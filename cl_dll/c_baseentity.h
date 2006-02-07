@@ -59,11 +59,37 @@ typedef unsigned int			AimEntsListHandle_t;
 extern void RecvProxy_IntToColor32( const CRecvProxyData *pData, void *pStruct, void *pOut );
 extern void RecvProxy_LocalVelocity( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
+// BEG: Added by Mulchman
+enum Class_T
+{
+	CLASS_NONE = 0,
+	CLASS_PLAYER,
+	CLASS_PLAYER_ALLY,
+
+	// BEG: Added by Mulchman
+	CLASS_DISPENSER,
+	CLASS_SENTRYGUN,
+	CLASS_DETPACK,
+	CLASS_GREN,
+	CLASS_GREN_EMP,
+	// END: Added by Mulchman
+
+	//-- Added by L0ki --
+	CLASS_PIPEBOMB,
+	//------------------- 
+
+	NUM_AI_CLASSES
+};
+// END: Added by Mulchman
+
 enum CollideType_t
 {
 	ENTITY_SHOULD_NOT_COLLIDE = 0,
 	ENTITY_SHOULD_COLLIDE,
-	ENTITY_SHOULD_RESPOND
+	ENTITY_SHOULD_RESPOND,
+
+	// HACKHACK: Fix to allow laser beam to shine off ragdolls
+	ENTITY_SHOULD_COLLIDE_RESPOND
 };
 
 struct VarMapEntry_t
@@ -222,6 +248,8 @@ public:
 
 									C_BaseEntity();
 	virtual							~C_BaseEntity();
+
+	virtual Class_T					Classify( void ) { return CLASS_NONE; }
 
 	static C_BaseEntity				*CreatePredictedEntityByName( const char *classname, const char *module, int line, bool persist = false );
 	
@@ -1224,6 +1252,9 @@ public:
 	int								m_lifeState;
 
 	int								m_iHealth;
+	// BEG: Added by Mulchman
+	int								m_iMaxHealth;
+	// END: Added by Mulchman
 
 	// was pev->speed
 	float							m_flSpeed;

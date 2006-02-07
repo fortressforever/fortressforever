@@ -1324,6 +1324,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	CAmmoDef*	pAmmoDef	= GetAmmoDef();
 	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
 	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);
+
+	float		flDmg = (info.m_iShots ? info.m_iDamage / info.m_iShots : info.m_iDamage);	// |-- Mirv: Split damage up into shots
 	
 	bool bDoServerEffects = true;
 
@@ -1355,7 +1357,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	Vector vecDir;
 	Vector vecEnd;
 	
-	CTraceFilterSkipTwoEntities traceFilter( this, info.m_pAdditionalIgnoreEnt, COLLISION_GROUP_NONE );
+	CTraceFilterSkipTwoEntities traceFilter( this, info.m_pAdditionalIgnoreEnt, /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE );	// |-- Mirv: Count bullets as projectiles so they don't hit weapon bags
 
 	bool bUnderwaterBullets = ShouldDrawUnderwaterBulletBubbles();
 	bool bStartedInWater = false;
@@ -1432,7 +1434,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 		// Now hit all triggers along the ray that respond to shots...
 		// Clip the ray to the first collided solid returned from traceline
-		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, info.m_iDamage, nDamageType );
+		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, /*info.m_iDamage*/flDmg, nDamageType ); // |-- Mirv: Split damage into shots
 		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecDir, tr.endpos );
 		triggerInfo.ScaleDamageForce( info.m_flDamageForceScale );
 		triggerInfo.SetAmmoType( info.m_iAmmoType );
@@ -1467,7 +1469,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				bHitWater = HandleShotImpactingWater( info, vecEnd, &traceFilter, &vecTracerDest );
 			}
 
-			float flActualDamage = info.m_iDamage;
+			float flActualDamage = /*info.m_iDamage*/ flDmg;	// |-- Mirv: Split damage into shots
 
 			// If we hit a player, and we have player damage specified, use that instead
 			// Adrian: Make sure to use the currect value if we hit a vehicle the player is currently driving.

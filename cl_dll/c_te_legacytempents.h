@@ -3,7 +3,7 @@
 // Purpose: 
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2006/01/07 16:37:32 $
 // $NoKeywords: $
 //=============================================================================//
 #if !defined( C_TE_LEGACYTEMPENTS_H )
@@ -27,7 +27,8 @@ enum
 	CS_SHELL_12GAUGE,
 	CS_SHELL_556,
 	CS_SHELL_762NATO,
-	CS_SHELL_338MAG
+	CS_SHELL_338MAG,
+	FF_SHELL_40MM
 };
 #endif
 
@@ -152,6 +153,7 @@ private:
 	struct model_t			*m_pCS_556Shell;
 	struct model_t			*m_pCS_762NATOShell;
 	struct model_t			*m_pCS_338MAGShell;
+	struct model_t			*m_pFF_40MMShell;
 #endif
 
 // Internal methods also available to children

@@ -5,16 +5,196 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "input.h"
 #include "c_ff_player.h"
-#include "weapon_ffbase.h"
+#include "ff_weapon_base.h"
 #include "c_basetempentity.h"
+#include "c_ff_buildableobjects.h"
+#include "ff_buildableobjects_shared.h"
+#include "ff_utils.h"
+#include "engine/IEngineSound.h"
+#include "in_buttons.h"
+
+
+#include "ff_hud_grenade1timer.h"
+#include "ff_hud_grenade2timer.h"
 
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
 
+extern CHudGrenade1Timer *g_pGrenade1Timer;
+extern CHudGrenade2Timer *g_pGrenade2Timer;
 
+#include "c_gib.h"
 
+#include "c_ff_timers.h"
+#include "vguicenterprint.h"
+
+// --> Mirv: Decaptiation code
+// These need to be mirrored in ff_player.cpp
+#define DECAP_HEAD			( 1 << 0 )
+#define DECAP_LEFT_ARM		( 1 << 1 )
+#define DECAP_RIGHT_ARM		( 1 << 2 )
+#define DECAP_LEFT_LEG		( 1 << 3 )
+#define DECAP_RIGHT_LEG		( 1 << 4 )
+// <-- Mirv: Decaptiation code
+
+// --> Mirv: Conc stuff
+static ConVar horiz_speed( "ffdev_concuss_hspeed", "2.0", 0, "Horizontal speed" );
+static ConVar horiz_mag( "ffdev_concuss_hmag", "2.0", 0, "Horizontal magnitude" );
+static ConVar vert_speed( "ffdev_concuss_vspeed", "1.0", 0, "Vertical speed" );
+static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
+static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
+// <-- Mirv: Conc stuff
+
+void OnTimerExpired(C_FFTimer *pTimer)
+{
+	string name = pTimer->GetTimerName();
+	DevMsg("OnTimerExpired(%s)\n",name.c_str());
+	char buf[256];
+	sprintf(buf,"OnTimerExpired(%s)\n",name.c_str());
+	internalCenterPrint->SetTextColor( 255, 255, 255, 255 );
+	internalCenterPrint->Print( buf );
+}
+
+// --> Mirv: Toggle grenades (requested by defrag)
+void CC_ToggleOne( void )
+{
+	if(!engine->IsConnected() || !engine->IsInGame())
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE || pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO )
+		CC_ThrowGren();
+	else
+		CC_PrimeOne();
+}
+
+void CC_ToggleTwo( void )
+{
+	if(!engine->IsConnected() || !engine->IsInGame())
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE || pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO )
+		CC_ThrowGren();
+	else
+		CC_PrimeTwo();
+}
+// <-- Mirv: Toggle grenades (requested by defrag)
+
+void CC_PrimeOne( void )
+{
+	if(!engine->IsConnected() || !engine->IsInGame())
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
+	// Bug #0000064: Civilian has primary & secondary grenade.
+	if(pLocalPlayer->m_iPrimary <= 0)
+	{
+		DevMsg("[Grenades] You are out of primary grenades!\n");
+		return;
+	}
+
+	// Bug #0000169: Grenade timer is played when player is dead and primes a grenade
+	if (!pLocalPlayer->IsAlive() || pLocalPlayer->GetTeamNumber() < TEAM_BLUE)
+		return;
+
+	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
+	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
+		return;
+
+	pLocalPlayer->m_flPrimeTime = engine->Time();
+
+	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
+	if (pTimer)
+	{
+		pTimer->m_bRemoveWhenExpired = true;
+		pTimer->StartTimer();				
+	}
+
+	pLocalPlayer->EmitSound( "Grenade.Timer" );
+
+	Assert (g_pGrenade1Timer);
+	g_pGrenade1Timer->SetTimer(4.0f);
+}
+
+void CC_PrimeTwo( void )
+{
+	if(!engine->IsConnected() || !engine->IsInGame())
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
+	// Bug #0000064: Civilian has primary & secondary grenade.
+	if(pLocalPlayer->m_iSecondary <= 0)
+	{
+		DevMsg("[Grenades] You are out of secondary grenades!\n");
+		return;
+	}
+
+	// Bug #0000169: Grenade timer is played when player is dead and primes a grenade
+	if (!pLocalPlayer->IsAlive() || pLocalPlayer->GetTeamNumber() < TEAM_BLUE)
+		return;
+
+	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
+	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
+		return;
+
+	pLocalPlayer->m_flPrimeTime = engine->Time();
+	
+	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
+	if (pTimer)
+	{
+		pTimer->m_bRemoveWhenExpired = true;
+		pTimer->StartTimer();				
+	}
+	pLocalPlayer->EmitSound( "Grenade.Timer" );
+
+	Assert (g_pGrenade2Timer);
+	g_pGrenade2Timer->SetTimer(4.0f);
+}
+void CC_ThrowGren( void )
+{
+	if(!engine->IsConnected() || !engine->IsInGame())
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if(
+		((pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE) && (pLocalPlayer->m_iPrimary == 0))
+		||
+		((pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO) && (pLocalPlayer->m_iSecondary == 0))
+		)
+	{
+		return;
+	}
+}
+void CC_TestTimers( void )
+{
+	DevMsg("[L0ki] CC_TestTimers\n");
+	if(!engine->IsConnected() || !engine->IsInGame())
+	{
+		DevMsg("[L0ki] \tNOT connected or NOT active!\n");
+		return;
+	}
+
+	C_FFTimer *pTimer = g_FFTimers.Create("ClientTimer0", 3.0f);
+	if(pTimer)
+	{
+		pTimer->SetExpiredCallback(OnTimerExpired, true);
+		pTimer->StartTimer();
+	}
+}
+
+ConCommand testtimers("cc_test_timers",CC_TestTimers,"Tests the basic timer classes.");
+
+#define FF_PLAYER_MODEL "models/player/terror.mdl"
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
@@ -48,18 +228,82 @@ BEGIN_RECV_TABLE_NOBASE( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	RecvPropInt( RECVINFO( m_iEvent ) )
 END_RECV_TABLE()
 
+// Prototype
+void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut );
+
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
-END_RECV_TABLE()
 
+	RecvPropInt( RECVINFO( m_iClassStatus ) ),	// |-- Mirv: Class status
+
+	// Beg: Added by Mulchman for building objects and such
+	RecvPropEHandle( RECVINFO( m_hDispenser ) ),
+	RecvPropEHandle( RECVINFO( m_hSentryGun ) ),
+	RecvPropEHandle( RECVINFO( m_hDetpack ) ),
+	RecvPropInt( RECVINFO( m_bBuilding ) ),
+	RecvPropInt( RECVINFO( m_iCurBuild ) ),
+	RecvPropInt( RECVINFO( m_bCancelledBuild ) ),
+	// End: Added by Mulchman for building objects and such
+
+	// ---> added by billdoor
+	RecvPropInt(RECVINFO(m_iMaxHealth)),
+	RecvPropInt(RECVINFO(m_iArmor)),
+	RecvPropInt(RECVINFO(m_iMaxArmor)),
+	RecvPropFloat(RECVINFO(m_fArmorType)),
+
+	RecvPropInt(RECVINFO(m_iSkiState)),
+	// ---> end
+
+	// Beg: Added by L0ki - Grenade related
+	RecvPropInt( RECVINFO( m_iPrimary ) ),
+	RecvPropInt( RECVINFO( m_iSecondary ) ),
+	RecvPropInt( RECVINFO( m_iGrenadeState ) ),
+	RecvPropFloat( RECVINFO( m_flServerPrimeTime ), 0, RecvProxy_PrimeTime ),
+	// End: Added by L0ki
+
+	// Beg: Added by FryGuy - Status Effects related
+	RecvPropFloat( RECVINFO( m_flNextBurnTick ) ),
+	RecvPropInt( RECVINFO( m_iBurnTicks ) ),
+	RecvPropFloat( RECVINFO( m_flBurningDamage ) ),
+	// End: Added by FryGuy
+
+	// --> Mirv: Map guide
+	RecvPropEHandle( RECVINFO( m_hNextMapGuide ) ),
+	RecvPropEHandle( RECVINFO( m_hLastMapGuide ) ),
+	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),
+	// <-- Mirv: Map guide
+
+	RecvPropFloat( RECVINFO( m_flConcTime ) ),		// |-- Mirv: Concussed
+
+	RecvPropFloat(RECVINFO(m_flMassCoefficient)),
+END_RECV_TABLE( )
+
+void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	DevMsg("[Grenades] RecvProxy_PrimeTime\n");
+	// Unpack the data.
+	if(!engine->IsConnected() || !engine->IsInGame())
+	{
+		DevMsg("[Grenades] \t NOT connected or NOT active!\n");
+		return;
+	}
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if(pLocalPlayer)
+	{
+		pLocalPlayer->m_flServerPrimeTime = pData->m_Value.m_Float;
+		if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
+			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
+		DevMsg("[Grenades] \tm_flServerPrimeTime: %f\n", pLocalPlayer->m_flServerPrimeTime);
+		DevMsg("[Grenades] \tm_flLatency: %f\n", pLocalPlayer->m_flLatency);
+	}
+}
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
-	RecvPropInt( RECVINFO( m_iThrowGrenadeCounter ) ),
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
-END_RECV_TABLE()
+END_RECV_TABLE( )
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay
 {
@@ -71,6 +315,12 @@ public:
 	~C_FFRagdoll();
 
 	virtual void OnDataChanged( DataUpdateType_t type );
+
+	// HACKHACK: Fix to allow laser beam to shine off ragdolls
+	virtual CollideType_t ShouldCollide()
+	{
+		return ENTITY_SHOULD_COLLIDE_RESPOND;
+	}
 
 	int GetPlayerEntIndex() const;
 	IRagdoll* GetIRagdoll() const;
@@ -91,6 +341,10 @@ private:
 	EHANDLE	m_hPlayer;
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
+
+	// --> Mirv: State of player's limbs
+	CNetworkVar( int, m_fBodygroupState );
+	// <-- Mirv: State of player's limbs
 };
 
 
@@ -100,7 +354,10 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_FFRagdoll, DT_FFRagdoll, CFFRagdoll )
 	RecvPropInt( RECVINFO( m_nModelIndex ) ),
 	RecvPropInt( RECVINFO(m_nForceBone) ),
 	RecvPropVector( RECVINFO(m_vecForce) ),
-	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) )
+	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) ),
+	// --> Mirv: State of player's limbs
+	RecvPropInt( RECVINFO(m_fBodygroupState) )
+	// <-- Mirv: State of player's limbs
 END_RECV_TABLE()
 
 
@@ -139,6 +396,10 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 
 	if( !pPhysicsObject )
 		return;
+
+	// --> Mirv: [TODO] Return on impact to invisible bodygroup
+	// This will need to wait until the #s of the hitgroups are finalised
+	// <-- Mirv: [TODO] Return on impact to invisible bodygroup
 
 	Vector dir = pTrace->endpos - pTrace->startpos;
 
@@ -204,7 +465,9 @@ void C_FFRagdoll::CreateRagdoll()
 			int iSeq = LookupSequence( "walk_lower" );
 			if ( iSeq == -1 )
 			{
-				Assert( false );	// missing walk_lower?
+				// Mulch: to start knowing what asserts are popping up for when testing stuff
+				AssertMsg( false, "missing sequence walk_lower" ); 
+				//Assert( false );	// missing walk_lower?
 				iSeq = 0;
 			}
 
@@ -229,12 +492,33 @@ void C_FFRagdoll::CreateRagdoll()
 
 	SetModelIndex( m_nModelIndex );
 
+
+
+	// --> Mirv: Spawn ragdoll with correct limbs missing
+	DevMsg( "[CLIENT] Spawned ragdoll, received m_fBodygroupState as %d\n", m_fBodygroupState );
+
+	if( m_fBodygroupState & DECAP_HEAD )
+		SetBodygroup( 1, 1 );
+	if( m_fBodygroupState & DECAP_LEFT_ARM )
+		SetBodygroup( 2, 1 );
+	if( m_fBodygroupState & DECAP_LEFT_LEG )
+		SetBodygroup( 3, 1 );
+	if( m_fBodygroupState & DECAP_RIGHT_ARM )
+		SetBodygroup( 4, 1 );
+	if( m_fBodygroupState & DECAP_RIGHT_LEG )
+		SetBodygroup( 5, 1 );
+	// <-- Mirv: Spawn ragdoll with correct limbs missing
+
 	// Turn it into a ragdoll.
 	// Make us a ragdoll..
 	m_nRenderFX = kRenderFxRagdoll;
 
 	BecomeRagdollOnClient( false );
 
+	// HACKHACK: Fix to allow laser beam to shine off ragdolls
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 }
 
 
@@ -295,20 +579,83 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
-}
 
+	m_iLocalSkiState = 0;
+
+	// BEG: Added by Mulchman
+	m_bClientBuilding = false;
+	// END: Added by Mulchman
+	
+	m_flConcTime = m_flConcTimeStart = 0;	// |-- Mirv: Don't start conced
+}
 
 C_FFPlayer::~C_FFPlayer()
 {
 	m_PlayerAnimState->Release();
 }
 
-
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 {
 	return ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 }
 
+// --> Mirv: Conc angles
+void C_FFPlayer::PreThink( void )
+{
+	if( m_flConcTime > gpGlobals->curtime )
+	{
+		// When did this start
+		if( m_flConcTimeStart == 0 )
+			m_flConcTimeStart = gpGlobals->curtime;
+
+		// Work our conc amount with this rather slow formula for now
+		float flConcAmount = 10.0f * ( m_flConcTime - gpGlobals->curtime ) / ( m_flConcTime - m_flConcTimeStart );
+			
+		// Our conc angles, this is also quite slow for now
+		m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+		//m_angNegConced = BaseClass::EyeAngles() - m_angConced;
+		//m_angConced += BaseClass::EyeAngles();
+	}
+	else
+		m_flConcTimeStart = 0;
+
+	// Do we need to do a class specific skill?
+	if (m_afButtonPressed & IN_ATTACK2)
+		ClassSpecificSkill();
+
+	else if (m_afButtonReleased & IN_ATTACK2)
+		ClassSpecificSkill_Post();
+
+	BaseClass::PreThink();
+}
+
+const QAngle &C_FFPlayer::EyeAngles()
+{
+	if( m_flConcTime > gpGlobals->curtime && conc_test.GetInt() != 0 )
+	{
+		m_angConcedTest = BaseClass::EyeAngles() + m_angConced;
+		return m_angConcedTest;
+	}
+	else
+		return BaseClass::EyeAngles();
+}
+
+void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
+{
+	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
+
+	if( m_flConcTime > gpGlobals->curtime && conc_test.GetInt() == 0 )
+		eyeAngles += m_angConced;
+}
+
+void C_FFPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
+{
+	if( m_flConcTime > gpGlobals->curtime )
+		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles - m_angConced );
+	else
+		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles );
+}
+// <-- Mirv: Conc angles
 
 const QAngle& C_FFPlayer::GetRenderAngles()
 {
@@ -328,7 +675,7 @@ void C_FFPlayer::UpdateClientSideAnimation()
 	// Update the animation data. It does the local check here so this works when using
 	// a third-person camera (and we don't have valid player angles).
 	if ( this == C_FFPlayer::GetLocalFFPlayer() )
-		m_PlayerAnimState->Update( EyeAngles()[YAW], m_angEyeAngles[PITCH] );
+		m_PlayerAnimState->Update( EyeAngles()[YAW], EyeAngles()[PITCH] );	// |-- Mirv: 3rd person viewmodel fix
 	else
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 
@@ -354,21 +701,93 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 
+	// BEG: Added by Mulchman
+	if( m_bBuilding && !m_bClientBuilding )
+	{
+		// We started building
+		DevMsg( "Started building a... " );
+
+		bool bDrawTimer = true;
+		string szTimerName = FF_BUILDABLE_TIMER_BUILD_STRING;
+		float flTimerDuration = 2.0f;
+
+		if( m_iCurBuild == FF_BUILD_DISPENSER )
+		{
+			DevMsg( "Dispenser!\n" );
+			flTimerDuration = 2.0f;
+		}
+		else if( m_iCurBuild == FF_BUILD_SENTRYGUN )
+		{
+			DevMsg( "SentryGun!\n" );
+			flTimerDuration = 5.0f;
+		}
+		else if( m_iCurBuild == FF_BUILD_DETPACK )
+		{
+			DevMsg( "Detpack!\n" );	
+			flTimerDuration = 4.0f;
+		}
+		else
+		{
+			DevMsg( "ERROR!? WTFBBQ!?\n" );
+			bDrawTimer = false;
+		}
+
+		if( bDrawTimer )
+		{
+			C_FFTimer *pTimer = g_FFTimers.Create( szTimerName, flTimerDuration );
+			if( pTimer )
+			{
+				pTimer->m_bRemoveWhenExpired = true;
+				pTimer->StartTimer();				
+			}
+		}
+	}
+	else if( !m_bBuilding && m_bClientBuilding )
+	{
+		// We stopped building
+		DevMsg( "Stopped building (or cancelled building)\n" );
+
+		// If the timer still exists and we've stopped building (or cancelled)
+		// then kill it off manually
+		C_FFTimer *pTimer = g_FFTimers.FindTimer( FF_BUILDABLE_TIMER_BUILD_STRING );
+
+		if( pTimer )
+			g_FFTimers.DeleteTimer( pTimer );
+/*	
+
+		// Code to get mins/maxs of a model - leave in please
+		/*		
+		//C_FFDispenser *pObject = ( C_FFDispenser * )m_hDispenser.Get( );
+		//C_FFSentryGun *pObject = ( C_FFSentryGun * )m_hSentryGun.Get( );
+		C_FFDetpack *pObject = ( C_FFDetpack * )m_hDetpack.Get( );
+		if( pObject )
+		{
+			Vector mins, maxs;
+
+			pObject->GetRenderBounds( mins, maxs );
+			DevMsg( "Mins: %f, %f, %f\nMaxs: %f, %f, %f\n", mins.x, mins.y, mins.z, maxs.x, maxs.y, maxs.z );
+		}
+		//*/
+	}
+
+	// Update client buildling state to that of
+	// the server
+	m_bClientBuilding = m_bBuilding;
+	// END: Added by Mulchman
+
 	UpdateVisibility();
 }
 
+void C_FFPlayer::Simulate()
+{
+	BaseClass::Simulate();
+
+	g_FFTimers.SimulateTimers();
+}
 
 void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
-	if ( event == PLAYERANIMEVENT_THROW_GRENADE )
-	{
-		// Let the server handle this event. It will update m_iThrowGrenadeCounter and the client will
-		// pick up the event in CCSPlayerAnimState.
-	}
-	else	
-	{
-		m_PlayerAnimState->DoAnimationEvent( event );
-	}
+	m_PlayerAnimState->DoAnimationEvent( event );
 }
 
 bool C_FFPlayer::ShouldDraw( void )
@@ -386,7 +805,29 @@ bool C_FFPlayer::ShouldDraw( void )
 	return BaseClass::ShouldDraw();
 }
 
-CWeaponFFBase* C_FFPlayer::GetActiveFFWeapon() const
+// --> Mirv: Get the class
+int C_FFPlayer::GetClassSlot( void )
 {
-	return dynamic_cast< CWeaponFFBase* >( GetActiveWeapon() );
+	return ( m_iClassStatus & 0x0000000F );
+}
+// <-- Mirv: Get the class
+
+CFFWeaponBase* C_FFPlayer::GetActiveFFWeapon() const
+{
+	return dynamic_cast< CFFWeaponBase* >( GetActiveWeapon() );
+}
+
+void C_FFPlayer::SwapToWeapon(FFWeaponID weaponid)
+{
+	if (GetActiveFFWeapon() && GetActiveFFWeapon()->GetWeaponID() == weaponid)
+		return;
+
+	CFFWeaponBase *weap;
+
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
+		if (weap && weap->GetWeaponID() == weaponid)
+			::input->MakeWeaponSelection(weap);
+	}	
 }

@@ -37,6 +37,7 @@ typedef enum {
 	SPECIAL1,
 	SPECIAL2,
 	SPECIAL3,
+	COCK,
 
 	// Add new shoot sound types here
 

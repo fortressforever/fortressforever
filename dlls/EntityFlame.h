@@ -11,8 +11,8 @@
 #endif
 
 #define FLAME_DAMAGE_INTERVAL			0.2f // How often to deal damage.
-#define FLAME_DIRECT_DAMAGE_PER_SEC		5.0f
-#define FLAME_RADIUS_DAMAGE_PER_SEC		4.0f
+#define FLAME_DIRECT_DAMAGE_PER_SEC		0 // 5.0f	// |-- Mirv: We seem to be handling dmg ourself
+#define FLAME_RADIUS_DAMAGE_PER_SEC		0 // 4.0f	// |-- Mirv: We seem to be handling dmg ourself
 
 #define FLAME_DIRECT_DAMAGE ( FLAME_DIRECT_DAMAGE_PER_SEC * FLAME_DAMAGE_INTERVAL )
 #define FLAME_RADIUS_DAMAGE ( FLAME_RADIUS_DAMAGE_PER_SEC * FLAME_DAMAGE_INTERVAL )
@@ -37,6 +37,8 @@ public:
 	virtual void UpdateOnRemove();
 
 	void	SetSize( float size ) { m_flSize = size; }
+
+	friend class CFFPlayer;		// |-- Mirv: Bug #0000162: Switching class while on fire, keeps playing burn sound
 
 	DECLARE_DATADESC();
 

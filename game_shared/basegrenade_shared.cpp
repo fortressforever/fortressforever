@@ -9,6 +9,7 @@
 #include "basegrenade_shared.h"
 #include "shake.h"
 #include "engine/IEngineSound.h"
+#include "ff_gamerules.h"
 
 #if !defined( CLIENT_DLL )
 
@@ -280,6 +281,11 @@ void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 	Assert( pOther );
 	if ( !pOther->IsSolid() )
 		return;
+
+	// --> Mirv: Check collision rules first
+	if (!g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
+		return;
+	// <-- Mirv: Check collision rules first
 
 	Vector velDir = GetAbsVelocity();
 	VectorNormalize( velDir );

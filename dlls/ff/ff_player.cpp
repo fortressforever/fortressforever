@@ -8,14 +8,82 @@
 #include "cbase.h"
 #include "ff_player.h"
 #include "ff_gamerules.h"
-#include "weapon_ffbase.h"
+#include "ff_weapon_base.h"
 #include "predicted_viewmodel.h"
 #include "iservervehicle.h"
 #include "viewport_panel_names.h"
+#include "EntityFlame.h"
+
+#include "ff_dispenser.h"
+#include "ff_detpack.h"
+#include "ff_sentrygun.h"
+#include "ff_item_flag.h"
+#include "ff_sevtest.h"
+#include "ff_utils.h"
+#include "ff_grenade_base.h"
+#include "ff_buildableobjects_shared.h"
+#include "ff_item_backpack.h"
+
+#include "ff_team.h"			// team info
+#include "in_buttons.h"			// for in_attack2
+#include "ff_projectile_pipebomb.h"
+
+#include <vector>
+#include <algorithm>
+
+#include "ff_entity_system.h"	// Entity system
+#include "ff_statslog.h"
+
+#include "gib.h"
+
+#include "omnibot_interface.h"
 
 extern int gEvilImpulse101;
-#define FF_PLAYER_MODEL "models/player/terror.mdl"
+#define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
 
+// Decapitation code
+// These need to be mirrored in c_ff_player.cpp
+#define DECAP_HEAD			( 1 << 0 )
+#define DECAP_LEFT_ARM		( 1 << 1 )
+#define DECAP_RIGHT_ARM		( 1 << 2 )
+#define DECAP_LEFT_LEG		( 1 << 3 )
+#define DECAP_RIGHT_LEG		( 1 << 4 )
+
+// Oh no a gobal.
+int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
+
+// grenade information
+ConVar gren_timer("ffdev_gren_timer","4.0",0,"Timer length for all grenades");
+//ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at");
+ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at");
+ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player");
+
+// For testing purposes
+// [integer] Number of cells it takes to perform the "radar" command
+static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
+
+// [integer] Distance of the "radar" pulse - ie. max distance someone
+// can be from us when doing a "radar" command so that the player
+// will show up on our screen
+static ConVar radar_radius_distance( "ffdev_radar_radius_distance", "1024" );
+
+// [integer] Time [in seconds] you have to wait before doing another "radar" command
+static ConVar radar_wait_time( "ffdev_radar_wait_time", "5" );
+
+// [integer] Max distance a player can be from us to be shown
+static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
+
+// [float] Time between radio tag updates
+static ConVar radiotag_duration( "ffdev_radiotag_duration", "0.25" );
+
+// status effect
+ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
+ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
+ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
+ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
+ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gains while a engy");
+
+static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
@@ -34,8 +102,6 @@ public:
 	CNetworkHandle( CBasePlayer, m_hPlayer );
 	CNetworkVar( int, m_iEvent );
 };
-
-#define THROWGRENADE_COUNTER_BITS 3
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	SendPropEHandle( SENDINFO( m_hPlayer ) ),
@@ -57,12 +123,47 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event )
 // Tables.
 // -------------------------------------------------------------------------------- //
 
+// attach the info_ff_teamspawn entity to something too.. might as well put it here
+LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CPointEntity);
 LINK_ENTITY_TO_CLASS( player, CFFPlayer );
 PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
-END_SEND_TABLE()
+
+	SendPropInt( SENDINFO( m_iClassStatus ) ),
+
+	// Buildables
+	SendPropEHandle( SENDINFO( m_hDispenser ) ),
+	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
+	SendPropEHandle( SENDINFO( m_hDetpack ) ),
+	SendPropInt( SENDINFO( m_bBuilding ) ),
+	SendPropInt( SENDINFO( m_iCurBuild ) ),
+	SendPropInt( SENDINFO( m_bCancelledBuild ) ),
+
+	// health/armor
+	SendPropInt(SENDINFO(m_iMaxHealth)),
+	SendPropInt(SENDINFO(m_iArmor)),
+	SendPropInt(SENDINFO(m_iMaxArmor)),
+	SendPropFloat(SENDINFO(m_fArmorType)),
+
+	SendPropInt(SENDINFO(m_iSkiState)),
+
+	// Grenade Related
+	SendPropInt( SENDINFO( m_iGrenadeState ) ),
+	SendPropInt( SENDINFO( m_iPrimary ) ),
+	SendPropInt( SENDINFO( m_iSecondary ) ),
+	SendPropFloat( SENDINFO( m_flServerPrimeTime ) ),
+
+	// Map guide
+	SendPropEHandle( SENDINFO( m_hNextMapGuide ) ),
+	SendPropEHandle( SENDINFO( m_hLastMapGuide ) ),
+	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
+
+	SendPropFloat( SENDINFO( m_flConcTime ) ),
+
+	SendPropFloat(SENDINFO(m_flMassCoefficient)),
+END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
@@ -81,9 +182,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11 ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11 ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
-
-	SendPropInt( SENDINFO( m_iThrowGrenadeCounter ), THROWGRENADE_COUNTER_BITS, SPROP_UNSIGNED ),
-END_SEND_TABLE()
+END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
 {
@@ -104,6 +203,10 @@ public:
 	CNetworkHandle( CBaseEntity, m_hPlayer );	// networked entity handle 
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
+
+	// State of player's limbs
+	CNetworkVar( int, m_fBodygroupState );
+
 };
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -114,7 +217,11 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRagdoll, DT_FFRagdoll )
 	SendPropModelIndex( SENDINFO( m_nModelIndex ) ),
 	SendPropInt		( SENDINFO(m_nForceBone), 8, 0 ),
 	SendPropVector	( SENDINFO(m_vecForce), -1, SPROP_NOSCALE ),
-	SendPropVector( SENDINFO( m_vecRagdollVelocity ) )
+	SendPropVector( SENDINFO( m_vecRagdollVelocity ) ),
+
+	// State of player's limbs
+	SendPropInt( SENDINFO(m_fBodygroupState) )
+
 END_SEND_TABLE()
 
 
@@ -138,9 +245,57 @@ CFFPlayer::CFFPlayer()
 
 	SetViewOffset( FF_PLAYER_VIEW_OFFSET );
 
-	m_iThrowGrenadeCounter = 0;
-}
+	m_iLocalSkiState = 0;
 
+	m_bBuilding = false;
+	m_bCancelledBuild = false;
+	m_iWantBuild = FF_BUILD_NONE;
+	m_iCurBuild = FF_BUILD_NONE;
+	m_hDispenser = NULL;
+	m_hSentryGun = NULL;
+	m_hDetpack = NULL;	
+	m_flBuildTime = 0.0f;
+
+	m_flLastScoutRadarUpdate = 0.0f;
+
+	m_bRadioTagged = false;
+	m_flRadioTaggedStartTime = 0.0f;
+	m_flRadioTaggedDuration = 30.0f;
+
+	m_flLastRadioTagUpdate = 0.0f;
+
+	// Grenade Related
+	m_iGrenadeState = FF_GREN_NONE;
+	m_flServerPrimeTime = 0;
+	m_iPrimary = 0;
+	m_iSecondary = 0;
+
+	// Status Effects
+	m_flNextBurnTick = 0.0;
+	m_iBurnTicks = 0;
+	m_flBurningDamage = 0.0;
+
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	{
+		m_vSpeedEffects[i].active = false;
+	}
+	m_fLastHealTick = 0.0f;
+	m_fLastInfectedTick = 0.0f;
+	m_bInfected = false;
+
+	// Map guide stuff
+	m_hNextMapGuide = NULL;
+	m_flNextMapGuideTime = 0;
+
+	// Class stuff
+	m_fRandomPC = false;
+	m_iNextClass = 0;
+
+	m_flConcTime = 0;		// Not concussed on creation
+	m_iClassStatus = 0;		// No class sorted yet
+
+	m_flLastGassed = 0;
+}
 
 CFFPlayer::~CFFPlayer()
 {
@@ -167,27 +322,124 @@ void CFFPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitA
 
 void CFFPlayer::PreThink(void)
 {
+	// reset these every frame
+	m_fBodygroupState = 0;	
+
+	// Has our radio tag expired?
+	if( m_bRadioTagged && ( ( m_flRadioTaggedStartTime + m_flRadioTaggedDuration ) < gpGlobals->curtime ) )
+	{
+		m_bRadioTagged = false;
+	}
+
+	// Update our list of tagged players that the client
+	// should be "seeing" if it's time to do another update
+	if( ( m_flLastRadioTagUpdate + radiotag_duration.GetFloat( ) ) < gpGlobals->curtime )
+	{
+		FindRadioTaggedPlayers( );
+	}
+
 	// Riding a vehicle?
-	if ( IsInAVehicle() )	
+	if( IsInAVehicle( ) )	
 	{
 		// make sure we update the client, check for timed damage and update suit even if we are in a vehicle
-		UpdateClientData();		
-		CheckTimeBasedDamage();
+		UpdateClientData( );		
+		CheckTimeBasedDamage( );
 
 		// Allow the suit to recharge when in the vehicle.
-		CheckSuitUpdate();
+		CheckSuitUpdate( );
 		
-		WaterMove();	
+		WaterMove( );	
 		return;
 	}
+
+	// update the grenade status if needed
+	if( IsGrenadePrimed( ) )
+		GrenadeThink( );
+
+	// If we're building and we've waited the two seconds or whatever...
+	if( m_bBuilding && ( m_flBuildTime < gpGlobals->curtime ) )
+		PostBuildGenericThink( );
+
+	StatusEffectsThink();
+
+	// Do we need to do a class specific skill?
+	if( m_afButtonPressed & IN_ATTACK2 )
+		ClassSpecificSkill();
+
+	else if (m_afButtonReleased & IN_ATTACK2)
+		ClassSpecificSkill_Post();
 
 	BaseClass::PreThink();
 }
 
+// Find a map guide
+CFFMapGuide *CFFPlayer::FindMapGuide( int sequence )
+{
+	CFFMapGuide *pMapGuide = NULL;
+		
+	while( ( pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname( pMapGuide, "ff_mapguide" ) ) != NULL )
+	{
+		if( pMapGuide->m_iSequence == sequence )
+			return pMapGuide;
+	}
+	return NULL;
+}
 
 void CFFPlayer::PostThink()
 {
 	BaseClass::PostThink();
+ 
+	// Test - mirv
+	if( GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide )
+	{
+		Vector vecMapGuideDir = m_hNextMapGuide->GetAbsOrigin() - GetAbsOrigin();
+
+		// We're close enough to the next one and the time has finished here
+		if( gpGlobals->curtime > m_flNextMapGuideTime )
+		{
+			DevMsg( "[MAPGUIDE] Reached guide %d\n", m_hNextMapGuide->m_iSequence );
+
+			// Play the narration file for this
+			if( m_hNextMapGuide->m_iNarrationFile != NULL_STRING )
+			{
+				EmitSound_t ep;
+				ep.m_nChannel = CHAN_ITEM;
+				ep.m_pSoundName = (char *) STRING( m_hNextMapGuide->m_iNarrationFile );
+				ep.m_flVolume = 1.0f;
+				ep.m_SoundLevel = SNDLVL_NORM;
+
+				CSingleUserRecipientFilter filter( this );
+				EmitSound( filter, entindex(), ep );
+			}
+
+			// Now the next one has become the last
+			m_hLastMapGuide = m_hNextMapGuide;
+
+			// And we are looking for a new one
+			m_hNextMapGuide = FindMapGuide( m_hLastMapGuide->m_iSequence + 1 );
+
+			// Only bother if we found one
+			if( m_hNextMapGuide )
+			{
+				// And we are going to reach that in x seconds time
+				m_flNextMapGuideTime = gpGlobals->curtime + 10.0f;
+
+				// And also let's aim in the right direction
+				SetAbsAngles( m_hLastMapGuide->m_angDirection );
+			}
+		}
+		// We're not close enough, so move us closer
+		else
+		{
+			float t = clamp( ( m_flNextMapGuideTime - gpGlobals->curtime ) / 10.0f, 0, 1.0f );
+
+			Vector vecNewPos = t * m_hLastMapGuide->GetAbsOrigin() + ( 1 - t ) * m_hNextMapGuide->GetAbsOrigin();
+			//QAngle angNewDirection = t * m_hLastMapGuide->m_angDirection + ( 1 - t ) * m_hNextMapGuide->m_angDirection;
+
+			SetAbsOrigin( vecNewPos );
+			//SetAbsAngles( angNewDirection );
+		}
+	}
 
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
@@ -196,7 +448,7 @@ void CFFPlayer::PostThink()
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );	
 }
 
 
@@ -204,43 +456,510 @@ void CFFPlayer::Precache()
 {
 	PrecacheModel( FF_PLAYER_MODEL );
 
+	// Quick addition to precache all the player models
+	PrecacheModel( "models/player/scout/scout.mdl" );
+	PrecacheModel( "models/player/sniper/sniper.mdl" );
+	PrecacheModel( "models/player/soldier/soldier.mdl" );
+	PrecacheModel( "models/player/demoman/demoman.mdl" );
+	PrecacheModel( "models/player/medic/medic.mdl" );
+	PrecacheModel( "models/player/hwguy/hwguy.mdl" );
+	PrecacheModel( "models/player/pyro/pyro.mdl" );
+	PrecacheModel( "models/player/spy/spy.mdl" );
+	PrecacheModel( "models/player/engineer/engineer.mdl" );
+	PrecacheModel( "models/player/civilian/civilian.mdl" );
+
+	// Sounds
+	PrecacheScriptSound( "Grenade.Timer" );
+	PrecacheScriptSound( "Grenade.Prime" );
+	PrecacheScriptSound( "Player.Jump" );
+	PrecacheScriptSound( "Player.Ammotoss" );
+	PrecacheScriptSound( "speech.saveme" );
+	PrecacheScriptSound("radar.single_shot");
+	
+	// Class gibs (wonderfully messy thanks)
+	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
+	{
+		char buf[256];
+		const char *class_string = Class_IntToString(i);
+
+		Q_snprintf(buf, 255, "models/player/%s/%s_head.mdl", class_string, class_string);
+		g_iLimbs[i][0] = PrecacheModel(buf);
+
+		Q_snprintf(buf, 255, "models/player/%s/%s_leftarm.mdl", class_string, class_string);
+		g_iLimbs[i][1] = PrecacheModel(buf);
+
+		Q_snprintf(buf, 255, "models/player/%s/%s_rightarm.mdl", class_string, class_string);
+		g_iLimbs[i][2] = PrecacheModel(buf);
+
+		Q_snprintf(buf, 255, "models/player/%s/%s_leftleg.mdl", class_string, class_string);
+		g_iLimbs[i][3] = PrecacheModel(buf);
+
+		Q_snprintf(buf, 255, "models/player/%s/%s_rightleg.mdl", class_string, class_string);
+		g_iLimbs[i][4] = PrecacheModel(buf);
+	}
+
 	BaseClass::Precache();
+}
+
+extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
+CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
+{
+	CBaseEntity *pSpot, *pGibSpot;
+	edict_t		*player;
+
+	player = edict();
+
+	pSpot = g_pLastSpawn;
+	// Randomize the start spot
+	// NOTE: given a larger range from the default SDK function so that players won't always
+	// spawn at the "first" spawn point for their team if the spawns are put in a "bad" order
+	for ( int i = random->RandomInt(15,25); i > 0; i-- )
+	{
+		pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+		if ( !pSpot )  // skip over the null point
+			pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+	}
+
+	CBaseEntity *pFirstSpot = pSpot;
+	pGibSpot = pFirstSpot;
+
+	do 
+	{
+		if ( pSpot )
+		{
+			// check the scripting system to check if the player is allowed to spawn here
+			// but let them spawn here if the name doesn't exist
+			if ( !FStrEq(STRING(pSpot->GetEntityName()), "") )
+			{
+				if ( !entsys.RunPredicates( pSpot, this, "validspawn" ) )
+				{
+					DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
+					pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+					continue;
+				}
+
+				DevMsg("[entsys] Found valid spawn for %s at %s\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
+			}
+			pGibSpot = pSpot;
+
+			// check if pSpot is valid
+			if ( g_pGameRules->IsSpawnPointValid( pSpot, this ) )
+			{
+				if ( pSpot->GetLocalOrigin() == vec3_origin )
+				{
+					pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+					continue;
+				}
+
+				// if so, go to pSpot
+				goto ReturnSpot;
+			}
+		}
+		// increment pSpot
+		pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+	} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
+
+	// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
+	pSpot = pGibSpot;
+	if ( pSpot )
+	{
+		CBaseEntity *ent = NULL;
+		for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 32 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
+		{
+			// if ent is a client, kill em (unless they are ourselves)
+			if ( ent->IsPlayer() && !(ent->edict() == player) )
+				ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
+		}
+		goto ReturnSpot;
+	}
+
+	// as a last resort, try to find an info_player_start
+	DevMsg("Spawning at info_player_start\n");
+	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+	if ( pSpot ) 
+		goto ReturnSpot;
+	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_deathmatch");
+	if ( pSpot ) 
+		goto ReturnSpot;
+
+ReturnSpot:
+	if ( !pSpot  )
+	{
+		Warning( "PutClientInServer: no info_player_start on level\n");
+		return CBaseEntity::Instance( INDEXENT( 0 ) );
+	}
+
+	g_pLastSpawn = pSpot;
+	return pSpot;
 }
 
 void CFFPlayer::Spawn()
 {
+	// --> Mirv: Various things to do on spawn
+	// Fixes water bug
+	if( GetWaterLevel() == 3 )
+	{
+		StopSound( "Player.AmbientUnderWater" );
+		SetPlayerUnderwater(false);
+		SetWaterLevel( 0 );
+	}
+
+	// Maybe this should go elsewhere
+	CSingleUserRecipientFilter user((CBasePlayer *)this);
+	user.MakeReliable();
+
+	// This will finish all status icons
+	UserMessageBegin(user, "StatusIconUpdate");
+	WRITE_BYTE(FF_NUMICONS);
+	WRITE_FLOAT(0.0);
+	MessageEnd();
+
+	// Not feigned anymore
+	m_fFeigned = false;
+
+	// Get rid of any fire
+	Extinguish();
+
+	// Tried to spawn while unassigned
+	if( GetTeamNumber() == TEAM_UNASSIGNED )
+	{
+		// Find an info_player_start place to spawn observer mode at
+		CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+
+		// We could find one
+		if( pSpawnSpot )
+		{
+			SetLocalOrigin( pSpawnSpot->GetLocalOrigin() + Vector(0,0,1) );
+			SetLocalAngles( pSpawnSpot->GetLocalAngles() );
+		}
+		// We couldn't find one
+		else
+		{
+			SetAbsOrigin( Vector( 0, 0, 0 ) );
+			SetAbsAngles( QAngle( 0, 0, 0 ) );
+		}
+
+		// Show the team menu
+		ShowViewPortPanel( PANEL_TEAM, true );
+
+		// Don't allow them to spawn
+		return;
+	}
+
+	// They tried to spawn with no class and they are not a spectator (or randompc)
+	if(GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
+	{
+		// Show the class select menu
+		ShowViewPortPanel( PANEL_CLASS, true );
+
+		// Don't allow them to spawn
+		return;
+	}
+
+	// They have spawned as a spectator
+	if( GetTeamNumber() == TEAM_SPECTATOR )
+	{
+		StartObserverMode( OBS_MODE_ROAMING );
+		AddEffects( EF_NODRAW );
+
+		BaseClass::Spawn();
+		return;
+	}
+
+	// They're spawning as a player
+	if (gpGlobals->curtime < m_flDeathTime + m_flNextSpawnDelay)
+		return;
+
+	// A 1 second wait feels like tfc
+	m_flNextSpawnDelay = 1.0f;
+
+	// Activate their class stuff, die if we can't
+	if (!ActivateClass())
+		return;
+
+	StopObserverMode();
+	RemoveEffects( EF_NODRAW );
+	
+	entsys.RunPredicates( NULL, this, "player_spawn" );
+
 	SetModel( FF_PLAYER_MODEL );
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	m_hRagdoll = NULL;
-	
+
+	// Not concussed on spawn
+	m_flConcTime = 0;
+
 	BaseClass::Spawn();
+
+	// Class system
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	ClientPrint( this, HUD_PRINTNOTIFY, pPlayerClassInfo.m_szPrintName );
+
+	m_iHealth		= pPlayerClassInfo.m_iHealth;
+	m_iMaxHealth	= pPlayerClassInfo.m_iHealth;
+	m_iArmor		= pPlayerClassInfo.m_iInitialArmour;
+	m_iMaxArmor		= pPlayerClassInfo.m_iMaxArmour;
+	m_fArmorType	= pPlayerClassInfo.m_flArmourType;
+
+	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
+
+	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
+	m_iSecondary	= pPlayerClassInfo.m_iSecondaryInitial;
+
+	m_flMassCoefficient = pPlayerClassInfo.m_flMassCoefficient;
+
+	SetModel( pPlayerClassInfo.m_szModel );
+	m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
+
+	for ( int i = 0; i < pPlayerClassInfo.m_iNumWeapons; i++ )
+		GiveNamedItem( pPlayerClassInfo.m_aWeapons[i] );
+	// <-- Mirv: Various things to do on spawn
+
+	// Can I get some freakin ammo please?
+	// Maybe some sharks with freakin laser beams?
+	for( int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++ )
+	{
+		DevMsg( "Giving: %i of ammo type: %s\n", pPlayerClassInfo.m_aAmmos[ i ].m_iAmount, pPlayerClassInfo.m_aAmmos[ i ].m_szAmmoType );
+		GiveAmmo( pPlayerClassInfo.m_aAmmos[ i ].m_iAmount, pPlayerClassInfo.m_aAmmos[ i ].m_szAmmoType, true );
+	}
+
+	// Clear the list of people who previously radio tagged us
+	//m_hWhoTaggedMeList.RemoveAll( );
+	m_pWhoTaggedMe = NULL;
+
+	// reset their status effects
+	m_flNextBurnTick = 0.0;
+	m_iBurnTicks = 0;
+	m_flBurningDamage = 0.0;
+
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	{
+		m_vSpeedEffects[i].active = false;
+	}
+	m_fLastHealTick = 0.0f;
+	m_fLastInfectedTick = 0.0f;
+	m_bInfected = false;
+
+	// equip the HEV suit
+	EquipSuit();
 }
 
 void CFFPlayer::InitialSpawn( void )
 {
-	BaseClass::InitialSpawn();
+	// Make sure they are dead
+	m_lifeState = LIFE_DEAD;
+	pl.deadflag = true;
 
-	const ConVar *hostname = cvar->FindVar( "hostname" );
-	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
+	BaseClass::InitialSpawn( );
 
-	// open info panel on client showing MOTD:
-	KeyValues *data = new KeyValues("data");
-	data->SetString( "title", title );		// info panel title
-	data->SetString( "type", "1" );			// show userdata from stringtable entry
-	data->SetString( "msg",	"motd" );		// use this stringtable entry
-	data->SetString( "cmd", "impulse 101" );// exec this command if panel closed
+	m_iRadioTaggedAmmoIndex = GetAmmoDef( )->Index( AMMO_RADIOTAG );
 
-	ShowViewPortPanel( PANEL_INFO, true, data );
+	// Fixes the no model problem
+	SetModel( FF_PLAYER_MODEL );
 
-	data->deleteThis();
+	// Set up their global voice channel
+	m_iChannel = 0;
+
+	DevMsg("CFFPlayer::InitialSpawn");
+}
+
+void CFFPlayer::SpyFeign( void )
+{
+	Vector relativeVel = GetAbsVelocity();
+
+	if (GetGroundEntity())
+		relativeVel.z = 0;
+
+	// A yell of pain if we're feigning [need to check feign will be allowed too]
+	if( !m_fFeigned && relativeVel.LengthSqr() <= 25.0f )
+		EmitSound( "Player.Death" );
+
+	SpySilentFeign();
+}
+
+void CFFPlayer::SpySilentFeign( void )
+{
+	// Already feigned
+	if( m_fFeigned )
+	{
+		// Yeah we're not feigned anymore bud
+		m_fFeigned = false;
+
+		// Remove the ragdoll
+		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
+		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+		pRagdoll->SetNextThink( gpGlobals->curtime );
+
+		// Invisible and stuff
+		RemoveEffects( EF_NODRAW );
+		RemoveFlag( FL_FROZEN );
+
+		// Redeploy our weapon
+		if (GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false)
+		{
+			GetActiveWeapon()->Deploy();
+			ShowCrosshair(true);
+		}
+	}
+	else
+	{
+		Vector relativeVel = GetAbsVelocity();
+
+		if (GetGroundEntity())
+			relativeVel.z = 0;
+
+		// Need to be stationary to feign
+		if( relativeVel.LengthSqr() > 25.0f )
+		{
+			ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_CANTFEIGNSPEED" );
+			return;
+		}
+
+		m_fFeigned = true;
+
+		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
+		CreateRagdollEntity();
+
+		// Quick get that ragdoll and change a few things
+		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
+		pRagdoll->m_vecRagdollVelocity = Vector( 0, 0, 0 );
+		pRagdoll->SetThink( NULL );
+
+		// Invisible and stuff
+		AddEffects( EF_NODRAW );
+		AddFlag( FL_FROZEN );
+
+		// Holster our current weapon
+		if (GetActiveWeapon())
+			GetActiveWeapon()->Holster(NULL);
+	}
 }
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	// Stats engine test!
+	g_StatsLog.AddToCount(entindex(), STAT_DEATHS);
+
+	// Drop any grenades
+	if (m_iGrenadeState != FF_GREN_NONE)
+	{
+		ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime), 0.0f);
+		m_iGrenadeState = FF_GREN_NONE;
+		m_flServerPrimeTime = 0;
+	}
+
+	ClearSpeedEffects();
+
+	// Beg; Added by Mulchman
+	if( m_bBuilding )
+	{
+		switch( m_iCurBuild )
+		{
+			case FF_BUILD_DISPENSER:
+			{
+				if( m_hDispenser.Get() )
+					( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
+			}
+			break;
+
+			case FF_BUILD_SENTRYGUN:
+			{
+				if( m_hSentryGun.Get() )
+					( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
+			}
+			break;
+
+			case FF_BUILD_DETPACK: 
+			{
+				if( m_hDetpack.Get() )
+					( ( CFFDetpack * )m_hDetpack.Get() )->Cancel( );
+			}
+			break;
+		}
+
+		// Unlock the player if he/she got locked
+		UnlockPlayer( );
+
+		// Re-initialize
+		m_bBuilding = false;
+		m_iCurBuild = FF_BUILD_NONE;
+		m_iWantBuild = FF_BUILD_NONE;
+	}
+	// If the tag is still active, award a point
+	// to the person who tagged us
+	if( m_bRadioTagged )
+	{
+		// TODO: Change to EHANDLE and we won't have to worry
+		// TODO: Check that the EHANDLE stuff works now
+
+		if( m_pWhoTaggedMe != NULL )
+		{
+			CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
+			if( pEntity && pEntity->IsPlayer() )
+				ToFFPlayer( m_pWhoTaggedMe )->AddPoints( 2, true );
+		}
+	}
+
+	// Reset this
+	m_pWhoTaggedMe = NULL;
+
+	// Reset the tag...
+	m_bRadioTagged = false;
+
+	// run the player_died event in lua
+	DevMsg("Running player_killed\n");
+	entsys.SetVar("killer", ENTINDEX(info.GetAttacker()));
+	entsys.RunPredicates( NULL, this, "player_killed" );
+
+	// Find any items that we are in control of and drop them
+	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+
+	while( pEnt != NULL )
+	{
+    // Tell the ent that it died
+		pEnt->OnPlayerDied( this );
+
+		// Next!
+		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+	}
+
+	// Get rid of fire
+	Extinguish();
+
+	// --> Mirv: Create backpack moved here to stop crash
+	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+
+	if (pBackpack)
+	{
+		pBackpack->SetSpawnFlags(SF_NORESPAWN);
+
+		Vector vel = GetAbsVelocity();
+
+		if (vel.z < 1.0f)
+			vel.z = 1.0f;
+
+		float velmag = vel.Length();
+
+		// Bug #0000243: Deaths by explosion send the dropped ammo bag flying unrealistically far
+		if (velmag > 300.0f)
+			vel *= 300.0f / velmag;
+
+		pBackpack->SetAbsVelocity(vel);
+		pBackpack->SetAbsOrigin(GetAbsOrigin());
+
+		for (int i = 1; i < MAX_AMMO_SLOTS; i++)
+			pBackpack->SetAmmoCount(i, GetAmmoCount(i));
+	}
+	// <-- Mirv: Create backpack moved here to stop crash
+
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
+
+	// Detonate player's pipes
+	CFFProjectilePipebomb::DestroyAllPipes(this, true);
 
 	BaseClass::Event_Killed( info );
 
@@ -266,6 +985,14 @@ void CFFPlayer::CreateRagdollEntity()
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = Vector(0,0,0);
+
+		// remove it after a time
+		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+		pRagdoll->SetNextThink( gpGlobals->curtime + 30.0f );
+
+		// Allows decapitation to continue into ragdoll state
+		DevMsg( "Createragdoll: %d\n", LastHitGroup() );
+		pRagdoll->m_fBodygroupState = m_fBodygroupState;
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -274,23 +1001,13 @@ void CFFPlayer::CreateRagdollEntity()
 
 void CFFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
-	if ( event == PLAYERANIMEVENT_THROW_GRENADE )
-	{
-		// Grenade throwing has to synchronize exactly with the player's grenade weapon going away,
-		// and events get delayed a bit, so we let CCSPlayerAnimState pickup the change to this
-		// variable.
-		m_iThrowGrenadeCounter = (m_iThrowGrenadeCounter+1) % (1<<THROWGRENADE_COUNTER_BITS);
-	}
-	else
-	{
-		m_PlayerAnimState->DoAnimationEvent( event );
-		TE_PlayerAnimEvent( this, event );	// Send to any clients who can see this guy.
-	}
+	m_PlayerAnimState->DoAnimationEvent( event );
+	TE_PlayerAnimEvent( this, event );	// Send to any clients who can see this guy.
 }
 
-CWeaponFFBase* CFFPlayer::GetActiveFFWeapon() const
+CFFWeaponBase* CFFPlayer::GetActiveFFWeapon() const
 {
-	return dynamic_cast< CWeaponFFBase* >( GetActiveWeapon() );
+	return dynamic_cast< CFFWeaponBase* >( GetActiveWeapon() );
 }
 
 void CFFPlayer::CreateViewModel( int index /*=0*/ )
@@ -321,15 +1038,7 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 	}
 	gEvilImpulse101 = true;
 
-	EquipSuit();
-
-	GiveNamedItem( "weapon_mp5" );
-	GiveNamedItem( "weapon_grenade" );
-	GiveNamedItem( "weapon_shotgun" );
-
 	// Give the player everything!
-	GiveAmmo( 90, AMMO_BULLETS );
-	GiveAmmo( 3, AMMO_GRENADE );
 	
 	if ( GetHealth() < 100 )
 	{
@@ -339,18 +1048,2458 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 	gEvilImpulse101		= false;
 }
 
-
-void CFFPlayer::FlashlightTurnOn( void )
+bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 {
-	AddEffects( EF_DIMLIGHT );
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	for ( int i = 0; i < pPlayerClassInfo.m_iNumSkills; i++ )
+	{
+		if( strcmp( pPlayerClassInfo.m_aSkills[i], szCommand ) == 0 )
+			return true;
+	}
+
+	return false;
 }
 
-void CFFPlayer::FlashlightTurnOff( void )
+void CFFPlayer::Command_TestCommand(void)
 {
-	RemoveEffects( EF_DIMLIGHT );
+	DevMsg("Inside Command_TestCommand for player %s\n", GetPlayerName());
+	DevMsg("Full command line on server was: %s\n", engine->Cmd_Args());
 }
 
-int CFFPlayer::FlashlightIsOn( void )
+void CFFPlayer::Command_MapGuide( void )
 {
-	return IsEffectActive( EF_DIMLIGHT );
+	if( !m_hNextMapGuide )
+	{
+		// Start map guide
+		m_hLastMapGuide = m_hNextMapGuide = FindMapGuide( 0 );
+
+		if( m_hNextMapGuide )
+		{
+			m_flNextMapGuideTime = 0;
+			DevMsg( "Starting, teleporting to guide 0\n" );
+		}
+		else
+			DevMsg( "Couldn't start, unable to find first map guide\n" );
+	}
+	else
+	{
+		// stop map guide
+		DevMsg( "Forced stopping of map guide\n" );
+		m_hNextMapGuide = NULL;
+		m_flNextMapGuideTime = 0;
+	}
+}
+
+// Set the voice comm channel
+void CFFPlayer::Command_SetChannel( void )
+{
+	if( engine->Cmd_Argc( ) < 2 )
+	{
+		// no channel specified
+		return;
+	}
+
+	int iChannel = atoi( engine->Cmd_Argv(1) );
+
+	if( iChannel < 0 || iChannel > 2 )
+		return;
+
+	m_iChannel = iChannel;
+}
+
+int CFFPlayer::GetClassSlot()
+{
+/*	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	return pPlayerClassInfo.m_iSlot;*/
+
+	return GetClassForClient();
+}
+
+// When spawned we this is called to handle class changing
+int CFFPlayer::ActivateClass( void )
+{
+	CFFTeam *pTeam = GetGlobalFFTeam( GetTeamNumber() );
+
+	// This shouldn't be called while not on a team
+	if( !pTeam )
+		return 0;
+
+	// Don't always have to call this
+	if (m_iNextClass == GetClassSlot() && !m_fRandomPC)
+		return GetClassSlot();
+
+	// If we're being unassigned then go for it.
+	if (m_iNextClass == 0 && !m_fRandomPC)
+	{
+		SetClassForClient(0);
+		return 0;
+	}
+
+	int iClasses[11] = {0};
+
+	// Build up an array of all in-use classes
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+		
+		// Check player classes on this player's team
+		if ( pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber() )
+		{
+			int playerclass = pPlayer->GetClassSlot();
+			
+			if ( playerclass > 0 && playerclass <= 10 )
+				iClasses[playerclass]++;
+		}
+	}
+
+	std::vector<int> vecAvailable;
+
+	// Build up a vector array of available classes
+	for( int j = 1; j <= 10; j++ )
+	{
+		int class_limit = pTeam->GetClassLimit( j );
+
+		// This class is available
+		if( class_limit == 0 || iClasses[j] < class_limit )
+			vecAvailable.push_back( j );
+	}
+
+	// Make a random choice for randompcs
+	if( m_fRandomPC )
+	{
+		int iNumAvail = (int) vecAvailable.size();
+
+		// No available classes
+		if( iNumAvail == 0 )
+			return 0;
+
+
+		// Loop until we get a new class if there's more than one available
+		while( ( m_iNextClass = vecAvailable[( rand() % iNumAvail )] ) == GetClassSlot() && iNumAvail != 1 );
+
+		DevMsg( "randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size() );
+	}
+	// Check target class is still available
+	else if (m_iNextClass != GetClassSlot())
+	{
+		// It's not available anymore, slowmow
+		if( std::find( vecAvailable.begin(), vecAvailable.end(), m_iNextClass ) == vecAvailable.end() )
+		{
+			m_iNextClass = GetClassSlot();
+			ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE" );
+			return GetClassSlot();
+		}
+	}
+	
+	// It's not available anymore (server changed class limits?)
+	if( std::find( vecAvailable.begin(), vecAvailable.end(), m_iNextClass ) == vecAvailable.end() )
+	{
+		m_iNextClass = 0;
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE" );
+		return GetClassSlot();
+	}
+
+	// Now lets try reading this class, this shouldn't fail!
+	if ( !ReadPlayerClassDataFromFileForSlot( filesystem, Class_IntToString( m_iNextClass ), &m_hPlayerClassFileInfo, GetEncryptionKey() ) )
+	{
+		//if (m_iNextClass != 0)
+			AssertMsg( 0, "Unable to read class script file, this shouldn't happen" );
+		return GetClassSlot();
+	}
+
+	const CFFPlayerClassInfo &pNewPlayerClassInfo = GetFFClassData();
+	SetClassForClient(pNewPlayerClassInfo.m_iSlot);
+
+	// Display our class information
+	ClientPrint( this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szPrintName );
+	ClientPrint( this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szDescription );
+
+	// Remove all buildable items from the game
+	RemoveItems( );
+
+	// Send a player class change event.
+	IGameEvent *event = gameeventmanager->CreateEvent( "player_changeclass" );
+		
+	if( event )
+	{
+		event->SetInt( "userid", GetUserID() );
+		event->SetInt( "oldclass", GetClassForClient() );
+		event->SetInt( "newclass", m_iNextClass );
+		gameeventmanager->FireEvent( event );
+	}
+
+	// Set class in stats engine
+	g_StatsLog.SetClass(entindex(), m_iNextClass);
+
+	// So the client can keep track
+	SetClassForClient( m_iNextClass );
+
+	return GetClassSlot();
+}
+
+void CFFPlayer::ChangeClass(const char *szNewClassName)
+{
+	//const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+	CFFTeam *pTeam = GetGlobalFFTeam( GetTeamNumber() );
+
+	// They are picking the randompc slot
+	if( FStrEq( szNewClassName, "randompc" ) )
+	{
+		m_fRandomPC = true;
+		KillAndRemoveItems();
+
+		DevMsg( "[Player] picked randompc\n" );
+
+		return;
+	}
+	else
+		m_fRandomPC = false;
+
+	// This shouldn't happen as class changes only allowed while on a team
+	if( !pTeam )
+		return;
+
+	int iClass = Class_StringToInt( szNewClassName );
+
+	// Check that they picked a valid class
+	if( !iClass )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOSUCHCLASS" );
+		return;
+	}
+
+	// Check that they aren't already this class
+	//if( Q_strcmp( pPlayerClassInfo.m_szClassName, Class_IntToString( iClass ) ) == 0 )
+	//	return;
+
+	// Make sure they aren't already this class
+	if (iClass == GetClassSlot())
+		return;
+
+	int iAlreadyThisClass = 0;
+
+    // Count the number of people of this class
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+		if( pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber() && pPlayer->GetClassSlot() == iClass )
+			iAlreadyThisClass++;
+	}
+
+	int class_limit = pTeam->GetClassLimit( iClass );
+
+	// Class is disabled
+	if( class_limit == -1 )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_DISABLED" );
+		return;
+	}
+
+	// Not enough space for this class
+	if( class_limit > 0 && iAlreadyThisClass >= class_limit )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOSPACE" );
+		return;
+	}
+
+	// Yup it is okay to change
+	// We don't change class instantly, only when we spawn
+	m_iNextClass = iClass;
+
+	// Now just need a way to select which one you want
+	if( bool bInstantSwitch = true )
+	{
+		// But for now we do have instant switching
+		KillAndRemoveItems();
+
+		// Should call ActivateClass right afterwards too, since otherwise they might
+		// miss out on getting their class because somebody else took it during the 5sec
+		// death wait
+		ActivateClass();
+	}
+}
+
+void CFFPlayer::Command_Class(void)
+{
+	if(engine->Cmd_Argc() < 1)
+	{
+		// no class specified
+		return;
+	}
+
+	DevMsg("CFFPlayer::Command_Class || Changing class to '%s'\n", engine->Cmd_Argv(1));
+	ChangeClass(engine->Cmd_Argv(1));
+}
+
+void CFFPlayer::Command_Team( void )
+{
+	if( engine->Cmd_Argc( ) < 1 )
+	{
+		// no team specified
+		return;
+	}
+
+	int iTeam = 0;
+	int iTeamNumbers[8] = {0};
+
+    // Count the number of people each team
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+		if( pPlayer )
+			iTeamNumbers[pPlayer->GetTeamNumber()]++;
+	}
+
+	// Case insensitive compares for now
+	if( Q_stricmp( engine->Cmd_Argv( 1 ), "spec" ) == 0 )
+		iTeam = FF_TEAM_SPEC;
+	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "blue" ) == 0 )
+		iTeam = FF_TEAM_BLUE;
+	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "red" ) == 0 )
+		iTeam = FF_TEAM_RED;
+	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "yellow" ) == 0 )
+		iTeam = FF_TEAM_YELLOW;
+	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "green" ) == 0 )
+		iTeam = FF_TEAM_GREEN;
+
+	// Pick the team with least capacity to join
+	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "auto" ) == 0 )
+	{
+		int iBestTeam = -1;
+		float flBestCapacity = 9999.0f;
+
+		// Loop from blue to green
+		for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
+		{
+			CFFTeam *pTeam = GetGlobalFFTeam(iTeamToCheck);
+
+			// Don't bother with non-existant teams
+			if( !pTeam )
+				continue;
+
+			// Take team limits into account when calculating the best team to join
+			float flTeamCapacity = (float)iTeamNumbers[iTeamToCheck] / ( pTeam->GetTeamLimits() == 0 ? 32 : pTeam->GetTeamLimits() );
+
+			DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
+
+			// Is this the best team to join so far (and there is space on it)
+			if( flTeamCapacity < flBestCapacity && ( pTeam->GetTeamLimits() == 0 || iTeamNumbers[iTeamToCheck] < pTeam->GetTeamLimits() ) )
+			{
+				flBestCapacity = flTeamCapacity;
+				iBestTeam = iTeamToCheck;
+			}
+		}
+
+		// Couldn't find a valid team to join (because of limits)
+		if( iBestTeam < 0 )
+		{
+			ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOFREETEAM" );
+			return;
+		}
+
+		// This is our team then bud
+		iTeam = iBestTeam;
+	}
+
+	// Couldn't find a team afterall
+	if( iTeam == 0 )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOSUCHTEAM" );
+		return;
+	}
+
+	// Check the team that was picked has space
+	CFFTeam *pTeam = GetGlobalFFTeam(iTeam);
+
+	// This should stop teams being picked which aren't active
+	if( !pTeam )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOSUCHTEAM" );
+		return;
+	}
+
+	// Check the team isn't full
+	if( pTeam->GetTeamLimits() != 0 && iTeamNumbers[iTeam] >= pTeam->GetTeamLimits() )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_TEAMFULL" );
+		return;
+	}
+
+	// [DEBUG] Check what team was picked
+	DevMsg( "%d\n", iTeam );
+
+	// Are we already this team
+	if( GetTeamNumber() == iTeam )
+	{
+		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_ALREADYONTHISTEAM" );
+		return;
+	}
+
+	// set their class to unassigned, so that they don't spawn
+	// immediately when changing teams
+	//ReadPlayerClassDataFromFileForSlot( filesystem, "unassigned", &m_hPlayerClassFileInfo, GetEncryptionKey() );
+	SetClassForClient(0);
+
+	if( GetTeamNumber() != TEAM_SPECTATOR && GetTeamNumber() != TEAM_UNASSIGNED )
+	{
+		KillAndRemoveItems();
+		ChangeTeam( iTeam );
+
+		// Fix - Make sure they don't think they're meant to be spawning as a new class
+		m_iNextClass = 0;	
+	}
+	else
+	{
+		ChangeTeam( iTeam );
+		m_lifeState = LIFE_DISCARDBODY;
+		pl.deadflag = true;
+		Spawn();
+
+		// Fix - Make sure they don't think they're meant to be spawning as a new class
+		m_iNextClass = 0;	
+	}
+
+	ChangeTeam( iTeam );
+}
+
+void CFFPlayer::RemoveItems( void )
+{
+	// NOTE: remove any of the players buildable objects here (and/or grens?)???
+
+	if( m_bBuilding )
+	{
+		m_bBuilding = false;
+		m_iCurBuild = FF_BUILD_NONE;
+		m_iWantBuild = FF_BUILD_NONE;
+		m_bCancelledBuild = true;
+	}
+	else
+	{
+		if( m_hDispenser.Get() )
+			( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
+
+		if( m_hSentryGun.Get() )
+			( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
+
+		if( m_hDetpack.Get() )
+		{
+			//*
+			CSingleUserRecipientFilter user( this );
+			user.MakeReliable( );
+
+			// Start the message block
+//			UserMessageBegin( user, "DetpackStopTimer" );
+
+			// Message to send
+//			WRITE_SHORT( 1 );
+
+			// End the message block
+//			MessageEnd( );
+			//*/
+			( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
+		}
+	}
+
+	// TODO: Remove any grenades whose owner is this player?
+}
+
+void CFFPlayer::KillPlayer( void )
+{
+	// Unlock the player if they were building and died
+	UnlockPlayer( );
+	Extinguish();
+
+	// have the player kill themself
+	m_iHealth = 0;
+
+	if (IsAlive())
+	{
+		Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
+		Event_Dying();
+	}
+	else
+	{
+		SetThink(&CBasePlayer::PlayerDeathThink);
+		SetNextThink(gpGlobals->curtime);
+	}
+}
+
+void CFFPlayer::KillAndRemoveItems( void )
+{
+	RemoveItems();
+	KillPlayer();
+}
+
+void CFFPlayer::LockPlayerInPlace( void )
+{
+	SetMoveType( MOVETYPE_NONE );
+
+	// TODO: Holster weapon
+	// TODO: Other classes need to check
+	// if (m_bBuilding == True)
+	// ie. grenades, weapons, etc
+}
+
+void CFFPlayer::UnlockPlayer( void )
+{
+	SetMoveType( MOVETYPE_WALK );
+}
+
+void CFFPlayer::FindRadioTaggedPlayers( void )
+{
+	// Reset
+	m_hRadioTaggedList.RemoveAll( );
+
+	// Get client count
+	int iMaxClients = gpGlobals->maxClients;
+
+	// If we're the only ones we don't care
+	if( iMaxClients < 1 )
+		return;
+
+	// My origin
+	Vector vecOrigin = GetAbsOrigin( );
+
+	// Loop through doing stuff on each player
+	for( int i = 0; i < iMaxClients; i++ )
+	{
+		CBasePlayer *pBasePlayer = UTIL_PlayerByIndex( i );
+
+		// Skip if NULL
+		if( !pBasePlayer )
+			continue;		
+
+		// Skip if not a player
+		if( !pBasePlayer->IsPlayer( ) )
+			continue;
+
+		CFFPlayer *pPlayer = ToFFPlayer( pBasePlayer );
+
+		// Skip if us
+		if( pPlayer == this )
+			continue;
+
+		// Skip if an observer
+		if( pPlayer->IsObserver( ) )
+			continue;
+
+		// Skip if not tagged
+		if( !pPlayer->m_bRadioTagged )
+			continue;
+
+		// Skip if they're not someone we can hurt
+		if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, this ) )
+			continue;
+
+		// Get their origin
+		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin( );
+
+		// Skip if they're out of range
+		if( vecOrigin.DistTo( vecPlayerOrigin ) > radiotag_distance.GetInt( ) )
+			continue;
+
+		// We're left w/ a player who's within range
+		// Add player to a list and send off to client
+
+		// Create a single object
+		ESP_Shared_s hObject;
+		hObject.m_iClass = pPlayer->GetClassSlot( );
+		hObject.m_iTeam = pPlayer->GetTeamNumber( );
+		hObject.m_vecOrigin = vecPlayerOrigin;
+
+		// Add object to radio tagged array
+		m_hRadioTaggedList.AddToTail( hObject );
+	}
+
+	if( m_hRadioTaggedList.Count( ) )
+	{
+		// Only send this message to the local player	
+		CSingleUserRecipientFilter user( this );
+		user.MakeReliable( );
+
+		// Start the message block
+		UserMessageBegin( user, "RadioTagUpdate" );
+
+			// send block	
+			// - team (int 1-4) [to color the silhouettes elitely] adjusted value
+			// - class (int)
+			// - origin (float[3])
+			// team = 99 terminates
+
+			for( int i = 0; i < m_hRadioTaggedList.Count( ); i++ )
+			{
+				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iTeam - 1 ); // adjusted
+				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iClass );
+				WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
+			}
+			
+			// We're done sending the HUD message
+			WRITE_SHORT( 99 );
+
+		// End the message block
+		MessageEnd( );
+
+		// Doing an update now...
+		m_flLastRadioTagUpdate = gpGlobals->curtime;
+	}
+}
+
+void CFFPlayer::Command_WhatTeam( void )
+{
+	DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber( ) );
+	DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
+}
+
+void CFFPlayer::Command_HintTest( void )
+{	
+	//ShowViewPortPanel( PANEL_HINT, true );
+	//UTIL_HudHintText( this, "#FF_HELLO" );
+	FF_HudHint( this, "#FF_HELLO" );
+}
+
+void CFFPlayer::Command_DispenserText( void )
+{
+	if( engine->Cmd_Argc( ) < 1 )
+	{
+		// no text given
+		return;
+	}
+
+	// Build a string based off of the input
+	// Just store the string until we build
+	// a dispenser then tell the dispenser 
+	// the text
+
+	// Clear out whatever was in there
+	m_szCustomDispenserText[ 0 ] = '\0';
+
+	// Get the number of args
+	int iArgs = engine->Cmd_Argc( );
+
+	// Running total of the length of the dispenser
+	// text string
+	int iTotalLen = 0;
+
+	// Start building a string
+	for( int i = 1; i < iArgs; i++ )
+	{
+		// Grab a chunk of text
+		char *pszTemp = engine->Cmd_Argv( i );
+		// Get the length of said chunk
+		int iTempLen = Q_strlen( pszTemp );
+
+		// FF_BUILD_DISP_STRING_LEN - 2 for the null terminator and
+		// the space if there is a next word
+		if(( iTempLen + iTotalLen ) >= ( FF_BUILD_DISP_STRING_LEN - 2 ))
+			iTempLen = ( ( FF_BUILD_DISP_STRING_LEN - 1 ) - iTotalLen );
+
+		// Add iTempLen of the chunk
+		Q_strncat( m_szCustomDispenserText, pszTemp, sizeof( m_szCustomDispenserText ), iTempLen );
+		// Add the space
+		Q_strcat( m_szCustomDispenserText, " " );
+
+		// Increase running len total + 1 to account
+		// for the space we just added too
+		iTotalLen += ( iTempLen + 1 );
+	}
+
+	DevMsg( "[Dispenser Text] %s\n", m_szCustomDispenserText );
+}
+
+void CFFPlayer::Command_Radar( void )
+{
+	// Player issued the command "radar"
+	// Can only do it every CVAR seconds (atm)
+	// Cost is CVAR cells (atm)
+	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )radar_wait_time.GetInt( ) ) )
+	{
+		// See if the player has enough ammo
+		if( GetAmmoCount( "AMMO_CELLS" ) >= radar_num_cells.GetInt( ) )
+		{
+			EmitSound("radar.single_shot");
+
+			// Remove ammo
+			RemoveAmmo( radar_num_cells.GetInt( ), "AMMO_CELLS" );
+
+			// Only send this message to the local player	
+			CSingleUserRecipientFilter user( this );
+			user.MakeReliable( );
+
+			// Start the message block
+			UserMessageBegin( user, "RadarUpdate" );
+
+			// Send our radar/esp to the client
+
+			// send block	
+			// - team (int 1-4) [to color the silhouettes elitely]
+			// - class (int)
+			// - origin (float[3])
+			// - player angles (qangle)
+			// team = 99 terminates
+
+			for( int i = 1; i <= gpGlobals->maxClients; i++ )
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+				if( pPlayer && ( pPlayer != this ) )
+				{
+					Vector vecOrigin = GetAbsOrigin( ), vecPlayerOrigin = pPlayer->GetAbsOrigin( );
+
+					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
+
+					DevMsg( "[Scout Radar] flDist: %f\n", flDist );
+
+					if( flDist <= ( float )radar_radius_distance.GetInt( ) )
+					{
+						const CFFPlayerClassInfo &pPlayerClassInfo = pPlayer->GetFFClassData( );
+
+						WRITE_SHORT( pPlayer->GetTeamNumber( ) - 1 );	// Team number (adjusted)
+						WRITE_SHORT( Class_StringToInt( pPlayerClassInfo.m_szClassName ) );						
+						WRITE_VEC3COORD( vecPlayerOrigin );				// Origin in 3d space
+
+						// Omni-bot: Notify the bot he has detected someone.
+						if(IsBot())
+						{
+							int iGameId = i-1;
+							Omnibot::BotUserData bud(pPlayer->edict());
+							Omnibot::omnibot_interface::Bot_Interface_SendEvent(
+								Omnibot::TF_MESSAGE_RADAR_DETECT_ENEMY,
+								iGameId, 0, 0, &bud);
+						}
+					}
+				}
+			}
+
+			// We're done sending the HUD message
+			WRITE_SHORT( 99 );
+
+			// End the message block
+			MessageEnd( );
+
+			// Update our timer
+			m_flLastScoutRadarUpdate = gpGlobals->curtime;
+		}
+		else
+		{
+			DevMsg( "[Scout Radar] You do not have enough cells to perform the \"radar\" command!\n" );
+		}
+	}
+	else
+	{
+		DevMsg( "[Scout Radar] You must wait a certain amount of time before doing the next \"radar\" command!\n" );
+	}
+}
+
+void CFFPlayer::Command_BuildDispenser( void )
+{
+	m_bCancelledBuild = false;
+	m_iWantBuild = FF_BUILD_DISPENSER;
+	PreBuildGenericThink( );
+}
+
+void CFFPlayer::Command_BuildSentryGun( void )
+{	
+	m_bCancelledBuild = false;
+	m_iWantBuild = FF_BUILD_SENTRYGUN;
+	PreBuildGenericThink( );
+}
+
+void CFFPlayer::Command_BuildDetpack( void )
+{
+	// Assume 5 second fuse time
+	m_iDetpackTime = 5;
+
+	// If there's an argument...
+	if( engine->Cmd_Argc( ) > 1 )
+	{
+		// Grab the first argument after detpack
+		char *pszArg = engine->Cmd_Argv( 1 );
+
+		DevMsg( "[Detpack Timer] %s\n", pszArg );
+
+		m_iDetpackTime = atoi( pszArg );
+		bool bInRange = true;
+		if(m_iDetpackTime < 5)
+		{
+			m_iDetpackTime = 5;
+			bInRange = false;
+		}
+		else if(m_iDetpackTime > 60)
+		{
+			m_iDetpackTime = 60;
+			bInRange = false;
+		}
+		if(!bInRange)
+		{
+			DevMsg( "[Detpack Timer] Invalid or out of bounds range! Clamping to %d\n", m_iDetpackTime );
+		}
+		if( m_iDetpackTime % 5 != 0 )
+		{
+			// Round it to the nearest multiple of 5
+			int iMultiple = (int)(((float)m_iDetpackTime + 2.5f) / 5.0f);
+			m_iDetpackTime = iMultiple * 5;
+			DevMsg( "[Detpack Timer] Fuse length must be a multiple of 5! Resetting to nearest multiple %d.\n", m_iDetpackTime );
+		}
+	}
+
+	m_bCancelledBuild = false;
+	m_iWantBuild = FF_BUILD_DETPACK;
+	PreBuildGenericThink( );
+}
+
+void CFFPlayer::PreBuildGenericThink( void )
+{
+	// See if we are in a build process already and take corrective action
+	if( m_bBuilding )
+	{
+		// TODO: Stop current build and cleanup if they are trying to
+		// build the same object again
+		// TODO: Otherwise, show error message
+
+		DevMsg( "[Buildable Object] Trying to build while building - Take action (cancel current build or error message)!\n" );
+
+		if( m_iCurBuild == m_iWantBuild )
+		{
+			// Cancel current build
+
+			// Tells people we cancelled building (mainly used for telling
+			// the client)
+			m_bCancelledBuild = true;
+			
+			// NOTE: just noting this code - set a time to think in the past and
+			// it looks like it effectively cancels calling the think function
+			SetNextThink( -1.0f );
+			// DevMsg( "Cancelling build and trying to cancel think\n" );
+
+			// Cancels the current build
+			switch( m_iCurBuild )
+			{
+				case FF_BUILD_DISPENSER:
+				{
+					if( m_hDispenser.Get( ) )
+						( ( CFFDispenser * )m_hDispenser.Get( ) )->Cancel( );
+				}
+				break;
+
+				case FF_BUILD_SENTRYGUN:
+				{
+					if( m_hSentryGun.Get( ) )
+						( ( CFFSentryGun * )m_hSentryGun.Get( ) )->Cancel( );
+				}
+				break;
+
+				case FF_BUILD_DETPACK: 
+				{
+					if( m_hDetpack.Get( ) )
+					{
+						Build_ReturnDetpack( this );
+						( ( CFFDetpack * )m_hDetpack.Get( ) )->Cancel( );
+					}
+				}
+				break;
+			}
+
+			// Unlock player
+			UnlockPlayer(  );
+
+			// TODO: Add in code to refund the object(s) to the player (cells, metal, detpack)
+			// Detpack: done
+
+			// Re-initialize
+			m_iCurBuild = FF_BUILD_NONE;
+			m_iWantBuild = FF_BUILD_NONE;
+			m_bBuilding = false;
+		}
+
+		return;
+	}
+
+	// See what the user wants to build and see if they've
+	// already built it. If they have built it possibly
+	// blow it up or give them a message saying they can't
+	// build multiple of the same objects.
+	switch( m_iWantBuild )
+	{
+		case FF_BUILD_DISPENSER:
+		{
+			if( m_hDispenser.Get( ) )
+			{
+				// TODO: Add nice thing for user to know what went on - right now dispenser
+				// is blown (maybe just display a nice message and have another bind to
+				// blow up dispenser?)
+
+				// TODO: Might want to make a specific "detdispenser" or
+				// "det<object>" if this becomes cumbersome or annoying
+
+				// Blow up dispenser
+				( ( CFFDispenser * )m_hDispenser.Get( ) )->Detonate( );
+				m_hDispenser = NULL;
+
+				m_iWantBuild = FF_BUILD_NONE;
+
+				return;
+			}
+		}
+		break;
+
+		case FF_BUILD_SENTRYGUN:
+		{
+			if( m_hSentryGun.Get( ) )
+			{
+				// TODO: Do something maybe
+				DevMsg( "[Buildable Object] Trying to build - Can't have multiple sentryguns!\n" );
+
+				//*
+				// TEMPORARY: TODO: Remove this, heh. This is just so
+				// I can build lots of SG's and test junk
+				//( ( CFFSentryGun * )m_hSentryGun.Get( ) )->Detonate( );
+				( ( CFFSentryGun * )m_hSentryGun.Get( ) )->RemoveQuietly( );
+				m_hSentryGun = NULL;
+				//*/
+
+				m_iWantBuild = FF_BUILD_NONE;
+
+				return;
+			}
+		}
+		break;
+
+		case FF_BUILD_DETPACK:
+		{
+			if( m_hDetpack.Get( ) )
+			{
+				// TODO: Tell user they can't build multiple detpacks
+				DevMsg( "[Buildable Object] Trying to build - Can't have multiple detpacks!\n" );
+
+				m_iWantBuild = FF_BUILD_NONE;
+
+				return;
+			}
+		}
+		break;
+	}
+
+	// Make sure player on ground
+	if( !FBitSet( GetFlags( ), FL_ONGROUND ) )
+	{
+		// TODO: Give player nice message
+		DevMsg( "[Buildable Object] Trying to build - You gotta be on the ground to build!\n" );
+
+		return;
+	}
+
+	// For detpack, make sure player isn't ducking
+	if( FBitSet( GetFlags( ), FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
+	{
+		// TODO: Give player nice message
+		DevMsg( "[Buildable Object] Can't duck and set a detpack!\n" );
+
+		return;
+	}
+
+	// See if the player has the item in inventory or enough
+	// of an item to build it (metal, cells, detpack)
+	switch( m_iWantBuild )
+	{
+		case FF_BUILD_DISPENSER:
+		{
+			if (GetAmmoCount(AMMO_CELLS) < 100)
+				return;
+
+			// TODO: Check metal
+			// TODO: Check cells
+		}
+		break;
+
+		case FF_BUILD_SENTRYGUN:
+		{
+			if (GetAmmoCount(AMMO_CELLS) < 130)
+				return;
+
+			// TODO: Check metal
+			// TODO: Check cells
+		}
+		break;
+
+		case FF_BUILD_DETPACK:
+		{
+			if( GetAmmoCount( AMMO_DETPACK ) < 1 )
+			{
+				// TODO: Give the player a nice message
+				DevMsg( "[Buildable Object] You don't have a detpack to use!\n" );
+
+				return;
+			}
+		}
+		break;
+	}
+
+	// Now try to build whatever object they want to build
+	m_bBuilding = true;
+	m_iCurBuild = m_iWantBuild;
+	bool bSuccess = false;
+
+	// Set up some stuff for building
+	// Vectors used later for each part
+	Vector vecBuildOrigin, vecForward;
+
+	//
+	// Adapted for use of the new building process - Mirv
+	//
+
+	switch( m_iWantBuild )
+	{
+		case FF_BUILD_DISPENSER:
+		{
+			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_DISP_BUILD_DIST, FF_BUILD_DISP_RAISE_VAL );
+
+			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
+			{
+				//
+				// BUILD - finally
+				//
+
+				// Create in air w/ proper angles
+				//CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
+
+				// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
+				CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+
+				// Check to see if we could get memory and actually create the dispenser
+				if( pDispenser )
+				{
+					bSuccess = true;
+
+					// Set custom text
+					pDispenser->SetText( m_szCustomDispenserText );
+
+					// Set network var (also lets player know he built something)
+					m_hDispenser = pDispenser;
+
+					// TODO: Lock player movement
+					LockPlayerInPlace( );
+
+					// TODO: Holster gun
+					//GetActiveFFWeapon( )->Holster( );
+
+					// TODO: Take away what it cost to build
+
+					// Mirv: Store future ground location + orientation
+					pDispenser->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
+					pDispenser->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
+
+					m_flBuildTime = gpGlobals->curtime + 2.0f;
+				}
+				else
+				{
+					Warning( "[Buildable Object] ERROR: FAILED TO CREATE DISPENSER\n" );
+				}
+			}
+			else
+			{
+				hBuildInfo.GetBuildError();
+			}
+		}
+		break;
+
+		case FF_BUILD_SENTRYGUN:
+		{
+			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL );
+
+			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
+			{
+				//
+				// BUILD - finally
+				//
+
+				// Create in air w/ proper angles
+				//CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
+
+				// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
+				CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+
+				// Check to see if we could get memory and actually create the dispenser
+				if( pSentryGun )
+				{
+					bSuccess = true;
+
+					// Set network var (also lets player know he built something)
+					m_hSentryGun = pSentryGun;
+
+					// TODO: Lock player movement
+					LockPlayerInPlace( );
+
+					// TODO: Holster gun
+
+					// TODO: Take away what it cost to build
+
+					// Mirv: Store future ground location + orientation
+					pSentryGun->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
+					pSentryGun->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
+
+
+					m_flBuildTime = gpGlobals->curtime + 5.0f;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
+				}
+				else
+				{
+					Warning( "[Buildable Object] ERROR: FAILED TO CREATE SENTRYGUN\n" );
+				}
+			}
+			else
+			{
+				hBuildInfo.GetBuildError();
+			}
+		}
+		break;
+
+		case FF_BUILD_DETPACK:
+		{
+			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_DET_BUILD_DIST, FF_BUILD_DET_RAISE_VAL );
+
+			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
+			{
+				//
+				// BUILD - finally
+				//
+
+				// Create in air w/ proper angles
+				CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
+				// Check to see if we could get memory and actually create the dispenser
+				if( pDetpack )
+				{
+					bSuccess = true;
+
+					// Set the fuse time
+					pDetpack->m_iFuseTime = m_iDetpackTime;
+
+					// Set network var (also lets player know he built something)
+					m_hDetpack = pDetpack;
+
+					// TODO: Lock player movement
+					LockPlayerInPlace( );
+
+					// TODO: Holster gun
+					//GetActiveFFWeapon( )->Holster( );
+
+					// Take away what it cost to build
+					RemoveAmmo( 1, AMMO_DETPACK );
+
+					// Mirv: Store future ground location + orientation
+					pDetpack->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
+					pDetpack->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
+
+
+					m_flBuildTime = gpGlobals->curtime + 2.0f;
+				}
+				else
+				{
+					Warning( "[Buildable Object] ERROR: FAILED TO CREATE DETPACK\n" );
+				}
+			}
+			else
+			{
+				hBuildInfo.GetBuildError();
+			}
+		}
+		break;
+	}
+
+	// Did not succeed in building (something in way, couldn't allocate memory, etc)
+	if( !bSuccess )
+	{
+		m_bBuilding = false;
+		m_iCurBuild = FF_BUILD_NONE;
+		m_iWantBuild = FF_BUILD_NONE;
+		return;
+	}
+
+	// [TEST] Do a build timer
+	CSingleUserRecipientFilter user(this);
+	user.MakeReliable( );
+	UserMessageBegin( user, "FF_BuildTimer" );
+	WRITE_SHORT(m_iCurBuild);
+	WRITE_FLOAT(m_flBuildTime - gpGlobals->curtime);
+	MessageEnd( );
+}
+
+void CFFPlayer::PostBuildGenericThink( void )
+{
+	// If we're building
+	if( m_bBuilding )
+	{
+		// Find out what we're building and drop it to the floor
+		switch( m_iCurBuild )
+		{
+			case FF_BUILD_DISPENSER:
+			{
+				if( m_hDispenser.Get( ) )
+				{
+					( ( CFFDispenser * )m_hDispenser.Get( ) )->GoLive( );
+
+					IGameEvent *event = gameeventmanager->CreateEvent( "build_dispenser" );
+					if( event )
+					{
+						event->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( event );
+					}					
+				}
+			}
+			break;
+
+			case FF_BUILD_SENTRYGUN:
+			{
+				if( m_hSentryGun.Get( ) )
+				{
+					( ( CFFSentryGun * )m_hSentryGun.Get( ) )->GoLive( );
+
+					IGameEvent *event = gameeventmanager->CreateEvent( "build_sentrygun" );
+					if( event )
+					{
+						event->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( event );
+					}
+				}
+			}
+			break;
+
+			case FF_BUILD_DETPACK: 
+			{
+				if( m_hDetpack.Get( ) )
+				{
+					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive( );
+
+					IGameEvent *event = gameeventmanager->CreateEvent( "build_detpack" );
+					if( event )
+					{
+						event->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( event );
+					}
+				}
+			}
+			break;
+
+		}
+
+		// Unlock the player
+		UnlockPlayer( );
+
+		// Reset stuff		
+		m_iCurBuild = FF_BUILD_NONE;
+		m_iWantBuild = FF_BUILD_NONE;
+		m_bBuilding = false;
+		m_bCancelledBuild = false;
+	}
+	else
+	{
+		// TODO: Something bad happened - Called the post think 
+		// and we weren't building - wtf happened!?
+		// NOTE: Cancelling a build stops the PostBuildGenericThink
+		// from _EVER_ being called
+
+		// Give a message for now
+		DevMsg( "CFFPlayer::PostBuildGenericThink - ERROR!!!\n" );
+	}
+}
+// Sev's test animation thing
+void CFFPlayer::Command_SevTest( void )
+{
+/* STOLEN!
+	Vector vecOrigin = GetAbsOrigin( );
+	vecOrigin.z += 48;
+
+	CFFSevTest *pSevTest = CFFSevTest::Create( vecOrigin, GetAbsAngles( ) );
+	if( pSevTest )
+		pSevTest->GoLive( );
+*/
+	// BASTARD! :P
+	if (engine->Cmd_Argc() == 4)
+	{
+		Vector vPush(atof(engine->Cmd_Argv(1)),atof(engine->Cmd_Argv(2)),atof(engine->Cmd_Argv(3)));
+		ApplyAbsVelocityImpulse(vPush);
+	}
+}
+
+/**
+	FlagInfo
+*/
+void CFFPlayer::Command_FlagInfo( void )
+{	
+	entsys.RunPredicates(NULL, this, "flaginfo");
+}
+
+/**
+	DropItems
+*/
+void CFFPlayer::Command_DropItems( void )
+{	
+	//entsys.RunPredicates(NULL, this, "dropitems");
+	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+
+	while( pEnt != NULL )
+	{
+		if (pEnt->GetOwnerEntity() == this)
+		{
+			if (entsys.RunPredicates( pEnt, this, "dropitemcmd" ))
+				pEnt->Drop(30.0f, 500.0f);
+		}
+
+		// Next!
+		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+	}
+}
+
+/**
+	Discard
+*/
+void CFFPlayer::Command_Discard( void )
+{
+	CFFItemBackpack *pBackpack = NULL;
+
+	bool iDroppableAmmo[MAX_AMMO_TYPES] = {true};
+
+	// Check we have the ammo to discard first
+	if (GetClassSlot() != CLASS_ENGINEER)
+	{
+		int i = 0;
+
+		// get ammo used by our weapons
+		while(GetWeapon(i))
+		{
+			iDroppableAmmo[GetWeapon(i)->GetPrimaryAmmoType()] = false;
+			i++;
+		}
+
+		// Add ammo if they have any
+		for (int i = 1; i < MAX_AMMO_TYPES; i++)
+		{
+			if (iDroppableAmmo[i] && GetAmmoCount(i) > 0)
+			{
+				if (!pBackpack)
+					pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+
+				// Check again in case we failed to make one
+				if (pBackpack)
+				{
+					pBackpack->SetAmmoCount(i, GetAmmoCount(i));
+					RemoveAmmo(GetAmmoCount(i), i);
+				}
+			}
+		}
+	}
+	// We're an engineer
+	else
+	{
+		int iShells = min(GetAmmoCount(AMMO_SHELLS), 40); // Default 20, 2 per unit
+		int iNails = min(GetAmmoCount(AMMO_NAILS), 20); // Default 20, 1 per unit
+		int iCells = min(GetAmmoCount(AMMO_CELLS), 20); // Default 10, 2 per unit
+		int iRockets = min(GetAmmoCount(AMMO_ROCKETS), 20); // Default 10, 2 per unit
+
+		// We have at least 1 of one type of ammo
+		if (iShells || iNails || iCells || iRockets)
+		{
+			pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+
+			if (pBackpack)
+			{
+				pBackpack->SetAmmoCount(GetAmmoDef()->Index(AMMO_SHELLS), iShells);
+				pBackpack->SetAmmoCount(GetAmmoDef()->Index(AMMO_NAILS), iNails);
+				pBackpack->SetAmmoCount(GetAmmoDef()->Index(AMMO_CELLS), iCells);
+				pBackpack->SetAmmoCount(GetAmmoDef()->Index(AMMO_ROCKETS), iRockets);
+
+				RemoveAmmo(iShells, AMMO_SHELLS);
+				RemoveAmmo(iNails, AMMO_NAILS);
+				RemoveAmmo(iCells, AMMO_CELLS);
+				RemoveAmmo(iRockets, AMMO_ROCKETS);
+			}
+		}
+	}
+
+	// Now sort out the rest of the backpack stuff if needed
+	if (pBackpack)
+	{
+		pBackpack->SetSpawnFlags(SF_NORESPAWN);
+
+		Vector vForward;
+		AngleVectors(EyeAngles(), &vForward);
+
+		DevMsg("%f %f %f\n", vForward.x, vForward.y, vForward.z);
+		vForward *= 600.0f;
+
+		// Bugfix: Floating objects
+		if (vForward.z < 1.0f)
+			vForward.z = 1.0f;
+
+		pBackpack->SetAbsVelocity(vForward);
+		pBackpack->SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 16.0f));
+	}
+}
+
+void CFFPlayer::Command_SaveMe( void )
+{
+	// MEDIC!
+	DevMsg("MEDIC!\n");
+
+	// Spawn the glyph
+	CBaseEntity *ent = CreateEntityByName("ff_modelglyph");
+
+	if (ent)
+	{
+		ent->SetOwnerEntity(this);
+		ent->Spawn();
+		ent->FollowEntity(this, true);
+	}
+
+	// play the sound
+	CPASAttenuationFilter sndFilter( this );
+
+	// remove all other teams except our own
+	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
+	{
+		if (iTeamToCheck != GetTeamNumber())
+			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( iTeamToCheck ) );
+	}
+	EmitSound( sndFilter, entindex( ), "speech.saveme" );
+}
+
+void CFFPlayer::StatusEffectsThink( void )
+{
+#ifdef GAME_DLL
+	// If we jump in water, extinguish the burn
+	if( m_iBurnTicks && ( GetWaterLevel( ) != WL_NotInWater ))
+		Extinguish();
+
+	// if we're on fire, then do something about it
+	if (m_iBurnTicks && (m_flNextBurnTick < gpGlobals->curtime))
+	{
+		// EmitSound( "General.BurningFlesh" );	// |-- Mirv: Dunno it just sounds odd using the emp sound!
+
+		float damage = m_flBurningDamage / (float)m_iBurnTicks;
+
+		// do damage
+		CTakeDamageInfo info(m_hIgniter,m_hIgniter,damage,DMG_BURN);
+		TakeDamage(info);
+
+		// remove a tick
+		m_iBurnTicks--;
+		m_flBurningDamage -= damage;
+
+		// schedule the next tick
+		m_flNextBurnTick = gpGlobals->curtime + 1.25f;
+	}
+
+	// check if the player needs a little health (because they are a medic/engy)
+	if ((GetClassSlot() == CLASS_MEDIC || GetClassSlot() == CLASS_ENGINEER) &&
+				gpGlobals->curtime > m_fLastHealTick + ffdev_regen_freq.GetFloat())
+	{		
+		m_fLastHealTick = gpGlobals->curtime;
+
+		if (GetClassSlot() == CLASS_MEDIC)
+		{
+			// add the regen health
+			if (TakeHealth(ffdev_regen_health.GetInt(), DMG_GENERIC))
+			{
+				// make a sound if we did
+				//EmitSound( "medkit.hit" );
+			}
+		}
+		else if (GetClassSlot() == CLASS_ENGINEER)
+		{
+			// add the regen armor
+			m_iArmor.GetForModify() = clamp(m_iArmor + ffdev_regen_armor.GetInt(), 0, m_iMaxArmor);
+		}
+
+		// reduce health if above max health (because they were healed recently)
+		if (m_iHealth > m_iMaxHealth)
+		{
+			m_iHealth = m_iHealth - ffdev_regen_health.GetInt() > m_iMaxHealth ? m_iHealth - ffdev_regen_health.GetInt() : m_iMaxHealth;
+				
+			//max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth); removed so linux server can be compiled
+		}
+	}
+
+	// if the player is infected, then hurt them as necessary
+	if (m_bInfected && gpGlobals->curtime > m_fLastInfectedTick + ffdev_infect_freq.GetFloat())
+	{
+		if (m_hInfector->GetClassSlot() != CLASS_MEDIC || m_hInfector->GetTeamNumber() == GetTeamNumber())
+		{
+			m_bInfected = false;
+			return;
+		}
+
+		EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
+
+		DevMsg("Infect Tick\n");
+		m_fLastInfectedTick = gpGlobals->curtime;
+		CTakeDamageInfo info(m_hInfector,m_hInfector,ffdev_infect_damage.GetInt(),DMG_DIRECT);
+		TakeDamage(info);
+
+		CBaseEntity *ent = NULL;
+
+		// Infect anybody nearby
+		for (CEntitySphereQuery sphere(GetAbsOrigin(), 128); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+		{
+			if (ent->IsPlayer())
+			{
+				CFFPlayer *player = ToFFPlayer(ent);
+				
+				if (player && player != this && player->IsAlive())
+				{
+					trace_t traceHit;
+					UTIL_TraceLine( GetAbsOrigin(), player->GetAbsOrigin(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS, &traceHit );
+
+					if (traceHit.fraction != 1.0f)
+						continue;
+
+					if (player->GetClassSlot() == CLASS_MEDIC)
+						continue;
+
+					player->Infect(m_hInfector);
+				}
+			}
+		}
+	}
+
+	// check if any speed effects are over
+	bool recalcspeed = false;
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+		if (m_vSpeedEffects[i].active && m_vSpeedEffects[i].endTime < gpGlobals->curtime )
+		{
+			m_vSpeedEffects[i].active = false;
+			recalcspeed = true;
+		}
+
+	// we might need to actually set their speed
+	if (recalcspeed)
+		RecalculateSpeed();
+
+#endif
+}
+
+void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod)
+{
+	// find an open slot
+	int i = 0;
+
+	// Without boolean we default to accumulative, but warn anyway in case we just forgot
+	Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
+
+	if (type == SEM_BOOLEAN)
+		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+		{
+			// we'll overwrite the old one
+			if (m_vSpeedEffects[i].type == type)
+				break;
+		}
+	else
+		while (m_vSpeedEffects[i].active == true && i != NUM_SPEED_EFFECTS) 
+			i++;
+
+	if (i == NUM_SPEED_EFFECTS)
+	{
+		DevMsg("ERROR: Too many speed effects. Raise NUM_SPEED_EFFECTS");
+		return;
+	}
+
+	m_vSpeedEffects[i].active = true;
+	m_vSpeedEffects[i].type = type;
+	m_vSpeedEffects[i].startTime = gpGlobals->curtime;
+	m_vSpeedEffects[i].endTime = gpGlobals->curtime + duration;
+	m_vSpeedEffects[i].speed = speed;
+	m_vSpeedEffects[i].modifiers = mod;
+	
+	RecalculateSpeed();
+}
+
+void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)
+{
+	// Remove speed effects with the certain name
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	{
+		if (m_vSpeedEffects[i].type == type)
+		{
+			m_vSpeedEffects[i].active = false;
+		}
+	}
+
+	RecalculateSpeed();
+}
+
+void CFFPlayer::ClearSpeedEffects(int mod)
+{
+	if (mod)
+		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+			if (m_vSpeedEffects[i].modifiers & mod)
+				m_vSpeedEffects[i].active = false;
+	else
+		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+			m_vSpeedEffects[i].active = false;
+
+	RecalculateSpeed();
+}
+
+void CFFPlayer::RecalculateSpeed( void )
+{
+	DevMsg("[SpeedEffect] Start\n");
+	// start off with the class base speed
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+	float speed = (float)pPlayerClassInfo.m_iSpeed;
+
+	// go apply all speed effects
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+		if (m_vSpeedEffects[i].active)
+			speed *= m_vSpeedEffects[i].speed;
+
+	// set the player speed
+	SetMaxSpeed((int)speed);
+
+	DevMsg("[SpeedEffect] Resetting speed to %d\n", (int)speed);
+}
+
+void CFFPlayer::Infect( CFFPlayer *pInfector )
+{
+	EmitSound("Player.DrownStart");	// |-- Mirv: [TODO] Change to something more suitable
+
+	if (!m_bInfected)
+	{
+		// they aren't infected, so go ahead and infect them
+		m_bInfected = true;
+		m_fLastInfectedTick = gpGlobals->curtime;
+		m_hInfector = pInfector;
+	}
+}
+void CFFPlayer::Cure( CFFPlayer *pCurer )
+{
+	if (m_bInfected)
+	{
+		// they are infected, so go ahead and cure them
+		m_bInfected = false;
+		m_fLastInfectedTick = 0;
+		m_hInfector = NULL;
+
+		// credit the curer with a score
+		pCurer->IncrementFragCount( 1 );
+	}
+}
+
+void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale )
+{
+#ifdef GAME_DLL
+	// send the status icon to be displayed
+	DevMsg("[Grenade Debug] Sending status icon\n");
+	CSingleUserRecipientFilter user( (CBasePlayer *)this );
+	user.MakeReliable();
+	UserMessageBegin(user, "StatusIconUpdate");
+		WRITE_BYTE(FF_ICON_ONFIRE);
+		WRITE_FLOAT(10.0);
+	MessageEnd();
+	DevMsg("[Grenade Debug] setting player on fire\n");
+
+	// set them on fire
+	if (!m_iBurnTicks)
+		m_flNextBurnTick = gpGlobals->curtime + 1.25;
+	m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
+	m_flBurningDamage = 0.75f*m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
+
+	/*
+		this may cause less damage to happen..
+		implemented differently above - fryguy 
+
+	// --> Mirv: Pyros safer against fire
+	//	# 50% damage reduction when being hurt by fire.
+	//	# Once on fire, burn time reduced by 50%.
+	if (GetClassSlot() == CLASS_PYRO)
+	{
+		m_iBurnTicks *= 0.5f;
+		m_flBurningDamage *= 0.5f;
+	}
+	// <-- Mirv: Pyros safer against fire
+	*/
+
+	Ignite( 10.0, false, 8, false );
+
+	// set up the igniter
+	m_hIgniter = hIgniter;
+#endif
+}
+
+// Toggle grenades (requested by defrag)
+void CFFPlayer::Command_ToggleOne( void )
+{
+	if( IsGrenadePrimed() )
+		Command_ThrowGren();
+	else
+		Command_PrimeOne();
+}
+
+void CFFPlayer::Command_ToggleTwo( void )
+{
+	if( IsGrenadePrimed() )
+		Command_ThrowGren();
+	else
+		Command_PrimeTwo();
+}
+
+void CFFPlayer::Command_PrimeOne(void)
+{
+	if (IsGrenadePrimed())
+		return;
+
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	// we have a primary grenade type
+	if ( strcmp( pPlayerClassInfo.m_szPrimaryClassName, "None" ) != 0 )
+	{
+		if(m_iPrimary > 0)
+		{
+			// Temp implementation of grenade timer defrag has been waiting for weeks for
+			EmitSound( "Grenade.Prime" );
+
+			m_iGrenadeState = FF_GREN_PRIMEONE;
+			m_flServerPrimeTime = gpGlobals->curtime;
+#ifndef _DEBUG
+			m_iPrimary--;
+		}
+		else
+		{
+			DevMsg("[Grenades] You are out of primary grenades!\n");
+#endif
+		}
+	}
+}
+
+void CFFPlayer::Command_PrimeTwo(void)
+{
+	if (IsGrenadePrimed())
+		return;
+
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	// we have a secondary grenade type
+	if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None" ) != 0 )
+	{
+		if(m_iSecondary > 0)
+		{
+			// Temp implementation of grenade timer defrag has been waiting for weeks for
+			EmitSound( "Grenade.Prime" );	// Serverside timer since its being tested on lan
+
+			m_iGrenadeState = FF_GREN_PRIMETWO;
+			m_flServerPrimeTime = gpGlobals->curtime;
+#ifndef _DEBUG
+			m_iSecondary--;
+		}
+		else
+		{
+			DevMsg("[Grenades] You are out of secondary grenades!\n");
+#endif
+		}
+	}
+}
+
+void CFFPlayer::Command_ThrowGren(void)
+{
+	if (!IsGrenadePrimed())
+		return;
+
+	ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime));
+	m_iGrenadeState = FF_GREN_NONE;
+	m_flServerPrimeTime = 0.0f;
+}
+
+int CFFPlayer::GetPrimaryGrenades( void )
+{
+	return m_iPrimary;
+}
+
+int CFFPlayer::GetSecondaryGrenades( void )
+{
+	return m_iSecondary;
+}
+
+void CFFPlayer::SetPrimaryGrenades( int iNewCount )
+{
+	const CFFPlayerClassInfo &info = GetFFClassData();
+	m_iPrimary = clamp(iNewCount, 0, info.m_iPrimaryMax);
+}
+
+void CFFPlayer::SetSecondaryGrenades( int iNewCount )
+{
+	const CFFPlayerClassInfo &info = GetFFClassData();
+	m_iSecondary = clamp(iNewCount, 0, info.m_iSecondaryMax);
+}
+
+int CFFPlayer::AddPrimaryGrenades( int iNewCount )
+{
+	const CFFPlayerClassInfo &info = GetFFClassData();
+	int ret = info.m_iPrimaryMax - m_iPrimary;
+	m_iPrimary = clamp(m_iPrimary+iNewCount, 0, info.m_iPrimaryMax);
+	return ret;
+}
+
+int CFFPlayer::AddSecondaryGrenades( int iNewCount )
+{
+	const CFFPlayerClassInfo &info = GetFFClassData();
+	int ret = info.m_iSecondaryMax - m_iSecondary;
+	m_iSecondary = clamp(m_iSecondary+iNewCount, 0, info.m_iSecondaryMax);
+	return ret;
+}
+
+bool CFFPlayer::IsGrenadePrimed(void)
+{
+	return ( ( m_iGrenadeState == FF_GREN_PRIMEONE ) || ( m_iGrenadeState == FF_GREN_PRIMETWO ) );
+}
+
+void CFFPlayer::GrenadeThink(void)
+{
+	if (!IsGrenadePrimed())
+		return;
+
+	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= gren_timer.GetFloat() ) )
+	{
+		ThrowGrenade(0); // "throw" a grenade that immediately explodes at the player's origin
+		m_iGrenadeState = FF_GREN_NONE;
+		m_flServerPrimeTime = 0;
+	}
+}
+
+void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
+{
+	if (!IsGrenadePrimed())
+		return;
+
+	// This is our player details
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	// For if we make a grenade
+	CFFGrenadeBase *pGrenade = NULL;
+
+	// Check which grenade we have to do
+	switch(m_iGrenadeState)
+	{
+		case FF_GREN_PRIMEONE:
+			
+			// They don't actually have a primary grenade
+			if( Q_strcmp( pPlayerClassInfo.m_szPrimaryClassName, "None" ) == 0 )
+				return;
+
+			// Make the grenade
+			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szPrimaryClassName );
+			break;
+
+		case FF_GREN_PRIMETWO:
+
+			// They don't actually have a secondary grenade
+			if( Q_strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None" ) == 0 )
+				return;
+
+			// Make the grenade
+			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szSecondaryClassName );
+			break;
+	}
+
+	// So we made a grenade
+	if (pGrenade != NULL)
+	{
+		Vector vecForward, vecSrc, vecVelocity;
+		QAngle angAngles;
+
+		EyeVectors(&vecForward);
+
+		// Thrown or held
+		if (fTimer != 0)
+			vecSrc = Weapon_ShootPosition() + vecForward * gren_forward_offset.GetFloat();
+		else 
+			vecSrc = GetAbsOrigin();
+
+		VectorAngles( vecForward, angAngles );
+		angAngles.x -= gren_spawn_ang_x.GetFloat();
+
+		UTIL_SetOrigin(pGrenade, vecSrc);
+
+		// Stationary
+		if (fTimer != 0)
+		{
+			AngleVectors(angAngles, &vecVelocity);
+			VectorNormalize(vecVelocity);
+			vecVelocity *= speed; //gren_speed.GetFloat();	// |-- Mirv: So we can drop grenades
+		}
+		else
+			vecVelocity = Vector(0, 0, 0);
+
+		pGrenade->Spawn();
+		pGrenade->SetAbsVelocity(vecVelocity);
+		pGrenade->SetThrower(this);
+		pGrenade->SetOwnerEntity(this);
+
+#ifdef GAME_DLL
+		pGrenade->SetDetonateTimerLength( fTimer );
+		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);
+
+		if (fTimer > 0)
+			pGrenade->m_fIsHandheld = false;
+#endif
+	}
+}
+
+void CFFPlayer::PackDeadPlayerItems( void )
+{
+	// Remove everything
+	RemoveAllItems( true );
+}
+
+// Taken from player.cpp
+static float DamageForce( const Vector &size, float damage )
+{ 
+	float force = damage * ((32 * 32 * 72.0) / (size.x * size.y * size.z)) * 5;
+
+	if ( force > 1000.0) 
+	{
+		force = 1000.0;
+	}
+
+	return force;
+}
+
+int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
+{
+	// have suit diagnose the problem - ie: report damage type
+	int bitsDamage = inputInfo.GetDamageType();
+	int fTookDamage;
+
+	CTakeDamageInfo info = inputInfo;
+
+	IServerVehicle *pVehicle = GetVehicle();
+	if ( pVehicle )
+	{
+		// Players don't take blast or radiation damage while in vehicles.
+		// The vehicle has to deal it to him
+		if ( info.GetDamageType() & (DMG_BLAST|DMG_RADIATION) )
+			return 0;
+
+		info.ScaleDamage(pVehicle->DamageModifier(info));
+	}
+
+	if ( GetFlags() & FL_GODMODE )
+		return 0;
+
+	if ( m_debugOverlays & OVERLAY_BUDDHA_MODE ) 
+	{
+		if ((m_iHealth - info.GetDamage()) <= 0)
+		{
+			m_iHealth = 1;
+			return 0;
+		}
+	}
+
+	// Early out if there's no damage
+	if ( !info.GetDamage() )
+		return 0;
+
+	// Already dead
+	if ( !IsAlive() )
+		return 0;
+
+	// go take the damage first
+	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
+	{
+        // Refuse the damage
+		// But apply force! Bug #0000177: Grenade explosions should effect teamates
+		ApplyAbsVelocityImpulse( info.GetDamageForce() );
+
+		return 0;
+	}
+
+	// tag the player if hit by radio tag ammo
+	if( inputInfo.GetAmmoType( ) == m_iRadioTaggedAmmoIndex )
+	{
+		m_bRadioTagged = true;
+		m_flRadioTaggedStartTime = gpGlobals->curtime;
+
+		// Setting time to max
+		//m_flRadioTaggedDuration = 3 * inputInfo.GetSniperRifleCharge( );
+		m_flRadioTaggedDuration = 30.0f;
+
+		// Keep track of who's radio tagged us to award them each a point when we die
+		//m_hWhoTaggedMeList.AddToTail( ToFFPlayer( info.GetAttacker( ) ) );
+		m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker( ) );
+	}
+
+	// if it's a pyro, they take half damage
+	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN )
+	{
+		info.SetDamage(info.GetDamage()/2);
+	}
+
+	// keep track of amount of damage last sustained
+	m_lastDamageAmount = info.GetDamage();
+
+	// Armor. 
+	if (!(info.GetDamageType() & (DMG_FALL | DMG_DROWN | DMG_POISON | DMG_RADIATION | DMG_DIRECT)))// armor doesn't protect against fall or drown damage!
+	{
+		//float flNew = info.GetDamage() * flRatio;
+		float fFullDamage = info.GetDamage();
+
+		float fArmorDamage = fFullDamage * m_fArmorType;
+		float fHealthDamage = fFullDamage - fArmorDamage;
+		float fArmorLeft = (float)m_iArmor;
+
+		// [FIXME] demo thinks armourtype is 0, other classes seem okay?
+		// DevMsg( "fFullDamage: %f\nfArmorDamage: %f\nm_fArmorType: %f\nfArmorLeft: %f\nfHealthDamage: %f\n", fFullDamage, fArmorDamage, m_fArmorType, fArmorLeft, fHealthDamage );
+
+		// if the armor damage is greater than the amount of armor remaining, apply the excess straight to health
+		if(fArmorDamage > fArmorLeft)
+		{
+			fHealthDamage += fArmorDamage - fArmorLeft;
+			fArmorDamage = fArmorLeft;
+			m_iArmor = 0;
+			DevMsg("OnTakeDamage: armor damage exceeds remaining armor!\n");
+		}
+		else
+		{
+			m_iArmor -= (int)fArmorDamage;
+		}
+
+		// Some more debug messaging
+		//DevMsg("OnTakeDamage: took %d health damage and %d armor damage from %d total (ratio %f)\n", (int)fHealthDamage, (int)fArmorDamage, (int)fFullDamage, fArmorDamage/fFullDamage);
+
+		info.SetDamage(fHealthDamage);
+	}
+
+	// Don't call up the baseclass, it does all this again
+	// Call instead the CBaseCombatChracter one which actually applies the damage
+	fTookDamage = CBaseCombatCharacter::OnTakeDamage( info );
+
+	// Early out if the base class took no damage
+	if ( !fTookDamage )
+		return 0;
+
+	// add to the damage total for clients, which will be sent as a single
+	// message at the end of the frame
+	// todo: remove after combining shotgun blasts?
+	if ( info.GetInflictor() && info.GetInflictor()->edict() )
+		m_DmgOrigin = info.GetInflictor()->GetAbsOrigin();
+
+	m_DmgTake += (int)info.GetDamage();
+
+	// reset damage time countdown for each type of time based damage player just sustained
+
+	for (int i = 0; i < CDMG_TIMEBASED; i++)
+	{
+		if (info.GetDamageType() & (DMG_PARALYZE << i))
+		{
+			m_rgbTimeBasedDamage[i] = 0;
+		}
+	}
+
+	// Display any effect associate with this damage type
+	DamageEffect(info.GetDamage(),bitsDamage);
+
+	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
+	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
+
+	return fTookDamage;
+}
+// ---> end
+
+//-----------------------------------------------------------------------------
+// Purpose: Overrided in order to let the explosion force actually be of
+//			TFC proportions, also lets people lose limbs when needed
+//-----------------------------------------------------------------------------
+int CFFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+{
+	// set damage type sustained
+	m_bitsDamageType |= info.GetDamageType();
+
+	// Skip the CBasePlayer one because it sucks
+	if ( !CBaseCombatCharacter::OnTakeDamage_Alive( info ) )
+		return 0;
+	
+	// Don't bother with decaps this time
+	if ( m_iHealth > 0 )
+	{
+		m_fBodygroupState = 0;
+	}
+	// [TODO] Check damage type maybe?
+	else if( m_iHealth < 50.0f )
+	{
+		LimbDecapitation( info );
+	}
+
+	CBaseEntity * attacker = info.GetAttacker();
+
+	if ( !attacker )
+		return 0;
+
+	// Apply the force needed
+	DevMsg("Applying impulse force of: %f\n", info.GetDamageForce().Length());
+	ApplyAbsVelocityImpulse( info.GetDamageForce() );
+
+	// fire global game event
+	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
+	if ( event )
+	{
+		event->SetInt("userid", GetUserID() );
+		event->SetInt("health", ( m_iHealth > 0 ? m_iHealth : 0 ) );	// max replaced with this
+
+		if ( attacker->IsPlayer() )
+		{
+			CBasePlayer *player = ToBasePlayer( attacker );
+			event->SetInt("attacker", player->GetUserID() ); // hurt by other player
+		}
+		else
+		{
+			event->SetInt("attacker", 0 ); // hurt by "world"
+		}
+
+		gameeventmanager->FireEvent( event );
+	}
+
+	return 1;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Depending on the origin, chop stuff off
+//			This is a pretty hacky method!
+//-----------------------------------------------------------------------------
+void CFFPlayer::LimbDecapitation( const CTakeDamageInfo &info )
+{
+	// In which direction from the player was the explosion?
+	Vector direction = info.GetDamagePosition() - BodyTarget( info.GetDamagePosition(), false );
+	VectorNormalize( direction );
+
+	// And which way is the player facing
+	Vector	vForward, vRight, vUp;
+	EyeVectors( &vForward, &vRight, &vUp );
+
+	// Use rightarm to work out which side of the player it is on and use the
+	// absolute upwards direction to work out whether it was above or below
+	float dp_rightarm = direction.Dot( vRight );
+	float dp_head = direction.Dot( Vector( 0.0f, 0.0f, 1.0f ) );
+
+	// Some lovely messages
+	DevMsg( "[DECAP] dp_rightarm: %f\n", dp_rightarm );
+	DevMsg( "[DECAP] dp_head: %f\n", dp_head );
+
+	// Now check whether the explosion seems to be on the right or left side
+	if( dp_rightarm > 0.6f )
+	{
+		m_fBodygroupState |= DECAP_RIGHT_ARM;
+		DevMsg( "[DECAP] Lost right arm\n" );
+	}
+	else if( dp_rightarm < -0.6f )
+	{
+		m_fBodygroupState |= DECAP_LEFT_ARM;
+		DevMsg( "[DECAP] Lost left arm\n" );
+	}
+
+	// Now check if the explosion seems to be above or below
+	if( dp_head > 0.7f )
+	{
+		m_fBodygroupState |= DECAP_HEAD;
+		DevMsg( "[DECAP] Lost head\n" );
+	}
+	else if( dp_head < -0.6f )
+	{
+		// If they lost an arm on one side don't lose the leg on the other
+		if( !(m_fBodygroupState & DECAP_RIGHT_ARM ) )
+			m_fBodygroupState |= DECAP_LEFT_LEG;
+
+		if( !(m_fBodygroupState & DECAP_LEFT_ARM ) )
+			m_fBodygroupState |= DECAP_RIGHT_LEG;
+
+		DevMsg( "[DECAP] Lost a leg or two\n" );
+	}
+
+	// Now spawn any limbs that are needed
+	// [TODO] This is not a great way to do it okay!
+	for (int i = 0; i <= 4; i++)
+	{
+		if (m_fBodygroupState & (1 << i))
+		{
+			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( CreateEntityByName( "ff_ragdoll" ) );
+
+			if ( !pRagdoll )
+			{
+				DevWarning("Couldn't make limb ragdoll!\n");
+				return;
+			}
+
+			if ( pRagdoll )
+			{
+				pRagdoll->m_hPlayer = this;
+				pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
+				pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
+				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot()][i];
+				pRagdoll->m_nForceBone = m_nForceBone;
+				pRagdoll->m_vecForce = Vector(0,0,0);
+				pRagdoll->m_fBodygroupState = 0;
+
+				// remove it after a time
+				pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+				pRagdoll->SetNextThink( gpGlobals->curtime + 30.0f );
+
+				//DevMsg("Limb ragdoll created %d\n", pRagdoll->m_nModelIndex);
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get rid of the ear ringing
+//-----------------------------------------------------------------------------
+void CFFPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Gibbing is currently broken (cannot respawn) so keep false
+//-----------------------------------------------------------------------------
+bool CFFPlayer::ShouldGib( const CTakeDamageInfo &info )
+{
+	// Some sort of HP check here
+	if( false )
+		return true;
+	else
+		return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: get this game's encryption key for decoding weapon kv files
+// Output : virtual const unsigned char
+//-----------------------------------------------------------------------------
+const unsigned char *CFFPlayer::GetEncryptionKey( void ) 
+{ 
+	return g_pGameRules->GetEncryptionKey(); 
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get script file playerclass data
+//----------------------------------------------------------------------------
+const CFFPlayerClassInfo &CFFPlayer::GetFFClassData() const
+{
+	const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle( m_hPlayerClassFileInfo ); //&GetClassData();
+
+	Assert(pPlayerClassInfo != NULL);
+
+	return *pPlayerClassInfo;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Apply the concussion effect on this player
+//-----------------------------------------------------------------------------
+void CFFPlayer::Concuss( float amount, const QAngle *viewjerk )
+{
+	if( amount > 0 )
+		m_flConcTime = gpGlobals->curtime + amount;
+
+	if( viewjerk )
+		ViewPunch( (*viewjerk) * jerkmulti.GetFloat() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Hold some class information for the client
+//-----------------------------------------------------------------------------
+void CFFPlayer::SetClassForClient( int classnum )
+{
+	m_iClassStatus &= 0xFFFFFFF0;
+	m_iClassStatus |= ( 0x0000000F & classnum );
+}
+
+void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
+{
+	AddFlag( FL_ONFIRE );
+
+	CEntityFlame *pFlame = NULL;
+
+	// Extend the flames for however long
+	if (GetEffectEntity())
+	{
+		pFlame = dynamic_cast<CEntityFlame *> (GetEffectEntity());
+
+		// We shouldn't have any other ones
+		Assert(pFlame);
+
+		DevMsg("Extending flames!\n");
+	}
+	else
+	{
+		pFlame = CEntityFlame::Create( this );
+		SetEffectEntity(pFlame);
+
+		// We should now have one
+		Assert(pFlame);
+
+		DevMsg("Creating new flames!\n");
+	}
+
+	// There isn't already a flame
+	pFlame->SetLifetime(flFlameLifetime);
+
+
+	m_OnIgnite.FireOutput( this, this );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Extinguish player flames
+//-----------------------------------------------------------------------------
+void CFFPlayer::Extinguish( void )
+{
+	// Only send the network stuff once
+	if (IsOnFire())
+	{
+		CSingleUserRecipientFilter user( (CBasePlayer *)this );
+		user.MakeReliable();
+
+		UserMessageBegin(user, "StatusIconUpdate");
+		WRITE_BYTE(FF_ICON_ONFIRE);
+		WRITE_FLOAT(0.0);
+		MessageEnd();
+
+		RemoveFlag(FL_ONFIRE);
+	}
+
+	// Make sure these are turned off
+	m_iBurnTicks = 0;
+	m_flBurningDamage = 0;
+
+	CEntityFlame *pFlame = (CEntityFlame *) GetEffectEntity();
+
+	if (!pFlame)
+		return;
+
+	// When we kill the flame it calls this again so we'll do this to avoid infinite loop
+	if (pFlame->m_flLifetime > gpGlobals->curtime)
+	{
+		// Bug #0000162: Switching class while on fire, keeps playing burn sound
+		pFlame->SetLifetime(-1);
+		pFlame->FlameThink();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Heal player above their maximum
+//-----------------------------------------------------------------------------
+int CFFPlayer::Heal( float flHealth )
+{
+	if (!edict() || m_takedamage < DAMAGE_YES)
+		return 0;
+
+	// 150% max specified in the wiki
+	if (m_iHealth >= m_iMaxHealth * 1.5f)
+		return 0;
+
+	// Also medpack boosts health to maximum + then carries on to 150%
+	if (m_iHealth < m_iMaxHealth)
+		m_iHealth = m_iMaxHealth;
+	else
+		m_iHealth = m_iHealth + flHealth < m_iMaxHealth * 1.5f ? m_iHealth + flHealth : m_iMaxHealth * 1.5f;
+		// min(m_iHealth + flHealth, m_iMaxHealth * 1.5f); removed for a while so linux server can be installed
+
+	if (m_bInfected)
+	{
+		m_bInfected = false;
+
+		// [TODO] A better sound
+		EmitSound( "medkit.hit" );
+	}
+
+	// And removes any adverse speed effects
+	ClearSpeedEffects(SEM_HEALABLE);
+
+	return 1;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove speed effects when players get hp
+//-----------------------------------------------------------------------------
+int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
+{
+	int hp = BaseClass::TakeHealth(flHealth, bitsDamageType);
+
+	// Only have good effects if they got health from this
+	if (hp && flHealth)
+		ClearSpeedEffects(SEM_HEALABLE);
+
+	return hp;
+}
+
+int CFFPlayer::TakeEmp()
+{
+	// Only rockets and shells explode from EMPs, unless you are a pyro
+	// in which case cells will do too!
+	// EMPs also reduce your ammo store by 25%!
+	// Values calculated  from TFC
+    int ammodmg = 0;
+
+	int iShells = GetAmmoDef()->Index(AMMO_SHELLS);
+	int iRockets = GetAmmoDef()->Index(AMMO_ROCKETS);
+	int iCells = GetAmmoDef()->Index(AMMO_CELLS);
+
+	ammodmg += GetAmmoCount(iShells) * 0.5f;
+	SetAmmoCount(GetAmmoCount(iShells) * 0.75f, iShells);
+
+	ammodmg += GetAmmoCount(iRockets) * 1.3f;
+	SetAmmoCount(GetAmmoCount(iRockets) * 0.75f, iRockets);
+
+	if (GetClassSlot() == CLASS_PYRO)
+	{
+		ammodmg += GetAmmoCount(iCells) * 1.3f;
+		SetAmmoCount(GetAmmoCount(iCells) * 0.75f, iCells);
+	}
+
+	return ammodmg;
+}
+
+bool CFFPlayer::TakeNamedItem(const char* pszName)
+{
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		if (m_hMyWeapons[i] && FClassnameIs(m_hMyWeapons[i], pszName))
+		{
+			// This is their active weapon
+			if (GetActiveWeapon() == m_hMyWeapons[i])
+			{
+				//ClearActiveWeapon();
+
+				if (!SwitchToNextBestWeapon(GetActiveWeapon()))
+				{
+					CBaseViewModel *vm = GetViewModel();
+
+					if (vm)
+						vm->AddEffects( EF_NODRAW );
+				}
+				//Weapon_SetLast(NULL);
+			}
+
+			// Remove weapon
+			m_hMyWeapons[i]->Delete( );
+			m_hMyWeapons.Set( i, NULL );
+		}
+	}
+
+	return true;
+}
+
+void CFFPlayer::Command_Disguise()
+{
+	if(engine->Cmd_Argc( ) < 3)
+		return;
+
+	int iteam = atoi(engine->Cmd_Argv(1));
+	int iclass = atoi(engine->Cmd_Argv(2));
+
+	PLAYERCLASS_FILE_INFO_HANDLE classinfo;
+    	
+	if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(iclass), &classinfo, GetEncryptionKey()))
+	{
+		const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle( m_hPlayerClassFileInfo );
+
+		if (pPlayerClassInfo)
+		{
+			SetModel(pPlayerClassInfo->m_szModel);
+			m_nSkin = iteam;
+		}
+	}
 }

@@ -16,6 +16,7 @@
 
 IMPLEMENT_CLIENTCLASS_DT(C_BaseDoor, DT_BaseDoor, CBaseDoor)
 	RecvPropFloat(RECVINFO(m_flWaveHeight)),
+	RecvPropVector(RECVINFO(m_vecVelocity)),	// |-- Mirv: For player prediction
 END_RECV_TABLE()
 
 C_BaseDoor::C_BaseDoor( void )

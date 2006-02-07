@@ -178,6 +178,19 @@ enum Class_T
 	CLASS_NONE = 0,
 	CLASS_PLAYER,
 	CLASS_PLAYER_ALLY,
+
+	// BEG: Added by Mulchman
+	CLASS_DISPENSER,
+	CLASS_SENTRYGUN,
+	CLASS_DETPACK,
+	CLASS_GREN,
+	CLASS_GREN_EMP,
+	// END: Added by Mulchman
+
+	//-- Added by L0ki --
+	CLASS_PIPEBOMB,
+	//------------------- 
+
 	NUM_AI_CLASSES
 };
 
@@ -188,6 +201,19 @@ enum Class_T
 	CLASS_NONE = 0,
 	CLASS_PLAYER,
 	CLASS_PLAYER_ALLY,
+
+	// BEG: Added by Mulchman
+	CLASS_DISPENSER,
+	CLASS_SENTRYGUN,
+	CLASS_DETPACK,
+	CLASS_GREN,
+	CLASS_GREN_EMP,
+	// END: Added by Mulchman
+
+	//-- Added by L0ki --
+	CLASS_PIPEBOMB,
+	//------------------- 
+
 	NUM_AI_CLASSES
 };
 
@@ -654,6 +680,8 @@ public:
 	virtual int	Restore( IRestore &restore );
 	virtual bool ShouldSavePhysics();
 
+	virtual int TakeEmp() { return 0; }	// |-- Mirv: For EMPs
+
 	// handler to reset stuff before you are restored
 	// NOTE: Always chain to base class when implementing this!
 	virtual void OnSave( IEntitySaveUtils *pSaveUtils );
@@ -841,6 +869,7 @@ public:
 	virtual bool			IsNPC( void ) const { return false; }
 	CAI_BaseNPC				*MyNPCPointer( void ); 
 	virtual CBaseCombatCharacter *MyCombatCharacterPointer( void ) { return NULL; }
+	virtual CBasePlayer		*MyCharacterPointer( void ) { return NULL; }
 	virtual float			GetDelay( void ) { return 0; }
 	virtual bool			IsMoving( void );
 	bool					IsWorld() { return entindex() == 0; }

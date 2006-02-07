@@ -3,10 +3,40 @@
 // Purpose: Client DLL VGUI2 Viewport
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2005/09/24 22:53:17 $
 //
 //-----------------------------------------------------------------------------
-// $Log: $
+// $Log: vgui_TeamFortressViewport.cpp,v $
+// Revision 1.12  2005/09/24 22:53:17  mirven_monkey
+// no message
+//
+// Revision 1.11  2005/08/15 23:25:28  mirven_monkey
+// no message
+//
+// Revision 1.10  2005/06/19 22:47:30  mulchman
+// no message
+//
+// Revision 1.8  2005/05/01 02:47:57  mulchman
+// no message
+//
+// Revision 1.7  2005/04/27 18:12:50  mulchman
+// no message
+//
+// Revision 1.6  2005/04/27 17:36:27  mulchman
+// no message
+//
+// Revision 1.5  2005/04/27 16:24:06  mulchman
+// no message
+//
+// Revision 1.4  2005/04/25 15:25:05  mulchman
+// no message
+//
+// Revision 1.3  2005/04/25 11:25:21  mulchman
+// no message
+//
+// Revision 1.2  2005/02/20 19:02:35  billdoor
+// Implementing SDK update.
+//
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -34,12 +64,13 @@
 // sub dialogs
 #include "clientscoreboarddialog.h"
 #include "spectatorgui.h"
-#include "teammenu.h"
 #include "vguitextwindow.h"
 #include "IGameUIFuncs.h"
 #include "mapoverview.h"
 #include "hud.h"
 #include "NavProgress.h"
+#include "teammenu.h"
+#include "classmenu.h"
 
 // our definition
 #include "baseviewport.h"
@@ -153,11 +184,12 @@ void CBaseViewport::CreateDefaultPanels( void )
 {
 	AddNewPanel( CreatePanelByName( PANEL_SCOREBOARD ) );
 	AddNewPanel( CreatePanelByName( PANEL_INFO ) );
+	AddNewPanel( CreatePanelByName( PANEL_TEAM ) );
+	AddNewPanel( CreatePanelByName( PANEL_CLASS ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ) );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ) );
-	// AddNewPanel( CreatePanelByName( PANEL_TEAM ) );
-	// AddNewPanel( CreatePanelByName( PANEL_CLASS ) );
+
 	// AddNewPanel( CreatePanelByName( PANEL_BUY ) );
 }
 
@@ -188,13 +220,17 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTextWindow( this );
 	}
+	else if( Q_strcmp(PANEL_TEAM, szPanelName) == 0 )
+	{
+		newpanel = new CTeamMenu( this );
+	}
+	else if( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )
+	{
+		newpanel = new CClassMenu( this );
+	}
 	else if ( Q_strcmp(PANEL_OVERVIEW, szPanelName) == 0 )
 	{
 		newpanel = new CMapOverview( this );
-	}
-	else if ( Q_strcmp(PANEL_TEAM, szPanelName) == 0 )
-	{
-		newpanel = new CTeamMenu( this );
 	}
 	else if ( Q_strcmp(PANEL_SPECMENU, szPanelName) == 0 )
 	{
@@ -208,7 +244,6 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CNavProgress( this );
 	}
-	
 	return newpanel; 
 }
 

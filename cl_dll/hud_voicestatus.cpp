@@ -67,6 +67,10 @@ void CHudVoiceSelfStatus::ApplySchemeSettings(vgui::IScheme *pScheme)
 void CHudVoiceSelfStatus::VidInit( void )
 {
 	m_pVoiceIcon = gHUD.GetIcon( "voice_self" );
+
+	// BEG: Added by Mulchman
+	SetPaintBackgroundEnabled( false );
+	// END: Added by Mulchman
 }
 
 bool CHudVoiceSelfStatus::ShouldDraw()
@@ -159,6 +163,10 @@ void CHudVoiceStatus::Init( void )
 void CHudVoiceStatus::VidInit( void )
 {
 	m_pVoiceIcon = gHUD.GetIcon( "voice_player" );
+
+	// BEG: Added by Mulchman
+	SetPaintBackgroundEnabled( false );
+	// END: Added by Mulchman
 }
 
 void CHudVoiceStatus::OnThink( void )

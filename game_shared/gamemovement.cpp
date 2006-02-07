@@ -13,6 +13,8 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "decals.h"
 
+extern float g_flLastJump;		// |-- Mirv: [TEST] Check jump times
+
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 #include "hl_movedata.h"
 #endif
@@ -30,7 +32,10 @@ extern IFileSystem *filesystem;
 
 #ifndef CLIENT_DLL
 	#include "env_player_surface_trigger.h"
+	#include "ff_player.h"				// |-- Mirv: Fall sounds
 	static ConVar dispcoll_drawplane( "dispcoll_drawplane", "0" );
+#else
+	#include "c_ff_player.h"					// |-- Mirv: Fall sounds
 #endif
 
 
@@ -43,7 +48,7 @@ extern IFileSystem *filesystem;
 
 
 // [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
-bool g_bMovementOptimizations = true;
+bool g_bMovementOptimizations = false;	// |-- Mirv: Changed to false, but not sure if necessary
 
 // Roughly how often we want to update the info about the ground surface we're on.
 // We don't need to do this very often.
@@ -841,7 +846,12 @@ void CGameMovement::CheckWaterJump( void )
 
 	// Are we backing into water from steps or something?  If so, don't pop forward
 	if ( curspeed != 0.0 && ( DotProduct( flatvelocity, flatforward ) < 0.0 ) )
+	{
+		//DevMsg( "[Movement] (curspeed == 0.0) && (DotProduct(flatvelocity, flatforward) >= 0.0)\n" );
 		return;
+	}
+
+	//DevMsg( "[Movement] DotProduct( flatvelocity, flatforward ): %f\n", DotProduct( flatvelocity, flatforward ) );
 
 	Vector vecStart;
 	// Start line trace at waist height (using the center of the player for this here)
@@ -931,13 +941,17 @@ void CGameMovement::WaterMove( void )
 		wishvel[i] = forward[i]*mv->m_flForwardMove + right[i]*mv->m_flSideMove;
 	}
 
+	// --> Mirv: Sharking fix
 	// if we have the jump key down, move us up as well
 	if (mv->m_nButtons & IN_JUMP)
 	{
-		wishvel[2] += mv->m_flClientMaxSpeed;
+		//wishvel[2] += mv->m_flClientMaxSpeed;
+		mv->m_vecVelocity[2] = 100.0f;
 	}
+	// <-- Mirv: Trimping fix
+
 	// Sinking after no other movement occurs
-	else if (!mv->m_flForwardMove && !mv->m_flSideMove && !mv->m_flUpMove)
+	if (!mv->m_flForwardMove && !mv->m_flSideMove && !mv->m_flUpMove)
 	{
 		wishvel[2] -= 60;		// drift towards bottom
 	}
@@ -965,7 +979,7 @@ void CGameMovement::WaterMove( void )
 	speed = VectorNormalize(temp);
 	if (speed)
 	{
-		newspeed = speed - gpGlobals->frametime * speed * sv_friction.GetFloat() * player->m_surfaceFriction;
+		newspeed = speed - gpGlobals->frametime * speed * /*sv_friction.GetFloat()*/ 4.0f * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 		if (newspeed < 0.1f)
 		{
 			newspeed = 0;
@@ -985,7 +999,7 @@ void CGameMovement::WaterMove( void )
 		if (addspeed > 0)
 		{
 			VectorNormalize(wishvel);
-			accelspeed = sv_accelerate.GetFloat() * wishspeed * gpGlobals->frametime * player->m_surfaceFriction;
+			accelspeed = sv_accelerate.GetFloat() * wishspeed * gpGlobals->frametime * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 			if (accelspeed > addspeed)
 			{
 				accelspeed = addspeed;
@@ -1202,7 +1216,7 @@ void CGameMovement::Friction( void )
 		friction = sv_friction.GetFloat();
 
 		// Grab friction value.
-		friction *= player->m_surfaceFriction;  // player friction?
+		friction *= /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 
 		// Bleed off some speed, but if we have less than the bleed
 		//  threshhold, bleed the theshold amount.
@@ -1285,7 +1299,7 @@ void CGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float accel
 		return;
 
 	// Determine acceleration speed after acceleration
-	accelspeed = accel * wishspeed * gpGlobals->frametime * player->m_surfaceFriction;
+	accelspeed = accel * wishspeed * gpGlobals->frametime * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 
 	// Cap it
 	if (accelspeed > addspeed)
@@ -1392,7 +1406,7 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 		return;
 
 	// Determine amount of accleration.
-	accelspeed = accel * gpGlobals->frametime * wishspeed * player->m_surfaceFriction;
+	accelspeed = accel * gpGlobals->frametime * wishspeed * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 
 	// Cap at addspeed
 	if (accelspeed > addspeed)
@@ -1634,11 +1648,14 @@ void CGameMovement::FullWalkMove( )
 			FinishGravity();
 		}
 
+		// --> Mirv: Can't remember why this is commented out
 		// If we are on ground, no downward velocity.
-		if ( player->GetGroundEntity() != NULL )
-		{
-			mv->m_vecVelocity[2] = 0;
-		}
+		//if ( player->GetGroundEntity() != NULL )
+		//{
+		//	mv->m_vecVelocity[2] = 0;
+		//}
+		// <-- Mirv: Can't remember why this is commented out
+
 		CheckFalling();
 	}
 
@@ -1816,7 +1833,7 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 		//  threshhold, bleed the theshold amount.
 		float control = (spd < maxspeed/4.0) ? maxspeed/4.0 : spd;
 		
-		float friction = sv_friction.GetFloat() * player->m_surfaceFriction;
+		float friction = sv_friction.GetFloat() * /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 				
 		// Add the amount to the drop amount.
 		float drop = control * friction * gpGlobals->frametime;
@@ -2181,7 +2198,7 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 				}
 				else
 				{
-					ClipVelocity( original_velocity, planes[i], new_velocity, 1.0 + sv_bounce.GetFloat() * (1 - player->m_surfaceFriction) );
+					ClipVelocity( original_velocity, planes[i], new_velocity, 1.0 + sv_bounce.GetFloat() * (1 - /*player->m_surfaceFriction*/ 1.0f) );	// |-- Mirv: More TFC Feeling (tm) friction
 				}
 			}
 
@@ -3119,7 +3136,7 @@ void CGameMovement::CategorizePosition( void )
 //	point[2] = mv->m_vecAbsOrigin[2] - 2;
 	point[2] = mv->m_vecAbsOrigin[2] - 2;		// move a total of 4 units to try and avoid some
 	                                        // epsilon error
-
+	
 	Vector bumpOrigin;
 	bumpOrigin = mv->m_vecAbsOrigin;
 	bumpOrigin.z += 2;
@@ -3127,11 +3144,23 @@ void CGameMovement::CategorizePosition( void )
 	// Shooting up really fast.  Definitely not on ground.
 	// On ladder moving up, so not on ground either
 	// NOTE: 145 is a jump.
-	if ( mv->m_vecVelocity[2] > 140 || 
+
+	// --> Mirv: Changed value to accomodate for ramp bug
+	float flUpSpeedLimit;
+
+	if( ( mv->m_nButtons & IN_JUMP ) && !( mv->m_nOldButtons & IN_JUMP ) )
+		flUpSpeedLimit = 260000;
+	else
+		flUpSpeedLimit = 260;
+	
+	// Scouts going up ramps can easily break past 140, and our new
+	// jump speed is 268 anyway, so 260 is going to be a better value
+	if ( mv->m_vecVelocity[2] > flUpSpeedLimit || 
 		( mv->m_vecVelocity[2] > 0.0f && player->GetMoveType() == MOVETYPE_LADDER ) )   
 	{
 		SetGroundEntity( (CBaseEntity *)NULL );
 	}
+	// <-- Mirv: Changed value to accomodate for ramp bug
 	else
 	{
 		// Try and move down.
@@ -3229,6 +3258,12 @@ void CGameMovement::CategorizePosition( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::CheckFalling( void )
 {
+	if( player->GetGroundEntity() != NULL && g_flLastJump != 0 )
+	{
+		//DevMsg( "Landed in %fs (grav multiplier: %f)\n", gpGlobals->curtime - g_flLastJump, player->GetGravity() );
+		g_flLastJump = 0;
+	}
+
 	if ( player->GetGroundEntity() != NULL &&
 		 !IsDead() &&
 		 player->m_Local.m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHOLD )
@@ -3271,12 +3306,21 @@ void CGameMovement::CheckFalling( void )
 
 		if ( fvol > 0.0 )
 		{
+			// --> Mirv: Use a fall sound, and reduce the volume for spies
+			CFFPlayer *pFFPlayer = ToFFPlayer(player);
+			Assert( pFFPlayer );
+
+			pFFPlayer->PlayFallSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol );
+
 			//
 			// Play landing sound right away.
-			player->m_flStepSoundTime = 400;
+			//player->m_flStepSoundTime = 400;
 
 			// Play step sound for current texture.
-			player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol, true );
+			//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol, true );
+
+			// <-- Mirv: Use a fall sound, and reduce the volume for spies
+
 
 			//
 			// Knock the screen around a little bit, temporary effect.
@@ -3519,7 +3563,7 @@ void CGameMovement::FinishDuck( void )
 	{
 		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
 		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
-		Vector viewDelta = ( hullSizeNormal - hullSizeCrouch );
+		Vector viewDelta = ( hullSizeNormal - hullSizeCrouch ) / 2.0f;	// |-- Mirv: We only want half the difference
    		VectorAdd( mv->m_vecAbsOrigin, viewDelta, mv->m_vecAbsOrigin );
 	}
 
@@ -3543,7 +3587,7 @@ void CGameMovement::StartUnDuckJump( void )
 
 	Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
 	Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
-	Vector viewDelta = ( hullSizeNormal - hullSizeCrouch );
+	Vector viewDelta = ( hullSizeNormal - hullSizeCrouch ) / 2.0f;	// |-- Mirv: We only want half the difference
 	VectorAdd( mv->m_vecAbsOrigin, viewDelta, mv->m_vecAbsOrigin );
 
 	// See if we are stuck?
@@ -3834,8 +3878,11 @@ void CGameMovement::PlayerMove( void )
 	UpdateDuckJumpEyeOffset();
 	Duck();
 
-	// Don't run ladder code if dead on on a train
-	if ( !player->pl.deadflag && !(player->GetFlags() & FL_ONTRAIN) )
+	// If statement modifed by Mulch so players don't
+	// get randomly stuck on ladders while flying around in observer mode
+
+	// Don't run ladder code if dead or on a train	
+	if ( !player->pl.deadflag && !(player->GetFlags() & FL_ONTRAIN) && (player->GetMoveType() != MOVETYPE_OBSERVER) )
 	{
 		// If was not on a ladder now, but was on one before, 
 		//  get off of the ladder
@@ -3920,7 +3967,7 @@ void CGameMovement::PerformFlyCollisionResolution( trace_t &pm, Vector &move )
 	case MOVECOLLIDE_DEFAULT:
 		{
 			if (player->GetMoveCollide() == MOVECOLLIDE_FLY_BOUNCE)
-				backoff = 2.0 - player->m_surfaceFriction;
+				backoff = 2.0 - /*player->m_surfaceFriction*/ 1.0f;	// |-- Mirv: More TFC Feeling (tm) friction
 			else
 				backoff = 1;
 

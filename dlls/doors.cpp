@@ -88,6 +88,7 @@ LINK_ENTITY_TO_CLASS( func_water, CBaseDoor );
 // SendTable stuff.
 IMPLEMENT_SERVERCLASS_ST(CBaseDoor, DT_BaseDoor)
 	SendPropFloat	(SENDINFO(m_flWaveHeight),		8,	SPROP_ROUNDUP,	0.0f,	8.0f),
+	SendPropVector	(SENDINFO(m_vecVelocity), 0, SPROP_NOSCALE),		// |-- Mirv: For player prediction
 END_SEND_TABLE()
 
 #define DOOR_SENTENCEWAIT	6
@@ -301,7 +302,14 @@ void CBaseDoor::Spawn()
 
 void CBaseDoor::MovingSoundThink( void )
 {
-	CPASAttenuationFilter filter( this );
+	// --> Mirv: Bug #0000094: Door sounds aren't heard when they're emitted from inside the "void."
+	trace_t tr;
+
+	UTIL_TraceLine(m_vecPosition1, m_vecPosition2, CONTENTS_SOLID|CONTENTS_MOVEABLE, this, COLLISION_GROUP_NONE, &tr);
+
+	CPASAttenuationFilter filter((m_toggle_state == TS_GOING_DOWN || m_toggle_state == TS_AT_TOP) ? tr.endpos : tr.startpos);
+	// <-- Mirv: Bug #0000094: Door sounds aren't heard when they're emitted from inside the "void."
+
 	filter.MakeReliable();
 
 	EmitSound_t ep;
@@ -846,7 +854,13 @@ void CBaseDoor::DoorHitTop( void )
 {
 	if ( !HasSpawnFlags( SF_DOOR_SILENT ) )
 	{
-		CPASAttenuationFilter filter( this );
+		// --> Mirv: Bug #0000094: Door sounds aren't heard when they're emitted from inside the "void."
+		trace_t tr;
+		UTIL_TraceLine(m_vecPosition1, m_vecPosition2, CONTENTS_SOLID|CONTENTS_MOVEABLE, this, COLLISION_GROUP_NONE, &tr);
+
+		CPASAttenuationFilter filter(tr.endpos);
+		// <-- Mirv: Bug #0000094: Door sounds aren't heard when they're emitted from inside the "void."
+
 		filter.MakeReliable();
 		StopMovingSound();
 

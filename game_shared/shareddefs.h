@@ -150,7 +150,13 @@ public:
 #define	TEAM_INVALID			-1
 #define TEAM_UNASSIGNED			0	// not assigned to a team
 #define TEAM_SPECTATOR			1	// spectator team
-
+// BEG: Added by Mulchman
+#define TEAM_BLUE            2   // blue team
+#define TEAM_RED            3   // red team
+#define TEAM_YELLOW            4   // yellow team
+#define TEAM_GREEN            5   // green team
+#define TEAM_COUNT            6   // # of teams there are
+// END: Added by Mulchman 
 #define MAX_TEAMS				32	// Max number of teams in a game
 #define MAX_TEAM_NAME_LENGTH	32	// Max length of a team's name
 
@@ -160,6 +166,19 @@ public:
 #define WEAPON_NOT_CARRIED				0	// Weapon is on the ground
 #define WEAPON_IS_CARRIED_BY_PLAYER		1	// This client is carrying this weapon.
 #define WEAPON_IS_ACTIVE				2	// This client is carrying this weapon and it's the currently held weapon
+
+// --> Mirv: Class defines
+#define CLASS_SCOUT			1
+#define CLASS_SNIPER		2
+#define CLASS_SOLDIER		3
+#define CLASS_DEMOMAN		4
+#define CLASS_MEDIC			5
+#define CLASS_HWGUY			6
+#define CLASS_PYRO			7
+#define CLASS_SPY			8
+#define CLASS_ENGINEER		9
+#define CLASS_CIVILIAN		10
+// <-- Mirv: Class defines
 
 // -----------------------------------------
 // Skill Level
@@ -273,11 +292,14 @@ enum PLAYER_ANIM
 #define PLAYER_MIN_BOUNCE_SPEED		173
 #define PLAYER_FALL_PUNCH_THRESHOLD 303.0f // won't punch player's screen/make scrape noise unless player falling at least this fast - at least a 76" fall (sqrt( 2 * g * 76))
 #else
-#define PLAYER_FATAL_FALL_SPEED		1024 // approx 60 feet
-#define PLAYER_MAX_SAFE_FALL_SPEED	580 // approx 20 feet
-#define PLAYER_LAND_ON_FLOATING_OBJECT	200 // Can go another 200 units without getting hurt
-#define PLAYER_MIN_BOUNCE_SPEED		200
-#define PLAYER_FALL_PUNCH_THRESHOLD (float)350 // won't punch player's screen/make scrape noise unless player falling at least this fast.
+
+// --> Mirv: Changed fall speed limits
+#define PLAYER_FATAL_FALL_SPEED				1024	// This is a kind of arbitary figure
+#define PLAYER_MAX_SAFE_FALL_SPEED			640		// Just a bit more than the 2fort balc drop
+#define PLAYER_LAND_ON_FLOATING_OBJECT		200		// Can go another 200 units without getting hurt
+#define PLAYER_MIN_BOUNCE_SPEED				200
+#define PLAYER_FALL_PUNCH_THRESHOLD			(float)490 // Won't punch player's screen/make scrape noise unless player falling at least this fast.
+// <-- Mirv: Changed fall speed limits
 #endif
 #define DAMAGE_FOR_FALL_SPEED		100.0f / ( PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED ) // damage per unit per second.
 

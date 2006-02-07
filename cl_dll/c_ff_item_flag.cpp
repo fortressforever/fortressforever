@@ -1,0 +1,56 @@
+/********************************************************************
+	created:	2006/01/21
+	created:	21:1:2006   20:55
+	filename: 	f:\cvs\code\cl_dll\c_ff_item_flag.cpp
+	file path:	f:\cvs\code\cl_dll
+	file base:	c_ff_item_flag
+	file ext:	cpp
+	author:		Gavin "Mirvin_Monkey" Bramhill
+	
+	purpose:	
+*********************************************************************/
+
+#include "cbase.h"
+
+class C_FFItemFlag : public C_BaseAnimating
+{
+public:
+	DECLARE_CLASS(C_FFItemFlag, C_BaseAnimating);
+	DECLARE_CLIENTCLASS();
+
+	C_FFItemFlag() {};
+	~C_FFItemFlag() {};
+
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+	virtual int DrawModel(int flags);
+
+	float m_flThrowTime;
+};
+
+IMPLEMENT_CLIENTCLASS_DT(C_FFItemFlag, DT_FFItemFlag, CFFItemFlag) 
+	RecvPropFloat(RECVINFO(m_flThrowTime)) 
+END_RECV_TABLE() 
+
+
+void C_FFItemFlag::OnDataChanged(DataUpdateType_t updateType) 
+{
+	// NOTE: We MUST call the base classes' implementation of this function
+	BaseClass::OnDataChanged(updateType);
+
+	if (updateType == DATA_UPDATE_CREATED) 
+	{
+		SetNextClientThink(CLIENT_THINK_ALWAYS);
+	}
+}
+
+int C_FFItemFlag::DrawModel(int flags) 
+{
+	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
+		return 0;
+
+	// Temporary fix until we sort out the interpolation business
+	if (m_flThrowTime + 0.2f > gpGlobals->curtime) 
+		return 0;
+
+	return BaseClass::DrawModel(flags);
+}

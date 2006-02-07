@@ -13,50 +13,45 @@
 
 #include <vgui/IScheme.h>
 #include <vgui_controls/Button.h>
+#include <vgui_controls/HTML.h>
 #include <filesystem.h>
 
 extern vgui::Panel *g_lastPanel;
 
 //-----------------------------------------------------------------------------
 // Purpose: Triggers a new panel when the mouse goes over the button
-//    
-// the new panel has the same dimensions as the passed templatePanel and is of
-// the same class.
-//
-// must at least inherit from vgui::EditablePanel to support LoadControlSettings
 //-----------------------------------------------------------------------------
-template <class T>
-class MouseOverButton : public vgui::Button
+class MouseOverPanelButton : public vgui::Button
 {
 private:
-	DECLARE_CLASS_SIMPLE( MouseOverButton, vgui::Button );
+	DECLARE_CLASS_SIMPLE( MouseOverPanelButton, vgui::Button );
 	
 public:
-	MouseOverButton(vgui::Panel *parent, const char *panelName, T *templatePanel ) :
-					Button( parent, panelName, "MouseOverButton")
+	MouseOverPanelButton( vgui::Panel *parent, const char *panelName, vgui::Panel *templatePanel ) :
+	  vgui::Button( parent, panelName, L"MouseOverPanelButton" )
 	{
-		m_pPanel = new T( parent, NULL );
-		m_pPanel ->SetVisible( false );
+		m_pPanel = new vgui::HTML( parent, NULL );
+		m_pPanel->SetVisible( false );
 
 		// copy size&pos from template panel
-		int x,y,wide,tall;
+		int x,y, wide, tall;
 		templatePanel->GetBounds( x, y, wide, tall );
 		m_pPanel->SetBounds( x, y, wide, tall );
 	}
 
-	virtual void ShowPage()
+	void ShowPage( )
 	{
 		if( m_pPanel )
 		{
 			m_pPanel->SetVisible( true );
-			m_pPanel->MoveToFront();
+			m_pPanel->MoveToFront( );
 			g_lastPanel = m_pPanel;
 		}
 	}
 	
-	virtual void HidePage()
+	void HidePage( )
 	{
-		if ( m_pPanel )
+		if( m_pPanel )
 		{
 			m_pPanel->SetVisible( false );
 		}
@@ -65,20 +60,30 @@ public:
 	const char *GetClassPage( const char *className )
 	{
 		static char classPanel[ _MAX_PATH ];
-		Q_snprintf( classPanel, sizeof( classPanel ), "classes/%s.res", className);
 
-		if ( vgui::filesystem()->FileExists( classPanel ) )
+		// --> Mirv: [HACK] Quick way to get round renaming files for now (V SILLY)
+		char name[128];
+		sprintf( name, GetName() );
+		
+		if( strlen(name) > 6 )
+			name[strlen(name) - 6] = 0;
+
+		Q_snprintf( classPanel, sizeof( classPanel ), "resource/classes/%s.html", /*className*/ name );
+		// <-- Mirv: [HACK] Quick way to get round renaming files for now (V SILLY)
+
+		if( vgui::filesystem( )->FileExists( classPanel ) )
 		{
 		}
-		else if (vgui::filesystem()->FileExists( "classes/default.res" ) )
+		else if( vgui::filesystem( )->FileExists( "resource/classes/default.html" ) )
 		{
-			Q_snprintf ( classPanel, sizeof( classPanel ), "classes/default.res" );
+			Q_snprintf ( classPanel, sizeof( classPanel ), "resource/classes/default.html" );
 		}
 		else
 		{
 			return NULL;
 		}
 
+		
 		return classPanel;
 	}
 
@@ -86,30 +91,31 @@ public:
 	{
 		BaseClass::ApplySettings( resourceData );
 
-		// name, position etc of button is set, now load matching
-		// resource file for associated info panel:
-		m_pPanel->LoadControlSettings( GetClassPage( GetName() ) );
-	}		
+		char szLocalFile[ _MAX_PATH ];
+
+		vgui::filesystem( )->GetLocalPath( GetClassPage( GetName( ) ), szLocalFile, sizeof( szLocalFile ) );
+		m_pPanel->OpenURL( szLocalFile );
+	}
 
 private:
 
-	virtual void OnCursorEntered() 
+	virtual void OnCursorEntered( ) 
 	{
-		BaseClass::OnCursorEntered();
+		BaseClass::OnCursorEntered( );
 
-		if ( m_pPanel && IsEnabled() )
+		if( m_pPanel && IsEnabled( ) )
 		{
-			if ( g_lastPanel )
+			if( g_lastPanel )
 			{
 				g_lastPanel->SetVisible( false );
 			}
-			ShowPage();
+
+			ShowPage( );
 		}
 	}
 
-	T *m_pPanel;
+	vgui::HTML *m_pPanel;
 };
 
-#define MouseOverPanelButton MouseOverButton<vgui::EditablePanel>
 
 #endif // MOUSEOVERPANELBUTTON_H

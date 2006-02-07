@@ -1,193 +1,242 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//=============================================================================//
+/// =============== Fortress Forever ==============
+/// ======== A modification for Half-Life 2 =======
+///
+/// @file classmenu.cpp
+/// @author Gavin "Mirvin_Monkey" Bramhill
+/// @date August 15, 2005
+/// @brief New class selection menu
+///
+/// REVISIONS
+/// ---------
+/// Aug 15, 2005 Mirv: First creation
 
 #include "cbase.h"
-#include <stdio.h>
-
-#include <cdll_client_int.h>
-
 #include "classmenu.h"
+#include <networkstringtabledefs.h>
+#include <cdll_client_int.h>
 
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
-#include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
 #include <FileSystem.h>
+#include <KeyValues.h>
+#include <convar.h>
+#include <vgui_controls/ImageList.h>
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
-#include <vgui_controls/Panel.h>
+#include <vgui_controls/RichText.h>
 
-#include "cdll_util.h"
-#include "IGameUIFuncs.h" // for key bindings
-extern IGameUIFuncs *gameuifuncs; // for key binding details
 #include <cl_dll/iviewport.h>
 
-#include <stdlib.h> // MAX_PATH define
+#include "IGameUIFuncs.h"
+#include <igameresources.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+extern INetworkStringTable *g_pStringTableInfoPanel;
+extern IGameUIFuncs *gameuifuncs;
 
+// Button names
+const char *szClassButtons[] = { "scoutbutton", "sniperbutton", "soldierbutton", 
+								 "demomanbutton", "medicbutton", "hwguybutton", 
+								 "pyrobutton", "spybutton", "engineerbutton", 
+								 "civilianbutton" };
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a test menu
+//-----------------------------------------------------------------------------
+//CON_COMMAND(classmenu, "Shows the class menu") 
+//{
+//	if (!gViewPortInterface) 
+//		return;
+//	
+//	IViewPortPanel *panel = gViewPortInterface->FindPanelByName(PANEL_CLASS);
+//
+//	 if (panel) 
+//		 gViewPortInterface->ShowPanel(panel, true);
+//	 else
+//		 Msg("Couldn't find panel.\n");
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
+CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS) 
 {
-	m_pViewPort = pViewPort;
-	m_pFirstButton = NULL;
-	m_iScoreBoardKey = -1; // this is looked up in Activate()
-	m_iTeam = 0;
-
 	// initialize dialog
-	SetTitle("", true);
+	m_pViewPort = pViewPort;
+
+	m_flNextUpdate = 0;
 
 	// load the new scheme early!!
 	SetScheme("ClientScheme");
 	SetMoveable(false);
 	SetSizeable(false);
-
-	// hide the system buttons
-	SetTitleBarVisible( false );
 	SetProportional(true);
 
+	// hide the system buttons
+	SetTitleBarVisible(false);
+
 	// info window about this class
-	m_pPanel = new EditablePanel( this, "ClassInfo" );
+	m_pPanel = new Panel(this, "ClassInfo");
+	m_pPanel->SetFgColor(Color(255, 255, 255, 255));
+
+	m_pCancel = new Button(this, "cancelbutton", "#FF_CANCEL");
 
 	LoadControlSettings("Resource/UI/ClassMenu.res");
+	
+	Reset();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
 //-----------------------------------------------------------------------------
-CClassMenu::~CClassMenu()
+CClassMenu::~CClassMenu() 
 {
-}
-
-MouseOverPanelButton* CClassMenu::CreateNewMouseOverPanelButton(EditablePanel *panel)
-{ 
-	return new MouseOverPanelButton(this, NULL, panel);
-}
-
-
-Panel *CClassMenu::CreateControlByName(const char *controlName)
-{
-	if( !Q_stricmp( "MouseOverPanelButton", controlName ) )
-	{
-		MouseOverPanelButton *newButton = CreateNewMouseOverPanelButton( m_pPanel );
-
-		if ( !m_pFirstButton )
-		{
-			m_pFirstButton = newButton;
-		}
-		return newButton;
-	}
-	else
-	{
-		return BaseClass::CreateControlByName( controlName );
-	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Called when the user picks a class
+// Purpose: Do whatever command is needed
 //-----------------------------------------------------------------------------
-void CClassMenu::OnCommand( const char *command)
+void CClassMenu::OnCommand(const char *command) 
 {
-	if ( Q_stricmp( command, "vguicancel" ) )
-	{
-		engine->ClientCmd( const_cast<char *>( command ) );
-	}
-	
-	Close();
+	if (Q_strcmp(command, "cancel") != 0) 
+		engine->ClientCmd(command);
 
-	gViewPortInterface->ShowBackGround( false );
+	m_pViewPort->ShowPanel(this, false);
 
 	BaseClass::OnCommand(command);
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: shows the class menu
+// Purpose: Nothing
 //-----------------------------------------------------------------------------
-void CClassMenu::ShowPanel(bool bShow)
+void CClassMenu::SetData(KeyValues *data) 
 {
-	if ( bShow )
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Show or don't show
+//-----------------------------------------------------------------------------
+void CClassMenu::ShowPanel(bool bShow) 
+{
+	if (BaseClass::IsVisible() == bShow) 
+		return;
+
+	m_pViewPort->ShowBackGround(bShow);
+
+	if (bShow) 
 	{
 		Activate();
-		SetMouseInputEnabled( true );
+		SetMouseInputEnabled(true);
+	}
+	else
+	{
+		SetVisible(false);
+		SetMouseInputEnabled(false);
+	}
+}
 
-		// load a default class page
-		if ( m_pFirstButton )
-		{
-			m_pFirstButton->ShowPage();
-		}
+//-----------------------------------------------------------------------------
+// Purpose: Don't need anything yet
+//-----------------------------------------------------------------------------
+void CClassMenu::Reset() 
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update the menu with everything
+//-----------------------------------------------------------------------------
+void CClassMenu::Update() 
+{
+	IGameResources *pGR = GameResources();
+
+	if (!pGR) 
+		return;
+
+	vgui::Button *pClassButton;
+
+	int iClassNumbers[12] = {0};
+
+	// A quick count of who is what class
+	for (int i = 1; i < gpGlobals->maxClients; i++) 
+	{
+		if (pGR->IsConnected(i) && pGR->GetTeam(i) == C_BasePlayer::GetLocalPlayer()->GetTeamNumber()) 
+			iClassNumbers[pGR->GetClass(i) ]++;
+	}
+
+	// We have to do this in here because it keeps breaking otherwise
+	for (int iClass = 0; iClass < 10; iClass++) 
+	{
+		// Get the number of available slots for this class
+		int class_limit = pGR->GetTeamClassLimits(C_BasePlayer::GetLocalPlayer()->GetTeamNumber(), iClass + 1);
+		int slots_avail = class_limit - iClassNumbers[iClass + 1];
+
+		pClassButton = (vgui::Button *) FindChildByName(szClassButtons[iClass]);
+
+		// Hide the button if class is marked as unavailable
+		if (class_limit == -1 || (class_limit > 0 && slots_avail <= 0)) 
+			pClassButton->SetVisible(false);
+		else
+			pClassButton->SetVisible(true);
+	}
+
+	// If they are unassigned then they have to choose a class really
+	if (pGR->GetClass(C_BasePlayer::GetLocalPlayer()->entindex()) == 0) 
+		m_pCancel->SetVisible(false);
+	else
+		m_pCancel->SetVisible(true);
+
+	m_flNextUpdate = gpGlobals->curtime + 0.2f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Give them some key control too
+//-----------------------------------------------------------------------------
+void CClassMenu::OnKeyCodePressed(KeyCode code) 
+{
+	// Show the scoreboard over this if needed
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores")) 
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
+
+	// Support hiding the class menu by hitting your changeteam button again like TFC
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeclass")) 
+		gViewPortInterface->ShowPanel(this, false);
+
+	// Support bring the team menu back up if the class menu is showing
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeteam")) 
+	{
+		m_pViewPort->ShowPanel(this, false);
+		engine->ClientCmd("changeteam");
+	}
+
+	BaseClass::OnKeyCodePressed(code);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Magic override to allow vgui to create mouse over buttons for us
+//-----------------------------------------------------------------------------
+Panel *CClassMenu::CreateControlByName(const char *controlName) 
+{
+	if (!Q_stricmp("MouseOverPanelButton", controlName)) 
+	{
+		MouseOverPanelButton *newButton = CreateNewMouseOverPanelButton(m_pPanel);
 		
-		if ( m_iScoreBoardKey < 0 ) 
-		{
-			m_iScoreBoardKey = gameuifuncs->GetEngineKeyCodeForBind( "showscores" );
-		}
+		return newButton;
 	}
 	else
 	{
-		SetVisible( false );
-		SetMouseInputEnabled( false );
-	}
-	
-	m_pViewPort->ShowBackGround( bShow );
-}
-
-
-void CClassMenu::SetData(KeyValues *data)
-{
-	m_iTeam = data->GetInt( "team" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the text of a control by name
-//-----------------------------------------------------------------------------
-void CClassMenu::SetLabelText(const char *textEntryName, const char *text)
-{
-	Label *entry = dynamic_cast<Label *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetText(text);
+		return BaseClass::CreateControlByName(controlName);
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Sets the visibility of a button by name
+// Purpose: A lovely factory function
 //-----------------------------------------------------------------------------
-void CClassMenu::SetVisibleButton(const char *textEntryName, bool state)
+MouseOverPanelButton * CClassMenu::CreateNewMouseOverPanelButton(vgui::Panel *panel) 
 {
-	Button *entry = dynamic_cast<Button *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetVisible(state);
-	}
+	return new MouseOverPanelButton(this, NULL, panel);
 }
-
-void CClassMenu::OnKeyCodePressed(KeyCode code)
-{
-	int lastPressedEngineKey = engine->GetLastPressedEngineKey();
-
-	if ( m_iScoreBoardKey >= 0 && m_iScoreBoardKey == lastPressedEngineKey )
-	{
-		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
-	}
-	else
-	{
-		BaseClass::OnKeyCodePressed( code );
-	}
-}
-
-
-
-
-
-

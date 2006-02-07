@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "ff_fx_shared.h"
-#include "weapon_ffbase.h"
+#include "ff_weapon_base.h"
 
 #ifdef CLIENT_DLL
 
@@ -108,7 +108,8 @@ void FX_FireBullets(
 	int	iWeaponID,
 	int	iMode,
 	int iSeed,
-	float flSpread
+	float flSpread,
+	float flSniperRifleCharge	// added 9/20/2005 by Mulchman
 	)
 {
 	bool bDoEffects = true;
@@ -128,7 +129,7 @@ void FX_FireBullets(
 	}
 
 	char wpnName[128];
-	Q_snprintf( wpnName, sizeof( wpnName ), "weapon_%s", weaponAlias );
+	Q_snprintf( wpnName, sizeof( wpnName ), "ff_weapon_%s", weaponAlias );
 	WEAPON_FILE_INFO_HANDLE	hWpnInfo = LookupWeaponInfoSlot( wpnName );
 
 	if ( hWpnInfo == GetInvalidWeaponInfoHandle() )
@@ -166,7 +167,7 @@ void FX_FireBullets(
 
 	iSeed++;
 
-	int		iDamage = pWeaponInfo->m_iDamage;
+	float	flDamage = (pWeaponInfo->m_iBullets ? pWeaponInfo->m_iDamage / pWeaponInfo->m_iBullets : pWeaponInfo->m_iDamage);	// |-- Mirv: Split damage for each shot
 	int		iAmmoType = pWeaponInfo->iAmmoType;
 
 	WeaponSound_t sound_type = SINGLE;
@@ -199,11 +200,12 @@ void FX_FireBullets(
 			vOrigin,
 			vAngles,
 			flSpread,
-			iDamage,
+			flDamage,	// |-- Mirv: Float
 			iAmmoType,
 			pPlayer,
 			bDoEffects,
-			x,y );
+			x,y,
+			flSniperRifleCharge ); // added by Mulchman 9/20/2005
 	}
 
 	EndGroupingSounds();

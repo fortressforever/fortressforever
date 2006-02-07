@@ -31,6 +31,11 @@
 #include "EntityParticleTrail.h"
 #include "in_buttons.h"
 
+// --> Mirv: Temp test for triggers
+#include "ff_entity_system.h"
+// <-- Mirv: Temp test for triggers
+
+
 #ifdef HL2_DLL
 #include "hl2_player.h"
 #endif
@@ -308,7 +313,19 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 		hOther = pOther;
 
 		m_hTouchingEntities.AddToTail( hOther );
+
+		// Test if the entity system (lua) allows this trigger to happen
+		if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
+		{
+			entsys.RunPredicates( this, pOther, "onfailtouch" );
+			return;
+		}
+
 		m_OnStartTouch.FireOutput(pOther, this);
+
+		// Fire the lua output
+		if( pOther->IsPlayer() )
+			entsys.RunPredicates( this, pOther, "ontouch" );
 	}
 }
 
@@ -324,12 +341,20 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		EHANDLE hOther;
 		hOther = pOther;
 		m_hTouchingEntities.FindAndRemove( hOther );
-		
+
+		// Test if the entity system (lua) allows this trigger to happen
+		if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
+			return;
+
 		//FIXME: Without this, triggers fire their EndTouch outputs when they are disabled!
 		//if ( !m_bDisabled )
 		//{
 			m_OnEndTouch.FireOutput(pOther, this);
 		//}
+
+		// Fire the lua output
+		if( pOther->IsPlayer() )
+			entsys.RunPredicates( this, pOther, "onendtouch" );
 
 		// If there are no more entities touching this trigger, fire the lost all touches
 		// Loop through the touching entities backwards. Clean out old ones, and look for existing
@@ -736,7 +761,6 @@ void CTriggerHurt::Touch( CBaseEntity *pOther )
 // ##################################################################################
 LINK_ENTITY_TO_CLASS( trigger_multiple, CTriggerMultiple );
 
-
 BEGIN_DATADESC( CTriggerMultiple )
 
 	// Function Pointers
@@ -793,6 +817,12 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 
 	m_hActivator = pActivator;
 
+	if( pActivator->IsPlayer() && !entsys.RunPredicates( this, pActivator, "allowed" ) )
+		return;
+
+	if( pActivator->IsPlayer() )
+		entsys.RunPredicates( this, pActivator, "ontrigger" );
+
 	m_OnTrigger.FireOutput(m_hActivator, this);
 
 	if (m_flWait > 0)
@@ -818,6 +848,17 @@ void CTriggerMultiple::MultiWaitOver( void )
 {
 	SetThink( NULL );
 }
+
+// ##################################################################################
+//	>> func_ff_script
+// ##################################################################################
+class CFuncFFScript : public CTriggerMultiple
+{
+	DECLARE_CLASS( CFuncFFScript, CTriggerMultiple );
+};
+
+LINK_ENTITY_TO_CLASS( trigger_ff_script, CFuncFFScript );
+
 
 // ##################################################################################
 //	>> TriggerOnce
@@ -4014,6 +4055,10 @@ void CBaseVPhysicsTrigger::EndTouch( CBaseEntity *pOther )
 bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 {
 	if ( pOther->GetMoveType() != MOVETYPE_VPHYSICS && !pOther->IsPlayer() )
+		return false;
+
+	// Test if the entity system (lua) allows this trigger to happen
+	if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
 		return false;
 
 	// First test spawn flag filters

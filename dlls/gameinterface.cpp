@@ -67,10 +67,13 @@
 #include "vstdlib/ICommandLine.h"
 #include "engine/iserverplugin.h"
 #include "ragdoll_shared.h"
+#include "ff_entity_system.h"
 
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 #include "bot/bot.h"
 #endif
+
+#include "omnibot_interface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -489,11 +492,15 @@ bool CServerGameDLL::DLLInit(CreateInterfaceFn engineFactory,
 	// create the Navigation Mesh interface
 	TheNavMesh = new CNavMesh;
 
+	Omnibot::omnibot_interface::OnDLLInit();
+
 	return true;
 }
 
 void CServerGameDLL::DLLShutdown( void )
 {
+	Omnibot::omnibot_interface::OnDLLShutdown();
+
 	// Due to dependencies, these are not autogamesystems
 	ModelSoundsCacheShutdown();
 	SceneCacheShutdown();
@@ -643,6 +650,9 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	ResetWindspeed();
 	UpdateChapterRestrictions( pMapName );
 
+	// Added: Initialize Lua stuff
+	entsys.StartForMap();
+
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
 	// That happens either in LoadGameState() or in MapEntity_ParseAllEntities()
 	if ( loadGame )
@@ -713,6 +723,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_AIFriendliesTalkSemaphore.Release();
 	g_AIFoesTalkSemaphore.Release();
 	g_OneWayTransition = false;
+
+	entsys.RunPredicates(NULL, NULL, "startup");
 	return true;
 }
 
@@ -776,7 +788,35 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 	}
 
 	// load the Navigation Mesh for this map
-	TheNavMesh->Load();
+	NavErrorType navErr = TheNavMesh->Load();
+
+	const char *pErrMsg = "Ok";
+	switch(navErr)
+	{
+	case NAV_CANT_ACCESS_FILE:
+		pErrMsg = "Can't access file!";
+		break;
+	case NAV_INVALID_FILE:
+		pErrMsg = "Invalid file!";
+		break;
+	case NAV_BAD_FILE_VERSION:
+		pErrMsg = "Bad file version!";
+		break;
+	case NAV_FILE_OUT_OF_DATE:
+		pErrMsg = "File out of date!";
+		break;
+	case NAV_CORRUPT_DATA:
+		pErrMsg = "Corrupt Data!";
+		break;
+	}
+	if(navErr != NAV_OK)
+	{
+		Warning("NAV MESH STATUS: %s\n", pErrMsg);
+		//TheNavMesh->BeginGeneration();
+	}
+
+	// Omni-bot: Initialize the bot interface
+	Omnibot::omnibot_interface::InitBotInterface();
 
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 	TheBots->ServerActivate();
@@ -829,6 +869,8 @@ void CServerGameDLL::GameFrame( bool simulating )
 	IGameSystem::FrameUpdatePreEntityThinkAllSystems();
 	GameStartFrame();
 
+	// Omni-bot: Update the bot interface
+	Omnibot::omnibot_interface::UpdateBotInterface();
 	TheNavMesh->Update();
 
 	Physics_RunThinkFunctions( simulating );
@@ -930,6 +972,9 @@ void CServerGameDLL::PreClientUpdate( bool simulating )
 // Called when a level is shutdown (including changing levels)
 void CServerGameDLL::LevelShutdown( void )
 {
+	// Omni-bot: Shut down the bot interface
+	Omnibot::omnibot_interface::ShutdownBotInterface();
+
 	IGameSystem::LevelShutdownPreEntityAllSystems();
 
 	// YWB:

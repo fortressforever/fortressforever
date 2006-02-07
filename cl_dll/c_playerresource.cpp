@@ -6,7 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "c_playerresource.h"
-#include "c_team.h"
+#include "c_ff_team.h"
 
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
@@ -23,6 +23,9 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bAlive), RecvPropInt( RECVINFO(m_bAlive[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iHealth), RecvPropInt( RECVINFO(m_iHealth[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_iClass), RecvPropInt( RECVINFO(m_iClass[0]))), // |-- Mirv: Current class
+	RecvPropArray3( RECVINFO_ARRAY(m_iChannel), RecvPropInt( RECVINFO(m_iChannel[0]))), // |-- Mirv: Channel information
+
 END_RECV_TABLE()
 
 C_PlayerResource *g_PR;
@@ -43,17 +46,30 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
 	memset( m_bAlive, 0, sizeof( m_bAlive ) );
 	memset( m_iHealth, 0, sizeof( m_iHealth ) );
+	memset( m_iClass, 0, sizeof( m_iClass ) );	// |-- Mirv: Current class
+
+	memset( m_iChannel, 0, sizeof( m_iChannel ) ); // |-- Mirv: Channel information
 
 	for ( int i=0; i<MAX_TEAMS; i++ )
 	{
 		m_Colors[i] = COLOR_GREY;
 	}
 
+   // BEG: Added by Mulchman
+
+   /*
 #ifdef HL2MP
-	m_Colors[TEAM_COMBINE] = COLOR_BLUE;
-	m_Colors[TEAM_REBELS] = COLOR_RED;
-	m_Colors[TEAM_UNASSIGNED] = COLOR_YELLOW;
+   m_Colors[TEAM_COMBINE] = COLOR_BLUE;
+   m_Colors[TEAM_REBELS] = COLOR_RED;
+   m_Colors[TEAM_UNASSIGNED] = COLOR_YELLOW;
 #endif
+   */
+
+   m_Colors[ TEAM_BLUE ] = Color( 0, 0, 255, 255 );
+   m_Colors[ TEAM_RED ] = Color( 255, 0, 0, 255 );
+   m_Colors[ TEAM_YELLOW ] = Color( 255, 255, 0, 255 );
+   m_Colors[ TEAM_GREEN ] = Color( 0, 255, 0, 255 );
+   // END: Added by Mulchman 
 
 	g_PR = this;
 }
@@ -132,9 +148,36 @@ int C_PlayerResource::GetTeamScore(int index)
 	return team->Get_Score();
 }
 
+// --> Mirv: So menus can show correct limits
+int C_PlayerResource::GetTeamClassLimits( int index, int classindex )
+{
+	C_FFTeam *team = (C_FFTeam *) GetGlobalTeam( index );
+
+	if ( !team )
+		return 0;
+
+	return team->Get_Classes( classindex );
+}
+
+int C_PlayerResource::GetTeamLimits( int index )
+{
+	C_FFTeam *team = (C_FFTeam *) GetGlobalTeam( index );
+
+	if( !team )
+		return -1;
+
+	return team->Get_Teams();
+}
+// <-- Mirv: So menus can show correct limits
+
 int C_PlayerResource::GetFrags(int index )
 {
-	return 666;
+	// BEG: Added by Mulchman
+	if( !IsConnected( index ) )
+		return 0;
+
+	return m_iScore[ index ];
+	// END: Added by Mulchman
 }
 
 bool C_PlayerResource::IsLocalPlayer(int index)
@@ -236,6 +279,16 @@ int	C_PlayerResource::GetHealth( int iIndex )
 	return m_iHealth[iIndex];
 }
 
+// --> Mirv: Get the player's class
+int	C_PlayerResource::GetClass( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_iClass[iIndex];
+}
+// <-- Mirv: Get the player's class
+
 const Color &C_PlayerResource::GetTeamColor(int index )
 {
 	if ( index < 0 || index >= MAX_TEAMS )
@@ -260,3 +313,19 @@ bool C_PlayerResource::IsConnected( int iIndex )
 	else
 		return m_bConnected[iIndex];
 }
+
+// --> Mirv: Channel info
+//-----------------------------------------------------------------------------
+// Purpose: Return the voice channel that this player is using
+//-----------------------------------------------------------------------------
+int C_PlayerResource::GetChannel( int iIndex )
+{
+	if ( iIndex < 0 || iIndex > MAX_PLAYERS )
+	{
+		Assert( 0 );
+		return 0;
+	}
+	else
+		return m_iChannel[iIndex];
+}
+// <-- Mirv: Channel info

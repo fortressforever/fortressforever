@@ -1,0 +1,327 @@
+/// =============== Fortress Forever ==============
+/// ======== A modification for Half-Life2 ========
+///
+/// @file ff_weapon_basemelee.cpp
+/// @author Gavin "Mirvin_Monkey" Bramhill
+/// @date December 21, 2004
+/// @brief The FF Melee weapon code, all melee weapons derived from here
+///
+/// REVISIONS
+/// ---------
+/// Jan 18, 2005 Mirv: Added to project
+
+
+#include "cbase.h"
+#include "ff_weapon_basemelee.h"
+
+#define MELEE_HULL_DIM		16
+
+static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
+static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
+
+//=============================================================================
+// CFFWeaponMeleeBase tables
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponMeleeBase, DT_FFWeaponMeleeBase) 
+
+BEGIN_NETWORK_TABLE(CFFWeaponMeleeBase, DT_FFWeaponMeleeBase) 
+END_NETWORK_TABLE() 
+
+BEGIN_PREDICTION_DATA(CFFWeaponMeleeBase) 
+END_PREDICTION_DATA() 
+
+LINK_ENTITY_TO_CLASS(ff_weapon_basemelee, CFFWeaponMeleeBase);
+
+//=============================================================================
+// CFFWeaponMeleeBase implementation
+//=============================================================================
+
+//----------------------------------------------------------------------------
+// Purpose: Constructor
+//----------------------------------------------------------------------------
+CFFWeaponMeleeBase::CFFWeaponMeleeBase() 
+{
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Spawn the weapon
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::Spawn() 
+{
+	//Call base class first
+	BaseClass::Spawn();
+
+	CFFWeaponInfo wpndata = GetFFWpnData();
+	m_fMinRange1	= 0;
+	m_fMinRange2	= 0;
+	m_fMaxRange1	= wpndata.m_flRange;
+	m_fMaxRange2	= wpndata.m_flRange;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Precache the weapon
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::Precache() 
+{
+	//Call base class first
+	BaseClass::Precache();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Player is 'firing' the melee weapon, so swing it
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::PrimaryAttack() 
+{
+	Swing();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: None
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::SecondaryAttack() 
+{
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Implement impact function
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity) 
+{
+#ifdef GAME_DLL
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+#endif
+
+	//DevMsg("[CFFWeaponMeleeBase] Hit\n");
+	
+	//Do view kick
+	AddViewKick();
+
+#ifdef GAME_DLL
+	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
+
+	//Apply damage to a hit target
+	if (pHitEntity != NULL) 
+	{
+		if (pHitEntity->IsPlayer()) 
+		{
+			CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
+			if (!g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+				goto skipdamage;
+		}
+
+		Vector hitDirection;
+		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+		VectorNormalize(hitDirection);
+
+		CFFWeaponInfo wpndata = GetFFWpnData();
+		CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+
+		CalculateMeleeDamageForce(&info, hitDirection, traceHit.endpos);
+		pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
+
+		ApplyMultiDamage();
+
+		// Now hit all triggers along the ray that... 
+		TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, hitDirection);
+	}
+skipdamage:
+#endif
+
+	// Apply an impact effect
+	ImpactEffect(traceHit);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Calculate the point where melee weapon hits & animation to play
+//----------------------------------------------------------------------------
+Activity CFFWeaponMeleeBase::ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner) 
+{
+	int			i, j, k;
+	float		distance;
+	const float	*minmaxs[2] = {mins.Base(), maxs.Base() };
+	trace_t		tmpTrace;
+	Vector		vecHullEnd = hitTrace.endpos;
+	Vector		vecEnd;
+
+	distance = 1e6f;
+	Vector vecSrc = hitTrace.startpos;
+
+	vecHullEnd = vecSrc + ((vecHullEnd - vecSrc) *2);
+	UTIL_TraceLine(vecSrc, vecHullEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &tmpTrace);
+	if (tmpTrace.fraction == 1.0) 
+	{
+		for (i = 0; i < 2; i++) 
+		{
+			for (j = 0; j < 2; j++) 
+			{
+				for (k = 0; k < 2; k++) 
+				{
+					vecEnd.x = vecHullEnd.x + minmaxs[i][0];
+					vecEnd.y = vecHullEnd.y + minmaxs[j][1];
+					vecEnd.z = vecHullEnd.z + minmaxs[k][2];
+
+					UTIL_TraceLine(vecSrc, vecEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &tmpTrace);
+					if (tmpTrace.fraction < 1.0) 
+					{
+						float thisDistance = (tmpTrace.endpos - vecSrc).Length();
+						if (thisDistance < distance) 
+						{
+							hitTrace = tmpTrace;
+							distance = thisDistance;
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		hitTrace = tmpTrace;
+	}
+
+
+	return ACT_VM_HITCENTER;
+} 
+
+//----------------------------------------------------------------------------
+// Purpose: Handle water splashes
+//----------------------------------------------------------------------------
+bool CFFWeaponMeleeBase::ImpactWater(const Vector &start, const Vector &end) 
+{
+	//FIXME: This doesn't handle the case of trying to splash while being underwater, but that's not going to look good
+	//		 right now anyway...
+	
+	// We must start outside the water
+	if (UTIL_PointContents(start) & (CONTENTS_WATER|CONTENTS_SLIME)) 
+		return false;
+
+	// We must end inside of water
+	if (! (UTIL_PointContents(end) & (CONTENTS_WATER|CONTENTS_SLIME))) 
+		return false;
+
+	trace_t	waterTrace;
+
+	UTIL_TraceLine(start, end, (CONTENTS_WATER|CONTENTS_SLIME), GetOwner(), COLLISION_GROUP_NONE, &waterTrace);
+
+	if (waterTrace.fraction < 1.0f) 
+	{
+		CEffectData	data;
+
+		data.m_fFlags  = 0;
+		data.m_vOrigin = waterTrace.endpos;
+		data.m_vNormal = waterTrace.plane.normal;
+		data.m_flScale = 8.0f;
+
+		// See if we hit slime
+		if (waterTrace.contents & CONTENTS_SLIME) 
+		{
+			data.m_fFlags |= FX_WATER_IN_SLIME;
+		}
+
+		DispatchEffect("watersplash", data);			
+	}
+
+	return true;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Handle decals/debris from hitting something
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::ImpactEffect(trace_t &traceHit) 
+{
+	// See if we hit water(we don't do the other impact effects in this case) 
+	if (ImpactWater(traceHit.startpos, traceHit.endpos)) 
+		return;
+
+	//FIXME: need new decals
+	UTIL_ImpactTrace(&traceHit, DMG_CLUB);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Starts the swing of the weapon and determines the animation
+//----------------------------------------------------------------------------
+void CFFWeaponMeleeBase::Swing() 
+{
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+	
+	trace_t traceHit;
+
+	// Try a ray
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	
+	if (!pOwner) 
+		return;
+
+	Vector swingStart = pOwner->Weapon_ShootPosition();
+	Vector forward;
+
+	pOwner->EyeVectors(&forward, NULL, NULL);
+
+	Vector swingEnd = swingStart + forward * pWeaponInfo.m_flRange;
+	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+
+	Activity nHitActivity = ACT_VM_HITCENTER;
+
+	// Like bullets, melee traces have to trace against triggers.
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+
+#ifdef GAME_DLL
+	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin);
+#endif
+
+	if (traceHit.fraction == 1.0) 
+	{
+		float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+
+		// Back off by hull "radius"
+		swingEnd -= forward * meleeHullRadius;
+
+		UTIL_TraceHull(swingStart, swingEnd, g_meleeMins, g_meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+
+		if (traceHit.fraction < 1.0 && traceHit.m_pEnt) 
+		{
+			Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
+			VectorNormalize(vecToTarget);
+
+			float dot = vecToTarget.Dot(forward);
+
+			// YWB:  Make sure they are sort of facing the guy at least...
+			if (dot < 0.70721f) 
+			{
+				// Force amiss
+				traceHit.fraction = 1.0f;
+			}
+			else
+			{
+				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, g_meleeMins, g_meleeMaxs, pOwner);
+			}
+		}
+	}
+
+	//	Miss
+	if (traceHit.fraction == 1.0f) 
+	{
+		nHitActivity = ACT_VM_MISSCENTER;
+
+		// We want to test the first swing again
+		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
+		
+		// See if we happened to hit water
+		ImpactWater(swingStart, testEnd);
+	}
+	else
+	{
+		Hit(traceHit, nHitActivity);
+	}
+
+	// Send the anim
+	SendWeaponAnim(nHitActivity);
+
+	//Setup our next attack times
+	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
+	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+
+	//Play swing sound
+	WeaponSound(SINGLE);
+}

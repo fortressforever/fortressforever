@@ -31,22 +31,38 @@
 
 ConVar g_Language( "g_Language", "0", FCVAR_REPLICATED );
 
+// --> Mirv: Changed some of the values
+//static CViewVectors g_DefaultViewVectors(
+//	Vector( 0, 0, 64 ),				// m_vView
+//	
+//	Vector(-16, -16, 0 ),			// m_vHullMin
+//	Vector( 16,  16,  72 ),			// m_vHullMax
+//	
+//	Vector(-16, -16, 0 ),			// m_vDuckHullMin
+//	Vector( 16,  16,  36 ),			// m_vDuckHullMax
+//	Vector( 0, 0, 28 ),				// m_vDuckView
+//	
+//	Vector(-10, -10, -10 ),			// m_vObsHullMin
+//	Vector( 10,  10,  10 ),			// m_vObsHullMax
+//	
+//	Vector( 0, 0, 14 )				// m_vDeadViewHeight
+//);
 static CViewVectors g_DefaultViewVectors(
-	Vector( 0, 0, 64 ),
-	
-	Vector(-16, -16, 0 ),
-	Vector( 16,  16,  72 ),
-	
-	Vector(-16, -16, 0 ),
-	Vector( 16,  16,  36 ),
-	Vector( 0, 0, 28 ),
-	
-	Vector(-10, -10, -10 ),
-	Vector( 10,  10,  10 ),
-	
-	Vector( 0, 0, 14 )
-);
+	Vector( 0, 0, 64 ),            // m_vView
 
+	Vector(-16, -16, 0 ),         // m_vHullMin
+	Vector( 16,  16,  72 ),         // m_vHullMax
+
+	Vector(-16, -16, 0 ),         // m_vDuckHullMin
+	Vector( 16,  16,  36 ),         // m_vDuckHullMax
+	Vector( 0, 0, 30 ),            // m_vDuckView         // |-- Mirv: Changed from 28
+
+	Vector(-10, -10, -10 ),         // m_vObsHullMin
+	Vector( 10,  10,  10 ),         // m_vObsHullMax
+
+	Vector( 0, 0, 14 )            // m_vDeadViewHeight
+);
+// <-- Mirv: Changed some of the values
 
 // ------------------------------------------------------------------------------------ //
 // CGameRulesProxy implementation.

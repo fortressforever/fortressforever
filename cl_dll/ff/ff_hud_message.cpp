@@ -18,6 +18,7 @@ using namespace vgui;
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
+
 class CHudGameMessage : public CHudElement, public vgui::Panel
 {
 private:
@@ -45,8 +46,7 @@ public:
 
 private:
 	CHudTexture *m_pIcon;		// Icon texture reference
-	wchar_t		m_pText[256];	// Unicode text buffer
-
+	wchar_t		m_pText[256];
 	float		m_flStartTime;	// When the message was recevied
 	float		m_flDuration;	// Duration of the message
 };
@@ -60,6 +60,10 @@ void CHudGameMessage::VidInit( void )
 	m_pIcon = gHUD.GetIcon( "message_icon" );
 
 	m_pText[0] = '\0';
+
+	// To make it go "away" - still visible
+	// just don't see the bg from it
+	SetPaintBackgroundEnabled( false );
 }
 
 void CHudGameMessage::Init( void )
@@ -73,8 +77,16 @@ void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 	char szString[256];
 	msg.ReadString( szString, sizeof(szString) );
 
+	//DevMsg( "[Game Message] %s\n", szString );
+
 	// Convert it to localize friendly unicode
-	vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof(m_pText) );
+	wchar_t *pszTemp = vgui::localize()->Find( szString );
+	if( pszTemp )
+		wcscpy( m_pText, pszTemp );
+	else
+		vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
+
+	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof(m_pText) );
 
 	// Setup our time trackers
 	m_flStartTime = gpGlobals->curtime;
@@ -82,21 +94,21 @@ void CHudGameMessage::MsgFunc_GameMessage( bf_read &msg )
 }
 
 void CHudGameMessage::Paint( void )
-{
-	if ( !m_pIcon )
-		return;
-	
+{	
+	//if ( !m_pIcon )
+	//	return;
+
 	// Find our fade based on our time shown
 	float dt = ( m_flStartTime - gpGlobals->curtime );
 	float flAlpha = SimpleSplineRemapVal( dt, 0.0f, m_flDuration, 255, 0 );
 	flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 
 	// Draw our icon
-	m_pIcon->DrawSelf( 0, 0, 32, 32, Color(255,255,255,flAlpha) );
+	//m_pIcon->DrawSelf( 0, 0, 32, 32, Color(255,255,255,flAlpha) );
 
 	// Get our scheme and font information
 	vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
-	vgui::HFont hFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "Default" );
+	vgui::HFont hFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "CloseCaption_Normal" );
 
 	// Draw our text
 	surface()->DrawSetTextFont( hFont ); // set the font	
@@ -104,4 +116,3 @@ void CHudGameMessage::Paint( void )
 	surface()->DrawSetTextPos( 32, 8 ); // x,y position
 	surface()->DrawPrintText( m_pText, wcslen(m_pText) ); // print text
 }
-

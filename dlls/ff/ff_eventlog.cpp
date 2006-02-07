@@ -8,6 +8,8 @@
 #include "cbase.h"
 #include "../EventLog.h"
 #include "KeyValues.h"
+#include "team.h"
+#include "ff_buildableobject.h"
 
 class CFFEventLog : public CEventLog
 {
@@ -18,8 +20,87 @@ public:
 	virtual ~CFFEventLog() {};
 
 public:
+	bool Init( void )
+	{
+		gameeventmanager->AddListener( this, "build_dispenser", true );
+		gameeventmanager->AddListener( this, "build_sentrygun", true );
+		gameeventmanager->AddListener( this, "build_detpack", true );
+
+		return BaseClass::Init();
+	}
+
 	bool PrintEvent( IGameEvent * event )	// override virtual function
 	{
+		// BEG: Added by Mulch for buildables watching for player_disconnect
+		const char *name = event->GetName();
+
+		if( Q_strncmp( name, "player_", strlen( "player_" ) ) == 0 )
+		{
+			const char *eventName = event->GetName();
+			const int userid = event->GetInt( "userid" );
+
+			if ( !Q_strncmp( eventName, "player_disconnect", Q_strlen( "player_disconnect" )  ) )
+			{
+				/*
+				const char *reason = event->GetString("reason" );
+				const char *name = event->GetString("name" );
+				const char *networkid = event->GetString("networkid" );
+				CTeam *team = NULL;
+				CBasePlayer *pPlayer = UTIL_PlayerByUserId( userid );
+
+				if ( pPlayer )
+				{
+				team = pPlayer->GetTeam();
+				}
+				*/
+
+				// See if we can get a pointer to the player
+				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByUserId( userid ) );
+				if( pPlayer )
+				{
+					// Remove any buildable objects the player might have before they
+					// disconnect
+
+					if( pPlayer->m_hDispenser.Get() )
+						( ( CFFBuildableObject * )pPlayer->m_hDispenser.Get() )->RemoveQuietly();
+
+					if( pPlayer->m_hSentryGun.Get() )
+						( ( CFFBuildableObject * )pPlayer->m_hSentryGun.Get() )->RemoveQuietly();
+
+					if( pPlayer->m_hDetpack.Get() )
+						( ( CFFBuildableObject * )pPlayer->m_hDetpack.Get() )->RemoveQuietly();
+				}
+			}
+		}
+		// END: Added by Mulch for buildables watching for player_disconnect
+
+		// BEG: Watching when buildables get built
+		if( Q_strncmp( name, "build_", strlen( "build_" ) ) == 0 )
+		{
+			const char *eventName = event->GetName();
+			const int userid = event->GetInt( "userid" );
+
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByUserId( userid ) );
+			CTeam *team = NULL;
+
+			if( pPlayer )
+				team = pPlayer->GetTeam();
+
+			char szObject[ 64 ];
+			if( Q_strcmp( eventName, "build_dispenser" ) == 0 )
+				Q_strcpy( szObject, "dispenser" );
+			else if( Q_strcmp( eventName, "build_sentrygun" ) == 0 )
+				Q_strcpy( szObject, "sentrygun" );
+			else if( Q_strcmp( eventName, "build_detpack" ) == 0 )
+				Q_strcpy( szObject, "detpack" );
+
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), team ? team->GetName() : "", szObject );
+
+			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), team ? team->GetName() : "", szObject );
+		}
+		// END: Watching when buildables get built
+
+
 		if ( BaseClass::PrintEvent( event ) )
 		{
 			return true;

@@ -81,7 +81,11 @@ bool CSoundscapeSystem::Init()
 	const char *mapSoundscapeFilename = NULL;
 	if ( mapname && *mapname )
 	{
-		mapSoundscapeFilename = UTIL_VarArgs( "scripts/soundscapes_%s.txt", mapname );
+		// BEG: Mulch
+		//mapSoundscapeFilename = UTIL_VarArgs( "scripts/soundscapes_%s.txt", mapname );		
+		mapSoundscapeFilename = UTIL_VarArgs( "maps/%s_soundscapes.txt", mapname );
+		//DevMsg( "[Soundscape] Setting soundscape file to: %s\n", mapSoundscapeFilename );
+		// END: Mulch
 	}
 
 	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );

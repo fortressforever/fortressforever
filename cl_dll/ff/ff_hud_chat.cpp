@@ -13,22 +13,56 @@
 #include "vguicenterprint.h"
 #include "vgui/ILocalize.h"
 
+#include <igameresources.h>	// |-- Mirv: Access to play details
+
+bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes are blocked
+
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 
-float g_ColorGreen[3]	= { 153, 255, 153 };
+// --> Mirv: Colours!
+float g_ColorConsole[3]	= { 153, 255, 153 };
+float g_ColorBlue[3]	= { 0, 0, 255 };
+float g_ColorRed[3]		= { 255, 0, 0 };
 float g_ColorYellow[3]	= { 255, 178.5, 0.0 };
+float g_ColorGreen[3]	= { 0, 255, 0 };
+float g_ColorSpec[3]	= { 128, 255, 255 };
+float g_ColorGrey[3]	= { 128, 128, 128 };
 
 float *GetClientColor( int clientIndex )
 {
 	if ( clientIndex == 0 ) // console msg
 	{
-		return g_ColorGreen;
+		return g_ColorConsole;
 	}
 	else 
 	{
-		return g_ColorYellow;
+		IGameResources *gr = GameResources();
+
+		if (!gr )
+			return g_ColorYellow;
+
+		// Use this when I get round to it:
+		// Color col = gr->GetTeamColor( gr->GetTeam( playerIndex ) );
+
+		// For now use this!
+		switch( gr->GetTeam( clientIndex ) )
+		{
+			case 1:
+				return g_ColorSpec;
+			case 2:
+				return g_ColorBlue;
+			case 3:
+				return g_ColorRed;
+			case 4:
+				return g_ColorYellow;
+			case 5:
+				return g_ColorGreen;
+			default:
+				return g_ColorGrey;
+		}
 	}	
 }
+// <-- Mirv: Colours!
 
 // converts all '\r' characters to '\n', so that the engine can deal with the properly
 // returns a pointer to str
@@ -224,6 +258,12 @@ void CHudChat::MsgFunc_SayText( bf_read &msg )
 	char szString[256];
 
 	int client = msg.ReadByte();
+
+	// --> Mirv: Actually bud, you're blocked
+	if( g_fBlockedStatus[client] )
+		return;
+	// <-- Mirv: Actually bud, you're blocked
+
 	msg.ReadString( szString, sizeof(szString) );
 	bool bWantsToChat = msg.ReadByte();
 	

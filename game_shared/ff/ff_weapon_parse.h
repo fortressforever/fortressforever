@@ -27,10 +27,26 @@ public:
 
 	char m_szAnimExtension[16];		// string used to generate player animations with this weapon
 
-	// Parameters for FX_FireBullets:
-	int		m_iDamage;
-	int		m_iBullets;
+	// Variables for weapons
 	float	m_flCycleTime;
+	float	m_iCycleDecrement;
+
+	int		m_iDamage;
+
+	int		m_iBullets;
+	float	m_flBulletSpread;
+
+	int		m_iSpeed;
+
+	float	m_flPreReloadTime;
+	float	m_flReloadTime;
+	float	m_flPostReloadTime;
+
+	float	m_flSpinTime;
+
+	float	m_flRange;
+	
+	float	m_flRecoilAmount;
 };
 
 

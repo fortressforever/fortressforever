@@ -3,10 +3,19 @@
 // Purpose: Client DLL VGUI2 Viewport
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2005/12/29 18:31:52 $
 //
 //-----------------------------------------------------------------------------
-// $Log: $
+// $Log: ffviewport.cpp,v $
+// Revision 1.4  2005/12/29 18:31:52  mirven_monkey
+// no message
+//
+// Revision 1.3  2005/06/18 10:07:12  mirven_monkey
+// SDK update
+//
+// Revision 1.2  2005/02/20 19:02:35  billdoor
+// Implementing FF update.
+//
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -65,6 +74,8 @@ IViewPortPanel* FFViewport::CreatePanelByName(const char *szPanelName)
 
 void FFViewport::CreateDefaultPanels( void )
 {
+	AddNewPanel( CreatePanelByName( PANEL_OVERVIEW ) );	// |-- Mirv: Overview!
+
 	BaseClass::CreateDefaultPanels();
 }
 

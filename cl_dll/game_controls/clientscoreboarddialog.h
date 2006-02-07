@@ -11,15 +11,42 @@
 #pragma once
 #endif
 
+// BEG: Added by Mulchman
+
+// NOTE there are several random and small changes in here
+// due to wavelength tutorials followed by Mulchman. Be
+// careful when diffing/overwriting stuff.
+
+// END: Added by Mulchman
+
 #include <vgui_controls/Frame.h>
 #include <cl_dll/iviewport.h>
 #include <igameevents.h>
 
-#define TYPE_NOTEAM			0	// NOTEAM must be zero :)
+/*
+//#define TYPE_NOTEAM			0	// NOTEAM must be zero :)
+#define TYPE_UNASSIGNED		0	// unassigned type
 #define TYPE_TEAM			1	// a section for a single team	
 #define TYPE_SPECTATORS		2	// a section for a spectator group
 #define TYPE_BLANK			3
+*/
 
+#define TYPE_UNASSIGNED     0   
+#define TYPE_TEAM           1   // a section for a single team  
+#define TYPE_SPECTATORS     2   // a section for a spectator group
+#define TYPE_NOTEAM         0	// NOTEAM must be zero :)
+
+// --> Mirv: Channel images
+namespace CHANNEL
+{
+	enum channelicons
+	{
+		NONE = 1,
+		CHANNELA = 2,
+		CHANNELB = 3,
+	};
+}
+// <-- Mirv: Channel images
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -31,7 +58,7 @@ private:
 
 protected:
 // column widths at 640
-	enum { NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0 };
+	enum { NAME_WIDTH = 160, CLASS_WIDTH = 60, SCORE_WIDTH = 40, DEATH_WIDTH = 40, PING_WIDTH = 40, VOICE_WIDTH = 30, CHANNEL_WIDTH = 30, FRIENDS_WIDTH = 0 };
 	// total = 340
 
 public:
@@ -54,6 +81,8 @@ public:
 	// IGameEventListener interface:
 	virtual void FireGameEvent( IGameEvent *event);
 			
+	virtual void CClientScoreBoardDialog::OnCommand( const char *command ); // |-- Mirv: Catch channel changing
+
 
 protected:
 	// functions to override
@@ -63,15 +92,18 @@ protected:
 	virtual void UpdatePlayerInfo();
 	
 	virtual void AddHeader(); // add the start header of the scoreboard
-	virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
+	virtual int	AddSection(int teamType, int teamNumber); // add a new section header for a team
 
 	// sorts players within a section
 	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
 
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
+	// BEG: Added by Mulchman
 	// finds the player in the scoreboard
-	int FindItemIDForPlayerIndex(int playerIndex);
+	int FindItemIDForPlayerIndex( int playerIndex );
+	int FindPlayerIndexForItemID( int iItemID );
+	// END: Added by Mulchman
 
 	int m_iNumTeams;
 
@@ -79,10 +111,13 @@ protected:
 	int				m_iSectionId; // the current section we are entering into
 
 	int s_VoiceImage[5];
+	int s_ChannelImage[5];	// |-- Mirv: Channel Images
 	int TrackerImage;
 	int	m_HLTVSpectators;
 
-	void MoveLabelToFront(const char *textEntryName);
+	vgui::Button *m_pChannelButton;	// |-- Mirv: Channel button
+
+	void MoveLabelToFront( const char *textEntryName );
 
 private:
 	int			m_iPlayerIndexSymbol;
@@ -90,10 +125,22 @@ private:
 	IViewPort	*m_pViewPort;
 	float		m_fNextUpdateTime;
 
-
+	// BEG: Added by Mulchman for stuff
+	int			m_iJumpKey;
 
 	// methods
-	void FillScoreBoard();
+	void FillScoreBoard( );
+
+protected:
+	int m_iTeamSections[ TEAM_COUNT ];
+	int m_iNumPlayersOnTeam[ TEAM_COUNT ];
+	int m_iTeamLatency[ TEAM_COUNT ];
+
+	virtual void OnKeyCodePressed( vgui::KeyCode code );
+
+private:
+	MESSAGE_FUNC_PARAMS( OnItemSelected, "ItemSelected", data );
+	// END: Added by Mulchman for stuff
 };
 
 

@@ -33,8 +33,13 @@ void FF_FX_EjectBrass_12Gauge_Callback( const CEffectData &data )
 	FF_EjectBrass( CS_SHELL_12GAUGE, data );
 }
 
+void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
+{
+	FF_EjectBrass( FF_SHELL_40MM, data );
+}
 
 
 DECLARE_CLIENT_EFFECT( "EjectBrass_9mm", FF_FX_EjectBrass_9mm_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_12Gauge",FF_FX_EjectBrass_12Gauge_Callback );
+DECLARE_CLIENT_EFFECT( "EjectBrass_40mm",FF_FX_EjectBrass_40mm_Callback );
 

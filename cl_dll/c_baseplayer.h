@@ -76,7 +76,7 @@ public:
 
 	// View model prediction setup
 	virtual void		CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
-	void				CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
+	virtual void		CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles); // |-- Mirv: Made virtual
 	
 
 	// Handle view smoothing when going up stairs
@@ -409,6 +409,9 @@ private:
 	friend class CHL1GameMovement;
 	friend class CCSGameMovement;
 	friend class CHL2GameMovement;
+	// --> billdoor: allow access to private member variables from our player movement code
+	friend class CFFGameMovement;
+	// <-- billdoor: allow access to private member variables from our player movement code
 
 	float m_flNextAvoidanceTime;
 	float m_flAvoidanceRight;

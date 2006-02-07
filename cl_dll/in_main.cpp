@@ -3,7 +3,7 @@
 // Purpose: builds an intended movement command to send to the server
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2005/10/07 13:40:33 $
 // $NoKeywords: $
 //=============================================================================//
 
@@ -46,10 +46,10 @@ ConVar cl_yawspeed( "cl_yawspeed", "210", 0 );
 ConVar cl_pitchspeed( "cl_pitchspeed", "225", 0 );
 ConVar cl_pitchdown( "cl_pitchdown", "89", FCVAR_CHEAT );
 ConVar cl_pitchup( "cl_pitchup", "89", FCVAR_CHEAT );
-ConVar cl_sidespeed( "cl_sidespeed", "400", 0 );
-ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_ARCHIVE );
-ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_ARCHIVE );
-ConVar cl_backspeed( "cl_backspeed", "400", FCVAR_ARCHIVE );
+ConVar cl_sidespeed( "cl_sidespeed", "1000", 0 );
+ConVar cl_upspeed( "cl_upspeed", "1000", FCVAR_ARCHIVE );
+ConVar cl_forwardspeed( "cl_forwardspeed", "1000", FCVAR_ARCHIVE );
+ConVar cl_backspeed( "cl_backspeed", "1000", FCVAR_ARCHIVE );
 ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
@@ -505,6 +505,28 @@ void IN_ScoreUp(void)
 	}
 }
 
+// BEG: Added by Mulchman for team change & class change
+void IN_ChangeTeam( void )
+{
+
+	if( gViewPortInterface )
+	{
+		IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_TEAM );
+		if( pPanel )
+			gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+	}
+}
+
+void IN_ChangeClass( void )
+{
+   if( gViewPortInterface )
+   {
+		IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_CLASS );
+		if( pPanel )
+			gViewPortInterface->ShowPanel( PANEL_CLASS, true );
+	}
+}
+// END: Added by Mulchman for team change & class change
 
 /*
 ============
@@ -1299,6 +1321,11 @@ static ConCommand force_centerview("force_centerview", IN_CenterView_f);
 static ConCommand joyadvancedupdate("joyadvancedupdate", IN_Joystick_Advanced_f);
 static ConCommand startzoom("+zoom", IN_ZoomDown);
 static ConCommand endzoom("-zoom", IN_ZoomUp);
+
+// BEG: Added by Mulchman for team & class changing
+static ConCommand changeteam( "changeteam", IN_ChangeTeam );
+static ConCommand changeclass( "changeclass", IN_ChangeClass );
+// END: Added by Mulchman for team & class changing
 
 /*
 ============

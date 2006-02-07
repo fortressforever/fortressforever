@@ -18,13 +18,13 @@
 
 #ifdef CLIENT_DLL
 	class C_BaseAnimatingOverlay;
-	class C_WeaponFFBase;
+	class C_FFWeaponBase;
 	#define CBaseAnimatingOverlay C_BaseAnimatingOverlay
-	#define CWeaponFFBase C_WeaponFFBase
+	#define CFFWeaponBase C_FFWeaponBase
 	#define CFFPlayer C_FFPlayer
 #else
 	class CBaseAnimatingOverlay;
-	class CWeaponFFBase; 
+	class CFFWeaponBase; 
 	class CFFPlayer;
 #endif
 
@@ -37,7 +37,6 @@ enum PlayerAnimEvent_t
 {
 	PLAYERANIMEVENT_FIRE_GUN_PRIMARY=0,
 	PLAYERANIMEVENT_FIRE_GUN_SECONDARY,
-	PLAYERANIMEVENT_THROW_GRENADE,
 	PLAYERANIMEVENT_JUMP,
 	PLAYERANIMEVENT_RELOAD,
 	
@@ -49,19 +48,16 @@ class IFFPlayerAnimState : virtual public IPlayerAnimState
 {
 public:
 	// This is called by both the client and the server in the same way to trigger events for
-	// players firing, jumping, throwing grenades, etc.
+	// players firing, jumping, etc.
 	virtual void DoAnimationEvent( PlayerAnimEvent_t event ) = 0;
-	
-	// Returns true if we're playing the grenade prime or throw animation.
-	virtual bool IsThrowingGrenade() = 0;
 };
 
 
-// This abstracts the differences between FF players and hostages.
+// We need these from the player
 class IFFPlayerAnimStateHelpers
 {
 public:
-	virtual CWeaponFFBase* FFAnim_GetActiveWeapon() = 0;
+	virtual CFFWeaponBase* FFAnim_GetActiveWeapon() = 0;
 	virtual bool FFAnim_CanMove() = 0;
 };
 

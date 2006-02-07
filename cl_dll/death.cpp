@@ -35,7 +35,13 @@ public:
 
 	virtual void CHudDeathNotice::ApplySchemeSettings( vgui::IScheme *scheme );
 
-	void FireGameEvent( KeyValues * event);
+	//--- Modified by L0ki ----------------
+	// Was originally:
+	//		void FireGameEvent( KeyValues * event);
+	// which is what IGameEventListener uses. CHudElement derives
+	// from IGameEventListener2, so i had to change to the following
+	void FireGameEvent( IGameEvent *event);
+	//-------------------------------------
 
 private:
 	CHudTexture			*m_iconD_skull;  // sprite index of skull icon
@@ -58,6 +64,10 @@ DECLARE_HUDELEMENT( CHudDeathNotice );
 CHudDeathNotice::CHudDeathNotice( const char *pElementName ) :
 	CHudElement( pElementName ), BaseClass( NULL, "HudDeathNotice" )
 {
+	if(gameeventmanager->AddListener( this, "player_death", false ))
+		DevMsg("[CHudDeathNotice::CHudDeathNotice] Successfully added listener!\n");
+	else
+		DevMsg("[CHudDeathNotice::CHudDeathNotice] failed to add listener!\n");
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
@@ -68,7 +78,7 @@ void CHudDeathNotice::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings( scheme );
 
-	m_hTextFont = scheme->GetFont( "HudNumbersSmall" );
+	m_hTextFont = scheme->GetFont( "Default" );
 	m_clrText = scheme->GetColor( "FgColor", GetFgColor() );
 
 	SetPaintBackgroundEnabled( false );
@@ -89,7 +99,7 @@ static int DEATHNOTICE_DISPLAY_TIME = 6;
 
 // Robin HACKHACK: HL2 doesn't use deathmsgs, so I just forced these down below our minimap.
 // It should be positioned by TF2/HL2 separately, and TF2 should position it according to the minimap position
-#define DEATHNOTICE_TOP		YRES( 140 )	// Was: 20
+#define DEATHNOTICE_TOP		YRES( 0 )//YRES( 140 )	// Was: 20
 
 DeathNoticeItem rgDeathNoticeList[ MAX_DEATHNOTICES + 1 ];
 
@@ -208,14 +218,14 @@ void CHudDeathNotice::Paint()
 //-----------------------------------------------------------------------------
 // Purpose: This message handler may be better off elsewhere
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::FireGameEvent( KeyValues * event)
+void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 {
 	// Got message during connection
 	if ( !g_PR )
 		return;
 
-	int killer = engine->GetPlayerForUserID( event->GetInt("killer") ); 
-	int victim = engine->GetPlayerForUserID( event->GetInt("victim") );
+	int killer = engine->GetPlayerForUserID( event->GetInt("attacker") );
+	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
 
 	char killedwith[32];
 	Q_snprintf( killedwith, sizeof( killedwith ), "d_%s", event->GetString("weapon") );

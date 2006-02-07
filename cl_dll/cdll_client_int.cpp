@@ -72,6 +72,10 @@
 #include "cl_dll/IGameClientExports.h"
 #include "ragdoll_shared.h"
 
+// BEG: Added by Mulchman for team menu at level start up
+#include <cl_dll/iviewport.h>
+// END: Added by Mulchman for team menu at level start up
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -849,6 +853,18 @@ void CHLClient::LevelInitPostEntity( )
 	IGameSystem::LevelInitPostEntityAllSystems();
 	C_PhysPropClientside::RecreateAll();
 	internalCenterPrint->Clear();
+
+   // BEG: Added by Mulchman for team menu
+   // Show the team menu selection every time we start a level
+   gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+
+   // Show the class menu selection every time we start a level
+   //gViewPortInterface->ShowPanel( PANEL_CLASS, true );
+
+   // Pop the info panel back up above the team change menu
+   IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+   if( pPanel )
+      pPanel->ShowPanel( true );
 }
 
 
@@ -891,6 +907,11 @@ void CHLClient::LevelShutdown( void )
 	g_ParticleMgr.RemoveAllEffects();
 
 	gHUD.LevelShutdown();
+
+	//-- Added by L0ki --
+	// Hide these panels so the game doesnt crash on us
+	gViewPortInterface->ShowPanel( PANEL_TEAM, false );
+	gViewPortInterface->ShowPanel( PANEL_CLASS, false );
 
 	internalCenterPrint->Clear();
 	messagechars->Clear();

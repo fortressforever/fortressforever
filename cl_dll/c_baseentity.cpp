@@ -1636,6 +1636,10 @@ void C_BaseEntity::UpdatePartitionListEntry()
 	else if (shouldCollide == ENTITY_SHOULD_RESPOND)
 		list |= PARTITION_CLIENT_RESPONSIVE_EDICTS;
 
+	// HACKHACK: Fix to allow laser beam to shine off ragdolls
+	else if (shouldCollide == ENTITY_SHOULD_COLLIDE_RESPOND)
+        list |= PARTITION_CLIENT_SOLID_EDICTS|PARTITION_CLIENT_RESPONSIVE_EDICTS;
+
 	// add the entity to the KD tree so we will collide against it
 	partition->RemoveAndInsert( PARTITION_CLIENT_SOLID_EDICTS | PARTITION_CLIENT_RESPONSIVE_EDICTS | PARTITION_CLIENT_NON_STATIC_EDICTS, list, CollisionProp()->GetPartitionHandle() );
 }

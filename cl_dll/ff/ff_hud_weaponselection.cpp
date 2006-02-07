@@ -22,6 +22,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar hud_fastswitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: hl2 weapon selection hud element
 //-----------------------------------------------------------------------------
@@ -181,6 +183,11 @@ bool CHudWeaponSelection::ShouldDraw()
 		return false;
 	}
 
+	// --> Mirv: Always show if hud fastswitch is on
+	if (hud_fastswitch.GetInt() != 0)
+		return (gpGlobals->curtime < m_flSelectionTime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME);
+	// <-- Mirv: Always show if hud fastswitch is on
+
 	bool bret = CBaseHudWeaponSelection::ShouldDraw();
 	if ( !bret )
 		return false;
@@ -210,8 +217,16 @@ void CHudWeaponSelection::Paint()
 
 	// find and display our current selection
 	C_BaseCombatWeapon *pSelectedWeapon = GetSelectedWeapon();
+
+	// --> Mirv: Try a different tact
 	if ( !pSelectedWeapon )
-		return;
+	{
+		pSelectedWeapon = pPlayer->GetActiveWeapon();
+
+		if (!pSelectedWeapon)
+			return;
+	}
+	// <-- Mirv: Try a different tact
 
 	int iActiveSlot = (pSelectedWeapon ? pSelectedWeapon->GetSlot() : -1);
 

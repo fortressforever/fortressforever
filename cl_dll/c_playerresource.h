@@ -48,6 +48,13 @@ public : // IGameResources intreface
 	virtual int		GetFrags( int index );
 	virtual int		GetHealth( int index );
 
+	// --> Mirv: Extra's needed for menus
+	virtual int		GetClass( int index );
+	virtual int		GetChannel( int index );
+	virtual int		GetTeamClassLimits( int index, int classindex );
+	virtual int		GetTeamLimits( int index );
+	// <-- Mirv: Extra's needed for menus
+
 protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
@@ -60,7 +67,8 @@ protected:
 	bool	m_bAlive[MAX_PLAYERS+1];
 	int		m_iHealth[MAX_PLAYERS+1];
 	Color	m_Colors[MAX_TEAMS];
-
+	int		m_iClass[MAX_PLAYERS+1];	// |-- Mirv: Current class
+	int		m_iChannel[MAX_PLAYERS+1];	// |-- Mirv: For voice channels
 };
 
 extern C_PlayerResource *g_PR;

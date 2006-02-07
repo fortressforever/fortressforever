@@ -13,6 +13,7 @@
 #include "movehelper_server.h"
 #include "shake.h"				// For screen fade constants
 #include "engine/IEngineSound.h"
+#include "ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -349,7 +350,17 @@ bool CMoveHelperServer::PlayerFallingDamage( void )
 	if ( flFallDamage > 0 )
 	{
 		m_pHostPlayer->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), flFallDamage, DMG_FALL ) ); 
-		StartSound( m_pHostPlayer->GetAbsOrigin(), "Player.FallDamage" );
+
+		// --> Mirv: Crouching spies have no fall sound
+		CFFPlayer *ffplayer = ToFFPlayer(m_pHostPlayer);
+
+		if (ffplayer && ffplayer->GetClassSlot() == CLASS_SPY && (ffplayer->GetFlags() & FL_DUCKING))
+		{
+			// Anything here instead?
+		}
+		else
+			StartSound( m_pHostPlayer->GetAbsOrigin(), "Player.FallDamage" );
+		// <-- Mirv: Crouching spies have no fall sound
 	}
 
 	if ( m_pHostPlayer->m_iHealth <= 0 )

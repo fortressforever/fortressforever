@@ -88,7 +88,7 @@ void CBaseHudWeaponSelection::Init(void)
 	// Initialise the weapons resource
 	gWR.Init();
 
-	m_flSelectionTime = gpGlobals->curtime;
+	m_flSelectionTime = gpGlobals->curtime - 10.0f;	// |-- Mirv: Make sure starts in past
 }
 
 //-----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ void CBaseHudWeaponSelection::Reset(void)
 
 	// Start hidden
 	m_bSelectionVisible = false;
-	m_flSelectionTime = gpGlobals->curtime;
+	m_flSelectionTime = gpGlobals->curtime - 10.0f;	// |-- Mirv: Make sure starts in past
 }
 
 //-----------------------------------------------------------------------------
@@ -339,7 +339,11 @@ void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 	}
 
 	SelectWeaponSlot( iSlot );
-	UpdateSelectionTime();
+
+	// --> Mirv: On fast switch don't let this re-show the weapon select
+	if( hud_fastswitch.GetInt() == 0 )
+		UpdateSelectionTime();
+	// <-- Mirv: On fast switch don't let this re-show the weapon select
 }
 
 //-----------------------------------------------------------------------------
@@ -365,13 +369,14 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 	}
 
 	CycleToNextWeapon();
-#ifdef HL2MP
+//#ifdef HL2MP		|-- Mirv: Re-enable
 	if( hud_fastswitch.GetInt() > 0 )
 	{
 		SelectWeapon();
+		m_flSelectionTime = gpGlobals->curtime - 4.0f;
 	}
 	else
-#endif
+//#endif			|-- Mirv: Re-enable
 	{
 		UpdateSelectionTime();
 	}
@@ -393,13 +398,14 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 
 	CycleToPrevWeapon();
 
-#ifdef HL2MP
+//#ifdef HL2MP			|-- Mirv: Re-enable
 	if( hud_fastswitch.GetInt() > 0 )
 	{
 		SelectWeapon();
+		m_flSelectionTime = gpGlobals->curtime - 4.0f;
 	}
 	else
-#endif
+//#endif				|-- Mirv: Re-enable
 	{
 		UpdateSelectionTime();
 	}

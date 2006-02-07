@@ -27,6 +27,12 @@
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
 	#include "hltvdirector.h"
+
+	// BEG: Added by Mulchman for Buildable Objects
+	#include "ff_detpack.h"
+	#include "ff_sentrygun.h"
+	#include "ff_dispenser.h"
+	// END: Added by Mulchman for Buildable Objects
 	
 #endif
 
@@ -45,7 +51,7 @@ ConVar mp_chattime(
 		true, 120 );
 
 ConVar	mp_timelimit( "mp_timelimit",
-					  "0",
+					  "30",
 					  FCVAR_NOTIFY|FCVAR_REPLICATED,
 					  "game time per map in minutes" );
 
@@ -444,6 +450,23 @@ bool CMultiplayRules::IsMultiplayer( void )
 			if ( pKiller->Classify() == CLASS_PLAYER )
 				return (CBasePlayer*)pKiller;
 
+			// BEG: Added by Mulchman
+			// Buildable Objects need to be specifically tested for
+			// because pScorer in DeathNotice is NULL when someone
+			// is killed by a Buildable Object (and this in incorrect -
+			// the owner of the Buildable Object needs to be credited
+			// with the kill). So, return the appropriate owner of
+			// the Buildable Object that made the kill.
+			if( pKiller->Classify( ) == CLASS_DETPACK )				
+				return ( CBasePlayer * )( ( ( CFFDetpack * )pKiller )->m_hOwner.Get() );
+
+			if( pKiller->Classify( ) == CLASS_SENTRYGUN )
+				return ( CBasePlayer * )( ( ( CFFSentryGun * )pKiller )->m_hOwner.Get() );
+
+			if( pKiller->Classify( ) == CLASS_DISPENSER )
+				return ( CBasePlayer * )( ( ( CFFDispenser * )pKiller )->m_hOwner.Get() );
+			// END: Added by Mulchman
+
 			// Killing entity might be specifying a scorer player
 			IScorer *pScorerInterface = dynamic_cast<IScorer*>( pKiller );
 			if ( pScorerInterface )
@@ -516,6 +539,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 	//=========================================================
 	void CMultiplayRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 	{
+		UTIL_LogPrintf("CMultiplayRules::DeathNotice\n");
 		// Work out what killed the player, and send a message to all clients about it
 		const char *killer_weapon_name = "world";		// by default, the player is killed by the world
 		int killer_ID = 0;
@@ -562,31 +586,48 @@ bool CMultiplayRules::IsMultiplayer( void )
 				killer_weapon_name = STRING( pInflictor->m_iClassname );
 			}
 
+			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
+			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
+
 			// strip the NPC_* or weapon_* from the inflictor's classname
 			if ( strncmp( killer_weapon_name, "weapon_", 7 ) == 0 )
 			{
+				UTIL_LogPrintf("  begins with weapon_, removing\n");
 				killer_weapon_name += 7;
 			}
 			else if ( strncmp( killer_weapon_name, "NPC_", 8 ) == 0 )
 			{
+				UTIL_LogPrintf("  begins with NPC_, removing\n");
 				killer_weapon_name += 8;
 			}
 			else if ( strncmp( killer_weapon_name, "func_", 5 ) == 0 )
 			{
+				UTIL_LogPrintf("  begins with func_, removing\n");
 				killer_weapon_name += 5;
 			}
+			// BEG: Added by Mulchman for FF_ entities
+			else if( strncmp( killer_weapon_name, "FF_", 3 ) == 0 )
+			{
+				UTIL_LogPrintf( "  begins with FF_, removing\n" );
+				killer_weapon_name += 3;
+			}
+			// END: Added by Mulchman for FF_ entities
 		}
+
+		UTIL_LogPrintf(" userid (victim): %i\n",pVictim->GetUserID());
+		UTIL_LogPrintf(" attacker: %i\n",killer_ID);
+		UTIL_LogPrintf(" weapon: %s\n",killer_weapon_name);
 
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
 		if ( event )
 		{
 			event->SetInt("userid", pVictim->GetUserID() );
 			event->SetInt("attacker", killer_ID );
-			event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
+			event->SetString("weapon", killer_weapon_name);
+			event->SetInt("priority", 10 );
 			
 			gameeventmanager->FireEvent( event );
 		}
-
 	}
 
 	//=========================================================
@@ -754,14 +795,16 @@ bool CMultiplayRules::IsMultiplayer( void )
 	//=========================================================
 	int CMultiplayRules::DeadPlayerWeapons( CBasePlayer *pPlayer )
 	{
-		return GR_PLR_DROP_GUN_ACTIVE;
+		// Modified by L0ki: we dont drop weapons in FF
+		return GR_PLR_DROP_GUN_NO;
 	}
 
 	//=========================================================
 	//=========================================================
 	int CMultiplayRules::DeadPlayerAmmo( CBasePlayer *pPlayer )
 	{
-		return GR_PLR_DROP_AMMO_ACTIVE;
+		// Modified by L0ki: we drop all ammo types in FF
+		return GR_PLR_DROP_AMMO_ALL;
 	}
 
 	CBaseEntity *CMultiplayRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )

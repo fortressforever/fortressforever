@@ -14,6 +14,10 @@
 #include "buttons.h"
 #include "eventqueue.h"
 
+// --> Mirv: Temp test for triggers
+#include "ff_entity_system.h"
+// <-- Mirv: Temp test for triggers
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -463,7 +467,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	// Ignore touches if button is moving, or pushed-in and waiting to auto-come-out.
 	// UNDONE: Should this use ButtonResponseToTouch() too?
 	if (m_toggle_state == TS_GOING_UP || m_toggle_state == TS_GOING_DOWN )
-		return;		
+		return;	
 
 	if (m_bLocked)
 	{
@@ -481,6 +485,10 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		//
 		if ( HasSpawnFlags(SF_BUTTON_TOGGLE))
 		{
+			// double check that it's allowed to toggle
+			if( !entsys.RunPredicates( this, pActivator, "allowed" ) )
+				return;
+
 			CPASAttenuationFilter filter( this );
 
 			EmitSound_t ep;
@@ -496,6 +504,10 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	}
 	else
 	{
+		// check with entsys to make sure it is allowed to activate
+		if( !entsys.RunPredicates( this, pActivator, "allowed" ) )
+			return;
+
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonActivate( );
 	}

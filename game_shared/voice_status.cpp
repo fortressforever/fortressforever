@@ -309,6 +309,25 @@ void CVoiceStatus::UpdateSpeakerStatus(int entindex, bool bTalking)
 	}
 }
 
+int CVoiceStatus::GetSpeakerStatus(int entindex)
+{
+	player_info_t pi;
+	if ( !engine->GetPlayerInfo( entindex, &pi ) )
+		return 0;
+
+	bool bTalking = !!m_VoicePlayers[entindex];
+	bool bBanned  = m_BanMgr.GetPlayerBan(pi.guid);
+	bool bNeverSpoken = !m_VoiceEnabledPlayers[entindex];
+
+	if (bBanned)
+		return VOICE_BANNED;
+	else if (bTalking)
+		return VOICE_TALKING;
+	else if (bNeverSpoken)
+		return VOICE_NEVERSPOKEN;
+	else
+		return VOICE_NOTTALKING;
+}
 
 void CVoiceStatus::UpdateServerState(bool bForce)
 {
@@ -539,7 +558,11 @@ void CVoiceStatus::SetPlayerBlockedState(int iPlayer, bool blocked)
 			Msg("CVoiceStatus::SetPlayerBlockedState: setting player %d ban to %d\n", iPlayer, !m_BanMgr.GetPlayerBan(pi.guid));
 		}
 
-		m_BanMgr.SetPlayerBan(pi.guid, !m_BanMgr.GetPlayerBan(pi.guid));
+		// --> Mirv: What the hell, a toggle??
+		// m_BanMgr.SetPlayerBan(pi.guid, !m_BanMgr.GetPlayerBan(pi.guid));
+		m_BanMgr.SetPlayerBan(pi.guid, blocked);
+		// <-- Mirv: What the hell, a toggle??
+
 		UpdateServerState(false);
 	}
 }

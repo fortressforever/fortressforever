@@ -15,7 +15,32 @@
 #include "c_baseplayer.h"
 #include "ff_shareddefs.h"
 #include "baseparticleentity.h"
+#include "ff_esp_shared.h"
+#include "ff_mapguide.h"		// |-- Mirv: Map guides
+#include "ff_weapon_base.h"
 
+#define FF_BUILD_NONE		0
+#define FF_BUILD_DISPENSER	1
+#define FF_BUILD_SENTRYGUN	2
+#define FF_BUILD_DETPACK	3
+
+// BEG: Added by Mulchman for team junk
+#define FF_TEAM_UNASSIGNED	0
+#define FF_TEAM_SPEC		1
+#define FF_TEAM_BLUE		2
+#define FF_TEAM_RED			3
+#define FF_TEAM_YELLOW		4
+#define FF_TEAM_GREEN		5
+// END: Added by Mulchman for team junk
+
+void CC_PrimeOne(void);
+void CC_PrimeTwo(void);
+void CC_ThrowGren(void);
+
+// --> Mirv: More gren priming functions
+void CC_ToggleOne( void );
+void CC_ToggleTwo( void );
+// <-- Mirv: More gren priming functions
 
 class C_FFPlayer : public C_BasePlayer, public IFFPlayerAnimStateHelpers
 {
@@ -35,12 +60,35 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
+	//--- Added by L0ki ---
+	virtual void Simulate();
+	//---------------------
+
+public:
+	// Beg: Added by Mulchman for building objects and such
+	//EHANDLE m_hDispenser; // Shared network handle for the dispenser
+	//EHANDLE m_hSentryGun; // Shared network handle for the sentry gun
+	//EHANDLE m_hDetpack; // Shared network handle for the detpack
+	CNetworkHandle( CBaseEntity, m_hDispenser );
+	CNetworkHandle( C_AI_BaseNPC, m_hSentryGun );
+	CNetworkHandle( CBaseEntity, m_hDetpack );
+
+	// Used for seeing if a player is currently
+	// trying to build a detpack, dispenser, or sentry gun
+	CNetworkVar( bool, m_bBuilding );
+	// Tells us what we are currently trying to build
+	CNetworkVar( int, m_iCurBuild );
+	// Tells us if the player cancelled building
+	CNetworkVar( bool, m_bCancelledBuild );
+
+	bool	m_bClientBuilding;
+	// End: Added by Mulchman for building objects and such
 
 // Called by shared code.
 public:
 	
 	// IFFPlayerAnimState overrides.
-	virtual CWeaponFFBase* FFAnim_GetActiveWeapon();
+	virtual CFFWeaponBase* FFAnim_GetActiveWeapon();
 	virtual bool FFAnim_CanMove();
 
 	void DoAnimationEvent( PlayerAnimEvent_t event );
@@ -51,12 +99,11 @@ public:
 	QAngle	m_angEyeAngles;
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
-	CNetworkVar( int, m_iThrowGrenadeCounter );	// used to trigger grenade throw animations.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 
 	EHANDLE	m_hRagdoll;
 
-	CWeaponFFBase *GetActiveFFWeapon() const;
+	CFFWeaponBase *GetActiveFFWeapon() const;
 
 	C_BaseAnimating *BecomeRagdollOnClient( bool bCopyEntity);
 	IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const;
@@ -65,12 +112,92 @@ public:
 		Vector vecSrc, 
 		const QAngle &shootAngles, 
 		float vecSpread, 
-		int iDamage, 
+		float flDamage, 	// |-- Mirv: Float
 		int iBulletType,
 		CBaseEntity *pevAttacker,
 		bool bDoEffects,
 		float x,
-		float y );
+		float y,
+		float flSniperRifleCharge = 0.0f ); // added by Mulchman 9/20/2005
+											// |-- Mirv: Modified a bit
+
+	// --> Mirv: Proper sound effects
+	void PlayJumpSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol );
+	void PlayFallSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol );
+	void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
+	// <-- Mirv: Proper sound effects
+
+	// ---> added by billdoor
+public:
+	CNetworkVar(int, m_iMaxHealth);
+	CNetworkVar(int, m_iArmor);
+	CNetworkVar(int, m_iMaxArmor);
+	CNetworkVar(float, m_fArmorType);
+
+	virtual int GetMaxHealth() const { return m_iMaxHealth; };
+	virtual int	GetArmor() const { return m_iArmor; };
+	virtual int	GetMaxArmor() const { return m_iMaxArmor; };
+	virtual float GetArmorType() const { return m_fArmorType; };
+	// ---> end
+
+private:
+	// ---> FF movecode stuff (billdoor)
+	friend CFFGameMovement;
+	void StartSkiing(void) { if(m_iSkiState == 0) m_iSkiState = 1; m_iLocalSkiState = 1; };
+	void StopSkiing(void) { if(m_iSkiState == 1) m_iSkiState = 0; m_iLocalSkiState = 0; };
+	int GetSkiState(void) { return m_iSkiState.Get(); };
+	CNetworkVar(int, m_iSkiState);
+	// this version of the ski state is not sent over the network, but is altered only by the movecode for the local player
+	int m_iLocalSkiState;
+	// ---> end
+
+	// Beg: Added by L0ki for grenade stuff
+public:
+	CNetworkVar(int, m_iGrenadeState);
+	CNetworkVar(float, m_flServerPrimeTime);
+	CNetworkVar(int, m_iPrimary);
+	CNetworkVar(int, m_iSecondary);
+
+	float m_flPrimeTime;
+	float m_flLatency;
+	// End: Added by L0ki for grenade stuff
+
+	// Beg: Added by FryGuy for status effect stuff
+	CNetworkVar(float, m_flNextBurnTick);   // when the next burn tick should fire
+	CNetworkVar(int, m_iBurnTicks);         // how many more ticks are left to fire
+	CNetworkVar(float, m_flBurningDamage);  // how much total damage is left to take
+	// End: Added by FryGuy
+
+	// --> Mirv: Map guide stuff
+	CNetworkHandle( CFFMapGuide, m_hNextMapGuide );
+	CNetworkHandle( CFFMapGuide, m_hLastMapGuide );
+
+	float		m_flNextMapGuideTime;
+	// <-- Mirv: Map guide stuff
+
+	// --> Mirv: Conc stuff
+	float m_flConcTime, m_flConcTimeStart;
+	QAngle m_angConced, m_angConcedTest;
+	
+	virtual const QAngle &EyeAngles();
+	virtual void CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
+	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
+	
+	virtual void PreThink( void );
+	// <-- Mirv: Conc stuff
+
+	// --> Mirv: Hold some class info on the player side
+	int m_iClassStatus;
+	int GetClassSlot( void );
+
+	void ClassSpecificSkill();
+	void ClassSpecificSkill_Post();
+	// <-- Mirv: Hold some class info on the player side
+
+	float m_flMassCoefficient;
+	float m_flNextClassSpecificSkill;
+
+	void SwapToWeapon(FFWeaponID);
 
 private:
 	C_FFPlayer( const C_FFPlayer & );

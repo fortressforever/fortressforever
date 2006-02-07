@@ -28,7 +28,7 @@ BEGIN_SIMPLE_DATADESC( CTakeDamageInfo )
 	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER),
 END_DATADESC()
 
-void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType )
+void CTakeDamageInfo::Init( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, const Vector &reportedPosition, float flDamage, int bitsDamageType, int iKillType)
 {
 	m_hInflictor = pInflictor;
 	if ( pAttacker )
@@ -280,7 +280,7 @@ void CalculateMeleeDamageForce( CTakeDamageInfo *info, const Vector &vecMeleeDir
 	info->SetDamagePosition( vecForceOrigin );
 
 	// Calculate an impulse large enough to push a 75kg man 4 in/sec per point of damage
-	float flForceScale = info->GetBaseDamage() * ImpulseScale( 75, 4 );
+	float flForceScale = info->GetBaseDamage() * ImpulseScale( 75, .2 );
 	Vector vecForce = vecMeleeDir;
 	VectorNormalize( vecForce );
 	vecForce *= flForceScale;

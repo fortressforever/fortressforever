@@ -3,7 +3,7 @@
 // Purpose: The TF Game rules object
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2005/08/26 22:00:12 $
 // $NoKeywords: $
 //=============================================================================//
 
@@ -61,11 +61,16 @@ public:
 	CFFGameRules();
 	virtual ~CFFGameRules();
 
+
+	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
+	virtual bool FlPlayerFallDeathDoesScreenFade( CBasePlayer *pPlayer );
 	virtual bool ClientCommand( const char *pcmd, CBaseEntity *pEdict );
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
 	virtual void Think();
 
 	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
+
+	virtual void Precache( void );	// |-- Mirv: Just need a function that occurs at the start of each map to reset pm
 
 private:
 
@@ -73,6 +78,17 @@ private:
 
 
 #endif
+
+protected:
+	// --> Mirv: Prematch
+	void StartGame();
+	float m_flGameStarted;
+
+public:
+	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
+	// <-- Mirv: Prematch
+
+
 };
 
 //-----------------------------------------------------------------------------

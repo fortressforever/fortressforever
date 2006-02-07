@@ -143,7 +143,7 @@ void CHudNumericDisplay::Paint()
 		surface()->DrawSetTextColor(GetFgColor());
 		PaintNumbers(m_hNumberFont, digit_xpos, digit_ypos, m_iValue);
 
-		// draw the overbright blur
+/*		// draw the overbright blur
 		for (float fl = m_flBlur; fl > 0.0f; fl -= 1.0f)
 		{
 			if (fl >= 1.0f)
@@ -158,7 +158,7 @@ void CHudNumericDisplay::Paint()
 				surface()->DrawSetTextColor(col);
 				PaintNumbers(m_hNumberGlowFont, digit_xpos, digit_ypos, m_iValue);
 			}
-		}
+		}*/
 	}
 
 	// total ammo

@@ -1364,6 +1364,23 @@ C_LocalTempEntity * CTempEnts::SpawnTempModel( model_t *pModel, const Vector &ve
 //-----------------------------------------------------------------------------
 void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, bool firstPerson )
 {
+	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
+	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
+	return;
+
+
+	DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
+
+		if ( firstPerson )
+		{
+			MuzzleFlash_Combine_Player( entityIndex, attachmentIndex );
+		}
+		else
+		{
+			MuzzleFlash_Combine_NPC( entityIndex, attachmentIndex );
+		}
+	return;
+
 	switch( type )
 	{
 	case MUZZLEFLASH_COMBINE:
@@ -1428,7 +1445,7 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 	default:
 		{
 			//NOTENOTE: This means you specified an invalid muzzleflash type, check your spelling?
-			Assert( 0 );
+			//Assert( 0 );
 		}
 		break;
 	}
@@ -1443,9 +1460,22 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 {
 #ifdef CSTRIKE_DLL
 
+#else
+
+	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
+	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
 	return;
 
-#else
+	DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
+		if ( firstPerson )
+		{
+			MuzzleFlash_AR2_Player( pos1, angles, entityIndex );
+		}
+		else
+		{
+			MuzzleFlash_AR2_NPC( pos1, angles, entityIndex );
+		}
+	return;
 
 	//NOTENOTE: This function is becoming obsolete as the muzzles are moved over to being local to attachments
 
@@ -1525,7 +1555,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	
 	default:
 		// There's no supported muzzle flash for the type specified!
-		Assert(0);
+		//Assert(0);
 		break;
 	}
 
@@ -2020,12 +2050,13 @@ void CTempEnts::LevelInit()
 #endif
 
 #if defined( CSTRIKE_DLL ) || defined ( FF_DLL )
-	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/Shells/shell_9mm.mdl" );
-	m_pCS_57Shell		= (model_t *)engine->LoadModel( "models/Shells/shell_57.mdl" );
-	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/Shells/shell_12gauge.mdl" );
-	m_pCS_556Shell		= (model_t *)engine->LoadModel( "models/Shells/shell_556.mdl" );
-	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/Shells/shell_762nato.mdl" );
-	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/Shells/shell_338mag.mdl" );
+	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_9mm.mdl" );
+	m_pCS_57Shell		= (model_t *)engine->LoadModel( "models/shells/shell_57.mdl" );
+	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/shells/shell_12gauge.mdl" );
+	m_pCS_556Shell		= (model_t *)engine->LoadModel( "models/shells/shell_556.mdl" );
+	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/shells/shell_762nato.mdl" );
+	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/shells/shell_338mag.mdl" );
+	m_pFF_40MMShell = (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
 #endif
 }
 
@@ -3048,6 +3079,9 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 		hitsound = TE_RIFLE_SHELL;
 		pModel = m_pCS_338MAGShell;
 		break;
+	case FF_SHELL_40MM:
+		hitsound = TE_RIFLE_SHELL;
+		pModel = m_pFF_40MMShell;
 	}
 #endif
 
@@ -3091,6 +3125,11 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	pTemp->m_vecTempEntAngVelocity[0] = random->RandomFloat(-256,256);
 	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat(-256,256);
 	pTemp->m_vecTempEntAngVelocity[2] = 0;
+#if defined ( CSTRIKE_DLL ) || defined ( FF_DLL )
+	if (shellType == FF_SHELL_40MM)
+		pTemp->m_vecTempEntAngVelocity = QAngle(0, 0, 0);
+#endif
+
 	pTemp->SetRenderMode( kRenderNormal );
 	pTemp->tempent_renderamt = 255;
 	

@@ -691,7 +691,12 @@ void CBaseHudChat::Printf( const char *fmt, ... )
 	}
 
 	line->SetText( "" );
-	line->InsertColorChange( line->GetTextColor() );
+	
+	// --> Mirv: Text alpha fix
+	Color col = line->GetTextColor();
+	line->InsertColorChange( Color( 255, 178, 0, 255 ) );
+	// <-- Mirv: Text alpha fix
+
 	line->SetExpireTime();
 	line->InsertString( pmsg );
 	line->SetVisible( true );

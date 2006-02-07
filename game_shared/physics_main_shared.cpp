@@ -17,6 +17,15 @@
 #include "igamesystem.h"
 #include "utlmultilist.h"
 
+// BEG: Added by Mulch 11/07/2005
+#ifdef CLIENT_DLL
+	#define CFFBuildableObject C_FFBuildableObject
+	#include "c_ff_buildableobjects.h"
+#else
+	#include "ff_buildableobject.h"
+#endif
+// END: Added by Mulch 11/07/2005
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -907,6 +916,20 @@ void CBaseEntity::PhysicsImpact( CBaseEntity *other, trace_t &trace )
 		return;
 	}
 
+	// BEG: Added by Mulch 11/07/2005
+	if( trace.m_pEnt )
+	{
+		if( ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) ||
+			( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || 
+			( trace.m_pEnt->Classify() == CLASS_DETPACK ) )
+		{
+			// If there's no owner bail out
+			if( !( ( ( CFFBuildableObject * )trace.m_pEnt )->CheckForOwner() ) )
+				return;
+		}
+	}
+	// END: Added by Mulch 11/07/2005
+
 	// If either of the entities is flagged to be deleted, 
 	//  don't call the touch functions
 	if ( ( GetFlags() | other->GetFlags() ) & FL_KILLME )
@@ -1394,9 +1417,12 @@ void CBaseEntity::PhysicsCheckWaterTransition( void )
 			// just crossed into water
 			EmitSound( "BaseEntity.EnterWater" );
 
-			Vector vecAbsVelocity = GetAbsVelocity();
-			vecAbsVelocity[2] *= 0.5;
-			SetAbsVelocity( vecAbsVelocity );
+			// BEG: Removed by Mulch - it was deflecting
+			// stuff entering water
+//			Vector vecAbsVelocity = GetAbsVelocity();
+//			vecAbsVelocity[2] *= 0.5;
+//			SetAbsVelocity( vecAbsVelocity );
+			// END: Mulch
 		}
 	}
 	else

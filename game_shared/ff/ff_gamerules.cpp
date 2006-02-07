@@ -9,16 +9,19 @@
 #include "ff_gamerules.h"
 #include "ammodef.h"
 #include "KeyValues.h"
-#include "weapon_ffbase.h"
-
+#include "ff_weapon_base.h"
 
 #ifdef CLIENT_DLL
-
+	#define C_FFTeam CFFTeam
+	#include "c_ff_team.h"
 
 #else
 	
 	#include "voice_gamemgr.h"
-	#include "team.h"
+	#include "ff_team.h"			// |-- Mirv: Using our proper team class now now
+	#include "ff_player.h"
+	#include "ff_playercommand.h"
+	#include "ff_statslog.h"
 
 #endif
 
@@ -42,6 +45,12 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_gamerules, CFFGameRulesProxy );
 IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
+// --> Mirv: Prematch
+ConVar mp_prematch( "mp_prematch",
+					"0.2",
+					FCVAR_NOTIFY|FCVAR_REPLICATED,
+					"delay before game starts" );
+// <-- Mirv: Prematch
 
 #ifdef CLIENT_DLL
 	void RecvProxy_FFGameRules( const RecvProp *pProp, void **pOut, void *pData, int objectID )
@@ -71,8 +80,33 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
 #ifdef CLIENT_DLL
 
-
 #else
+
+	// --> Mirv: Class limits
+
+	// Need to update the real class limits for this map
+	void ClassRestrictionChange( ConVar *var, const char *pOldString )
+	{
+		// Update the team limits
+		for( int i = 0; i < g_Teams.Count(); i++ )
+		{
+            CFFTeam *pTeam = (CFFTeam *) GetGlobalTeam( i );
+
+			pTeam->UpdateLimits();
+		}
+	}
+
+	// Classes to restrict (not civilian though, would make no sense to)
+	ConVar cr_scout( "cr_scout", "0", 0, "Max number of scouts", &ClassRestrictionChange );
+	ConVar cr_sniper( "cr_sniper", "0", 0, "Max number of snipers", &ClassRestrictionChange );
+	ConVar cr_soldier( "cr_soldier", "0", 0, "Max number of soldiers", &ClassRestrictionChange );
+	ConVar cr_demoman( "cr_demoman", "0", 0, "Max number of demoman", &ClassRestrictionChange );
+	ConVar cr_medic( "cr_medic", "0", 0, "Max number of medic", &ClassRestrictionChange );
+	ConVar cr_hwguy( "cr_hwguy", "0", 0, "Max number of hwguy", &ClassRestrictionChange );
+	ConVar cr_pyro( "cr_pyro", "0", 0, "Max number of pyro", &ClassRestrictionChange );
+	ConVar cr_spy( "cr_spy", "0", 0, "Max number of spy", &ClassRestrictionChange );
+	ConVar cr_engineer( "cr_engineer", "0", 0, "Max number of engineer", &ClassRestrictionChange );
+	// <-- Mirv: Class limits
 
 	// --------------------------------------------------------------------------------------------------- //
 	// Voice helper
@@ -105,12 +139,23 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	// --------------------------------------------------------------------------------------------------- //
 
 	// NOTE: the indices here must match TEAM_TERRORIST, TEAM_CT, TEAM_SPECTATOR, etc.
+	/*
 	char *sTeamNames[] =
 	{
 		"Unassigned",
 		"Spectator",
 		"Terrorist",
 		"Counter-Terrorist"
+	};
+	*/
+	char *sTeamNames[ ] =
+	{
+		"#FF_TEAM_UNASSIGNED",
+		"#FF_TEAM_SPECTATOR",
+		"#FF_TEAM_BLUE",
+		"#FF_TEAM_RED",
+		"#FF_TEAM_YELLOW",
+		"#FF_TEAM_GREEN"
 	};
 
 
@@ -151,17 +196,33 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	// CFFGameRules implementation.
 	// --------------------------------------------------------------------------------------------------- //
 
+	// --> Mirv: Extra gamerules stuff
 	CFFGameRules::CFFGameRules()
 	{
 		// Create the team managers
 		for ( int i = 0; i < ARRAYSIZE( sTeamNames ); i++ )
 		{
-			CTeam *pTeam = static_cast<CTeam*>(CreateEntityByName( "ff_team_manager" ));
+			// Use our team class with allies + class limits
+			CFFTeam *pTeam = static_cast<CFFTeam*>(CreateEntityByName( "ff_team_manager" ));
 			pTeam->Init( sTeamNames[i], i );
 
 			g_Teams.AddToTail( pTeam );
 		}
+
+		// Prematch system, game has not started
+		m_flGameStarted = -1.0f;
+		
+		// Start stats engine
+		SendStats();
+		g_StatsLog.CleanUp();
 	}
+
+	void CFFGameRules::Precache()
+	{
+		m_flGameStarted = -1.0f;
+		BaseClass::Precache();
+	}
+	// <-- Mirv: Extra gamerules stuff
 
 	//-----------------------------------------------------------------------------
 	// Purpose: 
@@ -180,8 +241,67 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	//-----------------------------------------------------------------------------
 	bool CFFGameRules::ClientCommand( const char *pcmd, CBaseEntity *pEdict )
 	{
+		if(g_pPlayerCommands && g_pPlayerCommands->ProcessCommand(pcmd, (CFFPlayer*)pEdict))
+			return true;
+
+		// --> Mirv: More commands
+		CFFPlayer *pPlayer = (CFFPlayer *) pEdict;
+
+		if (pPlayer && pPlayer->ClientCommand(pcmd))
+			return true;
+		// <-- Mirv: More commands
+
 		return BaseClass::ClientCommand( pcmd, pEdict );
 	}
+
+	// Uh.. we don't want that screen fade crap
+	bool CFFGameRules::FlPlayerFallDeathDoesScreenFade( CBasePlayer *pPlayer )
+	{
+		return false;
+	}
+
+	//=========================================================
+	// reduce fall damage
+	//=========================================================
+	float CFFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
+	{
+		// --> Mirv: Defrag's fall damage
+		CFFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
+
+		// This is bad
+		if( !pFFPlayer )
+		{
+			DevWarning("Fall damage on non-CFFPlayer!");
+			return 9999;
+		}
+
+		float flMaxSafe = PLAYER_MAX_SAFE_FALL_SPEED;
+
+		// Spy can fall twice as far without hurting
+		if( pFFPlayer->GetClassSlot() == 8 )
+			flMaxSafe *= 1.412;
+
+		// Should they really be losing damage
+		if( pPlayer->m_Local.m_flFallVelocity < flMaxSafe )
+			return 0;
+
+		DevMsg( "Falling speed: %f\n", (float)pPlayer->m_Local.m_flFallVelocity );
+
+		// Speed is a good approximation for now of a class's weight
+		// Therefore bigger base damage for slower classes
+		float weightratio = clamp( ( pPlayer->MaxSpeed() - 230.0f ) / 170.0f, 0, 1.0f );
+		float flBaseDmg = 6.0f + ( 1.0f - weightratio ) * 6.0f;
+
+		// Don't worry this'll be optimised!
+		float speedratio = clamp( ( pPlayer->m_Local.m_flFallVelocity - flMaxSafe ) / ( PLAYER_FATAL_FALL_SPEED - flMaxSafe ), 0, 1.0f );
+		float flDmg = flBaseDmg + speedratio * flBaseDmg;
+
+		DevMsg( "Base Damage for Class: %f, Damage for Fall: %f\n", flBaseDmg, flDmg );
+		
+
+		return flDmg;
+		// <-- Mirv: Defrag's fall damage
+	} 
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Player has just spawned. Equip them.
@@ -209,7 +329,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 		else
 			falloff = 1.0;
 
-		int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;
+		//int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;	|-- Mirv: Don't need this anymore
 		
 		vecSrc.z += 1;// in case grenade is lying on the ground
 
@@ -224,11 +344,13 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 					continue;
 				}
 
+				// --> Mirv: Explosions travel through water surface
 				// blast's don't tavel into or out of water
-				if (bInWater && pEntity->GetWaterLevel() == 0)
-					continue;
-				if (!bInWater && pEntity->GetWaterLevel() == 3)
-					continue;
+				//if (bInWater && pEntity->GetWaterLevel() == 0)
+				//	continue;
+				//if (!bInWater && pEntity->GetWaterLevel() == 3)
+				//	continue;
+				// <-- Mirv: Explosions travel through water surface
 
 				// radius damage can only be blocked by the world
 				vecSpot = pEntity->BodyTarget( vecSrc );
@@ -302,21 +424,111 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 		}
 	}
 
+	// --> Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
 	void CFFGameRules::Think()
 	{
-		BaseClass::Think();
+		// Lots of these depend on the game being started
+		if( !HasGameStarted() )
+		{
+			float flPrematch = mp_prematch.GetFloat() * 60;
+
+			// We should have started now, lets go!
+			if( gpGlobals->curtime > flPrematch )
+				StartGame();
+			else
+			{
+				// Stuff to do during prematch (not constantly though!)
+				for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+				{
+					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+
+					if ( pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
+						pPlayer->AddFlag( FL_FROZEN );
+				}
+
+				// This is a bit tempy
+				static float flNextMsg = 0;
+
+				// Only send message every second (not every frame)
+				if( gpGlobals->curtime > flNextMsg )
+				{
+					flNextMsg = gpGlobals->curtime + 1.0f;
+				
+					CReliableBroadcastRecipientFilter user;
+
+					char sztimeleft[10];
+					Q_snprintf( sztimeleft, sizeof(sztimeleft), "%d", (int) ( flPrematch - gpGlobals->curtime ) + 1 );
+
+					UTIL_ClientPrintAll( HUD_PRINTCENTER, "#FF_PREMATCH", sztimeleft );
+				}
+			}
+		}
+		else
+		{
+			float flTimeLimit = mp_timelimit.GetFloat() * 60;
+		
+			// Catch the end of the map
+			if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit + m_flGameStarted )
+			{
+				ChangeLevel();
+				return;
+			}
+		}
+		
+		GetVoiceGameMgr()->Update( gpGlobals->frametime );
 	}
+	// <-- Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
+
+	// --> Mirv: Prematch
+	// Stuff to do when the game starts
+	void CFFGameRules::StartGame()
+	{
+		m_flGameStarted = gpGlobals->curtime;
+
+		// Stuff to do during prematch
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+		{
+			CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+			if ( pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR && pPlayer->GetTeamNumber() != TEAM_UNASSIGNED )
+			{
+				pPlayer->RemoveFlag( FL_FROZEN );
+				pPlayer->KillAndRemoveItems();
+			}
+
+			UTIL_ClientPrintAll( HUD_PRINTCENTER, "#FF_PREMATCH_END" );
+		}
+	}
+	// <-- Mirv: Prematch
 
 #endif
 
 
 bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
+	// Bug #0000178: Grenades and player clipping
+	// HACKHACK this might break something else
+	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+		collisionGroup1 == COLLISION_GROUP_PROJECTILE )
+	{
+		return false;
+	}
+
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
 		swap(collisionGroup0,collisionGroup1);
 	}
+
+	//DevMsg("ShouldCollide: %d %d\n", collisionGroup0, collisionGroup1);
+
+	// Mirv: Don't collide projectiles with weapon objects (eg. ammo bags)
+	if (collisionGroup0 == COLLISION_GROUP_WEAPON && collisionGroup1 == COLLISION_GROUP_PROJECTILE)
+		return false;
+
+	// Mirv: Don't have ammo bags and the like colliding either
+	if (collisionGroup0 == COLLISION_GROUP_WEAPON && collisionGroup1 == COLLISION_GROUP_WEAPON)
+		return false;
 	
 	//Don't stand on COLLISION_GROUP_WEAPON
 	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
@@ -324,7 +536,7 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		return false;
 	}
-	
+
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }
 
@@ -355,8 +567,14 @@ CAmmoDef* GetAmmoDef()
 		bInitted = true;
 		
 		// def.AddAmmoType( BULLET_PLAYER_50AE,		DMG_BULLET, TRACER_LINE, 0, 0, "ammo_50AE_max",		2400, 0, 10, 14 );
-		def.AddAmmoType( AMMO_GRENADE, DMG_BLAST, TRACER_LINE, 0, 0,	1/*max carry*/, 1, 0 );
-		def.AddAmmoType( AMMO_BULLETS, DMG_BULLET, TRACER_LINE, 0, 0,	1/*max carry*/, 1, 0 );
+		//def.AddAmmoType( AMMO_GRENADES,	DMG_BLAST,	TRACER_LINE, 0, 0,	200/*max carry*/, 1, 0 );
+		def.AddAmmoType( AMMO_BULLETS,	DMG_BULLET, TRACER_LINE, 0, 0,	200/*max carry*/, 75, 0 );
+		def.AddAmmoType( AMMO_NAILS,	DMG_BULLET, TRACER_LINE, 0, 0,	200/*max carry*/, 75, 0 );
+		def.AddAmmoType( AMMO_SHELLS,	DMG_BULLET, TRACER_LINE, 0, 0,	200/*max carry*/, 75, 0 );
+		def.AddAmmoType( AMMO_ROCKETS,	DMG_BLAST,	TRACER_LINE, 0, 0,	200/*max carry*/, 1, 0 );
+		def.AddAmmoType( AMMO_CELLS,	DMG_SHOCK,	TRACER_LINE, 0, 0,	200/*max carry*/, 1, 0 );
+		def.AddAmmoType( AMMO_DETPACK,	DMG_BLAST,	TRACER_LINE, 0, 0,	1/*max carry*/, 1, 0 );
+		def.AddAmmoType( AMMO_RADIOTAG,	DMG_BULLET,	TRACER_LINE, 0, 0,  4/*max carry*/, 75, 0 );
 	}
 
 	return &def;
@@ -367,7 +585,14 @@ CAmmoDef* GetAmmoDef()
 
 const char *CFFGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	return "(chat prefix)";
+	// BEG: Added by Mulchman
+	if( bTeamOnly )
+		return "(TEAM)";
+	else
+		return "(GLOBAL)";
+	// END: Added by Mulchman
+
+	return "(FortressForever - chat prefix bee-hotches)";
 }
 
 #endif
@@ -377,6 +602,40 @@ const char *CFFGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
+//#ifdef GAME_DLL	
+	// BEG: Added by Mulchman
+	// TODO: Fix!?
+	if( pPlayer->GetTeamNumber() == pTarget->GetTeamNumber() )
+	{
+		//DevMsg( "[PlayerRelationship] [serverside] dudes are on the same team!\n" );
+		return GR_TEAMMATE;
+	}
+
+	if( pPlayer->IsPlayer() && pTarget->IsPlayer() )
+	{
+		//DevMsg( "[PlayerRelationship] [serverside] comparing two players\n" );
+
+		// --> Mirv: Allies
+		CFFTeam *pPlayerTeam = ( CFFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
+
+		if( pPlayerTeam->GetAllies() & ( 1 << pTarget->GetTeamNumber() ) )
+		{
+			//DevMsg( "[PlayerRelationship] [serverside] dudes are allies!\n" );
+			return GR_TEAMMATE;		// Do you want them identified as an ally or a tm?
+		}
+
+		// Mulch: I think team mate is just fine
+		// <-- Mirv: Allies
+
+	}
+	// END: Added by Mulchman
+	
+	//DevMsg("CFFGameRules::PlayerRelationship ( %d, %d )\n", ENTINDEX(pPlayer), ENTINDEX(pTarget));
+
+//#endif
+
+	// Commented out by Mulch 02/03/2006 
+	/*
 #ifndef CLIENT_DLL
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
@@ -387,6 +646,7 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 		return GR_TEAMMATE;
 
 #endif
+		*/
 
 	return GR_NOTTEAMMATE;
 }

@@ -14,7 +14,7 @@
 #include "vgui/ipanel.h"
 #include <vgui_controls/AnimationController.h>
 #include "ivmodemanager.h"
-#include "BuyMenu.h"
+//#include "BuyMenu.h"
 #include "filesystem.h"
 #include "vgui/ivgui.h"
 #include "keydefs.h"

@@ -1544,7 +1544,9 @@ int CJeepFourWheelServerVehicle::GetExitAnimToUse( Vector &vecEyeExitEndpoint, b
 
 	CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(m_pVehicle);
 	// If we don't have the gun anymore, we want to get out using the "gun-less" animation
-	if ( pAnimating )
+	// VALVE FIX: Modified by Mulchman according to hl2dev.tk
+	if ( pAnimating && ( ( CPropJeep * )m_pVehicle )->TauCannonHasBeenCutOff( ) )
+	//if ( pAnimating )
 	{
 		// HACK: We know the tau-cannon removed exit anim uses the first upright anim's exit details
 		trace_t tr;

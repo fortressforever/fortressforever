@@ -30,6 +30,19 @@ public:
 
 					C_FFTeam();
 	virtual			~C_FFTeam();
+
+	// --> Mirv: Menus need to know limits
+	virtual int		Get_Classes( int );
+	virtual int		Get_Teams( void );
+	virtual int		GetAllies( void );
+
+private:
+
+	int		m_iClasses[12];
+	int		m_iMaxPlayers;
+	int		m_iAllies;
+	// <-- Mirv: Menus need to know limits
+
 };
 
 

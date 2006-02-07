@@ -20,8 +20,9 @@ void FX_FireBullets(
 	int	iWeaponID,
 	int	iMode,
 	int iSeed,
-	float flSpread
-	);
+	float flSpread,
+	float flSniperRifleCharge = 0.0f	// Extra shiz by Mulchman 9/20/2005
+	);									// |-- Mirv: Modified a bit
 
 
 #endif // FX_CS_SHARED_H

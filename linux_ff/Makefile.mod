@@ -6,13 +6,14 @@
 #############################################################################
 # PROJECT MAKEFILES
 #############################################################################
-MAKE_FILE=Makefile.$(MOD_CONFIG)
+MAKE_FILE=Makefile.$(MOD_CONFIG)-fixed
 include $(MAKE_FILE)
 
 #############################################################################
 # The compiler command lne for each src code file to compile
 #############################################################################
 DO_CC=$(CPLUS) -w $(INCLUDES) $(CFLAGS) -o $@ -c $<
+DO_C=$(CC) -w $(INCLUDES) $(CFLAGS) -o $@ -c $<
 
 
 clean:

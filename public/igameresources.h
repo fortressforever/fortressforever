@@ -36,6 +36,13 @@ public:
 	virtual int		GetFrags( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
 	virtual int		GetHealth( int index ) = 0;
+
+	// --> Mirv: Extra's needed for menus
+	virtual int		GetClass( int index ) = 0;
+	virtual int		GetChannel( int index ) = 0;
+	virtual int		GetTeamClassLimits( int index, int classindex ) = 0;
+	virtual int		GetTeamLimits( int index ) = 0;
+	// <-- Mirv: Extra's needed for menus
 };
 
 extern IGameResources *GameResources( void ); // singelton accessor

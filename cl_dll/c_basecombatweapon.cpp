@@ -365,6 +365,8 @@ bool C_BaseCombatWeapon::ShouldDraw( void )
 		// Don't show it if it's the view model and we're in firstperson
 		if (input->CAM_IsThirdPerson() == false)
 			return false;
+
+		SetModel( GetWorldModel() );	// |-- Mirv: 3rd person viewmodel fix
 		
 		return true;
 	}

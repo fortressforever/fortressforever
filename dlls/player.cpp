@@ -640,11 +640,13 @@ void CBasePlayer::DeathSound( void )
 		EmitSound( "Player.Death" );
 	}
 
+	// --> Mirv: Don't play suit sound'
 	// play one of the suit death alarms
-	if ( IsSuitEquipped() )
-	{
-		UTIL_EmitGroupnameSuit(edict(), "HEV_DEAD");
-	}
+	//if ( IsSuitEquipped() )
+	//{
+	//	UTIL_EmitGroupnameSuit(edict(), "HEV_DEAD");
+	//}
+	// <-- Mirv: Don't play suit sound
 }
 
 // override takehealth
@@ -715,8 +717,8 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 
 		SetLastHitGroup( ptr->hitgroup );
 
-		
-		switch ( ptr->hitgroup )
+		// --> Mirv: No location damage please
+/*		switch ( ptr->hitgroup )
 		{
 		case HITGROUP_GENERIC:
 			break;
@@ -739,7 +741,8 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 			break;
 		default:
 			break;
-		}
+		}*/
+		// <-- Mirv: No location damage please
 
 		SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage());// a little surface blood.
 		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
@@ -1643,7 +1646,10 @@ void CBasePlayer::WaterMove()
 		
 		if (m_AirFinished < gpGlobals->curtime)
 		{
-			EmitSound( "Player.DrownStart" );
+			// --> Mirv: Fix the bubbly spawn start
+			if( GetTeamNumber() != TEAM_SPECTATOR && GetTeamNumber() != TEAM_UNASSIGNED )
+                EmitSound( "Player.DrownStart" );
+			// <-- Mirv: Fix the bubbly spawn start
 		}
 
 		m_AirFinished = gpGlobals->curtime + AIRTIME;
@@ -1895,7 +1901,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 
-		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
+		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 0.5f))) )	// |-- Mirv: No minimum length death time
 		return;
 
 	m_nButtons = 0;
@@ -1904,7 +1910,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	//Msg( "Respawn\n");
 
 	respawn( this, !IsObserver() );// don't copy a corpse if we're in deathcam.
-	SetNextThink( TICK_NEVER_THINK );
+	//	SetNextThink( TICK_NEVER_THINK );		// |-- Mirv: Still think because respawn may not be possible
 }
 
 /*
@@ -2022,8 +2028,11 @@ bool CBasePlayer::StartObserverMode(int mode)
 	//AddEffects( EF_NODRAW );		
 
 	m_iHealth = 1;
-	m_lifeState = LIFE_DEAD; // Can't be dead, otherwise movement doesn't work right.
-	pl.deadflag = true;
+
+	// --> Mirv: This breaks spectator mode
+	//m_lifeState = LIFE_DEAD; // Can't be dead, otherwise movement doesn't work right.
+	//pl.deadflag = true;
+	// <-- Mirv: This breaks spectator mode
 
 	return true;
 }

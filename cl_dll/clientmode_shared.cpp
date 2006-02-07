@@ -3,7 +3,7 @@
 // Purpose: Normal HUD mode
 //
 // $Workfile:     $
-// $Date:         $
+// $Date: 2005/08/22 19:09:05 $
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
@@ -17,6 +17,7 @@
 #include <vgui/IVGUI.h>
 #include <vgui/Cursor.h>
 #include <vgui/IPanel.h>
+#include <vgui/ILocalize.h>
 #include "engine/ienginesound.h"
 #include <keyvalues.h>
 #include <vgui_controls/AnimationController.h>
@@ -596,7 +597,21 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		
 		if ( pTeam )
 		{
-			hudChat->Printf( "Player %s joined team %s\n", pPlayer->GetPlayerName(), pTeam->Get_Name() );
+			// --> Mirv: Team localisation fix. This might be more a fundamental issue with the limitations of Printf that needs sorting though
+			wchar_t *szName = vgui::localize()->Find( pTeam->Get_Name() );
+			char szbuf[256];
+			char *pszName;
+
+			if( szName )
+			{
+				localize( )->ConvertUnicodeToANSI( szName, szbuf, sizeof( szbuf ) );
+				pszName = szbuf;
+			}
+			else
+				pszName = pTeam->Get_Name();
+			
+			hudChat->Printf( "Player %s joined team %s\n", pPlayer->GetPlayerName(), pszName );
+			// <-- Mirv: Team localisation fix. This might be more a fundamental issue with the limitations of Printf that needs sorting though
 		}
 		else
 		{

@@ -1,0 +1,133 @@
+/// =============== Fortress Forever ==============
+/// ======== A modification for Half-Life 2 =======
+///
+/// @file ff_weapon_rpg.cpp
+/// @author Gavin "Mirvin_Monkey" Bramhill
+/// @date December 21, 2004
+/// @brief The FF Rocket launcher code & class declaration.
+///
+/// REVISIONS
+/// ---------
+/// Dec 21, 2004 Mirv: First creation logged
+/// Jan 16, 2005 Mirv: Moved all repeated code to base class
+
+
+#include "cbase.h"
+#include "ff_weapon_base.h"
+#include "ff_fx_shared.h"
+#include "ff_projectile_rocket.h"
+
+#ifdef CLIENT_DLL 
+	#define CFFWeaponRPG C_FFWeaponRPG
+	#include "c_ff_player.h"
+#else
+	#include "ff_player.h"
+#endif
+
+//=============================================================================
+// CFFWeaponRPG
+//=============================================================================
+
+class CFFWeaponRPG : public CFFWeaponBase
+{
+public:
+	DECLARE_CLASS(CFFWeaponRPG, CFFWeaponBase);
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+	
+	CFFWeaponRPG();
+
+	virtual void Fire();
+	virtual bool SendWeaponAnim(int iActivity);
+
+	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_RPG; }
+
+private:
+
+	CFFWeaponRPG(const CFFWeaponRPG &);
+};
+
+//=============================================================================
+// CFFWeaponRPG tables
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponRPG, DT_FFWeaponRPG) 
+
+BEGIN_NETWORK_TABLE(CFFWeaponRPG, DT_FFWeaponRPG) 
+END_NETWORK_TABLE() 
+
+BEGIN_PREDICTION_DATA(CFFWeaponRPG) 
+END_PREDICTION_DATA() 
+
+LINK_ENTITY_TO_CLASS(ff_weapon_rpg, CFFWeaponRPG);
+PRECACHE_WEAPON_REGISTER(ff_weapon_rpg);
+
+//=============================================================================
+// CFFWeaponRPG implementation
+//=============================================================================
+
+//----------------------------------------------------------------------------
+// Purpose: Constructor
+//----------------------------------------------------------------------------
+CFFWeaponRPG::CFFWeaponRPG() 
+{
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Fire a rocket
+//----------------------------------------------------------------------------
+void CFFWeaponRPG::Fire() 
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+
+	Vector	vForward, vRight, vUp;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+
+	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+
+	QAngle angAiming;
+	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
+
+	CFFProjectileRocket::CreateRocket(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Override animations
+//----------------------------------------------------------------------------
+bool CFFWeaponRPG::SendWeaponAnim(int iActivity) 
+{
+	// If we have some unexpected clip amount, escape quick
+	if (m_iClip1 < 0 || m_iClip1 > 6) 
+		return BaseClass::SendWeaponAnim(iActivity);
+
+	// Override the animation with a specific one
+	switch (iActivity) 
+	{
+	case ACT_VM_DRAW:
+		iActivity = ACT_VM_DRAW_WITH0 + m_iClip1;
+		break;
+
+	case ACT_VM_IDLE:
+		iActivity = ACT_VM_IDLE_WITH0 + m_iClip1;
+		break;
+
+	case ACT_VM_PRIMARYATTACK:
+		iActivity = ACT_VM_PRIMARYATTACK_1TO0 + (m_iClip1 - 1);
+		break;
+
+	case ACT_VM_RELOAD:
+		iActivity = ACT_VM_RELOAD_0TO1 + m_iClip1;
+		break;
+
+	case ACT_SHOTGUN_RELOAD_START:
+		iActivity = ACT_VM_STARTRELOAD_WITH0 + m_iClip1;
+		break;
+
+	case ACT_SHOTGUN_RELOAD_FINISH:
+		iActivity = ACT_VM_FINISHRELOAD_WITH1 + (m_iClip1 - 1);
+		break;
+	}
+
+	return BaseClass::SendWeaponAnim(iActivity);
+}

@@ -432,6 +432,7 @@ public:
 	bool					ClearUseEntity();
 	CBaseEntity				*DoubleCheckUseNPC( CBaseEntity *pNPC, const Vector &vecSrc, const Vector &vecDir );
 
+	CBasePlayer				*MyCharacterPointer( void ) { return this; }
 
 	// physics interactions
 	// mass/size limit set to zero for none
@@ -856,6 +857,13 @@ private:
 	friend class CHL1GameMovement;
 	friend class CCSGameMovement;	
 	friend class CHL2GameMovement;
+	// --> billdoor: allow access to private member variables from our player movement code
+	friend class CFFGameMovement;
+	// <-- billdoor: allow access to private member variables from our player movement code
+	
+	// --> Mirv: this was put in by billdoor to access the maxspeed variable
+	friend class CFFPlayer;
+	// <-- Mirv: this was put in by billdoor to access the maxspeed variable
 
 	CNetworkVar( float,  m_flLaggedMovementValue );
 

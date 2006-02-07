@@ -1796,7 +1796,7 @@ float C_BasePlayer::GetMinFOV()	const
 	}
 	else
 	{
-		return 75;
+		return 20;		// |-- Mirv: BUG #0000040: Sniper Rifle & Radio Tag zoom sensitivity is not consistent with other HL2 stuff
 	}
 }
 

@@ -11,10 +11,10 @@
 #include "studio.h"
 #include "apparent_velocity_helper.h"
 #include "utldict.h"
+#include "in_buttons.h"
 
 #include "ff_playeranimstate.h"
-#include "weapon_ffbase.h"
-#include "weapon_baseffgrenade.h"
+#include "ff_weapon_base.h"
 
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
@@ -28,11 +28,14 @@
 #define ANIM_TOPSPEED_RUN			250
 #define ANIM_TOPSPEED_RUN_CROUCH	85
 
+#define ANGLE_BEFORE_TURN_LEGS		60 // changed from 30 -> 60 for rebo
+
 #define DEFAULT_IDLE_NAME "idle_upper_"
 #define DEFAULT_CROUCH_IDLE_NAME "crouch_idle_upper_"
 #define DEFAULT_CROUCH_WALK_NAME "crouch_walk_upper_"
 #define DEFAULT_WALK_NAME "walk_upper_"
 #define DEFAULT_RUN_NAME "run_upper_"
+#define DEFAULT_SLIDE_NAME "slide_upper_"
 
 #define DEFAULT_FIRE_IDLE_NAME "idle_shoot_"
 #define DEFAULT_FIRE_CROUCH_NAME "crouch_idle_shoot_"
@@ -43,8 +46,7 @@
 
 #define FIRESEQUENCE_LAYER		(AIMSEQUENCE_LAYER+NUM_AIMSEQUENCE_LAYERS)
 #define RELOADSEQUENCE_LAYER	(FIRESEQUENCE_LAYER + 1)
-#define GRENADESEQUENCE_LAYER	(RELOADSEQUENCE_LAYER + 1)
-#define NUM_LAYERS_WANTED		(GRENADESEQUENCE_LAYER + 1)
+#define NUM_LAYERS_WANTED		(RELOADSEQUENCE_LAYER + 1)
 
 
 
@@ -60,64 +62,50 @@ public:
 
 	CFFPlayerAnimState();
 
-	virtual void DoAnimationEvent( PlayerAnimEvent_t event );
-	virtual bool IsThrowingGrenade();
-	virtual int CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle );
-	virtual void ClearAnimationState();
-	virtual bool CanThePlayerMove();
-	virtual float GetCurrentMaxGroundSpeed();
-	virtual Activity CalcMainActivity();
-	virtual void DebugShowAnimState( int iStartLine );
-	virtual void ComputeSequences();
-	virtual void ClearAnimationLayers();
-	
-
 	void InitFF( CBaseAnimatingOverlay *pPlayer, IFFPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences );
+
+	virtual bool	CanThePlayerMove();
+	virtual float	GetCurrentMaxGroundSpeed();
+	virtual Activity CalcMainActivity();
+	virtual void	DebugShowAnimState( int iStartLine );
+	virtual void	ClearAnimationLayers();
+
+	virtual void	DoAnimationEvent( PlayerAnimEvent_t event );
+
+	virtual void	ComputeSequences();
+	
+	virtual int		CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle );
+	virtual void	ClearAnimationState();
 	
 protected:
 
-	int CalcFireLayerSequence(PlayerAnimEvent_t event);
-	void ComputeFireSequence();
+	int		CalcFireLayerSequence(PlayerAnimEvent_t event);
+	void	ComputeFireSequence();
 
-	void ComputeReloadSequence();
-	int CalcReloadLayerSequence();
-
-	bool IsOuterGrenadePrimed();
-	void ComputeGrenadeSequence();
-	int CalcGrenadePrimeSequence();
-	int CalcGrenadeThrowSequence();
-	int GetOuterGrenadeThrowCounter();
+	int		CalcReloadLayerSequence();
+	void	ComputeReloadSequence();
 
 	const char* GetWeaponSuffix();
+
 	bool HandleJumping();
 
 	void UpdateLayerSequenceGeneric( int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
 
 private:
 
-	// Current state variables.
-	bool m_bJumping;			// Set on a jump event.
-	float m_flJumpStartTime;
-	bool m_bFirstJumpFrame;
+	bool	m_bJumping;				// Set on a jump event.
+	bool	m_bFirstJumpFrame;		// Is this the first frame of the jump
+	float	m_flJumpStartTime;		// To keep track of when this jump started
 
-	// Aim sequence plays reload while this is on.
-	bool m_bReloading;
-	float m_flReloadCycle;
-	int m_iReloadSequence;
+	bool	m_bReloading;			// Set on a reload event
+	int		m_iReloadSequence;		// Sequence number
+	float	m_flReloadCycle;		// Where in the sequence are we
 	
-	// This is set to true if ANY animation is being played in the fire layer.
-	bool m_bFiring;						// If this is on, then it'll continue the fire animation in the fire layer
-										// until it completes.
-	int m_iFireSequence;				// (For any sequences in the fire layer, including grenade throw).
-	float m_flFireCycle;
-
-	// These control grenade animations.
-	bool m_bThrowingGrenade;
-	bool m_bPrimingGrenade;
-	float m_flGrenadeCycle;
-	int m_iGrenadeSequence;
-	int m_iLastThrowGrenadeCounter;	// used to detect when the guy threw the grenade.
+	bool	m_bFiring;				// Set on any fire layer animation
+	int		m_iFireSequence;		// Sequence number
+	float	m_flFireCycle;			// Where in the sequence are we
 	
+	// Easy access to some player information
 	IFFPlayerAnimStateHelpers *m_pHelpers;
 };
 
@@ -143,7 +131,7 @@ CFFPlayerAnimState::CFFPlayerAnimState()
 void CFFPlayerAnimState::InitFF( CBaseAnimatingOverlay *pEntity, IFFPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences )
 {
 	CModAnimConfig config;
-	config.m_flMaxBodyYawDegrees = 90;
+	config.m_flMaxBodyYawDegrees = ANGLE_BEFORE_TURN_LEGS;
 	config.m_LegAnimType = legAnimType;
 	config.m_bUseAimSequences = bUseAimSequences;
 
@@ -158,8 +146,6 @@ void CFFPlayerAnimState::ClearAnimationState()
 	m_bJumping = false;
 	m_bFiring = false;
 	m_bReloading = false;
-	m_bThrowingGrenade = m_bPrimingGrenade = false;
-	m_iLastThrowGrenadeCounter = GetOuterGrenadeThrowCounter();
 	
 	BaseClass::ClearAnimationState();
 }
@@ -167,8 +153,6 @@ void CFFPlayerAnimState::ClearAnimationState()
 
 void CFFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event )
 {
-	Assert( event != PLAYERANIMEVENT_THROW_GRENADE );
-
 	if ( event == PLAYERANIMEVENT_FIRE_GUN_PRIMARY || 
 		 event == PLAYERANIMEVENT_FIRE_GUN_SECONDARY )
 	{
@@ -199,30 +183,13 @@ void CFFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event )
 	}
 }
 
-
-float g_flThrowGrenadeFraction = 0.25;
-bool CFFPlayerAnimState::IsThrowingGrenade()
-{
-	if ( m_bThrowingGrenade )
-	{
-		// An animation event would be more appropriate here.
-		return m_flGrenadeCycle < g_flThrowGrenadeFraction;
-	}
-	else
-	{
-		bool bThrowPending = (m_iLastThrowGrenadeCounter != GetOuterGrenadeThrowCounter());
-		return bThrowPending || IsOuterGrenadePrimed();
-	}
-}
-
-
 int CFFPlayerAnimState::CalcReloadLayerSequence()
 {
 	const char *pSuffix = GetWeaponSuffix();
 	if ( !pSuffix )
 		return -1;
 
-	CWeaponFFBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
+	CFFWeaponBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
 	if ( !pWeapon )
 		return -1;
 
@@ -289,100 +256,6 @@ int CFFPlayerAnimState::CalcReloadLayerSequence()
 	}
 #endif
 
-
-
-bool CFFPlayerAnimState::IsOuterGrenadePrimed()
-{
-	CBaseCombatCharacter *pChar = m_pOuter->MyCombatCharacterPointer();
-	if ( pChar )
-	{
-		CBaseFFGrenade *pGren = dynamic_cast<CBaseFFGrenade*>( pChar->GetActiveWeapon() );
-		return pGren && pGren->IsPinPulled();
-	}
-	else
-	{
-		return NULL;
-	}
-}
-
-
-void CFFPlayerAnimState::ComputeGrenadeSequence()
-{
-#ifdef CLIENT_DLL
-	if ( m_bThrowingGrenade )
-	{
-		UpdateLayerSequenceGeneric( GRENADESEQUENCE_LAYER, m_bThrowingGrenade, m_flGrenadeCycle, m_iGrenadeSequence, false );
-	}
-	else
-	{
-		// Priming the grenade isn't an event.. we just watch the player for it.
-		// Also play the prime animation first if he wants to throw the grenade.
-		bool bThrowPending = (m_iLastThrowGrenadeCounter != GetOuterGrenadeThrowCounter());
-		if ( IsOuterGrenadePrimed() || bThrowPending )
-		{
-			if ( !m_bPrimingGrenade )
-			{
-				// If this guy just popped into our PVS, and he's got his grenade primed, then
-				// let's assume that it's all the way primed rather than playing the prime
-				// animation from the start.
-				if ( TimeSinceLastAnimationStateClear() < 0.4f )
-					m_flGrenadeCycle = 1;
-				else
-					m_flGrenadeCycle = 0;
-					
-				m_iGrenadeSequence = CalcGrenadePrimeSequence();
-			}
-
-			m_bPrimingGrenade = true;
-			UpdateLayerSequenceGeneric( GRENADESEQUENCE_LAYER, m_bPrimingGrenade, m_flGrenadeCycle, m_iGrenadeSequence, true );
-			
-			// If we're waiting to throw and we're done playing the prime animation...
-			if ( bThrowPending && m_flGrenadeCycle == 1 )
-			{
-				m_iLastThrowGrenadeCounter = GetOuterGrenadeThrowCounter();
-
-				// Now play the throw animation.
-				m_iGrenadeSequence = CalcGrenadeThrowSequence();
-				if ( m_iGrenadeSequence != -1 )
-				{
-					// Configure to start playing 
-					m_bThrowingGrenade = true;
-					m_bPrimingGrenade = false;
-					m_flGrenadeCycle = 0;
-				}
-			}
-		}
-		else
-		{
-			m_bPrimingGrenade = false;
-		}
-	}
-#endif
-}
-
-
-int CFFPlayerAnimState::CalcGrenadePrimeSequence()
-{
-	return CalcSequenceIndex( "idle_shoot_gren1" );
-}
-
-
-int CFFPlayerAnimState::CalcGrenadeThrowSequence()
-{
-	return CalcSequenceIndex( "idle_shoot_gren2" );
-}
-
-
-int CFFPlayerAnimState::GetOuterGrenadeThrowCounter()
-{
-	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer*>( m_pOuter );
-	if ( pPlayer )
-		return pPlayer->m_iThrowGrenadeCounter;
-	else
-		return 0;
-}
-
-
 void CFFPlayerAnimState::ComputeReloadSequence()
 {
 #ifdef CLIENT_DLL
@@ -391,7 +264,6 @@ void CFFPlayerAnimState::ComputeReloadSequence()
 	// Server doesn't bother with different fire sequences.
 #endif
 }
-
 
 int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle )
 {
@@ -414,6 +286,9 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 	{
 		switch ( GetCurrentMainSequenceActivity() )
 		{
+			case ACT_HL2MP_JUMP_SLAM:
+				return CalcSequenceIndex( "%s%s", DEFAULT_SLIDE_NAME, pSuffix );
+
 			case ACT_RUN:
 				return CalcSequenceIndex( "%s%s", DEFAULT_RUN_NAME, pSuffix );
 
@@ -436,12 +311,13 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 }
 
 
+
 const char* CFFPlayerAnimState::GetWeaponSuffix()
 {
 	// Figure out the weapon suffix.
-	CWeaponFFBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
+	CFFWeaponBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
 	if ( !pWeapon )
-		return "Pistol";
+		return 0;
 
 	const char *pSuffix = pWeapon->GetFFWpnData().m_szAnimExtension;
 
@@ -449,10 +325,11 @@ const char* CFFPlayerAnimState::GetWeaponSuffix()
 }
 
 
+
 int CFFPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
 {
 	// Figure out the weapon suffix.
-	CWeaponFFBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
+	CFFWeaponBase *pWeapon = m_pHelpers->FFAnim_GetActiveWeapon();
 	if ( !pWeapon )
 		return 0;
 
@@ -460,13 +337,6 @@ int CFFPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
 	if ( !pSuffix )
 		return 0;
 		
-	// Don't rely on their weapon here because the player has usually switched to their 
-	// pistol or rifle by the time the PLAYERANIMEVENT_THROW_GRENADE message gets to the client.
-	if ( event == PLAYERANIMEVENT_THROW_GRENADE )
-	{
-		pSuffix = "Gren"; 
-	}
-
 	switch ( GetCurrentMainSequenceActivity() )
 	{
 		case ACT_PLAYER_RUN_FIRE:
@@ -566,6 +436,15 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 					idealActivity = ACT_RUN;
 				else
 					idealActivity = ACT_WALK;
+				
+				/* commenting this out cause it borks the animations - fryguy
+				// --> Mirv: Slide anim test
+				CFFPlayer *player = dynamic_cast< CFFPlayer* >(m_pOuter);
+
+				if( ( player->m_nButtons & IN_FORWARD ) == FALSE )
+					idealActivity = ACT_HL2MP_JUMP_SLAM;
+				// <-- Mirv: Slide anim test
+				*/
 			}
 			else
 			{
@@ -594,7 +473,6 @@ void CFFPlayerAnimState::ComputeSequences()
 
 	ComputeFireSequence();
 	ComputeReloadSequence();
-	ComputeGrenadeSequence();
 }
 
 

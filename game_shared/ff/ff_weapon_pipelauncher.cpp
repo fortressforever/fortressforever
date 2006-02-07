@@ -1,0 +1,170 @@
+/// =============== Fortress Forever ==============
+/// ======== A modification for Half-Life 2 =======
+///
+/// @file ff_weapon_pipelauncher.cpp
+/// @author Gavin "Mirvin_Monkey" Bramhill
+/// @date December 21, 2004
+/// @brief The FF pipe launcher code & class declaration.
+///
+/// REVISIONS
+/// ---------
+/// Dec 24, 2004 Mirv: First created
+/// Jan 16, 2005 Mirv: Moved all repeated code to base class
+
+
+#include "cbase.h"
+#include "ff_weapon_base.h"
+#include "ff_fx_shared.h"
+#include "ff_projectile_pipebomb.h"
+
+#ifdef CLIENT_DLL 
+	#define CFFWeaponPipeLauncher C_FFWeaponPipeLauncher
+	#include "c_ff_player.h"
+#else
+	#include "ff_player.h"
+#endif
+
+//=============================================================================
+// CFFWeaponPipeLauncher
+//=============================================================================
+
+class CFFWeaponPipeLauncher : public CFFWeaponBase
+{
+public:
+	DECLARE_CLASS(CFFWeaponPipeLauncher, CFFWeaponBase);
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+	
+	CFFWeaponPipeLauncher();
+
+	virtual void Fire();
+	virtual bool Reload();
+	virtual bool SendWeaponAnim(int iActivity);
+
+	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_PIPELAUNCHER; }
+
+private:
+
+	CFFWeaponPipeLauncher(const CFFWeaponPipeLauncher &);
+};
+
+//=============================================================================
+// CFFWeaponPipeLauncher tables
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponPipeLauncher, DT_FFWeaponPipeLauncher) 
+
+BEGIN_NETWORK_TABLE(CFFWeaponPipeLauncher, DT_FFWeaponPipeLauncher) 
+END_NETWORK_TABLE() 
+
+BEGIN_PREDICTION_DATA(CFFWeaponPipeLauncher) 
+END_PREDICTION_DATA() 
+
+LINK_ENTITY_TO_CLASS(ff_weapon_pipelauncher, CFFWeaponPipeLauncher);
+PRECACHE_WEAPON_REGISTER(ff_weapon_pipelauncher);
+
+//=============================================================================
+// CFFWeaponPipeLauncher implementation
+//=============================================================================
+
+//----------------------------------------------------------------------------
+// Purpose: Constructor
+//----------------------------------------------------------------------------
+CFFWeaponPipeLauncher::CFFWeaponPipeLauncher() 
+{
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Fire a pipebomb
+//----------------------------------------------------------------------------
+void CFFWeaponPipeLauncher::Fire() 
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+
+	Vector	vForward, vRight, vUp;
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
+
+	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+
+	QAngle angAiming;
+	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
+
+	angAiming -= QAngle(12.0f, 0, 0);
+
+	CFFProjectilePipebomb::CreatePipebomb(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+
+	// We share ammo with the grenade launcher!
+	// We could probably just do GetWeapon(3) 
+	for (int i = 0; i < MAX_WEAPONS; i++) 
+	{
+		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
+
+		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
+			w->m_iClip1 = m_iClip1;
+	}
+
+	pPlayer->m_flNextClassSpecificSkill = gpGlobals->curtime + PIPEBOMB_TIME_TILL_LIVE;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Keep ammo acounts the same
+//----------------------------------------------------------------------------
+bool CFFWeaponPipeLauncher::Reload() 
+{
+	bool b = BaseClass::Reload();
+
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	// We share ammo with the pipelauncher!
+	// We could probably just do GetWeapon(2) 
+	for (int i = 0; i < MAX_WEAPONS; i++) 
+	{
+		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
+
+		if (w && w->GetWeaponID() == FF_WEAPON_GRENADELAUNCHER) 
+			w->m_iClip1 = m_iClip1;
+	}
+
+	return b;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Override animations
+//----------------------------------------------------------------------------
+bool CFFWeaponPipeLauncher::SendWeaponAnim(int iActivity) 
+{
+	// If we have some unexpected clip amount, escape quick
+	if (m_iClip1 < 0 || m_iClip1 > 6) 
+		return BaseClass::SendWeaponAnim(iActivity);
+
+	// Override the animation with a specific one
+	switch (iActivity) 
+	{
+	case ACT_VM_DRAW:
+		iActivity = ACT_VM_DRAW_WITH0 + m_iClip1;
+		break;
+
+	case ACT_VM_IDLE:
+		iActivity = ACT_VM_IDLE_WITH0 + m_iClip1;
+		break;
+
+	case ACT_VM_PRIMARYATTACK:
+		iActivity = ACT_VM_PRIMARYATTACK_1TO0 + (m_iClip1 - 1);
+		break;
+
+	case ACT_VM_RELOAD:
+		iActivity = ACT_VM_RELOAD_0TO1 + m_iClip1;
+		break;
+
+	case ACT_SHOTGUN_RELOAD_START:
+		iActivity = ACT_VM_STARTRELOAD_WITH0 + m_iClip1;
+		break;
+
+	case ACT_SHOTGUN_RELOAD_FINISH:
+		iActivity = ACT_VM_FINISHRELOAD_WITH1 + (m_iClip1 - 1);
+		break;
+	}
+
+	return BaseClass::SendWeaponAnim(iActivity);
+}

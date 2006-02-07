@@ -1124,14 +1124,16 @@ void CBaseEntity::TakeDamage( const CTakeDamageInfo &inputInfo )
 	{
 		CTakeDamageInfo info = inputInfo;
 		
+		// --> Mirv: No scaling
 		// Scale the damage by the attacker's modifier.
-		if ( info.GetAttacker() )
-		{
-			info.ScaleDamage( info.GetAttacker()->GetAttackDamageScale( this ) );
-		}
+		//if ( info.GetAttacker() )
+		//{
+			//info.ScaleDamage( info.GetAttacker()->GetAttackDamageScale( this ) );
+		//}
 
 		// Scale the damage by my own modifiers
-		info.ScaleDamage( GetReceivedDamageScale( info.GetAttacker() ) );
+		//info.ScaleDamage( GetReceivedDamageScale( info.GetAttacker() ) );
+		// <-- Mirv: No scaling
 
 		//Msg("%s took %.2f Damage, at %.2f\n", GetClassname(), info.GetDamage(), gpGlobals->curtime );
 

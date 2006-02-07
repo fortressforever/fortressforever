@@ -29,6 +29,8 @@
 #include "ff_gamerules.h"
 #include "tier0/vprof.h"
 #include "ff_bot_temp.h"
+#include "viewport_panel_names.h"
+#include "ff_statslog.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -41,19 +43,35 @@ extern bool			g_fGameOver;
 
 void FinishClientPutInServer( CFFPlayer *pPlayer )
 {
+	pPlayer->m_flNextSpawnDelay = 0;
+
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 
-	if (!pPlayer->IsBot())
-	{
-		// When the player first joins the server, they
-		pPlayer->m_takedamage = DAMAGE_YES;
-		pPlayer->pl.deadflag = false;
-		pPlayer->m_lifeState = LIFE_ALIVE;
-		pPlayer->RemoveEffects( EF_NODRAW );
-		pPlayer->ChangeTeam( TEAM_UNASSIGNED );
-		pPlayer->SetThink( NULL );
-	}
+
+	// --> Mirv: Various connectiong things
+	
+	// Register this with the stats engine
+	g_StatsLog.RegisterPlayerID(pPlayer->entindex(), engine->GetPlayerUserId(pPlayer->edict()), engine->GetPlayerNetworkIDString(pPlayer->edict()));
+
+	// Bring up the MOTD in front of the team menu
+	const ConVar *hostname = cvar->FindVar( "hostname" );
+	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
+
+	// open info panel on client showing MOTD:
+	KeyValues *data = new KeyValues("data");
+	data->SetString( "title", title );		// info panel title
+	data->SetString( "type", "1" );			// show userdata from stringtable entry
+	data->SetString( "msg",	"motd" );		// use this stringtable entry
+	
+	pPlayer->ShowViewPortPanel( PANEL_INFO, true, data );
+
+	data->deleteThis();
+
+	// Invisible when we connect
+	pPlayer->AddEffects( EF_NODRAW );
+	
+	// <-- Mirv: Various connectiong things
 
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );
@@ -107,7 +125,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "CounterStrike";
+		return "Fortress Forever";
 }
 
 

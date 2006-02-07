@@ -31,7 +31,7 @@ void RegisterUserMessages()
 	usermessages->Register( "VoiceMask", VOICE_MAX_PLAYERS_DW*4 * 2 + 1 );
 	usermessages->Register( "RequestState", 0 );
 
-	usermessages->Register( "BarTime", -1 );	// For the C4 progress bar.
+	//usermessages->Register( "BarTime", -1 );	// For the C4 progress bar.
 	usermessages->Register( "Damage", -1 );		// for HUD damage indicators
 	usermessages->Register( "RadioText", -1 );		// for HUD damage indicators
 	usermessages->Register( "HintText", -1 );	// Displays hint text display
@@ -40,9 +40,35 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerAnimEvent", -1 );	// jumping, firing, reload, etc.
 
 	usermessages->Register( "AmmoDenied", 2 );
-	usermessages->Register( "UpdateRadar", -1 );
+	//usermessages->Register( "UpdateRadar", -1 );
 
 	// Used to send a sample HUD message
 	usermessages->Register( "GameMessage", -1 );
+
+	// ESP/radar stuff, & hints
+	usermessages->Register( "RadarUpdate", -1 );
+	usermessages->Register( "FF_HudHint", -1 );
+	usermessages->Register( "RadioTagUpdate", -1 );
+	usermessages->Register( "SetPlayerLocation", -1 );
+
+	// so we know when a detpack has been removed
+	// so the owner's client can stop drawing the timer
+	usermessages->Register( "DetpackStopTimer", -1 );
+	// So we know when to start a detpack timer on a client
+	usermessages->Register( "DetpackStartTimer", -1 );
+
+	// When an enemy is touching our dispenser (sent to owner of dispenser)
+	usermessages->Register( "Dispenser_EnemiesUsing", -1 );
+	// When an enemy is touching our dispenser (sent to enemy doing the touching)
+	usermessages->Register( "Dispenser_TouchEnemy", -1 );
+	// When our dispenser blows up (sent to owner of dispenser)
+	usermessages->Register( "Dispenser_Destroyed", -1 );
+	// When our sentrygun blows up (sent to owner of sg)
+	usermessages->Register( "SentryGun_Destroyed", -1 );
+
+	usermessages->Register("FF_BuildTimer", -1);
+  
+	// used to send a status icon
+	usermessages->Register( "StatusIconUpdate", -1 );
 }
 

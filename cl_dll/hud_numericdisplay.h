@@ -51,7 +51,7 @@ private:
 	CPanelAnimationVar( Color, m_TextColor, "TextColor", "FgColor" );
 	CPanelAnimationVar( Color, m_Ammo2Color, "Ammo2Color", "FgColor" );
 
-	CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudNumbers" );
+	CPanelAnimationVar( vgui::HFont, m_hNumberFont, /*"NumberFont"*/ "TextFont", "HudNumbers2" );
 	CPanelAnimationVar( vgui::HFont, m_hNumberGlowFont, "NumberGlowFont", "HudNumbersGlow" );
 	CPanelAnimationVar( vgui::HFont, m_hSmallNumberFont, "SmallNumberFont", "HudNumbersSmall" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
@@ -62,6 +62,15 @@ private:
 	CPanelAnimationVarAliasType( float, digit_ypos, "digit_ypos", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, digit2_xpos, "digit2_xpos", "98", "proportional_float" );
 	CPanelAnimationVarAliasType( float, digit2_ypos, "digit2_ypos", "16", "proportional_float" );
+
+
+	// --> Mirv: Added for icons
+protected:
+	CPanelAnimationVarAliasType( float, icon_xpos, "icon_xpos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, icon_ypos, "icon_ypos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, icon_width, "icon_width", "1", "proportional_float" );
+	CPanelAnimationVarAliasType( float, icon_height, "icon_height", "1", "proportional_float" );
+	// <-- Mirv: Added for icons
 };
 
 

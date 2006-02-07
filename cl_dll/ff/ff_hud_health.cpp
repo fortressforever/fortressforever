@@ -50,12 +50,15 @@ public:
 	virtual void Reset( void );
 	virtual void OnThink();
 			void MsgFunc_Damage( bf_read &msg );
+	virtual void Paint();
 
 private:
 	// old variables
 	int		m_iHealth;
 	
 	int		m_bitsDamage;
+
+	CHudTexture	*m_pHudElementTexture;
 };	
 
 DECLARE_HUDELEMENT( CHudHealth );
@@ -66,7 +69,7 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 //-----------------------------------------------------------------------------
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudHealth")
 {
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
 }
 
 //-----------------------------------------------------------------------------
@@ -86,7 +89,7 @@ void CHudHealth::Reset()
 	m_iHealth		= INIT_HEALTH;
 	m_bitsDamage	= 0;
 
-	wchar_t *tempString = vgui::localize()->Find("#Valve_Hud_HEALTH");
+	/*wchar_t *tempString = vgui::localize()->Find("#Valve_Hud_HEALTH");
 
 	if (tempString)
 	{
@@ -95,7 +98,9 @@ void CHudHealth::Reset()
 	else
 	{
 		SetLabelText(L"HEALTH");
-	}
+	}*/
+
+	SetLabelText(L"");
 	SetDisplayValue(m_iHealth);
 }
 
@@ -105,6 +110,11 @@ void CHudHealth::Reset()
 void CHudHealth::VidInit()
 {
 	Reset();
+
+	// Precache the background texture
+	m_pHudElementTexture = new CHudTexture();
+	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_health", true, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -167,4 +177,13 @@ void CHudHealth::MsgFunc_Damage( bf_read &msg )
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
 		}
 	}
+}
+
+void CHudHealth::Paint()
+{
+	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+	surface()->DrawSetColor(255, 255, 255, 255);
+	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+
+	BaseClass::Paint();
 }

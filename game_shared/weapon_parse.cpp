@@ -31,7 +31,8 @@ const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ] =
 	"melee_hit_world",
 	"special1",
 	"special2",
-	"special3"
+	"special3",
+	"cock"			// |-- Mirv: Cock sfx
 };
 
 

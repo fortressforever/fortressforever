@@ -96,10 +96,11 @@ void CPlayerMove::CheckMovingGround( CBasePlayer *player, double frametime )
 {
 	CBaseEntity	    *groundentity;
 
+	// --> Mirv: Fixed this to work with doors
 	if ( player->GetFlags() & FL_ONGROUND )
 	{
 		groundentity = player->GetGroundEntity();
-		if ( groundentity && ( groundentity->GetFlags() & FL_CONVEYOR) )
+		if ( groundentity && (groundentity->GetFlags() & FL_CONVEYOR || groundentity->GetMoveType() & MOVETYPE_PUSH) )
 		{
 			Vector vecNewVelocity;
 			groundentity->GetGroundVelocityToApply( vecNewVelocity );
@@ -111,8 +112,9 @@ void CPlayerMove::CheckMovingGround( CBasePlayer *player, double frametime )
 			player->AddFlag( FL_BASEVELOCITY );
 		}
 	}
+	// <-- Mirv: Fixed this to work with doors
 
-	if ( !( player->GetFlags() & FL_BASEVELOCITY ) )
+	if ( ( player->GetFlags() & FL_BASEVELOCITY ) )
 	{
 		// Apply momentum (add in half of the previous frame of velocity first)
 		player->ApplyAbsVelocityImpulse( (1.0 + ( frametime * 0.5 )) * player->GetBaseVelocity() );
