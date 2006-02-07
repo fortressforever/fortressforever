@@ -1,0 +1,33 @@
+
+#include "common_ps_fxc.h"
+
+
+sampler BaseTextureSampler	: register( s0 );
+
+
+const HALF sharpenFactor : register( c0 );
+
+
+struct PS_INPUT
+{
+	HALF2 vBaseTexCoord0 : TEXCOORD0;
+	HALF2 vBaseTexCoord1 : TEXCOORD1;
+	HALF2 vBaseTexCoord2 : TEXCOORD2;
+	HALF2 vBaseTexCoord3 : TEXCOORD3;
+	HALF2 vBaseTexCoord4 : TEXCOORD4;
+};
+
+
+HALF4 main( PS_INPUT i ) : COLOR
+{
+	HALF4 mainColor = tex2D( BaseTextureSampler, i.vBaseTexCoord1 );
+
+	HALF4 baseColor1 = tex2D( BaseTextureSampler, i.vBaseTexCoord1 );
+	HALF4 baseColor2 = tex2D( BaseTextureSampler, i.vBaseTexCoord2 );
+	HALF4 baseColor3 = tex2D( BaseTextureSampler, i.vBaseTexCoord3 );
+	HALF4 baseColor4 = tex2D( BaseTextureSampler, i.vBaseTexCoord4 );
+
+	HALF4 g = mainColor - (baseColor1 + baseColor2 + baseColor3 + baseColor4) * 0.25;
+	return mainColor + g * sharpenFactor;
+}
+

@@ -1,0 +1,27 @@
+
+#include "common_ps_fxc.h"
+
+
+sampler BaseTextureSampler	: register( s0 );
+sampler LightmapSampler		: register( s1 );
+
+
+struct PS_INPUT
+{
+	HALF2 vBaseTexCoord	: TEXCOORD0;
+	HALF2 vLightmapTexCoord : TEXCOORD1;
+};
+
+
+HALF4 main( PS_INPUT i ) : COLOR
+{
+	// Sample the texture and lightmap.
+	HALF4 baseColor = tex2D( BaseTextureSampler, i.vBaseTexCoord );
+	HALF4 lightmapSample = tex2D( LightmapSampler, i.vLightmapTexCoord );
+	
+	// Multiply the base and lightmap colors.
+	baseColor *= lightmapSample;
+	
+	return baseColor;
+}
+

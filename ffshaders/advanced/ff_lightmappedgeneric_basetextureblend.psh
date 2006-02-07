@@ -1,0 +1,9 @@
+ps.1.1
+
+tex t0 ; base 1
+tex t1 ; base 2
+tex t2 ; lightmap (use alpha only)
+
+mov r1, t1
+lrp r0, t2.a, t0, r1
+

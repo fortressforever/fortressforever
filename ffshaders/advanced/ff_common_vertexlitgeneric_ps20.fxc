@@ -1,0 +1,243 @@
+#include "common_ps_fxc.h"
+
+struct PixelShaderLightInfo
+{
+	float4 color;
+	float4 dir;
+	float4 pos;
+	float4 spotParams;
+	float4 atten;
+};
+
+#define cOverbright 2.0f
+#define cOOOverbright 0.5f
+
+#define LIGHTTYPE_NONE				0
+#define LIGHTTYPE_STATIC			1
+#define LIGHTTYPE_SPOT				2
+#define LIGHTTYPE_POINT				3
+#define LIGHTTYPE_DIRECTIONAL		4
+#define LIGHTTYPE_AMBIENT			5
+
+static const int g_StaticLightTypeArray[22] = {
+	LIGHTTYPE_NONE, LIGHTTYPE_STATIC, 
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
+	LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, 
+	LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC, LIGHTTYPE_STATIC
+};
+ 
+static const int g_AmbientLightTypeArray[22] = {
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
+	LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, 
+	LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, 
+	LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, 
+	LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT, LIGHTTYPE_AMBIENT
+};
+
+static const int g_LocalLightType0Array[22] = {
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
+	LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
+	LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL,
+	LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
+	LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL
+};
+
+static const int g_LocalLightType1Array[22] = {
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_DIRECTIONAL,
+	LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, 
+	LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_DIRECTIONAL
+};
+
+float3 PixelShaderAmbientLight( const float3 worldNormal, const float3 cAmbientCube[6] )
+{
+	float3 nSquared = worldNormal * worldNormal;
+	int3 isNegative = ( worldNormal < 0.0 );
+	float3 linearColor;
+	linearColor = nSquared.x * cAmbientCube[isNegative.x] +
+	              nSquared.y * cAmbientCube[isNegative.y+2] +
+	              nSquared.z * cAmbientCube[isNegative.z+4];
+	return linearColor;
+}
+
+float3 PixelShaderSpotLight( const float3 worldPos, const float3 worldNormal, int lightNum, const float3 vertexColor, 
+				 in sampler normalizeSampler, PixelShaderLightInfo cLightInfo[2], bool bHalfLambert )
+{
+//	// Get light direction
+	// NOTE!!  Using texCUBE here made the results look quite a bit different than the vertex lit results.
+//	float3 lightDir = normalize( cLightInfo[lightNum].pos - worldPos );
+	float3 lightDir = NormalizeWithCubemap( normalizeSampler, cLightInfo[lightNum].pos - worldPos );
+
+
+	float nDotL;
+	if( bHalfLambert )
+	{
+		// half-lambert
+		nDotL = dot( worldNormal, lightDir ) * 0.5 + 0.5;
+		nDotL = nDotL * nDotL;
+	}
+	else
+	{
+		// compute n dot l
+		nDotL = dot( worldNormal, lightDir );
+		nDotL = max( 0.0f, nDotL );
+	}
+	return vertexColor * nDotL;
+}
+
+float3 PixelShaderPointLight( const float3 worldPos, const float3 worldNormal, int lightNum, const float3 vertexColor, 
+				  in sampler normalizeSampler, PixelShaderLightInfo cLightInfo[2], bool bHalfLambert )
+{
+//	// Get light direction
+	// NOTE!!  Using texCUBE here made the results look quite a bit different than the vertex lit results.
+//	float3 lightDir = normalize( cLightInfo[lightNum].pos - worldPos );
+	float3 lightDir = NormalizeWithCubemap( normalizeSampler, cLightInfo[lightNum].pos - worldPos );
+
+	float nDotL;
+	if( bHalfLambert )
+	{
+		// half-lambert
+		nDotL = dot( worldNormal, lightDir ) * 0.5 + 0.5;
+		nDotL = nDotL * nDotL;
+	}
+	else
+	{
+		// compute n dot l	
+		nDotL = dot( worldNormal, lightDir );
+		nDotL = max( 0.0f, nDotL );
+	}
+
+	return vertexColor * nDotL;
+//	return NDotL;
+//	return worldNormal;
+}
+
+float3 PixelShaderDirectionalLight( const float3 worldNormal, int lightNum, PixelShaderLightInfo cLightInfo[2],
+								    bool bHalfLambert )
+{
+	// Compute N dot L
+	float nDotL;
+	if( bHalfLambert )
+	{
+		// half-lambert
+		nDotL = dot( worldNormal, -cLightInfo[lightNum].dir ) * 0.5 + 0.5;
+		nDotL = nDotL * nDotL;
+	}
+	else
+	{
+		nDotL = dot( worldNormal, -cLightInfo[lightNum].dir );
+		nDotL = max( 0.0f, nDotL );
+	}
+
+	return cLightInfo[lightNum].color * nDotL;
+}
+
+float3 PixelShaderDoLight( const float3 worldPos, const float3 worldNormal, 
+				int lightNum, int lightType, const float3 vertexColor, in sampler normalizeSampler,
+				PixelShaderLightInfo cLightInfo[2], bool bHalfLambert )
+{
+	float3 color = 0.0f;
+	if( lightType == LIGHTTYPE_SPOT )
+	{
+		color = PixelShaderSpotLight( worldPos, worldNormal, lightNum, vertexColor, normalizeSampler, 
+			cLightInfo, bHalfLambert );
+	}
+	else if( lightType == LIGHTTYPE_POINT )
+	{
+		color = PixelShaderPointLight( worldPos, worldNormal, lightNum, vertexColor, normalizeSampler, cLightInfo,
+			bHalfLambert );
+	}
+	else if( lightType == LIGHTTYPE_DIRECTIONAL )
+	{
+		color = PixelShaderDirectionalLight( worldNormal, lightNum, cLightInfo, bHalfLambert );
+	}
+	return color;
+}
+
+float3 PixelShaderDoLightingLinear( const float3 worldPos, const float3 worldNormal,
+				   const float3 staticLightingColor, const int staticLightType,
+				   const int ambientLightType, const int localLightType0,
+				   const int localLightType1, const float3 vertexColor0,
+				   const float3 vertexColor1, const float3 cAmbientCube[6], 
+				   in sampler normalizeSampler, PixelShaderLightInfo cLightInfo[2],
+				   bool bHalfLambert )
+{
+	float3 linearColor = 0.0f;
+	if( staticLightType == LIGHTTYPE_STATIC )
+	{
+		// The static lighting comes in in gamma space and has also been premultiplied by $cOOOverbright
+		// need to get it into
+		// linear space so that we can do adds.
+		linearColor += GammaToLinear( staticLightingColor * cOverbright );
+	}
+
+	if( ambientLightType == LIGHTTYPE_AMBIENT )
+	{
+		linearColor += PixelShaderAmbientLight( worldNormal, cAmbientCube );
+	}
+
+	if( localLightType0 != LIGHTTYPE_NONE )
+	{
+		linearColor += PixelShaderDoLight( worldPos, worldNormal, 0, localLightType0, vertexColor0, normalizeSampler,
+			cLightInfo, bHalfLambert );
+	}
+
+	if( localLightType1 != LIGHTTYPE_NONE )
+	{
+		linearColor += PixelShaderDoLight( worldPos, worldNormal, 1, localLightType1, vertexColor1, normalizeSampler,
+			cLightInfo, bHalfLambert );
+	}
+
+	return linearColor;
+}
+
+
+float3 PixelShaderDoLighting( const float3 worldPos, const float3 worldNormal,
+				   const float3 staticLightingColor, const int staticLightType,
+				   const int ambientLightType, const int localLightType0,
+				   const int localLightType1, const float modulation,
+				   const float3 vertexColor0, 
+				   const float3 vertexColor1, const float3 cAmbientCube[6], 
+				   in sampler normalizeSampler, PixelShaderLightInfo cLightInfo[2],
+				   bool bHalfLambert )
+{
+	float3 returnColor;
+
+	// special case for no lighting
+	if( staticLightType == LIGHTTYPE_NONE && 
+		ambientLightType == LIGHTTYPE_NONE &&
+		localLightType0 == LIGHTTYPE_NONE &&
+		localLightType1 == LIGHTTYPE_NONE )
+	{
+		returnColor = float3( 0.0f, 0.0f, 0.0f );
+	}
+	else if( staticLightType == LIGHTTYPE_STATIC && 
+			 ambientLightType == LIGHTTYPE_NONE &&
+			 localLightType0 == LIGHTTYPE_NONE &&
+			 localLightType1 == LIGHTTYPE_NONE )
+	{
+		// special case for static lighting only
+		returnColor = GammaToLinear( staticLightingColor );
+	}
+	else
+	{
+		float3 linearColor = PixelShaderDoLightingLinear( worldPos, worldNormal, staticLightingColor, 
+			staticLightType, ambientLightType, localLightType0, localLightType1,
+			vertexColor0, vertexColor1, cAmbientCube, normalizeSampler, cLightInfo, bHalfLambert );
+
+		if (modulation != 1.0f)
+		{
+			linearColor *= modulation;
+		}
+
+		// go ahead and clamp to the linear space equivalent of overbright 2 so that we match
+		// everything else.
+//		returnColor = HuePreservingColorClamp( linearColor, pow( 2.0f, 2.2 ) );
+		returnColor = linearColor;
+		return returnColor;
+	}
+
+	return returnColor;
+}
+

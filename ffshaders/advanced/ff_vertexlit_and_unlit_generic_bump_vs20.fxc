@@ -1,0 +1,219 @@
+//  STATIC: "HALFLAMBERT"			"0..1"
+//  STATIC: "PARALLAXMAP"			"0..0"
+//	DYNAMIC: "LIGHT_COMBO"			"0..21"
+//	DYNAMIC: "FOG_TYPE"				"0..1"
+//	DYNAMIC: "NUM_BONES"			"0..3"
+
+#include "common_vs_fxc.h"
+
+#ifdef USE_CONDITIONALS
+const bool g_bZeroBones : register( b0 );
+const bool g_bOneBone   : register( b1 );
+const bool g_bTwoBones  : register( b2 );
+#else
+static const int g_NumBones			= NUM_BONES;
+#endif
+
+static const int g_LightCombo		= LIGHT_COMBO;
+static const int g_FogType			= FOG_TYPE;
+static const int g_LocalLightType0	= g_LocalLightType0Array[g_LightCombo];
+static const int g_LocalLightType1	= g_LocalLightType1Array[g_LightCombo];
+
+const float4 cBaseTexCoordTransform[2]	:  register( SHADER_SPECIFIC_CONST_0 );
+	   
+//-----------------------------------------------------------------------------
+//
+// Bumped lighting helper functions
+//
+//-----------------------------------------------------------------------------
+
+float3 Compute_SpotLightVertexColor( const float3 worldPos, const float3 worldNormal, int lightNum )
+{
+	// Direct mapping of current code
+	float3 lightDir = cLightInfo[lightNum].pos - worldPos;
+
+	// normalize light direction, maintain temporaries for attenuation
+	float lightDistSquared = dot( lightDir, lightDir );
+	float ooLightDist = rsqrt( lightDistSquared );
+	lightDir *= ooLightDist;
+	
+	float3 attenuationFactors;
+	attenuationFactors = dst( lightDistSquared, ooLightDist );
+
+	float flDistanceAttenuation = dot( attenuationFactors, cLightInfo[lightNum].atten );
+	flDistanceAttenuation = 1.0f / flDistanceAttenuation;
+	
+	// There's an additional falloff we need to make to get the edges looking good
+	// and confine the light within a sphere.
+	float flLinearFactor = saturate( 1.0f - lightDistSquared * cLightInfo[lightNum].atten.w ); 
+	flDistanceAttenuation *= flLinearFactor;
+
+	float flCosTheta = dot( cLightInfo[lightNum].dir, -lightDir );
+	float flAngularAtten = (flCosTheta - cLightInfo[lightNum].spotParams.z) * cLightInfo[lightNum].spotParams.w;
+	flAngularAtten = max( 0.0f, flAngularAtten );
+	flAngularAtten = pow( flAngularAtten, cLightInfo[lightNum].spotParams.x );
+	flAngularAtten = min( 1.0f, flAngularAtten );
+
+	return flDistanceAttenuation * flAngularAtten * cLightInfo[lightNum].color;
+}
+
+float3 Compute_PointLightVertexColor( const float3 worldPos, const float3 worldNormal, int lightNum )
+{
+	// Get light direction
+	float3 lightDir = cLightInfo[lightNum].pos - worldPos;
+
+	// Get light distance squared.
+	float lightDistSquared = dot( lightDir, lightDir );
+
+	// Get 1/lightDistance
+	float ooLightDist = rsqrt( lightDistSquared );
+
+	// Normalize light direction
+	lightDir *= ooLightDist;
+
+	// compute distance attenuation factors.
+	float3 attenuationFactors;
+	attenuationFactors.x = 1.0f;
+	attenuationFactors.y = lightDistSquared * ooLightDist;
+	attenuationFactors.z = lightDistSquared;
+
+	float flDistanceAtten = 1.0f / dot( cLightInfo[lightNum].atten.xyz, attenuationFactors );
+
+	// There's an additional falloff we need to make to get the edges looking good
+	// and confine the light within a sphere.
+	float flLinearFactor = saturate( 1.0f - lightDistSquared * cLightInfo[lightNum].atten.w ); 
+	flDistanceAtten *= flLinearFactor;
+
+	return flDistanceAtten * cLightInfo[lightNum].color;
+}
+
+float3 ComputeDirectionalLightVertexColor( const float3 worldNormal, int lightNum )
+{
+	return cLightInfo[lightNum].color;
+}
+
+float3 GetVertexColorForLight( const float3 worldPos, const float3 worldNormal, 
+				int lightNum, int lightType )
+{
+	if( lightType == LIGHTTYPE_SPOT )
+	{
+		return Compute_SpotLightVertexColor( worldPos, worldNormal, lightNum );
+	}
+	else if( lightType == LIGHTTYPE_POINT )
+	{
+		return Compute_PointLightVertexColor( worldPos, worldNormal, lightNum );
+	}
+	else if( lightType == LIGHTTYPE_DIRECTIONAL )
+	{
+		return ComputeDirectionalLightVertexColor( worldNormal, lightNum );
+	}
+	return float3( 0.0f, 0.0f, 0.0f );
+}
+
+
+//-----------------------------------------------------------------------------
+// Input vertex format
+//-----------------------------------------------------------------------------
+struct VS_INPUT
+{
+	// This is all of the stuff that we ever use.
+	float4 vPos				: POSITION;
+	float4 vBoneWeights		: BLENDWEIGHT;
+	float4 vBoneIndices		: BLENDINDICES;
+	float3 vNormal			: NORMAL;
+	float4 vColor			: COLOR0;
+	float3 vSpecular		: COLOR1;
+	// make these float2's and stick the [n n 0 1] in the dot math.
+	float4 vTexCoord0		: TEXCOORD0;
+	float4 vTexCoord1		: TEXCOORD1;
+	float4 vTexCoord2		: TEXCOORD2;
+	float4 vTexCoord3		: TEXCOORD3;
+	float3 vTangentS		: TANGENT;
+	float3 vTangentT		: BINORMAL;
+	float4 vUserData		: TANGENT;
+};
+
+
+//-----------------------------------------------------------------------------
+// Output vertex format
+//-----------------------------------------------------------------------------
+struct VS_OUTPUT
+{
+	// stuff that isn't seen by the pixel shader
+    float4 projPos					: POSITION;	
+	float  fog						: FOG;
+
+	// stuff for the pixel shader
+	HALF4 baseTexCoord2_tangentSpaceVertToEyeVectorXY	: TEXCOORD0;
+
+	// bump mapping and a separate envmap mask texture are mutually exclusive.
+	float3 color2						: TEXCOORD1;
+	float3 color1						: TEXCOORD2;
+	float4 worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ	: TEXCOORD3;
+	float3x3 tangentSpaceTranspose		: TEXCOORD4;
+
+	float4 worldPos_projPosZ			: TEXCOORD7;
+};
+
+
+//-----------------------------------------------------------------------------
+// Main shader entry point
+//-----------------------------------------------------------------------------
+VS_OUTPUT main( const VS_INPUT v )
+{
+	VS_OUTPUT o = ( VS_OUTPUT )0;
+
+	// Perform skinning
+	float3 worldNormal, worldPos, worldTangentS, worldTangentT;
+	SkinPositionNormalAndTangentSpace( 
+		g_NumBones, 
+		v.vPos, v.vNormal, v.vUserData,
+		v.vBoneWeights, v.vBoneIndices,
+		worldPos, worldNormal, worldTangentS, worldTangentT );
+
+	// Only need to renormalize if actually doing lighting
+	// Skinning can denormalize these values
+	if ( g_NumBones > 1 )
+	{
+		worldNormal = normalize( worldNormal );
+		worldTangentS = normalize( worldTangentS );
+		worldTangentT = normalize( worldTangentT );
+	}
+	
+	// Transform into projection space
+	float4 projPos = mul( float4( worldPos, 1 ), cViewProj );
+	o.projPos = projPos;
+	o.fog = CalcFog( worldPos, projPos, g_FogType );
+
+ 	// Needed for water fog alpha and diffuse lighting 
+	// FIXME: we shouldn't have to compute this all the time.
+	o.worldPos_projPosZ = float4( worldPos, projPos.z );
+
+	// Needed for cubemapping + parallax mapping
+	// FIXME: We shouldn't have to compute this all the time.
+	o.worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ.xyz = VSHADER_VECT_SCALE * (cEyePos - worldPos);
+
+	// Compute bumped lighting
+	// FIXME: We shouldn't have to compute this for unlit materials
+	o.color1 = GetVertexColorForLight( worldPos, worldNormal, 0, g_LocalLightType0 );
+	o.color2 = GetVertexColorForLight( worldPos, worldNormal, 1, g_LocalLightType1 );
+
+	// Base texture coordinate transform
+	o.baseTexCoord2_tangentSpaceVertToEyeVectorXY.x = dot( v.vTexCoord0, cBaseTexCoordTransform[0] );
+	o.baseTexCoord2_tangentSpaceVertToEyeVectorXY.y = dot( v.vTexCoord0, cBaseTexCoordTransform[1] );
+
+	// Tangent space transform
+	o.tangentSpaceTranspose[0] = float3( worldTangentS.x, worldTangentT.x, worldNormal.x );
+	o.tangentSpaceTranspose[1] = float3( worldTangentS.y, worldTangentT.y, worldNormal.y );
+	o.tangentSpaceTranspose[2] = float3( worldTangentS.z, worldTangentT.z, worldNormal.z );
+
+#if PARALLAXMAP
+	o.baseTexCoord2_tangentSpaceVertToEyeVectorXY.z = dot( o.tangentSpaceTranspose[0], o.worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ.xyz );
+	o.baseTexCoord2_tangentSpaceVertToEyeVectorXY.w = dot( o.tangentSpaceTranspose[1], o.worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ.xyz );
+	o.worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ.w = dot( o.tangentSpaceTranspose[2], o.worldVertToEyeVectorXYZ_tangentSpaceVertToEyeVectorZ.xyz );
+#endif
+
+	return o;
+}
+
+

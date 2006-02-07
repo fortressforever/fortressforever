@@ -1,0 +1,41 @@
+#include "common_vs_fxc.h"
+
+struct VS_INPUT
+{
+	float3 vPos						: POSITION;
+	float2 vBaseTexCoord			: TEXCOORD0;
+};
+
+struct VS_OUTPUT
+{
+    float4 vProjPos					: POSITION;	
+	float2 vBaseTexCoord0			: TEXCOORD0;
+	float2 vBaseTexCoord1			: TEXCOORD1;
+	float2 vBaseTexCoord2			: TEXCOORD2;
+	float2 vBaseTexCoord3			: TEXCOORD3;
+	float2 vBaseTexCoord4			: TEXCOORD4;
+};
+
+const float cBlurAmount :  register( SHADER_SPECIFIC_CONST_0 );
+
+VS_OUTPUT main( const VS_INPUT v )
+{
+	VS_OUTPUT o = ( VS_OUTPUT )0;
+
+	// Project the point.
+	float4 vProjPos = mul( float4( v.vPos, 1 ), cModelViewProj );
+	o.vProjPos = vProjPos;
+
+	// Pass texture coordinates through to the pixel shader.
+	float adj = cBlurAmount;
+	
+	o.vBaseTexCoord0 = v.vBaseTexCoord;
+	o.vBaseTexCoord1 = v.vBaseTexCoord + float2( -adj, adj );
+	o.vBaseTexCoord2 = v.vBaseTexCoord + float2( -adj, -adj );
+	o.vBaseTexCoord3 = v.vBaseTexCoord + float2( adj, -adj );
+	o.vBaseTexCoord4 = v.vBaseTexCoord + float2( adj, adj );
+
+	return o;
+}
+
+
