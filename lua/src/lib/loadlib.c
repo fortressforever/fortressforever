@@ -1,5 +1,5 @@
 /*
-** $Id: loadlib.c,v 1.1 2005/04/26 00:48:40 mirven_monkey Exp $
+** $Id: loadlib.c,v 1.1 2005/04/26 00:48:40 mirvin_monkey Exp $
 ** Dynamic library loader for Lua
 ** See Copyright Notice in lua.h
 *

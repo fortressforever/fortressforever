@@ -7,10 +7,10 @@
 //
 //-----------------------------------------------------------------------------
 // $Log: vgui_TeamFortressViewport.cpp,v $
-// Revision 1.12  2005/09/24 22:53:17  mirven_monkey
+// Revision 1.12  2005/09/24 22:53:17  mirvin_monkey
 // no message
 //
-// Revision 1.11  2005/08/15 23:25:28  mirven_monkey
+// Revision 1.11  2005/08/15 23:25:28  mirvin_monkey
 // no message
 //
 // Revision 1.10  2005/06/19 22:47:30  mulchman
