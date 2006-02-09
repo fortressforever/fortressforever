@@ -85,11 +85,18 @@ private:
 	bool	m_bDoNotDraw;
 	wchar_t m_wcsAmmoFullMsg[16];
 
+	CHudTexture *m_pHudAmmoTypes[MAX_AMMO_TYPES];	// |-- Mirv: Generic ammo icons
+
 	CPanelAnimationVarAliasType( float, m_flHistoryGap, "history_gap", "42", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flIconInset, "icon_inset", "28", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flTextInset, "text_inset", "26", "proportional_float" );
 	CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudNumbersSmall" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
+
+	// --> Mirv: Added for icons
+	CPanelAnimationVarAliasType( float, m_iIconHeight, "icon_height", "20", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_iIconWidth, "icon_width", "20", "proportional_float" );
+	// <-- Mirv: Added for icons
 };
 
 #endif // HISTORY_RESOURCE_H

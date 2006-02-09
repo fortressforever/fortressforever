@@ -421,6 +421,11 @@ public:
 	CNetworkVar(float, m_flMassCoefficient);
 
 	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
+
+	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
+	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
+
+	int m_iMaxAmmo[MAX_AMMO_TYPES];
 	// <-- Mirv: Various things
 };
 

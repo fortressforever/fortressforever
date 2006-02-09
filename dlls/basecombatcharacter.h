@@ -397,10 +397,10 @@ private:
 	// ---------------
 	CUtlVector<Relationship_t>		m_Relationship;						// Array of relationships
 
+protected:
+
 	// shared ammo slots
 	CNetworkArrayForDerived( int, m_iAmmo, MAX_AMMO_SLOTS );
-
-protected:
 
 	// Usable character items 
 	CNetworkArray( CBaseCombatWeaponHandle, m_hMyWeapons, MAX_WEAPONS );

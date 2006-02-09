@@ -29,11 +29,10 @@ class CFFPlayer;
 #define MAX_DEPLOY_TIME 0.75f
 
 // These are the names of the ammo types that the weapon script files reference.
-#define AMMO_BULLETS			"AMMO_BULLETS"	// ac
+// GRENADES and BULLETS have now been removed
 #define AMMO_SHELLS				"AMMO_SHELLS"	// shotguns
 #define AMMO_NAILS				"AMMO_NAILS"	// nailguns
 #define AMMO_ROCKETS			"AMMO_ROCKETS"	// rpg
-#define AMMO_GRENADES			"AMMO_GRENADES"	// pl, gl
 #define AMMO_CELLS				"AMMO_CELLS"	// for building dispenser, sentry gun
 #define AMMO_DETPACK			"AMMO_DETPACK"	// for "building" detpacks
 #define AMMO_RADIOTAG			"AMMO_RADIOTAG"	// for radio tagging

@@ -74,4 +74,6 @@ void FF_HudHint(
 
 #define END_ENTITY_SPHERE_QUERY( ) }
 
+const char *FF_GetAmmoName(int i);
+
 #endif // FF_UTILS_H

@@ -333,15 +333,16 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post() 
 {
+#ifdef CLIENT_DLL
 	switch (GetClassSlot()) 
 	{
-#ifdef CLIENT_DLL
+
 	case CLASS_SOLDIER:
 		engine->ClientCmd("-reload");
 		break;
 
-#endif
 	default:
 		break;
 	}
+#endif
 }

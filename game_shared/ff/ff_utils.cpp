@@ -29,6 +29,7 @@
 #include "cbase.h"
 #include "ff_utils.h"
 #include "Color.h"		// |-- Mirv: Fixed case for GCC
+#include "ammodef.h"
 
 #ifdef CLIENT_DLL
 #include <igameresources.h>
@@ -335,4 +336,14 @@ void FF_HudHint(
 		MessageEnd( );
 	}
 #endif
+}
+
+const char *FF_GetAmmoName(int i)
+{
+	Ammo_t *ammo = GetAmmoDef()->GetAmmoOfIndex(i);
+
+	if (ammo)
+		return ammo->pName;
+
+	return NULL;
 }

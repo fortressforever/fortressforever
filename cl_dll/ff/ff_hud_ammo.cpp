@@ -185,14 +185,14 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		SetAmmo(ammo1, false);
 		SetAmmo2(ammo2, false);
 
-		// TODO Some of the weapons will need to display different strings
-		// and possibly even icons. Query the weapon itself for these.
-
 		// update icon
 		m_iAmmoType = wpn->GetPrimaryAmmoType();
 
+		// ammo localised text is based on the weapon's localised printname
 		char buf[128];
-		sprintf(buf, "#FF_HUD_%s", m_pszHudAmmoNames[m_iAmmoType]);
+		sprintf(buf, "%s_AMMO", wpn->GetPrintName());
+
+		DevMsg(buf);
 
 		// update name
 		wchar_t *tempString = vgui::localize()->Find(buf);
@@ -202,7 +202,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		}
 		else
 		{
-			SetLabelText(L"NONE");
+			SetLabelText(L"AMMO");
 		}
 
 		// update whether or not we show the total ammo display
@@ -303,8 +303,15 @@ void CHudAmmo::Paint()
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
+	// Use the weapon ammo icon if possible
+	CHudTexture *ammoIcon = gWR.GetAmmoIconFromWeapon(m_iAmmoType);
+
+	// Use a generic one instead (unlikely this'll happen)
+	if (!ammoIcon)
+		ammoIcon = m_pHudAmmoTypes[m_iAmmoType];
+
 	// Draw ammo icon
-	surface()->DrawSetTexture(m_pHudAmmoTypes[m_iAmmoType]->textureId);
+	surface()->DrawSetTexture(ammoIcon->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 

@@ -720,11 +720,17 @@ void CFFPlayer::Spawn()
 
 	// Can I get some freakin ammo please?
 	// Maybe some sharks with freakin laser beams?
-	for( int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++ )
-	{
-		DevMsg( "Giving: %i of ammo type: %s\n", pPlayerClassInfo.m_aAmmos[ i ].m_iAmount, pPlayerClassInfo.m_aAmmos[ i ].m_szAmmoType );
-		GiveAmmo( pPlayerClassInfo.m_aAmmos[ i ].m_iAmount, pPlayerClassInfo.m_aAmmos[ i ].m_szAmmoType, true );
-	}
+	for(int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++)
+		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
+
+	// This is simpler to store in an array
+	// TODO Put this into playerclass_parse
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_CELLS)] = pPlayerClassInfo.m_iMaxCells;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_NAILS)] = pPlayerClassInfo.m_iMaxNails;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_SHELLS)] = pPlayerClassInfo.m_iMaxShells;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_ROCKETS)] = pPlayerClassInfo.m_iMaxRockets;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_DETPACK)] = pPlayerClassInfo.m_iMaxDetpack;
+	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_RADIOTAG)] = pPlayerClassInfo.m_iMaxRadioTag;
 
 	// Clear the list of people who previously radio tagged us
 	//m_hWhoTaggedMeList.RemoveAll( );
@@ -2358,27 +2364,35 @@ void CFFPlayer::Command_Discard( void )
 {
 	CFFItemBackpack *pBackpack = NULL;
 
-	bool iDroppableAmmo[MAX_AMMO_TYPES] = {true};
+	int iDroppableAmmo[MAX_AMMO_TYPES] = {0};
 
 	// Check we have the ammo to discard first
-	if (GetClassSlot() != CLASS_ENGINEER)
+		if (GetClassSlot() != CLASS_ENGINEER)
 	{
-		int i = 0;
-
 		// get ammo used by our weapons
-		while(GetWeapon(i))
+		for (int i = 0; i < MAX_WEAPON_SLOTS; i++)
 		{
-			iDroppableAmmo[GetWeapon(i)->GetPrimaryAmmoType()] = false;
-			i++;
+			if (GetWeapon(i))
+			{
+				int ammoid = GetWeapon(i)->GetPrimaryAmmoType();
+
+				if (ammoid > -1)
+				{
+					iDroppableAmmo[ammoid] = 1;
+					DevMsg("Can't drop %s\n", FF_GetAmmoName(ammoid));
+				}
+			}
 		}
 
 		// Add ammo if they have any
-		for (int i = 1; i < MAX_AMMO_TYPES; i++)
+		for (int i = 0; i < MAX_AMMO_TYPES; i++)
 		{
-			if (iDroppableAmmo[i] && GetAmmoCount(i) > 0)
+			if (!iDroppableAmmo[i] && GetAmmoCount(i) > 0)
 			{
 				if (!pBackpack)
 					pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
+
+				DevMsg("Dropping %s\n", FF_GetAmmoName(i));
 
 				// Check again in case we failed to make one
 				if (pBackpack)
@@ -3502,4 +3516,43 @@ void CFFPlayer::Command_Disguise()
 			m_nSkin = iteam;
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Give the player some ammo.
+//-----------------------------------------------------------------------------
+int CFFPlayer::GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound)
+{
+	if (iCount <= 0)
+		return 0;
+
+	if (iAmmoIndex < 0 || iAmmoIndex >= MAX_AMMO_SLOTS)
+		return 0;
+
+	int iMax = m_iMaxAmmo[iAmmoIndex];
+	int iAdd = min(iCount, iMax - m_iAmmo[iAmmoIndex]);
+	if (iAdd < 1)
+		return 0;
+
+	// Ammo pickup sound
+	if (!bSuppressSound)
+		EmitSound("BaseCombatCharacter.AmmoPickup");
+
+	m_iAmmo.Set(iAmmoIndex, m_iAmmo[iAmmoIndex] + iAdd);
+
+	return iAdd;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Give the player some ammo.
+//-----------------------------------------------------------------------------
+int CFFPlayer::GiveAmmo(int iCount, const char *szName, bool bSuppressSound)
+{
+	int iAmmoType = GetAmmoDef()->Index(szName);
+	if (iAmmoType == -1)
+	{
+		Msg("ERROR: Attempting to give unknown ammo type (%s)\n", szName);
+		return 0;
+	}
+	return GiveAmmo(iCount, iAmmoType, bSuppressSound);
 }

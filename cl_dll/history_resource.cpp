@@ -11,6 +11,7 @@
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include "iclientmode.h"
+#include "ammodef.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -71,6 +72,23 @@ void CHudHistoryResource::Reset( void )
 	m_PickupHistory.RemoveAll();
 	m_iCurrentHistorySlot = 0;
 	m_bDoNotDraw = true;
+
+	// --> Mirv: Get icon for each generic ammo type
+	for (int i = 0; i < MAX_AMMO_TYPES; i++)
+	{
+		Ammo_t *ammo = GetAmmoDef()->GetAmmoOfIndex(i);
+
+		if (ammo && ammo->pName)
+		{
+			char buf[128];
+			sprintf(buf, "vgui/hud_%s", ammo->pName);
+
+			m_pHudAmmoTypes[i] = new CHudTexture();
+			m_pHudAmmoTypes[i]->textureId = surface()->CreateNewTextureID();
+			surface()->DrawSetTextureFile(m_pHudAmmoTypes[i]->textureId, buf, true, false);
+		}
+	}
+	// <-- Mirv: Get icon for each generic ammo type
 }
 
 //-----------------------------------------------------------------------------
@@ -348,13 +366,21 @@ void CHudHistoryResource::Paint( void )
 				break;
 			}
 
-			if ( !itemIcon )
-				continue;
+			// --> Mirv: Draw proper icons
+
+			// We don't have a weapon for this item, so just show a generic one
+			if (!itemIcon)
+				itemIcon = m_pHudAmmoTypes[m_PickupHistory[i].iId];
 
 			int ypos = tall - (m_flHistoryGap * (i + 1));
-			int xpos = wide - itemIcon->Width() - m_flIconInset;
+			int xpos = wide - /*itemIcon->Width()*/ m_iIconWidth - m_flIconInset;
 
-			itemIcon->DrawSelf( xpos, ypos, clr );
+			//itemIcon->DrawSelf( xpos, ypos, 80, 80, clr );
+
+			surface()->DrawSetTexture(itemIcon->textureId);
+			surface()->DrawSetColor(255, 255, 255, 255);
+			surface()->DrawTexturedRect(xpos, ypos, xpos + m_iIconWidth, ypos + m_iIconHeight);
+			// <-- Mirv: Draw proper icons
 
 			if ( iAmount )
 			{
@@ -362,7 +388,7 @@ void CHudHistoryResource::Paint( void )
 				_snwprintf( text, sizeof( text ) / sizeof(wchar_t), L"%i", m_PickupHistory[i].iCount );
 
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - itemIcon->Height() ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hNumberFont );
 				vgui::surface()->DrawSetTextColor( clr );
@@ -376,7 +402,7 @@ void CHudHistoryResource::Paint( void )
 			else if ( bUseAmmoFullMsg )
 			{
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hTextFont ) - itemIcon->Height() ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hTextFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hTextFont );
 				vgui::surface()->DrawSetTextColor( clr );

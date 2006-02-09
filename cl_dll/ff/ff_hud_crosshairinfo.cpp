@@ -400,7 +400,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 void CHudCrosshairInfo::Paint( void )
 {
-	DevMsg( "PAINT PAINT PAINT PAINT\n" );
+	//DevMsg( "PAINT PAINT PAINT PAINT\n" );
 
 	if( m_bDrawText )
 	{

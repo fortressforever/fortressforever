@@ -22,7 +22,7 @@
 BEGIN_DATADESC( CFFItemBackpack )
 
 	// weapon ammo types
-	DEFINE_KEYFIELD( m_iAmmoCounts[1], FIELD_INTEGER, AMMO_BULLETS ),
+/*	DEFINE_KEYFIELD( m_iAmmoCounts[1], FIELD_INTEGER, AMMO_BULLETS ),
 	DEFINE_KEYFIELD( m_iAmmoCounts[2], FIELD_INTEGER, AMMO_SHELLS ),
 	DEFINE_KEYFIELD( m_iAmmoCounts[3], FIELD_INTEGER, AMMO_NAILS ),
 	DEFINE_KEYFIELD( m_iAmmoCounts[4], FIELD_INTEGER, AMMO_ROCKETS ),
@@ -36,7 +36,7 @@ BEGIN_DATADESC( CFFItemBackpack )
 
 	//health and armor
 	DEFINE_KEYFIELD( m_iArmor,	FIELD_INTEGER, "armorvalue" ),
-	DEFINE_KEYFIELD( m_iHealth,	FIELD_INTEGER, "healthvalue" ),
+	DEFINE_KEYFIELD( m_iHealth,	FIELD_INTEGER, "healthvalue" ),*/
 
 	DEFINE_ENTITYFUNC( RestockTouch ),
 
