@@ -171,6 +171,14 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 			Vector vecSrc = GetAbsOrigin();
 			vecSrc.z += 1;// in case grenade is lying on the ground
 			BEGIN_ENTITY_SPHERE_QUERY(vecSrc, flRadius)
+
+				// Bug #0000269: Napalm through walls.
+				trace_t tr;
+				UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS, &tr);
+
+				if (tr.fraction < 1.0f)
+					continue;
+
 				Class_T cls = pEntity->Classify();
 				switch(cls)
 				{
