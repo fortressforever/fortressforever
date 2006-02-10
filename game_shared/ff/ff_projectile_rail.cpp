@@ -170,7 +170,7 @@ void CFFProjectileRail::RailTouch(CBaseEntity *pOther)
 				data.m_vNormal = vForward;
 				data.m_nEntIndex = tr2.fraction != 1.0f;
 			
-				DispatchEffect("NailImpact", data);
+				DispatchEffect("RailImpact", data);
 			}
 		}
 		

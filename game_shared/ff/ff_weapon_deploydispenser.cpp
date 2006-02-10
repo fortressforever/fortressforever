@@ -26,6 +26,7 @@
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
 
+
 #ifdef CLIENT_DLL 
 	#define CFFWeaponDeployDispenser C_FFWeaponDeployDispenser
 	#include "c_ff_player.h"
@@ -33,6 +34,7 @@
 	#include "ff_buildableobjects_shared.h"
 #else
 	#include "ff_player.h"
+	#include "ff_dispenser.h"
 #endif
 
 //=============================================================================
@@ -131,10 +133,14 @@ void CFFWeaponDeployDispenser::PrimaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponDeployDispenser::SecondaryAttack() 
 {
-	if (m_flNextSecondaryAttack < gpGlobals->curtime) 
+	if (gpGlobals->curtime > m_flNextSecondaryAttack + 0.1f && gpGlobals->curtime < m_flNextSecondaryAttack + 0.3f)
 	{
-		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
+#ifdef CLIENT_DLL
+		engine->ClientCmd("detdismantledispenser");
+#endif
 	}
+
+	m_flNextSecondaryAttack = gpGlobals->curtime;
 }
 
 //----------------------------------------------------------------------------
@@ -190,3 +196,67 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 	return BaseClass::Holster();
 }
+
+#ifdef GAME_DLL
+	//=============================================================================
+	// Commands
+	//=============================================================================
+	CON_COMMAND(dismantledispenser, "Dismantle dispenser")
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
+
+		if (!pPlayer)
+			return;
+
+		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+
+		if (!pDispenser)
+			return;
+
+		// Close enough to dismantle
+		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
+		{
+			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			pDispenser->RemoveQuietly();
+		}
+		else
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_TOOFARAWAY");
+	}
+
+	CON_COMMAND(detdispenser, "Detonates dispenser")
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
+
+		if (!pPlayer)
+			return;
+
+		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+
+		if (!pDispenser)
+			return;
+
+		pDispenser->Detonate();
+	}
+
+	CON_COMMAND(detdismantledispenser, "Dismantles or detonate dispenser depending on distance")
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
+
+		if (!pPlayer)
+			return;
+
+		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+
+		if (!pDispenser)
+			return;
+
+		// Close enough to dismantle
+		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
+		{
+			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			pDispenser->RemoveQuietly();
+		}
+		else
+			pDispenser->Detonate();
+	}
+#endif
