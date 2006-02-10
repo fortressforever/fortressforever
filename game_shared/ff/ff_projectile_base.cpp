@@ -253,6 +253,8 @@ END_NETWORK_TABLE()
 void CFFProjectileBase::Spawn() 
 {
 	m_flSpawnTime = gpGlobals->curtime;
+	m_flNextBounceSoundTime = gpGlobals->curtime;
+
 	BaseClass::Spawn();
 
 	SetCollisionGroup(COLLISION_GROUP_PROJECTILE);

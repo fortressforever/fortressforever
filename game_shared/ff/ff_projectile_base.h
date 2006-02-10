@@ -39,6 +39,22 @@ public:
 	// so the projectile starts out moving right off the bat.
 	CNetworkVector(m_vInitialVelocity);
 
+	virtual void Precache() 
+	{
+		PrecacheScriptSound("BaseGrenade.BounceSound");
+	}
+
+	// Bug #0000275: Grenade bounce sounds missing
+	virtual void BounceSound()
+	{
+		if (gpGlobals->curtime > m_flNextBounceSoundTime)
+		{
+			EmitSound("BaseGrenade.BounceSound");
+
+			m_flNextBounceSoundTime = gpGlobals->curtime + 0.1;
+		}	
+	}
+
 	void Explode(trace_t *pTrace, int bitsDamageType);
 
 #ifdef CLIENT_DLL
@@ -62,6 +78,7 @@ public:
 
 	virtual void Spawn();
     float m_flSpawnTime;
+	float m_flNextBounceSoundTime;
 
 protected:
 
