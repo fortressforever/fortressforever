@@ -573,10 +573,15 @@ void CGameMovement::CheckParameters( void )
 
 	if ( !m_bSpeedCropped && ( mv->m_nButtons & IN_SPEED ) && !( player->m_Local.m_bDucked && !player->m_Local.m_bDucking ))
 	{
-		float frac = 1.0f; // TODO can we remove this ?
-		mv->m_flForwardMove *= frac;
-		mv->m_flSideMove    *= frac;
-		mv->m_flUpMove      *= frac;
+		//float frac = 0.1f; // TODO can we remove this ?
+		//mv->m_flForwardMove *= frac;
+		//mv->m_flSideMove    *= frac;
+		//mv->m_flUpMove      *= frac;
+
+		mv->m_flForwardMove = clamp(mv->m_flForwardMove, 0, 150.0f);
+		mv->m_flSideMove    = clamp(mv->m_flSideMove, 0, 150.0f);
+		mv->m_flUpMove      = clamp(mv->m_flUpMove, 0, 150.0f);
+
 		m_bSpeedCropped = true;
 	}
 

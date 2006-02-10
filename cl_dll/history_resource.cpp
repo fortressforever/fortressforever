@@ -388,7 +388,7 @@ void CHudHistoryResource::Paint( void )
 				_snwprintf( text, sizeof( text ) / sizeof(wchar_t), L"%i", m_PickupHistory[i].iCount );
 
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;	// |-- Mirv:
 
 				vgui::surface()->DrawSetTextFont( m_hNumberFont );
 				vgui::surface()->DrawSetTextColor( clr );
@@ -402,7 +402,7 @@ void CHudHistoryResource::Paint( void )
 			else if ( bUseAmmoFullMsg )
 			{
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hTextFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;
+				ypos -= ( surface()->GetFontTall( m_hTextFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;	// |-- Mirv:
 
 				vgui::surface()->DrawSetTextFont( m_hTextFont );
 				vgui::surface()->DrawSetTextColor( clr );

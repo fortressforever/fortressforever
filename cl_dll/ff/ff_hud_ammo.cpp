@@ -192,8 +192,6 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		char buf[128];
 		sprintf(buf, "%s_AMMO", wpn->GetPrintName());
 
-		DevMsg(buf);
-
 		// update name
 		wchar_t *tempString = vgui::localize()->Find(buf);
 		if (tempString)
