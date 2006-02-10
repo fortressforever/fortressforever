@@ -184,6 +184,9 @@ void CFFDispenser::GoLive( void )
 	// Call base class
 	CFFBuildableObject::GoLive();
 
+	// Object is now built
+	m_bBuilt = true;
+
 	// Mirv: Now use our stored ground location + orientation
 	SetAbsOrigin(m_vecGroundOrigin);
 	SetAbsAngles(m_angGroundAngles);

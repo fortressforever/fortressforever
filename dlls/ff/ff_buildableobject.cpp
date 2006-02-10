@@ -182,6 +182,8 @@ void CFFBuildableObject::Spawn( void )
 		pPhysics->EnableGravity( false );
 		pPhysics->EnableDrag( false );
 	}
+
+	m_bBuilt = false;	// |-- Mirv: Make sure we're in a state of not built
 }
 
 /**

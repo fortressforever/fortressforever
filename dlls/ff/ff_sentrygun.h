@@ -89,8 +89,6 @@ public:
 	void OnSearchThink( void );
 	void OnActiveThink( void );
 
-	bool IsBuilt() { return m_bBuilt; }
-
 	void HackFindEnemy( void );
 
 	float MaxYawSpeed();

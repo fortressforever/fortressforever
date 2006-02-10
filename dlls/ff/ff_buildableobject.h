@@ -67,6 +67,8 @@ public:
 
 	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
 
+	bool IsBuilt() { return m_bBuilt; } // |-- Mirv: Moved here from CFFSentry
+
 	void Detonate( void );
 	void RemoveQuietly( void );
 	virtual void Cancel( void ) { RemoveQuietly(); }

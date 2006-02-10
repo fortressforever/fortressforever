@@ -129,6 +129,9 @@ void CFFDetpack::GoLive( void )
 	// Call base class
 	CFFBuildableObject::GoLive( );
 
+	// Object is now built
+	m_bBuilt = true;
+
 	// Do this after calling baseclass!
 	// This is so we call damage functions
 	// but don't take any damage
@@ -162,6 +165,7 @@ void CFFDetpack::GoLive( void )
 		m_flThinkTime = 0.001f; // immediate
 	else
 		m_flThinkTime = m_flDetonateTime - flCurTime - 5.0f;
+
 	SetNextThink( flCurTime + m_flThinkTime );
 }
 

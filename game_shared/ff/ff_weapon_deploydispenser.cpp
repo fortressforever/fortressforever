@@ -123,7 +123,13 @@ void CFFWeaponDeployDispenser::PrimaryAttack()
 		Cleanup();
 
 #ifdef GAME_DLL
-		GetPlayerOwner()->Command_BuildDispenser();
+		// Bug #0000265: We've lost the dispenser explosion animation.
+		// For now, don't do anything to a built disp with primary attack.
+		CFFPlayer *player = GetPlayerOwner();
+		CFFDispenser *disp = dynamic_cast<CFFDispenser *> (player->m_hDispenser.Get());
+
+		if (!disp || !disp->IsBuilt()) 
+			GetPlayerOwner()->Command_BuildDispenser();
 #endif
 	}
 }
