@@ -65,6 +65,8 @@ public:
 	virtual void Precache( void );
 	virtual bool BlocksLOS( void ) { return false; }
 
+	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
+
 	void Detonate( void );
 	void RemoveQuietly( void );
 	virtual void Cancel( void ) { RemoveQuietly(); }

@@ -510,6 +510,8 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 */
 void CFFBuildableObject::DoExplosion( void )
 {
+	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+
 	// Explosion!
 	Vector vecAbsOrigin = GetAbsOrigin();
 	CPASFilter filter( vecAbsOrigin );	
@@ -535,7 +537,10 @@ void CFFBuildableObject::DoExplosion( void )
 		DevMsg( "CFFBuildableObject::DoExplosion - ERROR - NO EXPLOSION SOUND (might want to add one)!\n" );
 
 	// Cause damage and some effects to things around our origin
-	RadiusDamage( CTakeDamageInfo( this, this, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
+	// Mirv: Changed pAttacker from this to pOwner, to fix
+	// Bug #0000279: Detpack not causing damage.
+	// Bug #0000247: Dispenser explosion does not hurt you
+	RadiusDamage( CTakeDamageInfo( this, pOwner, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
 
 	// Shake the screen if you're close enough
 	UTIL_ScreenShake( GetAbsOrigin(), 25.0f, 150.0f, m_flExplosionDuration, 5.0f * m_flExplosionRadius, SHAKE_START );
