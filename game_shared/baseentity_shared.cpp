@@ -1325,7 +1325,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
 	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);
 
-	float		flDmg = (info.m_iShots ? info.m_iDamage / info.m_iShots : info.m_iDamage);	// |-- Mirv: Split damage up into shots
+	float		flDmg = (info.m_iShots ? (float) info.m_iDamage / info.m_iShots : info.m_iDamage);	// |-- Mirv: Split damage up into shots
 	
 	bool bDoServerEffects = true;
 

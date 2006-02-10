@@ -167,7 +167,7 @@ void FX_FireBullets(
 
 	iSeed++;
 
-	float	flDamage = (pWeaponInfo->m_iBullets ? pWeaponInfo->m_iDamage / pWeaponInfo->m_iBullets : pWeaponInfo->m_iDamage);	// |-- Mirv: Split damage for each shot
+	float	flDamage = (pWeaponInfo->m_iBullets ? (float) pWeaponInfo->m_iDamage / pWeaponInfo->m_iBullets : pWeaponInfo->m_iDamage);	// |-- Mirv: Split damage for each shot
 	int		iAmmoType = pWeaponInfo->iAmmoType;
 
 	WeaponSound_t sound_type = SINGLE;

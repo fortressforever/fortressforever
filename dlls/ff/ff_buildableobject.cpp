@@ -612,6 +612,11 @@ void CFFBuildableObject::DoExplosion( void )
 
 int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 {
+	// Sentry gun seems to take about 110% of damage, going to assume its the same
+	// for all others for now -mirv
+	CTakeDamageInfo adjustedDamage = info;
+	adjustedDamage.SetDamage(adjustedDamage.GetDamage() * 1.1f);
+	
 	// Just extending this to send events to the bots.
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 	if(pOwner && pOwner->IsBot())
@@ -639,5 +644,5 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		SendStatsToBot();
 	}
 
-	return BaseClass::OnTakeDamage(info);
+	return BaseClass::OnTakeDamage(adjustedDamage);
 }

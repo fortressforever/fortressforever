@@ -39,7 +39,7 @@ public:
 
 	virtual void Fire();
 
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SHOTGUN; }
+	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SUPERSHOTGUN; }
 
 private:
 
