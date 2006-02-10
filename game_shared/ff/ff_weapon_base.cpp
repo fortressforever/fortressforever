@@ -471,8 +471,8 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 
 	// Weapons that don't autoswitch away when they run out of ammo 
 	// can still be deployed when they have no ammo.
-	if (!HasAnyAmmo() && AllowsAutoSwitchFrom()) 
-		return false;
+	//if (!HasAnyAmmo() && AllowsAutoSwitchFrom()) 
+	//	return false;
 
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner) 

@@ -89,7 +89,10 @@ bool CBaseCombatCharacter::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 			return false;
 	}
 
-	if ( !pWeapon->HasAnyAmmo() && !GetAmmoCount( pWeapon->m_iPrimaryAmmoType ) )
+	// --> Mirv: Use CanBeSelected instead, which takes into account ITEM_FLAG_SELECTONEMPTY
+	//if ( !pWeapon->HasAnyAmmo() && !GetAmmoCount( pWeapon->m_iPrimaryAmmoType ) ) 
+	//	return false;
+	if (!pWeapon->CanBeSelected())
 		return false;
 
 	if ( !pWeapon->CanDeploy() )
