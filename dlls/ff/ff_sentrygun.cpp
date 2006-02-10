@@ -873,6 +873,10 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 		m_iHealth = clamp(m_iHealth + iCells * 3.5f, 0, m_iMaxHealth);
 		m_iShells = clamp(m_iShells + iShells, 0, m_iMaxShells);
 		m_iRockets = clamp(m_iRockets + iRockets, 0, m_iMaxRockets);
+
+		// Bug #0000238: Repairing sg doesn't remove damage decals
+		if (iCells > 0)
+			RemoveAllDecals();
 	}
 SendStatsToBot();
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
