@@ -80,15 +80,18 @@ void CHudBuildTimer::SetBuildTimer(int type, float duration)
 		SetLabelText(L"NONE");
 
 	// Fade it in if needed
-	if (!m_fVisible) 
+	if (!m_fVisible && duration > 0) 
 	{
 		m_fVisible = true;
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeInBuildTimer");
 	}
-	
 
 	m_flDuration = duration;
 	m_flStartTime = gpGlobals->curtime;
+
+	// Special case for no duration, set so we fade out instantly (so we can cancel a timer)
+	if (duration <= 0)
+		m_flStartTime = gpGlobals->curtime - 1.5f;
 }
 
 void CHudBuildTimer::MsgFunc_FF_BuildTimer(bf_read &msg) 

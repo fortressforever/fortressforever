@@ -718,19 +718,19 @@ void CFFPlayer::Spawn()
 		GiveNamedItem( pPlayerClassInfo.m_aWeapons[i] );
 	// <-- Mirv: Various things to do on spawn
 
-	// Can I get some freakin ammo please?
-	// Maybe some sharks with freakin laser beams?
-	for(int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++)
-		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
-
-	// This is simpler to store in an array
-	// TODO Put this into playerclass_parse
+	// Makes life simpler later to store this in an array
+	// TODO Use an array in playerclassparse instead	
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_CELLS)] = pPlayerClassInfo.m_iMaxCells;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_NAILS)] = pPlayerClassInfo.m_iMaxNails;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_SHELLS)] = pPlayerClassInfo.m_iMaxShells;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_ROCKETS)] = pPlayerClassInfo.m_iMaxRockets;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_DETPACK)] = pPlayerClassInfo.m_iMaxDetpack;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_RADIOTAG)] = pPlayerClassInfo.m_iMaxRadioTag;
+
+	// Can I get some freakin ammo please?
+	// Maybe some sharks with freakin laser beams?
+	for(int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++)
+		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 
 	// Clear the list of people who previously radio tagged us
 	//m_hWhoTaggedMeList.RemoveAll( );
@@ -893,6 +893,14 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_bBuilding = false;
 		m_iCurBuild = FF_BUILD_NONE;
 		m_iWantBuild = FF_BUILD_NONE;
+
+		// Mirv: Cancel build timer
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+		UserMessageBegin(user, "FF_BuildTimer");
+		WRITE_SHORT(m_iCurBuild);
+		WRITE_FLOAT(0);
+		MessageEnd();
 	}
 	// If the tag is still active, award a point
 	// to the person who tagged us
@@ -1911,8 +1919,13 @@ void CFFPlayer::PreBuildGenericThink( void )
 			// Unlock player
 			UnlockPlayer(  );
 
-			// TODO: Add in code to refund the object(s) to the player (cells, metal, detpack)
-			// Detpack: done
+			// Mirv: Cancel build timer
+			CSingleUserRecipientFilter user(this);
+			user.MakeReliable();
+			UserMessageBegin(user, "FF_BuildTimer");
+			WRITE_SHORT(m_iCurBuild);
+			WRITE_FLOAT(0);
+			MessageEnd();
 
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
@@ -2222,13 +2235,13 @@ void CFFPlayer::PreBuildGenericThink( void )
 		return;
 	}
 
-	// [TEST] Do a build timer
+	// Mirv: Start build timer
 	CSingleUserRecipientFilter user(this);
-	user.MakeReliable( );
-	UserMessageBegin( user, "FF_BuildTimer" );
+	user.MakeReliable();
+	UserMessageBegin(user, "FF_BuildTimer");
 	WRITE_SHORT(m_iCurBuild);
 	WRITE_FLOAT(m_flBuildTime - gpGlobals->curtime);
-	MessageEnd( );
+	MessageEnd();
 }
 
 void CFFPlayer::PostBuildGenericThink( void )
