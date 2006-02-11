@@ -12,6 +12,7 @@
 /// ---------
 /// Jan. 29, 2005	L0ki: Initial Creation
 /// Apr. 23, 2005	L0ki: removed header file, moved everything to a single cpp file
+/// Feb. 11, 2006	Mirv: Added new concussion glow effect.
 
 #include "cbase.h"
 #include "ff_grenade_base.h"
