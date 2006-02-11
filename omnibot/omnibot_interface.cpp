@@ -13,6 +13,9 @@
 #define WIN32
 #endif
 
+// Mirv: Just added this to stop all the redefinition warnings whenever i do a full recompile
+#pragma warning(disable: 4005)
+
 #include "omnibot_interface.h"
 #include "omnibot_eventhandler.h"
 

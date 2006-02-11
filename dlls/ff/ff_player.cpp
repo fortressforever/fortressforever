@@ -376,75 +376,12 @@ void CFFPlayer::PreThink(void)
 	BaseClass::PreThink();
 }
 
-// Find a map guide
-CFFMapGuide *CFFPlayer::FindMapGuide( int sequence )
-{
-	CFFMapGuide *pMapGuide = NULL;
-		
-	while( ( pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname( pMapGuide, "ff_mapguide" ) ) != NULL )
-	{
-		if( pMapGuide->m_iSequence == sequence )
-			return pMapGuide;
-	}
-	return NULL;
-}
-
 void CFFPlayer::PostThink()
 {
 	BaseClass::PostThink();
+
+	MoveTowardsMapGuide();
  
-	// Test - mirv
-	if( GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide )
-	{
-		Vector vecMapGuideDir = m_hNextMapGuide->GetAbsOrigin() - GetAbsOrigin();
-
-		// We're close enough to the next one and the time has finished here
-		if( gpGlobals->curtime > m_flNextMapGuideTime )
-		{
-			DevMsg( "[MAPGUIDE] Reached guide %d\n", m_hNextMapGuide->m_iSequence );
-
-			// Play the narration file for this
-			if( m_hNextMapGuide->m_iNarrationFile != NULL_STRING )
-			{
-				EmitSound_t ep;
-				ep.m_nChannel = CHAN_ITEM;
-				ep.m_pSoundName = (char *) STRING( m_hNextMapGuide->m_iNarrationFile );
-				ep.m_flVolume = 1.0f;
-				ep.m_SoundLevel = SNDLVL_NORM;
-
-				CSingleUserRecipientFilter filter( this );
-				EmitSound( filter, entindex(), ep );
-			}
-
-			// Now the next one has become the last
-			m_hLastMapGuide = m_hNextMapGuide;
-
-			// And we are looking for a new one
-			m_hNextMapGuide = FindMapGuide( m_hLastMapGuide->m_iSequence + 1 );
-
-			// Only bother if we found one
-			if( m_hNextMapGuide )
-			{
-				// And we are going to reach that in x seconds time
-				m_flNextMapGuideTime = gpGlobals->curtime + 10.0f;
-
-				// And also let's aim in the right direction
-				SetAbsAngles( m_hLastMapGuide->m_angDirection );
-			}
-		}
-		// We're not close enough, so move us closer
-		else
-		{
-			float t = clamp( ( m_flNextMapGuideTime - gpGlobals->curtime ) / 10.0f, 0, 1.0f );
-
-			Vector vecNewPos = t * m_hLastMapGuide->GetAbsOrigin() + ( 1 - t ) * m_hNextMapGuide->GetAbsOrigin();
-			//QAngle angNewDirection = t * m_hLastMapGuide->m_angDirection + ( 1 - t ) * m_hNextMapGuide->m_angDirection;
-
-			SetAbsOrigin( vecNewPos );
-			//SetAbsAngles( angNewDirection );
-		}
-	}
-
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
@@ -1089,6 +1026,9 @@ void CFFPlayer::Command_TestCommand(void)
 
 void CFFPlayer::Command_MapGuide( void )
 {
+	if (GetTeamNumber() != TEAM_SPECTATOR)
+		return;
+
 	if( !m_hNextMapGuide )
 	{
 		// Start map guide
@@ -3614,4 +3554,84 @@ int CFFPlayer::GiveAmmo(int iCount, const char *szName, bool bSuppressSound)
 		return 0;
 	}
 	return GiveAmmo(iCount, iAmmoType, bSuppressSound);
+}
+
+// Find a map guide
+CFFMapGuide *CFFPlayer::FindMapGuide(int sequence)
+{
+	CFFMapGuide *pMapGuide = NULL;
+
+	while ((pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname(pMapGuide, "info_ff_mapguide")) != NULL)
+	{
+		if (pMapGuide->m_iSequence == sequence)
+			return pMapGuide;
+	}
+	return NULL;
+}
+
+void CFFPlayer::MoveTowardsMapGuide()
+{
+	if (GetTeamNumber() != TEAM_SPECTATOR || !m_hNextMapGuide.Get())
+		return;
+
+	Vector vecMapGuideDir = m_hNextMapGuide->GetAbsOrigin() - GetAbsOrigin();
+
+	// We're close enough to the next one and the time has finished here
+	if (gpGlobals->curtime > m_flNextMapGuideTime)
+	{
+		DevMsg("[MAPGUIDE] Reached guide %d\n", m_hNextMapGuide->m_iSequence);
+
+		// Play the narration file for this
+		if (m_hNextMapGuide->m_iNarrationFile != NULL_STRING)
+		{
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_ITEM;
+			ep.m_pSoundName = (char *) STRING(m_hNextMapGuide->m_iNarrationFile);
+			ep.m_flVolume = 1.0f;
+			ep.m_SoundLevel = SNDLVL_NORM;
+
+			CSingleUserRecipientFilter filter(this);
+			EmitSound(filter, entindex(), ep);
+		}
+
+		// Now the next one has become the last
+		m_hLastMapGuide = m_hNextMapGuide;
+
+		// And we are looking for a new one
+		m_hNextMapGuide = FindMapGuide(m_hLastMapGuide->m_iSequence + 1);
+
+		// Only bother if we found one
+		if (m_hNextMapGuide)
+		{
+			// And we are going to reach that in x seconds time
+			m_flNextMapGuideTime = gpGlobals->curtime + m_hLastMapGuide->m_flTime;
+		}
+
+		// And also let's aim in the right direction
+		// TODO Fix this.
+		SetAbsAngles(m_hLastMapGuide->GetAbsAngles());
+	}
+	// We're not close enough, so move us closer
+	else
+	{
+		Vector vecNewPos;
+
+		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
+
+		// There've no curve point to worry about
+		if (m_hLastMapGuide->m_vecCurvePoint.Get().LengthSqr() < 3)
+			vecNewPos = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
+
+		// We're curving towards some point
+		else
+		{
+			Vector v1, v2;
+			v1 = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * m_hLastMapGuide->m_vecCurvePoint.Get();
+			v2 = t * m_hLastMapGuide->m_vecCurvePoint.Get() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
+
+			vecNewPos = t * v1 + (1 - t) * v2;
+		}
+
+		SetAbsOrigin(vecNewPos);
+	}
 }

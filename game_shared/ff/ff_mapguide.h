@@ -29,16 +29,18 @@ public:
 
 	CFFMapGuide();
 
-	void Spawn		 ();
-	void Precache	 ();
+	void Spawn();
+	void Precache();
 
 	void SetSpawnFlags(int flags);
 
-	//int			m_iSequence;
-	QAngle		m_angDirection;
-	string_t	m_iNarrationFile;
-
 	CNetworkVar(int, m_iSequence);
+	CNetworkVar(float, m_flTime);
+	CNetworkVector(m_vecCurvePoint);
+
+	virtual int ShouldTransmit(const CCheckTransmitInfo *pInfo);
+
+	string_t	m_iNarrationFile;
 };
 
 #endif //FF_MAPGUIDE

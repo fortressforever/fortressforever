@@ -240,7 +240,7 @@ void CHudGrenade1::Paint()
 
 	C_FFPlayer *ffplayer = ToFFPlayer(player);
 
-	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN) 
+	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
 		return;
 
 	int gren_num = 0;

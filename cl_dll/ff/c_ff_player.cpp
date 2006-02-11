@@ -629,8 +629,49 @@ void C_FFPlayer::PreThink( void )
 	BaseClass::PreThink();
 }
 
+// Handy function to get the midpoint angle between two angles
+float MidAngle(float target, float value, float amount) 
+{
+	target = anglemod(target);
+	value = anglemod(value);
+
+	float delta = target - value;
+
+	if (delta < -180) 
+		delta += 360;
+	else if (delta > 180) 
+		delta -= 360;
+
+	delta *= amount;
+
+	value += delta;
+
+	if (value < -180)
+		value += 360;
+	else if (value > 360)
+		value -= 360;
+
+	return value;
+}
+
 const QAngle &C_FFPlayer::EyeAngles()
 {
+	// Mapguides
+	if (GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide)
+	{
+		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
+
+		static QAngle angDirection;
+
+		// Dealing with 1-t here really, so swap Next/Last
+		angDirection.x = MidAngle(m_hLastMapGuide->GetAbsAngles().x, m_hNextMapGuide->GetAbsAngles().x, t);
+		angDirection.y = MidAngle(m_hLastMapGuide->GetAbsAngles().y, m_hNextMapGuide->GetAbsAngles().y, t);
+		angDirection.z = MidAngle(m_hLastMapGuide->GetAbsAngles().z, m_hNextMapGuide->GetAbsAngles().z, t);
+
+		return angDirection;
+	}
+
+	// Concussion
 	if( m_flConcTime > gpGlobals->curtime && conc_test.GetInt() != 0 )
 	{
 		m_angConcedTest = BaseClass::EyeAngles() + m_angConced;

@@ -18,27 +18,29 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFMapGuide, DT_FFMapGuide)
 
 BEGIN_NETWORK_TABLE(CFFMapGuide, DT_FFMapGuide) 
 #ifdef CLIENT_DLL
-	RecvPropInt(RECVINFO(m_iSequence)) 
+	RecvPropInt(RECVINFO(m_iSequence)),
+	RecvPropFloat(RECVINFO(m_flTime)),
+	RecvPropVector(RECVINFO(m_vecCurvePoint)),
 #else
 	SendPropInt(SENDINFO(m_iSequence)), 
+	SendPropFloat(SENDINFO(m_flTime)),
+	SendPropVector(SENDINFO(m_vecCurvePoint)),
 #endif
 END_NETWORK_TABLE() 
 
 BEGIN_DATADESC(CFFMapGuide) 
-
-	DEFINE_KEYFIELD(m_iSequence, FIELD_INTEGER, "order"), 
-	DEFINE_KEYFIELD(m_angDirection, FIELD_VECTOR, "direction"), 
-	DEFINE_KEYFIELD(m_iNarrationFile, FIELD_STRING, "narration"), 
-
+	DEFINE_KEYFIELD(m_iSequence, FIELD_INTEGER, "order"),
+	DEFINE_KEYFIELD(m_flTime, FIELD_FLOAT, "time"),
+	DEFINE_KEYFIELD(m_vecCurvePoint, FIELD_VECTOR, "curvetowards"),
+	DEFINE_KEYFIELD(m_iNarrationFile, FIELD_STRING, "narration"),
 END_DATADESC();
 
-LINK_ENTITY_TO_CLASS(ff_mapguide, CFFMapGuide);
-PRECACHE_REGISTER(ff_mapguide);
+LINK_ENTITY_TO_CLASS(info_ff_mapguide, CFFMapGuide);
+PRECACHE_REGISTER(info_ff_mapguide);
 
 CFFMapGuide::CFFMapGuide() 
 {
 	m_iSequence = 0;
-	m_angDirection = QAngle(0, 0, 0);
 	m_iNarrationFile = NULL_STRING;
 }
 
@@ -53,19 +55,24 @@ void CFFMapGuide::Spawn()
 	Precache();
 
 	BaseClass::Spawn();
+
+	SetMoveType(MOVETYPE_NONE);
+	SetSolid(SOLID_NONE);
+	AddSolidFlags(FSOLID_NOT_SOLID);
 	
-	SetEffects(EF_NODRAW);
-
-	SetAbsAngles(m_angDirection);
-
 #ifdef GAME_DLL
-	DevMsg("[SERVER] Spawned an ff_mapguide(%d) \n", m_iSequence);
+	DevMsg("[SERVER] Spawned an ff_mapguide(%d) (%.1f %.1f %.1f)\n", m_iSequence); //, GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z);
 #else
-	DevMsg("[CLIENT] Spawned an ff_mapguide(%d) \n", m_iSequence);
+	DevMsg("[CLIENT] Spawned an ff_mapguide(%d) (%.1f %.1f %.1f)\n", m_iSequence); //, GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z);
 #endif
 }
 
 void CFFMapGuide::SetSpawnFlags(int flags) 
 {
-	//m_spawnflags = flags;
+}
+
+// Only transmit to spectators
+int CFFMapGuide::ShouldTransmit(const CCheckTransmitInfo *pInfo)
+{
+	return FL_EDICT_ALWAYS;
 }
