@@ -362,6 +362,10 @@ void CFFPlayer::PreThink(void)
 
 	StatusEffectsThink();
 
+	// Disguising
+	if (m_iNewSpyDisguise && gpGlobals->curtime > m_flFinishDisguise)
+		FinishDisguise();
+
 	// Do we need to do a class specific skill?
 	if( m_afButtonPressed & IN_ATTACK2 )
 		ClassSpecificSkill();
@@ -614,8 +618,10 @@ void CFFPlayer::Spawn()
 	WRITE_FLOAT(0.0);
 	MessageEnd();
 
-	// Not feigned anymore
+	// Reset spy stuff
 	m_fFeigned = false;
+	m_flFinishDisguise = 0;
+	m_iSpyDisguise = m_iNewSpyDisguise = 0;
 
 	// Get rid of any fire
 	Extinguish();
@@ -3514,21 +3520,61 @@ void CFFPlayer::Command_Disguise()
 	if(engine->Cmd_Argc( ) < 3)
 		return;
 
-	int iteam = atoi(engine->Cmd_Argv(1));
-	int iclass = atoi(engine->Cmd_Argv(2));
+	const char *szTeam = engine->Cmd_Argv(1);
+
+	int iTeam, iClass;
+
+	// Allow either specify enemy/friendly or an actual team
+	if (FStrEq(szTeam, "enemy"))
+		iTeam = GetTeamNumber() == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
+	else if (FStrEq(szTeam, "friendly"))
+		iTeam = GetTeamNumber();
+	else
+        iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
+
+	iTeam = clamp(iTeam, TEAM_BLUE, TEAM_GREEN);
+
+	// Just use a number for now
+	iClass = atoi(engine->Cmd_Argv(2));
+	iClass = clamp(iClass, CLASS_SCOUT, CLASS_CIVILIAN);
+
+	m_iNewSpyDisguise = iTeam;
+	m_iNewSpyDisguise += iClass << 4;
+
+	m_flFinishDisguise = gpGlobals->curtime + 1.0f;
+
+	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_DISGUISING");
+}
+
+void CFFPlayer::ResetDisguise()
+{
+	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+
+	SetModel(pPlayerClassInfo.m_szModel);
+	m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
+
+	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE");
+}
+
+void CFFPlayer::FinishDisguise()
+{
+	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_DISGUISED");
 
 	PLAYERCLASS_FILE_INFO_HANDLE classinfo;
-    	
-	if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(iclass), &classinfo, GetEncryptionKey()))
+
+	if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString((m_iNewSpyDisguise & 0xFFFFFFF0) >> 4), &classinfo, GetEncryptionKey()))
 	{
-		const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle( m_hPlayerClassFileInfo );
+		const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(classinfo);
 
 		if (pPlayerClassInfo)
 		{
 			SetModel(pPlayerClassInfo->m_szModel);
-			m_nSkin = iteam;
+			m_nSkin = m_iNewSpyDisguise & 0x0000000F;
 		}
 	}
+
+	m_iSpyDisguise = m_iNewSpyDisguise;
+	m_iNewSpyDisguise = 0;
 }
 
 //-----------------------------------------------------------------------------

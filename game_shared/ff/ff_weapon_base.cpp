@@ -197,6 +197,12 @@ void CFFWeaponBase::PrimaryAttack()
 
 	pPlayer->m_iShotsFired++;
 
+	// Reset disguise
+#ifdef GAME_DLL
+	if (pPlayer->m_iSpyDisguise)
+		pPlayer->ResetDisguise();
+#endif
+
 	// Out of ammo?
 	if (m_iClip1 <= 0) 
 	{

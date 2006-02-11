@@ -426,6 +426,12 @@ public:
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
 
 	int m_iMaxAmmo[MAX_AMMO_TYPES];
+
+	int m_iSpyDisguise, m_iNewSpyDisguise;
+	float m_flFinishDisguise;
+
+	void FinishDisguise();
+	void ResetDisguise();
 	// <-- Mirv: Various things
 };
 
