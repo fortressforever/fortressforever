@@ -151,7 +151,7 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 				{
 					// Detpack is currently hidden
 					if (pDetpack->GetEffects() & EF_NODRAW)
-						pDetpack->SetEffects(EF_NODRAW);
+						pDetpack->RemoveEffects(EF_NODRAW);
 
 					// These were calculated in TryBuild()
 					pDetpack->SetAbsOrigin(hBuildInfo.GetBuildAirOrigin());
