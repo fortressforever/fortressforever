@@ -35,6 +35,8 @@ using namespace vgui;
 #include "ff_gamerules.h"
 #include "ff_utils.h"
 
+static ConVar hud_centerid( "hud_centerid", "0" );
+
 //=============================================================================
 //
 //	class CHudCrosshairInfo
@@ -57,6 +59,7 @@ public:
 		vgui::ivgui()->AddTickSignal( GetVPanel() );
 
 		m_flDuration = 0.2f;
+		m_flDrawDuration = 2.0f;
 	}
 
 	void Init( void );
@@ -68,7 +71,12 @@ protected:
 	float		m_flStartTime;
 	float		m_flDuration;
 	wchar_t		m_pText[ 256 ];	// Unicode text buffer
-	bool		m_bDrawText;
+	float		m_flDrawTime;
+	float		m_flDrawDuration;
+
+	// For center printing
+	float		m_flXOffset;
+	float		m_flYOffset;
 
 private:
 
@@ -99,9 +107,28 @@ void CHudCrosshairInfo::Init( void )
 
 void CHudCrosshairInfo::VidInit( void )
 {	
-	SetPaintBackgroundEnabled( false );
+	//SetPaintBackgroundEnabled( true );
+	//SetPaintBackgroundType( 2 );
 	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
-	m_bDrawText = false;
+	m_flDrawTime = -99;
+
+	// Get the screen width/height
+	//int iScreenWide, iScreenTall;
+	//vgui::surface()->GetScreenSize( iScreenWide, iScreenTall );
+
+	// Make sure this panel is big enough...
+	//SetPos( 0, 0 );
+	//SetWide( iScreenWide );
+	//SetTall( iScreenTall );
+
+	int iPanelWide = GetWide();
+	int iPanelTall = GetTall();
+
+	this->SetPaintEnabled( true );
+	this->SetPaintBorderEnabled( true );
+	this->SetPaintBackgroundType( 2 );
+
+	DevMsg( "[Crosshair Info] wide: %i, tall: %i\n", iPanelWide, iPanelTall );
 }
 
 void CHudCrosshairInfo::OnTick( void )
@@ -373,45 +400,76 @@ void CHudCrosshairInfo::OnTick( void )
 						wcscpy( wszClass, pszTemp );
 					else
 					{
-						wcscpy( wszClass, L"CLASS" );	// TODO: fix
+						wcscpy( wszClass, L"CLASS" );	// TODO: fix to show English version of class name :/
 					}
-					
-					
-					_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, L"100%", L"100%" );
 
-					char szTest[ 256 ];
-					vgui::localize()->ConvertUnicodeToANSI( m_pText, szTest, 256 );
+					if( ( iHealth != -1 ) && ( iArmor != -1 ) )
+					{
+						char szHealth[ 5 ], szArmor[ 5 ];
+						Q_snprintf( szHealth, 5, "%i", iHealth );
+						Q_snprintf( szArmor, 5, "%i", iArmor );
+
+						wchar_t wszHealth[ 10 ], wszArmor[ 10 ];
+
+                        vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+						vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
+
+						_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, wszHealth, wszArmor );
+					}
+					else
+						_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
+
+					if( hud_centerid.GetInt() )
+					{
+						int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
+						int iTall = surface()->GetFontTall( m_hTextFont );
+
+						// Get the screen width/height
+						int iScreenWide, iScreenTall;
+						surface()->GetScreenSize( iScreenWide, iScreenTall );
+
+						// Make sure this panel is big enough...
+						//SetPos( 0, 0 );
+						//SetWide( iScreenWide );
+						//SetTall( iScreenTall );
+
+						// Adjust values to get below the crosshair and offset correctly
+						m_flXOffset = ( iScreenWide / 2 ) - ( iWide / 2 );
+						m_flYOffset = ( iScreenTall / 2 ) + ( iTall / 2 ) + 100; // 100 to get it below the crosshair and not right on it
+
+						DevMsg( "[Crosshair Info] x: %f, y: %f\n", m_flXOffset, m_flYOffset );
+					}
+
+					// Start drawing
+					m_flDrawTime = gpGlobals->curtime;
+					
+
+					//char szTest[ 256 ];
+					//vgui::localize()->ConvertUnicodeToANSI( m_pText, szTest, 256 );
 					//int _snwprintf( wchar_t *buffer, size_t count, const wchar_t *format [,	argument] ... );
 					//_snwprintf(m_szSentry, 127, L"%s: %i%% %s: %i%% %s", m_szHealth, iHealthPerc, m_szAmmo, iAmmoPerc, fNoRockets ? m_szNoRockets : L"");
 
-
-
 					//DevMsg( "==========\nName: %s\nTeam: %i\nClass: %s\nHealth %%: %i\nArmor %%: %i\n", pszNewName, iTeam, szClass, iHealth, iArmor );
-					DevMsg( "[Crosshair Info] %s\n", szTest );
-
-					m_bDrawText = true;
+					//DevMsg( "[Crosshair Info] %s\n", szTest );/
 				}
 			}
 		}
 	}
-	else
-		m_bDrawText = false;
 }
 
 void CHudCrosshairInfo::Paint( void )
 {
-	//DevMsg( "PAINT PAINT PAINT PAINT\n" );
-
-	if( m_bDrawText )
+	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
-		DevMsg( "[Crosshair Info] Got text to paint\n" );
+		surface()->DrawSetTextFont( m_hTextFont );
+		surface()->DrawSetTextColor( GetFgColor() );
 
-		vgui::surface()->DrawSetTextFont( m_hTextFont );
-		vgui::surface()->DrawSetTextColor( GetFgColor() );
-
-		vgui::surface()->DrawSetTextPos( text1_xpos, text1_ypos );
+		if( hud_centerid.GetInt() )
+			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
+		else
+			surface()->DrawSetTextPos( text1_xpos, text1_ypos );
 
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
-			vgui::surface()->DrawUnicodeChar( *wch );
+			surface()->DrawUnicodeChar( *wch );
 	}
 }
