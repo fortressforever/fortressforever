@@ -18,20 +18,19 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFMapGuide, DT_FFMapGuide)
 
 BEGIN_NETWORK_TABLE(CFFMapGuide, DT_FFMapGuide) 
 #ifdef CLIENT_DLL
-	RecvPropInt(RECVINFO(m_iSequence)),
+	RecvPropFloat(RECVINFO(m_flWait)),
 	RecvPropFloat(RECVINFO(m_flTime)),
-	RecvPropVector(RECVINFO(m_vecCurvePoint)),
 #else
-	SendPropInt(SENDINFO(m_iSequence)), 
+	SendPropFloat(SENDINFO(m_flWait)),
 	SendPropFloat(SENDINFO(m_flTime)),
-	SendPropVector(SENDINFO(m_vecCurvePoint)),
 #endif
 END_NETWORK_TABLE() 
 
-BEGIN_DATADESC(CFFMapGuide) 
-	DEFINE_KEYFIELD(m_iSequence, FIELD_INTEGER, "order"),
+BEGIN_DATADESC(CFFMapGuide)
+	DEFINE_KEYFIELD(m_iNextMapguide, FIELD_STRING, "nextguide"),
+	DEFINE_KEYFIELD(m_flWait, FIELD_FLOAT, "wait"),
 	DEFINE_KEYFIELD(m_flTime, FIELD_FLOAT, "time"),
-	DEFINE_KEYFIELD(m_vecCurvePoint, FIELD_VECTOR, "curvetowards"),
+	DEFINE_KEYFIELD(m_iCurveEntity, FIELD_VECTOR, "curvetowards"),
 	DEFINE_KEYFIELD(m_iNarrationFile, FIELD_STRING, "narration"),
 END_DATADESC();
 
@@ -40,8 +39,12 @@ PRECACHE_REGISTER(info_ff_mapguide);
 
 CFFMapGuide::CFFMapGuide() 
 {
-	m_iSequence = 0;
 	m_iNarrationFile = NULL_STRING;
+	m_iCurveEntity = NULL_STRING;
+	m_iNextMapguide = NULL_STRING;
+
+	m_flWait = 10.0f;
+	m_flTime = 10.0f;
 }
 
 void CFFMapGuide::Precache() 
@@ -61,9 +64,9 @@ void CFFMapGuide::Spawn()
 	AddSolidFlags(FSOLID_NOT_SOLID);
 	
 #ifdef GAME_DLL
-	DevMsg("[SERVER] Spawned an ff_mapguide(%d) (%.1f %.1f %.1f)\n", m_iSequence); //, GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z);
+	DevMsg("[SERVER] Spawned an ff_mapguide (%s)\n", STRING(GetEntityName()));
 #else
-	DevMsg("[CLIENT] Spawned an ff_mapguide(%d) (%.1f %.1f %.1f)\n", m_iSequence); //, GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z);
+	DevMsg("[CLIENT] Spawned an ff_mapguide (%s)\n", "NULL");
 #endif
 }
 

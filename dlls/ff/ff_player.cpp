@@ -1031,9 +1031,13 @@ void CFFPlayer::Command_MapGuide( void )
 
 	if( !m_hNextMapGuide )
 	{
-		// Start map guide
-		m_hLastMapGuide = m_hNextMapGuide = FindMapGuide( 0 );
+		// Start at specified mapguide
+		if (engine->Cmd_Argc() > 1)
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING(engine->Cmd_Argv(1)));
+		else
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("start"));
 
+		// Check if mapguide was found
 		if( m_hNextMapGuide )
 		{
 			m_flNextMapGuideTime = 0;
@@ -3557,16 +3561,23 @@ int CFFPlayer::GiveAmmo(int iCount, const char *szName, bool bSuppressSound)
 }
 
 // Find a map guide
-CFFMapGuide *CFFPlayer::FindMapGuide(int sequence)
+CFFMapGuide *CFFPlayer::FindMapGuide(string_t targetname)
 {
-	CFFMapGuide *pMapGuide = NULL;
+	CBaseEntity *pent = gEntList.FindEntityByName(NULL, targetname, NULL);
 
-	while ((pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname(pMapGuide, "info_ff_mapguide")) != NULL)
-	{
-		if (pMapGuide->m_iSequence == sequence)
-			return pMapGuide;
-	}
-	return NULL;
+	if (!pent)
+		return NULL;
+
+	CFFMapGuide *pMapGuide = dynamic_cast<CFFMapGuide *>(pent);
+
+	return pMapGuide;
+
+	//while ((pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname(pMapGuide, "info_ff_mapguide")) != NULL)
+	//{
+	//	if (pMapGuide->GetEntityName() == targetname)
+	//		return pMapGuide;
+	//}
+	//return NULL;
 }
 
 void CFFPlayer::MoveTowardsMapGuide()
@@ -3579,7 +3590,7 @@ void CFFPlayer::MoveTowardsMapGuide()
 	// We're close enough to the next one and the time has finished here
 	if (gpGlobals->curtime > m_flNextMapGuideTime)
 	{
-		DevMsg("[MAPGUIDE] Reached guide %d\n", m_hNextMapGuide->m_iSequence);
+		DevMsg("[MAPGUIDE] Reached guide %s\n", STRING(m_hNextMapGuide->GetEntityName()));
 
 		// Play the narration file for this
 		if (m_hNextMapGuide->m_iNarrationFile != NULL_STRING)
@@ -3598,7 +3609,7 @@ void CFFPlayer::MoveTowardsMapGuide()
 		m_hLastMapGuide = m_hNextMapGuide;
 
 		// And we are looking for a new one
-		m_hNextMapGuide = FindMapGuide(m_hLastMapGuide->m_iSequence + 1);
+		m_hNextMapGuide = FindMapGuide(m_hLastMapGuide->m_iNextMapguide);
 
 		// Only bother if we found one
 		if (m_hNextMapGuide)
@@ -3608,8 +3619,7 @@ void CFFPlayer::MoveTowardsMapGuide()
 		}
 
 		// And also let's aim in the right direction
-		// TODO Fix this.
-		SetAbsAngles(m_hLastMapGuide->GetAbsAngles());
+		SnapEyeAngles(m_hLastMapGuide->GetAbsAngles());
 	}
 	// We're not close enough, so move us closer
 	else
@@ -3619,17 +3629,27 @@ void CFFPlayer::MoveTowardsMapGuide()
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
 
 		// There've no curve point to worry about
-		if (m_hLastMapGuide->m_vecCurvePoint.Get().LengthSqr() < 3)
+		if (m_hLastMapGuide->m_iCurveEntity == NULL_STRING)
 			vecNewPos = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
 
 		// We're curving towards some point
 		else
 		{
-			Vector v1, v2;
-			v1 = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * m_hLastMapGuide->m_vecCurvePoint.Get();
-			v2 = t * m_hLastMapGuide->m_vecCurvePoint.Get() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
+			CBaseEntity *pent = gEntList.FindEntityByName(NULL, m_hLastMapGuide->m_iCurveEntity, NULL);
 
-			vecNewPos = t * v1 + (1 - t) * v2;
+			if (pent)
+			{
+				Vector v1, v2;
+				v1 = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * pent->GetAbsOrigin();
+				v2 = t * pent->GetAbsOrigin() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
+
+				vecNewPos = t * v1 + (1 - t) * v2;
+			}
+			else
+			{
+				DevWarning("Could not find entity %s\n", STRING(m_hLastMapGuide->m_iCurveEntity));
+				vecNewPos = t * m_hLastMapGuide->GetAbsOrigin() + (1 - t) * m_hNextMapGuide->GetAbsOrigin();
+			}
 		}
 
 		SetAbsOrigin(vecNewPos);

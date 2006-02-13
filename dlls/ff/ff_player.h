@@ -389,7 +389,7 @@ public:
 	CNetworkHandle( CFFMapGuide, m_hLastMapGuide );
 	CNetworkVar( float, m_flNextMapGuideTime );
 
-	CFFMapGuide *FindMapGuide(int sequence);
+	CFFMapGuide *FindMapGuide(string_t targetname);
 	void MoveTowardsMapGuide();
 
 	void Command_MapGuide();

@@ -34,9 +34,11 @@ public:
 
 	void SetSpawnFlags(int flags);
 
-	CNetworkVar(int, m_iSequence);
+	CNetworkVar(float, m_flWait);
 	CNetworkVar(float, m_flTime);
-	CNetworkVector(m_vecCurvePoint);
+
+	string_t m_iNextMapguide;
+	string_t m_iCurveEntity;
 
 	virtual int ShouldTransmit(const CCheckTransmitInfo *pInfo);
 
