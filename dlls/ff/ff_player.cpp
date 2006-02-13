@@ -3614,8 +3614,9 @@ void CFFPlayer::MoveTowardsMapGuide()
 		// Only bother if we found one
 		if (m_hNextMapGuide)
 		{
-			// And we are going to reach that in x seconds time
-			m_flNextMapGuideTime = gpGlobals->curtime + m_hLastMapGuide->m_flTime;
+			// And we are going to reach that in x seconds time (including wait time)
+			// The extra wait time is clipped when deciding the position.
+			m_flNextMapGuideTime = gpGlobals->curtime + m_hLastMapGuide->m_flTime + m_hLastMapGuide->m_flWait;
 		}
 
 		// And also let's aim in the right direction
