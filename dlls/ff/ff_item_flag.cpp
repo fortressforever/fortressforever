@@ -255,13 +255,11 @@ CBaseEntity* CFFItemFlag::Return( void )
 	// eligible to be picked up again.
 	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
 
-	Assert(owner);
-
-	if (!owner)
-		return this;
-
-	m_flThrowTime = gpGlobals->curtime;
-	m_pLastOwner = owner;
+	if (owner)
+	{
+		m_flThrowTime = gpGlobals->curtime;
+		m_pLastOwner = owner;
+	}
 
 	CreateItemVPhysicsObject();
 
