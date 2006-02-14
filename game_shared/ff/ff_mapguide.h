@@ -39,6 +39,7 @@ public:
 
 	string_t m_iNextMapguide;
 	string_t m_iCurveEntity;
+	string_t m_iKeyName;
 
 	virtual int ShouldTransmit(const CCheckTransmitInfo *pInfo);
 

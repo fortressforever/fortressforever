@@ -240,6 +240,8 @@ bool ClientModeShared::ShouldDrawParticles( )
 	return true;
 }
 
+void HudContextMenuInput(float *x, float *y);	// |-- Mirv: Radial context menu
+
 //-----------------------------------------------------------------------------
 // Purpose: Allow weapons to override mouse input (for binoculars)
 //-----------------------------------------------------------------------------
@@ -250,6 +252,8 @@ void ClientModeShared::OverrideMouseInput( float *x, float *y )
 	{
 		pWeapon->OverrideMouseInput( x, y );
 	}
+
+	HudContextMenuInput(x, y);		// |-- Mirv: Feed into our menu
 }
 
 //-----------------------------------------------------------------------------

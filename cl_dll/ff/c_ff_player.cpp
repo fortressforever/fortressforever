@@ -15,7 +15,6 @@
 #include "engine/IEngineSound.h"
 #include "in_buttons.h"
 
-
 #include "ff_hud_grenade1timer.h"
 #include "ff_hud_grenade2timer.h"
 
@@ -613,8 +612,6 @@ void C_FFPlayer::PreThink( void )
 			
 		// Our conc angles, this is also quite slow for now
 		m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
-		//m_angNegConced = BaseClass::EyeAngles() - m_angConced;
-		//m_angConced += BaseClass::EyeAngles();
 	}
 	else
 		m_flConcTimeStart = 0;
@@ -627,6 +624,19 @@ void C_FFPlayer::PreThink( void )
 		ClassSpecificSkill_Post();
 
 	BaseClass::PreThink();
+}
+
+// Stomp any movement if we're in mapguide mode
+void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
+{
+	// Mapguides
+	if (GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide)
+	{
+		pCmd->buttons = 0;
+		pCmd->forwardmove = 0;
+		pCmd->sidemove = 0;
+		pCmd->upmove = 0;
+	}
 }
 
 // Handy function to get the midpoint angle between two angles
@@ -657,7 +667,7 @@ float MidAngle(float target, float value, float amount)
 const QAngle &C_FFPlayer::EyeAngles()
 {
 	// Mapguides
-	if (GetTeamNumber() == TEAM_SPECTATOR && m_hNextMapGuide)
+	if (GetTeamNumber() < TEAM_BLUE && m_hNextMapGuide)
 	{
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
 

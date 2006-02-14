@@ -71,6 +71,7 @@
 #include "NavProgress.h"
 #include "teammenu.h"
 #include "classmenu.h"
+#include "mapguidemenu.h"
 
 // our definition
 #include "baseviewport.h"
@@ -186,6 +187,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_INFO ) );
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ) );
 	AddNewPanel( CreatePanelByName( PANEL_CLASS ) );
+	AddNewPanel( CreatePanelByName( PANEL_MAPGUIDE ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ) );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ) );
@@ -227,6 +229,10 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	else if( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )
 	{
 		newpanel = new CClassMenu( this );
+	}
+	else if( Q_strcmp(PANEL_MAPGUIDE, szPanelName) == 0 )
+	{
+		newpanel = new CMapGuideMenu( this );
 	}
 	else if ( Q_strcmp(PANEL_OVERVIEW, szPanelName) == 0 )
 	{

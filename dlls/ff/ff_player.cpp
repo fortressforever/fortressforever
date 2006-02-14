@@ -563,23 +563,35 @@ void CFFPlayer::Spawn()
 	// Get rid of any fire
 	Extinguish();
 
-	// Tried to spawn while unassigned
-	if( GetTeamNumber() == TEAM_UNASSIGNED )
+	// Tried to spawn while unassigned (and not in a map guide)
+	if (GetTeamNumber() == TEAM_UNASSIGNED)
 	{
-		// Find an info_player_start place to spawn observer mode at
-		CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+		// Start a new map overview guide
+		if (!m_hNextMapGuide)
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
 
-		// We could find one
-		if( pSpawnSpot )
-		{
-			SetLocalOrigin( pSpawnSpot->GetLocalOrigin() + Vector(0,0,1) );
-			SetLocalAngles( pSpawnSpot->GetLocalAngles() );
-		}
-		// We couldn't find one
+		// Check if mapguide was found
+		if (m_hNextMapGuide)
+			m_flNextMapGuideTime = 0;
+
+		// Set us in the intermission location instead
 		else
 		{
-			SetAbsOrigin( Vector( 0, 0, 0 ) );
-			SetAbsAngles( QAngle( 0, 0, 0 ) );
+			// Find an info_player_start place to spawn observer mode at
+			CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");
+
+			// We could find one
+			if (pSpawnSpot)
+			{
+				SetLocalOrigin(pSpawnSpot->GetLocalOrigin() + Vector(0, 0, 1));
+				SetLocalAngles(pSpawnSpot->GetLocalAngles());
+			}
+			// We couldn't find one
+			else
+			{
+				SetAbsOrigin(Vector( 0, 0, 0 ));
+				SetAbsAngles(QAngle( 0, 0, 0 ));
+			}
 		}
 
 		// Show the team menu
@@ -592,6 +604,16 @@ void CFFPlayer::Spawn()
 	// They tried to spawn with no class and they are not a spectator (or randompc)
 	if(GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
 	{
+		// Start a new map overview guide
+		if (!m_hNextMapGuide)
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
+
+		// Check if mapguide was found
+		if (m_hNextMapGuide)
+			m_flNextMapGuideTime = 0;
+
+		// TODO set something if no map guides on this map
+
 		// Show the class select menu
 		ShowViewPortPanel( PANEL_CLASS, true );
 
@@ -1026,33 +1048,28 @@ void CFFPlayer::Command_TestCommand(void)
 
 void CFFPlayer::Command_MapGuide( void )
 {
+	// Swap them to spectator class if needed
 	if (GetTeamNumber() != TEAM_SPECTATOR)
-		return;
-
-	if( !m_hNextMapGuide )
 	{
-		// Start at specified mapguide
-		if (engine->Cmd_Argc() > 1)
-			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING(engine->Cmd_Argv(1)));
-		else
-			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("start"));
+		KillAndRemoveItems();
+		ChangeTeam(TEAM_SPECTATOR);
+		Spawn();
+	}
 
-		// Check if mapguide was found
-		if( m_hNextMapGuide )
-		{
-			m_flNextMapGuideTime = 0;
-			DevMsg( "Starting, teleporting to guide 0\n" );
-		}
-		else
-			DevMsg( "Couldn't start, unable to find first map guide\n" );
+	// Start at specified mapguide
+	if (engine->Cmd_Argc() > 1)
+		m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING(engine->Cmd_Argv(1)));
+	else
+		m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
+
+	// Check if mapguide was found
+	if (m_hNextMapGuide)
+	{
+		m_flNextMapGuideTime = 0;
+		DevMsg("Starting, teleporting to guide 0\n");
 	}
 	else
-	{
-		// stop map guide
-		DevMsg( "Forced stopping of map guide\n" );
-		m_hNextMapGuide = NULL;
-		m_flNextMapGuideTime = 0;
-	}
+		DevMsg("Couldn't start, unable to find first map guide\n");
 }
 
 // Set the voice comm channel
@@ -1408,6 +1425,17 @@ void CFFPlayer::Command_Team( void )
 	//ReadPlayerClassDataFromFileForSlot( filesystem, "unassigned", &m_hPlayerClassFileInfo, GetEncryptionKey() );
 	SetClassForClient(0);
 
+	KillAndRemoveItems();
+	ChangeTeam(iTeam);
+	
+	// Make sure they don't think they're meant to be spawning as a new class
+	m_iNextClass = 0;
+
+	// Cancel map guides
+    m_hNextMapGuide = NULL;
+
+	Spawn();
+/*
 	if( GetTeamNumber() != TEAM_SPECTATOR && GetTeamNumber() != TEAM_UNASSIGNED )
 	{
 		KillAndRemoveItems();
@@ -1427,7 +1455,7 @@ void CFFPlayer::Command_Team( void )
 		m_iNextClass = 0;	
 	}
 
-	ChangeTeam( iTeam );
+	ChangeTeam( iTeam );*/
 }
 
 void CFFPlayer::RemoveItems( void )
@@ -1494,6 +1522,15 @@ void CFFPlayer::KillPlayer( void )
 
 void CFFPlayer::KillAndRemoveItems( void )
 {
+	// Not on a team, don't be so hasty
+	if (GetTeamNumber() < TEAM_BLUE)
+	{
+		m_lifeState = LIFE_DISCARDBODY;
+		pl.deadflag = true;
+
+		return;
+	}
+
 	RemoveItems();
 	KillPlayer();
 }
@@ -3571,18 +3608,18 @@ CFFMapGuide *CFFPlayer::FindMapGuide(string_t targetname)
 	CFFMapGuide *pMapGuide = dynamic_cast<CFFMapGuide *>(pent);
 
 	return pMapGuide;
-
-	//while ((pMapGuide = (CFFMapGuide *) gEntList.FindEntityByClassname(pMapGuide, "info_ff_mapguide")) != NULL)
-	//{
-	//	if (pMapGuide->GetEntityName() == targetname)
-	//		return pMapGuide;
-	//}
-	//return NULL;
 }
 
 void CFFPlayer::MoveTowardsMapGuide()
 {
-	if (GetTeamNumber() != TEAM_SPECTATOR || !m_hNextMapGuide.Get())
+	// Cancel now if we're no longer eligable
+	if (GetTeamNumber() > TEAM_SPECTATOR)
+	{
+		m_hNextMapGuide = NULL;
+		return;
+	}
+
+	if (!m_hNextMapGuide.Get())
 		return;
 
 	Vector vecMapGuideDir = m_hNextMapGuide->GetAbsOrigin() - GetAbsOrigin();
@@ -3592,8 +3629,8 @@ void CFFPlayer::MoveTowardsMapGuide()
 	{
 		DevMsg("[MAPGUIDE] Reached guide %s\n", STRING(m_hNextMapGuide->GetEntityName()));
 
-		// Play the narration file for this
-		if (m_hNextMapGuide->m_iNarrationFile != NULL_STRING)
+		// Play the narration file for this (but only if speccing)
+		if (m_hNextMapGuide->m_iNarrationFile != NULL_STRING && GetTeamNumber() == TEAM_SPECTATOR)
 		{
 			EmitSound_t ep;
 			ep.m_nChannel = CHAN_ITEM;
@@ -3612,11 +3649,23 @@ void CFFPlayer::MoveTowardsMapGuide()
 		m_hNextMapGuide = FindMapGuide(m_hLastMapGuide->m_iNextMapguide);
 
 		// Only bother if we found one
+		// We are going to reach that in x seconds time (including wait time)
+		// The extra wait time is clipped when deciding the position.
 		if (m_hNextMapGuide)
-		{
-			// And we are going to reach that in x seconds time (including wait time)
-			// The extra wait time is clipped when deciding the position.
 			m_flNextMapGuideTime = gpGlobals->curtime + m_hLastMapGuide->m_flTime + m_hLastMapGuide->m_flWait;
+		
+		// We reached the end
+		else
+		{
+			// Show menu again if we are spectator
+			if (GetTeamNumber() == TEAM_SPECTATOR)
+				ShowViewPortPanel(PANEL_MAPGUIDE, true);
+
+			// Start looping again
+			m_hLastMapGuide = m_hNextMapGuide = FindMapGuide(MAKE_STRING("overview"));
+
+			if (m_hNextMapGuide)
+				m_flNextMapGuideTime = 0;
 		}
 
 		// And also let's aim in the right direction

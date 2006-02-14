@@ -32,6 +32,7 @@ BEGIN_DATADESC(CFFMapGuide)
 	DEFINE_KEYFIELD(m_flTime, FIELD_FLOAT, "time"),
 	DEFINE_KEYFIELD(m_iCurveEntity, FIELD_VECTOR, "curvetowards"),
 	DEFINE_KEYFIELD(m_iNarrationFile, FIELD_STRING, "narration"),
+	DEFINE_KEYFIELD(m_iKeyName, FIELD_STRING, "keyname"),
 END_DATADESC();
 
 LINK_ENTITY_TO_CLASS(info_ff_mapguide, CFFMapGuide);
@@ -42,6 +43,7 @@ CFFMapGuide::CFFMapGuide()
 	m_iNarrationFile = NULL_STRING;
 	m_iCurveEntity = NULL_STRING;
 	m_iNextMapguide = NULL_STRING;
+	m_iKeyName = NULL_STRING;
 
 	m_flWait = 10.0f;
 	m_flTime = 10.0f;

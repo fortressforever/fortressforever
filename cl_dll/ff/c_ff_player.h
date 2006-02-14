@@ -199,6 +199,8 @@ public:
 
 	void SwapToWeapon(FFWeaponID);
 
+	virtual void CreateMove(float flInputSampleTime, CUserCmd *pCmd);
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };

@@ -348,6 +348,9 @@
 					RelativePath=".\ff\ff_hud_hint.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_hud_menu.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_hud_message.cpp">
 				</File>
 				<File
@@ -2515,6 +2518,9 @@
 					</File>
 					<File
 						RelativePath="game_controls\commandmenu.cpp">
+					</File>
+					<File
+						RelativePath=".\game_controls\mapguidemenu.cpp">
 					</File>
 					<File
 						RelativePath="game_controls\MapOverview.cpp">
