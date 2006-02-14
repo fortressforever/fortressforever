@@ -62,6 +62,8 @@ public:
 		m_flDrawDuration = 2.0f;
 	}
 
+	~CHudCrosshairInfo( void ) {}
+
 	void Init( void );
 	void VidInit( void );
 	void OnTick( void );
@@ -85,17 +87,6 @@ private:
 
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "20", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text2_xpos, "text2_xpos", "8", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text2_ypos, "text2_ypos", "20", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon1_xpos, "icon1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon1_ypos, "icon1_ypos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon1_width, "icon1_width", "1", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon1_height, "icon1_height", "1", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon2_xpos, "icon2_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon2_ypos, "icon2_ypos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon2_width, "icon2_width", "1", "proportional_float" );
-	CPanelAnimationVarAliasType( float, icon2_height, "icon2_height", "1", "proportional_float" );
-
 };
 
 DECLARE_HUDELEMENT( CHudCrosshairInfo );
@@ -107,28 +98,14 @@ void CHudCrosshairInfo::Init( void )
 
 void CHudCrosshairInfo::VidInit( void )
 {	
-	//SetPaintBackgroundEnabled( true );
-	//SetPaintBackgroundType( 2 );
+	SetPaintBackgroundEnabled( false );
 	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
 	m_flDrawTime = -99;
 
-	// Get the screen width/height
-	//int iScreenWide, iScreenTall;
-	//vgui::surface()->GetScreenSize( iScreenWide, iScreenTall );
-
-	// Make sure this panel is big enough...
-	//SetPos( 0, 0 );
-	//SetWide( iScreenWide );
-	//SetTall( iScreenTall );
-
-	int iPanelWide = GetWide();
-	int iPanelTall = GetTall();
-
-	this->SetPaintEnabled( true );
-	this->SetPaintBorderEnabled( true );
-	this->SetPaintBackgroundType( 2 );
-
-	DevMsg( "[Crosshair Info] wide: %i, tall: %i\n", iPanelWide, iPanelTall );
+	// Make the panel as big as the screen
+	SetPos( 0, 0 );
+	SetWide( scheme()->GetProportionalScaledValue( 640 ) );
+	SetTall( scheme()->GetProportionalScaledValue( 480 ) );
 }
 
 void CHudCrosshairInfo::OnTick( void )
@@ -421,36 +398,32 @@ void CHudCrosshairInfo::OnTick( void )
 
 					if( hud_centerid.GetInt() )
 					{
-						int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
-						int iTall = surface()->GetFontTall( m_hTextFont );
-
 						// Get the screen width/height
 						int iScreenWide, iScreenTall;
 						surface()->GetScreenSize( iScreenWide, iScreenTall );
 
-						// Make sure this panel is big enough...
-						//SetPos( 0, 0 );
-						//SetWide( iScreenWide );
-						//SetTall( iScreenTall );
+						// "map" screen res to 640/480
+						float iXScale = 640.0f / iScreenWide;
+						float iYScale = 480.0f / iScreenTall;
+
+						int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
+						int iTall = surface()->GetFontTall( m_hTextFont );
 
 						// Adjust values to get below the crosshair and offset correctly
-						m_flXOffset = ( iScreenWide / 2 ) - ( iWide / 2 );
-						m_flYOffset = ( iScreenTall / 2 ) + ( iTall / 2 ) + 100; // 100 to get it below the crosshair and not right on it
+						m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
+						m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 100 to get it below the crosshair and not right on it
 
-						DevMsg( "[Crosshair Info] x: %f, y: %f\n", m_flXOffset, m_flYOffset );
+						// Scale by "map" scale values
+						m_flXOffset *= iXScale;
+						m_flYOffset *= iYScale;
+
+						// Scale to screen co-ords
+						m_flXOffset = scheme()->GetProportionalScaledValue( m_flXOffset );
+						m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
 					}
 
 					// Start drawing
 					m_flDrawTime = gpGlobals->curtime;
-					
-
-					//char szTest[ 256 ];
-					//vgui::localize()->ConvertUnicodeToANSI( m_pText, szTest, 256 );
-					//int _snwprintf( wchar_t *buffer, size_t count, const wchar_t *format [,	argument] ... );
-					//_snwprintf(m_szSentry, 127, L"%s: %i%% %s: %i%% %s", m_szHealth, iHealthPerc, m_szAmmo, iAmmoPerc, fNoRockets ? m_szNoRockets : L"");
-
-					//DevMsg( "==========\nName: %s\nTeam: %i\nClass: %s\nHealth %%: %i\nArmor %%: %i\n", pszNewName, iTeam, szClass, iHealth, iArmor );
-					//DevMsg( "[Crosshair Info] %s\n", szTest );/
 				}
 			}
 		}
