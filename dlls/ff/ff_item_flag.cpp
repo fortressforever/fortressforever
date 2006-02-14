@@ -250,10 +250,20 @@ CBaseEntity* CFFItemFlag::Return( void )
 	if (ffplayer)
 		ffplayer->TakeNamedItem(FLAG_WEAPON);
 
-	CreateItemVPhysicsObject();
+	// #0000220: Capping flag simultaneously with gren explosion results in flag touch.
+	// set this to curtime so that it will take a few seconds before it becomes
+	// eligible to be picked up again.
+	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
 
-	m_pLastOwner = NULL;
-	m_flThrowTime = 0.0f;
+	Assert(owner);
+
+	if (!owner)
+		return this;
+
+	m_flThrowTime = gpGlobals->curtime;
+	m_pLastOwner = owner;
+
+	CreateItemVPhysicsObject();
 
 	return this;
 }
