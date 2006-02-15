@@ -76,6 +76,9 @@ static ConVar radiotag_distance( "ffdev_radiotag_distance", "1024" );
 // [float] Time between radio tag updates
 static ConVar radiotag_duration( "ffdev_radiotag_duration", "0.25" );
 
+// [integer] Time in seconds you will stay 'tagged' once hit by a radio tag rifle round
+static ConVar radiotag_draw_duration( "ffdev_radiotag_draw_duration", "60" );
+
 // status effect
 ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
@@ -260,7 +263,7 @@ CFFPlayer::CFFPlayer()
 
 	m_bRadioTagged = false;
 	m_flRadioTaggedStartTime = 0.0f;
-	m_flRadioTaggedDuration = 30.0f;
+	m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
 
 	m_flLastRadioTagUpdate = 0.0f;
 
@@ -3033,7 +3036,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 		// Setting time to max
 		//m_flRadioTaggedDuration = 3 * inputInfo.GetSniperRifleCharge( );
-		m_flRadioTaggedDuration = 30.0f;
+		m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
 
 		// Keep track of who's radio tagged us to award them each a point when we die
 		//m_hWhoTaggedMeList.AddToTail( ToFFPlayer( info.GetAttacker( ) ) );

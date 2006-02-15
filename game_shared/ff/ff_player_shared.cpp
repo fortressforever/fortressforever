@@ -322,6 +322,10 @@ void CFFPlayer::ClassSpecificSkill()
 			engine->ClientCmd("+reload");
 			break;
 
+		case CLASS_SCOUT:
+			engine->ClientCmd("radar");
+			break;
+
 #endif
 		default:
 			break;
