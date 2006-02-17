@@ -31,6 +31,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "minmax.h"		// Re-adding this after STL to fix linux server issues
+
 #include "ff_entity_system.h"	// Entity system
 #include "ff_statslog.h"
 
@@ -2530,11 +2532,7 @@ void CFFPlayer::StatusEffectsThink( void )
 
 		// reduce health if above max health (because they were healed recently)
 		if (m_iHealth > m_iMaxHealth)
-		{
-			m_iHealth = m_iHealth - ffdev_regen_health.GetInt() > m_iMaxHealth ? m_iHealth - ffdev_regen_health.GetInt() : m_iMaxHealth;
-				
-			//max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth); removed so linux server can be compiled
-		}
+			max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth);
 	}
 
 	// if the player is infected, then hurt them as necessary
@@ -3411,8 +3409,7 @@ int CFFPlayer::Heal( float flHealth )
 	if (m_iHealth < m_iMaxHealth)
 		m_iHealth = m_iMaxHealth;
 	else
-		m_iHealth = m_iHealth + flHealth < m_iMaxHealth * 1.5f ? m_iHealth + flHealth : m_iMaxHealth * 1.5f;
-		// min(m_iHealth + flHealth, m_iMaxHealth * 1.5f); removed for a while so linux server can be installed
+		min(m_iHealth + flHealth, m_iMaxHealth * 1.5f);
 
 	if (m_bInfected)
 	{
