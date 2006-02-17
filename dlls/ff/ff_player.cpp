@@ -31,7 +31,9 @@
 #include <vector>
 #include <algorithm>
 
-#include "minmax.h"		// Re-adding this after STL to fix linux server issues
+// Re-adding this after STL to fix linux server issues
+#undef MINMAX_H
+#include "minmax.h"		
 
 #include "ff_entity_system.h"	// Entity system
 #include "ff_statslog.h"
