@@ -12,15 +12,53 @@
 
 #include "cbase.h"
 
+#define MENU_SHOW	0
+#define MENU_DIM	1
+#define MENU_HIDE	2
+
+// Menu option with pointer
+typedef struct menuoption_s
+{
+	const wchar_t *szName;
+	const char *szCommand;
+
+	int (*conditionfunc)();
+
+	menuoption_s(const wchar_t *name, const char *command, int (*cfnc)())
+	{
+		szName = name;
+		szCommand = command;
+		conditionfunc = cfnc;
+	}
+} menuoption_t;
+
+#define ADD_MENU_OPTION(id, name, command) \
+	int MenuOption##id##();	\
+	menuoption_t id##(name, command, &MenuOption##id##);	\
+	int MenuOption##id##()
+
 class CHudContextMenu : public CHudElement, public vgui::Panel
 {
 private:
 	DECLARE_CLASS_SIMPLE(CHudContextMenu, vgui::Panel);
 
 	// Progress
-	float	m_flStartTime, m_flDuration;
-	wchar_t m_LabelText[32];
+	float	m_flSelectStart;
+	float	m_flDuration;
+
+	// Remember old choice in menu
+//	int		m_iPreviousSelection;
+	const char	*m_pszPreviousCmd;
+
 	bool	m_fVisible;
+
+	// Which menu to show
+	menuoption_t *m_pMenu;
+
+	int		m_nOptions;
+	float	m_flPositions[25][2];
+
+	int		m_iSelected;
 
 	// Stuff we need to know
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
@@ -41,7 +79,7 @@ private:
 	char *m_pszBuildLabels[4];
 
 public:
-	CHudContextMenu(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildTimer") 
+	CHudContextMenu(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudRadialMenu") 
 	{
 		SetParent(g_pClientMode->GetViewport());
 		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
@@ -53,17 +91,18 @@ public:
 	void	VidInit();
 	void	Paint();
 
-	void	SetLabelText(const wchar_t *text);
-	
-	
 	void	SetBuildTimer(int type, float duration);
 
 	void	MouseMove(float *x, float *y);
 
+	void	Display(bool state);
+	void	SetMenu();
+	void	DoCommand(const char *cmd);
+
 	int		m_iIcon;
 
-	// Callback functions for setting
-	void	MsgFunc_FF_BuildTimer(bf_read &msg);
+	float	m_flPosX;
+	float	m_flPosY;
 
 	//CUtlLinkedList
 };

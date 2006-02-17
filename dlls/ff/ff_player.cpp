@@ -3519,7 +3519,7 @@ void CFFPlayer::Command_Disguise()
 	iTeam = clamp(iTeam, TEAM_BLUE, TEAM_GREEN);
 
 	// Just use a number for now
-	iClass = atoi(engine->Cmd_Argv(2));
+	iClass = Class_StringToInt(engine->Cmd_Argv(2));
 	iClass = clamp(iClass, CLASS_SCOUT, CLASS_CIVILIAN);
 
 	m_iNewSpyDisguise = iTeam;
@@ -3536,6 +3536,9 @@ void CFFPlayer::ResetDisguise()
 
 	SetModel(pPlayerClassInfo.m_szModel);
 	m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
+
+	m_iNewSpyDisguise = 0;
+	m_iSpyDisguise = 0;
 
 	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE");
 }

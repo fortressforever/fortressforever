@@ -11,8 +11,9 @@
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"
-
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
+
+	extern void HudContextShow(bool visible);
 
 #else
 
@@ -294,6 +295,8 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill() 
 {
+	DevMsg("ClassSpecificSkill\n");
+
 	if (m_flNextClassSpecificSkill > gpGlobals->curtime) 
 		return;
 
@@ -322,6 +325,11 @@ void CFFPlayer::ClassSpecificSkill()
 			engine->ClientCmd("+reload");
 			break;
 
+		case CLASS_ENGINEER:
+		case CLASS_SPY:
+			HudContextShow(true);
+			break;
+
 		case CLASS_SCOUT:
 			engine->ClientCmd("radar");
 			break;
@@ -337,12 +345,19 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post() 
 {
+	DevMsg("ClassSpecificSkill_Post\n");
+
 #ifdef CLIENT_DLL
 	switch (GetClassSlot()) 
 	{
 
 	case CLASS_SOLDIER:
 		engine->ClientCmd("-reload");
+		break;
+
+	case CLASS_ENGINEER:
+	case CLASS_SPY:
+		HudContextShow(false);
 		break;
 
 	default:

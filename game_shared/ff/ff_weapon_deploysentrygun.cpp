@@ -144,23 +144,8 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 		CFFPlayer *player = GetPlayerOwner();
 		CFFSentryGun *sg = dynamic_cast<CFFSentryGun *> (player->m_hSentryGun.Get());
 
-		if (sg && sg->IsBuilt()) 
-		{
-			DevMsg("Aiming...!\n");
-
-			Vector vecForward;
-			AngleVectors(player->EyeAngles(), &vecForward);
-            
-			trace_t tr;
-			UTIL_TraceLine(player->Weapon_ShootPosition(), player->Weapon_ShootPosition() + vecForward * MAX_TRACE_LENGTH, MASK_SHOT, player, COLLISION_GROUP_NONE, &tr);
-
-            sg->SetFocusPoint(tr.endpos);
-		}
-		else
-		{
+		if (!sg) 
 			GetPlayerOwner()->Command_BuildSentryGun();
-			Cleanup();
-		}
 #endif
 	}
 }
@@ -170,14 +155,6 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponDeploySentryGun::SecondaryAttack() 
 {
-	if (gpGlobals->curtime > m_flNextSecondaryAttack + 0.1f && gpGlobals->curtime < m_flNextSecondaryAttack + 0.3f) 
-	{
-#ifdef CLIENT_DLL
-		engine->ClientCmd("detdismantlesentry");
-		Cleanup_AimSphere();
-#endif
-	}
-
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 }
 
@@ -301,6 +278,27 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 	//=============================================================================
 	// Commands
 	//=============================================================================
+	CON_COMMAND(aimsentry, "Aim sentrygun")
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
+
+		if (!pPlayer) 
+			return;
+
+		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
+
+		if (!pSentry) 
+			return;
+
+		Vector vecForward;
+		AngleVectors(pPlayer->EyeAngles(), &vecForward);
+
+		trace_t tr;
+		UTIL_TraceLine(pPlayer->Weapon_ShootPosition(), pPlayer->Weapon_ShootPosition() + vecForward * MAX_TRACE_LENGTH, MASK_SHOT, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+		pSentry->SetFocusPoint(tr.endpos);
+	}
+
 	CON_COMMAND(dismantlesentry, "Dismantle sentrygun") 
 	{
 		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
