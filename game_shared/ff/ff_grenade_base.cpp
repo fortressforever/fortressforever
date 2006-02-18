@@ -310,5 +310,8 @@ void CFFGrenadeBase::Precache()
 	m_iShockwaveTexture = PrecacheModel("sprites/spotlight.vmt");
 	m_iFlameSprite = PrecacheModel("sprites/fire_floor.vmt");
 
+	//0000287: SV_StartSound: weapons/debris1.wav not precached (0)
+	PrecacheScriptSound("BaseGrenade.Explode");
+
 	BaseClass::Precache();
 }
