@@ -411,7 +411,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 						// Adjust values to get below the crosshair and offset correctly
 						m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
-						m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 100 to get it below the crosshair and not right on it
+						m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
 
 						// Scale by "map" scale values
 						m_flXOffset *= iXScale;
