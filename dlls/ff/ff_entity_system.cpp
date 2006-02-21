@@ -1400,31 +1400,34 @@ int CFFEntitySystem::MarkRadioTag( lua_State *L )
 
 //----------------------------------------------------------------------------
 // Purpose: Sets the player's location text
-//          int SetPlayerLocation( int player, string name, int r, int g, int b );
+//          int SetPlayerLocation( int player, string name, int team );
 //----------------------------------------------------------------------------
 int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 {
 	int n = lua_gettop(L);
 
-	if( n == 5 )
+	if( n == 3 )
 	{
 		bool ret = false;
 		int player = (int)lua_tonumber( L, 1 );
 		const char *name = lua_tostring( L, 2 );
-		int r = (int)lua_tonumber( L, 3 );
-		int g = (int)lua_tonumber( L, 4 );
-		int b = (int)lua_tonumber( L, 5 );
+		//int r = (int)lua_tonumber( L, 3 );
+		//int g = (int)lua_tonumber( L, 4 );
+		//int b = (int)lua_tonumber( L, 5 );
+		int iTeam = ( int )lua_tonumber( L, 3 ); // added
 
 		CBasePlayer *ent = UTIL_PlayerByIndex( player );
 		if (ent && ent->IsPlayer())
 		{
 			// do the stuff!
 			CSingleUserRecipientFilter filter(ent);
-			UserMessageBegin(filter, "SetLocation");
+			filter.MakeReliable();	// added
+			UserMessageBegin(filter, "SetPlayerLocation");
 				WRITE_STRING(name);
-				WRITE_CHAR(r);
-				WRITE_CHAR(g);
-				WRITE_CHAR(b);
+				//WRITE_CHAR(r);
+				//WRITE_CHAR(g);
+				//WRITE_CHAR(b);
+				WRITE_SHORT( iTeam ); // changed
 			MessageEnd();
 
 			ret = true;

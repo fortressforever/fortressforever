@@ -1,7 +1,7 @@
 //	=============== Fortress Forever ==============
 //	======== A modification for Half-Life 2 =======
 //
-//	@file ff_hud_buildable_messages.cpp
+//	@file ff_hud_crosshairinfo.cpp
 //	@author Patrick O'Leary (Mulchman)
 //	@date 02/03/2006
 //	@brief client side Hud crosshair info
