@@ -88,7 +88,7 @@ void CHudLocation::Init( void )
 
 void CHudLocation::VidInit( void )
 {	
-	//SetPaintBackgroundEnabled( false );
+	SetPaintBackgroundEnabled( false );
 }
 
 void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
