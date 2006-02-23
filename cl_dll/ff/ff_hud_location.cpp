@@ -89,6 +89,7 @@ void CHudLocation::Init( void )
 void CHudLocation::VidInit( void )
 {	
 	SetPaintBackgroundEnabled( false );
+	m_pText[ 0 ] = '\0'; // Bug 0000293: clear location text buffer on map change
 }
 
 void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
@@ -98,7 +99,12 @@ void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
 
 	m_iTeam = msg.ReadShort();
 
-	vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
+	wchar_t *pszTemp = vgui::localize()->Find( szString );
+	if( pszTemp )
+		wcscpy( m_pText, pszTemp );
+	else
+		vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
+
 	//DevMsg( "[Location] Team: %i, String: %s\n", iTeam, szString );
 }
 
