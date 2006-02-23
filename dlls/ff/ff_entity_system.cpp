@@ -1419,18 +1419,21 @@ int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 		CBasePlayer *ent = UTIL_PlayerByIndex( player );
 		if (ent && ent->IsPlayer())
 		{
-			// do the stuff!
-			CSingleUserRecipientFilter filter(ent);
-			filter.MakeReliable();	// added
-			UserMessageBegin(filter, "SetPlayerLocation");
-				WRITE_STRING(name);
-				//WRITE_CHAR(r);
-				//WRITE_CHAR(g);
-				//WRITE_CHAR(b);
-				WRITE_SHORT( iTeam ); // changed
-			MessageEnd();
+			if( ToFFPlayer( ent )->CanUpdateLocation() )
+			{
+				// do the stuff!
+				CSingleUserRecipientFilter filter( ent );
+				filter.MakeReliable();	// added
+				UserMessageBegin( filter, "SetPlayerLocation" );
+					WRITE_STRING( name );
+					//WRITE_CHAR(r);
+					//WRITE_CHAR(g);
+					//WRITE_CHAR(b);
+					WRITE_SHORT( iTeam ); // changed
+				MessageEnd();
 
-			ret = true;
+				ret = true;
+			}
 		}
 
 		// 1 result

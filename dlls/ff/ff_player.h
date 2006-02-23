@@ -270,6 +270,15 @@ public:
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	// End: Added by Mulchman for building objects and such
 
+
+	// Added by Mulchman to help stop location spammage in the ent system	
+public:
+	// Can we update our location yet?
+	bool CanUpdateLocation( void );
+private:
+	float m_flLastLocationUpdate;
+
+
 	//-- Added by L0ki -------------------------------------------------------
 	// Grenade related
 public:

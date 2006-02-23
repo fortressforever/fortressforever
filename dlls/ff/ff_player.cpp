@@ -83,6 +83,9 @@ static ConVar radiotag_duration( "ffdev_radiotag_duration", "0.25" );
 // [integer] Time in seconds you will stay 'tagged' once hit by a radio tag rifle round
 static ConVar radiotag_draw_duration( "ffdev_radiotag_draw_duration", "60" );
 
+// [float] Time between updating the players location
+static ConVar location_update_frequency( "ffdev_location_update_frequency", "0.5" );
+
 // status effect
 ConVar ffdev_infect_freq("ffdev_infect_freq","2",0,"Frequency (in seconds) a player loses health from an infection");
 ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a player loses while infected");
@@ -302,6 +305,8 @@ CFFPlayer::CFFPlayer()
 	m_iClassStatus = 0;		// No class sorted yet
 
 	m_flLastGassed = 0;
+
+	m_flLastLocationUpdate = -1;
 }
 
 CFFPlayer::~CFFPlayer()
@@ -1042,6 +1047,22 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 	{
 		if( strcmp( pPlayerClassInfo.m_aSkills[i], szCommand ) == 0 )
 			return true;
+	}
+
+	return false;
+}
+
+// Checks to see if we can update the player's location yet
+// This is basically to stop the location stuff from spamming
+// us every tick and it also helps w/ overlapping locations so
+// they don't flicker between the two locations on the screen heh.
+bool CFFPlayer::CanUpdateLocation( void )
+{
+	if( ( m_flLastLocationUpdate + location_update_frequency.GetFloat() ) < gpGlobals->curtime )
+	{
+		m_flLastLocationUpdate = gpGlobals->curtime;
+
+		return true;
 	}
 
 	return false;
