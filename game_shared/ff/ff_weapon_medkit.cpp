@@ -33,6 +33,7 @@ public:
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_MEDKIT; }
 
+	virtual void	Precache();
 	virtual void	SecondaryAttack();
 
 private:
@@ -64,6 +65,14 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_medkit);
 //----------------------------------------------------------------------------
 CFFWeaponMedkit::CFFWeaponMedkit() 
 {
+}
+
+void CFFWeaponMedkit::Precache()
+{
+	PrecacheScriptSound("medkit.hit");
+	PrecacheScriptSound("medkit.infect");
+
+	BaseClass::Precache();
 }
 
 void CFFWeaponMedkit::SecondaryAttack() 
@@ -119,5 +128,5 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 	}
 #endif
 
-	BaseClass::Hit(traceHit, nHitActivity);
+	//BaseClass::Hit(traceHit, nHitActivity);
 }
