@@ -55,6 +55,7 @@ PRECACHE_WEAPON_REGISTER(nail);
 		SetSize(-Vector(1, 1, 1), Vector(1, 1, 1));
 		SetSolid(SOLID_BBOX);
 		SetGravity(0.01f);
+		SetEffects(EF_NODRAW);
 		
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileNail::NailTouch);		// |-- Mirv: Account for GCC strictness
@@ -251,6 +252,12 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const 
 
 	// Set the speed and the initial transmitted velocity
 	pNail->SetAbsVelocity(vecForward * iSpeed);
+
+	CEffectData data;
+	data.m_vOrigin = vecOrigin;
+	data.m_vAngles = angAngles;
+	data.m_nEntIndex = pentOwner->entindex();
+	DispatchEffect("Projectile_Nail", data);
 
 #ifdef GAME_DLL
 	pNail->SetupInitialTransmittedVelocity(vecForward * iSpeed);

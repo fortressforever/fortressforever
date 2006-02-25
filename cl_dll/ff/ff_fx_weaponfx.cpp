@@ -38,8 +38,13 @@ void FF_FX_EjectBrass_40mm_Callback( const CEffectData &data )
 	FF_EjectBrass( FF_SHELL_40MM, data );
 }
 
+void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
+{
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, 800, FF_PROJECTILE_NAIL, data.m_nEntIndex);
+}
 
 DECLARE_CLIENT_EFFECT( "EjectBrass_9mm", FF_FX_EjectBrass_9mm_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_12Gauge",FF_FX_EjectBrass_12Gauge_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_40mm",FF_FX_EjectBrass_40mm_Callback );
 
+DECLARE_CLIENT_EFFECT("Projectile_Nail", FF_FX_Projectile_Nail_Callback);

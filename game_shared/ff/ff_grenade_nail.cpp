@@ -126,7 +126,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		AngleVectors(GetAbsAngles(), &vecForward);
 
 		// Emit a nail, just random for now
-		if (random->RandomInt(0, 5) == 0) 
+		if (random->RandomInt(0, 3) == 0) 
 		{
 			CFFProjectileNail::CreateNail(GetAbsOrigin() + (32 * vecForward), GetAbsAngles(), (CBasePlayer *) GetOwnerEntity(), 30, nailspeed.GetInt());
 		}

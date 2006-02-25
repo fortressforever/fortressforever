@@ -2056,8 +2056,10 @@ void CTempEnts::LevelInit()
 	m_pCS_556Shell		= (model_t *)engine->LoadModel( "models/shells/shell_556.mdl" );
 	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/shells/shell_762nato.mdl" );
 	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/shells/shell_338mag.mdl" );
-	m_pFF_40MMShell = (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
+	m_pFF_40MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
 #endif
+
+	m_pFF_Nail			= (model_t *) engine->LoadModel("models/projectiles/nail/w_nail.mdl");
 }
 
 
@@ -3161,4 +3163,52 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	}
 
 	
+}
+
+void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex)
+{
+	const model_t *pModel = NULL;
+	int hitsound = TE_BOUNCE_SHELL;
+
+	switch (projectileType)
+	{
+	default:
+	case FF_PROJECTILE_NAIL:
+		hitsound = TE_PISTOL_SHELL;
+		pModel = m_pFF_Nail;
+		break;
+	}
+
+	if (pModel == NULL)
+		return;
+
+	Vector velocity;
+
+	AngleVectors(angVelocity, &velocity);
+	velocity *= iSpeed;
+
+	// Allocate new temporary entity
+	C_LocalTempEntity *pTemp = TempEntAlloc(vecPosition, (model_t *) pModel);
+
+	if (!pTemp)
+		return;
+
+	pTemp->SetVelocity(velocity);
+	pTemp->SetAbsAngles(angVelocity);
+
+	pTemp->hitSound = hitsound;
+
+	pTemp->SetGravity(0);
+
+	pTemp->m_nBody = 0;
+	pTemp->flags = FTENT_FADEOUT | /*FTENT_GRAVITY |*/ FTENT_COLLIDEKILL | FTENT_COLLIDEALL | FTENT_HITSOUND /*| FTENT_ROTATE | FTENT_CHANGERENDERONCOLLIDE*/;
+
+	pTemp->m_vecTempEntAngVelocity = QAngle(0, 0, 0);
+
+	pTemp->SetRenderMode(kRenderNormal);
+	pTemp->tempent_renderamt = 255;
+
+	pTemp->die = gpGlobals->curtime + 10;
+
+	pTemp->clientIndex = entIndex;
 }

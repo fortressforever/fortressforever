@@ -28,7 +28,9 @@ enum
 	CS_SHELL_556,
 	CS_SHELL_762NATO,
 	CS_SHELL_338MAG,
-	FF_SHELL_40MM
+	FF_SHELL_40MM,
+
+	FF_PROJECTILE_NAIL
 };
 #endif
 
@@ -70,6 +72,8 @@ public:
 	
 	virtual void				PlaySound ( C_LocalTempEntity *pTemp, float damp ) = 0;
 	virtual void				PhysicsProp( int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, int flags ) = 0;
+
+	virtual	void				FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex) = 0;
 };
 
 
@@ -122,6 +126,8 @@ public:
 	void					CSEjectBrass( const Vector &vecPosition, const QAngle &angAngles, int nType, int nShellType, CBasePlayer *pShooter );
 	void					PhysicsProp( int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, int flags );
 
+	void					FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex);
+
 // Data
 private:
 	enum
@@ -155,6 +161,8 @@ private:
 	struct model_t			*m_pCS_338MAGShell;
 	struct model_t			*m_pFF_40MMShell;
 #endif
+
+	struct model_t			*m_pFF_Nail;
 
 // Internal methods also available to children
 protected:
