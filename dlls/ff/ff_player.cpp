@@ -428,6 +428,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound( "Player.Ammotoss" );
 	PrecacheScriptSound( "speech.saveme" );
 	PrecacheScriptSound("radar.single_shot");
+	PrecacheScriptSound("Player.bodysplat");
 	
 	// Class gibs (wonderfully messy thanks)
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
