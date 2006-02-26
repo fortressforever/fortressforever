@@ -288,6 +288,9 @@
 					RelativePath=".\ff\clientmode_ff.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_fx_conc_emitter.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_fx_gascloud_emitter.cpp">
 				</File>
 				<File
@@ -3381,10 +3384,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">

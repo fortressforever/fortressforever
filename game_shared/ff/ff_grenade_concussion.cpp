@@ -2,7 +2,7 @@
 /// ======== A modification for Half-Life 2 ========
 ///
 /// @file ff_grenade_concussion.cpp
-/// @author Shawn Smith(L0ki) 
+/// @author Shawn Smith(L0ki)
 /// @date Jan. 29, 2005
 /// @brief concussion grenade class
 ///
@@ -29,11 +29,11 @@ ConVar conc_push_mag("ffdev_conc_mag", "85.0", 0, "Magnitude of the concussion p
 ConVar conc_push_base("ffdev_conc_base", "20.0", 0, "Base push of the conc");
 
 #ifdef CLIENT_DLL
-	static ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red (0-255)");
-	static ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green (0-255)");
-	static ConVar conc_glow_b("ffdev_conc_glow_b", "200", 0, "Conc glow blue (0-255)");
-	static ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", 0, "Conc glow alpha (0-1)");
-	static ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size (0.0-10.0");
+	static ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red(0-255) ");
+	static ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green(0-255) ");
+	static ConVar conc_glow_b("ffdev_conc_glow_b", "200", 0, "Conc glow blue(0-255) ");
+	static ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", 0, "Conc glow alpha(0-1) ");
+	static ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size(0.0-10.0");
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
@@ -41,7 +41,7 @@ ConVar conc_push_base("ffdev_conc_base", "20.0", 0, "Base push of the conc");
 #define CONCUSSIONGRENADE_MODEL "models/grenades/conc/conc.mdl"
 #define CONCUSSIONGRENADE_GLOW_SPRITE "sprites/glow04_noz.vmt"
 #define CONCUSSION_SOUND "ConcussionGrenade.Explode"
-#define CONCUSSION_EFFECT "ConcussionExplosion"
+#define CONCUSSION_EFFECT "FF_ConcussionEffect" // "ConcussionExplosion"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeConcussion C_FFGrenadeConcussion
@@ -76,23 +76,23 @@ public:
 // CFFGrenadeConcussionGlow tables
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeConcussionGlow, DT_FFGrenadeConcussionGlow) 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeConcussionGlow, DT_FFGrenadeConcussionGlow)
 
-BEGIN_NETWORK_TABLE(CFFGrenadeConcussionGlow, DT_FFGrenadeConcussionGlow) 
-END_NETWORK_TABLE() 
+BEGIN_NETWORK_TABLE(CFFGrenadeConcussionGlow, DT_FFGrenadeConcussionGlow)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(env_ffconcussionglow, CFFGrenadeConcussionGlow);
 
-BEGIN_DATADESC(CFFGrenadeConcussionGlow) 
-END_DATADESC() 
+BEGIN_DATADESC(CFFGrenadeConcussionGlow)
+END_DATADESC()
 
 class CFFGrenadeConcussion : public CFFGrenadeBase
 {
 public:
-	DECLARE_CLASS(CFFGrenadeConcussion, CFFGrenadeBase) 
+	DECLARE_CLASS(CFFGrenadeConcussion, CFFGrenadeBase)
 
 	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC() 
+	DECLARE_DATADESC()
 
 	CNetworkVector(m_vInitialVelocity);
 
@@ -112,19 +112,19 @@ public:
 	CHandle<CFFGrenadeConcussionGlow> m_hGlowSprite;
 };
 
-BEGIN_DATADESC(CFFGrenadeConcussion) 
-END_DATADESC() 
+BEGIN_DATADESC(CFFGrenadeConcussion)
+END_DATADESC()
 
-IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeConcussion, DT_FFGrenadeConcussion) 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeConcussion, DT_FFGrenadeConcussion)
 
-BEGIN_NETWORK_TABLE(CFFGrenadeConcussion, DT_FFGrenadeConcussion) 
-END_NETWORK_TABLE() 
+BEGIN_NETWORK_TABLE(CFFGrenadeConcussion, DT_FFGrenadeConcussion)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(concussiongrenade, CFFGrenadeConcussion);
 PRECACHE_WEAPON_REGISTER(concussiongrenade);
 
 #ifdef GAME_DLL
-	void CFFGrenadeConcussion::Spawn() 
+	void CFFGrenadeConcussion::Spawn()
 	{
 		SetModel(CONCUSSIONGRENADE_MODEL);
 
@@ -139,21 +139,21 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		BaseClass::Spawn();
 	}
 
-	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType) 
+	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		CFFGrenadeBase::PreExplode(pTrace, CONCUSSION_SOUND, CONCUSSION_EFFECT);
 
 		// --> Mirv: Rewritten
 		Vector vecDisplacement, vecForce;
 
-		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius()) 
-			if (pPlayer) 
+		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
+			if (pPlayer)
 			{
 				vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 
 				// The conc effect is calculated differently if its handheld
 				// These values are from TFC
-				if (m_fIsHandheld) 
+				if (m_fIsHandheld)
 				{
 					VectorNormalize(vecDisplacement);
 					Vector pvel = pPlayer->GetAbsVelocity();
@@ -189,7 +189,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 				VectorAngles(vecDisplacement, angDirection);
 
 				// only concuss if teamplay rules says the player could be damaged
-				if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity())) 
+				if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 				{
 					pPlayer->Concuss((pPlayer->GetClassSlot() == 5 ? 7.5f : 15.0f), (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
 				}
@@ -202,10 +202,10 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 #endif
 
 #ifndef GAME_DLL
-void CFFGrenadeConcussion::DoEffectIdle() 
+void CFFGrenadeConcussion::DoEffectIdle()
 {
 	DevMsg("[concussion] idle\n");
-	if (m_hGlowSprite) 
+	if (m_hGlowSprite)
 	{
 		m_hGlowSprite->SetBrightness(random->RandomInt(32, 48));
 		m_hGlowSprite->SetScale(random->RandomFloat(2.5, 3.5));
@@ -216,7 +216,7 @@ void CFFGrenadeConcussion::DoEffectIdle()
 //----------------------------------------------------------------------------
 // Purpose: Precache the model ready for spawn
 //----------------------------------------------------------------------------
-void CFFGrenadeConcussion::Precache() 
+void CFFGrenadeConcussion::Precache()
 {
 	DevMsg("[Grenade Debug] CFFGrenadeConcussion::Precache\n");
 	PrecacheModel(CONCUSSIONGRENADE_MODEL);
@@ -231,11 +231,11 @@ void CFFGrenadeConcussion::Precache()
 
 #ifdef GAME_DLL
 
-CFFGrenadeConcussionGlow *CFFGrenadeConcussionGlow::Create(const Vector &origin, CBaseEntity *pOwner) 
+CFFGrenadeConcussionGlow *CFFGrenadeConcussionGlow::Create(const Vector &origin, CBaseEntity *pOwner)
 {
 	CFFGrenadeConcussionGlow *pConcGlow = (CFFGrenadeConcussionGlow *) CBaseEntity::Create("env_ffconcussionglow", origin, QAngle(0, 0, 0));
 
-	if (pConcGlow == NULL) 
+	if (pConcGlow == NULL)
 		return NULL;
 
 	pConcGlow->SetRenderMode((RenderMode_t) 9);
@@ -261,14 +261,14 @@ CFFGrenadeConcussionGlow *CFFGrenadeConcussionGlow::Create(const Vector &origin,
 
 #else
 
-int CFFGrenadeConcussionGlow::DrawModel(int flags) 
+int CFFGrenadeConcussionGlow::DrawModel(int flags)
 {
 	//See if we should draw
-	if (m_bReadyToDraw == false) 
+	if (m_bReadyToDraw == false)
 		return 0;
 
 	//Must be a sprite
-	if (modelinfo->GetModelType(GetModel()) != mod_sprite) 
+	if (modelinfo->GetModelType(GetModel()) != mod_sprite)
 	{
 		assert(0);
 		return 0;
@@ -276,7 +276,7 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 
 	CFFGrenadeConcussion *conc = dynamic_cast<CFFGrenadeConcussion *> (GetOwnerEntity());
 
-	if (!conc) 
+	if (!conc)
 		return 0;
 
 	// Because we're using a NOZ sprite, need to traceline to ensure this is really
@@ -284,7 +284,7 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 	trace_t tr;
 	UTIL_TraceLine(CBasePlayer::GetLocalPlayer()->EyePosition(), GetAbsOrigin(), MASK_SHOT, conc, COLLISION_GROUP_NONE, &tr);
 
-	if (tr.fraction < 1.0f && tr.m_pEnt != conc) 
+	if (tr.fraction < 1.0f && tr.m_pEnt != conc)
 		return 0;
 
 	Vector vecForward, vecRight, vecUp, vecDir;
@@ -294,7 +294,7 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 
 	float alpha = vecUp.Dot(vecDir);
 
-	if (alpha < 0) 
+	if (alpha < 0)
 		alpha *= -1;
 	
 	alpha = 1.0f - alpha;
@@ -312,10 +312,10 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 		m_nAttachment, 			// attachment point
 		GetRenderMode(), 		// rendermode
 		m_nRenderFX, 
-		(int) alpha, 		// alpha
-		/*m_clrRender->r*/ conc_glow_r.GetInt(), 
-		/*m_clrRender->g*/ conc_glow_g.GetInt(), 
-		/*m_clrRender->b*/ conc_glow_b.GetInt(), 
+		 (int) alpha, 		// alpha
+		/*m_clrRender->r */ conc_glow_r.GetInt(), 
+		/*m_clrRender->g */ conc_glow_g.GetInt(), 
+		/*m_clrRender->b */ conc_glow_b.GetInt(), 
 		conc_glow_size.GetFloat());			// sprite scale
 
 	return drawn;
@@ -324,9 +324,9 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 //-----------------------------------------------------------------------------
 // Purpose: Setup our sprite reference
 //-----------------------------------------------------------------------------
-void CFFGrenadeConcussionGlow::OnDataChanged(DataUpdateType_t updateType) 
+void CFFGrenadeConcussionGlow::OnDataChanged(DataUpdateType_t updateType)
 {
-	if (updateType == DATA_UPDATE_CREATED) 
+	if (updateType == DATA_UPDATE_CREATED)
 	{
 	}
 }
