@@ -291,6 +291,9 @@
 					RelativePath=".\ff\ff_fx_conc_emitter.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_fx_flash_emitter.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_fx_gascloud_emitter.cpp">
 				</File>
 				<File
@@ -301,6 +304,9 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_fx_napalm_emitter.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\ff_fx_ring_emitter.cpp">
 				</File>
 				<File
 					RelativePath=".\ff\ff_fx_tracer.cpp">
@@ -425,6 +431,9 @@
 					RelativePath="..\dlls\ff\ff_esp_shared.h">
 				</File>
 				<File
+					RelativePath=".\ff\ff_fx_flash_emitter.h">
+				</File>
+				<File
 					RelativePath=".\ff\ff_fx_gascloud_emitter.h">
 				</File>
 				<File
@@ -432,6 +441,9 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_fx_napalm_emitter.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_fx_ring_emitter.h">
 				</File>
 				<File
 					RelativePath=".\ff\ff_glyph.h">
@@ -3384,10 +3396,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
