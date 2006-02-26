@@ -85,7 +85,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 			DevMsg("[Grenade Debug] CFFGrenadeNail::GrenadeThink\n[Grenade Debug] Changing to nail mode\n");
 
 			// Reset the detonation time
-			SetDetonateTimerLength(4.5);
+			SetDetonateTimerLength(3);
 
 			// Should this maybe be noclip?
 			SetMoveType(MOVETYPE_FLY);
@@ -117,7 +117,13 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 			return;
 		}
 
-		SetAbsVelocity(Vector(0, 0, 10 + 20 * sin(DEG2RAD(GetAbsAngles().y))));
+		float risingheight = 0;
+
+		// Lasts for 3 seconds, rise for 0.3
+		if (m_flDetonateTime - gpGlobals->curtime > 2.6)
+			risingheight = 80;
+
+		SetAbsVelocity(Vector(0, 0, risingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
 
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
