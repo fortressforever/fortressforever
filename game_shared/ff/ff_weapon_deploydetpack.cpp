@@ -111,9 +111,17 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 
 		Cleanup( );
 
-#ifdef GAME_DLL
-		GetPlayerOwner( )->Command_BuildDetpack( );
+		// Mulch: bug 0000322: to circumvent the mouse key code getting passed as an argv :/
+#ifdef CLIENT_DLL 
+		engine->ClientCmd( "detpack" );
 #endif
+
+		/*
+#ifdef GAME_DLL		
+		//DevMsg( "[Detpack Slot] PrimaryAttack\n" );		
+		GetPlayerOwner()->Command_BuildDetpack();		
+#endif
+		*/
 	}
 }
 
