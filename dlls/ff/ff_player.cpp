@@ -558,6 +558,9 @@ void CFFPlayer::Spawn()
 		SetWaterLevel( 0 );
 	}
 
+	// Mulch: BUG 0000310: return fov to default on spawn	
+	SetFOV( this, GetDefaultFOV() );
+
 	// Maybe this should go elsewhere
 	CSingleUserRecipientFilter user((CBasePlayer *)this);
 	user.MakeReliable();
