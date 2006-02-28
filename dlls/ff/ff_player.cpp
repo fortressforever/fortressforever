@@ -862,7 +862,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			case FF_BUILD_DETPACK: 
 			{
 				if( m_hDetpack.Get() )
-					( ( CFFDetpack * )m_hDetpack.Get() )->Cancel( );
+					( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
 			}
 			break;
 		}
@@ -1512,8 +1512,8 @@ void CFFPlayer::RemoveItems( void )
 		if( m_hDetpack.Get() )
 		{
 			//*
-			CSingleUserRecipientFilter user( this );
-			user.MakeReliable( );
+			//CSingleUserRecipientFilter user( this );
+			//user.MakeReliable( );
 
 			// Start the message block
 //			UserMessageBegin( user, "DetpackStopTimer" );
