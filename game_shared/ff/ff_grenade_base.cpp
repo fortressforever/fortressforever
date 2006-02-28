@@ -163,6 +163,12 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		// Next think straight away
 		SetNextThink(gpGlobals->curtime);
 
+		CFFGrenadeBase::WaterThink();		
+	}
+
+	// Mulch: bug 0000273: make grens sink-ish in water
+	void CFFGrenadeBase::WaterThink( void ) 
+	{
 		if (GetWaterLevel() != 0)
 		{
 			// 11/08/2005 - Defrag's content with this

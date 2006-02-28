@@ -118,11 +118,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 		// Next think straight away
 		SetNextThink( gpGlobals->curtime );
 
-		// Slow down in water (need to fix this, will slow to a halt)
-		if (GetWaterLevel() != 0)
-		{
-			SetAbsVelocity( GetAbsVelocity() * 0.5 );
-		}
+		CFFGrenadeBase::WaterThink(); // Mulch: bug 0000273: make grens sink-ish in water
 	}
 
 	void CFFGrenadeNapalm::FlameThink( void )

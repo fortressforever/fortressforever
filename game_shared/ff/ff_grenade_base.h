@@ -78,6 +78,7 @@ public:
 	virtual void PreExplode( trace_t *pTrace, const char* pSound, const char *pEffect );
 	virtual void PostExplode( void );
 	virtual void GrenadeThink( void );
+	virtual void WaterThink( void );	// |-- Mulch: Not a real think func
 
 	void SetDetonateTimerLength( float timer );
 
