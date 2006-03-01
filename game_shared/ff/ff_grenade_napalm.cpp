@@ -175,6 +175,11 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 				if (tr.fraction < 1.0f)
 					continue;
 
+				// Bug #0000270: Napalm grenade burn radius reaches unrealisticly high.
+				float height = tr.startpos.z - tr.endpos.z;
+				if (height < -40.0f || height > 40.0f)
+					continue;
+
 				Class_T cls = pEntity->Classify();
 				switch(cls)
 				{
