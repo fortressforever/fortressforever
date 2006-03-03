@@ -1534,7 +1534,7 @@ void CFFPlayer::RemoveItems( void )
 void CFFPlayer::KillPlayer( void )
 {
 	// Unlock the player if they were building and died
-	UnlockPlayer( );
+	UnlockPlayer();
 	Extinguish();
 
 	// have the player kill themself
@@ -1912,31 +1912,31 @@ void CFFPlayer::PreBuildGenericThink( void )
 			{
 				case FF_BUILD_DISPENSER:
 				{
-					if( m_hDispenser.Get( ) )
-						( ( CFFDispenser * )m_hDispenser.Get( ) )->Cancel( );
+					if( m_hDispenser.Get() )
+						( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
 				}
 				break;
 
 				case FF_BUILD_SENTRYGUN:
 				{
-					if( m_hSentryGun.Get( ) )
-						( ( CFFSentryGun * )m_hSentryGun.Get( ) )->Cancel( );
+					if( m_hSentryGun.Get() )
+						( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
 				}
 				break;
 
 				case FF_BUILD_DETPACK: 
 				{
-					if( m_hDetpack.Get( ) )
+					if( m_hDetpack.Get() )
 					{
 						Build_ReturnDetpack( this );
-						( ( CFFDetpack * )m_hDetpack.Get( ) )->Cancel( );
+						( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
 					}
 				}
 				break;
 			}
 
 			// Unlock player
-			UnlockPlayer(  );
+			UnlockPlayer();
 
 			// Mirv: Cancel build timer
 			CSingleUserRecipientFilter user(this);
@@ -1963,7 +1963,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 	{
 		case FF_BUILD_DISPENSER:
 		{
-			if( m_hDispenser.Get( ) )
+			if( m_hDispenser.Get() )
 			{
 				// TODO: Add nice thing for user to know what went on - right now dispenser
 				// is blown (maybe just display a nice message and have another bind to
@@ -1973,7 +1973,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				// "det<object>" if this becomes cumbersome or annoying
 
 				// Blow up dispenser
-				( ( CFFDispenser * )m_hDispenser.Get( ) )->Detonate( );
+				( ( CFFDispenser * )m_hDispenser.Get() )->Detonate();
 				m_hDispenser = NULL;
 
 				m_iWantBuild = FF_BUILD_NONE;
@@ -1985,7 +1985,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 		case FF_BUILD_SENTRYGUN:
 		{
-			if( m_hSentryGun.Get( ) )
+			if( m_hSentryGun.Get() )
 			{
 				// TODO: Do something maybe
 				DevMsg( "[Buildable Object] Trying to build - Can't have multiple sentryguns!\n" );
@@ -1994,7 +1994,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				// TEMPORARY: TODO: Remove this, heh. This is just so
 				// I can build lots of SG's and test junk
 				//( ( CFFSentryGun * )m_hSentryGun.Get( ) )->Detonate( );
-				( ( CFFSentryGun * )m_hSentryGun.Get( ) )->RemoveQuietly( );
+				( ( CFFSentryGun * )m_hSentryGun.Get() )->RemoveQuietly();
 				m_hSentryGun = NULL;
 				//*/
 
@@ -2007,7 +2007,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 		case FF_BUILD_DETPACK:
 		{
-			if( m_hDetpack.Get( ) )
+			if( m_hDetpack.Get() )
 			{
 				// TODO: Tell user they can't build multiple detpacks
 				DevMsg( "[Buildable Object] Trying to build - Can't have multiple detpacks!\n" );
@@ -2021,7 +2021,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 	}
 
 	// Make sure player on ground
-	if( !FBitSet( GetFlags( ), FL_ONGROUND ) )
+	if( !FBitSet( GetFlags(), FL_ONGROUND ) )
 	{
 		// TODO: Give player nice message
 		DevMsg( "[Buildable Object] Trying to build - You gotta be on the ground to build!\n" );
@@ -2030,7 +2030,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 	}
 
 	// For detpack, make sure player isn't ducking
-	if( FBitSet( GetFlags( ), FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
+	if( FBitSet( GetFlags(), FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
 	{
 		// TODO: Give player nice message
 		DevMsg( "[Buildable Object] Can't duck and set a detpack!\n" );
@@ -2046,9 +2046,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			if (GetAmmoCount(AMMO_CELLS) < 100)
 				return;
-
-			// TODO: Check metal
-			// TODO: Check cells
 		}
 		break;
 
@@ -2056,9 +2053,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			if (GetAmmoCount(AMMO_CELLS) < 130)
 				return;
-
-			// TODO: Check metal
-			// TODO: Check cells
 		}
 		break;
 
@@ -2066,7 +2060,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			if( GetAmmoCount( AMMO_DETPACK ) < 1 )
 			{
-				// TODO: Give the player a nice message
 				DevMsg( "[Buildable Object] You don't have a detpack to use!\n" );
 
 				return;
@@ -2230,7 +2223,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					pDetpack->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
 
 
-					m_flBuildTime = gpGlobals->curtime + 2.0f;
+					m_flBuildTime = gpGlobals->curtime + 3.0f; // mulch: bug 0000337: build time 3 seconds for detpack
 				}
 				else
 				{
@@ -2273,9 +2266,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 		{
 			case FF_BUILD_DISPENSER:
 			{
-				if( m_hDispenser.Get( ) )
+				if( m_hDispenser.Get() )
 				{
-					( ( CFFDispenser * )m_hDispenser.Get( ) )->GoLive( );
+					( ( CFFDispenser * )m_hDispenser.Get() )->GoLive();
 
 					IGameEvent *event = gameeventmanager->CreateEvent( "build_dispenser" );
 					if( event )
@@ -2289,9 +2282,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 			case FF_BUILD_SENTRYGUN:
 			{
-				if( m_hSentryGun.Get( ) )
+				if( m_hSentryGun.Get() )
 				{
-					( ( CFFSentryGun * )m_hSentryGun.Get( ) )->GoLive( );
+					( ( CFFSentryGun * )m_hSentryGun.Get() )->GoLive();
 
 					IGameEvent *event = gameeventmanager->CreateEvent( "build_sentrygun" );
 					if( event )
@@ -2305,9 +2298,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 			case FF_BUILD_DETPACK: 
 			{
-				if( m_hDetpack.Get( ) )
+				if( m_hDetpack.Get() )
 				{
-					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive( );
+					( ( CFFDetpack * )m_hDetpack.Get() )->GoLive();
 
 					IGameEvent *event = gameeventmanager->CreateEvent( "build_detpack" );
 					if( event )
@@ -2322,7 +2315,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 		}
 
 		// Unlock the player
-		UnlockPlayer( );
+		UnlockPlayer();
 
 		// Reset stuff		
 		m_iCurBuild = FF_BUILD_NONE;

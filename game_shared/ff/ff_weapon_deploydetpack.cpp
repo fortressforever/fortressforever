@@ -146,10 +146,12 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 		//SetWeaponIdleTime( gpGlobals->curtime + 0.1f );
 
 #ifdef CLIENT_DLL 
-		C_FFPlayer *pPlayer = GetPlayerOwner( );
+		C_FFPlayer *pPlayer = GetPlayerOwner();
+
+		DevMsg( "[Detpack slot] WeaponIdle called. building: %s, iCurbuild: %i, building %s\n", pPlayer->m_bBuilding ? "true" : "false", pPlayer->m_iCurBuild, pPlayer->m_bClientBuilding ? "true" : "false" );
 
 		// If we haven't built a detpack...
-		if( !pPlayer->m_hDetpack.Get( ) )
+		if( !pPlayer->m_hDetpack.Get() )
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, FF_BUILD_DET_RAISE_VAL);
 			
@@ -182,7 +184,9 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 
 bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
-	Cleanup( );
+	DevMsg( "[Detpack slot] Holster called\n" );
+
+	Cleanup();
 
 	return BaseClass::Holster();
 }

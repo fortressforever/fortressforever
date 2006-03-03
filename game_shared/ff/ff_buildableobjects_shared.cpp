@@ -78,6 +78,9 @@ CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float f
 	// If we're dealing w/ a detpack then we're finished here
 	if (m_iBuildObject == FF_BUILD_DETPACK) 
 	{
+		// Rotate the detpack 180 degrees so the keypad and display face the player (as per rebo 2/28/2006)
+		VectorAngles( -m_vecPlayerForward, m_angBuildAirAngles );
+		VectorAngles( -m_vecPlayerForward, m_angBuildGroundAngles );
 		m_BuildResult = BUILD_ALLOWED;
 		return;
 	}
