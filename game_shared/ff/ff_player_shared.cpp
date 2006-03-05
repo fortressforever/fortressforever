@@ -295,8 +295,6 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill() 
 {
-	DevMsg("ClassSpecificSkill\n");
-
 	if (m_flNextClassSpecificSkill > gpGlobals->curtime) 
 		return;
 
@@ -345,8 +343,6 @@ void CFFPlayer::ClassSpecificSkill()
 //-----------------------------------------------------------------------------
 void CFFPlayer::ClassSpecificSkill_Post() 
 {
-	DevMsg("ClassSpecificSkill_Post\n");
-
 #ifdef CLIENT_DLL
 	switch (GetClassSlot()) 
 	{

@@ -1073,6 +1073,33 @@ CBaseEntity *CGlobalEntityList::FindEntityNearestFacing( const Vector &origin, c
 	return best_ent;
 }
 
+// --> Mirv: New useful method
+//-----------------------------------------------------------------------------
+// Purpose: Iterates through the entities for ones with the same target
+// Input  : pStartEntity - Last entity found, NULL to start a new iteration.
+//			pOwner - Owner to compare with
+//-----------------------------------------------------------------------------
+CBaseEntity *CGlobalEntityList::FindEntityByOwner(CBaseEntity *pStartEntity, const CBaseEntity *pOwner)
+{
+	const CEntInfo *pInfo = pStartEntity ? GetEntInfoPtr(pStartEntity->GetRefEHandle())->m_pNext : FirstEntInfo();
+
+	for (; pInfo; pInfo = pInfo->m_pNext)
+	{
+		CBaseEntity *pEntity = (CBaseEntity *) pInfo->m_pEntity;
+
+		if (!pEntity)
+		{
+			DevWarning("NULL entity in global entity list!\n");
+			continue;
+		}
+
+		if (pEntity->GetOwnerEntity() == pOwner)
+			return pEntity;
+	}
+
+	return NULL;
+}
+// <-- Mirv: New useful method
 
 void CGlobalEntityList::OnAddEntity( IHandleEntity *pEnt, CBaseHandle handle )
 {

@@ -50,6 +50,8 @@ public:
 
 	static CFFProjectileGrenade * CreateGrenade(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
+	virtual const char *GetBounceSound() { return "GrenadeProjectile.Bounce"; }
+
 #ifdef CLIENT_DLL
 	CFFProjectileGrenade() {}
 	CFFProjectileGrenade(const CFFProjectileGrenade&) {}

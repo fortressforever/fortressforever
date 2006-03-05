@@ -150,6 +150,8 @@ public:
 	CBaseEntity *FindEntityClassNearestFacing( const Vector &origin, const Vector &facing, float threshold, char *classname);
 	CBaseEntity *FindEntityByNetname( CBaseEntity *pStartEntity, const char *szModelName );
 
+	CBaseEntity *FindEntityByOwner(CBaseEntity *pStartEntity, const CBaseEntity *pOwner);	// |-- Mirv: Useful method
+
 	CGlobalEntityList();
 
 

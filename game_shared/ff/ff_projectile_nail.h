@@ -41,7 +41,7 @@ public:
 	void NailTouch(CBaseEntity *pOther);
 	//int ShouldTransmit(const CCheckTransmitInfo *pInfo) { return FL_EDICT_DONTSEND; }
 
-	static CFFProjectileNail *CreateNail(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileNail *CreateNail(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
 	CFFProjectileNail() {}

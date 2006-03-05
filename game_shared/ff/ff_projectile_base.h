@@ -41,7 +41,7 @@ public:
 
 	virtual void Precache() 
 	{
-		PrecacheScriptSound("BaseGrenade.BounceSound");
+		PrecacheScriptSound(GetBounceSound());
 	}
 
 	// Bug #0000275: Grenade bounce sounds missing
@@ -57,7 +57,6 @@ public:
 
 	virtual const char *GetBounceSound()
 	{
-		AssertMsg(0, "No custom bounce sound set!");
 		return "BaseGrenade.BounceSound";
 	}
 

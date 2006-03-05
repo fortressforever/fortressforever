@@ -1536,7 +1536,16 @@ void CFFPlayer::RemoveItems( void )
 		}
 	}
 
-	// TODO: Remove any grenades whose owner is this player?
+	// Remove any projectiles (grenades, nails, etc)
+	CBaseEntity *pEnt = gEntList.FindEntityByOwner(NULL, this);
+
+	while (pEnt != NULL)
+	{
+		if (dynamic_cast<CFFProjectileBase *>( pEnt ) != NULL)
+			UTIL_Remove(pEnt);
+
+		pEnt = gEntList.FindEntityByOwner(pEnt, this);
+	}
 }
 
 void CFFPlayer::KillPlayer( void )
