@@ -47,6 +47,12 @@ static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
 static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
+// #0000331: impulse 81 not working (weapon_cubemap)
+#include "../c_weapon__stubs.h"
+#include "ff_weapon_base.h"
+
+STUB_WEAPON_CLASS( weapon_cubemap, WeaponCubemap, C_BaseCombatWeapon );
+
 void OnTimerExpired(C_FFTimer *pTimer)
 {
 	string name = pTimer->GetTimerName();

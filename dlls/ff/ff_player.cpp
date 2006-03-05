@@ -407,19 +407,22 @@ void CFFPlayer::PostThink()
 
 void CFFPlayer::Precache()
 {
-	PrecacheModel( FF_PLAYER_MODEL );
+	PrecacheModel(FF_PLAYER_MODEL);
+
+	// #0000331: impulse 81 not working (weapon_cubemap)
+	PrecacheModel("models/shadertest/envballs.mdl");
 
 	// Quick addition to precache all the player models
-	PrecacheModel( "models/player/scout/scout.mdl" );
-	PrecacheModel( "models/player/sniper/sniper.mdl" );
-	PrecacheModel( "models/player/soldier/soldier.mdl" );
-	PrecacheModel( "models/player/demoman/demoman.mdl" );
-	PrecacheModel( "models/player/medic/medic.mdl" );
-	PrecacheModel( "models/player/hwguy/hwguy.mdl" );
-	PrecacheModel( "models/player/pyro/pyro.mdl" );
-	PrecacheModel( "models/player/spy/spy.mdl" );
-	PrecacheModel( "models/player/engineer/engineer.mdl" );
-	PrecacheModel( "models/player/civilian/civilian.mdl" );
+	PrecacheModel("models/player/scout/scout.mdl");
+	PrecacheModel("models/player/sniper/sniper.mdl");
+	PrecacheModel("models/player/soldier/soldier.mdl");
+	PrecacheModel("models/player/demoman/demoman.mdl");
+	PrecacheModel("models/player/medic/medic.mdl");
+	PrecacheModel("models/player/hwguy/hwguy.mdl");
+	PrecacheModel("models/player/pyro/pyro.mdl");
+	PrecacheModel("models/player/spy/spy.mdl");
+	PrecacheModel("models/player/engineer/engineer.mdl");
+	PrecacheModel("models/player/civilian/civilian.mdl");
 
 	// Sounds
 	PrecacheScriptSound( "Grenade.Timer" );

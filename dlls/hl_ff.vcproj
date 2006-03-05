@@ -325,6 +325,9 @@
 				<File
 					RelativePath=".\ff\te_firebullets.cpp">
 				</File>
+				<File
+					RelativePath=".\weapon_cubemap.cpp">
+				</File>
 			</Filter>
 			<Filter
 				Name="Header"
