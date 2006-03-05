@@ -47,12 +47,18 @@ public:
 	// Bug #0000275: Grenade bounce sounds missing
 	virtual void BounceSound()
 	{
-		if (gpGlobals->curtime > m_flNextBounceSoundTime)
+		if (gpGlobals->curtime > m_flNextBounceSoundTime && GetAbsVelocity().LengthSqr() > 1)
 		{
-			EmitSound("BaseGrenade.BounceSound");
+			EmitSound(GetBounceSound());
 
 			m_flNextBounceSoundTime = gpGlobals->curtime + 0.1;
 		}	
+	}
+
+	virtual const char *GetBounceSound()
+	{
+		AssertMsg(0, "No custom bounce sound set!");
+		return "BaseGrenade.BounceSound";
 	}
 
 	void Explode(trace_t *pTrace, int bitsDamageType);

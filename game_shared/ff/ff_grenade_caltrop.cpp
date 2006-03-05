@@ -65,6 +65,7 @@ public:
 	void Precache( void );
 	void CaltropTouch ( CBaseEntity *pOther );
 	void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
+	virtual const char *GetBounceSound() { return "CaltropGrenade.Bounce"; }
 
 	DECLARE_DATADESC();
 private:

@@ -33,6 +33,7 @@ public:
 	CNetworkVector(m_vInitialVelocity);
 
 	virtual void Precache();
+	virtual const char *GetBounceSound() { return "NailGrenade.Bounce"; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNail() {}

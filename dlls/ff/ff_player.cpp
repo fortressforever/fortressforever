@@ -430,12 +430,13 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("radar.single_shot");
 	PrecacheScriptSound("Player.bodysplat");
 	
-	// Class gibs (wonderfully messy thanks)
+	// Class specific things!
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
 	{
 		char buf[256];
 		const char *class_string = Class_IntToString(i);
 
+		// Model gibs
 		Q_snprintf(buf, 255, "models/player/%s/%s_head.mdl", class_string, class_string);
 		g_iLimbs[i][0] = PrecacheModel(buf);
 
@@ -450,6 +451,10 @@ void CFFPlayer::Precache()
 
 		Q_snprintf(buf, 255, "models/player/%s/%s_rightleg.mdl", class_string, class_string);
 		g_iLimbs[i][4] = PrecacheModel(buf);
+
+		// Saveme shouts
+		Q_snprintf(buf, 255, "%s.saveme", class_string);
+		PrecacheScriptSound(buf);
 	}
 
 	BaseClass::Precache();
@@ -2500,7 +2505,11 @@ void CFFPlayer::Command_SaveMe( void )
 		if (iTeamToCheck != GetTeamNumber())
 			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( iTeamToCheck ) );
 	}
-	EmitSound( sndFilter, entindex( ), "speech.saveme" );
+	
+	// BugID #0000332: PrecacheScriptSound 'speech.saveme' failed, no such sound script entry
+	char buf[64];
+	Q_snprintf(buf, 63, "%s.saveme", Class_IntToString(GetClassSlot()));
+	EmitSound(sndFilter, entindex(), buf);
 }
 
 void CFFPlayer::StatusEffectsThink( void )

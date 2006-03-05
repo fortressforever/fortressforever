@@ -60,6 +60,7 @@ public:
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeRadius() { return 240.0f; }
 	virtual float GetGrenadeDamage() { return 0.0f; }
+	virtual const char *GetBounceSound() { return "EmpGrenade.Bounce"; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeEmp() {}

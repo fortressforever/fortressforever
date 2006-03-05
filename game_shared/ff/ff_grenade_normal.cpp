@@ -30,6 +30,7 @@ public:
 
 	virtual void Precache();
 	virtual void Spawn();
+	virtual const char *GetBounceSound() { return "NormalGrenade.Bounce"; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeNormal() {}

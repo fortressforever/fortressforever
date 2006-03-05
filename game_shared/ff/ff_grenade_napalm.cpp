@@ -48,6 +48,7 @@ public:
 	CNetworkVector(m_vInitialVelocity);
 
 	virtual void Precache();
+	virtual const char *GetBounceSound() { return "NapalmGrenade.Bounce"; }
 
 	float m_flLastBurnCheck;
 #ifdef CLIENT_DLL

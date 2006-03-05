@@ -101,6 +101,7 @@ public:
 	virtual void Precache();
 	virtual float GetGrenadeDamage() { return 0.0f; }
 	virtual float GetGrenadeRadius() { return 280.0f; }
+	virtual const char *GetBounceSound() { return "ConcussionGrenade.Bounce"; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeConcussion() {}
