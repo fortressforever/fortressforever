@@ -128,7 +128,6 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 			// Get the class (actual c++ class name)
 			//const char *pszClassname = pEntity->GetClassname();
 
-			// TODO: Make this better!? EEK ON THE STRCMP's EVERY FRAME
 			if( pEntity->Classify() == CLASS_DETPACK )
 			{
 				C_FFDetpack *pDetpack = ( C_FFDetpack * )pEntity;
