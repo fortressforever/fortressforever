@@ -2326,7 +2326,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					// bug 0000327
 					RemoveAmmo( 1, AMMO_DETPACK );
 
-					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive( );
+					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive();
 
 					IGameEvent *event = gameeventmanager->CreateEvent( "build_detpack" );
 					if( event )
