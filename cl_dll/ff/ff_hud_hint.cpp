@@ -58,9 +58,21 @@ void CHudHint::Init( void )
 	HOOK_HUD_MESSAGE( CHudHint, FF_HudHint );
 }
 
-void CHudHint::AddHudHint( const char *pszMessage )
+void CHudHint::AddHudHint( const char *pszMessage, const char *pszSound )
 {
-	DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );	
+	DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );
+
+	// TODO:
+	// When adding a hud hint we need to do a couple of things
+	// Firstly, check to see if it's a new hint (ie. a hint
+	// that the user hasn't seen before)
+	// Secondly, if it's a new hint, add it to our log file
+	// thing
+	// Thirdly, display the new hint
+	// Fourthly, if it's not a new hint we simply show
+	// an icon on the screen that tells the user they can
+	// hit their "show hint" key to view the old hint
+
 
 	// TODO: TODO: TODO:
 	// Do this here for now in case the dev team
@@ -68,16 +80,17 @@ void CHudHint::AddHudHint( const char *pszMessage )
 	// to find the duration they want. Hard code it
 	// later in VidInit or Init. This just lets it
 	// get updated everytime we get a new hud hint.
-	m_flDuration = hint_duration.GetInt( );
+	m_flDuration = hint_duration.GetInt();
 
 	// Do something w/ the string!
-	CHint	hHint( pszMessage, gpGlobals->curtime );
+	CHint	hHint( pszMessage, pszSound, gpGlobals->curtime );
 }
 
 void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
 {
 	// Buffer
 	char szString[ 4096 ];
+	char szSound[ 4096 ];
 
 	// Grab the string up to newline
 	if( !msg.ReadString( szString, sizeof( szString ), true ) )
@@ -87,8 +100,11 @@ void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
 		return;
 	}
 
+	if( !msg.ReadString( szSound, sizeof( szSound ), true ) )
+		Warning( "[Hud Hint] Sound path larger than buffer - ignoring sound!\n" );
+
 	// Pass the string along
-	AddHudHint( szString );	
+	AddHudHint( szString, szSound );	
 }
 
 void CHudHint::Paint( void )

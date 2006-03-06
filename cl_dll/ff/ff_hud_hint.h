@@ -28,7 +28,7 @@ using namespace vgui;
 class CHint
 {
 public:
-	CHint( const char *pszHint, float flStartTime )
+	CHint( const char *pszHint, const char *pszSound, float flStartTime )
 		: m_flStartTime( flStartTime )
 	{
 		// TODO: Parse out the hint into labels
@@ -58,7 +58,7 @@ public:
 	CHudHint( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudHint" ) 
 	{
 		// Set our parent window
-		SetParent( g_pClientMode->GetViewport( ) );
+		SetParent( g_pClientMode->GetViewport() );
 
 		SetHiddenBits( 0 );
 	}
@@ -73,6 +73,6 @@ public:
 	void	MsgFunc_FF_HudHint( bf_read &msg );
 
 	// Manually add a hud hint
-	void	AddHudHint( const char *pszMessage );
+	void	AddHudHint( const char *pszMessage, const char *pszSound = NULL );
 	
 };
