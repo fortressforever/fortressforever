@@ -1945,7 +1945,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					if( m_hDetpack.Get() )
 					{
-						Build_ReturnDetpack( this );
+						// Don't do this here as we take away ammo only
+						// after a build was successful so we don't run
+						// into bugs like bug 0000327
+						//Build_ReturnDetpack( this );
+
 						( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
 					}
 				}
@@ -2232,8 +2236,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// TODO: Holster gun
 					//GetActiveFFWeapon( )->Holster( );
 
+					// Going to do this after the build to fix bug 0000327
 					// Take away what it cost to build
-					RemoveAmmo( 1, AMMO_DETPACK );
+					//RemoveAmmo( 1, AMMO_DETPACK );
 
 					// Mirv: Store future ground location + orientation
 					pDetpack->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
@@ -2317,7 +2322,11 @@ void CFFPlayer::PostBuildGenericThink( void )
 			{
 				if( m_hDetpack.Get() )
 				{
-					( ( CFFDetpack * )m_hDetpack.Get() )->GoLive();
+					// Remove what it cost to build. Do it here to fix
+					// bug 0000327
+					RemoveAmmo( 1, AMMO_DETPACK );
+
+					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive( );
 
 					IGameEvent *event = gameeventmanager->CreateEvent( "build_detpack" );
 					if( event )
