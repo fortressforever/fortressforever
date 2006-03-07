@@ -197,6 +197,9 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 	pDetpack->SetRenderMode( kRenderTransAlpha );
 	pDetpack->SetRenderColorA( ( byte )110 );
 
+	//kRenderTransAlphaAdd
+	//kRender
+
 	// Since this is client side only, give it an owner just in case
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!

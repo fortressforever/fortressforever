@@ -241,7 +241,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround()
 			// HACK Changed to COLLISION_GROUP_PROJECTILE so it doesn't clip healthpacks (Bug #0000242: SG/Disp when building clips on health pack.)
 			for (int i = 0; i < 4; i++) 
 			{
-				UTIL_TraceLine(vecCorners[i], vecCorners[i] - Vector(0, 0, m_flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);
+				UTIL_TraceLine(vecCorners[i], vecCorners[i] - Vector(0, 0, m_flTestDist), CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE, m_pPlayer, COLLISION_GROUP_PROJECTILE, &tr[i]);				
 
 				// Bug #0000246: Dispenser and sg overlap if built on each other
 				if (!tr[i].DidHit() || tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN || tr[i].m_pEnt->Classify() == CLASS_DISPENSER) 

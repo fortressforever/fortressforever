@@ -148,12 +148,12 @@ void CFFDetpack::GoLive( void )
 	m_flDetonateTime = flCurTime + ( float )m_iFuseTime;
 
 	// Make object react to physics
-	IPhysicsObject *pObject = VPhysicsGetObject( );
-	if( pObject )
-	{
-		pObject->SetMass( 2000.0f );
-		pObject->SetBuoyancyRatio( 1 );
-	}
+	//IPhysicsObject *pObject = VPhysicsGetObject( );
+	//if( pObject )
+	//{
+	//	pObject->SetMass( 2000.0f );
+	//	pObject->SetBuoyancyRatio( 1 );
+	//}
 
 	// Set up our touch function
 	SetTouch( &CFFDetpack::OnObjectTouch );		// |-- Mirv: Account for GCC strictness
