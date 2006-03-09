@@ -573,14 +573,11 @@ void CGameMovement::CheckParameters( void )
 
 	if ( !m_bSpeedCropped && ( mv->m_nButtons & IN_SPEED ) && !( player->m_Local.m_bDucked && !player->m_Local.m_bDucking ))
 	{
-		//float frac = 0.1f; // TODO can we remove this ?
-		//mv->m_flForwardMove *= frac;
-		//mv->m_flSideMove    *= frac;
-		//mv->m_flUpMove      *= frac;
-
-		mv->m_flForwardMove = clamp(mv->m_flForwardMove, 0, 150.0f);
-		mv->m_flSideMove    = clamp(mv->m_flSideMove, 0, 150.0f);
-		mv->m_flUpMove      = clamp(mv->m_flUpMove, 0, 150.0f);
+		// Bug ID #0000363: +speed command not fully implemented
+		float frac = 0.5f;
+		mv->m_flForwardMove *= frac;
+		mv->m_flSideMove    *= frac;
+		mv->m_flUpMove      *= frac;
 
 		m_bSpeedCropped = true;
 	}
