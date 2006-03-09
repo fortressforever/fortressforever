@@ -1372,7 +1372,7 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
 
-		if ( firstPerson )
+/*		if ( firstPerson )
 		{
 			MuzzleFlash_Combine_Player( entityIndex, attachmentIndex );
 		}
@@ -1380,7 +1380,7 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 		{
 			MuzzleFlash_Combine_NPC( entityIndex, attachmentIndex );
 		}
-	return;
+	return;*/
 
 	switch( type )
 	{
@@ -1468,7 +1468,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 		return;
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
-		if ( firstPerson )
+/*		if ( firstPerson )
 		{
 			MuzzleFlash_AR2_Player( pos1, angles, entityIndex );
 		}
@@ -1476,7 +1476,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 		{
 			MuzzleFlash_AR2_NPC( pos1, angles, entityIndex );
 		}
-	return;
+	return;*/
 
 	//NOTENOTE: This function is becoming obsolete as the muzzles are moved over to being local to attachments
 
