@@ -425,13 +425,14 @@ void CFFPlayer::Precache()
 	PrecacheModel("models/player/civilian/civilian.mdl");
 
 	// Sounds
-	PrecacheScriptSound( "Grenade.Timer" );
-	PrecacheScriptSound( "Grenade.Prime" );
-	PrecacheScriptSound( "Player.Jump" );
-	PrecacheScriptSound( "Player.Ammotoss" );
-	PrecacheScriptSound( "speech.saveme" );
+	PrecacheScriptSound("Grenade.Timer");
+	PrecacheScriptSound("Grenade.Prime");
+	PrecacheScriptSound("Player.Jump");
+	PrecacheScriptSound("Player.Ammotoss");
+	PrecacheScriptSound("speech.saveme");
 	PrecacheScriptSound("radar.single_shot");
 	PrecacheScriptSound("Player.bodysplat");
+	PrecacheScriptSound("Item.Toss");
 	
 	// Class specific things!
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
@@ -2499,6 +2500,9 @@ void CFFPlayer::Command_Discard( void )
 
 		pBackpack->SetAbsVelocity(vForward);
 		pBackpack->SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 16.0f));
+
+		// Play a sound
+		EmitSound("Item.Toss");
 	}
 }
 

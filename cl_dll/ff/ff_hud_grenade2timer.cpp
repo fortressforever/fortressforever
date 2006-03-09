@@ -78,7 +78,7 @@ void CHudGrenade2Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg)
 
 void CHudGrenade2Timer::Paint() 
 {
-	if (gpGlobals->curtime > m_flLastTime + 1.5f) 
+	if (gpGlobals->curtime > m_flLastTime + /*1.5f*/ 0.1f) 
 	{
 		// Begin to fade
 		if (m_fVisible) 
@@ -87,7 +87,7 @@ void CHudGrenade2Timer::Paint()
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeOutGrenade2Timer");
 		}
 		// Fading time is over
-		else if (gpGlobals->curtime > m_flLastTime + 1.7f) 
+		else if (gpGlobals->curtime > m_flLastTime + /*1.7f*/ 0.2f) 
 		{
 			return;
 		}
