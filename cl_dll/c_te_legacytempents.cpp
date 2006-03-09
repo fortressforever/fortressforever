@@ -57,6 +57,8 @@ CLIENTEFFECT_REGISTER_END()
 //Whether or not to eject brass from weapons
 ConVar cl_ejectbrass( "cl_ejectbrass", "1" );
 
+ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0");
+
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 
 
@@ -1364,10 +1366,9 @@ C_LocalTempEntity * CTempEnts::SpawnTempModel( model_t *pModel, const Vector &ve
 //-----------------------------------------------------------------------------
 void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, bool firstPerson )
 {
-	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
-//	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
-//	return;
-
+	// Mirv: Optionally disable'd muzzle flashes
+	if (ffdev_disablemuzzleflashes.GetBool())
+		return;
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
 
@@ -1462,9 +1463,9 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 
 #else
 
-//	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
-//	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
-//	return;
+	// Mirv: Optionally disable'd muzzle flashes
+	if (ffdev_disablemuzzleflashes.GetBool())
+		return;
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
 		if ( firstPerson )
