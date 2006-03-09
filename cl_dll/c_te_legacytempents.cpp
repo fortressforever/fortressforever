@@ -1365,8 +1365,8 @@ C_LocalTempEntity * CTempEnts::SpawnTempModel( model_t *pModel, const Vector &ve
 void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, bool firstPerson )
 {
 	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
-	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
-	return;
+//	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
+//	return;
 
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
@@ -1462,9 +1462,9 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 
 #else
 
-	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
-	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
-	return;
+//	// Mirv: Cancelled for now (Bug #0000218: Muzzlefash Sprites are Epilepsy-inducing)
+//	DevWarning("Muzzle flash disabled for now, %s %d\n", __FILE__, __LINE__);
+//	return;
 
 	DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
 		if ( firstPerson )
