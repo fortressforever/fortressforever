@@ -47,7 +47,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
 // --> Mirv: Prematch
 ConVar mp_prematch( "mp_prematch",
-					"0.2",
+					"0.0",							// trepids finding it annoying so i set it to zero and not .2
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
 					"delay before game starts" );
 // <-- Mirv: Prematch
