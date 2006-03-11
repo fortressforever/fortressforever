@@ -5670,6 +5670,41 @@ void CBasePlayer::UpdateClientData( void )
 						&& ( m_nPoisonDmg > m_nPoisonRestored ) 
 						&& ( m_iHealth < 100 );
 
+	// --> Mirv: Damage indicators too
+	if (m_DmgTake || m_DmgSave || m_bitsHUDDamage != m_bitsDamageType)
+	{
+		// Comes from inside me if not set
+		Vector damageOrigin = GetLocalOrigin();
+		// send "damage" message
+		// causes screen to flash, and pain compass to show direction of damage
+		damageOrigin = m_DmgOrigin;
+
+		// only send down damage type that have hud art
+		int visibleDamageBits = m_bitsDamageType & DMG_SHOWNHUD;
+
+		m_DmgTake = clamp( m_DmgTake, 0, 255 );
+		m_DmgSave = clamp( m_DmgSave, 0, 255 );
+
+		CSingleUserRecipientFilter user( this );
+		user.MakeReliable();
+		UserMessageBegin( user, "Damage" );
+		WRITE_BYTE( m_DmgSave );
+		WRITE_BYTE( m_DmgTake );
+		WRITE_LONG( visibleDamageBits );
+		WRITE_FLOAT( damageOrigin.x );	//BUG: Should be fixed point (to hud) not floats
+		WRITE_FLOAT( damageOrigin.y );	//BUG: However, the HUD does _not_ implement bitfield messages (yet)
+		WRITE_FLOAT( damageOrigin.z );	//BUG: We use WRITE_VEC3COORD for everything else
+		MessageEnd();
+
+		m_DmgTake = 0;
+		m_DmgSave = 0;
+		m_bitsHUDDamage = m_bitsDamageType;
+
+		// Clear off non-time-based damage indicators
+		m_bitsDamageType &= DMG_TIMEBASED;
+	}
+	// <-- Mirv: Damage indicators too
+
 	// Let any global rules update the HUD, too
 	g_pGameRules->UpdateClientData( this );
 }

@@ -1403,6 +1403,9 @@
 					RelativePath="hud_crosshair.h">
 				</File>
 				<File
+					RelativePath=".\hl2_hud\hud_damageindicator.cpp">
+				</File>
+				<File
 					RelativePath="hud_element_helper.cpp">
 				</File>
 				<File
@@ -3396,10 +3399,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
