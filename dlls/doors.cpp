@@ -1051,6 +1051,11 @@ void CBaseDoor::Blocked( CBaseEntity *pOther )
 	if ( m_bForceClosed )
 		return;
 
+	// --> Mirv: #0000356: Packs, grens keeping doors from closing
+	if (pOther->GetCollisionGroup() == COLLISION_GROUP_WEAPON || pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE)
+		return;
+	// <-- Mirv: #0000356: Packs, grens keeping doors from closing
+
 	// if a door has a negative wait, it would never come back if blocked,
 	// so let it just squash the object to death real fast
 	if (m_flWait >= 0)
