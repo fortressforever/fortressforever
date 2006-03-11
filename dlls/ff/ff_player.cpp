@@ -2816,6 +2816,11 @@ void CFFPlayer::Command_PrimeOne(void)
 	if (IsGrenadePrimed())
 		return;
 
+	// Bug #0000366: Spy's cloaking & grenade quirks
+	// Spy shouldn't be able to prime grenades when feigned
+	if (m_fFeigned)
+		return;
+
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
 	// we have a primary grenade type
@@ -2844,7 +2849,12 @@ void CFFPlayer::Command_PrimeTwo(void)
 	if (IsGrenadePrimed())
 		return;
 
-	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
+	// Bug #0000366: Spy's cloaking & grenade quirks
+	// Spy shouldn't be able to prime grenades when feigned
+	if (m_fFeigned)
+		return;
+
+    const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
 	// we have a secondary grenade type
 	if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None" ) != 0 )

@@ -114,6 +114,11 @@ void CC_PrimeOne( void )
 	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
 		return;
 
+	// Bug #0000366: Spy's cloaking & grenade quirks
+	// Spy shouldn't be able to prime grenades when feigned
+	if (pLocalPlayer->GetEffects() & EF_NODRAW)
+		return;
+
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 
 	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
@@ -150,6 +155,11 @@ void CC_PrimeTwo( void )
 
 	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
 	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
+		return;
+
+	// Bug #0000366: Spy's cloaking & grenade quirks
+	// Spy shouldn't be able to prime grenades when feigned
+	if (pLocalPlayer->GetEffects() & EF_NODRAW)
 		return;
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
