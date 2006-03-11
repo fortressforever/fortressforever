@@ -116,8 +116,8 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 		float risingheight = 0;
 
-		// Lasts for 3 seconds, rise for 0.3
-		if (m_flDetonateTime - gpGlobals->curtime > 2.6)
+		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
+		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
 			risingheight = 80;
 
 		SetAbsVelocity(Vector(0, 0, risingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));

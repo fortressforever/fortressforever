@@ -201,6 +201,10 @@ public:
 
 	virtual void CreateMove(float flInputSampleTime, CUserCmd *pCmd);
 
+	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
+	// account for various things. 
+	Vector GetLegacyAbsOrigin() { return GetAbsOrigin() + Vector(0, 0, 36.0f); }
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };

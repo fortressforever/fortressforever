@@ -154,7 +154,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
 			if (pPlayer)
 			{
-				vecDisplacement = pPlayer->GetAbsOrigin() - GetAbsOrigin();
+				vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
 
 				// The conc effect is calculated differently if its handheld
 				// These values are from TFC

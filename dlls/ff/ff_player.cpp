@@ -2980,7 +2980,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
 		if (fTimer != 0)
 			vecSrc = Weapon_ShootPosition() + vecForward * gren_forward_offset.GetFloat();
 		else 
-			vecSrc = GetAbsOrigin();
+			vecSrc = GetLegacyAbsOrigin();	// |-- Mirv: TFC style origin is halfway up model okay.
 
 		VectorAngles( vecForward, angAngles );
 		angAngles.x -= gren_spawn_ang_x.GetFloat();
