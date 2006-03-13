@@ -98,6 +98,12 @@ void CC_PrimeOne( void )
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
+	if( pLocalPlayer->m_bClientBuilding )
+	{
+		DevMsg( "[Client] Building - not priming a gren!\n" );
+		return;
+	}
+
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.
 	if(pLocalPlayer->m_iPrimary <= 0)
@@ -140,6 +146,12 @@ void CC_PrimeTwo( void )
 		return;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( pLocalPlayer->m_bClientBuilding )
+	{
+		DevMsg( "[Client] Building - not priming a gren!\n" );
+		return;
+	}
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.

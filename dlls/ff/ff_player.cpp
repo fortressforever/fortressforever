@@ -2816,6 +2816,10 @@ void CFFPlayer::Command_PrimeOne(void)
 	if (IsGrenadePrimed())
 		return;
 
+	// Can't throw grenade while building
+	if( m_bBuilding )
+		return;
+
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	if (m_fFeigned)
@@ -2847,6 +2851,10 @@ void CFFPlayer::Command_PrimeOne(void)
 void CFFPlayer::Command_PrimeTwo(void)
 {
 	if (IsGrenadePrimed())
+		return;
+
+	// Can't throw grenade while building
+	if( m_bBuilding )
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
