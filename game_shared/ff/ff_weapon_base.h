@@ -156,6 +156,14 @@ private:
 #endif
 
 	CNetworkVar(int, m_fInSpecialReload);
+
+	// So we don't spam when trying to kill
+	// buildables (by spam I mean stopping it
+	// then starting it right away then stopping
+	// it right away etc. because of holding
+	// down the mouse button. We want one
+	// click of mouse to kill the build.)
+	float m_flNextBuildKill;
 };
 
 

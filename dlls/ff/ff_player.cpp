@@ -1593,11 +1593,19 @@ void CFFPlayer::LockPlayerInPlace( void )
 	// TODO: Other classes need to check
 	// if (m_bBuilding == True)
 	// ie. grenades, weapons, etc
+
+	if( m_bBuilding )
+	{
+		// Holster our current weapon
+		// Holster our current weapon
+		if( GetActiveWeapon() )
+			GetActiveWeapon()->Holster( NULL );
+	}
 }
 
 void CFFPlayer::UnlockPlayer( void )
 {
-	SetMoveType( MOVETYPE_WALK );
+	SetMoveType( MOVETYPE_WALK );	
 }
 
 void CFFPlayer::FindRadioTaggedPlayers( void )
@@ -2360,6 +2368,10 @@ void CFFPlayer::PostBuildGenericThink( void )
 		// Give a message for now
 		DevMsg( "CFFPlayer::PostBuildGenericThink - ERROR!!!\n" );
 	}
+
+	// Deploy weapon
+	if( GetActiveWeapon()->GetLastWeapon() )
+		GetActiveWeapon()->GetLastWeapon()->Deploy();
 }
 // Sev's test animation thing
 void CFFPlayer::Command_SevTest( void )

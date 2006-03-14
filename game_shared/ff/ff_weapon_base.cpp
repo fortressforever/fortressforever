@@ -16,6 +16,7 @@
 #include "takedamageinfo.h"
 #include "ff_weapon_base.h"
 #include "ammodef.h"
+#include "ff_buildableobjects_shared.h"
 
 #ifdef CLIENT_DLL 
 	#include "c_ff_player.h"
@@ -145,6 +146,8 @@ CFFWeaponBase::CFFWeaponBase()
 	m_bFiresUnderwater = true; 
 
 	AddSolidFlags(FSOLID_TRIGGER); // Nothing collides with these but it gets touches.
+
+	m_flNextBuildKill = 0.0f;
 }
 
 //----------------------------------------------------------------------------
@@ -194,6 +197,32 @@ void CFFWeaponBase::PrimaryAttack()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( pPlayer->m_bBuilding )
+	{
+#ifdef GAME_DLL
+		DevMsg( "[Server] PrimaryAttack :: Player is building!\n" );
+#else
+		DevMsg( "[Client] PrimaryAttack :: Player is building!\n" );
+#endif
+
+		if( m_flNextBuildKill < gpGlobals->curtime )
+		{
+			m_flNextBuildKill = gpGlobals->curtime + 0.5f;
+
+#ifdef GAME_DLL
+			switch( pPlayer->m_iCurBuild )
+			{
+				case FF_BUILD_DETPACK: pPlayer->Command_BuildDetpack(); break;
+				case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
+				case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
+			}
+#endif
+		}
+
+		return;
+	}
 
 	pPlayer->m_iShotsFired++;
 
@@ -283,6 +312,20 @@ void CFFWeaponBase::Fire()
 bool CFFWeaponBase::Deploy() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( pPlayer->m_bBuilding )
+	{
+#ifdef GAME_DLL
+		DevMsg( "[Server]" );
+#else
+		DevMsg( "[Client]" );
+#endif
+		DevMsg( " Deploy :: Can't deploy when a player is building!\n" );
+
+		return false;
+	}
+
 	pPlayer->m_iShotsFired = 0;
 
 	m_fInSpecialReload = 0;
@@ -306,6 +349,21 @@ bool CFFWeaponBase::Reload()
 #ifdef CLIENT_DLL
 	engine->ClientCmd("-reload");
 #endif
+
+	// Is this necessary? Player could be reloading shotgun then
+	// start building but the build holsters the weapon so... (?)
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( pPlayer->m_bBuilding )
+	{
+#ifdef GAME_DLL
+		DevMsg( "[Server]" );
+#else
+		DevMsg( "[Client]" );
+#endif
+		DevMsg( " Deploy :: Can't reload while building!\n" );
+
+		return false;
+	}
 
 	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 || m_iClip1 == GetMaxClip1() || m_iClip1 < 0) 
 		return true;
