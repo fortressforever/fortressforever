@@ -29,6 +29,8 @@
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponDeployDispenser C_FFWeaponDeployDispenser
+	#define CFFDispenser C_FFDispenser
+
 	#include "c_ff_player.h"
 	#include "c_ff_buildableobjects.h"
 	#include "ff_buildableobjects_shared.h"
@@ -57,6 +59,7 @@ public:
 	virtual void SecondaryAttack();
 	virtual void WeaponIdle();
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool CanBeSelected();
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_DEPLOYDISPENSER; }
 
@@ -66,7 +69,7 @@ private:
 
 protected:
 #ifdef CLIENT_DLL
-	C_FFDispenser *pDispenser;
+	CFFDispenser *pDispenser;
 #endif
 
 	// I've stuck the client dll check in here so it doesnt have to be everywhere else
@@ -176,7 +179,7 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 					pDispenser->SetAbsAngles(hBuildInfo.GetBuildGroundAngles());
 				}
 				else
-					pDispenser = C_FFDispenser::CreateClientSideDispenser(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
+					pDispenser = CFFDispenser::CreateClientSideDispenser(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
 			}
 			// Unable to build, so hide buildable
 			else if (pDispenser && ! (pDispenser->GetEffects() & EF_NODRAW)) 
@@ -194,6 +197,17 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 	Cleanup();
 
 	return BaseClass::Holster();
+}
+
+bool CFFWeaponDeployDispenser::CanBeSelected()
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if (pPlayer && ((CFFDispenser *) pPlayer->m_hDispenser.Get()))
+		return false;
+
+	else
+		return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL

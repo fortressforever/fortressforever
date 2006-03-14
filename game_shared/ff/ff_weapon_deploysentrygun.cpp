@@ -26,6 +26,8 @@
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponDeploySentryGun C_FFWeaponDeploySentryGun
+	#define CFFSentryGun C_FFSentryGun
+
 	#include "c_ff_player.h"
 	#include "c_ff_buildableobjects.h"
 	#include "ff_buildableobjects_shared.h"
@@ -59,6 +61,7 @@ public:
 	virtual void SecondaryAttack();
 	virtual void WeaponIdle();
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool CanBeSelected();
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_DEPLOYSENTRYGUN; }
 
@@ -69,7 +72,7 @@ private:
 #ifdef CLIENT_DLL
 protected:
 	int	m_spriteTexture;
-	C_FFSentryGun *pSentryGun;
+	CFFSentryGun *pSentryGun;
 	C_FFSentryGun_AimSphere *pAimSphere;
 #endif
 
@@ -194,7 +197,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 					pSentryGun->SetAbsAngles(hBuildInfo.GetBuildGroundAngles());
 				}
 				else
-					pSentryGun = C_FFSentryGun::CreateClientSideSentryGun(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
+					pSentryGun = CFFSentryGun::CreateClientSideSentryGun(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
 			}
 			// Unable to build, so hide buildable
 			else if (pSentryGun && ! (pSentryGun->GetEffects() & EF_NODRAW)) 
@@ -206,7 +209,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 			Cleanup();
 
 			// TODO: Draw range circle thing so the player can aim
-			C_FFSentryGun *pActualSg = (C_FFSentryGun *) pPlayer->m_hSentryGun.Get();
+			CFFSentryGun *pActualSg = (CFFSentryGun *) pPlayer->m_hSentryGun.Get();
 
 			if (pActualSg) 
 			{
@@ -233,7 +236,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 				if (tr.DidHit() && tr.m_pEnt) 
 				{
 					// If the trace hit the SG and stopped
-					if ((C_FFSentryGun *) tr.m_pEnt == pActualSg) 
+					if ((CFFSentryGun *) tr.m_pEnt == pActualSg) 
 						bHaveLOS = true;
 				}
 				else
@@ -272,6 +275,17 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 	Cleanup_AimSphere();
 
 	return BaseClass::Holster();
+}
+
+bool CFFWeaponDeploySentryGun::CanBeSelected()
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if (pPlayer && ((CFFSentryGun *) pPlayer->m_hSentryGun.Get()))
+		return false;
+
+	else
+		return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL
