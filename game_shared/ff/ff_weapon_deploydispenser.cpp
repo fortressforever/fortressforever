@@ -139,13 +139,6 @@ void CFFWeaponDeployDispenser::PrimaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponDeployDispenser::SecondaryAttack() 
 {
-	if (gpGlobals->curtime > m_flNextSecondaryAttack + 0.1f && gpGlobals->curtime < m_flNextSecondaryAttack + 0.3f)
-	{
-#ifdef CLIENT_DLL
-		engine->ClientCmd("detdismantledispenser");
-#endif
-	}
-
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 }
 

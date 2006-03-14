@@ -314,7 +314,7 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
 		{
-			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			pPlayer->GiveAmmo(pSentry->GetLevel() * 65, AMMO_CELLS, true);
 			pSentry->RemoveQuietly();
 		}
 		else
@@ -351,7 +351,7 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
 		{
-			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			pPlayer->GiveAmmo(pSentry->GetLevel() * 65, AMMO_CELLS, true);
 			pSentry->RemoveQuietly();
 		}
 		else

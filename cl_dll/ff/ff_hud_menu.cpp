@@ -225,10 +225,8 @@ void CHudContextMenu::Display(bool state)
 	if( pPlayer->m_bBuilding )
 		return;
 
-	m_fVisible = state;
-
-	// Cancelling
-	if (state == false)
+	// There is a menu and it's cancelling
+	if (m_pMenu && m_fVisible == true && state == false)
 	{
 		if (m_iSelected >= 0)
 		{
@@ -236,8 +234,11 @@ void CHudContextMenu::Display(bool state)
 				DoCommand(m_pMenu[m_iSelected].szCommand);
 		}
 
+		m_fVisible = state;
 		return;
 	}
+
+	m_fVisible = state;
 
 	// Decide which menu is to be shown
 	if (pPlayer->GetClassSlot() == CLASS_ENGINEER)
