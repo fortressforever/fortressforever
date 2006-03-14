@@ -221,6 +221,10 @@ void CHudContextMenu::Display(bool state)
 	if (!pPlayer)
 		return;
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( pPlayer->m_bBuilding )
+		return;
+
 	m_fVisible = state;
 
 	// Cancelling
