@@ -21,6 +21,9 @@
 //
 //	05/14/05, Mulchman:
 //		Optimized as per Mirv's forum suggestion
+//
+//	03/14/06, Mulchman:
+//		Add some stuff for bug fixing
 
 #include "cbase.h"
 #include "ff_weapon_base.h"
@@ -221,6 +224,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 		if (!pPlayer)
 			return;
 
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding )
+			return;
+
 		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
 
 		if (!pDispenser)
@@ -241,6 +248,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
 
 		if (!pPlayer)
+			return;
+
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding )
 			return;
 
 		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
