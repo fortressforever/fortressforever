@@ -86,6 +86,10 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		return MENU_DIM;
+
 	if (!ff || ff->m_hDispenser)
 		return MENU_DIM;
 
@@ -95,6 +99,10 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		return MENU_DIM;
 
 	if (!ff || !ff->m_hSentryGun)
 		return MENU_DIM;
@@ -106,6 +114,10 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		return MENU_DIM;
+
 	if (!ff || !ff->m_hSentryGun)
 		return MENU_DIM;
 
@@ -115,6 +127,10 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		return MENU_DIM;
 
 	if (!ff || !ff->m_hSentryGun)
 		return MENU_DIM;

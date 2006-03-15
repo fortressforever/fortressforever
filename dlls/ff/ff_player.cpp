@@ -307,6 +307,8 @@ CFFPlayer::CFFPlayer()
 	m_flLastGassed = 0;
 
 	m_flLastLocationUpdate = -1;
+
+	m_pBuildLastWeapon = NULL;
 }
 
 CFFPlayer::~CFFPlayer()
@@ -569,6 +571,8 @@ void CFFPlayer::Spawn()
 
 	// Mulch: BUG 0000310: return fov to default on spawn	
 	SetFOV( this, GetDefaultFOV() );
+
+	m_pBuildLastWeapon = NULL;
 
 	// Maybe this should go elsewhere
 	CSingleUserRecipientFilter user((CBasePlayer *)this);
@@ -1597,8 +1601,11 @@ void CFFPlayer::LockPlayerInPlace( void )
 	{
 		// Holster our current weapon
 		// Holster our current weapon
-		if( GetActiveWeapon() )
-			GetActiveWeapon()->Holster( NULL );
+		//if( GetActiveWeapon() )
+			//GetActiveWeapon()->Holster( NULL );
+		m_pBuildLastWeapon = GetActiveFFWeapon();
+		if( m_pBuildLastWeapon )
+			m_pBuildLastWeapon->Holster( NULL );
 	}
 }
 
@@ -1910,6 +1917,8 @@ void CFFPlayer::Command_BuildDetpack( void )
 
 void CFFPlayer::PreBuildGenericThink( void )
 {
+	bool bDeployHack = false;
+
 	// See if we are in a build process already and take corrective action
 	if( m_bBuilding )
 	{
@@ -1967,6 +1976,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 			// Unlock player
 			UnlockPlayer();
 
+			// Deploy weapon
+			//if( GetActiveWeapon()->GetLastWeapon() )
+			//	GetActiveWeapon()->GetLastWeapon()->Deploy();
+			m_pBuildLastWeapon->Deploy();
+
 			// Mirv: Cancel build timer
 			CSingleUserRecipientFilter user(this);
 			user.MakeReliable();
@@ -1979,7 +1993,24 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
+
+			// Bug #0000333: Buildable Behavior (non build slot) while building
+			bDeployHack = true;
 		}
+
+		// Because of
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		//return;
+		// read below
+	}
+
+	// This is associated with
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( bDeployHack )
+	{
+		// Need to set m_bBuilding false before bringing out a new weapon...
+		if( m_pBuildLastWeapon )
+			m_pBuildLastWeapon->Deploy();
 
 		return;
 	}
@@ -2139,11 +2170,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set network var (also lets player know he built something)
 					m_hDispenser = pDispenser;
 
-					// TODO: Lock player movement
-					LockPlayerInPlace( );
-
-					// TODO: Holster gun
-					//GetActiveFFWeapon( )->Holster( );
+					LockPlayerInPlace();
 
 					// TODO: Take away what it cost to build
 
@@ -2189,10 +2216,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set network var (also lets player know he built something)
 					m_hSentryGun = pSentryGun;
 
-					// TODO: Lock player movement
-					LockPlayerInPlace( );
-
-					// TODO: Holster gun
+					LockPlayerInPlace();
 
 					// TODO: Take away what it cost to build
 
@@ -2238,11 +2262,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set network var (also lets player know he built something)
 					m_hDetpack = pDetpack;
 
-					// TODO: Lock player movement
-					LockPlayerInPlace( );
-
-					// TODO: Holster gun
-					//GetActiveFFWeapon( )->Holster( );
+					LockPlayerInPlace();
 
 					// Going to do this after the build to fix bug 0000327
 					// Take away what it cost to build
@@ -2369,8 +2389,10 @@ void CFFPlayer::PostBuildGenericThink( void )
 	}
 
 	// Deploy weapon
-	if( GetActiveWeapon()->GetLastWeapon() )
-		GetActiveWeapon()->GetLastWeapon()->Deploy();
+	//if( GetActiveWeapon()->GetLastWeapon() )
+	//	GetActiveWeapon()->GetLastWeapon()->Deploy();
+	if( m_pBuildLastWeapon )
+		m_pBuildLastWeapon->Deploy();
 }
 // Sev's test animation thing
 void CFFPlayer::Command_SevTest( void )

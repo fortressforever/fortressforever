@@ -266,6 +266,8 @@ public:
 	// Tells us when we can call the postbuildgenericthink
     float m_flBuildTime;
 
+	CFFWeaponBase *m_pBuildLastWeapon;
+
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	// End: Added by Mulchman for building objects and such
