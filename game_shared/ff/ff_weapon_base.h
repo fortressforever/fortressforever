@@ -98,6 +98,7 @@ typedef enum
 	Secondary_Mode, 
 } FFWeaponMode;
 
+int AliasToWeaponID(const char *alias);
 const char *WeaponIDToAlias(int id);
 
 //=============================================================================

@@ -265,7 +265,6 @@ public:
 	CNetworkVar( bool, m_bCancelledBuild );
 	// Tells us when we can call the postbuildgenericthink
     float m_flBuildTime;
-	CFFWeaponBase *m_pBuildWeapon;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***

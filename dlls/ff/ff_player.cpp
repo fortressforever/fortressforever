@@ -1589,7 +1589,6 @@ void CFFPlayer::LockPlayerInPlace( void )
 {
 	SetMoveType( MOVETYPE_NONE );
 
-	// TODO: Holster weapon
 	// TODO: Other classes need to check
 	// if (m_bBuilding == True)
 	// ie. grenades, weapons, etc

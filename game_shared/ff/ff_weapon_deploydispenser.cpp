@@ -190,7 +190,12 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 		}
 		// Destroy if we already have one
 		else
+		{
 			Cleanup();
+
+			// Bug #0000333: Buildable Behavior (non build slot) while building
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+		}
 #endif
 	}
 }
@@ -199,7 +204,7 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	Cleanup();
 
-	return BaseClass::Holster();
+	return BaseClass::Holster( pSwitchingTo );
 }
 
 bool CFFWeaponDeployDispenser::CanBeSelected()
@@ -236,7 +241,9 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
 		{
-			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			// Changed 130 to 65 because:
+			// Bug #0000333: Buildable Behavior (non build slot) while building
+			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
 			pDispenser->RemoveQuietly();
 		}
 		else
@@ -281,7 +288,9 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
 		{
-			pPlayer->GiveAmmo(130.0f, AMMO_CELLS, true);
+			// Changed 130 to 65 because:
+			// Bug #0000333: Buildable Behavior (non build slot) while building
+			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
 			pDispenser->RemoveQuietly();
 		}
 		else
