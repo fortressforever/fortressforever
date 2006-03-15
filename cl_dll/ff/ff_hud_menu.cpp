@@ -44,6 +44,10 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		return MENU_DIM;
+
 	if (!ff || ff->m_hDispenser)
 		return MENU_DIM;
 
@@ -54,6 +58,10 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		return MENU_DIM;
+
 	if (!ff || !ff->m_hDispenser)
 		return MENU_DIM;
 
@@ -63,6 +71,10 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		return MENU_DIM;
 
 	if (!ff || !ff->m_hDispenser)
 		return MENU_DIM;
@@ -219,10 +231,6 @@ void CHudContextMenu::Display(bool state)
 	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (CBasePlayer::GetLocalPlayer());
 
 	if (!pPlayer)
-		return;
-
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( pPlayer->m_bBuilding )
 		return;
 
 	// There is a menu and it's cancelling
