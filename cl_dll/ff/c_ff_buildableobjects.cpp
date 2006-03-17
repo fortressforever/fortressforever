@@ -40,6 +40,9 @@
 // 06/08/2005, Mulchman: 
 //		This file First created - a container for all
 //		ClientSide buildable object code
+//
+//	03/17/2006, Mulchman:
+//		Removing aim sphere
 
 #include "cbase.h"
 #include "c_ff_buildableobjects.h"

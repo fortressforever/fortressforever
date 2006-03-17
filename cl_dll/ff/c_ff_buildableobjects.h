@@ -40,6 +40,9 @@
 // 06/08/2005, Mulchman: 
 //		This file First created - a container for all
 //		ClientSide buildable object code
+//
+//	03/17/2006, Mulchman:
+//		Removing aim sphere
 
 #ifndef C_FF_BUILDABLEOBJECTS_H
 #define C_FF_BUILDABLEOBJECTS_H
@@ -52,6 +55,7 @@
 
 #include "ff_buildableobjects_shared.h"
 
+/*
 // SG Aim Sphere
 class C_FFSentryGun_AimSphere : public C_BaseAnimating
 {
@@ -85,6 +89,7 @@ public:
 		return pAimSphere;
 	}
 };
+*/
 
 //=============================================================================
 //

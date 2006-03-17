@@ -176,7 +176,7 @@ void CFFSentryGun::Precache()
 	//PrecacheModel(FLOOR_TURRET_MODEL);	
 	//PrecacheModel(FLOOR_TURRET_GLOW_SPRITE);
 	PrecacheModel(FF_SENTRYGUN_MODEL);
-	PrecacheModel(FF_SENTRYGUN_AIMSPHERE_MODEL);
+	//PrecacheModel(FF_SENTRYGUN_AIMSPHERE_MODEL);
 
 	// Precache normal models
 	int iCount = 0;

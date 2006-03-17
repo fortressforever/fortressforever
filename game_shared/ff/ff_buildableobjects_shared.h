@@ -46,7 +46,7 @@
 #define FF_SENTRYGUN_BUILD_SOUND			"Sentry.One"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
 
-#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
+//#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"
 
 #define FF_SEVTEST_MODEL					"models/weapons/w_missile.mdl"
 
@@ -92,8 +92,8 @@
 #define FF_SOUND_EXPLODE	1
 
 // Radius of the aimsphere model
-#define FF_SENTRYGUN_AIMSPHERE_RADIUS	128.0f
-#define FF_SENTRYGUN_AIMSPHERE_VISIBLE	(FF_SENTRYGUN_AIMSPHERE_RADIUS + 64.0f)
+//#define FF_SENTRYGUN_AIMSPHERE_RADIUS	128.0f
+//#define FF_SENTRYGUN_AIMSPHERE_VISIBLE	(FF_SENTRYGUN_AIMSPHERE_RADIUS + 64.0f)
 
 // Currently only the server uses these...
 #ifdef CLIENT_DLL 
