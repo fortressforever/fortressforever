@@ -82,6 +82,8 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 	}
 	void CFFGrenadeNapalm::Explode( trace_t *pTrace, int bitsDamageType )
 	{
+		// Bug #0000370: napalm explosion not playing
+		EmitSound("Napalm.Explode");
 //		DevMsg("[Grenade Debug] CFFGrenadeNapalm::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NAPALM_EFFECT );
 		CFFGrenadeBase::PostExplode(); 
@@ -221,6 +223,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 void CFFGrenadeNapalm::Precache()
 {
 //	DevMsg("[Grenade Debug] CFFGrenadeNapalm::Precache\n");
+	PrecacheScriptSound("Napalm.Explode");
 	PrecacheModel( NAPALMGRENADE_MODEL );
 	BaseClass::Precache();
 }

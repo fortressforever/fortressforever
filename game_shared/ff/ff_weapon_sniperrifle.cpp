@@ -497,6 +497,9 @@ void CFFWeaponSniperRifle::ItemBusyFrame()
 	// Allow zoom toggling even when we're reloading
 	CheckZoomToggle();
 	//CheckFire();
+
+	// Bug fix for #0000210: When radio tag rifle out of ammo, weapon slot doesn't auto switch to new weapon
+	BaseClass::ItemBusyFrame();
 }
 
 void CFFWeaponSniperRifle::ItemPostFrame() 
@@ -505,7 +508,8 @@ void CFFWeaponSniperRifle::ItemPostFrame()
 	CheckZoomToggle();
 	CheckFire();
 
-	//BaseClass::ItemPostFrame();
+	// Bug fix for #0000210: When radio tag rifle out of ammo, weapon slot doesn't auto switch to new weapon
+	HandleFireOnEmpty();
 }
 
 
