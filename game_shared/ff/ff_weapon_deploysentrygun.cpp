@@ -162,7 +162,10 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponDeploySentryGun::SecondaryAttack() 
 {
-	m_flNextSecondaryAttack = gpGlobals->curtime;
+	if( m_flNextSecondaryAttack < gpGlobals->curtime )
+	{
+		m_flNextSecondaryAttack = gpGlobals->curtime;
+	}
 }
 
 //----------------------------------------------------------------------------
