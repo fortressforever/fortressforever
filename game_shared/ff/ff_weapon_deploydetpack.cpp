@@ -184,5 +184,5 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	Cleanup();
 
-	return BaseClass::Holster();
+	return BaseClass::Holster( pSwitchingTo );
 }

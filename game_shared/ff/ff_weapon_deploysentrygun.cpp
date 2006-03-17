@@ -19,6 +19,10 @@
 //
 //	09/24/2005, 	Mulchman:
 //		Added a model for the aiming ring.
+//
+//	03/17/06, Mulchman:
+//		Bug #0000333: Buildable Behavior (non build slot) while building fixes
+//		Removing Aim Sphere
 
 #include "cbase.h"
 #include "ff_weapon_base.h"
@@ -53,7 +57,7 @@ public:
 	~CFFWeaponDeploySentryGun() 
 	{ 
 		Cleanup(); 
-		Cleanup_AimSphere();
+		//Cleanup_AimSphere();
 	}
 #endif
 
@@ -71,9 +75,9 @@ private:
 
 #ifdef CLIENT_DLL
 protected:
-	int	m_spriteTexture;
+	//int	m_spriteTexture;
 	CFFSentryGun *pSentryGun;
-	C_FFSentryGun_AimSphere *pAimSphere;
+	//C_FFSentryGun_AimSphere *pAimSphere;
 #endif
 
 	void Cleanup() 
@@ -87,16 +91,16 @@ protected:
 #endif
 	}
 
-	void Cleanup_AimSphere() 
-	{
-#ifdef CLIENT_DLL
-		if (pAimSphere) 
-		{
-			pAimSphere->Remove();
-			pAimSphere = NULL;
-		}
-#endif
-	}
+//	void Cleanup_AimSphere() 
+//	{
+//#ifdef CLIENT_DLL
+//		if (pAimSphere) 
+//		{
+//			pAimSphere->Remove();
+//			pAimSphere = NULL;
+//		}
+//#endif
+//	}
 };
 
 //=============================================================================
@@ -125,9 +129,9 @@ CFFWeaponDeploySentryGun::CFFWeaponDeploySentryGun()
 {
 #ifdef CLIENT_DLL
 	pSentryGun = NULL;
-	pAimSphere = NULL;
+	//pAimSphere = NULL;
 
-	m_spriteTexture = PrecacheModel("sprites/lgtning.vmt");
+	//m_spriteTexture = PrecacheModel("sprites/lgtning.vmt");
 #endif
 }
 
@@ -141,7 +145,7 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
 		Cleanup();
-		Cleanup_AimSphere();
+		//Cleanup_AimSphere();
 
 #ifdef GAME_DLL
 		CFFPlayer *player = GetPlayerOwner();
@@ -180,7 +184,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 		// If we haven't built a sentrygun...
 		else if (!pPlayer->m_hSentryGun.Get()) 
 		{
-			Cleanup_AimSphere();
+			//Cleanup_AimSphere();
 
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_SENTRYGUN, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL);
 
@@ -208,62 +212,65 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 		{
 			Cleanup();
 
+			// Bug #0000333: Buildable Behavior (non build slot) while building
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+
 			// TODO: Draw range circle thing so the player can aim
-			CFFSentryGun *pActualSg = (CFFSentryGun *) pPlayer->m_hSentryGun.Get();
-
-			if (pActualSg) 
-			{
-				// Player needs to be within x units of the SG & have line
-				// of sight to the gun(just so you can't do this from another room
-				// behind a wall or something...) 
-				
-				Vector vecSGOrigin, vecPlayerOrigin;
-				vecSGOrigin = pActualSg->GetAbsOrigin();
-				vecPlayerOrigin = pPlayer->GetAbsOrigin();
-
-				float flDist = vecSGOrigin.DistTo(vecPlayerOrigin);
-
-				// Hopefully this trace will ignore stuff like players and things that don't
-				// block LOS(as opposed to a WALL or something).
-				trace_t tr;
-				UTIL_TraceLine(vecPlayerOrigin + Vector(0, 0, 48), vecSGOrigin + Vector(0, 0, 48), MASK_OPAQUE, pPlayer, COLLISION_GROUP_NONE, &tr);
-
-				bool bHaveLOS = false;
-
-				// Not sure this stuff is needed actually, since the trace is always finishing(fraction = 1.0) 
-				// I guess I picked the right MASK_! :P Anyway, I'm leaving it in since it won't hurt
-				// anything for now and I can always come back to it.
-				if (tr.DidHit() && tr.m_pEnt) 
-				{
-					// If the trace hit the SG and stopped
-					if ((CFFSentryGun *) tr.m_pEnt == pActualSg) 
-						bHaveLOS = true;
-				}
-				else
-				{
-					// If the trace finished successfully(happened like 100% of the time
-					// while testing - but I was just ducking behind walls and getting
-					// a bot in my way. Dunno how it will work w/ grates and/or other ents).
-					if (tr.fraction == 1.0) 
-						bHaveLOS = true;
-				}
-				
-				if ((flDist <= (FF_SENTRYGUN_AIMSPHERE_VISIBLE)) && (bHaveLOS)) 
-				{
-					if (!pAimSphere) 
-					{
-						Color cColor;
-						SetColorByTeam(pPlayer->GetTeamNumber() - 1, cColor);
-
-						pAimSphere = C_FFSentryGun_AimSphere::CreateClientSentryGun_AimSphere(pActualSg->GetAbsOrigin(), QAngle(0, 0, 0));
-						pAimSphere->SetRenderColorR((byte) cColor.r());
-						pAimSphere->SetRenderColorG((byte) cColor.g());
-						pAimSphere->SetRenderColorB((byte) cColor.b());
-					}
-				}
-				else
-					Cleanup_AimSphere();
-			}
+//			CFFSentryGun *pActualSg = (CFFSentryGun *) pPlayer->m_hSentryGun.Get();
+//
+//			if (pActualSg) 
+//			{
+//				// Player needs to be within x units of the SG & have line
+//				// of sight to the gun(just so you can't do this from another room
+//				// behind a wall or something...) 
+//				
+//				Vector vecSGOrigin, vecPlayerOrigin;
+//				vecSGOrigin = pActualSg->GetAbsOrigin();
+//				vecPlayerOrigin = pPlayer->GetAbsOrigin();
+//
+//				float flDist = vecSGOrigin.DistTo(vecPlayerOrigin);
+//
+//				// Hopefully this trace will ignore stuff like players and things that don't
+//				// block LOS(as opposed to a WALL or something).
+//				trace_t tr;
+//				UTIL_TraceLine(vecPlayerOrigin + Vector(0, 0, 48), vecSGOrigin + Vector(0, 0, 48), MASK_OPAQUE, pPlayer, COLLISION_GROUP_NONE, &tr);
+//
+//				bool bHaveLOS = false;
+//
+//				// Not sure this stuff is needed actually, since the trace is always finishing(fraction = 1.0) 
+//				// I guess I picked the right MASK_! :P Anyway, I'm leaving it in since it won't hurt
+//				// anything for now and I can always come back to it.
+//				if (tr.DidHit() && tr.m_pEnt) 
+//				{
+//					// If the trace hit the SG and stopped
+//					if ((CFFSentryGun *) tr.m_pEnt == pActualSg) 
+//						bHaveLOS = true;
+//				}
+//				else
+//				{
+//					// If the trace finished successfully(happened like 100% of the time
+//					// while testing - but I was just ducking behind walls and getting
+//					// a bot in my way. Dunno how it will work w/ grates and/or other ents).
+//					if (tr.fraction == 1.0) 
+//						bHaveLOS = true;
+//				}
+//				
+//				if ((flDist <= (FF_SENTRYGUN_AIMSPHERE_VISIBLE)) && (bHaveLOS)) 
+//				{
+//					if (!pAimSphere) 
+//					{
+//						Color cColor;
+//						SetColorByTeam(pPlayer->GetTeamNumber() - 1, cColor);
+//
+//						pAimSphere = C_FFSentryGun_AimSphere::CreateClientSentryGun_AimSphere(pActualSg->GetAbsOrigin(), QAngle(0, 0, 0));
+//						pAimSphere->SetRenderColorR((byte) cColor.r());
+//						pAimSphere->SetRenderColorG((byte) cColor.g());
+//						pAimSphere->SetRenderColorB((byte) cColor.b());
+//					}
+//				}
+//				else
+//					Cleanup_AimSphere();
+//			}
 		}
 #endif
 	}
@@ -272,9 +279,9 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
 	Cleanup();
-	Cleanup_AimSphere();
+	//Cleanup_AimSphere();
 
-	return BaseClass::Holster();
+	return BaseClass::Holster( pSwitchingTo );
 }
 
 bool CFFWeaponDeploySentryGun::CanBeSelected()
@@ -299,6 +306,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if (!pPlayer) 
 			return;
 
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+			return;
+
 		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
 
 		if (!pSentry) 
@@ -318,6 +329,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
 
 		if (!pPlayer) 
+			return;
+
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 			return;
 
 		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
@@ -342,6 +357,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if (!pPlayer) 
 			return;
 
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+			return;
+
 		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
 
 		if (!pSentry) 
@@ -355,6 +374,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		CFFPlayer *pPlayer = ToFFPlayer(UTIL_GetCommandClient());
 
 		if (!pPlayer) 
+			return;
+
+		// Bug #0000333: Buildable Behavior (non build slot) while building
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 			return;
 
 		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());

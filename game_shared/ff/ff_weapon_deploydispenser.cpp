@@ -230,7 +230,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding )
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
 			return;
 
 		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
@@ -258,7 +258,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding )
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
 			return;
 
 		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
@@ -277,7 +277,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding )
+		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
 			return;
 
 		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
