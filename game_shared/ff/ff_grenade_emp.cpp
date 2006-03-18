@@ -185,6 +185,9 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 				UTIL_ScreenShake(pEntity->GetAbsOrigin(), explode, 150.0, 1.0, explode * 30, SHAKE_START);
 			}
+			
+			if( pEntity->Classify() == CLASS_DETPACK )
+				( ( CFFDetpack * )pEntity )->OnEmpExplosion();
 
 		END_ENTITY_SPHERE_QUERY();
 
