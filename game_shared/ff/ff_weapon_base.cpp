@@ -565,3 +565,14 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 
 	return true;
 }
+
+// Bug #0000333: Buildable Behavior (non build slot) while building
+bool CFFWeaponBase::CanBeSelected( void )
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( pPlayer->m_bBuilding )
+		return false;
+	else
+		return BaseClass::CanBeSelected();
+}

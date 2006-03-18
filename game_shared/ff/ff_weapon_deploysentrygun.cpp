@@ -148,10 +148,10 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 		//Cleanup_AimSphere();
 
 #ifdef GAME_DLL
-		CFFPlayer *player = GetPlayerOwner();
-		CFFSentryGun *sg = dynamic_cast<CFFSentryGun *> (player->m_hSentryGun.Get());
+		//CFFPlayer *player = GetPlayerOwner();
+		//CFFSentryGun *sg = dynamic_cast<CFFSentryGun *> (player->m_hSentryGun.Get());
 
-		if (!sg) 
+		//if (!sg) 
 			GetPlayerOwner()->Command_BuildSentryGun();
 #endif
 	}

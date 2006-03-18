@@ -136,6 +136,7 @@ public:
 	virtual bool Deploy();
 	virtual bool Reload();
 	virtual void WeaponIdle();
+	virtual bool CanBeSelected( void );
 	
 	// this is where our actual projectile spawning code goes for primary attack
 	virtual void Fire();
