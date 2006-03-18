@@ -60,7 +60,9 @@ public:
 		return "BaseGrenade.BounceSound";
 	}
 
-	void Explode(trace_t *pTrace, int bitsDamageType);
+	// Bug #0000326: emp explosion does not play correctly
+	// (added the bPlayBaseGrenSound = true part)
+	void Explode(trace_t *pTrace, int bitsDamageType, bool bPlayBaseGrenSound = true);
 
 #ifdef CLIENT_DLL
 	CFFProjectileBase() {}

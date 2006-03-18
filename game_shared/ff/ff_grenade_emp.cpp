@@ -93,31 +93,6 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		CFFGrenadeBase::PreExplode( pTrace );//, EMP_SOUND, EMP_EFFECT );
 		float radius = GetGrenadeRadius();
 
-		// TODO: something better looking?
-		//shockwave
-/*		CBroadcastRecipientFilter filter;
-		te->BeamRingPoint(
-			filter,
-			0,
-			GetAbsOrigin(),
-			0,
-			radius,
-			CFFGrenadeBase::m_iShockwaveTexture ,
-			0,
-			0,
-			emp_framerate.GetInt(),
-			emp_life.GetFloat(),
-			emp_width.GetFloat(),
-			emp_spread.GetFloat(),
-			emp_amplitude.GetFloat(),
-			255,
-			255,
-			0,
-			100,
-			emp_speed.GetFloat(),
-			FBEAM_FADEOUT
-			);*/
-
 		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), radius)
 
 			// Don't affect ourselves
@@ -196,7 +171,8 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr);
 
 		// Now blow up self
-		BaseClass::Explode(&tr, DMG_SHOCK);
+		// Bug #0000326: emp explosion does not play correctly
+		BaseClass::Explode(&tr, DMG_SHOCK, false);
 
 		UTIL_Remove(this);
 	}
