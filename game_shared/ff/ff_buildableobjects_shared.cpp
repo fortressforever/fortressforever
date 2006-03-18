@@ -114,8 +114,16 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	// If the trace does not complete them we hit something and the area is not clear
 	trace_t trHull;
 
+	// Mirv, you want the trace to not start and stop in the same position so that you can't build through walls
+	// If you're not sweeping it from the players position to the build position there's a possibility you could
+	// build right through some type of geometry... Also, the COLLISION_GROUP_WEAPON aint gonna work as you can
+	// build the shits right on top of each other that way (unless we can set some flag in the model so collision_gorup_weapon
+	// will collide with it and not fuck up other stuff. COLLISION_GROUP_PLAYER seems to work just great... -Mulch
+
 	// |-- Mirv: Fixed tracehull: use COLLISION_GROUP_WEAPON so that we don't collide with flags and ammo
-	UTIL_TraceHull(m_vecBuildAirOrigin, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_WEAPON, &trHull);
+	//UTIL_TraceHull(m_vecBuildAirOrigin, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_WEAPON, &trHull);
+	// |-- Modified by mulch, read the reasons ^^
+	UTIL_TraceHull( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &trHull );
 	//UTIL_TraceHull(vecPlayerOriginMod, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_NONE, &trHull);
 
 	// See if we started in a solid

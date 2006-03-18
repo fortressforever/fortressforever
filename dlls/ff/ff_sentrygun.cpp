@@ -237,6 +237,8 @@ void CFFSentryGun::Spawn()
 
 	SetModel(m_ppszModels[0]);
 
+	SetSolid(SOLID_BBOX);
+
 	// set skin
 	CFFPlayer *pOwner = (CFFPlayer *) m_hOwner.Get();
 
@@ -332,8 +334,6 @@ void CFFSentryGun::GoLive()
 	// Now use our stored ground location + orientation
 	SetAbsOrigin(m_vecGroundOrigin);
 	SetAbsAngles(m_angGroundAngles);
-
-	SetSolid(SOLID_BBOX);
 
 	// start thinking
 	SetThink(&CFFSentryGun::OnSearchThink);
