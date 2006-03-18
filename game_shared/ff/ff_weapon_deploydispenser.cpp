@@ -217,7 +217,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 	else if( pPlayer->m_bBuilding )
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 )
+	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
 		return false;
 	else
 		return BaseClass::CanBeSelected();
