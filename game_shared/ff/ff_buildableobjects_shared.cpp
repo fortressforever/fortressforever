@@ -22,6 +22,7 @@
 #include "ff_buildableobjects_shared.h"
 
 #ifdef CLIENT_DLL
+#include "debugoverlay_shared.h"
 #else
 	//#include "ff_sevtest.h"
 #endif
@@ -134,6 +135,72 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	// See if the trace completed - if fraction == 1.0 then it completed
 	else if (trHull.fraction != 1.0) 
 		return true;
+
+	if( m_iBuildObject == FF_BUILD_DETPACK )
+		return false;
+
+	// Bug #0000347: SG and dispenser buildable on an elevator
+	// Check if the player is standing on an ele
+	trace_t tr1;
+	UTIL_TraceLine( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecPlayerOrigin - Vector( 0, 0, 6 * m_flRaiseVal ), CONTENTS_MOVEABLE|CONTENTS_SOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &tr1 );
+	if( tr1.DidHit() && tr1.m_pEnt )
+	{
+#ifdef CLIENT_DLL
+		if( !Q_strcmp( "C_BaseDoor", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_RotDoor", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_MoveLinear", tr1.m_pEnt->GetClassName() ) || // Unsure about this one
+			!Q_strcmp( "C_FuncPlat", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncPlatRot", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_BaseButton", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncRotating", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTankTrain", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTrackTrain", tr1.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTrainControls", tr1.m_pEnt->GetClassName() ) )
+#else
+		if( !Q_strcmp( "func_door", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_door_rotating", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_move_linear", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_platrot", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_rot_button", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_button", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_rotating", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_tanktrain", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_tracktrain", tr1.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_traincontrols", tr1.m_pEnt->GetClassname() ) )
+#endif
+			return true;
+	}
+
+	// Check if the buildable is on an ele
+	trace_t tr2;
+	UTIL_TraceLine( m_vecBuildAirOrigin, m_vecBuildAirOrigin - Vector( 0, 0, 7 * m_flRaiseVal ), CONTENTS_MOVEABLE|CONTENTS_SOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &tr2 );
+	if( tr2.DidHit() && tr2.m_pEnt )
+	{
+#ifdef CLIENT_DLL
+		if( !Q_strcmp( "C_BaseDoor", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_RotDoor", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_MoveLinear", tr2.m_pEnt->GetClassName() ) || // Unsure about this one
+			!Q_strcmp( "C_FuncPlat", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncPlatRot", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_BaseButton", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncRotating", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTankTrain", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTrackTrain", tr2.m_pEnt->GetClassName() ) ||
+			!Q_strcmp( "C_FuncTrainControls", tr2.m_pEnt->GetClassName() ) )
+#else
+		if( !Q_strcmp( "func_door", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_door_rotating", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_move_linear", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_platrot", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_rot_button", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_button", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_rotating", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_tanktrain", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_tracktrain", tr2.m_pEnt->GetClassname() ) ||
+			!Q_strcmp( "func_traincontrols", tr2.m_pEnt->GetClassname() ) )
+#endif
+			return true;
+	}
 
 	return false;
 }
