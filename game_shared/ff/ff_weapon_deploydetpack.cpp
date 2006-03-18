@@ -20,11 +20,13 @@
 
 #if defined( CLIENT_DLL )
 	#define CFFWeaponDeployDetpack C_FFWeaponDeployDetpack
+	#define CFFDetpack C_FFDetpack
 	#include "c_ff_player.h"
 	#include "c_ff_buildableobjects.h"
 	#include "ff_buildableobjects_shared.h"
 #else
 	#include "ff_player.h"
+	#include "ff_detpack.h"
 #endif
 
 //=============================================================================
@@ -47,6 +49,7 @@ public:
 	virtual void SecondaryAttack();
 	virtual void WeaponIdle();
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
+	virtual bool CanBeSelected();
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDETPACK; }
 
@@ -107,7 +110,7 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 {
 	if( m_flNextPrimaryAttack < gpGlobals->curtime )
 	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 
 		Cleanup( );
 
@@ -175,7 +178,11 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 		}
 		// Destroy if we already have one
 		else
+		{
 			Cleanup();
+
+			pPlayer->SwapToWeapon( FF_WEAPON_CROWBAR );
+		}
 #endif
 	}
 }
@@ -185,4 +192,20 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 	Cleanup();
 
 	return BaseClass::Holster( pSwitchingTo );
+}
+
+bool CFFWeaponDeployDetpack::CanBeSelected()
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( pPlayer && ( ( CFFDetpack * )pPlayer->m_hDetpack.Get() ) )
+		return false;
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	else if( pPlayer->m_bBuilding )
+		return false;
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
+		return false;
+	else
+		return BaseClass::CanBeSelected();
 }
