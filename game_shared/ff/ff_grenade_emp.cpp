@@ -91,6 +91,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeEmp::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace );//, EMP_SOUND, EMP_EFFECT );
+		//CFFGrenadeBase::PreExplode( pTrace, NULL, "FF_RingEffect" );
 		float radius = GetGrenadeRadius();
 
 		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), radius)
@@ -170,9 +171,10 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		trace_t tr;
 		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr);
 
+		DevMsg( "[Emp] Here 4\n" );
 		// Now blow up self
 		// Bug #0000326: emp explosion does not play correctly
-		BaseClass::Explode(&tr, DMG_SHOCK, false);
+		BaseClass::Explode( &tr, DMG_SHOCK );
 
 		UTIL_Remove(this);
 	}

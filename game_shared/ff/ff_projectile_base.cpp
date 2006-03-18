@@ -263,10 +263,7 @@ void CFFProjectileBase::Spawn()
 //----------------------------------------------------------------------------
 // Purpose: Create an explosion, etc
 //----------------------------------------------------------------------------
-
-// Bug 0000326: emp explosion does not play correctly
-// (added the bPlayBaseGrenSound part)
-void CFFProjectileBase::Explode(trace_t *pTrace, int bitsDamageType, bool bPlayBaseGrenSound) 
+void CFFProjectileBase::Explode(trace_t *pTrace, int bitsDamageType) 
 {
 #ifdef GAME_DLL
 
@@ -327,9 +324,7 @@ void CFFProjectileBase::Explode(trace_t *pTrace, int bitsDamageType, bool bPlayB
 
 	UTIL_DecalTrace(pTrace, "Scorch");
 	
-	// Bug #0000326: emp explosion does not play correctly
-	if( bPlayBaseGrenSound )
-		EmitSound("BaseGrenade.Explode");
+	EmitSound("BaseGrenade.Explode");
 
 	SetThink(&CBaseGrenade::SUB_Remove);
 	SetTouch(NULL);
