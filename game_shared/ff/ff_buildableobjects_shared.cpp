@@ -114,6 +114,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	// If the trace does not complete them we hit something and the area is not clear
 	trace_t trHull;
 
+	// Bug #0000357: Stackable buildable.
 	// Mirv, you want the trace to not start and stop in the same position so that you can't build through walls
 	// If you're not sweeping it from the players position to the build position there's a possibility you could
 	// build right through some type of geometry... Also, the COLLISION_GROUP_WEAPON aint gonna work as you can
@@ -123,6 +124,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	// |-- Mirv: Fixed tracehull: use COLLISION_GROUP_WEAPON so that we don't collide with flags and ammo
 	//UTIL_TraceHull(m_vecBuildAirOrigin, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_WEAPON, &trHull);
 	// |-- Modified by mulch, read the reasons ^^
+	// Bug #0000357: Stackable buildable.
 	UTIL_TraceHull( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &trHull );
 	//UTIL_TraceHull(vecPlayerOriginMod, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_NONE, &trHull);
 
