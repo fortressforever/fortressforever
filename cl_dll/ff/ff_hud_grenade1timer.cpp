@@ -41,6 +41,8 @@ void CHudGrenade1Timer::VidInit()
 	m_fVisible = false;
 	m_flLastTime = -10.0f;
 
+	m_Timers.RemoveAll();
+
 	SetPaintBackgroundEnabled(false);
 
 	// Precache the background texture
