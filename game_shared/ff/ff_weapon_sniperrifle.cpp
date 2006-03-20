@@ -509,7 +509,11 @@ void CFFWeaponSniperRifle::ItemPostFrame()
 	CheckFire();
 
 	// Bug fix for #0000210: When radio tag rifle out of ammo, weapon slot doesn't auto switch to new weapon
-	HandleFireOnEmpty();
+	// Added check so this doesn't go crazy.
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if (pPlayer && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0) 
+		HandleFireOnEmpty();
 }
 
 
