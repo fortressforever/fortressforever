@@ -49,8 +49,8 @@ END_DATADESC()
 // Developer ConVars
 //========================================================================
 #ifdef GAME_DLL
-	ConVar gren_grav("ffdev_gren_grav", "0.4");
-	ConVar gren_fric("ffdev_gren_fric", "0.1");
+	ConVar gren_grav("ffdev_gren_grav", "0.8");
+	ConVar gren_fric("ffdev_gren_fric", "0.6");
 	ConVar gren_elas("ffdev_gren_elas", "0.5");
 	ConVar gren_radius("ffdev_gren_radius", "180.0f", 0, "Radius of grenade explosions");
 	ConVar gren_water_sink_rate("ffdev_gren_water_sink", "64.0");

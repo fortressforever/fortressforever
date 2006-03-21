@@ -69,6 +69,11 @@ public:
 	CFFGrenadeBase() {}
 	CFFGrenadeBase( const CFFGrenadeBase& ) {}
 
+	int DrawModel(int flags) 
+	{
+		return CBaseGrenade::DrawModel(flags);
+	}
+
 #else
 
 	DECLARE_DATADESC(); // Since we're adding new thinks etc

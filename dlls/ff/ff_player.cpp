@@ -60,7 +60,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 ConVar gren_timer("ffdev_gren_timer","4.0",0,"Timer length for all grenades");
 //ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at");
 ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at");
-ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player");
+//ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player");
 
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
@@ -3027,11 +3027,8 @@ void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
 
 		EyeVectors(&vecForward);
 
-		// Thrown or held
-		if (fTimer != 0)
-			vecSrc = Weapon_ShootPosition() + vecForward * gren_forward_offset.GetFloat();
-		else 
-			vecSrc = GetLegacyAbsOrigin();	// |-- Mirv: TFC style origin is halfway up model okay.
+		// Mirv: Grenade should always come from the waist, tfc-style
+		vecSrc = GetLegacyAbsOrigin();
 
 		VectorAngles( vecForward, angAngles );
 		angAngles.x -= gren_spawn_ang_x.GetFloat();
