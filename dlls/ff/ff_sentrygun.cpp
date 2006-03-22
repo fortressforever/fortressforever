@@ -237,7 +237,7 @@ void CFFSentryGun::Spawn()
 
 	SetModel(m_ppszModels[0]);
 
-	SetSolid(SOLID_BBOX);
+	//SetSolid(SOLID_BBOX);
 
 	// set skin
 	CFFPlayer *pOwner = (CFFPlayer *) m_hOwner.Get();
@@ -249,12 +249,14 @@ void CFFSentryGun::Spawn()
 
 	BaseClass::Spawn();
 
-	SetBlocksLOS(false);
+	// Do this in base buildable junk
+	//SetBlocksLOS(false);
 
 	m_HackedGunPos	= Vector(0, 0, 12.75);
 	SetViewOffset(EyeOffset(ACT_IDLE));
 	m_flFieldOfView	= 0.4f; // 60 degrees
-	m_takedamage	= DAMAGE_EVENTS_ONLY;
+
+	//m_takedamage	= DAMAGE_EVENTS_ONLY;
 
 	AddFlag(FL_AIMTARGET);
 	AddEFlags(EFL_NO_DISSOLVE);

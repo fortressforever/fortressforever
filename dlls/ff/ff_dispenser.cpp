@@ -170,7 +170,7 @@ void CFFDispenser::Spawn( void )
 	m_iRockets = 20;
 	m_iArmor = 20;
 
-	SetSolid( SOLID_VPHYSICS );
+	//SetSolid( SOLID_VPHYSICS );
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();

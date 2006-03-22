@@ -147,7 +147,10 @@ void CFFBuildableObject::Spawn( void )
 	}
 
 	// Give it a bounding box (use the .phy file provided)
-	SetSolid( SOLID_VPHYSICS );
+	//SetSolid( SOLID_VPHYSICS );
+	SetSolid( SOLID_BBOX );
+
+	SetBlocksLOS( false );
 
 	// Make sure it has a model
 	Assert( m_ppszModels[ 0 ] != NULL );
@@ -155,7 +158,7 @@ void CFFBuildableObject::Spawn( void )
 	// Give it a model
 	SetModel( m_ppszModels[ 0 ] );
 
-	m_takedamage = DAMAGE_NO;
+	m_takedamage = DAMAGE_EVENTS_ONLY;
 	
 	AddFlag( FL_OBJECT );
 
@@ -619,6 +622,11 @@ void CFFBuildableObject::DoExplosion( void )
 
 int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 {
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	// If we're not live yet don't take damage
+	if( !m_bBuilt )
+		return 0;
+
 	// Sentry gun seems to take about 110% of damage, going to assume its the same
 	// for all others for now -mirv
 	CTakeDamageInfo adjustedDamage = info;

@@ -117,6 +117,8 @@ void CFFDetpack::Spawn( void )
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn( );
+
+	SetSolid( SOLID_VPHYSICS );
 }
 
 /**
@@ -135,7 +137,7 @@ void CFFDetpack::GoLive( void )
 	// Do this after calling baseclass!
 	// This is so we call damage functions
 	// but don't take any damage
-	m_takedamage = DAMAGE_EVENTS_ONLY;
+	//m_takedamage = DAMAGE_EVENTS_ONLY;
 
 	// Tell client to start the timer
 	SendStartTimerMessage();
