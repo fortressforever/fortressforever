@@ -29,6 +29,7 @@ using namespace vgui;
 //#include "debugoverlay_shared.h"
 
 #include "c_ff_player.h"
+#include "ff_utils.h"
 //#include "c_ff_buildableobjects.h"
 //#include <igameresources.h>
 //#include "c_ff_team.h"
@@ -114,15 +115,10 @@ void CHudLocation::Paint( void )
 	{
 		surface()->DrawSetTextFont( m_hTextFont );
 
-		switch( m_iTeam )
-		{
-			case 1: surface()->DrawSetTextColor( 169, 169, 169, 255 ); break;
-			case 2: surface()->DrawSetTextColor( 0, 0, 255, 255 ); break;
-			case 3: surface()->DrawSetTextColor( 255, 0, 0, 255 ); break;
-			case 4: surface()->DrawSetTextColor( 255, 255, 0, 255 ); break;
-			case 5: surface()->DrawSetTextColor( 0, 255, 0, 255 ); break;
-		}
+		Color cColor;
+		SetColorByTeam( m_iTeam, cColor );
 
+		surface()->DrawSetTextColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 		surface()->DrawSetTextPos( text1_xpos, text1_ypos );
 
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )

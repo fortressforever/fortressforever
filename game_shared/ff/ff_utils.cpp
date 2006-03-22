@@ -205,10 +205,10 @@ void SetColorByTeam( int iTeam, Color& cColor )
 
 	switch( iTeam )
 	{
-		case 1: cColor.SetColor( 0, 0, 255 ); break;
-		case 2: cColor.SetColor( 255, 0, 0 ); break;
-		case 3: cColor.SetColor( 255, 255, 0 ); break;
-		case 4: cColor.SetColor( 0, 255, 0 ); break;
+		case 1: cColor.SetColor( 56, 100, 171 ); break;
+		case 2: cColor.SetColor( 188, 0, 0 ); break;
+		case 3: cColor.SetColor( 202, 173, 33 ); break;
+		case 4: cColor.SetColor( 68, 144, 65 ); break;
 		default: cColor.SetColor( 255, 255, 255 ); break;
 	}
 }
