@@ -79,7 +79,7 @@ public:
 	// Tells us what we are currently trying to build
 	CNetworkVar( int, m_iCurBuild );
 	// Tells us if the player cancelled building
-	CNetworkVar( bool, m_bCancelledBuild );
+	//CNetworkVar( bool, m_bCancelledBuild );
 
 	bool	m_bClientBuilding;
 	// End: Added by Mulchman for building objects and such

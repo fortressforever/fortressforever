@@ -269,7 +269,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hDetpack ) ),
 	RecvPropInt( RECVINFO( m_bBuilding ) ),
 	RecvPropInt( RECVINFO( m_iCurBuild ) ),
-	RecvPropInt( RECVINFO( m_bCancelledBuild ) ),
+	//RecvPropInt( RECVINFO( m_bCancelledBuild ) ),
 	// End: Added by Mulchman for building objects and such
 
 	// ---> added by billdoor
@@ -785,6 +785,9 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	{
 		// We started building
 		DevMsg( "Started building a... " );
+
+		// 0000333: Buildable Behavior (non build slot) while building
+		SetAbsVelocity( Vector( 0, 0, 0 ) );
 
 		bool bDrawTimer = true;
 		string szTimerName = FF_BUILDABLE_TIMER_BUILD_STRING;

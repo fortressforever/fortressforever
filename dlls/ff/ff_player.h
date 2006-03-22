@@ -262,7 +262,7 @@ public:
 	// Tells us what we want to build
 	int m_iWantBuild;
 	// Tells us if the player cancelled building
-	CNetworkVar( bool, m_bCancelledBuild );
+	//CNetworkVar( bool, m_bCancelledBuild );
 	// Tells us when we can call the postbuildgenericthink
     float m_flBuildTime;
 
