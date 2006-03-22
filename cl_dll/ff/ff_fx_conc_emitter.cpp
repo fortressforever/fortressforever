@@ -111,7 +111,7 @@ void CConcEmitter::RenderParticles(CParticleRenderIterator *pIterator)
 				IMaterialVar *pVar = pMat->FindVar("$refractamount", &bFound, true);
 
 				if (pVar)
-					pVar->SetFloatValue(pParticle->m_flRefract - SimpleSplineRemapVal(flLife, 0.0f, flDeath, 0.001f, pParticle->m_flRefract));
+					pVar->SetFloatValue(-pParticle->m_flRefract + SimpleSplineRemapVal(flLife, 0.0f, flDeath, 0.001f, pParticle->m_flRefract));
 
 				pVar = pMat->FindVar("$bluramount", &bFound, true);
 
