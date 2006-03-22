@@ -2763,7 +2763,7 @@ void CFFPlayer::Command_Discard( void )
 			vForward.z = 1.0f;
 
 		pBackpack->SetAbsVelocity(vForward);
-		pBackpack->SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 16.0f));
+		pBackpack->SetAbsOrigin(GetLegacyAbsOrigin());
 
 		// Play a sound
 		EmitSound("Item.Toss");

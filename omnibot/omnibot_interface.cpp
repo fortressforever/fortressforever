@@ -1260,7 +1260,7 @@ namespace Omnibot
 					*_max = 3;
 					break;
 				default:
-					assert(0);
+			//		assert(0);		// |-- Mirv: Melee weapons are breaking this
 					return 0;
 			}
 
