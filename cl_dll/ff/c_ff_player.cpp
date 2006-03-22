@@ -786,7 +786,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		// We started building
 		DevMsg( "Started building a... " );
 
-		// 0000333: Buildable Behavior (non build slot) while building
+		// Bug #0000333: Buildable Behavior (non build slot) while building
 		SetAbsVelocity( Vector( 0, 0, 0 ) );
 
 		bool bDrawTimer = true;

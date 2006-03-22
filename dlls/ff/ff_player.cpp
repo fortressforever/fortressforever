@@ -1593,6 +1593,9 @@ void CFFPlayer::LockPlayerInPlace( void )
 {
 	SetMoveType( MOVETYPE_NONE );
 
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	SetAbsVelocity( Vector( 0, 0, 0 ) );
+
 	// TODO: Other classes need to check
 	// if (m_bBuilding == True)
 	// ie. grenades, weapons, etc
