@@ -806,7 +806,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		else if( m_iCurBuild == FF_BUILD_DETPACK )
 		{
 			DevMsg( "Detpack!\n" );	
-			flTimerDuration = 4.0f;
+			flTimerDuration = 3.0f;
 		}
 		else
 		{
