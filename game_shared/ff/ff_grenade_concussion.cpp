@@ -145,7 +145,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		CFFGrenadeBase::PreExplode(pTrace, CONCUSSION_SOUND, CONCUSSION_EFFECT);
-		//CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
+		CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
 		//CFFGrenadeBase::PreExplode( pTrace, NULL, RING_EFFECT );
 
 		// --> Mirv: Rewritten

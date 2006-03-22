@@ -24,9 +24,9 @@
 
 ConVar conc_on			 ("ffdev_conc_on", "1", 0, "Turn the conc effect on or off - 1 or 0." );
 ConVar conc_scale		 ("ffdev_conc_scale", "512.0", 0, "How big the conc effect gets.");
-ConVar conc_refract		 ("ffdev_conc_refract", "0.5", 0, "Refraction amount for conc effect.");
+ConVar conc_refract		 ("ffdev_conc_refract", "0.2", 0, "Refraction amount for conc effect.");
 ConVar conc_blur		 ("ffdev_conc_blur", "0", 0, "Blur amount for conc effect.");
-ConVar conc_speed		 ("ffdev_conc_speed", "0.3", 0, "Duration of the conc effect.");
+ConVar conc_speed		 ("ffdev_conc_speed", "0.5", 0, "Duration of the conc effect.");
 ConVar conc_ripples		 ("ffdev_conc_ripples", "1", 0, "How many ripples the conc effect has.");
 ConVar conc_ripple_period("ffdev_conc_ripple_period", "0.05", 0, "Time between ripples.");
 
