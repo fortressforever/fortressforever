@@ -21,7 +21,7 @@
 
 #define FLASH_EFFECT_MATERIAL "effects/yellowflare"
 
-ConVar flash_on				( "ffdev_flash_on", "1", 0, "Turn the flash effect on or off - 1 or 0." );
+ConVar flash_on				( "ffdev_flash_on", "0", 0, "Turn the flash effect on or off - 1 or 0." );
 ConVar flash_scale			( "ffdev_flash_scale", "384.0", 0, "How big the flash effect gets.");
 ConVar flash_speed			( "ffdev_flash_speed", "0.3", 0, "Duration of the flash effect.");
 ConVar flash_ripples		( "ffdev_flash_ripples", "1", 0, "How many ripples the flash effect has.");
