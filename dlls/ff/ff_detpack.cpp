@@ -53,6 +53,7 @@ const char *g_pszFFDetpackSounds[ ] =
 {
 	FF_DETPACK_BUILD_SOUND,
 	FF_DETPACK_EXPLODE_SOUND,
+	"Detpack.FiveSeconds",
 	NULL
 };
 
@@ -192,7 +193,7 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 	if( !pOther )
 		return;
 
-	if( !pOther->IsPlayer( ) )
+	if( !pOther->IsPlayer() )
 		return;
 
 	CFFPlayer *pPlayer = ToFFPlayer( pOther );
@@ -202,11 +203,11 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 		return;
 			
 	// Skip if spectator
-	if( pPlayer->IsObserver( ) ) // make sure spectators aren't touching the object
+	if( pPlayer->IsObserver() ) // make sure spectators aren't touching the object
 		return;
 
 	// Skip if not scout
-    if( pPlayer->GetClassSlot( ) != 1 )
+    if( pPlayer->GetClassSlot() != 1 )
         return;
 
 	// Skip if person touching can't damage us
@@ -236,8 +237,9 @@ void CFFDetpack::OnObjectThink( void )
 	if( !m_bFiveSeconds )
 	{
 		DevMsg( "[Detpack] Setting 5 second timer\n" );
-		// Five seconds to go, start countdown, play sounds, yadda yadda
-		// TODO: ^^
+		
+		// Play the 5 second to go sound (whine up) whatever.
+		EmitSound( m_ppszSounds[ 2 ] );
 
 		m_bFiveSeconds = true;
 
