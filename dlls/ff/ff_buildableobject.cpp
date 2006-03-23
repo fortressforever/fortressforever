@@ -33,6 +33,7 @@
 #include "EntityFlame.h"
 #include "beam_flags.h"
 #include "basecombatcharacter.h"
+#include "gamevars_shared.h"
 
 #include "omnibot_interface.h"
 
@@ -626,6 +627,22 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// If we're not live yet don't take damage
 	if( !m_bBuilt )
 		return 0;
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	// Depending on the teamplay value, take damage
+	if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), info.GetAttacker() ) )
+	{
+		DevMsg( "[Buildable] Teammate or ally is attacking me so don't take damage!\n" );
+		return 0;
+	}
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if(( info.GetAttacker() == m_hOwner.Get() ) && ( friendlyfire.GetInt() == 0 ))
+	{
+		DevMsg( "[Buildable] My owner is attacking me & friendly fire is off so don't take damage!\n" );
+		return 0;
+	}
+
 
 	// Sentry gun seems to take about 110% of damage, going to assume its the same
 	// for all others for now -mirv
