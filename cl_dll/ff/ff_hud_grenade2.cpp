@@ -33,10 +33,10 @@
 using namespace vgui;
 
 // Yeah macros suck, but this is the quickest way to do it
-#define ADD_GRENADE_ICON(id, filename) \
-	m_pSecondaryGrenade[id] = new CHudTexture(); \
-	m_pSecondaryGrenade[id]->textureId = surface()->CreateNewTextureID(); \
-	surface()->DrawSetTextureFile(m_pSecondaryGrenade[id]->textureId, filename, true, false);
+//#define ADD_GRENADE_ICON(id, filename) \
+//	m_pSecondaryGrenade[id] = new CHudTexture(); \
+//	m_pSecondaryGrenade[id]->textureId = surface()->CreateNewTextureID(); \
+//	surface()->DrawSetTextureFile(m_pSecondaryGrenade[id]->textureId, filename, true, false);
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
@@ -66,8 +66,8 @@ private:
 	// Last recorded player class
 	int		m_iClass;
 
-	CHudTexture	*m_pHudElementTexture;
-	CHudTexture *m_pSecondaryGrenade[6];
+	//CHudTexture	*m_pHudElementTexture;
+	//CHudTexture *m_pSecondaryGrenade[6];
 };
 
 DECLARE_HUDELEMENT(CHudGrenade2);
@@ -106,17 +106,17 @@ void CHudGrenade2::Init()
 void CHudGrenade2::VidInit() 
 {
 	// Precache the background texture
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo2", true, false);
+	//m_pHudElementTexture = new CHudTexture();
+	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
+	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo2", true, false);
 
 	// Add the grenades icons
-	ADD_GRENADE_ICON(0, "vgui/hud_grenade_conc");
-	ADD_GRENADE_ICON(1, "vgui/hud_grenade_nail");
-	ADD_GRENADE_ICON(2, "vgui/hud_grenade_mirv");
-	ADD_GRENADE_ICON(3, "vgui/hud_grenade_gas");
-	ADD_GRENADE_ICON(4, "vgui/hud_grenade_napalm");
-	ADD_GRENADE_ICON(5, "vgui/hud_grenade_emp");
+//	ADD_GRENADE_ICON(0, "vgui/hud_grenade_conc");
+//	ADD_GRENADE_ICON(1, "vgui/hud_grenade_nail");
+//	ADD_GRENADE_ICON(2, "vgui/hud_grenade_mirv");
+//	ADD_GRENADE_ICON(3, "vgui/hud_grenade_gas");
+//	ADD_GRENADE_ICON(4, "vgui/hud_grenade_napalm");
+//	ADD_GRENADE_ICON(5, "vgui/hud_grenade_emp");
 }
 
 //-----------------------------------------------------------------------------
@@ -280,14 +280,14 @@ void CHudGrenade2::Paint()
 	}
 
 	// Draw background box
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	// Draw grenade icon
-	surface()->DrawSetTexture(m_pSecondaryGrenade[gren_num]->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
+	//surface()->DrawSetTexture(m_pSecondaryGrenade[gren_num]->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 
 	BaseClass::Paint();
 }

@@ -49,7 +49,7 @@ void CHudGrenade2Timer::VidInit()
 	// Precache the background texture
 	m_pHudElementTexture = new CHudTexture();
 	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_progressbar", true, false);
+	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_timer2", true, false);
 }
 
 void CHudGrenade2Timer::Init() 

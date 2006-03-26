@@ -82,6 +82,8 @@ void CHudAmmo::Init( void )
 	m_iAmmo2	= -1;
 	m_iAmmoType = 0;
 
+	/*
+	// REMOVED TEMPORARILY - ted
 	wchar_t *tempString = vgui::localize()->Find("#FF_HUD_NOAMMOTYPE");
 	if (tempString)
 	{
@@ -91,6 +93,8 @@ void CHudAmmo::Init( void )
 	{
 		SetLabelText(L"NONE");
 	}
+	*/
+	SetLabelText(L"");
 }
 
 //-----------------------------------------------------------------------------
@@ -150,9 +154,15 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 	C_BaseCombatWeapon *wpn = GetActiveWeapon();
 	if ( !wpn || !player || !wpn->UsesPrimaryAmmo() )
 	{
-		SetPaintEnabled(false);
-		SetPaintBackgroundEnabled(false);
+		//SetPaintEnabled(false);
+		// REMOVED - need to keep ammo panel up for melee weapons because grenade display is now part of it - ted
+		SetShouldDisplayValue(false);
+		SetPaintBackgroundEnabled(true);
 		return;
+	}
+	else
+	{
+		SetShouldDisplayValue(true);
 	}
 
 	SetPaintEnabled(true);
@@ -193,6 +203,8 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		sprintf(buf, "%s_AMMO", wpn->GetPrintName());
 
 		// update name
+		// REMOVED TEMPORARILY - ted
+		/*
 		wchar_t *tempString = vgui::localize()->Find(buf);
 		if (tempString)
 		{
@@ -202,6 +214,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		{
 			SetLabelText(L"AMMO");
 		}
+		*/
 
 		// update whether or not we show the total ammo display
 		if (wpn->UsesClipsForAmmo1())

@@ -114,7 +114,7 @@ void CHudHealth::VidInit()
 	// Precache the background texture
 	m_pHudElementTexture = new CHudTexture();
 	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_health", true, false);
+	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_health", true, false);
 }
 
 //-----------------------------------------------------------------------------

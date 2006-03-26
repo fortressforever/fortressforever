@@ -60,7 +60,7 @@ private:
 
 	int		m_bitsDamage;
 
-	CHudTexture	*m_pHudElementTexture;
+	//CHudTexture	*m_pHudElementTexture;
 };	
 
 DECLARE_HUDELEMENT( CHudArmor );
@@ -115,9 +115,9 @@ void CHudArmor::VidInit()
 	Reset();
 
 	// Precache the background texture
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_armor", true, false);
+	//m_pHudElementTexture = new CHudTexture();
+	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
+	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_armor", true, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -188,9 +188,9 @@ void CHudArmor::MsgFunc_Damage( bf_read &msg )
 
 void CHudArmor::Paint()
 {
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	BaseClass::Paint();
 }

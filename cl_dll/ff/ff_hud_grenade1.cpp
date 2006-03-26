@@ -66,8 +66,8 @@ private:
 	// Last recorded player class
 	int		m_iClass;
 
-	CHudTexture	*m_pHudElementTexture;
-	CHudTexture *m_pPrimaryGrenade[2];
+	//CHudTexture	*m_pHudElementTexture;
+	//CHudTexture *m_pPrimaryGrenade[2];
 };
 
 DECLARE_HUDELEMENT(CHudGrenade1);
@@ -106,13 +106,13 @@ void CHudGrenade1::Init()
 void CHudGrenade1::VidInit() 
 {
 	// Precache the background texture
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo1", true, false);
+	//m_pHudElementTexture = new CHudTexture();
+	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
+	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo1", true, false);
 
 	// Add the grenades icons(only these 2 are needed) 
-	ADD_GRENADE_ICON(0, "vgui/hud_grenade_frag");
-	ADD_GRENADE_ICON(1, "vgui/hud_grenade_caltop");
+	//ADD_GRENADE_ICON(0, "vgui/hud_grenade_frag");
+	//ADD_GRENADE_ICON(1, "vgui/hud_grenade_caltop");
 }
 
 //-----------------------------------------------------------------------------
@@ -249,14 +249,14 @@ void CHudGrenade1::Paint()
 		gren_num = 1;
 
 	// Draw background box
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
 	// Draw grenade icon
-	surface()->DrawSetTexture(m_pPrimaryGrenade[gren_num]->textureId);
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
+	//surface()->DrawSetTexture(m_pPrimaryGrenade[gren_num]->textureId);
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 
 	BaseClass::Paint();
 }
