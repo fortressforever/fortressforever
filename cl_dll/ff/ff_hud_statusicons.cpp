@@ -125,6 +125,15 @@ void CStatusIcons::VidInit( void )
 {	
 	// Cache textures
 	CacheTextures( );
+
+	// Bug #0000388: Status HUD icons persist don't go away
+	// Reset all icons
+	for( int i = 0; i < MAX_STATUSICONS; i++ )
+	{
+		m_hIcons[ i ].icontype = 0;
+		m_hIcons[ i ].start = m_hIcons[ i ].duration = 0.0;
+		m_hIcons[ i ].enabled = false;
+	}
 }
 
 void CStatusIcons::Init( void )
