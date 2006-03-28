@@ -45,6 +45,7 @@
 #ifdef USE_MONITORS
 #include "materialsystem/IMaterialSystem.h"
 #include "materialsystem/IMaterialSystemHardwareConfig.h"
+#include "materialsystem/itexture.h"
 #include "c_point_camera.h"
 #endif // USE_MONITORS
 	
