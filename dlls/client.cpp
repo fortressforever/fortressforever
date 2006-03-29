@@ -722,14 +722,18 @@ static ConCommand give("give", CC_Player_Give, "Give item to player.\n\tArgument
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+// Bug #0000310: fov doesn't reset |-- Mulch
 void CC_Player_FOV( void )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	if ( pPlayer && sv_cheats->GetBool() )
+	if ( pPlayer /* && sv_cheats->GetBool() */ )
 	{
 		if ( engine->Cmd_Argc() > 1)
 		{
 			int FOV = atoi( engine->Cmd_Argv(1) );
+
+			// Bug #0000310: fov doesn't reset |-- Mulch
+			FOV = clamp( FOV, 80, 120 );
 
 			pPlayer->SetDefaultFOV( FOV );
 		}

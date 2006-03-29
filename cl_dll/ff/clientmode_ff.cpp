@@ -31,8 +31,8 @@
 #include "text_message.h"
 #include "panelmetaclassmgr.h"
 
-
-ConVar default_fov( "default_fov", "90", FCVAR_CHEAT );
+// Bug #0000310: fov doesn't reset |-- Mulch
+ConVar default_fov( "default_fov", "90", FCVAR_NONE );
 
 IClientMode *g_pClientMode = NULL;
 
