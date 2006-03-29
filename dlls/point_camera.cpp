@@ -46,7 +46,7 @@ CPointCamera::~CPointCamera()
 CPointCamera::CPointCamera()
 {
 	// Set these to opposites so that it'll be sent the first time around.
-	m_bActive = false;
+	m_bActive = true;
 	m_bIsOn = false;
 	
 	m_bFogEnable = false;
@@ -200,6 +200,7 @@ void CPointCamera::InputSetOnAndTurnOthersOff( inputdata_t &inputdata )
 void CPointCamera::InputSetOn( inputdata_t &inputdata )
 {
 	m_bIsOn = true;
+	SetActive( true );
 }
 
 //-----------------------------------------------------------------------------

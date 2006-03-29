@@ -688,6 +688,7 @@ bool CViewRender::DrawOneMonitor( int cameraNum, C_PointCamera *pCameraEnt, CVie
 	int x, int y, int width, int height, bool highend )
 {
 #ifdef USE_MONITORS
+
 	VPROF_INCREMENT_COUNTER( "cameras rendered", 1 );
 	// Setup fog state for the camera.
 	fogparams_t oldFogParams;
@@ -747,7 +748,7 @@ bool CViewRender::DrawOneMonitor( int cameraNum, C_PointCamera *pCameraEnt, CVie
 		SetupVis( cameraView );
 	}
 
-	ViewDrawScene( true, cameraView, VIEW_MONITOR );
+	ViewDrawScene( true, cameraView, VIEW_MONITOR /*, false, true, DF_MONITOR */ );
 
 	// Reset the world fog parameters.
 	if ( fogEnabled )
@@ -768,8 +769,9 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 	C_PointCamera *pCameraEnt = GetPointCameraList();
 	if ( !pCameraEnt )
 	{
+		Warning( "[Monitor] Failed to get camera ent\n" );
 		return;
-	}
+	}	
 
 #ifdef _DEBUG
 	g_bRenderingCameraView = true;
@@ -849,7 +851,9 @@ void CViewRender::DrawLowEndMonitors( CViewSetup cameraView, const vrect_t *rect
 	for ( int cameraNum = 0; pCameraEnt != NULL; pCameraEnt = pCameraEnt->m_pNext )
 	{
 		if ( !pCameraEnt->IsActive() || pCameraEnt->IsDormant() )
+		{
 			continue;
+		}
 
 		if ( !DrawOneMonitor( cameraNum, pCameraEnt, cameraView, player, 
 				rect->width - (1+cameraNum) * cameraView.width,
