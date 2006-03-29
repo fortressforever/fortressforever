@@ -769,7 +769,6 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 	C_PointCamera *pCameraEnt = GetPointCameraList();
 	if ( !pCameraEnt )
 	{
-		Warning( "[Monitor] Failed to get camera ent\n" );
 		return;
 	}	
 

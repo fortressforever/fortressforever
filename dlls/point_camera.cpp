@@ -45,6 +45,9 @@ CPointCamera::~CPointCamera()
 
 CPointCamera::CPointCamera()
 {
+	// Bug #0000385: point_camera & func_monitor in-titties
+	// Just actually did what valves comment below said - they had both
+	// set to false...
 	// Set these to opposites so that it'll be sent the first time around.
 	m_bActive = true;
 	m_bIsOn = false;
@@ -199,6 +202,8 @@ void CPointCamera::InputSetOnAndTurnOthersOff( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CPointCamera::InputSetOn( inputdata_t &inputdata )
 {
+	// Bug #0000385: point_camera & func_monitor in-titties
+	// Added the SetActive to this function or the other one - can't remember
 	m_bIsOn = true;
 	SetActive( true );
 }
@@ -208,6 +213,8 @@ void CPointCamera::InputSetOn( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CPointCamera::InputSetOff( inputdata_t &inputdata )
 {
+	// Bug #0000385: point_camera & func_monitor in-titties
+	// Added the SetActive to this function or the other one - can't remember
 	m_bIsOn = false;
 	SetActive( false );
 }
