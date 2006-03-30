@@ -36,6 +36,9 @@ extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
 
+// |-- Mirv: FC request
+static ConVar cl_brasstime("cl_brasstime", "10.0");
+
 //Precahce the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
 CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle1" )
@@ -3136,7 +3139,7 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	pTemp->SetRenderMode( kRenderNormal );
 	pTemp->tempent_renderamt = 255;
 	
-	pTemp->die = gpGlobals->curtime + 10;
+	pTemp->die = gpGlobals->curtime + cl_brasstime.GetFloat();
 
 	bool bViewModelBrass = false;
 
@@ -3162,8 +3165,6 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 		// for viewmodel brass put it in the viewmodel renderer group
 		pTemp->m_RenderGroup = RENDER_GROUP_VIEW_MODEL_OPAQUE;
 	}
-
-	
 }
 
 void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex)
