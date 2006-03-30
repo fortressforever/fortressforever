@@ -36,6 +36,8 @@ public:
 	float			GetFogStart();
 	float			GetFogEnd();
 	bool			UseScreenAspectRatio() const { return m_bUseScreenAspectRatio; }
+	// Bug #0000390: multiple render targets for cameras
+	string_t		GetRenderTarget( void ) { return m_szRenderTarget; }
 
 private:
 	float m_FOV;
@@ -46,6 +48,8 @@ private:
 	float m_flFogEnd;
 	bool m_bActive;
 	bool m_bUseScreenAspectRatio;
+	// Bug #0000390: multiple render targets for cameras
+	char m_szRenderTarget[256];
 
 public:
 	C_PointCamera	*m_pNext;

@@ -19,6 +19,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_PointCamera, DT_PointCamera, CPointCamera )
 	RecvPropFloat( RECVINFO( m_flFogEnd ) ), 
 	RecvPropInt( RECVINFO( m_bActive ) ),
 	RecvPropInt( RECVINFO( m_bUseScreenAspectRatio ) ),
+	// Bug #0000390: multiple render targets for cameras
+	RecvPropString( RECVINFO( m_szRenderTarget ) ),
 END_RECV_TABLE()
 
 C_EntityClassList<C_PointCamera> g_PointCameraList;

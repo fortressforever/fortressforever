@@ -51,6 +51,9 @@ CPointCamera::CPointCamera()
 	// Set these to opposites so that it'll be sent the first time around.
 	m_bActive = true;
 	m_bIsOn = false;
+
+	// Bug #0000390: multiple render targets for cameras
+	m_szRenderTarget = NULL_STRING;
 	
 	m_bFogEnable = false;
 
@@ -229,6 +232,8 @@ BEGIN_DATADESC( CPointCamera )
 	DEFINE_KEYFIELD( m_flFogStart,	FIELD_FLOAT, "fogStart" ),
 	DEFINE_KEYFIELD( m_flFogEnd,	FIELD_FLOAT, "fogEnd" ),
 	DEFINE_KEYFIELD( m_bUseScreenAspectRatio, FIELD_BOOLEAN, "UseScreenAspectRatio" ),
+	// Bug #0000390: multiple render targets for cameras
+	DEFINE_KEYFIELD( m_szRenderTarget, FIELD_STRING, "renderTarget" ),
 	DEFINE_FIELD( m_bActive,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bIsOn,			FIELD_BOOLEAN ),
 
@@ -256,4 +261,6 @@ IMPLEMENT_SERVERCLASS_ST( CPointCamera, DT_PointCamera )
 	SendPropFloat( SENDINFO( m_flFogEnd ), 0, SPROP_NOSCALE ),	
 	SendPropInt( SENDINFO( m_bActive ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bUseScreenAspectRatio ), 1, SPROP_UNSIGNED ),
+	// Bug #0000390: multiple render targets for cameras
+	SendPropStringT( SENDINFO ( m_szRenderTarget ) ),
 END_SEND_TABLE()

@@ -776,9 +776,10 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 	g_bRenderingCameraView = true;
 #endif
 
-	// FIXME: this should check for the ability to do a render target maybe instead.
-	// FIXME: shouldn't have to truck through all of the visible entities for this!!!!
-	ITexture *pRenderTarget = GetCameraTexture();
+	// Bug #0000390: multiple render targets for cameras
+//	// FIXME: this should check for the ability to do a render target maybe instead.
+//	// FIXME: shouldn't have to truck through all of the visible entities for this!!!!
+//	ITexture *pRenderTarget = GetCameraTexture();
 
 	materials->MatrixMode( MATERIAL_PROJECTION );
 	materials->PushMatrix();
@@ -791,12 +792,13 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 	materials->GetViewport( x, y, w, h );
 	
 	ITexture *pSaveRenderTarget = materials->GetRenderTarget();
+
+	// Bug #0000390: multiple render targets for cameras
+//	materials->SetRenderTarget( pRenderTarget );
 	
-	materials->SetRenderTarget( pRenderTarget );
-	
-	int width, height;
-	materials->GetRenderTargetDimensions( width, height );
-	materials->Viewport( 0, 0, width, height );
+//	int width, height;
+//	materials->GetRenderTargetDimensions( width, height );
+//	materials->Viewport( 0, 0, width, height );
 	
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	
@@ -804,6 +806,23 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 	{
 		if ( !pCameraEnt->IsActive() || pCameraEnt->IsDormant() )
 			continue;
+
+		// Bug #0000390: multiple render targets for cameras
+		// -->
+		ITexture *pRenderTarget = materials->FindTexture( pCameraEnt->GetRenderTarget(), TEXTURE_GROUP_RENDER_TARGET );
+		
+		if( IsErrorTexture( pRenderTarget ) )
+		{
+			Msg( "Error: render target texture not found!\n" );
+			continue;
+		}
+
+		materials->SetRenderTarget( pRenderTarget );
+
+		int width, height;
+		materials->GetRenderTargetDimensions( width, height );
+		materials->Viewport( 0, 0, width, height );
+		// <--
 
 		if ( !DrawOneMonitor( cameraNum, pCameraEnt, cameraView, player, 0, 0, width, height, true ) )
 			continue;

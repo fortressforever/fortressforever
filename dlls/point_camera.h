@@ -33,6 +33,9 @@ public:
 
 	void ChangeFOVThink( void );
 
+	// Bug #0000390: multiple render targets for cameras
+	string_t GetRenderTarget( void ) { return m_szRenderTarget; }
+
 	void InputChangeFOV( inputdata_t &inputdata );
 	void InputSetOnAndTurnOthersOff( inputdata_t &inputdata );
 	void InputSetOn( inputdata_t &inputdata );
@@ -50,6 +53,8 @@ private:
 	CNetworkVar( float, m_flFogEnd );
 	CNetworkVar( bool, m_bActive );
 	CNetworkVar( bool, m_bUseScreenAspectRatio );
+	// Bug #0000390: multiple render targets for cameras
+	CNetworkVar( string_t, m_szRenderTarget );
 
 	// Allows the mapmaker to control whether a camera is active or not
 	bool	m_bIsOn;
