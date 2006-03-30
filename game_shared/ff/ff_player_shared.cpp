@@ -361,3 +361,11 @@ void CFFPlayer::ClassSpecificSkill_Post()
 	}
 #endif
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: TFC style man!
+//-----------------------------------------------------------------------------
+Vector CFFPlayer::GetLegacyAbsOrigin()
+{
+	return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
+}
