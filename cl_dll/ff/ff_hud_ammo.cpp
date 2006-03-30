@@ -321,6 +321,10 @@ void CHudAmmo::Paint()
 	if (!ammoIcon)
 		ammoIcon = m_pHudAmmoTypes[m_iAmmoType];
 
+	// Bug #0000391: Immediately entering specmode after map load crashes FF
+	if (!ammoIcon)
+		return;
+
 	// Draw ammo icon
 	surface()->DrawSetTexture(ammoIcon->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);

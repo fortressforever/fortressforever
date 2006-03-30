@@ -316,6 +316,13 @@ bool CBaseHudWeaponSelection::ShouldDraw()
 		return false;
 	}
 
+	// --> Mirv: Not while dead
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+    if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
+		return false;
+	// <-- Mirv: Not while dead
+
 	return BaseClass::ShouldDraw();
 }
 
@@ -368,7 +375,15 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 		return;
 	}
 
+	// --> Mirv: Not while dead
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
+		return;
+	// <-- Mirv: Not while dead
+
 	CycleToNextWeapon();
+
 //#ifdef HL2MP		|-- Mirv: Re-enable
 	if( hud_fastswitch.GetInt() > 0 )
 	{
@@ -395,6 +410,13 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 	{ 
 		return;
 	}
+
+	// --> Mirv: Not while dead
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
+		return;
+	// <-- Mirv: Not while dead
 
 	CycleToPrevWeapon();
 
@@ -435,8 +457,12 @@ void CBaseHudWeaponSelection::SwitchToLastWeapon( void )
 {
 	// Get the player's last weapon
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	if ( !player )
+
+	// --> Mirv: Don't select while dead
+	if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
 		return;
+	// <-- Mirv: Don't select while dead
+
 
 	input->MakeWeaponSelection( player->GetLastWeapon() );
 }
@@ -463,9 +489,13 @@ void CBaseHudWeaponSelection::SelectWeapon( void )
 		return;
 	}
 
+	// --> Mirv: Not while dead
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	if ( !player )
+
+	if (!player || !player->IsAlive() || player->GetTeamNumber() < TEAM_BLUE)
 		return;
+	// <-- Mirv: Not while dead
+
 
 	// Don't allow selections of weapons that can't be selected (out of ammo, etc)
 	if ( !GetSelectedWeapon()->CanBeSelected() )

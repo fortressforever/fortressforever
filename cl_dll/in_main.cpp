@@ -508,7 +508,6 @@ void IN_ScoreUp(void)
 // BEG: Added by Mulchman for team change & class change
 void IN_ChangeTeam( void )
 {
-
 	if( gViewPortInterface )
 	{
 		IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_TEAM );
@@ -519,8 +518,18 @@ void IN_ChangeTeam( void )
 
 void IN_ChangeClass( void )
 {
-   if( gViewPortInterface )
-   {
+	// --> Mirv: Select team first bud
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if (player && player->GetTeamNumber() < TEAM_BLUE)
+	{
+		IN_ChangeTeam();
+		return;
+	}
+	// <-- Mirv: Select team first bud
+
+	if( gViewPortInterface )
+	{
 		IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_CLASS );
 		if( pPanel )
 			gViewPortInterface->ShowPanel( PANEL_CLASS, true );
