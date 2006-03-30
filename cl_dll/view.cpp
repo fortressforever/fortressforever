@@ -813,8 +813,11 @@ void CViewRender::DrawHighEndMonitors( CViewSetup cameraView )
 		
 		if( IsErrorTexture( pRenderTarget ) )
 		{
-			Msg( "Error: render target texture not found!\n" );
-			continue;
+			Msg( "Error: render target texture not found - defaulting to _rt_Camera!\n" );
+
+			// Bug #0000390: multiple render targets for cameras
+			pRenderTarget = materials->GetRenderTarget();
+			//continue;
 		}
 
 		materials->SetRenderTarget( pRenderTarget );
