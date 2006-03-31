@@ -274,6 +274,8 @@ void CHudBuildableMessages::CalculateWidthHeight( void )
 	SetPos( ( iScreenWide / 2 ) - ( iWide / 2 ), y );
 }
 
+// Bug #0000387: Sentry HUD information displayed twice
+/*
 //=============================================================================
 //
 //	class CHudSentryGunStatus
@@ -501,3 +503,4 @@ void CHudSentryGunStatus::Paint( void )
 		surface()->DrawPrintText( m_szText[ i ], wcslen( m_szText[ i ] ) );
 	}
 }
+*/
