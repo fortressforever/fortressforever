@@ -748,7 +748,7 @@ bool CViewRender::DrawOneMonitor( int cameraNum, C_PointCamera *pCameraEnt, CVie
 		SetupVis( cameraView );
 	}
 
-	ViewDrawScene( true, cameraView, VIEW_MONITOR /*, false, true, DF_MONITOR */ );
+	ViewDrawScene( true, cameraView, VIEW_MONITOR );
 
 	// Reset the world fog parameters.
 	if ( fogEnabled )
