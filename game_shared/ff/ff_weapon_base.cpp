@@ -476,14 +476,6 @@ void CFFWeaponBase::WeaponIdle()
 		}
 		else
 		{
-			DevMsg( "[Weapon Base] " );
-#ifdef CLIENT_DLL 
-			DevMsg( "[Client] " );
-#else
-			DevMsg( "[Server] " );
-#endif
-			DevMsg( "Sending idle event (time: %f)\n", gpGlobals->curtime );
-
 			SendWeaponAnim(ACT_VM_IDLE);
 		}
 	}
