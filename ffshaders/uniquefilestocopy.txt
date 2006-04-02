@@ -1,0 +1,5 @@
+..\devtools\bin\perl.exe 
+..\devtools\bin\perl58.dll 
+..\dx9ff\utilities\fxc.exe 
+..\dx9ff\utilities\psa.exe 
+..\dx9ff\utilities\vsa.exe 
