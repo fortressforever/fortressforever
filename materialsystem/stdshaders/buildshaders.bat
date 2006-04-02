@@ -45,8 +45,8 @@ REM MOD ARGS - look for -game or the vproject environment variable
 REM ****************
 :set_mod_args
 
-if not exist %sourceff%\bin\shadercompile.exe goto NoShaderCompile
-set ChangeToDir=%sourceff%\bin
+if not exist %sourcesdk%\bin\shadercompile.exe goto NoShaderCompile
+set ChangeToDir=%sourcesdk%\bin
 
 if /i "%4" NEQ "-source" goto NoSourceDirSpecified
 set SrcDirBase=%~5
@@ -75,7 +75,7 @@ goto end
 
 :NoShaderCompile
 echo -
-echo - ERROR: shadercompile.exe doesn't exist in %sourceff%\bin
+echo - ERROR: shadercompile.exe doesn't exist in %sourcesdk%\bin
 echo -
 goto end
 
