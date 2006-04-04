@@ -515,7 +515,8 @@ void CFFWeaponBase::WeaponRecoil()
 		MessageEnd();*/
 
 		// Make the player play his reload animation.
-		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_RELOAD);
+		// ted - temporarily disabled
+		// pPlayer->DoAnimationEvent(PLAYERANIMEVENT_RELOAD);
 	}
 
 #endif
