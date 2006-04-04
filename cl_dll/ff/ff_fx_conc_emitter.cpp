@@ -20,7 +20,7 @@
 #include "c_te_effect_dispatch.h"
 #include "ff_fx_conc_emitter.h"
 
-#define CONC_EFFECT_MATERIAL "sprites/heatwave"
+#define CONC_EFFECT_MATERIAL "sprites/concrefract"
 
 ConVar conc_on			 ("ffdev_conc_on", "1", 0, "Turn the conc effect on or off - 1 or 0." );
 ConVar conc_scale		 ("ffdev_conc_scale", "512.0", 0, "How big the conc effect gets.");
@@ -99,7 +99,6 @@ void CConcEmitter::RenderParticles(CParticleRenderIterator *pIterator)
 
 		flLife = pParticle->m_flLifetime - pParticle->m_flOffset;
 		flDeath = pParticle->m_flDieTime - pParticle->m_flOffset;
-		
 
 		if (flLife > 0.0f)
 		{
@@ -119,7 +118,7 @@ void CConcEmitter::RenderParticles(CParticleRenderIterator *pIterator)
 					pVar->SetFloatValue(conc_blur.GetFloat());
 			}
 
-			float flColor = 1.0f; // RemapVal(flLife, 0.0f, flDeath, 1.0f, 0.0f);
+			float flColor = 1.0f;// RemapVal(flLife, 0.0f, flDeath, 1.0f, 0.0f);
 
 			Vector vColor = Vector(flColor, flColor, flColor);
 
@@ -128,7 +127,7 @@ void CConcEmitter::RenderParticles(CParticleRenderIterator *pIterator)
 				pIterator->GetParticleDraw(), 
 				tPos, 
 				vColor, 
-				flColor, 																					// Alpha
+				flColor, 																	// Alpha
 				SimpleSplineRemapVal(flLife, 0.0f, flDeath, 0, conc_scale.GetFloat()), 		// Size
 				pParticle->m_flRoll
 				);

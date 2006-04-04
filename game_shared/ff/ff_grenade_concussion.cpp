@@ -243,7 +243,7 @@ CFFGrenadeConcussionGlow *CFFGrenadeConcussionGlow::Create(const Vector &origin,
 	if (pConcGlow == NULL)
 		return NULL;
 
-	pConcGlow->SetRenderMode((RenderMode_t) 9);
+	pConcGlow->SetRenderMode(kRenderWorldGlow/*(RenderMode_t) 9*/);
 
 	pConcGlow->SetMoveType(MOVETYPE_NONE);
 	pConcGlow->AddSolidFlags(FSOLID_NOT_SOLID);

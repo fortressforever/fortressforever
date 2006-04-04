@@ -22,7 +22,7 @@
 
 #define RING_EFFECT_MATERIAL "effects/yellowflare"
 
-ConVar ring_on			( "ffdev_ring_on", "0", 0, "Turn the ring effect on or off - 1 or 0." );
+ConVar ring_on			( "ffdev_ring_on", "1", 0, "Turn the ring effect on or off - 1 or 0." );
 ConVar ring_particles	( "ffdev_particles_per_ring", "100", 0, "The number of particles in each ring." );
 ConVar ring_scale		( "ffdev_ring_scale", "20.0", 0, "How big the particles in the rings are." );
 ConVar ring_speed		( "ffdev_ring_speed", "0.2", 0, "Duration of the rings effect." );
