@@ -904,7 +904,7 @@ for( $i = 0; $i < $numCombos; $i++ )
 		}
 		elsif( $g_dx9 )
 		{
-			$vsa = "..\\..\\dx9ff\\utilities\\vsa";
+			$vsa = "..\\..\\dx9sdk\\utilities\\vsa";
 			$vsadebug = "$vsa /nologo /Foshader$i.o $outfilename";
 			$vsanodebug = "$vsa /nologo /Foshader$i.o $outfilename";
 		}

@@ -112,9 +112,9 @@ nmake /S /C -f makefile.%inputbase%
 REM ****************
 REM Add the executables to the makefile.
 REM ****************
-echo %SrcDirBase%\dx9ff\utilities\vsa.exe >> filestocopy.txt
-echo %SrcDirBase%\dx9ff\utilities\psa.exe >> filestocopy.txt
-echo %SrcDirBase%\dx9ff\utilities\fxc.exe >> filestocopy.txt
+echo %SrcDirBase%\dx9sdk\utilities\vsa.exe >> filestocopy.txt
+echo %SrcDirBase%\dx9sdk\utilities\psa.exe >> filestocopy.txt
+echo %SrcDirBase%\dx9sdk\utilities\fxc.exe >> filestocopy.txt
 echo %SrcDirBase%\devtools\bin\perl.exe >> filestocopy.txt
 echo %SrcDirBase%\devtools\bin\perl58.dll >> filestocopy.txt
 
