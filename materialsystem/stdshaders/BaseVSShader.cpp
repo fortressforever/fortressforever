@@ -655,7 +655,7 @@ void CBaseVSShader::VertexShaderUnlitGenericPass( bool doSkin, int baseTextureVa
 		vshIndex.SetENVMAPCAMERASPACE( bEnvmap && bEnvmapCameraSpace );
 		vshIndex.SetENVMAPSPHERE( bEnvmap && bEnvmapSphere );
 		vshIndex.SetVERTEXCOLOR( bVertexColor );
-		s_pShaderShadow->SetVertexShader( "unlitgeneric_vs11", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_unlitgeneric_vs11", vshIndex.GetIndex() );
 
 		DefaultFog();
 	}
@@ -724,10 +724,10 @@ void CBaseVSShader::DrawWorldBaseTexture( int baseTextureVar, int baseTextureTra
 		s_pShaderShadow->EnableTexture( SHADER_TEXTURE_STAGE0, true );
 		s_pShaderShadow->VertexShaderVertexFormat( 
 			VERTEX_POSITION, 1, 0, 0, 0 );
-		s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BaseTexture" );
+		s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BaseTexture" );
 
 		ff_lightmappedgeneric_basetexture_Static_Index vshIndex;
-		s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BaseTexture", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BaseTexture", vshIndex.GetIndex() );
 
 		FogToOOOverbright();
 	}
@@ -761,9 +761,9 @@ void CBaseVSShader::DrawWorldBumpedDiffuseLighting( int bumpmapVar, int bumpFram
 			VERTEX_POSITION, 3, 0, 0, 0 );
 
 		ff_lightmappedgeneric_bumpmappedlightmap_Static_Index vshIndex;
-		s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BumpmappedLightmap", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BumpmappedLightmap", vshIndex.GetIndex() );
 
-		s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BumpmappedLightmap" );
+		s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BumpmappedLightmap" );
 		FogToFogColor();
 	}
 	else
@@ -803,9 +803,9 @@ void CBaseVSShader::DrawWorldBumpedDiffuseLighting_Base_ps14( int bumpmapVar, in
 			VERTEX_POSITION, 3, 0, 0, 0 );
 
 		ff_lightmappedgeneric_bumpmappedlightmap_base_ps14_Static_Index vshIndex;
-		s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BumpmappedLightmap_Base_ps14", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BumpmappedLightmap_Base_ps14", vshIndex.GetIndex() );
 
-		s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BumpmappedLightmap_Base_ps14" );
+		s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BumpmappedLightmap_Base_ps14" );
 		FogToFogColor();
 	}
 	else
@@ -851,9 +851,9 @@ void CBaseVSShader::DrawWorldBumpedDiffuseLighting_Blend_ps14( int bumpmapVar, i
 			VERTEX_POSITION, 3, 0, 0, 0 );
 
 		ff_lightmappedgeneric_bumpmappedlightmap_blend_ps14_Static_Index vshIndex;
-		s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BumpmappedLightmap_Blend_ps14", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BumpmappedLightmap_Blend_ps14", vshIndex.GetIndex() );
 
-		s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BumpmappedLightmap_Blend_ps14" );
+		s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BumpmappedLightmap_Blend_ps14" );
 		FogToFogColor();
 	}
 	else
@@ -921,18 +921,18 @@ void CBaseVSShader::DrawWorldBumpedSpecularLighting( int bumpmapVar, int envmapV
 		if( g_pHardwareConfig->SupportsPixelShaders_1_4() )
 		{
 			ff_lightmappedgeneric_bumpmappedenvmap_ps14_Static_Index vshIndex;
-			s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BumpmappedEnvmap_ps14", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BumpmappedEnvmap_ps14", vshIndex.GetIndex() );
 
 			int nPshIndex = bHasNormalMapAlphaEnvMapMask ? 1 : 0;
-			s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BumpmappedEnvmap_ps14", nPshIndex );
+			s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BumpmappedEnvmap_ps14", nPshIndex );
 		}
 		else
 		{
 			ff_lightmappedgeneric_bumpmappedenvmap_Static_Index vshIndex;
-			s_pShaderShadow->SetVertexShader( "LightmappedGeneric_BumpmappedEnvmap", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_BumpmappedEnvmap", vshIndex.GetIndex() );
 
 			int nPshIndex = bHasNormalMapAlphaEnvMapMask ? 1 : 0;
-			s_pShaderShadow->SetPixelShader( "LightmappedGeneric_BumpmappedEnvmap", nPshIndex );
+			s_pShaderShadow->SetPixelShader( "FF_LightmappedGeneric_BumpmappedEnvmap", nPshIndex );
 		}
 		FogToBlack();
 	}
@@ -1023,29 +1023,29 @@ void CBaseVSShader::DrawModelBumpedSpecularLighting( int bumpMapVar, int bumpMap
 		if( g_pHardwareConfig->SupportsPixelShaders_1_4() )
 		{
 			ff_vertexlitgeneric_envmappedbumpmap_nolighting_ps14_Static_Index vshIndex;
-			s_pShaderShadow->SetVertexShader( "VertexLitGeneric_EnvmappedBumpmap_NoLighting_ps14", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_VertexLitGeneric_EnvmappedBumpmap_NoLighting_ps14", vshIndex.GetIndex() );
 			if( bHasNormalMapAlphaEnvMapMask )
 			{
-				s_pShaderShadow->SetPixelShader( "VertexLitGeneric_EnvmappedBumpmapV2_MultByAlpha_ps14" );
+				s_pShaderShadow->SetPixelShader( "FF_VertexLitGeneric_EnvmappedBumpmapV2_MultByAlpha_ps14" );
 			}
 			else
 			{
-				s_pShaderShadow->SetPixelShader( "VertexLitGeneric_EnvmappedBumpmapV2_ps14" );
+				s_pShaderShadow->SetPixelShader( "FF_VertexLitGeneric_EnvmappedBumpmapV2_ps14" );
 			}
 		}
 		else
 		{
 			ff_vertexlitgeneric_envmappedbumpmap_nolighting_Static_Index vshIndex;
-			s_pShaderShadow->SetVertexShader( "VertexLitGeneric_EnvmappedBumpmap_NoLighting", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_VertexLitGeneric_EnvmappedBumpmap_NoLighting", vshIndex.GetIndex() );
 			// This version does not multiply by lighting.
 			// NOTE: We don't support multiplying by lighting for bumped specular stuff.
 			if( bHasNormalMapAlphaEnvMapMask )
 			{
-				s_pShaderShadow->SetPixelShader( "VertexLitGeneric_EnvmappedBumpmapV2_MultByAlpha" );
+				s_pShaderShadow->SetPixelShader( "FF_VertexLitGeneric_EnvmappedBumpmapV2_MultByAlpha" );
 			}
 			else
 			{
-				s_pShaderShadow->SetPixelShader( "VertexLitGeneric_EnvmappedBumpmapV2" );
+				s_pShaderShadow->SetPixelShader( "FF_VertexLitGeneric_EnvmappedBumpmapV2" );
 			}
 		}
 		FogToBlack();
@@ -1113,9 +1113,9 @@ void CBaseVSShader::DrawBaseTextureBlend( int baseTextureVar, int baseTextureTra
 			VERTEX_POSITION, 2, 0, 0, 0 );
 
 		ff_lightmappedgeneric_basetextureblend_Static_Index vshIndex;
-		s_pShaderShadow->SetVertexShader( "lightmappedgeneric_basetextureblend", vshIndex.GetIndex() );
+		s_pShaderShadow->SetVertexShader( "FF_lightmappedgeneric_basetextureblend", vshIndex.GetIndex() );
 
-		s_pShaderShadow->SetPixelShader( "lightmappedgeneric_basetextureblend", 0 );
+		s_pShaderShadow->SetPixelShader( "FF_lightmappedgeneric_basetextureblend", 0 );
 		FogToOOOverbright();
 	}
 	else
@@ -1471,7 +1471,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGenericPass_HDR( bool bVertexLitGeneric
 		s_pShaderShadow->VertexShaderVertexFormat( 
 			flags, numTexCoords, NULL, numBoneWeights, userDataSize );
 
-		s_pShaderShadow->SetVertexShader( "vertexlit_and_unlit_generic_hdr_vs20" );
+		s_pShaderShadow->SetVertexShader( "FF_vertexlit_and_unlit_generic_hdr_vs20" );
 
 		vertexlit_and_unlit_generic_hdr_ps20_Index pshIndex;
 		pshIndex.SetBASETEXTURE( hasBaseTexture );
@@ -1488,7 +1488,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGenericPass_HDR( bool bVertexLitGeneric
 		pshIndex.SetVERTEXALPHA( hasVertexAlpha );
 		pshIndex.SetNEEDSALPHA( bNeedsAlpha );
 		pshIndex.SetRENDERALPHA( bRenderAlpha );
-		s_pShaderShadow->SetPixelShader( "vertexlit_and_unlit_generic_hdr_ps20", pshIndex.GetIndex() );
+		s_pShaderShadow->SetPixelShader( "FF_vertexlit_and_unlit_generic_hdr_ps20", pshIndex.GetIndex() );
 
 		s_pShaderShadow->EnableSRGBWrite( true );
 		FogToFogColor();
@@ -1801,7 +1801,7 @@ void CBaseVSShader::DrawFlashlight_dx80( IMaterialVar** params, IShaderDynamicAP
 		{
 			ff_lightmappedgeneric_flashlight_vs11_Static_Index	vshIndex;
 			vshIndex.SetNORMALMAP( bBump );
-			pShaderShadow->SetVertexShader( "lightmappedgeneric_flashlight_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_lightmappedgeneric_flashlight_vs11", vshIndex.GetIndex() );
 
 			unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL;
 			if( bBump )
@@ -1814,7 +1814,7 @@ void CBaseVSShader::DrawFlashlight_dx80( IMaterialVar** params, IShaderDynamicAP
 		else
 		{
 			ff_vertexlitgeneric_flashlight_vs11_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "vertexlitgeneric_flashlight_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_vertexlitgeneric_flashlight_vs11", vshIndex.GetIndex() );
 
 			unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL;
 			pShaderShadow->VertexShaderVertexFormat( 
@@ -1823,7 +1823,7 @@ void CBaseVSShader::DrawFlashlight_dx80( IMaterialVar** params, IShaderDynamicAP
 
 		ff_flashlight_ps11_Static_Index	pshIndex;
 		pshIndex.SetNORMALMAP( bBump );
-		pShaderShadow->SetPixelShader( "flashlight_ps11", pshIndex.GetIndex() );
+		pShaderShadow->SetPixelShader( "FF_flashlight_ps11", pshIndex.GetIndex() );
 
 		FogToBlack();
 	}
@@ -1926,7 +1926,7 @@ void CBaseVSShader::DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAP
 			ff_lightmappedgeneric_flashlight_vs20_Static_Index	vshIndex;
 			vshIndex.SetWORLDVERTEXTRANSITION( bWorldVertexTransition );
 			vshIndex.SetNORMALMAP( bBump );
-			pShaderShadow->SetVertexShader( "lightmappedgeneric_flashlight_vs20", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_lightmappedgeneric_flashlight_vs20", vshIndex.GetIndex() );
 
 			unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL;
 			if( bBump )
@@ -1944,7 +1944,7 @@ void CBaseVSShader::DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAP
 		else
 		{
 			ff_vertexlitgeneric_flashlight_vs11_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "vertexlitgeneric_flashlight_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_vertexlitgeneric_flashlight_vs11", vshIndex.GetIndex() );
 
 			unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL;
 			int numTexCoords = 1;
@@ -1956,7 +1956,7 @@ void CBaseVSShader::DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAP
 		pshIndex.SetNORMALMAP( bBump );
 		pshIndex.SetNORMALMAP2( bBump2 );
 		pshIndex.SetWORLDVERTEXTRANSITION( bWorldVertexTransition );
-		pShaderShadow->SetPixelShader( "flashlight_ps20", pshIndex.GetIndex() );
+		pShaderShadow->SetPixelShader( "FF_flashlight_ps20", pshIndex.GetIndex() );
 
 		FogToBlack();
 	}

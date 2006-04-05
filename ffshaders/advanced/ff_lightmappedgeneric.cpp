@@ -378,8 +378,8 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX9,
 				pShaderShadow->EnableAlphaWrites( true );
 			}
 
-			pShaderShadow->SetPixelShader( "lightmappedgeneric_ps20", pshIndex.GetIndex() );
-			pShaderShadow->SetVertexShader( "lightmappedgeneric_vs20", vshIndex.GetIndex() );
+			pShaderShadow->SetPixelShader( "FF_lightmappedgeneric_ps20", pshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_lightmappedgeneric_vs20", vshIndex.GetIndex() );
 			
 			DefaultFog();
 		}

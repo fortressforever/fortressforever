@@ -349,7 +349,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 				vshIndex.SetENVMAPCAMERASPACE( hasEnvmap && hasEnvmapCameraSpace );
 				vshIndex.SetENVMAPSPHERE( hasEnvmap && hasEnvmapSphere );
 				vshIndex.SetVERTEXCOLOR( hasVertexColor );
-				pShaderShadow->SetVertexShader( "LightmappedGeneric_vs11", vshIndex.GetIndex() );
+				pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 				const char *pshName = GetPixelShaderName( params, bBumpedEnvMap );
 				pShaderShadow->SetPixelShader( pshName );
@@ -440,7 +440,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			vshIndex.SetENVMAPCAMERASPACE( false );
 			vshIndex.SetENVMAPSPHERE( false );
 			vshIndex.SetVERTEXCOLOR( IS_FLAG_SET( MATERIAL_VAR_VERTEXCOLOR ) );
-			pShaderShadow->SetVertexShader( "LightmappedGeneric_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 			if (!params[BASETEXTURE]->IsTexture())
 			{
@@ -547,7 +547,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			vshIndex.SetENVMAPCAMERASPACE( IS_FLAG_SET(MATERIAL_VAR_ENVMAPCAMERASPACE) );
 			vshIndex.SetENVMAPSPHERE( IS_FLAG_SET(MATERIAL_VAR_ENVMAPSPHERE) );
 			vshIndex.SetVERTEXCOLOR( false );
-			s_pShaderShadow->SetVertexShader( "LightmappedGeneric_vs11", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 			const char *pshName = GetAdditiveEnvmapPixelShaderName( usingMask, 
 				usingBaseTexture, usingBaseAlphaEnvmapMask );

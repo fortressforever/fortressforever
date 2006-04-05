@@ -21,7 +21,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\public,..\..\materialsystem,..\..\materialsystem\stdshaders,..\..\public\tier1,fxctmp9,vshtmp9"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS"
+				PreprocessorDefinitions="DX9;WIN32;_DEBUG;_WINDOWS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
@@ -90,7 +90,7 @@ copy &quot;$(TargetDir)game_shader_generic_advanced.dll&quot; &quot;bin\game_sha
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\public,..\..\materialsystem,..\..\materialsystem\stdshaders,..\..\public\tier1,fxctmp9,vshtmp9"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS"
+				PreprocessorDefinitions="DX9;WIN32;NDEBUG;_WINDOWS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
@@ -159,26 +159,6 @@ copy &quot;$(TargetDir)game_shader_generic_advanced.dll&quot; &quot;bin\game_sha
 				RelativePath="..\..\materialsystem\stdshaders\basevsshader_vertexlitgeneric_dx9_helper.cpp">
 			</File>
 			<File
-				RelativePath="..\..\public\mathlib.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS;$(NoInherit)"
-						BasicRuntimeChecks="3"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\ff_lightmappedgeneric.cpp">
 			</File>
 			<File
@@ -207,6 +187,26 @@ copy &quot;$(TargetDir)game_shader_generic_advanced.dll&quot; &quot;bin\game_sha
 			</File>
 			<File
 				RelativePath=".\ff_vertexlitgeneric_dx8.cpp">
+			</File>
+			<File
+				RelativePath="..\..\public\mathlib.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS;$(NoInherit)"
+						BasicRuntimeChecks="3"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;GAME_SHADER_GENERIC_ADVANCED_EXPORTS;$(NoInherit)"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\public\vmatrix.cpp">

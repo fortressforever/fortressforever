@@ -352,7 +352,7 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 				vshIndex.SetENVMAPSPHERE( false );
 			}
 			vshIndex.SetDECAL( false );
-			pShaderShadow->SetVertexShader( "ff_vertexlitgeneric_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_ff_vertexlitgeneric_vs11", vshIndex.GetIndex() );
 
 			const char *pshName = GetUnbumpedPixelShaderName( params, bSkipEnvmap );
 			pShaderShadow->SetPixelShader( pshName );
@@ -446,7 +446,7 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_BONE_INDEX;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 3, 4 );
-			pShaderShadow->SetVertexShader( "VertexLitGeneric_DiffBumpTimesBase" );
+			pShaderShadow->SetVertexShader( "FF_VertexLitGeneric_DiffBumpTimesBase" );
 			const char *pshName = GetBumpedDiffusePixelShaderName( params );
 			pShaderShadow->SetPixelShader( pshName );
 		}
@@ -485,9 +485,9 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, NULL, 3, 0 /* userDataSize */ );
 
 			ff_vertexlitgeneric_selfillumonly_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "FF_VertexLitGeneric_SelfIllumOnly", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "FF_FF_VertexLitGeneric_SelfIllumOnly", vshIndex.GetIndex() );
 
-			pShaderShadow->SetPixelShader( "FF_VertexLitGeneric_SelfIllumOnly" );
+			pShaderShadow->SetPixelShader( "FF_FF_VertexLitGeneric_SelfIllumOnly" );
 		}
 					
 		DYNAMIC_STATE

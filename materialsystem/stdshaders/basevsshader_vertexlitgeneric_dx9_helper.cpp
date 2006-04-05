@@ -12,10 +12,10 @@
 #include "ConVar.h"
 
 #ifdef DX9
-#include "vertexlit_and_unlit_generic_vs20.inc"
-#include "vertexlit_and_unlit_generic_ps20.inc"
-#include "vertexlit_and_unlit_generic_bump_vs20.inc"
-#include "vertexlit_and_unlit_generic_bump_ps20.inc"
+#include "ff_vertexlit_and_unlit_generic_vs20.inc"
+#include "ff_vertexlit_and_unlit_generic_ps20.inc"
+#include "ff_vertexlit_and_unlit_generic_bump_vs20.inc"
+#include "ff_vertexlit_and_unlit_generic_bump_ps20.inc"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -443,7 +443,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGeneric_DX9(
 			ff_vertexlit_and_unlit_generic_bump_vs20_Static_Index vshIndex;
 			vshIndex.SetHALFLAMBERT( bHalfLambert);
 			vshIndex.SetPARALLAXMAP( hasParallaxMap );
-			s_pShaderShadow->SetVertexShader( "vertexlit_and_unlit_generic_bump_vs20", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_vertexlit_and_unlit_generic_bump_vs20", vshIndex.GetIndex() );
 			
 			ff_vertexlit_and_unlit_generic_bump_ps20_Static_Index pshIndex;
 			pshIndex.SetBASETEXTURE( hasBaseTexture );
@@ -455,7 +455,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGeneric_DX9(
 			pshIndex.SetPARALLAXMAP( hasParallaxMap );
 			pshIndex.SetFLASHLIGHT( hasFlashlight );
 
-			s_pShaderShadow->SetPixelShader( "vertexlit_and_unlit_generic_bump_ps20", pshIndex.GetIndex() );
+			s_pShaderShadow->SetPixelShader( "FF_vertexlit_and_unlit_generic_bump_ps20", pshIndex.GetIndex() );
 		}
 		else
 		{
@@ -464,7 +464,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGeneric_DX9(
 			vshIndex.SetCUBEMAP( hasEnvmap );
 			vshIndex.SetHALFLAMBERT( bHalfLambert );
 			vshIndex.SetFLASHLIGHT( hasFlashlight );
-			s_pShaderShadow->SetVertexShader( "vertexlit_and_unlit_generic_vs20", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "FF_vertexlit_and_unlit_generic_vs20", vshIndex.GetIndex() );
 			
 			ff_vertexlit_and_unlit_generic_ps20_Static_Index pshIndex;
 			pshIndex.SetBASETEXTURE( hasBaseTexture );
@@ -478,7 +478,7 @@ void CBaseVSShader::DrawVertexLitAndUnlitGeneric_DX9(
 			pshIndex.SetVERTEXALPHA( hasVertexAlpha );
 			pshIndex.SetFLASHLIGHT( hasFlashlight );
 
-			s_pShaderShadow->SetPixelShader( "vertexlit_and_unlit_generic_ps20", pshIndex.GetIndex() );
+			s_pShaderShadow->SetPixelShader( "FF_vertexlit_and_unlit_generic_ps20", pshIndex.GetIndex() );
 		}
 
 		if( hasFlashlight )
