@@ -4608,12 +4608,13 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 	}
 	OnVehicleEnd( vNewPos );
 	SetAbsOrigin( vNewPos );
+	qAngles[ ROLL ] = 0; // |- mulch
 	SetAbsAngles( qAngles );
 	
 	// Clear out any leftover velocity
 	SetAbsVelocity( vec3_origin );
 
-	qAngles[ROLL] = 0;
+	//qAngles[ROLL] = 0; |- mulch
 	SnapEyeAngles( qAngles );
 
 #ifndef HL2_DLL
