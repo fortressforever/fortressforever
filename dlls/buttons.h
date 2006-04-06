@@ -23,6 +23,11 @@ public:
 	void RotSpawn( void );
 	bool KeyValue( const char *szKeyName, const char *szValue );
 
+	// Input handlers
+	void InputLock( inputdata_t &inputdata );
+	void InputUnlock( inputdata_t &inputdata );
+	void InputPress( inputdata_t &inputdata );
+
 protected:
 
 	void ButtonActivate( );
@@ -39,11 +44,6 @@ protected:
 
 	virtual void Lock();
 	virtual void Unlock();
-
-	// Input handlers
-	void InputLock( inputdata_t &inputdata );
-	void InputUnlock( inputdata_t &inputdata );
-	void InputPress( inputdata_t &inputdata );
 
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 	

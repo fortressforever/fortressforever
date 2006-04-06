@@ -3350,12 +3350,26 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
+	// We need to apply the force first (since you should move a bit when damage is reduced)
+	ApplyAbsVelocityImpulse( info.GetDamageForce() );
+
+	entsys.SetVar("info_damage", info.GetDamage());
+	entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
+	entsys.SetVar("info_classname", info.GetInflictor()->GetClassname());
+    CFFPlayer *player = ToFFPlayer(info.GetInflictor());
+    if (player)
+    {
+        CBaseCombatWeapon *weapon = player->GetActiveWeapon();
+        if (weapon)
+			entsys.SetVar("info_classname", weapon->GetName());
+	}
+	entsys.RunPredicates(NULL, this, "player_ondamage");
+	info.SetDamage(entsys.GetFloat("info_damage"));
+
 	// go take the damage first
 	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
 	{
         // Refuse the damage
-		// But apply force! Bug #0000177: Grenade explosions should effect teamates
-		ApplyAbsVelocityImpulse( info.GetDamageForce() );
 
 		return 0;
 	}
@@ -3482,8 +3496,9 @@ int CFFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		return 0;
 
 	// Apply the force needed
-	DevMsg("Applying impulse force of: %f\n", info.GetDamageForce().Length());
-	ApplyAbsVelocityImpulse( info.GetDamageForce() );
+	// (commented this out cause we're doing it in the above function)
+	//DevMsg("Applying impulse force of: %f\n", info.GetDamageForce().Length());
+	//ApplyAbsVelocityImpulse( info.GetDamageForce() );
 
 	// fire global game event
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );

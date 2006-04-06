@@ -258,6 +258,22 @@ void CBaseButton::InputPress( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 {
+	// check to see if the trepids allow this button to do what it wants to
+	entsys.SetVar("info_damage", info.GetDamage());
+	entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
+	entsys.SetVar("info_classname", info.GetInflictor()?info.GetInflictor()->GetClassname():"");
+    CBasePlayer *player = ToBasePlayer(info.GetInflictor());
+    if (player)
+    {
+        CBaseCombatWeapon *weapon = player->GetActiveWeapon();
+        if (weapon)
+			entsys.SetVar("info_classname", weapon->GetName());
+	}
+	if (!entsys.RunPredicates(this, NULL, "ondamage"))
+		return 0;
+	if (entsys.GetFloat("info_damage") <= 0.0)
+		return 0;
+
 	m_OnDamaged.FireOutput(m_hActivator, this);
 
 	// dvsents2: remove obselete health keyvalue from func_button

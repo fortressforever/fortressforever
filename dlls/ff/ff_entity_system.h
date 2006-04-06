@@ -56,8 +56,14 @@ public:
 
 	static void SetVar( lua_State *L, const char *name, const char *value );
 	static void SetVar( lua_State *L, const char *name, int value );
+	static void SetVar( lua_State *L, const char *name, float value );
 	void SetVar( const char *name, const char *value );
 	void SetVar( const char *name, int value );
+	void SetVar( const char *name, float value );
+
+	const char *GetString( const char *name );
+	int GetInt( const char *name );
+	float GetFloat( const char *name );
 	int RunPredicates( CBaseEntity*, CBaseEntity*, const char * = NULL);
 
 	static int ConsoleToAll( lua_State* );

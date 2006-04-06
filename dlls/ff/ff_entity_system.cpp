@@ -29,6 +29,7 @@
 #include "ff_goal.h"
 #include "team.h"
 #include "doors.h"
+#include "buttons.h"
 #include "ff_utils.h"
 #include "ff_team.h"
 
@@ -834,15 +835,24 @@ int CFFEntitySystem::UseEntity( lua_State *L )
 				else if (FStrEq(classname, "func_door") || FStrEq(classname, "func_water"))
 				{
 					if (FStrEq(action, "Open"))
-							((CBaseDoor *)pEnt)->InputOpen(id);
+						((CBaseDoor *)pEnt)->InputOpen(id);
 					else if (FStrEq(action, "Close"))
-							((CBaseDoor *)pEnt)->InputClose(id);
+						((CBaseDoor *)pEnt)->InputClose(id);
 					else if (FStrEq(action, "Toggle"))
-							((CBaseDoor *)pEnt)->InputToggle(id);
+						((CBaseDoor *)pEnt)->InputToggle(id);
 					else if (FStrEq(action, "Lock"))
-							((CBaseDoor *)pEnt)->InputLock(id);
+						((CBaseDoor *)pEnt)->InputLock(id);
 					else if (FStrEq(action, "Unlock"))
-							((CBaseDoor *)pEnt)->InputUnlock(id);
+						((CBaseDoor *)pEnt)->InputUnlock(id);
+				}
+				else if (FStrEq(classname, "func_button"))
+				{
+					if (FStrEq(action, "Lock"))
+						((CBaseButton *)pEnt)->InputLock(id);
+					else if (FStrEq(action, "Unlock"))
+						((CBaseButton *)pEnt)->InputUnlock(id);
+					else if (FStrEq(action, "Press"))
+						((CBaseButton *)pEnt)->InputPress(id);
 				}
 				ret = true;
 			}
@@ -1490,6 +1500,11 @@ void CFFEntitySystem::SetVar( lua_State *L, const char *name, int value )
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
+void CFFEntitySystem::SetVar( lua_State *L, const char *name, float value )
+{
+	lua_pushnumber(L, value);
+	lua_setglobal(L, name);
+}
 
 
 void CFFEntitySystem::SetVar( const char *name, const char *value )
@@ -1501,6 +1516,33 @@ void CFFEntitySystem::SetVar( const char *name, int value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
+}
+void CFFEntitySystem::SetVar( const char *name, float value )
+{
+	lua_pushnumber(L, value);
+	lua_setglobal(L, name);
+}
+
+const char *CFFEntitySystem::GetString( const char *name )
+{
+	lua_getglobal(L, name);
+	const char *ret = lua_tostring(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+int CFFEntitySystem::GetInt( const char *name )
+{
+	lua_getglobal(L, name);
+	int ret = (int)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return ret;
+}
+float CFFEntitySystem::GetFloat( const char *name )
+{
+	lua_getglobal(L, name);
+	float ret = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return ret;
 }
 
 //----------------------------------------------------------------------------
@@ -1529,6 +1571,11 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 			Warning("Can't call entsys.runpredicates with an entity and no addname\n");
 			return false;
 		}
+
+		if (!strlen(STRING(ent->GetEntityName())))
+			return false;
+
+		SetVar("entname", STRING(ent->GetEntityName()));
 
 		// push the function onto stack ( entname:addname )
 		lua_getglobal( L, STRING(ent->GetEntityName()) );

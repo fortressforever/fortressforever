@@ -51,7 +51,7 @@ public:
 //	virtual void Friction(void);
 //	virtual void StartGravity(void);
 //	virtual void FinishGravity(void);
-//	virtual void CheckWaterJump( void );
+	virtual void CheckWaterJump( void );
 
 	virtual void FullNoClipMove( float factor, float maxacceleration ); // |-- Mirv: Map guides
 
@@ -461,85 +461,85 @@ bool CFFGameMovement::CheckJumpButton(void)
 //		PlaySwimSound();
 //	}
 //}
-//
-////-----------------------------------------------------------------------------
-//// Purpose: 
-////-----------------------------------------------------------------------------
-//void CFFGameMovement::CheckWaterJump( void )
-//{
-//	Vector	flatforward;
-//	Vector forward;
-//	Vector	flatvelocity;
-//	float curspeed;
-//
-//	AngleVectors( mv->m_vecViewAngles, &forward );  // Determine movement angles
-//
-//	// Already water jumping.
-//	if (player->m_flWaterJumpTime)
-//		return;
-//
-//	// Don't hop out if we just jumped in
-//	if (mv->m_vecVelocity[2] < 20)
-//		return; // only hop out if we are moving up
-//
-//	// See if we are backing up
-//	flatvelocity[0] = mv->m_vecVelocity[0];
-//	flatvelocity[1] = mv->m_vecVelocity[1];
-//	flatvelocity[2] = 0;
-//
-//	// Must be moving
-//	curspeed = VectorNormalize( flatvelocity );
-//	
-//	// see if near an edge
-//	flatforward[0] = forward[0];
-//	flatforward[1] = forward[1];
-//	flatforward[2] = 0;
-//	VectorNormalize (flatforward);
-//
-//	// Are we backing into water from steps or something?  If so, don't pop forward
-//	if ( curspeed != 0.0 && ( DotProduct( flatvelocity, flatforward ) < 0.0 ) )
-//		return;
-//
-//	Vector vecStart;
-//	// Start line trace at waist height (using the center of the player for this here)
-//	vecStart= mv->m_vecAbsOrigin + (GetPlayerMins() + GetPlayerMaxs() ) * 0.5;
-//
-//	Vector vecEnd;
-//	VectorMA( vecStart, 24.0f, flatforward, vecEnd );
-//	
-//	trace_t tr;
-//	TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
-//	if ( tr.fraction < 1.0 )		// solid at waist
-//	{
-//		IPhysicsObject *pPhysObj = tr.m_pEnt->VPhysicsGetObject();
-//		if ( pPhysObj )
-//		{
-//			if ( pPhysObj->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
-//				return;
-//		}
-//
-//		vecStart.z = mv->m_vecAbsOrigin.z + player->GetViewOffset().z + WATERJUMP_HEIGHT; 
-//		VectorMA( vecStart, 24.0f, flatforward, vecEnd );
-//		VectorMA( vec3_origin, -50.0f, tr.plane.normal, player->m_vecWaterJumpVel );
-//
-//		TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
-//		if ( tr.fraction == 1.0 )		// open at eye level
-//		{
-//			// Now trace down to see if we would actually land on a standable surface.
-//			VectorCopy( vecEnd, vecStart );
-//			vecEnd.z -= 1024.0f;
-//			TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
-//			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 0.7 ) )
-//			{
-//				mv->m_vecVelocity[2] = 256.0f;			// Push up
-//				mv->m_nOldButtons |= IN_JUMP;		// Don't jump again until released
-//				player->AddFlag( FL_WATERJUMP );
-//				player->m_flWaterJumpTime = 2000.0f;	// Do this for 2 seconds
-//			}
-//		}
-//	}
-//}
-//
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFGameMovement::CheckWaterJump( void )
+{
+	Vector	flatforward;
+	Vector forward;
+	Vector	flatvelocity;
+	float curspeed;
+
+	AngleVectors( mv->m_vecViewAngles, &forward );  // Determine movement angles
+
+	// Already water jumping.
+	if (player->m_flWaterJumpTime)
+		return;
+
+	// Don't hop out if we just jumped in
+	if (mv->m_vecVelocity[2] < 20)
+		return; // only hop out if we are moving up
+
+	// See if we are backing up
+	flatvelocity[0] = mv->m_vecVelocity[0];
+	flatvelocity[1] = mv->m_vecVelocity[1];
+	flatvelocity[2] = 0;
+
+	// Must be moving
+	curspeed = VectorNormalize( flatvelocity );
+	
+	// see if near an edge
+	flatforward[0] = forward[0];
+	flatforward[1] = forward[1];
+	flatforward[2] = 0;
+	VectorNormalize (flatforward);
+
+	// Are we backing into water from steps or something?  If so, don't pop forward
+	if ( curspeed != 0.0 && ( DotProduct( flatvelocity, flatforward ) < 0.0 ) )
+		return;
+
+	Vector vecStart;
+	// Start line trace at waist height (using the center of the player for this here)
+	vecStart= mv->m_vecAbsOrigin + (GetPlayerMins() + GetPlayerMaxs() ) * 0.5;
+
+	Vector vecEnd;
+	VectorMA( vecStart, 24.0f, flatforward, vecEnd );
+	
+	trace_t tr;
+	TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+	if ( tr.fraction < 1.0 )		// solid at waist
+	{
+		IPhysicsObject *pPhysObj = tr.m_pEnt->VPhysicsGetObject();
+		if ( pPhysObj )
+		{
+			if ( pPhysObj->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
+				return;
+		}
+
+		vecStart.z = mv->m_vecAbsOrigin.z + player->GetViewOffset().z + WATERJUMP_HEIGHT; 
+		VectorMA( vecStart, 24.0f, flatforward, vecEnd );
+		VectorMA( vec3_origin, -50.0f, tr.plane.normal, player->m_vecWaterJumpVel );
+
+		TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+		if ( tr.fraction == 1.0 )		// open at eye level
+		{
+			// Now trace down to see if we would actually land on a standable surface.
+			VectorCopy( vecEnd, vecStart );
+			vecEnd.z -= 1024.0f;
+			TracePlayerBBox( vecStart, vecEnd, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 0.7 ) )
+			{
+				mv->m_vecVelocity[2] = 256.0f;			// Push up
+				mv->m_nOldButtons |= IN_JUMP;		// Don't jump again until released
+				player->AddFlag( FL_WATERJUMP );
+				player->m_flWaterJumpTime = 2000.0f;	// Do this for 2 seconds
+			}
+		}
+	}
+}
+
 ////-----------------------------------------------------------------------------
 //// Purpose: 
 ////-----------------------------------------------------------------------------
