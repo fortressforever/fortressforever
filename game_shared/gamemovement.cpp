@@ -2968,9 +2968,9 @@ bool CGameMovement::CheckWater( void )
 		// Now check a point that is at the player hull midpoint.
 		point[2] = mv->m_vecAbsOrigin[2] + (GetPlayerMins()[2] + GetPlayerMaxs()[2])*0.5;
 
-		// Bug #0000017: Can't jump out of "deep" water |-- Mulch
-		// Raising the point to check for waist deep water 4 units
-		point[ 2 ] += 4.0f;
+//		// Bug #0000017: Can't jump out of "deep" water |-- Mulch
+//		// Raising the point to check for waist deep water 4 units
+//		point[ 2 ] += 4.0f;
 
 		cont = enginetrace->GetPointContents( point );
 		// If that point is also under water...
