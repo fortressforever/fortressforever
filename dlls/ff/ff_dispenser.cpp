@@ -108,37 +108,7 @@ inline void DispenseHelper( CFFPlayer *pPlayer, int& iAmmo, int iGiveAmmo, const
 @brief Constructor
 @return N/A
 */
-CFFDispenser::CFFDispenser( void )
-{
-	// Overwrite the base class stubs
-	m_ppszModels = g_pszFFDispenserModels;
-	m_ppszGibModels = g_pszFFDispenserGibModels;
-	m_ppszSounds = g_pszFFDispenserSounds;
-
-	// Max values
-	m_iMaxCells		= 400;
-	m_iMaxShells	= 400;
-	m_iMaxNails		= 600;
-	m_iMaxRockets	= 300;
-	m_iMaxArmor		= 500;
-
-	// Give values - values to give a player when they touch us
-	m_iGiveCells	= 20;
-	m_iGiveShells	= 20;
-	m_iGiveNails	= 20;
-	m_iGiveRockets	= 20;
-	m_iGiveArmor	= 10;
-
-	// Time in seconds between generating shiz
-	m_flThinkTime = 10.0f;
-
-	// Initialize
-	m_pLastTouch = NULL;
-	m_flLastTouch = 0.0f;
-
-	// Store a value from the base class
-	m_flOrigExplosionMagnitude = m_flExplosionMagnitude;
-}
+// --> Moved to ff_buildableobjects_shared.cpp
 
 /**
 @fn ~CFFDispenser
