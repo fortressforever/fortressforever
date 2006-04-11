@@ -36,10 +36,10 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "ai_basenpc.h"
+//#include "cbase.h"
+//#include "ai_basenpc.h"
 #include "utlvector.h"
-#include "ff_buildableobject.h"
+#include "ff_buildableobjects_shared.h"
 
 #define	FLOOR_TURRET_MODEL			"models/combine_turrets/floor_turret.mdl"
 #define FLOOR_TURRET_GLOW_SPRITE	"sprites/glow1.vmt"
@@ -63,6 +63,7 @@
 #define SF_FLOOR_TURRET_STARTINACTIVE		0x00000040
 #define SF_FLOOR_TURRET_FASTRETIRE			0x00000080
 
+/*
 class CFFSentryGun : public CFFBuildableObject
 {
 	DECLARE_CLASS( CFFSentryGun, CFFBuildableObject )
@@ -177,5 +178,7 @@ public:
 	QAngle	m_angAimBase;
 	QAngle	m_angAiming;
 };
+
+*/
 
 #endif // FF_SENTRYGUN_H

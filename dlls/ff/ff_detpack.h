@@ -27,8 +27,9 @@
 #pragma once
 #endif
 
-#include "ff_buildableobject.h"
+#include "ff_buildableobjects_shared.h"
 
+/*
 class CFFDetpack : public CFFBuildableObject
 {
 public:
@@ -62,5 +63,6 @@ public:
 	bool	m_bFiveSeconds;
 
 };
+*/
 
 #endif // FF_DETPACK_H

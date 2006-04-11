@@ -35,21 +35,23 @@
 #pragma once
 #endif
 
-#include "cbase.h"
-#include "ai_basenpc.h"
-#include "server_class.h"
-#include "ff_player.h"
-#include "soundent.h"
-#include "ff_buildableobjects_shared.h"
+//#include "cbase.h"
+//#include "ai_basenpc.h"
+//#include "server_class.h"
+//#include "ff_player.h"
+//#include "soundent.h"
+//#include "ff_buildableobjects_shared.h"
 
-#include <igameevents.h>
-#include <igamesystem.h>
+//#include <igameevents.h>
+//#include <igamesystem.h>
+//class CFFPlayer;
 
-inline void Build_ReturnDetpack( CFFPlayer *pPlayer )
-{
-	pPlayer->GiveAmmo( 1, "AMMO_DETPACK" );
-}
+//inline void Build_ReturnDetpack( CFFPlayer *pPlayer )
+//{
+//	pPlayer->GiveAmmo( 1, "AMMO_DETPACK" );
+//}
 
+/*
 class CFFBuildableObject : public CAI_BaseNPC
 {
 public:
@@ -176,5 +178,6 @@ public:
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
 };
+*/
 
 #endif // FF_BUILDABLEOBJECT_H

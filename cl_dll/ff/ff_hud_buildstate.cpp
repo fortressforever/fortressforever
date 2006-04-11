@@ -118,7 +118,7 @@ void CHudBuildState::VidInit()
 	tempString = vgui::localize()->Find("#FF_HUD_AMMO");
 
 	if (!tempString) 
-		tempString = L"HEALTH";
+		tempString = L"AMMO";
 
 	wcsncpy(m_szAmmo, tempString, sizeof(m_szAmmo) / sizeof(wchar_t));
 	m_szAmmo[ (sizeof(m_szAmmo) / sizeof(wchar_t)) - 1] = 0;
@@ -156,7 +156,7 @@ void CHudBuildState::OnTick()
 	{
 		m_bDrawDispenser = true;
 
-		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, 100, m_szAmmo, 0);
+		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealth(), m_szAmmo, /*pDispenser->GetAmmoPerc()*/100);
 	}
 
 	C_FFSentryGun *pSentryGun = (C_FFSentryGun *) pPlayer->m_hSentryGun.Get();

@@ -117,9 +117,9 @@ protected:
 	float				GetLastThink( const char *szContext = NULL );
 
 public:
-#if defined(new)
-#error
-#endif
+#if defined(new)	// --> Reworked by Mulchman 4/10/2006
+//#error
+#else
 
 	void *operator new( size_t nBytes )
 	{
@@ -128,6 +128,7 @@ public:
 		return pResult;
 	};
 
+
 #if defined(_DEBUG) || defined(USE_MEM_DEBUG)
 	void *operator new( size_t nBytes, int nBlockUse, const char *pFileName, int nLine )
 	{
@@ -135,7 +136,8 @@ public:
 		memset( pResult, 0, nBytes );
 		return pResult;
 	}
-#endif
+#endif // defined(_DEBUG) || defined(USE_MEM_DEBUG)
+#endif // defined(new)	// <-- Reworked by Mulchman 4/10/2006
 
 private:
 	CAI_BaseNPC *m_pOuter;

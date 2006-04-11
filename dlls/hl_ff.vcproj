@@ -336,15 +336,6 @@
 					RelativePath=".\ff\ff_bot_temp.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_buildableobject.h">
-				</File>
-				<File
-					RelativePath=".\ff\ff_detpack.h">
-				</File>
-				<File
-					RelativePath=".\ff\ff_dispenser.h">
-				</File>
-				<File
 					RelativePath=".\ff\ff_entity_system.h">
 				</File>
 				<File
@@ -364,9 +355,6 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_sentrygun.h">
-				</File>
-				<File
-					RelativePath=".\ff\ff_sevtest.h">
 				</File>
 				<File
 					RelativePath=".\ff\ff_team.h">
@@ -573,10 +561,10 @@
 					RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_esp_shared.h">
+					RelativePath="..\game_shared\ff\ff_esp_shared.h">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_esp_shared.h">
+					RelativePath=".\ff\ff_esp_shared.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_fx_shared.h">

@@ -37,10 +37,10 @@
 //		Dispenser now has ground pos & angles pre-stored for when it goes live
 
 #include "cbase.h"
-#include "ff_dispenser.h"
+#include "ff_buildableobjects_shared.h"
 #include "const.h"
 #include "ff_weapon_base.h"
-#include "ff_sevtest.h"
+//#include "ff_sevtest.h"
 
 #include "omnibot_interface.h"
 

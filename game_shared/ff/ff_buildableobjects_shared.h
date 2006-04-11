@@ -20,12 +20,28 @@
 	#pragma once
 #endif
 
+#include "debugoverlay_shared.h"
+
 #ifdef CLIENT_DLL
-	#define CFFPlayer C_FFPlayer
-	#define CFFBuildableInfo C_FFBuildableInfo
 	#include "c_ff_player.h"
+
+	#define CAI_BaseNPC C_AI_BaseNPC
+	#include "c_ai_basenpc.h"	
+	
+	#define CFFBuildableInfo C_FFBuildableInfo
+	#define CFFBuildableObject C_FFBuildableObject
+	#define CFFDispenser C_FFDispenser
+	#define CFFSentryGun C_FFSentryGun
+	#define CFFDetpack C_FFDetpack
+	#define CFFSevTest C_FFSevTest
 #else
 	#include "ff_player.h"
+	#include "ai_basenpc.h"
+
+	//#include "server_class.h"
+	//#include "soundent.h"
+	//#include <igameevents.h>
+	//#include <igamesystem.h>
 #endif
 
 #define FF_DISPENSER_MODEL					"models/buildable/dispenser/dispenser.mdl"
@@ -189,6 +205,466 @@ protected:
 	bool				IsGeometryInTheWay();
 	//bool				IsGroundTooSteep();
 	BuildInfoResult_t	CanOrientToGround();
+
+};
+
+//=============================================================================
+//
+//	class CFFBuildableObject / C_FFBuildableObject
+//
+//=============================================================================
+class CFFBuildableObject : public CAI_BaseNPC
+{
+public:
+	DECLARE_CLASS( CFFBuildableObject, CAI_BaseNPC )
+
+#ifdef CLIENT_DLL
+	DECLARE_CLIENTCLASS();
+#else
+	DECLARE_SERVERCLASS();
+#endif
+
+	// --> shared
+	CFFBuildableObject();
+	~CFFBuildableObject();
+	
+	virtual bool IsAlive( void ) { return true; }
+	virtual bool IsPlayer( void ) const { return false; }
+	virtual bool BlocksLOS( void ) { return false; }
+	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
+	bool IsBuilt( void	) const { return m_bBuilt; }
+ 
+	CNetworkHandle( CBaseEntity, m_hOwner );
+	// <-- shared
+
+#ifdef CLIENT_DLL
+public:
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	virtual int	GetHealth( void ) const { return m_iHealth; }
+	virtual int	GetMaxHealth( void ) const { return m_iMaxHealth; }
+
+	bool CheckForOwner( void ) { return ( m_hOwner.Get() ); }
+
+	bool m_bBuilt;	
+#else
+public:
+	virtual void Spawn( void ); 
+	virtual void Precache( void );
+	
+	void GoLive( void );
+	void Detonate( void );
+	void RemoveQuietly( void );
+	
+	virtual void Cancel( void ) { RemoveQuietly(); }
+	
+	bool CheckForOwner( void )
+	{
+		if( !m_hOwner.Get() )
+		{
+			RemoveQuietly();
+			return false;
+		}
+
+		return true;
+	}
+	//void EyeVectors( )
+
+	// NOTE: Super class handles touch function
+	// void OnObjectTouch( CBaseEntity *pOther );
+	void OnObjectThink( void );
+
+	int OnTakeDamage( const CTakeDamageInfo &info );
+
+	virtual void Event_Killed( const CTakeDamageInfo &info );
+
+	bool ShouldSavePhysics( void ) { return false; }
+
+	// Mirv: Store in advance the ground position
+	virtual void SetGroundAngles(const QAngle &ang) { m_angGroundAngles = ang; }
+	virtual void SetGroundOrigin(const Vector &vec) { m_vecGroundOrigin = vec; }
+
+private:
+	// NOTE: Don't call the CFFBuildableObject::Create function
+	static CFFBuildableObject *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
+
+public:
+	// So weapons (like the railgun) don't effect building
+	virtual int VPhysicsTakeDamage( const CTakeDamageInfo &info );
+
+protected:
+	void Explode( void );
+	void SpawnGib( const char *szGibModel, bool bFlame = true, bool bDieGroundTouch = false );
+	void DoExplosion( void );
+
+	virtual void SendStatsToBot() {};
+protected:
+
+	// Mirv: Store in advance the ground position
+	QAngle m_angGroundAngles;
+	Vector m_vecGroundOrigin;
+
+	// Pointer to array of char *'s of model names
+	const char **m_ppszModels;
+	// Pointer to array of char *'s of gib model names
+	const char **m_ppszGibModels;
+	// Pointer to array of char *'s of sounds
+	const char **m_ppszSounds;
+
+	// For the explosion function
+
+	// Explosion magnitude (int)
+	int		m_iExplosionMagnitude;
+	// Explosion magnitude (float)
+	float	m_flExplosionMagnitude;
+	// Explosion radius (float -> 3.5*magnitude)
+	float	m_flExplosionRadius;
+	// Explosion radius (int -> 3.5*magnitude)
+	int		m_iExplosionRadius;
+	// Explosion force
+	float	m_flExplosionForce;
+	// Explosion damage (for radius damage - same as flExplosion force)
+	float	m_flExplosionDamage;
+	// Explosion duration (duration of screen shaking)
+	float	m_flExplosionDuration;
+	// Explosion fireball scale
+	int		m_iExplosionFireballScale;
+
+	// Time (+ gpGlobals->curtime) that we will think (update network vars)
+	float	m_flThinkTime;// = 0.2f;
+
+	// Shockwave texture
+	int		m_iShockwaveExplosionTexture;
+	// Draw shockwaves
+	bool	m_bShockWave;
+
+	// Object is live and in color (not being built)
+	CNetworkVar( bool, m_bBuilt );
+	// Object takes damage once it is built
+	bool	m_bTakesDamage;
+
+	// Object has sounds associated with it
+	bool	m_bHasSounds;
+
+	// Whether or not the model is translucent
+	// while building
+	bool	m_bTranslucent;
+
+	// If true we should be using physics
+	bool	m_bUsePhysics;
+#endif
+
+};
+
+//=============================================================================
+//
+//	class CFFSevTest / C_FFSevTest
+//
+//=============================================================================
+class CFFSevTest : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFSevTest, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFSevTest( void );
+	~CFFSevTest( void );
+	// <-- shared
+
+#ifdef CLIENT_DLL
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+#else
+	void OnObjectThink( void );
+	void Spawn( void );
+	void GoLive( void );
+
+	static CFFSevTest *Create( const Vector &vecOrigin, const QAngle &vecAngles, edict_t *pentOwner = NULL );
+
+protected:
+	float	m_flSpawnTime;
+#endif
+
+};
+
+//=============================================================================
+//
+//	class CFFDetpack / C_FFDetpack
+//
+//=============================================================================
+class CFFDetpack : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFDetpack, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFDetpack( void );
+	~CFFDetpack( void );
+
+	virtual Class_T Classify( void ) { return CLASS_DETPACK; }
+	// <-- shared
+
+#ifdef CLIENT_DLL
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	// Creates a client side ONLY detpack - used for the build slot
+	static C_FFDetpack *CreateClientSideDetpack( const Vector& vecOrigin, const QAngle& vecAngles );
+#else
+	virtual void Spawn( void );
+	void GoLive( void );
+
+	void OnObjectTouch( CBaseEntity *pOther );
+	void OnObjectThink( void );
+	void SendStartTimerMessage( void );
+	void SendStopTimerMessage( void );
+	void OnEmpExplosion( void );
+
+	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
+
+	//bool	m_bLive;
+	int		m_iFuseTime;
+	float	m_flDetonateTime;
+	bool	m_bFiveSeconds;
+#endif
+
+};
+
+//=============================================================================
+//
+//	class CFFDispenser / C_FFDispenser
+//
+//=============================================================================
+class CFFDispenser : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFDispenser, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFDispenser( void );
+	~CFFDispenser( void );
+
+	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
+
+	int GetAmmoPerc( void );
+
+public:
+	// Network variables
+	CNetworkVar( int, m_iCells );
+	CNetworkVar( int, m_iShells );
+	CNetworkVar( int, m_iNails );
+	CNetworkVar( int, m_iRockets );
+	CNetworkVar( int, m_iArmor );
+
+protected:
+	int		m_iMaxCells;
+	int		m_iGiveCells;
+	int		m_iMaxShells;
+	int		m_iGiveShells;
+	int		m_iMaxNails;
+	int		m_iGiveNails;
+	int		m_iMaxRockets;
+	int		m_iGiveRockets;
+	int		m_iMaxArmor;
+	int		m_iGiveArmor;
+	// <-- shared
+
+public:
+
+#ifdef CLIENT_DLL 
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	// Creates a client side ONLY dispenser - used for build slot
+	static C_FFDispenser *CreateClientSideDispenser( const Vector& vecOrigin, const QAngle& vecAngles );
+#else
+	virtual void Spawn( void );
+	void GoLive( void );
+
+	void OnObjectTouch( CBaseEntity *pOther );
+	void OnObjectThink( void );
+	virtual void Event_Killed( const CTakeDamageInfo &info );
+
+	// Generic function to send hud messages to players
+	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText = false );
+
+	// Some functions for the custom dispenser text
+	void SetText( const char *szCustomText ) { Q_strcpy( m_szCustomText, szCustomText ); }
+	const char *GetText( void ) const { return m_szCustomText; }
+
+	static CFFDispenser *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
+
+protected:
+	void SendStatsToBot( void );
+
+	// Custom dispenser text string thing
+	char		m_szCustomText[ FF_BUILD_DISP_STRING_LEN ];
+	CFFPlayer	*m_pLastTouch;
+	float		m_flLastTouch;
+
+	// Actually give a player stuff
+	void Dispense( CFFPlayer *pPlayer );
+
+	// Calculates an adjustment to be made to the explosion
+	// based on how much stuff is in the dispenser
+	void CalcAdjExplosionVal( void );
+	float	m_flOrigExplosionMagnitude;
+#endif
+
+};
+
+//=============================================================================
+//
+//	class CFFSentryGun / C_FFSentryGun
+//
+//=============================================================================
+class CFFSentryGun : public CFFBuildableObject
+{
+public:
+	DECLARE_CLASS( CFFSentryGun, CFFBuildableObject )
+
+#ifdef CLIENT_DLL 
+	DECLARE_CLIENTCLASS()
+#else
+	DECLARE_SERVERCLASS()
+	DECLARE_DATADESC()
+#endif
+
+	// --> shared
+	CFFSentryGun( void );
+	~CFFSentryGun( void );
+
+	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
+
+public:
+	// Network variables
+	CNetworkVar( float, m_flRange );
+	CNetworkVar( int, m_iLevel );
+	CNetworkVar( int, m_iShells );
+	CNetworkVar( int, m_iRockets );
+	// <-- shared
+
+#ifdef CLIENT_DLL 
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+
+	// Creates a client side ONLY sentrygun - used for build slot
+	static C_FFSentryGun *CreateClientSideSentryGun( const Vector& vecOrigin, const QAngle& vecAngles );
+
+	// Mirv: Just going to store the ammo percentage here, with the msb
+	// holding the rocket state
+	unsigned int m_iAmmoPercent;
+#else
+	virtual void Precache( void );
+	virtual void Spawn( void );
+	void GoLive( void );
+
+	int TakeEmp();
+
+	void SetFocusPoint(Vector &origin);
+
+	void OnObjectThink( void ); // NOTE: Not an actual think function but called during every think function
+	void OnSearchThink( void );
+	void OnActiveThink( void );
+
+	void HackFindEnemy( void );
+
+	float MaxYawSpeed();
+	float MaxPitchSpeed();
+
+	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
+
+protected:
+	void Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
+	void Ping( void );	
+	void SpinUp( void );
+	void SpinDown( void );
+	bool UpdateFacing( void );
+	bool OnSide( void );
+
+	void SendStatsToBot();
+
+public:
+	virtual void Event_Killed( const CTakeDamageInfo &info );
+
+	const char *GetTracerType( void ) { return "SGTracer"; }
+
+	virtual Vector EyePosition( void );
+	Vector	EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
+
+	// Generic function to send hud messages to players
+	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage );
+
+	int GetLevel( void ) const { return m_iLevel; }
+	void Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
+
+	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
+
+	virtual void DoMuzzleFlash( void );
+
+public:
+	CNetworkVar(unsigned int, m_iAmmoPercent);
+
+	// Level-specific values
+	int		m_iMaxShells;
+	int		m_iMaxRockets;
+
+	int		m_iShellDamage;
+
+	float	m_flRocketCycleTime;
+	float	m_flShellCycleTime;
+
+	float	m_flTurnSpeed;
+	float	m_flLockTime;
+
+
+	// Ammo definition for shells
+	int		m_iAmmoType;
+
+	//	bool	m_bAutoStart;
+	//	bool	m_bActive;		// Denotes the turret is deployed and looking for targets
+	//	bool	m_bEnabled;		// Denotes whether the turret is able to deploy or not
+
+	float	m_flNextShell;
+	float	m_flNextRocket;
+
+
+	float	m_flLastSight;
+	float	m_flPingTime;
+	float	m_flNextActivateSoundTime;
+
+
+	int		m_iEyeAttachment;
+	int		m_iMuzzleAttachment;
+
+	int m_iPitchPoseParameter;
+	int m_iYawPoseParameter;
+
+	static const char		*m_pShotSounds[ ];
+
+	// Aiming
+	QAngle	m_angGoal;
+	QAngle	m_angAimBase;
+	QAngle	m_angAiming;
+#endif
 
 };
 

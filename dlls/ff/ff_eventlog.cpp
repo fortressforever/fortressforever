@@ -9,7 +9,7 @@
 #include "../EventLog.h"
 #include "KeyValues.h"
 #include "team.h"
-#include "ff_buildableobject.h"
+#include "ff_buildableobjects_shared.h"
 
 class CFFEventLog : public CEventLog
 {

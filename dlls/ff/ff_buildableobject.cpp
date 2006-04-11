@@ -26,10 +26,10 @@
 //		cleanup... basically an overhaul
 
 #include "cbase.h"
-#include "ff_buildableobject.h"
+#include "ff_buildableobjects_shared.h"
 #include "explode.h"
 #include "gib.h"
-#include "ff_player.h"
+//#include "ff_player.h"
 #include "EntityFlame.h"
 #include "beam_flags.h"
 #include "basecombatcharacter.h"

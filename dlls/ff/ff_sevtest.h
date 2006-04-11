@@ -5,7 +5,8 @@
 #pragma once
 #endif
 
-#include "ff_buildableobject.h"
+/*
+#include "ff_buildableobjects_shared.h"
 
 class CFFSevTest : public CFFBuildableObject
 {
@@ -26,5 +27,6 @@ public:
 protected:
 	float	m_flSpawnTime;
 };
+*/
 
 #endif // FF_SEVTEST_H

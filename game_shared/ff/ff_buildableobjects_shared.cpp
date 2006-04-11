@@ -21,12 +21,6 @@
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 
-#ifdef CLIENT_DLL
-#include "debugoverlay_shared.h"
-#else
-	//#include "ff_sevtest.h"
-#endif
-
 CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float flBuildDist, float flRaiseVal) 
 {
 	m_BuildResult = BUILD_ERROR;

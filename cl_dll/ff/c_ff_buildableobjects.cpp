@@ -45,7 +45,7 @@
 //		Removing aim sphere
 
 #include "cbase.h"
-#include "c_ff_buildableobjects.h"
+//#include "c_ff_buildableobjects.h"
 #include "ff_buildableobjects_shared.h"
 #include "c_ff_timers.h"
 
@@ -302,6 +302,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
 	RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
 	RecvPropFloat( RECVINFO( m_flRange ) ),
 	RecvPropInt( RECVINFO( m_iLevel ) ),
+	RecvPropInt( RECVINFO( m_iShells ) ),
+	RecvPropInt( RECVINFO( m_iRockets ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------

@@ -19,6 +19,12 @@
 #include "ff_weapon_base.h"
 #include "ff_buildableobjects_shared.h"
 
+class CFFBuildableObject;
+class CFFDetpack;
+class CFFDispenser;
+class CFFSentryGun;
+class CFFSevTest;
+
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
 // Defined twice because the compiler is retarded and

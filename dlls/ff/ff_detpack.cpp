@@ -21,7 +21,7 @@
 //		explode time
 
 #include "cbase.h"
-#include "ff_detpack.h"
+#include "ff_buildableobjects_shared.h"
 
 LINK_ENTITY_TO_CLASS( FF_Detpack_entity, CFFDetpack );
 PRECACHE_REGISTER( FF_Detpack_entity );
@@ -88,7 +88,7 @@ CFFDetpack::CFFDetpack( void )
 	m_bTranslucent = false;
 	m_bUsePhysics = true;
 	
-	m_bLive = false;
+	//m_bLive = false;
 
 	// Default
 	m_iFuseTime = 5;
@@ -144,7 +144,7 @@ void CFFDetpack::GoLive( void )
 	SendStartTimerMessage();
 
 	// Go live (for touching)
-	m_bLive = true;
+	//m_bLive = true;
 
 	// Set up when we're supposed to blow up
 	float flCurTime = gpGlobals->curtime;
@@ -187,7 +187,7 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 {
 	CheckForOwner();
 
-	if( !m_bLive )
+	if( !m_bBuilt )
 		return;
 
 	if( !pOther )

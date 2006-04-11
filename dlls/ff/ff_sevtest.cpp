@@ -1,5 +1,6 @@
+
 #include "cbase.h"
-#include "ff_sevtest.h"
+#include "ff_buildableobjects_shared.h"
 
 LINK_ENTITY_TO_CLASS( FF_SevTest_entity, CFFSevTest );
 PRECACHE_REGISTER( FF_SevTest_entity );

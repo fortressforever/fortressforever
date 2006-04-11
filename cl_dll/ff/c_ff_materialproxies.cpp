@@ -18,8 +18,8 @@
 #include "materialsystem/IMaterial.h"
 #include "IClientRenderable.h"
 
-#include "c_ff_player.h"
-#include "c_ff_buildableobjects.h"
+//#include "c_ff_player.h"
+#include "ff_buildableobjects_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

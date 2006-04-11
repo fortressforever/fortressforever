@@ -86,7 +86,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	// If we are in the water most of the way...	
 	if ( player->GetWaterLevel() >= 2 )
-	{	
+	{
 		// swimming, not jumping
 		SetGroundEntity( (CBaseEntity *)NULL );
 

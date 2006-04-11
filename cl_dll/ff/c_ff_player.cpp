@@ -9,11 +9,13 @@
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
 #include "c_basetempentity.h"
-#include "c_ff_buildableobjects.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_utils.h"
 #include "engine/IEngineSound.h"
 #include "in_buttons.h"
+
+#include "view.h"
+#include "iviewrender.h"
 
 #include "ff_hud_grenade1timer.h"
 #include "ff_hud_grenade2timer.h"

@@ -51,9 +51,9 @@
 #pragma once
 #endif
 
-#include "c_AI_BaseNPC.h"
+//#include "c_AI_BaseNPC.h"
 
-#include "ff_buildableobjects_shared.h"
+//#include "ff_buildableobjects_shared.h"
 
 /*
 // SG Aim Sphere
@@ -96,6 +96,7 @@ public:
 //	class C_FFBuildableObject
 //
 //=============================================================================
+/*
 class C_FFBuildableObject : public C_AI_BaseNPC
 {
 public:
@@ -119,7 +120,9 @@ public:
 	bool	m_bBuilt;
 
 };
+*/
 
+/*
 //=============================================================================
 //
 //	class C_FFSevTest
@@ -137,7 +140,9 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
 };
+*/
 
+/*
 //=============================================================================
 //
 //	class C_FFDetpack
@@ -159,7 +164,9 @@ public:
 	static C_FFDetpack *CreateClientSideDetpack( const Vector& vecOrigin, const QAngle& vecAngles );
 
 };
+*/
 
+/*
 //=============================================================================
 //
 //	class C_FFDispenser
@@ -177,6 +184,8 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
 
+	int GetAmmoPerc( void );
+
 	// Creates a client side ONLY dispenser - used for build slot
 	static C_FFDispenser *CreateClientSideDispenser( const Vector& vecOrigin, const QAngle& vecAngles );
 
@@ -189,7 +198,9 @@ public:
 	CNetworkVar( int, m_iArmor );
 
 };
+*/
 
+/*
 //=============================================================================
 //
 //	class C_FFSentryGun
@@ -220,5 +231,6 @@ public:
 	CNetworkVar( int, m_iLevel );
 
 };
+*/
 
 #endif // C_FF_BUILDABLEOBJECTS_H

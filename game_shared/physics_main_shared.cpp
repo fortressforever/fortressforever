@@ -19,11 +19,10 @@
 
 // BEG: Added by Mulch 11/07/2005
 #ifdef CLIENT_DLL
-	#define CFFBuildableObject C_FFBuildableObject
-	#include "c_ff_buildableobjects.h"
-#else
-	#include "ff_buildableobject.h"
+	//#define CFFBuildableObject C_FFBuildableObject
 #endif
+
+#include "ff_buildableobjects_shared.h"
 // END: Added by Mulch 11/07/2005
 
 // memdbgon must be the last include file in a .cpp file!!!

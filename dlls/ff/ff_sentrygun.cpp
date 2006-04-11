@@ -48,16 +48,16 @@
 // he is out of range
 
 #include "cbase.h"
-#include "ai_basenpc.h"
+//#include "ai_basenpc.h"
 #include "ammodef.h"
 #include "explode.h"
 #include "gib.h"
 #include "EntityFlame.h"
 #include "beam_flags.h"
 #include "ff_sentrygun.h"
-#include "ff_dispenser.h"
-#include "ff_player.h"
-#include "ff_buildableobjects_shared.h"
+//#include "ff_dispenser.h"
+//#include "ff_player.h"
+//#include "ff_buildableobjects_shared.h"
 #include "te_effect_dispatch.h" 
 #include "ff_projectile_rocket.h"
 
@@ -82,6 +82,8 @@ IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun)
 	SendPropInt(SENDINFO(m_iAmmoPercent), 8, SPROP_UNSIGNED), 
 	SendPropFloat(SENDINFO(m_flRange)), 
 	SendPropInt(SENDINFO(m_iLevel)), 
+	SendPropInt(SENDINFO(m_iShells)),
+	SendPropInt(SENDINFO(m_iRockets)),
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS(FF_SentryGun_entity, CFFSentryGun);

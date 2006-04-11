@@ -40,7 +40,8 @@
 #pragma once
 #endif
 
-#include "ff_buildableobject.h"
+/*
+#include "ff_buildableobjects_shared.h"
 
 class CFFDispenser : public CFFBuildableObject
 {
@@ -68,8 +69,7 @@ public:
     
 	virtual Class_T	Classify( void ) { return CLASS_DISPENSER; }
 
-	// Bug #0000135: Railgun shot makes dispenser bleed
-	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; }
+	int GetAmmoPerc( void );
 
 	static CFFDispenser *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
@@ -112,5 +112,6 @@ protected:
 	void CalcAdjExplosionVal( void );
 	float	m_flOrigExplosionMagnitude;
 };
+*/
 
 #endif // FF_DISPENSER_H
