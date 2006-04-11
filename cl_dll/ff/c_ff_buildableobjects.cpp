@@ -222,6 +222,7 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 #endif
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFDispenser, DT_FFDispenser, CFFDispenser )
+	RecvPropInt( RECVINFO( m_iAmmoPercent ) ),
 	RecvPropInt( RECVINFO( m_iCells ) ),
 	RecvPropInt( RECVINFO( m_iShells ) ),
 	RecvPropInt( RECVINFO( m_iNails ) ),
@@ -232,7 +233,9 @@ END_RECV_TABLE( )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-// Moved to ff_buildableobjects_shared.cpp
+C_FFDispenser::C_FFDispenser( void )
+{
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Deconstructor

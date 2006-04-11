@@ -156,7 +156,7 @@ void CHudBuildState::OnTick()
 	{
 		m_bDrawDispenser = true;
 
-		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPerc(), m_szAmmo, pDispenser->GetAmmoPerc());
+		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPercent(), m_szAmmo, pDispenser->GetAmmoPercent());
 	}
 
 	C_FFSentryGun *pSentryGun = (C_FFSentryGun *) pPlayer->m_hSentryGun.Get();
@@ -173,10 +173,12 @@ void CHudBuildState::OnTick()
 			// We have at least a level 1 sg(ie. it isn't in the process of being built -
 			// it's built and operational) 
 
-			int iHealthPerc = ((float) pSentryGun->GetHealth() / pSentryGun->GetMaxHealth()) * 100;	// |-- Mirv: BUG #0000104: Sentry gun health status goes to 0% the moment the sentry loses health
+			//int iHealthPerc = ((float) pSentryGun->GetHealth() / pSentryGun->GetMaxHealth()) * 100;	// |-- Mirv: BUG #0000104: Sentry gun health status goes to 0% the moment the sentry loses health
+			// Mulch: new function in buildables
+			int iHealthPerc = pSentryGun->GetHealthPercent();
 
 			// Get ammo percentage
-			int iAmmoPerc = pSentryGun->m_iAmmoPercent;
+			int iAmmoPerc = pSentryGun->GetAmmoPercent();
 			bool fNoRockets = false;
 
 			// We store the lack of rockets in the highest significant bit

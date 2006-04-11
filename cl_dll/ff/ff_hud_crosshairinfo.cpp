@@ -230,12 +230,12 @@ void CHudCrosshairInfo::OnTick( void )
 							{
 								C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
 
-								iHealth = pBuildable->GetHealthPerc();
+								iHealth = pBuildable->GetHealthPercent();
 								
 								if( pBuildable->Classify() == CLASS_DISPENSER )
-									iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPerc();
+									iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPercent();
 								else if( pBuildable->Classify() == CLASS_SENTRYGUN )
-									iArmor = ( ( C_FFSentryGun * )pBuildable )->m_iAmmoPercent;
+									iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
 								else
 									iArmor = -1;
 							}

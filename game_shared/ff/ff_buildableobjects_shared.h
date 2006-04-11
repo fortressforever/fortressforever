@@ -236,7 +236,11 @@ public:
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
-	int GetHealthPerc( void );
+	int GetHealthPercent( void );
+	unsigned int GetAmmoPercent( void ) { return m_iAmmoPercent; }
+
+protected:
+	CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -354,6 +358,7 @@ protected:
 
 	// If true we should be using physics
 	bool	m_bUsePhysics;
+
 #endif
 
 };
@@ -468,8 +473,6 @@ public:
 
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
 
-	int GetAmmoPerc( void );
-
 public:
 	// Network variables
 	CNetworkVar( int, m_iCells );
@@ -571,9 +574,10 @@ public:
 	// Creates a client side ONLY sentrygun - used for build slot
 	static C_FFSentryGun *CreateClientSideSentryGun( const Vector& vecOrigin, const QAngle& vecAngles );
 
+	// Mulch: now this is in buildableobject to extend to disp & sg
 	// Mirv: Just going to store the ammo percentage here, with the msb
 	// holding the rocket state
-	unsigned int m_iAmmoPercent;
+	//unsigned int m_iAmmoPercent;
 #else
 	virtual void Precache( void );
 	virtual void Spawn( void );
