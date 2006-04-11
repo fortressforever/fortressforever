@@ -430,13 +430,7 @@ int CFFDispenser::GetAmmoPerc( void )
 {
 	float flAmmo = m_iCells + m_iShells + m_iNails + m_iRockets;
 	float flMaxAmmo = m_iMaxCells + m_iMaxShells + m_iMaxNails + m_iMaxRockets;
-	float flPercent = ( flAmmo / flMaxAmmo ) + 100;
-
-#ifdef CLIENT_DLL 
-	DevMsg( "[Client] flAmmo: %f, flMaxAmmo: %f, flPercent: %f", flAmmo, flMaxAmmo, flPercent );
-#else
-	DevMsg( "[Client] flAmmo: %f, flMaxAmmo: %f, flPercent: %f", flAmmo, flMaxAmmo, flPercent );
-#endif
+	float flPercent = ( flAmmo / flMaxAmmo ) * 100;
 
 	return ( int )flPercent;
 }
