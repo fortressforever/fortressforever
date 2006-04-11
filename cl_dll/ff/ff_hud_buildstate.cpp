@@ -156,6 +156,7 @@ void CHudBuildState::OnTick()
 	{
 		m_bDrawDispenser = true;
 
+		DevMsg( "[Buildstate] Calculating ammo percentage (%f)\n", gpGlobals->curtime );
 		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealth(), m_szAmmo, pDispenser->GetAmmoPerc());
 	}
 
