@@ -426,7 +426,7 @@ CFFDispenser::CFFDispenser( void )
 	m_iGiveArmor	= 10;
 }
 
-int CFFDispenser::GetHealthPerc( void )
+int CFFBuildableObject::GetHealthPerc( void )
 {
 	float flPercent = ( ( float )m_iHealth / ( float )m_iMaxHealth ) * 100.0f;
 

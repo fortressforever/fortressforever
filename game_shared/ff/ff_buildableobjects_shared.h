@@ -235,6 +235,8 @@ public:
 	bool IsBuilt( void	) const { return m_bBuilt; }
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
+
+	int GetHealthPerc( void );
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -466,7 +468,6 @@ public:
 
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
 
-	int GetHealthPerc( void );
 	int GetAmmoPerc( void );
 
 public:
