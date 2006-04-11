@@ -229,9 +229,18 @@ void CHudCrosshairInfo::OnTick( void )
 							if( bWeEngy )
 							{
 								C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
-								iHealth = ( ( float )pBuildable->GetHealth() / pBuildable->GetMaxHealth() ) * 100;
-								iArmor = 999; // fake value for now
-								// TODO: Get ammo -> iArmor will be ammo % for buildables
+								
+								if( pBuildable->Classify() == CLASS_DISPENSER )
+								{
+									iHealth = ( ( C_FFDispenser * )pBuildable )->GetHealthPerc();
+									iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPerc();
+								}
+								else
+								{
+									iHealth = ( ( float )pBuildable->GetHealth() / pBuildable->GetMaxHealth() ) * 100;
+									iArmor = 999; // fake value for now
+									// TODO: Get ammo -> iArmor will be ammo % for buildables
+								}
 							}
 						}
 						else
