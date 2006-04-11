@@ -509,6 +509,8 @@ public:
 	void OnObjectThink( void );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
+	CNetworkVar( unsigned int, m_iAmmoPercent );
+
 	// Generic function to send hud messages to players
 	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText = false );
 
