@@ -156,7 +156,7 @@ void CHudBuildState::OnTick()
 	{
 		m_bDrawDispenser = true;
 
-		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealth(), m_szAmmo, pDispenser->GetAmmoPerc());
+		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPerc(), m_szAmmo, pDispenser->GetAmmoPerc());
 	}
 
 	C_FFSentryGun *pSentryGun = (C_FFSentryGun *) pPlayer->m_hSentryGun.Get();

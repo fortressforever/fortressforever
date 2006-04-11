@@ -466,6 +466,7 @@ public:
 
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
 
+	int GetHealthPerc( void );
 	int GetAmmoPerc( void );
 
 public:

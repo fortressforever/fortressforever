@@ -426,6 +426,13 @@ CFFDispenser::CFFDispenser( void )
 	m_iGiveArmor	= 10;
 }
 
+int CFFDispenser::GetHealthPerc( void )
+{
+	float flPercent = ( ( float )m_iHealth / ( float )m_iMaxHealth ) * 100.0f;
+
+	return ( int )flPercent;
+}
+
 int CFFDispenser::GetAmmoPerc( void )
 {
 	float flAmmo = m_iCells + m_iShells + m_iNails + m_iRockets;
