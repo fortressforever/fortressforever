@@ -533,6 +533,8 @@ protected:
 	// based on how much stuff is in the dispenser
 	void CalcAdjExplosionVal( void );
 	float	m_flOrigExplosionMagnitude;
+
+	void UpdateAmmoPercentage( void );
 #endif
 
 };

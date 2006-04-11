@@ -175,6 +175,8 @@ void CFFDispenser::Spawn( void )
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();
+
+	UpdateAmmoPercentage();
 }
 
 /**
@@ -284,6 +286,9 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					// Give the player stuff
 					Dispense( pPlayer );
 
+					// Update ammo percentage
+					UpdateAmmoPercentage();
+
 					// Modify explosion values
 					CalcAdjExplosionVal();
 				}
@@ -338,6 +343,9 @@ void CFFDispenser::OnObjectThink( void )
 	m_iCells = clamp( m_iCells + 20, 0, m_iMaxCells );
 	m_iRockets = clamp( m_iRockets + 10, 0, m_iMaxRockets );
 	m_iArmor = clamp( m_iArmor + 20, 0, m_iMaxArmor );
+
+	// Update ammo percentage
+	UpdateAmmoPercentage();
 
 	// Call base class think func
 	CFFBuildableObject::OnObjectThink();
@@ -452,13 +460,40 @@ void CFFDispenser::CalcAdjExplosionVal( void )
 	// explosion magnitude value by taking this percentage
 	// times the original explosion magnitude value
 
+	// From constructor
+	//// Default values
+	//m_iExplosionMagnitude = 50;
+	//m_flExplosionMagnitude = 50.0f;
+	//m_flExplosionRadius = 3.5f * m_flExplosionMagnitude;
+	//m_iExplosionRadius = ( int )m_flExplosionRadius;	
+	//m_flExplosionForce = 100.0f;
+	//// TODO: for now - change this later? remember to update in dispenser.cpp as well
+	//m_flExplosionDamage = m_flExplosionForce;
+
+	float flPercent = ( float )( m_iAmmoPercent / 100.0f );
+
+	m_iExplosionMagnitude = 50 * ( 1 + flPercent );
+	m_flExplosionMagnitude = 50.0f * ( 1 + flPercent );
+
 	// Update values for when we explode
-	m_iExplosionMagnitude = ( int )m_flExplosionMagnitude;
 	m_flExplosionRadius = 3.5f * m_flExplosionMagnitude;
 	m_iExplosionRadius = ( int )m_flExplosionRadius;
 	// TODO: for now - remember to change it to what it
 	// is for the base class or whatever
+	m_flExplosionForce = 100.0f * ( 1 + flPercent );
 	m_flExplosionDamage = m_flExplosionForce;
+}
+
+//
+// UpdateAmmoPercentage
+//		Calculates the percent ammo the dispenser has
+//
+void CFFDispenser::UpdateAmmoPercentage( void )
+{
+	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets;
+	float flMaxAmmo = m_iMaxCells = m_iMaxNails + m_iMaxShells + m_iMaxRockets;
+
+	m_iAmmoPercent = ( ( flAmmo / flMaxAmmo ) * 100 );
 }
 
 void CFFDispenser::SendStatsToBot()
