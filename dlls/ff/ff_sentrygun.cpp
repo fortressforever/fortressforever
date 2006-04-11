@@ -36,17 +36,6 @@
 //		A lot of this has been rewritten so support some future stuff. I've not yet
 //		finished all of it but its in a state where it can be committed now.
 
-// TODO: Random thing i thought of
-// need to add in a "pLastTarget" so that we can check
-// [after doing the next scan for enemies] for if the guy
-// we had previously targetted had moved out of range or
-// out of our view cone but is still somewhere we he can
-// be fired at - ie. do a trace to see if he's not behind
-// a wall and then make him the current target - like you
-// can do in tfc if a guy concs away from an sg the sg
-// is still locked on him and still fires at him eventhough
-// he is out of range
-
 #include "cbase.h"
 //#include "ai_basenpc.h"
 #include "ammodef.h"
