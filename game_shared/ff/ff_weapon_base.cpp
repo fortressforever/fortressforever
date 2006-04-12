@@ -486,6 +486,7 @@ void CFFWeaponBase::WeaponIdle()
 //----------------------------------------------------------------------------
 void CFFWeaponBase::WeaponRecoil() 
 {
+#ifdef GAME_DLL
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
@@ -493,6 +494,7 @@ void CFFWeaponBase::WeaponRecoil()
 	QAngle angle = pPlayer->GetPunchAngle();
 	angle.x -= pWeaponInfo.m_flRecoilAmount;
 	pPlayer->SetPunchAngle(angle);
+#endif
 }
 
 #ifdef GAME_DLL
