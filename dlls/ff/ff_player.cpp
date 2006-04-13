@@ -1897,27 +1897,25 @@ void CFFPlayer::Command_BuildDetpack( void )
 
 		m_iDetpackTime = atoi( pszArg );
 		bool bInRange = true;
-		if(m_iDetpackTime < 5)
+		if( ( m_iDetpackTime < 5 ) || ( m_iDetpackTime > 60 ) )
 		{
-			m_iDetpackTime = 5;
+			m_iDetpackTime = clamp( m_iDetpackTime, 0, 60 );
 			bInRange = false;
 		}
-		else if(m_iDetpackTime > 60)
-		{
-			m_iDetpackTime = 60;
-			bInRange = false;
-		}
+
 		if(!bInRange)
 		{
 			DevMsg( "[Detpack Timer] Invalid or out of bounds range! Clamping to %d\n", m_iDetpackTime );
 		}
-		if( m_iDetpackTime % 5 != 0 )
-		{
-			// Round it to the nearest multiple of 5
-			int iMultiple = (int)(((float)m_iDetpackTime + 2.5f) / 5.0f);
-			m_iDetpackTime = iMultiple * 5;
-			DevMsg( "[Detpack Timer] Fuse length must be a multiple of 5! Resetting to nearest multiple %d.\n", m_iDetpackTime );
-		}
+
+		// Bug #0000453: Detpack timer can't be anything other than multiples of five
+//		if( m_iDetpackTime % 5 != 0 )
+//		{
+//			// Round it to the nearest multiple of 5
+//			int iMultiple = (int)(((float)m_iDetpackTime + 2.5f) / 5.0f);
+//			m_iDetpackTime = iMultiple * 5;
+//			DevMsg( "[Detpack Timer] Fuse length must be a multiple of 5! Resetting to nearest multiple %d.\n", m_iDetpackTime );
+//		}
 	}
 
 	//m_bCancelledBuild = false;
