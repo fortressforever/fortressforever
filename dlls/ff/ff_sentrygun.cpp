@@ -111,6 +111,7 @@ const char *g_pszFFSentryGunSounds[] =
 	"Sentry.Three", 
 	"Sentry.Aim",
 	FF_SENTRYGUN_UNBUILD_SOUND,
+	"Spanner.HitSG",
 	NULL
 };
 

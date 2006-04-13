@@ -248,6 +248,11 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			// Changed 130 to 65 because:
 			// Bug #0000333: Buildable Behavior (non build slot) while building
 			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
+
+			// Bug #0000426: Buildables Dismantle Sounds Missing
+			CPASAttenuationFilter sndFilter( pDispenser );
+			pDispenser->EmitSound( sndFilter, pDispenser->entindex(), "Dispenser.unbuild" );
+
 			pDispenser->RemoveQuietly();
 		}
 		else
@@ -295,6 +300,11 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			// Changed 130 to 65 because:
 			// Bug #0000333: Buildable Behavior (non build slot) while building
 			pPlayer->GiveAmmo(65.0f, AMMO_CELLS, true);
+
+			// Bug #0000426: Buildables Dismantle Sounds Missing
+			CPASAttenuationFilter sndFilter( pDispenser );
+			pDispenser->EmitSound( sndFilter, pDispenser->entindex(), "Dispenser.unbuild" );
+
 			pDispenser->RemoveQuietly();
 		}
 		else
