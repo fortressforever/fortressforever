@@ -721,7 +721,13 @@ void CFFPlayer::Spawn()
 	// Can I get some freakin ammo please?
 	// Maybe some sharks with freakin laser beams?
 	for(int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++)
+	{
+		// Bug #0000452: Detpack is given to player after they've already used a detpack.
+		if( m_hDetpack.Get() && !Q_strcmp( pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, "AMMO_DETPACK" ) )
+			continue;
+
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
+	}
 
 	// Clear the list of people who previously radio tagged us
 	//m_hWhoTaggedMeList.RemoveAll( );
