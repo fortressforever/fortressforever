@@ -14,9 +14,6 @@
 #include "viewport_panel_names.h"
 #include "EntityFlame.h"
 
-#include "ff_dispenser.h"
-#include "ff_detpack.h"
-#include "ff_sentrygun.h"
 #include "ff_item_flag.h"
 #include "ff_sevtest.h"
 #include "ff_utils.h"

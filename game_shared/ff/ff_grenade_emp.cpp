@@ -17,10 +17,7 @@
 #include "ff_utils.h"
 #include "engine/IEngineSound.h"
 #ifdef GAME_DLL
-	#include "ff_buildableobject.h"
-	#include "ff_detpack.h"
-	#include "ff_dispenser.h"
-	#include "ff_sentrygun.h"
+	#include "ff_buildableobjects_shared.h"
 	#include "ff_projectile_pipebomb.h"
 	#include "baseentity.h"
 	#include "beam_flags.h"

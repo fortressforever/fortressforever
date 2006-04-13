@@ -110,6 +110,7 @@ const char *g_pszFFSentryGunSounds[] =
 	"Sentry.Two", 
 	"Sentry.Three", 
 	"Sentry.Aim",
+	FF_SENTRYGUN_UNBUILD_SOUND,
 	NULL
 };
 
@@ -913,7 +914,7 @@ void CFFSentryGun::SetFocusPoint(Vector &origin)
 	// Bug #0000427: Sound needed for Sentrygun aim feature
 	// Play aim sound
 	CPASAttenuationFilter sndFilter( this );
-	EmitSount( sndFilter, entindex(), "Sentry.Aim" );    
+	EmitSound( sndFilter, entindex(), "Sentry.Aim" );    
 
 #ifdef _DEBUG
 	if (sg_debug.GetBool()) 

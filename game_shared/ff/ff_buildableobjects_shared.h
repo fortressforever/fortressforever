@@ -50,6 +50,7 @@
 #define FF_DISPENSER_GIB03_MODEL			"models/gibs/dispenser/gib3.mdl"
 #define FF_DISPENSER_GIB04_MODEL			"models/gibs/dispenser/gib4.mdl"
 #define FF_DISPENSER_BUILD_SOUND			"Dispenser.Build"
+//#define FF_DISPENSER_UNBUILD_SOUND			"Dispenser.unbuild"
 #define FF_DISPENSER_EXPLODE_SOUND			"Dispenser.Explode"
 
 #define FF_DETPACK_MODEL					"models/buildable/detpack/detpack.mdl"
@@ -60,6 +61,7 @@
 #define FF_SENTRYGUN_MODEL_LVL2				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_MODEL_LVL3				"models/buildable/sg/sg_lvl2.mdl"
 #define FF_SENTRYGUN_BUILD_SOUND			"Sentry.One"
+#define FF_SENTRYGUN_UNBUILD_SOUND			"Sentry.unbuild"
 #define FF_SENTRYGUN_EXPLODE_SOUND			"Sentry.Explode"
 
 //#define FF_SENTRYGUN_AIMSPHERE_MODEL		"models/buildable/sg/sentrygun_aimsphere.mdl"

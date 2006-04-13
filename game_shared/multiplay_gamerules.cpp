@@ -29,9 +29,7 @@
 	#include "hltvdirector.h"
 
 	// BEG: Added by Mulchman for Buildable Objects
-	#include "ff_detpack.h"
-	#include "ff_sentrygun.h"
-	#include "ff_dispenser.h"
+	#include "ff_buildableobjects_shared.h"
 	// END: Added by Mulchman for Buildable Objects
 	
 #endif

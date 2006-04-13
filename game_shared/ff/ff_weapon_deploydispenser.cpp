@@ -35,12 +35,11 @@
 	#define CFFDispenser C_FFDispenser
 
 	#include "c_ff_player.h"
-	#include "c_ff_buildableobjects.h"
-	#include "ff_buildableobjects_shared.h"
 #else
 	#include "ff_player.h"
-	#include "ff_dispenser.h"
 #endif
+
+#include "ff_buildableobjects_shared.h"
 
 //=============================================================================
 // CFFWeaponDeployDispenser

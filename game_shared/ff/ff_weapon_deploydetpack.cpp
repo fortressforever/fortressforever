@@ -21,13 +21,12 @@
 #if defined( CLIENT_DLL )
 	#define CFFWeaponDeployDetpack C_FFWeaponDeployDetpack
 	#define CFFDetpack C_FFDetpack
-	#include "c_ff_player.h"
-	#include "c_ff_buildableobjects.h"
-	#include "ff_buildableobjects_shared.h"
+	#include "c_ff_player.h"	
 #else
 	#include "ff_player.h"
-	#include "ff_detpack.h"
 #endif
+
+#include "ff_buildableobjects_shared.h"
 
 //=============================================================================
 // CFFWeaponDeployDetpack

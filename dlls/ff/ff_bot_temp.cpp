@@ -64,7 +64,8 @@
 #include "ff_utils.h"
 
 // TODO: REMOVE ME REMOVE ME
-#include "ff_detpack.h"
+//#include "ff_detpack.h"
+#include "ff_buildableobjects_shared.h"
 
 class CFFBot;
 void Bot_Think( CFFBot *pBot );

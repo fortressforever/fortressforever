@@ -33,13 +33,12 @@
 	#define CFFSentryGun C_FFSentryGun
 
 	#include "c_ff_player.h"
-	#include "c_ff_buildableobjects.h"
-	#include "ff_buildableobjects_shared.h"
 	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
-	#include "ff_sentrygun.h"
 #endif
+
+#include "ff_buildableobjects_shared.h"
 
 //=============================================================================
 // CFFWeaponDeploySentryGun
@@ -352,6 +351,11 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
 		{
 			pPlayer->GiveAmmo(pSentry->GetLevel() * 65, AMMO_CELLS, true);
+
+			// Bug #0000426: Buildables Dismantle Sounds Missing
+			CPASAttenuationFilter sndFilter( pSentry );
+			pSentry->EmitSound( sndFilter, pSentry->entindex(), FF_SENTRYGUN_UNBUILD_SOUND );
+
 			pSentry->RemoveQuietly();
 		}
 		else
@@ -397,6 +401,11 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
 		{
 			pPlayer->GiveAmmo(pSentry->GetLevel() * 65, AMMO_CELLS, true);
+
+			// Bug #0000426: Buildables Dismantle Sounds Missing
+			CPASAttenuationFilter sndFilter( pSentry );
+			pSentry->EmitSound( sndFilter, pSentry->entindex(), FF_SENTRYGUN_UNBUILD_SOUND );
+
 			pSentry->RemoveQuietly();
 		}
 		else
