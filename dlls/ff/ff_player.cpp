@@ -567,7 +567,8 @@ void CFFPlayer::Spawn()
 	}
 
 	// Mulch: BUG 0000310: return fov to default on spawn	
-	SetFOV( this, GetDefaultFOV() );
+	bool bFovSet = SetFOV( this, GetDefaultFOV() );
+	DevMsg( "[Spawn] Setting fov to default on spawn was: %s\n", bFovSet ? "successful" : "a failure!" );
 
 	m_pBuildLastWeapon = NULL;
 
