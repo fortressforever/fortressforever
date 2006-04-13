@@ -84,6 +84,7 @@ const char *g_pszFFDispenserSounds[ ] =
 {
 	FF_DISPENSER_BUILD_SOUND,
 	FF_DISPENSER_EXPLODE_SOUND,
+	FF_DISPENSER_UNBUILD_SOUND,
 	NULL
 };
 

@@ -50,7 +50,7 @@
 #define FF_DISPENSER_GIB03_MODEL			"models/gibs/dispenser/gib3.mdl"
 #define FF_DISPENSER_GIB04_MODEL			"models/gibs/dispenser/gib4.mdl"
 #define FF_DISPENSER_BUILD_SOUND			"Dispenser.Build"
-//#define FF_DISPENSER_UNBUILD_SOUND			"Dispenser.unbuild"
+#define FF_DISPENSER_UNBUILD_SOUND			"Dispenser.unbuild"
 #define FF_DISPENSER_EXPLODE_SOUND			"Dispenser.Explode"
 
 #define FF_DETPACK_MODEL					"models/buildable/detpack/detpack.mdl"
