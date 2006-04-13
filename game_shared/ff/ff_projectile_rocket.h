@@ -44,6 +44,9 @@ public:
 	CFFProjectileRocket(const CFFProjectileRocket&) {}
 
 #else
+	// Added for:
+	// Bug #0000436: Need to truncate Rocket travel sound on impact.
+	DECLARE_DATADESC()
 
 	void ExplodeTouch( CBaseEntity *pOther );
 	virtual void Spawn();

@@ -33,6 +33,12 @@ PRECACHE_WEAPON_REGISTER(rocket);
 
 #ifdef GAME_DLL
 
+	// Bug #0000436: Need to truncate Rocket travel sound on impact.
+	BEGIN_DATADESC( CFFProjectileRocket )
+		// Function Pointers
+		DEFINE_ENTITYFUNC( ExplodeTouch ),
+	END_DATADESC()
+
 	//----------------------------------------------------------------------------
 	// Purpose: Creata a trail of smoke for the rocket
 	//----------------------------------------------------------------------------
@@ -82,6 +88,8 @@ PRECACHE_WEAPON_REGISTER(rocket);
 		BaseClass::Spawn();
 	}
 
+	// Added for:
+	// Bug #0000436: Need to truncate Rocket travel sound on impact.
 	void CFFProjectileRocket::ExplodeTouch( CBaseEntity *pOther )
 	{
 		// Bug: 0000436: Need to truncate Rocket travel sound on impact.
