@@ -59,6 +59,8 @@ CFFItemBackpack::CFFItemBackpack()
 	m_iHealth	= 0;
 
 	m_flSpawnTime = gpGlobals->curtime;
+
+	m_iDetpackIndex = GetAmmoDef()->Index( AMMO_DETPACK );
 }
 
 void CFFItemBackpack::Precache()
@@ -122,7 +124,13 @@ void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )
 		int ammotaken = 0;
 
 		for (int i = 1; i < MAX_AMMO_SLOTS; i++)
+		{
+			// Don't take detpack ammo if a player's detpack is active/alive
+			if( pFFPlayer->m_hDetpack.Get() && ( m_iDetpackIndex == i ) )
+				continue;
+
 			ammotaken += pFFPlayer->GiveAmmo(m_iAmmoCounts[i], i);
+		}
 
 		ammotaken += pFFPlayer->AddPrimaryGrenades(m_iGren1);
 		ammotaken += pFFPlayer->AddSecondaryGrenades(m_iGren2);
