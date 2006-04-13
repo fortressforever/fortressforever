@@ -45,6 +45,7 @@ public:
 
 #else
 
+	void ExplodeTouch( CBaseEntity *pOther );
 	virtual void Spawn();
 
 protected:

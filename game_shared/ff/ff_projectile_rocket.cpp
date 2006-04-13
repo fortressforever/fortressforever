@@ -82,6 +82,14 @@ PRECACHE_WEAPON_REGISTER(rocket);
 		BaseClass::Spawn();
 	}
 
+	void CFFProjectileRocket::ExplodeTouch( CBaseEntity *pOther )
+	{
+		// Bug: 0000436: Need to truncate Rocket travel sound on impact.
+		StopSound( "rocket.fly" );
+
+		BaseClass::ExplodeTouch( pOther );
+	}
+
 #endif
 
 //----------------------------------------------------------------------------
