@@ -61,9 +61,6 @@ private:
 	int m_iHealth;
 
 	float m_flSpawnTime;
-
-protected:
-	int m_iDetpackIndex; // Mulch
 };
 
 #endif//FF_ITEM_BACKPACK_H

@@ -723,9 +723,11 @@ void CFFPlayer::Spawn()
 	// Maybe some sharks with freakin laser beams?
 	for(int i = 0; i < pPlayerClassInfo.m_iNumAmmos; i++)
 	{
-		// Bug #0000452: Detpack is given to player after they've already used a detpack.
-		if( m_hDetpack.Get() && !Q_strcmp( pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, "AMMO_DETPACK" ) )
-			continue;
+		// UNDONE: per defrag and documentation update - give player the detpack ammo
+		// just don't let them lay another detpack while one is out
+//		// Bug #0000452: Detpack is given to player after they've already used a detpack.
+//		if( m_hDetpack.Get() && !Q_strcmp( pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, "AMMO_DETPACK" ) )
+//			continue;
 
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 	}
