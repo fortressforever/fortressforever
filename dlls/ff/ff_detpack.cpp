@@ -54,6 +54,7 @@ const char *g_pszFFDetpackSounds[ ] =
 	FF_DETPACK_BUILD_SOUND,
 	FF_DETPACK_EXPLODE_SOUND,
 	"Detpack.FiveSeconds",
+	"Detpack.Defuse",
 	NULL
 };
 
@@ -216,6 +217,10 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 
 	// Tell client to stop the timer
 	SendStopTimerMessage();
+
+	// Play defuse sound
+	CPASAttenuationFilter sndFilter( this );
+	EmitSound( sndFilter, entindex(), "Detpack.Defuse" );
 
 	// Finally remove
 	RemoveQuietly();	
