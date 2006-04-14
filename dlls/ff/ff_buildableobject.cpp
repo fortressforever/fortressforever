@@ -166,7 +166,8 @@ void CFFBuildableObject::Spawn( void )
 	// Play the build sound (if there is one)
 	if( m_bHasSounds )
 	{
-		CPASAttenuationFilter sndFilter( this );
+		CPASAttenuationFilter sndFilter( GetAbsOrigin() );
+		sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
 		EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
 	}
 

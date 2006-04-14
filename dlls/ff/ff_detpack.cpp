@@ -244,7 +244,7 @@ void CFFDetpack::OnObjectThink( void )
 		DevMsg( "[Detpack] Setting 5 second timer\n" );
 		
 		// Play the 5 second to go sound (whine up) whatever.
-		EmitSound( m_ppszSounds[ 2 ] );
+		EmitSound( m_ppszSounds[ 2 ] );		
 
 		m_bFiveSeconds = true;
 
