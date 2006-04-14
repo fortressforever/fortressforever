@@ -1974,9 +1974,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 			DevMsg( "[Buildable] User has already built a: %s" );
 			switch( m_iWantBuild )
 			{
-				case FF_BUILD_DISPENSER: DevMsg( "dispenser\n" ); break;
-				case FF_BUILD_SENTRYGUN: DevMsg( "sentrygun\n" ); break;
-				case FF_BUILD_DETPACK: DevMsg( "detpack\n" ); break;
+				case FF_BUILD_DISPENSER: DevMsg( "dispenser\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_DISPENSER_ALREADY_BUILT" ); break;
+				case FF_BUILD_SENTRYGUN: DevMsg( "sentrygun\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_SENTRYGUN_ALREADY_BUILT" ); break;
+				case FF_BUILD_DETPACK: DevMsg( "detpack\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_DETPACK_ALREADY_SET" ); break;
 			}
 
 			// Re-initialize
