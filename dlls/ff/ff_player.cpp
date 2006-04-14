@@ -367,9 +367,26 @@ void CFFPlayer::PreThink(void)
 	if( IsGrenadePrimed( ) )
 		GrenadeThink( );
 
-	// If we're building and we've waited the two seconds or whatever...
-	if( m_bBuilding && ( m_flBuildTime < gpGlobals->curtime ) )
-		PostBuildGenericThink( );
+	// Bug #0000459: building on ledge locks you into place.
+	if( m_bBuilding )
+	{
+		// Need to stop building because player somehow came off the ground
+		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
+		{
+			Warning( "[Buildable] Player building and came off the ground! Need to cancel build.\n" );
+
+			// Send back through build process *should* cancel it correctly
+			m_iWantBuild = m_iCurBuild;
+			PreBuildGenericThink();
+		}
+
+		// Keeping the m_bBulding line in there in case we cancel the build cause
+		// we left the ground in which case m_bBuilding will be false and we'll
+		// just skip this.
+		// If we're building and we've waited the two seconds or whatever...
+		if( m_bBuilding && ( m_flBuildTime < gpGlobals->curtime ) )
+			PostBuildGenericThink();
+	}
 
 	StatusEffectsThink();
 
@@ -942,6 +959,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Get rid of fire
 	Extinguish();
+
+	// Kill infection sound
+	// Bug #0000461: Infect sound plays eventhough you are dead
+	StopSound( "Player.DrownContinue" );
 
 	// --> Mirv: Create backpack moved here to stop crash
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
@@ -2104,7 +2125,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 		if( m_iCurBuild == m_iWantBuild )
 		{
-			DevMsg( "[Building] You're currently building this item so cancel the build\n" );
+			DevMsg( "[Building] You're currently building this item so cancel the build OR you're in the air trying to build.\n" );
 
 			// Cancel the build
 			switch( m_iCurBuild )
@@ -2867,6 +2888,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			return;
 		}
 
+		// When you change this be sure to change the StopSound above ^^ for bug
+		// Bug #0000461: Infect sound plays eventhough you are dead
 		EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
 
 		DevMsg("Infect Tick\n");
@@ -2892,6 +2915,10 @@ void CFFPlayer::StatusEffectsThink( void )
 						continue;
 
 					if (player->GetClassSlot() == CLASS_MEDIC)
+						continue;
+
+					// Bug #0000468: Infections transmit to non-teammates
+					if( player->GetTeamNumber() != GetTeamNumber() )
 						continue;
 
 					player->Infect(m_hInfector);
@@ -3755,14 +3782,15 @@ int CFFPlayer::Heal( float flHealth )
 		return 0;
 
 	// 150% max specified in the wiki
-	if (m_iHealth >= m_iMaxHealth * 1.5f)
+	if( ( float )m_iHealth >= ( float )( m_iMaxHealth * 1.5f ) )
 		return 0;
 
 	// Also medpack boosts health to maximum + then carries on to 150%
-	if (m_iHealth < m_iMaxHealth)
+	if( m_iHealth < m_iMaxHealth )
 		m_iHealth = m_iMaxHealth;
 	else
-		min(m_iHealth + flHealth, m_iMaxHealth * 1.5f);
+		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
+		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
 
 	if (m_bInfected)
 	{
