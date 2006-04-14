@@ -369,3 +369,17 @@ Vector CFFPlayer::GetLegacyAbsOrigin()
 {
 	return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
 }
+
+int CFFPlayer::GetHealthPercentage( void )
+{
+	float flPerc;
+	flPerc = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;
+	return ( int )flPerc;
+}
+
+int CFFPlayer::GetArmorPercentage( void )
+{
+	float flPerc;
+	flPerc = ( ( float )GetArmor() / ( float )GetMaxArmor() ) * 100.0f;
+	return ( int )flPerc;
+}

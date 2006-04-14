@@ -213,6 +213,8 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		{
 			CFFSentryGun *pSentryGun = (CFFSentryGun *) pHitEntity;
 
+			EmitSound("Spanner.HitSG");
+
 			// Is the sentrygun mine(is pPlayer the owner?) 
 			bool bMine = (pPlayer == ToFFPlayer(pSentryGun->m_hOwner));
 
@@ -237,9 +239,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					pSentryGun->Upgrade(false, cells, shells, rockets);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
 					pPlayer->RemoveAmmo(shells, AMMO_SHELLS);
-					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);
-
-					EmitSound("Spanner.HitSG");
+					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);					
 				}
 
 				// Get out now so we don't call the baseclass and do damage

@@ -140,6 +140,11 @@ public:
 	virtual float GetArmorType() const { return m_fArmorType; };
 	// ---> end
 
+	// --> mulch
+	int GetHealthPercentage( void );
+	int GetArmorPercentage( void );
+	// <--
+
 private:
 	// ---> FF movecode stuff (billdoor)
 	friend CFFGameMovement;

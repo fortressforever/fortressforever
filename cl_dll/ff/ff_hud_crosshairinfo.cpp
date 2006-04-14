@@ -242,8 +242,10 @@ void CHudCrosshairInfo::OnTick( void )
 						}
 						else
 						{
-							iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
-							iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;							
+							//iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
+							//iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;							
+							iHealth = pHitPlayer->GetHealthPercentage();
+							iArmor = pHitPlayer->GetArmorPercentage();
 						}
 					}
 					else
@@ -260,8 +262,10 @@ void CHudCrosshairInfo::OnTick( void )
 								if( !bTheySpy )
 								{
 									// Get real health/armor
-									iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
-									iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;
+									//iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
+									//iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;
+									iHealth = pHitPlayer->GetHealthPercentage();
+									iArmor = pHitPlayer->GetArmorPercentage();
 								}
 								else
 								{
@@ -389,8 +393,8 @@ void CHudCrosshairInfo::OnTick( void )
 					if( ( iHealth != -1 ) && ( iArmor != -1 ) )
 					{
 						char szHealth[ 5 ], szArmor[ 5 ];
-						Q_snprintf( szHealth, 5, "%i", iHealth );
-						Q_snprintf( szArmor, 5, "%i", iArmor );
+						Q_snprintf( szHealth, 5, "%i%%", iHealth );
+						Q_snprintf( szArmor, 5, "%i%%", iArmor );
 
 						wchar_t wszHealth[ 10 ], wszArmor[ 10 ];
 
