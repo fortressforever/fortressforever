@@ -492,7 +492,7 @@ void CFFDispenser::CalcAdjExplosionVal( void )
 void CFFDispenser::UpdateAmmoPercentage( void )
 {
 	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets;
-	float flMaxAmmo = m_iMaxCells = m_iMaxNails + m_iMaxShells + m_iMaxRockets;
+	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets;
 
 	m_iAmmoPercent = ( ( flAmmo / flMaxAmmo ) * 100 );
 }
