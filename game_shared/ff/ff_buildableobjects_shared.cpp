@@ -134,7 +134,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	{
 		// Bug #0000479: Demoman in detpack build slot can jump around and the fake model will still draw
 		// Must be on ground to set a detpack
-		if( FBitSet( m_pPlayer->GetEffects(), FL_ONGROUND ) )
+		if( !FBitSet( m_pPlayer->GetFlags(), FL_ONGROUND ) )
 			return true;
 
 		return false;

@@ -264,7 +264,12 @@ public:
 	void Detonate( void );
 	void RemoveQuietly( void );
 	
-	virtual void Cancel( void ) { RemoveQuietly(); }
+	virtual void Cancel( void ) 
+	{
+		// Stop the build sound
+		StopSound( m_ppszSounds[ 0 ] );
+		RemoveQuietly(); 
+	}
 	
 	bool CheckForOwner( void )
 	{

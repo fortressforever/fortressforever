@@ -407,15 +407,6 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 		if( Q_strcmp( "detpack", bot_sendcmd.GetString() ) == 0 )
 			pBot->Command_BuildDetpack();
 
-		if( Q_strcmp( "detpack20", bot_sendcmd.GetString() ) == 0 )
-		{			
-			pBot->Command_BuildDetpack();
-			if( pBot->m_hDetpack.Get() )
-			{
-				( ( CFFDetpack * )pBot->m_hDetpack.Get() )->m_iFuseTime = 20;
-			}
-		}
-
 		if( Q_strcmp( "sentrygun", bot_sendcmd.GetString() ) == 0 )
 			pBot->Command_BuildSentryGun();
 

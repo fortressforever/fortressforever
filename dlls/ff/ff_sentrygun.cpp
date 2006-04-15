@@ -363,6 +363,9 @@ void CFFSentryGun::OnObjectThink()
 {
 	CheckForOwner();
 
+	// TODO: Remvoe
+	m_flTurnSpeed = sg_turnspeed.GetFloat();
+
 	// Animate
 	StudioFrameAdvance();
 }
