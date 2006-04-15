@@ -134,10 +134,10 @@ public:
 	CNetworkVar(int, m_iMaxArmor);
 	CNetworkVar(float, m_fArmorType);
 
-	virtual int GetMaxHealth() const { return m_iMaxHealth; };
-	virtual int	GetArmor() const { return m_iArmor; };
-	virtual int	GetMaxArmor() const { return m_iMaxArmor; };
-	virtual float GetArmorType() const { return m_fArmorType; };
+	//int GetMaxHealth() const { return m_iMaxHealth; };
+	int	GetArmor() const { return m_iArmor; };
+	int	GetMaxArmor() const { return m_iMaxArmor; };
+	float GetArmorType() const { return m_fArmorType; };
 	// ---> end
 
 	// --> mulch

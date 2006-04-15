@@ -3800,7 +3800,7 @@ void CFFPlayer::Extinguish( void )
 	// Only send the network stuff once
 	if (IsOnFire())
 	{
-		CSingleUserRecipientFilter user( (CBasePlayer *)this );
+		CSingleUserRecipientFilter user( this );
 		user.MakeReliable();
 
 		UserMessageBegin(user, "StatusIconUpdate");
