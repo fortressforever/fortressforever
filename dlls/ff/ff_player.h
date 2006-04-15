@@ -27,17 +27,6 @@ class CFFSevTest;
 
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
-// Defined twice because the compiler is retarded and
-// for whatever reason ff_player.h can't find that this
-// is defined in ff_buildableobjects_shared.h eventhough
-// it's included up above! WHY!?
-
-// Welcome to dependency hell. (hint: ff_buildableobjects_shared.h includes
-// ff_player.h before it defines FF_BUILD_DISP_STRING_LEN so ff_player.h
-// won't have it defined. So anywhere where you have included ff_bo_s.h before
-// ff_player.h it will break horribly)
-//																- mirv
-
 #define FF_BUILD_DISP_STRING_LEN	256
 
 // BEG: Added by Mulchman for team junk
@@ -141,6 +130,11 @@ public:
 	void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 	// <-- Mirv: Proper sound effects
 
+	// --> mulch
+	int GetHealthPercentage( void );
+	int GetArmorPercentage( void );
+	// <--
+
 private:
 
 	void CreateRagdollEntity();
@@ -160,13 +154,14 @@ public:
 		if (iAmount < 1)
 			return 0;
 
-		m_iArmor.GetForModify( ) += iAmount;
+		//m_iArmor.GetForModify() += iAmount;
+		m_iArmor += iAmount;
 
 		return iAmount;
 	}
 
-	int GetArmor( void ) const { return m_iArmor.Get( ); }
-	int GetMaxArmor( void ) const { return m_iMaxArmor.Get( ); }
+	int GetArmor( void ) const { return m_iArmor; }
+	int GetMaxArmor( void ) const { return m_iMaxArmor; }
 	int GetMaxShells( void ) const { return GetFFClassData( ).m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData( ).m_iMaxCells; }
 	int GetMaxNails( void ) const { return GetFFClassData( ).m_iMaxNails; }
@@ -177,19 +172,14 @@ public:
 	// These "needs" functions will return however much the player needs
 	// of the item to reach the max capacity. It'll return 0 if they don't
 	// need anything.
-	int NeedsArmor( void ) const { return GetMaxArmor( ) - GetArmor( ); }
-	int NeedsShells( void ) const { return GetMaxShells( ) - GetAmmoCount( AMMO_SHELLS ); }
-	int NeedsCells( void ) const { return GetMaxCells( ) - GetAmmoCount( AMMO_CELLS ); }
-	int NeedsNails( void ) const { return GetMaxNails( ) - GetAmmoCount( AMMO_NAILS ); }
-	int NeedsRockets( void ) const { return GetMaxRockets( ) - GetAmmoCount( AMMO_ROCKETS ); }
-	int NeedsDetpack( void ) const { return GetMaxDetpack( ) - GetAmmoCount( AMMO_DETPACK ); }
-	int NeedsRadioTag( void ) const { return GetMaxRadioTag( ) - GetAmmoCount( AMMO_RADIOTAG ); }
+	int NeedsArmor( void ) const { return GetMaxArmor() - GetArmor(); }
+	int NeedsShells( void ) const { return GetMaxShells() - GetAmmoCount( AMMO_SHELLS ); }
+	int NeedsCells( void ) const { return GetMaxCells() - GetAmmoCount( AMMO_CELLS ); }
+	int NeedsNails( void ) const { return GetMaxNails() - GetAmmoCount( AMMO_NAILS ); }
+	int NeedsRockets( void ) const { return GetMaxRockets() - GetAmmoCount( AMMO_ROCKETS ); }
+	int NeedsDetpack( void ) const { return GetMaxDetpack() - GetAmmoCount( AMMO_DETPACK ); }
+	int NeedsRadioTag( void ) const { return GetMaxRadioTag() - GetAmmoCount( AMMO_RADIOTAG ); }
 	// END: Added by Mulchman for armor stuff
-
-	// --> mulch
-	int GetHealthPercentage( void );
-	int GetArmorPercentage( void );
-	// <--
 
 public:
 	bool m_fRandomPC;
@@ -327,13 +317,21 @@ private:
 	SpeedEffect m_vSpeedEffects[NUM_SPEED_EFFECTS];				// All speed effects impairing the player
 	float m_fLastHealTick;									// When the last time the medic was healed
 	float m_fLastInfectedTick;							// When the last health tick for infections was at
-	CFFPlayer *m_hInfector;									// Who infected this player
+	// Mulch: wrapping in EHANDLE
+	EHANDLE m_hInfector;									// Who infected this player
 	bool m_bInfected;												// if this player is infected
+	bool m_bImmune;	// Mulch: immunity
+	float m_flImmuneTime; // Mulch: immunity: time in the future of when the immunity ends
+	int m_iInfectedTeam;	// team the medic who infected us was on
+public:
+	bool IsImmune( void ) const { return m_bImmune; }
+
+private:
 
 	CFFPlayer *m_hIgniter;
-  float m_flNextBurnTick;   // when the next burn tick should fire
-  int m_iBurnTicks;         // how many more ticks are left to fire
-  float m_flBurningDamage;  // how much total damage is left to take
+	 float m_flNextBurnTick;   // when the next burn tick should fire
+	int m_iBurnTicks;         // how many more ticks are left to fire
+	float m_flBurningDamage;  // how much total damage is left to take
 
 	void StatusEffectsThink( void );
 	void RecalculateSpeed( );

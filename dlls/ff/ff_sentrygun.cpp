@@ -67,6 +67,8 @@ ConVar	sg_debug("ffdev_sg_debug", "1");
 // 1=On, 0=Off
 ConVar	sg_state("ffdev_sg_state", "1");
 
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "10.0" );
+
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt(SENDINFO(m_iAmmoPercent), 8, SPROP_UNSIGNED), 
 	SendPropFloat(SENDINFO(m_flRange)), 
@@ -278,12 +280,13 @@ void CFFSentryGun::Spawn()
 //	m_bEnabled = true;
 //	m_bActive = true;
 
+	// Base class plays the sound
 	// Play the build sound(if there is one) 
-	if (m_bHasSounds) 
-	{
-		CPASAttenuationFilter sndFilter(this);
-		EmitSound(/*sndFilter, entindex(), */ m_ppszSounds[0]);
-	}
+	//if (m_bHasSounds) 
+	//{
+	//	CPASAttenuationFilter sndFilter(this);
+	//	EmitSound(/*sndFilter, entindex(), */ m_ppszSounds[0]);
+	//}
 
 	// Start making it drop and/or flash(if applicable) 
 	if (m_bTranslucent) 
@@ -819,7 +822,8 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 			m_iHealth = 150;
 
 			m_flLockTime = 1.0f;
-			m_flTurnSpeed = 4.0f;
+			//m_flTurnSpeed = 4.0f;
+			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
 			break;
 
@@ -837,7 +841,8 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 			m_iHealth = 180;
 
 			m_flLockTime = 0.5f;
-			m_flTurnSpeed = 7.0f;
+			//m_flTurnSpeed = 7.0f;
+			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
 			break;
 
@@ -856,7 +861,8 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 			m_iHealth = 216;
 
 			m_flLockTime = 0.5f;
-			m_flTurnSpeed = 7.0f;
+			//m_flTurnSpeed = 7.0f;
+			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
 			break;
 		}

@@ -150,7 +150,7 @@ FF_AUTO_COMMAND( sentrygun, &CFFPlayer::Command_BuildSentryGun, "Build or detona
 FF_AUTO_COMMAND( dispensertext, &CFFPlayer::Command_DispenserText, "Set custom text for your dispenser.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( hinttest, &CFFPlayer::Command_HintTest, "Tests the hint system.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC );
 FF_AUTO_COMMAND( detpack, &CFFPlayer::Command_BuildDetpack, "Drop a detpack.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
-FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", /*FF_CMD_SKILL_COMMAND |*/ FF_CMD_ALIVE );
+FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
 // For sev's animation testing thing
 FF_AUTO_COMMAND( sevtest, &CFFPlayer::Command_SevTest, "Spawn sev's testing thing", FF_CMD_ALIVE );
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE);

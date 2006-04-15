@@ -131,7 +131,14 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 		return true;
 
 	if( m_iBuildObject == FF_BUILD_DETPACK )
+	{
+		// Bug #0000479: Demoman in detpack build slot can jump around and the fake model will still draw
+		// Must be on ground to set a detpack
+		if( FBitSet( m_pPlayer->GetEffects(), FL_ONGROUND ) )
+			return true;
+
 		return false;
+	}
 
 	// Bug #0000347: SG and dispenser buildable on an elevator
 	// Check if the player is standing on an ele

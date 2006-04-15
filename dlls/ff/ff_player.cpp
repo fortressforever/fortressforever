@@ -289,6 +289,10 @@ CFFPlayer::CFFPlayer()
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
 	m_bInfected = false;
+	m_hInfector = NULL;
+	m_bImmune = false;
+	m_iInfectedTeam = TEAM_UNASSIGNED;
+	m_flImmuneTime = 0.0f;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -765,6 +769,9 @@ void CFFPlayer::Spawn()
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
 	m_bInfected = false;
+	m_hInfector = NULL;
+	m_bImmune = false;
+	m_iInfectedTeam = TEAM_UNASSIGNED;
 
 	// equip the HEV suit
 	EquipSuit();
@@ -1819,7 +1826,7 @@ void CFFPlayer::Command_Radar( void )
 			EmitSound("radar.single_shot");
 
 			// Remove ammo
-			RemoveAmmo( radar_num_cells.GetInt( ), "AMMO_CELLS" );
+			RemoveAmmo( radar_num_cells.GetInt(), "AMMO_CELLS" );
 
 			// Only send this message to the local player	
 			CSingleUserRecipientFilter user( this );
@@ -1837,23 +1844,39 @@ void CFFPlayer::Command_Radar( void )
 			// - player angles (qangle)
 			// team = 99 terminates
 
+			Vector vecOrigin = GetAbsOrigin();
+
 			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer && ( pPlayer != this ) )
 				{
-					Vector vecOrigin = GetAbsOrigin( ), vecPlayerOrigin = pPlayer->GetAbsOrigin( );
+					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
+					// If the player isn't alive
+					if( !pPlayer->IsAlive() )
+						continue;
 
+					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
+					// If the player is a spectator
+					if( pPlayer->IsObserver() )
+						continue;
+
+					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
+					// If the player is a spectator
+					if( pPlayer->GetTeamNumber() < TEAM_BLUE )
+						continue;
+
+					Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
 					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
 
 					DevMsg( "[Scout Radar] flDist: %f\n", flDist );
 
-					if( flDist <= ( float )radar_radius_distance.GetInt( ) )
+					if( flDist <= ( float )radar_radius_distance.GetInt() )
 					{
-						const CFFPlayerClassInfo &pPlayerClassInfo = pPlayer->GetFFClassData( );
+						const CFFPlayerClassInfo &pPlayerClassInfo = pPlayer->GetFFClassData();
 
-						WRITE_SHORT( pPlayer->GetTeamNumber( ) - 1 );	// Team number (adjusted)
-						WRITE_SHORT( Class_StringToInt( pPlayerClassInfo.m_szClassName ) );						
+						WRITE_SHORT( pPlayer->GetTeamNumber() - 1 );	// Team number (adjusted)						
+						WRITE_SHORT( pPlayerClassInfo.m_iSlot );						
 						WRITE_VEC3COORD( vecPlayerOrigin );				// Origin in 3d space
 
 						// Omni-bot: Notify the bot he has detected someone.
@@ -1873,7 +1896,7 @@ void CFFPlayer::Command_Radar( void )
 			WRITE_SHORT( 99 );
 
 			// End the message block
-			MessageEnd( );
+			MessageEnd();
 
 			// Update our timer
 			m_flLastScoutRadarUpdate = gpGlobals->curtime;
@@ -2829,7 +2852,7 @@ void CFFPlayer::Command_SaveMe( void )
 
 void CFFPlayer::StatusEffectsThink( void )
 {
-#ifdef GAME_DLL
+//#ifdef GAME_DLL
 	// If we jump in water, extinguish the burn
 	if( m_iBurnTicks && ( GetWaterLevel( ) != WL_NotInWater ))
 		Extinguish();
@@ -2876,52 +2899,71 @@ void CFFPlayer::StatusEffectsThink( void )
 
 		// reduce health if above max health (because they were healed recently)
 		if (m_iHealth > m_iMaxHealth)
-			max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth);
+			m_iHealth = max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth);
 	}
 
-	// if the player is infected, then hurt them as necessary
-	if (m_bInfected && gpGlobals->curtime > m_fLastInfectedTick + ffdev_infect_freq.GetFloat())
+	// If the player is infected, then take appropriate action
+	if( m_bInfected && ( gpGlobals->curtime > ( m_fLastInfectedTick + ffdev_infect_freq.GetFloat() ) ) )
 	{
-		if (m_hInfector->GetClassSlot() != CLASS_MEDIC || m_hInfector->GetTeamNumber() == GetTeamNumber())
+		// Need to check to see if the medic who infected us has changed teams
+		// or dropped - switching to EHANDLE will handle the drop case
+		if( m_hInfector )
 		{
+			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
+
+			AssertMsg( pInfector, "[Infect] pInfector == NULL\n" );
+		
+			// Medic changed teams
+			if( pInfector->GetTeamNumber() != m_iInfectedTeam )
+				m_bInfected = false;
+		}
+		else
+		{
+			// Player dropped
 			m_bInfected = false;
-			return;
 		}
 
-		// When you change this be sure to change the StopSound above ^^ for bug
-		// Bug #0000461: Infect sound plays eventhough you are dead
-		EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
-
-		DevMsg("Infect Tick\n");
-		m_fLastInfectedTick = gpGlobals->curtime;
-		CTakeDamageInfo info(m_hInfector,m_hInfector,ffdev_infect_damage.GetInt(),DMG_DIRECT);
-		TakeDamage(info);
-
-		CBaseEntity *ent = NULL;
-
-		// Infect anybody nearby
-		for (CEntitySphereQuery sphere(GetAbsOrigin(), 128); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+		// If we're still infected, cause damage
+		if( m_bInfected )
 		{
-			if (ent->IsPlayer())
+			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
+
+			// When you change this be sure to change the StopSound above ^^ for bug
+			// Bug #0000461: Infect sound plays eventhough you are dead
+			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
+
+			DevMsg( "Infect Tick\n" );
+			m_fLastInfectedTick = gpGlobals->curtime;
+			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_DIRECT );
+			TakeDamage( info );
+
+			CBaseEntity *ent = NULL;
+
+			// Infect anybody nearby
+			for( CEntitySphereQuery sphere( GetAbsOrigin(), 128 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 			{
-				CFFPlayer *player = ToFFPlayer(ent);
-				
-				if (player && player != this && player->IsAlive())
+				if( ent->IsPlayer() )
 				{
-					trace_t traceHit;
-					UTIL_TraceLine( GetAbsOrigin(), player->GetAbsOrigin(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS, &traceHit );
+					CFFPlayer *player = ToFFPlayer( ent );
 
-					if (traceHit.fraction != 1.0f)
-						continue;
+					if( player && ( player != this ) && player->IsAlive() )
+					{
+						trace_t traceHit;
+						UTIL_TraceLine( GetAbsOrigin(), player->GetAbsOrigin(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS, &traceHit );
 
-					if (player->GetClassSlot() == CLASS_MEDIC)
-						continue;
+						if( traceHit.fraction != 1.0f )
+							continue;
 
-					// Bug #0000468: Infections transmit to non-teammates
-					if( player->GetTeamNumber() != GetTeamNumber() )
-						continue;
+						if( player->GetClassSlot() == CLASS_MEDIC )
+							continue;
 
-					player->Infect(m_hInfector);
+						// Bug #0000468: Infections transmit to non-teammates
+						if( player->GetTeamNumber() != GetTeamNumber() )
+							continue;
+
+						// Infect this guy
+						player->Infect( pInfector );
+					}
 				}
 			}
 		}
@@ -2940,7 +2982,17 @@ void CFFPlayer::StatusEffectsThink( void )
 	if (recalcspeed)
 		RecalculateSpeed();
 
-#endif
+	// Bug #0000503: "Immunity" is not in the mod
+	// See if immunity has worn off
+	if( m_bImmune )
+	{
+		// TODO: Dispatch immune effect!
+
+		if( gpGlobals->curtime > m_flImmuneTime )
+			m_bImmune = false;
+	}
+
+//#endif
 }
 
 void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod)
@@ -3025,24 +3077,28 @@ void CFFPlayer::RecalculateSpeed( void )
 
 void CFFPlayer::Infect( CFFPlayer *pInfector )
 {
-	EmitSound("Player.DrownStart");	// |-- Mirv: [TODO] Change to something more suitable
-
-	if (!m_bInfected)
+	if( !m_bInfected && !m_bImmune )
 	{
-		// they aren't infected, so go ahead and infect them
+		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = true;
 		m_fLastInfectedTick = gpGlobals->curtime;
 		m_hInfector = pInfector;
+		m_iInfectedTeam = pInfector->GetTeamNumber();
+
+		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
 	}
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
 {
-	if (m_bInfected)
+	if( m_bInfected )
 	{
 		// they are infected, so go ahead and cure them
 		m_bInfected = false;
 		m_fLastInfectedTick = 0;
 		m_hInfector = NULL;
+		// Bug# 0000503: "Immunity" is not in the mod
+		m_bImmune = true;
+		m_flImmuneTime = gpGlobals->curtime + 10.0f;
 
 		// credit the curer with a score
 		pCurer->IncrementFragCount( 1 );
