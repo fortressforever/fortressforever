@@ -216,7 +216,7 @@ void CHudCrosshairInfo::OnTick( void )
 							Q_strcpy( szClass, "#FF_PLAYER_DISPENSER" );
 					}
 					else
-						Q_strcpy( szClass, Class_IntToResourceString( pHitPlayer->GetClassSlot() ) );
+						Q_strcpy( szClass, Class_IntToResourceString( pGR->GetClass( pHitPlayer->index ) ) );
 
 					int iHealth = -1, iArmor = -1, iTeam = pHitPlayer->GetTeamNumber();
 
