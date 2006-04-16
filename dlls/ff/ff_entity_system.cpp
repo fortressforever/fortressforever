@@ -1439,7 +1439,7 @@ int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 					//WRITE_CHAR(r);
 					//WRITE_CHAR(g);
 					//WRITE_CHAR(b);
-					WRITE_SHORT( iTeam ); // changed
+					WRITE_SHORT( iTeam - 1 ); // changed
 				MessageEnd();
 
 				ret = true;

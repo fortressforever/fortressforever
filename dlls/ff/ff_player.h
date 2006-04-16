@@ -162,12 +162,12 @@ public:
 
 	//int GetArmor( void ) const { return m_iArmor; }
 	//int GetMaxArmor( void ) const { return m_iMaxArmor; }
-	int GetMaxShells( void ) const { return GetFFClassData( ).m_iMaxShells; }
-	int GetMaxCells( void ) const { return GetFFClassData( ).m_iMaxCells; }
-	int GetMaxNails( void ) const { return GetFFClassData( ).m_iMaxNails; }
-	int GetMaxRockets( void ) const { return GetFFClassData( ).m_iMaxRockets; }
-	int GetMaxDetpack( void ) const { return GetFFClassData( ).m_iMaxDetpack; }
-	int GetMaxRadioTag( void ) const { return GetFFClassData( ).m_iMaxRadioTag; }
+	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
+	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }
+	int GetMaxNails( void ) const { return GetFFClassData().m_iMaxNails; }
+	int GetMaxRockets( void ) const { return GetFFClassData().m_iMaxRockets; }
+	int GetMaxDetpack( void ) const { return GetFFClassData().m_iMaxDetpack; }
+	int GetMaxRadioTag( void ) const { return GetFFClassData().m_iMaxRadioTag; }
 
 	// These "needs" functions will return however much the player needs
 	// of the item to reach the max capacity. It'll return 0 if they don't
