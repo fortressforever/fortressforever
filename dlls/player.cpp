@@ -6452,7 +6452,12 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropDataTable(SENDINFO_DT(pl), &REFERENCE_SEND_TABLE(DT_PlayerState), SendProxy_DataTableToDataTable),
 		SendPropEHandle(SENDINFO(m_hVehicle)),
 		SendPropInt		(SENDINFO(m_MoveType),MOVETYPE_MAX_BITS, SPROP_UNSIGNED ),
+		// Added by Mulch for testing
 		SendPropInt		(SENDINFO(m_iHealth), 10 ),
+		SendPropInt		(SENDINFO(m_iMaxHealth), 10 ),
+		SendPropInt		(SENDINFO(m_iArmor), 10 ),
+		SendPropInt		(SENDINFO(m_iMaxArmor), 10 ),
+		// Added by Mulch for testing
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
 		SendPropInt		(SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN, SendProxy_CropFlagsToPlayerFlagBitsLength ),

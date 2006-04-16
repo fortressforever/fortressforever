@@ -1254,6 +1254,8 @@ public:
 	int								m_iHealth;
 	// BEG: Added by Mulchman
 	int								m_iMaxHealth;
+	int								m_iArmor;
+	int								m_iMaxArmor;
 	// END: Added by Mulchman
 
 	// was pev->speed

@@ -148,10 +148,10 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iCurBuild ) ),
 	//SendPropInt( SENDINFO( m_bCancelledBuild ) ),
 
-	// health/armor
-	SendPropInt(SENDINFO(m_iMaxHealth)),
-	SendPropInt(SENDINFO(m_iArmor)),
-	SendPropInt(SENDINFO(m_iMaxArmor)),
+	// health/armor	
+	//SendPropInt(SENDINFO(m_iMaxHealth)),
+	//SendPropInt(SENDINFO(m_iArmor)),
+	//SendPropInt(SENDINFO(m_iMaxArmor)),
 	SendPropFloat(SENDINFO(m_fArmorType)),
 
 	SendPropInt(SENDINFO(m_iSkiState)),

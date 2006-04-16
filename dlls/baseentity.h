@@ -1019,6 +1019,15 @@ public:
 	int		GetHealth() const		{ return m_iHealth; }
 	void	SetHealth( int amt )	{ m_iHealth = amt; }
 
+	// --> Added by Mulch for testing
+	// Armor accessors
+	int		GetMaxArmor() const		{ return m_iMaxArmor; }
+	void	SetMaxArmor( int amt )	{ m_iMaxArmor = amt; }
+
+	int		GetArmor() const		{ return m_iArmor; }
+	void	SetArmor( int amt )		{ m_iArmor = amt; }
+	// <-- Added by Mulch for testing
+
 	// Ugly code to lookup all functions to make sure they are in the table when set.
 #ifdef _DEBUG
 	void FunctionCheck( void *pFunction, char *name );
@@ -1062,6 +1071,11 @@ public:
 	CNetworkVarForDerived( int, m_takedamage );
 	CNetworkVarForDerived( int, m_iMaxHealth ); // CBaseEntity doesn't care about changes to this variable, but there are derived classes that do.
 	CNetworkVarForDerived( int, m_iHealth );
+
+	// --> Added by Mulch for testing
+	CNetworkVarForDerived( int, m_iArmor );
+	CNetworkVarForDerived( int, m_iMaxArmor );
+	// <-- Added by Mulch for testing
 
 	// Damage filtering
 	string_t	m_iszDamageFilterName;	// The name of the entity to use as our damage filter.

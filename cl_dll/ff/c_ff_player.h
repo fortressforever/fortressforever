@@ -129,14 +129,15 @@ public:
 
 	// ---> added by billdoor
 public:
-	CNetworkVar(int, m_iMaxHealth);
-	CNetworkVar(int, m_iArmor);
-	CNetworkVar(int, m_iMaxArmor);
+	//CNetworkVar(int, m_iMaxHealth);
+	//CNetworkVar(int, m_iArmor);
+	//CNetworkVar(int, m_iMaxArmor);
 	CNetworkVar(float, m_fArmorType);
 
+	//int GetHealth() const { return m_iHealth; }
 	//int GetMaxHealth() const { return m_iMaxHealth; };
-	int	GetArmor() const { return m_iArmor; };
-	int	GetMaxArmor() const { return m_iMaxArmor; };
+	//int	GetArmor() const { return m_iArmor; };
+	//int	GetMaxArmor() const { return m_iMaxArmor; };
 	float GetArmorType() const { return m_fArmorType; };
 	// ---> end
 

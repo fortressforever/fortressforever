@@ -102,6 +102,11 @@ public:
 	// Data handlers
 	virtual bool	IsPlayer( void ) const { return true; };
 	virtual int		GetHealth() const { return m_iHealth; };
+	// Added by Mulch for testing
+	virtual int		GetMaxHealth() const { return m_iMaxHealth; }
+	virtual int		GetArmor() const { return m_iArmor; }
+	virtual int		GetMaxArmor() const { return m_iMaxArmor; }
+	// Added by Mulch for testing
 
 	// observer mode
 	virtual int			GetObserverMode() const;
