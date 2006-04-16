@@ -650,6 +650,7 @@ public:
 	float	m_flShellCycleTime;
 
 	float	m_flTurnSpeed;
+	float	m_flPitchSpeed;
 	float	m_flLockTime;
 
 

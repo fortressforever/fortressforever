@@ -67,7 +67,8 @@ ConVar	sg_debug("ffdev_sg_debug", "1");
 // 1=On, 0=Off
 ConVar	sg_state("ffdev_sg_state", "1");
 
-ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "10.0" );
+ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
+ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt(SENDINFO(m_iAmmoPercent), 8, SPROP_UNSIGNED), 
@@ -365,6 +366,7 @@ void CFFSentryGun::OnObjectThink()
 
 	// TODO: Remvoe
 	m_flTurnSpeed = sg_turnspeed.GetFloat();
+	m_flPitchSpeed = sg_pitchspeed.GetFloat();
 
 	// Animate
 	StudioFrameAdvance();
@@ -591,7 +593,7 @@ float CFFSentryGun::MaxPitchSpeed()
 	if (GetEnemy() == NULL) 
 		return 1.0f;
 	else
-		return m_flTurnSpeed;
+		return m_flPitchSpeed;
 }
 
 //-----------------------------------------------------------------------------
