@@ -146,12 +146,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hDetpack ) ),
 	SendPropInt( SENDINFO( m_bBuilding ) ),
 	SendPropInt( SENDINFO( m_iCurBuild ) ),
-	//SendPropInt( SENDINFO( m_bCancelledBuild ) ),
 
 	// health/armor	
-	//SendPropInt(SENDINFO(m_iMaxHealth)),
-	//SendPropInt(SENDINFO(m_iArmor)),
-	//SendPropInt(SENDINFO(m_iMaxArmor)),
 	SendPropFloat(SENDINFO(m_fArmorType)),
 
 	SendPropInt(SENDINFO(m_iSkiState)),
@@ -692,12 +688,6 @@ void CFFPlayer::Spawn()
 
 	StopObserverMode();
 	RemoveEffects( EF_NODRAW );
-	
-	entsys.RunPredicates( NULL, this, "player_spawn" );
-
-	SetModel( FF_PLAYER_MODEL );
-	SetMoveType( MOVETYPE_WALK );
-	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	m_hRagdoll = NULL;
 
@@ -705,6 +695,12 @@ void CFFPlayer::Spawn()
 	m_flConcTime = 0;
 
 	BaseClass::Spawn();
+
+	entsys.RunPredicates( NULL, this, "player_spawn" );
+
+	SetModel( FF_PLAYER_MODEL );
+	SetMoveType( MOVETYPE_WALK );
+	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();

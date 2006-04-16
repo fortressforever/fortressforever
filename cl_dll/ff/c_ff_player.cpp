@@ -271,13 +271,9 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hDetpack ) ),
 	RecvPropInt( RECVINFO( m_bBuilding ) ),
 	RecvPropInt( RECVINFO( m_iCurBuild ) ),
-	//RecvPropInt( RECVINFO( m_bCancelledBuild ) ),
 	// End: Added by Mulchman for building objects and such
 
 	// ---> added by billdoor
-	//RecvPropInt(RECVINFO(m_iMaxHealth)),
-	//RecvPropInt(RECVINFO(m_iArmor)),
-	//RecvPropInt(RECVINFO(m_iMaxArmor)),
 	RecvPropFloat(RECVINFO(m_fArmorType)),
 
 	RecvPropInt(RECVINFO(m_iSkiState)),
