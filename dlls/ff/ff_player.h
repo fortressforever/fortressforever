@@ -318,7 +318,8 @@ private:
 	bool m_bInfected;												// if this player is infected
 	bool m_bImmune;	// Mulch: immunity
 	float m_flImmuneTime; // Mulch: immunity: time in the future of when the immunity ends
-	int m_iInfectedTeam;	// team the medic who infected us was on
+	int m_iInfectedTeam;	// Mulch: team the medic who infected us was on
+    float m_flLastOverHealthTick; // Mulch: last time we took health cause health > maxhealth
 public:
 	bool IsImmune( void ) const { return m_bImmune; }
 

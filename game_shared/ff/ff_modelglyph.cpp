@@ -138,8 +138,8 @@ void CFFModelGlyph::Spawn( void )
 //----------------------------------------------------------------------------
 void CFFModelGlyph::OnThink( void )
 {
-	DevMsg("Removing glyph!");
+	DevMsg("Removing glyph!\n");
 	if ( GetOwnerEntity() == NULL )
-		Warning( "Owner entity still null!" );
+		Warning( "Owner entity still null!\n" );
 	Remove();
 }

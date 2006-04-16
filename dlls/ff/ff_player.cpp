@@ -39,6 +39,8 @@
 
 #include "omnibot_interface.h"
 
+#include "te_effect_dispatch.h"
+
 extern int gEvilImpulse101;
 #define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
 
@@ -89,6 +91,7 @@ ConVar ffdev_infect_damage("ffdev_infect_damage","8",0,"Amount of health a playe
 ConVar ffdev_regen_freq("ffdev_regen_freq","3",0,"Frequency (in seconds) a player loses health when a medic");
 ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player gains while a medic");
 ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gains while a engy");
+ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 
 static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
 
@@ -289,6 +292,7 @@ CFFPlayer::CFFPlayer()
 	m_bImmune = false;
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
+	m_flLastOverHealthTick = 0.0f;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -2872,30 +2876,37 @@ void CFFPlayer::StatusEffectsThink( void )
 		m_flNextBurnTick = gpGlobals->curtime + 1.25f;
 	}
 
-	// check if the player needs a little health (because they are a medic/engy)
-	if ((GetClassSlot() == CLASS_MEDIC || GetClassSlot() == CLASS_ENGINEER) &&
-				gpGlobals->curtime > m_fLastHealTick + ffdev_regen_freq.GetFloat())
+	// check if the player needs a little health/armor (because they are a medic/engy)
+	if( ( ( GetClassSlot() == CLASS_MEDIC ) || ( GetClassSlot() == CLASS_ENGINEER ) ) &&
+		( gpGlobals->curtime > ( m_fLastHealTick + ffdev_regen_freq.GetFloat() ) ) )
 	{		
 		m_fLastHealTick = gpGlobals->curtime;
 
-		if (GetClassSlot() == CLASS_MEDIC)
+		if( GetClassSlot() == CLASS_MEDIC )
 		{
 			// add the regen health
-			if (TakeHealth(ffdev_regen_health.GetInt(), DMG_GENERIC))
+			if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
 			{
 				// make a sound if we did
 				//EmitSound( "medkit.hit" );
 			}
 		}
-		else if (GetClassSlot() == CLASS_ENGINEER)
+		else if( GetClassSlot() == CLASS_ENGINEER )
 		{
 			// add the regen armor
-			m_iArmor.GetForModify() = clamp(m_iArmor + ffdev_regen_armor.GetInt(), 0, m_iMaxArmor);
+			m_iArmor.GetForModify() = clamp( m_iArmor + ffdev_regen_armor.GetInt(), 0, m_iMaxArmor );
 		}
+	}
 
-		// reduce health if above max health (because they were healed recently)
-		if (m_iHealth > m_iMaxHealth)
-			m_iHealth = max(m_iHealth-ffdev_regen_health.GetInt(), m_iMaxHealth);
+	// Bug #0000485: If you're given beyond 100% health, by a medic, the health doesn't count down back to 100.
+	// Reduce health if we're over healthed (health > maxhealth
+	if( m_iHealth > m_iMaxHealth )
+	{
+		if( gpGlobals->curtime > ( m_flLastOverHealthTick + ffdev_overhealth_freq.GetFloat() ) )
+		{
+			m_flLastOverHealthTick = gpGlobals->curtime;
+			m_iHealth = max( m_iHealth - ffdev_regen_health.GetInt(), m_iMaxHealth );
+		}
 	}
 
 	// If the player is infected, then take appropriate action
@@ -2931,7 +2942,24 @@ void CFFPlayer::StatusEffectsThink( void )
 			DevMsg( "Infect Tick\n" );
 			m_fLastInfectedTick = gpGlobals->curtime;
 			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_DIRECT );
+			info.SetDamageForce( Vector( 0, 0, -1 ) );
+			info.SetDamagePosition( Vector( 0, 0, 1 ) );
 			TakeDamage( info );
+
+#if 1
+			// Bug #0000504: No infection visible effect
+			CEffectData data;
+			data.m_vOrigin = GetLegacyAbsOrigin();
+			data.m_flScale = 1.0f;
+			//DispatchEffect( "InfectCloud", data );
+			DispatchEffect( "bloodimpact", data );
+
+			CEffectData data2;
+			data2.m_vOrigin = EyePosition();
+			data2.m_flScale = 1.0f;
+			//DispatchEffect( "InfectCloud", data );
+			DispatchEffect( "bloodimpact", data2 );
+#endif
 
 			CBaseEntity *ent = NULL;
 
