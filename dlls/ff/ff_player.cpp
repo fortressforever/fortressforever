@@ -4145,3 +4145,26 @@ void CFFPlayer::MoveTowardsMapGuide()
 		SetAbsOrigin(vecNewPos);
 	}
 }
+
+int CFFPlayer::FlashlightIsOn( void )
+{
+	return IsEffectActive( EF_DIMLIGHT );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CFFPlayer::FlashlightTurnOn( void )
+{
+	AddEffects( EF_DIMLIGHT );
+	EmitSound( "HL2Player.FlashLightOn" );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CFFPlayer::FlashlightTurnOff( void )
+{
+	RemoveEffects( EF_DIMLIGHT );
+	EmitSound( "HL2Player.FlashLightOff" );
+}

@@ -454,6 +454,11 @@ public:
 
 	void FinishDisguise();
 	void ResetDisguise();
+
+	int		FlashlightIsOn( void );
+	void	FlashlightTurnOn( void );
+	void	FlashlightTurnOff( void );
+
 	// <-- Mirv: Various things
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
