@@ -11,6 +11,7 @@
 /// Dec 21, 2004 Mirv: First creation logged
 
 // NB. THIS SHOULD BE A TEMPENT!!!!
+//		EDIT: THIS *IS* A TEMPENT NOW!!!!
 
 #include "cbase.h"
 #include "ff_projectile_nail.h"
@@ -225,13 +226,18 @@ void CFFProjectileNail::BubbleThink()
 	VectorAngles(GetAbsVelocity(), angNewAngles);
 	SetAbsAngles(angNewAngles);
 
-	SetNextThink(gpGlobals->curtime + 0.1f);
+	SetNextThink(gpGlobals->curtime + 5.0f);
 
 	if (GetWaterLevel() == 0) 
 		return;
 
 #ifdef GAME_DLL
-	UTIL_BubbleTrail(GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 5);
+	
+	// Nails from nailgrens won't necessarily show any bubbles at all
+	if (GetOwnerEntity() && GetOwnerEntity()->Classify() == CLASS_GREN_NAIL && random->RandomInt(0, 4) > 0)
+		return;
+
+	UTIL_BubbleTrail(GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 1);
 #endif
 }
 

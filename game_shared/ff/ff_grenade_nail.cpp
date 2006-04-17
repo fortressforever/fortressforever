@@ -35,6 +35,8 @@ public:
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "NailGrenade.Bounce"; }
 
+	virtual Class_T Classify( void ) { return CLASS_GREN_NAIL; } 
+
 #ifdef CLIENT_DLL
 	CFFGrenadeNail() {}
 	CFFGrenadeNail(const CFFGrenadeNail&) {}
