@@ -14,6 +14,13 @@ LINK_ENTITY_TO_CLASS( predicted_viewmodel, CPredictedViewModel );
 IMPLEMENT_NETWORKCLASS_ALIASED( PredictedViewModel, DT_PredictedViewModel )
 
 BEGIN_NETWORK_TABLE( CPredictedViewModel, DT_PredictedViewModel )
+#ifdef GAME_DLL
+	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
+	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
+#else
+//	RecvPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
+//	RecvPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
+#endif
 END_NETWORK_TABLE()
 
 //-----------------------------------------------------------------------------

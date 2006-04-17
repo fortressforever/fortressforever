@@ -118,8 +118,8 @@ void NDebugOverlay::Line( const Vector &origin, const Vector &target, int r, int
  	float  dotOrigin	= DotProduct(clientForward,toOrigin);
  	float  dotTarget	= DotProduct(clientForward,toTarget);
 	
-	if (dotOrigin < 0 && dotTarget < 0) 
-		return;
+//	if (dotOrigin < 0 && dotTarget < 0) 
+//		return;
 
 	if ( debugoverlay )
 	{

@@ -17,6 +17,7 @@
 #include "ff_weapon_base.h"
 #include "ammodef.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_utils.h"
 
 #ifdef CLIENT_DLL 
 	#include "c_ff_player.h"
@@ -253,6 +254,8 @@ void CFFWeaponBase::PrimaryAttack()
 
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 
+	// Do this server side so there's no mismatch
+#ifdef GAME_DLL
 	if (m_iClip1 < 0) 
 	{
 		// Not a clip based weapon, so remove from primary ammo location
@@ -263,6 +266,7 @@ void CFFWeaponBase::PrimaryAttack()
 		// Remove from clip
 		m_iClip1 -= pWeaponInfo.m_iCycleDecrement;
 	}
+#endif
 
 	// Effects:
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -312,6 +316,44 @@ void CFFWeaponBase::Fire()
 bool CFFWeaponBase::Deploy() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
+
+#ifdef GAME_DLL
+	if (pPlayer->m_iSpyDisguise)
+	{
+		// Spies show different models!
+		PLAYERCLASS_FILE_INFO_HANDLE classinfo;
+
+		if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString((pPlayer->m_iSpyDisguise & 0xFFFFFFF0) >> 4), &classinfo, GetEncryptionKey()))
+		{
+			const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(classinfo);
+
+			if (pPlayerClassInfo)
+			{
+				const char *DisguiseWeapon = NULL;
+
+				for (int i = 0; i < pPlayerClassInfo->m_iNumWeapons; i++)
+				{
+					WEAPON_FILE_INFO_HANDLE weaponinfo;
+
+					if (!ReadWeaponDataFromFileForSlot(filesystem, pPlayerClassInfo->m_aWeapons[i], &weaponinfo, GetEncryptionKey()))
+						continue;
+
+					const FileWeaponInfo_t *pWeaponInfo = GetFileWeaponInfoFromHandle(weaponinfo);
+
+					if (pWeaponInfo && pWeaponInfo->iSlot <= GetSlot())
+						DisguiseWeapon = pPlayerClassInfo->m_aWeapons[i];
+				}
+
+				if (DisguiseWeapon)
+				{
+					PrecacheModel(DisguiseWeapon);	// Just in case
+					SetModel(DisguiseWeapon);
+					DevMsg("Disguising weapon as %s (%d)\n", DisguiseWeapon, -1);
+				}
+			}
+		}
+	}
+#endif
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( pPlayer->m_bBuilding )

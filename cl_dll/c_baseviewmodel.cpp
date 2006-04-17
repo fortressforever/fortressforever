@@ -127,14 +127,14 @@ bool C_BaseViewModel::Interpolate( float currentTime )
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	// Predicted viewmodels have fixed up interval
-	if ( GetPredictable() || IsClientCreated() )
+/*	if ( GetPredictable() || IsClientCreated() )
 	{
 		Assert( pPlayer );
 		float curtime = pPlayer ? pPlayer->GetFinalPredictedTime() : gpGlobals->curtime;
 		elapsed_time = curtime - m_flAnimTime;
 		// Adjust for interpolated partial frame
 		elapsed_time += ( gpGlobals->interpolation_amount * TICK_INTERVAL );
-	}
+	}*/
 
 	// Prediction errors?	
 	if ( elapsed_time < 0 )
