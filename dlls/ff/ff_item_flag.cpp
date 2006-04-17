@@ -145,6 +145,9 @@ void CFFItemFlag::Pickup(CFFPlayer *pFFPlayer)
 
 	pFFPlayer->GiveNamedItem(FLAG_WEAPON);
 
+	// Bug #0000508: Carried objects cast a shadow for the carrying player
+	AddEffects( EF_NOSHADOW );
+
 	// stop the return timer
 	SetThink( NULL );
 	SetNextThink( gpGlobals->curtime );
@@ -223,6 +226,9 @@ void CFFItemFlag::Drop( float delay, float speed )
 		vel.z = 1.0f;
 
 	SetAbsVelocity(vel);
+
+	// Bug #0000508: Carried objects cast a shadow for the carrying player
+	RemoveEffects( EF_NOSHADOW );
 
 	// make it respond to touch again
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
