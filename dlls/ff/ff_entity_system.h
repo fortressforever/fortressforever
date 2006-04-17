@@ -95,6 +95,7 @@ public:
 	static int GetPlayer( lua_State* );
 	static int IncludeScript( lua_State* );
 	static int SetTeamClassLimit( lua_State* );
+	static int SetTeamPlayerLimit( lua_State* );
 	static int Random( lua_State* );
 	static int SetTeamAllies( lua_State* );
 	static int GiveAmmo( lua_State* );

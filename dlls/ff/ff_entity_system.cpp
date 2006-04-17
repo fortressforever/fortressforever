@@ -220,6 +220,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "GetPlayer", GetPlayer );
 	lua_register( L, "IncludeScript", IncludeScript );
 	lua_register( L, "SetTeamClassLimit", SetTeamClassLimit );
+	lua_register( L, "SetTeamPlayerLimit", SetTeamPlayerLimit );
 	lua_register( L, "Random", Random );
 	lua_register( L, "rand", Random );
 	lua_register( L, "SetTeamAllies", SetTeamAllies );
@@ -1158,6 +1159,39 @@ int CFFEntitySystem::SetTeamClassLimit( lua_State *L )
 		}
 
 		DevMsg("Set class limit for team %d, class %d to %d\n", team, playerclass, limit);
+
+		// 1 result
+		lua_pushboolean( L, true );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Sets the total number of players that can be on a team
+//          int SetTeamPlayerLimit( team, class, limit );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetTeamPlayerLimit( lua_State *L )
+{
+	int n = lua_gettop(L);
+
+	// A 2 argument'd function
+	if( n == 2 )
+	{
+		int team = (int)lua_tonumber( L, 1 );
+		int limit = (int)lua_tonumber( L, 2 );
+
+		CFFTeam *pTeam = (CFFTeam *) GetGlobalTeam( team );
+
+		if (pTeam)
+		{
+			pTeam->SetTeamLimits( limit );
+			pTeam->UpdateLimits();
+		}
+
+		DevMsg("Set player limit for team %d to %d\n", team, limit);
 
 		// 1 result
 		lua_pushboolean( L, true );

@@ -120,7 +120,7 @@ void CFFItemFlag::OnTouch( CBaseEntity *pOther )
 	if(pFFPlayer)
 	{
 		// touch event
-		if (m_pLastOwner != pFFPlayer || m_flThrowTime + 7.0f < gpGlobals->curtime)
+		if (m_pLastOwner != pFFPlayer || m_flThrowTime + 3.0f < gpGlobals->curtime)
 			entsys.RunPredicates( this, pOther, "touch" );
 	}
 }
