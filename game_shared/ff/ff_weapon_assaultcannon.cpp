@@ -178,7 +178,9 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 	
+#ifdef GAME_DLL
 		pPlayer->RemoveAmmo(pWeaponInfo.m_iCycleDecrement, m_iPrimaryAmmoType);
+#endif
 
 		Fire();
 
