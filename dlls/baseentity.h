@@ -175,6 +175,9 @@ enum Class_T
 
 enum Class_T
 {
+/*	What's this one for, I just wasted ages waiting for it to compile because I didnt
+	look hard enough at this file :(
+
 	CLASS_NONE = 0,
 	CLASS_PLAYER,
 	CLASS_PLAYER_ALLY,
@@ -191,7 +194,9 @@ enum Class_T
 	CLASS_PIPEBOMB,
 	//------------------- 
 
-	NUM_AI_CLASSES
+	CLASS_GREN_NAIL,
+
+	NUM_AI_CLASSES*/
 };
 
 #else
@@ -213,6 +218,8 @@ enum Class_T
 	//-- Added by L0ki --
 	CLASS_PIPEBOMB,
 	//------------------- 
+
+	CLASS_GREN_NAIL,
 
 	NUM_AI_CLASSES
 };

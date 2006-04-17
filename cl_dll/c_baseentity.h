@@ -78,6 +78,8 @@ enum Class_T
 	CLASS_PIPEBOMB,
 	//------------------- 
 
+	CLASS_GREN_NAIL,
+
 	NUM_AI_CLASSES
 };
 // END: Added by Mulchman
