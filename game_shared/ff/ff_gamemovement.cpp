@@ -175,7 +175,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 	
 	if (speed > cap)
 	{
-		float applied_cap = (speed - baseline) * pcfactor + baseline;
+		float applied_cap = (speed - cap /*baseline*/) * pcfactor + baseline;
 		float multi = applied_cap / speed;
 
 		mv->m_vecVelocity[0] *= multi;

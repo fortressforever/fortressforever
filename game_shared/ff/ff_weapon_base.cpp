@@ -459,12 +459,14 @@ bool CFFWeaponBase::Reload()
 
 		CFFPlayer *pPlayer = GetPlayerOwner();
 
+#ifdef GAME_DLL
 		// phew finally, remove ammo from stores...
 		if (pPlayer) 
 			 pPlayer->RemoveAmmo(pWeaponInfo.m_iCycleDecrement, m_iPrimaryAmmoType);
 
 		// ...and add it to the clip
 		m_iClip1 += pWeaponInfo.m_iCycleDecrement;
+#endif
 
 		// go back to the previous stage of the sequence so it triggers this again
 		m_fInSpecialReload = 1;
