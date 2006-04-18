@@ -119,14 +119,12 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 			return;
 		}
 		else if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
-		{			
+		{
+			// Everyone takes damage from the medikit hitting them...			
+			pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, 9.0f, DMG_CLUB ) );
+
 			// Bug #0000510: Medics can infect medics.
-			if( pTarget->GetClassSlot() == CLASS_MEDIC )
-			{
-				// TODO: don't infect medics - just give them damage
-				// Damage
-			}
-			else
+			if( pTarget->GetClassSlot() != CLASS_MEDIC )
 			{
 				// otherwise, if they are bad people, then infect them
 				pTarget->Infect(pPlayer);
