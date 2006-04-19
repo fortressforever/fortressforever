@@ -23,6 +23,7 @@ public:
 
 	virtual void OnDataChanged(DataUpdateType_t updateType);
 	virtual int DrawModel(int flags);
+	virtual ShadowType_t ShadowCastType( void );
 
 	float m_flThrowTime;
 };
@@ -53,4 +54,18 @@ int C_FFItemFlag::DrawModel(int flags)
 		return 0;
 
 	return BaseClass::DrawModel(flags);
+}
+
+ShadowType_t C_FFItemFlag::ShadowCastType( void )
+{
+	if( GetFollowedEntity() == C_BasePlayer::GetLocalPlayer() )
+	{
+		DevMsg( "[Flag] ShadowCastType: SHADOWS_NONE\n" );
+		return SHADOWS_NONE;
+	}
+	else
+	{
+		DevMsg( "[Flag] ShadowCastType: SHADOWS_RENDER_TO_TEXTURE\n" );
+		return SHADOWS_RENDER_TO_TEXTURE;
+	}
 }
