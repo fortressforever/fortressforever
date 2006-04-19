@@ -1811,6 +1811,10 @@ void CFFPlayer::Command_DispenserText( void )
 	}
 
 	DevMsg( "[Dispenser Text] %s\n", m_szCustomDispenserText );
+
+	// Change text on the fly
+	if( m_hDispenser.Get() )
+		( ( CFFDispenser * )m_hDispenser.Get() )->SetText( m_szCustomDispenserText );
 }
 
 void CFFPlayer::Command_Radar( void )

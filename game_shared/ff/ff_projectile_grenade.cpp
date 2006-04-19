@@ -124,6 +124,14 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "0.5", 0, "");
 				flSurfaceElasticity = 0.3;
 		}
 
+		// Bug #0000512: Blue pipes don't explode on impact on buildables
+		// Explode on contact w/ buildables if pipe bomb
+		if( trace.m_pEnt && ( ( trace.m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( trace.m_pEnt->Classify() == CLASS_DISPENSER ) ) )
+		{
+			if( m_bIsLive )
+				Detonate();
+		}
+
 		float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
 		flTotalElasticity = clamp(flTotalElasticity, 0.0f, 0.9f);
 

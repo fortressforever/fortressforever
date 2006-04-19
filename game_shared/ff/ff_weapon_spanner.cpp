@@ -134,7 +134,8 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 
 		// Can the guy we hit take damage from us? If he can't, he's
 		// on our team or our ally so give him some armor!
-		if (!g_pGameRules->FPlayerCanTakeDamage(pHitPlayer, pPlayer)) 
+		// Bug #0000521: Engineer's spanner shouldn't inflict damage even with mp_friendlyfire 1
+		if (!g_pGameRules->FPlayerCanTakeDamage(pHitPlayer, pPlayer) || (pPlayer->GetTeamNumber() == pHitPlayer->GetTeamNumber())) 
 		{
 			DevMsg("[CFFWeaponSpanner] Player is on my team or an ally - so giving armor!\n");
 

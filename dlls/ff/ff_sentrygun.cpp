@@ -634,9 +634,34 @@ void CFFSentryGun::Shoot(const Vector &vecSrc, const Vector &vecDirToEnemy, bool
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
 
+	//CFFSevTest::Create( info.m_vecSrc, GetAbsAngles() );
+
+	if( m_iLevel == 3 )
+	{
+		/*
+		// For the second barrel
+		FireBulletsInfo_t info2;
+
+		info2.m_vecSrc = vecSrc;
+		info2.m_vecDirShooting = vecDir;
+		info2.m_iTracerFreq = 1;
+		info2.m_iShots = 1;
+		info2.m_pAttacker = this;
+		info2.m_vecSpread = VECTOR_CONE_PRECALCULATED;
+		info2.m_flDistance = MAX_COORD_RANGE;
+		info2.m_iAmmoType = m_iAmmoType;
+		info2.m_iDamage = m_iShellDamage;		
+
+		//CFFSevTest::Create( info2.m_vecSrc, GetAbsAngles() );
+
+		FireBullets(info2);
+		*/
+	}
+
 	FireBullets(info);
 	EmitSound("Sentry.Fire");
 	DoMuzzleFlash();
+	
 
 	m_iShells--;
 }
