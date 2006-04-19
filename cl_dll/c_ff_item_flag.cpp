@@ -56,16 +56,15 @@ int C_FFItemFlag::DrawModel(int flags)
 	return BaseClass::DrawModel(flags);
 }
 
+// Bug #0000508: Carried objects cast a shadow for the carrying player
 ShadowType_t C_FFItemFlag::ShadowCastType( void )
 {
 	if( GetFollowedEntity() == C_BasePlayer::GetLocalPlayer() )
 	{
-		DevMsg( "[Flag] ShadowCastType: SHADOWS_NONE\n" );
 		return SHADOWS_NONE;
 	}
 	else
 	{
-		DevMsg( "[Flag] ShadowCastType: SHADOWS_RENDER_TO_TEXTURE\n" );
 		return SHADOWS_RENDER_TO_TEXTURE;
 	}
 }

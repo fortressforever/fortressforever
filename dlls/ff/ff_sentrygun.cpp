@@ -489,7 +489,7 @@ FLOOR_TURRET_RANGE)
 	if (gpGlobals->curtime > m_flNextRocket && m_iRockets > 0) 
 	{
 		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
-        CFFProjectileRocket::CreateRocket(EyePosition() + vecAiming * 32.0f, m_angAiming, ToFFPlayer(GetOwnerEntity()), 102, 900.0f);
+        CFFProjectileRocket::CreateRocket(EyePosition() + vecAiming * 64.0f, m_angAiming, ToFFPlayer(GetOwnerEntity()), 102, 900.0f);
 
 		bFired = true;
 	}

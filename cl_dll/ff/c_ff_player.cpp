@@ -872,6 +872,14 @@ void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 	m_PlayerAnimState->DoAnimationEvent( event );
 }
 
+ShadowType_t C_FFPlayer::ShadowCastType( void )
+{
+	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
+		return SHADOWS_NONE;
+	else
+		return SHADOWS_RENDER_TO_TEXTURE;
+}
+
 bool C_FFPlayer::ShouldDraw( void )
 {
 	// If we're dead, our ragdoll will be drawn for us instead.

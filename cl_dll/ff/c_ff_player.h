@@ -137,6 +137,8 @@ public:
 	// --> mulch
 	int GetHealthPercentage( void );
 	int GetArmorPercentage( void );
+
+	virtual ShadowType_t ShadowCastType( void );
 	// <--
 
 private:
