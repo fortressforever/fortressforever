@@ -1681,7 +1681,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			continue;
 
 		// Skip if spec
-		if( !pBasePlayer->IsObserver() )
+		if( pBasePlayer->IsObserver() )
 			continue;
 
 		CFFPlayer *pPlayer = ToFFPlayer( pBasePlayer );
