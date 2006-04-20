@@ -545,9 +545,11 @@ void CFFSentryGun::HackFindEnemy()
 	{
 		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
 
+		// Changed a line for
+		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
 		if (!pPlayer || !pPlayer->IsPlayer() || pPlayer->IsObserver() || pPlayer == pOwner ||
-			!g_pGameRules->FPlayerCanTakeDamage(pOwner, pPlayer) || pPlayer->m_nSkin == pPlayer->GetTeamNumber() - 1) 
+			(g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE) || pPlayer->m_nSkin == pPlayer->GetTeamNumber() - 1) 
 			continue;
 
 		// Add alive players who are visible
@@ -556,15 +558,11 @@ void CFFSentryGun::HackFindEnemy()
 
 		// Add sentry guns
 		if (pPlayer->m_hSentryGun.Get() && FVisible(pPlayer->m_hSentryGun->GetAbsOrigin()) && pPlayer->m_hSentryGun.Get() != this) 
-			target = IsBetterTarget(target, pPlayer->m_hSentryGun.Get(), (pPlayer->m_hSentryGun->GetAbsOrigin() - 
-
-vecOrigin).LengthSqr());
+			target = IsBetterTarget(target, pPlayer->m_hSentryGun.Get(), (pPlayer->m_hSentryGun->GetAbsOrigin() - vecOrigin).LengthSqr());
 
 		// Add dispensers
 		if (pPlayer->m_hDispenser.Get() && FVisible(pPlayer->m_hDispenser->GetAbsOrigin())) 
-			target = IsBetterTarget(target, pPlayer->m_hDispenser.Get(), (pPlayer->m_hDispenser->GetAbsOrigin() - 
-
-vecOrigin).LengthSqr());
+			target = IsBetterTarget(target, pPlayer->m_hDispenser.Get(), (pPlayer->m_hDispenser->GetAbsOrigin() - vecOrigin).LengthSqr());
 	}
 
 	SetEnemy(target);
