@@ -281,6 +281,8 @@ CFFPlayer::CFFPlayer()
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
 
+	m_bDisguisable = true;
+
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
 		m_vSpeedEffects[i].active = false;
@@ -3992,12 +3994,18 @@ void CFFPlayer::Command_Disguise()
 	if(engine->Cmd_Argc( ) < 3)
 		return;
 
+	if (!m_bDisguisable) {
+		ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_NODISGUISENOW");
+		return;
+	}
+
 	const char *szTeam = engine->Cmd_Argv(1);
 
 	int iTeam, iClass;
 
 	// Allow either specify enemy/friendly or an actual team
 	if (FStrEq(szTeam, "enemy"))
+		// TODO: Check friendliness of the other team (do a loop methinks)
 		iTeam = GetTeamNumber() == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
 	else if (FStrEq(szTeam, "friendly"))
 		iTeam = GetTeamNumber();

@@ -239,6 +239,9 @@ void CFFItemFlag::Drop( float delay, float speed )
 	m_pLastOwner = owner;
 	m_flThrowTime = gpGlobals->curtime;
 
+	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
+	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
+
 	// it's dropped, so don't need a parent anymore
 	SetOwnerEntity(NULL);
 }
@@ -259,6 +262,8 @@ CBaseEntity* CFFItemFlag::Return( void )
 	{
 		m_flThrowTime = gpGlobals->curtime;
 		m_pLastOwner = owner;
+
+		entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 	}
 
 	CreateItemVPhysicsObject();

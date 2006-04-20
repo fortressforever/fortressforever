@@ -161,6 +161,8 @@ bool CFFEntitySystem::StartForMap()
 	// Load the base libraries [TODO] Not all of them !
 	lua_baselibopen(L);
 	
+	lua_atpanic(L, HandleError);
+
 	// And now load some of ours
 	FFLibOpen();
 
@@ -231,6 +233,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "AddFrags", AddFrags );
 	lua_register( L, "MarkRadioTag", MarkRadioTag );
 	lua_register( L, "SetPlayerLocation", SetPlayerLocation );
+	lua_register( L, "SetPlayerDisguisable", SetPlayerDisguisable );
 }
 
 //----------------------------------------------------------------------------
@@ -1491,6 +1494,36 @@ int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 
 
 //----------------------------------------------------------------------------
+// Purpose: Sets the player's ability to disguise
+//          int SetPlayerDisguisable( int player, boolean disguisable );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetPlayerDisguisable( lua_State *L )
+{
+	int n = lua_gettop(L);
+
+	if( n == 2 )
+	{
+		bool ret = false;
+		int player = (int)lua_tonumber( L, 1 );
+		bool disguisable = lua_toboolean( L, 2 );
+
+		CBasePlayer *ent = UTIL_PlayerByIndex( player );
+		if (ent && ent->IsPlayer())
+		{
+			ToFFPlayer(ent)->SetDisguisable( disguisable );
+		}
+
+		// 1 result
+		lua_pushboolean( L, ret );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+
+//----------------------------------------------------------------------------
 // Purpose: Sets the limit for a particular class on a team
 //          int SetTeamClassLimit( team, class, limit );
 //----------------------------------------------------------------------------
@@ -1519,6 +1552,17 @@ int CFFEntitySystem::Random( lua_State *L )
 	// 1 result
 	lua_pushnumber( L, ret );
 	return 1;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Handles Error
+//----------------------------------------------------------------------------
+int CFFEntitySystem::HandleError( lua_State *L )
+{
+	const char *error = lua_tostring(L, -1);
+	Warning("[SCRIPT] %s", error);
+
+	return 0;
 }
 
 //----------------------------------------------------------------------------

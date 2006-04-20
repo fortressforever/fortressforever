@@ -447,6 +447,15 @@ public:
 
 	int m_iMaxAmmo[MAX_AMMO_TYPES];
 
+
+	void SetDisguisable(bool in) {
+		DevMsg("Disguisable set to %d\n", in);
+		m_bDisguisable = in;
+		if (!in) ResetDisguise();
+	}
+	bool GetDisguisable() { return m_bDisguisable; }
+	bool m_bDisguisable;
+
 	int m_iSpyDisguise, m_iNewSpyDisguise;
 	float m_flFinishDisguise;
 

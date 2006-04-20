@@ -60,6 +60,7 @@ public:
 	void SetVar( const char *name, const char *value );
 	void SetVar( const char *name, int value );
 	void SetVar( const char *name, float value );
+	static int HandleError( lua_State* );
 
 	const char *GetString( const char *name );
 	int GetInt( const char *name );
@@ -105,6 +106,7 @@ public:
 	static int AddFrags( lua_State* );
 	static int MarkRadioTag( lua_State* );
 	static int SetPlayerLocation( lua_State* );
+	static int SetPlayerDisguisable( lua_State* );
 
 };
 
