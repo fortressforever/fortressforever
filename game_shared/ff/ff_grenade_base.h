@@ -87,6 +87,11 @@ public:
 
 	void SetDetonateTimerLength( float timer );
 
+	// BaseClass projectile was making grens use its takeemp which just removed
+	// them from the level
+	// Bug #0000527: Emps makes other grenades disappear instead of detonating them.
+	int TakeEmp( void ) { return 0; }
+
 	// Public members
 	CNetworkVector( m_vInitialVelocity );
 protected:

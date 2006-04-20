@@ -255,8 +255,6 @@ void CBaseGrenade::PreDetonate( void )
 
 void CBaseGrenade::Detonate( void )
 {
-	DevMsg( "[Grenade] Here 3\n" );
-
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
 
@@ -277,8 +275,6 @@ void CBaseGrenade::Detonate( void )
 // 
 void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
-	DevMsg( "[Grenade] Here 1\n" );
-
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
 
@@ -323,8 +319,6 @@ void CBaseGrenade::DangerSoundThink( void )
 
 void CBaseGrenade::BounceTouch( CBaseEntity *pOther )
 {
-	DevMsg( "[Grenade] Here 2\n" );
-
 	if ( pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS) )
 		return;
 

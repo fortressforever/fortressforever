@@ -66,6 +66,9 @@ public:
 	//-----------------------------------------------
 	void DetonatePipe(bool force = false, CBaseEntity *pOther = NULL);
 
+	// Override projectile_base so object isn't removed
+	int TakeEmp( void ) { return m_flDamage; } 
+
 	DECLARE_DATADESC(); // Added anyway
 
 #else
