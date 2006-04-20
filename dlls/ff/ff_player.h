@@ -303,6 +303,7 @@ public:
 
 public:
 	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0);
+	bool IsSpeedEffectSet( SpeedEffectType type );
 	void RemoveSpeedEffect(SpeedEffectType type);
 	void ClearSpeedEffects(int mod = 0);
 

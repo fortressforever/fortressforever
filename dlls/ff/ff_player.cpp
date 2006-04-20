@@ -1831,19 +1831,23 @@ void CFFPlayer::Command_Radar( void )
 	// Player issued the command "radar"
 	// Can only do it every CVAR seconds (atm)
 	// Cost is CVAR cells (atm)
-	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )radar_wait_time.GetInt( ) ) )
+	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )radar_wait_time.GetInt() ) )
 	{
 		// See if the player has enough ammo
 		if( GetAmmoCount( "AMMO_CELLS" ) >= radar_num_cells.GetInt( ) )
 		{
-			EmitSound("radar.single_shot");
+			// Bug #0000531: Everyone hears radar
+			CPASAttenuationFilter sndFilter;
+			sndFilter.RemoveAllRecipients();
+			sndFilter.AddRecipient( this );
+			EmitSound( sndFilter, entindex(), "radar.single_shot");
 
 			// Remove ammo
 			RemoveAmmo( radar_num_cells.GetInt(), "AMMO_CELLS" );
 
 			// Only send this message to the local player	
 			CSingleUserRecipientFilter user( this );
-			user.MakeReliable( );
+			user.MakeReliable();
 
 			// Start the message block
 			UserMessageBegin( user, "RadarUpdate" );
@@ -3065,6 +3069,19 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	m_vSpeedEffects[i].modifiers = mod;
 	
 	RecalculateSpeed();
+}
+
+bool CFFPlayer::IsSpeedEffectSet( SpeedEffectType type )
+{
+	bool bFound = false;
+
+	for( int i = 0; ( i < NUM_SPEED_EFFECTS ) && !bFound; i++ )
+	{
+		if( m_vSpeedEffects[ i ].type == type )
+			bFound = true;
+	}
+
+	return bFound;
 }
 
 void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)

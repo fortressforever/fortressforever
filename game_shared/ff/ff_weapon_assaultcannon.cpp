@@ -82,6 +82,15 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 //----------------------------------------------------------------------------
 bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
+	// Bug #0000499: Oddity with assault cannon
+	// Moved this up to here so it gets called and remove it if its set
+#ifdef GAME_DLL
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( pPlayer->IsSpeedEffectSet( SE_ASSAULTCANNON ) )
+        pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN );
+#endif
+
 	if (!m_fFireState) 
 		return BaseClass::Holster(pSwitchingTo);
 
@@ -89,11 +98,6 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	EmitSound("Assaultcannon.Winddown");
 
 	m_fFireState = 0;
-
-#ifdef GAME_DLL
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN);
-#endif
 
 	return BaseClass::Holster(pSwitchingTo);
 }

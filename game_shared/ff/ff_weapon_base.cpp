@@ -318,6 +318,11 @@ bool CFFWeaponBase::Deploy()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 #ifdef GAME_DLL
+	// Bug #0000499: Oddity with assault cannon
+	pPlayer->ClearSpeedEffects( SE_ASSAULTCANNON );
+#endif
+
+#ifdef GAME_DLL
 	if (pPlayer->m_iSpyDisguise)
 	{
 		// Spies show different models!
@@ -455,11 +460,11 @@ bool CFFWeaponBase::Reload()
 		SendReloadEvents();
 #endif
 		
-		//WeaponSound(RELOAD);
-
-		CFFPlayer *pPlayer = GetPlayerOwner();
+		//WeaponSound(RELOAD);		
 
 #ifdef GAME_DLL
+		CFFPlayer *pPlayer = GetPlayerOwner();
+
 		// phew finally, remove ammo from stores...
 		if (pPlayer) 
 			 pPlayer->RemoveAmmo(pWeaponInfo.m_iCycleDecrement, m_iPrimaryAmmoType);

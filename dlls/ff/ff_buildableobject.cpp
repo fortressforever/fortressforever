@@ -532,8 +532,8 @@ void CFFBuildableObject::DoExplosion( void )
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 
 	// Explosion!
-	Vector vecAbsOrigin = GetAbsOrigin();
-	CPASFilter filter( vecAbsOrigin );	
+	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 16.0f ); // Bring off the ground a little 
+	CPASFilter filter( vecAbsOrigin );
 	te->Explosion( filter,			// Filter
 		0.0f,						// Delay
 		&vecAbsOrigin,				// Origin (position)
@@ -591,7 +591,7 @@ void CFFBuildableObject::DoExplosion( void )
 
 		//Shock ring
 		te->BeamRingPoint( 
-			filter2, 0, GetAbsOrigin( ),	//origin
+			filter2, 0, GetAbsOrigin(),		//origin
 			1.0f,							//start radius
 			m_flExplosionRadius * 2.0f,		//end radius
 			m_iShockwaveExplosionTexture,	//texture
