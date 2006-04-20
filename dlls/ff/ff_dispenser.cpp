@@ -409,6 +409,8 @@ CFFDispenser *CFFDispenser::Create( const Vector &vecOrigin, const QAngle &vecAn
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner = pentOwner;
 
+	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
+
 	// Spawn the object
 	pObject->Spawn();
 

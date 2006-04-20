@@ -131,33 +131,17 @@ void CFFDetpack::Spawn( void )
 void CFFDetpack::GoLive( void )
 {
 	// Call base class
-	CFFBuildableObject::GoLive( );
+	CFFBuildableObject::GoLive();
 
 	// Object is now built
 	m_bBuilt = true;
 
-	// Do this after calling baseclass!
-	// This is so we call damage functions
-	// but don't take any damage
-	//m_takedamage = DAMAGE_EVENTS_ONLY;
-
 	// Tell client to start the timer
 	SendStartTimerMessage();
-
-	// Go live (for touching)
-	//m_bLive = true;
 
 	// Set up when we're supposed to blow up
 	float flCurTime = gpGlobals->curtime;
 	m_flDetonateTime = flCurTime + ( float )m_iFuseTime;
-
-	// Make object react to physics
-	//IPhysicsObject *pObject = VPhysicsGetObject( );
-	//if( pObject )
-	//{
-	//	pObject->SetMass( 2000.0f );
-	//	pObject->SetBuoyancyRatio( 1 );
-	//}
 
 	// Set up our touch function
 	SetTouch( &CFFDetpack::OnObjectTouch );		// |-- Mirv: Account for GCC strictness
@@ -322,7 +306,7 @@ CFFDetpack *CFFDetpack::Create( const Vector &vecOrigin, const QAngle &vecAngles
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner = pentOwner;
 
-	pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags( ), true );
+	pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 
 	// Spawn the object
 	pObject->Spawn( );

@@ -555,6 +555,7 @@ int CClientScoreBoardDialog::AddSection( int teamType, int teamNumber )
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "#Spectators", 0, scheme( )->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "class", "", 0, scheme( )->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "score", "", 0, scheme( )->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths", "", 0, scheme( )->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "ping", "", 0, scheme( )->GetProportionalScaledValue( PING_WIDTH ) );
 	}
 	else if( teamType == TYPE_UNASSIGNED )
@@ -563,6 +564,7 @@ int CClientScoreBoardDialog::AddSection( int teamType, int teamNumber )
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "#Unassigned", 0, scheme( )->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "class", "", 0, scheme( )->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "score", "", 0, scheme( )->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths", "", 0, scheme( )->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( m_iSectionId, "ping", "", 0, scheme( )->GetProportionalScaledValue( PING_WIDTH ) );
 	}
 
@@ -624,7 +626,6 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	}
 	// END: Mulch
 
-	
 	kv->SetInt( "deaths", gr->GetDeaths( playerIndex ) );
 	//kv->SetInt("frags", gr->GetFrags( playerIndex ) );
 	kv->SetInt( "score", gr->GetFrags( playerIndex ) );

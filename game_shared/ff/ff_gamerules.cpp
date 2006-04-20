@@ -586,7 +586,7 @@ const char *CFFGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	if( bTeamOnly )
 		return "(TEAM)";
 	else
-		return "(GLOBAL)";
+		return "";
 	// END: Added by Mulchman
 
 	return "(FortressForever - chat prefix bee-hotches)";

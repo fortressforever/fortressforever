@@ -323,14 +323,6 @@ void CFFSentryGun::GoLive()
 	// Object is now built
 	m_bBuilt = true;
 
-	// Object is built and can take damage if it is supposed to
-	if (m_bTakesDamage) 
-		m_takedamage = DAMAGE_YES;
-
-	// Make sure the model is drawn normally now(if "flashing") 
-	if (m_bTranslucent) 
-		SetRenderMode(kRenderNormal);
-
 	// Now use our stored ground location + orientation
 	SetAbsOrigin(m_vecGroundOrigin);
 	SetAbsAngles(m_angGroundAngles);
@@ -927,6 +919,8 @@ CFFSentryGun *CFFSentryGun::Create(const Vector &vecOrigin, const QAngle &vecAng
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner = pentOwner;
+
+	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 
 	// Spawn the object
 	pObject->Spawn();

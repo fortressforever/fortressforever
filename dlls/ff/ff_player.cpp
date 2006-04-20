@@ -350,7 +350,7 @@ void CFFPlayer::PreThink(void)
 	// should be "seeing" if it's time to do another update
 	if( ( m_flLastRadioTagUpdate + radiotag_duration.GetFloat( ) ) < gpGlobals->curtime )
 	{
-		FindRadioTaggedPlayers( );
+		FindRadioTaggedPlayers();
 	}
 
 	// Riding a vehicle?
@@ -1655,7 +1655,7 @@ void CFFPlayer::UnlockPlayer( void )
 void CFFPlayer::FindRadioTaggedPlayers( void )
 {
 	// Reset
-	m_hRadioTaggedList.RemoveAll( );
+	m_hRadioTaggedList.RemoveAll();
 
 	// Get client count
 	int iMaxClients = gpGlobals->maxClients;
@@ -1665,7 +1665,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		return;
 
 	// My origin
-	Vector vecOrigin = GetAbsOrigin( );
+	Vector vecOrigin = GetAbsOrigin();
 
 	// Loop through doing stuff on each player
 	for( int i = 0; i < iMaxClients; i++ )
@@ -1677,7 +1677,11 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			continue;		
 
 		// Skip if not a player
-		if( !pBasePlayer->IsPlayer( ) )
+		if( !pBasePlayer->IsPlayer() )
+			continue;
+
+		// Skip if spec
+		if( !pBasePlayer->IsObserver() )
 			continue;
 
 		CFFPlayer *pPlayer = ToFFPlayer( pBasePlayer );
@@ -1686,23 +1690,27 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		if( pPlayer == this )
 			continue;
 
-		// Skip if an observer
-		if( pPlayer->IsObserver( ) )
-			continue;
-
 		// Skip if not tagged
 		if( !pPlayer->m_bRadioTagged )
 			continue;
 
-		// Skip if they're not someone we can hurt
-		if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, this ) )
+		// Only want to show players whom people on our team have tagged or
+		// players whom allies have tagged
+		//if( ToFFPlayer( pPlayer->m_pWhoTaggedMe )->GetTeamNumber() != GetTeamNumber() )
+		//{
+		if( g_pGameRules->PlayerRelationship( this, ToFFPlayer( pPlayer->m_pWhoTaggedMe ) ) != GR_TEAMMATE )
 			continue;
+		//}
+
+//		// Skip if they're not someone we can hurt
+//		if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, this ) )
+//			continue;
 
 		// Get their origin
-		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin( );
+		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
 
 		// Skip if they're out of range
-		if( vecOrigin.DistTo( vecPlayerOrigin ) > radiotag_distance.GetInt( ) )
+		if( vecOrigin.DistTo( vecPlayerOrigin ) > radiotag_distance.GetInt() )
 			continue;
 
 		// We're left w/ a player who's within range
@@ -1710,19 +1718,19 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 		// Create a single object
 		ESP_Shared_s hObject;
-		hObject.m_iClass = pPlayer->GetClassSlot( );
-		hObject.m_iTeam = pPlayer->GetTeamNumber( );
+		hObject.m_iClass = pPlayer->GetClassSlot();
+		hObject.m_iTeam = pPlayer->GetTeamNumber() - 1;
 		hObject.m_vecOrigin = vecPlayerOrigin;
 
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
 	}
 
-	if( m_hRadioTaggedList.Count( ) )
+	if( m_hRadioTaggedList.Count() )
 	{
 		// Only send this message to the local player	
 		CSingleUserRecipientFilter user( this );
-		user.MakeReliable( );
+		user.MakeReliable();
 
 		// Start the message block
 		UserMessageBegin( user, "RadioTagUpdate" );
@@ -1733,9 +1741,9 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			// - origin (float[3])
 			// team = 99 terminates
 
-			for( int i = 0; i < m_hRadioTaggedList.Count( ); i++ )
+			for( int i = 0; i < m_hRadioTaggedList.Count(); i++ )
 			{
-				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iTeam - 1 ); // adjusted
+				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iTeam );
 				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iClass );
 				WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
 			}
@@ -1744,7 +1752,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			WRITE_SHORT( 99 );
 
 		// End the message block
-		MessageEnd( );
+		MessageEnd();
 
 		// Doing an update now...
 		m_flLastRadioTagUpdate = gpGlobals->curtime;

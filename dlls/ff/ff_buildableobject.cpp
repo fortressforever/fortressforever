@@ -192,7 +192,7 @@ void CFFBuildableObject::Spawn( void )
 }
 
 /**
-@fn void GoLive( )
+@fn void GoLive()
 @brief Object is built and ready to do it's thing
 @return void
 */
@@ -215,7 +215,7 @@ void CFFBuildableObject::GoLive( void )
 	// React to physics!
 	if( m_bUsePhysics )
 	{
-		IPhysicsObject *pPhysics = VPhysicsGetObject( );
+		IPhysicsObject *pPhysics = VPhysicsGetObject();
 		if( pPhysics )
 		{
 			pPhysics->Wake();
@@ -225,6 +225,18 @@ void CFFBuildableObject::GoLive( void )
 			pPhysics->EnableDrag( true );
 		}
 	}
+
+	/*
+	IPhysicsObject *pPhysics = VPhysicsGetObject();
+	if( pPhysics )
+	{
+		pPhysics->Wake();
+		pPhysics->EnableCollisions( true );
+		pPhysics->EnableMotion( m_bUsePhysics );
+		pPhysics->EnableGravity( m_bUsePhysics );
+		pPhysics->EnableDrag( m_bUsePhysics );
+	}
+	*/
 }
 
 /**
@@ -628,6 +640,16 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// If we're not live yet don't take damage
 	if( !m_bBuilt )
 		return 0;
+
+	/*
+	Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );
+
+	Warning( "[Buildable] Inflictor: %s, Attacker: %s\n", info.GetInflictor()->GetClassname(), info.GetAttacker()->GetClassname() );
+
+	// To stop falling detpacks from destroying objects they fall on
+	if( !Q_strcmp( info.GetInflictor()->GetClassname(), "worldspawn" ) )
+		return 0;
+		*/
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// Depending on the teamplay value, take damage
