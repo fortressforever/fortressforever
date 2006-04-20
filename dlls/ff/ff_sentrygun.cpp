@@ -317,6 +317,8 @@ SendStatsToBot();
 //-----------------------------------------------------------------------------
 void CFFSentryGun::GoLive() 
 {
+	BaseClass::GoLive();
+
 	// Upgrade to level 1
 	Upgrade(true);
 

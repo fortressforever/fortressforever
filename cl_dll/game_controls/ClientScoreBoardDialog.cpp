@@ -357,6 +357,13 @@ void CClientScoreBoardDialog::UpdateTeamInfo( )
 		// Display team score
 		m_pPlayerList->ModifyColumn( iSectionId, "score", szScore );
 
+		// Set up team deaths
+		wchar_t szDeaths[ 6 ];
+		swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( i ) );
+
+		// Display team deaths
+		m_pPlayerList->ModifyColumn( iSectionId, "deaths", szDeaths );
+
 		// Set up team latency
 		if( m_iNumPlayersOnTeam[ i ] > 0 )
 			m_iTeamLatency[ i ] /= m_iNumPlayersOnTeam[ i ];

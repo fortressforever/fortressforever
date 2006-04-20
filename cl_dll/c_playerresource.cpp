@@ -148,6 +148,16 @@ int C_PlayerResource::GetTeamScore(int index)
 	return team->Get_Score();
 }
 
+int C_PlayerResource::GetTeamDeaths( int index )
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if( !team )
+		return 0;
+
+	return team->Get_Deaths();
+}
+
 // --> Mirv: So menus can show correct limits
 int C_PlayerResource::GetTeamClassLimits( int index, int classindex )
 {
