@@ -1694,6 +1694,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		if( !pPlayer->m_bRadioTagged )
 			continue;
 
+		// Bug #0000517: Enemies see radio tag.
 		// Only want to show players whom people on our team have tagged or
 		// players whom allies have tagged
 		//if( ToFFPlayer( pPlayer->m_pWhoTaggedMe )->GetTeamNumber() != GetTeamNumber() )
