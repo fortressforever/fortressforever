@@ -23,8 +23,7 @@
 #include "ff_utils.h"
 #ifdef GAME_DLL
 	#include "ff_player.h"
-	#include "ff_dispenser.h"
-	#include "ff_sentrygun.h"
+	#include "ff_buildableobjects_shared.h"
 	#include "baseentity.h"
 #endif
 

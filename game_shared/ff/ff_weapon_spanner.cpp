@@ -17,8 +17,7 @@
 #ifdef CLIENT_DLL
 	#define CFFWeaponSpanner C_FFWeaponSpanner
 #else
-	#include "ff_sentrygun.h"
-	#include "ff_dispenser.h"
+	#include "ff_buildableobjects_shared.h"
 #endif
 
 //=============================================================================
