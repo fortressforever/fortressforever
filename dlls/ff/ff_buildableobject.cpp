@@ -147,10 +147,11 @@ void CFFBuildableObject::Spawn( void )
 		ChangeTeam(pOwner->GetTeamNumber());
 	}
 
+	// Bug #0000221: Building SG facing non-cardinal directions causes client stuck
+	// Don't use AABB's
 	// Give it a bounding box (use the .phy file provided)
-	//SetSolid( SOLID_VPHYSICS );
-	SetSolid( SOLID_BBOX );
-
+	SetSolid( SOLID_VPHYSICS );
+	
 	SetBlocksLOS( false );
 
 	// Make sure it has a model

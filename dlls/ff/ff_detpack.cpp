@@ -118,9 +118,10 @@ void CFFDetpack::Spawn( void )
 	m_iHealth = 1;
 
 	// Call baseclass spawn stuff
-	CFFBuildableObject::Spawn( );
+	CFFBuildableObject::Spawn();
 
-	SetSolid( SOLID_VPHYSICS );
+	// Done in baseclass
+	//SetSolid( SOLID_VPHYSICS );
 }
 
 /**
