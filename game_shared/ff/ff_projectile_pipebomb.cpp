@@ -49,8 +49,11 @@ PRECACHE_WEAPON_REGISTER(pipebomb);
 
 		// Transfer ownership before exploding 
 		//	eg. if an engineer dets these instead with emp
-		if (pOther) 
+		if (pOther)
+		{
+			SetThrower((CBaseCombatCharacter *)pOther);
 			SetOwnerEntity(pOther);
+		}
 
 		// Detonate!
 		SetThink(&CFFProjectilePipebomb::Detonate);
