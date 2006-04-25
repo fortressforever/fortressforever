@@ -292,6 +292,7 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
 	bool ShouldSavePhysics( void ) { return false; }
+	int TakeEmp( void ) { return 0; }
 
 	// Mirv: Store in advance the ground position
 	virtual void SetGroundAngles(const QAngle &ang) { m_angGroundAngles = ang; }
@@ -445,7 +446,8 @@ public:
 	void OnObjectThink( void );
 	void SendStartTimerMessage( void );
 	void SendStopTimerMessage( void );
-	void OnEmpExplosion( void );
+	//void OnEmpExplosion( void );
+	int TakeEmp( void );
 
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 

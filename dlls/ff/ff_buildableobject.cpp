@@ -152,23 +152,40 @@ void CFFBuildableObject::Spawn( void )
 	// Give it a bounding box (use the .phy file provided)
 	SetSolid( SOLID_VPHYSICS );
 	
-	SetBlocksLOS( false );
+	// To use solid_vphysics w/o tons of asserts
+	// since the engine can't rotate collideables (yet)
+	// Still aligns to world but i haven't been stuck
+	// building yet (like with solid_bbox)
+	AddSolidFlags( FSOLID_FORCE_WORLD_ALIGNED );
 
+	SetCollisionGroup( COLLISION_GROUP_NONE );
+	
+	if( m_bUsePhysics )
+	{
+		SetMoveType( MOVETYPE_VPHYSICS );
+	}
+	else
+	{
+		// So that doors collide with it
+		SetMoveType( MOVETYPE_FLY );
+	}
+		
 	// Make sure it has a model
 	Assert( m_ppszModels[ 0 ] != NULL );
 
 	// Give it a model
 	SetModel( m_ppszModels[ 0 ] );
 
+	//CollisionProp()->UseTriggerBounds( true, 16.0f );
+
+	SetBlocksLOS( false );
 	m_takedamage = DAMAGE_EVENTS_ONLY;
-	
-	AddFlag( FL_OBJECT );
 
 	// Play the build sound (if there is one)
 	if( m_bHasSounds )
 	{
-		CPASAttenuationFilter sndFilter( GetAbsOrigin() );
-		sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
+		CPASAttenuationFilter sndFilter( this );
+		//sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
 		EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
 	}
 
@@ -223,7 +240,7 @@ void CFFBuildableObject::GoLive( void )
 			pPhysics->EnableCollisions( true );
 			pPhysics->EnableMotion( true );
 			pPhysics->EnableGravity( true );
-			pPhysics->EnableDrag( true );
+			pPhysics->EnableDrag( true );			
 		}
 	}
 
@@ -237,7 +254,7 @@ void CFFBuildableObject::GoLive( void )
 		pPhysics->EnableGravity( m_bUsePhysics );
 		pPhysics->EnableDrag( m_bUsePhysics );
 	}
-	*/
+	//*/
 }
 
 /**

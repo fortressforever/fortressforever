@@ -279,7 +279,7 @@ void CFFDetpack::SendStopTimerMessage( void )
 	MessageEnd( );
 }
 
-void CFFDetpack::OnEmpExplosion( void )
+int CFFDetpack::TakeEmp( void )
 {
 	DevMsg( "[Detpack] Emp gren attacked me!\n" );
 
@@ -289,6 +289,8 @@ void CFFDetpack::OnEmpExplosion( void )
 		m_flThinkTime = 0.001f;	// immediate
 		SetNextThink( gpGlobals->curtime + m_flThinkTime );
 	}
+
+	return 0;
 }
 
 /**
