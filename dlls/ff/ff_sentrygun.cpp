@@ -240,12 +240,13 @@ void CFFSentryGun::Spawn()
 	// set skin
 	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner ) 
-	{
 		m_nSkin = clamp( pOwner->GetTeamNumber() - TEAM_BLUE, 0, 3 );	// |-- Mirv: BUG #0000118: SGs are always red	
-		Warning( "Found sg owner!\n" );
-	}
-	else
-		Warning( "Unable to find sg owner!\n" );
+	// This is dumb as spawn gets called twice (once as the "constructor" and
+	// once when the game code actually runs it) so it fails once and gives 
+	// this misleading msg in the console
+	//else
+	//	Warning( "Unable to find sg owner!\n" ); 
+	
 		
 
 	// Do this in base buildable junk

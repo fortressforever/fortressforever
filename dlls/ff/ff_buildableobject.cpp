@@ -144,8 +144,6 @@ void CFFBuildableObject::Spawn( void )
 	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner )
 		ChangeTeam( pOwner->GetTeamNumber() );
-	else
-		Warning( "Can't find buildable's owner!\n" );
 
 	// Bug #0000221: Building SG facing non-cardinal directions causes client stuck
 	// Don't use AABB's
