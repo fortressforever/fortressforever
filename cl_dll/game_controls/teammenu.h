@@ -48,6 +48,7 @@ public:
 	virtual void ShowPanel(bool bShow);
 
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
+	virtual void OnKeyCodeReleased(vgui::KeyCode code);
 
 	virtual bool IsVisible() 						{ return BaseClass::IsVisible(); }
   	virtual void SetParent(vgui::VPANEL parent) 	{ BaseClass::SetParent(parent); }

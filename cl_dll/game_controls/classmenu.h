@@ -58,6 +58,7 @@ public:
 	virtual bool HasInputElements() 			{ return true; }
 
 	void OnKeyCodePressed(vgui::KeyCode code);
+	void OnKeyCodeReleased(vgui::KeyCode code);
 
 public:
 

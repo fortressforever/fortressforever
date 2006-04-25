@@ -216,6 +216,17 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 	BaseClass::OnKeyCodePressed(code);
 }
 
+void CClassMenu::OnKeyCodeReleased(KeyCode code)
+{
+	// Bug #0000524: Scoreboard gets stuck with the class menu up when you first join
+	// Hide the scoreboard now
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
+
+	BaseClass::OnKeyCodeReleased(code);
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Magic override to allow vgui to create mouse over buttons for us
 //-----------------------------------------------------------------------------

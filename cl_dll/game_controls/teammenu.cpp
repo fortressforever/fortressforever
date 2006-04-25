@@ -134,14 +134,33 @@ void CTeamMenu::SetData(KeyValues *data)
 void CTeamMenu::OnKeyCodePressed(KeyCode code) 
 {
 	// Show the scoreboard over this if needed
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores")) 
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
 
 	// Support hiding the team menu by hitting your changeteam button again like TFC
 	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeteam")) 
 		gViewPortInterface->ShowPanel(this, false);
 
+	// Bug #0000540: Can't changeclass while changeteam menu is up
+	// Support bring the class menu back up if the team menu is showing
+	if( ( engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind( "changeclass" ) ) &&
+		( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() >= TEAM_BLUE ) ) 
+	{
+		m_pViewPort->ShowPanel( this, false );
+		engine->ClientCmd( "changeclass" );
+	}
+
 	BaseClass::OnKeyCodePressed(code);
+}
+
+void CTeamMenu::OnKeyCodeReleased(KeyCode code)
+{
+	// Bug #0000524: Scoreboard gets stuck with the class menu up when you first join
+	// Hide the scoreboard now
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
+
+	BaseClass::OnKeyCodeReleased(code);
 }
 
 //-----------------------------------------------------------------------------
