@@ -141,11 +141,11 @@ void CFFBuildableObject::Spawn( void )
 {
 	// Set the team number to the owner team number.
 	// Hope this is ok, bots use this for ally checks atm.
-	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-	if(pOwner)
-	{
-		ChangeTeam(pOwner->GetTeamNumber());
-	}
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	if( pOwner )
+		ChangeTeam( pOwner->GetTeamNumber() );
+	else
+		Warning( "Can't find buildable's owner!\n" );
 
 	// Bug #0000221: Building SG facing non-cardinal directions causes client stuck
 	// Don't use AABB's
@@ -389,29 +389,36 @@ void CFFBuildableObject::OnObjectThink( void )
 void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 {
 	//////////////////////////////////////////////////////////////////////////
-	const char *pEventName = 0;
-	switch(Classify())
+	/*const char *pEventName = 0;
+
+	switch( Classify() )
 	{
-	case CLASS_DISPENSER:
-		pEventName = "dispenser_killed";
+		case CLASS_DISPENSER:
+			pEventName = "dispenser_killed";
 		break;
-	case CLASS_SENTRYGUN:
-		pEventName = "sentry_killed";
+
+		case CLASS_SENTRYGUN:
+			pEventName = "sentrygun_killed";
 		break;
 	}
-	if(pEventName)
+	
+	if( pEventName )
 	{
-		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+		CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 		CBasePlayer *pAttacker = info.GetAttacker() ? info.GetAttacker()->MyCharacterPointer() : 0;
+
+		IGameEvent *event = gameeventmanager->CreateEvent( "build_dispenser" );
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( pEventName );
 		Assert(pOwner);
-		if(pEvent)
-		{			
-			pEvent->SetInt("ownerid", pOwner->GetUserID() );
-			pEvent->SetInt("attackerid", pAttacker ? pAttacker->GetUserID() : 0 );
+		if( pEvent )
+		{		
 			gameeventmanager->FireEvent( pEvent );
 		}
-	}
+		else
+		{
+			Warning( "[Buildable] Unknown event: %s!\n", pEventName );
+		}
+	}*/
 	//////////////////////////////////////////////////////////////////////////
 
 	// Do the explosion and radius damage last, because it clears the owner.

@@ -413,6 +413,16 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 		if( Q_strcmp( "sevtest", bot_sendcmd.GetString() ) == 0 )
 			pBot->Command_SevTest();
 
+		if( Q_strcmp( "ammo", bot_sendcmd.GetString() ) == 0 )
+		{
+			pBot->GiveAmmo( 200, AMMO_CELLS );
+			pBot->GiveAmmo( 200, AMMO_SHELLS );
+			pBot->GiveAmmo( 200, AMMO_NAILS );
+			pBot->GiveAmmo( 200, AMMO_ROCKETS );
+			pBot->GiveAmmo( 200, AMMO_RADIOTAG );
+			pBot->GiveAmmo( 200, AMMO_DETPACK );
+		}
+
 		if( Q_strcmp( "+gren1", bot_sendcmd.GetString() ) == 0 )
 		{
 			pBot->Command_PrimeOne();

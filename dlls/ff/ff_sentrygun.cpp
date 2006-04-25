@@ -170,6 +170,8 @@ CFFSentryGun::~CFFSentryGun()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Precache() 
 {
+	// Redundant code
+	/*
 	//PrecacheModel(FLOOR_TURRET_MODEL);	
 	//PrecacheModel(FLOOR_TURRET_GLOW_SPRITE);
 	PrecacheModel(FF_SENTRYGUN_MODEL);
@@ -214,6 +216,7 @@ void CFFSentryGun::Precache()
 			iCount++;
 		}
 	}
+	*/
 
 	// Activities
 	ADD_CUSTOM_ACTIVITY(CFFSentryGun, ACT_FLOOR_TURRET_OPEN);
@@ -232,19 +235,18 @@ void CFFSentryGun::Spawn()
 { 
 	Precache();
 
-	SetModel(m_ppszModels[0]);
-
-	//SetSolid(SOLID_BBOX);
+	BaseClass::Spawn();
 
 	// set skin
-	CFFPlayer *pOwner = (CFFPlayer *) m_hOwner.Get();
-
-	if (!pOwner) 
-		Warning("Unable to find sg owner!\n");
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	if( pOwner ) 
+	{
+		m_nSkin = clamp( pOwner->GetTeamNumber() - TEAM_BLUE, 0, 3 );	// |-- Mirv: BUG #0000118: SGs are always red	
+		Warning( "Found sg owner!\n" );
+	}
 	else
-		m_nSkin = clamp(pOwner->GetTeamNumber() - TEAM_BLUE, 0, 3);	// |-- Mirv: BUG #0000118: SGs are always red
-
-	BaseClass::Spawn();
+		Warning( "Unable to find sg owner!\n" );
+		
 
 	// Do this in base buildable junk
 	//SetBlocksLOS(false);
@@ -290,12 +292,14 @@ void CFFSentryGun::Spawn()
 	//}
 
 	// Start making it drop and/or flash(if applicable) 
-	if (m_bTranslucent) 
-	{
-		SetRenderMode(kRenderTransAlpha);
-		SetRenderColorA((byte) 110);
-	}
-SendStatsToBot();
+	//if (m_bTranslucent) 
+	//{
+	//	SetRenderMode(kRenderTransAlpha);
+	//	SetRenderColorA((byte) 110);
+	//}
+	
+	SendStatsToBot();
+
 	// Set initial direction
 	Vector vecBaseForward, vecBaseRight, vecBaseUp;
 	GetVectors(&vecBaseForward, &vecBaseRight, &vecBaseUp);
@@ -774,14 +778,35 @@ inline bool CFFSentryGun::OnSide()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Event_Killed(const CTakeDamageInfo &info) 
 {
-	SendMessageToPlayer(ToFFPlayer(m_hOwner.Get()), "SentryGun_Destroyed");
-	BaseClass::Event_Killed(info);
-	// Swap ownership to whoever killed the sg
-	if (info.GetAttacker()) 
-		SetOwnerEntity(info.GetAttacker());
+	SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "SentryGun_Destroyed" );
 
-	// Do the explosion and radius damage
-	Explode();
+	// WHY?
+	// Swap ownership to whoever killed the sg
+	//if( info.GetAttacker() ) 
+	//	SetOwnerEntity( info.GetAttacker() );
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "sentrygun_killed" );
+	if ( event )
+	{
+		int attackerid = 0;
+
+		if( info.GetAttacker() )
+		{
+			if( info.GetAttacker()->IsPlayer() )
+				attackerid = ToFFPlayer( info.GetAttacker() )->GetUserID();
+			else if( info.GetInflictor() )
+			{
+				if( info.GetInflictor()->IsPlayer() )
+					attackerid = ToFFPlayer( info.GetInflictor() )->GetUserID();
+			}
+		}
+
+		event->SetInt( "ownerid", ToFFPlayer( m_hOwner.Get() )->GetUserID() );
+		event->SetInt( "attackerid", attackerid );
+		gameeventmanager->FireEvent( event );
+	}
+
+	BaseClass::Event_Killed( info );
 }
 
 //-----------------------------------------------------------------------------
@@ -915,10 +940,10 @@ SendStatsToBot();
 CFFSentryGun *CFFSentryGun::Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner) 
 {
 	// Create the object
-	CFFSentryGun *pObject = (CFFSentryGun *) CBaseEntity::Create("FF_SentryGun_entity", vecOrigin, vecAngles, NULL);
+	CFFSentryGun *pObject = ( CFFSentryGun * )CBaseEntity::Create("FF_SentryGun_entity", vecOrigin, vecAngles, NULL );
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
-	pObject->m_hOwner = pentOwner;
+	pObject->m_hOwner.GetForModify() = pentOwner;
 
 	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 

@@ -307,7 +307,7 @@ CFFDetpack *CFFDetpack::Create( const Vector &vecOrigin, const QAngle &vecAngles
 	CFFDetpack *pObject = ( CFFDetpack * )CBaseEntity::Create( "FF_Detpack_entity", vecOrigin, vecAngles, NULL );
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
-	pObject->m_hOwner = pentOwner;
+	pObject->m_hOwner.GetForModify() = pentOwner;
 
 	pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 

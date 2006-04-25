@@ -25,6 +25,8 @@ public:
 		gameeventmanager->AddListener( this, "build_dispenser", true );
 		gameeventmanager->AddListener( this, "build_sentrygun", true );
 		gameeventmanager->AddListener( this, "build_detpack", true );
+		gameeventmanager->AddListener( this, "dispenser_killed", true );
+		gameeventmanager->AddListener( this, "sentrygun_killed", true );
 
 		return BaseClass::Init();
 	}
@@ -99,6 +101,35 @@ public:
 			DevMsg( "\"%s<%i><%s><%s>\" built a %s\n", pPlayer->GetPlayerName(), userid, pPlayer->GetNetworkIDString(), team ? team->GetName() : "", szObject );
 		}
 		// END: Watching when buildables get built
+
+		// BEG: Watch for buildables getting killed
+		if( !Q_strncmp( name, "dispenser_killed", Q_strlen( "dispenser_killed" ) ) )
+		{
+			const int ownerid = event->GetInt( "ownerid" );
+			const int attackerid = event->GetInt( "attackerid" );
+
+			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+
+			CTeam *team = pAttacker->GetTeam();
+
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+		}
+		else if( !Q_strncmp( name, "sentrygun_killed", Q_strlen( "sentrygun_killed" ) ) )
+		{
+			const int ownerid = event->GetInt( "ownerid" );
+			const int attackerid = event->GetInt( "attackerid" );
+
+			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
+			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+
+			CTeam *team = pAttacker->GetTeam();
+
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+		}
+		// END: Watch for buildables getting killed
 
 
 		if ( BaseClass::PrintEvent( event ) )
