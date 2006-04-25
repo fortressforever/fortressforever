@@ -89,6 +89,9 @@ public:
 	virtual void PostThink();
 	virtual CBaseEntity *EntSelectSpawnPoint();
 	virtual void Spawn();
+private:
+	Vector m_vecLastSpawnPoint;
+public:
 	virtual void InitialSpawn();
 	virtual void Precache();
 	virtual void Event_Killed( const CTakeDamageInfo &info );

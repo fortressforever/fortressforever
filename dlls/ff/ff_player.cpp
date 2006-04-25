@@ -707,6 +707,8 @@ void CFFPlayer::Spawn()
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
+	m_vecLastSpawnPoint = GetAbsOrigin();
+
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -1005,6 +1007,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	CFFProjectilePipebomb::DestroyAllPipes(this, true);
 
 	BaseClass::Event_Killed( info );
+
+	// HACK: Test
+	SetAbsOrigin( m_vecLastSpawnPoint );
 
 	CreateRagdollEntity();
 }

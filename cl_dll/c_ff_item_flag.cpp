@@ -11,6 +11,7 @@
 *********************************************************************/
 
 #include "cbase.h"
+#include "c_ff_player.h"
 
 class C_FFItemFlag : public C_BaseAnimating
 {
@@ -61,6 +62,9 @@ ShadowType_t C_FFItemFlag::ShadowCastType( void )
 {
 	if( GetFollowedEntity() == C_BasePlayer::GetLocalPlayer() )
 	{
+		if( r_selfshadows.GetInt() )
+			return SHADOWS_RENDER_TO_TEXTURE;
+
 		return SHADOWS_NONE;
 	}
 	else

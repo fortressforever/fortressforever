@@ -49,6 +49,8 @@ static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
 static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
+ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
+
 // #0000331: impulse 81 not working (weapon_cubemap)
 #include "../c_weapon__stubs.h"
 #include "ff_weapon_base.h"
@@ -872,12 +874,20 @@ void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 	m_PlayerAnimState->DoAnimationEvent( event );
 }
 
+// Bug #0000508: Carried objects cast a shadow for the carrying player
 ShadowType_t C_FFPlayer::ShadowCastType( void )
 {
 	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
+	{
+		if( r_selfshadows.GetInt() )
+			return SHADOWS_RENDER_TO_TEXTURE;
+
 		return SHADOWS_NONE;
+	}
 	else
+	{
 		return SHADOWS_RENDER_TO_TEXTURE;
+	}
 }
 
 bool C_FFPlayer::ShouldDraw( void )

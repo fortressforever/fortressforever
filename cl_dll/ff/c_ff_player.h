@@ -33,6 +33,8 @@
 #define FF_TEAM_GREEN		5
 // END: Added by Mulchman for team junk
 
+extern ConVar r_selfshadows;
+
 void CC_PrimeOne(void);
 void CC_PrimeTwo(void);
 void CC_ThrowGren(void);
