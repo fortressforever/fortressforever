@@ -105,8 +105,8 @@ public:
 		// BEG: Watch for buildables getting killed
 		if( !Q_strncmp( name, "dispenser_killed", Q_strlen( "dispenser_killed" ) ) )
 		{
-			const int ownerid = event->GetInt( "ownerid" );
-			const int attackerid = event->GetInt( "attackerid" );
+			const int ownerid = event->GetInt( "userid" );
+			const int attackerid = event->GetInt( "attacker" );
 
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
 			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
@@ -118,8 +118,8 @@ public:
 		}
 		else if( !Q_strncmp( name, "sentrygun_killed", Q_strlen( "sentrygun_killed" ) ) )
 		{
-			const int ownerid = event->GetInt( "ownerid" );
-			const int attackerid = event->GetInt( "attackerid" );
+			const int ownerid = event->GetInt( "userid" );
+			const int attackerid = event->GetInt( "attacker" );
 
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
 			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );

@@ -378,8 +378,8 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 
-		event->SetInt( "ownerid", ToFFPlayer( m_hOwner.Get() )->GetUserID() );
-		event->SetInt( "attackerid", attackerid );
+		event->SetInt( "userid", ToFFPlayer( m_hOwner.Get() )->GetUserID() );
+		event->SetInt( "attacker", attackerid );
 		gameeventmanager->FireEvent( event );
 	}
 
