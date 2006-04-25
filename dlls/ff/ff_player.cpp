@@ -707,7 +707,7 @@ void CFFPlayer::Spawn()
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
-	m_vecLastSpawnPoint = GetAbsOrigin();
+//	m_vecLastSpawnPoint = GetAbsOrigin();
 
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -1009,7 +1009,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	BaseClass::Event_Killed( info );
 
 	// HACK: Test
-	SetAbsOrigin( m_vecLastSpawnPoint );
+	//SetAbsOrigin( m_vecLastSpawnPoint );
+	// Ha, don't do this as it moves our view back too, heh.
 
 	CreateRagdollEntity();
 }
