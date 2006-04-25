@@ -94,10 +94,7 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 	}
 	
 	if ( !IsConnected( iIndex ) )
-	{
-		DevMsg( "[Player Resource] I am here\n" );
 		return "unconnected";
-	}
 
 	// Yuck, make sure it's up to date
 	player_info_t sPlayerInfo;

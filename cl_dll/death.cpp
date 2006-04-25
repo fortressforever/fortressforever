@@ -227,6 +227,10 @@ void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 	int killer = engine->GetPlayerForUserID( event->GetInt("attacker") );
 	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
 
+	Warning( "[Death]\n" );
+	Warning( "\tkiller: %i\n", killer );
+	Warning( "\tvictim: %i\n", victim );
+
 	char killedwith[32];
 	Q_snprintf( killedwith, sizeof( killedwith ), "d_%s", event->GetString("weapon") );
 
