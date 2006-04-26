@@ -624,8 +624,6 @@ bool CMultiplayRules::IsMultiplayer( void )
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
 		if ( event )
 		{
-			Warning( "MP GAME RULES\n" );
-
 			event->SetInt("userid", pVictim->GetUserID() );
 			event->SetInt("attacker", killer_ID );
 			event->SetString("weapon", killer_weapon_name);
