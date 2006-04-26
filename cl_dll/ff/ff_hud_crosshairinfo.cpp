@@ -259,20 +259,21 @@ void CHudCrosshairInfo::OnTick( void )
 
 						if( !bBuildable )
 						{
+							// We're looking at a player
+
 							if( bWeMedic )
 							{
 								// We can see their health/armor as a medic
 								if( !bTheySpy )
 								{
 									// Get real health/armor
-									//iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
-									//iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;
 									iHealth = pHitPlayer->GetHealthPercentage();
 									iArmor = pHitPlayer->GetArmorPercentage();
 								}
 								else
 								{
-									// We can see their health but mirv said we should make up a health/armor value									
+									// We can see their health but mirv said we should make up a health/armor value
+									// when we look at an enemy spy
 									iHealth = random->RandomInt( 1, 100 );
 									iArmor = random->RandomInt( 1, 100 );
 								}
@@ -282,7 +283,7 @@ void CHudCrosshairInfo::OnTick( void )
 							{
 								// Let's get the class by checking to see what model
 								// the spy is using (ie. the model will be whatever they
-								// are disguised as)
+								// are disguised as & skin will give us the team)
 
 								int iClassSlot = 0;
 
@@ -328,6 +329,9 @@ void CHudCrosshairInfo::OnTick( void )
 								// Gonna generate an array of people on the team we're disguised as
 								// in case we have to randomly pick a name later
 								int iPlayers[ 128 ], iCount = 0;
+
+								// Just in case we don't find anyone later
+								iPlayers[ iCount++ ] = pHitPlayer->index;
 
 								bool bDone = false;
 								for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
