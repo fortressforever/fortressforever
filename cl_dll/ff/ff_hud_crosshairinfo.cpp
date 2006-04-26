@@ -196,7 +196,7 @@ void CHudCrosshairInfo::OnTick( void )
 					// Are we a medic?
 					bool bWeMedic = ( pPlayer->GetClassSlot() == 5 );
 					// Are we an engineer?
-					bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
+					//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
 					// Are we looking at a spy?
 					bool bTheySpy = ( pHitPlayer->GetClassSlot() == 8 );
 					
@@ -229,8 +229,11 @@ void CHudCrosshairInfo::OnTick( void )
 
 						if( bBuildable )
 						{
-							if( bWeEngy )
-							{
+							// Now on teammates/allies can see teammate/allies
+							// buildable info according to:
+							// Bug #0000463: Hud Crosshair Info - douched
+							//if( bWeEngy )
+							//{
 								C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
 
 								iHealth = pBuildable->GetHealthPercent();
@@ -241,12 +244,10 @@ void CHudCrosshairInfo::OnTick( void )
 									iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
 								else
 									iArmor = -1;
-							}
+							//}
 						}
 						else
-						{
-							//iHealth = ( ( float )pHitPlayer->GetHealth() / pHitPlayer->GetMaxHealth() ) * 100;
-							//iArmor = ( ( float )pHitPlayer->GetArmor() / pHitPlayer->GetMaxArmor() ) * 100;							
+						{						
 							iHealth = pHitPlayer->GetHealthPercentage();
 							iArmor = pHitPlayer->GetArmorPercentage();
 						}
@@ -263,20 +264,30 @@ void CHudCrosshairInfo::OnTick( void )
 
 							if( bWeMedic )
 							{
+								// Going to assume this for now eventhough defrag hasn't
+								// said yes or no to it. It would be easier to use the
+								// straight up values and not randomize it. If it's random
+								// we need to track it and changes yp oy so players can't
+								// easily recognize a spy by ID'ing another player or if
+								// they see the spy get damaged and the health/armor
+								// doesn't reflect the visible damage just seen.
+								iHealth = pHitPlayer->GetHealthPercentage();
+								iArmor = pHitPlayer->GetArmorPercentage();
+
 								// We can see their health/armor as a medic
-								if( !bTheySpy )
-								{
-									// Get real health/armor
-									iHealth = pHitPlayer->GetHealthPercentage();
-									iArmor = pHitPlayer->GetArmorPercentage();
-								}
-								else
-								{
-									// We can see their health but mirv said we should make up a health/armor value
-									// when we look at an enemy spy
-									iHealth = random->RandomInt( 1, 100 );
-									iArmor = random->RandomInt( 1, 100 );
-								}
+								//if( !bTheySpy )
+								//{
+								//	// Get real health/armor
+								//	iHealth = pHitPlayer->GetHealthPercentage();
+								//	iArmor = pHitPlayer->GetArmorPercentage();
+								//}
+								//else
+								//{
+								//	// We can see their health but mirv said we should make up a health/armor value
+								//	// when we look at an enemy spy
+								//	iHealth = random->RandomInt( 1, 100 );
+								//	iArmor = random->RandomInt( 1, 100 );
+								//}
 							}
 
 							if( bTheySpy )

@@ -2870,7 +2870,6 @@ void CFFPlayer::Command_SaveMe( void )
 
 void CFFPlayer::StatusEffectsThink( void )
 {
-//#ifdef GAME_DLL
 	// If we jump in water, extinguish the burn
 	if( m_iBurnTicks && ( GetWaterLevel( ) != WL_NotInWater ))
 		Extinguish();
@@ -3034,7 +3033,6 @@ void CFFPlayer::StatusEffectsThink( void )
 			m_bImmune = false;
 	}
 
-//#endif
 }
 
 void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod)
@@ -3158,11 +3156,13 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		// credit the curer with a score
 		pCurer->IncrementFragCount( 1 );
 	}
+
+	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
+	ClearSpeedEffects( SEM_HEALABLE );
 }
 
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale )
 {
-#ifdef GAME_DLL
 	// send the status icon to be displayed
 	DevMsg("[Grenade Debug] Sending status icon\n");
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
@@ -3198,7 +3198,6 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale )
 
 	// set up the igniter
 	m_hIgniter = hIgniter;
-#endif
 }
 
 // Toggle grenades (requested by defrag)
@@ -3922,11 +3921,12 @@ int CFFPlayer::Heal( float flHealth )
 //-----------------------------------------------------------------------------
 int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
-	int hp = BaseClass::TakeHealth(flHealth, bitsDamageType);
+	int hp = BaseClass::TakeHealth( flHealth, bitsDamageType );
 
+	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
 	// Only have good effects if they got health from this
-	if (hp && flHealth)
-		ClearSpeedEffects(SEM_HEALABLE);
+	//if (hp && flHealth)
+	//	ClearSpeedEffects(SEM_HEALABLE);
 
 	return hp;
 }

@@ -118,7 +118,7 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 			EmitSound("medkit.hit");
 			return;
 		}
-		else if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+		else
 		{
 			// Everyone takes damage from the medikit hitting them...			
 			pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, 9.0f, DMG_CLUB ) );
