@@ -289,7 +289,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 								// Get the model name (something like models/player/spy.mdl)
 								const char *pModelName = modelinfo->GetModelName( pHitPlayer->GetModel() );								
-								DevMsg( "[Crosshair Info] Spy's model: %s\n", pModelName );
+								//DevMsg( "[Crosshair Info] Spy's model: %s\n", pModelName );
 
 								// Now strip off everything but the last part
 								int ch1 = '/', ch2 = '.';
@@ -313,7 +313,7 @@ void CHudCrosshairInfo::OnTick( void )
 									// Lame way to do this, ha
 									Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
 
-									DevMsg( "[Crosshair Info] Spy's class: %i\n", iClassSlot );
+									//DevMsg( "[Crosshair Info] Spy's class: %i\n", iClassSlot );
 								}
 								else
 								{
