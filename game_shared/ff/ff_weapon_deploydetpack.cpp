@@ -201,11 +201,7 @@ bool CFFWeaponDeployDetpack::CanBeSelected()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( pPlayer && ( ( CFFDetpack * )pPlayer->m_hDetpack.Get() ) )
-	{
-		// Bug #0000452: Detpack is given to player after they've already used a detpack.
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_DETPACK_ALREADY_SET" );	
 		return false;
-	}
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	else if( pPlayer->m_bBuilding )
 		return false;
