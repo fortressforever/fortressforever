@@ -23,8 +23,8 @@
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 
-LINK_ENTITY_TO_CLASS( FF_Detpack_entity, CFFDetpack );
-PRECACHE_REGISTER( FF_Detpack_entity );
+LINK_ENTITY_TO_CLASS( FF_Detpack, CFFDetpack );
+PRECACHE_REGISTER( FF_Detpack );
 
 IMPLEMENT_SERVERCLASS_ST( CFFDetpack, DT_FFDetpack )
 END_SEND_TABLE( )
@@ -304,7 +304,7 @@ int CFFDetpack::TakeEmp( void )
 CFFDetpack *CFFDetpack::Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
 {
 	// Create the object
-	CFFDetpack *pObject = ( CFFDetpack * )CBaseEntity::Create( "FF_Detpack_entity", vecOrigin, vecAngles, NULL );
+	CFFDetpack *pObject = ( CFFDetpack * )CBaseEntity::Create( "FF_Detpack", vecOrigin, vecAngles, NULL );
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner.GetForModify() = pentOwner;

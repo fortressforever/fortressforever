@@ -562,13 +562,22 @@ ConVar mp_prematch( "mp_prematch",
 			// END: Added by Mulchman for FF_ entities
 		}
 
+		// Award points & modify weapon if 'team kill'
+
+		// If the owner of the buildable is an ally or teammate
+		// it's a 'team kill'
+		if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
+		{
+			pScorer->IncrementFragCount( -1 );
+			pszWeapon = "teammate";
+		}
+		else
+			pScorer->IncrementFragCount( 1 );
+
 		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
 		UTIL_LogPrintf( " attacker: %i\n", iKillerID );
 		UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
-
-		// Award points
-		pScorer->IncrementFragCount( 1 );
-
+		
 		// For the event later
 		IGameEvent *event = NULL;
 

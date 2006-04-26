@@ -44,8 +44,8 @@
 
 #include "omnibot_interface.h"
 
-LINK_ENTITY_TO_CLASS( FF_Dispenser_entity, CFFDispenser );
-PRECACHE_REGISTER( FF_Dispenser_entity );
+LINK_ENTITY_TO_CLASS( FF_Dispenser, CFFDispenser );
+PRECACHE_REGISTER( FF_Dispenser );
 
 IMPLEMENT_SERVERCLASS_ST( CFFDispenser, DT_FFDispenser )
 	SendPropInt( SENDINFO( m_iAmmoPercent ), 8, SPROP_UNSIGNED ), 
@@ -404,7 +404,7 @@ void CFFDispenser::SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessa
 CFFDispenser *CFFDispenser::Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
 {
 	// Create the object
-	CFFDispenser *pObject = ( CFFDispenser * )CBaseEntity::Create( "FF_Dispenser_entity", vecOrigin, vecAngles, NULL );
+	CFFDispenser *pObject = ( CFFDispenser * )CBaseEntity::Create( "FF_Dispenser", vecOrigin, vecAngles, NULL );
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner.GetForModify() = pentOwner;

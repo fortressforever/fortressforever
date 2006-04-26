@@ -78,8 +78,8 @@ IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun)
 	SendPropInt(SENDINFO(m_iRockets)),
 END_SEND_TABLE() 
 
-LINK_ENTITY_TO_CLASS(FF_SentryGun_entity, CFFSentryGun);
-PRECACHE_REGISTER(FF_SentryGun_entity);
+LINK_ENTITY_TO_CLASS( FF_SentryGun, CFFSentryGun );
+PRECACHE_REGISTER( FF_SentryGun );
 
 // Datatable
 BEGIN_DATADESC(CFFSentryGun) 
@@ -920,7 +920,7 @@ SendStatsToBot();
 CFFSentryGun *CFFSentryGun::Create(const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner) 
 {
 	// Create the object
-	CFFSentryGun *pObject = ( CFFSentryGun * )CBaseEntity::Create("FF_SentryGun_entity", vecOrigin, vecAngles, NULL );
+	CFFSentryGun *pObject = ( CFFSentryGun * )CBaseEntity::Create( "FF_SentryGun", vecOrigin, vecAngles, NULL );
 
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner.GetForModify() = pentOwner;

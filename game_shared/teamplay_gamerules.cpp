@@ -303,9 +303,14 @@ void CTeamplayRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &i
 				IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
 				if ( event )
 				{
-					event->SetInt("killer", pk->GetUserID() );
-					event->SetInt("victim", pVictim->GetUserID() );
-					event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
+					Warning( "TP GAME RULES\n" );
+
+					event->SetInt( "userid", pVictim->GetUserID() );
+					event->SetInt( "attacker", pk->GetUserID() );
+					event->SetString( "weapon", "teammate" );
+					//event->SetInt("killer", pk->GetUserID() );
+					//event->SetInt("victim", pVictim->GetUserID() );
+					//event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
 					
 					gameeventmanager->FireEvent( event );
 				}
