@@ -40,6 +40,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "const.h"
 #include "ff_weapon_base.h"
+#include "ff_gamerules.h"
 //#include "ff_sevtest.h"
 
 #include "omnibot_interface.h"
@@ -304,7 +305,9 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				if( pOwner == pPlayer )
 					return;
 
-				if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )
+				// Bug #0000551: Dispenser treats teammates as enemies if mp_friendlyfire is enabled
+				//if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )				
+				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
 				{
 					// TODO: Hud message to owner					
 					SendMessageToPlayer( pOwner, "Dispenser_EnemiesUsing" );
