@@ -191,7 +191,6 @@ ConVar mp_prematch( "mp_prematch",
 	{
 	}
 
-
 	// --------------------------------------------------------------------------------------------------- //
 	// CFFGameRules implementation.
 	// --------------------------------------------------------------------------------------------------- //
@@ -478,6 +477,115 @@ ConVar mp_prematch( "mp_prematch",
 		GetVoiceGameMgr()->Update( gpGlobals->frametime );
 	}
 	// <-- Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
+
+	void CFFGameRules::BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info )
+	{
+		DevMsg( "[FFGameRules] Buildable was killed!\n" );
+
+		const char *pszWeapon = "world";
+		int iKillerID = 0;
+
+		// Find the killer & the scorer
+		CBaseEntity *pInflictor = info.GetInflictor();
+		CBaseEntity *pKiller = info.GetAttacker();
+		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
+
+		// pVictim is the buildables owner
+		CFFPlayer *pVictim = NULL;
+		if( pObject->Classify() == CLASS_SENTRYGUN )
+			pVictim = ToFFPlayer( ( ( CFFSentryGun * )pObject )->m_hOwner.Get() );
+		else if( pObject->Classify() == CLASS_DISPENSER )
+			pVictim = ToFFPlayer( ( ( CFFDispenser * )pObject )->m_hOwner.Get() );
+
+		// Custom kill type?
+		if( info.GetCustomKill() )
+		{
+			pszWeapon = GetCustomKillString( info );
+			if( pScorer )
+			{
+				iKillerID = pScorer->GetUserID();
+			}
+		}
+		else
+		{
+			// Is the killer a client?
+			if( pScorer )
+			{
+				iKillerID = pScorer->GetUserID();
+
+				if( pInflictor )
+				{
+					if( pInflictor == pScorer )
+					{
+						// If the inflictor is the killer,  then it must be their current weapon doing the damage
+						if( pScorer->GetActiveWeapon() )
+						{
+							pszWeapon = pScorer->GetActiveWeapon()->GetDeathNoticeName();
+						}
+					}
+					else
+					{
+						pszWeapon = STRING( pInflictor->m_iClassname );  // it's just that easy
+					}
+				}
+			}
+			else
+			{
+				pszWeapon = STRING( pInflictor->m_iClassname );
+			}
+
+			UTIL_LogPrintf( " killer_ID: %i\n", iKillerID );
+			UTIL_LogPrintf( " killer_weapon_name: %s\n", pszWeapon );
+
+			// strip the NPC_* or weapon_* from the inflictor's classname
+			if( strncmp( pszWeapon, "weapon_", 7 ) == 0 )
+			{
+				UTIL_LogPrintf( "  begins with weapon_, removing\n" );
+				pszWeapon += 7;
+			}
+			else if( strncmp( pszWeapon, "NPC_", 8 ) == 0 )
+			{
+				UTIL_LogPrintf( "  begins with NPC_, removing\n" );
+				pszWeapon += 8;
+			}
+			else if( strncmp( pszWeapon, "func_", 5 ) == 0 )
+			{
+				UTIL_LogPrintf( "  begins with func_, removing\n" );
+				pszWeapon += 5;
+			}
+			// BEG: Added by Mulchman for FF_ entities
+			else if( strncmp( pszWeapon, "FF_", 3 ) == 0 )
+			{
+				UTIL_LogPrintf( "  begins with FF_, removing\n" );
+				pszWeapon += 3;
+			}
+			// END: Added by Mulchman for FF_ entities
+		}
+
+		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
+		UTIL_LogPrintf( " attacker: %i\n", iKillerID );
+		UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
+
+		// Award points
+		pScorer->IncrementFragCount( 1 );
+
+		// For the event later
+		IGameEvent *event = NULL;
+
+		if( pObject->Classify() == CLASS_SENTRYGUN )
+			event = gameeventmanager->CreateEvent( "sentrygun_killed" );
+		else if( pObject->Classify() == CLASS_DISPENSER )
+			event = gameeventmanager->CreateEvent( "dispenser_killed" );
+
+		// If the event is valid, send it off
+		if( event )
+		{
+			event->SetInt( "userid", pVictim->GetUserID() );
+			event->SetInt( "attacker", iKillerID );
+			event->SetString( "weapon", pszWeapon );
+			gameeventmanager->FireEvent( event );
+		}
+	}
 
 	// --> Mirv: Prematch
 	// Stuff to do when the game starts

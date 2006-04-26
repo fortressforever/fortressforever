@@ -362,27 +362,6 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 	if( m_hOwner.Get() )
 		SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "Dispenser_Destroyed" );
 
-	IGameEvent * event = gameeventmanager->CreateEvent( "dispenser_killed" );
-	if ( event )
-	{
-		int attackerid = 0;
-
-		if( info.GetAttacker() )
-		{
-			if( info.GetAttacker()->IsPlayer() )
-				attackerid = ToFFPlayer( info.GetAttacker() )->GetUserID();
-			else if( info.GetInflictor() )
-			{
-				if( info.GetInflictor()->IsPlayer() )
-					attackerid = ToFFPlayer( info.GetInflictor() )->GetUserID();
-			}
-		}
-
-		event->SetInt( "userid", ToFFPlayer( m_hOwner.Get() )->GetUserID() );
-		event->SetInt( "attacker", attackerid );
-		gameeventmanager->FireEvent( event );
-	}
-
 	BaseClass::Event_Killed( info );
 }
 

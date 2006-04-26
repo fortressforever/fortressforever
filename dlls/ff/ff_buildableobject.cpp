@@ -34,6 +34,7 @@
 #include "beam_flags.h"
 #include "basecombatcharacter.h"
 #include "gamevars_shared.h"
+#include "ff_gamerules.h"
 
 #include "omnibot_interface.h"
 
@@ -386,38 +387,12 @@ void CFFBuildableObject::OnObjectThink( void )
 */
 void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 {
-	//////////////////////////////////////////////////////////////////////////
-	/*const char *pEventName = 0;
-
-	switch( Classify() )
+	// Can't kill detpacks
+	if( Classify() != CLASS_DETPACK )
 	{
-		case CLASS_DISPENSER:
-			pEventName = "dispenser_killed";
-		break;
-
-		case CLASS_SENTRYGUN:
-			pEventName = "sentrygun_killed";
-		break;
+		// Send to game rules to then fire event and send out hud death notice
+		FFGameRules()->BuildableKilled( this, info );
 	}
-	
-	if( pEventName )
-	{
-		CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-		CBasePlayer *pAttacker = info.GetAttacker() ? info.GetAttacker()->MyCharacterPointer() : 0;
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "build_dispenser" );
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( pEventName );
-		Assert(pOwner);
-		if( pEvent )
-		{		
-			gameeventmanager->FireEvent( pEvent );
-		}
-		else
-		{
-			Warning( "[Buildable] Unknown event: %s!\n", pEventName );
-		}
-	}*/
-	//////////////////////////////////////////////////////////////////////////
 
 	// Do the explosion and radius damage last, because it clears the owner.
 	Explode();

@@ -68,6 +68,17 @@ CHudDeathNotice::CHudDeathNotice( const char *pElementName ) :
 		DevMsg("[CHudDeathNotice::CHudDeathNotice] Successfully added listener!\n");
 	else
 		DevMsg("[CHudDeathNotice::CHudDeathNotice] failed to add listener!\n");
+
+	if( gameeventmanager->AddListener( this, "dispenser_killed", false ) )
+		DevMsg( "[CHudDeathNotice::CHudDeathNotice] Successfully added dispenser_killed listener!\n" );
+	else
+		DevMsg( "[CHudDeathNotice::CHudDeathNotice] Failed to add sentrygun_killed listener!\n" );
+
+	if( gameeventmanager->AddListener( this, "sentrygun_killed", false ) )
+		DevMsg( "[CHudDeathNotice::CHudDeathNotice] Successfully added sentrygun_killed listener!\n" );
+	else
+		DevMsg( "[CHudDeathNotice::CHudDeathNotice] Failed to add sentrygun_killed listener!\n" );
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 

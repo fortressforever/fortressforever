@@ -113,8 +113,8 @@ public:
 
 			CTeam *team = pAttacker->GetTeam();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
 		}
 		else if( !Q_strncmp( name, "sentrygun_killed", Q_strlen( "sentrygun_killed" ) ) )
 		{
@@ -126,8 +126,8 @@ public:
 
 			CTeam *team = pAttacker->GetTeam();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName() );
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
 		}
 		// END: Watch for buildables getting killed
 
