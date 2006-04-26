@@ -27,6 +27,7 @@
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
 	#include "hltvdirector.h"
+	#include "team.h"
 
 	// BEG: Added by Mulchman for Buildable Objects
 	#include "ff_buildableobjects_shared.h"
@@ -500,6 +501,10 @@ bool CMultiplayRules::IsMultiplayer( void )
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 		
 		pVictim->IncrementDeathCount( 1 );
+
+		// Bug #0000529: Total death column doesn't work
+		if( pVictim->GetTeam() )
+			pVictim->GetTeam()->AddDeaths( 1 );
 
 		// dvsents2: uncomment when removing all FireTargets
 		// variant_t value;

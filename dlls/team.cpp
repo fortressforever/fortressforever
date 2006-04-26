@@ -40,6 +40,8 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	SendPropInt( SENDINFO(m_iScore), 0 ),
+	// Bug #0000529: Total death column doesn't work
+	SendPropInt( SENDINFO(m_iDeaths), 0 ), // Mulch: send deaths to client
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
 	SendPropArray2( 
@@ -122,6 +124,7 @@ void CTeam::Init( const char *pName, int iNumber )
 	InitializePlayers();
 
 	m_iScore = 0;
+	m_iDeaths = 0;
 
 	Q_strncpy( m_szTeamname.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 	m_iTeamNum = iNumber;
@@ -291,3 +294,20 @@ int CTeam::GetScore( void )
 	return m_iScore;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Add / Remove deaths for this team
+// Bug #0000529: Total death column doesn't work
+//-----------------------------------------------------------------------------
+void CTeam::AddDeaths( int iScore )
+{
+	m_iDeaths += iScore;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get this team's deaths
+// Bug #0000529: Total death column doesn't work
+//-----------------------------------------------------------------------------
+int CTeam::GetDeaths( void )
+{
+	return m_iDeaths;
+}

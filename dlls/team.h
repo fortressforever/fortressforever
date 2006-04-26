@@ -67,6 +67,9 @@ public:
 	virtual void AddScore( int iScore );
 	virtual void SetScore( int iScore );
 	virtual int  GetScore( void );
+	// Bug #0000529: Total death column doesn't work
+	virtual void AddDeaths( int iScore );	// Mulch
+	virtual int  GetDeaths( void );	// Mulch
 
 public:
 	CUtlVector< CTeamSpawnPoint * > m_aSpawnPoints;
@@ -75,7 +78,8 @@ public:
 	// Data
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iScore );
-	int		m_iDeaths;
+	// Bug #0000529: Total death column doesn't work
+	CNetworkVar( int, m_iDeaths );	// Mulch: send deaths to client
 
 	// Spawnpoints
 	int		m_iLastSpawn;		// Index of the last spawnpoint used

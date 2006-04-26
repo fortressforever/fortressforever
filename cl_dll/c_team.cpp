@@ -32,6 +32,8 @@ void RecvProxyArrayLength_PlayerArray( void *pStruct, int objectID, int currentA
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_iScore)),
+	// Bug #0000529: Total death column doesn't work
+	RecvPropInt( RECVINFO(m_iDeaths)),	// Mulch: receive team deaths from server
 	RecvPropString( RECVINFO(m_szTeamname)),
 	
 	RecvPropArray2( 

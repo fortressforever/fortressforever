@@ -57,9 +57,10 @@ public:
 	CUtlVector< int > m_aPlayers;
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
 	int		m_iScore;
+	// Bug #0000529: Total death column doesn't work
+	int		m_iDeaths;	// Mulch: receive team deaths from server
 
-	// Data for the scoreboard
-	int		m_iDeaths;
+	// Data for the scoreboard	
 	int		m_iPing;
 	int		m_iPacketloss;
 	int		m_iTeamNum;

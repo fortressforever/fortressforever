@@ -238,10 +238,6 @@ void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 	int killer = engine->GetPlayerForUserID( event->GetInt("attacker") );
 	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
 
-	Warning( "[Death]\n" );
-	Warning( "\tkiller: %i\n", killer );
-	Warning( "\tvictim: %i\n", victim );
-
 	char killedwith[32];
 	Q_snprintf( killedwith, sizeof( killedwith ), "d_%s", event->GetString("weapon") );
 
@@ -264,6 +260,21 @@ void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 		killer_name = "";
 	if ( !victim_name )
 		victim_name = "";
+
+	// Temporary until we decide how we're displaying dispenser/sg deaths
+	char pszVictimMod[ 256 ];
+	if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
+	{
+		Q_strcpy( pszVictimMod, victim_name );
+		Q_strcat( pszVictimMod, "'s Dispenser" );
+		victim_name = const_cast< char * >( pszVictimMod );
+	}
+	else if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
+	{
+		Q_strcpy( pszVictimMod, victim_name );
+		Q_strcat( pszVictimMod, "'s SentryGun" );
+		victim_name = const_cast< char * >( pszVictimMod );
+	}
 
 	Q_strncpy( rgDeathNoticeList[i].szKiller, killer_name, MAX_PLAYER_NAME_LENGTH );
 	Q_strncpy( rgDeathNoticeList[i].szVictim, victim_name, MAX_PLAYER_NAME_LENGTH );
