@@ -3632,8 +3632,8 @@ int CFFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		m_fBodygroupState = 0;
 	}
-	// [TODO] Check damage type maybe?
-	else if( m_iHealth < 50.0f )
+	// Only explosions now okay.
+	else if( m_iHealth < 50.0f && info.GetDamageType() & DMG_BLAST)
 	{
 		LimbDecapitation( info );
 	}
