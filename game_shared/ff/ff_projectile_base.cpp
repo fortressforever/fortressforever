@@ -147,7 +147,7 @@ END_NETWORK_TABLE()
 
 			// Check that the explosion can 'see' this entity.
 			vecSpot = pEntity->BodyTarget(vecSrc, true);
-			UTIL_TraceLine(vecSrc, vecSpot, /*MASK_SHOT*/ CONTENTS_SOLID, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
 			// Hmmm?????????
 			DevMsg("Explode length: %f %f %f\n", (pEntity->GetAbsOrigin() - vecSrc).Length(), (vecSpot - vecSrc).Length(), (tr.endpos - vecSrc).Length());
