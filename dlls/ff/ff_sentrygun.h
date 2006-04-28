@@ -52,8 +52,8 @@
 #define FLOOR_TURRET_SHORT_WAIT		2.0		// Used for FAST_RETIRE spawnflag
 #define	FLOOR_TURRET_PING_TIME		10.0f	// LPB!!
 
-#define MAX_PITCH					60.0f
-#define MIN_PITCH					-30.0f
+#define MAX_PITCH					90.0f
+#define MIN_PITCH					-90.0f
 #define SCAN_HALFWIDTH				40.0f
 
 //Spawnflags
