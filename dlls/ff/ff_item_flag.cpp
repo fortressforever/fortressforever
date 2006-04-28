@@ -208,7 +208,8 @@ void CFFItemFlag::Drop( float delay, float speed )
 
 	SetAbsAngles(QAngle(0, owner->EyeAngles().y + 90.0f, 0));
 
-	Vector vel = owner->GetAbsVelocity();
+	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
+	Vector vel = Vector(0, 0, 20.0f); // owner->GetAbsVelocity();
 
 	if (speed)
 	{

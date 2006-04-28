@@ -172,6 +172,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 		float renderscale;
 		Vector vecAttachment, vecDir, endPos;
+		bool fDrawDot = true;
 
 		CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
 
@@ -197,6 +198,10 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 			// Backup off the hit plane
 			endPos = tr.endpos + (tr.plane.normal * 1.0f);
+
+			// Bug #0000376: Sniper dot is drawn on sky brushes
+			if (tr.surface.flags & SURF_SKY)
+				fDrawDot = false;
 
 			// Okay so beams. yes.
 			if (!pOwner->IsLocalPlayer()) 
@@ -248,6 +253,9 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 		// Bug #0000223: Sniper rifle dot doesn't get darker as shot is charged/does not charge?
 		int alpha = clamp(115 + 20 * (gpGlobals->curtime - m_flStartTime), 0, 255);
+
+		if (!fDrawDot)
+			return 0;
 
 		//Draw it
 		int drawn = DrawSprite(

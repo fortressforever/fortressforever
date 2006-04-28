@@ -147,7 +147,7 @@ END_NETWORK_TABLE()
 
 			// Check that the explosion can 'see' this entity.
 			vecSpot = pEntity->BodyTarget(vecSrc, true);
-			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(vecSrc, vecSpot, /*MASK_SHOT*/ CONTENTS_SOLID, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
 			// Hmmm?????????
 			DevMsg("Explode length: %f %f %f\n", (pEntity->GetAbsOrigin() - vecSrc).Length(), (vecSpot - vecSrc).Length(), (tr.endpos - vecSrc).Length());
@@ -226,9 +226,15 @@ END_NETWORK_TABLE()
 			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
 //			if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
 //			{
+				// Bug #0000539: Blood decals are projected onto shit
+				// (direction needed normalising)
+				Vector vecTraceDir = (tr.endpos - tr.startpos);
+				VectorNormalize(vecTraceDir);
+
 				// Bug #0000168: Blood sprites for damage on players do not display
-				SpawnBlood(tr.endpos, tr.endpos - tr.startpos, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
-				pEntity->TraceBleed(adjustedInfo.GetDamage(), tr.endpos - tr.startpos, &tr, adjustedInfo.GetDamageType());
+				SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
+
+                pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
 //			}
 
 			// Now hit all triggers along the way that respond to damage... 

@@ -4109,6 +4109,9 @@ int CFFPlayer::GetNewDisguisedTeam( void ) const
 
 void CFFPlayer::ResetDisguise()
 {
+	if (!m_iSpyDisguise)
+		return;
+
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
 	SetModel(pPlayerClassInfo.m_szModel);
