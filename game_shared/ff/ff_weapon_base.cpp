@@ -628,3 +628,12 @@ bool CFFWeaponBase::CanBeSelected( void )
 	else
 		return BaseClass::CanBeSelected();
 }
+
+char *CFFWeaponBase::GetDeathNoticeName()
+{
+#if !defined( CLIENT_DLL )
+	return (char *) STRING(m_iClassname);
+#else
+	return "GetDeathNoticeName not implemented on client yet";
+#endif
+}

@@ -144,6 +144,8 @@ public:
 	// this just loads the recoil
 	virtual void WeaponRecoil();
 
+	virtual char *GetDeathNoticeName();
+
 #ifdef GAME_DLL
 	virtual void SendReloadEvents();
 #endif
