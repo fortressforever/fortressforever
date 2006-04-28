@@ -50,6 +50,8 @@ static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
+static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
+
 
 // #0000331: impulse 81 not working (weapon_cubemap)
 #include "../c_weapon__stubs.h"

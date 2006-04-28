@@ -1373,8 +1373,10 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// We don't change class instantly, only when we spawn
 	m_iNextClass = iClass;
 
+	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
+
 	// Now just need a way to select which one you want
-	if( bool bInstantSwitch = true )
+	if (fInstantSwitch || GetClassSlot() == 0)
 	{
 		// But for now we do have instant switching
 		KillAndRemoveItems();
