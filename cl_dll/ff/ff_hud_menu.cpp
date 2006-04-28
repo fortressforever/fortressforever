@@ -42,7 +42,7 @@ DECLARE_HUDELEMENT(CHudContextMenu);
 
 ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
@@ -56,7 +56,7 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 
 ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
@@ -70,7 +70,7 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 
 ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
@@ -84,7 +84,7 @@ ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser"
 
 ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
@@ -98,7 +98,7 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 
 ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
@@ -112,7 +112,7 @@ ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 
 ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
@@ -126,7 +126,7 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 
 ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
@@ -145,6 +145,26 @@ ADD_MENU_OPTION(disguiseteam, L"Disguise as team", "team")
 }
 
 ADD_MENU_OPTION(disguiseenemy, L"Disguise as enemy", "enemy")
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION(disguisered, L"Disguise as red", "red")
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION(disguiseblue, L"Disguise as blue", "blue")
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION(disguiseyellow, L"Disguise as yellow", "yellow")
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION(disguisegreen, L"Disguise as green", "green")
 {
 	return MENU_SHOW;
 }
@@ -205,6 +225,9 @@ menuoption_t engy_menu[] = { detdispenser, dismantledispenser, detsentry, disman
 menuoption_t spy_menu1[] = { disguiseteam, disguiseenemy };
 menuoption_t spy_menu2[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 
+// static 4 team shit for testing right now
+menuoption_t spy_menu3[] = { disguisered, disguiseblue, disguiseyellow, disguisegreen };
+
 CHudContextMenu::~CHudContextMenu() 
 {
 }
@@ -239,12 +262,13 @@ void CHudContextMenu::DoCommand(const char *cmd)
 		sprintf(buf, "disguise %s %s", m_pszPreviousCmd, cmd);
 		engine->ClientCmd(buf);
 		DevMsg(buf);
+		DevMsg( "\n" );
 	}
 }
 
 void CHudContextMenu::Display(bool state)
 {
-	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (C_BasePlayer::GetLocalPlayer());
 
 	if (!pPlayer)
 		return;
@@ -272,8 +296,12 @@ void CHudContextMenu::Display(bool state)
 	}
 	else if (pPlayer->GetClassSlot() == CLASS_SPY)
 	{
+		/* Just commenting out for testing right now
 		m_pMenu = &spy_menu1[0];
 		m_nOptions = sizeof(spy_menu1) / sizeof(spy_menu1[0]);
+		*/
+		m_pMenu = &spy_menu3[ 0 ];
+		m_nOptions = sizeof( spy_menu3 ) / sizeof( spy_menu3[ 0 ] );
 	}
 
 	SetMenu();
@@ -401,7 +429,8 @@ void CHudContextMenu::Paint()
 	// TODO: A cleaner way of doing this
 	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + MENU_PROGRESS_TIME)
 	{
-		if (m_pMenu == &spy_menu1[0])
+		//if (m_pMenu == &spy_menu1[0])
+		if (m_pMenu == &spy_menu3[0])
 		{
 			m_pszPreviousCmd = m_pMenu[m_iSelected].szCommand;
 			m_pMenu = &spy_menu2[0];

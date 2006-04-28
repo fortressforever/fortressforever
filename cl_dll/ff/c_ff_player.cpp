@@ -302,6 +302,9 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_flConcTime ) ),		// |-- Mirv: Concussed
 
+	// Spy disguise
+	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
+
 	RecvPropFloat(RECVINFO(m_flMassCoefficient)),
 END_RECV_TABLE( )
 

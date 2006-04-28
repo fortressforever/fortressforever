@@ -448,16 +448,31 @@ public:
 	int m_iMaxAmmo[MAX_AMMO_TYPES];
 
 
-	void SetDisguisable(bool in) {
+	void SetDisguisable(bool in) 
+	{
 		DevMsg("Disguisable set to %d\n", in);
 		m_bDisguisable = in;
-		if (!in) ResetDisguise();
+		if (!in) 
+			ResetDisguise();
 	}
-	bool GetDisguisable() { return m_bDisguisable; }
+	bool GetDisguisable() const { return m_bDisguisable; }
 	bool m_bDisguisable;
 
-	int m_iSpyDisguise, m_iNewSpyDisguise;
+	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
+	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
+
+public:
+	// These 3 are shared, also
+	int GetDisguisedClass( void );	// Mulch
+	int GetDisguisedTeam( void );	// Mulch
+	bool IsDisguised( void );		// Mulch
+private:
+	// These 2 are server only
+	int GetNewDisguisedClass( void ) const;	// Mulch: While disguising will tell us new class we're disguising as
+	int GetNewDisguisedTeam( void ) const;	// Mulch: While disguising will tell us new team we're disguising as
+	
+public:
 
 	void FinishDisguise();
 	void ResetDisguise();

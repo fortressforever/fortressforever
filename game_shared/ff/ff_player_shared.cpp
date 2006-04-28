@@ -383,3 +383,28 @@ int CFFPlayer::GetArmorPercentage( void )
 	flPerc = ( ( float )GetArmor() / ( float )GetMaxArmor() ) * 100.0f;
 	return ( int )flPerc;
 }
+
+bool CFFPlayer::IsDisguised( void )
+{
+	AssertMsg( GetClassSlot() == CLASS_SPY, "Checking if a player, WHO IS NOT A SPY, is disguised...\n" );
+
+	return ( m_iSpyDisguise != 0 );
+}
+
+int CFFPlayer::GetDisguisedTeam( void )
+{
+	if( IsDisguised() )
+		return ( m_iSpyDisguise & 0x0000000F );
+
+	// 0 = not disguised
+	return 0;
+}
+
+int CFFPlayer::GetDisguisedClass( void )
+{
+	if( IsDisguised() )
+		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
+
+	// 0 = not disguised
+	return 0;
+}

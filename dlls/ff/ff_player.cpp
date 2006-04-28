@@ -167,6 +167,9 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	SendPropFloat( SENDINFO( m_flConcTime ) ),
 
+	// Spy disguise
+	SendPropInt( SENDINFO( m_iSpyDisguise ) ),
+
 	SendPropFloat(SENDINFO(m_flMassCoefficient)),
 END_SEND_TABLE( )
 
@@ -1763,8 +1766,10 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 void CFFPlayer::Command_WhatTeam( void )
 {
-	DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber( ) );
-	DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
+	//DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber() );
+	//DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
+
+	DevMsg( "[What Team] Disguised? %s, Team: %i, Class: %i, My Team: %i\n", IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber() );
 }
 
 void CFFPlayer::Command_HintTest( void )
@@ -3993,36 +3998,113 @@ void CFFPlayer::Command_Disguise()
 	if(engine->Cmd_Argc( ) < 3)
 		return;
 
-	if (!m_bDisguisable) {
+	if (!m_bDisguisable) 
+	{
 		ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_NODISGUISENOW");
 		return;
 	}
 
-	const char *szTeam = engine->Cmd_Argv(1);
-
-	int iTeam, iClass;
+	const char *szTeam = engine->Cmd_Argv( 1 );
+	const char *szClass = engine->Cmd_Argv( 2 );
+	int iTeam = 0, iClass = 0;
 
 	// Allow either specify enemy/friendly or an actual team
 	if (FStrEq(szTeam, "enemy"))
 		// TODO: Check friendliness of the other team (do a loop methinks)
-		iTeam = GetTeamNumber() == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
+		iTeam = ( ( GetTeamNumber() == TEAM_BLUE ) ? TEAM_RED : TEAM_BLUE );
 	else if (FStrEq(szTeam, "friendly"))
 		iTeam = GetTeamNumber();
 	else
-        iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
+	{
+		// iTeam = atoi(szTeam) + (TEAM_BLUE - 1);
 
-	iTeam = clamp(iTeam, TEAM_BLUE, TEAM_GREEN);
+		// Since players can enter an integer or string for
+		// the team we need to account for both methods.
 
-	// Just use a number for now
-	iClass = Class_StringToInt(engine->Cmd_Argv(2));
-	iClass = clamp(iClass, CLASS_SCOUT, CLASS_CIVILIAN);
+		if( strlen( szTeam ) == 1 ) // Single character
+		{
+			if( ( szTeam[ 0 ] >= '1' ) && ( szTeam[ 0 ] <= '9' ) ) // Number from 1-9
+				iTeam = atoi( szTeam ) + 1;
+			else
+			{
+				switch( szTeam[ 0 ] ) // Single letter like b, r, y, g
+				{
+					case 'b':
+					case 'B': iTeam = TEAM_BLUE; break;
+
+					case 'r':
+					case 'R': iTeam = TEAM_RED; break;
+
+					case 'y':
+					case 'Y': iTeam = TEAM_YELLOW; break;
+
+					case 'g':
+					case 'G': iTeam = TEAM_GREEN; break;
+
+					default:
+						Warning( "[Disguise] Disguise command must be in the proper format!\n" );
+						return;
+					break;
+
+				}
+			}
+		}
+		else
+		{
+			// Some kind of string
+			if( !Q_stricmp( szTeam, "blue" ) )
+				iTeam = TEAM_BLUE;
+			else if( !Q_stricmp( szTeam, "red" ) )
+				iTeam = TEAM_RED;
+			else if( !Q_stricmp( szTeam, "yellow" ) )
+				iTeam = TEAM_YELLOW;
+			else if( !Q_stricmp( szTeam, "green" ) )
+				iTeam = TEAM_GREEN;
+		}
+	}
+	
+	// Bail if we don't have a team yet
+	if( !iTeam )
+	{
+		Warning( "[Disguise] Disguise command must be in the proper format!\n" );
+		return;
+	}
+
+
+	// Now for the class. Allow numbers 1-9 and strings like "soldier".
+	// Not allowing single characters representing the first letter of the class.
+	if( ( strlen( szClass ) == 1 ) && ( szClass[ 0 ] >= '1' ) && ( szClass[ 0 ] <= '9' ) )
+		iClass = atoi( szClass );
+	else
+		iClass = Class_StringToInt( szClass );
+
+	// Bail if we don't have a class yet
+	if( !iClass )
+	{
+		Warning( "[Disguise] Disguise command must be in the proper format!\n" );
+		return;
+	}
 
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
 
 	m_flFinishDisguise = gpGlobals->curtime + 1.0f;
 
-	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_DISGUISING");
+	ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_DISGUISING" );
+}
+
+// Server only
+int CFFPlayer::GetNewDisguisedClass( void ) const
+{
+	// Assumes we're a spy and currently disguising
+	return ( m_iNewSpyDisguise & 0x0000000F );
+}
+
+// Server only
+int CFFPlayer::GetNewDisguisedTeam( void ) const
+{
+	// Assumes we're a spy and currently disguising
+	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 }
 
 void CFFPlayer::ResetDisguise()
@@ -4044,14 +4126,14 @@ void CFFPlayer::FinishDisguise()
 
 	PLAYERCLASS_FILE_INFO_HANDLE classinfo;
 
-	if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString((m_iNewSpyDisguise & 0xFFFFFFF0) >> 4), &classinfo, GetEncryptionKey()))
+	if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString( GetNewDisguisedClass() ), &classinfo, GetEncryptionKey()))
 	{
 		const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(classinfo);
 
 		if (pPlayerClassInfo)
 		{
 			SetModel(pPlayerClassInfo->m_szModel);
-			m_nSkin = m_iNewSpyDisguise & 0x0000000F;
+			m_nSkin = GetNewDisguisedTeam() - TEAM_BLUE; // since m_nSkin = 0 is blue
 		}
 	}
 

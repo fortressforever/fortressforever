@@ -296,8 +296,11 @@ void CHudCrosshairInfo::OnTick( void )
 								// the spy is using (ie. the model will be whatever they
 								// are disguised as & skin will give us the team)
 
-								int iClassSlot = 0;
+								int iClassSlot = pHitPlayer->GetDisguisedClass();
+								Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
 
+
+								/*
 								// Get the model name (something like models/player/spy.mdl)
 								const char *pModelName = modelinfo->GetModelName( pHitPlayer->GetModel() );								
 								//DevMsg( "[Crosshair Info] Spy's model: %s\n", pModelName );
@@ -330,14 +333,27 @@ void CHudCrosshairInfo::OnTick( void )
 								{
 									Warning( "[Crosshair Info] Incorrect model name format!\n" );
 									return;
-								}								
+								}
+								*/
 
+
+								/*
 								// Get the "team" by whatever skin the spy is using								
-								iTeam = pHitPlayer->m_nSkin + 2; // (skin 0 = blue,
+								//iTeam = pHitPlayer->m_nSkin + 2; // (skin 0 = blue,
 								// gotta get the value up to FF_TEAM_BLUE)
+								*/
+								iTeam = pHitPlayer->GetDisguisedTeam();
 
-								// Change name (if we can) to someone on the team m_nSkin
-								// that is playing as the class we are disguised as
+								// If this spy is disguised as our team we need to show his
+								// health/armor
+								if( iTeam == pPlayer->GetTeamNumber() )
+								{
+									iTeam = pHitPlayer->GetHealthPercentage();
+									iArmor = pHitPlayer->GetArmorPercentage();
+								}
+
+								// Change name (if we can) to someone on the team iTeam
+								// that is playing the class this guy is disguised as
 
 								// Gonna generate an array of people on the team we're disguised as
 								// in case we have to randomly pick a name later

@@ -141,6 +141,14 @@ public:
 	int GetArmorPercentage( void );
 
 	virtual ShadowType_t ShadowCastType( void );
+
+private:
+	int m_iSpyDisguise;
+public:
+	// These 3 are shared, also
+	int GetDisguisedClass( void );	// Mulch
+	int GetDisguisedTeam( void );	// Mulch
+	bool IsDisguised( void );		// Mulch
 	// <--
 
 private:
