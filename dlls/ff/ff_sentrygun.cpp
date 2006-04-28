@@ -554,8 +554,22 @@ void CFFSentryGun::HackFindEnemy()
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
 		if (!pPlayer || !pPlayer->IsPlayer() || pPlayer->IsObserver() || pPlayer == pOwner ||
-			(g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE) || pPlayer->m_nSkin == pPlayer->GetTeamNumber() - 1) 
+			(g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE))
 			continue;
+
+		// Spy check
+		if( pPlayer->GetClassSlot() == CLASS_SPY )
+		{
+			if( pPlayer->IsDisguised() )
+			{
+				// Spy disguised as owners team
+				if( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() )
+					continue;
+				// Spy disguised as allied team
+				// TODO:
+			}
+		}
+
 
 		// Add alive players who are visible
 		if (pPlayer->IsAlive() && FVisible(pPlayer->GetAbsOrigin())) 
