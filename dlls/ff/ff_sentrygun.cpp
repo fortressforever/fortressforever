@@ -558,16 +558,13 @@ void CFFSentryGun::HackFindEnemy()
 			continue;
 
 		// Spy check
-		if( pPlayer->GetClassSlot() == CLASS_SPY )
+		if( pPlayer->IsDisguised() )
 		{
-			if( pPlayer->IsDisguised() )
-			{
-				// Spy disguised as owners team
-				if( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() )
-					continue;
-				// Spy disguised as allied team
-				// TODO:
-			}
+			// Spy disguised as owners team
+			if( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() )
+				continue;
+			// Spy disguised as allied team
+			// TODO:			
 		}
 
 

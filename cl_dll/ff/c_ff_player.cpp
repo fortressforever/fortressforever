@@ -263,6 +263,7 @@ END_RECV_TABLE()
 
 // Prototype
 void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
@@ -305,7 +306,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_flConcTime ) ),		// |-- Mirv: Concussed
 
 	// Spy disguise
-	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
+	RecvPropInt( RECVINFO( m_iSpyDisguise ), 0, RecvProxy_SpyDisguise ),
 
 	RecvPropFloat(RECVINFO(m_flMassCoefficient)),
 END_RECV_TABLE( )
@@ -327,6 +328,25 @@ void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut
 			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
 		DevMsg("[Grenades] \tm_flServerPrimeTime: %f\n", pLocalPlayer->m_flServerPrimeTime);
 		DevMsg("[Grenades] \tm_flLatency: %f\n", pLocalPlayer->m_flLatency);
+	}
+}
+
+void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	DevMsg( "[Disguise] RecvProxy_SpyDisguise\n" );
+
+	// Unpack the data.
+	if( !engine->IsConnected() || !engine->IsInGame() )
+	{
+		DevMsg( "[Disguise] \t NOT connected or NOT in game!\n" );
+		return;
+	}
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( pPlayer )
+	{
+		pPlayer->m_iSpyDisguise = pData->m_Value.m_Int;
+		DevMsg( "[Disguise] \t value set: %i\n", pPlayer->m_iSpyDisguise );
 	}
 }
 
@@ -616,6 +636,7 @@ C_FFPlayer::C_FFPlayer() :
 
 	// BEG: Added by Mulchman
 	m_bClientBuilding = false;
+	m_iSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
 	m_flConcTime = m_flConcTimeStart = 0;	// |-- Mirv: Don't start conced

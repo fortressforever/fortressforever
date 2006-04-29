@@ -122,6 +122,8 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_bHasSounds = false;
 	m_bTranslucent = true; // by default
 	m_bUsePhysics = false;
+
+	m_hDoorBlocker = NULL;
 }
 
 /**
@@ -151,6 +153,13 @@ void CFFBuildableObject::Spawn( void )
 	// Give it a bounding box (use the .phy file provided)
 	SetSolid( SOLID_VPHYSICS );
 	
+	// Going to move this crap into its own separate entity
+	// and spawn two bitches for each buildable.
+	// That way they'll hold doors/eles and shit open
+	// and detpacks will be able to bounce off of dispensers/sgs.
+	// Currently, I can get one or the other, and I think we need
+	// both (otherwise stuff just looks stupid).
+	/*
 	// To use solid_vphysics w/o tons of asserts
 	// since the engine can't rotate collideables (yet)
 	// Still aligns to world but i haven't been stuck
@@ -168,6 +177,7 @@ void CFFBuildableObject::Spawn( void )
 		// So that doors collide with it
 		SetMoveType( MOVETYPE_FLY );
 	}
+	*/
 		
 	// Make sure it has a model
 	Assert( m_ppszModels[ 0 ] != NULL );
@@ -698,4 +708,18 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	}
 
 	return BaseClass::OnTakeDamage(adjustedDamage);
+}
+
+//=============================================================================
+//
+//	class CFFBuildableDoorBlocker
+//	Server only
+//=============================================================================
+void CFFBuildableDoorBlocker::Spawn( void )
+{
+	// The magic that makes doors/eles bounce off this item:
+	SetSolid( SOLID_BBOX );
+	AddSolidFlags( FSOLID_NOT_STANDABLE|FSOLID_TRIGGER );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 }

@@ -168,7 +168,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO( m_flConcTime ) ),
 
 	// Spy disguise
-	SendPropInt( SENDINFO( m_iSpyDisguise ) ),
+	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
 
 	SendPropFloat(SENDINFO(m_flMassCoefficient)),
 END_SEND_TABLE( )
@@ -610,7 +610,8 @@ void CFFPlayer::Spawn()
 	// Reset spy stuff
 	m_fFeigned = false;
 	m_flFinishDisguise = 0;
-	m_iSpyDisguise = m_iNewSpyDisguise = 0;
+	m_iSpyDisguise = 0;
+	m_iNewSpyDisguise = 0;
 
 	// Get rid of any fire
 	Extinguish();
@@ -4025,8 +4026,8 @@ void CFFPlayer::Command_Disguise()
 
 		if( strlen( szTeam ) == 1 ) // Single character
 		{
-			if( ( szTeam[ 0 ] >= '1' ) && ( szTeam[ 0 ] <= '9' ) ) // Number from 1-9
-				iTeam = atoi( szTeam ) + 1;
+			if( ( szTeam[ 0 ] >= '1' ) && ( szTeam[ 0 ] <= '4' ) ) // Number from 1-4
+				iTeam = atoi( szTeam ) + 1; // TEAM_BLUE = 2
 			else
 			{
 				switch( szTeam[ 0 ] ) // Single letter like b, r, y, g
@@ -4087,6 +4088,8 @@ void CFFPlayer::Command_Disguise()
 		return;
 	}
 
+	Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
+
 	m_iNewSpyDisguise = iTeam;
 	m_iNewSpyDisguise += iClass << 4;
 
@@ -4096,14 +4099,14 @@ void CFFPlayer::Command_Disguise()
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedClass( void ) const
+int CFFPlayer::GetNewDisguisedTeam( void )
 {
 	// Assumes we're a spy and currently disguising
 	return ( m_iNewSpyDisguise & 0x0000000F );
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedTeam( void ) const
+int CFFPlayer::GetNewDisguisedClass( void )
 {
 	// Assumes we're a spy and currently disguising
 	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -4111,7 +4114,7 @@ int CFFPlayer::GetNewDisguisedTeam( void ) const
 
 void CFFPlayer::ResetDisguise()
 {
-	if (!m_iSpyDisguise)
+	if (!IsDisguised())
 		return;
 
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();

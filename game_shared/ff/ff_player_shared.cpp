@@ -386,25 +386,22 @@ int CFFPlayer::GetArmorPercentage( void )
 
 bool CFFPlayer::IsDisguised( void )
 {
-	AssertMsg( GetClassSlot() == CLASS_SPY, "Checking if a player, WHO IS NOT A SPY, is disguised...\n" );
-
-	return ( m_iSpyDisguise != 0 );
+	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
 
 int CFFPlayer::GetDisguisedTeam( void )
 {
-	if( IsDisguised() )
+	if( IsDisguised() )	
 		return ( m_iSpyDisguise & 0x0000000F );
 
-	// 0 = not disguised
 	return 0;
 }
 
+// Server only
 int CFFPlayer::GetDisguisedClass( void )
 {
 	if( IsDisguised() )
 		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 
-	// 0 = not disguised
 	return 0;
 }

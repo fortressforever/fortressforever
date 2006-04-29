@@ -45,6 +45,8 @@
 
 #include "omnibot_interface.h"
 
+class CFFDispenserDoorBlocker;
+
 LINK_ENTITY_TO_CLASS( FF_Dispenser, CFFDispenser );
 PRECACHE_REGISTER( FF_Dispenser );
 
@@ -522,3 +524,29 @@ void CFFDispenser::SendStatsToBot()
 			iGameId, 0, 0, &bud);
 	}
 }
+
+//=============================================================================
+//
+//	class CFFDispenserDoorBlocker
+//	Server only
+//=============================================================================
+class CFFDispenserDoorBlocker : CFFBuildableDoorBlocker
+{
+public:
+	DECLARE_CLASS( CFFDispenserDoorBlocker, CFFBuildableDoorBlocker );
+
+	CFFDispenserDoorBlocker( void ) {}
+	~CFFDispenserDoorBlocker( void ) {}
+
+	void Precache( void )
+	{
+		PrecacheModel( FF_DISPENSER_MODEL );
+	}
+
+	void Spawn( void )
+	{
+		BaseClass::Spawn();
+		SetModel( FF_DISPENSER_MODEL );
+	}
+	
+};

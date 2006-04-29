@@ -194,11 +194,11 @@ void CHudCrosshairInfo::OnTick( void )
 					}
 
 					// Are we a medic?
-					bool bWeMedic = ( pPlayer->GetClassSlot() == 5 );
+					bool bWeMedic = ( pPlayer->GetClassSlot() == CLASS_MEDIC );
 					// Are we an engineer?
 					//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
 					// Are we looking at a spy?
-					bool bTheySpy = ( pHitPlayer->GetClassSlot() == 8 );
+					bool bTheySpy = ( pHitPlayer->GetClassSlot() == CLASS_SPY );
 					
 					// For the player/owner name
 					char szName[ MAX_PLAYER_NAME_LENGTH ];
@@ -292,112 +292,120 @@ void CHudCrosshairInfo::OnTick( void )
 
 							if( bTheySpy )
 							{
-								// Let's get the class by checking to see what model
-								// the spy is using (ie. the model will be whatever they
-								// are disguised as & skin will give us the team)
-
-								int iClassSlot = pHitPlayer->GetDisguisedClass();
-								Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
-
-
-								/*
-								// Get the model name (something like models/player/spy.mdl)
-								const char *pModelName = modelinfo->GetModelName( pHitPlayer->GetModel() );								
-								//DevMsg( "[Crosshair Info] Spy's model: %s\n", pModelName );
-
-								// Now strip off everything but the last part
-								int ch1 = '/', ch2 = '.';
-								char *pBeg = Q_strrchr( pModelName, ch1 );
-								if( !pBeg )
+								if( pHitPlayer->IsDisguised() )
 								{
-									ch1 = '\\';
-									pBeg = Q_strrchr( pModelName, ch1 );
-								}
-								char *pEnd = Q_strrchr( pModelName, ch2 );
+									// Let's get the class by checking to see what model
+									// the spy is using (ie. the model will be whatever they
+									// are disguised as & skin will give us the team)
 
-								if( pBeg && pEnd )
-								{	
-									int iBeg = ( int )( pBeg - pModelName + 1 );
-									int iEnd = ( int )( pEnd - pModelName + 1 );
+									Warning( "[CrosshairInfo] [Disguise] Team: %i, Class: %i\n", pHitPlayer->GetDisguisedTeam(), pHitPlayer->GetDisguisedClass() );
 
-									Q_strncpy( szClass, &pModelName[ iBeg ], iEnd - iBeg );
-									//szClass[ 0 ] = toupper( szClass[ 0 ] );
-									iClassSlot = Class_StringToInt( szClass );
-
-									// Lame way to do this, ha
+									int iClassSlot = pHitPlayer->GetDisguisedClass();
 									Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
 
-									//DevMsg( "[Crosshair Info] Spy's class: %i\n", iClassSlot );
-								}
-								else
-								{
-									Warning( "[Crosshair Info] Incorrect model name format!\n" );
-									return;
-								}
-								*/
+									/*
+									// Get the model name (something like models/player/spy.mdl)
+									const char *pModelName = modelinfo->GetModelName( pHitPlayer->GetModel() );								
+									//DevMsg( "[Crosshair Info] Spy's model: %s\n", pModelName );
 
-
-								/*
-								// Get the "team" by whatever skin the spy is using								
-								//iTeam = pHitPlayer->m_nSkin + 2; // (skin 0 = blue,
-								// gotta get the value up to FF_TEAM_BLUE)
-								*/
-								iTeam = pHitPlayer->GetDisguisedTeam();
-
-								// If this spy is disguised as our team we need to show his
-								// health/armor
-								if( iTeam == pPlayer->GetTeamNumber() )
-								{
-									iTeam = pHitPlayer->GetHealthPercentage();
-									iArmor = pHitPlayer->GetArmorPercentage();
-								}
-
-								// Change name (if we can) to someone on the team iTeam
-								// that is playing the class this guy is disguised as
-
-								// Gonna generate an array of people on the team we're disguised as
-								// in case we have to randomly pick a name later
-								int iPlayers[ 128 ], iCount = 0;
-
-								// Just in case we don't find anyone later
-								iPlayers[ iCount++ ] = pHitPlayer->index;
-
-								bool bDone = false;
-								for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
-								{
-									// Skip this spy - kind of useless if it tells us
-									// our real name, eh?
-									if( i == pHitPlayer->index )
-										continue;
-
-									if( pGR->IsConnected( i ) )
+									// Now strip off everything but the last part
+									int ch1 = '/', ch2 = '.';
+									char *pBeg = Q_strrchr( pModelName, ch1 );
+									if( !pBeg )
 									{
-										// If the guy's on the team we're disguised as...
-										if( pGR->GetTeam( i ) == iTeam )
-										{
-											// Store off the player index since we found
-											// someone on the team we're disguised as
-											iPlayers[ iCount++ ] = i;
+										ch1 = '\\';
+										pBeg = Q_strrchr( pModelName, ch1 );
+									}
+									char *pEnd = Q_strrchr( pModelName, ch2 );
 
-											// If the guy's playing as the class we're disguised as...
-											if( pGR->GetClass( i ) == iClassSlot )
+									if( pBeg && pEnd )
+									{	
+										int iBeg = ( int )( pBeg - pModelName + 1 );
+										int iEnd = ( int )( pEnd - pModelName + 1 );
+
+										Q_strncpy( szClass, &pModelName[ iBeg ], iEnd - iBeg );
+										//szClass[ 0 ] = toupper( szClass[ 0 ] );
+										iClassSlot = Class_StringToInt( szClass );
+
+										// Lame way to do this, ha
+										Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
+
+										//DevMsg( "[Crosshair Info] Spy's class: %i\n", iClassSlot );
+									}
+									else
+									{
+										Warning( "[Crosshair Info] Incorrect model name format!\n" );
+										return;
+									}
+									*/
+
+
+									/*
+									// Get the "team" by whatever skin the spy is using								
+									//iTeam = pHitPlayer->m_nSkin + 2; // (skin 0 = blue,
+									// gotta get the value up to FF_TEAM_BLUE)
+									*/
+									iTeam = pHitPlayer->GetDisguisedTeam();
+
+									// If this spy is disguised as our team we need to show his
+									// health/armor
+									if( iTeam == pPlayer->GetTeamNumber() )
+									{
+										iTeam = pHitPlayer->GetHealthPercentage();
+										iArmor = pHitPlayer->GetArmorPercentage();
+									}
+
+									// Change name (if we can) to someone on the team iTeam
+									// that is playing the class this guy is disguised as
+
+									// Gonna generate an array of people on the team we're disguised as
+									// in case we have to randomly pick a name later
+									int iPlayers[ 128 ], iCount = 0;
+
+									// Just in case we don't find anyone later
+									iPlayers[ iCount++ ] = pHitPlayer->index;
+
+									bool bDone = false;
+									for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
+									{
+										// Skip this spy - kind of useless if it tells us
+										// our real name, eh?
+										if( i == pHitPlayer->index )
+											continue;
+
+										if( pGR->IsConnected( i ) )
+										{
+											// If the guy's on the team we're disguised as...
+											if( pGR->GetTeam( i ) == iTeam )
 											{
-												// We're stealing this guys name
-												Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
-												bDone = true; // bail
+												// Store off the player index since we found
+												// someone on the team we're disguised as
+												iPlayers[ iCount++ ] = i;
+
+												// If the guy's playing as the class we're disguised as...
+												if( pGR->GetClass( i ) == iClassSlot )
+												{
+													// We're stealing this guys name
+													Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
+													bDone = true; // bail
+												}
 											}
 										}
 									}
-								}
 
-								// We iterated around and found no one on the team we're disguised as
-								// playing as the class we're disguised as so just pick a guy from
-								// the team we're disguised as
-								if( !bDone )
+									// We iterated around and found no one on the team we're disguised as
+									// playing as the class we're disguised as so just pick a guy from
+									// the team we're disguised as
+									if( !bDone )
+									{
+										// So we got an array of indexes to players of whom we can steal
+										// their name, so randomly steal one
+										Q_strcpy( szName, pGR->GetPlayerName( iPlayers[ random->RandomInt( 0, iCount - 1 ) ] ) );
+									}
+								}
+								else
 								{
-									// So we got an array of indexes to players of whom we can steal
-									// their name, so randomly steal one
-									Q_strcpy( szName, pGR->GetPlayerName( iPlayers[ random->RandomInt( 0, iCount - 1 ) ] ) );
+									Warning( "[CrosshairInfo] Dude isn't disguised\n" );
 								}
 							}
 						}					

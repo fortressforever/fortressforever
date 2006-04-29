@@ -229,7 +229,7 @@ void CFFWeaponBase::PrimaryAttack()
 
 	// Reset disguise
 #ifdef GAME_DLL
-	if (pPlayer->m_iSpyDisguise)
+	if (pPlayer->IsDisguised())
 		pPlayer->ResetDisguise();
 #endif
 
@@ -323,12 +323,12 @@ bool CFFWeaponBase::Deploy()
 #endif
 
 #ifdef GAME_DLL
-	if (pPlayer->m_iSpyDisguise)
+	if (pPlayer->IsDisguised())
 	{
 		// Spies show different models!
 		PLAYERCLASS_FILE_INFO_HANDLE classinfo;
 
-		if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString((pPlayer->m_iSpyDisguise & 0xFFFFFFF0) >> 4), &classinfo, GetEncryptionKey()))
+		if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(pPlayer->GetDisguisedClass()), &classinfo, GetEncryptionKey()))
 		{
 			const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(classinfo);
 

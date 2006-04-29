@@ -423,6 +423,12 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 			pBot->GiveAmmo( 200, AMMO_DETPACK );
 		}
 
+		if( Q_strcmp( "disguise12", bot_sendcmd.GetString() ) == 0 )
+			pBot->Bot_Disguise( TEAM_BLUE, CLASS_SOLDIER );		
+
+		if( Q_strcmp( "disguise21", bot_sendcmd.GetString() ) == 0 )
+			pBot->Bot_Disguise( TEAM_RED, CLASS_SCOUT );
+
 		if( Q_strcmp( "+gren1", bot_sendcmd.GetString() ) == 0 )
 		{
 			pBot->Command_PrimeOne();

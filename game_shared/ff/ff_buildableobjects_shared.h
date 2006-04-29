@@ -270,6 +270,17 @@ public:
 		StopSound( m_ppszSounds[ 0 ] );
 		RemoveQuietly(); 
 	}
+
+	// This is an invisible entity that I'm going to spawn to
+	// block doors/eles for buildables. The reason being I can't
+	// get buildables to block doors/eles AND also be able to
+	// have the detpack hit them when it's dropped and bounce
+	// off. I can do one or the other, but not both. Well, I
+	// could probably do both but we'd be getting three different
+	// asserts spamming constantly - two from rotated collideables
+	// in any of the UTIL_Trace* functions and one from not having
+	// a vphysics shadow.
+	EHANDLE m_hDoorBlocker;
 	
 	bool CheckForOwner( void )
 	{
@@ -687,5 +698,26 @@ public:
 #endif
 
 };
+
+#ifdef GAME_DLL
+//=============================================================================
+//
+//	class CFFBuildableDoorBlocker
+//	Server only
+//=============================================================================
+class CFFBuildableDoorBlocker : public CBaseAnimating
+{
+public:
+	DECLARE_CLASS( CFFBuildableDoorBlocker, CBaseAnimating );
+
+	CFFBuildableDoorBlocker( void ) {};
+	~CFFBuildableDoorBlocker( void ) {};
+
+	void Spawn( void );
+
+};
+
+#endif // GAME_DLL
+
 
 #endif // FF_BUILDABLEOBJECTS_SHARED_H

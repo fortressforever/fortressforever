@@ -380,6 +380,16 @@ protected:
 public:
 	void Bot_SetDispenserText( const char *pszString ) { Q_strcpy( m_szCustomDispenserText, pszString ); }
 	void Bot_SetDetpackTimer( int iTime ) { m_iDetpackTime = iTime; }
+	void Bot_Disguise( int iTeam, int iClass )
+	{
+		Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
+		m_iNewSpyDisguise = iTeam;
+		m_iNewSpyDisguise += iClass << 4;
+
+		Warning( "[Disguise] [Server] NEW Disguise team: %i, NEW Disguise class: %i\n", GetNewDisguisedTeam(), GetNewDisguisedClass() );
+
+		m_flFinishDisguise = gpGlobals->curtime + 1.0f;
+	}
 	
 protected:
 	// Added by Mulchman - here temporarily I guess
@@ -458,6 +468,7 @@ public:
 	bool GetDisguisable() const { return m_bDisguisable; }
 	bool m_bDisguisable;
 
+public:
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
@@ -469,8 +480,8 @@ public:
 	bool IsDisguised( void );		// Mulch
 private:
 	// These 2 are server only
-	int GetNewDisguisedClass( void ) const;	// Mulch: While disguising will tell us new class we're disguising as
-	int GetNewDisguisedTeam( void ) const;	// Mulch: While disguising will tell us new team we're disguising as
+	int GetNewDisguisedClass( void );	// Mulch: While disguising will tell us new class we're disguising as
+	int GetNewDisguisedTeam( void );	// Mulch: While disguising will tell us new team we're disguising as
 	
 public:
 

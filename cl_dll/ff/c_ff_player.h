@@ -142,9 +142,8 @@ public:
 
 	virtual ShadowType_t ShadowCastType( void );
 
-private:
-	int m_iSpyDisguise;
 public:
+	CNetworkVar( int, m_iSpyDisguise );
 	// These 3 are shared, also
 	int GetDisguisedClass( void );	// Mulch
 	int GetDisguisedTeam( void );	// Mulch
