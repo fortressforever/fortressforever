@@ -142,13 +142,12 @@ public:
 
 	virtual ShadowType_t ShadowCastType( void );
 
-public:
-	CNetworkVar( int, m_iSpyDisguise );
-	// These 3 are shared, also
-	int GetDisguisedClass( void );	// Mulch
-	int GetDisguisedTeam( void );	// Mulch
-	bool IsDisguised( void );		// Mulch
-	// <--
+public:	
+	int GetDisguisedClass( void );
+	int GetDisguisedTeam( void );
+	bool IsDisguised( void );
+	int m_iSpyDisguise;
+	// <-- mulch
 
 private:
 	// ---> FF movecode stuff (billdoor)
@@ -225,6 +224,5 @@ inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
 	Assert( dynamic_cast< C_FFPlayer* >( pPlayer ) != NULL );
 	return static_cast< C_FFPlayer* >( pPlayer );
 }
-
 
 #endif // C_FF_PLAYER_H

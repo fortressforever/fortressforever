@@ -1772,7 +1772,7 @@ void CFFPlayer::Command_WhatTeam( void )
 	//DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber() );
 	//DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
 
-	DevMsg( "[What Team] Disguised? %s, Team: %i, Class: %i, My Team: %i\n", IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber() );
+	DevMsg( "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber() );
 }
 
 void CFFPlayer::Command_HintTest( void )
@@ -4096,6 +4096,27 @@ void CFFPlayer::Command_Disguise()
 	m_flFinishDisguise = gpGlobals->curtime + 1.0f;
 
 	ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_DISGUISING" );
+}
+
+bool CFFPlayer::IsDisguised( void )
+{
+	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
+}
+
+int CFFPlayer::GetDisguisedTeam( void )
+{
+	if( IsDisguised() )	
+		return ( m_iSpyDisguise & 0x0000000F );
+
+	return 0;
+}
+
+int CFFPlayer::GetDisguisedClass( void )
+{
+	if( IsDisguised() )
+		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
+
+	return 0;
 }
 
 // Server only

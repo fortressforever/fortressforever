@@ -466,25 +466,21 @@ public:
 			ResetDisguise();
 	}
 	bool GetDisguisable() const { return m_bDisguisable; }
+private:
 	bool m_bDisguisable;
 
-public:
+public:	
+	int GetDisguisedClass( void );
+	int GetDisguisedTeam( void );
+	bool IsDisguised( void );
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
+private:
+	int GetNewDisguisedClass( void );
+	int GetNewDisguisedTeam( void );
 	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
 
 public:
-	// These 3 are shared, also
-	int GetDisguisedClass( void );	// Mulch
-	int GetDisguisedTeam( void );	// Mulch
-	bool IsDisguised( void );		// Mulch
-private:
-	// These 2 are server only
-	int GetNewDisguisedClass( void );	// Mulch: While disguising will tell us new class we're disguising as
-	int GetNewDisguisedTeam( void );	// Mulch: While disguising will tell us new team we're disguising as
-	
-public:
-
 	void FinishDisguise();
 	void ResetDisguise();
 

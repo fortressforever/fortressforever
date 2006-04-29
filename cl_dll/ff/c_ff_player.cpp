@@ -331,6 +331,8 @@ void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut
 	}
 }
 
+// Only added this to see when the server was telling the client the value
+// for m_iSpyDisguise changed.
 void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	DevMsg( "[Disguise] RecvProxy_SpyDisguise\n" );
@@ -346,7 +348,7 @@ void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pO
 	if( pPlayer )
 	{
 		pPlayer->m_iSpyDisguise = pData->m_Value.m_Int;
-		DevMsg( "[Disguise] \t value set: %i\n", pPlayer->m_iSpyDisguise );
+		DevMsg( "[Disguise] \t %s value set: %i\n", pPlayer->GetPlayerName(), pPlayer->m_iSpyDisguise );
 	}
 }
 
@@ -929,6 +931,27 @@ bool C_FFPlayer::ShouldDraw( void )
 		return true;
 
 	return BaseClass::ShouldDraw();
+}
+
+bool C_FFPlayer::IsDisguised( void )
+{
+	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
+}
+
+int C_FFPlayer::GetDisguisedTeam( void )
+{
+	if( IsDisguised() )	
+		return ( m_iSpyDisguise & 0x0000000F );
+
+	return 0;
+}
+
+int C_FFPlayer::GetDisguisedClass( void )
+{
+	if( IsDisguised() )
+		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
+
+	return 0;
 }
 
 // --> Mirv: Get the class

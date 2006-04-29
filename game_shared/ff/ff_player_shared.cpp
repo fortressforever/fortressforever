@@ -384,6 +384,7 @@ int CFFPlayer::GetArmorPercentage( void )
 	return ( int )flPerc;
 }
 
+/*
 bool CFFPlayer::IsDisguised( void )
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
@@ -397,7 +398,6 @@ int CFFPlayer::GetDisguisedTeam( void )
 	return 0;
 }
 
-// Server only
 int CFFPlayer::GetDisguisedClass( void )
 {
 	if( IsDisguised() )
@@ -405,3 +405,4 @@ int CFFPlayer::GetDisguisedClass( void )
 
 	return 0;
 }
+*/
