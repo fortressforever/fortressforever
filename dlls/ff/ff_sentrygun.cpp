@@ -49,6 +49,7 @@
 //#include "ff_buildableobjects_shared.h"
 #include "te_effect_dispatch.h" 
 #include "ff_projectile_rocket.h"
+#include "ff_team.h"
 
 #include "omnibot_interface.h"
 
@@ -545,6 +546,8 @@ void CFFSentryGun::HackFindEnemy()
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *target = NULL;
 
+	CFFTeam *pOwnerTeam = ( CFFTeam * )GetGlobalTeam( pOwner->GetTeamNumber() );
+
 	// Why were we including hidden enemies in this???
 	for (int i = 0; i < gpGlobals->maxClients; i++) 
 	{
@@ -564,9 +567,9 @@ void CFFSentryGun::HackFindEnemy()
 			if( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() )
 				continue;
 			// Spy disguised as allied team
-			// TODO:			
+			if( pOwnerTeam->GetAllies() & ( 1 << pPlayer->GetDisguisedTeam() ) )
+				continue;
 		}
-
 
 		// Add alive players who are visible
 		if (pPlayer->IsAlive() && FVisible(pPlayer->GetAbsOrigin())) 
