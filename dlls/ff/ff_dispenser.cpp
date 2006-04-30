@@ -257,7 +257,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 		if( pOther->IsPlayer() )
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( pOther );
-			if( !pPlayer->IsObserver() ) // make sure spectators aren't touching the object
+			if( !pPlayer->IsObserver() && pPlayer->IsAlive() )
 			{
 				bool bDispense = false;
 

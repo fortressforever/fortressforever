@@ -61,9 +61,7 @@ void CFFBuildableDoorBlocker::Spawn( void )
 	// The magic that makes doors/eles bounce off this item:
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
-	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	//SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 
 	// Want to take damage but only pass it along to our owner
@@ -84,6 +82,9 @@ int CFFBuildableDoorBlocker::OnTakeDamage( const CTakeDamageInfo &info )
 	}
 	else
 	{
+		GetOwnerEntity()->OnTakeDamage( info );
+
+		/*
 		// Only want to send door/ele/crush type damage
 		if( info.GetInflictor() )
 		{
@@ -109,6 +110,7 @@ int CFFBuildableDoorBlocker::OnTakeDamage( const CTakeDamageInfo &info )
 				GetOwnerEntity()->OnTakeDamage( info );
 			}
 		}
+		*/
 	}
 
 	// Don't take damage ourself
@@ -265,6 +267,7 @@ void CFFBuildableObject::Spawn( void )
 		SetMoveType( MOVETYPE_FLY );
 	}
 	*/
+	SetCollisionGroup( COLLISION_GROUP_PLAYER );
 		
 	// Make sure it has a model
 	Assert( m_ppszModels[ 0 ] != NULL );
@@ -528,7 +531,21 @@ CFFBuildableObject *CFFBuildableObject::Create( const Vector& vecOrigin, const Q
 //
 int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 {
+	Warning( "[BuildableObject] VPhysicsTakeDamage\n" );
+
 	return 1;
+}
+
+void CFFBuildableObject::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
+{
+	Warning( "[BuildableObject] VPhysicsCollision\n" );
+}
+
+bool CFFBuildableObject::ShouldCollide( int collisionGroup, int contentsMask ) const
+{
+	Warning( "[BuildableObject] ShouldCollide\n" );
+
+	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
 
 /**

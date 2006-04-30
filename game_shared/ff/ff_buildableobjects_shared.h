@@ -322,6 +322,8 @@ private:
 public:
 	// So weapons (like the railgun) don't effect building
 	virtual int VPhysicsTakeDamage( const CTakeDamageInfo &info );
+	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
+	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 
 protected:
 	void Explode( void );

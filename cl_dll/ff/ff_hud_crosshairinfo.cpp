@@ -199,8 +199,6 @@ void CHudCrosshairInfo::OnTick( void )
 					//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
 					// Are we looking at a spy?
 					bool bTheySpy = ( pHitPlayer->GetClassSlot() == CLASS_SPY );
-
-					Warning( "[CrosshairInfo] Dude is class: %i\n", pHitPlayer->GetClassSlot() );
 					
 					// For the player/owner name
 					char szName[ MAX_PLAYER_NAME_LENGTH ];
@@ -300,7 +298,7 @@ void CHudCrosshairInfo::OnTick( void )
 									// the spy is using (ie. the model will be whatever they
 									// are disguised as & skin will give us the team)
 
-									Warning( "[CrosshairInfo] [Disguise] Team: %i, Class: %i\n", pHitPlayer->GetDisguisedTeam(), pHitPlayer->GetDisguisedClass() );
+									//Warning( "[CrosshairInfo] [Disguise] Team: %i, Class: %i\n", pHitPlayer->GetDisguisedTeam(), pHitPlayer->GetDisguisedClass() );
 
 									int iClassSlot = pHitPlayer->GetDisguisedClass();
 									Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
@@ -404,10 +402,6 @@ void CHudCrosshairInfo::OnTick( void )
 										// their name, so randomly steal one
 										Q_strcpy( szName, pGR->GetPlayerName( iPlayers[ random->RandomInt( 0, iCount - 1 ) ] ) );
 									}
-								}
-								else
-								{
-									Warning( "[CrosshairInfo] Dude isn't disguised\n" );
 								}
 							}
 						}					
