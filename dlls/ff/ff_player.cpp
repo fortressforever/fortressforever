@@ -935,9 +935,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// to the person who tagged us
 	if( m_bRadioTagged )
 	{
-		// TODO: Change to EHANDLE and we won't have to worry
-		// TODO: Check that the EHANDLE stuff works now
-
 		if( m_pWhoTaggedMe != NULL )
 		{
 			CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
@@ -2071,9 +2068,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 			case FF_BUILD_SENTRYGUN: flRaiseVal = FF_BUILD_SG_RAISE_VAL; flBuildDist = FF_BUILD_SG_BUILD_DIST; break;
 			case FF_BUILD_DETPACK: flRaiseVal = FF_BUILD_DET_RAISE_VAL; flBuildDist = FF_BUILD_DET_BUILD_DIST; break;
 		}
-
+		
 		// Drop the detpack down a little if we're ducking so it's not hovering above us
-		if( FBitSet( GetFlags(), FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
+		if( ( GetFlags() & FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
 			flRaiseVal /= 2.0f;
 
 		// Our neat buildable info container

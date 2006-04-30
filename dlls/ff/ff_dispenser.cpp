@@ -45,8 +45,53 @@
 
 #include "omnibot_interface.h"
 
-class CFFDispenserDoorBlocker;
+//=============================================================================
+//
+//	class CFFDispenserDoorBlocker
+//	Server only
+//=============================================================================
+class CFFDispenserDoorBlocker : public CFFBuildableDoorBlocker
+{
+public:
+	DECLARE_CLASS( CFFDispenserDoorBlocker, CFFBuildableDoorBlocker );
+	DECLARE_DATADESC();
 
+	CFFDispenserDoorBlocker( void ) {}
+	~CFFDispenserDoorBlocker( void ) {}
+
+	void Precache( void )
+	{
+		PrecacheModel( FF_DISPENSER_MODEL );
+	}
+
+	void Spawn( void )
+	{
+		Precache();
+		BaseClass::Spawn();
+		SetModel( FF_DISPENSER_MODEL );
+		//AddEffects( EF_NODRAW | EF_NOSHADOW );
+	}
+
+	void RemoveSelf( void ) { BaseClass::RemoveSelf(); }
+
+	static CFFDispenserDoorBlocker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
+	{
+		CFFDispenserDoorBlocker *pObject = ( CFFDispenserDoorBlocker * )CBaseEntity::Create( "FF_DispenserDoorBlocker", vecOrigin, vecAngles, pentOwner );
+		pObject->Spawn();
+		return pObject;
+	}
+};
+
+LINK_ENTITY_TO_CLASS( FF_DispenserDoorBlocker, CFFDispenserDoorBlocker );
+
+BEGIN_DATADESC( CFFDispenserDoorBlocker )
+END_DATADESC()
+
+//=============================================================================
+//
+//	class CFFDispenser
+//
+//=============================================================================
 LINK_ENTITY_TO_CLASS( FF_Dispenser, CFFDispenser );
 PRECACHE_REGISTER( FF_Dispenser );
 
@@ -179,6 +224,9 @@ void CFFDispenser::Spawn( void )
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();
+
+	// Create door blocker
+	m_hDoorBlocker = CFFDispenserDoorBlocker::Create( GetAbsOrigin(), GetAbsAngles(), this );
 
 	UpdateAmmoPercentage();
 }
@@ -414,7 +462,7 @@ CFFDispenser *CFFDispenser::Create( const Vector &vecOrigin, const QAngle &vecAn
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner.GetForModify() = pentOwner;
 
-	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
+	pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 
 	// Spawn the object
 	pObject->Spawn();
@@ -524,29 +572,3 @@ void CFFDispenser::SendStatsToBot()
 			iGameId, 0, 0, &bud);
 	}
 }
-
-//=============================================================================
-//
-//	class CFFDispenserDoorBlocker
-//	Server only
-//=============================================================================
-class CFFDispenserDoorBlocker : CFFBuildableDoorBlocker
-{
-public:
-	DECLARE_CLASS( CFFDispenserDoorBlocker, CFFBuildableDoorBlocker );
-
-	CFFDispenserDoorBlocker( void ) {}
-	~CFFDispenserDoorBlocker( void ) {}
-
-	void Precache( void )
-	{
-		PrecacheModel( FF_DISPENSER_MODEL );
-	}
-
-	void Spawn( void )
-	{
-		BaseClass::Spawn();
-		SetModel( FF_DISPENSER_MODEL );
-	}
-	
-};

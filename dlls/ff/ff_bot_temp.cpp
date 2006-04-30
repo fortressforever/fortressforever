@@ -429,17 +429,11 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 		if( Q_strcmp( "disguise21", bot_sendcmd.GetString() ) == 0 )
 			pBot->Bot_Disguise( TEAM_RED, CLASS_SCOUT );
 
-		if( Q_strcmp( "+gren1", bot_sendcmd.GetString() ) == 0 )
-		{
-			pBot->Command_PrimeOne();
-			pBot->Command_ThrowGren();
-		}
+		if( Q_strcmp( "toggleone", bot_sendcmd.GetString() ) == 0 )
+			pBot->Command_ToggleOne();
 
-		if( Q_strcmp( "+gren2", bot_sendcmd.GetString() ) == 0 )
-		{
-			pBot->Command_PrimeTwo();
-			pBot->Command_ThrowGren();
-		}
+		if( Q_strcmp( "toggletwo", bot_sendcmd.GetString() ) == 0 )
+			pBot->Command_ToggleTwo();
 
 		if( Q_strcmp( "primeone", bot_sendcmd.GetString() ) == 0 )
 			pBot->Command_PrimeOne();

@@ -156,7 +156,11 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 		// If we haven't built a detpack...
 		if( !pPlayer->m_hDetpack.Get() )
 		{
-			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, FF_BUILD_DET_RAISE_VAL);
+			float flRaiseVal = FF_BUILD_DET_RAISE_VAL;
+			if( pPlayer->GetFlags() & FL_DUCKING )
+				flRaiseVal /= 2;
+
+			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, flRaiseVal);
 			
 			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
 			{

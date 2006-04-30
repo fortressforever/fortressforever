@@ -179,19 +179,22 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 		// We're going to predict it using the players' angles
 		if (pOwner != NULL && pOwner->IsDormant() == false) 
 		{
+			// Bug #0000555: Sniper rifle charge dot and conc effect
+			// Commented out by mulch for above bug
+
 			// Always draw the dot in front of our faces when in first-person
-			if (pOwner->IsLocalPlayer()) 
-			{
-				// Take our view position and orientation
-				vecAttachment = CurrentViewOrigin();
-				vecDir = CurrentViewForward();
-			}
-			else
-			{
+			//if (pOwner->IsLocalPlayer()) 
+			//{
+			//	// Take our view position and orientation
+			//	vecAttachment = CurrentViewOrigin();
+			//	vecDir = CurrentViewForward();
+			//}
+			//else
+			//{
 				// Take the eye position and direction
 				vecAttachment = pOwner->Weapon_ShootPosition();
 				AngleVectors(pOwner->EyeAngles(), &vecDir);
-			}
+			//}
 
 			trace_t tr;
 			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr);

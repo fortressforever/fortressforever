@@ -281,6 +281,7 @@ public:
 	// in any of the UTIL_Trace* functions and one from not having
 	// a vphysics shadow.
 	EHANDLE m_hDoorBlocker;
+	void RemoveDoorBlocker( void );
 	
 	bool CheckForOwner( void )
 	{
@@ -709,12 +710,14 @@ class CFFBuildableDoorBlocker : public CBaseAnimating
 {
 public:
 	DECLARE_CLASS( CFFBuildableDoorBlocker, CBaseAnimating );
+	DECLARE_DATADESC();
 
 	CFFBuildableDoorBlocker( void ) {};
 	~CFFBuildableDoorBlocker( void ) {};
 
 	void Spawn( void );
-
+	int OnTakeDamage( const CTakeDamageInfo &info );
+	void RemoveSelf( void );
 };
 
 #endif // GAME_DLL

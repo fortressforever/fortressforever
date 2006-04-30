@@ -2295,17 +2295,6 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="TF2 DLL"
-					Filter="">
-					<Filter
-						Name="TF2 Movement"
-						Filter="">
-						<File
-							RelativePath="..\game_shared\tf2\tf_gamemovement_sapper.h">
-						</File>
-					</Filter>
-				</Filter>
-				<Filter
 					Name="HL2 DLL"
 					Filter="">
 					<File
@@ -2525,10 +2514,6 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="CounterStrike DLL"
-					Filter="">
-				</Filter>
-				<Filter
 					Name="game_controls"
 					Filter="">
 					<File
@@ -2567,6 +2552,10 @@
 				</Filter>
 				<Filter
 					Name="HL2MP"
+					Filter="">
+				</Filter>
+				<Filter
+					Name="CounterStrike DLL"
 					Filter="">
 				</Filter>
 			</Filter>
@@ -3399,10 +3388,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
