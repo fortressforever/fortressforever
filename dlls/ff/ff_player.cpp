@@ -3084,7 +3084,7 @@ bool CFFPlayer::IsSpeedEffectSet( SpeedEffectType type )
 
 	for( int i = 0; ( i < NUM_SPEED_EFFECTS ) && !bFound; i++ )
 	{
-		if( m_vSpeedEffects[ i ].type == type )
+		if( ( m_vSpeedEffects[ i ].type == type ) && ( m_vSpeedEffects[ i ].active ) )
 			bFound = true;
 	}
 

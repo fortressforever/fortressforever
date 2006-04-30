@@ -318,11 +318,6 @@ bool CFFWeaponBase::Deploy()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 #ifdef GAME_DLL
-	// Bug #0000499: Oddity with assault cannon
-	pPlayer->ClearSpeedEffects( SE_ASSAULTCANNON );
-#endif
-
-#ifdef GAME_DLL
 	if (pPlayer->IsDisguised())
 	{
 		// Spies show different models!

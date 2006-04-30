@@ -199,6 +199,8 @@ void CHudCrosshairInfo::OnTick( void )
 					//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
 					// Are we looking at a spy?
 					bool bTheySpy = ( pHitPlayer->GetClassSlot() == CLASS_SPY );
+
+					Warning( "[CrosshairInfo] Dude is class: %i\n", pHitPlayer->GetClassSlot() );
 					
 					// For the player/owner name
 					char szName[ MAX_PLAYER_NAME_LENGTH ];

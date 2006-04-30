@@ -146,7 +146,7 @@ public:
 	int GetDisguisedClass( void );
 	int GetDisguisedTeam( void );
 	bool IsDisguised( void );
-	int m_iSpyDisguise;
+	CNetworkVar( int, m_iSpyDisguise );
 	// <-- mulch
 
 private:
