@@ -351,7 +351,7 @@ void CHudCrosshairInfo::OnTick( void )
 									// health/armor
 									if( iTeam == pPlayer->GetTeamNumber() )
 									{
-										iTeam = pHitPlayer->GetHealthPercentage();
+										iHealth = pHitPlayer->GetHealthPercentage();
 										iArmor = pHitPlayer->GetArmorPercentage();
 									}
 
