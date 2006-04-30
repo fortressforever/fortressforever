@@ -60,8 +60,10 @@ void CFFBuildableDoorBlocker::Spawn( void )
 {
 	// The magic that makes doors/eles bounce off this item:
 	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_STANDABLE|FSOLID_TRIGGER );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	//SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 
 	// Want to take damage but only pass it along to our owner
@@ -77,7 +79,9 @@ int CFFBuildableDoorBlocker::OnTakeDamage( const CTakeDamageInfo &info )
 
 	// Don't care if our owner [buildable object] attacks us (like from blowing up)
 	if( info.GetInflictor() == GetOwnerEntity() )
+	{		
 		Warning( "Door Blocker] Owner is attacking, ignore\n" );
+	}
 	else
 	{
 		// Only want to send door/ele/crush type damage
