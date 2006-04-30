@@ -355,6 +355,15 @@ void CHudCrosshairInfo::OnTick( void )
 										iArmor = pHitPlayer->GetArmorPercentage();
 									}
 
+									// Of, if this spy is disguised as an ally of our team we
+									// need to show his health/armor
+									C_FFTeam *pPlayerTeam = ( C_FFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
+									if( pPlayerTeam->GetAllies() & ( 1 << iTeam ) )
+									{
+										iHealth = pHitPlayer->GetHealthPercentage();
+										iArmor = pHitPlayer->GetArmorPercentage();
+									}
+
 									// Change name (if we can) to someone on the team iTeam
 									// that is playing the class this guy is disguised as
 
