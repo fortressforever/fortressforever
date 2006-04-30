@@ -488,7 +488,7 @@ ConVar mp_prematch( "mp_prematch",
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
-		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
+		CBasePlayer *pScorer = pScorer = GetDeathScorer( pKiller, pInflictor );
 
 		// pVictim is the buildables owner
 		CFFPlayer *pVictim = NULL;
@@ -564,20 +564,23 @@ ConVar mp_prematch( "mp_prematch",
 
 		// Award points & modify weapon if 'team kill'
 
-		// If the owner of the buildable is an ally or teammate
-		// it's a 'team kill'
-		if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
+		if( pScorer )
 		{
-			pScorer->IncrementFragCount( -1 );
-			pszWeapon = "teammate";
+			// If the owner of the buildable is an ally or teammate
+			// it's a 'team kill'
+			if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
+			{
+				pScorer->IncrementFragCount( -1 );
+				pszWeapon = "teammate";
+			}
+			else
+				pScorer->IncrementFragCount( 1 );
 		}
-		else
-			pScorer->IncrementFragCount( 1 );
 
 		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
 		UTIL_LogPrintf( " attacker: %i\n", iKillerID );
 		UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
-		
+
 		// For the event later
 		IGameEvent *event = NULL;
 

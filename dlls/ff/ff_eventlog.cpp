@@ -108,26 +108,38 @@ public:
 			const int ownerid = event->GetInt( "userid" );
 			const int attackerid = event->GetInt( "attacker" );
 
+			bool bWorldSpawn = ( attackerid == 0 );
+
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
-			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			CBasePlayer *pAttacker = NULL;
+			if( !bWorldSpawn )
+				pAttacker = UTIL_PlayerByUserId( attackerid );
 
-			CTeam *team = pAttacker->GetTeam();
+			CTeam *team = NULL;
+			if( !bWorldSpawn )
+				team = pAttacker->GetTeam();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's dispenser with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
 		}
 		else if( !Q_strncmp( name, "sentrygun_killed", Q_strlen( "sentrygun_killed" ) ) )
 		{
 			const int ownerid = event->GetInt( "userid" );
 			const int attackerid = event->GetInt( "attacker" );
 
+			bool bWorldSpawn = ( attackerid == 0 );
+
 			CBasePlayer *pOwner = UTIL_PlayerByUserId( ownerid );
-			CBasePlayer *pAttacker = UTIL_PlayerByUserId( attackerid );
+			CBasePlayer *pAttacker = NULL;
+			if( !bWorldSpawn )
+				pAttacker = UTIL_PlayerByUserId( attackerid );
 
-			CTeam *team = pAttacker->GetTeam();
+			CTeam *team = NULL;
+			if( !bWorldSpawn )
+				team = pAttacker->GetTeam();
 
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
-			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", pAttacker->GetPlayerName(), attackerid, pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
+			DevMsg( "\"%s<%i><%s><%s>\" killed %s's sentrygun with %s\n", bWorldSpawn ? "worldspawn" : pAttacker->GetPlayerName(), attackerid, bWorldSpawn ? "" : pAttacker->GetNetworkIDString(), team ? team->GetName() : "", pOwner->GetPlayerName(), event->GetString( "weapon" ) );
 		}
 		// END: Watch for buildables getting killed
 

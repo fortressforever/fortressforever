@@ -2090,6 +2090,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+					CFFDispenserDoorBlocker *pDoorBlocker = CFFDispenserDoorBlocker::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), pDispenser );
+					
+					// Set our door blocker entity
+					pDispenser->m_hDoorBlocker = pDoorBlocker;
 
 					// Set custom text
 					pDispenser->SetText( m_szCustomDispenserText );					
@@ -2110,6 +2114,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+					CFFSentryGunDoorBlocker *pDoorBlocker = CFFSentryGunDoorBlocker::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), pSentryGun );
+
+					// Set our door blocker entity
+					pSentryGun->m_hDoorBlocker = pDoorBlocker;
 
 					// Mirv: Store future ground location + orientation
 					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildGroundOrigin() );

@@ -56,6 +56,20 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+//=============================================================================
+//
+//	class CFFSentryGunDoorBlocker
+//
+//=============================================================================
+LINK_ENTITY_TO_CLASS( FF_SentryGunDoorBlocker, CFFSentryGunDoorBlocker );
+PRECACHE_REGISTER( FF_SentryGunDoorBlocker );
+
+//=============================================================================
+//
+//	class CFFSentryGun
+//
+//=============================================================================
+
 // Quick conversions from angles to pitchparamter style
 #define TO_PITCH(x) ((x) > 180 ? (360 - (x)) : ((x) * -1)) 
 #define FROM_PITCH(x) ((x) > 0 ? (360 - (x)) : ((x) * -1)) 

@@ -34,6 +34,9 @@
 	#define CFFSentryGun C_FFSentryGun
 	#define CFFDetpack C_FFDetpack
 	#define CFFSevTest C_FFSevTest
+	//#define CFFBuildableDoorBlocker C_FFBuildableDoorBlocker
+	//#define CFFDispenserDoorBlocker C_FFDispenserDoorBlocker
+	//#define CFFSentryGunDoorBlocker C_FFSentryGunDoorBlocker
 #else
 	#include "ff_player.h"
 	#include "ai_basenpc.h"
@@ -215,6 +218,7 @@ protected:
 //	class CFFBuildableObject / C_FFBuildableObject
 //
 //=============================================================================
+class CFFBuildableDoorBlocker;
 class CFFBuildableObject : public CAI_BaseNPC
 {
 public:
@@ -280,7 +284,8 @@ public:
 	// asserts spamming constantly - two from rotated collideables
 	// in any of the UTIL_Trace* functions and one from not having
 	// a vphysics shadow.
-	EHANDLE m_hDoorBlocker;
+	//EHANDLE m_hDoorBlocker;
+	CFFBuildableDoorBlocker *m_hDoorBlocker;
 	void RemoveDoorBlocker( void );
 	
 	bool CheckForOwner( void )
@@ -709,8 +714,7 @@ public:
 class CFFBuildableDoorBlocker : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CFFBuildableDoorBlocker, CBaseAnimating );
-	DECLARE_DATADESC();
+	DECLARE_CLASS( CFFBuildableDoorBlocker, CBaseAnimating );	
 
 	CFFBuildableDoorBlocker( void ) {};
 	~CFFBuildableDoorBlocker( void ) {};
@@ -720,6 +724,66 @@ public:
 	void RemoveSelf( void );
 };
 
+//=============================================================================
+//
+//	class CFFDispenserDoorBlocker
+//	Server only
+//=============================================================================
+class CFFDispenserDoorBlocker : public CFFBuildableDoorBlocker
+{
+public:
+	DECLARE_CLASS( CFFDispenserDoorBlocker, CFFBuildableDoorBlocker );	
+
+	CFFDispenserDoorBlocker( void ) {}
+	~CFFDispenserDoorBlocker( void ) {}
+
+	void Precache( void ) { PrecacheModel( FF_DISPENSER_MODEL ); }
+	void Spawn( void )
+	{
+		Precache();
+		BaseClass::Spawn();
+		SetModel( FF_DISPENSER_MODEL );
+		AddEffects( EF_NODRAW | EF_NOSHADOW );
+	}
+	void RemoveSelf( void ) { BaseClass::RemoveSelf(); }
+	static CFFDispenserDoorBlocker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
+	{
+		CFFDispenserDoorBlocker *pObject = ( CFFDispenserDoorBlocker * )CBaseEntity::Create( "FF_DispenserDoorBlocker", vecOrigin, vecAngles );
+		pObject->Spawn();
+		pObject->SetOwnerEntity( pentOwner );
+		return pObject;
+	}
+};
+
+//=============================================================================
+//
+//	class CFFSentryGunDoorBlocker
+//
+//=============================================================================
+class CFFSentryGunDoorBlocker : public CFFBuildableDoorBlocker
+{
+public:
+	DECLARE_CLASS( CFFSentryGunDoorBlocker, CFFBuildableDoorBlocker );	
+
+	CFFSentryGunDoorBlocker( void ) {}
+	~CFFSentryGunDoorBlocker( void ) {}
+
+	void Precache( void ) { PrecacheModel( FF_SENTRYGUN_MODEL ); } // All SGs [will] use same collision model
+	void Spawn( void )
+	{
+		Precache();
+		BaseClass::Spawn();
+		SetModel( FF_SENTRYGUN_MODEL );
+		AddEffects( EF_NODRAW | EF_NOSHADOW );
+	}
+	void RemoveSelf( void ) { BaseClass::RemoveSelf(); }
+	static CFFSentryGunDoorBlocker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
+	{
+		CFFSentryGunDoorBlocker *pObject = ( CFFSentryGunDoorBlocker * )CBaseEntity::Create( "FF_SentryGunDoorBlocker", vecOrigin, vecAngles, pentOwner );
+		pObject->Spawn();
+		return pObject;
+	}
+};
 #endif // GAME_DLL
 
 

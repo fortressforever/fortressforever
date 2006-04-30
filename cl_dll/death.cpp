@@ -254,7 +254,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 	}
 
 	// Get the names of the players
-	const char *killer_name = g_PR->GetPlayerName( killer );
+	const char *killer_name = ( killer == 0 ) ? "worldspawn" : g_PR->GetPlayerName( killer );
 	const char *victim_name = g_PR->GetPlayerName( victim );
 	if ( !killer_name )
 		killer_name = "";

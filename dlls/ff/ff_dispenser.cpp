@@ -48,44 +48,10 @@
 //=============================================================================
 //
 //	class CFFDispenserDoorBlocker
-//	Server only
+//
 //=============================================================================
-class CFFDispenserDoorBlocker : public CFFBuildableDoorBlocker
-{
-public:
-	DECLARE_CLASS( CFFDispenserDoorBlocker, CFFBuildableDoorBlocker );
-	DECLARE_DATADESC();
-
-	CFFDispenserDoorBlocker( void ) {}
-	~CFFDispenserDoorBlocker( void ) {}
-
-	void Precache( void )
-	{
-		PrecacheModel( FF_DISPENSER_MODEL );
-	}
-
-	void Spawn( void )
-	{
-		Precache();
-		BaseClass::Spawn();
-		SetModel( FF_DISPENSER_MODEL );
-		//AddEffects( EF_NODRAW | EF_NOSHADOW );
-	}
-
-	void RemoveSelf( void ) { BaseClass::RemoveSelf(); }
-
-	static CFFDispenserDoorBlocker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner )
-	{
-		CFFDispenserDoorBlocker *pObject = ( CFFDispenserDoorBlocker * )CBaseEntity::Create( "FF_DispenserDoorBlocker", vecOrigin, vecAngles, pentOwner );
-		pObject->Spawn();
-		return pObject;
-	}
-};
-
 LINK_ENTITY_TO_CLASS( FF_DispenserDoorBlocker, CFFDispenserDoorBlocker );
-
-BEGIN_DATADESC( CFFDispenserDoorBlocker )
-END_DATADESC()
+PRECACHE_REGISTER( FF_DispenserDoorBlocker );
 
 //=============================================================================
 //
@@ -102,7 +68,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFDispenser, DT_FFDispenser )
 	SendPropInt( SENDINFO( m_iNails ) ),
 	SendPropInt( SENDINFO( m_iRockets ) ),
 	SendPropInt( SENDINFO( m_iArmor ) ),
-END_SEND_TABLE( )
+END_SEND_TABLE()
 
 // Start of our data description for the class
 BEGIN_DATADESC( CFFDispenser )
@@ -207,7 +173,7 @@ CFFDispenser::~CFFDispenser( void )
 void CFFDispenser::Spawn( void )
 {
 	// Yeah, you can guess what this does!
-	Precache();		
+	Precache();
 
 	// Health value based on TFC
 	m_iMaxHealth = m_iHealth = 150;
@@ -226,7 +192,7 @@ void CFFDispenser::Spawn( void )
 	CFFBuildableObject::Spawn();
 
 	// Create door blocker
-	m_hDoorBlocker = CFFDispenserDoorBlocker::Create( GetAbsOrigin(), GetAbsAngles(), this );
+	//m_hDoorBlocker = CFFDispenserDoorBlocker::Create( GetAbsOrigin(), GetAbsAngles(), this );
 
 	UpdateAmmoPercentage();
 }

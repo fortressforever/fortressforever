@@ -24,6 +24,10 @@
 // 05/09/2005, Mulchman: 
 //		Tons of additions - better checking of build area, lots of 
 //		cleanup... basically an overhaul
+//
+//	06/30/2006, Mulchman:
+//		This thing has been through tons of changes and additions.
+//		The latest thing is the doorblockers
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
@@ -35,10 +39,89 @@
 #include "basecombatcharacter.h"
 #include "gamevars_shared.h"
 #include "ff_gamerules.h"
+#include "world.h"
 
 #include "omnibot_interface.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 extern short	g_sModelIndexFireball;
+
+//=============================================================================
+//
+//	class CFFBuildableDoorBlocker
+//	
+//=============================================================================
+LINK_ENTITY_TO_CLASS( FF_BuildableDoorBlocker, CFFBuildableDoorBlocker );
+PRECACHE_REGISTER( FF_BuildableDoorBlocker );
+
+void CFFBuildableDoorBlocker::Spawn( void )
+{
+	// The magic that makes doors/eles bounce off this item:
+	SetSolid( SOLID_BBOX );
+	AddSolidFlags( FSOLID_NOT_STANDABLE|FSOLID_TRIGGER );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+
+	// Want to take damage but only pass it along to our owner
+	m_takedamage = DAMAGE_EVENTS_ONLY;
+	SetThink( NULL );
+}
+
+int CFFBuildableDoorBlocker::OnTakeDamage( const CTakeDamageInfo &info )
+{
+	AssertMsg( GetOwnerEntity(), "Door blocker has no owner!\n" );
+	
+	Warning( "[Door Blocker] %s Taking damage\n", this->GetClassname() );
+
+	// Don't care if our owner [buildable object] attacks us (like from blowing up)
+	if( info.GetInflictor() == GetOwnerEntity() )
+		Warning( "Door Blocker] Owner is attacking, ignore\n" );
+	else
+	{
+		// Only want to send door/ele/crush type damage
+		if( info.GetInflictor() )
+		{
+			Warning( "[Door Blocker] Got an inflictor, classname: %s\n", info.GetInflictor()->GetClassname() );
+
+			if( Q_strcmp( info.GetInflictor()->GetClassname(), "func_door" ) == 0 )
+			{
+				Warning( "Door Blocker] Passing damage to owner!\n" );
+
+				// Pass damage along (like from doors or detpack etc)
+				GetOwnerEntity()->OnTakeDamage( info );
+			}
+		}
+		else if( info.GetAttacker() )
+		{
+			Warning( "[Door Blocker] Got an attacker, classname: %s\n", info.GetAttacker()->GetClassname() );
+
+			if( Q_strcmp( info.GetAttacker()->GetClassname(), "func_door" ) == 0 )
+			{
+				Warning( "Door Blocker] Passing damage to owner!\n" );
+
+				// Pass damage along (like from doors or detpack etc)
+				GetOwnerEntity()->OnTakeDamage( info );
+			}
+		}
+	}
+
+	// Don't take damage ourself
+	return 0;
+}
+
+void CFFBuildableDoorBlocker::RemoveSelf( void )
+{
+	Warning( "[BuildableDoorBlocker] Removing!\n" );
+	UTIL_Remove( this );
+}
+
+//=============================================================================
+//
+//	class CFFBuildableObject
+//	
+//=============================================================================
 
 LINK_ENTITY_TO_CLASS( FF_BuildableObject_entity, CFFBuildableObject );
 PRECACHE_REGISTER( FF_BuildableObject_entity );
@@ -473,12 +556,10 @@ void CFFBuildableObject::Explode( void )
 void CFFBuildableObject::RemoveDoorBlocker( void )
 {
 	if( m_hDoorBlocker )
-	{
-		//CBaseEntity *pEntity = ( CBaseEntity * )m_hDoorBlocker;
-		CFFBuildableDoorBlocker *pDoorBlocker = ( CFFBuildableDoorBlocker * )( ( CBaseEntity * )m_hDoorBlocker );
-		pDoorBlocker->RemoveSelf();
+	{		
+		m_hDoorBlocker->RemoveSelf();
 		m_hDoorBlocker = NULL;
-	}	
+	}
 }
 
 /**
@@ -669,12 +750,35 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	//*
 	Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );
 
-	Warning( "[Buildable] Inflictor: %s, Attacker: %s\n", info.GetInflictor()->GetClassname(), info.GetAttacker()->GetClassname() );
+	if( info.GetInflictor() )
+		Warning( "[Buildable] Inflictor: %s\n", info.GetInflictor()->GetClassname() );
+	if( info.GetAttacker() )
+		Warning( "[Buildable] Attacker: %s\n", info.GetAttacker()->GetClassname() );
 
-	// To stop falling detpacks from destroying objects they fall on
-	if( !Q_strcmp( info.GetInflictor()->GetClassname(), "worldspawn" ) )
-		return 0;
+	if( info.GetInflictor() )
+	{
+		// To stop falling detpacks from destroying objects they fall on
+		if( !Q_strcmp( info.GetInflictor()->GetClassname(), "worldspawn" ) )
+			return 0;
+
+		bool bDoorDamage = false;
+		
+		if( !Q_strcmp( info.GetInflictor()->GetClassname(), "func_door" ) )
+			bDoorDamage = true;
+		else if( !Q_strcmp( info.GetAttacker()->GetClassname(), "func_door" ) )
+			bDoorDamage = true;
+
+		if( bDoorDamage )
+		{
+			Warning( "[Buildable] Taking door damage! Damage amount: %f\n", info.GetDamage() );
+
+			CTakeDamageInfo info_mod = info;
+			info_mod.SetAttacker( GetWorldEntity() );
+			info_mod.SetInflictor( GetWorldEntity() );
+			return CBaseEntity::OnTakeDamage( info_mod );
+		}
 	//	*/
+	}
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// Depending on the teamplay value, take damage
@@ -725,56 +829,4 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	}
 
 	return BaseClass::OnTakeDamage(adjustedDamage);
-}
-
-//=============================================================================
-//
-//	class CFFBuildableDoorBlocker
-//	Server only
-//=============================================================================
-LINK_ENTITY_TO_CLASS( FF_BuildableDoorBlocker, CFFBuildableDoorBlocker );
-
-BEGIN_DATADESC( CFFBuildableDoorBlocker )
-END_DATADESC()
-
-void CFFBuildableDoorBlocker::Spawn( void )
-{
-	// The magic that makes doors/eles bounce off this item:
-	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_STANDABLE|FSOLID_TRIGGER );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
-	
-	// Want to take damage but only pass it along to our owner
-	m_takedamage = DAMAGE_EVENTS_ONLY;
-	m_iHealth = 1;
-}
-
-int CFFBuildableDoorBlocker::OnTakeDamage( const CTakeDamageInfo &info )
-{
-	AssertMsg( GetOwnerEntity(), "Door blocker has no owner!\n" );
-
-	Warning( "[Door Blocker] Door blocker taking damage!\n" );
-
-	// Only want to pass on door/ele damage - not player damage
-	// or the buildable will get it twice.
-	// Or just make the buildable not take any damage
-	// and the door blocker deal out all damage
-
-	// Pass damage along (like from doors or detpack etc)
-	if( info.GetInflictor() == GetOwnerEntity() )
-		Warning( "Door Blocker] Owner is attacking, ignore\n" );
-	else
-		GetOwnerEntity()->OnTakeDamage( info );
-
-	// Don't take damage ourself
-	return 0;
-}
-
-void CFFBuildableDoorBlocker::RemoveSelf( void )
-{
-	Warning( "[BuildableDoorBlocker] Removing!\n" );
-	m_takedamage = DAMAGE_NO;
-	SetSolid( SOLID_NONE );	
-	UTIL_Remove( this );
 }
