@@ -618,10 +618,14 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 		return false;
 
 	// BEG: Mulch
-	bool bFriendly = true;
+	bool bFriendly = false;
 
 	C_FFPlayer *pLocalPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
-	C_FFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( playerIndex ) );
+	C_FFPlayer *pPlayer = NULL;
+
+	// To stop one of those annoying ass c_ff_player.h asserts
+	if( gr->IsConnected( playerIndex ) && gr->IsAlive( playerIndex ) )
+		pPlayer = ToFFPlayer( UTIL_PlayerByIndex( playerIndex ) );
 
 	if( pPlayer && pLocalPlayer && ( pPlayer != pLocalPlayer ) )
 	{
