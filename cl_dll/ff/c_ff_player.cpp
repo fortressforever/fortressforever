@@ -268,8 +268,6 @@ void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pO
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 
-	RecvPropInt( RECVINFO( m_iClassStatus ) ),	// |-- Mirv: Class status
-
 	// Beg: Added by Mulchman for building objects and such
 	RecvPropEHandle( RECVINFO( m_hDispenser ) ),
 	RecvPropEHandle( RECVINFO( m_hSentryGun ) ),
@@ -304,9 +302,6 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// <-- Mirv: Map guide
 
 	RecvPropFloat( RECVINFO( m_flConcTime ) ),		// |-- Mirv: Concussed
-
-	// Spy disguise
-	RecvPropInt( RECVINFO( m_iSpyDisguise ), 0, RecvProxy_SpyDisguise ),
 
 	RecvPropFloat(RECVINFO(m_flMassCoefficient)),
 END_RECV_TABLE( )
@@ -357,6 +352,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
+
+	RecvPropInt( RECVINFO( m_iClassStatus ) ),	
+	RecvPropInt( RECVINFO( m_iSpyDisguise )/*, 0, RecvProxy_SpyDisguise*/),
 END_RECV_TABLE( )
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay

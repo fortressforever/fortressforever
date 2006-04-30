@@ -140,8 +140,6 @@ PRECACHE_REGISTER(player);
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 
-	SendPropInt( SENDINFO( m_iClassStatus ) ),
-
 	// Buildables
 	SendPropEHandle( SENDINFO( m_hDispenser ) ),
 	SendPropEHandle( SENDINFO( m_hSentryGun ) ),
@@ -167,8 +165,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	SendPropFloat( SENDINFO( m_flConcTime ) ),
 
-	// Spy disguise
-	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
 
 	SendPropFloat(SENDINFO(m_flMassCoefficient)),
 END_SEND_TABLE( )
@@ -190,6 +186,10 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11 ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11 ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
+
+	SendPropInt( SENDINFO( m_iClassStatus ) ),
+	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
+
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
