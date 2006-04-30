@@ -663,9 +663,16 @@ void C_FFPlayer::PreThink( void )
 
 		// Work our conc amount with this rather slow formula for now
 		float flConcAmount = 10.0f * ( m_flConcTime - gpGlobals->curtime ) / ( m_flConcTime - m_flConcTimeStart );
-			
-		// Our conc angles, this is also quite slow for now
-		m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+
+		if( IsAlive() )
+		{
+			// Our conc angles, this is also quite slow for now
+			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+		}
+		else
+		{
+			m_angConced = vec3_angle;
+		}
 	}
 	else
 		m_flConcTimeStart = 0;
