@@ -134,17 +134,30 @@ void CFFPlayer::FireBullet(
 				fCurrentDamage *= 0.5f;
 
 #ifdef GAME_DLL
-				// Slowed down by 10% - 60% depending on charge
-				CFFPlayer *player = ToFFPlayer(tr.m_pEnt);
-				player->AddSpeedEffect(SE_LEGSHOT, 999, 0.9f - flSniperRifleCharge / 14.0f, SEM_ACCUMULATIVE|SEM_HEALABLE);
+				// Bug #0000557: Teamplay 0 + sniper legshot slows allies
+				// Don't apply the speed effect if the hit player is a teammate/ally
 
-				// send them the status icon
-				CSingleUserRecipientFilter user((CBasePlayer *) player);
-				user.MakeReliable();
-				UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_ICON_CALTROP);
-					WRITE_FLOAT(15.0);
-				MessageEnd();
+				// Slowed down by 10% - 60% depending on charge
+				// Person hit by sniper rifle
+				CFFPlayer *player = ToFFPlayer(tr.m_pEnt);
+
+				// Person shooting the sniper rifle
+				CFFPlayer *pShooter = ToFFPlayer( pevAttacker );
+
+				// Bug #0000557: Teamplay 0 + sniper legshot slows allies
+				// If they're not a teammate/ally then do the leg shot speed effect
+				if( g_pGameRules->PlayerRelationship( pShooter, player ) == GR_NOTTEAMMATE )
+				{
+					player->AddSpeedEffect(SE_LEGSHOT, 999, 0.9f - flSniperRifleCharge / 14.0f, SEM_ACCUMULATIVE|SEM_HEALABLE);
+
+					// send them the status icon
+					CSingleUserRecipientFilter user((CBasePlayer *) player);
+					user.MakeReliable();
+					UserMessageBegin(user, "StatusIconUpdate");
+						WRITE_BYTE(FF_ICON_CALTROP);
+						WRITE_FLOAT(15.0);
+					MessageEnd();
+				}
 #endif
 			}			
 		}
