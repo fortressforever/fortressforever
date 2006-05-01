@@ -689,7 +689,7 @@ void CFFPlayer::Spawn()
 		return;
 
 	// A 1 second wait feels like tfc
-	m_flNextSpawnDelay = 1.0f;
+	m_flNextSpawnDelay = 0.0f;
 
 	// Activate their class stuff, die if we can't
 	if (!ActivateClass())
@@ -887,6 +887,16 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	ClearSpeedEffects();
+	// reset their status effects
+	m_flNextBurnTick = 0.0;
+	m_iBurnTicks = 0;
+	m_flBurningDamage = 0.0;
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	{
+		m_vSpeedEffects[i].active = false;
+	}
+	m_fLastHealTick = 0.0f;
+	m_fLastInfectedTick = 0.0f;
 
 	// Beg; Added by Mulchman
 	if( m_bBuilding )
@@ -1615,6 +1625,7 @@ void CFFPlayer::KillPlayer( void )
 	}
 	else
 	{
+		Warning( "[CFFPlayer] KillPlayer :: Going to player death think\n" );
 		SetThink(&CBasePlayer::PlayerDeathThink);
 		SetNextThink(gpGlobals->curtime);
 	}
@@ -3537,7 +3548,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	}
 
 	// tag the player if hit by radio tag ammo
-	if( inputInfo.GetAmmoType( ) == m_iRadioTaggedAmmoIndex )
+	if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
 	{
 		m_bRadioTagged = true;
 		m_flRadioTaggedStartTime = gpGlobals->curtime;
@@ -3548,7 +3559,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 		// Keep track of who's radio tagged us to award them each a point when we die
 		//m_hWhoTaggedMeList.AddToTail( ToFFPlayer( info.GetAttacker( ) ) );
-		m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker( ) );
+		m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker() );
 	}
 
 	// if it's a pyro, they take half damage
