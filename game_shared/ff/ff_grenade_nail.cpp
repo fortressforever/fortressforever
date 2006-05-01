@@ -19,7 +19,7 @@
 #include "ff_utils.h"
 #include "ff_projectile_nail.h"
 
-#define NAILGRENADE_MODEL "models/weapons/w_eq_fraggrenade_thrown.mdl"
+#define NAILGRENADE_MODEL "models/grenades/nailgren/nailgren.mdl"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeNail C_FFGrenadeNail
