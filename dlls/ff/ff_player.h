@@ -273,9 +273,9 @@ public:
 	// Added by Mulchman to help stop location spammage in the ent system	
 public:
 	// Can we update our location yet?
-	bool CanUpdateLocation( void );
+	bool CanUpdateLocation( const char *szNewLocation );
 private:
-	float m_flLastLocationUpdate;
+	char m_szCurrentLocation[ 1024 ]; // ACK!
 
 
 	//-- Added by L0ki -------------------------------------------------------

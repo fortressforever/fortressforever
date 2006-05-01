@@ -311,7 +311,7 @@ CFFPlayer::CFFPlayer()
 
 	m_flLastGassed = 0;
 
-	m_flLastLocationUpdate = -1;
+	m_szCurrentLocation[ 0 ] = '\0';
 
 	m_pBuildLastWeapon = NULL;
 }
@@ -1109,16 +1109,24 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 // This is basically to stop the location stuff from spamming
 // us every tick and it also helps w/ overlapping locations so
 // they don't flicker between the two locations on the screen heh.
-bool CFFPlayer::CanUpdateLocation( void )
+bool CFFPlayer::CanUpdateLocation( const char *szNewLocation )
 {
+	/*
 	if( ( m_flLastLocationUpdate + location_update_frequency.GetFloat() ) < gpGlobals->curtime )
 	{
 		m_flLastLocationUpdate = gpGlobals->curtime;
 
 		return true;
 	}
+	*/
 
-	return false;
+	// STRCMP EVERY FRAME!?
+	bool bSame = ( Q_strcmp( szNewLocation, m_szCurrentLocation ) == 0 );
+
+	if( !bSame )
+		Q_strcpy( m_szCurrentLocation, szNewLocation );
+
+	return bSame;
 }
 
 void CFFPlayer::Command_TestCommand(void)
