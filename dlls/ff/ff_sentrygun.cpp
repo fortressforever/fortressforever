@@ -864,6 +864,7 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 		{
 		case 1:
 			SetModel(FF_SENTRYGUN_MODEL);
+			SetSolid( SOLID_VPHYSICS );
 			
 			m_iShells = 20;
 
@@ -884,6 +885,7 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 
 		case 2:
 			SetModel(FF_SENTRYGUN_MODEL_LVL2);
+			SetSolid( SOLID_VPHYSICS );
 			EmitSound(sndFilter, entindex(), "Sentry.Two");
 
 			m_iMaxShells = 125;
@@ -903,6 +905,7 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 
 		case 3:
 			SetModel(FF_SENTRYGUN_MODEL_LVL3);
+			SetSolid( SOLID_VPHYSICS );
 			EmitSound(sndFilter, entindex(), "Sentry.Three");
 
 			m_iMaxShells = 150;

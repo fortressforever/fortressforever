@@ -1893,11 +1893,14 @@ void CBasePlayer::PlayerDeathThink(void)
 // if the player has been dead for one second longer than allowed by forcerespawn, 
 // forcerespawn isn't on. Send the player off to an intermission camera until they 
 // choose to respawn.
+	// Bug #0000567: Dying and electing not to respawn results in the spec hud letterbox being displayed
+	/*
 	if ( g_pGameRules->IsMultiplayer() && ( gpGlobals->curtime > (m_flDeathTime + DEATH_ANIMATION_TIME) ) && !IsObserver() )
 	{
 		// go to dead camera. 
 		StartObserverMode( m_iObserverLastMode );
 	}
+	*/
 	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 

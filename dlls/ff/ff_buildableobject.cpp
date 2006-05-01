@@ -536,6 +536,7 @@ int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 	return 1;
 }
 
+/*
 void CFFBuildableObject::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 {
 	Warning( "[BuildableObject] VPhysicsCollision\n" );
@@ -547,6 +548,7 @@ bool CFFBuildableObject::ShouldCollide( int collisionGroup, int contentsMask ) c
 
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
+*/
 
 /**
 @fn void Explode( )

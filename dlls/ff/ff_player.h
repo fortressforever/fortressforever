@@ -382,12 +382,8 @@ public:
 	void Bot_SetDetpackTimer( int iTime ) { m_iDetpackTime = iTime; }
 	void Bot_Disguise( int iTeam, int iClass )
 	{
-		Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
 		m_iNewSpyDisguise = iTeam;
 		m_iNewSpyDisguise += iClass << 4;
-
-		Warning( "[Disguise] [Server] NEW Disguise team: %i, NEW Disguise class: %i\n", GetNewDisguisedTeam(), GetNewDisguisedClass() );
-
 		m_flFinishDisguise = gpGlobals->curtime + 1.0f;
 	}
 	
