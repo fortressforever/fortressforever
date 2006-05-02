@@ -49,7 +49,10 @@ public:
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
 	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
-	virtual bool	IsTeamplay( void ) { return false;	}	
+	virtual bool	IsTeamplay( void ) { return false;	}
+
+	// Returns whether or not iTeam1 is allied to iTeam2
+	int				IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 );
 
 #ifdef CLIENT_DLL
 

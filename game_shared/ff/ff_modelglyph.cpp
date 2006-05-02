@@ -18,6 +18,7 @@
 	#define CFFModelGlyph C_FFModelGlyph
 	#include "c_ff_player.h"
 	#include "c_ff_team.h"
+	#include "ff_gamerules.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -114,13 +115,12 @@ void CFFModelGlyph::Spawn( void )
 
 	CFFPlayer *me = ToFFPlayer(( C_BaseEntity * )C_BasePlayer::GetLocalPlayer());
 	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
-	C_FFTeam *pTeam = ( C_FFTeam * )GetGlobalTeam( me->GetTeamNumber() );
 
 	// hide from player if not the right team
 	if (me && owner)
 	{
 		DevMsg("Setting nodraw flag: %d\n", me->GetTeamNumber() != owner->GetTeamNumber());
-		if ((me->GetTeamNumber() != owner->GetTeamNumber()) || !( pTeam->GetAllies() & ( 1 << owner->GetTeamNumber() ) ))
+		if ((me->GetTeamNumber() != owner->GetTeamNumber()) || ( FFGameRules()->IsTeam1AlliedToTeam2( me->GetTeamNumber(), owner->GetTeamNumber() ) == GR_NOTTEAMMATE ) )
 		{
 			AddEffects( EF_NODRAW );
 		}

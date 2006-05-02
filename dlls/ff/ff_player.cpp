@@ -2892,15 +2892,13 @@ void CFFPlayer::Command_SaveMe( void )
 		ent->FollowEntity(this, true);
 	}
 
-	CFFTeam *pTeam = ( CFFTeam * )GetGlobalTeam( GetTeamNumber() );
-
 	// play the sound
 	CPASAttenuationFilter sndFilter( this );
 
 	// remove all other teams except our own
 	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
 	{
-		if (iTeamToCheck != GetTeamNumber() || !( pTeam->GetAllies() & ( 1 << iTeamToCheck ) ))
+		if (iTeamToCheck != GetTeamNumber() || ( FFGameRules()->IsTeam1AlliedToTeam2( iTeamToCheck, GetTeamNumber() ) == GR_NOTTEAMMATE ) )
 			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( iTeamToCheck ) );
 	}
 	

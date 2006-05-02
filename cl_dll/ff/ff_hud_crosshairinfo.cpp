@@ -357,8 +357,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 									// Of, if this spy is disguised as an ally of our team we
 									// need to show his health/armor
-									C_FFTeam *pPlayerTeam = ( C_FFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
-									if( pPlayerTeam->GetAllies() & ( 1 << iTeam ) )
+									if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), iTeam ) == GR_TEAMMATE )
 									{
 										iHealth = pHitPlayer->GetHealthPercentage();
 										iArmor = pHitPlayer->GetArmorPercentage();

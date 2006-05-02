@@ -134,7 +134,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		// Can the guy we hit take damage from us? If he can't, he's
 		// on our team or our ally so give him some armor!
 		// Bug #0000521: Engineer's spanner shouldn't inflict damage even with mp_friendlyfire 1
-		if (!g_pGameRules->FPlayerCanTakeDamage(pHitPlayer, pPlayer) || (pPlayer->GetTeamNumber() == pHitPlayer->GetTeamNumber())) 
+		if( g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )		
 		{
 			DevMsg("[CFFWeaponSpanner] Player is on my team or an ally - so giving armor!\n");
 
@@ -184,13 +184,13 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			EmitSound("Spanner.HitDispenser");
 
 			// Is the dispenser mine(is pPlayer the owner?) 
-			bool bMine = (pPlayer == ToFFPlayer(pDispenser->m_hOwner));
+			bool bMine = ( pPlayer == ToFFPlayer( pDispenser->m_hOwner.Get() ) );
 
 			// Is the dispenser a teammates or an allies? (changes depending on friendlyfire value) 
-			bool bFriendly = !g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pDispenser->m_hOwner), pPlayer);
+			bool bFriendly = ( g_pGameRules->PlayerRelationship( pPlayer, ToFFPlayer( pDispenser->m_hOwner.Get() ) ) == GR_TEAMMATE );
 
 			// If the dispenser is mine, a team mates, or an allies, don't hurt it, ever
-			if (bMine || bFriendly) 
+			if( bMine || bFriendly ) 
 			{
 				DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is mine, a team mates, or an allies, don't hurt it!\n");
 
@@ -216,13 +216,13 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			EmitSound("Spanner.HitSG");
 
 			// Is the sentrygun mine(is pPlayer the owner?) 
-			bool bMine = (pPlayer == ToFFPlayer(pSentryGun->m_hOwner));
+			bool bMine = ( pPlayer == ToFFPlayer( pSentryGun->m_hOwner.Get() ) );
 
 			// Is the sentrygun a teammates or an allies? (changes depending on friendlyfire value) 
-			bool bFriendly = !g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pSentryGun->m_hOwner), pPlayer);
+			bool bFriendly = ( g_pGameRules->PlayerRelationship( pPlayer, ToFFPlayer( pSentryGun->m_hOwner.Get() ) ) == GR_TEAMMATE );
 
 			// If the sentrygun is mine, a team mates, or an allies, don't hurt it, ever
-			if (bMine || bFriendly) 
+			if( bMine || bFriendly ) 
 			{
 				// Try to upgrade first
 				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 

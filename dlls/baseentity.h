@@ -195,6 +195,7 @@ enum Class_T
 	//------------------- 
 
 	CLASS_GREN_NAIL,
+	CLASS_TURRET,
 
 	NUM_AI_CLASSES*/
 };
@@ -220,6 +221,7 @@ enum Class_T
 	//------------------- 
 
 	CLASS_GREN_NAIL,
+	CLASS_TURRET,
 
 	NUM_AI_CLASSES
 };
