@@ -126,7 +126,29 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 	filesystem->Close( f );
 
 	// Now load this script [TODO: Some error checking here]
-	lua_dostring( L, buffer );
+	//lua_dostring( L, buffer );
+	int rc = luaL_loadbuffer( L, buffer, fileSize, filename );
+	if ( rc )
+	{
+		if ( rc == LUA_ERRSYNTAX )
+		{
+			const char *error = lua_tostring(L, -1);
+			if (error)
+			{
+				Warning("Error loading %s: %s\n", filename, error);
+				lua_pop( L, 1 );
+			}
+			else
+				Warning("Unknown Syntax Error loading %s\n", filename);
+		}
+		else
+		{
+			Warning("Unknown Error loading %s\n", filename);
+		}
+		return false;
+	}
+
+	lua_pcall(L, 0, 0, 0);
 
 	MemFreeScratch();
 
@@ -161,7 +183,7 @@ bool CFFEntitySystem::StartForMap()
 	// Load the base libraries [TODO] Not all of them !
 	lua_baselibopen(L);
 	
-	lua_atpanic(L, HandleError);
+	//lua_atpanic(L, HandleError);
 
 	// And now load some of ours
 	FFLibOpen();
@@ -1221,9 +1243,15 @@ int CFFEntitySystem::SetTeamAllies( lua_State *L )
 
 		CFFTeam *pTeam = (CFFTeam *) GetGlobalTeam( team );
 
-		pTeam->SetAllies(allies);
-
-		DevMsg("Set allies for team %d to: %d\n", team, allies);
+		if (pTeam)
+		{
+			pTeam->SetAllies(allies);
+			DevMsg("Set allies for team %d to: %d\n", team, allies);
+		}
+		else
+		{
+			Warning("Unable to set allies for team %d to %d\n");
+		}
 
 		// 1 result
 		lua_pushboolean( L, true );
@@ -1505,7 +1533,7 @@ int CFFEntitySystem::SetPlayerDisguisable( lua_State *L )
 	{
 		bool ret = false;
 		int player = (int)lua_tonumber( L, 1 );
-		bool disguisable = lua_toboolean( L, 2 );
+		bool disguisable = lua_toboolean( L, 2 )!=0;
 
 		CBasePlayer *ent = UTIL_PlayerByIndex( player );
 		if (ent && ent->IsPlayer())
@@ -1621,6 +1649,37 @@ float CFFEntitySystem::GetFloat( const char *name )
 	float ret = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return ret;
+}
+
+void CFFEntitySystem::DoString( const char *buffer )
+{
+	Assert( buffer );
+
+	DevMsg("Running lua command '%s'\n", buffer);
+
+	int rc = luaL_loadbuffer( L, buffer, strlen(buffer), "User Command" );
+	if ( rc )
+	{
+		if ( rc == LUA_ERRSYNTAX )
+		{
+			const char *error = lua_tostring(L, -1);
+			if (error)
+			{
+				Warning("Error running command. %s\n", error);
+				lua_pop( L, 1 );
+			}
+			else
+				Warning("Unknown Syntax Error loading command\n");
+		}
+		else
+		{
+			Warning("Unknown Error loading command\n");
+		}
+		return;
+	}
+	
+	lua_pcall(L,0,0,0);
+
 }
 
 //----------------------------------------------------------------------------

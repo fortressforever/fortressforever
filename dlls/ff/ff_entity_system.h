@@ -61,6 +61,7 @@ public:
 	void SetVar( const char *name, int value );
 	void SetVar( const char *name, float value );
 	static int HandleError( lua_State* );
+	void DoString( const char *buffer );
 
 	const char *GetString( const char *name );
 	int GetInt( const char *name );

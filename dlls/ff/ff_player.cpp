@@ -550,6 +550,19 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 	pSpot = pGibSpot;
 	if ( pSpot )
 	{
+		CBaseEntity *pList[128];
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin()-Vector( 24, 24, 48 ), pSpot->GetAbsOrigin()+Vector( 24, 24, 48 ), FL_CLIENT|FL_NPC );
+		if ( count )
+			//Iterate through the list and check the results
+			for ( int i = 0; i < count; i++ )
+			{
+				CBaseEntity *ent = pList[i];
+				if ( ent && ent->IsPlayer() && !(ent->edict() == player) )
+					ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
+
+			}
+
+		/*
 		CBaseEntity *ent = NULL;
 		for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 32 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
 		{
@@ -557,6 +570,8 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			if ( ent->IsPlayer() && !(ent->edict() == player) )
 				ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
 		}
+		*/
+
 		goto ReturnSpot;
 	}
 
@@ -2742,13 +2757,19 @@ void CFFPlayer::Command_SevTest( void )
 	CFFSevTest *pSevTest = CFFSevTest::Create( vecOrigin, GetAbsAngles( ) );
 	if( pSevTest )
 		pSevTest->GoLive( );
-*/
+
 	// BASTARD! :P
 	if (engine->Cmd_Argc() == 4)
 	{
 		Vector vPush(atof(engine->Cmd_Argv(1)),atof(engine->Cmd_Argv(2)),atof(engine->Cmd_Argv(3)));
 		ApplyAbsVelocityImpulse(vPush);
 	}
+
+	STOLEN AGAIN. NINJA!
+*/
+
+	if (engine->Cmd_Argc() > 1)
+		entsys.DoString(engine->Cmd_Args());
 }
 
 /**

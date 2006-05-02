@@ -120,7 +120,8 @@ void CFFItemFlag::OnTouch( CBaseEntity *pOther )
 	if(pFFPlayer)
 	{
 		// touch event
-		if (m_pLastOwner != pFFPlayer || m_flThrowTime + 3.0f < gpGlobals->curtime)
+		//if (m_pLastOwner != pFFPlayer || m_flThrowTime + 3.0f < gpGlobals->curtime)
+		// this shit is lua controlled now. don't care who touched your penis last.
 			entsys.RunPredicates( this, pOther, "touch" );
 	}
 }
