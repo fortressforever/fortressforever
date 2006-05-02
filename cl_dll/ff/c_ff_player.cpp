@@ -326,27 +326,6 @@ void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut
 	}
 }
 
-// Only added this to see when the server was telling the client the value
-// for m_iSpyDisguise changed.
-void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	DevMsg( "[Disguise] RecvProxy_SpyDisguise\n" );
-
-	// Unpack the data.
-	if( !engine->IsConnected() || !engine->IsInGame() )
-	{
-		DevMsg( "[Disguise] \t NOT connected or NOT in game!\n" );
-		return;
-	}
-
-	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if( pPlayer )
-	{
-		pPlayer->m_iSpyDisguise = pData->m_Value.m_Int;
-		DevMsg( "[Disguise] \t %s value set: %i\n", pPlayer->GetPlayerName(), pPlayer->m_iSpyDisguise );
-	}
-}
-
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
@@ -354,7 +333,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
 
 	RecvPropInt( RECVINFO( m_iClassStatus ) ),	
-	RecvPropInt( RECVINFO( m_iSpyDisguise )/*, 0, RecvProxy_SpyDisguise*/),
+	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
 END_RECV_TABLE( )
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay

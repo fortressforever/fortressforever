@@ -623,6 +623,9 @@ void CC_Player_Kill( void )
 				{
 					if ( Q_strstr( pPlayer->GetPlayerName(), engine->Cmd_Argv(1)) )
 					{
+						// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+						if( pPlayer->IsAlive() )
+							pPlayer->m_flNextSpawnDelay = 5.0f;
 						ClientKill( pPlayer->edict() );
 					}
 				}
@@ -630,6 +633,9 @@ void CC_Player_Kill( void )
 		}
 		else
 		{
+			// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+			if( pPlayer->IsAlive() )
+				pPlayer->m_flNextSpawnDelay = 5.0f;
 			ClientKill( pPlayer->edict() );
 		}
 	}

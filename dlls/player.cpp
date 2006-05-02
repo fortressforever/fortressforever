@@ -463,6 +463,11 @@ CBasePlayer::CBasePlayer( )
 	m_surfaceFriction = 1.0f;
 	m_chTextureType = 0;
 	m_chPreviousTextureType = 0;
+
+	// Mulch:
+	// -1 = just joined map/need to force spawn once team/class have been chosen
+	// 0 - x = respawn delay (like when typing "kill" in the console)
+	m_flNextSpawnDelay = -1.0f;
 }
 
 CBasePlayer::~CBasePlayer( )
@@ -1901,6 +1906,32 @@ void CBasePlayer::PlayerDeathThink(void)
 		StartObserverMode( m_iObserverLastMode );
 	}
 	*/
+
+	// Bug #0000569: Choosing a team after joining the server causes you to get stuck for a few seconds
+	// Respawn now because you just changed teams/joined the server/map change etc.
+	if( m_flNextSpawnDelay == -1 )
+	{
+		respawn( this, !IsObserver() );
+	}
+
+	// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+	if( ( ( m_flDeathTime + m_flNextSpawnDelay ) - gpGlobals->curtime ) >= 0 )
+	{
+		char szSpawnTime[ 256 ];
+		Q_snprintf( szSpawnTime, sizeof( szSpawnTime ), "Can't spawn for %i seconds.", ( int )( ( m_flDeathTime + m_flNextSpawnDelay + 1 ) - gpGlobals->curtime ) );
+		ClientPrint( this, HUD_PRINTCENTER, szSpawnTime );
+	}
+	else
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "" );
+	}
+
+	// Can't respawn if there's a spawn delay
+	if( gpGlobals->curtime < ( m_flDeathTime + m_flNextSpawnDelay  ) )
+	{
+		// Return so we don't allow the player a chance to respawn
+		return;
+	}
 	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 

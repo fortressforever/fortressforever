@@ -592,8 +592,8 @@ void CFFPlayer::Spawn()
 	}
 
 	// Mulch: BUG 0000310: return fov to default on spawn	
-	bool bFovSet = SetFOV( this, GetDefaultFOV() );
-	DevMsg( "[Spawn] Setting fov to default on spawn was: %s\n", bFovSet ? "successful" : "a failure!" );
+	//bool bFovSet = SetFOV( this, GetDefaultFOV() );
+	//DevMsg( "[Spawn] Setting fov to default on spawn was: %s\n", bFovSet ? "successful" : "a failure!" );
 
 	m_pBuildLastWeapon = NULL;
 
@@ -684,11 +684,16 @@ void CFFPlayer::Spawn()
 		return;
 	}
 
-	// They're spawning as a player
-	if (gpGlobals->curtime < m_flDeathTime + m_flNextSpawnDelay)
-		return;
+	// Handle spawn stuff in CBasePlayer::PlayerDeathThink
 
-	// A 1 second wait feels like tfc
+	// They're spawning as a player
+	//if( gpGlobals->curtime < ( m_flDeathTime + m_flNextSpawnDelay ) )
+	//	return;
+
+	// m_flNextSpawnDelay used for "kill" command wait out
+	// and also when need to force a player to spawn
+	// after they've chosen team/class for first time
+	// Reset spawn delay to 0
 	m_flNextSpawnDelay = 0.0f;
 
 	// Activate their class stuff, die if we can't
@@ -1534,6 +1539,9 @@ void CFFPlayer::Command_Team( void )
 
 	// Cancel map guides
     m_hNextMapGuide = NULL;
+
+	// A forced spawn situation
+	m_flNextSpawnDelay = -1;
 
 	Spawn();
 /*

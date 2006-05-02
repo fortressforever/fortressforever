@@ -269,11 +269,10 @@ public:
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	// End: Added by Mulchman for building objects and such
 
-
-	// Added by Mulchman to help stop location spammage in the ent system	
 public:
 	// Can we update our location yet?
 	bool CanUpdateLocation( const char *szNewLocation );
+	const char *GetLocation( void ) { return const_cast< char * >( m_szCurrentLocation ); }
 private:
 	char m_szCurrentLocation[ 1024 ]; // ACK!
 
@@ -437,7 +436,9 @@ public:
 
 	virtual int				TakeHealth( float flHealth, int bitsDamageType );
 
-	float m_flNextSpawnDelay;
+	// Moving to CBasePlayer for use with "kill" command
+	// and also force spawning after joining a map for the first time
+	//float m_flNextSpawnDelay;
 
 	virtual int TakeEmp();
 	virtual void Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );

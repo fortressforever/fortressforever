@@ -656,6 +656,7 @@ public:
 	
 
 	float		GetDeathTime( void ) { return m_flDeathTime; }
+	float		m_flNextSpawnDelay; // Mulch: used for kill & force spawning after spawning for first time
 
 private:
 
