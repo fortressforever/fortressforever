@@ -1141,7 +1141,7 @@ bool CFFPlayer::CanUpdateLocation( const char *szNewLocation )
 	if( !bSame )
 		Q_strcpy( m_szCurrentLocation, szNewLocation );
 
-	return bSame;
+	return !bSame;
 }
 
 void CFFPlayer::Command_TestCommand(void)
