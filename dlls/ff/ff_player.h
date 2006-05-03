@@ -490,6 +490,8 @@ public:
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
 	Vector GetLegacyAbsOrigin();
+
+	virtual void Touch(CBaseEntity *pOther);
 };
 
 

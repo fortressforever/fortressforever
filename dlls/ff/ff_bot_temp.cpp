@@ -98,6 +98,24 @@ CON_COMMAND(bot_disguise, "trigger a disguise")
 	}
 }
 
+CON_COMMAND(bot_infectme, "infects you")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+
+	if (!you)
+		return;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) && pPlayer->GetClassSlot() == CLASS_MEDIC)
+		{
+			you->Infect(pPlayer);
+		}
+	}
+}
+
 // This is our bot class.
 class CFFBot : public CFFPlayer
 {

@@ -1067,6 +1067,9 @@ void CFFPlayer::CreateRagdollEntity()
 		// Allows decapitation to continue into ragdoll state
 		DevMsg( "Createragdoll: %d\n", LastHitGroup() );
 		pRagdoll->m_fBodygroupState = m_fBodygroupState;
+
+		// Bugfix: #0000574: On death, ragdolls change to the blue team's skin
+		pRagdoll->m_nSkin = m_nSkin;
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -4392,4 +4395,26 @@ void CFFPlayer::FlashlightTurnOff( void )
 {
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
+}
+
+// Bugfix for #0000585: Scouts don't undisguise Spies
+void CFFPlayer::Touch(CBaseEntity *pOther)
+{
+	if (GetClassSlot() == CLASS_SCOUT || GetClassSlot() == CLASS_SPY)
+	{
+		CFFPlayer *ffplayer = dynamic_cast<CFFPlayer *> (pOther);
+
+		if (ffplayer && ffplayer->IsDisguised())
+		{
+			ClientPrint(ffplayer, HUD_PRINTTALK, "#FF_SPY_BEENREVEALED");
+			ffplayer->ResetDisguise();
+			
+			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
+
+			// This the correct func for logs?
+			UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));
+		}
+	}
+
+	BaseClass::Touch(pOther);
 }
