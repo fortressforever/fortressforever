@@ -12,6 +12,7 @@
 
 #include "cbase.h"
 #include "c_ff_player.h"
+#include "iinput.h"
 
 class C_FFItemFlag : public C_BaseAnimating
 {
@@ -47,6 +48,11 @@ void C_FFItemFlag::OnDataChanged(DataUpdateType_t updateType)
 
 int C_FFItemFlag::DrawModel(int flags) 
 {
+	// Bug #0000590: You don't see flags you've thrown, or have, while in thirdperson
+	// Always draw if thirdperson
+	if( input->CAM_IsThirdPerson() )
+		return BaseClass::DrawModel( flags );
+
 	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
 		return 0;
 
