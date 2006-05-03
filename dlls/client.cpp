@@ -743,7 +743,8 @@ void CC_Player_FOV( void )
 			// Bug #0000310: fov doesn't reset |-- Mulch
 			FOV = clamp( FOV, 80, 120 );
 
-			pPlayer->SetDefaultFOV( FOV );
+			//pPlayer->SetDefaultFOV( FOV );
+			pPlayer->SetFOV( pPlayer, FOV );
 		}
 		else
 		{
