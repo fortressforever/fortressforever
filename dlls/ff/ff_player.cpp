@@ -232,7 +232,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRagdoll, DT_FFRagdoll )
 
 END_SEND_TABLE()
 
-
 // -------------------------------------------------------------------------------- //
 
 void cc_CreatePredictionError_f()
@@ -4404,7 +4403,8 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 	{
 		CFFPlayer *ffplayer = dynamic_cast<CFFPlayer *> (pOther);
 
-		if (ffplayer && ffplayer->IsDisguised())
+		// Don't forget allies!
+		if (ffplayer && ffplayer->IsDisguised() && ( g_pGameRules->PlayerRelationship( this, ffplayer ) == GR_NOTTEAMMATE ) )
 		{
 			ClientPrint(ffplayer, HUD_PRINTTALK, "#FF_SPY_BEENREVEALED");
 			ffplayer->ResetDisguise();
