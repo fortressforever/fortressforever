@@ -132,7 +132,10 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 		// Emit a nail, just random for now
 		if (random->RandomInt(0, 3) == 0) 
-			CFFProjectileNail::CreateNail(GetAbsOrigin() + (32 * vecForward), GetAbsAngles(), this->GetOwnerEntity() /*(CBasePlayer *) GetOwnerEntity()*/, 30, nailspeed.GetInt());
+		{
+			CFFProjectileNail::CreateNail(GetAbsOrigin() + (32 * vecForward), GetAbsAngles(), GetOwnerEntity() /*(CBasePlayer *) GetOwnerEntity()*/, 30, nailspeed.GetInt());
+			EmitSound( "NailGrenade.shoot" );
+		}
 
 		SetNextThink(gpGlobals->curtime);
 	}
