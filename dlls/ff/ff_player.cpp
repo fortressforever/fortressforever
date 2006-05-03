@@ -370,7 +370,7 @@ CFFPlayer::~CFFPlayer()
 // Purpose: Set the spawn delay for a player. If the current delay
 //			is longer than flDelay then flDelay is ignored and
 //			the longer delay is used. It also checks the entity
-//			system & mp_spawndelay for any global delays.
+//			system/mp_respawndelay for any global delay.
 // --------------------------------------------------------------------------------
 void CFFPlayer::SetRespawnDelay( float flDelay )
 {
