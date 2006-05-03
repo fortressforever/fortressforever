@@ -139,8 +139,8 @@ void CFFMiniTurret::Spawn( void )
 
 	SetBlocksLOS( false );
 
-	m_HackedGunPos	= Vector( 0, 0, 12.75 );
-	SetViewOffset( EyeOffset( ACT_IDLE ) );
+	//m_HackedGunPos	= Vector( 0, 0, 12.75 );
+	//SetViewOffset( EyeOffset( ACT_IDLE ) );
 	m_flFieldOfView	= 0.4f; // 60 degrees
 	m_takedamage	= DAMAGE_EVENTS_ONLY;
 	m_iHealth		= 100;
@@ -160,7 +160,7 @@ void CFFMiniTurret::Spawn( void )
 	m_iPitchPoseParameter = LookupPoseParameter( FF_MINITURRET_BC_PITCH );
 	m_iYawPoseParameter = LookupPoseParameter( FF_MINITURRET_BC_YAW );
 
-	// Set our autostart state
+	// Set our state
 	m_bEnabled = true;
 
 	//SetThink( &CFFMiniTurret::OnDisabledThink );
