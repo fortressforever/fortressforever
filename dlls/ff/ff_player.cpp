@@ -24,6 +24,8 @@
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
 
+#include "client.h"
+
 #include <vector>
 #include <algorithm>
 
@@ -93,6 +95,48 @@ ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gai
 ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 
 static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
+
+// --------------------------------------------------------------------------------
+// Purpose: Kill the player and set a 5 second spawn delay
+//			Stolen from client.cpp for easier interfacing w/ CFFPlayer
+// --------------------------------------------------------------------------------
+void CC_Player_Kill( void )
+{
+	CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
+	if (pPlayer)
+	{
+#ifdef _DEBUG
+		if ( engine->Cmd_Argc() > 1	)
+#else
+		if ( engine->Cmd_Argc() > 1 && !g_pGameRules->IsMultiplayer() )
+#endif
+		{
+			// Find the matching netname
+			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
+				if ( pPlayer )
+				{
+					if ( Q_strstr( pPlayer->GetPlayerName(), engine->Cmd_Argv(1)) )
+					{
+						// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+						if( pPlayer->IsAlive() )
+							pPlayer->SetRespawnDelay( 5.0f );
+						ClientKill( pPlayer->edict() );
+					}
+				}
+			}
+		}
+		else
+		{
+			// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+			if( pPlayer->IsAlive() )
+				pPlayer->SetRespawnDelay( 5.0f );
+			ClientKill( pPlayer->edict() );
+		}
+	}
+}
+static ConCommand kill("kill", CC_Player_Kill, "kills the player");
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
@@ -313,6 +357,8 @@ CFFPlayer::CFFPlayer()
 	m_szCurrentLocation[ 0 ] = '\0';
 
 	m_pBuildLastWeapon = NULL;
+
+	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
 }
 
 CFFPlayer::~CFFPlayer()
@@ -320,6 +366,18 @@ CFFPlayer::~CFFPlayer()
 	m_PlayerAnimState->Release();
 }
 
+// --------------------------------------------------------------------------------
+// Purpose: Set the spawn delay for a player. If the current delay
+//			is longer than flDelay then flDelay is ignored and
+//			the longer delay is used. It also checks the entity
+//			system & mp_spawndelay for any global delays.
+// --------------------------------------------------------------------------------
+void CFFPlayer::SetRespawnDelay( float flDelay )
+{
+	// The largest delay is what the player will be told
+	float flTmpDelay = max( flDelay, mp_respawndelay.GetFloat() );
+	m_flNextSpawnDelay = max( flTmpDelay, m_fl_LuaSet_PlayerRespawnDelay );
+}
 
 CFFPlayer *CFFPlayer::CreatePlayer( const char *className, edict_t *ed )
 {
@@ -708,7 +766,12 @@ void CFFPlayer::Spawn()
 	// and also when need to force a player to spawn
 	// after they've chosen team/class for first time
 	// Reset spawn delay to 0
-	m_flNextSpawnDelay = 0.0f;
+	//m_flNextSpawnDelay = 0.0f;
+
+	// Run spawn delays through this function now. It will calculate
+	// any LUA/cvar or personal spawn delay and return
+	// the appropriate delay.
+	SetRespawnDelay();
 
 	// Activate their class stuff, die if we can't
 	if (!ActivateClass())

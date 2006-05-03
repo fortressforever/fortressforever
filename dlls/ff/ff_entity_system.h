@@ -13,6 +13,8 @@
 
 #include "cbase.h"
 
+extern ConVar mp_respawndelay;
+
 // Lua includes
 extern "C"
 {
@@ -108,6 +110,8 @@ public:
 	static int MarkRadioTag( lua_State* );
 	static int SetPlayerLocation( lua_State* );
 	static int SetPlayerDisguisable( lua_State* );
+	static int SetPlayerRespawnDelay( lua_State* );
+	static int SetGlobalRespawnDelay( lua_State* );
 
 };
 

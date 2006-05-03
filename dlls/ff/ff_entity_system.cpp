@@ -40,6 +40,7 @@
 CFFEntitySystem entsys;
 CFFEntitySystemHelper *helper; // global variable.. OH NOES!
 
+ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 
 //============================================================================
 // CFFEntitySystemHelper implementation
@@ -256,6 +257,8 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "MarkRadioTag", MarkRadioTag );
 	lua_register( L, "SetPlayerLocation", SetPlayerLocation );
 	lua_register( L, "SetPlayerDisguisable", SetPlayerDisguisable );
+	lua_register( L, "SetPlayerRespawnDelay", SetPlayerRespawnDelay );
+	lua_register( L, "SetGlobalRespawnDelay", SetGlobalRespawnDelay );
 }
 
 //----------------------------------------------------------------------------
@@ -1550,6 +1553,58 @@ int CFFEntitySystem::SetPlayerDisguisable( lua_State *L )
 	return 0;
 }
 
+//----------------------------------------------------------------------------
+// Purpose: Sets the player's LUA controlled individual spawn delay
+//          int SetPlayerRespawnDelay( int player, float delay );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetPlayerRespawnDelay( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 2 )
+	{
+		bool ret = false;
+		int player = (int)lua_tonumber( L, 1 );
+		float delay = (float)lua_tonumber( L, 2 );
+
+		CBasePlayer *ent = UTIL_PlayerByIndex( player );
+		if( ent && ent->IsPlayer() )
+		{
+			ToFFPlayer( ent )->LUA_SetPlayerRespawnDelay( delay );
+		}
+
+		// 1 result
+		lua_pushboolean( L, ret );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Sets the global spawn delay (mp_spawndelay)
+//          int SetGlobalRespawnDelay( float delay );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetGlobalRespawnDelay( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool ret = false;
+		float delay = (float)lua_tonumber( L, 1 );
+
+		mp_respawndelay.SetValue( max( 0.0f, delay ) );
+
+		// 1 result
+		lua_pushboolean( L, ret );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Sets the limit for a particular class on a team

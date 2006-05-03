@@ -276,6 +276,17 @@ public:
 private:
 	char m_szCurrentLocation[ 1024 ]; // ACK!
 
+public:
+	// Set the spawn delay for a player. If the current delay
+	// is longer than flDelay then flDelay is ignored and
+	// the longer delay is used. It also checks the entity
+	// system & mp_spawndelay for any global delays.
+    void SetRespawnDelay( float flDelay = 0.0f );
+
+	// Only for LUA to use to set player specific spawn delays
+	void LUA_SetPlayerRespawnDelay( float flDelay ) { m_fl_LuaSet_PlayerRespawnDelay = flDelay; SetRespawnDelay(); }
+private:
+	float m_fl_LuaSet_PlayerRespawnDelay;
 
 	//-- Added by L0ki -------------------------------------------------------
 	// Grenade related

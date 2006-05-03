@@ -601,7 +601,8 @@ void CC_DrawCross( void )
 }
 static ConCommand drawcross("drawcross", CC_DrawCross, "Draws a cross at the given location\n\tArguments: x y z", FCVAR_CHEAT);
 
-
+/*
+// Mulch: moving to ff_player.cpp
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void CC_Player_Kill( void )
@@ -641,6 +642,7 @@ void CC_Player_Kill( void )
 	}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");
+*/
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
