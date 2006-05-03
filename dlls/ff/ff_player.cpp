@@ -1651,23 +1651,25 @@ void CFFPlayer::RemoveItems( void )
 {
 	// NOTE: remove any of the players buildable objects here (and/or grens?)???
 
-	if( m_bBuilding )
-	{
+	//if( m_bBuilding )
+	//{
 		m_bBuilding = false;
 		m_iCurBuild = FF_BUILD_NONE;
 		m_iWantBuild = FF_BUILD_NONE;
 		//m_bCancelledBuild = true;
-	}
-	else
+	//}
+	//else
+	//{
+
+	// Remove buildables if they exist
+	if( m_hDispenser.Get() )
+		( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
+
+	if( m_hSentryGun.Get() )
+		( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
+
+	if( m_hDetpack.Get() )
 	{
-		if( m_hDispenser.Get() )
-			( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
-
-		if( m_hSentryGun.Get() )
-			( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
-
-		if( m_hDetpack.Get() )
-		{
 			//*
 			//CSingleUserRecipientFilter user( this );
 			//user.MakeReliable( );
@@ -1681,9 +1683,9 @@ void CFFPlayer::RemoveItems( void )
 			// End the message block
 //			MessageEnd( );
 			//*/
-			( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
-		}
+		( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
 	}
+	//}
 
 	// Remove any projectiles (grenades, nails, etc)
 	CBaseEntity *pEnt = gEntList.FindEntityByOwner(NULL, this);

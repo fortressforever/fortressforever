@@ -114,7 +114,7 @@ void CFFProjectileRocket::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Create a new rocket
 //----------------------------------------------------------------------------
-CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectileRocket *pRocket = (CFFProjectileRocket *) CreateEntityByName("rocket");
 

@@ -37,7 +37,7 @@ public:
 public:
 
 	virtual void Precache();
-	static CFFProjectileRocket * CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileRocket * CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
 	CFFProjectileRocket() {}

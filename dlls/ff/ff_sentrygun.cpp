@@ -503,7 +503,8 @@ FLOOR_TURRET_RANGE)
 	if (gpGlobals->curtime > m_flNextRocket && m_iRockets > 0) 
 	{
 		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
-        CFFProjectileRocket::CreateRocket(EyePosition() + vecAiming * 64.0f, m_angAiming, ToFFPlayer(GetOwnerEntity()), 102, 900.0f);
+		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
+        CFFProjectileRocket::CreateRocket(EyePosition() + vecAiming * 64.0f, m_angAiming, this, 102, 900.0f);
 
 		bFired = true;
 	}

@@ -550,6 +550,11 @@ bool CMultiplayRules::IsMultiplayer( void )
 		// Find the killer & the scorer
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
+
+		// Hack for sg rockets (might break other stuff?)
+		if( pKiller->Classify() == CLASS_SENTRYGUN )
+			pInflictor = pKiller;
+
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 
 		// Custom kill type?
