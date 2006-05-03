@@ -146,5 +146,6 @@ void CFFGrenadeNail::Precache()
 {
 	DevMsg("[Grenade Debug] CFFGrenadeNail::Precache\n");
 	PrecacheModel(NAILGRENADE_MODEL);
+	PrecacheScriptSound( "NailGrenade.shoot" );
 	BaseClass::Precache();
 }
