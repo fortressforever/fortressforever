@@ -627,7 +627,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	if( gr->IsConnected( playerIndex ) && gr->IsAlive( playerIndex ) )
 		pPlayer = ToFFPlayer( UTIL_PlayerByIndex( playerIndex ) );
 
-	if( pPlayer && pLocalPlayer && ( pPlayer != pLocalPlayer ) )
+	if( pPlayer && pLocalPlayer )
 	{
 		//bFriendly = ( pPlayer->GetTeamNumber() == pLocalPlayer->GetTeamNumber() );
 		
