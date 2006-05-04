@@ -61,8 +61,8 @@
 //	class CFFSentryGunDoorBlocker
 //
 //=============================================================================
-LINK_ENTITY_TO_CLASS( FF_SentryGunDoorBlocker, CFFSentryGunDoorBlocker );
-PRECACHE_REGISTER( FF_SentryGunDoorBlocker );
+//LINK_ENTITY_TO_CLASS( FF_SentryGunDoorBlocker, CFFSentryGunDoorBlocker );
+//PRECACHE_REGISTER( FF_SentryGunDoorBlocker );
 
 //=============================================================================
 //

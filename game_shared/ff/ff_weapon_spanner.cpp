@@ -195,12 +195,25 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is mine, a team mates, or an allies, don't hurt it!\n");
 
 				// If it's damaged, restore it's health on the first clang
-				if (pDispenser->GetHealth() < pDispenser->GetMaxHealth()) 
-					pDispenser->SetHealth(pDispenser->GetMaxHealth());
+				if( pDispenser->NeedsHealth() ) 
+				{
+					// TODO: Remove cells?
+					pDispenser->SetHealth( pDispenser->GetMaxHealth() );
+				}
 				else
 				{
 					// On subsequent clangs, we gotta give it ammo and stuff!
-					// TODO: Give ammo and stuff
+					int iCells = min( min( 20, pPlayer->GetAmmoCount( AMMO_CELLS ) ), pDispenser->NeedsCells() );
+					int iShells = min( min( 20, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
+					int iNails = min( min( 20, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
+					int iRockets = min( min( 20, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
+
+					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets );
+
+					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
+					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
+					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
+					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
 				}
 
 				// Get out now so we don't call the baseclass and do damage
@@ -232,9 +245,12 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				}
 				else
 				{
-					int cells = min(ceil((pSentryGun->m_iMaxHealth - pSentryGun->m_iHealth) / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
-					int shells = min(pSentryGun->m_iMaxShells - pSentryGun->m_iShells, pPlayer->GetAmmoCount(AMMO_SHELLS));
-					int rockets = min(pSentryGun->m_iMaxRockets - pSentryGun->m_iRockets, pPlayer->GetAmmoCount(AMMO_ROCKETS));
+					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
+					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));
+					int rockets = 0; 
+					
+					if( pSentryGun->GetLevel() > 2 )
+						rockets = min(pSentryGun->NeedsRockets(), pPlayer->GetAmmoCount(AMMO_ROCKETS));
 
 					pSentryGun->Upgrade(false, cells, shells, rockets);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
@@ -252,6 +268,8 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// TODO: Add else if for hitting an entity
 			// that is supposed to fire some game event -
 			// like the generator in oppose or something...
+
+			// enysys.RunPredicates( NULL, this, "engy hit the shit w/ spanner, bitch" );
 		}
 	}
 #else

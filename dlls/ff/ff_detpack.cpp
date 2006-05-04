@@ -23,6 +23,9 @@
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 LINK_ENTITY_TO_CLASS( FF_Detpack, CFFDetpack );
 PRECACHE_REGISTER( FF_Detpack );
 

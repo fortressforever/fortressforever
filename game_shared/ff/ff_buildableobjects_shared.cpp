@@ -407,3 +407,8 @@ int CFFBuildableObject::GetHealthPercent( void )
 
 	return ( int )flPercent;
 }
+
+int CFFSentryGun::GetRockets( void )
+{
+	return m_iRockets;
+}

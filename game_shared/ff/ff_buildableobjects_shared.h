@@ -541,6 +541,13 @@ public:
 
 	// Generic function to send hud messages to players
 	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText = false );
+	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
+	int NeedsArmor( void ) { return m_iMaxArmor - m_iArmor; }
+	int NeedsCells( void ) { return m_iMaxCells - m_iCells; }
+	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
+	int NeedsNails( void ) { return m_iMaxNails - m_iNails; }
+	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
+	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
 
 	// Some functions for the custom dispenser text
 	void SetText( const char *szCustomText ) { Q_strcpy( m_szCustomText, szCustomText ); }
@@ -589,6 +596,7 @@ public:
 	// --> shared
 	CFFSentryGun( void );
 	~CFFSentryGun( void );
+	int GetRockets( void );
 
 	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
 
@@ -615,7 +623,10 @@ public:
 	virtual void Spawn( void );
 	void GoLive( void );
 
-	int TakeEmp();
+	int TakeEmp( void );
+	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
+	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
+	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
 
 	void SetFocusPoint(Vector &origin);
 

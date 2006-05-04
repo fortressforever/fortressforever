@@ -35,6 +35,9 @@
 //
 // 22/01/2006, Mirv:
 //		Dispenser now has ground pos & angles pre-stored for when it goes live
+//
+//	05/04/2006,	Mulchman
+//		AddAmmo function. Minor tweaks here and there.
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
@@ -45,13 +48,17 @@
 
 #include "omnibot_interface.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
+
 //=============================================================================
 //
 //	class CFFDispenserDoorBlocker
 //
 //=============================================================================
-LINK_ENTITY_TO_CLASS( FF_DispenserDoorBlocker, CFFDispenserDoorBlocker );
-PRECACHE_REGISTER( FF_DispenserDoorBlocker );
+//LINK_ENTITY_TO_CLASS( FF_DispenserDoorBlocker, CFFDispenserDoorBlocker );
+//PRECACHE_REGISTER( FF_DispenserDoorBlocker );
 
 //=============================================================================
 //
@@ -321,6 +328,10 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				if( pOwner == pPlayer )
 					return;
 
+				// If a spy who's disguised as our team (or an ally team) touches us ignore
+				if( pPlayer->IsDisguised() && ( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) == GR_TEAMMATE ) )
+					return;
+
 				// Bug #0000551: Dispenser treats teammates as enemies if mp_friendlyfire is enabled
 				//if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )				
 				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
@@ -450,26 +461,28 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 	// Give armor if we can
 	if( m_iArmor > 0 )
 	{
-		int iToGive = m_iGiveArmor;
-
-		if( m_iArmor < m_iGiveArmor )
-			iToGive = m_iArmor;
-
+		int iToGive = min( m_iArmor, m_iGiveArmor );
 		if( iToGive )
 		{
-			int iAccept = pPlayer->GetMaxArmor() - pPlayer->GetArmor();
-
-			if( iToGive < iAccept )
-				iToGive = iAccept;
-
-			if( iToGive )
-			{
-				pPlayer->AddArmor( iToGive );
-
-				m_iArmor.GetForModify() -= iToGive;
-			}
+			int iGave = pPlayer->AddArmor( min( pPlayer->NeedsArmor(), iToGive ) );
+			m_iArmor.GetForModify() -= iGave;
 		}
 	}
+}
+
+//
+// AddAmmo
+//		Put stuff into the dispenser
+//
+void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets )
+{
+	m_iArmor += iArmor;
+	m_iCells += iCells;
+	m_iShells += iShells;
+	m_iNails += iNails;
+	m_iRockets += iRockets;
+
+	UpdateAmmoPercentage();
 }
 
 //
