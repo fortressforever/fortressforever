@@ -1834,6 +1834,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		ESP_Shared_s hObject;
 		hObject.m_iClass = pPlayer->GetClassSlot();
 		hObject.m_iTeam = pPlayer->GetTeamNumber() - 1;
+		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
 		hObject.m_vecOrigin = vecPlayerOrigin;
 
 		// Add object to radio tagged array
@@ -1857,13 +1858,16 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 			for( int i = 0; i < m_hRadioTaggedList.Count(); i++ )
 			{
-				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iTeam );
-				WRITE_SHORT( m_hRadioTaggedList[ i ].m_iClass );
+				int iInfo = m_hRadioTaggedList[ i ].m_iTeam;
+				iInfo += m_hRadioTaggedList[ i ].m_iClass << 4;
+
+				WRITE_WORD( iInfo );
+				WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? 1 : 0 );
 				WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
 			}
 			
 			// We're done sending the HUD message
-			WRITE_SHORT( 99 );
+			WRITE_WORD( 0 );
 
 		// End the message block
 		MessageEnd();
@@ -1968,14 +1972,6 @@ void CFFPlayer::Command_Radar( void )
 			UserMessageBegin( user, "RadarUpdate" );
 
 			// Send our radar/esp to the client
-
-			// send block	
-			// - team (int 1-4) [to color the silhouettes elitely]
-			// - class (int)
-			// - origin (float[3])
-			// - player angles (qangle)
-			// team = 99 terminates
-
 			Vector vecOrigin = GetAbsOrigin();
 
 			for( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -2001,14 +1997,20 @@ void CFFPlayer::Command_Radar( void )
 					Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
 					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
 
-					DevMsg( "[Scout Radar] flDist: %f\n", flDist );
-
 					if( flDist <= ( float )radar_radius_distance.GetInt() )
 					{
-						const CFFPlayerClassInfo &pPlayerClassInfo = pPlayer->GetFFClassData();
+						int iInfo = pPlayer->GetTeamNumber() - 1;
+						iInfo += pPlayer->GetClassSlot() << 4;
 
-						WRITE_SHORT( pPlayer->GetTeamNumber() - 1 );	// Team number (adjusted)						
-						WRITE_SHORT( pPlayerClassInfo.m_iSlot );						
+						if( ( g_pGameRules->PlayerRelationship( this, pPlayer ) == GR_NOTTEAMMATE ) &&
+							( pPlayer->IsDisguised() ) )
+						{
+							iInfo = pPlayer->GetDisguisedTeam() - 1;
+							iInfo += pPlayer->GetDisguisedClass() << 4;
+						}
+
+						WRITE_WORD( iInfo );
+						WRITE_BYTE( ( ( pPlayer->GetFlags() & FL_DUCKING ) ? 1 : 0 ) );
 						WRITE_VEC3COORD( vecPlayerOrigin );				// Origin in 3d space
 
 						// Omni-bot: Notify the bot he has detected someone.
@@ -2025,7 +2027,7 @@ void CFFPlayer::Command_Radar( void )
 			}
 
 			// We're done sending the HUD message
-			WRITE_SHORT( 99 );
+			WRITE_WORD( 0 );
 
 			// End the message block
 			MessageEnd();

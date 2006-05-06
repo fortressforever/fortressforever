@@ -123,24 +123,26 @@ void CHudRadioTag::CacheTextures( void )
 
 void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 {
-	int iTeam = 99;
+	// Initialize
+	m_hRadioTaggedList.RemoveAll();
+	
 	bool bRecvMessage = false;
 
 	// Initialize
-	m_hRadioTaggedList.RemoveAll( );
-	
+	//m_iNumPlayers = 0;
+
 	// send block	
-	// - team (int 1-4) [to color the silhouettes elitely] adjusted value
+	// - team (int 1-4) [to color the silhouettes elitely]
 	// - class (int)
 	// - origin (float[3])
 	// team = 99 terminates
 
-	iTeam = msg.ReadShort( );
-	while( iTeam != 99 )
+	int iInfo = msg.ReadWord();
+	while( iInfo )
 	{
-		//ESP_Shared_s	hObject;
 		CGlyphESP	hObject;
 
+		/*
 		// Do stuff here - build internal vector
 		// for when we "paint" later
 		hObject.m_iTeam = iTeam;
@@ -150,14 +152,23 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 
 		// Read origin and do stuff
 		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
-        
+		*/
+
+		// Get team
+		hObject.m_iTeam = iInfo & 0x0000000F;
+		// Get class
+		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
+		// Get ducked state
+		hObject.m_bDucked = ( msg.ReadByte() == 1 );
+		// Get origin
+		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
+
 		// Received at least one valid message
 		bRecvMessage = true;
 
 		m_hRadioTaggedList.AddToTail( hObject );
 
-		// Start reading the next entry
-		iTeam = msg.ReadShort( );
+		iInfo = msg.ReadWord();
 	}
 
 	if( bRecvMessage )
@@ -169,12 +180,12 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 
 void CHudRadioTag::Paint( void )
 {
-	if( engine->IsInGame( ) )
+	if( engine->IsInGame() )
 	{
-		if( m_hRadioTaggedList.Count( ) )
+		if( m_hRadioTaggedList.Count() )
 		{
 			// Get us
-			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer( ) );
+			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 			if( !pPlayer )
 			{
 				Warning( "[Radio Tag] No local player!\n" );
@@ -182,7 +193,7 @@ void CHudRadioTag::Paint( void )
 			}
 
 			// Get our origin
-			Vector vecOrigin = pPlayer->GetAbsOrigin( );
+			Vector vecOrigin = pPlayer->GetAbsOrigin();
 
 			// Find our fade based on our time shown
 			float dt = ( m_flStartTime - gpGlobals->curtime );
@@ -196,6 +207,9 @@ void CHudRadioTag::Paint( void )
 				int iScreenX, iScreenY;
 				if( GetVectorInScreenSpace( m_hRadioTaggedList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
 				{
+					int iTopScreenX, iTopScreenY;
+					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( m_hRadioTaggedList[ i ].m_vecOrigin + ( m_hRadioTaggedList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+
 					Color cColor;
 					SetColorByTeam( m_hRadioTaggedList[ i ].m_iTeam, cColor );
 
@@ -205,40 +219,41 @@ void CHudRadioTag::Paint( void )
 					int iIndex = m_hRadioTaggedList[ i ].m_iClass - 1;
 
 					// Modify based on FOV
-					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor( ) );
+					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
 
 					int iWidthAdj = 30;
 					int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
-					int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+					//int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+					int iYTop = /*( bGotTopScreenY ?*/ iTopScreenY /*: ( ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) ) ) )*/;
 					int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
 
 					if( flDist <= 300 )
 					{
-						surface( )->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
-						surface( )->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
-						surface( )->DrawSetColor( cColor.r( ), cColor.g( ), cColor.b( ), flAlpha );
-						surface( )->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+						surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
+						surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
+						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+						surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 					}
 					else
 					{
-						surface( )->DrawSetColor( cColor.r( ), cColor.g( ), cColor.b( ), flAlpha );
-						surface( )->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+						surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 					}
 
 					// Get the current frame we're supposed to draw
-					int iFrame = m_hRadioTaggedList[ i ].UpdateFrame( );
+					int iFrame = m_hRadioTaggedList[ i ].UpdateFrame();
 
 					// Draw the radio tower thing
-					surface( )->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
-					surface( )->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
-					surface( )->DrawSetColor( 255, 255, 255, flAlpha );
-					surface( )->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
+					surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
+					surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
+					surface()->DrawSetColor( 255, 255, 255, flAlpha );
+					surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
 				}
 			}
 		}
 
 		// Stop drawing since we haven't gotten another update recently
 		if( ( m_flStartTime + FF_RADIOTAG_TIMETOFORGET ) <= gpGlobals->curtime )
-			m_hRadioTaggedList.RemoveAll( );
+			m_hRadioTaggedList.RemoveAll();
 	}
 }

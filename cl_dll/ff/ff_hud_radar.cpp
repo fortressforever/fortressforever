@@ -92,7 +92,7 @@ void CHudRadar::VidInit( void )
 
 	// Set up our screen position and stuff before drawing
 	int iWide, iTall;
-	surface( )->GetScreenSize( iWide, iTall );
+	surface()->GetScreenSize( iWide, iTall );
 
 	// Set up the panel to take up the WHOLE screen
 	SetPos( 0, 0 );
@@ -103,7 +103,7 @@ void CHudRadar::VidInit( void )
 	SetVisible( false );
 
 	// Cache textures
-	CacheTextures( );
+	CacheTextures();
 }
 
 void CHudRadar::Init( void )
@@ -119,12 +119,11 @@ void CHudRadar::CacheTextures( void )
 	m_iWidthOffset = 32;
 	m_iHeightOffset = 160;
 
-	CacheGlyphs( );
+	CacheGlyphs();
 }
 
 void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 {
-	int iTeam = 99;
 	bool bRecvMessage = false;
 
 	// Initialize
@@ -136,11 +135,12 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	// - origin (float[3])
 	// team = 99 terminates
 
-	iTeam = msg.ReadShort( );
-	while( iTeam != 99 )
+	int iInfo = msg.ReadWord();
+	while( iInfo )
 	{
 		CGlyphESP	hObject;
 
+		/*
 		// Do stuff here - build internal vector
 		// for when we "paint" later
 		hObject.m_iTeam = iTeam;
@@ -150,13 +150,25 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 
 		// Read origin and do stuff
 		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
+		*/
+
+		// Get team
+		hObject.m_iTeam = iInfo & 0x0000000F;
+		// Get class
+		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
+		// Get ducked state
+		hObject.m_bDucked = ( msg.ReadByte() == 1 );
+		// Get origin
+		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
+
+		DevMsg( "[Radar] Team: %i, Class: %i, Ducked: %s, Origin: %f, %f, %f\n", hObject.m_iTeam, hObject.m_iClass, hObject.m_bDucked ? "yes" : "no", hObject.m_vecOrigin.x, hObject.m_vecOrigin.y, hObject.m_vecOrigin.z );
 
 		// Received at least one valid message
 		bRecvMessage = true;
 
 		m_hRadarList.AddToTail( hObject );
 
-		iTeam = msg.ReadShort( );
+		iInfo = msg.ReadWord();
 	}
 
 	if( bRecvMessage )
@@ -168,12 +180,12 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 
 void CHudRadar::Paint( void )
 {
-	if( engine->IsInGame( ) )
+	if( engine->IsInGame() )
 	{
-		if( m_hRadarList.Count( ) )
+		if( m_hRadarList.Count() )
 		{
 			// Get us
-			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer( ) );
+			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 			if( !pPlayer )
 			{
 				Warning( "[Scout Radar] No local player!\n" );
@@ -181,20 +193,23 @@ void CHudRadar::Paint( void )
 			}
 
 			// Get our origin
-			Vector vecOrigin = pPlayer->GetAbsOrigin( );
+			Vector vecOrigin = pPlayer->GetAbsOrigin();
 
 			// Find our fade based on our time shown
 			float dt = ( m_flStartTime - gpGlobals->curtime );
-			float flAlpha = SimpleSplineRemapVal( dt, 0.0f, radar_duration.GetInt( ), 255, 0 );
+			float flAlpha = SimpleSplineRemapVal( dt, 0.0f, radar_duration.GetInt(), 255, 0 );
 			flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 
 			// Loop through all our dudes
-			for( int i = 0; i < m_hRadarList.Count( ); i++ )
+			for( int i = 0; i < m_hRadarList.Count(); i++ )
 			{				
 				// Draw a box around the guy if they're on our screen
 				int iScreenX, iScreenY;
 				if( GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
 				{
+					int iTopScreenX, iTopScreenY;
+					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin + ( m_hRadarList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+
 					Color cColor;
 					SetColorByTeam( m_hRadarList[ i ].m_iTeam, cColor );
 
@@ -204,40 +219,41 @@ void CHudRadar::Paint( void )
 					int iIndex = m_hRadarList[ i ].m_iClass - 1;
 
 					// Modify based on FOV
-					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor( ) );
+					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
 
 					int iWidthAdj = 30;
 					int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
-					int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+					//int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+					int iYTop = /*( bGotTopScreenY ?*/ iTopScreenY /*: ( ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) ) ) )*/;
 					int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
 
 					if( flDist <= 300 )
 					{
-						surface( )->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
-						surface( )->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
-						surface( )->DrawSetColor( cColor.r( ), cColor.g( ), cColor.b( ), flAlpha );
-						surface( )->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+						surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
+						surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
+						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+						surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 					}
 					else
 					{
-						surface( )->DrawSetColor( cColor.r( ), cColor.g( ), cColor.b( ), flAlpha );
-						surface( )->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+						surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 					}
 
 					// Get the current frame we're supposed to draw
-					int iFrame = m_hRadarList[ i ].UpdateFrame( );
+					int iFrame = m_hRadarList[ i ].UpdateFrame();
 
 					// Draw the radio tower thing
-					surface( )->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
-					surface( )->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
-					surface( )->DrawSetColor( 255, 255, 255, flAlpha );
-					surface( )->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
+					surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
+					surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
+					surface()->DrawSetColor( 255, 255, 255, flAlpha );
+					surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
 				}
 			}
 		}
 
 		// Stop drawing since we haven't gotten another update recently
-		if( ( m_flStartTime + radar_duration.GetInt( ) ) <= gpGlobals->curtime )
-			m_hRadarList.RemoveAll( );
+		if( ( m_flStartTime + radar_duration.GetInt() ) <= gpGlobals->curtime )
+			m_hRadarList.RemoveAll();
 	}
 }

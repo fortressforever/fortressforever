@@ -6,6 +6,7 @@ struct ESP_Shared_s
 {
 	int		m_iTeam;
 	int		m_iClass;
+	bool	m_bDucked;
 	Vector	m_vecOrigin;
 
 	ESP_Shared_s( void )
@@ -25,7 +26,8 @@ struct ESP_Shared_s
 	{
 		if( ( m_iTeam == hRhs.m_iTeam ) ||
 			( m_iClass == hRhs.m_iClass ) ||
-			( m_vecOrigin == hRhs.m_vecOrigin ))
+			( m_vecOrigin == hRhs.m_vecOrigin ) ||
+			( m_bDucked == hRhs.m_bDucked ))
 			return true;
 		
 		return false;
@@ -36,6 +38,7 @@ struct ESP_Shared_s
 		m_iTeam = hRhs.m_iTeam;
 		m_iClass = hRhs.m_iClass;
 		m_vecOrigin = hRhs.m_vecOrigin;
+		m_bDucked = hRhs.m_bDucked;
 
 		return *this;
 	}
