@@ -42,6 +42,7 @@ ConVar conc_push_base("ffdev_conc_base", "20.0", 0, "Base push of the conc");
 #define CONCUSSIONGRENADE_GLOW_SPRITE "sprites/glow04_noz.vmt"
 #define CONCUSSION_SOUND "ConcussionGrenade.Explode"
 #define CONCUSSION_EFFECT "FF_ConcussionEffect" // "ConcussionExplosion"
+#define CONCBITS_EFFECT "FF_ConcBitsEffect"
 #define FLASH_EFFECT "FF_FlashEffect"
 #define RING_EFFECT "FF_RingEffect"
 
@@ -145,8 +146,8 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		CFFGrenadeBase::PreExplode(pTrace, CONCUSSION_SOUND, CONCUSSION_EFFECT);
-		CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
-		//CFFGrenadeBase::PreExplode( pTrace, NULL, RING_EFFECT );
+		//CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
+		CFFGrenadeBase::PreExplode( pTrace, NULL, CONCBITS_EFFECT );
 
 		// --> Mirv: Rewritten
 		Vector vecDisplacement, vecForce;

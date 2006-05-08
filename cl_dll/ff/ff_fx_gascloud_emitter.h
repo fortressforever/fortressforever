@@ -41,6 +41,9 @@ public:
 	virtual void SimulateParticles	( CParticleSimulateIterator *pIterator );
 	virtual void RenderParticles	( CParticleRenderIterator *pIterator );
 
+	void AddAttractor(Vector *F, Vector apos, Vector ppos, float scale);
+	void ApplyDrag(Vector *F, Vector vel, float scale, float targetvel);
+
 	GasParticle*	AddGasParticle( const Vector &vOrigin);
 
 protected:

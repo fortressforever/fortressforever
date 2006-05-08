@@ -18,7 +18,6 @@
 #include "ff_fx_conc_emitter.h"
 #include "materialsystem/imaterialvar.h"
 #include "c_te_effect_dispatch.h"
-#include "ff_fx_conc_emitter.h"
 
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
 

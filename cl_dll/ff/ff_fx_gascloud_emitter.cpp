@@ -21,6 +21,7 @@
 ConVar gas_dietime("ffdev_gas_dietime","5.0",0,"How long gas cloud particles live.");
 ConVar gas_scale("ffdev_gas_scale","48.0",0,"How big gas particles are.");
 ConVar gas_alpha("ffdev_gas_alpha","0.2",0,"Alpha of gas particles.");
+ConVar gas_moveforce("ffdev_gas_moveforce","0.025",0,"Strength of gas movement attractor.");
 
 //========================================================================
 // Static material handles
@@ -115,8 +116,33 @@ void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 		float start = 1.0f - end;
 
 		// Keep moving if we're not past out end time
+		/*
 		if (pParticle->m_flLifetime < pParticle->m_flEndPosTime)
 			pParticle->m_Pos += pParticle->m_vVelocity * timeDelta;
+		*/
+		// ted - Now implements the same smoke-disturbance code as the conc particles
+		//if (pParticle->m_flLifetime < pParticle->m_flEndPosTime)
+		{
+			Vector F(0.0f, 0.0f, 0.0f);
+
+			C_BaseEntityIterator iterator;
+			CBaseEntity *point = iterator.Next();
+			while(point != NULL)
+			{
+				if((point->GetAbsOrigin() - pParticle->m_vOrigin).IsLengthLessThan(256.0f))
+				{
+					if(point->GetAbsVelocity().IsLengthGreaterThan(600.0f))
+						AddAttractor(&F, point->GetAbsOrigin(), pParticle->m_Pos, gas_moveforce.GetFloat() * point->GetAbsVelocity().LengthSqr());
+				}
+				point = iterator.Next();
+			}
+
+			ApplyDrag(&F, pParticle->m_vVelocity, 4.0f, 20.0f);
+
+			pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.5f;
+			pParticle->m_vVelocity += F * timeDelta;							// assume mass of 1
+			pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.5f;
+		}
 
 		pParticle->m_flAlpha = 0.8f * start + 0.0f * end;
 		pParticle->m_flSize = 1.0f * start + 48.0f * end;
@@ -127,6 +153,26 @@ void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 		pParticle = (GasParticle*)pIterator->GetNext();
 	}
 }
+
+void CGasCloud::AddAttractor(Vector *F, Vector apos, Vector ppos, float scale)
+{
+	Vector dir = (apos - ppos);
+	dir.NormalizeInPlace();
+	float dist = (apos - ppos).Length();
+	if(dist > 0.00001f)
+		*F += (scale / (dist/* * dist*/)) * dir;
+}
+
+void CGasCloud::ApplyDrag(Vector *F, Vector vel, float scale, float targetvel)
+{
+	if(vel.IsLengthLessThan(targetvel))
+		return;
+	Vector dir = -vel;
+	vel.NormalizeInPlace();
+	float mag = vel.Length() * scale;
+	*F += (dir * mag);
+}
+
 
 //========================================================================
 // RenderParticles

@@ -1890,6 +1890,16 @@ void CFFPlayer::Command_HintTest( void )
 	//ShowViewPortPanel( PANEL_HINT, true );
 	//UTIL_HudHintText( this, "#FF_HELLO" );
 	FF_HudHint( this, "#FF_HELLO" );
+	// ted - HL2 Hint Text buffer overrun PoC, don't enable... doesn't affect FF hints!
+	/*
+	char buf[254];
+	for(unsigned int i = 0; i < sizeof(buf); i++)
+	{
+		buf[i] = 'A' + i % 26;
+	}
+	buf[sizeof(buf) - 1] = '\0';
+	UTIL_HudHintText(this, buf);
+	*/
 }
 
 void CFFPlayer::Command_DispenserText( void )

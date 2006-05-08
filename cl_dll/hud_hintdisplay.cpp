@@ -119,7 +119,7 @@ bool CHudHintDisplay::SetHintText( const char *text )
 		return false;
 	}
 
-	strcpy( m_szHintText, text );
+	Q_strncpy(m_szHintText, text, 128);
 
 	// look up the text string
 	wchar_t *ws = vgui::localize()->Find( text );
