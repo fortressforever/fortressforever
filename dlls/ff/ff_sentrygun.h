@@ -45,8 +45,8 @@
 #define FLOOR_TURRET_GLOW_SPRITE	"sprites/glow1.vmt"
 #define FLOOR_TURRET_BC_YAW			"aim_yaw"
 #define FLOOR_TURRET_BC_PITCH		"aim_pitch"
-#define FF_BUILD_SG_YAW				"aim_yaw"
-#define FF_BUILD_SG_PITCH			"aim_pitch"
+//#define FF_BUILD_SG_YAW				"aim_yaw"
+//#define FF_BUILD_SG_PITCH			"aim_pitch"
 #define	FLOOR_TURRET_RANGE			1200
 #define	FLOOR_TURRET_MAX_WAIT		5
 #define FLOOR_TURRET_SHORT_WAIT		2.0		// Used for FAST_RETIRE spawnflag
