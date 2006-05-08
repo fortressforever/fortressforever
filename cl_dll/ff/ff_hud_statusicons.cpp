@@ -38,6 +38,7 @@ const char *szIcons[FF_NUMICONS] = {	"vgui/statusicon_conc",		//FF_ICON_CONCUSSI
 										"vgui/statusicon_caltrop",	//FF_ICON_CALTROP
 										"vgui/statusicon_legshot",	//FF_ICON_LEGSHOT
 										"vgui/statusicon_gas",		//FF_ICON_GAS
+										"vgui/statusicon_infected"	//FF_ICON_INFECTED
 									};
 
 struct statusicon_t {

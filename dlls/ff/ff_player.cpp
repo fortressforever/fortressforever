@@ -3103,6 +3103,13 @@ void CFFPlayer::StatusEffectsThink( void )
 			info.SetDamagePosition( Vector( 0, 0, 1 ) );
 			TakeDamage( info );
 
+			CSingleUserRecipientFilter user((CBasePlayer *)this);
+			user.MakeReliable();
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE(FF_ICON_INFECTED);
+				WRITE_FLOAT(2.0f);
+			MessageEnd();
+
 #if 1
 			// Bug #0000504: No infection visible effect
 			CEffectData data;
