@@ -114,7 +114,7 @@ void CHudGrenade2Timer::Paint()
 		float amount = clamp((gpGlobals->curtime - timer->m_flStartTime) / timer->m_flDuration, 0, 1.0f);
 
 		// Draw progress bar
-		surface()->DrawSetColor(131 - colour_mod, 136 - colour_mod, 129 - colour_mod, 240);
+		surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
 		surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
 
 		// Mark this up for removal if needed(1.7s so it doesnt disappear before fadeout if last) 
@@ -130,6 +130,6 @@ void CHudGrenade2Timer::Paint()
 		m_Timers.Remove(timer_to_remove);
 
 	// Draw progress bar box
-	surface()->DrawSetColor(0, 0, 0, 255);
+	surface()->DrawSetColor(bar_color);
 	surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
 }

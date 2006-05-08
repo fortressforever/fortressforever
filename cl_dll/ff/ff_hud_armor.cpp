@@ -132,9 +132,11 @@ void CHudArmor::OnThink()
 		C_FFPlayer *local = ToFFPlayer(baselocal);
 		// Never below zero
 		newArmor = max(local->GetArmor(), 0);
+		/*
 		float fArmorType = local->GetArmorType();
 		float fScale = 255.0f/max(fArmorType, 1.0f - fArmorType);
 		SetFgColor(Color(fArmorType * fScale, (1.0f - fArmorType) * fScale, 0, GetFgColor().a()));
+		*/
 	}
 
 	// Only update the fade if we've changed armor

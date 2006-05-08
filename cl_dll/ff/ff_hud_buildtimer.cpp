@@ -136,11 +136,11 @@ void CHudBuildTimer::Paint()
 	float amount = clamp((gpGlobals->curtime - m_flStartTime) / m_flDuration, 0, 1.0f);
 
 	// Draw progress bar
-	surface()->DrawSetColor(131, 136, 129, 240);
+	surface()->DrawSetColor(bar_color);
 	surface()->DrawFilledRect(bar_xpos, bar_ypos, bar_xpos + bar_width * amount, bar_ypos + bar_height);
 
 	// Draw progress bar box
-	surface()->DrawSetColor(0, 0, 0, 255);
+	surface()->DrawSetColor(bar_color);
 	surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
 
 	// Draw label

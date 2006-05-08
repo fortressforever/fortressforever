@@ -29,11 +29,11 @@ ConVar conc_push_mag("ffdev_conc_mag", "85.0", 0, "Magnitude of the concussion p
 ConVar conc_push_base("ffdev_conc_base", "20.0", 0, "Base push of the conc");
 
 #ifdef CLIENT_DLL
-	static ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red(0-255) ");
-	static ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green(0-255) ");
-	static ConVar conc_glow_b("ffdev_conc_glow_b", "200", 0, "Conc glow blue(0-255) ");
-	static ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", 0, "Conc glow alpha(0-1) ");
-	static ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size(0.0-10.0");
+	ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red(0-255) ");
+	ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green(0-255) ");
+	ConVar conc_glow_b("ffdev_conc_glow_b", "200", 0, "Conc glow blue(0-255) ");
+	ConVar conc_glow_a("ffdev_conc_glow_a", "0.8", 0, "Conc glow alpha(0-1) ");
+	ConVar conc_glow_size("ffdev_conc_glow_size", "1.0", 0, "Conc glow size(0.0-10.0");
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");

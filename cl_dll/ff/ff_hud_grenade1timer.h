@@ -50,6 +50,7 @@ private:
 	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
+	CPanelAnimationVarAliasType(Color, bar_color, "bar_color", "255 255 255", "color");
 
 	CHudTexture	*m_pHudElementTexture;
 
