@@ -97,6 +97,76 @@ ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in second
 static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
 
 // --------------------------------------------------------------------------------
+// Purpose: To spawn a model for testing - REMOVE (or disable) for release
+//
+// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
+// --------------------------------------------------------------------------------
+class CFFModelTemp : public CBaseAnimating
+{
+public:
+	DECLARE_CLASS( CFFModelTemp, CBaseAnimating );
+	
+	CFFModelTemp( void ) { m_hModel = NULL; }
+	~CFFModelTemp( void ) {}
+
+	const char *m_hModel;
+
+	void Spawn( void )
+	{
+		if( m_hModel )
+			PrecacheModel( m_hModel );
+		BaseClass::Precache();
+		if( m_hModel )
+			SetModel( m_hModel );
+	}
+
+	static CFFModelTemp *Create( const char *szModel, const Vector& vecOrigin, const QAngle& vecAngles )
+	{
+		CFFModelTemp *pObject = ( CFFModelTemp * )CBaseEntity::Create( "ff_model_temp", vecOrigin, vecAngles );
+		pObject->m_hModel = szModel;
+		pObject->Spawn();
+		return pObject;
+	}
+};
+
+// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
+LINK_ENTITY_TO_CLASS( ff_model_temp, CFFModelTemp );
+
+// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
+CON_COMMAND( model_temp, "Spawn a temporary model. Usage: model_temp <model> <distance_in_front_of_player>" )
+{
+	if( ( engine->Cmd_Argc() > 2 ) && ( engine->Cmd_Argc() < 4 ) )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
+
+		if( !pPlayer )
+			return;
+
+		Vector vecOrigin, vecForward, vecRight;
+		
+		// Get some info from the player...
+		vecOrigin = pPlayer->GetAbsOrigin();
+		pPlayer->EyeVectors( &vecForward, &vecRight );
+
+		vecForward.z = 0;
+
+		// Normalize
+		VectorNormalize( vecForward );
+
+		vecOrigin += ( vecForward * atof( engine->Cmd_Argv(2) ) );
+		
+		QAngle vecAngles;
+		VectorAngles( vecForward, vecAngles );
+
+		CFFModelTemp::Create( engine->Cmd_Argv(1), vecOrigin, vecAngles );
+	}
+	else
+	{
+		DevMsg( "Usage: model_temp <model> <distance_in_front_of_player>\n" );
+	}
+}
+
+// --------------------------------------------------------------------------------
 // Purpose: Kill the player and set a 5 second spawn delay
 //			Stolen from client.cpp for easier interfacing w/ CFFPlayer
 // --------------------------------------------------------------------------------

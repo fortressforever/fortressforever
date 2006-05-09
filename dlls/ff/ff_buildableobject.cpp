@@ -564,7 +564,7 @@ void CFFBuildableObject::Explode( void )
 	SetSolid( SOLID_NONE );
 
 	// Do the explosion
-	DoExplosion( );
+	DoExplosion();
 
 	// Notify player to tell them they can build
 	// again and remove current owner
@@ -689,6 +689,54 @@ void CFFBuildableObject::DoExplosion( void )
 	// Bug #0000279: Detpack not causing damage.
 	// Bug #0000247: Dispenser explosion does not hurt you
 	RadiusDamage( CTakeDamageInfo( this, pOwner, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
+
+	// Better damage given out
+	//CBaseEntity *pEntity = NULL;
+	//for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	//{
+		/*
+		if( !pEntity )
+			continue;
+
+		// Skip us
+		if( pEntity == this )
+			continue;
+
+		// The player (or buildable's owner) that is inside our sphere
+		CFFPlayer *pPlayer = NULL;
+
+		if( pEntity->IsPlayer() )
+		{
+			pPlayer = ToFFPlayer( pEntity );			
+		}
+		else if( pEntity->Classify() == CLASS_DISPENSER )
+		{
+			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pEntity );
+			pPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
+		}
+		else if( pEntity->Classify() == CLASS_SENTRYGUN )
+		{
+			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pEntity );
+			pPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
+		}
+
+		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			continue;
+
+		// If the player can't take damage from us (our owner), bail
+		if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
+			continue;
+
+		// Now, do some tracing to see if they're not blocked by something.
+		// Basically, only let the world block people.
+
+		// Raise up a little, don't want to be right on the ground
+		Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 32 );
+		Vector vecTarget = pEntity->IsPlayer() ? pPlayer->EyePosition() - pPlayer->GetAbsOrigin() : pEntity->GetAbsOrigin() + Vector( 0, 0, 48 );
+
+		NDebugOverlay::Line( vecOrigin, vecTarget, 0, 0, 255, false, 10.0f );
+		*/
+	//}
 
 	// Shake the screen if you're close enough
 	UTIL_ScreenShake( GetAbsOrigin(), 25.0f, 150.0f, m_flExplosionDuration, 5.0f * m_flExplosionRadius, SHAKE_START );
