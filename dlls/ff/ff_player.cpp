@@ -3045,7 +3045,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			// add the regen health
 			// Don't call CFFPlayer::TakeHealth as it will clear status effects
 			// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
-			if( BaseClass::TakeHealth( ffdev_regen_health.GetIn(), DMG_GENERIC ) )			
+			if( BaseClass::TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )			
 			//if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
 			{				
 				// make a sound if we did
