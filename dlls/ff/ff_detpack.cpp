@@ -246,7 +246,7 @@ void CFFDetpack::OnObjectThink( void )
 		SendStopTimerMessage();
 
 		// Second time calling the think func, so time to blow up!
-		Detonate();
+		Detonate();		
 	}
 }
 

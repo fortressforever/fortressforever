@@ -410,7 +410,7 @@ void CFFBuildableObject::Precache( void )
 		m_iShockwaveExplosionTexture = PrecacheModel( "sprites/lgtning.vmt" );	
 
 	// Call base class
-	BaseClass::Precache( );	
+	BaseClass::Precache();	
 }
 
 /**

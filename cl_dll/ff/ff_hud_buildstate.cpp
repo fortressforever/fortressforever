@@ -55,6 +55,7 @@ private:
 	wchar_t m_szHealth[32];
 	wchar_t m_szAmmo[32];
 	wchar_t m_szNoRockets[32];
+	wchar_t m_szRockets[ 32 ];
 
 	// Icons
 	CHudTexture *m_pHudSentry;

@@ -456,7 +456,7 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
 	// Creates a client side ONLY detpack - used for the build slot
-	static C_FFDetpack *CreateClientSideDetpack( const Vector& vecOrigin, const QAngle& vecAngles );
+	static C_FFDetpack *CreateClientSideDetpack( const Vector& vecOrigin, const QAngle& vecAngles );	
 #else
 	virtual void Spawn( void );
 	void GoLive( void );

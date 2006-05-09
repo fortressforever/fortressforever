@@ -464,9 +464,7 @@ void CFFSentryGun::OnActiveThink()
 	CBaseEntity *enemy = GetEnemy();
 
 	// Enemy is no longer targettable
-	if (!enemy || !FVisible(enemy) || !enemy->IsAlive() || (enemy->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() > FLOOR_TURRET_RANGE * 
-
-FLOOR_TURRET_RANGE) 
+	if (!enemy || !FVisible(enemy) || !enemy->IsAlive() || (enemy->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() > FLOOR_TURRET_RANGE * FLOOR_TURRET_RANGE) 
 	{
 		SetEnemy(NULL);
 		SetThink(&CFFSentryGun::OnSearchThink);
@@ -515,6 +513,8 @@ FLOOR_TURRET_RANGE)
 			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
         
 		CFFProjectileRocket::CreateRocket(vecOrigin + vecAiming * 8.0f, m_angAiming, this, 102, 900.0f);
+
+		m_iRockets--;
 
 		bFired = true;
 		m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
@@ -980,7 +980,7 @@ CFFSentryGun *CFFSentryGun::Create(const Vector &vecOrigin, const QAngle &vecAng
 	// Set our faux owner - see CFFBuildable::Create for the reason why
 	pObject->m_hOwner.GetForModify() = pentOwner;
 
-	//pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
+	pObject->VPhysicsInitNormal( SOLID_VPHYSICS, pObject->GetSolidFlags(), true );
 
 	// Spawn the object
 	pObject->Spawn();

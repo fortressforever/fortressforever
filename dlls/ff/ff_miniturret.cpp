@@ -375,7 +375,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	bool bEnemyVisible = FVisible( GetEnemy() ) && GetEnemy()->IsAlive();
 
 	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
-	float flDistToEnemy = VectorNormalize( vecDirToEnemy );
+	//float flDistToEnemy = VectorNormalize( vecDirToEnemy );
 
 	Vector vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMuzzle;
 	VectorNormalize( vecDirToEnemyEyes );
@@ -398,7 +398,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	}	
 
 	// Current enemy is not visible
-	if( !bEnemyVisible || ( flDistToEnemy > FF_MINITURRET_RANGE ) )
+	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
 	{
 		if( m_flLastSight )
 		{
@@ -418,6 +418,7 @@ void CFFMiniTurret::OnActiveThink( void )
 		bEnemyVisible = false;
 	}
 
+	// Get aiming direction and angles
 	Vector vecMuzzleDir;
 	QAngle vecMuzzleAng;
 
@@ -551,7 +552,10 @@ void CFFMiniTurret::Ping( void )
 //-----------------------------------------------------------------------------
 float CFFMiniTurret::MaxYawSpeed( void )
 {
-	return miniturret_turnspeed.GetFloat();
+	if( GetEnemy() )
+		return miniturret_turnspeed.GetFloat();
+
+	return 3.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -562,6 +566,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	FireBulletsInfo_t info;
 
 	Vector vecDir = vecDirToEnemy;
+	//Vector vecDir = GetEnemy()->GetAbsOrigin() - MuzzlePosition();
 
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDir;
@@ -571,7 +576,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
-	info.m_iDamage = 30.0f;
+	info.m_iDamage = 70.0f;
 
 	FireBullets( info );
 	DoMuzzleFlash();
