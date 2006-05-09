@@ -3043,8 +3043,11 @@ void CFFPlayer::StatusEffectsThink( void )
 		if( GetClassSlot() == CLASS_MEDIC )
 		{
 			// add the regen health
-			if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
-			{
+			// Don't call CFFPlayer::TakeHealth as it will clear status effects
+			// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
+			if( BaseClass::TakeHealth( ffdev_regen_health.GetIn(), DMG_GENERIC ) )			
+			//if( TakeHealth( ffdev_regen_health.GetInt(), DMG_GENERIC ) )
+			{				
 				// make a sound if we did
 				//EmitSound( "medkit.hit" );
 			}
@@ -4071,10 +4074,16 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
 	int hp = BaseClass::TakeHealth( flHealth, bitsDamageType );
 
-	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
-	// Only have good effects if they got health from this
-	//if (hp && flHealth)
-	//	ClearSpeedEffects(SEM_HEALABLE);
+	// Reverting back to how it was and will add medic regen
+	// health specifically when its time to add medic regen health
+
+// Bug reverted back to before "fix"
+//	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
+//	// Only have good effects if they got health from this
+
+	// Bug #0000604: Taking health with health kit doesn't fix status effects
+	if (hp && flHealth)
+		ClearSpeedEffects(SEM_HEALABLE);
 
 	return hp;
 }
