@@ -3150,7 +3150,9 @@ void CFFPlayer::StatusEffectsThink( void )
 							continue;
 
 						// Bug #0000468: Infections transmit to non-teammates
-						if( player->GetTeamNumber() != GetTeamNumber() )
+						//if( player->GetTeamNumber() != GetTeamNumber() )
+						// Changed to allow infections across allies
+						if( g_pGameRules->PlayerRelationship( this, player ) == GR_NOTTEAMMATE )
 							continue;
 
 						// Infect this guy
