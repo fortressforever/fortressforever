@@ -190,6 +190,9 @@ void CHudArmor::MsgFunc_Damage( bf_read &msg )
 
 void CHudArmor::Paint()
 {
+	if( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE )
+		return;
+
 	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	//surface()->DrawSetColor(255, 255, 255, 255);
 	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());

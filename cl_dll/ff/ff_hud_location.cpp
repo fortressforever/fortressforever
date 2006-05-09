@@ -111,6 +111,9 @@ void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
 
 void CHudLocation::Paint( void )
 {
+	if( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE )
+		return;
+
 	if( m_pText )
 	{
 		surface()->DrawSetTextFont( m_hTextFont );

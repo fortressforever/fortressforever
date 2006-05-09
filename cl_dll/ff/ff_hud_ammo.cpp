@@ -309,6 +309,9 @@ void CHudAmmo::SetAmmo2(int ammo2, bool playAnimation)
 
 void CHudAmmo::Paint()
 {
+	if( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE )
+		return;
+
 	// Draw background box
 	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
