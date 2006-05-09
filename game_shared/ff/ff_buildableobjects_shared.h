@@ -657,6 +657,7 @@ public:
 	const char *GetTracerType( void ) { return "SGTracer"; }
 
 	virtual Vector EyePosition( void );
+	Vector MuzzlePosition( void );
 	Vector	EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
 
 	// Generic function to send hud messages to players
@@ -709,6 +710,15 @@ public:
 	int m_iYawPoseParameter;
 
 	static const char		*m_pShotSounds[ ];
+
+	//
+	// Level 3 only stuff
+	//
+	// Which barrel to fire from (when level 3)
+	bool m_bLeftBarrel;
+	bool m_bRocketLeftBarrel;
+	int m_iLBarrelAttachment;
+	int m_iRBarrelAttachment;
 
 	// Aiming
 	QAngle	m_angGoal;

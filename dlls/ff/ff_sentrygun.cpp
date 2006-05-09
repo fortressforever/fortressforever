@@ -169,6 +169,8 @@ CFFSentryGun::CFFSentryGun()
 	m_iMaxRockets = 0;
 	m_iRockets = 0;
 	m_iShellDamage = 8;
+	m_bLeftBarrel = true;
+	m_bRocketLeftBarrel = true;
 
 	m_angGoal.Init();
 }
@@ -286,8 +288,8 @@ void CFFSentryGun::Spawn()
 	m_iAmmoType = GetAmmoDef()->Index("PISTOL");
 #endif
 
-	m_iMuzzleAttachment = LookupAttachment("eyes");
-	m_iEyeAttachment = LookupAttachment("barrel01");
+	m_iMuzzleAttachment = LookupAttachment("barrel01");
+	m_iEyeAttachment = LookupAttachment("eyes");
 
 	m_iPitchPoseParameter = LookupPoseParameter(FLOOR_TURRET_BC_PITCH);
 	m_iYawPoseParameter = LookupPoseParameter(FLOOR_TURRET_BC_YAW);
@@ -473,11 +475,11 @@ FLOOR_TURRET_RANGE)
 	}
 
 	// Get our shot positions
-	Vector vecMid = EyePosition();
+	Vector vecMid = MuzzlePosition();
 	Vector vecMidEnemy = GetEnemy()->BodyTarget(vecMid);
 
 	// Update our goal directions
-	VectorAngles(GetEnemy()->WorldSpaceCenter() - EyePosition(), m_angGoal);
+	VectorAngles(GetEnemy()->WorldSpaceCenter() - MuzzlePosition(), m_angGoal);
 
 	// Update angles now, otherwise we'll always be lagging behind
 	UpdateFacing();
@@ -494,7 +496,7 @@ FLOOR_TURRET_RANGE)
 		m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
 
 		if (vecAiming.Dot(vecGoal) > DOT_5DEGREE) 
-			Shoot(EyePosition(), vecAiming, true);
+			Shoot(MuzzlePosition(), vecAiming, true);
 
 		bFired = true;
 	}
@@ -504,9 +506,18 @@ FLOOR_TURRET_RANGE)
 	{
 		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-        CFFProjectileRocket::CreateRocket(EyePosition() + vecAiming * 64.0f, m_angAiming, this, 102, 900.0f);
+		Vector vecOrigin;
+		QAngle vecAngles;
+
+		if( m_bRocketLeftBarrel )
+			GetAttachment( m_iLBarrelAttachment, vecOrigin, vecAngles );
+		else
+			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
+        
+		CFFProjectileRocket::CreateRocket(vecOrigin + vecAiming * 8.0f, m_angAiming, this, 102, 900.0f);
 
 		bFired = true;
+		m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
 	}
 
 	if (bFired) 
@@ -663,32 +674,12 @@ void CFFSentryGun::Shoot(const Vector &vecSrc, const Vector &vecDirToEnemy, bool
 
 	//CFFSevTest::Create( info.m_vecSrc, GetAbsAngles() );
 
-	if( m_iLevel == 3 )
-	{
-		/*
-		// For the second barrel
-		FireBulletsInfo_t info2;
-
-		info2.m_vecSrc = vecSrc;
-		info2.m_vecDirShooting = vecDir;
-		info2.m_iTracerFreq = 1;
-		info2.m_iShots = 1;
-		info2.m_pAttacker = this;
-		info2.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-		info2.m_flDistance = MAX_COORD_RANGE;
-		info2.m_iAmmoType = m_iAmmoType;
-		info2.m_iDamage = m_iShellDamage;		
-
-		//CFFSevTest::Create( info2.m_vecSrc, GetAbsAngles() );
-
-		FireBullets(info2);
-		*/
-	}
-
 	FireBullets(info);
 	EmitSound("Sentry.Fire");
 	DoMuzzleFlash();
-	
+
+	// Change barrel
+	m_bLeftBarrel = !m_bLeftBarrel;	
 
 	m_iShells--;
 }
@@ -697,9 +688,18 @@ void CFFSentryGun::DoMuzzleFlash()
 {
 	CEffectData data;
 
-	data.m_nAttachmentIndex = LookupAttachment("gun_hole");
+	data.m_nAttachmentIndex = m_iMuzzleAttachment;
+
+	if( m_iLevel > 2 )
+	{
+		if( m_bLeftBarrel )
+			data.m_nAttachmentIndex = m_iLBarrelAttachment;
+		else
+			data.m_nAttachmentIndex = m_iRBarrelAttachment;
+	}
+
 	data.m_nEntIndex = entindex();
-	DispatchEffect("MuzzleFlash", data);
+	DispatchEffect( "MuzzleFlash", data );
 }
 
 //-----------------------------------------------------------------------------
@@ -754,7 +754,7 @@ bool CFFSentryGun::UpdateFacing()
 	// Calculate the real pitch target, this depends on the angle at the point we are at now
 	Vector vecMuzzle;
 	QAngle angMuzzle;
-	GetAttachment(m_iMuzzleAttachment, vecMuzzle, angMuzzle);
+	GetAttachment(m_iEyeAttachment, vecMuzzle, angMuzzle);
 
 	// Get orientation pitch at intended orientation
 	Vector dir; AngleVectors(QAngle(0, m_angAiming.y, 0), &dir);
@@ -827,8 +827,22 @@ Vector CFFSentryGun::EyePosition()
 	Vector vecOrigin;
 	QAngle vecAngles;
 
-	GetAttachment(m_iMuzzleAttachment, vecOrigin, vecAngles);
+	GetAttachment(m_iEyeAttachment, vecOrigin, vecAngles);
 
+	return vecOrigin;
+}
+Vector CFFSentryGun::MuzzlePosition( void )
+{
+	Vector vecOrigin;
+	QAngle vecAngles;
+	GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+	if( m_iLevel > 2 )
+	{
+		if( m_bLeftBarrel )
+			GetAttachment( m_iLBarrelAttachment, vecOrigin, vecAngles );
+		else
+			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
+	}
 	return vecOrigin;
 }
 
@@ -903,6 +917,10 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 			//m_flTurnSpeed = 7.0f;
 			m_flTurnSpeed = sg_turnspeed.GetFloat();
 
+			// Update attachments
+			m_iMuzzleAttachment = LookupAttachment("barrel01");
+			m_iEyeAttachment = LookupAttachment("eyes");
+
 			break;
 
 		case 3:
@@ -923,6 +941,10 @@ void CFFSentryGun::Upgrade(bool bUpgradeLevel, int iCells, int iShells, int iRoc
 			m_flLockTime = 0.5f;
 			//m_flTurnSpeed = 7.0f;
 			m_flTurnSpeed = sg_turnspeed.GetFloat();
+			
+			m_iEyeAttachment = LookupAttachment( "eyes" );
+			m_iLBarrelAttachment = LookupAttachment( "barrel01" );
+			m_iRBarrelAttachment = LookupAttachment( "barrel02" );
 
 			break;
 		}

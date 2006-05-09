@@ -739,8 +739,9 @@ void CFFPlayer::Spawn()
 
 		// TODO set something if no map guides on this map
 
-		// Show the class select menu
-		ShowViewPortPanel( PANEL_CLASS, true );
+		// Show the class select menu	
+		// Bug #0000584: Switch teams results in the class menu appearing twice.
+		//ShowViewPortPanel( PANEL_CLASS, true );
 
 		// Don't allow them to spawn
 		return;
