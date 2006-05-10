@@ -157,6 +157,14 @@ public:
 
 		return iAmount;
 	}
+	int RemoveArmor( int iAmount )
+	{
+		int iRemovedAmt = min( iAmount, m_iArmor );
+
+		m_iArmor = clamp( m_iArmor - iAmount, 0, m_iArmor );
+
+		return iRemovedAmt;
+	}
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }

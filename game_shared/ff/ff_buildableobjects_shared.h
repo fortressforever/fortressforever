@@ -12,6 +12,9 @@
 //		This file First created
 // 22/01/2006, Mirv:
 //		Rewritten a lot of this
+//
+//	05/10/2006,	Mulchman:
+//		Adding radio tags to dispenser
 
 #ifndef FF_BUILDABLEOBJECTS_SHARED_H
 #define FF_BUILDABLEOBJECTS_SHARED_H
@@ -508,6 +511,15 @@ public:
 	CNetworkVar( int, m_iNails );
 	CNetworkVar( int, m_iRockets );
 	CNetworkVar( int, m_iArmor );
+	CNetworkVar( int, m_iRadioTags );
+
+	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
+	int NeedsArmor( void ) { return m_iMaxArmor - m_iArmor; }
+	int NeedsCells( void ) { return m_iMaxCells - m_iCells; }
+	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
+	int NeedsNails( void ) { return m_iMaxNails - m_iNails; }
+	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
+	int NeedsRadioTags( void ) { return m_iMaxRadioTags - m_iRadioTags; }
 
 protected:
 	int		m_iMaxCells;
@@ -520,6 +532,8 @@ protected:
 	int		m_iGiveRockets;
 	int		m_iMaxArmor;
 	int		m_iGiveArmor;
+	int		m_iMaxRadioTags;
+	int		m_iGiveRadioTags;
 	// <-- shared
 
 public:
@@ -541,13 +555,7 @@ public:
 
 	// Generic function to send hud messages to players
 	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText = false );
-	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
-	int NeedsArmor( void ) { return m_iMaxArmor - m_iArmor; }
-	int NeedsCells( void ) { return m_iMaxCells - m_iCells; }
-	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
-	int NeedsNails( void ) { return m_iMaxNails - m_iNails; }
-	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
-	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
+	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags );
 
 	// Some functions for the custom dispenser text
 	void SetText( const char *szCustomText ) { Q_strcpy( m_szCustomText, szCustomText ); }

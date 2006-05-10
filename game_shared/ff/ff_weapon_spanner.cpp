@@ -9,6 +9,9 @@
 /// REVISIONS
 /// ---------
 /// Jan 19, 2005 Mirv: Initial implementation
+//
+//	05/10/2006,	Mulchman:
+//		Matched values from TFC (thanks Dospac)
 
 
 #include "cbase.h"
@@ -150,7 +153,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				{
 					DevMsg("[CFFWeaponSpanner] Giving armor and reducing my cells\n");
 
-					int armour_needed = max(pHitPlayer->GetMaxArmor() - pHitPlayer->GetArmor(), 50);
+					int armour_needed = max(pHitPlayer->NeedsArmor(), 50);
 					int armour_given = min(armour_needed, 5 * pPlayer->GetAmmoCount(AMMO_CELLS));
 
 					pHitPlayer->AddArmor(armour_given);
@@ -203,17 +206,21 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				else
 				{
 					// On subsequent clangs, we gotta give it ammo and stuff!
-					int iCells = min( min( 20, pPlayer->GetAmmoCount( AMMO_CELLS ) ), pDispenser->NeedsCells() );
-					int iShells = min( min( 20, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
-					int iNails = min( min( 20, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
-					int iRockets = min( min( 20, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
+					int iCells = min( min( 40, pPlayer->GetAmmoCount( AMMO_CELLS ) ), pDispenser->NeedsCells() );
+					int iShells = min( min( 40, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
+					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
+					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
+					int iRadioTags = min( min( 10, pPlayer->GetAmmoCount( AMMO_RADIOTAG ) ), pDispenser->NeedsRadioTags() );
+					int iArmor = min( min( 40, pPlayer->GetArmor() ), pDispenser->NeedsArmor() );
 
-					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets );
+					pDispenser->AddAmmo( iArmor, iCells, iShells, iNails, iRockets, iRadioTags );
 
+					pPlayer->RemoveArmor( iArmor );
 					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
 					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
 					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
 					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
+					pPlayer->RemoveAmmo( iRadioTags, AMMO_RADIOTAG );
 				}
 
 				// Get out now so we don't call the baseclass and do damage

@@ -412,3 +412,60 @@ int CFFSentryGun::GetRockets( void )
 {
 	return m_iRockets;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CFFDispenser::CFFDispenser( void )
+{
+#ifdef GAME_DLL
+	// Overwrite the base class stubs
+	m_ppszModels = g_pszFFDispenserModels;
+	m_ppszGibModels = g_pszFFDispenserGibModels;
+	m_ppszSounds = g_pszFFDispenserSounds;
+
+	// Time in seconds between generating shiz
+	m_flThinkTime = 10.0f;
+
+	// Initialize
+	m_pLastTouch = NULL;
+	m_flLastTouch = 0.0f;
+
+	// Store a value from the base class
+	m_flOrigExplosionMagnitude = m_flExplosionMagnitude;
+#endif
+
+	// Initial values
+	m_iCells = 0;
+	m_iNails = 0;
+	m_iShells = 0;
+	m_iRockets = 0;
+	m_iArmor = 0;
+	m_iRadioTags = 0;
+
+	// Max values
+	m_iMaxCells		= 400;
+	m_iMaxShells	= 400;
+	m_iMaxNails		= 600;
+	m_iMaxRockets	= 300;
+	m_iMaxArmor		= 500;
+	m_iMaxRadioTags	= 200;
+
+	// Give values - values to give a player when they touch us
+	m_iGiveCells	= 10; // Give engies 75, though
+	m_iGiveShells	= 20;
+	m_iGiveNails	= 20;
+	m_iGiveRockets	= 10;
+	m_iGiveArmor	= 20;
+	m_iGiveRadioTags = 10;
+
+	// Health
+	m_iMaxHealth = m_iHealth = 150;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+CFFDispenser::~CFFDispenser( void )
+{
+}

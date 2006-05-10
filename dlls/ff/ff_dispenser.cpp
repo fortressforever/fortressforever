@@ -38,6 +38,9 @@
 //
 //	05/04/2006,	Mulchman
 //		AddAmmo function. Minor tweaks here and there.
+//
+//	05/10/2006,	Mulchman:
+//		Matched values from TFC (thanks Dospac)
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
@@ -50,7 +53,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
 
 //=============================================================================
 //
@@ -75,6 +77,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFDispenser, DT_FFDispenser )
 	SendPropInt( SENDINFO( m_iNails ) ),
 	SendPropInt( SENDINFO( m_iRockets ) ),
 	SendPropInt( SENDINFO( m_iArmor ) ),
+	SendPropInt( SENDINFO( m_iRadioTags ) ),
 END_SEND_TABLE()
 
 // Start of our data description for the class
@@ -127,52 +130,6 @@ inline void DispenseHelper( CFFPlayer *pPlayer, int& iAmmo, int iGiveAmmo, const
 }
 
 /**
-@fn CFFDispenser
-@brief Constructor
-@return N/A
-*/
-CFFDispenser::CFFDispenser( void )
-{
-	// Overwrite the base class stubs
-	m_ppszModels = g_pszFFDispenserModels;
-	m_ppszGibModels = g_pszFFDispenserGibModels;
-	m_ppszSounds = g_pszFFDispenserSounds;
-
-	// Time in seconds between generating shiz
-	m_flThinkTime = 10.0f;
-
-	// Initialize
-	m_pLastTouch = NULL;
-	m_flLastTouch = 0.0f;
-
-	// Store a value from the base class
-	m_flOrigExplosionMagnitude = m_flExplosionMagnitude;
-
-	// Max values
-	m_iMaxCells		= 400;
-	m_iMaxShells	= 400;
-	m_iMaxNails		= 600;
-	m_iMaxRockets	= 300;
-	m_iMaxArmor		= 500;
-
-	// Give values - values to give a player when they touch us
-	m_iGiveCells	= 20;
-	m_iGiveShells	= 20;
-	m_iGiveNails	= 20;
-	m_iGiveRockets	= 20;
-	m_iGiveArmor	= 10;
-}
-
-/**
-@fn ~CFFDispenser
-@brief Deconstructor
-@return N/A
-*/
-CFFDispenser::~CFFDispenser( void )
-{
-}
-
-/**
 @fn void Spawn( )
 @brief Spawns a model - called from Create
 @return void
@@ -182,16 +139,9 @@ void CFFDispenser::Spawn( void )
 	// Yeah, you can guess what this does!
 	Precache();
 
+	// In shared code now
 	// Health value based on TFC
-	m_iMaxHealth = m_iHealth = 150;
-
-	// TODO: Give these _real_ values
-	// Initialize dispenser items
-	m_iCells = 20;
-	m_iShells = 20;
-	m_iNails = 20;
-	m_iRockets = 20;
-	m_iArmor = 20;
+	//m_iMaxHealth = m_iHealth = 150;
 
 	//SetSolid( SOLID_VPHYSICS );
 
@@ -370,10 +320,11 @@ void CFFDispenser::OnObjectThink( void )
 
 	// Generate stock
 	m_iShells = clamp( m_iShells + 20, 0, m_iMaxShells );
-	m_iNails = clamp( m_iNails + 20, 0, m_iMaxNails );
+	m_iNails = clamp( m_iNails + 30, 0, m_iMaxNails );
 	m_iCells = clamp( m_iCells + 20, 0, m_iMaxCells );
 	m_iRockets = clamp( m_iRockets + 10, 0, m_iMaxRockets );
-	m_iArmor = clamp( m_iArmor + 20, 0, m_iMaxArmor );
+	m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
+	m_iRadioTags = clamp( m_iRadioTags + 10, 0, m_iMaxRadioTags );
 
 	// Update ammo percentage
 	UpdateAmmoPercentage();
@@ -383,7 +334,7 @@ void CFFDispenser::OnObjectThink( void )
 
 	SendStatsToBot();
 
-	// Set the next time to call this function - right away
+	// Set the next time to call this function
 	SetNextThink( gpGlobals->curtime + m_flThinkTime );
 }
 
@@ -453,10 +404,14 @@ CFFDispenser *CFFDispenser::Create( const Vector &vecOrigin, const QAngle &vecAn
 //
 void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 {
-	DispenseHelper( pPlayer, m_iCells.GetForModify(), m_iGiveCells, AMMO_CELLS );
+	if( pPlayer->GetClassSlot() == CLASS_ENGINEER )
+		DispenseHelper( pPlayer, m_iCells.GetForModify(), 75, AMMO_CELLS ); // Engies get 75 cells
+	else
+    	DispenseHelper( pPlayer, m_iCells.GetForModify(), m_iGiveCells, AMMO_CELLS ); // Everyone else gets 10 cells
 	DispenseHelper( pPlayer, m_iNails.GetForModify(), m_iGiveNails, AMMO_NAILS );
 	DispenseHelper( pPlayer, m_iShells.GetForModify(), m_iGiveShells, AMMO_SHELLS );
 	DispenseHelper( pPlayer, m_iRockets.GetForModify(), m_iGiveRockets, AMMO_ROCKETS );
+	DispenseHelper( pPlayer, m_iRadioTags.GetForModify(), m_iGiveRadioTags, AMMO_RADIOTAG );
 
 	// Give armor if we can
 	if( m_iArmor > 0 )
@@ -474,13 +429,14 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 // AddAmmo
 //		Put stuff into the dispenser
 //
-void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets )
+void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags )
 {
-	m_iArmor += iArmor;
-	m_iCells += iCells;
-	m_iShells += iShells;
-	m_iNails += iNails;
-	m_iRockets += iRockets;
+	m_iArmor = min( m_iArmor + iArmor, m_iMaxArmor );
+	m_iCells = min( m_iCells + iCells, m_iMaxCells );
+	m_iShells = min( m_iShells + iShells, m_iMaxShells );
+	m_iNails = min( m_iNails + iNails, m_iMaxNails );
+	m_iRockets = min( m_iRockets + iRockets, m_iMaxRockets );
+	m_iRadioTags = min( m_iRadioTags + iRadioTags, m_iMaxRadioTags );
 
 	UpdateAmmoPercentage();
 }
@@ -525,8 +481,8 @@ void CFFDispenser::CalcAdjExplosionVal( void )
 //
 void CFFDispenser::UpdateAmmoPercentage( void )
 {
-	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets;
-	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets;
+	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets + m_iRadioTags + m_iArmor;
+	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets + m_iMaxRadioTags + m_iMaxArmor;
 
 	m_iAmmoPercent = ( ( flAmmo / flMaxAmmo ) * 100 );
 }
@@ -544,6 +500,8 @@ void CFFDispenser::SendStatsToBot()
 		bud.udata.m_2ByteFlags[3] = m_iRockets;
 		bud.udata.m_2ByteFlags[4] = m_iCells;
 		bud.udata.m_2ByteFlags[5] = m_iArmor;
+
+		// TODO: Add in radio tag
 
 		int iGameId = pOwner->entindex()-1;
 		Omnibot::omnibot_interface::Bot_Interface_SendEvent(

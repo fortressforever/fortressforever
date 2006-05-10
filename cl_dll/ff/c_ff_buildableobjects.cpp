@@ -43,6 +43,9 @@
 //
 //	03/17/2006, Mulchman:
 //		Removing aim sphere
+//
+//	05/10/2006, Mulchman:
+//		Add radio tags to dispenser
 
 #include "cbase.h"
 //#include "c_ff_buildableobjects.h"
@@ -251,21 +254,22 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFDispenser, DT_FFDispenser, CFFDispenser )
 	RecvPropInt( RECVINFO( m_iNails ) ),
 	RecvPropInt( RECVINFO( m_iRockets ) ),
 	RecvPropInt( RECVINFO( m_iArmor ) ),
+	RecvPropInt( RECVINFO( m_iRadioTags ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-C_FFDispenser::C_FFDispenser( void )
-{
-}
+//C_FFDispenser::C_FFDispenser( void )
+//{
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: Deconstructor
 //-----------------------------------------------------------------------------
-C_FFDispenser::~C_FFDispenser( void )
-{
-}
+//C_FFDispenser::~C_FFDispenser( void )
+//{
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
