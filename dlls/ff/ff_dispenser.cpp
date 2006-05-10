@@ -196,7 +196,13 @@ void CFFDispenser::GoLive( void )
 	// Bug #0000244: Building dispenser doesn't take away cells
 	// Temp value of 100 for now
 	if (pOwner)
+	{
 		pOwner->RemoveAmmo(100, AMMO_CELLS);
+
+		int iArmor = min( min( 40, pOwner->GetArmor() ), NeedsArmor() );
+		AddAmmo( iArmor, 0, 0, 0, 0, 0 );
+		pOwner->RemoveArmor( iArmor );
+	}
 }
 
 /**

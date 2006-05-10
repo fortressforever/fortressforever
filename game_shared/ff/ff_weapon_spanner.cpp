@@ -200,8 +200,12 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				// If it's damaged, restore it's health on the first clang
 				if( pDispenser->NeedsHealth() ) 
 				{
-					// TODO: Remove cells?
-					pDispenser->SetHealth( pDispenser->GetMaxHealth() );
+					// We get 5 health for each cell
+					int iHealthGiven = min( pDispenser->NeedsHealth(), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
+					
+					pDispenser->SetHealth( pDispenser->GetHealth() + iHealthGiven );
+
+					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
 				}
 				else
 				{
@@ -211,11 +215,12 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
 					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
 					int iRadioTags = min( min( 10, pPlayer->GetAmmoCount( AMMO_RADIOTAG ) ), pDispenser->NeedsRadioTags() );
-					int iArmor = min( min( 40, pPlayer->GetArmor() ), pDispenser->NeedsArmor() );
+					// Only add armor when building
+					//int iArmor = min( min( 40, pPlayer->GetArmor() ), pDispenser->NeedsArmor() );
 
-					pDispenser->AddAmmo( iArmor, iCells, iShells, iNails, iRockets, iRadioTags );
+					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets, iRadioTags );
 
-					pPlayer->RemoveArmor( iArmor );
+					//pPlayer->RemoveArmor( iArmor );
 					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
 					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
 					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
