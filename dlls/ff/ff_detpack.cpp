@@ -270,7 +270,7 @@ void CFFDetpack::SendStopTimerMessage( void )
 {
 	// Only send this message to the owner player	
 	CSingleUserRecipientFilter user( ToFFPlayer( m_hOwner.Get() ) );
-	user.MakeReliable( );
+	user.MakeReliable();
 
 	// Start the message block
 	UserMessageBegin( user, "DetpackStopTimer" );
@@ -279,7 +279,7 @@ void CFFDetpack::SendStopTimerMessage( void )
 	WRITE_SHORT( 1 );
 
 	// End the message block
-	MessageEnd( );
+	MessageEnd();
 }
 
 int CFFDetpack::TakeEmp( void )
@@ -291,6 +291,9 @@ int CFFDetpack::TakeEmp( void )
 		DevMsg( "[Detpack] Calling think function early to start timer - hit by emp!\n" );
 		m_flThinkTime = 0.001f;	// immediate
 		SetNextThink( gpGlobals->curtime + m_flThinkTime );
+
+		// Return something so an explosion goes off from the emp
+		return 1;
 	}
 
 	return 0;

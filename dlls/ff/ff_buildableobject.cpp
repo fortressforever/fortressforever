@@ -28,18 +28,24 @@
 //	06/30/2006, Mulchman:
 //		This thing has been through tons of changes and additions.
 //		The latest thing is the doorblockers
+//
+//	05/10/2006, Mulchman:
+//		Messing w/ the explode function and dealing better damage
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 #include "explode.h"
-#include "gib.h"
-//#include "ff_player.h"
-#include "EntityFlame.h"
+//#include "gib.h"
+#include "ff_player.h"
+//#include "EntityFlame.h"
 #include "beam_flags.h"
-#include "basecombatcharacter.h"
-#include "gamevars_shared.h"
 #include "ff_gamerules.h"
 #include "world.h"
+
+#ifdef _DEBUG
+#include "Color.h"
+#include "ff_utils.h"
+#endif
 
 #include "omnibot_interface.h"
 
@@ -658,7 +664,7 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 */
 void CFFBuildableObject::DoExplosion( void )
 {
-	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 
 	// Explosion!
 	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 16.0f ); // Bring off the ground a little 
@@ -688,55 +694,101 @@ void CFFBuildableObject::DoExplosion( void )
 	// Mirv: Changed pAttacker from this to pOwner, to fix
 	// Bug #0000279: Detpack not causing damage.
 	// Bug #0000247: Dispenser explosion does not hurt you
-	RadiusDamage( CTakeDamageInfo( this, pOwner, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
+	//RadiusDamage( CTakeDamageInfo( this, pOwner, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
+
+	// Raise up a little, don't want to be right on the ground
+	Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 32 );
 
 	// Better damage given out
-	//CBaseEntity *pEntity = NULL;
-	//for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	//{
-		/*
+	CBaseEntity *pEntity = NULL;
+	for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
 		if( !pEntity )
 			continue;
 
+		// Bail if the object doesn't take damage
+		if( ( pEntity->m_takedamage == DAMAGE_NO ) ||
+			( pEntity->m_takedamage == DAMAGE_AIM ) )
+			continue;
+
 		// Skip us
-		if( pEntity == this )
+		if( pEntity == ( CBaseEntity * )this )
 			continue;
 
 		// The player (or buildable's owner) that is inside our sphere
 		CFFPlayer *pPlayer = NULL;
+		bool bSpecial = false;
+		Vector vecTarget;
 
 		if( pEntity->IsPlayer() )
 		{
-			pPlayer = ToFFPlayer( pEntity );			
+			pPlayer = ToFFPlayer( pEntity );
+			vecTarget = pPlayer->GetLegacyAbsOrigin();
 		}
 		else if( pEntity->Classify() == CLASS_DISPENSER )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pEntity );
 			pPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
+			vecTarget = pDispenser->GetAbsOrigin() + Vector( 0, 0, 36 );
 		}
 		else if( pEntity->Classify() == CLASS_SENTRYGUN )
 		{
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pEntity );
 			pPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
+			vecTarget = pSentryGun->GetAbsOrigin() + Vector( 0, 0, 36 );
+		}
+		else
+		{
+			// Not a player, dispenser, or SG. Still need to give out damage
+			// in case the object needs to respond to damage (buttons?)
+			bSpecial = true;
+			vecTarget = pEntity->GetAbsOrigin();
 		}
 
-		if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
-			continue;
+		// Only want to do the next couple of checks on
+		// players, dispenser, and sentryguns
+		if( !bSpecial )
+		{
+			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+				continue;
 
-		// If the player can't take damage from us (our owner), bail
-		if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
-			continue;
+			// If the player can't take damage from us (our owner), bail
+			if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
+				continue;
 
-		// Now, do some tracing to see if they're not blocked by something.
-		// Basically, only let the world block people.
+#ifdef _DEBUG
+			Color cColor;
+			SetColorByTeam( pPlayer->GetTeamNumber() - 1, cColor );
 
-		// Raise up a little, don't want to be right on the ground
-		Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 32 );
-		Vector vecTarget = pEntity->IsPlayer() ? pPlayer->EyePosition() - pPlayer->GetAbsOrigin() : pEntity->GetAbsOrigin() + Vector( 0, 0, 48 );
+			NDebugOverlay::Line( vecOrigin, vecTarget, cColor.r(), cColor.g(), cColor.b(), false, 10.0f );
+#endif
+		}
 
-		NDebugOverlay::Line( vecOrigin, vecTarget, 0, 0, 255, false, 10.0f );
-		*/
-	//}
+		// Now, Trace! Basically, if we don't hit a couple of objects deal out [absolute] damage		
+		trace_t tr;
+		UTIL_TraceLine( vecOrigin, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+
+		bool bDoDamage = true;
+
+		if( tr.DidHit() )
+		{
+			DevMsg( "[%s Explosion] TraceLine hit something: %s\n", GetClassname(), tr.m_pEnt->GetClassname() );
+
+			// Don't do damage if the trace hit:
+			if( FClassnameIs( tr.m_pEnt, "func_door" ) ||
+				FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
+				FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
+				FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+				bDoDamage = false;
+		}
+
+		// Do damage
+		if( bDoDamage )
+		{
+			// TODO: Scale damage by distance?
+			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, Vector( 100, 100, 50 ), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );
+		}
+	}
 
 	// Shake the screen if you're close enough
 	UTIL_ScreenShake( GetAbsOrigin(), 25.0f, 150.0f, m_flExplosionDuration, 5.0f * m_flExplosionRadius, SHAKE_START );

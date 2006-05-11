@@ -43,11 +43,6 @@
 #else
 	#include "ff_player.h"
 	#include "ai_basenpc.h"
-
-	//#include "server_class.h"
-	//#include "soundent.h"
-	//#include <igameevents.h>
-	//#include <igamesystem.h>
 #endif
 
 #define FF_DISPENSER_MODEL					"models/buildable/dispenser/dispenser.mdl"
@@ -644,10 +639,8 @@ public:
 
 	void HackFindEnemy( void );
 
-	float MaxYawSpeed();
-	float MaxPitchSpeed();
-
-	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget );
+	float MaxYawSpeed( void );
+	float MaxPitchSpeed( void );
 
 protected:
 	void Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
@@ -655,9 +648,8 @@ protected:
 	void SpinUp( void );
 	void SpinDown( void );
 	bool UpdateFacing( void );
-	bool OnSide( void );
 
-	void SendStatsToBot();
+	void SendStatsToBot( void );
 
 public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
@@ -666,7 +658,7 @@ public:
 
 	virtual Vector EyePosition( void );
 	Vector MuzzlePosition( void );
-	Vector	EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
+	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
 
 	// Generic function to send hud messages to players
 	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage );
@@ -697,27 +689,18 @@ public:
 
 	// Ammo definition for shells
 	int		m_iAmmoType;
-
-	//	bool	m_bAutoStart;
-	//	bool	m_bActive;		// Denotes the turret is deployed and looking for targets
-	//	bool	m_bEnabled;		// Denotes whether the turret is able to deploy or not
-
 	float	m_flNextShell;
 	float	m_flNextRocket;
-
 
 	float	m_flLastSight;
 	float	m_flPingTime;
 	float	m_flNextActivateSoundTime;
-
 
 	int		m_iEyeAttachment;
 	int		m_iMuzzleAttachment;
 
 	int m_iPitchPoseParameter;
 	int m_iYawPoseParameter;
-
-	static const char		*m_pShotSounds[ ];
 
 	//
 	// Level 3 only stuff
