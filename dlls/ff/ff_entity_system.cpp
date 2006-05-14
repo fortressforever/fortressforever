@@ -1794,7 +1794,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	// 1 argument, 1 result, escape cleanly if it breaks
 	if( lua_pcall( L, (ent)?2:1, 1, 0 ) != 0 )
 	{
-		DevWarning( "[SCRIPT] Error calling %s\n", addname );
+		DevWarning( "[SCRIPT] Error calling %s (%s)\n", addname, lua_tostring(L, -1) );
 		return true;
 	}
 
