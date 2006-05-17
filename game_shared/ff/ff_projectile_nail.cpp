@@ -94,7 +94,6 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 	if (!pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS) || !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup())) 
 		return;
 
-
 	if (pOther->m_takedamage != DAMAGE_NO) 
 	{
 		trace_t	tr, tr2;

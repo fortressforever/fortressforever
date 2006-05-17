@@ -140,6 +140,10 @@ public:
 	int GetHealthPercentage( void );
 	int GetArmorPercentage( void );
 
+	// This is so when we ID a disguised spy we use the same
+	// player name until that spy disguises as something else
+	SpyInfo_s m_hSpyTracking[ MAX_PLAYERS + 1 ];
+
 	virtual ShadowType_t ShadowCastType( void );
 
 public:	

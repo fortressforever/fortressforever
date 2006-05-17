@@ -619,6 +619,13 @@ C_FFPlayer::C_FFPlayer() :
 	// END: Added by Mulchman
 	
 	m_flConcTime = m_flConcTimeStart = 0;	// |-- Mirv: Don't start conced
+
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		// -1 = not set
+		m_hSpyTracking[ i ].m_iClass = -1;
+		m_hSpyTracking[ i ].m_iTeam = -1;
+	}
 }
 
 C_FFPlayer::~C_FFPlayer()

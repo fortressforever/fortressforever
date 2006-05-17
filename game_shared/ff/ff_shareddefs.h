@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 
 enum FFPlayerGrenadeState
@@ -31,5 +30,31 @@ enum FFStatusIconTypes
 	FF_ICON_INFECTED,
 	FF_NUMICONS
 };
+
+#ifdef CLIENT_DLL
+struct SpyInfo_s
+{
+	char	m_szName[ MAX_PLAYER_NAME_LENGTH ];	// Name we're using
+	int		m_iTeam;	// Disguised team
+	int		m_iClass;	// Disguised class
+
+	void	Set( const char *pszName, int iTeam, int iClass )
+	{
+		Q_strcpy( m_szName, pszName );
+		m_iTeam = iTeam;
+		m_iClass = iClass;
+	}
+
+	void	SetTeam( int iTeam ) { m_iTeam = iTeam; }
+	void	SetClass( int iClass ) { m_iClass = iClass; }
+	void	SetName( const char *pszName ) { Q_strcpy( m_szName, pszName ); }
+
+	bool	SameGuy( int iTeam, int iClass )
+	{
+		return( ( m_iTeam == iTeam ) && ( m_iClass == iClass ) );
+	}
+
+};
+#endif
 
 #endif // FF_SHAREDDEFS_H
