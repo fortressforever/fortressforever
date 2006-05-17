@@ -465,11 +465,18 @@ ConVar mp_prematch( "mp_prematch",
 		else
 		{
 			float flTimeLimit = mp_timelimit.GetFloat() * 60;
+
+			// Changelevel after intermission
+			if (g_fGameOver && gpGlobals->curtime > m_flIntermissionEndTime)
+			{
+				ChangeLevel();
+				return;
+			}
 		
 			// Catch the end of the map
 			if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit + m_flGameStarted )
 			{
-				ChangeLevel();
+				GoToIntermission(); //ChangeLevel();
 				return;
 			}
 		}

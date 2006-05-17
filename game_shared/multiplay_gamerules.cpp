@@ -895,6 +895,11 @@ bool CMultiplayRules::IsMultiplayer( void )
 				continue;
 
 			pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
+			
+			// --> Mirv: Lock into place too
+			CFFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
+			pFFPlayer->LockPlayerInPlace();
+			// <-- Mirv
 		}
 	}
 	
