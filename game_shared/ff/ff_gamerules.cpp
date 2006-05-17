@@ -651,7 +651,7 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	
 	//Don't stand on COLLISION_GROUP_WEAPON
-	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+	if( (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER) &&
 		collisionGroup1 == COLLISION_GROUP_WEAPON )
 	{
 		return false;

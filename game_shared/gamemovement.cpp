@@ -3303,7 +3303,8 @@ void CGameMovement::CheckFalling( void )
 			}
 			else if ( player->m_Local.m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED / 2 )
 			{
-				fvol = 0.85;
+				// 0000608: Makes dropping damage sound from heights that dont inflict damage
+				fvol = 0; //0.85;
 			}
 			else if ( player->m_Local.m_flFallVelocity < PLAYER_MIN_BOUNCE_SPEED )
 			{
@@ -3321,7 +3322,9 @@ void CGameMovement::CheckFalling( void )
 
 			//
 			// Play landing sound right away.
-			//player->m_flStepSoundTime = 400;
+			// #0000599: footstep continues to play after cratering
+			// #0000401: Oddity with the fall sound.
+			player->m_flStepSoundTime = 400;
 
 			// Play step sound for current texture.
 			//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol, true );

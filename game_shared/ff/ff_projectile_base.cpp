@@ -147,7 +147,9 @@ END_NETWORK_TABLE()
 
 			// Check that the explosion can 'see' this entity.
 			vecSpot = pEntity->BodyTarget(vecSrc, true);
-			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+
+			// Bugfix for #0000598: Backpacks blocking grenade damage
+			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
 
 			// Hmmm?????????
 			DevMsg("Explode length: %f %f %f\n", (pEntity->GetAbsOrigin() - vecSrc).Length(), (vecSpot - vecSrc).Length(), (tr.endpos - vecSrc).Length());
