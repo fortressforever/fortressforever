@@ -6455,9 +6455,11 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropEHandle		( SENDINFO( m_hLastWeapon ) ),
 		SendPropEHandle		( SENDINFO( m_hGroundEntity ), SPROP_CHANGES_OFTEN ),
 
- 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 0), 20, SPROP_CHANGES_OFTEN, -2048.0f, 2048.0f  ),
- 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 1), 20, SPROP_CHANGES_OFTEN, -2048.0f, 2048.0f  ),
- 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN, -2048.0f, 2048.0f  ),
+		// --> Mirv: Increase bounds
+ 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 0), 20, SPROP_CHANGES_OFTEN, /*-2048.0f*/ -4096.0f, /*2048.0f*/ 4096.0f ),
+ 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 1), 20, SPROP_CHANGES_OFTEN, /*-2048.0f*/ -4096.0f, /*2048.0f*/ 4096.0f ),
+ 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 2), 16, SPROP_CHANGES_OFTEN, /*-2048.0f*/ -4096.0f, /*2048.0f*/ 4096.0f ),
+		// <-- Mirv
 
 		SendPropVector		( SENDINFO( m_vecBaseVelocity ), 20, 0, -1000, 1000 ),
 

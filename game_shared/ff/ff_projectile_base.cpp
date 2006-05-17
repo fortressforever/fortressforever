@@ -75,8 +75,8 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
-			//interpolator.AddToHead(changeTime - 1.0, &vCurOrigin, false);
+			Vector vCurOrigin = GetLocalOrigin() - (m_vInitialVelocity * .05f);
+			interpolator.AddToHead(changeTime - 0.5f, &vCurOrigin, false);
 
 			// Add the current sample.
 			vCurOrigin = GetLocalOrigin();
@@ -89,12 +89,12 @@ END_NETWORK_TABLE()
 		// During the first second of our life, don't draw ourselves, this is to
 		// fix the weapon appearing behind the player because of interpolation values
 		// being added into the past
-		if (gpGlobals->curtime - m_flSpawnTime < 0.15f) 
+		/*if (gpGlobals->curtime - m_flSpawnTime < 0.15f) 
 		{
 		//	AddEffects(EF_NOSHADOW);
 		//
 			return 0;
-		}
+		}*/
 
 		//RemoveEffects(EF_NOSHADOW);
 
