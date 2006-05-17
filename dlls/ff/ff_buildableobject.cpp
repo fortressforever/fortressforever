@@ -217,8 +217,6 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_bHasSounds = false;
 	m_bTranslucent = true; // by default
 	m_bUsePhysics = false;
-
-	m_hDoorBlocker = NULL;
 }
 
 /**
@@ -243,36 +241,21 @@ void CFFBuildableObject::Spawn( void )
 	if( pOwner )
 		ChangeTeam( pOwner->GetTeamNumber() );
 
-	// Bug #0000221: Building SG facing non-cardinal directions causes client stuck
-	// Don't use AABB's
-	// Give it a bounding box (use the .phy file provided)
-	SetSolid( SOLID_VPHYSICS );
-	
-	// Going to move this crap into its own separate entity
-	// and spawn two bitches for each buildable.
-	// That way they'll hold doors/eles and shit open
-	// and detpacks will be able to bounce off of dispensers/sgs.
-	// Currently, I can get one or the other, and I think we need
-	// both (otherwise stuff just looks stupid).
-	/*
-	// To use solid_vphysics w/o tons of asserts
-	// since the engine can't rotate collideables (yet)
-	// Still aligns to world but i haven't been stuck
-	// building yet (like with solid_bbox)
-	AddSolidFlags( FSOLID_FORCE_WORLD_ALIGNED );
-
-	SetCollisionGroup( COLLISION_GROUP_NONE );
-	
 	if( m_bUsePhysics )
 	{
+		SetSolid( SOLID_VPHYSICS );
 		SetMoveType( MOVETYPE_VPHYSICS );
 	}
 	else
 	{
 		// So that doors collide with it
+		SetSolid( SOLID_VPHYSICS );		
+		AddSolidFlags( FSOLID_FORCE_WORLD_ALIGNED );
 		SetMoveType( MOVETYPE_FLY );
+
+		VPhysicsInitStatic();
 	}
-	*/
+
 	SetCollisionGroup( COLLISION_GROUP_PLAYER );
 		
 	// Make sure it has a model
@@ -280,8 +263,6 @@ void CFFBuildableObject::Spawn( void )
 
 	// Give it a model
 	SetModel( m_ppszModels[ 0 ] );
-
-	//CollisionProp()->UseTriggerBounds( true, 16.0f );
 
 	SetBlocksLOS( false );
 	m_takedamage = DAMAGE_EVENTS_ONLY;
@@ -349,7 +330,7 @@ void CFFBuildableObject::GoLive( void )
 			pPhysics->EnableDrag( true );			
 		}
 	}
-	*/
+	//*/
 
 	//*
 	IPhysicsObject *pPhysics = VPhysicsGetObject();
@@ -451,8 +432,6 @@ void CFFBuildableObject::RemoveQuietly( void )
 	// again and remove current owner
 	m_hOwner = NULL;
 
-	RemoveDoorBlocker();
-
 	// Remove entity from game
 	UTIL_Remove( this );
 }
@@ -464,6 +443,9 @@ void CFFBuildableObject::RemoveQuietly( void )
 */
 void CFFBuildableObject::OnObjectThink( void )
 {
+	// Don't think this is really necessary (only affects
+	// detpack anyway)
+	/*
 	if( m_bUsePhysics )
 	{
 		// See if we've stopped moving from physics stuff
@@ -487,6 +469,7 @@ void CFFBuildableObject::OnObjectThink( void )
 			}
 		}
 	}
+	*/
 }
 
 /**
@@ -526,7 +509,7 @@ CFFBuildableObject *CFFBuildableObject::Create( const Vector& vecOrigin, const Q
 	pObject->m_hOwner = pentOwner;
 
 	// Spawn the object
-	pObject->Spawn( );
+	pObject->Spawn();
 
 	return pObject;
 }
@@ -537,24 +520,10 @@ CFFBuildableObject *CFFBuildableObject::Create( const Vector& vecOrigin, const Q
 //
 int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 {
-	Warning( "[BuildableObject] VPhysicsTakeDamage\n" );
+	//Warning( "[BuildableObject] VPhysicsTakeDamage\n" );
 
 	return 1;
 }
-
-/*
-void CFFBuildableObject::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
-{
-	Warning( "[BuildableObject] VPhysicsCollision\n" );
-}
-
-bool CFFBuildableObject::ShouldCollide( int collisionGroup, int contentsMask ) const
-{
-	Warning( "[BuildableObject] ShouldCollide\n" );
-
-	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-}
-*/
 
 /**
 @fn void Explode( )
@@ -576,19 +545,8 @@ void CFFBuildableObject::Explode( void )
 	// again and remove current owner
 	m_hOwner = NULL;
 
-	RemoveDoorBlocker();	
-
 	// Remove entity from game 
 	UTIL_Remove( this );
-}
-
-void CFFBuildableObject::RemoveDoorBlocker( void )
-{
-	if( m_hDoorBlocker )
-	{		
-		m_hDoorBlocker->RemoveSelf();
-		m_hDoorBlocker = NULL;
-	}
 }
 
 /**
@@ -707,12 +665,7 @@ void CFFBuildableObject::DoExplosion( void )
 			continue;
 
 		// Bail if the object doesn't take damage
-		if( ( pEntity->m_takedamage == DAMAGE_NO ) ||
-			( pEntity->m_takedamage == DAMAGE_AIM ) )
-			continue;
-
-		// Skip us
-		if( pEntity == ( CBaseEntity * )this )
+		if( pEntity->m_takedamage == DAMAGE_NO )
 			continue;
 
 		// The player (or buildable's owner) that is inside our sphere
@@ -764,29 +717,70 @@ void CFFBuildableObject::DoExplosion( void )
 #endif
 		}
 
-		// Now, Trace! Basically, if we don't hit a couple of objects deal out [absolute] damage		
-		trace_t tr;
-		UTIL_TraceLine( vecOrigin, vecTarget, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+		bool bDoDamage = true, bBail = false;
 
-		bool bDoDamage = true;
+		// Need to trace until we hit the entity or a door/wall as someone/something
+		// can block the trace from getting to us but there is still a door/wall in the
+		// way that should have stopped the blast in the first place.
 
-		if( tr.DidHit() )
+		Vector vecBeg = vecOrigin;
+		CBaseEntity *pIgnore = this;
+		int iCount = 0;
+
+		while( bDoDamage && ( iCount < 256 ) && !bBail )
 		{
-			DevMsg( "[%s Explosion] TraceLine hit something: %s\n", GetClassname(), tr.m_pEnt->GetClassname() );
+			// Now, Trace! 
+			trace_t tr;
+			UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
 
-			// Don't do damage if the trace hit:
-			if( FClassnameIs( tr.m_pEnt, "func_door" ) ||
-				FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
-				FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
-				FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
-				bDoDamage = false;
+			// If we hit something...
+			if( tr.DidHit() )
+			{
+#ifdef _DEBUG
+				if( pEntity->IsPlayer() )
+					Warning( "[%s Explosion] Iterating on: %s (%s)", GetClassname(), pEntity->GetClassname(), ToFFPlayer( pEntity )->GetPlayerName() );
+				else
+					Warning( "[%s Explosion] Iterating on: %s", GetClassname(), pEntity->GetClassname() );
+
+				if( tr.m_pEnt->IsPlayer() )
+					Warning( ", TraceLine hit something: %s (%s)\n", tr.m_pEnt->GetClassname(), ToFFPlayer( tr.m_pEnt )->GetPlayerName() );
+				else
+					Warning( ", TraceLine hit something: %s\n", tr.m_pEnt->GetClassname() );
+#endif
+
+				// Don't do damage if the trace hit:
+				if( FClassnameIs( tr.m_pEnt, "func_door" ) ||
+					FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
+					FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
+					FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+					bDoDamage = false;	// Get out of loop
+
+				// Traced until we hit ourselves
+				if( tr.m_pEnt == pEntity )
+					bBail = true;
+			}
+
+			// Haven't hit a wall or pEntity so keep tracing
+			// Update start & ignore entity
+			vecBeg = tr.endpos;
+			pIgnore = tr.m_pEnt;
+
+			iCount++; // In case we get stuck tracing this will bail us out after so many traces
+
+			if( vecBeg == vecTarget )
+				bBail = true;
 		}
 
+#ifdef _DEBUG
+		Warning( "[Buildable Object] bDoDamage: %s, iCount: %i, bBail: %s\n", bDoDamage ? "true" : "false", iCount, bBail ? "true" : "false" );
+#endif
+
+		// Basically, if we don't hit a couple of objects deal out [absolute] damage		
 		// Do damage
 		if( bDoDamage )
 		{
 			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, Vector( 100, 100, 50 ), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );
+			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, Vector( 100, 100, 100 ), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );
 		}
 	}
 
@@ -869,6 +863,13 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// If we're not live yet don't take damage
 	if( !m_bBuilt )
 		return 0;
+
+	// TODO: We really do need to take damage while building
+	// or set the solid to none until built so that you can't
+	// use the building phase to be invulnerable.
+	// But, don't want to make the object non-solid as players
+	// can/could walk into the building area and be stuck on
+	// the model when it went solid finally.
 
 	//*
 	Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );

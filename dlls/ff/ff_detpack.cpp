@@ -116,15 +116,12 @@ CFFDetpack::~CFFDetpack( void )
 void CFFDetpack::Spawn( void )
 {
 	// Yeah, you can guess what this does!
-	Precache( );
+	Precache();
 	
 	m_iHealth = 1;
 
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();
-
-	// Done in baseclass
-	//SetSolid( SOLID_VPHYSICS );
 }
 
 /**
