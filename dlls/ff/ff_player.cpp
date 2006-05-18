@@ -3162,19 +3162,20 @@ void CFFPlayer::StatusEffectsThink( void )
 		}
 
 		// If we're still infected, cause damage
-		if( m_bInfected )
+		if (m_bInfected && IsAlive())	// |-- Mirv: Bug #0000461: Infect sound plays eventhough you are dead
 		{
 			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
 
+
 			// When you change this be sure to change the StopSound above ^^ for bug
-			// Bug #0000461: Infect sound plays eventhough you are dead
+			
 			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
 
 			DevMsg( "Infect Tick\n" );
 			m_fLastInfectedTick = gpGlobals->curtime;
-			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_DIRECT );
-			info.SetDamageForce( Vector( 0, 0, -1 ) );
-			info.SetDamagePosition( Vector( 0, 0, 1 ) );
+			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_POISON );
+			//info.SetDamageForce( Vector( 0, 0, -1 ) );
+			//info.SetDamagePosition( Vector( 0, 0, 1 ) );
 			TakeDamage( info );
 
 			CSingleUserRecipientFilter user((CBasePlayer *)this);
@@ -3182,7 +3183,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			UserMessageBegin(user, "StatusIconUpdate");
 				WRITE_BYTE(FF_ICON_INFECTED);
 				WRITE_FLOAT(2.0f);
-			MessageEnd();
+			MessageEnd(); 
 
 #if 1
 			// Bug #0000504: No infection visible effect
@@ -3822,6 +3823,8 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	// Display any effect associate with this damage type
 	DamageEffect(info.GetDamage(),bitsDamage);
+
+	EmitSound("Player.Pain");	// |-- Mirv: Emit some pain sound why don't you.
 
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent

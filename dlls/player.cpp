@@ -800,6 +800,16 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	{
 		EmitSound( "Flesh.BulletImpact" );
 	}
+	// --> Mirv: Poisoned
+	if (fDamageType & DMG_POISON)
+	{
+		// Green damage indicator
+		color32 green = {32,64,0,200};
+		UTIL_ScreenFade( this, green, 2.0f, 0.1f, FFADE_IN );
+
+		ViewPunch(QAngle(random->RandomInt(-0.1,0.1), random->RandomInt(-0.1,0.1), random->RandomInt(-0.1,0.1)));
+	}
+	// <-- Mirv
 }
 
 
