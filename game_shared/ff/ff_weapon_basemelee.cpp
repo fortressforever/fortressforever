@@ -299,6 +299,9 @@ void CFFWeaponMeleeBase::Swing()
 		}
 	}
 
+	// Play swing sound first
+	WeaponSound(SINGLE);
+
 	//	Miss
 	if (traceHit.fraction == 1.0f) 
 	{
@@ -321,7 +324,4 @@ void CFFWeaponMeleeBase::Swing()
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-
-	//Play swing sound
-	WeaponSound(SINGLE);
 }

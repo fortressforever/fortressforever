@@ -184,7 +184,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		{
 			CFFDispenser *pDispenser = (CFFDispenser *) pHitEntity;
 
-			EmitSound("Spanner.HitDispenser");
+			WeaponSound(SPECIAL2);
 
 			// Is the dispenser mine(is pPlayer the owner?) 
 			bool bMine = ( pPlayer == ToFFPlayer( pDispenser->m_hOwner.Get() ) );
@@ -238,7 +238,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		{
 			CFFSentryGun *pSentryGun = (CFFSentryGun *) pHitEntity;
 
-			EmitSound("Spanner.HitSG");
+			WeaponSound(SPECIAL1);
 
 			// Is the sentrygun mine(is pPlayer the owner?) 
 			bool bMine = ( pPlayer == ToFFPlayer( pSentryGun->m_hOwner.Get() ) );
@@ -289,8 +289,17 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 	CBaseEntity *pHitEntity = traceHit.m_pEnt;
 
 	// If we're a client we don't want to draw decals and stuff
-	if (pHitEntity->Classify() == CLASS_SENTRYGUN || pHitEntity->Classify() ==CLASS_DISPENSER) 
+	// Also since weapon sounds are predicted, play on client too
+	if (pHitEntity->Classify() == CLASS_SENTRYGUN)
+	{
+		WeaponSound(SPECIAL1);
 		return;
+	}
+	else if (pHitEntity->Classify() ==CLASS_DISPENSER)
+	{
+		WeaponSound(SPECIAL2);
+		return;
+	}
 
 #endif
 
