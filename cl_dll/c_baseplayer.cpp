@@ -552,7 +552,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 	// Only care about this for local player
 	if ( IsLocalPlayer() )
 	{
-		default_fov.SetValue( m_Local.m_iDefaultFOV );
+		//default_fov.SetValue( m_Local.m_iDefaultFOV );
 
 		//Update our FOV, including any zooms going on
 		int iDefaultFOV = default_fov.GetInt();

@@ -741,7 +741,8 @@ void CC_Player_FOV( void )
 			int FOV = atoi( engine->Cmd_Argv(1) );
 
 			// Bug #0000310: fov doesn't reset |-- Mulch
-			FOV = clamp( FOV, 80, 120 );
+			if (FOV != 0)	// |-- Mirv: Allow for 0 too in order to reset.
+				FOV = clamp( FOV, 80, 120 );
 
 			//pPlayer->SetDefaultFOV( FOV );
 			pPlayer->SetFOV( pPlayer, FOV );

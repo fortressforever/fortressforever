@@ -6862,13 +6862,15 @@ bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate )
 	if ( pRequester == NULL )
 		return false;
 
-	// If we already have an owner, we only allow requests from that owner
+	// --> Mirv: Got rid of this, is annoying.
+	/*// If we already have an owner, we only allow requests from that owner
 	if ( ( m_hZoomOwner != NULL ) && ( m_hZoomOwner != pRequester ) )
 	{
 		if ( CanOverrideEnvZoomOwner( m_hZoomOwner ) == false )
 			 return false;
 	}
-	else
+	else*/
+	// <-- Mirv: Got rid of this, is annoying.
 	{
 		//FIXME: Maybe do this is as an accessor instead
 		if ( FOV == 0 )

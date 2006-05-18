@@ -3034,7 +3034,7 @@ void CFFPlayer::Command_Discard( void )
 		AngleVectors(EyeAngles(), &vForward);
 
 		DevMsg("%f %f %f\n", vForward.x, vForward.y, vForward.z);
-		vForward *= 350.0f;
+		vForward *= 420.0f;
 
 		// Bugfix: Floating objects
 		if (vForward.z < 1.0f)

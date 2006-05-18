@@ -485,7 +485,6 @@ void CFFWeaponSniperRifle::ToggleZoom()
 		pPlayer->SetFOV(this, 0, 0.2f);
 #endif
 
-		EmitSound("SniperRifle.zoom_out");
 		m_bZoomed = false;
 	}
 	else
@@ -494,9 +493,16 @@ void CFFWeaponSniperRifle::ToggleZoom()
 		pPlayer->SetFOV(this, 20, 0.1f);
 #endif
 
-		EmitSound("SniperRifle.zoom_in");
 		m_bZoomed = true;
 	}
+
+	// Mirv: Play a sound depending on what we are now.
+	//		 This should stop it getting out of sync
+	if (pPlayer->GetFOV() > 40)
+		EmitSound("SniperRifle.zoom_in");
+	else
+		EmitSound("SniperRifle.zoom_out");
+
 }
 
 
