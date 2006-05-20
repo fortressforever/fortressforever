@@ -521,6 +521,9 @@
 					RelativePath="..\game_shared\ff\ff_mapguide.cpp">
 				</File>
 				<File
+					RelativePath="..\game_shared\ff\ff_miniturret.cpp">
+				</File>
+				<File
 					RelativePath="..\game_shared\ff\ff_modelglyph.cpp">
 				</File>
 				<File
@@ -667,6 +670,9 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_mapguide.h">
+				</File>
+				<File
+					RelativePath="..\game_shared\ff\ff_miniturret.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_playeranimstate.h">
@@ -3394,10 +3400,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
