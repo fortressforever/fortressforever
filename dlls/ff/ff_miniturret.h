@@ -89,12 +89,15 @@ public:
 
 	Vector	EyePosition( void )
 	{
+		/*
 		Vector vecOrigin;
 		QAngle vecAngles;
 
 		GetAttachment( m_iEyeAttachment, vecOrigin, vecAngles );
 
 		return vecOrigin - Vector( 0, 0, 48 );
+		*/
+		return GetAbsOrigin() - Vector( 0, 0, 16 );
 	}
 
 	Vector	MuzzlePosition( void )
@@ -111,7 +114,7 @@ public:
 		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
 	}
 
-	Vector	EyeOffset( Activity nActivity ) { return -Vector( 0, 0, 48 ); }
+	//Vector	EyeOffset( Activity nActivity ) { return -Vector( 0, 0, 48 ); }
 
 protected:
 	void	Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );

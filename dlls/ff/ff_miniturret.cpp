@@ -29,7 +29,7 @@
 
 // Debug visualization
 ConVar	miniturret_debug( "ffdev_miniturret_debug", "0" );
-ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "20.0" );
+ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0" );
 
 LINK_ENTITY_TO_CLASS( ff_miniturret, CFFMiniTurret );
 PRECACHE_REGISTER( ff_miniturret );
@@ -161,8 +161,11 @@ void CFFMiniTurret::Spawn( void )
 	// Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
 
-	// Rotate the angles 180 to orient it corerctly
-	SetAbsAngles( GetAbsAngles() + QAngle( 0, 180, 0 ) );
+	// For whatever reason, it seems like the yaw has to be set to 180
+	// or the yaw for the aiming will be off. The trepids might complain
+	// that setting the angles in hammer has no effect, so we might
+	// need to compensate for this later.
+	SetAbsAngles( QAngle( 0, 180, 0 ) );
 
 	m_vecGoalAngles.Init();
 
@@ -212,8 +215,9 @@ void CFFMiniTurret::HackFindEnemy( void )
 		if( !pPlayer->IsAlive() )
 			continue;
 
-		if( FFGameRules()->IsTeam1AlliedToTeam2( m_iTeam, pPlayer->GetTeamNumber() ) == GR_TEAMMATE )
-			continue;
+		if( m_iTeam != 0 )
+			if( FFGameRules()->IsTeam1AlliedToTeam2( m_iTeam, pPlayer->GetTeamNumber() ) == GR_TEAMMATE )
+				continue;
 
 		if( FVisible( pPlayer->GetAbsOrigin() ) )
 			pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
@@ -362,6 +366,8 @@ void CFFMiniTurret::OnActiveThink( void )
 
 	if( !m_bActive || !GetEnemy() )
 	{
+		Warning( "[MiniTurret] ActiveThink - !m_bActive || !GetEnemy()\n" );
+
 		SetEnemy( NULL );
 		m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;
 		SetThink( &CFFMiniTurret::OnSearchThink );
@@ -400,6 +406,8 @@ void CFFMiniTurret::OnActiveThink( void )
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
 	{
+		Warning( "[MiniTurret] ActiveThink - !bEnemyVisible\n" );
+
 		if( m_flLastSight )
 		{
 			m_flLastSight = gpGlobals->curtime + 0.5f;
@@ -414,8 +422,6 @@ void CFFMiniTurret::OnActiveThink( void )
 			SpinDown();
 			return;
 		}
-
-		bEnemyVisible = false;
 	}
 
 	// Get aiming direction and angles
@@ -433,7 +439,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	if( m_flShotTime < gpGlobals->curtime )
 	{
 		// Fire the gun
-		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) >= 0.9848 ) // 10 degree slop
+		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) >= DOT_10DEGREE ) // 10 degree slop
 		{
 			//SetActivity( ACT_RESET );
 			//SetActivity( ( Activity )ACT_MINITURRET_FIRE );
@@ -508,8 +514,13 @@ bool CFFMiniTurret::UpdateFacing( void )
 	QAngle vecAngles;
 	MuzzlePosition( vecOrigin, vecAngles );
 
+	float flYaw = GetPoseParameter( m_iYawPoseParameter );
+
+	if( miniturret_debug.GetBool() )
+		Warning( "[MiniTurret] Current pose yaw: %f, vecAngles yaw: %f, goal yaw: %f\n", flYaw, vecAngles.y, m_vecGoalAngles.y );
+
 	// Update yaw
-	float flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y ), AngleNormalize( vecAngles.y ), MaxYawSpeed() ) );
+	float flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y ), AngleNormalize( flYaw ), MaxYawSpeed() ) );
 	SetPoseParameter( m_iYawPoseParameter, flDiff );
 
 	// Update pitch
@@ -517,9 +528,7 @@ bool CFFMiniTurret::UpdateFacing( void )
 	SetPoseParameter( m_iPitchPoseParameter, flDiff );
 
 	if( miniturret_debug.GetBool() )
-	{
 		DevMsg( "[MiniTurret] Current Pitch: %f, Goal Pitch: %f, pitch val: %f\n", vecAngles.x, m_vecGoalAngles.x, flDiff );
-	}
 
 	InvalidateBoneCache();
 
