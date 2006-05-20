@@ -16,11 +16,11 @@
 
 
 #include "cbase.h"
+#include "ff_miniturret.h"
 
 #ifdef CLIENT_DLL 
-
-#else
-	#include "ff_miniturret.h"
+	#define CFFMiniTurretLaser C_FFMiniTurretLaser
+#else	
 	#include "ammodef.h"
 	#include "ff_gamerules.h"
 	#include "ff_buildableobjects_shared.h"
@@ -29,6 +29,198 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+//=============================================================================
+//
+// Class CFFMiniTurretLaser
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a laser dot
+// Input  : &origin - 
+// Output : CFFWeaponLaserDot
+//-----------------------------------------------------------------------------
+CFFMiniTurretLaser *CFFMiniTurretLaser::Create( const Vector& vecOrigin, CBaseEntity *pOwner ) 
+{
+#ifdef GAME_DLL
+	CFFMiniTurretLaser *pLaser = ( CFFMiniTurretLaser * )CBaseEntity::Create( "env_ffminiturretlaser", vecOrigin, QAngle( 0, 0, 0 ) );
+
+	if( !pLaser )
+		return NULL;
+
+	pLaser->SetRenderMode( ( RenderMode_t )9 );
+
+	pLaser->SetMoveType( MOVETYPE_NONE );
+	pLaser->AddSolidFlags( FSOLID_NOT_SOLID );
+	pLaser->AddEffects( EF_NOSHADOW );
+	UTIL_SetSize( pLaser, vec3_origin, vec3_origin );
+
+	pLaser->SetOwnerEntity( pOwner );
+
+	pLaser->AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
+
+	pLaser->SpriteInit( FF_MINITURRET_DOT, vecOrigin );
+	pLaser->SetName( AllocPooledString( "FF_MINITURRET_LASER" ) );
+	pLaser->SetTransparency( kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
+	pLaser->SetScale( 0.25f );
+	pLaser->SetOwnerEntity( pOwner );
+	pLaser->SetSimulatedEveryTick( true );
+
+	return pLaser;
+#else
+	return NULL;
+#endif
+}
+
+void CFFMiniTurretLaser::SetLaserPosition( const Vector& vecOrigin ) 
+{
+	SetAbsOrigin( vecOrigin );
+}
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Draw our sprite
+//-----------------------------------------------------------------------------
+int CFFMiniTurretLaser::DrawModel( int flags ) 
+{
+	/*
+	// See if we should draw
+	if( !IsVisible() || ( m_bReadyToDraw == false ) ) 
+		return 0;
+
+	// Must be a sprite
+	if( modelinfo->GetModelType( GetModel() ) != mod_sprite ) 
+	{
+		assert( 0 );
+		return 0;
+	}
+
+	float renderscale;
+	Vector vecAttachment, vecDir, endPos;
+	bool fDrawDot = true;
+
+	//CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
+	CFFMiniTurret *pOwner = dynamic_cast< CFFMiniTurret * >( GetOwnerEntity() );
+
+	// We're going to predict it using the players' angles
+	if( pOwner != NULL && pOwner->IsDormant() == false ) 
+	{
+		// Bug #0000555: Sniper rifle charge dot and conc effect
+		// Commented out by mulch for above bug
+
+		// Always draw the dot in front of our faces when in first-person
+		//if (pOwner->IsLocalPlayer()) 
+		//{
+		//	// Take our view position and orientation
+		//	vecAttachment = CurrentViewOrigin();
+		//	vecDir = CurrentViewForward();
+		//}
+		//else
+		//{
+		// Take the eye position and direction
+		vecAttachment = pOwner->Weapon_ShootPosition();
+		AngleVectors(pOwner->EyeAngles(), &vecDir);
+		//}
+
+		trace_t tr;
+		UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr);
+
+		// Backup off the hit plane
+		endPos = tr.endpos + (tr.plane.normal * 1.0f);
+
+		// Bug #0000376: Sniper dot is drawn on sky brushes
+		if (tr.surface.flags & SURF_SKY)
+			fDrawDot = false;
+
+		// Okay so beams. yes.
+		if (!pOwner->IsLocalPlayer()) 
+		{
+			Vector v1 = tr.endpos - tr.startpos;
+			Vector v2 = C_BasePlayer::GetLocalPlayer()->GetAbsOrigin() - tr.startpos;
+
+			VectorNormalizeFast(v1);
+			VectorNormalizeFast(v2);
+
+			float flDot = v1.Dot(v2);
+
+			if (flDot < 0) 
+				flDot = -flDot;
+
+			float brightness = flDot * flDot;
+
+			if (brightness > 0.3f) 
+				beams->CreateBeamPoints(tr.startpos, 
+				endPos, 
+				g_iBeam, 
+				g_iHalo, 
+				5.0f, 						// haloScale
+				gpGlobals->frametime, 		// life
+				brightness, 					// width
+				brightness, 					// endwidth
+				40.0f, 						// fadelength
+				0.0f, 						// amplitude
+				brightness, 					// brightness
+				0, 							// speed
+				0, 							// startframe
+				1.0f, 						// framerate
+				brightness, 					// r
+				brightness, 					// g
+				brightness);				// b
+
+			//beams->CreateBeamEntPoint(pOwner->entindex(), &tr.startpos, pOwner->entindex(), &endPos, g_iBeam, g_iHalo, 0, 0.1f, 1.0f, 1.0f, 40.0f, 1.0f, 1.0f, 0, 0, 1.0f, 1.0f, 0, 0);
+		}
+	}
+	else
+	{
+		// Just use our position if we can't predict it otherwise
+		endPos = GetAbsOrigin();
+	}
+
+	// Randomly flutter
+	//renderscale = 16.0f + random->RandomFloat(-2.0f, 2.0f);	
+	renderscale = 0.5f + random->RandomFloat( -0.02f, 0.02f );
+
+	// Bug #0000223: Sniper rifle dot doesn't get darker as shot is charged/does not charge?
+	int alpha = clamp( 115 + 20 * ( gpGlobals->curtime - m_flStartTime ), 0, 255 );
+
+	if( !fDrawDot )
+		return 0;
+
+	//Draw it
+	int drawn = DrawSprite(
+		this, 
+		GetModel(), 
+		endPos, 
+		GetAbsAngles(), 
+		m_flFrame, 				// sprite frame to render
+		m_hAttachedToEntity, 	// attach to
+		m_nAttachment, 			// attachment point
+		GetRenderMode(), 		// rendermode
+		m_nRenderFX, 
+		alpha, 		// alpha
+		m_clrRender->r, 
+		m_clrRender->g, 
+		m_clrRender->b, 
+		renderscale );			// sprite scale
+
+	
+	return drawn;
+	*/
+
+	return BaseClass::DrawModel( flags );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Setup our sprite reference
+//-----------------------------------------------------------------------------
+void CFFMiniTurretLaser::OnDataChanged( DataUpdateType_t updateType ) 
+{
+	if( updateType == DATA_UPDATE_CREATED ) 
+	{
+	}
+}
+#endif
 
 //=============================================================================
 //

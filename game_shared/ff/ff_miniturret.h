@@ -21,10 +21,91 @@
 #pragma once
 #endif
 
+#include "Sprite.h"
+
+#ifdef CLIENT_DLL 
+	#define CFFMiniTurretLaser C_FFMiniTurretLaser
+	#include "iviewrender_beams.h"
+	#include "beam_shared.h"
+	#include "beamdraw.h"
+#else
+	#include "ai_basenpc.h"
+#endif
+
+#define FF_MINITURRET_BEAM			"effects/bluelaser1.vmt"
+#define FF_MINITURRET_DOT			"sprites/redglow1.vmt"
+
+//=============================================================================
+//
+// Class CFFMiniTurretLaser
+//
+//=============================================================================
+
+class CFFMiniTurretLaser : public CSprite
+{
+public:
+	DECLARE_CLASS( CFFMiniTurretLaser, CSprite );
+	DECLARE_NETWORKCLASS();
+	DECLARE_DATADESC();
+
+	CFFMiniTurretLaser( void ) {}
+	~CFFMiniTurretLaser( void ) {}
+
+	static CFFMiniTurretLaser *Create( const Vector& vecOrigin, CBaseEntity *pOwner = NULL );
+
+	void SetLaserPosition( const Vector& vecOrigin );
+
+	bool IsOn( void ) const	{ return m_bIsOn; }
+
+	void TurnOn( void ) 	{ m_bIsOn = true; }
+	void TurnOff( void ) 	{ m_bIsOn = false; }
+	void Toggle( void ) 	{ m_bIsOn = !m_bIsOn; }
+
+	int ObjectCaps( void )	{ return( BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION ) | FCAP_DONT_SAVE; }
+
+#ifdef CLIENT_DLL
+	virtual bool			IsTransparent( void ) { return true; }
+	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
+	virtual int				DrawModel( int flags );
+	virtual void			OnDataChanged( DataUpdateType_t updateType );
+	virtual bool			ShouldDraw( void ) { return( IsEffectActive( EF_NODRAW) == false ); }
+#endif
+
+	CNetworkVar( float, m_flStartTime );
+
+protected:
+	bool				m_bIsOn;
+};
+
+//=============================================================================
+//
+// CFFMiniTurretLaser tables
+//
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaser, DT_FFMiniTurretLaser ) 
+
+BEGIN_NETWORK_TABLE( CFFMiniTurretLaser, DT_FFMiniTurretLaser ) 
+#ifdef CLIENT_DLL
+	RecvPropFloat( RECVINFO( m_flStartTime ) ) 
+#else
+	SendPropFloat( SENDINFO( m_flStartTime ) ) 
+#endif
+END_NETWORK_TABLE() 
+
+LINK_ENTITY_TO_CLASS( env_ffminiturretlaser, CFFMiniTurretLaser );
+
+BEGIN_DATADESC( CFFMiniTurretLaser ) 
+	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ), 
+END_DATADESC() 
+
+//=============================================================================
+//
+//	class CFFMiniTurret
+//
+//=============================================================================
+
 #ifdef GAME_DLL
-
-#include "ai_basenpc.h"
-
 #define	FF_MINITURRET_MODEL			"models/buildable/respawn_turret/respawn_turret.mdl"
 #define FF_MINITURRET_GLOW_SPRITE	"sprites/glow1.vmt"
 #define FF_MINITURRET_BC_YAW		"aim_yaw"
@@ -36,9 +117,6 @@
 
 #define FF_MINITURRET_MAX_PITCH		0.0f
 #define FF_MINITURRET_MIN_PITCH		-90.0f
-
-#define FF_MINITURRET_BEAM			"effects/bluelaser1.vmt"
-#define FF_MINITURRET_DOT			"sprites/redglow1.vmt"
 
 //=============================================================================
 //
