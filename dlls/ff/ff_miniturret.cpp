@@ -366,8 +366,6 @@ void CFFMiniTurret::OnActiveThink( void )
 
 	if( !m_bActive || !GetEnemy() )
 	{
-		Warning( "[MiniTurret] ActiveThink - !m_bActive || !GetEnemy()\n" );
-
 		SetEnemy( NULL );
 		m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;
 		SetThink( &CFFMiniTurret::OnSearchThink );
@@ -406,8 +404,6 @@ void CFFMiniTurret::OnActiveThink( void )
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
 	{
-		Warning( "[MiniTurret] ActiveThink - !bEnemyVisible\n" );
-
 		if( m_flLastSight )
 		{
 			m_flLastSight = gpGlobals->curtime + 0.5f;
