@@ -22,24 +22,30 @@
 #endif
 
 #include "Sprite.h"
+#include "beam_shared.h"
 
 #ifdef CLIENT_DLL 
-	#define CFFMiniTurretLaser C_FFMiniTurretLaser
-	#include "iviewrender_beams.h"
-	#include "beam_shared.h"
+	#define CFFMiniTurret C_FFMiniTurret
+	#define CAI_BaseNPC C_AI_BaseNPC
+	#define CFFMiniTurretLaser C_FFMiniTurretLaser	
+/*
+	#include "iviewrender_beams.h"	
 	#include "beamdraw.h"
+	*/
+	#include "c_ai_basenpc.h"
 #else
 	#include "ai_basenpc.h"
 #endif
-
-#define FF_MINITURRET_BEAM			"effects/bluelaser1.vmt"
-#define FF_MINITURRET_DOT			"sprites/redglow1.vmt"
 
 //=============================================================================
 //
 // Class CFFMiniTurretLaser
 //
 //=============================================================================
+
+#define FF_MINITURRET_BEAM			"effects/bluelaser1.vmt"
+#define FF_MINITURRET_DOT			"sprites/redglow1.vmt"
+#define FF_MINITURRET_HALO			"sprites/muzzleflash1.vmt"
 
 class CFFMiniTurretLaser : public CSprite
 {
@@ -48,33 +54,32 @@ public:
 	DECLARE_NETWORKCLASS();
 	DECLARE_DATADESC();
 
-	CFFMiniTurretLaser( void ) {}
-	~CFFMiniTurretLaser( void ) {}
+	CFFMiniTurretLaser( void );
+	~CFFMiniTurretLaser( void );
 
 	static CFFMiniTurretLaser *Create( const Vector& vecOrigin, CBaseEntity *pOwner = NULL );
 
-	void SetLaserPosition( const Vector& vecOrigin );
-
 	bool IsOn( void ) const	{ return m_bIsOn; }
-
-	void TurnOn( void ) 	{ m_bIsOn = true; }
-	void TurnOff( void ) 	{ m_bIsOn = false; }
-	void Toggle( void ) 	{ m_bIsOn = !m_bIsOn; }
+	void TurnOn( void ) 	{ m_bIsOn = true; RemoveEffects( EF_NODRAW ); }
+	void TurnOff( void ) 	{ m_bIsOn = false; AddEffects( EF_NODRAW ); }
+	//void Toggle( void ) 	{ m_bIsOn = !m_bIsOn; }
+	virtual void			Spawn( void );
 
 	int ObjectCaps( void )	{ return( BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION ) | FCAP_DONT_SAVE; }
 
 #ifdef CLIENT_DLL
 	virtual bool			IsTransparent( void ) { return true; }
 	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
-	virtual int				DrawModel( int flags );
 	virtual void			OnDataChanged( DataUpdateType_t updateType );
-	virtual bool			ShouldDraw( void ) { return( IsEffectActive( EF_NODRAW) == false ); }
-#endif
+	virtual bool			ShouldDraw( void ) { return IsOn(); }
+	virtual void			ClientThink( void );
 
-	CNetworkVar( float, m_flStartTime );
+	/*CHandle< CBeam >*/CBeam *m_hLaser;
+#else
+	void					OnObjectThink( void );
+#endif	
 
-protected:
-	bool				m_bIsOn;
+	CNetworkVar( bool, m_bIsOn );
 };
 
 //=============================================================================
@@ -87,17 +92,20 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaser, DT_FFMiniTurretLaser )
 
 BEGIN_NETWORK_TABLE( CFFMiniTurretLaser, DT_FFMiniTurretLaser ) 
 #ifdef CLIENT_DLL
-	RecvPropFloat( RECVINFO( m_flStartTime ) ) 
+	RecvPropInt( RECVINFO( m_bIsOn ) ),
 #else
-	SendPropFloat( SENDINFO( m_flStartTime ) ) 
+	SendPropInt( SENDINFO( m_bIsOn ) ),
 #endif
 END_NETWORK_TABLE() 
 
-LINK_ENTITY_TO_CLASS( env_ffminiturretlaser, CFFMiniTurretLaser );
+BEGIN_DATADESC( CFFMiniTurretLaser )
+	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ),
+#ifdef GAME_DLL
+	DEFINE_THINKFUNC( OnObjectThink ),
+#endif
+END_DATADESC()
 
-BEGIN_DATADESC( CFFMiniTurretLaser ) 
-	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ), 
-END_DATADESC() 
+LINK_ENTITY_TO_CLASS( env_ffminiturretlaser, CFFMiniTurretLaser );
 
 //=============================================================================
 //
@@ -105,9 +113,8 @@ END_DATADESC()
 //
 //=============================================================================
 
-#ifdef GAME_DLL
 #define	FF_MINITURRET_MODEL			"models/buildable/respawn_turret/respawn_turret.mdl"
-#define FF_MINITURRET_GLOW_SPRITE	"sprites/glow1.vmt"
+//#define FF_MINITURRET_GLOW_SPRITE	"sprites/glow1.vmt"
 #define FF_MINITURRET_BC_YAW		"aim_yaw"
 #define FF_MINITURRET_BC_PITCH		"aim_pitch"
 
@@ -118,6 +125,9 @@ END_DATADESC()
 #define FF_MINITURRET_MAX_PITCH		0.0f
 #define FF_MINITURRET_MIN_PITCH		-90.0f
 
+#define FF_MINITURRET_MUZZLE_ATTACHMENT	"barrel01"
+#define FF_MINITURRET_EYE_ATTACHMENT	"eyes"
+
 //=============================================================================
 //
 //	class CFFMiniTurret
@@ -127,12 +137,79 @@ class CFFMiniTurret : public CAI_BaseNPC
 {
 public:
 	DECLARE_CLASS( CFFMiniTurret, CAI_BaseNPC );
-	DECLARE_DATADESC();
+	DECLARE_NETWORKCLASS();	
+	DECLARE_PREDICTABLE();
 
+	// --> Shared code
 	CFFMiniTurret( void );
 	~CFFMiniTurret( void );
 
-	void	Precache( void );
+	virtual void Precache( void );
+	Class_T	Classify( void ) { return CLASS_TURRET; }
+
+	Vector	EyePosition( void )
+	{
+		SetupAttachments();
+		/*
+		Vector vecOrigin;
+		QAngle vecAngles;
+
+		GetAttachment( m_iEyeAttachment, vecOrigin, vecAngles );
+
+		return vecOrigin - Vector( 0, 0, 48 );
+		*/
+		return GetAbsOrigin() - Vector( 0, 0, 16 );
+	}
+
+	Vector	MuzzlePosition( void )
+	{
+		Vector vecOrigin;
+		QAngle vecAngles;
+		SetupAttachments();
+		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+
+		return vecOrigin;
+	}
+	void	MuzzlePosition( Vector& vecOrigin, QAngle& vecAngles )
+	{
+		SetupAttachments();
+		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+	}
+	void	LaserPosition( Vector& vecOrigin, QAngle& vecAngles )
+	{
+		SetupAttachments();
+		GetAttachment( m_iLaserAttachment, vecOrigin, vecAngles );
+	}
+
+	void	SetupAttachments( void )
+	{
+		if( m_iMuzzleAttachment == -1 )
+			m_iMuzzleAttachment = LookupAttachment( FF_MINITURRET_MUZZLE_ATTACHMENT );
+		if( m_iEyeAttachment == -1 )
+			m_iEyeAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
+		if( m_iLaserAttachment == -1 )
+			m_iLaserAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
+	}
+
+protected:
+	int		m_iEyeAttachment;
+	int		m_iMuzzleAttachment;
+	int		m_iLaserAttachment;
+	// <-- Shared code
+
+#ifdef CLIENT_DLL 
+	virtual void OnDataChanged( DataUpdateType_t updateType ) 
+	{
+		BaseClass::OnDataChanged( updateType );
+
+		if( updateType == DATA_UPDATE_CREATED ) 
+		{
+			SetNextClientThink( CLIENT_THINK_ALWAYS );
+		}
+	}
+#else
+	DECLARE_DATADESC();
+	
 	void	Spawn( void );
 	//void	Activate( void );
 	virtual int	OnTakeDamage( const CTakeDamageInfo &info ) { return 0; }
@@ -156,9 +233,6 @@ public:
 	void	OnAutoSearchThink( void );
 	void	HackFindEnemy( void );
 
-	//float	GetAttackDamageScale( CBaseEntity *pVictim );
-	//Vector	GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget ) ;
-
 	// Inputs
 	/*
 	void	InputToggle( inputdata_t &inputdata );
@@ -171,41 +245,9 @@ public:
 
 	float	MaxYawSpeed( void );
 
-	Class_T	Classify( void ) { return CLASS_TURRET; }
-
-	Vector	EyePosition( void )
-	{
-		/*
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		GetAttachment( m_iEyeAttachment, vecOrigin, vecAngles );
-
-		return vecOrigin - Vector( 0, 0, 48 );
-		*/
-		return GetAbsOrigin() - Vector( 0, 0, 16 );
-	}
-
-	Vector	MuzzlePosition( void )
-	{
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
-
-		return vecOrigin;
-	}
-	void	MuzzlePosition( Vector &vecOrigin, QAngle &vecAngles )
-	{
-		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
-	}
-
-	//Vector	EyeOffset( Activity nActivity ) { return -Vector( 0, 0, 48 ); }
-
 protected:
 	void	Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
 	void	DoMuzzleFlash( void );
-	////void	SetEyeState( eyeState_t state );
 	void	Ping( void );	
 	//void	Toggle( void );
 	//void	Enable( void );
@@ -213,6 +255,8 @@ protected:
 	void	SpinUp( void );
 	void	SpinDown( void );
 	bool	UpdateFacing( void );
+	void	EnableLaser( void );
+	void	DisableLaser( void );
 
 protected:
 	// Team the turret is on
@@ -221,7 +265,6 @@ protected:
 	float	m_flNextShell;
 
 	bool	m_bActive;		// Denotes the turret is deployed and looking for targets
-	//bool	m_bBlinkState;
 	bool	m_bEnabled;		// Denotes whether the turret is able to deploy or not
 
 	float	m_flShotTime;
@@ -231,21 +274,17 @@ protected:
 
 	int		m_iPitchPoseParameter;
 	int		m_iYawPoseParameter;
-	
-	int						m_iEyeAttachment;
-	int						m_iMuzzleAttachment;
-	//eyeState_t				m_iEyeState;
-	//CHandle<CSprite>		m_hEyeGlow;
-	
+		
 	COutputEvent m_OnDeploy;
 	COutputEvent m_OnRetire;
 
 	// Aiming
 	QAngle	m_vecGoalAngles;
 
+	CHandle< CFFMiniTurretLaser >	m_hLaser;
+
 	//DEFINE_CUSTOM_AI;
+#endif // CLIENT_DLL
 };
 
 #endif // FF_MINITURRET_H
-
-#endif // GAME_DLL
