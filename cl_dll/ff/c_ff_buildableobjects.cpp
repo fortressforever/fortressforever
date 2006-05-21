@@ -52,29 +52,6 @@
 #include "ff_buildableobjects_shared.h"
 #include "c_ff_timers.h"
 
-/*
-#if defined( CFFBuildableDoorBlocker )
-	#undef CFFBuildableDoorBlocker
-#endif
-
-IMPLEMENT_CLIENTCLASS_DT( C_FFBuildableDoorBlocker, DT_FFBuildableDoorBlocker, CFFBuildableDoorBlocker )
-END_RECV_TABLE()
-
-#if defined( CFFDispenserDoorBlocker )
-	#undef CFFDispenserDoorBlocker
-#endif
-
-IMPLEMENT_CLIENTCLASS_DT( C_FFDispenserDoorBlocker, DT_FFDispenserDoorBlocker, CFFDispenserDoorBlocker )
-END_RECV_TABLE()
-
-#if defined( CFFSentryGunDoorBlocker )
-	#undef CFFSentryGunDoorBlocker
-#endif
-
-IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGunDoorBlocker, DT_FFSentryGunDoorBlocker, CFFSentryGunDoorBlocker )
-END_RECV_TABLE()
-*/
-
 //=============================================================================
 //
 //	class C_FFBuildableObject

@@ -13,20 +13,19 @@
 //
 //	5/19/2006,	Mulchman:
 //		Fixed some yaw code. Beginning to add the laser effect.
-
+//
+//	05/21/2006,	Mulchman:
+//		Added laser beam and laser dot.
 
 #include "cbase.h"
 #include "ff_miniturret.h"
-//#include "debugoverlay_shared.h"
 
 #ifdef CLIENT_DLL 	
-	#include "c_ff_player.h"
 #else	
 	#include "ammodef.h"
 	#include "ff_gamerules.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "te_effect_dispatch.h"
-	#include "ff_player.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -41,37 +40,12 @@ static int g_iMiniTurretBeam, g_iMiniTurretHalo, g_iMiniTurretDot;
 //=============================================================================
 
 //-----------------------------------------------------------------------------
-// Purpose: Create a laser
+// Purpose: Create the laser dot
 //-----------------------------------------------------------------------------
-CFFMiniTurretLaser::CFFMiniTurretLaser( void )
-{
-#ifdef CLIENT_DLL
-	m_hLaser = NULL;
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Create a laser
-//-----------------------------------------------------------------------------
-CFFMiniTurretLaser::~CFFMiniTurretLaser( void )
-{
-#ifdef CLIENT_DLL
-	if( m_hLaser )
-	{
-		m_hLaser->Remove();		
-		//UTIL_Remove( m_hLaser );
-		m_hLaser = NULL;
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Create a laser
-//-----------------------------------------------------------------------------
-CFFMiniTurretLaser *CFFMiniTurretLaser::Create( const Vector& vecOrigin, CBaseEntity *pOwner ) 
+CFFMiniTurretLaserDot *CFFMiniTurretLaserDot::Create( const Vector& vecOrigin, CBaseEntity *pOwner ) 
 {
 #ifdef GAME_DLL
-	CFFMiniTurretLaser *pLaser = ( CFFMiniTurretLaser * )CBaseEntity::Create( "env_ffminiturretlaser", vecOrigin, QAngle( 0, 0, 0 ) );
+	CFFMiniTurretLaserDot *pLaser = ( CFFMiniTurretLaserDot * )CBaseEntity::Create( "env_ffminiturretlaserdot", vecOrigin, QAngle( 0, 0, 0 ) );
 
 	if( !pLaser )
 		return NULL;
@@ -88,7 +62,7 @@ CFFMiniTurretLaser *CFFMiniTurretLaser::Create( const Vector& vecOrigin, CBaseEn
 	pLaser->AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
 
 	pLaser->SpriteInit( FF_MINITURRET_DOT, vecOrigin );
-	pLaser->SetName( AllocPooledString( "FF_MINITURRET_LASER" ) );
+	pLaser->SetName( AllocPooledString( "FF_MINITURRET_LASERDOT" ) );
 	pLaser->SetTransparency( kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
 	pLaser->SetScale( 0.25f );
 	//pLaser->SetOwnerEntity( pOwner );
@@ -103,29 +77,21 @@ CFFMiniTurretLaser *CFFMiniTurretLaser::Create( const Vector& vecOrigin, CBaseEn
 //-----------------------------------------------------------------------------
 // Purpose: Spawn function
 //-----------------------------------------------------------------------------
-void CFFMiniTurretLaser::Spawn( void )
+void CFFMiniTurretLaserDot::Spawn( void )
 {
 	BaseClass::Spawn();
 
-#ifdef CLIENT_DLL
-	// Create the laser beam
-	//Vector vecOrigin = GetAbsOrigin();
-	//m_hLaser = CBeam::BeamCreate( FF_MINITURRET_BEAM, 1.0f );
-	//m_hLaser->PointsInit( vecOrigin, vecOrigin );
-
-	//SetThink( &CFFMiniTurretLaser::OnObjectThink );
-	
-#else
-	SetThink( &CFFMiniTurretLaser::OnObjectThink );
+#ifdef GAME_DLL
+	SetThink( &CFFMiniTurretLaserDot::OnObjectThink );
 	SetNextThink( gpGlobals->curtime );
 #endif
 }
 
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
-// Purpose: Draw our sprite
+// Purpose: Draw the sprite
 //-----------------------------------------------------------------------------
-void CFFMiniTurretLaser::OnObjectThink( void )
+void CFFMiniTurretLaserDot::OnObjectThink( void )
 {
 	SetNextThink( gpGlobals->curtime );
 
@@ -169,6 +135,32 @@ void CFFMiniTurretLaser::OnObjectThink( void )
 	//debugoverlay->AddBoxOverlay( vecOrigin, -Vector( 5, 5, 5 ), Vector( 5, 5, 5 ), vecAngles, 255, 255, 255, 255, 2 );
 	//debugoverlay->AddBoxOverlay( vecEndPos, -Vector( 5, 5, 5 ), Vector( 5, 5, 5 ), vecAngles, 255, 255, 255, 255, 2 );
 
+	/*
+	if( !m_hLaserBeam )
+	{
+		// Create laser beam
+		m_hLaserBeam = CBeam::BeamCreate( FF_MINITURRET_BEAM, 1.0f );
+		if( !m_hLaserBeam )
+			Warning( "[Mini Turret Laser] Failed to create laser beam\n" );
+		else
+		{
+			m_hLaserBeam->PointsInit( vecOrigin, vecOrigin + ( vecForward * 48.0f ) );
+			m_hLaserBeam->SetColor( 255, 0, 0 );
+			m_hLaserBeam->SetBrightness( 255 );
+			m_hLaserBeam->SetNoise( 0.0f );
+			m_hLaserBeam->SetEndWidth( 0.0f );
+			m_hLaserBeam->SetScrollRate( 0.0f );
+		}
+	}
+	else
+	{
+		m_hLaserBeam->SetFadeLength( 32.0f );
+		m_hLaserBeam->SetAbsStartPos( vecOrigin );
+		m_hLaserBeam->SetAbsEndPos( vecOrigin + ( vecForward * 48.0f ) );
+		m_hLaserBeam->RelinkBeam();
+	}
+	*/
+
 	if( tr.surface.flags & SURF_SKY )
 		bDrawDot = false;
 
@@ -188,94 +180,9 @@ void CFFMiniTurretLaser::OnObjectThink( void )
 
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
-// Purpose: Client think function
-//-----------------------------------------------------------------------------
-void CFFMiniTurretLaser::ClientThink( void )
-{
-	// Draw beams on the client since beam drawn on server
-	// doesn't get predicted so it doesn't line up with the
-	// laser dot. But, since the trace doesn't work on the
-	// client I'm making the laser fade out after x units
-	// so it could go back to being drawn on the server
-	// just fine...
-
-
-	if( !IsOn() )
-		return;
-
-	// Get the owner
-	CFFMiniTurret *pOwner = dynamic_cast< CFFMiniTurret * >( GetOwnerEntity() );
-	if( !pOwner )
-	{
-		AssertMsg( false, "Mini Turret laser has no owner!" );
-		return;
-	}
-
-	// Get the origin & angles for the laser beam
-	Vector vecOrigin, vecForward, vecEndPos;
-	QAngle vecAngles;
-
-	pOwner->LaserPosition( vecOrigin, vecAngles );	
-	AngleVectors( vecAngles, &vecForward );
-
-	// If the laser beam exists... update its position
-	if( m_hLaser )
-	{
-		VectorNormalizeFast( vecForward );
-
-		// THIS SHIT DOES NOT HIT PLAYERS FOR WHATEVER REASON... MAKES NO SENSE
-		/*
-		trace_t tr;
-		//UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * MAX_TRACE_LENGTH ), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, pOwner, COLLISION_GROUP_NONE, &tr );
-		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * MAX_TRACE_LENGTH ), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr );
-
-		if( tr.DidHit() )
-		{
-			if( tr.m_pEnt )
-			{
-				Warning( "[Mini Turret Laser] [Client] Hit %s", tr.m_pEnt->GetClassname() );
-				if( tr.m_pEnt->IsPlayer() )
-					Warning( " (%s)\n", ToFFPlayer( tr.m_pEnt )->GetPlayerName() );
-				else
-					Warning( "\n" );
-			}
-		}
-
-		vecEndPos = tr.endpos + ( tr.plane.normal * 1.0f );
-		*/
-
-		// Since the trace doesn't work, make the laser fade out
-		vecEndPos = vecOrigin + ( vecForward * 48.0f );
-		m_hLaser->SetFadeLength( 32.0f );
-
-		m_hLaser->SetAbsStartPos( vecOrigin );
-		m_hLaser->SetAbsEndPos( vecEndPos );
-		m_hLaser->RelinkBeam();
-	}
-	else
-	{
-		// Create laser beam
-		m_hLaser = CBeam::BeamCreate( FF_MINITURRET_BEAM, 1.0f );
-		if( !m_hLaser )
-			Warning( "[Mini Turret Laser] Failed to create laser beam\n" );
-		else
-		{
-			m_hLaser->PointsInit( vecOrigin, vecEndPos );
-			m_hLaser->SetColor( 255, 0, 0 );
-			m_hLaser->SetBrightness( 255 );
-			m_hLaser->SetNoise( 0.0f );
-			m_hLaser->SetEndWidth( 0.0f );
-			m_hLaser->SetScrollRate( 0.0f );
-		}
-	}	
-
-	BaseClass::ClientThink();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Setup our sprite reference
 //-----------------------------------------------------------------------------
-void CFFMiniTurretLaser::OnDataChanged( DataUpdateType_t updateType ) 
+void CFFMiniTurretLaserDot::OnDataChanged( DataUpdateType_t updateType ) 
 {
 	BaseClass::OnDataChanged( updateType );
 
@@ -288,7 +195,128 @@ void CFFMiniTurretLaser::OnDataChanged( DataUpdateType_t updateType )
 
 //=============================================================================
 //
-// CFFMiniTurretLaser tables
+// Class CFFMiniTurretBeam
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CFFMiniTurretLaserBeam::CFFMiniTurretLaserBeam( void )
+{
+#ifdef CLIENT_DLL
+	m_pBeam = NULL;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+CFFMiniTurretLaserBeam::~CFFMiniTurretLaserBeam( void )
+{
+#ifdef CLIENT_DLL
+	if( m_pBeam )
+	{
+		m_pBeam->Remove();
+		m_pBeam = NULL;
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create the laser beam
+//-----------------------------------------------------------------------------
+CFFMiniTurretLaserBeam *CFFMiniTurretLaserBeam::Create( const Vector& vecOrigin, CBaseEntity *pOwner ) 
+{
+#ifdef GAME_DLL
+	CFFMiniTurretLaserBeam *pObject = ( CFFMiniTurretLaserBeam * )CBaseEntity::Create( "env_ffminiturretlaserbeam", vecOrigin, QAngle( 0, 0, 0 ) );
+
+	if( !pObject )
+		return NULL;	
+
+	pObject->SetMoveType( MOVETYPE_NONE );
+	pObject->AddSolidFlags( FSOLID_NOT_SOLID );
+	pObject->AddEffects( EF_NOSHADOW );
+	UTIL_SetSize( pObject, vec3_origin, vec3_origin );
+
+	pObject->AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
+	pObject->SetOwnerEntity( pOwner );
+	pObject->SetName( AllocPooledString( "FF_MINITURRET_LASERBEAM" ) );
+
+	return pObject;
+#else
+	return NULL;
+#endif
+}
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Setup our sprite reference
+//-----------------------------------------------------------------------------
+void CFFMiniTurretLaserBeam::OnDataChanged( DataUpdateType_t updateType ) 
+{
+	BaseClass::OnDataChanged( updateType );
+
+	if( updateType == DATA_UPDATE_CREATED ) 
+	{
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
+	}	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw the beam
+//-----------------------------------------------------------------------------
+void CFFMiniTurretLaserBeam::ClientThink( void )
+{
+	// Update laser beam position
+
+	if( !IsOn() )
+		return;
+
+	CFFMiniTurret *pOwner = dynamic_cast< CFFMiniTurret * >( GetOwnerEntity() );
+	if( !pOwner )
+	{
+		AssertMsg( false, "Mini Turret laser has no owner!" );
+		return;
+	}
+
+	Vector vecOrigin, vecForward;
+	QAngle vecAngles;
+
+	pOwner->LaserPosition( vecOrigin, vecAngles );	
+	AngleVectors( vecAngles, &vecForward );
+
+	VectorNormalizeFast( vecForward );
+
+	if( !m_pBeam )
+	{
+		// Create laser beam
+		m_pBeam = CBeam::BeamCreate( FF_MINITURRET_BEAM, 1.0f );
+		if( !m_pBeam )
+			Warning( "[Mini Turret Laser Beam] Failed to create laser beam\n" );
+		else
+		{
+			m_pBeam->PointsInit( vecOrigin, vecOrigin + ( vecForward * 48.0f ) );
+			m_pBeam->SetColor( 255, 0, 0 );
+			m_pBeam->SetBrightness( 255 );
+			m_pBeam->SetNoise( 0.0f );
+			m_pBeam->SetEndWidth( 0.0f );
+			m_pBeam->SetScrollRate( 0.0f );
+		}
+	}
+	else
+	{
+		m_pBeam->SetFadeLength( 32.0f );
+		m_pBeam->SetAbsStartPos( vecOrigin );
+		m_pBeam->SetAbsEndPos( vecOrigin + ( vecForward * 48.0f ) );
+		m_pBeam->RelinkBeam();
+	}
+}
+#endif // CLIENT_DLL
+
+//=============================================================================
+//
+// Class CFFMiniTurret tables
 //
 //=============================================================================
 
@@ -354,13 +382,17 @@ int ACT_MINITURRET_OPEN_IDLE;
 int ACT_MINITURRET_CLOSED_IDLE;
 int ACT_MINITURRET_FIRE;
 
-#endif // GAME_DLL
+// Mini Turret sounds to cache
+const char *g_ppszMiniTurretSounds[ ] =
+{
+	"RespawnTurret.Deploy",
+	"RespawnTurret.Retire",
+	"RespawnTurret.Fire",
+	"RespawnTurret.Spin",
+	NULL
+};
 
-//=============================================================================
-//
-//	class CFFMiniTurret
-//
-//=============================================================================
+#endif // GAME_DLL
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -377,7 +409,8 @@ CFFMiniTurret::CFFMiniTurret( void )
 	//m_bBlinkState = false;
 	m_bEnabled = false;
 
-	m_hLaser = NULL;
+	m_hLaserDot = NULL;
+	m_hLaserBeam = NULL;
 #endif // GAME_DLL
 
 	m_iEyeAttachment = -1;
@@ -391,10 +424,16 @@ CFFMiniTurret::CFFMiniTurret( void )
 CFFMiniTurret::~CFFMiniTurret( void )
 {
 #ifdef GAME_DLL
-	if( m_hLaser != NULL )
+	if( m_hLaserDot != NULL )
 	{
-		UTIL_Remove( m_hLaser );
-		m_hLaser = NULL;
+		UTIL_Remove( m_hLaserDot );
+		m_hLaserDot = NULL;
+	}
+
+	if( m_hLaserBeam != NULL )
+	{
+		UTIL_Remove( m_hLaserBeam );
+		m_hLaserBeam = NULL;
 	}
 #endif
 }
@@ -412,6 +451,14 @@ void CFFMiniTurret::Precache( void )
 	ADD_CUSTOM_ACTIVITY( CFFMiniTurret, ACT_MINITURRET_CLOSED_IDLE );
 	ADD_CUSTOM_ACTIVITY( CFFMiniTurret, ACT_MINITURRET_OPEN_IDLE );
 	ADD_CUSTOM_ACTIVITY( CFFMiniTurret, ACT_MINITURRET_FIRE );
+
+	// Precache sounds
+	int iCount = 0;
+	while( g_ppszMiniTurretSounds[ iCount ] != NULL )
+	{		
+		PrecacheScriptSound( g_ppszMiniTurretSounds[ iCount ] );
+		iCount++;
+	}
 #endif
 
 	BaseClass::Precache();
@@ -603,7 +650,8 @@ void CFFMiniTurret::OnDeploy( void )
 
 		m_OnDeploy.FireOutput( NULL, this );
 
-		EnableLaser();
+		EnableLaserDot();
+		EnableLaserBeam();
 	}
 
 	if( IsActivityFinished() )
@@ -806,7 +854,8 @@ void CFFMiniTurret::OnRetire( void )
 		SetThink( &CFFMiniTurret::OnAutoSearchThink );
 		SetNextThink( gpGlobals->curtime + 0.05f );
 
-		DisableLaser();
+		DisableLaserDot();
+		DisableLaserBeam();
 	}
 }
 
@@ -857,11 +906,11 @@ void CFFMiniTurret::SpinDown( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Creates the laser
+// Purpose: Creates the laser dot
 //-----------------------------------------------------------------------------
-void CFFMiniTurret::EnableLaser( void )
+void CFFMiniTurret::EnableLaserDot( void )
 {
-	if( m_hLaser )
+	if( m_hLaserDot )
 		return;
 
 	Vector vecOrigin;
@@ -869,23 +918,56 @@ void CFFMiniTurret::EnableLaser( void )
 
 	LaserPosition( vecOrigin, vecAngles );
 
-	m_hLaser = CFFMiniTurretLaser::Create( vecOrigin, this );
+	m_hLaserDot = CFFMiniTurretLaserDot::Create( vecOrigin, this );
 
-	AssertMsg( m_hLaser, "Failed to create Mini Turret laser!" );
+	AssertMsg( m_hLaserDot, "Failed to create Mini Turret laser dot!" );
 
-	m_hLaser->TurnOn();
+	m_hLaserDot->TurnOn();
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Destroys the laser
+// Purpose: Destroys the laser dot
 //-----------------------------------------------------------------------------
-void CFFMiniTurret::DisableLaser( void )
+void CFFMiniTurret::DisableLaserDot( void )
 {
-	if( m_hLaser )
+	if( m_hLaserDot )
 	{
-		m_hLaser->TurnOff();
-		UTIL_Remove( m_hLaser );
-		m_hLaser = NULL;
+		m_hLaserDot->TurnOff();
+		UTIL_Remove( m_hLaserDot );
+		m_hLaserDot = NULL;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Creates the laser beam
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::EnableLaserBeam( void )
+{
+	if( m_hLaserBeam )
+		return;
+
+	Vector vecOrigin;
+	QAngle vecAngles;
+
+	LaserPosition( vecOrigin, vecAngles );
+
+	m_hLaserBeam = CFFMiniTurretLaserBeam::Create( vecOrigin, this );
+
+	AssertMsg( m_hLaserBeam, "Failed to create Mini Turret laser beam!" );
+
+	m_hLaserBeam->TurnOn();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destroys the laser beam
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::DisableLaserBeam( void )
+{
+	if( m_hLaserBeam )
+	{
+		m_hLaserBeam->TurnOff();
+		UTIL_Remove( m_hLaserBeam );
+		m_hLaserBeam = NULL;
 	}
 }
 

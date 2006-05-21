@@ -13,6 +13,9 @@
 //
 //	5/19/2006,	Mulchman:
 //		Fixed some yaw code. Beginning to add the laser effect.
+//
+//	05/21/2006,	Mulchman:
+//		Added laser beam and laser dot.
 
 #ifndef FF_MINITURRET_H
 #define FF_MINITURRET_H
@@ -27,11 +30,8 @@
 #ifdef CLIENT_DLL 
 	#define CFFMiniTurret C_FFMiniTurret
 	#define CAI_BaseNPC C_AI_BaseNPC
-	#define CFFMiniTurretLaser C_FFMiniTurretLaser	
-/*
-	#include "iviewrender_beams.h"	
-	#include "beamdraw.h"
-	*/
+	#define CFFMiniTurretLaserDot C_FFMiniTurretLaserDot	
+	#define CFFMiniTurretLaserBeam C_FFMiniTurretLaserBeam
 	#include "c_ai_basenpc.h"
 #else
 	#include "ai_basenpc.h"
@@ -39,7 +39,7 @@
 
 //=============================================================================
 //
-// Class CFFMiniTurretLaser
+// Class CFFMiniTurretLaserDot
 //
 //=============================================================================
 
@@ -47,17 +47,16 @@
 #define FF_MINITURRET_DOT			"sprites/redglow1.vmt"
 #define FF_MINITURRET_HALO			"sprites/muzzleflash1.vmt"
 
-class CFFMiniTurretLaser : public CSprite
+class CFFMiniTurretLaserDot : public CSprite
 {
 public:
-	DECLARE_CLASS( CFFMiniTurretLaser, CSprite );
-	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC();
+	DECLARE_CLASS( CFFMiniTurretLaserDot, CSprite );
+	DECLARE_NETWORKCLASS();	
 
-	CFFMiniTurretLaser( void );
-	~CFFMiniTurretLaser( void );
+	CFFMiniTurretLaserDot( void ) {}
+	~CFFMiniTurretLaserDot( void ) {}
 
-	static CFFMiniTurretLaser *Create( const Vector& vecOrigin, CBaseEntity *pOwner = NULL );
+	static CFFMiniTurretLaserDot *Create( const Vector& vecOrigin, CBaseEntity *pOwner = NULL );
 
 	bool IsOn( void ) const	{ return m_bIsOn; }
 	void TurnOn( void ) 	{ m_bIsOn = true; RemoveEffects( EF_NODRAW ); }
@@ -72,11 +71,9 @@ public:
 	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
 	virtual void			OnDataChanged( DataUpdateType_t updateType );
 	virtual bool			ShouldDraw( void ) { return IsOn(); }
-	virtual void			ClientThink( void );
-
-	/*CHandle< CBeam >*/CBeam *m_hLaser;
 #else
 	void					OnObjectThink( void );
+	DECLARE_DATADESC();
 #endif	
 
 	CNetworkVar( bool, m_bIsOn );
@@ -84,13 +81,13 @@ public:
 
 //=============================================================================
 //
-// CFFMiniTurretLaser tables
+// CFFMiniTurretLaserDot tables
 //
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaser, DT_FFMiniTurretLaser ) 
+IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaserDot, DT_FFMiniTurretLaserDot ) 
 
-BEGIN_NETWORK_TABLE( CFFMiniTurretLaser, DT_FFMiniTurretLaser ) 
+BEGIN_NETWORK_TABLE( CFFMiniTurretLaserDot, DT_FFMiniTurretLaserDot ) 
 #ifdef CLIENT_DLL
 	RecvPropInt( RECVINFO( m_bIsOn ) ),
 #else
@@ -98,14 +95,80 @@ BEGIN_NETWORK_TABLE( CFFMiniTurretLaser, DT_FFMiniTurretLaser )
 #endif
 END_NETWORK_TABLE() 
 
-BEGIN_DATADESC( CFFMiniTurretLaser )
-	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ),
 #ifdef GAME_DLL
+BEGIN_DATADESC( CFFMiniTurretLaserDot )
+	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ),
 	DEFINE_THINKFUNC( OnObjectThink ),
-#endif
 END_DATADESC()
+#endif
 
-LINK_ENTITY_TO_CLASS( env_ffminiturretlaser, CFFMiniTurretLaser );
+LINK_ENTITY_TO_CLASS( env_ffminiturretlaserDot, CFFMiniTurretLaserDot );
+
+//=============================================================================
+//
+// Class CFFMiniTurretLaserBeam
+//
+//=============================================================================
+
+class CFFMiniTurretLaserBeam : public CBaseEntity
+{
+public:
+	DECLARE_CLASS( CFFMiniTurretLaserBeam, CBaseEntity );
+	DECLARE_NETWORKCLASS();	
+
+	CFFMiniTurretLaserBeam( void );
+	~CFFMiniTurretLaserBeam( void );
+
+	static CFFMiniTurretLaserBeam *Create( const Vector& vecOrigin, CBaseEntity *pOwner = NULL );
+
+	bool IsOn( void ) const	{ return m_bIsOn; }
+	void TurnOn( void ) 	{ m_bIsOn = true; RemoveEffects( EF_NODRAW ); }
+	void TurnOff( void ) 	{ m_bIsOn = false; AddEffects( EF_NODRAW ); }
+	virtual void Spawn( void ) {}
+
+	int ObjectCaps( void )	{ return( BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION ) | FCAP_DONT_SAVE; }
+
+#ifdef CLIENT_DLL
+	virtual bool			IsTransparent( void ) { return true; }
+	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
+	virtual void			OnDataChanged( DataUpdateType_t updateType );
+	virtual bool			ShouldDraw( void ) { return IsOn(); }
+	virtual void			ClientThink( void );	
+#else
+	DECLARE_DATADESC();
+#endif	
+
+	CNetworkVar( bool, m_bIsOn );
+
+#ifdef CLIENT_DLL 
+protected:
+	CBeam *m_pBeam;
+#endif
+};
+
+//=============================================================================
+//
+// CFFMiniTurretLaserBeam tables
+//
+//=============================================================================
+
+IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurretLaserBeam, DT_FFMiniTurretLaserBeam ) 
+
+BEGIN_NETWORK_TABLE( CFFMiniTurretLaserBeam, DT_FFMiniTurretLaserBeam ) 
+#ifdef CLIENT_DLL
+	RecvPropInt( RECVINFO( m_bIsOn ) ),
+#else
+	SendPropInt( SENDINFO( m_bIsOn ) ),
+#endif
+END_NETWORK_TABLE() 
+
+#ifdef GAME_DLL
+BEGIN_DATADESC( CFFMiniTurretLaserBeam )
+	DEFINE_FIELD( m_bIsOn, FIELD_BOOLEAN ),
+END_DATADESC()
+#endif
+
+LINK_ENTITY_TO_CLASS( env_ffminiturretlaserBeam, CFFMiniTurretLaserBeam );
 
 //=============================================================================
 //
@@ -255,8 +318,10 @@ protected:
 	void	SpinUp( void );
 	void	SpinDown( void );
 	bool	UpdateFacing( void );
-	void	EnableLaser( void );
-	void	DisableLaser( void );
+	void	EnableLaserDot( void );
+	void	DisableLaserDot( void );
+	void	EnableLaserBeam( void );
+	void	DisableLaserBeam( void );
 
 protected:
 	// Team the turret is on
@@ -281,7 +346,8 @@ protected:
 	// Aiming
 	QAngle	m_vecGoalAngles;
 
-	CHandle< CFFMiniTurretLaser >	m_hLaser;
+	CHandle< CFFMiniTurretLaserDot >	m_hLaserDot;
+	CHandle< CFFMiniTurretLaserBeam >	m_hLaserBeam;
 
 	//DEFINE_CUSTOM_AI;
 #endif // CLIENT_DLL
