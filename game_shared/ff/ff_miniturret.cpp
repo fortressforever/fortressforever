@@ -350,7 +350,7 @@ BEGIN_DATADESC( CFFMiniTurret )
 
 	DEFINE_FIELD( m_flShotTime,	FIELD_TIME ),
 	DEFINE_FIELD( m_flLastSight, FIELD_TIME ),
-	//DEFINE_FIELD( m_flPingTime,	FIELD_TIME ),
+	DEFINE_FIELD( m_flPingTime,	FIELD_TIME ),
 	//DEFINE_FIELD( m_flNextActivateSoundTime, FIELD_TIME ),
 
 	DEFINE_FIELD( m_vecGoalAngles, FIELD_VECTOR ),
@@ -388,7 +388,9 @@ const char *g_ppszMiniTurretSounds[ ] =
 	"RespawnTurret.Deploy",
 	"RespawnTurret.Retire",
 	"RespawnTurret.Fire",
-	"RespawnTurret.Spin",
+	"RespawnTurret.Ping",
+	"RespawnTurret.Alert",
+	//"RespawnTurret.Spin",
 	NULL
 };
 
@@ -509,6 +511,7 @@ void CFFMiniTurret::Spawn( void )
 
 	// Set our state
 	m_bEnabled = true;
+	m_flPingTime = gpGlobals->curtime;
 
 	SetThink( &CFFMiniTurret::OnAutoSearchThink );
 
@@ -625,7 +628,7 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 
 	if( GetEnemy() )
 	{
-		SetThink( &CFFMiniTurret::OnDeploy );
+		SetThink( &CFFMiniTurret::OnDeploy );		
 	}
 }
 
@@ -649,6 +652,8 @@ void CFFMiniTurret::OnDeploy( void )
 		SetActivity( ( Activity )ACT_MINITURRET_OPEN );
 
 		m_OnDeploy.FireOutput( NULL, this );
+
+		EmitSound( "RespawnTurret.Deploy" );
 
 		EnableLaserDot();
 		EnableLaserBeam();
@@ -691,6 +696,7 @@ void CFFMiniTurret::OnSearchThink( void )
 		m_flLastSight = 0;
 		SetThink( &CFFMiniTurret::OnActiveThink );
 		SpinUp();
+		EmitSound( "RespawnTurret.Alert" );
 		return;
 	}
 
@@ -842,6 +848,8 @@ void CFFMiniTurret::OnRetire( void )
 			SetActivity( ( Activity )ACT_MINITURRET_CLOSE );
 
 			m_OnRetire.FireOutput( NULL, this );
+
+			EmitSound( "RespawnTurret.Retire" );
 		}
 	}
 	else if( IsActivityFinished() )
@@ -976,6 +984,12 @@ void CFFMiniTurret::DisableLaserBeam( void )
 //-----------------------------------------------------------------------------
 void CFFMiniTurret::Ping( void )
 {
+	if( m_flPingTime > gpGlobals->curtime )
+		return;
+
+	EmitSound( "RespawnTurret.Ping" );
+
+	m_flPingTime = gpGlobals->curtime + FF_MINITURRET_PING_TIME;
 }
 
 //-----------------------------------------------------------------------------
@@ -1011,6 +1025,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 
 	if( !miniturret_castrate.GetBool() )
 		FireBullets( info );
+	EmitSound( "RespawnTurret.Fire" );
 	DoMuzzleFlash();
 }
 

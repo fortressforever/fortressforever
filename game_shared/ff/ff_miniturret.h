@@ -334,7 +334,7 @@ protected:
 
 	float	m_flShotTime;
 	float	m_flLastSight;
-	//float	m_flPingTime;
+	float	m_flPingTime;
 	//float	m_flNextActivateSoundTime;
 
 	int		m_iPitchPoseParameter;
