@@ -953,7 +953,7 @@ void CGameMovement::WaterMove( void )
 	// <-- Mirv: Trimping fix
 
 	// Sinking after no other movement occurs
-	if (!mv->m_flForwardMove && !mv->m_flSideMove && !mv->m_flUpMove)
+	if (!mv->m_flForwardMove && !mv->m_flSideMove && !mv->m_flUpMove && player->GetGroundEntity() == NULL)	// |-- Mirv: But only when not on ground, to fix #0000432: Standing underwater on a slope causes player to slip
 	{
 		wishvel[2] -= 60;		// drift towards bottom
 	}
