@@ -98,6 +98,18 @@ CON_COMMAND(bot_disguise, "trigger a disguise")
 	}
 }
 
+CON_COMMAND(ffdev_legshotme, "legshots you")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+	you->AddSpeedEffect(SE_LEGSHOT, 999, 0.5f, SEM_ACCUMULATIVE|SEM_HEALABLE);
+}
+
+CON_COMMAND(ffdev_tranqme, "tranqs you")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+	you->AddSpeedEffect(SE_TRANQ, 15.0, 0.4f, SEM_BOOLEAN|SEM_HEALABLE);
+}
+
 CON_COMMAND(bot_infectme, "infects you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
