@@ -191,8 +191,8 @@ END_NETWORK_TABLE()
 				CFFPlayer *ffplayer = ToFFPlayer(pEntity);
 
 				// Include the mass coeffient in the calculation if needed
-				if (ffplayer) 
-					coeff = ffplayer->m_flMassCoefficient;
+				if (ffplayer && ffplayer->GetClassSlot() == CLASS_HWGUY) 
+					coeff = 0.15f;
 
 				adjustedInfo.SetDamageForce(dir * info.GetDamage() * damage_force_multiplier.GetFloat() * coeff);
 				adjustedInfo.SetDamagePosition(vecSrc);

@@ -38,8 +38,9 @@ typedef enum {
 	SPECIAL2,
 	SPECIAL3,
 	COCK,
-
+    
 	// Add new shoot sound types here
+	STOP,
 
 	NUM_SHOOT_SOUND_TYPES,
 } WeaponSound_t;

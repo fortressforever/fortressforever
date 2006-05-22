@@ -81,16 +81,18 @@ public:
 	{
 		if (m_pFlameJet) 
 		{
-			if ((m_pFlameJet->m_bEmit != 0) == on && !force) 	// quick fix to get rid of compiler warning
+			if ((m_pFlameJet->m_bEmit != 0) == on && !force)
 				return;
 
 			m_pFlameJet->m_bEmit = on;
 		}
 
 		if (on) 
-			EmitSound("flamethrower.loop_shot");
+			//EmitSound("flamethrower.loop_shot");
+			WeaponSound(BURST);
 		else
-			StopSound("flamethrower.loop_shot");
+			WeaponSound(STOP);
+			//StopSound("flamethrower.loop_shot");
 	}
 
 
@@ -99,6 +101,7 @@ public:
 private:
 
 	CFlameJet *m_pFlameJet;
+	bool		m_fFiring;
 
 	CFFWeaponFlamethrower(const CFFWeaponFlamethrower &);
 
@@ -129,6 +132,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_flamethrower);
 CFFWeaponFlamethrower::CFFWeaponFlamethrower() 
 {
 	m_pFlameJet = NULL;
+	m_fFiring = false;
 }
 
 //----------------------------------------------------------------------------
@@ -157,6 +161,8 @@ void CFFWeaponFlamethrower::PrimaryAttack()
 
 		return;
 	}
+
+	m_fFiring = true;
 	
 	BaseClass::PrimaryAttack();
 }
@@ -199,7 +205,11 @@ void CFFWeaponFlamethrower::Fire()
 //----------------------------------------------------------------------------
 void CFFWeaponFlamethrower::WeaponIdle() 
 {
-	TurnOn(false);
+	if (m_fFiring)
+	{
+		m_fFiring = false;
+		TurnOn(false);
+	}
 
 	BaseClass::WeaponIdle();
 }

@@ -33,6 +33,7 @@ const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ] =
 	"special2",
 	"special3",
 	"cock"			// |-- Mirv: Cock sfx
+	"stop"			// |-- Mirv: Stops weapon sounds
 };
 
 

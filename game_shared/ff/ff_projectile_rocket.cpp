@@ -53,7 +53,7 @@ PRECACHE_WEAPON_REGISTER(rocket);
 			m_hRocketTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
 			m_hRocketTrail->m_EndColor.Init(0.0, 0.0, 0.0);
 			m_hRocketTrail->m_StartSize = 8;
-			m_hRocketTrail->m_EndSize = 32;
+			m_hRocketTrail->m_EndSize = 24; // 32; Reduced a bit now
 			m_hRocketTrail->m_SpawnRadius = 4;
 			m_hRocketTrail->m_MinSpeed = 2;
 			m_hRocketTrail->m_MaxSpeed = 16;

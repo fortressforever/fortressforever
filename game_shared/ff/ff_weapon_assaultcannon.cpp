@@ -94,8 +94,11 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	if (!m_fFireState) 
 		return BaseClass::Holster(pSwitchingTo);
 
-	StopSound("Assaultcannon.loop_shot");	// Possibly not needed
-	EmitSound("Assaultcannon.Winddown");
+	//StopSound("Assaultcannon.loop_shot");	// Possibly not needed
+	//EmitSound("Assaultcannon.Winddown");
+
+	// WindDown
+	WeaponSound(SPECIAL2);
 
 	m_fFireState = 0;
 
@@ -140,9 +143,12 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 		SendWeaponAnim(ACT_FIRE_START);
 		m_fFireState = 1;
 
-		CPASAttenuationFilter filter(this);
-		filter.UsePredictionRules();
-		EmitSound(filter, entindex(), "Assaultcannon.Windup");
+		//CPASAttenuationFilter filter(this);
+		//filter.UsePredictionRules();
+		//EmitSound(filter, entindex(), "Assaultcannon.Windup");
+
+		// Windup
+		WeaponSound(SPECIAL1);
 		
 		pPlayer->m_flNextAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
 
@@ -174,7 +180,10 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 		{
 			CPASAttenuationFilter filter(this);
 			filter.UsePredictionRules();
-			EmitSound(filter, entindex(), "Assaultcannon.loop_shot");
+
+			//EmitSound(filter, entindex(), "Assaultcannon.loop_shot");
+
+			WeaponSound(BURST);
 
 			m_fFireState++;
 		}
@@ -194,7 +203,8 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 		if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0) 
 		{
-			StopSound("Assaultcannon.loop_shot");
+			//StopSound("Assaultcannon.loop_shot");
+			WeaponSound(EMPTY);
 
 			// HEV suit - indicate out of ammo condition
 			pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
@@ -224,11 +234,14 @@ void CFFWeaponAssaultCannon::WeaponIdle()
 		SendWeaponAnim(ACT_FIRE_END);
 		m_fFireState = 0;
 
-		StopSound("Assaultcannon.loop_shot");
+		//StopSound("Assaultcannon.loop_shot");
 
-		CPASAttenuationFilter filter(this);
-		filter.UsePredictionRules();
-		EmitSound(filter, entindex(), "Assaultcannon.Winddown");
+		//CPASAttenuationFilter filter(this);
+		//filter.UsePredictionRules();
+		//EmitSound(filter, entindex(), "Assaultcannon.Winddown");
+
+		// Wind down
+		WeaponSound(SPECIAL2);
 
 		pPlayer->m_flNextAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
 

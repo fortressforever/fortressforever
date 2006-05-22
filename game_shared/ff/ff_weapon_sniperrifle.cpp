@@ -469,6 +469,8 @@ void CFFWeaponSniperRifle::Fire()
 		pWeaponInfo.m_flBulletSpread, 
 		flSniperRifleCharge
 		);
+
+	WeaponSound(SINGLE);
 }
 
 void CFFWeaponSniperRifle::ToggleZoom() 

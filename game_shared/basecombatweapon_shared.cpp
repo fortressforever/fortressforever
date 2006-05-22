@@ -1401,7 +1401,16 @@ float CBaseCombatWeapon::GetFireRate( void )
 void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
 {
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
-	const char *shootsound = GetShootSound( sound_type );
+	
+	// --> Mirv: All weapons use the same thing for STOP, okay!
+	const char *shootsound;
+
+	if (sound_type == STOP)
+		shootsound = "Weapon.StopSound";
+	else
+		shootsound = GetShootSound( sound_type );
+	// <-- Mirv
+
 	if ( !shootsound || !shootsound[0] )
 		return;
 
