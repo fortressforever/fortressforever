@@ -3,18 +3,18 @@
 //
 // @file ff_turret.cpp
 // @author Patrick O'Leary (Mulchman) 
-// @date 6/1/2006
+// @date 5/1/2006
 // @brief Turret class (for respawn turrets)
 //
 // REVISIONS
 // ---------
-//	6/1/2006, Mulchman: 
+//	5/1/2006, Mulchman: 
 //		First created
 //
 //	5/19/2006,	Mulchman:
 //		Fixed some yaw code. Beginning to add the laser effect.
 //
-//	05/21/2006,	Mulchman:
+//	5/21/2006,	Mulchman:
 //		Added laser beam and laser dot.
 
 #include "cbase.h"
