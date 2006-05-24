@@ -707,7 +707,8 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		// --------------------------------------------------
 		//  If an NPC check if friendly fire is disallowed
 		// --------------------------------------------------
-		CAI_BaseNPC *pNPC = info.GetAttacker()->MyNPCPointer();
+		// --> Mirv: All this disabled so we can impact friendlies
+/*		CAI_BaseNPC *pNPC = info.GetAttacker()->MyNPCPointer();
 		if ( pNPC && (pNPC->CapabilitiesGet() & bits_CAP_NO_HIT_PLAYER) && pNPC->IRelationType( this ) != D_HT )
 		{
 			return;
@@ -718,7 +719,8 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		{
 			if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
 				return;
-		}
+		}*/
+		// <-- Mirv
 
 		SetLastHitGroup( ptr->hitgroup );
 

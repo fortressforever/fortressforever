@@ -269,10 +269,10 @@ void CalculateBulletDamageForce( CTakeDamageInfo *info, int iBulletType, const V
 	vecForce *= GetAmmoDef()->DamageForce( iBulletType );
 	vecForce *= phys_pushscale.GetFloat();
 
-	// --> Mirv: Square scale, reduce total a tenth
-	vecForce *= flScale * flScale;
+	// --> Mirv: Cube scale, reduce total a tenth
+	vecForce *= flScale * flScale * flScale;
 	vecForce *= 0.1f;
-	// <-- Mirv: Square scale, reduce total a tenth
+	// <-- Mirv:
 	info->SetDamageForce( vecForce );
 }
 

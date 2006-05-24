@@ -196,7 +196,9 @@ void CFFPlayer::FireBullet(
 				if (! (tr.surface.flags & (SURF_SKY|SURF_NODRAW|SURF_HINT|SURF_SKIP))) 
 				{
 					CBaseEntity *pEntity = tr.m_pEnt;
-					if (! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber())) 
+
+					// Mirv: Do impact traces no matter what
+					if (pEntity && pEntity->IsPlayer()) //! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber())) 
 					{
 						UTIL_ImpactTrace(&tr, iDamageType);
 					}
