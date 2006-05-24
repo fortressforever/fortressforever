@@ -118,7 +118,7 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 			CFFPlayer *pPlayer = ToFFPlayer(pOther);
 
 			// make the player walk slow
-			pPlayer->AddSpeedEffect(SE_TRANQ, 15.0, 0.4f, SEM_BOOLEAN|SEM_HEALABLE);
+			pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
 
 			// send them the status icon
 			DevMsg("[Tranq Debug] Sending status icon\n");

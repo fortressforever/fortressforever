@@ -107,7 +107,7 @@ CON_COMMAND(ffdev_legshotme, "legshots you")
 CON_COMMAND(ffdev_tranqme, "tranqs you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
-	you->AddSpeedEffect(SE_TRANQ, 15.0, 0.4f, SEM_BOOLEAN|SEM_HEALABLE);
+	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
 }
 
 CON_COMMAND(bot_infectme, "infects you")

@@ -3267,7 +3267,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	// Without boolean we default to accumulative, but warn anyway in case we just forgot
 	Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
 
-	if (type == SEM_BOOLEAN)
+	if (mod & SEM_BOOLEAN)
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 		{
 			// we'll overwrite the old one
