@@ -323,7 +323,7 @@ public:
 	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0);
 	bool IsSpeedEffectSet( SpeedEffectType type );
 	void RemoveSpeedEffect(SpeedEffectType type);
-	void ClearSpeedEffects(int mod = 0);
+	int	ClearSpeedEffects(int mod = 0);
 
 	void Infect( CFFPlayer * );
 	void Cure( CFFPlayer * );

@@ -3321,17 +3321,39 @@ void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)
 	RecalculateSpeed();
 }
 
-void CFFPlayer::ClearSpeedEffects(int mod)
+int CFFPlayer::ClearSpeedEffects(int mod)
 {
+	int i = 0;
+
 	if (mod)
+	{
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+		{
 			if (m_vSpeedEffects[i].modifiers & mod)
+			{
+				// Keep track of any we've turned off
+				if (m_vSpeedEffects[i].active)
+					i++;
+
 				m_vSpeedEffects[i].active = false;
+			}
+		}
+	}
 	else
+	{
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+		{
+			// Keep track of any we've turned off
+			if (m_vSpeedEffects[i].active)
+				i++;
+
 			m_vSpeedEffects[i].active = false;
+		}
+	}
 
 	RecalculateSpeed();
+
+	return i;
 }
 
 void CFFPlayer::RecalculateSpeed( void )
