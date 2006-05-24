@@ -194,6 +194,9 @@ void CFFWeaponFlamethrower::Fire()
 
 		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
 		{
+			CTakeDamageInfo info(this, GetOwnerEntity(), 20, DMG_BURN);
+
+			pTarget->TakeDamage(info);
 			pTarget->ApplyBurning(pPlayer, 0.5f);
 		}
 	}
