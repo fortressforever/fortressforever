@@ -22,6 +22,9 @@
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeGas C_FFGrenadeGas
+	#include "c_te_effect_dispatch.h"
+#else
+	#include "te_effect_dispatch.h"
 #endif
 
 class CFFGrenadeGas : public CFFGrenadeBase
@@ -34,7 +37,7 @@ public:
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeDamage() { return 0.0f; }
-	virtual float GetGrenadeRadius() { return 100.0f; }
+	virtual float GetGrenadeRadius() { return 300.0f; }
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 
 #ifdef CLIENT_DLL
@@ -75,20 +78,20 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 	void CFFGrenadeGas::GrenadeThink()
 	{
 		// Been detonated for 10 secs now, so fade out
-		if (gpGlobals->curtime + 10.0f > m_flDetonateTime + 10.0f)
+		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
 		{
 			SetThink(&CBaseGrenade::SUB_FadeOut);
-			SetNextThink(gpGlobals->curtime + 10.0f);
+			//SetNextThink(gpGlobals->curtime + 10.0f);
 		}
 
 		// Don't start until we've stopped moving, for now
-		if (GetAbsVelocity().LengthSqr() > 0 && gpGlobals->curtime > m_flDetonateTime)
-			m_flDetonateTime = gpGlobals->curtime + 1.0f;
+		//if (GetAbsVelocity().LengthSqr() > 0 && gpGlobals->curtime > m_flDetonateTime)
+		//	m_flDetonateTime = gpGlobals->curtime + 1.0f;
 
 		// Damage people in here
 		if (gpGlobals->curtime > m_flDetonateTime && m_flNextHurt < gpGlobals->curtime)
 		{
-			m_flNextHurt = gpGlobals->curtime + 1.0f;
+			m_flNextHurt = gpGlobals->curtime + 0.2f;
 
 			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
 				if (pPlayer && gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f)
@@ -110,9 +113,22 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
 			END_ENTITY_SPHERE_QUERY();
+
+			// Just shoving this here for now, Ted can sort out the effect properly.
+			EmitSound(GAS_SOUND);
+
+			CEffectData data;
+			data.m_vOrigin = GetAbsOrigin();
+			data.m_flScale = 1.0f;
+			DispatchEffect(GAS_EFFECT, data);
 		}
 
-		BaseClass::GrenadeThink();
+		//BaseClass::GrenadeThink();
+
+		// Next think straight away
+		SetNextThink(gpGlobals->curtime);
+
+		CFFGrenadeBase::WaterThink();
 	}
 #endif
 
