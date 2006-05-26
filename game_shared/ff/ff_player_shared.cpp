@@ -197,8 +197,11 @@ void CFFPlayer::FireBullet(
 				{
 					CBaseEntity *pEntity = tr.m_pEnt;
 
+					// Revised further for
+					// Bug: 0000620: Trace attacks aren't hitting walls
+
 					// Mirv: Do impact traces no matter what
-					if (pEntity && pEntity->IsPlayer()) //! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber())) 
+					if (pEntity /*&& pEntity->IsPlayer()*/) //! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber())) 
 					{
 						UTIL_ImpactTrace(&tr, iDamageType);
 					}
