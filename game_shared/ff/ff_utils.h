@@ -47,6 +47,10 @@
 	#include "ff_player.h"
 #endif
 
+// Distance to trace from an entity outward when
+// trying to hit solids for placing scorch marks
+#define FF_DECALTRACE_TRACE_DIST	48.0f
+
 int Class_StringToInt( const char *szClassName );
 const char *Class_IntToString( int iClassIndex );
 const char *Class_IntToResourceString( int iClassIndex );
@@ -58,6 +62,8 @@ int FF_NumPlayersOnTeam( int iTeam );
 int FF_GetPlayerOnTeam( int iTeam, int iNum );
 int FF_NumPlayers( );
 int FF_GetPlayer( int iNum );
+
+void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName );
 
 // Do a HudHint
 void FF_HudHint(

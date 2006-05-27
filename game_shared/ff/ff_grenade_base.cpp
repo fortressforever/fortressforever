@@ -31,10 +31,15 @@
 	#include "soundent.h"
 	#include "te_effect_dispatch.h"
 	#include "ff_player.h"
+	#include "ff_utils.h"
 #else
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
 #endif
+
+extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
+extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
+extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 
 //========================================================================
 // CFFGrenadeBase tables
@@ -308,8 +313,79 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		}
 		BounceSound();
 	}
-
 #endif
+
+// Added so that grenades aren't using projectiles explode code.
+// Grenades might need to look in more places than just below
+// them to see if scorch marks can be drawn.
+void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
+{
+#ifdef GAME_DLL
+	SetModelName( NULL_STRING );//invisible
+	AddSolidFlags( FSOLID_NOT_SOLID );
+
+	m_takedamage = DAMAGE_NO;
+
+	// Pull out of the wall a bit
+	if( pTrace->fraction != 1.0 )
+		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 0.6 ) );
+
+	Vector vecAbsOrigin = GetAbsOrigin();
+	int contents = UTIL_PointContents( vecAbsOrigin );
+
+	if( pTrace->fraction != 1.0 ) 
+	{
+		Vector vecNormal = pTrace->plane.normal;
+		surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+		CPASFilter filter( vecAbsOrigin );
+		te->Explosion( filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin, 
+			! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+			m_DmgRadius * .03, 
+			25, 
+			TE_EXPLFLAG_NONE, 
+			m_DmgRadius, 
+			m_flDamage, 
+			&vecNormal, 
+			( char )pdata->game.material );
+
+		// Normal decals since trace hit something
+		UTIL_DecalTrace( pTrace, "Scorch" );
+	}
+	else
+	{
+		CPASFilter filter( vecAbsOrigin );
+		te->Explosion( filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin, 
+			! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+			m_DmgRadius * .03, 
+			25, 
+			TE_EXPLFLAG_NONE, 
+			m_DmgRadius, 
+			m_flDamage );
+
+		// Trace hit nothing so do custom scorch mark finding
+		FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
+	}
+
+	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
+
+	CBaseEntity *pThrower = GetThrower();
+	// Use the thrower's position as the reported position
+	Vector vecReported = pThrower ? pThrower->GetAbsOrigin() : vec3_origin;
+	CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
+
+	EmitSound( "BaseGrenade.Explode" );
+
+	SetThink( &CBaseGrenade::SUB_Remove );
+	SetTouch( NULL );
+
+	AddEffects( EF_NODRAW );
+	SetAbsVelocity( vec3_origin );
+	SetNextThink( gpGlobals->curtime );
+#endif
+}
 
 void CFFGrenadeBase::Precache()
 {

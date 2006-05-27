@@ -32,7 +32,11 @@
 #include "ammodef.h"
 
 #ifdef CLIENT_DLL
-#include <igameresources.h>
+	#include <igameresources.h>
+#else
+#ifdef _DEBUG
+	#include "debugoverlay_shared.h"
+#endif // _DEBUG
 #endif
 
 // This function takes a class name like "scout"
@@ -335,6 +339,112 @@ void FF_HudHint(
 			WRITE_STRING( pszMessage );
 		MessageEnd( );
 	}
+#endif
+}
+
+void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName )
+{
+#ifdef CLIENT_DLL 
+#else
+	// If we've gotten here then the normal trace_t passed
+	// to the explode function did not find ground below the
+	// object. But, that doesn't mean we aren't near something
+	// we should draw scorch marks on. So, check above and then
+	// around the object for stuff to draw the scorch mark on.
+
+	AssertMsg( pEntity, "FF_DecalTrace - Entity was NULL" );
+
+	Vector vecOrigin = pEntity->GetAbsOrigin();
+
+	trace_t trUp;
+	UTIL_TraceLine( vecOrigin, vecOrigin + Vector( 0, 0, flRadius ), MASK_SHOT_HULL, pEntity, COLLISION_GROUP_NONE, &trUp );
+
+	// If the trace never finished (we hit something)
+	if( trUp.fraction != 1.0f )
+	{
+		UTIL_DecalTrace( &trUp, pszDecalName );
+		return;
+	}
+
+	// Well, didn't hit anything below us (if we did we wouldn't
+	// have been in this function in the first place) and we didn't
+	// hit anything above us so now "reach out" and try to find
+	// something nearby to do scorch marks on for:
+	// Bug #0000211: Grens and pipe not drawing explosion soot decal on walls.
+
+	// TODO: Anyone got a better idea?
+	
+	Vector vecEndPos[ 8 ], vecForward, vecRight, vecUp;
+
+	AngleVectors( pEntity->GetAbsAngles(), &vecForward, &vecRight, &vecUp );	
+
+	VectorNormalize( vecForward );
+	VectorNormalize( vecRight );
+	VectorNormalize( vecUp );
+
+	// Make some points around the object where "O" is the object:
+	// . . .
+	// . O .
+	// . . .
+
+	vecEndPos[ 0 ] = vecOrigin + ( vecForward * flRadius ) - ( vecRight * flRadius );
+	vecEndPos[ 1 ] = vecOrigin + ( vecForward * flRadius );
+	vecEndPos[ 2 ] = vecOrigin + ( vecForward * flRadius ) + ( vecRight * flRadius );
+	vecEndPos[ 3 ] = vecOrigin - ( vecRight * flRadius );
+	vecEndPos[ 4 ] = vecOrigin + ( vecRight * flRadius );
+	vecEndPos[ 5 ] = vecOrigin - ( vecForward * flRadius ) - ( vecRight * flRadius );
+	vecEndPos[ 6 ] = vecOrigin - ( vecForward * flRadius );
+	vecEndPos[ 7 ] = vecOrigin - ( vecForward * flRadius ) + ( vecRight * flRadius );
+
+	// Go ahead and compute this now to use later
+	vecUp *= flRadius;
+
+	// For the traces
+	trace_t tr[ 24 ];
+	// Which trace we're on
+	int iTraceCount = 0;
+	// Index to use for the shortest trace
+	int iIndex = -1;
+	// To keep track of shortest distance
+	float flDist = flRadius * flRadius;
+	
+	// Do 24 traces - EEK
+	for( int j = -1; j <= 1; j++ )
+	{
+		for( int i = 0; i < 8; i++ )
+		{
+			// Want to make sure we're only tracing out flRadius units
+			// so get a direction vector facing the outward point(s)
+			Vector vecDir = ( vecEndPos[ i ] + ( j * vecUp ) ) - vecOrigin;
+			VectorNormalize( vecDir );
+
+			UTIL_TraceLine( vecOrigin, vecOrigin + ( vecDir * flRadius ), MASK_SHOT_HULL, pEntity, COLLISION_GROUP_NONE, &tr[ iTraceCount++ ] );
+
+#ifdef _DEBUG
+			// Draw the trace
+			debugoverlay->AddLineOverlay( tr[ iTraceCount - 1 ].startpos, tr[ iTraceCount - 1 ].endpos, 255, 0, 0, false, 2.0f );
+#endif
+
+			// [Trace didn't finish so] we hit something
+			if( tr[ iTraceCount - 1 ].fraction != 1.0f )
+			{
+				// Is this distance closer?
+				if( vecOrigin.DistTo( tr[ iTraceCount - 1 ].endpos ) < flDist )
+				{
+					// Store off this trace index since it's the closet so far
+					iIndex = iTraceCount - 1;
+				}
+			}
+		}
+	}
+
+	if( iIndex != -1 )
+	{
+		DevMsg( "[FF_DecalTrace] Drawing a scorch mark!\n" );
+		UTIL_DecalTrace( &tr[ iIndex ], pszDecalName );
+	}
+	else
+		DevMsg( "[FF_DecalTrace] Didn't hit anything - no scorch mark!\n" );
 #endif
 }
 

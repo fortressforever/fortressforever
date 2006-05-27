@@ -49,6 +49,9 @@ public:
 	// Override precache because we want a different model
 	virtual void Precache();
 	virtual void Spawn();
+	// Needs its own explode func for custom scorch mark
+	// drawing
+	virtual void Explode( trace_t *pTrace, int bitsDamageType );
 
 #ifdef CLIENT_DLL
 	virtual int DrawModel(int flags);

@@ -91,8 +91,9 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		//CFFGrenadeBase::PreExplode( pTrace, NULL, "FF_RingEffect" );
 		float radius = GetGrenadeRadius();
 
-		BEGIN_ENTITY_SPHERE_QUERY( GetAbsOrigin(), radius )
-
+		CBaseEntity *pEntity = NULL;
+		for ( CEntitySphereQuery sphere( GetAbsOrigin(), radius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
 			// Don't care about ourselves
 			if( pEntity == this )
 				continue;
@@ -114,20 +115,18 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 						DevMsg( "%s exploding with force of %d\n", pEntity->GetClassname(), explode );
 
-						trace_t		tr;
-						Vector		vecSpot;
+						trace_t		tr;						
 						Vector		vecOrigin = pEntity->GetAbsOrigin();
 
-						// Traceline to check if we should do scorchmarks on the floor
-						vecSpot = vecOrigin + Vector ( 0 , 0 , 8 );
-						UTIL_TraceLine(vecSpot, vecSpot + Vector(0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr);
+						// Traceline to check if we should do scorch marks on the floor						
+						UTIL_TraceLine( vecOrigin + Vector( 0, 0, 2.0f ), vecOrigin - Vector( 0, 0, FF_DECALTRACE_TRACE_DIST ), MASK_SHOT_HULL, pEntity, COLLISION_GROUP_NONE, &tr);
 
 						// Explode now
-						if (pTrace->fraction != 1.0)
+						if( tr.fraction != 1.0 )
 						{
 							Vector vecNormal = tr.plane.normal;
-							surfacedata_t *pdata = physprops->GetSurfaceData(tr.surface.surfaceProps);	
-							CPASFilter filter(vecOrigin);
+							surfacedata_t *pdata = physprops->GetSurfaceData( tr.surface.surfaceProps );	
+							CPASFilter filter( vecOrigin );
 
 							te->Explosion( filter, -1.0, // don't apply cl_interp delay
 								&vecOrigin,
@@ -138,11 +137,14 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 								m_DmgRadius,
 								m_flDamage,
 								&vecNormal,
-								(char) pdata->game.material );
+								( char )pdata->game.material );
+
+							// Normal decals since trace hit something
+							UTIL_DecalTrace( &tr, "Scorch" );
 						}
 						else
 						{
-							CPASFilter filter(vecOrigin);
+							CPASFilter filter( vecOrigin );
 
 							te->Explosion( filter, -1.0, // don't apply cl_interp delay
 								&vecOrigin, 
@@ -152,6 +154,9 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 								TE_EXPLFLAG_NONE,
 								m_DmgRadius,
 								m_flDamage );
+
+							// Trace hit nothing so do custom scorch mark finding
+							FF_DecalTrace( pEntity, FF_DECALTRACE_TRACE_DIST, "Scorch" );
 						}
 
 						// Sound
@@ -159,7 +164,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 						CTakeDamageInfo info( this, GetOwnerEntity(), GetBlastForce(), pEntity->GetAbsOrigin(), explode, DMG_SHOCK, 0, &vecOrigin );
 						RadiusDamage( info, pEntity->GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-						UTIL_DecalTrace( pTrace, "Scorch" );
+					
 						EmitSound( "BaseGrenade.Explode" );
 
 						UTIL_ScreenShake( pEntity->GetAbsOrigin(), explode, 150.0, 1.0, explode * 30, SHAKE_START );
@@ -167,94 +172,9 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 				}
 			}
+		}
 
-		END_ENTITY_SPHERE_QUERY();
-
-		/*
-		BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), radius)
-
-			// Don't affect ourselves
-			if (pEntity == this)
-				continue;
-
-			// Special case for pipebombs, change their owner to us so we get credited with the kill
-			if (pEntity->Classify() == CLASS_PIPEBOMB)
-				pEntity->SetOwnerEntity(GetOwnerEntity());
-
-			if (int explode = pEntity->TakeEmp())
-			{
-				DevMsg("%s exploding with force of %d\n", pEntity->GetClassname(), explode);
-
-				trace_t		tr;
-				Vector		vecSpot;
-				Vector		vecOrigin = pEntity->GetAbsOrigin();
-
-				// Traceline to check if we should do scorchmarks on the floor
-				vecSpot = vecOrigin + Vector ( 0 , 0 , 8 );
-				UTIL_TraceLine(vecSpot, vecSpot + Vector(0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr);
-
-				// Explode now
-				if (pTrace->fraction != 1.0)
-				{
-					Vector vecNormal = tr.plane.normal;
-					surfacedata_t *pdata = physprops->GetSurfaceData(tr.surface.surfaceProps);	
-					CPASFilter filter(vecOrigin);
-
-					te->Explosion( filter, -1.0, // don't apply cl_interp delay
-						&vecOrigin,
-						!pEntity->GetWaterLevel() ? g_sModelIndexFireball : g_sModelIndexWExplosion,
-						m_DmgRadius * .03, 
-						25,
-						TE_EXPLFLAG_NONE,
-						m_DmgRadius,
-						m_flDamage,
-						&vecNormal,
-						(char) pdata->game.material );
-				}
-				else
-				{
-					CPASFilter filter(vecOrigin);
-
-					te->Explosion( filter, -1.0, // don't apply cl_interp delay
-						&vecOrigin, 
-						!pEntity->GetWaterLevel() != 0 ? g_sModelIndexFireball : g_sModelIndexWExplosion,
-						m_DmgRadius * .03, 
-						25,
-						TE_EXPLFLAG_NONE,
-						m_DmgRadius,
-						m_flDamage );
-				}
-
-#ifdef GAME_DLL
-				// Sound
-				CSoundEnt::InsertSound ( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
-#endif
-
-				CTakeDamageInfo info( this, GetOwnerEntity(), GetBlastForce(), vecOrigin, explode, DMG_SHOCK, 0, &vecOrigin );
-
-				RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-				UTIL_DecalTrace( pTrace, "Scorch" );
-				EmitSound( "BaseGrenade.Explode" );
-
-				UTIL_ScreenShake(pEntity->GetAbsOrigin(), explode, 150.0, 1.0, explode * 30, SHAKE_START);
-			}
-			
-			if( pEntity->Classify() == CLASS_DETPACK )
-				( ( CFFDetpack * )pEntity )->OnEmpExplosion();
-
-		END_ENTITY_SPHERE_QUERY();
-		*/
-
-		// Traceline to check if we should do scorchmarks on the floor
-		//trace_t tr;
-		//UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, -32), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
-
-		// Now blow up self
-		// Bug #0000326: emp explosion does not play correctly
-		// Don't call a baseclass explode
-		//BaseClass::Explode( &tr, DMG_SHOCK );
-
-		// EXPLODE THE EMP GRENADE NOW
+		// EXPLODE THE ACTUAL EMP GRENADE NOW
 
 		SetModelName( NULL_STRING );
 		AddSolidFlags( FSOLID_NOT_SOLID );
@@ -265,38 +185,42 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		if( pTrace->fraction != 1.0 ) 
 		{
 			Vector vecNormal = pTrace->plane.normal;
-			surfacedata_t *pdata = physprops->GetSurfaceData(pTrace->surface.surfaceProps);	
-			CPASFilter filter(vecAbsOrigin);
-			te->Explosion(filter, -1.0, // don't apply cl_interp delay
+			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+			CPASFilter filter( vecAbsOrigin );
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
-				! (contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
 				m_DmgRadius * .03, 
 				25, 
 				TE_EXPLFLAG_NONE, 
 				m_DmgRadius, 
 				m_flDamage, 
 				&vecNormal, 
-				(char) pdata->game.material);
+				( char )pdata->game.material );
+
+			// Normal decals since trace hit something
+			UTIL_DecalTrace( pTrace, "Scorch" );
 		}
 		else
 		{
-			CPASFilter filter(vecAbsOrigin);
-			te->Explosion(filter, -1.0, // don't apply cl_interp delay
+			CPASFilter filter( vecAbsOrigin );
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
-				! (contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
 				m_DmgRadius * .03, 
 				25, 
 				TE_EXPLFLAG_NONE, 
 				m_DmgRadius, 
-				m_flDamage);
+				m_flDamage );
+
+			// Trace hit nothing so do custom scorch mark finding
+			FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
 		}
 
 		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
 
 		CTakeDamageInfo info( this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecAbsOrigin );
 		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-
-		UTIL_DecalTrace( pTrace, "Scorch" );
 
 		SetThink( &CBaseGrenade::SUB_Remove );
 		SetTouch( NULL );

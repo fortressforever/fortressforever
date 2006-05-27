@@ -58,7 +58,7 @@ public:
 	virtual const char *GetBounceSound()
 	{
 		return "BaseGrenade.BounceSound";
-	}
+	}	
 
 	void Explode(trace_t *pTrace, int bitsDamageType);
 

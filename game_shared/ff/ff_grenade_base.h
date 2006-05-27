@@ -51,13 +51,14 @@ public:
 
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN; }
+	virtual void Explode( trace_t *pTrace, int bitsDamageType );
 
 #ifdef GAME_DLL
 	virtual float GetGrenadeGravity() { return gren_grav.GetFloat(); }
 	virtual float GetGrenadeFriction() { return gren_fric.GetFloat(); }
 	virtual float GetGrenadeElasticity() { return gren_elas.GetFloat(); }
 	virtual float GetGrenadeDamage() { return 180.0f; }
-	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }
+	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }	
 
 	bool m_fIsHandheld;	// This will eventually need to be on the client too
 #endif
