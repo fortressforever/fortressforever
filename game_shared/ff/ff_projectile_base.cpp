@@ -26,7 +26,7 @@ extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index fo
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 
-static ConVar damage_force_multiplier("ffdev_force_multiplier", "7.0f");
+static ConVar damage_force_multiplier("ffdev_force_multiplier", "8.0f");
 
 void FFRadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore);
 
