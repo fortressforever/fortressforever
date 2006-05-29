@@ -1283,7 +1283,7 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 // This is basically to stop the location stuff from spamming
 // us every tick and it also helps w/ overlapping locations so
 // they don't flicker between the two locations on the screen heh.
-bool CFFPlayer::CanUpdateLocation( const char *szNewLocation )
+bool CFFPlayer::CanUpdateLocation( const char *szNewLocation, int iNewLocationTeam )
 {
 	/*
 	if( ( m_flLastLocationUpdate + location_update_frequency.GetFloat() ) < gpGlobals->curtime )
@@ -1295,10 +1295,13 @@ bool CFFPlayer::CanUpdateLocation( const char *szNewLocation )
 	*/
 
 	// STRCMP EVERY FRAME!?
-	bool bSame = ( Q_strcmp( szNewLocation, m_szCurrentLocation ) == 0 );
+	bool bSame = ( ( Q_strcmp( szNewLocation, m_szCurrentLocation ) == 0 ) && ( m_iCurrentLocationTeam == iNewLocationTeam ) );
 
 	if( !bSame )
+	{
+		m_iCurrentLocationTeam = iNewLocationTeam;
 		Q_strcpy( m_szCurrentLocation, szNewLocation );
+	}
 
 	return !bSame;
 }
