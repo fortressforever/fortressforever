@@ -16,8 +16,9 @@
 IMPLEMENT_SERVERCLASS_ST(CFFTeam, DT_FFTeam)
 	// --> Mirv: Some limits that the client needs to know about for the menu
 	SendPropInt( SENDINFO( m_iAllies ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_iClasses), SendPropInt( SENDINFO_ARRAY(m_iClasses), 4 ) ),
 	SendPropInt( SENDINFO( m_iMaxPlayers ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iClasses), SendPropInt( SENDINFO_ARRAY(m_iClasses), 4 ) ),
+	
 	// <-- Mirv: Some limits that the client needs to know about for the menu
 END_SEND_TABLE()
 

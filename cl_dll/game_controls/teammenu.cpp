@@ -222,11 +222,11 @@ void CTeamMenu::Update()
 		pTeamButton = (vgui::Button *) FindChildByName(szTeamButtons[iTeam]);
 
 		// This is one of the 4 teams and isn't full
-		if (GetGlobalTeam(iTeam) && (pGR->GetTeamLimits(iTeam) == 0 || iTeamNumbers[iTeam] < pGR->GetTeamLimits(iTeam))) 
+		if (GetGlobalTeam(iTeam + TEAM_BLUE) && (pGR->GetTeamLimits(iTeam + TEAM_BLUE) == 0 || iTeamNumbers[iTeam + TEAM_BLUE] < pGR->GetTeamLimits(iTeam + TEAM_BLUE))) 
 		{
 			pTeamButton->SetVisible(true);
 
-			wchar_t *szName = localize()->Find(pGR->GetTeamName(iTeam + 2));
+			wchar_t *szName = localize()->Find(pGR->GetTeamName(iTeam + TEAM_BLUE));
 
 			//DevMsg("[Teammenu] Found localized text \"%s\", %s\n", pGR->GetTeamName(iTeam + 2), (szName) ? "yes" : "no");
 
@@ -241,7 +241,7 @@ void CTeamMenu::Update()
 			else
 			{
 				char szbuf[128];
-				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + 2));
+				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + TEAM_BLUE));
 
 				pTeamButton->SetText(szbuf);
 			}				
