@@ -27,6 +27,9 @@
 //		up moving buildable stuff out to a buildable shared file.
 //	06/18/2005, L0ki:
 //		Added a utility macro for sphere queries, mainly for the grenades
+//
+//	05/28/2006, Mulchman:
+//		Added FF_DecalTrace
 
 #ifndef FF_UTILS_H
 #define FF_UTILS_H
@@ -55,7 +58,6 @@ int Class_StringToInt( const char *szClassName );
 const char *Class_IntToString( int iClassIndex );
 const char *Class_IntToResourceString( int iClassIndex );
 const char *Class_IntToPrintString( int iClassIndex );
-char *Class_GetModelByInt( int iClassIndex );
 void SetColorByTeam( int iTeam, Color& cColor );
 
 int FF_NumPlayersOnTeam( int iTeam );

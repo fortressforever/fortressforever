@@ -480,8 +480,77 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		Q_strncpy( buf, pmsg + iNameLength, strlen( pmsg ));
 		buf[ strlen( pmsg + iNameLength ) ] = '\0';
 		line->InsertColorChange( Color( g_ColorYellow[0], g_ColorYellow[1], g_ColorYellow[2], 255 ) );
-		vgui::localize()->ConvertANSIToUnicode( buf, wbuf, strlen(pmsg)*sizeof(wchar_t));
-		line->InsertString( wbuf );
+
+		// Want to look in buf for any localized strings
+		// and convert them to resource strings if possible
+		char *pBeg = buf;
+		int iAdjust = 1;
+		char szTemp[ 4096 ];
+
+		Q_strcpy( szTemp, "\0" );
+		int iPos = 0;
+
+		while( pBeg[ 0 ] )
+		{
+			iAdjust = 1;
+
+			if( ( pBeg[ 0 ] == '#' ) && pBeg[ 1 ] )
+			{
+				// If there's stuff in our buffer, dump it first
+				if( iPos )
+				{
+					wchar_t wszTemp[ 4096 ];
+					vgui::localize()->ConvertANSIToUnicode( szTemp, wszTemp, sizeof( wszTemp ) );
+					line->InsertString( wszTemp );
+					Q_strcpy( szTemp, "\0" );
+					iPos = 0;
+				}
+
+				// Now get on with tokenizing
+				int i = 1;
+
+				while( ( ( pBeg[ i ] >= 'A' ) && ( pBeg[ i ] <= 'Z' ) ) || 
+					( ( pBeg[ i ] >= 'a' ) && ( pBeg[ i ] <= 'z' ) ) ||
+					( pBeg[ i ] == '_' ) )
+					i++;
+
+				char szToken[ 1024 ];
+				Q_strncpy( szToken, pBeg, i + 1 );
+
+				wchar_t *pszTemp = vgui::localize()->Find( szToken );
+				if( pszTemp )
+					line->InsertString( pszTemp );
+				else
+				{
+					vgui::localize()->ConvertANSIToUnicode( szToken, wbuf, sizeof( wbuf ) );
+					line->InsertString( wbuf );
+				}					
+
+				iAdjust = i;
+			}
+			else
+			{
+				// Add a character to our buffer
+				char ch = pBeg[ 0 ];
+				szTemp[ iPos++ ] = ch;
+				if( iPos == 4096 )
+					szTemp[ --iPos ] = '\0';
+				else
+					szTemp[ iPos ] = '\0';
+			}
+
+			pBeg += iAdjust;
+		}
+
+		// If there's stuff in our buffer, dump it first
+		if( iPos )
+		{
+			wchar_t wszTemp[ 4096 ];
+			vgui::localize()->ConvertANSIToUnicode( szTemp, wszTemp, sizeof( wszTemp ) );
+			line->InsertString( wszTemp );
+			Q_strcpy( szTemp, "\0" );
+		}
+
 		line->SetVisible( true );
 		line->SetNameLength( iNameLength );
 		line->SetNameColor( Color( flColor[0], flColor[1], flColor[2], 255 ) );

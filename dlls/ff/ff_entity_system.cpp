@@ -1497,7 +1497,7 @@ int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 		CBasePlayer *ent = UTIL_PlayerByIndex( player );
 		if (ent && ent->IsPlayer())
 		{
-			if( ToFFPlayer( ent )->CanUpdateLocation( name ) )
+			if( ToFFPlayer( ent )->CanUpdateLocation( name, iTeam ) )
 			{
 				// do the stuff!
 				CSingleUserRecipientFilter filter( ent );

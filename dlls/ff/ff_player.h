@@ -279,10 +279,12 @@ public:
 
 public:
 	// Can we update our location yet?
-	bool CanUpdateLocation( const char *szNewLocation );
+	bool CanUpdateLocation( const char *szNewLocation, int iNewLocationTeam );
 	const char *GetLocation( void ) { return const_cast< char * >( m_szCurrentLocation ); }
+	int GetLocationTeam( void ) { return m_iCurrentLocationTeam; }
 private:
 	char m_szCurrentLocation[ 1024 ]; // ACK!
+	int  m_iCurrentLocationTeam; // team this location belongs to
 
 public:
 	// Set the spawn delay for a player. If the current delay

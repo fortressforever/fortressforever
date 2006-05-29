@@ -719,6 +719,44 @@ const char *CFFGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	return "(FortressForever - chat prefix bee-hotches)";
 }
 
+const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
+{
+	// TODO: abort if CVAR chooses to display location using %l (or not at all)
+
+	CFFPlayer *pffPlayer = ToFFPlayer( pPlayer );
+
+	if( pffPlayer )
+	{
+		int iTeam = pffPlayer->GetLocationTeam();
+		if( iTeam < TEAM_BLUE )
+			return pffPlayer->GetLocation();
+		else
+		{
+			// Build a string to include the team
+			static char szLocation[ 1024 + 32 ]; // Location size + additional size for team name
+			const char *szTeam = "";
+
+			switch( iTeam )
+			{
+				case TEAM_BLUE: szTeam = "#FF_TEAM_BLUE"; break;
+				case TEAM_RED: szTeam = "#FF_TEAM_RED"; break;
+				case TEAM_YELLOW: szTeam = "#FF_TEAM_YELLOW"; break;
+				case TEAM_GREEN: szTeam = "#FF_TEAM_GREEN"; break;
+			}
+
+			// Convert to ansi on client!
+			
+			Q_strcpy( szLocation, szTeam );
+			Q_strcat( szLocation, " " );
+			Q_strcat( szLocation, pffPlayer->GetLocation() );
+
+			return szLocation;
+		}
+	}
+	
+	return "";
+}
+
 #endif
 
 //-----------------------------------------------------------------------------

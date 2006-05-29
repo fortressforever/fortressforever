@@ -25,6 +25,9 @@
 //		Put more buildable object stuff in here to make it universal
 //		and easier to update client/server stuff in one file. Ended
 //		up moving buildable stuff out to a buildable shared file.
+//
+//	05/28/2006, Mulchman:
+//		Added FF_DecalTrace
 
 #include "cbase.h"
 #include "ff_utils.h"
@@ -163,43 +166,6 @@ const char *Class_IntToPrintString( int iClassIndex )
 	}
 
 	return "\0";
-}
-
-// TODO: Will need to change this when models are
-// put into the correct locations
-char *Class_GetModelByInt( int iClassIndex )
-{
-	char szModelPath[ 512 ];
-	char szClass[ 16 ];
-
-	// Get the class name
-	Q_strcpy( szClass, Class_IntToString( iClassIndex ) );
-
-	// Start building our string
-	Q_strcpy( szModelPath, "models/" );
-	
-	if( iClassIndex < 11 )
-	{
-		Q_strcat( szModelPath, "player/" );
-	}
-	else if( iClassIndex == 11 )
-	{
-		Q_strcat( szModelPath, "buildable/" );
-	}
-	else if( iClassIndex == 12 )
-	{
-		Q_strcpy( szModelPath, "models/weapons/sg/sg.mdl" );
-
-		return &szModelPath[ 0 ];
-	}
-	
-	Q_strcat( szModelPath, szClass );
-	Q_strcat( szModelPath, "/" );
-	Q_strcat( szModelPath, szClass );
-	Q_strcat( szModelPath, ".mdl" );
-	Q_strcat( szModelPath, "\0" );
-
-	return &szModelPath[ 0 ];
 }
 
 void SetColorByTeam( int iTeam, Color& cColor )

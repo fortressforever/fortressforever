@@ -74,6 +74,7 @@ public:
 	virtual void BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info );
 
 	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
+	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );
 
 	virtual void Precache( void );	// |-- Mirv: Just need a function that occurs at the start of each map to reset pm
 
