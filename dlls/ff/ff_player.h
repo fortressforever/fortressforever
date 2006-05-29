@@ -511,6 +511,9 @@ public:
 	Vector GetLegacyAbsOrigin();
 
 	virtual void Touch(CBaseEntity *pOther);
+	void	InstaSwitch(int iClassNum);
+	
+	void	SetupClassVariables();
 };
 
 

@@ -110,6 +110,15 @@ CON_COMMAND(ffdev_tranqme, "tranqs you")
 	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
 }
 
+CON_COMMAND(ffdev_iclass, "instant switch")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+
+	int iClass = atoi(engine->Cmd_Argv(1));
+
+	you->InstaSwitch(iClass);
+}
+
 CON_COMMAND(bot_infectme, "infects you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());

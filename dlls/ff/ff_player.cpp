@@ -724,20 +724,17 @@ ReturnSpot:
 
 void CFFPlayer::Spawn()
 {
-	// --> Mirv: Various things to do on spawn
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//  Please don't reinitialise class variables in here, but SetupClassVariables instead!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 	// Fixes water bug
-	if( GetWaterLevel() == 3 )
+	if (GetWaterLevel() == 3)
 	{
 		StopSound( "Player.AmbientUnderWater" );
 		SetPlayerUnderwater(false);
 		SetWaterLevel( 0 );
 	}
-
-	// Mulch: BUG 0000310: return fov to default on spawn	
-	//bool bFovSet = SetFOV( this, GetDefaultFOV() );
-	//DevMsg( "[Spawn] Setting fov to default on spawn was: %s\n", bFovSet ? "successful" : "a failure!" );
-
-	m_pBuildLastWeapon = NULL;
 
 	// Maybe this should go elsewhere
 	CSingleUserRecipientFilter user((CBasePlayer *)this);
@@ -748,12 +745,6 @@ void CFFPlayer::Spawn()
 	WRITE_BYTE(FF_NUMICONS);
 	WRITE_FLOAT(0.0);
 	MessageEnd();
-
-	// Reset spy stuff
-	m_fFeigned = false;
-	m_flFinishDisguise = 0;
-	m_iSpyDisguise = 0;
-	m_iNewSpyDisguise = 0;
 
 	// Get rid of any fire
 	Extinguish();
@@ -864,6 +855,46 @@ void CFFPlayer::Spawn()
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
+	SetupClassVariables();
+
+	// Clear the list of people who previously radio tagged us
+	//m_hWhoTaggedMeList.RemoveAll( );
+	m_pWhoTaggedMe = NULL;
+
+	// reset their status effects
+	m_flNextBurnTick = 0.0;
+	m_iBurnTicks = 0;
+	m_flBurningDamage = 0.0;
+
+	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	{
+		m_vSpeedEffects[i].active = false;
+	}
+
+	m_fLastHealTick = 0.0f;
+	m_fLastInfectedTick = 0.0f;
+	m_bInfected = false;
+	m_hInfector = NULL;
+	m_bImmune = false;
+	m_iInfectedTeam = TEAM_UNASSIGNED;
+
+	// equip the HEV suit
+	EquipSuit();
+}
+
+// Mirv: Moved all this out of spawn into here
+void CFFPlayer::SetupClassVariables()
+{
+	// Reset Engineer stuff
+	m_pBuildLastWeapon = NULL;
+
+	// Reset Spy stuff
+	m_fFeigned = false;
+	m_flFinishDisguise = 0;
+	m_iSpyDisguise = 0;
+	m_iNewSpyDisguise = 0;
+
+
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -904,35 +935,12 @@ void CFFPlayer::Spawn()
 	{
 		// UNDONE: per defrag and documentation update - give player the detpack ammo
 		// just don't let them lay another detpack while one is out
-//		// Bug #0000452: Detpack is given to player after they've already used a detpack.
-//		if( m_hDetpack.Get() && !Q_strcmp( pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, "AMMO_DETPACK" ) )
-//			continue;
+		//		// Bug #0000452: Detpack is given to player after they've already used a detpack.
+		//		if( m_hDetpack.Get() && !Q_strcmp( pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, "AMMO_DETPACK" ) )
+		//			continue;
 
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 	}
-
-	// Clear the list of people who previously radio tagged us
-	//m_hWhoTaggedMeList.RemoveAll( );
-	m_pWhoTaggedMe = NULL;
-
-	// reset their status effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
-
-	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
-	{
-		m_vSpeedEffects[i].active = false;
-	}
-	m_fLastHealTick = 0.0f;
-	m_fLastInfectedTick = 0.0f;
-	m_bInfected = false;
-	m_hInfector = NULL;
-	m_bImmune = false;
-	m_iInfectedTeam = TEAM_UNASSIGNED;
-
-	// equip the HEV suit
-	EquipSuit();
 }
 
 void CFFPlayer::InitialSpawn( void )
@@ -4608,4 +4616,21 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 	}
 
 	BaseClass::Touch(pOther);
+}
+
+// An instance switch. This should allow classes to be swapped without killing them.
+void CFFPlayer::InstaSwitch(int iClassNum)
+{
+	if (GetClassSlot() == iClassNum)
+		return;
+
+	m_iNextClass = iClassNum;
+
+	// First clean up some (don't remove suit though)
+	RemoveAllItems(false);
+	RemoveItems();
+
+	// Then apply the class stuff
+	ActivateClass();
+	SetupClassVariables();
 }
