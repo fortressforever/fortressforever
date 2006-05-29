@@ -894,6 +894,8 @@ void CFFPlayer::SetupClassVariables()
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
 
+	m_szCurrentLocation[ 0 ] = '\0';
+	m_iCurrentLocationTeam = TEAM_UNASSIGNED;
 
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
