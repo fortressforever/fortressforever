@@ -90,6 +90,9 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 		return;
 	}
 
+	// #0000623: Priming caltrop grenade and not ever throwing it causes all caltrops to hit yourself
+	if (GetGroundEntity() == NULL)
+		return;
 
 	CFFPlayer *pPlayer = ToFFPlayer(pOther);
 	if(pPlayer)

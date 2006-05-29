@@ -32,6 +32,8 @@
 #include "voice_status.h"
 //#include "Friends/IFriendsUser.h"
 
+#include "in_buttons.h"
+
 #include "IGameUIFuncs.h" // for key bindings
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
@@ -45,6 +47,23 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 //extern IFriendsUser *g_pFriendsUser;
 
 extern bool g_fBlockedStatus[256];	// |-- Mirv: The blocked status of people's text
+
+static CClientScoreBoardDialog *g_pScoreboard = NULL;
+
+bool ActivateScoreboard()
+{
+	if (!g_pScoreboard || !g_pScoreboard->IsVisible())
+		return false;
+
+	// If not enabled, set mouse input as enabled and return true to swallow +attack
+	if (!g_pScoreboard->IsMouseInputEnabled())
+	{
+		g_pScoreboard->SetMouseInputEnabled(true);
+		return true;
+	}
+
+	return false;
+}
 
 using namespace vgui;
 
@@ -75,7 +94,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	// initialize dialog
 	SetProportional(true);
 	SetKeyBoardInputEnabled(false);
-	SetMouseInputEnabled(true);
+	SetMouseInputEnabled(false);
 	SetSizeable(false);
 
 	// hide the system buttons
@@ -109,6 +128,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 		m_iNumPlayersOnTeam[ i ] = 0;
 		m_iTeamSections[ i ] = 0;
 	}
+
+	g_pScoreboard = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -238,7 +259,7 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 			m_iJumpKey = gameuifuncs->GetEngineKeyCodeForBind( "jump" );
 		}
 
-		SetMouseInputEnabled(true);
+		//SetMouseInputEnabled(true);
 
 		Reset();
 		Update();
