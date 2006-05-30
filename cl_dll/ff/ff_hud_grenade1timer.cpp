@@ -110,18 +110,22 @@ void CHudGrenade1Timer::Paint()
 	{
 		timer_t *timer = &m_Timers.Element(i);
 
-		float amount = clamp((gpGlobals->curtime - timer->m_flStartTime) / timer->m_flDuration, 0, 1.0f);
-
-		// Draw progress bar
-		surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
-		surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
-
-		// Mark this up for removal if needed(1.7s so it doesnt disappear before fadeout if last) 
-		if (gpGlobals->curtime > timer->m_flStartTime + timer->m_flDuration + 1.7f) 
+		// ted_maul: 0000614: Grenade timer issues
+		// Mark this up for removal if needed UNDONE: (1.7s so it doesnt disappear before fadeout if last) 
+		if (gpGlobals->curtime > timer->m_flStartTime + timer->m_flDuration/* + 1.7f*/) 
 			timer_to_remove = i;
+		else
+		{
+			float amount = clamp((gpGlobals->curtime - timer->m_flStartTime) / timer->m_flDuration, 0, 1.0f);
 
-		bar_newypos += timer_height;
-		colour_mod += 20.0f;			// TODO: Constrain this? Probably not needed.
+			// Draw progress bar
+			surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
+			surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
+
+
+			bar_newypos += timer_height;
+			colour_mod += 20.0f;			// TODO: Constrain this? Probably not needed.
+		}
 	}
 	
 	// Remove a timer this frame
