@@ -390,6 +390,7 @@ CFFPlayer::CFFPlayer()
 	m_flServerPrimeTime = 0;
 	m_iPrimary = 0;
 	m_iSecondary = 0;
+	m_bWantToThrowGrenade = false;
 
 	// Status Effects
 	m_flNextBurnTick = 0.0;
@@ -3555,7 +3556,17 @@ void CFFPlayer::Command_ThrowGren(void)
 	if (!IsGrenadePrimed())
 		return;
 
+	// ted_maul: 0000614: Grenade timer issues
+	// release delay
+	if(gpGlobals->curtime - m_flServerPrimeTime < 1.0f)
+	{
+		// release this grenade at the earliest opportunity
+		m_bWantToThrowGrenade = true;
+		return;
+	}
+
 	ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime));
+	m_bWantToThrowGrenade = false;
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0.0f;
 }
@@ -3607,6 +3618,12 @@ void CFFPlayer::GrenadeThink(void)
 {
 	if (!IsGrenadePrimed())
 		return;
+
+	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= 1.0f)
+	{
+		Command_ThrowGren();
+		return;
+	}
 
 	if ( (m_flServerPrimeTime != 0 ) && ( ( gpGlobals->curtime - m_flServerPrimeTime ) >= gren_timer.GetFloat() ) )
 	{
