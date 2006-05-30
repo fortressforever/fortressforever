@@ -57,10 +57,11 @@ extern int gEvilImpulse101;
 int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 // grenade information
-ConVar gren_timer("ffdev_gren_timer","4.0",0,"Timer length for all grenades");
-//ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at");
-ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at");
-//ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player");
+ConVar gren_timer("ffdev_gren_timer","4.0",0,"Timer length for all grenades.");
+ConVar gren_throw_delay("ffdev_throw_delay","1.0",0,"Delay before primed grenades can be thrown.");
+//ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at.");
+ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
+//ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
@@ -1252,21 +1253,23 @@ void CFFPlayer::CreateViewModel( int index /*=0*/ )
 
 void CFFPlayer::CheatImpulseCommands( int iImpulse )
 {
-	if ( iImpulse != 101 )
+	if (iImpulse != 101)
 	{
 		BaseClass::CheatImpulseCommands( iImpulse );
 		return ;
 	}
-	gEvilImpulse101 = true;
 
-	// Give the player everything!
-	
-	if ( GetHealth() < 100 )
+	if(sv_cheats->GetBool())
 	{
-		TakeHealth( 25, DMG_GENERIC );
+		GiveAmmo(200, AMMO_NAILS);
+		GiveAmmo(200, AMMO_SHELLS);
+		GiveAmmo(200, AMMO_ROCKETS);
+		GiveAmmo(200, AMMO_CELLS);
+		GiveAmmo(200, AMMO_RADIOTAG);
+		GiveAmmo(200, AMMO_DETPACK);
+		SetHealth(m_iMaxHealth);
+		m_iArmor = m_iMaxArmor;
 	}
-
-	gEvilImpulse101		= false;
 }
 
 bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
@@ -3558,7 +3561,7 @@ void CFFPlayer::Command_ThrowGren(void)
 
 	// ted_maul: 0000614: Grenade timer issues
 	// release delay
-	if(gpGlobals->curtime - m_flServerPrimeTime < 1.0f)
+	if(gpGlobals->curtime - m_flServerPrimeTime < gren_throw_delay.GetFloat())
 	{
 		// release this grenade at the earliest opportunity
 		m_bWantToThrowGrenade = true;
@@ -3619,7 +3622,7 @@ void CFFPlayer::GrenadeThink(void)
 	if (!IsGrenadePrimed())
 		return;
 
-	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= 1.0f)
+	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= gren_throw_delay.GetFloat())
 	{
 		Command_ThrowGren();
 		return;
