@@ -65,6 +65,7 @@ public:
 
 	static int m_iShockwaveTexture;
 	static int m_iFlameSprite;
+	static int m_iRingTexture;
 
 #ifdef CLIENT_DLL
 	CFFGrenadeBase() {}

@@ -87,8 +87,9 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 	void CFFGrenadeEmp::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeEmp::Explode\n");
-		CFFGrenadeBase::PreExplode( pTrace );//, EMP_SOUND, EMP_EFFECT );
+		//CFFGrenadeBase::PreExplode( pTrace );//, EMP_SOUND, EMP_EFFECT );
 		//CFFGrenadeBase::PreExplode( pTrace, NULL, "FF_RingEffect" );
+		CFFGrenadeBase::PreExplode(pTrace, NULL, "FF_EmpZap");
 		float radius = GetGrenadeRadius();
 
 		CBaseEntity *pEntity = NULL;
@@ -187,6 +188,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 			Vector vecNormal = pTrace->plane.normal;
 			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
 			CPASFilter filter( vecAbsOrigin );
+			/*
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
@@ -200,10 +202,12 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 			// Normal decals since trace hit something
 			UTIL_DecalTrace( pTrace, "Scorch" );
+			*/
 		}
 		else
 		{
 			CPASFilter filter( vecAbsOrigin );
+			/*
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
@@ -215,6 +219,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 			// Trace hit nothing so do custom scorch mark finding
 			FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
+			*/
 		}
 
 		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );

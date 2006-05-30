@@ -1,7 +1,7 @@
 /// =============== Fortress Forever ===============
 /// ======== A modification for Half-Life 2 ========
 ///
-/// @file d:\ffsrc\cl_dll\ff_fx_empzap.h
+/// @file d:\ffsrc\cl_dll\ff\ff_fx_empzap.h
 /// @author Alan Smithee (ted_maul)
 /// @date 2006/05/20
 /// @brief EMP lightning effect

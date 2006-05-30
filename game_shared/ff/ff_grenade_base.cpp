@@ -67,6 +67,7 @@ END_DATADESC()
 // CFFGrenadeBase implementation
 //=============================================================================
 int CFFGrenadeBase::m_iShockwaveTexture = -1;
+int CFFGrenadeBase::m_iRingTexture = -1;
 int CFFGrenadeBase::m_iFlameSprite = -1;
 
 #ifdef GAME_DLL
@@ -390,6 +391,7 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 void CFFGrenadeBase::Precache()
 {
 	m_iShockwaveTexture = PrecacheModel("sprites/spotlight.vmt");
+	m_iRingTexture = PrecacheModel("sprites/smoke.vmt");
 	m_iFlameSprite = PrecacheModel("sprites/fire_floor.vmt");
 
 	//0000287: SV_StartSound: weapons/debris1.wav not precached (0)

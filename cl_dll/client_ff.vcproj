@@ -294,6 +294,9 @@
 					RelativePath=".\ff_fx_concbits.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_fx_empzap.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_fx_flash_emitter.cpp">
 				</File>
 				<File
@@ -432,6 +435,9 @@
 				</File>
 				<File
 					RelativePath=".\ff_fx_concbits.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_fx_empzap.h">
 				</File>
 				<File
 					RelativePath=".\ff\ff_fx_flash_emitter.h">
