@@ -709,7 +709,7 @@ void CFFMiniTurret::OnSearchThink( void )
 	}
 
 	m_vecGoalAngles.x = 10.0f;
-	m_vecGoalAngles.y = m_vecGoalAngles.y + QAngle( 0, MaxYawSpeed(), 0 ).y;
+	m_vecGoalAngles.y = AngleNormalize( m_vecGoalAngles.y + QAngle( 0, MaxYawSpeed(), 0 ).y );
 
 	UpdateFacing();
 	Ping();
