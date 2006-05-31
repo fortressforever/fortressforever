@@ -874,25 +874,27 @@ bool CFFMiniTurret::UpdateFacing( void )
 {
 	bool bMoved = false;
 
+	// Get current orientation of the muzzle attachment
 	Vector vecOrigin;
 	QAngle vecAngles;
 	MuzzlePosition( vecOrigin, vecAngles );
 
+	// Update pitch
+	float flDiff = -m_vecGoalAngles.x;
+	SetPoseParameter( m_iPitchPoseParameter, flDiff );
+
+	if( miniturret_debug.GetBool() )
+		DevMsg( "[MiniTurret] Current Pitch: %f, Goal Pitch: %f, pitch val: %f\n", vecAngles.x, m_vecGoalAngles.x, flDiff );
+
+	// Get the current yaw value
 	float flYaw = GetPoseParameter( m_iYawPoseParameter );
 
 	if( miniturret_debug.GetBool() )
 		Warning( "[MiniTurret] Current pose yaw: %f, vecAngles yaw: %f, goal yaw: %f\n", flYaw, vecAngles.y, m_vecGoalAngles.y );
 
 	// Update yaw
-	float flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y ), AngleNormalize( flYaw ), MaxYawSpeed() ) );
+	flDiff = AngleNormalize( UTIL_ApproachAngle( AngleNormalize( m_vecGoalAngles.y ), AngleNormalize( flYaw ), MaxYawSpeed() ) );
 	SetPoseParameter( m_iYawPoseParameter, flDiff );
-
-	// Update pitch
-	flDiff = -m_vecGoalAngles.x;
-	SetPoseParameter( m_iPitchPoseParameter, flDiff );
-
-	if( miniturret_debug.GetBool() )
-		DevMsg( "[MiniTurret] Current Pitch: %f, Goal Pitch: %f, pitch val: %f\n", vecAngles.x, m_vecGoalAngles.x, flDiff );
 
 	InvalidateBoneCache();
 

@@ -180,6 +180,11 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		SetModelName( NULL_STRING );
 		AddSolidFlags( FSOLID_NOT_SOLID );
 
+		// According to PHISH & Dospac the TFC grenade
+		// doesn't do any of this stuff (other than
+		// blowing up ammo stored on players/objects) &
+		// the stuff we're having it do in FF.
+		/*
 		Vector vecAbsOrigin = GetAbsOrigin();
 		int contents = UTIL_PointContents( vecAbsOrigin );
 
@@ -188,7 +193,6 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 			Vector vecNormal = pTrace->plane.normal;
 			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
 			CPASFilter filter( vecAbsOrigin );
-			/*
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
@@ -202,12 +206,10 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 			// Normal decals since trace hit something
 			UTIL_DecalTrace( pTrace, "Scorch" );
-			*/
 		}
 		else
 		{
 			CPASFilter filter( vecAbsOrigin );
-			/*
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
@@ -219,13 +221,15 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 			// Trace hit nothing so do custom scorch mark finding
 			FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
-			*/
 		}
+		*/
 
 		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
 
+		/*
 		CTakeDamageInfo info( this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecAbsOrigin );
 		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
+		*/
 
 		SetThink( &CBaseGrenade::SUB_Remove );
 		SetTouch( NULL );
