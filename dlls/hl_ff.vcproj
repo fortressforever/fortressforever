@@ -573,10 +573,10 @@
 					RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_esp_shared.h">
+					RelativePath="..\game_shared\ff\ff_esp_shared.h">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_esp_shared.h">
+					RelativePath=".\ff\ff_esp_shared.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_fx_shared.h">
