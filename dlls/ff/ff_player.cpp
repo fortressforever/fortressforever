@@ -586,6 +586,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("radar.single_shot");
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
+	PrecacheScriptSound("Player.Pain");
 	
 	// Class specific things!
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
