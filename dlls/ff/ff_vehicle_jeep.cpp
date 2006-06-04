@@ -804,7 +804,7 @@ void CPropJeep::Think(void)
 	//FIXME: Don't bother for E3
 	if ( m_bCannonCharging )
 	{
-		m_nSpinPos += JEEP_GUN_SPIN_RATE;
+		m_nSpinPos -= 1;//JEEP_GUN_SPIN_RATE;
 		SetPoseParameter( JEEP_GUN_SPIN, m_nSpinPos );
 	}
 

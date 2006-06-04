@@ -1026,9 +1026,11 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	info.m_iDamage = 70.0f;
 
 	if( !miniturret_castrate.GetBool() )
+	{
 		FireBullets( info );
-	EmitSound( "RespawnTurret.Fire" );
-	DoMuzzleFlash();
+		EmitSound( "RespawnTurret.Fire" );
+		DoMuzzleFlash();
+	}
 }
 
 //-----------------------------------------------------------------------------

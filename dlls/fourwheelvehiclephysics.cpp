@@ -835,7 +835,7 @@ bool CFourWheelVehiclePhysics::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			// transform the wheel into body space
 			VectorITransform( m_wheelPosition[i], m_pOuter->EntityToWorldTransform(), tmp );
 			SetPoseParameter( m_poseParameters[VEH_FL_WHEEL_HEIGHT + i], (m_wheelBaseHeight[i] - tmp.z) / m_wheelTotalHeight[i] );
-			SetPoseParameter( m_poseParameters[VEH_FL_WHEEL_SPIN + i], -m_wheelRotation[i].z );
+			SetPoseParameter( m_poseParameters[VEH_FL_WHEEL_SPIN + i], -m_wheelRotation[i].z );			
 			return false;
 		}
 	}
