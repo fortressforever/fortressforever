@@ -201,7 +201,6 @@ class CFFMiniTurret : public CAI_BaseNPC
 public:
 	DECLARE_CLASS( CFFMiniTurret, CAI_BaseNPC );
 	DECLARE_NETWORKCLASS();	
-	DECLARE_PREDICTABLE();
 
 	// --> Shared code
 	CFFMiniTurret( void );
@@ -213,14 +212,6 @@ public:
 	Vector	EyePosition( void )
 	{
 		SetupAttachments();
-		/*
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		GetAttachment( m_iEyeAttachment, vecOrigin, vecAngles );
-
-		return vecOrigin - Vector( 0, 0, 48 );
-		*/
 		return GetAbsOrigin() - Vector( 0, 0, 16 );
 	}
 
@@ -270,7 +261,16 @@ protected:
 			SetNextClientThink( CLIENT_THINK_ALWAYS );
 		}
 	}
+
+	virtual bool Interpolate( float flCurrentTime );
+
+protected:
+	float m_flLastPose;
+	float m_flCurrentPose;
+
 #else
+
+public:
 	DECLARE_DATADESC();
 	
 	void	Spawn( void );

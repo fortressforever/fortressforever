@@ -325,9 +325,6 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurret, DT_FFMiniTurret )
 BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret ) 
 END_NETWORK_TABLE() 
 
-BEGIN_PREDICTION_DATA( CFFMiniTurret ) 
-END_PREDICTION_DATA()
-
 LINK_ENTITY_TO_CLASS( ff_miniturret, CFFMiniTurret );
 PRECACHE_REGISTER( ff_miniturret );
 
@@ -336,7 +333,7 @@ PRECACHE_REGISTER( ff_miniturret );
 // Debug visualization
 ConVar	miniturret_debug( "ffdev_miniturret_debug", "0" );
 ConVar	miniturret_turnspeed( "ffdev_miniturret_turnspeed", "17.0" );
-ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0" );
+ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "1" );
 
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )
@@ -439,6 +436,46 @@ CFFMiniTurret::~CFFMiniTurret( void )
 	}
 #endif
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Interpolate values
+//-----------------------------------------------------------------------------
+#ifdef CLIENT_DLL 
+bool CFFMiniTurret::Interpolate( float flCurrentTime )
+{
+	float flPoses[ MAXSTUDIOPOSEPARAM ];
+	GetPoseParameters( flPoses );
+
+	// Don't interp these values
+	if( ( flPoses[ 0 ] == 0.5000 ) && ( flPoses[ 1 ] == 1.0000 ) )
+		return true;
+
+	// Update the last pose
+	m_flLastPose = m_flCurrentPose;
+
+	// Get current pose
+	m_flCurrentPose = flPoses[ 0 ];
+
+	//Warning( "[Interpolate] Current pose: %f, Last pose: %f\n", m_flCurrentPose, m_flLastPose );
+	Warning( "[Poses] " );
+	for( int i = 0; i < 5; i++ )
+	//{
+		Warning( "(%i - %f)" , i, flPoses[ i ] );
+	//}
+	Warning( "\n" );
+
+	// TODO: When rotating "right" and getting near the 0.02 to 0.98 mark
+	// stop interpolating until back in 0.98 range
+
+	// TODO: For now
+	// No interp
+	return true;
+
+	// Normal interp
+	return BaseClass::Interpolate( flCurrentTime );
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Precache assets
 //-----------------------------------------------------------------------------
@@ -467,7 +504,7 @@ void CFFMiniTurret::Precache( void )
 
 	g_iMiniTurretDot = PrecacheModel( FF_MINITURRET_DOT );
 	g_iMiniTurretBeam = PrecacheModel( FF_MINITURRET_BEAM );
-	g_iMiniTurretHalo = PrecacheModel( FF_MINITURRET_HALO );	
+	g_iMiniTurretHalo = PrecacheModel( FF_MINITURRET_HALO );
 }
 
 #ifdef GAME_DLL
@@ -709,7 +746,7 @@ void CFFMiniTurret::OnSearchThink( void )
 	}
 
 	m_vecGoalAngles.x = 10.0f;
-	m_vecGoalAngles.y = AngleNormalize( m_vecGoalAngles.y + QAngle( 0, MaxYawSpeed(), 0 ).y );
+	m_vecGoalAngles.y = AngleNormalize( m_vecGoalAngles.y + MaxYawSpeed() );
 
 	UpdateFacing();
 	Ping();
