@@ -722,7 +722,9 @@ C_BaseAnimating::C_BaseAnimating() :
 	}
 
 	AddVar( m_flEncodedController, &m_iv_flEncodedController, LATCH_ANIMATION_VAR | EXCLUDE_AUTO_INTERPOLATE );
-	AddVar( m_flPoseParameter, &m_iv_flPoseParameter, LATCH_ANIMATION_VAR | EXCLUDE_AUTO_INTERPOLATE );
+
+	// Modified by Mulch: So we won't ever do hermite interpolation
+	AddVar( m_flPoseParameter, &m_iv_flPoseParameter, LATCH_ANIMATION_VAR | EXCLUDE_AUTO_INTERPOLATE | INTERPOLATE_LINEAR_ONLY );
 
 	AddVar( &m_flCycle, &m_iv_flCycle, LATCH_ANIMATION_VAR | EXCLUDE_AUTO_INTERPOLATE );
 

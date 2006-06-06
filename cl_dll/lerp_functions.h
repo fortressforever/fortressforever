@@ -29,11 +29,19 @@ inline float LoopingLerp( float flPercent, float flFrom, float flTo )
 			flTo += 1.0f;
 	}
 
+	/*
 	float s = flTo * flPercent + flFrom * (1.0f - flPercent);
 
 	s = s - (int)(s);
 	if (s < 0.0f)
 		s = s + 1.0f;
+		*/
+	
+	// Modified by Mulch - 6/6/2006
+	float s = flFrom + ( ( flTo - flFrom ) * flPercent );
+
+	if( s >= 1.0f )
+		s -= 1.0f;
 
 	return s;
 }

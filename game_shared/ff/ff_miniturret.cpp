@@ -443,6 +443,7 @@ CFFMiniTurret::~CFFMiniTurret( void )
 #ifdef CLIENT_DLL 
 bool CFFMiniTurret::Interpolate( float flCurrentTime )
 {
+	/*
 	float flPoses[ MAXSTUDIOPOSEPARAM ];
 	GetPoseParameters( flPoses );
 
@@ -470,6 +471,7 @@ bool CFFMiniTurret::Interpolate( float flCurrentTime )
 	// TODO: For now
 	// No interp
 	return true;
+	*/
 
 	// Normal interp
 	return BaseClass::Interpolate( flCurrentTime );
