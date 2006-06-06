@@ -28,7 +28,7 @@ using namespace vgui;
 class CHint
 {
 public:
-	CHint( const char *pszHint, const char *pszSound, float flStartTime )
+	CHint(bool fActive, const char *pszHint, const char *pszSound, float flStartTime)
 		: m_flStartTime( flStartTime )
 	{
 		// TODO: Parse out the hint into labels
@@ -49,10 +49,12 @@ private:
 	wchar_t		m_pText[ 256 ];	// Unicode text buffer
 
 	// Vector of all the hints we're showing at the time
-	CUtlVector< CHint >	m_hHints;
+	// We're only doing one hint at a time now. Yar.
+	//CUtlVector< CHint >	m_hHints;
 
 	// TODO: Hard code after tweaking/testing phase(s)
 	float		m_flDuration;	// Duration of hints
+	float		m_flNextHint;	// Next hint allowed
 
 public:
 	CHudHint( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudHint" ) 
@@ -73,6 +75,13 @@ public:
 	void	MsgFunc_FF_HudHint( bf_read &msg );
 
 	// Manually add a hud hint
-	void	AddHudHint( const char *pszMessage, const char *pszSound = NULL );
+	void	AddHudHint(byte bType, unsigned short wID, const char *pszMessage, const char *pszSound);
 	
+};
+
+
+enum HINT_TYPE
+{
+	HINT_GENERAL = 0,
+	HINT_MAP
 };

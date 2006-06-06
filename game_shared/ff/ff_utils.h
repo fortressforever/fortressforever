@@ -72,6 +72,8 @@ void FF_HudHint(
 #ifndef CLIENT_DLL 
 				CFFPlayer *pPlayer,
 #endif
+				byte bType,
+				unsigned short wID,
 				const char *pszMessage );
 
 #define BEGIN_ENTITY_SPHERE_QUERY( origin, radius ) CBaseEntity *pEntity = NULL; \

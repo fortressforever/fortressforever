@@ -175,6 +175,11 @@ static CDLL_ConVarAccessor g_ConVarAccessor;
 bool g_bLevelInitialized;
 bool g_bTextMode = false;
 
+// --> Mirv: For the hud hints loading/saving
+extern void HudHintLoad(const char *pMapName);
+extern void HudHintSave();
+// <-- Mirv
+
 //-----------------------------------------------------------------------------
 // Purpose: interface for gameui to modify voice bans
 //-----------------------------------------------------------------------------
@@ -815,6 +820,10 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	vieweffects->LevelInit();
 	
+	// --> Mirv: Initialise hud hints
+	HudHintLoad(pMapName);
+	// <-- Mirv
+
 	// Tell mode manager that map is changing
 	modemanager->LevelInit( pMapName );
 
@@ -907,6 +916,10 @@ void CHLClient::LevelShutdown( void )
 	g_ParticleMgr.RemoveAllEffects();
 
 	gHUD.LevelShutdown();
+
+	// --> Mirv: Initialise hud hints
+	HudHintSave();
+	// <-- Mirv
 
 	//-- Added by L0ki --
 	// Hide these panels so the game doesnt crash on us
