@@ -438,14 +438,14 @@ void CFFSentryGun::HackFindEnemy( void )
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *target = NULL;
 
-	for( int i = 0; i < gpGlobals->maxClients; i++ ) 
+	for( int i = 1; i < gpGlobals->maxClients; i++ ) 
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 
 		// Changed a line for
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
-		if( !pPlayer || !pPlayer->IsPlayer() || pPlayer->IsObserver() || pPlayer == pOwner ||
+		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || pPlayer == pOwner ||
 			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE ) )
 			continue;
 
@@ -461,17 +461,28 @@ void CFFSentryGun::HackFindEnemy( void )
 				continue;
 		}
 
-		// Add alive players who are visible
-		if( pPlayer->IsAlive() && FVisible( pPlayer->GetAbsOrigin() ) ) 
+		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
+		if( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
-		if( pPlayer->m_hSentryGun.Get() && FVisible( pPlayer->m_hSentryGun->GetAbsOrigin() ) && ( pPlayer->m_hSentryGun.Get() != this ) ) 
-			target = SG_IsBetterTarget( target, pPlayer->m_hSentryGun.Get(), ( pPlayer->m_hSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		if( pPlayer->m_hSentryGun.Get() )
+		{
+			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
+			if( pSentryGun != this )
+			{
+				if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+					target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
+		}
 
 		// Add dispensers
-		if( pPlayer->m_hDispenser.Get() && FVisible( pPlayer->m_hDispenser->GetAbsOrigin() ) ) 
-			target = SG_IsBetterTarget( target, pPlayer->m_hDispenser.Get(), ( pPlayer->m_hDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		if( pPlayer->m_hDispenser.Get() )
+		{
+			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
+			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		}
 	}
 
 	SetEnemy( target );
