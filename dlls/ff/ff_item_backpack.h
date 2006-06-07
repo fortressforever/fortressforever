@@ -53,6 +53,11 @@ public:
 
 	virtual int TakeEmp();
 
+	// Bug #0000656: Throwing discards at miniturret will freak it out
+	virtual bool IsPlayer( void ) { return false; }
+	virtual bool BlocksLOS( void ) { return false; }
+	virtual bool IsAlive( void ) { return false; }
+
 private:
 	int m_iAmmoCounts[ MAX_AMMO_SLOTS ];
 	int m_iGren1;
