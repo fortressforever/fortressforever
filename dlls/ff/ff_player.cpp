@@ -3803,16 +3803,17 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// tag the player if hit by radio tag ammo
 	if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
 	{
-		m_bRadioTagged = true;
-		m_flRadioTaggedStartTime = gpGlobals->curtime;
+		SetRadioTagged( ToFFPlayer( info.GetAttacker() ), gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+		//m_bRadioTagged = true;
+		//m_flRadioTaggedStartTime = gpGlobals->curtime;
 
 		// Setting time to max
 		//m_flRadioTaggedDuration = 3 * inputInfo.GetSniperRifleCharge( );
-		m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
+		//m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
 
 		// Keep track of who's radio tagged us to award them each a point when we die
 		//m_hWhoTaggedMeList.AddToTail( ToFFPlayer( info.GetAttacker( ) ) );
-		m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker() );
+		//m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker() );
 	}
 
 	// if it's a pyro, they take half damage
