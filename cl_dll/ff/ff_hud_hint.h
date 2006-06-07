@@ -55,17 +55,16 @@ private:
 	// TODO: Hard code after tweaking/testing phase(s)
 	float		m_flDuration;	// Duration of hints
 	float		m_flNextHint;	// Next hint allowed
+	float		m_flStarted;	// Start of hint
+
+	bool		m_fActive;
+
+	RichText	*m_pRichText;
 
 public:
-	CHudHint( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudHint" ) 
-	{
-		// Set our parent window
-		SetParent( g_pClientMode->GetViewport() );
 
-		SetHiddenBits( 0 );
-	}
-
-	~CHudHint( void );
+	CHudHint(const char *pElementName);
+	virtual ~CHudHint();
 
 	void	Init( void );
 	void	VidInit( void );

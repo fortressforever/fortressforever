@@ -15,6 +15,7 @@
 
 #ifdef CLIENT_DLL
 	#define CFFWeaponKnife C_FFWeaponKnife
+	#include "ff_utils.h"
 #endif
 
 //=============================================================================
@@ -72,6 +73,11 @@ CFFWeaponKnife::CFFWeaponKnife()
 bool CFFWeaponKnife::Deploy() 
 {
 	WeaponSound(SPECIAL1);
+
+	// A quick hint test
+#ifdef CLIENT_DLL
+	FF_HudHint(HINT_GENERAL, 54, "Hi there. You seem to have drawn a knife. The knife can backstab and stuff like that - it's awesome!");
+#endif
 	
 	return BaseClass::Deploy();
 }

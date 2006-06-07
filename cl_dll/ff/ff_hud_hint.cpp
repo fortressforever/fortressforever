@@ -33,10 +33,11 @@ IFileSystem **pFilesystem = &filesystem;
 #include <vgui/IScheme.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
+#include <vgui_controls/RichText.h>
 
 // [integer] Duration [in seconds] that each hut hint is
 // drawn on the screen
-static ConVar hint_duration( "ffdev_hint_duration", "5" );
+static ConVar hint_duration( "ffdev_hint_duration", "10" );
 static ConVar hint_on("cl_hints", "1");
 
 // Helper var
@@ -56,13 +57,23 @@ static char szMapPath[MAX_PATH];
 DECLARE_HUDELEMENT( CHudHint );
 DECLARE_HUD_MESSAGE( CHudHint, FF_HudHint );
 
-CHudHint::~CHudHint( void )
+CHudHint::CHudHint( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudHint" ) 
 {
-	pHudHintHelper = NULL;
+	// Set our parent window
+	SetParent( g_pClientMode->GetViewport() );
+
+	SetHiddenBits( 0 );
 
 	szMapPath[0] = 0;
 
-	m_flNextHint = 0;
+	m_fActive = true;
+
+	m_flNextHint = m_flDuration = m_flStarted = 0;
+}
+
+CHudHint::~CHudHint()
+{
+	pHudHintHelper = NULL;
 }
 
 void CHudHint::VidInit( void )
@@ -70,7 +81,15 @@ void CHudHint::VidInit( void )
 	// Point our helper to us
 	pHudHintHelper = this;
 
-	SetPaintBackgroundEnabled( false );
+	// Set up the rich text box that will contain the hud hint stuff
+	m_pRichText = new RichText(this, "HintText");
+	m_pRichText->SetPos(0, 20);
+	m_pRichText->SetWide(GetWide() - 2);
+	m_pRichText->SetTall(GetTall() - 22);
+	m_pRichText->SetVerticalScrollbar(false);
+	m_pRichText->SetBorder(NULL);
+
+	SetPaintBackgroundEnabled(false);
 }
 
 void CHudHint::Init( void )
@@ -80,13 +99,21 @@ void CHudHint::Init( void )
 
 void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage, const char *pszSound)
 {
+	// First off, we're now ignoring hints which are triggered while a hint is
+	// playing. We don't queue them up because they'll probably have lost relevancy
+	// by the time they are played.
+	if (gpGlobals->curtime < m_flNextHint && m_fActive)
+	{
+		DevMsg("[Hud Hint] Hint ignored (%s)\n", pszMessage);
+		return;
+	}
+
 	DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );
 
 	// When adding a hud hint we need to do a couple of things
 	// Firstly, check to see if it's a new hint (ie. a hint
 	// that the user hasn't seen before)
 	HintVector *sHint = NULL;
-	bool fActive = true;
 
 	if (bType == HINT_GENERAL)
 		sHint = &sGeneralHints;
@@ -94,12 +121,11 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 		sHint = &sMapHints;
 
 	// Already in list of shown hints, so not active by default
-	if (std::find(sHint->begin(), sHint->end(), wID) != sHint->end())
-		fActive = false;
+	m_fActive = (std::find(sHint->begin(), sHint->end(), wID) == sHint->end());
 
 	// Secondly, if it's a new hint, add it to our log file
 	// thing
-	if (fActive)
+	if (m_fActive)
 		sHint->push_back(wID);
 
 	// Thirdly, display the new hint
@@ -115,11 +141,14 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 	// later in VidInit or Init. This just lets it
 	// get updated everytime we get a new hud hint.
 	m_flDuration = hint_duration.GetInt();
+	m_flStarted = gpGlobals->curtime;
+	m_flNextHint = m_flStarted + m_flDuration + 2.0f;
 
-	m_flNextHint = gpGlobals->curtime + m_flDuration;
+	// Set the text now
+	m_pRichText->SetText(pszMessage);
 
 	// Do something w/ the string!
-	CHint	hHint(fActive, pszMessage, pszSound, gpGlobals->curtime);
+	//CHint	hHint(fActive, pszMessage, pszSound, gpGlobals->curtime);
 }
 
 void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
@@ -149,34 +178,41 @@ void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
 	AddHudHint(bType, wID, szString, szSound);	
 }
 
-void CHudHint::Paint( void )
+// This is currently A MESS!
+void CHudHint::Paint()
 {
-	/*
-	if( m_hHints.Count( ) >= 1 )
+	// TODO: Let's not actually do this every loop
+	if (!hint_on.GetBool())
 	{
-		if( !IsVisible( ) )
-			SetVisible( true );
+		m_pRichText->SetVisible(false);
+		return;
+	}
+
+	if (hint_on.GetBool() && gpGlobals->curtime > m_flStarted && gpGlobals->curtime < m_flNextHint)
+	{
+		if (!IsVisible())
+			SetVisible(true);
 
 		// Get our scheme and font information
-		vgui::HScheme scheme = vgui::scheme( )->GetScheme( "ClientScheme" );
-		vgui::HFont hFont = vgui::scheme( )->GetIScheme( scheme )->GetFont( "Default" );
+		vgui::HScheme scheme = vgui::scheme()->GetScheme("ClientScheme");
+		vgui::HFont hFont = vgui::scheme()->GetIScheme(scheme)->GetFont("Default");
 
-		char szText[ 256 ];
-		Q_strcpy( szText, "Hud Hints - WIP" );
-		localize( )->ConvertANSIToUnicode( szText, m_pText, sizeof( m_pText ) );
+		localize()->ConvertANSIToUnicode("<IMG>oh god a hint</IMG>", m_pText, sizeof(m_pText));
 
 		// Draw our text	
-		surface( )->DrawSetTextFont( hFont ); // set the font	
-		surface( )->DrawSetTextColor( GetFgColor( ) ); // white
-		surface( )->DrawSetTextPos( 5, 2 ); // x,y position
-		surface( )->DrawPrintText( m_pText, wcslen( m_pText ) ); // print text
+		surface()->DrawSetTextFont(hFont); // set the font	
+		surface()->DrawSetTextColor(GetFgColor()); // white
+		surface()->DrawSetTextPos(5, 2); // x,y position
+		surface()->DrawPrintText(m_pText, wcslen(m_pText)); // print text
+
+		// Once again, not every loop.
+		if (m_fActive)
+			m_pRichText->SetVisible(true);
+		else
+			m_pRichText->SetVisible(false);
 	}
 	else
-	{
-		if( IsVisible( ) )
-			SetVisible( false );
-	}
-	*/
+		m_pRichText->SetVisible(false);
 }
 
 // Useful helper (stuck it in as a template because not sure yet what
@@ -230,7 +266,9 @@ void LoadHints(const char *pFilename, HintVector &hints)
 		int nHintID = atoi(pHintID);
 		hints.push_back(nHintID);
 
-		pHintID = strtok(NULL, "\n");
+		DevMsg("Reading hint: %hu\n", nHintID);
+
+		pHintID = strtok(NULL, " ");
 	}
 
 	// Cleaning up
@@ -242,9 +280,6 @@ void LoadHints(const char *pFilename, HintVector &hints)
 /************************************************************************/
 void SaveHints(const char *pFilename, HintVector &hints)
 {
-	if (!hint_on.GetBool())
-		return;
-
 	FileHandle_t f = (*pFilesystem)->Open(pFilename, "wb", "MOD");
 
 	if (!f)
@@ -297,4 +332,17 @@ void HudHintLoad(const char *pMapName)
 	// Always clear and load the map, since it has probably changed
 	sMapHints.clear();
 	LoadHints(szMapPath, sMapHints);
+}
+
+CON_COMMAND(showhint, "Show a trigger'd hint")
+{
+	if (!pHudHintHelper)
+		return;
+
+	pHudHintHelper->m_fActive = true;
+
+	// Oh yeah and do all this mess again
+	pHudHintHelper->m_flDuration = hint_duration.GetInt();
+	pHudHintHelper->m_flStarted = gpGlobals->curtime;
+	pHudHintHelper->m_flNextHint = pHudHintHelper->m_flStarted + pHudHintHelper->m_flDuration + 2.0f;
 }
