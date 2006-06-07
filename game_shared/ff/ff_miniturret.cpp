@@ -573,7 +573,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *pTarget = NULL;
 
-	for( int i = 0; i < gpGlobals->maxClients; i++ )
+	for( int i = 1; i < gpGlobals->maxClients; i++ )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 
@@ -587,20 +587,21 @@ void CFFMiniTurret::HackFindEnemy( void )
 			if( FFGameRules()->IsTeam1AlliedToTeam2( m_iTeam, pPlayer->GetTeamNumber() ) == GR_TEAMMATE )
 				continue;
 
-		if( FVisible( pPlayer->GetAbsOrigin() ) )
+		// Bug #0000657: Respawn turret won't deploy
+		if( FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) )
 			pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		if( pPlayer->m_hSentryGun.Get() )
 		{
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
-			if( FVisible( pSentryGun->GetAbsOrigin() ) )
+			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
 				pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 
 		if( pPlayer->m_hDispenser.Get() )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
-			if( FVisible( pDispenser->GetAbsOrigin() ) )
+			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
 				pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 	}
