@@ -135,7 +135,12 @@ inline float LoopingLerp_Hermite( float t, float p0, float p1, float p2 )
 	if ( fabs( p2 - p1 ) > 0.5f )
 	{
 		if (p1 < p2)
+		{
 			p1 += 1.0f;
+			// Added by Mulch - 6/6/2006
+			if( p0 < 1.0f )
+				p0 += 1.0f;
+		}
 		else
 			p2 += 1.0f;
 	}

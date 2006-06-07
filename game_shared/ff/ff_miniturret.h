@@ -264,9 +264,9 @@ protected:
 
 	virtual bool Interpolate( float flCurrentTime );
 
-protected:
-	float m_flLastPose;
-	float m_flCurrentPose;
+//protected:
+	//float m_flLastPose;
+	//float m_flCurrentPose;
 
 #else
 
