@@ -262,7 +262,7 @@ protected:
 		}
 	}
 
-	virtual bool Interpolate( float flCurrentTime );
+	//virtual bool Interpolate( float flCurrentTime );
 
 //protected:
 	//float m_flLastPose;
