@@ -79,7 +79,6 @@ bool CFFItemFlag::CreateItemVPhysicsObject( void )
 
 	// make it respond to touches
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	CollisionProp()->UseTriggerBounds( false, ITEM_PICKUP_BOX_BLOAT );
 	SetTouch( &CFFItemFlag::OnTouch );
 
 	return true;
@@ -96,6 +95,9 @@ void CFFItemFlag::Spawn( void )
 	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 	SetModel( FLAG_MODEL );
+
+	// Try and make the flags easier to grab
+	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
 //	DevMsg("[ff_item_flag] Spawn\n");
 	entsys.RunPredicates( this, NULL, "spawn" );
