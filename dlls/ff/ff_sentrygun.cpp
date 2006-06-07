@@ -44,6 +44,7 @@
 #include "ff_sentrygun.h"
 #include "te_effect_dispatch.h" 
 #include "ff_projectile_rocket.h"
+#include "ff_utils.h"
 #include "ff_gamerules.h"
 
 #include "omnibot_interface.h"
@@ -453,11 +454,12 @@ void CFFSentryGun::HackFindEnemy( void )
 		if( pPlayer->IsDisguised() )
 		{
 			// Spy disguised as owners team
-			if( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() )
+			if( ( pPlayer->GetDisguisedTeam() == pOwner->GetTeamNumber() ) && ( !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) ) )
 				continue;
+
 			// Spy disguised as allied team
 			//if( pOwnerTeam->GetAllies() & ( 1 << pPlayer->GetDisguisedTeam() ) )
-			if( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) )
+			if( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) && !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) )
 				continue;
 		}
 

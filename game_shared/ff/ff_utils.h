@@ -65,6 +65,8 @@ int FF_GetPlayerOnTeam( int iTeam, int iNum );
 int FF_NumPlayers( );
 int FF_GetPlayer( int iNum );
 
+bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting );
+
 void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName );
 
 // Do a HudHint

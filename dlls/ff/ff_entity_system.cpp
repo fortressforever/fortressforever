@@ -1460,10 +1460,7 @@ int CFFEntitySystem::MarkRadioTag( lua_State *L )
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( ent );
 
-			pPlayer->m_bRadioTagged = true;
-			pPlayer->m_flRadioTaggedStartTime = gpGlobals->curtime;
-			pPlayer->m_flRadioTaggedDuration = duration; // time in seconds for the radio tag duration... change to whatever you want
-			pPlayer->m_pWhoTaggedMe = NULL; 
+			pPlayer->SetRadioTagged( NULL, gpGlobals->curtime, duration );
 			ret = true;
 		}
 

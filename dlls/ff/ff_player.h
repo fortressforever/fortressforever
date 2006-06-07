@@ -376,15 +376,19 @@ public:
 	// End: Added by Mulchman for scout radar
 
 	// BEG: Added by Mulchman for radar tagging
+	bool IsRadioTagged( void ) const { return m_bRadioTagged; }
+	void SetRadioTagged( CFFPlayer *pWhoTaggedMe, float flStartTime, float flDuration );
+	int GetTeamNumOfWhoTaggedMe( void ) const;
+	CFFPlayer *GetPlayerWhoTaggedMe( void );
+protected:
 	bool m_bRadioTagged;
 	float m_flRadioTaggedStartTime;
 	float m_flRadioTaggedDuration;
 	int m_iRadioTaggedAmmoIndex;
 
 	// This is here so that when someone tags us w/ a radiotag and
-	// we die, we can award that player their extra point thing
-	//CUtlVector< CFFPlayer * > m_hWhoTaggedMeList;
-	//CFFPlayer *m_pWhoTaggedMe;
+	// we die while tagged by that person, we can award that player 
+	// their extra point
 	EHANDLE	m_pWhoTaggedMe;
 
 	CUtlVector< ESP_Shared_s > m_hRadioTaggedList;

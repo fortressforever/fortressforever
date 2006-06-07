@@ -1113,9 +1113,14 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		if( m_pWhoTaggedMe != NULL )
 		{
+			/*
 			CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
 			if( pEntity && pEntity->IsPlayer() )
 				ToFFPlayer( m_pWhoTaggedMe )->AddPoints( 2, true );
+				*/
+			CFFPlayer *pPlayer = GetPlayerWhoTaggedMe();
+			if( pPlayer )
+				pPlayer->AddPoints( 2, true );
 		}
 	}
 
@@ -3888,6 +3893,51 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	return fTookDamage;
 }
 // ---> end
+
+//-----------------------------------------------------------------------------
+// Purpose: Set a player as being "radio tagged"
+//-----------------------------------------------------------------------------
+void CFFPlayer::SetRadioTagged( CFFPlayer *pWhoTaggedMe, float flStartTime, float flDuration )
+{
+	m_bRadioTagged = true;
+	m_pWhoTaggedMe = pWhoTaggedMe;
+	m_flRadioTaggedStartTime = flStartTime;
+	m_flRadioTaggedDuration = flDuration;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the team number of the player who last radio tagged us
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetTeamNumOfWhoTaggedMe( void ) const
+{
+	if( m_pWhoTaggedMe != NULL )
+	{
+		CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
+		if( pEntity && pEntity->IsPlayer() )
+		{
+			CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+			if( !pPlayer->IsObserver() )
+				return pPlayer->GetTeamNumber();
+		}
+	}
+
+	return TEAM_UNASSIGNED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the player who tagged us
+//-----------------------------------------------------------------------------
+CFFPlayer *CFFPlayer::GetPlayerWhoTaggedMe( void )
+{
+	if( m_pWhoTaggedMe != NULL )
+	{
+		CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
+		if( pEntity && pEntity->IsPlayer() )
+			return ToFFPlayer( pEntity );
+	}
+
+	return NULL;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Overrided in order to let the explosion force actually be of

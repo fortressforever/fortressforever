@@ -40,6 +40,7 @@
 #ifdef _DEBUG
 	#include "debugoverlay_shared.h"
 #endif // _DEBUG
+	#include "ff_gamerules.h"
 #endif
 
 // This function takes a class name like "scout"
@@ -309,6 +310,35 @@ void FF_HudHint(
 			WRITE_STRING( pszMessage );
 		MessageEnd( );
 	}
+#endif
+}
+
+
+bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting )
+{
+#ifdef CLIENT_DLL
+	return false;
+#else
+	// iTeamDoingTargetting is the team of the object/player that is checking
+	// to see if this radio tagged player is a valid target
+
+	// pPlayer is the radio tagged player being checked
+
+	if( !pPlayer->IsRadioTagged() )
+		return false;
+
+	// Purpose of this function is to check whether or not the radio tagged
+	// player got tagged by someone who is an ally or teammate to the team
+	// "iTeamDoingTargetting". If yes, return true, otherwise return false.
+
+	CFFPlayer *pWhoTaggedTheGuy = pPlayer->GetPlayerWhoTaggedMe();
+	if( pWhoTaggedTheGuy )
+	{
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pWhoTaggedTheGuy->GetTeamNumber(), iTeamDoingTargetting ) == GR_TEAMMATE )
+			return true;
+	}
+
+	return false;
 #endif
 }
 
