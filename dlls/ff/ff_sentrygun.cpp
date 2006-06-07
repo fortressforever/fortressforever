@@ -413,6 +413,15 @@ CBaseEntity *SG_IsBetterTarget( CBaseEntity *cur, CBaseEntity *latest, float dis
 	if( latest->IsPlayer() && !cur->IsPlayer() ) 
 		return latest;
 
+	// Check radio tagged players
+	if( latest->IsPlayer() && cur->IsPlayer() )
+	{
+		if( ToFFPlayer( latest )->IsRadioTagged() && !ToFFPlayer( cur )->IsRadioTagged() )
+			return latest;
+		else if( !ToFFPlayer( latest )->IsRadioTagged() && ToFFPlayer( cur )->IsRadioTagged() )
+			return cur;
+	}
+
 	// Go for the nearest
 	if( distance < lastdistance ) 
 		return latest;
@@ -450,7 +459,7 @@ void CFFSentryGun::HackFindEnemy( void )
 			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE ) )
 			continue;
 
-		// Spy check
+		// Spy check - but don't let valid radio tagged targets sneak by!
 		if( pPlayer->IsDisguised() )
 		{
 			// Spy disguised as owners team
