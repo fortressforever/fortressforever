@@ -206,44 +206,26 @@ public:
 	CFFMiniTurret( void );
 	~CFFMiniTurret( void );
 
-	virtual void Precache( void );
-	Class_T	Classify( void ) { return CLASS_TURRET; }
+	virtual void	Precache( void );
+	virtual Class_T	Classify( void ) { return CLASS_TURRET; }
+	virtual Vector	EyePosition( void );
+	Vector			MuzzlePosition( void );
+	void			MuzzlePosition( Vector& vecOrigin, QAngle& vecAngles );
+	void			LaserPosition( Vector& vecOrigin, QAngle& vecAngles );
+	void			SetupAttachments( void );
 
-	Vector	EyePosition( void )
-	{
-		SetupAttachments();
-		return GetAbsOrigin() - Vector( 0, 0, 16 );
-	}
+	CNetworkVar( int, m_iTeam );		// Team number
+	CNetworkVar( bool, m_bActive );		// Whether it's deployed/active or not
+	CNetworkVar( bool, m_bEnabled );	// Whether disabled or not
 
-	Vector	MuzzlePosition( void )
-	{
-		Vector vecOrigin;
-		QAngle vecAngles;
-		SetupAttachments();
-		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
-
-		return vecOrigin;
-	}
-	void	MuzzlePosition( Vector& vecOrigin, QAngle& vecAngles )
-	{
-		SetupAttachments();
-		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
-	}
-	void	LaserPosition( Vector& vecOrigin, QAngle& vecAngles )
-	{
-		SetupAttachments();
-		GetAttachment( m_iLaserAttachment, vecOrigin, vecAngles );
-	}
-
-	void	SetupAttachments( void )
-	{
-		if( m_iMuzzleAttachment == -1 )
-			m_iMuzzleAttachment = LookupAttachment( FF_MINITURRET_MUZZLE_ATTACHMENT );
-		if( m_iEyeAttachment == -1 )
-			m_iEyeAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
-		if( m_iLaserAttachment == -1 )
-			m_iLaserAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
-	}
+	virtual int		GetTeamNumber( void ) { return m_iTeam; }
+	virtual bool	IsPlayer( void ) const { return false; }
+	virtual bool	IsAlive( void ) { return true; }
+	virtual bool	IsActive( void ) { return m_bActive; }
+	virtual bool	IsEnabled( void ) { return m_bEnabled; }
+	virtual bool	BlocksLOS( void ) { return false; }
+	virtual int		BloodColor( void ) { return BLOOD_COLOR_MECH; }
+	virtual bool	ShouldSavePhysics( void ) { return false; }
 
 protected:
 	int		m_iEyeAttachment;
@@ -261,76 +243,54 @@ protected:
 			SetNextClientThink( CLIENT_THINK_ALWAYS );
 		}
 	}
-
-	//virtual bool Interpolate( float flCurrentTime );
-
-//protected:
-	//float m_flLastPose;
-	//float m_flCurrentPose;
-
 #else
 
 public:
 	DECLARE_DATADESC();
 	
-	void	Spawn( void );
-	//void	Activate( void );
-	virtual int	OnTakeDamage( const CTakeDamageInfo &info ) { return 0; }
-	int		VPhysicsTakeDamage( const CTakeDamageInfo &info ) { return 0; }
+	virtual void	Spawn( void );
+	virtual int		OnTakeDamage( const CTakeDamageInfo &info ) { return 0; }
+	virtual int		VPhysicsTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 
-	int		GetTeamNumber( void ) { return m_iTeam; }
-	bool	IsPlayer( void ) const { return false; }
-	bool	IsAlive( void ) { return true; }
-	bool	IsActive( void ) { return m_bActive; }
-	bool	BlocksLOS( void ) { return false; }
-	int		BloodColor( void ) { return BLOOD_COLOR_MECH; }
-	bool	ShouldSavePhysics( void ) { return false; }
-	const char *GetTracerType( void ) { return "AR2Tracer"; }
+	virtual void	ChangeTeam( int iTeamNum );
+	const char		*GetTracerType( void ) { return "AR2Tracer"; } // TODO: Change
 
 	// Think functions
-	void	OnObjectThink( void );	// Not a think function
-	void	OnRetire( void );
-	void	OnDeploy( void );
-	void	OnActiveThink( void );
-	void	OnSearchThink( void );
-	void	OnAutoSearchThink( void );
-	void	HackFindEnemy( void );
+	void			OnObjectThink( void );	// Not a think function
+	void			OnRetire( void );
+	void			OnDeploy( void );
+	void			OnActiveThink( void );
+	void			OnSearchThink( void );
+	void			OnAutoSearchThink( void );
+	void			HackFindEnemy( void );
 
 	// Inputs
 	/*
 	void	InputToggle( inputdata_t &inputdata );
 	void	InputEnable( inputdata_t &inputdata );
 	void	InputDisable( inputdata_t &inputdata );
-
-	bool	IsValidEnemy( CBaseEntity *pEnemy );
-	bool	CanBeAnEnemyOf( CBaseEntity *pEnemy );
 	*/
 
-	float	MaxYawSpeed( void );
+	float			MaxYawSpeed( void );
 
 protected:
-	void	Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
-	void	DoMuzzleFlash( void );
-	void	Ping( void );	
-	//void	Toggle( void );
-	//void	Enable( void );
-	//void	Disable( void );
-	void	SpinUp( void );
-	void	SpinDown( void );
-	bool	UpdateFacing( void );
-	void	EnableLaserDot( void );
-	void	DisableLaserDot( void );
-	void	EnableLaserBeam( void );
-	void	DisableLaserBeam( void );
+	void			Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
+	void			DoMuzzleFlash( void );
+	void			Ping( void );	
+	//void			Toggle( void );
+	//void			Enable( void );
+	//void			Disable( void );
+	void			SpinUp( void );
+	void			SpinDown( void );
+	bool			UpdateFacing( void );
+	void			EnableLaserDot( void );
+	void			DisableLaserDot( void );
+	void			EnableLaserBeam( void );
+	void			DisableLaserBeam( void );
 
 protected:
-	// Team the turret is on
-	int		m_iTeam;
 	int		m_iAmmoType;
 	float	m_flNextShell;
-
-	bool	m_bActive;		// Denotes the turret is deployed and looking for targets
-	bool	m_bEnabled;		// Denotes whether the turret is able to deploy or not
 
 	float	m_flShotTime;
 	float	m_flLastSight;
@@ -349,7 +309,6 @@ protected:
 	CHandle< CFFMiniTurretLaserDot >	m_hLaserDot;
 	CHandle< CFFMiniTurretLaserBeam >	m_hLaserBeam;
 
-	//DEFINE_CUSTOM_AI;
 #endif // CLIENT_DLL
 };
 

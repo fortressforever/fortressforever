@@ -322,7 +322,16 @@ void CFFMiniTurretLaserBeam::ClientThink( void )
 
 IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurret, DT_FFMiniTurret ) 
 
-BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret ) 
+BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret )
+#ifdef CLIENT_DLL 
+	RecvPropInt( RECVINFO( m_iTeam ) ),
+	RecvPropInt( RECVINFO( m_bActive ) ),
+	RecvPropInt( RECVINFO( m_bEnabled ) ),
+#else
+	SendPropInt( SENDINFO( m_iTeam ) ),
+	SendPropInt( SENDINFO( m_bActive ) ),
+	SendPropInt( SENDINFO( m_bEnabled ) ),
+#endif
 END_NETWORK_TABLE() 
 
 LINK_ENTITY_TO_CLASS( ff_miniturret, CFFMiniTurret );
@@ -437,18 +446,60 @@ CFFMiniTurret::~CFFMiniTurret( void )
 #endif
 }
 
-/*
 //-----------------------------------------------------------------------------
-// Purpose: Interpolate values
+// Purpose: Get the eye position (shared)
 //-----------------------------------------------------------------------------
-#ifdef CLIENT_DLL 
-bool CFFMiniTurret::Interpolate( float flCurrentTime )
+Vector CFFMiniTurret::EyePosition( void )
 {
-	// Normal interp
-	return BaseClass::Interpolate( flCurrentTime );
+	// Return a position underneath the turret and not up inside
+	// somewhere where when we're not deployed we'll never have
+	// LOS on anything
+	SetupAttachments();
+	return GetAbsOrigin() - Vector( 0, 0, 16 );
 }
-#endif
-*/
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the muzzle position (shared)
+//-----------------------------------------------------------------------------
+Vector CFFMiniTurret::MuzzlePosition( void )
+{
+	Vector vecOrigin;
+	QAngle vecAngles;
+	SetupAttachments();
+	GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+
+	return vecOrigin;
+}
+//-----------------------------------------------------------------------------
+// Purpose: Get the muzzle position (shared)
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::MuzzlePosition( Vector& vecOrigin, QAngle& vecAngles )
+{
+	SetupAttachments();
+	GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the point where the laser eminates from (shared)
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::LaserPosition( Vector& vecOrigin, QAngle& vecAngles )
+{
+	SetupAttachments();
+	GetAttachment( m_iLaserAttachment, vecOrigin, vecAngles );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Setup attachments (shared)
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::SetupAttachments( void )
+{
+	if( m_iMuzzleAttachment == -1 )
+		m_iMuzzleAttachment = LookupAttachment( FF_MINITURRET_MUZZLE_ATTACHMENT );
+	if( m_iEyeAttachment == -1 )
+		m_iEyeAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
+	if( m_iLaserAttachment == -1 )
+		m_iLaserAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Precache assets
@@ -537,7 +588,20 @@ void CFFMiniTurret::Spawn( void )
 
 	m_vecGoalAngles.Init();
 
+	ChangeTeam( m_iTeam );
+
 	//DevMsg( "[MiniTurret] On team: %i\n", m_iTeam - 1 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Change a turrets team
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::ChangeTeam( int iTeamNum )
+{
+	AssertMsg( ( iTeamNum >= TEAM_UNASSIGNED ) && ( iTeamNum <= TEAM_GREEN ), "Invalid ChangeTeam for MiniTurret\n" );
+
+	m_iTeam = iTeamNum;
+	SetEnemy( NULL );
 }
 
 //-----------------------------------------------------------------------------
