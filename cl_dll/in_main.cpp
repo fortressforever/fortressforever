@@ -463,15 +463,8 @@ void IN_GraphUp(void) {KeyUp(&in_graph);}
 void IN_ZoomDown(void) {KeyDown(&in_zoom);}
 void IN_ZoomUp(void) {KeyUp(&in_zoom);}
 
-extern bool ActivateScoreboard();	// |-- Mirv: For scoreboard mouse activation
-
 void IN_AttackDown(void)
 {
-	// --> Mirv: Swallow attack key?
-	if (ActivateScoreboard())
-		return;
-	// <-- Mirv
-
 	KeyDown( &in_attack );
 }
 

@@ -240,6 +240,8 @@ void CInput::ResetMouse( void )
 	SetMousePos( x, y );	
 }
 
+extern bool ActivateScoreboard();	// |-- Mirv: For scoreboard mouse activation
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : mstate - 
@@ -257,6 +259,11 @@ void CInput::MouseEvent( int mstate, bool down )
 		// Only fire changed buttons
 		if ( (mstate & (1<<i)) && !(m_nMouseOldButtons & (1<<i)) )
 		{
+			// --> Mirv: Swallow button 1 if the scoreboard is going to steal mouse focus
+			if (i == 0 && ActivateScoreboard())
+				continue;
+			// <--
+
 			engine->Key_Event (K_MOUSE1 + i, down);
 		}
 		if ( !(mstate & (1<<i)) && (m_nMouseOldButtons & (1<<i)) )

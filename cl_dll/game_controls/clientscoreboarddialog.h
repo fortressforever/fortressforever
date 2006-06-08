@@ -81,7 +81,7 @@ public:
 	// IGameEventListener interface:
 	virtual void FireGameEvent( IGameEvent *event);
 			
-	virtual void CClientScoreBoardDialog::OnCommand( const char *command ); // |-- Mirv: Catch channel changing
+	virtual void OnCommand( const char *command ); // |-- Mirv: Catch channel changing
 
 
 protected:

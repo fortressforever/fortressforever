@@ -94,7 +94,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	// initialize dialog
 	SetProportional(true);
 	SetKeyBoardInputEnabled(false);
-	SetMouseInputEnabled(false);
+	SetMouseInputEnabled(true);			// We have to enable this in the constructor
+										// even if it won't always be the case
+										// Otherwise panels within this one will not
+										// receive mouse input (thanks valve)
 	SetSizeable(false);
 
 	// hide the system buttons
@@ -265,6 +268,8 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		Update();
 
 		Activate();
+
+		SetMouseInputEnabled(false);
 	}
 	else
 	{
