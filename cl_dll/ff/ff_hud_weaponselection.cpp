@@ -135,13 +135,6 @@ void CHudWeaponSelection::OnWeaponPickup( C_BaseCombatWeapon *pWeapon )
 	CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );
 	if ( pHudHR )
 	{
-		// --> Mirv: Don't display the flag as a weapon pickup
-		C_FFWeaponBase *pFFWeapon = dynamic_cast <C_FFWeaponBase *> (pWeapon);
-
-		if (pFFWeapon && pFFWeapon->GetWeaponID() == FF_WEAPON_FLAG)
-			return;
-		// <-- Mirv:
-
 		pHudHR->AddToHistory( pWeapon );
 	}
 }

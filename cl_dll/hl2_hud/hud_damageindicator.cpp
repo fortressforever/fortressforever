@@ -144,6 +144,8 @@ void CHudDamageIndicator::Reset()
 {
 	m_DmgColorLeft[3] = 0;
 	m_DmgColorRight[3] = 0;
+	m_DmgColorFront[3] = 0;
+	m_DmgColorBehind[3] = 0;
 	m_DmgHighColorLeft[3] = 0;
 	m_DmgHighColorRight[3] = 0;
 	m_DmgFullscreenColor[3] = 0;
