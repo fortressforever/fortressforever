@@ -109,7 +109,13 @@ void CFFMiniTurretLaserDot::OnObjectThink( void )
 	QAngle vecAngles;	
 	bool bDrawDot = true;
 
-	pOwner->LaserPosition( vecOrigin, vecAngles );	
+	// Let's do muzzle position instead so the dot will be where the barrel
+	// is pointing and not where the laser is pointing (will hit players
+	// better this way [w/ the dot]). Before, the dot was projected from the
+	// laser origin so it would never be on the exact spot the barrel was
+	// pointing at.
+	// pOwner->LaserPosition( vecOrigin, vecAngles );	
+	pOwner->MuzzlePosition( vecOrigin, vecAngles );
 	AngleVectors( vecAngles, &vecForward );
 
 	VectorNormalizeFast( vecForward );
@@ -118,48 +124,10 @@ void CFFMiniTurretLaserDot::OnObjectThink( void )
 	//UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * MAX_TRACE_LENGTH ), MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, pOwner, COLLISION_GROUP_NONE, &tr );
 	UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * MAX_TRACE_LENGTH ), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr );
 
-//	if( tr.DidHit() )
-//	{
-//		if( tr.m_pEnt )
-//		{
-//			Warning( "[Mini Turret Laser] Hit %s", tr.m_pEnt->GetClassname() );
-//			if( tr.m_pEnt->IsPlayer() )
-//				Warning( " (%s)\n", ToFFPlayer( tr.m_pEnt )->GetPlayerName() );
-//			else
-//				Warning( "\n" );
-//		}
-//	}
-
 	vecEndPos = tr.endpos + ( tr.plane.normal * 1.0f );
 
 	//debugoverlay->AddBoxOverlay( vecOrigin, -Vector( 5, 5, 5 ), Vector( 5, 5, 5 ), vecAngles, 255, 255, 255, 255, 2 );
 	//debugoverlay->AddBoxOverlay( vecEndPos, -Vector( 5, 5, 5 ), Vector( 5, 5, 5 ), vecAngles, 255, 255, 255, 255, 2 );
-
-	/*
-	if( !m_hLaserBeam )
-	{
-		// Create laser beam
-		m_hLaserBeam = CBeam::BeamCreate( FF_MINITURRET_BEAM, 1.0f );
-		if( !m_hLaserBeam )
-			Warning( "[Mini Turret Laser] Failed to create laser beam\n" );
-		else
-		{
-			m_hLaserBeam->PointsInit( vecOrigin, vecOrigin + ( vecForward * 48.0f ) );
-			m_hLaserBeam->SetColor( 255, 0, 0 );
-			m_hLaserBeam->SetBrightness( 255 );
-			m_hLaserBeam->SetNoise( 0.0f );
-			m_hLaserBeam->SetEndWidth( 0.0f );
-			m_hLaserBeam->SetScrollRate( 0.0f );
-		}
-	}
-	else
-	{
-		m_hLaserBeam->SetFadeLength( 32.0f );
-		m_hLaserBeam->SetAbsStartPos( vecOrigin );
-		m_hLaserBeam->SetAbsEndPos( vecOrigin + ( vecForward * 48.0f ) );
-		m_hLaserBeam->RelinkBeam();
-	}
-	*/
 
 	if( tr.surface.flags & SURF_SKY )
 		bDrawDot = false;

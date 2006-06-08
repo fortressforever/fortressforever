@@ -389,6 +389,7 @@ public:
 	// --> shared
 	CFFSevTest( void );
 	~CFFSevTest( void );
+	virtual bool BlocksLOS( void ) { return false; }
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -428,6 +429,7 @@ public:
 	CFFDetpack( void );
 	~CFFDetpack( void );
 
+	virtual bool	BlocksLOS( void ) { return false; }
 	virtual Class_T Classify( void ) { return CLASS_DETPACK; }
 	// <-- shared
 
@@ -445,7 +447,7 @@ public:
 	void SendStartTimerMessage( void );
 	void SendStopTimerMessage( void );
 	//void OnEmpExplosion( void );
-	int TakeEmp( void );
+	virtual int TakeEmp( void );
 
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
