@@ -230,7 +230,7 @@ public:
 	
 	virtual bool IsAlive( void ) { return true; }
 	virtual bool IsPlayer( void ) const { return false; }
-	virtual bool BlocksLOS( void ) { return false; }
+	virtual bool BlocksLOS( void ) { return true; }
 	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
 	bool IsBuilt( void	) const { return m_bBuilt; }
  
@@ -285,12 +285,12 @@ public:
 	// void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
 
-	int OnTakeDamage( const CTakeDamageInfo &info );
+	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
-	bool ShouldSavePhysics( void ) { return false; }
-	int TakeEmp( void ) { return 0; }
+	virtual bool ShouldSavePhysics( void ) { return false; }
+	virtual int TakeEmp( void ) { return 0; }
 
 	// Mirv: Store in advance the ground position
 	virtual void SetGroundAngles(const QAngle &ang) { m_angGroundAngles = ang; }

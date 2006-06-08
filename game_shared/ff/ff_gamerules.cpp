@@ -487,7 +487,7 @@ ConVar mp_prematch( "mp_prematch",
 
 	void CFFGameRules::BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info )
 	{
-		DevMsg( "[FFGameRules] Buildable was killed!\n" );
+		// DevMsg( "[FFGameRules] Buildable was killed!\n" );
 
 		const char *pszWeapon = "world";
 		int iKillerID = 0;
@@ -545,25 +545,25 @@ ConVar mp_prematch( "mp_prematch",
 			UTIL_LogPrintf( " killer_weapon_name: %s\n", pszWeapon );
 
 			// strip the NPC_* or weapon_* from the inflictor's classname
-			if( strncmp( pszWeapon, "weapon_", 7 ) == 0 )
+			if( Q_strnicmp( pszWeapon, "weapon_", 7 ) == 0 )
 			{
 				UTIL_LogPrintf( "  begins with weapon_, removing\n" );
 				pszWeapon += 7;
 			}
-			else if( strncmp( pszWeapon, "NPC_", 8 ) == 0 )
+			else if( Q_strnicmp( pszWeapon, "NPC_", 8 ) == 0 )
 			{
 				UTIL_LogPrintf( "  begins with NPC_, removing\n" );
 				pszWeapon += 8;
 			}
-			else if( strncmp( pszWeapon, "func_", 5 ) == 0 )
+			else if( Q_strnicmp( pszWeapon, "func_", 5 ) == 0 )
 			{
 				UTIL_LogPrintf( "  begins with func_, removing\n" );
 				pszWeapon += 5;
 			}
 			// BEG: Added by Mulchman for FF_ entities
-			else if( strncmp( pszWeapon, "FF_", 3 ) == 0 )
+			else if( Q_strnicmp( pszWeapon, "ff_", 3 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with FF_, removing\n" );
+				UTIL_LogPrintf( "  begins with ff_, removing\n" );
 				pszWeapon += 3;
 			}
 			// END: Added by Mulchman for FF_ entities

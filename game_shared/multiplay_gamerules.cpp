@@ -532,6 +532,10 @@ bool CMultiplayRules::IsMultiplayer( void )
 		}
 		else
 		{  
+			// Bug #0000622: Dying by respawn turret gives you a suicide
+			if( pKiller && ( pKiller->Classify() == CLASS_TURRET ) )
+				return;
+
 			// Players lose a frag for letting the world kill them
 			pVictim->IncrementFragCount( -1 );
 		}
@@ -598,25 +602,25 @@ bool CMultiplayRules::IsMultiplayer( void )
 			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
 
 			// strip the NPC_* or weapon_* from the inflictor's classname
-			if ( strncmp( killer_weapon_name, "weapon_", 7 ) == 0 )
+			if ( Q_strnicmp( killer_weapon_name, "weapon_", 7 ) == 0 )
 			{
 				UTIL_LogPrintf("  begins with weapon_, removing\n");
 				killer_weapon_name += 7;
 			}
-			else if ( strncmp( killer_weapon_name, "NPC_", 8 ) == 0 )
+			else if ( Q_strnicmp( killer_weapon_name, "NPC_", 8 ) == 0 )
 			{
 				UTIL_LogPrintf("  begins with NPC_, removing\n");
 				killer_weapon_name += 8;
 			}
-			else if ( strncmp( killer_weapon_name, "func_", 5 ) == 0 )
+			else if ( Q_strnicmp( killer_weapon_name, "func_", 5 ) == 0 )
 			{
 				UTIL_LogPrintf("  begins with func_, removing\n");
 				killer_weapon_name += 5;
 			}
-			// BEG: Added by Mulchman for FF_ entities
-			else if( strncmp( killer_weapon_name, "FF_", 3 ) == 0 )
+			// BEG: Added by Mulchman for ff_ entities
+			else if( Q_strnicmp( killer_weapon_name, "ff_", 3 ) == 0 )
 			{
-				UTIL_LogPrintf( "  begins with FF_, removing\n" );
+				UTIL_LogPrintf( "  begins with ff_, removing\n" );
 				killer_weapon_name += 3;
 			}
 			// END: Added by Mulchman for FF_ entities
