@@ -349,22 +349,6 @@ BEGIN_DATADESC( CFFMiniTurret )
 
 	DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "team" ),
 
-	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bActive, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( m_bBlinkState, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_flShotTime,	FIELD_TIME ),
-	DEFINE_FIELD( m_flLastSight, FIELD_TIME ),
-	DEFINE_FIELD( m_flPingTime,	FIELD_TIME ),
-	//DEFINE_FIELD( m_flNextActivateSoundTime, FIELD_TIME ),
-
-	DEFINE_FIELD( m_vecGoalAngles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_iEyeAttachment,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_iMuzzleAttachment,	FIELD_INTEGER ),
-	//DEFINE_FIELD( m_iEyeState,		FIELD_INTEGER ),
-	//DEFINE_FIELD( m_hEyeGlow,		FIELD_EHANDLE ),
-
 	DEFINE_THINKFUNC( OnRetire ),
 	DEFINE_THINKFUNC( OnDeploy ),
 	DEFINE_THINKFUNC( OnActiveThink ),
@@ -542,8 +526,6 @@ void CFFMiniTurret::Spawn( void )
 	Precache();
 
 	SetSolid( SOLID_BBOX );
-	//SetMoveType( MOVETYPE_NONE );
-
 	SetModel( FF_MINITURRET_MODEL );	
 
 	BaseClass::Spawn();
@@ -551,7 +533,6 @@ void CFFMiniTurret::Spawn( void )
 	SetBlocksLOS( false );
 
 	SetViewOffset( EyeOffset( ACT_IDLE ) );
-	m_flFieldOfView	= 0.4f; // 60 degrees
 	m_takedamage	= DAMAGE_EVENTS_ONLY;
 	m_iHealth		= 100;
 	m_iMaxHealth	= 100;
@@ -562,10 +543,8 @@ void CFFMiniTurret::Spawn( void )
 	SetPoseParameter( FF_MINITURRET_BC_YAW, 0 );
 	SetPoseParameter( FF_MINITURRET_BC_PITCH, 0 );
 
-	m_iAmmoType = GetAmmoDef()->Index( "AMMO_SHELLS" );
+	m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
 
-	//m_iMuzzleAttachment = LookupAttachment( FF_MINITURRET_MUZZLE_ATTACHMENT );
-	//m_iEyeAttachment = LookupAttachment( FF_MINITURRET_EYE_ATTACHMENT );
 	SetupAttachments();
 
 	m_iPitchPoseParameter = LookupPoseParameter( FF_MINITURRET_BC_PITCH );
@@ -573,6 +552,7 @@ void CFFMiniTurret::Spawn( void )
 
 	// Set our state
 	m_bEnabled = true;
+	m_bActive = false; // don't start deployed ever
 	m_flPingTime = gpGlobals->curtime;
 
 	SetThink( &CFFMiniTurret::OnAutoSearchThink );
@@ -589,8 +569,6 @@ void CFFMiniTurret::Spawn( void )
 	m_vecGoalAngles.Init();
 
 	ChangeTeam( m_iTeam );
-
-	//DevMsg( "[MiniTurret] On team: %i\n", m_iTeam - 1 );
 }
 
 //-----------------------------------------------------------------------------
