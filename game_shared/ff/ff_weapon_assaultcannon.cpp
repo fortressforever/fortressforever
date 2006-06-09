@@ -38,6 +38,8 @@ public:
 	virtual void PrimaryAttack();
 	virtual void WeaponIdle();
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool Deploy();
+
 	virtual void Precache();
 
 	virtual void Fire();
@@ -103,6 +105,16 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	m_fFireState = 0;
 
 	return BaseClass::Holster(pSwitchingTo);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Reset state
+//----------------------------------------------------------------------------
+bool CFFWeaponAssaultCannon::Deploy()
+{
+	m_fFireState = 0;
+
+	return BaseClass::Deploy();
 }
 
 //----------------------------------------------------------------------------
