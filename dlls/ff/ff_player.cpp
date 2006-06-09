@@ -426,7 +426,8 @@ CFFPlayer::CFFPlayer()
 
 	m_flLastGassed = 0;
 
-	m_szCurrentLocation[ 0 ] = '\0';
+	m_Locations.RemoveAll();
+	m_iClientLocation = 0;
 
 	m_pBuildLastWeapon = NULL;
 
@@ -897,8 +898,8 @@ void CFFPlayer::SetupClassVariables()
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
 
-	m_szCurrentLocation[ 0 ] = '\0';
-	m_iCurrentLocationTeam = TEAM_UNASSIGNED;
+	m_Locations.RemoveAll();
+	m_iClientLocation = 0;
 
 	// Class system
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -1291,31 +1292,59 @@ bool CFFPlayer::PlayerHasSkillCommand(const char *szCommand)
 	return false;
 }
 
-// Checks to see if we can update the player's location yet
-// This is basically to stop the location stuff from spamming
-// us every tick and it also helps w/ overlapping locations so
-// they don't flicker between the two locations on the screen heh.
-bool CFFPlayer::CanUpdateLocation( const char *szNewLocation, int iNewLocationTeam )
+//Set a player's location.
+void CFFPlayer::SetLocation( int entindex, const char *szNewLocation, int iNewLocationTeam )
 {
-	/*
-	if( ( m_flLastLocationUpdate + location_update_frequency.GetFloat() ) < gpGlobals->curtime )
+	//Same as last one? Don't add additional head entries.
+	if(m_Locations.Count() && m_Locations[0].entindex == entindex)
+		return;
+
+	LocationInfo info;
+	info.entindex = entindex;
+	Q_strcpy( info.locationname, szNewLocation );
+	info.team = iNewLocationTeam;
+
+	m_Locations.AddToHead(info);
+
+	//Should never be equal anyway, but just for fun.
+	if(m_iClientLocation != entindex)
 	{
-		m_flLastLocationUpdate = gpGlobals->curtime;
+		CSingleUserRecipientFilter filter( this );
+		filter.MakeReliable();	// added
+		UserMessageBegin( filter, "SetPlayerLocation" );
+		WRITE_STRING( GetLocation() );
+		WRITE_SHORT( GetLocationTeam() - 1 ); // changed
+		MessageEnd();
 
-		return true;
+		m_iClientLocation = entindex;
 	}
-	*/
+}
 
-	// STRCMP EVERY FRAME!?
-	bool bSame = ( ( Q_strcmp( szNewLocation, m_szCurrentLocation ) == 0 ) && ( m_iCurrentLocationTeam == iNewLocationTeam ) );
+//Remove players location.
+void CFFPlayer::RemoveLocation( int entindex )
+{
+	if(entindex <= 0)
+		return;
 
-	if( !bSame )
+	for ( int i = 0; i < m_Locations.Count(); i++ )
 	{
-		m_iCurrentLocationTeam = iNewLocationTeam;
-		Q_strcpy( m_szCurrentLocation, szNewLocation );
+		if(m_Locations[i].entindex == entindex)
+			m_Locations.Remove(i);
 	}
 
-	return !bSame;
+	//Update location if we have too.
+	if(m_Locations.Count() > 0 
+		&& m_iClientLocation != m_Locations[0].entindex)
+	{
+		CSingleUserRecipientFilter filter( this );
+		filter.MakeReliable();	// added
+		UserMessageBegin( filter, "SetPlayerLocation" );
+		WRITE_STRING( GetLocation() );
+		WRITE_SHORT( GetLocationTeam() - 1 ); // changed
+		MessageEnd();
+
+		m_iClientLocation = m_Locations[0].entindex;
+	}
 }
 
 void CFFPlayer::Command_TestCommand(void)

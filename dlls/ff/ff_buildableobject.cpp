@@ -635,10 +635,15 @@ void CFFBuildableObject::DoExplosion( void )
 				continue;
 
 #ifdef _DEBUG
-			Color cColor;
-			SetColorByTeam( pPlayer->GetTeamNumber() - 1, cColor );
+			/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
+			util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
+			if (!engine->IsDedicatedServer())
+			{
+				Color cColor;
+				SetColorByTeam( pPlayer->GetTeamNumber() - 1, cColor );
 
-			NDebugOverlay::Line( vecOrigin, vecTarget, cColor.r(), cColor.g(), cColor.b(), false, 10.0f );
+				NDebugOverlay::Line( vecOrigin, vecTarget, cColor.r(), cColor.g(), cColor.b(), false, 10.0f );
+			}
 #endif
 		}
 

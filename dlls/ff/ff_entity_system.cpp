@@ -256,6 +256,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "AddFrags", AddFrags );
 	lua_register( L, "MarkRadioTag", MarkRadioTag );
 	lua_register( L, "SetPlayerLocation", SetPlayerLocation );
+	lua_register( L, "RemoveLocation", RemoveLocation );
 	lua_register( L, "SetPlayerDisguisable", SetPlayerDisguisable );
 	lua_register( L, "SetPlayerRespawnDelay", SetPlayerRespawnDelay );
 	lua_register( L, "SetGlobalRespawnDelay", SetGlobalRespawnDelay );
@@ -1475,43 +1476,62 @@ int CFFEntitySystem::MarkRadioTag( lua_State *L )
 
 //----------------------------------------------------------------------------
 // Purpose: Sets the player's location text
-//          int SetPlayerLocation( int player, string name, int team );
+//          int SetPlayerLocation( int iPlayer, int iEntIndex, string szName, int iTeam);
 //----------------------------------------------------------------------------
 int CFFEntitySystem::SetPlayerLocation( lua_State *L )
 {
 	int n = lua_gettop(L);
 
-	if( n == 3 )
+	if( n == 4 )
 	{
-		bool ret = false;
-		int player = (int)lua_tonumber( L, 1 );
-		const char *name = lua_tostring( L, 2 );
-		//int r = (int)lua_tonumber( L, 3 );
-		//int g = (int)lua_tonumber( L, 4 );
-		//int b = (int)lua_tonumber( L, 5 );
-		int iTeam = ( int )lua_tonumber( L, 3 ); // added
+		bool bRet = false;
+		int iPlayer = (int)lua_tonumber( L, 1 );
+		int iEntIndex = ( int )lua_tonumber( L, 2 );
+		const char *szName = lua_tostring( L, 3 );
+		int iTeam = ( int )lua_tonumber( L, 4 ); // added
 
-		CBasePlayer *ent = UTIL_PlayerByIndex( player );
-		if (ent && ent->IsPlayer())
+		CBasePlayer *pEnt = UTIL_PlayerByIndex( iPlayer );
+		if (pEnt && pEnt->IsPlayer())
 		{
-			if( ToFFPlayer( ent )->CanUpdateLocation( name, iTeam ) )
-			{
-				// do the stuff!
-				CSingleUserRecipientFilter filter( ent );
-				filter.MakeReliable();	// added
-				UserMessageBegin( filter, "SetPlayerLocation" );
-					WRITE_STRING( name );
-					//WRITE_CHAR(r);
-					//WRITE_CHAR(g);
-					//WRITE_CHAR(b);
-					WRITE_SHORT( iTeam - 1 ); // changed
-				MessageEnd();
+			CFFPlayer *pPlayer = ToFFPlayer(pEnt);
 
-				ret = true;
+			if(pPlayer)
+			{
+				pPlayer->SetLocation(iEntIndex, szName, iTeam);
+				bRet = true;
 			}
 		}
 
 		// 1 result
+		lua_pushboolean( L, bRet );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Remove location ID from players locations.
+//          int SetPlayerLocation( int iPlayer, int iEntIndex );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::RemoveLocation( lua_State *L )
+{
+	int n = lua_gettop(L);
+
+	if( n == 2 )
+	{
+		bool ret = false;
+		int iPlayer = (int)lua_tonumber( L, 1 );
+		int iEntIndex = ( int )lua_tonumber( L, 2 );
+
+		CBasePlayer *pEnt = UTIL_PlayerByIndex( iPlayer );
+		if (pEnt && pEnt->IsPlayer())
+		{
+			ToFFPlayer( pEnt )->RemoveLocation( iEntIndex );
+			ret = true;
+		}
+
 		lua_pushboolean( L, ret );
 		return 1;
 	}

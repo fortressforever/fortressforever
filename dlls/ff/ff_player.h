@@ -60,6 +60,13 @@ struct SpeedEffect
 	int modifiers;
 	bool active;			// whether this speed effect is active or not
 };
+
+struct LocationInfo
+{
+	int entindex;
+	char locationname[1024];
+	int team;
+};
 // END: Speed Effect class
 
 #define SEM_BOOLEAN			(1 << 0)
@@ -279,13 +286,25 @@ public:
 
 public:
 	// Can we update our location yet?
-	bool CanUpdateLocation( const char *szNewLocation, int iNewLocationTeam );
-	const char *GetLocation( void ) { return const_cast< char * >( m_szCurrentLocation ); }
-	int GetLocationTeam( void ) { return m_iCurrentLocationTeam; }
+	void SetLocation(int entindex, const char *szNewLocation, int iNewLocationTeam);
+	void RemoveLocation( int entindex );
+	const char *GetLocation( void ) 
+	{ 
+		if(m_Locations.Count() > 0)
+			return const_cast< char * >( m_Locations[0].locationname );
+		else
+			return "";
+	}
+	int GetLocationTeam( void ) 
+	{ 
+		if(m_Locations.Count() > 0)
+			return m_Locations[0].team; 
+		else
+			return TEAM_UNASSIGNED;
+	}
 private:
-	char m_szCurrentLocation[ 1024 ]; // ACK!
-	int  m_iCurrentLocationTeam; // team this location belongs to
-
+	int	m_iClientLocation;
+	CUtlVector<LocationInfo> m_Locations;
 public:
 	// Set the spawn delay for a player. If the current delay
 	// is longer than flDelay then flDelay is ignored and

@@ -101,7 +101,10 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 
 #ifdef GAME_DLL
 #ifdef _DEBUG
-	NDebugOverlay::Cross3D(m_vecBuildAirOrigin, vecMins, vecMaxs, 60, 255, 60, false, 5);
+	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
+		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
+	if (!engine->IsDedicatedServer())
+		NDebugOverlay::Cross3D(m_vecBuildAirOrigin, vecMins, vecMaxs, 60, 255, 60, false, 5);
 #endif
 #endif
 

@@ -643,7 +643,9 @@ bool CFFSentryGun::UpdateFacing( void )
 	float dst_pitch = TO_PITCH( m_angGoal.x ) - src_pitch;
 
 #ifdef _DEBUG
-	if( sg_debug.GetBool() ) 
+	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
+		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
+	if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
 	{
 		NDebugOverlay::Line(EyePosition(), EyePosition() + dir * 300.0f, 40, 40, 40, false, 0.05f);
 		NDebugOverlay::Line(EyePosition(), EyePosition() + vecBaseUp * 300.0f, 110, 110, 110, false, 0.05f);
@@ -859,7 +861,9 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 	EmitSound( sndFilter, entindex(), "Sentry.Aim" );    
 
 #ifdef _DEBUG
-	if( sg_debug.GetBool() ) 
+	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
+		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
+	if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
 		NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
 #endif
 }

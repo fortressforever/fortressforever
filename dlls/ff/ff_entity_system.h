@@ -109,6 +109,7 @@ public:
 	static int AddFrags( lua_State* );
 	static int MarkRadioTag( lua_State* );
 	static int SetPlayerLocation( lua_State* );
+	static int RemoveLocation( lua_State* );
 	static int SetPlayerDisguisable( lua_State* );
 	static int SetPlayerRespawnDelay( lua_State* );
 	static int SetGlobalRespawnDelay( lua_State* );
