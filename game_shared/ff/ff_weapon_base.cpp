@@ -113,15 +113,18 @@ BEGIN_NETWORK_TABLE(CFFWeaponBase, DT_FFWeaponBase)
 	RecvPropInt(RECVINFO(m_fInSpecialReload)) 
 #else
 	// world weapon models have no animations
-  	SendPropExclude("DT_AnimTimeMustBeFirst", "m_flAnimTime"), 
-	SendPropExclude("DT_BaseAnimating", "m_nSequence"), 
+  	
+	// Jerky anim fix
+	//SendPropExclude("DT_AnimTimeMustBeFirst", "m_flAnimTime"), 
+	//SendPropExclude("DT_BaseAnimating", "m_nSequence"), 
 
 	SendPropInt(SENDINFO(m_fInSpecialReload), 2, SPROP_UNSIGNED) 
 #endif
 END_NETWORK_TABLE() 
 
 BEGIN_PREDICTION_DATA(CFFWeaponBase) 
-	DEFINE_PRED_FIELD(m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK), 
+	// Jerky anim fix	
+	//DEFINE_PRED_FIELD(m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK), 
 END_PREDICTION_DATA() 
 
 #ifdef GAME_DLL
@@ -632,3 +635,25 @@ char *CFFWeaponBase::GetDeathNoticeName()
 	return "GetDeathNoticeName not implemented on client yet";
 #endif
 }
+
+// Jerky anim fix
+#ifdef CLIENT_DLL
+
+void CFFWeaponBase::OnDataChanged( DataUpdateType_t type )
+{
+	BaseClass::OnDataChanged( type );
+
+	if ( GetPredictable() && !ShouldPredict() )
+		ShutdownPredictable();
+}
+
+
+bool CFFWeaponBase::ShouldPredict()
+{
+	if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() )
+		return true;
+
+	return BaseClass::ShouldPredict();
+}
+
+#endif

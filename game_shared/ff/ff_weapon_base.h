@@ -168,6 +168,12 @@ private:
 	// down the mouse button. We want one
 	// click of mouse to kill the build.)
 	float m_flNextBuildKill;
+
+	// Jerky anim fix
+#ifdef CLIENT_DLL
+	virtual bool	ShouldPredict();
+	virtual void	OnDataChanged( DataUpdateType_t type );
+#endif
 };
 
 
