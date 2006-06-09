@@ -97,6 +97,8 @@ void CHudDeathNotice::ApplySchemeSettings( IScheme *scheme )
 
 //-----------------------------------------------------
 struct DeathNoticeItem {
+	int	iKillerTeam;
+	int iVictimTeam;
 	char szKiller[MAX_PLAYER_NAME_LENGTH];
 	char szVictim[MAX_PLAYER_NAME_LENGTH];
 	CHudTexture *iconDeath;	// the index number of the associated sprite
@@ -193,6 +195,12 @@ void CHudDeathNotice::Paint()
 
 			// Draw killer's name
 			surface()->DrawSetTextPos( x, y );
+			if(g_PR)
+			{
+				Color col = g_PR->GetTeamColor(rgDeathNoticeList[i].iKillerTeam);
+				surface()->DrawSetTextColor( col );
+			}
+
 			const wchar_t *p = killer;
 			while ( *p )
 			{
@@ -218,6 +226,12 @@ void CHudDeathNotice::Paint()
 
 		// Draw victims name
 		surface()->DrawSetTextPos( x, y );
+		if(g_PR)
+		{
+			Color col = g_PR->GetTeamColor(rgDeathNoticeList[i].iVictimTeam);
+			surface()->DrawSetTextColor( col );
+		}
+
 		const wchar_t *p = victim;
 		while ( *p )
 		{
@@ -275,6 +289,9 @@ void CHudDeathNotice::FireGameEvent( IGameEvent *event)
 		Q_strcat( pszVictimMod, "'s SentryGun" );
 		victim_name = const_cast< char * >( pszVictimMod );
 	}
+
+	rgDeathNoticeList[i].iKillerTeam = g_PR->GetTeam(killer);
+	rgDeathNoticeList[i].iVictimTeam = g_PR->GetTeam(victim);
 
 	Q_strncpy( rgDeathNoticeList[i].szKiller, killer_name, MAX_PLAYER_NAME_LENGTH );
 	Q_strncpy( rgDeathNoticeList[i].szVictim, victim_name, MAX_PLAYER_NAME_LENGTH );

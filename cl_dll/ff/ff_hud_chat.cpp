@@ -20,16 +20,13 @@ bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes a
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 
 // --> Mirv: Colours!
-float g_ColorConsole[3]	= { 153, 255, 153 };
-float g_ColorBlue[3]	= { 0, 0, 255 };
-float g_ColorRed[3]		= { 255, 0, 0 };
-float g_ColorYellow[3]	= { 255, 178.5, 0.0 };
-float g_ColorGreen[3]	= { 0, 255, 0 };
-float g_ColorSpec[3]	= { 128, 255, 255 };
-float g_ColorGrey[3]	= { 128, 128, 128 };
+int g_ColorConsole[3]	= { 153, 255, 153 };
+int g_ColorOrange[3]	= { 255, 170, 0 };
 
-float *GetClientColor( int clientIndex )
+int *GetClientColor( int clientIndex )
 {
+	static int iColor[3];
+
 	if ( clientIndex == 0 ) // console msg
 	{
 		return g_ColorConsole;
@@ -39,27 +36,14 @@ float *GetClientColor( int clientIndex )
 		IGameResources *gr = GameResources();
 
 		if (!gr )
-			return g_ColorYellow;
+			return g_ColorOrange;
 
-		// Use this when I get round to it:
-		// Color col = gr->GetTeamColor( gr->GetTeam( playerIndex ) );
+		Color col = gr->GetTeamColor( gr->GetTeam( clientIndex ) );
 
-		// For now use this!
-		switch( gr->GetTeam( clientIndex ) )
-		{
-			case 1:
-				return g_ColorSpec;
-			case 2:
-				return g_ColorBlue;
-			case 3:
-				return g_ColorRed;
-			case 4:
-				return g_ColorYellow;
-			case 5:
-				return g_ColorGreen;
-			default:
-				return g_ColorGrey;
-		}
+		int alpha = 0;
+		col.GetColor(iColor[0], iColor[1], iColor[2], alpha);
+
+		return iColor;
 	}	
 }
 // <-- Mirv: Colours!
@@ -163,7 +147,7 @@ void CHudChatLine::PerformFadeout( void )
 
 			wcsncpy( wText, wbuf + ( m_iNameLength ), wcslen( wbuf + m_iNameLength ) );
 			wText[ wcslen( wbuf + m_iNameLength ) ] = '\0';
-			InsertColorChange( Color( g_ColorYellow[0], g_ColorYellow[1], g_ColorYellow[2], alpha ) );
+			InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], alpha ) );
 			InsertString( wText );
 			InvalidateLayout( true );
 		}
@@ -462,24 +446,24 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		}
 	}
 	else
-		line->InsertColorChange( Color( g_ColorYellow[0], g_ColorYellow[1], g_ColorYellow[2], 255 ) );
+		line->InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], 255 ) );
 
 	char *buf = static_cast<char *>( _alloca( strlen( pmsg ) + 1  ) );
 	wchar_t *wbuf = static_cast<wchar_t *>( _alloca( (strlen( pmsg ) + 1 ) * sizeof(wchar_t) ) );
 	if ( buf )
 	{
-		float *flColor = GetClientColor( iPlayerIndex );
+		int *iColor = GetClientColor( iPlayerIndex );
 
 		line->SetExpireTime();
 	
 		// draw the first x characters in the player color
 		Q_strncpy( buf, pmsg, min( iNameLength + 1, MAX_PLAYER_NAME_LENGTH+32) );
 		buf[ min( iNameLength, MAX_PLAYER_NAME_LENGTH+31) ] = 0;
-		line->InsertColorChange( Color( flColor[0], flColor[1], flColor[2], 255 ) );
+		line->InsertColorChange( Color( iColor[0], iColor[1], iColor[2], 255 ) );
 		line->InsertString( buf );
 		Q_strncpy( buf, pmsg + iNameLength, strlen( pmsg ));
 		buf[ strlen( pmsg + iNameLength ) ] = '\0';
-		line->InsertColorChange( Color( g_ColorYellow[0], g_ColorYellow[1], g_ColorYellow[2], 255 ) );
+		line->InsertColorChange( Color( g_ColorOrange[0], g_ColorOrange[1], g_ColorOrange[2], 255 ) );
 
 		// Want to look in buf for any localized strings
 		// and convert them to resource strings if possible
@@ -553,7 +537,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 		line->SetVisible( true );
 		line->SetNameLength( iNameLength );
-		line->SetNameColor( Color( flColor[0], flColor[1], flColor[2], 255 ) );
+		line->SetNameColor( Color( iColor[0], iColor[1], iColor[2], 255 ) );
 	}
 
 	CLocalPlayerFilter filter;

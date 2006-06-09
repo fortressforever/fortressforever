@@ -65,7 +65,8 @@ C_PlayerResource::C_PlayerResource()
 #endif
    */
 
-   m_Colors[ TEAM_BLUE ] = Color( 56,100, 161, 255 );
+   m_Colors[ TEAM_SPECTATOR ] = Color( 128, 255, 255, 255 );
+   m_Colors[ TEAM_BLUE ] = Color( 56,100, 171, 255 );
    m_Colors[ TEAM_RED ] = Color( 128, 0, 0, 255 );
    m_Colors[ TEAM_YELLOW ] = Color( 202, 173, 33, 255 );
    m_Colors[ TEAM_GREEN ] = Color( 68, 144, 65, 255 );

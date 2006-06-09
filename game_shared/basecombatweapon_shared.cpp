@@ -1270,6 +1270,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 			(( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pOwner->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
 		{
 			HandleFireOnEmpty();
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2; //VOOGRU: #0000562 
 		}
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
