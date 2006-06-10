@@ -26,6 +26,7 @@
 	#include "ff_gamerules.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "te_effect_dispatch.h"
+	#include "ff_entity_system.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -546,6 +547,8 @@ void CFFMiniTurret::ChangeTeam( int iTeamNum )
 {
 	AssertMsg( ( iTeamNum >= TEAM_UNASSIGNED ) && ( iTeamNum <= TEAM_GREEN ), "Invalid ChangeTeam for MiniTurret\n" );
 
+	Warning( "[MiniTurret] Changing team to: %i\n", iTeamNum );
+
 	m_iTeam = iTeamNum;
 	SetEnemy( NULL );
 }
@@ -593,26 +596,48 @@ void CFFMiniTurret::HackFindEnemy( void )
 		if( !pPlayer->IsAlive() )
 			continue;
 
+		/*
 		if( m_iTeam != 0 )
 			if( FFGameRules()->IsTeam1AlliedToTeam2( m_iTeam, pPlayer->GetTeamNumber() ) == GR_TEAMMATE )
 				continue;
-
-		// Bug #0000657: Respawn turret won't deploy
+				*/
+		
+		// Check if lua will let us target this player
 		if( FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) )
-			pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+		{
+			//DevMsg( "[MiniTurret] About to run predicates for player: " );
+			if( entsys.RunPredicates( this, pPlayer, "validtarget" ) )
+			{
+				//DevMsg( "Success!\n" );
+				pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
+			else
+			{
+				//DevMsg( "Failure!\n" );
+			}
+			//DevMsg( "\n" );
+		}
 
+		// Check if lua will let us target this sentrygun
 		if( pPlayer->m_hSentryGun.Get() )
 		{
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
 			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
-				pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			{
+				if( entsys.RunPredicates( this, pSentryGun, "validtarget" ) )
+					pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
 		}
 
+		// Check if lua will let us target this dispenser
 		if( pPlayer->m_hDispenser.Get() )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
 			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
-				pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			{
+				if( entsys.RunPredicates( this, pDispenser, "validtarget" ) )
+					pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+			}
 		}
 	}
 
@@ -749,7 +774,10 @@ void CFFMiniTurret::OnActiveThink( void )
 
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
-	if( !m_bActive || !GetEnemy() )
+	// Check lua here too to make sure this guy is still a valid target
+	// He might have done something to make him not valid because of
+	// the awesomeness of lua
+	if( !m_bActive || !GetEnemy() || !entsys.RunPredicates( this, GetEnemy(), "validtarget" ) )
 	{
 		SetEnemy( NULL );
 		m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;

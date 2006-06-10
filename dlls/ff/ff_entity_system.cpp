@@ -32,6 +32,7 @@
 #include "buttons.h"
 #include "ff_utils.h"
 #include "ff_team.h"
+#include "ff_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -260,6 +261,11 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "SetPlayerDisguisable", SetPlayerDisguisable );
 	lua_register( L, "SetPlayerRespawnDelay", SetPlayerRespawnDelay );
 	lua_register( L, "SetGlobalRespawnDelay", SetGlobalRespawnDelay );
+	lua_register( L, "IsPlayer", IsPlayer );
+	lua_register( L, "IsDispenser", IsDispenser );
+	lua_register( L, "IsSentrygun", IsSentrygun );
+	lua_register( L, "GetObjectsTeam", GetObjectsTeam );
+	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
 }
 
 //----------------------------------------------------------------------------
@@ -1617,6 +1623,187 @@ int CFFEntitySystem::SetGlobalRespawnDelay( lua_State *L )
 		// 1 result
 		lua_pushboolean( L, ret );
 		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Change a turret's team
+//			int ChangeTurretTeam( turret_id, int iTeam )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::ChangeTurretTeam( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 2 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+		int iTeamNum = lua_tonumber( L, 2 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( pEntity->Classify() == CLASS_TURRET ) )
+		{
+			bRetVal = true;
+			pEntity->ChangeTeam( clamp( iTeamNum, TEAM_UNASSIGNED, TEAM_GREEN ) );
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity is a player
+//			int IsPlayer( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsPlayer( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity is a dispenser
+//			int IsDispenser( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsDispenser( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( pEntity->Classify() == CLASS_DISPENSER ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity is a dispenser
+//			int IsSentrygun( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsSentrygun( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( pEntity->Classify() == CLASS_SENTRYGUN ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get an objects team, will work for:
+//				Dispenser, Sentrygun, MiniTurret, Player
+//			int GetObjectsTeam( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::GetObjectsTeam( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity )
+		{
+			if( ( pEntity->IsPlayer() ) ||
+				( pEntity->Classify() == CLASS_DISPENSER ) ||
+				( pEntity->Classify() == CLASS_SENTRYGUN ) ||
+				( pEntity->Classify() == CLASS_TURRET ) )
+			{
+				lua_pushnumber( L, pEntity->GetTeamNumber() );
+			}
+			else
+			{
+				lua_pushnumber( L, 0 );
+			}
+
+			// 1 result
+			return 1;
+		}		
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Sees if team 1 is allied to team 2
+//			int IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsTeam1AlliedToTeam2( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 2 )
+	{		
+		int iTeam1 = lua_tonumber( L, 1 );
+		int iTeam2 = lua_tonumber( L, 2 );
+
+		if( ( iTeam1 >= TEAM_BLUE ) && ( iTeam1 <= TEAM_GREEN ) &&
+			( iTeam2 >= TEAM_BLUE ) && ( iTeam2 <= TEAM_GREEN ) )
+		{
+			bool bRetVal = false;
+
+			if( FFGameRules()->IsTeam1AlliedToTeam2( iTeam1, iTeam2 ) == GR_TEAMMATE )
+				bRetVal = true;
+
+			lua_pushboolean( L, bRetVal );
+
+			// 1 result
+			return 1;
+		}
 	}
 
 	// No results

@@ -162,6 +162,7 @@ void CFFBuildableObject::Spawn( void )
 {
 	// Set the team number to the owner team number.
 	// Hope this is ok, bots use this for ally checks atm.
+	// Mulch: Yeah, keep this here, needed for some lua stuff
 	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner )
 		ChangeTeam( pOwner->GetTeamNumber() );

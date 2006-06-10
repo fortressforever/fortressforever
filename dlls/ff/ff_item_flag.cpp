@@ -96,6 +96,8 @@ void CFFItemFlag::Spawn( void )
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 	SetModel( FLAG_MODEL );
 
+	SetBlocksLOS( false );
+
 	// Try and make the flags easier to grab
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 

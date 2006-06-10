@@ -39,6 +39,10 @@ public:
 	void OnThink( void );
 	void OnRespawn( void );
 
+	virtual bool IsPlayer( void ) { return false; }
+	virtual bool BlocksLOS( void ) { return false; }
+	virtual bool IsAlive( void ) { return false; }
+
 	void Pickup( CFFPlayer * );
 	void Drop( float delay, float speed = 0.0f );
 	void Respawn( float delay );
