@@ -293,11 +293,11 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFMiniTurret, DT_FFMiniTurret )
 
 BEGIN_NETWORK_TABLE( CFFMiniTurret, DT_FFMiniTurret )
 #ifdef CLIENT_DLL 
-	RecvPropInt( RECVINFO( m_iTeam ) ),
+	//RecvPropInt( RECVINFO( m_iTeam ) ),
 	RecvPropInt( RECVINFO( m_bActive ) ),
 	RecvPropInt( RECVINFO( m_bEnabled ) ),
 #else
-	SendPropInt( SENDINFO( m_iTeam ) ),
+	//SendPropInt( SENDINFO( m_iTeam ) ),
 	SendPropInt( SENDINFO( m_bActive ) ),
 	SendPropInt( SENDINFO( m_bEnabled ) ),
 #endif
@@ -316,7 +316,7 @@ ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0" );
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )
 
-	DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "team" ),
+	//DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "team" ),
 
 	DEFINE_THINKFUNC( OnRetire ),
 	DEFINE_THINKFUNC( OnDeploy ),
@@ -537,12 +537,13 @@ void CFFMiniTurret::Spawn( void )
 
 	m_vecGoalAngles.Init();
 
-	ChangeTeam( m_iTeam );
+	//ChangeTeam( m_iTeam );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Change a turrets team
 //-----------------------------------------------------------------------------
+/*
 void CFFMiniTurret::ChangeTeam( int iTeamNum )
 {
 	AssertMsg( ( iTeamNum >= TEAM_UNASSIGNED ) && ( iTeamNum <= TEAM_GREEN ), "Invalid ChangeTeam for MiniTurret\n" );
@@ -552,6 +553,7 @@ void CFFMiniTurret::ChangeTeam( int iTeamNum )
 	m_iTeam = iTeamNum;
 	SetEnemy( NULL );
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Decided whether this new target is better than the current one
@@ -743,7 +745,7 @@ void CFFMiniTurret::OnSearchThink( void )
 		m_flLastSight = 0;
 		SetThink( &CFFMiniTurret::OnActiveThink );
 		SpinUp();
-		EmitSound( "RespawnTurret.Alert" );
+		//EmitSound( "RespawnTurret.Alert" );
 		return;
 	}
 
@@ -1062,8 +1064,16 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 {
 	FireBulletsInfo_t info;
 
-	Vector vecDir = vecDirToEnemy;
-	//Vector vecDir = GetEnemy()->GetAbsOrigin() - MuzzlePosition();
+	//Vector vecDir = vecDirToEnemy;
+
+	Vector vecDir, vecOrigin;
+	
+	if( GetEnemy()->IsPlayer() )
+		vecOrigin = ToFFPlayer( GetEnemy() )->GetLegacyAbsOrigin();
+	else
+		vecOrigin = GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f );
+
+	vecDir = vecOrigin - MuzzlePosition();
 
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDir;

@@ -214,11 +214,11 @@ public:
 	void			LaserPosition( Vector& vecOrigin, QAngle& vecAngles );
 	void			SetupAttachments( void );
 
-	CNetworkVar( int, m_iTeam );		// Team number
+	//CNetworkVar( int, m_iTeam );		// Team number
 	CNetworkVar( bool, m_bActive );		// Whether it's deployed/active or not
 	CNetworkVar( bool, m_bEnabled );	// Whether disabled or not
 
-	virtual int		GetTeamNumber( void ) { return m_iTeam; }
+	virtual int		GetTeamNumber( void ) { return TEAM_UNASSIGNED; }
 	virtual bool	IsPlayer( void ) const { return false; }
 	virtual bool	IsAlive( void ) { return true; }
 	virtual bool	IsActive( void ) { return m_bActive; }
@@ -252,7 +252,7 @@ public:
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 	virtual int		VPhysicsTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 
-	virtual void	ChangeTeam( int iTeamNum );
+	//virtual void	ChangeTeam( int iTeamNum );
 	const char		*GetTracerType( void ) { return "AR2Tracer"; } // TODO: Change
 
 	// Think functions

@@ -113,7 +113,6 @@ public:
 	static int SetPlayerDisguisable( lua_State* );
 	static int SetPlayerRespawnDelay( lua_State* );
 	static int SetGlobalRespawnDelay( lua_State* );
-	static int ChangeTurretTeam( lua_State* );
 	static int IsPlayer( lua_State* );
 	static int IsDispenser( lua_State* );
 	static int IsSentrygun( lua_State* );

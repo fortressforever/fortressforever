@@ -1630,37 +1630,6 @@ int CFFEntitySystem::SetGlobalRespawnDelay( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Change a turret's team
-//			int ChangeTurretTeam( turret_id, int iTeam )
-//----------------------------------------------------------------------------
-int CFFEntitySystem::ChangeTurretTeam( lua_State *L )
-{
-	int n = lua_gettop( L );
-
-	if( n == 2 )
-	{
-		bool bRetVal = false;
-		int iEntIndex = lua_tonumber( L, 1 );
-		int iTeamNum = lua_tonumber( L, 2 );
-
-		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
-		if( pEntity && ( pEntity->Classify() == CLASS_TURRET ) )
-		{
-			bRetVal = true;
-			pEntity->ChangeTeam( clamp( iTeamNum, TEAM_UNASSIGNED, TEAM_GREEN ) );
-		}
-
-		lua_pushboolean( L, bRetVal );
-
-		// 1 result
-		return 1;
-	}
-
-	// No results
-	return 0;
-}
-
-//----------------------------------------------------------------------------
 // Purpose: See if an entity is a player
 //			int IsPlayer( ent_id )
 //----------------------------------------------------------------------------

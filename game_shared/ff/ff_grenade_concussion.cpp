@@ -153,7 +153,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		Vector vecDisplacement, vecForce;
 
 		CBaseEntity *pEntity = NULL;
-		for ( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
 			if( !pEntity )
 				continue;
