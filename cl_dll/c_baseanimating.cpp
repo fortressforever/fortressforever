@@ -2438,16 +2438,16 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			QAngle dummyAngles;
 			GetAttachment( 1, vAttachment, dummyAngles );
 
-			// Make an elight
-			dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + index );
-			el->origin = vAttachment;
-			el->radius = random->RandomInt( 32, 64 ); 
-			el->decay = el->radius / 0.05f;
-			el->die = gpGlobals->curtime + 0.05f;
-			el->color.r = 255;
-			el->color.g = 192;
-			el->color.b = 64;
-			el->color.exponent = 5;
+			// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dl->origin = vAttachment;
+			dl->radius = random->RandomInt( 32, 64 ); 
+			dl->decay = dl->radius / 0.05f;
+			dl->die = gpGlobals->curtime + 0.05f;
+			dl->color.r = 255;
+			dl->color.g = 192;
+			dl->color.b = 64;
+			dl->color.exponent = 5;
 		}
 	}
 }
