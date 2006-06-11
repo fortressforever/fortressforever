@@ -853,13 +853,15 @@ void CFFPlayer::Spawn()
 
 	BaseClass::Spawn();
 
-	entsys.RunPredicates( NULL, this, "player_spawn" );
-
 	SetModel( FF_PLAYER_MODEL );
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	SetupClassVariables();
+
+	// Run this after SetupClassVariables in case lua is
+	// manipulating the players' inventory
+	entsys.RunPredicates( NULL, this, "player_spawn" );
 
 	// Clear the list of people who previously radio tagged us
 	//m_hWhoTaggedMeList.RemoveAll( );
