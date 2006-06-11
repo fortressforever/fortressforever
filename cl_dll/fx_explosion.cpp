@@ -185,6 +185,8 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 
 	CreateDebris();
 	//FIXME: CreateDynamicLight();
+	// or let's try it anyways?
+	CreateDynamicLight();
 	CreateMisc();
 }
 
@@ -636,16 +638,17 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 	if ( m_fFlags & TE_EXPLFLAG_NODLIGHTS )
 		return;
 
-	dlight_t *dl = effects->CL_AllocDlight( 0 );
+	dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
 	
 	VectorCopy (m_vecOrigin, dl->origin);
 	
-	dl->decay	= 200;
-	dl->radius	= 255;
-	dl->color.r = 255;
-	dl->color.g = 220;
-	dl->color.b = 128;
+	dl->radius	= random->RandomInt( 224, 288 );
+	dl->decay = dl->radius / 0.05f;
 	dl->die		= gpGlobals->curtime + 0.1f;
+	dl->color.r = 255;
+	dl->color.g = 224;
+	dl->color.b = 128;
+	dl->color.exponent = 4;
 }
 
 //-----------------------------------------------------------------------------
