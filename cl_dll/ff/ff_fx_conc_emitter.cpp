@@ -174,12 +174,15 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 	{
 		ConcParticle *c = concEffect->AddConcParticle();
 
-		c->m_flDieTime = conc_speed.GetFloat();
-		c->m_Pos = data.m_vOrigin;
-		c->m_flRefract = conc_refract.GetFloat();
-		c->m_flOffset = offset;
+		if (c)
+		{
+			c->m_flDieTime = conc_speed.GetFloat();
+			c->m_Pos = data.m_vOrigin;
+			c->m_flRefract = conc_refract.GetFloat();
+			c->m_flOffset = offset;
 
-		offset += conc_ripple_period.GetFloat();
+			offset += conc_ripple_period.GetFloat();
+		}
 	}
 }
 
