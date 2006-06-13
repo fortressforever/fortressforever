@@ -33,6 +33,7 @@ class CFFProjectileRocket : public CFFProjectileBase
 {
 public:
 	DECLARE_CLASS(CFFProjectileRocket, CFFProjectileBase);
+	DECLARE_NETWORKCLASS();
 
 public:
 
@@ -43,12 +44,11 @@ public:
 	CFFProjectileRocket() {}
 	CFFProjectileRocket(const CFFProjectileRocket&) {}
 
+	virtual const char *GetFlightSound() { return "rocket.fly"; }
+
 #else
-	// Added for:
-	// Bug #0000436: Need to truncate Rocket travel sound on impact.
 	DECLARE_DATADESC()
 
-	void ExplodeTouch( CBaseEntity *pOther );
 	virtual void Spawn();
 
 protected:

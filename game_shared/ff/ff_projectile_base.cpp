@@ -59,8 +59,18 @@ END_NETWORK_TABLE()
 //=============================================================================
 
 #ifdef CLIENT_DLL
+
 	//----------------------------------------------------------------------------
-	// Purpose: Add initial velocity into the interpolation history so that interp works okay
+	// Purpose: Client constructor
+	//----------------------------------------------------------------------------
+	CFFProjectileBase::CFFProjectileBase()
+	{
+		m_fNeedsEngineSoundAttached = false;
+	}
+
+	//----------------------------------------------------------------------------
+	// Purpose: Add initial velocity into the interpolation history so that
+	//			interp works okay
 	//----------------------------------------------------------------------------
 	void CFFProjectileBase::PostDataUpdate(DataUpdateType_t type) 
 	{
@@ -81,9 +91,21 @@ END_NETWORK_TABLE()
 			// Add the current sample.
 			vCurOrigin = GetLocalOrigin();
 			interpolator.AddToHead(changeTime, &vCurOrigin, false);
+
+			// This projectile has entered the client's PVS so flag it as needing
+			// a sound attached. We can't directly start the sound here because
+			// the entity is not yet ready for queries (eg. GetAbsOrigin())
+			if (GetFlightSound())
+				m_fNeedsEngineSoundAttached = true;
 		}
 	}
 
+	//----------------------------------------------------------------------------
+	// Purpose: Delay the model drawing for a bit so it doesn't look odd with when
+	//			interp has a history of the projectile being behind where it was
+	//			launched
+	//			Also, check if we need to attach a flight sound
+	//----------------------------------------------------------------------------
 	int CFFProjectileBase::DrawModel(int flags) 
 	{
 		// During the first second of our life, don't draw ourselves, this is to
@@ -98,8 +120,23 @@ END_NETWORK_TABLE()
 
 		//RemoveEffects(EF_NOSHADOW);
 
+		if (m_fNeedsEngineSoundAttached)
+			EmitSound(GetFlightSound());
+
 		return BaseClass::DrawModel(flags);
 	}
+
+	//----------------------------------------------------------------------------
+	// Purpose: Entity is being released, so stop the sound effect
+	//----------------------------------------------------------------------------
+	void CFFProjectileBase::Release()
+	{
+		if (GetFlightSound())
+			StopSound(GetFlightSound());
+
+		BaseClass::Release();
+	}
+
 #else
 
 	//----------------------------------------------------------------------------
@@ -269,76 +306,25 @@ void CFFProjectileBase::Spawn()
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Create an explosion, etc
+// Purpose: Precache the bounce and flight sounds
 //----------------------------------------------------------------------------
-void CFFProjectileBase::Explode(trace_t *pTrace, int bitsDamageType) 
+void CFFProjectileBase::Precache() 
 {
-#ifdef GAME_DLL
+	PrecacheScriptSound(GetBounceSound());
 
-	SetModelName(NULL_STRING);//invisible
-	AddSolidFlags(FSOLID_NOT_SOLID);
+	if (GetFlightSound())
+		PrecacheScriptSound(GetFlightSound());
+}
 
-	m_takedamage = DAMAGE_NO;
-
-	// Pull out of the wall a bit
-	if (pTrace->fraction != 1.0) 
+//----------------------------------------------------------------------------
+// Purpose: Play a bounce sound with a minimum interval
+//----------------------------------------------------------------------------
+void CFFProjectileBase::BounceSound()
+{
+	if (gpGlobals->curtime > m_flNextBounceSoundTime && GetAbsVelocity().LengthSqr() > 1)
 	{
-		SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
-	}
+		EmitSound(GetBounceSound());
 
-	Vector vecAbsOrigin = GetAbsOrigin();
-	int contents = UTIL_PointContents(vecAbsOrigin);
-
-	if (pTrace->fraction != 1.0) 
-	{
-		Vector vecNormal = pTrace->plane.normal;
-		surfacedata_t *pdata = physprops->GetSurfaceData(pTrace->surface.surfaceProps);	
-		CPASFilter filter(vecAbsOrigin);
-		te->Explosion(filter, -1.0, // don't apply cl_interp delay
-			&vecAbsOrigin, 
-			! (contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-			m_DmgRadius * .03, 
-			25, 
-			TE_EXPLFLAG_NONE, 
-			m_DmgRadius, 
-			m_flDamage, 
-			&vecNormal, 
-			 (char) pdata->game.material);
-	}
-	else
-	{
-		CPASFilter filter(vecAbsOrigin);
-		te->Explosion(filter, -1.0, // don't apply cl_interp delay
-			&vecAbsOrigin, 
-			! (contents & MASK_WATER) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-			m_DmgRadius * .03, 
-			25, 
-			TE_EXPLFLAG_NONE, 
-			m_DmgRadius, 
-			m_flDamage);
-	}
-
-	CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0);
-
-	CBaseEntity *pThrower = GetThrower();
-	// Use the thrower's position as the reported position
-	Vector vecReported = pThrower ? pThrower->GetAbsOrigin() : vec3_origin;
-
-	CTakeDamageInfo info(this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
-
-	//FFRadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
-	//DevMsg("[projectile] Doing radius damage in explode(%.2f : %.2f) \n", m_flDamage, m_DmgRadius);
-	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
-
-	UTIL_DecalTrace(pTrace, "Scorch");
-	
-	EmitSound("BaseGrenade.Explode");
-
-	SetThink(&CBaseGrenade::SUB_Remove);
-	SetTouch(NULL);
-
-	AddEffects(EF_NODRAW);
-	SetAbsVelocity(vec3_origin);
-	SetNextThink(gpGlobals->curtime);
-#endif
+		m_flNextBounceSoundTime = gpGlobals->curtime + 0.1;
+	}	
 }

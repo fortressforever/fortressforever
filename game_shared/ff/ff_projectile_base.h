@@ -39,36 +39,27 @@ public:
 	// so the projectile starts out moving right off the bat.
 	CNetworkVector(m_vInitialVelocity);
 
-	virtual void Precache() 
-	{
-		PrecacheScriptSound(GetBounceSound());
-	}
+	virtual void Precache();
+	virtual void Spawn();
+	virtual void BounceSound();
 
-	// Bug #0000275: Grenade bounce sounds missing
-	virtual void BounceSound()
-	{
-		if (gpGlobals->curtime > m_flNextBounceSoundTime && GetAbsVelocity().LengthSqr() > 1)
-		{
-			EmitSound(GetBounceSound());
+	virtual const char *GetBounceSound() { return "BaseGrenade.BounceSound"; }
+	virtual const char *GetFlightSound() { return NULL; }
 
-			m_flNextBounceSoundTime = gpGlobals->curtime + 0.1;
-		}	
-	}
-
-	virtual const char *GetBounceSound()
-	{
-		return "BaseGrenade.BounceSound";
-	}	
-
-	void Explode(trace_t *pTrace, int bitsDamageType);
+	float m_flSpawnTime;
+	float m_flNextBounceSoundTime;
 
 #ifdef CLIENT_DLL
-	CFFProjectileBase() {}
-	CFFProjectileBase(const CFFProjectileBase&) {}
+
+	CFFProjectileBase();
 	
 	// Add initial velocity into the interpolation history so that interp works okay
 	virtual void PostDataUpdate(DataUpdateType_t type);
-	virtual int DrawModel(int flags);
+	virtual int	 DrawModel(int flags);
+	virtual void Release();
+
+	// Flag if engine sound needs adding
+	bool m_fNeedsEngineSoundAttached;
 
 #else
 	DECLARE_DATADESC();
@@ -80,10 +71,6 @@ public:
 	int TakeEmp();
 
 #endif
-
-	virtual void Spawn();
-    float m_flSpawnTime;
-	float m_flNextBounceSoundTime;
 
 protected:
 

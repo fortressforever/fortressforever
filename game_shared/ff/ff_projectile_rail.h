@@ -35,6 +35,7 @@ class CFFProjectileRail : public CFFProjectileBase
 {
 public:
 	DECLARE_CLASS(CFFProjectileRail, CFFProjectileBase);
+	DECLARE_NETWORKCLASS();
 
 public:
 
