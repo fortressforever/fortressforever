@@ -1056,6 +1056,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	ClearSpeedEffects();
+	RemoveFlag(FL_FROZEN);
+
 	// reset their status effects
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
