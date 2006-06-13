@@ -24,6 +24,11 @@
 // CFFProjectileRocket tables
 //=============================================================================
 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileRocket, DT_FFProjectileRocket)
+
+BEGIN_NETWORK_TABLE(CFFProjectileRocket, DT_FFProjectileRocket)
+END_NETWORK_TABLE()
+
 LINK_ENTITY_TO_CLASS(rocket, CFFProjectileRocket);
 PRECACHE_WEAPON_REGISTER(rocket);
 
@@ -88,16 +93,6 @@ PRECACHE_WEAPON_REGISTER(rocket);
 		BaseClass::Spawn();
 	}
 
-	// Added for:
-	// Bug #0000436: Need to truncate Rocket travel sound on impact.
-	void CFFProjectileRocket::ExplodeTouch( CBaseEntity *pOther )
-	{
-		// Bug: 0000436: Need to truncate Rocket travel sound on impact.
-		StopSound( "rocket.fly" );
-
-		BaseClass::ExplodeTouch( pOther );
-	}
-
 #endif
 
 //----------------------------------------------------------------------------
@@ -139,7 +134,8 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin,
 	// TFC doesn't multiply the radius at all, dont you know
 	pRocket->m_DmgRadius = pRocket->m_flDamage * 1.5f;
 
-	pRocket->EmitSound("rocket.fly");
+	//pRocket->EmitSound("rocket.fly");
+	// this is being swapped over to the client -mirv
 
 	return pRocket; 
 }

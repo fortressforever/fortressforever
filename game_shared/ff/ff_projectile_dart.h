@@ -33,6 +33,7 @@ class CFFProjectileDart : public CFFProjectileBase
 {
 public:
 	DECLARE_CLASS(CFFProjectileDart, CFFProjectileBase);
+	DECLARE_NETWORKCLASS();
 
 public:
 
