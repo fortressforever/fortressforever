@@ -68,6 +68,7 @@
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
+ConVar  sg_range( "ffdev_sg_range", "512.0" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -477,7 +478,7 @@ void CFFSentryGun::HackFindEnemy( void )
 		// Added stuff for Bug #0000669: SG can currently lock on to anybody at any range
 
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
-		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->EyePosition() ) > m_flRange ) ) 
+		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->EyePosition() ) <= sg_range.GetFloat() ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
@@ -486,7 +487,7 @@ void CFFSentryGun::HackFindEnemy( void )
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
 			if( pSentryGun != this )
 			{
-				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->EyePosition() ) <= m_flRange ) )
+				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->EyePosition() ) <= sg_range.GetFloat() ) )
 					target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 		}
@@ -495,7 +496,7 @@ void CFFSentryGun::HackFindEnemy( void )
 		if( pPlayer->m_hDispenser.Get() )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
-			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->EyePosition() ) <= m_flRange ) )
+			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->EyePosition() ) <= sg_range.GetFloat() ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 	}
