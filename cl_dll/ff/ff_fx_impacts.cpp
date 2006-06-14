@@ -7,7 +7,8 @@
 #include "fx_impact.h"
 #include "engine/IEngineSound.h"
 
-
+// Cvar that controls the frequency of the flecks effects
+extern ConVar cl_effectfrequency;
 
 //-----------------------------------------------------------------------------
 // Purpose: Handle weapon impacts
@@ -63,7 +64,9 @@ void NailImpactCallback( const CEffectData &data )
 	if ( Impact( vecOrigin, vecStart, iMaterial, iDamageType, iHitbox, pEntity, tr ) )
 	{
 		// Check for custom effects based on the Decal index
-		PerformCustomEffects( vecOrigin, tr, vecShotDir, iMaterial, 1.0 );
+		// Mirv: Only do the custom fleck effect some of the time
+		if (random->RandomFloat(0.0f, 1.0f) <= cl_effectfrequency.GetFloat())
+			PerformCustomEffects( vecOrigin, tr, vecShotDir, iMaterial, 1.0 );
 
 		//Play a ricochet sound some of the time
 		if( random->RandomInt(1,10) <= 3 && (iDamageType == DMG_BULLET) )
