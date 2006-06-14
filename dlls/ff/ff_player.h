@@ -293,16 +293,18 @@ public:
 		if(m_Locations.Count() > 0)
 			return const_cast< char * >( m_Locations[0].locationname );
 		else
-			return "";
+			return m_szLastLocation;
 	}
 	int GetLocationTeam( void ) 
 	{ 
 		if(m_Locations.Count() > 0)
 			return m_Locations[0].team; 
 		else
-			return TEAM_UNASSIGNED;
+			return m_iLastLocationTeam;
 	}
 private:
+	char m_szLastLocation[1024];
+	int	m_iLastLocationTeam;
 	int	m_iClientLocation;
 	CUtlVector<LocationInfo> m_Locations;
 public:

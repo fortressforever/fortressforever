@@ -242,6 +242,6 @@ FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw
 			engine->ServerCmd(fullcmd.c_str());
 		}
 	}
-	static ConCommand CliCmd_MinusGrenTwo("-gren2", CliCmdFunc_MinusGrenTwo, "Releases a secondary grenade that was previously primed with +gren1.");
+	static ConCommand CliCmd_MinusGrenTwo("-gren2", CliCmdFunc_MinusGrenTwo, "Releases a secondary grenade that was previously primed with +gren2.");
 #endif
 //------------------------------------------------------------------------
