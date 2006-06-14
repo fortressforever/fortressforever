@@ -68,7 +68,7 @@
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
-ConVar  sg_range( "ffdev_sg_range", "512.0" );
+ConVar  sg_range( "ffdev_sg_range", "1152.0" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
