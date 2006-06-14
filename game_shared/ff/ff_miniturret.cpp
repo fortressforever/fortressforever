@@ -788,23 +788,37 @@ void CFFMiniTurret::OnActiveThink( void )
 		return;
 	}
 
-	Vector vecMuzzle = MuzzlePosition();
-	Vector vecMidEnemy = GetEnemy()->GetAbsOrigin();
-
-	bool bEnemyVisible = FVisible( GetEnemy() ) && GetEnemy()->IsAlive();
+	bool bEnemyVisible = false;
+	Vector vecMidEnemy, vecMuzzle = MuzzlePosition();	
+	
+	if( GetEnemy()->IsPlayer() )
+	{
+		// Enemy is a player
+		CFFPlayer *pPlayer = ToFFPlayer( GetEnemy() );
+		bEnemyVisible = GetEnemy()->IsAlive() && ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) );		
+		vecMidEnemy = pPlayer->GetLegacyAbsOrigin();
+	}
+	else
+	{
+		// Enemy is a buildable
+		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f ) );
+		vecMidEnemy = GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f );
+	}
 
 	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
-	//float flDistToEnemy = VectorNormalize( vecDirToEnemy );
 
+#ifdef _DEBUG
 	Vector vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMuzzle;
 	VectorNormalize( vecDirToEnemyEyes );
 
 	QAngle vecAnglesToEnemy;
 	VectorAngles( vecDirToEnemyEyes, vecAnglesToEnemy );
+#endif
 
 	// Draw debug info
 	if( miniturret_debug.GetBool() )
 	{
+#ifdef _DEBUG
 		NDebugOverlay::Line( EyePosition(), EyePosition() + ( vecDirToEnemyEyes * 256 ), 0, 0, 255, false, 2.0f );
 
 		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
@@ -814,7 +828,8 @@ void CFFMiniTurret::OnActiveThink( void )
 		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
 		NDebugOverlay::Cross3D( vecMidEnemy, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
 		NDebugOverlay::Line( vecMuzzle, vecMidEnemy, 0, 255, 0, false, 0.05f );
-	}	
+#endif
+	}
 
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
@@ -1064,8 +1079,9 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 {
 	FireBulletsInfo_t info;
 
-	//Vector vecDir = vecDirToEnemy;
+	Vector vecDir = vecDirToEnemy;
 
+	/*
 	Vector vecDir, vecOrigin;
 	
 	if( GetEnemy()->IsPlayer() )
@@ -1074,6 +1090,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 		vecOrigin = GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f );
 
 	vecDir = vecOrigin - MuzzlePosition();
+	*/
 
 	info.m_vecSrc = vecSrc;
 	info.m_vecDirShooting = vecDir;
