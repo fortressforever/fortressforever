@@ -16,6 +16,7 @@
 #include "baseparticleentity.h"
 #include "ClientEffectPrecacheSystem.h"
 #include "c_ff_player.h"
+#include "c_ff_env_flamejet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -74,102 +75,31 @@ float tex_coords[5][4] = {	{ 0, 		0.25f, 		0, 			0.5f }, 	   // normal flame
 							{ 0.25f, 	0.5f, 		0.5f, 		1.0f }, // smaller flame
 							{ 0.5f, 		0.75f, 		0, 			1.0f } };  // flame splash
 
-
 //=============================================================================
-// C_FlameJet
-//=============================================================================
-
-class C_FlameJet : public C_BaseParticleEntity, public IPrototypeAppEffect
-{
-public:
-	DECLARE_CLIENTCLASS();
-	DECLARE_CLASS(C_FlameJet, C_BaseParticleEntity);
-
-	C_FlameJet();
-	~C_FlameJet();
-
-	//=========================================================================
-	// C_FlameJetParticle
-	//=========================================================================
-
-	class C_FlameJetParticle : public Particle
-	{
-	public:
-		
-		int				m_Type, m_Appearance;		// Type of particle
-		Vector			m_Origin, m_Velocity;					
-		float			m_flRoll, m_flRollDelta;	// Rotation
-		float			m_Lifetime, m_Dietime;		// To keep track
-		float			m_Collisiontime;			// When particle will next hit
-													// something
-		unsigned char	m_uchStartSize, m_uchEndSize;
-		Vector			m_HitSurfaceNormal;			// Normal of collision surface
-	};
-
-	int IsEmissive() { return true; /*return (m_spawnflags & SF_EMISSIVE);*/ }
-
-// C_BaseEntity
-public:
-
-	virtual void		OnDataChanged(DataUpdateType_t updateType);
-
-// IPrototypeAppEffect
-public:
-	virtual void		Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs);
-	virtual bool		GetPropEditInfo(RecvTable **ppTable, void **ppObj);
-
-
-// IParticleEffect
-public:
-	virtual void		Update(float fTimeDelta);
-	virtual void		RenderParticles(CParticleRenderIterator *pIterator);
-	virtual void		SimulateParticles(CParticleSimulateIterator *pIterator);
-
-public:
-
-	int				m_bEmit;
-
-	float			m_SpreadSpeed;
-	float			m_Speed;
-	float			m_StartSize;
-	float			m_EndSize;
-	float			m_Rate;
-	float			m_Lifetime; 
-
-private:
-
-	CParticleMgr		*m_pParticleMgr;
-	PMaterialHandle		m_hMaterialFlame, m_hMaterialSmoke;
-	TimedEvent			m_ParticleSpawn;
-
-private:
-					C_FlameJet(const C_FlameJet &);
-};
-
-
-//=============================================================================
-// C_FlameJet tables
+// C_FFFlameJet tables
 //=============================================================================
 
 // Expose to the particle app
-EXPOSE_PROTOTYPE_EFFECT(FlameJet, C_FlameJet);
+EXPOSE_PROTOTYPE_EFFECT(FlameJet, C_FFFlameJet);
 
-IMPLEMENT_CLIENTCLASS_DT(C_FlameJet, DT_FlameJet, CFlameJet) 
-	RecvPropInt(RECVINFO(m_bEmit), 0), 
+IMPLEMENT_CLIENTCLASS_DT(C_FFFlameJet, DT_FFFlameJet, CFFFlameJet) 
+	RecvPropInt(RECVINFO(m_fEmit), 0), 
 END_RECV_TABLE() 
+
+LINK_ENTITY_TO_CLASS(env_flamejet, C_FFFlameJet);
 
 CLIENTEFFECT_REGISTER_BEGIN(PrecacheFlameJet) 
 CLIENTEFFECT_MATERIAL("effects/compositeflare_bothalpha") 
 CLIENTEFFECT_REGISTER_END() 
 
 //=============================================================================
-// C_FlameJet implementation
+// C_FFFlameJet implementation
 //=============================================================================
 
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-C_FlameJet::C_FlameJet() 
+C_FFFlameJet::C_FFFlameJet() 
 {
 	m_pParticleMgr	= NULL;
 	m_hMaterialFlame = m_hMaterialSmoke = INVALID_MATERIAL_HANDLE;
@@ -180,7 +110,7 @@ C_FlameJet::C_FlameJet()
 	m_EndSize		= flame_endsize.GetInt();		// 128;
 	m_Rate			= flame_rate.GetInt();			// 128; 
 
-	m_bEmit			= true;
+	m_fEmit			= true;
 
 	m_ParticleEffect.SetAlwaysSimulate(false); // Don't simulate outside the PVS or frustum.
 }
@@ -188,7 +118,7 @@ C_FlameJet::C_FlameJet()
 //----------------------------------------------------------------------------
 // Purpose: Destructor
 //----------------------------------------------------------------------------
-C_FlameJet::~C_FlameJet() 
+C_FFFlameJet::~C_FFFlameJet() 
 {
 	if (m_pParticleMgr) 
 		m_pParticleMgr->RemoveEffect(&m_ParticleEffect);
@@ -198,7 +128,7 @@ C_FlameJet::~C_FlameJet()
 // Purpose: Called after a data update has occured
 // Input  : bnewentity - 
 //----------------------------------------------------------------------------
-void C_FlameJet::OnDataChanged(DataUpdateType_t updateType) 
+void C_FFFlameJet::OnDataChanged(DataUpdateType_t updateType) 
 {
 	C_BaseEntity::OnDataChanged(updateType);
 
@@ -215,7 +145,7 @@ void C_FlameJet::OnDataChanged(DataUpdateType_t updateType)
 // Input  : *pParticleMgr - 
 //			*pArgs - 
 //-----------------------------------------------------------------------------
-void C_FlameJet::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs) 
+void C_FFFlameJet::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs) 
 {
 	pParticleMgr->AddEffect(&m_ParticleEffect, this);
 
@@ -232,9 +162,9 @@ void C_FlameJet::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs)
 //			**ppObj - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool C_FlameJet::GetPropEditInfo(RecvTable **ppTable, void **ppObj) 
+bool C_FFFlameJet::GetPropEditInfo(RecvTable **ppTable, void **ppObj) 
 {
-	*ppTable = &REFERENCE_RECV_TABLE(DT_FlameJet);
+	*ppTable = &REFERENCE_RECV_TABLE(DT_FFFlameJet);
 	*ppObj = this;
 	return true;
 }
@@ -243,7 +173,7 @@ bool C_FlameJet::GetPropEditInfo(RecvTable **ppTable, void **ppObj)
 // Purpose: 
 // Input  : fTimeDelta - 
 //-----------------------------------------------------------------------------
-void C_FlameJet::Update(float fTimeDelta) 
+void C_FFFlameJet::Update(float fTimeDelta) 
 {
 	if (!m_pParticleMgr) 
 	{
@@ -301,13 +231,13 @@ void C_FlameJet::Update(float fTimeDelta)
 	m_EndSize		= flame_endsize.GetInt();		// 128;
 
 
-	if (m_bEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
+	if (m_fEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
 	{
 		float tempDelta = fTimeDelta;
 		while (m_ParticleSpawn.NextEvent(tempDelta)) 
 		{
 			// Make a new particle.
-			if (C_FlameJetParticle *pParticle = (C_FlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FlameJetParticle), m_hMaterialFlame)) 
+			if (C_FFFlameJetParticle *pParticle = (C_FFFlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FFFlameJetParticle), m_hMaterialFlame)) 
 			{
 				pParticle->m_Type			= FLAME_JET;
 				pParticle->m_Appearance		= (random->RandomInt(0, flame_chance_smallflame.GetInt() /*5 */) == 0 ? TEX_FLAME_SMALL1 : TEX_FLAME_NORMAL);
@@ -340,7 +270,7 @@ void C_FlameJet::Update(float fTimeDelta)
 			// Sometimes, I want a bit of smoke
 			if (random->RandomInt(0, flame_chance_smoke.GetInt() /*1 */) == 0) 
 			{
-				if (C_FlameJetParticle *pParticle = (C_FlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FlameJetParticle), /*m_hMaterialSmoke */ m_hMaterialFlame)) 
+				if (C_FFFlameJetParticle *pParticle = (C_FFFlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FFFlameJetParticle), /*m_hMaterialSmoke */ m_hMaterialFlame)) 
 				{
 					pParticle->m_Type			= SMOKE;
 					pParticle->m_Appearance		= TEX_SMOKE;
@@ -428,9 +358,9 @@ inline void RenderParticle_ColorSizeAngle(
 //----------------------------------------------------------------------------
 // Purpose: Render all the particles
 //----------------------------------------------------------------------------
-void C_FlameJet::RenderParticles(CParticleRenderIterator *pIterator) 
+void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator) 
 {
-	const C_FlameJetParticle *pParticle = (const C_FlameJetParticle *) pIterator->GetFirst();
+	const C_FFFlameJetParticle *pParticle = (const C_FFFlameJetParticle *) pIterator->GetFirst();
 	while (pParticle) 
 	{
 		// Render.
@@ -471,16 +401,16 @@ void C_FlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 			pParticle->m_flRoll, 
 			pParticle->m_Appearance);
 
-		pParticle = (const C_FlameJetParticle *) pIterator->GetNext(sortKey);
+		pParticle = (const C_FFFlameJetParticle *) pIterator->GetNext(sortKey);
 	}
 }
 
 //----------------------------------------------------------------------------
 // Purpose: Simulate the particles, this function is quite messy atm
 //----------------------------------------------------------------------------
-void C_FlameJet::SimulateParticles(CParticleSimulateIterator *pIterator) 
+void C_FFFlameJet::SimulateParticles(CParticleSimulateIterator *pIterator) 
 {
-	C_FlameJetParticle *pParticle = (C_FlameJetParticle *) pIterator->GetFirst();
+	C_FFFlameJetParticle *pParticle = (C_FFFlameJetParticle *) pIterator->GetFirst();
 
 	while (pParticle) 
 	{
@@ -556,6 +486,19 @@ void C_FlameJet::SimulateParticles(CParticleSimulateIterator *pIterator)
 			}
 		}
 
-		pParticle = (C_FlameJetParticle *) pIterator->GetNext();
+		pParticle = (C_FFFlameJetParticle *) pIterator->GetNext();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Turn the flame jet on or off
+//-----------------------------------------------------------------------------
+bool C_FFFlameJet::FlameEmit(bool fEmit)
+{
+	if ((m_fEmit != 0) != fEmit)
+	{
+		m_fEmit = fEmit;
+		return true;
+	}
+	return false;
 }

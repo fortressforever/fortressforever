@@ -20,21 +20,19 @@
 #include "cbase.h"
 #include "te_effect_dispatch.h"
 
-// Declare the flamejet entity for the server-side
-class CFlameJet : public CBaseEntity
+class CFFFlameJet : public CBaseParticleEntity
 {
 public:
+	DECLARE_CLASS(CFFFlameJet, CBaseParticleEntity);
 	DECLARE_SERVERCLASS();
-	DECLARE_CLASS(CFlameJet, CBaseEntity);
-
-	void Spawn();
-	
-	void InputToggle(inputdata_t &input);	// Input function for toggling our effect's state
-
-	CNetworkVar(bool, m_bEmit);		// Is it flaming
-
-private:
 	DECLARE_DATADESC();
+
+	virtual void	Spawn();
+	bool			FlameEmit(bool fEmit);
+
+	// Stuff from the datatable.
+public:
+	CNetworkVar(int, m_fEmit);
 };
 
 #endif // FF_ENV_FLAME_H

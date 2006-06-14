@@ -13,40 +13,23 @@
 
 #include "cbase.h"
 #include "baseparticleentity.h"
+#include "ff_env_flamejet.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
-//==================================================
-// CFlameJet [mirrored in ff_weapon_flamethrower.cpp]
-//==================================================
-
-class CFlameJet : public CBaseParticleEntity
-{
-public:
-	DECLARE_CLASS(CFlameJet, CBaseParticleEntity);
-	DECLARE_DATADESC();
-	DECLARE_SERVERCLASS();
-
-	virtual void	Spawn();
-
-public:
-	CNetworkVar(int, m_bEmit);
-};
 
 //=============================================================================
 // CFlameJet tables
 //=============================================================================
 
-IMPLEMENT_SERVERCLASS_ST(CFlameJet, DT_FlameJet) 
-	SendPropInt(SENDINFO(m_bEmit), 1, SPROP_UNSIGNED), 	// Declare our boolean state variable
+IMPLEMENT_SERVERCLASS_ST(CFFFlameJet, DT_FFFlameJet) 
+	SendPropInt(SENDINFO(m_fEmit), 1, SPROP_UNSIGNED), 	// Declare our boolean state variable
 END_SEND_TABLE() 
 
-LINK_ENTITY_TO_CLASS(env_flamejet, CFlameJet);
+LINK_ENTITY_TO_CLASS(env_flamejet, CFFFlameJet);
 
-BEGIN_DATADESC(CFlameJet) 
-	DEFINE_FIELD(m_bEmit, FIELD_BOOLEAN), 
+BEGIN_DATADESC(CFFFlameJet) 
+	DEFINE_FIELD(m_fEmit, FIELD_BOOLEAN), 
 END_DATADESC() 
 
 //=============================================================================
@@ -56,7 +39,21 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 // Purpose: Called before spawning, after key values have been set.
 //-----------------------------------------------------------------------------
-void CFlameJet::Spawn() 
+void CFFFlameJet::Spawn() 
 {
-	m_bEmit = false;
+	m_fEmit = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Turn the flame jet on or off
+//			Returns true if value has changed
+//-----------------------------------------------------------------------------
+bool CFFFlameJet::FlameEmit(bool fEmit)
+{
+	if ((m_fEmit != 0) != fEmit)
+	{
+		m_fEmit = fEmit;
+		return true;
+	}
+	return false;
 }
