@@ -807,18 +807,15 @@ void CFFMiniTurret::OnActiveThink( void )
 
 	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
 
-#ifdef _DEBUG
 	Vector vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMuzzle;
 	VectorNormalize( vecDirToEnemyEyes );
 
 	QAngle vecAnglesToEnemy;
 	VectorAngles( vecDirToEnemyEyes, vecAnglesToEnemy );
-#endif
 
 	// Draw debug info
 	if( miniturret_debug.GetBool() )
 	{
-#ifdef _DEBUG
 		NDebugOverlay::Line( EyePosition(), EyePosition() + ( vecDirToEnemyEyes * 256 ), 0, 0, 255, false, 2.0f );
 
 		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
@@ -828,7 +825,6 @@ void CFFMiniTurret::OnActiveThink( void )
 		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
 		NDebugOverlay::Cross3D( vecMidEnemy, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
 		NDebugOverlay::Line( vecMuzzle, vecMidEnemy, 0, 255, 0, false, 0.05f );
-#endif
 	}
 
 	// Current enemy is not visible
