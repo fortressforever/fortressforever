@@ -28,6 +28,7 @@
 #include "tier0/vprof.h"
 #include "particles_localspace.h"
 #include "physpropclientside.h"
+#include "c_te_effect_dispatch.h"	// |-- Mirv: Needed for client nail
 
 // NOTE: Always include this last!
 #include "tier0/memdbgon.h"
@@ -272,6 +273,85 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 	Assert( !GetMoveParent() );
 
 	m_vecPrevLocalOrigin = GetLocalOrigin();
+
+	// --> Mirv: FF Projectiles like nails and darts
+	if (flags & FTENT_FFPROJECTILE)
+	{
+		// Start off by advancing the projectile
+		SetLocalOrigin( GetLocalOrigin() + m_vecTempEntVelocity * frametime );
+
+		// Stationary, fade out
+		if (m_vecTempEntVelocity == vec3_origin)
+		{
+			int alpha = 255 * (die - gpGlobals->curtime);
+
+			// Starting to fade out now, ensure that it's the correct rendermode for this
+			if (alpha < 255)
+			{
+				if (GetRenderMode() == kRenderNormal)
+					SetRenderMode(kRenderTransTexture);
+
+				SetRenderColorA(max(alpha, 0));
+			}
+			
+			return true;
+		}
+
+		// Trace along the change in positon that we have just simulated
+		trace_t pm;
+		UTIL_TraceLine(m_vecPrevLocalOrigin, GetLocalOrigin(), MASK_SOLID, NULL, COLLISION_GROUP_PROJECTILE, &pm);
+
+		// Make sure it didn't bump into itself... (?!?)
+		if ((pm.fraction != 1) && ((pm.DidHitWorld()) || (pm.m_pEnt != ClientEntityList().GetEnt(clientIndex))))
+		{
+			// Are we going through breakable glass? That won't stop us.
+			if (pm.m_pEnt->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS)
+				return true;
+
+			// Place at contact point
+			Vector newOrigin;
+			VectorMA(m_vecPrevLocalOrigin, pm.fraction * frametime, m_vecTempEntVelocity, newOrigin);
+			SetLocalOrigin(newOrigin);
+
+			// Play an impact effect if this isn't a player who'll bleed
+			// Possibly we should do blood here too.
+			// TODO: We can reduce the changes of an effect here.
+			if (!pm.m_pEnt->IsPlayer())
+			{
+				CEffectData	data;
+				data.m_vStart = m_vecPrevLocalOrigin;
+				data.m_vOrigin = newOrigin;
+				data.m_vNormal = pm.plane.normal;
+				data.m_nSurfaceProp = pm.surface.surfaceProps;
+				data.m_nEntIndex = pm.GetEntityIndex();
+
+				// TODO: Add the rest of these as needed
+//				if (pModel == m_pFF_Nail)
+					DispatchEffect("NailImpact", data);
+//				else if (pModel == m_pFF_Dart)
+//					DispatchEffect("DartImpact", data);
+			}
+
+			// Remove straight away if its something that is movable or is the skybox
+			if (pm.m_pEnt->GetMoveType() != MOVETYPE_NONE || (pm.surface.flags & SURF_SKY))
+				die = gpGlobals->curtime;
+
+			// TODO: Remove straight away if angle with normal is too big?
+
+			// Otherwise jam into whatever we hit for a bit
+			// TODO: A cvar to disable jamming
+			else
+			{
+				m_vecTempEntVelocity = Vector(0, 0, 0);
+				
+				die = gpGlobals->curtime + 4.0f;
+				flags &= ~FTENT_FADEOUT;
+			}
+		}
+
+		return true;
+	}
+	// <-- Mirv
 
 	if ( flags & FTENT_PLYRATTACHMENT )
 	{
@@ -2063,7 +2143,10 @@ void CTempEnts::LevelInit()
 	m_pFF_40MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
 #endif
 
+	// --> Mirv: Load FF projectile models
 	m_pFF_Nail			= (model_t *) engine->LoadModel("models/projectiles/nail/w_nail.mdl");
+	m_pFF_Dart			= (model_t *) engine->LoadModel("models/projectiles/dart/w_dart.mdl");
+	// <-- Mirv
 }
 
 
@@ -3167,6 +3250,7 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	}
 }
 
+// --> Mirv: A FF projectile
 void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex)
 {
 	const model_t *pModel = NULL;
@@ -3176,8 +3260,12 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	{
 	default:
 	case FF_PROJECTILE_NAIL:
-		hitsound = TE_PISTOL_SHELL;
+		//hitsound = BOUNCE_METAL;
 		pModel = m_pFF_Nail;
+		break;
+
+	case FF_PROJECTILE_DART:
+		pModel = m_pFF_Dart;
 		break;
 	}
 
@@ -3203,7 +3291,7 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	pTemp->SetGravity(0);
 
 	pTemp->m_nBody = 0;
-	pTemp->flags = FTENT_FADEOUT | /*FTENT_GRAVITY |*/ FTENT_COLLIDEKILL | FTENT_COLLIDEALL | FTENT_HITSOUND /*| FTENT_ROTATE | FTENT_CHANGERENDERONCOLLIDE*/;
+	pTemp->flags = FTENT_FFPROJECTILE; //FTENT_FADEOUT | /*FTENT_GRAVITY |*/ FTENT_COLLIDEKILL | FTENT_COLLIDEALL | FTENT_HITSOUND /*| FTENT_ROTATE | FTENT_CHANGERENDERONCOLLIDE*/;
 
 	pTemp->m_vecTempEntAngVelocity = QAngle(0, 0, 0);
 
@@ -3214,3 +3302,4 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 
 	pTemp->clientIndex = entIndex;
 }
+// <-- Mirv

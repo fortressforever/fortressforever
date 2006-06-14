@@ -30,7 +30,10 @@ enum
 	CS_SHELL_338MAG,
 	FF_SHELL_40MM,
 
-	FF_PROJECTILE_NAIL
+	// --> Mirv: FF Projectiles
+	FF_PROJECTILE_NAIL,
+	FF_PROJECTILE_DART
+	// <-- Mirv
 };
 #endif
 
@@ -162,7 +165,10 @@ private:
 	struct model_t			*m_pFF_40MMShell;
 #endif
 
+	// --> Mirv: FF projectile models
 	struct model_t			*m_pFF_Nail;
+	struct model_t			*m_pFF_Dart;
+	// <--
 
 // Internal methods also available to children
 protected:

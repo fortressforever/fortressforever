@@ -91,18 +91,21 @@ void CFFProjectileNail::Precache()
 //----------------------------------------------------------------------------
 void CFFProjectileNail::NailTouch(CBaseEntity *pOther) 
 {
+	// The projectile has not hit anything valid so far
 	if (!pOther->IsSolid() || pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS) || !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup())) 
 		return;
 
+	trace_t	tr;
+	tr = BaseClass::GetTouchTrace();
+
+	// This entity can take damage, so deal it out
 	if (pOther->m_takedamage != DAMAGE_NO) 
 	{
-		trace_t	tr, tr2;
-		tr = BaseClass::GetTouchTrace();
-		Vector	vecNormalizedVel = GetAbsVelocity();
-
 #ifdef GAME_DLL
-		ClearMultiDamage();
+		Vector	vecNormalizedVel = GetAbsVelocity();
 		VectorNormalize(vecNormalizedVel);
+
+		ClearMultiDamage();
 
 		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB);
 		CalculateBulletDamageForce(&dmgInfo, GetAmmoDef()->Index("AMMO_NAILS"), vecNormalizedVel, tr.endpos);
@@ -112,107 +115,16 @@ void CFFProjectileNail::NailTouch(CBaseEntity *pOther)
 		ApplyMultiDamage();
 #endif
 
-		//Adrian: keep going through the glass.
+		// Keep going through the glass.
 		if (pOther->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS) 
 			 return;
 
-		SetAbsVelocity(Vector(0, 0, 0));
-
-		// play body "thwack" sound
+		// Play body "thwack" sound
 		EmitSound("Nail.HitBody");
-
-		Vector vForward;
-
-		AngleVectors(GetAbsAngles(), &vForward);
-		VectorNormalize(vForward);
-
-		UTIL_TraceLine(GetAbsOrigin(), 	GetAbsOrigin() + vForward * 128, MASK_OPAQUE, pOther, COLLISION_GROUP_NONE, &tr2);
-
-		if (tr2.fraction != 1.0f) 
-		{
-			if (tr2.m_pEnt == NULL || (tr2.m_pEnt && tr2.m_pEnt->GetMoveType() == MOVETYPE_NONE)) 
-			{
-				CEffectData	data;
-
-				data.m_vOrigin = tr2.endpos;
-				data.m_vNormal = vForward;
-				data.m_nEntIndex = tr2.fraction != 1.0f;
-			
-				DispatchEffect("NailImpact", data);
-			}
-		}
-		
-		SetTouch(NULL);
-		SetThink(NULL);
-
-		Vector vecDir = GetAbsVelocity();
-		float speed = VectorNormalize(vecDir);
-
-		// Spark if we hit an entity which wasn't human(ie. player) 
-		if (!pOther->IsPlayer() && UTIL_PointContents(GetAbsOrigin()) != CONTENTS_WATER && speed > 500) 
-		{
-            g_pEffects->Sparks(GetAbsOrigin());
-		}
-
-		Remove();
 	}
-	else
-	{
-		trace_t	tr;
-		tr = BaseClass::GetTouchTrace();
 
-		// See if we struck the world
-		if (pOther->GetMoveType() == MOVETYPE_NONE && ! (tr.surface.flags & SURF_SKY)) 
-		{
-			EmitSound("Nail.HitWorld");
-
-			// if what we hit is static architecture, can stay around for a while.
-			Vector vecDir = GetAbsVelocity();
-			float speed = VectorNormalize(vecDir);
-
-			SetThink(&CFFProjectileNail::SUB_Remove);
-			SetNextThink(gpGlobals->curtime + 2.0f);
-			
-			//FIXME: We actually want to stick(with hierarchy) to what we've hit
-			SetMoveType(MOVETYPE_NONE);
-		
-			Vector vForward;
-
-			AngleVectors(GetAbsAngles(), &vForward);
-			VectorNormalize(vForward);
-
-			CEffectData	data;
-
-			data.m_vOrigin = tr.endpos;
-			data.m_vNormal = vForward;
-			data.m_nEntIndex = 0;
-		
-			DispatchEffect("NailImpact", data);
-			
-			UTIL_ImpactTrace(&tr, DMG_BULLET);
-
-			AddEffects(EF_NODRAW);
-			SetTouch(NULL);
-			SetThink(&CFFProjectileNail::SUB_Remove);		// |-- Mirv: Account for GCC strictness
-			SetNextThink(gpGlobals->curtime + 2.0f);
-
-			// Shoot some sparks
-			if (UTIL_PointContents(GetAbsOrigin()) != CONTENTS_WATER && speed > 500) 
-			{
-				g_pEffects->Sparks(GetAbsOrigin());
-			}
-		}
-		else
-		{
-			// Put a mark unless we've hit the sky
-			if ((tr.surface.flags & SURF_SKY) == false) 
-			{
-				UTIL_ImpactTrace(&tr, DMG_BULLET);
-			}
-
-			Remove();
-		}
-	}
+	// Now just remove the nail
+	Remove();
 }
 
 //----------------------------------------------------------------------------
