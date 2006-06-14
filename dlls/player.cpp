@@ -2625,6 +2625,8 @@ void CBasePlayer::ResetFragCount()
 void CBasePlayer::IncrementFragCount( int nCount )
 {
 	m_iFrags += nCount;
+	m_iFrags = min(m_iFrags, 9999);	// |-- Mirv: Added to placate the trepids
+
 	pl.frags = m_iFrags;
 }
 
