@@ -54,6 +54,8 @@
 
 extern short	g_sModelIndexFireball;
 
+ConVar detpack_push( "ffdev_detpack_push", "500", FCVAR_NONE, "Detpack push value as a float" );
+
 //=============================================================================
 //
 //	class CFFBuildableObject
@@ -631,14 +633,16 @@ void CFFBuildableObject::DoExplosion( void )
 			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
 				continue;
 
+//			Test later as we want to push objects even
+//			if we can't hurt them!
 			// If the player can't take damage from us (our owner), bail
-			if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
-				continue;
+//			if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
+//				continue;
 
 #ifdef _DEBUG
 			/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
 			util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
-			if (!engine->IsDedicatedServer())
+			if( !engine->IsDedicatedServer() )
 			{
 				Color cColor;
 				SetColorByTeam( pPlayer->GetTeamNumber() - 1, cColor );
@@ -680,7 +684,8 @@ void CFFBuildableObject::DoExplosion( void )
 #endif
 
 				// Don't do damage if the trace hit:
-				if( FClassnameIs( tr.m_pEnt, "func_door" ) ||
+				if( tr.DidHitWorld() ||
+					FClassnameIs( tr.m_pEnt, "func_door" ) ||
 					FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
 					FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
 					FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
@@ -709,9 +714,10 @@ void CFFBuildableObject::DoExplosion( void )
 		// Basically, if we don't hit a couple of objects deal out [absolute] damage		
 		// Do damage
 		if( bDoDamage )
-		{
+		{			
+			//pEntity->ApplyAbsVelocityImpulse( ( pEntity->WorldSpaceCenter() - vecOrigin ) * 1000.0f );
 			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, Vector( 100, 100, 100 ), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );
+			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, ( pEntity->WorldSpaceCenter() - vecOrigin ) * detpack_push.GetFloat(), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
 		}
 	}
 
