@@ -633,8 +633,8 @@ void CFFBuildableObject::DoExplosion( void )
 			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
 				continue;
 
-//			Test later as we want to push objects even
-//			if we can't hurt them!
+//			Bug: #0000666: detpack doesn't push teammates
+//			Effect everybody...
 			// If the player can't take damage from us (our owner), bail
 //			if( !FFGameRules()->FPlayerCanTakeDamage( pPlayer, pOwner ) )
 //				continue;
