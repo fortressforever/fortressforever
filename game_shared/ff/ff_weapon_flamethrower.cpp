@@ -14,39 +14,26 @@
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
+#include "in_buttons.h"
 
 // For CFlameJet
 #include "baseparticleentity.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponFlamethrower C_FFWeaponFlamethrower
+	#define CFFFlameJet C_FFFlameJet
+
 	#include "c_ff_player.h"
+	#include "c_ff_env_flamejet.h"
 #else
 	#include "ff_player.h"
+	#include "ff_env_flamejet.h"
 #endif
 
 //=============================================================================
 // CFlameJet [mirrored in ff_env_flamejet.cpp]
 //=============================================================================
-class CFlameJet : public CBaseParticleEntity
-{
-public:
-	DECLARE_CLASS(CFlameJet, CBaseParticleEntity);
-	DECLARE_DATADESC();
 
-	// Modified by Mulchman - added the ifdef to
-	// stop the client from complaining(throwing warning) 
-	// during compile
-#ifdef GAME_DLL
-	DECLARE_SERVERCLASS();
-#endif
-
-	virtual void	Spawn();
-
-// Stuff from the datatable.
-public:
-	CNetworkVar(int, m_bEmit);
-};
 
 
 //=============================================================================
@@ -62,62 +49,40 @@ public:
 	
 	CFFWeaponFlamethrower();
 
-	virtual void PrimaryAttack();
 	virtual void Fire();
-	virtual void WeaponIdle();
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool Deploy();
 	virtual void Precache();
+	virtual void ItemPostFrame();
+	virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
-	// Override the single one(quickest way to do it) 
-	virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f) 
-	{
-		if (sound_type != SINGLE) 
-			BaseClass::WeaponSound(sound_type, soundtime);			
-	}
-
-	// Turn on/off flames
-	void TurnOn(bool on, bool force = false) 
-	{
-		if (m_pFlameJet) 
-		{
-			if ((m_pFlameJet->m_bEmit != 0) == on && !force)
-				return;
-
-			m_pFlameJet->m_bEmit = on;
-		}
-
-		if (on) 
-			//EmitSound("flamethrower.loop_shot");
-			WeaponSound(BURST);
-		else
-			WeaponSound(STOP);
-			//StopSound("flamethrower.loop_shot");
-	}
-
+	void EmitFlames(bool fEmit);
 
 	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_FLAMETHROWER; }
 
 private:
 
-	CFlameJet *m_pFlameJet;
-	bool		m_fFiring;
-
+	CNetworkHandle(CFFFlameJet, m_hFlameJet);
+	
 	CFFWeaponFlamethrower(const CFFWeaponFlamethrower &);
-
 };
 
 //=============================================================================
 // CFFWeaponFlamethrower tables
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponFlamethrower, DT_FFWeaponFlamethrower) 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponFlamethrower, DT_FFWeaponFlamethrower)
 
-BEGIN_NETWORK_TABLE(CFFWeaponFlamethrower, DT_FFWeaponFlamethrower) 
-END_NETWORK_TABLE() 
+BEGIN_NETWORK_TABLE(CFFWeaponFlamethrower, DT_FFWeaponFlamethrower)
+#ifdef GAME_DLL
+	SendPropEHandle(SENDINFO(m_hFlameJet)),
+#else
+	RecvPropEHandle(RECVINFO(m_hFlameJet)),
+#endif
+END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA(CFFWeaponFlamethrower) 
-END_PREDICTION_DATA() 
+BEGIN_PREDICTION_DATA(CFFWeaponFlamethrower)
+END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS(ff_weapon_flamethrower, CFFWeaponFlamethrower);
 PRECACHE_WEAPON_REGISTER(ff_weapon_flamethrower);
@@ -129,54 +94,32 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_flamethrower);
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponFlamethrower::CFFWeaponFlamethrower() 
+CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 {
-	m_pFlameJet = NULL;
-	m_fFiring = false;
+	m_hFlameJet = NULL;
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Weapon's primary attack, reduce ammo / check for empty clip
-//			Call Fire() if able to fire
+// Purpose: Turns on the flame stream, creates it if it doesn't yet exist
 //----------------------------------------------------------------------------
-void CFFWeaponFlamethrower::PrimaryAttack() 
+void CFFWeaponFlamethrower::Fire()
 {
+#ifdef GAME_DLL
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	// Mulch: can't fire flamethrower under water or when waist deep in water
-	if ((pPlayer->GetWaterLevel() == WL_Eyes) || (pPlayer->GetWaterLevel() == WL_Waist)) 
+	// If underwater then just innocent bubbles
+	if (pPlayer->GetWaterLevel() == 3)
 	{
-		// Stop the emissions
-		TurnOn(false);
-
-#ifdef GAME_DLL
 		Vector vecForward;
 		pPlayer->EyeVectors(&vecForward, NULL, NULL);
 		VectorNormalize(vecForward);
 
 		Vector vecShootPos = pPlayer->Weapon_ShootPosition();
 
-		UTIL_BubbleTrail(vecShootPos, vecShootPos + (vecForward * 32.0), random->RandomInt(5, 20));
-#endif
+		UTIL_BubbleTrail(vecShootPos, vecShootPos + (vecForward * 64.0), random->RandomInt(5, 20));
 
 		return;
 	}
-
-	m_fFiring = true;
-	
-	BaseClass::PrimaryAttack();
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Turns on the flame stream, creates it if it doesn't yet exist
-//----------------------------------------------------------------------------
-void CFFWeaponFlamethrower::Fire() 
-{
-	// Start emitting particles	
-	TurnOn(true);
-
-#ifdef GAME_DLL
-	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	// Just a basic traceline, this isn't very good but I just want to get some damage in	
 	Vector vecStart = pPlayer->Weapon_ShootPosition();
@@ -188,11 +131,11 @@ void CFFWeaponFlamethrower::Fire()
 	Vector vecEnd = vecStart + forward * 200.0f;
 	UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
 
-	if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer()) 
+	if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer())
 	{
 		CFFPlayer *pTarget = ToFFPlayer(traceHit.m_pEnt);
 
-		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget))
 		{
 			CTakeDamageInfo info(this, GetOwnerEntity(), 20, DMG_BURN);
 
@@ -204,26 +147,11 @@ void CFFWeaponFlamethrower::Fire()
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Turns off the flame jet if it exists and player not firing
-//----------------------------------------------------------------------------
-void CFFWeaponFlamethrower::WeaponIdle() 
-{
-	if (m_fFiring)
-	{
-		m_fFiring = false;
-		TurnOn(false);
-	}
-
-	BaseClass::WeaponIdle();
-}
-
-
-//----------------------------------------------------------------------------
 // Purpose: Turns off the flame jet if player changes weapon
 //----------------------------------------------------------------------------
-bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo) 
+bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
-	TurnOn(false, true);
+	EmitFlames(false);
 
 	return BaseClass::Holster();
 }
@@ -231,14 +159,14 @@ bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 //----------------------------------------------------------------------------
 // Purpose: Play the ignite sound & create the flamejet entity
 //----------------------------------------------------------------------------
-bool CFFWeaponFlamethrower::Deploy() 
+bool CFFWeaponFlamethrower::Deploy()
 {
 	// Play the ignite sound
 	WeaponSound(SPECIAL1);
 
 #ifdef GAME_DLL
 	// Flamejet entity doesn't exist yet, so make it now
-	if (!m_pFlameJet) 
+	if (!m_hFlameJet)
 	{
 		CFFPlayer *pPlayer = GetPlayerOwner();
 		QAngle angAiming;
@@ -246,12 +174,10 @@ bool CFFWeaponFlamethrower::Deploy()
 		VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 		
 		// Create a flamejet emitter
-		m_pFlameJet = dynamic_cast<CFlameJet *> (CBaseEntity::Create("env_flamejet", pPlayer->Weapon_ShootPosition(), angAiming, this));
+		m_hFlameJet = dynamic_cast<CFFFlameJet *> (CBaseEntity::Create("env_flamejet", pPlayer->Weapon_ShootPosition(), angAiming, this));
 
 		// Should inherit it's angles & position from the player for now
-		//m_pFlameJet->SetParent(pPlayer);
-		//m_pFlameJet->SetParent(pPlayer);
-		m_pFlameJet->SetOwnerEntity(pPlayer);
+		m_hFlameJet->SetOwnerEntity(pPlayer);
 	}
 #endif
 	
@@ -261,8 +187,91 @@ bool CFFWeaponFlamethrower::Deploy()
 //----------------------------------------------------------------------------
 // Purpose: Precache some extra sounds
 //----------------------------------------------------------------------------
-void CFFWeaponFlamethrower::Precache() 
+void CFFWeaponFlamethrower::Precache()
 {
 	PrecacheScriptSound("flamethrower.loop_shot");
 	BaseClass::Precache();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Turn flame jet on or off
+//----------------------------------------------------------------------------
+void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
+{
+	// Try changing the flamejet. If status has changed, play the correct sound.
+	if (m_hFlameJet && m_hFlameJet->FlameEmit(fEmit))
+	{
+		if (fEmit)
+			WeaponSound(BURST);
+		else
+			WeaponSound(STOP);
+	}
+}
+
+//====================================================================================
+// WEAPON BEHAVIOUR
+//====================================================================================
+void CFFWeaponFlamethrower::ItemPostFrame()
+{
+	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
+
+	if (!pOwner)
+		return;
+
+	// Keep track of fire duration for anywhere else it may be needed
+	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+
+	// Player is holding down fire
+	if (pOwner->m_nButtons & IN_ATTACK)
+	{
+		// Ensure it can't fire underwater
+		if (pOwner->GetWaterLevel() == 3)
+			EmitFlames(false);
+		else
+			EmitFlames(true);
+
+		// Time for the next real fire think
+		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
+		{
+			// Out of ammo
+			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+			{
+				HandleFireOnEmpty();
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
+			}
+
+			// This weapon doesn't fire underwater
+			//else if (pOwner->GetWaterLevel() == 3)
+			//{
+			//	WeaponSound(EMPTY);
+			//	m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+			//	return;
+			//}
+
+			// Weapon should be firing now
+			else
+			{
+				// If the firing button was just pressed, reset the firing time
+				if (pOwner && pOwner->m_afButtonPressed & IN_ATTACK)
+					m_flNextPrimaryAttack = gpGlobals->curtime;
+
+				PrimaryAttack();
+			}
+		}
+	}
+	// No buttons down
+	else
+	{
+		EmitFlames(false);
+		WeaponIdle();
+	}
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Quick change to override the single sound
+//----------------------------------------------------------------------------
+void CFFWeaponFlamethrower::WeaponSound(WeaponSound_t sound_type, float soundtime)
+{
+	if (sound_type != SINGLE)
+		BaseClass::WeaponSound(sound_type, soundtime);			
 }
