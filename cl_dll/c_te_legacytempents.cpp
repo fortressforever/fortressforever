@@ -37,9 +37,6 @@ extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
 
-// |-- Mirv: FC request
-static ConVar cl_brasstime("cl_brasstime", "10.0");
-
 //Precahce the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
 CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle1" )
@@ -59,12 +56,17 @@ CLIENTEFFECT_MATERIAL( "effects/muzzleflash4_noz" )
 CLIENTEFFECT_REGISTER_END()
 
 //Whether or not to eject brass from weapons
-ConVar cl_ejectbrass( "cl_ejectbrass", "1" );
+ConVar cl_ejectbrass("cl_ejectbrass", "1", FCVAR_ARCHIVE);
 
 ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0");
 
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 
+// --> Mirv: Useful effect cvars
+ConVar cl_brasstime("cl_brasstime", "10.0");
+ConVar cl_projectilelodge("cl_projectilelodge", "1", FCVAR_ARCHIVE, "Controls whether projectiles such as nails or darts can lodge into walls");
+ConVar cl_effectfrequency("cl_effectfrequency", "1.0", FCVAR_ARCHIVE, "Frequency of effects, from 0 (never) to 1.0 (always)", true, 0, true, 1.0);
+// <-- Mirv
 
 #if !defined( HL1_CLIENT_DLL )		// HL1 implements a derivative of CTempEnts
 // Temp entity interface
@@ -334,6 +336,10 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 
 			// Remove straight away if its something that is movable or is the skybox
 			if (pm.m_pEnt->GetMoveType() != MOVETYPE_NONE || (pm.surface.flags & SURF_SKY))
+				die = gpGlobals->curtime;
+
+			// Also remove straight away if their graphics are toned down
+			else if (random->RandomFloat(0, 1.0f) > cl_projectilelodge.GetFloat())
 				die = gpGlobals->curtime;
 
 			// TODO: Remove straight away if angle with normal is too big?
