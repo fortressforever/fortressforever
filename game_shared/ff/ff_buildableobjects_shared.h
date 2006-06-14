@@ -258,6 +258,8 @@ public:
 	virtual void Spawn( void ); 
 	virtual void Precache( void );
 	
+	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = false ) { return WorldSpaceCenter(); }
+	
 	void GoLive( void );
 	void Detonate( void );
 	void RemoveQuietly( void );
@@ -442,6 +444,8 @@ public:
 	virtual void Spawn( void );
 	void GoLive( void );
 
+	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
+
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
 	void SendStartTimerMessage( void );
@@ -524,6 +528,8 @@ public:
 #else
 	virtual void Spawn( void );
 	void GoLive( void );
+
+	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 48.0f ); }
 
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );

@@ -789,20 +789,19 @@ void CFFMiniTurret::OnActiveThink( void )
 	}
 
 	bool bEnemyVisible = false;
-	Vector vecMidEnemy, vecMuzzle = MuzzlePosition();	
+	Vector vecMuzzle = MuzzlePosition();	
+	Vector vecMidEnemy = BodyTarget( vecMuzzle );
 	
 	if( GetEnemy()->IsPlayer() )
 	{
 		// Enemy is a player
 		CFFPlayer *pPlayer = ToFFPlayer( GetEnemy() );
 		bEnemyVisible = GetEnemy()->IsAlive() && ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) );		
-		vecMidEnemy = pPlayer->GetLegacyAbsOrigin();
 	}
 	else
 	{
 		// Enemy is a buildable
-		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f ) );
-		vecMidEnemy = GetEnemy()->GetAbsOrigin() + Vector( 0, 0, 48.0f );
+		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->EyePosition() );
 	}
 
 	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;

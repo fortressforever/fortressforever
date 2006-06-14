@@ -327,7 +327,7 @@ void CFFSentryGun::OnActiveThink( void )
 	CBaseEntity *enemy = GetEnemy();
 
 	// Enemy is no longer targettable
-	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() || ( ( enemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( SG_RANGE * SG_RANGE ) ) )
+	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() /* || ( ( enemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( SG_RANGE * SG_RANGE ) )*/ )
 	{
 		SetEnemy( NULL );
 		SetThink( &CFFSentryGun::OnSearchThink );
@@ -340,7 +340,9 @@ void CFFSentryGun::OnActiveThink( void )
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid );
 
 	// Update our goal directions
-	VectorAngles( GetEnemy()->WorldSpaceCenter() - MuzzlePosition(), m_angGoal );
+	Vector vecDirToEnemy = vecMidEnemy - MuzzlePosition();
+	VectorNormalize( vecDirToEnemy );
+	VectorAngles( vecDirToEnemy, m_angGoal );
 
 	// Update angles now, otherwise we'll always be lagging behind
 	UpdateFacing();
@@ -472,8 +474,10 @@ void CFFSentryGun::HackFindEnemy( void )
 				continue;
 		}
 
+		// Added stuff for Bug #0000669: SG can currently lock on to anybody at any range
+
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
-		if( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) 
+		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->EyePosition() ) > m_flRange ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
@@ -482,7 +486,7 @@ void CFFSentryGun::HackFindEnemy( void )
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
 			if( pSentryGun != this )
 			{
-				if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->EyePosition() ) <= m_flRange ) )
 					target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 		}
@@ -491,7 +495,7 @@ void CFFSentryGun::HackFindEnemy( void )
 		if( pPlayer->m_hDispenser.Get() )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
-			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->EyePosition() ) <= m_flRange ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
 	}
