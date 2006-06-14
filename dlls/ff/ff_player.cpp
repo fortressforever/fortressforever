@@ -1310,7 +1310,6 @@ void CFFPlayer::SetLocation( int entindex, const char *szNewLocation, int iNewLo
 
 	m_Locations.AddToHead(info);
 
-	//Should never be equal anyway, but just for fun.
 	if(m_iClientLocation != entindex)
 	{
 		CSingleUserRecipientFilter filter( this );
@@ -1321,6 +1320,8 @@ void CFFPlayer::SetLocation( int entindex, const char *szNewLocation, int iNewLo
 		MessageEnd();
 
 		m_iClientLocation = entindex;
+		Q_strncpy( m_szLastLocation, GetLocation(), sizeof( m_szLastLocation ) );
+		m_iLastLocationTeam = GetLocationTeam() - 1;
 	}
 }
 
@@ -1331,10 +1332,8 @@ void CFFPlayer::RemoveLocation( int entindex )
 		return;
 
 	for ( int i = 0; i < m_Locations.Count(); i++ )
-	{
 		if(m_Locations[i].entindex == entindex)
 			m_Locations.Remove(i);
-	}
 
 	//Update location if we have too.
 	if(m_Locations.Count() > 0 
@@ -1348,6 +1347,8 @@ void CFFPlayer::RemoveLocation( int entindex )
 		MessageEnd();
 
 		m_iClientLocation = m_Locations[0].entindex;
+		Q_strncpy( m_szLastLocation, GetLocation(), sizeof( m_szLastLocation ) );
+		m_iLastLocationTeam = GetLocationTeam() - 1;
 	}
 }
 
