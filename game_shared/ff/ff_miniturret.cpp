@@ -624,7 +624,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 		if( pPlayer->m_hSentryGun.Get() )
 		{
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
-			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) )
 			{
 				if( entsys.RunPredicates( this, pSentryGun, "validtarget" ) )
 					pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
@@ -635,7 +635,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 		if( pPlayer->m_hDispenser.Get() )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
-			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->GetAbsOrigin() + Vector( 0, 0, 48.0f ) ) )
+			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) )
 			{
 				if( entsys.RunPredicates( this, pDispenser, "validtarget" ) )
 					pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
