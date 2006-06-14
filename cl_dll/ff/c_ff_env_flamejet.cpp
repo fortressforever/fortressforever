@@ -198,7 +198,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 		if (vm) 
 		{
-			int iAttachment = vm->LookupAttachment("1");
+			int iAttachment = vm->LookupAttachment("muzzle");
 			vm->GetAttachment(iAttachment, vecStart, angAngles);
 		}
 	}
@@ -209,13 +209,13 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 		if (cr) 
 		{
-			int iAttachment = cr->LookupAttachment("1");
+			int iAttachment = cr->LookupAttachment("muzzle");
 			cr->GetAttachment(iAttachment, vecStart, angAngles);
 		}
 	}
 
 	Vector forward, right, up;
-	AngleVectors(angAngles, &up, &right, &forward);
+	AngleVectors(angAngles, &forward, &right, &up);
 
 	// Set the bbox so the particle manager knows when to draw this flamejet.
 	Vector vEndPoint = vecStart + forward * m_Speed;

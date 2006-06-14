@@ -16,9 +16,6 @@
 #include "ff_fx_shared.h"
 #include "in_buttons.h"
 
-// For CFlameJet
-#include "baseparticleentity.h"
-
 #ifdef CLIENT_DLL 
 	#define CFFWeaponFlamethrower C_FFWeaponFlamethrower
 	#define CFFFlameJet C_FFFlameJet

@@ -19,6 +19,7 @@
 
 #include "cbase.h"
 #include "te_effect_dispatch.h"
+#include "baseparticleentity.h"
 
 class CFFFlameJet : public CBaseParticleEntity
 {
