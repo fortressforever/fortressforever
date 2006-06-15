@@ -50,6 +50,15 @@ extern bool g_fBlockedStatus[256];	// |-- Mirv: The blocked status of people's t
 
 static CClientScoreBoardDialog *g_pScoreboard = NULL;
 
+inline char *GetFormattedMapName( void )
+{	
+	static char szText[ 256 ];
+	Q_strcpy( szText, engine->GetLevelName() + 5 ); // Skip the "maps/" part
+	szText[ ( int )strlen( szText ) - 4 ] = '\0'; // Skip the ".bsp" part
+
+	return szText;
+}
+
 bool ActivateScoreboard()
 {
 	if (!g_pScoreboard || !g_pScoreboard->IsVisible())
@@ -107,6 +116,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	SetScheme("ClientScheme");
 
 	m_iJumpKey = -1;
+
+	m_pMapName = new Label( this, "MapName", GetFormattedMapName() );
 
 	m_pPlayerList = new SectionedListPanel(this, "PlayerList");
 	m_pPlayerList->SetVerticalScrollbar(false);
@@ -335,6 +346,8 @@ void CClientScoreBoardDialog::Update( void )
 		m_pPlayerList->SetSize(wide, m_iDesiredHeight);
 	}
 
+	m_pMapName->SetText( GetFormattedMapName() );
+
 	MoveToCenterOfScreen();
 
 	// update every second
@@ -506,12 +519,13 @@ void CClientScoreBoardDialog::AddHeader()
 //	m_pPlayerList->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(FRIENDS_WIDTH) );
 	*/
 
-	m_iSectionId = 0; //make a blank one
+	// Make a blank section
+	m_iSectionId = 0;
 	m_pPlayerList->AddSection( m_iSectionId, "" );
 	m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
 	m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "", 0, scheme( )->GetProportionalScaledValue( NAME_WIDTH ) );
 
-	m_iSectionId = 1;
+	++m_iSectionId;
 	m_pPlayerList->AddSection( m_iSectionId, "" );
 	m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
 	/*NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0*/
@@ -523,22 +537,22 @@ void CClientScoreBoardDialog::AddHeader()
 	m_pPlayerList->AddColumnToSection( m_iSectionId, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ VOICE_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
 	m_pPlayerList->AddColumnToSection( m_iSectionId, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
 
-	m_iSectionId = 2;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_BLUE ]		= AddSection( TYPE_TEAM, TEAM_BLUE );
 
-	m_iSectionId = 3;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_RED ]			= AddSection( TYPE_TEAM, TEAM_RED );
 
-	m_iSectionId = 4;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_YELLOW ]		= AddSection( TYPE_TEAM, TEAM_YELLOW );
 
-	m_iSectionId = 5;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_GREEN ]		= AddSection( TYPE_TEAM, TEAM_GREEN );
 
-	m_iSectionId = 6;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_SPECTATOR ]	= AddSection( TYPE_SPECTATORS, TEAM_SPECTATOR );
 
-	m_iSectionId = 7;
+	++m_iSectionId;
 	m_iTeamSections[ TEAM_UNASSIGNED ]	= AddSection( TYPE_UNASSIGNED, TEAM_UNASSIGNED );
 }
 
