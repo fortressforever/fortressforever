@@ -48,6 +48,19 @@ int *GetClientColor( int clientIndex )
 }
 // <-- Mirv: Colours!
 
+// Forward declare
+class CHudChatLine;
+
+// Dump text
+void DumpBufToChatline( CHudChatLine *pChatLine, char *szText, int &iPos )
+{
+	wchar_t wszTemp[ 4096 ];
+	vgui::localize()->ConvertANSIToUnicode( szText, wszTemp, sizeof( wszTemp ) );
+	pChatLine->InsertString( wszTemp );
+	Q_strcpy( szText, "\0" );
+	iPos = 0;
+}
+
 // converts all '\r' characters to '\n', so that the engine can deal with the properly
 // returns a pointer to str
 static char* ConvertCRtoNL( char *str )
@@ -478,17 +491,12 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 		{
 			iAdjust = 1;
 
+			// Found a resource string to localize
 			if( ( pBeg[ 0 ] == '#' ) && pBeg[ 1 ] )
 			{
 				// If there's stuff in our buffer, dump it first
 				if( iPos )
-				{
-					wchar_t wszTemp[ 4096 ];
-					vgui::localize()->ConvertANSIToUnicode( szTemp, wszTemp, sizeof( wszTemp ) );
-					line->InsertString( wszTemp );
-					Q_strcpy( szTemp, "\0" );
-					iPos = 0;
-				}
+					DumpBufToChatline( line, szTemp, iPos );
 
 				// Now get on with tokenizing
 				int i = 1;
@@ -508,10 +516,11 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 				{
 					vgui::localize()->ConvertANSIToUnicode( szToken, wbuf, sizeof( wbuf ) );
 					line->InsertString( wbuf );
-				}					
+				}
 
 				iAdjust = i;
 			}
+			// Regular characters
 			else
 			{
 				// Add a character to our buffer
@@ -526,14 +535,9 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 			pBeg += iAdjust;
 		}
 
-		// If there's stuff in our buffer, dump it first
+		// If there's stuff still in our buffer, dump it
 		if( iPos )
-		{
-			wchar_t wszTemp[ 4096 ];
-			vgui::localize()->ConvertANSIToUnicode( szTemp, wszTemp, sizeof( wszTemp ) );
-			line->InsertString( wszTemp );
-			Q_strcpy( szTemp, "\0" );
-		}
+			DumpBufToChatline( line, szTemp, iPos );
 
 		line->SetVisible( true );
 		line->SetNameLength( iNameLength );

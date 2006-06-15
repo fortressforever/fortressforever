@@ -32,6 +32,7 @@
 #include "globals.h"
 #include "nav_mesh.h"
 #include "team.h"
+#include "ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -42,6 +43,59 @@ extern int giPrecacheGrunt;
 extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 
 ConVar  *sv_cheats = NULL;
+ConVar cl_sayteamlocation( "cl_sayteamlocation", "0", FCVAR_NONE, "1 - enables location displaying in say_team chat" );
+
+// Parse out % commands.
+inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszText, int iDestLen )
+{
+	// Current % Commands:
+	// %h = health
+	// %a = armor
+	// %c = class
+	// %l = location
+
+	CFFPlayer *pPlayer = ToFFPlayer( ( ( CBasePlayer * )CBaseEntity::Instance( pEdict ) ) );
+	if( !pPlayer )
+		return false;
+
+	switch( cCommand )
+	{
+		case 'h':
+		case 'H':
+		{
+			Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetHealth() );
+			return true;
+		}
+		break;
+
+		case 'a':
+		case 'A':
+		{
+			Q_snprintf( pszText, iDestLen, "%i", pPlayer->GetArmor() );
+			return true;
+		}
+		break;
+
+		case 'c':
+		case 'C':
+		{
+			Q_snprintf( pszText, iDestLen, "%s", pPlayer->GetFFClassData().m_szPrintName );
+			return true;
+		}
+		break;
+
+		case 'l':
+		case 'L':
+		{
+			Q_snprintf( pszText, iDestLen, "%s", g_pGameRules->GetChatLocation( true, pPlayer ) );
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
 /*
 ============
 ClientKill
@@ -135,6 +189,100 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 	if ( !p )
 		return;
 
+	// Parse out % commands. Doing it here so it will
+	// get sent out to clients correctly especially
+	// if the location is a resource a resource string
+	// since that localization is done client side in
+	// ff_hud_chat.cpp
+
+	// Current % Commands:
+	// %h = health
+	// %a = armor
+	// %c = class
+	// %l = location
+
+
+	// Want to look in buf for any localized strings
+	// and convert them to resource strings if possible
+	char *pBeg = p;
+	int iAdjust = 1;
+	char szBuffer[ 4096 ], szText[ 4096 ];
+	bool bAddChar = true;
+
+	Q_strcpy( szBuffer, "\0" );
+	Q_strcpy( szText, "\0" );
+	int iPos = 0;
+
+	while( pBeg[ 0 ] )
+	{
+		iAdjust = 1;
+		bAddChar = true;
+
+		// Found a possible % command
+		if( ( pBeg[ 0 ] == '%' ) && pBeg[ 1 ] )
+		{
+			// If there's stuff in our buffer, dump it first
+			if( iPos )
+			{
+				// Copy buffer to text
+				Q_strcat( szText, szBuffer );
+				// Clear buffer
+				Q_strcpy( szBuffer, "\0" );
+				// Reset
+				iPos = 0;
+			}
+
+			// Parse the % command and get what 
+			// should be in its place
+			char szTempText[ 1024 + 1 ] = {0};	// for location + \0
+			if( FF_ParsePercentCommand( pEdict, pBeg[ 1 ], szTempText, 1025 ) )
+			{
+				// Add to text
+				Q_strcat( szText, szTempText );
+
+				// % commands are 2 characters long (for now)
+				iAdjust = 2;
+
+				// Don't add char as per normal
+				bAddChar = false;
+			}
+		}
+
+		// Add this character to the buffer
+		if( bAddChar )
+		{
+			// Add a character to our buffer
+			char ch = pBeg[ 0 ];
+			szBuffer[ iPos++ ] = ch;
+			if( iPos == 4096 )
+				szBuffer[ --iPos ] = '\0';
+			else
+				szBuffer[ iPos ] = '\0';
+		}
+
+		pBeg += iAdjust;
+	}
+
+	// If there's stuff in our buffer, dump it
+	if( iPos )
+	{
+		// Copy buffer to text
+		Q_strcat( szText, szBuffer );
+		// Clear buffer
+		Q_strcpy( szBuffer, "\0" );
+		// Reset
+		iPos = 0;
+	}
+
+	// Point p to our modified text
+	p = szText;
+
+	// Check again (will truncate if string too long)
+	p = CheckChatText( p );
+
+	if( !p )
+		return;
+
 	CBasePlayer *pPlayer = NULL;
 	if ( pEdict )
 	{
@@ -171,7 +319,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 
 	if ( pszPrefix && strlen( pszPrefix ) > 0 )
 	{
-		if ( pszLocation && strlen( pszLocation ) )
+		if ( pszLocation && strlen( pszLocation ) && cl_sayteamlocation.GetInt() )
 		{
 			Q_snprintf( text, sizeof(text), "%s %s @ %s: ", pszPrefix, pszPlayerName, pszLocation );
 		}
