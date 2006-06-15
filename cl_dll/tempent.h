@@ -49,7 +49,8 @@
 #define FTENT_COLLISIONGROUP	0x02000000	// if set, use the C_BaseEntity::GetCollisionGroup when doing collide trace
 
 // --> Mirv: New FF projectile temp entity
-#define	FTENT_FFPROJECTILE		0x04000000
+#define	FTENT_FFPROJECTILE		0x04000000	// This is a FF projectile (most likely nail)
+#define FTENT_FFOPTEFFECT		0x08000000	// This projectile's effect is optional
 // <-- Mirv
 
 //-----------------------------------------------------------------------------

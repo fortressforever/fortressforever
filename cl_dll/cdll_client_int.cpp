@@ -175,9 +175,11 @@ static CDLL_ConVarAccessor g_ConVarAccessor;
 bool g_bLevelInitialized;
 bool g_bTextMode = false;
 
-// --> Mirv: For the hud hints loading/saving
+// --> Mirv: For the hud hints loading/saving & effects control
 extern void HudHintLoad(const char *pMapName);
 extern void HudHintSave();
+
+extern void ClearAllowedEffects();
 // <-- Mirv
 
 //-----------------------------------------------------------------------------
@@ -820,8 +822,9 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	vieweffects->LevelInit();
 	
-	// --> Mirv: Initialise hud hints
+	// --> Mirv: Initialise hud hints & clear effect data
 	HudHintLoad(pMapName);
+	ClearAllowedEffects();
 	// <-- Mirv
 
 	// Tell mode manager that map is changing

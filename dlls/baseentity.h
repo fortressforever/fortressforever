@@ -1464,7 +1464,7 @@ private:
 public:
 	// Add a discontinuity to a step
 	bool					AddStepDiscontinuity( float flTime, const Vector &vecOrigin, const QAngle &vecAngles );
-private:
+protected:	// |-- Mirv: Changed from private
 	// origin and angles to use in step calculations
 	virtual	Vector			GetStepOrigin( void ) const;
 	virtual	QAngle			GetStepAngles( void ) const;

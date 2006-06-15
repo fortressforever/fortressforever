@@ -125,13 +125,10 @@ void CFFWeaponAssaultCannon::Fire()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
-	FireBulletsInfo_t info;
-	info.m_iShots = pWeaponInfo.m_iBullets;
-	info.m_vecSrc = pPlayer->Weapon_ShootPosition();
-	info.m_vecDirShooting = pPlayer->GetAutoaimVector(0);
-	info.m_vecSpread = GetBulletSpread();
-	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
+	Vector vecForward;
+	AngleVectors(pPlayer->EyeAngles(), &vecForward);
+
+	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage;
 

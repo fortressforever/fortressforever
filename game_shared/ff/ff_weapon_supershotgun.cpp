@@ -79,15 +79,15 @@ CFFWeaponSuperShotgun::CFFWeaponSuperShotgun()
 void CFFWeaponSuperShotgun::Fire() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();	
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
-	// Dispatch the FX right away with full accuracy.
-	FX_FireBullets(
-		pPlayer->entindex(), 
-		pPlayer->Weapon_ShootPosition(), 
-		pPlayer->EyeAngles() + 2.0f * pPlayer->GetPunchAngle(), 
-		GetWeaponID(), 
-		Primary_Mode, 
-		CBaseEntity::GetPredictionRandomSeed() & 255, // wrap it for network traffic so it's the same between client and server
-		pWeaponInfo.m_flBulletSpread);
+	Vector vecForward;
+	AngleVectors(pPlayer->EyeAngles(), &vecForward);
+
+	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	info.m_pAttacker = pPlayer;
+	info.m_iDamage = pWeaponInfo.m_iDamage;
+	info.m_iTracerFreq = 0;
+
+	pPlayer->FireBullets(info);
 }

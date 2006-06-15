@@ -63,9 +63,8 @@ ConVar ffdev_disablemuzzleflashes("ffdev_disablemuzzleflashes", "0");
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 
 // --> Mirv: Useful effect cvars
-ConVar cl_brasstime("cl_brasstime", "10.0");
-ConVar cl_projectilelodge("cl_projectilelodge", "1", FCVAR_ARCHIVE, "Controls whether projectiles such as nails or darts can lodge into walls");
-ConVar cl_effectfrequency("cl_effectfrequency", "1.0", FCVAR_ARCHIVE, "Frequency of effects, from 0 (never) to 1.0 (always)", true, 0, true, 1.0);
+ConVar cl_brasstime("cl_brasstime", "1.0");
+ConVar cl_projectilesdetail("cl_projectilesdetail", "1", FCVAR_ARCHIVE, "Projectile lodge detail: 0 - none, 1 - cutdown, 2 - full");
 // <-- Mirv
 
 #if !defined( HL1_CLIENT_DLL )		// HL1 implements a derivative of CTempEnts
@@ -327,11 +326,12 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				data.m_nSurfaceProp = pm.surface.surfaceProps;
 				data.m_nEntIndex = pm.GetEntityIndex();
 
+				// The actual effect isn't needed
+				if (flags & FTENT_FFOPTEFFECT)
+					data.m_fFlags |= CEFFECT_EFFECTNOTNEEDED;
+
 				// TODO: Add the rest of these as needed
-//				if (pModel == m_pFF_Nail)
-					DispatchEffect("NailImpact", data);
-//				else if (pModel == m_pFF_Dart)
-//					DispatchEffect("DartImpact", data);
+				DispatchEffect("NailImpact", data);
 			}
 
 			// Remove straight away if its something that is movable or is the skybox
@@ -339,13 +339,16 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				die = gpGlobals->curtime;
 
 			// Also remove straight away if their graphics are toned down
-			else if (random->RandomFloat(0, 1.0f) > cl_projectilelodge.GetFloat())
+			else if (cl_projectilesdetail.GetInt() == 0)
+				die = gpGlobals->curtime;
+
+			// And remove straight away if the effects for this is optional
+			else if (cl_projectilesdetail.GetInt() == 1 && flags & FTENT_FFOPTEFFECT)
 				die = gpGlobals->curtime;
 
 			// TODO: Remove straight away if angle with normal is too big?
 
 			// Otherwise jam into whatever we hit for a bit
-			// TODO: A cvar to disable jamming
 			else
 			{
 				m_vecTempEntVelocity = Vector(0, 0, 0);
@@ -1459,7 +1462,7 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 	if (ffdev_disablemuzzleflashes.GetBool())
 		return;
 
-	DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
+	//DevMsg("[muzzleflash] type: %d, ent: %d, attachment: %d fp: %d\n", type, entityIndex, attachmentIndex, firstPerson );
 
 /*		if ( firstPerson )
 		{
@@ -1556,7 +1559,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	if (ffdev_disablemuzzleflashes.GetBool())
 		return;
 
-	DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
+	//DevMsg("[muzzleflash] type: %d, ent: %d, fp: %d\n", type, entityIndex, firstPerson );
 /*		if ( firstPerson )
 		{
 			MuzzleFlash_AR2_Player( pos1, angles, entityIndex );
@@ -3257,6 +3260,9 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 }
 
 // --> Mirv: A FF projectile
+
+extern bool AllowEffects(int iEntityIndex, float flNewDelay);
+
 void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocity, int iSpeed, int projectileType, int entIndex)
 {
 	const model_t *pModel = NULL;
@@ -3307,5 +3313,8 @@ void CTempEnts::FFProjectile(const Vector &vecPosition, const QAngle &angVelocit
 	pTemp->die = gpGlobals->curtime + 10;
 
 	pTemp->clientIndex = entIndex;
+
+	if (!AllowEffects(entIndex, 0.3f))
+		pTemp->flags |= FTENT_FFOPTEFFECT;
 }
 // <-- Mirv
