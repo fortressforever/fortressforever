@@ -195,6 +195,8 @@ ConVar mp_prematch( "mp_prematch",
 	// CFFGameRules implementation.
 	// --------------------------------------------------------------------------------------------------- //
 
+	extern void ClearAllowedEffects();
+
 	// --> Mirv: Extra gamerules stuff
 	CFFGameRules::CFFGameRules()
 	{
@@ -214,6 +216,9 @@ ConVar mp_prematch( "mp_prematch",
 		// Start stats engine
 		SendStats();
 		g_StatsLog.CleanUp();
+
+		// Reset the effects timeouts
+		ClearAllowedEffects();
 	}
 
 	void CFFGameRules::Precache()

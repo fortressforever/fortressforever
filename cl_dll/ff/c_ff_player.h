@@ -218,6 +218,9 @@ public:
 	// account for various things. 
 	Vector GetLegacyAbsOrigin();
 
+	virtual void FireBullets(const FireBulletsInfo_t &info);
+	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };

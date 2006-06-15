@@ -459,16 +459,26 @@ void CFFWeaponSniperRifle::Fire()
 	float flSniperRifleCharge = clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);	// Minimum charge is 1.
 	DevMsg("FIRE IN THE HOLE(%.2f multiplier) !\n", flSniperRifleCharge);
 
+	// Does TFC have any sort of autoaiming for sniper rifle?
+	// #define WEINER_SNIPER from tf_defs.h suggests perhaps
+	// We could do something like the follows
+	// (providing we fix ShouldAutoaim()):
+
+	//QAngle angAiming;
+	//VectorAngles(pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), angAiming);
+
 	FX_FireBullets(
 		pPlayer->entindex(), 
 		pPlayer->Weapon_ShootPosition(), 
-		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), 
+		pPlayer->EyeAngles(), 
 		GetWeaponID(), 
 		Primary_Mode, 
 		CBaseEntity::GetPredictionRandomSeed() & 255, 
 		pWeaponInfo.m_flBulletSpread, 
 		flSniperRifleCharge
 		);
+
+	// TODO: Maybe FX_FireBullets is not a good idea
 
 	WeaponSound(SINGLE);
 }

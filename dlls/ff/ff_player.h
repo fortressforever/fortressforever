@@ -542,6 +542,10 @@ public:
 	void	InstaSwitch(int iClassNum);
 	
 	void	SetupClassVariables();
+
+	virtual void FireBullets(const FireBulletsInfo_t &info);
+	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
+
 };
 
 

@@ -296,7 +296,7 @@ void FX_Tracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 	dist = VectorNormalize( dir );
 
 	// Don't make short tracers.
-	if ( dist >= 256 )
+	//if ( dist >= 256 )		// |-- Mirv: any length allowed for now
 	{
 		float length = random->RandomFloat( 64.0f, 128.0f );
 		float life = ( dist + length ) / velocity;	//NOTENOTE: We want the tail to finish its run as well

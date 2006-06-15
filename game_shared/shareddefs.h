@@ -239,6 +239,11 @@ enum
 
 #define TRACER_DONT_USE_ATTACHMENT	-1
 
+// --> Mirv: CEffect flags
+#define	CEFFECT_EFFECTNOTNEEDED		0x01
+#define	CEFFECT_SOUNDNOTNEEDED		0x02
+// <-- Mirv
+
 // Entity Dissolve types
 enum
 {
