@@ -116,6 +116,7 @@ protected:
 	int	m_HLTVSpectators;
 
 	vgui::Button *m_pChannelButton;	// |-- Mirv: Channel button
+	vgui::Label	 *m_pMapName;		// |-- Mulch: map name
 
 	void MoveLabelToFront( const char *textEntryName );
 
