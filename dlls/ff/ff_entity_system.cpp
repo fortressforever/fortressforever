@@ -1934,11 +1934,11 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 		if (!addname || !strlen(addname))
 		{
 			Warning("Can't call entsys.runpredicates with an entity and no addname\n");
-			return false;
+			return true /* mirv: let it cont. regardless */;
 		}
 
 		if (!strlen(STRING(ent->GetEntityName())))
-			return false;
+			return true /* mirv: let it cont. regardless */;
 
 		SetVar("entname", STRING(ent->GetEntityName()));
 
@@ -1946,9 +1946,9 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 		lua_getglobal( L, STRING(ent->GetEntityName()) );
 		if (lua_isnil(L, -1))
 		{
-			Warning("Table '%s' doesn't exist!\n", STRING(ent->GetEntityName()) );
+			//Warning("Table '%s' doesn't exist!\n", STRING(ent->GetEntityName()) );
 			lua_pop(L, 1);
-			return false;
+			return true /* mirv: let it cont. regardless */;
 		}
 		lua_pushstring( L, addname );
 		lua_gettable( L, -2 );
