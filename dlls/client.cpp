@@ -43,7 +43,6 @@ extern int giPrecacheGrunt;
 extern CBaseEntity*	FindPickerEntity( CBasePlayer* pPlayer );
 
 ConVar  *sv_cheats = NULL;
-ConVar cl_sayteamlocation( "cl_sayteamlocation", "0", FCVAR_NONE, "1 - enables location displaying in say_team chat" );
 
 // Parse out % commands.
 inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszText, int iDestLen )
@@ -319,14 +318,15 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 
 	if ( pszPrefix && strlen( pszPrefix ) > 0 )
 	{
-		if ( pszLocation && strlen( pszLocation ) && cl_sayteamlocation.GetInt() )
-		{
-			Q_snprintf( text, sizeof(text), "%s %s @ %s: ", pszPrefix, pszPlayerName, pszLocation );
-		}
-		else
-		{
+		// Mulch: don't do CS:S style locations
+		//if ( pszLocation && strlen( pszLocation ) )
+		//{
+		//	Q_snprintf( text, sizeof(text), "%s %s @ %s: ", pszPrefix, pszPlayerName, pszLocation );
+		//}
+		//else
+		//{
 			Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
-		}
+		//}
 	}
 	else
 	{
