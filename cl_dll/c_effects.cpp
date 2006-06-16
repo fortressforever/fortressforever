@@ -1005,6 +1005,7 @@ protected:
 	TimedEvent			m_tParticleSpawn;
 	CSmartPtr<CEmberEmitter> m_pEmitter;
 
+	bool	m_bNeedToSetOrigin;	// |-- Mirv
 };
 
 //Receive datatable
@@ -1023,7 +1024,10 @@ C_Embers::C_Embers()
 {
 	m_pEmitter = CEmberEmitter::Create( "C_Embers" );
 
-	m_pEmitter->SetSortOrigin( GetAbsOrigin() );
+	// --> Mirv: Moved into Start; constructor is too early for GetAbsOrigin()
+	//m_pEmitter->SetSortOrigin( GetAbsOrigin() );
+	m_bNeedToSetOrigin = true;
+	// <-- Mirv
 }
 
 C_Embers::~C_Embers()
@@ -1068,6 +1072,11 @@ void C_Embers::AddEntity( void )
 	if ( m_bEmit == false )
 		return;
 
+	// --> Mirv: Moved here from the constructor
+	if (m_bNeedToSetOrigin)
+		m_pEmitter->SetSortOrigin(GetAbsOrigin());
+	// <-- Mirv
+
 	float tempDelta = gpGlobals->frametime;
 
 	while( m_tParticleSpawn.NextEvent( tempDelta ) )
@@ -1109,6 +1118,11 @@ void C_Embers::SpawnEmber( void )
 	sParticle->m_uchEndAlpha	= 0;
 	sParticle->m_uchStartSize	= 1;
 	sParticle->m_uchEndSize		= 0;
+
+	// --> Mirv: Initialise roll and rolldelta
+	sParticle->m_flRoll			= 0;
+	sParticle->m_flRollDelta	= 0;
+	// <-- Mirv
 	
 	//Set the velocity
 	Vector	velocity;
