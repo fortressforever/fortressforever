@@ -799,36 +799,6 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 // TODO
 //	CheckMovingGround( player, ucmd->frametime );
 
-	// --> Mirv: Check moving ground replacement
-	CBaseEntity	    *groundentity;
-
-	if ( player->GetFlags() & FL_ONGROUND )
-	{
-		groundentity = player->GetGroundEntity();
-
-		if ( groundentity && (groundentity->GetFlags() & FL_CONVEYOR || groundentity->GetMoveType() & MOVETYPE_PUSH) )
-		{
-			Vector vecNewVelocity;
-			vecNewVelocity = groundentity->m_vecVelocity;
-			if ( player->GetFlags() & FL_BASEVELOCITY )
-			{
-				vecNewVelocity += player->GetBaseVelocity();
-			}
-			player->SetBaseVelocity( vecNewVelocity );
-			player->AddFlag( FL_BASEVELOCITY );
-		}
-	}
-
-	if ( ( player->GetFlags() & FL_BASEVELOCITY ) )
-	{
-		// Apply momentum (add in half of the previous frame of velocity first)
-		player->ApplyAbsVelocityImpulse( (1.0 + ( gpGlobals->frametime * 0.5 )) * player->GetBaseVelocity() );
-		player->SetBaseVelocity( vec3_origin );
-	}
-
-	player->RemoveFlag( FL_BASEVELOCITY );
-	// <-- Mirv: Check moving ground replacement
-
 // TODO
 //	g_pMoveData->m_vecOldAngles = player->pl.v_angle;
 
