@@ -54,7 +54,7 @@
 
 extern short	g_sModelIndexFireball;
 
-ConVar detpack_push( "ffdev_detpack_push", "500", FCVAR_NONE, "Detpack push value as a float" );
+ConVar detpack_push( "ffdev_detpack_push", "3000", FCVAR_NONE, "Detpack push value as a float" );
 
 //=============================================================================
 //
@@ -714,10 +714,13 @@ void CFFBuildableObject::DoExplosion( void )
 		// Basically, if we don't hit a couple of objects deal out [absolute] damage		
 		// Do damage
 		if( bDoDamage )
-		{			
+		{
+			Vector vecDir = pEntity->GetAbsOrigin() - vecOrigin;
+			VectorNormalize( vecDir );
+
 			//pEntity->ApplyAbsVelocityImpulse( ( pEntity->WorldSpaceCenter() - vecOrigin ) * 1000.0f );
 			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, ( pEntity->WorldSpaceCenter() - vecOrigin ) * detpack_push.GetFloat(), vecOrigin, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
+			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, vecDir * detpack_push.GetFloat(), pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
 		}
 	}
 
