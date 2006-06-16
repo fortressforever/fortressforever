@@ -45,6 +45,9 @@ public:
 	virtual void Spawn();
 	virtual void NailEmit();
 	virtual void GrenadeThink();
+
+protected:
+	float m_flNailSpit;
 #endif
 };
 
@@ -60,6 +63,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800");
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.4" );
 #endif
 
 #ifdef GAME_DLL
@@ -70,6 +74,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
 
+		m_flNailSpit = 0.0f;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
 
@@ -128,13 +133,30 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 		Vector vecForward;
 
-		AngleVectors(GetAbsAngles(), &vecForward);
+		//AngleVectors(GetAbsAngles(), &vecForward);
+		//VectorNormalizeFast( vecForward );
 
 		// Emit a nail, just random for now
-		if (random->RandomInt(0, 3) == 0) 
+		//if (random->RandomInt(0, 3) == 0) 
+
+		// Time to spit out nails again?
+		if( m_flNailSpit < gpGlobals->curtime )
 		{
-			CFFProjectileNail::CreateNail(GetAbsOrigin() + (32 * vecForward), GetAbsAngles(), GetOwnerEntity() /*(CBasePlayer *) GetOwnerEntity()*/, 30, nailspeed.GetInt());
+			// Do the classic TFC pattern
+			for( int i = 0; i < 11; i++ )
+			{
+				Vector vecNailDir;
+				QAngle vecAngles = GetAbsAngles() + QAngle( 0, 30.0f * i, 0 );				
+				AngleVectors( vecAngles, &vecNailDir );
+				VectorNormalizeFast( vecNailDir );
+
+				CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt());
+			}
+			
 			EmitSound( "NailGrenade.shoot" );
+
+			// Set up next nail spit time
+			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();
 		}
 
 		SetNextThink(gpGlobals->curtime);
