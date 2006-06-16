@@ -144,7 +144,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
-				CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt() );
+				CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, this, 30, nailspeed.GetInt() );
 			}
 			
 			EmitSound( "NailGrenade.shoot" );
