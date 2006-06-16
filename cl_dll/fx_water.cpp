@@ -62,7 +62,13 @@ void UTIL_GetNormalizedColorTintAndLuminosity( const Vector &color, Vector *tint
 	if ( tint != NULL )
 	{
 		float maxComponent = max( color.x, max( color.y, color.z ) );
-		*tint = color / maxComponent;
+
+		// --> Mirv: Don't allow divide by zero here
+		if (maxComponent == 0.0f)
+			*tint = Vector(0, 0, 0);
+		else
+			*tint = color / maxComponent;
+		// <-- Mirv
 	}
 
 }

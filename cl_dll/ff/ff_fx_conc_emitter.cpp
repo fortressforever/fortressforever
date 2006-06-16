@@ -18,6 +18,7 @@
 #include "ff_fx_conc_emitter.h"
 #include "materialsystem/imaterialvar.h"
 #include "c_te_effect_dispatch.h"
+#include "fx_explosion.h"
 
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
 
@@ -166,6 +167,13 @@ ConcParticle * CConcEmitter::AddConcParticle()
 
 void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 {
+	// Mirv: If underwater, just do a bunch of gas
+	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
+	{
+		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
+		return;
+	}
+
 	CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
 	
 	float offset = 0;
