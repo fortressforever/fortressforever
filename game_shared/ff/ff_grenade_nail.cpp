@@ -131,13 +131,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
-		Vector vecForward;
-
-		//AngleVectors(GetAbsAngles(), &vecForward);
-		//VectorNormalizeFast( vecForward );
-
-		// Emit a nail, just random for now
-		//if (random->RandomInt(0, 3) == 0) 
+		// Bug #0000674: Nail grenade doesn't shoot nails out like TFC nail grenade
 
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
@@ -150,7 +144,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
-				CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt());
+				CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt() );
 			}
 			
 			EmitSound( "NailGrenade.shoot" );
