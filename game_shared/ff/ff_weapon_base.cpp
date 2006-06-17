@@ -125,6 +125,9 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA(CFFWeaponBase) 
 	// Jerky anim fix	
 	//DEFINE_PRED_FIELD(m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK), 
+
+	// Mirv: Some prediction fixes the reload sounds not always playing
+	DEFINE_PRED_FIELD(m_fInSpecialReload, FIELD_FLOAT, FTYPEDESC_INSENDTABLE), 
 END_PREDICTION_DATA() 
 
 #ifdef GAME_DLL
@@ -523,6 +526,7 @@ void CFFWeaponBase::WeaponIdle()
 		}
 		else
 		{
+			// Sets idle time automatically
 			SendWeaponAnim(ACT_VM_IDLE);
 		}
 	}
