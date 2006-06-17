@@ -891,6 +891,9 @@ void CFFPlayer::Spawn()
 // Mirv: Moved all this out of spawn into here
 void CFFPlayer::SetupClassVariables()
 {
+	// Player default to not being in a nobuild zone	
+	m_NoBuilds.RemoveAll();
+
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
@@ -1349,6 +1352,38 @@ void CFFPlayer::RemoveLocation( int entindex )
 		m_iClientLocation = m_Locations[0].entindex;
 		Q_strncpy( m_szLastLocation, GetLocation(), sizeof( m_szLastLocation ) );
 		m_iLastLocationTeam = GetLocationTeam() - 1;
+	}
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Set a player in a no build area
+//----------------------------------------------------------------------------
+void CFFPlayer::SetNoBuild( int iEntIndex )
+{
+	if( iEntIndex )
+	{
+		bool bFound = false;
+		for( int i = 0; ( i < m_NoBuilds.Count() ) && !bFound; i++ )
+			if( m_NoBuilds[ i ] == iEntIndex )
+				bFound = true;
+
+		if( !bFound )
+		{
+			m_NoBuilds.AddToTail( iEntIndex );
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Remove a player from a no build area
+//----------------------------------------------------------------------------
+void CFFPlayer::RemoveNoBuild( int iEntIndex )
+{
+	if( iEntIndex )
+	{
+		for( int i = 0; i < m_NoBuilds.Count(); i++ )
+			if( m_NoBuilds[ i ] == iEntIndex )
+				m_NoBuilds.Remove( i );
 	}
 }
 
@@ -2253,6 +2288,20 @@ void CFFPlayer::PreBuildGenericThink( void )
 	{
 		m_bBuilding = true;
 
+		// See if player is in a no build area first
+		if( IsInNoBuild() && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
+		{
+			// Re-initialize
+			m_iCurBuild = FF_BUILD_NONE;
+			m_iWantBuild = FF_BUILD_NONE;
+			m_bBuilding = false;
+
+			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_NOBUILD" );
+
+			return;
+		}
+
+		/*
 		DevMsg( "[Building] Not currently building so lets try to build a: %s" );
 		switch( m_iWantBuild )
 		{
@@ -2260,18 +2309,18 @@ void CFFPlayer::PreBuildGenericThink( void )
 			case FF_BUILD_SENTRYGUN: DevMsg( "sentrygun\n" ); break;
 			case FF_BUILD_DETPACK: DevMsg( "detpack\n" ); break;
 		}
+		*/
 
 		// See if the user has already built this item
 		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && ( m_hDispenser.Get() ) ) ||
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( m_hSentryGun.Get() ) ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( m_hDetpack.Get() ) ) )
 		{
-			DevMsg( "[Buildable] User has already built a: %s" );
 			switch( m_iWantBuild )
 			{
-				case FF_BUILD_DISPENSER: DevMsg( "dispenser\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_DISPENSER_ALREADY_BUILT" ); break;
-				case FF_BUILD_SENTRYGUN: DevMsg( "sentrygun\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_SENTRYGUN_ALREADY_BUILT" ); break;
-				case FF_BUILD_DETPACK: DevMsg( "detpack\n" ); ClientPrint( this, HUD_PRINTCENTER, "#FF_DETPACK_ALREADY_SET" ); break;
+				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" ); break;
+				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_ALREADYBUILT" ); break;
+				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYSET" ); break;
 			}
 
 			// Re-initialize
@@ -2287,7 +2336,13 @@ void CFFPlayer::PreBuildGenericThink( void )
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( GetAmmoCount( AMMO_CELLS ) < 130 ) ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) )
 		{
-			DevMsg( "[Building] Not enough ammo to build the item!\n" );
+			switch( m_iWantBuild )
+			{
+				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" ); break;
+				case FF_BUILD_SENTRYGUN: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_NOTENOUGHAMMO" ); break;
+				case FF_BUILD_DETPACK: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" ); break;
+			}
+			
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
@@ -2299,7 +2354,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if on ground...
 		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
 		{
-			DevMsg( "[Building] You gotta be on the ground to build!\n" );
+			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MUSTBEONGROUND" );
+
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
@@ -2339,11 +2395,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
-					//CFFDispenserDoorBlocker *pDoorBlocker = CFFDispenserDoorBlocker::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), pDispenser );
 					
-					// Set our door blocker entity
-					//pDispenser->m_hDoorBlocker = pDoorBlocker;
-
 					// Set custom text
 					pDispenser->SetText( m_szCustomDispenserText );					
 
@@ -2363,11 +2415,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
-					//CFFSentryGunDoorBlocker *pDoorBlocker = CFFSentryGunDoorBlocker::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), pSentryGun );
-
-					// Set our door blocker entity
-					//pSentryGun->m_hDoorBlocker = pDoorBlocker;
-
+				
 					// Mirv: Store future ground location + orientation
 					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildGroundOrigin() );
 					pSentryGun->SetGroundAngles( hBuildInfo.GetBuildGroundAngles() );
@@ -2422,13 +2470,13 @@ void CFFPlayer::PreBuildGenericThink( void )
 	}
 	else
 	{
-		// Player is already in the process of building something so cancel the build
-		// if they try to build what they're already building otherwise just show a message
+		// Player is already in the process of building something so cancel the build if
+		// they're trying to build what they're already building otherwise just show a message
 		// saying they can't build while building
 
 		if( m_iCurBuild == m_iWantBuild )
 		{
-			DevMsg( "[Building] You're currently building this item so cancel the build OR you're in the air trying to build.\n" );
+			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
 
 			// Cancel the build
 			switch( m_iCurBuild )
@@ -2460,7 +2508,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		}
 		else
 		{
-			DevMsg( "[Building] You're currently building another item - can't build two things at the same time!\n" );
+			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
 		}
 	}
 
@@ -2472,398 +2520,6 @@ void CFFPlayer::PreBuildGenericThink( void )
 		if( m_pBuildLastWeapon )
 			m_pBuildLastWeapon->Deploy();
 	}
-
-
-
-	/*
-	bool bDeployHack = false;
-
-	// See if we are in a build process already and take corrective action
-	if( m_bBuilding )
-	{
-		// TODO: Stop current build and cleanup if they are trying to
-		// build the same object again
-		// TODO: Otherwise, show error message
-
-		DevMsg( "[Buildable Object] Trying to build while building - Take action (cancel current build or error message)!\n" );
-
-		if( m_iCurBuild == m_iWantBuild )
-		{
-			// Cancel current build
-
-			// Tells people we cancelled building (mainly used for telling
-			// the client)
-			m_bCancelledBuild = true;
-			
-			// NOTE: just noting this code - set a time to think in the past and
-			// it looks like it effectively cancels calling the think function
-			SetNextThink( -1.0f );
-			// DevMsg( "Cancelling build and trying to cancel think\n" );
-
-			// Cancels the current build
-			switch( m_iCurBuild )
-			{
-				case FF_BUILD_DISPENSER:
-				{
-					if( m_hDispenser.Get() )
-						( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
-				}
-				break;
-
-				case FF_BUILD_SENTRYGUN:
-				{
-					if( m_hSentryGun.Get() )
-						( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
-				}
-				break;
-
-				case FF_BUILD_DETPACK: 
-				{
-					if( m_hDetpack.Get() )
-					{
-						// Don't do this here as we take away ammo only
-						// after a build was successful so we don't run
-						// into bugs like bug 0000327
-						//Build_ReturnDetpack( this );
-
-						( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
-					}
-				}
-				break;
-			}
-
-			// Unlock player
-			UnlockPlayer();
-
-			// Deploy weapon
-			//if( GetActiveWeapon()->GetLastWeapon() )
-			//	GetActiveWeapon()->GetLastWeapon()->Deploy();
-			m_pBuildLastWeapon->Deploy();
-
-			// Mirv: Cancel build timer
-			CSingleUserRecipientFilter user(this);
-			user.MakeReliable();
-			UserMessageBegin(user, "FF_BuildTimer");
-			WRITE_SHORT(m_iCurBuild);
-			WRITE_FLOAT(0);
-			MessageEnd();
-
-			// Re-initialize
-			m_iCurBuild = FF_BUILD_NONE;
-			m_iWantBuild = FF_BUILD_NONE;
-			m_bBuilding = false;
-
-			// Bug #0000333: Buildable Behavior (non build slot) while building
-			bDeployHack = true;
-		}
-
-		// Because of
-		// Bug #0000333: Buildable Behavior (non build slot) while building
-		//return;
-		// read below
-	}
-
-	// This is associated with
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( bDeployHack )
-	{
-		// Need to set m_bBuilding false before bringing out a new weapon...
-		if( m_pBuildLastWeapon )
-			m_pBuildLastWeapon->Deploy();
-
-		return;
-	}
-
-	// See what the user wants to build and see if they've
-	// already built it. If they have built it possibly
-	// blow it up or give them a message saying they can't
-	// build multiple of the same objects.
-	switch( m_iWantBuild )
-	{
-		case FF_BUILD_DISPENSER:
-		{
-			if( m_hDispenser.Get() )
-			{
-				// TODO: Add nice thing for user to know what went on - right now dispenser
-				// is blown (maybe just display a nice message and have another bind to
-				// blow up dispenser?)
-
-				// TODO: Might want to make a specific "detdispenser" or
-				// "det<object>" if this becomes cumbersome or annoying
-
-				// Blow up dispenser
-				( ( CFFDispenser * )m_hDispenser.Get() )->Detonate();
-				m_hDispenser = NULL;
-
-				m_iWantBuild = FF_BUILD_NONE;
-
-				return;
-			}
-		}
-		break;
-
-		case FF_BUILD_SENTRYGUN:
-		{
-			if( m_hSentryGun.Get() )
-			{
-				// TODO: Do something maybe
-				DevMsg( "[Buildable Object] Trying to build - Can't have multiple sentryguns!\n" );
-
-				//*
-				// TEMPORARY: TODO: Remove this, heh. This is just so
-				// I can build lots of SG's and test junk
-				//( ( CFFSentryGun * )m_hSentryGun.Get( ) )->Detonate( );
-				( ( CFFSentryGun * )m_hSentryGun.Get() )->RemoveQuietly();
-				m_hSentryGun = NULL;
-				//*/
-/*
-				m_iWantBuild = FF_BUILD_NONE;
-
-				return;
-			}
-		}
-		break;
-
-		case FF_BUILD_DETPACK:
-		{
-			if( m_hDetpack.Get() )
-			{
-				// TODO: Tell user they can't build multiple detpacks
-				DevMsg( "[Buildable Object] Trying to build - Can't have multiple detpacks!\n" );
-
-				m_iWantBuild = FF_BUILD_NONE;
-
-				return;
-			}
-		}
-		break;
-	}
-
-	// Make sure player on ground
-	if( !FBitSet( GetFlags(), FL_ONGROUND ) )
-	{
-		// TODO: Give player nice message
-		DevMsg( "[Buildable Object] Trying to build - You gotta be on the ground to build!\n" );
-
-		return;
-	}
-
-	// For detpack, make sure player isn't ducking
-	if( FBitSet( GetFlags(), FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
-	{
-		// TODO: Give player nice message
-		DevMsg( "[Buildable Object] Can't duck and set a detpack!\n" );
-
-		return;
-	}
-
-	// See if the player has the item in inventory or enough
-	// of an item to build it (metal, cells, detpack)
-	switch( m_iWantBuild )
-	{
-		case FF_BUILD_DISPENSER:
-		{
-			if (GetAmmoCount(AMMO_CELLS) < 100)
-				return;
-		}
-		break;
-
-		case FF_BUILD_SENTRYGUN:
-		{
-			if (GetAmmoCount(AMMO_CELLS) < 130)
-				return;
-		}
-		break;
-
-		case FF_BUILD_DETPACK:
-		{
-			if( GetAmmoCount( AMMO_DETPACK ) < 1 )
-			{
-				DevMsg( "[Buildable Object] You don't have a detpack to use!\n" );
-
-				return;
-			}
-		}
-		break;
-	}
-
-	// Now try to build whatever object they want to build
-	m_bBuilding = true;
-	m_iCurBuild = m_iWantBuild;
-	bool bSuccess = false;
-
-	// Set up some stuff for building
-	// Vectors used later for each part
-	Vector vecBuildOrigin, vecForward;
-
-	//
-	// Adapted for use of the new building process - Mirv
-	//
-
-	switch( m_iWantBuild )
-	{
-		case FF_BUILD_DISPENSER:
-		{
-			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_DISP_BUILD_DIST, FF_BUILD_DISP_RAISE_VAL );
-
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
-			{
-				//
-				// BUILD - finally
-				//
-
-				// Create in air w/ proper angles
-				//CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
-
-				// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
-				CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
-
-				// Check to see if we could get memory and actually create the dispenser
-				if( pDispenser )
-				{
-					bSuccess = true;
-
-					// Set custom text
-					pDispenser->SetText( m_szCustomDispenserText );
-
-					// Set network var (also lets player know he built something)
-					m_hDispenser = pDispenser;
-
-					LockPlayerInPlace();
-
-					// TODO: Take away what it cost to build
-
-					// Mirv: Store future ground location + orientation
-					pDispenser->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
-					pDispenser->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
-
-					m_flBuildTime = gpGlobals->curtime + 2.0f;
-				}
-				else
-				{
-					Warning( "[Buildable Object] ERROR: FAILED TO CREATE DISPENSER\n" );
-				}
-			}
-			else
-			{
-				hBuildInfo.GetBuildError();
-			}
-		}
-		break;
-
-		case FF_BUILD_SENTRYGUN:
-		{
-			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL );
-
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
-			{
-				//
-				// BUILD - finally
-				//
-
-				// Create in air w/ proper angles
-				//CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
-
-				// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
-				CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
-
-				// Check to see if we could get memory and actually create the dispenser
-				if( pSentryGun )
-				{
-					bSuccess = true;
-
-					// Set network var (also lets player know he built something)
-					m_hSentryGun = pSentryGun;
-
-					LockPlayerInPlace();
-
-					// TODO: Take away what it cost to build
-
-					// Mirv: Store future ground location + orientation
-					pSentryGun->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
-					pSentryGun->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
-
-
-					m_flBuildTime = gpGlobals->curtime + 5.0f;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
-				}
-				else
-				{
-					Warning( "[Buildable Object] ERROR: FAILED TO CREATE SENTRYGUN\n" );
-				}
-			}
-			else
-			{
-				hBuildInfo.GetBuildError();
-			}
-		}
-		break;
-
-		case FF_BUILD_DETPACK:
-		{
-			CFFBuildableInfo	hBuildInfo( this, m_iWantBuild, FF_BUILD_DET_BUILD_DIST, FF_BUILD_DET_RAISE_VAL );
-
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
-			{
-				//
-				// BUILD - finally
-				//
-
-				// Create in air w/ proper angles
-				CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles(), this );
-				// Check to see if we could get memory and actually create the dispenser
-				if( pDetpack )
-				{
-					bSuccess = true;
-
-					// Set the fuse time
-					pDetpack->m_iFuseTime = m_iDetpackTime;
-
-					// Set network var (also lets player know he built something)
-					m_hDetpack = pDetpack;
-
-					LockPlayerInPlace();
-
-					// Going to do this after the build to fix bug 0000327
-					// Take away what it cost to build
-					//RemoveAmmo( 1, AMMO_DETPACK );
-
-					// Mirv: Store future ground location + orientation
-					pDetpack->SetGroundOrigin(hBuildInfo.GetBuildGroundOrigin());
-					pDetpack->SetGroundAngles(hBuildInfo.GetBuildGroundAngles());
-
-
-					m_flBuildTime = gpGlobals->curtime + 3.0f; // mulch: bug 0000337: build time 3 seconds for detpack
-				}
-				else
-				{
-					Warning( "[Buildable Object] ERROR: FAILED TO CREATE DETPACK\n" );
-				}
-			}
-			else
-			{
-				hBuildInfo.GetBuildError();
-			}
-		}
-		break;
-	}
-
-	// Did not succeed in building (something in way, couldn't allocate memory, etc)
-	if( !bSuccess )
-	{
-		m_bBuilding = false;
-		m_iCurBuild = FF_BUILD_NONE;
-		m_iWantBuild = FF_BUILD_NONE;
-		return;
-	}
-
-	// Mirv: Start build timer
-	CSingleUserRecipientFilter user(this);
-	user.MakeReliable();
-	UserMessageBegin(user, "FF_BuildTimer");
-	WRITE_SHORT(m_iCurBuild);
-	WRITE_FLOAT(m_flBuildTime - gpGlobals->curtime);
-	MessageEnd();
-	*/
 }
 
 void CFFPlayer::PostBuildGenericThink( void )
