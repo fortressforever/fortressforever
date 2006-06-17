@@ -519,12 +519,6 @@ void CFFWeaponBase::WeaponIdle()
 			}
 			else
 			{
-#ifdef GAME_DLL				
-				DevMsg("[S] End Reload\n");
-#else
-				DevMsg("[C] End Reload\n");
-#endif
-
 				// reload debounce has timed out
 				SendWeaponAnim(ACT_SHOTGUN_RELOAD_FINISH);
 				m_fInSpecialReload = 0;
