@@ -121,6 +121,9 @@ public:
 	static int SetPlayerNoBuild( lua_State* );
 	static int RemovePlayerNoBuild( lua_State* );
 	static int IsPlayerInNoBuild( lua_State* );
+	static int IsPlayerUnderWater( lua_State* );
+	static int IsPlayerWaistDeepInWater( lua_State* );
+	static int IsPlayerFeetDeepInWater( lua_State* );
 
 };
 

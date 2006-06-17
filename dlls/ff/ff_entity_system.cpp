@@ -269,6 +269,9 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "SetPlayerNoBuild", SetPlayerNoBuild );
 	lua_register( L, "RemovePlayerNoBuild", RemovePlayerNoBuild );
 	lua_register( L, "IsPlayerInNoBuild", IsPlayerInNoBuild );
+	lua_register( L, "IsPlayerUnderWater", IsPlayerUnderWater );
+	lua_register( L, "IsPlayerWaistDeepInWater", IsPlayerWaistDeepInWater );
+	lua_register( L, "IsPlayerFeetDeepInWater", IsPlayerFeetDeepInWater );
 }
 
 //----------------------------------------------------------------------------
@@ -1868,6 +1871,93 @@ int CFFEntitySystem::IsPlayerInNoBuild( lua_State *L )
 		if( pEntity && pEntity->IsPlayer() )
 		{			
 			bRetVal = ToFFPlayer( pEntity )->IsInNoBuild();
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is completely under water
+//			int IsPlayerUnderWater( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsPlayerUnderWater( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( iEntIndex );
+		if( pPlayer && pPlayer->IsPlayer() )
+		{
+			bRetVal = ToFFPlayer( pPlayer )->GetWaterLevel() == WL_Eyes;
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is waist deep in water
+//			int IsPlayerWaistDeepInWater( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsPlayerWaistDeepInWater( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( iEntIndex );
+		if( pPlayer && pPlayer->IsPlayer() )
+		{
+			bRetVal = ToFFPlayer( pPlayer )->GetWaterLevel() == WL_Waist;
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is feet deep in water
+//			int IsPlayerFeetDeepInWater( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsPlayerFeetDeepInWater( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( iEntIndex );
+		if( pPlayer && pPlayer->IsPlayer() )
+		{
+			bRetVal = ToFFPlayer( pPlayer )->GetWaterLevel() == WL_Feet;
 		}
 
 		lua_pushboolean( L, bRetVal );
