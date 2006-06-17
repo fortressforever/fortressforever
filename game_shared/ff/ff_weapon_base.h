@@ -169,6 +169,9 @@ private:
 	// click of mouse to kill the build.)
 	float m_flNextBuildKill;
 
+	// We need to cock some guns
+	bool m_bNeedsCock;
+
 	// Jerky anim fix
 #ifdef CLIENT_DLL
 	virtual bool	ShouldPredict();

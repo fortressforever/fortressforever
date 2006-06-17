@@ -151,6 +151,7 @@ CFFWeaponBase::CFFWeaponBase()
 
 	// All FF weapons fire underwater
 	m_bFiresUnderwater = true; 
+	m_bNeedsCock = false;
 
 	AddSolidFlags(FSOLID_TRIGGER); // Nothing collides with these but it gets touches.
 
@@ -419,7 +420,7 @@ bool CFFWeaponBase::Reload()
 	// don't reload until recoil is done
 	if (m_flNextPrimaryAttack > gpGlobals->curtime) 
 		return true;
-		
+
 	// check to see if we're ready to reload
 	if (m_fInSpecialReload == 0) 
 	{
@@ -476,6 +477,9 @@ bool CFFWeaponBase::Reload()
 
 		// go back to the previous stage of the sequence so it triggers this again
 		m_fInSpecialReload = 1;
+
+		// need to cock the gun eventually
+		m_bNeedsCock = true;
 	}
 
 	return true;
@@ -515,11 +519,15 @@ void CFFWeaponBase::WeaponIdle()
 			}
 			else
 			{
+#ifdef GAME_DLL				
+				DevMsg("[S] End Reload\n");
+#else
+				DevMsg("[C] End Reload\n");
+#endif
+
 				// reload debounce has timed out
 				SendWeaponAnim(ACT_SHOTGUN_RELOAD_FINISH);
 				m_fInSpecialReload = 0;
-
-				WeaponSound(COCK);
 
 				SetWeaponIdleTime(gpGlobals->curtime + 1.5);
 			}
@@ -529,6 +537,12 @@ void CFFWeaponBase::WeaponIdle()
 			// Sets idle time automatically
 			SendWeaponAnim(ACT_VM_IDLE);
 		}
+	}
+
+	if (m_bNeedsCock && m_fInSpecialReload == 0)
+	{
+		WeaponSound(COCK);
+		m_bNeedsCock = false;
 	}
 }
 
