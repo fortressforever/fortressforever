@@ -52,6 +52,7 @@ inline bool FF_ParsePercentCommand( edict_t *pEdict, char cCommand, char *pszTex
 	// %a = armor
 	// %c = class
 	// %l = location
+	// %i = if you add this do it clientside to use the hud_crosshairinfo stuff so it's consistant
 
 	CFFPlayer *pPlayer = ToFFPlayer( ( ( CBasePlayer * )CBaseEntity::Instance( pEdict ) ) );
 	if( !pPlayer )

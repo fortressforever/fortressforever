@@ -216,24 +216,27 @@ void CFFBuildableInfo::GetBuildError()
 
 	if (m_BuildResult == BUILD_ALLOWED) 
 	{
-		DevMsg("[Buildable Object] Build was a success!\n");
+		//DevMsg("[Buildable Object] Build was a success!\n");
 	}
 	else
 	{
 		char szError[512];
-		Q_strcpy(szError, "[Buildable Object] ");
+		Q_strcpy(szError, "#FF_BUILDERROR_");
 
 		switch (m_BuildResult) 
 		{
-			case BUILD_NOPLAYER: Q_strcat(szError, "Player pointer was NULL!"); break;
-			case BUILD_NOROOM: Q_strcat(szError, "World geometry in the way!"); break;
-			case BUILD_TOOSTEEP: Q_strcat(szError, "Ground is too steep!"); break;
-			case BUILD_TOOFAR: Q_strcat(szError, "Ground is too far below us!"); break;
+			case BUILD_NOPLAYER: Q_strcat(szError, "NOPLAYER"); break;
+			case BUILD_NOROOM: Q_strcat(szError, "WORLDBLOCK"); break;
+			case BUILD_TOOSTEEP: Q_strcat(szError, "GROUNDSTEEP"); break;
+			case BUILD_TOOFAR: Q_strcat(szError, "GROUNDDISTANCE"); break;
 
-			default: Q_strcat(szError, "Generic error!"); break;
+			default: Q_strcat(szError, "GENERIC"); break;
 		}
 
-		Warning("%s\n", szError);
+		//Warning("%s\n", szError);
+#ifdef GAME_DLL
+		ClientPrint( m_pPlayer, HUD_PRINTCENTER, szError );
+#endif
 	}
 }
 
