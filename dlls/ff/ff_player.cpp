@@ -1878,7 +1878,6 @@ void CFFPlayer::KillPlayer( void )
 	}
 	else
 	{
-		Warning( "[CFFPlayer] KillPlayer :: Going to player death think\n" );
 		SetThink(&CBasePlayer::PlayerDeathThink);
 		SetNextThink(gpGlobals->curtime);
 	}

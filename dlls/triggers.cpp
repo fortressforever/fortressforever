@@ -315,7 +315,7 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 		m_hTouchingEntities.AddToTail( hOther );
 
 		// Test if the entity system (lua) allows this trigger to happen
-		if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
+		if( /*pOther->IsPlayer() &&*/ !entsys.RunPredicates( this, pOther, "allowed" ) )
 		{
 			entsys.RunPredicates( this, pOther, "onfailtouch" );
 			return;
@@ -324,7 +324,7 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 		m_OnStartTouch.FireOutput(pOther, this);
 
 		// Fire the lua output
-		if( pOther->IsPlayer() )
+		/*if( pOther->IsPlayer() )*/
 			entsys.RunPredicates( this, pOther, "ontouch" );
 	}
 }
@@ -343,7 +343,7 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		m_hTouchingEntities.FindAndRemove( hOther );
 
 		// Test if the entity system (lua) allows this trigger to happen
-		if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
+		if( /*pOther->IsPlayer() &&*/ !entsys.RunPredicates( this, pOther, "allowed" ) )
 			return;
 
 		//FIXME: Without this, triggers fire their EndTouch outputs when they are disabled!
@@ -353,7 +353,7 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		//}
 
 		// Fire the lua output
-		if( pOther->IsPlayer() )
+		/*if( pOther->IsPlayer() )*/
 			entsys.RunPredicates( this, pOther, "onendtouch" );
 
 		// If there are no more entities touching this trigger, fire the lost all touches
@@ -817,10 +817,10 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 
 	m_hActivator = pActivator;
 
-	if( pActivator->IsPlayer() && !entsys.RunPredicates( this, pActivator, "allowed" ) )
+	if( /*pActivator->IsPlayer() &&*/ !entsys.RunPredicates( this, pActivator, "allowed" ) )
 		return;
 
-	if( pActivator->IsPlayer() )
+	/*if( pActivator->IsPlayer() )*/
 		entsys.RunPredicates( this, pActivator, "ontrigger" );
 
 	m_OnTrigger.FireOutput(m_hActivator, this);
@@ -4058,7 +4058,7 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 		return false;
 
 	// Test if the entity system (lua) allows this trigger to happen
-	if( pOther->IsPlayer() && !entsys.RunPredicates( this, pOther, "allowed" ) )
+	if( /*pOther->IsPlayer() &&*/ !entsys.RunPredicates( this, pOther, "allowed" ) )
 		return false;
 
 	// First test spawn flag filters
