@@ -133,4 +133,6 @@ public:
 
 };
 
+bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction );
+
 extern CFFEntitySystem entsys;
