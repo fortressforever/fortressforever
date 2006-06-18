@@ -43,8 +43,6 @@ public:
 
 	static CFFProjectileNail *CreateNail(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
 
-	virtual bool CanClipOwnerEntity() const { return true; }
-
 #ifdef CLIENT_DLL
 	CFFProjectileNail() {}
 	CFFProjectileNail(const CFFProjectileNail&) {}
