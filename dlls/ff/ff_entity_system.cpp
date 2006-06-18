@@ -277,6 +277,8 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "RemoveGrenNoGren", RemoveGrenNoGren );
 	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );
 	lua_register( L, "IsGrenade", IsGrenade );
+	lua_register( L, "IsObjectsOriginInWater", IsObjectsOriginInWater );
+	lua_register( L, "IsObjectsOriginInSlime", IsObjectsOriginInSlime );
 }
 
 //----------------------------------------------------------------------------
@@ -2098,9 +2100,58 @@ int CFFEntitySystem::IsGrenade( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: See if an entity is a dispenser
-//			int IsDispenser( ent_id )
+// Purpose: See if an entity's origin is in water
+//			int IsObjectsOriginInWater( ent_id )
 //----------------------------------------------------------------------------
+int CFFEntitySystem::IsObjectsOriginInWater( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( UTIL_PointContents( pEntity->GetAbsOrigin() ) & CONTENTS_WATER ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity's origin is in slime
+//			int IsObjectsOriginInSlime( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsObjectsOriginInSlime( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( UTIL_PointContents( pEntity->GetAbsOrigin() ) & CONTENTS_SLIME ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Sets the limit for a particular class on a team
