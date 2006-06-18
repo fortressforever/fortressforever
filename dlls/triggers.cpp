@@ -325,7 +325,23 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 
 		// Fire the lua output
 		/*if( pOther->IsPlayer() )*/
-			entsys.RunPredicates( this, pOther, "ontouch" );
+		entsys.RunPredicates( this, pOther, "ontouch" );
+
+		// Add this trigger to m_hActiveScripts
+		int iEntIndex = entindex();
+		if( iEntIndex )
+		{
+			// Don't want dups
+			bool bFound = false;
+			for( int i = 0; ( i < m_hActiveScripts.Count() ) && !bFound; i++ )
+				if( m_hActiveScripts[ i ] == iEntIndex )
+					bFound = true;
+
+			if( !bFound )
+			{
+				m_hActiveScripts.AddToTail( iEntIndex );
+			}
+		}
 	}
 }
 
@@ -354,7 +370,16 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 
 		// Fire the lua output
 		/*if( pOther->IsPlayer() )*/
-			entsys.RunPredicates( this, pOther, "onendtouch" );
+		entsys.RunPredicates( this, pOther, "onendtouch" );
+
+		// Remove this trigger from m_hActiveScripts
+		int iEntIndex = entindex();
+		if( iEntIndex )
+		{
+			for( int i = 0; i < m_hActiveScripts.Count(); i++ )
+				if( m_hActiveScripts[ i ] == iEntIndex )
+					m_hActiveScripts.Remove( i );
+		}
 
 		// If there are no more entities touching this trigger, fire the lost all touches
 		// Loop through the touching entities backwards. Clean out old ones, and look for existing
