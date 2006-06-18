@@ -33,6 +33,7 @@
 #include "ff_utils.h"
 #include "ff_team.h"
 #include "ff_gamerules.h"
+#include "ff_grenade_base.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -272,6 +273,10 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IsPlayerUnderWater", IsPlayerUnderWater );
 	lua_register( L, "IsPlayerWaistDeepInWater", IsPlayerWaistDeepInWater );
 	lua_register( L, "IsPlayerFeetDeepInWater", IsPlayerFeetDeepInWater );
+	lua_register( L, "SetGrenNoGren", SetGrenNoGren );
+	lua_register( L, "RemoveGrenNoGren", RemoveGrenNoGren );
+	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );
+	lua_register( L, "IsGrenade", IsGrenade );
 }
 
 //----------------------------------------------------------------------------
@@ -1969,6 +1974,130 @@ int CFFEntitySystem::IsPlayerFeetDeepInWater( lua_State *L )
 	// No results
 	return 0;
 }
+
+//----------------------------------------------------------------------------
+// Purpose: Set a grenade in a no renade area
+//			int SetGrenNoGren( ent_id, entid )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetGrenNoGren( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 2 )
+	{
+		bool bRetVal = false;
+		int iGrenIndex = lua_tonumber( L, 1 );
+		int iEntIndex = lua_tonumber( L, 2 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
+		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+		{
+			( ( CFFGrenadeBase * )pEntity )->SetNoGren( iEntIndex );
+			bRetVal = true;
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Remove grenade from a no grenade area
+//			int RemoveGrenNoGren( ent_id, entid )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 2 )
+	{
+		bool bRetVal = false;
+		int iGrenIndex = lua_tonumber( L, 1 );
+		int iEntIndex = lua_tonumber( L, 2 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
+		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+		{
+			( ( CFFGrenadeBase * )pEntity )->RemoveNoGren( iEntIndex );
+			bRetVal = true;
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Is a grenade in a no grenade area
+//			int IsGrenInNoGren( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iGrenIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
+		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+		{
+			bRetVal = ( ( CFFGrenadeBase * )pEntity )->IsInNoGren();
+		}
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity is a grenade
+//			int IsGrenade( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsGrenade( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iGrenIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
+		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an entity is a dispenser
+//			int IsDispenser( ent_id )
+//----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 // Purpose: Sets the limit for a particular class on a team

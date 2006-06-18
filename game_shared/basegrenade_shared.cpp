@@ -10,6 +10,7 @@
 #include "shake.h"
 #include "engine/IEngineSound.h"
 #include "ff_gamerules.h"
+#include "ff_grenade_base.h"
 
 #if !defined( CLIENT_DLL )
 
@@ -25,6 +26,9 @@ extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index fo
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 extern ConVar    sk_plr_dmg_grenade;
+
+// Forward declare
+class CFFGrenadeBase;
 
 #if !defined( CLIENT_DLL )
 
@@ -265,10 +269,13 @@ void CBaseGrenade::Detonate( void )
 
 	Explode( &tr, DMG_BLAST );
 
-	if ( GetShakeAmplitude() )
+	// No shake if in a no gren area
+#ifdef GAME_DLL
+	if ( GetShakeAmplitude() && !( ( CFFGrenadeBase * )this )->IsInNoGren() )
 	{
 		UTIL_ScreenShake( GetAbsOrigin(), GetShakeAmplitude(), 150.0, 1.0, GetShakeRadius(), SHAKE_START );
 	}
+#endif
 }
 
 

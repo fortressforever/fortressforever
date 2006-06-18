@@ -124,6 +124,10 @@ public:
 	static int IsPlayerUnderWater( lua_State* );
 	static int IsPlayerWaistDeepInWater( lua_State* );
 	static int IsPlayerFeetDeepInWater( lua_State* );
+	static int SetGrenNoGren( lua_State* );
+	static int RemoveGrenNoGren( lua_State* );
+	static int IsGrenInNoGren( lua_State* );
+	static int IsGrenade( lua_State* );
 
 };
 

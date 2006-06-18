@@ -81,10 +81,17 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 	}
 	void CFFGrenadeNapalm::Explode( trace_t *pTrace, int bitsDamageType )
 	{
-		// Bug #0000370: napalm explosion not playing
-		EmitSound("Napalm.Explode");
+		
 //		DevMsg("[Grenade Debug] CFFGrenadeNapalm::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NAPALM_EFFECT );
+		
+		// If the grenade is not in a no gren area
+		if( !IsInNoGren() )
+		{
+			// Bug #0000370: napalm explosion not playing
+			EmitSound("Napalm.Explode");
+		}
+
 		CFFGrenadeBase::PostExplode(); 
 	}
 
@@ -103,16 +110,20 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 //			DevMsg("[Grenade Debug] CFFGrenadeNapalm:: Detonate stuffs\n");
 			//napalm grenade explodes and spews "napalm" over an area, then starts some fires
 			Detonate();
-			// Reset the detonation time
-			SetDetonateTimerLength( nap_flame_time.GetFloat() );
 
-			// Should this maybe be noclip?
-			SetMoveType( MOVETYPE_NONE );
+			if( !IsInNoGren() )
+			{
+				// Reset the detonation time
+				SetDetonateTimerLength( nap_flame_time.GetFloat() );
 
-			//start burning napalm
-			m_flLastBurnCheck = 0;
-			SetThink( &CFFGrenadeNapalm::FlameThink );		// |-- Mirv: Account for GCC strictness
-			SetNextThink( gpGlobals->curtime );
+				// Should this maybe be noclip?
+				SetMoveType( MOVETYPE_NONE );
+
+				//start burning napalm
+				m_flLastBurnCheck = 0;
+				SetThink( &CFFGrenadeNapalm::FlameThink );		// |-- Mirv: Account for GCC strictness
+				SetNextThink( gpGlobals->curtime );
+			}
 
 			return;
 		}
