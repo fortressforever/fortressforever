@@ -368,6 +368,8 @@ class CBaseEntity : public IServerEntity
 public:
 	DECLARE_CLASS_NOBASE( CBaseEntity );	
 
+	CUtlVector< int > m_hActiveScripts;
+
 	//----------------------------------------
 	// Class vars and functions
 	//----------------------------------------
