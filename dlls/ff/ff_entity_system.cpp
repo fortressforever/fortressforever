@@ -2367,14 +2367,21 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
+	Warning( "[FFScriptRunPredicates] Object: %x, Function: %s, Expected: %s\n", pObject, pszFunction, ( bExpectedVal ? "true" : "false" ) );
 	if( pObject && pszFunction )
-	{		
+	{
+		Warning( "[FFSriptRunPredicates] \tShit was good!\n" );
+
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
 		{
+			Warning( "[FFScriptRunPredicates] \tlooping: %i\n", i );
+
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
-				if( ( bool )( entsys.RunPredicates( pEntity, pObject, pszFunction ) ) != bExpectedVal )
+				Warning( "[FFScriptRunPredicates] \tGot an entity\n" );
+
+				if( entsys.RunPredicates( pEntity, pObject, pszFunction ) && !bExpectedVal )
 					return !bExpectedVal;
 			}
 		}
