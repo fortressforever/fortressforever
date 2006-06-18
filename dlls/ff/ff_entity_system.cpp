@@ -2360,11 +2360,8 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	return retVal;
 }
 
-bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction )
+bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
-	// Write your lua pszFunction in such a way that
-	// the default return value will always be true
-
 	if( pObject && pszFunction )
 	{		
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
@@ -2372,11 +2369,11 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction )
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
-				if( !entsys.RunPredicates( pEntity, pObject, pszFunction ) )
-					return false;
+				if( ( bool )( entsys.RunPredicates( pEntity, pObject, pszFunction ) ) != bExpectedVal )
+					return !bExpectedVal;
 			}
 		}
 	}
 
-	return true;
+	return bExpectedVal;
 }
