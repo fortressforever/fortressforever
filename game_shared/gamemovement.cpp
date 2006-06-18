@@ -48,7 +48,7 @@ extern IFileSystem *filesystem;
 
 
 // [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
-bool g_bMovementOptimizations = false;	// |-- Mirv: Changed to false, but not sure if necessary
+bool g_bMovementOptimizations = true;	// |-- Mirv: Changed to false, but not sure if necessary (voogru: changed back to true, uh, yeah, it's necessary otherwise movement is choppy and sucky.)
 
 // Roughly how often we want to update the info about the ground surface we're on.
 // We don't need to do this very often.
