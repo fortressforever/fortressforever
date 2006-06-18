@@ -3353,6 +3353,8 @@ void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
 
 			// Make the grenade
 			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szPrimaryClassName );
+			// Set the grenades team (for use later)
+			pGrenade->ChangeTeam( GetTeamNumber() );
 			break;
 
 		case FF_GREN_PRIMETWO:
@@ -3363,6 +3365,8 @@ void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
 
 			// Make the grenade
 			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szSecondaryClassName );
+			// Set the grenades team (for use later)
+			pGrenade->ChangeTeam( GetTeamNumber() );
 			break;
 	}
 

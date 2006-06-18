@@ -1730,7 +1730,7 @@ int CFFEntitySystem::IsSentrygun( lua_State *L )
 
 //----------------------------------------------------------------------------
 // Purpose: Get an objects team, will work for:
-//				Dispenser, Sentrygun, MiniTurret, Player
+//				Dispenser, Sentrygun, MiniTurret, Player, Grenades
 //			int GetObjectsTeam( ent_id )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::GetObjectsTeam( lua_State *L )
@@ -1747,7 +1747,10 @@ int CFFEntitySystem::GetObjectsTeam( lua_State *L )
 			if( ( pEntity->IsPlayer() ) ||
 				( pEntity->Classify() == CLASS_DISPENSER ) ||
 				( pEntity->Classify() == CLASS_SENTRYGUN ) ||
-				( pEntity->Classify() == CLASS_TURRET ) )
+				( pEntity->Classify() == CLASS_TURRET ) ||
+				( pEntity->Classify() == CLASS_GREN ) ||
+				( pEntity->Classify() == CLASS_GREN_EMP ) ||
+				( pEntity->Classify() == CLASS_GREN_NAIL ) )
 			{
 				lua_pushnumber( L, pEntity->GetTeamNumber() );
 			}
