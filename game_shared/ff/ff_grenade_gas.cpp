@@ -25,6 +25,7 @@
 	#include "c_te_effect_dispatch.h"
 #else
 	#include "te_effect_dispatch.h"
+	#include "ff_entity_system.h"
 #endif
 
 class CFFGrenadeGas : public CFFGrenadeBase
@@ -80,7 +81,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 	void CFFGrenadeGas::GrenadeThink()
 	{
 		// If the grenade is in a no grenade area, kill it
-		if( IsInNoGren() && ( gpGlobals->curtime > m_flDetonateTime ) )
+		if( !FFScriptRunPredicates( this, "canexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
 		{
 			// This will remove the gren
 			CFFGrenadeBase::PostExplode();

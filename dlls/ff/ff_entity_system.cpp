@@ -1988,6 +1988,7 @@ int CFFEntitySystem::SetGrenNoGren( lua_State *L )
 {
 	int n = lua_gettop( L );
 
+	/*
 	if( n == 2 )
 	{
 		bool bRetVal = false;
@@ -2006,6 +2007,7 @@ int CFFEntitySystem::SetGrenNoGren( lua_State *L )
 		// 1 result
 		return 1;
 	}
+	*/
 
 	// No results
 	return 0;
@@ -2019,6 +2021,7 @@ int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
 {
 	int n = lua_gettop( L );
 
+	/*
 	if( n == 2 )
 	{
 		bool bRetVal = false;
@@ -2037,6 +2040,7 @@ int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
 		// 1 result
 		return 1;
 	}
+	*/
 
 	// No results
 	return 0;
@@ -2050,6 +2054,7 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 {
 	int n = lua_gettop( L );
 
+	/*
 	if( n == 1 )
 	{
 		bool bRetVal = false;
@@ -2066,11 +2071,11 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 		// 1 result
 		return 1;
 	}
+	*/
 
 	// No results
 	return 0;
 }
-
 
 //----------------------------------------------------------------------------
 // Purpose: See if an entity is a grenade

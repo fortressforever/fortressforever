@@ -32,6 +32,7 @@
 	#include "te_effect_dispatch.h"
 	#include "ff_player.h"
 	#include "ff_utils.h"
+	#include "ff_entity_system.h"
 #else
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
@@ -99,39 +100,7 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 
 		SetThink(&CFFGrenadeBase::GrenadeThink);
 		SetNextThink(gpGlobals->curtime);
-	}
-
-	//----------------------------------------------------------------------------
-	// Purpose: Set a grenade in a no grenade area
-	//----------------------------------------------------------------------------
-	void CFFGrenadeBase::SetNoGren( int iEntIndex )
-	{
-		if( iEntIndex )
-		{
-			bool bFound = false;
-			for( int i = 0; ( i < m_NoGrens.Count() ) && !bFound; i++ )
-				if( m_NoGrens[ i ] == iEntIndex )
-					bFound = true;
-
-			if( !bFound )
-			{
-				m_NoGrens.AddToTail( iEntIndex );
-			}
-		}
-	}
-
-	//----------------------------------------------------------------------------
-	// Purpose: Remove a grenade from a no grenade area
-	//----------------------------------------------------------------------------
-	void CFFGrenadeBase::RemoveNoGren( int iEntIndex )
-	{
-		if( iEntIndex )
-		{
-			for( int i = 0; i < m_NoGrens.Count(); i++ )
-				if( m_NoGrens[ i ] == iEntIndex )
-					m_NoGrens.Remove( i );
-		}
-	}
+	}	
 
 	void CFFGrenadeBase::SetDetonateTimerLength(float timer)
 	{
@@ -156,7 +125,7 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 			SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
 
 		// Bail here if in a no gren area
-		if( IsInNoGren() )
+		if( !FFScriptRunPredicates( this, "canexplode", true ) )
 			return;
 
 		if (pSound)
@@ -367,7 +336,7 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 	if( pTrace->fraction != 1.0 )
 		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 0.6 ) );
 
-	if( !IsInNoGren() )
+	if( FFScriptRunPredicates( this, "canexplode", true ) )
 	{
 		Vector vecAbsOrigin = GetAbsOrigin();
 		int contents = UTIL_PointContents( vecAbsOrigin );
