@@ -90,6 +90,14 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
+			// Don't start spinning up if in a no gren area
+			if( IsInNoGren() )
+			{
+				// This will remove us
+				CFFGrenadeBase::PostExplode();
+				return;
+			}
+
 			DevMsg("[Grenade Debug] CFFGrenadeNail::GrenadeThink\n[Grenade Debug] Changing to nail mode\n");
 
 			// Reset the detonation time

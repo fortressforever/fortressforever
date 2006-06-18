@@ -87,50 +87,55 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 		DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NULL );
 
-		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
-		DevMsg("[Grenade Debug] pOwner: 0x0%X\n",pOwner);
-
-		// TODO: drop caltrops ala TFC
-		DevMsg("[Grenade Debug] Dropping caltrops\n");
-		for ( int i = 0; i < 6; i++ )
+		// If the grenade is in a no gren area don't deploy caltrops
+		if( !IsInNoGren() )
 		{
-			Vector vOrigin = GetAbsOrigin();
-			QAngle angSpawn;
 
-			angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
-			angSpawn.y = RandomFloat(caltrop_ang_y_min.GetFloat(),caltrop_ang_y_max.GetFloat());
-			angSpawn.z = RandomFloat(caltrop_ang_z_min.GetFloat(),caltrop_ang_z_max.GetFloat());//0.0f;
+			CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+			DevMsg("[Grenade Debug] pOwner: 0x0%X\n",pOwner);
 
-			Vector vecVelocity;
-			AngleVectors(angSpawn,&vecVelocity);
-			vecVelocity *= RandomFloat(caltrop_vel_min.GetFloat(),caltrop_vel_max.GetFloat());
+			// TODO: drop caltrops ala TFC
+			DevMsg("[Grenade Debug] Dropping caltrops\n");
+			for ( int i = 0; i < 6; i++ )
+			{
+				Vector vOrigin = GetAbsOrigin();
+				QAngle angSpawn;
 
-			// So they don't begin moving down, I guess
-			if (vecVelocity.z < 0)
-				vecVelocity.z *= -1;
+				angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
+				angSpawn.y = RandomFloat(caltrop_ang_y_min.GetFloat(),caltrop_ang_y_max.GetFloat());
+				angSpawn.z = RandomFloat(caltrop_ang_z_min.GetFloat(),caltrop_ang_z_max.GetFloat());//0.0f;
 
-			CFFCaltrop *pCaltrop= (CFFCaltrop *)CreateEntityByName( "caltrop" );
+				Vector vecVelocity;
+				AngleVectors(angSpawn,&vecVelocity);
+				vecVelocity *= RandomFloat(caltrop_vel_min.GetFloat(),caltrop_vel_max.GetFloat());
 
-			// shift them a little so they don't stick on each other
-			vOrigin += vecVelocity*.1;
+				// So they don't begin moving down, I guess
+				if (vecVelocity.z < 0)
+					vecVelocity.z *= -1;
 
-			QAngle angRotate;
-			angRotate.x = RandomFloat(-360.0f, 360.0f);
-			angRotate.y = RandomFloat(-360.0f, 360.0f);
-			angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
+				CFFCaltrop *pCaltrop= (CFFCaltrop *)CreateEntityByName( "caltrop" );
 
-			UTIL_SetOrigin( pCaltrop, vOrigin );
-			pCaltrop->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
-			pCaltrop->SetLocalAngularVelocity(angRotate);
-			pCaltrop->Spawn();
-			pCaltrop->SetOwnerEntity( pOwner );
+				// shift them a little so they don't stick on each other
+				vOrigin += vecVelocity*.1;
 
-			// Set the speed and the initial transmitted velocity
-			pCaltrop->SetAbsVelocity( vecVelocity );
-			pCaltrop->SetElasticity( GetGrenadeElasticity() );
-			pCaltrop->ChangeTeam( pOwner->GetTeamNumber() );
-			pCaltrop->SetGravity( GetGrenadeGravity() + 0.2f );
-			pCaltrop->SetFriction( GetGrenadeFriction() );
+				QAngle angRotate;
+				angRotate.x = RandomFloat(-360.0f, 360.0f);
+				angRotate.y = RandomFloat(-360.0f, 360.0f);
+				angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
+
+				UTIL_SetOrigin( pCaltrop, vOrigin );
+				pCaltrop->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
+				pCaltrop->SetLocalAngularVelocity(angRotate);
+				pCaltrop->Spawn();
+				pCaltrop->SetOwnerEntity( pOwner );
+
+				// Set the speed and the initial transmitted velocity
+				pCaltrop->SetAbsVelocity( vecVelocity );
+				pCaltrop->SetElasticity( GetGrenadeElasticity() );
+				pCaltrop->ChangeTeam( pOwner->GetTeamNumber() );
+				pCaltrop->SetGravity( GetGrenadeGravity() + 0.2f );
+				pCaltrop->SetFriction( GetGrenadeFriction() );
+			}
 		}
 
 		CFFGrenadeBase::PostExplode();

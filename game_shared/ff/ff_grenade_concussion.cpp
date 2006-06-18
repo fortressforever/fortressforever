@@ -149,75 +149,79 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		//CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
 		CFFGrenadeBase::PreExplode( pTrace, NULL, CONCBITS_EFFECT );
 
-		// --> Mirv: Rewritten
-		Vector vecDisplacement, vecForce;
-
-		CBaseEntity *pEntity = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		// If the grenade is in a no gren area don't deploy caltrops
+		if( !IsInNoGren() )
 		{
-			if( !pEntity )
-				continue;
+			// --> Mirv: Rewritten
+			Vector vecDisplacement, vecForce;
 
-			if( !pEntity->IsPlayer() )
-				continue;
-
-			CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-
-			if( !pPlayer->IsAlive() )
-				continue;
-
-			// I don't like this macro
-		//BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
-			//if (pPlayer)
-			//{
-			vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
-
-			// The conc effect is calculated differently if its handheld
-			// These values are from TFC
-			if (m_fIsHandheld)
+			CBaseEntity *pEntity = NULL;
+			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 			{
-				VectorNormalize(vecDisplacement);
-				Vector pvel = pPlayer->GetAbsVelocity();
+				if( !pEntity )
+					continue;
 
+				if( !pEntity->IsPlayer() )
+					continue;
+
+				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+
+				if( !pPlayer->IsAlive() )
+					continue;
+
+				// I don't like this macro
+			//BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
+				//if (pPlayer)
+				//{
+				vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+
+				// The conc effect is calculated differently if its handheld
 				// These values are from TFC
-				pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.12));
+				if (m_fIsHandheld)
+				{
+					VectorNormalize(vecDisplacement);
+					Vector pvel = pPlayer->GetAbsVelocity();
+
+					// These values are from TFC
+					pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.12));
+				}
+				else
+				{
+					float length = vecDisplacement.Length();
+					float multiplier = -0.0247f * length + 11.059f;
+
+					DevMsg("%.2f %.2f\n", length, multiplier);
+
+					vecDisplacement *= multiplier;
+					vecDisplacement.z *= 1.5f;
+
+					pPlayer->SetAbsVelocity(vecDisplacement);
+				}
+
+				// send the concussion icon to be displayed
+				CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
+				user.MakeReliable();
+
+				UserMessageBegin(user, "StatusIconUpdate");
+					WRITE_BYTE(FF_ICON_CONCUSSION);
+					WRITE_FLOAT(pPlayer->GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f);
+				MessageEnd();
+
+				VectorNormalize(vecDisplacement);
+					
+				QAngle angDirection;
+				VectorAngles(vecDisplacement, angDirection);
+
+				// only concuss if teamplay rules says the player could be damaged
+				if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+				{
+					pPlayer->Concuss((pPlayer->GetClassSlot() == 5 ? 7.5f : 15.0f), (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
+				}
 			}
-			else
-			{
-				float length = vecDisplacement.Length();
-				float multiplier = -0.0247f * length + 11.059f;
-
-				DevMsg("%.2f %.2f\n", length, multiplier);
-
-				vecDisplacement *= multiplier;
-				vecDisplacement.z *= 1.5f;
-
-				pPlayer->SetAbsVelocity(vecDisplacement);
-			}
-
-			// send the concussion icon to be displayed
-			CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
-			user.MakeReliable();
-
-			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE(FF_ICON_CONCUSSION);
-				WRITE_FLOAT(pPlayer->GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f);
-			MessageEnd();
-
-			VectorNormalize(vecDisplacement);
-				
-			QAngle angDirection;
-			VectorAngles(vecDisplacement, angDirection);
-
-			// only concuss if teamplay rules says the player could be damaged
-			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
-			{
-				pPlayer->Concuss((pPlayer->GetClassSlot() == 5 ? 7.5f : 15.0f), (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
-			}
+			// I don't like this macro
+			//END_ENTITY_SPHERE_QUERY();
+			// <-- Mirv: Rewritten
 		}
-		// I don't like this macro
-		//END_ENTITY_SPHERE_QUERY();
-		// <-- Mirv: Rewritten
 
 		CFFGrenadeBase::PostExplode();
 	}

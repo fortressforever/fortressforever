@@ -72,11 +72,21 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 		// TODO: trigger client side hallucination here
 
+		// TODO: Don't for IsInNoGren() check
+
 		//CFFGrenadeBase::PostExplode();
 	}
 
 	void CFFGrenadeGas::GrenadeThink()
 	{
+		// If the grenade is in a no grenade area, kill it
+		if( IsInNoGren() && ( gpGlobals->curtime > m_flDetonateTime ) )
+		{
+			// This will remove the gren
+			CFFGrenadeBase::PostExplode();
+			return;
+		}
+
 		// Been detonated for 10 secs now, so fade out
 		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
 		{
