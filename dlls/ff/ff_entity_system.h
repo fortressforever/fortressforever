@@ -128,6 +128,8 @@ public:
 	static int RemoveGrenNoGren( lua_State* );
 	static int IsGrenInNoGren( lua_State* );
 	static int IsGrenade( lua_State* );
+	static int IsObjectsOriginInWater( lua_State* );
+	static int IsObjectsOriginInSlime( lua_State* );
 
 };
 

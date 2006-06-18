@@ -140,9 +140,6 @@ void CBaseTrigger::InputDisable( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CBaseTrigger::Spawn()
 {
-	// Always touch all? (Mulch: 6/17/2006)
-	AddSpawnFlags( SF_TRIGGER_ALLOW_ALL );
-
 	if( HasSpawnFlags( SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS ) )
 	{
 		// Automatically set this trigger to work with NPC's.
