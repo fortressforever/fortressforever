@@ -365,6 +365,9 @@ public:
 	C_BaseEntity					*GetEffectEntity( void ) const;
 	void							SetEffectEntity( C_BaseEntity *pEffectEnt );
 
+	// specifies if this entity can collide with its owner entity
+	virtual bool					CanClipOwnerEntity() const { return false; }
+
 	// This function returns a value that scales all damage done by this entity.
 	// Use CDamageModifier to hook in damage modifiers on a guy.
 	virtual float					GetAttackDamageScale( void );

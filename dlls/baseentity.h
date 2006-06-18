@@ -502,6 +502,9 @@ public:
 	void					SetEffectEntity( CBaseEntity *pEffectEnt );
 	CBaseEntity				*GetEffectEntity() const;
 
+	// specifies if this entity can collide with its owner entity
+	virtual bool			CanClipOwnerEntity() const { return false; }
+
 	// Only CBaseEntity implements these. CheckTransmit calls the virtual ShouldTransmit to see if the
 	// entity wants to be sent. If so, it calls SetTransmit, which will mark any dependents for transmission too.
 	virtual int				ShouldTransmit( const CCheckTransmitInfo *pInfo );
