@@ -21,6 +21,7 @@
 	#include "ff_projectile_pipebomb.h"
 	#include "baseentity.h"
 	#include "beam_flags.h"
+	#include "ff_entity_system.h"
 #endif
 
 #define EMPGRENADE_MODEL "models/grenades/emp/emp.mdl"
@@ -92,7 +93,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		CFFGrenadeBase::PreExplode(pTrace, NULL, "FF_EmpZap");
 		
 		// If the grenade is in a no gren area don't explode
-		if( !IsInNoGren() )
+		if( FFScriptRunPredicates( this, "canexplode", true ) )
 		{		
 			float radius = GetGrenadeRadius();
 
@@ -191,7 +192,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 		// the stuff we're having it do in FF.
 
 		// If the grenade is in a no gren area don't explode
-		if( !IsInNoGren() )
+		if( FFScriptRunPredicates( this, "canexplode", true ) )
 			CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
 
 		SetThink( &CBaseGrenade::SUB_Remove );
@@ -214,7 +215,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 			m_bWarned = true;
 
 			// If the grenade is in a no gren area don't explode
-			if( !IsInNoGren() )
+			if( FFScriptRunPredicates( this, "canexplode", true ) )
 				EmitSound(EMP_SOUND);
 		}
 	}

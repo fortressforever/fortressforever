@@ -61,13 +61,6 @@ public:
 	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }
 
 public:
-	bool IsInNoGren( void ) const { return ( m_NoGrens.Count() != 0 ); }
-	void SetNoGren( int iEntIndex );
-	void RemoveNoGren( int iEntIndex );
-protected:
-	CUtlVector< int > m_NoGrens;
-
-public:
 
 	bool m_fIsHandheld;	// This will eventually need to be on the client too
 #endif

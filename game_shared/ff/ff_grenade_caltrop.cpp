@@ -20,6 +20,8 @@
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeCaltrop C_FFGrenadeCaltrop
+#else
+	#include "ff_entity_system.h"
 #endif
 
 #ifdef GAME_DLL
@@ -88,7 +90,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NULL );
 
 		// If the grenade is in a no gren area don't deploy caltrops
-		if( !IsInNoGren() )
+		if( FFScriptRunPredicates( this, "canexplode", true ) )
 		{
 
 			CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );

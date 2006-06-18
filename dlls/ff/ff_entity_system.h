@@ -10,6 +10,10 @@
 /// ---------
 /// Apr 21, 2005 Mirv: Begun
 
+#ifndef FF_ENTITY_SYSTEM_H
+#define FF_ENTITY_SYSTEM_H
+
+#pragma once
 
 #include "cbase.h"
 
@@ -136,3 +140,5 @@ public:
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
 
 extern CFFEntitySystem entsys;
+
+#endif // FF_ENTITY_SYSTEM_H

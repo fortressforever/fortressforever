@@ -25,6 +25,7 @@
 	#include "ff_player.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "baseentity.h"
+	#include "ff_entity_system.h"
 #endif
 
 //#define NAPALMGRENADE_MODEL "models/weapons/w_eq_fraggrenade_thrown.mdl"
@@ -86,7 +87,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NAPALM_EFFECT );
 		
 		// If the grenade is not in a no gren area
-		if( !IsInNoGren() )
+		if( FFScriptRunPredicates( this, "canexplode", true ) )
 		{
 			// Bug #0000370: napalm explosion not playing
 			EmitSound("Napalm.Explode");
@@ -111,7 +112,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 			//napalm grenade explodes and spews "napalm" over an area, then starts some fires
 			Detonate();
 
-			if( !IsInNoGren() )
+			if( FFScriptRunPredicates( this, "canexplode", true ) )
 			{
 				// Reset the detonation time
 				SetDetonateTimerLength( nap_flame_time.GetFloat() );

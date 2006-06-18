@@ -21,6 +21,8 @@
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeMirv C_FFGrenadeMirv
+#else
+	#include "ff_entity_system.h"
 #endif
 
 #ifdef GAME_DLL
@@ -93,7 +95,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 	BaseClass::Explode( pTrace, bitsDamageType );
 
 	// If the grenade is in a no gren area
-	if( !IsInNoGren() )
+	if( FFScriptRunPredicates( this, "canexplode", true ) )
 	{
 		CBaseEntity *pOwner = GetOwnerEntity();
 

@@ -23,6 +23,7 @@
 
 #ifdef GAME_DLL
 	#include "ff_player.h"
+	#include "ff_entity_system.h"
 #endif
 
 ConVar conc_push_mag("ffdev_conc_mag", "85.0", 0, "Magnitude of the concussion push effect");
@@ -150,7 +151,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		CFFGrenadeBase::PreExplode( pTrace, NULL, CONCBITS_EFFECT );
 
 		// If the grenade is in a no gren area don't deploy caltrops
-		if( !IsInNoGren() )
+		if( FFScriptRunPredicates( this, "canexplode", true ) )
 		{
 			// --> Mirv: Rewritten
 			Vector vecDisplacement, vecForce;

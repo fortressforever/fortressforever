@@ -19,6 +19,10 @@
 #include "ff_utils.h"
 #include "ff_projectile_nail.h"
 
+#ifdef GAME_DLL
+	#include "ff_entity_system.h"
+#endif
+
 #define NAILGRENADE_MODEL "models/grenades/nailgren/nailgren.mdl"
 
 #ifdef CLIENT_DLL
@@ -91,7 +95,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
 			// Don't start spinning up if in a no gren area
-			if( IsInNoGren() )
+			if( !FFScriptRunPredicates( this, "canexplode", true ) )
 			{
 				// This will remove us
 				CFFGrenadeBase::PostExplode();
