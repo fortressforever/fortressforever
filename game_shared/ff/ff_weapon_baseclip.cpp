@@ -309,7 +309,6 @@ void CFFWeaponBaseClip::ItemPostFrame()
 #ifdef CLIENT_DLL
 			if (!m_bInReload && m_flNextAutoReload <= gpGlobals->curtime && m_iClip1 < GetMaxClip1() && auto_reload.GetBool())
 			{
-				DevMsg("Autoreloading...\n");
 				engine->ClientCmd("+reload");
 				m_flNextAutoReload = gpGlobals->curtime + 0.2f;
 			}
