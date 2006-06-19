@@ -13,8 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_weapon_baseclip.h"
 #include "ff_projectile_grenade.h"
 
 #ifdef CLIENT_DLL 
@@ -28,23 +27,21 @@
 // CFFWeaponGrenadeLauncher
 //=============================================================================
 
-class CFFWeaponGrenadeLauncher : public CFFWeaponBase
+class CFFWeaponGrenadeLauncher : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponGrenadeLauncher, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponGrenadeLauncher, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponGrenadeLauncher();
 
-	virtual void Fire();
-	virtual bool Reload();
-	virtual bool SendWeaponAnim(int iActivity);
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_GRENADELAUNCHER; }
+	virtual void		Fire();
+	virtual bool		Reload();
+	virtual bool		SendWeaponAnim(int iActivity);
+	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_GRENADELAUNCHER; }
 
 private:
-
 	CFFWeaponGrenadeLauncher(const CFFWeaponGrenadeLauncher &);
 };
 

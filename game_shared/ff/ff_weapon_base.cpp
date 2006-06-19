@@ -26,40 +26,37 @@
 	#include "eventqueue.h"
 #endif
 
-#ifdef CLIENT_DLL
-	static ConVar auto_reload("cl_autoreload", "0", 0, "Automatic weapon reload");
-#endif
-
+// All our weapons
 static const char * s_WeaponAliasInfo[] = 
 {
-	"none", 				// FF_WEAPON_NONE
+	"none", 			// FF_WEAPON_NONE
 
 	"crowbar", 			// FF_WEAPON_CROWBAR
 	"knife", 			// FF_WEAPON_KNIFE
 	"medkit", 			// FF_WEAPON_MEDKIT
 	"spanner", 			// FF_WEAPON_SPANNER
-	"umbrella", 			// FF_WEAPON_UMBRELLA
-	"flag", 				// FF_WEAPON_FLAG
+	"umbrella", 		// FF_WEAPON_UMBRELLA
+	"flag", 			// FF_WEAPON_FLAG
 
 	"shotgun", 			// FF_WEAPON_SHOTGUN
-	"supershotgun", 		// FF_WEAPON_SUPERSHOTGUN
+	"supershotgun", 	// FF_WEAPON_SUPERSHOTGUN
 
 	"nailgun", 			// FF_WEAPON_NAILGUN
-	"supernailgun", 		// FF_WEAPON_SUPERNAILGUN
+	"supernailgun", 	// FF_WEAPON_SUPERNAILGUN
 
 	"grenadelauncher", 	// FF_WEAPON_GRENADELAUNCHER
-	"pipelauncher", 		// FF_WEAPON_PIPELAUNCHER
+	"pipelauncher", 	// FF_WEAPON_PIPELAUNCHER
 
 	"autorifle", 		// FF_WEAPON_AUTORIFLE
 	"sniperrifle", 		// FF_WEAPON_SNIPERRIFLE
 	"radiotagrifle", 	// FF_WEAPON_RADIOTAGRIFLE
 
-	"flamethrower", 		// FF_WEAPON_FLAMETHROWER, 
-	"incendiarycannon", 	// FF_WEAPON_INCENDIARYCANNON
+	"flamethrower", 	// FF_WEAPON_FLAMETHROWER, 
+	"incendiarycannon", // FF_WEAPON_INCENDIARYCANNON
 
 	"railgun", 			// FF_WEAPON_RAILGUN
 
-	"tranquiliser", 		// FF_WEAPON_TRANQUILISER
+	"tranquiliser", 	// FF_WEAPON_TRANQUILISER
 
 	"assaultcannon", 	// FF_WEAPON_ASSAULTCANNON
 
@@ -79,13 +76,15 @@ static const char * s_WeaponAliasInfo[] =
 //----------------------------------------------------------------------------
 // Purpose: Given an alias, return the associated weapon ID
 //----------------------------------------------------------------------------
-int AliasToWeaponID(const char *alias) 
+int AliasToWeaponID(const char *alias)
 {
-	if (alias) 
+	if (alias)
 	{
-		for (int i=0; s_WeaponAliasInfo[i] != NULL; ++i) 
-			if (!Q_stricmp(s_WeaponAliasInfo[i], alias)) 
+		for (int i=0; s_WeaponAliasInfo[i] != NULL; ++i)
+		{
+			if (!Q_stricmp(s_WeaponAliasInfo[i], alias))
 				return i;
+		}
 	}
 
 	return FF_WEAPON_NONE;
@@ -94,9 +93,9 @@ int AliasToWeaponID(const char *alias)
 //----------------------------------------------------------------------------
 // Purpose: Given a weapon ID, return its alias
 //----------------------------------------------------------------------------
-const char *WeaponIDToAlias(int id) 
+const char *WeaponIDToAlias(int id)
 {
-	if ((id >= FF_WEAPON_MAX) || (id < 0)) 
+	if ((id >= FF_WEAPON_MAX) || (id < 0))
 		return NULL;
 
 	return s_WeaponAliasInfo[id];
@@ -106,34 +105,17 @@ const char *WeaponIDToAlias(int id)
 // CFFWeaponBase tables.
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponBase, DT_FFWeaponBase) 
+IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponBase, DT_FFWeaponBase)
 
-BEGIN_NETWORK_TABLE(CFFWeaponBase, DT_FFWeaponBase) 
-#ifdef CLIENT_DLL
-	RecvPropInt(RECVINFO(m_fInSpecialReload)) 
-#else
-	// world weapon models have no animations
-  	
-	// Jerky anim fix
-	//SendPropExclude("DT_AnimTimeMustBeFirst", "m_flAnimTime"), 
-	//SendPropExclude("DT_BaseAnimating", "m_nSequence"), 
+BEGIN_NETWORK_TABLE(CFFWeaponBase, DT_FFWeaponBase)
+END_NETWORK_TABLE()
 
-	SendPropInt(SENDINFO(m_fInSpecialReload), 2, SPROP_UNSIGNED) 
-#endif
-END_NETWORK_TABLE() 
-
-BEGIN_PREDICTION_DATA(CFFWeaponBase) 
-	// Jerky anim fix	
-	//DEFINE_PRED_FIELD(m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK), 
-
-	// Mirv: Some prediction fixes the reload sounds not always playing
-	DEFINE_PRED_FIELD(m_fInSpecialReload, FIELD_FLOAT, FTYPEDESC_INSENDTABLE), 
-END_PREDICTION_DATA() 
+BEGIN_PREDICTION_DATA(CFFWeaponBase)
+END_PREDICTION_DATA()
 
 #ifdef GAME_DLL
-	BEGIN_DATADESC(CFFWeaponBase) 
-		// New weapon Think and Touch Functions go here..
-	END_DATADESC() 
+	BEGIN_DATADESC(CFFWeaponBase)
+	END_DATADESC()
 #endif
 
 LINK_ENTITY_TO_CLASS(weapon_ff_base, CFFWeaponBase);
@@ -145,17 +127,45 @@ LINK_ENTITY_TO_CLASS(weapon_ff_base, CFFWeaponBase);
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponBase::CFFWeaponBase() 
+CFFWeaponBase::CFFWeaponBase()
 {
 	SetPredictionEligible(true);
+	AddSolidFlags(FSOLID_TRIGGER); // Nothing collides with these but it gets touches.
 
 	// All FF weapons fire underwater
 	m_bFiresUnderwater = true; 
-	m_bNeedsCock = false;
-
-	AddSolidFlags(FSOLID_TRIGGER); // Nothing collides with these but it gets touches.
 
 	m_flNextBuildKill = 0.0f;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: All weapons use the same silence sound
+//----------------------------------------------------------------------------
+void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0.0f */)
+{
+#ifdef CLIENT_DLL
+
+	// If we have some sounds from the weapon classname.txt file, play a random one of them
+	const char *shootsound = GetWpnData().aShootSounds[sound_type]; 
+	if (!shootsound || !shootsound[0])
+		return;
+
+	CBroadcastRecipientFilter filter; // this is client side only
+	if (!te->CanPredict())
+		return;
+
+	CBaseEntity::EmitSound(filter, GetPlayerOwner()->entindex(), shootsound, &GetPlayerOwner()->GetAbsOrigin()); 
+#else
+	BaseClass::WeaponSound(sound_type, soundtime);
+#endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get CFFPlayer owner
+//----------------------------------------------------------------------------
+CFFPlayer * CFFWeaponBase::GetPlayerOwner() const
+{
+	return dynamic_cast<CFFPlayer *> (GetOwner());
 }
 
 //----------------------------------------------------------------------------
@@ -167,421 +177,14 @@ const CFFWeaponInfo &CFFWeaponBase::GetFFWpnData() const
 	const CFFWeaponInfo *pFFInfo;
 
 	#ifdef _DEBUG
-		pFFInfo = dynamic_cast< const CFFWeaponInfo * > (pWeaponInfo);
+		pFFInfo = dynamic_cast<const CFFWeaponInfo *> (pWeaponInfo);
 		Assert(pFFInfo);
 	#else
-		pFFInfo = static_cast< const CFFWeaponInfo * > (pWeaponInfo);
+		pFFInfo = static_cast<const CFFWeaponInfo *> (pWeaponInfo);
 	#endif
 
 	return *pFFInfo;
 }
-
-//----------------------------------------------------------------------------
-// Purpose: Play an empty clip sound for a weapon
-//----------------------------------------------------------------------------
-bool CFFWeaponBase::PlayEmptySound() 
-{
-	CPASAttenuationFilter filter(this);
-	filter.UsePredictionRules();
-
-	EmitSound(filter, entindex(), /*"Default.ClipEmpty_Rifle"*/ "Generic.Empty");
-	
-	return 0;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Return pointer to weapon's owner
-//----------------------------------------------------------------------------
-CFFPlayer * CFFWeaponBase::GetPlayerOwner() const
-{
-	return dynamic_cast< CFFPlayer * > (GetOwner());
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Weapon's primary attack, reduce ammo / check for empty clip
-//			Call Fire() if able to fire
-//----------------------------------------------------------------------------
-void CFFWeaponBase::PrimaryAttack() 
-{
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( pPlayer->m_bBuilding )
-	{
-#ifdef GAME_DLL
-		DevMsg( "[Server] PrimaryAttack :: Player is building!\n" );
-#else
-		DevMsg( "[Client] PrimaryAttack :: Player is building!\n" );
-#endif
-
-		if( m_flNextBuildKill < gpGlobals->curtime )
-		{
-			m_flNextBuildKill = gpGlobals->curtime + 0.5f;
-
-#ifdef GAME_DLL
-			switch( pPlayer->m_iCurBuild )
-			{
-				case FF_BUILD_DETPACK: pPlayer->Command_BuildDetpack(); break;
-				case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
-				case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
-			}
-#endif
-		}
-
-		return;
-	}
-
-	pPlayer->m_iShotsFired++;
-
-	// Reset disguise
-#ifdef GAME_DLL
-	if (pPlayer->IsDisguised())
-		pPlayer->ResetDisguise();
-#endif
-
-	// Out of ammo?
-	if (m_iClip1 <= 0) 
-	{
-		if (m_iClip1 == 0) 
-		{
-			Reload();
-			PlayEmptySound();
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
-			return;
-		}
-		else if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0) 
-		{
-			// An iClip1 of -1 means that it's not a clip-based weapon
-			// So now return if they have no ammo at all
-			return;
-		}
-		
-	}
-
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
-
-	// Do this server side so there's no mismatch
-#ifdef GAME_DLL
-	if (m_iClip1 < 0) 
-	{
-		// Not a clip based weapon, so remove from primary ammo location
-		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-	}
-	else
-	{
-		// Remove from clip
-		m_iClip1 -= pWeaponInfo.m_iCycleDecrement;
-	}
-#endif
-
-	// Effects:
-	pPlayer->SetAnimation(PLAYER_ATTACK1);
-	pPlayer->DoMuzzleFlash();
-
-#ifdef CLIENT_DLL
-	pPlayer->m_PlayerAnimState->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
-#endif
-
-	// Cancel any reload
-	m_fInSpecialReload = 0;
-
-	// Now do our actual projectile firing code
-	Fire();
-
-	if (m_iClip1 <= 0 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0) 
-	{
-		// HEV suit - indicate out of ammo condition
-		pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-	}
-
-	// More effects:
-	WeaponSound(SINGLE);
-	WeaponRecoil();
-
-	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
-
-	// how long till we start being idle
-	if (m_iClip1 != 0 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) != 0) 
-		SetWeaponIdleTime(gpGlobals->curtime + /*5.0f */ 0.75f);
-	else
-		SetWeaponIdleTime(gpGlobals->curtime + 0.75f);
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Warn if weapon fire function is not implemented
-//----------------------------------------------------------------------------
-void CFFWeaponBase::Fire() 
-{
-	// Shouldnt get here!
-	Assert(0 && "Weapon is missing a Fire() implementation!\n");
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Weapon has just been deployed(ie. unholstered) 
-//----------------------------------------------------------------------------
-bool CFFWeaponBase::Deploy() 
-{
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-#ifdef GAME_DLL
-	if (pPlayer->IsDisguised())
-	{
-		// Spies show different models!
-		PLAYERCLASS_FILE_INFO_HANDLE classinfo;
-
-		if (ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(pPlayer->GetDisguisedClass()), &classinfo, GetEncryptionKey()))
-		{
-			const CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(classinfo);
-
-			if (pPlayerClassInfo)
-			{
-				const char *DisguiseWeapon = NULL;
-
-				for (int i = 0; i < pPlayerClassInfo->m_iNumWeapons; i++)
-				{
-					WEAPON_FILE_INFO_HANDLE weaponinfo;
-
-					if (!ReadWeaponDataFromFileForSlot(filesystem, pPlayerClassInfo->m_aWeapons[i], &weaponinfo, GetEncryptionKey()))
-						continue;
-
-					const FileWeaponInfo_t *pWeaponInfo = GetFileWeaponInfoFromHandle(weaponinfo);
-
-					if (pWeaponInfo && pWeaponInfo->iSlot <= GetSlot())
-						DisguiseWeapon = pPlayerClassInfo->m_aWeapons[i];
-				}
-
-				if (DisguiseWeapon)
-				{
-					PrecacheModel(DisguiseWeapon);	// Just in case
-					SetModel(DisguiseWeapon);
-					DevMsg("Disguising weapon as %s (%d)\n", DisguiseWeapon, -1);
-				}
-			}
-		}
-	}
-#endif
-
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( pPlayer->m_bBuilding )
-	{
-#ifdef GAME_DLL
-		DevMsg( "[Server]" );
-#else
-		DevMsg( "[Client]" );
-#endif
-		DevMsg( " Deploy :: Can't deploy when a player is building!\n" );
-
-		return false;
-	}
-
-	pPlayer->m_iShotsFired = 0;
-
-	m_fInSpecialReload = 0;
-
-#ifdef CLIENT_DLL
-	m_flNextReloadAttempt = 0;
-#endif
-
-	return BaseClass::Deploy();
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Default TFC style reloading
-//----------------------------------------------------------------------------
-bool CFFWeaponBase::Reload() 
-{
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-	// Cancel the reload now
-#ifdef CLIENT_DLL
-	engine->ClientCmd("-reload");
-#endif
-
-	// Is this necessary? Player could be reloading shotgun then
-	// start building but the build holsters the weapon so... (?)
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( pPlayer->m_bBuilding )
-	{
-#ifdef GAME_DLL
-		DevMsg( "[Server]" );
-#else
-		DevMsg( "[Client]" );
-#endif
-		DevMsg( " Deploy :: Can't reload while building!\n" );
-
-		return false;
-	}
-
-	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 || m_iClip1 == GetMaxClip1() || m_iClip1 < 0) 
-		return true;
-
-	// don't reload until recoil is done
-	if (m_flNextPrimaryAttack > gpGlobals->curtime) 
-		return true;
-
-	// check to see if we're ready to reload
-	if (m_fInSpecialReload == 0) 
-	{
-		// animations
-		pPlayer->SetAnimation(PLAYER_RELOAD);
-		SendWeaponAnim(ACT_SHOTGUN_RELOAD_START);
-
-		// change to start-reload stage
-		m_fInSpecialReload = 1;
-
-		// time till we're ready to start the next sequence
-		SetWeaponIdleTime(gpGlobals->curtime + pWeaponInfo.m_flPreReloadTime);
-
-		return true;
-	}
-	// we've started reloading sequence
-	else if (m_fInSpecialReload == 1) 
-	{
-		// has sequence not finished yet
-		if (m_flTimeWeaponIdle > gpGlobals->curtime) 
-			return true;
-
-		// change to the adding ammo stage
-		m_fInSpecialReload = 2;
-
-		// anims
-		SendWeaponAnim(ACT_VM_RELOAD);
-		WeaponSound(RELOAD);
-
-		SetWeaponIdleTime(gpGlobals->curtime + pWeaponInfo.m_flReloadTime);
-	}
-	else
-	{
-		// has sequence not finished yet(Bug #0000145: First rocket in the RPG reload cycle is mis-timed) 
-		if (m_flTimeWeaponIdle > gpGlobals->curtime) 
-			return true;
-
-#ifdef GAME_DLL
-		SendReloadEvents();
-#endif
-		
-		//WeaponSound(RELOAD);		
-
-#ifdef GAME_DLL
-		CFFPlayer *pPlayer = GetPlayerOwner();
-
-		// phew finally, remove ammo from stores...
-		if (pPlayer) 
-			 pPlayer->RemoveAmmo(pWeaponInfo.m_iCycleDecrement, m_iPrimaryAmmoType);
-
-		// ...and add it to the clip
-		m_iClip1 += pWeaponInfo.m_iCycleDecrement;
-#endif
-
-		// go back to the previous stage of the sequence so it triggers this again
-		m_fInSpecialReload = 1;
-
-		// need to cock the gun eventually
-		m_bNeedsCock = true;
-	}
-
-	return true;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Carry on reload sequence or play an idle sequence, depending on state
-//----------------------------------------------------------------------------
-void CFFWeaponBase::WeaponIdle() 
-{
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-#ifdef CLIENT_DLL
-	// A reloadable weapon with ammo to reload with
-	if (!m_fInSpecialReload && m_flNextReloadAttempt < gpGlobals->curtime && m_iClip1 < GetMaxClip1() && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) > 0 && m_iClip1 >= 0) 
-	{
-		// Auto reloading, a rather hacky way perhaps
-		if (auto_reload.GetInt() != 0) 
-			engine->ClientCmd("+reload");
-
-		m_flNextReloadAttempt = gpGlobals->curtime + 0.1f;
-	}
-#endif
-
-	if (m_flTimeWeaponIdle < gpGlobals->curtime) 
-	{
-		if (m_iClip1 == 0 && m_fInSpecialReload == 0 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)) 
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload != 0) 
-		{
-			if (m_iClip1 != pWeaponInfo.iMaxClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)) 
-			{
-				Reload();
-			}
-			else
-			{
-				// reload debounce has timed out
-				SendWeaponAnim(ACT_SHOTGUN_RELOAD_FINISH);
-				m_fInSpecialReload = 0;
-
-				SetWeaponIdleTime(gpGlobals->curtime + 1.5);
-			}
-		}
-		else
-		{
-			// Sets idle time automatically
-			SendWeaponAnim(ACT_VM_IDLE);
-		}
-	}
-
-	if (m_bNeedsCock && m_fInSpecialReload == 0)
-	{
-		WeaponSound(COCK);
-		m_bNeedsCock = false;
-	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Jump the view a bit according to the script file
-//----------------------------------------------------------------------------
-void CFFWeaponBase::WeaponRecoil() 
-{
-#ifdef GAME_DLL
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-	// Update punch angles
-	QAngle angle = pPlayer->GetPunchAngle();
-	angle.x -= pWeaponInfo.m_flRecoilAmount;
-	pPlayer->SetPunchAngle(angle);
-#endif
-}
-
-#ifdef GAME_DLL
-
-	//----------------------------------------------------------------------------
-	// Purpose: Tell other entities to play reloading animation on this player
-	//----------------------------------------------------------------------------
-	void CFFWeaponBase::SendReloadEvents() 
-	{
-		CFFPlayer *pPlayer = dynamic_cast< CFFPlayer * > (GetOwner());
-		if (!pPlayer) 
-			return;
-
-		// Send a message to any clients that have this entity to play the reload.
-		CPASFilter filter(pPlayer->GetAbsOrigin());
-		filter.RemoveRecipient(pPlayer);
-
-		/*UserMessageBegin(filter, "ReloadEffect");
-		WRITE_SHORT(pPlayer->entindex());
-		MessageEnd();*/
-
-		// Make the player play his reload animation.
-		// ted - temporarily disabled
-		// pPlayer->DoAnimationEvent(PLAYERANIMEVENT_RELOAD);
-	}
-
-#endif
-
 
 //-----------------------------------------------------------------------------
 // Purpose: OVERRIDDEN from base sdk. Changed SequenceLength to MAX_DEPLOY_TIME for purposes of the first firing
@@ -591,20 +194,13 @@ void CFFWeaponBase::WeaponRecoil()
 //			*szAnimExt - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt) 
+bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt)
 {
-	// Msg("deploy %s at %f\n", GetClassname(), gpGlobals->curtime);
-
-	// Weapons that don't autoswitch away when they run out of ammo 
-	// can still be deployed when they have no ammo.
-	//if (!HasAnyAmmo() && AllowsAutoSwitchFrom()) 
-	//	return false;
-
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (pOwner) 
+	if (pOwner)
 	{
 		// Dead men deploy no weapons
-		if (pOwner->IsAlive() == false) 
+		if (pOwner->IsAlive() == false)
 			return false;
 
 		pOwner->SetAnimationExtension(szAnimExt);
@@ -628,44 +224,111 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 	return true;
 }
 
-// Bug #0000333: Buildable Behavior (non build slot) while building
-bool CFFWeaponBase::CanBeSelected( void )
+//----------------------------------------------------------------------------
+// Purpose: Stop selection of weapons while building
+//----------------------------------------------------------------------------
+bool CFFWeaponBase::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if( pPlayer->m_bBuilding )
+	if (pPlayer->m_bBuilding)
 		return false;
 	else
 		return BaseClass::CanBeSelected();
 }
 
+//----------------------------------------------------------------------------
+// Purpose: Do the weapon's recoil
+//----------------------------------------------------------------------------
+void CFFWeaponBase::WeaponRecoil()
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	QAngle angPunch = pPlayer->GetPunchAngle();
+	angPunch.x += GetFFWpnData().m_flRecoilAmount;
+
+	pPlayer->ViewPunch(angPunch);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Return a weapon's death notice name
+//----------------------------------------------------------------------------
 char *CFFWeaponBase::GetDeathNoticeName()
 {
-#if !defined( CLIENT_DLL )
+#ifdef GAME_DLL
 	return (char *) STRING(m_iClassname);
 #else
 	return "GetDeathNoticeName not implemented on client yet";
 #endif
 }
 
-// Jerky anim fix
 #ifdef CLIENT_DLL
 
-void CFFWeaponBase::OnDataChanged( DataUpdateType_t type )
+//----------------------------------------------------------------------------
+// Purpose: From HL2MP
+//----------------------------------------------------------------------------
+void CFFWeaponBase::OnDataChanged(DataUpdateType_t type)
 {
-	BaseClass::OnDataChanged( type );
+	BaseClass::OnDataChanged(type);
 
-	if ( GetPredictable() && !ShouldPredict() )
+	if (GetPredictable() && !ShouldPredict())
 		ShutdownPredictable();
 }
 
 
+//----------------------------------------------------------------------------
+// Purpose: From HL2MP
+//----------------------------------------------------------------------------
 bool CFFWeaponBase::ShouldPredict()
 {
-	if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() )
+	if (GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer())
 		return true;
 
 	return BaseClass::ShouldPredict();
 }
 
 #endif
+
+//-----------------------------------------------------------------------------
+// Purpose: Primary fire button attack for non-clip weapons
+//			For clip weapons, see ff_weapon_baseclip.cpp
+//-----------------------------------------------------------------------------
+void CFFWeaponBase::PrimaryAttack()
+{
+	// Only the player fires this way so we can cast
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
+	if (!pPlayer)
+	{
+		return;
+	}
+
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(SINGLE);
+
+	pPlayer->DoMuzzleFlash();
+
+	SendWeaponAnim(GetPrimaryAttackActivity());
+
+	// player "shoot" animation
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
+	// especially if the weapon we're firing has a really fast rate of fire.
+	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
+	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+
+	// Fire now
+	Fire();
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+	}
+
+	//Add our view kick in
+	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
+}

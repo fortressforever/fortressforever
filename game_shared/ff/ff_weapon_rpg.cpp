@@ -13,8 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_weapon_baseclip.h"
 #include "ff_projectile_rocket.h"
 
 #ifdef CLIENT_DLL 
@@ -28,22 +27,20 @@
 // CFFWeaponRPG
 //=============================================================================
 
-class CFFWeaponRPG : public CFFWeaponBase
+class CFFWeaponRPG : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponRPG, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponRPG, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponRPG();
 
-	virtual void Fire();
-	virtual bool SendWeaponAnim(int iActivity);
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_RPG; }
+	virtual void		Fire();
+	virtual bool		SendWeaponAnim(int iActivity);
+	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_RPG; }
 
 private:
-
 	CFFWeaponRPG(const CFFWeaponRPG &);
 };
 
