@@ -384,17 +384,10 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	float flduck;
 	int	fLadder;
 
-	if ( m_flStepSoundTime > 0 )
-	{
-		m_flStepSoundTime -= 1000.0f * gpGlobals->frametime;
-		if ( m_flStepSoundTime < 0 )
-		{
-			m_flStepSoundTime = 0;
-		}
-	}
-
-	if ( m_flStepSoundTime > 0 )
+	// --> Mirv: Replaced to fix footsteps
+	if (m_flStepSoundTime > gpGlobals->curtime)
 		return;
+	// <-- Mirv
 
 	if ( GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
 		return;
@@ -451,7 +444,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	{
 		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "ladder" ) );
 		fvol = 0.5;
-		m_flStepSoundTime = 350;
+		m_flStepSoundTime = gpGlobals->curtime +0.350f;	// |-- Mirv: Added gpGlobals->curtime
 	}
 	else if ( enginetrace->GetPointContents( knee ) & MASK_WATER )
 	{
@@ -469,20 +462,20 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 		}
 		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "wade" ) );
 		fvol = 0.65;
-		m_flStepSoundTime = 600;
+		m_flStepSoundTime = gpGlobals->curtime +0.600f;	// |-- Mirv: Added gpGlobals->curtime
 	}
 	else if ( enginetrace->GetPointContents( feet ) & MASK_WATER )
 	{
 		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "water" ) );
 		fvol = fWalking ? 0.2 : 0.5;
-		m_flStepSoundTime = fWalking ? 400 : 300;		
+		m_flStepSoundTime = fWalking ? gpGlobals->curtime +0.400f : gpGlobals->curtime +0.300f;	// |-- Mirv: Added gpGlobals->curtime
 	}
 	else
 	{
 		if ( !psurface )
 			return;
 
-		m_flStepSoundTime = fWalking ? 400 : 300;
+		m_flStepSoundTime = fWalking ? gpGlobals->curtime +0.400f : gpGlobals->curtime +0.300f;	// |-- Mirv: Added gpGlobals->curtime
 		switch ( psurface->game.material )
 		{
 		default:
@@ -516,7 +509,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 		}
 	}
 	
-	m_flStepSoundTime += flduck; // slower step time if ducking
+	m_flStepSoundTime += 0.001f * flduck; // slower step time if ducking	// |-- Mirv: Added gpGlobals->curtime
 
 	// play the sound
 	// 65% volume if ducking

@@ -266,7 +266,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecWaterJumpVel, FIELD_VECTOR ),
 	DEFINE_FIELD( m_nImpulse, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flStepSoundTime, FIELD_TIME ),
+//	DEFINE_FIELD( m_flStepSoundTime, FIELD_TIME ),	|-- Mirv: Removed to fix footsteps
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
 

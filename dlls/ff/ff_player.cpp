@@ -430,6 +430,8 @@ CFFPlayer::CFFPlayer()
 
 	m_pBuildLastWeapon = NULL;
 
+	m_flJumpTime = 0;
+
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
 }
 
