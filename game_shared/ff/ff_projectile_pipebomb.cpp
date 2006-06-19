@@ -245,7 +245,7 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const Vector &vecO
 	pPipebomb->m_flDamage = iDamage;
 
 	// Bug #0000678: Pipe blast damage radius out of whack
-	pPipebomb->m_DmgRadius = /*pPipebomb->m_flDamage * 3.5f;*/ 120.0;
+	pPipebomb->m_DmgRadius = /*pPipebomb->m_flDamage * 3.5f;*/ 120.0f;
 
 	pPipebomb->m_bIsLive = false;
 
