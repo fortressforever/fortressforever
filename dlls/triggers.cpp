@@ -333,13 +333,13 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 		{
 			// Don't want dups
 			bool bFound = false;
-			for( int i = 0; ( i < m_hActiveScripts.Count() ) && !bFound; i++ )
-				if( m_hActiveScripts[ i ] == iEntIndex )
+			for( int i = 0; ( i < pOther->m_hActiveScripts.Count() ) && !bFound; i++ )
+				if( pOther->m_hActiveScripts[ i ] == iEntIndex )
 					bFound = true;
 
 			if( !bFound )
 			{
-				m_hActiveScripts.AddToTail( iEntIndex );
+				pOther->m_hActiveScripts.AddToTail( iEntIndex );
 			}
 		}
 	}
@@ -376,9 +376,9 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		int iEntIndex = entindex();
 		if( iEntIndex )
 		{
-			for( int i = 0; i < m_hActiveScripts.Count(); i++ )
-				if( m_hActiveScripts[ i ] == iEntIndex )
-					m_hActiveScripts.Remove( i );
+			for( int i = 0; i < pOther->m_hActiveScripts.Count(); i++ )
+				if( pOther->m_hActiveScripts[ i ] == iEntIndex )
+					pOther->m_hActiveScripts.Remove( i );
 		}
 
 		// If there are no more entities touching this trigger, fire the lost all touches
