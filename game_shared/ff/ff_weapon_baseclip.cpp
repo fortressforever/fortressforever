@@ -10,7 +10,9 @@
 #include "ff_weapon_baseclip.h"
 #include "in_buttons.h"
 
-ConVar auto_reload("cl_autoreload", "0", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Automatic weapon reload");
+#ifdef CLIENT_DLL
+	ConVar auto_reload("cl_autoreload", "0", FCVAR_ARCHIVE, "Automatic weapon reload");
+#endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponBaseClip, DT_FFWeaponBaseClip)
 
@@ -30,6 +32,10 @@ LINK_ENTITY_TO_CLASS(weapon_ff_baseclip, CFFWeaponBaseClip);
 bool CFFWeaponBaseClip::StartReload()
 {
 	CBaseCombatCharacter *pOwner  = GetOwner();
+
+#ifdef CLIENT_DLL	
+	engine->ClientCmd("-reload");
+#endif
 
 	if (pOwner == NULL)
 		return false;
@@ -167,6 +173,10 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	m_bInReload = false;
 	m_flNextSecondaryAttack = -1.0f;
 
+#ifdef CLIENT_DLL
+	m_flNextAutoReload = gpGlobals->curtime;
+#endif
+
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
 
@@ -285,7 +295,7 @@ void CFFWeaponBaseClip::ItemPostFrame()
 		else
 		{
 			// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-			if (m_iClip1 <= 0 && ! (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
+			if (m_iClip1 <= 0 && m_flTimeWeaponIdle < gpGlobals->curtime && m_flNextPrimaryAttack < gpGlobals->curtime)
 			{
 				if (StartReload())
 				{
@@ -293,6 +303,17 @@ void CFFWeaponBaseClip::ItemPostFrame()
 					return;
 				}
 			}
+
+			// Autoreload
+			// This would be better done reading a client off the client
+#ifdef CLIENT_DLL
+			if (!m_bInReload && m_flNextAutoReload <= gpGlobals->curtime && m_iClip1 < GetMaxClip1() && auto_reload.GetBool())
+			{
+				DevMsg("Autoreloading...\n");
+				engine->ClientCmd("+reload");
+				m_flNextAutoReload = gpGlobals->curtime + 0.2f;
+			}
+#endif
 		}
 
 		WeaponIdle();
@@ -306,4 +327,8 @@ void CFFWeaponBaseClip::ItemPostFrame()
 CFFWeaponBaseClip::CFFWeaponBaseClip()
 {
 	m_bReloadsSingly = true;
+
+#ifdef CLIENT_DLL
+	m_flNextAutoReload = 0;
+#endif
 }
