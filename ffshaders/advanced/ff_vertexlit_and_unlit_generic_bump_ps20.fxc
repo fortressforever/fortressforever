@@ -196,6 +196,16 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	HALF3 result = diffuseComponent + specularLighting;
 
+
+/*
+	HALF3 worldSpaceNormal = mul(i.tangentSpaceTranspose, tangentSpaceNormal);
+	float mag = dot(normalize(g_EyePos - i.worldPos_projPosZ.xyz), worldSpaceNormal);
+	mag = max(0.0f, mag);
+	mag = 1.0f - mag;
+	mag = mag * mag;
+	result = lerp(result, HALF3(1.0f, 0.3f, 0.0f), mag);
+*/
+
 #if DOWATERFOG
 	float fogFactor = CalcWaterFogAlpha( g_WaterZ, g_EyePos.z, i.worldPos_projPosZ.z, i.worldPos_projPosZ.w, g_FogOORange );
 	result = lerp( result, g_WaterFogColor.xyz, fogFactor );
