@@ -587,6 +587,10 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
+
+	// Flashlight - Bug #0000679: flashlight sound isn't precached
+	PrecacheScriptSound( "HL2Player.FlashLightOn" );
+	PrecacheScriptSound( "HL2Player.FlashLightOff" );
 	
 	// Class specific things!
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
