@@ -191,7 +191,7 @@ public:
 	// <-- Mirv: Map guide stuff
 
 	// --> Mirv: Conc stuff
-	float m_flConcTime, m_flConcTimeStart;
+	float m_flConcTime;
 	QAngle m_angConced, m_angConcedTest;
 	
 	virtual const QAngle &EyeAngles();
