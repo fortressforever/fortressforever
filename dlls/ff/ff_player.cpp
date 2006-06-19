@@ -429,7 +429,7 @@ CFFPlayer::CFFPlayer()
 
 	m_pBuildLastWeapon = NULL;
 
-	m_flJumpTime = 0;
+	m_flJumpTime = m_flFallTime = 0;
 
 	m_iSpawnInterpCounter = 0;
 
