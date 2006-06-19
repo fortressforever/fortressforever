@@ -60,9 +60,15 @@ private:
 IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponAssaultCannon, DT_FFWeaponAssaultCannon) 
 
 BEGIN_NETWORK_TABLE(CFFWeaponAssaultCannon, DT_FFWeaponAssaultCannon) 
+#ifdef GAME_DLL
+	SendPropInt(SENDINFO(m_fFireState)),
+#else
+	RecvPropInt(RECVINFO(m_fFireState)),
+#endif
 END_NETWORK_TABLE() 
 
 BEGIN_PREDICTION_DATA(CFFWeaponAssaultCannon) 
+	DEFINE_PRED_FIELD(m_fFireState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA() 
 
 LINK_ENTITY_TO_CLASS(ff_weapon_assaultcannon, CFFWeaponAssaultCannon);
