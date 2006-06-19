@@ -13,8 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_weapon_baseclip.h"
 #include "ff_projectile_pipebomb.h"
 
 #ifdef CLIENT_DLL 
@@ -28,23 +27,21 @@
 // CFFWeaponPipeLauncher
 //=============================================================================
 
-class CFFWeaponPipeLauncher : public CFFWeaponBase
+class CFFWeaponPipeLauncher : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponPipeLauncher, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponPipeLauncher, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponPipeLauncher();
 
-	virtual void Fire();
-	virtual bool Reload();
-	virtual bool SendWeaponAnim(int iActivity);
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_PIPELAUNCHER; }
+	virtual void		Fire();
+	virtual bool		Reload();
+	virtual bool		SendWeaponAnim(int iActivity);
+	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_PIPELAUNCHER; }
 
 private:
-
 	CFFWeaponPipeLauncher(const CFFWeaponPipeLauncher &);
 };
 
@@ -112,7 +109,7 @@ void CFFWeaponPipeLauncher::Fire()
 //----------------------------------------------------------------------------
 bool CFFWeaponPipeLauncher::Reload() 
 {
-	bool b = BaseClass::Reload();
+	bool bRet = BaseClass::Reload();
 
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -126,7 +123,7 @@ bool CFFWeaponPipeLauncher::Reload()
 			w->m_iClip1 = m_iClip1;
 	}
 
-	return b;
+	return bRet;
 }
 
 //----------------------------------------------------------------------------

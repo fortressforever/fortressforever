@@ -180,7 +180,7 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 		{
 			if (m_bFireOnEmpty) 
 			{
-				PlayEmptySound();
+				//PlayEmptySound();
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
 			}
 			//return;	// return?

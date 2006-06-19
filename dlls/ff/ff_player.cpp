@@ -304,7 +304,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	SendPropInt( SENDINFO( m_iClassStatus ) ),
 	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
-
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay

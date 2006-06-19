@@ -70,27 +70,27 @@ void OnTimerExpired(C_FFTimer *pTimer)
 }
 
 // --> Mirv: Toggle grenades (requested by defrag)
-void CC_ToggleOne( void )
+void CC_ToggleOne()
 {
-	if(!engine->IsConnected() || !engine->IsInGame())
+	if (!engine->IsConnected() || !engine->IsInGame())
 		return;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
-	if( pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE || pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO )
+	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
 		CC_PrimeOne();
 }
 
-void CC_ToggleTwo( void )
+void CC_ToggleTwo()
 {
-	if(!engine->IsConnected() || !engine->IsInGame())
+	if (!engine->IsConnected() || !engine->IsInGame())
 		return;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
-	if( pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE || pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO )
+	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
 		CC_PrimeTwo();

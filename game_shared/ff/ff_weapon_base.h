@@ -118,48 +118,42 @@ public:
 		DECLARE_DATADESC();
 	#endif
 
+	// All FF weapons are predicted
+	virtual bool		IsPredicted() const { return true; }
+
 	// All predicted weapons need to implement and return true
-	virtual bool	IsPredicted() const { return true; }
-	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_NONE; }
+	virtual FFWeaponID	GetWeaponID() const { AssertMsg(0, "GetWeaponID() not defined for weapon"); return FF_WEAPON_NONE; }
 	
 	// Get FF weapon specific weapon data.
 	CFFWeaponInfo const	&GetFFWpnData() const;
 
 	// Get a pointer to the player that owns this weapon
-	CFFPlayer * GetPlayerOwner() const;
+	CFFPlayer			*GetPlayerOwner() const;
 
-	// override to play custom empty sounds
-	virtual bool PlayEmptySound();
+	// Play the correct sounds
+	virtual	void		WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
-	// override these with default firing code to save a lot of replication
-	virtual void PrimaryAttack();
-	virtual bool Deploy();
-	virtual bool Reload();
-	virtual void WeaponIdle();
-	virtual bool CanBeSelected( void );
+	// Ensure that weapons cannot be selected while building
+	virtual bool		CanBeSelected();
 	
-	// this is where our actual projectile spawning code goes for primary attack
-	virtual void Fire();
+	// Plays recoil on both client & server
+	virtual void		WeaponRecoil();
 
-	// this just loads the recoil
-	virtual void WeaponRecoil();
+	// This is overloaded with the correct response
+	virtual void		Fire() { AssertMsg(0, "Fire() not defined for weapon"); }
 
-	virtual char *GetDeathNoticeName();
+	// Death notice name
+	virtual char		*GetDeathNoticeName();
 
-#ifdef GAME_DLL
-	virtual void SendReloadEvents();
-#endif
+	// Override the deploy time to a fixed time
+	virtual bool		DefaultDeploy(char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt);
 
-	virtual bool DefaultDeploy(char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt);
+	// Default primary attack for non-clip weapons
+	virtual void		PrimaryAttack();
 
 private:
+
 	CFFWeaponBase(const CFFWeaponBase &);
-
-#ifdef CLIENT_DLL
-	float m_flNextReloadAttempt;
-#endif
-
-	CNetworkVar(int, m_fInSpecialReload);
 
 	// So we don't spam when trying to kill
 	// buildables (by spam I mean stopping it
@@ -169,13 +163,10 @@ private:
 	// click of mouse to kill the build.)
 	float m_flNextBuildKill;
 
-	// We need to cock some guns
-	bool m_bNeedsCock;
-
-	// Jerky anim fix
 #ifdef CLIENT_DLL
+	// Some things from HL2MP
 	virtual bool	ShouldPredict();
-	virtual void	OnDataChanged( DataUpdateType_t type );
+	virtual void	OnDataChanged(DataUpdateType_t type);
 #endif
 };
 

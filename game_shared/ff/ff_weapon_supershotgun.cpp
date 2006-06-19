@@ -13,38 +13,33 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_weapon_baseclip.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponSuperShotgun C_FFWeaponSuperShotgun
 	#include "c_ff_player.h"
 #else
 	#include "ff_player.h"
-	#include "te_firebullets.h"
 #endif
 
 //=============================================================================
 // CFFWeaponSuperShotgun
 //=============================================================================
 
-class CFFWeaponSuperShotgun : public CFFWeaponBase
+class CFFWeaponSuperShotgun : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponSuperShotgun, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponSuperShotgun, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponSuperShotgun();
 
-	virtual void Fire();
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SUPERSHOTGUN; }
+	virtual void		Fire();
+	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_SUPERSHOTGUN; }
 
 private:
-
 	CFFWeaponSuperShotgun(const CFFWeaponSuperShotgun &);
-
 };
 
 //=============================================================================

@@ -86,8 +86,9 @@ void CFFWeaponNailgun::Fire()
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
 
-	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
+	// This way is affected by recoil
+	//QAngle angAiming;
+	//VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileNail::CreateNail(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileNail::CreateNail(vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 }

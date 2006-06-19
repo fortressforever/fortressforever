@@ -13,8 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_weapon_baseclip.h"
 #include "ff_projectile_incendiaryrocket.h"
 
 #ifdef CLIENT_DLL 
@@ -28,21 +27,19 @@
 // CFFWeaponIC
 //=============================================================================
 
-class CFFWeaponIC : public CFFWeaponBase
+class CFFWeaponIC : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponIC();
 
-	virtual void Fire();
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_IC; }
+	virtual void		Fire();
+	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_IC; }
 
 private:
-
 	CFFWeaponIC(const CFFWeaponIC &);
 };
 
