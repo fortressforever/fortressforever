@@ -131,6 +131,11 @@ void CC_PrimeOne( void )
 	if (pLocalPlayer->GetEffects() & EF_NODRAW)
 		return;
 
+	// Make sure we can't insta-prime on the client either
+	// This can be anything really so long as it's less than the real delay
+	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.3f)
+		return;
+
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 
 	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
@@ -178,6 +183,11 @@ void CC_PrimeTwo( void )
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	if (pLocalPlayer->GetEffects() & EF_NODRAW)
+		return;
+
+	// Make sure we can't insta-prime on the client either
+	// This can be anything really so long as it's less than the real delay
+	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.3f)
 		return;
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
@@ -611,7 +621,7 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_iLocalSkiState = 0;
 
-	m_flJumpTime = 0;
+	m_flJumpTime = m_flFallTime = 0;
 
 	m_iSpawnInterpCounter = 0;
 
