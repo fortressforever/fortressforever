@@ -122,14 +122,10 @@ public:
 	static int IsSentrygun( lua_State* );
 	static int GetObjectsTeam( lua_State* );
 	static int IsTeam1AlliedToTeam2( lua_State* );
-	static int SetPlayerNoBuild( lua_State* );
-	static int RemovePlayerNoBuild( lua_State* );
 	static int IsPlayerInNoBuild( lua_State* );
 	static int IsPlayerUnderWater( lua_State* );
 	static int IsPlayerWaistDeepInWater( lua_State* );
 	static int IsPlayerFeetDeepInWater( lua_State* );
-	static int SetGrenNoGren( lua_State* );
-	static int RemoveGrenNoGren( lua_State* );
 	static int IsGrenInNoGren( lua_State* );
 	static int IsGrenade( lua_State* );
 	static int IsObjectsOriginInWater( lua_State* );

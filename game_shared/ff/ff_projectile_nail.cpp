@@ -68,6 +68,9 @@ PRECACHE_WEAPON_REGISTER(nail);
 		// Make sure we're updated if we're underwater
 		UpdateWaterState();
 
+		// Initialize
+		m_bNailGrenadeNail = false;
+
 		BaseClass::Spawn();
 	}
 

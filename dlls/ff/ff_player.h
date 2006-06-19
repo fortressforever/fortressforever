@@ -309,13 +309,6 @@ private:
 	CUtlVector<LocationInfo> m_Locations;
 
 public:
-	bool IsInNoBuild( void ) const { return ( m_NoBuilds.Count() != 0 ); }
-	void SetNoBuild( int iEntIndex );
-	void RemoveNoBuild( int iEntIndex );
-protected:
-	CUtlVector< int > m_NoBuilds;
-
-public:
 	// Set the spawn delay for a player. If the current delay
 	// is longer than flDelay then flDelay is ignored and
 	// the longer delay is used. It also checks the entity

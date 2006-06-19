@@ -267,14 +267,10 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IsSentrygun", IsSentrygun );
 	lua_register( L, "GetObjectsTeam", GetObjectsTeam );
 	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
-	lua_register( L, "SetPlayerNoBuild", SetPlayerNoBuild );
-	lua_register( L, "RemovePlayerNoBuild", RemovePlayerNoBuild );
 	lua_register( L, "IsPlayerInNoBuild", IsPlayerInNoBuild );
 	lua_register( L, "IsPlayerUnderWater", IsPlayerUnderWater );
 	lua_register( L, "IsPlayerWaistDeepInWater", IsPlayerWaistDeepInWater );
 	lua_register( L, "IsPlayerFeetDeepInWater", IsPlayerFeetDeepInWater );
-	lua_register( L, "SetGrenNoGren", SetGrenNoGren );
-	lua_register( L, "RemoveGrenNoGren", RemoveGrenNoGren );
 	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );
 	lua_register( L, "IsGrenade", IsGrenade );
 	lua_register( L, "IsObjectsOriginInWater", IsObjectsOriginInWater );
@@ -1803,68 +1799,6 @@ int CFFEntitySystem::IsTeam1AlliedToTeam2( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Set a player in a no build area
-//			int SetPlayerNoBuild( player_id, entid )
-//----------------------------------------------------------------------------
-int CFFEntitySystem::SetPlayerNoBuild( lua_State *L )
-{
-	int n = lua_gettop( L );
-
-	if( n == 2 )
-	{
-		bool bRetVal = false;
-		int iPlayerIndex = lua_tonumber( L, 1 );
-		int iEntIndex = lua_tonumber( L, 2 );
-
-		CBaseEntity *pEntity = UTIL_EntityByIndex( iPlayerIndex );
-		if( pEntity && pEntity->IsPlayer() )
-		{
-			ToFFPlayer( pEntity )->SetNoBuild( iEntIndex );
-			bRetVal = true;
-		}
-
-		lua_pushboolean( L, bRetVal );
-
-		// 1 result
-		return 1;
-	}
-
-	// No results
-	return 0;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Remove player from a no build area
-//			int RemovePlayerNoBuild( player_id, entid )
-//----------------------------------------------------------------------------
-int CFFEntitySystem::RemovePlayerNoBuild( lua_State *L )
-{
-	int n = lua_gettop( L );
-
-	if( n == 2 )
-	{
-		bool bRetVal = false;
-		int iPlayerIndex = lua_tonumber( L, 1 );
-		int iEntIndex = lua_tonumber( L, 2 );
-
-		CBaseEntity *pEntity = UTIL_EntityByIndex( iPlayerIndex );
-		if( pEntity && pEntity->IsPlayer() )
-		{
-			ToFFPlayer( pEntity )->RemoveNoBuild( iEntIndex );
-			bRetVal = true;
-		}
-
-		lua_pushboolean( L, bRetVal );
-
-		// 1 result
-		return 1;
-	}
-
-	// No results
-	return 0;
-}
-
-//----------------------------------------------------------------------------
 // Purpose: See if a player is in a no build area
 //			int IsPlayerInNoBuild( player_id )
 //----------------------------------------------------------------------------
@@ -1879,8 +1813,8 @@ int CFFEntitySystem::IsPlayerInNoBuild( lua_State *L )
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iPlayerIndex );
 		if( pEntity && pEntity->IsPlayer() )
-		{			
-			bRetVal = ToFFPlayer( pEntity )->IsInNoBuild();
+		{
+			bRetVal = !FFScriptRunPredicates( pEntity, "canbuild", true );
 		}
 
 		lua_pushboolean( L, bRetVal );
@@ -1981,80 +1915,13 @@ int CFFEntitySystem::IsPlayerFeetDeepInWater( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Set a grenade in a no renade area
-//			int SetGrenNoGren( ent_id, entid )
-//----------------------------------------------------------------------------
-int CFFEntitySystem::SetGrenNoGren( lua_State *L )
-{
-	//int n = lua_gettop( L );
-
-	/*
-	if( n == 2 )
-	{
-		bool bRetVal = false;
-		int iGrenIndex = lua_tonumber( L, 1 );
-		int iEntIndex = lua_tonumber( L, 2 );
-
-		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
-		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
-		{
-			( ( CFFGrenadeBase * )pEntity )->SetNoGren( iEntIndex );
-			bRetVal = true;
-		}
-
-		lua_pushboolean( L, bRetVal );
-
-		// 1 result
-		return 1;
-	}
-	*/
-
-	// No results
-	return 0;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Remove grenade from a no grenade area
-//			int RemoveGrenNoGren( ent_id, entid )
-//----------------------------------------------------------------------------
-int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
-{
-	//int n = lua_gettop( L );
-
-	/*
-	if( n == 2 )
-	{
-		bool bRetVal = false;
-		int iGrenIndex = lua_tonumber( L, 1 );
-		int iEntIndex = lua_tonumber( L, 2 );
-
-		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
-		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
-		{
-			( ( CFFGrenadeBase * )pEntity )->RemoveNoGren( iEntIndex );
-			bRetVal = true;
-		}
-
-		lua_pushboolean( L, bRetVal );
-
-		// 1 result
-		return 1;
-	}
-	*/
-
-	// No results
-	return 0;
-}
-
-//----------------------------------------------------------------------------
 // Purpose: Is a grenade in a no grenade area
 //			int IsGrenInNoGren( ent_id )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 {
-	//int n = lua_gettop( L );
+	int n = lua_gettop( L );
 
-	/*
 	if( n == 1 )
 	{
 		bool bRetVal = false;
@@ -2063,7 +1930,7 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
 		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
 		{
-			bRetVal = ( ( CFFGrenadeBase * )pEntity )->IsInNoGren();
+			bRetVal = !FFScriptRunPredicates( pEntity, "canexplode", true );
 		}
 
 		lua_pushboolean( L, bRetVal );
@@ -2071,7 +1938,6 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 		// 1 result
 		return 1;
 	}
-	*/
 
 	// No results
 	return 0;
