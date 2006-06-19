@@ -87,8 +87,6 @@ public:
 	int						m_iSecondaryInitial;
 	int						m_iSecondaryMax;
 
-	float					m_flMassCoefficient;
-
 	// Added by Mulchman
 	int						m_iMaxShells;
 	int						m_iMaxNails;

@@ -495,8 +495,6 @@ public:
 
 	virtual bool TakeNamedItem(const char* szName);
 
-	CNetworkVar(float, m_flMassCoefficient);
-
 	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
 
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
@@ -520,7 +518,10 @@ public:
 	int GetDisguisedClass( void );
 	int GetDisguisedTeam( void );
 	bool IsDisguised( void );
+
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
+	CNetworkVar(int, m_iSpawnInterpCounter);
+
 private:
 	int GetNewDisguisedClass( void );
 	int GetNewDisguisedTeam( void );

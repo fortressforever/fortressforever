@@ -295,15 +295,11 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_flBurningDamage ) ),
 	// End: Added by FryGuy
 
-	// --> Mirv: Map guide
 	RecvPropEHandle( RECVINFO( m_hNextMapGuide ) ),
 	RecvPropEHandle( RECVINFO( m_hLastMapGuide ) ),
 	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),
-	// <-- Mirv: Map guide
 
-	RecvPropFloat( RECVINFO( m_flConcTime ) ),		// |-- Mirv: Concussed
-
-	RecvPropFloat(RECVINFO(m_flMassCoefficient)),
+	RecvPropFloat(RECVINFO(m_flConcTime)),
 END_RECV_TABLE( )
 
 void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
@@ -334,6 +330,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 
 	RecvPropInt( RECVINFO( m_iClassStatus ) ),	
 	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
+
+	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 END_RECV_TABLE( )
 
 class C_FFRagdoll : public C_BaseAnimatingOverlay
@@ -615,6 +613,8 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_flJumpTime = 0;
 
+	m_iSpawnInterpCounter = 0;
+
 	// BEG: Added by Mulchman
 	m_bClientBuilding = false;
 	m_iSpyDisguise = 0; // start w/ no disguise
@@ -788,6 +788,14 @@ void C_FFPlayer::PostDataUpdate( DataUpdateType_t updateType )
 	// C_BaseEntity assumes we're networking the entity's angles, so pretend that it
 	// networked the same value we already have.
 	SetNetworkAngles( GetLocalAngles() );
+
+	// Move player directly to position
+	if (m_iSpawnInterpCounter != m_iSpawnInterpCounterCache)
+	{
+		MoveToLastReceivedPosition(true);
+		ResetLatched();
+		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
+	}
 	
 	BaseClass::PostDataUpdate( updateType );
 }

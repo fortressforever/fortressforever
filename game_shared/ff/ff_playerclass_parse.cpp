@@ -310,9 +310,6 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 	// Speed
 	m_iSpeed			= pKeyValuesData->GetInt("speed", 0);
 
-	// Mass coefficient
-	m_flMassCoefficient	= pKeyValuesData->GetFloat("mass_coefficient", 1.0f);
-
 	// Grenade types
 	Q_strncpy(m_szPrimaryClassName, pKeyValuesData->GetString("primary_classname", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
 	Q_strncpy(m_szSecondaryClassName, pKeyValuesData->GetString("secondary_classname", PLAYERCLASS_PRINTNAME_MISSING), MAX_PLAYERCLASS_STRING);
