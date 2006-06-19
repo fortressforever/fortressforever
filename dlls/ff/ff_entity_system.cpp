@@ -2349,7 +2349,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	// 1 argument, 1 result, escape cleanly if it breaks
 	if( lua_pcall( L, (ent)?2:1, 1, 0 ) != 0 )
 	{
-		DevWarning( "[SCRIPT] Error calling %s (%s)\n", addname, lua_tostring(L, -1) );
+		DevWarning( "[SCRIPT] Error calling %s (%s) ent: %s\n", addname, lua_tostring(L, -1), ent ? STRING( ent->GetEntityName() ) : "NULL" );
 		return true;
 	}
 
@@ -2370,7 +2370,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
-	Warning( "[FFScriptRunPredicates] Object: %x, Function: %s, Expected: %s\n", pObject, pszFunction, ( bExpectedVal ? "true" : "false" ) );
+	//Warning( "[FFScriptRunPredicates] Object: %x, Function: %s, Expected: %s\n", pObject, pszFunction, ( bExpectedVal ? "true" : "false" ) );
 	if( pObject && pszFunction )
 	{
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
@@ -2378,8 +2378,13 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
-				if( entsys.RunPredicates( pEntity, pObject, pszFunction ) && !bExpectedVal )
+				bool bEntSys = entsys.RunPredicates( pEntity, pObject, pszFunction ) > 0;
+
+				if( bEntSys != bExpectedVal )
 					return !bExpectedVal;
+
+				//if( entsys.RunPredicates( pEntity, pObject, pszFunction ) && !bExpectedVal )
+				//	return !bExpectedVal;
 			}
 		}
 	}
