@@ -264,6 +264,11 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	if (!psurface)
 		return;
 
+	if (m_flJumpTime > gpGlobals->curtime)
+		return;
+
+	m_flJumpTime = gpGlobals->curtime + 0.4f;
+
 	// If we want different jump sounds for material...
 //	IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
 //	const char *pSoundName = physprops->GetString(stepSoundName);

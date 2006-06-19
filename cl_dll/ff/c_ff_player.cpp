@@ -613,6 +613,8 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_iLocalSkiState = 0;
 
+	m_flJumpTime = 0;
+
 	// BEG: Added by Mulchman
 	m_bClientBuilding = false;
 	m_iSpyDisguise = 0; // start w/ no disguise

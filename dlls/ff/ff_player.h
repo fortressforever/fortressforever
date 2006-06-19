@@ -135,6 +135,8 @@ public:
 	void PlayJumpSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol );
 	void PlayFallSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol );
 	void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
+
+	float	m_flJumpTime;
 	// <-- Mirv: Proper sound effects
 
 	// --> mulch
