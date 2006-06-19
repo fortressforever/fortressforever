@@ -159,9 +159,10 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 				CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt() );
 				if(pNail)
 					pNail->m_bNailGrenadeNail = true;
-			}
-			
-			EmitSound( "NailGrenade.shoot" );
+
+				// Play this each time we spawn a nail?
+				EmitSound( "NailGrenade.shoot" );
+			}			
 
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();

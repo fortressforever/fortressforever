@@ -890,9 +890,6 @@ void CFFPlayer::Spawn()
 // Mirv: Moved all this out of spawn into here
 void CFFPlayer::SetupClassVariables()
 {
-	// Player default to not being in a nobuild zone	
-	m_NoBuilds.RemoveAll();
-
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
@@ -1351,38 +1348,6 @@ void CFFPlayer::RemoveLocation( int entindex )
 		m_iClientLocation = m_Locations[0].entindex;
 		Q_strncpy( m_szLastLocation, GetLocation(), sizeof( m_szLastLocation ) );
 		m_iLastLocationTeam = GetLocationTeam() - 1;
-	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Set a player in a no build area
-//----------------------------------------------------------------------------
-void CFFPlayer::SetNoBuild( int iEntIndex )
-{
-	if( iEntIndex )
-	{
-		bool bFound = false;
-		for( int i = 0; ( i < m_NoBuilds.Count() ) && !bFound; i++ )
-			if( m_NoBuilds[ i ] == iEntIndex )
-				bFound = true;
-
-		if( !bFound )
-		{
-			m_NoBuilds.AddToTail( iEntIndex );
-		}
-	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Remove a player from a no build area
-//----------------------------------------------------------------------------
-void CFFPlayer::RemoveNoBuild( int iEntIndex )
-{
-	if( iEntIndex )
-	{
-		for( int i = 0; i < m_NoBuilds.Count(); i++ )
-			if( m_NoBuilds[ i ] == iEntIndex )
-				m_NoBuilds.Remove( i );
 	}
 }
 
@@ -2287,7 +2252,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		m_bBuilding = true;
 
 		// See if player is in a no build area first
-		if( IsInNoBuild() && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
+		if( !FFScriptRunPredicates( this, "canbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
 		{
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
