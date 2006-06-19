@@ -279,9 +279,6 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
 	SendPropFloat( SENDINFO( m_flConcTime ) ),
-
-
-	SendPropFloat(SENDINFO(m_flMassCoefficient)),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -304,6 +301,8 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	SendPropInt( SENDINFO( m_iClassStatus ) ),
 	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
+
+	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -431,6 +430,8 @@ CFFPlayer::CFFPlayer()
 	m_pBuildLastWeapon = NULL;
 
 	m_flJumpTime = 0;
+
+	m_iSpawnInterpCounter = 0;
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
 }
@@ -891,6 +892,12 @@ void CFFPlayer::Spawn()
 
 	// equip the HEV suit
 	EquipSuit();
+
+	// Set on ground
+	AddFlag(FL_ONGROUND);
+
+	// Increment the spawn counter
+	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 }
 
 // Mirv: Moved all this out of spawn into here
@@ -923,8 +930,6 @@ void CFFPlayer::SetupClassVariables()
 
 	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
 	m_iSecondary	= pPlayerClassInfo.m_iSecondaryInitial;
-
-	m_flMassCoefficient = pPlayerClassInfo.m_flMassCoefficient;
 
 	SetModel( pPlayerClassInfo.m_szModel );
 	m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;

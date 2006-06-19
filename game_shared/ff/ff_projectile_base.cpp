@@ -227,7 +227,7 @@ END_NETWORK_TABLE()
 
 				CFFPlayer *ffplayer = ToFFPlayer(pEntity);
 
-				// Include the mass coeffient in the calculation if needed
+				// The HWG isn't budged as much by explosions
 				if (ffplayer && ffplayer->GetClassSlot() == CLASS_HWGUY) 
 					coeff = 0.15f;
 

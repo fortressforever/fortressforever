@@ -209,8 +209,10 @@ public:
 	void ClassSpecificSkill_Post();
 	// <-- Mirv: Hold some class info on the player side
 
-	float m_flMassCoefficient;
 	float m_flNextClassSpecificSkill;
+
+	int	  m_iSpawnInterpCounter;
+	int	  m_iSpawnInterpCounterCache;
 
 	void SwapToWeapon(FFWeaponID);
 
