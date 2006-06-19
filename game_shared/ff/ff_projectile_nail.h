@@ -35,13 +35,15 @@ public:
 	DECLARE_CLASS(CFFProjectileNail, CFFProjectileBase);
 
 public:
-
+	bool m_bNailGrenadeNail;
 	virtual void Precache();
 	void BubbleThink();
 	void NailTouch(CBaseEntity *pOther);
 	//int ShouldTransmit(const CCheckTransmitInfo *pInfo) { return FL_EDICT_DONTSEND; }
 
 	static CFFProjectileNail *CreateNail(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
+
+	virtual bool CanClipOwnerEntity() const { return m_bNailGrenadeNail; }
 
 #ifdef CLIENT_DLL
 	CFFProjectileNail() {}
