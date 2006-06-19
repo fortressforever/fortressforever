@@ -125,7 +125,11 @@
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+				Description="Copying to DLL folder(s)"
+				CommandLine="copy   &quot;$(TargetPath)&quot;   C:\srcds\fortressforever\bin
+copy   &quot;$(TargetPath)&quot;   C:\Games\Steam\SteamApps\SourceMods\fortressforever\bin"
+				Outputs="$(TargetName)"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
@@ -573,10 +577,10 @@
 					RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_esp_shared.h">
+					RelativePath=".\ff\ff_esp_shared.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_esp_shared.h">
+					RelativePath="..\game_shared\ff\ff_esp_shared.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_fx_shared.h">

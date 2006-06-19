@@ -41,7 +41,10 @@
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+				CommandLine="copy   &quot;$(TargetPath)&quot;   C:\srcds\fortressforever\bin
+copy   &quot;$(TargetPath)&quot;   C:\Games\Steam\SteamApps\SourceMods\fortressforever\bin"
+				Outputs="$(TargetName)"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
@@ -3406,10 +3409,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
