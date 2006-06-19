@@ -272,7 +272,7 @@ void CBaseGrenade::Detonate( void )
 
 	// No shake if in a no gren area
 #ifdef GAME_DLL
-	if ( GetShakeAmplitude() && !FFScriptRunPredicates( this, "canexplode", true ) )
+	if ( GetShakeAmplitude() && FFScriptRunPredicates( this, "canexplode", true ) )
 	{
 		UTIL_ScreenShake( GetAbsOrigin(), GetShakeAmplitude(), 150.0, 1.0, GetShakeRadius(), SHAKE_START );
 	}
