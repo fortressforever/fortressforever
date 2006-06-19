@@ -620,7 +620,7 @@ C_FFPlayer::C_FFPlayer() :
 	m_iSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
-	m_flConcTime = m_flConcTimeStart = 0;	// |-- Mirv: Don't start conced
+	m_flConcTime = 0;
 
 	for( int i = 0; i < MAX_PLAYERS; i++ )
 	{
@@ -641,18 +641,14 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 }
 
 // --> Mirv: Conc angles
-void C_FFPlayer::PreThink( void )
+void C_FFPlayer::PreThink()
 {
-	if( m_flConcTime > gpGlobals->curtime )
+	if (m_flConcTime > gpGlobals->curtime)
 	{
-		// When did this start
-		if( m_flConcTimeStart == 0 )
-			m_flConcTimeStart = gpGlobals->curtime;
+		float flLength = GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f;
+		float flConcAmount = 15.0f * (m_flConcTime - gpGlobals->curtime) / flLength;
 
-		// Work our conc amount with this rather slow formula for now
-		float flConcAmount = 10.0f * ( m_flConcTime - gpGlobals->curtime ) / ( m_flConcTime - m_flConcTimeStart );
-
-		if( IsAlive() )
+		if (IsAlive())
 		{
 			// Our conc angles, this is also quite slow for now
 			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
@@ -662,8 +658,6 @@ void C_FFPlayer::PreThink( void )
 			m_angConced = vec3_angle;
 		}
 	}
-	else
-		m_flConcTimeStart = 0;
 
 	// Do we need to do a class specific skill?
 	if (m_afButtonPressed & IN_ATTACK2)
