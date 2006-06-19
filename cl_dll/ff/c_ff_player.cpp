@@ -133,7 +133,8 @@ void CC_PrimeOne( void )
 
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
-	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.3f)
+	// This should be okay up to about ~400ms for the moment
+	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
 		return;
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
@@ -187,7 +188,8 @@ void CC_PrimeTwo( void )
 
 	// Make sure we can't insta-prime on the client either
 	// This can be anything really so long as it's less than the real delay
-	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.3f)
+	// This should be okay up to about ~400ms for the moment
+	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
 		return;
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
