@@ -25,7 +25,10 @@ public:
 	DECLARE_PREDICTABLE();
 
 private:
-	CNetworkVar(bool, 	m_bNeedPump);
+
+#ifdef CLIENT_DLL
+	float		m_flNextAutoReload;
+#endif
 
 public:
 	virtual	bool StartReload();

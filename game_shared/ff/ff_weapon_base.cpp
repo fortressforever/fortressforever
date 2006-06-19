@@ -313,10 +313,10 @@ void CFFWeaponBase::PrimaryAttack()
 	// player "shoot" animation
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
-	// especially if the weapon we're firing has a really fast rate of fire.
+#ifdef GAME_DLL
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+#endif
 
 	// Fire now
 	Fire();
