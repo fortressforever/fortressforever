@@ -1986,7 +1986,7 @@ int CFFEntitySystem::IsPlayerFeetDeepInWater( lua_State *L )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::SetGrenNoGren( lua_State *L )
 {
-	int n = lua_gettop( L );
+	//int n = lua_gettop( L );
 
 	/*
 	if( n == 2 )
@@ -2019,7 +2019,7 @@ int CFFEntitySystem::SetGrenNoGren( lua_State *L )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
 {
-	int n = lua_gettop( L );
+	//int n = lua_gettop( L );
 
 	/*
 	if( n == 2 )
@@ -2052,7 +2052,7 @@ int CFFEntitySystem::RemoveGrenNoGren( lua_State *L )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 {
-	int n = lua_gettop( L );
+	//int n = lua_gettop( L );
 
 	/*
 	if( n == 1 )
@@ -2317,7 +2317,10 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 		}
 
 		if (!strlen(STRING(ent->GetEntityName())))
+		{
+			Warning( "[entsys] ent did not have an entity name!\n" );
 			return true /* mirv: let it cont. regardless */;
+		}
 
 		SetVar("entname", STRING(ent->GetEntityName()));
 
@@ -2370,17 +2373,11 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 	Warning( "[FFScriptRunPredicates] Object: %x, Function: %s, Expected: %s\n", pObject, pszFunction, ( bExpectedVal ? "true" : "false" ) );
 	if( pObject && pszFunction )
 	{
-		Warning( "[FFSriptRunPredicates] \tShit was good!\n" );
-
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
 		{
-			Warning( "[FFScriptRunPredicates] \tlooping: %i\n", i );
-
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
-				Warning( "[FFScriptRunPredicates] \tGot an entity\n" );
-
 				if( entsys.RunPredicates( pEntity, pObject, pszFunction ) && !bExpectedVal )
 					return !bExpectedVal;
 			}
