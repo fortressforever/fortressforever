@@ -200,10 +200,10 @@ HALF4 main( PS_INPUT i ) : COLOR
 /*
 	HALF3 worldSpaceNormal = mul(i.tangentSpaceTranspose, tangentSpaceNormal);
 	float mag = dot(normalize(g_EyePos - i.worldPos_projPosZ.xyz), worldSpaceNormal);
-	mag = max(0.0f, mag);
-	mag = 1.0f - mag;
-	mag = mag * mag;
-	result = lerp(result, HALF3(1.0f, 0.3f, 0.0f), mag);
+	if(mag > 0.7f)
+		discard;
+	if(mag + 0.05f > 0.7f)
+		result = HALF3(0.1f, 0.2f, 1.0f); //lerp(result, HALF3(0.0f, 0.2f, 1.0f), 0.7f / mag);
 */
 
 #if DOWATERFOG

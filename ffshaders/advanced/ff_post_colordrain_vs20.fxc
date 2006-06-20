@@ -1,0 +1,7 @@
+#include "common_vs_fxc.h"
+
+void main(in float4 inpos : POSITION, in float2 intexcoord : TEXCOORD0, out float4 outpos : POSITION, out float2 outtexcoord : TEXCOORD0)
+{
+	outpos = inpos;
+	outtexcoord = intexcoord;
+}
