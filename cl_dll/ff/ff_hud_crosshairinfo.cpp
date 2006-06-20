@@ -97,7 +97,6 @@ DECLARE_HUDELEMENT( CHudCrosshairInfo );
 void CHudCrosshairInfo::Init( void )
 {
 	m_pText[ 0 ] = '\0';
-	m_iTeam = 0;
 }
 
 void CHudCrosshairInfo::VidInit( void )
@@ -105,6 +104,7 @@ void CHudCrosshairInfo::VidInit( void )
 	SetPaintBackgroundEnabled( false );
 	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
 	m_flDrawTime = -99;
+	m_iTeam = 0;
 
 	// Make the panel as big as the screen
 	SetPos( 0, 0 );
@@ -472,8 +472,8 @@ void CHudCrosshairInfo::Paint( void )
 
 		// Bug #0000686: defrag wants team colored hud_crosshair names
 		Color cColor;
-		SetColorByTeam( m_iTeam, cColor );
-		surface()->DrawSetTextColor( cColor );
+		SetColorByTeam( m_iTeam - 1, cColor );		
+		surface()->DrawSetTextColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 
 		if( hud_centerid.GetInt() )
 			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
