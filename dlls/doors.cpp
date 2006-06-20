@@ -88,7 +88,6 @@ LINK_ENTITY_TO_CLASS( func_water, CBaseDoor );
 // SendTable stuff.
 IMPLEMENT_SERVERCLASS_ST(CBaseDoor, DT_BaseDoor)
 	SendPropFloat	(SENDINFO(m_flWaveHeight),		8,	SPROP_ROUNDUP,	0.0f,	8.0f),
-	SendPropVector	(SENDINFO(m_vecVelocity), 0, SPROP_NOSCALE),		// |-- Mirv: For player prediction
 END_SEND_TABLE()
 
 #define DOOR_SENTENCEWAIT	6
