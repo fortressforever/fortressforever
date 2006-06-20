@@ -2216,6 +2216,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	if( lua_pcall( L, (ent)?2:1, 1, 0 ) != 0 )
 	{
 		// TODO: Definately don't want this message showing up permantly as it's kind of deceptive
+		// AND: should this return value be a parameter of run predicates? (so it'll work right w/ FFScriptRunPredicates?
 		DevWarning( "[SCRIPT] Error calling %s (%s) ent: %s\n", addname, lua_tostring(L, -1), ent ? STRING( ent->GetEntityName() ) : "NULL" );
 		return true;
 	}
