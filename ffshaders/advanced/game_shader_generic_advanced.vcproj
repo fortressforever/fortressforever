@@ -168,6 +168,9 @@ copy &quot;$(TargetDir)game_shader_generic_advanced.dll&quot; &quot;bin\game_sha
 				RelativePath=".\ff_lightmappedgeneric_dx8.cpp">
 			</File>
 			<File
+				RelativePath=".\ff_post_colordrain.cpp">
+			</File>
+			<File
 				RelativePath=".\ff_unlitgeneric.cpp">
 			</File>
 			<File

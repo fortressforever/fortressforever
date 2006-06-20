@@ -1,3 +1,6 @@
+ff_post_colordrain_ps20.fxc
+ff_post_colordrain_vs20.fxc
+
 ff_VertexLitGeneric.psh
 ff_vertexlitgeneric_basealphamaskedenvmap.psh
 ff_VertexLitGeneric_BaseAlphaMaskedEnvMapV2.psh
