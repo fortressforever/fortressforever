@@ -85,8 +85,8 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			Vector vCurOrigin = GetLocalOrigin() - (m_vInitialVelocity * .05f);
-			interpolator.AddToHead(changeTime - 0.5f, &vCurOrigin, false);
+			Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
+			interpolator.AddToHead(changeTime - 1.0f, &vCurOrigin, false);
 
 			// Add the current sample.
 			vCurOrigin = GetLocalOrigin();
@@ -101,27 +101,16 @@ END_NETWORK_TABLE()
 	}
 
 	//----------------------------------------------------------------------------
-	// Purpose: Delay the model drawing for a bit so it doesn't look odd with when
-	//			interp has a history of the projectile being behind where it was
-	//			launched
-	//			Also, check if we need to attach a flight sound
+	// Purpose: 
 	//----------------------------------------------------------------------------
 	int CFFProjectileBase::DrawModel(int flags) 
 	{
-		// During the first second of our life, don't draw ourselves, this is to
-		// fix the weapon appearing behind the player because of interpolation values
-		// being added into the past
-		/*if (gpGlobals->curtime - m_flSpawnTime < 0.15f) 
-		{
-		//	AddEffects(EF_NOSHADOW);
-		//
-			return 0;
-		}*/
-
-		//RemoveEffects(EF_NOSHADOW);
-
+		// Just putting this here for now.. not the best place for it admittedly
 		if (m_fNeedsEngineSoundAttached)
+		{
 			EmitSound(GetFlightSound());
+			m_fNeedsEngineSoundAttached = false;
+		}
 
 		return BaseClass::DrawModel(flags);
 	}
