@@ -80,6 +80,8 @@ protected:
 	// For center printing
 	float		m_flXOffset;
 	float		m_flYOffset;
+	// For color
+	int			m_iTeam;
 
 private:
 
@@ -95,6 +97,7 @@ DECLARE_HUDELEMENT( CHudCrosshairInfo );
 void CHudCrosshairInfo::Init( void )
 {
 	m_pText[ 0 ] = '\0';
+	m_iTeam = 0;
 }
 
 void CHudCrosshairInfo::VidInit( void )
@@ -228,7 +231,11 @@ void CHudCrosshairInfo::OnTick( void )
 						Q_strcpy( szClass, Class_IntToResourceString( pGR->GetClass( pHitPlayer->index ) ) );
 					}
 
-					int iHealth = -1, iArmor = -1, iTeam = pHitPlayer->GetTeamNumber();
+					// Default
+					int iHealth = -1, iArmor = -1;
+					
+					// Default
+					m_iTeam = pHitPlayer->GetTeamNumber();
 
 					if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
 					{
@@ -295,11 +302,11 @@ void CHudCrosshairInfo::OnTick( void )
 									Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
 
 									// Get the disguised team
-									iTeam = pHitPlayer->GetDisguisedTeam();
+									m_iTeam = pHitPlayer->GetDisguisedTeam();
 
 									// If this spy is disguised as our team we need to show his
 									// health/armor
-									if( iTeam == pPlayer->GetTeamNumber() )
+									if( m_iTeam == pPlayer->GetTeamNumber() )
 									{
 										iHealth = pHitPlayer->GetHealthPercentage();
 										iArmor = pHitPlayer->GetArmorPercentage();
@@ -307,7 +314,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 									// Or, if this spy is disguised as an ally of our team we
 									// need to show his health/armor
-									if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), iTeam ) == GR_TEAMMATE )
+									if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), m_iTeam ) == GR_TEAMMATE )
 									{
 										iHealth = pHitPlayer->GetHealthPercentage();
 										iArmor = pHitPlayer->GetArmorPercentage();
@@ -320,7 +327,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 									// Check to see if we've ID'd this spy before as the 
 									// disguise he's currently disguised as
-									if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( iTeam, iClassSlot ) )
+									if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( m_iTeam, iClassSlot ) )
 										Q_strcpy( szName, pPlayer->m_hSpyTracking[ pHitPlayer->index ].m_szName );
 									else
 									{
@@ -342,7 +349,7 @@ void CHudCrosshairInfo::OnTick( void )
 											if( pGR->IsConnected( i ) )
 											{
 												// If the guy's on the team we're disguised as...
-												if( pGR->GetTeam( i ) == iTeam )
+												if( pGR->GetTeam( i ) == m_iTeam )
 												{
 													// Store off the player index since we found
 													// someone on the team we're disguised as
@@ -376,7 +383,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 										// Store off the spies name, class & team in case we ID him again
 										// and he hasn't changed disguise
-										pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, iTeam, iClassSlot );
+										pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, iClassSlot );
 									}
 								}
 							}
@@ -461,7 +468,12 @@ void CHudCrosshairInfo::Paint( void )
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
 		surface()->DrawSetTextFont( m_hTextFont );
-		surface()->DrawSetTextColor( GetFgColor() );
+		//surface()->DrawSetTextColor( GetFgColor() );
+
+		// Bug #0000686: defrag wants team colored hud_crosshair names
+		Color cColor;
+		SetColorByTeam( m_iTeam, cColor );
+		surface()->DrawSetTextColor( cColor );
 
 		if( hud_centerid.GetInt() )
 			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
