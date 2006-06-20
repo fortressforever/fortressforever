@@ -607,7 +607,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 		// Check if lua will let us target this player
 		if( FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) )
 		{
-			//DevMsg( "[MiniTurret] About to run predicates for player: " );
+			//DevMsg( "[MiniTurret] %s About to run predicates for player: %s ", GetEntityName(), pPlayer->GetPlayerName() );
 			if( entsys.RunPredicates( this, pPlayer, "validtarget" ) )
 			{
 				//DevMsg( "Success!\n" );
@@ -860,7 +860,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	if( m_flShotTime < gpGlobals->curtime )
 	{
 		// Fire the gun
-		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) >= DOT_10DEGREE ) // 10 degree slop
+		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) <= DOT_10DEGREE ) // 10 degree slop
 		{
 			//SetActivity( ACT_RESET );
 			//SetActivity( ( Activity )ACT_MINITURRET_FIRE );
@@ -872,10 +872,6 @@ void CFFMiniTurret::OnActiveThink( void )
 
 			Shoot( vecMuzzle, vecMuzzleDir );
 		} 
-	}
-	else
-	{
-		//SetActivity( ( Activity )ACT_MINITURRET_OPEN_IDLE );
 	}
 
 	// If we can see our enemy, face it
@@ -1074,7 +1070,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 {
 	FireBulletsInfo_t info;
 
-	Vector vecDir = vecDirToEnemy;
+	//Vector vecDir = vecDirToEnemy;
 
 	/*
 	Vector vecDir, vecOrigin;
@@ -1088,7 +1084,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	*/
 
 	info.m_vecSrc = vecSrc;
-	info.m_vecDirShooting = vecDir;
+	info.m_vecDirShooting = vecDirToEnemy;
 	info.m_iTracerFreq = 1;
 	info.m_iShots = 1;
 	info.m_pAttacker = this;
@@ -1099,6 +1095,7 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 
 	if( !miniturret_castrate.GetBool() )
 	{
+		Warning( "[miniturret] fire!\n" );
 		FireBullets( info );
 		EmitSound( "RespawnTurret.Fire" );
 		DoMuzzleFlash();
