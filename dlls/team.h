@@ -41,6 +41,7 @@ public:
 	//-----------------------------------------------------------------------------
 	virtual int			GetTeamNumber( void );
 	virtual const char *GetName( void );
+	virtual void		SetName( const char *pszName );
 	virtual void		UpdateClientData( CBasePlayer *pPlayer );
 	virtual bool		ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntity );
 

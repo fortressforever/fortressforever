@@ -146,6 +146,14 @@ const char *CTeam::GetName( void )
 	return m_szTeamname;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Set the team's name
+//-----------------------------------------------------------------------------
+void CTeam::SetName( const char *pszName )
+{
+	Q_strncpy( m_szTeamname.GetForModify(), pszName, MAX_TEAM_NAME_LENGTH );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Update the player's client data
