@@ -860,7 +860,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	if( m_flShotTime < gpGlobals->curtime )
 	{
 		// Fire the gun
-		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) <= DOT_10DEGREE ) // 10 degree slop
+		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) <= DOT_3DEGREE )
 		{
 			//SetActivity( ACT_RESET );
 			//SetActivity( ( Activity )ACT_MINITURRET_FIRE );
@@ -1095,7 +1095,6 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 
 	if( !miniturret_castrate.GetBool() )
 	{
-		Warning( "[miniturret] fire!\n" );
 		FireBullets( info );
 		EmitSound( "RespawnTurret.Fire" );
 		DoMuzzleFlash();
