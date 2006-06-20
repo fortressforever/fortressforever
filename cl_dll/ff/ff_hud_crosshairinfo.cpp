@@ -82,6 +82,7 @@ protected:
 	float		m_flYOffset;
 	// For color
 	int			m_iTeam;
+	int			m_iClass;
 
 private:
 
@@ -105,6 +106,7 @@ void CHudCrosshairInfo::VidInit( void )
 	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
 	m_flDrawTime = -99;
 	m_iTeam = 0;
+	m_iClass = 0;
 
 	// Make the panel as big as the screen
 	SetPos( 0, 0 );
@@ -236,6 +238,7 @@ void CHudCrosshairInfo::OnTick( void )
 					
 					// Default
 					m_iTeam = pHitPlayer->GetTeamNumber();
+					m_iClass = pHitPlayer->GetTeamNumber();
 
 					if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
 					{
@@ -298,8 +301,8 @@ void CHudCrosshairInfo::OnTick( void )
 									// fails we use the real name.
 
 									// Get the disguised class
-									int iClassSlot = pHitPlayer->GetDisguisedClass();
-									Q_strcpy( szClass, Class_IntToResourceString( iClassSlot ) );
+									/*int iClassSlot*/ m_iClass = pHitPlayer->GetDisguisedClass();
+									Q_strcpy( szClass, Class_IntToResourceString( m_iClass ) );
 
 									// Get the disguised team
 									m_iTeam = pHitPlayer->GetDisguisedTeam();
@@ -327,7 +330,7 @@ void CHudCrosshairInfo::OnTick( void )
 
 									// Check to see if we've ID'd this spy before as the 
 									// disguise he's currently disguised as
-									if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( m_iTeam, iClassSlot ) )
+									if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( m_iTeam, m_iClass ) )
 										Q_strcpy( szName, pPlayer->m_hSpyTracking[ pHitPlayer->index ].m_szName );
 									else
 									{
@@ -356,7 +359,7 @@ void CHudCrosshairInfo::OnTick( void )
 													iPlayers[ iCount++ ] = i;
 
 													// If the guy's playing as the class we're disguised as...
-													if( pGR->GetClass( i ) == iClassSlot )
+													if( pGR->GetClass( i ) == m_iClass )
 													{
 														// We're stealing this guys name
 														Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
@@ -383,12 +386,15 @@ void CHudCrosshairInfo::OnTick( void )
 
 										// Store off the spies name, class & team in case we ID him again
 										// and he hasn't changed disguise
-										pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, iClassSlot );
+										pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, m_iClass );
 									}
 								}
 							}
 						}					
 					}
+
+					// Set up local crosshair info struct
+					pPlayer->m_hCrosshairInfo.Set( szName, m_iTeam, m_iClass );
 
 					// NOW! Remember team is 1 higher than the actual team
 					// If health/armor are -1 then we don't show it
@@ -458,6 +464,16 @@ void CHudCrosshairInfo::OnTick( void )
 					// Start drawing
 					m_flDrawTime = gpGlobals->curtime;
 				}
+				else
+				{
+					// Hit something but not a player/dispenser/sentrygun
+					pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
+				}
+			}
+			else
+			{
+				// Didn't hit anything!
+				pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
 			}
 		}
 	}

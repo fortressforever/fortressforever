@@ -55,6 +55,10 @@ struct SpyInfo_s
 	}
 
 };
+
+// Want to re-use this so renaming
+// so the name isn't confusing
+typedef SpyInfo_s CrosshairInfo_s;
 #endif
 
 #endif // FF_SHAREDDEFS_H

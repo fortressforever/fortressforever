@@ -147,6 +147,11 @@ public:
 	// player name until that spy disguises as something else
 	SpyInfo_s m_hSpyTracking[ MAX_PLAYERS + 1 ];
 
+	// The current guy you're ID'ing
+	// This is mainly for if you want to
+	// add %i lookup in messages
+	CrosshairInfo_s m_hCrosshairInfo;
+
 	virtual ShadowType_t ShadowCastType( void );
 
 public:	
