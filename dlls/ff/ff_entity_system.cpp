@@ -248,6 +248,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IncludeScript", IncludeScript );
 	lua_register( L, "SetTeamClassLimit", SetTeamClassLimit );
 	lua_register( L, "SetTeamPlayerLimit", SetTeamPlayerLimit );
+	lua_register( L, "SetTeamName", SetTeamName );
 	lua_register( L, "Random", Random );
 	lua_register( L, "rand", Random );
 	lua_register( L, "SetTeamAllies", SetTeamAllies );
@@ -1243,6 +1244,41 @@ int CFFEntitySystem::SetTeamPlayerLimit( lua_State *L )
 		}
 
 		DevMsg("Set player limit for team %d to %d\n", team, limit);
+
+		// 1 result
+		lua_pushboolean( L, true );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Sets the name of a team (ie. "attackers")
+//          int SetTeamName( team, name )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::SetTeamName( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	// A 2 argument'd function
+	if( n == 2 )
+	{
+		int iTeam = lua_tonumber( L, 1 );
+		const char *pszName = lua_tostring( L, 2 );
+
+		CFFTeam *pTeam = ( CFFTeam * )GetGlobalTeam( iTeam );
+
+		if( pTeam )
+		{
+			pTeam->SetName( pszName );
+			DevMsg( "Set team name for team %i to \"%s\"\n", iTeam, pszName );
+		}
+		else
+		{
+			Warning( "Unable to set the team name for team %i to \"%s\"\n", iTeam, pszName );
+		}
 
 		// 1 result
 		lua_pushboolean( L, true );
