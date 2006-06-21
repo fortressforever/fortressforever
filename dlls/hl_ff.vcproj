@@ -26,7 +26,7 @@
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
-				AdditionalIncludeDirectories="../game_shared/ff;./;../Public/tier1;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../lua/include;../stats;..\omnibot"
+				AdditionalIncludeDirectories="../game_shared/ff;./;../Public/tier1;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../stats;..\omnibot;..\external\boost\include;..\external\lua\include;..\external\luabind\include"
 				PreprocessorDefinitions="NDEBUG;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
@@ -51,11 +51,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib  lua.lib luabind.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\lib\public"
+				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
 				IgnoreDefaultLibraryNames="LIBCD"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
@@ -107,7 +107,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="../Public/tier1;../game_shared/ff;./;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../lua/include;../game_shared/hl2;../stats;..\omnibot"
+				AdditionalIncludeDirectories="../Public/tier1;../game_shared/ff;./;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../game_shared/hl2;../stats;..\omnibot;..\external\luabind\include;..\external\boost\include;..\external\lua\include"
 				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="5"
@@ -129,11 +129,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib luaD.lib luabindD.lib"
 				OutputFile="$(IntDir)/server.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\lib\public"
+				AdditionalLibraryDirectories="..\lib\public;..\external\lua\lib;..\external\luabind\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(IntDir)/server.pdb"
 				SubSystem="2"
@@ -576,10 +576,10 @@
 					RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_esp_shared.h">
+					RelativePath="..\game_shared\ff\ff_esp_shared.h">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_esp_shared.h">
+					RelativePath=".\ff\ff_esp_shared.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_fx_shared.h">
@@ -649,491 +649,6 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_weapon_parse.h">
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="lua"
-			Filter="">
-			<File
-				RelativePath="..\lua\src\lapi.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lapi.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lcode.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lcode.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\ldebug.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\ldebug.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\ldo.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\ldo.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\ldump.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lfunc.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lfunc.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lgc.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lgc.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\llex.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\llex.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\llimits.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lmem.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lmem.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lobject.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lobject.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lopcodes.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lopcodes.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lparser.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lparser.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lstate.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lstate.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lstring.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lstring.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\ltable.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\ltable.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\ltests.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\ltm.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\ltm.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lundump.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lundump.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lvm.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lvm.h">
-			</File>
-			<File
-				RelativePath="..\lua\src\lzio.c">
-				<FileConfiguration
-					Name="Release FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\lua\src\lzio.h">
-			</File>
-			<Filter
-				Name="lib"
-				Filter="">
-				<File
-					RelativePath="..\lua\src\lib\lauxlib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\lbaselib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\ldblib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\liolib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\lmathlib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\loadlib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\lstrlib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\lua\src\lib\ltablib.c">
-					<FileConfiguration
-						Name="Release FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug FF|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"/>
-					</FileConfiguration>
 				</File>
 			</Filter>
 		</Filter>
