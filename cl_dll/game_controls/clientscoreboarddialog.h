@@ -130,7 +130,8 @@ private:
 	int			m_iJumpKey;
 
 	// methods
-	void FillScoreBoard( );
+	void FillScoreBoard();
+	void RebuildScoreBoard();
 
 protected:
 	int m_iTeamSections[ TEAM_COUNT ];
