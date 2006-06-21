@@ -34,6 +34,7 @@ public:
 	virtual int		Get_Score( void );
 	virtual int		Get_Deaths( void );
 	virtual int		Get_Ping( void );
+	virtual float	Get_ScoreTime( void );
 
 	// Player Handling
 	virtual int		Get_Number_Players( void );
@@ -59,6 +60,7 @@ public:
 	int		m_iScore;
 	// Bug #0000529: Total death column doesn't work
 	int		m_iDeaths;	// Mulch: receive team deaths from server
+	float	m_flScoreTime; // Mulch: time this team last scored
 
 	// Data for the scoreboard	
 	int		m_iPing;

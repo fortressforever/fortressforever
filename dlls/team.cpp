@@ -42,6 +42,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iScore), 0 ),
 	// Bug #0000529: Total death column doesn't work
 	SendPropInt( SENDINFO(m_iDeaths), 0 ), // Mulch: send deaths to client
+	SendPropFloat( SENDINFO( m_flScoreTime) ), // Mulch: time team last scored
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
 	SendPropArray2( 
@@ -125,6 +126,7 @@ void CTeam::Init( const char *pName, int iNumber )
 
 	m_iScore = 0;
 	m_iDeaths = 0;
+	m_flScoreTime = 0.0f;
 
 	Q_strncpy( m_szTeamname.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 	m_iTeamNum = iNumber;
@@ -287,11 +289,13 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 void CTeam::AddScore( int iScore )
 {
 	m_iScore += iScore;
+	m_flScoreTime = gpGlobals->curtime;
 }
 
 void CTeam::SetScore( int iScore )
 {
 	m_iScore = iScore;
+	m_flScoreTime = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -300,6 +304,14 @@ void CTeam::SetScore( int iScore )
 int CTeam::GetScore( void )
 {
 	return m_iScore;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the time this team last scored
+//-----------------------------------------------------------------------------
+float CTeam::GetScoreTime( void )
+{
+	return m_flScoreTime;
 }
 
 //-----------------------------------------------------------------------------
