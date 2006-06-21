@@ -35,6 +35,16 @@
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
 
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -89,7 +99,6 @@ CFFEntitySystem::CFFEntitySystem()
 
 	// Initialise this to false
 	m_ScriptExists = false;
-
 }
 
 //----------------------------------------------------------------------------
@@ -162,6 +171,13 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 //----------------------------------------------------------------------------
 // Purpose: This loads the correct script for our map
 //----------------------------------------------------------------------------
+CFFPlayer* GetPlayerPtr(int i)
+{
+	CFFPlayer* pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i + 1));
+	return pPlayer;
+}
+
+
 bool CFFEntitySystem::StartForMap()
 {
 	// [TODO]
@@ -184,13 +200,16 @@ bool CFFEntitySystem::StartForMap()
 	}
 
 	// Load the base libraries [TODO] Not all of them !
-	lua_baselibopen(L);
+	luaopen_base(L);
 	
 	//lua_atpanic(L, HandleError);
 
+	// setup luabind
+	luabind::open(L);
+
 	// And now load some of ours
 	FFLibOpen();
-
+	
 	// Hurrah well that is set up now
 	DevMsg( "[SCRIPT] Entity system all set up!\n" );
 

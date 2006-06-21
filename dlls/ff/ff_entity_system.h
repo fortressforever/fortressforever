@@ -12,21 +12,13 @@
 
 #ifndef FF_ENTITY_SYSTEM_H
 #define FF_ENTITY_SYSTEM_H
-
 #pragma once
 
-#include "cbase.h"
+// forward declarations
+struct lua_State;
 
+// extern declarations
 extern ConVar mp_respawndelay;
-
-// Lua includes
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
-
 
 //============================================================================
 // CFFEntitySystemHelper
