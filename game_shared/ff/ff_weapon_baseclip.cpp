@@ -40,7 +40,7 @@ bool CFFWeaponBaseClip::StartReload()
 	if (pOwner == NULL)
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) < GetFFWpnData().m_iCycleDecrement)
 		return false;
 
 	if (m_iClip1 >= GetMaxClip1())
@@ -73,7 +73,7 @@ bool CFFWeaponBaseClip::Reload()
 	if (pOwner == NULL)
 		return false;
 
-	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) < GetFFWpnData().m_iCycleDecrement)
 		return false;
 
 	if (m_iClip1 >= GetMaxClip1())
@@ -228,7 +228,7 @@ void CFFWeaponBaseClip::ItemPostFrame()
 		if (m_flTimeWeaponIdle <= gpGlobals->curtime)
 		{
 			// If out of ammo, end reload
-			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <=0)
+			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) < GetFFWpnData().m_iCycleDecrement)
 			{
 				FinishReload();
 				return;

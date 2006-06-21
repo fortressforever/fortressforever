@@ -24,6 +24,8 @@
 
 #endif
 
+#include "ff_weapon_base.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1265,9 +1267,16 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	
 	if ( !bFired && (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
+		CFFWeaponBase *pFFWeapon = dynamic_cast<CFFWeaponBase*>(this);
+
+		if(!pFFWeapon)
+			return; //HACKHACK: voogru: too lazy to make the proper checks here, for now.
+
 		// Clip empty? Or out of ammo on a no-clip weapon?
 		if ( !IsMeleeWeapon() &&  
-			(( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pOwner->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
+			(( UsesClipsForAmmo1() && m_iClip1 < pFFWeapon->GetFFWpnData().m_iCycleDecrement) 
+			|| ( !UsesClipsForAmmo1() 
+			&& pOwner->GetAmmoCount(m_iPrimaryAmmoType)< pFFWeapon->GetFFWpnData().m_iCycleDecrement )) )
 		{
 			HandleFireOnEmpty();
 			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2; //VOOGRU: #0000562 
@@ -1507,8 +1516,19 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 
 	// If I don't have any spare ammo, I can't reload
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-		return false;
+
+	CFFWeaponBase *pFFWeapon = dynamic_cast<CFFWeaponBase*>(this);
+
+	if(pFFWeapon)
+	{
+		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) < pFFWeapon->GetFFWpnData().m_iCycleDecrement )
+			return false;
+	}
+	else
+	{
+		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+			return false;
+	}
 
 	bool bReload = false;
 
