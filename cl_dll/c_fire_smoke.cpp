@@ -869,6 +869,7 @@ int SortHitboxVolumes(HitboxVolume_t *elem1, HitboxVolume_t *elem2)
 	return 0;
 }
 
+#include "c_baseplayer.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Attaches fire to the hitboxes of an animating character. The fire
@@ -880,6 +881,22 @@ void C_EntityFlame::AttachToHitBoxes( void )
 	m_pCachedModel = NULL;
 
 	C_BaseCombatCharacter *pAnimating = (C_BaseCombatCharacter *)m_hEntAttached.Get();
+
+	// --> Mirv: Effect looks whack on local player, so put it on their view model instead
+	float flHitboxMinVolume = 1000.0f;
+	float flHitboxMaxVolume = 4000.0f;
+
+	C_BasePlayer *player = dynamic_cast<C_BasePlayer *> (pAnimating);
+
+	if (player == C_BasePlayer::GetLocalPlayer())
+	{
+		pAnimating = (C_BaseCombatCharacter *) player->GetViewModel();
+		
+		flHitboxMinVolume = 50.0f;
+		flHitboxMaxVolume = 200.0f;
+	}
+	// <-- Mirv
+
 	if (!pAnimating || !pAnimating->GetModel())
 	{
 		return;
@@ -975,17 +992,16 @@ void C_EntityFlame::AttachToHitBoxes( void )
 
 		Assert( IsFinite(flVolume) );
 
-#define FLAME_HITBOX_MIN_VOLUME 1000.0f
-#define FLAME_HITBOX_MAX_VOLUME 4000.0f
-
-		if( flVolume < FLAME_HITBOX_MIN_VOLUME )
+		// --> Mirv: Swapped to using variable rather than definition
+		if( flVolume < flHitboxMinVolume )
 		{
-			flVolume = FLAME_HITBOX_MIN_VOLUME;
+			flVolume = flHitboxMinVolume;
 		}
-		else if( flVolume > FLAME_HITBOX_MAX_VOLUME )
+		else if( flVolume > flHitboxMaxVolume )
 		{
-			flVolume = FLAME_HITBOX_MAX_VOLUME;
+			flVolume = flHitboxMaxVolume;
 		}
+		// <-- Mirv
 
 		m_pFireSmoke[i]->m_flScaleEnd = 0.00012f * flVolume;
 		m_pFireSmoke[i]->m_flScaleTimeStart = Helper_GetTime();
@@ -1021,6 +1037,15 @@ void C_EntityFlame::UpdateHitBoxFlames( void )
 	{
 		return;
 	}
+
+	// --> Mirv: Effect looks whack on local player, so put it on their viewmodel instead
+	C_BasePlayer *player = dynamic_cast<C_BasePlayer *> (pAnimating);
+
+	if (player == C_BasePlayer::GetLocalPlayer())
+	{
+		pAnimating = (C_BaseCombatCharacter *) player->GetViewModel();
+	}
+	// <-- Mirv
 
 	if (pAnimating->GetModel() != m_pCachedModel)
 	{

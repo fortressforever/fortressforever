@@ -110,6 +110,12 @@ CON_COMMAND(ffdev_tranqme, "tranqs you")
 	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
 }
 
+CON_COMMAND(ffdev_score, "you score")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+	you->AddPointsToTeam(10, true);
+}
+
 CON_COMMAND(ffdev_iclass, "instant switch")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
