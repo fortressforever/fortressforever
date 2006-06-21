@@ -49,7 +49,8 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void GrenadeThink();
 
-	float m_flNextHurt;
+	float	m_flNextHurt;
+	bool	m_bExploded;
 #endif
 };
 
@@ -79,6 +80,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		*/
 
 		m_flNextHurt = 0;
+		m_bExploded = false;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
@@ -144,7 +146,11 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			END_ENTITY_SPHERE_QUERY();
 
 			// Just shoving this here for now, Ted can sort out the effect properly.
-			EmitSound(GAS_SOUND);
+			if (!m_bExploded)
+			{
+				EmitSound(GAS_SOUND);
+				m_bExploded = true;
+			}
 
 			CEffectData data;
 			data.m_vOrigin = GetAbsOrigin();
