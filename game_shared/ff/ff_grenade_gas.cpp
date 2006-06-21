@@ -57,11 +57,26 @@ LINK_ENTITY_TO_CLASS( gasgrenade, CFFGrenadeGas );
 PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 #ifdef GAME_DLL
+
+/*
+	int ACT_GASGREN_IDLE;
+	int ACT_GASGREN_DEPLOY;
+	int ACT_GASGREN_DEPLOY_IDLE;
+	*/
+
 	void CFFGrenadeGas::Spawn( void )
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeGas::Spawn\n");
 		SetModel( GASGRENADE_MODEL );
 		BaseClass::Spawn();
+
+		/*
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_DEPLOY );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_DEPLOY_IDLE );
+
+		m_iSequence = SelectWeightedSequence( ( Activity )ACT_GASGREN_IDLE );
+		*/
 
 		m_flNextHurt = 0;
 	}
@@ -78,7 +93,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		//CFFGrenadeBase::PostExplode();
 	}
 
-	void CFFGrenadeGas::GrenadeThink()
+	void CFFGrenadeGas::GrenadeThink( void )
 	{
 		// If the grenade is in a no grenade area, kill it
 		if( !FFScriptRunPredicates( this, "canexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
@@ -86,7 +101,10 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			// This will remove the gren
 			CFFGrenadeBase::PostExplode();
 			return;
-		}
+		}		
+
+		// Animate
+		//StudioFrameAdvance();
 
 		// Been detonated for 10 secs now, so fade out
 		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
