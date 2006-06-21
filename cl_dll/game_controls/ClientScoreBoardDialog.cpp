@@ -592,7 +592,7 @@ int CClientScoreBoardDialog::AddSection( int teamType, int teamNumber )
 		m_pPlayerList->AddSection( m_iSectionId, "", StaticPlayerSortFunc );
 		
 		// --> Mirv: So we don't see teams unless there's somebody in them
-		m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
+		//m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
 		// <-- Mirv: So we don't see teams unless there's somebody in them
 
 		m_pPlayerList->SetFgColor( pGR->GetTeamColor( teamNumber ) );
