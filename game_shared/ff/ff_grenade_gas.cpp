@@ -16,7 +16,7 @@
 #include "ff_grenade_base.h"
 #include "ff_utils.h"
 
-#define GASGRENADE_MODEL "models/weapons/w_eq_fraggrenade_thrown.mdl"
+#define GASGRENADE_MODEL "models/grenades/gas/gas.mdl"
 #define GAS_SOUND "GasGrenade.Explode"
 #define GAS_EFFECT "GasCloud"
 
@@ -49,7 +49,10 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void GrenadeThink();
 
-	float	m_flNextHurt;
+	int m_iSequence;
+	Activity m_Activity;
+
+	float m_flNextHurt;
 	bool	m_bExploded;
 #endif
 };
@@ -59,11 +62,9 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 #ifdef GAME_DLL
 
-/*
-	int ACT_GASGREN_IDLE;
-	int ACT_GASGREN_DEPLOY;
-	int ACT_GASGREN_DEPLOY_IDLE;
-	*/
+	int ACT_GAS_IDLE;
+	int ACT_GAS_DEPLOY;
+	int ACT_GAS_DEPLOY_IDLE;
 
 	void CFFGrenadeGas::Spawn( void )
 	{
@@ -71,13 +72,13 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		SetModel( GASGRENADE_MODEL );
 		BaseClass::Spawn();
 
-		/*
-		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_IDLE );
-		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_DEPLOY );
-		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GASGREN_DEPLOY_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GAS_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GAS_DEPLOY );
+		ADD_CUSTOM_ACTIVITY( CFFGrenadeGas, ACT_GAS_DEPLOY_IDLE );
 
-		m_iSequence = SelectWeightedSequence( ( Activity )ACT_GASGREN_IDLE );
-		*/
+		m_Activity = ( Activity )ACT_GAS_IDLE;
+		m_iSequence = SelectWeightedSequence( m_Activity );
+		SetSequence( m_iSequence );
 
 		m_flNextHurt = 0;
 		m_bExploded = false;
@@ -86,11 +87,11 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
-		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
+		//CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
 
 		// TODO: trigger client side hallucination here
 
-		// TODO: Don't for IsInNoGren() check
+		// TODO: Don't for !FFScriptRunPredicates( this, "canexplode", true ) check
 
 		//CFFGrenadeBase::PostExplode();
 	}
@@ -103,26 +104,35 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			// This will remove the gren
 			CFFGrenadeBase::PostExplode();
 			return;
-		}		
+		}
 
-		// Animate
-		//StudioFrameAdvance();
+		// If we're done deploying, deploy idle
+		if( m_Activity == ( Activity )ACT_GAS_DEPLOY )
+		{
+			m_Activity = ( Activity )ACT_GAS_DEPLOY_IDLE;
+			m_iSequence = SelectWeightedSequence( m_Activity );
+			SetSequence( m_iSequence );
+		}
 
 		// Been detonated for 10 secs now, so fade out
 		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
 		{
 			SetThink(&CBaseGrenade::SUB_FadeOut);
 			//SetNextThink(gpGlobals->curtime + 10.0f);
-		}
-
-		// Don't start until we've stopped moving, for now
-		//if (GetAbsVelocity().LengthSqr() > 0 && gpGlobals->curtime > m_flDetonateTime)
-		//	m_flDetonateTime = gpGlobals->curtime + 1.0f;
+		}		
 
 		// Damage people in here
 		if (gpGlobals->curtime > m_flDetonateTime && m_flNextHurt < gpGlobals->curtime)
 		{
 			m_flNextHurt = gpGlobals->curtime + 0.2f;
+
+			// If we were idling, deploy
+			if( m_Activity == ( Activity )ACT_GAS_IDLE )
+			{
+				m_Activity = ( Activity )ACT_GAS_DEPLOY;
+				m_iSequence = SelectWeightedSequence( m_Activity );
+				SetSequence( m_iSequence );
+			}
 
 			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
 				if (pPlayer && gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f)
@@ -159,6 +169,8 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		}
 
 		//BaseClass::GrenadeThink();
+
+		StudioFrameAdvance();
 
 		// Next think straight away
 		SetNextThink(gpGlobals->curtime);

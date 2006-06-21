@@ -60,8 +60,6 @@ public:
 	virtual float GetGrenadeDamage() { return 180.0f; }
 	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }
 
-public:
-
 	bool m_fIsHandheld;	// This will eventually need to be on the client too
 #endif
 
