@@ -34,6 +34,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iScore)),
 	// Bug #0000529: Total death column doesn't work
 	RecvPropInt( RECVINFO(m_iDeaths)),	// Mulch: receive team deaths from server
+	RecvPropFloat( RECVINFO( m_flScoreTime ) ), // Mulch: time this team last scored
 	RecvPropString( RECVINFO(m_szTeamname)),
 	
 	RecvPropArray2( 
@@ -62,6 +63,7 @@ C_Team::C_Team()
 	m_iDeaths = 0;
 	m_iPing = 0;
 	m_iPacketloss = 0;
+	m_flScoreTime = 0.0f;
 
 	// Add myself to the global list of team entities
 	g_Teams.AddToTail( this );
@@ -126,6 +128,14 @@ int C_Team::Get_Score( void )
 int C_Team::Get_Deaths( void )
 {
 	return m_iDeaths;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float C_Team::Get_ScoreTime( void )
+{
+	return m_flScoreTime;
 }
 
 //-----------------------------------------------------------------------------

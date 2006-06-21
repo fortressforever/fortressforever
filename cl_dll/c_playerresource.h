@@ -29,6 +29,7 @@ public : // IGameResources intreface
 
 	// Team data access 
 	virtual int		GetTeamScore( int index );
+	virtual float	GetTeamScoreTime( int index );
 	virtual int		GetTeamDeaths( int index );
 	virtual const char *GetTeamName( int index );
 	virtual const Color&GetTeamColor( int index );

@@ -149,6 +149,16 @@ int C_PlayerResource::GetTeamScore(int index)
 	return team->Get_Score();
 }
 
+float C_PlayerResource::GetTeamScoreTime( int index )
+{
+	C_Team *pTeam = GetGlobalTeam( index );
+
+	if( !pTeam )
+		return 0.0f;
+
+	return pTeam->Get_ScoreTime();
+}
+
 int C_PlayerResource::GetTeamDeaths( int index )
 {
 	C_Team *team = GetGlobalTeam( index );
