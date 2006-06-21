@@ -35,8 +35,7 @@
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
 
-#undef MINMAX_H
-#include "minmax.h"
+#define temp_max(a,b) (((a)>(b))?(a):(b))
 
 // Lua includes
 extern "C"
@@ -1692,7 +1691,7 @@ int CFFEntitySystem::SetGlobalRespawnDelay( lua_State *L )
 		bool ret = false;
 		float delay = (float)lua_tonumber( L, 1 );
 
-		mp_respawndelay.SetValue( max( 0.0f, delay ) );
+		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 
 		// 1 result
 		lua_pushboolean( L, ret );
