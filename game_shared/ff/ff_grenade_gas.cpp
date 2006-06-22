@@ -53,7 +53,7 @@ public:
 	Activity m_Activity;
 
 	float m_flNextHurt;
-	bool	m_bExploded;
+	//bool	m_bExploded;
 #endif
 };
 
@@ -81,13 +81,13 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		SetSequence( m_iSequence );
 
 		m_flNextHurt = 0;
-		m_bExploded = false;
+		//m_bExploded = false;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
-		//CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
+		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
 
 		// TODO: trigger client side hallucination here
 
@@ -157,12 +157,15 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				}
 			END_ENTITY_SPHERE_QUERY();
 
+			// EDIT: Mulch: this isn't needed as PreExplode calls the sound
 			// Just shoving this here for now, Ted can sort out the effect properly.
+			/*
 			if (!m_bExploded)
 			{
 				EmitSound(GAS_SOUND);
 				m_bExploded = true;
 			}
+			*/
 
 			CEffectData data;
 			data.m_vOrigin = GetAbsOrigin();
