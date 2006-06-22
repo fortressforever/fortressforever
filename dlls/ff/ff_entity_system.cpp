@@ -56,6 +56,8 @@ CFFEntitySystemHelper *helper; // global variable.. OH NOES!
 
 ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 
+using namespace luabind;
+
 //============================================================================
 // CFFEntitySystemHelper implementation
 //============================================================================
@@ -173,13 +175,6 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 //----------------------------------------------------------------------------
 // Purpose: This loads the correct script for our map
 //----------------------------------------------------------------------------
-CFFPlayer* GetPlayerPtr(int i)
-{
-	CFFPlayer* pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i + 1));
-	return pPlayer;
-}
-
-
 bool CFFEntitySystem::StartForMap()
 {
 	// [TODO]
@@ -237,66 +232,348 @@ bool CFFEntitySystem::StartForMap()
 //----------------------------------------------------------------------------
 // Purpose: Opens our FF functions to the vm
 //----------------------------------------------------------------------------
+namespace FFLib
+{
+	// returns if the entity of the specified type
+	// uses the Classify function for evaluation
+	bool IsOfClass(CBaseEntity* pEntity, int classType)
+	{
+		return ((NULL != pEntity) && (pEntity->Classify() == classType));
+	}
+
+	// is entity a dispenser
+	bool IsDispenser(CBaseEntity* pEntity)
+	{
+		return IsOfClass(pEntity, CLASS_DISPENSER);
+	}
+
+	// is entity a sentry gun
+	bool IsSentryGun(CBaseEntity* pEntity)
+	{
+		return IsOfClass(pEntity, CLASS_SENTRYGUN);
+	}
+
+	// is the entity a grenade
+	bool IsGrenade(CBaseEntity* pEntity)
+	{
+		return (IsOfClass(pEntity, CLASS_GREN_NAIL) &&
+				IsOfClass(pEntity, CLASS_GREN_EMP));
+	}
+
+	void BroadcastMessage(const char* szMessage)
+	{
+		CBroadcastRecipientFilter filter;
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_STRING(szMessage);
+		MessageEnd();
+	}
+
+	void SendPlayerMessage(CFFPlayer* pPlayer, const char* szMessage)
+	{
+		if(NULL == pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter(pPlayer);
+		UserMessageBegin(filter, "GameMessage");
+			WRITE_STRING(szMessage);
+		MessageEnd();
+	}
+
+	void BroadcastSound(const char* szSound)
+	{
+		CBroadcastRecipientFilter filter;
+		helper->EmitSound( filter, helper->entindex(), szSound);
+	}
+
+	void SendPlayerSound(CFFPlayer* pPlayer, const char* szSound)
+	{
+		if(NULL == pPlayer)
+			return;
+
+		CSingleUserRecipientFilter filter(pPlayer);
+		helper->EmitSound( filter, helper->entindex(), szSound);
+	}
+
+	void SetGlobalRespawnDelay(float delay)
+	{
+		mp_respawndelay.SetValue( max( 0.0f, delay ) );
+	}
+
+	void RespawnAllPlayers()
+	{
+		// loop through each player
+		for (int i=0; i<gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+
+				pPlayer->KillAndRemoveItems();
+			}
+		}
+	}
+
+	void ConsoleToAll(const char* szMessage)
+	{
+		DevMsg( szMessage );
+		DevMsg( "\n" );
+	}
+
+	// FIX ME: get working off of CBaseEntity/CFFPlayer/CFFItemFlag
+	bool SetModel(int item_id, const char* model, int skin)
+	{
+		bool ret = false;
+
+		CBaseEntity *item = UTIL_EntityByIndex( item_id );
+		if (item)
+		{
+			UTIL_SetModel(item, model);
+			((CBaseAnimating *)item)->m_nSkin = skin;
+
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	void IncludeScript(const char* script)
+	{
+		char realscript[255];
+
+		// make sure it's a valid filename (alphanum only)
+		bool good = true;
+		for (unsigned int i=0; i<strlen(script); i++)
+		{
+			if (script[i]>='a' && script[i]<='z') continue;
+			if (script[i]>='A' && script[i]<='Z') continue;
+			if (script[i]>='0' && script[i]<='9') continue;
+			if (script[i]=='_') continue;
+			
+			good = false;
+		}
+
+		// if it's a good filename, then go ahead and include it
+		if (good)
+		{
+			strcpy(realscript, "maps/includes/" );
+			strcat(realscript, script);
+			strcat(realscript, ".lua");
+
+			CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript );
+		}
+		else
+		{
+			DevWarning("[SCRIPT] Warning: Invalid filename: %s\n", script);
+		}
+	}
+
+	void RemoveEntity(CBaseEntity* pEntity)
+	{
+		UTIL_Remove(pEntity);
+	}
+
+	CFFTeam* GetTeam(int teamId)
+	{
+		return dynamic_cast<CFFTeam*>(g_Teams[teamId]);
+	}
+
+	CBaseEntity* GetEntity(int item_id)
+	{
+		return UTIL_EntityByIndex(item_id);
+	}
+
+	CBaseEntity* GetEntityByName(const char* szName)
+	{
+		return gEntList.FindEntityByName(NULL, szName, NULL);
+	}
+
+	CFFPlayer* GetPlayer(int player_id)
+	{
+		CBaseEntity* pEnt = GetEntity(player_id);
+
+		if(NULL == pEnt)
+			return NULL;
+
+		if(!pEnt->IsPlayer())
+			return NULL;
+
+		return dynamic_cast<CFFPlayer*>(pEnt);
+	}
+
+	CFFPlayer* CastToPlayer(CBaseEntity* pEntity)
+	{
+		return dynamic_cast<CFFPlayer*>(pEntity);
+	}
+
+	CFFItemFlag* CastToItemFlag(CBaseEntity* pEntity)
+	{
+		return dynamic_cast<CFFItemFlag*>(pEntity);
+	}
+
+} // namespace FFLib
+
 void CFFEntitySystem::FFLibOpen()
 {
-	lua_register( L, "ConsoleToAll", ConsoleToAll );
+	// these functions are exposed through luabind too
 	lua_register( L, "GetPlayerTeam", GetPlayerTeam );
 	lua_register( L, "GetPlayerClass", GetPlayerClass );
-	lua_register( L, "GetPlayerName", GetPlayerName );
 	lua_register( L, "AddTeamScore", AddTeamScore );
-	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );
-	lua_register( L, "PlayerHasItem", PlayerHasItem );
-	lua_register( L, "RemoveItem", RemoveItem );
-	lua_register( L, "ReturnItem", ReturnItem );
-	lua_register( L, "Pickup", Pickup );
-	lua_register( L, "Respawn", Respawn );
-	lua_register( L, "DropItem", DropItem );
-	lua_register( L, "SetModel", SetModel);
-	lua_register( L, "PrecacheModel", PrecacheModel );
-	lua_register( L, "EmitSound", EmitSound );
-	lua_register( L, "PrecacheSound", PrecacheSound );
-	lua_register( L, "BroadCastSound", BroadCastSound );
-	lua_register( L, "BroadCastSoundToPlayer", BroadCastSoundToPlayer );
+	lua_register( L, "NumPlayersOnTeam", NumPlayersOnTeam );
+	lua_register( L, "AddArmor", AddArmor );
+	lua_register( L, "AddFrags", AddFrags );
+	lua_register( L, "IsPlayer", IsPlayer );
+	lua_register( L, "IsDispenser", IsDispenser );
+	lua_register( L, "IsSentrygun", IsSentrygun );
+	lua_register( L, "GetObjectsTeam", GetObjectsTeam );
+	lua_register( L, "IsGrenade", IsGrenade );
 	lua_register( L, "BroadCastMessage", BroadCastMessage );
 	lua_register( L, "BroadCastMessageToPlayer", BroadCastMessageToPlayer );
-	lua_register( L, "RespawnAllPlayers", RespawnAllPlayers );
-	lua_register( L, "RespawnPlayer", RespawnPlayer );
-	lua_register( L, "UseEntity", UseEntity );
-	lua_register( L, "NumPlayersOnTeam", NumPlayersOnTeam );
-	lua_register( L, "GetPlayerOnTeam", GetPlayerOnTeam );
+	lua_register( L, "BroadCastSound", BroadCastSound );
+	lua_register( L, "BroadCastSoundToPlayer", BroadCastSoundToPlayer );
 	lua_register( L, "NumPlayers", NumPlayers );
-	lua_register( L, "GetPlayer", GetPlayer );
-	lua_register( L, "IncludeScript", IncludeScript );
-	lua_register( L, "SetTeamClassLimit", SetTeamClassLimit );
-	lua_register( L, "SetTeamPlayerLimit", SetTeamPlayerLimit );
 	lua_register( L, "SetTeamName", SetTeamName );
-	lua_register( L, "Random", Random );
-	lua_register( L, "rand", Random );
-	lua_register( L, "SetTeamAllies", SetTeamAllies );
-	lua_register( L, "AddAmmo", GiveAmmo );
-	lua_register( L, "RemoveAmmo", RemoveAmmo );
-	lua_register( L, "AddArmor", AddArmor );
-	lua_register( L, "AddHealth", AddHealth );
-	lua_register( L, "AddFrags", AddFrags );
-	lua_register( L, "MarkRadioTag", MarkRadioTag );
+	lua_register( L, "GetPlayerName", GetPlayerName );
 	lua_register( L, "SetPlayerLocation", SetPlayerLocation );
 	lua_register( L, "RemoveLocation", RemoveLocation );
 	lua_register( L, "SetPlayerDisguisable", SetPlayerDisguisable );
 	lua_register( L, "SetPlayerRespawnDelay", SetPlayerRespawnDelay );
 	lua_register( L, "SetGlobalRespawnDelay", SetGlobalRespawnDelay );
-	lua_register( L, "IsPlayer", IsPlayer );
-	lua_register( L, "IsDispenser", IsDispenser );
-	lua_register( L, "IsSentrygun", IsSentrygun );
-	lua_register( L, "GetObjectsTeam", GetObjectsTeam );
-	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
+	lua_register( L, "RespawnPlayer", RespawnPlayer );
+	lua_register( L, "RespawnAllPlayers", RespawnAllPlayers );
+	lua_register( L, "RemoveItem", RemoveItem );
+	lua_register( L, "SetTeamAllies", SetTeamAllies );
+	lua_register( L, "PrecacheSound", PrecacheSound );
+	lua_register( L, "Respawn", Respawn );
+	lua_register( L, "ReturnItem", ReturnItem );
+	lua_register( L, "Pickup", Pickup );
+	lua_register( L, "DropItem", DropItem );
+	lua_register( L, "ConsoleToAll", ConsoleToAll );
+	lua_register( L, "PlayerHasItem", PlayerHasItem );
+	lua_register( L, "SetModel", SetModel);
+	lua_register( L, "PrecacheModel", PrecacheModel );
+	lua_register( L, "IncludeScript", IncludeScript );
+	lua_register( L, "SetTeamClassLimit", SetTeamClassLimit );
+	lua_register( L, "SetTeamPlayerLimit", SetTeamPlayerLimit );
+	lua_register( L, "MarkRadioTag", MarkRadioTag );
 	lua_register( L, "IsPlayerInNoBuild", IsPlayerInNoBuild );
 	lua_register( L, "IsPlayerUnderWater", IsPlayerUnderWater );
 	lua_register( L, "IsPlayerWaistDeepInWater", IsPlayerWaistDeepInWater );
 	lua_register( L, "IsPlayerFeetDeepInWater", IsPlayerFeetDeepInWater );
+
+	// these funcions are NOT exposed to luabind yet
+	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );
+	lua_register( L, "EmitSound", EmitSound );
+	lua_register( L, "UseEntity", UseEntity );
+	lua_register( L, "GetPlayerOnTeam", GetPlayerOnTeam );
+	lua_register( L, "GetPlayer", GetPlayer );
+	lua_register( L, "Random", Random );
+	lua_register( L, "rand", Random );
+	lua_register( L, "AddHealth", AddHealth );
+	lua_register( L, "AddAmmo", GiveAmmo );
+	lua_register( L, "RemoveAmmo", RemoveAmmo );
+	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
 	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );
-	lua_register( L, "IsGrenade", IsGrenade );
 	lua_register( L, "IsObjectsOriginInWater", IsObjectsOriginInWater );
 	lua_register( L, "IsObjectsOriginInSlime", IsObjectsOriginInSlime );
+	
+
+	module(L)
+	[
+		// CBaseEntity
+		class_<CBaseEntity>("BaseEntity")
+			.def("GetName",				&CBaseEntity::GetName)
+			.def("GetTeam",				&CBaseEntity::GetTeam)
+			.def("IsDespenser",			&FFLib::IsDispenser)
+			.def("IsGrenade",			&FFLib::IsGrenade)
+			.def("IsPlayer",			&CBaseEntity::IsPlayer)
+			.def("IsSentryGun",			&FFLib::IsSentryGun)
+			.def("PrecacheModel",		&CBaseEntity::PrecacheModel),
+	
+		// CTeam
+		class_<CTeam>("BaseTeam")
+			.def("AddScore",			&CTeam::AddScore)
+			.def("GetNumPlayers",		&CTeam::GetNumPlayers)
+			.def("GetTeamId",			&CTeam::GetTeamNumber)
+			.def("SetName",				&CTeam::SetName),
+
+		// CTeam
+		class_<CFFTeam, CTeam>("Team")
+			.def("SetAllies",			&CFFTeam::SetAllies)
+			.def("SetClassLimit",		&CFFTeam::SetClassLimit)
+			.def("SetPlayerLimit",		&CFFTeam::SetTeamLimits)
+			.enum_("TeamId")
+			[
+				value("kUnassigned",	TEAM_UNASSIGNED),
+				value("kSpectator",		TEAM_SPECTATOR),
+				value("kBlue",			TEAM_BLUE),
+				value("kRed",			TEAM_RED),
+				value("kYellow",		TEAM_YELLOW),
+				value("kGreen",			TEAM_GREEN)
+			],
+
+		// CFFPlayer
+		class_<CFFPlayer, CBaseEntity>("Player")
+			.def("AddArmor",			&CFFPlayer::AddArmor)
+			.def("AddFrags",			&CFFPlayer::IncrementFragCount)
+			.def("GetClass",			&CFFPlayer::GetClassSlot)
+			.def("GetName",				&CFFPlayer::GetPlayerName)
+			.def("HasItem",				&CFFPlayer::HasItem)
+			.def("IsFeetDeepInWater",	&CFFPlayer::IsFeetDeepInWater)
+			.def("IsInNoBuild",			&CFFPlayer::IsInNoBuild)
+			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
+			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)
+			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
+			.def("RemoveArmor",			&CFFPlayer::RemoveArmor)
+			.def("RemoveLocation",		&CFFPlayer::RemoveLocation)
+			.def("Respawn",				&CFFPlayer::KillAndRemoveItems)
+			.def("SetDisguisable",		&CFFPlayer::SetDisguisable)
+			.def("SetLocation",			&CFFPlayer::SetLocation)
+			.def("SetRespawnDelay",		&CFFPlayer::LUA_SetPlayerRespawnDelay)
+			.enum_("ClassId")
+			[
+				value("kScout",			CLASS_SCOUT),
+				value("kSniper",		CLASS_SNIPER),
+				value("kSoldier",		CLASS_SOLDIER),
+				value("kDemoman",		CLASS_DEMOMAN),
+				value("kMedic",			CLASS_MEDIC),
+				value("kHwguy",			CLASS_HWGUY),
+				value("kPyro",			CLASS_PYRO),
+				value("kSpy",			CLASS_SPY),
+				value("kEngineer",		CLASS_ENGINEER),
+				value("kCivilian",		CLASS_CIVILIAN)
+			],
+
+		// CFFItemFlag
+		class_<CFFItemFlag, CBaseEntity>("InfoScript")
+			.def("Drop",				&CFFItemFlag::Drop)
+			.def("Pickup",				&CFFItemFlag::Pickup)
+			.def("Respawn",				&CFFItemFlag::Respawn)
+			.def("Return",				&CFFItemFlag::Return),
+
+		// global functions
+		namespace_("ffmod")	// temp namespace so names dont collide with regular lua_register
+		[
+			def("BroadCastMessage",			&FFLib::BroadcastMessage),
+			def("BroadCastMessageToPlayer",	&FFLib::SendPlayerMessage),
+			def("BroadCastSound",			&FFLib::BroadcastSound),
+			def("BroadCastSoundToPlayer",	&FFLib::SendPlayerSound),
+			def("CastToPlayer",				&FFLib::CastToPlayer),
+			def("CastToInfoScript",			&FFLib::CastToItemFlag),
+			def("GetEntity",				&FFLib::GetEntity),
+			def("GetEntityByName",			&FFLib::GetEntityByName),
+			def("GetPlayer",				&FFLib::GetPlayer),
+			def("GetTeam",					&FFLib::GetTeam),
+			def("IncludeScript",			&FFLib::IncludeScript),
+			def("ConsoleToAll",				&FFLib::ConsoleToAll),
+			def("NumPlayers",				&FF_NumPlayers),
+			def("PrecacheSound",			&CBaseEntity::PrecacheScriptSound),
+			def("RemoveEntity",				&FFLib::RemoveEntity),
+			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
+			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
+			def("SetModel",					&FFLib::SetModel)
+		]
+	];
 }
 
 //----------------------------------------------------------------------------
@@ -1228,7 +1505,6 @@ int CFFEntitySystem::SetTeamClassLimit( lua_State *L )
 		if (pTeam)
 		{
 			pTeam->SetClassLimit( playerclass, limit );
-			pTeam->UpdateLimits();
 		}
 
 		DevMsg("Set class limit for team %d, class %d to %d\n", team, playerclass, limit);
@@ -1261,7 +1537,6 @@ int CFFEntitySystem::SetTeamPlayerLimit( lua_State *L )
 		if (pTeam)
 		{
 			pTeam->SetTeamLimits( limit );
-			pTeam->UpdateLimits();
 		}
 
 		DevMsg("Set player limit for team %d to %d\n", team, limit);

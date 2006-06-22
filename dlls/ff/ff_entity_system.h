@@ -52,6 +52,8 @@ public:
 	bool StartForMap();
 	void FFLibOpen();
 
+	lua_State* GetLuaState() const { return L; }
+
 	static void SetVar( lua_State *L, const char *name, const char *value );
 	static void SetVar( lua_State *L, const char *name, int value );
 	static void SetVar( lua_State *L, const char *name, float value );

@@ -4317,6 +4317,38 @@ void CFFPlayer::MoveTowardsMapGuide()
 	}
 }
 
+//-----------------------------------------------------------------------------
+bool CFFPlayer::HasItem(const char* itemname) const
+{
+	bool ret = false;
+
+	// get all info_ff_scripts
+	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+
+	while( pEnt != NULL )
+	{
+		// Tell the ent that it died
+		if ( pEnt->GetOwnerEntity() == this && FStrEq( STRING(pEnt->GetEntityName()), itemname ) )
+		{
+			DevMsg("[SCRIPT] found item %d: %s\n", ENTINDEX(pEnt), itemname);
+			ret = true;
+		}
+
+		// Next!
+		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+	}
+
+	return ret;
+}
+
+//-----------------------------------------------------------------------------
+bool CFFPlayer::IsInNoBuild() const
+{
+	return !FFScriptRunPredicates( (CBaseEntity*)this, "canbuild", true );
+}
+
+
+//-----------------------------------------------------------------------------
 int CFFPlayer::FlashlightIsOn( void )
 {
 	return IsEffectActive( EF_DIMLIGHT );
