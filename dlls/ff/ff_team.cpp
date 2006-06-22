@@ -67,6 +67,7 @@ int CFFTeam::GetAllies( void )
 void CFFTeam::SetTeamLimits( int val )
 {
 	m_iMaxPlayers = val;
+	UpdateLimits();
 }
 int CFFTeam::GetTeamLimits( void )
 {
@@ -77,6 +78,7 @@ int CFFTeam::GetTeamLimits( void )
 void CFFTeam::SetClassLimit( int classnum, int val )
 {
 	m_iClassesMap[classnum] = val;
+	UpdateLimits();
 }
 
 // This is the class limit taking into account cr_ too

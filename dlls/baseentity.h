@@ -589,6 +589,7 @@ public:
 	int			GetParentAttachment();
 
 	string_t	GetEntityName();
+	const char* GetName() { return STRING(GetEntityName()); }
 
 	bool		NameMatches( const char *pszNameOrWildcard );
 	bool		ClassMatches( const char *pszClassOrWildcard );
