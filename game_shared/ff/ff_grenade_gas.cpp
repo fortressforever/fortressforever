@@ -132,6 +132,8 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				m_Activity = ( Activity )ACT_GAS_DEPLOY;
 				m_iSequence = SelectWeightedSequence( m_Activity );
 				SetSequence( m_iSequence );
+
+				EmitSound( "GasGrenade.Open" );
 			}
 
 			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
@@ -184,5 +186,6 @@ void CFFGrenadeGas::Precache()
 	DevMsg("[Grenade Debug] CFFGrenadeGas::Precache\n");
 	PrecacheModel( GASGRENADE_MODEL );
 	PrecacheScriptSound( GAS_SOUND );
+	PrecacheScriptSound( "GasGrenade.Open" );
 	BaseClass::Precache();
 }
