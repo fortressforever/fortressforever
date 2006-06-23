@@ -90,7 +90,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NULL );
 
 		// If the grenade is in a no gren area don't deploy caltrops
-		if( FFScriptRunPredicates( this, "canexplode", true ) )
+		if( FFScriptRunPredicates( this, "onexplode", true ) )
 		{
 
 			CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );

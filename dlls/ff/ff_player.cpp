@@ -2263,7 +2263,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		m_bBuilding = true;
 
 		// See if player is in a no build area first
-		if( !FFScriptRunPredicates( this, "canbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
+		if( !FFScriptRunPredicates( this, "onbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
 		{
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
@@ -4365,7 +4365,7 @@ bool CFFPlayer::HasItem(const char* itemname) const
 //-----------------------------------------------------------------------------
 bool CFFPlayer::IsInNoBuild() const
 {
-	return !FFScriptRunPredicates( (CBaseEntity*)this, "canbuild", true );
+	return !FFScriptRunPredicates( (CBaseEntity*)this, "onbuild", true );
 }
 
 
