@@ -268,7 +268,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt(SENDINFO(m_iSkiState)),
 
 	// Grenade Related
-	SendPropInt( SENDINFO( m_iGrenadeState ) ),
+	SendPropInt( SENDINFO( m_iGrenadeState ), 2 ),
 	SendPropInt( SENDINFO( m_iPrimary ) ),
 	SendPropInt( SENDINFO( m_iSecondary ) ),
 	SendPropFloat( SENDINFO( m_flServerPrimeTime ) ),
