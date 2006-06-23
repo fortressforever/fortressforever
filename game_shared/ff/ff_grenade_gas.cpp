@@ -55,7 +55,7 @@ protected:
 	Activity m_Activity;
 
 	float m_flNextHurt;
-	//CBaseAnimating *m_pNewGas;
+	float m_flOpenTime;
 #endif
 };
 
@@ -82,18 +82,16 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		m_iSequence = SelectWeightedSequence( m_Activity );
 		SetSequence( m_iSequence );		
 
-		//m_pNewGas = NULL;
-
 		m_flNextHurt = 0;
+		m_flOpenTime = 0.0f;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
-		//CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
+		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
 
 		// TODO: trigger client side hallucination here
-
 		// TODO: Don't for !FFScriptRunPredicates( this, "onexplode", true ) check
 
 		//CFFGrenadeBase::PostExplode();
@@ -117,16 +115,18 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			SetSequence( m_iSequence );
 		}
 
+		// Stop the thing from rolling if it starts moving
+		if( gpGlobals->curtime > m_flOpenTime + 2.0f )
+		{
+			IPhysicsObject *pObject = VPhysicsGetObject();
+			if( pObject )
+				pObject->EnableMotion( false );
+		}
+
 		// Been detonated for 10 secs now, so fade out
 		if (gpGlobals->curtime > m_flDetonateTime + 10.0f)
 		{
 			SetThink(&CBaseGrenade::SUB_FadeOut);
-			//SetNextThink(gpGlobals->curtime + 10.0f);
-			//if( m_pNewGas )
-			//{
-			//	UTIL_Remove( m_pNewGas );
-			//	m_pNewGas = NULL;
-			//}
 		}		
 
 		// Damage people in here
@@ -138,13 +138,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			if( m_Activity == ( Activity )ACT_GAS_IDLE )
 			{
 				VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
-				/*
-				if( !m_pNewGas )
-				{
-					m_pNewGas = ( CFFGrenadeGas * )CBaseEntity::Create( "gasgrenade", GetAbsOrigin() + Vector( 0, 0, 64 ), GetAbsAngles() );
-					m_pNewGas->VPhysicsInitNormal( SOLID_VPHYSICS, 0, true );
-				}
-				*/
+				m_flOpenTime = gpGlobals->curtime;
 
 				m_Activity = ( Activity )ACT_GAS_DEPLOY;
 				m_iSequence = SelectWeightedSequence( m_Activity );
@@ -153,7 +147,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				EmitSound( "GasGrenade.Open" );
 			}
 
-			//*
 			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
 				if (pPlayer && gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f)
 				{
@@ -180,11 +173,9 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			data.m_vOrigin = GetAbsOrigin();
 			data.m_flScale = 1.0f;
 			DispatchEffect(GAS_EFFECT, data);
-			//*/
 		}
 
-		//BaseClass::GrenadeThink();
-
+		// Animate
 		StudioFrameAdvance();
 
 		// Next think straight away
