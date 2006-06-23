@@ -449,9 +449,7 @@ CFFBuildableObject *CFFBuildableObject::Create( const Vector& vecOrigin, const Q
 //
 int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 {
-	//Warning( "[BuildableObject] VPhysicsTakeDamage\n" );
-
-	return 1;
+	return 0;
 }
 
 /**
@@ -787,13 +785,50 @@ void CFFBuildableObject::DoExplosion( void )
 				continue;
 
 			// See if the world is not blocking this object from us
+			bool bDoDamage = true, bBail = false;
+			Vector vecBeg = vecOrigin, vecTarget = pEntity->GetAbsOrigin();
+			CBaseEntity *pIgnore = this;
+			int iCount = 0;			
 
-			// TODO: Should we call "allowed", then "ontrigger" ???
-			// Then, in lua the mapper could check the detpacks team and shit in allowed
-			// and return 
+			while( bDoDamage && ( iCount < 256 ) && !bBail )
+			{
+				// Now, Trace! 
+				trace_t tr;
+				UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
 
-			// If it's effected by detpack explosions do something
-			entsys.RunPredicates( pEntity, ( CFFDetpack * )this, "ondetpackexplosion" );
+				// If we hit something...
+				if( tr.DidHit() )
+				{
+					// Skip object if it's not one of these:
+					if( tr.DidHitWorld() ||
+						FClassnameIs( tr.m_pEnt, "func_door" ) ||
+						FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
+						FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
+						FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+						bDoDamage = false;	// Get out of loop
+
+					// Traced until we hit ourselves
+					if( tr.m_pEnt == pEntity )
+						bBail = true;
+				}
+
+				// Haven't hit a wall or pEntity so keep tracing
+				// Update start & ignore entity
+				vecBeg = tr.endpos;
+				pIgnore = tr.m_pEnt;
+
+				iCount++; // In case we get stuck tracing this will bail us out after so many traces
+
+				if( vecBeg == vecTarget )
+					bBail = true;
+			}
+
+			// If we traced to the object w/o hitting world or something else
+			if( bDoDamage )
+			{
+				// If it's affected by detpack explosions do something
+				entsys.RunPredicates( pEntity, ( CFFDetpack * )this, "onexplode" );
+			}
 		}
 	}
 }
