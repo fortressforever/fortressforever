@@ -50,10 +50,12 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 	virtual void GrenadeThink();
 
+protected:
 	int m_iSequence;
 	Activity m_Activity;
 
 	float m_flNextHurt;
+	//CBaseAnimating *m_pNewGas;
 #endif
 };
 
@@ -78,7 +80,9 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 		m_Activity = ( Activity )ACT_GAS_IDLE;
 		m_iSequence = SelectWeightedSequence( m_Activity );
-		SetSequence( m_iSequence );
+		SetSequence( m_iSequence );		
+
+		//m_pNewGas = NULL;
 
 		m_flNextHurt = 0;
 	}
@@ -86,7 +90,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
-		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
+		//CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
 
 		// TODO: trigger client side hallucination here
 
@@ -118,6 +122,11 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		{
 			SetThink(&CBaseGrenade::SUB_FadeOut);
 			//SetNextThink(gpGlobals->curtime + 10.0f);
+			//if( m_pNewGas )
+			//{
+			//	UTIL_Remove( m_pNewGas );
+			//	m_pNewGas = NULL;
+			//}
 		}		
 
 		// Damage people in here
@@ -128,6 +137,15 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			// If we were idling, deploy
 			if( m_Activity == ( Activity )ACT_GAS_IDLE )
 			{
+				VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+				/*
+				if( !m_pNewGas )
+				{
+					m_pNewGas = ( CFFGrenadeGas * )CBaseEntity::Create( "gasgrenade", GetAbsOrigin() + Vector( 0, 0, 64 ), GetAbsAngles() );
+					m_pNewGas->VPhysicsInitNormal( SOLID_VPHYSICS, 0, true );
+				}
+				*/
+
 				m_Activity = ( Activity )ACT_GAS_DEPLOY;
 				m_iSequence = SelectWeightedSequence( m_Activity );
 				SetSequence( m_iSequence );
