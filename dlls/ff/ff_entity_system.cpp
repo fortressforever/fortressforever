@@ -248,16 +248,23 @@ namespace FFLib
 	}
 
 	// is entity a sentry gun
-	bool IsSentryGun(CBaseEntity* pEntity)
+	bool IsSentrygun(CBaseEntity* pEntity)
 	{
 		return IsOfClass(pEntity, CLASS_SENTRYGUN);
+	}
+
+	// is entity a dispenser
+	bool IsDetpack( CBaseEntity *pEntity )
+	{
+		return IsOfClass( pEntity, CLASS_DETPACK );
 	}
 
 	// is the entity a grenade
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
-		return (IsOfClass(pEntity, CLASS_GREN_NAIL) &&
-				IsOfClass(pEntity, CLASS_GREN_EMP));
+		return (IsOfClass(pEntity, CLASS_GREN_NAIL) ||
+				IsOfClass(pEntity, CLASS_GREN_EMP) ||
+				IsOfClass(pEntity, CLASS_GREN));
 	}
 
 	void BroadcastMessage(const char* szMessage)
@@ -453,6 +460,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IsPlayer", IsPlayer );
 	lua_register( L, "IsDispenser", IsDispenser );
 	lua_register( L, "IsSentrygun", IsSentrygun );
+	lua_register( L, "IsDetpack", IsDetpack );
 	lua_register( L, "GetObjectsTeam", GetObjectsTeam );
 	lua_register( L, "IsGrenade", IsGrenade );
 	lua_register( L, "BroadCastMessage", BroadCastMessage );
@@ -516,7 +524,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsDespenser",			&FFLib::IsDispenser)
 			.def("IsGrenade",			&FFLib::IsGrenade)
 			.def("IsPlayer",			&CBaseEntity::IsPlayer)
-			.def("IsSentryGun",			&FFLib::IsSentryGun)
+			.def("IsSentryGun",			&FFLib::IsSentrygun)
+			.def("IsDetpack",			&FFLib::IsDetpack)
 			.def("PrecacheModel",		&CBaseEntity::PrecacheModel),
 	
 		// CTeam
@@ -2097,8 +2106,35 @@ int CFFEntitySystem::IsSentrygun( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
+// Purpose: See if an entity is a detpack
+//			int IsDetpack( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsDetpack( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iEntIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
+		if( pEntity && ( pEntity->Classify() == CLASS_DETPACK ) )
+			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Get an objects team, will work for:
-//				Dispenser, Sentrygun, MiniTurret, Player, Grenades
+//				Dispenser, Sentrygun, Detpack, MiniTurret, Player, Grenades
 //			int GetObjectsTeam( ent_id )
 //----------------------------------------------------------------------------
 int CFFEntitySystem::GetObjectsTeam( lua_State *L )
@@ -2115,6 +2151,7 @@ int CFFEntitySystem::GetObjectsTeam( lua_State *L )
 			if( ( pEntity->IsPlayer() ) ||
 				( pEntity->Classify() == CLASS_DISPENSER ) ||
 				( pEntity->Classify() == CLASS_SENTRYGUN ) ||
+				( pEntity->Classify() == CLASS_DETPACK ) ||
 				( pEntity->Classify() == CLASS_TURRET ) ||
 				( pEntity->Classify() == CLASS_GREN ) ||
 				( pEntity->Classify() == CLASS_GREN_EMP ) ||
