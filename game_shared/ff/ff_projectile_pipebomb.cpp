@@ -18,8 +18,6 @@
 	#include "ff_utils.h"
 #endif
 
-#define PIPEBOMB_MODEL "models/projectiles/pipe/w_pipe.mdl"
-
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
 extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
 extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
@@ -188,15 +186,6 @@ int CFFProjectilePipebomb::DrawModel(int flags)
 	return BaseClass::DrawModel(flags);
 }
 #endif
-
-//----------------------------------------------------------------------------
-// Purpose: Precache the pipebomb model
-//----------------------------------------------------------------------------
-void CFFProjectilePipebomb::Precache() 
-{
-	PrecacheModel(PIPEBOMB_MODEL);
-	BaseClass::Precache();
-}
 
 //----------------------------------------------------------------------------
 // Purpose: Destroy all pipes belonging to a player
