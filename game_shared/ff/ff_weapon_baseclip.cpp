@@ -135,8 +135,10 @@ void CFFWeaponBaseClip::FillClip()
 	{
 		if (Clip1() < GetMaxClip1())
 		{
+#ifdef GAME_DLL
 			m_iClip1 += nAdd;
 			pOwner->RemoveAmmo(nAdd, m_iPrimaryAmmoType);
+#endif
 		}
 	}
 }
@@ -186,7 +188,10 @@ void CFFWeaponBaseClip::PrimaryAttack()
 
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+
+#ifdef GAME_DLL
 	m_iClip1 -= GetFFWpnData().m_iCycleDecrement;
+#endif
 
 	// player "shoot" animation
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
