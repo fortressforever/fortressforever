@@ -19,22 +19,29 @@
 // Menu option with pointer
 typedef struct menuoption_s
 {
-	const wchar_t *szName;
-	const char *szCommand;
+	const wchar_t	*szName;
+	const char		*szCommand;
+	menuoption_s	*pNextMenu;
 
 	int (*conditionfunc)();
 
-	menuoption_s(const wchar_t *name, const char *command, int (*cfnc)())
+	menuoption_s(const wchar_t *name, const char *command, int (*cfnc)(), menuoption_s *nextmenu)
 	{
-		szName = name;
-		szCommand = command;
-		conditionfunc = cfnc;
+		szName			= name;
+		szCommand		= command;
+		conditionfunc	= cfnc;
+		pNextMenu		= nextmenu;
 	}
 } menuoption_t;
 
 #define ADD_MENU_OPTION(id, name, command) \
 	int MenuOption##id##();	\
-	menuoption_t id##(name, command, &MenuOption##id##);	\
+	menuoption_t id##(name, command, &MenuOption##id##, NULL);	\
+	int MenuOption##id##()
+
+#define ADD_MENU_BRANCH(id, name, command, nextmenu) \
+	int MenuOption##id##();	\
+	menuoption_t id##(name, command, &MenuOption##id##, nextmenu);	\
 	int MenuOption##id##()
 
 class CHudContextMenu : public CHudElement, public vgui::Panel

@@ -27,6 +27,8 @@
 
 #include <vgui/ILocalize.h>
 
+#include <igameresources.h>
+
 using namespace vgui;
 
 CHudContextMenu *g_pHudContextMenu = NULL;
@@ -40,6 +42,13 @@ ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
 
 DECLARE_HUDELEMENT(CHudContextMenu);
 
+// Forward declarations for a menu
+extern menuoption_t SpyClassDisguise[];
+
+
+/************************************************************************/
+/* These are all possible menu options                                  */
+/************************************************************************/
 ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
@@ -139,34 +148,57 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 }
 
 // These act as intermediate menus
-ADD_MENU_OPTION(disguiseteam, L"Disguise as team", "team")
+ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", "disguise friendly ", SpyClassDisguise)
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(disguiseenemy, L"Disguise as enemy", "enemy")
+ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", "disguise enemy ", SpyClassDisguise)
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION(disguisered, L"Disguise as red", "red")
+ADD_MENU_BRANCH(disguisered, L"Disguise as red", "disguise red ", SpyClassDisguise)
 {
-	return MENU_SHOW;
+	IGameResources *pGr = GameResources();
+
+	if (!pGr || pGr->GetTeamLimits(TEAM_RED) >= 0)
+		return MENU_SHOW;
+
+	return MENU_DIM;
 }
 
-ADD_MENU_OPTION(disguiseblue, L"Disguise as blue", "blue")
+ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", "disguise blue ", SpyClassDisguise)
 {
-	return MENU_SHOW;
+	IGameResources *pGr = GameResources();
+
+	if (!pGr || pGr->GetTeamLimits(TEAM_BLUE) >= 0)
+		return MENU_SHOW;
+
+	return MENU_DIM;
+
 }
 
-ADD_MENU_OPTION(disguiseyellow, L"Disguise as yellow", "yellow")
+ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", "disguise yellow ", SpyClassDisguise)
 {
-	return MENU_SHOW;
+	IGameResources *pGr = GameResources();
+
+	if (!pGr || pGr->GetTeamLimits(TEAM_YELLOW) >= 0)
+		return MENU_SHOW;
+
+	return MENU_DIM;
+
 }
 
-ADD_MENU_OPTION(disguisegreen, L"Disguise as green", "green")
+ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", "disguise green ", SpyClassDisguise)
 {
-	return MENU_SHOW;
+	IGameResources *pGr = GameResources();
+
+	if (!pGr || pGr->GetTeamLimits(TEAM_GREEN) >= 0)
+		return MENU_SHOW;
+
+	return MENU_DIM;
+
 }
 
 ADD_MENU_OPTION(disguisescout, L"Disguise as scout", "scout")
@@ -220,13 +252,14 @@ ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", "civilian")
 }
 
 
-// Actual possible menus
-menuoption_t engy_menu[] = { detdispenser, dismantledispenser, detsentry, dismantlesentry, aimsentry };
-menuoption_t spy_menu1[] = { disguiseteam, disguiseenemy };
-menuoption_t spy_menu2[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
+/************************************************************************/
+/* And these are the actual menus themselves                            */
+/************************************************************************/
+menuoption_t BuildMenu[]		= { detdispenser, dismantledispenser, detsentry, dismantlesentry, aimsentry };
+menuoption_t SpyTeamDisguise2[] = { disguiseteam, disguiseenemy };
+menuoption_t SpyTeamDisguise4[] = { disguisered, disguiseblue, disguiseyellow, disguisegreen };
+menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 
-// static 4 team shit for testing right now
-menuoption_t spy_menu3[] = { disguisered, disguiseblue, disguiseyellow, disguisegreen };
 
 CHudContextMenu::~CHudContextMenu() 
 {
@@ -253,16 +286,18 @@ void CHudContextMenu::Init()
 
 void CHudContextMenu::DoCommand(const char *cmd)
 {
-	if (m_pMenu == &engy_menu[0])
+	if (!m_pszPreviousCmd)
 		engine->ClientCmd(cmd);
 
-	else if(m_pMenu == &spy_menu2[0])
+	// Currently this only supports has 2 levels of menu
+	// If we need more, change m_pszPreviousCmd to a character array
+	// and concatonate on each menu item's command each time 
+	// we progress to next menu
+	else
 	{
-		char buf[128];
-		sprintf(buf, "disguise %s %s", m_pszPreviousCmd, cmd);
+		char buf[256];
+		Q_snprintf(buf, 255, "%s%s", m_pszPreviousCmd, cmd);
 		engine->ClientCmd(buf);
-		DevMsg(buf);
-		DevMsg( "\n" );
 	}
 }
 
@@ -288,20 +323,42 @@ void CHudContextMenu::Display(bool state)
 
 	m_fVisible = state;
 
+	// Clear any previous commands
+	m_pszPreviousCmd = NULL;
+
 	// Decide which menu is to be shown
 	if (pPlayer->GetClassSlot() == CLASS_ENGINEER)
 	{
-		m_pMenu = &engy_menu[0];
-		m_nOptions = sizeof(engy_menu) / sizeof(engy_menu[0]);
+		m_pMenu = &BuildMenu[0];
+		m_nOptions = sizeof(BuildMenu) / sizeof(BuildMenu[0]);
 	}
 	else if (pPlayer->GetClassSlot() == CLASS_SPY)
 	{
-		/* Just commenting out for testing right now
-		m_pMenu = &spy_menu1[0];
-		m_nOptions = sizeof(spy_menu1) / sizeof(spy_menu1[0]);
-		*/
-		m_pMenu = &spy_menu3[ 0 ];
-		m_nOptions = sizeof( spy_menu3 ) / sizeof( spy_menu3[ 0 ] );
+		int nTeams = 0;
+		IGameResources *pGr = GameResources();
+
+		if (!pGr)
+		{
+			AssertMsg(0, "Can't get GameResources");
+			return;
+		}
+
+		for (int iTeam = TEAM_BLUE; iTeam <= TEAM_GREEN; iTeam++)
+		{
+			if (pGr->GetTeamLimits(iTeam) < 0)
+				nTeams++;
+		}
+
+		if (nTeams == 2)
+		{
+			m_pMenu = &SpyTeamDisguise2[0];
+			m_nOptions = sizeof(SpyTeamDisguise2) / sizeof(SpyTeamDisguise2[0]);
+		}
+		else
+		{
+			m_pMenu = &SpyTeamDisguise4[0];
+			m_nOptions = sizeof(SpyTeamDisguise4) / sizeof(SpyTeamDisguise4[0]);
+		}
 	}
 
 	SetMenu();
@@ -429,13 +486,13 @@ void CHudContextMenu::Paint()
 	// TODO: A cleaner way of doing this
 	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + MENU_PROGRESS_TIME)
 	{
-		//if (m_pMenu == &spy_menu1[0])
-		if (m_pMenu == &spy_menu3[0])
+		// There is a next menu for this option
+		if (m_pMenu[m_iSelected].pNextMenu)
 		{
 			m_pszPreviousCmd = m_pMenu[m_iSelected].szCommand;
-			m_pMenu = &spy_menu2[0];
-			m_nOptions = sizeof(spy_menu2) / sizeof(spy_menu2[0]);
-			
+			m_pMenu = &SpyClassDisguise[0];
+			m_nOptions = sizeof(SpyClassDisguise) / sizeof(SpyClassDisguise[0]);
+
 			m_iSelected = -1;
 			m_flSelectStart = gpGlobals->curtime;
 

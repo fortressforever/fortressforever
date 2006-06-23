@@ -11,7 +11,11 @@
 #include "in_buttons.h"
 
 #ifdef CLIENT_DLL
+	#include "c_ff_player.h"
+
 	ConVar auto_reload("cl_autoreload", "0", FCVAR_ARCHIVE, "Automatic weapon reload");
+#else
+	#include "ff_player.h"
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponBaseClip, DT_FFWeaponBaseClip)
@@ -162,12 +166,14 @@ void CFFWeaponBaseClip::DryFire()
 void CFFWeaponBaseClip::PrimaryAttack()
 {
 	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
 	if (!pPlayer)
-	{
 		return;
-	}
+
+#ifdef GAME_DLL
+	pPlayer->ResetDisguise();
+#endif
 
 	// No longer reloading (cancel any deferred ammo too)
 	m_bInReload = false;

@@ -296,12 +296,15 @@ bool CFFWeaponBase::ShouldPredict()
 void CFFWeaponBase::PrimaryAttack()
 {
 	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
 	if (!pPlayer)
-	{
 		return;
-	}
+
+	// Undisguise
+#ifdef GAME_DLL
+	pPlayer->ResetDisguise();
+#endif
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
