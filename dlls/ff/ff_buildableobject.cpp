@@ -788,6 +788,10 @@ void CFFBuildableObject::DoExplosion( void )
 
 			// See if the world is not blocking this object from us
 
+			// TODO: Should we call "allowed", then "ontrigger" ???
+			// Then, in lua the mapper could check the detpacks team and shit in allowed
+			// and return 
+
 			// If it's effected by detpack explosions do something
 			entsys.RunPredicates( pEntity, ( CFFDetpack * )this, "ondetpackexplosion" );
 		}
