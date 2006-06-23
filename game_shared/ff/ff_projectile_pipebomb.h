@@ -47,7 +47,6 @@ public:
 	DECLARE_NETWORKCLASS(); 
 
 	// Override precache because we want a different model
-	virtual void Precache();
 	virtual void Spawn();
 	// Needs its own explode func for custom scorch mark
 	// drawing

@@ -14,7 +14,7 @@
 #include "cbase.h"
 #include "ff_projectile_grenade.h"
 
-#define GRENADE_MODEL "models/weapons/pipelauncher/pipe.mdl"
+#define GRENADE_MODEL "models/projectiles/pipe/w_pipe.mdl"
 
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
