@@ -2347,7 +2347,16 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 		int iGrenIndex = lua_tonumber( L, 1 );
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
-		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+		if( pEntity && 
+			( ( pEntity->Classify() == CLASS_GREN ) 
+			( pEntity->Classify() == CLASS_GREN_EMP ) ||
+			( pEntity->Classify() == CLASS_GREN_NAIL ) ||
+			( pEntity->Classify() == CLASS_GREN_MIRV ) ||
+			( pEntity->Classify() == CLASS_GREN_MIRVLET ) ||
+			( pEntity->Classify() == CLASS_GREN_NAPALM ) ||
+			( pEntity->Classify() == CLASS_GREN_GAS ) ||
+			( pEntity->Classify() == CLASS_GREN_CONC ) ||
+			( pEntity->Classify() == CLASS_GREN_CALTROP ) ) )
 		{
 			bRetVal = !FFScriptRunPredicates( pEntity, "onexplode", true );
 		}
