@@ -53,7 +53,6 @@ public:
 	Activity m_Activity;
 
 	float m_flNextHurt;
-	//bool	m_bExploded;
 #endif
 };
 
@@ -81,7 +80,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		SetSequence( m_iSequence );
 
 		m_flNextHurt = 0;
-		//m_bExploded = false;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
@@ -136,6 +134,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				EmitSound( "GasGrenade.Open" );
 			}
 
+			//*
 			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
 				if (pPlayer && gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f)
 				{
@@ -157,20 +156,12 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				}
 			END_ENTITY_SPHERE_QUERY();
 
-			// EDIT: Mulch: this isn't needed as PreExplode calls the sound
 			// Just shoving this here for now, Ted can sort out the effect properly.
-			/*
-			if (!m_bExploded)
-			{
-				EmitSound(GAS_SOUND);
-				m_bExploded = true;
-			}
-			*/
-
 			CEffectData data;
 			data.m_vOrigin = GetAbsOrigin();
 			data.m_flScale = 1.0f;
 			DispatchEffect(GAS_EFFECT, data);
+			//*/
 		}
 
 		//BaseClass::GrenadeThink();
