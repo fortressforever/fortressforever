@@ -87,7 +87,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NAPALM_EFFECT );
 		
 		// If the grenade is not in a no gren area
-		if( FFScriptRunPredicates( this, "canexplode", true ) )
+		if( FFScriptRunPredicates( this, "onexplode", true ) )
 		{
 			// Bug #0000370: napalm explosion not playing
 			EmitSound("Napalm.Explode");
@@ -112,7 +112,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 			//napalm grenade explodes and spews "napalm" over an area, then starts some fires
 			Detonate();
 
-			if( FFScriptRunPredicates( this, "canexplode", true ) )
+			if( FFScriptRunPredicates( this, "onexplode", true ) )
 			{
 				// Reset the detonation time
 				SetDetonateTimerLength( nap_flame_time.GetFloat() );

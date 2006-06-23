@@ -95,7 +95,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 	BaseClass::Explode( pTrace, bitsDamageType );
 
 	// If the grenade is in a no gren area
-	if( FFScriptRunPredicates( this, "canexplode", true ) )
+	if( FFScriptRunPredicates( this, "onexplode", true ) )
 	{
 		CBaseEntity *pOwner = GetOwnerEntity();
 

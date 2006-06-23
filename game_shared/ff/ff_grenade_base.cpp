@@ -125,7 +125,7 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 			SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
 
 		// Bail here if in a no gren area
-		if( !FFScriptRunPredicates( this, "canexplode", true ) )
+		if( !FFScriptRunPredicates( this, "onexplode", true ) )
 			return;
 
 		if (pSound)
@@ -336,7 +336,7 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 	if( pTrace->fraction != 1.0 )
 		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 0.6 ) );
 
-	if( FFScriptRunPredicates( this, "canexplode", true ) )
+	if( FFScriptRunPredicates( this, "onexplode", true ) )
 	{
 		Vector vecAbsOrigin = GetAbsOrigin();
 		int contents = UTIL_PointContents( vecAbsOrigin );

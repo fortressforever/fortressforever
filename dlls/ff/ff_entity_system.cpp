@@ -2221,7 +2221,7 @@ int CFFEntitySystem::IsPlayerInNoBuild( lua_State *L )
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iPlayerIndex );
 		if( pEntity && pEntity->IsPlayer() )
 		{
-			bRetVal = !FFScriptRunPredicates( pEntity, "canbuild", true );
+			bRetVal = !FFScriptRunPredicates( pEntity, "onbuild", true );
 		}
 
 		lua_pushboolean( L, bRetVal );
@@ -2337,7 +2337,7 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
 		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
 		{
-			bRetVal = !FFScriptRunPredicates( pEntity, "canexplode", true );
+			bRetVal = !FFScriptRunPredicates( pEntity, "onexplode", true );
 		}
 
 		lua_pushboolean( L, bRetVal );

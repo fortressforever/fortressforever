@@ -151,7 +151,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		CFFGrenadeBase::PreExplode( pTrace, NULL, CONCBITS_EFFECT );
 
 		// If the grenade is in a no gren area don't deploy caltrops
-		if( FFScriptRunPredicates( this, "canexplode", true ) )
+		if( FFScriptRunPredicates( this, "onexplode", true ) )
 		{
 			// --> Mirv: Rewritten
 			Vector vecDisplacement, vecForce;

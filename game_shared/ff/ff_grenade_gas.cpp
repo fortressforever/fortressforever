@@ -89,7 +89,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 		// TODO: trigger client side hallucination here
 
-		// TODO: Don't for !FFScriptRunPredicates( this, "canexplode", true ) check
+		// TODO: Don't for !FFScriptRunPredicates( this, "onexplode", true ) check
 
 		//CFFGrenadeBase::PostExplode();
 	}
@@ -97,7 +97,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 	void CFFGrenadeGas::GrenadeThink( void )
 	{
 		// If the grenade is in a no grenade area, kill it
-		if( !FFScriptRunPredicates( this, "canexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
+		if( !FFScriptRunPredicates( this, "onexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
 		{
 			// This will remove the gren
 			CFFGrenadeBase::PostExplode();
