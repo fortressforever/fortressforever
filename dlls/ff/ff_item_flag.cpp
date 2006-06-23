@@ -18,7 +18,6 @@
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
-#define FLAG_WEAPON					"ff_weapon_flag"
 
 // --> Mirv: Added for client class
 IMPLEMENT_SERVERCLASS_ST( CFFItemFlag, DT_FFItemFlag )
@@ -148,8 +147,6 @@ void CFFItemFlag::Pickup(CFFPlayer *pFFPlayer)
 
 	FollowEntity(pFFPlayer, true);
 
-	pFFPlayer->GiveNamedItem(FLAG_WEAPON);
-
 	// stop the return timer
 	SetThink( NULL );
 	SetNextThink( gpGlobals->curtime );
@@ -187,11 +184,6 @@ void CFFItemFlag::OnRespawn( void )
 
 void CFFItemFlag::Drop( float delay, float speed )
 {
-	CFFPlayer *ffplayer = ToFFPlayer(GetFollowedEntity());
-
-	if (ffplayer)
-		ffplayer->TakeNamedItem(FLAG_WEAPON);
-
 	// stop following
 	FollowEntity(NULL);
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
@@ -254,11 +246,6 @@ void CFFItemFlag::Drop( float delay, float speed )
 
 CBaseEntity* CFFItemFlag::Return( void )
 {
-	CFFPlayer *ffplayer = ToFFPlayer(GetFollowedEntity());
-
-	if (ffplayer)
-		ffplayer->TakeNamedItem(FLAG_WEAPON);
-
 	// #0000220: Capping flag simultaneously with gren explosion results in flag touch.
 	// set this to curtime so that it will take a few seconds before it becomes
 	// eligible to be picked up again.
