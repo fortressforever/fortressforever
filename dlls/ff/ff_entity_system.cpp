@@ -262,7 +262,7 @@ namespace FFLib
 	// is the entity a grenade
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
-		return (IsOfClass(pEntity, CLASS_GREN)
+		return (IsOfClass(pEntity, CLASS_GREN) ||
 				IsOfClass(pEntity, CLASS_GREN_EMP) ||
 				IsOfClass(pEntity, CLASS_GREN_NAIL) ||
 				IsOfClass(pEntity, CLASS_GREN_MIRV) ||
@@ -2348,7 +2348,7 @@ int CFFEntitySystem::IsGrenInNoGren( lua_State *L )
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
 		if( pEntity && 
-			( ( pEntity->Classify() == CLASS_GREN ) 
+			( ( pEntity->Classify() == CLASS_GREN ) ||
 			( pEntity->Classify() == CLASS_GREN_EMP ) ||
 			( pEntity->Classify() == CLASS_GREN_NAIL ) ||
 			( pEntity->Classify() == CLASS_GREN_MIRV ) ||
@@ -2386,7 +2386,7 @@ int CFFEntitySystem::IsGrenade( lua_State *L )
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
 		if( pEntity && 
-			( ( pEntity->Classify() == CLASS_GREN ) 
+			( ( pEntity->Classify() == CLASS_GREN ) ||
 			( pEntity->Classify() == CLASS_GREN_EMP ) ||
 			( pEntity->Classify() == CLASS_GREN_NAIL ) ||
 			( pEntity->Classify() == CLASS_GREN_MIRV ) ||
