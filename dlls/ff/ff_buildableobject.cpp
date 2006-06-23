@@ -41,6 +41,7 @@
 #include "beam_flags.h"
 #include "ff_gamerules.h"
 #include "world.h"
+#include "ff_entity_system.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -774,27 +775,23 @@ void CFFBuildableObject::DoExplosion( void )
 		);
 	}
 
-	/*
-	// TODO: Get w/ sev about new gibs and shiz
-	// Throw some gibs out
-	int iCount = 0;	
-	while( m_ppszGibModels[ iCount ] != NULL )
+	
+	// Hit detpack triggers (and do this after potentially gibbing players so there's less to trace through [possibly])
+	if( Classify() == CLASS_DETPACK )
 	{
-		SpawnGib( m_ppszGibModels[ iCount ] );
-		iCount++;
-	}
-
-	// Throw some generic gibs out
-	for( int i = 0; i < 3; i++ )
-	{
-		iCount = 0;
-		while( g_pszFFGenGibModels[ iCount ] != NULL )
+		// Detpack trigger radius is 3*detpack_radius
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius * 3.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
-			SpawnGib( g_pszFFGenGibModels[ iCount ], false, true );
-			iCount++;
+			if( !pEntity )
+				continue;
+
+			// See if the world is not blocking this object from us
+
+			// If it's effected by detpack explosions do something
+			entsys.RunPredicates( pEntity, ( CFFDetpack * )this, "ondetpackexplosion" );
 		}
 	}
-	*/
 }
 
 int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
