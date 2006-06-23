@@ -248,10 +248,14 @@ void CFFWeaponMeleeBase::Swing()
 	trace_t traceHit;
 
 	// Try a ray
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
 	
 	if (!pOwner) 
 		return;
+
+#ifdef GAME_DLL
+	pOwner->ResetDisguise();
+#endif
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
