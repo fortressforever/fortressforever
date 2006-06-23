@@ -490,6 +490,7 @@ public:
 
 	virtual void Extinguish();
 
+	int AddHealth(unsigned int amount);
 	virtual int				TakeHealth( float flHealth, int bitsDamageType );
 
 	// Moving to CBasePlayer for use with "kill" command
@@ -503,6 +504,7 @@ public:
 
 	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
 
+	int AddAmmo(const char* ammo, unsigned int amount);
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
 

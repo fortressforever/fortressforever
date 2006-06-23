@@ -411,6 +411,34 @@ namespace FFLib
 		return dynamic_cast<CFFItemFlag*>(pEntity);
 	}
 
+	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
+	{
+		if(NULL == pTeam1 || NULL == pTeam2)
+			return false;
+
+		int iTeam1 = pTeam1->GetTeamNumber();
+		int iTeam2 = pTeam2->GetTeamNumber();
+
+		if( ( iTeam1 >= TEAM_BLUE ) && ( iTeam1 <= TEAM_GREEN ) &&
+			( iTeam2 >= TEAM_BLUE ) && ( iTeam2 <= TEAM_GREEN ) )
+		{
+			if( FFGameRules()->IsTeam1AlliedToTeam2( iTeam1, iTeam2 ) == GR_TEAMMATE )
+				return true;
+		}
+
+		return false;
+	}
+
+	int RandomInt(int min, int max)
+	{
+		return random->RandomInt(min, max);
+	}
+
+	float RandomFloat(float min, float max)
+	{
+		return random->RandomFloat(min, max);
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -460,28 +488,29 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IsPlayerUnderWater", IsPlayerUnderWater );
 	lua_register( L, "IsPlayerWaistDeepInWater", IsPlayerWaistDeepInWater );
 	lua_register( L, "IsPlayerFeetDeepInWater", IsPlayerFeetDeepInWater );
-
-	// these funcions are NOT exposed to luabind yet
-	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );
-	lua_register( L, "EmitSound", EmitSound );
-	lua_register( L, "UseEntity", UseEntity );
-	lua_register( L, "GetPlayerOnTeam", GetPlayerOnTeam );
+	lua_register( L, "AddAmmo", GiveAmmo );
+	lua_register( L, "AddHealth", AddHealth );
+	lua_register( L, "RemoveAmmo", RemoveAmmo );
 	lua_register( L, "GetPlayer", GetPlayer );
+	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
+	lua_register( L, "GetPlayerOnTeam", GetPlayerOnTeam );
+	lua_register( L, "EmitSound", EmitSound );
 	lua_register( L, "Random", Random );
 	lua_register( L, "rand", Random );
-	lua_register( L, "AddHealth", AddHealth );
-	lua_register( L, "AddAmmo", GiveAmmo );
-	lua_register( L, "RemoveAmmo", RemoveAmmo );
-	lua_register( L, "IsTeam1AlliedToTeam2", IsTeam1AlliedToTeam2 );
-	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );
-	lua_register( L, "IsObjectsOriginInWater", IsObjectsOriginInWater );
-	lua_register( L, "IsObjectsOriginInSlime", IsObjectsOriginInSlime );
+
+	// these funcions are NOT exposed to luabind yet
+	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );			// not used
+	lua_register( L, "UseEntity", UseEntity );								// base.lua
+	lua_register( L, "IsGrenInNoGren", IsGrenInNoGren );					// not used
+	lua_register( L, "IsObjectsOriginInWater", IsObjectsOriginInWater );	// not used
+	lua_register( L, "IsObjectsOriginInSlime", IsObjectsOriginInSlime );	// not used
 	
 
 	module(L)
 	[
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
+			.def("EmitSound",			(void(CBaseEntity::*)(const char*, float, float*))&CBaseEntity::EmitSound)
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
 			.def("IsDespenser",			&FFLib::IsDispenser)
@@ -494,10 +523,11 @@ void CFFEntitySystem::FFLibOpen()
 		class_<CTeam>("BaseTeam")
 			.def("AddScore",			&CTeam::AddScore)
 			.def("GetNumPlayers",		&CTeam::GetNumPlayers)
+			.def("GetPlayer",			&CTeam::GetPlayer)
 			.def("GetTeamId",			&CTeam::GetTeamNumber)
 			.def("SetName",				&CTeam::SetName),
 
-		// CTeam
+		// CFFTeam
 		class_<CFFTeam, CTeam>("Team")
 			.def("SetAllies",			&CFFTeam::SetAllies)
 			.def("SetClassLimit",		&CFFTeam::SetClassLimit)
@@ -512,10 +542,14 @@ void CFFEntitySystem::FFLibOpen()
 				value("kGreen",			TEAM_GREEN)
 			],
 
+		// CBasePlayer
+		class_<CBasePlayer, CBaseEntity>("BasePlayer"),
+
 		// CFFPlayer
-		class_<CFFPlayer, CBaseEntity>("Player")
+		class_<CFFPlayer, CBasePlayer>("Player")
 			.def("AddArmor",			&CFFPlayer::AddArmor)
 			.def("AddFrags",			&CFFPlayer::IncrementFragCount)
+			.def("AddHealth",			&CFFPlayer::AddHealth)
 			.def("GetClass",			&CFFPlayer::GetClassSlot)
 			.def("GetName",				&CFFPlayer::GetPlayerName)
 			.def("HasItem",				&CFFPlayer::HasItem)
@@ -524,6 +558,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
 			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)
 			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
+			.def("RemoveAmmo",			(void(CFFPlayer::*)(int, const char*))&CFFPlayer::RemoveAmmo)
 			.def("RemoveArmor",			&CFFPlayer::RemoveArmor)
 			.def("RemoveLocation",		&CFFPlayer::RemoveLocation)
 			.def("Respawn",				&CFFPlayer::KillAndRemoveItems)
@@ -564,10 +599,13 @@ void CFFEntitySystem::FFLibOpen()
 			def("GetEntityByName",			&FFLib::GetEntityByName),
 			def("GetPlayer",				&FFLib::GetPlayer),
 			def("GetTeam",					&FFLib::GetTeam),
+			def("AreTeamsAllied",			&FFLib::AreTeamsAllied),
 			def("IncludeScript",			&FFLib::IncludeScript),
 			def("ConsoleToAll",				&FFLib::ConsoleToAll),
 			def("NumPlayers",				&FF_NumPlayers),
 			def("PrecacheSound",			&CBaseEntity::PrecacheScriptSound),
+			def("RandomFloat",				&FFLib::RandomFloat),
+			def("RandomInt",				&FFLib::RandomInt),
 			def("RemoveEntity",				&FFLib::RemoveEntity),
 			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),

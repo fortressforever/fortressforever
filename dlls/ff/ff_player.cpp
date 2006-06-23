@@ -4169,6 +4169,27 @@ void CFFPlayer::FinishDisguise()
 	m_iNewSpyDisguise = 0;
 }
 
+int CFFPlayer::AddHealth(unsigned int amount)
+{
+	int left = TakeHealth( amount, DMG_GENERIC );
+    return left;		
+}
+
+//-----------------------------------------------------------------------------
+int CFFPlayer::AddAmmo(const char* ammo, unsigned int amount)
+{
+	int dispensed = 0;
+
+	if (FStrEq(ammo, "AMMO_GREN1"))
+		dispensed = AddPrimaryGrenades( amount );
+	else if (FStrEq(ammo, "AMMO_GREN2"))
+		dispensed = AddSecondaryGrenades( amount );
+	else
+		dispensed = GiveAmmo( amount, ammo, true );
+
+	return dispensed;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Give the player some ammo.
 //-----------------------------------------------------------------------------
