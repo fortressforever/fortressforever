@@ -49,6 +49,7 @@ public:
 
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "NapalmGrenade.Bounce"; }
+	virtual Class_T Classify( void ) { return CLASS_GREN_NAPALM; }
 
 	float m_flLastBurnCheck;
 #ifdef CLIENT_DLL

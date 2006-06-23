@@ -44,6 +44,7 @@ public:
 	CNetworkVector(m_vInitialVelocity);
 
 	virtual void Precache();
+	virtual Class_T Classify( void ) { return CLASS_GREN_CALTROP; }
 
 	virtual float		GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 
