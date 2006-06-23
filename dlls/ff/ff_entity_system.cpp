@@ -262,9 +262,15 @@ namespace FFLib
 	// is the entity a grenade
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
-		return (IsOfClass(pEntity, CLASS_GREN_NAIL) ||
+		return (IsOfClass(pEntity, CLASS_GREN)
 				IsOfClass(pEntity, CLASS_GREN_EMP) ||
-				IsOfClass(pEntity, CLASS_GREN));
+				IsOfClass(pEntity, CLASS_GREN_NAIL) ||
+				IsOfClass(pEntity, CLASS_GREN_MIRV) ||
+				IsOfClass(pEntity, CLASS_GREN_MIRVLET) ||
+				IsOfClass(pEntity, CLASS_GREN_NAPALM) ||
+				IsOfClass(pEntity, CLASS_GREN_GAS) ||
+				IsOfClass(pEntity, CLASS_GREN_CONC) ||
+				IsOfClass(pEntity, CLASS_GREN_CALTROP));
 	}
 
 	void BroadcastMessage(const char* szMessage)
@@ -2155,7 +2161,13 @@ int CFFEntitySystem::GetObjectsTeam( lua_State *L )
 				( pEntity->Classify() == CLASS_TURRET ) ||
 				( pEntity->Classify() == CLASS_GREN ) ||
 				( pEntity->Classify() == CLASS_GREN_EMP ) ||
-				( pEntity->Classify() == CLASS_GREN_NAIL ) )
+				( pEntity->Classify() == CLASS_GREN_NAIL ) ||
+				( pEntity->Classify() == CLASS_GREN_MIRV ) ||
+				( pEntity->Classify() == CLASS_GREN_MIRVLET ) ||
+				( pEntity->Classify() == CLASS_GREN_NAPALM ) ||
+				( pEntity->Classify() == CLASS_GREN_GAS ) ||
+				( pEntity->Classify() == CLASS_GREN_CONC ) ||
+				( pEntity->Classify() == CLASS_GREN_CALTROP ) )
 			{
 				lua_pushnumber( L, pEntity->GetTeamNumber() );
 			}
@@ -2364,7 +2376,16 @@ int CFFEntitySystem::IsGrenade( lua_State *L )
 		int iGrenIndex = lua_tonumber( L, 1 );
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iGrenIndex );
-		if( pEntity && ( ( pEntity->Classify() == CLASS_GREN ) || ( pEntity->Classify() == CLASS_GREN_NAIL ) || ( pEntity->Classify() == CLASS_GREN_EMP ) ) )
+		if( pEntity && 
+			( ( pEntity->Classify() == CLASS_GREN ) 
+			( pEntity->Classify() == CLASS_GREN_EMP ) ||
+			( pEntity->Classify() == CLASS_GREN_NAIL ) ||
+			( pEntity->Classify() == CLASS_GREN_MIRV ) ||
+			( pEntity->Classify() == CLASS_GREN_MIRVLET ) ||
+			( pEntity->Classify() == CLASS_GREN_NAPALM ) ||
+			( pEntity->Classify() == CLASS_GREN_GAS ) ||
+			( pEntity->Classify() == CLASS_GREN_CONC ) ||
+			( pEntity->Classify() == CLASS_GREN_CALTROP ) ) )
 			bRetVal = true;
 
 		lua_pushboolean( L, bRetVal );

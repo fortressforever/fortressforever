@@ -104,6 +104,7 @@ public:
 	virtual float GetGrenadeDamage() { return 0.0f; }
 	virtual float GetGrenadeRadius() { return 280.0f; }
 	virtual const char *GetBounceSound() { return "ConcussionGrenade.Bounce"; }
+	virtual Class_T Classify( void ) { return CLASS_GREN_CONC; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeConcussion() {}

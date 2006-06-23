@@ -212,15 +212,21 @@ enum Class_T
 	CLASS_DISPENSER,
 	CLASS_SENTRYGUN,
 	CLASS_DETPACK,
-	CLASS_GREN,
-	CLASS_GREN_EMP,
+	CLASS_GREN,			// Normal gren
+	CLASS_GREN_EMP,		// Emp greande
+	CLASS_GREN_NAIL,	// Nail grenade
+	CLASS_GREN_MIRV,	// Mirv grenade
+	CLASS_GREN_MIRVLET,	// Mirvlet (from mirv gren)
+	CLASS_GREN_NAPALM,	// Napalm grenade
+	CLASS_GREN_GAS,		// Gas grenade
+	CLASS_GREN_CONC,	// Conc grenade
+	CLASS_GREN_CALTROP,	// Caltrop grenade
 	// END: Added by Mulchman
 
 	//-- Added by L0ki --
 	CLASS_PIPEBOMB,
 	//------------------- 
-
-	CLASS_GREN_NAIL,
+	
 	CLASS_TURRET,
 
 	NUM_AI_CLASSES

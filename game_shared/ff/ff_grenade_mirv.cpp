@@ -47,6 +47,7 @@ public:
 
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvGrenade.Bounce"; }
+	virtual Class_T Classify( void ) { return CLASS_GREN_MIRV; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirv() {}
@@ -66,6 +67,7 @@ public:
 	CNetworkVector(m_vInitialVelocity);
 
 	virtual void Precache();
+	virtual Class_T Classify( void ) { return CLASS_GREN_MIRVLET; }
 
 #ifdef CLIENT_DLL
 	CFFGrenadeMirvlet() {}
