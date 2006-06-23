@@ -303,7 +303,7 @@ namespace FFLib
 
 	void SetGlobalRespawnDelay(float delay)
 	{
-		mp_respawndelay.SetValue( max( 0.0f, delay ) );
+		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 	}
 
 	void RespawnAllPlayers()
