@@ -32,6 +32,8 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+#define MELEE_IMPACT_FORCE		50.0f
+
 //=========================================================
 // CFFWeaponMeleeBase 
 //=========================================================

@@ -120,7 +120,14 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				// we get to totally kerplown this guy
 
 				// Mulch: armor doesn't protect against DMG_DIRECT
-				pTarget->TakeDamage(CTakeDamageInfo(this, pPlayer, 108, DMG_DIRECT));				
+				Vector hitDirection;
+				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+				VectorNormalize(hitDirection);
+
+				CTakeDamageInfo info(this, pPlayer, 108, DMG_DIRECT);
+				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
+
+				pTarget->TakeDamage(info);
 
 				// we don't need to call BaseClass since we already did damage.
 				return;
