@@ -286,6 +286,9 @@ public:
 	// Tells us when we can call the postbuildgenericthink
     float m_flBuildTime;
 
+	// Origin of where we started to build at
+	Vector m_vecBuildOrigin;
+
 	CFFWeaponBase *m_pBuildLastWeapon;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
