@@ -765,6 +765,23 @@ const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer 
 #endif
 
 //-----------------------------------------------------------------------------
+// Purpose: Determine if pPlayer can take damage from pAttacker
+//-----------------------------------------------------------------------------
+bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+{
+	if ((pAttacker) && (PlayerRelationship(pPlayer, pAttacker) == GR_TEAMMATE))
+	{
+		// If friendly fire is off and I'm not attacking myself, then
+		// someone else on my team/an ally is attacking me - don't
+		// take damage
+		if ((friendlyfire.GetInt() == 0) && (pPlayer != pAttacker))
+			return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Find the relationship between players (teamplay vs. deathmatch)
 //-----------------------------------------------------------------------------
 int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )

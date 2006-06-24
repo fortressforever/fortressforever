@@ -133,7 +133,6 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 		else
 		{
 			// Everyone takes damage from the medikit hitting them...			
-#ifdef GAME_DLL
 			Vector hitDirection;
 			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
 			VectorNormalize(hitDirection);
@@ -141,19 +140,19 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 			CTakeDamageInfo info(this, GetOwner(), GetFFWpnData().m_iDamage, DMG_CLUB);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
-			//pTarget->TakeDamage(info);
-
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 			ApplyMultiDamage();
 
 			// Bug #0000510: Medics can infect medics.
 			if( pTarget->GetClassSlot() != CLASS_MEDIC )
 			{
+#ifdef GAME_DLL
 				// otherwise, if they are bad people, then infect them
 				pTarget->Infect(pPlayer);
 				DevMsg("[medkit] Infected Player\n");
-			}
 #endif
+			}
+
 			// Infect sound. Add a sound before next sound can be played too
 			if (m_flNextSecondaryAttack <= gpGlobals->curtime)
 			{

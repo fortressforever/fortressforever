@@ -14,7 +14,11 @@
 #include "cbase.h"
 #include "ff_weapon_basemelee.h"
 
-#define MELEE_HULL_DIM		16
+#ifdef CLIENT_DLL
+#include "c_ff_player.h"
+#endif
+
+#define MELEE_HULL_DIM		32
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
@@ -88,16 +92,13 @@ void CFFWeaponMeleeBase::SecondaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity) 
 {
-#ifdef GAME_DLL
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-#endif
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
 	//DevMsg("[CFFWeaponMeleeBase] Hit\n");
 	
 	//Do view kick
 	AddViewKick();
 
-#ifdef GAME_DLL
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
 	//Apply damage to a hit target
@@ -106,27 +107,27 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 		if (pHitEntity->IsPlayer()) 
 		{
 			CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
-			if (!g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
-				goto skipdamage;
-		}
 
-		Vector hitDirection;
-		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
-		VectorNormalize(hitDirection);
+			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget))
+			{
+				Vector hitDirection;
+				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+				VectorNormalize(hitDirection);
 
-		CFFWeaponInfo wpndata = GetFFWpnData();
-		CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+				CFFWeaponInfo wpndata = GetFFWpnData();
+				CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
-		CalculateMeleeDamageForce(&info, hitDirection, traceHit.endpos);
-		pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
+				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
+				ApplyMultiDamage();
 
-		ApplyMultiDamage();
-
-		// Now hit all triggers along the ray that... 
-		TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, hitDirection);
-	}
-skipdamage:
+#ifdef GAME_DLL
+				// Now hit all triggers along the ray that... 
+				TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, hitDirection);
 #endif
+			}
+		}
+	}
 
 	// Apply an impact effect
 	ImpactEffect(traceHit);
