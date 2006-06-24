@@ -327,5 +327,5 @@ void CFFWeaponMeleeBase::Swing()
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 }
