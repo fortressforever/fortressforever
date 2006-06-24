@@ -42,7 +42,6 @@ PRECACHE_WEAPON_REGISTER(rocket);
 	BEGIN_DATADESC( CFFProjectileRocket )
 		// Function Pointers
 		DEFINE_ENTITYFUNC( ExplodeTouch ),
-		DEFINE_THINKFUNC( Think ),
 	END_DATADESC()
 
 	//----------------------------------------------------------------------------
@@ -50,9 +49,6 @@ PRECACHE_WEAPON_REGISTER(rocket);
 	//----------------------------------------------------------------------------
 	void CFFProjectileRocket::CreateSmokeTrail() 
 	{
-		if( GetWaterLevel() != 0 )
-			return;
-
 		// Smoke trail.
 		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL) 
 		{
@@ -86,38 +82,15 @@ PRECACHE_WEAPON_REGISTER(rocket);
 
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileRocket::ExplodeTouch); // No we're going to explode when we touch something
-		SetThink(&CFFProjectileRocket::Think);		// no thinking!
+		SetThink(NULL);		// no thinking!
 
 		// Next think
 		SetNextThink(gpGlobals->curtime);
-
-		m_hRocketTrail = NULL;
 
 		// Creates the smoke trail
 		CreateSmokeTrail();
 
 		BaseClass::Spawn();
-	}
-
-	void CFFProjectileRocket::Think( void )
-	{
-		if( GetWaterLevel() != 0 )
-		{
-			if( m_hRocketTrail )
-			{
-				UTIL_Remove( m_hRocketTrail );
-				m_hRocketTrail = NULL;
-			}
-		}
-		else
-		{
-			if( !m_hRocketTrail )
-			{
-				CreateSmokeTrail();
-			}
-		}
-
-		SetNextThink( gpGlobals->curtime );
 	}
 
 #endif
