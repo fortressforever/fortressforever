@@ -4525,7 +4525,7 @@ void CBasePlayer::CommitSuicide()
 
 	// have the player kill themself
 	m_iHealth = 0;
-	Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
+	Event_Killed( CTakeDamageInfo( NULL, this, 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
 	Event_Dying();
 }
 
