@@ -595,7 +595,7 @@ bool CBasePlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, cons
 //-----------------------------------------------------------------------------
 void CBasePlayer::SnapEyeAngles( const QAngle &viewAngles )
 {
-	pl.v_angle = viewAngles;
+	pl.v_angle.GetForModify() = viewAngles;		// |-- Mirv: updated now that it is a networkvar
 	pl.fixangle = FIXANGLE_ABSOLUTE;
 }
 
@@ -2915,7 +2915,7 @@ void CBasePlayer::PhysicsSimulate( void )
 					ctx->cmds[ i ].forwardmove = 0;
 					ctx->cmds[ i ].sidemove = 0;
 					ctx->cmds[ i ].upmove = 0;
-					VectorCopy ( pl.v_angle, ctx->cmds[ i ].viewangles );
+					VectorCopy ( pl.v_angle.Get(), ctx->cmds[ i ].viewangles );	// |-- Mirv: updated now that it is a networkvar
 				}
 			}
 			
@@ -3053,7 +3053,7 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 
 	if ( pl.fixangle == FIXANGLE_NONE)
 	{
-		VectorCopy ( ucmd->viewangles, pl.v_angle );
+		VectorCopy ( ucmd->viewangles, pl.v_angle.GetForModify() );	// |-- Mirv: Updated for network var
 	}
 
 	// Handle FL_FROZEN.
@@ -3066,7 +3066,7 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->upmove = 0;
 		ucmd->buttons = 0;
 		ucmd->impulse = 0;
-		VectorCopy ( pl.v_angle, ucmd->viewangles );
+		VectorCopy ( pl.v_angle.Get(), ucmd->viewangles );
 	}
 
 	PlayerMove()->RunCommand(this, ucmd, moveHelper);
@@ -4428,7 +4428,7 @@ int CBasePlayer::Restore( IRestore &restore )
 		SetLocalAngles( pSpawnSpot->GetLocalAngles() );
 	}
 
-	QAngle newViewAngles = pl.v_angle;
+	QAngle newViewAngles = pl.v_angle.Get();
 	newViewAngles.z = 0;	// Clear out roll
 	SetLocalAngles( newViewAngles );
 	SnapEyeAngles( newViewAngles );
@@ -6453,6 +6453,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 	BEGIN_SEND_TABLE_NOBASE(CPlayerState, DT_PlayerState)
 		SendPropInt		(SENDINFO(deadflag),	1, SPROP_UNSIGNED ),
+		SendPropQAngles (SENDINFO(v_angle), 13),	// |-- Mirv: transmit view angles
 	END_SEND_TABLE()
 
 // -------------------------------------------------------------------------------- //
