@@ -396,9 +396,9 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	moveHelper->ProcessImpacts();
 
 	// --> Mirv: Unlagging only done for PostThink weapons stuff
-	lagcompensation->StartLagCompensation( player, ucmd );
+	lagcompensation->StartLagCompensation(player, ucmd);
 	RunPostThink( player );
-	lagcompensation->FinishLagCompensation( player );
+	lagcompensation->FinishLagCompensation(player);
 	// <-- Mirv
 
 	FinishCommand( player );
