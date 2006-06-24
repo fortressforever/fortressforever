@@ -285,19 +285,6 @@ void CFFProjectileGrenade::GrenadeThink()
 		return;
 	}
 
-	// In water
-	if( GetWaterLevel() != 0 )
-	{
-#ifdef GAME_DLL
-		// Bug #0000697: pipes have smoke trail in water
-		if( m_hSmokeTrail )
-		{
-			if( m_hSmokeTrail->m_bEmit )
-				m_hSmokeTrail->SetEmit( false );
-		}
-#endif
-	}
-
 	// Next think straight away
 	SetNextThink(gpGlobals->curtime);
 

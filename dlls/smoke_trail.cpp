@@ -56,6 +56,7 @@ BEGIN_DATADESC( SmokeTrail )
 	DEFINE_KEYFIELD( m_SpawnRadius, FIELD_FLOAT, "spawnradius" ),
 	DEFINE_FIELD( m_bEmit, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_nAttachment, FIELD_INTEGER ),
+	DEFINE_THINKFUNC( SmokeTrailThink ),
 
 END_DATADESC()
 
@@ -166,9 +167,35 @@ void SmokeTrail::FollowEntity( CBaseEntity *pEntity, const char *pAttachmentName
 		m_nAttachment = 0;
 	}
 
+	SetThink( &SmokeTrail::SmokeTrailThink );
+	SetNextThink( gpGlobals->curtime );
+
 	BaseClass::FollowEntity( pEntity );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Kill the trail if in water and do bubbles
+//-----------------------------------------------------------------------------
+void SmokeTrail::SmokeTrailThink( void )
+{
+	if( GetFollowedEntity() )
+	{
+		if( GetFollowedEntity()->GetWaterLevel() != 0 )
+		{
+			if( m_bEmit )
+				SetEmit( false );
+
+			//if( GetFollowedEntity()->GetAbsVelocity().Length() > 8.0f )
+			{
+				// Do bubbles!
+				UTIL_Bubbles( GetFollowedEntity()->GetAbsOrigin() - Vector( 16, 16, 16 ), GetFollowedEntity()->GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
+			}			
+		}
+	}	
+
+	// Think right away
+	SetNextThink( gpGlobals->curtime );
+}
 
 //==================================================
 // RocketTrail
@@ -212,6 +239,7 @@ BEGIN_DATADESC( RocketTrail )
 	DEFINE_FIELD( m_nAttachment, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bDamaged, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flFlareScale, FIELD_FLOAT ),
+	DEFINE_THINKFUNC( RocketTrailThink ),
 
 END_DATADESC()
 
@@ -290,7 +318,19 @@ void RocketTrail::FollowEntity( CBaseEntity *pEntity, const char *pAttachmentNam
 		m_nAttachment = 0;
 	}
 
+	SetThink( &RocketTrail::RocketTrailThink );
+	SetNextThink( gpGlobals->curtime );
+
 	BaseClass::FollowEntity( pEntity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Kill the trail if in water and do bubbles
+//-----------------------------------------------------------------------------
+void RocketTrail::RocketTrailThink( void )
+{
+	// Think right away
+	//SetNextThink( gpGlobals->curtime );
 }
 
 //==================================================
