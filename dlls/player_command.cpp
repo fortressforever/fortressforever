@@ -47,7 +47,7 @@ void CPlayerMove::StartCommand( CBasePlayer *player, CUserCmd *cmd )
 	CBaseEntity::SetPredictionPlayer( player );
 	
 	// Move other players back to history positions based on local player's lag
-	lagcompensation->StartLagCompensation( player, cmd );
+	//lagcompensation->StartLagCompensation( player, cmd );	// |-- Mirv: deferred until later to fix sticky collisions
 
 #if defined (HL2_DLL)
 	// pull out backchannel data and move this out
@@ -79,7 +79,7 @@ void CPlayerMove::FinishCommand( CBasePlayer *player )
 	VPROF( "CPlayerMove::FinishCommand" );
 
 	// Restore other players to current positions
-	lagcompensation->FinishLagCompensation( player );
+	//lagcompensation->FinishLagCompensation( player );	// |-- Mirv: deferred until later to avoid sticky collisions
 
 	player->m_pCurrentCommand = NULL;
 	CBaseEntity::SetPredictionRandomSeed( NULL );
@@ -395,7 +395,11 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	// Let server invoke any needed impact functions
 	moveHelper->ProcessImpacts();
 
+	// --> Mirv: Unlagging only done for PostThink weapons stuff
+	lagcompensation->StartLagCompensation( player, ucmd );
 	RunPostThink( player );
+	lagcompensation->FinishLagCompensation( player );
+	// <-- Mirv
 
 	FinishCommand( player );
 
