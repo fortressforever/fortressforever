@@ -117,22 +117,26 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 		
 		ApplyMultiDamage();
 
-		/* apply the tranq'ed flag here */
+		// Apply the tranq'ed flag here
 		if (pOther->IsPlayer()) 
 		{
 			CFFPlayer *pPlayer = ToFFPlayer(pOther);
 
-			// make the player walk slow
-			pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
+			// #0000695: you can tranq your teammates w/ mp_friendlyfire 0
+			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+			{
+				// make the player walk slow
+				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
 
-			// send them the status icon
-			DevMsg("[Tranq Debug] Sending status icon\n");
-			CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
-			user.MakeReliable();
-			UserMessageBegin(user, "StatusIconUpdate");
+				// send them the status icon
+				DevMsg("[Tranq Debug] Sending status icon\n");
+				CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
+				user.MakeReliable();
+				UserMessageBegin(user, "StatusIconUpdate");
 				WRITE_BYTE(FF_ICON_TRANQ);
 				WRITE_FLOAT(15.0);
-			MessageEnd();
+				MessageEnd();
+			}
 		}
 #endif
 
