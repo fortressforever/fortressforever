@@ -48,7 +48,9 @@ public:
 
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
-	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
+	virtual int		PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget);
+	virtual bool	FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker);
+
 	virtual bool	IsTeamplay( void ) { return false;	}
 
 	// Returns whether or not iTeam1 is allied to iTeam2

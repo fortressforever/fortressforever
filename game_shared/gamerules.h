@@ -135,11 +135,12 @@ public:
 	virtual const unsigned char *GetEncryptionKey() { return NULL; }
 #ifdef CLIENT_DLL
 
-	// --> Mirv: Clientside PlayerRelationship
+	// --> Mirv: Clientside rules
 
-	// A clientside version of PlayerRelationship. This isn't a pure virtual function
-	// though so that it doesn't break all the other derived gamerule classes
-	virtual int PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget) { AssertMsg(0, "This should not be called!"); return 0; }
+	// These aren't pure virtual functions so that they don't 
+	// break all the other derived gamerule classes
+	virtual int		PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget) { AssertMsg(0, "This should not be called!"); return 0; }
+	virtual bool	FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker) { AssertMsg(0, "This should not be called!"); return TRUE; }
 	// <-- Mirv
 
 
