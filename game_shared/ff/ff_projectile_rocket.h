@@ -50,7 +50,6 @@ public:
 	DECLARE_DATADESC()
 
 	virtual void Spawn();
-	void Think( void );
 
 protected:
 
