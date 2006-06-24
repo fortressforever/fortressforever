@@ -134,7 +134,17 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 		{
 			// Everyone takes damage from the medikit hitting them...			
 #ifdef GAME_DLL
-			pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, 9.0f, DMG_CLUB ) );
+			Vector hitDirection;
+			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+			VectorNormalize(hitDirection);
+
+			CTakeDamageInfo info(this, GetOwner(), GetFFWpnData().m_iDamage, DMG_CLUB);
+			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
+
+			//pTarget->TakeDamage(info);
+
+			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
+			ApplyMultiDamage();
 
 			// Bug #0000510: Medics can infect medics.
 			if( pTarget->GetClassSlot() != CLASS_MEDIC )
