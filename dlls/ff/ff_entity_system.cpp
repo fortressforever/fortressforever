@@ -232,6 +232,36 @@ bool CFFEntitySystem::StartForMap()
 //----------------------------------------------------------------------------
 // Purpose: Opens our FF functions to the vm
 //----------------------------------------------------------------------------
+class CClassLimits
+{
+public:
+	CClassLimits()
+	{
+		int def = 128;
+		scout = def;
+		sniper = def;
+		soldier = def;
+		demoman = def;
+		medic = def;
+		hwguy = def;
+		pyro = def;
+		engineer = def;
+		civilian = def;
+	}
+
+public:
+	unsigned int scout;
+	unsigned int sniper;
+	unsigned int soldier;
+	unsigned int demoman;
+	unsigned int medic;
+	unsigned int hwguy;
+	unsigned int pyro;
+	unsigned int spy;
+	unsigned int engineer;
+	unsigned int civilian;
+};
+
 namespace FFLib
 {
 	// returns if the entity of the specified type
@@ -414,6 +444,38 @@ namespace FFLib
 		return dynamic_cast<CFFPlayer*>(pEnt);
 	}
 
+	CFFItemFlag* GetInfoScriptByName(const char* entityName)
+	{
+		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+
+		while( pEnt != NULL )
+		{
+			if ( FStrEq( STRING(pEnt->GetEntityName()), entityName ) )
+				return pEnt;
+
+			// Next!
+			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		}
+
+		return NULL;
+	}
+
+	CFFItemFlag* GetInfoScriptById(int item_id)
+	{
+		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+
+		while( pEnt != NULL )
+		{
+			if ( pEnt->entindex() == item_id )
+				return pEnt;
+
+			// Next!
+			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		}
+
+		return NULL;
+	}
+
 	CFFPlayer* CastToPlayer(CBaseEntity* pEntity)
 	{
 		return dynamic_cast<CFFPlayer*>(pEntity);
@@ -450,6 +512,113 @@ namespace FFLib
 	float RandomFloat(float min, float max)
 	{
 		return random->RandomFloat(min, max);
+	}
+
+	void SmartClassLimits(unsigned int teamId, CClassLimits& limits )
+	{
+		// get team
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set team's class limits
+		pTeam->SetClassLimit(CLASS_SCOUT, limits.scout);
+		pTeam->SetClassLimit(CLASS_SNIPER, limits.sniper);
+		pTeam->SetClassLimit(CLASS_SOLDIER, limits.soldier);
+		pTeam->SetClassLimit(CLASS_DEMOMAN, limits.demoman);
+		pTeam->SetClassLimit(CLASS_MEDIC, limits.medic);
+		pTeam->SetClassLimit(CLASS_HWGUY, limits.hwguy);
+		pTeam->SetClassLimit(CLASS_PYRO, limits.pyro);
+		pTeam->SetClassLimit(CLASS_SPY, limits.spy);
+		pTeam->SetClassLimit(CLASS_ENGINEER, limits.engineer);
+		pTeam->SetClassLimit(CLASS_CIVILIAN, limits.civilian);
+	}
+
+	void SmartMessage(int playerId, const char* playerMsg, const char* teamMsg, const char* otherMsg)
+	{
+		CFFPlayer* pPlayer = GetPlayer(playerId);
+		if(NULL == pPlayer)
+			return;
+
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(i);
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerMessage(pTestPlayer, playerMsg);
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerMessage(pTestPlayer, teamMsg);
+
+			else
+				SendPlayerMessage(pTestPlayer, otherMsg);
+		}
+	}
+
+	void SmartSound(int playerId, const char* playerSound, const char* teamSound, const char* otherSound)
+	{
+		CFFPlayer* pPlayer = GetPlayer(playerId);
+		if(NULL == pPlayer)
+			return;
+
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pTestPlayer = GetPlayer(i);
+
+			if(pTestPlayer->entindex() == pPlayer->entindex())
+				SendPlayerSound(pTestPlayer, playerSound);
+
+			else if(pTestPlayer->GetTeamNumber() == pPlayer->GetTeamNumber())
+				SendPlayerSound(pTestPlayer, teamSound);
+
+			else
+				SendPlayerSound(pTestPlayer, otherSound);
+		}
+	}
+
+	void SmartTeamMessage(int teamId, const char* teamMsg, const char* otherMsg)
+	{
+		// get team
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate message to each player
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(i);
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
+				SendPlayerMessage(pPlayer, teamMsg);
+			else
+				SendPlayerMessage(pPlayer, otherMsg);
+		}
+	}
+
+	void SmartTeamSound(int teamId, const char* teamSound, const char* otherSound)
+	{
+		// get team
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL == pTeam)
+			return;
+
+		// set the appropriate sound to each player
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(i);
+
+			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
+				SendPlayerSound(pPlayer, teamSound);
+			else
+				SendPlayerSound(pPlayer, otherSound);
+		}
 	}
 
 } // namespace FFLib
@@ -522,11 +691,24 @@ void CFFEntitySystem::FFLibOpen()
 
 	module(L)
 	[
+		class_<CClassLimits>("ClassLimits")
+			.def_readwrite("Scout",		&CClassLimits::scout)
+			.def_readwrite("Sniper",	&CClassLimits::sniper)
+			.def_readwrite("Soldier",	&CClassLimits::soldier)
+			.def_readwrite("Demoman",	&CClassLimits::demoman)
+			.def_readwrite("Medic",		&CClassLimits::medic)
+			.def_readwrite("Hwguy",		&CClassLimits::hwguy)
+			.def_readwrite("Pyro",		&CClassLimits::pyro)
+			.def_readwrite("Engineer",	&CClassLimits::engineer)
+			.def_readwrite("Spy",		&CClassLimits::spy)
+			.def_readwrite("Civilian",	&CClassLimits::civilian),
+
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
 			.def("EmitSound",			(void(CBaseEntity::*)(const char*, float, float*))&CBaseEntity::EmitSound)
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
+			.def("GetTeamId",			&CBaseEntity::GetTeamNumber)
 			.def("IsDespenser",			&FFLib::IsDispenser)
 			.def("IsGrenade",			&FFLib::IsGrenade)
 			.def("IsPlayer",			&CBaseEntity::IsPlayer)
@@ -562,6 +744,7 @@ void CFFEntitySystem::FFLibOpen()
 
 		// CFFPlayer
 		class_<CFFPlayer, CBasePlayer>("Player")
+			.def("AddAmmo",				&CFFPlayer::AddAmmo)
 			.def("AddArmor",			&CFFPlayer::AddArmor)
 			.def("AddFrags",			&CFFPlayer::IncrementFragCount)
 			.def("AddHealth",			&CFFPlayer::AddHealth)
@@ -612,6 +795,8 @@ void CFFEntitySystem::FFLibOpen()
 			def("CastToInfoScript",			&FFLib::CastToItemFlag),
 			def("GetEntity",				&FFLib::GetEntity),
 			def("GetEntityByName",			&FFLib::GetEntityByName),
+			def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
+			def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 			def("GetPlayer",				&FFLib::GetPlayer),
 			def("GetTeam",					&FFLib::GetTeam),
 			def("AreTeamsAllied",			&FFLib::AreTeamsAllied),
@@ -624,7 +809,12 @@ void CFFEntitySystem::FFLibOpen()
 			def("RemoveEntity",				&FFLib::RemoveEntity),
 			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
-			def("SetModel",					&FFLib::SetModel)
+			def("SetModel",					&FFLib::SetModel),
+			def("SmartClassLimits",			&FFLib::SmartClassLimits),
+			def("SmartMessage",				&FFLib::SmartMessage),
+			def("SmartSound",				&FFLib::SmartSound),
+			def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
+			def("SmartTeamSound",			&FFLib::SmartTeamSound)
 		]
 	];
 }
