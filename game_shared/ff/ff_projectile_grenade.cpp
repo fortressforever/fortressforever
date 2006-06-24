@@ -51,6 +51,9 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "0.5", 0, "");
 	//----------------------------------------------------------------------------
 	void CFFProjectileGrenade::CreateSmokeTrail() 
 	{
+		if( GetWaterLevel() != 0 )
+			return;
+
 		if ((m_hSmokeTrail = SmokeTrail::CreateSmokeTrail()) != NULL) 
 		{
 			m_hSmokeTrail->m_Opacity = 0.2f;
@@ -165,7 +168,8 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "0.5", 0, "");
 				SetLocalAngularVelocity(vec3_angle);
 
 				// Remove smoke BUG #0000126: Pipes from Launcher keeps emitting smoke after they are at rest.
-				m_hSmokeTrail->SetEmit(false);
+				if( m_hSmokeTrail )
+					m_hSmokeTrail->SetEmit(false);
 
 				////align to the ground so we're not standing on end
 				//QAngle angle;
@@ -284,6 +288,21 @@ void CFFProjectileGrenade::GrenadeThink()
 		Detonate();
 		return;
 	}
+
+#ifdef GAME_DLL
+
+	// If in water...
+	if( GetWaterLevel() != 0 )
+	{
+		// Kill the smoke trail
+		if( m_hSmokeTrail )
+		{
+			UTIL_Remove( m_hSmokeTrail );
+			m_hSmokeTrail = NULL;
+		}
+	}
+
+#endif
 
 	// Next think straight away
 	SetNextThink(gpGlobals->curtime);
