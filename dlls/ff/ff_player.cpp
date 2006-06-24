@@ -520,6 +520,14 @@ void CFFPlayer::PreThink(void)
 			PreBuildGenericThink();
 		}
 
+		// Our origin has changed while building! no!!!!!!!!!!!!!!!!!!!!!!
+		if( m_vecBuildOrigin != GetAbsOrigin() )
+		{
+			Warning( "[Buildable] Player origin has changed!\n" );
+			m_iWantBuild = m_iCurBuild;
+			PreBuildGenericThink();
+		}
+
 		// Keeping the m_bBulding line in there in case we cancel the build cause
 		// we left the ground in which case m_bBuilding will be false and we'll
 		// just skip this.
@@ -2261,6 +2269,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 	if( !m_bBuilding )
 	{
 		m_bBuilding = true;
+
+		// Store the player's current origin
+		m_vecBuildOrigin = GetAbsOrigin();
 
 		// See if player is in a no build area first
 		if( !FFScriptRunPredicates( this, "onbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
