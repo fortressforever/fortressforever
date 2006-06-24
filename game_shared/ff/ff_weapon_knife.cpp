@@ -118,7 +118,9 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 			{
 				DevMsg("BACKSTAB!!!!!\n");
 				// we get to totally kerplown this guy
-				pTarget->TakeDamage(CTakeDamageInfo(this, pPlayer, 125, DMG_CLUB));
+
+				// Mulch: armor doesn't protect against DMG_DIRECT
+				pTarget->TakeDamage(CTakeDamageInfo(this, pPlayer, 108, DMG_DIRECT));				
 
 				// we don't need to call BaseClass since we already did damage.
 				return;
