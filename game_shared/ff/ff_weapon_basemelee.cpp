@@ -263,7 +263,7 @@ void CFFWeaponMeleeBase::Swing()
 
 	pOwner->EyeVectors(&forward, NULL, NULL);
 
-	Vector swingEnd = swingStart + forward * pWeaponInfo.m_flRange;
+	Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
 
 	Activity nHitActivity = ACT_VM_HITCENTER;
