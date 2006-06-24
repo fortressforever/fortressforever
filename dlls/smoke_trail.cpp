@@ -178,6 +178,9 @@ void SmokeTrail::FollowEntity( CBaseEntity *pEntity, const char *pAttachmentName
 //-----------------------------------------------------------------------------
 void SmokeTrail::Think( void )
 {
+	// A smoke trail dies when the object 
+	// it is attached to goes into water
+
 	if( GetFollowedEntity() )
 	{
 		if( GetFollowedEntity()->GetWaterLevel() != 0 )
@@ -185,12 +188,23 @@ void SmokeTrail::Think( void )
 			if( m_bEmit )
 				SetEmit( false );
 
-			// Do bubbles!
-			UTIL_Bubbles( GetFollowedEntity()->GetAbsOrigin() - Vector( 16, 16, 16 ), GetFollowedEntity()->GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
-		}
+			// If we're going slow enough, don't do bubbles anymore
+			// Also make sure we're still underwater and haven't bounced out
+			if( ( GetFollowedEntity()->GetAbsVelocity() != vec3_origin ) && ( UTIL_PointContents( GetFollowedEntity()->GetAbsOrigin() ) & MASK_WATER ) )
+			{
+				// Do bubbles!
+				UTIL_Bubbles( GetFollowedEntity()->GetAbsOrigin() - Vector( 16, 16, 16 ), GetFollowedEntity()->GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 3, 8 ) );
+			}			
 
-		// Think right away
-		SetNextThink( gpGlobals->curtime );
+			// Think slower underwater
+			SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.4f ) );
+		}
+		else
+		{
+			// Set next time to think. Not underwater
+			// yet so keep spamming the think function
+			SetNextThink( gpGlobals->curtime );
+		}		
 	}	
 }
 
@@ -326,6 +340,11 @@ void RocketTrail::FollowEntity( CBaseEntity *pEntity, const char *pAttachmentNam
 //-----------------------------------------------------------------------------
 void RocketTrail::Think( void )
 {
+	// A rocket trail dies when the object 
+	// it is attached to goes into water but
+	// will restart if that object comes out
+	// of water
+
 	if( GetFollowedEntity() )
 	{
 		if( GetFollowedEntity()->GetWaterLevel() != 0 )
@@ -333,12 +352,28 @@ void RocketTrail::Think( void )
 			if( m_bEmit )
 				SetEmit( false );
 
-			// Do bubbles!
-			UTIL_Bubbles( GetFollowedEntity()->GetAbsOrigin() - Vector( 16, 16, 16 ), GetFollowedEntity()->GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
-		}
+			// Make sure we're still under water... since we
+			// think slower we might have left the water and
+			// are now airborn (so therefore we don't want
+			// bubbles being made!)
+			if( UTIL_PointContents( GetFollowedEntity()->GetAbsOrigin() ) & MASK_WATER )
+			{
+				// Do bubbles!
+				UTIL_Bubbles( GetFollowedEntity()->GetAbsOrigin() - Vector( 16, 16, 16 ), GetFollowedEntity()->GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 3, 8 ) );
+			}			
 
-		// Think right away
-		SetNextThink( gpGlobals->curtime );
+			// Think slower underwater
+			SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.4f ) );
+		}
+		else
+		{
+			// Turn on the trail, we're leaving water
+			if( !m_bEmit )
+				SetEmit( true );
+
+			// Set next time to think
+			SetNextThink( gpGlobals->curtime );
+		}		
 	}
 }
 
