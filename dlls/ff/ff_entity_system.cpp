@@ -788,6 +788,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetDisguisable",		&CFFPlayer::SetDisguisable)
 			.def("SetLocation",			&CFFPlayer::SetLocation)
 			.def("SetRespawnDelay",		&CFFPlayer::LUA_SetPlayerRespawnDelay)
+			.def("InstaSwitch",			&CFFPlayer::InstaSwitch)
+			.def("GiveWeapon",			&CFFPlayer::GiveNamedItem)
+			.def("TakeWeapon",			&CFFPlayer::TakeNamedItem)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -807,7 +810,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Drop",				&CFFItemFlag::Drop)
 			.def("Pickup",				&CFFItemFlag::Pickup)
 			.def("Respawn",				&CFFItemFlag::Respawn)
-			.def("Return",				&CFFItemFlag::Return),
+			.def("Return",				&CFFItemFlag::Return)
+			.def("SetModel",			&CFFItemFlag::LUA_SetModel)
+			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin),
 
 		// global functions
 		namespace_("ffmod")	// temp namespace so names dont collide with regular lua_register
