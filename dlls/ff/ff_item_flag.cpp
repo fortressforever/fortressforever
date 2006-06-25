@@ -56,6 +56,7 @@ bool CFFItemFlag::CreateItemVPhysicsObject( void )
 	}
 
 	// move it to where it's supposed to respawn at
+	m_atStart = true;
 	SetAbsOrigin(m_vStartOrigin);
 	SetLocalAngles(m_vStartAngles);
 
@@ -68,6 +69,7 @@ bool CFFItemFlag::CreateItemVPhysicsObject( void )
 	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
+	/*
 	// If it's not physical, drop it to the floor
 	if (UTIL_DropToFloor(this, MASK_SOLID) == 0)
 	{
@@ -75,6 +77,7 @@ bool CFFItemFlag::CreateItemVPhysicsObject( void )
 		UTIL_Remove( this );
 		return false;
 	}
+	*/
 
 	// make it respond to touches
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
@@ -105,6 +108,7 @@ void CFFItemFlag::Spawn( void )
 
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
+	m_atStart = true;
 
 	CreateItemVPhysicsObject();
 
@@ -119,6 +123,9 @@ void CFFItemFlag::OnTouch( CBaseEntity *pOther )
 
 	//DevMsg("[ff_item_flag] Entity Touch");
 	CFFPlayer *pFFPlayer = ToFFPlayer(pOther);
+
+	//if ( m_atStart && GetAbsOrigin().DistToSqr(m_vStartOrigin) > 72)
+	//	return;
 
 	if(pFFPlayer)
 	{
@@ -237,11 +244,11 @@ void CFFItemFlag::Drop( float delay, float speed )
 	m_pLastOwner = owner;
 	m_flThrowTime = gpGlobals->curtime;
 
-	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
-	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
-
 	// it's dropped, so don't need a parent anymore
 	SetOwnerEntity(NULL);
+
+	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
+	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 }
 
 CBaseEntity* CFFItemFlag::Return( void )
@@ -274,4 +281,13 @@ void CFFItemFlag::OnThink( void )
 void CFFItemFlag::SetSpawnFlags( int flags )
 {
 	m_spawnflags = flags;
+}
+
+void CFFItemFlag::LUA_SetModel( const char *model )
+{
+	UTIL_SetModel(this, model);
+}
+void CFFItemFlag::LUA_SetSkin( int skin )
+{
+	this->m_nSkin = skin;
 }

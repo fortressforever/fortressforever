@@ -736,6 +736,8 @@ ReturnSpot:
 		return CBaseEntity::Instance( INDEXENT( 0 ) );
 	}
 
+	DevMsg("Spawning player %s at spawn '%s'\n", GetPlayerName(), STRING(pSpot->GetEntityName()));
+
 	g_pLastSpawn = pSpot;
 	return pSpot;
 }
@@ -1057,6 +1059,18 @@ void CFFPlayer::SpySilentFeign( void )
 		// Holster our current weapon
 		if (GetActiveWeapon())
 			GetActiveWeapon()->Holster(NULL);
+
+		// Find any items that we are in control of and let them know we feigned
+		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		while( pEnt != NULL )
+		{
+			// Tell the ent that it died
+			if (pEnt->GetOwnerEntity() == this)
+				entsys.RunPredicates( pEnt, this, "ownerfeign" );
+
+			// Next!
+			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		}
 	}
 }
 
@@ -3280,7 +3294,7 @@ void CFFPlayer::SetSecondaryGrenades( int iNewCount )
 int CFFPlayer::AddPrimaryGrenades( int iNewCount )
 {
 	const CFFPlayerClassInfo &info = GetFFClassData();
-	int ret = info.m_iPrimaryMax - m_iPrimary;
+	int ret = clamp(info.m_iPrimaryMax - m_iPrimary, 0, iNewCount);
 	m_iPrimary = clamp(m_iPrimary+iNewCount, 0, info.m_iPrimaryMax);
 	return ret;
 }
@@ -3288,7 +3302,7 @@ int CFFPlayer::AddPrimaryGrenades( int iNewCount )
 int CFFPlayer::AddSecondaryGrenades( int iNewCount )
 {
 	const CFFPlayerClassInfo &info = GetFFClassData();
-	int ret = info.m_iSecondaryMax - m_iSecondary;
+	int ret = clamp(info.m_iSecondaryMax - m_iSecondary, 0, iNewCount);
 	m_iSecondary = clamp(m_iSecondary+iNewCount, 0, info.m_iSecondaryMax);
 	return ret;
 }
@@ -4430,6 +4444,9 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 // An instance switch. This should allow classes to be swapped without killing them.
 void CFFPlayer::InstaSwitch(int iClassNum)
 {
+	if (iClassNum < CLASS_SCOUT || iClassNum > CLASS_CIVILIAN)
+		return;
+
 	if (GetClassSlot() == iClassNum)
 		return;
 

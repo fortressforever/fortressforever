@@ -50,9 +50,14 @@ public:
 
 	void SetSpawnFlags( int flags );
 
+	void LUA_SetModel( const char *model );
+	void LUA_SetSkin( int skin );
+
 private:
 
 	bool CreateItemVPhysicsObject( void );
+
+	bool m_atStart;
 
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
