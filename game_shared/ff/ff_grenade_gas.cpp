@@ -116,7 +116,9 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		}
 
 		// Stop the thing from rolling if it starts moving
-		if( gpGlobals->curtime > m_flOpenTime + 2.0f )
+		// (but stop it only if it's moving [in case you got
+		// it primed and never throw before the timer expires]!)
+		if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && ( GetAbsVelocity() != vec3_origin ) )
 		{
 			IPhysicsObject *pObject = VPhysicsGetObject();
 			if( pObject )
