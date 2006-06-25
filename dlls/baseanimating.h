@@ -39,6 +39,7 @@ public:
 	DECLARE_SERVERCLASS();
 
 	virtual void SetModel( const char *szModelName );
+	virtual void SetSkin(int iSkin) { m_nSkin = iSkin; }
 	virtual void Activate();
 	virtual void SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 

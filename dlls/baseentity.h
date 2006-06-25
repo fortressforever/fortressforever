@@ -560,6 +560,8 @@ public:
 	virtual void Precache( void ) {}
 
 	virtual void SetModel( const char *szModelName );
+	virtual void SetModel( const char *szModelName, int iSkin);
+	virtual void SetSkin( int iSkin) {}
 
 	virtual void PostConstructor( const char *szClassname );
 	virtual void ParseMapData( CEntityMapData *mapData );
