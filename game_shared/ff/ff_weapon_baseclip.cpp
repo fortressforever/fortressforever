@@ -140,7 +140,9 @@ void CFFWeaponBaseClip::FillClip()
 		if (Clip1() < GetMaxClip1())
 		{
 			m_iClip1 += nAdd;
+#ifdef GAME_DLL
 			pOwner->RemoveAmmo(nAdd, m_iPrimaryAmmoType);
+#endif
 		}
 	}
 }

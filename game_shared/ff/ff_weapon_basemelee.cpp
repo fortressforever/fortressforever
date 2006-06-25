@@ -106,26 +106,21 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 	{
 		if (pHitEntity->IsPlayer()) 
 		{
-			CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
+			Vector hitDirection;
+			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+			VectorNormalize(hitDirection);
 
-			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget))
-			{
-				Vector hitDirection;
-				pPlayer->EyeVectors(&hitDirection, NULL, NULL);
-				VectorNormalize(hitDirection);
+			CFFWeaponInfo wpndata = GetFFWpnData();
+			CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
+			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
 
-				CFFWeaponInfo wpndata = GetFFWpnData();
-				CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
-				info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
-
-				pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
-				ApplyMultiDamage();
+			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
+			ApplyMultiDamage();
 
 #ifdef GAME_DLL
-				// Now hit all triggers along the ray that... 
-				TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, hitDirection);
+			// Now hit all triggers along the ray that... 
+			TraceAttackToTriggers(info, traceHit.startpos, traceHit.endpos, hitDirection);
 #endif
-			}
 		}
 	}
 

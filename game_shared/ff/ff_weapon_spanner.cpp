@@ -300,6 +300,15 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		WeaponSound(SPECIAL2);
 		return;
 	}
+	else if (pHitEntity->IsPlayer() && pHitEntity->IsAlive())
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
+		CFFPlayer *pHitPlayer = ToFFPlayer(pHitEntity);
+
+		// Don't do rest of swing if teammate so that blood won't be shown
+		if (g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE)
+			return;
+	}
 
 #endif
 
