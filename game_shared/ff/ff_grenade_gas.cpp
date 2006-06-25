@@ -182,8 +182,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			DispatchEffect(GAS_EFFECT, data);
 		}
 
-		Warning( "[Thinking!]\n" );
-
 		// Animate
 		StudioFrameAdvance();
 
