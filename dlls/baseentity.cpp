@@ -3508,6 +3508,11 @@ void CBaseEntity::SetModel( const char *szModelName )
 	NetworkStateChanged( );
 }
 
+void CBaseEntity::SetModel( const char *szModelName, int iSkin)
+{
+	SetModel(szModelName);
+	SetSkin(iSkin);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Called once per frame after the server frame loop has finished and after all messages being

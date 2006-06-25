@@ -237,7 +237,7 @@ class CClassLimits
 public:
 	CClassLimits()
 	{
-		int def = 128;
+		int def = -1;
 		scout = def;
 		sniper = def;
 		soldier = def;
@@ -250,16 +250,34 @@ public:
 	}
 
 public:
-	unsigned int scout;
-	unsigned int sniper;
-	unsigned int soldier;
-	unsigned int demoman;
-	unsigned int medic;
-	unsigned int hwguy;
-	unsigned int pyro;
-	unsigned int spy;
-	unsigned int engineer;
-	unsigned int civilian;
+	int scout;
+	int sniper;
+	int soldier;
+	int demoman;
+	int medic;
+	int hwguy;
+	int pyro;
+	int spy;
+	int engineer;
+	int civilian;
+};
+
+class CPlayerLimits
+{
+public:
+	CPlayerLimits()
+	{
+		blue = 0;
+		red = 0;
+		yellow = -1;
+		green = -1;
+	}
+
+public:
+	int blue;
+	int red;
+	int yellow;
+	int green;
 };
 
 namespace FFLib
@@ -361,23 +379,6 @@ namespace FFLib
 	{
 		DevMsg( szMessage );
 		DevMsg( "\n" );
-	}
-
-	// FIX ME: get working off of CBaseEntity/CFFPlayer/CFFItemFlag
-	bool SetModel(int item_id, const char* model, int skin)
-	{
-		bool ret = false;
-
-		CBaseEntity *item = UTIL_EntityByIndex( item_id );
-		if (item)
-		{
-			UTIL_SetModel(item, model);
-			((CBaseAnimating *)item)->m_nSkin = skin;
-
-			ret = true;
-		}
-
-		return ret;
 	}
 
 	void IncludeScript(const char* script)
@@ -621,6 +622,21 @@ namespace FFLib
 		}
 	}
 
+	void SetPlayerLimits(CPlayerLimits& limits)
+	{
+		CFFTeam* pTeam = GetTeam(TEAM_BLUE);
+		pTeam->SetTeamLimits(limits.blue);
+
+		pTeam = GetTeam(TEAM_RED);
+		pTeam->SetTeamLimits(limits.red);
+
+		pTeam = GetTeam(TEAM_YELLOW);
+		pTeam->SetTeamLimits(limits.yellow);
+
+		pTeam = GetTeam(TEAM_GREEN);
+		pTeam->SetTeamLimits(limits.green);
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -692,6 +708,7 @@ void CFFEntitySystem::FFLibOpen()
 	module(L)
 	[
 		class_<CClassLimits>("ClassLimits")
+			.def(constructor<>())
 			.def_readwrite("Scout",		&CClassLimits::scout)
 			.def_readwrite("Sniper",	&CClassLimits::sniper)
 			.def_readwrite("Soldier",	&CClassLimits::soldier)
@@ -702,6 +719,13 @@ void CFFEntitySystem::FFLibOpen()
 			.def_readwrite("Engineer",	&CClassLimits::engineer)
 			.def_readwrite("Spy",		&CClassLimits::spy)
 			.def_readwrite("Civilian",	&CClassLimits::civilian),
+
+		class_<CPlayerLimits>("PlayerLimits")
+			.def(constructor<>())
+			.def_readwrite("Blue",		&CPlayerLimits::blue)
+			.def_readwrite("Red",		&CPlayerLimits::red)
+			.def_readwrite("Yellow",	&CPlayerLimits::yellow)
+			.def_readwrite("Green",		&CPlayerLimits::green),
 
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
@@ -714,7 +738,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsPlayer",			&CBaseEntity::IsPlayer)
 			.def("IsSentryGun",			&FFLib::IsSentrygun)
 			.def("IsDetpack",			&FFLib::IsDetpack)
-			.def("PrecacheModel",		&CBaseEntity::PrecacheModel),
+			.def("SetModel",			(void(CBaseEntity::*)(const char*))&CBaseEntity::SetModel)
+			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
@@ -803,14 +828,15 @@ void CFFEntitySystem::FFLibOpen()
 			def("IncludeScript",			&FFLib::IncludeScript),
 			def("ConsoleToAll",				&FFLib::ConsoleToAll),
 			def("NumPlayers",				&FF_NumPlayers),
+			def("PrecacheModel",			&CBaseEntity::PrecacheModel),
 			def("PrecacheSound",			&CBaseEntity::PrecacheScriptSound),
 			def("RandomFloat",				&FFLib::RandomFloat),
 			def("RandomInt",				&FFLib::RandomInt),
 			def("RemoveEntity",				&FFLib::RemoveEntity),
 			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
-			def("SetModel",					&FFLib::SetModel),
-			def("SmartClassLimits",			&FFLib::SmartClassLimits),
+			def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
+			def("SetClassLimits",			&FFLib::SmartClassLimits),
 			def("SmartMessage",				&FFLib::SmartMessage),
 			def("SmartSound",				&FFLib::SmartSound),
 			def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
