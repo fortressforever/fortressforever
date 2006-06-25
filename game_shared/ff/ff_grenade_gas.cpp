@@ -116,13 +116,15 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		}
 
 		// Stop the thing from rolling if it starts moving
-		// (but stop it only if it's moving [in case you got
-		// it primed and never throw before the timer expires]!)
-		if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && ( GetAbsVelocity() != vec3_origin ) )
+		if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && VPhysicsGetObject() )
 		{
-			IPhysicsObject *pObject = VPhysicsGetObject();
-			if( pObject )
-				pObject->EnableMotion( false );
+			VPhysicsGetObject()->EnableMotion( false );
+		}
+
+		// If open and we're not moving and physics aren't enabled, enable physics
+		if( ( m_flOpenTime != 0.0f ) && ( GetAbsVelocity() == vec3_origin ) && !VPhysicsGetObject() )
+		{
+			VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
 		}
 
 		// Been detonated for 10 secs now, so fade out
@@ -139,7 +141,10 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			// If we were idling, deploy
 			if( m_Activity == ( Activity )ACT_GAS_IDLE )
 			{
-				VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+				// If it's at rest, enable physics
+				if( GetAbsVelocity() == vec3_origin )
+					VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+
 				m_flOpenTime = gpGlobals->curtime;
 
 				m_Activity = ( Activity )ACT_GAS_DEPLOY;
@@ -177,13 +182,39 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			DispatchEffect(GAS_EFFECT, data);
 		}
 
+		Warning( "[Thinking!]\n" );
+
 		// Animate
 		StudioFrameAdvance();
 
 		// Next think straight away
-		SetNextThink(gpGlobals->curtime);
+		SetNextThink(gpGlobals->curtime);		
 
-		CFFGrenadeBase::WaterThink();
+		/*
+		// TODO:
+		// Let's effervesce underwater
+		if( ( GetWaterLevel() != 0 ) && ( m_flOpenTime != 0.0f ) )
+		{
+			// When motion is disabled GetAbsOrigin() no longer works
+
+			IPhysicsObject *pObject = VPhysicsGetObject();
+			if( pObject )
+			{
+				//Vector vecPos;
+				//QAngle vecAng;
+				//pObject->GetPosition( &vecPos, &vecAng );
+				
+				//UTIL_Bubbles( vecPos - Vector( 16, 16, 16 ), vecPos + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
+			}
+			else
+			{
+				UTIL_Bubbles( GetAbsOrigin() - Vector( 16, 16, 16 ), GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
+			}			
+		}
+		*/
+
+		// Do underwater grenade movement thinking
+		CFFGrenadeBase::WaterThink();		
 	}
 #endif
 
