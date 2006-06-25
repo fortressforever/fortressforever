@@ -3183,7 +3183,7 @@ void CFFPlayer::Command_PrimeOne(void)
 		if(m_iPrimary > 0)
 		{
 			// Temp implementation of grenade timer defrag has been waiting for weeks for
-			EmitSound( "Grenade.Prime" );
+			//EmitSound( "Grenade.Prime" );
 
 			m_iGrenadeState = FF_GREN_PRIMEONE;
 			m_flServerPrimeTime = gpGlobals->curtime;
@@ -3220,7 +3220,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 		if(m_iSecondary > 0)
 		{
 			// Temp implementation of grenade timer defrag has been waiting for weeks for
-			EmitSound( "Grenade.Prime" );	// Serverside timer since its being tested on lan
+			//EmitSound( "Grenade.Prime" );	// Serverside timer since its being tested on lan
 
 			m_iGrenadeState = FF_GREN_PRIMETWO;
 			m_flServerPrimeTime = gpGlobals->curtime;
