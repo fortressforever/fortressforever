@@ -250,9 +250,9 @@ bool CFFGameMovement::CheckJumpButton(void)
 				//fMul += reflect.z * flSpeedAmount;
 
 #ifdef CLIENT_DLL
-				Warning( "[CLIENT] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
+				//Warning( "[CLIENT] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
 #else
-				Warning( "[SERVER] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
+				//Warning( "[SERVER] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
 #endif
 
 #ifdef CLIENT_DLL
