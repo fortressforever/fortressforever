@@ -190,28 +190,17 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// Default positions and angles
 	Vector vecStart = pOwner->Weapon_ShootPosition();
 	QAngle angAngles = pOwner->EyeAngles();
+	C_BaseAnimating *pWeapon = NULL;
 
 	if (pOwner->IsLocalPlayer()) 
-	{
-		// Use the V_ model attachment
-		C_BaseViewModel *vm = pOwner->GetViewModel(0);
-
-		if (vm) 
-		{
-			int iAttachment = vm->LookupAttachment("muzzle");
-			vm->GetAttachment(iAttachment, vecStart, angAngles);
-		}
-	}
+		pWeapon = pOwner->GetViewModel(0);
 	else
-	{
-		// Use the W_ model attachment
-		C_BaseCombatWeapon *cr = pOwner->GetActiveWeapon();
+		pWeapon = pOwner->GetActiveWeapon();
 
-		if (cr) 
-		{
-			int iAttachment = cr->LookupAttachment("muzzle");
-			cr->GetAttachment(iAttachment, vecStart, angAngles);
-		}
+	if (pWeapon)
+	{
+		int iAttachment = pWeapon->LookupAttachment("muzzle");
+		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
 	}
 
 	Vector forward, right, up;
