@@ -78,9 +78,12 @@ void CFFProjectilePipebomb::Spawn()
 #ifdef CLIENT_DLL
 	// Rebo you are quite mean with this tomfoolery!!!!!!!!!!
 	player_info_t pinfo;
-	engine->GetPlayerInfo(C_BasePlayer::GetLocalPlayer()->entindex(), &pinfo);
 
-	fAltSkin = ! (pinfo.friendsID & 1);
+	if (CBasePlayer::GetLocalPlayer())
+	{
+		engine->GetPlayerInfo(C_BasePlayer::GetLocalPlayer()->entindex(), &pinfo);
+		fAltSkin = ! (pinfo.friendsID & 1);
+	}
 #else
 
 	// Start the armed light

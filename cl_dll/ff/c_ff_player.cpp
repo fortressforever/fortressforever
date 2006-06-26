@@ -15,6 +15,11 @@
 #include "in_buttons.h"
 #include "filesystem.h"
 
+#include "iviewrender_beams.h"
+#include "r_efx.h"
+#include "dlight.h"
+#include "beamdraw.h"
+
 #include "view.h"
 #include "iviewrender.h"
 
@@ -665,11 +670,15 @@ C_FFPlayer::C_FFPlayer() :
 		m_hSpyTracking[ i ].m_iClass = -1;
 		m_hSpyTracking[ i ].m_iTeam = -1;
 	}
+
+	m_pFlashlightBeam = NULL;
 }
 
 C_FFPlayer::~C_FFPlayer()
 {
 	m_PlayerAnimState->Release();
+
+	ReleaseFlashlight();
 }
 
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
@@ -1074,4 +1083,135 @@ void TimerChange_Callback(ConVar *var, char const *pOldString)
 	Q_snprintf(g_szTimerFile, MAX_PATH - 1, "timers/%s", pFilename);
 
 	(*pFilesystem)->FindClose(findHandle);
+}
+
+void C_FFPlayer::AddEntity()
+{
+	BaseClass::AddEntity();
+
+	// Can probably get rid of this
+
+	/*QAngle vTempAngles = GetLocalAngles();
+	vTempAngles[PITCH] = m_angEyeAngles[PITCH];
+
+	SetLocalAngles(vTempAngles);
+
+	m_PlayerAnimState.Update();
+
+	// Zero out model pitch, blending takes care of all of it.
+	SetLocalAnglesDim(X_INDEX, 0);*/
+
+	if (this != C_BasePlayer::GetLocalPlayer())
+	{
+		if (IsEffectActive(EF_DIMLIGHT))
+		{
+			int iAttachment = LookupAttachment("anim_attachment_RH");
+
+			if (iAttachment < 0)
+				return;
+
+			Vector vecOrigin;
+			QAngle eyeAngles = m_angEyeAngles;
+
+			GetAttachment(iAttachment, vecOrigin, eyeAngles);
+
+			Vector vForward;
+			AngleVectors(eyeAngles, &vForward);
+
+			trace_t tr;
+			UTIL_TraceLine(vecOrigin, vecOrigin + (vForward * 200), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+			if (!m_pFlashlightBeam)
+			{
+				BeamInfo_t beamInfo;
+				beamInfo.m_nType = TE_BEAMPOINTS;
+				beamInfo.m_vecStart = tr.startpos;
+				beamInfo.m_vecEnd = tr.endpos;
+				beamInfo.m_pszModelName = "sprites/glow01.vmt";
+				beamInfo.m_pszHaloName = "sprites/glow01.vmt";
+				beamInfo.m_flHaloScale = 3.0;
+				beamInfo.m_flWidth = 8.0f;
+				beamInfo.m_flEndWidth = 35.0f;
+				beamInfo.m_flFadeLength = 300.0f;
+				beamInfo.m_flAmplitude = 0;
+				beamInfo.m_flBrightness = 60.0;
+				beamInfo.m_flSpeed = 0.0f;
+				beamInfo.m_nStartFrame = 0.0;
+				beamInfo.m_flFrameRate = 0.0;
+				beamInfo.m_flRed = 255.0;
+				beamInfo.m_flGreen = 255.0;
+				beamInfo.m_flBlue = 255.0;
+				beamInfo.m_nSegments = 8;
+				beamInfo.m_bRenderable = true;
+				beamInfo.m_flLife = 0.5;
+				beamInfo.m_nFlags = FBEAM_FOREVER | FBEAM_ONLYNOISEONCE | FBEAM_NOTILE | FBEAM_HALOBEAM;
+
+				m_pFlashlightBeam = beams->CreateBeamPoints(beamInfo);
+			}
+
+			if (m_pFlashlightBeam)
+			{
+				BeamInfo_t beamInfo;
+				beamInfo.m_vecStart = tr.startpos;
+				beamInfo.m_vecEnd = tr.endpos;
+				beamInfo.m_flRed = 255.0;
+				beamInfo.m_flGreen = 255.0;
+				beamInfo.m_flBlue = 255.0;
+
+				beams->UpdateBeamInfo(m_pFlashlightBeam, beamInfo);
+
+				dlight_t *el = effects->CL_AllocDlight(0);
+				el->origin = tr.endpos;
+				el->radius = 50; 
+				el->color.r = 200;
+				el->color.g = 200;
+				el->color.b = 200;
+				el->die = gpGlobals->curtime + 0.1;
+			}
+		}
+
+		else if (m_pFlashlightBeam)
+		{
+			ReleaseFlashlight();
+		}
+	}
+}
+
+bool C_FFPlayer::ShouldReceiveProjectedTextures(int flags)
+{
+	Assert(flags & SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK);
+
+	if (IsEffectActive(EF_NODRAW))
+		return false;
+
+	if (flags & SHADOW_FLAGS_FLASHLIGHT)
+	{
+		return true;
+	}
+
+	return BaseClass::ShouldReceiveProjectedTextures(flags);
+}
+
+void C_FFPlayer::NotifyShouldTransmit(ShouldTransmitState_t state)
+{
+	if (state == SHOULDTRANSMIT_END)
+	{
+		if (m_pFlashlightBeam != NULL)
+		{
+			ReleaseFlashlight();
+		}
+	}
+
+	BaseClass::NotifyShouldTransmit(state);
+}
+
+void C_FFPlayer::ReleaseFlashlight()
+{
+	if (m_pFlashlightBeam)
+	{
+		m_pFlashlightBeam->flags = 0;
+		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
+
+		m_pFlashlightBeam = NULL;
+	}
 }

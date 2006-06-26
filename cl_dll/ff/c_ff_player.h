@@ -16,8 +16,9 @@
 #include "ff_shareddefs.h"
 #include "baseparticleentity.h"
 #include "ff_esp_shared.h"
-#include "ff_mapguide.h"		// |-- Mirv: Map guides
+#include "ff_mapguide.h"
 #include "ff_weapon_base.h"
+#include "iviewrender_beams.h"
 
 #define FF_BUILD_NONE		0
 #define FF_BUILD_DISPENSER	1
@@ -230,6 +231,14 @@ public:
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
+
+	virtual void AddEntity();
+	void ReleaseFlashlight();
+	virtual void NotifyShouldTransmit(ShouldTransmitState_t state);
+	virtual bool ShouldReceiveProjectedTextures(int flags);
+
+	Beam_t	*m_pFlashlightBeam;
+
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
