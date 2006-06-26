@@ -729,7 +729,7 @@ void CFFEntitySystem::FFLibOpen()
 
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
-			.def("EmitSound",			(void(CBaseEntity::*)(const char*, float, float*))&CBaseEntity::EmitSound)
+			.def("EmitSound",			&CBaseEntity::PlaySound)
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
 			.def("GetTeamId",			&CBaseEntity::GetTeamNumber)
@@ -739,7 +739,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsSentryGun",			&FFLib::IsSentrygun)
 			.def("IsDetpack",			&FFLib::IsDetpack)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*))&CBaseEntity::SetModel)
-			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel),
+			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel)
+			.def("SetSkin",				&CBaseEntity::SetSkin),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
@@ -811,8 +812,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Pickup",				&CFFItemFlag::Pickup)
 			.def("Respawn",				&CFFItemFlag::Respawn)
 			.def("Return",				&CFFItemFlag::Return)
-			.def("SetModel",			&CFFItemFlag::LUA_SetModel)
-			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin),
+			.def("SetModel",			&CFFItemFlag::LUA_SetModel)	// already supported in BaseEntity
+			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin),	// already supported in BaseEntity
 
 		// global functions
 		namespace_("ffmod")	// temp namespace so names dont collide with regular lua_register

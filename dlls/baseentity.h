@@ -1284,6 +1284,7 @@ public:
 	void					SetLocalTransform( const matrix3x4_t &localTransform );
 
 	// See CSoundEmitterSystem
+	void					PlaySound(const char *soundname);
 	void					EmitSound( const char *soundname, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter filter( this ), and EmitSound( filter, entindex(), etc. );
 	void					StopSound( const char *soundname );
 	void					GenderExpandString( char const *in, char *out, int maxlen );

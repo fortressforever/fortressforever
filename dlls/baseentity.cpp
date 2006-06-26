@@ -5924,6 +5924,11 @@ bool CLogicalEntity::KeyValue( const char *szKeyName, const char *szValue )
 	return BaseClass::KeyValue( szKeyName, szValue );
 }
 
+void CBaseEntity::PlaySound(const char *soundname)
+{
+	CPASAttenuationFilter sndFilter(this);
+	EmitSound(sndFilter, entindex(), soundname);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the entity invisible, and makes it remove itself on the next frame
