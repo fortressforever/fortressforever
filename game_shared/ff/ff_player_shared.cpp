@@ -33,7 +33,6 @@
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client(red) and server(blue) bullet impact point");
 
-ConVar sniper_push( "ffdev_sniper_push", "0.5" );
 extern ConVar ai_debug_shoot_positions;
 
 BEGIN_PREDICTION_DATA(CFFPlayer)
@@ -150,7 +149,11 @@ void CFFPlayer::FireBullet(
 		if (flSniperRifleCharge)
 		{
 			fCurrentDamage *= flSniperRifleCharge;
-			fScale *= ( flSniperRifleCharge * flSniperRifleCharge * sniper_push.GetFloat() );
+
+			// Bug #0000671: Sniper rifle needs to cause more push upon hitting
+			// Nothing fancy... 4.5 seemed to be about TFC's quick shot
+			// and 8.5 seemed to be about TFC's full charge shot
+			fScale = clamp( flSniperRifleCharge + 3.5f, 4.5f, 8.5f );
 
 			if (tr.hitgroup == HITGROUP_HEAD)
 			{
