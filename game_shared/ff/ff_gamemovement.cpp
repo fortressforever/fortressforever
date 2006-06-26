@@ -36,6 +36,8 @@ float g_flLastJump = 0;		// |-- Mirv: [TEST] Get jump times
 
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
+static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "0.3", FCVAR_REPLICATED);
+
 class CBasePlayer;
 
 class CFFGameMovement : public CGameMovement
@@ -223,34 +225,34 @@ bool CFFGameMovement::CheckJumpButton(void)
 		// Take the lateral velocity
 		Vector vecVelocity = mv->m_vecVelocity * Vector( 1.0f, 1.0f, 0.0f );
 
-		float flLength = vecVelocity.Length();
+		float flHorizontalSpeed = vecVelocity.Length();
 
 		// They have to be at least moving a bit
-		if( flLength > 5.0f )
+		if( flHorizontalSpeed > 5.0f )
 		{
-			vecVelocity /= flLength;
+			vecVelocity /= flHorizontalSpeed;
 
             float flDotProduct = DotProduct( vecVelocity, pm.plane.normal );
 
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
 			// Changed to 0.1f to make it a bit less trimpy on only slightly uneven ground
-			if( flDotProduct < /*0*/ -0.1f  )
+			if( flDotProduct < /*0*/ -0.15f || flDotProduct > 0.15f )
 			{
 				// This is one way to do it
-				// float flSlopeAmount = flDotProduct * -2;
-				// fMul += flSlopeAmount * flLength * 0.6f;
+				// UNDONE: Reverted back to the original way for now
+				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
 
 				// This is another which'll give some different height results
-				Vector reflect = mv->m_vecVelocity + ( -2.0f * pm.plane.normal * DotProduct( mv->m_vecVelocity, pm.plane.normal ) );
+				//Vector reflect = mv->m_vecVelocity + ( -2.0f * pm.plane.normal * DotProduct( mv->m_vecVelocity, pm.plane.normal ) );
 
-				float flSpeedAmount = clamp( ( flLength - 400.0f ) / 800.0f, 0, 1.0f );
+				//float flSpeedAmount = clamp( ( flLength - 400.0f ) / 800.0f, 0, 1.0f );
 				
-				fMul += reflect.z * flSpeedAmount;
+				//fMul += reflect.z * flSpeedAmount;
 
 #ifdef CLIENT_DLL
-				//Warning( "[CLIENT] flDotProduct: %f, reflect.z: %f, flLength: %f\n", flDotProduct, reflect.z, flLength );
+				Warning( "[CLIENT] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
 #else
-				//Warning( "[SERVER] flDotProduct: %f, reflect.z: %f, flLength: %f\n", flDotProduct, reflect.z, flLength );
+				Warning( "[SERVER] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
 #endif
 
 #ifdef CLIENT_DLL
