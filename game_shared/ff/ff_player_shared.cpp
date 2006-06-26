@@ -555,7 +555,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 		vecEnd = info.m_vecSrc + vecDir * info.m_flDistance;
 
-		if (IsPlayer() && info.m_iShots > 1 && iShot % 2)
+		if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
 			AI_TraceHull(info.m_vecSrc, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT, &traceFilter, &tr);
