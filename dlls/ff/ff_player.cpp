@@ -602,6 +602,7 @@ void CFFPlayer::Precache()
 	// Flashlight - Bug #0000679: flashlight sound isn't precached
 	PrecacheScriptSound( "HL2Player.FlashLightOn" );
 	PrecacheScriptSound( "HL2Player.FlashLightOff" );
+	PrecacheModel( "sprites/glow01.vmt" );
 	
 	// Class specific things!
 	for (int i = CLASS_SCOUT; i <= CLASS_CIVILIAN; i++)
@@ -4395,27 +4396,27 @@ bool CFFPlayer::IsInNoBuild() const
 
 
 //-----------------------------------------------------------------------------
-int CFFPlayer::FlashlightIsOn( void )
+int CFFPlayer::FlashlightIsOn()
 {
-	return IsEffectActive( EF_DIMLIGHT );
+	return IsEffectActive(EF_DIMLIGHT);
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CFFPlayer::FlashlightTurnOn( void )
+void CFFPlayer::FlashlightTurnOn()
 {
-	AddEffects( EF_DIMLIGHT );
-	EmitSound( "HL2Player.FlashLightOn" );
+	AddEffects(EF_DIMLIGHT);
+	EmitSound("HL2Player.FlashLightOn");
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CFFPlayer::FlashlightTurnOff( void )
+void CFFPlayer::FlashlightTurnOff()
 {
-	RemoveEffects( EF_DIMLIGHT );
-	EmitSound( "HL2Player.FlashLightOff" );
+	RemoveEffects(EF_DIMLIGHT);
+	EmitSound("HL2Player.FlashLightOff");
 }
 
 // Bugfix for #0000585: Scouts don't undisguise Spies

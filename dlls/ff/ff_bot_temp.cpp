@@ -98,6 +98,19 @@ CON_COMMAND(bot_disguise, "trigger a disguise")
 	}
 }
 
+CON_COMMAND(bot_flashlight, "turn on flashlights")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			pPlayer->FlashlightTurnOn();
+		}
+	}
+}
+
 CON_COMMAND(ffdev_legshotme, "legshots you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
