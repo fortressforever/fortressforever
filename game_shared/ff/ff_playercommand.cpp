@@ -159,25 +159,25 @@ FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class
 
 // entity system interfacing stuffs
 FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD );
-FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE);
+FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE );
 
 // --> Mirv: Toggle grenades (requested by defrag)
-FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED);
-FF_SHARED_COMMAND( toggletwo, &CFFPlayer::Command_ToggleTwo, CC_ToggleTwo, "Primes and throws secondary grendae on subsequent touches", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED);
+FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );
+FF_SHARED_COMMAND( toggletwo, &CFFPlayer::Command_ToggleTwo, CC_ToggleTwo, "Primes and throws secondary grendae on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );
 // <-- Mirv: Toggle grenades (requested by defrag)
 
 //-- Added by L0ki -------------------------------------------------------
 //
 // Grenade related
-FF_SHARED_COMMAND(primeone, &CFFPlayer::Command_PrimeOne, CC_PrimeOne, "Primes one of your primary grenades.", FF_CMD_ALIVE | FF_CMD_PREMATCH);
-FF_SHARED_COMMAND(primetwo, &CFFPlayer::Command_PrimeTwo, CC_PrimeTwo, "Prime one of your secondary grenades.", FF_CMD_ALIVE | FF_CMD_PREMATCH);
-FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw a primed grenade.", FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED);
+FF_SHARED_COMMAND(primeone, &CFFPlayer::Command_PrimeOne, CC_PrimeOne, "Primes one of your primary grenades.", FF_CMD_ALIVE );
+FF_SHARED_COMMAND(primetwo, &CFFPlayer::Command_PrimeTwo, CC_PrimeTwo, "Prime one of your secondary grenades.", FF_CMD_ALIVE );
+FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw a primed grenade.", FF_CMD_ALIVE | FF_CMD_FEIGNED );
 //		had to do it this way because you cant use + and - with the macros
 #ifndef CLIENT_DLL
-	static CPlayerCommand SrvCmd_PlusGrenOne("+gren1", &CFFPlayer::Command_PrimeOne, FF_CMD_ALIVE | FF_CMD_PREMATCH);
-	static CPlayerCommand SrvCmd_MinusGrenOne("-gren1", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED);
-	static CPlayerCommand SrvCmd_PlusGrenTwo("+gren2", &CFFPlayer::Command_PrimeTwo, FF_CMD_ALIVE | FF_CMD_PREMATCH);
-	static CPlayerCommand SrvCmd_MinusGrenTwo("-gren2", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED);
+	static CPlayerCommand SrvCmd_PlusGrenOne("+gren1", &CFFPlayer::Command_PrimeOne, FF_CMD_ALIVE );
+	static CPlayerCommand SrvCmd_MinusGrenOne("-gren1", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED);
+	static CPlayerCommand SrvCmd_PlusGrenTwo("+gren2", &CFFPlayer::Command_PrimeTwo, FF_CMD_ALIVE );
+	static CPlayerCommand SrvCmd_MinusGrenTwo("-gren2", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED);
 #else
 	void CliCmdFunc_PlusGrenOne(void)
 	{

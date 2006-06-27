@@ -91,6 +91,7 @@ protected:
 	// --> Mirv: Prematch
 	void StartGame();
 	float m_flGameStarted;
+	float m_flNextMsg;
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }

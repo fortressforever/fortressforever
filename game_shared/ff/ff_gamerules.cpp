@@ -223,6 +223,7 @@ ConVar mp_prematch( "mp_prematch",
 
 	void CFFGameRules::Precache()
 	{
+		m_flNextMsg = 0.0f;
 		m_flGameStarted = -1.0f;
 		BaseClass::Precache();
 	}
@@ -436,8 +437,6 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			float flPrematch = mp_prematch.GetFloat() * 60;
 
-			// BUG? Doesn't prematch need to be mp_prematch + gpGlobals->curtime the map started?
-
 			// We should have started now, lets go!
 			if( gpGlobals->curtime > flPrematch )
 				StartGame();
@@ -453,17 +452,29 @@ ConVar mp_prematch( "mp_prematch",
 				}
 
 				// This is a bit tempy
-				static float flNextMsg = 0;
+				//static float flNextMsg = 0;
 
 				// Only send message every second (not every frame)
-				if( gpGlobals->curtime > flNextMsg )
+				if( gpGlobals->curtime > m_flNextMsg )
 				{
-					flNextMsg = gpGlobals->curtime + 1.0f;
+					m_flNextMsg = gpGlobals->curtime + 1.0f;
 				
-					CReliableBroadcastRecipientFilter user;
+					//CReliableBroadcastRecipientFilter user;
 
 					char sztimeleft[10];
-					Q_snprintf( sztimeleft, sizeof(sztimeleft), "%d", (int) ( flPrematch - gpGlobals->curtime ) + 1 );
+
+					float flTimeLeft = ( int )( flPrematch - gpGlobals->curtime + 1 );
+					if( flTimeLeft > 59 )
+					{
+						int iMinutes = ( int )( flTimeLeft / 60.0f );
+						float flSeconds = ( float )( ( ( flTimeLeft / 60.0f ) - ( float )iMinutes ) * 60.0f );
+
+						Q_snprintf( sztimeleft, sizeof(sztimeleft), "%d:%02.0f", iMinutes, flSeconds );
+					}
+					else
+					{
+						Q_snprintf( sztimeleft, sizeof(sztimeleft), "%d", ( int )flTimeLeft );
+					}
 
 					UTIL_ClientPrintAll( HUD_PRINTCENTER, "#FF_PREMATCH", sztimeleft );
 				}
