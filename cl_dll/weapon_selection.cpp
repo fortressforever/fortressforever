@@ -384,14 +384,16 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 
 	CycleToNextWeapon();
 
-//#ifdef HL2MP		|-- Mirv: Re-enable
-	if( hud_fastswitch.GetInt() > 0 )
+	// --> Mirv: hud_fastswitch 1 will automatically change on prev/next
+//#ifdef HL2MP
+	if( hud_fastswitch.GetInt() == 1 )
 	{
 		SelectWeapon();
 		m_flSelectionTime = gpGlobals->curtime - 4.0f;
 	}
 	else
-//#endif			|-- Mirv: Re-enable
+//#endif
+	// <-- Mirv
 	{
 		UpdateSelectionTime();
 	}
@@ -420,14 +422,16 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 
 	CycleToPrevWeapon();
 
-//#ifdef HL2MP			|-- Mirv: Re-enable
-	if( hud_fastswitch.GetInt() > 0 )
+	// --> Mirv: hud_fastswitch 1 will automatically change on prev/next
+//#ifdef HL2MP
+	if( hud_fastswitch.GetInt() == 1 )
 	{
 		SelectWeapon();
 		m_flSelectionTime = gpGlobals->curtime - 4.0f;
 	}
 	else
-//#endif				|-- Mirv: Re-enable
+//#endif
+	// <-- Mirv
 	{
 		UpdateSelectionTime();
 	}
