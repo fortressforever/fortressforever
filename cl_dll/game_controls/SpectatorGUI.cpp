@@ -577,7 +577,7 @@ void CSpectatorMenu::Update( void )
 		const char * teamname = gr->GetTeamName( gr->GetTeam(iPlayerIndex) );
 		if ( teamname )
 		{	
-			Q_snprintf( localizeTeamName, sizeof( localizeTeamName ), "#%s", teamname );
+			Q_snprintf( localizeTeamName, sizeof( localizeTeamName ), "%s", teamname );
 			team=localize()->Find( localizeTeamName );
 
 			if ( !team ) 
