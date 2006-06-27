@@ -46,6 +46,7 @@ extern "C"
 }
 
 #include "luabind/luabind.hpp"
+#include "luabind/iterator_policy.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -198,6 +199,9 @@ bool CFFEntitySystem::StartForMap()
 
 	// Load the base libraries [TODO] Not all of them !
 	luaopen_base(L);
+	luaopen_table(L);
+	luaopen_string(L);
+	luaopen_math(L);
 	
 	//lua_atpanic(L, HandleError);
 
@@ -430,6 +434,35 @@ namespace FFLib
 	CBaseEntity* GetEntityByName(const char* szName)
 	{
 		return gEntList.FindEntityByName(NULL, szName, NULL);
+	}
+	
+	//std::vector<CBaseEntity*> GetEntitiesByName(const char* szName)
+	std::vector<int> GetEntitiesByName(const char* szName)
+	{
+		static std::vector<int> ret;
+
+		CBaseEntity *ent = gEntList.FindEntityByName(NULL, szName, NULL);
+		while (ent != NULL)
+		{
+			DevMsg("push_back(%d)\n", ENTINDEX(ent));
+			ret.push_back(ENTINDEX(ent));
+			ent = gEntList.FindEntityByName(ent, szName, NULL);
+		}
+
+		return ret;
+	}
+
+	std::vector<CBaseEntity*> GetEntitiesInSphere(Vector origin, float radius)
+	{
+		static std::vector<CBaseEntity*> ret;
+
+		CBaseEntity *ent;
+		for( CEntitySphereQuery sphere( origin, radius ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			ret.push_back(ent);
+		}
+
+		return ret;
 	}
 
 	CFFPlayer* GetPlayer(int player_id)
@@ -707,6 +740,13 @@ void CFFEntitySystem::FFLibOpen()
 
 	module(L)
 	[
+		class_<Vector>("Vector")
+			.def_readwrite("x",			&Vector::x)
+			.def_readwrite("y",			&Vector::y)
+			.def_readwrite("z",			&Vector::z)
+			.def("DistTo",				&Vector::DistTo)
+			.def("Length",				&Vector::Length),
+
 		class_<CClassLimits>("ClassLimits")
 			.def(constructor<>())
 			.def_readwrite("Scout",		&CClassLimits::scout)
@@ -740,7 +780,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsDetpack",			&FFLib::IsDetpack)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*))&CBaseEntity::SetModel)
 			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel)
-			.def("SetSkin",				&CBaseEntity::SetSkin),
+			.def("SetSkin",				&CBaseEntity::SetSkin)
+			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin)
+			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
@@ -791,7 +833,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetRespawnDelay",		&CFFPlayer::LUA_SetPlayerRespawnDelay)
 			.def("InstaSwitch",			&CFFPlayer::InstaSwitch)
 			.def("GiveWeapon",			&CFFPlayer::GiveNamedItem)
-			.def("TakeWeapon",			&CFFPlayer::TakeNamedItem)
+			.def("RemoveWeapon",		&CFFPlayer::TakeNamedItem)
+			.def("RemoveAllWeapons",	&CFFPlayer::RemoveAllItems)
+			.def("GetOrigin",			&CFFPlayer::GetAbsOrigin)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -813,7 +857,10 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Respawn",				&CFFItemFlag::Respawn)
 			.def("Return",				&CFFItemFlag::Return)
 			.def("SetModel",			&CFFItemFlag::LUA_SetModel)	// already supported in BaseEntity
-			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin),	// already supported in BaseEntity
+			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin)	// already supported in BaseEntity
+			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
+																	// do I need it here?
+
 
 		// global functions
 		namespace_("ffmod")	// temp namespace so names dont collide with regular lua_register
@@ -826,6 +873,8 @@ void CFFEntitySystem::FFLibOpen()
 			def("CastToInfoScript",			&FFLib::CastToItemFlag),
 			def("GetEntity",				&FFLib::GetEntity),
 			def("GetEntityByName",			&FFLib::GetEntityByName),
+			def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
+			def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
 			def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 			def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 			def("GetPlayer",				&FFLib::GetPlayer),
