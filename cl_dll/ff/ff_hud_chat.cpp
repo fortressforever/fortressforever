@@ -18,6 +18,7 @@
 bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes are blocked
 
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
+extern ConVar sv_specchat;
 
 // --> Mirv: Colours!
 int g_ColorConsole[3]	= { 153, 255, 153 };
@@ -263,7 +264,18 @@ void CHudChat::MsgFunc_SayText( bf_read &msg )
 
 	msg.ReadString( szString, sizeof(szString) );
 	bool bWantsToChat = msg.ReadByte();
-	
+
+	IGameResources *gr = GameResources();
+
+	if (gr && CBasePlayer::GetLocalPlayer())
+	{
+		bool bIsSpectator = gr->GetTeam(client) < TEAM_BLUE;
+		bool bLocalPlayerSpectator = CBasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE;
+
+		if (!bLocalPlayerSpectator && bIsSpectator && !sv_specchat.GetBool())
+			return;
+	}
+
 	if ( bWantsToChat )
 	{
 		// print raw chat text

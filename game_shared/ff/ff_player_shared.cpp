@@ -32,6 +32,7 @@
 #include "engine/ivdebugoverlay.h"
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client(red) and server(blue) bullet impact point");
+ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED, "Allows spectators to talk to players");
 
 extern ConVar ai_debug_shoot_positions;
 
