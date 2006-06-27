@@ -85,11 +85,14 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
+			//VOOGRU: Taken this out due to #0000706
+			/*
 			Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
 			interpolator.AddToHead(changeTime - 1.0f, &vCurOrigin, false);
+			*/
 
 			// Add the current sample.
-			vCurOrigin = GetLocalOrigin();
+			Vector vCurOrigin = GetLocalOrigin();
 			interpolator.AddToHead(changeTime, &vCurOrigin, false);
 
 			// This projectile has entered the client's PVS so flag it as needing
