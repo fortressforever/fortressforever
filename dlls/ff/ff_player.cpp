@@ -269,8 +269,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	// Grenade Related
 	SendPropInt( SENDINFO( m_iGrenadeState ), 2, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iPrimary ), 3, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iSecondary ), 3, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iPrimary ), 4 ),		// Not unsigned because can be -1
+	SendPropInt( SENDINFO( m_iSecondary ), 4 ),
 	SendPropFloat( SENDINFO( m_flServerPrimeTime ) ),
 
 	// Map guide
