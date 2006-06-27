@@ -76,10 +76,10 @@ CFFDetpack::CFFDetpack( void )
 	// Override some values
 	m_iExplosionMagnitude = 200;
 	m_flExplosionMagnitude = 200.0f;
-	m_flExplosionRadius = 3.5f * m_flExplosionMagnitude;
-	m_iExplosionRadius = ( int )m_flExplosionRadius;	
-	m_flExplosionForce = 300.0f;
-	m_flExplosionDamage = m_flExplosionForce; // for now
+	m_flExplosionRadius = 700.0f / 2;
+	m_iExplosionRadius = 700 / 2;
+	m_flExplosionForce = 3000.0f;
+	m_flExplosionDamage = 1270.f;
 	m_flExplosionDuration = 2.0f;
 	m_iExplosionFireballScale = random->RandomInt( 20, 35 );
 

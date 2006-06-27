@@ -55,7 +55,7 @@
 
 extern short	g_sModelIndexFireball;
 
-ConVar detpack_push( "ffdev_detpack_push", "3000", FCVAR_NONE, "Detpack push value as a float" );
+//ConVar detpack_push( "ffdev_detpack_push", "3000", FCVAR_NONE, "Detpack push value as a float" );
 
 //=============================================================================
 //
@@ -719,7 +719,7 @@ void CFFBuildableObject::DoExplosion( void )
 
 			//pEntity->ApplyAbsVelocityImpulse( ( pEntity->WorldSpaceCenter() - vecOrigin ) * 1000.0f );
 			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, vecDir * detpack_push.GetFloat(), pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
+			pEntity->TakeDamage( CTakeDamageInfo( this, pOwner, vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
 		}
 	}
 
@@ -779,7 +779,7 @@ void CFFBuildableObject::DoExplosion( void )
 	{
 		// Detpack trigger radius is 3*detpack_radius
 		CBaseEntity *pEntity = NULL;
-		for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius * 3.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1500.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
 			if( !pEntity )
 				continue;

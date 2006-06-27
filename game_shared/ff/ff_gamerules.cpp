@@ -436,6 +436,8 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			float flPrematch = mp_prematch.GetFloat() * 60;
 
+			// BUG? Doesn't prematch need to be mp_prematch + gpGlobals->curtime the map started?
+
 			// We should have started now, lets go!
 			if( gpGlobals->curtime > flPrematch )
 				StartGame();
