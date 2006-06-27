@@ -652,8 +652,9 @@ ConVar mp_prematch( "mp_prematch",
 bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
 	// Bug #0000178: Grenades and player clipping
+	// Bug #0000718: get stuck on mirv grens
 	// HACKHACK this might break something else
-	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+	if( (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER) &&
 		collisionGroup1 == COLLISION_GROUP_PROJECTILE )
 	{
 		return false;
