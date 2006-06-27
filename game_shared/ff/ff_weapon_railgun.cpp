@@ -17,6 +17,7 @@
 #include "ff_projectile_rail.h"
 #include "in_buttons.h"
 
+#define TEMP_SPRITE	"sprites/redglow1.vmt"
 #define RAIL_BEAM	"effects/blueblacklargebeam"
 
 #ifdef CLIENT_DLL 
@@ -50,6 +51,22 @@ public:
 	virtual bool			IsTransparent() { return true; }
 	virtual RenderGroup_t	GetRenderGroup() { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
 	virtual bool			ShouldDraw() { return (IsEffectActive(EF_NODRAW) == false); }
+
+	// Returns the bounds relative to the origin (render bounds)
+	virtual void GetRenderBounds(Vector& mins, Vector& maxs)
+	{
+		// nasty temp measure
+		ClearBounds(mins, maxs);
+		/*AddPointToBounds(m_vecStartPosition, mins, maxs);
+		AddPointToBounds(m_vecEndPosition, mins, maxs);
+		mins -= GetRenderOrigin();
+		maxs -= GetRenderOrigin();*/
+	}
+
+	virtual void OnDataChanged( DataUpdateType_t updateType )
+	{
+		CBaseEntity::OnDataChanged( updateType );
+	}
 
 	virtual int	DrawModel(int flags)
 	{
@@ -207,7 +224,8 @@ CFFWeaponRailgun::CFFWeaponRailgun()
 //----------------------------------------------------------------------------
 void CFFWeaponRailgun::Precache()
 {
-	PrecacheModel("sprites/physbeam");
+	PrecacheModel(TEMP_SPRITE);
+	PrecacheModel(RAIL_BEAM);
 
 	BaseClass::Precache();
 }
@@ -235,7 +253,7 @@ bool CFFWeaponRailgun::Deploy()
 		m_hRailBeam->AddSolidFlags(FSOLID_NOT_SOLID);
 		m_hRailBeam->AddEffects(EF_NOSHADOW);
 		m_hRailBeam->AddEFlags(EFL_FORCE_CHECK_TRANSMIT);
-		m_hRailBeam->SpriteInit("sprites/physbeam", pPlayer->Weapon_ShootPosition());	// just give it a fake sprite
+		m_hRailBeam->SpriteInit(TEMP_SPRITE, pPlayer->Weapon_ShootPosition());	// just give it a fake sprite
 		//m_hRailBeam->SetName(AllocPooledString("RAILBEAM"));
 		//m_hRailBeam->SetTransparency(kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
 		//m_hRailBeam->SetScale(0.25f);
@@ -289,7 +307,10 @@ void CFFWeaponRailgun::Fire()
 
 	// Trigger the railbeam visual effect
 	if (m_hRailBeam)
+	{
+		m_hRailBeam->SetAbsOrigin(GetAbsOrigin());
 		m_hRailBeam->m_flFired = gpGlobals->curtime;
+	}
 
 	float flChargeTime = gpGlobals->curtime - m_flStartCharge;
 

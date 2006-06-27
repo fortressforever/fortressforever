@@ -186,7 +186,7 @@ bool CHudWeaponSelection::ShouldDraw()
 	}
 
 	// --> Mirv: Always show if hud fastswitch is on
-	if (hud_fastswitch.GetInt() != 0)
+	if (hud_fastswitch.GetInt() > 0)
 		return (gpGlobals->curtime < m_flSelectionTime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME);
 	// <-- Mirv: Always show if hud fastswitch is on
 
