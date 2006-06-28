@@ -50,6 +50,33 @@ extern bool g_fBlockedStatus[256];	// |-- Mirv: The blocked status of people's t
 
 static CClientScoreBoardDialog *g_pScoreboard = NULL;
 
+// Returns -1 if pLHS < pRHS, 1 if pLHS > pRHS, and 0 is pLHS == pRHS
+inline int ScoreboardSection_Sort( const ScoreboardSection_s *pLHS, const ScoreboardSection_s* pRHS )
+{
+	if( pLHS->m_iScore < pRHS->m_iScore )
+		return 1;
+	else if( pLHS->m_iScore > pRHS->m_iScore )
+		return -1;
+	else
+	{
+		// Scores are equal, sort by score time
+		if( pLHS->m_flLastScored < pRHS->m_flLastScored )
+			return 1;
+		else if( pLHS->m_flLastScored > pRHS->m_flLastScored )
+			return -1;
+		else
+		{
+			// Score times are equal, sort by team
+			if( pLHS->m_iTeam < pRHS->m_iTeam )
+				return -1;
+			else if( pLHS->m_iTeam > pRHS->m_iTeam )
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
 inline char *GetFormattedMapName( void )
 {	
 	static char szText[ 256 ];
@@ -136,13 +163,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	gameeventmanager->AddListener(this, "hltv_status", false );
 	gameeventmanager->AddListener(this, "server_spawn", false );
 
-	for( int i = 0; i < TEAM_COUNT; i++ )
-	{
-		m_iTeamLatency[ i ] = 0;
-		m_iNumPlayersOnTeam[ i ] = 0;
-		m_iTeamSections[ i ] = 0;
-	}
-
 	g_pScoreboard = this;
 }
 
@@ -198,10 +218,10 @@ void CClientScoreBoardDialog::OnCommand( const char *command )
 void CClientScoreBoardDialog::Reset( void )
 {
 	// clear
-	m_pPlayerList->DeleteAllItems();
+	m_pPlayerList->RemoveAll();
 	m_pPlayerList->RemoveAllSections();
 
-	m_iSectionId = 0;
+	//m_iSectionId = 0;
 	m_fNextUpdateTime = 0;
 	// add all the sections
 	InitScoreboardSections();
@@ -212,6 +232,12 @@ void CClientScoreBoardDialog::Reset( void )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::InitScoreboardSections( void )
 {
+	// Do this initially
+	m_hSections[ TEAM_BLUE ].m_iTeam = TEAM_BLUE;
+	m_hSections[ TEAM_RED ].m_iTeam = TEAM_RED;
+	m_hSections[ TEAM_YELLOW ].m_iTeam = TEAM_YELLOW;
+	m_hSections[ TEAM_GREEN ].m_iTeam = TEAM_GREEN;
+
 	AddHeader();
 }
 
@@ -320,27 +346,8 @@ bool CClientScoreBoardDialog::NeedsUpdate( void )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::Update( void )
 {
-	/*
-	IGameResources *pGr = GameResources();
-	if( pGr )
-	{
-		CUtlVector< int > iTeamScores;
-		for( int i = 0; i < 4; i++ )
-		{
-			int iIndex = TEAM_BLUE + i;
-
-			// Store the team scores in a vector
-			if( pGr->GetTeam( iIndex ) )
-				iTeamScores.AddToTail( pGr->GetTeamScore( iIndex ) );
-		}
-	}
-	else
-	{
-	*/
-		//m_pPlayerList->RemoveAll();
-		m_pPlayerList->DeleteAllItems();
-		FillScoreBoard();
-	//}
+	// Update the scoreboard
+	FillScoreBoard();
 
 	// grow the scoreboard to fit all the players
 	int wide, tall;
@@ -366,77 +373,17 @@ void CClientScoreBoardDialog::Update( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Sort all the teams
+// Purpose: Finds what section a team is in
 //-----------------------------------------------------------------------------
-void CClientScoreBoardDialog::UpdateTeamInfo( void )
+int CClientScoreBoardDialog::FindSectionByTeam( int iTeam ) const
 {
-	IGameResources *pGR = GameResources();
-	if( !pGR )
-		return;
-
-	for( int i = TEAM_UNASSIGNED; i < TEAM_COUNT; i++ )
+	for( int i = 0; i < 8; i++ )
 	{
-		int iSectionId = m_iTeamSections[ i ];
-
-		//Q_snprintf( pDest, destLen, char const *pFormat, ... );
-
-		// --> Mirv: Fixed localisation on teams
-		wchar_t *szName = localize()->Find( pGR->GetTeamName( i ) );
-		wchar_t szTeamLine[ 256 ];	
-
-		if( szName )
-		{
-			swprintf( szTeamLine, L"%s - (%i players)", szName, m_iNumPlayersOnTeam[i] );
-		}
-		else
-		{
-			char szString[ 256 ];
-			Q_snprintf( szString, 256, "%s - (%i players)", pGR->GetTeamName( i ), m_iNumPlayersOnTeam[ i ] );
-
-			localize( )->ConvertANSIToUnicode( szString, szTeamLine, sizeof( szTeamLine ) );
-		}
-		// <-- Mirv: Fixed localisation on teams
-
-		// Display team name & # of players
-		m_pPlayerList->ModifyColumn( iSectionId, "name", szTeamLine );		
-
-		// Set up team score
-		wchar_t szScore[ 6 ];
-		swprintf( szScore, L"%d", pGR->GetTeamScore( i ) );
-		
-		// Display team score
-		m_pPlayerList->ModifyColumn( iSectionId, "score", szScore );
-
-		// Set up team deaths
-		wchar_t szDeaths[ 6 ];
-		swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( i ) );
-
-		// Display team deaths
-		m_pPlayerList->ModifyColumn( iSectionId, "deaths", szDeaths );
-
-		// Set up team latency
-		if( m_iNumPlayersOnTeam[ i ] > 0 )
-			m_iTeamLatency[ i ] /= m_iNumPlayersOnTeam[ i ];
-		else
-			m_iTeamLatency[ i ] = 0;
-
-		// Display team latency
-		if( m_iTeamLatency[ i ] < 1 )
-			m_pPlayerList->ModifyColumn( iSectionId, "ping", L"" );
-		else
-		{
-			wchar_t szPing[ 12 ];
-
-			swprintf( szPing, L"%i", m_iTeamLatency[ i ] );
-			m_pPlayerList->ModifyColumn( iSectionId, "ping", szPing );
-		}
-
-		// Reset team latency
-		m_iTeamLatency[ i ] = 0;
-
-		// Color it
-		m_pPlayerList->SetSectionFgColor( iSectionId, pGR->GetTeamColor( i ) );
+		if( m_hSections[ i ].m_iTeam == iTeam )
+			return i;
 	}
+
+	return TEAM_UNASSIGNED;
 }
 
 //-----------------------------------------------------------------------------
@@ -444,15 +391,15 @@ void CClientScoreBoardDialog::UpdateTeamInfo( void )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 {
-	m_iSectionId = 0;
+	IGameResources *pGR = GameResources();
+	if( !pGR )
+		return;
+
 	int iSelectedRow = -1;
 
-	// Walk all the players and make sure they're in the scoreboard
 	for( int i = 1; i < gpGlobals->maxClients; i++ )
 	{
-		IGameResources *pGR = GameResources();
-
-		if( pGR && pGR->IsConnected( i ) )
+		if( pGR->IsConnected( i ) )
 		{
 			// Add the player to the list
 			KeyValues *pPlayerData = new KeyValues( "data" );
@@ -468,16 +415,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 
 			int iItemId = FindItemIDForPlayerIndex( i );
 			int iPlayerTeam = pGR->GetTeam( i );
-			//int iSectionId = pGR->GetTeam( i );
-			int iSectionId = m_iTeamSections[ iPlayerTeam ];
-
-			m_iNumPlayersOnTeam[ iPlayerTeam ]++;
-			m_iTeamLatency[ iPlayerTeam ] += pPlayerData->GetInt( "ping" );
+			int iSectionId = FindSectionByTeam( iPlayerTeam );
 
 			if( pGR->IsLocalPlayer( i ) )
-			{
 				iSelectedRow = iItemId;
-			}
 
 			if( iItemId == -1 )
 			{
@@ -486,12 +427,12 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 			}
 			else
 			{
-				// Modify the current row
+				// Modify current row
 				m_pPlayerList->ModifyItem( iItemId, iSectionId, pPlayerData );
 			}
 
 			// Set the row color based on players team
-			m_pPlayerList->SetItemFgColor( iItemId, pGR->GetTeamColor( iSectionId ) );
+			m_pPlayerList->SetItemFgColor( iItemId, pGR->GetTeamColor( iPlayerTeam ) );
 
 			pPlayerData->deleteThis();
 		}
@@ -501,16 +442,12 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 			int iItemId = FindItemIDForPlayerIndex( i );
 
 			if( iItemId != -1 )
-			{
 				m_pPlayerList->RemoveItem( iItemId );
-			}
 		}
 	}
 
 	if( iSelectedRow != -1 )
-	{
 		m_pPlayerList->SetSelectedItem( iSelectedRow );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -518,142 +455,225 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::AddHeader( void )
 {
-	/*
-	// add the top header
-	m_pPlayerList->AddSection(m_iSectionId, "");
-	m_pPlayerList->SetSectionAlwaysVisible(m_iSectionId);
-	m_pPlayerList->AddColumnToSection(m_iSectionId, "name", "#PlayerName", 0, scheme()->GetProportionalScaledValue(NAME_WIDTH) );
-	m_pPlayerList->AddColumnToSection(m_iSectionId, "frags", "#PlayerScore", 0, scheme()->GetProportionalScaledValue(SCORE_WIDTH) );
-	m_pPlayerList->AddColumnToSection(m_iSectionId, "deaths", "#PlayerDeath", 0, scheme()->GetProportionalScaledValue(DEATH_WIDTH) );
-	m_pPlayerList->AddColumnToSection(m_iSectionId, "ping", "#PlayerPing", 0, scheme()->GetProportionalScaledValue(PING_WIDTH) );
-//	m_pPlayerList->AddColumnToSection(m_iSectionId, "voice", "#PlayerVoice", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
-//	m_pPlayerList->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(FRIENDS_WIDTH) );
-	*/
+	// We can get called back into here when teams
+	// get sorted so that's why part is commented
+	// out as the team values are already set by
+	// the sort (or by the initial creation of the
+	// scoreboard)
 
-	// Make a blank section
-	m_iSectionId = 0;
-	m_pPlayerList->AddSection( m_iSectionId, "" );
-	m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "", 0, scheme( )->GetProportionalScaledValue( NAME_WIDTH ) );
+	int iSection = 0;	
+	m_hSections[ iSection ].m_iTeam = AddSection( TYPE_BLANK, iSection );		// 0
 
-	++m_iSectionId;
-	m_pPlayerList->AddSection( m_iSectionId, "" );
-	m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
-	/*NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0*/
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "name" , "#FF_PlayerName" , 0 , scheme( )->GetProportionalScaledValue( NAME_WIDTH ) );
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "class" , "#FF_PlayerClass" , 0 , scheme( )->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "score" , "#FF_PlayerScore" , 0, scheme( )->GetProportionalScaledValue( SCORE_WIDTH ) );
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths" , "#FF_PlayerDeath" , 0, scheme( )->GetProportionalScaledValue( DEATH_WIDTH ) );
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "ping" , "#FF_PlayerPing" , 0, scheme( )->GetProportionalScaledValue( PING_WIDTH ) );
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ VOICE_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
-	m_pPlayerList->AddColumnToSection( m_iSectionId, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
+	iSection++;
+	m_hSections[ iSection ].m_iTeam = AddSection( TYPE_HEADER, iSection );		// 1
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_BLUE ]		= AddSection( TYPE_TEAM, TEAM_BLUE );
+	iSection++;
+	/*m_hSections[ iSection ].m_iTeam =*/ AddSection( TYPE_TEAM, iSection );		// 2
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_RED ]			= AddSection( TYPE_TEAM, TEAM_RED );
+	iSection++;
+	/*m_hSections[ iSection ].m_iTeam =*/ AddSection( TYPE_TEAM, iSection );		// 3
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_YELLOW ]		= AddSection( TYPE_TEAM, TEAM_YELLOW );
+	iSection++;
+	/*m_hSections[ iSection ].m_iTeam =*/ AddSection( TYPE_TEAM, iSection );		// 4
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_GREEN ]		= AddSection( TYPE_TEAM, TEAM_GREEN );
+	iSection++;
+	/*m_hSections[ iSection ].m_iTeam =*/ AddSection( TYPE_TEAM, iSection );		// 5
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_SPECTATOR ]	= AddSection( TYPE_SPECTATORS, TEAM_SPECTATOR );
+	iSection++;
+	m_hSections[ iSection ].m_iTeam = AddSection( TYPE_SPECTATORS, iSection );	// 6
 
-	++m_iSectionId;
-	m_iTeamSections[ TEAM_UNASSIGNED ]	= AddSection( TYPE_UNASSIGNED, TEAM_UNASSIGNED );
+	iSection++;
+	m_hSections[ iSection ].m_iTeam = AddSection( TYPE_UNASSIGNED, iSection );	// 7
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Adds a new section to the scoreboard (i.e the team header)
 //-----------------------------------------------------------------------------
-int CClientScoreBoardDialog::AddSection( int teamType, int teamNumber )
+int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 {
-	if( teamType == TYPE_TEAM )
-	{
-		IGameResources *pGR = GameResources();
-		if( !pGR )
-			return -1;
+	int iRetval = -1;
 
-		// Set up the team name
-		wchar_t *szTeamName = localize()->Find( pGR->GetTeamName( teamNumber ) );		
-		wchar_t szName[ 64 ];
+	if( iType == TYPE_BLANK )
+	{
+		m_pPlayerList->AddSection( iSection, "" );
+		m_pPlayerList->SetSectionAlwaysVisible( iSection );
+		m_pPlayerList->AddColumnToSection( iSection, "name", "", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
+	}
+	else if( iType == TYPE_HEADER )
+	{
+		m_pPlayerList->AddSection( iSection, "" );
+		m_pPlayerList->SetSectionAlwaysVisible( iSection );
+        m_pPlayerList->AddColumnToSection( iSection, "name" , "#FF_PlayerName" , 0 , scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "class" , "#FF_PlayerClass" , 0 , scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "score" , "#FF_PlayerScore" , 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "deaths" , "#FF_PlayerDeath" , 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "ping" , "#FF_PlayerPing" , 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ VOICE_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
+		m_pPlayerList->AddColumnToSection( iSection, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
+	}
+	else if( iType == TYPE_TEAM )
+	{
+		m_pPlayerList->AddSection( iSection, "", StaticPlayerSortFunc_Score );
+		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
+		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Team", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
+
+		// --> Mirv: Voice and channel images
+		m_pPlayerList->AddColumnToSection( iSection, "voice", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, VOICE_WIDTH );
+		m_pPlayerList->AddColumnToSection( iSection, "channel", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, CHANNEL_WIDTH );
+		// <-- Mirv: Voice and channel images
+
+		iRetval = iSection;
+	}
+	else if( iType == TYPE_SPECTATORS )
+	{
+		m_pPlayerList->AddSection( iSection, "", StaticPlayerSortFunc_Name );
+		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
+		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Spectators", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
+
+		iRetval = TEAM_SPECTATOR;
+	}
+	else if( iType == TYPE_UNASSIGNED )
+	{
+		m_pPlayerList->AddSection( iSection, "" );
+		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
+		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Unassigned", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
+
+		iRetval = TEAM_UNASSIGNED;
+	}
+
+	return iRetval;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update team sections to correct teams & colors
+//-----------------------------------------------------------------------------
+void CClientScoreBoardDialog::UpdateHeaders( void )
+{
+	// Go from m_hSections[ 2 -> 6 ] (ie. the team's that can be sorted)
+	// Assumes m_hSections has been sorted properly before doing this
+
+	IGameResources *pGR = GameResources();
+	if( !pGR )
+		return;
+	
+	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+	{
+		int iTeam = m_hSections[ i ].m_iTeam;
+		int iNumPlayers = m_hSections[ i ].m_iNumPlayers;
+		int iLatency = m_hSections[ i ].m_iLatency;
+
+		// This is nice and all but if teams get sorted while
+		// you're viewing the scoreboard the color doesn't change :/
+		m_pPlayerList->SetSectionFgColor( i, pGR->GetTeamColor( iTeam ) );
+
+		wchar_t *szTeamName = localize()->Find( pGR->GetTeamName( iTeam ) );
+		wchar_t	szName[ 256 ];
 
 		if( !szTeamName )
 		{
-			
-			localize()->ConvertANSIToUnicode( pGR->GetTeamName( teamNumber ), szName, sizeof( szName ) );
+			// No localized text or team name not a resource string
+			char szString[ 256 ];
+			Q_snprintf( szString, 256, "%s - (%i players)", pGR->GetTeamName( iTeam ), iNumPlayers );
+			localize()->ConvertANSIToUnicode( szString, szName, sizeof( szName ) );
+			szTeamName = szName;
+		}
+		else
+		{
+			swprintf( szName, L"%s - (%i players)", szTeamName, iNumPlayers );
 			szTeamName = szName;
 		}
 
-		m_pPlayerList->AddSection( m_iSectionId, "", StaticPlayerSortFunc );
-		
-		// --> Mirv: So we don't see teams unless there's somebody in them
-		//m_pPlayerList->SetSectionAlwaysVisible( m_iSectionId );
-		// <-- Mirv: So we don't see teams unless there's somebody in them
+		m_pPlayerList->ModifyColumn( i, "name", szTeamName );
 
-		m_pPlayerList->SetFgColor( pGR->GetTeamColor( teamNumber ) );
-		
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "name", szTeamName, 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
-		
-		// --> Mirv: Voice and channel images
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "voice", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, VOICE_WIDTH );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "channel", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, CHANNEL_WIDTH );
-		// <-- Mirv: Voice and channel images
-	}
-	else if( teamType == TYPE_SPECTATORS )
-	{
-		m_pPlayerList->AddSection( m_iSectionId, "" );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "#Spectators", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
-	}
-	else if( teamType == TYPE_UNASSIGNED )
-	{
-		m_pPlayerList->AddSection( m_iSectionId, "" );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "name", "#Unassigned", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( m_iSectionId, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
-	}
+		// Loop up team score
+		wchar_t szScore[ 6 ];
+		swprintf( szScore, L"%d", pGR->GetTeamScore( iTeam ) );
 
-	return m_iSectionId;
+		// Display team score
+		m_pPlayerList->ModifyColumn( i, "score", szScore );
+
+		// Look up team deaths
+		wchar_t szDeaths[ 6 ];
+		swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( iTeam ) );
+
+		// Display team deaths
+		m_pPlayerList->ModifyColumn( i, "deaths", szDeaths );
+
+		// Set up team latency
+		if( iNumPlayers > 0 )
+			iLatency /= iNumPlayers;
+		else
+			iLatency = 0;
+
+		// Display team latency
+		if( iLatency < 1 )
+			m_pPlayerList->ModifyColumn( i, "ping", L"0" );
+		else
+		{
+			wchar_t szLatency[ 12 ];
+			swprintf( szLatency, L"%i", iLatency );
+			m_pPlayerList->ModifyColumn( i, "ping", szLatency );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Used for sorting players
 //-----------------------------------------------------------------------------
-bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2)
+bool CClientScoreBoardDialog::StaticPlayerSortFunc_Score( vgui::SectionedListPanel *list, int itemID1, int itemID2 )
 {
-	KeyValues *it1 = list->GetItemData(itemID1);
-	KeyValues *it2 = list->GetItemData(itemID2);
-	Assert(it1 && it2);
+	KeyValues *it1 = list->GetItemData( itemID1 );
+	KeyValues *it2 = list->GetItemData( itemID2 );
+	Assert( it1 && it2 );
 
 	// first compare frags
-	int v1 = it1->GetInt("frags");
-	int v2 = it2->GetInt("frags");
-	if (v1 > v2)
+	int v1 = it1->GetInt( "score" );
+	int v2 = it2->GetInt( "score" );
+	if( v1 > v2 )
 		return true;
-	else if (v1 < v2)
+	else if( v1 < v2 )
 		return false;
 
 	// next compare deaths
-	v1 = it1->GetInt("deaths");
-	v2 = it2->GetInt("deaths");
-	if (v1 > v2)
+	v1 = it1->GetInt( "deaths" );
+	v2 = it2->GetInt( "deaths" );
+	if( v1 > v2 )
 		return false;
-	else if (v1 < v2)
+	else if( v1 < v2 )
 		return true;
+
+	// the same, so compare itemID's (as a sentinel value to get deterministic sorts)
+	return itemID1 < itemID2;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Used for sorting players
+//-----------------------------------------------------------------------------
+bool CClientScoreBoardDialog::StaticPlayerSortFunc_Name( vgui::SectionedListPanel *list, int itemID1, int itemID2 )
+{
+	KeyValues *it1 = list->GetItemData( itemID1 );
+	KeyValues *it2 = list->GetItemData( itemID2 );
+	Assert( it1 && it2 );
+
+	// first compare frags
+	const char *p1 = it1->GetString( "name" );
+	const char *p2 = it2->GetString( "name" );
+	if( Q_stricmp( p1, p2 ) < 0 )	
+		return true;
+	else if( Q_stricmp( p1, p2 ) > 0 )
+		return false;
 
 	// the same, so compare itemID's (as a sentinel value to get deterministic sorts)
 	return itemID1 < itemID2;
@@ -664,12 +684,10 @@ bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *lis
 //-----------------------------------------------------------------------------
 bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv )
 {
-	IGameResources *gr = GameResources();
-
-	if (!gr )
+	IGameResources *pGR = GameResources();
+	if( !pGR )
 		return false;
 
-	// BEG: Mulch
 	bool bFriendly = false;
 
 	C_FFPlayer *pLocalPlayer = NULL;
@@ -679,7 +697,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	C_FFPlayer *pPlayer = NULL;
 
 	// To stop one of those annoying ass c_ff_player.h asserts
-	if( gr->IsConnected( playerIndex ) && gr->IsAlive( playerIndex ) )
+	if( pGR->IsConnected( playerIndex ) && pGR->IsAlive( playerIndex ) )
 	{
 		CBasePlayer *pTemp = UTIL_PlayerByIndex( playerIndex );
 		if( pTemp && pTemp->IsPlayer() )
@@ -687,34 +705,27 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	}
 
 	if( pPlayer && pLocalPlayer )
-	{
-		//bFriendly = ( pPlayer->GetTeamNumber() == pLocalPlayer->GetTeamNumber() );
-		
-		// Check allies as well???
-		//if( !bFriendly )
-			bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE );
-	}
-	// END: Mulch
+		bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE );
 
-	kv->SetInt( "deaths", gr->GetDeaths( playerIndex ) );
-	kv->SetInt( "score", gr->GetFrags( playerIndex ) );
-	kv->SetInt( "ping", gr->GetPing( playerIndex ) ) ;
-	kv->SetString( "name", gr->GetPlayerName( playerIndex ) );
+	kv->SetInt( "deaths", pGR->GetDeaths( playerIndex ) );
+	kv->SetInt( "score", pGR->GetFrags( playerIndex ) );
+	kv->SetInt( "ping", pGR->GetPing( playerIndex ) ) ;
+	kv->SetString( "name", pGR->GetPlayerName( playerIndex ) );
 
 	if( bFriendly )
-		kv->SetString( "class", szClassName[gr->GetClass( playerIndex )] ); 	// |-- Mirv: Current class
+		kv->SetString( "class", szClassName[ pGR->GetClass( playerIndex ) ] ); 	// |-- Mirv: Current class
 	else
-		kv->SetString( "class", " " );
+		kv->SetString( "class", "" );
 
 	kv->SetInt( "playerIndex", playerIndex );
 
 	// --> Mirv: Fixed for an extra setting
-	// kv->SetInt( "voice", s_VoiceImage[ GetClientVoiceMgr( )->GetSpeakerStatus( playerIndex - 1 ) ] );	
+	// kv->SetInt( "voice", s_VoiceImage[ GetClientVoiceMgr()->GetSpeakerStatus( playerIndex - 1 ) ] );	
 
 	if( bFriendly )
 	{
-		kv->SetInt( "voice", s_VoiceImage[ GetClientVoiceMgr( )->GetSpeakerStatus( playerIndex ) ] + ( g_fBlockedStatus[playerIndex] ? 1 : 0 ) );	
-		kv->SetInt( "channel", s_ChannelImage[ gr->GetChannel( playerIndex ) ] + 1 );
+		kv->SetInt( "voice", s_VoiceImage[ GetClientVoiceMgr()->GetSpeakerStatus( playerIndex ) ] + ( g_fBlockedStatus[ playerIndex ] ? 1 : 0 ) );	
+		kv->SetInt( "channel", s_ChannelImage[ pGR->GetChannel( playerIndex ) ] + 1 );
 	}
 	else
 	{
@@ -732,19 +743,108 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::FillScoreBoard( void )
 {
-	for( int i = TEAM_UNASSIGNED; i < TEAM_COUNT; i++ )
+	IGameResources *pGR = GameResources();
+	if( !pGR )
+		return;
+
+	bool bNeedToSort = NeedToSortTeams();
+
+	// Set up num players, latency, score, and time scored for each team
+	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
 	{
-		m_iNumPlayersOnTeam[ i ] = 0; //clear!
-		//clear anything else for the team
+		int iTeam = m_hSections[ i ].m_iTeam;
+
+		// Get team score
+		m_hSections[ i ].m_iScore = pGR->GetTeamScore( iTeam );
+		// Get the time the team last scored
+		m_hSections[ i ].m_flLastScored = pGR->GetTeamScoreTime( iTeam );
+
+		int iPlayerCount = 0, iLatency = 0;
+
+		for( int j = 1; j < gpGlobals->maxClients; j++ )
+		{
+			if( pGR->IsConnected( j ) )
+			{
+				// If the player is on iTeam
+				if( pGR->GetTeam( j ) == iTeam )
+				{
+					iPlayerCount++;
+					iLatency += pGR->GetPing( j );
+				}
+			}
+		}
+
+		// Set number of players on this team
+		m_hSections[ i ].m_iNumPlayers = iPlayerCount;
+		// Set the team's latency
+		m_hSections[ i ].m_iLatency = iLatency;
 	}
 
-	UpdatePlayerInfo();
-	UpdateTeamInfo();
+	// Do sorting
+	if( bNeedToSort )
+	{
+		Warning( "[Sorting] [Sorting] [Sorting]\n" );
+
+		// YES, THIS IS VERY CHEESY!
+		CUtlVector< ScoreboardSection_s > hTemp;
+		
+		// Copy to vector...
+		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+			hTemp.AddToTail( m_hSections[ i ] );
+
+		// Sort!
+		hTemp.Sort( ScoreboardSection_Sort );
+
+		// Copy back over...
+		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+			m_hSections[ i ] = hTemp[ i - TEAM_BLUE ];
+
+		// Have to remove all sections because if you're
+		// viewing the scoreboard when teams get sorted
+		// the team header doesn't change color until
+		// you hide the scoreboard then bring it back up
+		m_pPlayerList->RemoveAll();
+		m_pPlayerList->RemoveAllSections();		
+
+		// Re-add all headers and sections
+		AddHeader();		
+	}
+	
+	// Update team headers
+	UpdateHeaders();
+
+	// Update player info
+	UpdatePlayerInfo();	
 } 
 
 //-----------------------------------------------------------------------------
-// Purpose: searches for the player in the scoreboard
+// Purpose: checks to see if we need to sort the teams
 //-----------------------------------------------------------------------------
+bool CClientScoreBoardDialog::NeedToSortTeams( void ) const
+{
+	bool bSort = false;
+
+	int iLastScore = m_hSections[ TEAM_BLUE ].m_iScore;
+	float flLastUpdate = m_hSections[ TEAM_BLUE ].m_flLastScored;
+
+	for( int i = TEAM_RED; ( i <= TEAM_GREEN ) && !bSort; i++ )
+	{
+		if( iLastScore < m_hSections[ i ].m_iScore )
+			bSort = true;
+		else if( iLastScore == m_hSections [ i ].m_iScore )
+		{
+			if( flLastUpdate < m_hSections[ i ].m_flLastScored )
+				bSort = true;
+		}
+
+		// Update 'last'
+		iLastScore = m_hSections[ i ].m_iScore;
+		flLastUpdate = m_hSections[ i ].m_flLastScored;
+	}
+
+	return bSort;
+}
+
 int CClientScoreBoardDialog::FindItemIDForPlayerIndex( int playerIndex )
 {
 	for( int i = 0; i <= m_pPlayerList->GetHighestItemID(); i++)

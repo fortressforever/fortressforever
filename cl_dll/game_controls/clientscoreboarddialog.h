@@ -11,30 +11,18 @@
 #pragma once
 #endif
 
-// BEG: Added by Mulchman
-
-// NOTE there are several random and small changes in here
-// due to wavelength tutorials followed by Mulchman. Be
-// careful when diffing/overwriting stuff.
-
-// END: Added by Mulchman
-
 #include <vgui_controls/Frame.h>
 #include <cl_dll/iviewport.h>
 #include <igameevents.h>
 
-/*
-//#define TYPE_NOTEAM			0	// NOTEAM must be zero :)
-#define TYPE_UNASSIGNED		0	// unassigned type
-#define TYPE_TEAM			1	// a section for a single team	
-#define TYPE_SPECTATORS		2	// a section for a spectator group
-#define TYPE_BLANK			3
-*/
-
 #define TYPE_UNASSIGNED     0   
 #define TYPE_TEAM           1   // a section for a single team  
 #define TYPE_SPECTATORS     2   // a section for a spectator group
+#define TYPE_BLANK			3	// a blank section
+#define TYPE_HEADER			4	// the main header
 #define TYPE_NOTEAM         0	// NOTEAM must be zero :)
+
+#define SCOREBOARD_NUMSECTIONS 8 // 6 teams, 1 blank section, 1 header section
 
 // --> Mirv: Channel images
 namespace CHANNEL
@@ -47,6 +35,35 @@ namespace CHANNEL
 	};
 }
 // <-- Mirv: Channel images
+
+struct ScoreboardSection_s
+{
+	int	m_iTeam;
+	int m_iLatency;
+	int m_iNumPlayers;
+	int m_iScore;
+	float m_flLastScored;
+
+	ScoreboardSection_s( void )
+	{
+		m_iTeam = -1;
+		m_iLatency = 0;
+		m_iNumPlayers = 0;
+		m_iScore = 0;
+		m_flLastScored = 0.0f;
+	}
+
+	ScoreboardSection_s &operator=( const ScoreboardSection_s& rhs )
+	{
+		m_iTeam = rhs.m_iTeam;
+		m_iLatency = rhs.m_iLatency;
+		m_iNumPlayers = rhs.m_iNumPlayers;
+		m_iScore = rhs.m_iScore;
+		m_flLastScored = rhs.m_flLastScored;
+
+		return *this;
+	}
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -87,17 +104,19 @@ public:
 protected:
 	// functions to override
 	virtual bool GetPlayerScoreInfo(int playerIndex, KeyValues *outPlayerInfo);
-	virtual void InitScoreboardSections();
-	virtual void UpdateTeamInfo();
-	virtual void UpdatePlayerInfo();
+	virtual void InitScoreboardSections( void );
+	virtual void UpdatePlayerInfo( void );
 	
-	virtual void AddHeader(); // add the start header of the scoreboard
-	virtual int	AddSection(int teamType, int teamNumber); // add a new section header for a team
+	// Add sections to the scoreboard
+	virtual void AddHeader( void );
+	virtual int  AddSection( int iType, int iSection );
+	virtual void UpdateHeaders( void );
 
 	// sorts players within a section
-	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
+	static bool StaticPlayerSortFunc_Score( vgui::SectionedListPanel *list, int itemID1, int itemID2 );
+	static bool StaticPlayerSortFunc_Name( vgui::SectionedListPanel *list, int itemID1, int itemID2 );
 
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 	// BEG: Added by Mulchman
 	// finds the player in the scoreboard
@@ -105,10 +124,9 @@ protected:
 	int FindPlayerIndexForItemID( int iItemID );
 	// END: Added by Mulchman
 
-	int m_iNumTeams;
+	//int m_iNumTeams;
 
 	vgui::SectionedListPanel *m_pPlayerList;
-	int				m_iSectionId; // the current section we are entering into
 
 	int s_VoiceImage[5];
 	int s_ChannelImage[5];	// |-- Mirv: Channel Images
@@ -130,13 +148,12 @@ private:
 	int			m_iJumpKey;
 
 	// methods
-	void FillScoreBoard();
-	void RebuildScoreBoard();
+	void FillScoreBoard( void );
+	bool NeedToSortTeams( void ) const;
+	int  FindSectionByTeam( int iTeam ) const;
 
 protected:
-	int m_iTeamSections[ TEAM_COUNT ];
-	int m_iNumPlayersOnTeam[ TEAM_COUNT ];
-	int m_iTeamLatency[ TEAM_COUNT ];
+	ScoreboardSection_s m_hSections[ SCOREBOARD_NUMSECTIONS ];
 
 	virtual void OnKeyCodePressed( vgui::KeyCode code );
 
