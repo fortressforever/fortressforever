@@ -36,7 +36,8 @@ public:
 
 	CFFWeaponSpanner();
 
-	virtual void PrimaryAttack( void );
+	virtual bool CanBeSelected();
+	virtual void PrimaryAttack();
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SPANNER; }
 
 private:
@@ -72,6 +73,17 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_spanner);
 //----------------------------------------------------------------------------
 CFFWeaponSpanner::CFFWeaponSpanner() 
 {
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Allow to be selected even when no ammo
+//-----------------------------------------------------------------------------
+bool CFFWeaponSpanner::CanBeSelected()
+{
+	if (!VisibleInWeaponSelection())
+		return false;
+
+	return true;
 }
 
 void CFFWeaponSpanner::PrimaryAttack( void )
