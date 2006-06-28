@@ -147,6 +147,9 @@ CFFSentryGun::CFFSentryGun()
 	m_bRocketLeftBarrel = true;
 
 	m_angGoal.Init();
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -251,6 +254,9 @@ void CFFSentryGun::GoLive( void )
 	// Bug #0000244: Building L1 sg doesn't take away cells
 	if( pOwner ) 
 		pOwner->RemoveAmmo( 130, AMMO_CELLS );
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -455,11 +461,18 @@ void CFFSentryGun::HackFindEnemy( void )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 
+		// Mirv: Find enemies instead. Maybe we should be changing the owner so the kills
+		// count towards the spy, this can be changed later if needed.
+		// We differentiate between malicious and normal sabotage by the fact that
+		// malicious sabotage no longer has a m_hSaboteur (it's not needed and it's a
+		// cheap way to keep track of things).
+		int iTypeToFind = (!m_hSaboteur && m_flSabotageTime > gpGlobals->curtime ? GR_NOTTEAMMATE : GR_TEAMMATE);
+
 		// Changed a line for
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
 		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || pPlayer == pOwner ||
-			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) == GR_TEAMMATE ) )
+			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) == iTypeToFind ) )
 			continue;
 
 		// Spy check - but don't let valid radio tagged targets sneak by!
@@ -552,6 +565,10 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
+
+	// Rather than simply be inaccurate, how about just not hurting as much?
+	if (m_flSabotageTime > gpGlobals->curtime)
+		info.m_iDamage = 1.0f;
 
 	FireBullets( info );
 	EmitSound( "Sentry.Fire" );
@@ -909,19 +926,38 @@ void CFFSentryGun::SendStatsToBot( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: If already sabotaged then don't try and sabotage again
+//-----------------------------------------------------------------------------
 bool CFFSentryGun::CanSabotage()
 {
-	// TODO: Return false if CURRENTLY sabotaged
+	return m_flSabotageTime < gpGlobals->curtime;
 
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Sabotaged results in SG doing less damage (to simulate being
+//			less accurate). Need to keep track of saboteur so that they can
+//			trigger the malicious sabotage via their menu.
+//-----------------------------------------------------------------------------
 void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 {
+	m_flSabotageTime = gpGlobals->curtime + 120.0f;
+	m_hSaboteur = pSaboteur;
+
 	Warning("SG sabotaged\n");
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This turns the sentry on its own team for 10 seconds.
+//			To differentiate between normal and malicious sabotage, we're
+//			just going to set m_hSaboteur to NULL (cheap, I know)
+//-----------------------------------------------------------------------------
 void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
+	m_flSabotageTime = gpGlobals->curtime + 10.0f;
+	m_hSaboteur = NULL;
+
 	Warning("SG maliciously sabotaged\n");
 }

@@ -319,7 +319,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// End: Added by Mulchman for building objects and such
 
 	// ---> added by billdoor
-	RecvPropFloat(RECVINFO(m_fArmorType)),
+	RecvPropFloat(RECVINFO(m_flArmorType)),
 
 	RecvPropInt(RECVINFO(m_iSkiState)),
 	// ---> end

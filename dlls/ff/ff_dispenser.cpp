@@ -195,6 +195,9 @@ void CFFDispenser::GoLive( void )
 		AddAmmo( iArmor, 0, 0, 0, 0, 0 );
 		pOwner->RemoveArmor( iArmor );
 	}
+
+	m_flSabotageTime = 0;
+	m_hSaboteur = NULL;
 }
 
 /**
@@ -284,21 +287,25 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				//if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )				
 				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
 				{
-					// TODO: Hud message to owner					
-					SendMessageToPlayer( pOwner, "Dispenser_EnemiesUsing" );
-
-					// TODO: Hud message to person who touched us
-					SendMessageToPlayer( pPlayer, "Dispenser_TouchEnemy", true );
-
-					// Omni-bot: Tell the bot about his dispenser.
-					if(pOwner->IsBot())
+					// Mirv: Don't do this while sabotaged
+					if (m_flSabotageTime <= gpGlobals->curtime)
 					{
-						int iGameId = pOwner->entindex()-1;
+						// TODO: Hud message to owner					
+						SendMessageToPlayer( pOwner, "Dispenser_EnemiesUsing" );
 
-						Omnibot::BotUserData bud(pPlayer->edict());
-						Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-							Omnibot::TF_MESSAGE_DISPENSER_ENEMYUSED,
-							iGameId, 0, 0, &bud);
+						// TODO: Hud message to person who touched us
+						SendMessageToPlayer( pPlayer, "Dispenser_TouchEnemy", true );
+
+						// Omni-bot: Tell the bot about his dispenser.
+						if(pOwner->IsBot())
+						{
+							int iGameId = pOwner->entindex()-1;
+
+							Omnibot::BotUserData bud(pPlayer->edict());
+							Omnibot::omnibot_interface::Bot_Interface_SendEvent(
+								Omnibot::TF_MESSAGE_DISPENSER_ENEMYUSED,
+								iGameId, 0, 0, &bud);
+						}
 					}
 				}
 			}
@@ -421,6 +428,11 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 			m_iArmor.GetForModify() -= iGave;
 		}
 	}
+
+	// Mirv: sabotage
+	// We can call this over and over, it will only ever reduce one level
+	if (m_flSabotageTime > gpGlobals->curtime)
+		pPlayer->ReduceArmorClass();
 }
 
 //
@@ -508,21 +520,35 @@ void CFFDispenser::SendStatsToBot()
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: If already sabotaged then don't try and sabotage again
+//-----------------------------------------------------------------------------
 bool CFFDispenser::CanSabotage()
 {
-	// TODO: Return false if CURRENTLY sabotaged
-
-	return true;
+	return (m_flSabotageTime <= gpGlobals->curtime);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Flags the dispenser as sabotaged.
+//			This results in:
+//				· Reducing armour types
+//				· No more enemy warning messages
+//-----------------------------------------------------------------------------
 void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 {
+	m_flSabotageTime = gpGlobals->curtime + 120.0f;
+	m_hSaboteur = pSaboteur;
+
 	Warning("Dispenser sabotaged\n");
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This blows up the sentry a la detdispenser (nice and simple)
+//-----------------------------------------------------------------------------
 void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
-	Warning("Dispenser maliciously sabotaged\n");
+	Detonate();
+	m_hSaboteur = NULL;
 
-	// Some code to detonate here.
+	Warning("Dispenser maliciously sabotaged\n");
 }

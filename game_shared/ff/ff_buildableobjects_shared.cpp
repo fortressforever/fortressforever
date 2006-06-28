@@ -405,8 +405,6 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround()
 	return BUILD_ALLOWED;
 }
 
-
-
 int CFFBuildableObject::GetHealthPercent( void )
 {
 	float flPercent = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;

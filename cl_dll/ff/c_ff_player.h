@@ -135,9 +135,9 @@ public:
 
 	// ---> added by billdoor
 public:
-	CNetworkVar(float, m_fArmorType);
+	CNetworkVar(float, m_flArmorType);
 
-	float GetArmorType() const { return m_fArmorType; };
+	float GetArmorType() const { return m_flArmorType; };
 	// ---> end
 
 	// --> mulch

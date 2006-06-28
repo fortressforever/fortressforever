@@ -540,6 +540,9 @@ public:
 	void OnObjectThink( void );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
+	CHandle<CFFPlayer>	m_hSaboteur;
+	float				m_flSabotageTime;
+
 	virtual bool CanSabotage();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
@@ -663,6 +666,9 @@ public:
 
 	int GetLevel( void ) const { return m_iLevel; }
 	void Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
+
+	CHandle<CFFPlayer>	m_hSaboteur;
+	float				m_flSabotageTime;
 
 	virtual bool CanSabotage();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
