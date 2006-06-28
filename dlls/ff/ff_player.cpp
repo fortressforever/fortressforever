@@ -195,22 +195,8 @@ void CC_Player_Kill( void )
 							pPlayer->SetRespawnDelay( 5.0f );
 
 						// Bug #0000700: people with infection should give medic kill if they suicide
-						// Also check if the player is infected. If they are,
-						// accredit a kill to the person who infected them
-						if( pPlayer->IsInfected() )
-						{
-							CFFPlayer *pInfector = ToFFPlayer( pPlayer->GetInfector() );
-							if( pInfector )
-							{
-								// This should really be changed to something better so it
-								// fires the lua player_killed function :(
-								// Like, maybe modify CommitSuicide in CBasePlayer or
-								// something...
-
-								pPlayer->SetSpecialInfectedDeath();
-								pInfector->AddPoints( 1, true );
-							}
-						}
+						if( pPlayer->IsInfected() && pPlayer->GetInfector() )
+							pPlayer->SetSpecialInfectedDeath();
 
                         ClientKill( pPlayer->edict() );
 					}
@@ -224,21 +210,8 @@ void CC_Player_Kill( void )
 				pPlayer->SetRespawnDelay( 5.0f );
 
 			// Bug #0000700: people with infection should give medic kill if they suicide
-			// Also check if the player is infected. If they are,
-			// accredit a kill to the person who infected them
-			if( pPlayer->IsInfected() )
-			{
-				CFFPlayer *pInfector = ToFFPlayer( pPlayer->GetInfector() );
-				if( pInfector )
-				{
-					// This should really be changed to something better
-					// so it fires the lua player_killed function :(
-					// Like, maybe modify CommitSuicide in CBasePlayer or
-					// something...
-					pPlayer->SetSpecialInfectedDeath();
-					pInfector->AddPoints( 1, true );
-				}
-			}
+			if( pPlayer->IsInfected() && pPlayer->GetInfector() )
+				pPlayer->SetSpecialInfectedDeath();
 
 			ClientKill( pPlayer->edict() );
 		}
@@ -1801,19 +1774,9 @@ void CFFPlayer::Command_Team( void )
 		return;
 	}
 
-	// HACK: to give the medic who infected us a kill (because we are changing
-	// teams to avoid giving the medica point for killing us)
-	// This should really be changed to something better so it fires the lua
-	// player_killed function :(
-	if( IsInfected() )
-	{
-		CFFPlayer *pInfector = ToFFPlayer( GetInfector() );
-		if( pInfector )
-		{
-			SetSpecialInfectedDeath();
-			pInfector->AddPoints( 1, true );
-		}
-	}
+	// Bug #0000700: people with infection should give medic kill if they suicide	
+	if( IsInfected() && GetInfector() )
+		SetSpecialInfectedDeath();
 
 	// set their class to unassigned, so that they don't spawn
 	// immediately when changing teams
