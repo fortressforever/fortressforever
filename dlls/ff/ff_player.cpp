@@ -763,19 +763,33 @@ ReturnSpot:
 void CFFPlayer::Spawn()
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//  Please don't reinitialise class variables in here, but SetupClassVariables instead!
+	//  Please don't reinitialise class specific variables in here, but SetupClassVariables instead!
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	// First initalise a bunch of player data
+	m_pWhoTaggedMe		= NULL;
+	m_flNextBurnTick	= 0.0f;
+	m_iBurnTicks		= 0.0f;
+	m_flBurningDamage	= 0.0f;
+	m_fLastHealTick		= 0.0f;
+	m_fLastInfectedTick = 0.0f;
+	m_bInfected			= false;
+	m_hInfector			= NULL;
+	m_bImmune			= false;
+	m_iInfectedTeam		= TEAM_UNASSIGNED;
+	m_hRagdoll			= NULL;
+	m_flConcTime		= 0.0f;
 
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
 	{
-		StopSound( "Player.AmbientUnderWater" );
+		StopSound("Player.AmbientUnderWater");
 		SetPlayerUnderwater(false);
-		SetWaterLevel( 0 );
+		SetWaterLevel(0);
 	}
 
 	// Maybe this should go elsewhere
-	CSingleUserRecipientFilter user((CBasePlayer *)this);
+	CSingleUserRecipientFilter user((CBasePlayer *) this);
 	user.MakeReliable();
 
 	// This will finish all status icons
@@ -819,14 +833,14 @@ void CFFPlayer::Spawn()
 		}
 
 		// Show the team menu
-		ShowViewPortPanel( PANEL_TEAM, true );
+		ShowViewPortPanel(PANEL_TEAM, true);
 
 		// Don't allow them to spawn
 		return;
 	}
 
 	// They tried to spawn with no class and they are not a spectator (or randompc)
-	if(GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
+	if (GetClassSlot() == 0 && GetTeamNumber() != TEAM_SPECTATOR && !m_fRandomPC)
 	{
 		// Start a new map overview guide
 		if (!m_hNextMapGuide)
@@ -847,10 +861,10 @@ void CFFPlayer::Spawn()
 	}
 
 	// They have spawned as a spectator
-	if( GetTeamNumber() == TEAM_SPECTATOR )
+	if (GetTeamNumber() == TEAM_SPECTATOR)
 	{
-		StartObserverMode( OBS_MODE_ROAMING );
-		AddEffects( EF_NODRAW );
+		StartObserverMode(OBS_MODE_ROAMING);
+		AddEffects(EF_NODRAW);
 
 		BaseClass::Spawn();
 		return;
@@ -880,11 +894,6 @@ void CFFPlayer::Spawn()
 	StopObserverMode();
 	RemoveEffects( EF_NODRAW );
 
-	m_hRagdoll = NULL;
-
-	// Not concussed on spawn
-	m_flConcTime = 0;
-
 	BaseClass::Spawn();
 
 	SetModel( FF_PLAYER_MODEL );
@@ -897,26 +906,8 @@ void CFFPlayer::Spawn()
 	// manipulating the players' inventory
 	entsys.RunPredicates( NULL, this, "player_spawn" );
 
-	// Clear the list of people who previously radio tagged us
-	//m_hWhoTaggedMeList.RemoveAll( );
-	m_pWhoTaggedMe = NULL;
-
-	// reset their status effects
-	m_flNextBurnTick = 0.0;
-	m_iBurnTicks = 0;
-	m_flBurningDamage = 0.0;
-
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
-	{
 		m_vSpeedEffects[i].active = false;
-	}
-
-	m_fLastHealTick = 0.0f;
-	m_fLastInfectedTick = 0.0f;
-	m_bInfected = false;
-	m_hInfector = NULL;
-	m_bImmune = false;
-	m_iInfectedTeam = TEAM_UNASSIGNED;
 
 	// equip the HEV suit
 	EquipSuit();
