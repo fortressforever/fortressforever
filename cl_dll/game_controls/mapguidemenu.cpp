@@ -53,9 +53,9 @@ CON_COMMAND(mapguidemenu, "Shows the mapguide menu")
 
 	 if (panel)
 	 {
-		 gViewPortInterface->ShowPanel(panel, true);
 		 gViewPortInterface->ShowPanel(PANEL_TEAM, false);
 		 gViewPortInterface->ShowPanel(PANEL_CLASS, false);
+		 gViewPortInterface->ShowPanel(panel, true);
 	 }
 	 else
 		 Msg("Couldn't find panel.\n");
@@ -221,6 +221,15 @@ void CMapGuideMenu::OnKeyCodePressed(KeyCode code)
 	}
 
 	BaseClass::OnKeyCodePressed(code);
+}
+
+void CMapGuideMenu::OnKeyCodeReleased(KeyCode code)
+{
+	// Hide the scoreboard now
+	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
+
+	BaseClass::OnKeyCodeReleased(code);
 }
 
 //-----------------------------------------------------------------------------
