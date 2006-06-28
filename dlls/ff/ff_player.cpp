@@ -193,7 +193,26 @@ void CC_Player_Kill( void )
 						// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
 						if( pPlayer->IsAlive() )
 							pPlayer->SetRespawnDelay( 5.0f );
-						ClientKill( pPlayer->edict() );
+
+						// Bug #0000700: people with infection should give medic kill if they suicide
+						// Also check if the player is infected. If they are,
+						// accredit a kill to the person who infected them
+						if( pPlayer->IsInfected() )
+						{
+							CFFPlayer *pInfector = ToFFPlayer( pPlayer->GetInfector() );
+							if( pInfector )
+							{
+								// This should really be changed to something better so it
+								// fires the lua player_killed function :(
+								// Like, maybe modify CommitSuicide in CBasePlayer or
+								// something...
+
+								pPlayer->SetSpecialInfectedDeath();
+								pInfector->AddPoints( 1, true );
+							}
+						}
+
+                        ClientKill( pPlayer->edict() );
 					}
 				}
 			}
@@ -203,6 +222,24 @@ void CC_Player_Kill( void )
 			// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
 			if( pPlayer->IsAlive() )
 				pPlayer->SetRespawnDelay( 5.0f );
+
+			// Bug #0000700: people with infection should give medic kill if they suicide
+			// Also check if the player is infected. If they are,
+			// accredit a kill to the person who infected them
+			if( pPlayer->IsInfected() )
+			{
+				CFFPlayer *pInfector = ToFFPlayer( pPlayer->GetInfector() );
+				if( pInfector )
+				{
+					// This should really be changed to something better
+					// so it fires the lua player_killed function :(
+					// Like, maybe modify CommitSuicide in CBasePlayer or
+					// something...
+					pPlayer->SetSpecialInfectedDeath();
+					pInfector->AddPoints( 1, true );
+				}
+			}
+
 			ClientKill( pPlayer->edict() );
 		}
 	}
@@ -917,6 +954,8 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
+	m_bSpecialInfectedDeath = false;
+
 	// Reset Spy stuff
 	m_fFeigned = false;
 	m_flFinishDisguise = 0;
@@ -1151,11 +1190,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		if( m_pWhoTaggedMe != NULL )
 		{
-			/*
-			CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
-			if( pEntity && pEntity->IsPlayer() )
-				ToFFPlayer( m_pWhoTaggedMe )->AddPoints( 2, true );
-				*/
 			CFFPlayer *pPlayer = GetPlayerWhoTaggedMe();
 			if( pPlayer )
 				pPlayer->AddPoints( 2, true );
@@ -1765,6 +1799,20 @@ void CFFPlayer::Command_Team( void )
 	{
 		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_ALREADYONTHISTEAM" );
 		return;
+	}
+
+	// HACK: to give the medic who infected us a kill (because we are changing
+	// teams to avoid giving the medica point for killing us)
+	// This should really be changed to something better so it fires the lua
+	// player_killed function :(
+	if( IsInfected() )
+	{
+		CFFPlayer *pInfector = ToFFPlayer( GetInfector() );
+		if( pInfector )
+		{
+			SetSpecialInfectedDeath();
+			pInfector->AddPoints( 1, true );
+		}
 	}
 
 	// set their class to unassigned, so that they don't spawn

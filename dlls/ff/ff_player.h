@@ -364,6 +364,13 @@ public:
 	void Infect( CFFPlayer * );
 	void Cure( CFFPlayer * );
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f );
+
+	bool IsInfected( void ) const		{ return m_bInfected; }
+	CBaseEntity *GetInfector( void )	{ return ( m_hInfector == NULL ) ? NULL : ( CBaseEntity * )m_hInfector; }
+	int GetInfectorTeam( void ) const	{ return IsInfected() ? m_iInfectedTeam : TEAM_UNASSIGNED; }
+	
+	bool GetSpecialInfectedDeath( void ) const { return m_bSpecialInfectedDeath; }
+	void SetSpecialInfectedDeath( void ) { m_bSpecialInfectedDeath = true; }
 private:
 	SpeedEffect m_vSpeedEffects[NUM_SPEED_EFFECTS];				// All speed effects impairing the player
 	float m_fLastHealTick;									// When the last time the medic was healed
@@ -375,6 +382,13 @@ private:
 	float m_flImmuneTime; // Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;	// Mulch: team the medic who infected us was on
     float m_flLastOverHealthTick; // Mulch: last time we took health cause health > maxhealth
+	
+	// A hack flag to put on a player who was infected and tried to
+	// evade dying by infection by changing teams or typing kill. We
+	// note this so we can acredit the guy who infected him when we
+	// get to gamerules. If we didn't have to note this properly in
+	// a hud death msg (and logs) it'd be a lot easier.
+	bool m_bSpecialInfectedDeath; 
 public:
 	bool IsImmune( void ) const { return m_bImmune; }
 

@@ -559,6 +559,19 @@ bool CMultiplayRules::IsMultiplayer( void )
 		if( pKiller->Classify() == CLASS_SENTRYGUN )
 			pInflictor = pKiller;
 
+		// HACK: Check for special infection deaths
+		if( pVictim->IsPlayer() )
+		{
+			CFFPlayer *pFFPlayer = ToFFPlayer( pVictim );
+			if( pFFPlayer && pFFPlayer->GetSpecialInfectedDeath() )
+			{
+				// Set killer & attacker to the medic
+				// that infected the victim
+				pInflictor = pFFPlayer->GetInfector();
+				pKiller = pFFPlayer->GetInfector();
+			}
+		}
+
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 
 		// Custom kill type?
