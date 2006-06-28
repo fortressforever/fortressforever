@@ -287,6 +287,7 @@ void CFFWeaponLaserDot::OnDataChanged(DataUpdateType_t updateType)
 {
 	if (updateType == DATA_UPDATE_CREATED) 
 	{
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
 #endif
@@ -510,10 +511,15 @@ void CFFWeaponSniperRifle::ToggleZoom()
 
 	// Mirv: Play a sound depending on what we are now.
 	//		 This should stop it getting out of sync
+
+
+	// Bug #0000737: sniper rifle zoom in/out sound
+	CSingleUserRecipientFilter filter( pPlayer );
+
 	if (pPlayer->GetFOV() > 40)
-		EmitSound("SniperRifle.zoom_in");
+		EmitSound( filter, pPlayer->entindex(), "SniperRifle.zoom_in" );
 	else
-		EmitSound("SniperRifle.zoom_out");
+		EmitSound( filter, pPlayer->entindex(), "SniperRifle.zoom_out" );
 
 }
 
