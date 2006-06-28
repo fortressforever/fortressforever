@@ -908,3 +908,20 @@ void CFFSentryGun::SendStatsToBot( void )
 			iGameId, 0, 0, &bud);
 	}
 }
+
+bool CFFSentryGun::CanSabotage()
+{
+	// TODO: Return false if CURRENTLY sabotaged
+
+	return true;
+}
+
+void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
+{
+	Warning("SG sabotaged\n");
+}
+
+void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
+{
+	Warning("SG maliciously sabotaged\n");
+}
