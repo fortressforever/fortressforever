@@ -258,7 +258,12 @@ void CHudCrosshairInfo::OnTick( void )
 								if( pBuildable->Classify() == CLASS_DISPENSER )
 									iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPercent();
 								else if( pBuildable->Classify() == CLASS_SENTRYGUN )
+								{
 									iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
+
+									if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
+										iArmor -= 128;
+								}
 								else
 									iArmor = -1;
 							//}
