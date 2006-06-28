@@ -1160,12 +1160,12 @@ static ConVar smoothstairs( "smoothstairs", "1", FCVAR_REPLICATED, "Smooth playe
 //-----------------------------------------------------------------------------
 void CBasePlayer::SmoothViewOnStairs( Vector& eyeOrigin )
 {
+	CBaseEntity *pGroundEntity = GetGroundEntity();
 	float flCurrentPlayerZ = GetLocalOrigin().z;
 	float flCurrentPlayerViewOffsetZ = GetViewOffset().z;
 
 	// Smooth out stair step ups
-	if ( ( GetGroundEntity() != NULL ) && ( flCurrentPlayerZ - m_flOldPlayerZ > 0 ) && smoothstairs.GetBool() &&
-		 m_flOldPlayerViewOffsetZ == flCurrentPlayerViewOffsetZ )
+	if ( ( pGroundEntity != NULL && pGroundEntity->GetMoveType() == MOVETYPE_NONE ) && (flCurrentPlayerZ != m_flOldPlayerZ ) && smoothstairs.GetBool() && m_flOldPlayerViewOffsetZ == flCurrentPlayerViewOffsetZ)
 	{
 		float steptime = gpGlobals->frametime;
 		if (steptime < 0)
