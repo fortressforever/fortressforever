@@ -243,6 +243,10 @@ void CHudGrenade1::Paint()
 	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN || !ffplayer->GetClassSlot()) 
 		return;
 
+	// Don't show while spec
+	if (ffplayer->GetTeamNumber() < TEAM_BLUE || ffplayer->GetTeamNumber() > TEAM_GREEN)
+		return;
+
 	int gren_num = 0;
 
 	if (ffplayer->GetClassSlot() == CLASS_SCOUT) 
