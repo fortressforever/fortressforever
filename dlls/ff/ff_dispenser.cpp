@@ -507,3 +507,22 @@ void CFFDispenser::SendStatsToBot()
 			iGameId, 0, 0, &bud);
 	}
 }
+
+bool CFFDispenser::CanSabotage()
+{
+	// TODO: Return false if CURRENTLY sabotaged
+
+	return true;
+}
+
+void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
+{
+	Warning("Dispenser sabotaged\n");
+}
+
+void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
+{
+	Warning("Dispenser maliciously sabotaged\n");
+
+	// Some code to detonate here.
+}

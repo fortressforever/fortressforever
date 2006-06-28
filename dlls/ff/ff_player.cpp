@@ -548,9 +548,16 @@ void CFFPlayer::PreThink(void)
 
 	StatusEffectsThink();
 
-	// Disguising
-	if (m_iNewSpyDisguise && gpGlobals->curtime > m_flFinishDisguise)
-		FinishDisguise();
+	// Do some spy stuff
+	if (GetClassSlot() == CLASS_SPY)
+	{
+		// Disguising
+		if (m_iNewSpyDisguise && gpGlobals->curtime > m_flFinishDisguise)
+			FinishDisguise();
+
+		// Sabotage!!
+		SpySabotageThink();
+	}
 
 	// Do we need to do a class specific skill?
 	if( m_afButtonPressed & IN_ATTACK2 )
@@ -934,6 +941,9 @@ void CFFPlayer::SetupClassVariables()
 	m_flFinishDisguise = 0;
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
+	m_flNextSpySabotageThink = 0.0f;
+	m_flSpySabotageFinish = 0.0f;
+	m_hSabotaging = NULL;
 
 	m_Locations.RemoveAll();
 	m_iClientLocation = 0;
@@ -4477,4 +4487,91 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 	// Then apply the class stuff
 	ActivateClass();
 	SetupClassVariables();
+}
+
+void CFFPlayer::SpySabotageThink()
+{
+	if (m_flNextSpySabotageThink > gpGlobals->curtime)
+		return;
+
+	m_flNextSpySabotageThink = gpGlobals->curtime + 0.2f;
+
+	// We have to be under a particular speed to sabotage
+	if (GetAbsVelocity().LengthSqr() > 100 * 100)
+	{
+		// Cancel anything currently going on
+		if (m_hSabotaging)
+		{
+			CSingleUserRecipientFilter user(this);
+			user.MakeReliable();
+			UserMessageBegin(user, "FF_BuildTimer");
+			WRITE_SHORT(0);
+			WRITE_FLOAT(0);
+			MessageEnd();
+		}
+
+		m_hSabotaging = NULL;
+		return;
+	}
+
+	// Traceline to see what we are looking at
+	Vector vecForward;
+	AngleVectors(EyeAngles(), &vecForward);
+
+	trace_t tr;
+	UTIL_TraceLine(EyePosition(), vecForward * 100.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+	CFFBuildableObject *pBuildable = dynamic_cast<CFFBuildableObject *> (tr.m_pEnt);
+
+	// Our sabotage status has changed
+	if (pBuildable != m_hSabotaging)
+	{
+		// If it's not a valid thing to sabotage
+		if (pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber())
+		{
+			// Not something we can sabotage, stop 
+			if (m_hSabotaging)
+			{
+				CSingleUserRecipientFilter user(this);
+				user.MakeReliable();
+				UserMessageBegin(user, "FF_BuildTimer");
+				WRITE_SHORT(0);
+				WRITE_FLOAT(0);
+				MessageEnd();
+			}
+
+			// Remember that we aren't sabotaging
+			m_hSabotaging = NULL;
+
+			return;
+		}
+
+		int iBuildableType;
+
+		// Determine the correct item that'll be shown on the menu
+		if (pBuildable->Classify() == CLASS_SENTRYGUN)
+			iBuildableType = FF_BUILD_SENTRYGUN;
+		else
+			iBuildableType = FF_BUILD_DISPENSER;
+
+		// Reset the time left until the sabotage is finished
+		m_flSpySabotageFinish = gpGlobals->curtime + 3.0f;
+
+		// Now send off the timer
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+		UserMessageBegin(user, "FF_BuildTimer");
+		WRITE_SHORT(iBuildableType);
+		WRITE_FLOAT(3.0f);
+		MessageEnd();
+	}
+	// Sabotage state has not changed
+	else
+	{
+		// If we are sabotaging then check if we've timed out
+		if (m_hSabotaging && m_flSpySabotageFinish <= gpGlobals->curtime)
+		{
+			m_hSabotaging->Sabotage(this);
+		}
+	}
 }

@@ -420,6 +420,19 @@ int CFFSentryGun::GetRockets( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Team accessor [mirv]
+//-----------------------------------------------------------------------------
+int CFFBuildableObject::GetTeamNumber()
+{
+	CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+
+	if (!pOwner)
+		return -1;
+
+	return pOwner->GetTeamNumber();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CFFDispenser::CFFDispenser( void )

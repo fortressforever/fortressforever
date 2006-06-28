@@ -232,6 +232,7 @@ public:
 	virtual bool IsPlayer( void ) const { return false; }
 	virtual bool BlocksLOS( void ) { return true; }
 	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
+	virtual int	GetTeamNumber();	// |-- Mirv: Easy team id accessor
 	bool IsBuilt( void	) const { return m_bBuilt; }
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
@@ -263,6 +264,10 @@ public:
 	void GoLive( void );
 	void Detonate( void );
 	void RemoveQuietly( void );
+
+	virtual bool CanSabotage() { return false; }
+	virtual void Sabotage(CFFPlayer *pSaboteur) {};
+	virtual void MaliciousSabotage(CFFPlayer *pSaboteur) {};
 	
 	virtual void Cancel( void ) 
 	{
@@ -535,6 +540,10 @@ public:
 	void OnObjectThink( void );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
+	virtual bool CanSabotage();
+	virtual void Sabotage(CFFPlayer *pSaboteur);
+	void MaliciousSabotage(CFFPlayer *pSaboteur);
+
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
 	// Generic function to send hud messages to players
@@ -654,6 +663,10 @@ public:
 
 	int GetLevel( void ) const { return m_iLevel; }
 	void Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
+
+	virtual bool CanSabotage();
+	virtual void Sabotage(CFFPlayer *pSaboteur);
+	void MaliciousSabotage(CFFPlayer *pSaboteur);
 
 	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
