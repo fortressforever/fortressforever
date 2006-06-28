@@ -161,6 +161,11 @@ FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class
 FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD );
 FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE );
 
+// spy sabotage stuff
+FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD );
+FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy SG on own team", FF_CMD_ALIVE );
+
+
 // --> Mirv: Toggle grenades (requested by defrag)
 FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );
 FF_SHARED_COMMAND( toggletwo, &CFFPlayer::Command_ToggleTwo, CC_ToggleTwo, "Primes and throws secondary grendae on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );

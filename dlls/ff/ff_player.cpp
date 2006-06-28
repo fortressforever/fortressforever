@@ -273,7 +273,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iCurBuild ) ),
 
 	// health/armor	
-	SendPropFloat(SENDINFO(m_fArmorType)),
+	SendPropFloat(SENDINFO(m_flArmorType)),
 
 	SendPropInt(SENDINFO(m_iSkiState)),
 
@@ -948,7 +948,8 @@ void CFFPlayer::SetupClassVariables()
 	m_iMaxHealth	= pPlayerClassInfo.m_iHealth;
 	m_iArmor		= pPlayerClassInfo.m_iInitialArmour;
 	m_iMaxArmor		= pPlayerClassInfo.m_iMaxArmour;
-	m_fArmorType	= pPlayerClassInfo.m_flArmourType;
+	m_flArmorType	= pPlayerClassInfo.m_flArmourType;
+	m_flBaseArmorType = m_flArmorType;
 
 	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
 
@@ -1452,12 +1453,12 @@ int CFFPlayer::GetClassSlot()
 }
 
 // When spawned we this is called to handle class changing
-int CFFPlayer::ActivateClass( void )
+int CFFPlayer::ActivateClass()
 {
-	CFFTeam *pTeam = GetGlobalFFTeam( GetTeamNumber() );
+	CFFTeam *pTeam = GetGlobalFFTeam(GetTeamNumber());
 
 	// This shouldn't be called while not on a team
-	if( !pTeam )
+	if (!pTeam)
 		return 0;
 
 	// Don't always have to call this
@@ -1474,16 +1475,16 @@ int CFFPlayer::ActivateClass( void )
 	int iClasses[11] = {0};
 
 	// Build up an array of all in-use classes
-	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
-		
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex(i);
+
 		// Check player classes on this player's team
-		if ( pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber() )
+		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber())
 		{
 			int playerclass = pPlayer->GetClassSlot();
-			
-			if ( playerclass > 0 && playerclass <= 10 )
+
+			if (playerclass > 0 && playerclass <= 10)
 				iClasses[playerclass]++;
 		}
 	}
@@ -1491,55 +1492,55 @@ int CFFPlayer::ActivateClass( void )
 	std::vector<int> vecAvailable;
 
 	// Build up a vector array of available classes
-	for( int j = 1; j <= 10; j++ )
+	for (int j = 1; j <= 10; j++)
 	{
-		int class_limit = pTeam->GetClassLimit( j );
+		int class_limit = pTeam->GetClassLimit(j);
 
 		// This class is available
-		if( class_limit == 0 || iClasses[j] < class_limit )
-			vecAvailable.push_back( j );
+		if (class_limit == 0 || iClasses[j] < class_limit)
+			vecAvailable.push_back(j);
 	}
 
 	// Make a random choice for randompcs
-	if( m_fRandomPC )
+	if (m_fRandomPC)
 	{
 		int iNumAvail = (int) vecAvailable.size();
 
 		// No available classes
-		if( iNumAvail == 0 )
+		if (iNumAvail == 0)
 			return 0;
 
 
 		// Loop until we get a new class if there's more than one available
-		while( ( m_iNextClass = vecAvailable[( rand() % iNumAvail )] ) == GetClassSlot() && iNumAvail != 1 );
+		while ((m_iNextClass = vecAvailable[(rand() % iNumAvail) ]) == GetClassSlot() && iNumAvail != 1);
 
-		DevMsg( "randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size() );
+		DevMsg("randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size());
 	}
 	// Check target class is still available
 	else if (m_iNextClass != GetClassSlot())
 	{
 		// It's not available anymore, slowmow
-		if( std::find( vecAvailable.begin(), vecAvailable.end(), m_iNextClass ) == vecAvailable.end() )
+		if (std::find(vecAvailable.begin(), vecAvailable.end(), m_iNextClass) == vecAvailable.end())
 		{
 			m_iNextClass = GetClassSlot();
-			ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE" );
+			ClientPrint(this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE");
 			return GetClassSlot();
 		}
 	}
-	
-	// It's not available anymore (server changed class limits?)
-	if( std::find( vecAvailable.begin(), vecAvailable.end(), m_iNextClass ) == vecAvailable.end() )
+
+	// It's not available anymore(server changed class limits?)
+	if (std::find(vecAvailable.begin(), vecAvailable.end(), m_iNextClass) == vecAvailable.end())
 	{
 		m_iNextClass = 0;
-		ClientPrint( this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE" );
+		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE");
 		return GetClassSlot();
 	}
 
 	// Now lets try reading this class, this shouldn't fail!
-	if ( !ReadPlayerClassDataFromFileForSlot( filesystem, Class_IntToString( m_iNextClass ), &m_hPlayerClassFileInfo, GetEncryptionKey() ) )
+	if (!ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(m_iNextClass), &m_hPlayerClassFileInfo, GetEncryptionKey()))
 	{
 		//if (m_iNextClass != 0)
-			AssertMsg( 0, "Unable to read class script file, this shouldn't happen" );
+		AssertMsg(0, "Unable to read class script file, this shouldn't happen");
 		return GetClassSlot();
 	}
 
@@ -1547,28 +1548,28 @@ int CFFPlayer::ActivateClass( void )
 	SetClassForClient(pNewPlayerClassInfo.m_iSlot);
 
 	// Display our class information
-	ClientPrint( this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szPrintName );
-	ClientPrint( this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szDescription );
+	ClientPrint(this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szPrintName);
+	ClientPrint(this, HUD_PRINTNOTIFY, pNewPlayerClassInfo.m_szDescription);
 
 	// Remove all buildable items from the game
-	RemoveItems( );
+	RemoveItems();
 
 	// Send a player class change event.
-	IGameEvent *event = gameeventmanager->CreateEvent( "player_changeclass" );
-		
-	if( event )
+	IGameEvent *event = gameeventmanager->CreateEvent("player_changeclass");
+
+	if (event)
 	{
-		event->SetInt( "userid", GetUserID() );
-		event->SetInt( "oldclass", GetClassForClient() );
-		event->SetInt( "newclass", m_iNextClass );
-		gameeventmanager->FireEvent( event );
+		event->SetInt("userid", GetUserID());
+		event->SetInt("oldclass", GetClassForClient());
+		event->SetInt("newclass", m_iNextClass);
+		gameeventmanager->FireEvent(event);
 	}
 
 	// Set class in stats engine
 	g_StatsLog.SetClass(entindex(), m_iNextClass);
 
 	// So the client can keep track
-	SetClassForClient( m_iNextClass );
+	SetClassForClient(m_iNextClass);
 
 	return GetClassSlot();
 }
@@ -3350,7 +3351,7 @@ void CFFPlayer::GrenadeThink(void)
 	}
 }
 
-void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
+void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 {
 	if (!IsGrenadePrimed())
 		return;
@@ -3410,7 +3411,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float speed)//, float fSpeed)
 		{
 			AngleVectors(angAngles, &vecVelocity);
 			VectorNormalize(vecVelocity);
-			vecVelocity *= speed; //gren_speed.GetFloat();	// |-- Mirv: So we can drop grenades
+			vecVelocity *= flSpeed; //gren_speed.GetFloat();	// |-- Mirv: So we can drop grenades
 		}
 		else
 			vecVelocity = Vector(0, 0, 0);
@@ -3543,12 +3544,9 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		//float flNew = info.GetDamage() * flRatio;
 		float fFullDamage = info.GetDamage();
 
-		float fArmorDamage = fFullDamage * m_fArmorType;
+		float fArmorDamage = fFullDamage * m_flArmorType;
 		float fHealthDamage = fFullDamage - fArmorDamage;
 		float fArmorLeft = (float)m_iArmor;
-
-		// [FIXME] demo thinks armourtype is 0, other classes seem okay?
-		// DevMsg( "fFullDamage: %f\nfArmorDamage: %f\nm_fArmorType: %f\nfArmorLeft: %f\nfHealthDamage: %f\n", fFullDamage, fArmorDamage, m_fArmorType, fArmorLeft, fHealthDamage );
 
 		// if the armor damage is greater than the amount of armor remaining, apply the excess straight to health
 		if(fArmorDamage > fArmorLeft)
@@ -3656,54 +3654,54 @@ CFFPlayer *CFFPlayer::GetPlayerWhoTaggedMe( void )
 // Purpose: Overrided in order to let the explosion force actually be of
 //			TFC proportions, also lets people lose limbs when needed
 //-----------------------------------------------------------------------------
-int CFFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 {
 	// set damage type sustained
 	m_bitsDamageType |= info.GetDamageType();
 
 	// Skip the CBasePlayer one because it sucks
-	if ( !CBaseCombatCharacter::OnTakeDamage_Alive( info ) )
+	if (!CBaseCombatCharacter::OnTakeDamage_Alive(info))
 		return 0;
-	
+
 	// Don't bother with decaps this time
-	if ( m_iHealth > 0 )
+	if (m_iHealth > 0)
 	{
 		m_fBodygroupState = 0;
 	}
 	// Only explosions now okay.
-	else if( m_iHealth < 50.0f && info.GetDamageType() & DMG_BLAST)
+	else if (m_iHealth < 50.0f && info.GetDamageType() & DMG_BLAST)
 	{
-		LimbDecapitation( info );
+		LimbDecapitation(info);
 	}
 
 	CBaseEntity * attacker = info.GetAttacker();
 
-	if ( !attacker )
+	if (!attacker)
 		return 0;
 
 	// Apply the force needed
 	// (commented this out cause we're doing it in the above function)
 	//DevMsg("Applying impulse force of: %f\n", info.GetDamageForce().Length());
-	//ApplyAbsVelocityImpulse( info.GetDamageForce() );
+	//ApplyAbsVelocityImpulse(info.GetDamageForce());
 
 	// fire global game event
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
-	if ( event )
+	IGameEvent * event = gameeventmanager->CreateEvent("player_hurt");
+	if (event)
 	{
-		event->SetInt("userid", GetUserID() );
-		event->SetInt("health", ( m_iHealth > 0 ? m_iHealth : 0 ) );	// max replaced with this
+		event->SetInt("userid", GetUserID());
+		event->SetInt("health", (m_iHealth > 0 ? m_iHealth : 0));	// max replaced with this
 
-		if ( attacker->IsPlayer() )
+		if (attacker->IsPlayer())
 		{
-			CBasePlayer *player = ToBasePlayer( attacker );
-			event->SetInt("attacker", player->GetUserID() ); // hurt by other player
+			CBasePlayer *player = ToBasePlayer(attacker);
+			event->SetInt("attacker", player->GetUserID()); // hurt by other player
 		}
 		else
 		{
-			event->SetInt("attacker", 0 ); // hurt by "world"
+			event->SetInt("attacker", 0); // hurt by "world"
 		}
 
-		gameeventmanager->FireEvent( event );
+		gameeventmanager->FireEvent(event);
 	}
 
 	return 1;
@@ -3713,53 +3711,53 @@ int CFFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 // Purpose: Depending on the origin, chop stuff off
 //			This is a pretty hacky method!
 //-----------------------------------------------------------------------------
-void CFFPlayer::LimbDecapitation( const CTakeDamageInfo &info )
+void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 {
 	// In which direction from the player was the explosion?
-	Vector direction = info.GetDamagePosition() - BodyTarget( info.GetDamagePosition(), false );
-	VectorNormalize( direction );
+	Vector direction = info.GetDamagePosition() - BodyTarget(info.GetDamagePosition(), false);
+	VectorNormalize(direction);
 
 	// And which way is the player facing
 	Vector	vForward, vRight, vUp;
-	EyeVectors( &vForward, &vRight, &vUp );
+	EyeVectors(&vForward, &vRight, &vUp);
 
 	// Use rightarm to work out which side of the player it is on and use the
 	// absolute upwards direction to work out whether it was above or below
-	float dp_rightarm = direction.Dot( vRight );
-	float dp_head = direction.Dot( Vector( 0.0f, 0.0f, 1.0f ) );
+	float dp_rightarm = direction.Dot(vRight);
+	float dp_head = direction.Dot(Vector(0.0f, 0.0f, 1.0f));
 
 	// Some lovely messages
-	DevMsg( "[DECAP] dp_rightarm: %f\n", dp_rightarm );
-	DevMsg( "[DECAP] dp_head: %f\n", dp_head );
+	DevMsg("[DECAP] dp_rightarm: %f\n", dp_rightarm);
+	DevMsg("[DECAP] dp_head: %f\n", dp_head);
 
 	// Now check whether the explosion seems to be on the right or left side
-	if( dp_rightarm > 0.6f )
+	if (dp_rightarm > 0.6f)
 	{
 		m_fBodygroupState |= DECAP_RIGHT_ARM;
-		DevMsg( "[DECAP] Lost right arm\n" );
+		DevMsg("[DECAP] Lost right arm\n");
 	}
-	else if( dp_rightarm < -0.6f )
+	else if (dp_rightarm < -0.6f)
 	{
 		m_fBodygroupState |= DECAP_LEFT_ARM;
-		DevMsg( "[DECAP] Lost left arm\n" );
+		DevMsg("[DECAP] Lost left arm\n");
 	}
 
 	// Now check if the explosion seems to be above or below
-	if( dp_head > 0.7f )
+	if (dp_head > 0.7f)
 	{
 		m_fBodygroupState |= DECAP_HEAD;
-		DevMsg( "[DECAP] Lost head\n" );
+		DevMsg("[DECAP] Lost head\n");
 	}
-	else if( dp_head < -0.6f )
+	else if (dp_head < -0.6f)
 	{
 		// If they lost an arm on one side don't lose the leg on the other
-		if( !(m_fBodygroupState & DECAP_RIGHT_ARM ) )
+		if (! (m_fBodygroupState & DECAP_RIGHT_ARM))
 			m_fBodygroupState |= DECAP_LEFT_LEG;
 
-		if( !(m_fBodygroupState & DECAP_LEFT_ARM ) )
+		if (! (m_fBodygroupState & DECAP_LEFT_ARM))
 			m_fBodygroupState |= DECAP_RIGHT_LEG;
 
-		DevMsg( "[DECAP] Lost a leg or two\n" );
+		DevMsg("[DECAP] Lost a leg or two\n");
 	}
 
 	// Now spawn any limbs that are needed
@@ -3768,29 +3766,27 @@ void CFFPlayer::LimbDecapitation( const CTakeDamageInfo &info )
 	{
 		if (m_fBodygroupState & (1 << i))
 		{
-			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( CreateEntityByName( "ff_ragdoll" ) );
+			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * > (CreateEntityByName("ff_ragdoll"));
 
-			if ( !pRagdoll )
+			if (!pRagdoll)
 			{
 				DevWarning("Couldn't make limb ragdoll!\n");
 				return;
 			}
 
-			if ( pRagdoll )
+			if (pRagdoll)
 			{
 				pRagdoll->m_hPlayer = this;
 				pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
 				pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
-				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot()][i];
+				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot() ][i];
 				pRagdoll->m_nForceBone = m_nForceBone;
-				pRagdoll->m_vecForce = Vector(0,0,0);
+				pRagdoll->m_vecForce = Vector(0, 0, 0);
 				pRagdoll->m_fBodygroupState = 0;
 
 				// remove it after a time
-				pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-				pRagdoll->SetNextThink( gpGlobals->curtime + 30.0f );
-
-				//DevMsg("Limb ragdoll created %d\n", pRagdoll->m_nModelIndex);
+				pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
+				pRagdoll->SetNextThink(gpGlobals->curtime + 30.0f);
 			}
 		}
 	}
@@ -4176,6 +4172,9 @@ int CFFPlayer::GetNewDisguisedClass( void )
 	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Reset the model, skin and any flags
+//-----------------------------------------------------------------------------
 void CFFPlayer::ResetDisguise()
 {
 	if (!IsDisguised())
@@ -4192,6 +4191,9 @@ void CFFPlayer::ResetDisguise()
 	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE");
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Disguise has finished, so model and skin needs to be changed
+//-----------------------------------------------------------------------------
 void CFFPlayer::FinishDisguise()
 {
 	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_DISGUISED");
@@ -4286,6 +4288,10 @@ CFFMapGuide *CFFPlayer::FindMapGuide(string_t targetname)
 	return pMapGuide;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Move between map guide points.
+//			Currently no splining is done.
+//-----------------------------------------------------------------------------
 void CFFPlayer::MoveTowardsMapGuide()
 {
 	// Cancel now if we're no longer eligable
@@ -4414,6 +4420,8 @@ bool CFFPlayer::IsInNoBuild() const
 
 
 //-----------------------------------------------------------------------------
+// Purpose: Is the flashlight on or off, taken from HL2MP
+//-----------------------------------------------------------------------------
 int CFFPlayer::FlashlightIsOn()
 {
 	return IsEffectActive(EF_DIMLIGHT);
@@ -4421,6 +4429,7 @@ int CFFPlayer::FlashlightIsOn()
 
 
 //-----------------------------------------------------------------------------
+// Purpose: Turn on the flashlight, taken from HL2MP
 //-----------------------------------------------------------------------------
 void CFFPlayer::FlashlightTurnOn()
 {
@@ -4428,8 +4437,8 @@ void CFFPlayer::FlashlightTurnOn()
 	EmitSound("HL2Player.FlashLightOn");
 }
 
-
 //-----------------------------------------------------------------------------
+// Purpose: Turn off the flashlight, taken from HL2MP
 //-----------------------------------------------------------------------------
 void CFFPlayer::FlashlightTurnOff()
 {
@@ -4437,7 +4446,9 @@ void CFFPlayer::FlashlightTurnOff()
 	EmitSound("HL2Player.FlashLightOff");
 }
 
-// Bugfix for #0000585: Scouts don't undisguise Spies
+//-----------------------------------------------------------------------------
+// Purpose: Scouts and spys can uncover disguised spies (trackerid: #0000585)
+//-----------------------------------------------------------------------------
 void CFFPlayer::Touch(CBaseEntity *pOther)
 {
 	if (GetClassSlot() == CLASS_SCOUT || GetClassSlot() == CLASS_SPY)
@@ -4445,7 +4456,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 		CFFPlayer *ffplayer = dynamic_cast<CFFPlayer *> (pOther);
 
 		// Don't forget allies!
-		if (ffplayer && ffplayer->IsDisguised() && ( g_pGameRules->PlayerRelationship( this, ffplayer ) == GR_NOTTEAMMATE ) )
+		if (ffplayer && ffplayer->IsDisguised() && g_pGameRules->PlayerRelationship(this, ffplayer) == GR_NOTTEAMMATE)
 		{
 			ClientPrint(ffplayer, HUD_PRINTTALK, "#FF_SPY_BEENREVEALED");
 			ffplayer->ResetDisguise();
@@ -4459,8 +4470,10 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 
 	BaseClass::Touch(pOther);
 }
-
-// An instance switch. This should allow classes to be swapped without killing them.
+//-----------------------------------------------------------------------------
+// Purpose: An instance switch.
+//			This should allow classes to be swapped without killing them.
+//-----------------------------------------------------------------------------
 void CFFPlayer::InstaSwitch(int iClassNum)
 {
 	if (iClassNum < CLASS_SCOUT || iClassNum > CLASS_CIVILIAN)
@@ -4480,6 +4493,10 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 	SetupClassVariables();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Attempts to sabotage the entity the player is looking at.
+//			Handles both the timers and the actual sabotage itself.
+//-----------------------------------------------------------------------------
 void CFFPlayer::SpySabotageThink()
 {
 	if (m_flNextSpySabotageThink > gpGlobals->curtime)
@@ -4564,5 +4581,78 @@ void CFFPlayer::SpySabotageThink()
 		{
 			m_hSabotaging->Sabotage(this);
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add armour, ensure that armour type is reset
+//-----------------------------------------------------------------------------
+int CFFPlayer::AddArmor( int iAmount )
+{
+	// Boost up their armour type again
+	m_flArmorType = m_flBaseArmorType;
+
+	iAmount = min( iAmount, m_iMaxArmor - m_iArmor );
+	if (iAmount < 1)
+		return 0;
+
+	m_iArmor += iAmount;
+
+	return iAmount;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove armour, yadda yadda yadda. Moved out of the header file
+//-----------------------------------------------------------------------------
+int CFFPlayer::RemoveArmor( int iAmount )
+{
+	int iRemovedAmt = min( iAmount, m_iArmor );
+
+	m_iArmor = clamp( m_iArmor - iAmount, 0, m_iArmor );
+
+	return iRemovedAmt;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Reduce armour class to level below normal, this is only really
+//			used by the sabotaged dispenser
+//-----------------------------------------------------------------------------
+void CFFPlayer::ReduceArmorClass()
+{
+	if (m_flBaseArmorType == 0.8f)
+		m_flArmorType = 0.5f;
+	else if (m_flBaseArmorType == 0.5f)
+		m_flArmorType = 0.3f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Find all sentry guns that have been sabotaged by this player and 
+//			turn them on the enemy.
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SabotageSentry()
+{
+	CFFSentryGun *pSentry = NULL; 
+
+	// Detonate any pipes belonging to us
+	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	{
+		if (pSentry->m_flSabotageTime > gpGlobals->curtime && pSentry->m_hSaboteur) 
+			pSentry->MaliciousSabotage(this);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Find all dispensers that have been sabotaged by this player and 
+//			detonate them
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SabotageDispenser()
+{
+	CFFDispenser *pDispenser = NULL; 
+
+	// Detonate any pipes belonging to us
+	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	{
+		if (pDispenser->m_flSabotageTime > gpGlobals->curtime && pDispenser->m_hSaboteur) 
+			pDispenser->MaliciousSabotage(this);
 	}
 }

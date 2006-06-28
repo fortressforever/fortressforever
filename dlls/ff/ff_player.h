@@ -152,29 +152,14 @@ private:
 	IFFPlayerAnimState *m_PlayerAnimState;
 
 	// ---> FF class stuff (billdoor)
-	CNetworkVar(float, m_fArmorType);
+	CNetworkVar(float, m_flArmorType);
+	float m_flBaseArmorType;
 
 	// BEG: Added by Mulchman for armor stuff
 public:
-	int AddArmor( int iAmount )
-	{
-		iAmount = min( iAmount, m_iMaxArmor - m_iArmor );
-		if (iAmount < 1)
-			return 0;
-
-		//m_iArmor.GetForModify() += iAmount;
-		m_iArmor += iAmount;
-
-		return iAmount;
-	}
-	int RemoveArmor( int iAmount )
-	{
-		int iRemovedAmt = min( iAmount, m_iArmor );
-
-		m_iArmor = clamp( m_iArmor - iAmount, 0, m_iArmor );
-
-		return iRemovedAmt;
-	}
+	int		AddArmor( int iAmount );
+	int		RemoveArmor( int iAmount );
+	void	ReduceArmorClass();	// Bit of a one hit wonder, this
 
 	int GetMaxShells( void ) const { return GetFFClassData().m_iMaxShells; }
 	int GetMaxCells( void ) const { return GetFFClassData().m_iMaxCells; }
@@ -265,6 +250,9 @@ public:
 	void Command_Discard( void );	
 	void Command_SaveMe( void );	
 	void Command_Disguise();
+
+	void Command_SabotageSentry();
+	void Command_SabotageDispenser();
 	// ---> end of FF server-side player command handlers
 
 	
