@@ -63,6 +63,11 @@
 #include "weapon_physcannon.h"
 #endif
 
+// For the upcast in CommitSuicide
+#include "ff_player.h"
+// Forward declare
+class CFFPlayer;
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -4525,7 +4530,14 @@ void CBasePlayer::CommitSuicide()
 
 	// have the player kill themself
 	m_iHealth = 0;
-	Event_Killed( CTakeDamageInfo( NULL, this, 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
+
+	CFFPlayer *pPlayer = ToFFPlayer( this );
+	if( pPlayer && pPlayer->GetSpecialInfectedDeath() && pPlayer->IsInfected() && pPlayer->GetInfector() )
+	{
+		Event_Killed( CTakeDamageInfo( pPlayer->GetInfector(), pPlayer->GetInfector(), 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
+	}
+	else
+		Event_Killed( CTakeDamageInfo( NULL, this, 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
 	Event_Dying();
 }
 

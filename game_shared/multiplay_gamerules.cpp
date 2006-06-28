@@ -559,6 +559,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 		if( pKiller->Classify() == CLASS_SENTRYGUN )
 			pInflictor = pKiller;
 
+		/*
 		// HACK: Check for special infection deaths
 		if( pVictim->IsPlayer() )
 		{
@@ -571,6 +572,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 				pKiller = pFFPlayer->GetInfector();
 			}
 		}
+		*/
 
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 
