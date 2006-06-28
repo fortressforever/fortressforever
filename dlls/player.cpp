@@ -4531,6 +4531,7 @@ void CBasePlayer::CommitSuicide()
 	// have the player kill themself
 	m_iHealth = 0;
 
+	// Bug #0000700: people with infection should give medic kill if they suicide
 	CFFPlayer *pPlayer = ToFFPlayer( this );
 	if( pPlayer && pPlayer->GetSpecialInfectedDeath() && pPlayer->IsInfected() && pPlayer->GetInfector() )
 	{

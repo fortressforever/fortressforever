@@ -1882,7 +1882,13 @@ void CFFPlayer::KillPlayer( void )
 
 	if (IsAlive())
 	{
-		Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
+		// Bug #0000700: people with infection should give medic kill if they suicide
+		if( GetSpecialInfectedDeath() && IsInfected() && GetInfector() )
+		{
+			Event_Killed( CTakeDamageInfo( GetInfector(), GetInfector(), 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
+		}
+		else
+			Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
 		Event_Dying();
 	}
 	else
