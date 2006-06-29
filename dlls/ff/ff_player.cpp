@@ -993,6 +993,9 @@ void CFFPlayer::SetupClassVariables()
 		CBaseCombatWeapon *pWeapon = GetWeaponForSlot(iSpawnSlot - 1);
 		Weapon_Switch(pWeapon);
 	}
+
+	// Load class configs
+	engine->ClientCommand(edict(), "exec %.10s.cfg", pPlayerClassInfo.m_szClassName);
 }
 
 void CFFPlayer::InitialSpawn( void )
