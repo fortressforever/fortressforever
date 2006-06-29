@@ -14,6 +14,7 @@
 #define FF_STATSLOG_H
 
 #include "ff_statdefs.h"
+#include "ff_weapon_base.h"
 
 // Forward declarations
 class CFFPlayer;
@@ -28,9 +29,14 @@ class CPlayerStats
 {
 public:
 	// Set to public for now
-	int		m_iCounters[STAT_MAX];
-	float	m_flTimers[TIMER_MAX];
-	bool	m_fTimerStates[TIMER_MAX];
+	unsigned short	m_iCounters[STAT_MAX];
+	float			m_flTimers[TIMER_MAX];
+	bool			m_fTimerStates[TIMER_MAX];
+
+	// This could be optimised to work with slots instead since each 
+	// class only has a few weapons
+	unsigned short	m_nWpnFire[FF_WEAPON_MAX];
+	unsigned short	m_nWpnHit[FF_WEAPON_MAX];
 
 	// Hold player information
 	int		m_iPlayerUid;
@@ -76,6 +82,9 @@ public:
 
 	void AddToCount(int playerindex, StatisticType stat, int i = 1);
 	void AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i = 1);
+
+	void AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i = 1);
+	void AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i = 1);
 
 	void SetTimer(int playerindex, TimerType timer, bool on);
 

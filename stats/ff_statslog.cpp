@@ -7,7 +7,13 @@
 	file ext:	cpp
 	author:		Gavin "Mirvin_Monkey" Bramhill
 	
-	purpose:	
+	purpose:	Accumulate player class stats throughout a map.
+				This has been designed to use as little lookup time as
+				possible since it will be called a lot.
+
+				When this is received by the stats server it should work
+				out the average skill of all the people on the server and
+				use that to weight how many FP are given.
 *********************************************************************/
 
 #include "cbase.h"
@@ -192,6 +198,32 @@ void CFFStatsLogging::AddToCount(int playerindex, StatisticType stat, int i /* =
 }
 
 /**
+* Add a count to weapons
+*
+* @param playerindex Current player
+* @param wpn Weapon type
+* @param i Increment amount
+*/
+void CFFStatsLogging::AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
+{
+	if (m_pCurrentPlayers[playerindex]) 
+		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
+}
+
+/**
+* Add a count to hits with weapons
+*
+* @param playerindex Current player
+* @param wpn Weapon type
+* @param i Increment amount
+*/
+void CFFStatsLogging::AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
+{
+	if (m_pCurrentPlayers[playerindex]) 
+		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
+}
+
+/**
 * Turn a timer on or off
 *
 * @param playerindex Current player
@@ -277,6 +309,14 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 	for (i = 0; i < TIMER_MAX; i++)
 		buf.Add("%s %d\n", g_pszTimerStrings[i], STAT_MAX + i);
 
+	// Loop through defining all weapon stats too
+	// FORMAT: WEAPONSTATNAME WEAPONSTATID
+	for (i = 0; i < FF_WEAPON_MAX; i++)
+	{
+		buf.Add("fired_%s %d\n", s_WeaponAliasInfo[i], STAT_MAX + TIMER_MAX + (2 * i));
+		buf.Add("hit_%s %d\n", s_WeaponAliasInfo[i], STAT_MAX + TIMER_MAX + (2 * i) + 1);
+	}
+
 	buf.Add("weapondef\n");
 
 	// Loop through defining all the weapon names
@@ -298,7 +338,7 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 			if (m_pPlayerStats[i]->m_iCounters[j] == 0) 
 				continue;
 
-			buf.Add("%d %d %d %d\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, m_pPlayerStats[i]->m_iCounters[j]);
+			buf.Add("%d %d %d %hu\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, m_pPlayerStats[i]->m_iCounters[j]);
 		}
 
 		// Then print all timer stats. As integers or floats?
@@ -308,7 +348,7 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 			if (m_pPlayerStats[i]->m_flTimers[j] == 0)
 				continue;
 
-			buf.Add("%d %d %d %d\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, (int) m_pPlayerStats[i]->m_flTimers[j]);
+			buf.Add("%d %d %d %hu\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, (unsigned short) m_pPlayerStats[i]->m_flTimers[j]);
 		}
 	}
 }
