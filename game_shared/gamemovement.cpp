@@ -13,8 +13,6 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "decals.h"
 
-extern float g_flLastJump;		// |-- Mirv: [TEST] Check jump times
-
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 #include "hl_movedata.h"
 #endif
@@ -3265,12 +3263,6 @@ void CGameMovement::CategorizePosition( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::CheckFalling( void )
 {
-	if( player->GetGroundEntity() != NULL && g_flLastJump != 0 )
-	{
-		//DevMsg( "Landed in %fs (grav multiplier: %f)\n", gpGlobals->curtime - g_flLastJump, player->GetGravity() );
-		g_flLastJump = 0;
-	}
-
 	if ( player->GetGroundEntity() != NULL &&
 		 !IsDead() &&
 		 player->m_Local.m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHOLD )

@@ -17,12 +17,10 @@
 #include "ff_shareddefs.h"
 #include "in_buttons.h"
 #include "movevars_shared.h"
-#include "ff_mapguide.h"		// |-- Mirv: Map guides
+#include "ff_mapguide.h"
 
 #define	STOP_EPSILON		0.1
 #define	MAX_CLIP_PLANES		5
-
-float g_flLastJump = 0;		// |-- Mirv: [TEST] Get jump times
 
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
@@ -167,39 +165,33 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// In the air now.
 	SetGroundEntity( (CBaseEntity *)NULL );
 
-	// BHOP CAP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//DevMsg("Velocities: %.2f %.2f %.2f\n", mv->m_vecVelocity[0], mv->m_vecVelocity[1], mv->m_vecVelocity[2]);
+	// This following dynamic cap is documented here:
+	//		http://www.madabouthats.org/code-tf2/viewtopic.php?t=2360
 
-	const float baseline = 1.9f * mv->m_flMaxSpeed;
-	const float cap = 2.0f * mv->m_flMaxSpeed;
+	const float baseline = /*1.9f*/ 1.52f * mv->m_flMaxSpeed;
+	const float cap = /*2.0f*/ 1.6f * mv->m_flMaxSpeed;
 	const float pcfactor = 0.5f;
 	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
 	
 	if (speed > cap)
 	{
-		float applied_cap = (speed - cap /*baseline*/) * pcfactor + baseline;
+		float applied_cap = (speed - cap) * pcfactor + baseline;
 		float multi = applied_cap / speed;
 
 		mv->m_vecVelocity[0] *= multi;
 		mv->m_vecVelocity[1] *= multi;
-		//mv->m_vecVelocity[2] *= multi;
 
-		//DevMsg("speed: %.2f applied_cap: %.2f multi: %.2f\n", speed, applied_cap, multi);
+		Assert(multi <= 1.0f);
 	}
-	//else
-		//DevMsg("speed: %.2f\n", speed);
 
-	// --> Mirv: Jump sounds
+	// Mirv: Play proper jump sounds
 	//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0, true );
 	CFFPlayer *FFPlayer = dynamic_cast<CFFPlayer *> (player);
-	FFPlayer->PlayJumpSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0 );
-	// <-- Mirv: Jump sounds
+	FFPlayer->PlayJumpSound(mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0);
 
-	g_flLastJump = gpGlobals->curtime;		// |-- Mirv: [TEST] Get jump time
-
+	// Mirv: This fixes the jump animation
 	//MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
-	// This fixes the jump animation
-	ffplayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
+	ffplayer->m_PlayerAnimState->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
 
 	float fGroundFactor = 1.0f;
 	if (player->m_pSurfaceData)
@@ -210,67 +202,45 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
 	//float fMul = 268.3281573;
-	float fMul = sqrt(2.0f * 800.0f * 45.1f);
+	float fMul = 268.6261342; //sqrt(2.0f * 800.0f * 45.1f);
 
 	trace_t pm;
 
-	Vector vecStart = mv->m_vecAbsOrigin + Vector( 0, 0, GetPlayerMins()[2] + 1.0f );
-	Vector vecStop = vecStart - Vector( 0, 0, 16.0f );
+	Vector vecStart = mv->m_vecAbsOrigin + Vector(0, 0, GetPlayerMins()[2] + 1.0f);
+	Vector vecStop = vecStart - Vector(0, 0, 16.0f);
 	
-	TracePlayerBBox( vecStart, vecStop, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+	TracePlayerBBox(vecStart, vecStop, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm);
 
 	// Found the floor
-	if( pm.fraction != 1.0f )
+	if(pm.fraction != 1.0f)
 	{
 		// Take the lateral velocity
-		Vector vecVelocity = mv->m_vecVelocity * Vector( 1.0f, 1.0f, 0.0f );
+		Vector vecVelocity = mv->m_vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 
 		float flHorizontalSpeed = vecVelocity.Length();
 
 		// They have to be at least moving a bit
-		if( flHorizontalSpeed > 5.0f )
+		if (flHorizontalSpeed > 5.0f)
 		{
 			vecVelocity /= flHorizontalSpeed;
 
-            float flDotProduct = DotProduct( vecVelocity, pm.plane.normal );
+            float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
 
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
-			// Changed to 0.1f to make it a bit less trimpy on only slightly uneven ground
-			if( flDotProduct < /*0*/ -0.15f || flDotProduct > 0.15f )
+			// Changed to 0.15f to make it a bit less trimpy on only slightly uneven ground
+			if (flDotProduct < -0.15f || flDotProduct > 0.15f)
 			{
 				// This is one way to do it
-				// UNDONE: Reverted back to the original way for now
 				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
 
-				// This is another which'll give some different height results
-				//Vector reflect = mv->m_vecVelocity + ( -2.0f * pm.plane.normal * DotProduct( mv->m_vecVelocity, pm.plane.normal ) );
-
-				//float flSpeedAmount = clamp( ( flLength - 400.0f ) / 800.0f, 0, 1.0f );
-				
+				// This is another that'll give some different height results
+				// UNDONE: Reverted back to the original way for now
+				//Vector reflect = mv->m_vecVelocity + (-2.0f * pm.plane.normal * DotProduct(mv->m_vecVelocity, pm.plane.normal));
+				//float flSpeedAmount = clamp((flLength - 400.0f) / 800.0f, 0, 1.0f);
 				//fMul += reflect.z * flSpeedAmount;
-
-#ifdef CLIENT_DLL
-				//Warning( "[CLIENT] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
-#else
-				//Warning( "[SERVER] flDotProduct: %.2f, reflect.z: %.2f, flHorizSpeed: %.2f\n", flDotProduct, 0.0f /*reflect.z*/, flHorizontalSpeed );
-#endif
-
-#ifdef CLIENT_DLL
-				//DevMsg( "[CLIENT] DP: %f, Adding on %f\n", flDotProduct, fMul - FF_MUL_CONSTANT );
-#else
-				//DevMsg( "[SERVER] DP: %f, Adding on %f\n", flDotProduct, fMul - FF_MUL_CONSTANT );
-#endif
 			}
-			//else
-				//DevMsg( "[BOTH] Not sloping enough relative to motion\n" );
 		}
-		//else
-			//DevMsg( "[BOTH] Lateral speed too low!\n" );
 	}
-#ifdef CLIENT_DLL
-	//else
-		//DevMsg( "Couldn't find ground\n" );
-#endif*/
 	// <-- Mirv: Trimp code v2.0!
 
 	//// Acclerate upward
@@ -297,8 +267,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 		mv->m_vecVelocity[2] = 0;
 
 	mv->m_vecVelocity[2] += fMul;
-
-	//DevMsg( "mv->m_vecVelocity[2] = %f\n", mv->m_vecVelocity[2] );
 	// <-- Mirv: Add on new velocity
 
 	FinishGravity();
