@@ -725,6 +725,15 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_OneWayTransition = false;
 
 	entsys.RunPredicates(NULL, NULL, "startup");
+
+	// --> Mirv: Automatically execute map config
+	char szExecMapConfig[128];
+	Q_snprintf(szExecMapConfig, 127, "exec %.20s.cfg\n", pMapName);
+
+	engine->ServerCommand(szExecMapConfig);
+	engine->ServerExecute();
+	// <-- Mirv
+
 	return true;
 }
 
