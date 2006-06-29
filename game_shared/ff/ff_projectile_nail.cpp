@@ -21,6 +21,10 @@
 
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
+ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED, "Nail speed");
+ConVar ffdev_nail_bbox("ffdev_nail_bbox", "3.0", FCVAR_REPLICATED, "Nail bbox");
+
+
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
 #else
@@ -53,7 +57,7 @@ PRECACHE_WEAPON_REGISTER(nail);
 		// Setup
 		SetModel(NAIL_MODEL);
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-		SetSize(-Vector(1, 1, 1), Vector(1, 1, 1));
+		SetSize(-Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat(), Vector(1.0f, 1.0f, 1.0f) * ffdev_nail_bbox.GetFloat());
 		SetSolid(SOLID_BBOX);
 		SetGravity(0.01f);
 		SetEffects(EF_NODRAW);
@@ -170,8 +174,10 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);
 
+	vecForward *= /*iSpeed*/ ffdev_nail_speed.GetFloat();
+
 	// Set the speed and the initial transmitted velocity
-	pNail->SetAbsVelocity(vecForward * iSpeed);
+	pNail->SetAbsVelocity(vecForward);
 
 	CEffectData data;
 	data.m_vOrigin = vecOrigin;
@@ -180,7 +186,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const 
 	DispatchEffect("Projectile_Nail", data);
 
 #ifdef GAME_DLL
-	pNail->SetupInitialTransmittedVelocity(vecForward * iSpeed);
+	pNail->SetupInitialTransmittedVelocity(vecForward);
 #endif
 
 	pNail->m_flDamage = iDamage;
