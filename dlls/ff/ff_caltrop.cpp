@@ -16,7 +16,9 @@
 #include "ff_grenade_base.h"
 #include "ff_player.h"
 
-#define CALTROP_MODEL "models/grenades/caltrop/caltrop.mdl"
+#define CALTROPGRENADE_MODEL_CALTROP	"models/grenades/caltrop/caltrop.mdl"
+#define CALTROPGRENADE_MODEL_GIB1		"models/grenades/caltrop/caltrop_holster_gib1.mdl"
+#define CALTROPGRENADE_MODEL_GIB2		"models/grenades/caltrop/caltrop_holster_gib2.mdl"
 
 ConVar caltrop_life("ffdev_caltrop_life","5.0",0,"How long caltrops are alive.");
 ConVar caltrop_dmg("ffdev_caltrop_dmg","9.0",0,"How much damage a single caltrop deals.");
@@ -55,7 +57,7 @@ CFFCaltrop::CFFCaltrop()
 void CFFCaltrop::Precache ( void )
 {
 	DevMsg("[Grenade Debug] CFFCaltrop::Precache\n");
-	PrecacheModel( CALTROP_MODEL );
+	PrecacheModel( CALTROPGRENADE_MODEL_CALTROP );
 	BaseClass::Precache();
 }
 
@@ -65,7 +67,7 @@ void CFFCaltrop::Spawn( void )
 	m_flSpawnTime = gpGlobals->curtime;
 	BaseClass::Spawn();
 
-	SetModel ( CALTROP_MODEL );
+	SetModel ( CALTROPGRENADE_MODEL_CALTROP );
 	SetAbsAngles( QAngle( 0, 0, 0 ) );
 	SetSolidFlags( FSOLID_TRIGGER | FSOLID_NOT_STANDABLE );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );

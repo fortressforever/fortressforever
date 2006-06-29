@@ -16,7 +16,7 @@
 #include "ff_grenade_base.h"
 #include "ff_utils.h"
 
-#define CALTROPGRENADE_MODEL "models/weapons/w_eq_fraggrenade_thrown.mdl"
+#define CALTROPGRENADE_MODEL_HOLSTER	"models/grenades/caltrop/caltrop_holster.mdl"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeCaltrop C_FFGrenadeCaltrop
@@ -82,7 +82,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 	void CFFGrenadeCaltrop::Spawn( void )
 	{
 		DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Spawn\n");
-		SetModel( CALTROPGRENADE_MODEL );
+		SetModel( CALTROPGRENADE_MODEL_HOLSTER );
 		BaseClass::Spawn();
 	}
 	void CFFGrenadeCaltrop::Explode(trace_t *pTrace, int bitsDamageType)
@@ -139,6 +139,8 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 				pCaltrop->SetGravity( GetGrenadeGravity() + 0.2f );
 				pCaltrop->SetFriction( GetGrenadeFriction() );
 			}
+
+			// TODO: Spawn the two gibs
 		}
 
 		CFFGrenadeBase::PostExplode();
@@ -148,6 +150,6 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 void CFFGrenadeCaltrop::Precache()
 {
 	DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Precache\n");
-	PrecacheModel( CALTROPGRENADE_MODEL );
+	PrecacheModel( CALTROPGRENADE_MODEL_HOLSTER );
 	BaseClass::Precache();
 }
