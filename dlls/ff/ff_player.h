@@ -466,7 +466,7 @@ public:
 	void SpyFeign( void );
 	void SpySilentFeign( void );
 
-	int Heal(float);
+	int Heal(CFFPlayer *, float);
 
 	// Keeping these seperate for now
 	CNetworkHandle( CFFMapGuide, m_hNextMapGuide );

@@ -13,6 +13,8 @@
 #include "cbase.h"
 #include "ff_statslog.h"
 #include "ff_socks.h"
+#include "ff_weapon_base.h"
+#include "ff_player.h"
 
 #include <list>
 #include <algorithm>
@@ -24,6 +26,39 @@ int CPlayerStats::refcount = 0;
 
 // Singleton for this.
 CFFStatsLogging g_StatsLog;
+
+// Strings that the PHP recognise the stats by
+const char *g_pszStatStrings[] =
+{
+	"kills",			// STAT_KILLS
+	"teamkills",		// STAT_TEAMKILLS
+	"deaths",			// STAT_DEATHS
+	"roundwins",		// STAT_ROUNDWINS
+	"rounddraws",		// STAT_ROUNDDRAWS
+	"roundlosses",		// STAT_ROUNDLOSSES
+	"score",			// STAT_SCORE
+	"teamfor",			// STAT_TEAMFOR
+	"teamagainst",		// STAT_TEAMAGAINST
+	"heals",			// STAT_HEALS
+	"criticalheals",	// STAT_CRITICALHEALS
+	"hphealed",			// STAT_HPHEALED
+	"cures",			// STAT_CURES
+	"infections",		// STAT_INFECTIONS
+	"infectionspreads", // STAT_INFECTIONSPREADS
+	"infectionkills",	// STAT_INFECTIONKILLS
+	"concjumps",		// STAT_CONCJUMPS
+	"concdistance",		// STAT_CONCDISTANCE
+	"hangtime",			// STAT_HANGTIME
+};
+
+// More strings that the php recognises stats by
+const char *g_pszTimerStrings[] =
+{
+	"played",			// STAT_KILLS
+};
+
+// FF weapon names
+extern const char *s_WeaponAliasInfo[];
 
 /**
 * Constructor
@@ -134,6 +169,18 @@ void CFFStatsLogging::SetClass(int playerindex, int classid)
 /**
 * Add a count to a current player
 *
+* @param player Current player
+* @param stat Statistic type
+* @param i Increment amount
+*/
+void CFFStatsLogging::AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i /* = 1 */) 
+{
+	AddToCount(pPlayer->entindex(), stat, i);
+}
+
+/**
+* Add a count to a current player
+*
 * @param playerindex Current player
 * @param stat Statistic type
 * @param i Increment amount
@@ -184,7 +231,9 @@ const char *CFFStatsLogging::GetTimestampString()
 void CFFStatsLogging::Serialise(char *buffer, int buffer_size) 
 {
 	CQuickBuffer buf(buffer, buffer_size);
+	int i, j;
 
+	// Basic header information
 	buf.Add("login ff-test\n");
 	buf.Add("auth %s\n", GetAuthString());
 	buf.Add("date %s\n", GetTimestampString());
@@ -194,12 +243,14 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 	buf.Add("redscore %d\n", 0);
 	buf.Add("yellowscore %d\n", 0);
 	buf.Add("greenscore %d\n", 0);
-	buf.Add("players\n");
+	buf.Add("playerdef\n");
 
 	std::list<int> i_Done;
 	std::list<int>::iterator i_Find;
 
-	for (int i = 0; i < m_nPlayers; i++) 
+	// Loop through defining all players
+	// Format: STEAMID NAME UNIQUEID
+	for (i = 0; i < m_nPlayers; i++) 
 	{
 		if (!m_pPlayerStats[i]) 
 			continue;
@@ -214,20 +265,50 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 		}
 	}
 
-	buf.Add("stats\n");
+	buf.Add("statdef\n");
 
-	for (int i = 0; i < m_nPlayers; i++) 
+	// Loop through defining all the stats
+	// FORMAT: STATNAME STATID
+	for (i = 0; i < STAT_MAX; i++)
+		buf.Add("%s %d\n", g_pszStatStrings[i], i);
+
+	// Loop through defining all timers and include these as stats too
+	// FORMAT: TIMERNAME TIMERID+STAT_MAX
+	for (i = 0; i < TIMER_MAX; i++)
+		buf.Add("%s %d\n", g_pszTimerStrings[i], STAT_MAX + i);
+
+	buf.Add("weapondef\n");
+
+	// Loop through defining all the weapon names
+	// FORMAT: WEAPONNAME WEAPID
+	for (i = 0; i < FF_WEAPON_MAX; i++)
+		buf.Add("%s %d\n", s_WeaponAliasInfo[i], i);
+
+	// Loop through each player/class combination and print the changed stats
+	// FORMAT: UNIQUEID CLASSID STATID STATVALUE
+	for (i = 0; i < m_nPlayers; i++) 
 	{
 		if (!m_pPlayerStats[i]) 
 			continue;
 
-		for (int j = 0; j < STAT_MAX; j++) 
+		// First print all the normal stats
+		for (j = 0; j < STAT_MAX; j++) 
 		{
 			// Don't send any unchanged values
 			if (m_pPlayerStats[i]->m_iCounters[j] == 0) 
 				continue;
 
 			buf.Add("%d %d %d %d\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, m_pPlayerStats[i]->m_iCounters[j]);
+		}
+
+		// Then print all timer stats. As integers or floats?
+		for (j = 0; j < TIMER_MAX; j++)
+		{
+			// Don't send any unchanged values
+			if (m_pPlayerStats[i]->m_flTimers[j] == 0)
+				continue;
+
+			buf.Add("%d %d %d %d\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, (int) m_pPlayerStats[i]->m_flTimers[j]);
 		}
 	}
 }

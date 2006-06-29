@@ -15,6 +15,9 @@
 
 #include "ff_statdefs.h"
 
+// Forward declarations
+class CFFPlayer;
+
 /**
 * Stats information
 *
@@ -72,6 +75,8 @@ public:
 	void SetClass(int playerindex, int classid);
 
 	void AddToCount(int playerindex, StatisticType stat, int i = 1);
+	void AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i = 1);
+
 	void SetTimer(int playerindex, TimerType timer, bool on);
 
 	void Serialise(char *buffer, int buffer_size);
