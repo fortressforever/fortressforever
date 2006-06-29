@@ -567,6 +567,8 @@ public:
 	float		m_flNextSpySabotageThink;
 	float		m_flSpySabotageFinish;
 	CHandle<CFFBuildableObject>	m_hSabotaging;
+
+	CBaseCombatWeapon *GetWeaponForSlot(int iSlot);
 };
 
 

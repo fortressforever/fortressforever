@@ -984,6 +984,15 @@ void CFFPlayer::SetupClassVariables()
 
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 	}
+
+	// Select the correct weapon
+	int iSpawnSlot = atoi(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnslot"));
+
+	if (iSpawnSlot > 0 && iSpawnSlot <= MAX_WEAPON_SLOTS)
+	{
+		CBaseCombatWeapon *pWeapon = GetWeaponForSlot(iSpawnSlot - 1);
+		Weapon_Switch(pWeapon);
+	}
 }
 
 void CFFPlayer::InitialSpawn( void )
@@ -4609,6 +4618,24 @@ void CFFPlayer::SpySabotageThink()
 			m_hSabotaging->Sabotage(this);
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Return the weapon in a slot
+//-----------------------------------------------------------------------------
+CBaseCombatWeapon *CFFPlayer::GetWeaponForSlot(int iSlot)
+{
+	Assert((iSlot >= 0) && (iSlot < MAX_WEAPON_SLOTS));
+
+	for (int iWeap = 0; iWeap < MAX_WEAPONS; iWeap++)
+	{
+		CBaseCombatWeapon *pWeapon = GetWeapon(iWeap);
+
+		if (pWeapon && pWeapon->GetSlot() == iSlot)
+			return pWeapon;
+	}
+
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
