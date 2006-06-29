@@ -1091,8 +1091,20 @@ void CFFPlayer::SpySilentFeign( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
-	// Stats engine test!
-	g_StatsLog.AddToCount(entindex(), STAT_DEATHS);
+	// Log the death to the stats engine
+	g_StatsLog.AddToCount(this, STAT_DEATHS);
+
+	// TODO: Take SGs into account here?
+	CFFPlayer *pKiller = (CFFPlayer *) info.GetAttacker();
+	
+	// Log the correct stat for the killer
+	if (pKiller)
+	{
+		if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
+			g_StatsLog.AddToCount(pKiller, STAT_TEAMKILLS);
+		else
+			g_StatsLog.AddToCount(pKiller, STAT_KILLS);
+	}
 
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
@@ -3117,6 +3129,8 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		m_iInfectedTeam = pInfector->GetTeamNumber();
 
 		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
+
+		g_StatsLog.AddToCount(pInfector, STAT_INFECTIONS, 1);
 	}
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
@@ -3133,6 +3147,9 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 		// credit the curer with a score
 		pCurer->IncrementFragCount( 1 );
+
+		// Log this in the stats
+		g_StatsLog.AddToCount(pCurer, STAT_CURES, 1);
 	}
 
 	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
@@ -3927,7 +3944,7 @@ void CFFPlayer::Extinguish( void )
 //-----------------------------------------------------------------------------
 // Purpose: Heal player above their maximum
 //-----------------------------------------------------------------------------
-int CFFPlayer::Heal( float flHealth )
+int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 {
 	if (!edict() || m_takedamage < DAMAGE_YES)
 		return 0;
@@ -3936,12 +3953,22 @@ int CFFPlayer::Heal( float flHealth )
 	if( ( float )m_iHealth >= ( float )( m_iMaxHealth * 1.5f ) )
 		return 0;
 
+	int iOriginalHP = m_iHealth;
+
 	// Also medpack boosts health to maximum + then carries on to 150%
 	if( m_iHealth < m_iMaxHealth )
 		m_iHealth = m_iMaxHealth;
 	else
 		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
+
+	// Log the added health
+	g_StatsLog.AddToCount(pHealer, STAT_HEALS, 1);
+	g_StatsLog.AddToCount(pHealer, STAT_HPHEALED, m_iHealth - iOriginalHP);
+	
+	// Critical heal is when they are <= 15hp
+	if (iOriginalHP <= 15)
+		g_StatsLog.AddToCount(pHealer, STAT_CRITICALHEALS, 1);
 
 	if (m_bInfected)
 	{

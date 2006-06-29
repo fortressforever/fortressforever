@@ -26,8 +26,8 @@
 	#include "eventqueue.h"
 #endif
 
-// All our weapons
-static const char * s_WeaponAliasInfo[] = 
+// All our weapons (no longer static)
+const char *s_WeaponAliasInfo[] = 
 {
 	"none", 			// FF_WEAPON_NONE
 

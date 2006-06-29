@@ -14,11 +14,12 @@ purpose:
 #undef STAT_MAX
 #undef TIMER_MAX
 
+// Must update ff_statslog.cpp too
 enum StatisticType
 {
-	STAT_KILLS = 0, 
-	STAT_TEAMKILLS, 
-	STAT_DEATHS, 
+	STAT_KILLS = 0,			// CFFPlayer::Event_Killed [ff_player.cpp]
+	STAT_TEAMKILLS,			// CFFPlayer::Event_Killed [ff_player.cpp]
+	STAT_DEATHS,			// CFFPlayer::Event_Killed [ff_player.cpp]
 	STAT_ROUNDWINS, 
 	STAT_ROUNDDRAWS, 
 	STAT_ROUNDLOSSES, 
@@ -26,11 +27,11 @@ enum StatisticType
 	STAT_TEAMFOR, 
 	STAT_TEAMAGAINST, 
 
-	STAT_HEALS, 
-	STAT_CRITICALHEALS, 
-	STAT_HPHEALED, 
-	STAT_CURES, 
-	STAT_INFECTIONS, 
+	STAT_HEALS,				// CFFPlayer::Heal [ff_player.cpp]
+	STAT_CRITICALHEALS,		// CFFPlayer::Heal [ff_player.cpp]
+	STAT_HPHEALED,			// CFFPlayer::Heal [ff_player.cpp]
+	STAT_CURES,				// CFFPlayer::Cure [ff_player.cpp]
+	STAT_INFECTIONS,		// CFFPlayer::Infect [ff_player.cpp]
 	STAT_INFECTIONSPREADS, 
 	STAT_INFECTIONKILLS, 
 	STAT_CONCJUMPS, 

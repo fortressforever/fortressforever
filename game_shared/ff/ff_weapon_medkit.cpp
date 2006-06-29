@@ -118,7 +118,7 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 
 #ifdef GAME_DLL
 			pTarget->Cure(pPlayer);
-			pTarget->Heal(5);		// |-- Mirv: Heal them by 5hp
+			pTarget->Heal(pPlayer, 5);		// |-- Mirv: Heal them by 5hp
 #endif
 
 			// Heal sound. Add a delay before next sound can be played too
