@@ -900,52 +900,48 @@ int CClientScoreBoardDialog::FindPlayerIndexForItemID( int iItemID )
     return -1;
 }
 
-void CClientScoreBoardDialog::OnItemSelected( KeyValues *data )
+//-----------------------------------------------------------------------------
+// Purpose: Scroll between different block modes
+//-----------------------------------------------------------------------------
+void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 {  
-	int iRowId = data->GetInt( "itemID" );
-	int playerIndex = FindPlayerIndexForItemID( iRowId );
+	int iRowId = data->GetInt("itemID");
+	int playerIndex = FindPlayerIndexForItemID(iRowId);
 
-	if( playerIndex == -1 )
+	// Don't change local player info
+	if (playerIndex <= 1)
 		return;
 
-	// --> Mirv: New voice & text blocking code
+	// If player is not audible, only toggle text block
+	if (!GetClientVoiceMgr()->IsPlayerAudible(playerIndex))
+	{
+		g_fBlockedStatus[playerIndex] = !g_fBlockedStatus[playerIndex];
+		return;
+	}
 
-	//if( GetClientVoiceMgr( )->GetSpeakerStatus( playerIndex ) != CVoiceStatus::VOICE_BANNED )
-
-	// Interesting, doing this toggles it. so 
-	//	GetClientVoiceMgr( )->SetPlayerBlockedState( playerIndex, true );
-	//else 
-	//	GetClientVoiceMgr( )->SetPlayerBlockedState( playerIndex, false );
-
-	bool fVBlock = GetClientVoiceMgr()->GetSpeakerStatus( playerIndex ) == CVoiceStatus::VOICE_BANNED;
-	bool fTBlock = g_fBlockedStatus[ playerIndex ];
-
-	//DevMsg( "VBlock: %s, TBlock: %s -- ", fVBlock ? "BLOCKED" : "fine", fTBlock ? "BLOCKED" : "fine" );
+	// Get some current states
+	bool fVBlock = GetClientVoiceMgr()->GetSpeakerStatus(playerIndex) == CVoiceStatus::VOICE_BANNED;
+	bool fTBlock = g_fBlockedStatus[playerIndex];
 
 	// We have everything blocked, so go onto nothing blocked
-	if( fVBlock && fTBlock )
+	if (fVBlock && fTBlock)
 	{
-		//DevMsg( "Blocked: Nothing\n" );
-		g_fBlockedStatus[  playerIndex ] = false;
-		GetClientVoiceMgr()->SetPlayerBlockedState( playerIndex, false );
+		g_fBlockedStatus[playerIndex] = false;
+		GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, false);
 	}
 	// We just have voice blocked, so go onto everything blocked
-	else if( fVBlock )
+	else if (fVBlock)
 	{
-		//DevMsg( "Blocked: Everything\n" );
-		g_fBlockedStatus[ playerIndex ] = true;
-		GetClientVoiceMgr()->SetPlayerBlockedState( playerIndex, true );
+		g_fBlockedStatus[playerIndex] = true;
+		GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, true);
 	}
 	// We have nothing blocked, so just block voice
 	else
 	{
-		//DevMsg( "Blocked: Voice\n" );
-		g_fBlockedStatus[ playerIndex ] = false;
-		GetClientVoiceMgr()->SetPlayerBlockedState( playerIndex, true );
+		g_fBlockedStatus[playerIndex] = false;
+		GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, true);
 	}
 
 	// Update right away to show voice icon change
 	Update();
-
-	// <-- Mirv: New voice & text blocking code
 }
