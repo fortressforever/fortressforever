@@ -39,6 +39,10 @@ public:
 	virtual void		Fire();
 	virtual bool		Reload();
 	virtual bool		SendWeaponAnim(int iActivity);
+	virtual bool		Holster(CBaseCombatWeapon *pSwitchingTo);
+
+	void				Synchronise();
+
 	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_GRENADELAUNCHER; }
 
 private:
@@ -69,6 +73,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_grenadelauncher);
 //----------------------------------------------------------------------------
 CFFWeaponGrenadeLauncher::CFFWeaponGrenadeLauncher() 
 {
+	m_fIsSwitching = false;
 }
 
 //----------------------------------------------------------------------------
@@ -91,15 +96,8 @@ void CFFWeaponGrenadeLauncher::Fire()
 
 	CFFProjectileGrenade::CreateGrenade(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
-	// We share ammo with the pipelauncher!
-	// We could probably just do GetWeapon(2) 
-	for (int i = 0; i < MAX_WEAPONS; i++) 
-	{
-		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
-
-		if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER) 
-			w->m_iClip1 = m_iClip1;
-	}
+	// Synchronise with pipelauncher
+	Synchronise();
 }
 
 //----------------------------------------------------------------------------
@@ -109,17 +107,8 @@ bool CFFWeaponGrenadeLauncher::Reload()
 {
 	bool b = BaseClass::Reload();
 
-	CFFPlayer *pPlayer = GetPlayerOwner();
-
-	// We share ammo with the pipelauncher!
-	// We could probably just do GetWeapon(2) 
-	for (int i = 0; i < MAX_WEAPONS; i++) 
-	{
-		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
-
-		if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER) 
-			w->m_iClip1 = m_iClip1;
-	}
+	// Synchronise with pipelauncher
+	Synchronise();
 
 	return b;
 }
@@ -137,7 +126,10 @@ bool CFFWeaponGrenadeLauncher::SendWeaponAnim(int iActivity)
 	switch (iActivity) 
 	{
 	case ACT_VM_DRAW:
-		iActivity = ACT_VM_DRAW_WITH0 + m_iClip1;
+		if (m_fIsSwitching)
+			iActivity = ACT_VM_SWITCHDRAW_WITH0 + m_iClip1;
+		else
+			iActivity = ACT_VM_DRAW_WITH0 + m_iClip1;
 		break;
 
 	case ACT_VM_IDLE:
@@ -161,5 +153,42 @@ bool CFFWeaponGrenadeLauncher::SendWeaponAnim(int iActivity)
 		break;
 	}
 
+	// No more switching mode animation
+	m_fIsSwitching = false;
+
 	return BaseClass::SendWeaponAnim(iActivity);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Play a 'switch' animation when we swap to the grenade launcher
+//----------------------------------------------------------------------------
+bool CFFWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
+{
+	// Let the other weapon know it's animation type
+	CFFWeaponBaseClip *pWeapon = dynamic_cast<CFFWeaponBaseClip *> (pSwitchingTo);
+	
+	if (pWeapon && pWeapon->GetWeaponID() == FF_WEAPON_PIPELAUNCHER)
+		pWeapon->m_fIsSwitching = true;
+
+	// Synchronise with pipelauncher
+	Synchronise();
+
+	return BaseClass::Holster();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: We share ammo with the pipelauncher, so synchronise
+//----------------------------------------------------------------------------
+void CFFWeaponGrenadeLauncher::Synchronise()
+{
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	// We could probably just do GetWeapon(2) 
+	for (int i = 0; i < MAX_WEAPONS; i++) 
+	{
+		CFFWeaponBase *w = dynamic_cast<CFFWeaponBase *> (pPlayer->GetWeapon(i));
+
+		if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER) 
+			w->m_iClip1 = m_iClip1;
+	}
 }

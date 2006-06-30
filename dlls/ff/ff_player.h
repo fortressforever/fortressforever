@@ -569,6 +569,8 @@ public:
 	CHandle<CFFBuildableObject>	m_hSabotaging;
 
 	CBaseCombatWeapon *GetWeaponForSlot(int iSlot);
+
+	float		m_flIdleTime;
 };
 
 

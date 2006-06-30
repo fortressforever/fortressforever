@@ -41,6 +41,9 @@ public:
 
 	CFFWeaponBaseClip();
 
+	// This is here for the pipe/gren launcher really
+	bool	m_fIsSwitching;
+
 private:
 	CFFWeaponBaseClip(const CFFWeaponBaseClip &);
 };
