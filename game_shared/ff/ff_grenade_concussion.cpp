@@ -168,7 +168,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 
 				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
 
-				if( !pPlayer->IsAlive() )
+				if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
 					continue;
 
 				// I don't like this macro
