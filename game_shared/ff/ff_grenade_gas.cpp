@@ -154,8 +154,24 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				EmitSound( "GasGrenade.Open" );
 			}
 
-			BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
-				if (pPlayer && gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f)
+			CBaseEntity *pEntity = NULL;
+			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			{
+				if( !pEntity )
+					continue;
+
+				if( !pEntity->IsPlayer() )
+					continue;
+
+				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+
+				if( !pPlayer || pPlayer->IsObserver() )
+					continue;
+
+				if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
+					continue;
+			
+				if( gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f )
 				{
 					pPlayer->EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
 
@@ -173,7 +189,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 					// Don't allow this to be accumulative
 					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
-			END_ENTITY_SPHERE_QUERY();
+			}
 
 			// Just shoving this here for now, Ted can sort out the effect properly.
 			CEffectData data;
