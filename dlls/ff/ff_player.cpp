@@ -1328,7 +1328,7 @@ void CFFPlayer::CreateViewModel( int index /*=0*/ )
 	}
 }
 
-void CFFPlayer::CheatCommands( int iImpulse )
+void CFFPlayer::CheatImpulseCommands( int iImpulse )
 {
 	if (iImpulse != 101)
 	{
