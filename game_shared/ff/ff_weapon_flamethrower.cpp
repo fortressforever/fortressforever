@@ -132,7 +132,7 @@ void CFFWeaponFlamethrower::Fire()
 	//UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
 	
 	// Changed to this to add some "width" to the shot. How much more expensive is this than traceline???
-	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL, pPlayer, MASK_SHOT_HULL, &traceHit );
+	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit );
 
 	// We want to hit buildables too
 	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
