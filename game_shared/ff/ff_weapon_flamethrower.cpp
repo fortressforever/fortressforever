@@ -27,6 +27,8 @@
 	#include "ff_env_flamejet.h"
 #endif
 
+ConVar ffdev_flame_bbox("ffdev_flame_bbox", "3.0", FCVAR_REPLICATED, "Flame bbox");
+
 //=============================================================================
 // CFlameJet [mirrored in ff_env_flamejet.cpp]
 //=============================================================================
@@ -126,7 +128,11 @@ void CFFWeaponFlamethrower::Fire()
 	pPlayer->EyeVectors(&forward, NULL, NULL);
 
 	Vector vecEnd = vecStart + forward * 200.0f;
-	UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
+	
+	//UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
+	
+	// Changed to this to add some "width" to the shot. How much more expensive is this than traceline???
+	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL, pPlayer, MASK_SHOT_HULL, &traceHit );
 
 	// We want to hit buildables too
 	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
@@ -148,10 +154,13 @@ void CFFWeaponFlamethrower::Fire()
 			// If pTarget can take damage from the flame thrower shooter...
 			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
 			{
-				CTakeDamageInfo info(this, GetOwnerEntity(), 20, DMG_BURN);
+				CTakeDamageInfo info(this, pPlayer, 20, DMG_BURN);
 
 				pTarget->TakeDamage(info);
-				pTarget->ApplyBurning(pPlayer, 0.5f);
+
+				// Only players do this
+				if (traceHit.m_pEnt->IsPlayer())
+					pTarget->ApplyBurning(pPlayer, 0.5f);
 			}
 		}		
 	}
