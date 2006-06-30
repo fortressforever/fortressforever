@@ -40,6 +40,8 @@ public:
 	virtual bool		SendWeaponAnim(int iActivity);
 	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_RPG; }
 
+	bool	m_fStartedReloading;
+
 private:
 	CFFWeaponRPG(const CFFWeaponRPG &);
 };
@@ -68,6 +70,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_rpg);
 //----------------------------------------------------------------------------
 CFFWeaponRPG::CFFWeaponRPG() 
 {
+	m_fStartedReloading = false;
 }
 
 //----------------------------------------------------------------------------
@@ -119,11 +122,18 @@ bool CFFWeaponRPG::SendWeaponAnim(int iActivity)
 		break;
 
 	case ACT_VM_RELOAD:
-		iActivity = ACT_VM_RELOAD_0TO1 + m_iClip1;
+		if (m_fStartedReloading)
+		{
+			iActivity = ACT_VM_INITRELOAD_0TO1 + m_iClip1;
+			m_fStartedReloading = false;
+		}
+		else
+			iActivity = ACT_VM_RELOAD_0TO1 + m_iClip1;
 		break;
 
 	case ACT_SHOTGUN_RELOAD_START:
 		iActivity = ACT_VM_STARTRELOAD_WITH0 + m_iClip1;
+		m_fStartedReloading = true;
 		break;
 
 	case ACT_SHOTGUN_RELOAD_FINISH:
