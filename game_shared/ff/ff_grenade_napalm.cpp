@@ -203,33 +203,43 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 				Class_T cls = pEntity->Classify();
 				switch(cls)
 				{
-				case CLASS_PLAYER:
+					case CLASS_PLAYER:
 					{
 						CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-						if(pPlayer && !pPlayer->IsObserver() && pPlayer->IsAlive())
+						if( pPlayer && !pPlayer->IsObserver() && pPlayer->IsAlive() )
 						{
 							// damage enemies and self
-							if(g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetThrower() ) )
+							if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 							{
 //								DevMsg("[Grenade Debug] damaging enemy or self\n");
-								CTakeDamageInfo info(this,pPlayer,1.0f,DMG_BURN);
-								TakeDamage(info);
+								//CTakeDamageInfo info( this, pPlayer, 1.0f, DMG_BURN );
+								//TakeDamage( info );
+								// Why do we do damage to the grenade itself?
 
-								pPlayer->ApplyBurning( ToFFPlayer(GetThrower()), 1.0f );
+								pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f );
 							}
 						}
-					}
+					}				
 					break;
-				case CLASS_SENTRYGUN:
+
+					case CLASS_SENTRYGUN:
 					{
+						CFFSentryGun *pSentryGun = dynamic_cast< CFFSentryGun * >( pEntity );
+						if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pSentryGun->m_hOwner.Get() ), GetOwnerEntity() ) )
+							pSentryGun->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 10.0f, DMG_BURN ) );
 					}
 					break;
-				case CLASS_DISPENSER:
+				
+					case CLASS_DISPENSER:
 					{
+						CFFDispenser *pDispenser = dynamic_cast< CFFDispenser * >( pEntity );
+						if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pDispenser->m_hOwner.Get() ), GetOwnerEntity() ) )
+							pDispenser->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 10.0f, DMG_BURN ) );
 					}
 					break;
-				default:
-					break;
+					
+					default:
+						break;
 				}
 //				DevMsg("[Grenade Debug] Checking next entity\n");
 			//END_ENTITY_SPHERE_QUERY();
