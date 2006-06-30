@@ -98,6 +98,8 @@ bool CFFWeaponRPG::SendWeaponAnim(int iActivity)
 	if (m_iClip1 < 0 || m_iClip1 > 6) 
 		return BaseClass::SendWeaponAnim(iActivity);
 
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
 	// Override the animation with a specific one
 	switch (iActivity) 
 	{
@@ -106,7 +108,10 @@ bool CFFWeaponRPG::SendWeaponAnim(int iActivity)
 		break;
 
 	case ACT_VM_IDLE:
-		iActivity = ACT_VM_IDLE_WITH0 + m_iClip1;
+		if (pPlayer->m_flIdleTime + 10.0f < gpGlobals->curtime && random->RandomInt(0, 10) == 0)
+			iActivity = ACT_VM_DEEPIDLE_WITH0 + m_iClip1;
+		else
+			iActivity = ACT_VM_IDLE_WITH0 + m_iClip1;
 		break;
 
 	case ACT_VM_PRIMARYATTACK:

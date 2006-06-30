@@ -265,6 +265,9 @@ void CFFPlayer::FireBullet(
 // --> Mirv: Proper sounds
 void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol)
 {
+	// Remember last time idled
+	m_flIdleTime = gpGlobals->curtime;
+
 	if (!psurface)
 		return;
 
@@ -345,6 +348,9 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force)
 {
+	// Remember last time idled
+	m_flIdleTime = gpGlobals->curtime;
+
 	// Don't play footsteps for spy
 	if (GetClassSlot() != 8)
 		BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);

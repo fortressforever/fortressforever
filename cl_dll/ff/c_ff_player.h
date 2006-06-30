@@ -237,8 +237,9 @@ public:
 	virtual void NotifyShouldTransmit(ShouldTransmitState_t state);
 	virtual bool ShouldReceiveProjectedTextures(int flags);
 
-	Beam_t	*m_pFlashlightBeam;
+	Beam_t		*m_pFlashlightBeam;
 
+	float		m_flIdleTime;
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
