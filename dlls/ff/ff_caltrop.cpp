@@ -62,10 +62,8 @@ void CFFCaltropGib::Spawn( void )
 //-----------------------------------------------------------------------------
 void CFFCaltropGib::Precache( void )
 {
-	if( m_iGibModel == 1 )
-		PrecacheModel( CALTROPGRENADE_MODEL_GIB1 );
-	else
-		PrecacheModel( CALTROPGRENADE_MODEL_GIB2 );
+	PrecacheModel( CALTROPGRENADE_MODEL_GIB1 );
+	PrecacheModel( CALTROPGRENADE_MODEL_GIB2 );
 
 	BaseClass::Precache();
 }
