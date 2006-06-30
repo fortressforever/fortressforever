@@ -128,17 +128,32 @@ void CFFWeaponFlamethrower::Fire()
 	Vector vecEnd = vecStart + forward * 200.0f;
 	UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
 
-	if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer())
+	// We want to hit buildables too
+	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
 	{
-		CFFPlayer *pTarget = ToFFPlayer(traceHit.m_pEnt);
+		CFFPlayer *pTarget = NULL;
 
-		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget))
+		if (traceHit.m_pEnt->IsPlayer())
+			pTarget = ToFFPlayer(traceHit.m_pEnt);
+		else
 		{
-			CTakeDamageInfo info(this, GetOwnerEntity(), 20, DMG_BURN);
-
-			pTarget->TakeDamage(info);
-			pTarget->ApplyBurning(pPlayer, 0.5f);
+			if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
+				pTarget = ToFFPlayer( ( ( CFFSentryGun * )traceHit.m_pEnt )->m_hOwner.Get() );
+			else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
+				pTarget = ToFFPlayer( ( ( CFFDispenser * )traceHit.m_pEnt )->m_hOwner.Get() );
 		}
+
+		if (pTarget)
+		{
+			// If pTarget can take damage from the flame thrower shooter...
+			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
+			{
+				CTakeDamageInfo info(this, GetOwnerEntity(), 20, DMG_BURN);
+
+				pTarget->TakeDamage(info);
+				pTarget->ApplyBurning(pPlayer, 0.5f);
+			}
+		}		
 	}
 #endif
 }

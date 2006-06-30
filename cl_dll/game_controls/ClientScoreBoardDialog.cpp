@@ -783,8 +783,6 @@ void CClientScoreBoardDialog::FillScoreBoard( void )
 	// Do sorting
 	if( bNeedToSort )
 	{
-		Warning( "[Sorting] [Sorting] [Sorting]\n" );
-
 		// YES, THIS IS VERY CHEESY!
 		CUtlVector< ScoreboardSection_s > hTemp;
 		
