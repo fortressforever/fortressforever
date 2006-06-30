@@ -1328,7 +1328,7 @@ void CFFPlayer::CreateViewModel( int index /*=0*/ )
 	}
 }
 
-void CFFPlayer::CheatImpulseCommands( int iImpulse )
+void CFFPlayer::CheatCommands( int iImpulse )
 {
 	if (iImpulse != 101)
 	{
@@ -1344,6 +1344,8 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		GiveAmmo(200, AMMO_CELLS);
 		GiveAmmo(200, AMMO_RADIOTAG);
 		GiveAmmo(200, AMMO_DETPACK);
+		AddPrimaryGrenades( 4 );
+		AddSecondaryGrenades( 4 );
 		SetHealth(m_iMaxHealth);
 		m_iArmor = m_iMaxArmor;
 	}
