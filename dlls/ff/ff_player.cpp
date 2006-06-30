@@ -1336,7 +1336,7 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		return ;
 	}
 
-	if(sv_cheats->GetBool())
+	if(sv_cheats->GetBool() && GetTeamNumber() >= TEAM_BLUE && GetTeamNumber() <= TEAM_GREEN)
 	{
 		GiveAmmo(200, AMMO_NAILS);
 		GiveAmmo(200, AMMO_SHELLS);
