@@ -618,7 +618,7 @@ void CFFWeaponSniperRifle::CheckFire()
 
 			// make sure the player is slow
 #ifdef GAME_DLL
-			pPlayer->AddSpeedEffect(SE_SNIPERRIFLE, 999, .5, SEM_BOOLEAN);
+			pPlayer->AddSpeedEffect(SE_SNIPERRIFLE, 999, .20, SEM_BOOLEAN);
 
 			if (m_hLaserDot.Get()) 
 				m_hLaserDot->m_flStartTime = gpGlobals->curtime;
