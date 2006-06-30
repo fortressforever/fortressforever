@@ -181,7 +181,12 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 			float flRadius = CFFGrenadeBase::GetGrenadeRadius();
 			Vector vecSrc = GetAbsOrigin();
 			vecSrc.z += 1;// in case grenade is lying on the ground
-			BEGIN_ENTITY_SPHERE_QUERY(vecSrc, flRadius)
+			//BEGIN_ENTITY_SPHERE_QUERY(vecSrc, flRadius)
+			CBaseEntity *pEntity = NULL;
+			for( CEntitySphereQuery sphere( vecSrc, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			{
+				if( !pEntity )
+					continue;
 
 				// Bug #0000269: Napalm through walls.
 				trace_t tr;
@@ -200,7 +205,8 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 				{
 				case CLASS_PLAYER:
 					{
-						if(pPlayer)
+						CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+						if(pPlayer && !pPlayer->IsObserver() && pPlayer->IsAlive())
 						{
 							// damage enemies and self
 							if(g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetThrower() ) )
@@ -226,7 +232,8 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 					break;
 				}
 //				DevMsg("[Grenade Debug] Checking next entity\n");
-			END_ENTITY_SPHERE_QUERY();
+			//END_ENTITY_SPHERE_QUERY();
+			}
 		}
 		SetNextThink( gpGlobals->curtime );
 	}
