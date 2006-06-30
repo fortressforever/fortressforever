@@ -110,10 +110,10 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 				angRotate.y = RandomFloat(-360.0f, 360.0f);
 				angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
 
+				pCaltropGib->Spawn();
 				UTIL_SetOrigin( pCaltropGib, vOrigin );
 				pCaltropGib->SetAbsAngles( QAngle( 0,0,0 ) ); //make the model stand on end
-				pCaltropGib->SetLocalAngularVelocity( angRotate );
-				pCaltropGib->Spawn();
+				pCaltropGib->SetLocalAngularVelocity( angRotate );				
 				pCaltropGib->SetOwnerEntity( pOwner );
 
 				// Set the speed and the initial transmitted velocity
