@@ -18,6 +18,7 @@
 
 #define	OLD_EXPLOSION	0
 
+static ConVar cl_explosionoverlay("cl_explosionoverlay", "0", 0);	// |-- Mirv
 
 // Enumator class for ragdolls being affected by explosive forces
 CRagdollExplosionEnumerator::CRagdollExplosionEnumerator( Vector origin, float radius, float magnitude )
@@ -194,7 +195,7 @@ void C_TEExplosion::PostDataUpdate( DataUpdateType_t updateType )
 		return;
 	}
 
-	if ( !( m_nFlags & TE_EXPLFLAG_NOFIREBALL ) )
+	if ( !( m_nFlags & TE_EXPLFLAG_NOFIREBALL ) && cl_explosionoverlay.GetBool() )	// |-- Mirv: Can disable overlay
 	{
 		if ( CExplosionOverlay *pOverlay = new CExplosionOverlay )
 		{
