@@ -194,7 +194,9 @@ void CBasePlayer::ItemPostFrame()
 		return;
 #endif
 
-	GetActiveWeapon()->ItemPostFrame( );
+	// Mirv: Totally disable weapons in spectator mode
+	if (GetTeamNumber() >= TEAM_BLUE && GetTeamNumber() <= TEAM_GREEN)
+		GetActiveWeapon()->ItemPostFrame( );
 }
 
 
