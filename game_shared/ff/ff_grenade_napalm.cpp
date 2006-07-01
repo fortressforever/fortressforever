@@ -216,6 +216,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 								//TakeDamage( info );
 								// Why do we do damage to the grenade itself?
 
+								pPlayer->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 1.0f, DMG_BURN ) );
 								pPlayer->ApplyBurning( ToFFPlayer( GetOwnerEntity() ), 1.0f );
 							}
 						}
