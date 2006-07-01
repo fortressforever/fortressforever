@@ -2839,8 +2839,8 @@ void CFFPlayer::Command_SaveMe( void )
 
 void CFFPlayer::StatusEffectsThink( void )
 {
-	// If we jump in water, extinguish the burn
-	if( m_iBurnTicks && ( GetWaterLevel( ) != WL_NotInWater ))
+	// If we jump in water up to waist level, extinguish ourselves
+	if (m_iBurnTicks && GetWaterLevel() >= WL_Waist)
 		Extinguish();
 
 	// if we're on fire, then do something about it
