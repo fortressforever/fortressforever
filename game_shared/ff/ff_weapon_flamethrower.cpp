@@ -156,11 +156,16 @@ void CFFWeaponFlamethrower::Fire()
 			{
 				CTakeDamageInfo info(this, pPlayer, 20, DMG_BURN);
 
-				pTarget->TakeDamage(info);
-
-				// Only players do this
+				//pTarget->TakeDamage(info);
 				if (traceHit.m_pEnt->IsPlayer())
-					pTarget->ApplyBurning(pPlayer, 0.5f);
+				{
+					pTarget->TakeDamage(info);
+					pTarget->ApplyBurning( pPlayer, 0.5f );
+				}
+				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
+					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage(info);
+				else if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
+					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage(info);
 			}
 		}		
 	}
