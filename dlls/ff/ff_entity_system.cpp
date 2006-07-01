@@ -538,6 +538,13 @@ namespace FFLib
 		return false;
 	}
 
+	bool AreTeamsAllied(int teamA, int teamB)
+	{
+		CFFTeam* pTeamA = GetGlobalFFTeam(teamA);
+		CFFTeam* pTeamB = GetGlobalFFTeam(teamB);
+		return AreTeamsAllied(pTeamA, pTeamB);
+	}
+
 	int RandomInt(int min, int max)
 	{
 		return random->RandomInt(min, max);
@@ -670,6 +677,30 @@ namespace FFLib
 		pTeam->SetTeamLimits(limits.green);
 	}
 
+	void SetPlayerLimit(int teamId, int limit)
+	{
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL != pTeam)
+			pTeam->SetTeamLimits(limit);
+	}
+
+	void SetTeamName(int teamId, const char* szTeamName)
+	{
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL != pTeam)
+			pTeam->SetName(szTeamName);
+	}
+
+	void SetTeamClassLimit(int teamId, int classId, int limit)
+	{
+		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+
+		if(NULL != pTeam)
+			pTeam->SetClassLimit(classId, limit);
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -745,7 +776,10 @@ void CFFEntitySystem::FFLibOpen()
 			.def_readwrite("y",			&Vector::y)
 			.def_readwrite("z",			&Vector::z)
 			.def("DistTo",				&Vector::DistTo)
-			.def("Length",				&Vector::Length),
+			.def("DistToSq",			&Vector::DistToSqr)
+			.def("Dot",					&Vector::Dot)
+			.def("Length",				&Vector::Length)
+			.def("Normalize",			&Vector::NormalizeInPlace),
 
 		class_<CClassLimits>("ClassLimits")
 			.def(constructor<>())
@@ -773,7 +807,6 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
 			.def("GetTeamId",			&CBaseEntity::GetTeamNumber)
-			.def("IsOfClass",			&FFLib::IsOfClass)
 			.def("IsDespenser",			&FFLib::IsDispenser)
 			.def("IsGrenade",			&FFLib::IsGrenade)
 			.def("IsPlayer",			&CBaseEntity::IsPlayer)
@@ -860,7 +893,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetModel",			&CFFItemFlag::LUA_SetModel)	// already supported in BaseEntity
 			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin)	// already supported in BaseEntity
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
-																	// do I need it here?
+																	// do I need it here? -- Nope
 
 
 		// global functions
@@ -880,7 +913,8 @@ void CFFEntitySystem::FFLibOpen()
 			def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 			def("GetPlayer",				&FFLib::GetPlayer),
 			def("GetTeam",					&FFLib::GetTeam),
-			def("AreTeamsAllied",			&FFLib::AreTeamsAllied),
+			def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
+			def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
 			def("IncludeScript",			&FFLib::IncludeScript),
 			def("ConsoleToAll",				&FFLib::ConsoleToAll),
 			def("NumPlayers",				&FF_NumPlayers),
@@ -891,8 +925,11 @@ void CFFEntitySystem::FFLibOpen()
 			def("RemoveEntity",				&FFLib::RemoveEntity),
 			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
+			def("SetPlayerLimit",			&FFLib::SetPlayerLimit),
 			def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
 			def("SetClassLimits",			&FFLib::SmartClassLimits),
+			def("SetTeamClassLimit",		&FFLib::SetTeamClassLimit),
+			def("SetTeamName",				&FFLib::SetTeamName),
 			def("SmartMessage",				&FFLib::SmartMessage),
 			def("SmartSound",				&FFLib::SmartSound),
 			def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
