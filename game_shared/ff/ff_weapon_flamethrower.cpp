@@ -127,7 +127,7 @@ void CFFWeaponFlamethrower::Fire()
 
 	pPlayer->EyeVectors(&forward, NULL, NULL);
 
-	Vector vecEnd = vecStart + forward * 200.0f;
+	Vector vecEnd = vecStart + ( forward * 320.0f ); // 320 is about how far the flames are drawn on the client
 	
 	//UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
 	
@@ -154,7 +154,7 @@ void CFFWeaponFlamethrower::Fire()
 			// If pTarget can take damage from the flame thrower shooter...
 			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
 			{
-				CTakeDamageInfo info(this, pPlayer, 20, DMG_BURN);
+				CTakeDamageInfo info(this, pPlayer, 10, DMG_BURN);
 
 				//pTarget->TakeDamage(info);
 				if (traceHit.m_pEnt->IsPlayer())
