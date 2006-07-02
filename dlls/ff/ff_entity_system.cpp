@@ -433,7 +433,8 @@ namespace FFLib
 
 	CBaseEntity* GetEntity(int item_id)
 	{
-		return UTIL_EntityByIndex(item_id);
+		CBaseEntity *pEntity = UTIL_EntityByIndex( item_id );
+		return ( pEntity == NULL ) ? NULL : pEntity;
 	}
 
 	CBaseEntity* GetEntityByName(const char* szName)
