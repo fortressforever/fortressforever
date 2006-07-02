@@ -176,26 +176,35 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 				//if (pPlayer)
 				//{
 				vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+				float flDistance = vecDisplacement.Length();
 
-				// The conc effect is calculated differently if its handheld
-				// These values are from TFC
-				if (m_fIsHandheld)
+				// TFC considers a displacement < 16units to be a hh
+				// However in FF sometimes the distance can be more with a hh
+				// But we don't want to lose the trait of a hh-like jump with a drop conc
+				// So an extra flag here helps out
+				if (m_fIsHandheld || flDistance < 16.0f)
 				{
 					VectorNormalize(vecDisplacement);
 					Vector pvel = pPlayer->GetAbsVelocity();
 
-					// These values are from TFC
-					pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.12));
+					// These values are close (~within 0.01) of TFC
+					pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.10));
 				}
 				else
 				{
-					float length = vecDisplacement.Length();
-					float multiplier = -0.0247f * length + 11.059f;
+					float verticalDistance = vecDisplacement.z;
+					
+					vecDisplacement.z = 0;
+					float horizontalDistance = vecDisplacement.Length();
 
-					DevMsg("%.2f %.2f\n", length, multiplier);
+					// Normalise the lateral direction of this
+					vecDisplacement /= horizontalDistance;
 
-					vecDisplacement *= multiplier;
-					vecDisplacement.z *= 1.5f;
+					// This is the equation I've calculated for drop concs
+					// Is accurate to about ~0.001 in TFC so pretty sure this is the
+					// damn thing they use.
+					vecDisplacement *= (horizontalDistance * (8.4f - 0.015f * flDistance));
+					vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
 
 					pPlayer->SetAbsVelocity(vecDisplacement);
 				}
