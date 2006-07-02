@@ -642,6 +642,9 @@ namespace FFLib
 		{
 			CFFPlayer* pPlayer = GetPlayer(i);
 
+			if( !pPlayer )
+				continue;
+
 			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
 				SendPlayerMessage(pPlayer, teamMsg);
 			else
@@ -662,6 +665,9 @@ namespace FFLib
 		for(int i = 1 ; i <= nPlayers ; i++)
 		{
 			CFFPlayer* pPlayer = GetPlayer(i);
+
+			if( !pPlayer )
+				continue;
 
 			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
 				SendPlayerSound(pPlayer, teamSound);
