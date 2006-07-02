@@ -347,7 +347,8 @@ namespace FFLib
 	void BroadcastSound(const char* szSound)
 	{
 		CBroadcastRecipientFilter filter;
-		helper->EmitSound( filter, helper->entindex(), szSound);
+		if( helper )
+			helper->EmitSound( filter, helper->entindex(), szSound);
 	}
 
 	void SendPlayerSound(CFFPlayer* pPlayer, const char* szSound)
@@ -356,7 +357,8 @@ namespace FFLib
 			return;
 
 		CSingleUserRecipientFilter filter(pPlayer);
-		helper->EmitSound( filter, helper->entindex(), szSound);
+		if( helper )
+			helper->EmitSound( filter, helper->entindex(), szSound);
 	}
 
 	void SetGlobalRespawnDelay(float delay)
@@ -418,6 +420,9 @@ namespace FFLib
 
 	void RemoveEntity(CBaseEntity* pEntity)
 	{
+		if( !pEntity )
+			return;
+		
 		UTIL_Remove(pEntity);
 	}
 
