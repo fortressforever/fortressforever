@@ -1107,7 +1107,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	g_StatsLog.AddToCount(this, STAT_DEATHS);
 
 	// TODO: Take SGs into account here?
-	CFFPlayer *pKiller = (CFFPlayer *) info.GetAttacker();
+	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *> (info.GetAttacker());
 	
 	// Log the correct stat for the killer
 	if (pKiller)
