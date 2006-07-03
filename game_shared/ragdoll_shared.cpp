@@ -270,10 +270,16 @@ static void RagdollCreateObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragd
 }
 
 void RagdollSetupCollisions( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex )
-{
-	Assert(pCollide);
+{	
+	//Assert(pCollide);
 	if (!pCollide)
+	{
+		// 7/3/2006 - Mulchman:
+		// Commented out because people are tired of getting this assert!
+		Warning( "[RagdollSetupCollisions] Assert( pCollide )\n" );
+
 		return;
+	}
 
 	IPhysicsCollisionSet *pSet = physics->FindCollisionSet( modelIndex );
 	if ( !pSet )

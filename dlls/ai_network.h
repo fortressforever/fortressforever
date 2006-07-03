@@ -120,7 +120,9 @@ public:
 			static int warningCount = 0;
 			if ( ++warningCount < 10 )
 			{
-				AssertMsg2( 0, "Node (%i) out of range (%i total)\n", id, m_iNumNodes ); 
+				// 7/3/2006 - Mulchman:
+				// Commented out for beefy (he's the only one getting this assert)
+				//AssertMsg2( 0, "Node (%i) out of range (%i total)\n", id, m_iNumNodes ); 
 			}
 		}
 		return NULL; 
