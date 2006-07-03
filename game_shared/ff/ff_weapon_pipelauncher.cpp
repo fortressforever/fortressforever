@@ -183,6 +183,9 @@ void CFFWeaponPipeLauncher::Synchronise()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
+	if( !pPlayer )
+		return;
+
 	// We could probably just do GetWeapon(2) 
 	for (int i = 0; i < MAX_WEAPONS; i++) 
 	{
