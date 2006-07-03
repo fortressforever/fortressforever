@@ -4576,7 +4576,7 @@ void CFFPlayer::SpySabotageThink()
 	if (pBuildable != m_hSabotaging)
 	{
 		// If it's not a valid thing to sabotage
-		if (pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber())
+		if (pBuildable == NULL || !pBuildable->CanSabotage() || pBuildable->GetTeamNumber() == GetTeamNumber() || GetDisguisedTeam() != pBuildable->GetTeamNumber())
 		{
 			// Not something we can sabotage, stop 
 			if (m_hSabotaging)

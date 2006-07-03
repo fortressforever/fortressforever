@@ -785,13 +785,42 @@ const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer 
 bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
 {
 #ifdef GAME_DLL
-	// Special case for SGs
-	// If an SG is shooting its teammates then let it attack them
+	// Special cases for sabotageable buildings
+
+	// If an SG is shooting its teammates then allow it to hurt them
 	if (pAttacker->Classify() == CLASS_SENTRYGUN)
 	{
 		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pAttacker);
 
 		if (pSentry && pSentry->IsShootingTeammates())
+			return true;
+	}
+
+	// If an SG is sabotaged or shooting its own team, allow them to kill it
+	if (pPlayer->Classify() == CLASS_SENTRYGUN)
+	{
+		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pPlayer);
+
+		// Allow team to kill their own SG if it is sabotaged
+		if (pSentry && (pSentry->IsSabotaged() || pSentry->IsShootingTeammates()))
+			return true;
+	}
+
+	// Allow sabotaged dispensers to give out damage when they explode
+	if (pAttacker->Classify() == CLASS_DISPENSER)
+	{
+		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pAttacker);
+
+		if (pDispenser && pDispenser->IsSabotaged())
+			return true;
+	}
+
+	// Allow sabotaged dispensers to be destroyed by shooting
+	if (pPlayer->Classify() ==CLASS_DISPENSER)
+	{
+		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pPlayer);
+
+		if (pDispenser && pDispenser->IsSabotaged())
 			return true;
 	}
 #endif
