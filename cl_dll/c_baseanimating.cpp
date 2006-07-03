@@ -2439,15 +2439,20 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			GetAttachment( 1, vAttachment, dummyAngles );
 
 			// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
-			dl->origin = vAttachment;
-			dl->radius = random->RandomInt( 32, 64 ); 
-			dl->decay = dl->radius / 0.05f;
-			dl->die = gpGlobals->curtime + 0.05f;
-			dl->color.r = 255;
-			dl->color.g = 192;
-			dl->color.b = 64;
-			dl->color.exponent = 5;
+			//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+			if (dl) // I'm scared, daddy...of NULL pointers.
+			{
+				dl->origin = vAttachment;
+				dl->radius = random->RandomInt( 48, 64 ); // sorta small radius for muzzle flash
+				dl->die = gpGlobals->curtime + 0.05f; // die = current time + life
+				dl->decay = dl->radius / 0.05f; // radius / life = good fade
+				dl->color.r = 255;
+				dl->color.g = 192;
+				dl->color.b = 64;
+				dl->color.exponent = 3; // essentially the brightness...also determines the gradient, basically
+			}
 		}
 	}
 }
