@@ -171,6 +171,13 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 			return;
 		}
 
+		// Bug #0000501: Doors can be blocked by shit that shouldn't block them.
+		if( GetGroundEntity() && ( GetAbsVelocity() == vec3_origin ) )
+		{
+			if( GetGroundEntity()->GetMoveType() != MOVETYPE_PUSH )
+				SetMoveType( MOVETYPE_NONE );
+		}
+
 		// Next think straight away
 		SetNextThink(gpGlobals->curtime);
 
