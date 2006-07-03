@@ -207,16 +207,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 					vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
 
 					pPlayer->SetAbsVelocity(vecDisplacement);
-				}
-
-				// send the concussion icon to be displayed
-				CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
-				user.MakeReliable();
-
-				UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_ICON_CONCUSSION);
-					WRITE_FLOAT(pPlayer->GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f);
-				MessageEnd();
+				}				
 
 				VectorNormalize(vecDisplacement);
 					
@@ -226,6 +217,18 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 				// only concuss if teamplay rules says the player could be damaged
 				if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 				{
+					// BUG FIX: Previously teammates would
+					// get the status icon when FF was off
+
+					// send the concussion icon to be displayed
+					CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
+					user.MakeReliable();
+
+					UserMessageBegin(user, "StatusIconUpdate");
+					WRITE_BYTE(FF_ICON_CONCUSSION);
+					WRITE_FLOAT(pPlayer->GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f);
+					MessageEnd();
+
 					pPlayer->Concuss((pPlayer->GetClassSlot() == 5 ? 7.5f : 15.0f), (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
 				}
 			}
