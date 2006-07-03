@@ -559,7 +559,6 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
 	Detonate();
-	m_hSaboteur = NULL;
 
 	Warning("Dispenser maliciously sabotaged\n");
 }
