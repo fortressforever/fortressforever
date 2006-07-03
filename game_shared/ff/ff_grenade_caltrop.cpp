@@ -35,7 +35,6 @@
 	ConVar caltrop_ang_y_max("ffdev_caltrop_ang_y_max","360",0,"Maximum yaw angle for caltroplets");
 	ConVar caltrop_ang_z_min("ffdev_caltrop_ang_z_min","0",0,"Minimum z spawn angle for caltroplets");
 	ConVar caltrop_ang_z_max("ffdev_caltrop_ang_z_max","0",0,"Maximum z spawn angle for caltroplets");
-	ConVar caltrop_amount("ffdev_caltrop_amount","12",0,"Number of caltrop's to spawn");
 #endif
 
 class CFFGrenadeCaltrop : public CFFGrenadeBase
@@ -126,7 +125,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 
 			// TODO: drop caltrops ala TFC
 			DevMsg("[Grenade Debug] Dropping caltrops\n");
-			for ( int i = 0; i < caltrop_amount.GetInt(); i++ )
+			for ( int i = 0; i < 12; i++ )
 			{
 				Vector vOrigin = GetAbsOrigin();
 				QAngle angSpawn;
