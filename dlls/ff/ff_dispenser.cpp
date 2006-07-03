@@ -288,7 +288,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
 				{
 					// Mirv: Don't do this while sabotaged
-					if (m_flSabotageTime <= gpGlobals->curtime)
+					if (!IsSabotaged())
 					{
 						// TODO: Hud message to owner					
 						SendMessageToPlayer( pOwner, "Dispenser_EnemiesUsing" );
@@ -431,7 +431,7 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 
 	// Mirv: sabotage
 	// We can call this over and over, it will only ever reduce one level
-	if (m_flSabotageTime > gpGlobals->curtime)
+	if (IsSabotaged())
 		pPlayer->ReduceArmorClass();
 }
 
@@ -525,7 +525,18 @@ void CFFDispenser::SendStatsToBot()
 //-----------------------------------------------------------------------------
 bool CFFDispenser::CanSabotage()
 {
-	return (m_flSabotageTime <= gpGlobals->curtime);
+	if (!m_bBuilt)
+		return false;
+
+	return !IsSabotaged();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this building in level 1 sabotage
+//-----------------------------------------------------------------------------
+bool CFFDispenser::IsSabotaged()
+{
+	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
 }
 
 //-----------------------------------------------------------------------------

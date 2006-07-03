@@ -4568,7 +4568,7 @@ void CFFPlayer::SpySabotageThink()
 	AngleVectors(EyeAngles(), &vecForward);
 
 	trace_t tr;
-	UTIL_TraceLine(EyePosition(), vecForward * 100.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(EyePosition(), EyePosition() + vecForward * 100.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 
 	CFFBuildableObject *pBuildable = dynamic_cast<CFFBuildableObject *> (tr.m_pEnt);
 
@@ -4613,6 +4613,9 @@ void CFFPlayer::SpySabotageThink()
 		WRITE_SHORT(iBuildableType);
 		WRITE_FLOAT(3.0f);
 		MessageEnd();
+
+		// Now remember what we're sabotaging
+		m_hSabotaging = pBuildable;
 	}
 	// Sabotage state has not changed
 	else
@@ -4621,6 +4624,7 @@ void CFFPlayer::SpySabotageThink()
 		if (m_hSabotaging && m_flSpySabotageFinish <= gpGlobals->curtime)
 		{
 			m_hSabotaging->Sabotage(this);
+			m_hSabotaging = NULL;
 		}
 	}
 }
