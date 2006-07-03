@@ -17,10 +17,6 @@
 #include "ff_player.h"
 #include "ff_caltrop.h"
 
-ConVar caltrop_life("ffdev_caltrop_life","5.0",0,"How long caltrops are alive.");
-ConVar caltrop_dmg("ffdev_caltrop_dmg","9.0",0,"How much damage a single caltrop deals.");
-ConVar caltrop_mode("ffdev_caltrop_mode","0",0,"0 = 'sticky' mode, 1 = 'normal' mode");
-
 LINK_ENTITY_TO_CLASS( caltropgib, CFFCaltropGib );
 PRECACHE_WEAPON_REGISTER( caltropgib );
 
@@ -54,7 +50,7 @@ void CFFCaltropGib::Spawn( void )
 	SetSize( Vector ( -3, -3, -3 ), Vector ( 3, 3, 3 ) );
 
 	SetThink( &CBaseAnimating::SUB_Remove );
-	SetNextThink( gpGlobals->curtime + caltrop_life.GetFloat() );
+	SetNextThink( gpGlobals->curtime + 15.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -231,7 +227,7 @@ void CFFCaltrop::Spawn( void )
 	SetSize( Vector ( -3, -3, -3 ), Vector ( 3, 3, 3 ) );
 	SetTouch( &CFFCaltrop::CaltropTouch );
 	SetThink( &CBaseAnimating::SUB_Remove );
-	SetNextThink( gpGlobals->curtime + caltrop_life.GetFloat() );
+	SetNextThink( gpGlobals->curtime + 15.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -260,7 +256,7 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 		if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 		{
 			DevMsg("[Grenade Debug] Damaging player and removing\n");
-			CTakeDamageInfo info(this,GetOwnerEntity(),Vector(0,0,0),GetAbsOrigin(),caltrop_dmg.GetFloat(), DMG_GENERIC);
+			CTakeDamageInfo info(this,GetOwnerEntity(),Vector(0,0,0),GetAbsOrigin(),10.0f, DMG_GENERIC);
 			pPlayer->TakeDamage( info );
 			m_takedamage = DAMAGE_NO;
 			AddSolidFlags( FSOLID_NOT_SOLID );
