@@ -4625,6 +4625,8 @@ void CFFPlayer::SpySabotageThink()
 		{
 			m_hSabotaging->Sabotage(this);
 			m_hSabotaging = NULL;
+
+			ClientPrint(this, HUD_PRINTCENTER, "#FF_BUILDINGSABOTAGED");
 		}
 	}
 }
