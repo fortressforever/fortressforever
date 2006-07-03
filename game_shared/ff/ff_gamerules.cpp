@@ -18,9 +18,10 @@
 #else
 	
 	#include "voice_gamemgr.h"
-	#include "ff_team.h"			// |-- Mirv: Using our proper team class now now
+	#include "ff_team.h"
 	#include "ff_player.h"
 	#include "ff_playercommand.h"
+	#include "ff_sentrygun.h"
 	#include "ff_statslog.h"
 
 #endif
@@ -783,6 +784,18 @@ const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer 
 //-----------------------------------------------------------------------------
 bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
 {
+#ifdef GAME_DLL
+	// Special case for SGs
+	// If an SG is shooting its teammates then let it attack them
+	if (pAttacker->Classify() == CLASS_SENTRYGUN)
+	{
+		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pAttacker);
+
+		if (pSentry && pSentry->IsShootingTeammates())
+			return true;
+	}
+#endif
+
 	if ((pAttacker) && (PlayerRelationship(pPlayer, pAttacker) == GR_TEAMMATE))
 	{
 		// If friendly fire is off and I'm not attacking myself, then

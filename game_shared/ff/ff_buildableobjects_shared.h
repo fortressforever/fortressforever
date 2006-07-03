@@ -266,6 +266,7 @@ public:
 	void RemoveQuietly( void );
 
 	virtual bool CanSabotage() { return false; }
+	virtual bool IsSabotaged() { return false; }
 	virtual void Sabotage(CFFPlayer *pSaboteur) {};
 	virtual void MaliciousSabotage(CFFPlayer *pSaboteur) {};
 	
@@ -544,6 +545,7 @@ public:
 	float				m_flSabotageTime;
 
 	virtual bool CanSabotage();
+	virtual bool IsSabotaged();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
 
@@ -671,6 +673,8 @@ public:
 	float				m_flSabotageTime;
 
 	virtual bool CanSabotage();
+	virtual bool IsSabotaged();
+	virtual bool IsShootingTeammates();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
 

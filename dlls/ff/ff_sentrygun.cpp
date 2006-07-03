@@ -466,13 +466,13 @@ void CFFSentryGun::HackFindEnemy( void )
 		// We differentiate between malicious and normal sabotage by the fact that
 		// malicious sabotage no longer has a m_hSaboteur (it's not needed and it's a
 		// cheap way to keep track of things).
-		int iTypeToFind = (!m_hSaboteur && m_flSabotageTime > gpGlobals->curtime ? GR_NOTTEAMMATE : GR_TEAMMATE);
+		int iTypeToTarget = IsShootingTeammates() ? GR_TEAMMATE : GR_NOTTEAMMATE;
 
 		// Changed a line for
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
-		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || pPlayer == pOwner ||
-			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) == iTypeToFind ) )
+		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || /*pPlayer == pOwner ||*/
+			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
 			continue;
 
 		// Spy check - but don't let valid radio tagged targets sneak by!
@@ -567,7 +567,8 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_iDamage = m_iShellDamage;
 
 	// Rather than simply be inaccurate, how about just not hurting as much?
-	if (m_flSabotageTime > gpGlobals->curtime)
+	// Don't do this in malicious sabotage mode though (want to cause full damage to team)
+	if (IsSabotaged())
 		info.m_iDamage = 1.0f;
 
 	FireBullets( info );
@@ -931,9 +932,26 @@ void CFFSentryGun::SendStatsToBot( void )
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::CanSabotage()
 {
-	return m_flSabotageTime < gpGlobals->curtime;
+	if (!m_bBuilt)
+		return false;
 
-	return true;
+	return !IsSabotaged();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this building in level 1 sabotage
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::IsSabotaged()
+{
+	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the SG in level 2 sabotage (shooting teammates mode)
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::IsShootingTeammates()
+{
+	return (!m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
 }
 
 //-----------------------------------------------------------------------------
@@ -958,6 +976,9 @@ void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
 	m_flSabotageTime = gpGlobals->curtime + 10.0f;
 	m_hSaboteur = NULL;
+
+	// Cancel target so it searchs for a new (friendly one)
+	SetEnemy(NULL);
 
 	Warning("SG maliciously sabotaged\n");
 }

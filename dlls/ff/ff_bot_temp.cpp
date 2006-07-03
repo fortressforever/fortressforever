@@ -85,6 +85,20 @@ ConVar bot_crouch( "bot_crouch", "0", 0, "Bot crouches" );
 
 static int g_CurBotNumber = 1;
 
+CON_COMMAND(bot_buildsg, "build an sg")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			pPlayer->Command_BuildSentryGun();
+		}
+	}
+
+}
+
 CON_COMMAND(bot_disguise, "trigger a disguise")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
