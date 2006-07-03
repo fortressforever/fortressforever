@@ -638,17 +638,21 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 	if ( m_fFlags & TE_EXPLFLAG_NODLIGHTS )
 		return;
 
-	dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
-	
-	VectorCopy (m_vecOrigin, dl->origin);
-	
-	dl->radius	= random->RandomInt( 224, 288 );
-	dl->decay = dl->radius / 0.05f;
-	dl->die		= gpGlobals->curtime + 0.1f;
-	dl->color.r = 255;
-	dl->color.g = 224;
-	dl->color.b = 128;
-	dl->color.exponent = 4;
+	// Make a dlight (that's a "D" for dynamic so everything lights up, YAAAAYYYYY!)
+	//dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
+	dlight_t *dl = effects->CL_AllocDlight( 0 ); // 0 allows multiple dynamic lights at the same time
+
+	if (dl) // I'm scared, daddy...of NULL pointers.
+	{
+		dl->origin = m_vecOrigin;
+		dl->radius	= random->RandomInt( 224, 256 ); // kinda big radius for explosion
+		dl->die = gpGlobals->curtime + 0.25f; // die = current time + life
+		dl->decay = dl->radius / 0.25f; // radius / life = good fade
+		dl->color.r = 255;
+		dl->color.g = 224;
+		dl->color.b = 128;
+		dl->color.exponent = 3; // essentially the brightness...also determines the gradient, basically
+	}
 }
 
 //-----------------------------------------------------------------------------
