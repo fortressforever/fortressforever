@@ -593,6 +593,9 @@ namespace FFLib
 		{
 			CFFPlayer* pTestPlayer = GetPlayer(i);
 
+			if( !pTestPlayer )
+				continue;
+
 			if(pTestPlayer->entindex() == pPlayer->entindex())
 				SendPlayerMessage(pTestPlayer, playerMsg);
 
