@@ -18,7 +18,7 @@
 #include "c_ff_player.h"
 #endif
 
-#define MELEE_HULL_DIM		32
+#define MELEE_HULL_DIM		16
 
 static const Vector g_meleeMins(-MELEE_HULL_DIM, -MELEE_HULL_DIM, -MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM, MELEE_HULL_DIM, MELEE_HULL_DIM);
