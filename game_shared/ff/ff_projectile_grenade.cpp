@@ -40,9 +40,9 @@ PRECACHE_WEAPON_REGISTER(glgrenade);
 // CFFProjectileGrenade implementation
 //=============================================================================
 
-ConVar projectile_gren_friction("ffdev_projectile_gren_friction", "0.05", 0, "");
+ConVar projectile_gren_friction("ffdev_projectile_gren_friction", "0.5", 0, "");
 ConVar projectile_gren_elasticity("ffdev_projectile_gren_elasticity", "0.5", 0, "");
-ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "0.5", 0, "");
+ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", 0, "");
 
 #ifdef GAME_DLL
 
