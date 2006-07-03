@@ -538,9 +538,13 @@ void C_FFRagdoll::CreateRagdoll()
 			int iSeq = LookupSequence( "walk_lower" );
 			if ( iSeq == -1 )
 			{
+				// 7/3/2006 - Mulchman:
+				// Commented out because people are tired of getting this assert!
+				Warning( "[C_FFRagdoll :: CreateRagdoll] Missing sequence walk_lower!\n" );
+
 				// Mulch: to start knowing what asserts are popping up for when testing stuff
-				AssertMsg( false, "missing sequence walk_lower" ); 
-				//Assert( false );	// missing walk_lower?
+				// AssertMsg( false, "missing sequence walk_lower" ); 
+				//Assert( false );	// missing walk_lower?				
 				iSeq = 0;
 			}
 

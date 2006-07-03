@@ -248,7 +248,12 @@ private:
 
 inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
 {
-	Assert( dynamic_cast< C_FFPlayer* >( pPlayer ) != NULL );
+	// 7/3/2006 - Mulchman:
+	// Commented out because people are tired of getting this assert!
+	// Assert( dynamic_cast< C_FFPlayer* >( pPlayer ) != NULL );
+	if( dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL )
+		Warning( "[C_FFPlayer :: ToFFPlayer] dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL\n" );
+
 	return static_cast< C_FFPlayer* >( pPlayer );
 }
 
