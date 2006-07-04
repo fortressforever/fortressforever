@@ -379,6 +379,8 @@ inline touchlink_t *AllocTouchLink( void )
 	return link;
 }
 
+static touchlink_t *g_pNextLink = NULL;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *link - 
@@ -388,6 +390,10 @@ inline void FreeTouchLink( touchlink_t *link )
 {
 	if ( link )
 	{
+		if ( link == g_pNextLink )
+		{
+			g_pNextLink = link->nextLink;
+		}
 		--linksallocated;
 	}
 	g_EdictTouchLinks.Free( link );
@@ -450,54 +456,58 @@ static bool g_bCleanupDatObject = true;
 //-----------------------------------------------------------------------------
 void CBaseEntity::PhysicsCheckForEntityUntouch( void )
 {
-	touchlink_t *link, *nextLink;
+	Assert( g_pNextLink == NULL ); 
 
-	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK );
-	if ( root )
-	{
-		bool saveCleanup = g_bCleanupDatObject;
-		g_bCleanupDatObject = false;
+	touchlink_t *link; 
 
-		link = root->nextLink;
-		while ( link != root )
-		{
-			nextLink = link->nextLink;
+	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK ); 
+	if ( root ) 
+	{ 
+		bool saveCleanup = g_bCleanupDatObject; 
+		g_bCleanupDatObject = false; 
 
-			// these touchlinks are not polled.  The ents are touching due to an outside
-			// system that will add/delete them as necessary (vphysics in this case)
-			if ( link->touchStamp == TOUCHSTAMP_EVENT_DRIVEN )
-			{
-				// refresh the touch call
-				PhysicsTouch( link->entityTouched );
-			}
-			else
-			{
-				// check to see if the touch stamp is up to date
-				if ( link->touchStamp != touchStamp )
-				{
-					// stamp is out of data, so entities are no longer touching
-					// remove self from other entities touch list
-					PhysicsNotifyOtherOfUntouch( this, link->entityTouched );
+		link = root->nextLink; 
+		while ( link != root ) 
+		{ 
+			g_pNextLink = link->nextLink; 
 
-					// remove other entity from this list
-					PhysicsRemoveToucher( this, link );
-				}
-			}
+			// these touchlinks are not polled. The ents are touching due to an outside 
+			// system that will add/delete them as necessary (vphysics in this case) 
+			if ( link->touchStamp == TOUCHSTAMP_EVENT_DRIVEN ) 
+			{ 
+				// refresh the touch call 
+				PhysicsTouch( link->entityTouched ); 
+			} 
+			else 
+			{ 
+				// check to see if the touch stamp is up to date 
+				if ( link->touchStamp != touchStamp ) 
+				{ 
+					// stamp is out of data, so entities are no longer touching 
+					// remove self from other entities touch list 
+					PhysicsNotifyOtherOfUntouch( this, link->entityTouched ); 
 
-			link = nextLink;
-		}
+					// remove other entity from this list 
+					PhysicsRemoveToucher( this, link ); 
+				} 
+			} 
 
-		g_bCleanupDatObject = saveCleanup;
+			link = g_pNextLink; 
+		} 
 
-		// Nothing left in list, destroy root
-		if ( root->nextLink == root &&
-			 root->prevLink == root )
-		{
-			DestroyDataObject( TOUCHLINK );
-		}
-	}
+		g_bCleanupDatObject = saveCleanup; 
 
-	SetCheckUntouch( false );
+		// Nothing left in list, destroy root 
+		if ( root->nextLink == root && 
+			root->prevLink == root ) 
+		{ 
+			DestroyDataObject( TOUCHLINK ); 
+		} 
+	} 
+
+	g_pNextLink = NULL; 
+
+	SetCheckUntouch( false );  
 }
 
 //-----------------------------------------------------------------------------
