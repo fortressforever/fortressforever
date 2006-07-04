@@ -1683,6 +1683,10 @@ void CCollisionEvent::DispatchEndTouch( CBaseEntity *pEntity0, CBaseEntity *pEnt
 
 void CCollisionEvent::UpdateTouchEvents( void )
 {
+	// Turn on buffering in case new touch events occur during processing
+	bool bOldTouchEvents = m_bBufferTouchEvents;
+	m_bBufferTouchEvents = true;
+
 	for ( int i = 0; i < m_touchEvents.Count(); i++ )
 	{
 		const touchevent_t &event = m_touchEvents[i];
@@ -1697,6 +1701,7 @@ void CCollisionEvent::UpdateTouchEvents( void )
 		}
 	}
 	m_touchEvents.RemoveAll();
+	m_bBufferTouchEvents = bOldTouchEvents;
 }
 
 void CCollisionEvent::UpdateDamageEvents( void )

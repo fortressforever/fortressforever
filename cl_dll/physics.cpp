@@ -400,24 +400,29 @@ void CCollisionEvent::FrameUpdate( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CCollisionEvent::UpdateTouchEvents( void )
-{
-	for ( int i = 0; i < m_touchEvents.Count(); i++ )
-	{
-		const touchevent_t &event = m_touchEvents[i];
-		if ( event.touchType == TOUCH_START )
-		{
-			DispatchStartTouch( event.pEntity0, event.pEntity1 );
-		}
-		else
-		{
-			// TOUCH_END
-			DispatchEndTouch( event.pEntity0, event.pEntity1 );
-		}
-	}
+void CCollisionEvent::UpdateTouchEvents( void ) 
+{ 
+	// Turn on buffering in case new touch events occur during processing 
+	bool bOldTouchEvents = m_bBufferTouchEvents; 
+	m_bBufferTouchEvents = true; 
+	for ( int i = 0; i < m_touchEvents.Count(); i++ ) 
+	{ 
+		const touchevent_t &event = m_touchEvents[i]; 
+		if ( event.touchType == TOUCH_START ) 
+		{ 
+			DispatchStartTouch( event.pEntity0, event.pEntity1 ); 
+		} 
+		else 
+		{ 
+			// TOUCH_END 
+			DispatchEndTouch( event.pEntity0, event.pEntity1 ); 
+		} 
+	} 
 
-	m_touchEvents.RemoveAll();
-}
+	m_touchEvents.RemoveAll(); 
+	m_bBufferTouchEvents = bOldTouchEvents; 
+} 
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 

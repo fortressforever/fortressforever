@@ -378,6 +378,9 @@
 					RelativePath=".\ff\ff_hud_radiotag.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_hud_speedometer.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_hud_statusicons.cpp">
 				</File>
 				<File
