@@ -242,6 +242,12 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 		if (!pDispenser)
 			return;
 
+		if (pDispenser->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
+
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)
 		{
@@ -274,6 +280,12 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 
 		if (!pDispenser)
 			return;
+		
+		if (pDispenser->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
 
 		pDispenser->Detonate();
 	}
@@ -293,6 +305,12 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 
 		if (!pDispenser)
 			return;
+
+		if (pDispenser->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
 
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pDispenser->GetAbsOrigin()).LengthSqr() < 6400.0f)

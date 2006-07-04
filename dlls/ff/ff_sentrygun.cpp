@@ -150,6 +150,7 @@ CFFSentryGun::CFFSentryGun()
 
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
+	m_bShootingTeammates = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -257,6 +258,7 @@ void CFFSentryGun::GoLive( void )
 
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
+	m_bShootingTeammates = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -332,6 +334,13 @@ void CFFSentryGun::OnActiveThink( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	CBaseEntity *enemy = GetEnemy();
+
+	// We've just finished being maliciously sabotaged, so remove enemy here
+	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
+	{
+		m_bShootingTeammates = false;
+		enemy = NULL;
+	}
 
 	// Enemy is no longer targettable
 	if( !enemy || !FVisible( enemy ) || !enemy->IsAlive() /* || ( ( enemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( SG_RANGE * SG_RANGE ) )*/ )
@@ -470,11 +479,7 @@ void CFFSentryGun::HackFindEnemy( void )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 
-		// Mirv: Find enemies instead. Maybe we should be changing the owner so the kills
-		// count towards the spy, this can be changed later if needed.
-		// We differentiate between malicious and normal sabotage by the fact that
-		// malicious sabotage no longer has a m_hSaboteur (it's not needed and it's a
-		// cheap way to keep track of things).
+		// Mirv: If we are maliciously sabotaged, then shoot teammates instead.
 		int iTypeToTarget = IsShootingTeammates() ? GR_TEAMMATE : GR_NOTTEAMMATE;
 
 		// Changed a line for
@@ -575,10 +580,10 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
 
-	// Rather than simply be inaccurate, how about just not hurting as much?
-	// Don't do this in malicious sabotage mode though (want to cause full damage to team)
-	if (IsSabotaged())
-		info.m_iDamage = 1.0f;
+	// Introduce quite a big spread now if sabotaged
+	// but not if we're in malicious mode
+	if (IsSabotaged()&& !IsShootingTeammates())
+		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
 	FireBullets( info );
 	EmitSound( "Sentry.Fire" );
@@ -960,7 +965,7 @@ bool CFFSentryGun::IsSabotaged()
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::IsShootingTeammates()
 {
-	return (!m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
+	return (m_hSaboteur && m_bShootingTeammates && m_flSabotageTime > gpGlobals->curtime);
 }
 
 //-----------------------------------------------------------------------------
@@ -972,6 +977,8 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 {
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
+	m_bShootingTeammates = false;
+
 
 	Warning("SG sabotaged\n");
 }
@@ -984,7 +991,7 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
 	m_flSabotageTime = gpGlobals->curtime + 10.0f;
-	m_hSaboteur = NULL;
+	m_bShootingTeammates = true;
 
 	// Cancel target so it searchs for a new (friendly one)
 	SetEnemy(NULL);

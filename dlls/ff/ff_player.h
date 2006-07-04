@@ -564,6 +564,8 @@ public:
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
 
 	void		SpySabotageThink();
+	void		SpySabotageRelease();
+
 	float		m_flNextSpySabotageThink;
 	float		m_flSpySabotageFinish;
 	CHandle<CFFBuildableObject>	m_hSabotaging;
