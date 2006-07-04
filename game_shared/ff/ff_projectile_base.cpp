@@ -145,7 +145,12 @@ END_NETWORK_TABLE()
 	}
 
 	//------------------------------------------------------------------------
-	// Purpose: Currently using this so we can track where a player was hit
+	// Purpose: Wow, so TFC's radius damage is not as similar to Half-Life's
+	//			as we thought it was. Everything has a falloff of 0.33 for a start.
+	//
+	//			Explosions always happen at least 32units above the ground, except
+	//			for concs. Rockets will also pull back 32 units from the normal
+	//			of any walls.
 	//------------------------------------------------------------------------
 	void FFRadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore) 
 	{
@@ -156,14 +161,16 @@ END_NETWORK_TABLE()
 
 		Vector vecSrc = vecSrcIn;
 
-		if (flRadius) 
-			falloff = info.GetDamage() / flRadius;
-		else
-			falloff = 1.0;
+#ifdef GAME_DLL
+		//NDebugOverlay::Cross3D(vecSrcIn, 8.0f, 255, 0, 0, false, 5.0f);
+#endif
 
-		// int bInWater = (UTIL_PointContents(vecSrc) & MASK_WATER) ? true : false;
+		// TFC style falloff please.
+		falloff = 0.33;
 
-		vecSrc.z += 1;// in case grenade is lying on the ground
+		// Always raise by 1.0f
+		// It's so that the grenade isn't in the ground
+		vecSrc.z += 1.0f;
 
 		// iterate on all entities in the vicinity.
 		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
@@ -175,27 +182,40 @@ END_NETWORK_TABLE()
 				continue;
 
 			// Check that the explosion can 'see' this entity.
+			// TFC also uses a noisy bodytarget
 			vecSpot = pEntity->BodyTarget(vecSrc, true);
+
+			// Lets calculate the distance ready for later
+			float flDistance = (vecSrc - vecSpot).Length();
 
 			// Bugfix for #0000598: Backpacks blocking grenade damage
 			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
 
-			// Hmmm?????????
-			DevMsg("Explode length: %f %f %f\n", (pEntity->GetAbsOrigin() - vecSrc).Length(), (vecSpot - vecSrc).Length(), (tr.endpos - vecSrc).Length());
+#ifdef GAME_DLL
+			NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, false, 5.0f);
+#endif
 
+			// Could not see this entity, so don't hurt it
 			if (tr.fraction != 1.0 && tr.m_pEnt != pEntity) 
 				continue;
 
-			// decrease damage for an ent that's farther from the bomb.
-			flAdjustedDamage = (vecSrc - tr.endpos).Length() * falloff;
-			flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+			float flBaseDamage = info.GetDamage();
+			
+			// In TFC players only do 2/3 damage to themselves
+			// This also affects forces, I am assuming by the same amount
+			if (pEntity == info.GetAttacker())
+				flBaseDamage *= 0.66666f;
 
+			// Decrease damage for an ent that's farther from the explosion
+			flAdjustedDamage = flDistance * falloff;
+			flAdjustedDamage = flBaseDamage - flAdjustedDamage;
+
+			// We're doing no damage, so don't do anything else here
 			if (flAdjustedDamage <= 0) 
 				continue;
 
-			// the explosion can 'see' this entity, so hurt them!
-
-			// if we're stuck inside them, fixup the position and distance
+			// If we're stuck inside them, fixup the position and distance
+			// I'm assuming this is done in TFC too
 			if (tr.startsolid) 
 			{
 				tr.endpos = vecSrc;
@@ -207,26 +227,32 @@ END_NETWORK_TABLE()
 			adjustedInfo.SetDamage(flAdjustedDamage);
 
 			Vector dir = vecSpot - vecSrc;
-			VectorNormalize(dir);
 
-			float origforce = 0;
+			// Normalise the direction too with our length
+			dir /= flDistance;
 
+			float flCalculatedForce = 0;
 
 			// If we don't have a damage force, manufacture one
 			if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin) 
 			{
-				float coeff = 1.0f;
+				float flForceMultiplier = 1.0f;
 
-				CFFPlayer *ffplayer = ToFFPlayer(pEntity);
+				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 
 				// The HWG isn't budged as much by explosions
-				if (ffplayer && ffplayer->GetClassSlot() == CLASS_HWGUY) 
-					coeff = 0.15f;
+				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
+					flForceMultiplier *= 0.15f;
 
-				adjustedInfo.SetDamageForce(dir * info.GetDamage() * damage_force_multiplier.GetFloat() * coeff);
+				// We also do less force to ourselves, I assume 2/3 again
+				if (pPlayer == info.GetAttacker())
+					flForceMultiplier *= 0.66666f;
+
+				// Set the forces now
+				adjustedInfo.SetDamageForce(dir * info.GetDamage() * damage_force_multiplier.GetFloat() * flForceMultiplier);
 				adjustedInfo.SetDamagePosition(vecSrc);
 
-				origforce = adjustedInfo.GetDamageForce().Length();
+				flCalculatedForce = adjustedInfo.GetDamageForce().Length();
 			}
 
 			// We'll have a damage force by now, 
@@ -238,25 +264,23 @@ END_NETWORK_TABLE()
 			else
 				forcefalloff = 1.0;
 
-			// decrease damage for an ent that's farther from the bomb.
-			flAdjustedForce = (vecSrc - vecSpot).Length() * forcefalloff;
-			flAdjustedForce = adjustedInfo.GetDamageForce().Length() - flAdjustedForce;
+			// TODO: Clean this up if this is correct
+			forcefalloff = falloff;
 
-			//DevMsg("%f %f %f\n", info.GetDamageForce().Length(), forcefalloff, flAdjustedForce);
+			// decrease damage for an ent that's farther from the bomb.
+			flAdjustedForce = flDistance * forcefalloff;
+			flAdjustedForce = flCalculatedForce - flAdjustedForce;
 
 			// Set this new force
 			adjustedInfo.SetDamageForce(dir * flAdjustedForce);
 			adjustedInfo.SetDamagePosition(vecSrc);
 
-			// Some stuff
-//			DevMsg("info.damage %f\ninfo.force %f\nadjusted.damage %f\nadjusted.force %f\n", info.GetDamage(), (info.GetDamageForce().Length() != 0 ? info.GetDamageForce().Length() : origforce), adjustedInfo.GetDamage(), adjustedInfo.GetDamageForce().Length());
-
 			// Now deal the damage
 			pEntity->TakeDamage(adjustedInfo);
 
 			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
-//			if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
-//			{
+			// if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
+			{
 				// Bug #0000539: Blood decals are projected onto shit
 				// (direction needed normalising)
 				Vector vecTraceDir = (tr.endpos - tr.startpos);
@@ -266,7 +290,7 @@ END_NETWORK_TABLE()
 				SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
 
                 pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
-//			}
+			}
 
 			// Now hit all triggers along the way that respond to damage... 
 			pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, dir);

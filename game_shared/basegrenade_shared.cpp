@@ -129,7 +129,7 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	// Pull out of the wall a bit
 	if ( pTrace->fraction != 1.0 )
 	{
-		SetLocalOrigin( pTrace->endpos + (pTrace->plane.normal * 0.6) );
+		SetLocalOrigin( pTrace->endpos + (pTrace->plane.normal * 32.0f) );	// |-- Mirv: 32 units used in TFC
 	}
 
 	Vector vecAbsOrigin = GetAbsOrigin();

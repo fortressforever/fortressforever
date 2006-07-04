@@ -118,7 +118,7 @@ void CFFProjectilePipebomb::Explode( trace_t *pTrace, int bitsDamageType )
 
 	// Pull out of the wall a bit
 	if( pTrace->fraction != 1.0 )
-		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 0.6 ) );
+		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 32 ) );
 
 	Vector vecAbsOrigin = GetAbsOrigin();
 	int contents = UTIL_PointContents( vecAbsOrigin );

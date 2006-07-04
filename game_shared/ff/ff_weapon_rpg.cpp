@@ -84,7 +84,8 @@ void CFFWeaponRPG::Fire()
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 4.0f + Vector(0, 1, 20.0f);
 
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);

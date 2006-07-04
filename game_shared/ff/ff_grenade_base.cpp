@@ -339,9 +339,11 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 
 	m_takedamage = DAMAGE_NO;
 
-	// Pull out of the wall a bit
+	// Make sure grenade explosion is 32.0f above the ground.
+	// In TFC exploding grenade explosions are ALWAYS 32.0f above the floor, except
+	// in the case of the concussion grenade.
 	if( pTrace->fraction != 1.0 )
-		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 0.6 ) );
+		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 32 ) );
 
 	if( FFScriptRunPredicates( this, "onexplode", true ) )
 	{

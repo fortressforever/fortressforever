@@ -38,7 +38,7 @@ extern ConVar sensitivity;
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
 ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
 
-#define MENU_PROGRESS_TIME	0.8f
+#define MENU_PROGRESS_TIME	0.3f
 
 DECLARE_HUDELEMENT(CHudContextMenu);
 
@@ -440,7 +440,7 @@ void CHudContextMenu::Paint()
 	int newSelection = -1;
 
 	// If we're not in the middle then get the right button
-	if ((dx * dx) + (dy * dy) > 10000)
+	if ((dx * dx) + (dy * dy) > 2500)
 	{
 		const float pi_2 = M_PI * 2.0f;
 
