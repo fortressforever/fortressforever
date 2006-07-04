@@ -1257,6 +1257,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Detonate player's pipes
 	CFFProjectilePipebomb::DestroyAllPipes(this, true);
 
+	// Release control of sabotaged structures
+	SpySabotageRelease();
+
 	BaseClass::Event_Killed( info );
 
 	CreateRagdollEntity();
@@ -4698,10 +4701,9 @@ void CFFPlayer::Command_SabotageSentry()
 {
 	CFFSentryGun *pSentry = NULL; 
 
-	// Detonate any pipes belonging to us
 	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
-		if (pSentry->m_flSabotageTime > gpGlobals->curtime && pSentry->m_hSaboteur) 
+		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
 			pSentry->MaliciousSabotage(this);
 	}
 }
@@ -4714,10 +4716,36 @@ void CFFPlayer::Command_SabotageDispenser()
 {
 	CFFDispenser *pDispenser = NULL; 
 
+	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
+	{
+		if (pDispenser->IsSabotaged() && pDispenser->m_hSaboteur == this) 
+			pDispenser->MaliciousSabotage(this);
+	}
+}
+
+void CFFPlayer::SpySabotageRelease()
+{
+	CFFDispenser *pDispenser = NULL; 
+
 	// Detonate any pipes belonging to us
 	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
 	{
-		if (pDispenser->m_flSabotageTime > gpGlobals->curtime && pDispenser->m_hSaboteur) 
-			pDispenser->MaliciousSabotage(this);
+		if (pDispenser->m_hSaboteur == this) 
+		{
+			pDispenser->m_hSaboteur = NULL;
+			pDispenser->m_flSabotageTime = 0;
+		}
+	}
+
+	CFFSentryGun *pSentry = NULL; 
+
+	// Detonate any pipes belonging to us
+	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
+	{
+		if (pSentry->m_hSaboteur == this) 
+		{
+			pSentry->m_hSaboteur = NULL;
+			pSentry->m_flSabotageTime = 0;
+		}
 	}
 }

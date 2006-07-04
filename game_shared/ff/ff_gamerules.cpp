@@ -802,7 +802,7 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pPlayer);
 
 		// Allow team to kill their own SG if it is sabotaged
-		if (pSentry && (pSentry->IsSabotaged() || pSentry->IsShootingTeammates()))
+		if (pSentry && pSentry->IsSabotaged())
 			return true;
 	}
 

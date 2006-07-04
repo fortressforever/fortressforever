@@ -322,6 +322,12 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if (!pSentry) 
 			return;
 
+		if (pSentry->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
+
 		Vector vecForward;
 		AngleVectors(pPlayer->EyeAngles(), &vecForward);
 
@@ -346,6 +352,12 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 
 		if (!pSentry) 
 			return;
+
+		if (pSentry->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
 
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 
@@ -378,6 +390,12 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 		if (!pSentry) 
 			return;
 
+		if (pSentry->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
+
 		pSentry->Detonate();
 	}
 
@@ -396,6 +414,12 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 
 		if (!pSentry) 
 			return;
+
+		if (pSentry->IsSabotaged())
+		{
+			ClientPrint(pPlayer, HUD_PRINTCENTER, "#FF_BUILDINGUNRESPONSIVE");
+			return;
+		}
 
 		// Close enough to dismantle
 		if ((pPlayer->GetAbsOrigin() - pSentry->GetAbsOrigin()).LengthSqr() < 6400.0f) 

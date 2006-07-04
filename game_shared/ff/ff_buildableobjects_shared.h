@@ -671,6 +671,7 @@ public:
 
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
+	bool				m_bShootingTeammates;
 
 	virtual bool CanSabotage();
 	virtual bool IsSabotaged();
