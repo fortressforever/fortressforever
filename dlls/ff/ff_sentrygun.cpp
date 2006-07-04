@@ -344,10 +344,19 @@ void CFFSentryGun::OnActiveThink( void )
 
 	// Get our shot positions
 	Vector vecMid = MuzzlePosition();
-	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid );
+	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid, false ); // false: not 'noisey', so no random z added on
 
 	// Update our goal directions
-	Vector vecDirToEnemy = vecMidEnemy - MuzzlePosition();
+	Vector vecDirToEnemy = vecMidEnemy - vecMid;
+
+	// Actually we're pretty close, and we'll wobble unless we use something a 
+	//bit more static as the source
+	if (vecDirToEnemy.LengthSqr() < 10000)
+	{
+		vecMid = GetAbsOrigin() + Vector(0, 0, 40.0f);
+		vecDirToEnemy = vecMidEnemy - vecMid;
+	}
+
 	VectorNormalize( vecDirToEnemy );
 	VectorAngles( vecDirToEnemy, m_angGoal );
 
