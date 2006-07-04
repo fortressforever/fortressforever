@@ -126,13 +126,6 @@ void CFFWeaponRailgun::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	// Trigger the railbeam visual effect
-	/*if (m_hRailBeam)
-	{
-		m_hRailBeam->SetAbsOrigin(GetAbsOrigin());
-		m_hRailBeam->m_flFired = gpGlobals->curtime;
-	}*/
-
 	RailBeamEffect();
 
 	float flChargeTime = gpGlobals->curtime - m_flStartCharge;
