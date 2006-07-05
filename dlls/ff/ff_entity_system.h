@@ -126,6 +126,7 @@ public:
 	static int IsGrenade( lua_State* );
 	static int IsObjectsOriginInWater( lua_State* );
 	static int IsObjectsOriginInSlime( lua_State* );
+	static int GetServerTime( lua_State* );
 
 };
 
