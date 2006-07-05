@@ -67,37 +67,32 @@ public:
 	CFFGameRules();
 	virtual ~CFFGameRules();
 
+	virtual void	RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore);
 
-	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
-	virtual bool FlPlayerFallDeathDoesScreenFade( CBasePlayer *pPlayer );
-	virtual bool ClientCommand( const char *pcmd, CBaseEntity *pEdict );
-	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
-	virtual void Think();
-	virtual void BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info );
+	virtual float	FlPlayerFallDamage(CBasePlayer *pPlayer);
+	virtual bool	FlPlayerFallDeathDoesScreenFade( CBasePlayer *pPlayer );
+	virtual bool	ClientCommand( const char *pcmd, CBaseEntity *pEdict );
+	virtual void	Think();
+	virtual void	BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info );
 
 	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
 	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );
 
-	virtual void Precache( void );	// |-- Mirv: Just need a function that occurs at the start of each map to reset pm
+	virtual void	Precache();
 
 private:
-
-	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld );
-
 
 #endif
 
 protected:
-	// --> Mirv: Prematch
-	void StartGame();
-	float m_flGameStarted;
-	float m_flNextMsg;
+
+	// Prematch stuff
+	void	StartGame();
+	float	m_flGameStarted;
+	float	m_flNextMsg;
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
-	// <-- Mirv: Prematch
-
-
 };
 
 //-----------------------------------------------------------------------------
