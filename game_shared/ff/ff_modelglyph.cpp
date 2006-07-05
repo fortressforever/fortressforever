@@ -4,144 +4,204 @@
 /// @file ff_modelglyph.cpp
 /// @author Kevin Hjelden (FryGuy)
 /// @date 29 Dec 2005
-/// @brief Entity for displaying glyphs above player's heads (saveme!)
+/// @brief Class for drawing models attached to objects
 /// 
 /// Revisions
 /// ---------
 /// 29 Dec 2005: Initial Creation
+//
+//	7/4/2006: Mulchman
+//		Made this OOPy
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
-#include "ff_fx_shared.h"
+#include "ff_modelglyph.h"
 
-#if defined( CLIENT_DLL )
-	#define CFFModelGlyph C_FFModelGlyph
+#ifdef CLIENT_DLL 
 	#include "c_ff_player.h"
-	#include "c_ff_team.h"
 	#include "ff_gamerules.h"
-#else
-	#include "ff_player.h"
 #endif
 
-#define GLYPH_MODEL "models/misc/saveme.mdl"
-#define GLYPH_DELAY 10.0f
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 //=============================================================================
-// CFFWeaponAssaultCannon
+//
+// Class CFFModelGlyph tables
+//
 //=============================================================================
-
-class CFFModelGlyph : public CBaseAnimating
-{
-public:
-	DECLARE_CLASS( CFFModelGlyph, CBaseAnimating );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-	
-	#ifdef GAME_DLL
-		DECLARE_DATADESC();
-	#endif
-
-	CFFModelGlyph();
-
-	void Spawn		( void );
-	void Precache	( void );
-	void OnThink( void );
-private:
-
-};
-
-//=============================================================================
-// CFFModelGlyph tables
-//=============================================================================
-
-IMPLEMENT_NETWORKCLASS_ALIASED( FFModelGlyph, DT_FFModelGlyph )
+IMPLEMENT_NETWORKCLASS_ALIASED( FFModelGlyph, DT_FFModelGlyph ) 
 
 BEGIN_NETWORK_TABLE( CFFModelGlyph, DT_FFModelGlyph )
-END_NETWORK_TABLE()
+#ifdef CLIENT_DLL 
+#else
+#endif
+END_NETWORK_TABLE() 
 
 BEGIN_PREDICTION_DATA( CFFModelGlyph )
 END_PREDICTION_DATA()
 
 #ifdef GAME_DLL
+// Datatable
 BEGIN_DATADESC( CFFModelGlyph )
-	DEFINE_THINKFUNC( OnThink ),
-END_DATADESC();
+	DEFINE_THINKFUNC( OnObjectThink ),
+END_DATADESC()
 #endif
 
 LINK_ENTITY_TO_CLASS( ff_modelglyph, CFFModelGlyph );
 PRECACHE_REGISTER( ff_modelglyph );
 
-//=============================================================================
-// CFFModelGlyph implementation
-//=============================================================================
-
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
-//----------------------------------------------------------------------------
-CFFModelGlyph::CFFModelGlyph()
+//-----------------------------------------------------------------------------
+CFFModelGlyph::CFFModelGlyph( void )
+{
+#ifdef GAME_DLL
+	m_flLifeTime = -1;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+CFFModelGlyph::~CFFModelGlyph( void )
 {
 }
 
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Purpose: Precache
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void CFFModelGlyph::Precache( void )
 {
-	PrecacheModel( GLYPH_MODEL );
 	BaseClass::Precache();
 }
 
-//----------------------------------------------------------------------------
-// Purpose: Spawn
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// Purpose: Set's the lifetime
+//-----------------------------------------------------------------------------
 void CFFModelGlyph::Spawn( void )
 {
-	Precache();
+#ifdef GAME_DLL
+	SetBlocksLOS( false );
 
-	SetModel( GLYPH_MODEL );
-
-#ifndef GAME_DLL
-	if ( C_BasePlayer::GetLocalPlayer() == NULL )
-	{
-		//AssertMsg( 0, "GetLocalPlayer is null");
-		return;
-	}
-
-	if ( GetOwnerEntity() == NULL )
-	{
-		//AssertMsg( 0, "GetOwnerEntity is null");
-		return;
-	}
-
-	CFFPlayer *me = ToFFPlayer(( C_BaseEntity * )C_BasePlayer::GetLocalPlayer());
-	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
-
-	// hide from player if not the right team
-	if (me && owner)
-	{
-		DevMsg("Setting nodraw flag: %d\n", me->GetTeamNumber() != owner->GetTeamNumber());
-		if ((me->GetTeamNumber() != owner->GetTeamNumber()) || ( FFGameRules()->IsTeam1AlliedToTeam2( me->GetTeamNumber(), owner->GetTeamNumber() ) == GR_NOTTEAMMATE ) )
-		{
-			AddEffects( EF_NODRAW );
-		}
-	}
+	SetThink( &CFFModelGlyph::OnObjectThink );
+	SetNextThink( gpGlobals->curtime );
 #endif
 
-	SetRenderMode(kRenderGlow);
-	SetRenderColor(255, 255, 255);
-	//SetTransparency( , 255, 255, 255, 255, kRenderFxFlickerFast );
-
-	SetThink ( &CFFModelGlyph::OnThink );
-	SetNextThink( gpGlobals->curtime + GLYPH_DELAY );
+	BaseClass::Spawn();
 }
 
-//----------------------------------------------------------------------------
-// Purpose: Remove the glyph after its time has expired
-//----------------------------------------------------------------------------
-void CFFModelGlyph::OnThink( void )
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Server thinking
+//-----------------------------------------------------------------------------
+void CFFModelGlyph::OnObjectThink( void )
 {
-	DevMsg("Removing glyph!\n");
-	if ( GetOwnerEntity() == NULL )
-		Warning( "Owner entity still null!\n" );
-	Remove();
+	if( ( gpGlobals->curtime >= m_flLifeTime ) && ( m_flLifeTime != -1 ) )
+	{
+		UTIL_Remove( this );
+	}
+	else
+	{
+		SetNextThink( gpGlobals->curtime );
+	}
 }
+#endif
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Make the client think always
+//-----------------------------------------------------------------------------
+void CFFModelGlyph::OnDataChanged( DataUpdateType_t updateType ) 
+{
+	BaseClass::OnDataChanged( updateType );
+
+	if( updateType == DATA_UPDATE_CREATED ) 
+	{
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
+	}	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Position the model
+//-----------------------------------------------------------------------------
+void CFFModelGlyph::ClientThink( void )
+{
+}
+#endif
+
+//=============================================================================
+//
+// Class CFFSaveMe tables
+//
+//=============================================================================
+IMPLEMENT_NETWORKCLASS_ALIASED( FFSaveMe, DT_FFSaveMe ) 
+
+BEGIN_NETWORK_TABLE( CFFSaveMe, DT_FFSaveMe )
+#ifdef CLIENT_DLL 
+#else
+#endif
+END_NETWORK_TABLE() 
+
+BEGIN_PREDICTION_DATA( CFFSaveMe )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( ff_saveme, CFFSaveMe );
+PRECACHE_REGISTER( ff_saveme );
+
+//-----------------------------------------------------------------------------
+// Purpose: Precache
+//-----------------------------------------------------------------------------
+void CFFSaveMe::Precache( void )
+{
+	PrecacheModel( FF_SAVEME_MODEL );
+	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn
+//-----------------------------------------------------------------------------
+void CFFSaveMe::Spawn( void )
+{
+	Precache();
+	SetModel( FF_SAVEME_MODEL );
+
+	BaseClass::Spawn();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if the model should be drawn
+//-----------------------------------------------------------------------------
+#ifdef CLIENT_DLL
+bool CFFSaveMe::ShouldDraw( void )
+{
+	if( IsEffectActive( EF_NODRAW ) )
+		return false;
+
+	if( C_BasePlayer::GetLocalPlayer() == NULL )
+		return false;
+
+	if( GetOwnerEntity() == NULL )
+		return false;
+
+	CFFPlayer *pLocalPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+
+	if( pLocalPlayer->IsObserver() )
+		return false;
+
+	if( pOwner->IsObserver() )
+		return false;
+
+	// Hide from player if not the right team
+	if( pLocalPlayer && pOwner )
+	{
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pLocalPlayer->GetTeamNumber(), pOwner->GetTeamNumber() ) == GR_NOTTEAMMATE )
+		{
+			AddEffects( EF_NODRAW );
+			return false;
+		}
+	}
+
+	return true;
+}
+#endif

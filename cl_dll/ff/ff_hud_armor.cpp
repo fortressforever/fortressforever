@@ -126,12 +126,14 @@ void CHudArmor::VidInit()
 void CHudArmor::OnThink()
 {
 	int newArmor = 0;
+	int maxArmor = 0;
 	C_BasePlayer *baselocal = C_BasePlayer::GetLocalPlayer();
-	if (baselocal)
+	if( baselocal )
 	{
-		C_FFPlayer *local = ToFFPlayer(baselocal);
+		C_FFPlayer *local = ToFFPlayer( baselocal );
 		// Never below zero
-		newArmor = max(local->GetArmor(), 0);
+		newArmor = max( local->GetArmor(), 0 );
+		maxArmor = local->GetMaxArmor();
 	}
 
 	// Only update the fade if we've changed armor
@@ -140,15 +142,36 @@ void CHudArmor::OnThink()
 		return;
 	}
 
-	m_iArmor = newArmor;
+	// Get an armor percentage
+	bool bUnder25Perc = ( float )( ( ( float )newArmor / ( float )maxArmor ) * 100 ) < 25;
 
-	if( m_iArmor > 0 )
+	// Play appropriate animation whether armor has gone up or down
+	if( newArmor > m_iArmor )
 	{
-		// Keep going w/ the animation
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorIncrease" );
+		// Armor went up
+
+		if( bUnder25Perc )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorIncreaseBelow25" );
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorIncrease" );
+		}		
+	}
+	else
+	{
+		// Armor went down
+
+		if( bUnder25Perc )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorBelow25" );
+		}
 	}
 
-	SetDisplayValue(m_iArmor);
+	m_iArmor = newArmor;
+
+	SetDisplayValue( m_iArmor );
 }
 
 //-----------------------------------------------------------------------------
@@ -174,7 +197,7 @@ void CHudArmor::MsgFunc_Damage( bf_read &msg )
 		if ( damageTaken > 0 )
 		{
 			// start the animation
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("ArmorDamageTaken");
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorDamageTaken" );
 		}
 	}
 }

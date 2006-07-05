@@ -153,6 +153,19 @@ CON_COMMAND(bot_flashlight, "turn on flashlights")
 	}
 }
 
+CON_COMMAND(bot_saveme, "have a bot do saveme")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			pPlayer->Command_SaveMe();
+		}
+	}
+}
+
 CON_COMMAND(ffdev_legshotme, "legshots you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
