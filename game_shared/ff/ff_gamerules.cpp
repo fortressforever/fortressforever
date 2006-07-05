@@ -269,13 +269,12 @@ ConVar mp_prematch( "mp_prematch",
 	//=========================================================
 	// reduce fall damage
 	//=========================================================
-	float CFFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
+	float CFFGameRules::FlPlayerFallDamage(CBasePlayer *pPlayer)
 	{
-		// --> Mirv: Defrag's fall damage
 		CFFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
 
 		// This is bad
-		if( !pFFPlayer )
+		if (!pFFPlayer)
 		{
 			DevWarning("Fall damage on non-CFFPlayer!");
 			return 9999;
@@ -284,149 +283,170 @@ ConVar mp_prematch( "mp_prematch",
 		float flMaxSafe = PLAYER_MAX_SAFE_FALL_SPEED;
 
 		// Spy can fall twice as far without hurting
-		if( pFFPlayer->GetClassSlot() == 8 )
+		if (pFFPlayer->GetClassSlot() == 8)
 			flMaxSafe *= 1.412;
 
 		// Should they really be losing damage
-		if( pPlayer->m_Local.m_flFallVelocity < flMaxSafe )
+		if (pPlayer->m_Local.m_flFallVelocity < flMaxSafe)
 			return 0;
 
-		DevMsg( "Falling speed: %f\n", (float)pPlayer->m_Local.m_flFallVelocity );
+		DevMsg("Falling speed: %f\n", (float) pPlayer->m_Local.m_flFallVelocity);
 
 		// Speed is a good approximation for now of a class's weight
 		// Therefore bigger base damage for slower classes
-		float weightratio = clamp( ( pPlayer->MaxSpeed() - 230.0f ) / 170.0f, 0, 1.0f );
-		float flBaseDmg = 6.0f + ( 1.0f - weightratio ) * 6.0f;
+		float weightratio = clamp((pPlayer->MaxSpeed() - 230.0f) / 170.0f, 0, 1.0f);
+		float flBaseDmg = 6.0f + (1.0f - weightratio) * 6.0f;
 
 		// Don't worry this'll be optimised!
-		float speedratio = clamp( ( pPlayer->m_Local.m_flFallVelocity - flMaxSafe ) / ( PLAYER_FATAL_FALL_SPEED - flMaxSafe ), 0, 1.0f );
+		float speedratio = clamp((pPlayer->m_Local.m_flFallVelocity - flMaxSafe) / (PLAYER_FATAL_FALL_SPEED - flMaxSafe), 0, 1.0f);
 		float flDmg = flBaseDmg + speedratio * flBaseDmg;
 
-		DevMsg( "Base Damage for Class: %f, Damage for Fall: %f\n", flBaseDmg, flDmg );
-		
+		DevMsg("Base Damage for Class: %f, Damage for Fall: %f\n", flBaseDmg, flDmg);
+
 
 		return flDmg;
-		// <-- Mirv: Defrag's fall damage
 	} 
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Player has just spawned. Equip them.
-	//-----------------------------------------------------------------------------
-
-	void CFFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore )
-	{
-		RadiusDamage( info, vecSrcIn, flRadius, iClassIgnore, false );
-	}
-
-	// Add the ability to ignore the world trace
-	void CFFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld )
+	//------------------------------------------------------------------------
+	// Purpose: Wow, so TFC's radius damage is not as similar to Half-Life's
+	//			as we thought it was. Everything has a falloff of .5 for a start.
+	//
+	//			Explosions always happen at least 32units above the ground, except
+	//			for concs. Rockets will also pull back 32 units from the normal
+	//			of any walls.
+	//
+	//			You only cause 2/3 total damage on yourself.
+	//
+	//			The force (or change in v) is always 8x the total damage.
+	//------------------------------------------------------------------------
+	void CFFGameRules::RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore)
 	{
 		CBaseEntity *pEntity = NULL;
 		trace_t		tr;
 		float		flAdjustedDamage, falloff;
 		Vector		vecSpot;
-		Vector		vecToTarget;
-		Vector		vecEndPos;
 
-		Vector vecSrc = vecSrcIn;
+		// Because we modify this later
+		Vector		vecSrc = vecSrcIn;
 
-		if ( flRadius )
-			falloff = info.GetDamage() / flRadius;
-		else
-			falloff = 1.0;
+#ifdef GAME_DLL
+		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, false, 5.0f);
+#endif
 
-		//int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;	|-- Mirv: Don't need this anymore
-		
-		vecSrc.z += 1;// in case grenade is lying on the ground
+		// TFC style falloff please.
+		falloff = 0.5f;
+
+		// Always raise by 1.0f
+		// It's so that the grenade isn't in the ground
+		vecSrc.z += 1.0f;
 
 		// iterate on all entities in the vicinity.
-		for ( CEntitySphereQuery sphere( vecSrc, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
-			if ( pEntity->m_takedamage != DAMAGE_NO )
+			//if (pEntity == pEntityIgnore) 
+			//	continue;
+
+			if (pEntity->m_takedamage == DAMAGE_NO) 
+				continue;
+
+#ifdef GAME_DLL
+			//NDebugOverlay::EntityBounds(pEntity, 0, 0, 255, 100, 5.0f);
+#endif
+
+			// Check that the explosion can 'see' this entity.
+			// TFC also uses a noisy bodytarget
+			vecSpot = pEntity->BodyTarget(vecSrc, true);
+
+			// Lets calculate some values for this grenade and player
+			Vector vecDirection		= (vecSpot - vecSrc);
+			float flDistance		= vecDirection.Length();
+			vecDirection /= flDistance;
+
+			// Bugfix for #0000598: Backpacks blocking grenade damage
+			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
+
+#ifdef GAME_DLL
+			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, false, 5.0f);
+#endif
+
+			// Could not see this entity, so don't hurt it
+			if (tr.fraction != 1.0 && tr.m_pEnt != pEntity) 
+				continue;
+
+			float flBaseDamage = info.GetDamage();
+
+			// TFC uses 0.5 falloff for everything
+			float falloff = 0.5f;
+
+			// Decrease damage for an ent that's farther from the explosion
+			flAdjustedDamage = flBaseDamage - (flDistance * falloff);
+
+			// We're doing no damage, so don't do anything else here
+			if (flAdjustedDamage <= 0) 
+				continue;
+
+			// In TFC players only do 2/3 damage to themselves
+			// This also affects forces by the same amount
+			if (pEntity == info.GetAttacker())
+				flAdjustedDamage *= 0.66666f;
+
+			// If we're stuck inside them, fixup the position and distance
+			// I'm assuming this is done in TFC too
+			if (tr.startsolid) 
 			{
-				// UNDONE: this should check a damage mask, not an ignore
-				if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
-				{// houndeyes don't hurt other houndeyes with their attack
-					continue;
-				}
-
-				// --> Mirv: Explosions travel through water surface
-				// blast's don't tavel into or out of water
-				//if (bInWater && pEntity->GetWaterLevel() == 0)
-				//	continue;
-				//if (!bInWater && pEntity->GetWaterLevel() == 3)
-				//	continue;
-				// <-- Mirv: Explosions travel through water surface
-
-				// radius damage can only be blocked by the world
-				vecSpot = pEntity->BodyTarget( vecSrc );
-
-
-
-				bool bHit = false;
-
-				if( bIgnoreWorld )
-				{
-					vecEndPos = vecSpot;
-					bHit = true;
-				}
-				else
-				{
-					UTIL_TraceLine( vecSrc, vecSpot, MASK_SOLID_BRUSHONLY, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-
-					if (tr.startsolid)
-					{
-						// if we're stuck inside them, fixup the position and distance
-						tr.endpos = vecSrc;
-						tr.fraction = 0.0;
-					}
-
-					vecEndPos = tr.endpos;
-
-					if( tr.fraction == 1.0 || tr.m_pEnt == pEntity )
-					{
-						bHit = true;
-					}
-				}
-
-				if ( bHit )
-				{
-					// the explosion can 'see' this entity, so hurt them!
-					//vecToTarget = ( vecSrc - vecEndPos );
-					vecToTarget = ( vecEndPos - vecSrc );
-
-					// decrease damage for an ent that's farther from the bomb.
-					flAdjustedDamage = vecToTarget.Length() * falloff;
-					flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
-				
-					if ( flAdjustedDamage > 0 )
-					{
-						CTakeDamageInfo adjustedInfo = info;
-						adjustedInfo.SetDamage( flAdjustedDamage );
-
-						Vector dir = vecToTarget;
-						VectorNormalize( dir );
-
-						// If we don't have a damage force, manufacture one
-						if ( adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin )
-						{
-							CalculateExplosiveDamageForce( &adjustedInfo, dir, vecSrc, 1.5	/* explosion scale! */ );
-						}
-						else
-						{
-							// Assume the force passed in is the maximum force. Decay it based on falloff.
-							float flForce = adjustedInfo.GetDamageForce().Length() * falloff;
-							adjustedInfo.SetDamageForce( dir * flForce );
-							adjustedInfo.SetDamagePosition( vecSrc );
-						}
-
-						pEntity->TakeDamage( adjustedInfo );
-			
-						// Now hit all triggers along the way that respond to damage... 
-						pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, vecEndPos, dir );
-					}
-				}
+				tr.endpos = vecSrc;
+				tr.fraction = 0.0;
 			}
+
+			// Create a new TakeDamageInfo for this player
+			CTakeDamageInfo adjustedInfo = info;
+
+			// Set the new adjusted damage
+			adjustedInfo.SetDamage(flAdjustedDamage);
+
+			// Don't calculate the forces if we already have them
+			if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin) 
+			{
+				// Multiply the damage by 8.0f (ala tfc) to get the force
+				float flCalculatedForce = flAdjustedDamage * 8.0f;
+
+				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+				// We have to reduce the force further if they're fat
+				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
+					flCalculatedForce *= 0.15f;
+
+				CFFPlayer *pAttacker = ToFFPlayer(info.GetAttacker());
+
+				// And also reduce if we couldn't hurt them
+				// TODO: Get exact figure for this
+				if (pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
+					flCalculatedForce *= 0.8f;
+
+				// Now set all our calculated values
+				adjustedInfo.SetDamageForce(vecDirection * flCalculatedForce);
+				adjustedInfo.SetDamagePosition(vecSrc);
+			}
+
+			// Now deal the damage
+			pEntity->TakeDamage(adjustedInfo);
+
+			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
+			// if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
+			{
+				// Bug #0000539: Blood decals are projected onto shit
+				// (direction needed normalising)
+				Vector vecTraceDir = (tr.endpos - tr.startpos);
+				VectorNormalize(vecTraceDir);
+
+				// Bug #0000168: Blood sprites for damage on players do not display
+				SpawnBlood(tr.endpos, vecTraceDir, pEntity->BloodColor(), adjustedInfo.GetDamage() * 3.0f);
+
+				pEntity->TraceBleed(adjustedInfo.GetDamage(), vecTraceDir, &tr, adjustedInfo.GetDamageType());
+			}
+
+			// Now hit all triggers along the way that respond to damage... 
+			pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, vecDirection);
 		}
 	}
 
@@ -788,7 +808,7 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	// Special cases for sabotageable buildings
 
 	// If an SG is shooting its teammates then allow it to hurt them
-	if (pAttacker->Classify() == CLASS_SENTRYGUN)
+	if (pAttacker && pAttacker->Classify() == CLASS_SENTRYGUN)
 	{
 		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pAttacker);
 
@@ -797,7 +817,7 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	}
 
 	// If an SG is sabotaged or shooting its own team, allow them to kill it
-	if (pPlayer->Classify() == CLASS_SENTRYGUN)
+	if (pPlayer && pPlayer->Classify() == CLASS_SENTRYGUN)
 	{
 		CFFSentryGun *pSentry = dynamic_cast <CFFSentryGun *> (pPlayer);
 
@@ -807,7 +827,7 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	}
 
 	// Allow sabotaged dispensers to give out damage when they explode
-	if (pAttacker->Classify() == CLASS_DISPENSER)
+	if (pAttacker && pAttacker->Classify() == CLASS_DISPENSER)
 	{
 		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pAttacker);
 
@@ -816,7 +836,7 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	}
 
 	// Allow sabotaged dispensers to be destroyed by shooting
-	if (pPlayer->Classify() ==CLASS_DISPENSER)
+	if (pPlayer && pPlayer->Classify() ==CLASS_DISPENSER)
 	{
 		CFFDispenser *pDispenser = dynamic_cast <CFFDispenser *> (pPlayer);
 

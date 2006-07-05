@@ -2463,10 +2463,6 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 	PhysCallbackDamage( this, dmgInfo, *pEvent, index );
 }
 
-// --> Mirv: Use our radius damage instead
-void FFRadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
-// <-- Mirv: Use our radius damage instead
-
 //-----------------------------------------------------------------------------
 // Purpose: this entity is exploding, or otherwise needs to inflict damage upon 
 //			entities within a certain range.  only damage ents that can clearly 
@@ -2480,11 +2476,7 @@ void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRa
 	// code unnecessarily. We need TF2 specific rules for RadiusDamage, so I moved
 	// the implementation of radius damage into gamerules. All existing code calls
 	// this method, which calls the game rules method
-	//g_pGameRules->RadiusDamage( info, vecSrc, flRadius, iClassIgnore, pEntityIgnore );
-
-	// --> Mirv: Use our radius damage instead
-	FFRadiusDamage( info, vecSrc, flRadius, iClassIgnore, pEntityIgnore );
-	// <-- Mirv: Use our radius damage instead
+	g_pGameRules->RadiusDamage( info, vecSrc, flRadius, iClassIgnore, pEntityIgnore );
 
 	// Let the world know if this was an explosion.
 	if( info.GetDamageType() & DMG_BLAST )
