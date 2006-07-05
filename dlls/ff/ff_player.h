@@ -573,6 +573,9 @@ public:
 	CBaseCombatWeapon *GetWeaponForSlot(int iSlot);
 
 	float		m_flIdleTime;
+
+	Vector		BodyTarget(const Vector &posSrc, bool bNoisy);
+
 };
 
 

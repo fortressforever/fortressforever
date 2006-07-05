@@ -4723,6 +4723,9 @@ void CFFPlayer::Command_SabotageDispenser()
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Release control of any sabotaged thing
+//-----------------------------------------------------------------------------
 void CFFPlayer::SpySabotageRelease()
 {
 	CFFDispenser *pDispenser = NULL; 
@@ -4749,3 +4752,22 @@ void CFFPlayer::SpySabotageRelease()
 		}
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: A more TFC-style bodytarget
+//-----------------------------------------------------------------------------
+Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
+{ 
+	if (IsInAVehicle())
+	{
+		return GetVehicle()->GetVehicleEnt()->BodyTarget(posSrc, bNoisy);
+	}
+	if (bNoisy)
+	{
+		return GetLegacyAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
+	}
+	else
+	{
+		return EyePosition(); 
+	}
+};
