@@ -719,6 +719,11 @@ namespace FFLib
 			pTeam->SetClassLimit(classId, limit);
 	}
 
+	float GetServerTime( void )
+	{
+		return gpGlobals->curtime;
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -778,6 +783,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "EmitSound", EmitSound );
 	lua_register( L, "Random", Random );
 	lua_register( L, "rand", Random );
+	lua_register( L, "GetServerTime", GetServerTime );
 
 	// these funcions are NOT exposed to luabind yet
 	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );			// not used
@@ -951,7 +957,8 @@ void CFFEntitySystem::FFLibOpen()
 			def("SmartMessage",				&FFLib::SmartMessage),
 			def("SmartSound",				&FFLib::SmartSound),
 			def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
-			def("SmartTeamSound",			&FFLib::SmartTeamSound)
+			def("SmartTeamSound",			&FFLib::SmartTeamSound),
+			def("GetServerTime",			&FFLib::GetServerTime)
 		]
 	];
 }
@@ -2789,8 +2796,19 @@ int CFFEntitySystem::IsObjectsOriginInSlime( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Sets the limit for a particular class on a team
-//          int SetTeamClassLimit( team, class, limit );
+// Purpose: Get's the server time
+//          float GetServerTime( void )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::GetServerTime( lua_State *L )
+{
+	lua_pushnumber( L, gpGlobals->curtime );
+
+	// 1 result
+	return 1;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Random
 //----------------------------------------------------------------------------
 int CFFEntitySystem::Random( lua_State *L )
 {
