@@ -575,9 +575,6 @@
 					RelativePath="..\game_shared\ff\ff_projectile_rocket.cpp">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_saveme.cpp">
-				</File>
-				<File
 					RelativePath="..\game_shared\ff\ff_timers_shared.cpp">
 				</File>
 				<File
@@ -727,9 +724,6 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_projectile_rocket.h">
-				</File>
-				<File
-					RelativePath="..\game_shared\ff\ff_saveme.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_shareddefs.h">
@@ -3427,10 +3421,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
