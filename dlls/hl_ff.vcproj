@@ -600,6 +600,9 @@
 					RelativePath="..\game_shared\ff\ff_miniturret.h">
 				</File>
 				<File
+					RelativePath="..\game_shared\ff\ff_modelglyph.h">
+				</File>
+				<File
 					RelativePath="..\game_shared\ff\ff_playeranimstate.h">
 				</File>
 				<File

@@ -125,11 +125,14 @@ void CHudHealth::VidInit()
 void CHudHealth::OnThink()
 {
 	int newHealth = 0;
-	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
-	if ( local )
+	int maxHealth = 0;
+	C_BasePlayer *baselocal = C_BasePlayer::GetLocalPlayer();
+	if( baselocal )
 	{
+		C_FFPlayer *local = ToFFPlayer( baselocal );
 		// Never below zero
 		newHealth = max( local->GetHealth(), 0 );
+		maxHealth = local->GetMaxHealth();
 	}
 
 	// Only update the fade if we've changed health
@@ -138,19 +141,36 @@ void CHudHealth::OnThink()
 		return;
 	}
 
+	// Get a health percentage
+	bool bUnder25Perc = ( float )( ( ( float )newHealth / ( float )maxHealth ) * 100 ) < 25;
+
+	// Play appropriate animation whether health has gone up or down
+	if( newHealth > m_iHealth )
+	{
+		// Health went up
+
+		if( bUnder25Perc )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncreaseBelow25" );
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncrease" );
+		}		
+	}
+	else
+	{
+		// Health went down
+
+		if( bUnder25Perc )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthBelow25" );
+		}
+	}
+
 	m_iHealth = newHealth;
 
-	if ( m_iHealth >= 20 )
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthIncreasedAbove20");
-	}
-	else if ( m_iHealth > 0 )
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthIncreasedBelow20");
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthLow");
-	}
-
-	SetDisplayValue(m_iHealth);
+	SetDisplayValue( m_iHealth );
 }
 
 //-----------------------------------------------------------------------------

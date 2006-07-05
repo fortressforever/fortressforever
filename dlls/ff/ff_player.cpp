@@ -23,6 +23,7 @@
 #include "ff_team.h"			// team info
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
+#include "ff_modelglyph.h"
 
 #include "client.h"
 
@@ -2815,12 +2816,13 @@ void CFFPlayer::Command_SaveMe( void )
 	DevMsg("MEDIC!\n");
 
 	// Spawn the glyph
-	CBaseEntity *ent = CreateEntityByName("ff_modelglyph");
+	CFFSaveMe *ent = ( CFFSaveMe * )CreateEntityByName( "ff_saveme" );
 
 	if (ent)
-	{
-		ent->SetOwnerEntity(this);
+	{		
+		ent->SetOwnerEntity( this );
 		ent->Spawn();
+		ent->SetLifeTime( gpGlobals->curtime + FF_SAVEME_LIFETIME );
 		ent->FollowEntity(this, true);
 	}
 
