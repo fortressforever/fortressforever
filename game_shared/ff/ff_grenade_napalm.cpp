@@ -234,7 +234,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 					{
 						CFFSentryGun *pSentryGun = dynamic_cast< CFFSentryGun * >( pEntity );
 						if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pSentryGun->m_hOwner.Get() ), GetOwnerEntity() ) )
-							pSentryGun->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 10.0f, DMG_BURN ) );
+							pSentryGun->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 					}
 					break;
 				
@@ -242,7 +242,7 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 					{
 						CFFDispenser *pDispenser = dynamic_cast< CFFDispenser * >( pEntity );
 						if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pDispenser->m_hOwner.Get() ), GetOwnerEntity() ) )
-							pDispenser->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 10.0f, DMG_BURN ) );
+							pDispenser->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 					}
 					break;
 					

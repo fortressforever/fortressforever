@@ -154,18 +154,16 @@ void CFFWeaponFlamethrower::Fire()
 			// If pTarget can take damage from the flame thrower shooter...
 			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
 			{
-				CTakeDamageInfo info(this, pPlayer, 10, DMG_BURN);
-
 				//pTarget->TakeDamage(info);
 				if (traceHit.m_pEnt->IsPlayer())
 				{
-					pTarget->TakeDamage(info);
+					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, 10, DMG_BURN ) );
 					pTarget->ApplyBurning( pPlayer, 0.5f );
 				}
 				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
-					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage(info);
+					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 8.0f, DMG_BURN ) );
 				else if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
-					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage(info);
+					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 8.0f, DMG_BURN ) );
 			}
 		}		
 	}
