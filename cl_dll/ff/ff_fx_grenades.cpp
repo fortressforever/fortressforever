@@ -167,12 +167,11 @@ DECLARE_CLIENT_EFFECT( "NapalmBurst", NapalmBurstCallback )
 
 void FF_FX_GasCloud( Vector &origin )
 {
-	float radius = 180.0f;
-	//FF_FX_DrawCircle(origin,radius,CFFGrenadeBase::m_iShockwaveTexture);
-
 	CSmartPtr<CGasCloud> pGasCloud = CGasCloud::Create("GasCloud");
-	if(pGasCloud == NULL)
+
+	if (pGasCloud == NULL)
 		return;
+
 	pGasCloud->SetSortOrigin(origin);
 
 	//float scale = gas_scale.GetFloat();
@@ -182,38 +181,29 @@ void FF_FX_GasCloud( Vector &origin )
 
 	// TODO: make the gas cloud act like "real" gas, and disperse from the grenade and slowly "fill"
 	//		 the area around the grenade
-	Vector vFinalPos;
-	for(float radius_offset=0; radius_offset < radius; radius_offset += 45)
+	for (int i = 0; i < 5; i++)
 	{
-		for(float r=radius-radius_offset, offset=0; r>0; r -= 45, offset++)
-		{
-			int iAngleSeed = RandomInt(0,360);
-			for(int iAngle = iAngleSeed; iAngle < (iAngleSeed + 360); iAngle += 60)
-			{
-				pParticle = pGasCloud->AddGasParticle(origin);
-				if(pParticle)
-				{
-					angle.x = 0;
-					angle.y = iAngle;
-					angle.z = 0;
-					AngleVectors(angle, &forward, &right, &up);
+		pParticle = pGasCloud->AddGasParticle(origin);
+		
+		if(!pParticle)
+			return;
 
-					vFinalPos = origin + forward * r;
-					vFinalPos.z += radius_offset;
+		// Pick a random direction
+		Vector vecDirection(RandomFloat(-1.0, 1.0f), RandomFloat(-1.0, 1.0f), RandomFloat(0, 2.0f));
+		vecDirection.NormalizeInPlace();
 
-					// Can we really travel this far
-					trace_t tr;
-					UTIL_TraceLine(origin, vFinalPos, MASK_SOLID, NULL, COLLISION_GROUP_DEBRIS, &tr );
+		// And a random distance
+		Vector vecFinalPos = origin + vecDirection * RandomFloat(50.0f, 200.0f);
 
-					//vFinalPos = tr.endpos;
+		// Go as far as possible
+		trace_t tr;
+		UTIL_TraceLine(origin, vecFinalPos, MASK_SOLID, NULL, COLLISION_GROUP_DEBRIS, &tr);
 
-					pParticle->m_vVelocity = (vFinalPos - origin) * 0.1f;	// 10 secs to get there
-					pParticle->m_vFinalPos = vFinalPos;						// Even though we might not be able to reach it
+		// Takes 5 seconds for a cloud to disperse
+		pParticle->m_vVelocity = (tr.endpos - origin) * 0.2f;
 
-					pParticle->m_flEndPosTime = tr.fraction * 10.0f;		// How far can we go before we're blocked
-				}
-			}
-		}
+		// This is the position we're going to, even though we may not reach it
+		pParticle->m_vFinalPos = tr.endpos;
 	}
 }
 
