@@ -349,6 +349,15 @@ ConVar mp_prematch( "mp_prematch",
 			if (pEntity->m_takedamage == DAMAGE_NO) 
 				continue;
 
+			// Skip objects that are building
+			if( ( pEntity->Classify() == CLASS_DISPENSER ) ||
+				( pEntity->Classify() == CLASS_SENTRYGUN ) ||
+				( pEntity->Classify() == CLASS_DETPACK ) )
+			{
+				if( !( ( CFFBuildableObject * )pEntity )->IsBuilt() )
+					continue;
+			}
+
 #ifdef GAME_DLL
 			//NDebugOverlay::EntityBounds(pEntity, 0, 0, 255, 100, 5.0f);
 #endif
@@ -410,17 +419,29 @@ ConVar mp_prematch( "mp_prematch",
 				// Multiply the damage by 8.0f (ala tfc) to get the force
 				float flCalculatedForce = flAdjustedDamage * 8.0f;
 
-				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+				CFFPlayer *pPlayer = NULL;
+
+				if( pEntity->IsPlayer() )
+					pPlayer = ToFFPlayer(pEntity);
 
 				// We have to reduce the force further if they're fat
 				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
 					flCalculatedForce *= 0.15f;
 
-				CFFPlayer *pAttacker = ToFFPlayer(info.GetAttacker());
+				CFFPlayer *pAttacker = NULL;
+
+				if( ( info.GetAttacker()->Classify() == CLASS_DISPENSER ) ||
+					( info.GetAttacker()->Classify() == CLASS_SENTRYGUN ) ||
+					( info.GetAttacker()->Classify() == CLASS_DISPENSER ) )
+				{
+					pAttacker = ToFFPlayer( ( ( CFFBuildableObject * )info.GetAttacker() )->m_hOwner.Get() );
+				}
+				else
+                    pAttacker = ToFFPlayer( info.GetAttacker() );
 
 				// And also reduce if we couldn't hurt them
 				// TODO: Get exact figure for this
-				if (pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
+				if (pPlayer && pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
 					flCalculatedForce *= 0.8f;
 
 				// Now set all our calculated values

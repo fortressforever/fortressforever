@@ -3525,8 +3525,12 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !IsAlive() )
 		return 0;
 
-	// We need to apply the force first (since you should move a bit when damage is reduced)
-	ApplyAbsVelocityImpulse( info.GetDamageForce() );
+	// Bug #0000781: Placing a detpack can be interrupted
+	if( !m_bBuilding )
+	{
+		// We need to apply the force first (since you should move a bit when damage is reduced)
+		ApplyAbsVelocityImpulse( info.GetDamageForce() );
+	}	
 
 	entsys.SetVar("info_damage", info.GetDamage());
 	entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
