@@ -789,6 +789,8 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "Random", Random );
 	lua_register( L, "rand", Random );
 	lua_register( L, "GetServerTime", GetServerTime );
+	lua_register( L, "IsFeigned", IsFeigned );
+	lua_register( L, "IsDisguised", IsDisguised );
 
 	// these funcions are NOT exposed to luabind yet
 	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );			// not used
@@ -899,6 +901,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("RemoveWeapon",		&CFFPlayer::TakeNamedItem)
 			.def("RemoveAllWeapons",	&CFFPlayer::RemoveAllItems)
 			.def("GetOrigin",			&CFFPlayer::GetAbsOrigin)
+			.def("IsFeigned",			&CFFPlayer::IsFeigned)
+			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -2385,6 +2389,60 @@ int CFFEntitySystem::IsPlayer( lua_State *L )
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iEntIndex );
 		if( pEntity && pEntity->IsPlayer() )
 			bRetVal = true;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is feigned
+//			int IsFeigned( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsFeigned( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = ToFFPlayer( pEntity )->IsFeigned();
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is disguised
+//			int IsDisguised( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsDisguised( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = ToFFPlayer( pEntity )->IsDisguised();
 
 		lua_pushboolean( L, bRetVal );
 

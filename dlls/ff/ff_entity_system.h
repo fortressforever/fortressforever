@@ -127,6 +127,8 @@ public:
 	static int IsObjectsOriginInWater( lua_State* );
 	static int IsObjectsOriginInSlime( lua_State* );
 	static int GetServerTime( lua_State* );
+	static int IsFeigned( lua_State* );
+	static int IsDisguised( lua_State* );
 
 };
 

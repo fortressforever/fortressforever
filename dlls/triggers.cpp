@@ -271,6 +271,29 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PUSHABLES) && FClassnameIs(pOther, "func_pushable")) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS))
 	{
+		// If we're set to check all entities
+		if( HasSpawnFlags( SF_TRIGGER_ALLOW_ALL ) )
+		{
+			// If the entity sys allowed func returns false then 
+			// bail. If true, run these other checks.
+			if( !entsys.RunPredicates( this, pOther, "allowed" ) )
+				return false;
+		}
+		else
+		{
+			// Always check players... Doing this double check
+			// as most allowed functions are only set up to check
+			// a player_id and not an ent_id (so I don't want
+			// to crash anybody's script)
+			if( pOther->IsPlayer() )
+			{
+				// If the entity sys allowed func returns false then 
+				// bail. If true, run these other checks.
+				if( !entsys.RunPredicates( this, pOther, "allowed" ) )
+					return false;
+			}
+		}
+
 		bool bOtherIsPlayer = pOther->IsPlayer();
 		if( HasSpawnFlags(SF_TRIGGER_ONLY_PLAYER_ALLY_NPCS) && !bOtherIsPlayer )
 		{
