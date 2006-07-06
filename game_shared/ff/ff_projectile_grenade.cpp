@@ -57,7 +57,7 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", 0, "");
 			m_hSmokeTrail->m_SpawnRate = 100;
 			m_hSmokeTrail->m_ParticleLifetime = 0.5f;
 			m_hSmokeTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
-			m_hSmokeTrail->m_EndColor.Init(0.0, 0.0, 0.0);
+			m_hSmokeTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
 			m_hSmokeTrail->m_StartSize = 4;	// 8
 			m_hSmokeTrail->m_EndSize = 12;	// 32
 			m_hSmokeTrail->m_SpawnRadius = 4;
