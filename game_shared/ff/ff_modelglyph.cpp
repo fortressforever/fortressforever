@@ -186,10 +186,15 @@ bool CFFSaveMe::ShouldDraw( void )
 	CFFPlayer *pLocalPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
 
-	if( pLocalPlayer->IsObserver() )
+	// Shouldn't happen
+	if( !pLocalPlayer )
 		return false;
 
-	if( pOwner->IsObserver() )
+	// Just in case someone attaches this to a non-player
+	if( !pOwner || !pOwner->IsPlayer() )
+		return false;
+
+	if( pLocalPlayer->IsObserver() || pOwner->IsObserver() || ( pOwner->GetTeamNumber() < TEAM_BLUE ) || ( pLocalPlayer->GetTeamNumber() < TEAM_BLUE ) )
 		return false;
 
 	// Hide from player if not the right team
