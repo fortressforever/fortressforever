@@ -108,6 +108,8 @@ void CHudRadioTag::VidInit( void )
 void CHudRadioTag::Init( void )
 {
 	HOOK_HUD_MESSAGE( CHudRadioTag, RadioTagUpdate );
+
+	CacheGlyphs();
 }
 
 void CHudRadioTag::CacheTextures( void )
@@ -117,8 +119,6 @@ void CHudRadioTag::CacheTextures( void )
 
 	m_iWidthOffset = 32;
 	m_iHeightOffset = 160;
-
-	CacheGlyphs( );
 }
 
 void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )

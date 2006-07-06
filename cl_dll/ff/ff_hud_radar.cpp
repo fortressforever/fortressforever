@@ -109,6 +109,8 @@ void CHudRadar::VidInit( void )
 void CHudRadar::Init( void )
 {
 	HOOK_HUD_MESSAGE( CHudRadar, RadarUpdate );
+
+	CacheGlyphs();
 }
 
 void CHudRadar::CacheTextures( void )
@@ -118,8 +120,6 @@ void CHudRadar::CacheTextures( void )
 
 	m_iWidthOffset = 32;
 	m_iHeightOffset = 160;
-
-	CacheGlyphs();
 }
 
 void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )

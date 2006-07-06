@@ -38,7 +38,7 @@ void CacheGlyphs( void )
 		for( int i = 0; i < FF_RADIOTAG_NUMGLYPHS; i++ )
 		{
 			g_ClassGlyphs[ i ].m_pTexture = new CHudTexture( );
-			g_ClassGlyphs[ i ].m_pTexture->textureId = vgui::surface( )->CreateNewTextureID( );
+			g_ClassGlyphs[ i ].m_pTexture->textureId = vgui::surface( )->CreateNewTextureID( );			
 
 			string_t szTemp;
 			switch( i )
@@ -57,6 +57,8 @@ void CacheGlyphs( void )
 			}
 
 			g_ClassGlyphs[ i ].m_szMaterial = szTemp;
+
+			PrecacheMaterial( g_ClassGlyphs[ i ].m_szMaterial );
 		}
 
 		for( int i = 0; i < 16; i++ )
