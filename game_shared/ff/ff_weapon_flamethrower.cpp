@@ -107,20 +107,21 @@ CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 //----------------------------------------------------------------------------
 void CFFWeaponFlamethrower::Fire()
 {
-#ifdef GAME_DLL
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
+	Vector vecForward;
+	pPlayer->EyeVectors(&vecForward);
+
+	// Push them gently if in air
+	if (!pPlayer->GetGroundEntity())
+		pPlayer->ApplyAbsVelocityImpulse(vecForward * -8.0f);
+
+#ifdef GAME_DLL
 	// If underwater then just innocent bubbles
 	if (pPlayer->GetWaterLevel() == 3)
 	{
-		Vector vecForward;
-		pPlayer->EyeVectors(&vecForward, NULL, NULL);
-		VectorNormalize(vecForward);
-
 		Vector vecShootPos = pPlayer->Weapon_ShootPosition();
-
 		UTIL_BubbleTrail(vecShootPos, vecShootPos + (vecForward * 64.0), random->RandomInt(5, 20));
-
 		return;
 	}
 

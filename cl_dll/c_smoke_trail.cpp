@@ -49,6 +49,22 @@ public:
 		return pParticle->m_flRoll;
 	}
 
+	// --> Mirv: Update colour too
+	virtual Vector UpdateColor(const SimpleParticle *pParticle)
+	{
+		Vector	color;
+
+		float	tLifetime = pParticle->m_flLifetime / pParticle->m_flDieTime;
+		float	ramp = 1.0f - tLifetime;
+
+		color[0] = ((float) pParticle->m_uchColor[0] * ramp) / 255.0f;
+		color[1] = ((float) pParticle->m_uchColor[1] * ramp) / 255.0f;
+		color[2] = ((float) pParticle->m_uchColor[2] * ramp) / 255.0f;
+
+		return color;
+	}
+	// <-- Mirv
+
 	//Alpha
 	virtual float UpdateAlpha( const SimpleParticle *pParticle )
 	{

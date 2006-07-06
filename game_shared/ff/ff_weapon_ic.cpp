@@ -75,15 +75,20 @@ CFFWeaponIC::CFFWeaponIC()
 void CFFWeaponIC::Fire() 
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+ 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
 	Vector	vForward, vRight, vUp;
 	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+	//Vector	vecSrc = pPlayer->Weapon_ShootPosition() + vForward * 8.0f + vRight * 8.0f + vUp * -8.0f;
+
+	Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vForward * 16.0f + vRight * 4.0f + Vector(0, 1, 20.0f);
 
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
 	CFFProjectileIncendiaryRocket::CreateRocket(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+
+	// Push player backwards
+	pPlayer->ApplyAbsVelocityImpulse(vForward * -280.0f);
 }
