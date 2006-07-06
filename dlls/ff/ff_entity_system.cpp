@@ -428,6 +428,11 @@ namespace FFLib
 
 	CFFTeam* GetTeam(int teamId)
 	{
+		if( teamId < TEAM_BLUE )
+			return NULL;
+		if( teamId > TEAM_GREEN )
+			return NULL;
+
 		return dynamic_cast<CFFTeam*>(g_Teams[teamId]);
 	}
 
