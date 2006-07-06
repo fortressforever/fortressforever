@@ -465,6 +465,7 @@ public:
 	bool m_fFeigned;
 	void SpyFeign( void );
 	void SpySilentFeign( void );
+	bool IsFeigned( void ) const { return m_fFeigned; }
 
 	int Heal(CFFPlayer *, float);
 
