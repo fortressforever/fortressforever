@@ -23,7 +23,6 @@ public:
 	Vector			m_vOrigin;
 	Vector			m_vFinalPos;
 	Vector			m_vVelocity;
-	float			m_flEndPosTime;
 	float			m_flDieTime;
 	float			m_flLifetime;
 	float			m_flAlpha;

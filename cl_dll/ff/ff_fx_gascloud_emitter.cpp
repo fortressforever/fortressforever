@@ -91,7 +91,7 @@ GasParticle* CGasCloud::AddGasParticle( const Vector &vOrigin )
 		pRet->m_uchColor[1] = 192;
 		pRet->m_uchColor[2] = 32;
 		pRet->m_flAlpha = 0.8f;
-		pRet->m_flSize = 0.1f;
+		pRet->m_flSize = 0.5f;
 	}
 
 	return pRet;
@@ -145,7 +145,7 @@ void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 		}
 
 		pParticle->m_flAlpha = 0.8f * start + 0.0f * end;
-		pParticle->m_flSize = 1.0f * start + 48.0f * end;
+		pParticle->m_flSize = 1.0f * start + 96.0f * end;
 
 		if ( pParticle->m_flLifetime >= pParticle->m_flDieTime )
 			pIterator->RemoveParticle( pParticle );
@@ -198,8 +198,6 @@ void CGasCloud::RenderParticles( CParticleRenderIterator *pIterator )
 			pIterator->GetParticleDraw(),
 			tPos,
 			vColor,
-//			gas_alpha.GetFloat(),
-//			gas_scale.GetFloat()
 			pParticle->m_flAlpha,
 			pParticle->m_flSize
 			);

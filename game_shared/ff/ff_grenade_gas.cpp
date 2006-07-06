@@ -56,6 +56,7 @@ protected:
 
 	float m_flNextHurt;
 	float m_flOpenTime;
+	float m_flNextPuff;
 #endif
 };
 
@@ -84,6 +85,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 		m_flNextHurt = 0;
 		m_flOpenTime = 0.0f;
+		m_flNextPuff = 0.0f;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
@@ -152,12 +154,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				SetSequence( m_iSequence );
 
 				EmitSound( "GasGrenade.Open" );
-
-				// Just shoving this here for now, Ted can sort out the effect properly.
-				CEffectData data;
-				data.m_vOrigin = GetAbsOrigin();
-				data.m_flScale = 1.0f;
-				DispatchEffect(GAS_EFFECT, data);
 			}
 
 			CBaseEntity *pEntity = NULL;
@@ -195,6 +191,18 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 					// Don't allow this to be accumulative
 					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
+			}
+
+			// Just shoving this here for now, Ted can sort out the effect properly.
+			// Only deploy gas for 8 seconds
+			if (gpGlobals->curtime < m_flDetonateTime + 8.0f && m_flNextPuff < gpGlobals->curtime)
+			{
+				CEffectData data;
+				data.m_vOrigin = GetAbsOrigin();
+				data.m_flScale = 1.0f;
+				DispatchEffect(GAS_EFFECT, data);
+
+				m_flNextPuff = gpGlobals->curtime + 1.0f;
 			}
 		}
 
