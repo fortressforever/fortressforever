@@ -79,7 +79,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 	void CFFGrenadeEmp::Spawn( void )
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeEmp::Spawn\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeEmp::Spawn\n");
 		SetModel( EMPGRENADE_MODEL );
 		m_bWarned = false;
 		BaseClass::Spawn();
@@ -87,7 +87,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 
 	void CFFGrenadeEmp::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeEmp::Explode\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeEmp::Explode\n");
 		//CFFGrenadeBase::PreExplode( pTrace );//, EMP_SOUND, EMP_EFFECT );
 		//CFFGrenadeBase::PreExplode( pTrace, NULL, "FF_RingEffect" );
 		CFFGrenadeBase::PreExplode(pTrace, NULL, "FF_EmpZap");
@@ -119,7 +119,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 							// something from TakeEmp we gotta add the explosions
 							// ourselves
 
-							DevMsg( "%s exploding with force of %d\n", pEntity->GetClassname(), explode );
+							//DevMsg( "%s exploding with force of %d\n", pEntity->GetClassname(), explode );
 
 							trace_t		tr;						
 							Vector		vecOrigin = pEntity->GetAbsOrigin();
@@ -226,7 +226,7 @@ PRECACHE_WEAPON_REGISTER( empgrenade );
 //----------------------------------------------------------------------------
 void CFFGrenadeEmp::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeEmp::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeEmp::Precache\n");
 	PrecacheModel( EMPGRENADE_MODEL );
 	PrecacheScriptSound( EMP_SOUND );
 	BaseClass::Precache();

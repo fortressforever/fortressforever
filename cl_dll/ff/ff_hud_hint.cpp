@@ -266,7 +266,7 @@ void LoadHints(const char *pFilename, HintVector &hints)
 		int nHintID = atoi(pHintID);
 		hints.push_back(nHintID);
 
-		DevMsg("Reading hint: %hu\n", nHintID);
+		//DevMsg("Reading hint: %hu\n", nHintID);
 
 		pHintID = strtok(NULL, " ");
 	}

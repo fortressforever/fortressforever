@@ -64,13 +64,13 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 #ifdef GAME_DLL
 	void CFFGrenadeCaltrop::Spawn( void )
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Spawn\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Spawn\n");
 		SetModel( CALTROPGRENADE_MODEL_HOLSTER );
 		BaseClass::Spawn();
 	}
 	void CFFGrenadeCaltrop::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Explode\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NULL );
 
 		// If the grenade is in a no gren area don't deploy caltrops
@@ -78,7 +78,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 		{
 
 			CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
-			DevMsg("[Grenade Debug] pOwner: 0x0%X\n",pOwner);
+			//DevMsg("[Grenade Debug] pOwner: 0x0%X\n",pOwner);
 
 			// Drop the gibs
 			for( int i = 0; i < 2; i++ )
@@ -124,7 +124,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 			}
 
 			// TODO: drop caltrops ala TFC
-			DevMsg("[Grenade Debug] Dropping caltrops\n");
+			//DevMsg("[Grenade Debug] Dropping caltrops\n");
 			for ( int i = 0; i < 12; i++ )
 			{
 				Vector vOrigin = GetAbsOrigin();
@@ -175,7 +175,7 @@ PRECACHE_WEAPON_REGISTER( caltropgrenade );
 
 void CFFGrenadeCaltrop::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeCaltrop::Precache\n");
 	PrecacheModel( CALTROPGRENADE_MODEL_HOLSTER );
 	BaseClass::Precache();
 }

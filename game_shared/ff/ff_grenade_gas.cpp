@@ -70,7 +70,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 	void CFFGrenadeGas::Spawn( void )
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeGas::Spawn\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeGas::Spawn\n");
 		SetModel( GASGRENADE_MODEL );
 		BaseClass::Spawn();
 
@@ -88,7 +88,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
 
 		// TODO: trigger client side hallucination here
@@ -152,6 +152,12 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				SetSequence( m_iSequence );
 
 				EmitSound( "GasGrenade.Open" );
+
+				// Just shoving this here for now, Ted can sort out the effect properly.
+				CEffectData data;
+				data.m_vOrigin = GetAbsOrigin();
+				data.m_flScale = 1.0f;
+				DispatchEffect(GAS_EFFECT, data);
 			}
 
 			CBaseEntity *pEntity = NULL;
@@ -190,12 +196,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
 			}
-
-			// Just shoving this here for now, Ted can sort out the effect properly.
-			CEffectData data;
-			data.m_vOrigin = GetAbsOrigin();
-			data.m_flScale = 1.0f;
-			DispatchEffect(GAS_EFFECT, data);
 		}
 
 		// Animate
@@ -234,7 +234,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 void CFFGrenadeGas::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeGas::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeGas::Precache\n");
 	PrecacheModel( GASGRENADE_MODEL );
 	PrecacheScriptSound( GAS_SOUND );
 	PrecacheScriptSound( "GasGrenade.Open" );

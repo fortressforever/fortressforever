@@ -26,9 +26,6 @@
 	#include "ff_entity_system.h"
 #endif
 
-ConVar conc_push_mag("ffdev_conc_mag", "85.0", 0, "Magnitude of the concussion push effect");
-ConVar conc_push_base("ffdev_conc_base", "20.0", 0, "Base push of the conc");
-
 #ifdef CLIENT_DLL
 	ConVar conc_glow_r("ffdev_conc_glow_r", "255", 0, "Conc glow red(0-255) ");
 	ConVar conc_glow_g("ffdev_conc_glow_g", "255", 0, "Conc glow green(0-255) ");
@@ -247,7 +244,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 #ifndef GAME_DLL
 void CFFGrenadeConcussion::DoEffectIdle()
 {
-	DevMsg("[concussion] idle\n");
+	//DevMsg("[concussion] idle\n");
 	if (m_hGlowSprite)
 	{
 		m_hGlowSprite->SetBrightness(random->RandomInt(32, 48));
@@ -261,7 +258,7 @@ void CFFGrenadeConcussion::DoEffectIdle()
 //----------------------------------------------------------------------------
 void CFFGrenadeConcussion::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeConcussion::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeConcussion::Precache\n");
 	PrecacheModel(CONCUSSIONGRENADE_MODEL);
 	PrecacheModel(CONCUSSIONGRENADE_GLOW_SPRITE);
 	PrecacheScriptSound(CONCUSSION_SOUND);

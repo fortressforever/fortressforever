@@ -74,7 +74,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 	void CFFGrenadeNail::Spawn() 
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeNail\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeNail\n");
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
 
@@ -102,7 +102,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 				return;
 			}
 
-			DevMsg("[Grenade Debug] CFFGrenadeNail::GrenadeThink\n[Grenade Debug] Changing to nail mode\n");
+			//DevMsg("[Grenade Debug] CFFGrenadeNail::GrenadeThink\n[Grenade Debug] Changing to nail mode\n");
 
 			// Reset the detonation time
 			SetDetonateTimerLength(3);
@@ -128,7 +128,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			DevMsg("[Grenade Debug] CFFGrenadeNail::NailEmit\n[Grenade Debug] Detonating\n");
+			//DevMsg("[Grenade Debug] CFFGrenadeNail::NailEmit\n[Grenade Debug] Detonating\n");
 			Detonate();
 			return;
 		}
@@ -176,7 +176,7 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 
 void CFFGrenadeNail::Precache() 
 {
-	DevMsg("[Grenade Debug] CFFGrenadeNail::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeNail::Precache\n");
 	PrecacheModel(NAILGRENADE_MODEL);
 	PrecacheScriptSound( "NailGrenade.shoot" );
 	BaseClass::Precache();

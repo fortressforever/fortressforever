@@ -83,7 +83,7 @@ PRECACHE_WEAPON_REGISTER( mirvgrenade );
 #ifdef GAME_DLL
 void CFFGrenadeMirv::Spawn( void )
 {
-	DevMsg("[Grenade Debug] CFFGrenadeMirv::Spawn\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeMirv::Spawn\n");
 	SetModel( MIRVGRENADE_MODEL );
 	BaseClass::Spawn();
 
@@ -101,7 +101,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 	{
 		CBaseEntity *pOwner = GetOwnerEntity();
 
-		DevMsg("[Grenade Debug] Creating mirvlets\n");
+		//DevMsg("[Grenade Debug] Creating mirvlets\n");
 		//random starting y axis rotation
 		// after the first mirvlet, each of the remaining mirvletss will be rotated another 90 degrees
 		float y_ang_seed = RandomFloat(0.0f,360.0f);
@@ -155,7 +155,7 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 
 void CFFGrenadeMirv::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeMirv::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeMirv::Precache\n");
 	PrecacheModel( MIRVGRENADE_MODEL );
 	BaseClass::Precache();
 }
