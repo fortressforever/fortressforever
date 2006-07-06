@@ -22,7 +22,7 @@
 #define NAIL_MODEL "models/projectiles/nail/w_nail.mdl"
 
 ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED, "Nail speed");
-ConVar ffdev_nail_bbox("ffdev_nail_bbox", "3.0", FCVAR_REPLICATED, "Nail bbox");
+ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED, "Nail bbox");
 
 
 #ifdef CLIENT_DLL
