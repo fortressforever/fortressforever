@@ -2413,7 +2413,7 @@ int CFFEntitySystem::IsFeigned( lua_State *L )
 		bool bRetVal = false;
 		int iIndex = lua_tonumber( L, 1 );
 
-		CBaseEntity *pEntity = UTIL_PlayerByIndex( iIndex );
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
 			bRetVal = ToFFPlayer( pEntity )->IsFeigned();
 
@@ -2440,7 +2440,7 @@ int CFFEntitySystem::IsDisguised( lua_State *L )
 		bool bRetVal = false;
 		int iIndex = lua_tonumber( L, 1 );
 
-		CBaseEntity *pEntity = UTIL_PlayerByIndex( iIndex );
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
 			bRetVal = ToFFPlayer( pEntity )->IsDisguised();
 
