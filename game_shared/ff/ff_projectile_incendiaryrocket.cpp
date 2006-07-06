@@ -19,6 +19,7 @@
 
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
+	#include "ff_buildableobjects_shared.h"
 #endif
 
 //=============================================================================
@@ -59,14 +60,23 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 				}
 			}
 			break;
-		case CLASS_SENTRYGUN:
+			
+			case CLASS_SENTRYGUN:
 			{
+				CFFSentryGun *pSentryGun = dynamic_cast< CFFSentryGun * >( pEntity );
+				if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pSentryGun->m_hOwner.Get() ), GetOwnerEntity() ) )
+					pSentryGun->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 			}
 			break;
-		case CLASS_DISPENSER:
+
+			case CLASS_DISPENSER:
 			{
+				CFFDispenser *pDispenser = dynamic_cast< CFFDispenser * >( pEntity );
+				if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pDispenser->m_hOwner.Get() ), GetOwnerEntity() ) )
+					pDispenser->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 			}
 			break;
+
 		default:
 			break;
 		}
