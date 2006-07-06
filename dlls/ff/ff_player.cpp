@@ -4770,6 +4770,6 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 	}
 	else
 	{
-		return EyePosition(); 
+		return GetLegacyAbsOrigin(); //return EyePosition(); 
 	}
 };
