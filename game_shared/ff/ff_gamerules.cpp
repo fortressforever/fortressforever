@@ -343,8 +343,8 @@ ConVar mp_prematch( "mp_prematch",
 		// iterate on all entities in the vicinity.
 		for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity()) 
 		{
-			//if (pEntity == pEntityIgnore) 
-			//	continue;
+			if (pEntity == pEntityIgnore) 
+				continue;
 
 			if (pEntity->m_takedamage == DAMAGE_NO) 
 				continue;

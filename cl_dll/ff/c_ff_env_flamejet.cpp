@@ -183,9 +183,12 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 	CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
 
-	// Flames without an owner is just weird.
-	if (!pOwner) 
+	// A bunch of conditions that may stop the flamethrower
+	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)
+	{
+		m_fEmit = false;
 		return;
+	}
 
 	// Default positions and angles
 	Vector vecStart = pOwner->Weapon_ShootPosition();
