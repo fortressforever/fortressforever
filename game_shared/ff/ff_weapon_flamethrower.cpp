@@ -29,6 +29,10 @@
 
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "3.0", FCVAR_REPLICATED, "Flame bbox");
 
+#ifdef GAME_DLL
+	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
+#endif
+
 //=============================================================================
 // CFlameJet [mirrored in ff_env_flamejet.cpp]
 //=============================================================================
@@ -127,7 +131,13 @@ void CFFWeaponFlamethrower::Fire()
 
 	pPlayer->EyeVectors(&forward, NULL, NULL);
 
-	Vector vecEnd = vecStart + ( forward * 320.0f ); // 320 is about how far the flames are drawn on the client
+	// 320 is about how far the flames are drawn on the client
+	// 0.4f is the time taken to reach end of flame jet
+	Vector vecEnd = vecStart + ( forward * 320.0f ) - GetAbsVelocity() * 0.4f;
+
+	// Visualise trace
+	if (ffdev_flame_showtrace.GetBool())
+		NDebugOverlay::Line(vecStart, vecEnd, 255, 255, 0, false, 1.0f);
 	
 	//UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
 	
@@ -157,7 +167,7 @@ void CFFWeaponFlamethrower::Fire()
 				//pTarget->TakeDamage(info);
 				if (traceHit.m_pEnt->IsPlayer())
 				{
-					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, 10, DMG_BURN ) );
+					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
 					pTarget->ApplyBurning( pPlayer, 0.5f );
 				}
 				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
