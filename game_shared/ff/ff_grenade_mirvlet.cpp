@@ -47,7 +47,7 @@ PRECACHE_WEAPON_REGISTER( mirvlet );
 #ifdef GAME_DLL
 	void CFFGrenadeMirvlet::Spawn( void )
 	{
-		DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Spawn\n");
+		//DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Spawn\n");
 		SetModel( MIRVLET_MODEL );
 		BaseClass::Spawn();
 	}
@@ -55,7 +55,7 @@ PRECACHE_WEAPON_REGISTER( mirvlet );
 
 void CFFGrenadeMirvlet::Precache()
 {
-	DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Precache\n");
+	//DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Precache\n");
 	PrecacheModel( MIRVLET_MODEL );
 	BaseClass::Precache();
 }
