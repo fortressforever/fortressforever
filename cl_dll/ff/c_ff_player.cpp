@@ -415,9 +415,8 @@ private:
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
 
-	// --> Mirv: State of player's limbs
-	CNetworkVar( int, m_fBodygroupState );
-	// <-- Mirv: State of player's limbs
+	int		m_fBodygroupState;
+	int		m_nSkinIndex;
 };
 
 
@@ -428,9 +427,9 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_FFRagdoll, DT_FFRagdoll, CFFRagdoll )
 	RecvPropInt( RECVINFO(m_nForceBone) ),
 	RecvPropVector( RECVINFO(m_vecForce) ),
 	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) ),
-	// --> Mirv: State of player's limbs
-	RecvPropInt( RECVINFO(m_fBodygroupState) )
-	// <-- Mirv: State of player's limbs
+
+	RecvPropInt(RECVINFO(m_fBodygroupState)),
+	RecvPropInt(RECVINFO(m_nSkinIndex)),
 END_RECV_TABLE()
 
 
@@ -568,23 +567,19 @@ void C_FFRagdoll::CreateRagdoll()
 	}
 
 	SetModelIndex( m_nModelIndex );
+	m_nSkin = m_nSkinIndex;
 
-
-
-	// --> Mirv: Spawn ragdoll with correct limbs missing
-	DevMsg( "[CLIENT] Spawned ragdoll, received m_fBodygroupState as %d\n", m_fBodygroupState );
-
-	if( m_fBodygroupState & DECAP_HEAD )
-		SetBodygroup( 1, 1 );
-	if( m_fBodygroupState & DECAP_LEFT_ARM )
-		SetBodygroup( 2, 1 );
-	if( m_fBodygroupState & DECAP_LEFT_LEG )
-		SetBodygroup( 3, 1 );
-	if( m_fBodygroupState & DECAP_RIGHT_ARM )
-		SetBodygroup( 4, 1 );
-	if( m_fBodygroupState & DECAP_RIGHT_LEG )
-		SetBodygroup( 5, 1 );
-	// <-- Mirv: Spawn ragdoll with correct limbs missing
+	// Remove the correct parts of the body
+	if (m_fBodygroupState & DECAP_HEAD)
+		SetBodygroup(1, 1);
+	if (m_fBodygroupState & DECAP_LEFT_ARM)
+		SetBodygroup(2, 1);
+	if (m_fBodygroupState & DECAP_LEFT_LEG)
+		SetBodygroup(3, 1);
+	if (m_fBodygroupState & DECAP_RIGHT_ARM)
+		SetBodygroup(4, 1);
+	if (m_fBodygroupState & DECAP_RIGHT_LEG)
+		SetBodygroup(5, 1);
 
 	// Turn it into a ragdoll.
 	// Make us a ragdoll..
