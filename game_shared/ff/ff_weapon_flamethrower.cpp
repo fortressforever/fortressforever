@@ -114,7 +114,7 @@ void CFFWeaponFlamethrower::Fire()
 
 	// Push them gently if in air
 	if (!pPlayer->GetGroundEntity())
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * -8.0f);
+		pPlayer->ApplyAbsVelocityImpulse(vecForward * -12.0f);
 
 #ifdef GAME_DLL
 	// If underwater then just innocent bubbles

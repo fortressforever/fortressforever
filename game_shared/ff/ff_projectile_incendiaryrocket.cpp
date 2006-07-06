@@ -35,11 +35,20 @@ PRECACHE_WEAPON_REGISTER(incendiaryrocket);
 
 void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 {
+	// Make sure grenade explosion is 32.0f away from hit point
+	if (pTrace->fraction != 1.0)
+		SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 32));
+
 #ifdef GAME_DLL
-	DevMsg("[CFFProjectileIncendiaryRocket::Explode] Start\n");
 
 	Vector vecSrc = GetAbsOrigin();
-	vecSrc.z += 1;// in case grenade is lying on the ground
+	vecSrc.z += 1;
+
+	// Do normal radius damage?
+	//Vector vecReported = vec3_origin;
+	//CTakeDamageInfo info(this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
+	//RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
+
 	BEGIN_ENTITY_SPHERE_QUERY(vecSrc, m_DmgRadius)
 		Class_T cls = pEntity->Classify();
 		switch (cls)
@@ -49,10 +58,18 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 				if (pPlayer)
 				{
 					// damage enemies and self
-					if (pPlayer == GetThrower() || g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetThrower()))
+					if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetThrower()))
 					{
-						DevMsg("[Grenade Debug] damaging enemy or self\n");
-						CTakeDamageInfo info(this, pPlayer, 1.0f, DMG_BURN);
+						// Use normal damage calculations?
+						//float flDistance = (GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
+						//float flAdjustedDamage = m_flDamage - (flDistance * 0.5f);
+
+						float flAdjustedDamage = m_flDamage;
+
+						if (pPlayer == GetThrower())
+							flAdjustedDamage *= 0.5f;
+
+						CTakeDamageInfo info(this, pPlayer, flAdjustedDamage, DMG_BURN);
 						pEntity->TakeDamage(info);
 
 						pPlayer->ApplyBurning(ToFFPlayer(GetThrower()), 1.0f);
@@ -88,8 +105,6 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 
 	Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
-	DevMsg("Distance: %f\n", vecDisp.Length());
-
 #endif
 
 	BaseClass::Explode(pTrace, bitsDamageType);
@@ -104,13 +119,12 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	void CFFProjectileIncendiaryRocket::CreateSmokeTrail()
 	{
 		// Smoke trail.
-		//if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
 		if ((m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL)
 		{
 			m_hRocketTrail->m_Opacity = 0.2f;
 			m_hRocketTrail->m_SpawnRate = 100;
 			m_hRocketTrail->m_ParticleLifetime = 0.5f;
-			m_hRocketTrail->m_StartColor.Init(0.6f, 0.1f, 0.1f);
+			m_hRocketTrail->m_StartColor.Init(1.0f, 0.3f, 0.0f);
 			m_hRocketTrail->m_EndColor.Init(0.0f, 0.0f, 0.0f);
 			m_hRocketTrail->m_StartSize = 8;
 			m_hRocketTrail->m_EndSize = 32;

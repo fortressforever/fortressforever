@@ -430,6 +430,7 @@ ConVar mp_prematch( "mp_prematch",
 
 				CFFPlayer *pAttacker = NULL;
 
+				// If it's a building then take it's owner
 				if( ( info.GetAttacker()->Classify() == CLASS_DISPENSER ) ||
 					( info.GetAttacker()->Classify() == CLASS_SENTRYGUN ) ||
 					( info.GetAttacker()->Classify() == CLASS_DISPENSER ) )
