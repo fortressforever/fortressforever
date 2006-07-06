@@ -337,8 +337,10 @@ public:
 	CNetworkVector( m_vecRagdollOrigin );
 
 	// State of player's limbs
-	CNetworkVar( int, m_fBodygroupState );
-
+	CNetworkVar(int, m_fBodygroupState);
+	
+	// Network this separately now that previous method broken
+	CNetworkVar(int, m_nSkinIndex);
 };
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -352,8 +354,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRagdoll, DT_FFRagdoll )
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) ),
 
 	// State of player's limbs
-	SendPropInt( SENDINFO(m_fBodygroupState) )
-
+	SendPropInt(SENDINFO(m_fBodygroupState)),
+	SendPropInt(SENDINFO(m_nSkinIndex), 3, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 // -------------------------------------------------------------------------------- //
@@ -1295,7 +1297,7 @@ void CFFPlayer::CreateRagdollEntity()
 		pRagdoll->m_fBodygroupState = m_fBodygroupState;
 
 		// Bugfix: #0000574: On death, ragdolls change to the blue team's skin
-		pRagdoll->m_nSkin = m_nSkin;
+		pRagdoll->m_nSkinIndex = m_nSkin;
 	}
 
 	// ragdolls will be removed on round restart automatically
