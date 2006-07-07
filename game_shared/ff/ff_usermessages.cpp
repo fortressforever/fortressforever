@@ -51,6 +51,8 @@ void RegisterUserMessages()
 	usermessages->Register( "RadioTagUpdate", -1 );
 	usermessages->Register( "SetPlayerLocation", -1 );
 
+	usermessages->Register("FF_HudLua", -1);
+
 	// so we know when a detpack has been removed
 	// so the owner's client can stop drawing the timer
 	usermessages->Register( "DetpackStopTimer", -1 );

@@ -69,6 +69,11 @@ bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting );
 
 void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalName );
 
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText);
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage);
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed);
+void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
+
 // Do a HudHint
 void FF_HudHint(
 #ifndef CLIENT_DLL 
