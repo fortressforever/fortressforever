@@ -330,7 +330,7 @@ ConVar mp_prematch( "mp_prematch",
 		Vector		vecSrc = vecSrcIn;
 
 #ifdef GAME_DLL
-		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, false, 5.0f);
+		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
 #endif
 
 		// TFC style falloff please.
@@ -371,11 +371,19 @@ ConVar mp_prematch( "mp_prematch",
 			float flDistance		= vecDirection.Length();
 			vecDirection /= flDistance;
 
+			// Because our models are pretty weird, the tracelines don't work
+			// as expected. To simulate the tracelines being inside the model, we
+			// just check the bounds here.
+			// TODO: May possibly want to reduce the size that is checked
+			const CCollisionProperty *pCollide = pEntity->CollisionProp();
+			if (pCollide && pCollide->IsPointInBounds(vecSrc))
+				flDistance = 0.0f;
+
 			// Bugfix for #0000598: Backpacks blocking grenade damage
 			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
 
 #ifdef GAME_DLL
-			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, false, 5.0f);
+			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, true, 5.0f);
 #endif
 
 			// Could not see this entity, so don't hurt it
