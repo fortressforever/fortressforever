@@ -1091,7 +1091,7 @@ void CFFPlayer::SpySilentFeign( void )
 			GetActiveWeapon()->Holster(NULL);
 
 		// Find any items that we are in control of and let them know we feigned
-		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 		while( pEnt != NULL )
 		{
 			// Tell the ent that it died
@@ -1099,7 +1099,7 @@ void CFFPlayer::SpySilentFeign( void )
 				entsys.RunPredicates( pEnt, this, "ownerfeign" );
 
 			// Next!
-			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 		}
 	}
 }
@@ -1210,7 +1210,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	entsys.RunPredicates( NULL, this, "player_killed" );
 
 	// Find any items that we are in control of and drop them
-	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 	while( pEnt != NULL )
 	{
@@ -1218,7 +1218,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pEnt->OnPlayerDied( this );
 
 		// Next!
-		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 	}
 
 	// Get rid of fire
@@ -2700,7 +2700,7 @@ void CFFPlayer::Command_FlagInfo( void )
 void CFFPlayer::Command_DropItems( void )
 {	
 	//entsys.RunPredicates(NULL, this, "dropitems");
-	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 	while( pEnt != NULL )
 	{
@@ -2711,7 +2711,7 @@ void CFFPlayer::Command_DropItems( void )
 		}
 
 		// Next!
-		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 	}
 }
 
@@ -4446,7 +4446,7 @@ bool CFFPlayer::HasItem(const char* itemname) const
 	bool ret = false;
 
 	// get all info_ff_scripts
-	CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 	while( pEnt != NULL )
 	{
@@ -4458,7 +4458,7 @@ bool CFFPlayer::HasItem(const char* itemname) const
 		}
 
 		// Next!
-		pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 	}
 
 	return ret;

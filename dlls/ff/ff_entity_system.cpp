@@ -489,9 +489,9 @@ namespace FFLib
 		return dynamic_cast<CFFPlayer*>(pEnt);
 	}
 
-	CFFItemFlag* GetInfoScriptByName(const char* entityName)
+	CFFInfoScript* GetInfoScriptByName(const char* entityName)
 	{
-		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 		while( pEnt != NULL )
 		{
@@ -499,15 +499,15 @@ namespace FFLib
 				return pEnt;
 
 			// Next!
-			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 		}
 
 		return NULL;
 	}
 
-	CFFItemFlag* GetInfoScriptById(int item_id)
+	CFFInfoScript* GetInfoScriptById(int item_id)
 	{
-		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 		while( pEnt != NULL )
 		{
@@ -515,7 +515,7 @@ namespace FFLib
 				return pEnt;
 
 			// Next!
-			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 		}
 
 		return NULL;
@@ -526,9 +526,9 @@ namespace FFLib
 		return dynamic_cast<CFFPlayer*>(pEntity);
 	}
 
-	CFFItemFlag* CastToItemFlag(CBaseEntity* pEntity)
+	CFFInfoScript* CastToItemFlag(CBaseEntity* pEntity)
 	{
-		return dynamic_cast<CFFItemFlag*>(pEntity);
+		return dynamic_cast<CFFInfoScript*>(pEntity);
 	}
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
@@ -917,14 +917,14 @@ void CFFEntitySystem::FFLibOpen()
 				value("kCivilian",		CLASS_CIVILIAN)
 			],
 
-		// CFFItemFlag
-		class_<CFFItemFlag, CBaseEntity>("InfoScript")
-			.def("Drop",				&CFFItemFlag::Drop)
-			.def("Pickup",				&CFFItemFlag::Pickup)
-			.def("Respawn",				&CFFItemFlag::Respawn)
-			.def("Return",				&CFFItemFlag::Return)
-			.def("SetModel",			&CFFItemFlag::LUA_SetModel)	// already supported in BaseEntity
-			.def("SetSkin",				&CFFItemFlag::LUA_SetSkin)	// already supported in BaseEntity
+		// CFFInfoScript
+		class_<CFFInfoScript, CBaseEntity>("InfoScript")
+			.def("Drop",				&CFFInfoScript::Drop)
+			.def("Pickup",				&CFFInfoScript::Pickup)
+			.def("Respawn",				&CFFInfoScript::Respawn)
+			.def("Return",				&CFFInfoScript::Return)
+			.def("SetModel",			&CFFInfoScript::LUA_SetModel)	// already supported in BaseEntity
+			.def("SetSkin",				&CFFInfoScript::LUA_SetSkin)	// already supported in BaseEntity
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
 																	// do I need it here? -- Nope
 
@@ -1231,7 +1231,7 @@ int CFFEntitySystem::PlayerHasItem( lua_State *L )
 			CFFPlayer *pPlayer = ToFFPlayer( ent );
 
 			// get all info_ff_scripts
-			CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+			CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 			while( pEnt != NULL )
 			{
@@ -1243,7 +1243,7 @@ int CFFEntitySystem::PlayerHasItem( lua_State *L )
 				}
 
 				// Next!
-				pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+				pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 			}
 		}
 
@@ -1365,7 +1365,7 @@ int CFFEntitySystem::ReturnItem( lua_State *L )
 		bool ret = false;
 
 		// get all info_ff_scripts
-		CFFItemFlag *pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 
 		while( pEnt != NULL )
 		{
@@ -1378,7 +1378,7 @@ int CFFEntitySystem::ReturnItem( lua_State *L )
 			}
 
 			// Next!
-			pEnt = (CFFItemFlag*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
 		}
 
 		lua_pushnumber( L, ret );
@@ -1412,7 +1412,7 @@ int CFFEntitySystem::Pickup( lua_State *L )
 		if (item && player && player->IsPlayer())
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( player );
-			CFFItemFlag *pItem = (CFFItemFlag*)item;
+			CFFInfoScript *pItem = (CFFInfoScript*)item;
 
 			pItem->Pickup(pPlayer);
 
@@ -1447,7 +1447,7 @@ int CFFEntitySystem::Respawn( lua_State *L )
 		CBaseEntity *item = UTIL_EntityByIndex( item_id );
 		if (item)
 		{
-			CFFItemFlag *pItem = (CFFItemFlag*)item;
+			CFFInfoScript *pItem = (CFFInfoScript*)item;
 
 			pItem->Respawn(delay);
 
@@ -1482,7 +1482,7 @@ int CFFEntitySystem::DropItem( lua_State *L )
 		CBaseEntity *item = UTIL_EntityByIndex( item_id );
 		if (item)
 		{
-			CFFItemFlag *pItem = (CFFItemFlag*)item;
+			CFFInfoScript *pItem = (CFFInfoScript*)item;
 
 			pItem->Drop(delay);
 

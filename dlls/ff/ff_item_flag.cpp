@@ -19,83 +19,144 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+LINK_ENTITY_TO_CLASS( info_ff_script_animator, CFFInfoScriptAnimator );
+PRECACHE_REGISTER( CFFInfoScriptAnimator );
+
+BEGIN_DATADESC( CFFInfoScriptAnimator )
+	DEFINE_THINKFUNC( OnThink ),
+END_DATADESC()
+
+void CFFInfoScriptAnimator::Spawn( void )
+{
+	SetThink( &CFFInfoScriptAnimator::OnThink );
+	SetNextThink( gpGlobals->curtime );
+}
+
+void CFFInfoScriptAnimator::OnThink( void )
+{
+	if( m_pFFScript )
+	{
+		if( m_pFFScript->HasAnimations() )
+		{
+			m_pFFScript->StudioFrameAdvance();
+		}
+	}
+
+	SetNextThink( gpGlobals->curtime );
+}
+
+// -----------------
+
 // --> Mirv: Added for client class
-IMPLEMENT_SERVERCLASS_ST( CFFItemFlag, DT_FFItemFlag )
-	SendPropFloat( SENDINFO( m_flThrowTime ) )
-END_SEND_TABLE( )
+IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
+	SendPropFloat( SENDINFO( m_flThrowTime ) ),
+	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ),
+END_SEND_TABLE()
 // <-- Mirv: Added for client class
 
-BEGIN_DATADESC( CFFItemFlag )
+BEGIN_DATADESC( CFFInfoScript )
 	DEFINE_ENTITYFUNC( OnTouch ),
 	DEFINE_THINKFUNC( OnThink ),
 	DEFINE_THINKFUNC( OnRespawn ),
-END_DATADESC();
+END_DATADESC()
 
-LINK_ENTITY_TO_CLASS( info_ff_script, CFFItemFlag );
+LINK_ENTITY_TO_CLASS( info_ff_script, CFFInfoScript );
 PRECACHE_REGISTER( info_ff_script );
 
-CFFItemFlag::CFFItemFlag( )
+int ACT_INFO_IDLE;
+int ACT_INFO_ROLL;
+
+CFFInfoScript::CFFInfoScript( void )
+{
+	m_pAnimator = NULL;
+	m_pOwner = NULL;
+	m_pLastOwner = NULL;
+	m_spawnflags = 0;
+	m_vStartOrigin = Vector( 0, 0, 0 );
+	m_bHasAnims = false;
+}
+
+CFFInfoScript::~CFFInfoScript( void )
 {
 	m_spawnflags = 0;
 	m_vStartOrigin = Vector();
 }
 
-void CFFItemFlag::Precache( void )
+void CFFInfoScript::Precache( void )
 {
 	PrecacheModel( FLAG_MODEL );
 	entsys.RunPredicates( this, NULL, "precache" );
 }
 
-bool CFFItemFlag::CreateItemVPhysicsObject( void )
+bool CFFInfoScript::CreateItemVPhysicsObject( void )
 {
-	// make the entity stop following the player if necessary
-	if (GetOwnerEntity())
-	{
-		FollowEntity(NULL);
-		SetOwnerEntity(NULL);
-	}
+	SetOwnerEntity( NULL );
+	m_pLastOwner = m_pOwner;
+	m_pOwner = NULL;
 
 	// move it to where it's supposed to respawn at
 	m_atStart = true;
-	SetAbsOrigin(m_vStartOrigin);
-	SetLocalAngles(m_vStartAngles);
+	SetAbsOrigin( m_vStartOrigin );
+	SetLocalAngles( m_vStartAngles );
 
 	SetMoveType( MOVETYPE_NONE );
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetSolid( SOLID_BBOX );
+	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 
-	/*
-	// If it's not physical, drop it to the floor
-	if (UTIL_DropToFloor(this, MASK_SOLID) == 0)
+	// See if the info_ff_script should drop to the ground or not
+	if( !entsys.RunPredicates( this, NULL, "airspawn" ) )
 	{
-		Warning( "xxxx Item %s fell out of level at %f,%f,%f\n", GetClassname(), GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z);
-		UTIL_Remove( this );
-		return false;
+		// If it's not physical, drop it to the floor
+		if( UTIL_DropToFloor( this, MASK_SOLID ) == 0 )
+		{
+			Warning( "[InfoFFScript] Item %s fell out of level at %f,%f,%f\n", GetClassname(), GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z);
+			UTIL_Remove( this );
+			return false;
+		}
 	}
-	*/
 
 	// make it respond to touches
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	SetTouch( &CFFItemFlag::OnTouch );
+	SetTouch( &CFFInfoScript::OnTouch );
 
 	return true;
 }
 
-void CFFItemFlag::Spawn( void )
+void CFFInfoScript::Spawn( void )
 {
 	Precache();
+
+	m_vecOffset.SetX( entsys.RunPredicates( this, NULL, "attachoffsetforward" ) );
+	m_vecOffset.SetY( entsys.RunPredicates( this, NULL, "attachoffsetright" ) );
+	m_vecOffset.SetZ( entsys.RunPredicates( this, NULL, "attachoffsetup" ) );
+
+	if( entsys.RunPredicates( this, NULL, "hasanimation" ) )
+	{
+		m_bHasAnims = true;
+
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_ROLL );
+
+		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
+		if( m_pAnimator )
+		{
+			Warning( "[info_ff_script] created animator!\n" );
+			m_pAnimator->Spawn();
+			m_pAnimator->m_pFFScript = this;
+		}		
+	}
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetSolid( SOLID_BBOX );
+	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	SetModel( FLAG_MODEL );
 
 	SetBlocksLOS( false );
@@ -103,7 +164,6 @@ void CFFItemFlag::Spawn( void )
 	// Try and make the flags easier to grab
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
-//	DevMsg("[ff_item_flag] Spawn\n");
 	entsys.RunPredicates( this, NULL, "spawn" );
 
 	m_vStartOrigin = GetAbsOrigin();
@@ -112,70 +172,111 @@ void CFFItemFlag::Spawn( void )
 
 	CreateItemVPhysicsObject();
 
+	m_pOwner = NULL;
 	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
+
+	PlayIdleAnim();
 }
 
-void CFFItemFlag::OnTouch( CBaseEntity *pOther )
+void CFFInfoScript::PlayIdleAnim( void )
 {
-	if ( !pOther->IsPlayer() )
-		return;
-
-	//DevMsg("[ff_item_flag] Entity Touch");
-	CFFPlayer *pFFPlayer = ToFFPlayer(pOther);
-
-	//if ( m_atStart && GetAbsOrigin().DistToSqr(m_vStartOrigin) > 72)
-	//	return;
-
-	if(pFFPlayer)
-	{
-		// touch event
-		//if (m_pLastOwner != pFFPlayer || m_flThrowTime + 3.0f < gpGlobals->curtime)
-		// this shit is lua controlled now. don't care who touched your penis last.
-			entsys.RunPredicates( this, pOther, "touch" );
+	if( m_bHasAnims )
+	{		
+		m_Activity = ( Activity )ACT_INFO_IDLE;
+		m_iSequence = SelectWeightedSequence( m_Activity );
+		SetSequence( m_iSequence );
 	}
 }
 
-void CFFItemFlag::OnPlayerDied( CFFPlayer *pPlayer )
+void CFFInfoScript::PlayActiveAnim( void )
 {
-	if (this->GetOwnerEntity() == pPlayer)
+	if( m_bHasAnims )
 	{
-		//DevMsg("[ff_item_flag] Player Death\n");
-	
+		m_Activity = ( Activity )ACT_INFO_ROLL;
+		m_iSequence = SelectWeightedSequence( m_Activity );
+		SetSequence( m_iSequence );
+	}
+}
+
+void CFFInfoScript::OnTouch( CBaseEntity *pOther )
+{
+	if( !pOther->IsPlayer() )
+		return;
+
+	CFFPlayer *pPlayer = ToFFPlayer( pOther );
+
+	if( !pPlayer )
+		return;
+
+	entsys.RunPredicates( this, pPlayer, "touch" );
+}
+
+void CFFInfoScript::OnPlayerDied( CFFPlayer *pPlayer )
+{
+	// GetOwnerEntity() is NULL when coming in here
+	// since the owner has died.
+
+	/*
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+
+	Assert( pOwner );
+
+	if( !pOwner )
+		return;
+		*/
+
+	// Just making sure
+	SetOwnerEntity( NULL );
+
+	if( !m_pOwner )
+		return;
+
+	if( m_pOwner == pPlayer )
+	{
+		// Do this before running the script
+		m_pLastOwner = m_pOwner;
+		m_pOwner = NULL;
+
+		PlayIdleAnim();
+
 		// see when lua wants us to return this item
 		entsys.RunPredicates( this, pPlayer, "ownerdie" );
 	}
 }
 
-void CFFItemFlag::Pickup(CFFPlayer *pFFPlayer)
+void CFFInfoScript::Pickup(CFFPlayer *pFFPlayer)
 {
-	SetOwnerEntity(pFFPlayer);
-	SetTouch(NULL);
+	SetOwnerEntity( pFFPlayer );
+	SetTouch( NULL );
 
-	FollowEntity(pFFPlayer, true);
+	//FollowEntity(pFFPlayer, true);
+	m_pLastOwner = m_pOwner;
+	m_pOwner = pFFPlayer;	
 
 	// stop the return timer
 	SetThink( NULL );
 	SetNextThink( gpGlobals->curtime );
+
+	PlayActiveAnim();
 }
 
-void CFFItemFlag::Respawn(float delay)
+void CFFInfoScript::Respawn(float delay)
 {
 	CreateItemVPhysicsObject();
 
-	SetTouch(NULL);
+	SetTouch( NULL );
 	AddEffects( EF_NODRAW );
 
-	SetThink ( &CFFItemFlag::OnRespawn );
+	SetThink( &CFFInfoScript::OnRespawn );
 	SetNextThink( gpGlobals->curtime + delay );
-
 }
 
-void CFFItemFlag::OnRespawn( void )
+void CFFInfoScript::OnRespawn( void )
 {
 	CreateItemVPhysicsObject();
 
-	if ( IsEffectActive( EF_NODRAW ) )
+	if( IsEffectActive( EF_NODRAW ) )
 	{
 		// changing from invisible state to visible.
 		RemoveEffects( EF_NODRAW );
@@ -183,111 +284,160 @@ void CFFItemFlag::OnRespawn( void )
 		entsys.RunPredicates( this, NULL, "materialize" );
 	}
 
-	SetTouch( &CFFItemFlag::OnTouch );
+	SetTouch( &CFFInfoScript::OnTouch );
 
-	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
+
+	PlayIdleAnim();
 }
 
-void CFFItemFlag::Drop( float delay, float speed )
+void CFFInfoScript::Drop( float delay, float speed )
 {
+	/*
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+
+	Assert( pOwner );
+
+	if( !pOwner )
+		return;
+		*/
+
+	// GetOwnerEntity() is NULL already
+
+	if( !m_pOwner )
+		return;
+
+	CFFPlayer *pOwner = m_pOwner;
+
+	// All stuff to use later once we lose the ownerentity
+	Vector vecForward, vecRight, vecUp;
+	pOwner->EyeVectors( &vecForward, &vecRight, &vecUp );
+	Vector vecOrigin = pOwner->GetAbsOrigin();
+	QAngle vecAngles = pOwner->EyeAngles();
+
+	// Lose the owner & mark as not being carried
+	SetOwnerEntity( NULL );	
+
 	// stop following
-	FollowEntity(NULL);
+	//FollowEntity(NULL);	
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	CollisionRulesChanged();
+	
+	VectorNormalize( vecForward );
+	VectorNormalize( vecRight );
+	VectorNormalize( vecUp );
 
+	/*
 	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
 
 	Assert(owner);
 
 	if (!owner)
 		return;
+		*/
 
 	// inherit the owner's motion
 	SetGravity( 1.0 );
-	SetAbsOrigin(owner->GetAbsOrigin());
+	//SetAbsOrigin(owner->GetAbsOrigin());
+	SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
-	QAngle ang = owner->EyeAngles();
-	ang.y += 90.0f;
+	//QAngle ang = owner->EyeAngles();
+	//ang.y += 90.0f;
 
-	SetAbsAngles(QAngle(0, owner->EyeAngles().y + 90.0f, 0));
+	//SetAbsAngles(QAngle(0, owner->EyeAngles().y + 90.0f, 0));
+	SetAbsAngles( QAngle( 0, vecAngles.y + 90.0f, 0 ) );
 
 	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
-	Vector vel = Vector(0, 0, 20.0f); // owner->GetAbsVelocity();
+	Vector vel = Vector( 0, 0, 20.0f ); // owner->GetAbsVelocity();
 
-	if (speed)
+	if( speed )
 	{
+		/*
 		Vector vecForward;
 		owner->EyeVectors(&vecForward);
+		*/
+		VectorNormalize( vecForward );
 
 		vel += vecForward * speed;
 	}
 
 	// Mirv: Don't allow a downwards velocity as this will make it float instead
-	if (vel.z < 1.0f)
+	if( vel.z < 1.0f )
 		vel.z = 1.0f;
 
-	SetAbsVelocity(vel);
+	SetAbsVelocity( vel );
 
 	// make it respond to touch again
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	CollisionProp()->UseTriggerBounds( false, ITEM_PICKUP_BOX_BLOAT );
-	SetTouch( &CFFItemFlag::OnTouch );		// |-- Mirv: Account for GCC strictness
+	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
+	SetTouch( &CFFInfoScript::OnTouch );		// |-- Mirv: Account for GCC strictness
 
 	// set to respawn in [delay] seconds
-	if (delay > 0)
+	if( delay > 0 )
 	{
-		SetThink( &CFFItemFlag::OnThink );	// |-- Mirv: Account for GCC strictness
+		SetThink( &CFFInfoScript::OnThink );	// |-- Mirv: Account for GCC strictness
 		SetNextThink( gpGlobals->curtime + delay );
 	}
 
-	m_pLastOwner = owner;
+	//m_pLastOwner = pOwner;
 	m_flThrowTime = gpGlobals->curtime;
+	m_pLastOwner = m_pOwner;
+	m_pOwner = NULL;
 
-	// it's dropped, so don't need a parent anymore
-	SetOwnerEntity(NULL);
+	PlayIdleAnim();
 
 	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
 	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 }
 
-CBaseEntity* CFFItemFlag::Return( void )
+CBaseEntity* CFFInfoScript::Return( void )
 {
 	// #0000220: Capping flag simultaneously with gren explosion results in flag touch.
 	// set this to curtime so that it will take a few seconds before it becomes
 	// eligible to be picked up again.
-	CFFPlayer *owner = ToFFPlayer(GetOwnerEntity());
+	/*
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
 
-	if (owner)
+	if( pOwner )
 	{
 		m_flThrowTime = gpGlobals->curtime;
-		m_pLastOwner = owner;
+		m_pLastOwner = pOwner;
 
 		entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 	}
+	*/
+
+	if( !m_pLastOwner )
+		return NULL;
+
+	m_flThrowTime = gpGlobals->curtime;
+
+	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 
 	CreateItemVPhysicsObject();
 
 	return this;
 }
 
-void CFFItemFlag::OnThink( void )
+void CFFInfoScript::OnThink( void )
 {
 	entsys.RunPredicates( this, NULL, "onreturn" );
 
 	Return();
 }
 
-void CFFItemFlag::SetSpawnFlags( int flags )
+void CFFInfoScript::SetSpawnFlags( int flags )
 {
 	m_spawnflags = flags;
 }
 
-void CFFItemFlag::LUA_SetModel( const char *model )
+//* This stuff is part of baseentity... need to remove
+void CFFInfoScript::LUA_SetModel( const char *model )
 {
 	UTIL_SetModel(this, model);
 }
-void CFFItemFlag::LUA_SetSkin( int skin )
+void CFFInfoScript::LUA_SetSkin( int skin )
 {
 	this->m_nSkin = skin;
 }
+//*/
