@@ -97,7 +97,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		default:
 			break;
 		}
-		DevMsg("[Grenade Debug] Checking next entity\n");
+		//DevMsg("[Grenade Debug] Checking next entity\n");
 	END_ENTITY_SPHERE_QUERY();
 
 	// set the damage to 0 since we already did damage
