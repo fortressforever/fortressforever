@@ -14,6 +14,8 @@
 //
 //	07/11/2005, Mulchman:
 //		Added client side ability to add hints
+//
+//	Mirv: Rewritten and fully implemented this
 
 #include "cbase.h"
 IFileSystem **pFilesystem = &filesystem;

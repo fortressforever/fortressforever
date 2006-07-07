@@ -369,6 +369,9 @@
 					RelativePath=".\ff\ff_hud_location.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_hud_lua.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_hud_menu.cpp">
 				</File>
 				<File
@@ -410,6 +413,9 @@
 				<Filter
 					Name="vgui"
 					Filter="">
+					<File
+						RelativePath=".\ff\vgui\ff_vgui_timer.cpp">
+					</File>
 					<File
 						RelativePath=".\ff\vgui\ffviewport.cpp">
 					</File>
@@ -3421,10 +3427,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">

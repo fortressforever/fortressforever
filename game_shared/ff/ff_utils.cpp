@@ -457,3 +457,80 @@ const char *FF_GetAmmoName(int i)
 
 	return NULL;
 }
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Set an icon on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+		WRITE_BYTE(0);	// HUD_ICON
+		WRITE_STRING(pszIdentifier);
+		WRITE_SHORT(x);
+		WRITE_SHORT(y);
+		WRITE_STRING(pszImage);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set some text on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+		WRITE_BYTE(1);	// HUD_TEXT
+		WRITE_STRING(pszIdentifier);
+		WRITE_SHORT(x);
+		WRITE_SHORT(y);
+		WRITE_STRING(pszText);
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set a timer on the hud
+//-----------------------------------------------------------------------------
+void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+		WRITE_BYTE(2);	// HUD_TIMER
+		WRITE_STRING(pszIdentifier);
+		WRITE_SHORT(x);
+		WRITE_SHORT(y);
+		WRITE_SHORT(iStartValue);
+		WRITE_FLOAT(flSpeed);
+	MessageEnd();
+}
+
+void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier)
+{
+	if (!pPlayer)
+		return;
+
+	CSingleUserRecipientFilter user(pPlayer);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FF_HudLua");
+		WRITE_BYTE(3);	// HUD_REMOVE
+		WRITE_STRING(pszIdentifier);
+	MessageEnd();
+}
+#endif
