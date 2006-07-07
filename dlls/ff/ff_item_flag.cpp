@@ -145,7 +145,7 @@ void CFFInfoScript::Spawn( void )
 		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
 		if( m_pAnimator )
 		{
-			Warning( "[info_ff_script] created animator!\n" );
+			//Warning( "[info_ff_script] created animator!\n" );
 			m_pAnimator->Spawn();
 			m_pAnimator->m_pFFScript = this;
 		}		
@@ -407,12 +407,15 @@ CBaseEntity* CFFInfoScript::Return( void )
 	}
 	*/
 
-	if( !m_pLastOwner )
+	if( !m_pLastOwner && !m_pOwner )
 		return NULL;
 
 	m_flThrowTime = gpGlobals->curtime;
 
-	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
+	if( m_pLastOwner )
+		entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
+	else
+		entsys.RunPredicates( this, m_pOwner, "onloseitem" );
 
 	CreateItemVPhysicsObject();
 
