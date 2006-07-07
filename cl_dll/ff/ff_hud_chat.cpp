@@ -272,7 +272,8 @@ void CHudChat::MsgFunc_SayText( bf_read &msg )
 		bool bIsSpectator = gr->GetTeam(client) < TEAM_BLUE;
 		bool bLocalPlayerSpectator = CBasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE;
 
-		if (!bLocalPlayerSpectator && bIsSpectator && !sv_specchat.GetBool())
+		// Don't block rcon messages
+		if (client != 0 && !bLocalPlayerSpectator && bIsSpectator && !sv_specchat.GetBool())
 			return;
 	}
 
