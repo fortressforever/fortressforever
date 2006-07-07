@@ -168,6 +168,41 @@ CFFPlayer * CFFWeaponBase::GetPlayerOwner() const
 	return dynamic_cast<CFFPlayer *> (GetOwner());
 }
 
+const char *CFFWeaponBase::GetWorldModel( void ) const
+{
+#ifdef CLIENT_DLL
+	CFFPlayer *pFFPlayer = GetPlayerOwner();
+	if(pFFPlayer && pFFPlayer->IsDisguised())
+	{
+		CFFWeaponBase *pWeapon = pFFPlayer->GetActiveFFWeapon();
+
+		int iSlot = pWeapon->GetFFWpnData().iSlot;
+		int iClass = pFFPlayer->GetDisguisedClass();
+
+		if(pWeapon == this)
+		{
+			if(pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[pWeapon->GetFFWpnData().iSlot][0] != NULL)
+				return pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[iSlot];
+		}
+	}
+#endif
+	return BaseClass::GetWorldModel();
+}
+
+int CFFWeaponBase::GetWorldModelIndex( void )
+{
+	CFFPlayer *pFFPlayer = GetPlayerOwner();
+	if(pFFPlayer && pFFPlayer->IsDisguised())
+		return modelinfo->GetModelIndex(GetWorldModel()); 
+	else
+#ifdef CLIENT_DLL
+		return BaseClass::GetWorldModelIndex();
+#else	//server should never use this code!
+		Assert( false );
+#endif
+	return 0;
+}
+
 //----------------------------------------------------------------------------
 // Purpose: Get script file weapon data
 //----------------------------------------------------------------------------
