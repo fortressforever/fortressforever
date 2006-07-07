@@ -22,6 +22,7 @@
 
 //#define FLAG_MODEL "models/items/backpack/backpack.mdl"
 #define FLAG_MODEL "models/items/healthkit.mdl"
+//#define FLAG_MODEL "models/items/ball/ball.mdl"
 
 // Forward declaration
 class CFFInfoScriptAnimator;
@@ -36,28 +37,29 @@ public:
 	CFFInfoScript( void );
 	~CFFInfoScript( void );
 
-	void Spawn		( void );
-	void Precache	( void );
-	void OnTouch( CBaseEntity * );
-	void OnPlayerDied( CFFPlayer * );
-	void OnThink( void );
-	void OnRespawn( void );
+	virtual void	Spawn( void );
+	virtual void	Precache( void );
+	void			OnTouch( CBaseEntity * );
+	void			OnPlayerDied( CFFPlayer * );
+	void			OnThink( void );
+	void			TempThink( void );
+	void			OnRespawn( void );
 
-	virtual bool IsPlayer( void ) { return false; }
-	virtual bool BlocksLOS( void ) { return false; }
-	virtual bool IsAlive( void ) { return false; }
+	virtual bool	IsPlayer( void ) { return false; }
+	virtual bool	BlocksLOS( void ) { return false; }
+	virtual bool	IsAlive( void ) { return false; }
 
-	void Pickup( CFFPlayer * );
-	void Drop( float delay, float speed = 0.0f );
-	void Respawn( float delay );
-	CBaseEntity* Return ( void );
+	void			Pickup( CFFPlayer * );
+	void			Drop( float delay, float speed = 0.0f );
+	void			Respawn( float delay );
+	CBaseEntity*	Return ( void );
 
-	void SetSpawnFlags( int flags );
+	void			SetSpawnFlags( int flags );
 
-	void LUA_SetModel( const char *model );
-	void LUA_SetSkin( int skin );
+	void			LUA_SetModel( const char *model );
+	void			LUA_SetSkin( int skin );
 
-	bool HasAnimations( void ) const { return m_bHasAnims; }
+	bool			HasAnimations( void ) const { return m_bHasAnims; }
 
 protected:
 
@@ -75,7 +77,7 @@ protected:
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
 
-	CFFPlayer *m_pOwner;
+	//CFFPlayer *m_pOwner;
 	CFFPlayer *m_pLastOwner;
 	
 	CNetworkVar(float, m_flThrowTime);
