@@ -186,7 +186,8 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// A bunch of conditions that may stop the flamethrower
 	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)
 	{
-		m_fEmit = false;
+		// Don't disable it for now
+		//m_fEmit = false;
 		return;
 	}
 
