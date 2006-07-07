@@ -375,6 +375,13 @@ void RocketTrail::Think( void )
 			SetNextThink( gpGlobals->curtime );
 		}		
 	}
+	else
+	{
+		// If we're not following an entity, remove self
+		// See if this helps the rogue rocket trails at all
+		SetThink(&RocketTrail::SUB_Remove);
+		SetNextThink(gpGlobals->curtime);
+	}
 }
 
 //==================================================
