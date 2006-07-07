@@ -31,6 +31,12 @@ enum FFStatusIconTypes
 	FF_NUMICONS
 };
 
+struct SpyDisguiseWeapon
+{
+	char szWeaponModel[6][MAX_WEAPON_STRING];
+	char szAnimExt[6][MAX_WEAPON_PREFIX];
+};
+
 #ifdef CLIENT_DLL
 struct SpyInfo_s
 {

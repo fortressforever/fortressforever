@@ -156,6 +156,7 @@ public:
 	virtual ShadowType_t ShadowCastType( void );
 
 public:	
+	SpyDisguiseWeapon m_DisguisedWeapons[11];
 	int GetDisguisedClass( void );
 	int GetDisguisedTeam( void );
 	bool IsDisguised( void );

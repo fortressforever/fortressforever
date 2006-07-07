@@ -321,6 +321,16 @@ const char* CFFPlayerAnimState::GetWeaponSuffix()
 
 	const char *pSuffix = pWeapon->GetFFWpnData().m_szAnimExtension;
 
+	//Disguised? override.
+#ifdef CLIENT_DLL
+	CFFPlayer *pFFPlayer = ToFFPlayer(pWeapon->GetOwner());
+
+	if(pFFPlayer && pFFPlayer->IsDisguised())
+	{
+		if(pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot][0] != NULL)
+			pSuffix = pFFPlayer->m_DisguisedWeapons[pFFPlayer->GetDisguisedClass()].szAnimExt[pWeapon->GetFFWpnData().iSlot];
+	}
+#endif
 	return pSuffix;
 }
 

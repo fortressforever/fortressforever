@@ -8,6 +8,7 @@
 #include "input.h"
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
+#include "ff_playerclass_parse.h"
 #include "c_basetempentity.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_utils.h"
@@ -63,6 +64,9 @@ static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_
 static char g_szTimerFile[MAX_PATH];
 void TimerChange_Callback(ConVar *var, char const *pOldString);
 ConVar cl_timerwav("cl_grenadetimer", "default", FCVAR_ARCHIVE, "Timer file to use", TimerChange_Callback);
+
+// Get around the ambiguous symbol problem
+extern IFileSystem **pFilesystem;
 
 // #0000331: impulse 81 not working (weapon_cubemap)
 #include "../c_weapon__stubs.h"
@@ -642,6 +646,10 @@ IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const
 	}
 }
 
+const unsigned char *GetEncryptionKey( void )
+{
+	return NULL;
+}
 
 
 C_FFPlayer::C_FFPlayer() : 
@@ -673,6 +681,79 @@ C_FFPlayer::C_FFPlayer() :
 	}
 
 	m_pFlashlightBeam = NULL;
+
+	//VOOGRU: I'll have bad nightmares if I don't do this.
+	memset(&m_DisguisedWeapons, 0, sizeof(m_DisguisedWeapons));
+
+	//Loop through all classes.
+	for (int i=1; i < 10; i++)
+	{
+		PLAYERCLASS_FILE_INFO_HANDLE PlayerClassInfo;
+
+		if (!ReadPlayerClassDataFromFileForSlot((*pFilesystem), Class_IntToString(i), &PlayerClassInfo, GetEncryptionKey()))
+			return;
+
+		CFFPlayerClassInfo *pPlayerClassInfo = GetFilePlayerClassInfoFromHandle(PlayerClassInfo);
+
+		//Get weapons for the class they disguised as.
+		WEAPON_FILE_INFO_HANDLE	WeaponInfo;
+
+		//Loop through weapons, find a weapon in the same slot as the one they are using, and set their current weapon model to that.
+		for ( int j = 0; j < pPlayerClassInfo->m_iNumWeapons; j++ )
+		{
+			if ( ReadWeaponDataFromFileForSlot( (*pFilesystem), pPlayerClassInfo->m_aWeapons[j], &WeaponInfo, GetEncryptionKey() ) )
+			{
+				CFFWeaponInfo *pWeaponInfo = NULL;
+#ifdef _DEBUG
+				pWeaponInfo = dynamic_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+				Assert(pWeaponInfo);
+#else
+				pWeaponInfo = static_cast<CFFWeaponInfo *> (GetFileWeaponInfoFromHandle(WeaponInfo));
+#endif
+
+				if(pWeaponInfo)
+				{
+					int iPlayerClass = i;
+					int iSlot = pWeaponInfo->iSlot;
+
+					//Correct slots in a 1/2/3/4 layout, so spy can select all available weapons.
+					switch(iPlayerClass)
+					{
+					case 1:
+						if(iSlot == 3) 
+							iSlot = 2;
+						break;
+					case 3:
+						if(iSlot == 4) 
+							iSlot = 3;
+						break;
+					case 4:
+						if(iSlot == 4) 
+							iSlot = 2;
+						break;
+					case 6:
+						if(iSlot == 4) 
+							iSlot = 3;
+						break;
+					case 7:
+						if(iSlot == 3) 
+							iSlot = 2;
+						else if(iSlot == 4) 
+							iSlot = 3;
+						break;
+					}
+
+					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
+						pWeaponInfo->szWorldModel, 
+						sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
+
+					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
+						pWeaponInfo->m_szAnimExtension, 
+						sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+				}
+			}
+		}
+	}
 }
 
 C_FFPlayer::~C_FFPlayer()
@@ -1022,9 +1103,6 @@ void C_FFPlayer::SwapToWeapon(FFWeaponID weaponid)
 			::input->MakeWeaponSelection(weap);
 	}	
 }
-
-// Get around the ambiguous symbol problem
-extern IFileSystem **pFilesystem;
 
 //-----------------------------------------------------------------------------
 // Purpose: When the player selects a timer by changing this cvar, validate

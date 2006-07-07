@@ -151,6 +151,8 @@ public:
 	// Default primary attack for non-clip weapons
 	virtual void		PrimaryAttack();
 
+	const char			*GetWorldModel( void ) const;
+	int					GetWorldModelIndex( void );
 private:
 
 	CFFWeaponBase(const CFFWeaponBase &);
