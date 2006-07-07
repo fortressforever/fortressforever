@@ -1927,7 +1927,7 @@ void CFFPlayer::KillPlayer( void )
 			Event_Killed( CTakeDamageInfo( GetInfector(), GetInfector(), 0, DMG_NEVERGIB ) );	// |-- Mirv: pInflictor = NULL so that death message is "x died."
 		}
 		else
-			Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
+			Event_Killed( CTakeDamageInfo( NULL, this, 0, DMG_NEVERGIB ) );
 		Event_Dying();
 	}
 	else
