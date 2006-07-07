@@ -23,14 +23,18 @@
 //#define FLAG_MODEL "models/items/backpack/backpack.mdl"
 #define FLAG_MODEL "models/items/healthkit.mdl"
 
-class CFFItemFlag : public CBaseAnimating
+// Forward declaration
+class CFFInfoScriptAnimator;
+
+class CFFInfoScript : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CFFItemFlag, CBaseAnimating );
+	DECLARE_CLASS( CFFInfoScript, CBaseAnimating );
 	DECLARE_SERVERCLASS();		// |-- Mirv: Added for client class
 	DECLARE_DATADESC();
 
-	CFFItemFlag( );
+	CFFInfoScript( void );
+	~CFFInfoScript( void );
 
 	void Spawn		( void );
 	void Precache	( void );
@@ -53,18 +57,43 @@ public:
 	void LUA_SetModel( const char *model );
 	void LUA_SetSkin( int skin );
 
-private:
+	bool HasAnimations( void ) const { return m_bHasAnims; }
+
+protected:
 
 	bool CreateItemVPhysicsObject( void );
 
 	bool m_atStart;
+	
+	bool m_bHasAnims;
+	int m_iSequence;
+	Activity m_Activity;
+	void PlayIdleAnim( void );
+	void PlayActiveAnim( void );
+	CFFInfoScriptAnimator *m_pAnimator;
 
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
 
+	CFFPlayer *m_pOwner;
 	CFFPlayer *m_pLastOwner;
 	
 	CNetworkVar(float, m_flThrowTime);
+
+	CNetworkVector( m_vecOffset );
+};
+
+// This is a cheap hack
+class CFFInfoScriptAnimator : public CBaseAnimating
+{
+public:
+	DECLARE_CLASS( CFFInfoScriptAnimator, CBaseAnimating );
+	DECLARE_DATADESC();
+
+	virtual void	Spawn( void );
+	void			OnThink( void );
+
+	CFFInfoScript *m_pFFScript;
 };
 
 #endif//FF_ITEM_FLAG_H

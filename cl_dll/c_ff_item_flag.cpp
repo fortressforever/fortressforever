@@ -14,39 +14,44 @@
 #include "c_ff_player.h"
 #include "iinput.h"
 
-class C_FFItemFlag : public C_BaseAnimating
+class C_FFInfoScript : public C_BaseAnimating
 {
 public:
-	DECLARE_CLASS(C_FFItemFlag, C_BaseAnimating);
+	DECLARE_CLASS(C_FFInfoScript, C_BaseAnimating);
 	DECLARE_CLIENTCLASS();
 
-	C_FFItemFlag() {};
-	~C_FFItemFlag() {};
+	C_FFInfoScript() {};
+	~C_FFInfoScript() {};
 
-	virtual void OnDataChanged(DataUpdateType_t updateType);
-	virtual int DrawModel(int flags);
+	virtual void	OnDataChanged(DataUpdateType_t updateType);
+	virtual int		DrawModel(int flags);	
+	virtual void	ClientThink( void );
 	virtual ShadowType_t ShadowCastType( void );
 
+protected:
 	float m_flThrowTime;
+
+	Vector m_vecOffset;
 };
 
-IMPLEMENT_CLIENTCLASS_DT(C_FFItemFlag, DT_FFItemFlag, CFFItemFlag) 
-	RecvPropFloat(RECVINFO(m_flThrowTime)) 
+IMPLEMENT_CLIENTCLASS_DT( C_FFInfoScript, DT_FFInfoScript, CFFInfoScript ) 
+	RecvPropFloat( RECVINFO( m_flThrowTime ) ),
+	RecvPropVector( RECVINFO( m_vecOffset ) ),
 END_RECV_TABLE() 
 
 
-void C_FFItemFlag::OnDataChanged(DataUpdateType_t updateType) 
+void C_FFInfoScript::OnDataChanged( DataUpdateType_t updateType ) 
 {
 	// NOTE: We MUST call the base classes' implementation of this function
-	BaseClass::OnDataChanged(updateType);
+	BaseClass::OnDataChanged( updateType );
 
-	if (updateType == DATA_UPDATE_CREATED) 
+	if( updateType == DATA_UPDATE_CREATED ) 
 	{
-		SetNextClientThink(CLIENT_THINK_ALWAYS);
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
 
-int C_FFItemFlag::DrawModel(int flags) 
+int C_FFInfoScript::DrawModel( int flags ) 
 {
 	// Bug #0000590: You don't see flags you've thrown, or have, while in thirdperson
 	// Always draw if thirdperson
@@ -64,7 +69,7 @@ int C_FFItemFlag::DrawModel(int flags)
 }
 
 // Bug #0000508: Carried objects cast a shadow for the carrying player
-ShadowType_t C_FFItemFlag::ShadowCastType( void )
+ShadowType_t C_FFInfoScript::ShadowCastType( void )
 {
 	if( GetFollowedEntity() == C_BasePlayer::GetLocalPlayer() )
 	{
@@ -76,5 +81,45 @@ ShadowType_t C_FFItemFlag::ShadowCastType( void )
 	else
 	{
 		return SHADOWS_RENDER_TO_TEXTURE;
+	}
+}
+
+void C_FFInfoScript::ClientThink( void )
+{
+	// If we have an owner entity we are being carried
+	if( GetOwnerEntity() )
+	{
+		// Move our origin according to GetOwnerEntity()'s GetAbsOrigin()
+
+		// All this "extra" junk is so the object doesn't move
+		// when the player looks up or down
+		Vector vecForward, vecRight, vecUp;
+		GetOwnerEntity()->GetVectors( &vecForward, &vecRight, &vecUp );
+
+		Vector vecOrigin = GetOwnerEntity()->GetAbsOrigin();
+
+		VectorNormalizeFast( vecForward );
+
+		Vector vecForwardPos = vecOrigin + ( vecForward * 96.0f );
+
+		// Put on the same plane
+		vecForwardPos.z = vecOrigin.z;
+		
+		// Get real forward direction now (not just "forward-wherever-crosshair-pointed" direction)
+		vecForward = vecForwardPos - vecOrigin;
+
+		// Get real up direction
+		vecUp = ( vecOrigin + Vector( 0, 0, 96.0f ) ) - vecOrigin;
+
+		VectorNormalizeFast( vecForward );		
+		VectorNormalizeFast( vecUp );
+
+		// Think this is correct to get a right vector
+		CrossProduct( vecUp, vecForward, vecRight );
+
+		VectorNormalizeFast( vecRight );
+
+		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.x ) + ( vecRight * m_vecOffset.y ) + ( vecUp * m_vecOffset.z ) );
+		SetAbsAngles( QAngle( 0, GetOwnerEntity()->GetAbsAngles().y, 0 ) );
 	}
 }
