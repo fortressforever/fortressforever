@@ -58,7 +58,8 @@ int C_FFInfoScript::DrawModel( int flags )
 	if( input->CAM_IsThirdPerson() )
 		return BaseClass::DrawModel( flags );
 
-	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
+	// Flags seem to have changed to using GetOwnerEntity now
+	if (/*GetFollowedEntity()*/ GetOwnerEntity() == CBasePlayer::GetLocalPlayer()) 
 		return 0;
 
 	// Temporary fix until we sort out the interpolation business
