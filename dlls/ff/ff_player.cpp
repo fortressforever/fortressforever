@@ -1689,6 +1689,11 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		// death wait
 		ActivateClass();
 	}
+	else
+	{
+		// They didn't want to kill themselves, so let them know they're changing
+		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_CHANGECLASS_LATER", Class_IntToString(iClass));
+	}
 }
 
 void CFFPlayer::Command_Class(void)
