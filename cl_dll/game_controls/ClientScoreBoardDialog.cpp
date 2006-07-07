@@ -906,8 +906,10 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 	int iRowId = data->GetInt("itemID");
 	int playerIndex = FindPlayerIndexForItemID(iRowId);
 
+	IGameResources *pGR = GameResources();
+
 	// Don't change local player info
-	if (playerIndex <= 1)
+	if (pGR && pGR->IsLocalPlayer(playerIndex))
 		return;
 
 	// If player is not audible, only toggle text block
