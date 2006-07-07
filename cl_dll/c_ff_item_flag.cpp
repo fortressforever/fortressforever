@@ -59,7 +59,7 @@ int C_FFInfoScript::DrawModel( int flags )
 		return BaseClass::DrawModel( flags );
 
 	// Flags seem to have changed to using GetOwnerEntity now
-	if (/*GetFollowedEntity()*/ GetOwnerEntity() == CBasePlayer::GetLocalPlayer()) 
+	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
 		return 0;
 
 	// Temporary fix until we sort out the interpolation business
@@ -88,16 +88,16 @@ ShadowType_t C_FFInfoScript::ShadowCastType( void )
 void C_FFInfoScript::ClientThink( void )
 {
 	// If we have an owner entity we are being carried
-	if( GetOwnerEntity() )
+	if( GetFollowedEntity() )
 	{
 		// Move our origin according to GetOwnerEntity()'s GetAbsOrigin()
 
 		// All this "extra" junk is so the object doesn't move
 		// when the player looks up or down
 		Vector vecForward, vecRight, vecUp;
-		GetOwnerEntity()->GetVectors( &vecForward, &vecRight, &vecUp );
+		GetFollowedEntity()->GetVectors( &vecForward, &vecRight, &vecUp );
 
-		Vector vecOrigin = GetOwnerEntity()->GetAbsOrigin();
+		Vector vecOrigin = GetFollowedEntity()->GetAbsOrigin();
 
 		VectorNormalizeFast( vecForward );
 
@@ -121,6 +121,6 @@ void C_FFInfoScript::ClientThink( void )
 		VectorNormalizeFast( vecRight );
 
 		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.x ) + ( vecRight * m_vecOffset.y ) + ( vecUp * m_vecOffset.z ) );
-		SetAbsAngles( QAngle( 0, GetOwnerEntity()->GetAbsAngles().y, 0 ) );
+		SetAbsAngles( QAngle( 0, GetFollowedEntity()->GetAbsAngles().y, 0 ) );
 	}
 }

@@ -271,13 +271,24 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PUSHABLES) && FClassnameIs(pOther, "func_pushable")) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_PHYSICS) && pOther->GetMoveType() == MOVETYPE_VPHYSICS))
 	{
+		// This is needed as CBaseTrigger::StartTouch can fail
+		// but the superclass (like a push or teleporter) will
+		// still call it's individual Touch function - when it
+		// shouldn't. A better solution would be when StartTouch
+		// doesn't finish (like allowed is false) the super class
+		// touch function never gets called - but I don't know
+		// where that code is...
+
 		// If we're set to check all entities
 		if( HasSpawnFlags( SF_TRIGGER_ALLOW_ALL ) )
 		{
 			// If the entity sys allowed func returns false then 
 			// bail. If true, run these other checks.
 			if( !entsys.RunPredicates( this, pOther, "allowed" ) )
+			{
+				entsys.RunPredicates( this, pOther, "onfailtouch" );
 				return false;
+			}
 		}
 		else
 		{
@@ -290,7 +301,10 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 				// If the entity sys allowed func returns false then 
 				// bail. If true, run these other checks.
 				if( !entsys.RunPredicates( this, pOther, "allowed" ) )
+				{
+					entsys.RunPredicates( this, pOther, "onfailtouch" );
 					return false;
+				}
 			}
 		}
 
