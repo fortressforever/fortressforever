@@ -11,9 +11,9 @@
 				This is a basic starting implementation.
 
 				Some things to think about:
-					· Colour control
+					· Colour control.
 					· Loading the ClientScheme.res settings for font
-					  sizes and stuff
+					  sizes and stuff.
 					· Do we _REALLY_ want to give them free reign to
 					  put their things everywhere? This screws up
 					  users' ability to customise their hud.
@@ -22,7 +22,7 @@
 					· You can currently have elements of different types
 					  with the same names. That way you could have some
 					  text and an icon with the same name and get rid of
-					  them both with one call
+					  them both with one call.
 *********************************************************************/
 
 #include "cbase.h"
@@ -248,27 +248,6 @@ Panel *CHudLua::GetHudElement(const char *pszIdentifier, HudElementType_t iType,
 	m_nHudElements++;
 
 	return pPanel;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Add a hud element to the lua hud
-//-----------------------------------------------------------------------------
-void CHudLua::AddHudElement(const char *pszIdentifier, HudElementType_t type, Panel *pPanel)
-{
-	
-
-	if (m_nHudElements == MAX_HUD_ELEMENTS)
-	{
-		AssertMsg(0, "Serious memory leak happening here");
-		return;
-	}
-
-	// Keep a track of this hud element here
-	m_sHudElements[m_nHudElements].pPanel = pPanel;
-	m_sHudElements[m_nHudElements].iType = type;
-	Q_strncpy(m_sHudElements[m_nHudElements].szIdentifier, pszIdentifier, 127);
-
-	m_nHudElements++;
 }
 
 //-----------------------------------------------------------------------------

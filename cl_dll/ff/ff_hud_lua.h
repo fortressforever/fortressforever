@@ -59,9 +59,7 @@ public:
 	void	MsgFunc_FF_HudLua(bf_read &msg);
 
 	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType, bool bCreateNew = true);
-	void	AddHudElement(const char *pszIdentifier, HudElementType_t type, Panel *pPanel);
 	void	RemoveElement(const char *pszIdentifier);
-
 
 	void	HudIcon(const char *pszIdentifer, int iX, int iY, const char *pszSource);
 	void	HudText(const char *pszIdentifer, int iX, int iY, const char *pszText);
