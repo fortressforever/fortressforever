@@ -715,6 +715,7 @@ C_FFPlayer::C_FFPlayer() :
 				{
 					int iPlayerClass = i;
 					int iSlot = pWeaponInfo->iSlot;
+					bool bDone = false;
 
 					//Correct slots in a 1/2/3/4 layout, so spy can select all available weapons.
 					switch(iPlayerClass)
@@ -741,7 +742,23 @@ C_FFPlayer::C_FFPlayer() :
 						else if(iSlot == 4) 
 							iSlot = 3;
 						break;
+					case 9:
+						if(iSlot > 2) //use shotgun for everything after the shotgun.
+						{
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szWeaponModel[2], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot]));
+
+							Q_strncpy(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot], 
+								m_DisguisedWeapons[iPlayerClass].szAnimExt[2], 
+								sizeof(m_DisguisedWeapons[iPlayerClass].szAnimExt[iSlot]));
+							bDone = true;
+						}
+						break;
 					}
+
+					if(bDone)
+						continue;
 
 					Q_strncpy(m_DisguisedWeapons[iPlayerClass].szWeaponModel[iSlot], 
 						pWeaponInfo->szWorldModel, 
