@@ -4768,6 +4768,8 @@ void CFFPlayer::SpySabotageRelease()
 
 //-----------------------------------------------------------------------------
 // Purpose: A more TFC-style bodytarget
+//			Have decreased some of the variance as well to make rocket
+//			jumping more consistent
 //-----------------------------------------------------------------------------
 Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 { 
@@ -4777,7 +4779,7 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 	}
 	if (bNoisy)
 	{
-		return GetLegacyAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.5f, 1.1f));
+		return GetLegacyAbsOrigin() + (Vector(0, 0, 28) * random->RandomFloat(0.8f, 1.1f));
 	}
 	else
 	{
