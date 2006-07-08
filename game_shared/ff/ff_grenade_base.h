@@ -59,6 +59,7 @@ public:
 	virtual float GetGrenadeElasticity() { return gren_elas.GetFloat(); }
 	virtual float GetGrenadeDamage() { return 180.0f; }
 	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }
+	virtual float GetShakeAmplitude() { return 2.5f; }
 
 	bool m_fIsHandheld;	// This will eventually need to be on the client too
 #endif
