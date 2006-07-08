@@ -80,6 +80,11 @@ public:
 	* @param position	new position for the entity
 	*/
 	void SetOrigin(Vector position);
+
+	/**
+	* Returns true if an object is on fire
+	*/
+	bool IsOnFire();
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -341,6 +346,31 @@ public:
 	* @param bRemoveSuit	take the suit away too?
 	*/
 	void RemoveAllWeapons(bool bRemoveSuit);
+
+	/**
+	/* Returns true if a player is disguised
+	*/
+	bool IsDisguised();
+
+	/** 
+	/* Returns the team the player is disguised as
+	*/
+	int GetDisguisedTeam();
+
+	/** 
+	/* Returns the class the player is disguised as
+	*/
+	int GetDisguisedTeam();
+
+	/**
+	/* Returns true if a player is ducking
+	*/
+	bool IsDucking();
+
+	/** 
+	/* Returns true if a player is on the ground
+	*/
+	bool IsOnGround();
 };
 
 /////////////////////////////////////////////////////////////////////////////
