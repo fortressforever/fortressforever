@@ -15,6 +15,7 @@
 #include "cbase.h"
 #include "ff_item_flag.h"
 #include "ff_entity_system.h"
+#include "debugoverlay_shared.h"
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -252,6 +253,12 @@ void CFFInfoScript::Pickup(CFFPlayer *pFFPlayer)
 	SetOwnerEntity( pFFPlayer );
 	SetTouch( NULL );
 
+	if( m_bUsePhysics )
+	{
+		if( VPhysicsGetObject() )
+			VPhysicsDestroyObject();
+	}
+
 	FollowEntity( pFFPlayer, true );
 
 	// stop the return timer
@@ -315,27 +322,75 @@ void CFFInfoScript::Drop( float delay, float speed )
 	VectorNormalize( vecRight );
 	VectorNormalize( vecUp );
 
-	// inherit the owner's motion
-	SetGravity( 1.0 );
-	//SetAbsOrigin(owner->GetAbsOrigin());
-	SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
-
-	QAngle vecAngles = pOwner->EyeAngles();
-	SetAbsAngles( QAngle( 0, vecAngles.y + 90.0f, 0 ) );
-
 	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
 	Vector vel = Vector( 0, 0, 20.0f ); // owner->GetAbsVelocity();
 
 	if( speed )
-	{
 		vel += vecForward * speed;
-	}
 
 	// Mirv: Don't allow a downwards velocity as this will make it float instead
 	if( vel.z < 1.0f )
 		vel.z = 1.0f;
 
-	SetAbsVelocity( vel );
+	if( m_bUsePhysics )
+	{
+		// No physics object exists, create it
+		if( !VPhysicsGetObject() )
+			VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags(), false );
+
+		// No physics object can be created, use normal stuff
+		if( !VPhysicsGetObject() )
+			m_bUsePhysics = false;
+	}
+
+	if( m_bUsePhysics )
+	{
+		Warning( "[Physics!]\n" );
+
+		IPhysicsObject *pPhysics = VPhysicsGetObject();
+
+		// If we're here, pPhysics won't be NULL
+		Assert( pPhysics );
+
+		pPhysics->EnableGravity( true );
+		pPhysics->EnableMotion( true );
+		pPhysics->EnableCollisions( true );
+		pPhysics->EnableDrag( true );
+
+		Vector vecF, vecR, vecU;
+		pOwner->GetVectors( &vecF, &vecR, &vecU );
+
+#ifdef _DEBUG
+		if( !engine->IsDedicatedServer() )
+		{
+			NDebugOverlay::Line( pOwner->GetAbsOrigin(), pOwner->GetAbsOrigin() + ( vecF * ( vel * vel ) ), 255, 255, 255, false, 10.0f );
+		}
+#endif
+
+		// This is shitty now, change to something better (and not on one plane)
+		pPhysics->ApplyForceCenter( ( pOwner->GetAbsOrigin() + ( vecF * ( vel * vel ) ) ) - pOwner->GetAbsOrigin() );
+
+		// Stop the sequence if playing
+		if( m_bHasAnims )
+		{
+			ResetSequenceInfo();
+			SetSequence( -1 );
+		}		
+	}
+	else
+	{
+		Warning( "[Physics!] FAILED\n" );
+
+		// inherit the owner's motion
+		SetGravity( 1.0 );
+		//SetAbsOrigin(owner->GetAbsOrigin());
+		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
+
+		QAngle vecAngles = pOwner->EyeAngles();
+		SetAbsAngles( QAngle( 0, vecAngles.y + 90.0f, 0 ) );
+
+		SetAbsVelocity( vel );
+	}
 
 	// make it respond to touch again
 	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
