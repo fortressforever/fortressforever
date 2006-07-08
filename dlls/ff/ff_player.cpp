@@ -1106,6 +1106,8 @@ void CFFPlayer::SpySilentFeign( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	engine->ClientCommand( edict(), "-reload" );
+
 	// Log the death to the stats engine
 	g_StatsLog.AddToCount(this, STAT_DEATHS);
 

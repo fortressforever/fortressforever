@@ -847,7 +847,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetModel",			(void(CBaseEntity::*)(const char*, int))&CBaseEntity::SetModel)
 			.def("SetSkin",				&CBaseEntity::SetSkin)
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin)
-			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin),
+			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin)
+			.def("IsOnFire",			&CBaseEntity::IsOnFire),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
@@ -887,7 +888,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsFeetDeepInWater",	&CFFPlayer::IsFeetDeepInWater)
 			.def("IsInNoBuild",			&CFFPlayer::IsInNoBuild)
 			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
-			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)
+			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)			
+			.def("IsOnGround",			&CFFPlayer::IsOnGround)
+			.def("IsDucking",			&CFFPlayer::IsDucking)
 			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
 			.def("RemoveAmmo",			(void(CFFPlayer::*)(int, const char*))&CFFPlayer::RemoveAmmo)
 			.def("RemoveArmor",			&CFFPlayer::RemoveArmor)
@@ -903,6 +906,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetOrigin",			&CFFPlayer::GetAbsOrigin)
 			.def("IsFeigned",			&CFFPlayer::IsFeigned)
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
+			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
+			.def("GetDisguisedTeam",	&CFFPlayer::GetDisguisedTeam)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
