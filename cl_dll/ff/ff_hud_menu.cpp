@@ -68,10 +68,12 @@ inline int CheckDisguiseClass( int iClass )
 	if( !Q_strcmp( pszTeam, "friendly" ) )
 	{
 		// TODO: Find out what "friendly " team is
+		return MENU_SHOW;
 	}
 	else if( !Q_strcmp( pszTeam, "enemy " ) )
 	{
 		// TODO: Find out what "friendly" team is
+		return MENU_SHOW;
 	}
 	else if( !Q_strcmp( pszTeam, "red " ) )
 		iDisguiseTeam = TEAM_RED;
