@@ -58,6 +58,8 @@ inline int CheckDisguiseClass( int iClass )
 
 	Assert( pszTeam );
 
+	// Remeber, pszTeam is going to have a space at the end
+
 	C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 	if( !pPlayer )
 		return MENU_DIM;
