@@ -79,7 +79,6 @@ protected:
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
 
-	//CFFPlayer *m_pOwner;
 	CFFPlayer *m_pLastOwner;
 	
 	CNetworkVar(float, m_flThrowTime);
@@ -87,7 +86,8 @@ protected:
 	CNetworkVector( m_vecOffset );
 };
 
-// This is a cheap hack
+// This is a cheap hack. Basically, this just calls
+// StudioFrameAdvance() on m_pFFScript.
 class CFFInfoScriptAnimator : public CBaseAnimating
 {
 public:
