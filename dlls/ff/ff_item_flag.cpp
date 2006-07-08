@@ -179,6 +179,11 @@ void CFFInfoScript::Spawn( void )
 		}		
 	}
 
+	if( entsys.RunPredicates( this, NULL, "usephysics" ) && !m_bUsePhysics )
+	{
+		m_bUsePhysics = true;
+	}
+
 	CreateItemVPhysicsObject();
 
 	m_pLastOwner = NULL;
