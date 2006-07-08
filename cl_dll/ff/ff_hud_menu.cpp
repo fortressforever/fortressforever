@@ -66,14 +66,17 @@ inline int CheckDisguiseClass( int iClass )
 	int iDisguiseTeam = TEAM_UNASSIGNED;
 
 	if( !Q_strcmp( pszTeam, "friendly" ) )
-	{
-		// TODO: Find out what "friendly " team is
-		return MENU_SHOW;
-	}
+		iDisguiseTeam = iTeam;
 	else if( !Q_strcmp( pszTeam, "enemy " ) )
 	{
-		// TODO: Find out what "friendly" team is
-		return MENU_SHOW;
+		// This implies there are only
+		// 2 teams on this map. iTeam &
+		// something else. Find that
+		// something else!
+
+		for( int i = TEAM_BLUE; ( i <= TEAM_GREEN ) && ( iDisguiseTeam == TEAM_UNASSIGNED ); i++ )
+			if( ( pGr->GetTeamLimits( i ) != -1 ) && ( i != iTeam ) )
+				iDisguiseTeam = i;
 	}
 	else if( !Q_strcmp( pszTeam, "red " ) )
 		iDisguiseTeam = TEAM_RED;
