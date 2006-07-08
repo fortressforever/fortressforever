@@ -61,6 +61,8 @@ public:
 
 	void EmitFlames(bool fEmit);
 
+	virtual ~CFFWeaponFlamethrower();
+
 	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_FLAMETHROWER; }
 
 private:
@@ -101,6 +103,18 @@ CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 {
 	m_hFlameJet = NULL;
 }
+
+//----------------------------------------------------------------------------
+// Purpose: Destructor, destroy flamejet
+//----------------------------------------------------------------------------
+CFFWeaponFlamethrower::~CFFWeaponFlamethrower()
+{
+#ifdef GAME_DLL
+	if (m_hFlameJet)
+		UTIL_Remove(m_hFlameJet);
+#endif
+}
+
 
 //----------------------------------------------------------------------------
 // Purpose: Turns on the flame stream, creates it if it doesn't yet exist
