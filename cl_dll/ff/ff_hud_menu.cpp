@@ -45,6 +45,54 @@ DECLARE_HUDELEMENT(CHudContextMenu);
 // Forward declarations for a menu
 extern menuoption_t SpyClassDisguise[];
 
+inline int CheckDisguiseClass( int iClass )
+{
+	IGameResources *pGr = GameResources();
+
+	if( !g_pHudContextMenu || !pGr || !g_pHudContextMenu->GetPrevCmd() )
+		return MENU_DIM;
+
+	// This is like "disguise friendly", or "disguise red" so
+	// grab the part after "disguise"
+	const char *pszTeam = g_pHudContextMenu->GetPrevCmd() + 9;
+
+	Assert( pszTeam );
+
+	C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	if( !pPlayer )
+		return MENU_DIM;
+
+	int iTeam = pPlayer->GetTeamNumber();
+	int iDisguiseTeam = TEAM_UNASSIGNED;
+
+	if( !Q_strcmp( pszTeam, "friendly" ) )
+	{
+		// TODO: Find out what "friendly " team is
+	}
+	else if( !Q_strcmp( pszTeam, "enemy " ) )
+	{
+		// TODO: Find out what "friendly" team is
+	}
+	else if( !Q_strcmp( pszTeam, "red " ) )
+		iDisguiseTeam = TEAM_RED;
+	else if( !Q_strcmp( pszTeam, "blue " ) )
+		iDisguiseTeam = TEAM_BLUE;
+	else if( !Q_strcmp( pszTeam, "yellow " ) )
+		iDisguiseTeam = TEAM_YELLOW;
+	else if( !Q_strcmp( pszTeam, "green " ) )
+		iDisguiseTeam = TEAM_GREEN;
+
+	// Bail if we didn't get a disguise team
+	if( iDisguiseTeam == TEAM_UNASSIGNED )
+		return MENU_DIM;
+
+	// Check the class limit for the disguise team
+	if( pGr->GetTeamClassLimits( iDisguiseTeam, iClass ) == -1 )
+		return MENU_DIM;
+
+	return MENU_SHOW;
+}
+
 
 /************************************************************************/
 /* These are all possible menu options                                  */
@@ -53,11 +101,15 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
-	if (!ff || ff->m_hDispenser)
+	if (ff->m_hDispenser)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -67,11 +119,15 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
-	if (!ff || !ff->m_hDispenser)
+	if (!ff->m_hDispenser)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -81,11 +137,15 @@ ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser"
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_DISPENSER ) )
 		return MENU_DIM;
 
-	if (!ff || !ff->m_hDispenser)
+	if (!ff->m_hDispenser)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -95,11 +155,15 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
-	if (!ff || ff->m_hDispenser)
+	if (ff->m_hDispenser)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -109,11 +173,15 @@ ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
-	if (!ff || !ff->m_hSentryGun)
+	if (!ff->m_hSentryGun)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -123,11 +191,15 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
-	if (!ff || !ff->m_hSentryGun)
+	if (!ff->m_hSentryGun)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -137,11 +209,15 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 {
 	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
 
+	// Yeah, this is highly unlikely to happen, but just checking anyway
+	if( !ff )
+		return MENU_DIM;
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if( ff->m_bBuilding && ( ff->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
 		return MENU_DIM;
 
-	if (!ff || !ff->m_hSentryGun)
+	if (!ff->m_hSentryGun)
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -203,52 +279,52 @@ ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", "disguise green ", SpyClass
 
 ADD_MENU_OPTION(disguisescout, L"Disguise as scout", "scout")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_SCOUT );
 }
 
 ADD_MENU_OPTION(disguisesniper, L"Disguise as sniper", "sniper")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_SNIPER );
 }
 
 ADD_MENU_OPTION(disguisesoldier, L"Disguise as soldier", "soldier")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_SOLDIER );
 }
 
 ADD_MENU_OPTION(disguisedemoman, L"Disguise as demoman", "demoman")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_DEMOMAN );
 }
 
 ADD_MENU_OPTION(disguisemedic, L"Disguise as medic", "medic")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_MEDIC );
 }
 
 ADD_MENU_OPTION(disguisehwguy, L"Disguise as hwguy", "hwguy")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_HWGUY );
 }
 
 ADD_MENU_OPTION(disguisespy, L"Disguise as spy", "spy")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_SPY );
 }
 
 ADD_MENU_OPTION(disguisepyro, L"Disguise as pyro", "pyro")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_PYRO );
 }
 
 ADD_MENU_OPTION(disguiseengineer, L"Disguise as engineer", "engineer")
 {
-	return MENU_SHOW;
+	return CheckDisguiseClass( CLASS_ENGINEER );
 }
 
 ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", "civilian")
 {
-	return MENU_DIM;
+	return CheckDisguiseClass( CLASS_CIVILIAN );
 }
 
 

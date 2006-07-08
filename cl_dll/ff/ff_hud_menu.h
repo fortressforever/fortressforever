@@ -94,6 +94,8 @@ public:
 
 	~CHudContextMenu();
 
+	const char *GetPrevCmd( void ) { return m_pszPreviousCmd; }
+
 	void	Init();
 	void	VidInit();
 	void	Paint();
