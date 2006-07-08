@@ -707,7 +707,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	}
 
 	if( pPlayer && pLocalPlayer )
-		bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE );
+		bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE ) || ( pLocalPlayer->GetTeamNumber() == TEAM_SPECTATOR );
 
 	kv->SetInt( "deaths", pGR->GetDeaths( playerIndex ) );
 	kv->SetInt( "score", pGR->GetFrags( playerIndex ) );
