@@ -48,6 +48,8 @@ public:
 	static inline const float GetGrenadeFriction() { return /*0.2f */ projectile_gren_friction.GetFloat(); }
 	static inline const float GetGrenadeElasticity() { return /*0.45f */ projectile_gren_elasticity.GetFloat(); }
 
+	virtual float GetShakeAmplitude() { return 2.5f; }
+
 	static CFFProjectileGrenade * CreateGrenade(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
 	virtual const char *GetBounceSound() { return "GrenadeProjectile.Bounce"; }
