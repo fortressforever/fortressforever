@@ -27,10 +27,10 @@
 // CFFWeaponIC
 //=============================================================================
 
-class CFFWeaponIC : public CFFWeaponBaseClip
+class CFFWeaponIC : public CFFWeaponBase
 {
 public:
-	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBaseClip);
+	DECLARE_CLASS(CFFWeaponIC, CFFWeaponBase);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
