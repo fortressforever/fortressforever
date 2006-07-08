@@ -378,6 +378,8 @@ CBaseEntity* CFFInfoScript::Return( void )
 
 	CreateItemVPhysicsObject();
 
+	PlayIdleAnim();
+
 	return this;
 }
 
