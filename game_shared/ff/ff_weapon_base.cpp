@@ -176,6 +176,15 @@ const char *CFFWeaponBase::GetWorldModel( void ) const
 	{
 		CFFWeaponBase *pWeapon = pFFPlayer->GetActiveFFWeapon();
 
+		// Check for null pointers! This was found from
+		// Jon crashing and me investigating his .mdmp |- Mulch
+
+		Assert( pWeapon );
+
+		// TODO: What do you want to do if pWeapon is NULL?
+		if( !pWeapon )
+			return "";
+
 		int iSlot = pWeapon->GetFFWpnData().iSlot;
 		int iClass = pFFPlayer->GetDisguisedClass();
 
