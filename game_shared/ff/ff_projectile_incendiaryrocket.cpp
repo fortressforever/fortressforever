@@ -69,7 +69,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 						if (pPlayer == GetThrower())
 							flAdjustedDamage *= 0.5f;
 
-						CTakeDamageInfo info(this, pPlayer, flAdjustedDamage, DMG_BURN);
+						CTakeDamageInfo info(this, GetOwnerEntity(), flAdjustedDamage, DMG_BURN);
 						pEntity->TakeDamage(info);
 
 						pPlayer->ApplyBurning(ToFFPlayer(GetThrower()), 1.0f);
