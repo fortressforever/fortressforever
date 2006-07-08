@@ -791,6 +791,11 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "GetServerTime", GetServerTime );
 	lua_register( L, "IsFeigned", IsFeigned );
 	lua_register( L, "IsDisguised", IsDisguised );
+	lua_register( L, "GetDisguisedClass", GetDisguisedClass );
+	lua_register( L, "GetDisguisedTeam", GetDisguisedTeam );
+	lua_register( L, "IsOnFire", IsOnFire );
+	lua_register( L, "IsDucking", IsDucking );
+	lua_register( L, "IsOnGround", IsOnGround );
 
 	// these funcions are NOT exposed to luabind yet
 	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );			// not used
@@ -2448,6 +2453,147 @@ int CFFEntitySystem::IsDisguised( lua_State *L )
 		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
 			bRetVal = ToFFPlayer( pEntity )->IsDisguised();
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get a player's disguised class
+//			int GetDisguisedClass( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::GetDisguisedClass( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		int iIndex = lua_tonumber( L, 1 );
+		int iClass = 0;
+
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+		{
+			if( ToFFPlayer( pEntity )->IsDisguised() )
+				iClass = ToFFPlayer( pEntity )->GetDisguisedClass();
+		}
+
+		lua_pushnumber( L, iClass );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get a player's disguised team
+//			int GetDisguisedTeam( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::GetDisguisedTeam( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		int iIndex = lua_tonumber( L, 1 );
+		int iTeam = 0;
+
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+		{
+			if( ToFFPlayer( pEntity )->IsDisguised() )
+				iTeam = ToFFPlayer( pEntity )->GetDisguisedTeam();
+		}
+
+		lua_pushnumber( L, iTeam );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if an object is on fire
+//			int IsOnFire( ent_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsOnFire( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBaseEntity *pEntity = UTIL_EntityByIndex( iIndex );
+		if( pEntity )
+			bRetVal = ( pEntity->GetFlags() & FL_ONFIRE ) ? true : false;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is ducking
+//			int IsDucking( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsDucking( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = ( ToFFPlayer( pEntity )->GetFlags() & FL_DUCKING ) ? true : false;
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is on the ground
+//			int IsOnGround( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsOnGround( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = ( ToFFPlayer( pEntity )->GetFlags() & FL_ONGROUND ) ? true : false;
 
 		lua_pushboolean( L, bRetVal );
 

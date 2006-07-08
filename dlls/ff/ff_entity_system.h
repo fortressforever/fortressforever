@@ -129,6 +129,11 @@ public:
 	static int GetServerTime( lua_State* );
 	static int IsFeigned( lua_State* );
 	static int IsDisguised( lua_State* );
+	static int GetDisguisedClass( lua_State* );
+	static int GetDisguisedTeam( lua_State* );
+	static int IsOnFire( lua_State* );
+	static int IsDucking( lua_State* );
+	static int IsOnGround( lua_State* );
 
 };
 
