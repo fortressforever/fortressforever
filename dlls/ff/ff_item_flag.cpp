@@ -357,11 +357,16 @@ void CFFInfoScript::Drop( float delay, float speed )
 		pPhysics->EnableCollisions( true );
 		pPhysics->EnableDrag( true );
 
-		Vector vecF, vecR, vecU;
-		pOwner->GetVectors( &vecF, &vecR, &vecU );
+		Vector vecDir;
+		AngleVectors( pOwner->EyeAngles(), &vecDir );
 
-		// This is shitty now, change to something better (and not on one plane)
-		pPhysics->ApplyForceCenter( ( pOwner->GetAbsOrigin() + ( vecF * vel * vel ) ) - pOwner->GetAbsOrigin() );
+		AngularImpulse angImpulse;
+		QAngleToAngularImpulse( pOwner->EyeAngles(), angImpulse );
+
+		// This needs to be based on where the player is looking
+		// and the angle they're looking (so they can throw upwards)
+		Vector vecVelocity = vecDir * ( vel * vel );
+		pPhysics->SetVelocity( &vecVelocity, &angImpulse );
 
 		// Stop the sequence if playing
 		if( m_bHasAnims )
