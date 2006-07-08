@@ -353,6 +353,11 @@ public:
 	bool IsDisguised();
 
 	/** 
+	/* Returns true if a player is feigned
+	*/
+	bool IsFeigned();
+
+	/** 
 	/* Returns the team the player is disguised as
 	*/
 	int GetDisguisedTeam();
@@ -447,4 +452,5 @@ namespace ffmod
 	void SmartSound(int player_id, string playerSound, string teamSound, string otherSound);
 	void SmartTeamMessage(Team.TeamId teamId, string teamMsg, string otherMsg);
 	void SmartTeamSound(Team.TeamId teamId, string teamSound, string otherSound);
+	float GetServerTime();
 }
