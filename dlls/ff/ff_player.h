@@ -519,7 +519,6 @@ public:
 
 	void SetDisguisable(bool in) 
 	{
-		DevMsg("Disguisable set to %d\n", in);
 		m_bDisguisable = in;
 		if (!in) 
 			ResetDisguise();
@@ -535,6 +534,10 @@ public:
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	CNetworkVar(int, m_iSpawnInterpCounter);
+
+	//bool IsJumping( void ) const	{ return input->GetButtonBits() & IN_JUMP; }
+	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
+	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 
 private:
 	int GetNewDisguisedClass( void );
