@@ -66,6 +66,8 @@ protected:
 	bool CreateItemVPhysicsObject( void );
 
 	bool m_atStart;
+
+	bool m_bUsePhysics;
 	
 	bool m_bHasAnims;
 	int m_iSequence;
