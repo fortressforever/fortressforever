@@ -87,6 +87,7 @@ ShadowType_t C_FFInfoScript::ShadowCastType( void )
 
 void C_FFInfoScript::ClientThink( void )
 {
+	/* Yeah...
 	// If we have an owner entity we are being carried
 	if( GetFollowedEntity() )
 	{
@@ -123,4 +124,5 @@ void C_FFInfoScript::ClientThink( void )
 		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.x ) + ( vecRight * m_vecOffset.y ) + ( vecUp * m_vecOffset.z ) );
 		SetAbsAngles( QAngle( 0, GetFollowedEntity()->GetAbsAngles().y, 0 ) );
 	}
+	*/
 }
