@@ -2566,7 +2566,7 @@ int CFFEntitySystem::IsDucking( lua_State *L )
 
 		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
-			bRetVal = ( ToFFPlayer( pEntity )->GetFlags() & FL_DUCKING ) ? true : false;
+			bRetVal = ToFFPlayer( pEntity )->IsDucking();
 
 		lua_pushboolean( L, bRetVal );
 
@@ -2593,7 +2593,7 @@ int CFFEntitySystem::IsOnGround( lua_State *L )
 
 		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
-			bRetVal = ( ToFFPlayer( pEntity )->GetFlags() & FL_ONGROUND ) ? true : false;
+			bRetVal = ToFFPlayer( pEntity )->IsOnGround();
 
 		lua_pushboolean( L, bRetVal );
 
