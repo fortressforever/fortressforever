@@ -360,20 +360,14 @@ void CFFInfoScript::Drop( float delay, float speed )
 		Vector vecF, vecR, vecU;
 		pOwner->GetVectors( &vecF, &vecR, &vecU );
 
-#ifdef _DEBUG
-		if( !engine->IsDedicatedServer() )
-		{
-			NDebugOverlay::Line( pOwner->GetAbsOrigin(), pOwner->GetAbsOrigin() + ( vecF * ( vel * vel ) ), 255, 255, 255, false, 10.0f );
-		}
-#endif
-
 		// This is shitty now, change to something better (and not on one plane)
-		pPhysics->ApplyForceCenter( ( pOwner->GetAbsOrigin() + ( vecF * ( vel * vel ) ) ) - pOwner->GetAbsOrigin() );
+		pPhysics->ApplyForceCenter( ( pOwner->GetAbsOrigin() + ( vecF * vel * vel ) ) - pOwner->GetAbsOrigin() );
 
 		// Stop the sequence if playing
 		if( m_bHasAnims )
 		{
 			ResetSequenceInfo();
+			SetCycle( 0 );
 			SetSequence( -1 );
 		}		
 	}
