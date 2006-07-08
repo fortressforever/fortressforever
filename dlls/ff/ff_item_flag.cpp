@@ -19,6 +19,9 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+int ACT_INFO_IDLE;
+int ACT_INFO_ROLL;
+
 LINK_ENTITY_TO_CLASS( info_ff_script_animator, CFFInfoScriptAnimator );
 PRECACHE_REGISTER( CFFInfoScriptAnimator );
 
@@ -38,6 +41,12 @@ void CFFInfoScriptAnimator::OnThink( void )
 	{
 		if( m_pFFScript->HasAnimations() )
 		{
+			/*
+			m_pFFScript->ResetSequenceInfo();
+			//Warning( "[m_pffScript] %s\n", STRING( m_pFFScript->GetModelName() ) );
+			int nSequence = m_pFFScript->SelectWeightedSequence( ( Activity )ACT_INFO_IDLE );
+			m_pFFScript->SetSequence( nSequence );
+			*/
 			m_pFFScript->StudioFrameAdvance();
 		}
 	}
@@ -64,17 +73,14 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS( info_ff_script, CFFInfoScript );
 PRECACHE_REGISTER( info_ff_script );
 
-int ACT_INFO_IDLE;
-int ACT_INFO_ROLL;
-
 CFFInfoScript::CFFInfoScript( void )
 {
 	m_pAnimator = NULL;
-	//m_pOwner = NULL;
 	m_pLastOwner = NULL;
 	m_spawnflags = 0;
 	m_vStartOrigin = Vector( 0, 0, 0 );
 	m_bHasAnims = false;
+	m_bUsePhysics = false;
 }
 
 CFFInfoScript::~CFFInfoScript( void )
@@ -136,23 +142,7 @@ void CFFInfoScript::Spawn( void )
 
 	m_vecOffset.SetX( entsys.RunPredicates( this, NULL, "attachoffsetforward" ) );
 	m_vecOffset.SetY( entsys.RunPredicates( this, NULL, "attachoffsetright" ) );
-	m_vecOffset.SetZ( entsys.RunPredicates( this, NULL, "attachoffsetup" ) );
-
-	if( entsys.RunPredicates( this, NULL, "hasanimation" ) )
-	{
-		m_bHasAnims = true;
-
-		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_IDLE );
-		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_ROLL );
-
-		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
-		if( m_pAnimator )
-		{
-			//Warning( "[info_ff_script] created animator!\n" );
-			m_pAnimator->Spawn();
-			m_pAnimator->m_pFFScript = this;
-		}		
-	}
+	m_vecOffset.SetZ( entsys.RunPredicates( this, NULL, "attachoffsetup" ) );	
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -172,6 +162,22 @@ void CFFInfoScript::Spawn( void )
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
 	m_atStart = true;
+
+	if( entsys.RunPredicates( this, NULL, "hasanimation" ) && !m_bHasAnims )
+	{
+		m_bHasAnims = true;
+
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_IDLE );
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_ROLL );
+
+		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
+		if( m_pAnimator )
+		{
+			//Warning( "[info_ff_script] created animator!\n" );
+			m_pAnimator->Spawn();
+			m_pAnimator->m_pFFScript = this;
+		}		
+	}
 
 	CreateItemVPhysicsObject();
 
@@ -197,11 +203,10 @@ void CFFInfoScript::PlayIdleAnim( void )
 {
 	if( m_bHasAnims )
 	{		
+		ResetSequenceInfo();
 		m_Activity = ( Activity )ACT_INFO_IDLE;
 		m_iSequence = SelectWeightedSequence( m_Activity );
 		SetSequence( m_iSequence );
-
-		Warning( "[PlayerIdleAnim] [%s] Activity: %d, m_iSequence: %d\n", STRING( GetEntityName() ), m_Activity, m_iSequence );
 	}
 }
 
@@ -209,11 +214,10 @@ void CFFInfoScript::PlayActiveAnim( void )
 {
 	if( m_bHasAnims )
 	{
+		ResetSequenceInfo();
 		m_Activity = ( Activity )ACT_INFO_ROLL;
 		m_iSequence = SelectWeightedSequence( m_Activity );		
 		SetSequence( m_iSequence );
-
-		Warning( "[PlayerActiveAnim] [%s] Activity: %d, m_iSequence: %d\n", STRING( GetEntityName() ), m_Activity, m_iSequence );
 	}
 }
 
