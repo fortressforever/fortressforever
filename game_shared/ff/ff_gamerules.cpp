@@ -656,22 +656,18 @@ ConVar mp_prematch( "mp_prematch",
 		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );
 		UTIL_LogPrintf( " attacker: %i\n", iKillerID );
 		UTIL_LogPrintf( " weapon: %s\n", pszWeapon );
-
-		// For the event later
-		IGameEvent *event = NULL;
-
+		
+		IGameEvent *pEvent = NULL;
 		if( pObject->Classify() == CLASS_SENTRYGUN )
-			event = gameeventmanager->CreateEvent( "sentrygun_killed" );
+			pEvent = gameeventmanager->CreateEvent( "sentrygun_killed" );
 		else if( pObject->Classify() == CLASS_DISPENSER )
-			event = gameeventmanager->CreateEvent( "dispenser_killed" );
-
-		// If the event is valid, send it off
-		if( event )
+			pEvent = gameeventmanager->CreateEvent( "dispenser_killed" );
+		if( pEvent )
 		{
-			event->SetInt( "userid", pVictim->GetUserID() );
-			event->SetInt( "attacker", iKillerID );
-			event->SetString( "weapon", pszWeapon );
-			gameeventmanager->FireEvent( event );
+			pEvent->SetInt( "userid", pVictim->GetUserID() );
+			pEvent->SetInt( "attacker", iKillerID );
+			pEvent->SetString( "weapon", pszWeapon );
+			gameeventmanager->FireEvent( pEvent, true );
 		}
 	}
 

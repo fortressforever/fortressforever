@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-01-28 12:33:58 -0500 (Sat, 28 Jan 2006) $
-// $LastChangedRevision: 1137 $
+// $LastChangedDate: 2006-04-30 17:19:23 -0400 (Sun, 30 Apr 2006) $
+// $LastChangedRevision: 1200 $
 //
 // Title: TF Config
 //
@@ -14,64 +14,132 @@
 #include "Omni-Bot_Types.h"
 #include "Omni-Bot_Events.h"
 
+// These values should be verified to be correct with the game.
+#define RADAR_CELL_REQUIREMENT 5
+#define BUILD_SENTRY_REQUIREMENT 130
+#define BUILD_DISPENSER_REQUIREMENT 100
+
 // typedef: TF_Events
 //		Defines the events specific to the TF game, numbered starting at the end of
 //		the global events.
 typedef enum eTF_Events
 {
-	TF_MESSAGE_BEGIN = EVENT_NUM_EVENTS,
+	TF_MSG_BEGIN = EVENT_NUM_EVENTS,
 
 	// General Events
+	TF_MSG_BUILD_MUSTBEONGROUND,
 
 	// Scout
-	TF_MESSAGE_RADAR_DETECT_ENEMY,
+	TF_MSG_SCOUT_START,
+		// Game Events
+		TF_MSG_RADAR_DETECT_ENEMY,
+		// Internal Events.
+	TF_MSG_SCOUT_END,
 
 	// Sniper
+	TF_MSG_SNIPER_START,
+		// Game Events
+		TF_MSG_RADIOTAG_UPDATE,
+		// Internal Events
+	TF_MSG_SNIPER_END,
 
 	// Soldier
+	TF_MSG_SOLDIER_START,
+		// Game Events
+		// Internal Events
+	TF_MSG_SOLDIER_END,
 
 	// Demo-man
-	TF_MESSAGE_DETPIPES,		// The bot has detected the desire to det pipes.
-	TF_MESSAGE_DETPIPESNOW,		// Configurable delayed message for the actual detting.
-
+	TF_MSG_DEMOMAN_START,
+		// Game Events
+		TF_MSG_DETPACK_BUILDING,
+		TF_MSG_DETPACK_BUILT,
+		TF_MSG_DETPACK_NOTENOUGHAMMO,
+		TF_MSG_DETPACK_CANTBUILD,
+		TF_MSG_DETPACK_ALREADYBUILT,
+		TF_MSG_DETPACK_DETONATED,
+		// Internal Events
+		TF_MSG_DETPIPES,		// The bot has detected the desire to det pipes.
+		TF_MSG_DETPIPESNOW,		// Configurable delayed message for the actual detting.
+	TF_MSG_DEMOMAN_END,
+	
 	// Medic
-	TF_MESSAGE_CALLFORMEDIC,
+	TF_MSG_MEDIC_START,
+		// Game Events
+		TF_MSG_CALLFORMEDIC,
+		// Internal Events
+	TF_MSG_MEDIC_END,
 
 	// HW-Guy
+	TF_MSG_HWGUY_START,
+		// Game Events	
+		// Internal Events
+	TF_MSG_HWGUY_END,
 
 	// Pyro
+	TF_MSG_PYRO_START,
+		// Game Events	
+		// Internal Events
+	TF_MSG_PYRO_END,
 
 	// Spy
-	TF_MESSAGE_AGENT_START,
-		TF_MESSAGE_AGENT_INFO,
-	TF_MESSAGE_AGENT_END,
+	TF_MSG_AGENT_START,	
+		// Game Events
+		TF_MSG_DISGUISING,
+		TF_MSG_DISGUISED,
+		TF_MSG_DISGUISE_LOST,
+		TF_MSG_CANT_FEIGN,
+		TF_MSG_FEIGNED,
+		TF_MSG_UNFEIGNED,
+		TF_MSG_SABOTAGED_SENTRY,
+		TF_MSG_SABOTAGED_DISPENSER,
+		// Internal Events
+	TF_MSG_AGENT_END,
 
 	// Engineer
-	TF_MESSAGE_SENTRY_START,
-		TF_MESSAGE_SENTRY_BUILDING,
-		TF_MESSAGE_SENTRY_BUILT,
-		TF_MESSAGE_SENTRY_DESTROYED,
-		TF_MESSAGE_SENTRY_SPOTENEMY,
-		TF_MESSAGE_SENTRY_DAMAGED,
-		TF_MESSAGE_SENTRY_STATS,
-	TF_MESSAGE_SENTRY_END,
+	TF_MSG_ENGINEER_START,
+		TF_MSG_SENTRY_START,
+			// Game Events
+			TF_MSG_SENTRY_NOTENOUGHAMMO,
+			TF_MSG_SENTRY_ALREADYBUILT,
+			TF_MSG_SENTRY_CANTBUILD,
+			TF_MSG_SENTRY_BUILDING,
+			TF_MSG_SENTRY_BUILT,
+			TF_MSG_SENTRY_DESTROYED,
+			TF_MSG_SENTRY_SPOTENEMY,
+			TF_MSG_SENTRY_DAMAGED,
+			TF_MSG_SENTRY_STATS,
+			TF_MSG_SENTRY_UPGRADED,
+			TF_MSG_SENTRY_DETONATED,
+			TF_MSG_SENTRY_DISMANTLED,
+			// Internal Events
+		TF_MSG_SENTRY_END,
 
-	TF_MESSAGE_DISPENSER_START,
-		TF_MESSAGE_DISPENSER_BUILDING,
-		TF_MESSAGE_DISPENSER_BUILT,
-		TF_MESSAGE_DISPENSER_DESTROYED,
-		TF_MESSAGE_DISPENSER_ENEMYUSED,
-		TF_MESSAGE_DISPENSER_DAMAGED,
-		TF_MESSAGE_DISPENSER_TOUCHED,
-		TF_MESSAGE_DISPENSER_STATS,
-	TF_MESSAGE_DISPENSER_END,
-
-	TF_MESSAGE_DISPENSER_DETONATE,
-	TF_MESSAGE_DETPACK_BUILT,
+		TF_MSG_DISPENSER_START,
+			// Game Events
+			TF_MSG_DISPENSER_NOTENOUGHAMMO,
+			TF_MSG_DISPENSER_ALREADYBUILT,
+			TF_MSG_DISPENSER_CANTBUILD,			
+			TF_MSG_DISPENSER_BUILDING,
+			TF_MSG_DISPENSER_BUILT,
+			TF_MSG_DISPENSER_DESTROYED,
+			TF_MSG_DISPENSER_ENEMYUSED,
+			TF_MSG_DISPENSER_DAMAGED,
+			TF_MSG_DISPENSER_STATS,
+			TF_MSG_DISPENSER_DETONATED,
+			TF_MSG_DISPENSER_DISMANTLED,
+			// Internal Events
+			TF_MSG_DISPENSER_BLOWITUP,
+		TF_MSG_DISPENSER_END,
+	TF_MSG_ENGINEER_END,
 
 	// Civilian
+	TF_MSG_CIVILIAN_START,
+		// Game Events	
+		// Internal Events
+	TF_MSG_CIVILIAN_END,
 
-	TF_MESSAGE_END
+	TF_MSG_END_EVENTS
 } FF_Events;
 
 // typedef: TF_GameMessage
@@ -82,36 +150,17 @@ typedef enum eTF_GameMessage
 
 	// Info.
 	TF_MSG_ISGUNCHARGING,
-	//TF_MSG_ISINVISIBLE,
-	//TF_MSG_ISDISGUISED,
 	TF_MSG_ISBUILDING,
-	TF_MSG_GETSENTRY,
-	TF_MSG_GETDISPENSER,
-
-	/*TF_MSG_GETSENTRYSTATS,
-	TF_MSG_GETDISPENSERSTATS,*/
-
-	// Effects
-	/*TF_MSG_ISCONCED,
-	TF_MSG_ISONFIRE,
-	TF_MSG_ISINFECTED,
-	TF_MSG_ISGASSED,
-	TF_MSG_ISTRANQED,
-	TF_MSG_ISBLIND,*/
-
-	// Powerups
-	/*TF_MSG_HASQUAD,
-	TF_MSG_HASBATTLESUIT,
-	TF_MSG_HASHASTE,
-	TF_MSG_HASINVIS,
-	TF_MSG_HASREGEN,
-	TF_MSG_HASFLIGHT,
-	TF_MSG_HASINVULN,
-	TF_MSG_HASAQUALUNG,*/
+	TF_MSG_GETBUILDABLES,
 
 	// Get Info
-	TF_MSG_GETPLAYERPIPECOUNT,
-	TF_MSG_GETTEAMPIPEINFO,
+	TF_MSG_PLAYERPIPECOUNT,
+	TF_MSG_TEAMPIPEINFO,
+
+	// Commands
+	TF_MSG_DISGUISE,
+	TF_MSG_FEIGN,
+	TF_MSG_HUDHINT,
 
 	TF_MSG_END
 } TF_GameMessage;
@@ -139,6 +188,14 @@ typedef enum eTF_PlayerClass
 	TF_CLASSEX_BACKPACK,
 	TF_CLASSEX_DETPACK,
 	TF_CLASSEX_GRENADE,
+	TF_CLASSEX_EMP_GRENADE,
+	TF_CLASSEX_NAIL_GRENADE,
+	TF_CLASSEX_MIRV_GRENADE,
+	TF_CLASSEX_MIRVLET_GRENADE,
+	TF_CLASSEX_NAPALM_GRENADE,
+	TF_CLASSEX_GAS_GRENADE,
+	TF_CLASSEX_CONC_GRENADE,
+	TF_CLASSEX_CALTROP,
 	TF_CLASSEX_PIPE,
 	TF_CLASSEX_ROCKET,
 
@@ -147,25 +204,55 @@ typedef enum eTF_PlayerClass
 
 typedef enum eTF_EntityFlags
 {
-	// bit: TF_ENT_FLAG_DISGUISED
-	//		This entity is disguised
-	TF_ENT_FLAG_DISGUISED	= (ENT_FLAG_FIRST_USER<<0),	
-	// bit: TF_ENT_FLAG_INVISIBLE
-	//		This entity is invisible
-	TF_ENT_FLAG_INVISIBLE	= (ENT_FLAG_FIRST_USER<<1),
 	// bit: FF_ENT_SAVEME
 	//		This entity is has called for medic
-	TF_ENT_FLAG_SAVEME		= (ENT_FLAG_FIRST_USER<<2),
+	TF_ENT_FLAG_SAVEME		= (ENT_FLAG_FIRST_USER<<0),
 	// bit: FF_ENT_ARMORME
 	//		This entity has called for armor
-	TF_ENT_FLAG_ARMORME	= (ENT_FLAG_FIRST_USER<<3),
+	TF_ENT_FLAG_ARMORME		= (ENT_FLAG_FIRST_USER<<1),
 	// bit: FF_ENT_BURNING
 	//		This entity is on fire
-	TF_ENT_FLAG_BURNING	= (ENT_FLAG_FIRST_USER<<4),
+	TF_ENT_FLAG_BURNING		= (ENT_FLAG_FIRST_USER<<2),
 	// bit: FF_ENT_TRANQED
 	//		This entity is tranquilized
-	TF_ENT_FLAG_TRANQED	= (ENT_FLAG_FIRST_USER<<5),
+	TF_ENT_FLAG_TRANQED		= (ENT_FLAG_FIRST_USER<<3),
+
+	TF_ENT_SNIPERAIMING		= (ENT_FLAG_FIRST_USER<<4),
+	TF_ENT_ASSAULTFIRING	= (ENT_FLAG_FIRST_USER<<5),
+	TF_ENT_LEGSHOT			= (ENT_FLAG_FIRST_USER<<6),
+	TF_ENT_CALTROP			= (ENT_FLAG_FIRST_USER<<8),
+	TF_ENT_RADIOTAGGED		= (ENT_FLAG_FIRST_USER<<9),
+	
+	TF_ENT_CAN_SABOTAGE		= (ENT_FLAG_FIRST_USER<<10),
+	TF_ENT_SABOTAGED		= (ENT_FLAG_FIRST_USER<<11),
+	TF_ENT_SABOTAGING		= (ENT_FLAG_FIRST_USER<<12),
+
 } FF_EntityFlags;
+
+typedef enum eFF_Powerups
+{
+	// Team Disguise
+	TF_PW_DISGUISE_BLUE		= (1<<0),
+	TF_PW_DISGUISE_RED		= (1<<1),
+	TF_PW_DISGUISE_YELLOW	= (1<<2),
+	TF_PW_DISGUISE_GREEN	= (1<<3),
+
+	// Class Disguise
+	TF_PW_DISGUISE_SCOUT	= (1<<4),
+	TF_PW_DISGUISE_SNIPER	= (1<<5),
+	TF_PW_DISGUISE_SOLDIER	= (1<<6),
+	TF_PW_DISGUISE_DEMOMAN	= (1<<7),
+	TF_PW_DISGUISE_MEDIC	= (1<<8),
+	TF_PW_DISGUISE_HWGUY	= (1<<9),
+	TF_PW_DISGUISE_PYRO		= (1<<10),
+	TF_PW_DISGUISE_ENGINEER	= (1<<11),
+	TF_PW_DISGUISE_SPY		= (1<<12),
+	TF_PW_DISGUISE_CIVILIAN	= (1<<13),
+	
+	// Other powerups
+	TF_PW_FEIGNED			= (1<<14),
+
+} FF_Powerups;
 
 // typedef: TF_Weapon
 //		The available weapons for this gametype
@@ -266,6 +353,7 @@ typedef enum eTF_Goals
 	goal_tf_buildsentry,
 	goal_tf_upgradesentry,
 	goal_tf_buildss,
+	goal_tf_detpack,
 	goal_tf_pipetrap,
 	goal_tf_laypipetrap,
 	goal_tf_watchpipetrap,
@@ -276,16 +364,7 @@ typedef enum eTF_Goals
 	goal_tf_num
 } TF_Goals;
 
-//////////////////////////////////////////////////////////////////////////
-// Message Helpers
-typedef struct  
-{
-	obint32		m_NumTeamPipes;
-	obint32		m_NumTeamPipers;
-	obint32		m_MaxPipesPerPiper;
-} TF_TeamPipeInfo;
-
-typedef enum
+typedef enum eTF_BuildingStatus
 {
 	BUILDING_NONE,
 	BUILDING_DISPENSER,

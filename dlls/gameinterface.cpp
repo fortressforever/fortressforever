@@ -492,7 +492,7 @@ bool CServerGameDLL::DLLInit(CreateInterfaceFn engineFactory,
 	// create the Navigation Mesh interface
 	TheNavMesh = new CNavMesh;
 
-	//Omnibot::omnibot_interface::OnDLLInit();
+	Omnibot::omnibot_interface::OnDLLInit();
 
 	return true;
 }

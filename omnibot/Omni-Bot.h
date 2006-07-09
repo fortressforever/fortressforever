@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2005-12-25 23:49:22 -0500 (Sun, 25 Dec 2005) $
-// $LastChangedRevision: 1092 $
+// $LastChangedDate: 2006-02-06 17:54:23 -0500 (Mon, 06 Feb 2006) $
+// $LastChangedRevision: 1139 $
 //
 // about: Exported function definitions
 //		In order for the game to call functions from the bot, we must export
@@ -18,6 +18,7 @@
 #include "Functions_Engine.h"
 #include "Omni-Bot_Types.h"
 #include "Omni-Bot_Events.h"
+#include "MessageHelper.h"
 
 // function: Bot_Initialise
 //		Initializes the bot library and sets the bot up with the callbacks to 
@@ -33,9 +34,6 @@ void BotUpdate();
 //		Any time commands from the game are executed, this will get called
 //		to allow the bot to process it and perform any necessary actions.
 int BotConsoleCommand(const char *_cmd, int _size);
-// fucntion: Bot_Log
-//		Allows the game to print text messages into the bots logs or other output.
-void BotLog(const char *_txt);
 // function: Bot_AddGoal
 //		Allows the game to register a goal with the bot that the bots can use
 void BotAddGoal(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
@@ -58,5 +56,12 @@ void BotSendTrigger(TriggerInfo *_triggerInfo);
 // function: BotSetNavFuncs
 //		Allows the game to give the bot functions to call for an external navigation system.
 int BotSetNavFuncs(Nav_EngineFuncs_t *_pNavFuncs, int _size);
+
+//SubscriberHandle Message_SubscribeToMsg(int _msg, pfnMessageFunction _func);
+//void Message_Unsubscribe(const SubscriberHandle _handle);
+//MessageHelper Message_BeginMessage(int _msgId, size_t _messageSize);
+//MessageHelper Message_BeginMessageEx(int _msgId, void *_mem, size_t _messageSize);
+//void Message_EndMessage(const MessageHelper &_helper);
+//void Message_EndMessageEx(const MessageHelper &_helper);
 
 #endif

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-01-28 12:33:58 -0500 (Sat, 28 Jan 2006) $
-// $LastChangedRevision: 1137 $
+// $LastChangedDate: 2006-06-08 06:28:14 -0400 (Thu, 08 Jun 2006) $
+// $LastChangedRevision: 1232 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,6 +10,7 @@
 #define __FUNCTIONS_ENGINE_H__
 
 #include "Omni-Bot_Types.h"
+#include "MessageHelper.h"
 
 // Title: Functions Engine
 
@@ -25,7 +26,7 @@ typedef struct
 	// Function: pfnAddBot
 	//		This function should add a bot to the game with the name specified,
 	//		and return the bots GameID
-	int (*pfnAddBot)(const char *_name, const BotUserData *_data);
+	int (*pfnAddBot)(const char *_name, const MessageHelper *_data);
 	
 	// Function: pfnRemoveBot
 	//		This function should remove/kick a bot from the game by its name
@@ -33,11 +34,11 @@ typedef struct
 
 	// Function: pfnChangeTeam
 	//		This function should force a bot to a certain team
-	int (*pfnChangeTeam)(int _client, int _newteam, const BotUserData *_data);
+	obResult (*pfnChangeTeam)(int _client, int _newteam, const MessageHelper *_data);
 
 	// Function: pfnChangeClass
 	//		This function should force a bot to change to a certain class
-	int (*pfnChangeClass)(int _client, int _newclass, const BotUserData *_data);
+	obResult (*pfnChangeClass)(int _client, int _newclass, const MessageHelper *_data);
 
 	// Function: pfnUpdateBotInput
 	//		This function should interpret and handle the bots input
@@ -50,11 +51,11 @@ typedef struct
 	// Function: pfnTraceLine
 	//		This bot should intepret and perform a traceline, returning
 	//		the results into the <BotTraceResult> parameter.
-	int (*pfnTraceLine)(BotTraceResult *_result, const float _start[3], const float _end[3], const AABB *_pBBox , int _mask, int _user, obBool _bUsePVS);
+	obResult (*pfnTraceLine)(BotTraceResult *_result, const float _start[3], const float _end[3], const AABB *_pBBox , int _mask, int _user, obBool _bUsePVS);
     
 	// Function: pfnPrintEntitiesInRadius
 	//		This function should print all the entities in the radius using <pfnPrintMessage>
-	int (*pfnPrintEntitiesInRadius)(const float _pos[3], float _radius);
+	obResult (*pfnPrintEntitiesInRadius)(const float _pos[3], float _radius);
 
 	// Function: pfnFindEntityByClassName
 	//		This function should return entities matching the classname, and should be
@@ -70,29 +71,33 @@ typedef struct
 	//		This function should return the entity flags for an entity
 	int (*pfnGetEntityFlags)(const GameEntity _ent);
 
+	// Function: pfnGetEntityPowerups
+	//		This function should return the powerup flags for an entity.
+	int (*pfnGetEntityPowerups)(const GameEntity _ent);
+
 	// Function: pfnGetEntityEyePosition
 	//		This function should return the eye position of an entity
-	int (*pfnGetEntityEyePosition)(const GameEntity _ent, float _pos[3]);
+	obResult (*pfnGetEntityEyePosition)(const GameEntity _ent, float _pos[3]);
 
 	// Function: pfnGetEntityEyePosition
 	//		This function should return the bone position of an entity
-	int (*pfnGetEntityBonePosition)(const GameEntity _ent, int _boneid, float _pos[3]);
+	obResult (*pfnGetEntityBonePosition)(const GameEntity _ent, int _boneid, float _pos[3]);
 
 	// Function: pfnGetEntityOrientation
 	//		This function should return the orientation of a <GameEntity> as fwd, right, up vectors
-	int (*pfnGetEntityOrientation)(const GameEntity _ent, float _fwd[3], float _right[3], float _up[3]);
+	obResult (*pfnGetEntityOrientation)(const GameEntity _ent, float _fwd[3], float _right[3], float _up[3]);
 	
 	// Function: pfnGetEntityVelocity
 	//		This function should return the velocity of a <GameEntity> in world space
-	int (*pfnGetEntityVelocity)(const GameEntity _ent, float _velocity[3]);
+	obResult (*pfnGetEntityVelocity)(const GameEntity _ent, float _velocity[3]);
 
 	// Function: pfnGetEntityPosition
 	//		This function should return the position of a <GameEntity> in world space
-	int (*pfnGetEntityPosition)(const GameEntity _ent, float _pos[3]);
+	obResult (*pfnGetEntityPosition)(const GameEntity _ent, float _pos[3]);
 
 	// Function: pfnGetEntityWorldAABB
 	//		This function should return the axis aligned box of a <GameEntity> in world space
-	int (*pfnGetEntityWorldAABB)(const GameEntity _ent, AABB *_aabb);
+	obResult (*pfnGetEntityWorldAABB)(const GameEntity _ent, AABB *_aabb);
 
 	// Function: pfnGetEntityOwner
 	//		This function should return the <GameID> of a client that owns this item
@@ -112,11 +117,11 @@ typedef struct
 
 	// Function: pfnGetClientPosition
 	//		This function should return the position of a client in world space
-	int (*pfnGetClientPosition)(int _client, float _pos[3]);
+	obResult (*pfnGetClientPosition)(int _client, float _pos[3]);
 	
 	// Function: pfnGetClientOrientation
 	//		This function should return the orientation of a <GameEntity> as fwd, right, up vectors
-	int (*pfnGetClientOrientation)(int _client, float _fwd[3], float _right[3], float _up[3]);
+	obResult (*pfnGetClientOrientation)(int _client, float _fwd[3], float _right[3], float _up[3]);
 
 	// Function: pfnGetClientName
 	//		This function should give access to the in-game name of the client
@@ -124,11 +129,11 @@ typedef struct
 
 	// Function: pfnBotGetCurrentWeaponClip
 	//		This function should update weapon clip count for the current weapon
-	int (*pfnBotGetCurrentWeaponClip)(int _client, int *_curclip, int *_maxclip);
+	obResult (*pfnBotGetCurrentWeaponClip)(int _client, int *_curclip, int *_maxclip);
 
 	// Function: pfnBotGetCurrentAmmo
 	//		This function should update ammo stats for a client and ammotype
-	int (*pfnBotGetCurrentAmmo)(int _client, int _ammotype, int *_cur, int *_max);
+	obResult (*pfnBotGetCurrentAmmo)(int _client, int _ammotype, int *_cur, int *_max);
 
 	// Function: pfnGetGameTime
 	//		This function should return the current game time in milli-seconds
@@ -136,25 +141,25 @@ typedef struct
 
 	// Function: pfnGetGoals
 	//		This function should tell the game to register all <MapGoal>s with the bot
-	int (*pfnGetGoals)();
+	obResult (*pfnGetGoals)();
 
 	// Function: pfnGetThreats
 	//		This function should tell the game to register all potential threats with the bot
 	//		Threats include potential targets, projectiles, or other entities of interest to the bot
-	int (*pfnGetThreats)();
+	obResult (*pfnGetThreats)();
 
 	// Function: pfnGetMaxNumPlayers
 	//		Gets the currently set maximum number of players from the game
 	int (*pfnGetMaxNumPlayers)();
 
 	// Function: pfnGetCurNumPlayers
-	//		Gets the current number of players from the game
+	//		Gets the current number of players from the game. Combine with above?
 	int (*pfnGetCurNumPlayers)();
 
 	// Function: pfnInterfaceSendMessage
-	//		This function sends a message to the game with optional <BotUserData> in/out parameters
+	//		This function sends a message to the game with optional <MessageHelper> in/out parameters
 	//		to request additional or mod specific info from the game
-	int (*pfnInterfaceSendMessage)(int _msg, const GameEntity _ent, const BotUserData *_in, BotUserData *_out);
+	obResult (*pfnInterfaceSendMessage)(const MessageHelper &_data, const GameEntity _ent);
 
 	// Function: pfnAddDisplayPath
 	//		Adds a line to display between 2 positions, with a specific color, and type that determines how it is drawn

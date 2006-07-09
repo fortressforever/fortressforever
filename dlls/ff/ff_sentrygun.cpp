@@ -206,8 +206,6 @@ void CFFSentryGun::Spawn( void )
 	m_iPitchPoseParameter = LookupPoseParameter( SG_BC_PITCH );
 	m_iYawPoseParameter = LookupPoseParameter( SG_BC_YAW );
 	
-	SendStatsToBot();
-
 	// Set initial direction
 	Vector vecBaseForward, vecBaseRight, vecBaseUp;
 	GetVectors( &vecBaseForward, &vecBaseRight, &vecBaseUp) ;
@@ -240,18 +238,9 @@ void CFFSentryGun::GoLive( void )
 
 	// Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
-// Omni-bot: Tell the bot about his dispenser.
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-	if( pOwner && pOwner->IsBot() ) 
-	{
-		int iGameId = pOwner->entindex() -1;
-		Omnibot::BotUserData bud(edict());
-		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MESSAGE_SENTRY_BUILT, 
-			iGameId, 0, 0, &bud);
-		SendStatsToBot();
-	}
 
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	
 	// Bug #0000244: Building L1 sg doesn't take away cells
 	if( pOwner ) 
 		pOwner->RemoveAmmo( 130, AMMO_CELLS );
@@ -853,6 +842,16 @@ void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	}
 
 	SendStatsToBot();
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent( "sentrygun_upgraded" );
+	if( pEvent )
+	{
+		CFFPlayer *pOwner = static_cast<CFFPlayer*>( m_hOwner.Get() );
+		pEvent->SetInt( "userid", pOwner->GetUserID() );
+		pEvent->SetInt( "level", m_iLevel );
+		gameeventmanager->FireEvent( pEvent, true );
+	}
+
 	// Recalculate ammo percentage, 7 bits for shells + 1 bit for no rockets
 	m_iAmmoPercent = 100.0f * (float) m_iShells / m_iMaxShells;
 	if( m_iMaxRockets && !m_iRockets ) 
@@ -903,6 +902,12 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 	if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
 		NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
 #endif
+
+	CFFPlayer *pOwner = static_cast<CFFPlayer *>( m_hOwner.Get() );
+	if(pOwner && pOwner->IsBot())
+	{
+		Omnibot::Notify_SentrySpottedEnemy(pOwner);
+	}
 }
 
 // How much damage should be taken from an emp explosion
@@ -924,7 +929,7 @@ void CFFSentryGun::SendStatsToBot( void )
 	if (pOwner && pOwner->IsBot()) 
 	{
 		Omnibot::BotUserData bud;
-		bud.m_DataType = Omnibot::BotUserData::dt6_2byteFlags;
+		bud.DataType = Omnibot::BotUserData::dt6_2byteFlags;
 		bud.udata.m_2ByteFlags[0] = m_iHealth;
 		bud.udata.m_2ByteFlags[1] = m_iMaxHealth;
 
@@ -936,7 +941,7 @@ void CFFSentryGun::SendStatsToBot( void )
 
 		int iGameId = pOwner->entindex() -1;
 		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MESSAGE_SENTRY_STATS, 
+			Omnibot::TF_MSG_SENTRY_STATS, 
 			iGameId, 0, 0, &bud);
 	}
 }
@@ -997,4 +1002,21 @@ void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 	SetEnemy(NULL);
 
 	Warning("SG maliciously sabotaged\n");
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Overridden just to fire the appropriate event.
+//-----------------------------------------------------------------------------
+void CFFSentryGun::Detonate()
+{
+	// Fire an event.
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("sentry_detonated");						
+	if(pEvent)
+	{
+		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+		pEvent->SetInt("userid", pOwner->GetUserID());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
+
+	CFFBuildableObject::Detonate();
 }

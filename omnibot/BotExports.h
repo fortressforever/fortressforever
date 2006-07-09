@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-01-28 12:33:58 -0500 (Sat, 28 Jan 2006) $
-// $LastChangedRevision: 1137 $
+// $LastChangedDate: 2006-03-28 21:32:59 -0500 (Tue, 28 Mar 2006) $
+// $LastChangedRevision: 1143 $
 //
 // Title: BotExports
 //		In order for the game to call functions from the bot, we must export
@@ -116,7 +116,7 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 	// Macro: SHUTDOWNBOTLIBRARY
 	//		Handles shutting down and free'ing the bot library.
 	#define SHUTDOWNBOTLIBRARY \
-		if(g_BotLibrary) { FreeLibrary(g_BotLibrary); g_BotLibrary = 0; }
+		if(g_BotLibrary) { FreeLibrary(g_BotLibrary); g_BotLibrary = 0; memset(&g_BotFunctions, 0, sizeof(g_BotFunctions)); }
 		
 	//////////////////////////////////////////////////////////////////////////
 #elif defined __linux__
@@ -183,7 +183,7 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 	} \
 
 	#define SHUTDOWNBOTLIBRARY \
-		if(g_BotLibrary) { dlclose(g_BotLibrary); g_BotLibrary = 0; }
+		if(g_BotLibrary) { dlclose(g_BotLibrary); g_BotLibrary = 0; memset(&g_BotFunctions, 0, sizeof(g_BotFunctions)); }
 
 	//////////////////////////////////////////////////////////////////////////
 #else

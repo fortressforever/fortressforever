@@ -450,6 +450,8 @@ public:
 	virtual void Spawn( void );
 	void GoLive( void );
 
+	void Detonate();
+
 	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
 
 	void OnObjectTouch( CBaseEntity *pOther );
@@ -548,6 +550,7 @@ public:
 	virtual bool IsSabotaged();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
+	void Detonate();
 
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
@@ -678,6 +681,7 @@ public:
 	virtual bool IsShootingTeammates();
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
+	void Detonate();
 
 	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 

@@ -423,7 +423,6 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_say" );
-
 	if ( event )	// will be null if there are no listeners!
 	{
 		event->SetInt("userid", userid );
