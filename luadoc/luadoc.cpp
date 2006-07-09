@@ -376,6 +376,11 @@ public:
 	/* Returns true if a player is on the ground
 	*/
 	bool IsOnGround();
+
+	/** 
+	/* Returns true if a player is not on the ground
+	*/
+	bool IsInAir();
 };
 
 /////////////////////////////////////////////////////////////////////////////

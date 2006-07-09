@@ -796,6 +796,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "IsOnFire", IsOnFire );
 	lua_register( L, "IsDucking", IsDucking );
 	lua_register( L, "IsOnGround", IsOnGround );
+	lua_register( L, "IsInAir", IsInAir );
 
 	// these funcions are NOT exposed to luabind yet
 	lua_register( L, "SpawnEntityAtPlayer", SpawnEntityAtPlayer );			// not used
@@ -895,6 +896,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
 			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)			
 			.def("IsOnGround",			&CFFPlayer::IsOnGround)
+			.def("IsInAir",				&CFFPlayer::IsInAir)
 			.def("IsDucking",			&CFFPlayer::IsDucking)
 			.def("MarkRadioTag",		&CFFPlayer::SetRadioTagged)
 			.def("RemoveAmmo",			(void(CFFPlayer::*)(int, const char*))&CFFPlayer::RemoveAmmo)
@@ -2594,6 +2596,33 @@ int CFFEntitySystem::IsOnGround( lua_State *L )
 		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
 		if( pEntity && pEntity->IsPlayer() )
 			bRetVal = ToFFPlayer( pEntity )->IsOnGround();
+
+		lua_pushboolean( L, bRetVal );
+
+		// 1 result
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: See if a player is in the air
+//			int IsInAir( player_id )
+//----------------------------------------------------------------------------
+int CFFEntitySystem::IsInAir( lua_State *L )
+{
+	int n = lua_gettop( L );
+
+	if( n == 1 )
+	{
+		bool bRetVal = false;
+		int iIndex = lua_tonumber( L, 1 );
+
+		CBasePlayer *pEntity = UTIL_PlayerByIndex( iIndex );
+		if( pEntity && pEntity->IsPlayer() )
+			bRetVal = !ToFFPlayer( pEntity )->IsOnGround();
 
 		lua_pushboolean( L, bRetVal );
 

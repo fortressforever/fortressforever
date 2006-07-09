@@ -538,6 +538,7 @@ public:
 	//bool IsJumping( void ) const	{ return input->GetButtonBits() & IN_JUMP; }
 	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
+	bool IsInAir( void ) const		{ return !IsOnGround(); }
 
 private:
 	int GetNewDisguisedClass( void );

@@ -134,6 +134,7 @@ public:
 	static int IsOnFire( lua_State* );
 	static int IsDucking( lua_State* );
 	static int IsOnGround( lua_State* );
+	static int IsInAir( lua_State* );
 
 };
 
