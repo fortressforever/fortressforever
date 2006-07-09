@@ -538,6 +538,8 @@ namespace FFLib
 
 	CFFGrenadeBase *CastToGrenade( CBaseEntity *pEntity )
 	{
+		Warning( "[CastToGrenade]\n" );
+
 		if( !pEntity )
 			return NULL;
 
@@ -905,7 +907,7 @@ void CFFEntitySystem::FFLibOpen()
 			],
 
 		// CFFGrenadeBase
-		class_<CFFGrenadeBase, CFFProjectileBase>("BaseGrenade")
+		class_<CFFGrenadeBase>("BaseGrenade")
 			.enum_("GrenId")
 			[
 				value("kNormal",		CLASS_GREN),
