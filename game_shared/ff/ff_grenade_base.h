@@ -55,6 +55,8 @@ public:
 		AddFlag( FL_GRENADE );
 	}
 
+	virtual Class_T GetGrenId( void ) { return Classify(); }
+
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN; }
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );

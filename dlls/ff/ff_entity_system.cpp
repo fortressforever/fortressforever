@@ -908,6 +908,7 @@ void CFFEntitySystem::FFLibOpen()
 
 		// CFFGrenadeBase
 		class_<CFFGrenadeBase>("BaseGrenade")
+		.def("GetGrenId",				&CFFGrenadeBase::GetGrenId)
 			.enum_("GrenId")
 			[
 				value("kNormal",		CLASS_GREN),
