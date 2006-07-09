@@ -2596,7 +2596,7 @@ int CFFEntitySystem::IsOnFire( lua_State *L )
 
 		CBaseEntity *pEntity = UTIL_EntityByIndex( iIndex );
 		if( pEntity )
-			bRetVal = ( pEntity->GetFlags() & FL_ONFIRE ) ? true : false;
+			bRetVal = pEntity->IsOnFire();
 
 		lua_pushboolean( L, bRetVal );
 
