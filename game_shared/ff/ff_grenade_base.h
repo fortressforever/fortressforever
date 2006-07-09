@@ -49,6 +49,12 @@ class CFFGrenadeBase : public CFFProjectileBase
 public:
 	DECLARE_CLASS( CFFGrenadeBase, CFFProjectileBase );
 
+	CFFGrenadeBase::CFFGrenadeBase( void )
+	{
+		// Hey, this exists already, let's use it!
+		AddFlag( FL_GRENADE );
+	}
+
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN; }
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
@@ -69,8 +75,8 @@ public:
 	static int m_iRingTexture;
 
 #ifdef CLIENT_DLL
-	CFFGrenadeBase() {}
-	CFFGrenadeBase( const CFFGrenadeBase& ) {}
+	//CFFGrenadeBase() {}
+	//CFFGrenadeBase( const CFFGrenadeBase& ) {}
 
 	int DrawModel(int flags) 
 	{
