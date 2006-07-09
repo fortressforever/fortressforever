@@ -314,6 +314,9 @@ namespace FFLib
 	// is the entity a grenade
 	bool IsGrenade(CBaseEntity* pEntity)
 	{
+		// Yeah, the simple life, man
+		return ( pEntity->GetFlags() & FL_GRENADE ) ? true : false;
+		/*
 		return (IsOfClass(pEntity, CLASS_GREN) ||
 				IsOfClass(pEntity, CLASS_GREN_EMP) ||
 				IsOfClass(pEntity, CLASS_GREN_NAIL) ||
@@ -323,6 +326,7 @@ namespace FFLib
 				IsOfClass(pEntity, CLASS_GREN_GAS) ||
 				IsOfClass(pEntity, CLASS_GREN_CONC) ||
 				IsOfClass(pEntity, CLASS_GREN_CALTROP));
+				*/
 	}
 
 	void BroadcastMessage(const char* szMessage)
@@ -521,14 +525,31 @@ namespace FFLib
 		return NULL;
 	}
 
-	CFFPlayer* CastToPlayer(CBaseEntity* pEntity)
+	CFFPlayer* CastToPlayer( CBaseEntity* pEntity )
 	{
-		return dynamic_cast<CFFPlayer*>(pEntity);
+		if( !pEntity )
+			return NULL;
+
+		if( pEntity->IsPlayer() )
+			return dynamic_cast< CFFPlayer * >( pEntity );
+		else
+			return NULL;
+	}
+
+	CFFGrenadeBase *CastToGrenade( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		return dynamic_cast< CFFGrenadeBase * >( pEntity );
 	}
 
 	CFFInfoScript* CastToItemFlag(CBaseEntity* pEntity)
 	{
-		return dynamic_cast<CFFInfoScript*>(pEntity);
+		if( !pEntity )
+			return NULL;
+
+		return dynamic_cast< CFFInfoScript * >( pEntity );
 	}
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
@@ -553,6 +574,10 @@ namespace FFLib
 	{
 		CFFTeam* pTeamA = GetGlobalFFTeam(teamA);
 		CFFTeam* pTeamB = GetGlobalFFTeam(teamB);
+
+		if( !pTeamA || !pTeamB )
+			return false;
+
 		return AreTeamsAllied(pTeamA, pTeamB);
 	}
 
@@ -879,6 +904,32 @@ void CFFEntitySystem::FFLibOpen()
 				value("kGreen",			TEAM_GREEN)
 			],
 
+		// CFFGrenadeBase
+		class_<CFFGrenadeBase, CFFProjectileBase>("BaseGrenade")
+			.enum_("GrenId")
+			[
+				value("kNormal",		CLASS_GREN),
+				value("kCaltrop",		CLASS_GREN_CALTROP),
+				value("kNail",			CLASS_GREN_NAIL),
+				value("kMirv",			CLASS_GREN_MIRV),
+				value("kMirvlet",		CLASS_GREN_MIRVLET),
+				value("kConc",			CLASS_GREN_CONC),
+				value("kNapalm",		CLASS_GREN_NAPALM),
+				value("kGas",			CLASS_GREN_GAS),
+				value("kEmp",			CLASS_GREN_EMP)
+			],
+
+		// TODO: Should we add classes for all gren types?
+		// Normal grenade,
+		// Caltrop,
+		// Nail grenade,
+		// Mirv grenade,
+		// Mirvlet,
+		// Conc grenade,
+		// Napalm grenade,
+		// Gas grenade,
+		// Emp grenade,
+
 		// CBasePlayer
 		class_<CBasePlayer, CBaseEntity>("BasePlayer"),
 
@@ -950,6 +1001,7 @@ void CFFEntitySystem::FFLibOpen()
 			def("BroadCastSoundToPlayer",	&FFLib::SendPlayerSound),
 			def("CastToPlayer",				&FFLib::CastToPlayer),
 			def("CastToInfoScript",			&FFLib::CastToItemFlag),
+			def("CastToGrenade",			&FFLib::CastToGrenade),
 			def("GetEntity",				&FFLib::GetEntity),
 			def("GetEntityByName",			&FFLib::GetEntityByName),
 			def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
