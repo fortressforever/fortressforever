@@ -1057,6 +1057,14 @@ void CFFPlayer::SpySilentFeign( void )
 			GetActiveWeapon()->Deploy();
 			ShowCrosshair(true);
 		}
+
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("unfeigned");						
+		if(pEvent)
+		{
+			pEvent->SetInt("userid", this->GetUserID());
+			gameeventmanager->FireEvent(pEvent, true);
+		}
 	}
 	else
 	{
@@ -1069,6 +1077,12 @@ void CFFPlayer::SpySilentFeign( void )
 		if( relativeVel.LengthSqr() > 25.0f )
 		{
 			ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_CANTFEIGNSPEED" );
+			
+			// Notify the bot: convert this to an event?
+			if(IsBot())
+			{
+				Omnibot::Notify_CantFeign(this);
+			}
 			return;
 		}
 
@@ -1100,6 +1114,14 @@ void CFFPlayer::SpySilentFeign( void )
 
 			// Next!
 			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		}
+
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("feigned");						
+		if(pEvent)
+		{
+			pEvent->SetInt("userid", this->GetUserID());
+			gameeventmanager->FireEvent(pEvent, true);
 		}
 	}
 }
@@ -1590,14 +1612,13 @@ int CFFPlayer::ActivateClass()
 	RemoveItems();
 
 	// Send a player class change event.
-	IGameEvent *event = gameeventmanager->CreateEvent("player_changeclass");
-
-	if (event)
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_changeclass");
+	if (pEvent)
 	{
-		event->SetInt("userid", GetUserID());
-		event->SetInt("oldclass", GetClassForClient());
-		event->SetInt("newclass", m_iNextClass);
-		gameeventmanager->FireEvent(event);
+		pEvent->SetInt("userid", GetUserID());
+		pEvent->SetInt("oldclass", GetClassForClient());
+		pEvent->SetInt("newclass", m_iNextClass);
+		gameeventmanager->FireEvent(pEvent, true);
 	}
 
 	// Set class in stats engine
@@ -2245,11 +2266,7 @@ void CFFPlayer::Command_Radar( void )
 						// Omni-bot: Notify the bot he has detected someone.
 						if(IsBot())
 						{
-							int iGameId = i-1;
-							Omnibot::BotUserData bud(pPlayer->edict());
-							Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-								Omnibot::TF_MESSAGE_RADAR_DETECT_ENEMY,
-								iGameId, 0, 0, &bud);
+							Omnibot::Notify_RadarDetectedEnemy(this, pPlayer->edict());							
 						}
 					}
 				}
@@ -2350,6 +2367,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if player is in a no build area first
 		if( !FFScriptRunPredicates( this, "onbuild", true ) && ( ( m_iWantBuild == FF_BUILD_DISPENSER ) || ( m_iWantBuild == FF_BUILD_SENTRYGUN ) ) )
 		{
+			// Notify the bot: convert this to an event?
+			if(IsBot())
+			{
+				Omnibot::Notify_Build_CantBuild(this, m_iWantBuild);
+			}
+
 			// Re-initialize
 			m_iCurBuild = FF_BUILD_NONE;
 			m_iWantBuild = FF_BUILD_NONE;
@@ -2375,6 +2398,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( m_hSentryGun.Get() ) ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( m_hDetpack.Get() ) ) )
 		{
+			// Notify the bot: convert this to an event?
+			if(IsBot())
+			{
+				Omnibot::Notify_Build_AlreadyBuilt(this, m_iWantBuild);
+			}
+
 			switch( m_iWantBuild )
 			{
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" ); break;
@@ -2395,6 +2424,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( GetAmmoCount( AMMO_CELLS ) < 130 ) ) ||
 			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( GetAmmoCount( AMMO_DETPACK ) < 1 ) ) )
 		{
+			// Notify the bot: convert this to an event?
+			if(IsBot())
+			{
+				Omnibot::Notify_Build_NotEnoughAmmo(this, m_iWantBuild);
+			}
+
 			switch( m_iWantBuild )
 			{
 				case FF_BUILD_DISPENSER: ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" ); break;
@@ -2413,6 +2448,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 		// See if on ground...
 		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
 		{
+			// Notify the bot: convert this to an event?
+			if(IsBot())
+			{
+				Omnibot::Notify_Build_MustBeOnGround(this, m_iWantBuild);				
+			}
+
 			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MUSTBEONGROUND" );
 
 			// Re-initialize
@@ -2467,6 +2508,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Set the time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 2.0f;
+
+					if(IsBot())
+					{
+						Omnibot::Notify_DispenserBuilding(this, pDispenser->edict());
+					}
 				}
 				break;
 
@@ -2484,6 +2530,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 					// Set the time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 5.0f;	// |-- Mirv: Bug #0000127: when building a sentry gun the build finishes before the sound
+
+					if(IsBot())
+					{
+						Omnibot::Notify_SentryBuilding(this, pSentryGun->edict());
+					}
 				}
 				break;
 
@@ -2505,6 +2556,10 @@ void CFFPlayer::PreBuildGenericThink( void )
 					// Set time it takes to build
 					m_flBuildTime = gpGlobals->curtime + 3.0f; // mulch: bug 0000337: build time 3 seconds for detpack
 
+					if(IsBot())
+					{
+						Omnibot::Notify_DetpackBuilding(this, pDetpack->edict());
+					}
 				}
 				break;
 			}
@@ -2595,11 +2650,11 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					( ( CFFDispenser * )m_hDispenser.Get() )->GoLive();
 
-					IGameEvent *event = gameeventmanager->CreateEvent( "build_dispenser" );
-					if( event )
+					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_dispenser" );
+					if( pEvent )
 					{
-						event->SetInt( "userid", GetUserID() );
-						gameeventmanager->FireEvent( event );
+						pEvent->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( pEvent, true );
 					}					
 				}
 			}
@@ -2611,11 +2666,11 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					( ( CFFSentryGun * )m_hSentryGun.Get() )->GoLive();
 
-					IGameEvent *event = gameeventmanager->CreateEvent( "build_sentrygun" );
-					if( event )
+					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_sentrygun" );
+					if( pEvent )
 					{
-						event->SetInt( "userid", GetUserID() );
-						gameeventmanager->FireEvent( event );
+						pEvent->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( pEvent, true );
 					}
 				}
 			}
@@ -2631,11 +2686,11 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive();
 
-					IGameEvent *event = gameeventmanager->CreateEvent( "build_detpack" );
-					if( event )
+					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_detpack" );
+					if( pEvent )
 					{
-						event->SetInt( "userid", GetUserID() );
-						gameeventmanager->FireEvent( event );
+						pEvent->SetInt( "userid", GetUserID() );
+						gameeventmanager->FireEvent( pEvent, true );
 					}
 				}
 			}
@@ -3735,23 +3790,22 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	//ApplyAbsVelocityImpulse(info.GetDamageForce());
 
 	// fire global game event
-	IGameEvent * event = gameeventmanager->CreateEvent("player_hurt");
-	if (event)
+	IGameEvent * pEvent = gameeventmanager->CreateEvent("player_hurt");
+	if (pEvent)
 	{
-		event->SetInt("userid", GetUserID());
-		event->SetInt("health", (m_iHealth > 0 ? m_iHealth : 0));	// max replaced with this
-
+		pEvent->SetInt("userid", GetUserID());
+		pEvent->SetInt("health", (m_iHealth > 0 ? m_iHealth : 0));	// max replaced with this
 		if (attacker->IsPlayer())
 		{
 			CBasePlayer *player = ToBasePlayer(attacker);
-			event->SetInt("attacker", player->GetUserID()); // hurt by other player
+			pEvent->SetInt("attacker", player->GetUserID()); // hurt by other player
 		}
 		else
 		{
-			event->SetInt("attacker", 0); // hurt by "world"
+			pEvent->SetInt("attacker", 0); // hurt by "world"
 		}
 
-		gameeventmanager->FireEvent(event);
+		gameeventmanager->FireEvent(pEvent, true);
 	}
 
 	return 1;
@@ -4195,6 +4249,12 @@ void CFFPlayer::Command_Disguise()
 	m_flFinishDisguise = gpGlobals->curtime + 1.0f;
 
 	ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_DISGUISING" );
+
+	// Notify the bot: convert this to an event?
+	if(IsBot())
+	{
+		Omnibot::Notify_Disguising(this, GetDisguisedTeam(), GetDisguisedClass());
+	}
 }
 
 bool CFFPlayer::IsDisguised( void )
@@ -4249,6 +4309,12 @@ void CFFPlayer::ResetDisguise()
 	m_iSpyDisguise = 0;
 
 	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE");
+
+	// Notify the bot: convert this to an event?
+	if(IsBot())
+	{
+		Omnibot::Notify_DisguiseLost(this);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4273,6 +4339,16 @@ void CFFPlayer::FinishDisguise()
 
 	m_iSpyDisguise = m_iNewSpyDisguise;
 	m_iNewSpyDisguise = 0;
+
+	// Fire an event.
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("disguised");						
+	if(pEvent)
+	{
+		pEvent->SetInt("userid", this->GetUserID());
+		pEvent->SetInt("team", GetDisguisedTeam());
+		pEvent->SetInt("class", GetDisguisedClass());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
 }
 
 int CFFPlayer::AddHealth(unsigned int amount)
@@ -4646,6 +4722,19 @@ void CFFPlayer::SpySabotageThink()
 			m_hSabotaging = NULL;
 
 			ClientPrint(this, HUD_PRINTCENTER, "#FF_BUILDINGSABOTAGED");
+
+			// Fire an event.
+			IGameEvent *pEvent = NULL;
+			if(m_hSabotaging->Classify() == CLASS_SENTRYGUN)
+				pEvent = gameeventmanager->CreateEvent("sentry_sabotaged");
+			else if(m_hSabotaging->Classify() == CLASS_DISPENSER)
+				pEvent = gameeventmanager->CreateEvent("dispenser_sabotaged");
+			if(pEvent)
+			{
+				CFFPlayer *pPlayer = ToFFPlayer(GetOwnerEntity());
+				pEvent->SetInt("userid", pPlayer->GetUserID());
+				pEvent->SetInt("saboteur", this->GetUserID());				
+			}
 		}
 	}
 }

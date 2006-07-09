@@ -172,18 +172,7 @@ void CFFDispenser::GoLive( void )
 	SetThink( &CFFDispenser::OnObjectThink );	// |-- Mirv: Account for GCC strictness
 	SetNextThink( gpGlobals->curtime + m_flThinkTime );
 
-	// Omni-bot: Tell the bot about his dispenser.
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-	if(pOwner && pOwner->IsBot())
-	{
-		int iGameId = pOwner->entindex()-1;
-
-		Omnibot::BotUserData bud(edict());
-		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MESSAGE_DISPENSER_BUILT,
-			iGameId, 0, 0, &bud);
-		SendStatsToBot();
-	}
 
 	// Bug #0000244: Building dispenser doesn't take away cells
 	// Temp value of 100 for now
@@ -296,15 +285,13 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 						// TODO: Hud message to person who touched us
 						SendMessageToPlayer( pPlayer, "Dispenser_TouchEnemy", true );
 
-						// Omni-bot: Tell the bot about his dispenser.
-						if(pOwner->IsBot())
+						// Fire an event.
+						IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_enemyused");						
+						if(pEvent)
 						{
-							int iGameId = pOwner->entindex()-1;
-
-							Omnibot::BotUserData bud(pPlayer->edict());
-							Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-								Omnibot::TF_MESSAGE_DISPENSER_ENEMYUSED,
-								iGameId, 0, 0, &bud);
+							pEvent->SetInt("userid", pOwner->GetUserID());
+							pEvent->SetInt("enemyid", pPlayer->GetUserID());
+							gameeventmanager->FireEvent(pEvent, true);
 						}
 					}
 				}
@@ -503,7 +490,7 @@ void CFFDispenser::SendStatsToBot()
 	if(pOwner && pOwner->IsBot())
 	{
 		Omnibot::BotUserData bud;
-		bud.m_DataType = Omnibot::BotUserData::dt6_2byteFlags;
+		bud.DataType = Omnibot::BotUserData::dt6_2byteFlags;
 		bud.udata.m_2ByteFlags[0] = m_iHealth;
 		bud.udata.m_2ByteFlags[1] = m_iShells;
 		bud.udata.m_2ByteFlags[2] = m_iNails;
@@ -511,11 +498,11 @@ void CFFDispenser::SendStatsToBot()
 		bud.udata.m_2ByteFlags[4] = m_iCells;
 		bud.udata.m_2ByteFlags[5] = m_iArmor;
 
-		// TODO: Add in radio tag
+		// TODO: Add in radio tag?
 
 		int iGameId = pOwner->entindex()-1;
 		Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-			Omnibot::TF_MESSAGE_DISPENSER_STATS,
+			Omnibot::TF_MSG_DISPENSER_STATS,
 			iGameId, 0, 0, &bud);
 	}
 }
@@ -561,4 +548,21 @@ void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
 	Detonate();
 
 	Warning("Dispenser maliciously sabotaged\n");
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Overridden just to fire the appropriate event.
+//-----------------------------------------------------------------------------
+void CFFDispenser::Detonate()
+{
+	// Fire an event.
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_detonated");						
+	if(pEvent)
+	{
+		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+		pEvent->SetInt("userid", pOwner->GetUserID());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
+
+	CFFBuildableObject::Detonate();
 }

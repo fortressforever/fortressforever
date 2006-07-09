@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-01-28 12:33:58 -0500 (Sat, 28 Jan 2006) $
-// $LastChangedRevision: 1137 $
+// $LastChangedDate: 2006-06-08 06:28:14 -0400 (Thu, 08 Jun 2006) $
+// $LastChangedRevision: 1232 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +42,31 @@ typedef obuint64 NavigationFlags;
 //		guarantee that bools are supported, lets use an enumerated value instead.
 typedef enum
 {
-	obfalse,
-	obtrue
+	Invalid = -1,
+	False,
+	True
 } obBool;
+
+// enum: obResult
+//		Various error codes for functions.
+typedef enum
+{
+	Success = 0,
+	OutOfPVS,
+	UnableToAddBot,
+	InvalidEntity,
+	InvalidParameter
+} obResult;
+
+#ifdef __cplusplus
+inline int SUCCESS(obResult _res)
+{
+	return (_res == Success) ? 1 : 0;
+}
+#else
+#define SUCCESS(res) ((res) == Success ? 1 : 0)
+#endif
+//#define SUCCESS(x) ((x)==Success ? true : false)
 
 typedef enum
 {
@@ -119,58 +141,66 @@ typedef struct AABB_t
 #endif
 } AABB;
 
+// Helper macro so the game can check the status of bot buttons.
+#define BOT_CHECK_BUTTON(button, flag) (((button) & (1<<(flag))) != 0)
+
 // package: ButtonFlags
 //		This enum defines the button press states available
 typedef enum eButtonFlags
 {
-	BOT_BUTTON_NONE		= 0,
 	// bit: BOT_BUTTON_ATTACK1
 	//		If the bot is pressing primary attack
-	BOT_BUTTON_ATTACK1	= (1<<0),
+	BOT_BUTTON_ATTACK1,
 	// bit: BOT_BUTTON_ATTACK2
 	//		If the bot is pressing secondary attack
-	BOT_BUTTON_ATTACK2	= (1<<1),
+	BOT_BUTTON_ATTACK2,
 	// bit: BOT_BUTTON_JUMP
 	//		If the bot is pressing jump
-	BOT_BUTTON_JUMP		= (1<<2),
+	BOT_BUTTON_JUMP,
 	// bit: BOT_BUTTON_CROUCH
 	//		If the bot is pressing crouch
-	BOT_BUTTON_CROUCH	= (1<<3),
+	BOT_BUTTON_CROUCH,
 	// bit: BOT_BUTTON_PRONE
 	//		If the bot is pressing prone
-	BOT_BUTTON_PRONE	= (1<<4),
+	BOT_BUTTON_PRONE,
 	// bit: BOT_BUTTON_WALK
 	//		If the bot is pressing walk
-	BOT_BUTTON_WALK		= (1<<5),
+	BOT_BUTTON_WALK,
 	// bit: BOT_BUTTON_USE
 	//		If the bot is pressing use
-	BOT_BUTTON_USE		= (1<<6),
+	BOT_BUTTON_USE,
+	// bit: BOT_BUTTON_FWD
+	//		If the bot is pressing the forward key
+	BOT_BUTTON_FWD,
+	// bit: BOT_BUTTON_BACK
+	//		If the bot is pressing the backward key
+	BOT_BUTTON_BACK,
 	// bit: BOT_BUTTON_RSTRAFE
 	//		If the bot is pressing right strafe
-	BOT_BUTTON_RSTRAFE  = (1<<7),
+	BOT_BUTTON_RSTRAFE,
 	// bit: BOT_BUTTON_LSTRAFE
 	//		If the bot is pressing left strafe
-	BOT_BUTTON_LSTRAFE  = (1<<8),
+	BOT_BUTTON_LSTRAFE,
 	// bit: BOT_BUTTON_RELOAD
 	//		If the bot is pressing reload
-	BOT_BUTTON_RELOAD	= (1<<9),
+	BOT_BUTTON_RELOAD,
 	// bit: BOT_BUTTON_SPRINT
 	//		If the bot wants to sprint
-	BOT_BUTTON_SPRINT	= (1<<10),
+	BOT_BUTTON_SPRINT,
 	// bit: BOT_BUTTON_DROP
 	//		If the bot wants to drop current item
-	BOT_BUTTON_DROP		= (1<<11),
+	BOT_BUTTON_DROP,
 	// bit: BOT_BUTTON_LEANLEFT
 	//		If the bot wants to lean left
-	BOT_BUTTON_LEANLEFT	= (1<<12),
+	BOT_BUTTON_LEANLEFT,
 	// bit: BOT_BUTTON_LEANRIGHT
 	//		If the bot wants to lean right
-	BOT_BUTTON_LEANRIGHT= (1<<13),
+	BOT_BUTTON_LEANRIGHT,
 	// bit: BOT_BUTTON_AIM
 	//		If the bot wants to drop current item
-	BOT_BUTTON_AIM		= (1<<14),
+	BOT_BUTTON_AIM,
 
-	BOT_BUTTUN_FIRSTUSER= (1<<20)
+	BOT_BUTTUN_FIRSTUSER
 } ButtonFlags;
 
 // package: GoalType
@@ -208,12 +238,16 @@ typedef enum eGoalType
 	// var: GOAL_CTF_FLAGCAP
 	//		The bot should take GOAL_CTF_FLAG to this point.
 	GOAL_CTF_FLAGCAP,
+	// var: GOAL_SCRIPT
+	//		A script should be ran for this goal.
+	GOAL_SCRIPT,
+
 	// This must stay last!
 	BASE_GOAL_NUM
 } GoalType;
 
 // A basic list of goals. There should be one of these for any base Goal class.
-typedef enum eETFGoals
+typedef enum eBasicGoals
 {
 	goal_none,
 	goal_goto,
@@ -296,7 +330,7 @@ typedef enum eEntityFlags
 	ENT_FLAG_ZOOMING	= (1<<11),
 	// bit: ENT_FLAG_LADDER
 	//		This entity is on a ladder.
-	ENT_FLAG_LADDER		= (1<<11),
+	ENT_FLAG_LADDER		= (1<<12),
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= (1<<16)
@@ -425,6 +459,9 @@ typedef enum eNavigatorID
 	// int: NAVID_WP
 	//		Waypoint-based path planning implementation
 	NAVID_WP,
+	// int: NAVID_NAVMESH
+	//		Navigation mesh path planning implementation
+	NAVID_NAVMESH,
 	// int: NAVID_AAS
 	//		Implementation of Quake 4 AAS system
 	NAVID_Q4_AAS,
@@ -488,7 +525,9 @@ typedef enum eTraceMasks
 	// const: TR_MASK_PLAYERCLIP
 	//		This trace should test against player clips
 	TR_MASK_PLAYERCLIP	= (1<<6),
-
+	// const: TR_MASK_SMOKEBOMB
+	//		This trace should test against player clips
+	TR_MASK_SMOKEBOMB	= (1<<7),
 	// THIS MUST BE LAST!
 	TR_MASK_LAST = (1<<16)
 } TraceMasks;
@@ -539,35 +578,34 @@ typedef struct BotUserData_t
 		short			m_2ByteFlags[6];
 		char			m_1ByteFlags[12];
 	} udata;
-	int					m_DataType;
 	// Easy Constructors for C++
 #ifdef __cplusplus
-	BotUserData_t() : m_DataType(dtNone) {};
-	BotUserData_t(const char * _str) : m_DataType(dtString) { udata.m_String = _str; };
-	BotUserData_t(int _int) : m_DataType(dtInt) { udata.m_Int = _int; };
-	BotUserData_t(float _float) : m_DataType(dtFloat) { udata.m_Float = _float; };
-	BotUserData_t(const GameEntity &_ent) : m_DataType(dtEntity) { udata.m_Entity = _ent; };
+	BotUserData_t() : DataType(dtNone) {};
+	BotUserData_t(const char * _str) : DataType(dtString) { udata.m_String = _str; };
+	BotUserData_t(int _int) : DataType(dtInt) { udata.m_Int = _int; };
+	BotUserData_t(float _float) : DataType(dtFloat) { udata.m_Float = _float; };
+	BotUserData_t(const GameEntity &_ent) : DataType(dtEntity) { udata.m_Entity = _ent; };
 	BotUserData_t(float _x, float _y, float _z) : 
-		m_DataType(dtVector) 
+		DataType(dtVector) 
 	{
 		udata.m_Vector[0] = _x; 
 		udata.m_Vector[1] = _y; 
 		udata.m_Vector[2] = _z;
 	};
-	BotUserData_t(int _0, int _1, int _2) : m_DataType(dt3_4byteFlags)
+	BotUserData_t(int _0, int _1, int _2) : DataType(dt3_4byteFlags)
 	{
 		udata.m_4ByteFlags[0] = _0; 
 		udata.m_4ByteFlags[1] = _1; 
 		udata.m_4ByteFlags[2] = _2;
 	};
-	BotUserData_t(char *_0, char *_1, char *_2) : m_DataType(dt3_Strings)
+	BotUserData_t(char *_0, char *_1, char *_2) : DataType(dt3_Strings)
 	{
 		udata.m_CharPtrs[0] = _0; 
 		udata.m_CharPtrs[1] = _1; 
 		udata.m_CharPtrs[2] = _2;
 	};
 	BotUserData_t(short _0, short _1, short _2, short _3, short _4, short _5) : 
-		m_DataType(dt6_2byteFlags)
+		DataType(dt6_2byteFlags)
 	{
 		udata.m_2ByteFlags[0] = _0; 
 		udata.m_2ByteFlags[1] = _1; 
@@ -577,7 +615,7 @@ typedef struct BotUserData_t
 		udata.m_2ByteFlags[5] = _5;
 	};
 	BotUserData_t(char _0, char _1, char _2, char _3, char _4, char _5, char _6, char _7, char _8, char _9, char _10, char _11) : 
-		m_DataType(dt12_1byteFlags)
+		DataType(dt12_1byteFlags)
 	{
 		udata.m_1ByteFlags[0] = _0; 
 		udata.m_1ByteFlags[1] = _1; 
@@ -594,37 +632,37 @@ typedef struct BotUserData_t
 	};
 	// Function: IsNone
 	// This <BotUserData> has no type specified
-	inline bool IsNone() const { return (m_DataType == dtNone); };
+	inline bool IsNone() const { return (DataType == dtNone); };
 	// Function: IsString
 	// This <BotUserData> is a char * type
-	inline bool IsString() const { return (m_DataType == dtString); };
+	inline bool IsString() const { return (DataType == dtString); };
 	// Function: Is3String
 	// This <BotUserData> is a array of 3 strings
-	inline bool Is3String() const { return (m_DataType == dt3_Strings); };
+	inline bool Is3String() const { return (DataType == dt3_Strings); };
 	// Function: IsInt
 	// This <BotUserData> is an int type
-	inline bool IsInt() const { return (m_DataType == dtInt); };
+	inline bool IsInt() const { return (DataType == dtInt); };
 	// Function: IsFloat
 	// This <BotUserData> is an float type
-	inline bool IsFloat() const { return (m_DataType == dtFloat); };
+	inline bool IsFloat() const { return (DataType == dtFloat); };
 	// Function: IsFloatOrInt
 	// This <BotUserData> is an float type or an int type
-	inline bool IsFloatOrInt() const { return (m_DataType == dtFloat) || (m_DataType == dtInt); };
+	inline bool IsFloatOrInt() const { return (DataType == dtFloat) || (DataType == dtInt); };
 	// Function: IsEntity
 	// This <BotUserData> is an <GameEntity> type
-	inline bool IsEntity() const { return (m_DataType == dtEntity); };
+	inline bool IsEntity() const { return (DataType == dtEntity); };
 	// Function: IsVector
 	// This <BotUserData> is a 3d Vector type
-	inline bool IsVector() const { return (m_DataType == dtVector); };
+	inline bool IsVector() const { return (DataType == dtVector); };
 	// Function: Is3_4ByteFlags
 	// This <BotUserData> is an array of 3 4-byte values
-	inline bool Is3_4ByteFlags() const { return (m_DataType == dt3_4byteFlags); };
+	inline bool Is3_4ByteFlags() const { return (DataType == dt3_4byteFlags); };
 	// Function: Is6_2ByteFlags
 	// This <BotUserData> is an array of 6 2-byte values
-	inline bool Is6_2ByteFlags() const { return (m_DataType == dt6_2byteFlags); };
+	inline bool Is6_2ByteFlags() const { return (DataType == dt6_2byteFlags); };
 	// Function: Is12_1ByteFlags
 	// This <BotUserData> is an array of 12 1-byte values
-	inline bool Is12_1ByteFlags() const { return (m_DataType == dt12_1byteFlags); };
+	inline bool Is12_1ByteFlags() const { return (DataType == dt12_1byteFlags); };
 
 	inline const char *GetString() const { return udata.m_String; };
 	inline int GetInt() const { return udata.m_Int; };
@@ -722,5 +760,15 @@ typedef enum eFlagState
 	S_FLAG_CARRIED
 } FlagState;
 
+typedef enum eGameState
+{
+	GAME_STATE_INVALID,
+	GAME_STATE_PLAYING,
+	GAME_STATE_WARMUP,
+	GAME_STATE_WARMUP_COUNTDOWN,
+	GAME_STATE_INTERMISSION,
+	GAME_STATE_WAITINGFORPLAYERS,
+	GAME_STATE_PAUSED,
+} GameState;
 
 #endif

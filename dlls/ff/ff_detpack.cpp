@@ -319,3 +319,21 @@ CFFDetpack *CFFDetpack::Create( const Vector &vecOrigin, const QAngle &vecAngles
 
 	return pObject;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Overridden just to fire the appropriate event.
+//-----------------------------------------------------------------------------
+void CFFDetpack::Detonate()
+{
+	// Fire an event.
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("detpack_detonated");						
+	if(pEvent)
+	{
+		CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
+		pEvent->SetInt("userid", pOwner->GetUserID());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
+
+	CFFBuildableObject::Detonate();
+}

@@ -324,6 +324,14 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			pDispenser->EmitSound( sndFilter, pDispenser->entindex(), "Dispenser.unbuild" );
 
 			pDispenser->RemoveQuietly();
+
+			// Fire an event.
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_dismantled");						
+			if(pEvent)
+			{
+				pEvent->SetInt("userid", pPlayer->GetUserID());
+				gameeventmanager->FireEvent(pEvent, true);
+			}
 		}
 		else
 			pDispenser->Detonate();

@@ -905,26 +905,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 	if(pOwner && pOwner->IsBot())
 	{
-		int iMsg = 0;
-		switch(Classify())
-		{
-		case CLASS_DISPENSER:
-			iMsg = Omnibot::TF_MESSAGE_DISPENSER_DAMAGED;
-			break;
-		case CLASS_SENTRYGUN:
-			iMsg = Omnibot::TF_MESSAGE_SENTRY_DAMAGED;
-			break;
-		}			
-
-		if(iMsg != 0)
-		{
-			int iGameId = pOwner->entindex()-1;
-
-			Omnibot::BotUserData bud(edict());
-			Omnibot::omnibot_interface::Bot_Interface_SendEvent(
-				iMsg,
-				iGameId, 0, 0, &bud);
-		}
+		Omnibot::Notify_BuildableDamaged(pOwner, Classify(), edict());
 		SendStatsToBot();
 	}
 

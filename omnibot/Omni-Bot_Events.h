@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-01-17 18:15:33 -0500 (Tue, 17 Jan 2006) $
-// $LastChangedRevision: 1126 $
+// $LastChangedDate: 2006-05-08 21:41:37 -0400 (Mon, 08 May 2006) $
+// $LastChangedRevision: 1209 $
 //
 // about: Generic Bot Events
 //
@@ -46,6 +46,7 @@ typedef enum
 		GOAL_ID_FIRST,
 			GOAL_SUCCESS,
 			GOAL_FAILED,
+			GOAL_ABORTED,
 		GOAL_ID_LAST,
 
 		// Messages that are passed around between any objects
@@ -83,7 +84,9 @@ typedef enum
 			PERCEPT_HEAR_GLOBALVOICEMACRO,
 			PERCEPT_HEAR_TEAMVOICEMACRO,
 			PERCEPT_HEAR_PRIVATEVOICEMACRO,
-			PERCEPT_HEAR_CHATMSG,
+			PERCEPT_HEAR_GLOBALCHATMSG,
+			PERCEPT_HEAR_TEAMCHATMSG,
+			PERCEPT_HEAR_PRIVCHATMSG,
 		PERCEPT_ID_LAST,
 	EVENT_ID_LAST,
 	EVENT_NUM_EVENTS
@@ -99,7 +102,6 @@ typedef enum
 	GEN_MSG_ISALIVE,
 	GEN_MSG_ISRELOADING,
 	GEN_MSG_ISREADYTOFIRE,
-	GEN_MSG_GETTEAM,
 	GEN_MSG_ISALLIED,
 	GEN_MSG_ISHUMAN,
 
@@ -108,6 +110,8 @@ typedef enum
 	GEN_MSG_GETCURRENTCLASS,
 	GEN_MSG_GETCURRENTTEAM,
 	GEN_MSG_GETHEALTHARMOR,
+	GEN_MSG_GETFLAGSTATE,
+	GEN_MSG_GAMESTATE,
 
 	GEN_MSG_END
 } GEN_GameMessage;
@@ -126,10 +130,11 @@ typedef enum
 //		Human readable identifiers for blackboard entries.
 typedef enum
 {
-	bbk_None,
-	bbk_Goal,
-	bbk_SoundPlayed,
-	bbk_SoundAmbient,
+	bbk_All = 0,
+	bbk_DelayGoal,
+
+	// This must stay last.
+	bbk_LastKey,
 } BlackBoard_Key;
 
 #endif

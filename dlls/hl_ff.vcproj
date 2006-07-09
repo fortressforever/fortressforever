@@ -3878,6 +3878,9 @@
 			Name="Omnibot"
 			Filter="">
 			<File
+				RelativePath="..\omnibot\Base_Messages.h">
+			</File>
+			<File
 				RelativePath="..\omnibot\BotExports.h">
 			</File>
 			<File
@@ -3900,6 +3903,9 @@
 			</File>
 			<File
 				RelativePath=".\ientityinfo.h">
+			</File>
+			<File
+				RelativePath="..\omnibot\MessageHelper.h">
 			</File>
 			<File
 				RelativePath="..\omnibot\Omni-Bot.h">
@@ -3927,6 +3933,9 @@
 			</File>
 			<File
 				RelativePath="..\omnibot\TF_Config.h">
+			</File>
+			<File
+				RelativePath="..\omnibot\TF_Messages.h">
 			</File>
 		</Filter>
 		<Filter
