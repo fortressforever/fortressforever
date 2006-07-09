@@ -290,7 +290,10 @@ namespace FFLib
 	// uses the Classify function for evaluation
 	bool IsOfClass(CBaseEntity* pEntity, int classType)
 	{
-		return ((NULL != pEntity) && (pEntity->Classify() == classType));
+		if( !pEntity )
+			return false;
+
+		return ( pEntity->Classify() == classType );
 	}
 
 	// is entity a dispenser
@@ -380,6 +383,22 @@ namespace FFLib
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
 
+				pPlayer->RemoveItems();
+				pPlayer->Spawn();
+				//pPlayer->KillAndRemoveItems();
+			}
+		}
+	}
+
+	void KillAndRespawnAllPlayers( void )
+	{
+		// loop through each player
+		for (int i=0; i<gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				pPlayer->KillAndRemoveItems();
 			}
 		}
@@ -491,6 +510,44 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast<CFFPlayer*>(pEnt);
+	}
+
+	CFFGrenadeBase *GetGrenade( int ent_id )
+	{
+		CBaseEntity *pEnt = GetEntity( ent_id );
+
+		if( !pEnt )
+			return NULL;
+
+		if( !IsGrenade( pEnt ) )
+			return NULL;
+
+		return dynamic_cast< CFFGrenadeBase * >( pEnt );
+	}
+
+	bool IsPlayerFromId( int player_id )
+	{
+		return GetPlayer( player_id ) == NULL ? false : true;
+	}
+
+	bool IsGrenadeFromId( int ent_id )
+	{
+		return IsGrenade( GetEntity( ent_id ) );
+	}
+
+	bool IsDispenserFromId( int ent_id )
+	{
+		return IsDispenser( GetEntity( ent_id ) );
+	}
+
+	bool IsSentrygunFromId( int ent_id )
+	{
+		return IsSentrygun( GetEntity( ent_id ) );
+	}
+
+	bool IsDetpackFromId( int ent_id )
+	{
+		return IsDetpack( GetEntity( ent_id ) );
 	}
 
 	CFFInfoScript* GetInfoScriptByName(const char* entityName)
@@ -787,6 +844,7 @@ void CFFEntitySystem::FFLibOpen()
 	lua_register( L, "SetGlobalRespawnDelay", SetGlobalRespawnDelay );
 	lua_register( L, "RespawnPlayer", RespawnPlayer );
 	lua_register( L, "RespawnAllPlayers", RespawnAllPlayers );
+	lua_register( L, "KillAndRespawnAllPlayers", KillAndRespawnAllPlayers );
 	lua_register( L, "RemoveItem", RemoveItem );
 	lua_register( L, "SetTeamAllies", SetTeamAllies );
 	lua_register( L, "PrecacheSound", PrecacheSound );
@@ -907,8 +965,8 @@ void CFFEntitySystem::FFLibOpen()
 			],
 
 		// CFFGrenadeBase
-		class_<CFFGrenadeBase>("BaseGrenade")
-		.def("GetGrenId",				&CFFGrenadeBase::GetGrenId)
+		class_<CFFGrenadeBase>("Grenade")
+		.def("Type",					&CFFGrenadeBase::GetGrenId)
 			.enum_("GrenId")
 			[
 				value("kNormal",		CLASS_GREN),
@@ -1013,6 +1071,12 @@ void CFFEntitySystem::FFLibOpen()
 			def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 			def("GetPlayer",				&FFLib::GetPlayer),
 			def("GetTeam",					&FFLib::GetTeam),
+			def("GetGrenade",				&FFLib::GetGrenade),
+			def("IsPlayer",					&FFLib::IsPlayerFromId),
+			def("IsDispenser",				&FFLib::IsDispenserFromId),
+			def("IsSentrygun",				&FFLib::IsSentrygunFromId),
+			def("IsDetpack",				&FFLib::IsDetpackFromId),
+			def("IsGrenade",				&FFLib::IsGrenadeFromId),
 			def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
 			def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
 			def("IncludeScript",			&FFLib::IncludeScript),
@@ -1024,6 +1088,7 @@ void CFFEntitySystem::FFLibOpen()
 			def("RandomInt",				&FFLib::RandomInt),
 			def("RemoveEntity",				&FFLib::RemoveEntity),
 			def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
+			def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 			def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
 			def("SetPlayerLimit",			&FFLib::SetPlayerLimit),
 			def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
@@ -1904,7 +1969,38 @@ int CFFEntitySystem::RespawnAllPlayers( lua_State *L )
 			if (ent && ent->IsPlayer())
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				pPlayer->RemoveItems();
+				pPlayer->Spawn();
+			}
+		}
 
+		// 1 result
+		lua_pushboolean( L, true );
+		return 1;
+	}
+
+	// No results
+	return 0;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: KillAndRespawn all players (i.e. for round end in epicentre/hunted)
+//          int RespawnAllPlayers(  );
+//----------------------------------------------------------------------------
+int CFFEntitySystem::KillAndRespawnAllPlayers( lua_State *L )
+{
+	int n = lua_gettop(L);
+
+	// A zero argument'd function
+	if( n == 0 )
+	{
+		// loop through each player
+		for (int i=0; i<gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
 				pPlayer->KillAndRemoveItems();
 			}
 		}

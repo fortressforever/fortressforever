@@ -90,6 +90,7 @@ public:
 	static int BroadCastMessage( lua_State* );
 	static int BroadCastMessageToPlayer( lua_State* );
 	static int RespawnAllPlayers( lua_State* );
+	static int KillAndRespawnAllPlayers( lua_State* );
 	static int RespawnPlayer( lua_State* );
 	static int NumPlayersOnTeam( lua_State* );
 	static int GetPlayerOnTeam( lua_State* );
