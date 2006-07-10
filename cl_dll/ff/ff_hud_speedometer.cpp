@@ -119,6 +119,8 @@ void CHudSpeedometer::Paint()
 		vecVelocity.x * vecVelocity.x 
 		+ vecVelocity.y * vecVelocity.y 
 		+ vecVelocity.z * vecVelocity.z));
+
+	// Hey voogru, why not .Length() ? Does the same thing :)
 	
 	surface()->DrawSetTextPos(digit_xpos, digit_ypos);
 	for (wchar_t *ch = unicode; *ch != 0; ch++)

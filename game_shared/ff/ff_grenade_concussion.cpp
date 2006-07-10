@@ -188,7 +188,8 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 					Vector pvel = pPlayer->GetAbsVelocity();
 
 					// These values are close (~within 0.01) of TFC
-					pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.10));
+					if( !pPlayer->IsBuilding() )
+						pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.10));
 				}
 				else
 				{
@@ -206,7 +207,8 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 					vecDisplacement *= (horizontalDistance * (8.4f - 0.015f * flDistance));
 					vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
 
-					pPlayer->SetAbsVelocity(vecDisplacement);
+					if( !pPlayer->IsBuilding() )
+						pPlayer->SetAbsVelocity(vecDisplacement);
 				}				
 
 				VectorNormalize(vecDisplacement);
