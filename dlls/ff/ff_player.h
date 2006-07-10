@@ -18,6 +18,7 @@
 #include "utlvector.h"
 #include "ff_weapon_base.h"
 #include "ff_buildableobjects_shared.h"
+#include "in_buttons.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -54,7 +55,7 @@ enum SpeedEffectType
 };
 
 // BEG: Speed Effect class for handling speed impairing effects (caltrop, legshot, etc)
-#define NUM_SPEED_EFFECTS 10
+#define NUM_SPEED_EFFECTS 32
 struct SpeedEffect
 {
 	SpeedEffectType type;		// using a type now so we can search through them all
@@ -544,7 +545,11 @@ public:
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	CNetworkVar(int, m_iSpawnInterpCounter);
 
-	//bool IsJumping( void ) const	{ return input->GetButtonBits() & IN_JUMP; }
+public:
+	bool IsAttacking1( void ) const	{ return ( m_nButtons & IN_ATTACK ) ? true : false; }
+	bool IsAttacking2( void ) const { return ( m_nButtons & IN_ATTACK2 ) ? true : false; }
+	bool IsUsing( void ) const		{ return ( m_nButtons & IN_USE ) ? true : false; }
+	bool IsJumping( void ) const	{ return ( m_nButtons & IN_JUMP ) ? true : false; }
 	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
