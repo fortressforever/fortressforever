@@ -199,8 +199,7 @@ ConVar mp_prematch( "mp_prematch",
 	extern void ClearAllowedEffects();
 
 	// --------------------------------------------------------------------------------
-	// Purpose: Kill the player and set a 5 second spawn delay
-	//			Stolen from client.cpp for easier interfacing w/ CFFPlayer
+	// Purpose: Restarts the round in progress
 	// --------------------------------------------------------------------------------
 	void CC_FF_RestartRound( void )
 	{
