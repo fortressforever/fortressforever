@@ -813,6 +813,10 @@ namespace FFLib
 		return gpGlobals->curtime;
 	}
 
+	void AddPlayerSpeedEffect( CFFPlayer *pPlayer, float flDuration, float flPercent )
+	{
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1027,6 +1031,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
 			.def("GetDisguisedTeam",	&CFFPlayer::GetDisguisedTeam)
+			.def("AddSpeedEffect",		&CFFPlayer::AddLuaSpeedEffect)	// currently support for one lua speed effect only
+			.def("IsSpeedEffectSet",	&CFFPlayer::IsLuaSpeedEffectSet)
+			.def("RemoveSpeedEffect",	&CFFPlayer::RemoveLuaSpeedEffect)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
