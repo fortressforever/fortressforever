@@ -381,6 +381,26 @@ public:
 	/* Returns true if a player is not on the ground
 	*/
 	bool IsInAir();
+
+	/** 
+	/* Returns true if a player is jumping
+	*/
+	bool IsJumping();
+
+	/** 
+	/* Returns true if a player pressing their +use key
+	*/
+	bool IsUsing();
+
+	/** 
+	/* Returns true if a player pressing their +attack key
+	*/
+	bool IsAttacking1();
+
+	/** 
+	/* Returns true if a player pressing their +attack2 key
+	*/
+	bool IsAttacking2();
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -436,9 +456,15 @@ namespace ffmod
 	InfoScript GetInfoScriptByName(string name);
 	Player GetPlayer(player_id);
 	Team GetTeam(Team.TeamId teamId);
+	float GetServerTime();
 	bool AreTeamsAllied(Team teamA, Team teamB);
 	bool AreTeamsAllied(Team.TeamId teamA, Team.TeamId teamB);
 	void IncludeScript(string script);
+	bool IsDetpack();
+	bool IsDispenser();
+	bool IsGrenade();
+	bool IsPlayer();
+	bool IsSentrygun();	
 	void ConsoleToAll(string message);
 	int NumPlayers();
 	void PrecacheModel(string model);
@@ -447,6 +473,7 @@ namespace ffmod
 	int RandomInt(int min, int max);
 	void RemoveEntity(BaseEntity entity);
 	void RespawnAllPlayers();
+	void KillAndRespawnAllPlayers();
 	void SetGlobalRespawnDelay(float delay);
 	void SetPlayerLimit(Team.TeamId teamId, int maxPlayers);
 //	def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
@@ -457,5 +484,5 @@ namespace ffmod
 	void SmartSound(int player_id, string playerSound, string teamSound, string otherSound);
 	void SmartTeamMessage(Team.TeamId teamId, string teamMsg, string otherMsg);
 	void SmartTeamSound(Team.TeamId teamId, string teamSound, string otherSound);
-	float GetServerTime();
+	
 }
