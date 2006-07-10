@@ -72,6 +72,7 @@ public:
 	// Bug #0000529: Total death column doesn't work
 	virtual void AddDeaths( int iScore );	// Mulch
 	virtual int  GetDeaths( void );	// Mulch
+	virtual void SetDeaths( int iDeaths );
 
 public:
 	CUtlVector< CTeamSpawnPoint * > m_aSpawnPoints;

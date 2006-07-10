@@ -198,6 +198,36 @@ ConVar mp_prematch( "mp_prematch",
 
 	extern void ClearAllowedEffects();
 
+	// --------------------------------------------------------------------------------
+	// Purpose: Kill the player and set a 5 second spawn delay
+	//			Stolen from client.cpp for easier interfacing w/ CFFPlayer
+	// --------------------------------------------------------------------------------
+	void CC_FF_RestartRound( void )
+	{
+		if( FFGameRules() )
+		{
+			if( engine->Cmd_Argc() > 1 )
+			{
+				float flTime = atof( engine->Cmd_Argv( 1 ) );
+
+				// TODO: Check flTime a number?
+				mp_prematch.SetValue( flTime / 60.0f );
+			}
+			else
+			{
+				// Default 15 seconds
+				mp_prematch.SetValue( 15.0f / 60.0f );
+			}
+
+			FFGameRules()->RestartRound();
+		}
+		else
+		{
+			Warning( "Gamerules error!\n" );
+		}
+	}
+	static ConCommand ff_restartround( "ff_restartround", CC_FF_RestartRound, "Restarts the round in progress." );
+
 	// --> Mirv: Extra gamerules stuff
 	CFFGameRules::CFFGameRules()
 	{
@@ -226,6 +256,7 @@ ConVar mp_prematch( "mp_prematch",
 	{
 		m_flNextMsg = 0.0f;
 		m_flGameStarted = -1.0f;
+		m_flRoundStarted = gpGlobals->curtime;
 		BaseClass::Precache();
 	}
 	// <-- Mirv: Extra gamerules stuff
@@ -238,6 +269,45 @@ ConVar mp_prematch( "mp_prematch",
 		// Note, don't delete each team since they are in the gEntList and will 
 		// automatically be deleted from there, instead.
 		g_Teams.Purge();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::RestartRound( void )
+	{
+		// Tell gamerules the round JUST started
+		Precache();
+
+		// TODO: Reset all map entities
+
+		// TODO: Reset all LUA entities
+		
+		// Kill all non-spec'd players and remove anything that belongs to them
+		for( int i = 1; i < gpGlobals->maxClients; i++ )
+		{
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+			if( pPlayer && ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR ) )
+			{
+				pPlayer->KillAndRemoveItems();
+
+				// This is temp so they don't chill dead. With FL_FROZEN
+				// set it seems like you can't spawn. You're stuck... dead or alive.
+				pPlayer->Spawn(); 
+			}
+		}
+
+		// Reset all team scores & deaths
+		for( int i = 0; i < GetNumberOfTeams(); i++ )
+		{
+			CTeam *pTeam = GetGlobalTeam( i );
+			
+			if( !pTeam )
+				continue;
+
+			pTeam->SetScore( 0 );
+			pTeam->SetDeaths( 0 );
+		}
 	}
 
 	//-----------------------------------------------------------------------------
@@ -486,7 +556,7 @@ ConVar mp_prematch( "mp_prematch",
 		// Lots of these depend on the game being started
 		if( !HasGameStarted() )
 		{
-			float flPrematch = mp_prematch.GetFloat() * 60;
+			float flPrematch = m_flRoundStarted + mp_prematch.GetFloat() * 60;
 
 			// We should have started now, lets go!
 			if( gpGlobals->curtime > flPrematch )
@@ -686,9 +756,23 @@ ConVar mp_prematch( "mp_prematch",
 			{
 				pPlayer->RemoveFlag( FL_FROZEN );
 				pPlayer->KillAndRemoveItems();
+				pPlayer->ResetFragCount();
+				pPlayer->ResetDeathCount();
 			}
 
 			UTIL_ClientPrintAll( HUD_PRINTCENTER, "#FF_PREMATCH_END" );
+		}
+
+		// Reset all team scores & deaths
+		for( int i = 0; i < GetNumberOfTeams(); i++ )
+		{
+			CTeam *pTeam = GetGlobalTeam( i );
+
+			if( !pTeam )
+				continue;
+
+			pTeam->SetScore( 0 );
+			pTeam->SetDeaths( 0 );
 		}
 	}
 	// <-- Mirv: Prematch

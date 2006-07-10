@@ -331,3 +331,11 @@ int CTeam::GetDeaths( void )
 {
 	return m_iDeaths;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Set the team's deaths
+//-----------------------------------------------------------------------------
+void CTeam::SetDeaths( int iDeaths )
+{
+	m_iDeaths = iDeaths;
+}
