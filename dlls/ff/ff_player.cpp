@@ -3087,6 +3087,56 @@ void CFFPlayer::StatusEffectsThink( void )
 
 }
 
+void CFFPlayer::AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flSpeed )
+{
+	SpeedEffectType sEffect;
+	switch( iSpeedEffect )
+	{
+		case 1: sEffect = SE_LUA1; break;
+		case 2: sEffect = SE_LUA2; break;
+		case 3: sEffect = SE_LUA3; break;
+		case 4: sEffect = SE_LUA4; break;
+		case 5: sEffect = SE_LUA5; break;
+	}
+
+	if( ( sEffect >= SE_LUA1 ) && ( sEffect <= SE_LUA5 ) )
+		AddSpeedEffect( sEffect, flDuration, flSpeed, SEM_ACCUMULATIVE );
+}
+
+bool CFFPlayer::IsLuaSpeedEffectSet( int iSpeedEffect )
+{
+	SpeedEffectType sEffect;
+	switch( iSpeedEffect )
+	{
+		case 1: sEffect = SE_LUA1; break;
+		case 2: sEffect = SE_LUA2; break;
+		case 3: sEffect = SE_LUA3; break;
+		case 4: sEffect = SE_LUA4; break;
+		case 5: sEffect = SE_LUA5; break;
+	}
+
+	if( ( sEffect >= SE_LUA1 ) && ( sEffect <= SE_LUA5 ) )
+		return IsSpeedEffectSet( sEffect );
+
+	return false;
+}
+
+void CFFPlayer::RemoveLuaSpeedEffect( int iSpeedEffect )
+{
+	SpeedEffectType sEffect;
+	switch( iSpeedEffect )
+	{
+		case 1: sEffect = SE_LUA1; break;
+		case 2: sEffect = SE_LUA2; break;
+		case 3: sEffect = SE_LUA3; break;
+		case 4: sEffect = SE_LUA4; break;
+		case 5: sEffect = SE_LUA5; break;
+	}
+
+	if( ( sEffect >= SE_LUA1 ) && ( sEffect <= SE_LUA5 ) )
+		RemoveSpeedEffect( sEffect );
+}
+
 void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod)
 {
 	// find an open slot

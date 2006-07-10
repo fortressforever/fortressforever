@@ -41,11 +41,16 @@ class CFFSevTest;
 // Speed effect type
 enum SpeedEffectType
 {
-	SE_SNIPERRIFLE,
+	SE_SNIPERRIFLE = 0,
 	SE_ASSAULTCANNON,
 	SE_LEGSHOT,
 	SE_TRANQ,
 	SE_CALTROP,
+	SE_LUA1,	// a speed effect that lua can set
+	SE_LUA2,	// a speed effect that lua can set
+	SE_LUA3,	// a speed effect that lua can set
+	SE_LUA4,	// a speed effect that lua can set
+	SE_LUA5,	// a speed effect that lua can set
 };
 
 // BEG: Speed Effect class for handling speed impairing effects (caltrop, legshot, etc)
@@ -345,8 +350,11 @@ public:
 
 public:
 	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0);
+	void AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flSpeed );
 	bool IsSpeedEffectSet( SpeedEffectType type );
+	bool IsLuaSpeedEffectSet( int iSpeedEffect );
 	void RemoveSpeedEffect(SpeedEffectType type);
+	void RemoveLuaSpeedEffect( int iSpeedEffect );
 	int	ClearSpeedEffects(int mod = 0);
 
 	void Infect( CFFPlayer * );
