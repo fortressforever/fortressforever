@@ -3089,7 +3089,7 @@ void CFFPlayer::StatusEffectsThink( void )
 
 void CFFPlayer::AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flSpeed )
 {
-	SpeedEffectType sEffect;
+	SpeedEffectType sEffect = SE_LEGSHOT;
 	switch( iSpeedEffect )
 	{
 		case 1: sEffect = SE_LUA1; break;
@@ -3105,7 +3105,7 @@ void CFFPlayer::AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flS
 
 bool CFFPlayer::IsLuaSpeedEffectSet( int iSpeedEffect )
 {
-	SpeedEffectType sEffect;
+	SpeedEffectType sEffect = SE_LEGSHOT;
 	switch( iSpeedEffect )
 	{
 		case 1: sEffect = SE_LUA1; break;
@@ -3123,7 +3123,7 @@ bool CFFPlayer::IsLuaSpeedEffectSet( int iSpeedEffect )
 
 void CFFPlayer::RemoveLuaSpeedEffect( int iSpeedEffect )
 {
-	SpeedEffectType sEffect;
+	SpeedEffectType sEffect = SE_LEGSHOT;
 	switch( iSpeedEffect )
 	{
 		case 1: sEffect = SE_LUA1; break;

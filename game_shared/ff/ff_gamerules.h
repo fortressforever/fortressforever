@@ -80,6 +80,9 @@ public:
 
 	virtual void	Precache();
 
+	// This resets the map currently in progress
+	virtual void	RestartRound( void );
+
 private:
 
 #endif
@@ -90,6 +93,7 @@ protected:
 	void	StartGame();
 	float	m_flGameStarted;
 	float	m_flNextMsg;
+	float	m_flRoundStarted;
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
