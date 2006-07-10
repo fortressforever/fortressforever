@@ -267,6 +267,7 @@ public:
 	CNetworkHandle( CAI_BaseNPC, m_hSentryGun );
 	CNetworkHandle( CAI_BaseNPC, m_hDetpack );
 
+	bool IsBuilding( void ) { return m_bBuilding; }
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
 	CNetworkVar( bool, m_bBuilding );
