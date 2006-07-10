@@ -83,10 +83,10 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 	//		Initializes the bot library by attempting to load the bot from several
 	//		expected bot locations. If found, it verifies a version before returning 0
 	//		on success, or an error code on failure, which can be used with <BOT_ERR_MSG>
-	#define INITBOTLIBRARY(version, navid, win, lin, custom, result) \
+	#define INITBOTLIBRARY(version, navid, win, lin, custompath, result) \
 	{ \
 		char szBuffer[1024] = {0}; \
-		OB_snprintf(szBuffer, 1024, "%s/%s", custom, win); \
+		OB_snprintf(szBuffer, 1024, "%s/%s", custompath, win); \
 		g_BotLibrary = LoadLibrary( szBuffer ); \
 		if(g_BotLibrary == 0) \
 			g_BotLibrary = LoadLibrary( ".\\omni-bot\\" win ); \
@@ -127,38 +127,39 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 	//////////////////////////////////////////////////////////////////////////	
 	void *g_BotLibrary = NULL;
 
-	#define INITBOTLIBRARY(version, navid, win, lin, custom, result) \
+	#define INITBOTLIBRARY(version, navid, win, lin, custompath, result) \
 	{ \
 		const char *pError = 0; \
 		char szBuffer[1024] = {0}; \
-		sprintf(szBuffer, "%s/%s", custom, lin); \
-		g_BotLibrary = dlopen( szBuffer, RTLD_NOW ); \
+		OB_snprintf(szBuffer, 1024, "%s/%s", custompath, lin); \
+		g_BotLibrary = dlopen(szBuffer, RTLD_NOW); \
 		if(pError = dlerror()) \
 		{ \
-			sprintf(szBuffer, "failed loading: %s", pError); \
+			OB_snprintf(szBuffer, 1024, "failed loading: %s", pError); \
 			pfnPrintError(szBuffer); \
-			g_BotLibrary = dlopen( "./omni-bot/" lin, RTLD_NOW ); \
+			OB_snprintf(szBuffer, 1024, "./omni-bot/%s", lin); \
+			g_BotLibrary = dlopen(szBuffer, RTLD_NOW); \
 		} \
 		if(pError = dlerror()) \
 		{ \
-			char *homeDir = getenv( "HOME" ); \
-			sprintf(szBuffer, "failed loading: %s", pError); \
+			char *homeDir = getenv("HOME"); \
+			OB_snprintf(szBuffer, 1024, "failed loading: %s", pError); \
 			pfnPrintError(szBuffer); \
-			if( homeDir && *homeDir ) \
+			if(homeDir && *homeDir) \
 			{ \
-				char *dir = va("%s/.etwolf/omni-bot/%s", homeDir, lin ); \
-				g_BotLibrary = dlopen( dir, RTLD_NOW ); \
+				OB_snprintf(szBuffer, 1024, "%s/omni-bot/%s", homeDir, lin); \
+				g_BotLibrary = dlopen(szBuffer, RTLD_NOW); \
 			} \
 		} \
 		if(pError = dlerror()) \
 		{ \
-			sprintf(szBuffer, "failed loading: %s", pError); \
+			OB_snprintf(szBuffer, 1024, "failed loading: %s", pError); \
 			pfnPrintError(szBuffer); \
-			g_BotLibrary = dlopen( lin, RTLD_NOW ); \
+			g_BotLibrary = dlopen(lin, RTLD_NOW); \
 		} \
 		if(pError = dlerror()) \
 		{ \
-			sprintf(szBuffer, "failed loading: %s", pError); \
+			OB_snprintf(szBuffer, 1024, "failed loading: %s", pError); \
 			pfnPrintError(szBuffer); \
 			result = BOT_ERROR_CANTLOADDLL; \
 		} \

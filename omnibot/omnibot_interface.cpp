@@ -377,7 +377,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void obPrintError(const char *_error)
+	static void pfnPrintError(const char *_error)
 	{
 		if(_error)
 			Warning("%s\n", _error);
@@ -423,10 +423,8 @@ namespace Omnibot
 			CFFPlayer *pFFPlayer = dynamic_cast<CFFPlayer*>(pEntity);
 			ASSERT(pFFPlayer);
 
-			_newteam = obUtilGetGameTeamFromBotTeam(_newteam);
-
 			const char *pTeam = "auto";
-			switch(_newteam)
+			switch(obUtilGetGameTeamFromBotTeam(_newteam))
 			{
 			case TEAM_BLUE:
 				pTeam = "blue";
@@ -461,9 +459,8 @@ namespace Omnibot
 			ASSERT(pFFPlayer);
 			if(pFFPlayer)
 			{
-				int iClass = obUtilGetGameClassFromBotClass(_newclass);
 				const char *pClassName = "randompc";
-				switch(iClass)
+				switch(obUtilGetGameClassFromBotClass(_newclass))
 				{		
 				case CLASS_SCOUT:
 					pClassName = "scout";
@@ -681,7 +678,7 @@ namespace Omnibot
 		edict_t *pEdict = engine->CreateFakeClient( _name );
 		if (!pEdict)
 		{
-			obPrintError("Unable to Add Bot!");
+			pfnPrintError("Unable to Add Bot!");
 			return -1;
 		}
 
@@ -1357,27 +1354,17 @@ namespace Omnibot
 				TF_Disguise *pMsg = _data.Get<TF_Disguise>();
 				if(pMsg)
 				{
-					char teamChar;
-					switch(pMsg->m_DisguiseTeam)
+					int iTeam = obUtilGetGameTeamFromBotTeam(pMsg->m_DisguiseTeam);
+					int iClass = obUtilGetGameClassFromBotClass(pMsg->m_DisguiseClass);
+					if(iTeam != TEAM_UNASSIGNED && iClass != -1)
 					{
-					case TEAM_BLUE:
-						teamChar = 'b';
-						break;
-					case TEAM_RED:
-						teamChar = 'r';
-						break;
-					case TEAM_YELLOW:
-						teamChar = 'y';
-						break;
-					case TEAM_GREEN:	
-						teamChar = 'g';
-						break;
-					default:
+						serverpluginhelpers->ClientCommand(pPlayer->edict(), 
+							UTIL_VarArgs("disguise %d %d", iTeam, iClass));
+					}
+					else
+					{
 						return InvalidParameter;
 					}
-					
-					serverpluginhelpers->ClientCommand(pPlayer->edict(), 
-						UTIL_VarArgs("disguise %c", teamChar, obUtilGetGameClassFromBotClass(pMsg->m_DisguiseClass)));
 				}
 				break;
 			}
@@ -1394,6 +1381,8 @@ namespace Omnibot
 		case TF_MSG_HUDHINT:
 			{
 				TF_HudHint *pMsg = _data.Get<TF_HudHint>();
+				pEnt = CBaseEntity::Instance( pMsg->m_TargetPlayer );
+				pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
 				if(pMsg && ToFFPlayer(pPlayer))
 				{					
 					FF_HudHint(ToFFPlayer(pPlayer), 0, pMsg->m_Id, pMsg->m_Message);
@@ -1771,7 +1760,7 @@ namespace Omnibot
 
 		// Set up all the utility functions.
 		g_InterfaceFunctions.pfnPrintScreenText				= obPrintScreenText;
-		g_InterfaceFunctions.pfnPrintError					= obPrintError;
+		g_InterfaceFunctions.pfnPrintError					= pfnPrintError;
 		g_InterfaceFunctions.pfnPrintMessage				= obPrintMessage;	
 		g_InterfaceFunctions.pfnTraceLine					= obTraceLine;
 		g_InterfaceFunctions.pfnUpdateBotInput				= obUpdateBotInput;
@@ -1845,7 +1834,7 @@ namespace Omnibot
 		INITBOTLIBRARY(FF_VERSION_0_1, navId, "omnibot_ff.dll", "omnibot_ff.so", botPath, iLoadResult);
 		if(iLoadResult != BOT_ERROR_NONE)
 		{
-			obPrintError(BOT_ERR_MSG(iLoadResult));
+			pfnPrintError(BOT_ERR_MSG(iLoadResult));
 			bSuccess = false;
 			SHUTDOWNBOTLIBRARY;
 		}
