@@ -501,6 +501,7 @@ namespace FFLib
 
 	CFFPlayer* GetPlayer(int player_id)
 	{
+		Warning( "[GetPlayer]\n" );
 		CBaseEntity* pEnt = GetEntity(player_id);
 
 		if(NULL == pEnt)
@@ -509,6 +510,7 @@ namespace FFLib
 		if(!pEnt->IsPlayer())
 			return NULL;
 
+		Warning( "[GetPlayer] Returning player!\n" );
 		return dynamic_cast<CFFPlayer*>(pEnt);
 	}
 
@@ -527,6 +529,7 @@ namespace FFLib
 
 	bool IsPlayerFromId( int player_id )
 	{
+		Warning( "[IsPlayerFromId]\n" );
 		return GetPlayer( player_id ) == NULL ? false : true;
 	}
 
@@ -1011,7 +1014,11 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsFeetDeepInWater",	&CFFPlayer::IsFeetDeepInWater)
 			.def("IsInNoBuild",			&CFFPlayer::IsInNoBuild)
 			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
-			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)			
+			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)
+			.def("IsAttacking1",		&CFFPlayer::IsAttacking1)
+			.def("IsAttacking2",		&CFFPlayer::IsAttacking2)
+			.def("IsUsing",				&CFFPlayer::IsUsing)
+			.def("IsJumping",			&CFFPlayer::IsJumping)
 			.def("IsOnGround",			&CFFPlayer::IsOnGround)
 			.def("IsInAir",				&CFFPlayer::IsInAir)
 			.def("IsDucking",			&CFFPlayer::IsDucking)
