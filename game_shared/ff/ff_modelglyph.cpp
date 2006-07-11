@@ -102,6 +102,7 @@ void CFFModelGlyph::OnObjectThink( void )
 	}
 	else
 	{
+		StudioFrameAdvance();
 		SetNextThink( gpGlobals->curtime );
 	}
 }
