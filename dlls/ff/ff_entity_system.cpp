@@ -501,7 +501,6 @@ namespace FFLib
 
 	CFFPlayer* GetPlayer(int player_id)
 	{
-		Warning( "[GetPlayer]\n" );
 		CBaseEntity* pEnt = GetEntity(player_id);
 
 		if(NULL == pEnt)
@@ -510,7 +509,6 @@ namespace FFLib
 		if(!pEnt->IsPlayer())
 			return NULL;
 
-		Warning( "[GetPlayer] Returning player!\n" );
 		return dynamic_cast<CFFPlayer*>(pEnt);
 	}
 
@@ -1015,10 +1013,21 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsInNoBuild",			&CFFPlayer::IsInNoBuild)
 			.def("IsUnderWater",		&CFFPlayer::IsUnderWater)
 			.def("IsWaistDeepInWater",	&CFFPlayer::IsWaistDeepInWater)
-			.def("IsAttacking1",		&CFFPlayer::IsAttacking1)
-			.def("IsAttacking2",		&CFFPlayer::IsAttacking2)
-			.def("IsUsing",				&CFFPlayer::IsUsing)
-			.def("IsJumping",			&CFFPlayer::IsJumping)
+			.def("IsInAttack1",			&CFFPlayer::IsInAttack1)
+			.def("IsInAttack2",			&CFFPlayer::IsInAttack2)
+			.def("IsInUse",				&CFFPlayer::IsInUse)
+			.def("IsInJump",			&CFFPlayer::IsInJump)
+			.def("IsInForward",			&CFFPlayer::IsInForward)
+			.def("IsInBack",			&CFFPlayer::IsInBack)
+			.def("IsInMoveLeft",		&CFFPlayer::IsInMoveLeft)
+			.def("IsInMoveRight",		&CFFPlayer::IsInMoveRight)
+			.def("IsInLeft",			&CFFPlayer::IsInLeft)
+			.def("IsInRight",			&CFFPlayer::IsInRight)
+			.def("IsInRun",				&CFFPlayer::IsInRun)
+			.def("IsInReload",			&CFFPlayer::IsInReload)
+			.def("IsInSpeed",			&CFFPlayer::IsInSpeed)
+			.def("IsInWalk",			&CFFPlayer::IsInWalk)
+			.def("IsInZoom",			&CFFPlayer::IsInZoom)
 			.def("IsOnGround",			&CFFPlayer::IsOnGround)
 			.def("IsInAir",				&CFFPlayer::IsInAir)
 			.def("IsDucking",			&CFFPlayer::IsDucking)

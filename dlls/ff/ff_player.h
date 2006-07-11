@@ -18,6 +18,7 @@
 #include "utlvector.h"
 #include "ff_weapon_base.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_modelglyph.h"
 #include "in_buttons.h"
 
 class CFFBuildableObject;
@@ -545,11 +546,25 @@ public:
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	CNetworkVar(int, m_iSpawnInterpCounter);
 
+protected:
+	CHandle< CFFSaveMe >	m_hSaveMe;
+
 public:
-	bool IsAttacking1( void ) const	{ return ( m_nButtons & IN_ATTACK ) ? true : false; }
-	bool IsAttacking2( void ) const { return ( m_nButtons & IN_ATTACK2 ) ? true : false; }
-	bool IsUsing( void ) const		{ return ( m_nButtons & IN_USE ) ? true : false; }
-	bool IsJumping( void ) const	{ return ( m_nButtons & IN_JUMP ) ? true : false; }
+	bool IsInAttack1( void ) const	{ return ( m_nButtons & IN_ATTACK ) ? true : false; }
+	bool IsInAttack2( void ) const	{ return ( m_nButtons & IN_ATTACK2 ) ? true : false; }
+	bool IsInUse( void ) const		{ return ( m_nButtons & IN_USE ) ? true : false; }
+	bool IsInJump( void ) const		{ return ( m_nButtons & IN_JUMP ) ? true : false; }
+	bool IsInForward( void ) const	{ return ( m_nButtons & IN_FORWARD ) ? true : false; }
+	bool IsInBack( void ) const		{ return ( m_nButtons & IN_BACK ) ? true : false; }
+	bool IsInMoveLeft( void ) const	{ return ( m_nButtons & IN_MOVELEFT ) ? true : false; }
+	bool IsInMoveRight( void ) const	{ return ( m_nButtons & IN_MOVERIGHT ) ? true : false; }
+	bool IsInLeft( void ) const		{ return ( m_nButtons & IN_LEFT ) ? true : false; }
+	bool IsInRight( void ) const	{ return ( m_nButtons & IN_RIGHT ) ? true : false; }
+	bool IsInRun( void ) const		{ return ( m_nButtons & IN_RUN ) ? true : false; }
+	bool IsInReload( void ) const	{ return ( m_nButtons & IN_RELOAD ) ? true : false; }
+	bool IsInSpeed( void ) const	{ return ( m_nButtons & IN_SPEED ) ? true : false; }
+	bool IsInWalk( void ) const		{ return ( m_nButtons & IN_WALK ) ? true : false; }
+	bool IsInZoom( void ) const		{ return ( m_nButtons & IN_ZOOM ) ? true : false; }
 	bool IsDucking( void ) const	{ return ( GetFlags() & FL_DUCKING ) ? true : false; }
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
