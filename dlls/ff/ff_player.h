@@ -153,7 +153,7 @@ public:
 
 private:
 
-	void CreateRagdollEntity();
+	void CreateRagdollEntity(const CTakeDamageInfo *info = NULL);
 
 	IFFPlayerAnimState *m_PlayerAnimState;
 

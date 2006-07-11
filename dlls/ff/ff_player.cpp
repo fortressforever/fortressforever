@@ -1290,10 +1290,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
-	CreateRagdollEntity();
+	CreateRagdollEntity(&info);
 }
 
-void CFFPlayer::CreateRagdollEntity()
+void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 {
 	// If we already have a ragdoll, don't make another one.
 	CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
@@ -1311,7 +1311,10 @@ void CFFPlayer::CreateRagdollEntity()
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
-		pRagdoll->m_vecForce = Vector(0,0,0);
+		pRagdoll->m_vecForce = Vector(0, 0, 0);
+
+		if (info && info->GetDamageType() & DMG_BLAST)
+			pRagdoll->m_vecForce = 100.0f * info->GetDamageForce();
 
 		// remove it after a time
 		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
