@@ -23,7 +23,6 @@
 #include "ff_team.h"			// team info
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
-#include "ff_modelglyph.h"
 
 #include "client.h"
 
@@ -928,6 +927,8 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
+	m_hSaveMe = NULL;
+
 	m_bSpecialInfectedDeath = false;
 
 	// Reset Spy stuff
@@ -1130,6 +1131,12 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	// Possible fix: 0000807: When using cl_autoreload 1 players randomly cannot respawn
 	engine->ClientCommand( edict(), "-reload" );
+
+	if( m_hSaveMe )
+	{
+		// This will kill it
+		m_hSaveMe->SetLifeTime( gpGlobals->curtime );
+	}
 
 	// Log the death to the stats engine
 	g_StatsLog.AddToCount(this, STAT_DEATHS);
@@ -2883,15 +2890,18 @@ void CFFPlayer::Command_SaveMe( void )
 	// MEDIC!
 	DevMsg("MEDIC!\n");
 
-	// Spawn the glyph
-	CFFSaveMe *ent = ( CFFSaveMe * )CreateEntityByName( "ff_saveme" );
+	if( !m_hSaveMe )
+	{
+		// Spawn the glyph
+		m_hSaveMe = ( CFFSaveMe * )CreateEntityByName( "ff_saveme" );
 
-	if (ent)
-	{		
-		ent->SetOwnerEntity( this );
-		ent->Spawn();
-		ent->SetLifeTime( gpGlobals->curtime + FF_SAVEME_LIFETIME );
-		ent->FollowEntity(this, true);
+		if( m_hSaveMe )
+		{		
+			m_hSaveMe->SetOwnerEntity( this );
+			m_hSaveMe->Spawn();
+			m_hSaveMe->SetLifeTime( gpGlobals->curtime + FF_SAVEME_LIFETIME );
+			m_hSaveMe->FollowEntity(this, true);
+		}
 	}
 
 	// play the sound
