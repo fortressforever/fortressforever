@@ -166,6 +166,9 @@ void CFFSaveMe::Spawn( void )
 	SetModel( FF_SAVEME_MODEL );
 
 	BaseClass::Spawn();
+
+	ResetSequenceInfo();
+	SetSequence( SelectWeightedSequence( ( Activity )ACT_IDLE ) );
 }
 
 //-----------------------------------------------------------------------------
