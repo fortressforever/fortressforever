@@ -1107,7 +1107,7 @@ CBaseEntity *CGlobalEntityList::FindEntityByOwner(CBaseEntity *pStartEntity, con
 // Input  : pStartEntity - Last entity found, NULL to start a new iteration.
 //			szClassT - Class_T we're looking for
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityByClassT( CBaseEntity *pStartEntity, Class_T szClassT )
+CBaseEntity *CGlobalEntityList::FindEntityByClassT( CBaseEntity *pStartEntity, int szClassT )
 {
 	const CEntInfo *pInfo = pStartEntity ? GetEntInfoPtr( pStartEntity->GetRefEHandle() )->m_pNext : FirstEntInfo();
 
