@@ -373,8 +373,85 @@ namespace FFLib
 		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 	}
 
-	void RespawnAllPlayers()
+	bool ResetParseFlags( const object& table, bool *pbFlags )
 	{
+		if( table.is_valid() && ( type( table ) == LUA_TTABLE ) )
+		{
+			// Iterate through the table
+			for( iterator ib( table ), ie; ib != ie; ++ib )
+			{
+				//std::string strKey = object_cast< std::string >( ib.key() );
+
+				object val = *ib;
+
+				if( type( val ) == LUA_TNUMBER )
+				{
+					int iIndex = object_cast< int >( val );
+
+					Warning( "[ResetParseFlags] %i, \n", iIndex );
+
+					// Make sure within bounds
+					if( ( iIndex >= 0 ) && ( iIndex < RS_MAX_FLAG ) )
+						pbFlags[ iIndex ] = true;
+				}
+				else
+				{
+					Warning( "[ResetParseFlags] Only handles integers in the table!\n" );
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	void ResetAll( const object& table )
+	{
+		bool bFlags[ RS_MAX_FLAG ] = { false };
+
+		if( ResetParseFlags( table, bFlags ) )
+		{
+			if( FFGameRules() )
+				FFGameRules()->ResetUsingCriteria( bFlags );
+		}
+	}
+
+	void ResetTeam( CFFTeam *pTeam, const object& table )
+	{
+		bool bFlags[ RS_MAX_FLAG ] = { false };
+
+		if( ResetParseFlags( table, bFlags ) && pTeam )
+		{
+			if( FFGameRules() )
+				FFGameRules()->ResetUsingCriteria( bFlags, pTeam->GetTeamNumber() );
+		}
+	}
+
+	void ResetPlayer( CFFPlayer *pPlayer, const object& table )
+	{
+		bool bFlags[ RS_MAX_FLAG ] = { false };
+
+		if( ResetParseFlags( table, bFlags ) && pPlayer )
+		{
+			if( FFGameRules() )
+				FFGameRules()->ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, pPlayer );
+		}
+	}
+
+	void ResetMap( const object& table )
+	{
+		bool bFlags[ RS_MAX_FLAG ] = { false };
+
+		if( ResetParseFlags( table, bFlags ) )
+		{
+			if( FFGameRules() )
+				FFGameRules()->ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
+		}
+	}
+
+	void RespawnAllPlayers( const object& table )
+	{		
 		// loop through each player
 		for (int i=0; i<gpGlobals->maxClients; i++)
 		{
@@ -1123,7 +1200,11 @@ void CFFEntitySystem::FFLibOpen()
 			def("SmartSound",				&FFLib::SmartSound),
 			def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
 			def("SmartTeamSound",			&FFLib::SmartTeamSound),
-			def("GetServerTime",			&FFLib::GetServerTime)
+			def("GetServerTime",			&FFLib::GetServerTime),
+			def("ResetAll",					&FFLib::ResetAll),
+			def("ResetTeam",				&FFLib::ResetTeam),
+			def("ResetPlayer",				&FFLib::ResetPlayer),
+			def("ResetMap",					&FFLib::ResetMap)
 		]
 	];
 }

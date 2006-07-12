@@ -23,6 +23,7 @@
 	#include "ff_playercommand.h"
 	#include "ff_sentrygun.h"
 	#include "ff_statslog.h"
+	#include "ff_item_flag.h"
 
 #endif
 
@@ -306,6 +307,160 @@ ConVar mp_prematch( "mp_prematch",
 
 			pTeam->SetScore( 0 );
 			pTeam->SetDeaths( 0 );
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Reset certain aspects of the game based on criteria
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::ResetUsingCriteria( bool *pbFlags, int iTeam, CFFPlayer *pFFPlayer, bool bFullReset )
+	{
+		// iSlection is ALL = 0, TEAM = 1, or PLAYER = 2
+		// pbFlags are the criteria used during the reset
+		// bFullReset - everything reset. Just like the server was restarted.
+
+#ifdef _DEBUG
+		Assert( pbFlags );
+#endif
+
+		bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
+		bool bUsePlayer = pFFPlayer ? true : false;
+
+		if( bFullReset )
+		{
+			// Turn off stuff that might confuse since we're doing a full update
+			bUseTeam = false;
+			bUsePlayer = false;
+		}
+
+		// Eh? Which one do we use? 
+		if( bUseTeam && bUsePlayer )
+		{
+			// We'll go with player since it took more params to get there
+			bUseTeam = false;
+		}
+
+		// Full map reset, really only used w/ ff_restartround as it restarts
+		// absolutely everything - scores, players, entities, etc.
+		if( bFullReset )
+		{
+			// TODO: ignoring for now.
+
+			// Set these to false so we do an "all" type of update later
+			bUseTeam = false;
+			bUsePlayer = false;
+		}
+		
+
+		// Loop through all players
+		for( int i = 1; i < gpGlobals->maxClients; i++ )
+		{	
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+			if( pPlayer && pPlayer->IsPlayer() )
+			{
+				// If bUseTeam, meaning we were sent in a valid team...
+				if( bUseTeam )
+				{
+					// Then filter out players not on team iTeam
+					if( pPlayer->GetTeamNumber() != iTeam )
+						continue;
+				}
+
+				// If we're acting on one player
+				if( bUsePlayer )
+				{
+					// TODO: Move this so we don't enter the loop
+					// if bUsePlayer is true (no need to waste time
+					// with UTIL_PlayerByIndex since we've already
+					// got a player pointer!
+					if( pPlayer != pFFPlayer )
+						continue;
+				}
+
+				// Please don't change the order. They're set up hopefully
+				// to work correctly.
+
+				if( pbFlags[ RS_DROP_ITEMS ] || pbFlags[ RS_THROW_ITEMS ] )
+				{
+					// Don't do anything...
+					// ownerdie will get called if RS_KILL_PLAYERS is set and that
+					// will handle whether or not the items a player is carrying
+					// get thrown or dropped
+
+					// NOTE: this is a useless flag I think...
+				}
+
+				if( pbFlags[ RS_FORCE_DROP_ITEMS ] || pbFlags[ RS_FORCE_THROW_ITEMS ] )
+				{
+					// TODO: iterate through getting this players' items
+					// and make them be dropped before killing the player
+
+					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassname( NULL, ( CBaseEntity * )pPlayer, "info_ff_script"	);
+					while( pEntity )
+					{
+						CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+						if( pFFScript )
+						{
+							// TODO: Need to make a lua call to get the delay and throw speed
+							float flDelay = 10.0f;
+							float flSpeed = 0.0f;
+							pFFScript->Drop( flDelay, flSpeed );
+						}
+
+						pEntity = gEntList.FindEntityByOwnerAndClassname( pEntity, ( CBaseEntity * )pPlayer, "info_ff_script" );
+					}
+				}
+
+				if( pbFlags[ RS_RETURN_CARRIED_ITEMS ] )
+				{
+					// Eh? This is dumb. Needs a "FORCE". We're not going to forcibly
+					// return a carried item. If the player is killed, ownerdie handles
+					// that. The only case left is a player being respawned and not
+					// killed and for that you might want to do something
+				}
+
+				if( pbFlags[ RS_RETURN_DROPPED_ITEMS ] )
+				{
+					// TODO: do this globally - not on each player's iteration
+				}
+
+				if( pbFlags[ RS_KILL_PLAYERS ] )
+				{
+					pPlayer->KillPlayer();
+				}
+
+				if( pbFlags[ RS_RESPAWN_PLAYERS ] )
+				{
+					pPlayer->Spawn();
+				}
+
+				if( pbFlags[ RS_REMOVE_RAGDOLLS ] )
+				{
+					// TODO: Send a message to each client
+					// saying to remove all ragdolls?
+				}
+
+				if( pbFlags[ RS_REMOVE_PACKS ] )
+				{
+					pPlayer->RemoveBackpacks();
+				}
+
+				if( pbFlags[ RS_REMOVE_PROJECTILES ] )
+				{
+					pPlayer->RemoveProjectiles();
+				}
+
+				if( pbFlags[ RS_REMOVE_BUILDABLES ] )
+				{
+					pPlayer->RemoveBuildables();
+				}
+					
+				if( pbFlags[ RS_REMOVE_DECALS ] )
+				{
+					// TODO: Send a message to the client telling it to clean up the level (?)
+					// not sure how decals are handled
+				}
+			}
 		}
 	}
 

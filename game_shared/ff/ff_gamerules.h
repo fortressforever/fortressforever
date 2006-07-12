@@ -40,6 +40,31 @@ public:
 	DECLARE_NETWORKCLASS();
 };
 
+#ifdef GAME_DLL
+// Reset flags. Keep the order the same
+// as in base.lua!
+enum ResetFlag_e
+{
+	RS_KILL_PLAYERS = 0,
+	RS_RESPAWN_PLAYERS,
+	RS_DROP_ITEMS,
+	RS_FORCE_DROP_ITEMS,
+	RS_THROW_ITEMS,
+	RS_FORCE_THROW_ITEMS,
+	RS_RETURN_CARRIED_ITEMS,
+	RS_RETURN_DROPPED_ITEMS,
+	RS_REMOVE_RAGDOLLS,
+	RS_REMOVE_PACKS,
+	RS_REMOVE_PROJECTILES,
+	RS_REMOVE_BUILDABLES,
+	RS_REMOVE_DECALS,
+
+
+	// Yeah
+	RS_MAX_FLAG
+};
+#endif
+
 
 class CFFGameRules : public CTeamplayRules
 {
@@ -82,6 +107,8 @@ public:
 
 	// This resets the map currently in progress
 	virtual void	RestartRound( void );
+
+	virtual void	ResetUsingCriteria( bool *pbFlags, int iTeam = TEAM_UNASSIGNED, CFFPlayer *pFFPlayer = NULL, bool bFullReset = false );
 
 private:
 

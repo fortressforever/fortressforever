@@ -1265,6 +1265,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (pBackpack)
 	{
+		pBackpack->SetOwnerEntity( this );
 		pBackpack->SetSpawnFlags(SF_NORESPAWN);
 
 		Vector vel = GetAbsVelocity();
@@ -1892,19 +1893,14 @@ void CFFPlayer::Command_Team( void )
 	ChangeTeam( iTeam );*/
 }
 
-void CFFPlayer::RemoveItems( void )
+//-----------------------------------------------------------------------------
+// Purpose: Remove buildables
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemoveBuildables( void )
 {
-	// NOTE: remove any of the players buildable objects here (and/or grens?)???
-
-	//if( m_bBuilding )
-	//{
-		m_bBuilding = false;
-		m_iCurBuild = FF_BUILD_NONE;
-		m_iWantBuild = FF_BUILD_NONE;
-		//m_bCancelledBuild = true;
-	//}
-	//else
-	//{
+	m_bBuilding = false;
+	m_iCurBuild = FF_BUILD_NONE;
+	m_iWantBuild = FF_BUILD_NONE;
 
 	// Remove buildables if they exist
 	if( m_hDispenser.Get() )
@@ -1915,24 +1911,15 @@ void CFFPlayer::RemoveItems( void )
 
 	if( m_hDetpack.Get() )
 	{
-			//*
-			//CSingleUserRecipientFilter user( this );
-			//user.MakeReliable( );
-
-			// Start the message block
-//			UserMessageBegin( user, "DetpackStopTimer" );
-
-			// Message to send
-//			WRITE_SHORT( 1 );
-
-			// End the message block
-//			MessageEnd( );
-			//*/
 		( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
 	}
-	//}
+}
 
-	// Remove any projectiles (grenades, nails, etc)
+//-----------------------------------------------------------------------------
+// Purpose: Remove grenades
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemoveProjectiles( void )
+{
 	CBaseEntity *pEnt = gEntList.FindEntityByOwner(NULL, this);
 
 	while (pEnt != NULL)
@@ -1942,6 +1929,34 @@ void CFFPlayer::RemoveItems( void )
 
 		pEnt = gEntList.FindEntityByOwner(pEnt, this);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove backpacks
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemoveBackpacks( void )
+{
+	CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_BACKPACK );
+
+	while( pEntity )
+	{
+		if( ToFFPlayer( pEntity->GetOwnerEntity() ) == this )
+			UTIL_Remove( pEntity );
+
+		pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_BACKPACK );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove some items from the player
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemoveItems( void )
+{
+	// Remove buildables
+	RemoveBuildables();	
+
+	// Remove any projectiles (grenades, nails, etc)
+	RemoveProjectiles();
 }
 
 void CFFPlayer::KillPlayer( void )

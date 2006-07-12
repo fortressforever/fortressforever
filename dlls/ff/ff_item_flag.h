@@ -60,6 +60,7 @@ public:
 	void			LUA_SetSkin( int skin );
 
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
+	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
 protected:
 
