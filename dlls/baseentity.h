@@ -228,6 +228,9 @@ enum Class_T
 	//------------------- 
 	
 	CLASS_TURRET,
+	CLASS_BACKPACK,
+	CLASS_INFOSCRIPT,
+	CLASS_TRIGGERSCRIPT,
 
 	NUM_AI_CLASSES
 };

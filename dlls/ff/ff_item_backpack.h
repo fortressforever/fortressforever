@@ -58,6 +58,9 @@ public:
 	virtual bool BlocksLOS( void ) { return false; }
 	virtual bool IsAlive( void ) { return false; }
 
+	virtual Class_T Classify( void ) { return CLASS_BACKPACK; }
+	virtual bool CanClipOwnerEntity( void ) const { return true; }
+
 private:
 	int m_iAmmoCounts[ MAX_AMMO_SLOTS ];
 	int m_iGren1;

@@ -27,6 +27,7 @@ public:
 	virtual int		DrawModel(int flags);	
 	virtual void	ClientThink( void );
 	virtual ShadowType_t ShadowCastType( void );
+	virtual Class_T Classify( void ) { return CLASS_INFOSCRIPT; }
 
 protected:
 	float m_flThrowTime;

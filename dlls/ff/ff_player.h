@@ -198,6 +198,9 @@ public:
 
 	void KillPlayer( void );
 	void RemoveItems( void );
+	void RemoveBuildables( void );	// dispenser / sg / detpack
+	void RemoveProjectiles( void );	// greandes & projectiles
+	void RemoveBackpacks( void );	// Remove player thrown backpacks
 	void KillAndRemoveItems( void );
 	
 	bool PlayerHasSkillCommand(const char *szCommand);
