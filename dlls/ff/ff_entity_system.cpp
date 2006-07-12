@@ -979,11 +979,23 @@ void CFFEntitySystem::FFLibOpen()
 			.def_readwrite("x",			&Vector::x)
 			.def_readwrite("y",			&Vector::y)
 			.def_readwrite("z",			&Vector::z)
+			.def("IsValid",				&Vector::IsValid)
+			.def("IsZero",				&Vector::IsZero)
 			.def("DistTo",				&Vector::DistTo)
 			.def("DistToSq",			&Vector::DistToSqr)
 			.def("Dot",					&Vector::Dot)
 			.def("Length",				&Vector::Length)
-			.def("Normalize",			&Vector::NormalizeInPlace),
+			.def("LengthSqr",			&Vector::LengthSqr)
+			.def("Normalize",			&Vector::NormalizeInPlace)
+			.def("Negate",				&Vector::Negate),
+
+		class_<QAngle>("QAngle")
+			.def_readwrite("x",			&QAngle::x)
+			.def_readwrite("y",			&QAngle::y)
+			.def_readwrite("z",			&QAngle::z)
+			.def("IsValid",				&QAngle::IsValid)
+			.def("Length",				&QAngle::Length)
+			.def("LengthSqr",			&QAngle::LengthSqr),
 
 		class_<CClassLimits>("ClassLimits")
 			.def(constructor<>())
@@ -1022,7 +1034,13 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetSkin",				&CBaseEntity::SetSkin)
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin)
 			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin)
-			.def("IsOnFire",			&CBaseEntity::IsOnFire),
+			.def("GetAngles",			&CBaseEntity::GetAbsAngles)
+			.def("SetAngles",			&CBaseEntity::SetAbsAngles)
+			.def("IsOnFire",			&CBaseEntity::IsOnFire)
+			.def("GetGravity",			&CBaseEntity::GetGravity)
+			.def("SetGravity",			&CBaseEntity::SetGravity)
+			.def("GetFriction",			&CBaseEntity::GetFriction)
+			.def("SetFriction",			&CBaseEntity::GetFriction),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
