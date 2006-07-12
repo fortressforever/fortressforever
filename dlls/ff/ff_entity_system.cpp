@@ -1048,7 +1048,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
 			.def("GetDisguisedTeam",	&CFFPlayer::GetDisguisedTeam)
-			.def("AddSpeedEffect",		&CFFPlayer::AddLuaSpeedEffect)	// currently support for one lua speed effect only
+			.def("AddSpeedEffect",		&CFFPlayer::AddLuaSpeedEffect)
 			.def("IsSpeedEffectSet",	&CFFPlayer::IsLuaSpeedEffectSet)
 			.def("RemoveSpeedEffect",	&CFFPlayer::RemoveLuaSpeedEffect)
 			.enum_("ClassId")
