@@ -16,7 +16,6 @@
 #include "baseentity.h"
 
 class IEntityListener;
-enum Class_T;
 
 class CBaseEntityClassList
 {
@@ -152,7 +151,7 @@ public:
 	CBaseEntity *FindEntityByNetname( CBaseEntity *pStartEntity, const char *szModelName );
 
 	CBaseEntity *FindEntityByOwner(CBaseEntity *pStartEntity, const CBaseEntity *pOwner);	// |-- Mirv: Useful method
-	CBaseEntity *FindEntityByClassT( CBaseEntity *pStartEntity, Class_T szClassT );	// |-- Mulch
+	CBaseEntity *FindEntityByClassT( CBaseEntity *pStartEntity, int szClassT );	// |-- Mulch
 	CBaseEntity *FindEntityByOwnerAndClassname( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, const char *szClassname ); // |- Mulch
 
 	CGlobalEntityList();
