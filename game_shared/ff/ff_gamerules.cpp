@@ -395,7 +395,7 @@ ConVar mp_prematch( "mp_prematch",
 					// TODO: iterate through getting this players' items
 					// and make them be dropped before killing the player
 
-					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassname( NULL, ( CBaseEntity * )pPlayer, "info_ff_script"	);
+					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
 					while( pEntity )
 					{
 						CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
@@ -407,7 +407,7 @@ ConVar mp_prematch( "mp_prematch",
 							pFFScript->Drop( flDelay, flSpeed );
 						}
 
-						pEntity = gEntList.FindEntityByOwnerAndClassname( pEntity, ( CBaseEntity * )pPlayer, "info_ff_script" );
+						pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
 					}
 				}
 
