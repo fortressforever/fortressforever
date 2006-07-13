@@ -27,6 +27,9 @@ typedef enum eTF_Events
 	TF_MSG_BEGIN = EVENT_NUM_EVENTS,
 
 	// General Events
+	TF_CLASS_DISABLED, // todo: implement this
+	TF_CLASS_NOTAVAILABLE, // todo: implement this
+	TF_CLASS_CHANGELATER, // todo: implement this
 	TF_MSG_BUILD_MUSTBEONGROUND,
 
 	// Scout
@@ -261,6 +264,7 @@ typedef enum eTF_Weapon
 	TF_WP_NONE = 0,
 	TF_WP_UMBRELLA,
 	TF_WP_AXE,
+	TF_WP_CROWBAR,
 	TF_WP_MEDKIT,
 	TF_WP_KNIFE,
 	TF_WP_SPANNER,
@@ -271,6 +275,7 @@ typedef enum eTF_Weapon
 	TF_WP_GRENADE_LAUNCHER,
 	TF_WP_ROCKET_LAUNCHER,
 	TF_WP_SNIPER_RIFLE,
+	TF_WP_RADIOTAG_RIFLE,
 	TF_WP_RAILGUN,
 	TF_WP_FLAMETHROWER,
 	TF_WP_MINIGUN,

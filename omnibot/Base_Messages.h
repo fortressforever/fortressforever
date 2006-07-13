@@ -25,6 +25,11 @@ typedef struct
 } Msg_PlayerHealthArmor;
 
 typedef struct 
+{
+	float		m_MaxSpeed;
+} Msg_PlayerMaxSpeed;
+
+typedef struct 
 {	
 	obBool		m_IsAlive;
 } Msg_IsAlive;
