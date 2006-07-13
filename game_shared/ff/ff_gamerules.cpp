@@ -717,24 +717,10 @@ ConVar mp_prematch( "mp_prematch",
 				StartGame();
 			else
 			{
-				// Stuff to do during prematch (not constantly though!)
-				for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-				{
-					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-					if ( pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
-						pPlayer->AddFlag( FL_FROZEN );
-				}
-
-				// This is a bit tempy
-				//static float flNextMsg = 0;
-
 				// Only send message every second (not every frame)
 				if( gpGlobals->curtime > m_flNextMsg )
 				{
 					m_flNextMsg = gpGlobals->curtime + 1.0f;
-				
-					//CReliableBroadcastRecipientFilter user;
 
 					char sztimeleft[10];
 
@@ -901,33 +887,11 @@ ConVar mp_prematch( "mp_prematch",
 	{
 		m_flGameStarted = gpGlobals->curtime;
 
-		// Stuff to do during prematch
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+		// Stuff to do when prematch ends
+		bool bFlags[ RS_MAX_FLAG ] = { true };
 
-			if ( pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR && pPlayer->GetTeamNumber() != TEAM_UNASSIGNED )
-			{
-				pPlayer->RemoveFlag( FL_FROZEN );
-				pPlayer->KillAndRemoveItems();
-				pPlayer->ResetFragCount();
-				pPlayer->ResetDeathCount();
-			}
-
-			UTIL_ClientPrintAll( HUD_PRINTCENTER, "#FF_PREMATCH_END" );
-		}
-
-		// Reset all team scores & deaths
-		for( int i = 0; i < GetNumberOfTeams(); i++ )
-		{
-			CTeam *pTeam = GetGlobalTeam( i );
-
-			if( !pTeam )
-				continue;
-
-			pTeam->SetScore( 0 );
-			pTeam->SetDeaths( 0 );
-		}
+		// Piggy back this guy now with a FULL MAP RESET
+		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
 	}
 	// <-- Mirv: Prematch
 

@@ -134,55 +134,55 @@ CPlayerCommand::CPlayerCommand(std::string strCommand, PLAYERCMD_FUNC_TYPE pfn, 
 
 FF_AUTO_COMMAND( testcmd, &CFFPlayer::Command_TestCommand, "test command description", FF_CMD_ALIVE );
 
-FF_AUTO_COMMAND( mapguide, &CFFPlayer::Command_MapGuide, "Start/stop a map guide.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC ); // |-- Mirv: Channel setting command
-FF_AUTO_COMMAND( setchannel, &CFFPlayer::Command_SetChannel, "Choose your voice comm channel.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC ); // |-- Mirv: Channel setting command
+FF_AUTO_COMMAND( mapguide, &CFFPlayer::Command_MapGuide, "Start/stop a map guide.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH ); // |-- Mirv: Channel setting command
+FF_AUTO_COMMAND( setchannel, &CFFPlayer::Command_SetChannel, "Choose your voice comm channel.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH ); // |-- Mirv: Channel setting command
 
 // --> Mirv: Spy feigning
-FF_AUTO_COMMAND( feign, &CFFPlayer::SpyFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED );
-FF_AUTO_COMMAND( sfeign, &CFFPlayer::SpySilentFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED );
+FF_AUTO_COMMAND( feign, &CFFPlayer::SpyFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( sfeign, &CFFPlayer::SpySilentFeign, "Feign!", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
 // <-- Mirv: Spy feigning
 
 FF_AUTO_COMMAND( class, &CFFPlayer::Command_Class, "Choose your player class.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
 FF_AUTO_COMMAND( team, &CFFPlayer::Command_Team, "Choose your team.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
 FF_AUTO_COMMAND( whatteam, &CFFPlayer::Command_WhatTeam, "Tells what team you're on for debugging.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
-FF_AUTO_COMMAND( dispenser, &CFFPlayer::Command_BuildDispenser, "Build or detonate a dispenser.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
-FF_AUTO_COMMAND( sentrygun, &CFFPlayer::Command_BuildSentryGun, "Build or detonate a sentry gun.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
+FF_AUTO_COMMAND( dispenser, &CFFPlayer::Command_BuildDispenser, "Build or detonate a dispenser.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( sentrygun, &CFFPlayer::Command_BuildSentryGun, "Build or detonate a sentry gun.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( dispensertext, &CFFPlayer::Command_DispenserText, "Set custom text for your dispenser.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( hinttest, &CFFPlayer::Command_HintTest, "Tests the hint system.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC );
-FF_AUTO_COMMAND( detpack, &CFFPlayer::Command_BuildDetpack, "Drop a detpack.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
-FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE );
+FF_AUTO_COMMAND( hinttest, &CFFPlayer::Command_HintTest, "Tests the hint system.", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_SPEC | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( detpack, &CFFPlayer::Command_BuildDetpack, "Drop a detpack.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH );
 // For sev's animation testing thing
-FF_AUTO_COMMAND( sevtest, &CFFPlayer::Command_SevTest, "Spawn sev's testing thing", FF_CMD_ALIVE );
-FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE);
-FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE);
-FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE )
+FF_AUTO_COMMAND( sevtest, &CFFPlayer::Command_SevTest, "Spawn sev's testing thing", FF_CMD_ALIVE  | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH )
 
 // entity system interfacing stuffs
-FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD );
-FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE );
+FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 
 // spy sabotage stuff
-FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD );
-FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy SG on own team", FF_CMD_ALIVE );
+FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy SG on own team", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 
 
 // --> Mirv: Toggle grenades (requested by defrag)
-FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );
-FF_SHARED_COMMAND( toggletwo, &CFFPlayer::Command_ToggleTwo, CC_ToggleTwo, "Primes and throws secondary grendae on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED );
+FF_SHARED_COMMAND( toggleone, &CFFPlayer::Command_ToggleOne, CC_ToggleOne, "Primes and throws primary grenade on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
+FF_SHARED_COMMAND( toggletwo, &CFFPlayer::Command_ToggleTwo, CC_ToggleTwo, "Primes and throws secondary grendae on subsequent touches", FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
 // <-- Mirv: Toggle grenades (requested by defrag)
 
 //-- Added by L0ki -------------------------------------------------------
 //
 // Grenade related
-FF_SHARED_COMMAND(primeone, &CFFPlayer::Command_PrimeOne, CC_PrimeOne, "Primes one of your primary grenades.", FF_CMD_ALIVE );
-FF_SHARED_COMMAND(primetwo, &CFFPlayer::Command_PrimeTwo, CC_PrimeTwo, "Prime one of your secondary grenades.", FF_CMD_ALIVE );
-FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw a primed grenade.", FF_CMD_ALIVE | FF_CMD_FEIGNED );
+FF_SHARED_COMMAND(primeone, &CFFPlayer::Command_PrimeOne, CC_PrimeOne, "Primes one of your primary grenades.", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_SHARED_COMMAND(primetwo, &CFFPlayer::Command_PrimeTwo, CC_PrimeTwo, "Prime one of your secondary grenades.", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_SHARED_COMMAND(throwgren, &CFFPlayer::Command_ThrowGren, CC_ThrowGren, "Throw a primed grenade.", FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
 //		had to do it this way because you cant use + and - with the macros
 #ifndef CLIENT_DLL
-	static CPlayerCommand SrvCmd_PlusGrenOne("+gren1", &CFFPlayer::Command_PrimeOne, FF_CMD_ALIVE );
-	static CPlayerCommand SrvCmd_MinusGrenOne("-gren1", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED);
-	static CPlayerCommand SrvCmd_PlusGrenTwo("+gren2", &CFFPlayer::Command_PrimeTwo, FF_CMD_ALIVE );
-	static CPlayerCommand SrvCmd_MinusGrenTwo("-gren2", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED);
+	static CPlayerCommand SrvCmd_PlusGrenOne("+gren1", &CFFPlayer::Command_PrimeOne, FF_CMD_ALIVE | FF_CMD_PREMATCH );
+	static CPlayerCommand SrvCmd_MinusGrenOne("-gren1", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
+	static CPlayerCommand SrvCmd_PlusGrenTwo("+gren2", &CFFPlayer::Command_PrimeTwo, FF_CMD_ALIVE | FF_CMD_PREMATCH );
+	static CPlayerCommand SrvCmd_MinusGrenTwo("-gren2", &CFFPlayer::Command_ThrowGren, FF_CMD_ALIVE | FF_CMD_FEIGNED | FF_CMD_PREMATCH );
 #else
 	void CliCmdFunc_PlusGrenOne(void)
 	{
