@@ -119,6 +119,10 @@ void CC_PrimeOne( void )
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
+	// Don't want timers going when frozen
+	if( pLocalPlayer->GetFlags() & FL_FROZEN )
+		return;
+
 	if( pLocalPlayer->m_bClientBuilding )
 	{
 		DevMsg( "[Client] Building - not priming a gren!\n" );
@@ -183,6 +187,10 @@ void CC_PrimeTwo( void )
 		return;
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	// Don't want timers going when frozen
+	if( pLocalPlayer->GetFlags() & FL_FROZEN )
+		return;
 
 	if( pLocalPlayer->m_bClientBuilding )
 	{
