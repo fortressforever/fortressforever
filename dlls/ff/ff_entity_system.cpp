@@ -1143,9 +1143,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
 			.def("GetDisguisedTeam",	&CFFPlayer::GetDisguisedTeam)
-			.def("AddSpeedEffect",		&CFFPlayer::AddLuaSpeedEffect)
-			.def("IsSpeedEffectSet",	&CFFPlayer::IsLuaSpeedEffectSet)
-			.def("RemoveSpeedEffect",	&CFFPlayer::RemoveLuaSpeedEffect)
+			.def("AddEffect",			&CFFPlayer::LuaAddEffect)
+			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
+			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),

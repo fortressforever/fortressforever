@@ -53,10 +53,15 @@ enum SpeedEffectType
 	SE_LUA3,	// a speed effect that lua can set
 	SE_LUA4,	// a speed effect that lua can set
 	SE_LUA5,	// a speed effect that lua can set
+	SE_LUA6,	// a speed effect that lua can set
+	SE_LUA7,	// a speed effect that lua can set
+	SE_LUA8,	// a speed effect that lua can set
+	SE_LUA9,	// a speed effect that lua can set
+	SE_LUA10,	// a speed effect that lua can set
 };
 
 // BEG: Speed Effect class for handling speed impairing effects (caltrop, legshot, etc)
-#define NUM_SPEED_EFFECTS 32
+#define NUM_SPEED_EFFECTS 48
 struct SpeedEffect
 {
 	SpeedEffectType type;		// using a type now so we can search through them all
@@ -355,17 +360,19 @@ public:
 
 
 public:
+	// These 3 handle lua settings speed effects and other effects
+	void LuaAddEffect( int iEffect, float flEffectDuration = 0.0f, float flIconDuration = 0.0f, float flSpeed = 0.0f );
+	bool LuaIsEffectActive( int iEffect );
+	void LuaRemoveEffect( int iEffect );
+
 	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0);
-	void AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flSpeed );
 	bool IsSpeedEffectSet( SpeedEffectType type );
-	bool IsLuaSpeedEffectSet( int iSpeedEffect );
 	void RemoveSpeedEffect(SpeedEffectType type);
-	void RemoveLuaSpeedEffect( int iSpeedEffect );
 	int	ClearSpeedEffects(int mod = 0);
 
 	void Infect( CFFPlayer * );
 	void Cure( CFFPlayer * );
-	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f );
+	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f );
 
 	bool IsInfected( void ) const		{ return m_bInfected; }
 	CBaseEntity *GetInfector( void )	{ return ( m_hInfector == NULL ) ? NULL : ( CBaseEntity * )m_hInfector; }
