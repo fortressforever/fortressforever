@@ -1154,6 +1154,33 @@ CBaseEntity *CGlobalEntityList::FindEntityByOwnerAndClassname( CBaseEntity *pSta
 
 	return NULL;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Iterates through the entities finding one where pOwner & szClassT match
+// Input  : pStartEntity - Last entity found, NULL to start a new iteration.
+//			pOwner - owner we're looking for
+//			szClassname - class name we're looking for
+//-----------------------------------------------------------------------------
+CBaseEntity *CGlobalEntityList::FindEntityByOwnerAndClassT( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, int szClassT )
+{
+	const CEntInfo *pInfo = pStartEntity ? GetEntInfoPtr( pStartEntity->GetRefEHandle() )->m_pNext : FirstEntInfo();
+
+	for( ; pInfo; pInfo = pInfo->m_pNext )
+	{
+		CBaseEntity *pEntity = ( CBaseEntity * )pInfo->m_pEntity;
+
+		if( !pEntity )
+		{
+			DevWarning( "NULL entity in global entity list!\n" );
+			continue;
+		}
+
+		if( ( pEntity->GetOwnerEntity() == pOwner ) && ( pEntity->Classify() == szClassT ) )
+			return pEntity;
+	}
+
+	return NULL;
+}
 // <-- Mulch
 
 void CGlobalEntityList::OnAddEntity( IHandleEntity *pEnt, CBaseHandle handle )

@@ -153,6 +153,7 @@ public:
 	CBaseEntity *FindEntityByOwner(CBaseEntity *pStartEntity, const CBaseEntity *pOwner);	// |-- Mirv: Useful method
 	CBaseEntity *FindEntityByClassT( CBaseEntity *pStartEntity, int szClassT );	// |-- Mulch
 	CBaseEntity *FindEntityByOwnerAndClassname( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, const char *szClassname ); // |- Mulch
+	CBaseEntity *FindEntityByOwnerAndClassT( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, int szClassT ); // |- Mulch
 
 	CGlobalEntityList();
 
