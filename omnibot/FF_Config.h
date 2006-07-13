@@ -19,6 +19,7 @@
 typedef enum eFF_Version
 {
 	FF_VERSION_0_1 = 1,
+	FF_VERSION_0_2,
 	FF_VERSION_LATEST = FF_VERSION_0_1
 } FF_Version;
 

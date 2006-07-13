@@ -80,7 +80,7 @@ typedef enum
 	BOT_DEBUG_SCRIPT	= (1<<7),
 	BOT_DEBUG_EVENTS	= (1<<8),
 	BOT_DEBUG_FPINFO	= (1<<9),
-	// NOTE: This must be last!
+	// THIS MUST STAY LAST
 	NUM_BOT_DEBUG_FLAGS = (1<<16)
 } BotDebugFlag;
 

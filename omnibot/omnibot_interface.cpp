@@ -86,6 +86,8 @@ namespace Omnibot
 		// TF_WP_UMBRELLA,
 		"ff_weapon_umbrella",
 		// TF_WP_AXE,
+		"",
+		// TF_WP_CROWBAR,
 		"ff_weapon_crowbar",
 		// TF_WP_MEDKIT,
 		"ff_weapon_medkit",
@@ -107,6 +109,8 @@ namespace Omnibot
 		"ff_weapon_rpg",
 		// TF_WP_SNIPER_RIFLE,
 		"ff_weapon_sniperrifle",
+		// TF_WP_RADIOTAG_RIFLE
+		"ff_weapon_radiotagrifle",
 		// TF_WP_RAILGUN,
 		"ff_weapon_railgun",
 		// TF_WP_FLAMETHROWER,
@@ -703,17 +707,6 @@ namespace Omnibot
 
 	static int obRemoveBot(const char *_name)
 	{
-		//for(int i = 1; i <= g_pGlobals->maxClients; ++i )
-		//{
-		//	const char *pCharName = obGetClientName(i);
-		//	if(pCharName && _name)
-		//	{
-		//		if(Q_strcmp(pCharName, _name))
-		//		{
-		//			// do the kick command.
-		//		}
-		//	}
-		//}
 		engine->ServerCommand(UTIL_VarArgs("kick %s\n", _name));
 		return -1;
 	}
@@ -744,7 +737,7 @@ namespace Omnibot
 	static int obGetMaxNumPlayers()
 	{
 		// TODO: fix this
-		return 32;
+		return gpGlobals->maxClients;
 	}
 
 	//-----------------------------------------------------------------
@@ -1262,18 +1255,24 @@ namespace Omnibot
 		case GEN_MSG_GETHEALTHARMOR:
 			{
 				Msg_PlayerHealthArmor *pMsg = _data.Get<Msg_PlayerHealthArmor>();
-				if(pMsg)
+				if(pMsg && pPlayer)
 				{
-					if(pPlayer)
-					{
-						pMsg->m_CurrentHealth = pPlayer->GetHealth();
-						pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
-						pMsg->m_CurrentArmor = pPlayer->ArmorValue();
-						pMsg->m_MaxArmor = pPlayer->ArmorValue(); // TODO FIX THIS
-					}
+					pMsg->m_CurrentHealth = pPlayer->GetHealth();
+					pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
+					pMsg->m_CurrentArmor = pPlayer->ArmorValue();
+					pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
 				}
 				break;
-			}	
+			}
+		case GEN_MSG_GETMAXSPEED:
+			{
+				Msg_PlayerMaxSpeed *pMsg = _data.Get<Msg_PlayerMaxSpeed>();
+				if(pMsg && pPlayer)
+				{
+					pMsg->m_MaxSpeed = pPlayer->MaxSpeed();
+				}
+				break;
+			}
 			//////////////////////////////////
 			// Game specific messages next. //
 			//////////////////////////////////
@@ -1831,7 +1830,7 @@ namespace Omnibot
 		Q_FixSlashes(botPath);
 
 		bool bSuccess = true;
-		INITBOTLIBRARY(FF_VERSION_0_1, navId, "omnibot_ff.dll", "omnibot_ff.so", botPath, iLoadResult);
+		INITBOTLIBRARY(FF_VERSION_LATEST, navId, "omnibot_ff.dll", "omnibot_ff.so", botPath, iLoadResult);
 		if(iLoadResult != BOT_ERROR_NONE)
 		{
 			pfnPrintError(BOT_ERR_MSG(iLoadResult));

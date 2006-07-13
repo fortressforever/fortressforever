@@ -16,7 +16,6 @@ namespace Omnibot
 		static bool InitBotInterface();
 		static void ShutdownBotInterface();
 		static void UpdateBotInterface();
-		static void Bot_Interface_LogOutput(const char *_txt);
 		static void Bot_SendSoundEvent(int _client, int _sndtype, Omnibot::GameEntity _source);
 		static void Bot_Interface_SendEvent(int _eid, int _dest, int _source, int _msdelay, BotUserData * _data);
 		static void Bot_Interface_SendGlobalEvent(int _eid, int _source, int _msdelay, BotUserData * _data);
