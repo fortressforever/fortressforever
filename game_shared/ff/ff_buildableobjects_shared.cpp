@@ -145,6 +145,10 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 
 	// Bug #0000347: SG and dispenser buildable on an elevator
 	// Check if the player is standing on an ele
+
+	// Could you catch all these just by checking if movetype is MOVETYPE_PUSH?
+	//																	- mirv
+
 	trace_t tr1;
 	UTIL_TraceLine( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecPlayerOrigin - Vector( 0, 0, 6 * m_flRaiseVal ), CONTENTS_MOVEABLE|CONTENTS_SOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &tr1 );
 	if( tr1.DidHit() && tr1.m_pEnt )

@@ -316,6 +316,7 @@ protected:
 	void Explode( void );
 	void SpawnGib( const char *szGibModel, bool bFlame = true, bool bDieGroundTouch = false );
 	void DoExplosion( void );
+	virtual void DoExplosionDamage() { AssertMsg(0, "No DoExplosionDamage()"); }
 
 	virtual void SendStatsToBot() {};
 protected:
@@ -461,6 +462,8 @@ public:
 	//void OnEmpExplosion( void );
 	virtual int TakeEmp( void );
 
+	virtual void DoExplosionDamage();
+
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
 	//bool	m_bLive;
@@ -493,6 +496,7 @@ public:
 	~CFFDispenser( void );
 
 	virtual Class_T Classify( void ) { return CLASS_DISPENSER; }
+
 
 public:
 	// Network variables
@@ -542,6 +546,8 @@ public:
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
+
+	virtual void DoExplosionDamage();
 
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
@@ -647,6 +653,8 @@ public:
 
 	float MaxYawSpeed( void );
 	float MaxPitchSpeed( void );
+
+	virtual void DoExplosionDamage();
 
 protected:
 	void Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
