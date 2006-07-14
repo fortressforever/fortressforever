@@ -165,6 +165,7 @@ void NapalmBurstCallback(const CEffectData &data)
 
 DECLARE_CLIENT_EFFECT( "NapalmBurst", NapalmBurstCallback )
 
+// Mirv: This is no longer used!! Gas grenade has its own CGasCloud emitter
 void FF_FX_GasCloud( Vector &origin )
 {
 	CSmartPtr<CGasCloud> pGasCloud = CGasCloud::Create("GasCloud");

@@ -23,6 +23,7 @@
 #ifdef CLIENT_DLL
 	#define CFFGrenadeGas C_FFGrenadeGas
 	#include "c_te_effect_dispatch.h"
+	#include "ff_fx_gascloud_emitter.h"
 #else
 	#include "te_effect_dispatch.h"
 	#include "ff_entity_system.h"
@@ -32,8 +33,10 @@ class CFFGrenadeGas : public CFFGrenadeBase
 {
 public:
 	DECLARE_CLASS(CFFGrenadeGas,CFFGrenadeBase)
+	DECLARE_NETWORKCLASS();
 
 	CNetworkVector(m_vInitialVelocity);
+	CNetworkVar(int, m_bIsEmitting);
 
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
@@ -45,6 +48,12 @@ public:
 #ifdef CLIENT_DLL
 	CFFGrenadeGas() {}
 	CFFGrenadeGas( const CFFGrenadeGas& ) {}
+
+	virtual void ClientThink();
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+
+	CSmartPtr<CGasCloud>	m_pGasEmitter;
+
 #else
 	virtual void Spawn();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
@@ -59,6 +68,16 @@ protected:
 	float m_flNextPuff;
 #endif
 };
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeGas, DT_FFGrenadeGas)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeGas, DT_FFGrenadeGas)
+#ifdef GAME_DLL
+SendPropInt(SENDINFO(m_bIsEmitting), 1, SPROP_UNSIGNED),
+#else
+RecvPropInt(RECVINFO(m_bIsEmitting)),
+#endif
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( gasgrenade, CFFGrenadeGas );
 PRECACHE_WEAPON_REGISTER( gasgrenade );
@@ -86,6 +105,8 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		m_flNextHurt = 0;
 		m_flOpenTime = 0.0f;
 		m_flNextPuff = 0.0f;
+
+		m_bIsEmitting = 0;
 	}
 
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
@@ -115,6 +136,8 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			m_Activity = ( Activity )ACT_GAS_DEPLOY_IDLE;
 			m_iSequence = SelectWeightedSequence( m_Activity );
 			SetSequence( m_iSequence );
+
+			m_bIsEmitting = 1;
 		}
 
 		// Stop the thing from rolling if it starts moving
@@ -192,18 +215,6 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
 			}
-
-			// Just shoving this here for now, Ted can sort out the effect properly.
-			// Only deploy gas for 8 seconds
-			if (gpGlobals->curtime < m_flDetonateTime + 8.0f && m_flNextPuff < gpGlobals->curtime)
-			{
-				CEffectData data;
-				data.m_vOrigin = GetAbsOrigin();
-				data.m_flScale = 1.0f;
-				DispatchEffect(GAS_EFFECT, data);
-
-				m_flNextPuff = gpGlobals->curtime + 1.0f;
-			}
 		}
 
 		// Animate
@@ -238,6 +249,47 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		// Do underwater grenade movement thinking
 		CFFGrenadeBase::WaterThink();		
 	}
+#else
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Emit gas.
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeGas::ClientThink()
+	{
+		if (m_bIsEmitting)
+		{
+			if (!m_pGasEmitter)
+			{
+				// Grenade deals damage for 10 seconds, gas lasts for 5 seconds
+				// So we can die 5 seconds before
+				m_pGasEmitter = CGasCloud::Create("GasCloud");
+				m_pGasEmitter->SetDieTime(gpGlobals->curtime + 5.0f);
+			}
+
+			if (!!m_pGasEmitter)
+			{
+				m_pGasEmitter->UpdateEmitter(GetAbsOrigin(), GetAbsVelocity());
+			}
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Called when data changes on the server
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeGas::OnDataChanged(DataUpdateType_t updateType)
+	{
+		// NOTE: We MUST call the base classes' implementation of this function
+		BaseClass::OnDataChanged(updateType);
+
+		// Setup our entity's particle system on creation
+		if (updateType == DATA_UPDATE_CREATED)
+		{
+			// Call our ClientThink() function once every client frame
+			SetNextClientThink(CLIENT_THINK_ALWAYS);
+			m_pGasEmitter = NULL;
+		}
+	}
+
 #endif
 
 void CFFGrenadeGas::Precache()

@@ -43,7 +43,20 @@ public:
 	void AddAttractor(Vector *F, Vector apos, Vector ppos, float scale);
 	void ApplyDrag(Vector *F, Vector vel, float scale, float targetvel);
 
+	virtual void	Update( float flTimeDelta );
+
 	GasParticle*	AddGasParticle( const Vector &vOrigin);
+
+	void UpdateEmitter(const Vector &vecOrigin, const Vector &vecVelocity)
+	{
+		m_vecOrigin = vecOrigin;
+		m_vecVelocity = vecVelocity;
+	}
+
+	void SetDieTime(float flDieTime)
+	{
+		m_flDieTime = flDieTime;
+	}
 
 protected:
 	CGasCloud( const char *pDebugName );
@@ -54,6 +67,12 @@ private:
 
 	float m_flNearClipMin;
 	float m_flNearClipMax;
+
+	Vector	m_vecOrigin;
+	Vector	m_vecVelocity;
+
+	float	m_flDieTime;
+	float	m_flNextParticle;
 
 	static PMaterialHandle m_hMaterial;
 };
