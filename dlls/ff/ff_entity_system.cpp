@@ -1080,6 +1080,21 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetGravity",			&CBaseEntity::SetGravity)
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::GetFriction),
+
+		// Buildable base
+		class_<CFFBuildableObject>("BaseBuildable")
+			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
+			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer),
+			// TODO: Add GetTeam
+
+		// Dispenser
+		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
+		
+		// Sentrygun
+		class_<CFFSentryGun, CFFBuildableObject>("Sentrygun"),
+		
+		// Detpack
+		class_<CFFDetpack, CFFBuildableObject>("Detpack"),
 	
 		// CTeam
 		class_<CTeam>("BaseTeam")
