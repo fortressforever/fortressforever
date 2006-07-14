@@ -1105,7 +1105,7 @@ void CFFEntitySystem::FFLibOpen()
 			],
 
 		// CFFGrenadeBase
-		class_<CFFGrenadeBase>("Grenade")
+		class_<CFFGrenadeBase, CBaseEntity>("Grenade")
 		.def("Type",					&CFFGrenadeBase::GetGrenId)
 			.enum_("GrenId")
 			[
