@@ -1020,3 +1020,15 @@ void CFFSentryGun::Detonate()
 
 	CFFBuildableObject::Detonate();
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Carry out the radius damage for this buildable
+//-----------------------------------------------------------------------------
+void CFFSentryGun::DoExplosionDamage()
+{
+	// Going to use the same calculation as emp damage right now
+	float flDamage = 2.0f * TakeEmp();
+	
+	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+}

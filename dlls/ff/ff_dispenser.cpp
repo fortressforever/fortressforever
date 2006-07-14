@@ -566,3 +566,16 @@ void CFFDispenser::Detonate()
 
 	CFFBuildableObject::Detonate();
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Carry out the radius damage for this buildable
+//-----------------------------------------------------------------------------
+void CFFDispenser::DoExplosionDamage()
+{
+	// Using the values posted in the bugtracker, capping at 200
+	float flDamage = 1.4f * m_iRockets + 1.0f * m_iCells;
+	flDamage = min(200, flDamage);
+
+	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
+	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+}

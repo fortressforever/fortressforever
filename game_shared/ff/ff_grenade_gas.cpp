@@ -38,7 +38,7 @@ public:
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeDamage() { return 0.0f; }
-	virtual float GetGrenadeRadius() { return 300.0f; }
+	virtual float GetGrenadeRadius() { return 200.0f; }
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_GAS; }
 
@@ -177,7 +177,7 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 				{
 					pPlayer->EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
 
-					CTakeDamageInfo info(this, GetOwnerEntity(), 1, DMG_DIRECT);
+					CTakeDamageInfo info(this, GetOwnerEntity(), vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
 					pPlayer->TakeDamage(info);
 
 					CSingleUserRecipientFilter user((CBasePlayer *)pPlayer);
