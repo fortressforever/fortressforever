@@ -237,6 +237,8 @@ public:
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
+	CFFPlayer *GetOwnerPlayer( void );
+
 	int GetHealthPercent( void );
 	unsigned int GetAmmoPercent( void ) { return m_iAmmoPercent; }
 

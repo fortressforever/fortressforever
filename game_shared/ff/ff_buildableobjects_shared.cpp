@@ -435,6 +435,17 @@ int CFFBuildableObject::GetTeamNumber()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get a buildables owner
+//-----------------------------------------------------------------------------
+CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void )
+{
+	if( m_hOwner.Get() )
+		return ToFFPlayer( m_hOwner.Get() );
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CFFDispenser::CFFDispenser( void )
