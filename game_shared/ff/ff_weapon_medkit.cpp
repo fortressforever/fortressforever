@@ -80,6 +80,8 @@ void CFFWeaponMedkit::Precache()
 
 void CFFWeaponMedkit::SecondaryAttack() 
 {
+	// Can we get rid of this now?
+
 	// heal the player to full if cheats are on
 	ConVar *sv_cheats = (ConVar *) ConCommandBase::FindCommand("sv_cheats");
 	if (sv_cheats) 

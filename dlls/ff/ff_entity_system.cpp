@@ -687,7 +687,43 @@ namespace FFLib
 		if( !pEntity )
 			return NULL;
 
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return NULL;
+
 		return dynamic_cast< CFFInfoScript * >( pEntity );
+	}
+
+	CFFDispenser *CastToDispenser( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsDispenser( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFDispenser * >( pEntity );
+	}
+
+	CFFSentryGun *CastToSentrygun( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsSentrygun( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFSentryGun * >( pEntity );
+	}
+
+	CFFDetpack *CastToDetpack( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsDetpack( pEntity ) )
+			return NULL;
+
+		return dynamic_cast< CFFDetpack * >( pEntity );
 	}
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
@@ -944,6 +980,34 @@ namespace FFLib
 		}
 	}
 
+	float GetConvar( const char *pszConvarName )
+	{
+		if( !pszConvarName )
+			return 0.0f;
+
+		ConVar *pConvar = ( ConVar * )ConCommandBase::FindCommand( pszConvarName );
+		if( !pConvar || !pConvar->IsCommand() )
+			return 0.0f;
+
+		return pConvar->GetFloat();
+	}
+
+	void SetConvar( const char *pszConvarName, float flValue )
+	{
+		if( !pszConvarName )
+			return;
+
+		// Don't allow sv_cheats setting
+		if( !Q_stricmp( pszConvarName, "sv_cheats" ) )
+			return;
+
+		ConVar *pConvar = ( ConVar * )ConCommandBase::FindCommand( pszConvarName );
+		if( !pConvar || !pConvar->IsCommand() )
+			return;
+
+		pConvar->SetValue( flValue );
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1056,17 +1120,6 @@ void CFFEntitySystem::FFLibOpen()
 				value("kEmp",			CLASS_GREN_EMP)
 			],
 
-		// TODO: Should we add classes for all gren types?
-		// Normal grenade,
-		// Caltrop,
-		// Nail grenade,
-		// Mirv grenade,
-		// Mirvlet,
-		// Conc grenade,
-		// Napalm grenade,
-		// Gas grenade,
-		// Emp grenade,
-
 		// CBasePlayer
 		class_<CBasePlayer, CBaseEntity>("BasePlayer"),
 
@@ -1155,6 +1208,9 @@ void CFFEntitySystem::FFLibOpen()
 		def("CastToPlayer",				&FFLib::CastToPlayer),
 		def("CastToInfoScript",			&FFLib::CastToItemFlag),
 		def("CastToGrenade",			&FFLib::CastToGrenade),
+		def("CastToDispenser",			&FFLib::CastToDispenser),
+		def("CastToSentrygun",			&FFLib::CastToSentrygun),
+		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
 		def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
@@ -1196,7 +1252,9 @@ void CFFEntitySystem::FFLibOpen()
 		def("ResetAll",					&FFLib::ResetAll),
 		def("ResetTeam",				&FFLib::ResetTeam),
 		def("ResetPlayer",				&FFLib::ResetPlayer),
-		def("ResetMap",					&FFLib::ResetMap)
+		def("ResetMap",					&FFLib::ResetMap),
+		def("GetConvar",				&FFLib::GetConvar),
+		def("SetConvar",				&FFLib::SetConvar)
 	];
 }
 
