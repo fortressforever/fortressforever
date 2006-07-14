@@ -11,6 +11,8 @@
 /// Revisions
 /// ---------
 /// May 8, 2005	L0ki: Initial Creation
+///
+/// Jul 14, 2006 Mirv: Redone this so that it's no longer crap
 
 #include "cbase.h"
 #include "clienteffectprecachesystem.h"
@@ -49,6 +51,8 @@ CGasCloud::CGasCloud( const char *pDebugName ) : CParticleEffect( pDebugName )
 
 	m_flNearClipMin	= 16.0f;
 	m_flNearClipMax	= 64.0f;
+
+	m_flNextParticle = 0;
 }
 
 //========================================================================
@@ -106,6 +110,7 @@ GasParticle* CGasCloud::AddGasParticle( const Vector &vOrigin )
 void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 {
 	float timeDelta = pIterator->GetTimeDelta();
+
 
 	GasParticle *pParticle = (GasParticle*)pIterator->GetFirst();
 	while ( pParticle )
@@ -204,4 +209,47 @@ void CGasCloud::RenderParticles( CParticleRenderIterator *pIterator )
 
 		pParticle = (const GasParticle *)pIterator->GetNext( sortKey );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add a new bunch of particles
+//-----------------------------------------------------------------------------
+void CGasCloud::Update(float flTimeDelta)
+{
+	// Don't create any more after this has died. Once the remaining ones have
+	// been simulated this entity will automatically remove itself
+	if (gpGlobals->curtime > m_flDieTime)
+		return;
+
+	if (gpGlobals->curtime < m_flNextParticle)
+		return;
+
+	m_flNextParticle = gpGlobals->curtime + 0.1f;
+
+	//float scale = gas_scale.GetFloat();
+	GasParticle *pParticle = NULL;
+	QAngle angle;
+	Vector forward, right, up, velocity;
+
+	pParticle = AddGasParticle(m_vecOrigin);
+
+	if(!pParticle)
+		return;
+
+	// Pick a random direction
+	Vector vecDirection(RandomFloat(-1.0, 1.0f), RandomFloat(-1.0, 1.0f), RandomFloat(0, 2.0f));
+	vecDirection.NormalizeInPlace();
+
+	// And a random distance
+	Vector vecFinalPos = m_vecOrigin + vecDirection * RandomFloat(50.0f, 200.0f);
+
+	// Go as far as possible
+	trace_t tr;
+	UTIL_TraceLine(m_vecOrigin, vecFinalPos, MASK_SOLID, NULL, COLLISION_GROUP_DEBRIS, &tr);
+
+	// Takes 5 seconds for a cloud to disperse
+	pParticle->m_vVelocity = m_vecVelocity + (tr.endpos - m_vecOrigin) * 0.2f;
+
+	// This is the position we're going to, even though we may not reach it
+	pParticle->m_vFinalPos = tr.endpos;
 }
