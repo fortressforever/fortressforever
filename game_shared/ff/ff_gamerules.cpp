@@ -279,35 +279,9 @@ ConVar mp_prematch( "mp_prematch",
 		// Tell gamerules the round JUST started
 		Precache();
 
-		// TODO: Reset all map entities
+		bool bFlags[ RS_MAX_FLAG ] = { true };
 
-		// TODO: Reset all LUA entities
-		
-		// Kill all non-spec'd players and remove anything that belongs to them
-		for( int i = 1; i < gpGlobals->maxClients; i++ )
-		{
-			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
-			if( pPlayer && ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR ) )
-			{
-				pPlayer->KillAndRemoveItems();
-
-				// This is temp so they don't chill dead. With FL_FROZEN
-				// set it seems like you can't spawn. You're stuck... dead or alive.
-				pPlayer->Spawn(); 
-			}
-		}
-
-		// Reset all team scores & deaths
-		for( int i = 0; i < GetNumberOfTeams(); i++ )
-		{
-			CTeam *pTeam = GetGlobalTeam( i );
-			
-			if( !pTeam )
-				continue;
-
-			pTeam->SetScore( 0 );
-			pTeam->SetDeaths( 0 );
-		}
+		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -326,13 +300,6 @@ ConVar mp_prematch( "mp_prematch",
 		bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
 		bool bUsePlayer = pFFPlayer ? true : false;
 
-		if( bFullReset )
-		{
-			// Turn off stuff that might confuse since we're doing a full update
-			bUseTeam = false;
-			bUsePlayer = false;
-		}
-
 		// Eh? Which one do we use? 
 		if( bUseTeam && bUsePlayer )
 		{
@@ -344,13 +311,12 @@ ConVar mp_prematch( "mp_prematch",
 		// absolutely everything - scores, players, entities, etc.
 		if( bFullReset )
 		{
-			// TODO: ignoring for now.
-
 			// Set these to false so we do an "all" type of update later
 			bUseTeam = false;
 			bUsePlayer = false;
 		}
 		
+		// Do players first (or only if it's not a full reset)
 
 		// Loop through all players
 		for( int i = 1; i < gpGlobals->maxClients; i++ )
@@ -375,7 +341,7 @@ ConVar mp_prematch( "mp_prematch",
 					// got a player pointer!
 					if( pPlayer != pFFPlayer )
 						continue;
-				}
+				}				
 
 				// Please don't change the order. They're set up hopefully
 				// to work correctly.
@@ -460,6 +426,30 @@ ConVar mp_prematch( "mp_prematch",
 					// TODO: Send a message to the client telling it to clean up the level (?)
 					// not sure how decals are handled
 				}
+
+				// Reset players score
+				if( bFullReset )
+				{
+					pPlayer->ResetFragCount();
+					pPlayer->ResetDeathCount();
+				}
+			}
+		}
+
+		// If a full reset...
+		if( bFullReset )
+		{
+			// Reset all team scores & deaths. Do it here
+			// after we've killed/spawned players.
+			for( int i = 0; i < GetNumberOfTeams(); i++ )
+			{
+				CTeam *pTeam = GetGlobalTeam( i );
+
+				if( !pTeam )
+					continue;
+
+				pTeam->SetScore( 0 );
+				pTeam->SetDeaths( 0 );
 			}
 		}
 	}
