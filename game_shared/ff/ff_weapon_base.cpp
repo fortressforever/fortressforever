@@ -184,7 +184,7 @@ const char *CFFWeaponBase::GetWorldModel( void ) const
 
 		if(pWeapon == this)
 		{
-			if(pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[pWeapon->GetFFWpnData().iSlot][0] != NULL)
+			if(pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[iSlot][0] != NULL)
 				return pFFPlayer->m_DisguisedWeapons[iClass].szWeaponModel[iSlot];
 		}
 	}
