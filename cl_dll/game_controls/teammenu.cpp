@@ -205,6 +205,7 @@ void CTeamMenu::Update()
 		return;
 
 	vgui::Button *pTeamButton;
+	vgui::Label* pTeamInfoLabel = (vgui::Label *) FindChildByName("TeamInfo");
 
 	// First count number of players in each team
 	int iTeamNumbers[8] = {0};
@@ -215,6 +216,8 @@ void CTeamMenu::Update()
 		if (pGR->IsConnected(i)) 
 			iTeamNumbers[pGR->GetTeam(i) ]++;
 	}
+
+	pTeamInfoLabel->SetText("");
 
 	// We have to do this in here because it keeps breaking otherwise
 	for (int iTeam = 0; iTeam < 4; iTeam++) 
@@ -244,7 +247,49 @@ void CTeamMenu::Update()
 				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + TEAM_BLUE));
 
 				pTeamButton->SetText(szbuf);
-			}				
+			}			
+
+			// update team info if mouse is hovered over team button
+			if(pTeamButton->IsCursorOver())
+			{
+				// setup team name, number of players, and score
+				wchar_t szText[4096];
+				int idxTeam = iTeam + TEAM_BLUE;
+
+				swprintf(szText, L"&%s: %i Players (%i Points)\n",
+					szName,
+					iTeamNumbers[idxTeam],
+					pGR->GetTeamScore(idxTeam));
+
+				// find all the name of the players on the team
+				bool bFirstName = true;
+				for(int iClient = 1 ; iClient < gpGlobals->maxClients ; iClient++)
+				{
+					if(pGR->IsConnected(iClient))
+					{
+						if(pGR->GetTeam(iClient) == idxTeam)
+						{
+							// seperate name with a comma
+							if(!bFirstName)
+								wcscat(szText, L", ");
+							
+							bFirstName = false;
+
+							// append the player's name
+							const char* szPlayerName = pGR->GetPlayerName(iClient);
+
+							wchar_t wszName[256];
+							vgui::localize()->ConvertANSIToUnicode(szPlayerName, wszName, sizeof(wszName));
+
+							wcscat(szText, wszName);
+						}
+					}
+				}
+
+				// set label text for team info
+				pTeamInfoLabel->SetFgColor(pGR->GetTeamColor(idxTeam));
+				pTeamInfoLabel->SetText(szText);
+			}
 		}
 		else
 			pTeamButton->SetVisible(false);
