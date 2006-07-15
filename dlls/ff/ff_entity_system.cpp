@@ -1374,6 +1374,85 @@ void CFFEntitySystem::DoString( const char *buffer )
 }
 
 //----------------------------------------------------------------------------
+bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject)
+{
+	if(!pEntity)
+		return false;
+
+	// lookup the object using the entity's name
+	const char* szEntName = STRING(pEntity->GetEntityName());
+	return GetObject(szEntName, outObject);
+}
+
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetObject(const char* szTableName, luabind::adl::object& outObject)
+{
+	if(NULL == szTableName)
+		return false;
+
+	try
+	{
+		// lookup the table in the global scope
+		luabind::adl::object retObject = luabind::globals(L)[szTableName];
+		if(luabind::type(retObject) == LUA_TTABLE)
+		{
+			outObject = retObject;
+			return true;
+		}
+	}
+	catch(...)
+	{
+		// throw the error away, lets just keep the game running
+		return false;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetFunction(CBaseEntity* pEntity,
+								  const char* szFunctionName,
+								  luabind::adl::object& outObject)
+{
+	if(NULL == pEntity || NULL == szFunctionName)
+		return false;
+
+	luabind::adl::object tableObject;
+	if(GetObject(pEntity, tableObject))
+		return GetFunction(tableObject, szFunctionName, outObject);
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
+								  const char* szFunctionName,
+								  luabind::adl::object& outObject)
+{
+	if(NULL == szFunctionName)
+		return false;
+
+	if(luabind::type(tableObject) != LUA_TTABLE)
+		return false;
+
+	try
+	{
+		luabind::adl::object funcObject = tableObject[szFunctionName];
+		if(luabind::type(funcObject) == LUA_TFUNCTION)
+		{
+			outObject = funcObject;
+			return true;
+		}
+	}
+	catch(...)
+	{
+		return false;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Runs the appropriate script function
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
