@@ -52,7 +52,7 @@ public:
 
 	virtual bool IsVisible() 						{ return BaseClass::IsVisible(); }
   	virtual void SetParent(vgui::VPANEL parent) 	{ BaseClass::SetParent(parent); }
-	virtual bool NeedsUpdate() 				{ return false; }
+	virtual bool NeedsUpdate() 				{ return true; }
 	virtual bool HasInputElements() 			{ return true; }
 
 
