@@ -17,6 +17,14 @@
 // forward declarations
 struct lua_State;
 
+namespace luabind
+{
+	namespace adl
+	{
+		class object;
+	}
+}
+
 // extern declarations
 extern ConVar mp_respawndelay;
 
@@ -67,6 +75,17 @@ public:
 	int GetInt( const char *name );
 	float GetFloat( const char *name );
 	int RunPredicates( CBaseEntity*, CBaseEntity*, const char * = NULL);
+
+	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
+	bool GetObject(const char* szTableName, luabind::adl::object& outObject);
+
+	bool GetFunction(CBaseEntity* pEntity,
+					 const char* szFunctionName,
+					 luabind::adl::object& outObject);
+
+	bool GetFunction(luabind::adl::object& tableObject,
+					 const char* szFunctionName,
+					 luabind::adl::object& outObject);
 };
 
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
