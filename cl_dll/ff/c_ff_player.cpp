@@ -819,6 +819,9 @@ void C_FFPlayer::PreThink()
 	else if (m_afButtonReleased & IN_ATTACK2)
 		ClassSpecificSkill_Post();
 
+	if (m_afButtonPressed & IN_RELOAD && !IsAlive())
+		engine->ClientCmd("-reload");
+
 	BaseClass::PreThink();
 }
 
