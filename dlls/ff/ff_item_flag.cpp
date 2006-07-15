@@ -360,13 +360,19 @@ void CFFInfoScript::Drop( float delay, float speed )
 		Vector vecDir;
 		AngleVectors( pOwner->EyeAngles(), &vecDir );
 
-		AngularImpulse angImpulse;
-		QAngleToAngularImpulse( pOwner->EyeAngles(), angImpulse );
+		// NOTE: This is the right angle shit... the ball just
+		// doesn't want to be thrown that way
+		// NDebugOverlay::Line( pOwner->EyePosition(), pOwner->EyePosition() + ( 256.0f * vecDir ), 0, 0, 255, false, 5.0f );
+
+		pPhysics->ApplyForceCenter( ( ( pOwner->GetAbsOrigin() + ( 256.0f * vecDir ) ) - pOwner->GetAbsOrigin() ) * vel * vel );
+
+		//AngularImpulse angImpulse;
+		//QAngleToAngularImpulse( pOwner->EyeAngles(), angImpulse );
 
 		// This needs to be based on where the player is looking
 		// and the angle they're looking (so they can throw upwards)
-		Vector vecVelocity = vecDir * ( vel * vel );
-		pPhysics->SetVelocity( &vecVelocity, &angImpulse );
+		//Vector vecVelocity = vecDir * ( vel * vel );
+		//pPhysics->SetVelocity( &vecVelocity, &angImpulse );
 
 		// Stop the sequence if playing
 		if( m_bHasAnims )
