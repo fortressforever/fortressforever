@@ -34,6 +34,7 @@
 #include "ff_team.h"
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
+#include "beam_shared.h"
 
 #define temp_max(a,b) (((a)>(b))?(a):(b))
 
@@ -539,8 +540,7 @@ namespace FFLib
 
 	CBaseEntity* GetEntity(int item_id)
 	{
-		CBaseEntity *pEntity = UTIL_EntityByIndex( item_id );
-		return ( pEntity == NULL ) ? NULL : pEntity;
+		return UTIL_EntityByIndex(item_id);
 	}
 
 	CBaseEntity* GetEntityByName(const char* szName)
@@ -680,6 +680,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFFGrenadeBase * >( pEntity );
+	}
+
+	CBeam* CastToBeam(CBaseEntity* pEntity)
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !FStrEq( pEntity->GetClassname(), "env_beam") )
+			return NULL;
+
+		return dynamic_cast< CBeam * >( pEntity );
 	}
 
 	CFFInfoScript* CastToItemFlag(CBaseEntity* pEntity)
@@ -1078,6 +1089,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsOnFire",			&CBaseEntity::IsOnFire)
 			.def("GetGravity",			&CBaseEntity::GetGravity)
 			.def("SetGravity",			&CBaseEntity::SetGravity)
+			.def("SetRenderColor",		(void(CBaseEntity::*)(byte,byte,byte))&CBaseEntity::SetRenderColor)
+			.def("SetRenderMode",		&CBaseEntity::SetRenderMode)
 			.def("GetFriction",			&CBaseEntity::GetFriction)
 			.def("SetFriction",			&CBaseEntity::GetFriction),
 
@@ -1214,12 +1227,16 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
 																	// do I need it here? -- Nope
 
+		// CBeam
+		class_<CBeam, CBaseEntity>("Beam")
+			.def("SetColor",			&CBeam::SetColor),
 
 		// global functions
 		def("BroadCastMessage",			&FFLib::BroadcastMessage),
 		def("BroadCastMessageToPlayer",	&FFLib::SendPlayerMessage),
 		def("BroadCastSound",			&FFLib::BroadcastSound),
 		def("BroadCastSoundToPlayer",	&FFLib::SendPlayerSound),
+		def("CastToBeam",				&FFLib::CastToBeam),
 		def("CastToPlayer",				&FFLib::CastToPlayer),
 		def("CastToInfoScript",			&FFLib::CastToItemFlag),
 		def("CastToGrenade",			&FFLib::CastToGrenade),
