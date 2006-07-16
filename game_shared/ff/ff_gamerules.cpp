@@ -289,7 +289,6 @@ ConVar mp_prematch( "mp_prematch",
 	//-----------------------------------------------------------------------------
 	void CFFGameRules::ResetUsingCriteria( bool *pbFlags, int iTeam, CFFPlayer *pFFPlayer, bool bFullReset )
 	{
-		// iSlection is ALL = 0, TEAM = 1, or PLAYER = 2
 		// pbFlags are the criteria used during the reset
 		// bFullReset - everything reset. Just like the server was restarted.
 
@@ -316,7 +315,37 @@ ConVar mp_prematch( "mp_prematch",
 			bUsePlayer = false;
 		}
 		
-		// Do players first (or only if it's not a full reset)
+		if( bFullReset )
+		{
+			// Want to reset the map and spawns before restting players & teams
+
+			// TODO: Do stuff!
+
+			// Temporary to reset items
+			CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
+			while( pEntity )
+			{
+				CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+				if( pFFScript )
+				{
+					// If it's being carried...
+					if( pFFScript->GetOwnerEntity() )
+					{
+						// Drop will assert if there's no GetOwnerEntity()
+
+						// This will drop it and make it respawn back where it goes
+						pFFScript->Drop( 0.0f, 0.0f );
+					}
+					else
+					{
+						// Put it back at it's spawn...
+						pFFScript->Return();
+					}
+				}
+
+				pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_INFOSCRIPT );
+			}
+		}
 
 		// Loop through all players
 		for( int i = 1; i < gpGlobals->maxClients; i++ )

@@ -404,7 +404,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 	SetTouch( &CFFInfoScript::OnTouch );		// |-- Mirv: Account for GCC strictness
 
 	// set to respawn in [delay] seconds
-	if( delay > 0 )
+	if( delay >= 0 )
 	{
 		SetThink( &CFFInfoScript::OnThink );	// |-- Mirv: Account for GCC strictness
 		SetNextThink( gpGlobals->curtime + delay );
