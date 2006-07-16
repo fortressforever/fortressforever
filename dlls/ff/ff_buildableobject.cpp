@@ -549,7 +549,7 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 */
 void CFFBuildableObject::DoExplosion( void )
 {
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	//CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 
 	// Explosion!
 	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 16.0f ); // Bring off the ground a little 

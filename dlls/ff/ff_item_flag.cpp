@@ -375,6 +375,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 		//pPhysics->SetVelocity( &vecVelocity, &angImpulse );
 
 		// Stop the sequence if playing
+		// NOTE: This doesn't seem to work yet either...
 		if( m_bHasAnims )
 		{
 			ResetSequenceInfo();

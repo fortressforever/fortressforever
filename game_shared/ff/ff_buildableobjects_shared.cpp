@@ -446,6 +446,18 @@ CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get a buildables team
+//-----------------------------------------------------------------------------
+CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
+{
+	CFFPlayer *pOwner = GetOwnerPlayer();
+	if( pOwner )
+		return dynamic_cast< CFFTeam * >( pOwner->GetTeam() );
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CFFDispenser::CFFDispenser( void )
