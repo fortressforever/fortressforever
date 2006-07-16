@@ -183,6 +183,10 @@ void CFFWeaponGrenadeLauncher::Synchronise()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
+	// Player was NULL once in an mdmp on build 3101
+	if( !pPlayer )
+		return;
+
 	// We could probably just do GetWeapon(2) 
 	for (int i = 0; i < MAX_WEAPONS; i++) 
 	{
