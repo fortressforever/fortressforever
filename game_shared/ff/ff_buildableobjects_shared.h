@@ -27,6 +27,9 @@
 
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
+	#include "c_ff_team.h"
+
+	#define CFFTeam C_FFTeam
 
 	#define CAI_BaseNPC C_AI_BaseNPC
 	#include "c_ai_basenpc.h"	
@@ -39,6 +42,7 @@
 	#define CFFSevTest C_FFSevTest
 #else
 	#include "ff_player.h"
+	#include "ff_team.h"
 	#include "ai_basenpc.h"
 #endif
 
@@ -232,12 +236,13 @@ public:
 	virtual bool IsPlayer( void ) const { return false; }
 	virtual bool BlocksLOS( void ) { return true; }
 	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
-	virtual int	GetTeamNumber();	// |-- Mirv: Easy team id accessor
+	virtual int	GetTeamNumber();	// |-- Mirv: Easy team id accessor	
 	bool IsBuilt( void	) const { return m_bBuilt; }
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
 	CFFPlayer *GetOwnerPlayer( void );
+	CFFTeam *GetOwnerTeam( void );
 
 	int GetHealthPercent( void );
 	unsigned int GetAmmoPercent( void ) { return m_iAmmoPercent; }

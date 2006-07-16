@@ -1097,7 +1097,8 @@ void CFFEntitySystem::FFLibOpen()
 		// Buildable base
 		class_<CFFBuildableObject>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
-			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer),
+			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
+			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
 			// TODO: Add GetTeam
 
 		// Dispenser
@@ -1134,7 +1135,7 @@ void CFFEntitySystem::FFLibOpen()
 
 		// CFFGrenadeBase
 		class_<CFFGrenadeBase, CBaseEntity>("Grenade")
-		.def("Type",					&CFFGrenadeBase::GetGrenId)
+			.def("Type",				&CFFGrenadeBase::GetGrenId)
 			.enum_("GrenId")
 			[
 				value("kNormal",		CLASS_GREN),
@@ -1221,10 +1222,10 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Drop",				&CFFInfoScript::Drop)
 			.def("Pickup",				&CFFInfoScript::Pickup)
 			.def("Respawn",				&CFFInfoScript::Respawn)
-			.def("Return",				&CFFInfoScript::Return)
-			.def("SetModel",			&CFFInfoScript::LUA_SetModel)	// already supported in BaseEntity
-			.def("SetSkin",				&CFFInfoScript::LUA_SetSkin)	// already supported in BaseEntity
-			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
+			.def("Return",				&CFFInfoScript::Return),
+			//.def("SetModel",			&CFFInfoScript::LUA_SetModel)	// already supported in BaseEntity
+			//.def("SetSkin",				&CFFInfoScript::LUA_SetSkin)	// already supported in BaseEntity
+			//.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
 																	// do I need it here? -- Nope
 
 		// CBeam
