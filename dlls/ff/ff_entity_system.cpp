@@ -1019,6 +1019,14 @@ namespace FFLib
 		pConvar->SetValue( flValue );
 	}
 
+	const char *GetSteamID( CFFPlayer *pPlayer )
+	{
+		if( pPlayer )
+			return pPlayer->GetSteamID();
+
+		return "\0";
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1197,7 +1205,6 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GiveWeapon",			&CFFPlayer::GiveNamedItem)
 			.def("RemoveWeapon",		&CFFPlayer::TakeNamedItem)
 			.def("RemoveAllWeapons",	&CFFPlayer::RemoveAllItems)
-			.def("GetOrigin",			&CFFPlayer::GetAbsOrigin)
 			.def("IsFeigned",			&CFFPlayer::IsFeigned)
 			.def("IsDisguised",			&CFFPlayer::IsDisguised)
 			.def("GetDisguisedClass",	&CFFPlayer::GetDisguisedClass)
@@ -1205,6 +1212,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("AddEffect",			&CFFPlayer::LuaAddEffect)
 			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
 			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)
+			.def("GetSteamID",			&CFFPlayer::GetSteamID)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -1289,7 +1297,8 @@ void CFFEntitySystem::FFLibOpen()
 		def("ResetPlayer",				&FFLib::ResetPlayer),
 		def("ResetMap",					&FFLib::ResetMap),
 		def("GetConvar",				&FFLib::GetConvar),
-		def("SetConvar",				&FFLib::SetConvar)
+		def("SetConvar",				&FFLib::SetConvar),
+		def("GetSteamID",				&FFLib::GetSteamID)
 	];
 }
 

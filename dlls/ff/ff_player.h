@@ -579,6 +579,9 @@ public:
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
 
+	// Possible crash: Should I check if engine is valid or engine->IsConnected() first?
+	const char *GetSteamID( void )	{ return engine->GetPlayerNetworkIDString( edict() ); }
+
 private:
 	int GetNewDisguisedClass( void );
 	int GetNewDisguisedTeam( void );
