@@ -610,17 +610,32 @@ ConVar mp_prematch( "mp_prematch",
 			vecSpot = pEntity->BodyTarget(vecSrc, true);
 
 			// Lets calculate some values for this grenade and player
-			Vector vecDirection		= (vecSpot - vecSrc);
-			float flDistance		= vecDirection.Length();
-			vecDirection /= flDistance;
+			Vector vecDisplacement	= (vecSpot - vecSrc);
+			float flDistance		= vecDisplacement.Length();
+			Vector vecDirection		= vecDisplacement / flDistance;
 
 			// Because our models are pretty weird, the tracelines don't work
-			// as expected. To simulate the tracelines being inside the model, we
-			// just check the bounds here.
-			// TODO: May possibly want to reduce the size that is checked
-			const CCollisionProperty *pCollide = pEntity->CollisionProp();
-			if (pCollide && pCollide->IsPointInBounds(vecSrc))
-				flDistance = 0.0f;
+			// as expected. So instead we use this awful little hack here. Thanks
+			// modellers!
+			if (pEntity->IsPlayer())
+			{
+                float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
+				float dV = fabs(vecDisplacement.z - (vecSpot.z - (pEntity->GetAbsOrigin().z + 32.0f))) - 32.0f; // Half of model height
+
+				// Inside our model bounds
+				if (dH <= 0 && dV <= 0)
+				{
+					flDistance = 0.0f;
+				}
+				else if (dH > dV)
+				{
+					flDistance *= dH / (dH + 16.0f);
+				}
+				else
+				{
+					flDistance *= dV / (dV + 32.0f);
+				}
+			}
 
 			// Bugfix for #0000598: Backpacks blocking grenade damage
 			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
