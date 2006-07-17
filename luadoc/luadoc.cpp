@@ -457,6 +457,12 @@ public:
 	void AddEffect();
 	bool IsEffectActive();
 	void RemoveEffect();
+
+	/**
+	* Gets the player's Steam ID
+	* @return player's Steam ID
+	*/
+	string GetSteamID();
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -661,5 +667,6 @@ namespace ffmod
 	void ResetPlayer(Player player, const luabind::adl::object& table);
 	void ResetMap(const object& table);
 	float GetConvar(string szConvar);
-	void SetConvar(string szConvar, float value);	
+	void SetConvar(string szConvar, float value);
+	string GetSteamID(Player player);
 }
