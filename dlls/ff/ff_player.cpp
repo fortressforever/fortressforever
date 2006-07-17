@@ -25,7 +25,6 @@
 #include "ff_projectile_pipebomb.h"
 
 #include "client.h"
-#include "igameresources.h"
 
 #include <vector>
 #include <algorithm>
@@ -42,6 +41,7 @@
 #include "omnibot_interface.h"
 
 #include "te_effect_dispatch.h"
+#include <igameresources.h>
 
 extern int gEvilImpulse101;
 #define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
@@ -3651,10 +3651,12 @@ const char *CFFPlayer::GetSteamID( void )
 //-----------------------------------------------------------------------------
 int CFFPlayer::GetPing( void )
 {
+	/*
 	IGameResources *pGr = GameResources();
 
 	if( pGr )
 		return pGr->GetPing( entindex() );
+		*/
 
 	return 0;
 }
