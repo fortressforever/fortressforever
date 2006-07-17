@@ -1026,6 +1026,7 @@ void CFFEntitySystem::FFLibOpen()
 	module(L)
 	[
 		class_<Vector>("Vector")
+			.def(constructor<>())
 			.def_readwrite("x",			&Vector::x)
 			.def_readwrite("y",			&Vector::y)
 			.def_readwrite("z",			&Vector::z)
@@ -1040,6 +1041,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Negate",				&Vector::Negate),
 
 		class_<QAngle>("QAngle")
+			.def(constructor<>())
 			.def_readwrite("x",			&QAngle::x)
 			.def_readwrite("y",			&QAngle::y)
 			.def_readwrite("z",			&QAngle::z)
