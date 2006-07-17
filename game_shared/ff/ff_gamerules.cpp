@@ -620,7 +620,7 @@ ConVar mp_prematch( "mp_prematch",
 			if (pEntity->IsPlayer())
 			{
                 float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
-				float dV = fabs(vecDisplacement.z - (vecSpot.z - (pEntity->GetAbsOrigin().z + 32.0f))) - 32.0f; // Half of model height
+				float dV = fabs(vecDisplacement.z - (vecSpot.z - (pEntity->GetAbsOrigin().z + 36.0f))) - 36.0f; // Half of model height
 
 				// Inside our model bounds
 				if (dH <= 0 && dV <= 0)
@@ -633,7 +633,21 @@ ConVar mp_prematch( "mp_prematch",
 				}
 				else
 				{
-					flDistance *= dV / (dV + 32.0f);
+					flDistance *= dV / (dV + 36.0f);
+				}
+
+				// Another quick fix for the movement code this time
+				// This should be fixed in the movement code eventually but that
+				// might be a bigger job if it breaks trimping or something.
+				if (pEntity->GetGroundEntity())
+				{
+					Vector vecVelocity = pEntity->GetAbsVelocity();
+
+					if (vecVelocity.z < 0.0f)
+					{
+						vecVelocity.z = 0;
+						pEntity->SetAbsVelocity(vecVelocity);
+					}
 				}
 			}
 
