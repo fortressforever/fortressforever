@@ -1027,6 +1027,14 @@ namespace FFLib
 		return "\0";
 	}
 
+	int GetPing( CFFPlayer *pPlayer )
+	{
+		if( pPlayer )
+			return pPlayer->GetPing();
+
+		return 0;
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1109,7 +1117,6 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
 			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
-			// TODO: Add GetTeam
 
 		// Dispenser
 		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
@@ -1213,6 +1220,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
 			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)
 			.def("GetSteamID",			&CFFPlayer::GetSteamID)
+			.def("GetPing",				&CFFPlayer::GetPing)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -1233,10 +1241,6 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Pickup",				&CFFInfoScript::Pickup)
 			.def("Respawn",				&CFFInfoScript::Respawn)
 			.def("Return",				&CFFInfoScript::Return),
-			//.def("SetModel",			&CFFInfoScript::LUA_SetModel)	// already supported in BaseEntity
-			//.def("SetSkin",				&CFFInfoScript::LUA_SetSkin)	// already supported in BaseEntity
-			//.def("GetOrigin",			&CBaseEntity::GetAbsOrigin), // already supported in BaseEntity..
-																	// do I need it here? -- Nope
 
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")
@@ -1298,7 +1302,8 @@ void CFFEntitySystem::FFLibOpen()
 		def("ResetMap",					&FFLib::ResetMap),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("SetConvar",				&FFLib::SetConvar),
-		def("GetSteamID",				&FFLib::GetSteamID)
+		def("GetSteamID",				&FFLib::GetSteamID),
+		def("GetPing",					&FFLib::GetPing)
 	];
 }
 
