@@ -1027,14 +1027,6 @@ namespace FFLib
 		return "\0";
 	}
 
-	int GetPing( CFFPlayer *pPlayer )
-	{
-		if( pPlayer )
-			return pPlayer->GetPing();
-
-		return 0;
-	}
-
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1220,7 +1212,6 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
 			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)
 			.def("GetSteamID",			&CFFPlayer::GetSteamID)
-			.def("GetPing",				&CFFPlayer::GetPing)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -1302,8 +1293,7 @@ void CFFEntitySystem::FFLibOpen()
 		def("ResetMap",					&FFLib::ResetMap),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("SetConvar",				&FFLib::SetConvar),
-		def("GetSteamID",				&FFLib::GetSteamID),
-		def("GetPing",					&FFLib::GetPing)
+		def("GetSteamID",				&FFLib::GetSteamID)
 	];
 }
 
