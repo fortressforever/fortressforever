@@ -82,9 +82,27 @@ public:
 	void SetOrigin(Vector position);
 
 	/**
+	* Returns the angles of the entity.
+	*/
+	QAngle GetAngles();
+
+	/**
+	* Sets the angles of the entity
+	* @param angles    new angles for the entity
+	*/
+	void SetAngles( QAngle angles );
+
+	/**
 	* Returns true if an object is on fire
 	*/
 	bool IsOnFire();
+
+	GetGravity
+		SetGravity
+		SetRenderColor
+		SetRenderMode
+		GetFriction
+		SetFriction
 };
 
 /////////////////////////////////////////////////////////////////////////////
