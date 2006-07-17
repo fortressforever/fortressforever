@@ -581,7 +581,6 @@ public:
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
 
 	const char *GetSteamID( void );
-	int GetPing( void );
 
 private:
 	int GetNewDisguisedClass( void );

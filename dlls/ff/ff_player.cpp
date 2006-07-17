@@ -41,7 +41,6 @@
 #include "omnibot_interface.h"
 
 #include "te_effect_dispatch.h"
-#include <igameresources.h>
 
 extern int gEvilImpulse101;
 #define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
@@ -3644,21 +3643,6 @@ const char *CFFPlayer::GetSteamID( void )
 		return engine->GetPlayerNetworkIDString( edict() );
 
 	return "\0";
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get a player's ping
-//-----------------------------------------------------------------------------
-int CFFPlayer::GetPing( void )
-{
-	/*
-	IGameResources *pGr = GameResources();
-
-	if( pGr )
-		return pGr->GetPing( entindex() );
-		*/
-
-	return 0;
 }
 
 //-----------------------------------------------------------------------------
