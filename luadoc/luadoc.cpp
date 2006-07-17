@@ -97,12 +97,39 @@ public:
 	*/
 	bool IsOnFire();
 
-	GetGravity
-		SetGravity
-		SetRenderColor
-		SetRenderMode
-		GetFriction
-		SetFriction
+	/**
+	* Returns the gravity of this entity.
+	*/
+	float GetGravity();
+
+	/**
+	* Sets the gravity of this entity.
+	* @param gravity    new gravity for the entity
+	*/
+	void SetGravity( float gravity );
+
+	/**
+	* Sets the render color
+	* @param unknown - fryguy added it
+	*/
+	void SetRenderColor();
+
+	/**
+	* Sets the render mode
+	* @param unknown - fryguy added it
+	*/
+	void SetRenderMode();
+
+	/**
+	* Gets the friction for this entity
+	*/
+	float GetFriction();
+
+	/**
+	* Sets the friction for this entity
+	* @param friction    new friction
+	*/
+	void SetFriction( float friction );
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,6 +159,17 @@ public:
 	* Forces the item to return.
 	*/
 	BaseEntity Return();
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class Beam : public BaseEntity
+{
+public:
+	/**
+	* Sets the color of the beam
+	* @param unknown - fryguy added
+	*/
+	void SetColor();
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -296,6 +334,37 @@ public:
 	*/
 	bool IsWaistDeepInWater();
 
+	bool IsInAttack1();
+	bool IsInAttack2();
+	bool IsInUse();
+	bool IsInJump();
+	bool IsInForward();
+	bool IsInBack();
+	bool IsInMoveLeft();
+	bool IsInMoveRight();
+	bool IsInLeft();
+	bool IsInRight();
+	bool IsInRun();
+	bool IsInReload();
+	bool IsInSpeed();
+	bool IsInWalk();
+	bool IsInZoom();
+
+	/** 
+	/* Returns true if a player is on the ground
+	*/
+	bool IsOnGround();
+
+	/** 
+	/* Returns true if a player is not on the ground
+	*/
+	bool IsInAir();
+
+	/**
+	/* Returns true if a player is ducking
+	*/
+	bool IsDucking();
+
 	/**
 	*
 	*/
@@ -365,66 +434,108 @@ public:
 	*/
 	void RemoveAllWeapons(bool bRemoveSuit);
 
-	/**
-	/* Returns true if a player is disguised
-	*/
-	bool IsDisguised();
-
 	/** 
 	/* Returns true if a player is feigned
 	*/
 	bool IsFeigned();
 
-	/** 
-	/* Returns the team the player is disguised as
+	/**
+	/* Returns true if a player is disguised
 	*/
-	int GetDisguisedTeam();
+	bool IsDisguised();	
 
 	/** 
 	/* Returns the class the player is disguised as
 	*/
+	int GetDisguisedClass();
+
+	/** 
+	/* Returns the team the player is disguised as
+	*/
 	int GetDisguisedTeam();
+	
+	void AddEffect();
+	bool IsEffectActive();
+	void RemoveEffect();
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class BuildableObject
+{
+public:
+	/**
+	* Gets the buildable owners' team number
+	*/
+	int GetTeamId();
 
 	/**
-	/* Returns true if a player is ducking
+	* Gets the owner of the buildable
 	*/
-	bool IsDucking();
+	Player GetOwner();
 
-	/** 
-	/* Returns true if a player is on the ground
+	/**
+	* Gets the buildable owners' team
 	*/
-	bool IsOnGround();
+	Team GetTeam();
+};
 
-	/** 
-	/* Returns true if a player is not on the ground
-	*/
-	bool IsInAir();
+/////////////////////////////////////////////////////////////////////////////
+class Dispenser : public BuildableObject
+{
+public:
+};
 
-	/** 
-	/* Returns true if a player is jumping
-	*/
-	bool IsJumping();
+/////////////////////////////////////////////////////////////////////////////
+class Sentrygun : public BuildableObject
+{
+public:
+};
 
-	/** 
-	/* Returns true if a player pressing their +use key
-	*/
-	bool IsUsing();
+/////////////////////////////////////////////////////////////////////////////
+class Detpack : public BuildableObject
+{
+public:
+};
 
-	/** 
-	/* Returns true if a player pressing their +attack key
-	*/
-	bool IsAttacking1();
+/////////////////////////////////////////////////////////////////////////////
+class Grenade : public BaseEntity
+{
+public:
+	enum GrenId
+	{
+		kNormal,
+		kCaltrop,
+		kNail,
+		kMirv,
+		kMirvlet,
+		kConc,
+		kNapalm,
+		kGas,
+		kEmp,
+	}
 
-	/** 
-	/* Returns true if a player pressing their +attack2 key
+public:
+	/**
+	* Gets the grenades current type
+	* @return current gren type
 	*/
-	bool IsAttacking2();
+	GrenId Type();
 };
 
 /////////////////////////////////////////////////////////////////////////////
 class Vector
 {
 public:
+	/**
+	* Checks for NAN's
+	*/
+	bool IsValid();
+
+	/**
+	* See's if the vector is close to 0.0f
+	*/
+	bool IsZero();
+
 	/**
 	* Compute the distance from one vector to another.
 	*/
@@ -447,9 +558,47 @@ public:
 	float Length();
 
 	/**
+	* Computes the magnitude squared of the vector. This returns the distance from vector
+	* to the origin (0,0,0) of the world.
+	*/
+	float LengthSqr();
+
+	/**
 	* Normalizes to a unit vector.
 	*/
 	void Normalize();
+
+	/**
+	* Negates the vector components.
+	*/
+	void Negate();
+
+public:
+	float x;
+	float y;
+	float z;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class QAngle
+{
+public:
+	/**
+	* Checks for NAN's
+	*/
+	bool IsValid();
+
+	/**
+	* Computes the magnitude of the vector. This returns the distance from vector
+	* to the origin (0,0,0) of the world.
+	*/
+	float Length();
+
+	/**
+	* Computes the magnitude squared of the vector. This returns the distance from vector
+	* to the origin (0,0,0) of the world.
+	*/
+	float LengthSqr();
 
 public:
 	float x;
@@ -464,25 +613,29 @@ namespace ffmod
 	void BroadCastMessageToPlayer(Player player, string message);
 	void BroadCastSound(string sound);
 	void BroadCastSoundToPlayer(Player player, string sound);
+	Beam CasToBeam(BaseEntity entity);
 	Player CastToPlayer(BaseEntity entity);
 	InfoScript CastToInfoScript(BaseEntity entity);
+	Grenade CastToGrenade(BaseEntity entity);
+	Dispenser CastToDispenser(BaseEntity entity);
+	Sentrygun CastToSentrygun((BaseEntity entity);
+	Detpack CastToDetpack(BaseEntity entity);
 	BaseEntity GetEntity(int item_id);
 	BaseEntity GetEntityByName(string name);
 //	def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
 //	def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
 	InfoScript GetInfoScriptById(int item_id);
 	InfoScript GetInfoScriptByName(string name);
-	Player GetPlayer(player_id);
+	Player GetPlayer(int player_id);
 	Team GetTeam(Team.TeamId teamId);
-	float GetServerTime();
+	Grenade GetGrenade(int gren_id);
+	bool IsPlayer();
+	bool IsDispenser();
+	bool IsSentrygun();	
+	bool IsDetpack();
+	bool IsGrenade();
 	bool AreTeamsAllied(Team teamA, Team teamB);
 	bool AreTeamsAllied(Team.TeamId teamA, Team.TeamId teamB);
-	void IncludeScript(string script);
-	bool IsDetpack();
-	bool IsDispenser();
-	bool IsGrenade();
-	bool IsPlayer();
-	bool IsSentrygun();	
 	void ConsoleToAll(string message);
 	int NumPlayers();
 	void PrecacheModel(string model);
@@ -494,13 +647,19 @@ namespace ffmod
 	void KillAndRespawnAllPlayers();
 	void SetGlobalRespawnDelay(float delay);
 	void SetPlayerLimit(Team.TeamId teamId, int maxPlayers);
-//	def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
 	void SetClassLimits(Team.TeamId teamId, Player.ClassId classId, int limit);
-//	def("SetTeamClassLimit",		&FFLib::SetTeamClassLimit),
 	void SetTeamName(Team.TeamId teamId, string name);
 	void SmartMessage(int player_id, string playerMsg, string teamMsg, string otherMsg);
 	void SmartSound(int player_id, string playerSound, string teamSound, string otherSound);
 	void SmartTeamMessage(Team.TeamId teamId, string teamMsg, string otherMsg);
 	void SmartTeamSound(Team.TeamId teamId, string teamSound, string otherSound);
-	
+	float GetServerTime();
+	void UseEntity(string itemName, string className, string action);	
+	void IncludeScript(string script);
+	void ResetAll(const luabind::adl::object& table);
+	void ResetTeam(Team team, const luabind::adl::object& table);
+	void ResetPlayer(Player player, const luabind::adl::object& table);
+	void ResetMap(const object& table);
+	float GetConvar(string szConvar);
+	void SetConvar(string szConvar, float value);	
 }
