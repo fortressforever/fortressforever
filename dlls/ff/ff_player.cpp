@@ -25,6 +25,7 @@
 #include "ff_projectile_pipebomb.h"
 
 #include "client.h"
+#include "igameresources.h"
 
 #include <vector>
 #include <algorithm>
@@ -3637,9 +3638,9 @@ void CFFPlayer::RecalculateSpeed( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get a player's Steam ID
 //-----------------------------------------------------------------------------
-const char *CFFPlayer::GetSteamId( void )
+const char *CFFPlayer::GetSteamID( void )
 {
-	if( engine && engine->IsConnected() )
+	if( engine )
 		return engine->GetPlayerNetworkIDString( edict() );
 
 	return "\0";
