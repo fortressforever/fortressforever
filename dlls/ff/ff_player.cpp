@@ -3634,6 +3634,34 @@ void CFFPlayer::RecalculateSpeed( void )
 	DevMsg("[SpeedEffect] Resetting speed to %d\n", (int)speed);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Get a player's Steam ID
+//-----------------------------------------------------------------------------
+const char *CFFPlayer::GetSteamId( void )
+{
+	if( engine && engine->IsConnected() )
+		return engine->GetPlayerNetworkIDString( edict() );
+
+	return "\0";
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get a player's ping
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetPing( void )
+{
+	IGameResources *pGr = GameResources();
+
+	if( pGr )
+		return pGr->GetPing( entindex() );
+
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get a player's 
+//-----------------------------------------------------------------------------
+
 void CFFPlayer::Infect( CFFPlayer *pInfector )
 {
 	if( !m_bInfected && !m_bImmune )

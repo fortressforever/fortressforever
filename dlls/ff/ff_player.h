@@ -560,6 +560,7 @@ protected:
 	CHandle< CFFSaveMe >	m_hSaveMe;
 
 public:
+	// Some luabind functions
 	bool IsInAttack1( void ) const	{ return ( m_nButtons & IN_ATTACK ) ? true : false; }
 	bool IsInAttack2( void ) const	{ return ( m_nButtons & IN_ATTACK2 ) ? true : false; }
 	bool IsInUse( void ) const		{ return ( m_nButtons & IN_USE ) ? true : false; }
@@ -579,8 +580,8 @@ public:
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
 
-	// Possible crash: Should I check if engine is valid or engine->IsConnected() first?
-	const char *GetSteamID( void )	{ return engine->GetPlayerNetworkIDString( edict() ); }
+	const char *GetSteamID( void );
+	int GetPing( void );
 
 private:
 	int GetNewDisguisedClass( void );
