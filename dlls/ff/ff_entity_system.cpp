@@ -375,20 +375,20 @@ namespace FFLib
 		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 	}
 
-	bool ApplyToParseFlags( const object& table, bool *pbFlags )
+	bool ApplyToParseFlags( const luabind::adl::object& table, bool *pbFlags )
 	{
-		if( table.is_valid() && ( type( table ) == LUA_TTABLE ) )
+		if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
 		{
 			// Iterate through the table
 			for( iterator ib( table ), ie; ib != ie; ++ib )
 			{
 				//std::string strKey = object_cast< std::string >( ib.key() );
 
-				object val = *ib;
+				luabind::adl::object val = *ib;
 
-				if( type( val ) == LUA_TNUMBER )
+				if( luabind::type( val ) == LUA_TNUMBER )
 				{
-					int iIndex = object_cast< int >( val );
+					int iIndex = luabind::object_cast< int >( val );
 
 					// Make sure within bounds
 					if( ( iIndex >= 0 ) && ( iIndex < AT_MAX_FLAG ) )
@@ -406,7 +406,7 @@ namespace FFLib
 		return false;
 	}
 
-	void ApplyToAll( const object& table )
+	void ApplyToAll( const luabind::adl::object& table )
 	{
 		bool bFlags[ AT_MAX_FLAG ] = { false };
 
@@ -417,7 +417,7 @@ namespace FFLib
 		}
 	}
 
-	void ApplyToTeam( CFFTeam *pTeam, const object& table )
+	void ApplyToTeam( CFFTeam *pTeam, const luabind::adl::object& table )
 	{
 		bool bFlags[ AT_MAX_FLAG ] = { false };
 
@@ -428,7 +428,7 @@ namespace FFLib
 		}
 	}
 
-	void ApplyToPlayer( CFFPlayer *pPlayer, const object& table )
+	void ApplyToPlayer( CFFPlayer *pPlayer, const luabind::adl::object& table )
 	{
 		bool bFlags[ AT_MAX_FLAG ] = { false };
 
@@ -439,7 +439,7 @@ namespace FFLib
 		}
 	}
 
-	void ResetMap( const object& table )
+	void ResetMap( const luabind::adl::object& table )
 	{
 		bool bFlags[ AT_MAX_FLAG ] = { false };
 
@@ -450,7 +450,7 @@ namespace FFLib
 		}
 	}
 
-	void RespawnAllPlayers( const object& table )
+	void RespawnAllPlayers( void )
 	{		
 		// loop through each player
 		for (int i=0; i<gpGlobals->maxClients; i++)
@@ -1096,6 +1096,36 @@ void CFFEntitySystem::FFLibOpen()
 			.def_readwrite("Yellow",	&CPlayerLimits::yellow)
 			.def_readwrite("Green",		&CPlayerLimits::green),
 
+		class_<CFFEntity_ApplyTo_Flags>("AT")
+			.enum_("ApplyToFlagId")
+			[
+				value("kKillPlayers",		AT_KILL_PLAYERS),
+				value("kRespawnPlayers",	AT_RESPAWN_PLAYERS),
+				value("kDropItems",			AT_DROP_ITEMS),
+				value("kForceDropItems",	AT_FORCE_DROP_ITEMS),
+				value("kThrowItems",		AT_THROW_ITEMS),
+				value("kForceThrowItems",	AT_FORCE_THROW_ITEMS),
+				value("kReturnCarriedItems",	AT_RETURN_CARRIED_ITEMS),
+				value("kReturnDroppedItems",	AT_RETURN_DROPPED_ITEMS),
+				value("kRemoveRagdolls",	AT_REMOVE_RAGDOLLS),
+				value("kRemovePacks",		AT_REMOVE_PACKS),
+				value("kRemoveProjectiles",	AT_REMOVE_PROJECTILES),
+				value("kRemoveBuildables",	AT_REMOVE_BUILDABLES),
+				value("kRemoveDecals",		AT_REMOVE_DECALS),
+
+				value("kChangeClassScout",	AT_CHANGECLASS_SCOUT),
+				value("kChangeClassSniper",	AT_CHANGECLASS_SNIPER),
+				value("kChangeClassSoldier",	AT_CHANGECLASS_SOLDIER),
+				value("kChangeClassDemoman",	AT_CHANGECLASS_DEMOMAN),
+				value("kChangeClassMedic",	AT_CHANGECLASS_MEDIC),
+				value("kChangeClassHWGuy",	AT_CHANGECLASS_HWGUY),
+				value("kChangeClassPyro",	AT_CHANGECLASS_PYRO),
+				value("kChangeClassSpy",	AT_CHANGECLASS_SPY),
+				value("kChangeClassEngineer",	AT_CHANGECLASS_ENGINEER),
+				value("kChangeClassCivilian",	AT_CHANGECLASS_CIVILIAN),
+				value("kChangeClassRandom",	AT_CHANGECLASS_RANDOM)
+			],
+
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
 			.def("EmitSound",			&CBaseEntity::PlaySound)
@@ -1219,7 +1249,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetDisguisable",		&CFFPlayer::SetDisguisable)
 			.def("SetLocation",			&CFFPlayer::SetLocation)
 			.def("SetRespawnDelay",		&CFFPlayer::LUA_SetPlayerRespawnDelay)
-			.def("InstaSwitch",			&CFFPlayer::InstaSwitch)
+			//.def("InstaSwitch",			&CFFPlayer::InstaSwitch) -- doing this as part of ApplyToPlayer()
 			.def("GiveWeapon",			&CFFPlayer::GiveNamedItem)
 			.def("RemoveWeapon",		&CFFPlayer::TakeNamedItem)
 			.def("RemoveAllWeapons",	&CFFPlayer::RemoveAllItems)
