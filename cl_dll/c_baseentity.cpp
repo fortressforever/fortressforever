@@ -1323,7 +1323,10 @@ void C_BaseEntity::GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType
 //-----------------------------------------------------------------------------
 const Vector& C_BaseEntity::GetAbsOrigin( void ) const
 {
-	Assert( s_bAbsQueriesValid );
+	char szBuffer[ 256 ];
+	Q_snprintf( szBuffer, sizeof( szBuffer ), "C: %s", const_cast< C_BaseEntity * >( this )->GetClassname() );
+
+	AssertMsg( s_bAbsQueriesValid, szBuffer );
 	const_cast<C_BaseEntity*>(this)->CalcAbsolutePosition();
 	return m_vecAbsOrigin;
 }
