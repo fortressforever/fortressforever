@@ -309,7 +309,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void _AddDebugLineToDraw(obLineType _type, const float _start[3], const float _end[3], const float _color[3])
+	static void _AddDebugLineToDraw(LineType _type, const float _start[3], const float _end[3], const float _color[3])
 	{
 		debugLines_t line;
 		line.type = _type;
@@ -507,9 +507,8 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static int obGetEntityFlags(const GameEntity _ent)
+	static obResult obGetEntityFlags(const GameEntity _ent, UserFlags64 &_entflags)
 	{
-		int iFlags = 0;
 		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
 		if(pEntity)
 		{
@@ -518,36 +517,52 @@ namespace Omnibot
 			case CLASS_PLAYER:
 				{
 					if(pEntity->GetHealth() <= 0 || pEntity->GetTeamNumber() == TEAM_SPECTATOR)
-						iFlags |= ENT_FLAG_DEAD;
+						_entflags.SetFlag(ENT_FLAG_DEAD);
 					
 					int iWaterLevel = pEntity->GetWaterLevel();
 					if(iWaterLevel == 3)
-						iFlags |= ENT_FLAG_UNDERWATER;
+						_entflags.SetFlag(ENT_FLAG_UNDERWATER);
 					else if(iWaterLevel >= 2)
-						iFlags |= ENT_FLAG_INWATER;
+						_entflags.SetFlag(ENT_FLAG_INWATER);
 
 					if(pEntity->GetFlags() & FL_DUCKING)
-						iFlags |= ENT_FLAG_CROUCHED;
+						_entflags.SetFlag(ENT_FLAG_CROUCHED);
 
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 					if(pffPlayer)
 					{
 						if(pffPlayer->IsOnLadder())
-							iFlags |= ENT_FLAG_LADDER;
+							_entflags.SetFlag(ENT_FLAG_LADDER);
 						if(pffPlayer->IsSpeedEffectSet(SE_SNIPERRIFLE))
-							iFlags |= TF_ENT_SNIPERAIMING;
+							_entflags.SetFlag(TF_ENT_FLAG_SNIPERAIMING);
 						if(pffPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
-							iFlags |= TF_ENT_ASSAULTFIRING;
+							_entflags.SetFlag(TF_ENT_FLAG_ASSAULTFIRING);
 						if(pffPlayer->IsSpeedEffectSet(SE_LEGSHOT))
-							iFlags |= TF_ENT_LEGSHOT;
+							_entflags.SetFlag(TF_ENT_FLAG_LEGSHOT);
 						if(pffPlayer->IsSpeedEffectSet(SE_TRANQ))
-							iFlags |= TF_ENT_FLAG_TRANQED;
+							_entflags.SetFlag(TF_ENT_FLAG_TRANQED);
 						if(pffPlayer->IsSpeedEffectSet(SE_CALTROP))
-							iFlags |= TF_ENT_CALTROP;
+							_entflags.SetFlag(TF_ENT_FLAG_CALTROP);
 						if(pffPlayer->IsRadioTagged())
-							iFlags |= TF_ENT_RADIOTAGGED;
+							_entflags.SetFlag(TF_ENT_FLAG_RADIOTAGGED);
 						if(pffPlayer->m_hSabotaging)
-							iFlags |= TF_ENT_SABOTAGING;
+							_entflags.SetFlag(TF_ENT_FLAG_SABOTAGING);
+
+						if(pffPlayer->m_bBuilding)
+						{
+							switch(pffPlayer->m_iCurBuild)
+							{
+							case FF_BUILD_DISPENSER:
+								_entflags.SetFlag(TF_ENT_FLAG_BUILDING_DISP);
+								break;
+							case FF_BUILD_SENTRYGUN:
+								_entflags.SetFlag(TF_ENT_FLAG_BUILDING_SG);
+								break;
+							case FF_BUILD_DETPACK:
+								_entflags.SetFlag(TF_ENT_FLAG_BUILDING_DETP);
+								break;
+							}
+						}
 					}
 					break;
 				}
@@ -567,24 +582,20 @@ namespace Omnibot
 			if(pBuildable)
 			{
 				if(pBuildable->CanSabotage())
-					iFlags |= TF_ENT_CAN_SABOTAGE;
+					_entflags.SetFlag(TF_ENT_FLAG_CAN_SABOTAGE);
 				if(pBuildable->IsSabotaged())
-					iFlags |= TF_ENT_SABOTAGED;
+					_entflags.SetFlag(TF_ENT_FLAG_SABOTAGED);
 				// need one for when shooting teammates?
 			}
-
-			
+			return Success;
 		}
-
-		return iFlags;
+		return InvalidEntity;
 	}
 
 	//-----------------------------------------------------------------
 
-	static int obGetEntityPowerups(const GameEntity _ent)
-	{		
-		int iPowerUps = 0;
-
+	static obResult obGetEntityPowerups(const GameEntity _ent, UserFlags64 &_powerups)
+	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
 		if(pEntity)
 		{
@@ -595,7 +606,7 @@ namespace Omnibot
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 					
 					if(pffPlayer->IsFeigned())
-						iPowerUps |= TF_PW_FEIGNED;
+						_powerups.SetFlag(TF_PWR_FEIGNED);
 
 					// Disguises
 					if(pffPlayer)
@@ -603,58 +614,60 @@ namespace Omnibot
 						switch(pffPlayer->GetDisguisedTeam())
 						{
 						case TEAM_BLUE:
-							iPowerUps |= TF_PW_DISGUISE_BLUE;
+							_powerups.SetFlag(TF_PWR_DISGUISE_BLUE);
 							break;
 						case TEAM_RED:
-							iPowerUps |= TF_PW_DISGUISE_RED;
+							_powerups.SetFlag(TF_PWR_DISGUISE_RED);
 							break;
 						case TEAM_YELLOW:
-							iPowerUps |= TF_PW_DISGUISE_YELLOW;
+							_powerups.SetFlag(TF_PWR_DISGUISE_YELLOW);
 							break;
 						case TEAM_GREEN:
-							iPowerUps |= TF_PW_DISGUISE_GREEN;
+							_powerups.SetFlag(TF_PWR_DISGUISE_GREEN);
 							break;
 						}
 						switch(pffPlayer->GetDisguisedClass())
 						{
 						case CLASS_SCOUT:
-							iPowerUps |= TF_PW_DISGUISE_SCOUT;
+							_powerups.SetFlag(TF_PWR_DISGUISE_SCOUT);
 							break;
 						case CLASS_SNIPER:
-							iPowerUps |= TF_PW_DISGUISE_SNIPER;
+							_powerups.SetFlag(TF_PWR_DISGUISE_SNIPER);
 							break;
 						case CLASS_SOLDIER:
-							iPowerUps |= TF_PW_DISGUISE_SOLDIER;
+							_powerups.SetFlag(TF_PWR_DISGUISE_SOLDIER);
 							break;
 						case CLASS_DEMOMAN:
-							iPowerUps |= TF_PW_DISGUISE_DEMOMAN;
+							_powerups.SetFlag(TF_PWR_DISGUISE_DEMOMAN);
 							break;
 						case CLASS_MEDIC:
-							iPowerUps |= TF_PW_DISGUISE_MEDIC;
+							_powerups.SetFlag(TF_PWR_DISGUISE_MEDIC);
 							break;
 						case CLASS_HWGUY:
-							iPowerUps |= TF_PW_DISGUISE_HWGUY;
+							_powerups.SetFlag(TF_PWR_DISGUISE_HWGUY);
 							break;
 						case CLASS_PYRO:
-							iPowerUps |= TF_PW_DISGUISE_PYRO;
+							_powerups.SetFlag(TF_PWR_DISGUISE_PYRO);
 							break;
 						case CLASS_SPY:
-							iPowerUps |= TF_PW_DISGUISE_SPY;
+							_powerups.SetFlag(TF_PWR_DISGUISE_SPY);
 							break;
 						case CLASS_ENGINEER:
-							iPowerUps |= TF_PW_DISGUISE_ENGINEER;
+							_powerups.SetFlag(TF_PWR_DISGUISE_ENGINEER);
 							break;
 						case CLASS_CIVILIAN:
-							iPowerUps |= TF_PW_DISGUISE_CIVILIAN;
+							_powerups.SetFlag(TF_PWR_DISGUISE_CIVILIAN);
 							break;
 						}
 					}
 					break;
 				}
+			/*case CLASS_SENTRYGUN:
+			case CLASS_DISPENSER:*/
 			}
+			return Success;
 		}
-
-		return iPowerUps;
+		return InvalidEntity;
 	}	
 
 	//-----------------------------------------------------------------
@@ -857,10 +870,9 @@ namespace Omnibot
 		for ( CBaseEntity *pEntity = gEntList.FirstEnt(); pEntity != NULL; pEntity = gEntList.NextEnt(pEntity) )
 		{
 			// default data.
-			info.m_EntityFlags = 0;
+			info.m_EntityFlags.ClearAll();
 			info.m_EntityCategory = 0;
 			info.m_EntityClass = TF_CLASS_NONE;
-			info.m_UserData.DataType = BotUserData::dtNone;
 			
 			switch(pEntity->Classify())
 			{
@@ -871,7 +883,7 @@ namespace Omnibot
 					ASSERT(pFFPlayer);
 					info.m_EntityClass = obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());				
 					info.m_EntityCategory = ENT_CAT_SHOOTABLE | ENT_CAT_PLAYER;
-					info.m_EntityFlags = obGetEntityFlags(pFFPlayer->edict());
+					obGetEntityFlags(pFFPlayer->edict(), info.m_EntityFlags);
 					break;
 				}
 			case CLASS_DISPENSER:
@@ -980,7 +992,7 @@ namespace Omnibot
 		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
-			QAngle viewAngles = pEntity->GetLocalAngles();
+			QAngle viewAngles = pEntity->EyeAngles();
 			AngleVectors(viewAngles, (Vector*)_fwd, (Vector*)_right, (Vector*)_up);
 			return Success;
 		}
@@ -995,7 +1007,7 @@ namespace Omnibot
 		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
-			QAngle viewAngles = pEntity->GetLocalAngles();
+			QAngle viewAngles = pEntity->EyeAngles();
 			AngleVectors(viewAngles, (Vector*)_fwd, (Vector*)_right, (Vector*)_up);
 			return Success;
 		}
@@ -1127,7 +1139,7 @@ namespace Omnibot
 		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
-			return pEntity->GetTeamNumber();
+			return obUtilGetBotTeamFromGameTeam(pEntity->GetTeamNumber());
 		}
 		return 0;
 	}
@@ -1259,7 +1271,7 @@ namespace Omnibot
 				{
 					pMsg->m_CurrentHealth = pPlayer->GetHealth();
 					pMsg->m_MaxHealth = pPlayer->GetMaxHealth();
-					pMsg->m_CurrentArmor = pPlayer->ArmorValue();
+					pMsg->m_CurrentArmor = pPlayer->GetArmor();
 					pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
 				}
 				break;
@@ -1285,33 +1297,9 @@ namespace Omnibot
 				}
 				break;
 			}
-		case TF_MSG_ISBUILDING:
-			{
-				TF_Building *pMsg = _data.Get<TF_Building>();
-				if(pMsg)
-				{
-					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
-					if(pFFPlayer && pFFPlayer->m_bBuilding)
-					{
-						switch(pFFPlayer->m_iCurBuild)
-						{
-						case FF_BUILD_DISPENSER:
-							pMsg->m_Building = BUILDING_DISPENSER;
-							break;
-						case FF_BUILD_SENTRYGUN:
-							pMsg->m_Building = BUILDING_SENTRY;
-							break;
-						case FF_BUILD_DETPACK:
-							pMsg->m_Building = BUILDING_DETPACK;
-							break;
-						}
-					}
-				}				
-				break;
-			}
 		case TF_MSG_GETBUILDABLES:
 			{
-				TF_Buildables *pMsg = _data.Get<TF_Buildables>();
+				TF_BuildInfo *pMsg = _data.Get<TF_BuildInfo>();
 				if(pMsg)
 				{
 					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
@@ -1374,6 +1362,23 @@ namespace Omnibot
 				{
 					serverpluginhelpers->ClientCommand(pPlayer->edict(), 
 						pMsg->m_SilentFeign ? "sfeign" : "feign");                    					
+				}
+				break;
+			}
+		case TF_MSG_LOCKPOSITION:
+			{
+				TF_LockPosition *pMsg = _data.Get<TF_LockPosition>();
+				if(pMsg)
+				{
+					CBaseEntity *pEnt = CBaseEntity::Instance( (edict_t*)pMsg->m_TargetPlayer );
+					if(pEnt)
+					{
+						if(pMsg->m_Lock == True)
+							pEnt->AddFlag( FL_FROZEN );
+						else
+							pEnt->RemoveFlag( FL_FROZEN );
+						pMsg->m_Succeeded = True;
+					}
 				}
 				break;
 			}
@@ -1525,7 +1530,7 @@ namespace Omnibot
 			const char *pNewWeapon = obUtilGetStringFromWeaponId(_input->m_CurrentWeapon);
 			CBaseCombatWeapon *pCurrentWpn = pPlayer->GetActiveWeapon();
 
-			if(pNewWeapon && (!pCurrentWpn || !Q_strcmp(pCurrentWpn->GetClassname(), pNewWeapon)))
+			if(pNewWeapon && (!pCurrentWpn || !FStrEq(pCurrentWpn->GetClassname(), pNewWeapon)))
 			{
 				CBaseCombatWeapon *pWpn = pPlayer->Weapon_OwnsThisType(pNewWeapon);
 				if(pWpn != pCurrentWpn)
@@ -1846,21 +1851,21 @@ namespace Omnibot
 		/*if( !gameLocal.isServer )
 		return;*/
 
-		obPrintMessage( "------------ Omni-bot Shutdown --------------\n" );
-
-		Bot_Interface_SendGlobalEvent(GAME_ID_ENDGAME, -1, 0, 0);
+		
 		if(g_BotFunctions.pfnBotShutdown)
 		{
+			obPrintMessage( "------------ Omni-bot Shutdown --------------\n" );
+			Bot_Interface_SendGlobalEvent(GAME_ID_ENDGAME, -1, 0, 0);
 			g_BotFunctions.pfnBotShutdown();
-			obPrintMessage( "Omni-bot Shut Down Successfully\n" );
 			memset(&g_BotFunctions, 0, sizeof(g_BotFunctions));
+			obPrintMessage( "Omni-bot Shut Down Successfully\n" );
+			obPrintMessage( "---------------------------------------------\n" );
 		}
 		else
 		{
 			obPrintMessage( "Omni-bot Not Loaded\n" );
 		}
-		SHUTDOWNBOTLIBRARY;
-		obPrintMessage( "---------------------------------------------\n" );
+		SHUTDOWNBOTLIBRARY;		
 	}
 
 	void omnibot_interface::UpdateBotInterface()

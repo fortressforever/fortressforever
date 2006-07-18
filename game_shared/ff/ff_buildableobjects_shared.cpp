@@ -21,6 +21,10 @@
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
 
+#ifdef GAME_DLL
+#include "omnibot_interface.h"
+#endif
+
 CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float flBuildDist, float flRaiseVal) 
 {
 	m_BuildResult = BUILD_ERROR;
@@ -240,6 +244,11 @@ void CFFBuildableInfo::GetBuildError()
 		//Warning("%s\n", szError);
 #ifdef GAME_DLL
 		ClientPrint( m_pPlayer, HUD_PRINTCENTER, szError );
+
+		if(m_pPlayer && m_pPlayer->IsBot())
+		{
+			Omnibot::Notify_Build_CantBuild(m_pPlayer, m_pPlayer->m_iWantBuild);
+		}
 #endif
 	}
 }
