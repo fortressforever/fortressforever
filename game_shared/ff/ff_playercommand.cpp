@@ -65,11 +65,11 @@ bool CPlayerCommands::ProcessCommand(std::string strCommand, CBaseEntity *pEntit
 
 	// check to see if this is a skill command, and if it is we need to check if the player has that ability
 
-	DevMsg("Player %s triggered server player command %s.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+	//DevMsg("Player %s triggered server player command %s.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 
 	if(!(i->second->m_uiFlags & FF_CMD_ALIVE) && pPlayer->IsAlive())
 	{
-		DevMsg("Player %s tried to use command %s, but failed because that command requires player not to be alive.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+		Warning("Player %s tried to use command %s, but failed because that command requires player not to be alive.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 		return true;
 	}
 
