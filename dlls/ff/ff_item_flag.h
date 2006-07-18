@@ -102,8 +102,11 @@ protected:
 	virtual void	SetDropped( void );
 
 	bool CreateItemVPhysicsObject( void );
-	void PlayIdleAnim( void );
-	void PlayActiveAnim( void );
+
+	void PlayDroppedAnim( void );
+	void PlayCarriedAnim( void );
+	void PlayReturnedAnim( void	);
+	void InternalPlayAnim( Activity hActivity );
 
 protected:	
 
@@ -111,9 +114,7 @@ protected:
 
 	bool m_bUsePhysics;
 	
-	bool m_bHasAnims;
-	int m_iSequence;
-	Activity m_Activity;	
+	bool m_bHasAnims;	
 	CFFInfoScriptAnimator *m_pAnimator;
 
 	Vector m_vStartOrigin;

@@ -20,14 +20,9 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
-// IMPLEMENT THESE
 int ACT_INFO_RETURNED;
 int ACT_INFO_CARRIED;
 int ACT_INFO_DROPPED;
-
-// DEPRECATE THESE
-int ACT_INFO_IDLE;
-int ACT_INFO_ROLL;
 
 LINK_ENTITY_TO_CLASS( info_ff_script_animator, CFFInfoScriptAnimator );
 PRECACHE_REGISTER( CFFInfoScriptAnimator );
@@ -179,8 +174,9 @@ void CFFInfoScript::Spawn( void )
 	{
 		m_bHasAnims = true;
 
-		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_IDLE );
-		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_ROLL );
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_RETURNED );
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_DROPPED );
+		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_CARRIED );
 
 		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
 		if( m_pAnimator )
@@ -188,7 +184,7 @@ void CFFInfoScript::Spawn( void )
 			//Warning( "[info_ff_script] created animator!\n" );
 			m_pAnimator->Spawn();
 			m_pAnimator->m_pFFScript = this;
-		}		
+		}
 	}
 
 	if( entsys.RunPredicates( this, NULL, "usephysics" ) && !m_bUsePhysics )
@@ -201,28 +197,42 @@ void CFFInfoScript::Spawn( void )
 	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
 
-	PlayIdleAnim();
+	PlayReturnedAnim();
 }
 
-void CFFInfoScript::PlayIdleAnim( void )
+//-----------------------------------------------------------------------------
+// Purpose: Play an animation specific to this info_ff_script being dropped
+//-----------------------------------------------------------------------------
+void CFFInfoScript::PlayDroppedAnim( void )
 {
-	if( m_bHasAnims )
-	{		
-		ResetSequenceInfo();
-		m_Activity = ( Activity )ACT_INFO_IDLE;
-		m_iSequence = SelectWeightedSequence( m_Activity );
-		SetSequence( m_iSequence );
-	}
+	InternalPlayAnim( ( Activity )ACT_INFO_DROPPED );
 }
 
-void CFFInfoScript::PlayActiveAnim( void )
+//-----------------------------------------------------------------------------
+// Purpose: Play an animation specific to this info_ff_script being carried
+//-----------------------------------------------------------------------------
+void CFFInfoScript::PlayCarriedAnim( void )
+{
+	InternalPlayAnim( ( Activity )ACT_INFO_CARRIED );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Play an animation specific to this info_ff_script being returned
+//-----------------------------------------------------------------------------
+void CFFInfoScript::PlayReturnedAnim( void )
+{
+	InternalPlayAnim( ( Activity )ACT_INFO_RETURNED );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Play an animation
+//-----------------------------------------------------------------------------
+void CFFInfoScript::InternalPlayAnim( Activity hActivity )
 {
 	if( m_bHasAnims )
 	{
 		ResetSequenceInfo();
-		m_Activity = ( Activity )ACT_INFO_ROLL;
-		m_iSequence = SelectWeightedSequence( m_Activity );		
-		SetSequence( m_iSequence );
+		SetSequence( SelectWeightedSequence( hActivity ) );
 	}
 }
 
@@ -287,7 +297,7 @@ void CFFInfoScript::Pickup( CBaseEntity *pEntity )
 	SetThink( NULL );
 	SetNextThink( gpGlobals->curtime );
 
-	PlayActiveAnim();
+	PlayCarriedAnim();
 }
 
 void CFFInfoScript::Respawn(float delay)
@@ -330,7 +340,7 @@ void CFFInfoScript::OnRespawn( void )
 	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
 
-	PlayIdleAnim();
+	PlayReturnedAnim();
 }
 
 void CFFInfoScript::Drop( float delay, float speed )
@@ -458,7 +468,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 
 	SetOwnerEntity( NULL );
 
-	PlayIdleAnim();
+	PlayDroppedAnim();
 
 	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
 	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
@@ -486,7 +496,7 @@ void CFFInfoScript::Return( void )
 
 	CreateItemVPhysicsObject();
 
-	PlayIdleAnim();
+	PlayReturnedAnim();
 }
 
 void CFFInfoScript::OnThink( void )
