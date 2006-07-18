@@ -296,6 +296,9 @@ ConVar mp_prematch( "mp_prematch",
 		Assert( pbFlags );
 #endif
 
+		// For use later
+		int iNumChangeClassFlags = 0;
+
 		bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
 		bool bUsePlayer = pFFPlayer ? true : false;
 
@@ -306,6 +309,13 @@ ConVar mp_prematch( "mp_prematch",
 			bUseTeam = false;
 		}
 
+		// Sum up the number of changeclass flags set, if any
+		for( int i = AT_CHANGECLASS_SCOUT; i < AT_CHANGECLASS_RANDOM; i++ )
+		{
+			if( pbFlags[ i ] )
+				iNumChangeClassFlags++;
+		}
+
 		// Full map reset, really only used w/ ff_restartround as it restarts
 		// absolutely everything - scores, players, entities, etc.
 		if( bFullReset )
@@ -313,6 +323,7 @@ ConVar mp_prematch( "mp_prematch",
 			// Set these to false so we do an "all" type of update later
 			bUseTeam = false;
 			bUsePlayer = false;
+			iNumChangeClassFlags = 0;
 		}
 		
 		if( bFullReset )
@@ -374,6 +385,18 @@ ConVar mp_prematch( "mp_prematch",
 
 				// Please don't change the order. They're set up hopefully
 				// to work correctly.
+
+				// 1 or more changeclass flags was set
+				if( iNumChangeClassFlags > 0 )
+				{
+					if( iNumChangeClassFlags == 1 )
+					{
+					}
+					else
+					{
+						// Pick a random class
+					}
+				}
 
 				if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
 				{
