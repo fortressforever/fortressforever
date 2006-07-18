@@ -573,7 +573,7 @@ void CFFBuildableObject::DoExplosion( void )
 		EmitSound( sndFilter, entindex(), m_ppszSounds[ 1 ] );	
 	}
 	else
-		DevMsg( "CFFBuildableObject::DoExplosion - ERROR - NO EXPLOSION SOUND (might want to add one)!\n" );
+		Warning( "CFFBuildableObject::DoExplosion - ERROR - NO EXPLOSION SOUND (might want to add one)!\n" );
 
 	// Mirv: Moved explosion damage logic into the derived classes
 	DoExplosionDamage();
@@ -594,12 +594,12 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// the model when it went solid finally.
 
 	//*
-	Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );
+	//Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );
 
-	if( info.GetInflictor() )
-		Warning( "[Buildable] Inflictor: %s\n", info.GetInflictor()->GetClassname() );
-	if( info.GetAttacker() )
-		Warning( "[Buildable] Attacker: %s\n", info.GetAttacker()->GetClassname() );
+	//if( info.GetInflictor() )
+	//	Warning( "[Buildable] Inflictor: %s\n", info.GetInflictor()->GetClassname() );
+	//if( info.GetAttacker() )
+	//	Warning( "[Buildable] Attacker: %s\n", info.GetAttacker()->GetClassname() );
 
 	if( info.GetInflictor() )
 	{
@@ -630,14 +630,14 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// Depending on the teamplay value, take damage
 	if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), info.GetAttacker() ) )
 	{
-		DevMsg( "[Buildable] Teammate or ally is attacking me so don't take damage!\n" );
+		//DevMsg( "[Buildable] Teammate or ally is attacking me so don't take damage!\n" );
 		return 0;
 	}
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if(( info.GetAttacker() == m_hOwner.Get() ) && ( friendlyfire.GetInt() == 0 ))
 	{
-		DevMsg( "[Buildable] My owner is attacking me & friendly fire is off so don't take damage!\n" );
+		//DevMsg( "[Buildable] My owner is attacking me & friendly fire is off so don't take damage!\n" );
 		return 0;
 	}
 

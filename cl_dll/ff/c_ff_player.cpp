@@ -1006,16 +1006,14 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	else if( !m_bBuilding && m_bClientBuilding )
 	{
 		// We stopped building
-		DevMsg( "Stopped building (or cancelled building)\n" );
+		//DevMsg( "Stopped building (or cancelled building)\n" );
 
 		SetAbsVelocity( Vector( 0, 0, 0 ) );
 
-		// If the timer still exists and we've stopped building (or cancelled)
-		// then kill it off manually
-		C_FFTimer *pTimer = g_FFTimers.FindTimer( FF_BUILDABLE_TIMER_BUILD_STRING );
+		/*C_FFTimer *pTimer = g_FFTimers.FindTimer( FF_BUILDABLE_TIMER_BUILD_STRING );
 
 		if( pTimer )
-			g_FFTimers.DeleteTimer( pTimer );
+			g_FFTimers.DeleteTimer( pTimer );*/
 /*	
 
 		// Code to get mins/maxs of a model - leave in please

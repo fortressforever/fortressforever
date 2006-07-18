@@ -422,7 +422,7 @@ void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalNa
 
 #ifdef _DEBUG
 			// Draw the trace
-			debugoverlay->AddLineOverlay( tr[ iTraceCount - 1 ].startpos, tr[ iTraceCount - 1 ].endpos, 255, 0, 0, false, 2.0f );
+			//debugoverlay->AddLineOverlay( tr[ iTraceCount - 1 ].startpos, tr[ iTraceCount - 1 ].endpos, 255, 0, 0, false, 2.0f );
 #endif
 
 			// [Trace didn't finish so] we hit something
@@ -440,11 +440,11 @@ void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalNa
 
 	if( iIndex != -1 )
 	{
-		DevMsg( "[FF_DecalTrace] Drawing a scorch mark!\n" );
+		//DevMsg( "[FF_DecalTrace] Drawing a scorch mark!\n" );
 		UTIL_DecalTrace( &tr[ iIndex ], pszDecalName );
 	}
-	else
-		DevMsg( "[FF_DecalTrace] Didn't hit anything - no scorch mark!\n" );
+	//else
+		//DevMsg( "[FF_DecalTrace] Didn't hit anything - no scorch mark!\n" );
 #endif
 }
 
