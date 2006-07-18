@@ -2355,7 +2355,11 @@ void CFFPlayer::Command_BuildDetpack( void )
 		if(!bInRange)
 		{
 			char szBuffer[16];
-			ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", itoa((int) m_iDetpackTime, szBuffer, 10));
+			Q_snprintf( szBuffer, sizeof( szBuffer ), "%i", m_iDetpackTime );
+
+			// EDIT: There's no gcc/g++ itoa apparently?
+			//ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", itoa((int) m_iDetpackTime, szBuffer, 10));
+			ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", szBuffer);
 		}
 
 		// Bug #0000453: Detpack timer can't be anything other than multiples of five
