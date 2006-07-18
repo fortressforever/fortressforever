@@ -463,6 +463,18 @@ public:
 	* @return player's Steam ID
 	*/
 	string GetSteamID();
+
+	/**
+	* Gets the player's ping
+	* @return player's ping
+	*/
+	int GetPing();
+
+	/**
+	* Gets the player's packetloss
+	* @return player's packetloss
+	*/
+	int GetPacketloss();
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -669,4 +681,6 @@ namespace ffmod
 	float GetConvar(string szConvar);
 	void SetConvar(string szConvar, float value);
 	string GetSteamID(Player player);
+	int GetPing(Player player);
+	int GetPacketloss(Player player);
 }
