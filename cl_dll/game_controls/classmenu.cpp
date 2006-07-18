@@ -161,12 +161,15 @@ void CClassMenu::Update()
 
 	int iClassNumbers[12] = {0};
 
+	// number of classes available
+	int iVisibleButtons = 0;
+
 	// A quick count of who is what class
 	for (int i = 1; i < gpGlobals->maxClients; i++) 
 	{
 		if (pGR->IsConnected(i) && pGR->GetTeam(i) == C_BasePlayer::GetLocalPlayer()->GetTeamNumber()) 
 			iClassNumbers[pGR->GetClass(i) ]++;
-	}
+	}	
 
 	// We have to do this in here because it keeps breaking otherwise
 	for (int iClass = 0; iClass < 10; iClass++) 
@@ -181,7 +184,18 @@ void CClassMenu::Update()
 		if (class_limit == -1 || (class_limit > 0 && slots_avail <= 0)) 
 			pClassButton->SetVisible(false);
 		else
+		{
 			pClassButton->SetVisible(true);
+			iVisibleButtons++;
+		}
+	}
+
+	// Only one available class, disable random
+	if( iVisibleButtons <= 1 )
+	{
+		pClassButton = ( vgui::Button * )FindChildByName( "randombutton" );
+		if( pClassButton )
+			pClassButton->SetVisible( false );
 	}
 
 	// If they are unassigned then they have to choose a class really
