@@ -42,7 +42,6 @@ public:
 	void Precache( void );
 };
 
-
 //============================================================================
 // CFFEntitySystem
 //============================================================================
@@ -91,5 +90,14 @@ public:
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
 
 extern CFFEntitySystem entsys;
+
+//============================================================================
+// CFFEntity_ApplyToFlags
+// Purpose: this is a fake class to expose AT_ flags to lua easily
+//============================================================================
+class CFFEntity_ApplyTo_Flags
+{
+public:
+};
 
 #endif // FF_ENTITY_SYSTEM_H
