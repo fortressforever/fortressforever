@@ -5065,7 +5065,8 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 		return;
 
 	// TODO: Make sure we can change to this class!
-	// TODO: Remove buildables for sure but everything else should be specified
+	// TODO: Remove buildables for sure but everything else should be specified.
+	// TODO: Probably incorporate this into ApplyToPlayer() lua function...
 
 	m_iNextClass = iClassNum;
 
