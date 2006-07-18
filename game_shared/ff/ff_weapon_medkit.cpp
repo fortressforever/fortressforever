@@ -101,7 +101,7 @@ void CFFWeaponMedkit::SecondaryAttack()
 //----------------------------------------------------------------------------
 void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity) 
 {
-	DevMsg("[CFFWeaponMedkit] Hit\n");
+	//DevMsg("[CFFWeaponMedkit] Hit\n");
 
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
@@ -110,12 +110,12 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 	if (pHitEntity != NULL && pHitEntity->IsPlayer()) 
 	{
 		CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
-		DevMsg("[medkit] hit other player.. team: %d(mine: %d) \n", pPlayer->GetTeamNumber(), pTarget->GetTeamNumber());
+		//DevMsg("[medkit] hit other player.. team: %d(mine: %d) \n", pPlayer->GetTeamNumber(), pTarget->GetTeamNumber());
 
 		// check if they are allies
 		if (g_pGameRules->PlayerRelationship(pPlayer, pTarget) == GR_TEAMMATE) 
 		{
-			DevMsg("[medkit] Same Team\n");
+			//DevMsg("[medkit] Same Team\n");
 			// if they are same team, then cure the player
 
 #ifdef GAME_DLL
@@ -151,7 +151,7 @@ void CFFWeaponMedkit::Hit(trace_t &traceHit, Activity nHitActivity)
 #ifdef GAME_DLL
 				// otherwise, if they are bad people, then infect them
 				pTarget->Infect(pPlayer);
-				DevMsg("[medkit] Infected Player\n");
+				//DevMsg("[medkit] Infected Player\n");
 #endif
 			}
 
@@ -174,7 +174,7 @@ void CFFWeaponMedkit::WeaponSound(WeaponSound_t sound_type, float soundtime /* =
 {
 	if (m_flNextSecondaryAttack > gpGlobals->curtime)
 	{
-		DevMsg("Ignored");
+		//DevMsg("Ignored");
 		return;
 	}
 	

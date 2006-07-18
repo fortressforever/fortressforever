@@ -671,13 +671,13 @@ bool CFFSentryGun::UpdateFacing( void )
 #ifdef _DEBUG
 	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
 		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
-	if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
-	{
-		NDebugOverlay::Line(EyePosition(), EyePosition() + dir * 300.0f, 40, 40, 40, false, 0.05f);
-		NDebugOverlay::Line(EyePosition(), EyePosition() + vecBaseUp * 300.0f, 110, 110, 110, false, 0.05f);
-		NDebugOverlay::Line(EyePosition(), EyePosition() + cross * 300.0f, 180, 180, 180, false, 0.05f);
-		NDebugOverlay::Line(EyePosition(), EyePosition() + fwd * 300.0f, 255, 255, 255, false, 0.05f);
-	}
+	//if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
+	//{
+	//	NDebugOverlay::Line(EyePosition(), EyePosition() + dir * 300.0f, 40, 40, 40, false, 0.05f);
+	//	NDebugOverlay::Line(EyePosition(), EyePosition() + vecBaseUp * 300.0f, 110, 110, 110, false, 0.05f);
+	//	NDebugOverlay::Line(EyePosition(), EyePosition() + cross * 300.0f, 180, 180, 180, false, 0.05f);
+	//	NDebugOverlay::Line(EyePosition(), EyePosition() + fwd * 300.0f, 255, 255, 255, false, 0.05f);
+	//}
 #endif
 
 	// Target pitch = constrained goal pitch - current pitch
@@ -899,8 +899,8 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 #ifdef _DEBUG
 	/* VOOGRU: I debug with dedicated server, and I don't want srcds to throw 
 		util.cpp (552) : Assertion Failed: !"UTIL_GetListenServerHost" */
-	if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
-		NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
+	//if( sg_debug.GetBool() && !engine->IsDedicatedServer()) 
+	//	NDebugOverlay::Line( EyePosition(), origin, 255, 0, 255, false, 5.0f );
 #endif
 
 	CFFPlayer *pOwner = static_cast<CFFPlayer *>( m_hOwner.Get() );

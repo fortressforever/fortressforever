@@ -92,7 +92,7 @@ void CFFWeaponSpanner::PrimaryAttack( void )
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	if( pPlayer->m_bBuilding )
 	{
-		DevMsg( "[Spanner] Player is building - need to cancel build since they are hitting +attack\n" );
+		//DevMsg( "[Spanner] Player is building - need to cancel build since they are hitting +attack\n" );
 
 		switch( pPlayer->m_iCurBuild )
 		{
@@ -144,26 +144,26 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			return;
 		}
 
-		DevMsg("[CFFWeaponSpanner] Hit a player\n");
+		//DevMsg("[CFFWeaponSpanner] Hit a player\n");
 
 		// Can the guy we hit take damage from us? If he can't, he's
 		// on our team or our ally so give him some armor!
 		// Bug #0000521: Engineer's spanner shouldn't inflict damage even with mp_friendlyfire 1
 		if( g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )		
 		{
-			DevMsg("[CFFWeaponSpanner] Player is on my team or an ally - so giving armor!\n");
+			//DevMsg("[CFFWeaponSpanner] Player is on my team or an ally - so giving armor!\n");
 
 			// See how much the player needs...
 			int iNeedsArmor = pHitPlayer->NeedsArmor();
 
 			if (iNeedsArmor > 0) 
 			{
-				DevMsg("[CFFWeaponSpanner] Player NEEDS armor!\n");
+				//DevMsg("[CFFWeaponSpanner] Player NEEDS armor!\n");
 
 				// If we've got 10 cells...
 				if (pPlayer->GetAmmoCount(AMMO_CELLS) >= 10) 
 				{
-					DevMsg("[CFFWeaponSpanner] Giving armor and reducing my cells\n");
+					//DevMsg("[CFFWeaponSpanner] Giving armor and reducing my cells\n");
 
 					int armour_needed = max(pHitPlayer->NeedsArmor(), 50);
 					int armour_given = min(armour_needed, 5 * pPlayer->GetAmmoCount(AMMO_CELLS));
@@ -174,7 +174,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			}
 			else
 			{
-				DevMsg("[CFFWeaponSpanner] Player DOES NOT NEED armor!\n");
+				//DevMsg("[CFFWeaponSpanner] Player DOES NOT NEED armor!\n");
 			}
 
 			// Don't want to call the baseclass hit func cause
@@ -184,7 +184,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		}
 		else
 		{
-			DevMsg("[CFFWeaponSpanner] Player is not on my team and not an ally - so sending to baseclass to hurt!\n");
+			//DevMsg("[CFFWeaponSpanner] Player is not on my team and not an ally - so sending to baseclass to hurt!\n");
 		}		
 	}
 	else
@@ -207,7 +207,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// If the dispenser is mine, a team mates, or an allies, don't hurt it, ever
 			if( bMine || bFriendly ) 
 			{
-				DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is mine, a team mates, or an allies, don't hurt it!\n");
+				//DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is mine, a team mates, or an allies, don't hurt it!\n");
 
 				// If it's damaged, restore it's health on the first clang
 				if( pDispenser->NeedsHealth() ) 
@@ -244,7 +244,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				return;
 			}
 
-			DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is not mine, a team mates, or an allies. HURT THE THING!\n");
+			//DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is not mine, a team mates, or an allies. HURT THE THING!\n");
 		}
 		else if (pHitEntity->Classify() == CLASS_SENTRYGUN) 
 		{
