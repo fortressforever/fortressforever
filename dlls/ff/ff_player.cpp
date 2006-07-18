@@ -3635,7 +3635,7 @@ void CFFPlayer::RecalculateSpeed( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get a player's Steam ID
 //-----------------------------------------------------------------------------
-const char *CFFPlayer::GetSteamID( void )
+const char *CFFPlayer::GetSteamID( void ) const
 {
 	if( engine )
 		return engine->GetPlayerNetworkIDString( edict() );
@@ -3644,8 +3644,26 @@ const char *CFFPlayer::GetSteamID( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Get a player's 
+// Purpose: Get a player's ping
 //-----------------------------------------------------------------------------
+int CFFPlayer::GetPing( void ) const
+{
+	int iPing = 0, iPacketloss = 0;
+	UTIL_GetPlayerConnectionInfo( entindex(), iPing, iPacketloss );
+
+	return iPing;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get a player's packetloss
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetPacketloss( void ) const
+{
+	int iPing = 0, iPacketloss = 0;
+	UTIL_GetPlayerConnectionInfo( entindex(), iPing, iPacketloss );
+
+	return iPacketloss;
+}
 
 void CFFPlayer::Infect( CFFPlayer *pInfector )
 {
@@ -5045,6 +5063,9 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 
 	if (GetClassSlot() == iClassNum)
 		return;
+
+	// TODO: Make sure we can change to this class!
+	// TODO: Remove buildables for sure but everything else should be specified
 
 	m_iNextClass = iClassNum;
 

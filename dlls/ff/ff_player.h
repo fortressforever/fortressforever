@@ -580,7 +580,9 @@ public:
 	bool IsOnGround( void ) const	{ return ( GetFlags() & FL_ONGROUND ) ? true : false; }
 	bool IsInAir( void ) const		{ return !IsOnGround(); }
 
-	const char *GetSteamID( void );
+	const char *GetSteamID( void ) const;
+	int GetPing( void ) const;
+	int GetPacketloss( void ) const;
 
 private:
 	int GetNewDisguisedClass( void );
