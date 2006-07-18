@@ -163,7 +163,7 @@ CON_COMMAND( model_temp, "Spawn a temporary model. Usage: model_temp <model> <di
 	}
 	else
 	{
-		DevMsg( "Usage: model_temp <model> <distance_in_front_of_player>\n" );
+		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Usage: model_temp <model> <distance_in_front_of_player>\n");
 	}
 }
 
@@ -685,12 +685,12 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			{
 				if ( !entsys.RunPredicates( pSpot, this, "validspawn" ) )
 				{
-					DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
+					//DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
 					pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
 					continue;
 				}
 
-				DevMsg("[entsys] Found valid spawn for %s at %s\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
+				//DevMsg("[entsys] Found valid spawn for %s at %s\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
 			}
 			pGibSpot = pSpot;
 
@@ -741,7 +741,7 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 	}
 
 	// as a last resort, try to find an info_player_start
-	DevMsg("Spawning at info_player_start\n");
+	//DevMsg("Spawning at info_player_start\n");
 	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
 	if ( pSpot ) 
 		goto ReturnSpot;
@@ -756,7 +756,7 @@ ReturnSpot:
 		return CBaseEntity::Instance( INDEXENT( 0 ) );
 	}
 
-	DevMsg("Spawning player %s at spawn '%s'\n", GetPlayerName(), STRING(pSpot->GetEntityName()));
+	//DevMsg("Spawning player %s at spawn '%s'\n", GetPlayerName(), STRING(pSpot->GetEntityName()));
 
 	g_pLastSpawn = pSpot;
 	return pSpot;
@@ -1018,7 +1018,7 @@ void CFFPlayer::InitialSpawn( void )
 	// Set up their global voice channel
 	m_iChannel = 0;
 
-	DevMsg("CFFPlayer::InitialSpawn");
+	//DevMsg("CFFPlayer::InitialSpawn");
 }
 
 void CFFPlayer::SpyFeign( void )
@@ -1237,7 +1237,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bRadioTagged = false;
 
 	// run the player_died event in lua
-	DevMsg("Running player_killed\n");
+	//DevMsg("Running player_killed\n");
 	entsys.SetVar("killer", ENTINDEX(info.GetAttacker()));
 	entsys.RunPredicates( NULL, this, "player_killed" );
 
@@ -1330,7 +1330,7 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 		pRagdoll->SetNextThink( gpGlobals->curtime + 30.0f );
 
 		// Allows decapitation to continue into ragdoll state
-		DevMsg( "Createragdoll: %d\n", LastHitGroup() );
+		//DevMsg( "Createragdoll: %d\n", LastHitGroup() );
 		pRagdoll->m_fBodygroupState = m_fBodygroupState;
 
 		// Bugfix: #0000574: On death, ragdolls change to the blue team's skin
@@ -1465,8 +1465,8 @@ void CFFPlayer::RemoveLocation( int entindex )
 
 void CFFPlayer::Command_TestCommand(void)
 {
-	DevMsg("Inside Command_TestCommand for player %s\n", GetPlayerName());
-	DevMsg("Full command line on server was: %s\n", engine->Cmd_Args());
+	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Inside Command_TestCommand for player %s\n", GetPlayerName());
+	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Full command line on server was: %s\n", engine->Cmd_Args());
 }
 
 void CFFPlayer::Command_MapGuide( void )
@@ -1489,10 +1489,10 @@ void CFFPlayer::Command_MapGuide( void )
 	if (m_hNextMapGuide)
 	{
 		m_flNextMapGuideTime = 0;
-		DevMsg("Starting, teleporting to guide 0\n");
+		ClientPrint(this, HUD_PRINTCONSOLE, "Starting, teleporting to guide 0\n");
 	}
 	else
-		DevMsg("Couldn't start, unable to find first map guide\n");
+		ClientPrint(this, HUD_PRINTCONSOLE, "Couldn't start, unable to find first map guide\n");
 }
 
 // Set the voice comm channel
@@ -1583,7 +1583,7 @@ int CFFPlayer::ActivateClass()
 		// Loop until we get a new class if there's more than one available
 		while ((m_iNextClass = vecAvailable[(rand() % iNumAvail) ]) == GetClassSlot() && iNumAvail != 1);
 
-		DevMsg("randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size());
+		//DevMsg("randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size());
 	}
 	// Check target class is still available
 	else if (m_iNextClass != GetClassSlot())
@@ -1652,9 +1652,6 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	{
 		m_fRandomPC = true;
 		KillAndRemoveItems();
-
-		DevMsg( "[Player] picked randompc\n" );
-
 		return;
 	}
 	else
@@ -1740,7 +1737,7 @@ void CFFPlayer::Command_Class(void)
 		return;
 	}
 
-	DevMsg("CFFPlayer::Command_Class || Changing class to '%s'\n", engine->Cmd_Argv(1));
+	//DevMsg("CFFPlayer::Command_Class || Changing class to '%s'\n", engine->Cmd_Argv(1));
 	ChangeClass(engine->Cmd_Argv(1));
 }
 
@@ -1794,7 +1791,7 @@ void CFFPlayer::Command_Team( void )
 			// Take team limits into account when calculating the best team to join
 			float flTeamCapacity = (float)iTeamNumbers[iTeamToCheck] / ( pTeam->GetTeamLimits() == 0 ? 32 : pTeam->GetTeamLimits() );
 
-			DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
+			//DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
 
 			// Is this the best team to join so far (and there is space on it)
 			if( flTeamCapacity < flBestCapacity && ( pTeam->GetTeamLimits() == 0 || iTeamNumbers[iTeamToCheck] < pTeam->GetTeamLimits() ) )
@@ -1840,7 +1837,7 @@ void CFFPlayer::Command_Team( void )
 	}
 
 	// [DEBUG] Check what team was picked
-	DevMsg( "%d\n", iTeam );
+	//DevMsg( "%d\n", iTeam );
 
 	// Are we already this team
 	if( GetTeamNumber() == iTeam )
@@ -2148,7 +2145,9 @@ void CFFPlayer::Command_WhatTeam( void )
 	//DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber() );
 	//DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
 
-	DevMsg( "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber() );
+	char szBuffer[128];
+	Q_snprintf(szBuffer, 127, "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber());
+	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, szBuffer);
 }
 
 void CFFPlayer::Command_HintTest( void )
@@ -2214,7 +2213,7 @@ void CFFPlayer::Command_DispenserText( void )
 		iTotalLen += ( iTempLen + 1 );
 	}
 
-	DevMsg( "[Dispenser Text] %s\n", m_szCustomDispenserText );
+	//DevMsg( "[Dispenser Text] %s\n", m_szCustomDispenserText );
 
 	// Change text on the fly
 	if( m_hDispenser.Get() )
@@ -2309,12 +2308,12 @@ void CFFPlayer::Command_Radar( void )
 		}
 		else
 		{
-			DevMsg( "[Scout Radar] You do not have enough cells to perform the \"radar\" command!\n" );
+			ClientPrint(this, HUD_PRINTCONSOLE, "#FF_RADARCELLS");
 		}
 	}
 	else
 	{
-		DevMsg( "[Scout Radar] You must wait a certain amount of time before doing the next \"radar\" command!\n" );
+		ClientPrint(this, HUD_PRINTCONSOLE, "#FF_RADARTOOSOON");
 	}
 }
 
@@ -2343,7 +2342,7 @@ void CFFPlayer::Command_BuildDetpack( void )
 		// Grab the first argument after detpack
 		char *pszArg = engine->Cmd_Argv( 1 );
 
-		DevMsg( "[Detpack Timer] %s\n", pszArg );
+		//DevMsg( "[Detpack Timer] %s\n", pszArg );
 
 		m_iDetpackTime = atoi( pszArg );
 		bool bInRange = true;
@@ -2355,7 +2354,8 @@ void CFFPlayer::Command_BuildDetpack( void )
 
 		if(!bInRange)
 		{
-			DevMsg( "[Detpack Timer] Invalid or out of bounds range! Clamping to %d\n", m_iDetpackTime );
+			char szBuffer[16];
+			ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", itoa((int) m_iDetpackTime, szBuffer, 10));
 		}
 
 		// Bug #0000453: Detpack timer can't be anything other than multiples of five
@@ -2741,7 +2741,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 		// from _EVER_ being called
 
 		// Give a message for now
-		DevMsg( "CFFPlayer::PostBuildGenericThink - ERROR!!!\n" );
+		Warning( "CFFPlayer::PostBuildGenericThink - ERROR!!!\n" );
 	}
 
 	// Deploy weapon
@@ -2826,7 +2826,6 @@ void CFFPlayer::Command_Discard( void )
 				if (ammoid > -1)
 				{
 					iDroppableAmmo[ammoid] = 1;
-					DevMsg("Can't drop %s\n", FF_GetAmmoName(ammoid));
 				}
 			}
 		}
@@ -2838,8 +2837,6 @@ void CFFPlayer::Command_Discard( void )
 			{
 				if (!pBackpack)
 					pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
-
-				DevMsg("Dropping %s\n", FF_GetAmmoName(i));
 
 				// Check again in case we failed to make one
 				if (pBackpack)
@@ -2886,7 +2883,6 @@ void CFFPlayer::Command_Discard( void )
 		Vector vForward;
 		AngleVectors(EyeAngles(), &vForward);
 
-		DevMsg("%f %f %f\n", vForward.x, vForward.y, vForward.z);
 		vForward *= 420.0f;
 
 		// Bugfix: Floating objects
@@ -2904,8 +2900,6 @@ void CFFPlayer::Command_Discard( void )
 void CFFPlayer::Command_SaveMe( void )
 {
 	// MEDIC!
-	DevMsg("MEDIC!\n");
-
 	if( !m_hSaveMe )
 	{
 		// Spawn the glyph
@@ -3028,7 +3022,6 @@ void CFFPlayer::StatusEffectsThink( void )
 			
 			EmitSound( "Player.DrownContinue" );	// |-- Mirv: [TODO] Change to something more suitable
 
-			DevMsg( "Infect Tick\n" );
 			m_fLastInfectedTick = gpGlobals->curtime;
 			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_POISON );
 			//info.SetDamageForce( Vector( 0, 0, -1 ) );
@@ -3541,7 +3534,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 
 	if (i == NUM_SPEED_EFFECTS)
 	{
-		DevMsg("ERROR: Too many speed effects. Raise NUM_SPEED_EFFECTS");
+		Warning("ERROR: Too many speed effects. Raise NUM_SPEED_EFFECTS");
 		return;
 	}
 
@@ -3619,7 +3612,7 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 
 void CFFPlayer::RecalculateSpeed( void )
 {
-	DevMsg("[SpeedEffect] Start\n");
+	//DevMsg("[SpeedEffect] Start\n");
 	// start off with the class base speed
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 	float speed = (float)pPlayerClassInfo.m_iSpeed;
@@ -3632,7 +3625,7 @@ void CFFPlayer::RecalculateSpeed( void )
 	// set the player speed
 	SetMaxSpeed((int)speed);
 
-	DevMsg("[SpeedEffect] Resetting speed to %d\n", (int)speed);
+	//DevMsg("[SpeedEffect] Resetting speed to %d\n", (int)speed);
 }
 
 //-----------------------------------------------------------------------------
@@ -3691,14 +3684,14 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration )
 {
 	// send the status icon to be displayed
-	DevMsg("[Grenade Debug] Sending status icon\n");
+	//DevMsg("[Grenade Debug] Sending status icon\n");
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
 	UserMessageBegin(user, "StatusIconUpdate");
 	WRITE_BYTE(FF_ICON_ONFIRE);
 	WRITE_FLOAT(flIconDuration);
 	MessageEnd();
-	DevMsg("[Grenade Debug] setting player on fire\n");
+	//DevMsg("[Grenade Debug] setting player on fire\n");
 
 	// set them on fire
 	if (!m_iBurnTicks)
@@ -4099,7 +4092,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 		float fArmorDamage = fFullDamage * m_flArmorType;
 		float fHealthDamage = fFullDamage - fArmorDamage;
-		float fArmorLeft = (float)m_iArmor;
+		float fArmorLeft = (float) m_iArmor;
 
 		// if the armor damage is greater than the amount of armor remaining, apply the excess straight to health
 		if(fArmorDamage > fArmorLeft)
@@ -4107,15 +4100,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			fHealthDamage += fArmorDamage - fArmorLeft;
 			fArmorDamage = fArmorLeft;
 			m_iArmor = 0;
-			DevMsg("OnTakeDamage: armor damage exceeds remaining armor!\n");
 		}
 		else
 		{
-			m_iArmor -= (int)fArmorDamage;
+			m_iArmor -= (int) fArmorDamage;
 		}
-
-		// Some more debug messaging
-		//DevMsg("OnTakeDamage: took %d health damage and %d armor damage from %d total (ratio %f)\n", (int)fHealthDamage, (int)fArmorDamage, (int)fFullDamage, fArmorDamage/fFullDamage);
 
 		info.SetDamage(fHealthDamage);
 	}
@@ -4278,27 +4267,20 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 	float dp_rightarm = direction.Dot(vRight);
 	float dp_head = direction.Dot(Vector(0.0f, 0.0f, 1.0f));
 
-	// Some lovely messages
-	DevMsg("[DECAP] dp_rightarm: %f\n", dp_rightarm);
-	DevMsg("[DECAP] dp_head: %f\n", dp_head);
-
 	// Now check whether the explosion seems to be on the right or left side
 	if (dp_rightarm > 0.6f)
 	{
 		m_fBodygroupState |= DECAP_RIGHT_ARM;
-		DevMsg("[DECAP] Lost right arm\n");
 	}
 	else if (dp_rightarm < -0.6f)
 	{
 		m_fBodygroupState |= DECAP_LEFT_ARM;
-		DevMsg("[DECAP] Lost left arm\n");
 	}
 
 	// Now check if the explosion seems to be above or below
 	if (dp_head > 0.7f)
 	{
 		m_fBodygroupState |= DECAP_HEAD;
-		DevMsg("[DECAP] Lost head\n");
 	}
 	else if (dp_head < -0.6f)
 	{
@@ -4308,8 +4290,6 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 
 		if (! (m_fBodygroupState & DECAP_LEFT_ARM))
 			m_fBodygroupState |= DECAP_RIGHT_LEG;
-
-		DevMsg("[DECAP] Lost a leg or two\n");
 	}
 
 	// Now spawn any limbs that are needed
@@ -4322,7 +4302,7 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 
 			if (!pRagdoll)
 			{
-				DevWarning("Couldn't make limb ragdoll!\n");
+				Warning("Couldn't make limb ragdoll!\n");
 				return;
 			}
 
@@ -4338,7 +4318,7 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 
 				// remove it after a time
 				pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
-				pRagdoll->SetNextThink(gpGlobals->curtime + 30.0f);
+				pRagdoll->SetNextThink(gpGlobals->curtime + 10.0f);
 			}
 		}
 	}
@@ -4418,8 +4398,6 @@ void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool
 
 		// We shouldn't have any other ones
 		Assert(pFlame);
-
-		DevMsg("Extending flames!\n");
 	}
 	else
 	{
@@ -4428,8 +4406,6 @@ void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool
 
 		// We should now have one
 		Assert(pFlame);
-
-		DevMsg("Creating new flames!\n");
 	}
 
 	// There isn't already a flame
@@ -4893,7 +4869,7 @@ void CFFPlayer::MoveTowardsMapGuide()
 	// We're close enough to the next one and the time has finished here
 	if (gpGlobals->curtime > m_flNextMapGuideTime)
 	{
-		DevMsg("[MAPGUIDE] Reached guide %s\n", STRING(m_hNextMapGuide->GetEntityName()));
+		//DevMsg("[MAPGUIDE] Reached guide %s\n", STRING(m_hNextMapGuide->GetEntityName()));
 
 		// Play the narration file for this (but only if speccing)
 		if (m_hNextMapGuide->m_iNarrationFile != NULL_STRING && GetTeamNumber() == TEAM_SPECTATOR)
@@ -4985,7 +4961,7 @@ bool CFFPlayer::HasItem(const char* itemname) const
 		// Tell the ent that it died
 		if ( pEnt->GetOwnerEntity() == this && FStrEq( STRING(pEnt->GetEntityName()), itemname ) )
 		{
-			DevMsg("[SCRIPT] found item %d: %s\n", ENTINDEX(pEnt), itemname);
+			//DevMsg("[SCRIPT] found item %d: %s\n", ENTINDEX(pEnt), itemname);
 			ret = true;
 		}
 

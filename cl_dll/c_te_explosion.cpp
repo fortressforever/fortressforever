@@ -56,6 +56,10 @@ CRagdollExplosionEnumerator::~CRagdollExplosionEnumerator()
 
 		Vector	position = pEnt->CollisionProp()->GetCollisionOrigin();
 
+		// Mirv: Account for the fact that explosions are moved. This shouldn't be a
+		// problem unless they are being hit right up by a ceiling
+		position += Vector(0, 0, 32.0f);
+
 		trace_t	tr;
 		UTIL_TraceLine( m_vecOrigin, position, MASK_SHOT, NULL, COLLISION_GROUP_NONE, &tr );
 

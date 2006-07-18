@@ -124,8 +124,6 @@ void PrecacheFilePlayerClassInfoDatabase(IFileSystem *filesystem, const unsigned
 	const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_ *.txt", "MOD", &findHandle);
 	while (pFilename != NULL) 
 	{
-		DevMsg("[MIRV] Precached class script file: %s\n", pFilename);
-
 		char fileBase[512];
 		Q_FileBase(pFilename, fileBase, sizeof(fileBase));
 		PLAYERCLASS_FILE_INFO_HANDLE tmp;
@@ -229,8 +227,6 @@ bool ReadPlayerClassDataFromFileForSlot(IFileSystem * filesystem, const char *sz
 	if (!pKV) 
 		return false;
 
-	DevMsg("[MIRV] Read from file: %s\n", sz);
-
 	pFileInfo->Parse(pKV, szPlayerClassName);
 
 	pKV->deleteThis();
@@ -285,8 +281,6 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 {
 	// Okay, we tried at least once to look this up...
 	bParsedScript = true;
-
-	DevMsg("[MIRV] Parsing for: %s\n", szPlayerClassName);
 
 	// Player number / selection slot
 	m_iSlot = pKeyValuesData->GetInt("slot", 0);

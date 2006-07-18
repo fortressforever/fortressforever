@@ -77,7 +77,7 @@ STUB_WEAPON_CLASS( weapon_cubemap, WeaponCubemap, C_BaseCombatWeapon );
 void OnTimerExpired(C_FFTimer *pTimer)
 {
 	string name = pTimer->GetTimerName();
-	DevMsg("OnTimerExpired(%s)\n",name.c_str());
+	//DevMsg("OnTimerExpired(%s)\n",name.c_str());
 	char buf[256];
 	sprintf(buf,"OnTimerExpired(%s)\n",name.c_str());
 	internalCenterPrint->SetTextColor( 255, 255, 255, 255 );
@@ -125,7 +125,7 @@ void CC_PrimeOne( void )
 
 	if( pLocalPlayer->m_bClientBuilding )
 	{
-		DevMsg( "[Client] Building - not priming a gren!\n" );
+		//DevMsg( "[Client] Building - not priming a gren!\n" );
 		return;
 	}
 
@@ -158,12 +158,12 @@ void CC_PrimeOne( void )
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 
-	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
+/*	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
 	if (pTimer)
 	{
 		pTimer->m_bRemoveWhenExpired = true;
 		pTimer->StartTimer();				
-	}
+	}*/
 
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
 
@@ -194,7 +194,7 @@ void CC_PrimeTwo( void )
 
 	if( pLocalPlayer->m_bClientBuilding )
 	{
-		DevMsg( "[Client] Building - not priming a gren!\n" );
+		//DevMsg( "[Client] Building - not priming a gren!\n" );
 		return;
 	}
 
@@ -227,12 +227,12 @@ void CC_PrimeTwo( void )
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 	
-	C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
+	/*C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
 	if (pTimer)
 	{
 		pTimer->m_bRemoveWhenExpired = true;
 		pTimer->StartTimer();				
-	}
+	}*/
 	
 	//pLocalPlayer->EmitSound( "Grenade.Timer" );
 
@@ -360,11 +360,11 @@ END_RECV_TABLE( )
 
 void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	DevMsg("[Grenades] RecvProxy_PrimeTime\n");
+	//DevMsg("[Grenades] RecvProxy_PrimeTime\n");
 	// Unpack the data.
 	if(!engine->IsConnected() || !engine->IsInGame())
 	{
-		DevMsg("[Grenades] \t NOT connected or NOT active!\n");
+		//DevMsg("[Grenades] \t NOT connected or NOT active!\n");
 		return;
 	}
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
@@ -373,8 +373,8 @@ void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut
 		pLocalPlayer->m_flServerPrimeTime = pData->m_Value.m_Float;
 		if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
 			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
-		DevMsg("[Grenades] \tm_flServerPrimeTime: %f\n", pLocalPlayer->m_flServerPrimeTime);
-		DevMsg("[Grenades] \tm_flLatency: %f\n", pLocalPlayer->m_flLatency);
+		//DevMsg("[Grenades] \tm_flServerPrimeTime: %f\n", pLocalPlayer->m_flServerPrimeTime);
+		//DevMsg("[Grenades] \tm_flLatency: %f\n", pLocalPlayer->m_flLatency);
 	}
 }
 
@@ -489,7 +489,7 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 
 	if ( iDamageType == DMG_BLAST )
 	{
-		dir *= 4000;  // adjust impact strenght
+		dir *= 40000;  // adjust impact strenght
 
 		// apply force at object mass center
 		pPhysicsObject->ApplyForceCenter( dir );
@@ -993,7 +993,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 			bDrawTimer = false;
 		}
 
-		if( bDrawTimer )
+		/*if( bDrawTimer )
 		{
 			C_FFTimer *pTimer = g_FFTimers.Create( szTimerName, flTimerDuration );
 			if( pTimer )
@@ -1001,7 +1001,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 				pTimer->m_bRemoveWhenExpired = true;
 				pTimer->StartTimer();				
 			}
-		}
+		}*/
 	}
 	else if( !m_bBuilding && m_bClientBuilding )
 	{

@@ -558,8 +558,6 @@ ConVar mp_prematch( "mp_prematch",
 		if (pPlayer->m_Local.m_flFallVelocity < flMaxSafe)
 			return 0;
 
-		DevMsg("Falling speed: %f\n", (float) pPlayer->m_Local.m_flFallVelocity);
-
 		// Speed is a good approximation for now of a class's weight
 		// Therefore bigger base damage for slower classes
 		float weightratio = clamp((pPlayer->MaxSpeed() - 230.0f) / 170.0f, 0, 1.0f);
@@ -568,9 +566,6 @@ ConVar mp_prematch( "mp_prematch",
 		// Don't worry this'll be optimised!
 		float speedratio = clamp((pPlayer->m_Local.m_flFallVelocity - flMaxSafe) / (PLAYER_FATAL_FALL_SPEED - flMaxSafe), 0, 1.0f);
 		float flDmg = flBaseDmg + speedratio * flBaseDmg;
-
-		DevMsg("Base Damage for Class: %f, Damage for Fall: %f\n", flBaseDmg, flDmg);
-
 
 		return flDmg;
 	} 
