@@ -20,6 +20,12 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+// IMPLEMENT THESE
+int ACT_INFO_RETURNED;
+int ACT_INFO_CARRIED;
+int ACT_INFO_DROPPED;
+
+// DEPRECATE THESE
 int ACT_INFO_IDLE;
 int ACT_INFO_ROLL;
 
@@ -42,12 +48,6 @@ void CFFInfoScriptAnimator::OnThink( void )
 	{
 		if( m_pFFScript->HasAnimations() )
 		{
-			/*
-			m_pFFScript->ResetSequenceInfo();
-			//Warning( "[m_pffScript] %s\n", STRING( m_pFFScript->GetModelName() ) );
-			int nSequence = m_pFFScript->SelectWeightedSequence( ( Activity )ACT_INFO_IDLE );
-			m_pFFScript->SetSequence( nSequence );
-			*/
 			m_pFFScript->StudioFrameAdvance();
 		}
 	}
@@ -61,6 +61,8 @@ void CFFInfoScriptAnimator::OnThink( void )
 IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
 	SendPropFloat( SENDINFO( m_flThrowTime ) ),
 	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ),
+	SendPropInt( SENDINFO( m_iGoalState ), 4 ),
+	SendPropInt( SENDINFO( m_iPosState ), 4 ),
 END_SEND_TABLE()
 // <-- Mirv: Added for client class
 
@@ -68,7 +70,6 @@ BEGIN_DATADESC( CFFInfoScript )
 	DEFINE_ENTITYFUNC( OnTouch ),
 	DEFINE_THINKFUNC( OnThink ),
 	DEFINE_THINKFUNC( OnRespawn ),
-	DEFINE_THINKFUNC( TempThink ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( info_ff_script, CFFInfoScript );
@@ -82,6 +83,11 @@ CFFInfoScript::CFFInfoScript( void )
 	m_vStartOrigin = Vector( 0, 0, 0 );
 	m_bHasAnims = false;
 	m_bUsePhysics = false;
+
+	// Init the goal state
+	m_iGoalState = GS_INACTIVE;
+	// Init the position state
+	m_iPosState = PS_RETURNED;
 }
 
 CFFInfoScript::~CFFInfoScript( void )
@@ -110,6 +116,11 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	SetLocalAngles( m_vStartAngles );
 
 	SetMoveType( MOVETYPE_NONE );
+
+	// Update goal state
+	SetInactive();
+	// Update position state
+	SetReturned();
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -191,18 +202,6 @@ void CFFInfoScript::Spawn( void )
 	m_flThrowTime = 0.0f;
 
 	PlayIdleAnim();
-
-	/*
-	SetThink( &CFFInfoScript::TempThink );
-	SetNextThink( gpGlobals->curtime );
-	*/
-}
-
-void CFFInfoScript::TempThink( void )
-{
-	Warning( "[TempThink]\n" );
-	StudioFrameAdvance();
-	SetNextThink( gpGlobals->curtime );
 }
 
 void CFFInfoScript::PlayIdleAnim( void )
@@ -227,30 +226,48 @@ void CFFInfoScript::PlayActiveAnim( void )
 	}
 }
 
-void CFFInfoScript::OnTouch( CBaseEntity *pOther )
+void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 {
-	if( !pOther->IsPlayer() )
+	if( !pEntity )
 		return;
 
-	CFFPlayer *pPlayer = ToFFPlayer( pOther );
-
-	if( !pPlayer )
-		return;
-
-	entsys.RunPredicates( this, pPlayer, "touch" );
+	entsys.RunPredicates( this, pEntity, "touch" );
 }
 
-void CFFInfoScript::OnPlayerDied( CFFPlayer *pPlayer )
+void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
 {
-	if( GetOwnerEntity() == pPlayer )
+	if( GetOwnerEntity() == pEntity )
 	{
-		entsys.RunPredicates( this, pPlayer, "ownerdie" );
+		// Update position state
+		SetDropped();
+		entsys.RunPredicates( this, pEntity, "onownerdie" );
 	}
 }
 
-void CFFInfoScript::Pickup(CFFPlayer *pFFPlayer)
+//-----------------------------------------------------------------------------
+// Purpose: Added so that players getting forced respawn by ApplyToAll/Team/Player
+//			can give their objects a chance to be dropped so we don't run into
+//			a situation where you respawn with an info_ff_script and you're not
+//			supposed to because forcing a respawn used to not ask lua what to
+//			do with objects players were carrying.
+//-----------------------------------------------------------------------------
+void CFFInfoScript::OnOwnerForceRespawn( CBaseEntity *pEntity )
 {
-	SetOwnerEntity( pFFPlayer );
+	if( GetOwnerEntity() == pEntity )
+	{
+		// Update position state
+		SetDropped();
+		entsys.RunPredicates( this, pEntity, "onownerforcerespawn" );
+	}
+}
+
+void CFFInfoScript::Pickup( CBaseEntity *pEntity )
+{
+	// Don't do anything if removed
+	if( IsRemoved() )
+		return;
+
+	SetOwnerEntity( pEntity );
 	SetTouch( NULL );
 
 	if( m_bUsePhysics )
@@ -259,7 +276,12 @@ void CFFInfoScript::Pickup(CFFPlayer *pFFPlayer)
 			VPhysicsDestroyObject();
 	}
 
-	FollowEntity( pFFPlayer, true );
+	FollowEntity( pEntity, true );
+
+	// Goal is active when carried	
+	SetActive();
+	// Update position state
+	SetCarried();
 
 	// stop the return timer
 	SetThink( NULL );
@@ -270,10 +292,18 @@ void CFFInfoScript::Pickup(CFFPlayer *pFFPlayer)
 
 void CFFInfoScript::Respawn(float delay)
 {
+	// Don't do anything if removed
+	if( IsRemoved() )
+		return;
+
 	CreateItemVPhysicsObject();
 
 	SetTouch( NULL );
 	AddEffects( EF_NODRAW );
+
+	// During this period until
+	// we respawn we're active
+	SetActive();
 
 	SetThink( &CFFInfoScript::OnRespawn );
 	SetNextThink( gpGlobals->curtime + delay );
@@ -281,6 +311,10 @@ void CFFInfoScript::Respawn(float delay)
 
 void CFFInfoScript::OnRespawn( void )
 {
+	// Don't do anything if removed
+	if( IsRemoved() )
+		return;
+
 	CreateItemVPhysicsObject();
 
 	if( IsEffectActive( EF_NODRAW ) )
@@ -301,6 +335,10 @@ void CFFInfoScript::OnRespawn( void )
 
 void CFFInfoScript::Drop( float delay, float speed )
 {
+	// Don't do anything if removed
+	if( IsRemoved() )
+		return;
+
 	// stop following
 	FollowEntity( NULL );	
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
@@ -312,6 +350,11 @@ void CFFInfoScript::Drop( float delay, float speed )
 
 	if( !pOwner )
 		return;
+
+	// Update goal state
+	SetActive();
+	// Update position state
+	SetDropped();
 
 	Vector vecOrigin = pOwner->GetAbsOrigin();
 
@@ -421,8 +464,12 @@ void CFFInfoScript::Drop( float delay, float speed )
 	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
 }
 
-CBaseEntity* CFFInfoScript::Return( void )
+void CFFInfoScript::Return( void )
 {
+	// Don't do anything if removed
+	if( IsRemoved() )
+		return;
+
 	// #0000220: Capping flag simultaneously with gren explosion results in flag touch.
 	// set this to curtime so that it will take a few seconds before it becomes
 	// eligible to be picked up again.
@@ -440,8 +487,6 @@ CBaseEntity* CFFInfoScript::Return( void )
 	CreateItemVPhysicsObject();
 
 	PlayIdleAnim();
-
-	return this;
 }
 
 void CFFInfoScript::OnThink( void )
@@ -456,13 +501,142 @@ void CFFInfoScript::SetSpawnFlags( int flags )
 	m_spawnflags = flags;
 }
 
-//* This stuff is part of baseentity... need to remove
-void CFFInfoScript::LUA_SetModel( const char *model )
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+int CFFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 {
-	UTIL_SetModel(this, model);
+	// Force sending even if no model. By default objects
+	// without a model aren't sent to the client. And,
+	// sometimes we don't want a model.
+	return FL_EDICT_ALWAYS;
 }
-void CFFInfoScript::LUA_SetSkin( int skin )
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script currently carried?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsCarried( void )
 {
-	this->m_nSkin = skin;
+	return m_iPosState == PS_CARRIED;
 }
-//*/
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script currently dropped?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsDropped( void )
+{
+	return m_iPosState == PS_DROPPED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script currently returned?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsReturned( void )
+{
+	return m_iPosState == PS_RETURNED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script "active"?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsActive( void )
+{
+	return m_iGoalState == GS_ACTIVE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script "inactive"?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsInactive( void )
+{
+	return m_iGoalState == GS_INACTIVE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is this info_ff_script "removed"?
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::IsRemoved( void )
+{
+	return ( m_iGoalState == GS_REMOVED ) || ( m_iPosState == PS_REMOVED );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetActive( void )
+{
+	m_iGoalState = GS_ACTIVE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetInactive( void )
+{
+	m_iGoalState = GS_INACTIVE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetRemoved( void )
+{
+	m_iGoalState = GS_REMOVED;
+	m_iPosState = PS_REMOVED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetCarried( void )
+{
+	m_iPosState = PS_CARRIED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetDropped( void )
+{
+	m_iPosState = PS_DROPPED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::SetReturned( void )
+{
+	m_iPosState = PS_RETURNED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::LUA_Remove( void )
+{
+	// This sets the object as "removed"	
+	FollowEntity( NULL );
+	SetOwnerEntity( NULL );
+
+	SetTouch( NULL );
+
+	SetThink( NULL );
+	SetNextThink( gpGlobals->curtime );
+
+	SetRemoved();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFFInfoScript::LUA_Restore( void )
+{
+	// This "restores" the item
+
+	// Set some flags so we can call respawn
+	SetInactive();
+	SetReturned();
+
+	// Respawn the item back at it's starting spot
+	Respawn( 0.0f );
+}

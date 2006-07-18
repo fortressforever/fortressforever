@@ -375,7 +375,7 @@ namespace FFLib
 		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 	}
 
-	bool ResetParseFlags( const object& table, bool *pbFlags )
+	bool ApplyToParseFlags( const object& table, bool *pbFlags )
 	{
 		if( table.is_valid() && ( type( table ) == LUA_TTABLE ) )
 		{
@@ -390,15 +390,13 @@ namespace FFLib
 				{
 					int iIndex = object_cast< int >( val );
 
-					Warning( "[ResetParseFlags] %i, \n", iIndex );
-
 					// Make sure within bounds
-					if( ( iIndex >= 0 ) && ( iIndex < RS_MAX_FLAG ) )
+					if( ( iIndex >= 0 ) && ( iIndex < AT_MAX_FLAG ) )
 						pbFlags[ iIndex ] = true;
 				}
 				else
 				{
-					Warning( "[ResetParseFlags] Only handles integers in the table!\n" );
+					// Warning( "[ResetParseFlags] Only handles integers in the table!\n" );
 				}
 			}
 
@@ -408,33 +406,33 @@ namespace FFLib
 		return false;
 	}
 
-	void ResetAll( const object& table )
+	void ApplyToAll( const object& table )
 	{
-		bool bFlags[ RS_MAX_FLAG ] = { false };
+		bool bFlags[ AT_MAX_FLAG ] = { false };
 
-		if( ResetParseFlags( table, bFlags ) )
+		if( ApplyToParseFlags( table, bFlags ) )
 		{
 			if( FFGameRules() )
 				FFGameRules()->ResetUsingCriteria( bFlags );
 		}
 	}
 
-	void ResetTeam( CFFTeam *pTeam, const object& table )
+	void ApplyToTeam( CFFTeam *pTeam, const object& table )
 	{
-		bool bFlags[ RS_MAX_FLAG ] = { false };
+		bool bFlags[ AT_MAX_FLAG ] = { false };
 
-		if( ResetParseFlags( table, bFlags ) && pTeam )
+		if( ApplyToParseFlags( table, bFlags ) && pTeam )
 		{
 			if( FFGameRules() )
 				FFGameRules()->ResetUsingCriteria( bFlags, pTeam->GetTeamNumber() );
 		}
 	}
 
-	void ResetPlayer( CFFPlayer *pPlayer, const object& table )
+	void ApplyToPlayer( CFFPlayer *pPlayer, const object& table )
 	{
-		bool bFlags[ RS_MAX_FLAG ] = { false };
+		bool bFlags[ AT_MAX_FLAG ] = { false };
 
-		if( ResetParseFlags( table, bFlags ) && pPlayer )
+		if( ApplyToParseFlags( table, bFlags ) && pPlayer )
 		{
 			if( FFGameRules() )
 				FFGameRules()->ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, pPlayer );
@@ -443,9 +441,9 @@ namespace FFLib
 
 	void ResetMap( const object& table )
 	{
-		bool bFlags[ RS_MAX_FLAG ] = { false };
+		bool bFlags[ AT_MAX_FLAG ] = { false };
 
-		if( ResetParseFlags( table, bFlags ) )
+		if( ApplyToParseFlags( table, bFlags ) )
 		{
 			if( FFGameRules() )
 				FFGameRules()->ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
@@ -605,7 +603,6 @@ namespace FFLib
 
 	bool IsPlayerFromId( int player_id )
 	{
-		Warning( "[IsPlayerFromId]\n" );
 		return GetPlayer( player_id ) == NULL ? false : true;
 	}
 
@@ -674,9 +671,10 @@ namespace FFLib
 
 	CFFGrenadeBase *CastToGrenade( CBaseEntity *pEntity )
 	{
-		Warning( "[CastToGrenade]\n" );
-
 		if( !pEntity )
+			return NULL;
+
+		if( !IsGrenade( pEntity ) )
 			return NULL;
 
 		return dynamic_cast< CFFGrenadeBase * >( pEntity );
@@ -1027,6 +1025,11 @@ namespace FFLib
 		return "\0";
 	}
 
+	const char *PrintBool( bool bValue )
+	{
+		return bValue ? "True" : "False";
+	}
+
 } // namespace FFLib
 
 void CFFEntitySystem::FFLibOpen()
@@ -1231,7 +1234,15 @@ void CFFEntitySystem::FFLibOpen()
 			.def("Drop",				&CFFInfoScript::Drop)
 			.def("Pickup",				&CFFInfoScript::Pickup)
 			.def("Respawn",				&CFFInfoScript::Respawn)
-			.def("Return",				&CFFInfoScript::Return),
+			.def("Return",				&CFFInfoScript::Return)
+			.def("IsCarried",			&CFFInfoScript::IsCarried)
+			.def("IsReturned",			&CFFInfoScript::IsReturned)
+			.def("IsDropped",			&CFFInfoScript::IsDropped)
+			.def("IsActive",			&CFFInfoScript::IsActive)
+			.def("IsInactive",			&CFFInfoScript::IsInactive)
+			.def("IsRemoved",			&CFFInfoScript::IsRemoved)
+			.def("Remove",				&CFFInfoScript::LUA_Remove)
+			.def("Restore",				&CFFInfoScript::LUA_Restore),
 
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")
@@ -1287,13 +1298,14 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetServerTime",			&FFLib::GetServerTime),
 		def("UseEntity",				&FFLib::UseEntity),
 		def("IncludeScript",			&FFLib::IncludeScript),
-		def("ResetAll",					&FFLib::ResetAll),
-		def("ResetTeam",				&FFLib::ResetTeam),
-		def("ResetPlayer",				&FFLib::ResetPlayer),
+		def("ApplyToAll",				&FFLib::ApplyToAll),
+		def("ApplyToTeam",				&FFLib::ApplyToTeam),
+		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
 		def("ResetMap",					&FFLib::ResetMap),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("SetConvar",				&FFLib::SetConvar),
-		def("GetSteamID",				&FFLib::GetSteamID)
+		def("GetSteamID",				&FFLib::GetSteamID),
+		def("PrintBool",				&FFLib::PrintBool)
 	];
 }
 
