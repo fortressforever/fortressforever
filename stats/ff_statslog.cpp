@@ -181,7 +181,7 @@ void CFFStatsLogging::SetClass(int playerindex, int classid)
 */
 void CFFStatsLogging::AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i /* = 1 */) 
 {
-	//AddToCount(pPlayer->entindex(), stat, i);
+	AddToCount(pPlayer->entindex(), stat, i);
 }
 
 /**
@@ -193,8 +193,8 @@ void CFFStatsLogging::AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i /
 */
 void CFFStatsLogging::AddToCount(int playerindex, StatisticType stat, int i /* = 1 */) 
 {
-	//if (m_pCurrentPlayers[playerindex]) 
-	//	 (*m_pCurrentPlayers[playerindex])->m_iCounters[stat] += i;
+	if (m_pCurrentPlayers[playerindex]) 
+		 (*m_pCurrentPlayers[playerindex])->m_iCounters[stat] += i;
 }
 
 /**
@@ -206,8 +206,8 @@ void CFFStatsLogging::AddToCount(int playerindex, StatisticType stat, int i /* =
 */
 void CFFStatsLogging::AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
 {
-	//if (m_pCurrentPlayers[playerindex]) 
-	//	(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
+	if (m_pCurrentPlayers[playerindex]) 
+		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
 }
 
 /**
@@ -219,8 +219,8 @@ void CFFStatsLogging::AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i /
 */
 void CFFStatsLogging::AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
 {
-	//if (m_pCurrentPlayers[playerindex]) 
-	//	(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
+	if (m_pCurrentPlayers[playerindex]) 
+		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
 }
 
 /**
@@ -233,12 +233,12 @@ void CFFStatsLogging::AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i /*
 void CFFStatsLogging::SetTimer(int playerindex, TimerType timer, bool on) 
 {
 	// Make sure the timer status is changing
-	//if (m_pCurrentPlayers[playerindex] && (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] != on) 
-	//{
-	//	 (*m_pCurrentPlayers[playerindex])->m_flTimers[timer] = gpGlobals->curtime - (*m_pCurrentPlayers[playerindex])->m_flTimers[timer];
+	if (m_pCurrentPlayers[playerindex] && (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] != on) 
+	{
+		 (*m_pCurrentPlayers[playerindex])->m_flTimers[timer] = gpGlobals->curtime - (*m_pCurrentPlayers[playerindex])->m_flTimers[timer];
 
-//		 (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] = on;
-//	}
+		 (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] = on;
+	}
 }
 
 /**
@@ -262,8 +262,6 @@ const char *CFFStatsLogging::GetTimestampString()
 */
 void CFFStatsLogging::Serialise(char *buffer, int buffer_size) 
 {
-	return;
-
 	CQuickBuffer buf(buffer, buffer_size);
 	int i, j;
 
