@@ -24,6 +24,23 @@
 #define FLAG_MODEL "models/items/healthkit.mdl"
 //#define FLAG_MODEL "models/items/ball/ball.mdl"
 
+// An info_ff_script has 3 position states
+enum FF_ScriptPosState_e
+{
+	PS_RETURNED = 0,
+	PS_CARRIED = 1,
+	PS_DROPPED = 2,
+	PS_REMOVED = 3
+};
+
+// An info_ff_script has 3 goal states
+enum FF_ScriptGoalState_e
+{
+	GS_ACTIVE = 0,
+	GS_INACTIVE = 1,
+	GS_REMOVED = 2
+};
+
 // Forward declaration
 class CFFInfoScriptAnimator;
 
@@ -39,32 +56,56 @@ public:
 
 	virtual void	Spawn( void );
 	virtual void	Precache( void );
-	void			OnTouch( CBaseEntity * );
-	void			OnPlayerDied( CFFPlayer * );
+	void			OnTouch( CBaseEntity *pEntity );
+	void			OnOwnerDied( CBaseEntity *pEntity );
+	void			OnOwnerForceRespawn( CBaseEntity *pEntity );
 	void			OnThink( void );
-	void			TempThink( void );
 	void			OnRespawn( void );
 
 	virtual bool	IsPlayer( void ) { return false; }
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual bool	IsAlive( void ) { return false; }
 
-	void			Pickup( CFFPlayer * );
+	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
+
+	// An info_ff_script's position state
+	virtual bool	IsCarried( void );
+	virtual bool	IsDropped( void );
+	virtual bool	IsReturned( void );
+
+	// An info_ff_script's goal state
+	virtual bool	IsActive( void );
+	virtual bool	IsInactive( void );
+	virtual bool	IsRemoved( void );	
+
+	// Expose these two
+	virtual void	LUA_Remove( void );
+	virtual void	LUA_Restore( void );
+
+	void			Pickup( CBaseEntity *pEntity );
 	void			Drop( float delay, float speed = 0.0f );
 	void			Respawn( float delay );
-	CBaseEntity*	Return ( void );
+	void			Return( void );
 
 	void			SetSpawnFlags( int flags );
-
-	void			LUA_SetModel( const char *model );
-	void			LUA_SetSkin( int skin );
 
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
 	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
 protected:
+	// Do not expose these to LUA!
+	virtual void	SetActive( void );
+	virtual void	SetInactive( void );
+	virtual void	SetRemoved( void );
+	virtual void	SetCarried( void );
+	virtual void	SetReturned( void );
+	virtual void	SetDropped( void );
 
 	bool CreateItemVPhysicsObject( void );
+	void PlayIdleAnim( void );
+	void PlayActiveAnim( void );
+
+protected:	
 
 	bool m_atStart;
 
@@ -72,19 +113,20 @@ protected:
 	
 	bool m_bHasAnims;
 	int m_iSequence;
-	Activity m_Activity;
-	void PlayIdleAnim( void );
-	void PlayActiveAnim( void );
+	Activity m_Activity;	
 	CFFInfoScriptAnimator *m_pAnimator;
 
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
 
-	CFFPlayer *m_pLastOwner;
+	CBaseEntity *m_pLastOwner;
 	
 	CNetworkVar(float, m_flThrowTime);
 
 	CNetworkVector( m_vecOffset );
+
+	CNetworkVar( int, m_iGoalState );
+	CNetworkVar( int, m_iPosState );
 };
 
 // This is a cheap hack. Basically, this just calls
@@ -101,4 +143,4 @@ public:
 	CFFInfoScript *m_pFFScript;
 };
 
-#endif//FF_ITEM_FLAG_H
+#endif //FF_ITEM_FLAG_H

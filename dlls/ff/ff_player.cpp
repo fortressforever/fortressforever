@@ -1241,16 +1241,17 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	entsys.SetVar("killer", ENTINDEX(info.GetAttacker()));
 	entsys.RunPredicates( NULL, this, "player_killed" );
 
+	// EDIT: Let's not use strings if we don't have to...
 	// Find any items that we are in control of and drop them
-	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 
 	while( pEnt != NULL )
 	{
-    // Tell the ent that it died
-		pEnt->OnPlayerDied( this );
+		// Tell the ent that it died
+		pEnt->OnOwnerDied( this );
 
 		// Next!
-		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
 	}
 
 	// Get rid of fire

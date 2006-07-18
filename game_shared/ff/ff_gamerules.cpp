@@ -279,7 +279,7 @@ ConVar mp_prematch( "mp_prematch",
 		// Tell gamerules the round JUST started
 		Precache();
 
-		bool bFlags[ RS_MAX_FLAG ] = { true };
+		bool bFlags[ AT_MAX_FLAG ] = { true };
 
 		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
 	}
@@ -375,7 +375,7 @@ ConVar mp_prematch( "mp_prematch",
 				// Please don't change the order. They're set up hopefully
 				// to work correctly.
 
-				if( pbFlags[ RS_DROP_ITEMS ] || pbFlags[ RS_THROW_ITEMS ] )
+				if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
 				{
 					// Don't do anything...
 					// ownerdie will get called if RS_KILL_PLAYERS is set and that
@@ -385,7 +385,7 @@ ConVar mp_prematch( "mp_prematch",
 					// NOTE: this is a useless flag I think...
 				}
 
-				if( pbFlags[ RS_FORCE_DROP_ITEMS ] || pbFlags[ RS_FORCE_THROW_ITEMS ] )
+				if( pbFlags[ AT_FORCE_DROP_ITEMS ] || pbFlags[ AT_FORCE_THROW_ITEMS ] )
 				{
 					// TODO: iterate through getting this players' items
 					// and make them be dropped before killing the player
@@ -406,7 +406,34 @@ ConVar mp_prematch( "mp_prematch",
 					}
 				}
 
-				if( pbFlags[ RS_RETURN_CARRIED_ITEMS ] )
+				// Do this before killing the player and before respawning. This is
+				// for when we're doing a force respawn without killing the player.
+				// In this type of situation objects are never asked if they should
+				// be dropped from the player or not so we could end up in a situation
+				// where a player has a flag and another team does something to trigger
+				// ApplyToAll/Team/Player to get called and now we respawn with a flag
+				// and we're not supposed to.
+				if( pbFlags[ AT_RESPAWN_PLAYERS ] && !pbFlags[ AT_KILL_PLAYERS ] )
+				{
+					// Iterate through objects this player has and ask lua object what
+					// it should do.
+					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+					
+					while( pEntity )
+					{
+						CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+						if( pFFScript )
+						{
+							// Yes, this is redundant since we're searching by owner & class_t
+							// so we already know this guy is the owner of this info_ff_script.
+							pFFScript->OnOwnerForceRespawn( ( CBaseEntity * )pPlayer );
+						}
+
+						pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+					}
+				}
+
+				if( pbFlags[ AT_RETURN_CARRIED_ITEMS ] )
 				{
 					// Eh? This is dumb. Needs a "FORCE". We're not going to forcibly
 					// return a carried item. If the player is killed, ownerdie handles
@@ -414,43 +441,41 @@ ConVar mp_prematch( "mp_prematch",
 					// killed and for that you might want to do something
 				}
 
-				if( pbFlags[ RS_RETURN_DROPPED_ITEMS ] )
+				if( pbFlags[ AT_RETURN_DROPPED_ITEMS ] )
 				{
 					// TODO: do this globally - not on each player's iteration
 				}
 
-				if( pbFlags[ RS_KILL_PLAYERS ] )
+				if( pbFlags[ AT_KILL_PLAYERS ] )
 				{
 					pPlayer->KillPlayer();
 				}
 
-				if( pbFlags[ RS_RESPAWN_PLAYERS ] )
+				if( pbFlags[ AT_RESPAWN_PLAYERS ] )
 				{
 					pPlayer->Spawn();
 				}
 
-				if( pbFlags[ RS_REMOVE_RAGDOLLS ] )
+				if( pbFlags[ AT_REMOVE_RAGDOLLS ] )
 				{
-					// TODO: Send a message to each client
-					// saying to remove all ragdolls?
 				}
 
-				if( pbFlags[ RS_REMOVE_PACKS ] )
+				if( pbFlags[ AT_REMOVE_PACKS ] )
 				{
 					pPlayer->RemoveBackpacks();
 				}
 
-				if( pbFlags[ RS_REMOVE_PROJECTILES ] )
+				if( pbFlags[ AT_REMOVE_PROJECTILES ] )
 				{
 					pPlayer->RemoveProjectiles();
 				}
 
-				if( pbFlags[ RS_REMOVE_BUILDABLES ] )
+				if( pbFlags[ AT_REMOVE_BUILDABLES ] )
 				{
 					pPlayer->RemoveBuildables();
 				}
 					
-				if( pbFlags[ RS_REMOVE_DECALS ] )
+				if( pbFlags[ AT_REMOVE_DECALS ] )
 				{
 					// TODO: Send a message to the client telling it to clean up the level (?)
 					// not sure how decals are handled
@@ -936,7 +961,7 @@ ConVar mp_prematch( "mp_prematch",
 		m_flGameStarted = gpGlobals->curtime;
 
 		// Stuff to do when prematch ends
-		bool bFlags[ RS_MAX_FLAG ] = { true };
+		bool bFlags[ AT_MAX_FLAG ] = { true };
 
 		// Piggy back this guy now with a FULL MAP RESET
 		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
