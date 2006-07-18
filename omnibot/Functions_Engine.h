@@ -69,11 +69,11 @@ typedef struct
 
 	// Function: pfnGetEntityFlags
 	//		This function should return the entity flags for an entity
-	int (*pfnGetEntityFlags)(const GameEntity _ent);
+	obResult (*pfnGetEntityFlags)(const GameEntity _ent, UserFlags64 &_flags);
 
 	// Function: pfnGetEntityPowerups
 	//		This function should return the powerup flags for an entity.
-	int (*pfnGetEntityPowerups)(const GameEntity _ent);
+	obResult (*pfnGetEntityPowerups)(const GameEntity _ent, UserFlags64 &_flags);
 
 	// Function: pfnGetEntityEyePosition
 	//		This function should return the eye position of an entity

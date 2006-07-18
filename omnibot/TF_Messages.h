@@ -4,7 +4,7 @@
 // $LastChangedDate: 2006-02-07 23:16:24 -0500 (Tue, 07 Feb 2006) $
 // $LastChangedRevision: 1140 $
 //
-// Title: ET Message Structure Definitions
+// Title: TF Message Structure Definitions
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,15 +25,10 @@ typedef struct
 
 typedef struct 
 {
-	TF_BuildingStatus		m_Building;
-} TF_Building;
-
-typedef struct 
-{
-	GameEntity	m_Sentry;
-	GameEntity	m_Dispenser;
-	GameEntity	m_Detpack;
-} TF_Buildables;
+	GameEntity			m_Sentry;
+	GameEntity			m_Dispenser;
+	GameEntity			m_Detpack;
+} TF_BuildInfo;
 
 typedef struct 
 {
@@ -65,6 +60,13 @@ typedef struct
 	obint32		m_Id;
 	char		m_Message[1024];
 } TF_HudHint;
+
+typedef struct  
+{
+	GameEntity	m_TargetPlayer;
+	obBool		m_Lock;
+	obBool		m_Succeeded;
+} TF_LockPosition;
 
 //////////////////////////////////////////////////////////////////////////
 

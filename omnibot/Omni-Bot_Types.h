@@ -10,8 +10,15 @@
 #define __OMNIBOT_TYPES_H__
 
 #include "Omni-Bot_BasicTypes.h"
+#include "Omni-Bot_UserFlags.h"
 
-// Errors
+// constants: Omni-bot Errors
+//		BOT_ERROR_NONE - No error
+//		BOT_ERROR_CANTLOADDLL - Can't load DLL
+//		BOT_ERROR_CANTGETBOTFUNCTIONS - Unable to get functions from bot
+//		BOT_ERROR_CANTINITBOT - Unable to init bot
+//		BOT_ERROR_BAD_INTERFACE - Bad interface passed to bot
+//		BOT_ERROR_WRONGVERSION - Version mismatch between interface and bot
 typedef enum
 {
 	BOT_ERROR_NONE,
@@ -33,7 +40,7 @@ typedef obvoidp GameEntity;
 //		A numeric value for an entities game id. Usually an array index of some sort.
 typedef int GameId;
 
-// typedef: WaypointFlags
+// typedef: NavigationFlags
 //		This is the type waypoint flags, and should be a 64 bit type
 typedef obuint64 NavigationFlags;
 
@@ -47,8 +54,12 @@ typedef enum
 	True
 } obBool;
 
-// enum: obResult
-//		Various error codes for functions.
+// enumerations: obResult
+//		Success - Successful.
+//		OutOfPVS - Out of PVS(Potential Visibility Set).
+//		UnableToAddBot - Unable to add bot for some reason.
+//		InvalidEntity - Invalid entity parameter.
+//		InvalidParameter - Invalid parameter.
 typedef enum
 {
 	Success = 0,
@@ -68,6 +79,17 @@ inline int SUCCESS(obResult _res)
 #endif
 //#define SUCCESS(x) ((x)==Success ? true : false)
 
+// enumerations: BotDebugFlag
+//		BOT_DEBUG_LOG - Debug log for this bot.
+//		BOT_DEBUG_MOVEVEC - Draw the move vector.
+//		BOT_DEBUG_AIMPOINT - Draw a line to the aim point.
+//		BOT_DEBUG_GOALS - Output info about the bot goals.
+//		BOT_DEBUG_SENSORY - Draw lines to sensed entities.
+//		BOT_DEBUG_BRAIN - Output info from the bot brain.
+//		BOT_DEBUG_WEAPON - Output info about weapon system.
+//		BOT_DEBUG_SCRIPT - Output info about bot script events/signals.
+//		BOT_DEBUG_EVENTS - Output Event info.
+//		BOT_DEBUG_FPINFO - Output first person info.
 typedef enum
 {
 	BOT_DEBUG_LOG		= (1<<0),
@@ -80,13 +102,16 @@ typedef enum
 	BOT_DEBUG_SCRIPT	= (1<<7),
 	BOT_DEBUG_EVENTS	= (1<<8),
 	BOT_DEBUG_FPINFO	= (1<<9),
+
 	// THIS MUST STAY LAST
 	NUM_BOT_DEBUG_FLAGS = (1<<16)
 } BotDebugFlag;
 
-// enum: Helpers
-//		A couple enum values for readable values for special case class identifiers
-//		Used for the client ChangeClass and ChangeTeam
+// enumerations: Helpers
+//		RANDOM_CLASS - Pick a random class.
+//		RANDOM_CLASS_IF_NO_CLASS - Pick a random class if we don't already have a class.
+//		RANDOM_TEAM - Pick a random team.
+//		RANDOM_TEAM_IF_NO_TEAM -  - Pick a random team if we don't already have a team.
 typedef enum
 {
 	RANDOM_CLASS				= -1,
@@ -95,16 +120,20 @@ typedef enum
 	RANDOM_TEAM_IF_NO_TEAM		= -2,
 } Helpers;
 
-// enum: obLineTypes
-//		For identifying the types of lines the interface should draw. Some are treated differently based on type.
-typedef enum
+// enumerations: obLineTypes
+//		LINE_NONE - Null line
+//		LINE_NORMAL - Normal line.
+//		LINE_WAYPOINT - Waypoint line.
+//		LINE_PATH - Path line.
+//		LINE_BLOCKABLE - Blockable line.
+typedef enum eLineType
 {
 	LINE_NONE,
 	LINE_NORMAL,
     LINE_WAYPOINT,
 	LINE_PATH,
 	LINE_BLOCKABLE,
-} obLineType;
+} LineType;
 
 // typedef: AABB
 //		Represents the axis aligned bounding box of an object
@@ -144,105 +173,76 @@ typedef struct AABB_t
 // Helper macro so the game can check the status of bot buttons.
 #define BOT_CHECK_BUTTON(button, flag) (((button) & (1<<(flag))) != 0)
 
-// package: ButtonFlags
-//		This enum defines the button press states available
+// enumerations: ButtonFlags
+//		BOT_BUTTON_ATTACK1 - If the bot is pressing primary attack.
+//		BOT_BUTTON_ATTACK2 - If the bot is pressing secondary attack.
+//		BOT_BUTTON_JUMP - If the bot is pressing jump.
+//		BOT_BUTTON_CROUCH - If the bot is pressing crouch.
+//		BOT_BUTTON_PRONE - If the bot is pressing prone.
+//		BOT_BUTTON_WALK - If the bot is pressing walk.
+//		BOT_BUTTON_USE - If the bot is pressing use.
+//		BOT_BUTTON_FWD - If the bot is pressing the forward key.
+//		BOT_BUTTON_BACK - If the bot is pressing the backward key.
+//		BOT_BUTTON_RSTRAFE - If the bot is pressing right strafe.
+//		BOT_BUTTON_LSTRAFE - If the bot is pressing left strafe.
+//		BOT_BUTTON_RELOAD - If the bot is pressing reload.
+//		BOT_BUTTON_SPRINT - If the bot wants to sprint.
+//		BOT_BUTTON_DROP - If the bot wants to drop current item.
+//		BOT_BUTTON_LEANLEFT - If the bot wants to lean left.
+//		BOT_BUTTON_LEANRIGHT - If the bot wants to lean right.
+//		BOT_BUTTON_AIM - If the bot wants to drop current item.
 typedef enum eButtonFlags
-{
-	// bit: BOT_BUTTON_ATTACK1
-	//		If the bot is pressing primary attack
+{	
 	BOT_BUTTON_ATTACK1,
-	// bit: BOT_BUTTON_ATTACK2
-	//		If the bot is pressing secondary attack
 	BOT_BUTTON_ATTACK2,
-	// bit: BOT_BUTTON_JUMP
-	//		If the bot is pressing jump
 	BOT_BUTTON_JUMP,
-	// bit: BOT_BUTTON_CROUCH
-	//		If the bot is pressing crouch
 	BOT_BUTTON_CROUCH,
-	// bit: BOT_BUTTON_PRONE
-	//		If the bot is pressing prone
 	BOT_BUTTON_PRONE,
-	// bit: BOT_BUTTON_WALK
-	//		If the bot is pressing walk
 	BOT_BUTTON_WALK,
-	// bit: BOT_BUTTON_USE
-	//		If the bot is pressing use
 	BOT_BUTTON_USE,
-	// bit: BOT_BUTTON_FWD
-	//		If the bot is pressing the forward key
 	BOT_BUTTON_FWD,
-	// bit: BOT_BUTTON_BACK
-	//		If the bot is pressing the backward key
 	BOT_BUTTON_BACK,
-	// bit: BOT_BUTTON_RSTRAFE
-	//		If the bot is pressing right strafe
 	BOT_BUTTON_RSTRAFE,
-	// bit: BOT_BUTTON_LSTRAFE
-	//		If the bot is pressing left strafe
 	BOT_BUTTON_LSTRAFE,
-	// bit: BOT_BUTTON_RELOAD
-	//		If the bot is pressing reload
 	BOT_BUTTON_RELOAD,
-	// bit: BOT_BUTTON_SPRINT
-	//		If the bot wants to sprint
 	BOT_BUTTON_SPRINT,
-	// bit: BOT_BUTTON_DROP
-	//		If the bot wants to drop current item
 	BOT_BUTTON_DROP,
-	// bit: BOT_BUTTON_LEANLEFT
-	//		If the bot wants to lean left
 	BOT_BUTTON_LEANLEFT,
-	// bit: BOT_BUTTON_LEANRIGHT
-	//		If the bot wants to lean right
 	BOT_BUTTON_LEANRIGHT,
-	// bit: BOT_BUTTON_AIM
-	//		If the bot wants to drop current item
 	BOT_BUTTON_AIM,
 
+	// THIS MUST BE LAST
 	BOT_BUTTUN_FIRSTUSER
 } ButtonFlags;
 
-// package: GoalType
-//		This enum defines the identifiers for goal entity types the game can register with the bot.
+// enumerations: GoalType
+//		GOAL_AMMO - Ammunition can be located at this goal
+//		GOAL_ARMOR - Armor can be located at this goal
+//		GOAL_HEALTH - Health can be located at this goal
+//		GOAL_GOTO - The bot should just go to this goal
+//		GOAL_DEFEND - The bot should just go to this goal and watch for targets.
+//		GOAL_ATTACK - The bot should just go to this goal and hunt for targets.
+//		GOAL_SNIPE - The bot should snipe from this point.
+//		GOAL_CTF_FLAG - The bot should attempt to grab this flag and return it to a capture point.
+//		GOAL_CTF_RETURN_FLAG - The bot should attempt to touch this flag to 'return' it.
+//		GOAL_CTF_FLAGCAP - The bot should take GOAL_CTF_FLAG to this point.
+//		GOAL_SCRIPT - A script should be ran for this goal.
 typedef enum eGoalType
 {
 	GOAL_NONE = 0,
-	// var: GOAL_AMMO
-	//		Ammunition can be located at this goal
 	GOAL_AMMO,
-	// var: GOAL_ARMOR
-	//		Armor can be located at this goal
 	GOAL_ARMOR,
-	// var: GOAL_HEALTH
-	//		Health can be located at this goal
 	GOAL_HEALTH,
-	// var: GOAL_GOTO
-	//		The bot should just go to this goal
 	GOAL_GOTO,
-	// var: GOAL_DEFEND
-	//		The bot should just go to this goal and watch for targets.
 	GOAL_DEFEND,
-	// var: GOAL_ATTACK
-	//		The bot should just go to this goal and hunt for targets.
 	GOAL_ATTACK,
-	// var: GOAL_SNIPE
-	//		The bot should snipe from this point.
 	GOAL_SNIPE,
-	// var: GOAL_CTF_FLAG
-	//		The bot should attempt to grab this flag and return it to a capture point.
 	GOAL_CTF_FLAG,
-	// var: GOAL_CTF_RETURN_FLAG
-	//		The bot should attempt to touch this flag to 'return' it.
 	GOAL_CTF_RETURN_FLAG,
-	// var: GOAL_CTF_FLAGCAP
-	//		The bot should take GOAL_CTF_FLAG to this point.
 	GOAL_CTF_FLAGCAP,
-	// var: GOAL_SCRIPT
-	//		A script should be ran for this goal.
 	GOAL_SCRIPT,
 
-	// This must stay last!
+	// THIS MUST BE LAST
 	BASE_GOAL_NUM
 } GoalType;
 
@@ -287,88 +287,79 @@ typedef enum eBasicGoals
 	goal_strafe,
 	goal_adjust_range,
 	goal_say_phrase*/
+
+	// THIS MUST BE LAST
 	goal_base_num
 } Goals_Base;
 
-// package: EntityFlags
-//		Possible flags that can go on an entity for special behavior/treatment
-typedef enum eEntityFlags
+// enumerations: EntityFlag
+//		ENT_FLAG_TEAM1 - This entity is only available/visible for team 1
+//		ENT_FLAG_TEAM2 - This entity is only available/visible for team 2
+//		ENT_FLAG_TEAM3 - This entity is only available/visible for team 3
+//		ENT_FLAG_TEAM4 - This entity is only available/visible for team 4
+//		ENT_FLAG_DISABLED - Entity is disabled
+//		ENT_FLAG_PRONED - This entity is prone
+//		ENT_FLAG_CROUCHED - This entity is crouched
+//		ENT_FLAG_CARRYABLE - This entity is carryable(flag, powerup,...)
+//		ENT_FLAG_DEAD - This entity is dead
+//		ENT_FLAG_INWATER - This entity is in water
+//		ENT_FLAG_UNDERWATER - This entity is under water
+//		ENT_FLAG_ZOOMING - This entity is zooming through scope or binoculars.
+//		ENT_FLAG_LADDER - This entity is on a ladder.
+typedef enum eEntityFlag
 {
-	// bit: ENT_FLAG_TEAM1
-	// bit: ENT_FLAG_TEAM2
-	// bit: ENT_FLAG_TEAM3
-	// bit: ENT_FLAG_TEAM4
-	//		This entity is only available/visible for a certain team.
-	ENT_FLAG_TEAM1		= (1<<0),
-	ENT_FLAG_TEAM2		= (1<<1),
-	ENT_FLAG_TEAM3		= (1<<2),
-	ENT_FLAG_TEAM4		= (1<<3),
-
-	// bit: ENT_FLAG_DISABLED
-	//		This entity is disabled
-	ENT_FLAG_DISABLED	= (1<<4),
-	// bit: ENT_FLAG_PRONED
-	//		This entity is prone
-	ENT_FLAG_PRONED		= (1<<5),
-	// bit: ENT_FLAG_CROUCHED
-	//		This entity is crouched
-	ENT_FLAG_CROUCHED	= (1<<6),
-	// bit: ENT_FLAG_CARRYABLE
-	//		This entity is carryable(flag, powerup,...)
-    ENT_FLAG_CARRYABLE	= (1<<7),
-	// bit: ENT_FLAG_DEAD
-	//		This entity is dead
-	ENT_FLAG_DEAD		= (1<<8),
-	// bit: ENT_FLAG_INWATER
-	//		This entity is in water
-	ENT_FLAG_INWATER	= (1<<9),
-	// bit: ENT_FLAG_UNDERWATER
-	//		This entity is under water
-	ENT_FLAG_UNDERWATER	= (1<<10),
-	// bit: ENT_FLAG_ZOOMING
-	//		This entity is zooming through scope or binoculars.
-	ENT_FLAG_ZOOMING	= (1<<11),
-	// bit: ENT_FLAG_LADDER
-	//		This entity is on a ladder.
-	ENT_FLAG_LADDER		= (1<<12),
+	ENT_FLAG_NONE = 0,	
+	ENT_FLAG_TEAM1,
+	ENT_FLAG_TEAM2,
+	ENT_FLAG_TEAM3,
+	ENT_FLAG_TEAM4,	
+	ENT_FLAG_DISABLED,	
+	ENT_FLAG_PRONED,	
+	ENT_FLAG_CROUCHED,	
+    ENT_FLAG_CARRYABLE,	
+	ENT_FLAG_DEAD,	
+	ENT_FLAG_INWATER,	
+	ENT_FLAG_UNDERWATER,	
+	ENT_FLAG_ZOOMING,	
+	ENT_FLAG_LADDER,
 
 	// THIS MUST BE LAST
-	ENT_FLAG_FIRST_USER	= (1<<16)
-} EntityFlags;
+	ENT_FLAG_FIRST_USER	= 32
+} EntityFlag;
 
-// package: EntityCategory
-//		Category flags that categorize this entity type for sensory queries.
+// enumerations: Powerups
+//		PW_INVINCIBLE - The entity is invincible.
+typedef enum ePowerups
+{
+	PWR_NONE = 0,
+	PWR_INVINCIBLE,
+
+	// THIS MUST BE LAST	
+	PWR_FIRST_USER		= 16,
+} Powerups;
+
+// enumerations: EntityCategory
+//		ENT_CAT_PLAYER - This entity is a player of some sort.
+//		ENT_CAT_PROJECTILE - This entity is a projectile of some sort.
+//		ENT_CAT_SHOOTABLE - This entity is shootable.
+//		ENT_CAT_PICKUP - This entity is a pickup/powerup of some sort.
+//		ENT_CAT_TRIGGER - This entity is a trigger of some sort.
+//		ENT_CAT_MOVER - This entity is a mover of some sort(lift, door,...).
+//		ENT_CAT_AVOID - This entity is something bots should avoid.
+//		ENT_CAT_MOUNTEDWEAPON - This entity is something bots can mount and use.
+//		ENT_CAT_MISC - Miscellaneous entity category.
+//		ENT_CAT_STATIC - Static entities don't need to be seen. This allows the bot to skip LOS checks.
 typedef enum eEntityCategory
 {
-	// bit: ENT_CAT_PLAYER
-	//		This entity is a player of some sort
 	ENT_CAT_PLAYER		= (1<<0),
-	// bit: ENT_CAT_PROJECTILE
-	//		This entity is a projectile of some sort
 	ENT_CAT_PROJECTILE	= (1<<1),
-	// bit: ENT_CAT_SHOOTABLE
-	//		This entity is shootable
 	ENT_CAT_SHOOTABLE	= (1<<2),
-	// bit: ENT_CAT_PICKUP
-	//		This entity is a pickup/powerup of some sort
 	ENT_CAT_PICKUP		= (1<<3),
-	// bit: ENT_CAT_TRIGGER
-	//		This entity is a trigger of some sort
 	ENT_CAT_TRIGGER		= (1<<4),
-	// bit: ENT_CAT_MOVER
-	//		This entity is a mover of some sort(lift, door,...)
 	ENT_CAT_MOVER		= (1<<5),
-	// bit: ENT_CAT_AVOID
-	//		This entity is something bots should avoid
 	ENT_CAT_AVOID		= (1<<6),
-	// bit: ENT_CAT_MOUNTEDWEAPON
-	//		This entity is something bots can mount and use
 	ENT_CAT_MOUNTEDWEAPON= (1<<7),
-	// bit: ENT_CAT_MISC
-	//		Miscellaneous entity category.
 	ENT_CAT_MISC		= (1<<8),
-	// bit: ENT_CAT_STATIC
-	//		Static entities don't need to be seen. This allows the bot to skip LOS checks.
 	ENT_CAT_STATIC		= (1<<9),
 
 	// THIS MUST BE LAST
@@ -386,56 +377,48 @@ typedef enum eEntityClassGeneric
 	ENT_CLASS_GENERIC_ARMOR,
 } EntityClassGeneric;
 
-// package: SoundType
-//		This enum categorizes generic sound types for the bot. Mods can extend this
-//		if they want with more specific sound ids or more categories.
+// enumerations: SoundType
+//		SND_JUMP - Sound of jump from another entity.
+//		SND_FOOTSTEP - Sound of footstep from another entity.
+//		SND_TAKEDAMAGE - Sound of another entity taking damage.
+//		SND_POWERUP_SPAWN - Sound of a powerup respawning.
+//		SND_POWERUP_PICKUP - Sound of a powerup being picked up.
+//		SND_WEAPON_FIRE - Sound of a weapon firing.
+//		SND_WEAPON_RELOAD - Sound of a weapon reloading.
+//		SND_WEAPON_EMPTY - Sound of a weapon empty.
+//		SND_WEAPON_STARTFIRE - Sound of a weapon starting to fire.
+//		SND_VOICE_TAUNT - Sound of a voice taunt.
+//		SND_VOICE_TEAM - Sound of a voice team message.
+//		SND_VOICE_ENEMY - Sound of a voice enemy message.
 typedef enum eSoundType
 {
 	SND_NONE,
-
-	// int: SND_JUMP
-	//		Sound of jump from another entity
 	SND_JUMP,
-	// int: SND_FOOTSTEP
-	//		Sound of footstep from another entity
 	SND_FOOTSTEP,
-	// int: SND_TAKEDAMAGE
-	//		Sound of another entity taking damage
 	SND_TAKEDAMAGE,
-	// int: SND_POWERUP_SPAWN
-	//		Sound of a powerup respawning
 	SND_POWERUP_SPAWN,
-	// int: SND_POWERUP_PICKUP
-	//		Sound of a powerup being picked up
 	SND_POWERUP_PICKUP,
-	// int: SND_WEAPON_FIRE
-	//		Sound of a weapon firing
 	SND_WEAPON_FIRE,
-	// int: SND_WEAPON_RELOAD
-	//		Sound of a weapon reloading
 	SND_WEAPON_RELOAD,
-	// int: SND_WEAPON_EMPTY
-	//		Sound of a weapon empty
 	SND_WEAPON_EMPTY,
-	// int: SND_WEAPON_STARTFIRE
-	//		Sound of a weapon starting to fire
 	SND_WEAPON_STARTFIRE,
-	// int: SND_VOICE_TAUNT
-	//		Sound of a voice taunt
 	SND_VOICE_TAUNT,
-	// int: SND_VOICE_TEAM
-	//		Sound of a voice team message
 	SND_VOICE_TEAM,
-	// int: SND_VOICE_ENEMY
-	//		Sound of a voice enemy message
 	SND_VOICE_ENEMY,
 
 	// THIS MUST BE LAST!
 	SND_MAX_SOUNDS
 } SoundType;
 
-// package: Contents
-//		This enum defines contents representing special properties of a place
+// enumerations: Contents
+//		CONT_SOLID - Solid object.
+//		CONT_WATER - In water.
+//		CONT_SLIME - In slime.
+//		CONT_FOG - In fog.
+//		CONT_TELEPORTER - In teleporter.
+//		CONT_MOVER - In mover.
+//		CONT_TRIGGER - In trigger.
+//		CONT_LAVA - In lava.
 typedef enum eContents
 {
 	CONT_SOLID		= (1<<0),
@@ -451,22 +434,17 @@ typedef enum eContents
 	CONT_START_USER = (1<<24)
 } Contents;
 
-// package: NavigationID
-//		This enum defines the available navigation systems that are usable for path planning.
+// enumerations: NavigationID
+//		NAVID_WP - Waypoint-based path planning implementation.
+//		NAVID_NAVMESH - Navigation mesh path planning implementation.
+//		NAVID_AAS - Implementation of Quake 4 AAS system.
+//		NAVID_HL2_NAVMESH - Implementation of HL2 Navigation Mesh.
 typedef enum eNavigatorID
 {
-	NAVID_NONE,
-	// int: NAVID_WP
-	//		Waypoint-based path planning implementation
-	NAVID_WP,
-	// int: NAVID_NAVMESH
-	//		Navigation mesh path planning implementation
-	NAVID_NAVMESH,
-	// int: NAVID_AAS
-	//		Implementation of Quake 4 AAS system
-	NAVID_Q4_AAS,
-	// int: NAVID_HL2_NAVMESH
-	//		Implementation of HL2 Navigation Mesh
+	NAVID_NONE,	
+	NAVID_WP,	
+	NAVID_NAVMESH,	
+	NAVID_Q4_AAS,	
 	NAVID_HL2_NAVMESH,
 
 	// THIS MUST BE LAST!
@@ -500,34 +478,26 @@ typedef struct
 	int			m_iUser2;
 } BotTraceResult;
 
-// package: TraceMasks
-//		This enum defines the masks used for tracelines.
+// enumerations: TraceMasks
+//		TR_MASK_ALL - This trace should test against everything
+//		TR_MASK_SOLID - This trace should test against only solids
+//		TR_MASK_PLAYER - This trace should test against only players
+//		TR_MASK_SHOT - This trace should test as a shot trace
+//		TR_MASK_OPAQUE - This trace should test against opaque objects only
+//		TR_MASK_WATER - This trace should test against water
+//		TR_MASK_PLAYERCLIP - This trace should test against player clips
+//		TR_MASK_SMOKEBOMB - This trace should test against player clips
 typedef enum eTraceMasks
 {
-	// enum: TR_MASK_ALL
-	//		This trace should test against everything
 	TR_MASK_ALL			= (1<<0),
-	// enum: TR_MASK_SOLID
-	//		This trace should test against only solids
 	TR_MASK_SOLID		= (1<<1),
-	// enum: TR_MASK_PLAYER
-	//		This trace should test against only players
 	TR_MASK_PLAYER		= (1<<2),
-	// const: TR_MASK_SHOT
-	//		This trace should test as a shot trace
 	TR_MASK_SHOT		= (1<<3),
-	// const: TR_MASK_OPAQUE
-	//		This trace should test against opaque objects only
 	TR_MASK_OPAQUE		= (1<<4),
-	// const: TR_MASK_WATER
-	//		This trace should test against water
 	TR_MASK_WATER		= (1<<5),
-	// const: TR_MASK_PLAYERCLIP
-	//		This trace should test against player clips
 	TR_MASK_PLAYERCLIP	= (1<<6),
-	// const: TR_MASK_SMOKEBOMB
-	//		This trace should test against player clips
 	TR_MASK_SMOKEBOMB	= (1<<7),
+
 	// THIS MUST BE LAST!
 	TR_MASK_LAST = (1<<16)
 } TraceMasks;
@@ -700,16 +670,16 @@ typedef struct
 {
 	// int: m_EntityClass
 	//		The specific classification of this entity
-	int			m_EntityClass;
-	// int: m_EntityFlags
-	//		Current flags of this entity, see <EntityFlags>
-	int			m_EntityFlags;
+	int			m_EntityClass;	
 	// int: m_EntityCategoty
 	//		Current category of this entity, see <EntityCategory>
 	int			m_EntityCategory;
+	// int: m_EntityFlags
+	//		Current flags of this entity, see <EntityFlags>
+	UserFlags64	m_EntityFlags;
 	// var: m_UserData
 	//		Additional Info
-	BotUserData	m_UserData;
+	//BotUserData	m_UserData;
 } EntityInfo;
 
 // struct: TriggerInfo
