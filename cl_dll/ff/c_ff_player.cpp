@@ -489,10 +489,11 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 
 	if ( iDamageType == DMG_BLAST )
 	{
-		dir *= 40000;  // adjust impact strenght
+		dir *= 4000;  // adjust impact strenght
 
 		// apply force at object mass center
 		pPhysicsObject->ApplyForceCenter( dir );
+		pPhysicsObject->AddVelocity(&dir, &dir);
 	}
 	else
 	{
