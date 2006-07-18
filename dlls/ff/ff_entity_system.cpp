@@ -1025,6 +1025,22 @@ namespace FFLib
 		return "\0";
 	}
 
+	int GetPing( CFFPlayer *pPlayer )
+	{
+		if( pPlayer )
+			return pPlayer->GetPing();
+
+		return 0;
+	}
+
+	int GetPacketloss( CFFPlayer *pPlayer )
+	{
+		if( pPlayer )
+			return pPlayer->GetPacketloss();
+
+		return 0;
+	}
+
 	const char *PrintBool( bool bValue )
 	{
 		return bValue ? "True" : "False";
@@ -1215,6 +1231,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsEffectActive",		&CFFPlayer::LuaIsEffectActive)
 			.def("RemoveEffect",		&CFFPlayer::LuaRemoveEffect)
 			.def("GetSteamID",			&CFFPlayer::GetSteamID)
+			.def("GetPing",				&CFFPlayer::GetPing)
+			.def("GetPacketloss",		&CFFPlayer::GetPacketloss)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
@@ -1305,6 +1323,8 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetConvar",				&FFLib::GetConvar),
 		def("SetConvar",				&FFLib::SetConvar),
 		def("GetSteamID",				&FFLib::GetSteamID),
+		def("GetPing",					&FFLib::GetPing),
+		def("GetPacketloss",			&FFLib::GetPacketloss),
 		def("PrintBool",				&FFLib::PrintBool)
 	];
 }
