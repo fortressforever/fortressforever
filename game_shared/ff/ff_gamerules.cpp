@@ -945,7 +945,7 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent->SetInt( "userid", pVictim->GetUserID() );
 			pEvent->SetInt( "attacker", iKillerID );
 			pEvent->SetString( "weapon", pszWeapon );
-			gameeventmanager->FireEvent( pEvent, true );
+			gameeventmanager->FireEvent( pEvent );
 		}
 	}
 
