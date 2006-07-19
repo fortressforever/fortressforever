@@ -731,7 +731,7 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 void CBaseCombatWeapon::SetActivity( Activity act, float duration ) 
 { 
 	//Adrian: Oh man...
-#if !defined( CLIENT_DLL ) && defined( HL2MP )
+#if !defined( CLIENT_DLL ) //&& defined( HL2MP )	// |-- Mirv: We need this too
 	SetModel( GetWorldModel() );
 #endif
 	
@@ -742,7 +742,7 @@ void CBaseCombatWeapon::SetActivity( Activity act, float duration )
 		sequence = SelectWeightedSequence( ACT_VM_IDLE );
 
 	//Adrian: Oh man again...
-#if !defined( CLIENT_DLL ) && defined( HL2MP )
+#if !defined( CLIENT_DLL ) //&& defined( HL2MP )	// |-- Mirv: We need this too
 	SetModel( GetViewModel() );
 #endif
 
@@ -1861,8 +1861,10 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	else
 	{
 		//Set our activity to the ideal
-		SetActivity( m_IdealActivity );
-		SetSequence( m_nIdealSequence );	
+		// --> Mirv: Fixed so that we can catch activity changes
+		SetActivity( m_IdealActivity, 0 );
+		//SetSequence( m_nIdealSequence );
+		// <--
 		SendViewModelAnim( m_nIdealSequence );
 	}
 
