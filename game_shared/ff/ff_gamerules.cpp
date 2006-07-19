@@ -642,14 +642,12 @@ ConVar mp_prematch( "mp_prematch",
 			if (pEntity->m_takedamage == DAMAGE_NO) 
 				continue;
 
+			// Is this a buildable of some sort
+			CFFBuildableObject *pBuildable = dynamic_cast <CFFBuildableObject *> (info.GetInflictor());
+
 			// Skip objects that are building
-			if( ( pEntity->Classify() == CLASS_DISPENSER ) ||
-				( pEntity->Classify() == CLASS_SENTRYGUN ) ||
-				( pEntity->Classify() == CLASS_DETPACK ) )
-			{
-				if( !( ( CFFBuildableObject * )pEntity )->IsBuilt() )
-					continue;
-			}
+			if(pBuildable && !pBuildable->IsBuilt())
+				continue;
 
 #ifdef GAME_DLL
 			//NDebugOverlay::EntityBounds(pEntity, 0, 0, 255, 100, 5.0f);
@@ -726,7 +724,9 @@ ConVar mp_prematch( "mp_prematch",
 
 			// In TFC players only do 2/3 damage to themselves
 			// This also affects forces by the same amount
-			if (pEntity == info.GetAttacker())
+			// Added: Make sure the source isn't a buildable though
+			// as that should do full damage!
+			if (pEntity == info.GetAttacker() && !pBuildable)
 				flAdjustedDamage *= 0.66666f;
 
 			// If we're stuck inside them, fixup the position and distance

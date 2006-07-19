@@ -576,6 +576,9 @@ void CFFDispenser::DoExplosionDamage()
 	float flDamage = 1.4f * m_iRockets + 1.0f * m_iCells;
 	flDamage = min(200, flDamage);
 
-	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
-	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+	// In TFC the damage comes from the base of the dispenser
+	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin(), flDamage, DMG_BLAST);
+	RadiusDamage(info, GetAbsOrigin(), 625, CLASS_NONE, NULL);
+
+	UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 }
