@@ -93,6 +93,16 @@ PRECACHE_WEAPON_REGISTER(rocket);
 		BaseClass::Spawn();
 	}
 
+#else
+
+//----------------------------------------------------------------------------
+// Purpose: Simulate the rocket client side
+//----------------------------------------------------------------------------
+void CFFProjectileRocket::Simulate( void )
+{
+	// TODO: Move the rocket!
+}
+
 #endif
 
 //----------------------------------------------------------------------------
