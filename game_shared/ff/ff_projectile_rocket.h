@@ -45,6 +45,7 @@ public:
 	CFFProjectileRocket(const CFFProjectileRocket&) {}
 
 	virtual const char *GetFlightSound() { return "rocket.fly"; }
+	virtual void Simulate( void );
 
 #else
 	DECLARE_DATADESC()
