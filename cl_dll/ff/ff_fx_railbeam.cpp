@@ -14,6 +14,7 @@
 #include "ff_fx_railbeam.h"
 #include "c_te_effect_dispatch.h"
 #include "view.h"
+#include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -108,7 +109,7 @@ void FX_RailBeam(int entindex, const Vector &target, float scale)
 	C_BaseAnimating *pWeapon;
 
 	// Use the correct weapon model
-	if (pPlayer->IsLocalPlayer())
+	if (pPlayer->IsLocalPlayer() && !input->CAM_IsThirdPerson())
 		pWeapon = pPlayer->GetViewModel(0);
 	else
 		pWeapon = pPlayer->GetActiveWeapon();
@@ -119,7 +120,7 @@ void FX_RailBeam(int entindex, const Vector &target, float scale)
 	// Get the attachment (precache this number sometime)
 	if (pWeapon)
 	{
-		int iAttachment = pWeapon->LookupAttachment("muzzle");
+		int iAttachment = pWeapon->LookupAttachment("1");
 		pWeapon->GetAttachment(iAttachment, m_vecStartPosition, angDirection);
 	}
 	else
