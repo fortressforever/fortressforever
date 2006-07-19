@@ -25,7 +25,7 @@ int ACT_INFO_CARRIED;
 int ACT_INFO_DROPPED;
 
 LINK_ENTITY_TO_CLASS( info_ff_script_animator, CFFInfoScriptAnimator );
-PRECACHE_REGISTER( CFFInfoScriptAnimator );
+PRECACHE_REGISTER( info_ff_script_animator );
 
 BEGIN_DATADESC( CFFInfoScriptAnimator )
 	DEFINE_THINKFUNC( OnThink ),
@@ -170,27 +170,29 @@ void CFFInfoScript::Spawn( void )
 	m_vStartAngles = GetAbsAngles();
 	m_atStart = true;
 
-	if( entsys.RunPredicates( this, NULL, "hasanimation" ) && !m_bHasAnims )
-	{
-		m_bHasAnims = true;
+	// Check to see if this object has animations
+	m_bHasAnims = entsys.GetFunctionValue_Bool( this, "hasanimation", NULL );
 
+	Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
+
+	// If using anims, set them up!
+	if( m_bHasAnims )
+	{
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_RETURNED );
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_DROPPED );
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_CARRIED );
 
+		// Set up the animator helper
 		m_pAnimator = ( CFFInfoScriptAnimator * )CreateEntityByName( "info_ff_script_animator" );
 		if( m_pAnimator )
 		{
-			//Warning( "[info_ff_script] created animator!\n" );
 			m_pAnimator->Spawn();
 			m_pAnimator->m_pFFScript = this;
 		}
 	}
 
-	if( entsys.RunPredicates( this, NULL, "usephysics" ) && !m_bUsePhysics )
-	{
-		m_bUsePhysics = true;
-	}
+	// Check to see if this object uses physics
+	m_bUsePhysics = entsys.GetFunctionValue_Bool( this, "usephysics", NULL );
 
 	CreateItemVPhysicsObject();
 

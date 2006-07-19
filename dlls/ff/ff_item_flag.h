@@ -138,6 +138,9 @@ public:
 	DECLARE_CLASS( CFFInfoScriptAnimator, CBaseAnimating );
 	DECLARE_DATADESC();
 
+	CFFInfoScriptAnimator( void ) {}
+	~CFFInfoScriptAnimator( void ) {}
+
 	virtual void	Spawn( void );
 	void			OnThink( void );
 

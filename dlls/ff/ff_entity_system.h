@@ -85,6 +85,15 @@ public:
 	bool GetFunction(luabind::adl::object& tableObject,
 					 const char* szFunctionName,
 					 luabind::adl::object& outObject);
+
+	// Just checks if object exists
+	bool GetObject( CBaseEntity *pEntity );
+
+	// Just checks if a function for an object exists
+	bool GetFunction( CBaseEntity *pEntity, const char *szFunctionName );
+
+	// This is temp... needs to be templatable
+	bool GetFunctionValue_Bool( CBaseEntity *pEntity, const char *szFunction, CBaseEntity *pArg );
 };
 
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );

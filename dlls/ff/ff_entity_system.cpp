@@ -1539,6 +1539,49 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 }
 
 //----------------------------------------------------------------------------
+// Purpose: Check to see if an object exists
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetObject( CBaseEntity *pEntity )
+{
+	luabind::adl::object table;
+	return GetObject( pEntity, table );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Check to see if a function exists for an object
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetFunction( CBaseEntity *pEntity, const char *szFunctionName )
+{
+	luabind::adl::object table;
+	
+    if( GetObject( pEntity, table ) )
+		return GetFunction( pEntity, szFunctionName, table );
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get a value from a function
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetFunctionValue_Bool( CBaseEntity *pEntity, const char *szFunctionName, CBaseEntity *pArg )
+{
+	luabind::adl::object table;
+
+	try
+	{
+		if( GetFunction( pEntity, szFunctionName, table ) )
+			return luabind::call_function< bool >( table, pArg );
+	}
+	catch( ... )
+	{
+		Warning( "[GetFunctionValue] Error!\n" );
+		return false;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Runs the appropriate script function
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
