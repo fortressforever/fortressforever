@@ -1026,9 +1026,11 @@ void CFFSentryGun::Detonate()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::DoExplosionDamage()
 {
-	// Going to use the same calculation as emp damage right now
-	float flDamage = 2.0f * TakeEmp();
+	float flDamage = 2 * (m_iRockets * 1.4f + m_iShells * 1.0f);
+	flDamage = min(280, flDamage);
 	
 	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
 	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
+
+	UTIL_ScreenShake(GetAbsOrigin(), flDamage * 0.0125f, 150.0f, m_flExplosionDuration, 620.0f, SHAKE_START);
 }
