@@ -17,6 +17,7 @@
 #include "ClientEffectPrecacheSystem.h"
 #include "c_ff_player.h"
 #include "c_ff_env_flamejet.h"
+#include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -196,14 +197,14 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	QAngle angAngles = pOwner->EyeAngles();
 	C_BaseAnimating *pWeapon = NULL;
 
-	if (pOwner->IsLocalPlayer()) 
+	if (pOwner->IsLocalPlayer() && !input->CAM_IsThirdPerson()) 
 		pWeapon = pOwner->GetViewModel(0);
 	else
 		pWeapon = pOwner->GetActiveWeapon();
 
 	if (pWeapon)
 	{
-		int iAttachment = pWeapon->LookupAttachment("muzzle");
+		int iAttachment = pWeapon->LookupAttachment("1");
 		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
 	}
 

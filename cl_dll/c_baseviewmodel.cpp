@@ -15,6 +15,7 @@
 #include "vmatrix.h"
 #include "cl_animevent.h"
 #include "eventlist.h"
+#include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -91,6 +92,10 @@ void C_BaseViewModel::UncorrectViewModelAttachment( Vector &vOrigin )
 //-----------------------------------------------------------------------------
 void C_BaseViewModel::FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options )
 {
+	// Mirv: Don't do any viewmodel stuff in third person
+	if (input->CAM_IsThirdPerson())
+		return;
+
 	// We override sound requests so that we can play them locally on the owning player
 	if ( ( event == AE_CL_PLAYSOUND ) || ( event == CL_EVENT_SOUND ) )
 	{
