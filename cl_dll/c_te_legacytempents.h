@@ -155,20 +155,26 @@ private:
 	struct model_t			*m_pHL1ShotgunShell;
 #endif
 
-#if defined( CSTRIKE_DLL ) || defined ( FF_DLL )
+#if defined( CSTRIKE_DLL )
 	struct model_t			*m_pCS_9MMShell;
 	struct model_t			*m_pCS_57Shell;
 	struct model_t			*m_pCS_12GaugeShell;
 	struct model_t			*m_pCS_556Shell;
 	struct model_t			*m_pCS_762NATOShell;
 	struct model_t			*m_pCS_338MAGShell;
-	struct model_t			*m_pFF_40MMShell;
 #endif
 
-	// --> Mirv: FF projectile models
+// --> Mirv: Our models
+#if defined (FF_DLL)
+	struct model_t			*m_pCS_9MMShell;
+	struct model_t			*m_pCS_12GaugeShell;
+
+	struct model_t			*m_pFF_40MMShell;
+
 	struct model_t			*m_pFF_Nail;
 	struct model_t			*m_pFF_Dart;
-	// <--
+#endif
+// <-- Mirv
 
 // Internal methods also available to children
 protected:

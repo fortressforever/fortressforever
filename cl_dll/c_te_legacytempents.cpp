@@ -2142,20 +2142,26 @@ void CTempEnts::LevelInit()
 	m_pHL1ShotgunShell	= (model_t *)engine->LoadModel( "models/shotgunshell.mdl" );
 #endif
 
-#if defined( CSTRIKE_DLL ) || defined ( FF_DLL )
+#if defined( CSTRIKE_DLL )
 	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_9mm.mdl" );
 	m_pCS_57Shell		= (model_t *)engine->LoadModel( "models/shells/shell_57.mdl" );
 	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/shells/shell_12gauge.mdl" );
 	m_pCS_556Shell		= (model_t *)engine->LoadModel( "models/shells/shell_556.mdl" );
 	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/shells/shell_762nato.mdl" );
 	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/shells/shell_338mag.mdl" );
-	m_pFF_40MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
 #endif
 
-	// --> Mirv: Load FF projectile models
+// --> Mirv: Load FF models
+#if defined (FF_DLL)
+	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_9mm.mdl" );
+	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/shells/shell_12gauge.mdl" );
+
+	m_pFF_40MMShell		= (model_t *)engine->LoadModel( "models/shells/shell_40mm.mdl" );
+
 	m_pFF_Nail			= (model_t *) engine->LoadModel("models/projectiles/nail/w_nail.mdl");
 	m_pFF_Dart			= (model_t *) engine->LoadModel("models/projectiles/dart/w_dart.mdl");
-	// <-- Mirv
+#endif
+// <-- Mirv
 }
 
 
@@ -2185,13 +2191,23 @@ void CTempEnts::Init (void)
 	m_pHL1ShotgunShell	= NULL;
 #endif
 
-#if defined( CSTRIKE_DLL ) || defined ( FF_DLL )
+#if defined( CSTRIKE_DLL )
 	m_pCS_9MMShell		= NULL;
 	m_pCS_57Shell		= NULL;
 	m_pCS_12GaugeShell	= NULL;
 	m_pCS_556Shell		= NULL;
 	m_pCS_762NATOShell	= NULL;
 	m_pCS_338MAGShell	= NULL;
+#endif
+
+#if defined (FF_DLL)
+	m_pCS_9MMShell		= NULL;
+	m_pCS_12GaugeShell	= NULL;
+
+	m_pFF_40MMShell		= NULL;
+
+	m_pFF_Dart			= NULL;
+	m_pFF_Nail			= NULL;
 #endif
 
 	// Clear out lists to start
@@ -3148,7 +3164,7 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	const model_t *pModel = NULL;
 	int hitsound = TE_BOUNCE_SHELL;
 
-#if defined ( CSTRIKE_DLL ) || defined ( FF_DLL )
+#if defined ( CSTRIKE_DLL )
 
 	switch( shellType )
 	{
@@ -3181,6 +3197,27 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 		hitsound = TE_RIFLE_SHELL;
 		pModel = m_pFF_40MMShell;
 	}
+#endif
+
+#if defined (FF_DLL)
+	
+	switch( shellType )
+	{
+	default:
+	case CS_SHELL_9MM:
+		hitsound = TE_PISTOL_SHELL;
+		pModel = m_pCS_9MMShell;
+		break;
+	case CS_SHELL_12GAUGE:
+		hitsound = TE_SHOTGUN_SHELL;
+		pModel = m_pCS_12GaugeShell;
+		break;
+	case FF_SHELL_40MM:
+		hitsound = TE_RIFLE_SHELL;
+		pModel = m_pFF_40MMShell;
+		break;
+	}
+
 #endif
 
 	if ( pModel == NULL )
