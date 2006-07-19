@@ -12,6 +12,7 @@
 #include "engine/ivmodelinfo.h"
 #include "c_fire_smoke.h"
 #include "engine/IEngineSound.h"
+#include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -690,6 +691,11 @@ void C_EntityFlame::OnDataChanged( DataUpdateType_t updateType )
 		{
 			return;
 		}
+
+		// --> Mirv: Don't attach to local player in first person mode
+		if (pEnt == CBasePlayer::GetLocalPlayer() && !input->CAM_IsThirdPerson())
+			return;
+		// <--
 		
 		if ( m_bUseHitboxes && pEnt->GetBaseAnimating() != NULL )
 		{
@@ -881,22 +887,6 @@ void C_EntityFlame::AttachToHitBoxes( void )
 	m_pCachedModel = NULL;
 
 	C_BaseCombatCharacter *pAnimating = (C_BaseCombatCharacter *)m_hEntAttached.Get();
-
-	// --> Mirv: Effect looks whack on local player, so put it on their view model instead
-	float flHitboxMinVolume = 1000.0f;
-	float flHitboxMaxVolume = 4000.0f;
-
-	C_BasePlayer *player = dynamic_cast<C_BasePlayer *> (pAnimating);
-
-	if (player == C_BasePlayer::GetLocalPlayer())
-	{
-		pAnimating = (C_BaseCombatCharacter *) player->GetViewModel();
-		
-		flHitboxMinVolume = 50.0f;
-		flHitboxMaxVolume = 200.0f;
-	}
-	// <-- Mirv
-
 	if (!pAnimating || !pAnimating->GetModel())
 	{
 		return;
@@ -955,11 +945,11 @@ void C_EntityFlame::AttachToHitBoxes( void )
 		{
 			hitboxindex = random->RandomInt( 0, set->numhitboxes - 1 );
 		}
-		
+
 		mstudiobbox_t *pBox = set->pHitbox( hitboxvolume[hitboxindex].nIndex );
 
 		Assert( hitboxbones[pBox->bone] );
-	
+
 		m_nHitbox[i] = hitboxvolume[hitboxindex].nIndex;
 		m_pFireSmoke[i] = new C_FireSmoke;
 
@@ -971,7 +961,7 @@ void C_EntityFlame::AttachToHitBoxes( void )
 		VectorTransform( m_vecFireOrigin[i], *hitboxbones[pBox->bone], vecAbsOrigin);
 		m_pFireSmoke[i]->SetLocalOrigin( vecAbsOrigin );
 
-		
+
 		//
 		// The first fire emits smoke, the rest do not.
 		//
@@ -985,23 +975,24 @@ void C_EntityFlame::AttachToHitBoxes( void )
 		m_pFireSmoke[i]->m_flChildFlameSpread = 20.0;
 		m_pFireSmoke[i]->m_flScaleStart = 0;
 		m_pFireSmoke[i]->SetOwnerEntity( this );
-		
+
 		// Do a simple That Looks About Right clamp on the volumes
 		// so that we don't get flames too large or too tiny.
 		float flVolume = hitboxvolume[hitboxindex].flVolume;
 
 		Assert( IsFinite(flVolume) );
 
-		// --> Mirv: Swapped to using variable rather than definition
-		if( flVolume < flHitboxMinVolume )
+#define FLAME_HITBOX_MIN_VOLUME 1000.0f
+#define FLAME_HITBOX_MAX_VOLUME 4000.0f
+
+		if( flVolume < FLAME_HITBOX_MIN_VOLUME )
 		{
-			flVolume = flHitboxMinVolume;
+			flVolume = FLAME_HITBOX_MIN_VOLUME;
 		}
-		else if( flVolume > flHitboxMaxVolume )
+		else if( flVolume > FLAME_HITBOX_MAX_VOLUME )
 		{
-			flVolume = flHitboxMaxVolume;
+			flVolume = FLAME_HITBOX_MAX_VOLUME;
 		}
-		// <-- Mirv
 
 		m_pFireSmoke[i]->m_flScaleEnd = 0.00012f * flVolume;
 		m_pFireSmoke[i]->m_flScaleTimeStart = Helper_GetTime();
@@ -1038,15 +1029,6 @@ void C_EntityFlame::UpdateHitBoxFlames( void )
 		return;
 	}
 
-	// --> Mirv: Effect looks whack on local player, so put it on their viewmodel instead
-	C_BasePlayer *player = dynamic_cast<C_BasePlayer *> (pAnimating);
-
-	if (player == C_BasePlayer::GetLocalPlayer())
-	{
-		pAnimating = (C_BaseCombatCharacter *) player->GetViewModel();
-	}
-	// <-- Mirv
-
 	if (pAnimating->GetModel() != m_pCachedModel)
 	{
 		if (m_pCachedModel != NULL)
@@ -1055,7 +1037,7 @@ void C_EntityFlame::UpdateHitBoxFlames( void )
 			DeleteHitBoxFlames();
 			AttachToHitBoxes();
 		}
-		
+
 		if (m_pCachedModel == NULL)
 		{
 			// We tried to reattach and failed.
@@ -1086,13 +1068,12 @@ void C_EntityFlame::UpdateHitBoxFlames( void )
 	{
 		Vector vecAbsOrigin;
 		mstudiobbox_t *pBox = set->pHitbox(m_nHitbox[i]);
-		
+
 		VectorTransform(m_vecFireOrigin[i], pAnimating->GetBoneForWrite( pBox->bone ), vecAbsOrigin);
 
 		m_pFireSmoke[i]->SetLocalOrigin(vecAbsOrigin);
 	}
 }
-
 
 //CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStriderKill )
 //CLIENTEFFECT_MATERIAL( "effects/spark" )
