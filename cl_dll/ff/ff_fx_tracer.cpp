@@ -58,7 +58,8 @@ void ACTracerCallback( const CEffectData &data )
 	}
 
 	// Do tracer effect
-	FX_Tracer( (Vector&)vecStart, (Vector&)data.m_vOrigin, flVelocity, bWhiz );
+	//FX_Tracer( (Vector&)vecStart, (Vector&)data.m_vOrigin, flVelocity, bWhiz );
+	FX_GunshipTracer((Vector&) vecStart, (Vector&) data.m_vOrigin, flVelocity, bWhiz);;
 }
 
 DECLARE_CLIENT_EFFECT( "ACTracer", ACTracerCallback );

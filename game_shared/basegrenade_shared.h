@@ -29,12 +29,12 @@
 class CTakeDamageInfo;
 
 #if !defined( CLIENT_DLL )
-class CBaseGrenade : public CBaseCombatCharacter, public CDefaultPlayerPickupVPhysics
+class CBaseGrenade : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
 #else
-class CBaseGrenade : public CBaseCombatCharacter
+class CBaseGrenade : public CBaseAnimating
 #endif
 {
-	DECLARE_CLASS( CBaseGrenade, CBaseCombatCharacter );
+	DECLARE_CLASS( CBaseGrenade, CBaseAnimating );
 public:
 
 	CBaseGrenade(void);
@@ -119,6 +119,10 @@ public:
 	CNetworkVar( float, m_DmgRadius );				// How far do I do damage?
 	float				m_flDetonateTime;			// Time at which to detonate.
 	float				m_flWarnAITime;				// Time at which to warn the AI
+
+	CNetworkVar(float,	m_flNextAttack);
+
+
 
 protected:
 
