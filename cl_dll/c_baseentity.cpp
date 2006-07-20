@@ -1321,12 +1321,14 @@ void C_BaseEntity::GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType
 // Purpose: Last received origin
 // Output : const float
 //-----------------------------------------------------------------------------
+ConVar sDebugAbsQueriesValid("ffdev_debugabsqueriesvalid", "0");
+
 const Vector& C_BaseEntity::GetAbsOrigin( void ) const
 {
-	char szBuffer[ 256 ];
-	Q_snprintf( szBuffer, sizeof( szBuffer ), "C: %s", const_cast< C_BaseEntity * >( this )->GetClassname() );
-
-	AssertMsg( s_bAbsQueriesValid, szBuffer );
+	if (!s_bAbsQueriesValid && sDebugAbsQueriesValid.GetBool())
+		Warning("!s_bAbsQueriesValid: %s\n", const_cast<C_BaseEntity *>(this)->GetClassname());
+	
+	Assert(s_bAbsQueriesValid);
 	const_cast<C_BaseEntity*>(this)->CalcAbsolutePosition();
 	return m_vecAbsOrigin;
 }
