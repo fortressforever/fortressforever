@@ -14,6 +14,7 @@
 #define FF_ENTITY_SYSTEM_H
 #pragma once
 
+/*
 // Lua includes
 extern "C"
 {
@@ -24,20 +25,21 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
+*/
 
 // forward declarations
 
 struct lua_State;
 
-/*
+//*
 namespace luabind
 {
 	namespace adl
 	{
 		class object;
 	}
-}*/
-using namespace luabind;
+}//*/
+//using namespace luabind;
 
 // extern declarations
 extern ConVar mp_respawndelay;
@@ -141,6 +143,7 @@ class CFFEntity_ApplyTo_Flags
 public:
 };
 
+/* think this caused linux to not compile
 //----------------------------------------------------------------------------
 // Purpose: Call into lua and get a result
 // Output : true or false - false means the object or the function of the object didn't exist
@@ -165,5 +168,6 @@ bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionNa
 
 	return false;
 }
+*/
 
 #endif // FF_ENTITY_SYSTEM_H
