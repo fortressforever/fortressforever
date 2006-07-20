@@ -15,6 +15,7 @@
 #pragma once
 
 // forward declarations
+
 struct lua_State;
 
 namespace luabind
@@ -29,6 +30,19 @@ using namespace luabind;
 
 // extern declarations
 extern ConVar mp_respawndelay;
+
+//----------------------------------------------------------------------------
+// defines
+#define LUAHANDLE	luabind::adl::object
+
+#define BEGIN_SCRIPTCALL(pEntity, hLua) \
+			if(entsys.BeginCall(pEntity, hLua)) {
+
+#define END_SCRIPTCALL()		\
+			entsys.EndCall();	\
+			}
+
+#define CALLSCRIPT		luabind::call_function
 
 //============================================================================
 // CFFEntitySystemHelper
@@ -87,6 +101,9 @@ public:
 	bool GetFunction(luabind::adl::object& tableObject,
 					 const char* szFunctionName,
 					 luabind::adl::object& outObject);
+
+	bool BeginCall(CBaseEntity* pEntity, luabind::adl::object& outObject);
+	void EndCall();
 
 	// Just checks if object exists
 	bool GetObject( CBaseEntity *pEntity );
