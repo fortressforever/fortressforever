@@ -16,6 +16,18 @@
 #include "ff_item_flag.h"
 #include "ff_entity_system.h"
 #include "debugoverlay_shared.h"
+
+// Lua includes
+extern "C"
+{
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/object.hpp"
+
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -147,9 +159,9 @@ void CFFInfoScript::Spawn( void )
 {
 	Precache();
 	
-	Vector vecOutput;
-	if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
-		m_vecOffset.GetForModify() = vecOutput;
+	//Vector vecOutput;
+	//if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
+	//	m_vecOffset.GetForModify() = vecOutput;
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON

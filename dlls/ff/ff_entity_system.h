@@ -25,6 +25,8 @@ namespace luabind
 	}
 }
 
+using namespace luabind;
+
 // extern declarations
 extern ConVar mp_respawndelay;
 
@@ -111,6 +113,7 @@ class CFFEntity_ApplyTo_Flags
 public:
 };
 
+/*
 template< class hObjType >
 bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionName, CBaseEntity *pArg, hObjType& hObjOutput )
 {
@@ -131,5 +134,6 @@ bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionNa
 
 	return false;
 }
+*/
 
 #endif // FF_ENTITY_SYSTEM_H
