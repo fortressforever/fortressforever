@@ -17,17 +17,6 @@
 #include "ff_entity_system.h"
 #include "debugoverlay_shared.h"
 
-// Lua includes
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
-#include "luabind/luabind.hpp"
-#include "luabind/object.hpp"
-
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -159,9 +148,9 @@ void CFFInfoScript::Spawn( void )
 {
 	Precache();
 	
-	//Vector vecOutput;
-	//if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
-	//	m_vecOffset.GetForModify() = vecOutput;
+	Vector vecOutput;
+	if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
+		m_vecOffset.GetForModify() = vecOutput;
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -183,9 +172,10 @@ void CFFInfoScript::Spawn( void )
 	m_atStart = true;
 
 	// Check to see if this object has animations
-	m_bHasAnims = entsys.GetFunctionValue_Bool( this, "hasanimation", NULL );
+	//m_bHasAnims = entsys.GetFunctionValue_Bool( this, "hasanimation", NULL );
+	LUA_GetObjectFunctionValue< bool >( this, "hasanimation", NULL, m_bHasAnims );
 
-	// Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
+	//Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
 
 	// If using anims, set them up!
 	if( m_bHasAnims )
@@ -204,7 +194,8 @@ void CFFInfoScript::Spawn( void )
 	}
 
 	// Check to see if this object uses physics
-	m_bUsePhysics = entsys.GetFunctionValue_Bool( this, "usephysics", NULL );
+	//m_bUsePhysics = entsys.GetFunctionValue_Bool( this, "usephysics", NULL );
+	LUA_GetObjectFunctionValue< bool >( this, "usephysics", NULL, m_bUsePhysics );
 
 	CreateItemVPhysicsObject();
 
