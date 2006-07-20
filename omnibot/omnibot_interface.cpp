@@ -237,6 +237,124 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
+	const int obUtilGetBotWeaponFromGameWeapon(int _gameWpn)
+	{
+		switch(_gameWpn)
+		{
+			case FF_WEAPON_CROWBAR: 
+				return TF_WP_CROWBAR;
+			case FF_WEAPON_KNIFE: 
+				return TF_WP_KNIFE;
+			case FF_WEAPON_MEDKIT: 
+				return TF_WP_MEDKIT;
+			case FF_WEAPON_SPANNER: 
+				return TF_WP_SPANNER;
+			case FF_WEAPON_UMBRELLA: 
+				return TF_WP_UMBRELLA;
+			case FF_WEAPON_FLAG:
+				return TF_WP_FLAG;
+			case FF_WEAPON_SHOTGUN: 
+				return TF_WP_SHOTGUN;
+			case FF_WEAPON_SUPERSHOTGUN: 
+				return TF_WP_SUPERSHOTGUN;
+			case FF_WEAPON_NAILGUN: 
+				return TF_WP_NAILGUN;
+			case FF_WEAPON_SUPERNAILGUN: 
+				return TF_WP_SUPERNAILGUN;
+			case FF_WEAPON_GRENADELAUNCHER: 
+				return TF_WP_GRENADE_LAUNCHER;
+			case FF_WEAPON_PIPELAUNCHER:
+				return TF_WP_PIPELAUNCHER;
+			case FF_WEAPON_AUTORIFLE: 
+				return TF_WP_AUTORIFLE;
+			case FF_WEAPON_SNIPERRIFLE: 
+				return TF_WP_SNIPER_RIFLE;
+			case FF_WEAPON_RADIOTAGRIFLE: 
+				return TF_WP_RADIOTAG_RIFLE;
+			case FF_WEAPON_FLAMETHROWER: 
+				return TF_WP_FLAMETHROWER;
+			case FF_WEAPON_IC: 
+				return TF_WP_NAPALMCANNON;
+			case FF_WEAPON_RAILGUN: 
+				return TF_WP_RAILGUN;
+			case FF_WEAPON_TRANQUILISER: 
+				return TF_WP_DARTGUN;
+			case FF_WEAPON_ASSAULTCANNON: 
+				return TF_WP_MINIGUN;
+			case FF_WEAPON_RPG: 
+				return TF_WP_ROCKET_LAUNCHER;
+			case FF_WEAPON_DEPLOYDISPENSER: 
+				return TF_WP_DEPLOY_DISP;
+			case FF_WEAPON_DEPLOYSENTRYGUN: 
+				return TF_WP_DEPLOY_SG;
+			case FF_WEAPON_DEPLOYDETPACK: 
+				return TF_WP_DEPLOY_DETP;
+			default:
+				return TF_WP_NONE;
+		}		
+	}
+
+	//-----------------------------------------------------------------
+
+	const int obUtilGetGameWeaponFromBotWeapon(int _botWpn)
+	{
+		switch(_botWpn)
+		{
+		case TF_WP_CROWBAR: 
+			return FF_WEAPON_CROWBAR;
+		case TF_WP_KNIFE: 
+			return FF_WEAPON_KNIFE;
+		case TF_WP_MEDKIT: 
+			return FF_WEAPON_MEDKIT;
+		case TF_WP_SPANNER: 
+			return FF_WEAPON_SPANNER;
+		case TF_WP_UMBRELLA: 
+			return FF_WEAPON_UMBRELLA;
+		case TF_WP_FLAG:
+			return FF_WEAPON_FLAG;
+		case TF_WP_SHOTGUN: 
+			return FF_WEAPON_SHOTGUN;
+		case TF_WP_SUPERSHOTGUN: 
+			return FF_WEAPON_SUPERSHOTGUN;
+		case TF_WP_NAILGUN: 
+			return FF_WEAPON_NAILGUN;
+		case TF_WP_SUPERNAILGUN: 
+			return FF_WEAPON_SUPERNAILGUN;
+		case TF_WP_GRENADE_LAUNCHER: 
+			return FF_WEAPON_GRENADELAUNCHER;
+		case TF_WP_PIPELAUNCHER:
+			return FF_WEAPON_PIPELAUNCHER;
+		case TF_WP_AUTORIFLE: 
+			return FF_WEAPON_AUTORIFLE;
+		case TF_WP_SNIPER_RIFLE: 
+			return FF_WEAPON_SNIPERRIFLE;
+		case TF_WP_RADIOTAG_RIFLE: 
+			return FF_WEAPON_RADIOTAGRIFLE;
+		case TF_WP_FLAMETHROWER: 
+			return FF_WEAPON_FLAMETHROWER;
+		case TF_WP_NAPALMCANNON: 
+			return FF_WEAPON_IC;
+		case TF_WP_RAILGUN: 
+			return FF_WEAPON_RAILGUN;
+		case TF_WP_DARTGUN: 
+			return FF_WEAPON_TRANQUILISER;
+		case TF_WP_MINIGUN: 
+			return FF_WEAPON_ASSAULTCANNON;
+		case TF_WP_ROCKET_LAUNCHER: 
+			return FF_WEAPON_RPG;
+		case TF_WP_DEPLOY_DISP: 
+			return FF_WEAPON_DEPLOYDISPENSER;
+		case TF_WP_DEPLOY_SG: 
+			return FF_WEAPON_DEPLOYSENTRYGUN;
+		case TF_WP_DEPLOY_DETP: 
+			return FF_WEAPON_DEPLOYDETPACK;
+		default:
+			return FF_WEAPON_NONE;
+		}
+	}
+
+	//-----------------------------------------------------------------
+
 	edict_t* INDEXEDICT(int iEdictNum)		
 	{ 
 		return engine->PEntityOfEntIndex(iEdictNum); 
@@ -1888,6 +2006,46 @@ namespace Omnibot
 
 	//////////////////////////////////////////////////////////////////////////
 	// Message Helpers
+	void Notify_GameStarted()
+	{
+		omnibot_interface::Bot_Interface_SendGlobalEvent(GAME_ID_STARTGAME, 0, 100, NULL);
+	}
+
+	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg)
+	{
+		BotUserData bud(_msg);
+		int iSourceGameId = _player->entindex()-1;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+
+			// Check player classes on this player's team
+			if (pPlayer && pPlayer->IsBot())
+			{
+				int iGameId = pPlayer->entindex()-1;
+				omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_GLOBALCHATMSG, 
+					iGameId, iSourceGameId, 0, &bud);
+			}
+		}
+	}
+
+	void Notify_TeamChatMsg(CBasePlayer *_player, const char *_msg)
+	{
+		BotUserData bud(_msg);
+		int iSourceGameId = _player->entindex()-1;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex(i);
+
+			// Check player classes on this player's team
+			if (pPlayer && pPlayer->IsBot() && pPlayer->GetTeamNumber() == _player->GetTeamNumber())
+			{
+				int iGameId = pPlayer->entindex()-1;
+				omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_TEAMCHATMSG, 
+					iGameId, iSourceGameId, 0, &bud);
+			}
+		}
+	}
 
 	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot)
 	{
@@ -1917,11 +2075,12 @@ namespace Omnibot
 		omnibot_interface::Bot_Interface_SendEvent(PERCEPT_FEEL_PAIN, iGameId, 0, 0, &bud);
 	}
 
-	void Notify_Death(CBasePlayer *_player, edict_t *_attacker)
+	void Notify_Death(CBasePlayer *_player, edict_t *_attacker, const char *_weapon)
 	{
 		int iGameId = _player->entindex()-1;
-		BotUserData bud((GameEntity)_attacker);
-		omnibot_interface::Bot_Interface_SendEvent(MESSAGE_DEATH, iGameId, 0, 0, &bud);
+		BotUserData bud(_weapon);
+		omnibot_interface::Bot_Interface_SendEvent(MESSAGE_DEATH, 
+			iGameId, _attacker ? ENTINDEX(_attacker) : -1, 0, &bud);
 	}
 
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam)
@@ -2156,6 +2315,12 @@ namespace Omnibot
 		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_SENTRY_SPOTENEMY, iGameId, 0, 0, 0);
 	}
 
+	void Notify_SentryAimed(CBasePlayer *_player)
+	{
+		int iGameId = _player->entindex()-1;
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_SENTRY_AIMED, iGameId, 0, 0, 0);
+	}
+
 	void Notify_DetpackBuilding(CBasePlayer *_player, edict_t *_buildEnt)
 	{
 		int iGameId = _player->entindex()-1;
@@ -2212,6 +2377,13 @@ namespace Omnibot
 	{
 		int iGameId = _player->entindex()-1;
 		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_SENTRY_DISMANTLED, iGameId, 0, 0, 0);
+	}
+
+	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon)
+	{
+		int iGameId = _player->entindex()-1;
+		BotUserData bud(obUtilGetBotWeaponFromGameWeapon(_weapon));
+		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE, iGameId, 0, 0, 0);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

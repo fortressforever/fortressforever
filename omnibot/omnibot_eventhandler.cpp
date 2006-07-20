@@ -25,15 +25,32 @@ typedef struct
 	pfnEventCallback	m_Callback;
 } EventCallback;
 
-void event_Chat(IGameEvent *_event);
+void event_ServerMessage(IGameEvent *_event);
+void event_ServerPlayerConnect(IGameEvent *_event);
+void event_ServerPlayerDisConnect(IGameEvent *_event);
+void event_ServerPlayerInfo(IGameEvent *_event);
+void event_ServerPlayerActivate(IGameEvent *_event);
+void event_ServerPlayerSay(IGameEvent *_event);
+void event_ServerPlayerSayTeam(IGameEvent *_event);
+void event_GameTeamInfo(IGameEvent *_event);
+void event_GameTeamScore(IGameEvent *_event);
+void event_GamePlayerScore(IGameEvent *_event);
+void event_GamePlayerShoot(IGameEvent *_event);
+void event_GamePlayerUse(IGameEvent *_event);
+void event_GamePlayerChangeName(IGameEvent *_event);
+void event_GameNewMap(IGameEvent *_event);
+void event_GameStart(IGameEvent *_event);
+void event_GameEnd(IGameEvent *_event);
+void event_RoundStart(IGameEvent *_event);
+void event_RoundEnd(IGameEvent *_event);
+void event_GameMessage(IGameEvent *_event);
+void event_BreakBreakable(IGameEvent *_event);
+void event_BreakProp(IGameEvent *_event);
 void event_Class(IGameEvent *_event);
 void event_Team(IGameEvent *_event);
 void event_Hurt(IGameEvent *_event);
 void event_Death(IGameEvent *_event);
 void event_Spawn(IGameEvent *_event);
-void event_Connect(IGameEvent *_event);
-void event_Connect(IGameEvent *_event);
-void event_Disconnect(IGameEvent *_event);
 void event_SentryBuilt(IGameEvent *_event);
 void event_DispenserBuilt(IGameEvent *_event);
 void event_DetpackBuilt(IGameEvent *_event);
@@ -55,14 +72,37 @@ void event_SentryDismantled(IGameEvent *_event);
 
 const EventCallback EVENT_CALLBACKS[] =
 {
-	{ "player_chat", event_Chat },
+	// Engine Events
+	{ "server_message", event_ServerMessage },
+	{ "player_connect", event_ServerPlayerConnect },
+	{ "player_disconnect", event_ServerPlayerDisConnect },
+	{ "player_info", event_ServerPlayerInfo },
+	{ "player_activate", event_ServerPlayerActivate },
+	{ "player_say", event_ServerPlayerSay },
+	{ "player_sayteam", event_ServerPlayerSayTeam },
+	
+	// Game Events
+	{ "team_info", event_GameTeamInfo },
+	{ "team_score", event_GameTeamScore },	
+	{ "player_score", event_GamePlayerScore },
+	{ "player_shoot", event_GamePlayerShoot },
+	{ "player_use", event_GamePlayerUse },
+	{ "player_changename", event_GamePlayerChangeName },
+	{ "game_newmap", event_GameNewMap },
+	{ "game_start", event_GameStart },
+	{ "game_end", event_GameEnd },
+	{ "round_start", event_RoundStart },
+	{ "round_end", event_RoundEnd },
+	{ "game_message", event_GameMessage },
+	{ "break_breakable", event_BreakBreakable },
+	{ "break_prop", event_BreakProp },
+
+	// Mod Events
 	{ "player_changeclass", event_Class },
 	{ "player_team", event_Team },
 	{ "player_hurt", event_Hurt },
 	{ "player_death", event_Death },
 	{ "player_spawn", event_Spawn },
-	{ "player_connect", event_Connect },
-	{ "player_disconnect", event_Disconnect },
 	{ "build_dispenser", event_DispenserBuilt },
 	{ "build_sentrygun", event_SentryBuilt },
 	{ "build_detpack", event_DetpackBuilt },
@@ -70,7 +110,6 @@ const EventCallback EVENT_CALLBACKS[] =
 	{ "sentrygun_killed", event_SentryKilled },
 	{ "dispenser_killed", event_DispenserKilled },
 	{ "sentrygun_upgraded", event_SentryUpgraded },
-
 	{ "disguised", event_DisguiseFinished },
 	{ "disguise_lost", event_DisguiseLost },
 	{ "unfeigned", event_SpyUnFeigned },
@@ -82,8 +121,6 @@ const EventCallback EVENT_CALLBACKS[] =
 	{ "sentry_dismantled", event_SentryDismantled },
 	{ "dispenser_sabotaged", event_DispenserSabotaged },
 	{ "sentry_sabotaged", event_SentrySabotaged },
-
-	// sabotaged?
 };
 
 //---------------------------------------------------------------------------------
@@ -303,32 +340,154 @@ CON_COMMAND( listevt, "List all the events matching a given pattern" )
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-void event_Chat(IGameEvent *_event)
+void event_ServerMessage(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_ServerPlayerConnect(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		Omnibot::Notify_ClientConnected(pPlayer, _event->GetBool("bot"));
+	}
+}
+
+void event_ServerPlayerDisConnect(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		Omnibot::Notify_ClientDisConnected(pPlayer);
+	}
+}
+
+void event_ServerPlayerInfo(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_ServerPlayerActivate(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_ServerPlayerSay(IGameEvent *_event)
 {
 	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
 	if(pPlayer)
 	{
-		int iGameId = pPlayer->entindex()-1;
-		bool bTeamOnly = _event->GetBool("teamonly");
-		BotUserData bud( _event->GetString("text", ""));
-		if(bTeamOnly)
-		{
-			int iSourceTeam = pPlayer->GetTeamNumber();
+		const char *pMsg = _event->GetString("text", "");
+		if(pMsg)
+			Omnibot::Notify_ChatMsg(pPlayer, pMsg);
+	}
+}
 
-			for(int i = 1; i <= gpGlobals->maxClients; ++i)
-			{
-				CBaseEntity *pEntity = CBaseEntity::Instance(i);				
-				if(pEntity && (iSourceTeam == pEntity->GetTeamNumber()))
-				{
-					omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_TEAMCHATMSG, i+1, iGameId, 0, &bud);
-				}
-			}
-		}
-		else
-		{
-			omnibot_interface::Bot_Interface_SendGlobalEvent(PERCEPT_HEAR_GLOBALCHATMSG, iGameId, 0, &bud);
-		}
-	}		
+void event_ServerPlayerSayTeam(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer)
+	{
+		const char *pMsg = _event->GetString("text", "");
+		if(pMsg)
+			Omnibot::Notify_TeamChatMsg(pPlayer, pMsg);
+	}
+}
+
+void event_GameTeamInfo(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GameTeamScore(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GamePlayerScore(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GamePlayerShoot(IGameEvent *_event)
+{
+	/*"player_shoot"
+	{
+		"userid" (TYPE_SHORT)
+		"weapon" (TYPE_BYTE)
+		"mode" (TYPE_BYTE)
+	}*/
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		Omnibot::Notify_PlayerShoot(pPlayer, _event->GetInt("weapon"));
+	}
+}
+
+void event_GamePlayerUse(IGameEvent *_event)
+{
+	/*"player_use"
+	{
+		"userid" (TYPE_SHORT)
+		"entity" (TYPE_SHORT)
+	}*/
+
+	Msg(__FUNCTION__);
+}
+
+void event_GamePlayerChangeName(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GameNewMap(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GameStart(IGameEvent *_event)
+{
+	/*"game_start"
+	{
+		"roundslimit" (TYPE_LONG)
+		"timelimit" (TYPE_LONG)
+		"fraglimit" (TYPE_LONG)
+		"objective" (TYPE_STRING)
+	}*/
+
+	Msg(__FUNCTION__);
+	Omnibot::Notify_GameStarted();
+}
+
+void event_GameEnd(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_RoundStart(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_RoundEnd(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_GameMessage(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_BreakBreakable(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
+}
+
+void event_BreakProp(IGameEvent *_event)
+{
+	Msg(__FUNCTION__);
 }
 
 void event_Class(IGameEvent *_event)
@@ -363,10 +522,10 @@ void event_Death(IGameEvent *_event)
 {
 	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
 	CBasePlayer *pAttacker = UTIL_PlayerByUserId(_event->GetInt("attacker"));
-	//const char *pWeapon = _event->GetInt("weapon"); TODO:
+	const char *pWeapon = _event->GetString("weapon");
 	if(pPlayer && pPlayer->IsBot())
 	{
-		Omnibot::Notify_Death(pPlayer, pAttacker->edict());
+		Omnibot::Notify_Death(pPlayer, pAttacker ? pAttacker->edict() : 0, pWeapon);
 	}	
 }
 
@@ -377,24 +536,6 @@ void event_Spawn(IGameEvent *_event)
 	{
 		Omnibot::Notify_Spawned(pPlayer);
 	}
-}
-
-void event_Connect(IGameEvent *_event)
-{
-	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
-	if(pPlayer)
-	{
-		Omnibot::Notify_ClientConnected(pPlayer, _event->GetBool("bot"));
-	}	
-}
-
-void event_Disconnect(IGameEvent *_event)
-{
-	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
-	if(pPlayer)
-	{
-		Omnibot::Notify_ClientDisConnected(pPlayer);
-	}	
 }
 
 void event_SentryBuilt(IGameEvent *_event)

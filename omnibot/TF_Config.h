@@ -200,6 +200,10 @@ typedef enum eTF_Weapon
 	TF_WP_DARTGUN,
 	TF_WP_PIPELAUNCHER,
 	TF_WP_NAPALMCANNON,
+	TF_WP_DEPLOY_SG,
+	TF_WP_DEPLOY_DISP,
+	TF_WP_DEPLOY_DETP,
+	TF_WP_FLAG,
 	TF_WP_MAX
 } TF_Weapon;
 
@@ -277,9 +281,9 @@ typedef enum eTF_Events
 	TF_MSG_BEGIN = EVENT_NUM_EVENTS,
 
 	// General Events
-	TF_CLASS_DISABLED, // todo: implement this
-	TF_CLASS_NOTAVAILABLE, // todo: implement this
-	TF_CLASS_CHANGELATER, // todo: implement this
+	TF_MSG_CLASS_DISABLED, // todo: implement this
+	TF_MSG_CLASS_NOTAVAILABLE, // todo: implement this
+	TF_MSG_CLASS_CHANGELATER, // todo: implement this
 	TF_MSG_BUILD_MUSTBEONGROUND,
 
 	// Scout
@@ -360,6 +364,7 @@ typedef enum eTF_Events
 	TF_MSG_SENTRY_BUILT,
 	TF_MSG_SENTRY_DESTROYED,
 	TF_MSG_SENTRY_SPOTENEMY,
+	TF_MSG_SENTRY_AIMED,
 	TF_MSG_SENTRY_DAMAGED,
 	TF_MSG_SENTRY_STATS,
 	TF_MSG_SENTRY_UPGRADED,

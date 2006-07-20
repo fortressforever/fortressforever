@@ -197,6 +197,15 @@ void CFFWeaponBaseClip::PrimaryAttack()
 
 #ifdef GAME_DLL
 	m_iClip1 -= GetFFWpnData().m_iCycleDecrement;
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_shoot");
+	if(pEvent)
+	{
+		pEvent->SetInt("userid", pPlayer->GetUserID());
+		pEvent->SetInt("weapon", GetWeaponID());
+		pEvent->SetInt("mode", 0);
+		gameeventmanager->FireEvent(pEvent, true);
+	}	
 #endif
 
 	// player "shoot" animation
