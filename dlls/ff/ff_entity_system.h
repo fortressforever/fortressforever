@@ -14,18 +14,29 @@
 #define FF_ENTITY_SYSTEM_H
 #pragma once
 
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/object.hpp"
+
 // forward declarations
 
 struct lua_State;
 
+/*
 namespace luabind
 {
 	namespace adl
 	{
 		class object;
 	}
-}
-
+}*/
 using namespace luabind;
 
 // extern declarations
@@ -130,7 +141,10 @@ class CFFEntity_ApplyTo_Flags
 public:
 };
 
-/*
+//----------------------------------------------------------------------------
+// Purpose: Call into lua and get a result
+// Output : true or false - false means the object or the function of the object didn't exist
+//----------------------------------------------------------------------------
 template< class hObjType >
 bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionName, CBaseEntity *pArg, hObjType& hObjOutput )
 {
@@ -151,6 +165,5 @@ bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionNa
 
 	return false;
 }
-*/
 
 #endif // FF_ENTITY_SYSTEM_H
