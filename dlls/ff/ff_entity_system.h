@@ -94,6 +94,8 @@ public:
 
 	// This is temp... needs to be templatable
 	bool GetFunctionValue_Bool( CBaseEntity *pEntity, const char *szFunction, CBaseEntity *pArg );
+	bool GetFunctionValue_Vector( CBaseEntity *pEntity, const char *szFunction, CBaseEntity *pArg, Vector& vecOutput );
+
 };
 
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
@@ -108,5 +110,26 @@ class CFFEntity_ApplyTo_Flags
 {
 public:
 };
+
+template< class hObjType >
+bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionName, CBaseEntity *pArg, hObjType& hObjOutput )
+{
+	try
+	{
+		luabind::adl::object table;
+
+		if( entsys.GetFunction( pObject, pszFunctionName, table ) )
+		{
+			hObjOutput = luabind::call_function< hObjType >( table, pArg );
+			return true;
+		}
+	}
+	catch( ... )
+	{
+		return false;
+	}
+
+	return false;
+}
 
 #endif // FF_ENTITY_SYSTEM_H
