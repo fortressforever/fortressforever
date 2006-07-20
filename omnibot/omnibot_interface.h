@@ -31,14 +31,21 @@ namespace Omnibot
 	const int obUtilGetBotClassFromGameClass(int _class);
 	const int obUtilGetBotTeamFromGameTeam(int _team);
 
+	const int obUtilGetBotWeaponFromGameWeapon(int _gameWpn);
+	const int obUtilGetGameWeaponFromBotWeapon(int _botWpn);
+
 	// Message Helpers
+	void Notify_GameStarted();
+
+	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg);
+	void Notify_TeamChatMsg(CBasePlayer *_player, const char *_msg);
 
 	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot);
 	void Notify_ClientDisConnected(CBasePlayer *_player);
 
 	void Notify_Spawned(CBasePlayer *_player);
 	void Notify_Hurt(CBasePlayer *_player, edict_t *_attacker);
-	void Notify_Death(CBasePlayer *_player, edict_t *_attacker);
+	void Notify_Death(CBasePlayer *_player, edict_t *_attacker, const char *_weapon);
 
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam);
 	void Notify_ChangedClass(CBasePlayer *_player, int _oldclass, int _newclass);
@@ -72,6 +79,7 @@ namespace Omnibot
 	void Notify_SentryDetonated(CBasePlayer *_player);
 	void Notify_SentryDismantled(CBasePlayer *_player);
 	void Notify_SentrySpottedEnemy(CBasePlayer *_player);
+	void Notify_SentryAimed(CBasePlayer *_player);
 
 	void Notify_DetpackBuilding(CBasePlayer *_player, edict_t *_buildEnt);
 	void Notify_DetpackBuilt(CBasePlayer *_player, edict_t *_buildEnt);
@@ -79,6 +87,8 @@ namespace Omnibot
 
 	void Notify_DispenserSabotaged(CBasePlayer *_player, edict_t *_saboteur);
 	void Notify_SentrySabotaged(CBasePlayer *_player, edict_t *_saboteur);	
+
+	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon);
 };
 
 #endif

@@ -990,6 +990,16 @@ ConVar mp_prematch( "mp_prematch",
 
 		// Piggy back this guy now with a FULL MAP RESET
 		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("game_start");
+		if(pEvent)
+		{
+			pEvent->SetInt("roundslimit", 0);
+			pEvent->SetInt("timelimit", 0);
+			pEvent->SetInt("fraglimit", 0);
+			pEvent->SetString("fraglimit", "CTF");
+			gameeventmanager->FireEvent(pEvent);
+		}
 	}
 	// <-- Mirv: Prematch
 
