@@ -375,6 +375,12 @@ namespace FFLib
 		mp_respawndelay.SetValue( temp_max( 0.0f, delay ) );
 	}
 
+	void GoToIntermission()
+	{
+		if (FFGameRules())
+			FFGameRules()->GoToIntermission();
+	}
+
 	bool ApplyToParseFlags( const luabind::adl::object& table, bool *pbFlags )
 	{
 		if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
@@ -1153,7 +1159,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetRenderColor",		(void(CBaseEntity::*)(byte,byte,byte))&CBaseEntity::SetRenderColor)
 			.def("SetRenderMode",		&CBaseEntity::SetRenderMode)
 			.def("GetFriction",			&CBaseEntity::GetFriction)
-			.def("SetFriction",			&CBaseEntity::GetFriction),
+			.def("SetFriction",			&CBaseEntity::GetFriction)
+			.def("Input",				&CBaseEntity::AcceptInput),
 
 		// Buildable base
 		class_<CFFBuildableObject>("BaseBuildable")
@@ -1357,7 +1364,8 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetSteamID",				&FFLib::GetSteamID),
 		def("GetPing",					&FFLib::GetPing),
 		def("GetPacketloss",			&FFLib::GetPacketloss),
-		def("PrintBool",				&FFLib::PrintBool)
+		def("PrintBool",				&FFLib::PrintBool),
+		def("GoToIntermission",			&FFLib::GoToIntermission)
 	];
 }
 

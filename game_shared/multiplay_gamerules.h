@@ -127,7 +127,8 @@ public:
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) { GoToIntermission(); }
 
-protected:
+//protected: // commenting this out so we can use changelevel/gotointermission
+			// in lua
 	virtual void GetNextLevelName( char *szNextMap, int bufsize );
 	virtual void ChangeLevel( void );
 	virtual void GoToIntermission( void );
