@@ -149,8 +149,24 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 	// Set the text now
 	m_pRichText->SetText(pszMessage);
 
-	// Do something w/ the string!
-	//CHint	hHint(fActive, pszMessage, pszSound, gpGlobals->curtime);
+	// And play a sound, if there's one
+	if (pszSound)
+	{
+		CBasePlayer *pLocal = CBasePlayer::GetLocalPlayer();
+
+		if (!pLocal)
+			return;
+
+		CPASAttenuationFilter filter(pLocal, pszSound);
+
+		EmitSound_t params;
+		params.m_pSoundName = pszSound;
+		params.m_flSoundTime = 0.0f;
+		params.m_pflSoundDuration = NULL;
+		params.m_bWarnOnDirectWaveReference = false;
+
+		pLocal->EmitSound(filter, pLocal->entindex(), params);
+	}
 }
 
 void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
@@ -177,7 +193,7 @@ void CHudHint::MsgFunc_FF_HudHint( bf_read &msg )
 		Warning( "[Hud Hint] Sound path larger than buffer - ignoring sound!\n" );
 
 	// Pass the string along
-	AddHudHint(bType, wID, szString, szSound);	
+	AddHudHint(bType, wID, szString, szSound[0] == 0 ? NULL : szSound);	
 }
 
 // This is currently A MESS!
