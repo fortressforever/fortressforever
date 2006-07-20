@@ -774,9 +774,11 @@ void FX_GunshipTracer( Vector& start, Vector& end, int velocity, bool makeWhiz )
 	VectorSubtract( end, start, shotDir );
 	totalDist = VectorNormalize( shotDir );
 
+	// --> Mirv: No do make small tracers
 	//Don't make small tracers
-	if ( totalDist <= 256 )
-		return;
+	//if ( totalDist <= 256 )
+	//	return;
+	// <--
 
 	float length = random->RandomFloat( 128.0f, 256.0f );
 	float life = ( totalDist + length ) / velocity;	//NOTENOTE: We want the tail to finish its run as well
