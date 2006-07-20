@@ -1541,6 +1541,38 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 }
 
 //----------------------------------------------------------------------------
+bool CFFEntitySystem::BeginCall(CBaseEntity* pEntity, luabind::adl::object& outObject)
+{
+	if(NULL == pEntity)
+		return false;
+
+	if(GetObject(pEntity, outObject))
+	{
+		// set lua's reference to the calling entity
+		luabind::object globals = luabind::globals(L);
+		globals["entity"] = luabind::object(L, pEntity);
+
+		// temps
+		int ent_id = pEntity ? ENTINDEX( pEntity ) : -1;
+		SetVar("entid", ent_id);
+		SetVar("entname", STRING(pEntity->GetEntityName()));
+
+		return true;
+	}
+	return false;
+}
+
+//----------------------------------------------------------------------------
+void CFFEntitySystem::EndCall()
+{
+	luabind::adl::object dummy;
+
+	// remove the "entity" field
+	luabind::object globals = luabind::globals(L);
+	globals["entity"] = dummy;
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Check to see if an object exists
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::GetObject( CBaseEntity *pEntity )
