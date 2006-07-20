@@ -1576,7 +1576,29 @@ bool CFFEntitySystem::GetFunctionValue_Bool( CBaseEntity *pEntity, const char *s
 	}
 	catch( ... )
 	{
-		Warning( "[GetFunctionValue] Error!\n" );
+		return false;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Get a value from a function
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::GetFunctionValue_Vector( CBaseEntity *pEntity, const char *szFunctionName, CBaseEntity *pArg, Vector& vecOutput )
+{
+	luabind::adl::object table;
+
+	try
+	{
+		if( GetFunction( pEntity, szFunctionName, table ) )
+		{
+			vecOutput = luabind::call_function< Vector >( table, pArg );
+			return true;
+		}
+	}
+	catch( ... )
+	{
 		return false;
 	}
 
@@ -1686,3 +1708,30 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 
 	return bExpectedVal;
 }
+
+/*
+//----------------------------------------------------------------------------
+// Purpose: Call into lua and get a result
+// Output : true or false - false means the object or the function of the object didn't exist
+//----------------------------------------------------------------------------
+template< class hObjType >
+bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionName, CBaseEntity *pArg, hObjType& hObjOutput )
+{
+	try
+	{
+		luabind::adl::object table;
+
+		if( entsys.GetFunction( pObject, pszFunctionName, table ) )
+		{
+			//hObjOutput = luabind::call_function< hObjOutput >( table, pArg );
+			return true;
+		}
+	}
+	catch( ... )
+	{
+		return false;
+	}
+
+	return false;
+}
+*/

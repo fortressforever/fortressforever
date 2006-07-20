@@ -146,10 +146,10 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 void CFFInfoScript::Spawn( void )
 {
 	Precache();
-
-	m_vecOffset.SetX( entsys.RunPredicates( this, NULL, "attachoffsetforward" ) );
-	m_vecOffset.SetY( entsys.RunPredicates( this, NULL, "attachoffsetright" ) );
-	m_vecOffset.SetZ( entsys.RunPredicates( this, NULL, "attachoffsetup" ) );	
+	
+	Vector vecOutput;
+	if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
+		m_vecOffset.GetForModify() = vecOutput;
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -173,7 +173,7 @@ void CFFInfoScript::Spawn( void )
 	// Check to see if this object has animations
 	m_bHasAnims = entsys.GetFunctionValue_Bool( this, "hasanimation", NULL );
 
-	Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
+	// Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
 
 	// If using anims, set them up!
 	if( m_bHasAnims )
