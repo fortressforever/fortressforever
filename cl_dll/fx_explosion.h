@@ -53,6 +53,7 @@ protected:
 	Vector	m_vecOrigin;
 	Vector	m_vecDirection;
 	float	m_flForce;
+	float	m_flScale;	// |-- Mirv: Scale now
 	int		m_fFlags;
 };
 

@@ -88,7 +88,7 @@ CFFDetpack::CFFDetpack( void )
 	m_flExplosionForce = 3000.0f;
 	m_flExplosionDamage = 1270.f;
 	m_flExplosionDuration = 2.0f;
-	m_iExplosionFireballScale = random->RandomInt( 20, 35 );
+	m_iExplosionFireballScale = 2.0f;
 
 	m_bTakesDamage = false;
 

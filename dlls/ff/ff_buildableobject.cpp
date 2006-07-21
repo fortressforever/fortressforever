@@ -131,7 +131,7 @@ CFFBuildableObject::CFFBuildableObject( void )
 	// TODO: for now - change this later? remember to update in dispenser.cpp as well
 	m_flExplosionDamage = m_flExplosionForce;
 	m_flExplosionDuration = 0.5f;
-	m_iExplosionFireballScale = random->RandomInt( 10, 15 );
+	m_iExplosionFireballScale = 1.1f;
 
 	// Default think time
 	m_flThinkTime = 0.2f;
@@ -552,7 +552,7 @@ void CFFBuildableObject::DoExplosion( void )
 	//CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 
 	// Explosion!
-	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 16.0f ); // Bring off the ground a little 
+	Vector vecAbsOrigin = GetAbsOrigin() + Vector( 0, 0, 32.0f ); // Bring off the ground a little 
 	CPASFilter filter( vecAbsOrigin );
 	te->Explosion( filter,			// Filter
 		0.0f,						// Delay
