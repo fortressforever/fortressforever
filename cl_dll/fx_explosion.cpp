@@ -180,7 +180,8 @@ void C_BaseExplosionEffect::Create( const Vector &position, float force, float s
 	// --> Mirv: Now supporting better explosion scaling
 	// HACK HACK: Rather than replace all the times when scale is much bigger
 	// we're just going to reduce to a "normal" size if they're trying an old-style scale
-	scale = 0.9f;
+	if (scale > 2.5f)
+		scale = 0.9f;
 
 	m_flScale = clamp(scale, 0.5f, 2.0f);
 	// <-- Mirv
