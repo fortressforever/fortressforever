@@ -536,6 +536,11 @@ ConVar mp_prematch( "mp_prematch",
 				pTeam->SetDeaths( 0 );
 			}
 		}
+
+		if( pbFlags[ AT_END_MAP ] )
+		{
+			GoToIntermission();
+		}
 	}
 
 	//-----------------------------------------------------------------------------

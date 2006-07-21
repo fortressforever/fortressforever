@@ -66,6 +66,8 @@ const char *s_WeaponAliasInfo[] =
 	"deploysentrygun", 	// FF_WEAPON_DEPLOYSENTRYGUN
 	"deploydetpack", 	// FF_WEAPON_DEPLOYDETPACK
 
+	"tommygun",			// FF_WEAPON_TOMMYGUN
+
 	NULL, 				// FF_WEAPON_MAX
 };
 

@@ -36,8 +36,6 @@
 #include "ff_grenade_base.h"
 #include "beam_shared.h"
 
-#define temp_max(a,b) (((a)>(b))?(a):(b))
-
 // Lua includes
 extern "C"
 {
@@ -52,6 +50,8 @@ extern "C"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#define temp_max(a,b) (((a)>(b))?(a):(b))
 
 // Better way of doing this maybe?
 CFFEntitySystem entsys;
@@ -1120,6 +1120,7 @@ void CFFEntitySystem::FFLibOpen()
 				value("kRemoveProjectiles",	AT_REMOVE_PROJECTILES),
 				value("kRemoveBuildables",	AT_REMOVE_BUILDABLES),
 				value("kRemoveDecals",		AT_REMOVE_DECALS),
+				value("kEndMap",			AT_END_MAP),
 
 				value("kChangeClassScout",	AT_CHANGECLASS_SCOUT),
 				value("kChangeClassSniper",	AT_CHANGECLASS_SNIPER),
@@ -1603,49 +1604,6 @@ bool CFFEntitySystem::GetFunction( CBaseEntity *pEntity, const char *szFunctionN
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Get a value from a function
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetFunctionValue_Bool( CBaseEntity *pEntity, const char *szFunctionName, CBaseEntity *pArg )
-{
-	luabind::adl::object table;
-
-	try
-	{
-		if( GetFunction( pEntity, szFunctionName, table ) )
-			return luabind::call_function< bool >( table, pArg );
-	}
-	catch( ... )
-	{
-		return false;
-	}
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Get a value from a function
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetFunctionValue_Vector( CBaseEntity *pEntity, const char *szFunctionName, CBaseEntity *pArg, Vector& vecOutput )
-{
-	luabind::adl::object table;
-
-	try
-	{
-		if( GetFunction( pEntity, szFunctionName, table ) )
-		{
-			vecOutput = luabind::call_function< Vector >( table, pArg );
-			return true;
-		}
-	}
-	catch( ... )
-	{
-		return false;
-	}
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
 // Purpose: Runs the appropriate script function
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
@@ -1747,4 +1705,119 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 	}
 
 	return bExpectedVal;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Call into lua and get a result, basically. A better runpredicates
+// Output : hOutput - the value returned from the lua object/function called
+//
+// Function return value: function will return true if it found the lua object/function
+//----------------------------------------------------------------------------
+template< class hObjType >
+bool LUA_RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, hObjType *hOutput )
+{
+	if( !entsys.GetLuaState() || !entsys.ScriptExists() )
+		return false;
+
+	// If no function supplied, abort
+	if( !szFunctionName || !Q_strlen( szFunctionName ) )
+		return false;
+
+	// Assume it exists
+	bool bRetval = true;
+
+	// Looking for a global function
+	if( !pObject )
+	{
+		// TODO: !
+	}
+	// Looking for a function of an object
+	else
+	{
+		// Abort if pObject has no name
+		if( !Q_strlen( STRING( pObject->GetEntityName() ) ) )
+			return false;
+
+		// Set lua's reference to the calling entity
+		luabind::object globals = luabind::globals( entsys.GetLuaState() );
+		globals[ "entity" ] = luabind::object( entsys.GetLuaState(), pObject );
+
+		// Temps
+		int ent_id = pObject ? ENTINDEX( pObject ) : -1;
+		entsys.SetVar( "entid", ent_id );
+		entsys.SetVar( "entname", STRING( pObject->GetEntityName() ) );
+
+		luabind::adl::object table;
+		if( entsys.GetFunction( pObject, szFunctionName, table ) )
+		{
+
+			Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
+
+			// Call the lua function
+			try
+			{
+				if( hOutput != NULL )
+				{
+					*( hOutput ) = luabind::call_function< hObjType >( table, pEntity );
+				}
+				else
+				{
+
+					// TODO: This is supposed to be when hOutput == NULL meaning
+					// the type was void but it doesn't work.
+
+					luabind::call_function< hObjType >( table, pEntity );
+				}
+			}
+			catch( ... )
+			{
+				Warning( "[LUA_RunPredicates] call_function failure on entity: %s - function: %s!\n", STRING( pObject->GetEntityName() ), szFunctionName );
+			}			
+		}
+		else
+			bRetval = false;
+
+		// Cleanup
+		luabind::adl::object dummy;
+		globals[ "entity" ] = dummy;
+	}
+
+
+	return bRetval;
+}
+
+bool CFFEntitySystem::RunPredicates_Bool( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, bool *hOutput )
+{
+	return LUA_RunPredicates< bool >( pObject, pEntity, szFunctionName, hOutput );
+}
+
+bool CFFEntitySystem::RunPredicates_Vector( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, Vector *hOutput )
+{
+	return LUA_RunPredicates< Vector >( pObject, pEntity, szFunctionName, hOutput );
+}
+
+bool CFFEntitySystem::RunPredicates_Void( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName )
+{
+	//*
+	bool *p = NULL;
+	return LUA_RunPredicates< bool >( pObject, pEntity, szFunctionName, p );
+	//*/
+
+	// TODO: Void version does not work for some reason. The luabind::call_function< void > bombs.
+	//return true;
+}
+
+bool CFFEntitySystem::RunPredicates_Int( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, int *hOutput )
+{
+	return LUA_RunPredicates< int >( pObject, pEntity, szFunctionName, hOutput );
+}
+
+bool CFFEntitySystem::RunPredicates_Float( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, float *hOutput )
+{
+	return LUA_RunPredicates< float >( pObject, pEntity, szFunctionName, hOutput );
+}
+
+bool CFFEntitySystem::RunPredicates_QAngle( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, QAngle *hOutput )
+{
+	return LUA_RunPredicates< QAngle >( pObject, pEntity, szFunctionName, hOutput );
 }

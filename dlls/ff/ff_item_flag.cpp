@@ -147,11 +147,10 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 void CFFInfoScript::Spawn( void )
 {
 	Precache();
-	
-	//Vector vecOutput;
-	//if( LUA_GetObjectFunctionValue< Vector >( this, "attachoffset", NULL, vecOutput ) )	
-	//	m_vecOffset.GetForModify() = vecOutput;
 
+	// Check if this object has an attachoffset function and get the value if it does
+	//entsys.RunPredicates_Vector( this, NULL, "attachoffset", m_vecOffset.GetForModify() );
+	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
@@ -166,14 +165,14 @@ void CFFInfoScript::Spawn( void )
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
 	entsys.RunPredicates( this, NULL, "spawn" );
+	//entsys.RunPredicates_Void( this, NULL, "spawn" );
 
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
 	m_atStart = true;
 
 	// Check to see if this object has animations
-	m_bHasAnims = entsys.GetFunctionValue_Bool( this, "hasanimation", NULL );
-	//LUA_GetObjectFunctionValue< bool >( this, "hasanimation", NULL, m_bHasAnims );
+	entsys.RunPredicates_Bool( this, NULL, "hasanimation", &m_bHasAnims );
 
 	//Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
 
@@ -194,8 +193,7 @@ void CFFInfoScript::Spawn( void )
 	}
 
 	// Check to see if this object uses physics
-	m_bUsePhysics = entsys.GetFunctionValue_Bool( this, "usephysics", NULL );
-	//LUA_GetObjectFunctionValue< bool >( this, "usephysics", NULL, m_bUsePhysics );
+	entsys.RunPredicates_Bool( this, NULL, "usephysics", &m_bUsePhysics );
 
 	CreateItemVPhysicsObject();
 

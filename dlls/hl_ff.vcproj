@@ -548,6 +548,9 @@
 					RelativePath="..\game_shared\ff\ff_weapon_supershotgun.cpp">
 				</File>
 				<File
+					RelativePath="..\game_shared\ff\ff_weapon_tommygun.cpp">
+				</File>
+				<File
 					RelativePath="..\game_shared\ff\ff_weapon_tranquiliser.cpp">
 				</File>
 				<File

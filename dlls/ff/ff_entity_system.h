@@ -14,32 +14,16 @@
 #define FF_ENTITY_SYSTEM_H
 #pragma once
 
-/*
-// Lua includes
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
-
-#include "luabind/luabind.hpp"
-#include "luabind/object.hpp"
-*/
-
 // forward declarations
-
 struct lua_State;
 
-//*
 namespace luabind
 {
 	namespace adl
 	{
 		class object;
 	}
-}//*/
-//using namespace luabind;
+}
 
 // extern declarations
 extern ConVar mp_respawndelay;
@@ -89,6 +73,7 @@ public:
 	void FFLibOpen();
 
 	lua_State* GetLuaState() const { return L; }
+	bool ScriptExists( void ) const { return m_ScriptExists; }
 
 	static void SetVar( lua_State *L, const char *name, const char *value );
 	static void SetVar( lua_State *L, const char *name, int value );
@@ -102,7 +87,14 @@ public:
 	const char *GetString( const char *name );
 	int GetInt( const char *name );
 	float GetFloat( const char *name );
-	int RunPredicates( CBaseEntity*, CBaseEntity*, const char * = NULL);
+	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
+
+	bool RunPredicates_Bool( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, bool *hOutput = NULL );
+	bool RunPredicates_Vector( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, Vector *hOutput = NULL );
+	bool RunPredicates_Void( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
+	bool RunPredicates_Int( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, int *hOutput = NULL );
+	bool RunPredicates_Float( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, float *hOutput = NULL );
+	bool RunPredicates_QAngle( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, QAngle *hOutput = NULL );
 
 	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
 	bool GetObject(const char* szTableName, luabind::adl::object& outObject);
@@ -124,10 +116,6 @@ public:
 	// Just checks if a function for an object exists
 	bool GetFunction( CBaseEntity *pEntity, const char *szFunctionName );
 
-	// This is temp... needs to be templatable
-	bool GetFunctionValue_Bool( CBaseEntity *pEntity, const char *szFunction, CBaseEntity *pArg );
-	bool GetFunctionValue_Vector( CBaseEntity *pEntity, const char *szFunction, CBaseEntity *pArg, Vector& vecOutput );
-
 };
 
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
@@ -142,32 +130,5 @@ class CFFEntity_ApplyTo_Flags
 {
 public:
 };
-
-/* think this caused linux to not compile
-//----------------------------------------------------------------------------
-// Purpose: Call into lua and get a result
-// Output : true or false - false means the object or the function of the object didn't exist
-//----------------------------------------------------------------------------
-template< class hObjType >
-bool LUA_GetObjectFunctionValue( CBaseEntity *pObject, const char *pszFunctionName, CBaseEntity *pArg, hObjType& hObjOutput )
-{
-	try
-	{
-		luabind::adl::object table;
-
-		if( entsys.GetFunction( pObject, pszFunctionName, table ) )
-		{
-			hObjOutput = luabind::call_function< hObjType >( table, pArg );
-			return true;
-		}
-	}
-	catch( ... )
-	{
-		return false;
-	}
-
-	return false;
-}
-*/
 
 #endif // FF_ENTITY_SYSTEM_H
