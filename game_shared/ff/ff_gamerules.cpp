@@ -310,7 +310,7 @@ ConVar mp_prematch( "mp_prematch",
 		}
 
 		// Sum up the number of changeclass flags set, if any
-		for( int i = AT_CHANGECLASS_SCOUT; i < AT_CHANGECLASS_RANDOM; i++ )
+		for( int i = AT_CHANGECLASS_SCOUT; i <= AT_CHANGECLASS_RANDOM; i++ )
 		{
 			if( pbFlags[ i ] )
 				iNumChangeClassFlags++;
