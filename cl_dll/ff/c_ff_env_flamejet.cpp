@@ -26,23 +26,16 @@
 // Debug ConVars
 //=============================================================================
 
-static ConVar flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"50", 	0, 	"How fast the flames spread outwards");
+static ConVar flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"100", 	0, 	"How fast the flames spread outwards");
 static ConVar flame_speed(			"ffdev_flame_speed", 			"800", 	0, 	"How fast the flames go forwards");
 static ConVar flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
 static ConVar flame_endsize(		"ffdev_flame_endsize", 		"128", 	0, 	"How big the flame finishes(0-255) ");
 static ConVar flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
-static ConVar flame_alpha(			"ffdev_flame_alpha", 			"0.95", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+static ConVar flame_alpha(			"ffdev_flame_alpha", 			"0.5", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+
+static ConVar flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long the flame stays blue for");
 
 static ConVar flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How long before end of life will flames fade out(in seconds) ");
-
-static ConVar flame_chance_smallflame(		"ffdev_flame_chance_smallflame", 		"5", 	0, "Chance of a litle small flame in the main stream(higher integer = less chance) ");
-static ConVar flame_chance_smoke(			"ffdev_flame_chance_smoke", 			"1", 	0, "Chance of some smoke(higher integer = less chance) ");
-static ConVar flame_chance_bouncequick(		"ffdev_flame_chance_bouncequick", 		"3", 	0, "Chance of a litle quick moving bounce flame(higher integer = less chance) ");
-static ConVar flame_chance_bounceflareup(	"ffdev_flame_chance_bounceflareup", 	"3", 	0, "Chance of a big flarey flame after bounce(higher integer = less chance) ");
-
-static ConVar flame_position_forward(	"ffdev_flame_position_forward", 	"24", 	0, "Where the flames begin");
-static ConVar flame_position_up(		"ffdev_flame_position_up", 		"-16", 	0, "Where the flames begin");
-static ConVar flame_position_right(		"ffdev_flame_position_right", 		"8", 	0, "Where the flames begin");
 
 static ConVar flame_length_min(		"ffdev_flame_length_min", 		"0.3", 	0, 	"Length of the flames in seconds");
 static ConVar flame_length_max(		"ffdev_flame_length_max", 		"0.4", 	0, 	"Length of the flames in seconds");
@@ -90,7 +83,7 @@ END_RECV_TABLE()
 LINK_ENTITY_TO_CLASS(env_flamejet, C_FFFlameJet);
 
 CLIENTEFFECT_REGISTER_BEGIN(PrecacheFlameJet) 
-CLIENTEFFECT_MATERIAL("effects/compositeflare_bothalpha") 
+CLIENTEFFECT_MATERIAL("effects/flame") 
 CLIENTEFFECT_REGISTER_END() 
 
 //=============================================================================
@@ -150,7 +143,7 @@ void C_FFFlameJet::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs)
 {
 	pParticleMgr->AddEffect(&m_ParticleEffect, this);
 
-	m_hMaterialFlame	= m_ParticleEffect.FindOrAddMaterial("effects/compositeflare_bothalpha");
+	m_hMaterialFlame	= m_ParticleEffect.FindOrAddMaterial("effects/flame");
 	
 	m_ParticleSpawn.Init(m_Rate);
 	m_pParticleMgr = pParticleMgr;
@@ -234,14 +227,17 @@ void C_FFFlameJet::Update(float fTimeDelta)
 			if (C_FFFlameJetParticle *pParticle = (C_FFFlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FFFlameJetParticle), m_hMaterialFlame)) 
 			{
 				pParticle->m_Type			= FLAME_JET;
-				pParticle->m_Appearance		= (random->RandomInt(0, flame_chance_smallflame.GetInt() /*5 */) == 0 ? TEX_FLAME_SMALL1 : TEX_FLAME_NORMAL);
+				pParticle->m_Appearance		= TEX_FLAME_NORMAL;
 
 				pParticle->m_Pos			= vecStart;
 				pParticle->m_Origin			= pParticle->m_Pos;
-				
+
 				pParticle->m_Velocity		= FRand(-m_SpreadSpeed, m_SpreadSpeed) * right +
 											  FRand(-m_SpreadSpeed, m_SpreadSpeed) * up +
 											  m_Speed * forward;
+
+				// Move along to correct position
+				pParticle->m_Origin	+= pParticle->m_Velocity * tempDelta;
 				
 				pParticle->m_Lifetime		= 0;
 				pParticle->m_Dietime		= random->RandomFloat(flame_length_min.GetFloat() /*0.3 */, flame_length_max.GetFloat() /*0.4 */);
@@ -252,6 +248,8 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				pParticle->m_flRoll			= random->RandomFloat(0, 360);
 				pParticle->m_flRollDelta	= random->RandomFloat(-8.0f, 8.0f);
 
+				pParticle->m_flRedness		= random->RandomFloat(0, 1.0f);
+
 				trace_t tr;
 
 				// How far can this particle travel
@@ -259,40 +257,6 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
-			}
-
-			// Sometimes, I want a bit of smoke
-			if (random->RandomInt(0, flame_chance_smoke.GetInt() /*1 */) == 0) 
-			{
-				if (C_FFFlameJetParticle *pParticle = (C_FFFlameJetParticle *) m_ParticleEffect.AddParticle(sizeof(C_FFFlameJetParticle), /*m_hMaterialSmoke */ m_hMaterialFlame)) 
-				{
-					pParticle->m_Type			= SMOKE;
-					pParticle->m_Appearance		= TEX_SMOKE;
-
-					pParticle->m_Pos			= vecStart;
-					pParticle->m_Origin			= pParticle->m_Pos;
-					
-					pParticle->m_Velocity		= FRand(-m_SpreadSpeed, m_SpreadSpeed) * right +
-												  FRand(0 , 3 *m_SpreadSpeed) * up +
-												  m_Speed * forward;
-					
-					pParticle->m_Lifetime		= 0;
-					pParticle->m_Dietime		= random->RandomFloat(flame_length_min.GetFloat() /*0.3 */, flame_length_max.GetFloat() /*0.4 */);
-
-					pParticle->m_uchStartSize	= m_StartSize;
-					pParticle->m_uchEndSize		= m_EndSize;
-
-					pParticle->m_flRoll			= random->RandomFloat(0, 360);
-					pParticle->m_flRollDelta	= random->RandomFloat(-8.0f, 8.0f);
-
-					trace_t tr;
-
-					// How far can this particle travel
-					UTIL_TraceLine(pParticle->m_Pos, pParticle->m_Pos + (pParticle->m_Velocity * pParticle->m_Dietime), 	MASK_SOLID, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
-
-					pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
-					pParticle->m_HitSurfaceNormal = tr.plane.normal;
-				}
 			}
 		}
 	}
@@ -329,22 +293,22 @@ inline void RenderParticle_ColorSizeAngle(
 
 	pBuilder->Position3f(pos.x + (-ca + sa) * size, pos.y + (-sa - ca) * size, pos.z);
 	pBuilder->Color4ubv(ubColor);
-	pBuilder->TexCoord2f(0, tex_coords[appearance][0], tex_coords[appearance][3]);
+	pBuilder->TexCoord2f(0, 0, 1);
  	pBuilder->AdvanceVertex();
 
 	pBuilder->Position3f(pos.x + (-ca - sa) * size, pos.y + (-sa + ca) * size, pos.z);
 	pBuilder->Color4ubv(ubColor);
-	pBuilder->TexCoord2f(0, tex_coords[appearance][0], tex_coords[appearance][2]);
+	pBuilder->TexCoord2f(0, 0, 0);
  	pBuilder->AdvanceVertex();
 
 	pBuilder->Position3f(pos.x + (ca - sa) * size, pos.y + (sa + ca) * size, pos.z);
 	pBuilder->Color4ubv(ubColor);
-	pBuilder->TexCoord2f(0, tex_coords[appearance][1], tex_coords[appearance][2]);
+	pBuilder->TexCoord2f(0, 1, 0);
  	pBuilder->AdvanceVertex();
 
 	pBuilder->Position3f(pos.x + (ca + sa) * size, pos.y + (sa - ca) * size, pos.z);
 	pBuilder->Color4ubv(ubColor);
-	pBuilder->TexCoord2f(0, tex_coords[appearance][1], tex_coords[appearance][3]);
+	pBuilder->TexCoord2f(0, 1, 1);
  	pBuilder->AdvanceVertex();
 
 }
@@ -386,10 +350,24 @@ void C_FFFlameJet::RenderParticles(CParticleRenderIterator *pIterator)
 			col = random->RandomFloat(0.1f, 0.2f);
 		}
 
+		float r = 1.0f, g = 1.0f, b = 1.0f;
+
+		if (pParticle->m_Lifetime < flame_startblue.GetFloat())
+		{
+			float reduction = (flame_startblue.GetFloat() - pParticle->m_Lifetime) / flame_startblue.GetFloat();
+			r -= reduction;
+			g -= reduction;
+		}
+		else
+		{
+			b -= pParticle->m_flRedness;
+			g -= pParticle->m_flRedness;
+		}
+
 		RenderParticle_ColorSizeAngle(
 			pIterator->GetParticleDraw(), 
 			tPos, 
-			Vector(col, col, col), 
+			Vector(r, g, b), 
 			alpha, 
 			FLerp(pParticle->m_uchStartSize, pParticle->m_uchEndSize, pParticle->m_Lifetime), 
 			pParticle->m_flRoll, 
@@ -421,62 +399,41 @@ void C_FFFlameJet::SimulateParticles(CParticleSimulateIterator *pIterator)
 			pParticle->m_flRoll += pParticle->m_flRollDelta * pIterator->GetTimeDelta();
 			pParticle->m_Pos = pParticle->m_Pos + pParticle->m_Velocity * pIterator->GetTimeDelta();
 
-			if (pParticle->m_Lifetime > pParticle->m_Collisiontime) 
+			if (pParticle->m_Lifetime > pParticle->m_Collisiontime && pParticle->m_Type != FLAME_LICK) 
 			{
-				// This is a flamejet, so modify and now change to a flame lick
-				if (pParticle->m_Type == FLAME_JET) 
-				{
-					// Pull out of the surface
-					pParticle->m_Pos = pParticle->m_Origin + (pParticle->m_Velocity * (pParticle->m_Collisiontime - 0.01f));
-					pParticle->m_Type = FLAME_LICK;
+				// Pull out of the surface
+				pParticle->m_Pos = pParticle->m_Origin + (pParticle->m_Velocity * (pParticle->m_Collisiontime - 0.01f));
+				pParticle->m_Type = FLAME_LICK;
 
-					// Some crossproducts(really!) 
-					Vector cp1 = CrossProduct(pParticle->m_Velocity, pParticle->m_HitSurfaceNormal);
-					Vector cp2 = CrossProduct(pParticle->m_HitSurfaceNormal, cp1);
+				// Some crossproducts (really!) 
+				Vector cp1 = CrossProduct(pParticle->m_Velocity, pParticle->m_HitSurfaceNormal);
+				Vector cp2 = CrossProduct(pParticle->m_HitSurfaceNormal, cp1);
 
-					// Change the velocity to be parallel to the surface it hit
-					float normal_len = pParticle->m_HitSurfaceNormal.Length();
+				// Change the velocity to be parallel to the surface it hit
+				float normal_len = pParticle->m_HitSurfaceNormal.Length();
 
-					// Save from the dreaded divide by zero
-					if (!normal_len) 
-						normal_len += 0.01f;
+				// Save from the dreaded divide by zero
+				if (!normal_len) 
+					normal_len += 0.01f;
 
-					pParticle->m_Velocity = cp2 / normal_len;
+				pParticle->m_Velocity = cp2 / normal_len;
 
-					// Okay some flames get smaller and faster
-					if (random->RandomInt(0, flame_chance_bouncequick.GetInt() /*3 */) == 0) 
-					{
-						pParticle->m_Velocity *= 2.0f;
-						pParticle->m_uchEndSize /= 2;
-						pParticle->m_uchStartSize /= 2;
-					}
-					// Okay, some turn into some silly shape
-					else if (random->RandomInt(0, flame_chance_bounceflareup.GetInt() /*4 */) == 0) 
-					{
-						pParticle->m_Appearance = TEX_FLAME_SPLASH;
-						pParticle->m_flRoll = 0;
-						pParticle->m_flRollDelta = 0;
-						pParticle->m_uchEndSize = 120;
-					}
+				// Now slow down the flames a bit
+				pParticle->m_Velocity *= 0.8f;
 
-					// Work out next point of collision
-					trace_t tr;
+				// Work out next point of collision
+				trace_t tr;
 
-					// Work our how far of the route left we can go
-					UTIL_TraceLine(pParticle->m_Pos, pParticle->m_Pos + pParticle->m_Velocity * (pParticle->m_Dietime - pParticle->m_Lifetime), MASK_SOLID, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
+				// Work our how far of the route left we can go
+				UTIL_TraceLine(pParticle->m_Pos, pParticle->m_Pos + pParticle->m_Velocity * (pParticle->m_Dietime - pParticle->m_Lifetime), MASK_SOLID, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
 
-					pParticle->m_Collisiontime += tr.fraction * (pParticle->m_Dietime - pParticle->m_Lifetime);
+				pParticle->m_Collisiontime += tr.fraction * (pParticle->m_Dietime - pParticle->m_Lifetime);
 
-					// Wait wait, why are flames only allowed to bounce once?
-					// Well, we don't want loads of trace's being done for loads 
-					// of particles, and we have to trace the same route on the 
-					// server too, so limiting it is a pretty good idea really!
-				}
-				// It's either smoke or a flame lick, so remove it
-				else
-				{
-					pIterator->RemoveParticle(pParticle);
-				}
+				// UNDONE:
+				// Wait wait, why are flames only allowed to bounce once?
+				// Well, we don't want loads of trace's being done for loads 
+				// of particles, and we have to trace the same route on the 
+				// server too, so limiting it is a pretty good idea really!
 			}
 		}
 

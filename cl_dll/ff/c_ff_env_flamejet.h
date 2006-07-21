@@ -47,6 +47,8 @@ public:
 		// something
 		unsigned char	m_uchStartSize, m_uchEndSize;
 		Vector			m_HitSurfaceNormal;			// Normal of collision surface
+
+		float			m_flRedness;
 	};
 
 	int IsEmissive() { return true; /*return (m_spawnflags & SF_EMISSIVE);*/ }
