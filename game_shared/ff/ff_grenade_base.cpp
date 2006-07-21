@@ -356,7 +356,7 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-				m_DmgRadius * .03, 
+				m_flDamage / 160, 
 				25, 
 				TE_EXPLFLAG_NONE, 
 				m_DmgRadius, 
@@ -373,7 +373,7 @@ void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 			te->Explosion( filter, -1.0, // don't apply cl_interp delay
 				&vecAbsOrigin, 
 				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-				m_DmgRadius * .03, 
+				m_flDamage / 160, 
 				25, 
 				TE_EXPLFLAG_NONE, 
 				m_DmgRadius, 
