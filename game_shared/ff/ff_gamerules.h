@@ -58,6 +58,7 @@ enum ApplyToFlag_e
 	AT_REMOVE_PROJECTILES,
 	AT_REMOVE_BUILDABLES,
 	AT_REMOVE_DECALS,
+	AT_END_MAP,
 
 	// Change class "ApplyTo" flags
 	AT_CHANGECLASS_SCOUT,

@@ -87,6 +87,9 @@ typedef enum
 	FF_WEAPON_DEPLOYDISPENSER, 
 	FF_WEAPON_DEPLOYSENTRYGUN, 
 	FF_WEAPON_DEPLOYDETPACK, 
+
+	// Civilian specific
+	FF_WEAPON_TOMMYGUN,
 	
 	FF_WEAPON_MAX, 		// number of weapons weapon index
 
