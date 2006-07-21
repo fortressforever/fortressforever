@@ -26,12 +26,12 @@
 // Debug ConVars
 //=============================================================================
 
-static ConVar flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"100", 	0, 	"How fast the flames spread outwards");
+static ConVar flame_spreadspeed(	"ffdev_flame_spreadspeed", 	"150", 	0, 	"How fast the flames spread outwards");
 static ConVar flame_speed(			"ffdev_flame_speed", 			"800", 	0, 	"How fast the flames go forwards");
 static ConVar flame_startsize(		"ffdev_flame_startsize", 		"3", 	0, 	"How big the flame starts(0-255) ");
 static ConVar flame_endsize(		"ffdev_flame_endsize", 		"128", 	0, 	"How big the flame finishes(0-255) ");
 static ConVar flame_rate(			"ffdev_flame_rate", 			"128", 	0, 	"Number of flame particles per second");
-static ConVar flame_alpha(			"ffdev_flame_alpha", 			"0.5", 	0, 	"Alpha value of the flame(0 - 1.0) ");
+static ConVar flame_alpha(			"ffdev_flame_alpha", 			"0.4", 	0, 	"Alpha value of the flame(0 - 1.0) ");
 
 static ConVar flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long the flame stays blue for");
 
