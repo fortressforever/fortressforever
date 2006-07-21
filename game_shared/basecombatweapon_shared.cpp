@@ -1862,8 +1862,16 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	{
 		//Set our activity to the ideal
 		// --> Mirv: Fixed so that we can catch activity changes
-		SetActivity( m_IdealActivity, 0 );
-		//SetSequence( m_nIdealSequence );
+		// For idles, do it the normal way! The othe way breaks them
+		if (ideal == ACT_VM_IDLE || (ideal >= ACT_VM_IDLE_WITH0 && ideal <= ACT_VM_DEEPIDLE_WITH6))
+		{
+			SetActivity( m_IdealActivity, 0 );
+			SetSequence( m_nIdealSequence );
+		}
+		else
+		{
+			SetActivity(m_IdealActivity, 0);
+		}
 		// <--
 		SendViewModelAnim( m_nIdealSequence );
 	}
