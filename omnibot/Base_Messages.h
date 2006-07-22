@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-05-07 23:34:09 -0400 (Sun, 07 May 2006) $
-// $LastChangedRevision: 1208 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,16 +50,6 @@ typedef struct
 	int			m_Contents;
 	float		x,y,z;
 } Msg_PointContents;
-
-typedef struct 
-{
-	int			m_Class;
-} Msg_EntityClass;
-
-typedef struct 
-{
-	int			m_Team;
-} Msg_EntityTeam;
 
 typedef struct 
 {

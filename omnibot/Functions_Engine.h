@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-06-08 06:28:14 -0400 (Thu, 08 Jun 2006) $
-// $LastChangedRevision: 1232 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,9 +10,25 @@
 #define __FUNCTIONS_ENGINE_H__
 
 #include "Omni-Bot_Types.h"
+#include "Omni-Bot_UserFlags.h"
 #include "MessageHelper.h"
 
 // Title: Functions Engine
+
+// struct: EntityInfo
+//		Used to store information about an entity
+typedef struct 
+{
+	// int: m_EntityClass
+	//		The specific classification of this entity
+	int			m_EntityClass;	
+	// int: m_EntityCategoty
+	//		Current category of this entity, see <EntityCategory>
+	int			m_EntityCategory;
+	// int: m_EntityFlags
+	//		Current flags of this entity, see <EntityFlags>
+	UserFlags64	m_EntityFlags;
+} EntityInfo;
 
 // typedef: Game_EngineFuncs_t
 //		This struct defines all the function pointers that the
@@ -106,6 +122,10 @@ typedef struct
 	// Function: pfnGetEntityTeam
 	//		This function should return the bot team of the entity.
 	int (*pfnGetEntityTeam)(const GameEntity _ent);
+
+	// Function: pfnGetEntityClass
+	//		This function should return the bot class of the entity.
+	int (*pfnGetEntityClass)(const GameEntity _ent);
 
 	// Function: pfnEntityFromID
 	//		This function should return the <GameEntity> that matches the provided Id

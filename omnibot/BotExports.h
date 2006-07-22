@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-03-28 21:32:59 -0500 (Tue, 28 Mar 2006) $
-// $LastChangedRevision: 1143 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 // Title: BotExports
 //		In order for the game to call functions from the bot, we must export
@@ -85,6 +85,7 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 	//		on success, or an error code on failure, which can be used with <BOT_ERR_MSG>
 	#define INITBOTLIBRARY(version, navid, win, lin, custompath, result) \
 	{ \
+		result = BOT_ERROR_NONE; \
 		char szBuffer[1024] = {0}; \
 		OB_snprintf(szBuffer, 1024, "%s/%s", custompath, win); \
 		g_BotLibrary = LoadLibrary( szBuffer ); \
@@ -129,6 +130,7 @@ Game_EngineFuncs_t		g_InterfaceFunctions = {0};
 
 	#define INITBOTLIBRARY(version, navid, win, lin, custompath, result) \
 	{ \
+		result = BOT_ERROR_NONE; \
 		const char *pError = 0; \
 		char szBuffer[1024] = {0}; \
 		OB_snprintf(szBuffer, 1024, "%s/%s", custompath, lin); \

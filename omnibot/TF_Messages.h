@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-02-07 23:16:24 -0500 (Tue, 07 Feb 2006) $
-// $LastChangedRevision: 1140 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 // Title: TF Message Structure Definitions
 //
