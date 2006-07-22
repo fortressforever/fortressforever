@@ -17,6 +17,17 @@
 #include "ff_entity_system.h"
 #include "debugoverlay_shared.h"
 
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/object.hpp"
+
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -164,8 +175,10 @@ void CFFInfoScript::Spawn( void )
 	// Try and make the flags easier to grab
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
-	entsys.RunPredicates( this, NULL, "spawn" );
+	//entsys.RunPredicates( this, NULL, "spawn" );
 	//entsys.RunPredicates_Void( this, NULL, "spawn" );
+	luabind::adl::object hSpawn;
+	entsys.RunPredicates_LUA( this, NULL, "spawn", hSpawn );
 
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
@@ -173,10 +186,14 @@ void CFFInfoScript::Spawn( void )
 
 	// Check to see if this object has animations
 	entsys.RunPredicates_Bool( this, NULL, "hasanimation", &m_bHasAnims );
+	//luabind::adl::object hAnims;
+	//entsys.RunPredicates_LUA( this, NULL, "hasanimation", hAnims );
 
 	//Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
 
 	// If using anims, set them up!
+	// TODO: Only do this if the "spawn" call was successful so
+	// it won't break maps
 	if( m_bHasAnims )
 	{
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_RETURNED );
@@ -194,6 +211,8 @@ void CFFInfoScript::Spawn( void )
 
 	// Check to see if this object uses physics
 	entsys.RunPredicates_Bool( this, NULL, "usephysics", &m_bUsePhysics );
+	//luabind::adl::object hOutput;
+	//entsys.RunPredicates_LUA( this, NULL, "usephysics", hOutput );
 
 	CreateItemVPhysicsObject();
 
