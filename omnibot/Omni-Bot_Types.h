@@ -18,7 +18,7 @@
 //		BOT_ERROR_CANTINITBOT - Unable to init bot
 //		BOT_ERROR_BAD_INTERFACE - Bad interface passed to bot
 //		BOT_ERROR_WRONGVERSION - Version mismatch between interface and bot
-typedef enum
+typedef enum eomnibot_error
 {
 	BOT_ERROR_NONE,
 	BOT_ERROR_CANTLOADDLL,
@@ -46,7 +46,7 @@ typedef obuint64 NavigationFlags;
 // enum: obBool
 //		Since theres no promise that we're running in C or C++, and therefor no
 //		guarantee that bools are supported, lets use an enumerated value instead.
-typedef enum
+typedef enum eobBool
 {
 	Invalid = -1,
 	False,
@@ -59,7 +59,7 @@ typedef enum
 //		UnableToAddBot - Unable to add bot for some reason.
 //		InvalidEntity - Invalid entity parameter.
 //		InvalidParameter - Invalid parameter.
-typedef enum
+typedef enum eobResult
 {
 	Success = 0,
 	OutOfPVS,
@@ -89,7 +89,7 @@ inline int SUCCESS(obResult _res)
 //		BOT_DEBUG_SCRIPT - Output info about bot script events/signals.
 //		BOT_DEBUG_EVENTS - Output Event info.
 //		BOT_DEBUG_FPINFO - Output first person info.
-typedef enum
+typedef enum eBotDebugFlag
 {
 	BOT_DEBUG_LOG		= (1<<0),
 	BOT_DEBUG_MOVEVEC	= (1<<1),
@@ -111,7 +111,7 @@ typedef enum
 //		RANDOM_CLASS_IF_NO_CLASS - Pick a random class if we don't already have a class.
 //		RANDOM_TEAM - Pick a random team.
 //		RANDOM_TEAM_IF_NO_TEAM -  - Pick a random team if we don't already have a team.
-typedef enum
+typedef enum eHelpers
 {
 	RANDOM_CLASS				= -1,
 	RANDOM_CLASS_IF_NO_CLASS	= -2,

@@ -83,48 +83,48 @@ namespace Omnibot
 	const char *g_Weapons[TF_WP_MAX] =
 	{
 		0,
-		// TF_WP_UMBRELLA,
-		"ff_weapon_umbrella",
-		// TF_WP_AXE,
-		"",
-		// TF_WP_CROWBAR,
-		"ff_weapon_crowbar",
-		// TF_WP_MEDKIT,
-		"ff_weapon_medkit",
-		// TF_WP_KNIFE,
-		"ff_weapon_knife",
-		// TF_WP_SPANNER,
-		"ff_weapon_spanner",
-		// TF_WP_SHOTGUN,
-		"ff_weapon_shotgun",
-		// TF_WP_SUPERSHOTGUN,
-		"ff_weapon_supershotgun",
-		// TF_WP_NAILGUN,
-		"ff_weapon_nailgun",
-		// TF_WP_SUPERNAILGUN,
-		"ff_weapon_supernailgun",
-		// TF_WP_GRENADE_LAUNCHER,
-		"ff_weapon_grenadelauncher",
-		// TF_WP_ROCKET_LAUNCHER,
-		"ff_weapon_rpg",
-		// TF_WP_SNIPER_RIFLE,
-		"ff_weapon_sniperrifle",
-		// TF_WP_RADIOTAG_RIFLE
-		"ff_weapon_radiotagrifle",
-		// TF_WP_RAILGUN,
-		"ff_weapon_railgun",
-		// TF_WP_FLAMETHROWER,
-		"ff_weapon_flamethrower",
-		// TF_WP_MINIGUN,
-		"ff_weapon_assaultcannon",
-		// TF_WP_AUTORIFLE,
-		"ff_weapon_autorifle",
-		// TF_WP_DARTGUN,
-		"ff_weapon_tranquiliser",
-		// TF_WP_PIPELAUNCHER,
-		"ff_weapon_pipelauncher",
-		// TF_WP_NAPALMCANNON,
-		"ff_weapon_ic"
+			// TF_WP_UMBRELLA,
+			"ff_weapon_umbrella",
+			// TF_WP_AXE,
+			"",
+			// TF_WP_CROWBAR,
+			"ff_weapon_crowbar",
+			// TF_WP_MEDKIT,
+			"ff_weapon_medkit",
+			// TF_WP_KNIFE,
+			"ff_weapon_knife",
+			// TF_WP_SPANNER,
+			"ff_weapon_spanner",
+			// TF_WP_SHOTGUN,
+			"ff_weapon_shotgun",
+			// TF_WP_SUPERSHOTGUN,
+			"ff_weapon_supershotgun",
+			// TF_WP_NAILGUN,
+			"ff_weapon_nailgun",
+			// TF_WP_SUPERNAILGUN,
+			"ff_weapon_supernailgun",
+			// TF_WP_GRENADE_LAUNCHER,
+			"ff_weapon_grenadelauncher",
+			// TF_WP_ROCKET_LAUNCHER,
+			"ff_weapon_rpg",
+			// TF_WP_SNIPER_RIFLE,
+			"ff_weapon_sniperrifle",
+			// TF_WP_RADIOTAG_RIFLE
+			"ff_weapon_radiotagrifle",
+			// TF_WP_RAILGUN,
+			"ff_weapon_railgun",
+			// TF_WP_FLAMETHROWER,
+			"ff_weapon_flamethrower",
+			// TF_WP_MINIGUN,
+			"ff_weapon_assaultcannon",
+			// TF_WP_AUTORIFLE,
+			"ff_weapon_autorifle",
+			// TF_WP_DARTGUN,
+			"ff_weapon_tranquiliser",
+			// TF_WP_PIPELAUNCHER,
+			"ff_weapon_pipelauncher",
+			// TF_WP_NAPALMCANNON,
+			"ff_weapon_ic"
 	};
 	//
 	int obUtilGetWeaponId(const char *_weaponName)
@@ -241,56 +241,56 @@ namespace Omnibot
 	{
 		switch(_gameWpn)
 		{
-			case FF_WEAPON_CROWBAR: 
-				return TF_WP_CROWBAR;
-			case FF_WEAPON_KNIFE: 
-				return TF_WP_KNIFE;
-			case FF_WEAPON_MEDKIT: 
-				return TF_WP_MEDKIT;
-			case FF_WEAPON_SPANNER: 
-				return TF_WP_SPANNER;
-			case FF_WEAPON_UMBRELLA: 
-				return TF_WP_UMBRELLA;
-			case FF_WEAPON_FLAG:
-				return TF_WP_FLAG;
-			case FF_WEAPON_SHOTGUN: 
-				return TF_WP_SHOTGUN;
-			case FF_WEAPON_SUPERSHOTGUN: 
-				return TF_WP_SUPERSHOTGUN;
-			case FF_WEAPON_NAILGUN: 
-				return TF_WP_NAILGUN;
-			case FF_WEAPON_SUPERNAILGUN: 
-				return TF_WP_SUPERNAILGUN;
-			case FF_WEAPON_GRENADELAUNCHER: 
-				return TF_WP_GRENADE_LAUNCHER;
-			case FF_WEAPON_PIPELAUNCHER:
-				return TF_WP_PIPELAUNCHER;
-			case FF_WEAPON_AUTORIFLE: 
-				return TF_WP_AUTORIFLE;
-			case FF_WEAPON_SNIPERRIFLE: 
-				return TF_WP_SNIPER_RIFLE;
-			case FF_WEAPON_RADIOTAGRIFLE: 
-				return TF_WP_RADIOTAG_RIFLE;
-			case FF_WEAPON_FLAMETHROWER: 
-				return TF_WP_FLAMETHROWER;
-			case FF_WEAPON_IC: 
-				return TF_WP_NAPALMCANNON;
-			case FF_WEAPON_RAILGUN: 
-				return TF_WP_RAILGUN;
-			case FF_WEAPON_TRANQUILISER: 
-				return TF_WP_DARTGUN;
-			case FF_WEAPON_ASSAULTCANNON: 
-				return TF_WP_MINIGUN;
-			case FF_WEAPON_RPG: 
-				return TF_WP_ROCKET_LAUNCHER;
-			case FF_WEAPON_DEPLOYDISPENSER: 
-				return TF_WP_DEPLOY_DISP;
-			case FF_WEAPON_DEPLOYSENTRYGUN: 
-				return TF_WP_DEPLOY_SG;
-			case FF_WEAPON_DEPLOYDETPACK: 
-				return TF_WP_DEPLOY_DETP;
-			default:
-				return TF_WP_NONE;
+		case FF_WEAPON_CROWBAR: 
+			return TF_WP_CROWBAR;
+		case FF_WEAPON_KNIFE: 
+			return TF_WP_KNIFE;
+		case FF_WEAPON_MEDKIT: 
+			return TF_WP_MEDKIT;
+		case FF_WEAPON_SPANNER: 
+			return TF_WP_SPANNER;
+		case FF_WEAPON_UMBRELLA: 
+			return TF_WP_UMBRELLA;
+		case FF_WEAPON_FLAG:
+			return TF_WP_FLAG;
+		case FF_WEAPON_SHOTGUN: 
+			return TF_WP_SHOTGUN;
+		case FF_WEAPON_SUPERSHOTGUN: 
+			return TF_WP_SUPERSHOTGUN;
+		case FF_WEAPON_NAILGUN: 
+			return TF_WP_NAILGUN;
+		case FF_WEAPON_SUPERNAILGUN: 
+			return TF_WP_SUPERNAILGUN;
+		case FF_WEAPON_GRENADELAUNCHER: 
+			return TF_WP_GRENADE_LAUNCHER;
+		case FF_WEAPON_PIPELAUNCHER:
+			return TF_WP_PIPELAUNCHER;
+		case FF_WEAPON_AUTORIFLE: 
+			return TF_WP_AUTORIFLE;
+		case FF_WEAPON_SNIPERRIFLE: 
+			return TF_WP_SNIPER_RIFLE;
+		case FF_WEAPON_RADIOTAGRIFLE: 
+			return TF_WP_RADIOTAG_RIFLE;
+		case FF_WEAPON_FLAMETHROWER: 
+			return TF_WP_FLAMETHROWER;
+		case FF_WEAPON_IC: 
+			return TF_WP_NAPALMCANNON;
+		case FF_WEAPON_RAILGUN: 
+			return TF_WP_RAILGUN;
+		case FF_WEAPON_TRANQUILISER: 
+			return TF_WP_DARTGUN;
+		case FF_WEAPON_ASSAULTCANNON: 
+			return TF_WP_MINIGUN;
+		case FF_WEAPON_RPG: 
+			return TF_WP_ROCKET_LAUNCHER;
+		case FF_WEAPON_DEPLOYDISPENSER: 
+			return TF_WP_DEPLOY_DISP;
+		case FF_WEAPON_DEPLOYSENTRYGUN: 
+			return TF_WP_DEPLOY_SG;
+		case FF_WEAPON_DEPLOYDETPACK: 
+			return TF_WP_DEPLOY_DETP;
+		default:
+			return TF_WP_NONE;
 		}		
 	}
 
@@ -636,7 +636,7 @@ namespace Omnibot
 				{
 					if(pEntity->GetHealth() <= 0 || pEntity->GetTeamNumber() == TEAM_SPECTATOR)
 						_entflags.SetFlag(ENT_FLAG_DEAD);
-					
+
 					int iWaterLevel = pEntity->GetWaterLevel();
 					if(iWaterLevel == 3)
 						_entflags.SetFlag(ENT_FLAG_UNDERWATER);
@@ -684,15 +684,15 @@ namespace Omnibot
 					}
 					break;
 				}
-			/*case CLASS_SENTRYGUN:
+				/*case CLASS_SENTRYGUN:
 				{
-					CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntity);					
-					break;
+				CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntity);					
+				break;
 				}
-			case CLASS_DISPENSER:
+				case CLASS_DISPENSER:
 				{
-					CFFDispenser *pDispenser = static_cast<CFFDispenser*>(pEntity);
-					break;
+				CFFDispenser *pDispenser = static_cast<CFFDispenser*>(pEntity);
+				break;
 				}*/
 			}
 
@@ -722,7 +722,7 @@ namespace Omnibot
 			case CLASS_PLAYER:
 				{
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
-					
+
 					if(pffPlayer->IsFeigned())
 						_powerups.SetFlag(TF_PWR_FEIGNED);
 
@@ -780,8 +780,8 @@ namespace Omnibot
 					}
 					break;
 				}
-			/*case CLASS_SENTRYGUN:
-			case CLASS_DISPENSER:*/
+				/*case CLASS_SENTRYGUN:
+				case CLASS_DISPENSER:*/
 			}
 			return Success;
 		}
@@ -1048,25 +1048,11 @@ namespace Omnibot
 
 	static GameEntity obFindEntityInSphere(const float _pos[3], float _radius, GameEntity _pStart, const char *_name)
 	{
-		// square it to avoid the square root in the distance check.
-		float sqRad = _radius * _radius;
-
 		Vector start(_pos[0], _pos[1], _pos[2]);
-		float edict_pos[3];
+		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
 
-		int iStartIndex = _pStart ? ENTINDEX((edict_t*)_pStart) : 0;
-		for( ; iStartIndex <= engine->GetEntityCount(); ++iStartIndex)
-		{
-			edict_t *pEdict = INDEXENT(iStartIndex);
-			if(!Q_stricmp(pEdict->GetClassName(), _name))
-			{
-				obGetEntityPosition(pEdict, edict_pos);
-				if(start.DistToSqr(Vector(edict_pos[0],edict_pos[1],edict_pos[2])) < sqRad)
-					return pEdict;
-			}
-		}
-
-		return 0;
+		CBaseEntity *pFoundEntity = gEntList.FindEntityByClassnameWithin(pEntity, _name, start, _radius);
+		return pFoundEntity ? pFoundEntity->edict() : 0;
 	}
 
 	//-----------------------------------------------------------------
@@ -1241,55 +1227,55 @@ namespace Omnibot
 		{
 			switch(pEntity->Classify())
 			{
-				case CLASS_PLAYER:
-				case CLASS_PLAYER_ALLY:
-					{
-						CFFPlayer *pFFPlayer = ToFFPlayer(pEntity);
-						if(pFFPlayer)
-							return obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());
-						break;
-					}
-				case CLASS_DISPENSER:
-					return TF_CLASSEX_DISPENSER;
-				case CLASS_SENTRYGUN:
-					return TF_CLASSEX_SENTRY;
-				case CLASS_DETPACK:
-					return TF_CLASSEX_DETPACK;
-				case CLASS_GREN:
-					return TF_CLASSEX_GRENADE;
-				case CLASS_GREN_EMP:
-					return TF_CLASSEX_EMP_GRENADE;
-				case CLASS_GREN_NAIL:
-					return TF_CLASSEX_NAIL_GRENADE;
-				case CLASS_GREN_MIRV:
-					return TF_CLASSEX_MIRV_GRENADE;
-				case CLASS_GREN_MIRVLET:
-					return TF_CLASSEX_MIRVLET_GRENADE;
-				case CLASS_GREN_NAPALM:
-					return TF_CLASSEX_NAPALM_GRENADE;
-				case CLASS_GREN_GAS:
-					return TF_CLASSEX_GAS_GRENADE;
-				case CLASS_GREN_CONC:
-					return TF_CLASSEX_CONC_GRENADE;
-				case CLASS_GREN_CALTROP:	
-					return TF_CLASSEX_CALTROP;
-				case CLASS_PIPEBOMB:
-					return TF_CLASSEX_PIPE;
-				case CLASS_GLGRENADE:
-					return TF_CLASSEX_GLGRENADE;
-				case CLASS_ROCKET:
-					return TF_CLASSEX_ROCKET;
-				case CLASS_TURRET:
-					return TF_CLASSEX_TURRET;
-				case CLASS_BACKPACK:
-					return TF_CLASSEX_BACKPACK;
+			case CLASS_PLAYER:
+			case CLASS_PLAYER_ALLY:
+				{
+					CFFPlayer *pFFPlayer = ToFFPlayer(pEntity);
+					if(pFFPlayer)
+						return obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());
+					break;
+				}
+			case CLASS_DISPENSER:
+				return TF_CLASSEX_DISPENSER;
+			case CLASS_SENTRYGUN:
+				return TF_CLASSEX_SENTRY;
+			case CLASS_DETPACK:
+				return TF_CLASSEX_DETPACK;
+			case CLASS_GREN:
+				return TF_CLASSEX_GRENADE;
+			case CLASS_GREN_EMP:
+				return TF_CLASSEX_EMP_GRENADE;
+			case CLASS_GREN_NAIL:
+				return TF_CLASSEX_NAIL_GRENADE;
+			case CLASS_GREN_MIRV:
+				return TF_CLASSEX_MIRV_GRENADE;
+			case CLASS_GREN_MIRVLET:
+				return TF_CLASSEX_MIRVLET_GRENADE;
+			case CLASS_GREN_NAPALM:
+				return TF_CLASSEX_NAPALM_GRENADE;
+			case CLASS_GREN_GAS:
+				return TF_CLASSEX_GAS_GRENADE;
+			case CLASS_GREN_CONC:
+				return TF_CLASSEX_CONC_GRENADE;
+			case CLASS_GREN_CALTROP:	
+				return TF_CLASSEX_CALTROP;
+			case CLASS_PIPEBOMB:
+				return TF_CLASSEX_PIPE;
+			case CLASS_GLGRENADE:
+				return TF_CLASSEX_GLGRENADE;
+			case CLASS_ROCKET:
+				return TF_CLASSEX_ROCKET;
+			case CLASS_TURRET:
+				return TF_CLASSEX_TURRET;
+			case CLASS_BACKPACK:
+				return TF_CLASSEX_BACKPACK;
 				/*case CLASS_INFOSCRIPT:
 				case CLASS_TRIGGERSCRIPT:*/
 			}
 		}
 		return 0;
 	}
-	
+
 	//-----------------------------------------------------------------
 
 	static obResult obGetThreats()
@@ -1649,49 +1635,49 @@ namespace Omnibot
 			CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
 			switch(_ammotype)
 			{
-				case TF_AMMO_SHELLS:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_SHELLS);
-					*_max = pFFPlayer->GetMaxShells();
-					break;
-				case TF_AMMO_NAILS:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_NAILS);
-					*_max = pFFPlayer->GetMaxNails();
-					break;
-				case TF_AMMO_ROCKETS:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_ROCKETS);
-					*_max = pFFPlayer->GetMaxRockets();
-					break;
-				case TF_AMMO_CELLS:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_CELLS);
-					*_max = pFFPlayer->GetMaxCells();
-					break;
-				case TF_AMMO_MEDIKIT:
-					*_cur = -1;
-					*_max = -1;
-					break;
-				case TF_AMMO_DETPACK:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_DETPACK);
-					*_max = pFFPlayer->GetMaxDetpack();
-					break;
-				case TF_AMMO_RADIOTAG:
-					*_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
-					*_max = pFFPlayer->GetMaxRadioTag();
-					break;
-				case TF_AMMO_GRENADE1:
-					*_cur = pFFPlayer->GetPrimaryGrenades();
-					*_max = 4;
-					break;
-				case TF_AMMO_GRENADE2:
-					*_cur = pFFPlayer->GetSecondaryGrenades();
-					*_max = 3;
-					break;
-				case -1:
-					*_cur = -1;
-					*_max = -1;
-					break;
-				default:
-			//		assert(0);		// |-- Mirv: Melee weapons are breaking this
-					return InvalidParameter;
+			case TF_AMMO_SHELLS:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_SHELLS);
+				*_max = pFFPlayer->GetMaxShells();
+				break;
+			case TF_AMMO_NAILS:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_NAILS);
+				*_max = pFFPlayer->GetMaxNails();
+				break;
+			case TF_AMMO_ROCKETS:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_ROCKETS);
+				*_max = pFFPlayer->GetMaxRockets();
+				break;
+			case TF_AMMO_CELLS:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_CELLS);
+				*_max = pFFPlayer->GetMaxCells();
+				break;
+			case TF_AMMO_MEDIKIT:
+				*_cur = -1;
+				*_max = -1;
+				break;
+			case TF_AMMO_DETPACK:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_DETPACK);
+				*_max = pFFPlayer->GetMaxDetpack();
+				break;
+			case TF_AMMO_RADIOTAG:
+				*_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
+				*_max = pFFPlayer->GetMaxRadioTag();
+				break;
+			case TF_AMMO_GRENADE1:
+				*_cur = pFFPlayer->GetPrimaryGrenades();
+				*_max = 4;
+				break;
+			case TF_AMMO_GRENADE2:
+				*_cur = pFFPlayer->GetSecondaryGrenades();
+				*_max = 3;
+				break;
+			case -1:
+				*_cur = -1;
+				*_max = -1;
+				break;
+			default:
+				//		assert(0);		// |-- Mirv: Melee weapons are breaking this
+				return InvalidParameter;
 			}
 
 			return Success;
@@ -2090,7 +2076,7 @@ namespace Omnibot
 		/*if( !gameLocal.isServer )
 		return;*/
 
-		
+
 		if(g_BotFunctions.pfnBotShutdown)
 		{
 			obPrintMessage( "------------ Omni-bot Shutdown --------------\n" );
@@ -2502,6 +2488,17 @@ namespace Omnibot
 		int iGameId = _player->entindex()-1;
 		BotUserData bud(obUtilGetBotWeaponFromGameWeapon(_weapon));
 		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE, iGameId, 0, 0, 0);
+	}
+
+	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed)
+	{
+		CBasePlayer *pUsedPlayer = ToBasePlayer(_entityUsed);
+		if(pUsedPlayer && pUsedPlayer->IsBot())
+		{
+			int iGameId = pUsedPlayer->entindex()-1;
+			BotUserData bud(_player->edict());
+			omnibot_interface::Bot_Interface_SendEvent(PERCEPT_FEEL_PLAYER_USE, iGameId, 0, 0, &bud);
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////

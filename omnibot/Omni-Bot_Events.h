@@ -78,6 +78,7 @@ typedef enum
 
 		// Percepts  (senses: feel, see, hear, smell, )
 		PERCEPT_ID_FIRST,
+			PERCEPT_FEEL_PLAYER_USE,
 			PERCEPT_FEEL_TOUCH_PLAYER,
 			PERCEPT_FEEL_PAIN,
 			PERCEPT_SEE_ENEMY_FOOT_PRINT,
