@@ -175,10 +175,10 @@ void CFFInfoScript::Spawn( void )
 	// Try and make the flags easier to grab
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
-	//entsys.RunPredicates( this, NULL, "spawn" );
+	entsys.RunPredicates( this, NULL, "spawn" );
 	//entsys.RunPredicates_Void( this, NULL, "spawn" );
-	luabind::adl::object hSpawn;
-	entsys.RunPredicates_LUA( this, NULL, "spawn", hSpawn );
+	//luabind::adl::object hSpawn;
+	//entsys.RunPredicates_LUA( this, NULL, "spawn", hSpawn );
 
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
