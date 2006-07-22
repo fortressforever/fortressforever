@@ -1959,7 +1959,7 @@ namespace Omnibot
 		virtual void OnEntitySpawned( CBaseEntity *pEntity )
 		{
 			int iClass = pEntity->Classify();
-            Msg("Entity Spawned %d", iClass);
+            Msg("Entity Spawned %d\n", iClass);
 		}
 		virtual void OnEntityDeleted( CBaseEntity *pEntity )
 		{
