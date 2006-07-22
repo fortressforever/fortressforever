@@ -64,6 +64,7 @@ public:
 
 	virtual void Spawn();
 
+	Class_T Classify() { return CLASS_GLGRENADE; }
 protected:
 
 	// Creates the smoke trail

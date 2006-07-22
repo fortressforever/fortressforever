@@ -54,6 +54,8 @@ public:
 
 protected:
 
+	Class_T Classify() { return CLASS_ROCKET; }
+
 	// Creates the smoke trail
 	void CreateSmokeTrail();
 

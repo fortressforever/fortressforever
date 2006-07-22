@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-06-08 06:28:14 -0400 (Thu, 08 Jun 2006) $
-// $LastChangedRevision: 1232 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,7 +10,6 @@
 #define __OMNIBOT_TYPES_H__
 
 #include "Omni-Bot_BasicTypes.h"
-#include "Omni-Bot_UserFlags.h"
 
 // constants: Omni-bot Errors
 //		BOT_ERROR_NONE - No error
@@ -243,7 +242,7 @@ typedef enum eGoalType
 	GOAL_SCRIPT,
 
 	// THIS MUST BE LAST
-	BASE_GOAL_NUM
+	BASE_GOAL_NUM = 1000
 } GoalType;
 
 // A basic list of goals. There should be one of these for any base Goal class.
@@ -289,7 +288,7 @@ typedef enum eBasicGoals
 	goal_say_phrase*/
 
 	// THIS MUST BE LAST
-	goal_base_num
+	goal_base_num = 1000
 } Goals_Base;
 
 // enumerations: EntityFlag
@@ -434,6 +433,36 @@ typedef enum eContents
 	CONT_START_USER = (1<<24)
 } Contents;
 
+// enumerations: SkeletonBone
+//		BONE_TORSO - Torso bone
+//		BONE_PELVIS - Pelvis bone
+//		BONE_HEAD - Head bone
+//		BONE_RIGHTARM - Right arm bone
+//		BONE_LEFTARM - Left arm bone
+//		BONE_RIGHTHAND - Right hand bone
+//		BONE_LEFTHAND - Left hand bone
+//		BONE_RIGHTLEG - Right leg bone
+//		BONE_LEFTLEG - Left leg bone
+//		BONE_RIGHTFOOT - Right foot bone
+//		BONE_LEFTFOOT - Left foot bone
+typedef enum eSkeletonBone
+{
+	BONE_TORSO,
+	BONE_PELVIS,
+	BONE_HEAD,
+	BONE_RIGHTARM,
+	BONE_LEFTARM,
+	BONE_RIGHTHAND,
+	BONE_LEFTHAND,
+	BONE_RIGHTLEG,
+	BONE_LEFTLEG,
+	BONE_RIGHTFOOT,
+	BONE_LEFTFOOT,
+
+	// THIS MUST BE LAST!
+	BONE_LAST_BONE = 1000
+} SkeletonBone;
+
 // enumerations: NavigationID
 //		NAVID_WP - Waypoint-based path planning implementation.
 //		NAVID_NAVMESH - Navigation mesh path planning implementation.
@@ -499,7 +528,7 @@ typedef enum eTraceMasks
 	TR_MASK_SMOKEBOMB	= (1<<7),
 
 	// THIS MUST BE LAST!
-	TR_MASK_LAST = (1<<16)
+	TR_MASK_LAST		= (1<<16)
 } TraceMasks;
 
 // struct: ClientInput
@@ -520,7 +549,6 @@ typedef struct
 	// int: m_CurrentWeapon
 	//		The current weapon Id this bot wants to use.
 	int		m_CurrentWeapon;
-
 } ClientInput;
 
 // struct: BotUserData
@@ -663,24 +691,6 @@ typedef struct BotUserData_t
 	
 #endif
 } BotUserData;
-
-// struct: EntityInfo
-//		Used to store information about an entity
-typedef struct 
-{
-	// int: m_EntityClass
-	//		The specific classification of this entity
-	int			m_EntityClass;	
-	// int: m_EntityCategoty
-	//		Current category of this entity, see <EntityCategory>
-	int			m_EntityCategory;
-	// int: m_EntityFlags
-	//		Current flags of this entity, see <EntityFlags>
-	UserFlags64	m_EntityFlags;
-	// var: m_UserData
-	//		Additional Info
-	//BotUserData	m_UserData;
-} EntityInfo;
 
 // struct: TriggerInfo
 typedef struct TriggerInfo_t

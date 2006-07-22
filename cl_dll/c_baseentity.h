@@ -83,8 +83,10 @@ enum Class_T
 
 	//-- Added by L0ki --
 	CLASS_PIPEBOMB,
+	CLASS_GLGRENADE,
 	//------------------- 
 
+	CLASS_ROCKET,
 	CLASS_TURRET,
 	CLASS_BACKPACK,
 	CLASS_INFOSCRIPT,

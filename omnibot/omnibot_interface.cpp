@@ -981,94 +981,6 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static obResult obGetThreats()
-	{
-		EntityInfo info;
-
-		for ( CBaseEntity *pEntity = gEntList.FirstEnt(); pEntity != NULL; pEntity = gEntList.NextEnt(pEntity) )
-		{
-			// default data.
-			info.m_EntityFlags.ClearAll();
-			info.m_EntityCategory = 0;
-			info.m_EntityClass = TF_CLASS_NONE;
-			
-			switch(pEntity->Classify())
-			{
-			case CLASS_PLAYER:
-			case CLASS_PLAYER_ALLY:
-				{
-					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pEntity);
-					ASSERT(pFFPlayer);
-					info.m_EntityClass = obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());				
-					info.m_EntityCategory = ENT_CAT_SHOOTABLE | ENT_CAT_PLAYER;
-					obGetEntityFlags(pFFPlayer->edict(), info.m_EntityFlags);
-					break;
-				}
-			case CLASS_DISPENSER:
-				info.m_EntityClass = TF_CLASSEX_DISPENSER;
-				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
-				break;
-			case CLASS_SENTRYGUN:
-				info.m_EntityClass = TF_CLASSEX_SENTRY;
-				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
-				break;
-			case CLASS_DETPACK:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_DETPACK;
-				break;
-			case CLASS_GREN:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_GRENADE;
-				break;
-			case CLASS_GREN_EMP:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_EMP_GRENADE;
-				break;
-			case CLASS_GREN_NAIL:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_NAIL_GRENADE;
-				break;
-			case CLASS_GREN_MIRV:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_MIRV_GRENADE;
-				break;
-			case CLASS_GREN_MIRVLET:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_MIRVLET_GRENADE;
-				break;
-			case CLASS_GREN_NAPALM:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_NAPALM_GRENADE;
-				break;
-			case CLASS_GREN_GAS:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_GAS_GRENADE;
-				break;
-			case CLASS_GREN_CONC:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_CONC_GRENADE;
-				break;
-			case CLASS_GREN_CALTROP:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_CALTROP;
-				break;
-			case CLASS_PIPEBOMB:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				info.m_EntityClass = TF_CLASSEX_PIPE;
-				break;
-				// TODO: rocket, gl grenade
-			default:
-				continue;
-			}
-
-			if(g_BotFunctions.pfnBotAddThreatEntity)
-				g_BotFunctions.pfnBotAddThreatEntity((GameEntity)pEntity->edict(), &info);
-		}
-		return Success;
-	}
-
-	//-----------------------------------------------------------------
-
 	static obResult obGetEntityPosition(const GameEntity _ent, float _pos[3])
 	{	
 		edict_t *pEdict = (edict_t *)_ent;
@@ -1232,20 +1144,77 @@ namespace Omnibot
 
 	static obResult obGetEntityBonePosition(const GameEntity _ent, int _boneid, float _pos[3])
 	{
-		// todo: get bone position based on bone id
-		//idEntity *pEnt = (idEntity*)_ent;
-		//idPlayer.GetAnimator()
-		return obGetEntityPosition(_ent, _pos);
+		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
+		CBasePlayer *pPlayer = pEntity ? pEntity->MyCharacterPointer() : 0;
+		if(pPlayer)
+		{
+			int iBoneIndex = -1;
+			switch(_boneid)
+			{
+			case BONE_TORSO:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_Spine3");
+				break;
+			case BONE_PELVIS:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_Hips");
+				break;
+			case BONE_HEAD:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_Head");
+				break;
+			case BONE_RIGHTARM:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_RightForeArm");
+				break;
+			case BONE_LEFTARM:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_LeftForeArm");
+				break;
+			case BONE_RIGHTHAND:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_RightHand");
+				break;
+			case BONE_LEFTHAND:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_LeftHand");
+				break;
+			case BONE_RIGHTLEG:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_RightLeg");
+				break;
+			case BONE_LEFTLEG:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_LeftLeg");
+				break;
+			case BONE_RIGHTFOOT:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_RightFoot");
+				break;
+			case BONE_LEFTFOOT:
+				iBoneIndex = pPlayer->LookupBone("ffSkel_LeftFoot");
+				break;
+				//"ffSg_Yaw"
+			}
+
+			if(iBoneIndex != -1)
+			{
+				Vector vBonePos;
+				QAngle boneAngle;
+
+				pPlayer->GetBonePosition(iBoneIndex, vBonePos, boneAngle);
+
+				_pos[0] = vBonePos.x;
+				_pos[1] = vBonePos.y;
+				_pos[2] = vBonePos.z;
+
+				return Success;
+			}
+			return InvalidParameter;
+		}
+		return InvalidEntity;
 	}
 
 	//-----------------------------------------------------------------
 
 	static int obGetEntityOwner(const GameEntity _ent)
 	{
-		// TODO:
-		//gentity_t *pEnt = (gentity_t *)(*_ent);
-		//// -1 means theres no owner.
-		//return ((pEnt->s.otherEntityNum == MAX_CLIENTS) ? -1 : pEnt->s.otherEntityNum);
+		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
+		if(pEntity)
+		{
+			CBaseEntity *pOwner = pEntity->GetOwnerEntity();
+			return pOwner ? pOwner->entindex() : -1;
+		}
 		return -1;
 	}
 
@@ -1260,6 +1229,153 @@ namespace Omnibot
 			return obUtilGetBotTeamFromGameTeam(pEntity->GetTeamNumber());
 		}
 		return 0;
+	}
+
+	//-----------------------------------------------------------------
+
+	static int obGetEntityClass(const GameEntity _ent)
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
+		assert(pEntity && "Null Ent!");
+		if(pEntity)
+		{
+			switch(pEntity->Classify())
+			{
+				case CLASS_PLAYER:
+				case CLASS_PLAYER_ALLY:
+					{
+						CFFPlayer *pFFPlayer = ToFFPlayer(pEntity);
+						if(pFFPlayer)
+							return obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());
+						break;
+					}
+				case CLASS_DISPENSER:
+					return TF_CLASSEX_DISPENSER;
+				case CLASS_SENTRYGUN:
+					return TF_CLASSEX_SENTRY;
+				case CLASS_DETPACK:
+					return TF_CLASSEX_DETPACK;
+				case CLASS_GREN:
+					return TF_CLASSEX_GRENADE;
+				case CLASS_GREN_EMP:
+					return TF_CLASSEX_EMP_GRENADE;
+				case CLASS_GREN_NAIL:
+					return TF_CLASSEX_NAIL_GRENADE;
+				case CLASS_GREN_MIRV:
+					return TF_CLASSEX_MIRV_GRENADE;
+				case CLASS_GREN_MIRVLET:
+					return TF_CLASSEX_MIRVLET_GRENADE;
+				case CLASS_GREN_NAPALM:
+					return TF_CLASSEX_NAPALM_GRENADE;
+				case CLASS_GREN_GAS:
+					return TF_CLASSEX_GAS_GRENADE;
+				case CLASS_GREN_CONC:
+					return TF_CLASSEX_CONC_GRENADE;
+				case CLASS_GREN_CALTROP:	
+					return TF_CLASSEX_CALTROP;
+				case CLASS_PIPEBOMB:
+					return TF_CLASSEX_PIPE;
+				case CLASS_GLGRENADE:
+					return TF_CLASSEX_GLGRENADE;
+				case CLASS_ROCKET:
+					return TF_CLASSEX_ROCKET;
+				case CLASS_TURRET:
+					return TF_CLASSEX_TURRET;
+				case CLASS_BACKPACK:
+					return TF_CLASSEX_BACKPACK;
+				/*case CLASS_INFOSCRIPT:
+				case CLASS_TRIGGERSCRIPT:*/
+			}
+		}
+		return 0;
+	}
+	
+	//-----------------------------------------------------------------
+
+	static obResult obGetThreats()
+	{
+		EntityInfo info;
+
+		for ( CBaseEntity *pEntity = gEntList.FirstEnt(); pEntity != NULL; pEntity = gEntList.NextEnt(pEntity) )
+		{
+			// default data.
+			info.m_EntityFlags.ClearAll();
+			info.m_EntityCategory = 0;
+			info.m_EntityClass = obGetEntityClass(pEntity->edict());
+
+			switch(pEntity->Classify())
+			{
+			case CLASS_PLAYER:
+			case CLASS_PLAYER_ALLY:
+				{
+					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pEntity);
+					ASSERT(pFFPlayer);
+					//info.m_EntityClass = obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());				
+					info.m_EntityCategory = ENT_CAT_SHOOTABLE | ENT_CAT_PLAYER;
+					obGetEntityFlags(pFFPlayer->edict(), info.m_EntityFlags);
+					break;
+				}
+			case CLASS_DISPENSER:
+				//info.m_EntityClass = TF_CLASSEX_DISPENSER;
+				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
+				break;
+			case CLASS_SENTRYGUN:
+				//info.m_EntityClass = TF_CLASSEX_SENTRY;
+				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
+				break;
+			case CLASS_DETPACK:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_DETPACK;
+				break;
+			case CLASS_GREN:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_GRENADE;
+				break;
+			case CLASS_GREN_EMP:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_EMP_GRENADE;
+				break;
+			case CLASS_GREN_NAIL:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_NAIL_GRENADE;
+				break;
+			case CLASS_GREN_MIRV:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_MIRV_GRENADE;
+				break;
+			case CLASS_GREN_MIRVLET:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_MIRVLET_GRENADE;
+				break;
+			case CLASS_GREN_NAPALM:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_NAPALM_GRENADE;
+				break;
+			case CLASS_GREN_GAS:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_GAS_GRENADE;
+				break;
+			case CLASS_GREN_CONC:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_CONC_GRENADE;
+				break;
+			case CLASS_GREN_CALTROP:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_CALTROP;
+				break;
+			case CLASS_PIPEBOMB:
+				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				//info.m_EntityClass = TF_CLASSEX_PIPE;
+				break;
+				// TODO: rocket, gl grenade
+			default:
+				continue;
+			}
+
+			if(g_BotFunctions.pfnBotAddThreatEntity)
+				g_BotFunctions.pfnBotAddThreatEntity((GameEntity)pEntity->edict(), &info);
+		}
+		return Success;
 	}
 
 	//-----------------------------------------------------------------
@@ -1361,24 +1477,6 @@ namespace Omnibot
 				{
 					CBaseCombatWeapon *pWeapon = pPlayer ? pPlayer->GetActiveWeapon() : 0;
 					pMsg->m_Weapon = pWeapon ? obUtilGetWeaponId(pWeapon->GetName()) : 0;
-				}
-				break;
-			}
-		case GEN_MSG_GETCURRENTCLASS:
-			{
-				Msg_EntityClass *pMsg = _data.Get<Msg_EntityClass>();
-				if(pMsg)
-				{
-					pMsg->m_Class = 0;
-				}
-				break;
-			}
-		case GEN_MSG_GETCURRENTTEAM:
-			{
-				Msg_EntityTeam *pMsg = _data.Get<Msg_EntityTeam>();
-				if(pMsg)
-				{
-					pMsg->m_Team = pEnt ? obUtilGetBotTeamFromGameTeam(pEnt->GetTeamNumber()) : 0;;
 				}
 				break;
 			}
@@ -1851,6 +1949,27 @@ namespace Omnibot
 	}
 
 	//////////////////////////////////////////////////////////////////////////
+
+	class OmnibotEntityListener : public IEntityListener
+	{
+		virtual void OnEntityCreated( CBaseEntity *pEntity )
+		{
+
+		}
+		virtual void OnEntitySpawned( CBaseEntity *pEntity )
+		{
+			int iClass = pEntity->Classify();
+            Msg("Entity Spawned %d", iClass);
+		}
+		virtual void OnEntityDeleted( CBaseEntity *pEntity )
+		{
+
+		}
+	};
+
+	OmnibotEntityListener gBotEntityListener;
+
+	//////////////////////////////////////////////////////////////////////////
 	// Interface Functions
 	bool omnibot_interface::InitBotInterface()
 	{
@@ -1912,6 +2031,7 @@ namespace Omnibot
 		g_InterfaceFunctions.pfnGetEntityWorldAABB			= obGetEntityWorldAABB;
 		g_InterfaceFunctions.pfnGetEntityOwner				= obGetEntityOwner;
 		g_InterfaceFunctions.pfnGetEntityTeam				= obGetEntityTeam;
+		g_InterfaceFunctions.pfnGetEntityClass				= obGetEntityClass;
 		g_InterfaceFunctions.pfnGetEntityPowerups			= obGetEntityPowerups;
 
 		g_InterfaceFunctions.pfnBotGetCurrentAmmo			= obBotGetCurrentAmmo;
@@ -1960,6 +2080,7 @@ namespace Omnibot
 			bSuccess = false;
 			SHUTDOWNBOTLIBRARY;
 		}
+		gEntList.AddListenerEntity(&gBotEntityListener);
 		obPrintMessage( "---------------------------------------------\n" );
 		return bSuccess;
 	}
@@ -1973,15 +2094,12 @@ namespace Omnibot
 		if(g_BotFunctions.pfnBotShutdown)
 		{
 			obPrintMessage( "------------ Omni-bot Shutdown --------------\n" );
+			gEntList.RemoveListenerEntity(&gBotEntityListener);
 			Bot_Interface_SendGlobalEvent(GAME_ID_ENDGAME, -1, 0, 0);
 			g_BotFunctions.pfnBotShutdown();
 			memset(&g_BotFunctions, 0, sizeof(g_BotFunctions));
 			obPrintMessage( "Omni-bot Shut Down Successfully\n" );
 			obPrintMessage( "---------------------------------------------\n" );
-		}
-		else
-		{
-			obPrintMessage( "Omni-bot Not Loaded\n" );
 		}
 		SHUTDOWNBOTLIBRARY;		
 	}

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-05-08 21:41:37 -0400 (Mon, 08 May 2006) $
-// $LastChangedRevision: 1209 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 // about: Generic Bot Events
 //
@@ -108,8 +108,6 @@ typedef enum
 
 	GEN_MSG_GETPOINTCONTENTS,
 	GEN_MSG_GETEQUIPPEDWEAPON,
-	GEN_MSG_GETCURRENTCLASS,
-	GEN_MSG_GETCURRENTTEAM,
 	GEN_MSG_GETHEALTHARMOR,
 	GEN_MSG_GETMAXSPEED,
 	GEN_MSG_GETFLAGSTATE,

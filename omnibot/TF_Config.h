@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-04-30 17:19:23 -0400 (Sun, 30 Apr 2006) $
-// $LastChangedRevision: 1200 $
+// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
+// $LastChangedRevision: 1234 $
 //
 // Title: TF Config
 //
@@ -78,7 +78,9 @@ typedef enum eTF_EntityClass
 	TF_CLASSEX_CONC_GRENADE,
 	TF_CLASSEX_CALTROP,
 	TF_CLASSEX_PIPE,
+	TF_CLASSEX_GLGRENADE,
 	TF_CLASSEX_ROCKET,
+	TF_CLASSEX_TURRET,
 
 	TF_NUM_CLASSES
 } TF_EntityClass;
