@@ -89,6 +89,7 @@ namespace Omnibot
 	void Notify_SentrySabotaged(CBasePlayer *_player, edict_t *_saboteur);	
 
 	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon);
+	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed);
 };
 
 #endif

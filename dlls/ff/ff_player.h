@@ -101,6 +101,8 @@ public:
 	static CFFPlayer *CreatePlayer( const char *className, edict_t *ed );
 	static CFFPlayer* Instance( int iEnt );
 
+	virtual int ObjectCaps( void );
+
 	// This passes the event to the client's and server's CPlayerAnimState.
 	void DoAnimationEvent( PlayerAnimEvent_t event );
 

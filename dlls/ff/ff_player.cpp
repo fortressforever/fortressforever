@@ -4270,6 +4270,14 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	return 1;
 }
 
+int CFFPlayer::ObjectCaps( void ) 
+{ 
+	int iCaps = BaseClass::ObjectCaps();
+	if(IsBot())
+		 iCaps |= FCAP_IMPULSE_USE;
+	return iCaps; 
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Depending on the origin, chop stuff off
 //			This is a pretty hacky method!

@@ -18,10 +18,16 @@
 //		RADAR_CELL_REQUIREMENT - Number of cells required to use the radar.
 //		BUILD_SENTRY_REQUIREMENT - Number of cells required to build a sentry gun.
 //		BUILD_DISPENSER_REQUIREMENT - Number of cells required to build a dispenser.
+//		MAX_DEMO_PIPETRAPS - Max number of traps to lay at once.
+//		MAX_DEMO_PIPES - Max number of pipes a single demo-man can lay.
+//		MAX_DEMO_TEAM_PIPES - Max number of pipes available for an entire team.
 #define RADAR_CELL_REQUIREMENT 5
 #define BUILD_SENTRY_REQUIREMENT 130
 #define BUILD_SENTRY_UPGRADE_RADIUS 64.0
 #define BUILD_DISPENSER_REQUIREMENT 100
+#define MAX_DEMO_PIPETRAPS 3
+#define MAX_DEMO_PIPES 6
+#define MAX_DEMO_TEAM_PIPES 8
 
 // enumerations: TF_EntityClass
 //		TF_CLASS_SCOUT - Scout player class.

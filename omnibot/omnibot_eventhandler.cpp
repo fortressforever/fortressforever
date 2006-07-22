@@ -427,13 +427,12 @@ void event_GamePlayerShoot(IGameEvent *_event)
 
 void event_GamePlayerUse(IGameEvent *_event)
 {
-	/*"player_use"
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	CBaseEntity *pUsedEnt = CBaseEntity::Instance(_event->GetInt("entity"));
+	if(pPlayer && pUsedEnt)
 	{
-		"userid" (TYPE_SHORT)
-		"entity" (TYPE_SHORT)
-	}*/
-
-	Msg(__FUNCTION__);
+		Omnibot::Notify_PlayerUsed(pPlayer, pUsedEnt);
+	}
 }
 
 void event_GamePlayerChangeName(IGameEvent *_event)

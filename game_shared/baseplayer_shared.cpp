@@ -1082,6 +1082,8 @@ void CBasePlayer::PlayerUse ( void )
 
 		//!!!UNDONE: traceline here to prevent +USEing buttons through walls			
 
+		bool bUsed = false;
+
 		int caps = pUseEntity->ObjectCaps();
 		variant_t emptyVariant;
 		if ( ( (m_nButtons & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) || ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
@@ -1094,16 +1096,30 @@ void CBasePlayer::PlayerUse ( void )
 			if ( pUseEntity->ObjectCaps() & FCAP_ONOFF_USE )
 			{
 				pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_ON );
+				bUsed = true;
 			}
 			else
 			{
 				pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_TOGGLE );
+				bUsed = true;
 			}
 		}
 		// UNDONE: Send different USE codes for ON/OFF.  Cache last ONOFF_USE object to send 'off' if you turn away
 		else if ( (m_afButtonReleased & IN_USE) && (pUseEntity->ObjectCaps() & FCAP_ONOFF_USE) )	// BUGBUG This is an "off" use
 		{
 			pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_OFF );
+			bUsed = true;
+		}
+
+		if(bUsed)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("player_use");
+			if(pEvent)
+			{
+				pEvent->SetInt("userid", GetUserID());
+                pEvent->SetInt("entity", pUseEntity->entindex());
+				gameeventmanager->FireEvent(pEvent, true);
+			}
 		}
 	}
 	else if ( m_afButtonPressed & IN_USE )
