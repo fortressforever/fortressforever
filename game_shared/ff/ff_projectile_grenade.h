@@ -53,6 +53,7 @@ public:
 	static CFFProjectileGrenade * CreateGrenade(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
 	virtual const char *GetBounceSound() { return "GrenadeProjectile.Bounce"; }
+	virtual Class_T Classify() { return CLASS_GLGRENADE; }
 
 #ifdef CLIENT_DLL
 	CFFProjectileGrenade() {}
@@ -62,9 +63,7 @@ public:
 
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 
-	virtual void Spawn();
-
-	Class_T Classify() { return CLASS_GLGRENADE; }
+	virtual void Spawn();	
 protected:
 
 	// Creates the smoke trail

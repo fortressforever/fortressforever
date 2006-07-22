@@ -1751,7 +1751,7 @@ bool LUA_RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *
 		if( entsys.GetFunction( pObject, szFunctionName, table ) )
 		{
 
-			Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
+			//Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
 
 			// Call the lua function
 			try
@@ -1782,6 +1782,91 @@ bool LUA_RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *
 		globals[ "entity" ] = dummy;
 	}
 
+
+	return bRetval;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Call into lua and get a result, basically. A better runpredicates
+// Output : hOutput - the value returned from the lua object/function called
+//
+// Function return value: function will return true if it found the lua object/function
+//----------------------------------------------------------------------------
+bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object &hOutput )
+{
+	if( !GetLuaState() || !ScriptExists() )
+		return false;
+
+	// If no function supplied, abort
+	if( !szFunctionName || !Q_strlen( szFunctionName ) )
+		return false;
+
+	// Assume it exists
+	bool bRetval = true;
+
+	// Looking for a global function
+	if( !pObject )
+	{
+		// TODO: !
+	}
+	// Looking for a function of an object
+	else
+	{
+		// Abort if pObject has no name
+		if( !Q_strlen( STRING( pObject->GetEntityName() ) ) )
+			return false;
+
+		// Set lua's reference to the calling entity
+		luabind::object globals = luabind::globals( GetLuaState() );
+		globals[ "entity" ] = luabind::object( GetLuaState(), pObject );
+
+		// Temps
+		int ent_id = pObject ? ENTINDEX( pObject ) : -1;
+		entsys.SetVar( "entid", ent_id );
+		entsys.SetVar( "entname", STRING( pObject->GetEntityName() ) );
+
+		//lua_pushstring( GetLuaState(), STRING( pObject->GetEntityName() ) );
+		//' First, you push the name of the variable
+		//	lua_pushstring( lua_State, "MyVariable".ToCString( ) )
+		//	' Then, get it from the globals table like so:
+		//	lua_gettable( lua_State, LUA_GLOBALSINDEX )
+		//lua_gettable( GetLuaState(), -2 );
+		
+		luabind::adl::object table;
+		if( GetFunction( pObject, szFunctionName, table ) )
+		{
+			/*
+			try
+			{
+				luabind::adl::object hTemp;
+				GetObject( pObject, hTemp );
+				luabind::call_member< void >( hTemp, "__index" );
+			}
+			catch( ... )
+			{
+				Warning( "[RunPredicates_LUA] call_member failure: [%s]:[%s]\n", STRING( pObject->GetEntityName() ), szFunctionName );
+			}
+			*/
+
+			//Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
+
+			// Call the lua function
+			try
+			{
+				hOutput = luabind::call_function< luabind::adl::object >( table, pEntity );
+			}
+			catch( ... )
+			{
+				Warning( "[RunPredicates_LUA] call_function failure: [%s]:[%s]\n", STRING( pObject->GetEntityName() ), szFunctionName );
+			}			
+		}
+		else
+			bRetval = false;
+
+		// Cleanup
+		luabind::adl::object dummy;
+		globals[ "entity" ] = dummy;
+	}
 
 	return bRetval;
 }

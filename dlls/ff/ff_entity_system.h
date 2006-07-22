@@ -89,6 +89,7 @@ public:
 	float GetFloat( const char *name );
 	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
 
+	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object& hOutput );
 	bool RunPredicates_Bool( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, bool *hOutput = NULL );
 	bool RunPredicates_Vector( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, Vector *hOutput = NULL );
 	bool RunPredicates_Void( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );

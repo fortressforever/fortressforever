@@ -13,7 +13,7 @@
 
 
 #include "cbase.h"
-#include "ff_weapon_base.h"
+#include "ff_weapon_baseclip.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponTommygun C_FFWeaponTommygun
@@ -26,10 +26,10 @@
 // CFFWeaponTommygun
 //=============================================================================
 
-class CFFWeaponTommygun : public CFFWeaponBase
+class CFFWeaponTommygun : public CFFWeaponBaseClip
 {
 public:
-	DECLARE_CLASS(CFFWeaponTommygun, CFFWeaponBase);
+	DECLARE_CLASS(CFFWeaponTommygun, CFFWeaponBaseClip);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	

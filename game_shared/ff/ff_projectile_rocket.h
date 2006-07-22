@@ -38,6 +38,7 @@ public:
 public:
 
 	virtual void Precache();
+	virtual Class_T Classify() { return CLASS_ROCKET; }
 	static CFFProjectileRocket * CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
@@ -52,9 +53,7 @@ public:
 
 	virtual void Spawn();
 
-protected:
-
-	Class_T Classify() { return CLASS_ROCKET; }
+protected:	
 
 	// Creates the smoke trail
 	void CreateSmokeTrail();
