@@ -19,6 +19,9 @@
 #include "ff_luaobject_wrapper.h"
 // <-- Mirv: Temp test for triggers
 
+#undef MINMAX_H
+#include "minmax.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -508,7 +511,10 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
 			{
 				if( !hAllowed.GetBool() )
+				{
+					entsys.RunPredicates_LUA( this, pActivator, "onfailuse" );
 					return;
+				}
 			}
 
 			CPASAttenuationFilter filter( this );
@@ -531,7 +537,10 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
 		{
 			if( !hAllowed.GetBool() )
+			{
+				entsys.RunPredicates_LUA( this, pActivator, "onfailused" );
 				return;
+			}
 		}
 
 		m_OnPressed.FireOutput(m_hActivator, this);
@@ -583,7 +592,10 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hButtonTouch.GetObject() ) )
 	{
 		if( !hButtonTouch.GetBool() )
+		{
+			entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
 			return;
+		}
 	}
 
 	m_hActivator = pOther;
