@@ -16,6 +16,7 @@
 
 // This is to stop some linux gayness
 #define _GLIBCXX_EXPORT_TEMPLATE 1
+#undef _GLIBCXX_USE_WCHAR_T
 
 #ifdef _WIN32
 #pragma once
