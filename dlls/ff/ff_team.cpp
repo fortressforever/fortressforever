@@ -59,6 +59,20 @@ void CFFTeam::SetAllies( int allies )
 	m_iAllies = allies;
 }
 
+void CFFTeam::SetEasyAllies( int iTeam )
+{
+	int iAllies = 0;
+	switch( iTeam )
+	{
+		case TEAM_BLUE:		iAllies = 4; break;
+		case TEAM_RED:		iAllies = 8; break;
+		case TEAM_YELLOW:	iAllies = 16; break;
+		case TEAM_GREEN:	iAllies = 32; break;
+	}
+
+	m_iAllies += iAllies;
+}
+
 int CFFTeam::GetAllies( void )
 {
 	return m_iAllies;

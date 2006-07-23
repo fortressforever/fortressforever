@@ -48,6 +48,7 @@ public:
 	int GetTeamLimits( void );
 
 	void SetAllies( int );
+	void SetEasyAllies( int );
 	int GetAllies( void );
 
 	void UpdateLimits( void );
