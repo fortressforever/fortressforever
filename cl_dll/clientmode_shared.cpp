@@ -27,7 +27,6 @@
 #include "particlemgr.h"
 #include "c_vguiscreen.h"
 #include "c_team.h"
-#include "c_playerresource.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -592,13 +591,12 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 	else if ( Q_strcmp( "player_team", eventname ) == 0 )
 	{
 		C_BasePlayer *pPlayer = USERID2PLAYER( event->GetInt("userid") );
-		IGameResources *pGr = GameResources();
 
-		if ( !hudChat || !pPlayer || !pGr )
+		if ( !hudChat || !pPlayer )
 			return;
 
 		// Bug #0000822: When someone leaves the game, it says "played joined team Unassigned"
-		if( !pGr->IsConnected( event->GetInt( "userid" ) ) )
+		if( event->GetInt( "disconnect" ) )
 			return;
 
 		int team = event->GetInt( "team" );
