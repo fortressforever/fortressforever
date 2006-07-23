@@ -15,7 +15,7 @@
 #define FF_LUAOBJECT_WRAPPER_H
 
 // This is to stop some linux gayness
-//#define _GLIBCXX_EXPORT_TEMPLATE 1
+#define _GLIBCXX_EXPORT_TEMPLATE 1
 
 #ifdef _WIN32
 #pragma once
