@@ -24,6 +24,9 @@
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
 
+#include "ff_entity_system.h"	// Entity system
+#include "ff_luaobject_wrapper.h"
+
 #include "client.h"
 
 #include <vector>
@@ -33,8 +36,6 @@
 #undef MINMAX_H
 #include "minmax.h"		
 
-#include "ff_entity_system.h"	// Entity system
-#include "ff_luaobject_wrapper.h"
 #include "ff_statslog.h"
 
 #include "gib.h"
