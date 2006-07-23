@@ -187,7 +187,7 @@ void CC_Player_Kill( void )
 
 		ClientKill( pPlayer->edict() );
 
-		// Call lua on player_killed on suicides
+		// Call lua player_killed on suicides
 		entsys.SetVar( "killer", ENTINDEX( pPlayer ) );
 		entsys.RunPredicates_LUA( NULL, pPlayer, "player_killed" );
 	}
