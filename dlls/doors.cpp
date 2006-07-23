@@ -13,6 +13,9 @@
 #include "engine/IEngineSound.h"
 #include "physics_npc_solver.h"
 
+#include "ff_entity_system.h"
+#include "ff_luaobject_wrapper.h"
+
 #ifdef HL1_DLL
 #include "filters.h"
 #endif
@@ -20,6 +23,9 @@
 #ifdef CSTRIKE_DLL
 #include "KeyValues.h"
 #endif
+
+#undef MINMAX_H
+#include "minmax.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -575,6 +581,17 @@ void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 		return; 
 	}
 	
+	// TODO: Will need to change this so more than players can trigger doors
+	CFFLuaObjectWrapper hAllowed;
+	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+	{
+		if( !hAllowed.GetBool() )
+		{
+			entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+			return;
+		}
+	}
+
 	// If door has master, and it's not ready to trigger, 
 	// play 'locked' sound.
 	if (m_sMaster != NULL_STRING && !UTIL_IsMasterTriggered(m_sMaster, pOther))
@@ -593,6 +610,7 @@ void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 
 	if (DoorActivate( ))
 	{
+		entsys.RunPredicates_LUA( this, pOther, "ontouch" );
 		// Temporarily disable the touch function, until movement is finished.
 		SetTouch( NULL );
 	}
@@ -650,6 +668,16 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		return;
 	}
 
+	CFFLuaObjectWrapper hAllowed;
+	if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+	{
+		if( !hAllowed.GetBool() )
+		{
+			entsys.RunPredicates_LUA( this, pActivator, "onfailuse" );
+			return;
+		}
+	}
+
 	// if not ready to be used, ignore "use" command.
 	if (m_toggle_state == TS_AT_BOTTOM || (HasSpawnFlags(SF_DOOR_NO_AUTO_RETURN) && m_toggle_state == TS_AT_TOP) )
 	{
@@ -659,6 +687,7 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		}
 		else
 		{
+			entsys.RunPredicates_LUA( this, pActivator, "ontouch" );
 			DoorActivate();
 		}
 	}
