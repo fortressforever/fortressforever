@@ -16,6 +16,7 @@
 
 // --> Mirv: Temp test for triggers
 #include "ff_entity_system.h"
+#include "ff_luaobject_wrapper.h"
 // <-- Mirv: Temp test for triggers
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -269,7 +270,8 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
         if (weapon)
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
-	if (!entsys.RunPredicates_LUA(this, NULL, "ondamage"))
+
+	if( !entsys.RunPredicates_LUA(this, NULL, "ondamage" ) )
 		return 0;
 	if (entsys.GetFloat("info_damage") <= 0.0)
 		return 0;
@@ -502,8 +504,12 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		if ( HasSpawnFlags(SF_BUTTON_TOGGLE))
 		{
 			// double check that it's allowed to toggle
-			if( !entsys.RunPredicates_LUA( this, pActivator, "allowed" ) )
-				return;
+			CFFLuaObjectWrapper hAllowed;
+			if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+			{
+				if( !hAllowed.GetBool() )
+					return;
+			}
 
 			CPASAttenuationFilter filter( this );
 
@@ -521,8 +527,12 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	else
 	{
 		// check with entsys to make sure it is allowed to activate
-		if( !entsys.RunPredicates( this, pActivator, "allowed" ) )
-			return;
+		CFFLuaObjectWrapper hAllowed;
+		if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+		{
+			if( !hAllowed.GetBool() )
+				return;
+		}
 
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonActivate( );
@@ -569,6 +579,13 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 	if ( !pOther->IsPlayer() )
 		return;
 
+	CFFLuaObjectWrapper hButtonTouch;
+	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hButtonTouch.GetObject() ) )
+	{
+		if( !hButtonTouch.GetBool() )
+			return;
+	}
+
 	m_hActivator = pOther;
 
 	BUTTON_CODE code = ButtonResponseToTouch();
@@ -582,6 +599,8 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 		PlayLockSounds(this, &m_ls, TRUE, TRUE);
 		return;
 	}
+
+	entsys.RunPredicates_LUA( this, pOther, "ontouch" );
 
 	// Temporarily disable the touch function, until movement is finished.
 	SetTouch( NULL );
