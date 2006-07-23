@@ -36,6 +36,8 @@
 #include "ff_luaobject_wrapper.h"
 // <-- Mirv: Temp test for triggers
 
+#undef MINMAX_H
+#include "minmax.h"	
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
