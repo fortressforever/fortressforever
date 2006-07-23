@@ -177,45 +177,19 @@ void CC_Player_Kill( void )
 	CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
 	if (pPlayer)
 	{
-#ifdef _DEBUG
-		if ( engine->Cmd_Argc() > 1	)
-#else
-		if ( engine->Cmd_Argc() > 1 && !g_pGameRules->IsMultiplayer() )
-#endif
-		{
-			// Find the matching netname
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
-				if ( pPlayer )
-				{
-					if ( Q_strstr( pPlayer->GetPlayerName(), engine->Cmd_Argv(1)) )
-					{
-						// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
-						if( pPlayer->IsAlive() )
-							pPlayer->SetRespawnDelay( 5.0f );
+		// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
+		if( pPlayer->IsAlive() )
+			pPlayer->SetRespawnDelay( 5.0f );
 
-						// Bug #0000700: people with infection should give medic kill if they suicide
-						if( pPlayer->IsInfected() && pPlayer->GetInfector() )
-							pPlayer->SetSpecialInfectedDeath();
+		// Bug #0000700: people with infection should give medic kill if they suicide
+		if( pPlayer->IsInfected() && pPlayer->GetInfector() )
+			pPlayer->SetSpecialInfectedDeath();
 
-                        ClientKill( pPlayer->edict() );
-					}
-				}
-			}
-		}
-		else
-		{
-			// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
-			if( pPlayer->IsAlive() )
-				pPlayer->SetRespawnDelay( 5.0f );
+		ClientKill( pPlayer->edict() );
 
-			// Bug #0000700: people with infection should give medic kill if they suicide
-			if( pPlayer->IsInfected() && pPlayer->GetInfector() )
-				pPlayer->SetSpecialInfectedDeath();
-
-			ClientKill( pPlayer->edict() );
-		}
+		// Call lua on player_killed on suicides
+		entsys.SetVar( "killer", ENTINDEX( pPlayer ) );
+		entsys.RunPredicates_LUA( NULL, pPlayer, "player_killed" );
 	}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");

@@ -959,7 +959,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
-
+/*
 	// BEG: Added by Mulchman
 	if( m_bBuilding && !m_bClientBuilding )
 	{
@@ -1002,7 +1002,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 				pTimer->m_bRemoveWhenExpired = true;
 				pTimer->StartTimer();				
 			}
-		}*/
+		}*//*
 	}
 	else if( !m_bBuilding && m_bClientBuilding )
 	{
@@ -1030,11 +1030,11 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 			DevMsg( "Mins: %f, %f, %f\nMaxs: %f, %f, %f\n", mins.x, mins.y, mins.z, maxs.x, maxs.y, maxs.z );
 		}
 		//*/
-	}
+	//}
 
 	// Update client buildling state to that of
 	// the server
-	m_bClientBuilding = m_bBuilding;
+	//m_bClientBuilding = m_bBuilding;
 	// END: Added by Mulchman
 
 	UpdateVisibility();
