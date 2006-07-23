@@ -687,7 +687,7 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		}
 		else
 		{
-			entsys.RunPredicates_LUA( this, pActivator, "ontouch" );
+			entsys.RunPredicates_LUA( this, pActivator, "onuse" );
 			DoorActivate();
 		}
 	}
