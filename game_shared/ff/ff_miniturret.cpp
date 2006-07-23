@@ -27,6 +27,7 @@
 	#include "ff_buildableobjects_shared.h"
 	#include "te_effect_dispatch.h"
 	#include "ff_entity_system.h"
+	#include "ff_luaobject_wrapper.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -608,10 +609,11 @@ void CFFMiniTurret::HackFindEnemy( void )
 		if( FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) )
 		{
 			//DevMsg( "[MiniTurret] %s About to run predicates for player: %s ", GetEntityName(), pPlayer->GetPlayerName() );
-			if( entsys.RunPredicates_LUA( this, pPlayer, "validtarget" ) )
+			CFFLuaObjectWrapper hValidTarget;
+			if( entsys.RunPredicates_LUA( this, pPlayer, "validtarget", hValidTarget.GetObject() ) )
 			{
-				//DevMsg( "Success!\n" );
-				pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+				if( hValidTarget.GetBool() )
+					pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 			else
 			{
@@ -626,8 +628,10 @@ void CFFMiniTurret::HackFindEnemy( void )
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
 			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) )
 			{
-				if( entsys.RunPredicates_LUA( this, pSentryGun, "validtarget" ) )
-					pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+				CFFLuaObjectWrapper hValidTarget;
+				if( entsys.RunPredicates_LUA( this, pSentryGun, "validtarget", hValidTarget.GetObject() ) )
+					if( hValidTarget.GetBool() )
+						pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 		}
 
@@ -637,8 +641,10 @@ void CFFMiniTurret::HackFindEnemy( void )
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
 			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) )
 			{
-				if( entsys.RunPredicates_LUA( this, pDispenser, "validtarget" ) )
-					pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+				CFFLuaObjectWrapper hValidTarget;
+				if( entsys.RunPredicates_LUA( this, pDispenser, "validtarget", hValidTarget.GetObject() ) )
+					if( hValidTarget.GetBool() )
+						pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
 		}
 	}
@@ -779,7 +785,12 @@ void CFFMiniTurret::OnActiveThink( void )
 	// Check lua here too to make sure this guy is still a valid target
 	// He might have done something to make him not valid because of
 	// the awesomeness of lua
-	if( !m_bActive || !GetEnemy() || !entsys.RunPredicates_LUA( this, GetEnemy(), "validtarget" ) )
+	bool bValidTarget = true;
+	CFFLuaObjectWrapper hValidTarget;
+	if( entsys.RunPredicates_LUA( this, GetEnemy(), "validtarget", hValidTarget.GetObject() ) )
+		bValidTarget = hValidTarget.GetBool();
+
+	if( !m_bActive || !GetEnemy() || !bValidTarget )
 	{
 		SetEnemy( NULL );
 		m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;
