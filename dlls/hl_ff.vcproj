@@ -287,6 +287,9 @@
 					RelativePath=".\ff\ff_logicalentity.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_luacontext.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_minecart.cpp">
 				</File>
 				<File
@@ -337,6 +340,9 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_item_flag.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_luacontext.h">
 				</File>
 				<File
 					RelativePath=".\ff\ff_luaobject_wrapper.h">
@@ -567,10 +573,10 @@
 					RelativePath="..\game_shared\ff\ff_buildableobjects_shared.h">
 				</File>
 				<File
-					RelativePath=".\ff\ff_esp_shared.h">
+					RelativePath="..\game_shared\ff\ff_esp_shared.h">
 				</File>
 				<File
-					RelativePath="..\game_shared\ff\ff_esp_shared.h">
+					RelativePath=".\ff\ff_esp_shared.h">
 				</File>
 				<File
 					RelativePath="..\game_shared\ff\ff_fx_shared.h">

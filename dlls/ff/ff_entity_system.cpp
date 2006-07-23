@@ -36,6 +36,7 @@
 #include "ff_grenade_base.h"
 #include "beam_shared.h"
 #include "ff_luaobject_wrapper.h"
+#include "ff_luacontext.h"
 
 // Lua includes
 extern "C"
@@ -1718,6 +1719,18 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEnt
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object &hOutput )
 {
+	CFFLuaSC sc;
+	sc.Push(pEntity);
+	if(sc.CallFunction(pObject, szFunctionName))
+	{
+		hOutput = *sc.GetObject();
+		return true;
+	}
+
+	return false;
+
+	
+/*
 	if( !GetLuaState() || !ScriptExists() )
 		return false;
 
@@ -1782,4 +1795,5 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEnt
 	globals[ "entity" ] = dummy;
 
 	return bRetval;
+*/
 }
