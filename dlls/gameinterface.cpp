@@ -724,7 +724,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_AIFoesTalkSemaphore.Release();
 	g_OneWayTransition = false;
 
-	entsys.RunPredicates(NULL, NULL, "startup");
+	entsys.RunPredicates_LUA(NULL, NULL, "startup");
 
 	// --> Mirv: Automatically execute map config
 	char szExecMapConfig[128];

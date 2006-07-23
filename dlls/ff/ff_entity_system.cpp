@@ -35,6 +35,7 @@
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
 #include "beam_shared.h"
+#include "ff_luaobject_wrapper.h"
 
 // Lua includes
 extern "C"
@@ -84,13 +85,13 @@ void CFFEntitySystemHelper::Spawn( void )
 
 void CFFEntitySystemHelper::OnThink( void )
 {
-	entsys.RunPredicates( NULL, NULL, "tick" );
+	entsys.RunPredicates_LUA( NULL, NULL, "tick" );
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
 void CFFEntitySystemHelper::Precache( void )
 {
-	entsys.RunPredicates( NULL, NULL, "precache" );
+	entsys.RunPredicates_LUA( NULL, NULL, "precache" );
 }
 
 //============================================================================
@@ -581,17 +582,17 @@ namespace FFLib
 		return ret;
 	}
 
-	CFFPlayer* GetPlayer(int player_id)
+	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
-		CBaseEntity* pEnt = GetEntity(player_id);
+		//CBaseEntity* pEnt = GetEntity(player_id);
 
-		if(NULL == pEnt)
+		if(NULL == pEntity)
 			return NULL;
 
-		if(!pEnt->IsPlayer())
+		if(!pEntity->IsPlayer())
 			return NULL;
 
-		return dynamic_cast<CFFPlayer*>(pEnt);
+		return dynamic_cast<CFFPlayer*>(pEntity);
 	}
 
 	CFFGrenadeBase *GetGrenade( int ent_id )
@@ -607,29 +608,9 @@ namespace FFLib
 		return dynamic_cast< CFFGrenadeBase * >( pEnt );
 	}
 
-	bool IsPlayerFromId( int player_id )
+	bool IsPlayer( CBaseEntity *pEntity )
 	{
-		return GetPlayer( player_id ) == NULL ? false : true;
-	}
-
-	bool IsGrenadeFromId( int ent_id )
-	{
-		return IsGrenade( GetEntity( ent_id ) );
-	}
-
-	bool IsDispenserFromId( int ent_id )
-	{
-		return IsDispenser( GetEntity( ent_id ) );
-	}
-
-	bool IsSentrygunFromId( int ent_id )
-	{
-		return IsSentrygun( GetEntity( ent_id ) );
-	}
-
-	bool IsDetpackFromId( int ent_id )
-	{
-		return IsDetpack( GetEntity( ent_id ) );
+		return GetPlayer( pEntity ) == NULL ? false : true;
 	}
 
 	CFFInfoScript* GetInfoScriptByName(const char* entityName)
@@ -801,16 +782,16 @@ namespace FFLib
 		pTeam->SetClassLimit(CLASS_CIVILIAN, limits.civilian);
 	}
 
-	void SmartMessage(int playerId, const char* playerMsg, const char* teamMsg, const char* otherMsg)
+	void SmartMessage(CBaseEntity *pEntity, const char* playerMsg, const char* teamMsg, const char* otherMsg)
 	{
-		CFFPlayer* pPlayer = GetPlayer(playerId);
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
 		if(NULL == pPlayer)
 			return;
 
 		int nPlayers = FF_NumPlayers();
 		for(int i = 1 ; i <= nPlayers ; i++)
 		{
-			CFFPlayer* pTestPlayer = GetPlayer(i);
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
 			if( !pTestPlayer )
 				continue;
@@ -826,16 +807,16 @@ namespace FFLib
 		}
 	}
 
-	void SmartSound(int playerId, const char* playerSound, const char* teamSound, const char* otherSound)
+	void SmartSound(CBaseEntity *pEntity, const char* playerSound, const char* teamSound, const char* otherSound)
 	{
-		CFFPlayer* pPlayer = GetPlayer(playerId);
+		CFFPlayer* pPlayer = GetPlayer(pEntity);
 		if(NULL == pPlayer)
 			return;
 
 		int nPlayers = FF_NumPlayers();
 		for(int i = 1 ; i <= nPlayers ; i++)
 		{
-			CFFPlayer* pTestPlayer = GetPlayer(i);
+			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
 			if( !pTestPlayer )
 				continue;
@@ -851,10 +832,10 @@ namespace FFLib
 		}
 	}
 
-	void SmartTeamMessage(int teamId, const char* teamMsg, const char* otherMsg)
+	void SmartTeamMessage(CFFTeam *pTeam, const char* teamMsg, const char* otherMsg)
 	{
 		// get team
-		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
 
 		if(NULL == pTeam)
 			return;
@@ -863,22 +844,22 @@ namespace FFLib
 		int nPlayers = FF_NumPlayers();
 		for(int i = 1 ; i <= nPlayers ; i++)
 		{
-			CFFPlayer* pPlayer = GetPlayer(i);
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
 			if( !pPlayer )
 				continue;
 
-			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
 				SendPlayerMessage(pPlayer, teamMsg);
 			else
 				SendPlayerMessage(pPlayer, otherMsg);
 		}
 	}
 
-	void SmartTeamSound(int teamId, const char* teamSound, const char* otherSound)
+	void SmartTeamSound(CFFTeam *pTeam, const char* teamSound, const char* otherSound)
 	{
 		// get team
-		CFFTeam* pTeam = GetGlobalFFTeam(teamId);
+		//CFFTeam* pTeam = GetGlobalFFTeam(teamId);
 
 		if(NULL == pTeam)
 			return;
@@ -887,16 +868,22 @@ namespace FFLib
 		int nPlayers = FF_NumPlayers();
 		for(int i = 1 ; i <= nPlayers ; i++)
 		{
-			CFFPlayer* pPlayer = GetPlayer(i);
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
 			if( !pPlayer )
 				continue;
 
-			if(pPlayer->GetTeam()->GetTeamNumber() == teamId)
+			if(pPlayer->GetTeam()->GetTeamNumber() == pTeam->GetTeamNumber())
 				SendPlayerSound(pPlayer, teamSound);
 			else
 				SendPlayerSound(pPlayer, otherSound);
 		}
+	}
+
+	CFFPlayer *GetPlayerByID( int player_id )
+	{
+		CBaseEntity *pEntity = UTIL_EntityByIndex( player_id );
+		return GetPlayer( pEntity );
 	}
 
 	void SetPlayerLimits(CPlayerLimits& limits)
@@ -1141,6 +1128,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
 			.def("GetTeamId",			&CBaseEntity::GetTeamNumber)
+			.def("GetId",				&CBaseEntity::entindex)
 			.def("GetVelocity",			&CBaseEntity::GetAbsVelocity)
 			.def("IsDispenser",			&FFLib::IsDispenser)
 			.def("IsGrenade",			&FFLib::IsGrenade)
@@ -1327,11 +1315,11 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetPlayer",				&FFLib::GetPlayer),
 		def("GetTeam",					&FFLib::GetTeam),
 		def("GetGrenade",				&FFLib::GetGrenade),
-		def("IsPlayer",					&FFLib::IsPlayerFromId),
-		def("IsDispenser",				&FFLib::IsDispenserFromId),
-		def("IsSentrygun",				&FFLib::IsSentrygunFromId),
-		def("IsDetpack",				&FFLib::IsDetpackFromId),
-		def("IsGrenade",				&FFLib::IsGrenadeFromId),
+		def("IsPlayer",					&FFLib::IsPlayer),
+		def("IsDispenser",				&FFLib::IsDispenser),
+		def("IsSentrygun",				&FFLib::IsSentrygun),
+		def("IsDetpack",				&FFLib::IsDetpack),
+		def("IsGrenade",				&FFLib::IsGrenade),
 		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
 		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
@@ -1366,7 +1354,8 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetPing",					&FFLib::GetPing),
 		def("GetPacketloss",			&FFLib::GetPacketloss),
 		def("PrintBool",				&FFLib::PrintBool),
-		def("GoToIntermission",			&FFLib::GoToIntermission)
+		def("GoToIntermission",			&FFLib::GoToIntermission),
+		def("GetPlayerByID",			&FFLib::GetPlayerByID)	// TEMPORARY
 	];
 }
 
@@ -1696,7 +1685,11 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 			CBaseEntity *pEntity = UTIL_EntityByIndex( pObject->m_hActiveScripts[ i ] );
 			if( pEntity )
 			{
-				bool bEntSys = entsys.RunPredicates( pEntity, pObject, pszFunction ) > 0;
+				bool bEntSys = bExpectedVal;
+				CFFLuaObjectWrapper hOutput;
+				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
+				if( entsys.RunPredicates_LUA( pEntity, pObject, pszFunction, hOutput.GetObject() ) )
+					bEntSys = hOutput.GetBool();
 
 				if( bEntSys != bExpectedVal )
 					return !bExpectedVal;
@@ -1707,83 +1700,14 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 	return bExpectedVal;
 }
 
+
 //----------------------------------------------------------------------------
-// Purpose: Call into lua and get a result, basically. A better runpredicates
-// Output : hOutput - the value returned from the lua object/function called
-//
-// Function return value: function will return true if it found the lua object/function
+// Purpose: This just hooks us into the real function
 //----------------------------------------------------------------------------
-template< class hObjType >
-bool LUA_RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, hObjType *hOutput )
+bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName )
 {
-	if( !entsys.GetLuaState() || !entsys.ScriptExists() )
-		return false;
-
-	// If no function supplied, abort
-	if( !szFunctionName || !Q_strlen( szFunctionName ) )
-		return false;
-
-	// Assume it exists
-	bool bRetval = true;
-
-	// Looking for a global function
-	if( !pObject )
-	{
-		// TODO: !
-	}
-	// Looking for a function of an object
-	else
-	{
-		// Abort if pObject has no name
-		if( !Q_strlen( STRING( pObject->GetEntityName() ) ) )
-			return false;
-
-		// Set lua's reference to the calling entity
-		luabind::object globals = luabind::globals( entsys.GetLuaState() );
-		globals[ "entity" ] = luabind::object( entsys.GetLuaState(), pObject );
-
-		// Temps
-		int ent_id = pObject ? ENTINDEX( pObject ) : -1;
-		entsys.SetVar( "entid", ent_id );
-		entsys.SetVar( "entname", STRING( pObject->GetEntityName() ) );
-
-		luabind::adl::object table;
-		if( entsys.GetFunction( pObject, szFunctionName, table ) )
-		{
-
-			//Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
-
-			// Call the lua function
-			try
-			{
-				if( hOutput != NULL )
-				{
-					*( hOutput ) = luabind::call_function< hObjType >( table, pEntity );
-				}
-				else
-				{
-
-					// TODO: This is supposed to be when hOutput == NULL meaning
-					// the type was void but it doesn't work.
-
-					luabind::call_function< hObjType >( table, pEntity );
-				}
-			}
-			catch( ... )
-			{
-				Warning( "[LUA_RunPredicates] call_function failure on entity: %s - function: %s!\n", STRING( pObject->GetEntityName() ), szFunctionName );
-			}			
-		}
-		else
-			bRetval = false;
-
-		// Cleanup
-		luabind::adl::object dummy;
-		globals[ "entity" ] = dummy;
-	}
-
-
-	return bRetval;
+	luabind::adl::object hObject;
+	return RunPredicates_LUA( pObject, pEntity, szFunctionName, hObject );
 }
 
 //----------------------------------------------------------------------------
@@ -1804,105 +1728,58 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEnt
 	// Assume it exists
 	bool bRetval = true;
 
+	// Set lua's reference to the calling entity. Don't care if
+	// it's NULL, either
+	luabind::object globals = luabind::globals( GetLuaState() );
+	globals[ "entity" ] = luabind::object( GetLuaState(), pObject );
+
 	// Looking for a global function
 	if( !pObject )
 	{
-		// TODO: !
+		try
+		{
+			hOutput = call_function< luabind::adl::object >( GetLuaState(), szFunctionName, pEntity );
+		}
+		catch( ... )
+		{
+			Warning( "[RunPredicates_LUA] call_function failure: [global]:[%s]\n", szFunctionName );
+			
+			// Call failed for some reason so lets return false
+			bRetval = false;
+		}
 	}
 	// Looking for a function of an object
 	else
-	{
-		// Abort if pObject has no name
-		if( !Q_strlen( STRING( pObject->GetEntityName() ) ) )
-			return false;
-
-		// Set lua's reference to the calling entity
-		luabind::object globals = luabind::globals( GetLuaState() );
-		globals[ "entity" ] = luabind::object( GetLuaState(), pObject );
-
-		// Temps
-		int ent_id = pObject ? ENTINDEX( pObject ) : -1;
-		entsys.SetVar( "entid", ent_id );
-		entsys.SetVar( "entname", STRING( pObject->GetEntityName() ) );
-
-		//lua_pushstring( GetLuaState(), STRING( pObject->GetEntityName() ) );
-		//' First, you push the name of the variable
-		//	lua_pushstring( lua_State, "MyVariable".ToCString( ) )
-		//	' Then, get it from the globals table like so:
-		//	lua_gettable( lua_State, LUA_GLOBALSINDEX )
-		//lua_gettable( GetLuaState(), -2 );
-		
+	{		
+		// Make sure the object:function() exists
 		luabind::adl::object table;
 		if( GetFunction( pObject, szFunctionName, table ) )
 		{
-			/*
+			// Just get the object scope, we know it will be "true"
+			// or we wouldn't be inside of GetFunction()
+			luabind::adl::object hObject;
+			GetObject( pObject, hObject );
+
+			// Call the lua object:function() passing in pEntity
 			try
 			{
-				luabind::adl::object hTemp;
-				GetObject( pObject, hTemp );
-				luabind::call_member< void >( hTemp, "__index" );
+				hOutput = luabind::call_member< luabind::adl::object >( hObject, szFunctionName, pEntity );
 			}
 			catch( ... )
 			{
 				Warning( "[RunPredicates_LUA] call_member failure: [%s]:[%s]\n", STRING( pObject->GetEntityName() ), szFunctionName );
-			}
-			*/
 
-			//Warning( "[LUA_RunPredicates] [%s] - [%s] - [hOutput - %s]\n", STRING( pObject->GetEntityName() ), szFunctionName, hOutput ? "VALID" : "NULL" );
-
-			// Call the lua function
-			try
-			{
-				hOutput = luabind::call_function< luabind::adl::object >( table, pEntity );
-			}
-			catch( ... )
-			{
-				Warning( "[RunPredicates_LUA] call_function failure: [%s]:[%s]\n", STRING( pObject->GetEntityName() ), szFunctionName );
+				// Call failed for some reason so lets return false
+				bRetval = false;
 			}			
 		}
 		else
 			bRetval = false;
-
-		// Cleanup
-		luabind::adl::object dummy;
-		globals[ "entity" ] = dummy;
 	}
 
+	// Cleanup
+	luabind::adl::object dummy;
+	globals[ "entity" ] = dummy;
+
 	return bRetval;
-}
-
-bool CFFEntitySystem::RunPredicates_Bool( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, bool *hOutput )
-{
-	return LUA_RunPredicates< bool >( pObject, pEntity, szFunctionName, hOutput );
-}
-
-bool CFFEntitySystem::RunPredicates_Vector( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, Vector *hOutput )
-{
-	return LUA_RunPredicates< Vector >( pObject, pEntity, szFunctionName, hOutput );
-}
-
-bool CFFEntitySystem::RunPredicates_Void( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName )
-{
-	//*
-	bool *p = NULL;
-	return LUA_RunPredicates< bool >( pObject, pEntity, szFunctionName, p );
-	//*/
-
-	// TODO: Void version does not work for some reason. The luabind::call_function< void > bombs.
-	//return true;
-}
-
-bool CFFEntitySystem::RunPredicates_Int( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, int *hOutput )
-{
-	return LUA_RunPredicates< int >( pObject, pEntity, szFunctionName, hOutput );
-}
-
-bool CFFEntitySystem::RunPredicates_Float( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, float *hOutput )
-{
-	return LUA_RunPredicates< float >( pObject, pEntity, szFunctionName, hOutput );
-}
-
-bool CFFEntitySystem::RunPredicates_QAngle( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, QAngle *hOutput )
-{
-	return LUA_RunPredicates< QAngle >( pObject, pEntity, szFunctionName, hOutput );
 }

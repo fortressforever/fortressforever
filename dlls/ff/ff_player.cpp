@@ -34,6 +34,7 @@
 #include "minmax.h"		
 
 #include "ff_entity_system.h"	// Entity system
+#include "ff_luaobject_wrapper.h"
 #include "ff_statslog.h"
 
 #include "gib.h"
@@ -683,11 +684,16 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			// but let them spawn here if the name doesn't exist
 			if ( !FStrEq(STRING(pSpot->GetEntityName()), "") )
 			{
-				if ( !entsys.RunPredicates( pSpot, this, "validspawn" ) )
+				CFFLuaObjectWrapper hSpawnSpot;
+				if( entsys.RunPredicates_LUA( pSpot, this, "validspawn", hSpawnSpot.GetObject() ) )
 				{
-					//DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
-					pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
-					continue;
+					// pSpot:validspawn() exists, check the value returned from it
+					if( !hSpawnSpot.GetBool() )
+					{
+						//DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
+						pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+						continue;
+					}					
 				}
 
 				//DevMsg("[entsys] Found valid spawn for %s at %s\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
@@ -906,7 +912,7 @@ void CFFPlayer::Spawn()
 
 	// Run this after SetupClassVariables in case lua is
 	// manipulating the players' inventory
-	entsys.RunPredicates( NULL, this, "player_spawn" );
+	entsys.RunPredicates_LUA( NULL, this, "player_spawn" );
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 		m_vSpeedEffects[i].active = false;
@@ -1111,7 +1117,7 @@ void CFFPlayer::SpySilentFeign( void )
 		{
 			// Tell the ent that it died
 			if (pEnt->GetOwnerEntity() == this)
-				entsys.RunPredicates( pEnt, this, "ownerfeign" );
+				entsys.RunPredicates_LUA( pEnt, this, "ownerfeign" );
 
 			// Next!
 			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
@@ -1239,7 +1245,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// run the player_died event in lua
 	//DevMsg("Running player_killed\n");
 	entsys.SetVar("killer", ENTINDEX(info.GetAttacker()));
-	entsys.RunPredicates( NULL, this, "player_killed" );
+	entsys.RunPredicates_LUA( NULL, this, "player_killed" );
 
 	// EDIT: Let's not use strings if we don't have to...
 	// Find any items that we are in control of and drop them
@@ -2784,7 +2790,7 @@ void CFFPlayer::Command_SevTest( void )
 */
 void CFFPlayer::Command_FlagInfo( void )
 {	
-	entsys.RunPredicates(NULL, this, "flaginfo");
+	entsys.RunPredicates_LUA(NULL, this, "flaginfo");
 }
 
 /**
@@ -2793,18 +2799,19 @@ void CFFPlayer::Command_FlagInfo( void )
 void CFFPlayer::Command_DropItems( void )
 {	
 	//entsys.RunPredicates(NULL, this, "dropitems");
-	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 
 	while( pEnt != NULL )
 	{
-		if (pEnt->GetOwnerEntity() == this)
+		if( pEnt->GetOwnerEntity() == ( CBaseEntity * )this )
 		{
-			if (entsys.RunPredicates( pEnt, this, "dropitemcmd" ))
-				pEnt->Drop(30.0f, 500.0f);
+			// If the function exists, try and drop
+			entsys.RunPredicates_LUA( pEnt, this, "dropitemcmd" );
+				//pEnt->Drop(30.0f, 500.0f);
 		}
 
 		// Next!
-		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
 	}
 }
 
@@ -4070,7 +4077,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
         if (weapon)
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
-	entsys.RunPredicates(NULL, this, "player_ondamage");
+	entsys.RunPredicates_LUA(NULL, this, "player_ondamage");
 	info.SetDamage(entsys.GetFloat("info_damage"));
 
 	// go take the damage first
@@ -4984,19 +4991,15 @@ bool CFFPlayer::HasItem(const char* itemname) const
 	bool ret = false;
 
 	// get all info_ff_scripts
-	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 
-	while( pEnt != NULL )
+	while( pEnt && !ret )
 	{
-		// Tell the ent that it died
-		if ( pEnt->GetOwnerEntity() == this && FStrEq( STRING(pEnt->GetEntityName()), itemname ) )
-		{
-			//DevMsg("[SCRIPT] found item %d: %s\n", ENTINDEX(pEnt), itemname);
+		if( ( pEnt->GetOwnerEntity() == ( CBaseEntity * )this ) && FStrEq( STRING(pEnt->GetEntityName()), itemname ) )
 			ret = true;
-		}
 
 		// Next!
-		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
 	}
 
 	return ret;
