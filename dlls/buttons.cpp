@@ -525,6 +525,8 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			ep.m_flVolume = 1;
 			ep.m_SoundLevel = SNDLVL_NORM;
 
+			entsys.RunPredicates_LUA( this, pActivator, "onuse" );
+
 			EmitSound( filter, entindex(), ep );
 			m_OnPressed.FireOutput(m_hActivator, this);
 			ButtonReturn();
@@ -543,6 +545,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			}
 		}
 
+		entsys.RunPredicates_LUA( this, pActivator, "onuse" );
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonActivate( );
 	}
