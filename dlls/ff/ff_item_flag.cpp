@@ -15,6 +15,7 @@
 #include "cbase.h"
 #include "ff_item_flag.h"
 #include "ff_entity_system.h"
+#include "ff_luaobject_wrapper.h"
 #include "debugoverlay_shared.h"
 
 // Lua includes
@@ -106,7 +107,7 @@ CFFInfoScript::~CFFInfoScript( void )
 void CFFInfoScript::Precache( void )
 {
 	PrecacheModel( FLAG_MODEL );
-	entsys.RunPredicates( this, NULL, "precache" );
+	entsys.RunPredicates_LUA( this, NULL, "precache" );
 }
 
 bool CFFInfoScript::CreateItemVPhysicsObject( void )
@@ -136,8 +137,11 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 
+	CFFLuaObjectWrapper hDropAtSpawn;
+	entsys.RunPredicates_LUA( this, NULL, "dropatspawn", hDropAtSpawn.GetObject() );
+
 	// See if the info_ff_script should drop to the ground or not
-	if( entsys.RunPredicates( this, NULL, "dropatspawn" ) )
+	if( hDropAtSpawn.GetBool() )
 	{
 		// If it's not physical, drop it to the floor
 		if( UTIL_DropToFloor( this, MASK_SOLID ) == 0 )
@@ -161,6 +165,9 @@ void CFFInfoScript::Spawn( void )
 
 	// Check if this object has an attachoffset function and get the value if it does
 	//entsys.RunPredicates_Vector( this, NULL, "attachoffset", m_vecOffset.GetForModify() );
+	CFFLuaObjectWrapper hAttachOffset;
+	if( entsys.RunPredicates_LUA( this, NULL, "attachoffset", hAttachOffset.GetObject() ) )
+		m_vecOffset.GetForModify() = hAttachOffset.GetVector();	
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -175,26 +182,22 @@ void CFFInfoScript::Spawn( void )
 	// Try and make the flags easier to grab
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 
-	entsys.RunPredicates( this, NULL, "spawn" );
-	//entsys.RunPredicates_Void( this, NULL, "spawn" );
-	//luabind::adl::object hSpawn;
-	//entsys.RunPredicates_LUA( this, NULL, "spawn", hSpawn );
+	// Run the spawn function
+	bool bSpawnSuccessful = entsys.RunPredicates_LUA( this, NULL, "spawn" );
 
 	m_vStartOrigin = GetAbsOrigin();
 	m_vStartAngles = GetAbsAngles();
 	m_atStart = true;
 
-	// Check to see if this object has animations
-	entsys.RunPredicates_Bool( this, NULL, "hasanimation", &m_bHasAnims );
-	//luabind::adl::object hAnims;
-	//entsys.RunPredicates_LUA( this, NULL, "hasanimation", hAnims );
+	// See if the object uses animations
+	CFFLuaObjectWrapper hHasAnims;
+	entsys.RunPredicates_LUA( this, NULL, "hasanimation", hHasAnims.GetObject() );	
+	m_bHasAnims = hHasAnims.GetBool();
 
-	//Warning( "[ff_item_flag] entity: %s - m_bHasAnims: %s\n", STRING( GetEntityName() ), m_bHasAnims ? "TRUE" : "FALSE" );
 
 	// If using anims, set them up!
-	// TODO: Only do this if the "spawn" call was successful so
-	// it won't break maps
-	if( m_bHasAnims )
+	// Only do this if the "spawn" call was successful so it won't break maps
+	if( m_bHasAnims && bSpawnSuccessful )
 	{
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_RETURNED );
 		ADD_CUSTOM_ACTIVITY( CFFInfoScript, ACT_INFO_DROPPED );
@@ -210,9 +213,9 @@ void CFFInfoScript::Spawn( void )
 	}
 
 	// Check to see if this object uses physics
-	entsys.RunPredicates_Bool( this, NULL, "usephysics", &m_bUsePhysics );
-	//luabind::adl::object hOutput;
-	//entsys.RunPredicates_LUA( this, NULL, "usephysics", hOutput );
+	CFFLuaObjectWrapper hUsePhysics;
+	entsys.RunPredicates_LUA( this, NULL, "usephysics", hUsePhysics.GetObject() );
+	m_bUsePhysics = hUsePhysics.GetBool();
 
 	CreateItemVPhysicsObject();
 
@@ -263,7 +266,7 @@ void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 	if( !pEntity )
 		return;
 
-	entsys.RunPredicates( this, pEntity, "touch" );
+	entsys.RunPredicates_LUA( this, pEntity, "touch" );
 }
 
 void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
@@ -272,7 +275,7 @@ void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
 	{
 		// Update position state
 		SetDropped();
-		entsys.RunPredicates( this, pEntity, "onownerdie" );
+		entsys.RunPredicates_LUA( this, pEntity, "onownerdie" );
 	}
 }
 
@@ -289,7 +292,7 @@ void CFFInfoScript::OnOwnerForceRespawn( CBaseEntity *pEntity )
 	{
 		// Update position state
 		SetDropped();
-		entsys.RunPredicates( this, pEntity, "onownerforcerespawn" );
+		entsys.RunPredicates_LUA( this, pEntity, "onownerforcerespawn" );
 	}
 }
 
@@ -354,7 +357,7 @@ void CFFInfoScript::OnRespawn( void )
 		// changing from invisible state to visible.
 		RemoveEffects( EF_NODRAW );
 		DoMuzzleFlash();
-		entsys.RunPredicates( this, NULL, "materialize" );
+		entsys.RunPredicates_LUA( this, NULL, "materialize" );
 	}
 
 	SetTouch( &CFFInfoScript::OnTouch );
@@ -492,8 +495,8 @@ void CFFInfoScript::Drop( float delay, float speed )
 
 	PlayDroppedAnim();
 
-	entsys.RunPredicates( this, m_pLastOwner, "ondrop" );
-	entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
+	entsys.RunPredicates_LUA( this, m_pLastOwner, "ondrop" );
+	entsys.RunPredicates_LUA( this, m_pLastOwner, "onloseitem" );
 }
 
 void CFFInfoScript::Return( void )
@@ -513,7 +516,7 @@ void CFFInfoScript::Return( void )
 		m_flThrowTime = gpGlobals->curtime;
 		m_pLastOwner = pOwner;
 
-		entsys.RunPredicates( this, m_pLastOwner, "onloseitem" );
+		entsys.RunPredicates_LUA( this, m_pLastOwner, "onloseitem" );
 	}
 
 	CreateItemVPhysicsObject();
@@ -523,7 +526,7 @@ void CFFInfoScript::Return( void )
 
 void CFFInfoScript::OnThink( void )
 {
-	entsys.RunPredicates( this, NULL, "onreturn" );
+	entsys.RunPredicates_LUA( this, NULL, "onreturn" );
 
 	Return();
 }

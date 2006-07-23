@@ -89,13 +89,9 @@ public:
 	float GetFloat( const char *name );
 	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
 
+	// A better run predicates
+	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
 	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object& hOutput );
-	bool RunPredicates_Bool( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, bool *hOutput = NULL );
-	bool RunPredicates_Vector( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, Vector *hOutput = NULL );
-	bool RunPredicates_Void( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
-	bool RunPredicates_Int( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, int *hOutput = NULL );
-	bool RunPredicates_Float( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, float *hOutput = NULL );
-	bool RunPredicates_QAngle( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, QAngle *hOutput = NULL );
 
 	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
 	bool GetObject(const char* szTableName, luabind::adl::object& outObject);

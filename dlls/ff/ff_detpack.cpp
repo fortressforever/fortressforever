@@ -603,7 +603,7 @@ void CFFDetpack::DoExplosionDamage()
 			if( bDoDamage )
 			{
 				// If it's affected by detpack explosions do something
-				entsys.RunPredicates( pEntity, ( CFFDetpack * )this, "onexplode" );
+				entsys.RunPredicates_LUA( pEntity, ( CFFDetpack * )this, "onexplode" );
 			}
 		}
 	}

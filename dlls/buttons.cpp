@@ -269,7 +269,7 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
         if (weapon)
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
-	if (!entsys.RunPredicates(this, NULL, "ondamage"))
+	if (!entsys.RunPredicates_LUA(this, NULL, "ondamage"))
 		return 0;
 	if (entsys.GetFloat("info_damage") <= 0.0)
 		return 0;
@@ -502,7 +502,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		if ( HasSpawnFlags(SF_BUTTON_TOGGLE))
 		{
 			// double check that it's allowed to toggle
-			if( !entsys.RunPredicates( this, pActivator, "allowed" ) )
+			if( !entsys.RunPredicates_LUA( this, pActivator, "allowed" ) )
 				return;
 
 			CPASAttenuationFilter filter( this );
