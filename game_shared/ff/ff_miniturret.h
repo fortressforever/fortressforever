@@ -253,7 +253,7 @@ public:
 	virtual int		VPhysicsTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 
 	//virtual void	ChangeTeam( int iTeamNum );
-	const char		*GetTracerType( void ) { return "AR2Tracer"; } // TODO: Change
+	const char		*GetTracerType( void ) { return "ACTracer"; } // TODO: Change
 
 	// Think functions
 	void			OnObjectThink( void );	// Not a think function
