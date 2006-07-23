@@ -14,6 +14,8 @@
 #ifndef FF_LUAOBJECT_WRAPPER_H
 #define FF_LUAOBJECT_WRAPPER_H
 
+#define _GLIBCXX_EXPORT_TEMPLATE 1
+
 #ifdef _WIN32
 #pragma once
 #endif
