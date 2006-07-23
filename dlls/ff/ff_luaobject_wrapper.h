@@ -14,6 +14,7 @@
 #ifndef FF_LUAOBJECT_WRAPPER_H
 #define FF_LUAOBJECT_WRAPPER_H
 
+// This is to stop some linux gayness
 #define _GLIBCXX_EXPORT_TEMPLATE 1
 
 #ifdef _WIN32
@@ -32,9 +33,10 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
+#include "luabind/iterator_policy.hpp"
 
 // memdbgon must be the last include file in a .cpp file!!!
-//#include "tier0/memdbgon.h"
+#include "tier0/memdbgon.h"
 
 //=============================================================================
 //
