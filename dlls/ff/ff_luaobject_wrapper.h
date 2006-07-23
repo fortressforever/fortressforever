@@ -18,6 +18,22 @@
 #pragma once
 #endif
 
+namespace luabind
+{
+	namespace adl
+	{
+		class object;
+	}
+}
+
+// OKAY, LINUX WANTS TO BE GAY
+// SO FUCK THIS WRAPPER, WE'LL DO THINGS GAY STYLE.
+bool GetBool( const luabind::adl::object& hObject );
+int GetInt( const luabind::adl::object& hObject );
+float GetFloat( const luabind::adl::object& hObject );
+Vector GetVector( const luabind::adl::object& hObject );
+QAngle GetQAngle( const luabind::adl::object& hObject );
+/*
 // Lua includes
 extern "C"
 {
@@ -52,5 +68,6 @@ protected:
 	// The data:
 	luabind::adl::object	m_hObject;
 };
+*/
 
 #endif // FF_LUAOBJECT_WRAPPER
