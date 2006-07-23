@@ -48,11 +48,51 @@ class CFFLuaObjectWrapper
 {
 public:
 	// Accessors (add any you need...):
-	float	GetFloat( void )	{ return luabind::object_cast< float >( m_hObject ); }
-	int		GetInt( void )		{ return luabind::object_cast< int >( m_hObject ); }
-	bool	GetBool( void )		{ return luabind::object_cast< bool >( m_hObject ); }
-	Vector	GetVector( void )	{ return luabind::object_cast< Vector >( m_hObject ); }
-	QAngle	GetQAngle( void )	{ return luabind::object_cast< QAngle >( m_hObject ); }
+	float	GetFloat( void )
+	{
+		try { return luabind::object_cast< float >( m_hObject ); }
+		catch(...)
+		{
+			return 0.0f;
+		}
+	}
+	int		GetInt( void )
+	{ 
+		try { return luabind::object_cast< int >( m_hObject ); }
+		catch(...)
+		{
+			return 0;
+		}
+	}
+
+	bool	GetBool( void )
+	{
+		try {return luabind::object_cast< bool >( m_hObject ); }
+		catch(...)
+		{
+			return false;
+		}
+	}
+
+	Vector	GetVector( void )
+	{ 
+		try { return luabind::object_cast< Vector >( m_hObject ); }
+		catch(...)
+		{ 
+			Vector vec; 
+			return vec;
+		}
+	}
+
+	QAngle	GetQAngle( void )
+	{
+		try { return luabind::object_cast< QAngle >( m_hObject ); }
+		catch(...)
+		{
+			QAngle angle;
+			return angle;
+		}
+	}
 
 	// Get at the data!
 	luabind::adl::object GetObject( void ) const { return m_hObject; }
