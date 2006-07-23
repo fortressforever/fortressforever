@@ -39,6 +39,12 @@
 #include "weapon_physcannon.h"
 #endif
 
+#include "ff_player.h"
+#include "ff_entity_system.h"
+
+#undef MINMAX_H
+#include "minmax.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1810,6 +1816,20 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 			bool bGibbed = false;
 
 			Event_Killed( info );
+
+			if( ToFFPlayer( this ) )
+			{
+				// -------------------------------------------------------------------
+				// Keep the lua player_killed stuff after we've actually died
+				// so that for cases like the map hunted we aren't forcibly respawned
+				// and then killed by BaseClass::Event_Killed
+				// -------------------------------------------------------------------
+				// TODO: Change killer to an object
+				Warning( "[Player] BEG: Running player_killed\n" );
+				entsys.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
+				entsys.RunPredicates_LUA( NULL, ToFFPlayer( this ), "player_killed" );
+				Warning( "[Player] END: Running player_killed\n" );
+			}			
 
 			// Only classes that specifically request it are gibbed
 			if ( ShouldGib( info ) )
