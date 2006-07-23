@@ -7,6 +7,8 @@
 
 #include "cbase.h"
 #include "ff_player.h"
+#include "ff_entity_system.h"	// Entity system
+#include "ff_luaobject_wrapper.h"
 #include "ff_gamerules.h"
 #include "ff_weapon_base.h"
 #include "predicted_viewmodel.h"
@@ -23,9 +25,6 @@
 #include "ff_team.h"			// team info
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
-
-#include "ff_entity_system.h"	// Entity system
-#include "ff_luaobject_wrapper.h"
 
 #include "client.h"
 
