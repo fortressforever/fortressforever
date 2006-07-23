@@ -1242,10 +1242,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Reset the tag...
 	m_bRadioTagged = false;
 
-	// run the player_died event in lua
-	//DevMsg("Running player_killed\n");
-	entsys.SetVar("killer", ENTINDEX(info.GetAttacker()));
-	entsys.RunPredicates_LUA( NULL, this, "player_killed" );
+	// Get rid of fire
+	Extinguish();	
 
 	// EDIT: Let's not use strings if we don't have to...
 	// Find any items that we are in control of and drop them
@@ -1259,9 +1257,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		// Next!
 		pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
 	}
-
-	// Get rid of fire
-	Extinguish();
 
 	// Kill infection sound
 	// Bug #0000461: Infect sound plays eventhough you are dead
