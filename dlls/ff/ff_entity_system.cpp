@@ -1177,7 +1177,7 @@ void CFFEntitySystem::FFLibOpen()
 
 		// CFFTeam
 		class_<CFFTeam, CTeam>("Team")
-			.def("SetAllies",			&CFFTeam::SetAllies)
+			.def("SetAllies",			&CFFTeam::SetEasyAllies)
 			.def("SetClassLimit",		&CFFTeam::SetClassLimit)
 			.def("SetPlayerLimit",		&CFFTeam::SetTeamLimits)
 			.enum_("TeamId")
