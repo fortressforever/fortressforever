@@ -137,12 +137,11 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 
-	//CFFLuaObjectWrapper hDropAtSpawn;
-	luabind::adl::object hDropAtSpawn;
-	entsys.RunPredicates_LUA( this, NULL, "dropatspawn", hDropAtSpawn );
+	CFFLuaObjectWrapper hDropAtSpawn;
+	entsys.RunPredicates_LUA( this, NULL, "dropatspawn", hDropAtSpawn.GetObject() );
 
 	// See if the info_ff_script should drop to the ground or not
-	if( GetBool( hDropAtSpawn ) )
+	if( hDropAtSpawn.GetBool() )
 	{
 		// If it's not physical, drop it to the floor
 		if( UTIL_DropToFloor( this, MASK_SOLID ) == 0 )
@@ -166,10 +165,9 @@ void CFFInfoScript::Spawn( void )
 
 	// Check if this object has an attachoffset function and get the value if it does
 	//entsys.RunPredicates_Vector( this, NULL, "attachoffset", m_vecOffset.GetForModify() );
-	//CFFLuaObjectWrapper hAttachOffset;
-	luabind::adl::object hAttachOffset;
-	if( entsys.RunPredicates_LUA( this, NULL, "attachoffset", hAttachOffset ) )
-		m_vecOffset.GetForModify() = GetVector( hAttachOffset );
+	CFFLuaObjectWrapper hAttachOffset;
+	if( entsys.RunPredicates_LUA( this, NULL, "attachoffset", hAttachOffset.GetObject() ) )
+		m_vecOffset.GetForModify() = hAttachOffset.GetVector();	
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// Projectiles won't collide with COLLISION_GROUP_WEAPON
@@ -192,10 +190,9 @@ void CFFInfoScript::Spawn( void )
 	m_atStart = true;
 
 	// See if the object uses animations
-	//CFFLuaObjectWrapper hHasAnims;
-	luabind::adl::object hHasAnims;
-	entsys.RunPredicates_LUA( this, NULL, "hasanimation", hHasAnims );	
-	m_bHasAnims = GetBool( hHasAnims );
+	CFFLuaObjectWrapper hHasAnims;
+	entsys.RunPredicates_LUA( this, NULL, "hasanimation", hHasAnims.GetObject() );	
+	m_bHasAnims = hHasAnims.GetBool();
 
 
 	// If using anims, set them up!
@@ -216,10 +213,9 @@ void CFFInfoScript::Spawn( void )
 	}
 
 	// Check to see if this object uses physics
-	//CFFLuaObjectWrapper hUsePhysics;
-	luabind::adl::object hUsePhysics;
-	entsys.RunPredicates_LUA( this, NULL, "usephysics", hUsePhysics );
-	m_bUsePhysics = GetBool( hUsePhysics );
+	CFFLuaObjectWrapper hUsePhysics;
+	entsys.RunPredicates_LUA( this, NULL, "usephysics", hUsePhysics.GetObject() );
+	m_bUsePhysics = hUsePhysics.GetBool();
 
 	CreateItemVPhysicsObject();
 
