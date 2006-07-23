@@ -1686,10 +1686,11 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 			if( pEntity )
 			{
 				bool bEntSys = bExpectedVal;
-				CFFLuaObjectWrapper hOutput;
+				//CFFLuaObjectWrapper hOutput;
+				luabind::adl::object hOutput;
 				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
-				if( entsys.RunPredicates_LUA( pEntity, pObject, pszFunction, hOutput.GetObject() ) )
-					bEntSys = hOutput.GetBool();
+				if( entsys.RunPredicates_LUA( pEntity, pObject, pszFunction, hOutput ) )
+					bEntSys = GetBool( hOutput );
 
 				if( bEntSys != bExpectedVal )
 					return !bExpectedVal;

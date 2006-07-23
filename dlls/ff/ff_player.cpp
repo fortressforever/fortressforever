@@ -35,6 +35,18 @@
 
 #include "ff_entity_system.h"	// Entity system
 #include "ff_luaobject_wrapper.h"
+
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/object.hpp"
+
 #include "ff_statslog.h"
 
 #include "gib.h"
@@ -684,11 +696,12 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			// but let them spawn here if the name doesn't exist
 			if ( !FStrEq(STRING(pSpot->GetEntityName()), "") )
 			{
-				CFFLuaObjectWrapper hSpawnSpot;
-				if( entsys.RunPredicates_LUA( pSpot, this, "validspawn", hSpawnSpot.GetObject() ) )
+				//CFFLuaObjectWrapper hSpawnSpot;
+				luabind::adl::object hSpawnSpot;
+				if( entsys.RunPredicates_LUA( pSpot, this, "validspawn", hSpawnSpot ) )
 				{
 					// pSpot:validspawn() exists, check the value returned from it
-					if( !hSpawnSpot.GetBool() )
+					if( !GetBool( hSpawnSpot ) )
 					{
 						//DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
 						pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );

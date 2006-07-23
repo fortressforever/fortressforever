@@ -287,6 +287,9 @@
 					RelativePath=".\ff\ff_logicalentity.cpp">
 				</File>
 				<File
+					RelativePath=".\ff\ff_luaobject_wrapper.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_minecart.cpp">
 				</File>
 				<File

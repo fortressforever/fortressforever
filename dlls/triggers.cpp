@@ -34,6 +34,17 @@
 // --> Mirv: Temp test for triggers
 #include "ff_entity_system.h"
 #include "ff_luaobject_wrapper.h"
+
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/object.hpp"
 // <-- Mirv: Temp test for triggers
 
 
@@ -292,10 +303,11 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 				return false;
 			}
 			*/
-			CFFLuaObjectWrapper hAllowed;
-			if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+			//CFFLuaObjectWrapper hAllowed;
+			luabind::adl::object hAllowed;
+			if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed ) )
 			{
-				if( !hAllowed.GetBool() )
+				if( !GetBool( hAllowed ) )
 				{
 					entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
 					return false;
@@ -319,10 +331,11 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 					return false;
 				}
 				*/
-				CFFLuaObjectWrapper hAllowed;
-				if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+				//CFFLuaObjectWrapper hAllowed;
+				luabind::adl::object hAllowed;
+				if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed ) )
 				{
-					if( !hAllowed.GetBool() )
+					if( !GetBool( hAllowed ) )
 					{
 						entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
 						return false;
@@ -382,10 +395,11 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 			return;
 		}
 		*/
-		CFFLuaObjectWrapper hAllowed;
-		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+		//CFFLuaObjectWrapper hAllowed;
+		luabind::adl::object hAllowed;
+		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed ) )
 		{
-			if( !hAllowed.GetBool() )
+			if( !GetBool( hAllowed ) )
 			{
 				entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
 				return;
@@ -435,10 +449,11 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
 			return;
 		*/
-		CFFLuaObjectWrapper hAllowed;
-		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+		//CFFLuaObjectWrapper hAllowed;
+		luabind::adl::object hAllowed;
+		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed ) )
 		{
-			if( !hAllowed.GetBool() )
+			if( !GetBool( hAllowed ) )
 				return;
 		}
 
@@ -927,10 +942,11 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 	if( /*pActivator->IsPlayer() &&*//* !entsys.RunPredicates( this, pActivator, "allowed" ) )
 		return;
 	*/
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	luabind::adl::object hAllowed;
+	if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed ) )
 	{
-		if( !hAllowed.GetBool() )
+		if( !GetBool( hAllowed ) )
 			return;
 	}
 
@@ -4177,10 +4193,11 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 	if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
 		return false;
 	*/
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	luabind::adl::object hAllowed;
+	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed ) )
 	{
-		if( !hAllowed.GetBool() )
+		if( !GetBool( hAllowed ) )
 			return false;
 	}
 
