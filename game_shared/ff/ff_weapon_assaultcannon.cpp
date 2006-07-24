@@ -14,6 +14,8 @@
 #include "cbase.h"
 #include "ff_weapon_base.h"
 #include "ff_fx_shared.h"
+#include "in_buttons.h"
+#include "soundenvelope.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponAssaultCannon C_FFWeaponAssaultCannon
@@ -21,6 +23,10 @@
 #else
 	#include "ff_player.h"
 #endif
+
+#define AC_MAX_CHARGETIME	7.0f
+#define AC_CHARGEUP_TIME	0.6f
+#define AC_MAX_REV_SOUND	3.0f
 
 //=============================================================================
 // CFFWeaponAssaultCannon
@@ -36,9 +42,11 @@ public:
 	CFFWeaponAssaultCannon();
 
 	virtual void PrimaryAttack();
-	virtual void WeaponIdle();
+	//virtual void WeaponIdle();
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool Deploy();
+
+	virtual void ItemPostFrame();
 
 	virtual void Precache();
 
@@ -50,7 +58,15 @@ public:
 private:
 
 	CFFWeaponAssaultCannon(const CFFWeaponAssaultCannon &);
-	CNetworkVar(int, m_fFireState);
+
+	float m_flLastTick;
+	CNetworkVar(float, m_flChargeTime);
+
+	bool	m_bFiring;
+
+#ifdef CLIENT_DLL
+	CSoundPatch *m_pEngine;
+#endif
 };
 
 //=============================================================================
@@ -61,14 +77,14 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponAssaultCannon, DT_FFWeaponAssaultCannon)
 
 BEGIN_NETWORK_TABLE(CFFWeaponAssaultCannon, DT_FFWeaponAssaultCannon) 
 #ifdef GAME_DLL
-	SendPropInt(SENDINFO(m_fFireState)),
+	SendPropFloat(SENDINFO(m_flChargeTime)),
 #else
-	RecvPropInt(RECVINFO(m_fFireState)),
+	RecvPropFloat(RECVINFO(m_flChargeTime)),
 #endif
 END_NETWORK_TABLE() 
 
 BEGIN_PREDICTION_DATA(CFFWeaponAssaultCannon) 
-	DEFINE_PRED_FIELD(m_fFireState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
 END_PREDICTION_DATA() 
 
 LINK_ENTITY_TO_CLASS(ff_weapon_assaultcannon, CFFWeaponAssaultCannon);
@@ -83,6 +99,11 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_assaultcannon);
 //----------------------------------------------------------------------------
 CFFWeaponAssaultCannon::CFFWeaponAssaultCannon() 
 {
+	m_flNextSecondaryAttack = gpGlobals->curtime;
+
+#ifdef CLIENT_DLL
+	m_pEngine = NULL;
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -95,12 +116,21 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 #ifdef GAME_DLL
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if( pPlayer->IsSpeedEffectSet( SE_ASSAULTCANNON ) )
-        pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN );
+	if(pPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
+        pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN);
 #endif
 
-	if (!m_fFireState) 
-		return BaseClass::Holster(pSwitchingTo);
+	// Also start the engine sound for the client
+#ifdef CLIENT_DLL
+	if (m_pEngine)
+	{
+		CSoundEnvelopeController::GetController().SoundDestroy(m_pEngine);
+		m_pEngine = NULL;
+	}
+#endif
+
+	//if (!m_fFireState) 
+	//	return BaseClass::Holster(pSwitchingTo);
 
 	//StopSound("Assaultcannon.loop_shot");	// Possibly not needed
 	//EmitSound("Assaultcannon.Winddown");
@@ -108,7 +138,7 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	// WindDown
 	WeaponSound(SPECIAL2);
 
-	m_fFireState = 0;
+	//m_fFireState = 0;
 
 	return BaseClass::Holster(pSwitchingTo);
 }
@@ -118,7 +148,24 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 //----------------------------------------------------------------------------
 bool CFFWeaponAssaultCannon::Deploy()
 {
-	m_fFireState = 0;
+	m_flChargeTime = 0;
+	m_flLastTick = gpGlobals->curtime;
+	m_flNextPrimaryAttack = gpGlobals->curtime;
+
+	m_bFiring = false;
+
+#ifdef CLIENT_DLL
+	// play an engine start sound!!
+	CPASAttenuationFilter filter(this);
+
+	// Bring up the engine looping sound.
+	if (!m_pEngine)
+	{
+		m_pEngine = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "assaultcannon.rotate");
+		CSoundEnvelopeController::GetController().Play(m_pEngine, 0.0, 50);
+		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pEngine, 0.7, 2.0);
+	}
+#endif
 
 	return BaseClass::Deploy();
 }
@@ -142,138 +189,111 @@ void CFFWeaponAssaultCannon::Fire()
 
 }
 
-//----------------------------------------------------------------------------
-// Purpose: Spin up or fire weapon, depending on state
-//----------------------------------------------------------------------------
-void CFFWeaponAssaultCannon::PrimaryAttack() 
+void CFFWeaponAssaultCannon::ItemPostFrame()
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
 
-	// check to see if we're ready to spin up
-	if (m_fFireState == 0) 
-	{
-		pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-		SendWeaponAnim(ACT_FIRE_START);
-		m_fFireState = 1;
-
-		//CPASAttenuationFilter filter(this);
-		//filter.UsePredictionRules();
-		//EmitSound(filter, entindex(), "Assaultcannon.Windup");
-
-		// Windup
-		WeaponSound(SPECIAL1);
-		
-		pPlayer->m_flNextAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
-
-		m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
-		m_flNextSecondaryAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
- 
-		SetWeaponIdleTime(gpGlobals->curtime + pWeaponInfo.m_flSpinTime);
-
-#ifdef GAME_DLL
-		pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 999, 80.0/230.0, SEM_BOOLEAN);
-#endif
-	}
-	// Spinning
-	else if (m_fFireState > 0) 
-	{
-		pPlayer->m_iShotsFired++;
-
-		// Out of ammo?
-		if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0) 
-		{
-			if (m_bFireOnEmpty) 
-			{
-				//PlayEmptySound();
-				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
-			}
-			//return;	// return?
-		}
-		else if (m_fFireState == 1) 
-		{
-			CPASAttenuationFilter filter(this);
-			filter.UsePredictionRules();
-
-			//EmitSound(filter, entindex(), "Assaultcannon.loop_shot");
-
-			WeaponSound(BURST);
-
-			m_fFireState++;
-		}
-
-
-		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
-	
-#ifdef GAME_DLL
-		pPlayer->RemoveAmmo(pWeaponInfo.m_iCycleDecrement, m_iPrimaryAmmoType);
-#endif
-
-		Fire();
-
-		pPlayer->DoMuzzleFlash();
-	
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
-
-		if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0) 
-		{
-			//StopSound("Assaultcannon.loop_shot");
-			WeaponSound(EMPTY);
-
-			// HEV suit - indicate out of ammo condition
-			pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
-		}
-
-		// so we can catch for spindown immediately
-		SetWeaponIdleTime(gpGlobals->curtime + 0.1);
-	}
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Spin down or play idle animation, depending on state
-//----------------------------------------------------------------------------
-void CFFWeaponAssaultCannon::WeaponIdle() 
-{
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-	if (m_flTimeWeaponIdle > gpGlobals->curtime) 
+	if (!pOwner)
 		return;
 
-	// We are either spinning up or down
-	if (m_fFireState != 0) 
+	float flTimeDelta = gpGlobals->curtime - m_flLastTick;
+	m_flLastTick = gpGlobals->curtime;
+
+	// Keep track of fire duration for anywhere else it may be needed
+	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+
+	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
+	if (pOwner->m_nButtons & IN_ATTACK && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
-		pPlayer->SetAnimation(PLAYER_ATTACK1);
+		m_flChargeTime += flTimeDelta;
 
-		SendWeaponAnim(ACT_FIRE_END);
-		m_fFireState = 0;
+		// Oh no...
+		if (m_flChargeTime > AC_MAX_CHARGETIME)
+		{
+			// Freeze for 5s, reduce to max rev sound so it falls away instantly
+			m_flNextSecondaryAttack = gpGlobals->curtime + 5.0;
+			m_flChargeTime = AC_MAX_REV_SOUND;
+			
+			// Play the overheat sound
+			WeaponSound(SPECIAL3);
 
-		//StopSound("Assaultcannon.loop_shot");
+			m_bFiring = false;
+		}
 
-		//CPASAttenuationFilter filter(this);
-		//filter.UsePredictionRules();
-		//EmitSound(filter, entindex(), "Assaultcannon.Winddown");
+		// Time for the next real fire think
+		else if (m_flChargeTime > AC_CHARGEUP_TIME && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		{
+			// Out of ammo
+			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+			{
+				WeaponSound(STOP);
+				HandleFireOnEmpty();
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
+			}
+			// Weapon should be firing now
+			else
+			{
+				// If the firing button was just pressed, reset the firing time
+				if (pOwner && pOwner->m_afButtonPressed & IN_ATTACK)
+					m_flNextPrimaryAttack = gpGlobals->curtime;
 
-		// Wind down
-		WeaponSound(SPECIAL2);
+				m_flPlaybackRate = 1.0f + (m_flChargeTime);
+				PrimaryAttack();
+			}
 
-		pPlayer->m_flNextAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
+			m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 
-		m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
-		m_flNextSecondaryAttack = gpGlobals->curtime + pWeaponInfo.m_flSpinTime;
- 
-		SetWeaponIdleTime(gpGlobals->curtime + pWeaponInfo.m_flSpinTime);
-	}
-	else
-	{
-		SetWeaponIdleTime(gpGlobals->curtime + 5.0f);
-		SendWeaponAnim(ACT_VM_IDLE);
+			float flT = (m_flChargeTime - AC_CHARGEUP_TIME) / (2.0f * AC_MAX_CHARGETIME);
+
+			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFFWpnData().m_flCycleTime * (flT > 0.0f ? 1.0f : 1 - flT));
+
+			if (!m_bFiring && m_flChargeTime > AC_CHARGEUP_TIME)
+			{
+				WeaponSound(BURST);
 
 #ifdef GAME_DLL
-		pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
+				CFFPlayer *pPlayer = GetPlayerOwner();
+				pPlayer->AddSpeedEffect(SE_ASSAULTCANNON, 999, 80.0f / 230.0f, SEM_BOOLEAN);
 #endif
+
+				m_bFiring = true;
+			}
+		}
 	}
+	// No buttons down
+	else
+	{
+		// Reduce speed at 3 times the rate
+		if (m_flChargeTime > 0)
+		{
+			m_flChargeTime -= 3.0f * flTimeDelta;
+
+			if (m_flChargeTime < 0)
+				m_flChargeTime = 0;
+		}
+		
+		if (m_bFiring)
+		{
+			WeaponSound(STOP);
+
+#ifdef GAME_DLL
+			CFFPlayer *pPlayer = GetPlayerOwner();
+			pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
+#endif
+
+			m_bFiring = false;
+		}
+
+		WeaponIdle();
+	}
+
+#ifdef CLIENT_DLL
+	if (m_pEngine)
+	{
+		float flPitch = 40 + 10 * min(AC_MAX_REV_SOUND, m_flChargeTime);
+		CSoundEnvelopeController::GetController().SoundChangePitch(m_pEngine, min(80, flPitch), 0);
+	}
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -284,5 +304,53 @@ void CFFWeaponAssaultCannon::Precache()
 	PrecacheScriptSound("Assaultcannon.loop_shot");
 	PrecacheScriptSound("Assaultcannon.Windup");
 	PrecacheScriptSound("Assaultcannon.Winddown");
+	PrecacheScriptSound("assaultcannon.rotate");
+	PrecacheScriptSound("assaultcannon.overheat");
 	BaseClass::Precache();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Precache some extra sounds
+//----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::PrimaryAttack()
+{
+	// Only the player fires this way so we can cast
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
+
+	if (!pPlayer)
+		return;
+
+	// Undisguise
+#ifdef GAME_DLL
+	pPlayer->ResetDisguise();
+#endif
+
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	//WeaponSound(SINGLE);
+
+	pPlayer->DoMuzzleFlash();
+
+	SendWeaponAnim(GetPrimaryAttackActivity());
+
+	// player "shoot" animation
+	pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+#ifdef GAME_DLL
+	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
+	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+#endif
+
+	// Fire now
+	Fire();
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+	}
+
+	//Add our view kick in
+	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
 }

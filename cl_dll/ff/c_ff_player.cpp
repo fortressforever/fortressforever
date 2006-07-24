@@ -680,6 +680,8 @@ C_FFPlayer::C_FFPlayer() :
 	m_iSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
+	m_pOldActiveWeapon = NULL;
+
 	m_flConcTime = 0;
 
 	for( int i = 0; i < MAX_PLAYERS; i++ )
@@ -958,6 +960,22 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	if ( type == DATA_UPDATE_CREATED )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+	}
+
+	// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
+	// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
+	// This fixes it, hurrah.
+	if (this == C_BasePlayer::GetLocalPlayer() && GetActiveWeapon() != m_pOldActiveWeapon)
+	{
+		DevMsg("Weapon changed\n");
+		
+		if (m_pOldActiveWeapon)
+			m_pOldActiveWeapon->Holster(GetActiveWeapon());
+
+		if (GetActiveWeapon())
+			GetActiveWeapon()->Deploy();
+
+		m_pOldActiveWeapon = GetActiveWeapon();
 	}
 /*
 	// BEG: Added by Mulchman
@@ -1320,4 +1338,19 @@ void C_FFPlayer::ReleaseFlashlight()
 
 		m_pFlashlightBeam = NULL;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Part of the weapon change bugfix. Ensures that the weapons'
+//			deploy & holster method isn't called twice when the client switches
+//-----------------------------------------------------------------------------
+bool C_FFPlayer::Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex /*=0*/) 
+{
+	if (BaseClass::Weapon_Switch(pWeapon, viewmodelindex))
+	{
+		m_pOldActiveWeapon = pWeapon;
+		return true;
+	}
+
+	return false;
 }

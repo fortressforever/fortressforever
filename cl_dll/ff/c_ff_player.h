@@ -242,6 +242,9 @@ public:
 
 	float		m_flIdleTime;
 
+	bool Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex = 0);
+	CBaseCombatWeapon *m_pOldActiveWeapon;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };
