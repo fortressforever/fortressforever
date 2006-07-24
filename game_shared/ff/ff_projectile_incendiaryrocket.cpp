@@ -44,64 +44,18 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	Vector vecSrc = GetAbsOrigin();
 	vecSrc.z += 1;
 
-	// Do normal radius damage?
-	//Vector vecReported = vec3_origin;
-	//CTakeDamageInfo info(this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
-	//RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
+	// Do normal radius damage then do a trace sphere to set things alight
+	Vector vecReported = vec3_origin;
+	CTakeDamageInfo info(this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
+	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
 
 	BEGIN_ENTITY_SPHERE_QUERY(vecSrc, m_DmgRadius)
-		Class_T cls = pEntity->Classify();
-		switch (cls)
+		if (pEntity->Classify() == CLASS_PLAYER)
 		{
-		case CLASS_PLAYER:
-			{
-				if (pPlayer)
-				{
-					// damage enemies and self
-					if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetThrower()))
-					{
-						// Use normal damage calculations?
-						//float flDistance = (GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
-						//float flAdjustedDamage = m_flDamage - (flDistance * 0.5f);
-
-						float flAdjustedDamage = m_flDamage;
-
-						if (pPlayer == GetThrower())
-							flAdjustedDamage *= 0.5f;
-
-						CTakeDamageInfo info(this, GetOwnerEntity(), flAdjustedDamage, DMG_BURN);
-						pEntity->TakeDamage(info);
-
-						pPlayer->ApplyBurning(ToFFPlayer(GetThrower()), 1.0f);
-					}
-				}
-			}
-			break;
-			
-			case CLASS_SENTRYGUN:
-			{
-				CFFSentryGun *pSentryGun = dynamic_cast< CFFSentryGun * >( pEntity );
-				if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pSentryGun->m_hOwner.Get() ), GetOwnerEntity() ) )
-					pSentryGun->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
-			}
-			break;
-
-			case CLASS_DISPENSER:
-			{
-				CFFDispenser *pDispenser = dynamic_cast< CFFDispenser * >( pEntity );
-				if( g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( pDispenser->m_hOwner.Get() ), GetOwnerEntity() ) )
-					pDispenser->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
-			}
-			break;
-
-		default:
-			break;
+			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+			pPlayer->ApplyBurning(pPlayer, 0.5f);
 		}
-		//DevMsg("[Grenade Debug] Checking next entity\n");
 	END_ENTITY_SPHERE_QUERY();
-
-	// set the damage to 0 since we already did damage
-	m_flDamage = 0;
 
 	Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
@@ -197,7 +151,7 @@ CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(cons
 #endif
 
 	pRocket->m_flDamage = iDamage;
-	pRocket->m_DmgRadius = pRocket->m_flDamage * 3.5f;
+	pRocket->m_DmgRadius = pRocket->m_flDamage * 2.0f;
 
 	return pRocket; 
 }

@@ -20,6 +20,7 @@
 #include "r_efx.h"
 #include "dlight.h"
 #include "beamdraw.h"
+#include "fx.h"
 
 #include "view.h"
 #include "iviewrender.h"
@@ -507,6 +508,9 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset( dir, hitpos );	
 	}
+
+	//FX_Blood(pTrace->endpos, pTrace->endpos - pTrace->startpos, 128.0f, 1.0f, 1.0f, 1.0f);
+	UTIL_BloodDrips(pTrace->endpos, pTrace->endpos - pTrace->startpos, BLOOD_COLOR_RED, 40);
 }
 
 
@@ -692,6 +696,8 @@ C_FFPlayer::C_FFPlayer() :
 	}
 
 	m_pFlashlightBeam = NULL;
+
+	m_flNextJumpTimeForDouble = 0;
 
 	//VOOGRU: I'll have bad nightmares if I don't do this.
 	memset(&m_DisguisedWeapons, 0, sizeof(m_DisguisedWeapons));

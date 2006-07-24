@@ -130,12 +130,15 @@ void CFFWeaponRailgun::Fire()
 
 	float flChargeTime = gpGlobals->curtime - m_flStartCharge;
 
+	if (flChargeTime > 5.0f)
+		flChargeTime = 5.0f;
+
 	// Simulate this as a bullet for now
 	FireBulletsInfo_t info(1, vecSrc, vecForward, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage + (flChargeTime * 3.0f);
 	info.m_iTracerFreq = 0;
-	info.m_flDamageForceScale = 1.0f + (flChargeTime * 100.0f);
+	info.m_flDamageForceScale = 1.0f + (flChargeTime * 90.0f);
 
 	pPlayer->FireBullets(info);
 }

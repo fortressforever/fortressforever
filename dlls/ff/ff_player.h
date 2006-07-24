@@ -627,6 +627,8 @@ public:
 
 	Vector		BodyTarget(const Vector &posSrc, bool bNoisy);
 
+	// TODO: Possibly network this?
+	float		m_flNextJumpTimeForDouble;
 };
 
 

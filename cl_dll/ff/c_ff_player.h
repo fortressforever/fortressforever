@@ -245,6 +245,8 @@ public:
 	bool Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex = 0);
 	CBaseCombatWeapon *m_pOldActiveWeapon;
 
+	float		m_flNextJumpTimeForDouble;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };
