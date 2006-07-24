@@ -114,7 +114,7 @@ void CFFWeaponRailgun::Fire()
 	if (pWeapon)
 	{
 		QAngle angAiming;
-		int iAttachment = pWeapon->LookupAttachment("muzzle");
+		int iAttachment = pWeapon->LookupAttachment("1");
 		pWeapon->GetAttachment(iAttachment, vecSrc, angAiming);
 
 		AngleVectors(angAiming, &vecForward);
