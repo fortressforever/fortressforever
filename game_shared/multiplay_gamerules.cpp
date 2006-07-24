@@ -56,7 +56,7 @@ ConVar	mp_timelimit( "mp_timelimit",
 
 ConVar	tv_delaymapchange( "tv_delaymapchange",
 					 "0",
-					 0,
+					 FCVAR_NOTIFY|FCVAR_REPLICATED,
 					 "Delays map change until broadcast is complete" );
 					  					  
 
