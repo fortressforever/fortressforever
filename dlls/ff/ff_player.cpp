@@ -385,6 +385,8 @@ CFFPlayer::CFFPlayer()
 
 	m_bDisguisable = true;
 
+	m_flNextJumpTimeForDouble = 0;
+
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
 		m_vSpeedEffects[i].active = false;
