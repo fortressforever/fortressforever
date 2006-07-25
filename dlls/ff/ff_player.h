@@ -465,9 +465,7 @@ public:
 	void Bot_SetDetpackTimer( int iTime ) { m_iDetpackTime = iTime; }
 	void Bot_Disguise( int iTeam, int iClass )
 	{
-		m_iNewSpyDisguise = iTeam;
-		m_iNewSpyDisguise += iClass << 4;
-		m_flFinishDisguise = gpGlobals->curtime + 1.0f;
+		SetDisguise(iTeam, iClass);
 	}
 	
 protected:
@@ -554,6 +552,7 @@ public:
 	int GetDisguisedClass( void );
 	int GetDisguisedTeam( void );
 	bool IsDisguised( void );
+	void SetDisguise(int iTeam, int iClass, bool bInstant = false);
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	CNetworkVar(int, m_iSpawnInterpCounter);

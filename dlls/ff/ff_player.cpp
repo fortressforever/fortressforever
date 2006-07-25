@@ -4675,10 +4675,8 @@ void CFFPlayer::Command_Disguise()
 
 	Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
 
-	m_iNewSpyDisguise = iTeam;
-	m_iNewSpyDisguise += iClass << 4;
-
-	m_flFinishDisguise = gpGlobals->curtime + 1.0f;
+	// Now do the actual disguise
+	SetDisguise(iTeam, iClass);
 
 	ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_DISGUISING" );
 
@@ -4780,6 +4778,29 @@ void CFFPlayer::FinishDisguise()
 		pEvent->SetInt("team", GetDisguisedTeam());
 		pEvent->SetInt("class", GetDisguisedClass());
 		gameeventmanager->FireEvent(pEvent, true);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set the disguise
+//-----------------------------------------------------------------------------
+void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
+{
+#ifdef _DEBUG
+	bInstant = true;
+#endif
+
+	m_iNewSpyDisguise = iTeam;
+	m_iNewSpyDisguise += iClass << 4;
+	
+	// TODO: Time logic
+	if (bInstant)
+	{
+		m_flFinishDisguise = 0;
+	}
+	else
+	{
+		m_flFinishDisguise = gpGlobals->curtime + 7.0f;
 	}
 }
 
