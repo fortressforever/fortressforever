@@ -142,7 +142,7 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin,
 
 	// Bug #0000231: Rocket splash is incorrect
 	// TFC doesn't multiply the radius at all, dont you know
-	pRocket->m_DmgRadius = pRocket->m_flDamage * 1.5f;
+	pRocket->m_DmgRadius = pRocket->m_flDamage;
 
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
