@@ -250,7 +250,14 @@ void CFFWeaponMeleeBase::Swing()
 		return;
 
 #ifdef GAME_DLL
-	pOwner->ResetDisguise();
+	// UNDONE:
+	// Since spies only actually have the knife, this shouldn't really be needed.
+	// But you can never tell what direction this mod is going to go in and whether
+	// spies will end up somehow getting other melee weapons.
+	//if (GetWeaponID() != FF_WEAPON_KNIFE)
+	{
+		pOwner->ResetDisguise();
+	}
 #endif
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();
