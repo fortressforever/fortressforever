@@ -672,8 +672,11 @@ ConVar mp_prematch( "mp_prematch",
 			// modellers!
 			if (pEntity->IsPlayer())
 			{
+				CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+				float flBodyTargetOffset = vecSpot.z - pPlayer->GetLegacyAbsOrigin().z;
+
                 float dH = vecDisplacement.Length2D() - 16.0f;	// Half of model width
-				float dV = fabs(vecDisplacement.z - (vecSpot.z - (pEntity->GetAbsOrigin().z + 36.0f))) - 36.0f; // Half of model height
+				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - 36.0f; // Half of model height
 
 				// Inside our model bounds
 				if (dH <= 0 && dV <= 0)
@@ -686,7 +689,7 @@ ConVar mp_prematch( "mp_prematch",
 				}
 				else
 				{
-					flDistance *= dV / (dV + 36.0f);
+					flDistance *= dV / (vecDisplacement.z);
 				}
 
 				// Another quick fix for the movement code this time
@@ -709,6 +712,10 @@ ConVar mp_prematch( "mp_prematch",
 
 #ifdef GAME_DLL
 			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, true, 5.0f);
+
+			//Vector v = vecSpot - vecSrc;
+			//v *= flDistance / v.Length();
+			//NDebugOverlay::Line(vecSrc, vecSrc + v, 200, 200, 0, true, 5.0f);
 #endif
 
 			// Could not see this entity, so don't hurt it
