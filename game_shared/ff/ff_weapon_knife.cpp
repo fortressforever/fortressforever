@@ -136,6 +136,11 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 					CFFPlayer *pVictim = ToFFPlayer(pHitEntity);
 					pPlayer->SetDisguise(pVictim->GetTeamNumber(), pVictim->GetClassSlot(), true);
 				}
+				else
+				{
+					// He's not dead, so lose our disguise as normal
+					pPlayer->ResetDisguise();
+				}
 
 				// we don't need to call BaseClass since we already did damage.
 				return;
@@ -145,6 +150,10 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 		}
 	}
+
+	// It wasn't a backstab (which returned early), so remove any disguise here
+	pPlayer->ResetDisguise();
+
 #endif
 
 	BaseClass::Hit(traceHit, nHitActivity);
