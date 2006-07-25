@@ -973,8 +973,6 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	// This fixes it, hurrah.
 	if (this == C_BasePlayer::GetLocalPlayer() && GetActiveWeapon() != m_pOldActiveWeapon)
 	{
-		DevMsg("Weapon changed\n");
-		
 		if (m_pOldActiveWeapon)
 			m_pOldActiveWeapon->Holster(GetActiveWeapon());
 
