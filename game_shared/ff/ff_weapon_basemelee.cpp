@@ -250,11 +250,10 @@ void CFFWeaponMeleeBase::Swing()
 		return;
 
 #ifdef GAME_DLL
-	// UNDONE:
 	// Since spies only actually have the knife, this shouldn't really be needed.
 	// But you can never tell what direction this mod is going to go in and whether
 	// spies will end up somehow getting other melee weapons.
-	//if (GetWeaponID() != FF_WEAPON_KNIFE)
+	if (GetWeaponID() != FF_WEAPON_KNIFE)
 	{
 		pOwner->ResetDisguise();
 	}
@@ -319,6 +318,15 @@ void CFFWeaponMeleeBase::Swing()
 		
 		// See if we happened to hit water
 		ImpactWater(swingStart, testEnd);
+
+#ifdef GAME_DLL
+		// If this _IS_ a knife, then always undisguise if they miss with it
+		// The rest of the undisguise logic is handled by the knife itself
+		if (GetWeaponID() == FF_WEAPON_KNIFE)
+		{
+			pOwner->ResetDisguise();
+		}
+#endif
 	}
 	else
 	{
