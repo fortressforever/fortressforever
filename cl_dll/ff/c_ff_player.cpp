@@ -805,10 +805,13 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 // --> Mirv: Conc angles
 void C_FFPlayer::PreThink()
 {
-	if (m_flConcTime > gpGlobals->curtime)
+	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime == -1))
 	{
+		//Warning( "[prethink] conctime: %i\n", m_flConcTime );
 		float flLength = GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f;
-		float flConcAmount = 15.0f * (m_flConcTime - gpGlobals->curtime) / flLength;
+		float flConcAmount = 15.0f;
+		if( m_flConcTime != -1 )
+			flConcAmount = 15.0f * (m_flConcTime - gpGlobals->curtime) / flLength;
 
 		if (IsAlive())
 		{

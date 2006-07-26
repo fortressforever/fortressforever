@@ -88,7 +88,7 @@ CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementNa
 	// initialize the status icons
 	for (int i=0; i<MAX_STATUSICONS; i++) {
 		m_hIcons[i].icontype = 0;
-		m_hIcons[i].start = m_hIcons[i].duration = 0.0;
+		m_hIcons[i].start = m_hIcons[i].duration = 0.0f;		
 		m_hIcons[i].enabled = false;
 	}
 
@@ -131,9 +131,9 @@ void CStatusIcons::VidInit( void )
 	// Reset all icons
 	for( int i = 0; i < MAX_STATUSICONS; i++ )
 	{
-		m_hIcons[ i ].icontype = 0;
-		m_hIcons[ i ].start = m_hIcons[ i ].duration = 0.0;
-		m_hIcons[ i ].enabled = false;
+		m_hIcons[i].icontype = 0;
+		m_hIcons[i].start = m_hIcons[i].duration = 0.0f;
+		m_hIcons[i].enabled = false;
 	}
 }
 
@@ -145,14 +145,19 @@ void CStatusIcons::Init( void )
 void CStatusIcons::OnTick( void )
 {
 	int iWide, iTall;
-	surface( )->GetScreenSize( iWide, iTall );
+	surface()->GetScreenSize( iWide, iTall );
 
 	int displayed = 0;
-	for (int i=0; i<MAX_STATUSICONS; i++) {
-		if (m_hIcons[i].enabled) {
-			if (gpGlobals->curtime - m_hIcons[i].start <= m_hIcons[i].duration) {
+	for (int i=0; i<MAX_STATUSICONS; i++) 
+	{
+		if (m_hIcons[i].enabled) 
+		{
+			if (((gpGlobals->curtime - m_hIcons[i].start) <= m_hIcons[i].duration) || (m_hIcons[i].duration == -1))
+			{
 				displayed++;
-			} else {
+			} 
+			else 
+			{
 				// no time left.. remove it
 				m_hIcons[i].enabled = false;
 			}
@@ -160,12 +165,15 @@ void CStatusIcons::OnTick( void )
 	}
 
 	// resize the window
-	if (displayed) {
+	if (displayed) 
+	{
 		SetVisible( true );
 		SetPos(iWide/2 - displayed*20, iTall - 50);
 		SetWide( displayed*40 );
 		SetTall( 40 );
-	} else {
+	} 
+	else 
+	{
 		SetVisible( false );
 	}
 
@@ -188,13 +196,13 @@ void CStatusIcons::MsgFunc_StatusIconUpdate( bf_read &msg )
 	// find an unused status icon
 	// check for an existing icon first
 	int id = 0;
-	while (m_hIcons[id].icontype != icontype && id != MAX_STATUSICONS)
+	while ((m_hIcons[id].icontype != icontype) && (id != MAX_STATUSICONS))
 		id++;
 
 	// if it's not found, then find any usable one
 	if (id == MAX_STATUSICONS)
 		id = 0;
-	while (m_hIcons[id].enabled && m_hIcons[id].icontype != icontype && id != MAX_STATUSICONS)
+	while (m_hIcons[id].enabled && (m_hIcons[id].icontype != icontype) && (id != MAX_STATUSICONS))
 		id++;
 
 	// if there's no more room, break
@@ -217,7 +225,9 @@ void CStatusIcons::Paint( void )
 	for (int i=0; i<MAX_STATUSICONS; i++) {
 		if (m_hIcons[i].enabled)
 		{
-			float timeleft = m_hIcons[i].duration - (gpGlobals->curtime - m_hIcons[i].start);
+			float timeleft = 5.0f;
+			if( m_hIcons[i].duration != -1 )
+				timeleft = m_hIcons[i].duration - (gpGlobals->curtime - m_hIcons[i].start);
 			float alpha;
 			if (timeleft >= 0)
 			{

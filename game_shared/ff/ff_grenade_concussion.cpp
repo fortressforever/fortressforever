@@ -222,16 +222,12 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 					// BUG FIX: Previously teammates would
 					// get the status icon when FF was off
 
-					// send the concussion icon to be displayed
-					CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
-					user.MakeReliable();
-
-					UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_ICON_CONCUSSION);
-					WRITE_FLOAT(pPlayer->GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f);
-					MessageEnd();
-
-					pPlayer->Concuss((pPlayer->GetClassSlot() == 5 ? 7.5f : 15.0f), (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
+					float flDuration = ( pPlayer->GetClassSlot() == CLASS_MEDIC ) ? 7.5f : 15.0f;
+					float flIconDuration = flDuration;
+					if( pPlayer->LuaRunEffect( LUA_EF_CONC, &flDuration, &flIconDuration ) )
+					{
+						pPlayer->Concuss( flDuration, flIconDuration, (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
+					}					
 				}
 			}
 			// I don't like this macro

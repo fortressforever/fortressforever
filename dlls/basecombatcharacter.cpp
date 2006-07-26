@@ -1825,10 +1825,8 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 				// and then killed by BaseClass::Event_Killed
 				// -------------------------------------------------------------------
 				// TODO: Change killer to an object
-				Warning( "[Player] BEG: Running player_killed\n" );
 				entsys.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
 				entsys.RunPredicates_LUA( NULL, ToFFPlayer( this ), "player_killed" );
-				Warning( "[Player] END: Running player_killed\n" );
 			}			
 
 			// Only classes that specifically request it are gibbed

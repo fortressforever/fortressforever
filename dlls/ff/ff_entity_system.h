@@ -128,4 +128,34 @@ class CFFEntity_ApplyTo_Flags
 public:
 };
 
+//============================================================================
+// CFFEntity_EffectFlags
+// Purpose: this is a fake class to expose "EF_" ["effect"] flags to lua easily
+//============================================================================
+class CFFEntity_Effect_Flags
+{
+public:
+};
+
+//============================================================================
+// CFFEntity_AmmoTypes
+// Purpose: this is a fake class to expose "AMMO" to lua
+//============================================================================
+enum LuaAmmoTypes
+{
+	LUA_AMMO_SHELLS = 0,
+	LUA_AMMO_NAILS,
+	LUA_AMMO_CELLS,
+	LUA_AMMO_ROCKETS,
+	LUA_AMMO_RADIOTAG,
+	LUA_AMMO_DETPACK,
+	LUA_AMMO_GREN1,
+	LUA_AMMO_GREN2
+};
+
+class CFFEntity_AmmoTypes
+{
+public:
+};
+
 #endif // FF_ENTITY_SYSTEM_H

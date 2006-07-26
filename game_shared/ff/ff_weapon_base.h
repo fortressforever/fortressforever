@@ -36,6 +36,8 @@ class CFFPlayer;
 #define AMMO_CELLS				"AMMO_CELLS"	// for building dispenser, sentry gun
 #define AMMO_DETPACK			"AMMO_DETPACK"	// for "building" detpacks
 #define AMMO_RADIOTAG			"AMMO_RADIOTAG"	// for radio tagging
+#define AMMO_GREN1				"AMMO_GREN1"	// gren1
+#define AMMO_GREN2				"AMMO_GREN2"	// gren2
 
 // Weapon IDs for all FF Game weapons
 typedef enum
