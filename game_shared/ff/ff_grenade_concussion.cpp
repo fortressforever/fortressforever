@@ -224,7 +224,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 
 					float flDuration = ( pPlayer->GetClassSlot() == CLASS_MEDIC ) ? 7.5f : 15.0f;
 					float flIconDuration = flDuration;
-					if( pPlayer->LuaRunEffect( LUA_EF_CONC, &flDuration, &flIconDuration ) )
+					if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
 					{
 						pPlayer->Concuss( flDuration, flIconDuration, (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
 					}					

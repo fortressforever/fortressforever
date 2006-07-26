@@ -68,6 +68,7 @@
 #include "engine/iserverplugin.h"
 #include "ragdoll_shared.h"
 #include "ff_entity_system.h"
+#include "ff_luacontext.h"
 
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 #include "bot/bot.h"
@@ -724,7 +725,8 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_AIFoesTalkSemaphore.Release();
 	g_OneWayTransition = false;
 
-	entsys.RunPredicates_LUA(NULL, NULL, "startup");
+	CFFLuaSC hStartup;
+	entsys.RunPredicates_LUA(NULL, &hStartup, "startup");
 
 	// --> Mirv: Automatically execute map config
 	char szExecMapConfig[128];

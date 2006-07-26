@@ -14,7 +14,8 @@
 #include "physics_npc_solver.h"
 
 #include "ff_entity_system.h"
-#include "ff_luaobject_wrapper.h"
+//#include "ff_luaobject_wrapper.h"
+#include "ff_luacontext.h"
 
 #ifdef HL1_DLL
 #include "filters.h"
@@ -582,12 +583,13 @@ void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 	}
 	
 	// TODO: Will need to change this so more than players can trigger doors
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	CFFLuaSC hAllowed( 1, pOther );
+	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 		{
-			entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+			entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 			return;
 		}
 	}
@@ -610,7 +612,7 @@ void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 
 	if (DoorActivate( ))
 	{
-		entsys.RunPredicates_LUA( this, pOther, "ontouch" );
+		entsys.RunPredicates_LUA( this, &hAllowed, "ontouch" );
 		// Temporarily disable the touch function, until movement is finished.
 		SetTouch( NULL );
 	}
@@ -668,12 +670,13 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		return;
 	}
 
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	CFFLuaSC hAllowed( 1, pActivator );
+	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 		{
-			entsys.RunPredicates_LUA( this, pActivator, "onfailuse" );
+			entsys.RunPredicates_LUA( this, &hAllowed, "onfailuse" );
 			return;
 		}
 	}
@@ -687,7 +690,7 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		}
 		else
 		{
-			entsys.RunPredicates_LUA( this, pActivator, "onuse" );
+			entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
 			DoorActivate();
 		}
 	}

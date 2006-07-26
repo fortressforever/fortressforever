@@ -41,6 +41,7 @@
 
 #include "ff_player.h"
 #include "ff_entity_system.h"
+#include "ff_luacontext.h"
 
 #undef MINMAX_H
 #include "minmax.h"
@@ -1826,7 +1827,8 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 				// -------------------------------------------------------------------
 				// TODO: Change killer to an object
 				entsys.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
-				entsys.RunPredicates_LUA( NULL, ToFFPlayer( this ), "player_killed" );
+				CFFLuaSC hPlayerKilled( 1, ToFFPlayer( this ) );
+				entsys.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 			}			
 
 			// Only classes that specifically request it are gibbed
