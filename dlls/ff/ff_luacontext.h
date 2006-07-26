@@ -43,6 +43,7 @@ class CFFLuaSC
 public:
 	// 'structors
 	CFFLuaSC() {}
+	CFFLuaSC( int iArgs, ... );
 	~CFFLuaSC();
 
 public:
@@ -83,6 +84,9 @@ public:
 	QAngle	GetQAngle();
 	Vector	GetVector();
 	luabind::adl::object* GetObject();
+
+protected:
+	void	SetParams( int iArgs, ... );
 
 private:
 	// private data

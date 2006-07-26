@@ -50,6 +50,54 @@ extern "C"
 			}					\
 
 //----------------------------------------------------------------------------
+// Purpose: Constructor to use a bunch of args
+//----------------------------------------------------------------------------
+CFFLuaSC::CFFLuaSC( int iArgs, ... )
+{
+	// TODO: Make the constructor and setparams use this same code
+
+	va_list ap;		
+	va_start( ap, iArgs );
+
+	try
+	{
+		for( int i = 0; i < iArgs; i++ )
+		{
+			Push( va_arg( ap, CBaseEntity* ) );
+		}
+	}
+	catch( ... )
+	{
+	}	
+
+	va_end( ap );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Constructor to use a bunch of args
+//----------------------------------------------------------------------------
+void CFFLuaSC::SetParams( int iArgs, ... )
+{	
+	// TODO: Make the constructor and setparams use this same code
+
+	va_list ap;		
+	va_start( ap, iArgs );
+
+	try
+	{
+		for( int i = 0; i < iArgs; i++ )
+		{
+			Push( va_arg( ap, CBaseEntity* ) );
+		}
+	}
+	catch( ... )
+	{
+	}	
+
+	va_end( ap );	
+}
+
+//----------------------------------------------------------------------------
 CFFLuaSC::~CFFLuaSC()
 {
 	m_params.PurgeAndDeleteElements();

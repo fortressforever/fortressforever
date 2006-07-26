@@ -26,6 +26,8 @@ namespace luabind
 	}
 }
 
+class CFFLuaSC;
+
 //----------------------------------------------------------------------------
 // extern declarations
 extern ConVar mp_respawndelay;
@@ -92,8 +94,11 @@ public:
 	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
 
 	// A better run predicates
-	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
-	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object& hOutput );
+	//bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
+	//bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object& hOutput );
+	bool RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName );
+	//bool RunPredicates_LUA( CBaseEntity *pObject, CUtlVector< CBaseEntity * > *pEntityList, const char *szFunctionName );
+	//bool RunPredicates_LUA( CBaseEntity *pObject, CUtlVector< CBaseEntity * >, const char *szFunctionName, luabind::adl::object& hOutput );
 
 };
 

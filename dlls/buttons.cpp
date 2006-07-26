@@ -16,7 +16,8 @@
 
 // --> Mirv: Temp test for triggers
 #include "ff_entity_system.h"
-#include "ff_luaobject_wrapper.h"
+//#include "ff_luaobject_wrapper.h"
+#include "ff_luacontext.h"
 // <-- Mirv: Temp test for triggers
 
 #undef MINMAX_H
@@ -274,7 +275,9 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
 
-	if( !entsys.RunPredicates_LUA(this, NULL, "ondamage" ) )
+	// TODO: Need to send the attacker to the button...
+	CFFLuaSC hOnDamage;
+	if( !entsys.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
 		return 0;
 	if (entsys.GetFloat("info_damage") <= 0.0)
 		return 0;
@@ -507,12 +510,13 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		if ( HasSpawnFlags(SF_BUTTON_TOGGLE))
 		{
 			// double check that it's allowed to toggle
-			CFFLuaObjectWrapper hAllowed;
-			if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+			//CFFLuaObjectWrapper hAllowed;
+			CFFLuaSC hAllowed( 1, pActivator );
+			if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 			{
 				if( !hAllowed.GetBool() )
 				{
-					entsys.RunPredicates_LUA( this, pActivator, "onfailuse" );
+					entsys.RunPredicates_LUA( this, &hAllowed, "onfailuse" );
 					return;
 				}
 			}
@@ -525,7 +529,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			ep.m_flVolume = 1;
 			ep.m_SoundLevel = SNDLVL_NORM;
 
-			entsys.RunPredicates_LUA( this, pActivator, "onuse" );
+			entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
 
 			EmitSound( filter, entindex(), ep );
 			m_OnPressed.FireOutput(m_hActivator, this);
@@ -535,17 +539,18 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	else
 	{
 		// check with entsys to make sure it is allowed to activate
-		CFFLuaObjectWrapper hAllowed;
-		if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+		//CFFLuaObjectWrapper hAllowed;
+		CFFLuaSC hAllowed( 1, pActivator );
+		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 		{
 			if( !hAllowed.GetBool() )
 			{
-				entsys.RunPredicates_LUA( this, pActivator, "onfailused" );
+				entsys.RunPredicates_LUA( this, &hAllowed, "onfailused" );
 				return;
 			}
 		}
 
-		entsys.RunPredicates_LUA( this, pActivator, "onuse" );
+		entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonActivate( );
 	}
@@ -591,12 +596,13 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 	if ( !pOther->IsPlayer() )
 		return;
 
-	CFFLuaObjectWrapper hButtonTouch;
-	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hButtonTouch.GetObject() ) )
+	//CFFLuaObjectWrapper hButtonTouch;
+	CFFLuaSC hAllowed( 1, pOther );
+	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
-		if( !hButtonTouch.GetBool() )
+		if( !hAllowed.GetBool() )
 		{
-			entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+			entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 			return;
 		}
 	}
@@ -615,7 +621,7 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	entsys.RunPredicates_LUA( this, pOther, "ontouch" );
+	entsys.RunPredicates_LUA( this, &hAllowed, "ontouch" );
 
 	// Temporarily disable the touch function, until movement is finished.
 	SetTouch( NULL );

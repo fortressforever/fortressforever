@@ -9,6 +9,7 @@
 #include "ff_player.h"
 #include "ff_entity_system.h"	// Entity system
 #include "ff_luaobject_wrapper.h"
+#include "ff_luacontext.h"
 #include "ff_gamerules.h"
 #include "ff_weapon_base.h"
 #include "predicted_viewmodel.h"
@@ -189,7 +190,8 @@ void CC_Player_Kill( void )
 
 		// Call lua player_killed on suicides
 		entsys.SetVar( "killer", ENTINDEX( pPlayer ) );
-		entsys.RunPredicates_LUA( NULL, pPlayer, "player_killed" );
+		CFFLuaSC hPlayerKilled( 1, pPlayer );
+		entsys.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");
@@ -263,7 +265,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hLastMapGuide ) ),
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
-	// Need this to be able to be -1...
+	// Need this to be able to be -1... but nothing I do
+	// is working, heh...
 	SendPropFloat( SENDINFO( m_flConcTime ), 8, 0, -1.0f ),
 END_SEND_TABLE( )
 
@@ -661,11 +664,12 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			// but let them spawn here if the name doesn't exist
 			if ( !FStrEq(STRING(pSpot->GetEntityName()), "") )
 			{
-				CFFLuaObjectWrapper hSpawnSpot;
-				if( entsys.RunPredicates_LUA( pSpot, this, "validspawn", hSpawnSpot.GetObject() ) )
+				//CFFLuaObjectWrapper hSpawnSpot;
+				CFFLuaSC hAllowed( 1, this );
+				if( entsys.RunPredicates_LUA( pSpot, &hAllowed, "validspawn" ) )
 				{
 					// pSpot:validspawn() exists, check the value returned from it
-					if( !hSpawnSpot.GetBool() )
+					if( !hAllowed.GetBool() )
 					{
 						//DevMsg("[entsys] Skipping spawn for player %s at %s because it fails the check\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
 						pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
@@ -889,7 +893,8 @@ void CFFPlayer::Spawn()
 
 	// Run this after SetupClassVariables in case lua is
 	// manipulating the players' inventory
-	entsys.RunPredicates_LUA( NULL, this, "player_spawn" );
+	CFFLuaSC hPlayerSpawn( 1, this );
+	entsys.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 		m_vSpeedEffects[i].active = false;
@@ -1088,13 +1093,14 @@ void CFFPlayer::SpySilentFeign( void )
 		if (GetActiveWeapon())
 			GetActiveWeapon()->Holster(NULL);
 
+		CFFLuaSC hOwnerFeign( 1, this );
 		// Find any items that we are in control of and let them know we feigned
 		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
 		while( pEnt != NULL )
 		{
 			// Tell the ent that it died
 			if (pEnt->GetOwnerEntity() == this)
-				entsys.RunPredicates_LUA( pEnt, this, "ownerfeign" );
+				entsys.RunPredicates_LUA( pEnt, &hOwnerFeign, "ownerfeign" );
 
 			// Next!
 			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
@@ -2762,7 +2768,8 @@ void CFFPlayer::Command_SevTest( void )
 */
 void CFFPlayer::Command_FlagInfo( void )
 {	
-	entsys.RunPredicates_LUA(NULL, this, "flaginfo");
+	CFFLuaSC hFlagInfo( 1, this );
+	entsys.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
 }
 
 /**
@@ -2770,6 +2777,7 @@ void CFFPlayer::Command_FlagInfo( void )
 */
 void CFFPlayer::Command_DropItems( void )
 {	
+	CFFLuaSC hDropItemCmd( 1, this );
 	//entsys.RunPredicates(NULL, this, "dropitems");
 	CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 
@@ -2778,7 +2786,7 @@ void CFFPlayer::Command_DropItems( void )
 		if( pEnt->GetOwnerEntity() == ( CBaseEntity * )this )
 		{
 			// If the function exists, try and drop
-			entsys.RunPredicates_LUA( pEnt, this, "dropitemcmd" );
+			entsys.RunPredicates_LUA( pEnt, &hDropItemCmd, "dropitemcmd" );
 				//pEnt->Drop(30.0f, 500.0f);
 		}
 
@@ -3101,7 +3109,7 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 	if( ( iEffect < 0 ) || ( iEffect > ( LUA_EF_MAX_FLAG - 1 ) ) )
 		return;
 
-	if( LuaRunEffect( iEffect, &flEffectDuration, &flIconDuration, &flSpeed ) )
+	if( LuaRunEffect( iEffect, NULL, &flEffectDuration, &flIconDuration, &flSpeed ) )
 	{
 		switch( iEffect )
 		{
@@ -4046,7 +4054,9 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
         if (weapon)
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
-	entsys.RunPredicates_LUA(NULL, this, "player_ondamage");
+
+	CFFLuaSC hPlayerOnDamage( 1, this );
+	entsys.RunPredicates_LUA(NULL, &hPlayerOnDamage, "player_ondamage");
 	info.SetDamage(entsys.GetFloat("info_damage"));
 
 	// go take the damage first
@@ -5385,13 +5395,13 @@ const char *LookupLuaAmmo( int iAmmoType )
 // Output : Function returns true if LUA allowed us to conc the person. Values
 //			may or may not have been modified.
 //-----------------------------------------------------------------------------
-bool CFFPlayer::LuaRunEffect( int iEffect, float *pflDuration, float *pflIconDuration, float *pflSpeed )
+bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDuration, float *pflIconDuration, float *pflSpeed )
 {
 	// Invalid effect
 	if( ( iEffect < 0 ) || ( iEffect > ( LUA_EF_MAX_FLAG - 1 ) ) )
 		return false;
 
-	float flDuration, flIconDuration, flSpeed;
+	float flDuration = 0.0f, flIconDuration = 0.0f, flSpeed = 0.0f;
 	
 	if( pflDuration )
 		flDuration = *pflDuration;
@@ -5477,14 +5487,14 @@ bool CFFPlayer::LuaRunEffect( int iEffect, float *pflDuration, float *pflIconDur
 			break;
 	}
 
-	CFFLuaObjectWrapper hObject;	
-	if( entsys.RunPredicates_LUA( NULL, this, szLuaFunc, hObject.GetObject() ) )
+	CFFLuaSC hContext( 2, this, pEffector );
+	if( entsys.RunPredicates_LUA( NULL, &hContext, szLuaFunc ) )
 	{
 		// LUA function was found and run.
 
 		// LUA function returned false. This means the player
 		// should not take the effect.
-		if( !hObject.GetBool() )
+		if( !hContext.GetBool() )
 			return false;
 		else
 		{
@@ -5527,8 +5537,6 @@ bool CFFPlayer::LuaRunEffect( int iEffect, float *pflDuration, float *pflIconDur
 					flSpeed = entsys.GetFloat( szLuaSpeed );
 					break;
 			}
-
-			Warning( "[LUA EFFECT] duration: %f, iconduration: %f\n", flDuration, flIconDuration );
 
 			if( flDuration < 0 )
 				flDuration = -1;

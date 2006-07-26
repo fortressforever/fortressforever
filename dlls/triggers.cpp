@@ -33,7 +33,8 @@
 
 // --> Mirv: Temp test for triggers
 #include "ff_entity_system.h"
-#include "ff_luaobject_wrapper.h"
+//#include "ff_luaobject_wrapper.h"
+#include "ff_luacontext.h"
 // <-- Mirv: Temp test for triggers
 
 #undef MINMAX_H
@@ -294,12 +295,13 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 				return false;
 			}
 			*/
-			CFFLuaObjectWrapper hAllowed;
-			if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+			//CFFLuaObjectWrapper hAllowed;
+			CFFLuaSC hAllowed( 1, pOther );
+			if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 			{
 				if( !hAllowed.GetBool() )
 				{
-					entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+					entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 					return false;
 				}
 			}
@@ -321,12 +323,13 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 					return false;
 				}
 				*/
-				CFFLuaObjectWrapper hAllowed;
-				if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+				//CFFLuaObjectWrapper hAllowed;
+				CFFLuaSC hAllowed( 1, pOther );
+				if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 				{
 					if( !hAllowed.GetBool() )
 					{
-						entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+						entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 						return false;
 					}
 				}
@@ -384,12 +387,13 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 			return;
 		}
 		*/
-		CFFLuaObjectWrapper hAllowed;
-		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+		//CFFLuaObjectWrapper hAllowed;
+		CFFLuaSC hAllowed( 1, pOther );
+		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 		{
 			if( !hAllowed.GetBool() )
 			{
-				entsys.RunPredicates_LUA( this, pOther, "onfailtouch" );
+				entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 				return;
 			}
 		}
@@ -399,7 +403,7 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 		// Fire the lua output
 		/*if( pOther->IsPlayer() )*/
 		//entsys.RunPredicates( this, pOther, "ontouch" );
-		entsys.RunPredicates_LUA( this, pOther, "ontouch" );
+		entsys.RunPredicates_LUA( this, &hAllowed, "ontouch" );
 
 		// Add this trigger to m_hActiveScripts
 		int iEntIndex = entindex();
@@ -437,8 +441,9 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
 			return;
 		*/
-		CFFLuaObjectWrapper hAllowed;
-		if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+		//CFFLuaObjectWrapper hAllowed;
+		CFFLuaSC hAllowed( 1, pOther );
+		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 		{
 			if( !hAllowed.GetBool() )
 				return;
@@ -453,7 +458,7 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		// Fire the lua output
 		/*if( pOther->IsPlayer() )*/
 		//entsys.RunPredicates( this, pOther, "onendtouch" );
-		entsys.RunPredicates_LUA( this, pOther, "onendtouch" );
+		entsys.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
 
 		// Remove this trigger from m_hActiveScripts
 		int iEntIndex = entindex();
@@ -929,8 +934,9 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 	if( /*pActivator->IsPlayer() &&*//* !entsys.RunPredicates( this, pActivator, "allowed" ) )
 		return;
 	*/
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pActivator, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	CFFLuaSC hAllowed( 1, pActivator );
+	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 			return;
@@ -938,7 +944,7 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 
 	/*if( pActivator->IsPlayer() )*/
 	//	entsys.RunPredicates( this, pActivator, "ontrigger" );
-	entsys.RunPredicates_LUA( this, pActivator, "ontrigger" );
+	entsys.RunPredicates_LUA( this, &hAllowed, "ontrigger" );
 
 	m_OnTrigger.FireOutput(m_hActivator, this);
 
@@ -4179,8 +4185,9 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 	if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
 		return false;
 	*/
-	CFFLuaObjectWrapper hAllowed;
-	if( entsys.RunPredicates_LUA( this, pOther, "allowed", hAllowed.GetObject() ) )
+	//CFFLuaObjectWrapper hAllowed;
+	CFFLuaSC hAllowed( 1, pOther );
+	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 			return false;

@@ -92,14 +92,16 @@ void CFFEntitySystemHelper::Spawn( void )
 //----------------------------------------------------------------------------
 void CFFEntitySystemHelper::OnThink( void )
 {
-	entsys.RunPredicates_LUA( NULL, NULL, "tick" );
+	CFFLuaSC hTick;
+	entsys.RunPredicates_LUA( NULL, &hTick, "tick" );
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
 //----------------------------------------------------------------------------
 void CFFEntitySystemHelper::Precache( void )
 {
-	entsys.RunPredicates_LUA( NULL, NULL, "precache" );
+	CFFLuaSC hPrecache;
+	entsys.RunPredicates_LUA( NULL, &hPrecache, "precache" );
 }
 
 //============================================================================
@@ -1691,9 +1693,10 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 			if( pEntity )
 			{
 				bool bEntSys = bExpectedVal;
-				CFFLuaObjectWrapper hOutput;
+				//CFFLuaObjectWrapper hOutput;
+				CFFLuaSC hOutput( 1, pObject );
 				//bool bEntSys = entsys.RunPredicates_LUA( pEntity, pObject, pszFunction ) > 0;
-				if( entsys.RunPredicates_LUA( pEntity, pObject, pszFunction, hOutput.GetObject() ) )
+				if( entsys.RunPredicates_LUA( pEntity, &hOutput, pszFunction ) )
 					bEntSys = hOutput.GetBool();
 
 				if( bEntSys != bExpectedVal )
@@ -1705,31 +1708,29 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 	return bExpectedVal;
 }
 
-
-//----------------------------------------------------------------------------
-// Purpose: This just hooks us into the real function
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName )
-{
-	luabind::adl::object hObject;
-	return RunPredicates_LUA( pObject, pEntity, szFunctionName, hObject );
-}
-
 //----------------------------------------------------------------------------
 // Purpose: Call into lua and get a result, basically. A better runpredicates
 // Output : hOutput - the value returned from the lua object/function called
 //
 // Function return value: function will return true if it found the lua object/function
 //----------------------------------------------------------------------------
-bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object &hOutput )
+bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
-	CFFLuaSC sc;
-	sc.Push(pEntity);
-	if(sc.CallFunction(pObject, szFunctionName))
+	if( !pContext )
+		return false;
+
+	// Not sure if this is needed but we can have a case
+	// where there won't be any params so just adding
+	// a NULL param for the hell of it until I find out
+	// it's alright.
+	if( pContext->GetNumParams() == 0 )
 	{
-		hOutput = *sc.GetObject();
-		return true;
+		CBaseEntity *pEntity = NULL;
+		pContext->Push( pEntity );
 	}
+
+	if( pContext->CallFunction( pObject, szFunctionName ) )
+		return true;
 
 	return false;
 }

@@ -634,7 +634,7 @@ public:
 public:
 	// Run "effects" and "speed effects" through here first
 	// before giving the player the actual effect.
-	bool LuaRunEffect( int iEffect, float *pflDuration = NULL, float *pflIconDuration = NULL, float *pflSpeed = NULL );
+	bool LuaRunEffect( int iEffect, CBaseEntity *pEffector = NULL, float *pflDuration = NULL, float *pflIconDuration = NULL, float *pflSpeed = NULL );
 
 };
 
