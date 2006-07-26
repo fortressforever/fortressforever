@@ -77,7 +77,7 @@ protected:
 	CEventAction *m_ActionList;
 	DECLARE_SIMPLE_DATADESC();
 
-	CBaseEntityOutput() {} // this class cannot be created, only it's children
+	CBaseEntityOutput() { m_ActionList = NULL; } // this class cannot be created, only it's children
 	void FireOutput( variant_t Value, CBaseEntity *pActivator, CBaseEntity *pCaller, float fDelay = 0 );
 
 private:

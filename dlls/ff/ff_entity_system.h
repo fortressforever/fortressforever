@@ -14,6 +14,7 @@
 #define FF_ENTITY_SYSTEM_H
 #pragma once
 
+//----------------------------------------------------------------------------
 // forward declarations
 struct lua_State;
 
@@ -25,21 +26,9 @@ namespace luabind
 	}
 }
 
+//----------------------------------------------------------------------------
 // extern declarations
 extern ConVar mp_respawndelay;
-
-//----------------------------------------------------------------------------
-// defines
-#define LUAHANDLE	luabind::adl::object
-
-#define BEGIN_SCRIPTCALL(pEntity, hLua) \
-			if(entsys.BeginCall(pEntity, hLua)) {
-
-#define END_SCRIPTCALL()		\
-			entsys.EndCall();	\
-			}
-
-#define CALLSCRIPT		luabind::call_function
 
 //============================================================================
 // CFFEntitySystemHelper
@@ -68,55 +57,52 @@ public:
 	CFFEntitySystem();
 	~CFFEntitySystem();
 
+	// runs the lua file into the script environment
 	static bool LoadLuaFile( lua_State*, const char *);
+
+	// loads the script for the current map
 	bool StartForMap();
+
+	// opens the FF-specific lua library
 	void FFLibOpen();
 
+	// returns the lua interpreter
 	lua_State* GetLuaState() const { return L; }
 	bool ScriptExists( void ) const { return m_ScriptExists; }
 
+	// handles lua error
+	static int HandleError( lua_State *L );
+
+	// sets a global variable in the script environment
 	static void SetVar( lua_State *L, const char *name, const char *value );
 	static void SetVar( lua_State *L, const char *name, int value );
 	static void SetVar( lua_State *L, const char *name, float value );
 	void SetVar( const char *name, const char *value );
 	void SetVar( const char *name, int value );
 	void SetVar( const char *name, float value );
-	static int HandleError( lua_State* );
-	void DoString( const char *buffer );
 
+	// gets a global variable from the script environment
 	const char *GetString( const char *name );
 	int GetInt( const char *name );
 	float GetFloat( const char *name );
+
+	// runs the script
+	void DoString( const char *buffer );
+
 	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
 
 	// A better run predicates
 	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName );
 	bool RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName, luabind::adl::object& hOutput );
 
-	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
-	bool GetObject(const char* szTableName, luabind::adl::object& outObject);
-
-	bool GetFunction(CBaseEntity* pEntity,
-					 const char* szFunctionName,
-					 luabind::adl::object& outObject);
-
-	bool GetFunction(luabind::adl::object& tableObject,
-					 const char* szFunctionName,
-					 luabind::adl::object& outObject);
-
-	bool BeginCall(CBaseEntity* pEntity, luabind::adl::object& outObject);
-	void EndCall();
-
-	// Just checks if object exists
-	bool GetObject( CBaseEntity *pEntity );
-
-	// Just checks if a function for an object exists
-	bool GetFunction( CBaseEntity *pEntity, const char *szFunctionName );
-
 };
 
+//----------------------------------------------------------------------------
+// utility functions
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
 
+//----------------------------------------------------------------------------
+// global externs
 extern CFFEntitySystem entsys;
 
 //============================================================================

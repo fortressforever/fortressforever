@@ -17,6 +17,8 @@
 /// Jul 31, 2005 FryGuy: Added the entity helper, along with the sound stuffs
 /// Aug 01, 2005 FryGuy: Added BroadcastMessage and RespawnAllPlayers
 
+//----------------------------------------------------------------------------
+// includes
 #include "cbase.h"
 #include "ff_entity_system.h"
 
@@ -53,9 +55,12 @@ extern "C"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+//----------------------------------------------------------------------------
+// defines
 #define temp_max(a,b) (((a)>(b))?(a):(b))
 
-// Better way of doing this maybe?
+//----------------------------------------------------------------------------
+// globals
 CFFEntitySystem entsys;
 CFFEntitySystemHelper *helper; // global variable.. OH NOES!
 
@@ -84,12 +89,14 @@ void CFFEntitySystemHelper::Spawn( void )
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
+//----------------------------------------------------------------------------
 void CFFEntitySystemHelper::OnThink( void )
 {
 	entsys.RunPredicates_LUA( NULL, NULL, "tick" );
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
+//----------------------------------------------------------------------------
 void CFFEntitySystemHelper::Precache( void )
 {
 	entsys.RunPredicates_LUA( NULL, NULL, "precache" );
@@ -98,10 +105,6 @@ void CFFEntitySystemHelper::Precache( void )
 //============================================================================
 // CFFEntitySystem implementation
 //============================================================================
-
-//----------------------------------------------------------------------------
-// Purpose: Constructor, sets up the vm and that's all!
-//----------------------------------------------------------------------------
 CFFEntitySystem::CFFEntitySystem()
 {
 	DevMsg( "[SCRIPT] Attempting to start up the entity system...\n" );
@@ -110,8 +113,6 @@ CFFEntitySystem::CFFEntitySystem()
 	m_ScriptExists = false;
 }
 
-//----------------------------------------------------------------------------
-// Purpose: Destructor!
 //----------------------------------------------------------------------------
 CFFEntitySystem::~CFFEntitySystem()
 {
@@ -125,6 +126,7 @@ CFFEntitySystem::~CFFEntitySystem()
 	L = NULL;
 }
 
+//----------------------------------------------------------------------------
 bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 {
 	DevMsg("[SCRIPT] Loading Lua File: %s\n", filename);
@@ -177,8 +179,6 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 	return true;
 }
 
-//----------------------------------------------------------------------------
-// Purpose: This loads the correct script for our map
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::StartForMap()
 {
@@ -1040,8 +1040,93 @@ namespace FFLib
 		return bValue ? "True" : "False";
 	}
 
+	void FireOutput(const char* szTargetEntityName,
+					const char* szTargetInputName)
+
+	{
+		// EventAction string is in the following format:
+		//    targetname,inputname,parameter,delay,number_times_to_fire
+		char szAction[2048];
+		Q_snprintf(szAction,
+				   sizeof(szAction),
+				   "%s,%s",
+				   szTargetEntityName,
+				   szTargetInputName);
+
+		COutputEvent event;
+		event.ParseEventAction(szAction);
+		event.FireOutput(NULL, NULL);
+	}
+
+	void FireOutput(const char* szTargetEntityName,
+					const char* szTargetInputName,
+					const char* szParameter)
+
+	{
+		// EventAction string is in the following format:
+		//    targetname,inputname,parameter,delay,number_times_to_fire
+		char szAction[2048];
+		Q_snprintf(szAction,
+				   sizeof(szAction),
+				   "%s,%s,%s",
+				   szTargetEntityName,
+				   szTargetInputName,
+				   szParameter);
+
+		COutputEvent event;
+		event.ParseEventAction(szAction);
+		event.FireOutput(NULL, NULL);
+	}
+
+	void FireOutput(const char* szTargetEntityName,
+					const char* szTargetInputName,
+					const char* szParameter,
+					float delay)
+
+	{
+		// EventAction string is in the following format:
+		//    targetname,inputname,parameter,delay,number_times_to_fire
+		char szAction[2048];
+		Q_snprintf(szAction,
+				   sizeof(szAction),
+				   "%s,%s,%s,%f",
+				   szTargetEntityName,
+				   szTargetInputName,
+				   szParameter,
+				   delay);
+
+		COutputEvent event;
+		event.ParseEventAction(szAction);
+		event.FireOutput(NULL, NULL, delay);
+	}
+
+	void FireOutput(const char* szTargetEntityName,
+					const char* szTargetInputName,
+					const char* szParameter,
+					float delay,
+					unsigned int nRepeat)
+
+	{
+		// EventAction string is in the following format:
+		//    targetname,inputname,parameter,delay,number_times_to_fire
+		char szAction[2048];
+		Q_snprintf(szAction,
+				   sizeof(szAction),
+				   "%s,%s,%s,%f,%d",
+				   szTargetEntityName,
+				   szTargetInputName,
+				   szParameter,
+				   delay,
+				   nRepeat);
+
+		COutputEvent event;
+		event.ParseEventAction(szAction);
+		event.FireOutput(NULL, NULL, delay);
+	}
+
 } // namespace FFLib
 
+//----------------------------------------------------------------------------
 void CFFEntitySystem::FFLibOpen()
 {
 	module(L)
@@ -1395,12 +1480,14 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetPacketloss",			&FFLib::GetPacketloss),
 		def("PrintBool",				&FFLib::PrintBool),
 		def("GoToIntermission",			&FFLib::GoToIntermission),
+		def("OutputEvent",				(void(*)(const char*, const char*))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float, unsigned int))&FFLib::FireOutput),
 		def("GetPlayerByID",			&FFLib::GetPlayerByID)	// TEMPORARY
 	];
 }
 
-//----------------------------------------------------------------------------
-// Purpose: Handles Error
 //----------------------------------------------------------------------------
 int CFFEntitySystem::HandleError( lua_State *L )
 {
@@ -1411,41 +1498,48 @@ int CFFEntitySystem::HandleError( lua_State *L )
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Sets a variable
-//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, const char *value )
 {
 	lua_pushstring(L, value);
 	lua_setglobal(L, name);
 }
+
+//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, int value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
+
+//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, float value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
-
+//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( const char *name, const char *value )
 {
 	lua_pushstring(L, value);
 	lua_setglobal(L, name);
 }
+
+//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( const char *name, int value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
+
+//----------------------------------------------------------------------------
 void CFFEntitySystem::SetVar( const char *name, float value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
+//----------------------------------------------------------------------------
 const char *CFFEntitySystem::GetString( const char *name )
 {
 	lua_getglobal(L, name);
@@ -1453,6 +1547,8 @@ const char *CFFEntitySystem::GetString( const char *name )
 	lua_pop(L, 1);
 	return ret;
 }
+
+//----------------------------------------------------------------------------
 int CFFEntitySystem::GetInt( const char *name )
 {
 	lua_getglobal(L, name);
@@ -1460,6 +1556,8 @@ int CFFEntitySystem::GetInt( const char *name )
 	lua_pop(L, 1);
 	return ret;
 }
+
+//----------------------------------------------------------------------------
 float CFFEntitySystem::GetFloat( const char *name )
 {
 	lua_getglobal(L, name);
@@ -1468,6 +1566,7 @@ float CFFEntitySystem::GetFloat( const char *name )
 	return ret;
 }
 
+//----------------------------------------------------------------------------
 void CFFEntitySystem::DoString( const char *buffer )
 {
 	Assert( buffer );
@@ -1499,141 +1598,6 @@ void CFFEntitySystem::DoString( const char *buffer )
 
 }
 
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject)
-{
-	if(!pEntity)
-		return false;
-
-	// lookup the object using the entity's name
-	const char* szEntName = STRING(pEntity->GetEntityName());
-	return GetObject(szEntName, outObject);
-}
-
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetObject(const char* szTableName, luabind::adl::object& outObject)
-{
-	if(NULL == szTableName)
-		return false;
-
-	try
-	{
-		// lookup the table in the global scope
-		luabind::adl::object retObject = luabind::globals(L)[szTableName];
-		if(luabind::type(retObject) == LUA_TTABLE)
-		{
-			outObject = retObject;
-			return true;
-		}
-	}
-	catch(...)
-	{
-		// throw the error away, lets just keep the game running
-		return false;
-	}
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetFunction(CBaseEntity* pEntity,
-								  const char* szFunctionName,
-								  luabind::adl::object& outObject)
-{
-	if(NULL == pEntity || NULL == szFunctionName)
-		return false;
-
-	luabind::adl::object tableObject;
-	if(GetObject(pEntity, tableObject))
-		return GetFunction(tableObject, szFunctionName, outObject);
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
-								  const char* szFunctionName,
-								  luabind::adl::object& outObject)
-{
-	if(NULL == szFunctionName)
-		return false;
-
-	if(luabind::type(tableObject) != LUA_TTABLE)
-		return false;
-
-	try
-	{
-		luabind::adl::object funcObject = tableObject[szFunctionName];
-		if(luabind::type(funcObject) == LUA_TFUNCTION)
-		{
-			outObject = funcObject;
-			return true;
-		}
-	}
-	catch(...)
-	{
-		return false;
-	}
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::BeginCall(CBaseEntity* pEntity, luabind::adl::object& outObject)
-{
-	if(NULL == pEntity)
-		return false;
-
-	if(GetObject(pEntity, outObject))
-	{
-		// set lua's reference to the calling entity
-		luabind::object globals = luabind::globals(L);
-		globals["entity"] = luabind::object(L, pEntity);
-
-		// temps
-		int ent_id = pEntity ? ENTINDEX( pEntity ) : -1;
-		SetVar("entid", ent_id);
-		SetVar("entname", STRING(pEntity->GetEntityName()));
-
-		return true;
-	}
-	return false;
-}
-
-//----------------------------------------------------------------------------
-void CFFEntitySystem::EndCall()
-{
-	luabind::adl::object dummy;
-
-	// remove the "entity" field
-	luabind::object globals = luabind::globals(L);
-	globals["entity"] = dummy;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Check to see if an object exists
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetObject( CBaseEntity *pEntity )
-{
-	luabind::adl::object table;
-	return GetObject( pEntity, table );
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Check to see if a function exists for an object
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::GetFunction( CBaseEntity *pEntity, const char *szFunctionName )
-{
-	luabind::adl::object table;
-	
-    if( GetObject( pEntity, table ) )
-		return GetFunction( pEntity, szFunctionName, table );
-
-	return false;
-}
-
-//----------------------------------------------------------------------------
-// Purpose: Runs the appropriate script function
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
@@ -1716,6 +1680,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	return retVal;
 }
 
+//----------------------------------------------------------------------------
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
 	if( pObject && pszFunction )
@@ -1767,72 +1732,4 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CBaseEntity *pEnt
 	}
 
 	return false;
-
-	
-/*
-	if( !GetLuaState() || !ScriptExists() )
-		return false;
-
-	// If no function supplied, abort
-	if( !szFunctionName || !Q_strlen( szFunctionName ) )
-		return false;
-
-	// Assume it exists
-	bool bRetval = true;
-
-	// Set lua's reference to the calling entity. Don't care if
-	// it's NULL, either
-	luabind::object globals = luabind::globals( GetLuaState() );
-	globals[ "entity" ] = luabind::object( GetLuaState(), pObject );
-
-	// Looking for a global function
-	if( !pObject )
-	{
-		try
-		{
-			hOutput = call_function< luabind::adl::object >( GetLuaState(), szFunctionName, pEntity );
-		}
-		catch( ... )
-		{
-			Warning( "[RunPredicates_LUA] call_function failure: [global]:[%s]\n", szFunctionName );
-			
-			// Call failed for some reason so lets return false
-			bRetval = false;
-		}
-	}
-	// Looking for a function of an object
-	else
-	{		
-		// Make sure the object:function() exists
-		luabind::adl::object table;
-		if( GetFunction( pObject, szFunctionName, table ) )
-		{
-			// Just get the object scope, we know it will be "true"
-			// or we wouldn't be inside of GetFunction()
-			luabind::adl::object hObject;
-			GetObject( pObject, hObject );
-
-			// Call the lua object:function() passing in pEntity
-			try
-			{
-				hOutput = luabind::call_member< luabind::adl::object >( hObject, szFunctionName, pEntity );
-			}
-			catch( ... )
-			{
-				Warning( "[RunPredicates_LUA] call_member failure: [%s]:[%s]\n", STRING( pObject->GetEntityName() ), szFunctionName );
-
-				// Call failed for some reason so lets return false
-				bRetval = false;
-			}			
-		}
-		else
-			bRetval = false;
-	}
-
-	// Cleanup
-	luabind::adl::object dummy;
-	globals[ "entity" ] = dummy;
-
-	return bRetval;
-*/
 }
