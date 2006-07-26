@@ -268,6 +268,14 @@ void CBaseTrigger::InitTrigger( )
 //-----------------------------------------------------------------------------
 bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 {
+	// Check for removed state here
+	if( Classify() == CLASS_TRIGGERSCRIPT )
+	{
+		CFuncFFScript *pScript = dynamic_cast< CFuncFFScript * >( this );
+		if( pScript && pScript->IsRemoved() )
+			return false;
+	}
+
 	// First test spawn flag filters
 	if ( HasSpawnFlags(SF_TRIGGER_ALLOW_ALL) ||
 		(HasSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS) && (pOther->GetFlags() & FL_CLIENT)) ||
@@ -372,53 +380,47 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 //-----------------------------------------------------------------------------
 void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 {
+	// No need to check allowed in here as PassesTriggerFilters
+	// will return false if allowed is not allowed.
+
 	if (PassesTriggerFilters(pOther) )
 	{
+		Warning( "[CBaseTrigger] StartTouch\n" );
+
 		EHANDLE hOther;
 		hOther = pOther;
 
 		m_hTouchingEntities.AddToTail( hOther );
 
-		/*
-		// Test if the entity system (lua) allows this trigger to happen
-		if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
-		{
-			entsys.RunPredicates( this, pOther, "onfailtouch" );
-			return;
-		}
-		*/
-		//CFFLuaObjectWrapper hAllowed;
-		CFFLuaSC hAllowed( 1, pOther );
-		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
-		{
-			if( !hAllowed.GetBool() )
-			{
-				entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
-				return;
-			}
-		}
-
 		m_OnStartTouch.FireOutput(pOther, this);
 
 		// Fire the lua output
-		/*if( pOther->IsPlayer() )*/
-		//entsys.RunPredicates( this, pOther, "ontouch" );
-		entsys.RunPredicates_LUA( this, &hAllowed, "ontouch" );
+		CFFLuaSC hTouch( 1, pOther );
+		entsys.RunPredicates_LUA( this, &hTouch, "ontouch" );
 
-		// Add this trigger to m_hActiveScripts
-		int iEntIndex = entindex();
-		if( iEntIndex )
+		// Got a trigger_ff_script - do special stuff
+		if( Classify() == CLASS_TRIGGERSCRIPT )
 		{
-			// Don't want dups
-			bool bFound = false;
-			for( int i = 0; ( i < pOther->m_hActiveScripts.Count() ) && !bFound; i++ )
-				if( pOther->m_hActiveScripts[ i ] == iEntIndex )
-					bFound = true;
-
-			if( !bFound )
+			// Add this trigger to m_hActiveScripts
+			int iEntIndex = entindex();
+			if( iEntIndex )
 			{
-				pOther->m_hActiveScripts.AddToTail( iEntIndex );
+				// Don't want dups
+				bool bFound = false;
+				for( int i = 0; ( i < pOther->m_hActiveScripts.Count() ) && !bFound; i++ )
+					if( pOther->m_hActiveScripts[ i ] == iEntIndex )
+						bFound = true;
+
+				if( !bFound )
+				{
+					pOther->m_hActiveScripts.AddToTail( iEntIndex );
+				}
 			}
+
+			// Change our goal state
+			CFuncFFScript *pScript = dynamic_cast< CFuncFFScript * >( this );
+			if( pScript )
+				pScript->SetActive();
 		}
 	}
 }
@@ -432,35 +434,16 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 {
 	if ( IsTouching( pOther ) )
 	{
+		Warning( "[CBaseTrigger] EndTouch\n" );
+
 		EHANDLE hOther;
 		hOther = pOther;
 		m_hTouchingEntities.FindAndRemove( hOther );
 
-		/*
-		// Test if the entity system (lua) allows this trigger to happen
-		if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
-			return;
-		*/
-		//CFFLuaObjectWrapper hAllowed;
-		CFFLuaSC hAllowed( 1, pOther );
-		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
-		{
-			if( !hAllowed.GetBool() )
-				return;
-		}
-
-		//FIXME: Without this, triggers fire their EndTouch outputs when they are disabled!
-		//if ( !m_bDisabled )
-		//{
-			m_OnEndTouch.FireOutput(pOther, this);
-		//}
-
-		// Fire the lua output
-		/*if( pOther->IsPlayer() )*/
-		//entsys.RunPredicates( this, pOther, "onendtouch" );
-		entsys.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
-
-		// Remove this trigger from m_hActiveScripts
+		// Do this to clear the entry. Don't care if we're not allowed
+		// to touch this trigger still.
+		// Remove this trigger from m_hActiveScripts. Want to do this even
+		// if we're removed so we don't leave entries in.
 		int iEntIndex = entindex();
 		if( iEntIndex )
 		{
@@ -468,6 +451,12 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 				if( pOther->m_hActiveScripts[ i ] == iEntIndex )
 					pOther->m_hActiveScripts.Remove( i );
 		}
+
+		//FIXME: Without this, triggers fire their EndTouch outputs when they are disabled!
+		//if ( !m_bDisabled )
+		//{
+			m_OnEndTouch.FireOutput(pOther, this);
+		//}		
 
 		// If there are no more entities touching this trigger, fire the lost all touches
 		// Loop through the touching entities backwards. Clean out old ones, and look for existing
@@ -493,6 +482,31 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		if ( !bFoundOtherTouchee /*&& !m_bDisabled*/ )
 		{
 			m_OnEndTouchAll.FireOutput(pOther, this);
+		}
+
+		if( Classify() == CLASS_TRIGGERSCRIPT )
+		{
+			CFuncFFScript *pScript = dynamic_cast< CFuncFFScript * >( this );
+			if( pScript )
+			{
+				if( !bFoundOtherTouchee )
+					pScript->SetInactive();
+
+				if( pScript->IsRemoved() )
+					return;
+			}
+		}
+
+		// Tell lua we're not touching this thing anymore. Run allowed
+		// just to make sure we're allowed to still be touching it.
+		CFFLuaSC hAllowed( 1, pOther );
+		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+		{
+			if( hAllowed.GetBool() )
+			{
+				// Fire the lua output
+				entsys.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
+			}
 		}
 	}
 }
@@ -975,13 +989,7 @@ void CTriggerMultiple::MultiWaitOver( void )
 // ##################################################################################
 //	>> func_ff_script
 // ##################################################################################
-class CFuncFFScript : public CTriggerMultiple
-{
-	DECLARE_CLASS( CFuncFFScript, CTriggerMultiple );
-};
-
 LINK_ENTITY_TO_CLASS( trigger_ff_script, CFuncFFScript );
-
 
 // ##################################################################################
 //	>> TriggerOnce

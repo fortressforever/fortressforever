@@ -8,7 +8,6 @@
 #include "cbase.h"
 #include "ff_player.h"
 #include "ff_entity_system.h"	// Entity system
-#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
 #include "ff_gamerules.h"
 #include "ff_weapon_base.h"

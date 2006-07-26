@@ -37,7 +37,6 @@
 #include "ff_gamerules.h"
 #include "ff_grenade_base.h"
 #include "beam_shared.h"
-#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
 
 // Lua includes
@@ -1416,6 +1415,14 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsRemoved",			&CFFInfoScript::IsRemoved)
 			.def("Remove",				&CFFInfoScript::LUA_Remove)
 			.def("Restore",				&CFFInfoScript::LUA_Restore),
+
+		// CFuncFFScript - trigger_ff_script
+		class_<CFuncFFScript>("TriggerScript")
+			.def("IsActive",			&CFuncFFScript::IsActive)
+			.def("IsInactive",			&CFuncFFScript::IsInactive)
+			.def("IsRemoved",			&CFuncFFScript::IsRemoved)
+			.def("Remove",				&CFuncFFScript::LuaRemove)
+			.def("Restore",				&CFuncFFScript::LuaRestore),
 
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")

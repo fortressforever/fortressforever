@@ -141,4 +141,33 @@ protected:
 	CHandle<class CBaseFilter>	m_hFilter;
 };
 
+// ##################################################################################
+//	>> func_ff_script
+// ##################################################################################
+class CFuncFFScript : public CTriggerMultiple
+{
+	DECLARE_CLASS( CFuncFFScript, CTriggerMultiple );
+
+	// Goal States:
+	enum { GS_INACTIVE = 0, GS_ACTIVE = 1, GS_REMOVED = -1 };
+
+public:
+	CFuncFFScript( void ) { m_iGoalState = GS_INACTIVE; }
+
+	virtual bool	IsActive( void ) const		{ return m_iGoalState == GS_ACTIVE; }
+	virtual bool	IsInactive( void ) const	{ return m_iGoalState == GS_INACTIVE; }
+	virtual bool	IsRemoved( void ) const		{ return m_iGoalState == GS_REMOVED; }
+
+	virtual void	LuaRestore( void )			{ m_iGoalState = GS_INACTIVE; }
+	virtual void	LuaRemove( void )			{ m_iGoalState = GS_REMOVED; }
+
+	virtual Class_T Classify( void )			{ return CLASS_TRIGGERSCRIPT; }
+
+	virtual void	SetActive( void )			{ m_iGoalState = GS_ACTIVE; }
+	virtual void	SetInactive( void )			{ m_iGoalState = GS_INACTIVE; }
+
+protected:
+	int	m_iGoalState;
+};
+
 #endif // TRIGGERS_H
