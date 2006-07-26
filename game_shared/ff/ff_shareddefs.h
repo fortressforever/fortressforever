@@ -31,6 +31,37 @@ enum FFStatusIconTypes
 	FF_NUMICONS
 };
 
+// LUA Effect Flags
+// Some of these just map to speed effect values
+// but the mapping is through code and not actual
+// integer values
+enum LuaEffectType
+{
+	LUA_EF_ONFIRE = 0,		// put a player on fire
+	LUA_EF_CONC,				// concuss a player
+	LUA_EF_GAS,				// gas a player
+	LUA_EF_INFECT,			// infect a player
+	LUA_EF_RADIOTAG,		// radio tag a player
+	LUA_EF_HEADSHOT,		// player is headshotted (currently only by sniperrifle)
+	LUA_EF_LEGSHOT,			// left shot a player
+	LUA_EF_TRANQ,			// tranq a player
+	LUA_EF_CALTROP,			// caltrop a player
+	LUA_EF_ACSPINUP,		// ac spinning up
+	LUA_EF_SNIPERRIFLE,		// player slowed due to sniper rifle charging
+	LUA_EF_SPEED_LUA1,		// custom speed effect (etc.)
+	LUA_EF_SPEED_LUA2,
+	LUA_EF_SPEED_LUA3,
+	LUA_EF_SPEED_LUA4,
+	LUA_EF_SPEED_LUA5,
+	LUA_EF_SPEED_LUA6,
+	LUA_EF_SPEED_LUA7,
+	LUA_EF_SPEED_LUA8,
+	LUA_EF_SPEED_LUA9,
+	LUA_EF_SPEED_LUA10,
+
+	LUA_EF_MAX_FLAG
+};
+
 struct SpyDisguiseWeapon
 {
 	char szWeaponModel[6][MAX_WEAPON_STRING];

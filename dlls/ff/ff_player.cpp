@@ -263,7 +263,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hLastMapGuide ) ),
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
-	SendPropFloat( SENDINFO( m_flConcTime ) ),
+	// Need this to be able to be -1...
+	SendPropFloat( SENDINFO( m_flConcTime ), 8, 0, -1.0f ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -3096,118 +3097,141 @@ void CFFPlayer::StatusEffectsThink( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconDuration, float flSpeed )
 {
-	// These are hardcoded values in base.lua...
-	if( ( iEffect >= 0 ) && ( iEffect <= 3 ) )
-	{
-		// REGULAR EFFECTS
+	// Invalid effect
+	if( ( iEffect < 0 ) || ( iEffect > ( LUA_EF_MAX_FLAG - 1 ) ) )
+		return;
 
-		// These are in lua as:
-		// EF_ONFIRE = 0
-		// EF_CONCUSS = 1
-		// EF_GAS = 2
-		// EF_INFECT = 3
+	if( LuaRunEffect( iEffect, &flEffectDuration, &flIconDuration, &flSpeed ) )
+	{
 		switch( iEffect )
 		{
-			// This is really sloppy
-
-			case 0:
+			case LUA_EF_ONFIRE:
 			{
-				// This will do the icon too and set us
-				// on fire. Using "this" just so it's not
-				// NULL.
-				ApplyBurning( this, 1.0f, flIconDuration );
-			}				
-			break;
-
-			case 1:
-			{
-				// Set concuss'd
-				Concuss( flEffectDuration );
-
-				// Send the concussion icon
-				CSingleUserRecipientFilter user( this );
-				user.MakeReliable();
-
-				UserMessageBegin( user, "StatusIconUpdate" );
-					WRITE_BYTE( FF_ICON_CONCUSSION );
-					WRITE_FLOAT( flIconDuration );
-				MessageEnd();
 			}
 			break;
 
-			case 2:
+			case LUA_EF_CONC:
 			{
-				// EH, need to make gas like fire or something
-				// where you've got gasticks counting down and
-				// taking damage every x seconds and what not
-				// TODO: Make the player take gas damage
+				Concuss( flEffectDuration, flIconDuration );
 			}
 			break;
 
-			case 3:
+			case LUA_EF_GAS:
 			{
-				// Passing "this" just so it's got something
-				// besides NULL for the time being
-				Infect( this );
+			}
+			break;
+
+			case LUA_EF_INFECT:
+			{
+			}
+			break;
+
+			case LUA_EF_RADIOTAG:
+			{
+			}
+			break;
+
+			case LUA_EF_HEADSHOT:
+			{
+			}
+			break;
+			
+			case LUA_EF_LEGSHOT:
+			{				
+				int mod = SEM_BOOLEAN;
+				int iIcon = FF_ICON_LEGSHOT;
+				AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
+			}
+			break;
+
+			case LUA_EF_TRANQ:
+			{
+				int mod = SEM_BOOLEAN | SEM_HEALABLE;
+				int iIcon = FF_ICON_TRANQ;
+				AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
+			}
+			break;
+
+			case LUA_EF_CALTROP:
+			{
+				int mod = SEM_ACCUMULATIVE | SEM_HEALABLE;
+				int iIcon = FF_ICON_CALTROP;
+				AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
+			}
+			break;
+
+			case LUA_EF_ACSPINUP:
+			{
+				AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN );
+			}
+			break;
+
+			case LUA_EF_SNIPERRIFLE:
+			{
+				AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA1:
+			{
+				AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA2:
+			{
+				AddSpeedEffect( SE_LUA2, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA3:
+			{
+				AddSpeedEffect( SE_LUA3, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA4:
+			{
+				AddSpeedEffect( SE_LUA4, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA5:
+			{
+				AddSpeedEffect( SE_LUA5, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA6:
+			{
+				AddSpeedEffect( SE_LUA6, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA7:
+			{
+				AddSpeedEffect( SE_LUA7, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA8:
+			{
+				AddSpeedEffect( SE_LUA8, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA9:
+			{
+				AddSpeedEffect( SE_LUA9, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
+			}
+			break;
+
+			case LUA_EF_SPEED_LUA10:
+			{
+				AddSpeedEffect( SE_LUA10, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );
 			}
 			break;
 		}
-	}
-	else if( ( iEffect >= 4 ) && ( iEffect <= 16 ) )
-	{
-		// SPEED EFFECTS
-
-		// These are in lua as:
-		// EF_LEGSHOT = 4
-		// EF_TRANQ = 5
-		// EF_CALTROP = 6 
- 		// EF_SPEED_LUA1 = 7
-		// EF_SPEED_LUA2 = 8
-		// EF_SPEED_LUA3 = 9
-		// EF_SPEED_LUA4 = 10
-		// EF_SPEED_LUA5 = 11
-		// EF_SPEED_LUA6 = 12
-		// EF_SPEED_LUA7 = 13
-		// EF_SPEED_LUA8 = 14
-		// EF_SPEED_LUA9 = 15
-		// EF_SPEED_LUA10 = 16
-
-		bool bUseIcon = false;
-
-		byte bIcon = 0x0;
-		int mod = SEM_ACCUMULATIVE;
-
-		SpeedEffectType sEffect;
-		switch( iEffect )
-		{
-			case 4: sEffect = SE_LEGSHOT; mod = SEM_BOOLEAN; bUseIcon = true; bIcon = FF_ICON_LEGSHOT; break;
-			case 5: sEffect = SE_TRANQ; mod = SEM_BOOLEAN | SEM_HEALABLE; bUseIcon = true; bIcon = FF_ICON_TRANQ; break;
-			case 6: sEffect = SE_CALTROP; mod |= SEM_HEALABLE; bUseIcon = true; bIcon = FF_ICON_CALTROP; break;
-			case 7: sEffect = SE_LUA1; break;
-			case 8: sEffect = SE_LUA2; break;
-			case 9: sEffect = SE_LUA3; break;
-			case 10: sEffect = SE_LUA4; break;
-			case 11: sEffect = SE_LUA5; break;
-			case 12: sEffect = SE_LUA6; break;
-			case 13: sEffect = SE_LUA7; break;
-			case 14: sEffect = SE_LUA8; break;
-			case 15: sEffect = SE_LUA9; break;
-			case 16: sEffect = SE_LUA10; break;
-			default: return; break;
-		}
-
-		if( bUseIcon )
-		{
-			CSingleUserRecipientFilter user( this );
-			user.MakeReliable();
-
-			UserMessageBegin( user, "StatusIconUpdate" );
-				WRITE_BYTE( bIcon );
-				WRITE_FLOAT( flIconDuration );
-			MessageEnd();
-		}
-
-		AddSpeedEffect( sEffect, flEffectDuration, flSpeed, mod );
 	}
 }
 
@@ -3395,48 +3419,7 @@ void CFFPlayer::LuaRemoveEffect( int iEffect )
 	}
 }
 
-//void CFFPlayer::AddLuaSpeedEffect( int iSpeedEffect, float flDuration, float flSpeed )
-//{
-//	bool bIcon = false;
-//
-//	byte icon = 0x0;
-//	int mod = SEM_ACCUMULATIVE;
-//
-//	SpeedEffectType sEffect;
-//	switch( iSpeedEffect )
-//	{
-//		case 0: sEffect = SE_SNIPERRIFLE; mod = SEM_BOOLEAN; break;
-//		case 1: sEffect = SE_ASSAULTCANNON; mod = SEM_BOOLEAN; break;
-//		case 2: sEffect = SE_LEGSHOT; mod |= SEM_HEALABLE; bIcon = true; break;
-//		case 3: sEffect = SE_TRANQ; mod = SEM_BOOLEAN | SEM_HEALABLE; bIcon = true; break;
-//		case 4: sEffect = SE_CALTROP; mod |= SEM_HEALABLE; bIcon = true; break;
-//		case 5: sEffect = SE_LUA1; break;
-//		case 6: sEffect = SE_LUA2; break;
-//		case 7: sEffect = SE_LUA3; break;
-//		case 8: sEffect = SE_LUA4; break;
-//		case 9: sEffect = SE_LUA5; break;
-//		case 10: sEffect = SE_LUA6; break;
-//		case 11: sEffect = SE_LUA7; break;
-//		case 12: sEffect = SE_LUA8; break;
-//		case 13: sEffect = SE_LUA9; break;
-//		case 14: sEffect = SE_LUA10; break;
-//		default: return; break;
-//	}
-//
-//	// Fire an icon for appropriate effects
-//	if( bIcon )
-//	{
-//		CSingleUserRecipientFilter filter( this );
-//		filter.MakeReliable();
-//		UserMessageBegin( filter, "StatusIconUpdate" );
-//			WRITE_BYTE( icon );
-//			WRITE_FLOAT( flDuration );
-//		MessageEnd();
-//	}
-//	
-//	AddSpeedEffect( sEffect, flDuration, flSpeed, mod );
-//}
-//
+
 ////-----------------------------------------------------------------------------
 //// Purpose: So lua can add speed effects
 ////-----------------------------------------------------------------------------
@@ -3495,7 +3478,7 @@ void CFFPlayer::LuaRemoveEffect( int iEffect )
 //	RemoveSpeedEffect( sEffect );
 //}
 
-void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod)
+void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod, int iIcon, float flIconDuration)
 {
 	// find an open slot
 	int i = 0;
@@ -3504,15 +3487,19 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
 
 	if (mod & SEM_BOOLEAN)
+	{
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 		{
 			// we'll overwrite the old one
 			if (m_vSpeedEffects[i].type == type)
 				break;
 		}
+	}
 	else
-		while (m_vSpeedEffects[i].active == true && i != NUM_SPEED_EFFECTS) 
+	{
+		while (m_vSpeedEffects[i].active && (i != NUM_SPEED_EFFECTS))
 			i++;
+	}
 
 	if (i == NUM_SPEED_EFFECTS)
 	{
@@ -3526,6 +3513,17 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	m_vSpeedEffects[i].endTime = gpGlobals->curtime + duration;
 	m_vSpeedEffects[i].speed = speed;
 	m_vSpeedEffects[i].modifiers = mod;
+
+	if( iIcon != -1 )
+	{
+		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+		user.MakeReliable();
+
+		UserMessageBegin( user, "StatusIconUpdate" );
+			WRITE_BYTE( iIcon );
+			WRITE_FLOAT( flIconDuration );
+		MessageEnd();
+	}
 	
 	RecalculateSpeed();
 }
@@ -4375,10 +4373,22 @@ const CFFPlayerClassInfo &CFFPlayer::GetFFClassData() const
 //-----------------------------------------------------------------------------
 // Purpose: Apply the concussion effect on this player
 //-----------------------------------------------------------------------------
-void CFFPlayer::Concuss( float amount, const QAngle *viewjerk )
+void CFFPlayer::Concuss( float flDuration, float flIconDuration, const QAngle *viewjerk )
 {
-	if( amount > 0 )
-		m_flConcTime = gpGlobals->curtime + amount;
+	if( flDuration == -1 )
+		m_flConcTime = flDuration;
+	else
+		m_flConcTime = gpGlobals->curtime + flDuration;
+
+    // Send the status icon here... makes sense.
+	// send the concussion icon to be displayed
+	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "StatusIconUpdate" );
+		WRITE_BYTE( FF_ICON_CONCUSSION );
+		WRITE_FLOAT( flIconDuration );
+	MessageEnd();
 
 	if( viewjerk )
 		ViewPunch( (*viewjerk) * jerkmulti.GetFloat() );
@@ -4811,18 +4821,34 @@ int CFFPlayer::AddHealth(unsigned int amount)
 }
 
 //-----------------------------------------------------------------------------
-int CFFPlayer::AddAmmo(const char* ammo, unsigned int amount)
+// Purpose: Give the player some ammo. LUA, and only LUA, calls this to give
+//			ammo to a player.
+//-----------------------------------------------------------------------------
+int CFFPlayer::AddAmmo( int iAmmoType, int iAmount )
 {
-	int dispensed = 0;
+	int iDispensed = 0;
 
-	if (FStrEq(ammo, "AMMO_GREN1"))
-		dispensed = AddPrimaryGrenades( amount );
-	else if (FStrEq(ammo, "AMMO_GREN2"))
-		dispensed = AddSecondaryGrenades( amount );
-	else
-		dispensed = GiveAmmo( amount, ammo, true );
+	switch( iAmmoType )
+	{
+		case LUA_AMMO_SHELLS:
+		case LUA_AMMO_CELLS:
+		case LUA_AMMO_NAILS:
+		case LUA_AMMO_ROCKETS:
+		case LUA_AMMO_RADIOTAG:
+		case LUA_AMMO_DETPACK:
+			iDispensed = GiveAmmo( iAmount, LookupLuaAmmo( iAmmoType ), true );
+		break;
 
-	return dispensed;
+		case LUA_AMMO_GREN1:
+			iDispensed = AddPrimaryGrenades( iAmount );
+		break;
+
+		case LUA_AMMO_GREN2:
+			iDispensed = AddSecondaryGrenades( iAmount );
+		break;
+	}
+
+	return iDispensed;
 }
 
 //-----------------------------------------------------------------------------
@@ -5327,3 +5353,201 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 		return GetLegacyAbsOrigin(); //return EyePosition(); 
 	}
 };
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert lua ammo type (int) to game ammo type (string)
+//-----------------------------------------------------------------------------
+const char *LookupLuaAmmo( int iAmmoType )
+{
+	switch( iAmmoType )
+	{
+		case LUA_AMMO_SHELLS: return AMMO_SHELLS; break;
+		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
+		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
+		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
+		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
+		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
+		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
+		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
+	}
+
+	AssertMsg( false, "LookupLuaAmmo - invalid ammo type!" );
+
+	return "";
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Run "effects" and "speed effects" through here first before giving 
+//			the player the actual effect.
+// Input  :	iEffect - the effect
+// Input  : szEffectSuffix - the effect suffix, like "conc", or "gas", etc. It
+//			corresponds to a player_on<SUFFIX> function in Lua.
+// Output : Function returns true if LUA allowed us to conc the person. Values
+//			may or may not have been modified.
+//-----------------------------------------------------------------------------
+bool CFFPlayer::LuaRunEffect( int iEffect, float *pflDuration, float *pflIconDuration, float *pflSpeed )
+{
+	// Invalid effect
+	if( ( iEffect < 0 ) || ( iEffect > ( LUA_EF_MAX_FLAG - 1 ) ) )
+		return false;
+
+	float flDuration, flIconDuration, flSpeed;
+	
+	if( pflDuration )
+		flDuration = *pflDuration;
+	if( pflIconDuration )
+		flIconDuration = *pflIconDuration;
+	if( pflSpeed )
+		flSpeed = *pflSpeed;
+
+	// Generate our lua function name...
+	char szLuaFunc[ 64 ], *pszEffectSuffix = 0;
+
+	switch( iEffect )
+	{
+		case LUA_EF_ONFIRE: pszEffectSuffix = "fire"; break;
+		case LUA_EF_CONC: pszEffectSuffix = "conc"; break;
+		case LUA_EF_GAS: pszEffectSuffix = "gas"; break;
+		case LUA_EF_INFECT: pszEffectSuffix = "infect"; break;
+		case LUA_EF_RADIOTAG: pszEffectSuffix = "radiotag"; break;
+		case LUA_EF_HEADSHOT: pszEffectSuffix = "headshot"; break;
+		case LUA_EF_LEGSHOT: pszEffectSuffix = "legshot"; break;
+		case LUA_EF_TRANQ: pszEffectSuffix = "tranq"; break;
+		case LUA_EF_CALTROP: pszEffectSuffix = "caltrop"; break;
+		case LUA_EF_ACSPINUP: pszEffectSuffix = "acspinup"; break;
+		case LUA_EF_SNIPERRIFLE: pszEffectSuffix = "sniperrifle"; break;
+		case LUA_EF_SPEED_LUA1: pszEffectSuffix = "speedlua1"; break;
+		case LUA_EF_SPEED_LUA2: pszEffectSuffix = "speedlua2"; break;
+		case LUA_EF_SPEED_LUA3: pszEffectSuffix = "speedlua3"; break;
+		case LUA_EF_SPEED_LUA4: pszEffectSuffix = "speedlua4"; break;
+		case LUA_EF_SPEED_LUA5: pszEffectSuffix = "speedlua5"; break;
+		case LUA_EF_SPEED_LUA6: pszEffectSuffix = "speedlua6"; break;
+		case LUA_EF_SPEED_LUA7: pszEffectSuffix = "speedlua7"; break;
+		case LUA_EF_SPEED_LUA8: pszEffectSuffix = "speedlua8"; break;
+		case LUA_EF_SPEED_LUA9: pszEffectSuffix = "speedlua9"; break;
+		case LUA_EF_SPEED_LUA10: pszEffectSuffix = "speedlua10"; break;
+	}
+
+	Q_snprintf( szLuaFunc, sizeof( szLuaFunc ), "player_on%s", pszEffectSuffix );
+
+	// Set up the lua vars that get set
+	char szLuaDuration[ 64 ];
+	char szLuaIconDuration[ 64 ];
+	char szLuaSpeed[ 64 ];
+
+	Q_snprintf( szLuaDuration, sizeof( szLuaDuration ), "%s_duration", pszEffectSuffix );
+	Q_snprintf( szLuaIconDuration, sizeof( szLuaIconDuration ), "%s_iconduration", pszEffectSuffix );
+	Q_snprintf( szLuaSpeed, sizeof( szLuaSpeed ), "%s_speed", pszEffectSuffix );
+
+	// Set the vars in lua - duration and icon duration
+	switch( iEffect )
+	{
+		case LUA_EF_ONFIRE:
+		case LUA_EF_CONC:
+		case LUA_EF_GAS:
+		case LUA_EF_INFECT:
+		case LUA_EF_RADIOTAG:
+		case LUA_EF_LEGSHOT:
+		case LUA_EF_TRANQ:
+		case LUA_EF_CALTROP:
+			entsys.SetVar( szLuaDuration, flDuration );
+			entsys.SetVar( szLuaIconDuration, flIconDuration );
+			break;
+	}
+
+	// Set the vars in lua - speed
+	switch( iEffect )
+	{
+		case LUA_EF_LEGSHOT:
+		case LUA_EF_TRANQ:
+		case LUA_EF_CALTROP:
+		case LUA_EF_ACSPINUP:
+		case LUA_EF_SNIPERRIFLE:
+		case LUA_EF_SPEED_LUA1:
+		case LUA_EF_SPEED_LUA2:
+		case LUA_EF_SPEED_LUA3:
+		case LUA_EF_SPEED_LUA4:
+		case LUA_EF_SPEED_LUA5:
+		case LUA_EF_SPEED_LUA6:
+		case LUA_EF_SPEED_LUA7:
+		case LUA_EF_SPEED_LUA8:
+		case LUA_EF_SPEED_LUA9:
+		case LUA_EF_SPEED_LUA10:
+			entsys.SetVar( szLuaSpeed, flSpeed );
+			break;
+	}
+
+	CFFLuaObjectWrapper hObject;	
+	if( entsys.RunPredicates_LUA( NULL, this, szLuaFunc, hObject.GetObject() ) )
+	{
+		// LUA function was found and run.
+
+		// LUA function returned false. This means the player
+		// should not take the effect.
+		if( !hObject.GetBool() )
+			return false;
+		else
+		{
+			// Pick up the vars that could have been set.
+
+			// Get the vars in lua - duration and icon duration
+			switch( iEffect )
+			{
+				case LUA_EF_ONFIRE:
+				case LUA_EF_CONC:
+				case LUA_EF_GAS:
+				case LUA_EF_INFECT:
+				case LUA_EF_RADIOTAG:
+				case LUA_EF_LEGSHOT:
+				case LUA_EF_TRANQ:
+				case LUA_EF_CALTROP:
+					flDuration = entsys.GetFloat( szLuaDuration );
+					flIconDuration = entsys.GetFloat( szLuaIconDuration );
+					break;
+			}
+
+			// Get the vars in lua - speed
+			switch( iEffect )
+			{
+				case LUA_EF_LEGSHOT:
+				case LUA_EF_TRANQ:
+				case LUA_EF_CALTROP:
+				case LUA_EF_ACSPINUP:
+				case LUA_EF_SNIPERRIFLE:
+				case LUA_EF_SPEED_LUA1:
+				case LUA_EF_SPEED_LUA2:
+				case LUA_EF_SPEED_LUA3:
+				case LUA_EF_SPEED_LUA4:
+				case LUA_EF_SPEED_LUA5:
+				case LUA_EF_SPEED_LUA6:
+				case LUA_EF_SPEED_LUA7:
+				case LUA_EF_SPEED_LUA8:
+				case LUA_EF_SPEED_LUA9:
+				case LUA_EF_SPEED_LUA10:
+					flSpeed = entsys.GetFloat( szLuaSpeed );
+					break;
+			}
+
+			Warning( "[LUA EFFECT] duration: %f, iconduration: %f\n", flDuration, flIconDuration );
+
+			if( flDuration < 0 )
+				flDuration = -1;
+			if( flIconDuration < 0 )
+				flIconDuration = -1;
+			if( flSpeed < 0 )
+				flSpeed = -1;
+
+			if( pflDuration )
+				*pflDuration = flDuration;
+			if( pflIconDuration )
+				*pflIconDuration = flIconDuration;
+			if( pflSpeed )
+				*pflSpeed = flSpeed;
+
+			return true;
+		}
+	}
+
+	// Lua function didn't exist so function as normal
+	return true;
+}

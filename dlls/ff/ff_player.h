@@ -367,7 +367,7 @@ public:
 	bool LuaIsEffectActive( int iEffect );
 	void LuaRemoveEffect( int iEffect );
 
-	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0);
+	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0, int iIcon = -1, float flIconDuration = -1);
 	bool IsSpeedEffectSet( SpeedEffectType type );
 	void RemoveSpeedEffect(SpeedEffectType type);
 	int	ClearSpeedEffects(int mod = 0);
@@ -506,7 +506,7 @@ public:
 	float m_flNextClassSpecificSkill;
 
 	CNetworkVar( float, m_flConcTime );
-	void Concuss( float amount, const QAngle *viewjerk = NULL );
+	void Concuss( float flDuration, float flIconDuration, const QAngle *viewjerk = NULL );
 
 	CNetworkVar( int, m_iClassStatus );
 	int GetClassForClient() { return (0x0000000F & m_iClassStatus); }
@@ -531,7 +531,9 @@ public:
 
 	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
 
-	int AddAmmo(const char* ammo, unsigned int amount);
+public:
+	int AddAmmo( int iAmmoType, int iAmount );	
+
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
 
@@ -628,6 +630,12 @@ public:
 
 	// TODO: Possibly network this?
 	float		m_flNextJumpTimeForDouble;
+
+public:
+	// Run "effects" and "speed effects" through here first
+	// before giving the player the actual effect.
+	bool LuaRunEffect( int iEffect, float *pflDuration = NULL, float *pflIconDuration = NULL, float *pflSpeed = NULL );
+
 };
 
 
@@ -642,5 +650,9 @@ inline CFFPlayer *ToFFPlayer( CBaseEntity *pEntity )
 	return static_cast< CFFPlayer* >( pEntity );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Convert lua ammo type (int) to game ammo type (string)
+//-----------------------------------------------------------------------------
+const char *LookupLuaAmmo( int iAmmoType );
 
 #endif	// FF_PLAYER_H
