@@ -32,6 +32,7 @@
 #include "team.h"
 #include "doors.h"
 #include "buttons.h"
+#include "triggers.h"
 #include "ff_utils.h"
 #include "ff_team.h"
 #include "ff_gamerules.h"
