@@ -33,6 +33,7 @@
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client(red) and server(blue) bullet impact point");
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
+ConVar ffdev_snipertracesize("ffdev_snipertracesize", "3", FCVAR_REPLICATED);
 
 // ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
 // ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
@@ -114,8 +115,10 @@ void CFFPlayer::FireBullet(
 	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
 
 	trace_t tr; // main enter bullet trace
+	//UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr);
 
-	UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr);
+	float flSize = ffdev_snipertracesize.GetFloat();
+	UTIL_TraceHull(vecSrc, vecEnd, Vector(-1, -1, -1) * flSize, Vector(1, 1, 1) * flSize, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
 
 	if (tr.fraction == 1.0f)
 		return; // we didn't hit anything, stop tracing shoot
