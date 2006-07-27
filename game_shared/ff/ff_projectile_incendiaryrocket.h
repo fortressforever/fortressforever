@@ -34,11 +34,17 @@ class CFFProjectileIncendiaryRocket : public CFFProjectileBase
 public:
 	DECLARE_CLASS(CFFProjectileIncendiaryRocket, CFFProjectileBase);
 
+#ifdef GAME_DLL
+	DECLARE_DATADESC();
+#endif
+
 public:
 
 	virtual void Precache();
 	static CFFProjectileIncendiaryRocket * CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 	virtual void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType);
+
+	void ArcThink();
 
 #ifdef CLIENT_DLL
 	CFFProjectileIncendiaryRocket() {}
