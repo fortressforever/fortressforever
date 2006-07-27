@@ -793,7 +793,17 @@ ConVar mp_prematch( "mp_prematch",
 			}
 
 			// Now deal the damage
-			pEntity->TakeDamage(adjustedInfo);
+			if (pEntity->IsPlayer())
+			{
+				pEntity->TakeDamage(adjustedInfo);
+			}
+			else
+			{
+				adjustedInfo.ScaleDamageForce(100.0f);
+				pEntity->DispatchTraceAttack(adjustedInfo, vecDirection, &tr);
+				ApplyMultiDamage();
+			}
+			
 
 			// For the moment we'll play blood effects if its a teammate too so its consistant with other weapons
 			// if (pEntity->IsPlayer() && g_pGameRules->FPlayerCanTakeDamage(ToFFPlayer(pEntity), info.GetAttacker())) 
@@ -1020,35 +1030,44 @@ ConVar mp_prematch( "mp_prematch",
 
 bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
-	// Bug #0000178: Grenades and player clipping
-	// Bug #0000718: get stuck on mirv grens
-	// HACKHACK this might break something else
-	if( (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER) &&
-		collisionGroup1 == COLLISION_GROUP_PROJECTILE )
-	{
-		return false;
-	}
-
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
 		swap(collisionGroup0,collisionGroup1);
 	}
-
-	//DevMsg("ShouldCollide: %d %d\n", collisionGroup0, collisionGroup1);
-
-	// Mirv: Don't collide projectiles with weapon objects (eg. ammo bags)
-	if (collisionGroup0 == COLLISION_GROUP_WEAPON && collisionGroup1 == COLLISION_GROUP_PROJECTILE)
-		return false;
-
-	// Mirv: Don't have ammo bags and the like colliding either
-	if (collisionGroup0 == COLLISION_GROUP_WEAPON && collisionGroup1 == COLLISION_GROUP_WEAPON)
-		return false;
 	
 	//Don't stand on COLLISION_GROUP_WEAPON
-	if( (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER) &&
+	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
 		collisionGroup1 == COLLISION_GROUP_WEAPON )
 	{
+		return false;
+	}
+	
+	// Don't get caught on projectiles
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+		collisionGroup1 == COLLISION_GROUP_PROJECTILE)
+	{
+		return false;
+	}
+
+	// Allow projectiles to hit other projectiles and weapons now
+	if ((collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE) &&
+		(collisionGroup1 == COLLISION_GROUP_PROJECTILE))
+	{
+		return true;
+	}
+
+	// Nothing hits the trigger-only stuff unless its a client-side laser
+	if (collisionGroup0 == COLLISION_GROUP_TRIGGERONLY ||
+		collisionGroup1 == COLLISION_GROUP_TRIGGERONLY)
+	{
+#ifdef CLIENT_DLL
+		if (collisionGroup1 == COLLISION_GROUP_LASER)
+		{
+			return true;
+		}
+#endif
+
 		return false;
 	}
 

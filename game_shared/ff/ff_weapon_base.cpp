@@ -138,6 +138,8 @@ CFFWeaponBase::CFFWeaponBase()
 	m_bFiresUnderwater = true; 
 
 	m_flNextBuildKill = 0.0f;
+
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 }
 
 //----------------------------------------------------------------------------

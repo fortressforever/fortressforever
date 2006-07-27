@@ -344,6 +344,9 @@ enum Collision_Group_t
 	COLLISION_GROUP_DISSOLVING,		// Things that are dissolving are in this group
 	COLLISION_GROUP_PUSHAWAY,		// Nonsolid on client and server, pushaway in player code
 
+	COLLISION_GROUP_TRIGGERONLY,	// Stuff that can trigger but not actually be hit
+	COLLISION_GROUP_LASER,			// Can hit even the trigger only stuff
+
 	LAST_SHARED_COLLISION_GROUP
 };
 

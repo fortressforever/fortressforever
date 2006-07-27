@@ -197,7 +197,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 			//}
 
 			trace_t tr;
-			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_LASER, &tr);
 
 			// Backup off the hit plane
 			//endPos = tr.endpos + (tr.plane.normal * 1.0f);
