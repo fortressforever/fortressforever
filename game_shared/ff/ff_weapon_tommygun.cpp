@@ -10,6 +10,8 @@
 // ---------
 //	7/21/2006	Mulchman:
 //		First version
+//  ?/??/????	Mirv:
+//		Reloading logic sorted
 
 
 #include "cbase.h"
@@ -24,6 +26,9 @@
 
 //=============================================================================
 // CFFWeaponTommygun
+//	Because this isn't a "standard" TFC clip weapon, we need to use some of the
+//	original basecombatweapon member functions:
+//		ItemPostFrame(), Reload() and FinishReload()
 //=============================================================================
 
 class CFFWeaponTommygun : public CFFWeaponBaseClip
@@ -39,6 +44,10 @@ public:
 
 	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_TOMMYGUN; }
 	const char *GetTracerType() { return "ACTracer"; }
+
+	virtual void ItemPostFrame() { CBaseCombatWeapon::ItemPostFrame(); }
+	virtual bool Reload() { return CBaseCombatWeapon::Reload(); }
+	virtual void FinishReload() { CBaseCombatWeapon::FinishReload(); }
 
 private:
 
@@ -70,6 +79,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_tommygun);
 //----------------------------------------------------------------------------
 CFFWeaponTommygun::CFFWeaponTommygun() 
 {
+	m_bReloadsSingly = false;
 }
 
 //----------------------------------------------------------------------------

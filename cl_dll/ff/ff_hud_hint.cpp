@@ -71,6 +71,8 @@ CHudHint::CHudHint( const char *pElementName ) : CHudElement( pElementName ), vg
 	m_fActive = true;
 
 	m_flNextHint = m_flDuration = m_flStarted = 0;
+
+	m_pRichText = NULL;
 }
 
 CHudHint::~CHudHint()
@@ -84,12 +86,15 @@ void CHudHint::VidInit( void )
 	pHudHintHelper = this;
 
 	// Set up the rich text box that will contain the hud hint stuff
-	m_pRichText = new RichText(this, "HintText");
-	m_pRichText->SetPos(0, 20);
-	m_pRichText->SetWide(GetWide() - 2);
-	m_pRichText->SetTall(GetTall() - 22);
-	m_pRichText->SetVerticalScrollbar(false);
-	m_pRichText->SetBorder(NULL);
+	if (!m_pRichText)
+	{
+		m_pRichText = new RichText(this, "HintText");
+		m_pRichText->SetPos(0, 20);
+		m_pRichText->SetWide(GetWide() - 2);
+		m_pRichText->SetTall(GetTall() - 22);
+		m_pRichText->SetVerticalScrollbar(false);
+		m_pRichText->SetBorder(NULL);
+	}
 
 	SetPaintBackgroundEnabled(false);
 }
@@ -202,12 +207,17 @@ void CHudHint::Paint()
 	// TODO: Let's not actually do this every loop
 	if (!hint_on.GetBool())
 	{
-		m_pRichText->SetVisible(false);
+		if (m_pRichText->IsVisible())
+			m_pRichText->SetVisible(false);
+
 		return;
 	}
 
+	bool bVisible = false;
+
 	if (hint_on.GetBool() && gpGlobals->curtime > m_flStarted && gpGlobals->curtime < m_flNextHint)
 	{
+		// Make sure we are visible
 		if (!IsVisible())
 			SetVisible(true);
 
@@ -223,14 +233,13 @@ void CHudHint::Paint()
 		surface()->DrawSetTextPos(5, 2); // x,y position
 		surface()->DrawPrintText(m_pText, wcslen(m_pText)); // print text
 
-		// Once again, not every loop.
 		if (m_fActive)
-			m_pRichText->SetVisible(true);
-		else
-			m_pRichText->SetVisible(false);
+			bVisible = true;
 	}
-	else
-		m_pRichText->SetVisible(false);
+
+	// Update the status of the text box displaying the hint
+	if (m_pRichText->IsVisible() != bVisible)
+		m_pRichText->SetVisible(bVisible);
 }
 
 // Useful helper (stuck it in as a template because not sure yet what
