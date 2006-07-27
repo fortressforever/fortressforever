@@ -34,12 +34,6 @@ ConVar ffdev_flame_bbox("ffdev_flame_bbox", "3.0", FCVAR_REPLICATED, "Flame bbox
 #endif
 
 //=============================================================================
-// CFlameJet [mirrored in ff_env_flamejet.cpp]
-//=============================================================================
-
-
-
-//=============================================================================
 // CFFWeaponFlamethrower
 //=============================================================================
 
@@ -201,6 +195,7 @@ void CFFWeaponFlamethrower::Fire()
 bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	EmitFlames(false);
+	WeaponSound(STOP);
 
 	return BaseClass::Holster();
 }
