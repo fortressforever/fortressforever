@@ -618,7 +618,7 @@ namespace FFLib
 
 	CFFInfoScript* GetInfoScriptByName(const char* entityName)
 	{
-		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 
 		while( pEnt != NULL )
 		{
@@ -626,7 +626,22 @@ namespace FFLib
 				return pEnt;
 
 			// Next!
-			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassT( pEnt, CLASS_INFOSCRIPT );
+		}
+
+		return NULL;
+	}
+
+	CFuncFFScript *GetTriggerScriptByName( const char *pszEntityName )
+	{
+		CFuncFFScript *pEntity = ( CFuncFFScript * )gEntList.FindEntityByClassT( NULL, CLASS_TRIGGERSCRIPT );
+
+		while( pEntity )
+		{
+			if( FStrEq( STRING( pEntity->GetEntityName() ), pszEntityName ) )
+				return pEntity;
+
+			pEntity = ( CFuncFFScript * )gEntList.FindEntityByClassT( pEntity, CLASS_TRIGGERSCRIPT );
 		}
 
 		return NULL;
@@ -634,17 +649,10 @@ namespace FFLib
 
 	CFFInfoScript* GetInfoScriptById(int item_id)
 	{
-		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
-
-		while( pEnt != NULL )
-		{
-			if ( pEnt->entindex() == item_id )
-				return pEnt;
-
-			// Next!
-			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
-		}
-
+		CBaseEntity *pEntity = UTIL_EntityByIndex( item_id );
+		if( pEntity && ( pEntity->Classify() == CLASS_INFOSCRIPT ) )
+			return dynamic_cast< CFFInfoScript * >( pEntity );
+		
 		return NULL;
 	}
 
@@ -690,6 +698,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFFInfoScript * >( pEntity );
+	}
+
+	CFuncFFScript *CastToTriggerScript( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( pEntity->Classify() != CLASS_TRIGGERSCRIPT )
+			return NULL;
+
+		return dynamic_cast< CFuncFFScript * >( pEntity );
 	}
 
 	CFFDispenser *CastToDispenser( CBaseEntity *pEntity )
@@ -1437,6 +1456,7 @@ void CFFEntitySystem::FFLibOpen()
 		def("CastToBeam",				&FFLib::CastToBeam),
 		def("CastToPlayer",				&FFLib::CastToPlayer),
 		def("CastToInfoScript",			&FFLib::CastToItemFlag),
+		def("CastToTriggerScript",		&FFLib::CastToTriggerScript),
 		def("CastToGrenade",			&FFLib::CastToGrenade),
 		def("CastToDispenser",			&FFLib::CastToDispenser),
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
@@ -1447,6 +1467,7 @@ void CFFEntitySystem::FFLibOpen()
 		def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
+		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
 		def("GetPlayer",				&FFLib::GetPlayer),
 		def("GetTeam",					&FFLib::GetTeam),
 		def("GetGrenade",				&FFLib::GetGrenade),
