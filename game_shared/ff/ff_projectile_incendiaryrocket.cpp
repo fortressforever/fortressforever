@@ -111,7 +111,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileIncendiaryRocket::ExplodeTouch); // No we're going to explode when we touch something
-		SetThink(ArcThink);
+		SetThink(&CFFProjectileIncendiaryRocket::ArcThink);
 
 		// Next think
 		SetNextThink(gpGlobals->curtime);
