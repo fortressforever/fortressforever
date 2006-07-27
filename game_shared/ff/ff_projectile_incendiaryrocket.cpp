@@ -29,6 +29,12 @@
 LINK_ENTITY_TO_CLASS(incendiaryrocket, CFFProjectileIncendiaryRocket);
 PRECACHE_WEAPON_REGISTER(incendiaryrocket);
 
+#ifdef GAME_DLL
+BEGIN_DATADESC(CFFProjectileIncendiaryRocket)
+DEFINE_THINKFUNC(ArcThink),
+END_DATADESC()
+#endif
+
 //=============================================================================
 // CFFProjectileIncendiaryRocket implementation
 //=============================================================================
@@ -105,7 +111,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 
 		// Set the correct think & touch for the nail
 		SetTouch(&CFFProjectileIncendiaryRocket::ExplodeTouch); // No we're going to explode when we touch something
-		SetThink(NULL);		// no thinking!
+		SetThink(ArcThink);
 
 		// Next think
 		SetNextThink(gpGlobals->curtime);
@@ -154,4 +160,17 @@ CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(cons
 	pRocket->m_DmgRadius = pRocket->m_flDamage * 2.0f;
 
 	return pRocket; 
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Orient the model to follow the arc
+//-----------------------------------------------------------------------------
+void CFFProjectileIncendiaryRocket::ArcThink()
+{
+	QAngle angDir;
+	VectorAngles(GetAbsVelocity(), angDir);
+
+	SetAbsAngles(angDir);
+
+	SetNextThink(gpGlobals->curtime + 0.1f);
 }

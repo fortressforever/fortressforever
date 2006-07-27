@@ -200,7 +200,10 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &tr);
 
 			// Backup off the hit plane
-			endPos = tr.endpos + (tr.plane.normal * 1.0f);
+			//endPos = tr.endpos + (tr.plane.normal * 1.0f);
+			
+			// Backup without using the normal (for trackerid: #0000866)
+			endPos = tr.endpos - vecDir;
 
 			// Bug #0000376: Sniper dot is drawn on sky brushes
 			if (tr.surface.flags & SURF_SKY)

@@ -568,7 +568,13 @@ void C_FFRagdoll::CreateRagdoll()
 			SetCycle( 0.0 );
 
 			Interp_Reset( varMap );
-		}		
+		}
+
+		// Now set the corpse alight if needed
+		if (pPlayer->GetEffectEntity())
+		{
+			IgniteRagdoll(pPlayer);
+		}
 	}
 	else
 	{
