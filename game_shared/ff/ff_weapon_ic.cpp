@@ -89,6 +89,11 @@ void CFFWeaponIC::Fire()
 
 	CFFProjectileIncendiaryRocket::CreateRocket(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
-	// Push player backwards
-	pPlayer->ApplyAbsVelocityImpulse(vForward * -280.0f);
+	// Push player but don't add to upwards force
+	Vector vecImpulse = vForward * -200.0f;
+
+	if (vecImpulse.z > 0)
+		vecImpulse.z = 0;
+
+	pPlayer->ApplyAbsVelocityImpulse(vecImpulse);
 }
