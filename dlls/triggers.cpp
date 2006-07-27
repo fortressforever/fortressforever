@@ -296,14 +296,6 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		{
 			// If the entity sys allowed func returns false then 
 			// bail. If true, run these other checks.
-			/*
-			if( !entsys.RunPredicates( this, pOther, "allowed" ) )
-			{
-				entsys.RunPredicates( this, pOther, "onfailtouch" );
-				return false;
-			}
-			*/
-			//CFFLuaObjectWrapper hAllowed;
 			CFFLuaSC hAllowed( 1, pOther );
 			if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 			{
@@ -324,14 +316,6 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 			{
 				// If the entity sys allowed func returns false then 
 				// bail. If true, run these other checks.
-				/*
-				if( !entsys.RunPredicates( this, pOther, "allowed" ) )
-				{
-					entsys.RunPredicates( this, pOther, "onfailtouch" );
-					return false;
-				}
-				*/
-				//CFFLuaObjectWrapper hAllowed;
 				CFFLuaSC hAllowed( 1, pOther );
 				if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 				{
@@ -385,8 +369,6 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 
 	if (PassesTriggerFilters(pOther) )
 	{
-		Warning( "[CBaseTrigger] StartTouch\n" );
-
 		EHANDLE hOther;
 		hOther = pOther;
 
@@ -434,8 +416,6 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 {
 	if ( IsTouching( pOther ) )
 	{
-		Warning( "[CBaseTrigger] EndTouch\n" );
-
 		EHANDLE hOther;
 		hOther = pOther;
 		m_hTouchingEntities.FindAndRemove( hOther );
@@ -944,21 +924,9 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 
 	m_hActivator = pActivator;
 
-	/*
-	if( /*pActivator->IsPlayer() &&*//* !entsys.RunPredicates( this, pActivator, "allowed" ) )
-		return;
-	*/
-	//CFFLuaObjectWrapper hAllowed;
-	CFFLuaSC hAllowed( 1, pActivator );
-	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
-	{
-		if( !hAllowed.GetBool() )
-			return;
-	}
-
-	/*if( pActivator->IsPlayer() )*/
-	//	entsys.RunPredicates( this, pActivator, "ontrigger" );
-	entsys.RunPredicates_LUA( this, &hAllowed, "ontrigger" );
+	// Run lua trigger event
+	CFFLuaSC hOnTrigger( 1, pActivator );
+	entsys.RunPredicates_LUA( this, &hOnTrigger, "ontrigger" );
 
 	m_OnTrigger.FireOutput(m_hActivator, this);
 
@@ -4188,18 +4156,19 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 	if ( pOther->GetMoveType() != MOVETYPE_VPHYSICS && !pOther->IsPlayer() )
 		return false;
 
+	// Removing this for now...  what is a CBaseVPhysicsTrigger
+	// anyway and when is it used? Also, we never fire a
+	// ontouch/ontrigger with anything but a CBaseTrigger so 
+	// CBaseVPhysicsTrigger should be set up fully and not half
+	// assed like it currently is.
 	/*
-	// Test if the entity system (lua) allows this trigger to happen
-	if( /*pOther->IsPlayer() &&*//* !entsys.RunPredicates( this, pOther, "allowed" ) )
-		return false;
-	*/
-	//CFFLuaObjectWrapper hAllowed;
 	CFFLuaSC hAllowed( 1, pOther );
 	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 			return false;
 	}
+	*/
 
 	// First test spawn flag filters
 	if ( HasSpawnFlags(SF_TRIGGER_ALLOW_ALL) ||
