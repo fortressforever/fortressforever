@@ -134,11 +134,10 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	SetReturned();
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
 	//CFFLuaObjectWrapper hDropAtSpawn;
 	CFFLuaSC hDropAtSpawn;
@@ -175,11 +174,10 @@ void CFFInfoScript::Spawn( void )
 		m_vecOffset.GetForModify() = hAttachOffset.GetVector();	
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 	SetModel( FLAG_MODEL );
 
 	SetBlocksLOS( false );

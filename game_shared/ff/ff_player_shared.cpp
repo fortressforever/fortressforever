@@ -115,7 +115,7 @@ void CFFPlayer::FireBullet(
 
 	trace_t tr; // main enter bullet trace
 
-	UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, /*COLLISION_GROUP_NONE */ COLLISION_GROUP_PROJECTILE, &tr);	// |-- Mirv: Count bullets as projectiles so they don't hit weapon bags
+	UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr);
 
 	if (tr.fraction == 1.0f)
 		return; // we didn't hit anything, stop tracing shoot
@@ -523,8 +523,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 	Vector vecDir, vecEnd;
 
-	// Count bullets as projectiles so that they don't hit weapon bags
-	CTraceFilterSkipTwoEntities traceFilter(this, info.m_pAdditionalIgnoreEnt, /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE);
+	CTraceFilterSkipTwoEntities traceFilter(this, info.m_pAdditionalIgnoreEnt, COLLISION_GROUP_NONE);
 
 	// Did bullet start underwater?
 	bool bStartedInWater = (enginetrace->GetPointContents(info.m_vecSrc) & (CONTENTS_WATER|CONTENTS_SLIME)) != 0;

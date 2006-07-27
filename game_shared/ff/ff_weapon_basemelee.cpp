@@ -104,7 +104,7 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 	//Apply damage to a hit target
 	if (pHitEntity != NULL) 
 	{
-		if (pHitEntity->IsPlayer()) 
+		if (pHitEntity->m_takedamage != DAMAGE_NO) 
 		{
 			Vector hitDirection;
 			pPlayer->EyeVectors(&hitDirection, NULL, NULL);
@@ -113,6 +113,7 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 			CFFWeaponInfo wpndata = GetFFWpnData();
 			CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
+			info.SetDamagePosition(traceHit.endpos);
 
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
 			ApplyMultiDamage();

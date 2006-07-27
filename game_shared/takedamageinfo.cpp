@@ -267,12 +267,8 @@ void CalculateBulletDamageForce( CTakeDamageInfo *info, int iBulletType, const V
 	Vector vecForce = vecBulletDir;
 	VectorNormalize( vecForce );
 	vecForce *= GetAmmoDef()->DamageForce( iBulletType );
-	vecForce *= phys_pushscale.GetFloat();
+	vecForce *= 10.0f * phys_pushscale.GetFloat();	// |-- Mirv: Keep us consistent with hl2 & other mods
 
-	// --> Mirv: Cube scale, reduce total a tenth
-	vecForce *= flScale * flScale * flScale;
-	vecForce *= 0.1f;
-	// <-- Mirv:
 	info->SetDamageForce( vecForce );
 }
 

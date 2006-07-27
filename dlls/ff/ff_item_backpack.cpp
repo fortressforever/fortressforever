@@ -71,11 +71,10 @@ void CFFItemBackpack::Spawn()
 	Precache();
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 
@@ -141,11 +140,10 @@ bool CFFItemBackpack::CreateItemVPhysicsObject()
 	SetMoveType(MOVETYPE_NONE);
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// Projectiles won't collide with COLLISION_GROUP_WEAPON
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
 	// If it's not physical, drop it to the floor
 	if (UTIL_DropToFloor(this, MASK_SOLID) == 0)
