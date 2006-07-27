@@ -168,7 +168,7 @@ void CFFDetpack::GoLive( void )
 
 	SetNextThink( flCurTime + m_flThinkTime );
 
-	DevMsg( "[Detpack] Next think in: %f seconds\n", flCurTime + m_flThinkTime );
+	//DevMsg( "[Detpack] Next think in: %f seconds\n", flCurTime + m_flThinkTime );
 }
 
 /**
@@ -230,11 +230,11 @@ void CFFDetpack::OnObjectThink( void )
 
 	// First time we come here it will be 5 seconds before we need 
 	// to blow up
-	DevMsg( "[Detpack] In think function!\n" );
+	//DevMsg( "[Detpack] In think function!\n" );
 
 	if( !m_bFiveSeconds )
 	{
-		DevMsg( "[Detpack] Setting 5 second timer\n" );
+		//DevMsg( "[Detpack] Setting 5 second timer\n" );
 		
 		// Play the 5 second to go sound (whine up) whatever.
 		EmitSound( m_ppszSounds[ 2 ] );		
@@ -245,7 +245,7 @@ void CFFDetpack::OnObjectThink( void )
 	}
 	else
 	{
-		DevMsg( "[Detpack] Detonating\n" );
+		//DevMsg( "[Detpack] Detonating\n" );
 
 		// Tell player to stop timer (in case the detpack took emp damage)
 		SendStopTimerMessage();
