@@ -16,6 +16,9 @@
 
 #include <vector>
 
+#undef MINMAX_H
+#include "minmax.h"	
+
 //----------------------------------------------------------------------------
 // forward declarations
 struct lua_State;
