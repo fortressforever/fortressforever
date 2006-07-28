@@ -3135,30 +3135,9 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 			}
 			break;
 			
-			case LUA_EF_LEGSHOT:
-			{				
-				int mod = SEM_BOOLEAN;
-				int iIcon = FF_ICON_LEGSHOT;
-				AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
-			}
-			break;
-
-			case LUA_EF_TRANQ:
-			{
-				int mod = SEM_BOOLEAN | SEM_HEALABLE;
-				int iIcon = FF_ICON_TRANQ;
-				AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
-			}
-			break;
-
-			case LUA_EF_CALTROP:
-			{
-				int mod = SEM_ACCUMULATIVE | SEM_HEALABLE;
-				int iIcon = FF_ICON_CALTROP;
-				AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, mod, iIcon, flIconDuration );
-			}
-			break;
-
+			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_ICON_LEGSHOT, flIconDuration ); break;
+			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_ICON_TRANQ, flIconDuration ); break;
+			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_ICON_CALTROP, flIconDuration ); break;
 			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN );  break;
 			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN ); break;
 			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
