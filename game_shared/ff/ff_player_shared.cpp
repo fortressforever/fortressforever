@@ -191,15 +191,7 @@ void CFFPlayer::FireBullet(
 				// If they're not a teammate/ally then do the leg shot speed effect
 				if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
 				{
-					player->AddSpeedEffect(SE_LEGSHOT, 999, 0.9f - flSniperRifleCharge / 14.0f, SEM_ACCUMULATIVE|SEM_HEALABLE);
-
-					// send them the status icon
-					CSingleUserRecipientFilter user((CBasePlayer *) player);
-					user.MakeReliable();
-					UserMessageBegin(user, "StatusIconUpdate");
-						WRITE_BYTE(FF_ICON_CALTROP);
-						WRITE_FLOAT(15.0);
-					MessageEnd();
+					player->AddSpeedEffect(SE_LEGSHOT, 999, 0.9f - flSniperRifleCharge / 14.0f, SEM_ACCUMULATIVE|SEM_HEALABLE, FF_ICON_LEGSHOT, 15.0f );
 				}
 #endif
 			}			

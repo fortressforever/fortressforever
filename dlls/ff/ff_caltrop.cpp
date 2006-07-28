@@ -267,8 +267,9 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 			SetNextThink( gpGlobals->curtime );
 
 			// make the player walk slow
-			pPlayer->AddSpeedEffect(SE_CALTROP, 15.0, 0.8f, SEM_ACCUMULATIVE|SEM_HEALABLE);
+			pPlayer->AddSpeedEffect(SE_CALTROP, 15.0, 0.8f, SEM_ACCUMULATIVE|SEM_HEALABLE, FF_ICON_CALTROP, 15.0f);
 
+			/*
 			// send them the status icon
 			DevMsg("[Grenade Debug] Sending status icon\n");
 			CSingleUserRecipientFilter user( (CBasePlayer *)pPlayer );
@@ -277,6 +278,7 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 			WRITE_BYTE(FF_ICON_CALTROP);
 			WRITE_FLOAT(15.0);
 			MessageEnd();
+			*/
 		}		
 	}
 }

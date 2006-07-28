@@ -130,16 +130,7 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
 				// make the player walk slow
-				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE);
-
-				// send them the status icon
-				DevMsg("[Tranq Debug] Sending status icon\n");
-				CSingleUserRecipientFilter user((CBasePlayer *) pPlayer);
-				user.MakeReliable();
-				UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE(FF_ICON_TRANQ);
-				WRITE_FLOAT(15.0);
-				MessageEnd();
+				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_ICON_TRANQ, 15.0f );
 			}
 		}
 #endif
