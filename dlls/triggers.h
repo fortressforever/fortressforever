@@ -158,14 +158,15 @@ public:
 	virtual bool	IsInactive( void ) const	{ return m_iGoalState == GS_INACTIVE; }
 	virtual bool	IsRemoved( void ) const		{ return m_iGoalState == GS_REMOVED; }
 
-	virtual void	LuaRestore( void )			{ SetInactive(); Enable(); }
+	virtual void	LuaRestore( void )			{ SetRestored(); SetInactive(); Enable(); }
 	virtual void	LuaRemove( void )			{ SetRemoved(); Disable(); }
 
 	virtual Class_T Classify( void )			{ return CLASS_TRIGGERSCRIPT; }
 
-	virtual void	SetActive( void )			{ m_iGoalState = GS_ACTIVE; }
-	virtual void	SetInactive( void )			{ m_iGoalState = GS_INACTIVE; }
-	virtual void	SetRemoved( void )			{ m_iGoalState = GS_REMOVED; }
+	virtual void	SetActive( void );
+	virtual void	SetInactive( void );
+	virtual void	SetRemoved( void );
+	virtual void	SetRestored( void );
 
 protected:
 	int	m_iGoalState;

@@ -959,6 +959,48 @@ void CTriggerMultiple::MultiWaitOver( void )
 // ##################################################################################
 LINK_ENTITY_TO_CLASS( trigger_ff_script, CFuncFFScript );
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFuncFFScript::SetActive( void )
+{
+	m_iGoalState = GS_ACTIVE;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onactive" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFuncFFScript::SetInactive( void )
+{
+	m_iGoalState = GS_INACTIVE;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "oninactive" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFuncFFScript::SetRemoved( void )
+{
+	m_iGoalState = GS_REMOVED;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onremoved" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFuncFFScript::SetRestored( void )
+{
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onrestored" );
+}
+
 // ##################################################################################
 //	>> TriggerOnce
 // ##################################################################################
