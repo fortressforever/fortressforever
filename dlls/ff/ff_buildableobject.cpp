@@ -55,7 +55,79 @@
 
 extern short	g_sModelIndexFireball;
 
-//ConVar detpack_push( "ffdev_detpack_push", "3000", FCVAR_NONE, "Detpack push value as a float" );
+//=============================================================================
+//
+//	class CFFBuildableFlickerer
+//
+//=============================================================================
+LINK_ENTITY_TO_CLASS( ff_buildable_flickerer, CFFBuildableFlickerer );
+PRECACHE_REGISTER( ff_buildable_flickerer );
+
+BEGIN_DATADESC( CFFBuildableFlickerer )
+	DEFINE_THINKFUNC( OnObjectThink ),
+END_DATADESC()
+
+static ConVar flicker_time( "ffdev_flicker_time", "0.3", FCVAR_NONE );
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn a flickerer
+//-----------------------------------------------------------------------------
+void CFFBuildableFlickerer::Spawn( void )
+{
+	m_flFlicker = gpGlobals->curtime;
+
+	SetThink( &CFFBuildableFlickerer::OnObjectThink );
+	SetNextThink( gpGlobals->curtime + 0.1f );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if it's time to un-flicker
+//-----------------------------------------------------------------------------
+void CFFBuildableFlickerer::OnObjectThink( void )
+{
+	// If a certain time period has gone by
+	// since we last flickered we need to unflicker
+
+	if( m_pBuildable )
+	{
+		// See if it's time to un-flicker
+		if( ( ( m_flFlicker + flicker_time.GetFloat() ) < gpGlobals->curtime ) && ( m_pBuildable->GetRenderMode() != kRenderNormal ) )
+		{
+			m_pBuildable->SetRenderMode( kRenderNormal );
+		}
+
+		// Think again soon!
+		SetThink( &CFFBuildableFlickerer::OnObjectThink );
+		SetNextThink( gpGlobals->curtime + 0.1f );
+	}
+	else
+	{
+		UTIL_Remove( this );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Flicker a buildable to indicate it's taking damage
+//-----------------------------------------------------------------------------
+void CFFBuildableFlickerer::Flicker( void )
+{
+	// When flicker is called the buildable is taking damage
+
+	if( m_pBuildable )
+	{
+		// Put us in a flickered "state"
+		if( m_pBuildable->GetRenderMode() == kRenderNormal )
+		{
+			m_pBuildable->SetRenderMode( kRenderTransAlpha );
+			m_pBuildable->SetRenderColorA( ( byte )110 );
+		}
+
+		// Note the time we flickered
+		m_flFlicker = gpGlobals->curtime;
+	}
+	else
+		UTIL_Remove( this );
+}
 
 //=============================================================================
 //
@@ -145,6 +217,9 @@ CFFBuildableObject::CFFBuildableObject( void )
 	m_bHasSounds = false;
 	m_bTranslucent = true; // by default
 	m_bUsePhysics = false;
+
+	// Set to null
+	m_pFlickerer = NULL;
 }
 
 /**
@@ -409,6 +484,13 @@ void CFFBuildableObject::OnObjectThink( void )
 */
 void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 {
+	// Remove the flickerer
+	if( m_pFlickerer )
+	{
+		UTIL_Remove( m_pFlickerer );
+		m_pFlickerer = NULL;
+	}
+
 	// Can't kill detpacks
 	if( Classify() != CLASS_DETPACK )
 	{
@@ -641,6 +723,9 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		return 0;
 	}
 
+	// Lets flicker
+	if( m_pFlickerer )
+		m_pFlickerer->Flicker();
 
 	// Sentry gun seems to take about 110% of damage, going to assume its the same
 	// for all others for now -mirv

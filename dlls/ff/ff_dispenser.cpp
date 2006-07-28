@@ -140,9 +140,6 @@ void CFFDispenser::Spawn( void )
 	// Call baseclass spawn stuff
 	CFFBuildableObject::Spawn();
 
-	// Create door blocker
-	//m_hDoorBlocker = CFFDispenserDoorBlocker::Create( GetAbsOrigin(), GetAbsAngles(), this );
-
 	UpdateAmmoPercentage();
 }
 
@@ -183,6 +180,19 @@ void CFFDispenser::GoLive( void )
 		int iArmor = min( min( 40, pOwner->GetArmor() ), NeedsArmor() );
 		AddAmmo( iArmor, 0, 0, 0, 0, 0 );
 		pOwner->RemoveArmor( iArmor );
+	}
+
+	// Create our flickerer
+	m_pFlickerer = ( CFFBuildableFlickerer * )CreateEntityByName( "ff_buildable_flickerer" );
+	if( !m_pFlickerer )
+	{
+		Warning( "[Dispenser] Failed to create flickerer!\n" );
+		m_pFlickerer = NULL;
+	}
+	else
+	{		
+		m_pFlickerer->SetBuildable( this );
+		m_pFlickerer->Spawn();
 	}
 
 	m_flSabotageTime = 0;
