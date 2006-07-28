@@ -20,13 +20,7 @@
 //----------------------------------------------------------------------------
 // includes
 #include "cbase.h"
-
-#undef MINMAX_H
-
 #include "ff_entity_system.h"
-
-#undef MINMAX_H
-#include "minmax.h"	
 
 // Filesystem stuff
 #include "filesystem.h"
@@ -46,6 +40,8 @@
 #include "beam_shared.h"
 #include "ff_luacontext.h"
 
+#undef MINMAX_H
+
 // Lua includes
 extern "C"
 {
@@ -58,7 +54,6 @@ extern "C"
 #include "luabind/object.hpp"
 #include "luabind/iterator_policy.hpp"
 
-#undef MINMAX_H
 #include "minmax.h"	
 
 // memdbgon must be the last include file in a .cpp file!!!
