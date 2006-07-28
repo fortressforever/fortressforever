@@ -1442,7 +1442,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsInactive",			&CFuncFFScript::IsInactive)
 			.def("IsRemoved",			&CFuncFFScript::IsRemoved)
 			.def("Remove",				&CFuncFFScript::LuaRemove)
-			.def("Restore",				&CFuncFFScript::LuaRestore),
+			.def("Restore",				&CFuncFFScript::LuaRestore)
+			.def("IsTouching",			&CFuncFFScript::IsTouching),
 
 		// CBeam
 		class_<CBeam, CBaseEntity>("Beam")
