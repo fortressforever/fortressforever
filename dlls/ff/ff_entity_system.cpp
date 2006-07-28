@@ -43,8 +43,6 @@
 #include "beam_shared.h"
 #include "ff_luacontext.h"
 
-#undef MINMAX_H
-
 // Lua includes
 extern "C"
 {
@@ -53,11 +51,12 @@ extern "C"
 	#include "lauxlib.h"
 }
 
+#undef MINMAX_H
+#include "minmax.h"	
+
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
 #include "luabind/iterator_policy.hpp"
-
-#include "minmax.h"	
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
