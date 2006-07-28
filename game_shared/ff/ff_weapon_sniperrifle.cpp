@@ -283,16 +283,16 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 		return drawn;
 	}
 
-//-----------------------------------------------------------------------------
-// Purpose: Setup our sprite reference
-//-----------------------------------------------------------------------------
-void CFFWeaponLaserDot::OnDataChanged(DataUpdateType_t updateType) 
-{
-	if (updateType == DATA_UPDATE_CREATED) 
+	//-----------------------------------------------------------------------------
+	// Purpose: Setup our sprite reference
+	//-----------------------------------------------------------------------------
+	void CFFWeaponLaserDot::OnDataChanged(DataUpdateType_t updateType) 
 	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		if (updateType == DATA_UPDATE_CREATED) 
+		{
+			SetNextClientThink( CLIENT_THINK_ALWAYS );
+		}
 	}
-}
 #endif
 
 //=============================================================================
@@ -324,6 +324,10 @@ public:
 	virtual void ItemPostFrame();
 	virtual void ItemBusyFrame();
 
+#ifdef CLIENT_DLL
+	virtual float GetFOV();
+#endif
+
 	void UpdateLaserPosition();
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SNIPERRIFLE; }
@@ -342,6 +346,11 @@ private:
 #endif
 
 	float m_flFireStartTime;
+
+#ifdef CLIENT_DLL
+	float m_flZoomTime;
+	float m_flNextZoomTime;
+#endif
 };
 
 //=============================================================================
@@ -368,6 +377,10 @@ CFFWeaponSniperRifle::CFFWeaponSniperRifle()
 	m_bZoomed = false;
 	m_bInFire = false;
 	m_flFireStartTime = 0.0f;
+
+#ifdef CLIENT_DLL
+	m_flNextZoomTime = m_flZoomTime = 0;
+#endif
 }
 
 CFFWeaponSniperRifle::~CFFWeaponSniperRifle() 
@@ -487,43 +500,33 @@ void CFFWeaponSniperRifle::Fire()
 	WeaponSound(SINGLE);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//			TODO: Really need to fix this!!!!
+//-----------------------------------------------------------------------------
 void CFFWeaponSniperRifle::ToggleZoom() 
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-
-	if (pPlayer == NULL) 
+#ifdef CLIENT_DLL
+	if (m_flNextZoomTime > gpGlobals->curtime)
 		return;
 
-	// Bug #0000180: Sniper rifle scope sound doesn't play
-	if (m_bZoomed) 
-	{
-#ifdef GAME_DLL
-		pPlayer->SetFOV(this, 0, 0.2f);
-#endif
+	m_flNextZoomTime = gpGlobals->curtime + 0.2f;
+	m_flZoomTime = gpGlobals->tickcount * gpGlobals->interval_per_tick;
 
-		m_bZoomed = false;
-	}
-	else
-	{
-#ifdef GAME_DLL
-		pPlayer->SetFOV(this, 20, 0.1f);
-#endif
+	m_bZoomed = !m_bZoomed;
+	
+	C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		m_bZoomed = true;
+	if (pPlayer)
+	{
+		CSingleUserRecipientFilter filter(pPlayer);
+		EmitSound(filter, pPlayer->entindex(), m_bZoomed ? "SniperRifle.zoom_in" : "SniperRifle.zoom_out");
 	}
 
-	// Mirv: Play a sound depending on what we are now.
-	//		 This should stop it getting out of sync
-
-
-	// Bug #0000737: sniper rifle zoom in/out sound
-	CSingleUserRecipientFilter filter( pPlayer );
-
-	if (pPlayer->GetFOV() > 40)
-		EmitSound( filter, pPlayer->entindex(), "SniperRifle.zoom_in" );
-	else
-		EmitSound( filter, pPlayer->entindex(), "SniperRifle.zoom_out" );
-
+	// Set the fov cvar (which we ignore on the client) so that the server is up
+	// to date. Not the best way of doing it REALLY
+	engine->ClientCmd(m_bZoomed ? "fov 20\n" : "fov 0\n");
+#endif
 }
 
 
@@ -640,7 +643,7 @@ void CFFWeaponSniperRifle::CheckZoomToggle()
 	
 	if (pPlayer->m_afButtonPressed & IN_ATTACK2) 
 	{
-		DevMsg("[sniper rifle] Toggling Zoom!\n");
+		//DevMsg("[sniper rifle] Toggling Zoom!\n");
 		ToggleZoom();
 	}
 }
@@ -725,6 +728,50 @@ void CFFWeaponSniperRifle::UpdateLaserPosition()
 	}
 #endif
 }
+
+#ifdef CLIENT_DLL
+
+extern ConVar default_fov;
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the weapon's fov
+//-----------------------------------------------------------------------------
+float CFFWeaponSniperRifle::GetFOV()
+{
+	C_FFPlayer *pPlayer = GetPlayerOwner();
+
+	if (!pPlayer)
+	{
+		return NULL;
+	}
+
+	float deltaTime = (float) (gpGlobals->tickcount * gpGlobals->interval_per_tick - m_flZoomTime) * 2.0f;
+
+	if (deltaTime < 1.0f)
+	{
+		// Random negative business
+		if (deltaTime < 0)
+		{
+			return (m_bZoomed ? -1 : 20.0f);
+		}
+
+		float flFOV;
+
+		if (m_bZoomed)
+		{
+			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, default_fov.GetFloat(), 20.0f);
+		}
+		else
+		{
+			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, 20.0f, default_fov.GetFloat());
+		}
+
+		return flFOV;
+	}
+
+	return (m_bZoomed ? 20.0f : -1);
+}
+#endif
 
 //=============================================================================
 // CFFWeaponRadioTagRifle

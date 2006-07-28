@@ -1367,3 +1367,24 @@ bool C_FFPlayer::Weapon_Switch(CBaseCombatWeapon *pWeapon, int viewmodelindex /*
 
 	return false;
 }
+
+extern ConVar default_fov;
+
+//-----------------------------------------------------------------------------
+// Purpose: Disable FOV and use weapon-specific stuff
+//-----------------------------------------------------------------------------
+float C_FFPlayer::GetFOV()
+{
+	C_FFWeaponBase *pWeapon = GetActiveFFWeapon();
+
+	
+	if (pWeapon)
+	{
+		float flFOV = pWeapon->GetFOV();
+
+		if (flFOV > 0)
+			return pWeapon->GetFOV();
+	}
+
+	return default_fov.GetFloat();
+}
