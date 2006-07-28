@@ -25,9 +25,6 @@
 // Filesystem stuff
 #include "filesystem.h"
 
-#undef MINMAX_H
-#include "minmax.h"
-
 // Entity stuff
 #include "ff_player.h"
 #include "ff_item_flag.h"
@@ -50,9 +47,6 @@ extern "C"
 	#include "lualib.h"
 	#include "lauxlib.h"
 }
-
-#undef MINMAX_H
-#include "minmax.h"	
 
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
