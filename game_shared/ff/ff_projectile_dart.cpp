@@ -115,7 +115,13 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 		CTakeDamageInfo	dmgInfo(this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB);
 		CalculateMeleeDamageForce(&dmgInfo, vecNormalizedVel, tr.endpos, 0.7f);
 		dmgInfo.SetDamagePosition(tr.endpos);
-		//dmgInfo.SetDamageForce(Vector(0, 0, 0)); // nerf the force this applies.. UNDONE: why? if this is needed then only nerf against player
+
+		// Damage force is nerf'd against player
+		if (pOther->IsPlayer())
+		{
+			dmgInfo.ScaleDamageForce(0.0f);
+		}
+
 		pOther->DispatchTraceAttack(dmgInfo, vecNormalizedVel, &tr);
 		
 		
