@@ -156,6 +156,9 @@ public:
 	// Default primary attack for non-clip weapons
 	virtual void		PrimaryAttack();
 
+	// Should override the fov
+	virtual float		GetFOV() { return -1; }
+
 	const char			*GetWorldModel( void ) const;
 	int					GetWorldModelIndex( void );
 private:

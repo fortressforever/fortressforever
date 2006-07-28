@@ -247,6 +247,8 @@ public:
 
 	float		m_flNextJumpTimeForDouble;
 
+	virtual		float GetFOV();
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };
