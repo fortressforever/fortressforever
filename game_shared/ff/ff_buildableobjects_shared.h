@@ -212,6 +212,11 @@ protected:
 
 };
 
+// Forward declaration
+#ifdef GAME_DLL
+class CFFBuildableFlickerer;
+#endif
+
 //=============================================================================
 //
 //	class CFFBuildableObject / C_FFBuildableObject
@@ -327,6 +332,9 @@ protected:
 
 	virtual void SendStatsToBot() {};
 protected:
+
+	// Flickerer - flickers to indicate us taking damage
+	CFFBuildableFlickerer *m_pFlickerer;
 
 	// Mirv: Store in advance the ground position
 	QAngle m_angGroundAngles;
@@ -748,7 +756,30 @@ public:
 	QAngle	m_angAimBase;
 	QAngle	m_angAiming;
 #endif
-
 };
+
+#ifdef GAME_DLL
+//=============================================================================
+//
+//	class CFFBuildableFlickerer
+//
+//=============================================================================
+class CFFBuildableFlickerer : public CBaseAnimating
+{
+	DECLARE_CLASS( CFFBuildableFlickerer, CBaseAnimating );
+	DECLARE_DATADESC();
+
+public:
+	virtual void	Spawn( void );
+
+	void			OnObjectThink( void );
+	void			SetBuildable( CFFBuildableObject *pBuildable ) { m_pBuildable = pBuildable; }
+	void			Flicker( void );
+
+protected:
+	CFFBuildableObject *m_pBuildable;
+	float				m_flFlicker;
+};
+#endif // GAME_DLL
 
 #endif // FF_BUILDABLEOBJECTS_SHARED_H

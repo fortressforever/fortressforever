@@ -245,6 +245,19 @@ void CFFSentryGun::GoLive( void )
 	if( pOwner ) 
 		pOwner->RemoveAmmo( 130, AMMO_CELLS );
 
+	// Create our flickerer
+	m_pFlickerer = ( CFFBuildableFlickerer * )CreateEntityByName( "ff_buildable_flickerer" );
+	if( !m_pFlickerer )
+	{
+		Warning( "[Sentrygun] Failed to create flickerer!\n" );
+		m_pFlickerer = NULL;
+	}
+	else
+	{		
+		m_pFlickerer->SetBuildable( this );
+		m_pFlickerer->Spawn();
+	}
+
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bShootingTeammates = false;

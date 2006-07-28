@@ -22,8 +22,11 @@
 #include "ff_buildableobjects_shared.h"
 
 #ifdef GAME_DLL
-#include "omnibot_interface.h"
+	#include "omnibot_interface.h"	
 #endif
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float flBuildDist, float flRaiseVal) 
 {
