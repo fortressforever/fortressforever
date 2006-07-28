@@ -14,6 +14,8 @@
 #define FF_ENTITY_SYSTEM_H
 #pragma once
 
+#undef MINMAX_H
+
 #include <vector>
 
 #undef MINMAX_H
