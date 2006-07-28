@@ -12,11 +12,11 @@
 #pragma once
 #endif
 
-#ifndef min
-#define min(a,b)  (((a) < (b)) ? (a) : (b))
+#ifndef valve_min
+#define valve_min(a,b)  (((a) < (b)) ? (a) : (b))
 #endif
-#ifndef max
-#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#ifndef valve_max
+#define valve_max(a,b)  (((a) > (b)) ? (a) : (b))
 #endif
 
 #endif // MINMAX_H
