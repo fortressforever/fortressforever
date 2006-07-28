@@ -706,8 +706,7 @@ ConVar mp_prematch( "mp_prematch",
 				}
 			}
 
-			// Bugfix for #0000598: Backpacks blocking grenade damage
-			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE, &tr);
+			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
 #ifdef GAME_DLL
 			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, true, 5.0f);
@@ -1047,13 +1046,6 @@ bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		collisionGroup1 == COLLISION_GROUP_PROJECTILE)
 	{
 		return false;
-	}
-
-	// Allow projectiles to hit other projectiles and weapons now
-	if ((collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE) &&
-		(collisionGroup1 == COLLISION_GROUP_PROJECTILE))
-	{
-		return true;
 	}
 
 	// Nothing hits the trigger-only stuff unless its a client-side laser

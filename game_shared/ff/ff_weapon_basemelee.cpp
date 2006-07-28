@@ -113,6 +113,12 @@ void CFFWeaponMeleeBase::Hit(trace_t &traceHit, Activity nHitActivity)
 			CFFWeaponInfo wpndata = GetFFWpnData();
 			CTakeDamageInfo info(GetOwner(), GetOwner(), wpndata.m_iDamage, DMG_CLUB);
 			info.SetDamageForce(hitDirection * MELEE_IMPACT_FORCE);
+
+			if (!pHitEntity->IsPlayer())
+			{
+				info.ScaleDamageForce(10.0f);
+			}
+
 			info.SetDamagePosition(traceHit.endpos);
 
 			pHitEntity->DispatchTraceAttack(info, hitDirection, &traceHit); 
