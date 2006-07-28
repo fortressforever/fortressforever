@@ -290,6 +290,528 @@ public:
 	int green;
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: Parse collection filter flags
+//-----------------------------------------------------------------------------
+bool CollectionFilterParseFlags( const luabind::adl::object& table, bool *pbFlags )
+{
+	if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( table ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			if( luabind::type( val ) == LUA_TNUMBER )
+			{
+				// Set to out of bounds in case the cast fails
+				int iIndex = -1;
+
+				try
+				{
+					iIndex = luabind::object_cast< int >( val );
+				}
+				catch( ... )
+				{
+				}
+
+				// Make sure within bounds
+				if( ( iIndex >= 0 ) && ( iIndex < CF_MAX_FLAG ) )
+					pbFlags[ iIndex ] = true;
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter_Players( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	if( !pEntity->IsPlayer() )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter_PlayerClass( CBaseEntity *pEntity, int iClassSlot )
+{
+	if( pEntity && pEntity->IsPlayer() )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+		if( pPlayer )
+			return pPlayer->GetClassSlot() == iClassSlot;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter_Team( CBaseEntity *pEntity )
+{
+	if( pEntity )
+	{
+		if( ( pEntity->GetTeamNumber() >= TEAM_SPECTATOR ) && ( pEntity->GetTeamNumber() <= TEAM_GREEN ) )
+			return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter_TeamNum( CBaseEntity *pEntity, int iTeamNum )
+{
+	if( pEntity )
+		return pEntity->GetTeamNumber() == iTeamNum;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Check an entity against some collection filter flags
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags, const Vector& vecTraceOrigin )
+{
+	if( pbFlags[ CF_PLAYERS ] )
+	{
+		if( !PassesCollectionFilter_Players( pEntity ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_SCOUT ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_SCOUT ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_SNIPER ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_SNIPER ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_SOLDIER ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_SOLDIER ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_DEMOMAN ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_DEMOMAN ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_MEDIC ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_MEDIC ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_HWGUY ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_HWGUY ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_PYRO ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_PYRO ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_SPY ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_SPY ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_ENGY ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_ENGINEER ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PLAYER_CIVILIAN ] )
+	{
+		if( !PassesCollectionFilter_PlayerClass( pEntity, CLASS_CIVILIAN ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAMS ] )
+	{
+		if( !PassesCollectionFilter_Team( pEntity ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAM_SPECTATOR ] )
+	{
+		if( !PassesCollectionFilter_TeamNum( pEntity, TEAM_SPECTATOR ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAM_BLUE ] )
+	{
+		if( !PassesCollectionFilter_TeamNum( pEntity, TEAM_BLUE ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAM_RED ] )
+	{
+		if( !PassesCollectionFilter_TeamNum( pEntity, TEAM_RED ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAM_YELLOW ] )
+	{
+		if( !PassesCollectionFilter_TeamNum( pEntity, TEAM_YELLOW ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_TEAM_GREEN ] )
+	{
+		if( !PassesCollectionFilter_TeamNum( pEntity, TEAM_GREEN ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_PROJECTILES ] )
+	{
+		if( dynamic_cast< CFFProjectileBase * >( pEntity ) == NULL )
+			return false;
+	}
+
+	if( pbFlags[ CF_GRENADES ] )
+	{
+		if( !( pEntity->GetFlags() & FL_GRENADE ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_BUILDABLES ] )
+	{
+		if( ( pEntity->Classify() != CLASS_DISPENSER ) ||
+			( pEntity->Classify() != CLASS_SENTRYGUN ) ||
+			( pEntity->Classify() != CLASS_DETPACK ) )
+			return false;
+	}
+
+	if( pbFlags[ CF_BUILDABLE_DISPENSER ] )
+	{
+		if( pEntity->Classify() != CLASS_DISPENSER )
+			return false;
+	}
+
+	if( pbFlags[ CF_BUILDABLE_SENTRYGUN ] )
+	{
+		if( pEntity->Classify() != CLASS_SENTRYGUN )
+			return false;
+	}
+
+	if( pbFlags[ CF_BUILDABLE_DETPACK ] )
+	{
+		if( pEntity->Classify() != CLASS_DETPACK )
+			return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor - Create an empty collection
+//-----------------------------------------------------------------------------
+CFFEntity_Collection::CFFEntity_Collection( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor - Create a collection from table
+//-----------------------------------------------------------------------------
+CFFEntity_Collection::CFFEntity_Collection( const luabind::adl::object& table )
+{
+	AddItem( table );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add an item to the collection
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::AddItem( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return;
+
+	if( !InternalFindPtr( pItem ) )
+		m_vCollection.push_back( pItem );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add an item to the collection
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::AddItem( const luabind::adl::object& table )
+{
+	if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( table ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			try
+			{
+				CBaseEntity *pEntity = luabind::object_cast< CBaseEntity * >( val );
+
+				if( pEntity )
+					AddItem( pEntity );
+			}
+			catch( ... )
+			{
+				Warning( "[Collection] Error in AddItem!\n" );
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove an item from the collection
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::RemoveItem( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return;
+
+	CollectionContainer::iterator vs = InternalFindItr( pItem );
+
+	if( vs != m_vCollection.end() )
+		m_vCollection.erase( vs );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove an item from the collection
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::RemoveItem( const luabind::adl::object& table )
+{
+	if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( table ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			try
+			{
+				CBaseEntity *pEntity = luabind::object_cast< CBaseEntity * >( val );
+
+				if( pEntity )
+					RemoveItem( pEntity );
+			}
+			catch( ... )
+			{
+				Warning( "[Collection] Error in RemoveItem!\n" );
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove all items from the collection
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::RemoveAllItems( void )
+{
+	m_vCollection.clear();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if an item exists
+//-----------------------------------------------------------------------------
+bool CFFEntity_Collection::HasItem( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return false;
+
+	return InternalFindPtr( pItem ) ? true : false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if an item exists
+//-----------------------------------------------------------------------------
+bool CFFEntity_Collection::HasItem( const luabind::adl::object& table )
+{
+	if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( table ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			try
+			{
+				CBaseEntity *pEntity = luabind::object_cast< CBaseEntity * >( val );
+
+				// TODO: Support seeing if all values in table were found
+				if( pEntity )
+					return HasItem( pEntity );
+			}
+			catch( ... )
+			{
+				Warning( "[Collection] Error in HasItem!\n" );
+			}
+		}
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Return an item from the collection
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFEntity_Collection::GetItem( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return NULL;
+
+	return InternalFindPtr( pItem );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Return an item from the collection.
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFEntity_Collection::GetItem( const luabind::adl::object& table )
+{
+	if( table.is_valid() && ( luabind::type( table ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( table ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			try
+			{
+				CBaseEntity *pEntity = luabind::object_cast< CBaseEntity * >( val );
+
+				if( pEntity )
+				{
+					CBaseEntity *pFoundEntity = GetItem( pEntity );
+					if( pFoundEntity )
+						return pFoundEntity;
+				}
+			}
+			catch( ... )
+			{
+				Warning( "[Collection] Error in GetItem!\n" );
+			}
+		}
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Find an item in the collection & return a reference to it
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFEntity_Collection::InternalFindPtr( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return NULL;
+
+	CollectionContainer::iterator vb = m_vCollection.begin(), ve = m_vCollection.end();
+
+	// Search for pItem
+	for( ; vb != ve; vb++ )
+	{
+		if( *vb == pItem )
+			return *vb;
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Find an item in the collection & return a iterator to it
+//-----------------------------------------------------------------------------
+CollectionContainer::iterator CFFEntity_Collection::InternalFindItr( CBaseEntity *pItem )
+{
+	if( !pItem )
+		return m_vCollection.end();
+
+	CollectionContainer::iterator vb = m_vCollection.begin(), ve = m_vCollection.end();
+
+	// Search for pItem
+	for( ; vb != ve; vb++ )
+	{
+		if( *vb == pItem )
+			return vb;
+	}
+
+	return m_vCollection.end();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get entities inside a sphere filtered by hFilterTable
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable )
+{
+	// Waste!
+	if( flRadius < 0 )
+		return;
+
+	bool bFlags[ CF_MAX_FLAG ] = { false };
+	if( CollectionFilterParseFlags( hFilterTable, bFlags ) )
+	{
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( vecOrigin, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( !pEntity )
+				continue;
+
+			if( PassesCollectionFilter( pEntity, bFlags, vecOrigin ) )
+				m_vCollection.push_back( pEntity );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get any entities that are currently touching pTouchee filter by hFilterTable
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable )
+{
+	if( !pTouchee )
+		return;
+
+	bool bFlags[ CF_MAX_FLAG ] = { false };
+	if( CollectionFilterParseFlags( hFilterTable, bFlags ) )
+	{
+		// TODO: Hrm, don't know how possible this is
+		// Might have to be trigger_ff_script only (?)
+		/*
+		CBaseEntity *pEntity = gEntList.FirstEnt();
+		while( pEntity )
+		{
+			if( pEntity->IsCurrentlyTouching() )
+			{
+				
+			}
+
+			pEntity = gEntList.NextEnt( pEntity );
+		}
+		*/
+	}
+}
+
+//-----------------------------------------------------------------------------
+// FFLib Namespace
+//-----------------------------------------------------------------------------
 namespace FFLib
 {
 	// returns if the entity of the specified type
@@ -398,7 +920,15 @@ namespace FFLib
 
 				if( luabind::type( val ) == LUA_TNUMBER )
 				{
-					int iIndex = luabind::object_cast< int >( val );
+					int iIndex =  - 1;
+					
+					try
+					{
+						iIndex = luabind::object_cast< int >( val );
+					}
+					catch( ... )
+					{
+					}
 
 					// Make sure within bounds
 					if( ( iIndex >= 0 ) && ( iIndex < AT_MAX_FLAG ) )
@@ -1197,6 +1727,56 @@ void CFFEntitySystem::FFLibOpen()
 			.def_readwrite("Red",		&CPlayerLimits::red)
 			.def_readwrite("Yellow",	&CPlayerLimits::yellow)
 			.def_readwrite("Green",		&CPlayerLimits::green),
+
+		// CFFEntity_Collection
+		class_<CFFEntity_Collection>("Collection")
+			.def(constructor<>())
+			.def(constructor<const luabind::adl::object&>())
+			.def_readwrite("items",		&CFFEntity_Collection::m_vCollection, return_stl_iterator)
+			.def("AddItem",				(void(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::AddItem)
+			.def("AddItem",				(void(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::AddItem)
+			.def("RemoveItem",			(void(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::RemoveItem)
+			.def("RemoveItem",			(void(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::RemoveItem)
+			.def("RemoveAllItems",		&CFFEntity_Collection::RemoveAllItems)
+			.def("IsEmpty",				&CFFEntity_Collection::IsEmpty)
+			.def("Count",				&CFFEntity_Collection::Count)
+			.def("NumItems",			&CFFEntity_Collection::Count)
+			.def("HasItem",				(bool(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::HasItem)
+			.def("HasItem",				(bool(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::HasItem)
+			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::GetItem)
+			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetItem),
+
+		// CFFEntity_CollectionFilter
+		class_<CFFEntity_CollectionFilter>("CF")
+			.enum_("FilterId")
+			[
+				value("kPlayers",			CF_PLAYERS),
+				value("kPlayerScout",		CF_PLAYER_SCOUT),
+				value("kPlayerSniper",		CF_PLAYER_SNIPER),
+				value("kPlayerSoldier",		CF_PLAYER_SOLDIER),
+				value("kPlayerDemoman",		CF_PLAYER_DEMOMAN),
+				value("kPlayerMedic",		CF_PLAYER_DEMOMAN),
+				value("kPlayerHWGuy",		CF_PLAYER_HWGUY),
+				value("kPlayerPyro",		CF_PLAYER_PYRO),
+				value("kPlayerSpy",			CF_PLAYER_SPY),
+				value("kPlayerEngineer",	CF_PLAYER_ENGY),
+				value("kPlayerCivilian",	CF_PLAYER_CIVILIAN),
+
+				value("kTeams",				CF_TEAMS),
+				value("kTeamSpec",			CF_TEAM_SPECTATOR),
+				value("kTeamBlue",			CF_TEAM_BLUE),
+				value("kTeamRed",			CF_TEAM_RED),
+				value("kTeamYellow",		CF_TEAM_YELLOW),
+				value("kTeamGreen",			CF_TEAM_GREEN),
+
+				value("kProjectiles",		CF_PROJECTILES),
+				value("kGrenades",			CF_GRENADES),
+				
+				value("kBuildables",		CF_BUILDABLES),
+				value("kDispenser",			CF_BUILDABLE_DISPENSER),
+				value("kSentrygun",			CF_BUILDABLE_SENTRYGUN),
+				value("kDetpack",			CF_BUILDABLE_DETPACK)
+			],
 			
 		class_<CFFEntity_AmmoTypes>("Ammo")
 			.enum_("AmmoType")
