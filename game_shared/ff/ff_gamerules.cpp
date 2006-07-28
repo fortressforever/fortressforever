@@ -507,8 +507,7 @@ ConVar mp_prematch( "mp_prematch",
 					
 				if( pbFlags[ AT_REMOVE_DECALS ] )
 				{
-					// TODO: Send a message to the client telling it to clean up the level (?)
-					// not sure how decals are handled
+					engine->ClientCommand( pPlayer->edict(), "r_cleardecals" );
 				}
 
 				// Reset players score

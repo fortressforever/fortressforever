@@ -372,10 +372,19 @@ public:
 	void RemoveSpeedEffect(SpeedEffectType type);
 	int	ClearSpeedEffects(int mod = 0);
 
-	void Infect( CFFPlayer * );
-	void Cure( CFFPlayer * );
+	void Infect( CFFPlayer *pPlayer );
+	void Cure( CFFPlayer *pPlayer );
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f );
+	bool IsBurning( void ) const;
 
+	void Gas( float flDuration, float flIconDuration );
+	bool IsGassed( void ) const { return m_bGassed; }
+	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
+protected:
+	void UnGas( void );
+	bool m_bGassed;
+
+public:	
 	bool IsInfected( void ) const		{ return m_bInfected; }
 	CBaseEntity *GetInfector( void )	{ return ( m_hInfector == NULL ) ? NULL : ( CBaseEntity * )m_hInfector; }
 	int GetInfectorTeam( void ) const	{ return IsInfected() ? m_iInfectedTeam : TEAM_UNASSIGNED; }
@@ -436,6 +445,7 @@ public:
 	// BEG: Added by Mulchman for radar tagging
 	bool IsRadioTagged( void ) const { return m_bRadioTagged; }
 	void SetRadioTagged( CFFPlayer *pWhoTaggedMe, float flStartTime, float flDuration );
+	void SetUnRadioTagged( void );
 	int GetTeamNumOfWhoTaggedMe( void ) const;
 	CFFPlayer *GetPlayerWhoTaggedMe( void );
 protected:
@@ -506,6 +516,7 @@ public:
 	float m_flNextClassSpecificSkill;
 
 	CNetworkVar( float, m_flConcTime );
+	void UnConcuss( void );
 	void Concuss( float flDuration, float flIconDuration, const QAngle *viewjerk = NULL );
 
 	CNetworkVar( int, m_iClassStatus );
@@ -527,9 +538,7 @@ public:
 	virtual int TakeEmp();
 	virtual void Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
 
-	virtual bool TakeNamedItem(const char* szName);
-
-	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
+	virtual bool TakeNamedItem(const char* szName);	
 
 public:
 	int AddAmmo( int iAmmoType, int iAmount );	

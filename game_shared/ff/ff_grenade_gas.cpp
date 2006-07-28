@@ -198,21 +198,10 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 			
 				if( gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f )
 				{
-					pPlayer->EmitSound("Player.DrownContinue");	// |-- Mirv: [TODO] Change to something more suitable
+					pPlayer->Gas( 10.0f, 10.0f );
 
 					CTakeDamageInfo info(this, GetOwnerEntity(), vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
 					pPlayer->TakeDamage(info);
-
-					CSingleUserRecipientFilter user((CBasePlayer *)pPlayer);
-					user.MakeReliable();
-
-					UserMessageBegin(user, "StatusIconUpdate");
-					WRITE_BYTE(FF_ICON_GAS);
-					WRITE_FLOAT(15.0);
-					MessageEnd();
-
-					// Don't allow this to be accumulative
-					pPlayer->m_flLastGassed = gpGlobals->curtime;
 				}
 			}
 		}
