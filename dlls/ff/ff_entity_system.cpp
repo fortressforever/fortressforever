@@ -20,6 +20,9 @@
 //----------------------------------------------------------------------------
 // includes
 #include "cbase.h"
+
+#undef MINMAX_H
+
 #include "ff_entity_system.h"
 
 #undef MINMAX_H
