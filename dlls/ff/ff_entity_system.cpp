@@ -40,6 +40,9 @@
 #include "beam_shared.h"
 #include "ff_luacontext.h"
 
+#undef MINMAX_H
+#include "minmax.h"	
+
 // Lua includes
 extern "C"
 {
