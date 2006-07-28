@@ -3228,36 +3228,6 @@ void CFFPlayer::LuaRemoveEffect( int iEffect )
 	}
 }
 
-////-----------------------------------------------------------------------------
-//// Purpose: So lua can add speed effects
-////-----------------------------------------------------------------------------
-//bool CFFPlayer::IsLuaSpeedEffectSet( int iSpeedEffect )
-//{
-//	SpeedEffectType sEffect;
-//	switch( iSpeedEffect )
-//	{
-//		case 0: sEffect = SE_SNIPERRIFLE; break;
-//		case 1: sEffect = SE_ASSAULTCANNON; break;
-//		case 2: sEffect = SE_LEGSHOT; break;
-//		case 3: sEffect = SE_TRANQ; break;
-//		case 4: sEffect = SE_CALTROP; break;
-//		case 5: sEffect = SE_LUA1; break;
-//		case 6: sEffect = SE_LUA2; break;
-//		case 7: sEffect = SE_LUA3; break;
-//		case 8: sEffect = SE_LUA4; break;
-//		case 9: sEffect = SE_LUA5; break;
-//		case 10: sEffect = SE_LUA6; break;
-//		case 11: sEffect = SE_LUA7; break;
-//		case 12: sEffect = SE_LUA8; break;
-//		case 13: sEffect = SE_LUA9; break;
-//		case 14: sEffect = SE_LUA10; break;
-//		default: return; break;
-//	}
-//
-//	return IsSpeedEffectSet( sEffect );
-//}
-//
-
 void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod, int iIcon, float flIconDuration)
 {
 	// find an open slot
