@@ -25,6 +25,9 @@
 // Filesystem stuff
 #include "filesystem.h"
 
+#undef MINMAX_H
+#include "minmax.h"
+
 // Entity stuff
 #include "ff_player.h"
 #include "ff_item_flag.h"
