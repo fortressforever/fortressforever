@@ -615,6 +615,9 @@ bool CFFInfoScript::IsRemoved( void )
 void CFFInfoScript::SetActive( void )
 {
 	m_iGoalState = GS_ACTIVE;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onactive" );
 }
 
 //-----------------------------------------------------------------------------
@@ -623,6 +626,9 @@ void CFFInfoScript::SetActive( void )
 void CFFInfoScript::SetInactive( void )
 {
 	m_iGoalState = GS_INACTIVE;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "oninactive" );
 }
 
 //-----------------------------------------------------------------------------
@@ -632,6 +638,9 @@ void CFFInfoScript::SetRemoved( void )
 {
 	m_iGoalState = GS_REMOVED;
 	m_iPosState = PS_REMOVED;
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onremoved" );
 }
 
 //-----------------------------------------------------------------------------
@@ -681,6 +690,9 @@ void CFFInfoScript::LUA_Remove( void )
 void CFFInfoScript::LUA_Restore( void )
 {
 	// This "restores" the item
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "onrestored" );
 
 	// Set some flags so we can call respawn
 	SetInactive();
