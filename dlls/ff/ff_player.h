@@ -11,6 +11,10 @@
 
 #include "player.h"
 #include "server_class.h"
+
+#undef MINMAX_H
+#include "minmax.h"
+
 #include "ff_playeranimstate.h"
 #include "ff_shareddefs.h"
 #include "ff_playerclass_parse.h"
