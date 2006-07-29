@@ -663,8 +663,14 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 				// Damage specified by function parameter
 				CTakeDamageInfo dmgInfo(this, pAttacker, flActualDamage, nActualDamageType);
 				CalculateBulletDamageForce(&dmgInfo, info.m_iAmmoType, vecDir, tr.endpos);
-				dmgInfo.ScaleDamageForce(info.m_flDamageForceScale);
 				dmgInfo.SetAmmoType(info.m_iAmmoType);
+
+				// Reduce push for players
+				if (tr.m_pEnt->IsPlayer())
+				{
+					dmgInfo.ScaleDamageForce(0.01f);
+				}
+
 				tr.m_pEnt->DispatchTraceAttack(dmgInfo, vecDir, &tr);
 
 				if (bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS))
