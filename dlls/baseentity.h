@@ -517,6 +517,7 @@ public:
 
 	// specifies if this entity can collide with its owner entity
 	virtual bool			CanClipOwnerEntity() const { return false; }
+	virtual bool			CanClipPlayer() const { return true; }
 
 	// Only CBaseEntity implements these. CheckTransmit calls the virtual ShouldTransmit to see if the
 	// entity wants to be sent. If so, it calls SetTransmit, which will mark any dependents for transmission too.

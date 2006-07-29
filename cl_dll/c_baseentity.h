@@ -378,6 +378,7 @@ public:
 
 	// specifies if this entity can collide with its owner entity
 	virtual bool					CanClipOwnerEntity() const { return false; }
+	virtual bool					CanClipPlayer() const { return true; }
 
 	// This function returns a value that scales all damage done by this entity.
 	// Use CDamageModifier to hook in damage modifiers on a guy.

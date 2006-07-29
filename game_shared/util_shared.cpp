@@ -216,6 +216,9 @@ bool PassServerEntityFilter( const IHandleEntity *pTouch, const IHandleEntity *p
 			return false;
 	}
 
+	if(!pEntPass->CanClipPlayer() && pEntTouch->IsPlayer())
+		return false;
+
 	return true;
 }
 

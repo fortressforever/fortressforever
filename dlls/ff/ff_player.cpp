@@ -1280,6 +1280,13 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Release control of sabotaged structures
 	SpySabotageRelease();
 
+	//prevent weapons from being picked up when dropped (they should get deleted properly later so do not delete them here)
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		if ( m_hMyWeapons[i] )
+			m_hMyWeapons[i]->SetTouch( NULL ); //touching other peoples private parts is naughty.
+	}
+
 	BaseClass::Event_Killed( info );
 
 	CreateRagdollEntity(&info);
