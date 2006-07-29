@@ -239,6 +239,27 @@ void CBaseEntity::ParseMapData( CEntityMapData *mapData )
 		} 
 		while ( mapData->GetNextKey(keyName, value) );
 	}
+
+#ifdef GAME_DLL
+	// setup the event action for the output
+	// this is necessary for routing the ouputs to lua
+	for ( datamap_t *dmap = GetDataDescMap(); dmap != NULL; dmap = dmap->baseMap )
+	{
+		// search through all the actions in the data description, looking for a match
+		for ( int i = 0; i < dmap->dataNumFields; i++ )
+		{
+			if ( dmap->dataDesc[i].flags & FTYPEDESC_OUTPUT )
+			{
+				const char* szEntName = STRING(GetEntityName());
+				COutputEvent* pEvent = (COutputEvent*)(((int)this) + dmap->dataDesc[i].fieldOffset[TD_OFFSET_NORMAL]);
+
+				char szEvent[2048];
+				Q_snprintf(szEvent, sizeof(szEvent), "%s,%s", szEntName, dmap->dataDesc[i].externalName);
+				pEvent->ParseEventAction(szEvent);
+			}
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

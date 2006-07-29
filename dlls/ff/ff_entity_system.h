@@ -100,6 +100,16 @@ public:
 	// A better run predicates
 	bool RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName );
 
+	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
+	bool GetObject(const char* szTableName, luabind::adl::object& outObject);
+
+	bool GetFunction(CBaseEntity* pEntity,
+					 const char* szFunctionName,
+					 luabind::adl::object& outObject);
+
+	bool GetFunction(luabind::adl::object& tableObject,
+					 const char* szFunctionName,
+					 luabind::adl::object& outObject);
 };
 
 //----------------------------------------------------------------------------
