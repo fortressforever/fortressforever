@@ -1878,8 +1878,7 @@ void CFFEntitySystem::FFLibOpen()
 			.def("SetRenderColor",		(void(CBaseEntity::*)(byte,byte,byte))&CBaseEntity::SetRenderColor)
 			.def("SetRenderMode",		&CBaseEntity::SetRenderMode)
 			.def("GetFriction",			&CBaseEntity::GetFriction)
-			.def("SetFriction",			&CBaseEntity::GetFriction)
-			.def("Input",				&CBaseEntity::AcceptInput),
+			.def("SetFriction",			&CBaseEntity::GetFriction),
 
 		// Buildable base
 		class_<CFFBuildableObject>("BaseBuildable")
