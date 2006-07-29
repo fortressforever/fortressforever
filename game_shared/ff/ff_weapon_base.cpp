@@ -377,3 +377,18 @@ void CFFWeaponBase::PrimaryAttack()
 	//Add our view kick in
 	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
 }
+
+//----------------------------------------------------------------------------
+// Purpose: Don't leave a dangling pointer!
+//----------------------------------------------------------------------------
+CFFWeaponBase::~CFFWeaponBase()
+{
+#ifdef CLIENT_DLL
+	C_FFPlayer *pOwner = GetPlayerOwner();
+
+	if (pOwner && pOwner->m_pOldActiveWeapon == this)
+	{
+		pOwner->m_pOldActiveWeapon = NULL;
+	}
+#endif
+}

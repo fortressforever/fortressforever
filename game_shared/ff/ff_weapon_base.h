@@ -118,6 +118,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 	CFFWeaponBase();
+	~CFFWeaponBase();
 
 	#ifdef GAME_DLL
 		DECLARE_DATADESC();
