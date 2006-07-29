@@ -264,9 +264,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hLastMapGuide ) ),
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
-	// Need this to be able to be -1... but nothing I do
-	// is working, heh...
-	SendPropFloat( SENDINFO( m_flConcTime ), 8, 0, -1.0f ),
+	SendPropFloat(SENDINFO(m_flConcTime)),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )

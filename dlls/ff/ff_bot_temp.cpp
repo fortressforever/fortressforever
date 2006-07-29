@@ -184,6 +184,12 @@ CON_COMMAND(ffdev_score, "you score")
 	you->AddPointsToTeam(10, true);
 }
 
+CON_COMMAND(ffdev_conc, "some weird negative conc")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+	you->m_flConcTime = -1;
+}
+
 CON_COMMAND(ffdev_iclass, "instant switch")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
