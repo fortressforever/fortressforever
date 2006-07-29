@@ -25,6 +25,10 @@ extern "C"
 	#include "lauxlib.h"
 }
 
+#undef MINMAX_H
+#undef min
+#undef max
+
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
 
