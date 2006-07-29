@@ -1006,36 +1006,42 @@ void CFFPlayer::InitialSpawn( void )
 	//DevMsg("CFFPlayer::InitialSpawn");
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This is the normal, noisey feign. It used to have a check for
+//			velocity but not anymore.
+//-----------------------------------------------------------------------------
 void CFFPlayer::SpyFeign( void )
 {
-	Vector relativeVel = GetAbsVelocity();
-
-	if (GetGroundEntity())
-		relativeVel.z = 0;
-
-	// A yell of pain if we're feigning [need to check feign will be allowed too]
-	if( !m_fFeigned && relativeVel.LengthSqr() <= 25.0f )
+	// A yell of pain
+	if (!m_fFeigned)
+	{
 		EmitSound( "Player.Death" );
+	}
 
 	SpySilentFeign();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This doesn't have a maximum speed either.
+//			That wasn't really a description of a purpose, I know.
+//-----------------------------------------------------------------------------
 void CFFPlayer::SpySilentFeign( void )
 {
-	// Already feigned
-	if( m_fFeigned )
+	// Already feigned so remove all effects
+	if (m_fFeigned)
 	{
 		// Yeah we're not feigned anymore bud
 		m_fFeigned = false;
 
-		// Remove the ragdoll
-		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
-		pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-		pRagdoll->SetNextThink( gpGlobals->curtime );
+		CFFRagdoll *pRagdoll = dynamic_cast<CFFRagdoll *> (m_hRagdoll.Get());
 
-		// Invisible and stuff
-		RemoveEffects( EF_NODRAW );
-		RemoveFlag( FL_FROZEN );
+		// Remove the ragdoll instantly
+		pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
+		pRagdoll->SetNextThink(gpGlobals->curtime);
+
+		// Visible and able to move again
+		RemoveEffects(EF_NODRAW);
+		RemoveFlag(FL_FROZEN);
 
 		// Redeploy our weapon
 		if (GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false)
@@ -1052,39 +1058,26 @@ void CFFPlayer::SpySilentFeign( void )
 			gameeventmanager->FireEvent(pEvent, true);
 		}
 	}
+	// Not already feigned, so collapse with ragdoll
 	else
 	{
-		Vector relativeVel = GetAbsVelocity();
-
-		if (GetGroundEntity())
-			relativeVel.z = 0;
-
-		// Need to be stationary to feign
-		if( relativeVel.LengthSqr() > 25.0f )
-		{
-			ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_CANTFEIGNSPEED" );
-			
-			// Notify the bot: convert this to an event?
-			if(IsBot())
-			{
-				Omnibot::Notify_CantFeign(this);
-			}
-			return;
-		}
-
 		m_fFeigned = true;
 
 		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
 		CreateRagdollEntity();
 
-		// Quick get that ragdoll and change a few things
-		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
-		pRagdoll->m_vecRagdollVelocity = Vector( 0, 0, 0 );
-		pRagdoll->SetThink( NULL );
+		CFFRagdoll *pRagdoll = dynamic_cast<CFFRagdoll *> (m_hRagdoll.Get());
 
-		// Invisible and stuff
-		AddEffects( EF_NODRAW );
-		AddFlag( FL_FROZEN );
+		// Make a few things to the ragdoll, such as stopping it from travelling any
+		// further and don't allow it to fade out. Actually this velocity change
+		// won't work because the client will use the velocity of its local 
+		// representation of this player. Dang.
+		pRagdoll->m_vecRagdollVelocity = Vector(0, 0, 0);
+		pRagdoll->SetThink(NULL);
+
+		// Invisible and unable to move
+		AddEffects(EF_NODRAW);
+		AddFlag(FL_FROZEN);
 
 		// Holster our current weapon
 		if (GetActiveWeapon())
