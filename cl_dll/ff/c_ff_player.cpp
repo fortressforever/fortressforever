@@ -980,7 +980,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
 	// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
 	// This fixes it, hurrah.
-	if (this == C_BasePlayer::GetLocalPlayer() && GetActiveWeapon() != m_pOldActiveWeapon)
+	/*if (this == C_BasePlayer::GetLocalPlayer() && GetActiveWeapon() != m_pOldActiveWeapon)
 	{
 		if (m_pOldActiveWeapon)
 			m_pOldActiveWeapon->Holster(GetActiveWeapon());
@@ -989,7 +989,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 			GetActiveWeapon()->Deploy();
 
 		m_pOldActiveWeapon = GetActiveWeapon();
-	}
+	}*/
 /*
 	// BEG: Added by Mulchman
 	if( m_bBuilding && !m_bClientBuilding )
