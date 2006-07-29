@@ -74,6 +74,9 @@ public:
 	// script call was successful; otherwise, it returns false
 	bool CallFunction(CBaseEntity* pEntity, const char* szFunctionName);
 
+	// calls a global function
+	bool CallFunction(const char* szFunctionName);
+
 	// returns the number of return values
 	int GetNumReturns() const { return m_returnVals.Count(); }
 
@@ -84,6 +87,10 @@ public:
 	QAngle	GetQAngle();
 	Vector	GetVector();
 	luabind::adl::object* GetObject();
+
+public:
+	static void QuickCallFunction(CBaseEntity* pEntity, const char* szFunctionName);
+	static void QuickCallFunction(const char* szFunctionName);
 
 protected:
 	void	SetParams( int iArgs, ... );

@@ -55,6 +55,7 @@
 #include "movetype_push.h"
 #include "vstdlib/ICommandLine.h"
 #include "vphysics/friction.h"
+#include "ff_luacontext.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -3185,6 +3186,12 @@ bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator,
 						data.nOutputID = outputID;
 
 						(this->*pfnInput)( data );
+
+						// pass the event to script
+						CFFLuaSC sc;
+						sc.Push(pActivator);
+						sc.Push(pCaller);
+						sc.CallFunction(this, szInputName);
 					}
 					else if ( dmap->dataDesc[i].flags & FTYPEDESC_KEY )
 					{

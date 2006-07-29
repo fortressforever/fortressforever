@@ -221,6 +221,12 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 }
 
 //----------------------------------------------------------------------------
+bool CFFLuaSC::CallFunction(const char* szFunctionName)
+{
+	return CallFunction(NULL, szFunctionName);
+}
+
+//----------------------------------------------------------------------------
 void CFFLuaSC::ClearParams()
 {
 	m_params.PurgeAndDeleteElements();
@@ -262,4 +268,18 @@ Vector CFFLuaSC::GetVector()
 {
 	Vector vec;
 	RETURN_OBJECTCAST(Vector, vec, 0);
+}
+
+//----------------------------------------------------------------------------
+void CFFLuaSC::QuickCallFunction(const char* szFunctionName)
+{
+	CFFLuaSC sc;
+	sc.CallFunction(NULL, szFunctionName);
+}
+
+//----------------------------------------------------------------------------
+void CFFLuaSC::QuickCallFunction(CBaseEntity* pEntity, const char* szFunctionName)
+{
+	CFFLuaSC sc;
+	sc.CallFunction(pEntity, szFunctionName);
 }
