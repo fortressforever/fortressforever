@@ -814,6 +814,20 @@ void CFFEntity_Collection::GetTouching( CBaseEntity *pTouchee, const luabind::ad
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Return item[ iElement ]
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFEntity_Collection::Element( int iElement )
+{
+	if( iElement < 0 )
+		return NULL;
+
+	if( iElement > ( Count() - 1 ) )
+		return NULL;
+
+	return m_vCollection[ iElement ];
+}
+
+//-----------------------------------------------------------------------------
 // FFLib Namespace
 //-----------------------------------------------------------------------------
 namespace FFLib
@@ -1748,7 +1762,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("HasItem",				(bool(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::HasItem)
 			.def("HasItem",				(bool(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::HasItem)
 			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::GetItem)
-			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetItem),
+			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetItem)
+			.def("Element",				&CFFEntity_Collection::Element),
 
 		// CFFEntity_CollectionFilter
 		class_<CFFEntity_CollectionFilter>("CF")

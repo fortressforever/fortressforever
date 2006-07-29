@@ -190,6 +190,8 @@ public:
 	void GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable );
 	void GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable );
 
+	CBaseEntity *Element( int iElement );
+
 	CollectionContainer	m_vCollection;
 
 protected:
