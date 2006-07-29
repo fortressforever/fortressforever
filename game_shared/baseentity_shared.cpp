@@ -1438,6 +1438,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecDir, tr.endpos );
 		triggerInfo.ScaleDamageForce( info.m_flDamageForceScale );
 		triggerInfo.SetAmmoType( info.m_iAmmoType );
+
 #ifdef GAME_DLL
 		TraceAttackToTriggers( triggerInfo, tr.startpos, tr.endpos, vecDir );
 #endif
@@ -1507,6 +1508,14 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, vecDir, tr.endpos );
 				dmgInfo.ScaleDamageForce( info.m_flDamageForceScale );
 				dmgInfo.SetAmmoType( info.m_iAmmoType );
+
+				// --> Mirv: Quick hack, fix this tomorrow
+				if (tr.m_pEnt->IsPlayer())
+				{
+					dmgInfo.ScaleDamageForce(0.01f);
+				}
+				// <-- Mirv
+
 				tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecDir, &tr );
 			
 				if ( bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS) )
