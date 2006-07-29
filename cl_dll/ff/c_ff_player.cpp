@@ -811,13 +811,13 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 // --> Mirv: Conc angles
 void C_FFPlayer::PreThink()
 {
-	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime == -1))
+	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))
 	{
 		//Warning( "[prethink] conctime: %i\n", m_flConcTime );
 		float flLength = GetClassSlot() == CLASS_MEDIC ? 7.5f : 15.0f;
 		float flConcAmount = 15.0f;
-		if( m_flConcTime != -1 )
-			flConcAmount = 15.0f * (m_flConcTime - gpGlobals->curtime) / flLength;
+		if( m_flConcTime > 0 )
+			flConcAmount *= (m_flConcTime - gpGlobals->curtime) / flLength;
 
 		if (IsAlive())
 		{
@@ -899,7 +899,7 @@ const QAngle &C_FFPlayer::EyeAngles()
 	}
 
 	// Concussion
-	if( m_flConcTime > gpGlobals->curtime && conc_test.GetInt() != 0 )
+	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() != 0 )
 	{
 		m_angConcedTest = BaseClass::EyeAngles() + m_angConced;
 		return m_angConcedTest;
@@ -912,13 +912,13 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 {
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
 
-	if( m_flConcTime > gpGlobals->curtime && conc_test.GetInt() == 0 )
+	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() == 0)
 		eyeAngles += m_angConced;
 }
 
 void C_FFPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
-	if( m_flConcTime > gpGlobals->curtime )
+	if (m_flConcTime > gpGlobals->curtime || m_flConcTime < 0)
 		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles - m_angConced );
 	else
 		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles );
