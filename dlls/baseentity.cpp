@@ -3205,6 +3205,14 @@ bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator,
 					return true;
 				}
 			}
+			else if ( dmap->dataDesc[i].flags & FTYPEDESC_OUTPUT )
+			{
+				// pass the event to script
+				CFFLuaSC sc;
+				sc.Push(pActivator);
+				sc.Push(pCaller);
+				sc.CallFunction(this, szInputName);
+			}
 		}
 	}
 

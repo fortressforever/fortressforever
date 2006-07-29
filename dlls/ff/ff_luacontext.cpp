@@ -154,6 +154,11 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 			return false;
 		}
 
+		// check if the function exists
+		luabind::adl::object func;
+		if(!entsys.GetFunction(pEntity, szFunctionName, func))
+			return false;
+
 		// push the function onto stack ( entname:addname )
 		lua_getglobal( L, STRING(pEntity->GetEntityName()) );
 		if (lua_isnil(L, -1))
@@ -196,7 +201,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	{
 		const char* szErrorMsg = lua_tostring(L, -1);
 		DevWarning("[SCRIPT] Error calling %s (%s) ent: %s\n",
-				   szFunctionName,
+				   szFunctionName, 
 				   szErrorMsg,
 				   pEntity ? STRING(pEntity->GetEntityName()) : "NULL");
 
