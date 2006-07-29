@@ -253,7 +253,14 @@ void CFFPlayer::FireBullet(
 		// for radio tagging and to make ammo type work in the DamageFunctions
 		info.SetAmmoType(iBulletType);
 
-		CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);	// |-- Mirv: Modified this
+		CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
+		info.ScaleDamageForce(fScale * fScale * fScale);
+
+		if (tr.m_pEnt->IsPlayer())
+		{
+			info.ScaleDamageForce(0.01f);
+		}
+
 		tr.m_pEnt->DispatchTraceAttack(info, vecDir, &tr);
 
 		// Bug #0000168: Blood sprites for damage on players do not display
@@ -664,6 +671,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 				CTakeDamageInfo dmgInfo(this, pAttacker, flActualDamage, nActualDamageType);
 				CalculateBulletDamageForce(&dmgInfo, info.m_iAmmoType, vecDir, tr.endpos);
 				dmgInfo.SetAmmoType(info.m_iAmmoType);
+				dmgInfo.ScaleDamageForce(info.m_flDamageForceScale);
 
 				// Reduce push for players
 				if (tr.m_pEnt->IsPlayer())
