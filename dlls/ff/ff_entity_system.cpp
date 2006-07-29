@@ -48,6 +48,8 @@ extern "C"
 	#include "lauxlib.h"
 }
 
+#undef MINMAX_H
+
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
 #include "luabind/iterator_policy.hpp"
