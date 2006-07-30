@@ -545,14 +545,21 @@ public:
 	virtual bool TakeNamedItem(const char* szName);	
 
 public:
-	int AddAmmo( int iAmmoType, int iAmount );	
+	int LuaAddAmmo( int iAmmoType, int iAmount );
+	void LuaRemoveAmmo( int iAmmoType, int iAmount );
 
 	virtual int GiveAmmo(int iCount, int iAmmoIndex, bool bSuppressSound = false);
 	int	GiveAmmo(int iCount, const char *szName, bool bSuppressSound = false);
 
 	int m_iMaxAmmo[MAX_AMMO_TYPES];
 
+	// For pipebomb delay
+	void SetPipebombShotTime( float flShotTime ) { m_flPipebombShotTime = flShotTime; }
+	float GetPipebombShotTime( void ) const { return m_flPipebombShotTime; }
+protected:
+	float m_flPipebombShotTime;
 
+public:
 	void SetDisguisable(bool in) 
 	{
 		m_bDisguisable = in;

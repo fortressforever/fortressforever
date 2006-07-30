@@ -916,6 +916,8 @@ void CFFPlayer::SetupClassVariables()
 
 	m_hSaveMe = NULL;
 
+	m_flPipebombShotTime = 0.0f;
+
 	m_bSpecialInfectedDeath = false;
 
 	// Reset Spy stuff
@@ -4676,7 +4678,7 @@ int CFFPlayer::AddHealth(unsigned int amount)
 // Purpose: Give the player some ammo. LUA, and only LUA, calls this to give
 //			ammo to a player.
 //-----------------------------------------------------------------------------
-int CFFPlayer::AddAmmo( int iAmmoType, int iAmount )
+int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 {
 	int iDispensed = 0;
 
@@ -4701,6 +4703,32 @@ int CFFPlayer::AddAmmo( int iAmmoType, int iAmount )
 	}
 
 	return iDispensed;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove ammo from player. LUA, and only LUA, calls this
+//-----------------------------------------------------------------------------
+void CFFPlayer::LuaRemoveAmmo( int iAmmoType, int iAmount )
+{
+	switch( iAmmoType )
+	{
+		case LUA_AMMO_SHELLS:
+		case LUA_AMMO_CELLS:
+		case LUA_AMMO_NAILS:
+		case LUA_AMMO_ROCKETS:
+		case LUA_AMMO_RADIOTAG:
+		case LUA_AMMO_DETPACK:
+			RemoveAmmo( iAmount, LookupLuaAmmo( iAmmoType ) );
+			break;
+
+		case LUA_AMMO_GREN1:
+			AddPrimaryGrenades( -iAmount );
+			break;
+
+		case LUA_AMMO_GREN2:
+			AddSecondaryGrenades( -iAmount );
+			break;
+	}
 }
 
 //-----------------------------------------------------------------------------
