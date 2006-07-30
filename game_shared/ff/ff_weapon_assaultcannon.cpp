@@ -222,6 +222,11 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			// Play the overheat sound
 			WeaponSound(SPECIAL3);
 
+#ifdef GAME_DLL
+			// Remember to reset the speed soon
+			pOwner->AddSpeedEffect(SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN);
+#endif
+
 			m_bFiring = false;
 		}
 
