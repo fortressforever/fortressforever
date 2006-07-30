@@ -432,6 +432,13 @@ void CFFBuildableObject::RemoveQuietly( void )
 	if( m_bHasSounds )
 		StopSound( m_ppszSounds[ 0 ] );
 
+	// Remove the flickerer
+	if( m_pFlickerer )
+	{
+		m_pFlickerer->SetBuildable( NULL );
+		m_pFlickerer = NULL;
+	}
+
 	// Notify player to tell them they can build
 	// again and remove current owner
 	m_hOwner = NULL;
