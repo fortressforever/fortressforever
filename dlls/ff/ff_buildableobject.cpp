@@ -228,7 +228,13 @@ CFFBuildableObject::CFFBuildableObject( void )
 @return N/A
 */
 CFFBuildableObject::~CFFBuildableObject( void )
-{	
+{
+	// Remove the flickerer
+	if( m_pFlickerer )
+	{
+		m_pFlickerer->SetBuildable( NULL );
+		m_pFlickerer = NULL;
+	}
 }
 
 /**
