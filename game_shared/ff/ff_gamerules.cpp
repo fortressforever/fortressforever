@@ -469,6 +469,11 @@ ConVar mp_prematch( "mp_prematch",
 					// TODO: do this globally - not on each player's iteration
 				}
 
+				if( pbFlags[ AT_STOP_PRIMED_GRENS ] )
+				{
+					pPlayer->RemovePrimedGrenades();
+				}
+
 				// TODO: this is temp for testing
 				// of course more have to be added...
 				if( pbFlags[ AT_CHANGECLASS_SCOUT ] )

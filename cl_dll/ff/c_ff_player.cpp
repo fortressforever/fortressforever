@@ -843,6 +843,18 @@ void C_FFPlayer::PreThink()
 	BaseClass::PreThink();
 }
 
+void C_FFPlayer::Spawn( void )
+{
+	// TODO: Try and make this function get called
+	// everytime server CFFPlayer::Spawn() gets called.
+	// Or, add another function to get called upon
+	// CFFPlayer::Spawn() that's similar so we
+	// can stop timers from animating if they're
+	// still going after we've "spawned". Also,
+	// the client side cl_spawnslot stuff could
+	// be put into this new function.
+}
+
 // Stomp any movement if we're in mapguide mode
 void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 {

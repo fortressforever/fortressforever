@@ -3749,13 +3749,23 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		pGrenade->SetThrower(this);
 		pGrenade->SetOwnerEntity(this);
 
-#ifdef GAME_DLL
 		pGrenade->SetDetonateTimerLength( fTimer );
 		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);
 
 		if (fTimer > 0)
 			pGrenade->m_fIsHandheld = false;
-#endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove primed grenades
+//-----------------------------------------------------------------------------
+void CFFPlayer::RemovePrimedGrenades( void )
+{
+	if( IsGrenadePrimed() )
+	{
+		m_flServerPrimeTime = 0.0f;
+		m_iGrenadeState = FF_GREN_NONE;
 	}
 }
 

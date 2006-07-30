@@ -224,6 +224,7 @@ public:
 
 	void SwapToWeapon(FFWeaponID);
 
+	virtual void Spawn( void );
 	virtual void CreateMove(float flInputSampleTime, CUserCmd *pCmd);
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into

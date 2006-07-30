@@ -354,6 +354,9 @@ private:
 	bool IsGrenadePrimed(void);
 	void GrenadeThink(void);
 	void ThrowGrenade(float fTimer, float speed = 630.0f);		// |-- Mirv: So we can drop grens
+public:
+	void RemovePrimedGrenades( void );
+private:
 	CNetworkVar(FFPlayerGrenadeState, m_iGrenadeState);
 	CNetworkVar(float, m_flServerPrimeTime);
 	CNetworkVar(int, m_iPrimary);

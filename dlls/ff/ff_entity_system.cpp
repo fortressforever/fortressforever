@@ -1864,7 +1864,9 @@ void CFFEntitySystem::FFLibOpen()
 				value("kChangeClassSpy",	AT_CHANGECLASS_SPY),
 				value("kChangeClassEngineer",	AT_CHANGECLASS_ENGINEER),
 				value("kChangeClassCivilian",	AT_CHANGECLASS_CIVILIAN),
-				value("kChangeClassRandom",	AT_CHANGECLASS_RANDOM)
+				value("kChangeClassRandom",	AT_CHANGECLASS_RANDOM),
+
+				value("kStopPrimedGrens",	AT_STOP_PRIMED_GRENS)
 			],
 
 		// CBaseEntity
