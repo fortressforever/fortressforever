@@ -52,6 +52,10 @@ public:
 	// drawing
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
 
+	//-- Added by L0ki ------------------------------
+	virtual Class_T Classify( void ) { return CLASS_PIPEBOMB; }
+	//-----------------------------------------------
+
 #ifdef CLIENT_DLL
 	virtual int DrawModel(int flags);
 #endif
@@ -62,10 +66,7 @@ public:
 	static CFFProjectilePipebomb * CreatePipebomb(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 	static void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force = false);
 
-#ifdef GAME_DLL
-	//-- Added by L0ki ------------------------------
-	Class_T Classify() { return CLASS_PIPEBOMB; }
-	//-----------------------------------------------
+#ifdef GAME_DLL	
 	void DetonatePipe(bool force = false, CBaseEntity *pOther = NULL);
 
 	// Override projectile_base so object isn't removed

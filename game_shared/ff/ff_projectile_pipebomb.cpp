@@ -75,6 +75,8 @@ void CFFProjectilePipebomb::Spawn()
 	BaseClass::Spawn();
 	m_nSkin = 0;			// Green skin(#1) 
 
+	m_flSpawnTime = gpGlobals->curtime;
+
 #ifdef CLIENT_DLL
 	// Rebo you are quite mean with this tomfoolery!!!!!!!!!!
 	player_info_t pinfo;
@@ -214,6 +216,9 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) CreateEntityByName("pipebomb");
+
+	if( !pPipebomb )
+		return NULL;
 
 	UTIL_SetOrigin(pPipebomb, vecOrigin);
 	pPipebomb->SetAbsAngles(angAngles);
