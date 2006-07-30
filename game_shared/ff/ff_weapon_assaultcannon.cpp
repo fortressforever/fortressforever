@@ -122,7 +122,7 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 	// Also start the engine sound for the client
 #ifdef CLIENT_DLL
-	if (m_pEngine)
+	if (m_pEngine && GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
 	{
 		CSoundEnvelopeController::GetController().SoundDestroy(m_pEngine);
 		m_pEngine = NULL;
@@ -136,7 +136,12 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	//EmitSound("Assaultcannon.Winddown");
 
 	// WindDown
-	WeaponSound(SPECIAL2);
+#ifdef CLIENT_DLL
+	if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
+#endif
+	{
+		WeaponSound(SPECIAL2);
+	}
 
 	//m_fFireState = 0;
 
