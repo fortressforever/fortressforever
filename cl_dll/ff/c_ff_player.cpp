@@ -320,7 +320,6 @@ END_RECV_TABLE()
 
 // Prototype
 void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut );
-void RecvProxy_SpyDisguise( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
@@ -845,7 +844,19 @@ void C_FFPlayer::PreThink()
 
 void C_FFPlayer::Spawn( void )
 {
-	// TODO: Do stuff to stop timers.
+	// Stop grenade 1 timers if they're playing
+	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
+	{
+		if( g_pGrenade1Timer->ActiveTimer() )
+			g_pGrenade1Timer->ResetTimer();
+	}
+
+	// Stop grenade 2 timers if they're playing
+	if( g_pGrenade2Timer && ( m_iGrenadeState != FF_GREN_PRIMETWO ) )
+	{
+		if( g_pGrenade2Timer->ActiveTimer() )
+			g_pGrenade2Timer->ResetTimer();
+	}
 
 	char szCommand[128];
 

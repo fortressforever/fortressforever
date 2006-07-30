@@ -68,6 +68,8 @@ public:
 	void	Paint();
 
 	void	SetTimer(float duration);
+	bool	ActiveTimer( void ) const;
+	void	ResetTimer( void );
 
 	// Callback functions for setting
 	void	MsgFunc_FF_Grenade1Timer(bf_read &msg);
