@@ -27,7 +27,7 @@
 	#include "ff_env_flamejet.h"
 #endif
 
-ConVar ffdev_flame_bbox("ffdev_flame_bbox", "3.0", FCVAR_REPLICATED, "Flame bbox");
+ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbox");
 
 #ifdef GAME_DLL
 	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
@@ -133,24 +133,24 @@ void CFFWeaponFlamethrower::Fire()
 		return;
 	}
 
-	// Just a basic traceline, this isn't very good but I just want to get some damage in	
-	Vector vecStart = pPlayer->Weapon_ShootPosition();
-	Vector forward;
-	trace_t traceHit;
-
-	pPlayer->EyeVectors(&forward, NULL, NULL);
+	Vector vecStart = pPlayer->Weapon_ShootPosition() + vecForward * 16.0f;
 
 	// 320 is about how far the flames are drawn on the client
 	// 0.4f is the time taken to reach end of flame jet
-	Vector vecEnd = vecStart + ( forward * 320.0f ) - GetAbsVelocity() * 0.4f;
+	Vector vecEnd = vecStart + ( vecForward * 320.0f ) - GetAbsVelocity() * 0.4f;
 
 	// Visualise trace
 	if (ffdev_flame_showtrace.GetBool())
+	{
 		NDebugOverlay::Line(vecStart, vecEnd, 255, 255, 0, false, 1.0f);
-	
-	//UTIL_TraceLine(vecStart, vecEnd, MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit);
+		
+		QAngle angDir;
+		VectorAngles(vecForward, angDir);
+		NDebugOverlay::SweptBox(vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), angDir, 200, 100, 0, 100, 0.1f);
+	}
 	
 	// Changed to this to add some "width" to the shot. How much more expensive is this than traceline???
+	trace_t traceHit;
 	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit );
 
 	// We want to hit buildables too
