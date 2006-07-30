@@ -136,7 +136,7 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
 				// make the player walk slow
-				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_ICON_TRANQ, 15.0f );
+				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_ICON_TRANQ, 6.0f );
 			}
 		}
 #endif
