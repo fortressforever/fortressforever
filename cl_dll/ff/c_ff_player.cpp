@@ -57,7 +57,7 @@ static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
 static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
-static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE|FCVAR_USERINFO, "Weapon slot to spawn with");
+static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
 static ConVar cl_classautokill( "cl_classautokill", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Change class instantly");
@@ -845,14 +845,25 @@ void C_FFPlayer::PreThink()
 
 void C_FFPlayer::Spawn( void )
 {
-	// TODO: Try and make this function get called
-	// everytime server CFFPlayer::Spawn() gets called.
-	// Or, add another function to get called upon
-	// CFFPlayer::Spawn() that's similar so we
-	// can stop timers from animating if they're
-	// still going after we've "spawned". Also,
-	// the client side cl_spawnslot stuff could
-	// be put into this new function.
+	// TODO: Do stuff to stop timers.
+
+	char szCommand[128];
+
+	// Execute the player config
+	Q_snprintf(szCommand, 127, "exec %.10s.cfg", Class_IntToString(GetClassSlot()));
+	engine->ClientCmd(szCommand);
+
+	int iSpawnWeapon = cl_spawnweapon.GetInt();
+
+	// Automatically call the slot specified by cl_spawnslot
+	if (iSpawnWeapon > 0 && iSpawnWeapon <= MAX_WEAPON_SLOTS)
+	{
+		Q_snprintf(szCommand, 127, "slot%d", iSpawnWeapon);
+		engine->ClientCmd(szCommand);
+	}
+
+	// Should this be added?
+	//BaseClass::Spawn();
 }
 
 // Stomp any movement if we're in mapguide mode
@@ -975,6 +986,12 @@ void C_FFPlayer::PostDataUpdate( DataUpdateType_t updateType )
 		MoveToLastReceivedPosition(true);
 		ResetLatched();
 		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
+
+		// If this is the local player then do normal spawny stuff.
+		if (IsLocalPlayer())
+		{
+			Spawn();
+		}
 	}
 	
 	BaseClass::PostDataUpdate( updateType );
