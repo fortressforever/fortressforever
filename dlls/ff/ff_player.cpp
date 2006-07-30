@@ -388,6 +388,8 @@ CFFPlayer::CFFPlayer()
 
 	m_flNextJumpTimeForDouble = 0;
 
+	m_flMaxspeedChangeTime = 0;
+
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
 		m_vSpeedEffects[i].active = false;
@@ -3374,10 +3376,16 @@ void CFFPlayer::RecalculateSpeed( void )
 			speed *= m_vSpeedEffects[i].speed;
 	}
 
-	// set the player speed
-	SetMaxSpeed((int)speed);
+	// Store off the old max speed for the server to use for the next few ms.
+	m_flOldMaxspeed = m_flMaxspeed;
 
-	//DevMsg("[SpeedEffect] Resetting speed to %d\n", (int)speed);
+	// Work our approximately when the client will receive this speed change.
+	m_flMaxspeedChangeTime = gpGlobals->curtime + (0.001f * this->GetPing());
+
+	// While we've set the max speed now, it won't actually be used by the server
+	// movement code until after m_flMaxspeedChangeTime. This allows the client to
+	// predict the speed change in time and avoid any warping.
+	SetMaxSpeed(speed);
 }
 
 //-----------------------------------------------------------------------------

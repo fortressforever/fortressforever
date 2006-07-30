@@ -15,6 +15,7 @@
 #include "iservervehicle.h"
 #include "ilagcompensationmanager.h"
 #include "tier0/vprof.h"
+#include "ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -171,7 +172,26 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 	}
 
 	// Prepare remaining fields
+	// --> Mirv: 
+
+	// We're delaying the max speed for the server so that the client
+	// has time to catch up. This will stop a lot of warping that occurs when the
+	// max speed changes.
+	// m_flMaxspeedChangeTime is set to curtime + the client's latency
 	move->m_flClientMaxSpeed		= player->m_flMaxspeed;
+
+	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (player);
+
+	if (pPlayer)
+	{
+		if (pPlayer->m_flMaxspeedChangeTime > gpGlobals->curtime)
+		{
+			move->m_flClientMaxSpeed = pPlayer->m_flOldMaxspeed;
+		}
+	}
+	// <-- Mirv
+	
+	
 	move->m_nOldButtons			= player->m_Local.m_nOldButtons;
 	move->m_vecAngles			= player->pl.v_angle.Get();		// |-- Mirv: updated now that it is a networkvar
 
@@ -202,7 +222,10 @@ void CPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *mo
 {
 	VPROF( "CPlayerMove::FinishMove" );
 
-	player->m_flMaxspeed			= move->m_flClientMaxSpeed;
+	// --> Mirv: Don't change this afterall.
+	//player->m_flMaxspeed			= move->m_flClientMaxSpeed;
+	// <--
+
 	player->SetAbsOrigin( move->m_vecAbsOrigin );
 	player->SetAbsVelocity( move->m_vecVelocity );
 
