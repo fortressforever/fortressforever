@@ -70,6 +70,27 @@ void CHudGrenade1Timer::SetTimer(float duration)
 	m_flLastTime = gpGlobals->curtime + duration;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Clear all timers
+//-----------------------------------------------------------------------------
+void CHudGrenade1Timer::ResetTimer( void )
+{
+	m_Timers.RemoveAll();
+
+	m_flLastTime = 0.0f;
+
+	m_fVisible = false;
+	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("FadeOutGrenade1Timer");
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if any timers are active
+//-----------------------------------------------------------------------------
+bool CHudGrenade1Timer::ActiveTimer( void ) const
+{
+	return m_Timers.Count();
+}
+
 void CHudGrenade1Timer::MsgFunc_FF_Grenade1Timer(bf_read &msg) 
 {
 	float duration = msg.ReadFloat();
