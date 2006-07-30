@@ -5047,7 +5047,9 @@ void CFFPlayer::SpySabotageThink()
 				pEvent = gameeventmanager->CreateEvent("dispenser_sabotaged");
 			if(pEvent)
 			{
-				CFFPlayer *pPlayer = ToFFPlayer(GetOwnerEntity());
+				
+
+				CFFPlayer *pPlayer = ToFFPlayer(m_hSabotaging->m_hOwner.Get());
 				pEvent->SetInt("userid", pPlayer->GetUserID());
 				pEvent->SetInt("saboteur", this->GetUserID());				
 			}
