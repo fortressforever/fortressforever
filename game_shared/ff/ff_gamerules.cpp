@@ -1033,6 +1033,15 @@ ConVar mp_prematch( "mp_prematch",
 
 bool CFFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
+	// Do this before the groups are re-ordered. This way we can check only when
+	// one entity pushing on another, and not the other way round.
+	// This is checking for players moving into grenades
+	if (collisionGroup0 == COLLISION_GROUP_PLAYER &&
+		collisionGroup1 == COLLISION_GROUP_PROJECTILE)
+	{
+		return false;
+	}
+
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
