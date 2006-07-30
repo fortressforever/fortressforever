@@ -96,6 +96,11 @@ void CFFWeaponPipeLauncher::Fire()
 
 	CFFProjectilePipebomb::CreatePipebomb(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
+#ifdef GAME_DLL
+	// Store off the time we shot the pipebomb
+	pPlayer->SetPipebombShotTime( gpGlobals->curtime );
+#endif
+
 	// Synchronise with grenade launcher
 	Synchronise();
 }

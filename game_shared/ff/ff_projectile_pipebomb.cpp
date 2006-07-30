@@ -50,8 +50,8 @@ PRECACHE_WEAPON_REGISTER(pipebomb);
 	void CFFProjectilePipebomb::DetonatePipe(bool force, CBaseEntity *pOther) 
 	{	
 		// This is currently live
-		if (!force && gpGlobals->curtime < m_flSpawnTime + PIPEBOMB_TIME_TILL_LIVE) 
-			return;
+		//if (!force && gpGlobals->curtime < m_flSpawnTime + PIPEBOMB_TIME_TILL_LIVE) 
+		//	return;
 
 		// Transfer ownership before exploding 
 		//	eg. if an engineer dets these instead with emp
@@ -202,7 +202,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 	CFFProjectilePipebomb *pPipe = NULL; 
 
 	// Detonate any pipes belonging to us
-	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassname(pPipe, "pipebomb")) != NULL) 
+	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassT(pPipe, CLASS_PIPEBOMB)) != NULL) 
 	{
 		if (pPipe->GetOwnerEntity() == pOwner) 
 			pPipe->DetonatePipe(force);
@@ -258,7 +258,7 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const Vector &vecO
 	int i = 0;
 
 	// Make sure there aren't already too many pipes
-	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassname(pPipe, "pipebomb")) != NULL) 
+	while ((pPipe = (CFFProjectilePipebomb *) gEntList.FindEntityByClassT(pPipe, CLASS_PIPEBOMB)) != NULL) 
 	{
 		if (pPipe->GetOwnerEntity() == pPipebomb->GetOwnerEntity()) 
 		{

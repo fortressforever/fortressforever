@@ -378,7 +378,8 @@ void CFFPlayer::ClassSpecificSkill()
 	{
 #ifdef GAME_DLL
 	case CLASS_DEMOMAN:
-		CFFProjectilePipebomb::DestroyAllPipes(this);
+		if( ( GetPipebombShotTime() + PIPEBOMB_TIME_TILL_LIVE ) < gpGlobals->curtime )
+			CFFProjectilePipebomb::DestroyAllPipes(this);
 		break;
 #endif
 
