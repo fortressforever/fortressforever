@@ -487,7 +487,7 @@ void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 	// Remove the flickerer
 	if( m_pFlickerer )
 	{
-		UTIL_Remove( m_pFlickerer );
+		m_pFlickerer->SetBuildable( NULL );
 		m_pFlickerer = NULL;
 	}
 
