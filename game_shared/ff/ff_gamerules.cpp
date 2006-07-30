@@ -1274,6 +1274,12 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 //-----------------------------------------------------------------------------
 int CFFGameRules::IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
 {
+	// There is a spectator involved here
+	if (iTeam1 < TEAM_BLUE || iTeam2 < TEAM_BLUE)
+	{
+		return GR_TEAMMATE;
+	}
+
 	// Returns GR_TEAMMATE if iTeam1 is allied to iTeam2
 	Assert( ( iTeam1 >= TEAM_BLUE ) && ( iTeam1 <= TEAM_GREEN ) );
 	Assert( ( iTeam2 >= TEAM_BLUE ) && ( iTeam2 <= TEAM_GREEN ) );
