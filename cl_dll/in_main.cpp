@@ -20,6 +20,7 @@
 #include "hltvcamera.h"
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
+#include "c_ff_player.h"	// |-- Mirv: Needed for ScaleMovements
 
 extern ConVar in_joystick;
 
@@ -795,6 +796,36 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 
 	// clip to maxspeed
 	// FIXME FIXME:  This doesn't work
+
+	// --> Mirv: FIXED FIXED
+
+	// We have to scale speeds this early on.
+	// This way we don't tell the server that we're trying to move faster than we
+	// know we're allowed. This reduces jerkiness when the max speed is changing, since
+	// if the client maxspeed is temporarily slower than the server, it'll still be
+	// telling the server to move at its own maxspeed and the client/server movements
+	// won't diverge.
+
+	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (CBasePlayer::GetLocalPlayer());
+
+	if (!pPlayer)
+		return;
+
+	float flSpeed = sqrt((cmd->forwardmove * cmd->forwardmove) + 
+						 (cmd->sidemove * cmd->sidemove) + 
+						 (cmd->upmove * cmd->upmove));
+
+	float flMaxSpeed = pPlayer->MaxSpeed();
+
+	if (flSpeed > flMaxSpeed)
+	{
+		float fRatio = flMaxSpeed / flSpeed;
+		cmd->forwardmove *= fRatio;
+		cmd->sidemove    *= fRatio;
+		cmd->upmove      *= fRatio;
+	}
+
+	// <-- Mirv
 	return;
 
 	/*

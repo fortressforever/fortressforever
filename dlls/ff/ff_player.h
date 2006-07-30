@@ -644,6 +644,9 @@ public:
 	// TODO: Possibly network this?
 	float		m_flNextJumpTimeForDouble;
 
+	float		m_flMaxspeedChangeTime;
+	float		m_flOldMaxspeed;
+
 public:
 	// Run "effects" and "speed effects" through here first
 	// before giving the player the actual effect.
