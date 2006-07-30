@@ -745,7 +745,7 @@ float CFFWeaponSniperRifle::GetFOV()
 		return NULL;
 	}
 
-	float deltaTime = (float) (gpGlobals->tickcount * gpGlobals->interval_per_tick - m_flZoomTime) * 2.0f;
+	float deltaTime = (float) (gpGlobals->tickcount * gpGlobals->interval_per_tick - m_flZoomTime) * 5.0f;
 
 	if (deltaTime < 1.0f)
 	{
