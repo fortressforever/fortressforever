@@ -5037,9 +5037,6 @@ void CFFPlayer::SpySabotageThink()
 		// If we are sabotaging then check if we've timed out
 		if (m_hSabotaging && m_flSpySabotageFinish <= gpGlobals->curtime)
 		{
-			m_hSabotaging->Sabotage(this);
-			m_hSabotaging = NULL;
-
 			ClientPrint(this, HUD_PRINTCENTER, "#FF_BUILDINGSABOTAGED");
 
 			// Fire an event.
@@ -5054,6 +5051,9 @@ void CFFPlayer::SpySabotageThink()
 				pEvent->SetInt("userid", pPlayer->GetUserID());
 				pEvent->SetInt("saboteur", this->GetUserID());				
 			}
+
+			m_hSabotaging->Sabotage(this);
+			m_hSabotaging = NULL;
 		}
 	}
 }
