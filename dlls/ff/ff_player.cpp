@@ -59,7 +59,7 @@ int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
 // grenade information
 ConVar gren_timer("ffdev_gren_timer","4.0",0,"Timer length for all grenades.");
-ConVar gren_throw_delay("ffdev_throw_delay","1.0",0,"Delay before primed grenades can be thrown.");
+ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenades can be thrown.");
 //ConVar gren_speed("ffdev_gren_speed","500.0",0,"Speed grenades are thrown at.");
 ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");

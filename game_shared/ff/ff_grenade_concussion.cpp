@@ -181,8 +181,9 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 				// TFC considers a displacement < 16units to be a hh
 				// However in FF sometimes the distance can be more with a hh
 				// But we don't want to lose the trait of a hh-like jump with a drop conc
-				// So an extra flag here helps out
-				if (m_fIsHandheld || flDistance < 16.0f)
+				// So an extra flag here helps out.
+				// Remember that m_fIsHandheld only affects the grenade owner
+				if ((pEntity == GetThrower() && m_fIsHandheld) || flDistance < 16.0f)
 				{
 					VectorNormalize(vecDisplacement);
 					Vector pvel = pPlayer->GetAbsVelocity();
