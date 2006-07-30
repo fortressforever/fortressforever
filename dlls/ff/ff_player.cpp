@@ -977,18 +977,6 @@ void CFFPlayer::SetupClassVariables()
 
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 	}
-
-	// Select the correct weapon
-	int iSpawnSlot = atoi(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_spawnslot"));
-
-	if (iSpawnSlot > 0 && iSpawnSlot <= MAX_WEAPON_SLOTS)
-	{
-		CBaseCombatWeapon *pWeapon = GetWeaponForSlot(iSpawnSlot - 1);
-		Weapon_Switch(pWeapon);
-	}
-
-	// Load class configs
-	engine->ClientCommand(edict(), "exec %.10s.cfg", pPlayerClassInfo.m_szClassName);
 }
 
 void CFFPlayer::InitialSpawn( void )
