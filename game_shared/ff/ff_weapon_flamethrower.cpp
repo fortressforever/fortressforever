@@ -195,7 +195,17 @@ void CFFWeaponFlamethrower::Fire()
 bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	EmitFlames(false);
-	WeaponSound(STOP);
+
+	// Stop any sound effect that may be playing at the time. Holster seems to be called
+	// on the client for other people too. It should only be sent by the server for other
+	// people's holstering.
+
+#ifdef CLIENT_DLL
+	if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
+#endif
+	{
+		WeaponSound(STOP);
+	}
 
 	return BaseClass::Holster();
 }
