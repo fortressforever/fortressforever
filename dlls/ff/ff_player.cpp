@@ -4113,10 +4113,12 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 
 			if (pRagdoll)
 			{
-				pRagdoll->m_hPlayer = this;
+				// Don't associate with a player, this is a quick fix to the ragdoll
+				// limbs trying to snatch a player model instance.
+				pRagdoll->m_hPlayer = NULL;	
 				pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
 				pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
-				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot() ][i];
+				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot()][i];
 				pRagdoll->m_nForceBone = m_nForceBone;
 				pRagdoll->m_vecForce = Vector(0, 0, 0);
 				pRagdoll->m_fBodygroupState = 0;
