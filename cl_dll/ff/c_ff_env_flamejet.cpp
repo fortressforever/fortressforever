@@ -201,6 +201,16 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
 	}
 
+	// Check that this isn't going through a wall
+	trace_t tr;
+	UTIL_TraceLine(pOwner->GetLegacyAbsOrigin(), vecStart, MASK_SOLID_BRUSHONLY, pOwner, COLLISION_GROUP_NONE, &tr);
+
+	// Yes, going through a wall
+	if (tr.fraction < 1.0f)
+	{
+		return;
+	}
+
 	Vector forward, right, up;
 	AngleVectors(angAngles, &forward, &right, &up);
 
