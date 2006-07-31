@@ -654,8 +654,9 @@ public:
 	// TODO: Possibly network this?
 	float		m_flNextJumpTimeForDouble;
 
-	float		m_flMaxspeedChangeTime;
-	float		m_flOldMaxspeed;
+	CNetworkVar(float, m_flSpeedModifier);
+	float		m_flSpeedModifierOld;
+	float		m_flSpeedModifierChangeTime;
 
 public:
 	// Run "effects" and "speed effects" through here first

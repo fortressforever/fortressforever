@@ -250,6 +250,8 @@ public:
 
 	virtual		float GetFOV();
 
+	float		m_flSpeedModifier;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };

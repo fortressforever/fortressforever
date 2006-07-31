@@ -356,6 +356,8 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_flNextMapGuideTime ) ),
 
 	RecvPropFloat(RECVINFO(m_flConcTime)),
+
+	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
 END_RECV_TABLE( )
 
 void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
