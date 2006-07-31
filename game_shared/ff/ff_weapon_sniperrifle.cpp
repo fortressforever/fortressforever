@@ -17,6 +17,12 @@
 #include "in_buttons.h"
 #include "Sprite.h"
 
+#ifdef CLIENT_DLL
+	#include "fx.h"
+	#include "fx_sparks.h"
+	#include "fx_line.h"
+#endif
+
 //#define	RPG_LASER_SPRITE	"sprites/redglow1"
 
 static int g_iBeam, g_iHalo;
@@ -51,7 +57,15 @@ public:
 	DECLARE_NETWORKCLASS();
 	DECLARE_DATADESC();
 
-//	CFFWeaponLaserDot();
+#ifdef CLIENT_DLL
+	CFFWeaponLaserDot()
+	{
+
+		m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+		m_pMaterial->IncrementReferenceCount();
+	}
+#endif
+
 //	~CFFWeaponLaserDot();
 
 	static CFFWeaponLaserDot *Create(const Vector &origin, CBaseEntity *pOwner = NULL);
@@ -73,6 +87,8 @@ public:
 	virtual int				DrawModel(int flags);
 	virtual void			OnDataChanged(DataUpdateType_t updateType);
 	virtual bool			ShouldDraw() { return (IsEffectActive(EF_NODRAW) ==false); }
+
+	IMaterial	*m_pMaterial;
 #endif
 
 	CNetworkVar(float, m_flStartTime);
@@ -174,6 +190,8 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 		Vector vecAttachment, vecDir, endPos;
 		bool fDrawDot = true;
 
+		int alpha = clamp(150 + 15 * (gpGlobals->curtime - m_flStartTime), 0, 255);
+
 		CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (GetOwnerEntity());
 
 		// We're going to predict it using the players' angles
@@ -225,7 +243,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 				float brightness = flDot * flDot;
 
-				if (brightness > 0.3f) 
+				/*if (brightness > 0.3f) 
 					beams->CreateBeamPoints(tr.startpos, 
 						endPos, 
 						g_iBeam, 
@@ -242,7 +260,11 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 						1.0f, 						// framerate
 						brightness, 					// r
 						brightness, 					// g
-						brightness);				// b
+						brightness);				// b*/
+
+				color32 colour = { 255, 0, 0, alpha * brightness };
+
+				FX_DrawLine(tr.startpos, tr.endpos, brightness, m_pMaterial, colour);
 
 				//beams->CreateBeamEntPoint(pOwner->entindex(), &tr.startpos, pOwner->entindex(), &endPos, g_iBeam, g_iHalo, 0, 0.1f, 1.0f, 1.0f, 40.0f, 1.0f, 1.0f, 0, 0, 1.0f, 1.0f, 0, 0);
 			}
@@ -256,9 +278,6 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 		// Randomly flutter
 		//renderscale = 16.0f + random->RandomFloat(-2.0f, 2.0f);	
 		renderscale = 0.5f + random->RandomFloat(-0.02f, 0.02f);
-
-		// Bug #0000223: Sniper rifle dot doesn't get darker as shot is charged/does not charge?
-		int alpha = clamp(115 + 20 * (gpGlobals->curtime - m_flStartTime), 0, 255);
 
 		if (!fDrawDot)
 			return 0;
