@@ -268,6 +268,36 @@ void CFFPlayer::FireBullet(
 		TraceAttackToTriggers(info, tr.startpos, tr.endpos, vecDir);
 #endif
 
+		// Sniper rifle has some extra hit & gib sounds that we need to use.
+		if (flSniperRifleCharge)
+		{
+			if (tr.m_pEnt->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer(tr.m_pEnt);
+
+				if (pPlayer)
+				{
+					CRecipientFilter filter;
+					filter.AddRecipientsByPAS(pPlayer->GetAbsOrigin());
+
+#ifdef GAME_DLL
+					filter.RemoveRecipientsByPVS(pPlayer->GetAbsOrigin());
+#endif
+
+					EmitSound_t ep;
+					ep.m_nChannel = CHAN_BODY;
+					ep.m_pSoundName = pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib";
+					ep.m_flVolume = 1.0f;
+					ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
+					ep.m_nFlags = 0;
+					ep.m_nPitch = PITCH_NORM; // params.pitch;
+					ep.m_pOrigin = &pPlayer->GetAbsOrigin();
+
+					pPlayer->EmitSound(filter, pPlayer->entindex(), ep);
+				}
+			}
+		}
+
 		ApplyMultiDamage();
 }
 

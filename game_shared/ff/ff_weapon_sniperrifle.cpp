@@ -407,6 +407,9 @@ void CFFWeaponSniperRifle::Precache()
 
 	PrecacheScriptSound("SniperRifle.zoom_out");
 	PrecacheScriptSound("SniperRifle.zoom_in");
+
+	PrecacheScriptSound("Sniper.Hit");
+	PrecacheScriptSound("Sniper.Gib");
 }
 
 bool CFFWeaponSniperRifle::Deploy() 
@@ -561,7 +564,6 @@ void CFFWeaponSniperRifle::ItemPostFrame()
 // ---------------------------------------------------------------------------
 void CFFWeaponSniperRifle::CheckFire() 
 {
-
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 	
 	// if we're currently firing, then check to see if we release
@@ -575,8 +577,10 @@ void CFFWeaponSniperRifle::CheckFire()
 				// Fire!!
 				Fire();
 
+#ifdef GAME_DLL
 				// remove the ammo
 				pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
+#endif
 			}
 			else
 				ClientPrint(dynamic_cast<CBasePlayer *> (GetOwnerEntity()), HUD_PRINTCENTER, "#FF_MUSTBEONGROUND");
