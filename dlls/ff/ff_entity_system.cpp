@@ -2035,7 +2035,8 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsInactive",			&CFFInfoScript::IsInactive)
 			.def("IsRemoved",			&CFFInfoScript::IsRemoved)
 			.def("Remove",				&CFFInfoScript::LUA_Remove)
-			.def("Restore",				&CFFInfoScript::LUA_Restore),
+			.def("Restore",				&CFFInfoScript::LUA_Restore)
+			.def("EntName",				&CFFInfoScript::EntName),
 
 		// CFuncFFScript - trigger_ff_script
 		class_<CFuncFFScript>("TriggerScript")

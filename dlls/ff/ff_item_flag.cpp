@@ -128,13 +128,10 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 
 	SetMoveType( MOVETYPE_NONE );
 
-	if( !IsRemoved() )
-	{
-		// Update goal state
-		SetInactive();
-		// Update position state
-		SetReturned();
-	}	
+	// Update goal state
+	SetInactive();
+	// Update position state
+	SetReturned();
 
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
@@ -158,17 +155,9 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 		}
 	}
 
-	if( !IsRemoved() )
-	{
-		// make it respond to touches
-		//SetCollisionGroup( COLLISION_GROUP_WEAPON );
-		SetTouch( &CFFInfoScript::OnTouch );
-	}
-	else
-	{
-		SetTouch( NULL );
-		SetThink( NULL );
-	}
+	// make it respond to touches
+	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
+	SetTouch( &CFFInfoScript::OnTouch );
 
 	return true;
 }
