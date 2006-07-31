@@ -51,7 +51,7 @@ public:
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual bool	IsAlive( void ) { return false; }
 
-	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
+	//virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
 
 	// An info_ff_script's position state
 	virtual bool	IsCarried( void );
@@ -185,13 +185,13 @@ bool C_FFInfoScript::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-int C_FFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
-{
+//int C_FFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+//{
 	// Force sending even if no model. By default objects
 	// without a model aren't sent to the client. And,
 	// sometimes we don't want a model.
-	return FL_EDICT_ALWAYS;
-}
+//	return FL_EDICT_ALWAYS;
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: Is this info_ff_script currently carried?

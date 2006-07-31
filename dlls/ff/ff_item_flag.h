@@ -92,6 +92,8 @@ public:
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
 	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
+	const char *EntName( void ) { return STRING( GetEntityName() ); }
+
 protected:
 	// Do not expose these to LUA!
 	virtual void	SetActive( void );
