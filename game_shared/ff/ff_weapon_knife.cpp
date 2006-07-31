@@ -116,7 +116,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 			float angle = vFacing.Dot(vDisplacement);
 			if (angle > .707) // cos(45deg) 
 			{
-				DevMsg("BACKSTAB!!!!!\n");
+				//DevMsg("BACKSTAB!!!!!\n");
 				// we get to totally kerplown this guy
 
 				// Mulch: armor doesn't protect against DMG_DIRECT
@@ -135,6 +135,14 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				{
 					CFFPlayer *pVictim = ToFFPlayer(pHitEntity);
 					pPlayer->SetDisguise(pVictim->GetTeamNumber(), pVictim->GetClassSlot(), true);
+
+					CBaseEntity *pRagdoll = pVictim->m_hRagdoll.Get();
+
+					// Ragdoll should die very soon
+					if (pRagdoll)
+					{
+						pRagdoll->SetNextThink(gpGlobals->curtime + 2.5f);
+					}
 				}
 				else
 				{
