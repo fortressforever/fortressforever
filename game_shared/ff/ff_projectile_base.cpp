@@ -39,9 +39,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileBase, DT_FFProjectileBase)
 
 BEGIN_NETWORK_TABLE(CFFProjectileBase, DT_FFProjectileBase) 
 	#ifdef CLIENT_DLL
-		RecvPropVector(RECVINFO(m_vInitialVelocity)) 
+		RecvPropVector(RECVINFO(m_vecInitialVelocity)) 
 	#else
-		SendPropVector(SENDINFO(m_vInitialVelocity), 
+		SendPropVector(SENDINFO(m_vecInitialVelocity), 
 			20, 		// nbits
 			0, 		// flags
 			-3000, 	// low value
@@ -74,6 +74,9 @@ END_NETWORK_TABLE()
 
 		if (type == DATA_UPDATE_CREATED) 
 		{
+			// Store start origin
+			m_vecStartOrigin = GetLocalOrigin();
+
 			// Now stick our initial velocity into the interpolation history 
 			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
 			
@@ -81,15 +84,12 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			//VOOGRU: Taken this out due to #0000706
-			/*
-			Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
-			interpolator.AddToHead(changeTime - 1.0f, &vCurOrigin, false);
-			*/
+			Vector vecCurOrigin = GetLocalOrigin() - m_vecInitialVelocity;
+			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
 
 			// Add the current sample.
-			Vector vCurOrigin = GetLocalOrigin();
-			interpolator.AddToHead(changeTime, &vCurOrigin, false);
+			vecCurOrigin = GetLocalOrigin();
+			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
 
 			// This projectile has entered the client's PVS so flag it as needing
 			// a sound attached. We can't directly start the sound here because
@@ -97,6 +97,25 @@ END_NETWORK_TABLE()
 			if (GetFlightSound())
 				m_fNeedsEngineSoundAttached = true;
 		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Because we're adding interpolation history, the projectile will be
+	//			drawn slightly in the past at various times. This function just
+	//			calculates whether or not this is the case. It is needed by Draw()
+	//			and for any entities that use this as their move parent (eg. rocket
+	//			trails).
+	//-----------------------------------------------------------------------------
+	bool CFFProjectileBase::IsDrawingHistory()
+	{
+		Vector vecDisplacement = GetLocalOrigin() - m_vecStartOrigin;
+
+		// We don't need to normalise because the magnitude doesn't matter.
+		float flDot = vecDisplacement.Dot(m_vecInitialVelocity);
+
+		// If the rocket is behind our start point (thanks to the interpolation)
+		// then don't draw it. We also need to stop drawing the trail too.
+		return (flDot < 0);
 	}
 
 	//----------------------------------------------------------------------------
@@ -109,6 +128,12 @@ END_NETWORK_TABLE()
 		{
 			EmitSound(GetFlightSound());
 			m_fNeedsEngineSoundAttached = false;
+		}
+
+		// Don't draw us if we're in some interpolated past.
+		if (IsDrawingHistory())
+		{
+			return 0;
 		}
 
 		return BaseClass::DrawModel(flags);
@@ -137,7 +162,7 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	void CFFProjectileBase::SetupInitialTransmittedVelocity(const Vector &velocity) 
 	{
-		m_vInitialVelocity = velocity;
+		m_vecInitialVelocity = velocity;
 	}
 
 	//----------------------------------------------------------------------------
