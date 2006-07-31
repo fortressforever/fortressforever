@@ -182,12 +182,10 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 
 	CFFPlayer *pPlayer = dynamic_cast<CFFPlayer *> (player);
 
-	if (pPlayer)
+	// Don't do this if not yet ready to apply the new speed modifier
+	if (pPlayer && pPlayer->m_flSpeedModifierChangeTime <= gpGlobals->curtime)
 	{
-		if (pPlayer->m_flMaxspeedChangeTime > gpGlobals->curtime)
-		{
-			move->m_flClientMaxSpeed = pPlayer->m_flOldMaxspeed;
-		}
+		move->m_flClientMaxSpeed *= pPlayer->m_flSpeedModifier;
 	}
 	// <-- Mirv
 	

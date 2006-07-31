@@ -815,7 +815,7 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 						 (cmd->sidemove * cmd->sidemove) + 
 						 (cmd->upmove * cmd->upmove));
 
-	float flMaxSpeed = pPlayer->MaxSpeed();
+	float flMaxSpeed = pPlayer->MaxSpeed() * pPlayer->m_flSpeedModifier;
 
 	if (flSpeed > flMaxSpeed)
 	{

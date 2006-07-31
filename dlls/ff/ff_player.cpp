@@ -265,6 +265,8 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO( m_flNextMapGuideTime ) ),
 
 	SendPropFloat(SENDINFO(m_flConcTime)),
+
+	SendPropFloat(SENDINFO(m_flSpeedModifier)),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -388,7 +390,9 @@ CFFPlayer::CFFPlayer()
 
 	m_flNextJumpTimeForDouble = 0;
 
-	m_flMaxspeedChangeTime = 0;
+	m_flSpeedModifier = 1.0f;
+	m_flSpeedModifierOld = 1.0f;
+	m_flSpeedModifierChangeTime = 0;
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
@@ -767,6 +771,10 @@ void CFFPlayer::Spawn()
 	m_iInfectedTeam		= TEAM_UNASSIGNED;
 	m_hRagdoll			= NULL;
 	m_flConcTime		= 0.0f;
+	m_flSpeedModifier	= 1.0f;
+	
+	m_flSpeedModifierOld		= 1.0f;
+	m_flSpeedModifierChangeTime	= 0;
 
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
@@ -3354,28 +3362,39 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 
 void CFFPlayer::RecalculateSpeed( void )
 {
-	//DevMsg("[SpeedEffect] Start\n");
-	// start off with the class base speed
-	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
-	float speed = (float)pPlayerClassInfo.m_iSpeed;
+	float flSpeed = 1.0f;
 
 	// go apply all speed effects
-	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
+	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
 		if (m_vSpeedEffects[i].active)
-			speed *= m_vSpeedEffects[i].speed;
+			flSpeed *= m_vSpeedEffects[i].speed;
 	}
 
-	// Store off the old max speed for the server to use for the next few ms.
-	m_flOldMaxspeed = m_flMaxspeed;
+	// If speed has gotten slower then delay the max speed change on the server.
+	// This way the client can predict in time that the speed has changed, and warping
+	// won't happen.
+	// This will break if two speed changes happen in quick succession but unless
+	// that turns out to be a problem it's not worth worrying about.
+	if (flSpeed < m_flSpeedModifier)
+	{
+		// Store off the old max speed for the server to use for the next few ms.
+		m_flSpeedModifierOld = m_flSpeedModifier;
 
-	// Work our approximately when the client will receive this speed change.
-	m_flMaxspeedChangeTime = gpGlobals->curtime + (0.001f * this->GetPing());
+		// Work our approximately when the client will receive this speed change.
+		m_flSpeedModifierChangeTime = gpGlobals->curtime + (0.002f * this->GetPing());
+	}
+	else
+	{
+		// Apply the speed change instantly. Warping won't occur because the client
+		// is moving slower than the server's max speed.
+		m_flSpeedModifierChangeTime = 0;
+	}
 
 	// While we've set the max speed now, it won't actually be used by the server
 	// movement code until after m_flMaxspeedChangeTime. This allows the client to
 	// predict the speed change in time and avoid any warping.
-	SetMaxSpeed(speed);
+	m_flSpeedModifier = flSpeed;
 }
 
 //-----------------------------------------------------------------------------

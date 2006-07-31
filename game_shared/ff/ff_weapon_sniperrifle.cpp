@@ -496,7 +496,7 @@ void CFFWeaponSniperRifle::Fire()
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();	
 
 	float flSniperRifleCharge = clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);	// Minimum charge is 1.
-	DevMsg("FIRE IN THE HOLE(%.2f multiplier) !\n", flSniperRifleCharge);
+	//DevMsg("FIRE IN THE HOLE(%.2f multiplier) !\n", flSniperRifleCharge);
 
 	// Does TFC have any sort of autoaiming for sniper rifle?
 	// #define WEINER_SNIPER from tf_defs.h suggests perhaps
