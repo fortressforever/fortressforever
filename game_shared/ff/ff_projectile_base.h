@@ -37,7 +37,7 @@ public:
 
 	// This gets sent to the client and placed in the client's interpolation history
 	// so the projectile starts out moving right off the bat.
-	CNetworkVector(m_vInitialVelocity);
+	CNetworkVector(m_vecInitialVelocity);
 
 	virtual void Precache();
 	virtual void Spawn();
@@ -58,8 +58,14 @@ public:
 	virtual int	 DrawModel(int flags);
 	virtual void Release();
 
+	// This entity is drawing its past position thanks to interpolation
+	bool IsDrawingHistory();
+
 	// Flag if engine sound needs adding
-	bool m_fNeedsEngineSoundAttached;
+	bool	m_fNeedsEngineSoundAttached;
+
+	// Position that this projectile first started
+	Vector	m_vecStartOrigin;
 
 #else
 	DECLARE_DATADESC();
