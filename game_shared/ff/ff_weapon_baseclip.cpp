@@ -50,6 +50,10 @@ bool CFFWeaponBaseClip::StartReload()
 	if (m_iClip1 >= GetMaxClip1())
 		return false;
 
+	// Don't allow reload instantly after fire
+	if (m_flNextPrimaryAttack > gpGlobals->curtime)
+		return false;
+
 	SendWeaponAnim(ACT_SHOTGUN_RELOAD_START);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
