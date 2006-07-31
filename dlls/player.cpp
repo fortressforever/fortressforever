@@ -4853,6 +4853,19 @@ CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
 		pent->Touch( this );
 	}
 
+	// --> Mirv: Dropped weapon fix
+
+	// Sometimes weapons aren't equipped, for some reason. This seems to happen during
+	// telefrags (either occasionally or constantly) and rapidly dying in respawn spam.
+	// Check if the weapon has really been picked up and remove if it hasn't.
+	if (pent->GetOwnerEntity() != this)
+	{
+		pent->SetTouch(NULL);
+		UTIL_Remove(pent);
+	}
+
+	// <-- Mirv
+
 	return pent;
 }
 
