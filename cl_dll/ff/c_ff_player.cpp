@@ -677,6 +677,14 @@ C_FFPlayer::C_FFPlayer() :
 {
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
+	// Friendly spy list stuff
+	m_flFriendlySpyListTime = 0.0f;
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		m_hFriendlySpyList[ i ].m_pGlyph = NULL;
+		m_hFriendlySpyList[ i ].m_flTimeDrawn = 0.0f;
+	}
+
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -799,6 +807,14 @@ C_FFPlayer::C_FFPlayer() :
 
 C_FFPlayer::~C_FFPlayer()
 {
+	// Friendly spy list stuff
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		if( m_hFriendlySpyList[ i ].m_pGlyph )
+			m_hFriendlySpyList[ i ].m_pGlyph->Delete();
+		m_hFriendlySpyList[ i ].m_pGlyph = NULL;
+	}
+
 	m_PlayerAnimState->Release();
 
 	ReleaseFlashlight();
@@ -809,8 +825,10 @@ C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 	return ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
 }
 
-// --> Mirv: Conc angles
-void C_FFPlayer::PreThink()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_FFPlayer::PreThink( void )
 {
 	if ((m_flConcTime > gpGlobals->curtime) || (m_flConcTime < 0))
 	{
@@ -841,9 +859,38 @@ void C_FFPlayer::PreThink()
 	if (m_afButtonPressed & IN_RELOAD && !IsAlive())
 		engine->ClientCmd("-reload");
 
+	// Do stuff w/ the friendly spy list
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		if( m_hFriendlySpyList[ i ].m_pGlyph )
+		{
+			// If we haven't gotten an update in a very short time, stop drawing
+			if( ( m_hFriendlySpyList[ i ].m_flTimeDrawn + 0.2f ) < gpGlobals->curtime )
+				m_hFriendlySpyList[ i ].m_pGlyph->AddEffects( EF_NODRAW );
+
+			// If we haven't gotten an updated in an even longer time, delete it
+			if( ( m_hFriendlySpyList[ i ].m_flTimeDrawn + 1.0f ) < gpGlobals->curtime )
+			{
+				m_hFriendlySpyList[ i ].m_pGlyph->Delete();
+				m_hFriendlySpyList[ i ].m_pGlyph = NULL;
+			}
+		}
+	}
+
 	BaseClass::PreThink();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_FFPlayer::PostThink( void )
+{
+	BaseClass::PostThink();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn
+//-----------------------------------------------------------------------------
 void C_FFPlayer::Spawn( void )
 {
 	// Stop grenade 1 timers if they're playing
@@ -892,6 +939,49 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int C_FFPlayer::DrawModel( int flags )
+{
+	C_FFPlayer *pPlayer = GetLocalFFPlayer();
+	if( pPlayer && ( this != pPlayer ) )
+	{
+		// See if we're drawing a spy who is on our team and disguised
+		if( IsDisguised() && ( GetTeamNumber() == pPlayer->GetTeamNumber() ) )
+		{
+			// Spy is disguised as someone not of the team we're on
+			if( GetDisguisedTeam() != pPlayer->GetTeamNumber() )
+			{
+				// Store this guy in our local friendly spy list
+				int iPlayerIndex = entindex() - 1;
+
+				// Store time we started drawing/updated drawing
+				pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_flTimeDrawn = gpGlobals->curtime;
+
+				if( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph )
+				{
+					// Update position
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsOrigin( EyePosition() );
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsAngles( QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
+				}
+				else if( !pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph )
+				{
+					// Create glyph
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph = C_FFFriendlySpyGlyph::CreateClientSideFriendlySpyGlyph( EyePosition(), QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
+					Assert( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph );
+				}
+				
+				// If we were flagged as nodraw, unflag
+				if( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->IsEffectActive( EF_NODRAW ) )
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->RemoveEffects( EF_NODRAW );
+			}
+		}	
+	}
+
+	return BaseClass::DrawModel( flags );
+}
+
 // Handy function to get the midpoint angle between two angles
 float MidAngle(float target, float value, float amount) 
 {
@@ -917,6 +1007,9 @@ float MidAngle(float target, float value, float amount)
 	return value;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 const QAngle &C_FFPlayer::EyeAngles()
 {
 	// Mapguides
@@ -944,6 +1037,9 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return BaseClass::EyeAngles();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
@@ -952,6 +1048,9 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 		eyeAngles += m_angConced;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
 	if (m_flConcTime > gpGlobals->curtime || m_flConcTime < 0)
@@ -961,6 +1060,9 @@ void C_FFPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAn
 }
 // <-- Mirv: Conc angles
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 const QAngle& C_FFPlayer::GetRenderAngles()
 {
 	if ( IsRagdoll() )
@@ -973,7 +1075,9 @@ const QAngle& C_FFPlayer::GetRenderAngles()
 	}
 }
 
-
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::UpdateClientSideAnimation()
 {
 	// Update the animation data. It does the local check here so this works when using
@@ -986,7 +1090,9 @@ void C_FFPlayer::UpdateClientSideAnimation()
 	BaseClass::UpdateClientSideAnimation();
 }
 
-
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::PostDataUpdate( DataUpdateType_t updateType )
 {
 	// C_BaseEntity assumes we're networking the entity's angles, so pretend that it

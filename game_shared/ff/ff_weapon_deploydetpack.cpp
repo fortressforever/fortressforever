@@ -113,16 +113,6 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 
 		Cleanup();
 
-		// Mulch: bug 0000322: to circumvent the mouse key code getting passed as an argv :/
-//#ifdef CLIENT_DLL 
-//		engine->ClientCmd( "detpack" );
-//#endif
-
-//#ifdef GAME_DLL		
-//		//DevMsg( "[Detpack Slot] PrimaryAttack\n" );		
-//		GetPlayerOwner()->Command_BuildDetpack();		
-//#endif
-
 #ifdef GAME_DLL
 		// Bug #0000378: Detpack slot sometimes cancels the deploy phase almost immediately
 		engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );

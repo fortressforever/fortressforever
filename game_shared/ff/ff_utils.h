@@ -88,7 +88,8 @@ void FF_HudHint(
 	CFFPlayer *pPlayer = NULL; \
 	for ( CEntitySphereQuery sphere( GetAbsOrigin(), radius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() ) \
 	{ \
-		pPlayer = ToFFPlayer( pEntity );
+		if( pEntity->IsPlayer() ) \
+			pPlayer = ToFFPlayer( pEntity );
 
 #define END_ENTITY_SPHERE_QUERY( ) }
 

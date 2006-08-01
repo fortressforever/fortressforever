@@ -45,6 +45,53 @@ void CC_ToggleOne( void );
 void CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
+// Class C_FFFriendlySpyGlyph. Draws a glyph.
+class C_FFFriendlySpyGlyph : public C_BaseAnimating
+{
+public:
+	DECLARE_CLASS( C_FFFriendlySpyGlyph, C_BaseAnimating );
+
+	static C_FFFriendlySpyGlyph *CreateClientSideFriendlySpyGlyph( const Vector& vecOrigin, const QAngle& vecAngles )
+	{
+		C_FFFriendlySpyGlyph *pGlyph = new C_FFFriendlySpyGlyph;
+
+		if( !pGlyph )
+			return NULL;
+		
+		if( !pGlyph->InitializeAsClientEntity( "models/buildable/dispenser/dispenser.mdl", RENDER_GROUP_OPAQUE_ENTITY ) )
+		{
+			pGlyph->Release();
+
+			return NULL;
+		}
+
+		pGlyph->SetAbsOrigin( vecOrigin );
+		pGlyph->SetLocalAngles( vecAngles );
+		pGlyph->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+		pGlyph->SetRenderMode( kRenderNormal );
+
+		return pGlyph;
+	}
+
+	void Delete( void ) 
+	{
+		Remove();
+	}
+};
+
+// Forward declaration
+class C_FFPlayer;
+
+// Friendly spy list struct
+struct FriendlySpyList_s
+{
+	// Point to the glyph we're drawing
+	C_FFFriendlySpyGlyph	*m_pGlyph;
+	// Time we drew this guy
+	float					m_flTimeDrawn;
+};
+
+// Class C_FFPlayer dude.
 class C_FFPlayer : public C_BasePlayer, public IFFPlayerAnimStateHelpers
 {
 public:
@@ -62,6 +109,7 @@ public:
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
+	virtual int  DrawModel( int flags );
 
 	//--- Added by L0ki ---
 	virtual void Simulate();
@@ -207,6 +255,7 @@ public:
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
 	
 	virtual void PreThink( void );
+	virtual void PostThink( void );
 	// <-- Mirv: Conc stuff
 
 	// --> Mirv: Hold some class info on the player side
@@ -254,6 +303,11 @@ public:
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
+
+public:
+	FriendlySpyList_s m_hFriendlySpyList[ MAX_PLAYERS ];
+	float m_flFriendlySpyListTime;
+
 };
 
 
@@ -263,7 +317,12 @@ inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
 	// Commented out because people are tired of getting this assert!
 	// Assert( dynamic_cast< C_FFPlayer* >( pPlayer ) != NULL );
 	if( dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL )
+	{
 		Warning( "[C_FFPlayer :: ToFFPlayer] dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL\n" );
+
+		// Try to figure out what's doing a ToFFPlayer() on a non player
+		Warning( "\t pPlayer class: %s, class_t: %i\n", pPlayer->GetClassname(), pPlayer->Classify() );
+	}
 
 	return static_cast< C_FFPlayer* >( pPlayer );
 }
