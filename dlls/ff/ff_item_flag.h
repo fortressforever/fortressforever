@@ -15,14 +15,9 @@
 #ifndef FF_ITEM_FLAG_H
 #define FF_ITEM_FLAG_H
 
-#include "ammodef.h"
-#include "items.h"
-#include "ff_player.h"
-#include "ff_weapon_base.h" //for ammo types
+#include "baseanimating.h"
 
-//#define FLAG_MODEL "models/items/backpack/backpack.mdl"
 #define FLAG_MODEL "models/items/healthkit.mdl"
-//#define FLAG_MODEL "models/items/ball/ball.mdl"
 
 // An info_ff_script has 3 position states
 enum FF_ScriptPosState_e
@@ -87,6 +82,8 @@ public:
 	void			Respawn( float delay );
 	void			Return( void );
 
+	void			RemoveThink( void );
+
 	void			SetSpawnFlags( int flags );
 
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
@@ -130,6 +127,8 @@ protected:
 
 	CNetworkVar( int, m_iGoalState );
 	CNetworkVar( int, m_iPosState );
+
+	float m_flSpawnTime;
 };
 
 // This is a cheap hack. Basically, this just calls
