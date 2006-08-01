@@ -131,7 +131,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				ApplyMultiDamage();
 
 				// Is the guy dead? If so then take his clothes because we are cool
-				if (pHitEntity->IsPlayer() && !pHitEntity->IsAlive())
+				if (pHitEntity->IsPlayer() && !pHitEntity->IsAlive() && pPlayer->IsDisguised())
 				{
 					CFFPlayer *pVictim = ToFFPlayer(pHitEntity);
 					pPlayer->SetDisguise(pVictim->GetTeamNumber(), pVictim->GetClassSlot(), true);
