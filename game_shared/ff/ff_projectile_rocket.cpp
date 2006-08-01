@@ -18,6 +18,9 @@
 
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
+#else
+	#define RocketTrail C_RocketTrail
+	#include "c_smoke_trail.h"
 #endif
 
 //=============================================================================
@@ -27,6 +30,11 @@
 IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileRocket, DT_FFProjectileRocket)
 
 BEGIN_NETWORK_TABLE(CFFProjectileRocket, DT_FFProjectileRocket)
+#ifdef GAME_DLL
+SendPropEHandle(SENDINFO(m_hRocketTrail)),
+#else
+RecvPropEHandle(RECVINFO(m_hRocketTrail)),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS(rocket, CFFProjectileRocket);
@@ -95,13 +103,19 @@ PRECACHE_WEAPON_REGISTER(rocket);
 
 #else
 
-//----------------------------------------------------------------------------
-// Purpose: Simulate the rocket client side
-//----------------------------------------------------------------------------
-void CFFProjectileRocket::Simulate( void )
-{
-	// TODO: Move the rocket!
-}
+	//-----------------------------------------------------------------------------
+	// Purpose: Remove the rocket trail
+	//-----------------------------------------------------------------------------
+	void CFFProjectileRocket::CleanUp()
+	{
+		// Brute for rocket trail destruction
+		if (m_hRocketTrail)
+		{
+			m_hRocketTrail->Remove();
+		}
+
+		BaseClass::CleanUp();
+	}
 
 #endif
 

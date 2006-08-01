@@ -21,9 +21,11 @@
 
 #ifdef CLIENT_DLL
 	#define CFFProjectileRocket C_FFProjectileRocket
+	#define RocketTrail C_RocketTrail
 #endif
 
 class RocketTrail;
+
 
 //=============================================================================
 // CFFProjectileRocket
@@ -46,7 +48,7 @@ public:
 	CFFProjectileRocket(const CFFProjectileRocket&) {}
 
 	virtual const char *GetFlightSound() { return "rocket.fly"; }
-	virtual void Simulate( void );
+	virtual void CleanUp();
 
 #else
 	DECLARE_DATADESC()
@@ -58,11 +60,11 @@ protected:
 	// Creates the smoke trail
 	void CreateSmokeTrail();
 
-	CHandle<RocketTrail>	m_hRocketTrail;
-
 private:	
 	
 #endif
+
+	CNetworkHandle(RocketTrail, m_hRocketTrail);
 };
 
 

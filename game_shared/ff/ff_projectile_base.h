@@ -55,14 +55,20 @@ public:
 	
 	// Add initial velocity into the interpolation history so that interp works okay
 	virtual void PostDataUpdate(DataUpdateType_t type);
+	virtual void OnDataChanged(DataUpdateType_t type);
+
 	virtual int	 DrawModel(int flags);
+	
+	virtual void SetDormant(bool bDormant);
 	virtual void Release();
+
+	virtual void CleanUp();
 
 	// This entity is drawing its past position thanks to interpolation
 	bool IsDrawingHistory();
 
-	// Flag if engine sound needs adding
-	bool	m_fNeedsEngineSoundAttached;
+	// Flag to keep track of whether projectile needs a cleanup
+	bool	m_bNeedsCleanup;
 
 	// Position that this projectile first started
 	Vector	m_vecStartOrigin;
