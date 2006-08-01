@@ -667,7 +667,7 @@ bool CFFSentryGun::UpdateFacing( void )
 	// Calculate the real pitch target, this depends on the angle at the point we are at now
 	Vector vecMuzzle;
 	QAngle angMuzzle;
-	GetAttachment( m_iEyeAttachment, vecMuzzle, angMuzzle );
+	GetAttachment( (m_iLevel == 3 ? m_iEyeAttachment : m_iMuzzleAttachment), vecMuzzle, angMuzzle );
 
 	// Get orientation pitch at intended orientation
 	Vector dir; 
@@ -720,7 +720,7 @@ Vector CFFSentryGun::EyePosition( void )
 	Vector vecOrigin;
 	QAngle vecAngles;
 
-	GetAttachment( m_iEyeAttachment, vecOrigin, vecAngles );
+	GetAttachment( (m_iLevel == 3 ? m_iEyeAttachment : m_iMuzzleAttachment), vecOrigin, vecAngles );
 
 	return vecOrigin;
 }
