@@ -17,6 +17,7 @@
 #include "ff_entity_system.h"
 #include "ff_luacontext.h"
 #include "ff_player.h"
+#include "omnibot_interface.h"
 
 #include "tier0/memdbgon.h"
 
@@ -324,6 +325,8 @@ void CFFInfoScript::Pickup( CBaseEntity *pEntity )
 	SetNextThink( gpGlobals->curtime );
 
 	PlayCarriedAnim();
+
+	Omnibot::Notify_ItemPickedUp(this, pEntity);
 }
 
 void CFFInfoScript::Respawn(float delay)
@@ -343,6 +346,8 @@ void CFFInfoScript::Respawn(float delay)
 
 	SetThink( &CFFInfoScript::OnRespawn );
 	SetNextThink( gpGlobals->curtime + delay );
+
+	Omnibot::Notify_ItemRespawned(this);
 }
 
 void CFFInfoScript::OnRespawn( void )
@@ -369,6 +374,8 @@ void CFFInfoScript::OnRespawn( void )
 	m_flThrowTime = 0.0f;
 
 	PlayReturnedAnim();
+
+	Omnibot::Notify_ItemRespawned(this);
 }
 
 void CFFInfoScript::Drop( float delay, float speed )
@@ -501,6 +508,8 @@ void CFFInfoScript::Drop( float delay, float speed )
 	CFFLuaSC hObject( 1, m_pLastOwner );
 	entsys.RunPredicates_LUA( this, &hObject, "ondrop" );
 	entsys.RunPredicates_LUA( this, &hObject, "onloseitem" );
+
+	Omnibot::Notify_ItemDropped(this);
 }
 
 void CFFInfoScript::Return( void )
@@ -712,4 +721,10 @@ void CFFInfoScript::LUA_Restore( void )
 void CFFInfoScript::RemoveThink( void )
 {
 	LUA_Remove();
+}
+
+
+void CFFInfoScript::SetBotGoalInfo(int _type, int _team)
+{
+	Omnibot::Notify_GoalInfo(this, _type, _team);
 }

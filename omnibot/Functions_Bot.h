@@ -31,7 +31,7 @@ typedef struct
 	int (*pfnBotConsoleCommand)(const char *_cmd, int _size);
 	void (*pfnBotSendEvent)(int _eid, int _dest, int _source, int _msdelay, BotUserData *_data);
 	void (*pfnBotSendGlobalEvent)(int _eid, int _source, int _msdelay, BotUserData *_data);
-	void (*pfnBotAddGoal)(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
+	obint32 (*pfnBotAddGoal)(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
 	void (*pfnBotSendTrigger)(TriggerInfo *_triggerInfo);
 	void (*pfnBotAddBBRecord)(BlackBoard_Key _type, int _posterID, int _targetID, BotUserData *_data);
 	void (*pfnBotAddThreatEntity)(GameEntity _ent, EntityInfo *_info);

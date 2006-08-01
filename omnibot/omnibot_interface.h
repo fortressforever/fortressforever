@@ -63,6 +63,7 @@ namespace Omnibot
 	void Notify_Feigned(CBasePlayer *_player);
 	
 	void Notify_RadarDetectedEnemy(CBasePlayer *_player, edict_t *_ent);
+	void Notify_RadioTagUpdate(CBasePlayer *_player, edict_t *_ent);
 	void Notify_BuildableDamaged(CBasePlayer *_player, int _type, edict_t *_buildableEnt);
 
 	void Notify_DispenserBuilding(CBasePlayer *_player, edict_t *_buildEnt);
@@ -90,6 +91,21 @@ namespace Omnibot
 
 	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon);
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed);
+
+	// Goal Stuff
+	enum BotGoalTypes
+	{
+		kNone,
+		kBackPack,
+		kFlag,
+		kFlagCap
+	};
+	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _team);
+
+	void Notify_ItemDropped(CBaseEntity *_entity);
+	void Notify_ItemPickedUp(CBaseEntity *_entity, CBaseEntity *_whodoneit);
+	void Notify_ItemRespawned(CBaseEntity *_entity);
+	void Notify_ItemReturned(CBaseEntity *_entity);
 };
 
 #endif

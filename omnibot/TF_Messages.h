@@ -63,6 +63,26 @@ typedef struct
 
 typedef struct  
 {
+	enum GuiType
+	{
+		GuiAlert,
+		GuiMenu,
+		GuiTextBox
+	};
+	GameId		m_TargetPlayer;
+	GuiType		m_MenuType;
+	char		m_Title[32];
+	char		m_Caption[32];
+	char		m_Message[512];
+	char		m_Option[10][64];
+	char		m_Command[10][64];
+	int			m_Level;
+	float		m_TimeOut;
+	obColor		m_Color;
+} TF_HudMenu;
+
+typedef struct  
+{
 	GameEntity	m_TargetPlayer;
 	obBool		m_Lock;
 	obBool		m_Succeeded;

@@ -11,6 +11,7 @@
 
 #include "Omni-Bot_Types.h"
 #include "Omni-Bot_UserFlags.h"
+#include "Omni-Bot_Color.h"
 #include "MessageHelper.h"
 
 // Title: Functions Engine
@@ -183,15 +184,15 @@ typedef struct
 
 	// Function: pfnAddDisplayPath
 	//		Adds a line to display between 2 positions, with a specific color, and type that determines how it is drawn
-	void (*pfnAddDisplayLine)(int _type, const float _start[3], const float _end[3], const float _color[3]);
+	void (*pfnAddDisplayLine)(int _type, const float _start[3], const float _end[3], const obColor &_color);
 
 	// Function: pfnAddTempDisplayLine
 	//		Adds a line to immediately display between 2 positions, with a specific color
-	void (*pfnAddTempDisplayLine)(const float _start[3], const float _end[3], const float _color[3]);
+	void (*pfnAddTempDisplayLine)(const float _start[3], const float _end[3], const obColor &_color);
 
 	// Function: pfnAddDisplayRadius
 	//		Adds a radius indicator to be displayed at a certain position with radius and color
-	void (*pfnAddDisplayRadius)(const float _pos[3], const float _radius, const float _color[3]);
+	void (*pfnAddDisplayRadius)(const float _pos[3], const float _radius, const obColor &_color);
 
 	// Function: pfnClearDebugLines
 	//		This function tells the interface to potentially clear prior navigation or radius indicators
@@ -209,7 +210,7 @@ typedef struct
 
 	// Function: pfnPrintScreenMessage
 	//		This function should print a message the the game screen if possible
-	void (*pfnPrintScreenText)(const int _client, const float _pos[3], const float _color[3], const char *_msg);
+	void (*pfnPrintScreenText)(const int _client, const float _pos[3], const obColor &_color, const char *_msg);
 
 	// Function: pfnGetMapName
 	//		This function should give access to the name of the currently loaded map

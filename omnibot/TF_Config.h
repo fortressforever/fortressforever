@@ -427,6 +427,7 @@ typedef enum eTF_GameMessage
 	TF_MSG_FEIGN,
 	TF_MSG_LOCKPOSITION,
 	TF_MSG_HUDHINT,
+	TF_MSG_HUDMENU,
 
 	TF_MSG_END
 } TF_GameMessage;
@@ -436,6 +437,7 @@ typedef enum eTF_GameMessage
 typedef enum eTF_GoalType
 {
 	TF_GOAL_FLAG = BASE_GOAL_NUM,
+	TF_GOAL_BACK_PACK,
 	TF_GOAL_CAPPOINT,
 	TF_GOAL_SNIPEPOINT,
 	TF_GOAL_SENTRYPOINT,

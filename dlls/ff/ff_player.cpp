@@ -2083,6 +2083,12 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
+
+		// Omni-bot: Notify the bot he has detected someone.
+		if(IsBot())
+		{
+			Omnibot::Notify_RadioTagUpdate(this, pPlayer->edict());							
+		}
 	}
 
 	if( m_hRadioTaggedList.Count() )
@@ -2114,7 +2120,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			WRITE_WORD( 0 );
 
 		// End the message block
-		MessageEnd();
+		MessageEnd();		
 
 		// Doing an update now...
 		m_flLastRadioTagUpdate = gpGlobals->curtime;
