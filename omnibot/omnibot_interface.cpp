@@ -8,6 +8,7 @@
 #include "ai_basenpc.h"
 #include "Color.h"
 #include "world.h"
+#include "ff_item_flag.h"
 
 #include "ff_utils.h"
 
@@ -44,6 +45,21 @@ ConVar	omnibot_debug( "omnibot_debug", "0", FCVAR_ARCHIVE | FCVAR_PROTECTED);
 #define OMNIBOT_MODNAME "Fortress Forever"
 
 extern IServerPluginHelpers *serverpluginhelpers;
+
+//////////////////////////////////////////////////////////////////////////
+
+struct BotGoalInfo
+{
+	char	m_GoalName[64];
+	int		m_GoalType;
+	int		m_GoalTeam;
+	edict_t *m_Edict;
+};
+
+const int MAX_DEFERRED_GOALS = 32;
+int	g_DeferredGoalIndex = 0;
+BotGoalInfo g_DeferredGoals[MAX_DEFERRED_GOALS] = {};
+bool g_ReadyForGoals = false;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -1349,46 +1365,35 @@ namespace Omnibot
 				//info.m_EntityClass = TF_CLASSEX_DETPACK;
 				break;
 			case CLASS_GREN:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_GRENADE;
-				break;
 			case CLASS_GREN_EMP:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_EMP_GRENADE;
-				break;
 			case CLASS_GREN_NAIL:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_NAIL_GRENADE;
-				break;
 			case CLASS_GREN_MIRV:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_MIRV_GRENADE;
-				break;
 			case CLASS_GREN_MIRVLET:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_MIRVLET_GRENADE;
-				break;
 			case CLASS_GREN_NAPALM:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_NAPALM_GRENADE;
-				break;
 			case CLASS_GREN_GAS:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_GAS_GRENADE;
-				break;
 			case CLASS_GREN_CONC:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_CONC_GRENADE;
-				break;
 			case CLASS_GREN_CALTROP:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_CALTROP;
-				break;
 			case CLASS_PIPEBOMB:
+			case CLASS_GLGRENADE:
+			case CLASS_ROCKET:
 				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				break;
+			case CLASS_TURRET:
+				info.m_EntityCategory = ENT_CAT_AUTODEFENSE | ENT_CAT_STATIC;
 				//info.m_EntityClass = TF_CLASSEX_PIPE;
 				break;
-				// TODO: rocket, gl grenade
+			case CLASS_BACKPACK:
+				info.m_EntityCategory = ENT_CAT_PICKUP;
+				//info.m_EntityClass = TF_CLASSEX_PIPE;
+				break;
+			//case CLASS_INFOSCRIPT:
+			//	info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+			//	//info.m_EntityClass = TF_CLASSEX_PIPE;
+			//	break;
+			//case CLASS_TRIGGERSCRIPT:
+			//	info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+			//	//info.m_EntityClass = TF_CLASSEX_PIPE;
+			//	break;	
 			default:
 				continue;
 			}
@@ -1511,6 +1516,25 @@ namespace Omnibot
 					pMsg->m_CurrentArmor = pPlayer->GetArmor();
 					pMsg->m_MaxArmor = pPlayer->GetMaxArmor();
 				}
+				break;
+			}
+		case GEN_MSG_GETFLAGSTATE:
+			{
+				Msg_FlagState *pMsg = _data.Get<Msg_FlagState>();
+				if(pMsg)
+				{
+					if(pEnt && pEnt->Classify() == CLASS_INFOSCRIPT)
+					{
+						CFFInfoScript *pInfoScript = static_cast<CFFInfoScript*>(pEnt);
+						if(pInfoScript->IsDropped())
+							pMsg->m_FlagState = S_FLAG_DROPPED;
+						else if(pInfoScript->IsCarried())
+							pMsg->m_FlagState = S_FLAG_CARRIED;
+						else if(pInfoScript->IsReturned())
+							pMsg->m_FlagState = S_FLAG_AT_BASE;
+						pMsg->m_Owner = pEnt->GetOwnerEntity() ? pEnt->GetOwnerEntity()->edict() : 0;
+					}
+				}			
 				break;
 			}
 		case GEN_MSG_GETMAXSPEED:
@@ -2157,6 +2181,7 @@ namespace Omnibot
 			bSuccess = false;
 			SHUTDOWNBOTLIBRARY;
 		}
+		g_ReadyForGoals = false;
 		gEntList.AddListenerEntity(&gBotEntityListener);
 		obPrintMessage( "---------------------------------------------\n" );
 		return bSuccess;
@@ -2193,6 +2218,20 @@ namespace Omnibot
 				// Call the libraries update.
 				if(g_BotFunctions.pfnBotUpdate)
 				{
+					if(g_ReadyForGoals)
+					{
+						for(int i = 0; i < g_DeferredGoalIndex; ++i)
+						{
+							g_BotFunctions.pfnBotAddGoal(
+								(GameEntity)g_DeferredGoals[i].m_Edict, 
+								g_DeferredGoals[i].m_GoalType, 
+								g_DeferredGoals[i].m_GoalTeam, 
+								g_DeferredGoals[i].m_GoalName, 
+								NULL);
+						}
+						g_DeferredGoalIndex = 0;
+					}					
+
 					g_BotFunctions.pfnBotUpdate();
 				}
 			}
@@ -2204,6 +2243,7 @@ namespace Omnibot
 	void Notify_GameStarted()
 	{
 		omnibot_interface::Bot_Interface_SendGlobalEvent(GAME_ID_STARTGAME, 0, 100, NULL);
+		g_ReadyForGoals = true;		
 	}
 
 	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg)
@@ -2603,56 +2643,66 @@ namespace Omnibot
 
 	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _team)
 	{
+		BotGoalInfo gi;
+
 		//////////////////////////////////////////////////////////////////////////
-		int iTeam = 0;
 		switch(_team)
 		{
-		case 0:
-			iTeam |= (1 << TF_TEAM_BLUE);
-			iTeam |= (1 << TF_TEAM_RED);
-			iTeam |= (1 << TF_TEAM_YELLOW);
-			iTeam |= (1 << TF_TEAM_GREEN);
+		case 0:			
+			gi.m_GoalTeam |= (1 << TF_TEAM_BLUE);
+			gi.m_GoalTeam |= (1 << TF_TEAM_RED);
+			gi.m_GoalTeam |= (1 << TF_TEAM_YELLOW);
+			gi.m_GoalTeam |= (1 << TF_TEAM_GREEN);
 			break;
 		case TEAM_BLUE:
-			iTeam |= (1 << TF_TEAM_BLUE);
+			gi.m_GoalTeam |= (1 << TF_TEAM_BLUE);
 			break;
 		case TEAM_RED:
-			iTeam |= (1 << TF_TEAM_RED);
+			gi.m_GoalTeam |= (1 << TF_TEAM_RED);
 			break;
 		case TEAM_YELLOW:
-			iTeam |= (1 << TF_TEAM_YELLOW);
+			gi.m_GoalTeam |= (1 << TF_TEAM_YELLOW);
 			break;
 		case TEAM_GREEN:
-			iTeam |= (1 << TF_TEAM_GREEN);
+			gi.m_GoalTeam |= (1 << TF_TEAM_GREEN);
 			break;
 		}
 		//////////////////////////////////////////////////////////////////////////
 
-		if(iTeam != 0)
+		if(gi.m_GoalTeam != 0)
 		{
+			gi.m_Edict = _entity->edict();
+			const char *pName = _entity->GetName();
+			Q_strncpy(gi.m_GoalName, pName ? pName : "", sizeof(gi.m_GoalName));
+
 			switch(_type)
 			{
 			case Omnibot::kBackPack:			
 				{
-					const char *pName = _entity->GetName();
-					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
-						TF_GOAL_BACK_PACK, iTeam, pName, NULL);
+					gi.m_GoalType = TF_GOAL_BACK_PACK;									
 					break;
 				}
 			case Omnibot::kFlag:
 				{
-					const char *pName = _entity->GetName();
-					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
-						TF_GOAL_FLAG, iTeam, pName, NULL);
+					gi.m_GoalType = TF_GOAL_FLAG;					
 					break;
 				}
 			case Omnibot::kFlagCap:
 				{
-					const char *pName = _entity->GetName();
-					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
-						TF_GOAL_CAPPOINT, iTeam, pName, NULL);
+					gi.m_GoalType = TF_GOAL_CAPPOINT;
 					break;
 				}
+			default:
+				return;
+			}
+
+			if(g_DeferredGoalIndex < MAX_DEFERRED_GOALS-1)
+			{
+				g_DeferredGoals[g_DeferredGoalIndex++] = gi;
+			}
+			else
+			{
+				pfnPrintError("Omni-bot: Out of deferred goal slots!");
 			}
 		}
 	}
