@@ -61,7 +61,7 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	CFFProjectileBase::CFFProjectileBase()
 	{
-		m_fNeedsEngineSoundAttached = false;
+		m_bNeedsCleanup = true;
 	}
 
 	//----------------------------------------------------------------------------
@@ -90,13 +90,25 @@ END_NETWORK_TABLE()
 			// Add the current sample.
 			vecCurOrigin = GetLocalOrigin();
 			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
-
-			// This projectile has entered the client's PVS so flag it as needing
-			// a sound attached. We can't directly start the sound here because
-			// the entity is not yet ready for queries (eg. GetAbsOrigin())
-			if (GetFlightSound())
-				m_fNeedsEngineSoundAttached = true;
 		}
+	}
+
+	//----------------------------------------------------------------------------
+	// Purpose: When the rocket enters the client's PVS, add the flight sound
+	//			to it. This is done here rather than PostDataUpdate because 
+	//			origins (needed for emitsound) are not valid there
+	//----------------------------------------------------------------------------
+	void CFFProjectileBase::OnDataChanged(DataUpdateType_t type) 
+	{
+		if (type == DATA_UPDATE_CREATED)
+		{
+			if (GetFlightSound())
+			{
+				EmitSound(GetFlightSound());
+			}
+		}
+
+		BaseClass::OnDataChanged(type);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -123,13 +135,6 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	int CFFProjectileBase::DrawModel(int flags) 
 	{
-		// Just putting this here for now.. not the best place for it admittedly
-		if (m_fNeedsEngineSoundAttached)
-		{
-			EmitSound(GetFlightSound());
-			m_fNeedsEngineSoundAttached = false;
-		}
-
 		// Don't draw us if we're in some interpolated past.
 		if (IsDrawingHistory())
 		{
@@ -144,10 +149,39 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	void CFFProjectileBase::Release()
 	{
-		if (GetFlightSound())
-			StopSound(GetFlightSound());
+		if (m_bNeedsCleanup)
+		{
+			CleanUp();
+			m_bNeedsCleanup = false;
+		}
 
 		BaseClass::Release();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Entity has been made dormant, clean up. Sometimes Release isn't
+	//			called (due to latency) and so dormant has to step in to solve this
+	//-----------------------------------------------------------------------------
+	void CFFProjectileBase::SetDormant(bool bDormant)
+	{
+		if (bDormant && m_bNeedsCleanup)
+		{
+			CleanUp();
+			m_bNeedsCleanup = false;
+		}
+
+		BaseClass::SetDormant(bDormant);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Remove sound
+	//-----------------------------------------------------------------------------
+	void CFFProjectileBase::CleanUp()
+	{
+		if (GetFlightSound())
+		{
+			StopSound(GetFlightSound());
+		}
 	}
 
 #else
