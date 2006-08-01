@@ -98,6 +98,8 @@ ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in second
 
 static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
 
+extern ConVar sv_maxspeed;
+
 // --------------------------------------------------------------------------------
 // Purpose: To spawn a model for testing - REMOVE (or disable) for release
 //
@@ -863,6 +865,10 @@ void CFFPlayer::Spawn()
 		AddEffects(EF_NODRAW);
 
 		BaseClass::Spawn();
+
+		// We have to do this after base spawn because it handly sets it to 0
+		SetMaxSpeed(sv_maxspeed.GetFloat());
+
 		return;
 	}
 
