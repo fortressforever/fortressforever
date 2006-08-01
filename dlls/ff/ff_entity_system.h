@@ -240,4 +240,10 @@ enum CollectionFilter
 	CF_MAX_FLAG
 };
 
+class Omnibot_GoalTypes
+{
+public:
+};
+
+
 #endif // FF_ENTITY_SYSTEM_H

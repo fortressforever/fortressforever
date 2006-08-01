@@ -39,6 +39,7 @@
 #include "ff_grenade_base.h"
 #include "beam_shared.h"
 #include "ff_luacontext.h"
+#include "omnibot_interface.h"
 
 // Lua includes
 extern "C"
@@ -2035,8 +2036,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("IsInactive",			&CFFInfoScript::IsInactive)
 			.def("IsRemoved",			&CFFInfoScript::IsRemoved)
 			.def("Remove",				&CFFInfoScript::LUA_Remove)
+			.def("EntName",				&CFFInfoScript::EntName)
 			.def("Restore",				&CFFInfoScript::LUA_Restore)
-			.def("EntName",				&CFFInfoScript::EntName),
+			.def("SetBotGoalInfo",		&CFFInfoScript::SetBotGoalInfo),
 
 		// CFuncFFScript - trigger_ff_script
 		class_<CFuncFFScript>("TriggerScript")
@@ -2118,7 +2120,16 @@ void CFFEntitySystem::FFLibOpen()
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float, unsigned int))&FFLib::FireOutput),
-		def("GetPlayerByID",			&FFLib::GetPlayerByID)	// TEMPORARY
+		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
+
+		class_<Omnibot_GoalTypes>("Bot")
+		.enum_("GoalType")
+		[
+			value("kNone",				Omnibot::kNone),
+			value("kBackPack",			Omnibot::kBackPack),
+			value("kFlag",				Omnibot::kFlag),
+			value("kFlagCap",			Omnibot::kFlagCap)
+		]
 	];
 }
 

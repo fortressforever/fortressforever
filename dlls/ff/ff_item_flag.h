@@ -91,6 +91,7 @@ public:
 
 	const char *EntName( void ) { return STRING( GetEntityName() ); }
 
+	virtual void SetBotGoalInfo(int _type, int _team);
 protected:
 	// Do not expose these to LUA!
 	virtual void	SetActive( void );

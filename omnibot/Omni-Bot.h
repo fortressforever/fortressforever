@@ -36,7 +36,7 @@ void BotUpdate();
 int BotConsoleCommand(const char *_cmd, int _size);
 // function: Bot_AddGoal
 //		Allows the game to register a goal with the bot that the bots can use
-void BotAddGoal(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
+obint32 BotAddGoal(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
 // function: Bot_AddBBRecord
 //		Allows the game to enter blackboard records into the bots knowledge database.
 void BotAddBBRecord(BlackBoard_Key _type, int _posterID, int _targetID, BotUserData *_data);

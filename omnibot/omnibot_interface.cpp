@@ -6,6 +6,8 @@
 #include "playerinfomanager.h"
 #include "filesystem.h"
 #include "ai_basenpc.h"
+#include "Color.h"
+#include "world.h"
 
 #include "ff_utils.h"
 
@@ -25,7 +27,7 @@ typedef struct
 {
 	float	start[3];
 	float	end[3];
-	float	color[3];
+	Omnibot::obColor	color;
 	float	dist;
 	bool	drawme;
 	char	type;
@@ -42,6 +44,54 @@ ConVar	omnibot_debug( "omnibot_debug", "0", FCVAR_ARCHIVE | FCVAR_PROTECTED);
 #define OMNIBOT_MODNAME "Fortress Forever"
 
 extern IServerPluginHelpers *serverpluginhelpers;
+
+//////////////////////////////////////////////////////////////////////////
+
+class CSkeletonServerPlugin : public IServerPluginCallbacks
+{
+public:
+	CSkeletonServerPlugin() {}
+	~CSkeletonServerPlugin() {}
+
+	// IServerPluginCallbacks methods
+	virtual bool			Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory )
+	{
+		return true;
+	}
+	virtual void			Unload( void ) {}
+	virtual void			Pause( void ) {}
+	virtual void			UnPause( void ) {}
+	virtual const char     *GetPluginDescription( void ) { return "Blah"; }      
+	virtual void			LevelInit( char const *pMapName ) {}
+	virtual void			ServerActivate( edict_t *pEdictList, int edictCount, int clientMax ) {}
+	virtual void			GameFrame( bool simulating ) {}
+	virtual void			LevelShutdown( void ) {}
+	virtual void			ClientActive( edict_t *pEntity ) {}
+	virtual void			ClientDisconnect( edict_t *pEntity ) {}
+	virtual void			ClientPutInServer( edict_t *pEntity, char const *playername ) {}
+	virtual void			SetCommandClient( int index ) {}
+	virtual void			ClientSettingsChanged( edict_t *pEdict ) {}
+	virtual PLUGIN_RESULT	ClientConnect( bool *bAllowConnect, edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen ) 
+	{
+		return PLUGIN_CONTINUE;
+	}
+	virtual PLUGIN_RESULT	ClientCommand( edict_t *pEntity )
+	{
+		return PLUGIN_CONTINUE;
+	}
+	virtual PLUGIN_RESULT	NetworkIDValidated( const char *pszUserName, const char *pszNetworkID )
+	{
+		return PLUGIN_CONTINUE;
+	}
+
+	//virtual int GetCommandIndex() { return m_iClientCommandIndex; }
+private:
+};
+
+CSkeletonServerPlugin g_ServerPlugin;
+
+//////////////////////////////////////////////////////////////////////////
+
 
 namespace Omnibot
 {
@@ -383,22 +433,22 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void obAddTempDisplayLine(const float _start[3], const float _end[3], const float _color[3])
+	static void obAddTempDisplayLine(const float _start[3], const float _end[3], const obColor &_color)
 	{
 		Vector vStart(_start[0], _start[1], _start[2]);
 		Vector vEnd(_end[0], _end[1], _end[2]);
 		debugoverlay->AddLineOverlay(vStart, 
 			vEnd, 
-			_color[0] * 255, 
-			_color[1] * 255, 
-			_color[2] * 255, 
+			_color.r(), 
+			_color.g(), 
+			_color.b(), 
 			false, 
 			2.0);
 	}
 
 	//-----------------------------------------------------------------
 
-	void obAddDisplayRadius(const float _pos[3], const float _radius, const float _color[3])
+	void obAddDisplayRadius(const float _pos[3], const float _radius, const obColor &_color)
 	{
 		Vector pos(_pos[0], _pos[1], _pos[2] + 40);
 		Vector start;
@@ -417,9 +467,9 @@ namespace Omnibot
 			debugoverlay->AddLineOverlay(
 				pos + start,
 				pos + end,
-				_color[0] * 255,
-				_color[1] * 255,
-				_color[2] * 255, 
+				_color.r(), 
+				_color.g(), 
+				_color.b(), 
 				false,
 				2.0f);
 		}
@@ -427,7 +477,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void _AddDebugLineToDraw(LineType _type, const float _start[3], const float _end[3], const float _color[3])
+	static void _AddDebugLineToDraw(LineType _type, const float _start[3], const float _end[3], const obColor &_color)
 	{
 		debugLines_t line;
 		line.type = _type;
@@ -437,9 +487,7 @@ namespace Omnibot
 		line.end[0] = _end[0];
 		line.end[1] = _end[1];
 		line.end[2] = _end[2];
-		line.color[0] = _color[0];
-		line.color[1] = _color[1];
-		line.color[2] = _color[2];
+		line.color = _color;
 
 		if(_type == LINE_BLOCKABLE)
 		{		
@@ -451,7 +499,7 @@ namespace Omnibot
 		}	
 	}
 
-	static void obAddDisplayLine(int _type, const float _start[3], const float _end[3], const float _color[3])
+	static void obAddDisplayLine(int _type, const float _start[3], const float _end[3], const obColor &_color)
 	{
 		static float fStartOffset = 64.0f;
 		static float fEndOffset = 0.0f;
@@ -515,7 +563,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void obPrintScreenText(const int _client, const float _pos[3], const float _color[3], const char *_msg)
+	static void obPrintScreenText(const int _client, const float _pos[3], const obColor &_color, const char *_msg)
 	{	
 		if(_msg && _pos)
 		{
@@ -962,21 +1010,9 @@ namespace Omnibot
 
 	static GameEntity obFindEntityByClassName(GameEntity _pStart, const char *_name)
 	{
-		if(!_pStart)
-			return INDEXENT(1);
-		else
-			return 0;
-
-		// TODO: FIX THIS
-		int iStartIndex = _pStart ? ENTINDEX((edict_t*)_pStart) : 1;
-		int iNumEntities = engine->GetEntityCount();
-		for( ; iStartIndex <= iNumEntities; ++iStartIndex)
-		{
-			edict_t *pEdict = INDEXENT(iStartIndex);
-			if(!FNullEnt(pEdict) && !Q_stricmp(pEdict->GetClassName(), _name))
-				return pEdict;
-		}
-		return 0;//(GameEntity)G_Find((gentity_t*)(*_pStart), FOFS(classname), _name);
+		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
+		CBaseEntity *pFoundEntity = gEntList.FindEntityByClassname(pEntity, _name);
+		return pFoundEntity ? pFoundEntity->edict() : 0;
 	}
 
 	//-----------------------------------------------------------------
@@ -985,7 +1021,6 @@ namespace Omnibot
 	{	
 		edict_t *pEdict = (edict_t *)_ent;
 		CBaseEntity *pEntity = pEdict ? CBaseEntity::Instance( pEdict ) : 0;
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			const Vector &vPos = pEntity->GetAbsOrigin();
@@ -1595,6 +1630,47 @@ namespace Omnibot
 				}
 				break;
 			}
+		case TF_MSG_HUDMENU:
+			{
+				TF_HudMenu *pMsg = _data.Get<TF_HudMenu>();
+				pEnt = CBaseEntity::Instance( pMsg->m_TargetPlayer );
+				pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
+				if(pMsg && ToFFPlayer(pPlayer))
+				{
+					KeyValues *kv = new KeyValues( "menu" );
+					kv->SetString( "title", pMsg->m_Title );
+					kv->SetInt( "level", pMsg->m_Level );
+					kv->SetColor( "color", Color( pMsg->m_Color.r(), pMsg->m_Color.g(), pMsg->m_Color.b(), pMsg->m_Color.a() ));
+					kv->SetInt( "time", pMsg->m_TimeOut );
+					kv->SetString( "msg", pMsg->m_Message );
+
+					for(int i = 0; i < 10; ++i)
+					{
+						char num[10];
+						Q_snprintf( num, sizeof(num), "%i", i );
+						KeyValues *item1 = kv->FindKey( num, true );
+						item1->SetString( "msg", pMsg->m_Option[i] );
+						item1->SetString( "command", pMsg->m_Command[i] );
+					}
+
+					DIALOG_TYPE type = DIALOG_MSG;
+					switch(pMsg->m_MenuType)
+					{
+					case TF_HudMenu::GuiAlert:
+						type = DIALOG_MSG; // just an on screen message
+						break;
+					case TF_HudMenu::GuiMenu:
+						type = DIALOG_MENU; // an options menu
+						break;
+					case TF_HudMenu::GuiTextBox:
+						type = DIALOG_TEXT; // a richtext dialog
+						break;
+					}					
+					serverpluginhelpers->CreateMessage( pPlayer->edict(), type, kv, &g_ServerPlugin );
+					kv->deleteThis();
+				}
+				break;
+			}
 		default:
 			{
 				assert(0 && "Unknown Interface Message");
@@ -1749,8 +1825,21 @@ namespace Omnibot
 	//-----------------------------------------------------------------
 
 	static void obGetMapExtents(AABB *_aabb)
-	{		
+	{
 		memset(_aabb, 0, sizeof(AABB));
+
+		CWorld *world = GetWorldEntity();
+		if(world)
+		{
+			Vector mins, maxs;
+			world->GetWorldBounds(mins, maxs);
+
+			for(int i = 0; i < 3; ++i)
+			{
+				_aabb->m_Mins[i] = mins[i];
+				_aabb->m_Maxs[i] = maxs[i];
+			}
+		}
 	}
 
 	static const char *obGetMapName()
@@ -1940,16 +2029,18 @@ namespace Omnibot
 	{
 		virtual void OnEntityCreated( CBaseEntity *pEntity )
 		{
-
+			/*int iIndex = pEntity->entindex();
+			Msg("Entity Created %s\n", pEntity->GetClassname());*/
 		}
 		virtual void OnEntitySpawned( CBaseEntity *pEntity )
 		{
-			int iClass = pEntity->Classify();
-            Msg("Entity Spawned %d\n", iClass);
+			/*int iIndex = pEntity->entindex();
+			Msg("Entity Spawned %s\n", pEntity->GetClassname());*/
 		}
 		virtual void OnEntityDeleted( CBaseEntity *pEntity )
 		{
-
+			/*int iIndex = pEntity->entindex();
+			Msg("Entity Deleted %s\n", pEntity->GetClassname());*/
 		}
 	};
 
@@ -2324,6 +2415,13 @@ namespace Omnibot
 		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_RADAR_DETECT_ENEMY, iGameId, 0, 0, &bud);
 	}
 
+	void Notify_RadioTagUpdate(CBasePlayer *_player, edict_t *_ent)
+	{
+		int iGameId =_player->entindex()-1;
+		BotUserData bud(_ent);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_RADIOTAG_UPDATE, iGameId, 0, 0, &bud);
+	}
+
 	void Notify_BuildableDamaged(CBasePlayer *_player, int _type, edict_t *_buildableEnt)
 	{
 		int iMsg = 0;
@@ -2499,6 +2597,103 @@ namespace Omnibot
 			BotUserData bud(_player->edict());
 			omnibot_interface::Bot_Interface_SendEvent(PERCEPT_FEEL_PLAYER_USE, iGameId, 0, 0, &bud);
 		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _team)
+	{
+		//////////////////////////////////////////////////////////////////////////
+		int iTeam = 0;
+		switch(_team)
+		{
+		case 0:
+			iTeam |= (1 << TF_TEAM_BLUE);
+			iTeam |= (1 << TF_TEAM_RED);
+			iTeam |= (1 << TF_TEAM_YELLOW);
+			iTeam |= (1 << TF_TEAM_GREEN);
+			break;
+		case TEAM_BLUE:
+			iTeam |= (1 << TF_TEAM_BLUE);
+			break;
+		case TEAM_RED:
+			iTeam |= (1 << TF_TEAM_RED);
+			break;
+		case TEAM_YELLOW:
+			iTeam |= (1 << TF_TEAM_YELLOW);
+			break;
+		case TEAM_GREEN:
+			iTeam |= (1 << TF_TEAM_GREEN);
+			break;
+		}
+		//////////////////////////////////////////////////////////////////////////
+
+		if(iTeam != 0)
+		{
+			switch(_type)
+			{
+			case Omnibot::kBackPack:			
+				{
+					const char *pName = _entity->GetName();
+					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
+						TF_GOAL_BACK_PACK, iTeam, pName, NULL);
+					break;
+				}
+			case Omnibot::kFlag:
+				{
+					const char *pName = _entity->GetName();
+					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
+						TF_GOAL_FLAG, iTeam, pName, NULL);
+					break;
+				}
+			case Omnibot::kFlagCap:
+				{
+					const char *pName = _entity->GetName();
+					g_BotFunctions.pfnBotAddGoal((GameEntity)_entity->edict(), 
+						TF_GOAL_CAPPOINT, iTeam, pName, NULL);
+					break;
+				}
+			}
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	void Notify_ItemDropped(CBaseEntity *_entity)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_dropped";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
+	void Notify_ItemPickedUp(CBaseEntity *_entity, CBaseEntity *_whodoneit)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_pickedup";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = _whodoneit ? _whodoneit->edict() : 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
+	void Notify_ItemRespawned(CBaseEntity *_entity)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_respawned";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
+	void Notify_ItemReturned(CBaseEntity *_entity)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_returned";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
