@@ -57,6 +57,8 @@ static ConVar vert_mag( "ffdev_concuss_vmag", "2.0", 0, "Vertical magnitude" );
 static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
+static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
+
 static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
 
 ConVar r_selfshadows( "r_selfshadows", "0", FCVAR_CLIENTDLL, "Toggles player & player carried objects' shadows", true, 0, true, 1 );
@@ -963,13 +965,35 @@ int C_FFPlayer::DrawModel( int flags )
 				{
 					// Update position
 					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsOrigin( EyePosition() );
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsAngles( QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
+					//pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsAngles( QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
 				}
 				else if( !pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph )
 				{
 					// Create glyph
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph = C_FFFriendlySpyGlyph::CreateClientSideFriendlySpyGlyph( EyePosition(), QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph = C_FFFriendlySpyGlyph::Create( EyePosition() /*, QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) */ );
 					Assert( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph );
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetScale( 0.25f );
+
+					RenderMode_t nRenderMode = kRenderNormal;
+
+					switch( render_mode.GetInt() )
+					{
+					case 0: nRenderMode = kRenderNormal; break;
+					case 1: nRenderMode = kRenderTransColor; break;
+					case 2: nRenderMode = kRenderTransTexture; break;
+					case 3: nRenderMode = kRenderGlow; break;
+					case 4: nRenderMode = kRenderTransAlpha; break;
+					case 5: nRenderMode = kRenderTransAdd; break;
+					case 6: nRenderMode = kRenderEnvironmental; break;
+					case 7: nRenderMode = kRenderTransAddFrameBlend; break;
+					case 8: nRenderMode = kRenderTransAlphaAdd; break;
+					case 9: nRenderMode = kRenderWorldGlow; break;
+					default: Warning( "[Rendermode] Out of bounds!\n" ); break;
+					}
+
+					// This is temp waiting for sprite
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetRenderMode( nRenderMode, true );
+					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetTransparency( nRenderMode, 255, 255, 255, 200, kRenderFxNone );
 				}
 				
 				// If we were flagged as nodraw, unflag
