@@ -10,7 +10,6 @@
 #pragma once
 #endif
 
-
 #include "ff_playeranimstate.h"
 #include "c_baseplayer.h"
 #include "ff_shareddefs.h"
@@ -19,6 +18,7 @@
 #include "ff_mapguide.h"
 #include "ff_weapon_base.h"
 #include "iviewrender_beams.h"
+#include "Sprite.h"
 
 #define FF_BUILD_NONE		0
 #define FF_BUILD_DISPENSER	1
@@ -46,19 +46,19 @@ void CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
 // Class C_FFFriendlySpyGlyph. Draws a glyph.
-class C_FFFriendlySpyGlyph : public C_BaseAnimating
+class C_FFFriendlySpyGlyph : public CSprite
 {
 public:
-	DECLARE_CLASS( C_FFFriendlySpyGlyph, C_BaseAnimating );
+	DECLARE_CLASS( C_FFFriendlySpyGlyph, CSprite );
 
-	static C_FFFriendlySpyGlyph *CreateClientSideFriendlySpyGlyph( const Vector& vecOrigin, const QAngle& vecAngles )
+	static C_FFFriendlySpyGlyph *Create( const Vector& vecOrigin )
 	{
 		C_FFFriendlySpyGlyph *pGlyph = new C_FFFriendlySpyGlyph;
 
 		if( !pGlyph )
 			return NULL;
-		
-		if( !pGlyph->InitializeAsClientEntity( "models/buildable/dispenser/dispenser.mdl", RENDER_GROUP_OPAQUE_ENTITY ) )
+
+		if( !pGlyph->InitializeAsClientEntity( "sprites/redglow1.vmt", RENDER_GROUP_TRANSLUCENT_ENTITY ) )
 		{
 			pGlyph->Release();
 
@@ -66,12 +66,12 @@ public:
 		}
 
 		pGlyph->SetAbsOrigin( vecOrigin );
-		pGlyph->SetLocalAngles( vecAngles );
-		pGlyph->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-		pGlyph->SetRenderMode( kRenderNormal );
 
 		return pGlyph;
 	}
+
+	virtual bool			IsTransparent( void ) { return true; }
+	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
 
 	void Delete( void ) 
 	{

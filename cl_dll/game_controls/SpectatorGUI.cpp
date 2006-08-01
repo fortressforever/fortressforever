@@ -34,6 +34,7 @@
 #include <imapoverview.h>
 #include <shareddefs.h>
 #include <igameresources.h>
+#include "c_ff_team.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -368,6 +369,12 @@ void CSpectatorGUI::OnThink()
 				gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, m_bSpecScoreboard );
 			}
 		}
+
+		// Update the timer
+		UpdateTimer();
+
+		// Update scores
+		UpdateScores();
 	}
 }
 
@@ -537,6 +544,13 @@ void CSpectatorGUI::Update()
 	SetLabelText("extrainfo", string1 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CSpectatorGUI::UpdateScores( void )
+{
+	// Draw team scores up top-ish
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Resets the list of players
@@ -652,9 +666,10 @@ void CSpectatorGUI::UpdateTimer()
 {
 	wchar_t szText[ 63 ];
 
-	int timer = 0;
+	// TODO: (?) Offset by game rules & actual round start time - like start it when prematch ended (?)
+	int timer = gpGlobals->curtime;
 
-	_snwprintf ( szText, sizeof( szText ), L"%d:%02d\n", (timer / 60), (timer % 60) );
+	_snwprintf ( szText, sizeof( szText ), L"%d:%02d", (timer / 60), (timer % 60) );
 
 	szText[63] = 0;
 

@@ -71,6 +71,7 @@ protected:
 	void MoveLabelToFront(const char *textEntryName);
 	void UpdateTimer();
 	void SetLogoImage(const char *image);
+	void UpdateScores( void );
 
 private:	
 	enum { INSET_OFFSET = 2 } ; 
