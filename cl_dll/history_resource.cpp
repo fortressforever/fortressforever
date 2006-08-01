@@ -182,6 +182,13 @@ void CHudHistoryResource::AddIconToHistory( int iType, int iId, C_BaseCombatWeap
 		m_iCurrentHistorySlot = 0;
 	}
 
+	// --> Mirv: Also limit to 8 icons
+	if (m_iCurrentHistorySlot == 8)
+	{
+		m_iCurrentHistorySlot = 0;
+	}
+	// <-- Mirv
+
 	// ensure the size 
 	m_PickupHistory.EnsureCount(m_iCurrentHistorySlot + 1);
 
