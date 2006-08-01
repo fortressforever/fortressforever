@@ -40,6 +40,7 @@
 #include "beam_shared.h"
 #include "ff_luacontext.h"
 #include "omnibot_interface.h"
+//#include "ff_miniturret.h"
 
 // Lua includes
 extern "C"
@@ -879,6 +880,12 @@ namespace FFLib
 				*/
 	}
 
+	// is the entity a miniturret
+	bool IsTurret( CBaseEntity *pEntity )
+	{
+		return IsOfClass( pEntity, CLASS_TURRET );
+	}
+
 	void BroadcastMessage(const char* szMessage)
 	{
 		CBroadcastRecipientFilter filter;
@@ -1292,6 +1299,18 @@ namespace FFLib
 
 		return dynamic_cast< CFFDetpack * >( pEntity );
 	}
+
+	/*CFFMiniTurret *CastToTurret( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( !IsTurret( pEntity ) )
+			return NULL;
+		
+		return dynamic_cast< CFFMiniTurret * >( pEntity );
+	}
+	*/
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
 	{
@@ -1870,6 +1889,9 @@ void CFFEntitySystem::FFLibOpen()
 				value("kStopPrimedGrens",	AT_STOP_PRIMED_GRENS)
 			],
 
+		// CFFMiniTurret
+		//class_<CFFMiniTurret>("Turret"),
+
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
 			.def("EmitSound",			&CBaseEntity::PlaySound)
@@ -2066,6 +2088,7 @@ void CFFEntitySystem::FFLibOpen()
 		def("CastToDispenser",			&FFLib::CastToDispenser),
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
+		//def("CastToTurret",				&FFLib::CastToTurret),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
 		def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
@@ -2081,6 +2104,7 @@ void CFFEntitySystem::FFLibOpen()
 		def("IsSentrygun",				&FFLib::IsSentrygun),
 		def("IsDetpack",				&FFLib::IsDetpack),
 		def("IsGrenade",				&FFLib::IsGrenade),
+		def("IsTurret",					&FFLib::IsTurret),
 		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
 		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
