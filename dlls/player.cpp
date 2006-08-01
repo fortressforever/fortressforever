@@ -3054,6 +3054,9 @@ void CBasePlayer::ProcessUsercmds( CUserCmd *cmds, int numcmds, int totalcmds,
 //-----------------------------------------------------------------------------
 void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
+	if( GetTeamNumber() <= TEAM_SPECTATOR )
+		ucmd->buttons &= ~IN_USE;
+
 	m_touchedPhysObject = false;
 
 	if ( pl.fixangle == FIXANGLE_NONE)
@@ -5045,6 +5048,9 @@ ImpulseCommands
 
 void CBasePlayer::ImpulseCommands( )
 {
+	if( GetTeamNumber() <= TEAM_SPECTATOR )
+		return;
+
 	trace_t	tr;
 		
 	int iImpulse = (int)m_nImpulse;
