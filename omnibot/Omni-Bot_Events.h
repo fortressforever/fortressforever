@@ -96,8 +96,19 @@ typedef enum
 
 ////////////////////////////////////////////////////////////////////////
 
-// enum: GameMessage
-//		General game messages common to all bots/mods
+// enumerations: GameMessage
+//		GEN_MSG_NONE - Invalid message reserved as 0.
+//		GEN_MSG_ISALIVE - Is the entity alive?
+//		GEN_MSG_ISRELOADING - Is the entity reloading?
+//		GEN_MSG_ISREADYTOFIRE - Is the entity ready to fire?
+//		GEN_MSG_ISALLIED - Is the entity allied with another?
+//		GEN_MSG_ISHUMAN - Is the entity a human player?
+//		GEN_MSG_GETPOINTCONTENTS - Get the point content id for a location.
+//		GEN_MSG_GETEQUIPPEDWEAPON - Get the currently equipped weapon id for an entity.
+//		GEN_MSG_GETHEALTHARMOR - Get health and armor for an entity.
+//		GEN_MSG_GETMAXSPEED - Get the max speed of the entity.
+//		GEN_MSG_GETFLAGSTATE - Get the current state of the flag.
+//		GEN_MSG_GAMESTATE - Get the current state of the game.
 typedef enum
 {
 	GEN_MSG_NONE = 0,
@@ -114,21 +125,13 @@ typedef enum
 	GEN_MSG_GETFLAGSTATE,
 	GEN_MSG_GAMESTATE,
 
+	// This must stay last.
 	GEN_MSG_END
 } GEN_GameMessage;
 
-// enum: GEN_EntityProperty
-//		General entity properties
-typedef enum
-{
-	PROP_CLASSNAME = 0,
-	PROP_TARGETNAME,
-	
-	PROPS_END
-} GEN_EntityProperty;
-
-// enum: BlackBoard_Key
-//		Human readable identifiers for blackboard entries.
+// enumerations: BlackBoard_Key
+//		bbk_All - Special identifier for ALL keys.
+//		bbk_DelayGoal - Goal delayed for the duration of this blackboard entry.
 typedef enum
 {
 	bbk_All = 0,

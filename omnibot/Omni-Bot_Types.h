@@ -361,6 +361,7 @@ typedef enum eEntityCategory
 	ENT_CAT_MOUNTEDWEAPON= (1<<7),
 	ENT_CAT_MISC		= (1<<8),
 	ENT_CAT_STATIC		= (1<<9),
+	ENT_CAT_AUTODEFENSE	= (1<<10),
 
 	// THIS MUST BE LAST
 	ENT_CAT_MAX			= (1<<16),
@@ -720,30 +721,49 @@ typedef struct TriggerInfo_t
 
 // Generic Enumerations
 
-// typedef: PlayerState
-//		Enumerations for a players current game state.
+// enumerations: PlayerState
+//		S_PLAYER_INVALID - Player doesn't exist
+//		S_PLAYER_SPECTATOR - Player is in spectator mode.
+//		S_PLAYED_WAITING_TEAM - Player waiting on team selection.
+//		S_PLAYED_WAITING_CLASS - Player waiting on class selection.
+//		S_PLAYED_WAITING_NEXTROUND - Player waiting on on the next round. Died or something.
+//		S_PLAYER_PLAYING - Player is good to go, and fully joined.
 typedef enum ePlayerState
 {
-	S_PLAYER_INVALID,				// Player doesn't exist
+	S_PLAYER_INVALID = 0,			// Player doesn't exist
 	S_PLAYER_SPECTATOR,			// Player is in spectator mode.
 	S_PLAYED_WAITING_TEAM,		// Player waiting on team selection.
 	S_PLAYED_WAITING_CLASS,		// Player waiting on class selection.
 	S_PLAYED_WAITING_NEXTROUND,	// Player waiting on on the next round. Died or something.
-	S_PLAYER_PLAYING				// Player is good to go, and fully joined.
+	S_PLAYER_PLAYING			// Player is good to go, and fully joined.
 } PlayerState;
 
-// typedef: FlagState
-//		Enumerations for the status of a flag type entity.
+// enumerations: FlagState
+//		S_FLAG_NOT_A_FLAG - The entity isn't a flag. Typically an error condition.
+//		S_FLAG_AT_BASE - The flag is at its base position.
+//		S_FLAG_DROPPED - The flag has been dropped in the field somewhere.
+//		S_FLAG_CARRIED - The flag is being carried by someone/something. Should have valid owner entity.
+//		S_FLAG_UNAVAILABLE - Flag is not available for some reason.
 typedef enum eFlagState
 {
+	S_FLAG_NOT_A_FLAG = 0,
 	S_FLAG_AT_BASE,
 	S_FLAG_DROPPED,
-	S_FLAG_CARRIED
+	S_FLAG_CARRIED,
+	S_FLAG_UNAVAILABLE
 } FlagState;
 
+// enumerations: GameState
+//		GAME_STATE_INVALID - Invalid game state.
+//		GAME_STATE_PLAYING - Game is currently being played.
+//		GAME_STATE_WARMUP - Game is currently in warmup period.
+//		GAME_STATE_WARMUP_COUNTDOWN - Game is currently in warmup countdown, about to start.
+//		GAME_STATE_INTERMISSION - Game is currently in intermission, between rounds.
+//		GAME_STATE_WAITINGFORPLAYERS - Game is awaiting more players before starting.
+//		GAME_STATE_PAUSED - Game is currently paused.
 typedef enum eGameState
 {
-	GAME_STATE_INVALID,
+	GAME_STATE_INVALID = 0,
 	GAME_STATE_PLAYING,
 	GAME_STATE_WARMUP,
 	GAME_STATE_WARMUP_COUNTDOWN,

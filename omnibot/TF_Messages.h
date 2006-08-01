@@ -18,11 +18,17 @@
 
 //////////////////////////////////////////////////////////////////////////
 
+// struct: TF_WeaponCharging
+//		m_IsCharging - true if the weapon is charging.
 typedef struct 
 {
 	obBool		m_IsCharging;
 } TF_WeaponCharging;
 
+// struct: TF_BuildInfo
+//		m_Sentry - Sentry Entity.
+//		m_Dispenser - Dispenser Entity.
+//		m_Detpack - Detpack Entity.
 typedef struct 
 {
 	GameEntity			m_Sentry;
@@ -30,12 +36,19 @@ typedef struct
 	GameEntity			m_Detpack;
 } TF_BuildInfo;
 
+// struct: TF_PlayerPipeCount
+//		m_NumPipes - Current number of player pipes.
+//		m_MaxPipes - Max player pipes.
 typedef struct 
 {
 	obint32		m_NumPipes;
 	obint32		m_MaxPipes;
 } TF_PlayerPipeCount;
 
+// struct: TF_TeamPipeInfo
+//		m_NumTeamPipes - Current number of team pipes.
+//		m_NumTeamPipers - Current number of team pipers(demo-men).
+//		m_MaxPipesPerPiper - Max pipes per piper
 typedef struct  
 {
 	obint32		m_NumTeamPipes;
@@ -43,17 +56,26 @@ typedef struct
 	obint32		m_MaxPipesPerPiper;
 } TF_TeamPipeInfo;
 
+// struct: TF_Disguise
+//		m_DisguiseTeam - Team disguised as.
+//		m_DisguiseClass - Class disguised as.
 typedef struct  
 {
 	obint32		m_DisguiseTeam;
 	obint32		m_DisguiseClass;
 } TF_Disguise;
 
+// struct: TF_FeignDeath
+//		m_SilentFeign - Silent feign or not.
 typedef struct  
 {
 	obBool		m_SilentFeign;
 } TF_FeignDeath;
 
+// struct: TF_HudHint
+//		m_TargetPlayer - Target player entity for the hint.
+//		m_Id - Id for the hint.
+//		m_Message[1024] - Hint message.
 typedef struct  
 {
 	GameId		m_TargetPlayer;
@@ -61,6 +83,17 @@ typedef struct
 	char		m_Message[1024];
 } TF_HudHint;
 
+// struct: TF_HudMenu
+//		m_TargetPlayer - Target player entity for the hint.
+//		m_MenuType - The type of menu.
+//		m_Title[32] - Title of the menu.
+//		m_Caption[32] - Caption of the menu.
+//		m_Message[512] - Message of the menu.
+//		m_Option[10][64] - Array of options, max 10.
+//		m_Command[10][64] - Array of commands, max 10.
+//		m_Level - Menu level.
+//		m_TimeOut - Duration of the menu.
+//		m_Color - Text color.
 typedef struct  
 {
 	enum GuiType
@@ -81,6 +114,10 @@ typedef struct
 	obColor		m_Color;
 } TF_HudMenu;
 
+// struct: TF_LockPosition
+//		m_TargetPlayer - Target player entity for the hint.
+//		m_Lock - Lock the player or not.
+//		m_Succeeded - Status result.
 typedef struct  
 {
 	GameEntity	m_TargetPlayer;

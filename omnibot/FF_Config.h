@@ -4,8 +4,6 @@
 // $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
 // $LastChangedRevision: 1234 $
 //
-// File: FF Config
-//
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __FF_EVENTS_H__
