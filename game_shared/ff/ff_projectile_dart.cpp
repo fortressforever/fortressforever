@@ -135,8 +135,14 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 			// #0000695: you can tranq your teammates w/ mp_friendlyfire 0
 			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
-				// make the player walk slow
-				pPlayer->AddSpeedEffect(SE_TRANQ, 6.0f, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_ICON_TRANQ, 6.0f );
+				// make the player walk slow, but run it through lau first!
+				float flDuration = 6.0f;
+				float flIconDuration = flDuration;
+				float flSpeed = 0.3f;
+				if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
+				{
+					pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_ICON_TRANQ, flIconDuration );
+				}				
 			}
 		}
 #endif
