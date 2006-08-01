@@ -15,20 +15,8 @@
 #include "cbase.h"
 #include "ff_item_flag.h"
 #include "ff_entity_system.h"
-//#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
-#include "debugoverlay_shared.h"
-
-// Lua includes
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
-
-#include "luabind/luabind.hpp"
-#include "luabind/object.hpp"
+#include "ff_player.h"
 
 #include "tier0/memdbgon.h"
 
@@ -79,6 +67,7 @@ BEGIN_DATADESC( CFFInfoScript )
 	DEFINE_ENTITYFUNC( OnTouch ),
 	DEFINE_THINKFUNC( OnThink ),
 	DEFINE_THINKFUNC( OnRespawn ),
+	DEFINE_THINKFUNC( RemoveThink ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( info_ff_script, CFFInfoScript );
@@ -164,6 +153,9 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 
 void CFFInfoScript::Spawn( void )
 {
+	// Set the time we spawned.
+	m_flSpawnTime = gpGlobals->curtime;
+
 	Precache();
 
 	// Check if this object has an attachoffset function and get the value if it does
@@ -672,6 +664,17 @@ void CFFInfoScript::SetReturned( void )
 //-----------------------------------------------------------------------------
 void CFFInfoScript::LUA_Remove( void )
 {
+	// Delay in this situation as weird stuff will
+	// happen to the info_ff_script if you remove it
+	// in the same frame as spawning it
+	if( m_flSpawnTime == gpGlobals->curtime )
+	{
+		SetThink( &CFFInfoScript::RemoveThink );
+		SetNextThink( gpGlobals->curtime + 0.3f );
+
+		return;
+	}
+
 	// This sets the object as "removed"	
 	FollowEntity( NULL );
 	SetOwnerEntity( NULL );
@@ -700,4 +703,13 @@ void CFFInfoScript::LUA_Restore( void )
 
 	// Respawn the item back at it's starting spot
 	Respawn( 0.0f );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: This is for when spawn time == curtime when in LUA_Remove code.
+//			All this does is fake queue the LUA_Remove for a couple ms
+//-----------------------------------------------------------------------------
+void CFFInfoScript::RemoveThink( void )
+{
+	LUA_Remove();
 }
