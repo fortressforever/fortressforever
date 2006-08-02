@@ -139,6 +139,7 @@ protected:
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
+	float GetRoundStart( void ) { return m_flRoundStarted; }
 };
 
 //-----------------------------------------------------------------------------
