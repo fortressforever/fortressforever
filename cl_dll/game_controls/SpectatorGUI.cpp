@@ -35,6 +35,7 @@
 #include <shareddefs.h>
 #include <igameresources.h>
 #include "c_ff_team.h"
+#include "ff_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -549,7 +550,56 @@ void CSpectatorGUI::Update()
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::UpdateScores( void )
 {
+	IGameResources *pGR = GameResources();
+
+	if( !pGR )
+		return;
+
 	// Draw team scores up top-ish
+
+	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+	{
+		int iLabelNum = i - TEAM_BLUE + 1;
+
+		char szLabel[ 32 ];
+		Q_snprintf( szLabel, sizeof( szLabel ), "team%ilabel", iLabelNum );
+
+		char szLabelScore[ 32 ];
+		Q_snprintf( szLabelScore, sizeof( szLabel ), "team%iscorelabel", iLabelNum );
+
+		wchar_t szTeam[ MAX_TEAM_NAME_LENGTH + 1 ];
+		wchar_t szTeamScore[ MAX_TEAM_NAME_LENGTH + 1 ];
+
+		// Grab valid teams where team limit isn't -1
+		if( GetGlobalTeam( i ) && ( pGR->GetTeamLimits( i ) != -1 ) )
+		{
+			wchar_t *szName = localize()->Find( pGR->GetTeamName( i ) );
+			if( szName )
+			{
+				_snwprintf( szTeam, sizeof( szTeam ), L"%s", szName );
+			}
+			else
+			{
+				wchar_t szTemp[ MAX_TEAM_NAME_LENGTH + 1 ];
+				
+				localize()->ConvertANSIToUnicode( pGR->GetTeamName( i ), szTemp, sizeof( szTemp ) );
+				_snwprintf( szTeam, sizeof( szTeam ), L"%s", szTemp );				
+			}
+
+			_snwprintf( szTeamScore, sizeof( szTeam ), L"%i", pGR->GetTeamScore( i ) );
+		}
+		else
+		{
+			// Team limit -1 or getglobalteam failed
+			_snwprintf( szTeam, sizeof( szTeam ), L"" );
+			_snwprintf( szTeamScore, sizeof( szTeamScore ), L"" );
+		}
+
+		// Team
+		SetLabelText( szLabel, szTeam );
+		// Team score
+		SetLabelText( szLabelScore, szTeamScore );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -666,8 +716,9 @@ void CSpectatorGUI::UpdateTimer()
 {
 	wchar_t szText[ 63 ];
 
-	// TODO: (?) Offset by game rules & actual round start time - like start it when prematch ended (?)
-	int timer = gpGlobals->curtime;
+	// Yeah, doesn't work just yet, need to modify gamerules
+	int timer = gpGlobals->curtime - FFGameRules()->GetRoundStart();
+	//Warning( "[hi] getroundstart %f\n", FFGameRules()->GetRoundStart() );
 
 	_snwprintf ( szText, sizeof( szText ), L"%d:%02d", (timer / 60), (timer % 60) );
 
