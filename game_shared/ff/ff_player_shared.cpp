@@ -189,9 +189,15 @@ void CFFPlayer::FireBullet(
 
 				// Bug #0000557: Teamplay 0 + sniper legshot slows allies
 				// If they're not a teammate/ally then do the leg shot speed effect
-				if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
+				float flDuration = -1.0f;
+				float flIconDuration = flDuration;
+				float flSpeed = 0.9f - flSniperRifleCharge / 14.0f;
+				if( player->LuaRunEffect( LUA_EF_LEGSHOT, pShooter, &flDuration, &flIconDuration, &flSpeed ) )
 				{
-					player->AddSpeedEffect(SE_LEGSHOT, 999, 0.9f - flSniperRifleCharge / 14.0f, SEM_ACCUMULATIVE|SEM_HEALABLE, FF_ICON_LEGSHOT, 15.0f );
+					if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
+					{
+						player->AddSpeedEffect( SE_LEGSHOT, flDuration, flSpeed, SEM_ACCUMULATIVE| SEM_HEALABLE, FF_ICON_LEGSHOT, flIconDuration );
+					}
 				}
 #endif
 			}			
