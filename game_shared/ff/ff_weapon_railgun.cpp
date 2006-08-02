@@ -28,7 +28,7 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-static ConVar ffdev_railpush("ffdev_railpush", "90.0", FCVAR_REPLICATED, "Maximum push done by railgun");
+static ConVar ffdev_railpush("ffdev_railpush", "30.0", FCVAR_REPLICATED, "Maximum push done by railgun");
 
 //=============================================================================
 // CFFWeaponRailgun
