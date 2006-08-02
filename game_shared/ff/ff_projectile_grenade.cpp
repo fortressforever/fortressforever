@@ -135,10 +135,31 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 		float flTotalElasticity = GetElasticity() * flSurfaceElasticity;
 		flTotalElasticity = clamp(flTotalElasticity, 0.0f, 0.9f);
 
-		// NOTE: A backoff of 2.0f is a reflection
+		// UNDONE: A backoff of 2.0f is a reflection
+		// In HL it seems to use an overbounce of 1.5, so we're using 
+		// 1.0 + default elasticity = 1.5
 		Vector vecAbsVelocity;
-		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, 2.0f);
-		vecAbsVelocity *= flTotalElasticity;
+		PhysicsClipVelocity(GetAbsVelocity(), trace.plane.normal, vecAbsVelocity, 1.0f + GetElasticity());
+		//vecAbsVelocity *= flTotalElasticity;
+
+		// Some new friction calculating. 200 is a base figure which *looks* correct
+		float flSpeed = vecAbsVelocity.Length();
+		float flNewSpeed = flSpeed - 200 * GetFriction();
+
+		flNewSpeed /= flSpeed;
+
+		if (flNewSpeed < 0)
+			flNewSpeed = 0;
+
+		// Don't apply this if we're bouncing down a slope
+		// This is because a) things tend not to slow down while bouncing down
+		// a slope and b) if they do then they tend to comple to a complete halt
+		// pretty sharpish.
+		if (vecAbsVelocity.z >= 0)
+		{
+			vecAbsVelocity.x *= flNewSpeed;
+			vecAbsVelocity.y *= flNewSpeed;
+		}
 
 		// Get the total velocity(player + conveyors, etc.) 
 		VectorAdd(vecAbsVelocity, GetBaseVelocity(), vecVelocity);

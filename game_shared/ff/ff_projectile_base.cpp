@@ -62,6 +62,7 @@ END_NETWORK_TABLE()
 	CFFProjectileBase::CFFProjectileBase()
 	{
 		m_bNeedsCleanup = true;
+		m_bInPresent = false;
 	}
 
 	//----------------------------------------------------------------------------
@@ -120,6 +121,12 @@ END_NETWORK_TABLE()
 	//-----------------------------------------------------------------------------
 	bool CFFProjectileBase::IsDrawingHistory()
 	{
+		// Once we've come out of history, make sure we never go back in again
+		if (m_bInPresent)
+		{
+			return false;
+		}
+
 		Vector vecDisplacement = GetLocalOrigin() - m_vecStartOrigin;
 
 		// We don't need to normalise because the magnitude doesn't matter.
@@ -127,7 +134,9 @@ END_NETWORK_TABLE()
 
 		// If the rocket is behind our start point (thanks to the interpolation)
 		// then don't draw it. We also need to stop drawing the trail too.
-		return (flDot < 0);
+		m_bInPresent = (flDot >= 0);
+
+		return m_bInPresent;
 	}
 
 	//----------------------------------------------------------------------------

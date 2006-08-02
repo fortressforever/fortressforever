@@ -69,6 +69,7 @@ public:
 
 	// Flag to keep track of whether projectile needs a cleanup
 	bool	m_bNeedsCleanup;
+	bool	m_bInPresent;
 
 	// Position that this projectile first started
 	Vector	m_vecStartOrigin;
