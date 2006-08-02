@@ -37,8 +37,8 @@ static ConVar flame_startblue(		"ffdev_flame_startblue", "0.05",		0, "How long t
 
 static ConVar flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How long before end of life will flames fade out(in seconds) ");
 
-static ConVar flame_length_min(		"ffdev_flame_length_min", 		"0.3", 	0, 	"Length of the flames in seconds");
-static ConVar flame_length_max(		"ffdev_flame_length_max", 		"0.4", 	0, 	"Length of the flames in seconds");
+static ConVar flame_length_min(		"ffdev_flame_length_min", 		/*"0.3"*/ "0.36", 	0, 	"Length of the flames in seconds");
+static ConVar flame_length_max(		"ffdev_flame_length_max", 		/*"0.4"*/ "0.48", 	0, 	"Length of the flames in seconds");
 
 //=============================================================================
 // Globals
