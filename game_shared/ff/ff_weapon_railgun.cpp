@@ -28,6 +28,8 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+static ConVar ffdev_railpush("ffdev_railpush", "90.0", FCVAR_REPLICATED, "Maximum push done by railgun");
+
 //=============================================================================
 // CFFWeaponRailgun
 //=============================================================================
@@ -138,7 +140,7 @@ void CFFWeaponRailgun::Fire()
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage + (flChargeTime * 3.0f);
 	info.m_iTracerFreq = 0;
-	info.m_flDamageForceScale = 1.0f + (flChargeTime * 90.0f);
+	info.m_flDamageForceScale = 1.0f + (flChargeTime * ffdev_railpush.GetFloat());
 
 	pPlayer->FireBullets(info);
 }
