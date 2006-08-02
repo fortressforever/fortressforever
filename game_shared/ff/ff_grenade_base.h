@@ -60,7 +60,7 @@ public:
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN; }
 	virtual void Explode( trace_t *pTrace, int bitsDamageType );
-	virtual bool CanClipPlayer() const { return false; }
+	//virtual bool CanClipPlayer() const { return false; }
 
 #ifdef GAME_DLL
 	virtual float GetGrenadeGravity() { return gren_grav.GetFloat(); }
