@@ -127,6 +127,8 @@ END_NETWORK_TABLE()
 			return false;
 		}
 
+		// We could probably factor in the player's velocity into this too to make it
+		// more accurate.
 		Vector vecDisplacement = GetLocalOrigin() - m_vecStartOrigin;
 
 		// We don't need to normalise because the magnitude doesn't matter.
