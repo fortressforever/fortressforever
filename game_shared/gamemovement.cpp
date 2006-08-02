@@ -3263,6 +3263,9 @@ void CGameMovement::CategorizePosition( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::CheckFalling( void )
 {
+	CFFPlayer *pPlayer = ToFFPlayer(player);
+	pPlayer->m_bCanDoubleJump = true;
+
 	if ( player->GetGroundEntity() != NULL &&
 		 !IsDead() &&
 		 player->m_Local.m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHOLD )

@@ -262,6 +262,29 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//	mv->m_vecVelocity[2] = fGroundFactor * fMul;  // 2 * gravity * height
 	//}
 
+	CFFPlayer *pPlayer = ToFFPlayer(player);
+
+	// Double jump
+	if (pPlayer->m_bCanDoubleJump)
+	{
+		float flElapsed = pPlayer->m_flNextJumpTimeForDouble - gpGlobals->curtime;
+
+		if (flElapsed > 0 && flElapsed < 0.4f)
+		{
+			fMul *= 1.5f;
+
+#ifdef GAME_DLL
+			DevMsg("[S] Double jump %f!\n", fMul);
+#else
+			DevMsg("[C] Double jump %f!\n", fMul);
+#endif
+
+			pPlayer->m_bCanDoubleJump = false;
+		}
+
+		pPlayer->m_flNextJumpTimeForDouble = gpGlobals->curtime + 0.5f;
+	}
+
 	// --> Mirv: Add on new velocity
 	if( mv->m_vecVelocity[2] < 0 )
 		mv->m_vecVelocity[2] = 0;
