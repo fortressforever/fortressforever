@@ -61,6 +61,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
 	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_iGoalState ), 4 ),
 	SendPropInt( SENDINFO( m_iPosState ), 4 ),
+	SendPropInt( SENDINFO( m_iShadow ), 1 ),
 END_SEND_TABLE()
 // <-- Mirv: Added for client class
 
@@ -82,6 +83,7 @@ CFFInfoScript::CFFInfoScript( void )
 	m_vStartOrigin = Vector( 0, 0, 0 );
 	m_bHasAnims = false;
 	m_bUsePhysics = false;
+	m_iShadow = 1;
 
 	// Init the goal state
 	m_iGoalState = GS_INACTIVE;
@@ -165,6 +167,14 @@ void CFFInfoScript::Spawn( void )
 	CFFLuaSC hAttachOffset;
 	if( entsys.RunPredicates_LUA( this, &hAttachOffset, "attachoffset" ) )
 		m_vecOffset.GetForModify() = hAttachOffset.GetVector();	
+
+	// See if object has a shadow
+	CFFLuaSC hShadow;
+	if( entsys.RunPredicates_LUA( this, &hShadow, "hasshadow" ) )
+	{
+		if( !hShadow.GetBool() )
+			m_iShadow = 0;
+	}
 	
 	// Bug #0000131: Ammo, health and armor packs stop rockets
 	// We don't want to set as not-solid because we need to trace it for sniper rifle dot

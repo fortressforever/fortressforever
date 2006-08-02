@@ -45,53 +45,6 @@ void CC_ToggleOne( void );
 void CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
-// Class C_FFFriendlySpyGlyph. Draws a glyph.
-class C_FFFriendlySpyGlyph : public CSprite
-{
-public:
-	DECLARE_CLASS( C_FFFriendlySpyGlyph, CSprite );
-
-	static C_FFFriendlySpyGlyph *Create( const Vector& vecOrigin )
-	{
-		C_FFFriendlySpyGlyph *pGlyph = new C_FFFriendlySpyGlyph;
-
-		if( !pGlyph )
-			return NULL;
-
-		if( !pGlyph->InitializeAsClientEntity( "sprites/redglow1.vmt", RENDER_GROUP_TRANSLUCENT_ENTITY ) )
-		{
-			pGlyph->Release();
-
-			return NULL;
-		}
-
-		pGlyph->SetAbsOrigin( vecOrigin );
-
-		return pGlyph;
-	}
-
-	virtual bool			IsTransparent( void ) { return true; }
-	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
-
-	void Delete( void ) 
-	{
-		Remove();
-	}
-};
-
-// Forward declaration
-class C_FFPlayer;
-
-// Friendly spy list struct
-struct FriendlySpyList_s
-{
-	// Point to the glyph we're drawing
-	C_FFFriendlySpyGlyph	*m_pGlyph;
-	// Time we drew this guy
-	float					m_flTimeDrawn;
-};
-
-// Class C_FFPlayer dude.
 class C_FFPlayer : public C_BasePlayer, public IFFPlayerAnimStateHelpers
 {
 public:
@@ -303,11 +256,6 @@ public:
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
-
-public:
-	FriendlySpyList_s m_hFriendlySpyList[ MAX_PLAYERS ];
-	float m_flFriendlySpyListTime;
-
 };
 
 
