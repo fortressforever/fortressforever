@@ -254,6 +254,8 @@ public:
 
 	float		m_flSpeedModifier;
 
+	int			m_iHallucinationIndex;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };
@@ -269,7 +271,11 @@ inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
 		Warning( "[C_FFPlayer :: ToFFPlayer] dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL\n" );
 
 		// Try to figure out what's doing a ToFFPlayer() on a non player
-		Warning( "\t pPlayer class: %s, class_t: %i\n", pPlayer->GetClassname(), pPlayer->Classify() );
+		// FIX: Check that pPlayer is actually okay first!!!!
+		if (pPlayer)
+		{
+			Warning( "\t pPlayer class: %s, class_t: %i\n", pPlayer->GetClassname(), pPlayer->Classify() );
+		}
 	}
 
 	return static_cast< C_FFPlayer* >( pPlayer );
