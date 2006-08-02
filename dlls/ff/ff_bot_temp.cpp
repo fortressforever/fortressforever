@@ -148,7 +148,7 @@ CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
 
 		if( pPlayer && ( pPlayer->GetFlags() & FL_FAKECLIENT ) )
 		{
-			Warning( "[Bot %s] Health: %i (%%%i), Armor: %i (%%%i)\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage() );
+			Warning( "[Bot %s] Health: %i (%i%%), Armor: %i (%i%%)\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage() );
 		}
 	}
 }
