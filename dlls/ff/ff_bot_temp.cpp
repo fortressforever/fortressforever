@@ -140,6 +140,19 @@ CON_COMMAND(bot_disguise, "trigger a disguise")
 	}
 }
 
+CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
+{
+	for( int i = 0; i < gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if( pPlayer && ( pPlayer->GetFlags() & FL_FAKECLIENT ) )
+		{
+			Warning( "[Bot %s] Health: %i (%%%i), Armor: %i (%%%i)\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage() );
+		}
+	}
+}
+
 CON_COMMAND(bot_flashlight, "turn on flashlights")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
