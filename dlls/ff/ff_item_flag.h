@@ -125,6 +125,8 @@ protected:
 	CNetworkVar(float, m_flThrowTime);
 
 	CNetworkVector( m_vecOffset );
+	
+	CNetworkVar( int, m_iShadow );
 
 	CNetworkVar( int, m_iGoalState );
 	CNetworkVar( int, m_iPosState );

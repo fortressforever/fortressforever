@@ -16,6 +16,10 @@
 #include "in_buttons.h"
 #include "filesystem.h"
 
+#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/IMesh.h"
+#include "ClientEffectPrecacheSystem.h"
+
 #include "iviewrender_beams.h"
 #include "r_efx.h"
 #include "dlight.h"
@@ -76,6 +80,10 @@ extern IFileSystem **pFilesystem;
 #include "ff_weapon_base.h"
 
 STUB_WEAPON_CLASS( weapon_cubemap, WeaponCubemap, C_BaseCombatWeapon );
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheSpySprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_spy" )
+CLIENTEFFECT_REGISTER_END()
 
 void OnTimerExpired(C_FFTimer *pTimer)
 {
@@ -679,14 +687,6 @@ C_FFPlayer::C_FFPlayer() :
 {
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
-	// Friendly spy list stuff
-	m_flFriendlySpyListTime = 0.0f;
-	for( int i = 0; i < MAX_PLAYERS; i++ )
-	{
-		m_hFriendlySpyList[ i ].m_pGlyph = NULL;
-		m_hFriendlySpyList[ i ].m_flTimeDrawn = 0.0f;
-	}
-
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -809,14 +809,6 @@ C_FFPlayer::C_FFPlayer() :
 
 C_FFPlayer::~C_FFPlayer()
 {
-	// Friendly spy list stuff
-	for( int i = 0; i < MAX_PLAYERS; i++ )
-	{
-		if( m_hFriendlySpyList[ i ].m_pGlyph )
-			m_hFriendlySpyList[ i ].m_pGlyph->Delete();
-		m_hFriendlySpyList[ i ].m_pGlyph = NULL;
-	}
-
 	m_PlayerAnimState->Release();
 
 	ReleaseFlashlight();
@@ -861,24 +853,6 @@ void C_FFPlayer::PreThink( void )
 	if (m_afButtonPressed & IN_RELOAD && !IsAlive())
 		engine->ClientCmd("-reload");
 
-	// Do stuff w/ the friendly spy list
-	for( int i = 0; i < MAX_PLAYERS; i++ )
-	{
-		if( m_hFriendlySpyList[ i ].m_pGlyph )
-		{
-			// If we haven't gotten an update in a very short time, stop drawing
-			if( ( m_hFriendlySpyList[ i ].m_flTimeDrawn + 0.2f ) < gpGlobals->curtime )
-				m_hFriendlySpyList[ i ].m_pGlyph->AddEffects( EF_NODRAW );
-
-			// If we haven't gotten an updated in an even longer time, delete it
-			if( ( m_hFriendlySpyList[ i ].m_flTimeDrawn + 1.0f ) < gpGlobals->curtime )
-			{
-				m_hFriendlySpyList[ i ].m_pGlyph->Delete();
-				m_hFriendlySpyList[ i ].m_pGlyph = NULL;
-			}
-		}
-	}
-
 	BaseClass::PreThink();
 }
 
@@ -898,6 +872,7 @@ void C_FFPlayer::Spawn( void )
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
 	{
+		// TODO: Stop sound
 		if( g_pGrenade1Timer->ActiveTimer() )
 			g_pGrenade1Timer->ResetTimer();
 	}
@@ -905,6 +880,7 @@ void C_FFPlayer::Spawn( void )
 	// Stop grenade 2 timers if they're playing
 	if( g_pGrenade2Timer && ( m_iGrenadeState != FF_GREN_PRIMETWO ) )
 	{
+		// TODO: Stop sound
 		if( g_pGrenade2Timer->ActiveTimer() )
 			g_pGrenade2Timer->ResetTimer();
 	}
@@ -955,50 +931,15 @@ int C_FFPlayer::DrawModel( int flags )
 			// Spy is disguised as someone not of the team we're on
 			if( GetDisguisedTeam() != pPlayer->GetTeamNumber() )
 			{
-				// Store this guy in our local friendly spy list
-				int iPlayerIndex = entindex() - 1;
-
-				// Store time we started drawing/updated drawing
-				pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_flTimeDrawn = gpGlobals->curtime;
-
-				if( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph )
+				// Thanks mirv!
+				IMaterial *pMaterial;
+				pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
+				if( pMaterial )
 				{
-					// Update position
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsOrigin( EyePosition() );
-					//pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetAbsAngles( QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) );
+					materials->Bind( pMaterial );
+					color32 c = { 255, 255, 255, 255 };
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 8.0f ), 15.0f, 15.0f, c );
 				}
-				else if( !pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph )
-				{
-					// Create glyph
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph = C_FFFriendlySpyGlyph::Create( EyePosition() /*, QAngle( 0.0f, pPlayer->GetAbsAngles().y, 0.0f ) */ );
-					Assert( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph );
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetScale( 0.25f );
-
-					RenderMode_t nRenderMode = kRenderNormal;
-
-					switch( render_mode.GetInt() )
-					{
-					case 0: nRenderMode = kRenderNormal; break;
-					case 1: nRenderMode = kRenderTransColor; break;
-					case 2: nRenderMode = kRenderTransTexture; break;
-					case 3: nRenderMode = kRenderGlow; break;
-					case 4: nRenderMode = kRenderTransAlpha; break;
-					case 5: nRenderMode = kRenderTransAdd; break;
-					case 6: nRenderMode = kRenderEnvironmental; break;
-					case 7: nRenderMode = kRenderTransAddFrameBlend; break;
-					case 8: nRenderMode = kRenderTransAlphaAdd; break;
-					case 9: nRenderMode = kRenderWorldGlow; break;
-					default: Warning( "[Rendermode] Out of bounds!\n" ); break;
-					}
-
-					// This is temp waiting for sprite
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetRenderMode( nRenderMode, true );
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->SetTransparency( nRenderMode, 255, 255, 255, 200, kRenderFxNone );
-				}
-				
-				// If we were flagged as nodraw, unflag
-				if( pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->IsEffectActive( EF_NODRAW ) )
-					pPlayer->m_hFriendlySpyList[ iPlayerIndex ].m_pGlyph->RemoveEffects( EF_NODRAW );
 			}
 		}	
 	}

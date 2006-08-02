@@ -37,7 +37,7 @@ public:
 	DECLARE_CLASS(C_FFInfoScript, C_BaseAnimating);
 	DECLARE_CLIENTCLASS();
 
-	C_FFInfoScript() {};
+	C_FFInfoScript() { m_iShadow = 1; }
 	~C_FFInfoScript() {};
 
 	virtual void	OnDataChanged(DataUpdateType_t updateType);
@@ -68,6 +68,7 @@ protected:
 	float m_flThrowTime;
 
 	Vector m_vecOffset;
+	int m_iShadow;
 
 	CNetworkVar( int, m_iGoalState );
 	CNetworkVar( int, m_iPosState );
@@ -78,6 +79,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFInfoScript, DT_FFInfoScript, CFFInfoScript )
 	RecvPropVector( RECVINFO( m_vecOffset ) ),
 	RecvPropInt( RECVINFO( m_iGoalState ) ),
 	RecvPropInt( RECVINFO( m_iPosState ) ),
+	RecvPropInt( RECVINFO( m_iShadow ) ),
 END_RECV_TABLE() 
 
 
@@ -116,6 +118,9 @@ int C_FFInfoScript::DrawModel( int flags )
 // Bug #0000508: Carried objects cast a shadow for the carrying player
 ShadowType_t C_FFInfoScript::ShadowCastType( void )
 {
+	if( !m_iShadow )
+		return SHADOWS_NONE;
+
 	if( !ShouldDraw() )
 		return SHADOWS_NONE;
 
