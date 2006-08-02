@@ -1072,11 +1072,20 @@ namespace FFLib
 		// if it's a good filename, then go ahead and include it
 		if (good)
 		{
+			// Let's use a little more control
+			/*
 			strcpy(realscript, "maps/includes/" );
 			strcat(realscript, script);
 			strcat(realscript, ".lua");
+			*/
+			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
 
-			CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript );
+			if( !CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript ) )
+			{
+				// Try looking in the maps directory
+				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
+				CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript );
+			}
 		}
 		else
 		{
