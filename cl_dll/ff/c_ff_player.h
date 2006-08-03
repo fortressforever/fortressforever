@@ -272,6 +272,9 @@ inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
 
 		// Try to figure out what's doing a ToFFPlayer() on a non player
 		// FIX: Check that pPlayer is actually okay first!!!!
+		
+		// Hm, who would send NULL in here? I figured it was something that wasn't
+		// a player coming in hence printing the classname and class_t shite - my bad! :)
 		if (pPlayer)
 		{
 			Warning( "\t pPlayer class: %s, class_t: %i\n", pPlayer->GetClassname(), pPlayer->Classify() );
