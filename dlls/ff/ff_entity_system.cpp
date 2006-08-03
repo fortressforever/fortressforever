@@ -41,6 +41,7 @@
 #include "beam_shared.h"
 #include "ff_luacontext.h"
 #include "ff_lualib.h"
+#include "ammodef.h"
 //#include "ff_miniturret.h"
 
 // Lua includes
@@ -594,15 +595,36 @@ const char *LookupLuaAmmo( int iLuaAmmoType )
 //-----------------------------------------------------------------------------
 int LookupAmmoLua( int iAmmoType )
 {
-	/*
+	// NOTE: this is kind of lame as in i don't think we even setup the ammo
+	// type in our CTakeDamageInfo classes ... except for radio tag rifle.
+
 	if( GetAmmoDef() )
 	{
-		const char *pName = GetAmmoDef()->m_AmmoType[ iAmmoType ].pName;
-		if( pName )
+		char *pszName = GetAmmoDef()->GetAmmoOfIndex( iAmmoType )->pName;
+
+		if( pszName && Q_strlen( pszName ) )
 		{
+			if( !Q_strcmp( pszName, AMMO_SHELLS ) )
+				return LUA_AMMO_SHELLS;
+			else if( !Q_strcmp( pszName, AMMO_CELLS ) )
+				return LUA_AMMO_CELLS;
+			else if( !Q_strcmp( pszName, AMMO_NAILS ) )
+				return LUA_AMMO_NAILS;
+			else if( !Q_strcmp( pszName, AMMO_ROCKETS ) )
+				return LUA_AMMO_ROCKETS;
+			else if( !Q_strcmp( pszName, AMMO_RADIOTAG ) )
+				return LUA_AMMO_RADIOTAG;
+			else if( !Q_strcmp( pszName, AMMO_DETPACK ) )
+				return LUA_AMMO_DETPACK;
+			// TODO: Maybe figure these in somehow?
+			/*
+			else if( !Q_strcmp( pszName, AMMO_GREN1 ) )
+				return LUA_AMMO_GREN1;
+			else if( !Q_strcmp( pszName, AMMO_GREN2 ) )
+				return LUA_AMMO_GREN2;
+				*/
 		}
 	}
-	*/
 
 	return LUA_AMMO_INVALID;
 }
