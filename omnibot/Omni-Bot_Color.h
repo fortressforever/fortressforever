@@ -41,6 +41,11 @@ public:
 	inline obuint8 b() const	{ return cdata.m_RGBA[2]; }
 	inline obuint8 a() const	{ return cdata.m_RGBA[3]; }
 
+	inline float rF() const	{ return (float)cdata.m_RGBA[0] / 255.0f; }
+	inline float gF() const	{ return (float)cdata.m_RGBA[1] / 255.0f; }
+	inline float bF() const	{ return (float)cdata.m_RGBA[2] / 255.0f; }
+	inline float aF() const	{ return (float)cdata.m_RGBA[3] / 255.0f; }
+
 	inline obint32 rgba() const { return cdata.m_RGBAi; }
 private:
 	union cdatatype

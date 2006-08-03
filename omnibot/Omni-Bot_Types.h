@@ -170,9 +170,6 @@ typedef struct AABB_t
 #endif
 } AABB;
 
-// Helper macro so the game can check the status of bot buttons.
-#define BOT_CHECK_BUTTON(button, flag) (((button) & (1<<(flag))) != 0)
-
 // enumerations: ButtonFlags
 //		BOT_BUTTON_ATTACK1 - If the bot is pressing primary attack.
 //		BOT_BUTTON_ATTACK2 - If the bot is pressing secondary attack.
@@ -193,7 +190,7 @@ typedef struct AABB_t
 //		BOT_BUTTON_AIM - If the bot wants to drop current item.
 typedef enum eButtonFlags
 {	
-	BOT_BUTTON_ATTACK1,
+	BOT_BUTTON_ATTACK1 = 0,
 	BOT_BUTTON_ATTACK2,
 	BOT_BUTTON_JUMP,
 	BOT_BUTTON_CROUCH,
@@ -532,26 +529,6 @@ typedef enum eTraceMasks
 	// THIS MUST BE LAST!
 	TR_MASK_LAST		= (1<<16)
 } TraceMasks;
-
-// struct: ClientInput
-//		Generic data structure representing the bots input and movement states
-//		Game is responsible for translating this into a format suitable for use
-//		by the game.
-typedef struct
-{
-	// float: m_Facing
-	//		The direction the bot is facing/aiming
-	float	m_Facing[3];
-	// float: m_MoveDir
-	//		The direction the bot is moving
-	float	m_MoveDir[3];
-	// int: m_ButtonFlags
-	//		32 bit int of bits representing bot keypresses, see <ButtonFlags>
-	int		m_ButtonFlags;
-	// int: m_CurrentWeapon
-	//		The current weapon Id this bot wants to use.
-	int		m_CurrentWeapon;
-} ClientInput;
 
 // struct: BotUserData
 //		Generic data structure that uses a union to hold various types

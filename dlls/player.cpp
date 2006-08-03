@@ -1304,6 +1304,14 @@ void CBasePlayer::RemoveAllItems( bool removeSuit )
 	}
 
 	UpdateClientData();
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_removeallitems");						
+	if(pEvent)
+	{
+		pEvent->SetInt("userid", GetUserID());
+		gameeventmanager->FireEvent(pEvent, true);
+	}
+	
 }
 
 bool CBasePlayer::IsDead() const
@@ -4869,6 +4877,13 @@ CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 	// <-- Mirv
 
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_additem");						
+	if(pEvent)
+	{
+		pEvent->SetInt("userid", GetUserID());
+		pEvent->SetString("item", pszName);
+		gameeventmanager->FireEvent(pEvent, true);
+	}
 	return pent;
 }
 

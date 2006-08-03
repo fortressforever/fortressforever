@@ -75,6 +75,7 @@ typedef struct
 typedef struct 
 {
 	GameState	m_GameState;
+	float		m_TimeLeft;
 } Msg_GameState;
 
 //////////////////////////////////////////////////////////////////////////

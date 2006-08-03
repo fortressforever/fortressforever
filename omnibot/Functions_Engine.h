@@ -10,7 +10,7 @@
 #define __FUNCTIONS_ENGINE_H__
 
 #include "Omni-Bot_Types.h"
-#include "Omni-Bot_UserFlags.h"
+#include "Omni-Bot_BitFlags.h"
 #include "Omni-Bot_Color.h"
 #include "MessageHelper.h"
 
@@ -28,8 +28,29 @@ typedef struct
 	int			m_EntityCategory;
 	// int: m_EntityFlags
 	//		Current flags of this entity, see <EntityFlags>
-	UserFlags64	m_EntityFlags;
+	BitFlag64	m_EntityFlags;
 } EntityInfo;
+
+
+// struct: ClientInput
+//		Generic data structure representing the bots input and movement states
+//		Game is responsible for translating this into a format suitable for use
+//		by the game.
+typedef struct
+{
+	// float: m_Facing
+	//		The direction the bot is facing/aiming
+	float		m_Facing[3];
+	// float: m_MoveDir
+	//		The direction the bot is moving
+	float		m_MoveDir[3];
+	// int: m_ButtonFlags
+	//		32 bit int of bits representing bot keypresses, see <ButtonFlags>
+	BitFlag32	m_ButtonFlags;
+	// int: m_CurrentWeapon
+	//		The current weapon Id this bot wants to use.
+	int			m_CurrentWeapon;
+} ClientInput;
 
 // typedef: Game_EngineFuncs_t
 //		This struct defines all the function pointers that the
@@ -86,11 +107,11 @@ typedef struct
 
 	// Function: pfnGetEntityFlags
 	//		This function should return the entity flags for an entity
-	obResult (*pfnGetEntityFlags)(const GameEntity _ent, UserFlags64 &_flags);
+	obResult (*pfnGetEntityFlags)(const GameEntity _ent, BitFlag64 &_flags);
 
 	// Function: pfnGetEntityPowerups
 	//		This function should return the powerup flags for an entity.
-	obResult (*pfnGetEntityPowerups)(const GameEntity _ent, UserFlags64 &_flags);
+	obResult (*pfnGetEntityPowerups)(const GameEntity _ent, BitFlag64 &_flags);
 
 	// Function: pfnGetEntityEyePosition
 	//		This function should return the eye position of an entity

@@ -920,6 +920,25 @@ bool CMultiplayRules::IsMultiplayer( void )
 			pFFPlayer->LockPlayerInPlace();
 			// <-- Mirv
 		}
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("game_end");
+		if(pEvent)
+		{
+			//////////////////////////////////////////////////////////////////////////
+			CTeam *pWinningTeam = 0;
+			for( int i = 0; i < GetNumberOfTeams(); i++ )
+			{
+				CTeam *pTeam = GetGlobalTeam(i);
+				if(pTeam)
+				{
+					if(!pWinningTeam || (pTeam->GetScore() > pWinningTeam->GetScore()))
+						pWinningTeam = pTeam;
+				}
+			}
+			//////////////////////////////////////////////////////////////////////////
+			pEvent->SetInt("winner", pWinningTeam ? pWinningTeam->GetTeamNumber() : 0);
+			gameeventmanager->FireEvent(pEvent);
+		}
 	}
 	
 	void CMultiplayRules::GetNextLevelName( char *pszNextMap, int bufsize )
