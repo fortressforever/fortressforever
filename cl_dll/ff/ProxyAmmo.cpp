@@ -14,6 +14,7 @@
 #include "FunctionProxy.h"
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
+#include "materialsystem/IMaterialVar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -24,8 +25,29 @@
 class CProxyAmmo : public CResultProxy
 {
 public:
+	virtual bool Init(IMaterial *pMaterial, KeyValues *pKeyValues);
 	virtual void OnBind(void *pC_BaseEntity);
+
+private:
+	int		m_iModifier;
 };
+
+bool CProxyAmmo::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
+{
+	bool bModifier;
+	IMaterialVar *pModifier = pMaterial->FindVar("$digitindex", &bModifier, false);
+
+	if (!bModifier)
+	{
+		m_iModifier = -1;
+	}
+	else
+	{
+		m_iModifier = pModifier->GetIntValue();
+	}
+
+	return CResultProxy::Init(pMaterial, pKeyValues);
+}
 
 void CProxyAmmo::OnBind(void *pC_BaseEntity) 
 {
@@ -36,8 +58,17 @@ void CProxyAmmo::OnBind(void *pC_BaseEntity)
 
 	Assert(m_pResult);
 
+	int iAmmo = pPlayer->GetActiveFFWeapon()->m_iClip1;
+
+	if (m_iModifier >= 0)
+	{
+		int p = pow(10, m_iModifier);
+		iAmmo /= p;
+		iAmmo -= 10 * (iAmmo / 10);
+	}
+
 	if (pPlayer && pPlayer->GetActiveFFWeapon()) 
-		SetFloatResult(pPlayer->GetActiveFFWeapon()->m_iClip1);
+		SetFloatResult(iAmmo);
 	else
 		SetFloatResult(0);
 }

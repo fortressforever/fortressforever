@@ -66,6 +66,9 @@ private:
 
 #ifdef CLIENT_DLL
 	CSoundPatch *m_pEngine;
+
+	float		m_flRotationValue;
+	int			m_iBarrelRotation;
 #endif
 };
 
@@ -84,7 +87,7 @@ BEGIN_NETWORK_TABLE(CFFWeaponAssaultCannon, DT_FFWeaponAssaultCannon)
 END_NETWORK_TABLE() 
 
 BEGIN_PREDICTION_DATA(CFFWeaponAssaultCannon) 
-	DEFINE_PRED_FIELD_TOL(m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE),
+	DEFINE_PRED_FIELD_TOL(m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 1.0f),
 END_PREDICTION_DATA() 
 
 LINK_ENTITY_TO_CLASS(ff_weapon_assaultcannon, CFFWeaponAssaultCannon);
@@ -103,6 +106,9 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 
 #ifdef CLIENT_DLL
 	m_pEngine = NULL;
+
+	m_flRotationValue = 0;
+	m_iBarrelRotation = -1;
 #endif
 }
 
@@ -170,6 +176,8 @@ bool CFFWeaponAssaultCannon::Deploy()
 		CSoundEnvelopeController::GetController().Play(m_pEngine, 0.0, 50);
 		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pEngine, 0.7, 2.0);
 	}
+
+	m_flRotationValue = 0;
 #endif
 
 	return BaseClass::Deploy();
@@ -203,6 +211,20 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 	float flTimeDelta = gpGlobals->curtime - m_flLastTick;
 	m_flLastTick = gpGlobals->curtime;
+
+#ifdef CLIENT_DLL
+	CBaseViewModel *pVM = pOwner->GetViewModel();
+	
+	if (m_iBarrelRotation < 0)
+	{
+		m_iBarrelRotation = pVM->LookupPoseParameter("ac_rotate");
+	}
+
+	// Might need to separate m_flRotationValue from m_flChargeTime
+	// Perhaps a separate client-side variable to track it
+	m_flRotationValue += flTimeDelta * 100.0f * m_flChargeTime * 5.0f;
+	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
+#endif
 
 	// Keep track of fire duration for anywhere else it may be needed
 	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
