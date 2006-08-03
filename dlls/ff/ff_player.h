@@ -276,9 +276,6 @@ public:
 	void Command_SabotageDispenser();
 	// ---> end of FF server-side player command handlers
 
-	// Compile was saying this didn't exist
-	bool m_bCanDoubleJump;
-
     // Beg: Added by Mulchman for building objects and such
 	CNetworkHandle( CAI_BaseNPC, m_hDispenser );
 	CNetworkHandle( CAI_BaseNPC, m_hSentryGun );
@@ -654,6 +651,7 @@ public:
 
 	// TODO: Possibly network this?
 	float		m_flNextJumpTimeForDouble;
+	bool		m_bCanDoubleJump;
 
 	CNetworkVar(float, m_flSpeedModifier);
 	float		m_flSpeedModifierOld;
