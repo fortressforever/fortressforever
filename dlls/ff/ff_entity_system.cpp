@@ -26,6 +26,7 @@
 #include "filesystem.h"
 
 // Entity stuff
+#include "takedamageinfo.h"
 #include "ff_player.h"
 #include "ff_item_flag.h"
 #include "ff_goal.h"
@@ -1939,7 +1940,8 @@ void CFFEntitySystem::FFLibOpen()
 		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
 		
 		// Sentrygun
-		class_<CFFSentryGun, CFFBuildableObject>("Sentrygun"),
+		class_<CFFSentryGun, CFFBuildableObject>("Sentrygun")
+			.def("GetLevel",			&CFFSentryGun::GetLevel),
 		
 		// Detpack
 		class_<CFFDetpack, CFFBuildableObject>("Detpack"),
@@ -2053,6 +2055,16 @@ void CFFEntitySystem::FFLibOpen()
 				value("kEngineer",		CLASS_ENGINEER),
 				value("kCivilian",		CLASS_CIVILIAN)
 			],
+
+		// CTakeDamageInfo
+		class_<CTakeDamageInfo>("Damage")
+			.def("GetAttacker",			&CTakeDamageInfo::GetAttacker)
+			.def("GetInflictor",		&CTakeDamageInfo::GetInflictor)
+			.def("GetDamage",			&CTakeDamageInfo::GetDamage)
+			.def("GetDamageForce",		&CTakeDamageInfo::GetDamageForce)
+			.def("GetDamagePosition",	&CTakeDamageInfo::GetDamagePosition),
+			//.def("GetDamageType",		&CTakeDamageInfo::GetDamageType), // expose damage types?
+			//.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeWrapper) // need a map function to convert to Ammo.k shits
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
