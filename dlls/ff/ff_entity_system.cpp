@@ -2063,10 +2063,9 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetInflictor",		&CTakeDamageInfo::GetInflictor)
 			.def("GetDamage",			&CTakeDamageInfo::GetDamage)
 			.def("GetDamageForce",		&CTakeDamageInfo::GetDamageForce)
-			.def("GetDamagePosition",	&CTakeDamageInfo::GetDamagePosition),
-			/*
-			.def("GetDamageType",		&CTakeDamageInfo::GetDamageType)
-			.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeLua)
+			.def("GetDamagePosition",	&CTakeDamageInfo::GetDamagePosition)
+			//.def("GetDamageType",		(int(CTakeDamageInfo::*)(void))&CTakeDamageInfo::GetDamageType)
+			//.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeLua),
 			.enum_("DamageTypes")
 			[
 				value("kGeneric",		DMG_GENERIC),
@@ -2105,7 +2104,6 @@ void CFFEntitySystem::FFLibOpen()
 				value("kShownHud",		DMG_SHOWNHUD),
 				value("kNoPhysForce",	DMG_NO_PHYSICS_FORCE)
 			],
-			*/
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
