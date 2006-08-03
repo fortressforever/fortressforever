@@ -76,6 +76,10 @@ public:
 	void			AdjustPlayerDamageInflictedForSkillLevel();
 	void			AdjustPlayerDamageTakenForSkillLevel();
 
+#ifdef GAME_DLL
+	int				GetAmmoTypeLua( void );
+#endif
+
 
 private:
 	void			CopyDamageToBaseDamage();

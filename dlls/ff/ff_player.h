@@ -678,9 +678,4 @@ inline CFFPlayer *ToFFPlayer( CBaseEntity *pEntity )
 	return static_cast< CFFPlayer* >( pEntity );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Convert lua ammo type (int) to game ammo type (string)
-//-----------------------------------------------------------------------------
-const char *LookupLuaAmmo( int iAmmoType );
-
 #endif	// FF_PLAYER_H

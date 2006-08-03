@@ -1837,7 +1837,8 @@ void CFFEntitySystem::FFLibOpen()
 				value("kRadiotag",			LUA_AMMO_RADIOTAG),
 				value("kDetpack",			LUA_AMMO_DETPACK),
 				value("kGren1",				LUA_AMMO_GREN1),
-				value("kGren2",				LUA_AMMO_GREN2)
+				value("kGren2",				LUA_AMMO_GREN2),
+				value("kInvalid",			LUA_AMMO_INVALID)
 			],
 
 		class_<CFFEntity_Effect_Flags>("EF")
@@ -2063,8 +2064,48 @@ void CFFEntitySystem::FFLibOpen()
 			.def("GetDamage",			&CTakeDamageInfo::GetDamage)
 			.def("GetDamageForce",		&CTakeDamageInfo::GetDamageForce)
 			.def("GetDamagePosition",	&CTakeDamageInfo::GetDamagePosition),
-			//.def("GetDamageType",		&CTakeDamageInfo::GetDamageType), // expose damage types?
-			//.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeWrapper) // need a map function to convert to Ammo.k shits
+			/*
+			.def("GetDamageType",		&CTakeDamageInfo::GetDamageType)
+			.def("GetAmmoType",			&CTakeDamageInfo::GetAmmoTypeLua)
+			.enum_("DamageTypes")
+			[
+				value("kGeneric",		DMG_GENERIC),
+				value("kCrush",			DMG_CRUSH),
+				value("kBullet",		DMG_BULLET),
+				value("kSlash",			DMG_SLASH),
+				value("kBurn",			DMG_BURN),
+				value("kVehicle",		DMG_VEHICLE),
+				value("kFall",			DMG_FALL),
+				value("kBlast",			DMG_BLAST),
+				value("kClub",			DMG_CLUB),
+				value("kShock",			DMG_SHOCK),
+				value("kSonic",			DMG_SONIC),
+				value("kEnergyBeam",	DMG_ENERGYBEAM),
+				value("kPreventPhysForce",	DMG_PREVENT_PHYSICS_FORCE),
+				value("kNeverGib",		DMG_NEVERGIB),
+				value("kAlwaysGib",		DMG_ALWAYSGIB),
+				value("kDrown",			DMG_DROWN),
+				value("kTimeBased",		DMG_TIMEBASED),
+				value("kParalyze",		DMG_PARALYZE),
+				value("kNerveGas",		DMG_NERVEGAS),
+				value("kPoison",		DMG_POISON),
+				value("kRadiation",		DMG_RADIATION),
+				value("kDrownRecover",	DMG_DROWNRECOVER),
+				value("kAcid",			DMG_ACID),
+				value("kSlowBurn",		DMG_SLOWBURN),
+				value("kRemoveNoRagdoll",	DMG_REMOVENORAGDOLL),
+				value("kPhysgun",		DMG_PHYSGUN),
+				value("kPlasma",		DMG_PLASMA),
+				value("kAirboat",		DMG_AIRBOAT),
+				value("kDissolve",		DMG_DISSOLVE),
+				value("kBlastSurface",	DMG_BLAST_SURFACE),
+				value("kDirect",		DMG_DIRECT),
+				value("kBuckshot",		DMG_BUCKSHOT),
+				value("kGibCorpose",	DMG_GIB_CORPSE),
+				value("kShownHud",		DMG_SHOWNHUD),
+				value("kNoPhysForce",	DMG_NO_PHYSICS_FORCE)
+			],
+			*/
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
@@ -2501,4 +2542,44 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContex
 		return true;
 
 	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert lua ammo type (int) to game ammo type (string)
+//-----------------------------------------------------------------------------
+const char *LookupLuaAmmo( int iLuaAmmoType )
+{
+	switch( iLuaAmmoType )
+	{
+		case LUA_AMMO_SHELLS: return AMMO_SHELLS; break;
+		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
+		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
+		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
+		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
+		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
+		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
+		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
+	}
+
+	AssertMsg( false, "LookupLuaAmmo - invalid ammo type!" );
+
+	return "";
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert ammo to lua ammo
+//-----------------------------------------------------------------------------
+int LookupAmmoLua( int iAmmoType )
+{
+	/*
+	if( GetAmmoDef() )
+	{
+		const char *pName = GetAmmoDef()->m_AmmoType[ iAmmoType ].pName;
+		if( pName )
+		{
+		}
+	}
+	*/
+
+	return LUA_AMMO_INVALID;
 }

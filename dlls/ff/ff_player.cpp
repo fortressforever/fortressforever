@@ -5278,28 +5278,6 @@ Vector CFFPlayer::BodyTarget(const Vector &posSrc, bool bNoisy)
 };
 
 //-----------------------------------------------------------------------------
-// Purpose: Convert lua ammo type (int) to game ammo type (string)
-//-----------------------------------------------------------------------------
-const char *LookupLuaAmmo( int iAmmoType )
-{
-	switch( iAmmoType )
-	{
-		case LUA_AMMO_SHELLS: return AMMO_SHELLS; break;
-		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
-		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
-		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
-		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
-		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
-		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
-		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
-	}
-
-	AssertMsg( false, "LookupLuaAmmo - invalid ammo type!" );
-
-	return "";
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Run "effects" and "speed effects" through here first before giving 
 //			the player the actual effect.
 // Input  :	iEffect - the effect

@@ -9,6 +9,10 @@
 #include "takedamageinfo.h"
 #include "ammodef.h"
 
+#ifdef GAME_DLL
+#include "ff_entity_system.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -309,3 +313,13 @@ void GuessDamageForce( CTakeDamageInfo *info, const Vector &vecForceDir, const V
 		CalculateMeleeDamageForce( info, vecForceDir, vecForceOrigin, flScale );
 	}
 }
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Convert ammo type to lua range
+//-----------------------------------------------------------------------------
+int CTakeDamageInfo::GetAmmoTypeLua( void )
+{
+	return LookupAmmoLua( GetAmmoType() );
+}
+#endif
