@@ -126,13 +126,20 @@ void CHudHealth::OnThink()
 {
 	int newHealth = 0;
 	int maxHealth = 0;
-	C_BasePlayer *baselocal = C_BasePlayer::GetLocalPlayer();
-	if( baselocal )
+
+	C_FFPlayer *local = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
+
+	if (local)
 	{
-		C_FFPlayer *local = ToFFPlayer( baselocal );
 		// Never below zero
 		newHealth = max( local->GetHealth(), 0 );
 		maxHealth = local->GetMaxHealth();
+	}
+
+	// Hullucination
+	if (local->m_iHallucinationIndex)
+	{
+		newHealth = local->m_iHallucinationIndex * 4;
 	}
 
 	// Only update the fade if we've changed health
