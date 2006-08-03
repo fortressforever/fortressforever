@@ -705,6 +705,10 @@ C_FFPlayer::C_FFPlayer() :
 
 	m_flConcTime = 0;
 
+	m_flSpeedModifier = 1.0f;
+	
+	m_iHallucinationIndex = 0;
+
 	for( int i = 0; i < MAX_PLAYERS; i++ )
 	{
 		// -1 = not set
@@ -942,6 +946,35 @@ int C_FFPlayer::DrawModel( int flags )
 				}
 			}
 		}	
+	}
+
+	// If we're hallucinating, players intermittently get swapped.  But only for
+	// enemy players because we don't want the teamkills
+	C_FFPlayer *pLocalPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+	if (pLocalPlayer && pLocalPlayer->m_iHallucinationIndex && !IsLocalPlayer())
+	{
+		if (pLocalPlayer->GetTeamNumber() != GetTeamNumber())
+		{
+			int nSkin = entindex() + pLocalPlayer->m_iHallucinationIndex;
+
+			// It doesn't really matter if this is acutally odd or even, just need
+			// half the samples
+			if (nSkin & 1)
+			{
+				nSkin = pLocalPlayer->GetTeamNumber() - TEAM_BLUE;
+			}
+			else
+			{
+				nSkin = GetTeamNumber() - TEAM_BLUE;
+			}
+
+			// Skin has changed
+			if (m_nSkin != nSkin)
+			{
+				m_nSkin = nSkin;
+			}
+		}
 	}
 
 	return BaseClass::DrawModel( flags );
@@ -1490,7 +1523,7 @@ float C_FFPlayer::GetFOV()
 {
 	C_FFWeaponBase *pWeapon = GetActiveFFWeapon();
 
-	
+	// There is a weapon specific FOV
 	if (pWeapon)
 	{
 		float flFOV = pWeapon->GetFOV();
@@ -1500,4 +1533,10 @@ float C_FFPlayer::GetFOV()
 	}
 
 	return default_fov.GetFloat();
+}
+
+CON_COMMAND(ffdev_hallucinate, "hallucination!")
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	pPlayer->m_iHallucinationIndex++;
 }
