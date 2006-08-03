@@ -12,7 +12,10 @@
 
 #ifndef FF_ENTITY_SYSTEM_H
 #define FF_ENTITY_SYSTEM_H
+
+#ifdef _WIN32
 #pragma once
+#endif
 
 #include <vector>
 
@@ -147,6 +150,9 @@ class CFFEntity_AmmoTypes
 public:
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: Ammo types in lua
+//-----------------------------------------------------------------------------
 enum LuaAmmoTypes
 {
 	LUA_AMMO_SHELLS = 0,
@@ -156,8 +162,20 @@ enum LuaAmmoTypes
 	LUA_AMMO_RADIOTAG,
 	LUA_AMMO_DETPACK,
 	LUA_AMMO_GREN1,
-	LUA_AMMO_GREN2
+	LUA_AMMO_GREN2,
+
+	LUA_AMMO_INVALID
 };
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert lua ammo type (int) to game ammo type (string)
+//-----------------------------------------------------------------------------
+const char *LookupLuaAmmo( int iLuaAmmoType );
+
+//-----------------------------------------------------------------------------
+// Purpose: Convert ammo to lua ammo
+//-----------------------------------------------------------------------------
+int LookupAmmoLua( int iAmmoType );
 
 //============================================================================
 // CFFEntity_Collection
