@@ -32,6 +32,9 @@ void event_ServerPlayerInfo(IGameEvent *_event);
 void event_ServerPlayerActivate(IGameEvent *_event);
 void event_ServerPlayerSay(IGameEvent *_event);
 void event_ServerPlayerSayTeam(IGameEvent *_event);
+void event_ServerPlayerAddItem(IGameEvent *_event);
+void event_ServerPlayerRemoveItem(IGameEvent *_event);
+
 void event_GameTeamInfo(IGameEvent *_event);
 void event_GameTeamScore(IGameEvent *_event);
 void event_GamePlayerScore(IGameEvent *_event);
@@ -80,6 +83,8 @@ const EventCallback EVENT_CALLBACKS[] =
 	{ "player_activate", event_ServerPlayerActivate },
 	{ "player_say", event_ServerPlayerSay },
 	{ "player_sayteam", event_ServerPlayerSayTeam },
+	{ "player_additem", event_ServerPlayerAddItem },
+	{ "player_removeitem", event_ServerPlayerRemoveItem },
 	
 	// Game Events
 	{ "team_info", event_GameTeamInfo },
@@ -395,6 +400,37 @@ void event_ServerPlayerSayTeam(IGameEvent *_event)
 	}
 }
 
+void event_ServerPlayerAddItem(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		const char *pItemName = _event->GetString("item", "");
+		if(pItemName)
+			Omnibot::Notify_AddWeapon(pPlayer, pItemName);
+	}
+}
+
+void event_ServerPlayerRemoveItem(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		const char *pItemName = _event->GetString("item", "");
+		if(pItemName)
+			Omnibot::Notify_RemoveWeapon(pPlayer, pItemName);
+	}
+}
+
+void event_ServerPlayerRemoveAllItems(IGameEvent *_event)
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
+	if(pPlayer && pPlayer->IsBot())
+	{
+		Omnibot::Notify_RemoveAllItems(pPlayer);
+	}
+}
+
 void event_GameTeamInfo(IGameEvent *_event)
 {
 	Msg(__FUNCTION__);
@@ -447,21 +483,13 @@ void event_GameNewMap(IGameEvent *_event)
 
 void event_GameStart(IGameEvent *_event)
 {
-	/*"game_start"
-	{
-		"roundslimit" (TYPE_LONG)
-		"timelimit" (TYPE_LONG)
-		"fraglimit" (TYPE_LONG)
-		"objective" (TYPE_STRING)
-	}*/
-
-	Msg(__FUNCTION__);
 	Omnibot::Notify_GameStarted();
 }
 
 void event_GameEnd(IGameEvent *_event)
 {
-	Msg(__FUNCTION__);
+	int iWinner = _event->GetInt("winner");
+	Omnibot::Notify_GameEnded(obUtilGetBotTeamFromGameTeam(iWinner));
 }
 
 void event_RoundStart(IGameEvent *_event)

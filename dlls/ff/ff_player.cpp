@@ -4470,6 +4470,14 @@ bool CFFPlayer::TakeNamedItem(const char* pszName)
 			// Remove weapon
 			m_hMyWeapons[i]->Delete( );
 			m_hMyWeapons.Set( i, NULL );
+
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("player_removeitem");						
+			if(pEvent)
+			{
+				pEvent->SetInt("userid", GetUserID());
+				pEvent->SetString("name", pszName);
+				gameeventmanager->FireEvent(pEvent, true);
+			}
 		}
 	}
 

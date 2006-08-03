@@ -36,12 +36,18 @@ namespace Omnibot
 
 	// Message Helpers
 	void Notify_GameStarted();
+	void Notify_GameEnded(int _winningteam);	
 
 	void Notify_ChatMsg(CBasePlayer *_player, const char *_msg);
 	void Notify_TeamChatMsg(CBasePlayer *_player, const char *_msg);
+	void Notify_Spectated(CBasePlayer *_player, CBasePlayer *_spectated);
 
 	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot);
 	void Notify_ClientDisConnected(CBasePlayer *_player);
+
+	void Notify_AddWeapon(CBasePlayer *_player, const char *_item);
+	void Notify_RemoveWeapon(CBasePlayer *_player, const char *_item);
+	void Notify_RemoveAllItems(CBasePlayer *_player);	
 
 	void Notify_Spawned(CBasePlayer *_player);
 	void Notify_Hurt(CBasePlayer *_player, edict_t *_attacker);

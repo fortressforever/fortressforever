@@ -1020,9 +1020,9 @@ ConVar mp_prematch( "mp_prematch",
 		if(pEvent)
 		{
 			pEvent->SetInt("roundslimit", 0);
-			pEvent->SetInt("timelimit", 0);
+			pEvent->SetInt("timelimit", mp_timelimit.GetFloat());
 			pEvent->SetInt("fraglimit", 0);
-			pEvent->SetString("fraglimit", "CTF");
+			pEvent->SetString("objective", "TF");
 			gameeventmanager->FireEvent(pEvent);
 		}
 	}
