@@ -10,6 +10,7 @@
 #pragma once
 #endif
 
+#include "locksounds.h"
 
 class CBaseButton : public CBaseToggle
 {
