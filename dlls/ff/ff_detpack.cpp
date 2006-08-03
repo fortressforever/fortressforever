@@ -289,11 +289,11 @@ void CFFDetpack::SendStopTimerMessage( void )
 
 int CFFDetpack::TakeEmp( void )
 {
-	DevMsg( "[Detpack] Emp gren attacked me!\n" );
+	//DevMsg( "[Detpack] Emp gren attacked me!\n" );
 
 	if( ( m_flDetonateTime - gpGlobals->curtime ) >= 5.0f )
 	{
-		DevMsg( "[Detpack] Calling think function early to start timer - hit by emp!\n" );
+		//DevMsg( "[Detpack] Calling think function early to start timer - hit by emp!\n" );
 		m_flThinkTime = 0.001f;	// immediate
 		SetNextThink( gpGlobals->curtime + m_flThinkTime );
 
