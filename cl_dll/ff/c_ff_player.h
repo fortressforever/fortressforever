@@ -182,6 +182,9 @@ public:
 	CNetworkVar(int, m_iPrimary);
 	CNetworkVar(int, m_iSecondary);
 
+	// This was left out and the mod wouldn't compile
+	bool m_bCanDoubleJump;
+
 	float m_flPrimeTime;
 	float m_flLatency;
 	// End: Added by L0ki for grenade stuff
