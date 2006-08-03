@@ -1413,10 +1413,14 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// don't let the status bar glitch for players with <0 health.
+	// UNDONE: Check status bar in the actual display. We need to
+	// allow health to go way negative for gibbing
+	/*
 	if (m_iHealth < -99)
 	{
 		m_iHealth = 0;
 	}
+	*/
 
 	// holster the current weapon
 	if ( GetActiveWeapon() )

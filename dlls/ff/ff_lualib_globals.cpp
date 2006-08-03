@@ -385,6 +385,8 @@ namespace FFLib
 		return gEntList.FindEntityByName(NULL, szName, NULL);
 	}
 	
+	// These don't work - use the "Collection" stuff instead
+	/*
 	//std::vector<CBaseEntity*> GetEntitiesByName(const char* szName)
 	std::vector<int> GetEntitiesByName(const char* szName)
 	{
@@ -413,6 +415,7 @@ namespace FFLib
 
 		return ret;
 	}
+	*/
 
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
@@ -1033,8 +1036,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		//def("CastToTurret",				&FFLib::CastToTurret),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
-		def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
-		def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
+		//def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
+		//def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
 		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
