@@ -350,14 +350,9 @@ void CFFDetpack::Detonate()
 // Purpose: Carry out the radius damage for this buildable
 //			Mulchman's custom detpack radius damage has been moved into here
 //-----------------------------------------------------------------------------
-void CFFDetpack::DoExplosionDamage()
+void CFFDetpack::DoExplosionDamage( void )
 {
 	// Cause damage and some effects to things around our origin
-	// Mirv: Changed pAttacker from this to pOwner, to fix
-	// Bug #0000279: Detpack not causing damage.
-	// Bug #0000247: Dispenser explosion does not hurt you
-	//RadiusDamage( CTakeDamageInfo( this, pOwner, m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ), GetAbsOrigin(), m_flExplosionRadius, CLASS_NONE, NULL );
-
 	// Raise up a little, don't want to be right on the ground
 	Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 32 );
 
@@ -550,11 +545,9 @@ void CFFDetpack::DoExplosionDamage()
 			);
 	}
 
-
 	// Hit detpack triggers (and do this after potentially gibbing players so there's less to trace through [possibly])
 	if( Classify() == CLASS_DETPACK )
 	{
-		// Detpack trigger radius is 3*detpack_radius
 		CBaseEntity *pEntity = NULL;
 		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1500.0f ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
