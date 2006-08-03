@@ -33,8 +33,6 @@ namespace luabind
 
 class CFFLuaSC;
 
-typedef std::vector< CBaseEntity * > CollectionContainer;
-
 //----------------------------------------------------------------------------
 // extern declarations
 extern ConVar mp_respawndelay;
@@ -52,6 +50,8 @@ public:
 	void OnThink( void );
 	void Precache( void );
 };
+
+extern CFFEntitySystemHelper *helper;
 
 //============================================================================
 // CFFEntitySystem
@@ -71,9 +71,6 @@ public:
 
 	// loads the script for the current map
 	bool StartForMap();
-
-	// opens the FF-specific lua library
-	void FFLibOpen();
 
 	// returns the lua interpreter
 	lua_State* GetLuaState() const { return L; }
@@ -176,92 +173,5 @@ const char *LookupLuaAmmo( int iLuaAmmoType );
 // Purpose: Convert ammo to lua ammo
 //-----------------------------------------------------------------------------
 int LookupAmmoLua( int iAmmoType );
-
-//============================================================================
-// CFFEntity_Collection
-// Purpose: basically a list/vector of entities that lua can have access to
-//============================================================================
-class CFFEntity_Collection
-{
-public:
-	CFFEntity_Collection( void );
-	CFFEntity_Collection( const luabind::adl::object& table );
-
-	void AddItem( CBaseEntity *pItem = NULL );
-	void AddItem( const luabind::adl::object& table );
-	
-	void RemoveItem( CBaseEntity *pItem = NULL );
-	void RemoveItem( const luabind::adl::object& table );
-	
-	void RemoveAllItems( void );
-	
-	bool IsEmpty( void ) const		{ return m_vCollection.empty(); }
-	
-	int Count( void ) const			{ return ( int )m_vCollection.size(); }
-
-	bool HasItem( CBaseEntity *pItem = NULL );
-	bool HasItem( const luabind::adl::object& table );
-
-	CBaseEntity *GetItem( CBaseEntity *pItem = NULL );
-	CBaseEntity *GetItem( const luabind::adl::object& table );
-
-	void GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable );
-	void GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable );
-
-	CBaseEntity *Element( int iElement );
-
-	CollectionContainer	m_vCollection;
-
-protected:
-	CBaseEntity *InternalFindPtr( CBaseEntity *pItem = NULL );
-	CollectionContainer::iterator InternalFindItr( CBaseEntity *pItem = NULL );
-};
-
-//============================================================================
-// CFFEntity_CollectionFilter
-// Purpose: this is a fake class to expose collection filter enums to lua
-//============================================================================
-class CFFEntity_CollectionFilter
-{
-public:
-};
-
-enum CollectionFilter
-{
-	CF_PLAYERS = 0,
-	CF_PLAYER_SCOUT,
-	CF_PLAYER_SNIPER,
-	CF_PLAYER_SOLDIER,
-	CF_PLAYER_DEMOMAN,
-	CF_PLAYER_MEDIC,
-	CF_PLAYER_HWGUY,
-	CF_PLAYER_PYRO,
-	CF_PLAYER_SPY,
-	CF_PLAYER_ENGY,
-	CF_PLAYER_CIVILIAN,
-
-	CF_TEAMS,
-	CF_TEAM_SPECTATOR,
-	CF_TEAM_BLUE,
-	CF_TEAM_RED,
-	CF_TEAM_YELLOW,
-	CF_TEAM_GREEN,
-
-	CF_PROJECTILES,
-	CF_GRENADES,
-
-	CF_BUILDABLES,
-	CF_BUILDABLE_DISPENSER,
-	CF_BUILDABLE_SENTRYGUN,
-	CF_BUILDABLE_DETPACK,
-
-	CF_MAX_FLAG
-};
-
-class Omnibot_GoalTypes
-{
-public:
-};
-
 
 #endif // FF_ENTITY_SYSTEM_H

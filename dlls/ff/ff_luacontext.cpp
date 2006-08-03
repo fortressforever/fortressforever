@@ -1,7 +1,7 @@
 
 // ff_luacontext.cpp
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // includes
 #include "cbase.h"
 #include "ff_luacontext.h"
@@ -35,7 +35,7 @@ extern "C"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // defines
 #define SETOBJECT(val)		new luabind::adl::object(entsys.GetLuaState(), val)
 
@@ -53,9 +53,9 @@ extern "C"
 				return defaultVal;	\
 			}					\
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Purpose: Constructor to use a bunch of args
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 CFFLuaSC::CFFLuaSC( int iArgs, ... )
 {
 	// TODO: Make the constructor and setparams use this same code
@@ -77,9 +77,9 @@ CFFLuaSC::CFFLuaSC( int iArgs, ... )
 	va_end( ap );
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Purpose: Constructor to use a bunch of args
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void CFFLuaSC::SetParams( int iArgs, ... )
 {	
 	// TODO: Make the constructor and setparams use this same code
@@ -101,14 +101,14 @@ void CFFLuaSC::SetParams( int iArgs, ... )
 	va_end( ap );	
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 CFFLuaSC::~CFFLuaSC()
 {
 	m_params.PurgeAndDeleteElements();
 	m_returnVals.PurgeAndDeleteElements();
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void CFFLuaSC::Push(CBaseEntity* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(CFFBuildableObject* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(CFFDispenser* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
@@ -124,7 +124,7 @@ void CFFLuaSC::Push(CBeam* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(Vector vector) { m_params.AddToTail(SETOBJECT(vector)); }
 void CFFLuaSC::Push(QAngle angle) { m_params.AddToTail(SETOBJECT(angle)); }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
 	m_returnVals.PurgeAndDeleteElements();
@@ -225,64 +225,64 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	return true;
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(const char* szFunctionName)
 {
 	return CallFunction(NULL, szFunctionName);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void CFFLuaSC::ClearParams()
 {
 	m_params.PurgeAndDeleteElements();
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool CFFLuaSC::GetBool()
 {
 	RETURN_OBJECTCAST(bool, false, 0);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 float CFFLuaSC::GetFloat()
 {
 	RETURN_OBJECTCAST(float, 0.0f, 0);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 int CFFLuaSC::GetInt()
 {
 	RETURN_OBJECTCAST(int, 0, 0);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 luabind::adl::object* CFFLuaSC::GetObject()
 {
 	return m_returnVals[0];
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QAngle CFFLuaSC::GetQAngle()
 {
 	QAngle dummy;
 	RETURN_OBJECTCAST(QAngle, dummy, 0);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 Vector CFFLuaSC::GetVector()
 {
 	Vector vec;
 	RETURN_OBJECTCAST(Vector, vec, 0);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void CFFLuaSC::QuickCallFunction(const char* szFunctionName)
 {
 	CFFLuaSC sc;
 	sc.CallFunction(NULL, szFunctionName);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void CFFLuaSC::QuickCallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
 	CFFLuaSC sc;
