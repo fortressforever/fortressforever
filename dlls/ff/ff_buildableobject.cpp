@@ -351,6 +351,9 @@ void CFFBuildableObject::GoLive( void )
 		pPhysics->EnableMotion( m_bUsePhysics );
 		pPhysics->EnableGravity( m_bUsePhysics );
 		pPhysics->EnableDrag( m_bUsePhysics );
+
+		if( Classify() == CLASS_DETPACK )
+			pPhysics->SetMass( 1000.0f );
 	}
 	//*/
 }
@@ -460,33 +463,6 @@ void CFFBuildableObject::RemoveQuietly( void )
 */
 void CFFBuildableObject::OnObjectThink( void )
 {
-	// Don't think this is really necessary (only affects
-	// detpack anyway)
-	/*
-	if( m_bUsePhysics )
-	{
-		// See if we've stopped moving from physics stuff
-		IPhysicsObject *pPhysics = VPhysicsGetObject();
-		if( pPhysics )
-		{
-			Vector vecVelocity;
-			AngularImpulse angVelocity;
-
-			pPhysics->GetVelocity( &vecVelocity, &angVelocity );
-
-			// If we stopped moving, don't react to physics!
-			if( vecVelocity.IsZero() )
-			{
-				pPhysics->EnableCollisions( false );
-				pPhysics->EnableMotion( false );
-				pPhysics->EnableGravity( false );
-				pPhysics->EnableDrag( false );
-
-				m_bUsePhysics = false;
-			}
-		}
-	}
-	*/
 }
 
 /**
