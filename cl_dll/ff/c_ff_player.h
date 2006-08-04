@@ -226,6 +226,7 @@ public:
 
 	void SwapToWeapon(FFWeaponID);
 
+	bool m_bFirstSpawn;
 	virtual void Spawn( void );
 	virtual void CreateMove(float flInputSampleTime, CUserCmd *pCmd);
 
