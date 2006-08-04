@@ -3777,6 +3777,18 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 }
 
 //-----------------------------------------------------------------------------
+const char* CFFPlayer::GetActiveWeaponName() const
+{
+	const char* szWeaponName = NULL;
+
+	CBaseCombatWeapon *weapon = GetActiveWeapon();
+    if(NULL != weapon)
+		szWeaponName = weapon->GetName();
+
+	return szWeaponName;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Remove primed grenades
 //-----------------------------------------------------------------------------
 void CFFPlayer::RemovePrimedGrenades( void )
@@ -3864,9 +3876,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			entsys.SetVar("info_classname", weapon->GetName());
 	}
 
-	CFFLuaSC hPlayerOnDamage( 1, this );
-	entsys.RunPredicates_LUA(NULL, &hPlayerOnDamage, "player_ondamage");
-	info.SetDamage(entsys.GetFloat("info_damage"));
+	// call script: player_ondamage(player, damageinfo)	
+	CFFLuaSC func;
+	func.Push(this);
+	func.Push(&info);
+	func.CallFunction("player_ondamage");
 
 	// go take the damage first
 	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )

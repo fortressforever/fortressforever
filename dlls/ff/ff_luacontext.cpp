@@ -16,6 +16,7 @@
 #include "beam_shared.h"
 #include "player.h"
 #include "team.h"
+#include "takedamageinfo.h"
 
 // Lua includes
 extern "C"
@@ -38,6 +39,7 @@ extern "C"
 //---------------------------------------------------------------------------
 // defines
 #define SETOBJECT(val)		new luabind::adl::object(entsys.GetLuaState(), val)
+#define SETOBJECTREF(val)	new luabind::adl::object(entsys.GetLuaState(), boost::ref(val))
 
 #define RETURN_OBJECTCAST(type, defaultVal, idx)	\
 			try					\
@@ -123,6 +125,10 @@ void CFFLuaSC::Push(CFFInfoScript* pEntity) { m_params.AddToTail(SETOBJECT(pEnti
 void CFFLuaSC::Push(CBeam* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(Vector vector) { m_params.AddToTail(SETOBJECT(vector)); }
 void CFFLuaSC::Push(QAngle angle) { m_params.AddToTail(SETOBJECT(angle)); }
+void CFFLuaSC::Push(CTakeDamageInfo* pInfo) { m_params.AddToTail(SETOBJECT(pInfo)); }
+
+//---------------------------------------------------------------------------
+void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(info)); }
 
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
