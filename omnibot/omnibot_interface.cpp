@@ -1038,11 +1038,124 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
+	const char *GetGameClassNameFromBotClassId(int _classId)
+	{
+		switch(_classId)
+		{
+		case TF_CLASS_SCOUT:
+		case TF_CLASS_SNIPER:
+		case TF_CLASS_SOLDIER:
+		case TF_CLASS_DEMOMAN:
+		case TF_CLASS_MEDIC:
+		case TF_CLASS_HWGUY:
+		case TF_CLASS_PYRO:
+		case TF_CLASS_SPY:
+		case TF_CLASS_ENGINEER:
+		case TF_CLASS_CIVILIAN:
+			return "player";			
+		case TF_CLASSEX_SENTRY:
+			return "FF_SentryGun";
+		case TF_CLASSEX_DISPENSER:
+			return "FF_Dispenser";
+		case TF_CLASSEX_BACKPACK:
+			return "ff_item_backpack";
+		case TF_CLASSEX_DETPACK:
+			return "FF_Detpack";
+		case TF_CLASSEX_GRENADE:
+			return "normalgrenade";
+		case TF_CLASSEX_EMP_GRENADE:
+			return "empgrenade";
+		case TF_CLASSEX_NAIL_GRENADE:
+			return "nailgrenade";
+		case TF_CLASSEX_MIRV_GRENADE:
+			return "mirvgrenade";
+		case TF_CLASSEX_MIRVLET_GRENADE:
+			return "mirvlet";
+		case TF_CLASSEX_NAPALM_GRENADE:
+			return "napalmgrenade";
+		case TF_CLASSEX_GAS_GRENADE:
+			return "gasgrenade";
+		case TF_CLASSEX_CONC_GRENADE:
+			return "concussiongrenade";
+		case TF_CLASSEX_CALTROP:
+			return "caltrop";
+		case TF_CLASSEX_PIPE:
+			return "pipebomb";
+		case TF_CLASSEX_GLGRENADE:
+			return "glgrenade";
+		case TF_CLASSEX_ROCKET:
+			return "rocket";
+		case TF_CLASSEX_TURRET:
+			return "ff_miniturret";
+		}
+		return 0;
+	}
+
+	//-----------------------------------------------------------------
+
 	static GameEntity obFindEntityByClassName(GameEntity _pStart, const char *_name)
 	{
 		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
-		CBaseEntity *pFoundEntity = gEntList.FindEntityByClassname(pEntity, _name);
-		return pFoundEntity ? pFoundEntity->edict() : 0;
+		
+		do 
+		{
+			pEntity = gEntList.FindEntityByClassname(pEntity, _name);
+			// special case, if it's a player, don't consider spectators
+			if(pEntity && !Q_strcmp(_name, "player"))
+			{
+				CBasePlayer *pPlayer = ToBasePlayer(pEntity);
+				if(pPlayer && !pPlayer->IsObserver())
+					break;
+			}
+			else
+			{
+				break;
+			}
+		} while(1);		
+
+		return pEntity ? pEntity->edict() : 0;
+	}
+
+	//-----------------------------------------------------------------
+
+	static GameEntity obFindEntityByClassId(GameEntity _pStart, int _classId)
+	{
+		const char *pEntityTypeName = GetGameClassNameFromBotClassId(_classId);
+		return pEntityTypeName ? obFindEntityByClassName(_pStart, pEntityTypeName) : 0;
+	}
+
+	//-----------------------------------------------------------------
+
+	static GameEntity obFindEntityInSphere(const float _pos[3], float _radius, GameEntity _pStart, const char *_name)
+	{
+		Vector start(_pos[0], _pos[1], _pos[2]);
+		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
+
+		do 
+		{
+			pEntity = gEntList.FindEntityByClassnameWithin(pEntity, _name, start, _radius);
+			// special case, if it's a player, don't consider spectators
+			if(pEntity && !Q_strcmp(_name, "player"))
+			{
+				CBasePlayer *pPlayer = ToBasePlayer(pEntity);
+				if(pPlayer && !pPlayer->IsObserver())
+					break;
+			}
+			else
+			{
+				break;
+			}
+		} while(1);		
+
+		return pEntity ? pEntity->edict() : 0;
+	}
+
+	//-----------------------------------------------------------------
+
+	static GameEntity obFindEntityInSphereId(const float _pos[3], float _radius, GameEntity _pStart, int _classId)
+	{
+		const char *pEntityTypeName = GetGameClassNameFromBotClassId(_classId);
+		return pEntityTypeName ? obFindEntityInSphere(_pos, _radius, _pStart, pEntityTypeName) : 0;
 	}
 
 	//-----------------------------------------------------------------
@@ -1107,17 +1220,6 @@ namespace Omnibot
 			return Success;
 		}
 		return InvalidEntity;
-	}
-
-	//-----------------------------------------------------------------
-
-	static GameEntity obFindEntityInSphere(const float _pos[3], float _radius, GameEntity _pStart, const char *_name)
-	{
-		Vector start(_pos[0], _pos[1], _pos[2]);
-		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
-
-		CBaseEntity *pFoundEntity = gEntList.FindEntityByClassnameWithin(pEntity, _name, start, _radius);
-		return pFoundEntity ? pFoundEntity->edict() : 0;
 	}
 
 	//-----------------------------------------------------------------
@@ -1631,10 +1733,18 @@ namespace Omnibot
 		case TF_MSG_PLAYERPIPECOUNT:
 			{
 				TF_PlayerPipeCount *pMsg = _data.Get<TF_PlayerPipeCount>();
-				if(pMsg)
+				if(pMsg && pEnt)
 				{
-					pMsg->m_NumPipes = 0;
-					pMsg->m_MaxPipes = 0;
+					int iNumPipes = 0;
+					CBaseEntity *pPipe = 0;
+					while((pPipe = gEntList.FindEntityByClassT(pPipe, CLASS_PIPEBOMB)) != NULL) 
+					{
+						if (pPipe->GetOwnerEntity() == pEnt)
+							++iNumPipes;
+					}
+
+					pMsg->m_NumPipes = iNumPipes;
+					pMsg->m_MaxPipes = 8;
 				}
 				break;
 			}
@@ -1645,7 +1755,7 @@ namespace Omnibot
 				{
 					pMsg->m_NumTeamPipes = 0;
 					pMsg->m_NumTeamPipers = 0;
-					pMsg->m_MaxPipesPerPiper = 0;
+					pMsg->m_MaxPipesPerPiper = 8;
 				}
 				break;
 			}
@@ -1853,6 +1963,8 @@ namespace Omnibot
 			// Process the bot keypresses.
 			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_ATTACK1))
 				cmd.buttons |= IN_ATTACK;
+			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_ATTACK2))
+				cmd.buttons |= IN_ATTACK2;
 			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_WALK))
 				cmd.buttons |= IN_SPEED;
 			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_USE))
@@ -2037,7 +2149,10 @@ namespace Omnibot
 		{
 			if(g_BotFunctions.pfnBotConsoleCommand)
 			{
-				g_BotFunctions.pfnBotConsoleCommand(engine->Cmd_Args(), strlen(engine->Cmd_Args()));
+				if(engine->Cmd_Args())
+				{
+					g_BotFunctions.pfnBotConsoleCommand(engine->Cmd_Args(), strlen(engine->Cmd_Args()));
+				}
 			}
 			else
 			{
@@ -2197,7 +2312,8 @@ namespace Omnibot
 		g_InterfaceFunctions.pfnClearDebugLines				= obClearNavLines;
 		g_InterfaceFunctions.pfnFindEntityByClassName		= obFindEntityByClassName;
 		g_InterfaceFunctions.pfnFindEntityInSphere			= obFindEntityInSphere;
-		g_InterfaceFunctions.pfnPrintEntitiesInRadius		= obPrintEntitiesInRadius;
+		g_InterfaceFunctions.pfnFindEntityByClassId			= obFindEntityByClassId;
+		g_InterfaceFunctions.pfnFindEntityInSphereId		= obFindEntityInSphereId;
 
 		// clear the debug arrays
 		//g_DebugLines.Clear();
@@ -2762,25 +2878,21 @@ namespace Omnibot
 		BotGoalInfo gi;
 
 		//////////////////////////////////////////////////////////////////////////
+		const int iAllTeams = (1<<TF_TEAM_BLUE)|(1<<TF_TEAM_RED)|(1<<TF_TEAM_YELLOW)|(1<<TF_TEAM_GREEN);
+		gi.m_GoalTeam = iAllTeams;
 		switch(_team)
 		{
-		case 0:			
-			gi.m_GoalTeam |= (1 << TF_TEAM_BLUE);
-			gi.m_GoalTeam |= (1 << TF_TEAM_RED);
-			gi.m_GoalTeam |= (1 << TF_TEAM_YELLOW);
-			gi.m_GoalTeam |= (1 << TF_TEAM_GREEN);
-			break;
 		case TEAM_BLUE:
-			gi.m_GoalTeam |= (1 << TF_TEAM_BLUE);
+			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_BLUE);
 			break;
 		case TEAM_RED:
-			gi.m_GoalTeam |= (1 << TF_TEAM_RED);
+			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_RED);
 			break;
 		case TEAM_YELLOW:
-			gi.m_GoalTeam |= (1 << TF_TEAM_YELLOW);
+			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_YELLOW);
 			break;
 		case TEAM_GREEN:
-			gi.m_GoalTeam |= (1 << TF_TEAM_GREEN);
+			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_GREEN);
 			break;
 		}
 		//////////////////////////////////////////////////////////////////////////
@@ -2795,6 +2907,7 @@ namespace Omnibot
 			{
 			case Omnibot::kBackPack:			
 				{
+					gi.m_GoalTeam ^= iAllTeams;
 					gi.m_GoalType = TF_GOAL_BACK_PACK;									
 					break;
 				}
@@ -2805,6 +2918,7 @@ namespace Omnibot
 				}
 			case Omnibot::kFlagCap:
 				{
+					gi.m_GoalTeam ^= iAllTeams;
 					gi.m_GoalType = TF_GOAL_CAPPOINT;
 					break;
 				}

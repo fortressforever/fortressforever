@@ -158,6 +158,10 @@ public:
 	virtual bool	IsInactive( void ) const	{ return m_iGoalState == GS_INACTIVE; }
 	virtual bool	IsRemoved( void ) const		{ return m_iGoalState == GS_REMOVED; }
 
+	virtual void	Spawn( void );
+
+	void SetBotGoalInfo(int _type, int _team);
+
 	virtual void	LuaRestore( void )			{ SetRestored(); SetInactive(); Enable(); }
 	virtual void	LuaRemove( void )			{ SetRemoved(); Disable(); }
 

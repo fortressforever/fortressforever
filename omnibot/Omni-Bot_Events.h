@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
-// $LastChangedRevision: 1234 $
+// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
+// $LastChangedRevision: 1241 $
 //
 // about: Generic Bot Events
 //
