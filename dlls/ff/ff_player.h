@@ -119,6 +119,10 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	
+	// returns the name of the active weapons. returns null if there
+	// there is no active weapon
+	const char* GetActiveWeaponName() const;
+
 	CFFWeaponBase* GetActiveFFWeapon() const;
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
 

@@ -129,12 +129,12 @@ void CHudHealth::OnThink()
 
 	C_FFPlayer *local = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
 
-	if (local)
-	{
-		// Never below zero
-		newHealth = max( local->GetHealth(), 0 );
-		maxHealth = local->GetMaxHealth();
-	}
+	if (!local)
+		return;
+
+	// Never below zero
+	newHealth = max( local->GetHealth(), 0 );
+	maxHealth = local->GetMaxHealth();
 
 	// Hullucination
 	if (local->m_iHallucinationIndex)

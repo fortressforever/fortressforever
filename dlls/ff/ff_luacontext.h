@@ -28,6 +28,7 @@ class CBasePlayer;
 class CFFPlayer;
 class CFFInfoScript;
 class CBeam;
+class CTakeDamageInfo;
 
 namespace luabind
 {
@@ -62,6 +63,10 @@ public:
 	void Push(CBeam* pEntity);
 	void Push(Vector vector);
 	void Push(QAngle angle);
+	void Push(CTakeDamageInfo* pInfo);
+
+	// pushes a parameter by reference in preparation for a function call
+	void PushRef(CTakeDamageInfo& info);
 
 	// returns the number of parameters
 	int GetNumParams() const { return m_params.Count(); }

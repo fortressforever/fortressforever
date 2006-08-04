@@ -48,6 +48,7 @@ void CFFLuaLib::InitBase(lua_State* L)
 		// CBaseEntity
 		class_<CBaseEntity>("BaseEntity")
 			.def("EmitSound",			&CBaseEntity::PlaySound)
+			.def("GetClassName",		&CBaseEntity::GetClassname)
 			.def("GetName",				&CBaseEntity::GetName)
 			.def("GetTeam",				&CBaseEntity::GetTeam)
 			.def("GetTeamId",			&CBaseEntity::GetTeamNumber)
