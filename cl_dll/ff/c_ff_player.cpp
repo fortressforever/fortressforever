@@ -690,6 +690,8 @@ C_FFPlayer::C_FFPlayer() :
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
+	m_bFirstSpawn = true;
+
 	m_iLocalSkiState = 0;
 
 	m_flJumpTime = m_flFallTime = 0;
@@ -873,6 +875,14 @@ void C_FFPlayer::PostThink( void )
 //-----------------------------------------------------------------------------
 void C_FFPlayer::Spawn( void )
 {
+	// Okay, not calling the base spawn when this was created
+	// was breaking a lot of stuff.
+	if (m_bFirstSpawn)
+	{
+		BaseClass::Spawn();
+		m_bFirstSpawn = false;
+	}
+
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
 	{
@@ -903,9 +913,6 @@ void C_FFPlayer::Spawn( void )
 		Q_snprintf(szCommand, 127, "slot%d", iSpawnWeapon);
 		engine->ClientCmd(szCommand);
 	}
-
-	// Should this be added?
-	//BaseClass::Spawn();
 }
 
 // Stomp any movement if we're in mapguide mode
