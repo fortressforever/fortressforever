@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-07-20 08:59:11 -0700 (Thu, 20 Jul 2006) $
-// $LastChangedRevision: 1234 $
+// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
+// $LastChangedRevision: 1241 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,20 +90,26 @@ typedef struct
 	//		This bot should intepret and perform a traceline, returning
 	//		the results into the <BotTraceResult> parameter.
 	obResult (*pfnTraceLine)(BotTraceResult *_result, const float _start[3], const float _end[3], const AABB *_pBBox , int _mask, int _user, obBool _bUsePVS);
-    
-	// Function: pfnPrintEntitiesInRadius
-	//		This function should print all the entities in the radius using <pfnPrintMessage>
-	obResult (*pfnPrintEntitiesInRadius)(const float _pos[3], float _radius);
 
 	// Function: pfnFindEntityByClassName
 	//		This function should return entities matching the classname, and should be
 	//		compatible with a while loop using the _pStart and returning 0 at the end of search
 	GameEntity (*pfnFindEntityByClassName)(GameEntity _pStart, const char *_name);
 	
+	// Function: pfnFindEntityByClassId
+	//		This function should return entities matching the class id, and should be
+	//		compatible with a while loop using the _pStart and returning 0 at the end of search
+	GameEntity (*pfnFindEntityByClassId)(GameEntity _pStart, int _classId);
+
 	// Function: pfnFindEntityInSphere
 	//		This function should return entities matching the classname, and in a radius, and should be
 	//		compatible with a while loop using the _pStart and returning 0 at the end of search
 	GameEntity (*pfnFindEntityInSphere)(const float _pos[3], float _radius, GameEntity _pStart, const char *_name);
+
+	// Function: pfnFindEntityInSphereId
+	//		This function should return entities matching the class id, and in a radius, and should be
+	//		compatible with a while loop using the _pStart and returning 0 at the end of search
+	GameEntity (*pfnFindEntityInSphereId)(const float _pos[3], float _radius, GameEntity _pStart, int classId);
 
 	// Function: pfnGetEntityFlags
 	//		This function should return the entity flags for an entity

@@ -31,6 +31,8 @@
 #include "EntityParticleTrail.h"
 #include "in_buttons.h"
 
+#include "omnibot_interface.h"
+
 // --> Mirv: Temp test for triggers
 #include "ff_entity_system.h"
 //#include "ff_luaobject_wrapper.h"
@@ -1000,6 +1002,20 @@ void CFuncFFScript::SetRestored( void )
 	CFFLuaSC hContext;
 	entsys.RunPredicates_LUA( this, &hContext, "onrestored" );
 }
+
+void CFuncFFScript::Spawn( void )
+{
+	BaseClass::Spawn();
+
+	CFFLuaSC hContext;
+	entsys.RunPredicates_LUA( this, &hContext, "spawn" );
+}
+
+void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
+{
+	Omnibot::Notify_GoalInfo(this, _type, _team);
+}
+
 
 // ##################################################################################
 //	>> TriggerOnce

@@ -733,7 +733,6 @@ void CFFInfoScript::RemoveThink( void )
 	LUA_Remove();
 }
 
-
 void CFFInfoScript::SetBotGoalInfo(int _type, int _team)
 {
 	Omnibot::Notify_GoalInfo(this, _type, _team);
