@@ -231,12 +231,22 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event )
 	g_TEPlayerAnimEvent.Create( filter, 0 );
 }
 
+// --------------------------------------------------------------------------------
+// Purpose: Team spawn class
+// --------------------------------------------------------------------------------
+class CFFTeamSpawn : public CPointEntity
+{
+public:
+	DECLARE_CLASS( CFFTeamSpawn, CPointEntity );
+
+	virtual Class_T Classify( void ) { return CLASS_TEAMSPAWN; }
+};
+
+LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CFFTeamSpawn );
+
 // -------------------------------------------------------------------------------- //
 // Tables.
 // -------------------------------------------------------------------------------- //
-
-// attach the info_ff_teamspawn entity to something too.. might as well put it here
-LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CPointEntity);
 LINK_ENTITY_TO_CLASS( player, CFFPlayer );
 PRECACHE_REGISTER(player);
 
@@ -642,6 +652,7 @@ void CFFPlayer::Precache()
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
 CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 {
+	/*
 	CBaseEntity *pSpot, *pGibSpot;
 	edict_t		*player;
 
@@ -653,9 +664,9 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 	// spawn at the "first" spawn point for their team if the spawns are put in a "bad" order
 	for ( int i = random->RandomInt(15,25); i > 0; i-- )
 	{
-		pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 		if ( !pSpot )  // skip over the null point
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+			pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 	}
 
 	CBaseEntity *pFirstSpot = pSpot;
@@ -681,8 +692,6 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 						continue;
 					}					
 				}
-
-				//DevMsg("[entsys] Found valid spawn for %s at %s\n", GetPlayerName(), STRING( pSpot->GetEntityName() ) );
 			}
 			pGibSpot = pSpot;
 
@@ -691,7 +700,7 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			{
 				if ( pSpot->GetLocalOrigin() == vec3_origin )
 				{
-					pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+					pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 					continue;
 				}
 
@@ -700,7 +709,7 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 			}
 		}
 		// increment pSpot
-		pSpot = gEntList.FindEntityByClassname( pSpot, "info_ff_teamspawn" );
+		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 	} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
 
 	// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
@@ -708,36 +717,30 @@ CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 	if ( pSpot )
 	{
 		CBaseEntity *pList[128];
-		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin()-Vector( 24, 24, 48 ), pSpot->GetAbsOrigin()+Vector( 24, 24, 48 ), FL_CLIENT|FL_NPC );
+		// Made minx/maxs be size of actual info_playerstart and included FL_FAKECLIENT for Dr Evil's bots
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin()-Vector( 16, 16, 35 ), pSpot->GetAbsOrigin()+Vector( 16, 16, 35 ), FL_CLIENT|FL_NPC|FL_FAKECLIENT );
 		if ( count )
 			//Iterate through the list and check the results
 			for ( int i = 0; i < count; i++ )
 			{
 				CBaseEntity *ent = pList[i];
-				if ( ent && ent->IsPlayer() && !(ent->edict() == player) )
-					ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
-
+				if( ent )
+				{
+					if( ent->IsPlayer() )
+					{
+						// We were doing damage to dead players before
+						if( ent->IsAlive() && ( ent->edict() != player ) )
+							ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
+					}					
+				}
 			}
 
-		/*
-		CBaseEntity *ent = NULL;
-		for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 32 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
-		{
-			// if ent is a client, kill em (unless they are ourselves)
-			if ( ent->IsPlayer() && !(ent->edict() == player) )
-				ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
-		}
-		*/
-
-		goto ReturnSpot;
+			goto ReturnSpot;
 	}
 
 	// as a last resort, try to find an info_player_start
 	//DevMsg("Spawning at info_player_start\n");
-	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
-	if ( pSpot ) 
-		goto ReturnSpot;
-	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_deathmatch");
+	pSpot = gEntList.FindEntityByClassT( NULL, CLASS_TEAMSPAWN );
 	if ( pSpot ) 
 		goto ReturnSpot;
 
@@ -752,6 +755,139 @@ ReturnSpot:
 
 	g_pLastSpawn = pSpot;
 	return pSpot;
+	*/
+
+	// NOTE: below is some test code I was playing with. It's not perfect
+	// yet and it does a UTIL_EntitiesInBox twice (eek?) but I want to commit
+	// my shit before someone starts diffing, heh.
+	//*
+#ifdef _DEBUG
+	Warning( "[EntSelectSpawnPoint] Looking for a spawn point!\n" );
+#endif
+
+	CBaseEntity *pSpot = NULL, *pGibSpot = NULL;
+
+	pSpot = g_pLastSpawn;
+	// Randomize the start spot
+	// NOTE: given a larger range from the default SDK function so that players won't always
+	// spawn at the "first" spawn point for their team if the spawns are put in a "bad" order
+	for( int i = random->RandomInt(15,25); i > 0; i-- )
+	{
+		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
+		if( !pSpot )  // skip over the null point
+			pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
+	}
+
+	CBaseEntity *pFirstSpot = pSpot;
+	pGibSpot = pFirstSpot;
+
+	do 
+	{
+		if( pSpot )
+		{
+			if( FFGameRules()->IsSpawnPointValid( pSpot, ( CBasePlayer * )this ) )
+			{
+				Vector vecMins = -Vector( 16, 16, 0 );
+				Vector vecMaxs = Vector( 16, 16, 70 );
+				Vector vecOrigin = pSpot->GetAbsOrigin();
+
+				// See if the spot is clear
+				if( FFGameRules()->IsSpawnPointClear( pSpot, ( CBasePlayer * )this ) )
+				{
+#ifdef _DEBUG
+					// Some debug listenserver visualization
+					if( !engine->IsDedicatedServer() )
+					{
+						NDebugOverlay::Box( vecOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
+						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 0, 0, 255, false, 10.0f );
+					}
+#endif
+
+					goto ReturnSpot;
+				}
+				else
+				{
+#ifdef _DEBUG
+					// Some debug listenserver visualization
+					if( !engine->IsDedicatedServer() )
+					{
+						NDebugOverlay::Box( vecOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
+						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 255, 0, 0, false, 10.0f );
+					}
+#endif
+					// Not clear, so perhaps later we'll gib the guy here
+					pGibSpot = pSpot;
+				}
+			}
+		}
+
+		// Increment pSpot
+		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
+	} 
+	while( pSpot != pFirstSpot ); // loop if we're not back to the start
+
+	// At this point, we've checked all ff specific team spawns. If we
+	// have a gib spot then kill people in that spot. Otherwise, we'll
+	// go and check info_player_starts.
+
+	pSpot = pGibSpot;
+	if( pSpot )
+	{
+#ifdef _DEBUG
+		Warning( "[EntSelectSpawnPoint] All spawns full, going to have to telefrag.\n" );
+#endif
+
+		CBaseEntity *pList[ 128 ];
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() - Vector( 16, 16, 0 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 70 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+		if( count )
+		{
+			// Iterate through the list and check the results
+			for( int i = 0; i < count; i++ )
+			{
+				CBaseEntity *ent = pList[ i ];
+				if( ent )
+				{
+					if( ent->IsPlayer() )
+					{
+						if( ( ToFFPlayer( ent ) != this ) && ent->IsAlive() )
+							ent->TakeDamage( CTakeDamageInfo( GetContainingEntity( INDEXENT( 0 ) ), GetContainingEntity( INDEXENT( 0 ) ), 400, DMG_GENERIC ) );
+					}
+					else
+					{
+						// TODO: Remove objects - buildables/grenades/projectiles - on the spawn point?
+					}
+				}
+			}
+		}
+
+		goto ReturnSpot;
+	}
+
+#ifdef _DEBUG
+	Warning( "[EntSelectSpawnPoint] Picking the info_player_start...\n" );
+#endif
+
+	// As a last resort, try to find an info_player_start
+	pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+	if( pSpot ) 
+		goto ReturnSpot;
+
+ReturnSpot:
+	if( !pSpot  )
+	{
+		Warning( "PutClientInServer: no info_player_start on level\n");
+		return CBaseEntity::Instance( INDEXENT( 0 ) );
+	}
+	else
+	{
+#ifdef _DEBUG
+		Warning( "[EntSelectSpawnPoint] Got a valid spawn point!\n" );
+#endif
+	}
+
+	g_pLastSpawn = pSpot;
+	return pSpot;
+	//*/
 }
 
 void CFFPlayer::Spawn()
@@ -2138,9 +2274,10 @@ void CFFPlayer::Command_WhatTeam( void )
 	//DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber() );
 	//DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
 
-	char szBuffer[128];
-	Q_snprintf(szBuffer, 127, "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber());
-	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, szBuffer);
+	//char szBuffer[128];
+	//Q_snprintf(szBuffer, 127, "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber());
+	//ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, szBuffer);
+	Warning( "[Player %s] IsAlive(): %s, H: %i, A: %i, LIFE_STATE: %i\n", GetPlayerName(), IsAlive() ? "Yes" : "No", GetHealth(), GetArmor(), m_lifeState );
 }
 
 void CFFPlayer::Command_HintTest( void )
@@ -3821,6 +3958,8 @@ static float DamageForce( const Vector &size, float damage )
 
 int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
+	Warning( "[Player: %s] Taking Damage: %f\n", GetPlayerName(), inputInfo.GetDamage() );
+
 	// have suit diagnose the problem - ie: report damage type
 	int bitsDamage = inputInfo.GetDamageType();
 	int fTookDamage;
@@ -3886,6 +4025,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
 	{
         // Refuse the damage
+		Warning( "[Player: %s] Refusing damage: %f\n", GetPlayerName(), info.GetDamage() );
 
 		return 0;
 	}

@@ -148,7 +148,7 @@ CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
 
 		if( pPlayer && ( pPlayer->GetFlags() & FL_FAKECLIENT ) )
 		{
-			Warning( "[Bot %s] Health: %i (%i%%), Armor: %i (%i%%)\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage() );
+			Warning( "[Bot %s] Health: %i (%i%%), Armor: %i (%i%%), Alive: %s: Lifestate: %i\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage(), pPlayer->IsAlive() ? "Yes" : "No", pPlayer->m_lifeState );
 		}
 	}
 }
@@ -652,6 +652,8 @@ void Bot_SetForwardMovement( CFFBot *pBot, CUserCmd &cmd )
 
 void Bot_HandleRespawn( CFFBot *pBot, CUserCmd &cmd )
 {
+	//Warning( "[Bot %s] HandleRespawn: IsAlive(): %s, Health: %i, Armor: %i, Life_state: %i\n", pBot->GetPlayerName(), pBot->IsAlive() ? "Yes" : "No", pBot->GetHealth(), pBot->GetArmorPercentage(), pBot->m_lifeState );
+	
 	// Wait for Reinforcement wave
 	if ( !pBot->IsAlive() )
 	{
@@ -661,7 +663,9 @@ void Bot_HandleRespawn( CFFBot *pBot, CUserCmd &cmd )
 			// Respawn the bot
 			if ( random->RandomInt( 0, 1 ) == 0 )
 			{
-				cmd.buttons |= IN_JUMP;
+				//cmd.buttons |= IN_JUMP;
+				cmd.buttons = 0;
+				//Warning( "[Bot %s] Trying to respawn, lifestate: %i\n", pBot->GetPlayerName(), pBot->m_lifeState );
 			}
 			else
 			{
