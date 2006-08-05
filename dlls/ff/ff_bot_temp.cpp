@@ -633,7 +633,7 @@ void Bot_SetForwardMovement( CFFBot *pBot, CUserCmd &cmd )
 {
 	if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) )
 	{
-		if ( pBot->m_iHealth == 100 )
+		if ( pBot->m_iHealth == pBot->GetMaxHealth() )
 		{
 			cmd.forwardmove = 600 * ( pBot->m_bBackwards ? -1 : 1 );
 			if ( pBot->m_flSideMove != 0.0f )
@@ -663,6 +663,9 @@ void Bot_HandleRespawn( CFFBot *pBot, CUserCmd &cmd )
 			// Respawn the bot
 			if ( random->RandomInt( 0, 1 ) == 0 )
 			{
+				// NOTE: The reason I commented this out is because after a telefrag bots were getting
+				// stuck in m_lifeState == 2 and never going to m_lifeState = 3 (respawnable) because
+				// they seemed to be spamming their buttons infinately.
 				//cmd.buttons |= IN_JUMP;
 				cmd.buttons = 0;
 				//Warning( "[Bot %s] Trying to respawn, lifestate: %i\n", pBot->GetPlayerName(), pBot->m_lifeState );
@@ -704,7 +707,7 @@ void Bot_Think( CFFBot *pBot )
 			Bot_SetForwardMovement( pBot, cmd );
 
 			// Only turn if I haven't been hurt
-			if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) && pBot->m_iHealth == 100 )
+			if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) && pBot->m_iHealth == pBot->GetMaxHealth() )
 			{
 				Bot_UpdateDirection( pBot );
 				Bot_UpdateStrafing( pBot, cmd );
