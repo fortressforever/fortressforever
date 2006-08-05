@@ -179,6 +179,10 @@ void CC_Player_Kill( void )
 	CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
 	if (pPlayer)
 	{
+		// Don't kill if we're a spec or something
+		if( pPlayer->GetTeamNumber() < TEAM_BLUE )
+			return;
+
 		// Bug #0000578: Suiciding using /kill doesn't cause a respawn delay
 		if( pPlayer->IsAlive() )
 			pPlayer->SetRespawnDelay( 5.0f );
@@ -1427,6 +1431,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 {
+	// Let's not create ragdolls until we're actually playing
+	if( GetTeamNumber() < TEAM_BLUE )
+		return;
+
 	// If we already have a ragdoll, don't make another one.
 	CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll* >( m_hRagdoll.Get() );
 
