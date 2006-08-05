@@ -108,6 +108,15 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kChangeClassRandom",	AT_CHANGECLASS_RANDOM),
 
 				value("kStopPrimedGrens",	AT_STOP_PRIMED_GRENS)
+			],
+
+		class_<CFFEntity_HudItemTypes>("Hud")
+			.enum_("HudItemTypes")
+			[
+				value("kIcon",				LUA_HUD_ITEM_ICON),
+				value("kText",				LUA_HUD_ITEM_TEXT),
+				value("kTimer",				LUA_HUD_ITEM_TIMER),
+				value("kRemove",			LUA_HUD_ITEM_REMOVE)
 			]
 	];
 };

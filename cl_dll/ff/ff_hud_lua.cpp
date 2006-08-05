@@ -150,8 +150,12 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 	if (!pImagePanel)
 		return;
 
+	// Yo mirv: Think this is a good idea?
+	// Assume x & y are in 640 x 480 so we need to scale so
+	// use the proportional scale thingy
+
 	// Now set this label up
-	pImagePanel->SetPos(iX, iY);
+	pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
 	pImagePanel->SetImage(pszSource);
 	pImagePanel->SetVisible(true);
 }
