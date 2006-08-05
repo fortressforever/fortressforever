@@ -125,6 +125,9 @@ public:
 
 	virtual void	ResetUsingCriteria( bool *pbFlags, int iTeam = TEAM_UNASSIGNED, CFFPlayer *pFFPlayer = NULL, bool bFullReset = false );
 
+	virtual bool	IsSpawnPointClear( CBaseEntity *pSpot, CBasePlayer *pPlayer );
+	virtual bool	IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
+
 private:
 
 #endif
