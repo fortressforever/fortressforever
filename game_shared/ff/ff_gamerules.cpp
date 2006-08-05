@@ -24,6 +24,8 @@
 	#include "ff_sentrygun.h"
 	#include "ff_statslog.h"
 	#include "ff_item_flag.h"
+	#include "ff_entity_system.h"
+	#include "ff_luacontext.h"
 
 #endif
 
@@ -545,6 +547,80 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			GoToIntermission();
 		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Checks to see if a spawn point is clear
+	//-----------------------------------------------------------------------------
+	bool CFFGameRules::IsSpawnPointClear( CBaseEntity *pSpot, CBasePlayer *pPlayer )
+	{
+		if( !pSpot )
+			return false;
+
+		if( !pPlayer )
+			return false;
+
+		CFFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
+		if( !pFFPlayer )
+			return false;
+
+		CBaseEntity *pList[ 128 ];
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() -Vector( 16, 16, 0 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 70 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+		if( count )
+		{
+			// Iterate through the list and check the results
+			for( int i = 0; i < count; i++ )
+			{
+				CBaseEntity *ent = pList[ i ];
+				if( ent )
+				{
+					if( ent->IsPlayer() )
+					{
+						if( ( ( CBasePlayer * )ent != pPlayer ) && ent->IsAlive() )
+							return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Checks if the spawn point is valid
+	//-----------------------------------------------------------------------------
+	bool CFFGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer )
+	{
+		if( !pSpot )
+			return false;
+
+		if( pSpot->GetLocalOrigin() == vec3_origin )
+			return false;
+
+		if( !pPlayer )
+			return false;
+
+		CFFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
+		if( !pFFPlayer )
+			return false;		
+
+		// Check if lua lets us spawn here			
+		CFFLuaSC hAllowed;
+		hAllowed.Push( pFFPlayer );
+		if( entsys.RunPredicates_LUA( pSpot, &hAllowed, "validspawn" ) )
+		{
+			// Spot is a valid place for us to spawn
+			if( hAllowed.GetBool() )
+			{
+				return true;
+			}
+		}
+
+		// info_player_start's are valid spawns... for now
+		if( FClassnameIs( pSpot, "info_player_start" ) )
+			return true;
+
+		return false;
 	}
 
 	//-----------------------------------------------------------------------------
