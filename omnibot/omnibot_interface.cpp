@@ -2365,7 +2365,10 @@ namespace Omnibot
 			memset(&g_BotFunctions, 0, sizeof(g_BotFunctions));
 			obPrintMessage( "Omni-bot Shut Down Successfully\n" );
 			obPrintMessage( "---------------------------------------------\n" );
-			debugoverlay->ClearAllOverlays();
+
+			// Temp fix?
+			if( debugoverlay )
+				debugoverlay->ClearAllOverlays();
 		}
 		SHUTDOWNBOTLIBRARY;		
 	}
