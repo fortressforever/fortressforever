@@ -1929,7 +1929,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		{
 			m_lifeState = LIFE_RESPAWNABLE;
 		}
-		
+
 		return;
 	}
 
