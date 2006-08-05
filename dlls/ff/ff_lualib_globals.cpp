@@ -989,6 +989,38 @@ namespace FFLib
 		event.FireOutput(NULL, NULL, delay);
 	}
 
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y )
+	{
+		if( !pPlayer || !pszImage || !pszIdentifier )
+			return;
+
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage );
+	}
+
+	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y )
+	{
+		if( !pPlayer || !pszIdentifier || !pszText )
+			return;
+
+		FF_LuaHudText( pPlayer, pszIdentifier, x, y, pszText );
+	}
+
+	void AddHudTimer( CFFPlayer *pPlayer, const char *pszIdentifier, int iStartValue, float flSpeed, int x, int y )
+	{
+		if( !pszIdentifier || !pszIdentifier )
+			return;
+
+		FF_LuaHudTimer( pPlayer, pszIdentifier, x, y, iStartValue, flSpeed );
+	}
+
+	void RemoveHudItem( CFFPlayer *pPlayer, const char *pszIdentifier )
+	{
+		if( !pPlayer || !pszIdentifier )
+			return;
+
+		FF_LuaHudRemove( pPlayer, pszIdentifier );
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -1089,6 +1121,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
 		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float, unsigned int))&FFLib::FireOutput),
-		def("GetPlayerByID",			&FFLib::GetPlayerByID)	// TEMPORARY
+		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
+		def("AddHudIcon",				&FFLib::AddHudIcon),
+		def("AddHudText",				&FFLib::AddHudText),
+		def("AddHudTimer",				&FFLib::AddHudTimer),
+		def("RemoveHudItem",			&FFLib::RemoveHudItem)
 	];
 }

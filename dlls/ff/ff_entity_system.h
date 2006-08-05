@@ -174,4 +174,23 @@ const char *LookupLuaAmmo( int iLuaAmmoType );
 //-----------------------------------------------------------------------------
 int LookupAmmoLua( int iAmmoType );
 
+//============================================================================
+// CFFEntity_AmmoTypes
+// Purpose: this is a fake class to expose hud items to LUA
+//============================================================================
+class CFFEntity_HudItemTypes
+{
+public:
+};
+
+enum LuaHudItemTypes
+{
+	LUA_HUD_ITEM_ICON = 0,
+	LUA_HUD_ITEM_TEXT,
+	LUA_HUD_ITEM_TIMER,
+	LUA_HUD_ITEM_REMOVE,
+
+	LUA_HUD_ITEM_MAX
+};
+
 #endif // FF_ENTITY_SYSTEM_H
