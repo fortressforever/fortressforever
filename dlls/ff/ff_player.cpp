@@ -3958,8 +3958,6 @@ static float DamageForce( const Vector &size, float damage )
 
 int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 {
-	Warning( "[Player: %s] Taking Damage: %f\n", GetPlayerName(), inputInfo.GetDamage() );
-
 	// have suit diagnose the problem - ie: report damage type
 	int bitsDamage = inputInfo.GetDamageType();
 	int fTookDamage;
@@ -4025,8 +4023,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( !g_pGameRules->FPlayerCanTakeDamage( this, info.GetAttacker() ) )
 	{
         // Refuse the damage
-		Warning( "[Player: %s] Refusing damage: %f\n", GetPlayerName(), info.GetDamage() );
-
 		return 0;
 	}
 
