@@ -35,8 +35,9 @@
 
 
 #ifndef CLIENT_DLL
-LINK_ENTITY_TO_CLASS(info_player_terrorist, CPointEntity);
-LINK_ENTITY_TO_CLASS(info_player_counterterrorist,CPointEntity);
+// Let's not use these or allow them.
+//LINK_ENTITY_TO_CLASS(info_player_terrorist, CPointEntity);
+//LINK_ENTITY_TO_CLASS(info_player_counterterrorist,CPointEntity);
 #endif
 
 REGISTER_GAMERULES_CLASS( CFFGameRules );
@@ -70,7 +71,7 @@ ConVar mp_prematch( "mp_prematch",
 #else
 	void *SendProxy_FFGameRules( const SendProp *pProp, const void *pStructBase, const void *pData, CSendProxyRecipients *pRecipients, int objectID )
 	{
-		CFFGameRules *pRules = FFGameRules();
+        CFFGameRules *pRules = FFGameRules();
 		Assert( pRules );
 		pRecipients->SetAllRecipients();
 		return pRules;

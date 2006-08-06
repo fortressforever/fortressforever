@@ -138,7 +138,10 @@ protected:
 	void	StartGame();
 	float	m_flGameStarted;
 	float	m_flNextMsg;
-	float	m_flRoundStarted;
+	//float	m_flRoundStarted;
+	// Alright mirv, I need this networked but the send/recv proxy
+	// is messing with me. talk to you sunday about it.
+	CNetworkVar( float, m_flRoundStarted );
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
