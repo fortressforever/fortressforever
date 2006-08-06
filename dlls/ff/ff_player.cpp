@@ -789,6 +789,12 @@ ReturnSpot:
 	{
 		if( pSpot )
 		{
+			// If we got a spawn spot and we're spec, it's valid
+			if( GetTeamNumber() < TEAM_BLUE )
+			{
+				goto ReturnSpot;
+			}
+
 			if( FFGameRules()->IsSpawnPointValid( pSpot, ( CBasePlayer * )this ) )
 			{
 				Vector vecMins = -Vector( 16, 16, 0 );
