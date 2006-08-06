@@ -12,6 +12,7 @@
 #include <vgui/ISurface.h>
 #include "iclientmode.h"
 #include "ammodef.h"
+#include "ff_hud_boxes.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -384,11 +385,13 @@ void CHudHistoryResource::Paint( void )
 			int ypos = tall - (m_flHistoryGap * (i + 1));
 			int xpos = wide - /*itemIcon->Width()*/ m_iIconWidth - m_flIconInset;
 
-			//itemIcon->DrawSelf( xpos, ypos, 80, 80, clr );
-
+#ifdef FF_USE_HUD_BOX
+			itemIcon->DrawSelf( xpos, ypos, 80, 80, clr );
+#else
 			surface()->DrawSetTexture(itemIcon->textureId);
 			surface()->DrawSetColor(255, 255, 255, 255);
 			surface()->DrawTexturedRect(xpos, ypos, xpos + m_iIconWidth, ypos + m_iIconHeight);
+#endif
 			// <-- Mirv: Draw proper icons
 
 			if ( iAmount )

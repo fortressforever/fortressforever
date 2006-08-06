@@ -333,6 +333,9 @@
 					RelativePath=".\ff\ff_hud_armor.cpp">
 				</File>
 				<File
+					RelativePath=".\ff_hud_boxes.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\ff_hud_buildable_messages.cpp">
 				</File>
 				<File
@@ -468,6 +471,9 @@
 				</File>
 				<File
 					RelativePath=".\ff\ff_glyph.h">
+				</File>
+				<File
+					RelativePath=".\ff\ff_hud_boxes.h">
 				</File>
 				<File
 					RelativePath=".\ff\ff_hud_chat.h">
@@ -3436,10 +3442,10 @@
 					RelativePath="..\public\tier1\mempool.h">
 				</File>
 				<File
-					RelativePath="menu.h">
+					RelativePath="..\public\vgui_controls\Menu.h">
 				</File>
 				<File
-					RelativePath="..\public\vgui_controls\Menu.h">
+					RelativePath="menu.h">
 				</File>
 				<File
 					RelativePath="..\public\vgui_controls\MenuItem.h">
