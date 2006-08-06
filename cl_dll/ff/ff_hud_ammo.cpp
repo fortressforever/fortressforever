@@ -17,11 +17,14 @@
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
 #include <vgui_controls/AnimationController.h>
+#include <igameresources.h>
 
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
+#include "ff_hud_boxes.h"
 
 #include <vgui/ILocalize.h>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -58,9 +61,17 @@ private:
 	int		m_iAmmo2;
 	int		m_iAmmoType;
 
+	bool	m_bGotTeamColor;
+	Color	m_clrTeamColor;
+
+	char	m_szFontFile[ 256 ];
+	char	m_cFontChar;
+
 	CHudTexture	*m_pHudElementTexture;
 	CHudTexture	*m_pHudAmmoTypes[MAX_AMMO_TYPES];
 	const char *m_pszHudAmmoNames[MAX_AMMO_TYPES];
+
+	KeyValues *kv;
 };
 
 DECLARE_HUDELEMENT( CHudAmmo );
@@ -71,6 +82,9 @@ DECLARE_HUDELEMENT( CHudAmmo );
 CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHudElement( pElementName )
 {
 	SetHiddenBits( /*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+
+	kv = NULL;
+	m_pHudElementTexture = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -80,7 +94,7 @@ void CHudAmmo::Init( void )
 {
 	m_iAmmo		= -1;
 	m_iAmmo2	= -1;
-	m_iAmmoType = 0;
+	m_iAmmoType = 0;	
 
 	/*
 	// REMOVED TEMPORARILY - ted
@@ -102,11 +116,20 @@ void CHudAmmo::Init( void )
 //-----------------------------------------------------------------------------
 void CHudAmmo::VidInit( void )
 {
+#ifdef FF_USE_HUD_BOX
+	GetVectorBgBoxInfo( "ammo", m_szFontFile, m_cFontChar );
+
+	// Start setting up our background font guy
+	m_pHudElementTexture = new CHudTexture();
+	m_pHudElementTexture->bRenderUsingFont = true;
+	m_pHudElementTexture->hFont = vgui::scheme()->GetIScheme( GetScheme() )->GetFont( m_szFontFile );
+	m_pHudElementTexture->cCharacterInFont = m_cFontChar;
+#else
 	// Precache the background texture
 	m_pHudElementTexture = new CHudTexture();
 	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_ammo", true, false);
-
+	
 	// Get icon for each graphic
 	for (int i = 0; i < MAX_AMMO_TYPES; i++)
 	{
@@ -125,6 +148,10 @@ void CHudAmmo::VidInit( void )
 			surface()->DrawSetTextureFile(m_pHudAmmoTypes[i]->textureId, buf, true, false);
 		}
 	}
+#endif
+	
+	// Reset
+	m_bGotTeamColor = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -317,10 +344,12 @@ void CHudAmmo::Paint()
 	if( pPlayer && ( ( pPlayer->GetClassSlot() < CLASS_SCOUT ) || ( pPlayer->GetClassSlot() > CLASS_CIVILIAN ) ) )
 		return;
 
+#ifndef FF_USE_HUD_BOX
 	// Draw background box
 	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+#endif
 
 	// Use the weapon ammo icon if possible
 	CHudTexture *ammoIcon = gWR.GetAmmoIconFromWeapon(m_iAmmoType);
@@ -333,10 +362,29 @@ void CHudAmmo::Paint()
 	if (!ammoIcon)
 		return;
 
+	if( !m_bGotTeamColor )
+	{
+		IGameResources *pGR = GameResources();
+		if( !pGR )
+			return;
+
+		Color clrTeamColor = pGR->GetTeamColor( pPlayer->GetTeamNumber() );
+		m_clrTeamColor = Color( clrTeamColor.r(), clrTeamColor.g(), clrTeamColor.b(), 255 );
+		m_bGotTeamColor = true;
+	}
+	
+#ifdef FF_USE_HUD_BOX
+	// Draw BG Box
+	m_pHudElementTexture->DrawSelf( 0, 0, GetWide(), GetTall(), m_clrTeamColor );
+
+	// Draw ammo icon
+	ammoIcon->DrawSelf( icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height, m_clrTeamColor );
+#else
 	// Draw ammo icon
 	surface()->DrawSetTexture(ammoIcon->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
+#endif
 
 	BaseClass::Paint();
 }
