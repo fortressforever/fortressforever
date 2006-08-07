@@ -61,7 +61,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
 	SendPropVector( SENDINFO( m_vecOffset ), SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_iGoalState ), 4 ),
 	SendPropInt( SENDINFO( m_iPosState ), 4 ),
-	SendPropInt( SENDINFO( m_iShadow ), 1 ),
+	SendPropInt( SENDINFO( m_iShadow ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 // <-- Mirv: Added for client class
 
