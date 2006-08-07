@@ -40,6 +40,8 @@
 #include "mapoverview.h"
 #include "hud.h"
 #include "NavProgress.h"
+#include "classmenu.h"
+#include "mapguidemenu.h"
 
 // our definition
 #include "baseviewport.h"
@@ -169,6 +171,12 @@ void CBaseViewport::CreateDefaultPanels( void )
 	// AddNewPanel( CreatePanelByName( PANEL_TEAM ) );
 	// AddNewPanel( CreatePanelByName( PANEL_CLASS ) );
 	// AddNewPanel( CreatePanelByName( PANEL_BUY ) );
+
+	// --> Mirv: FF panels
+	AddNewPanel(CreatePanelByName(PANEL_TEAM));
+	AddNewPanel(CreatePanelByName(PANEL_CLASS));
+	AddNewPanel(CreatePanelByName(PANEL_MAPGUIDE));
+	// <--
 #endif
 }
 
@@ -221,6 +229,21 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CNavProgress( this );
 	}
+
+	// --> Mirv: Pick up new panels
+	else if (Q_strcmp(PANEL_TEAM, szPanelName) == 0)
+	{
+		newpanel = new CTeamMenu(this);
+	}
+	else if (Q_strcmp(PANEL_CLASS, szPanelName) == 0)
+	{
+		newpanel = new CClassMenu(this);
+	}
+	else if (Q_strcmp(PANEL_MAPGUIDE, szPanelName) == 0)
+	{
+		newpanel = new CMapGuideMenu(this);
+	}
+	// <--
 #endif
 	
 	return newpanel; 
