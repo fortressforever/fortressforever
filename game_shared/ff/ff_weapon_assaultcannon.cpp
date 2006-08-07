@@ -59,6 +59,8 @@ private:
 
 	CFFWeaponAssaultCannon(const CFFWeaponAssaultCannon &);
 
+public:	// temp while i expose m_flChargeTime to global function
+
 	float m_flLastTick;
 	CNetworkVar(float, m_flChargeTime);
 
@@ -388,3 +390,28 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	//Add our view kick in
 	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
 }
+
+#ifdef CLIENT_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: This is a awful function to quickly get the AC charge. It will be
+//			replaced tomorrow.
+//-----------------------------------------------------------------------------
+float GetAssaultCannonCharge()
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+	if (!pPlayer)
+		return 0.0f;
+
+	C_FFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+	Assert(pWeapon);
+
+	if (!pWeapon || pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
+		return 0.0f;
+
+	CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *) pWeapon;
+
+	return (100.0f * pAC->m_flChargeTime / AC_MAX_CHARGETIME);
+}
+#endif
