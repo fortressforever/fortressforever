@@ -105,7 +105,7 @@ CRopeKeyframe::CRopeKeyframe()
 	m_TextureScale = 4;	// 4:1
 	m_nSegments = 5;
 	m_RopeLength = 20;
-	m_fLockedPoints = ROPE_LOCK_START_POINT | ROPE_LOCK_END_POINT; // by default, both points are locked
+	m_fLockedPoints = (int) (ROPE_LOCK_START_POINT | ROPE_LOCK_END_POINT); // by default, both points are locked
 	m_flScrollSpeed = 0;
 	m_RopeFlags = ROPE_SIMULATE | ROPE_INITIAL_HANG;
 	m_iRopeMaterialModel = -1;
@@ -114,20 +114,68 @@ CRopeKeyframe::CRopeKeyframe()
 	m_bCreatedFromMapFile = true;
 }
 
+
+CRopeKeyframe::~CRopeKeyframe()
+{
+	// Release transmit state ownership.
+	SetStartPoint( NULL, 0 );
+	SetEndPoint( NULL, 0 );
+	SetParent( NULL, 0 );
+}
+
+
+void CRopeKeyframe::SetAttachmentPoint( CBaseHandle &hOutEnt, short &iOutAttachment, CBaseEntity *pEnt, int iAttachment )
+{
+	// Unforce our previously attached entity from transmitting.
+	CBaseEntity *pCurEnt = gEntList.GetBaseEntity( hOutEnt );
+	if ( pCurEnt && pCurEnt->edict() )
+	{
+		pCurEnt->DecrementTransmitStateOwnedCounter();
+		pCurEnt->DispatchUpdateTransmitState();
+	}
+	
+	hOutEnt = pEnt;
+	iOutAttachment = iAttachment;
+
+	// Force this entity to transmit.
+	if ( pEnt )
+	{
+		pEnt->SetTransmitState( FL_EDICT_ALWAYS );
+		pEnt->IncrementTransmitStateOwnedCounter();
+	}
+
+	EndpointsChanged();
+}
+
+
 void CRopeKeyframe::SetStartPoint( CBaseEntity *pStartPoint, int attachment )
 {
-	m_hStartPoint = pStartPoint;
-	m_iStartAttachment = attachment;
-	EndpointsChanged();
+	SetAttachmentPoint( m_hStartPoint.GetForModify(), m_iStartAttachment.GetForModify(), pStartPoint, attachment );
 }
 
 void CRopeKeyframe::SetEndPoint( CBaseEntity *pEndPoint, int attachment )
 {
-	m_hEndPoint = pEndPoint;
-	m_iEndAttachment = attachment;
-	EndpointsChanged();
+	SetAttachmentPoint( m_hEndPoint.GetForModify(), m_iEndAttachment.GetForModify(), pEndPoint, attachment );
 }
 
+void CRopeKeyframe::SetParent( CBaseEntity *pNewParent, int iAttachment )
+{
+	CBaseEntity *pCurParent = GetMoveParent();
+	if ( pCurParent )
+	{
+		pCurParent->DecrementTransmitStateOwnedCounter();
+		pCurParent->DispatchUpdateTransmitState();
+	}
+
+	// Make sure our move parent always transmits or we get asserts on the client.
+	if ( pNewParent	)
+	{
+		pNewParent->IncrementTransmitStateOwnedCounter();
+		pNewParent->SetTransmitState( FL_EDICT_ALWAYS );
+	}
+
+	BaseClass::SetParent( pNewParent, iAttachment );
+}
 
 void CRopeKeyframe::EnablePlayerWeaponAttach( bool bAttach )
 {
@@ -140,7 +188,6 @@ void CRopeKeyframe::EnablePlayerWeaponAttach( bool bAttach )
 	if ( newFlags != m_RopeFlags )
 	{
 		m_RopeFlags = newFlags;
-		NetworkStateChanged();
 	}
 }
 
@@ -191,7 +238,7 @@ CRopeKeyframe* CRopeKeyframe::CreateWithSecondPointDetached(
 	pRet->SetStartPoint( pStartEnt, iStartAttachment );
 	pRet->SetEndPoint( NULL, 0 );
 	pRet->m_bCreatedFromMapFile = false;
-	pRet->m_fLockedPoints = ROPE_LOCK_START_POINT; // Only attach the first point.
+	pRet->m_fLockedPoints.Set( ROPE_LOCK_START_POINT ); // Only attach the first point.
 
 	if( !bInitialHang )
 	{
@@ -212,11 +259,11 @@ void CRopeKeyframe::ActivateStartDirectionConstraints( bool bEnable )
 {
 	if (bEnable)
 	{
-		m_fLockedPoints |= ROPE_LOCK_START_DIRECTION; 
+		m_fLockedPoints.Set( m_fLockedPoints | ROPE_LOCK_START_DIRECTION ); 
 	}
 	else
 	{
-		m_fLockedPoints &= ~(ROPE_LOCK_START_DIRECTION); 
+		m_fLockedPoints &= ~((int)ROPE_LOCK_START_DIRECTION); 
 	}
 }
 
@@ -225,11 +272,11 @@ void CRopeKeyframe::ActivateEndDirectionConstraints( bool bEnable )
 {
 	if (bEnable)
 	{
-		m_fLockedPoints |= ROPE_LOCK_END_DIRECTION; 
+		m_fLockedPoints.Set( m_fLockedPoints | ROPE_LOCK_END_DIRECTION ); 
 	}
 	else
 	{
-		m_fLockedPoints &= ~(ROPE_LOCK_END_DIRECTION); 
+		m_fLockedPoints &= ~((int)ROPE_LOCK_END_DIRECTION); 
 	}
 }
 
@@ -251,16 +298,14 @@ bool CRopeKeyframe::SetupHangDistance( float flHangDist )
 	if ( !pEnt1 || !pEnt2 )
 		return false;
 
-	QAngle dummyAngles;
-
 	// Calculate starting conditions so we can force it to hang down N inches.
 	Vector v1 = pEnt1->GetAbsOrigin();
 	if ( pEnt1->GetBaseAnimating() )
-		pEnt1->GetBaseAnimating()->GetAttachment( m_iStartAttachment, v1, dummyAngles );
+		pEnt1->GetBaseAnimating()->GetAttachment( m_iStartAttachment, v1 );
 		
 	Vector v2 = pEnt2->GetAbsOrigin();
 	if ( pEnt2->GetBaseAnimating() )
-		pEnt2->GetBaseAnimating()->GetAttachment( m_iEndAttachment, v2, dummyAngles );
+		pEnt2->GetBaseAnimating()->GetAttachment( m_iEndAttachment, v2 );
 
 	float flSlack, flLen;
 	CalcRopeStartingConditions( v1, v2, ROPE_MAX_SEGMENTS, flHangDist, &flLen, &flSlack );
@@ -282,9 +327,6 @@ void CRopeKeyframe::Init()
 
 	m_bStartPointValid = (m_hStartPoint.Get() != NULL);
 	m_bEndPointValid = (m_hEndPoint.Get() != NULL);
-	
-	// Use manual mode networking since we rarely change.
-	NetworkStateChanged();
 }
 
 
@@ -300,7 +342,7 @@ void CRopeKeyframe::Activate()
 		m_iRopeMaterialModel = PrecacheModel( "cable/cable.vmt" );
 
 	// Find the next entity in our chain.
-	CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, m_iNextLinkName, NULL );
+	CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, m_iNextLinkName );
 	if( pEnt && pEnt->edict() )
 	{
 		SetEndPoint( pEnt );
@@ -313,7 +355,7 @@ void CRopeKeyframe::Activate()
 		// If we're from the map file, and we don't have a target ent, and 
 		// "Start Dangling" wasn't set, then this rope keyframe doesn't have
 		// any rope coming out of it.
-		if ( m_fLockedPoints & ROPE_LOCK_END_POINT )
+		if ( m_fLockedPoints & (int)ROPE_LOCK_END_POINT )
 		{
 			m_RopeFlags &= ~ROPE_SIMULATE;
 		}
@@ -321,6 +363,10 @@ void CRopeKeyframe::Activate()
 
 	// By default, our start point is our own entity.
 	SetStartPoint( this );
+
+	// If we don't do this here, then when we save/load, we won't "own" the transmit 
+	// state of our parent, so the client might get our entity without our parent entity.
+	SetParent( GetParent(), GetParentAttachment() );
 
 	EndpointsChanged();
 
@@ -386,11 +432,13 @@ void CRopeKeyframe::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways )
 		BaseClass::SetTransmit( pInfo, bAlways );
 	
 		// Make sure our target ents are sent too.
-		if ( m_hStartPoint.Get() )
-			m_hStartPoint->SetTransmit( pInfo, bAlways );
+		CBaseEntity *pEnt = m_hStartPoint;
+		if ( pEnt )
+			pEnt->SetTransmit( pInfo, bAlways );
 
-		if ( m_hEndPoint.Get() )
-			m_hEndPoint->SetTransmit( pInfo, bAlways );
+		pEnt = m_hEndPoint;
+		if ( pEnt )
+			pEnt->SetTransmit( pInfo, bAlways );
 	}
 }
 
@@ -405,8 +453,7 @@ bool CRopeKeyframe::GetEndPointPos2( CBaseEntity *pAttached, int iAttachment, Ve
 		CBaseAnimating *pAnim = pAttached->GetBaseAnimating();
 		if ( pAnim )
 		{
-			QAngle angles;
-			if( !pAnim->GetAttachment( iAttachment, vPos, angles ) )
+			if( !pAnim->GetAttachment( iAttachment, vPos ) )
 				return false;
 		}
 		else
@@ -546,7 +593,6 @@ void CRopeKeyframe::NotifyPositionChanged( CBaseEntity *pEntity )
 		if ( len != m_RopeLength )
 		{
 			m_RopeLength = len;
-			NetworkStateChanged();
 		}
 	}
 
@@ -558,7 +604,6 @@ void CRopeKeyframe::NotifyPositionChanged( CBaseEntity *pEntity )
 		if ( *pValid[i] != bCurrentlyValid )
 		{
 			*pValid[i] = bCurrentlyValid;
-			NetworkStateChanged();
 		}
 	}
 }
@@ -589,8 +634,6 @@ void CRopeKeyframe::DetachPoint( int iPoint )
 	Assert( iPoint == 0 || iPoint == 1 );
 	
 	m_fLockedPoints &= ~(1 << iPoint);
-
-	NetworkStateChanged();
 }
 
 
@@ -599,7 +642,6 @@ void CRopeKeyframe::EnableCollision()
 	if( !( m_RopeFlags & ROPE_COLLIDE ) )
 	{
 		m_RopeFlags |= ROPE_COLLIDE;
-		NetworkStateChanged();
 	}
 }
 
@@ -612,7 +654,6 @@ void CRopeKeyframe::EnableWind( bool bEnable )
 	if ( (m_RopeFlags & ROPE_NO_WIND) != flag )
 	{
 		m_RopeFlags |= flag;
-		NetworkStateChanged();
 	}
 }
 
@@ -704,16 +745,13 @@ void CRopeKeyframe::SetMaterial( const char *pName )
 
 int CRopeKeyframe::UpdateTransmitState()
 {
-	return SetTransmitState( FL_EDICT_FULLCHECK );
-}
-
-int CRopeKeyframe::ShouldTransmit( const CCheckTransmitInfo *pInfo )
-{
 	// Certain entities like sprites and ropes are strewn throughout the level and they rarely change.
 	// For these entities, it's more efficient to transmit them once and then always leave them on
 	// the client. Otherwise, the server will have to send big bursts of data with the entity states
 	// as they come in and out of the PVS.
-	return FL_EDICT_ALWAYS;
+	return SetTransmitState( FL_EDICT_ALWAYS );
 }
- 
 
+
+
+		

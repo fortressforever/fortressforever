@@ -236,12 +236,12 @@ void CFFBuildableInfo::GetBuildError()
 
 		switch (m_BuildResult) 
 		{
-			case BUILD_NOPLAYER: Q_strcat(szError, "NOPLAYER"); break;
-			case BUILD_NOROOM: Q_strcat(szError, "WORLDBLOCK"); break;
-			case BUILD_TOOSTEEP: Q_strcat(szError, "GROUNDSTEEP"); break;
-			case BUILD_TOOFAR: Q_strcat(szError, "GROUNDDISTANCE"); break;
+			case BUILD_NOPLAYER: Q_strncat(szError, "NOPLAYER", sizeof(szError)); break;
+			case BUILD_NOROOM: Q_strncat(szError, "WORLDBLOCK", sizeof(szError)); break;
+			case BUILD_TOOSTEEP: Q_strncat(szError, "GROUNDSTEEP", sizeof(szError)); break;
+			case BUILD_TOOFAR: Q_strncat(szError, "GROUNDDISTANCE", sizeof(szError)); break;
 
-			default: Q_strcat(szError, "GENERIC"); break;
+			default: Q_strncat(szError, "GENERIC", sizeof(szError)); break;
 		}
 
 		//Warning("%s\n", szError);

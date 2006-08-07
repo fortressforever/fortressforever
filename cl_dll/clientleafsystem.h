@@ -92,19 +92,18 @@ enum
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
-class IClientLeafShadowEnum
+abstract_class IClientLeafShadowEnum
 {
 public:
-	// return false to stop iterating
 	// The user ID is the id passed into CreateShadow
-	virtual bool EnumShadow( unsigned short userId ) = 0;
+	virtual void EnumShadow( unsigned short userId ) = 0;
 };
 
 
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
-class IClientLeafSystem : public IClientLeafSystemEngine, public IGameSystem
+abstract_class IClientLeafSystem : public IClientLeafSystemEngine, public IGameSystemPerFrame
 {
 public:
 	// Adds and removes renderables from the leaf lists
@@ -159,6 +158,16 @@ public:
 
 	// Find all shadow casters in a set of leaves
 	virtual void EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pLeaves, IClientLeafShadowEnum* pEnum ) = 0;
+
+	// Fill in a list of the leaves this renderable is in.
+	// Returns -1 if the handle is invalid.
+	virtual int GetRenderableLeaves( ClientRenderHandle_t handle, int leaves[128] ) = 0;
+
+	// Get leaves this renderable is in
+	virtual bool GetRenderableLeaf ( ClientRenderHandle_t handle, int* pOutLeaf, const int* pInIterator = 0, int* pOutIterator = 0 ) = 0;
+
+	// Use alternate translucent sorting algorithm (draw translucent objects in the furthest leaf they lie in)
+	virtual void EnableAlternateSorting( ClientRenderHandle_t handle, bool bEnable ) = 0;
 };
 
 

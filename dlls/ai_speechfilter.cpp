@@ -20,6 +20,12 @@ BEGIN_DATADESC( CAI_SpeechFilter )
 	DEFINE_KEYFIELD( m_iszSubject,		FIELD_STRING, "subject" ),
 	DEFINE_KEYFIELD( m_flIdleModifier,	FIELD_FLOAT, "IdleModifier" ),
 	DEFINE_KEYFIELD( m_bNeverSayHello,	FIELD_BOOLEAN, "NeverSayHello" ),
+	DEFINE_KEYFIELD( m_bDisabled,		FIELD_BOOLEAN, "StartDisabled" ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetIdleModifier", InputSetIdleModifier ),
+
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -39,19 +45,77 @@ void CAI_SpeechFilter::Activate( void )
 {
 	BaseClass::Activate();
 
+	PopulateSubjectList( m_bDisabled );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::UpdateOnRemove(void)
+{
+	gEntList.RemoveListenerEntity( this );
+	BaseClass::UpdateOnRemove();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::Enable( bool bEnable )
+{
+	m_bDisabled = !bEnable;
+
+	PopulateSubjectList( m_bDisabled );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::InputEnable( inputdata_t &inputdata )
+{
+	Enable( true );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::InputDisable( inputdata_t &inputdata )
+{
+	Enable( false );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::InputSetIdleModifier( inputdata_t &inputdata )
+{
+	m_flIdleModifier = inputdata.value.Float();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_SpeechFilter::PopulateSubjectList( bool purge )
+{
 	// Populate the subject list. Try targetname first.
 	CBaseEntity *pSearch = NULL;
 	int iNumSubjects = 0;
 	do
 	{
-		pSearch = gEntList.FindEntityByName( pSearch, m_iszSubject, this );
+		pSearch = gEntList.FindEntityByName( pSearch, m_iszSubject );
 		if ( pSearch )
 		{
 #ifndef CSTRIKE_DLL
 			CAI_PlayerAlly *pAlly = dynamic_cast<CAI_PlayerAlly *>(pSearch);
 			if ( pAlly )
 			{
-				pAlly->SetSpeechFilter( this );
+				if( purge )
+				{
+					pAlly->SetSpeechFilter( NULL );
+				}
+				else
+				{
+					if( pAlly->GetSpeechFilter() != NULL )
+					{
+						DevWarning("ai_speechfilter %s is slamming NPC %s's current speech filter.\n", STRING(GetEntityName()), STRING(pSearch->GetEntityName()) );
+					}
+
+					pAlly->SetSpeechFilter( this );
+				}
 			}
 			else if ( pSearch->IsNPC() )
 			{
@@ -74,7 +138,19 @@ void CAI_SpeechFilter::Activate( void )
 				CAI_PlayerAlly *pAlly = dynamic_cast<CAI_PlayerAlly *>(pSearch);
 				if ( pAlly )
 				{
-					pAlly->SetSpeechFilter( this );
+					if( purge )
+					{
+						pAlly->SetSpeechFilter( NULL );
+					}
+					else
+					{
+						if( pAlly->GetSpeechFilter() != NULL )
+						{
+							DevWarning("ai_speechfilter %s is slamming NPC %s's current speech filter.\n", STRING(GetEntityName()), STRING(pSearch->GetEntityName()) );
+						}
+
+						pAlly->SetSpeechFilter( this );
+					}
 				}
 				else if ( pSearch->IsNPC() )
 				{
@@ -94,21 +170,12 @@ void CAI_SpeechFilter::Activate( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CAI_SpeechFilter::UpdateOnRemove(void)
-{
-	gEntList.RemoveListenerEntity( this );
-	BaseClass::UpdateOnRemove();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEntity - 
 //-----------------------------------------------------------------------------
 void CAI_SpeechFilter::OnEntityCreated( CBaseEntity *pEntity )
 {
-	if ( pEntity->NameMatches( m_iszSubject ) || pEntity->ClassMatches( m_iszSubject ) )
+	if ( !m_bDisabled && pEntity->NameMatches( m_iszSubject ) || pEntity->ClassMatches( m_iszSubject ) )
 	{
 #ifndef CSTRIKE_DLL
 		CAI_PlayerAlly *pAlly = dynamic_cast<CAI_PlayerAlly *>(pEntity);

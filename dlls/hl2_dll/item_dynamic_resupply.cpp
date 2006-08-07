@@ -168,6 +168,12 @@ CItem_DynamicResupply::CItem_DynamicResupply( void )
 //-----------------------------------------------------------------------------
 void CItem_DynamicResupply::Spawn( void )
 { 
+	if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+
 	// Don't callback to spawn
 	Precache();
 
@@ -305,6 +311,19 @@ void CItem_DynamicResupply::SpawnFullItem( CItem_DynamicResupply *pMaster, CBase
 
 	if ( flTotalProb == 0.0f )
 	{
+		// If we're supposed to fallback to just a health vial, do that and finish.
+		if ( pMaster->HasSpawnFlags(SF_DYNAMICRESUPPLY_FALLBACK_TO_VIAL) )
+		{
+			CBaseEntity::Create( "item_healthvial", GetAbsOrigin(), GetAbsAngles(), this );
+
+			if ( iDebug )
+			{
+				Msg("Player is full, spawning item_healthvial due to spawnflag.\n", g_DynamicResupplyAmmoItems[i].sEntityName );
+			}
+			return;
+		}
+
+		// Otherwise, spawn the first ammo item in the list
 		flRatio[0] = 1.0f;
 		flTotalProb = 1.0f;
 	}

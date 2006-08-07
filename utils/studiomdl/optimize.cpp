@@ -256,7 +256,7 @@ class COptimizedModel
 {
 public:
 	bool OptimizeFromStudioHdr( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts, int vertCacheSize, 
-		bool usesFixedFunction, bool bForceSoftwareSkin, int maxBonesPerVert, int maxBonesPerTri, 
+		bool usesFixedFunction, bool bForceSoftwareSkin, bool bHWFlex, int maxBonesPerVert, int maxBonesPerTri, 
 		int maxBonesPerStrip, const char *fileName, const char *glViewFileName );
 
 private:
@@ -283,12 +283,12 @@ private:
 
 	// This processes the model + breaks it into strips
 	void ProcessModel( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts, TotalMeshStats_t& stats, 
-		bool bForceSoftwareSkin );
+		bool bForceSoftwareSkin, bool bHWFlex );
 
 	// processes a single mesh within the model
 	void ProcessMesh( Mesh_t *pMesh, studiohdr_t *pStudioHeader, CUtlVector<mstudioiface_t> &srcFaces,
 						mstudiomodel_t *pStudioModel, mstudiomesh_t *pStudioMesh, bool ForceNoFlex, 
-						bool bForceSoftwareSkin );
+						bool bForceSoftwareSkin, bool bHWFlex );
 
 	// Processes a single strip group
 	void ProcessStripGroup( StripGroup_t *pStripGroup, bool isHWSkinned, bool isFlexed, 
@@ -296,7 +296,7 @@ private:
 							CUtlVector<mstudioiface_t> &srcFaces,
 							TriangleProcessedList_t& trianglesProcessed,
 							int maxBonesPerVert, int maxBonesPerTri, int maxBonesPerStrip,
-							bool forceNoFlex );
+							bool forceNoFlex, bool bHWFlex );
 
 	// Constructs vertices appropriate for a strip group based on source face data
 	bool GenerateStripGroupVerticesFromFace( mstudioiface_t* pFace, 
@@ -873,8 +873,8 @@ void COptimizedModel::BuildHWSkinnedStrips( TriangleList_t& triangles,
 		// Save off the bones used for this strip.
 		for( i = 0; i < m_HardwareMatrixState.AllocatedMatrixCount(); i++ )
 		{
-			newStrip.boneStateChanges[i].hardwareID = i;
-			newStrip.boneStateChanges[i].newBoneID = m_HardwareMatrixState.GetNthBoneGlobalID( i );
+			newStrip.boneStateChanges[i].hardwareID = IsChar( i );
+			newStrip.boneStateChanges[i].newBoneID = IsChar( m_HardwareMatrixState.GetNthBoneGlobalID( i ) );
 		}
 
 		// Empty out the triangles to strip so that we can start again with a new strip.
@@ -929,8 +929,8 @@ void COptimizedModel::BuildSWSkinnedStrips( TriangleList_t& triangles,
 	newStrip.numBoneStateChanges = 0;
 	for( i = 0; i < MAX_NUM_BONES_PER_STRIP; i++ )
 	{
-		newStrip.boneStateChanges[i].hardwareID = -1;
-		newStrip.boneStateChanges[i].newBoneID = -1;
+		newStrip.boneStateChanges[i].hardwareID = IsChar( -1 );
+		newStrip.boneStateChanges[i].newBoneID = IsChar( -1 );
 	}
 }
 
@@ -972,6 +972,7 @@ void COptimizedModel::ComputeStripGroupFlags( StripGroup_t *pStripGroup,
 	if( isFlexed )
 	{
 		pStripGroup->flags |= STRIPGROUP_IS_FLEXED;
+		pStripGroup->flags |= STRIPGROUP_IS_DELTA_FLEXED;	// Going forward, DX9 models are delta flexed
 	}
 	if( isHWSkinned )
 	{
@@ -1279,7 +1280,7 @@ void COptimizedModel::ProcessStripGroup( StripGroup_t *pStripGroup, bool isHWSki
 										CUtlVector<mstudioiface_t> &srcFaces,
 										TriangleProcessedList_t& trianglesProcessed,
 										int maxBonesPerVert, int maxBonesPerTri, 
-										int maxBonesPerStrip, bool forceNoFlex )
+										int maxBonesPerStrip, bool forceNoFlex, bool bHWFlex )
 {
 	ComputeStripGroupFlags( pStripGroup, isHWSkinned, isFlexed );
 
@@ -1299,11 +1300,12 @@ void COptimizedModel::ProcessStripGroup( StripGroup_t *pStripGroup, bool isHWSki
 
 		mstudioiface_t *pFace = &srcFaces[n];
 
+		int preferredBones = isHWSkinned && (bHWFlex || !isFlexed) ? maxBonesPerVert : 0;
 		// start a new strip group header.
 		Vertex_t stripGroupVert[3];
 		bool triangleIsFlexed = GenerateStripGroupVerticesFromFace( 
 			pFace, pStudioMesh, 
-			isHWSkinned && (!isFlexed) ? maxBonesPerVert : 0, 
+			preferredBones, 
 			stripGroupVert );
 
 		if( forceNoFlex )
@@ -1540,7 +1542,7 @@ void COptimizedModel::ComputeMeshFlags( Mesh_t *pMesh, studiohdr_t *pStudioHeade
 void COptimizedModel::ProcessMesh( Mesh_t *pMesh, studiohdr_t *pStudioHeader, 
 								  CUtlVector<mstudioiface_t> &srcFaces,
 								  mstudiomodel_t *pStudioModel, mstudiomesh_t *pStudioMesh,
-								  bool forceNoFlex, bool bForceSoftwareSkin )
+								  bool forceNoFlex, bool bForceSoftwareSkin, bool bHWFlex )
 {
 	// Compute the mesh flags
 	ComputeMeshFlags( pMesh, pStudioHeader, pStudioMesh );
@@ -1562,7 +1564,7 @@ void COptimizedModel::ProcessMesh( Mesh_t *pMesh, studiohdr_t *pStudioHeader,
 		{
 			int realMaxBonesPerTri, realMaxBonesPerVert, realMaxBonesPerStrip;
 
-			if( isFlexed )
+			if( isFlexed && !bHWFlex )
 			{
 				realMaxBonesPerTri = 1;
 				realMaxBonesPerVert = 1;
@@ -1581,7 +1583,7 @@ void COptimizedModel::ProcessMesh( Mesh_t *pMesh, studiohdr_t *pStudioHeader,
 				isHWSkinned ? true : false, 
 				isFlexed ? true : false, 
 				pStudioModel, pStudioMesh, srcFaces, trianglesProcessed,
-				realMaxBonesPerVert, realMaxBonesPerTri, realMaxBonesPerStrip, forceNoFlex );
+				realMaxBonesPerVert, realMaxBonesPerTri, realMaxBonesPerStrip, forceNoFlex, bHWFlex );
 
 			PostProcessStripGroup( pStudioModel, pStudioMesh, &newStripGroup );
 
@@ -1998,7 +2000,7 @@ bool COptimizedModel::MeshNeedsRemoval( studiohdr_t *pHdr, mstudiomesh_t *pStudi
 //-----------------------------------------------------------------------------
 	
 void COptimizedModel::ProcessModel( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyParts, 
-										  TotalMeshStats_t& stats, bool bForceSoftwareSkin )
+										  TotalMeshStats_t& stats, bool bForceSoftwareSkin, bool bHWFlex )
 {
 	memset( &stats, 0, sizeof(stats) );
 	m_Models.RemoveAll();
@@ -2021,7 +2023,7 @@ void COptimizedModel::ProcessModel( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyPar
 				// get the source of the model's lod data
 				// a model may not have an alternate source for its lod
 				bool found;
-				s_source_t* pLODSource = GetModelLODSource( pStudioModel->name, scriptLOD, &found );
+				s_source_t* pLODSource = GetModelLODSource( pStudioModel->pszName(), scriptLOD, &found );
 
 				int i = newModel.modelLODs.AddToTail();
 				Assert( i == lodID );
@@ -2079,7 +2081,7 @@ void COptimizedModel::ProcessModel( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyPar
 					}
 					
 					ProcessMesh( &newMesh, pHdr, meshTriangleList, pStudioModel, pStudioMesh, 
-						!scriptLOD.GetFacialAnimationEnabled(), bForceSoftwareSkin );
+						!scriptLOD.GetFacialAnimationEnabled(), bForceSoftwareSkin, bHWFlex );
 					
 					stats.m_TotalVerts += GetTotalVertsForMesh( &newMesh );
 					stats.m_TotalIndices += GetTotalIndicesForMesh( &newMesh );
@@ -2177,7 +2179,7 @@ void COptimizedModel::MapGlobalBonesToHardwareBoneIDsAndSortBones( studiohdr_t *
 									}
 									assert( globalBoneID >= 0 && globalBoneID < m_NumBones );
 									vert->boneID[boneID] = globalToHardwareBoneIndex[globalBoneID];
-									assert( vert->boneID[boneID] >= 0 && vert->boneID[boneID] < header->maxBonesPerStrip );
+									Assert( vert->boneID[boneID] >= 0 && vert->boneID[boneID] < header->maxBonesPerStrip );
 								}
 								
 								// We only do index palette skinning when we're not doing fixed function
@@ -2213,13 +2215,13 @@ void COptimizedModel::WriteHeader( int vertCacheSize, int maxBonesPerVert,
 	fileHeader.version = OPTIMIZED_MODEL_FILE_VERSION;
 	fileHeader.vertCacheSize = vertCacheSize;
 	fileHeader.maxBonesPerTri = maxBonesPerTri;
-	fileHeader.maxBonesPerVert = maxBonesPerVert;
-	fileHeader.maxBonesPerStrip = maxBonesPerStrip;
-	fileHeader.numBodyParts = numBodyParts;
-	fileHeader.bodyPartOffset = sizeof( FileHeader_t );
+	fileHeader.maxBonesPerVert = IsUShort( maxBonesPerVert );
+	fileHeader.maxBonesPerStrip = IsUShort( maxBonesPerStrip );
+	fileHeader.numBodyParts = IsChar( numBodyParts );
+	fileHeader.bodyPartOffset = IsInt24( sizeof( FileHeader_t ) );
 	fileHeader.checkSum = checkSum;
-	fileHeader.numLODs = g_ScriptLODs.Size();
-	fileHeader.materialReplacementListOffset = m_MaterialReplacementsListOffset;
+	fileHeader.numLODs = IsChar( g_ScriptLODs.Size() );
+	fileHeader.materialReplacementListOffset = IsInt24( m_MaterialReplacementsListOffset );
 	m_FileBuffer->WriteAt( 0, &fileHeader, sizeof( FileHeader_t ), "header" );
 #ifdef _DEBUG
 	FileHeader_t *debug = ( FileHeader_t * )m_FileBuffer->GetPointer( 0 );
@@ -2231,10 +2233,10 @@ void COptimizedModel::WriteHeader( int vertCacheSize, int maxBonesPerVert,
 void COptimizedModel::WriteBodyPart( int bodyPartID, mstudiobodyparts_t *pBodyPart, int modelID )
 {
 	BodyPartHeader_t bodyPart;
-	bodyPart.numModels = pBodyPart->nummodels;
+	bodyPart.numModels = IsChar( pBodyPart->nummodels );
 	int bodyPartOffset = m_BodyPartsOffset + bodyPartID * sizeof( BodyPartHeader_t );
 	int modelFileOffset = m_ModelsOffset + modelID * sizeof( ModelHeader_t );
-	bodyPart.modelOffset = modelFileOffset - bodyPartOffset;
+	bodyPart.modelOffset = IsInt24( modelFileOffset - bodyPartOffset );
 	m_FileBuffer->WriteAt( bodyPartOffset, &bodyPart, sizeof( BodyPartHeader_t ), "bodypart" );
 #ifdef _DEBUG
 	BodyPartHeader_t *debug = ( BodyPartHeader_t * )m_FileBuffer->GetPointer( bodyPartOffset );
@@ -2245,10 +2247,10 @@ void COptimizedModel::WriteBodyPart( int bodyPartID, mstudiobodyparts_t *pBodyPa
 void COptimizedModel::WriteModel( int modelID, mstudiomodel_t *pModel, int lodID )
 {
 	ModelHeader_t model;
-	model.numLODs = g_ScriptLODs.Size();
+	model.numLODs = IsChar( g_ScriptLODs.Size() );
 	int modelFileOffset = m_ModelsOffset + modelID * sizeof( ModelHeader_t );
 	int lodFileOffset = m_ModelLODsOffset + lodID * sizeof( ModelLODHeader_t );
-	model.lodOffset = lodFileOffset - modelFileOffset;
+	model.lodOffset = IsInt24( lodFileOffset - modelFileOffset );
 	m_FileBuffer->WriteAt( modelFileOffset, &model, sizeof( ModelHeader_t ), "model" );
 #ifdef _DEBUG
 	ModelHeader_t *debug = ( ModelHeader_t * )m_FileBuffer->GetPointer( modelFileOffset );
@@ -2261,8 +2263,8 @@ void COptimizedModel::WriteModelLOD( int lodID, ModelLOD_t *pLOD, int meshID )
 	ModelLODHeader_t lod;
 	int lodFileOffset = m_ModelLODsOffset + lodID * sizeof( ModelLODHeader_t );
 	int meshFileOffset = m_MeshesOffset + meshID * sizeof( MeshHeader_t );
-	lod.meshOffset = meshFileOffset - lodFileOffset;
-	lod.numMeshes = pLOD->meshes.Size();
+	lod.meshOffset = IsInt24( meshFileOffset - lodFileOffset );
+	lod.numMeshes = IsChar( pLOD->meshes.Size() );
 	lod.switchPoint = pLOD->switchPoint;
 	m_FileBuffer->WriteAt( lodFileOffset, &lod, sizeof( ModelLODHeader_t ), "modellod" );
 #ifdef _DEBUG
@@ -2274,7 +2276,7 @@ void COptimizedModel::WriteModelLOD( int lodID, ModelLOD_t *pLOD, int meshID )
 void COptimizedModel::WriteMesh( int meshID, Mesh_t *pMesh, int stripGroupID )
 {
 	MeshHeader_t mesh;
-	mesh.numStripGroups = pMesh->stripGroups.Size();
+	mesh.numStripGroups = IsChar( pMesh->stripGroups.Size() );
 	int meshFileOffset = m_MeshesOffset + meshID * sizeof( MeshHeader_t );
 	int stripGroupFileOffset = m_StripGroupsOffset + stripGroupID * sizeof( StripGroupHeader_t );
 	mesh.stripGroupHeaderOffset = stripGroupFileOffset - meshFileOffset;
@@ -2290,10 +2292,10 @@ void COptimizedModel::WriteStripGroup( int stripGroupID, StripGroup_t *pStripGro
 									   int vertID, int indexID, int stripID )
 {
 	StripGroupHeader_t stripGroup;
-	stripGroup.numVerts = pStripGroup->verts.Size();
-	stripGroup.numIndices = pStripGroup->indices.Size();
-	stripGroup.numStrips = pStripGroup->strips.Size();
-	stripGroup.flags = pStripGroup->flags;
+	stripGroup.numVerts = IsShort( pStripGroup->verts.Size() );
+	stripGroup.numIndices = IsShort( pStripGroup->indices.Size() );
+	stripGroup.numStrips = IsShort( pStripGroup->strips.Size() );
+	stripGroup.flags = IsByte( pStripGroup->flags );
 	int stripGroupFileOffset = m_StripGroupsOffset + stripGroupID * sizeof( StripGroupHeader_t );
 	int vertsFileOffset = m_VertsOffset + vertID * sizeof( Vertex_t );
 	int indicesFileOffset = m_IndicesOffset + indexID * sizeof( unsigned short );
@@ -2336,16 +2338,16 @@ void COptimizedModel::WriteStrip( int stripID, Strip_t *pStrip, int indexID, int
 {
 	StripHeader_t stripHeader;
 
-	stripHeader.numIndices = pStrip->numStripGroupIndices;
+	stripHeader.numIndices = IsShort( pStrip->numStripGroupIndices );
 	stripHeader.indexOffset = pStrip->stripGroupIndexOffset;
-	stripHeader.numVerts = pStrip->numStripGroupVerts;
+	stripHeader.numVerts = IsShort( pStrip->numStripGroupVerts );
 	stripHeader.vertOffset = pStrip->stripGroupVertexOffset;
-	stripHeader.numBoneStateChanges = pStrip->numBoneStateChanges;
-	stripHeader.numBones = pStrip->numBones;
-	stripHeader.flags = pStrip->flags;
-	int boneFileOffset = m_BoneStageChangesOffset + boneID * sizeof( BoneStateChange_t );
+	stripHeader.numBoneStateChanges = IsChar( pStrip->numBoneStateChanges );
+	stripHeader.numBones = IsChar( pStrip->numBones );
+	stripHeader.flags = IsByte( pStrip->flags );
+	int boneFileOffset = m_BoneStageChangesOffset + boneID * sizeof( BoneStateChangeHeader_t );
 	int stripFileOffset = m_StripsOffset + stripID * sizeof( StripHeader_t );
-	stripHeader.boneStateChangeOffset = boneFileOffset - stripFileOffset;
+	stripHeader.boneStateChangeOffset = IsInt24( boneFileOffset - stripFileOffset );
 	m_FileBuffer->WriteAt( stripFileOffset, &stripHeader, sizeof( StripHeader_t ), "strip" );
 #ifdef _DEBUG
 	StripHeader_t *debug = ( StripHeader_t* )m_FileBuffer->GetPointer( stripFileOffset );
@@ -2356,8 +2358,8 @@ void COptimizedModel::WriteStrip( int stripID, Strip_t *pStrip, int indexID, int
 void COptimizedModel::WriteBoneStateChange( int boneID, BoneStateChange_t *boneStateChange )
 {
 	BoneStateChangeHeader_t boneHeader;
-	boneHeader.hardwareID = boneStateChange->hardwareID;
-	boneHeader.newBoneID = boneStateChange->newBoneID;
+	boneHeader.hardwareID = IsChar( boneStateChange->hardwareID );
+	boneHeader.newBoneID = IsChar( boneStateChange->newBoneID );
 	int boneFileOffset = m_BoneStageChangesOffset + boneID * sizeof( BoneStateChangeHeader_t );
 #if 0
 	printf( "\tboneStateChange: hwid: %d boneID %d\n", ( int )boneHeader.hardwareID, 
@@ -2451,8 +2453,8 @@ void COptimizedModel::WriteMaterialReplacementLists( int materialReplacementsOff
 	{
 		LodScriptData_t &scriptLOD = g_ScriptLODs[i];
 		MaterialReplacementListHeader_t tmpHeader;
-		tmpHeader.numReplacements = scriptLOD.materialReplacements.Size();
-		tmpHeader.replacementOffset = replacementOffset - offset;
+		tmpHeader.numReplacements = IsChar( scriptLOD.materialReplacements.Size() );
+		tmpHeader.replacementOffset = IsInt24( replacementOffset - offset );
 		m_FileBuffer->WriteAt( offset, &tmpHeader, sizeof( tmpHeader ), "material replacement headers" );
 		MaterialReplacementListHeader_t *pDebugList = 
 			( MaterialReplacementListHeader_t * )m_FileBuffer->GetPointer( offset );
@@ -2816,7 +2818,7 @@ static int CalcNumMaterialReplacements()
 
 bool COptimizedModel::OptimizeFromStudioHdr( studiohdr_t *pHdr, s_bodypart_t *pSrcBodyParts, 
 		int vertCacheSize, 
-		bool usesFixedFunction, bool bForceSoftwareSkin, int maxBonesPerVert, int maxBonesPerTri, 
+		bool usesFixedFunction, bool bForceSoftwareSkin, bool bHWFlex, int maxBonesPerVert, int maxBonesPerTri, 
 		int maxBonesPerStrip, const char *pFileName, const char *glViewFileName )
 {
 	Assert( maxBonesPerVert <= MAX_NUM_BONES_PER_VERT );
@@ -2831,7 +2833,7 @@ bool COptimizedModel::OptimizeFromStudioHdr( studiohdr_t *pHdr, s_bodypart_t *pS
 
 	// The dude that does it all
 	TotalMeshStats_t stats;
-	ProcessModel( pHdr, pSrcBodyParts, stats, bForceSoftwareSkin );
+	ProcessModel( pHdr, pSrcBodyParts, stats, bForceSoftwareSkin, bHWFlex );
 	stats.m_TotalMaterialReplacements = CalcNumMaterialReplacements();
 
 	// Write it out to disk
@@ -3922,48 +3924,69 @@ void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts )
 	strcat( filename, outname );
 	Q_StripExtension( filename, filename, sizeof( filename ) );
 
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".sw.vtx" );
-	strcpy( glViewFilename, filename );
-	strcat( glViewFilename, ".sw.glview" );
-	bool bForceSoftwareSkinning = phdr->numbones > 0 && !g_staticprop;
-	s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
-		                                    512,	//vert cache size FIXME: figure out the correct size for L1
-											false, /* doesn't use fixed function */
-											bForceSoftwareSkinning,	// force software skinning if not static prop
-		                                    3,		// bones/vert
-											3*3,		// bones/tri
-											512,	// bones/strip
-											tmpFileName, glViewFilename );
+	// if ( !g_bXbox )
+	{
+		strcpy( tmpFileName, filename );
+		strcat( tmpFileName, ".sw.vtx" );
+		strcpy( glViewFilename, filename );
+		strcat( glViewFilename, ".sw.glview" );
+		bool bForceSoftwareSkinning = phdr->numbones > 0 && !g_staticprop;
+		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
+												512,	//vert cache size FIXME: figure out the correct size for L1
+												false, /* doesn't use fixed function */
+												bForceSoftwareSkinning,	// force software skinning if not static prop
+												false, // No hardware flex
+												3,		// bones/vert
+												3*3,		// bones/tri
+												512,	// bones/strip
+												tmpFileName, glViewFilename );
 
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".dx80.vtx" );
-	strcpy( glViewFilename, filename );
-	strcat( glViewFilename, ".dx80.glview" );
-	s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
-		                                    24 /* vert cache size (real size, not effective!)*/, 
-											false, /* doesn't use fixed function */
-											false, // don't force software skinning
-		                                    3  /* bones/vert */, 
-											9  /* bones/tri */, 
-											16  /* bones/strip */,
-											tmpFileName, glViewFilename );
+		strcpy( tmpFileName, filename );
+		strcat( tmpFileName, ".dx80.vtx" );
+		strcpy( glViewFilename, filename );
+		strcat( glViewFilename, ".dx80.glview" );
+		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
+												24 /* vert cache size (real size, not effective!)*/, 
+												false, /* doesn't use fixed function */
+												false, // don't force software skinning
+												false, // No hardware flex
+												3  /* bones/vert */, 
+												9  /* bones/tri */, 
+												16  /* bones/strip */,
+												tmpFileName, glViewFilename );
 
-	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".dx90.vtx" );
-	strcpy( glViewFilename, filename );
-	strcat( glViewFilename, ".dx90.glview" );
-	s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
-		                                    24 /* vert cache size (real size, not effective!)*/, 
-											false, /* doesn't use fixed function */
-											false, // don't force software skinning
-		                                    3  /* bones/vert */, 
-											9  /* bones/tri */, 
-											53  /* bones/strip */,
-											tmpFileName, glViewFilename );
+		strcpy( tmpFileName, filename );
+		strcat( tmpFileName, ".dx90.vtx" );
+		strcpy( glViewFilename, filename );
+		strcat( glViewFilename, ".dx90.glview" );
+		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
+												24 /* vert cache size (real size, not effective!)*/, 
+												false, /* doesn't use fixed function */
+												false, // don't force software skinning
+												true, // Hardware flex on DX9 parts
+												3  /* bones/vert */, 
+												9  /* bones/tri */, 
+												53  /* bones/strip */,
+												tmpFileName, glViewFilename );
+	}
+	// else
+	{
+		strcpy( tmpFileName, filename );
+		strcat( tmpFileName, ".xbox.vtx" );
+		strcpy( glViewFilename, filename );
+		strcat( glViewFilename, ".xbox.glview" );
+		s_OptimizedModel.OptimizeFromStudioHdr( phdr, pSrcBodyParts,
+												24 /* vert cache size (real size, not effective!)*/, 
+												false, /* doesn't use fixed function */
+												false, // don't force software skinning
+												true, // Allow hardware flex
+												3  /* bones/vert */, 
+												9  /* bones/tri */, 
+												47  /* bones/strip */,
+												tmpFileName, glViewFilename );
+	}
 
 	s_StringTable.Purge();
-
 }
 
 }; // namespace OptimizedModel

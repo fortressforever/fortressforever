@@ -110,7 +110,8 @@ void FireTargets( const char *targetName, CBaseEntity *pActivator, CBaseEntity *
 
 	for (;;)
 	{
-		pTarget = gEntList.FindEntityByName( pTarget, targetName, pActivator );
+		CBaseEntity *pSearchingEntity = pActivator;
+		pTarget = gEntList.FindEntityByName( pTarget, targetName, pSearchingEntity, pActivator, pCaller );
 		if ( !pTarget )
 			break;
 
@@ -283,6 +284,14 @@ void CBaseToggle::AngularMove( const QAngle &vecDestAngle, float flSpeed )
 	
 	// divide by speed to get time to reach dest
 	float flTravelTime = vecDestDelta.Length() / flSpeed;
+
+	const float MinTravelTime = 0.01f;
+	if ( flTravelTime < MinTravelTime )
+	{
+		// If we only travel for a short time, we can fail WillSimulateGamePhysics()
+		flTravelTime = MinTravelTime;
+		flSpeed = vecDestDelta.Length() / flTravelTime;
+	}
 
 	// set m_flNextThink to trigger a call to AngularMoveDone when dest is reached
 	SetMoveDoneTime( flTravelTime );

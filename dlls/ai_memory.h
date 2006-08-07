@@ -43,6 +43,7 @@ struct AI_EnemyInfo_t
 	bool			bDangerMemory;		// Memory of danger position w/o Enemy pointer
 	bool			bEludedMe;			// True if enemy not at last known location 
 	bool			bUnforgettable;
+	bool			bMobbedMe;			// True if enemy was part of a mob at some point
 
 	DECLARE_SIMPLE_DATADESC();
 	DECLARE_FIXEDSIZE_ALLOCATOR(AI_EnemyInfo_t);
@@ -79,7 +80,7 @@ public:
 	const Vector &	LastSeenPosition( CBaseEntity *pEnemy );
 
 	float			TimeLastReacquired( CBaseEntity *pEnemy );
-	float			LastTimeSeen( CBaseEntity *pEnemy );
+	float			LastTimeSeen( CBaseEntity *pEnemy, bool bCheckDangerMemory = true );
 	float			FirstTimeSeen( CBaseEntity *pEnemy);
 	bool			HasFreeKnowledgeOf( CBaseEntity *pEnemy );
 
@@ -93,9 +94,11 @@ public:
 	void			SetTimeValidEnemy( CBaseEntity *pEnemy, float flTime );
 
 	void			SetUnforgettable( CBaseEntity *pEnemy, bool bUnforgettable = true );
+	void			SetMobbedMe( CBaseEntity *pEnemy, bool bMobbedMe = true );
 	
 	void			SetFreeKnowledgeDuration( float flDuration );
 	void			SetEnemyDiscardTime( float flTime );
+	float			GetEnemyDiscardTime( void ) const { return m_flEnemyDiscardTime; }
 
 	DECLARE_SIMPLE_DATADESC();
 

@@ -122,16 +122,17 @@ void *FindClosestDart(void *items,int NResults, size_t itemsize,
 
 
 // color quantization of 24 bit images
-#define QUANTFLAGS_NODITHER 1								// don't do Floyd-steinberg dither
+#define QUANTFLAGS_NODITHER 1	// don't do Floyd-steinberg dither
 
-void ColorQuantize(uint8 const *Image,						// 4 byte pixels ARGB
-				   int Width,
-				   int Height,
-				   int flags, 								// QUANTFLAGS_xxx
-				   int ncolors,								// # of colors to fill in in palette
-				   uint8 *out_pixels,						// where to store resulting 8 bit pixels
-				   uint8 *out_palette,						// where to store resulting 768-byte palette
-				   int firstcolor);							// first color to use in mapping
+extern void ColorQuantize(
+uint8 const	*pImage,			// 4 byte pixels ARGB
+int			nWidth,
+int			nHeight,
+int			nFlags, 			// QUANTFLAGS_xxx
+int			nColors,			// # of colors to fill in in palette
+uint8		*pOutPixels,		// where to store resulting 8 bit pixels
+uint8		*pOutPalette,		// where to store resulting 768-byte palette
+int			nFirstColor);		// first color to use in mapping
 
 
 

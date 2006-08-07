@@ -37,16 +37,19 @@
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist  ..\..\..\bin\demoinfo.exe attrib -r ..\..\..\bin\demoinfo.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\demoinfo.exe
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\demoinfo.exe"/>
+				Outputs="..\..\..\bin\demoinfo.exe;..\..\..\bin\demoinfo.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Release/demoinfo.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\lib\public"
+				IgnoreDefaultLibraryNames="LIBCMT"
 				ProgramDatabaseFile=".\Release/demoinfo.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
@@ -102,10 +105,12 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\d
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist  ..\..\..\bin\demoinfo.exe attrib -r ..\..\..\bin\demoinfo.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\demoinfo.exe
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\demoinfo.exe"/>
+				Outputs="..\..\..\bin\demoinfo.exe;..\..\..\bin\demoinfo.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
@@ -113,6 +118,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\d
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\lib\public"
+				IgnoreDefaultLibraryNames="LIBCMT"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/demoinfo.pdb"
 				GenerateMapFile="TRUE"
@@ -401,7 +407,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\d
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\Public\basetypes.h">
+				RelativePath="..\..\Public\tier0\basetypes.h">
 			</File>
 			<File
 				RelativePath="..\..\Public\commonmacros.h">
@@ -536,6 +542,12 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\d
 if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\demoinfo.exe
 "/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\..\lib\public\tier1.lib">
+		</File>
+		<File
+			RelativePath="..\..\lib\public\tier2.lib">
 		</File>
 		<File
 			RelativePath="..\..\lib\public\vstdlib.lib">

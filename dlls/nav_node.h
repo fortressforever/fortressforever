@@ -16,7 +16,11 @@
 
 // If DEBUG_NAV_NODES is true, nav_show_nodes controls drawing node positions, and
 // nav_show_node_id allows you to show the IDs of nodes that didn't get used to create areas.
+#ifdef _DEBUG
+#define DEBUG_NAV_NODES 1
+#else
 #define DEBUG_NAV_NODES 0
+#endif
 
 //--------------------------------------------------------------------------------------------------------------
 /**
@@ -62,6 +66,8 @@ public:
 private:
 	friend class CNavMesh;
 
+	void CheckCrouch( void );
+
 	Vector m_pos;													///< position of this node in the world
 	Vector m_normal;												///< surface normal at this location
 	CNavNode *m_to[ NUM_DIRECTIONS ];								///< links to north, south, east, and west. NULL if no link
@@ -70,13 +76,16 @@ private:
 
 	static CNavNode *m_list;										///< the master list of all nodes for this map
 	static unsigned int m_listLength;
+	static unsigned int m_nextID;
 	CNavNode *m_next;												///< next link in master list
 
 	// below are only needed when generating
 	unsigned char m_visited;										///< flags for automatic node generation. If direction bit is clear, that direction hasn't been explored yet.
 	CNavNode *m_parent;												///< the node prior to this in the search, which we pop back to when this node's search is done (a stack)
-	BOOL m_isCovered;												///< true when this node is "covered" by a CNavArea
+	bool m_isCovered;												///< true when this node is "covered" by a CNavArea
 	CNavArea *m_area;												///< the area this node is contained within
+
+	bool m_crouch[ NUM_CORNERS ];
 };
 
 //--------------------------------------------------------------------------------------------------------------

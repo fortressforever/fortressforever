@@ -90,6 +90,7 @@ public:
 	int						iDefaultClip1;							// amount of primary ammo in the gun when it's created
 	int						iDefaultClip2;							// amount of secondary ammo in the gun when it's created
 	int						iWeight;								// this value used to determine this weapon's importance in autoselection.
+	int						iRumbleEffect;							// Which rumble effect to use when fired? (xbox)
 	bool					bAutoSwitchTo;							// whether this weapon should be considered for autoswitching to
 	bool					bAutoSwitchFrom;						// whether this weapon can be autoswitched away from when picking up another weapon or ammo
 	int						iFlags;									// miscellaneous weapon flags
@@ -121,7 +122,6 @@ public:
 	CHudTexture 					*iconZoomedCrosshair;
 	CHudTexture 					*iconZoomedAutoaim;
 
-// TF2 specific
 	bool					bShowUsageHint;							// if true, then when you receive the weapon, show a hint about it
 
 // SERVER DLL

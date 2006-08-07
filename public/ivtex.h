@@ -24,14 +24,12 @@ public:
 #define IVTEX_VERSION_STRING "VTEX001"
 
 
-// This is what we 
-class IVTex2
+class IVTex3
 {
 public:
-	virtual int VTex( IFileSystem *pFSInherit, const char *pGameDir, int argc, char **argv ) = 0;
+	virtual int VTex( CreateInterfaceFn filesystemFactory, const char *pGameDir, int argc, char **argv ) = 0;
 };
-
-#define IVTEX2_VERSION_STRING "VTEX2_001"
+#define IVTEX3_VERSION_STRING "VTEX3_001"
 
 
 #endif // IVTEX_H

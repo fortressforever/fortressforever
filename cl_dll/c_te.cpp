@@ -1,12 +1,17 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//=== Copyright © 1996-2005, Valve Corporation, All rights reserved. ========//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "itempents.h"
 #include "effect_dispatch_data.h"
+#include "tier1/keyvalues.h"
+#include "iefx.h"
+#include "ieffects.h"
+#include "toolframework_client.h"
+#include "cdll_client_int.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -43,32 +48,41 @@ void TE_BeamSpline( IRecipientFilter& filter, float delay,
 	int points, Vector* rgPoints );
 void TE_BloodStream( IRecipientFilter& filter, float delay,
 	const Vector* org, const Vector* dir, int r, int g, int b, int a, int amount );
+void TE_BloodStream( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_BloodSprite( IRecipientFilter& filter, float delay,
 	const Vector* org, const Vector *dir, int r, int g, int b, int a, int size );
+void TE_BloodSprite( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_BreakModel( IRecipientFilter& filter, float delay,
 	const Vector& pos, const QAngle &angles, const Vector& size, const Vector& vel, 
 	int modelindex, int randomization, int count, float time, int flags );
+void TE_BreakModel( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_BSPDecal( IRecipientFilter& filter, float delay,
 	const Vector* pos, int entity, int index );
 void TE_ProjectDecal( IRecipientFilter& filter, float delay,
 	const Vector* pos, const QAngle *angles, float distance, int index );
+void TE_ProjectDecal( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_Bubbles( IRecipientFilter& filter, float delay,
 	const Vector* mins, const Vector* maxs, float height, int modelindex, int count, float speed );
 void TE_BubbleTrail( IRecipientFilter& filter, float delay,
 	const Vector* mins, const Vector* maxs, float height, int modelindex, int count, float speed );
 void TE_Decal( IRecipientFilter& filter, float delay,
 	const Vector* pos, const Vector* start, int entity, int hitbox, int index );
+void TE_Decal( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_DynamicLight( IRecipientFilter& filter, float delay,
-	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay );
+	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay, int nLightIndex = LIGHT_INDEX_TE_DYNAMIC );
+void TE_DynamicLight( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_Explosion( IRecipientFilter& filter, float delay,
 	const Vector* pos, int modelindex, float scale, int framerate, int flags, int radius, int magnitude, 
-	const Vector* normal = NULL, unsigned char materialType = 'C' );
+	const Vector* normal = NULL, unsigned char materialType = 'C', bool bShouldAffectRagdolls = true );
+void TE_Explosion( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_ShatterSurface( IRecipientFilter& filter, float delay,
 	const Vector* pos, const QAngle* angle, const Vector* vForce, const Vector* vForcePos, 
 	float width, float height, float shardsize, ShatterSurface_t surfacetype,
 	int front_r, int front_g, int front_b, int back_r, int back_g, int back_b);
+void TE_ShatterSurface( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_GlowSprite( IRecipientFilter& filter, float delay,
 	const Vector* pos, int modelindex, float life, float size, int brightness );
+void TE_GlowSprite( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_FootprintDecal( IRecipientFilter& filter, float delay, const Vector* origin, const Vector* right, 
 	int entity, int index, unsigned char materialType );
 void TE_Fizz( IRecipientFilter& filter, float delay,
@@ -91,10 +105,13 @@ void TE_Sparks( IRecipientFilter& filter, float delay,
 	const Vector* pos, int nMagnitude, int nTrailLength, const Vector *pDir );
 void TE_Sprite( IRecipientFilter& filter, float delay,
 	const Vector* pos, int modelindex, float size, int brightness );
+void TE_Sprite( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_SpriteSpray( IRecipientFilter& filter, float delay,
 	const Vector* pos, const Vector* dir, int modelindex, int speed, float noise, int count );
+void TE_SpriteSpray( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_WorldDecal( IRecipientFilter& filter, float delay,
 	const Vector* pos, int index );
+void TE_WorldDecal( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_MuzzleFlash( IRecipientFilter& filter, float delay,
 	const Vector &start, const QAngle &angles, float scale, int type );
 void TE_Dust( IRecipientFilter& filter, float delay,
@@ -103,8 +120,11 @@ void TE_GaussExplosion( IRecipientFilter& filter, float delayt,
 			 const Vector &pos, const Vector &dir, int type );
 void TE_DispatchEffect( IRecipientFilter& filter, float delay, 
 			 const Vector &pos, const char *pName, const CEffectData &data );
+void TE_DispatchEffect( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 void TE_PhysicsProp( IRecipientFilter& filter, float delay,
-	int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, bool breakmodel );
+	int modelindex, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, bool breakmodel, int effects );
+void TE_PhysicsProp( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
+void TE_ConcussiveExplosion( IRecipientFilter& filter, float delay, KeyValues *pKeyValues );
 
 
 class C_TempEntsSystem : public ITempEntsSystem
@@ -487,13 +507,166 @@ public:
 			TE_DispatchEffect( filter, delay, pos, pName, data );
 		}
 	}
-	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags )
+	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex, int skin,
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects )
 	{
 		if ( !SuppressTE( filter ) )
 		{
-			TE_PhysicsProp( filter, delay, modelindex, pos, angles, vel, flags );
+			TE_PhysicsProp( filter, delay, modelindex, skin, pos, angles, vel, flags, effects );
 		}
+	}
+
+	// For playback from external tools
+	virtual void TriggerTempEntity( KeyValues *pKeyValues )
+	{
+		g_pEffects->SuppressEffectsSounds( true );
+
+		// While playing back, suppress recording
+		bool bIsRecording = clienttools->IsInRecordingMode();
+		clienttools->EnableRecordingMode( false );
+
+		CBroadcastRecipientFilter filter;
+
+		TERecordingType_t type = (TERecordingType_t)pKeyValues->GetInt( "te" );
+		switch( type )
+		{
+		case TE_DYNAMIC_LIGHT:
+			TE_DynamicLight( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_WORLD_DECAL:
+			TE_WorldDecal( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_DISPATCH_EFFECT:
+			TE_DispatchEffect( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_MUZZLE_FLASH:
+			{
+				Vector vecOrigin;
+				QAngle angles;
+				vecOrigin.x = pKeyValues->GetFloat( "originx" );
+				vecOrigin.y = pKeyValues->GetFloat( "originy" );
+				vecOrigin.z = pKeyValues->GetFloat( "originz" );
+				angles.x = pKeyValues->GetFloat( "anglesx" );
+				angles.y = pKeyValues->GetFloat( "anglesy" );
+				angles.z = pKeyValues->GetFloat( "anglesz" );
+				float flScale = pKeyValues->GetFloat( "scale" );
+				int nType = pKeyValues->GetInt( "type" ); 
+
+				TE_MuzzleFlash( filter, 0.0f, vecOrigin, angles, flScale, nType );
+			}
+			break;
+
+		case TE_ARMOR_RICOCHET:
+			{
+				Vector vecOrigin, vecDirection;
+				vecOrigin.x = pKeyValues->GetFloat( "originx" );
+				vecOrigin.y = pKeyValues->GetFloat( "originy" );
+				vecOrigin.z = pKeyValues->GetFloat( "originz" );
+				vecDirection.x = pKeyValues->GetFloat( "directionx" );
+				vecDirection.y = pKeyValues->GetFloat( "directiony" );
+				vecDirection.z = pKeyValues->GetFloat( "directionz" );
+
+				TE_ArmorRicochet( filter, 0.0f, &vecOrigin, &vecDirection );
+			}
+			break;
+
+		case TE_METAL_SPARKS:
+			{
+				Vector vecOrigin, vecDirection;
+				vecOrigin.x = pKeyValues->GetFloat( "originx" );
+				vecOrigin.y = pKeyValues->GetFloat( "originy" );
+				vecOrigin.z = pKeyValues->GetFloat( "originz" );
+				vecDirection.x = pKeyValues->GetFloat( "directionx" );
+				vecDirection.y = pKeyValues->GetFloat( "directiony" );
+				vecDirection.z = pKeyValues->GetFloat( "directionz" );
+
+				TE_MetalSparks( filter, 0.0f, &vecOrigin, &vecDirection );
+			}
+			break;
+
+		case TE_SMOKE:
+			{
+				Vector vecOrigin, vecDirection;
+				vecOrigin.x = pKeyValues->GetFloat( "originx" );
+				vecOrigin.y = pKeyValues->GetFloat( "originy" );
+				vecOrigin.z = pKeyValues->GetFloat( "originz" );
+				float flScale = pKeyValues->GetFloat( "scale" );
+				int nFrameRate = pKeyValues->GetInt( "framerate" );
+				TE_Smoke( filter, 0.0f, &vecOrigin, 0, flScale, nFrameRate );
+			}
+			break;
+
+		case TE_SPARKS:
+			{
+				Vector vecOrigin, vecDirection;
+				vecOrigin.x = pKeyValues->GetFloat( "originx" );
+				vecOrigin.y = pKeyValues->GetFloat( "originy" );
+				vecOrigin.z = pKeyValues->GetFloat( "originz" );
+				vecDirection.x = pKeyValues->GetFloat( "directionx" );
+				vecDirection.y = pKeyValues->GetFloat( "directiony" );
+				vecDirection.z = pKeyValues->GetFloat( "directionz" );
+				int nMagnitude = pKeyValues->GetInt( "magnitude" );
+				int nTrailLength = pKeyValues->GetInt( "traillength" );
+				TE_Sparks( filter, 0.0f, &vecOrigin, nMagnitude, nTrailLength, &vecDirection );
+			}
+			break;
+
+		case TE_BLOOD_STREAM:
+			TE_BloodStream( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_BLOOD_SPRITE:
+			TE_BloodSprite( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_BREAK_MODEL:
+			TE_BreakModel( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_GLOW_SPRITE:
+			TE_GlowSprite( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_PHYSICS_PROP:
+			TE_PhysicsProp( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_SPRITE_SINGLE:
+			TE_Sprite( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_SPRITE_SPRAY:
+			TE_SpriteSpray( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_SHATTER_SURFACE:
+			TE_ShatterSurface( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_DECAL:
+			TE_Decal( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_PROJECT_DECAL:
+			TE_ProjectDecal( filter, 0.0f, pKeyValues );
+			break;
+
+		case TE_EXPLOSION:
+			TE_Explosion( filter, 0.0f, pKeyValues );
+			break;
+
+#ifdef HL2_DLL
+		case TE_CONCUSSIVE_EXPLOSION:
+			TE_ConcussiveExplosion( filter, 0.0f, pKeyValues );
+			break;
+#endif
+		}
+
+		g_pEffects->SuppressEffectsSounds( false );
+		clienttools->EnableRecordingMode( bIsRecording );
 	}
 };
 

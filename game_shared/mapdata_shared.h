@@ -16,7 +16,7 @@
 
 #define INTERFACEVERSION_MAPDATA	"MapData001"
 
-class IMapData
+abstract_class IMapData
 {
 public:
 

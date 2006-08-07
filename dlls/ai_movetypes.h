@@ -179,7 +179,7 @@ enum AIMotorMoveResult_t
 //			notify and receive guidance from higher level-classes
 //-----------------------------------------------------------------------------
 
-class IAI_MovementSink
+abstract_class IAI_MovementSink
 {
 public:
 	//---------------------------------

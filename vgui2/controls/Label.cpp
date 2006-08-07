@@ -31,6 +31,8 @@ using namespace vgui;
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( Label, Label );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -481,10 +483,29 @@ void Label::Paint()
 
 		// add the offset to x
 		x += imageInfo.offset;
-		
-		if (i == _textImageIndex) // if this is the text image then add its inset
+
+		// if this is the text image then add its inset to the left or from the right
+		if (i == _textImageIndex)
 		{
-			x += _textInset[0];
+			switch ( _contentAlignment )
+			{
+				// left
+				case Label::a_northwest:
+				case Label::a_west:
+				case Label::a_southwest:
+				{
+					x += _textInset[0];
+					break;
+				}
+				// right
+				case Label::a_northeast:
+				case Label::a_east:
+				case Label::a_southeast:
+				{
+					x -= _textInset[0];
+					break;
+				}
+			}
 		}
 
 		// see if the image is in a fixed position
@@ -785,6 +806,13 @@ void Label::ClearImages()
 	_textImageIndex = -1;
 }
 
+void Label::ResetToSimpleTextImage()
+{
+	ClearImages();
+	_textImageIndex = AddImage(_textImage, 0);
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Multiple image handling
 //			Images are drawn from left to right across the label, ordered by index
@@ -809,9 +837,9 @@ void Label::SetImageAtIndex(int index, IImage *image, int offset)
 //-----------------------------------------------------------------------------
 IImage *Label::GetImageAtIndex(int index)
 {
-	Assert( _imageDar.IsValidIndex( index ) );
-//	Assert( _imageDar[index].image );
-	return _imageDar[index].image;
+	if ( _imageDar.IsValidIndex( index ) )
+		return _imageDar[index].image;
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -949,11 +977,6 @@ void Label::ApplySchemeSettings(IScheme *pScheme)
 		_textImage->GetContentSize(wide, tall);
 		_textImage->SetSize(wide, tall);
 	}
-
-	// if you don't set the size of the image, many, many buttons will break - we might want to look into fixing this all over the place later
-	int wide, tall;
-	_textImage->GetContentSize(wide, tall);
-	_textImage->SetSize(wide, tall);
 
 	// clear out any the images, since they will have been invalidated
 	for (int i = 0; i < _imageDar.Count(); i++)

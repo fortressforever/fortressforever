@@ -29,7 +29,7 @@
 #define CHAR_TEX_SAND		'N'
 #define CHAR_TEX_PLASTIC	'L'
 
-class IDecalEmitterSystem
+abstract_class IDecalEmitterSystem
 {
 public:
 	virtual int	GetDecalIndexForName( char const *decalname ) = 0;

@@ -33,6 +33,9 @@
 #define SF_PHYSBOX_ENABLE_ON_PHYSCANNON		0x20000
 #define SF_PHYSBOX_NO_ROTORWASH_PUSH		0x40000		// The rotorwash doesn't push these
 #define SF_PHYSBOX_ENABLE_PICKUP_OUTPUT		0x80000
+#define SF_PHYSBOX_ALWAYS_PICK_UP		    0x100000		// Physcannon can always pick this up, no matter what mass or constraints may apply.
+#define SF_PHYSBOX_NEVER_PICK_UP			0x200000		// Physcannon will never be able to pick this up.
+#define SF_PHYSBOX_NEVER_PUNT				0x400000		// Physcannon will never be able to punt this object.
 
 // UNDONE: Hook collisions into the physics system to generate touch functions and take damage on falls
 // UNDONE: Base class PhysBrush
@@ -87,6 +90,7 @@ protected:
 	COutputEvent	m_OnAwakened;
 	COutputEvent	m_OnMotionEnabled;
 	COutputEvent	m_OnPhysGunPickup;
+	COutputEvent	m_OnPhysGunOnlyPickup;
 	COutputEvent	m_OnPhysGunDrop;
 	COutputEvent	m_OnPlayerUse;
 
@@ -104,19 +108,24 @@ public:
 	DECLARE_CLASS( CPhysExplosion, CPointEntity );
 
 	void	Spawn ( void );
-	void	Explode( CBaseEntity *pActivator );
+	void	Explode( CBaseEntity *pActivator, CBaseEntity *pCaller );
 
-	CBaseEntity *FindEntity( CBaseEntity *pEntity, CBaseEntity *pActivator );
+	CBaseEntity *FindEntity( CBaseEntity *pEntity, CBaseEntity *pActivator, CBaseEntity *pCaller );
 
 	// Input handlers
 	void InputExplode( inputdata_t &inputdata );
 
 	DECLARE_DATADESC();
 private:
+	
+	float		GetRadius( void );
 
 	float		m_damage;
 	float		m_radius;
 	string_t	m_targetEntityName;
+	float		m_flInnerRadius;
+	
+	COutputEvent	m_OnPushedPlayer;	
 };
 
 

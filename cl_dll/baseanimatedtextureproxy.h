@@ -34,7 +34,7 @@ protected:
 	// this method is called whenever the animation wraps...
 	virtual void   AnimationWrapped( void* pBaseEntity ) {}
 
-private:
+protected:
 	void Cleanup();
 	
 	IMaterialVar *m_AnimatedTextureVar;

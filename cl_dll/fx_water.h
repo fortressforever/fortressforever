@@ -12,6 +12,8 @@
 
 #include "particles_simple.h"
 
+#include "tier0/memdbgon.h"
+
 class CSplashParticle : public CSimpleEmitter
 {
 public:
@@ -63,5 +65,7 @@ extern void FX_GunshotSplash( const Vector &origin, const Vector &normal, float 
 extern void FX_GunshotSlimeSplash( const Vector &origin, const Vector &normal, float scale );
 
 extern inline void FX_GetSplashLighting( Vector position, Vector *color, float *luminosity );
+
+#include "tier0/memdbgoff.h"
 
 #endif // FX_WATER_H

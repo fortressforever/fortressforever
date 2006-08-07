@@ -12,13 +12,15 @@
 
 #include "utlhash.h"
 
+#include "tier0/memdbgon.h"
+
 // This is the hash key type, but it could just as easily be and int or void *
 class CBaseEntity;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class IEntityDataInstantiator
+abstract_class IEntityDataInstantiator
 {
 public:
 	virtual ~IEntityDataInstantiator() {};
@@ -118,5 +120,7 @@ private:
 
 	CUtlHash< HashEntry >	m_HashTable;
 };
+
+#include "tier0/memdbgoff.h"
 
 #endif // ENTITYDATAINSTANTIATOR_H

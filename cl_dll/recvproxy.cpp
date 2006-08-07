@@ -167,6 +167,7 @@ RecvProp RecvPropTime(
 //			*pStruct - 
 //			*pOut - 
 //-----------------------------------------------------------------------------
+#if !defined( NO_ENTITY_PREDICTION )
 static void RecvProxy_IntToPredictableId( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	CPredictableId *pId = (CPredictableId*)pOut;
@@ -187,3 +188,4 @@ RecvProp RecvPropPredictableId(
 {
 	return RecvPropInt( pVarName, offset, sizeofVar, 0, RecvProxy_IntToPredictableId );
 }
+#endif

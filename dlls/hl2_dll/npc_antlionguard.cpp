@@ -60,7 +60,7 @@ ConVar	sk_antlionguard_dmg_shove( "sk_antlionguard_dmg_shove", "0" );
 #define	ANTLIONGUARD_MIN_OBJECT_MASS			8
 #define	ANTLIONGUARD_MAX_OBJECT_MASS			750
 #define	ANTLIONGUARD_FARTHEST_PHYSICS_OBJECT	350
-#define ANTLIONGUARD_OBJECTFINDING_FOV			0.7
+#define ANTLIONGUARD_OBJECTFINDING_FOV			DOT_45DEGREE // 1/sqrt(2)
 
 //Melee definitions
 #define	ANTLIONGUARD_MELEE1_RANGE		156.0f
@@ -179,6 +179,14 @@ int AE_ANTLIONGUARD_VOICE_GRUNT;
 int AE_ANTLIONGUARD_VOICE_ROAR;
 int AE_ANTLIONGUARD_BURROW_OUT;
 
+struct PhysicsObjectCriteria_t
+{
+	CBaseEntity *pTarget;
+	float	flRadius;
+	float	flTargetCone;
+	bool	bPreferObjectsAlongTargetVector;  // Prefer objects that we can strike easily as we move towards our target
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -191,16 +199,19 @@ public:
 			CNPC_AntlionGuard( void );
 
 	Class_T	Classify( void ) { return CLASS_ANTLION; }
-	int		GetSoundInterests( void ) { return (SOUND_WORLD|SOUND_COMBAT|SOUND_PLAYER|SOUND_DANGER); }
+	virtual int		GetSoundInterests( void ) { return (SOUND_WORLD|SOUND_COMBAT|SOUND_PLAYER|SOUND_DANGER); }
+	virtual bool	QueryHearSound( CSound *pSound );
 
 	const impactdamagetable_t &GetPhysicsImpactDamageTable( void );
 
 	int		MeleeAttack1Conditions( float flDot, float flDist );
 	int		TranslateSchedule( int scheduleType );
 	int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	void	DeathSound( void );
+	void	DeathSound( const CTakeDamageInfo &info );
 	void	Event_Killed( const CTakeDamageInfo &info );
 	int		SelectSchedule( void );
+
+	virtual float GetAutoAimRadius() { return 36.0f; }
 	
 	void	Precache( void );
 	void	Spawn( void );
@@ -233,12 +244,15 @@ public:
 	bool	OverrideMove( float flInterval );
 	bool	CanBecomeRagdoll( void );
 
+	bool	ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity );
+
 	Activity	NPC_TranslateActivity( Activity baseAct );
 
 	DEFINE_CUSTOM_AI;
 
-protected:
+private:
 
+	void	Footstep( bool bHeavy );
 	int		SelectCombatSchedule( void );
 	int		SelectUnreachableSchedule( void );
 	bool	CanSummon( bool bIgnoreTime );
@@ -256,15 +270,16 @@ protected:
 	void	FoundEnemy( void );
 	void	LostEnemy( void );
 	void	UpdateHead( void );
-	void	UpdatePhysicsTarget( bool bAllowFartherObjects, float flRadius = ANTLIONGUARD_FARTHEST_PHYSICS_OBJECT );
-	void	SweepPhysicsDebris( void );
+	void	UpdatePhysicsTarget( bool bPreferObjectsAlongTargetVector, float flRadius = ANTLIONGUARD_FARTHEST_PHYSICS_OBJECT );
+	void	MaintainPhysicsTarget( void );
 	void	ChargeDamage( CBaseEntity *pTarget );
 	void	StartSounds( void );
 	void	SetHeavyDamageAnim( const Vector &vecSource );
 	float	ChargeSteer( void );
 
-	CBaseEntity *FindPhysicsObjectTarget( CBaseEntity *pTarget, float radius, float targetCone, bool allowFartherObjects = false );
-	Vector	GetPhysicsHitPosition( CBaseEntity *pObject, Vector &vecTrajectory, float &flClearDistance );
+	CBaseEntity *FindPhysicsObjectTarget( const PhysicsObjectCriteria_t &criteria );
+	Vector	GetPhysicsHitPosition( CBaseEntity *pObject, CBaseEntity *pTarget, Vector *vecTrajectory, float *flClearDistance );
+	bool	CanStandAtShoveTarget( CBaseEntity *pShoveObject, CBaseEntity *pTarget, Vector *pOut );
 
 	int				m_nFlinchActivity;
 
@@ -283,6 +298,8 @@ protected:
 	float			m_flNextRoarTime;
 	int				m_iChargeMisses;
 	bool			m_bDecidedNotToStop;
+	bool			m_bCavernBreed;			// If this guard is meant to be a cavern dweller (uses different assets)
+	bool			m_bInCavern;			// Behavioral hint telling the guard to change his behavior
 					
 	Vector			m_vecPhysicsTargetStartPos;
 	Vector			m_vecPhysicsHitPosition;
@@ -301,6 +318,8 @@ protected:
 	CSoundPatch		*m_pGrowlIdleSound;
 	CSoundPatch		*m_pBreathSound;
 	CSoundPatch		*m_pConfusedSound;
+
+	string_t		m_iszPhysicsPropClass;
 };
 
 //==================================================
@@ -335,6 +354,9 @@ BEGIN_DATADESC( CNPC_AntlionGuard )
 	DEFINE_FIELD( m_flNextRoarTime,				FIELD_TIME ),
 	DEFINE_FIELD( m_iChargeMisses,				FIELD_INTEGER ),
 	DEFINE_FIELD( m_bDecidedNotToStop,			FIELD_BOOLEAN ),
+
+	DEFINE_KEYFIELD( m_bCavernBreed,FIELD_BOOLEAN, "cavernbreed" ),
+	DEFINE_KEYFIELD( m_bInCavern,	FIELD_BOOLEAN, "incavern" ),
 
 	DEFINE_OUTPUT( m_OnSummon,			"OnSummon" ),
 
@@ -514,8 +536,9 @@ const impactdamagetable_t &CNPC_AntlionGuard::GetPhysicsImpactDamageTable( void 
 // CNPC_AntlionGuard
 //==================================================
 
-CNPC_AntlionGuard::CNPC_AntlionGuard( void )
+CNPC_AntlionGuard::CNPC_AntlionGuard( void ) : m_bCavernBreed( false ), m_bInCavern( false )
 {
+	m_iszPhysicsPropClass = AllocPooledString( "prop_physics" );
 }
 
 LINK_ENTITY_TO_CLASS( npc_antlionguard, CNPC_AntlionGuard );
@@ -541,6 +564,14 @@ void CNPC_AntlionGuard::Precache( void )
 		PrecacheScriptSound( "NPC_AntlionGuard.StepHeavy" );
 	}
 
+#if HL2_EPISODIC
+	PrecacheScriptSound( "NPC_AntlionGuard.NearStepLight" );
+	PrecacheScriptSound( "NPC_AntlionGuard.NearStepHeavy" );
+	PrecacheScriptSound( "NPC_AntlionGuard.FarStepLight" );
+	PrecacheScriptSound( "NPC_AntlionGuard.FarStepHeavy" );
+	PrecacheScriptSound( "NPC_AntlionGuard.BreatheLoop" );
+#endif // HL2_EPISODIC
+
 	PrecacheScriptSound( "NPC_AntlionGuard.Anger" );
 	PrecacheScriptSound( "NPC_AntlionGuard.Roar" );
 	PrecacheScriptSound( "NPC_AntlionGuard.Die" );
@@ -551,10 +582,7 @@ void CNPC_AntlionGuard::Precache( void )
 	PrecacheScriptSound( "NPC_AntlionGuard.Confused" );
 	PrecacheScriptSound( "NPC_AntlionGuard.Fallover" );
 
-	PrecacheScriptSound( "NPC_AntlionGuard.GrowlHigh" );
-	PrecacheScriptSound( "NPC_AntlionGuard.GrowlIdle" );
-	PrecacheScriptSound( "NPC_AntlionGuard.BreathSound" );
-	PrecacheScriptSound( "NPC_AntlionGuard.Confused" );
+	PrecacheScriptSound( "NPC_AntlionGuard.FrustratedRoar" );
 
 	BaseClass::Precache();
 }
@@ -565,6 +593,12 @@ void CNPC_AntlionGuard::Precache( void )
 void CNPC_AntlionGuard::Spawn( void )
 {
 	Precache();
+
+	// Switch our skin (for now), if we're the cavern guard
+	if ( m_bCavernBreed )
+	{
+		m_nSkin = 1;
+	}
 
 	SetModel( ANTLIONGUARD_MODEL );
 
@@ -706,15 +740,32 @@ int CNPC_AntlionGuard::SelectUnreachableSchedule( void )
 
 	// Otherwise, look for a physics objects nearby
 	m_hLastFailedPhysicsTarget = NULL;
-	UpdatePhysicsTarget( true );
+	UpdatePhysicsTarget( false );
 	if ( HasCondition( COND_ANTLIONGUARD_PHYSICS_TARGET ) )
 		return SCHED_ANTLIONGUARD_PHYSICS_ATTACK;
 
 	// Otherwise, roar at the player
 	if ( HasCondition(COND_SEE_ENEMY) && m_flNextRoarTime < gpGlobals->curtime )
 	{
-		m_flNextRoarTime = gpGlobals->curtime + RandomFloat( 20,40 );
-		return SCHED_ANTLIONGUARD_ROAR;
+		if ( hl2_episodic.GetBool() == true && m_bInCavern == false )
+		{
+			if ( GetEnemy() )
+			{
+				Vector dir = GetEnemy()->GetAbsOrigin() - GetAbsOrigin();
+				VectorNormalize(dir);
+
+				GetMotor()->SetIdealYaw( -dir );
+			}
+
+			return SCHED_MOVE_AWAY;
+		}
+
+		// Don't roar in a cavern setting
+		if ( hl2_episodic.GetBool() == false || m_bInCavern == false )
+		{
+			m_flNextRoarTime = gpGlobals->curtime + RandomFloat( 20,40 );
+			return SCHED_ANTLIONGUARD_ROAR;
+		}
 	}
 
 	return SCHED_ANTLIONGUARD_CHASE_ENEMY_TOLERANCE;
@@ -775,6 +826,10 @@ int CNPC_AntlionGuard::SelectCombatSchedule( void )
 //-----------------------------------------------------------------------------
 bool CNPC_AntlionGuard::ShouldCharge( const Vector &startPos, const Vector &endPos, bool useTime, bool bCheckForCancel )
 {
+	// Don't charge in tight spaces
+	if ( hl2_episodic.GetBool() && m_bInCavern )
+		return false;
+
 	// Must have a target
 	if ( !GetEnemy() )
 		return false;
@@ -944,10 +999,21 @@ int CNPC_AntlionGuard::MeleeAttack1Conditions( float flDot, float flDist )
 	if ( IsCurSchedule( SCHED_ANTLIONGUARD_CHARGE ) )
 		return 0;
 
-	// Must be close enough
-	if ( flDist > ANTLIONGUARD_MELEE1_RANGE )
-		return COND_TOO_FAR_TO_ATTACK;
-	
+	if ( hl2_episodic.GetBool() && m_bInCavern )
+	{
+		// Predict where they'll be and see if THAT is within range
+		Vector vecPredPos;
+		UTIL_PredictedPosition( GetEnemy(), 0.25f, &vecPredPos );
+		if ( ( GetAbsOrigin() - vecPredPos ).Length() > ANTLIONGUARD_MELEE1_RANGE )
+			return COND_TOO_FAR_TO_ATTACK;
+	}
+	else
+	{
+		// Must be close enough
+		if ( flDist > ANTLIONGUARD_MELEE1_RANGE )
+			return COND_TOO_FAR_TO_ATTACK;
+	}
+
 	// Must be within a viable cone
 	if ( flDot < ANTLIONGUARD_MELEE1_CONE )
 		return COND_NOT_FACING_ATTACK;
@@ -991,6 +1057,13 @@ float CNPC_AntlionGuard::MaxYawSpeed( void )
 	// Turn slowly when you're charging
 	if ( eActivity == ACT_ANTLIONGUARD_CHARGE_START )
 		return 4.0f;
+
+	if ( hl2_episodic.GetBool() && m_bInCavern )
+	{
+		// Allow a better turning rate when moving quickly but not charging the player
+		if ( ( eActivity == ACT_ANTLIONGUARD_CHARGE_RUN ) && IsCurSchedule( SCHED_ANTLIONGUARD_CHARGE ) == false )
+			return 16.0f;
+	}
 
 	// Turn more slowly as we close in on our target
 	if ( eActivity == ACT_ANTLIONGUARD_CHARGE_RUN )
@@ -1140,7 +1213,8 @@ void CNPC_AntlionGuard::Shove( void )
 					Pickup_OnPhysGunDrop( pVictim, NULL, LAUNCHED_BY_CANNON );
 				}
 
-				pVictim->ApplyAbsVelocityImpulse( BodyDirection2D() * 400 + Vector( 0, 0, 250 ) );
+				// FIXME: This causes NPCs that are not physically motivated to hop into the air strangely -- jdw
+				// pVictim->ApplyAbsVelocityImpulse( BodyDirection2D() * 400 + Vector( 0, 0, 250 ) );
 			}
 
 			m_hShoveTarget = NULL;
@@ -1232,6 +1306,51 @@ public:
 	CNPC_AntlionGuard	*m_pAttacker;
 };
 
+#define	MIN_FOOTSTEP_NEAR_DIST	80*12.0f // ft
+
+//-----------------------------------------------------------------------------
+// Purpose: Plays a footstep sound with temporary distance fades
+// Input  : bHeavy - Larger back hoof is considered a "heavy" step
+//-----------------------------------------------------------------------------
+void CNPC_AntlionGuard::Footstep( bool bHeavy )
+{
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	Assert( pPlayer != NULL );
+	if ( pPlayer == NULL )
+		return;
+
+	float flDistanceToPlayer = ( pPlayer->GetAbsOrigin() - GetAbsOrigin() ).Length();
+	float flNearVolume = RemapValClamped( flDistanceToPlayer, (10*12.0f), MIN_FOOTSTEP_NEAR_DIST, VOL_NORM, 0.0f );
+
+	EmitSound_t soundParams;
+	CPASAttenuationFilter filter( this );
+
+	if ( bHeavy )
+	{
+		if ( flNearVolume > 0.0f )
+		{
+			soundParams.m_pSoundName = "NPC_AntlionGuard.NearStepHeavy";
+			soundParams.m_flVolume = flNearVolume;
+			soundParams.m_nFlags = SND_CHANGE_VOL;
+			EmitSound( filter, entindex(), soundParams );
+		}
+
+		EmitSound( "NPC_AntlionGuard.FarStepHeavy" );
+	}
+	else
+	{
+		if ( flNearVolume > 0.0f )
+		{
+			soundParams.m_pSoundName = "NPC_AntlionGuard.NearStepLight";
+			soundParams.m_flVolume = flNearVolume;
+			soundParams.m_nFlags = SND_CHANGE_VOL;
+			EmitSound( filter, entindex(), soundParams );
+		}
+
+		EmitSound( "NPC_AntlionGuard.FarStepLight" );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEvent - 
@@ -1276,9 +1395,14 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 		Vector	targetDir = ( GetEnemy()->GetAbsOrigin() - m_hPhysicsTarget->WorldSpaceCenter() );
 		float	targetDist = VectorNormalize( targetDir );
 
+		Vector shoveDir = m_hPhysicsTarget->WorldSpaceCenter() - WorldSpaceCenter();
+		float shoveDist = VectorNormalize( shoveDir );
+
 		// Must still be close enough to our target
-		if ( UTIL_DistApprox( WorldSpaceCenter(), m_hPhysicsTarget->WorldSpaceCenter() ) > 300 )
+		if ( shoveDist > 300.0f )
 		{
+			// Pick a new target next time (this one foiled us!)
+			m_hLastFailedPhysicsTarget = m_hPhysicsTarget;
 			m_hPhysicsTarget = NULL;
 			return;
 		}
@@ -1304,6 +1428,8 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 
 		// If it's being held by the player, break that bond
 		Pickup_ForcePlayerToDropThisObject( m_hPhysicsTarget );
+
+		EmitSound( "NPC_AntlionGuard.HitHard" );
 
 		//Send it flying
 		AngularImpulse angVel( random->RandomFloat(-180, 180), 100, random->RandomFloat(-360, 360) );
@@ -1369,11 +1495,19 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	{
 		if ( HasSpawnFlags(SF_ANTLIONGUARD_INSIDE_FOOTSTEPS) )
 		{
+#if HL2_EPISODIC
+			Footstep( false );
+#else 
 			EmitSound("NPC_AntlionGuard.Inside.StepLight", pEvent->eventtime );
+#endif // HL2_EPISODIC
 		}
 		else
 		{
+#if HL2_EPISODIC
+			Footstep( false );
+#else 
 			EmitSound("NPC_AntlionGuard.StepLight", pEvent->eventtime );
+#endif // HL2_EPISODIC
 		}
 		return;
 	}
@@ -1382,11 +1516,19 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	{
 		if ( HasSpawnFlags(SF_ANTLIONGUARD_INSIDE_FOOTSTEPS) )
 		{
+#if HL2_EPISODIC
+			Footstep( true );
+#else 
 			EmitSound( "NPC_AntlionGuard.Inside.StepHeavy", pEvent->eventtime );
+#endif // HL2_EPISODIC
 		}
 		else
 		{
+#if HL2_EPISODIC
+			Footstep( true );
+#else 
 			EmitSound( "NPC_AntlionGuard.StepHeavy", pEvent->eventtime );
+#endif // HL2_EPISODIC
 		}
 		return;
 	}
@@ -1395,7 +1537,18 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	{
 		StartSounds();
 
-		float duration = ENVELOPE_CONTROLLER.SoundPlayEnvelope( m_pGrowlHighSound, SOUNDCTRL_CHANGE_VOLUME, envAntlionGuardFastGrowl, ARRAYSIZE(envAntlionGuardFastGrowl) );
+		float duration = 0.0f;
+
+		if ( random->RandomInt( 0, 10 ) < 6 )
+		{
+			duration = ENVELOPE_CONTROLLER.SoundPlayEnvelope( m_pGrowlHighSound, SOUNDCTRL_CHANGE_VOLUME, envAntlionGuardFastGrowl, ARRAYSIZE(envAntlionGuardFastGrowl) );
+		}
+		else
+		{
+			duration = 1.0f;
+			EmitSound( "NPC_AntlionGuard.FrustratedRoar" );
+			ENVELOPE_CONTROLLER.SoundFadeOut( m_pGrowlHighSound, 0.5f, false );
+		}
 		
 		m_flAngerNoiseTime = gpGlobals->curtime + duration + random->RandomFloat( 2.0f, 4.0f );
 
@@ -1575,6 +1728,10 @@ int CNPC_AntlionGuard::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	CTakeDamageInfo dInfo = info;
 
+	// Don't take damage from another antlion guard!
+	if ( dInfo.GetAttacker() && FClassnameIs( dInfo.GetAttacker(), "npc_antlionguard" ) )
+		return 0;
+
 	// Hack to make antlion guard harder in HARD
 	if ( g_pGameRules->IsSkillLevel(SKILL_HARD) && !(info.GetDamageType() & DMG_CRUSH) )
 	{
@@ -1709,7 +1866,7 @@ void CNPC_AntlionGuard::StartTask( const Task_t *pTask )
 		{
 			// Force the antlion guard to find a physobject
 			m_flPhysicsCheckTime = 0;
-			UpdatePhysicsTarget( true, 1024 );
+			UpdatePhysicsTarget( false, 1024 );
 			if ( m_hPhysicsTarget )
 			{
 				TaskComplete();
@@ -1855,7 +2012,7 @@ void CNPC_AntlionGuard::StartTask( const Task_t *pTask )
 			if ( m_iNumLiveAntlions >= 2 && RandomFloat(0,1) > 0.5 )
 			{
 				m_hLastFailedPhysicsTarget = NULL;
-				UpdatePhysicsTarget( true );
+				UpdatePhysicsTarget( false );
 				if ( HasCondition( COND_ANTLIONGUARD_PHYSICS_TARGET ) )
 				{
 					SetSchedule( SCHED_ANTLIONGUARD_PHYSICS_ATTACK );
@@ -2069,7 +2226,7 @@ bool CNPC_AntlionGuard::HandleChargeImpact( Vector vecImpact, CBaseEntity *pEnti
 	}
 
 	// Hit something we don't hate. If it's not moveable, crash into it.
-	if ( pEntity->GetMoveType() == MOVETYPE_NONE )
+	if ( pEntity->GetMoveType() == MOVETYPE_NONE || pEntity->GetMoveType() == MOVETYPE_PUSH )
 		return true;
 
 	// If it's a vphysics object that's too heavy, crash into it too.
@@ -2270,26 +2427,29 @@ void CNPC_AntlionGuard::RunTask( const Task_t *pTask )
 				}
 				else 
 				{
-					Vector	goalDir = ( GetEnemy()->GetAbsOrigin() - GetAbsOrigin() );
-					VectorNormalize( goalDir );
-
-					if ( DotProduct( BodyDirection2D(), goalDir ) < 0.25f )
+					if ( GetEnemy() != NULL )
 					{
-						if ( !m_bDecidedNotToStop )
+						Vector	goalDir = ( GetEnemy()->GetAbsOrigin() - GetAbsOrigin() );
+						VectorNormalize( goalDir );
+
+						if ( DotProduct( BodyDirection2D(), goalDir ) < 0.25f )
 						{
-							// We've missed the target. Randomly decide not to stop, which will cause
-							// the guard to just try and swing around for another pass.
-							m_bDecidedNotToStop = true;
-							if ( RandomFloat(0,1) > 0.3 )
+							if ( !m_bDecidedNotToStop )
 							{
-								m_iChargeMisses++;
-								SetActivity( ACT_ANTLIONGUARD_CHARGE_STOP );
+								// We've missed the target. Randomly decide not to stop, which will cause
+								// the guard to just try and swing around for another pass.
+								m_bDecidedNotToStop = true;
+								if ( RandomFloat(0,1) > 0.3 )
+								{
+									m_iChargeMisses++;
+									SetActivity( ACT_ANTLIONGUARD_CHARGE_STOP );
+								}
 							}
 						}
-					}
-					else
-					{
-						m_bDecidedNotToStop = false;
+						else
+						{
+							m_bDecidedNotToStop = false;
+						}
 					}
 				}
 			}
@@ -2332,7 +2492,14 @@ void CNPC_AntlionGuard::RunTask( const Task_t *pTask )
 					// Crash unless we're trying to stop already
 					if ( eActivity != ACT_ANTLIONGUARD_CHARGE_STOP )
 					{
-						SetActivity( ACT_ANTLIONGUARD_CHARGE_CRASH );
+						if ( moveTrace.fStatus == AIMR_BLOCKED_WORLD && moveTrace.vHitNormal == vec3_origin )
+						{
+							SetActivity( ACT_ANTLIONGUARD_CHARGE_STOP );
+						}
+						else
+						{
+							SetActivity( ACT_ANTLIONGUARD_CHARGE_CRASH );
+						}
 					}
 				}
 				else if ( moveTrace.pObstruction )
@@ -2340,7 +2507,18 @@ void CNPC_AntlionGuard::RunTask( const Task_t *pTask )
 					// If we hit an antlion, don't stop, but kill it
 					if ( moveTrace.pObstruction->Classify() == CLASS_ANTLION )
 					{
-						ApplyChargeDamage( this, moveTrace.pObstruction, moveTrace.pObstruction->GetHealth() );
+						if ( FClassnameIs( moveTrace.pObstruction, "npc_antlionguard" ) )
+						{
+							// Crash unless we're trying to stop already
+							if ( eActivity != ACT_ANTLIONGUARD_CHARGE_STOP )
+							{
+								SetActivity( ACT_ANTLIONGUARD_CHARGE_STOP );
+							}
+						}
+						else
+						{
+							ApplyChargeDamage( this, moveTrace.pObstruction, moveTrace.pObstruction->GetHealth() );
+						}
 					}
 				}
 			}
@@ -2526,7 +2704,7 @@ void CNPC_AntlionGuard::InputSetShoveTarget( inputdata_t &inputdata )
 	if ( IsAlive() == false )
 		return;
 
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, inputdata.value.String(), inputdata.pActivator );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, inputdata.value.String(), NULL, inputdata.pActivator, inputdata.pCaller );
 
 	if ( pTarget == NULL )
 	{
@@ -2552,7 +2730,7 @@ void CNPC_AntlionGuard::InputSetChargeTarget( inputdata_t &inputdata )
 
 	// Get charge target name
 	char *pszParam = strtok(parseString," ");
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pszParam, inputdata.pActivator );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pszParam, NULL, inputdata.pActivator, inputdata.pCaller );
 	if ( !pTarget )
 	{
 		Warning( "ERROR: Guard %s cannot find charge target '%s'\n", STRING(GetEntityName()), pszParam );
@@ -2561,10 +2739,10 @@ void CNPC_AntlionGuard::InputSetChargeTarget( inputdata_t &inputdata )
 
 	// Get the charge position name
 	pszParam = strtok(NULL," ");
-	CBaseEntity *pPosition = gEntList.FindEntityByName( NULL, pszParam, inputdata.pActivator );
+	CBaseEntity *pPosition = gEntList.FindEntityByName( NULL, pszParam, NULL, inputdata.pActivator, inputdata.pCaller );
 	if ( !pPosition )
 	{
-		Warning( "ERROR: Guard %s cannot find charge position '%s'\n", STRING(GetEntityName()), pszParam );
+		Warning( "ERROR: Guard %s cannot find charge position '%s'\nMake sure you've specifed the parameters as [target start]!\n", STRING(GetEntityName()), pszParam );
 		return;
 	}
 
@@ -2601,6 +2779,18 @@ Activity CNPC_AntlionGuard::NPC_TranslateActivity( Activity baseAct )
 	//See which run to use
 	if ( ( baseAct == ACT_RUN ) && IsCurSchedule( SCHED_ANTLIONGUARD_CHARGE ) )
 		return (Activity) ACT_ANTLIONGUARD_CHARGE_RUN;
+
+	// Do extra code if we're trying to close on an enemy in a confined space
+	if ( hl2_episodic.GetBool() && m_bInCavern )
+	{
+		if ( GetEnemy() != NULL )
+		{
+			// FIXME: This might want to be the route distance to our enemy instead
+			float flDistToEnemy = ( GetAbsOrigin() - GetEnemy()->GetAbsOrigin() ).Length();
+			if ( flDistToEnemy > 256.0f )
+				return (Activity) ACT_ANTLIONGUARD_CHARGE_RUN;
+		}
+	}
 
 	if ( ( baseAct == ACT_RUN ) && ( m_iHealth <= (m_iMaxHealth/4) ) )
 		return (Activity) ACT_ANTLIONGUARD_RUN_HURT;
@@ -2673,38 +2863,62 @@ void CNPC_AntlionGuard::UpdateHead( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_AntlionGuard::UpdatePhysicsTarget( bool bAllowFartherObjects, float flRadius )
+void CNPC_AntlionGuard::MaintainPhysicsTarget( void )
+{
+	if ( m_hPhysicsTarget == NULL )
+		return;
+
+	// Update our current target to make sure it's still valid
+	float flTargetDistSqr = ( m_hPhysicsTarget->WorldSpaceCenter() - m_vecPhysicsTargetStartPos ).LengthSqr();
+	bool bTargetMoved = ( flTargetDistSqr > (64.0f*64.0f) );
+	bool bEnemyCloser = ( ( GetEnemy()->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() <= flTargetDistSqr );
+
+	// Make sure this hasn't moved too far or that the player is now closer
+	if ( bTargetMoved || bEnemyCloser )
+	{
+		ClearCondition( COND_ANTLIONGUARD_PHYSICS_TARGET );
+		SetCondition( COND_ANTLIONGUARD_PHYSICS_TARGET_INVALID );
+		m_hPhysicsTarget = NULL;
+		return;
+	}
+	else
+	{
+		SetCondition( COND_ANTLIONGUARD_PHYSICS_TARGET );
+		ClearCondition( COND_ANTLIONGUARD_PHYSICS_TARGET_INVALID );
+	}
+
+	if ( g_debug_antlionguard.GetInt() == 3 )
+	{
+		NDebugOverlay::Cross3D( m_hPhysicsTarget->WorldSpaceCenter(), -Vector(32,32,32), Vector(32,32,32), 255, 255, 255, true, 1.0f );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CNPC_AntlionGuard::UpdatePhysicsTarget( bool bPreferObjectsAlongTargetVector, float flRadius )
 {
 	if ( GetEnemy() == NULL )
 		return;
 
+	// Already have a target, don't bother looking
 	if ( m_hPhysicsTarget != NULL )
-	{
-		//Check to see if it's moved too much since we first picked it up
-		if ( UTIL_DistApprox( m_hPhysicsTarget->WorldSpaceCenter(), m_vecPhysicsTargetStartPos ) > 256.0f )
-		{
-			ClearCondition( COND_ANTLIONGUARD_PHYSICS_TARGET );
-			SetCondition( COND_ANTLIONGUARD_PHYSICS_TARGET_INVALID );
-		}
-		else
-		{
-			SetCondition( COND_ANTLIONGUARD_PHYSICS_TARGET );
-			ClearCondition( COND_ANTLIONGUARD_PHYSICS_TARGET_INVALID );
-		}
-
-		if ( g_debug_antlionguard.GetInt() == 3 )
-		{
-			NDebugOverlay::Cross3D( m_hPhysicsTarget->WorldSpaceCenter(), -Vector(32,32,32), Vector(32,32,32), 255, 255, 255, true, 0.1f );
-		}
-
 		return;
-	}
 
+	// Too soon to check again
 	if ( m_flPhysicsCheckTime > gpGlobals->curtime )
 		return;
 
-	m_hPhysicsTarget = FindPhysicsObjectTarget( GetEnemy(), flRadius, ANTLIONGUARD_OBJECTFINDING_FOV, bAllowFartherObjects );
+	// Attempt to find a valid shove target
+	PhysicsObjectCriteria_t criteria;
+	criteria.pTarget = GetEnemy();
+	criteria.flRadius = flRadius;
+	criteria.flTargetCone = ANTLIONGUARD_OBJECTFINDING_FOV;
+	criteria.bPreferObjectsAlongTargetVector = bPreferObjectsAlongTargetVector;
+
+	m_hPhysicsTarget = FindPhysicsObjectTarget( criteria );
 		
+	// Found one, so interrupt us if we care
 	if ( m_hPhysicsTarget != NULL )
 	{
 		SetCondition( COND_ANTLIONGUARD_PHYSICS_TARGET );
@@ -2713,49 +2927,35 @@ void CNPC_AntlionGuard::UpdatePhysicsTarget( bool bAllowFartherObjects, float fl
 
 		// We must steer around this obstacle until we've thrown it, this stops us from
 		// shoving it out of the way while we travel there
-		m_hPhysicsTarget->SetNavIgnore();
+		//m_hPhysicsTarget->SetNavIgnore();
 	}
 
+	// Don't search again for another second
 	m_flPhysicsCheckTime = gpGlobals->curtime + 1.0f;
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Push and sweep away small mass items
+// Purpose: Let the probe know I can run through small debris
 //-----------------------------------------------------------------------------
-void CNPC_AntlionGuard::SweepPhysicsDebris( void )
+bool CNPC_AntlionGuard::ShouldProbeCollideAgainstEntity( CBaseEntity *pEntity )
 {
-	CBaseEntity *pList[ANTLIONGUARD_MAX_OBJECTS];
-	CBaseEntity	*pObject;
-	IPhysicsObject *pPhysObj;
-	Vector vecDelta(128,128,8);
-	int	i;
+	if ( m_iszPhysicsPropClass != pEntity->m_iClassname )
+		return BaseClass::ShouldProbeCollideAgainstEntity( pEntity );
 
-	if ( g_debug_antlionguard.GetInt() == 1 )
+	if ( m_hPhysicsTarget == pEntity )
+		return false;
+
+	if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
 	{
-		NDebugOverlay::Box( GetAbsOrigin(), vecDelta, -vecDelta, 255, 0, 0, true, 0.1f );
+		IPhysicsObject *pPhysObj = pEntity->VPhysicsGetObject();
+
+		if( pPhysObj && pPhysObj->GetMass() <= ANTLIONGUARD_MAX_OBJECT_MASS )
+		{
+			return false;
+		}
 	}
 
-	int count = UTIL_EntitiesInBox( pList, ANTLIONGUARD_MAX_OBJECTS, GetAbsOrigin() - vecDelta, GetAbsOrigin() + vecDelta, 0 );
-
-	for( i = 0, pObject = pList[0]; i < count; i++, pObject = pList[i] )
-	{
-		if ( pObject == NULL )
-			continue;
-
-		// Don't ignore our shoving target
-		if ( pObject == m_hPhysicsTarget )
-			continue;
-
-		pPhysObj = pObject->VPhysicsGetObject();
-
-		if( pPhysObj == NULL || pPhysObj->GetMass() > ANTLIONGUARD_MAX_OBJECT_MASS )
-			continue;
-	
-		if ( FClassnameIs( pObject, "prop_physics" ) == false )
-			continue;
-
-		pObject->SetNavIgnore();
-	}
+	return BaseClass::ShouldProbeCollideAgainstEntity( pEntity );
 }
 
 //-----------------------------------------------------------------------------
@@ -2773,19 +2973,10 @@ void CNPC_AntlionGuard::PrescheduleThink( void )
 	if ( m_bIsBurrowed )
 		return;
 
-	// Check our current physics target
-	if ( m_hPhysicsTarget != NULL )
-	{
-		if ( g_debug_antlionguard.GetInt() == 1 )
-		{
-			NDebugOverlay::Cross3D( m_hPhysicsTarget->WorldSpaceCenter(), Vector(15,15,15), -Vector(15,15,15), 0, 255, 0, true, 0.1f );
-		}
-	}
-
 	// Automatically update our physics target when chasing enemies
 	if ( IsCurSchedule( SCHED_CHASE_ENEMY ) || IsCurSchedule( SCHED_ANTLIONGUARD_PATROL_RUN ))
 	{
-		UpdatePhysicsTarget( false );
+		UpdatePhysicsTarget( true );
 	}
 	else if ( !IsCurSchedule( SCHED_ANTLIONGUARD_PHYSICS_ATTACK ) )
 	{
@@ -2793,7 +2984,6 @@ void CNPC_AntlionGuard::PrescheduleThink( void )
 		m_hPhysicsTarget = NULL;
 	}
 
-	SweepPhysicsDebris();
 	UpdateHead();
 
 	if ( ( m_flGroundSpeed <= 0.0f ) )
@@ -2864,6 +3054,9 @@ void CNPC_AntlionGuard::GatherConditions( void )
 	{
 		ClearCondition( COND_ANTLIONGUARD_CAN_SUMMON );
 	}
+
+	// Make sure our physics target is still valid
+	MaintainPhysicsTarget();
 }
 
 //-----------------------------------------------------------------------------
@@ -2876,6 +3069,7 @@ void CNPC_AntlionGuard::StopLoopingSounds()
 	ENVELOPE_CONTROLLER.SoundDestroy( m_pGrowlIdleSound );
 	ENVELOPE_CONTROLLER.SoundDestroy( m_pBreathSound );
 	ENVELOPE_CONTROLLER.SoundDestroy( m_pConfusedSound );
+	
 	
 	m_pGrowlHighSound	= NULL;
 	m_pGrowlIdleSound	= NULL;
@@ -2910,219 +3104,227 @@ void CNPC_AntlionGuard::InputUnburrow( inputdata_t &inputdata )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Return the point at which the guard wants to stand on to knock the physics object at the enemy
+// Purpose: Return the point at which the guard wants to stand on to knock the physics object at the target entity
+// Input  : *pObject - Object to be shoved.
+//			*pTarget - Target to be shoved at.
+//			*vecTrajectory - Trajectory to our target
+//			*flClearDistance - Distance behind the entity we're clear to use
+// Output : Position at which to attempt to strike the object
 //-----------------------------------------------------------------------------
-Vector CNPC_AntlionGuard::GetPhysicsHitPosition( CBaseEntity *pObject, Vector &vecTrajectory, float &flClearDistance )
+Vector CNPC_AntlionGuard::GetPhysicsHitPosition( CBaseEntity *pObject, CBaseEntity *pTarget, Vector *vecTrajectory, float *flClearDistance )
 {
-	Assert( GetEnemy() );
-
 	// Get the trajectory we want to knock the object along
-	vecTrajectory = GetEnemy()->WorldSpaceCenter() - pObject->WorldSpaceCenter();
-	VectorNormalize( vecTrajectory );
-	vecTrajectory.z = 0;
+	Vector vecToTarget = pTarget->WorldSpaceCenter() - pObject->WorldSpaceCenter();
+	VectorNormalize( vecToTarget );
+	vecToTarget.z = 0;
 
 	// Get the distance we want to be from the object when we hit it
 	IPhysicsObject *pPhys = pObject->VPhysicsGetObject();
-	Vector extent = physcollision->CollideGetExtent( pPhys->GetCollide(), pObject->GetAbsOrigin(), pObject->GetAbsAngles(), -vecTrajectory );
-	flClearDistance = ( extent - pObject->WorldSpaceCenter() ).Length() + CollisionProp()->BoundingRadius() + 32.0f;
-	return (pObject->WorldSpaceCenter() + ( vecTrajectory * -flClearDistance ));
+	Vector extent = physcollision->CollideGetExtent( pPhys->GetCollide(), pObject->GetAbsOrigin(), pObject->GetAbsAngles(), -vecToTarget );
+	float flDist = ( extent - pObject->WorldSpaceCenter() ).Length() + CollisionProp()->BoundingRadius() + 32.0f;
+	
+	if ( vecTrajectory != NULL )
+	{
+		*vecTrajectory = vecToTarget;
+	}
+
+	if ( flClearDistance != NULL )
+	{
+		*flClearDistance = flDist;
+	}
+
+	// Position at which we'd like to be
+	return (pObject->WorldSpaceCenter() + ( vecToTarget * -flDist ));
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
+// Purpose: Determines whether or not the guard can stand in a position to strike a specified object
+// Input  : *pShoveObject - Object being shoved
+//			*pTarget - Target we're shoving the object at
+//			*pOut - The position we decide to stand at
+// Output : Returns true if the guard can stand and deliver.
 //-----------------------------------------------------------------------------
-CBaseEntity *CNPC_AntlionGuard::FindPhysicsObjectTarget( CBaseEntity *pTarget, float radius, float targetCone, bool allowFartherObjects )
+bool CNPC_AntlionGuard::CanStandAtShoveTarget( CBaseEntity *pShoveObject, CBaseEntity *pTarget, Vector *pOut )
 {
-	CBaseEntity	*pNearest = NULL;
+	// Get the position we want to be at to swing at the object
+	float flClearDistance;
+	Vector vecTrajectory;
+	Vector vecHitPosition = GetPhysicsHitPosition( pShoveObject, pTarget, &vecTrajectory, &flClearDistance );
 
-	// If we're allowed to look for farther objects, find the nearest object to the guard.
-	// Otherwise, find the nearest object to the vector to the target.
-	float flNearestDist = -1.0;
-	if ( allowFartherObjects )
+	// See if we can stand at this position (FIXME: Better function for this?)
+	trace_t tr;
+	UTIL_TraceHull( vecHitPosition, vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
+	if ( tr.startsolid || tr.allsolid || (tr.m_pEnt && tr.m_pEnt != pShoveObject) )
 	{
-		flNearestDist = radius;
+		// Can we get at it at from an angle on the side of it we're on?
+		Vector vecUp(0,0,1);
+		Vector vecRight;
+		CrossProduct( vecUp, vecTrajectory, vecRight );
+
+		// Is the guard to the right? or the left?
+		Vector vecToGuard = ( WorldSpaceCenter() - pShoveObject->WorldSpaceCenter() );
+		VectorNormalize( vecToGuard );
+		if ( DotProduct( vecRight, vecToGuard ) > 0 )
+		{
+			vecHitPosition += (vecRight * 64) + (vecTrajectory * 32);
+		}
+		else
+		{
+			vecHitPosition -= (vecRight * 64) + (vecTrajectory * 32);
+		}
+
+		// Now try and stand at this side position
+		UTIL_TraceHull( vecHitPosition, vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
+		if ( tr.startsolid || tr.allsolid || (tr.m_pEnt && tr.m_pEnt != pShoveObject) )
+			return false;
 	}
 
-	Vector vecDirToTarget = pTarget->GetAbsOrigin() - GetAbsOrigin();
+	if ( pOut != NULL )
+	{
+		*pOut = vecHitPosition;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Search for a physics item to swat at the player
+// Output : Returns the object we're going to swat.
+//-----------------------------------------------------------------------------
+CBaseEntity *CNPC_AntlionGuard::FindPhysicsObjectTarget( const PhysicsObjectCriteria_t &criteria )
+{
+	// Must have a valid target entity
+ 	if ( criteria.pTarget == NULL )
+		return NULL;
+
+	// Get the vector to our target, from ourself
+	Vector vecDirToTarget = criteria.pTarget->GetAbsOrigin() - GetAbsOrigin();
 	VectorNormalize( vecDirToTarget );
 	vecDirToTarget.z = 0;
 
-	bool bDebug = g_debug_antlionguard.GetInt() == 3;
-	if ( bDebug )
-	{
-		if ( m_hLastFailedPhysicsTarget )
-		{
-			NDebugOverlay::Cross3D( m_hLastFailedPhysicsTarget->WorldSpaceCenter(), -Vector(32,32,32), Vector(32,32,32) , 255, 255, 0, true, 1.0f );
-		}
-	}
+	// Cost is determined by distance to the object, modified by how "in line" it is with our target direction of travel
+	// Use the distance to the player as the base cost for throwing an object (avoids pushing things too close to the player)
+	float flLeastCost = ( criteria.pTarget->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
+	float flCost;
 
-	// Traipse through the sensed object list
 	AISightIter_t iter;
 	CBaseEntity *pObject;
+	CBaseEntity	*pNearest = NULL;
+	Vector vecBestHitPosition = vec3_origin;
+
+	// Look through the list of sensed objects for possible targets
 	for ( pObject = GetSenses()->GetFirstSeenEntity( &iter, SEEN_MISC ); pObject; pObject = GetSenses()->GetNextSeenEntity( &iter ) )
 	{
 		// If we couldn't shove this object last time, don't try again
 		if ( pObject == m_hLastFailedPhysicsTarget )
 			continue;
 
+		// Ignore things less than half a foot in diameter
+		if ( pObject->CollisionProp()->BoundingRadius() < 6.0f )
+			continue;
+
 		IPhysicsObject *pPhysObj = pObject->VPhysicsGetObject();
-		if ( !pPhysObj )
+		if ( pPhysObj == NULL )
 			continue;
 
 		// Ignore motion disabled props
-		if ( !pPhysObj->IsMoveable() )
+		if ( pPhysObj->IsMoveable() == false )
 			continue;
 
-		// Ignore physics objects that are too low to really be noticed by the player
-		Vector vecAbsMins, vecAbsMaxs;
-		pObject->CollisionProp()->WorldSpaceAABB( &vecAbsMins, &vecAbsMaxs );
-		if ( fabs(vecAbsMaxs.z - vecAbsMins.z) < 28 )
+		// Ignore things lighter than 5kg
+		if ( pPhysObj->GetMass() < 5.0f )
 			continue;
 
-		// Ignore objects moving too fast
+		// Ignore objects moving too quickly (they'll be too hard to catch otherwise)
 		Vector	velocity;
 		pPhysObj->GetVelocity( &velocity, NULL );
 		if ( velocity.LengthSqr() > (16*16) )
 			continue;
 
-		Vector center = pObject->WorldSpaceCenter();
+		// Get the direction from us to the physics object
 		Vector vecDirToObject = pObject->WorldSpaceCenter() - GetAbsOrigin();
 		VectorNormalize( vecDirToObject );
 		vecDirToObject.z = 0;
-		float flDist = 0;
+		
+		Vector vecObjCenter = pObject->WorldSpaceCenter();
+		float flDistSqr = 0.0f;
+		float flDot = 0.0f;
 
-		if ( !allowFartherObjects )
+		// If we want to find things along the vector to the target, do so
+		if ( criteria.bPreferObjectsAlongTargetVector )
 		{
-			// Validate our cone of sight
-			if ( DotProduct( vecDirToTarget, vecDirToObject ) < targetCone )
-			{
-				if ( bDebug )
-				{
-					NDebugOverlay::Cross3D( center, Vector(15,15,15), -Vector(15,15,15), 255, 0, 255, true, 1.0f );
-				}
-
-				continue;
-			}
-
 			// Object must be closer than our target
-			if ( UTIL_DistApprox2D( GetAbsOrigin(), center ) > UTIL_DistApprox2D( GetAbsOrigin(), GetEnemy()->GetAbsOrigin() ) )
-			{
-				if ( bDebug )
-				{
-					NDebugOverlay::Cross3D( center, Vector(15,15,15), -Vector(15,15,15), 0, 255, 255, true, 1.0f );
-				}
-
+			if ( ( GetAbsOrigin() - vecObjCenter ).LengthSqr() > ( GetAbsOrigin() - criteria.pTarget->GetAbsOrigin() ).LengthSqr() )
 				continue;
-			}		
 
-			// Must be closer to the line towards the target than a previously valid object
-			flDist = DotProduct( vecDirToTarget, vecDirToObject );
-			if ( flDist < flNearestDist )
-			{
-				if ( bDebug )
-				{
-					NDebugOverlay::Cross3D( center, Vector(15,15,15), -Vector(15,15,15), 255, 0, 0, true, 1.0f );
-				}
-
+			// Calculate a "cost" to this object
+			flDistSqr = ( GetAbsOrigin() - vecObjCenter ).LengthSqr();
+			flDot = DotProduct( vecDirToTarget, vecDirToObject );
+			
+			// Ignore things outside our allowed cone
+			if ( flDot < criteria.flTargetCone )
 				continue;
-			}
+
+			// The more perpendicular we are, the higher the cost
+			float flCostScale = RemapValClamped( flDot, 1.0f, criteria.flTargetCone, 1.0f, 4.0f );
+			flCost = flDistSqr * flCostScale;
 		}
 		else
 		{
-			// Must be closer than the nearest phys object
-			flDist = UTIL_DistApprox2D( GetAbsOrigin(), center );
-			if ( flDist > flNearestDist )
-			{
-				if ( bDebug )
-				{
-					NDebugOverlay::Cross3D( center, Vector(15,15,15), -Vector(15,15,15), 255, 0, 0, true, 1.0f );
-				}
-
-				continue;
-			}
+			// Straight distance cost
+			flCost = ( GetAbsOrigin() - vecObjCenter ).LengthSqr();
 		}
 
-		// Check for a clear shove path (roughly)
+		// This must be a less costly object to use
+		if ( flCost >= flLeastCost )
+		{
+			if ( g_debug_antlionguard.GetInt() == 3 )
+			{
+				NDebugOverlay::Box( vecObjCenter, -Vector(16,16,16), Vector(16,16,16), 255, 0, 0, 0, 2.0f );
+			}
+
+			continue;
+		}
+
+		// Check for a (roughly) clear trajectory path from the object to target
 		trace_t	tr;
-		UTIL_TraceLine( pObject->WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecObjCenter, criteria.pTarget->BodyTarget( vecObjCenter ), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 		
-		// See how close to our target we got
-		if ( ( tr.endpos - GetEnemy()->WorldSpaceCenter() ).LengthSqr() > (256*256) )
+		// See how close to our target we got (we still look good hurling things that won't necessarily hit)
+		if ( ( tr.endpos - criteria.pTarget->WorldSpaceCenter() ).LengthSqr() > (256*256) )
 			continue;
 
-		// Get the position we want to be at to swing at the object
-		float flClearDistance;
-		Vector vecTrajectory;
-		Vector vecHitPosition = GetPhysicsHitPosition( pObject, vecTrajectory, flClearDistance );
-		Vector vecObjectPosition = pObject->WorldSpaceCenter();
-
-		if ( bDebug )
+		// Must be able to stand at a position to hit the object
+		Vector vecHitPosition;
+		if ( CanStandAtShoveTarget( pObject, criteria.pTarget, &vecHitPosition ) == false )
 		{
-			NDebugOverlay::Box( vecObjectPosition, NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), 255, 0, 0, true, 1.0f );
-			NDebugOverlay::Box( vecHitPosition, NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), 0, 255, 0, true, 1.0f );
-		}
-
-		// Can we move to the spot behind the prop?
-		UTIL_TraceHull( vecHitPosition, vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-		if ( tr.startsolid || tr.allsolid || (tr.m_pEnt && tr.m_pEnt != pObject) )
-		{
-			if ( bDebug )
+			if ( g_debug_antlionguard.GetInt() == 3 )
 			{
-				NDebugOverlay::Box( vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), 255, 0, 0, 8, 1.0f );
-				NDebugOverlay::Line( vecObjectPosition, vecHitPosition, 255, 0, 0, true, 1.0f );
+				NDebugOverlay::HorzArrow( GetAbsOrigin(), pObject->WorldSpaceCenter(), 32.0f, 255, 0, 0, 64, true, 2.0f );
 			}
-		
-			// Can we get at it at from an angle on the side of it we're on?
-			Vector vecUp(0,0,1);
-			Vector vecRight;
-			CrossProduct( vecUp, vecTrajectory, vecRight );
-			
-			// Is the guard to the right? or the left?
-			Vector vecToGuard = ( WorldSpaceCenter() - vecObjectPosition );
-			VectorNormalize( vecToGuard );
-			if ( DotProduct( vecRight, vecToGuard ) > 0 )
-			{
-				vecHitPosition = vecHitPosition + (vecRight * 64) + (vecTrajectory * 64);
-			}
-			else
-			{
-				vecHitPosition = vecHitPosition - (vecRight * 64) + (vecTrajectory * 64);
-			}
-
-			if ( g_debug_antlionguard.GetInt() == 4 )
-			{
-				NDebugOverlay::Box( vecHitPosition, NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), 0, 255, 0, true, 1.0f );
-				NDebugOverlay::Line( vecObjectPosition, vecHitPosition, 255, 0, 0, true, 1.0f );
-			}
-
-			// Now try and move from the side position
-			UTIL_TraceHull( vecHitPosition, vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-			if ( tr.startsolid || tr.allsolid || (tr.m_pEnt && tr.m_pEnt != pObject) )
-			{
-				if ( g_debug_antlionguard.GetInt() == 4 )
-				{
-					NDebugOverlay::Box( vecHitPosition, WorldAlignMins(), WorldAlignMaxs(), 255, 0, 0, 8, 1.0f );
-					NDebugOverlay::Line( vecObjectPosition, vecHitPosition, 255, 0, 0, true, 1.0f );
-				}
-				continue;
-			}
+			continue;
 		}
 
 		// Take this as the best object so far
 		pNearest = pObject;
-		flNearestDist = flDist;
-		m_vecPhysicsHitPosition = vecHitPosition;
+		flLeastCost = flCost;
+		vecBestHitPosition = vecHitPosition;
 		
-		if ( bDebug )
+		if ( g_debug_antlionguard.GetInt() == 3 )
 		{
-			NDebugOverlay::Cross3D( center, Vector(15,15,15), -Vector(15,15,15), 255, 255, 0, true, 0.5f );
+			NDebugOverlay::HorzArrow( GetAbsOrigin(), pObject->WorldSpaceCenter(), 16.0f, 255, 255, 0, 0, true, 2.0f );
 		}
 	}
 
-	if ( pNearest && bDebug )
+	// Set extra info if we've succeeded
+	if ( pNearest != NULL )
 	{
-		NDebugOverlay::Cross3D( pNearest->WorldSpaceCenter(), Vector(30,30,30), -Vector(30,30,30), 255, 255, 255, true, 0.5f );
+		m_vecPhysicsHitPosition = vecBestHitPosition;
+	
+		if ( g_debug_antlionguard.GetInt() == 3 )
+		{
+			NDebugOverlay::HorzArrow( GetAbsOrigin(), pNearest->WorldSpaceCenter(), 32.0f, 0, 255, 0, 128, true, 2.0f );
+		}
 	}
 
 	return pNearest;
@@ -3147,6 +3349,12 @@ void CNPC_AntlionGuard::BuildScheduleTestBits( void )
 	if ( IsCurSchedule( SCHED_ANTLIONGUARD_CHARGE ) == false )
 	{
 		SetCustomInterruptCondition( COND_ANTLIONGUARD_HAS_CHARGE_TARGET );
+	}
+
+	// Once we commit to doing this, just do it!
+	if ( IsCurSchedule( SCHED_MELEE_ATTACK1 ) )
+	{
+		ClearCustomInterruptCondition( COND_ENEMY_OCCLUDED );
 	}
 
 	// Always take heavy damage
@@ -3350,7 +3558,7 @@ void CNPC_AntlionGuard::InputDisableBark( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_AntlionGuard::DeathSound( void )
+void CNPC_AntlionGuard::DeathSound( const CTakeDamageInfo &info )
 {
 	EmitSound( "NPC_AntlionGuard.Die" );
 }
@@ -3432,16 +3640,31 @@ bool CNPC_AntlionGuard::BecomeRagdollOnClient( const Vector &force )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: turn in the direction of movement
+// Purpose: Override how we face our target as we move
 // Output :
 //-----------------------------------------------------------------------------
 bool CNPC_AntlionGuard::OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval )
 {
-  	// FIXME: this will break scripted sequences that walk when they have an enemy
+  	Vector		vecFacePosition = vec3_origin;
+	CBaseEntity	*pFaceTarget = NULL;
+	bool		bFaceTarget = false;
+
+	// FIXME: this will break scripted sequences that walk when they have an enemy
 	if ( m_hChargeTarget )
 	{
-		AddFacingTarget( m_hChargeTarget, m_hChargeTarget->GetAbsOrigin(), 1.0, 0.2 );
+		vecFacePosition = m_hChargeTarget->GetAbsOrigin();
+		pFaceTarget = m_hChargeTarget;
+		bFaceTarget = true;
 	}
+#ifdef HL2_EPISODIC
+	else if ( GetEnemy() && IsCurSchedule( SCHED_ANTLIONGUARD_CANT_ATTACK ) )
+	{
+		// Always face our enemy when randomly patrolling around
+		vecFacePosition = GetEnemy()->EyePosition();
+		pFaceTarget = GetEnemy();
+		bFaceTarget = true;
+	}
+#endif	// HL2_EPISODIC
 	else if ( GetEnemy() && GetNavigator()->GetMovementActivity() == ACT_RUN )
   	{
 		Vector vecEnemyLKP = GetEnemyLKP();
@@ -3449,8 +3672,16 @@ bool CNPC_AntlionGuard::OverrideMoveFacing( const AILocalMoveGoal_t &move, float
 		// Only start facing when we're close enough
 		if ( ( UTIL_DistApprox( vecEnemyLKP, GetAbsOrigin() ) < 512 ) || IsCurSchedule( SCHED_ANTLIONGUARD_PATROL_RUN ) )
 		{
-			AddFacingTarget( GetEnemy(), vecEnemyLKP, 1.0, 0.2 );
+			vecFacePosition = vecEnemyLKP;
+			pFaceTarget = GetEnemy();
+			bFaceTarget = true;
 		}
+	}
+
+	// Face
+	if ( bFaceTarget )
+	{
+		AddFacingTarget( pFaceTarget, vecFacePosition, 1.0, 0.2 );
 	}
 
 	return BaseClass::OverrideMoveFacing( move, flInterval );
@@ -3521,6 +3752,20 @@ void CNPC_AntlionGuard::InputSummonedAntlionDied( inputdata_t &inputdata )
 	{
 		Msg("Guard summoned antlion count: %d\n", m_iNumLiveAntlions );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Filter out sounds we don't care about
+// Input  : *pSound - sound to test against
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_AntlionGuard::QueryHearSound( CSound *pSound )
+{
+	// Don't bother with danger sounds from antlions or other guards
+	if ( pSound->SoundType() == SOUND_DANGER && ( pSound->m_hOwner != NULL && pSound->m_hOwner->Classify() == CLASS_ANTLION ) )
+		return false;
+
+	return BaseClass::QueryHearSound( pSound );
 }
 
 //-----------------------------------------------------------------------------
@@ -3641,7 +3886,6 @@ AI_BEGIN_CUSTOM_NPC( npc_antlionguard, CNPC_AntlionGuard )
 
 		"	Tasks"
 		"		TASK_STOP_MOVING					0"
-		"		TASK_SET_FAIL_SCHEDULE				SCHEDULE:SCHED_CHASE_ENEMY"
 		"		TASK_FACE_ENEMY						0"
 		"		TASK_ANTLIONGUARD_CHARGE			0"
 		""
@@ -3710,17 +3954,37 @@ AI_BEGIN_CUSTOM_NPC( npc_antlionguard, CNPC_AntlionGuard )
 	//		If we're here, the guard can't chase enemy, can't find a physobject to attack with, and can't summon
 	//==================================================
 
+#ifdef HL2_EPISODIC
+
 	DEFINE_SCHEDULE
 	( 
 		SCHED_ANTLIONGUARD_CANT_ATTACK,
 
 		"	Tasks"
-		"		TASK_WAIT								5"
+		"		TASK_SET_ROUTE_SEARCH_TIME		5"	// Spend 5 seconds trying to build a path if stuck
+		"		TASK_GET_PATH_TO_RANDOM_NODE	200"
+		"		TASK_WALK_PATH					0"
+		"		TASK_WAIT_FOR_MOVEMENT			0"
+		"		TASK_WAIT_PVS					0"
 		""
 		"	Interrupts"
+		"		COND_GIVE_WAY"
 		"		COND_NEW_ENEMY"
-		"		COND_LOST_ENEMY"
 	)
+
+#else
+
+	DEFINE_SCHEDULE
+	( 
+	SCHED_ANTLIONGUARD_CANT_ATTACK,
+
+	"	Tasks"
+	"		TASK_WAIT								5"
+	""
+	"	Interrupts"
+	)
+
+#endif
 
 	//==================================================
 	// SCHED_ANTLIONGUARD_PHYSICS_DAMAGE_HEAVY

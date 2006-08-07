@@ -74,10 +74,6 @@ void CmdLib_FPrintf( FileHandle_t hFile, const char *pFormat, ... )
 			// Write the string.
 			g_pFileSystem->Write( buf.Base(), ret, hFile );
 			
-			// Write a null terminator.
-			char cNull = 0;
-			g_pFileSystem->Write( &cNull, 1, hFile );
-			
 			break;
 		}
 		else
@@ -98,7 +94,8 @@ void CmdLib_FPrintf( FileHandle_t hFile, const char *pFormat, ... )
 
 char* CmdLib_FGets( char *pOut, int outSize, FileHandle_t hFile )
 {
-	for ( int iCur=0; iCur < (outSize-1); iCur++ )
+	int iCur=0;
+	for ( ; iCur < (outSize-1); iCur++ )
 	{
 		char c;
 		if ( !g_pFileSystem->Read( &c, 1, hFile ) )
@@ -368,6 +365,9 @@ void CmdLib_Cleanup()
 
 	CmdLib_TermFileSystem();
 
+	FOR_EACH_LL( g_CleanupFunctions, i )
+		g_CleanupFunctions[i]();
+
 #if defined( MPI )
 	// Unfortunately, when you call exit(), even if you have things registered with atexit(),
 	// threads go into a seemingly undefined state where GetExitCodeThread gives STILL_ACTIVE
@@ -375,15 +375,11 @@ void CmdLib_Cleanup()
 	// everything that uses threads before exiting.
 	VMPI_Finalize();
 #endif
-
-	FOR_EACH_LL( g_CleanupFunctions, i )
-		g_CleanupFunctions[i]();
 }
 
 
 void CmdLib_Exit( int exitCode )
 {
-	CmdLib_Cleanup();
 	TerminateProcess( GetCurrentProcess(), 1 );
 }	
 
@@ -476,13 +472,29 @@ void qprintf (char *format, ...)
 }
 
 
+// ---------------------------------------------------------------------------------------------------- //
+// Helpers.
+// ---------------------------------------------------------------------------------------------------- //
+
+static void CmdLib_getwd( char *out, int outSize )
+{
+#if defined( _WIN32 ) || defined( WIN32 )
+	_getcwd( out, outSize );
+	Q_strncat( out, "\\", outSize, COPY_ALL_CHARACTERS );
+#else
+	getwd(out);
+	strcat(out, "/");
+#endif
+	Q_FixSlashes( out );
+}
+
 char *ExpandArg (char *path)
 {
 	static char full[1024];
 
 	if (path[0] != '/' && path[0] != '\\' && path[1] != ':')
 	{
-		Q_getwd (full, sizeof( full ));
+		CmdLib_getwd (full, sizeof( full ));
 		Q_strncat (full, path, sizeof( full ), COPY_ALL_CHARACTERS);
 	}
 	else
@@ -543,13 +555,15 @@ void Q_mkdir (char *path)
 	if (mkdir (path, 0777) != -1)
 		return;
 #endif
-	if (errno != EEXIST)
-		Error ("mkdir %s: %s",path, strerror(errno));
+//	if (errno != EEXIST)
+	Error ("mkdir failed %s\n", path );
 }
 
 void CmdLib_InitFileSystem( const char *pFilename, int maxMemoryUsage )
 {
 	FileSystem_Init( pFilename, maxMemoryUsage );
+	if ( !g_pFileSystem )
+		Error( "CmdLib_InitFileSystem failed." );
 }
 
 void CmdLib_TermFileSystem()
@@ -773,17 +787,23 @@ LoadFile
 */
 int    LoadFile (char *filename, void **bufferptr)
 {
-	int    length;
+	int    length = 0;
 	void    *buffer;
 
 	FileHandle_t f = SafeOpenRead (filename);
-	length = Q_filelength (f);
-	buffer = malloc (length+1);
-	((char *)buffer)[length] = 0;
-	SafeRead (f, buffer, length);
-	g_pFileSystem->Close (f);
-
-	*bufferptr = buffer;
+	if ( FILESYSTEM_INVALID_HANDLE != f )
+	{
+		length = Q_filelength (f);
+		buffer = malloc (length+1);
+		((char *)buffer)[length] = 0;
+		SafeRead (f, buffer, length);
+		g_pFileSystem->Close (f);
+		*bufferptr = buffer;
+	}
+	else
+	{
+		*bufferptr = NULL;
+	}
 	return length;
 }
 
@@ -856,10 +876,11 @@ int ParseNum (char *str)
 CreatePath
 ============
 */
-void	CreatePath (char *path)
+void CreatePath (char *path)
 {
 	char	*ofs, c;
 
+	// strip the drive
 	if (path[1] == ':')
 		path += 2;
 
@@ -875,6 +896,35 @@ void	CreatePath (char *path)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Creates a path, path may already exist
+//-----------------------------------------------------------------------------
+#if defined( _WIN32 ) || defined( WIN32 )
+void SafeCreatePath( char *path )
+{
+	char *ptr;
+
+	// skip past the drive path, but don't strip
+	if ( path[1] == ':' )
+	{
+		ptr = strchr( path, '\\' );
+	}
+	else
+	{
+		ptr = path;
+	}
+	while ( ptr )
+	{		
+		ptr = strchr( ptr+1, '\\' );
+		if ( ptr )
+		{
+			*ptr = '\0';
+			_mkdir( path );
+			*ptr = '\\';
+		}
+	}
+}
+#endif
 
 /*
 ============

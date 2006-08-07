@@ -110,9 +110,15 @@ public:
 	virtual const unsigned char *GetEncryptionKey( void ) { return (unsigned char *)"x9Ke0BY7"; }
 	virtual const CViewVectors* GetViewVectors() const;
 	const HL2MPViewVectors* GetHL2MPViewVectors() const;
+
+	float GetMapRemainingTime();
+	void CleanUpMap();
+	void CheckRestartGame();
+	void RestartGame();
 	
 #ifndef CLIENT_DLL
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
+	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );
 	virtual bool	CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem );
 	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );
@@ -132,7 +138,11 @@ public:
 private:
 	
 	CNetworkVar( bool, m_bTeamPlayEnabled );
+	CNetworkVar( float, m_flGameStartTime );
 	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
+	float m_tmNextPeriodicThink;
+	float m_flRestartGameTime;
+	bool m_bCompleteReset;
 
 
 };

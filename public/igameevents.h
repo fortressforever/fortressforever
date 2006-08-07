@@ -16,7 +16,7 @@
 #pragma once
 #endif
 
-#include "interface.h"
+#include "tier1/interface.h"
 
 #define INTERFACEVERSION_GAMEEVENTSMANAGER	"GAMEEVENTSMANAGER001"	// old game event manager, don't use it!
 #define INTERFACEVERSION_GAMEEVENTSMANAGER2	"GAMEEVENTSMANAGER002"	// new game event manager,
@@ -63,7 +63,7 @@ class bf_read;
 class bf_write;
 class CGameEvent;
 
-class IGameEvent
+abstract_class IGameEvent
 {
 public:
 	virtual ~IGameEvent() {};
@@ -86,7 +86,7 @@ public:
 };
 
 
-class IGameEventListener2
+abstract_class IGameEventListener2
 {
 public:
 	virtual	~IGameEventListener2( void ) {};
@@ -96,7 +96,7 @@ public:
 	virtual void FireGameEvent( IGameEvent *event ) = 0;
 };
 
-class IGameEventManager2 : public IBaseInterface
+abstract_class IGameEventManager2 : public IBaseInterface
 {
 public:
 	virtual	~IGameEventManager2( void ) {};
@@ -139,7 +139,7 @@ public:
 
 // the old game event manager interface, don't use it. Rest is legacy support:
 
-class IGameEventListener
+abstract_class IGameEventListener
 {
 public:
 	virtual	~IGameEventListener( void ) {};
@@ -149,7 +149,7 @@ public:
 	virtual void FireGameEvent( KeyValues * event) = 0;
 };
 
-class IGameEventManager : public IBaseInterface
+abstract_class IGameEventManager : public IBaseInterface
 {
 public:
 	virtual	~IGameEventManager( void ) {};

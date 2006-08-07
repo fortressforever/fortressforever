@@ -23,17 +23,8 @@ public:
 	
 	virtual void SetFadeMinMax( float fademin, float fademax );
 
-	// Allow entities to perform client-side fades
-	virtual unsigned char GetClientSideFade();
-
 	// Copy fade from another breakable prop
 	void CopyFadeFrom( C_BreakableProp *pSource );
-
-protected:
-	// Networked vars.
-	float m_fadeMinDist;
-	float m_fadeMaxDist;
-	float m_flFadeScale;
 };
 
 #endif // C_BREAKABLEPROP_H

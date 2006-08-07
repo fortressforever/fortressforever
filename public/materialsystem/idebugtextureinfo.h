@@ -18,7 +18,7 @@ class KeyValues;
 #define DEBUG_TEXTURE_INFO_VERSION "DebugTextureInfo001"
 
 
-class IDebugTextureInfo
+abstract_class IDebugTextureInfo
 {
 public:
 	

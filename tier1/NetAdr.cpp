@@ -2,25 +2,26 @@
 //
 // Purpose: 
 //
-// $NoKeywords: $
-//
-//=============================================================================//
 // NetAdr.cpp: implementation of the CNetAdr class.
 //
-//////////////////////////////////////////////////////////////////////
+//=============================================================================//
 
+#ifdef _XBOX
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#endif
+#include "tier0/dbg.h"
 #include "netadr.h"
 #include "vstdlib/strtools.h"
 
-#if defined( _WIN32 )
-
+#if defined(_WIN32) && !defined(_XBOX)
 #define WIN32_LEAN_AND_MEAN
 #include <winsock.h>
-
 typedef int socklen_t;
-
-#else
+#elif !defined(_XBOX)
 #include <netinet/in.h> // ntohs()
+#include <netdb.h>	// gethostbyname()
+#include <sys/socket.h>	// getsockname()
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -109,7 +110,11 @@ const char * netadr_t::ToString(bool baseOnly) const
 		}
 		else
 		{
+#ifndef _XBOX
 			Q_snprintf (s, sizeof( s ), "%i.%i.%i.%i:%i", ip[0], ip[1], ip[2], ip[3], ntohs(port));
+#else
+			Q_snprintf (s, sizeof( s ), "%i.%i.%i.%i:%i", ip[0], ip[1], ip[2], ip[3], port);
+#endif
 		}
 	}
 
@@ -135,6 +140,19 @@ void netadr_t::Clear()
 	type = NA_NULL;
 }
 
+void netadr_t::SetIP(uint8 b1, uint8 b2, uint8 b3, uint8 b4)
+{
+	ip[0] = b1;
+	ip[1] = b2;
+	ip[2] = b3;
+	ip[3] = b4;
+}
+
+void netadr_t::SetIP(uint unIP)
+{
+	*((uint*)ip) = BigLong( unIP );
+}
+
 void netadr_t::SetType(netadrtype_t newtype)
 {
 	type = newtype;
@@ -148,6 +166,11 @@ netadrtype_t netadr_t::GetType() const
 unsigned short netadr_t::GetPort() const
 {
 	return BigShort( port );
+}
+
+unsigned int netadr_t::GetIP() const
+{
+	return *(unsigned int *)&ip;;
 }
 
 void netadr_t::ToSockadr (struct sockaddr * s) const
@@ -205,4 +228,73 @@ void netadr_t::SetPort(unsigned short newport)
 	port = BigShort( newport );
 }
 
+void netadr_t::SetFromString( const char *pch, bool bUseDNS )
+{
+	Clear();
+	type = NA_IP;
 
+	Assert( pch );		// invalid to call this with NULL pointer; fix your code bug!
+	if ( !pch )			// but let's not crash
+		return;
+
+
+	if ( pch[0] >= '0' && pch[0] <= '9' && strchr( pch, '.' ) )
+	{
+		int n1, n2, n3, n4, n5;
+		int nRes = sscanf( pch, "%d.%d.%d.%d:%d", &n1, &n2, &n3, &n4, &n5 );
+		if ( nRes >= 4 )
+		{
+			SetIP( n1, n2, n3, n4 );
+		}
+
+		if ( nRes == 5 )
+		{
+			SetPort( ( uint16 ) n5 );
+		}
+	}
+	else if ( bUseDNS )
+	{
+		char szHostName[ 256 ];
+		Q_strncpy( szHostName, pch, sizeof(szHostName) );
+		char *pchColon = strchr( szHostName, ':' );
+		if ( pchColon )
+		{
+			*pchColon = 0;
+		}
+		
+		// DNS it
+		struct hostent *h = gethostbyname( szHostName );
+		if ( !h )
+			return;
+
+		SetIP( ntohl( *(int *)h->h_addr_list[0]  ) );
+
+		if ( pchColon )
+		{
+			SetPort( atoi( ++pchColon ) );
+		}
+	}
+}
+
+bool netadr_t::operator<(const netadr_t &netadr) const
+{
+	if ( *((uint *)netadr.ip) < *((uint *)ip) )
+		return true;
+	else if ( *((uint *)netadr.ip) > *((uint *)ip) )
+		return false;
+	return ( netadr.port < port );
+}
+
+
+void netadr_t::SetFromSocket( int hSocket )
+{	
+	Clear();
+	type = NA_IP;
+
+	struct sockaddr address;
+	int namelen = sizeof(address);
+	if ( getsockname( hSocket, (struct sockaddr *)&address, (int *)&namelen) == 0 )
+	{
+		SetFromSockadr( &address );
+	}
+}

@@ -9,6 +9,8 @@
 #include <string.h>
 #include "choreoactor.h"
 #include "choreochannel.h"
+#include "choreoscene.h"
+#include "tier1/utlbuffer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -238,4 +240,54 @@ CChoreoChannel *CChoreoActor::FindChannel( const char *name )
 	return NULL;
 }
 
+void CChoreoActor::SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
+{
+	int i, c;
+	buf.PutString( GetName() );
+
+	c = GetNumChannels();
+	buf.PutShort( c );
+	for ( i = 0; i < c; i++ )
+	{
+		CChoreoChannel *channel = GetChannel( i );
+		Assert( channel );
+		channel->SaveToBuffer( buf, pScene );
+	}
+
+	/*
+	if ( Q_strlen( a->GetFacePoserModelName() ) > 0 )
+	{
+		FilePrintf( buf, level + 1, "faceposermodel \"%s\"\n", a->GetFacePoserModelName() );
+	}
+	*/
+	buf.PutChar( GetActive() ? 1 : 0 );
+}
+
+bool CChoreoActor::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
+{
+	char sz[ 256 ];
+	buf.GetString( sz, sizeof( sz ) );
+
+	SetName( sz );
+
+	int i;
+	int c = buf.GetShort();
+	for ( i = 0; i < c; i++ )
+	{
+		CChoreoChannel *channel = pScene->AllocChannel();
+		Assert( channel );
+		if ( channel->RestoreFromBuffer( buf, pScene, this ) )
+		{
+			AddChannel( channel );
+			channel->SetActor( this );
+			continue;
+		}
+
+		return false;
+	}
+
+	SetActive( buf.GetChar() == 1 ? true : false );
+
+	return true;
+}
 

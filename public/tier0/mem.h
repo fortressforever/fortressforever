@@ -15,7 +15,7 @@
 #include <stddef.h>
 #include "tier0/platform.h"
 
-#ifndef STATIC_TIER0
+#if !defined(STATIC_TIER0) && !defined(_STATIC_LINKED)
 
 #ifdef TIER0_DLL_EXPORT
 #  define MEM_INTERFACE DLL_EXPORT

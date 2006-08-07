@@ -142,32 +142,23 @@ C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 void C_HL2MP_Player::Initialize( void )
 {
 	m_headYawPoseParam = LookupPoseParameter( "head_yaw" );
-	if ( m_headYawPoseParam != -1 )
-	{
-		const mstudioposeparamdesc_t &info = GetPoseParameterPtr( "head_yaw" );
-		if ( &info != 0 )
-		{
-			m_headYawMin = info.start;
-			m_headYawMax = info.end;
-		}
-	}
+	GetPoseParameterRange( m_headYawPoseParam, m_headYawMin, m_headYawMax );
 
 	m_headPitchPoseParam = LookupPoseParameter( "head_pitch" );
-	if ( m_headPitchPoseParam != -1 )
+	GetPoseParameterRange( m_headPitchPoseParam, m_headPitchMin, m_headPitchMax );
+
+	CStudioHdr *hdr = GetModelPtr();
+	for ( int i = 0; i < hdr->GetNumPoseParameters() ; i++ )
 	{
-		const mstudioposeparamdesc_t &info = GetPoseParameterPtr( "head_pitch" );
-		if ( &info != 0 )
-		{
-			m_headPitchMin = info.start;
-			m_headPitchMax = info.end;
-		}
+		SetPoseParameter( hdr, i, 0.0 );
 	}
 }
-studiohdr_t *C_HL2MP_Player::OnNewModel( void )
+
+CStudioHdr *C_HL2MP_Player::OnNewModel( void )
 {
-	studiohdr_t *hdr = BaseClass::OnNewModel();
+	CStudioHdr *hdr = BaseClass::OnNewModel();
 	
-	Initialize();
+	Initialize( );
 
 	return hdr;
 }
@@ -676,9 +667,9 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 		Vector WALL_MAX( WALL_OFFSET, WALL_OFFSET, WALL_OFFSET );
 
 		trace_t trace; // clip against world
-		C_BaseEntity::EnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+		C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
 		UTIL_TraceHull( origin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace );
-		C_BaseEntity::EnableAbsRecomputations( true );
+		C_BaseEntity::PopEnableAbsRecomputations();
 
 		if (trace.fraction < 1.0)
 		{
@@ -734,23 +725,29 @@ C_HL2MPRagdoll::~C_HL2MPRagdoll()
 	}
 }
 
-void C_HL2MPRagdoll::Interp_Copy( VarMapping_t *pDest, C_BaseAnimatingOverlay *pDestinationEntity, C_BaseAnimatingOverlay *pSourceEntity, VarMapping_t *pSrc )
+void C_HL2MPRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
 {
-	if ( !pDest || !pSrc )
+	if ( !pSourceEntity )
 		return;
-
-	if ( pDest->m_Entries.Count() != pSrc->m_Entries.Count() )
+	
+	VarMapping_t *pSrc = pSourceEntity->GetVarMapping();
+	VarMapping_t *pDest = GetVarMapping();
+    	
+	// Find all the VarMapEntry_t's that represent the same variable.
+	for ( int i = 0; i < pDest->m_Entries.Count(); i++ )
 	{
-		return;
+		VarMapEntry_t *pDestEntry = &pDest->m_Entries[i];
+		const char *pszName = pDestEntry->watcher->GetDebugName();
+		for ( int j=0; j < pSrc->m_Entries.Count(); j++ )
+		{
+			VarMapEntry_t *pSrcEntry = &pSrc->m_Entries[j];
+			if ( !Q_strcmp( pSrcEntry->watcher->GetDebugName(), pszName ) )
+			{
+				pDestEntry->watcher->Copy( pSrcEntry->watcher );
+				break;
+			}
+		}
 	}
-
-	int c = pDest->m_Entries.Count();
-	for ( int i = 0; i < c; i++ )
-	{
-		pDest->m_Entries[ i ].watcher->Copy( pSrc->m_Entries[i].watcher );
-	}
-
-	Interp_Copy( pDest->m_pBaseClassVarMapping, pDestinationEntity, pSourceEntity, pSrc->m_pBaseClassVarMapping );
 }
 
 void C_HL2MPRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
@@ -784,6 +781,8 @@ void C_HL2MPRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCusto
 		// Blood spray!
 //		FX_CS_BloodSpray( hitpos, dir, 10 );
 	}
+
+	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
 
@@ -805,7 +804,7 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 		bool bRemotePlayer = (pPlayer != C_BasePlayer::GetLocalPlayer());			
 		if ( bRemotePlayer )
 		{
-			Interp_Copy( varMap, this, pPlayer, pPlayer->C_BaseAnimatingOverlay::GetVarMapping() );
+			Interp_Copy( pPlayer );
 
 			SetAbsAngles( pPlayer->GetRenderAngles() );
 			GetRotationInterpolator().Reset();
@@ -902,13 +901,13 @@ void C_HL2MPRagdoll::SetupWeights( void )
 	static float destweight[128];
 	static bool bIsInited = false;
 
-	studiohdr_t *hdr = GetModelPtr();
+	CStudioHdr *hdr = GetModelPtr();
 	if ( !hdr )
 	{
 		return;
 	}
 
-	if (hdr->numflexdesc > 0)
+	if (hdr->numflexdesc() > 0)
 	{
 		if (!bIsInited)
 		{
@@ -919,7 +918,7 @@ void C_HL2MPRagdoll::SetupWeights( void )
 			}
 			bIsInited = true;
 		}
-		modelrender->SetFlexWeights( hdr->numflexdesc, destweight );
+		modelrender->SetFlexWeights( hdr->numflexdesc(), destweight );
 	}
 
 	if (m_iEyeAttachment > 0)

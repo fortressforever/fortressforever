@@ -11,7 +11,6 @@
 #include "tier0/dbg.h"
 #include "vbsp.h"
 #include "mstristrip.h"
-#include "disp_lightmap_alpha.h"
 #include "writebsp.h"
 #include "pacifier.h"
 #include "disp_ivp.h"
@@ -325,7 +324,11 @@ void EmitInitialDispInfos( void )
 		// save power, minimum tesselation, and smoothing angle
 		//
 		pDisp->power = pMapDisp->power;
-		pDisp->minTess = pMapDisp->minTess;
+		
+		// If the high bit is set - this is FLAGS!
+		pDisp->minTess = pMapDisp->flags;
+		pDisp->minTess |= 0x80000000;
+//		pDisp->minTess = pMapDisp->minTess;
 		pDisp->smoothingAngle = pMapDisp->smoothingAngle;
 		pDisp->m_iMapFace = -2;
 
@@ -522,9 +525,6 @@ void EmitDispLMAlphaAndNeighbors()
 
 	Msg( "Finding displacement neighbors...\n" );
 
-	// Do lightmap alpha.
-    g_DispLightmapAlpha.RemoveAll();
-
 	// Build the CCoreDispInfos.
 	CUtlVector<dface_t*> faces;
 
@@ -610,19 +610,8 @@ void EmitDispLMAlphaAndNeighbors()
 		CCoreDispInfo *pCoreDispInfo = g_CoreDispInfos[i];
 
 		// Allocate space for the alpha values.
-		pDisp->m_iLightmapAlphaStart = g_DispLightmapAlpha.Count();
-		int nLuxelsToAdd = (pFace->m_LightmapTextureSizeInLuxels[0]+1) * (pFace->m_LightmapTextureSizeInLuxels[1]+1);
-		g_DispLightmapAlpha.AddMultipleToTail( nLuxelsToAdd );
-
-		DispUpdateLightmapAlpha( 
-			g_CoreDispInfos.Base(),
-			i,
-			(float)dispCount     / g_dispinfo.Count(),
-			(float)(dispCount+1) / g_dispinfo.Count(),
-			pDisp, 
-			pFace->m_LightmapTextureSizeInLuxels[0],
-			pFace->m_LightmapTextureSizeInLuxels[1] );
-	
+		pDisp->m_iLightmapAlphaStart = 0; // not used anymore
+		
 		++dispCount;
 	}
 

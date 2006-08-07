@@ -23,7 +23,7 @@ typedef CGameTrace trace_t;
 class IClientUnknown;
 
 
-class ICollideable
+abstract_class ICollideable
 {
 public:
 	// Gets at the entity handle associated with the collideable

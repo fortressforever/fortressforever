@@ -15,7 +15,7 @@
 //=========================================================
 // Machine gun base class
 //=========================================================
-class CHLMachineGun : public CBaseHLCombatWeapon
+abstract_class CHLMachineGun : public CBaseHLCombatWeapon
 {
 public:
 	DECLARE_CLASS( CHLMachineGun, CBaseHLCombatWeapon );

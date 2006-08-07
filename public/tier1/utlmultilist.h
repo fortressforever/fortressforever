@@ -136,6 +136,18 @@ protected:
 	// A test for debug mode only...
 	bool IsElementInList( ListHandle_t list, I elem ) const;
 
+	// copy constructors not allowed
+	CUtlMultiList( CUtlMultiList<T, I> const& list ) { Assert(0); }
+	   
+	CUtlMemory<ListElem_t>		m_Memory;
+	CUtlLinkedList<List_t, I>	m_List;
+	I*	m_pElementList;
+
+	I	m_FirstFree;
+	I	m_TotalElements;	
+	I	m_MaxElementIndex;	// The number allocated
+
+#if !defined(_XBOX) || defined(_DEBUG)
 	void ResetDbgInfo()
 	{
 		m_pElements = m_Memory.Base();
@@ -155,21 +167,13 @@ protected:
 		}
 #endif
 	}
-	
-	// copy constructors not allowed
-	CUtlMultiList( CUtlMultiList<T, I> const& list ) { Assert(0); }
-	   
-	CUtlMemory<ListElem_t>		m_Memory;
-	CUtlLinkedList<List_t, I>	m_List;
-	I*	m_pElementList;
-
-	I	m_FirstFree;
-	I	m_TotalElements;	
-	I	m_MaxElementIndex;	// The number allocated
 
 	// For debugging purposes; 
 	// it's in release builds so this can be used in libraries correctly
 	ListElem_t  *m_pElements;
+#else
+	void ResetDbgInfo() {}
+#endif
 };
    
    
@@ -354,7 +358,9 @@ template <class T, class I>
 void  CUtlMultiList<T,I>::Purge()
 {
 	RemoveAll();
+	m_List.Purge();
 	m_Memory.Purge( );
+	m_List.Purge();
 	m_FirstFree = InvalidIndex();
 	m_TotalElements = 0;
 	m_MaxElementIndex = 0;

@@ -133,7 +133,10 @@ void CBaseButton::Precache( void )
 		default: m_ls.sUnlockedSentence = NULL_STRING; break;
 	}
 
-	PrecacheScriptSound( STRING( m_sNoise ) );
+	if ( m_sNoise != NULL_STRING )
+	{
+		PrecacheScriptSound( STRING( m_sNoise ) );
+	}
 }
 
 
@@ -232,15 +235,18 @@ void CBaseButton::InputPress( inputdata_t &inputdata )
 
 	if ( m_toggle_state == TS_AT_TOP)
 	{
-		CPASAttenuationFilter filter( this );
+		if ( m_sNoise != NULL_STRING )
+		{
+			CPASAttenuationFilter filter( this );
 
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_VOICE;
-		ep.m_pSoundName = (char*)STRING(m_sNoise);
-		ep.m_flVolume = 1;
-		ep.m_SoundLevel = SNDLVL_NORM;
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_VOICE;
+			ep.m_pSoundName = (char*)STRING(m_sNoise);
+			ep.m_flVolume = 1;
+			ep.m_SoundLevel = SNDLVL_NORM;
 
-		EmitSound( filter, entindex(), ep );
+			EmitSound( filter, entindex(), ep );
+		}
 
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonReturn();
@@ -311,15 +317,18 @@ int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 
 	if ( code == BUTTON_RETURN )
 	{
-		CPASAttenuationFilter filter( this );
+		if ( m_sNoise != NULL_STRING )
+		{
+			CPASAttenuationFilter filter( this );
 
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_VOICE;
-		ep.m_pSoundName = (char*)STRING(m_sNoise);
-		ep.m_flVolume = 1;
-		ep.m_SoundLevel = SNDLVL_NORM;
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_VOICE;
+			ep.m_pSoundName = (char*)STRING(m_sNoise);
+			ep.m_flVolume = 1;
+			ep.m_SoundLevel = SNDLVL_NORM;
 
-		EmitSound( filter, entindex(), ep );
+			EmitSound( filter, entindex(), ep );
+		}
 
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonReturn();
@@ -341,8 +350,15 @@ void CBaseButton::Spawn( )
 	//determine sounds for buttons
 	//a sound of 0 should not make a sound
 	//----------------------------------------------------
-	m_sNoise = MakeButtonSound( m_sounds );
-	PrecacheScriptSound(m_sNoise.ToCStr());
+	if ( m_sounds )
+	{
+		m_sNoise = MakeButtonSound( m_sounds );
+		PrecacheScriptSound(m_sNoise.ToCStr());
+	}
+	else
+	{
+		m_sNoise = NULL_STRING;
+	}
 
 	Precache();
 
@@ -520,18 +536,22 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 					return;
 				}
 			}
+			if ( m_sNoise != NULL_STRING )
+			{
+				CPASAttenuationFilter filter( this );
 
-			CPASAttenuationFilter filter( this );
+				EmitSound_t ep;
+				ep.m_nChannel = CHAN_VOICE;
+				ep.m_pSoundName = (char*)STRING(m_sNoise);
+				ep.m_flVolume = 1;
+				ep.m_SoundLevel = SNDLVL_NORM;
 
-			EmitSound_t ep;
-			ep.m_nChannel = CHAN_VOICE;
-			ep.m_pSoundName = (char*)STRING(m_sNoise);
-			ep.m_flVolume = 1;
-			ep.m_SoundLevel = SNDLVL_NORM;
+				EmitSound( filter, entindex(), ep );
+			}
 
 			entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
 
-			EmitSound( filter, entindex(), ep );
+
 			m_OnPressed.FireOutput(m_hActivator, this);
 			ButtonReturn();
 		}
@@ -628,15 +648,18 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 
 	if ( code == BUTTON_RETURN )
 	{
-		CPASAttenuationFilter filter( this );
+		if ( m_sNoise != NULL_STRING )
+		{
+			CPASAttenuationFilter filter( this );
 
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_VOICE;
-		ep.m_pSoundName = (char*)STRING(m_sNoise);
-		ep.m_flVolume = 1;
-		ep.m_SoundLevel = SNDLVL_NORM;
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_VOICE;
+			ep.m_pSoundName = (char*)STRING(m_sNoise);
+			ep.m_flVolume = 1;
+			ep.m_SoundLevel = SNDLVL_NORM;
 
-		EmitSound( filter, entindex(), ep );
+			EmitSound( filter, entindex(), ep );
+		}
 
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonReturn();
@@ -656,15 +679,18 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CBaseButton::ButtonActivate( void )
 {
-	CPASAttenuationFilter filter( this );
+	if ( m_sNoise != NULL_STRING )
+	{
+		CPASAttenuationFilter filter( this );
 
-	EmitSound_t ep;
-	ep.m_nChannel = CHAN_VOICE;
-	ep.m_pSoundName = (char*)STRING(m_sNoise);
-	ep.m_flVolume = 1;
-	ep.m_SoundLevel = SNDLVL_NORM;
+		EmitSound_t ep;
+		ep.m_nChannel = CHAN_VOICE;
+		ep.m_pSoundName = (char*)STRING(m_sNoise);
+		ep.m_flVolume = 1;
+		ep.m_SoundLevel = SNDLVL_NORM;
 
-	EmitSound( filter, entindex(), ep );
+		EmitSound( filter, entindex(), ep );
+	}
 	
 	if (!UTIL_IsMasterTriggered(m_sMaster, m_hActivator) || m_bLocked)
 	{
@@ -807,8 +833,15 @@ void CRotButton::Spawn( void )
 	//determine sounds for buttons
 	//a sound of 0 should not make a sound
 	//----------------------------------------------------
-	m_sNoise = MakeButtonSound( m_sounds );
-	PrecacheScriptSound(m_sNoise.ToCStr());
+	if ( m_sounds )
+	{
+		m_sNoise = MakeButtonSound( m_sounds );
+		PrecacheScriptSound(m_sNoise.ToCStr());
+	}
+	else
+	{
+		m_sNoise = NULL_STRING;
+	}
 
 	// set the axis of rotation
 	CBaseToggle::AxisDir();
@@ -828,6 +861,7 @@ void CRotButton::Spawn( void )
 #endif
 	if ( HasSpawnFlags( SF_ROTBUTTON_NOTSOLID ) )
 	{
+		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
 
@@ -919,6 +953,10 @@ BEGIN_DATADESC( CMomentaryRotButton )
 	DEFINE_OUTPUT( m_OnFullyOpen, "OnFullyOpen" ),
 	DEFINE_OUTPUT( m_OnReachedPosition, "OnReachedPosition" ),
 
+	DEFINE_INPUTFUNC( FIELD_VOID,	"Enable",	InputEnable ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"Disable",	InputDisable ),
+	DEFINE_FIELD( m_bDisabled, FIELD_BOOLEAN )
+
 END_DATADESC()
 
 
@@ -980,8 +1018,16 @@ void CMomentaryRotButton::Spawn( void )
 
 	if ( HasSpawnFlags( SF_BUTTON_USE_ACTIVATES ) )
 	{
-		m_sNoise = MakeButtonSound( m_sounds );
-		PrecacheScriptSound(m_sNoise.ToCStr());
+		if ( m_sounds )
+		{
+			m_sNoise = MakeButtonSound( m_sounds );
+			PrecacheScriptSound(m_sNoise.ToCStr());
+		}
+		else
+		{
+			m_sNoise = NULL_STRING;
+		}
+
 		m_lastUsed	= 0;
 		UpdateTarget(0,this);
 	}
@@ -993,6 +1039,7 @@ void CMomentaryRotButton::Spawn( void )
 #endif
 	if (HasSpawnFlags(SF_ROTBUTTON_NOTSOLID))
 	{
+		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
 
@@ -1006,6 +1053,8 @@ void CMomentaryRotButton::Spawn( void )
 	{
 		SetSolid( SOLID_BSP );
 	}
+
+	m_bDisabled = false;
 }
 
 int	CMomentaryRotButton::ObjectCaps( void ) 
@@ -1038,6 +1087,9 @@ bool CMomentaryRotButton::CreateVPhysics( void )
 //-----------------------------------------------------------------------------
 void CMomentaryRotButton::PlaySound( void )
 {
+	if ( m_sNoise == NULL_STRING )
+		return;
+
 	CPASAttenuationFilter filter( this );
 
 	EmitSound_t ep;
@@ -1229,6 +1281,9 @@ void CMomentaryRotButton::SetPositionMoveDone(void)
 //-----------------------------------------------------------------------------
 void CMomentaryRotButton::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
+	if ( m_bDisabled == true )
+		return;
+
 	if (m_bLocked)
 	{
 		if ( OnUseLocked( pActivator ) && HasSpawnFlags( SF_BUTTON_JIGGLE_ON_USE_LOCKED ) )
@@ -1439,26 +1494,60 @@ int CMomentaryRotButton::DrawDebugTextOverlays(void)
 		char tempstr[255];
 		
 		Q_snprintf(tempstr,sizeof(tempstr),"QAngle: %.2f %.2f %.2f", GetLocalAngles()[0], GetLocalAngles()[1], GetLocalAngles()[2]);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"AVelocity: %.2f %.2f %.2f", GetLocalAngularVelocity()[0], GetLocalAngularVelocity()[1], GetLocalAngularVelocity()[2]);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"Target Pos:   %3.3f",m_IdealYaw);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		float flCurPos = GetPos(GetLocalAngles());
 		Q_snprintf(tempstr,sizeof(tempstr),"Current Pos:   %3.3f",flCurPos);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"Direction: %s",(m_direction == 1) ? "Forward" : "Backward");
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 	}
 	return text_offset;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Input hander that starts the spawner
+//-----------------------------------------------------------------------------
+void CMomentaryRotButton::InputEnable( inputdata_t &inputdata )
+{
+	Enable();
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Input hander that stops the spawner
+//-----------------------------------------------------------------------------
+void CMomentaryRotButton::InputDisable( inputdata_t &inputdata )
+{
+	Disable();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Start the spawner
+//-----------------------------------------------------------------------------
+void CMomentaryRotButton::Enable( void )
+{
+	m_bDisabled = false;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop the spawner
+//-----------------------------------------------------------------------------
+void CMomentaryRotButton::Disable( void )
+{
+	m_bDisabled = true;
 }

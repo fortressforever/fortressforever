@@ -19,7 +19,7 @@ class CChoreoScene;
 // Purpose: During choreo playback, events are triggered by calling back from
 //  the scene through this interface.
 //-----------------------------------------------------------------------------
-class IChoreoEventCallback
+abstract_class IChoreoEventCallback
 {
 public:
 	virtual void StartEvent( float currenttime, CChoreoScene *scene, CChoreoEvent *event ) = 0;

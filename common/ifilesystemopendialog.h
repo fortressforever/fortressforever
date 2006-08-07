@@ -12,17 +12,17 @@
 
 
 
-#define FILESYSTEMOPENDIALOG_VERSION	"FileSystemOpenDlg002"
+#define FILESYSTEMOPENDIALOG_VERSION	"FileSystemOpenDlg003"
 
 
 class IFileSystem;
 
 
-class IFileSystemOpenDialog
+abstract_class IFileSystemOpenDialog
 {
 public:
 	// You must call this first to set the hwnd.
-	virtual void Init( IFileSystem *pFileSystem, void *parentHwnd ) = 0;
+	virtual void Init( CreateInterfaceFn factory, void *parentHwnd ) = 0;
 
 	// Call this to free the dialog.
 	virtual void Release() = 0;

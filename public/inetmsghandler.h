@@ -110,7 +110,6 @@ class SVC_CreateStringTable;
 class SVC_UpdateStringTable;
 class SVC_VoiceInit;
 class SVC_VoiceData;
-class SVC_HLTV;
 class SVC_Sounds;
 class SVC_SetView;
 class SVC_FixAngle;
@@ -140,7 +139,6 @@ public:
 	PROCESS_SVC_MESSAGE( UpdateStringTable ) = 0;
 	PROCESS_SVC_MESSAGE( VoiceInit ) = 0;
 	PROCESS_SVC_MESSAGE( VoiceData ) = 0;
-	PROCESS_SVC_MESSAGE( HLTV ) = 0;
 	PROCESS_SVC_MESSAGE( Sounds ) = 0;
 	PROCESS_SVC_MESSAGE( SetView ) = 0;
 	PROCESS_SVC_MESSAGE( FixAngle ) = 0;

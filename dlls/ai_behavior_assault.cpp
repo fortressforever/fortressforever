@@ -22,6 +22,9 @@ BEGIN_DATADESC( CRallyPoint )
 	DEFINE_KEYFIELD( m_RallySequenceName, FIELD_STRING, "rallysequence" ),
 	DEFINE_KEYFIELD( m_flAssaultDelay, FIELD_FLOAT, "assaultdelay" ),
 	DEFINE_KEYFIELD( m_iPriority, FIELD_INTEGER, "priority" ),
+	DEFINE_KEYFIELD( m_iStrictness, FIELD_INTEGER, "strict" ),
+	DEFINE_KEYFIELD( m_bForceCrouch, FIELD_BOOLEAN, "forcecrouch" ),
+	DEFINE_KEYFIELD( m_bIsUrgent, FIELD_BOOLEAN, "urgent" ),
 	DEFINE_FIELD( m_hLockedBy, FIELD_EHANDLE ),
 
 	DEFINE_OUTPUT( m_OnArrival, "OnArrival" ),
@@ -33,11 +36,17 @@ BEGIN_DATADESC( CAssaultPoint )
 	DEFINE_KEYFIELD( m_flAssaultTimeout, FIELD_FLOAT, "assaulttimeout" ),
 	DEFINE_KEYFIELD( m_bClearOnContact, FIELD_BOOLEAN, "clearoncontact" ),
 	DEFINE_KEYFIELD( m_bAllowDiversion, FIELD_BOOLEAN, "allowdiversion" ),
+	DEFINE_KEYFIELD( m_flAllowDiversionRadius, FIELD_FLOAT, "allowdiversionradius" ),
 	DEFINE_KEYFIELD( m_bNeverTimeout, FIELD_BOOLEAN, "nevertimeout" ),
+	DEFINE_KEYFIELD( m_iStrictness, FIELD_INTEGER, "strict" ),
+	DEFINE_KEYFIELD( m_bForceCrouch, FIELD_BOOLEAN, "forcecrouch" ),
+	DEFINE_KEYFIELD( m_bIsUrgent, FIELD_BOOLEAN, "urgent" ),
+	DEFINE_FIELD( m_bInputForcedClear, FIELD_BOOLEAN ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetClearOnContact", InputSetClearOnContact ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetAllowDiversion", InputSetAllowDiversion ),
+	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetForceClear", InputSetForceClear ),
 
 	// Outputs
 	DEFINE_OUTPUT( m_OnArrival, "OnArrival" ),
@@ -57,7 +66,22 @@ BEGIN_DATADESC( CAI_AssaultBehavior )
 	DEFINE_FIELD( m_bDiverting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flLastSawAnEnemyAt, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flTimeDeferScheduleSelection, FIELD_TIME ),
+	DEFINE_FIELD( m_AssaultPointName, FIELD_STRING )
 END_DATADESC();
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::CanRunAScriptedNPCInteraction( bool bForced )
+{
+	if ( m_AssaultCue == CUE_NO_ASSAULT )
+	{
+		// It's OK with the assault behavior, so leave it up to the base class.
+		return BaseClass::CanRunAScriptedNPCInteraction( bForced );
+	}
+
+	return false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -67,6 +91,26 @@ CAI_AssaultBehavior::CAI_AssaultBehavior()
 	m_AssaultCue = CUE_NO_ASSAULT;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draw any text overlays
+// Input  : Previous text offset from the top
+// Output : Current text offset from the top
+//-----------------------------------------------------------------------------
+int CAI_AssaultBehavior::DrawDebugTextOverlays( int text_offset )
+{
+	char	tempstr[ 512 ];
+	int		offset;
+
+	offset = BaseClass::DrawDebugTextOverlays( text_offset );
+	if ( GetOuter()->m_debugOverlays & OVERLAY_TEXT_BIT )
+	{	
+		Q_snprintf( tempstr, sizeof(tempstr), "Assault Point: %s %s", STRING( m_AssaultPointName ), VecToString( m_hAssaultPoint->GetAbsOrigin() ) );
+		GetOuter()->EntityText( offset, tempstr, 0 );
+		offset++;
+	}
+
+	return offset;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -83,6 +127,18 @@ void CAI_AssaultBehavior::ReceiveAssaultCue( AssaultCue_t cue )
 }
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::AssaultHasBegun()
+{
+	if( m_AssaultCue == CUE_DONT_WAIT && IsRunning() && m_bHitRallyPoint )
+	{
+		return true;
+	}
+
+	return m_ReceivedAssaultCue == m_AssaultCue;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CAI_AssaultBehavior::ClearAssaultPoint( void )
@@ -94,11 +150,14 @@ void CAI_AssaultBehavior::ClearAssaultPoint( void )
 	// This can also be happen if an assault point has ClearOnContact set, and
 	// an NPC assaulting to this point has seen an enemy.
 
+	// keep track of the name of the assault point
+	m_AssaultPointName = m_hAssaultPoint->m_NextAssaultPointName;
+
 	// Do we need to move to another assault point?
 	if( m_hAssaultPoint->m_NextAssaultPointName != NULL_STRING )
 	{
-		CAssaultPoint *pNextPoint = (CAssaultPoint *)gEntList.FindEntityByName( NULL, m_hAssaultPoint->m_NextAssaultPointName, NULL );
-
+		CAssaultPoint *pNextPoint = (CAssaultPoint *)gEntList.FindEntityByName( NULL, m_hAssaultPoint->m_NextAssaultPointName );
+		
 		if( pNextPoint )
 		{
 			m_hAssaultPoint = pNextPoint;
@@ -136,6 +195,66 @@ void CAI_AssaultBehavior::ClearAssaultPoint( void )
 	}
 
 	m_hAssaultPoint->m_OnAssaultClear.FireOutput( GetOuter(), GetOuter(), 0 );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_AssaultBehavior::OnHitAssaultPoint( void )
+{
+	GetOuter()->SpeakSentence( ASSAULT_SENTENCE_HIT_ASSAULT_POINT );
+	m_bHitAssaultPoint = true;
+	m_hAssaultPoint->m_OnArrival.FireOutput( GetOuter(), m_hAssaultPoint, 0 );
+
+	// Set the assault hint group
+	if( m_hAssaultPoint->m_AssaultHintGroup != NULL_STRING )
+	{
+		SetHintGroup( m_hAssaultPoint->m_AssaultHintGroup );
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CAI_AssaultBehavior::GatherConditions( void )
+{
+	BaseClass::GatherConditions();
+
+	// If this NPC is moving towards an assault point which
+	//		a) Has a Next Assault Point, and 
+	//		b) Is flagged to Clear On Arrival,
+	// then hit and clear the assault point (fire all entity I/O) and move on to the next one without
+	// interrupting the NPC's schedule. This provides a more fluid movement from point to point.
+	if( IsCurSchedule( SCHED_MOVE_TO_ASSAULT_POINT ) && hl2_episodic.GetBool() )
+	{
+		if( m_hAssaultPoint && m_hAssaultPoint->HasSpawnFlags(SF_ASSAULTPOINT_CLEARONARRIVAL) && m_hAssaultPoint->m_NextAssaultPointName != NULL_STRING )
+		{
+			float flDist = GetAbsOrigin().DistTo( m_hAssaultPoint->GetAbsOrigin() );
+
+			if( flDist <= GetOuter()->GetMotor()->MinStoppingDist() )
+			{
+				OnHitAssaultPoint();
+				ClearAssaultPoint();
+
+				AI_NavGoal_t goal( m_hAssaultPoint->GetAbsOrigin() );
+				goal.pTarget = m_hAssaultPoint;
+				
+				if ( GetNavigator()->SetGoal( goal ) == false )
+				{
+					TaskFail( "Can't refresh assault path" );
+				}
+			}
+		}
+
+		if( OnStrictAssault() )
+		{
+			// Don't get distracted. Die trying if you have to.
+			ClearCondition( COND_HEAR_DANGER );
+		}
+	}
+
+	if ( IsForcingCrouch() && GetOuter()->IsCrouching() )
+	{
+		ClearCondition( COND_HEAR_BULLET_IMPACT );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -217,6 +336,8 @@ void CAI_AssaultBehavior::StartTask( const Task_t *pTask )
 
 	case TASK_FACE_RALLY_POINT:
 		{
+			UpdateForceCrouch();
+			
 			GetMotor()->SetIdealYaw( m_hRallyPoint->GetAbsAngles().y );
 			GetOuter()->SetTurnActivity(); 
 		}
@@ -245,6 +366,8 @@ void CAI_AssaultBehavior::StartTask( const Task_t *pTask )
 
 	case TASK_FACE_ASSAULT_POINT:
 		{
+			UpdateForceCrouch();
+
 			if( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
 			{
 				// If I can already fight when I arrive, don't bother running any facing code. Let
@@ -261,16 +384,7 @@ void CAI_AssaultBehavior::StartTask( const Task_t *pTask )
 		break;
 
 	case TASK_HIT_ASSAULT_POINT:
-		GetOuter()->SpeakSentence( ASSAULT_SENTENCE_HIT_ASSAULT_POINT );
-		m_bHitAssaultPoint = true;
-		m_hAssaultPoint->m_OnArrival.FireOutput( GetOuter(), m_hAssaultPoint, 0 );
-
-		// Set the assault hint group
-		if( m_hAssaultPoint->m_AssaultHintGroup != NULL_STRING )
-		{
-			SetHintGroup( m_hAssaultPoint->m_AssaultHintGroup );
-		}
-
+		OnHitAssaultPoint();
 		TaskComplete();
 		break;
 
@@ -292,13 +406,14 @@ void CAI_AssaultBehavior::StartTask( const Task_t *pTask )
 		}
 		else
 		{
-			// The cue hasn't been given yet, so set to the rally sequence, if any.
-			if( m_hRallyPoint->m_RallySequenceName != NULL_STRING )
+			// Don't do anything if we've been told to crouch
+			if ( IsForcingCrouch() )
+				break;
+
+			else if( m_hRallyPoint->m_RallySequenceName != NULL_STRING )
 			{
-				int sequence;
-
-				sequence = GetOuter()->LookupSequence( STRING( m_hRallyPoint->m_RallySequenceName ) );
-
+				// The cue hasn't been given yet, so set to the rally sequence.
+				int sequence = GetOuter()->LookupSequence( STRING( m_hRallyPoint->m_RallySequenceName ) );
 				if( sequence != -1 )
 				{
 					GetOuter()->ResetSequence( sequence );
@@ -333,13 +448,16 @@ void CAI_AssaultBehavior::RunTask( const Task_t *pTask )
 	{
 	case TASK_WAIT_ASSAULT_DELAY:
 	case TASK_AWAIT_ASSAULT_TIMEOUT:
-		// If we're on an assault that should clear on contact, clear if we see an enemy
-		if ( m_hAssaultPoint && m_hAssaultPoint->m_bClearOnContact && HasCondition( COND_SEE_ENEMY ) )
+		if ( m_hAssaultPoint )
 		{
-			TaskComplete();
+			if ( m_hAssaultPoint->m_bInputForcedClear || (m_hAssaultPoint->m_bClearOnContact && HasCondition( COND_SEE_ENEMY )) )
+			{
+				// If we're on an assault that should clear on contact, clear when we see an enemy
+				TaskComplete();
+			}
 		}
 
-		if( GetOuter()->IsWaitFinished() )
+		if( GetOuter()->IsWaitFinished() && ( pTask->iTask == TASK_WAIT_ASSAULT_DELAY || !m_hAssaultPoint->m_bNeverTimeout ) )
 		{
 			TaskComplete();
 		}
@@ -373,6 +491,10 @@ void CAI_AssaultBehavior::RunTask( const Task_t *pTask )
 		{
 			TaskComplete();
 		}
+
+		if ( IsForcingCrouch() )
+			break;
+
 		if( GetOuter()->GetEnemy() && m_hRallyPoint->m_RallySequenceName == NULL_STRING )
 		{
 			// I have an enemy and I'm NOT playing a custom animation.
@@ -395,9 +517,9 @@ void CAI_AssaultBehavior::RunTask( const Task_t *pTask )
 			}
 		}
 
-		// If we're on an assault that should clear on contact, clear if we see an enemy
-		if ( m_hAssaultPoint && m_hAssaultPoint->m_bClearOnContact && HasCondition( COND_SEE_ENEMY ) )
+		if ( m_hAssaultPoint && (m_hAssaultPoint->m_bInputForcedClear || (m_hAssaultPoint->m_bClearOnContact && HasCondition( COND_SEE_ENEMY ))) )
 		{
+			DevMsg( "Assault Cleared due to Contact or Input!\n" );
 			ClearAssaultPoint();
 			TaskComplete();
 			return;
@@ -469,10 +591,74 @@ bool CAI_AssaultBehavior::IsValidShootPosition( const Vector &vLocation, CAI_Nod
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+float CAI_AssaultBehavior::GetMaxTacticalLateralMovement( void )
+{
+	return CUE_POINT_TOLERANCE - 0.1;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void CAI_AssaultBehavior::UpdateOnRemove()
 {
 	if( m_hRallyPoint && m_hRallyPoint->IsLocked() )
 		m_hRallyPoint->Unlock( GetOuter() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::OnStrictAssault( void )
+{ 
+	return (m_hAssaultPoint && m_hAssaultPoint->m_iStrictness); 
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::UpdateForceCrouch( void )
+{
+	if ( IsForcingCrouch() )
+	{
+		// Only force crouch when we're near the point we're supposed to crouch at
+		float flDistanceToTargetSqr = GetOuter()->GetAbsOrigin().DistToSqr( AssaultHasBegun() ? m_hAssaultPoint->GetAbsOrigin() : m_hRallyPoint->GetAbsOrigin() );
+		if ( flDistanceToTargetSqr < (64*64) )
+		{
+			GetOuter()->ForceCrouch();
+		}
+		else
+		{
+			GetOuter()->ClearForceCrouch();
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::IsForcingCrouch( void )
+{
+	if ( AssaultHasBegun() )
+		return (m_hAssaultPoint && m_hAssaultPoint->m_bForceCrouch);
+
+	return (m_hRallyPoint && m_hRallyPoint->m_bForceCrouch);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::IsUrgent( void )
+{
+	if ( AssaultHasBegun() )
+		return (m_hAssaultPoint && m_hAssaultPoint->m_bIsUrgent);
+
+	return (m_hRallyPoint && m_hRallyPoint->m_bIsUrgent);
 }
 
 //-----------------------------------------------------------------------------
@@ -520,47 +706,81 @@ void CAI_AssaultBehavior::SetParameters( CBaseEntity *pRallyEnt, AssaultCue_t as
 // Input  : rallypointname - 
 //			assaultcue - 
 //-----------------------------------------------------------------------------
-void CAI_AssaultBehavior::SetParameters( string_t rallypointname, AssaultCue_t assaultcue )
+void CAI_AssaultBehavior::SetParameters( string_t rallypointname, AssaultCue_t assaultcue, int rallySelectMethod )
 {
 	VPROF_BUDGET( "CAI_AssaultBehavior::SetParameters", VPROF_BUDGETGROUP_NPCS );
 
 	// Firstly, find a rally point. 
-	CRallyPoint *pRallyEnt = dynamic_cast<CRallyPoint *>(gEntList.FindEntityByName( NULL, rallypointname, NULL ) );
+	CRallyPoint *pRallyEnt = dynamic_cast<CRallyPoint *>(gEntList.FindEntityByName( NULL, rallypointname ) );
 
 	CRallyPoint *pBest = NULL;
 	int iBestPriority = -1;
 
-	while( pRallyEnt )
+	switch( rallySelectMethod )
 	{
-		if( !pRallyEnt->IsLocked() )
+	case RALLY_POINT_SELECT_DEFAULT:
 		{
-			// Consider this point.
-			if( pRallyEnt->m_iPriority > iBestPriority )
+			while( pRallyEnt )
 			{
-				// This point is higher priority. I must take it.
-				pBest = pRallyEnt;
-				iBestPriority = pRallyEnt->m_iPriority;
-			}
-			else if ( pRallyEnt->m_iPriority == iBestPriority )
-			{
-				// This point is the same priority as my current best. 
-				// I must take it if it is closer.
-				Vector vecStart = GetOuter()->GetAbsOrigin();
-
-				float flNewDist, flBestDist;
-			
-				flNewDist = ( pRallyEnt->GetAbsOrigin() - vecStart ).LengthSqr();
-				flBestDist = ( pBest->GetAbsOrigin() - vecStart ).LengthSqr();
-
-				if( flNewDist < flBestDist )
+				if( !pRallyEnt->IsLocked() )
 				{
-					// Priority is already identical. Just take this point.
-					pBest = pRallyEnt;
+					// Consider this point.
+					if( pRallyEnt->m_iPriority > iBestPriority )
+					{
+						// This point is higher priority. I must take it.
+						pBest = pRallyEnt;
+						iBestPriority = pRallyEnt->m_iPriority;
+					}
+					else if ( pRallyEnt->m_iPriority == iBestPriority )
+					{
+						// This point is the same priority as my current best. 
+						// I must take it if it is closer.
+						Vector vecStart = GetOuter()->GetAbsOrigin();
+
+						float flNewDist, flBestDist;
+
+						flNewDist = ( pRallyEnt->GetAbsOrigin() - vecStart ).LengthSqr();
+						flBestDist = ( pBest->GetAbsOrigin() - vecStart ).LengthSqr();
+
+						if( flNewDist < flBestDist )
+						{
+							// Priority is already identical. Just take this point.
+							pBest = pRallyEnt;
+						}
+					}
 				}
+
+				pRallyEnt = dynamic_cast<CRallyPoint *>(gEntList.FindEntityByName( pRallyEnt, rallypointname, NULL ) );
 			}
 		}
+		break;
 
-		pRallyEnt = dynamic_cast<CRallyPoint *>(gEntList.FindEntityByName( pRallyEnt, rallypointname, NULL ) );
+	case RALLY_POINT_SELECT_RANDOM:
+		{
+			// Gather all available points into a utilvector, then pick one at random.
+			
+			CUtlVector<CRallyPoint *> rallyPoints; // List of rally points that are available to choose from.
+
+			while( pRallyEnt )
+			{
+				if( !pRallyEnt->IsLocked() )
+				{
+					rallyPoints.AddToTail( pRallyEnt );
+				}
+
+				pRallyEnt = dynamic_cast<CRallyPoint *>(gEntList.FindEntityByName( pRallyEnt, rallypointname ) );
+			}
+
+			if( rallyPoints.Count() > 0 )
+			{
+				pBest = rallyPoints[ random->RandomInt(0, rallyPoints.Count()- 1) ];
+			}
+		}
+		break;
+
+	default:
+		DevMsg( "ERROR: INVALID RALLY POINT SELECTION METHOD. Assault will not function.\n");
+		break;
 	}
 
 	if( !pBest )
@@ -607,7 +827,7 @@ void CAI_AssaultBehavior::InitializeBehavior()
 	// Also reset the status of externally received assault cues
 	m_ReceivedAssaultCue = CUE_NO_ASSAULT;
 
-	CAssaultPoint *pAssaultEnt = (CAssaultPoint *)gEntList.FindEntityByName( NULL, m_hRallyPoint->m_AssaultPointName, NULL );
+	CAssaultPoint *pAssaultEnt = (CAssaultPoint *)gEntList.FindEntityByName( NULL, m_hRallyPoint->m_AssaultPointName );
 	if( pAssaultEnt )
 	{
 		m_hAssaultPoint = pAssaultEnt;
@@ -673,6 +893,20 @@ bool CAI_AssaultBehavior::PollAssaultCue( void )
 }
 
 //-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void CAI_AssaultBehavior::OnRestore()
+{
+	if ( !m_hAssaultPoint || !m_hRallyPoint )
+	{
+		Disable();
+		NotifyChangeBehaviorStatus();
+	}
+
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
@@ -706,24 +940,18 @@ bool CAI_AssaultBehavior::CanSelectSchedule()
 
 	// If we've seen an enemy in the last few seconds, and we're allowed to divert,
 	// let the base AI decide what I should do.
-	if ( m_hAssaultPoint && m_hAssaultPoint->m_bAllowDiversion )
+	if ( IsAllowedToDivert() )
 	{
-		if ( m_flLastSawAnEnemyAt && ((gpGlobals->curtime - m_flLastSawAnEnemyAt) < ASSAULT_DIVERSION_TIME) )
-		{
-			// Return true, but remember that we're actually allowing them to divert
-			// This is done because we don't want the assault behaviour to think it's finished with the assault.
-			m_bDiverting = true;
-		}
-		else
-		{
-			// If we were diverting, provoke us to make a new schedule selection
-			if ( m_bDiverting )
-			{
-				SetCondition( COND_PROVOKED );
-			}
+		// Return true, but remember that we're actually allowing them to divert
+		// This is done because we don't want the assault behaviour to think it's finished with the assault.
+		m_bDiverting = true;
+	}
+	else if ( m_bDiverting )
+	{
+		// If we were diverting, provoke us to make a new schedule selection
+		SetCondition( COND_PROVOKED );
 
-			m_bDiverting = false;
-		}
+		m_bDiverting = false;
 	}
 
 	// If we're diverting, let the base AI decide everything
@@ -752,6 +980,8 @@ void CAI_AssaultBehavior::EndScheduleSelection()
 	{
 		m_hRallyPoint->Unlock( GetOuter() );
 	}
+
+	GetOuter()->ClearForceCrouch();
 }
 
 //-----------------------------------------------------------------------------
@@ -823,6 +1053,22 @@ void CAI_AssaultBehavior::ClearSchedule()
 	GetOuter()->ClearSchedule();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_AssaultBehavior::IsAllowedToDivert( void )
+{
+	if ( m_hAssaultPoint && m_hAssaultPoint->m_bAllowDiversion )
+	{
+		if ( m_hAssaultPoint->m_flAllowDiversionRadius == 0.0f || (m_bHitAssaultPoint && GetEnemy() != NULL && GetEnemy()->GetAbsOrigin().DistToSqr(m_hAssaultPoint->GetAbsOrigin()) <= Square(m_hAssaultPoint->m_flAllowDiversionRadius)) ) 
+		{
+			if ( m_flLastSawAnEnemyAt && ((gpGlobals->curtime - m_flLastSawAnEnemyAt) < ASSAULT_DIVERSION_TIME) )
+				return true;
+		}
+	}
+
+	return false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -832,11 +1078,11 @@ void CAI_AssaultBehavior::BuildScheduleTestBits()
 	BaseClass::BuildScheduleTestBits();
 
 	// If we're allowed to divert, add the appropriate interrupts to our movement schedules
-	if ( m_hAssaultPoint && m_hAssaultPoint->m_bAllowDiversion )
+	if ( IsAllowedToDivert() )
 	{
 		if ( IsCurSchedule( SCHED_MOVE_TO_ASSAULT_POINT ) ||
-			 IsCurSchedule( SCHED_MOVE_TO_RALLY_POINT ) || 
-			 IsCurSchedule( SCHED_HOLD_RALLY_POINT ) )
+			IsCurSchedule( SCHED_MOVE_TO_RALLY_POINT ) || 
+			IsCurSchedule( SCHED_HOLD_RALLY_POINT ) )
 		{
 			GetOuter()->SetCustomInterruptCondition( COND_NEW_ENEMY );
 			GetOuter()->SetCustomInterruptCondition( COND_SEE_ENEMY );
@@ -850,26 +1096,21 @@ void CAI_AssaultBehavior::BuildScheduleTestBits()
 //-----------------------------------------------------------------------------
 int CAI_AssaultBehavior::SelectSchedule()
 {
-	if( HasCondition( COND_PLAYER_PUSHING ) )
+	if ( !OnStrictAssault() )
 	{
-		return SCHED_ASSAULT_MOVE_AWAY; 
-	}
+		if( HasCondition( COND_PLAYER_PUSHING ) )
+			return SCHED_ASSAULT_MOVE_AWAY; 
 
-	if( HasCondition( COND_HEAR_DANGER ) )
-	{
-		return SCHED_TAKE_COVER_FROM_BEST_SOUND;
+		if( HasCondition( COND_HEAR_DANGER ) )
+			return SCHED_TAKE_COVER_FROM_BEST_SOUND;
 	}
 
 	if( HasCondition( COND_CAN_MELEE_ATTACK1 ) )
-	{
 		return SCHED_MELEE_ATTACK1;
-	}
 
 	// If you're empty, reload before trying to carry out any assault functions.
 	if( HasCondition( COND_NO_PRIMARY_AMMO ) )
-	{
 		return SCHED_RELOAD;
-	}
 
 	if( m_bHitRallyPoint && !m_bHitAssaultPoint && !AssaultHasBegun() )
 	{
@@ -909,12 +1150,19 @@ int CAI_AssaultBehavior::SelectSchedule()
 
 	if( !m_bHitAssaultPoint )
 	{
-		if( m_ReceivedAssaultCue == m_AssaultCue || m_ReceivedAssaultCue == CUE_COMMANDER )
+		if( m_ReceivedAssaultCue == m_AssaultCue || m_ReceivedAssaultCue == CUE_COMMANDER || m_AssaultCue == CUE_DONT_WAIT )
 		{
 			GetOuter()->SpeakSentence( ASSAULT_SENTENCE_SQUAD_ADVANCE_TO_ASSAULT );
 
-			if( m_hRallyPoint )
+			if ( m_hRallyPoint )
+			{
 				m_hRallyPoint->Unlock( GetOuter() );// Here we go! Free up the rally point since I'm moving to assault.
+			}
+
+			if ( !UpdateForceCrouch() )
+			{
+				GetOuter()->ClearForceCrouch();
+			}
 
 			return SCHED_MOVE_TO_ASSAULT_POINT;
 		}
@@ -932,12 +1180,13 @@ int CAI_AssaultBehavior::SelectSchedule()
 			GetOuter()->SpeakSentence( ASSAULT_SENTENCE_UNDER_ATTACK );
 			return SCHED_ALERT_FACE;
 		}
-		else if( GetOuter()->GetEnemy() && (!HasCondition( COND_CAN_RANGE_ATTACK1 )) && !(HasCondition( COND_CAN_RANGE_ATTACK2)) )
+		else if( GetOuter()->GetEnemy() && !HasCondition( COND_CAN_RANGE_ATTACK1 ) && !HasCondition( COND_CAN_RANGE_ATTACK2) && !HasCondition(COND_ENEMY_OCCLUDED) )
 		{
 			return SCHED_COMBAT_FACE;
 		}
 		else
 		{
+			UpdateForceCrouch();
 			return SCHED_HOLD_RALLY_POINT;
 		}
 	}
@@ -953,12 +1202,25 @@ int CAI_AssaultBehavior::SelectSchedule()
 		return SCHED_CLEAR_ASSAULT_POINT;
 	}
 
-	if( !GetEnemy() || !HasCondition( COND_SEE_ENEMY ) )
+	if ( !GetEnemy() && !GetOuter()->HasConditionsToInterruptSchedule( SCHED_WAIT_AND_CLEAR ) )
 	{
 		// Don't have an enemy. Just keep an eye on things.
 		return SCHED_WAIT_AND_CLEAR;
 	}
 
+	if ( OnStrictAssault() )
+	{
+		// Don't allow the base class to select a schedule cause it will probably move the NPC.
+		if( !HasCondition(COND_CAN_RANGE_ATTACK1)	&&
+			!HasCondition(COND_CAN_RANGE_ATTACK2)	&&
+			!HasCondition(COND_CAN_MELEE_ATTACK1)	&&
+			!HasCondition(COND_CAN_MELEE_ATTACK2)	&&
+			!HasCondition(COND_TOO_CLOSE_TO_ATTACK) )
+		{
+			return SCHED_WAIT_AND_CLEAR;
+		}
+	}
+	
 	return BaseClass::SelectSchedule();
 }
 
@@ -979,6 +1241,7 @@ class CAI_AssaultGoal : public CAI_GoalEntity
 
 	string_t		m_RallyPoint;
 	int				m_AssaultCue;
+	int				m_RallySelectMethod;
 
 	void InputBeginAssault( inputdata_t &inputdata );
 
@@ -988,6 +1251,7 @@ class CAI_AssaultGoal : public CAI_GoalEntity
 BEGIN_DATADESC( CAI_AssaultGoal )
 	DEFINE_KEYFIELD( m_RallyPoint, FIELD_STRING, "rallypoint" ),
 	DEFINE_KEYFIELD( m_AssaultCue, FIELD_INTEGER, "AssaultCue" ),
+	DEFINE_KEYFIELD( m_RallySelectMethod, FIELD_INTEGER, "RallySelectMethod" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "BeginAssault", InputBeginAssault ),
 END_DATADESC();
@@ -1009,7 +1273,7 @@ void CAI_AssaultGoal::EnableGoal( CAI_BaseNPC *pAI )
 		return;
 	}
 
-	pBehavior->SetParameters( m_RallyPoint, (AssaultCue_t)m_AssaultCue );
+	pBehavior->SetParameters( m_RallyPoint, (AssaultCue_t)m_AssaultCue, m_RallySelectMethod );
 
 	// Duplicate the output
 }
@@ -1096,6 +1360,7 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		"		COND_HEAR_DANGER"
 		"		COND_PROVOKED"
 		"		COND_NO_PRIMARY_AMMO"
+		"		COND_PLAYER_PUSHING"
 	)
 
 	//=========================================================
@@ -1125,6 +1390,8 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		"		COND_CAN_MELEE_ATTACK1"
 	)
 
+
+#ifdef HL2_EPISODIC
 	//=========================================================
 	//=========================================================
 	DEFINE_SCHEDULE 
@@ -1132,11 +1399,12 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		SCHED_HOLD_RALLY_POINT,
 
 		"	Tasks"
+		"		TASK_FACE_RALLY_POINT					0"
 		"		TASK_AWAIT_CUE							0"
 		"		TASK_WAIT_ASSAULT_DELAY					0"
 		"	"
 		"	Interrupts"
-		"		COND_NEW_ENEMY"
+		//"		COND_NEW_ENEMY"
 		"		COND_CAN_RANGE_ATTACK1"
 		"		COND_CAN_MELEE_ATTACK1"
 		"		COND_LIGHT_DAMAGE"
@@ -1146,6 +1414,30 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		"		COND_HEAR_BULLET_IMPACT"
 		"		COND_NO_PRIMARY_AMMO"
 	)
+#else
+	//=========================================================
+	//=========================================================
+	DEFINE_SCHEDULE 
+	(
+	SCHED_HOLD_RALLY_POINT,
+
+	"	Tasks"
+	"		TASK_FACE_RALLY_POINT					0"
+	"		TASK_AWAIT_CUE							0"
+	"		TASK_WAIT_ASSAULT_DELAY					0"
+	"	"
+	"	Interrupts"
+	"		COND_CAN_RANGE_ATTACK1"
+	"		COND_CAN_MELEE_ATTACK1"
+	"		COND_LIGHT_DAMAGE"
+	"		COND_HEAVY_DAMAGE"
+	"		COND_PLAYER_PUSHING"
+	"		COND_HEAR_DANGER"
+	"		COND_HEAR_BULLET_IMPACT"
+	"		COND_NO_PRIMARY_AMMO"
+	"		COND_TOO_CLOSE_TO_ATTACK"
+	)
+#endif//HL2_EPISODIC
 
 	//=========================================================
 	//=========================================================
@@ -1205,12 +1497,16 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER(CAI_AssaultBehavior)
 		"	"
 		"	Interrupts"
 		"		COND_NEW_ENEMY"
+		"		COND_LIGHT_DAMAGE"
+		"		COND_HEAVY_DAMAGE"
 		"		COND_CAN_RANGE_ATTACK1"
 		"		COND_CAN_MELEE_ATTACK1"
 		"		COND_CAN_RANGE_ATTACK2"
 		"		COND_CAN_MELEE_ATTACK2"
 		"		COND_HEAR_DANGER"
 		"		COND_HEAR_BULLET_IMPACT"
+		"		COND_TOO_CLOSE_TO_ATTACK"
+		"		COND_PLAYER_PUSHING"
 	)
 
 	//=========================================================

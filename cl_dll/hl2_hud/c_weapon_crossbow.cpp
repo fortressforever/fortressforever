@@ -9,12 +9,11 @@
 #include "ClientEffectPrecacheSystem.h"
 #include "fx.h"
 #include "c_te_effect_dispatch.h"
+#include "beamdraw.h"
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectCrossbow )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash1" )
 CLIENTEFFECT_REGISTER_END()
-
-extern void DrawHalo( IMaterial* pMaterial, const Vector &source, float scale, float const *color );
 
 //
 // Crossbow bolt
@@ -142,16 +141,15 @@ void C_CrossbowBolt::ClientThink( void )
 //-----------------------------------------------------------------------------
 void CrosshairLoadCallback( const CEffectData &data )
 {
-	C_BaseEntity *pEnt = ClientEntityList().GetEnt( data.m_nEntIndex );
-	
-	if ( !pEnt )
+	IClientRenderable *pRenderable = data.GetRenderable( );
+	if ( !pRenderable )
 		return;
 	
 	Vector	position;
 	QAngle	angles;
 
 	// If we found the attachment, emit sparks there
-	if ( pEnt->GetAttachment( data.m_nAttachmentIndex, position, angles ) )
+	if ( pRenderable->GetAttachment( data.m_nAttachmentIndex, position, angles ) )
 	{
 		FX_ElectricSpark( position, 1.0f, 1.0f, NULL );
 	}

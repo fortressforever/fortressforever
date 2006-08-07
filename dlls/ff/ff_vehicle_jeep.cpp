@@ -119,13 +119,14 @@ public:
 	void			Think(void);
 	void			Precache( void );
 	void			Spawn( void ); 
+	void			OnRestore( void );
 
 	virtual void	CreateServerVehicle( void );
 	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
 	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 	virtual void	EnterVehicle( CBasePlayer *pPlayer );
-	virtual void	ExitVehicle( int iRole );
+	virtual void	ExitVehicle( int nRole );
 
 	void			AimGunAt( Vector *endPos, float flInterval );
 	bool			TauCannonHasBeenCutOff( void ) { return m_bGunHasBeenCutOff; }
@@ -1476,11 +1477,11 @@ void CPropJeep::EnterVehicle( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropJeep::ExitVehicle( int iRole )
+void CPropJeep::ExitVehicle( int nRole )
 {
 	HeadlightTurnOff();
 
-	BaseClass::ExitVehicle(iRole);
+	BaseClass::ExitVehicle( nRole );
 
 	//If the player has exited, stop charging
 	StopChargeSound();
@@ -1513,6 +1514,19 @@ void CPropJeep::InputFinishRemoveTauCannon( inputdata_t &inputdata )
 	// Remove & hide the gun
 	SetBodygroup( 1, false );
 	m_bHasGun = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropJeep::OnRestore( void )
+{
+	IServerVehicle *pServerVehicle = GetServerVehicle();
+	if ( pServerVehicle != NULL )
+	{
+		// Restore the passenger information we're holding on to
+		pServerVehicle->RestorePassengerInfo();
+	}
 }
 
 //========================================================================================================================================

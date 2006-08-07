@@ -4,6 +4,7 @@
 //
 // $NoKeywords: $
 //
+// Serialization/unserialization buffer
 //=============================================================================//
 
 #ifndef UTLHASH_H
@@ -18,14 +19,13 @@
 
 typedef unsigned int UtlHashHandle_t;
 
-template<class Data>
+template<class Data, typename C = bool (*)( Data const&, Data const& ), typename K = unsigned int (*)( Data const& ) >
 class CUtlHash
 {
 public:
-
 	// compare and key functions - implemented by the 
-	typedef bool (*CompareFunc_t)( Data const&, Data const& );
-	typedef unsigned int (*KeyFunc_t)( Data const& );
+	typedef C CompareFunc_t;
+	typedef K KeyFunc_t;
 	
 	// constructor/deconstructor
 	CUtlHash( int bucketCount = 0, int growCount = 0, int initCount = 0,
@@ -44,11 +44,12 @@ public:
 
 	// insertion methods
 	UtlHashHandle_t Insert( Data const &src );
+	UtlHashHandle_t Insert( Data const &src, bool *pDidInsert );
 	UtlHashHandle_t AllocEntryFromKey( Data const &src );
 
 	// removal methods
 	void Remove( UtlHashHandle_t handle );
-	void RemoveAll( void );
+	void RemoveAll();
 
 	// retrieval methods
 	UtlHashHandle_t Find( Data const &src );
@@ -58,6 +59,9 @@ public:
 	Data &operator[]( UtlHashHandle_t handle );
 	Data const &operator[]( UtlHashHandle_t handle ) const;
 
+	UtlHashHandle_t GetFirstHandle() const;
+	UtlHashHandle_t GetNextHandle( UtlHashHandle_t h ) const;
+
 	// debugging!!
 	void Log( const char *filename );
 
@@ -65,7 +69,9 @@ protected:
 
 	int GetBucketIndex( UtlHashHandle_t handle ) const;
 	int GetKeyDataIndex( UtlHashHandle_t handle ) const;
-	UtlHashHandle_t BuildHandle( int ndxBucket, int ndxKeyData );
+	UtlHashHandle_t BuildHandle( int ndxBucket, int ndxKeyData ) const;
+
+	bool DoFind( Data const &src, unsigned int *pBucket, int *pIndex );
 
 protected:
 
@@ -84,8 +90,8 @@ protected:
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-CUtlHash<Data>::CUtlHash( int bucketCount, int growCount, int initCount,
+template<class Data, typename C, typename K>
+CUtlHash<Data, C, K>::CUtlHash( int bucketCount, int growCount, int initCount,
 						  CompareFunc_t compareFunc, KeyFunc_t keyFunc ) :
 	m_CompareFunc( compareFunc ),
 	m_KeyFunc( keyFunc )
@@ -106,8 +112,8 @@ CUtlHash<Data>::CUtlHash( int bucketCount, int growCount, int initCount,
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-CUtlHash<Data>::~CUtlHash()
+template<class Data, typename C, typename K>
+CUtlHash<Data, C, K>::~CUtlHash()
 {
 	Purge();
 }
@@ -115,8 +121,8 @@ CUtlHash<Data>::~CUtlHash()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline bool CUtlHash<Data>::IsValidHandle( UtlHashHandle_t handle ) const
+template<class Data, typename C, typename K>
+inline bool CUtlHash<Data, C, K>::IsValidHandle( UtlHashHandle_t handle ) const
 {
 	int ndxBucket = GetBucketIndex( handle );
 	int ndxKeyData = GetKeyDataIndex( handle );
@@ -132,8 +138,8 @@ inline bool CUtlHash<Data>::IsValidHandle( UtlHashHandle_t handle ) const
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline int CUtlHash<Data>::Count( void )
+template<class Data, typename C, typename K>
+inline int CUtlHash<Data, C, K>::Count( void )
 {
 	int count = 0;
 
@@ -149,8 +155,8 @@ inline int CUtlHash<Data>::Count( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline int CUtlHash<Data>::GetBucketIndex( UtlHashHandle_t handle ) const
+template<class Data, typename C, typename K>
+inline int CUtlHash<Data, C, K>::GetBucketIndex( UtlHashHandle_t handle ) const
 {
 	return ( ( ( handle >> 16 ) & 0x0000ffff ) );
 }
@@ -158,8 +164,8 @@ inline int CUtlHash<Data>::GetBucketIndex( UtlHashHandle_t handle ) const
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline int CUtlHash<Data>::GetKeyDataIndex( UtlHashHandle_t handle ) const
+template<class Data, typename C, typename K>
+inline int CUtlHash<Data, C, K>::GetKeyDataIndex( UtlHashHandle_t handle ) const
 {
 	return ( handle & 0x0000ffff );
 }
@@ -167,8 +173,8 @@ inline int CUtlHash<Data>::GetKeyDataIndex( UtlHashHandle_t handle ) const
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline UtlHashHandle_t CUtlHash<Data>::BuildHandle( int ndxBucket, int ndxKeyData )
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::BuildHandle( int ndxBucket, int ndxKeyData ) const
 {
 	assert( ( ndxBucket >= 0 ) && ( ndxBucket < 65536 ) );
 	assert( ( ndxKeyData >= 0 ) && ( ndxKeyData < 65536 ) );
@@ -182,92 +188,131 @@ inline UtlHashHandle_t CUtlHash<Data>::BuildHandle( int ndxBucket, int ndxKeyDat
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline void CUtlHash<Data>::Purge( void )
+template<class Data, typename C, typename K>
+inline void CUtlHash<Data, C, K>::Purge( void )
 {
 	int bucketCount = m_Buckets.Count();
 	for( int ndxBucket = 0; ndxBucket < bucketCount; ndxBucket++ )
 	{
 		m_Buckets[ndxBucket].Purge();
 	}
-
-	m_Buckets.Purge();
-
-	m_CompareFunc = 0;
-	m_KeyFunc = 0;
 }
 
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline UtlHashHandle_t CUtlHash<Data>::Insert( Data const &src )
+template<class Data, typename C, typename K>
+inline bool CUtlHash<Data, C, K>::DoFind( Data const &src, unsigned int *pBucket, int *pIndex )
 {
-	// check to see if that "key" already exists in the "bucket"
-	// as "keys" are unique
-	UtlHashHandle_t handle = Find( src );
-	if( handle != InvalidHandle() )
-		return handle;
-
 	// generate the data "key"
 	unsigned int key = m_KeyFunc( src );
 
 	// hash the "key" - get the correct hash table "bucket"
-	int bucketCount = m_Buckets.Count();
 	unsigned int ndxBucket;
 	if( m_bPowerOfTwo )
 	{
-		ndxBucket = ( key & m_ModMask );
+		*pBucket = ndxBucket = ( key & m_ModMask );
 	}
 	else
 	{
-		ndxBucket = key % bucketCount;
+		int bucketCount = m_Buckets.Count();
+		*pBucket = ndxBucket = key % bucketCount;
 	}
 
-	// add the key/data pair to the "bucket"
-	int	ndx = m_Buckets[ndxBucket].AddToTail( src );
+	int ndxKeyData;
+	CUtlVector<Data> &bucket = m_Buckets[ndxBucket];
+	int keyDataCount = bucket.Count();
+	for( ndxKeyData = 0; ndxKeyData < keyDataCount; ndxKeyData++ )
+	{
+		if( m_CompareFunc( bucket.Element( ndxKeyData ), src ) )
+			break;
+	}
 
-	return ( BuildHandle( ndxBucket, ndx ) );
+	if( ndxKeyData == keyDataCount )
+		return false;
+
+	*pIndex = ndxKeyData;
+	return true;
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline UtlHashHandle_t CUtlHash<Data>::AllocEntryFromKey( Data const &src )
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::Find( Data const &src )
 {
-	// check to see if that "key" already exists in the "bucket"
-	// as "keys" are unique
-	UtlHashHandle_t handle = Find( src );
-	if( handle != InvalidHandle() )
-		return handle;
-
-	// generate the data "key"
-	unsigned int key = m_KeyFunc( src );
-
-	// hash the "key" - get the correct hash table "bucket"
-	int bucketCount = m_Buckets.Count();
 	unsigned int ndxBucket;
-	if( m_bPowerOfTwo )
-	{
-		ndxBucket = ( key & m_ModMask );
-	}
-	else
-	{
-		ndxBucket = key % bucketCount;
-	}
+	int ndxKeyData;
 
-	// add the key/data pair to the "bucket"
-	int	ndx = m_Buckets[ndxBucket].AddToTail();
-
-	return ( BuildHandle( ndxBucket, ndx ) );
+	if ( DoFind( src, &ndxBucket, &ndxKeyData ) )
+	{
+		return ( BuildHandle( ndxBucket, ndxKeyData ) );
+	}
+	return ( InvalidHandle() );
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline void CUtlHash<Data>::Remove( UtlHashHandle_t handle )
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::Insert( Data const &src )
+{
+	unsigned int ndxBucket;
+	int ndxKeyData;
+
+	if ( DoFind( src, &ndxBucket, &ndxKeyData ) )
+	{
+		return ( BuildHandle( ndxBucket, ndxKeyData ) );
+	}
+
+	ndxKeyData = m_Buckets[ndxBucket].AddToTail( src );
+
+	return ( BuildHandle( ndxBucket, ndxKeyData ) );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::Insert( Data const &src, bool *pDidInsert )
+{
+	unsigned int ndxBucket;
+	int ndxKeyData;
+
+	if ( DoFind( src, &ndxBucket, &ndxKeyData ) )
+	{
+		*pDidInsert = false;
+		return ( BuildHandle( ndxBucket, ndxKeyData ) );
+	}
+
+	*pDidInsert = true;
+	ndxKeyData = m_Buckets[ndxBucket].AddToTail( src );
+
+	return ( BuildHandle( ndxBucket, ndxKeyData ) );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::AllocEntryFromKey( Data const &src )
+{
+	unsigned int ndxBucket;
+	int ndxKeyData;
+
+	if ( DoFind( src, &ndxBucket, &ndxKeyData ) )
+	{
+		return ( BuildHandle( ndxBucket, ndxKeyData ) );
+	}
+
+	ndxKeyData = m_Buckets[ndxBucket].AddToTail();
+
+	return ( BuildHandle( ndxBucket, ndxKeyData ) );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline void CUtlHash<Data, C, K>::Remove( UtlHashHandle_t handle )
 {
 	assert( IsValidHandle( handle ) );
 
@@ -277,116 +322,102 @@ inline void CUtlHash<Data>::Remove( UtlHashHandle_t handle )
 
 	if( m_Buckets[ndxBucket].IsValidIndex( ndxKeyData ) )
 	{
-		m_Buckets[ndxBucket].Remove( ndxKeyData );
+		m_Buckets[ndxBucket].FastRemove( ndxKeyData );
 	}
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline void CUtlHash<Data>::RemoveAll( void )
+template<class Data, typename C, typename K>
+inline void CUtlHash<Data, C, K>::RemoveAll()
 {
 	int bucketCount = m_Buckets.Count();
 	for( int ndxBucket = 0; ndxBucket < bucketCount; ndxBucket++ )
 	{
 		m_Buckets[ndxBucket].RemoveAll();
 	}
-
-	m_Buckets.RemoveAll();
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline UtlHashHandle_t CUtlHash<Data>::Find( Data const &src )
+template<class Data, typename C, typename K>
+inline Data &CUtlHash<Data, C, K>::Element( UtlHashHandle_t handle )
 {
-	// sanity check(s)
-	assert( m_KeyFunc );
-	assert( m_CompareFunc );
+	int ndxBucket = GetBucketIndex( handle );
+	int ndxKeyData = GetKeyDataIndex( handle );
 
-	// generate the data "key"
-	unsigned int key = m_KeyFunc( src );
+	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
+}
 
-	// hash the "key" - get the correct hash table "bucket"
-	int bucketCount = m_Buckets.Count();
-	unsigned int ndxBucket;
-	if( m_bPowerOfTwo )
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline Data const &CUtlHash<Data, C, K>::Element( UtlHashHandle_t handle ) const
+{
+	int ndxBucket = GetBucketIndex( handle );
+	int ndxKeyData = GetKeyDataIndex( handle );
+
+	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline Data &CUtlHash<Data, C, K>::operator[]( UtlHashHandle_t handle )
+{
+	int ndxBucket = GetBucketIndex( handle );
+	int ndxKeyData = GetKeyDataIndex( handle );
+
+	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline Data const &CUtlHash<Data, C, K>::operator[]( UtlHashHandle_t handle ) const
+{
+	int ndxBucket = GetBucketIndex( handle );
+	int ndxKeyData = GetKeyDataIndex( handle );
+
+	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::GetFirstHandle() const
+{
+	return GetNextHandle( ( UtlHashHandle_t )-1 );
+}
+
+template<class Data, typename C, typename K>
+inline UtlHashHandle_t CUtlHash<Data, C, K>::GetNextHandle( UtlHashHandle_t handle ) const
+{
+	++handle; // start at the first possible handle after the one given
+
+	int bi = GetBucketIndex( handle );
+	int ki =  GetKeyDataIndex( handle );
+
+	int nBuckets = m_Buckets.Count();
+	for ( ; bi < nBuckets; ++bi )
 	{
-		ndxBucket = ( key & m_ModMask );
+		if ( ki < m_Buckets[ bi ].Count() )
+			return BuildHandle( bi, ki );
+
+		ki = 0;
 	}
-	else
-	{
-		ndxBucket = key % bucketCount;
-	}
 
-	int ndxKeyData;
-	int keyDataCount = m_Buckets[ndxBucket].Count();
-	for( ndxKeyData = 0; ndxKeyData < keyDataCount; ndxKeyData++ )
-	{
-		if( m_CompareFunc( m_Buckets[ndxBucket].Element( ndxKeyData ), src ) )
-			break;
-	}
-	
-	if( ndxKeyData == keyDataCount )
-		return ( InvalidHandle() );
-
-	return ( BuildHandle( ndxBucket, ndxKeyData ) );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-template<class Data>
-inline Data &CUtlHash<Data>::Element( UtlHashHandle_t handle )
-{
-	int ndxBucket = GetBucketIndex( handle );
-	int ndxKeyData = GetKeyDataIndex( handle );
-
-	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
+	return InvalidHandle();
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template<class Data>
-inline Data const &CUtlHash<Data>::Element( UtlHashHandle_t handle ) const
-{
-	int ndxBucket = GetBucketIndex( handle );
-	int ndxKeyData = GetKeyDataIndex( handle );
-
-	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-template<class Data>
-inline Data &CUtlHash<Data>::operator[]( UtlHashHandle_t handle )
-{
-	int ndxBucket = GetBucketIndex( handle );
-	int ndxKeyData = GetKeyDataIndex( handle );
-
-	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-template<class Data>
-inline Data const &CUtlHash<Data>::operator[]( UtlHashHandle_t handle ) const
-{
-	int ndxBucket = GetBucketIndex( handle );
-	int ndxKeyData = GetKeyDataIndex( handle );
-
-	return ( m_Buckets[ndxBucket].Element( ndxKeyData ) );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-template<class Data>
-inline void CUtlHash<Data>::Log( const char *filename )
+template<class Data, typename C, typename K>
+inline void CUtlHash<Data, C, K>::Log( const char *filename )
 {
 	FILE *pDebugFp;
 	pDebugFp = fopen( filename, "w" );
@@ -465,15 +496,19 @@ public:
 
 //protected:
 
-	struct HashFastData_t
+	// Templatized for memory tracking purposes
+	template <typename HashData>
+	struct HashFastData_t_
 	{
 		unsigned int	m_uiKey;
-		Data			m_Data;
+		HashData	m_Data;
 	};
 
-	unsigned int							m_uiBucketMask;	
-	CUtlVector<UtlHashFastHandle_t>			m_aBuckets;
-	CUtlFixedLinkedList<HashFastData_t>		m_aDataPool;
+	typedef HashFastData_t_<Data> HashFastData_t;
+
+	unsigned int						m_uiBucketMask;	
+	CUtlVector<UtlHashFastHandle_t>		m_aBuckets;
+	CUtlFixedLinkedList<HashFastData_t>	m_aDataPool;
 };
 
 //-----------------------------------------------------------------------------

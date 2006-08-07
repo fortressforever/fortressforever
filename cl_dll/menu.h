@@ -28,6 +28,7 @@ public:
 	void Reset( void );
 	virtual bool ShouldDraw( void );
 	void MsgFunc_ShowMenu( bf_read &msg );
+	void HideMenu( void );
 	void ShowMenu( const char * menuName, int keySlot );
 
 	bool IsMenuOpen( void );

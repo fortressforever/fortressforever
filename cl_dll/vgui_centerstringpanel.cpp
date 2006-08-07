@@ -21,15 +21,18 @@
 #include "tier0/memdbgon.h"
 
 
-
-static ConVar		scr_centertime( "scr_centertime","2" );
+#ifdef TF_CLIENT_DLL
+static ConVar		scr_centertime( "scr_centertime", "5" );
+#else
+static ConVar		scr_centertime( "scr_centertime", "2" );
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Implements Center String printing
 //-----------------------------------------------------------------------------
 class CCenterStringLabel : public vgui::Label
 {
-	typedef vgui::Label BaseClass;
+	DECLARE_CLASS_SIMPLE( CCenterStringLabel, vgui::Label );
 
 public:
 						CCenterStringLabel( vgui::VPANEL parent );
@@ -48,7 +51,12 @@ public:
 	virtual void		ColorPrint( int r, int g, int b, int a, wchar_t *text );
 	virtual void		Clear( void );
 
+protected:
+	MESSAGE_FUNC_INT_INT( OnScreenSizeChanged, "OnScreenSizeChanged", oldwide, oldtall );
+
 private:
+	void ComputeSize( void );
+
 	vgui::HFont			m_hFont;
 
 	float				m_flCentertimeOff;
@@ -61,10 +69,8 @@ private:
 CCenterStringLabel::CCenterStringLabel( vgui::VPANEL parent ) : 
 	BaseClass( NULL, "CCenterStringLabel", " " )
 {
-	int iHeight = (int)(ScreenHeight() * 0.3);
 	SetParent( parent );
-	SetSize( ScreenWidth(), iHeight );
-	SetPos( 0, ( ScreenHeight() * 0.35 ) - ( iHeight / 2 ) );
+	ComputeSize();
 	SetVisible( false );
 	SetCursor( null );
 	SetKeyBoardInputEnabled( false );
@@ -88,6 +94,30 @@ CCenterStringLabel::~CCenterStringLabel( void )
 {
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Updates panel to handle the new screen size
+//-----------------------------------------------------------------------------
+void CCenterStringLabel::OnScreenSizeChanged(int iOldWide, int iOldTall)
+{
+	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
+	ComputeSize();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Computes panel's desired size and position
+//-----------------------------------------------------------------------------
+void CCenterStringLabel::ComputeSize( void )
+{
+	int w, h;
+	w = ScreenWidth();
+	h = ScreenHeight();
+
+	int iHeight = (int)(h * 0.3);
+
+	SetSize( w, iHeight );
+	SetPos( 0, ( h * 0.35 ) - ( iHeight / 2 ) );
+}
+
 void CCenterStringLabel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
@@ -96,6 +126,13 @@ void CCenterStringLabel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_hFont = pScheme->GetFont( "Trebuchet24" );
 	assert( m_hFont );
 	SetFont( m_hFont );
+
+	int w, h;
+	w = ScreenWidth();
+	h = ScreenHeight();
+	int iHeight = (int)(h * 0.3);
+	SetSize( w, iHeight );
+	SetPos( 0, ( h * 0.35 ) - ( iHeight / 2 ) );
 }
 
 //-----------------------------------------------------------------------------

@@ -94,6 +94,7 @@ private:
 	HFont _font;
 };
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( RadioButton, RadioButton );
 
 //-----------------------------------------------------------------------------
 // Purpose: Create a radio button.

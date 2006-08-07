@@ -22,6 +22,7 @@
 #define INVALID_STEAM_TICKET "Invalid STEAM UserID Ticket\n"
 #define INVALID_STEAM_LOGON "No Steam logon\n"
 #define INVALID_STEAM_VACBANSTATE "VAC banned from secure server\n"
+#define INVALID_STEAM_LOGGED_IN_ELSEWHERE "This Steam account is being used in another location\n"
 
 // This is the default, see shareddefs.h for mod-specific value, which can override this
 #define DEFAULT_TICK_INTERVAL	(0.015)				// 15 msec is the default
@@ -42,12 +43,12 @@
 
 // How many bits to use to encode an edict.
 #define	MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
-// Max # of edicts in a level (1024)
+// Max # of edicts in a level
 #define	MAX_EDICTS					(1<<MAX_EDICT_BITS)
 
 // How many bits to use to encode an server class index
 #define MAX_SERVER_CLASS_BITS		9
-// Max # of networkable server classes (512)
+// Max # of networkable server classes
 #define MAX_SERVER_CLASSES			(1<<MAX_SERVER_CLASS_BITS)
 
 #define SIGNED_GUID_LEN 32 // Hashed CD Key (32 hex alphabetic chars + 0 terminator )
@@ -125,7 +126,7 @@
 enum MoveType_t
 {
 	MOVETYPE_NONE		= 0,	// never moves
-	MOVETYPE_ISOMETRIC,			// For players -- in TF2 commander view, etc.
+	MOVETYPE_ISOMETRIC,			// For players
 	MOVETYPE_WALK,				// Player only - moving on the ground
 	MOVETYPE_STEP,				// gravity, special edge handling -- monsters use this
 	MOVETYPE_FLY,				// No gravity, but still collides with stuff
@@ -225,7 +226,9 @@ enum
 										// Otherwise, it sets up the parent's bones every frame to figure out where to place
 										// the aiment, which is inefficient because it'll setup the parent's bones even if
 										// the parent is not in the PVS.
-	EF_MAX_BITS = 8
+	EF_ITEM_BLINK			= 0x100,	// blink an item so that the user notices it.
+	EF_PARENT_ANIMATES		= 0x200,	// always assume that the parent entity is animating
+	EF_MAX_BITS = 10
 };
 
 #define EF_PARITY_BITS	3
@@ -248,7 +251,6 @@ enum
 
 // Break Model Defines
 
-#define BREAK_TYPEMASK	0x4F
 #define BREAK_GLASS		0x01
 #define BREAK_METAL		0x02
 #define BREAK_FLESH		0x04
@@ -257,7 +259,9 @@ enum
 #define BREAK_SMOKE		0x10
 #define BREAK_TRANS		0x20
 #define BREAK_CONCRETE	0x40
-#define BREAK_2			0x80
+
+// If this is set, then we share a lighting origin with the last non-slave breakable sent down to the client
+#define BREAK_SLAVE		0x80
 
 // Colliding temp entity sounds
 
@@ -332,8 +336,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_PLAYER,
 	COLLISION_GROUP_BREAKABLE_GLASS,
 	COLLISION_GROUP_VEHICLE,
-	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player, for
-										// TF2, this filters out other players and CBaseObjects
+	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player
+										
 	COLLISION_GROUP_NPC,			// Generic NPC group
 	COLLISION_GROUP_IN_VEHICLE,		// for any entity inside a vehicle
 	COLLISION_GROUP_WEAPON,			// for any weapons that need collision detection
@@ -344,6 +348,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_DISSOLVING,		// Things that are dissolving are in this group
 	COLLISION_GROUP_PUSHAWAY,		// Nonsolid on client and server, pushaway in player code
 
+	COLLISION_GROUP_NPC_ACTOR,		// Used so NPCs in scripts ignore the player.
+
 	COLLISION_GROUP_TRIGGERONLY,	// Stuff that can trigger but not actually be hit
 	COLLISION_GROUP_LASER,			// Can hit even the trigger only stuff
 
@@ -353,6 +359,10 @@ enum Collision_Group_t
 #include "basetypes.h"
 
 #define SOUND_NORMAL_CLIP_DIST	1000.0f
+
+// How many networked area portals do we allow?
+#define MAX_AREA_STATE_BYTES		32
+#define MAX_AREA_PORTAL_STATE_BYTES 24
 
 #endif
 

@@ -115,7 +115,7 @@ void ResetFilePlayerClassInfoDatabase( void )
 #endif
 }
 
-
+#ifndef _XBOX
 KeyValues* ReadEncryptedKVPlayerClassFile( IFileSystem *filesystem, const char *szFilenameWithoutExtension, const unsigned char *pICEKey )
 {
 	Assert( strchr( szFilenameWithoutExtension, '.' ) == NULL );
@@ -170,7 +170,7 @@ KeyValues* ReadEncryptedKVPlayerClassFile( IFileSystem *filesystem, const char *
 
 	return pKV;
 }
-
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Read data on weapon from script file

@@ -293,6 +293,11 @@ void CScratchPad3D::SetMapping(
 	AutoFlush();
 }
 
+bool CScratchPad3D::GetAutoFlush()
+{
+	return m_bAutoFlush;
+}
+
 void CScratchPad3D::SetAutoFlush( bool bAutoFlush )
 {
 	m_bAutoFlush = bAutoFlush;

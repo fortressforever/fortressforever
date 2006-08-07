@@ -260,7 +260,7 @@ int CWallHealth::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr),"Charge left: %i", m_iJuice );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -541,7 +541,7 @@ int CNewWallHealth::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr),"Charge left: %i", m_iJuice );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;

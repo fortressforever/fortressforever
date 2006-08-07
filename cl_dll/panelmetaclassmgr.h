@@ -33,7 +33,7 @@ namespace vgui
 //-----------------------------------------------------------------------------
 // Class factory interface for metaclasses
 //-----------------------------------------------------------------------------
-class IPanelFactory
+abstract_class IPanelFactory
 {
 public:
 	// Creation, destruction methods
@@ -46,7 +46,7 @@ public:
 // A metaclass is simply an association of panel implementation class with
 // various initialization data
 //-----------------------------------------------------------------------------
-class IPanelMetaClassMgr
+abstract_class IPanelMetaClassMgr
 {
 public:
 	// Call this to load up a file containing metaclass definitions

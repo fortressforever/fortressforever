@@ -20,16 +20,24 @@
 #include "ai_behavior_rappel.h"
 #include "ai_behavior_actbusy.h"
 #include "ai_sentence.h"
+#include "ai_baseactor.h"
 
+#ifdef HL2_EPISODIC
+#error("*** EPISODIC BUILD - You have included npc_combine.h instead of combine_episodic.h!")
+#endif//HL2_EPISODIC
+
+// Used when only what combine to react to what the spotlight sees
+#define SF_COMBINE_NO_LOOK	(1 << 16)
+#define SF_COMBINE_NO_GRENADEDROP ( 1 << 17 )
 
 //=========================================================
 //	>> CNPC_Combine
 //=========================================================
-class CNPC_Combine : public CAI_BaseHumanoid
+class CNPC_Combine : public CAI_BaseActor
 {
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
-	DECLARE_CLASS( CNPC_Combine, CAI_BaseHumanoid );
+	DECLARE_CLASS( CNPC_Combine, CAI_BaseActor );
 
 public:
 	CNPC_Combine();
@@ -38,6 +46,7 @@ public:
 	virtual bool	CreateComponents();
 
 	bool			CanThrowGrenade( const Vector &vecTarget );
+	bool			CheckCanThrowGrenade( const Vector &vecTarget );
 	virtual	bool	CanGrenadeEnemy( bool bUseFreeKnowledge = true );
 	virtual bool	CanAltFireEnemy( bool bUseFreeKnowledge );
 	int				GetGrenadeConditions( float flDot, float flDist );
@@ -50,7 +59,6 @@ public:
 
 
 	void SetActivity( Activity NewActivity );
-	bool IsCrouchedActivity( Activity activity );
 	NPC_STATE		SelectIdealState ( void );
 
 	// Input handlers.
@@ -60,6 +68,7 @@ public:
 	void InputStopPatrolling( inputdata_t &inputdata );
 	void InputAssault( inputdata_t &inputdata );
 	void InputHitByBugbait( inputdata_t &inputdata );
+	void InputThrowGrenadeAtTarget( inputdata_t &inputdata );
 
 	bool			UpdateEnemyMemory( CBaseEntity *pEnemy, const Vector &position, CBaseEntity *pInformer = NULL );
 
@@ -76,6 +85,7 @@ public:
 	void			HandleAnimEvent( animevent_t *pEvent );
 	Vector			Weapon_ShootPosition( );
 
+	bool			IsCrouchedActivity( Activity activity );
 	Vector			EyeOffset( Activity nActivity );
 	Vector			EyePosition( void );
 	Vector			BodyTarget( const Vector &posSrc, bool bNoisy = true );
@@ -105,8 +115,8 @@ public:
 	// -------------
 	// Sounds
 	// -------------
-	void			DeathSound( void );
-	void			PainSound( void );
+	void			DeathSound( const CTakeDamageInfo &info );
+	void			PainSound( const CTakeDamageInfo &info );
 	void			IdleSound( void );
 	void			AlertSound( void );
 	void			LostEnemySound( void );
@@ -164,6 +174,9 @@ private:
 		SCHED_COMBINE_PATROL_ENEMY,
 		SCHED_COMBINE_BURNING_STAND,
 		SCHED_COMBINE_AR2_ALTFIRE,
+		SCHED_COMBINE_FORCED_GRENADE_THROW,
+		SCHED_COMBINE_MOVE_TO_FORCED_GREN_LOS,
+		SCHED_COMBINE_FACE_IDEAL_YAW,
 		NEXT_SCHEDULE,
 	};
 
@@ -179,6 +192,7 @@ private:
 		TASK_COMBINE_CHASE_ENEMY_CONTINUOUSLY,
 		TASK_COMBINE_DIE_INSTANTLY,
 		TASK_COMBINE_PLAY_SEQUENCE_FACE_ALTFIRE_TARGET,
+		TASK_COMBINE_GET_PATH_TO_FORCED_GREN_LOS,
 		NEXT_TASK
 	};
 
@@ -227,9 +241,8 @@ private:
 private:
 	int				m_nKickDamage;
 	Vector			m_vecTossVelocity;
-	bool			m_bStanding;
+	EHANDLE			m_hForcedGrenadeTarget;
 	bool			m_bShouldPatrol;
-	bool			m_bCanCrouch;
 	bool			m_bFirstEncounter;// only put on the handsign show in the squad's first encounter.
 
 	// Time Variables

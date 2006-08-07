@@ -419,7 +419,8 @@ void CAPCController::TrackTarget( void )
 
 	if ( lineOfSight == TRUE )
 	{
-		// see if the target is in a vehicle, if so, check it's relationship
+		// FIXME: This will ultimately have to deal with NPCs being in the vehicle as well
+		// See if the target is in a vehicle. If so, check its relationship
 		CBasePlayer *pPlayer = ToBasePlayer( pTarget );
 		if ( pPlayer && pPlayer->IsInAVehicle() )
 		{

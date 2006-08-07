@@ -33,7 +33,7 @@ typedef enum
 //-----------------------------------------------------------------------------
 // Purpose: callbacks the engine exposes to the 3rd party plugins (ala MetaMod)
 //-----------------------------------------------------------------------------
-class IServerPluginCallbacks
+abstract_class IServerPluginCallbacks
 {
 public:
 	// Initialize the plugin to run
@@ -104,7 +104,7 @@ typedef enum
 //-----------------------------------------------------------------------------
 // Purpose: functions that only 3rd party plugins need
 //-----------------------------------------------------------------------------
-class IServerPluginHelpers
+abstract_class IServerPluginHelpers
 {
 public:
 	// creates an onscreen menu with various option buttons

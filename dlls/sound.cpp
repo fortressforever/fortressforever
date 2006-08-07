@@ -11,6 +11,12 @@
 //
 //=============================================================================//
 
+#ifdef _XBOX
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#include "xbox/xbox_core.h"
+#endif
+
 #include "cbase.h"
 #include "player.h"
 #include "mathlib.h"
@@ -37,6 +43,9 @@
 //			playEverywhere - (disable attenuation)
 //-----------------------------------------------------------------------------
 #define REFERENCE_dB			60.0
+
+#define AMBIENT_GENERIC_UPDATE_RATE	5	// update at 5hz
+#define AMBIENT_GENERIC_THINK_DELAY ( 1.0f / float( AMBIENT_GENERIC_UPDATE_RATE ) )
 
 #ifdef HL1_DLL
 ConVar hl1_ref_db_distance( "hl1_ref_db_distance", "18.0" );
@@ -162,6 +171,7 @@ public:
 
 	// Rules about which entities need to transmit along with me
 	virtual void SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
+	virtual void UpdateOnRemove( void );
 
 	void ToggleSound();
 	void SendSound( SoundFlags_t flags );
@@ -172,6 +182,8 @@ public:
 	void InputToggleSound( inputdata_t &inputdata );
 	void InputPitch( inputdata_t &inputdata );
 	void InputVolume( inputdata_t &inputdata );
+	void InputFadeIn( inputdata_t &inputdata );
+	void InputFadeOut( inputdata_t &inputdata );
 
 	DECLARE_DATADESC();
 
@@ -221,11 +233,13 @@ BEGIN_DATADESC( CAmbientGeneric )
 	DEFINE_INPUTFUNC(FIELD_VOID, "ToggleSound", InputToggleSound ),
 	DEFINE_INPUTFUNC(FIELD_FLOAT, "Pitch", InputPitch ),
 	DEFINE_INPUTFUNC(FIELD_FLOAT, "Volume", InputVolume ),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "FadeIn", InputFadeIn ),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "FadeOut", InputFadeOut ),
 
 END_DATADESC()
 
 
-#define SF_AMBIENT_SOUND_EVERYWHERE		1
+#define SF_AMBIENT_SOUND_EVERYWHERE			1
 #define SF_AMBIENT_SOUND_START_SILENT		16
 #define SF_AMBIENT_SOUND_NOT_LOOPING		32
 
@@ -358,8 +372,50 @@ void CAmbientGeneric::InputVolume( inputdata_t &inputdata )
 	// Multiply the input value by ten since volumes are expected to be from 0 - 100.
 	//
 	m_dpv.vol = clamp( inputdata.value.Float(), 0, 10 ) * 10;
+	m_dpv.volfrac = m_dpv.vol << 8;
 
 	SendSound( SND_CHANGE_VOL );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Input handler for fading in volume over time.
+// Input  : Float volume fade in time 0 - 100 seconds
+//-----------------------------------------------------------------------------
+void CAmbientGeneric::InputFadeIn( inputdata_t &inputdata )
+{
+	// cancel any fade out that might be happening
+	m_dpv.fadeout = 0;
+
+	m_dpv.fadein = inputdata.value.Float();
+	if (m_dpv.fadein > 100) m_dpv.fadein = 100;
+	if (m_dpv.fadein < 0) m_dpv.fadein = 0;
+
+	if (m_dpv.fadein > 0)
+		m_dpv.fadein = ( 100 << 8 ) / ( m_dpv.fadein * AMBIENT_GENERIC_UPDATE_RATE );
+
+	SetNextThink( gpGlobals->curtime + 0.1f );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Input handler for fading out volume over time.
+// Input  : Float volume fade out time 0 - 100 seconds
+//-----------------------------------------------------------------------------
+void CAmbientGeneric::InputFadeOut( inputdata_t &inputdata )
+{
+	// cancel any fade in that might be happening
+	m_dpv.fadein = 0;
+
+	m_dpv.fadeout = inputdata.value.Float();
+
+	if (m_dpv.fadeout > 100) m_dpv.fadeout = 100;
+	if (m_dpv.fadeout < 0) m_dpv.fadeout = 0;
+
+	if (m_dpv.fadeout > 0)
+		m_dpv.fadeout = ( 100 << 8 ) / ( m_dpv.fadeout * AMBIENT_GENERIC_UPDATE_RATE );
+
+	SetNextThink( gpGlobals->curtime + 0.1f );
 }
 
 
@@ -399,7 +455,7 @@ void CAmbientGeneric::Activate( void )
 	{
 		if (m_sSourceEntName != NULL_STRING)
 		{
-			m_hSoundSource = gEntList.FindEntityByName( NULL, m_sSourceEntName, NULL );
+			m_hSoundSource = gEntList.FindEntityByName( NULL, m_sSourceEntName );
 			if ( m_hSoundSource != NULL )
 			{
 				m_nSoundSourceEntIndex = m_hSoundSource->entindex();
@@ -427,7 +483,8 @@ void CAmbientGeneric::Activate( void )
 		// If we are loading a saved game, we can't write into the init/signon buffer here, so just issue
 		//  as a regular sound message...
 		if ( gpGlobals->eLoadType == MapLoad_Transition ||
-			 gpGlobals->eLoadType == MapLoad_LoadGame )
+			 gpGlobals->eLoadType == MapLoad_LoadGame || 
+			 g_pGameRules->InRoundRestart() )
 		{
 			flags = SND_NOFLAGS;
 		}
@@ -465,6 +522,19 @@ void CAmbientGeneric::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAmbientGeneric::UpdateOnRemove( void )
+{
+	if ( m_fActive )
+	{
+		// Stop the sound we're generating
+		SendSound( SND_STOP );
+	}
+
+	BaseClass::UpdateOnRemove();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Think at 5hz if we are dynamically modifying pitch or volume of the
@@ -540,12 +610,15 @@ void CAmbientGeneric::RampThink( void )
 		if (vol > m_dpv.volrun)
 		{
 			vol = m_dpv.volrun;
+			m_dpv.volfrac = vol << 8;
 			m_dpv.fadein = 0;				// done with ramp up
 		}
 
 		if (vol < m_dpv.volstart)
 		{
 			vol = m_dpv.volstart;
+			m_dpv.vol = vol;
+			m_dpv.volfrac = vol << 8;
 			m_dpv.fadeout = 0;				// done with ramp down
 			
 			// shut sound off
@@ -555,8 +628,16 @@ void CAmbientGeneric::RampThink( void )
 			return;
 		}
 
-		if (vol > 100) vol = 100;
-		if (vol < 1) vol = 1;
+		if (vol > 100) 
+		{
+			vol = 100;
+			m_dpv.volfrac = vol << 8;
+		}
+		if (vol < 1) 
+		{
+			vol = 1;
+			m_dpv.volfrac = vol << 8;
+		}
 
 		m_dpv.vol = vol;
 
@@ -658,7 +739,7 @@ void CAmbientGeneric::RampThink( void )
 	}
 
 	// update ramps at 5hz
-	SetNextThink( gpGlobals->curtime + 0.2 );
+	SetNextThink( gpGlobals->curtime + AMBIENT_GENERIC_THINK_DELAY );
 	return;
 }
 
@@ -962,7 +1043,7 @@ bool CAmbientGeneric::KeyValue( const char *szKeyName, const char *szValue )
 		
 		m_dpv.volstart *= 10;	// 0 - 100
 	}
-	// fadein
+	// legacy fadein
 	else if (FStrEq(szKeyName, "fadein"))
 	{
 		m_dpv.fadein = atoi(szValue);
@@ -974,7 +1055,7 @@ bool CAmbientGeneric::KeyValue( const char *szKeyName, const char *szValue )
 			m_dpv.fadein = (101 - m_dpv.fadein) * 64;
 		m_dpv.fadeinsav = m_dpv.fadein;
 	}
-	// fadeout
+	// legacy fadeout
 	else if (FStrEq(szKeyName, "fadeout"))
 	{
 		m_dpv.fadeout = atoi(szValue);
@@ -984,6 +1065,30 @@ bool CAmbientGeneric::KeyValue( const char *szKeyName, const char *szValue )
 
 		if (m_dpv.fadeout > 0)
 			m_dpv.fadeout = (101 - m_dpv.fadeout) * 64;
+		m_dpv.fadeoutsav = m_dpv.fadeout;
+	}
+	// fadeinsecs
+	else if (FStrEq(szKeyName, "fadeinsecs"))
+	{
+		m_dpv.fadein = atoi(szValue);
+
+		if (m_dpv.fadein > 100) m_dpv.fadein = 100;
+		if (m_dpv.fadein < 0) m_dpv.fadein = 0;
+
+		if (m_dpv.fadein > 0)
+			m_dpv.fadein = ( 100 << 8 ) / ( m_dpv.fadein * AMBIENT_GENERIC_UPDATE_RATE );
+		m_dpv.fadeinsav = m_dpv.fadein;
+	}
+	// fadeoutsecs
+	else if (FStrEq(szKeyName, "fadeoutsecs"))
+	{
+		m_dpv.fadeout = atoi(szValue);
+
+		if (m_dpv.fadeout > 100) m_dpv.fadeout = 100;
+		if (m_dpv.fadeout < 0) m_dpv.fadeout = 0;
+
+		if (m_dpv.fadeout > 0)
+			m_dpv.fadeout = ( 100 << 8 ) / ( m_dpv.fadeout * AMBIENT_GENERIC_UPDATE_RATE );
 		m_dpv.fadeoutsav = m_dpv.fadeout;
 	}
 	// lfotype
@@ -1199,13 +1304,19 @@ void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick)
 // open sentences.txt, scan for groups, build rgsentenceg
 // Should be called from world spawn, only works on the
 // first call and is ignored subsequently.
-
+extern const char*	XBX_GetLanguageString(void);
 void SENTENCEG_Init()
 {
 	if (fSentencesInit)
 		return;
 
+#ifdef _XBOX
+	char scriptName[ MAX_PATH ];
+	Q_snprintf( scriptName, MAX_PATH, "scripts/sentences_%s.txt", XBX_GetLanguageString() );
+	engine->PrecacheSentenceFile( scriptName );
+#else
 	engine->PrecacheSentenceFile( "scripts/sentences.txt" );
+#endif
 	fSentencesInit = true;
 }
 
@@ -1229,6 +1340,10 @@ void UTIL_RestartAmbientSounds( void )
 	{
 		if (pAmbient->m_fActive )
 		{
+			if ( strstr( STRING( pAmbient->m_iszSound ), "mp3" ) )
+			{
+				pAmbient->SendSound( SND_CHANGE_VOL ); // fake a change, so we don't create 2 sounds
+			}
 			pAmbient->SendSound( SND_CHANGE_VOL ); // fake a change, so we don't create 2 sounds
 		}
 	}

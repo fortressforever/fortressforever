@@ -6,7 +6,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "vehicle_base.h"
 #include "engine/IEngineSound.h"
 #include "in_buttons.h"
 #include "ammodef.h"
@@ -26,6 +25,9 @@
 #include "ai_hint.h"
 #include "npc_crow.h"
 #include "globalstate.h"
+#include "vehicle_jeep.h"
+#include "rumble_shared.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -44,7 +46,6 @@
 #define OVERTURNED_EXIT_WAITTIME	2.0f
 
 #define JEEP_AMMOCRATE_HITGROUP		5
-#define JEEP_WHEEL_COUNT			4
 
 #define JEEP_STEERING_SLOW_ANGLE	50.0f
 #define JEEP_STEERING_FAST_ANGLE	15.0f
@@ -65,21 +66,12 @@ ConVar	sk_jeep_gauss_damage( "sk_jeep_gauss_damage", "15" );
 ConVar	hud_jeephint_numentries( "hud_jeephint_numentries", "10", FCVAR_NONE );
 ConVar	g_jeepexitspeed( "g_jeepexitspeed", "100", FCVAR_CHEAT );
 
+extern ConVar autoaim_max_dist;
+
 //=============================================================================
 //
 // Jeep water data.
 //
-struct JeepWaterData_t
-{
-	bool		m_bWheelInWater[JEEP_WHEEL_COUNT];
-	bool		m_bWheelWasInWater[JEEP_WHEEL_COUNT];
-	Vector		m_vecWheelContactPoints[JEEP_WHEEL_COUNT];
-	float		m_flNextRippleTime[JEEP_WHEEL_COUNT];
-	bool		m_bBodyInWater;
-	bool		m_bBodyWasInWater;
-
-	DECLARE_SIMPLE_DATADESC();
-};
 
 BEGIN_SIMPLE_DATADESC( JeepWaterData_t )
 	DEFINE_ARRAY( m_bWheelInWater,			FIELD_BOOLEAN,	JEEP_WHEEL_COUNT ),
@@ -101,129 +93,6 @@ public:
 	bool		NPC_HasPrimaryWeapon( void ) { return true; }
 	void		NPC_AimPrimaryWeapon( Vector vecTarget );
 	int			GetExitAnimToUse( Vector &vecEyeExitEndpoint, bool &bAllPointsBlocked );
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CPropJeep : public CPropVehicleDriveable
-{
-	DECLARE_CLASS( CPropJeep, CPropVehicleDriveable );
-
-public:
-
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
-
-	CPropJeep( void );
-
-	// CPropVehicle
-	virtual void	ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMoveData );
-	virtual void	DriveVehicle( float flFrameTime, CUserCmd *ucmd, int iButtonsDown, int iButtonsReleased );
-	virtual void	SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move );
-	virtual void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual void	DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles );
-	virtual bool	AllowBlockedExit( CBasePlayer *pPlayer, int nRole ) { return false; }
-	virtual bool	CanExitVehicle( CBaseEntity *pEntity );
-	virtual bool	IsVehicleBodyInWater() { return m_WaterData.m_bBodyInWater; }
-
-	// CBaseEntity
-	void			Think(void);
-	void			Precache( void );
-	void			Spawn( void ); 
-
-	virtual void	CreateServerVehicle( void );
-	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
-	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
-	virtual void	EnterVehicle( CBasePlayer *pPlayer );
-	virtual void	ExitVehicle( int iRole );
-
-	void			AimGunAt( Vector *endPos, float flInterval );
-	bool			TauCannonHasBeenCutOff( void ) { return m_bGunHasBeenCutOff; }
-
-	// NPC Driving
-	bool			NPC_HasPrimaryWeapon( void ) { return true; }
-	void			NPC_AimPrimaryWeapon( Vector vecTarget );
-
-	const char		*GetTracerType( void ) { return "AR2Tracer"; }
-	void			DoImpactEffect( trace_t &tr, int nDamageType );
-
-	bool HeadlightIsOn( void ) { return m_bHeadlightIsOn; }
-	void HeadlightTurnOn( void ) { m_bHeadlightIsOn = true; }
-	void HeadlightTurnOff( void ) { m_bHeadlightIsOn = false; }
-
-private:
-
-	void		FireCannon( void );
-	void		ChargeCannon( void );
-	void		FireChargedCannon( void );
-
-	void		DrawBeam( const Vector &startPos, const Vector &endPos, float width );
-	void		StopChargeSound( void );
-	void		GetCannonAim( Vector *resultDir );
-
-	void		InitWaterData( void );
-	void		HandleWater( void );
-	bool		CheckWater( void );
-	void		CheckWaterLevel( void );
-	void		CreateSplash( const Vector &vecPosition );
-	void		CreateRipple( const Vector &vecPosition );
-
-	void		UpdateSteeringAngle( void );
-	void		CreateDangerSounds( void );
-
-	void		ComputePDControllerCoefficients( float *pCoefficientsOut, float flFrequency, float flDampening, float flDeltaTime );
-	void		DampenForwardMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
-	void		DampenUpMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
-
-	void		JeepSeagullThink( void );
-	void		SpawnPerchedSeagull( void );
-	void		AddSeagullPoop( const Vector &vecOrigin );
-
-	void		InputStartRemoveTauCannon( inputdata_t &inputdata );
-	void		InputFinishRemoveTauCannon( inputdata_t &inputdata );
-
-private:
-
-	bool			m_bGunHasBeenCutOff;
-	float			m_flDangerSoundTime;
-	int				m_nBulletType;
-	bool			m_bCannonCharging;
-	float			m_flCannonTime;
-	float			m_flCannonChargeStartTime;
-	Vector			m_vecGunOrigin;
-	CSoundPatch		*m_sndCannonCharge;
-	int				m_nSpinPos;
-	float			m_aimYaw;
-	float			m_aimPitch;
-	float			m_throttleDisableTime;
-	float			m_flAmmoCrateCloseTime;
-
-	// handbrake after the fact to keep vehicles from rolling
-	float			m_flHandbrakeTime;
-	bool			m_bInitialHandbrake;
-	
-	float			m_flOverturnedTime;
-
-	Vector			m_vecLastEyePos;
-	Vector			m_vecLastEyeTarget;
-	Vector			m_vecEyeSpeed;
-	Vector			m_vecTargetSpeed;
-
-	JeepWaterData_t	m_WaterData;
-
-	int				m_iNumberOfEntries;
-	int				m_nAmmoType;
-
-	// Seagull perching
-	float			m_flPlayerExitedTime;	// Time at which the player last left this vehicle
-	float			m_flLastSawPlayerAt;	// Time at which we last saw the player
-	EHANDLE			m_hLastPlayerInVehicle;
-	EHANDLE			m_hSeagull;
-	bool			m_bHasPoop;
-
-	CNetworkVar( bool, m_bHeadlightIsOn );
 };
 
 BEGIN_DATADESC( CPropJeep )
@@ -269,7 +138,10 @@ IMPLEMENT_SERVERCLASS_ST( CPropJeep, DT_PropJeep )
 	SendPropBool( SENDINFO( m_bHeadlightIsOn ) ),
 END_SEND_TABLE();
 
+// This is overriden for the episodic jeep
+#ifndef HL2_EPISODIC
 LINK_ENTITY_TO_CLASS( prop_vehicle_jeep, CPropJeep );
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -359,6 +231,23 @@ void CPropJeep::Spawn( void )
 
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 	m_nAmmoType = pAmmoDef->Index("GaussEnergy");
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CPropJeep::Activate()
+{
+	BaseClass::Activate();
+
+	CBaseServerVehicle *pServerVehicle = dynamic_cast<CBaseServerVehicle *>(GetServerVehicle());
+	if ( pServerVehicle )
+	{
+		if( pServerVehicle->GetPassenger() )
+		{
+			// If a jeep comes back from a save game with a driver, make sure the engine rumble starts up.
+			pServerVehicle->StartEngineRumble();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -472,7 +361,7 @@ void CPropJeep::AimGunAt( Vector *endPos, float flInterval )
 	Vector	aimPos = *endPos;
 
 	// See if the gun should be allowed to aim
-	if ( IsOverturned() || m_bEngineLocked )
+	if ( IsOverturned() || m_bEngineLocked || m_bHasGun == false )
 	{
 		SetPoseParameter( JEEP_GUN_YAW, 0 );
 		SetPoseParameter( JEEP_GUN_PITCH, 0 );
@@ -779,7 +668,7 @@ void CPropJeep::Think(void)
 			pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
 		}
 	}
-	else
+	else if ( m_bHasGun )
 	{
 		// Start this as false and update it again each frame
 		m_bUnableToFire = false;
@@ -829,6 +718,18 @@ void CPropJeep::Think(void)
 		Vector vecEyeDir, vecEyePos;
 		m_hPlayer->EyePositionAndVectors( &vecEyePos, &vecEyeDir, NULL, NULL );
 
+		if ( IsXbox() )
+		{
+			autoaim_params_t params;
+
+			params.m_fScale = AUTOAIM_SCALE_DEFAULT * 10.0f;
+			params.m_fMaxDist = autoaim_max_dist.GetFloat();
+			m_hPlayer->GetAutoaimVector( params );
+
+			// Use autoaim as the eye dir if there is an autoaim ent.
+			vecEyeDir = params.m_vecAutoAimDir;
+		}
+
 		// Trace out from the player's eye point.
 		Vector	vecEndPos = vecEyePos + ( vecEyeDir * MAX_TRACE_LENGTH );
 		trace_t	trace;
@@ -871,7 +772,7 @@ void CPropJeep::Think(void)
 				m_iNumberOfEntries++;
 			}
 		}
-		
+
 		// If we're exiting and have had the tau cannon removed, we don't want to reset the animation
 		GetServerVehicle()->HandleEntryExitFinish( m_bExitAnimOn, !(m_bExitAnimOn && TauCannonHasBeenCutOff()) );
 	}
@@ -966,6 +867,7 @@ void CPropJeep::FireCannon( void )
 	if ( m_hPlayer )
 	{
 		m_hPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );
+		m_hPlayer->RumbleEffect( RUMBLE_PISTOL, 0, RUMBLE_FLAG_RESTART	);
 	}
 
 	CPASAttenuationFilter sndFilter( this, "PropJeep.FireCannon" );
@@ -990,6 +892,11 @@ void CPropJeep::FireChargedCannon( void )
 
 	CPASAttenuationFilter sndFilter( this, "PropJeep.FireChargedCannon" );
 	EmitSound( sndFilter, entindex(), "PropJeep.FireChargedCannon" );
+
+	if( m_hPlayer )
+	{
+		m_hPlayer->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
+	}
 
 	//Find the direction the gun is pointing in
 	Vector aimDir;
@@ -1105,6 +1012,11 @@ void CPropJeep::ChargeCannon( void )
 		CPASAttenuationFilter filter( this );
 		m_sndCannonCharge = (CSoundEnvelopeController::GetController()).SoundCreate( filter, entindex(), CHAN_STATIC, "Jeep.GaussCharge", ATTN_NORM );
 
+		if ( m_hPlayer )
+		{
+			m_hPlayer->RumbleEffect( RUMBLE_FLAT_LEFT, (int)(0.1 * 100), RUMBLE_FLAG_RESTART | RUMBLE_FLAG_LOOP | RUMBLE_FLAG_INITIAL_SCALE );
+		}
+
 		assert(m_sndCannonCharge!=NULL);
 		if ( m_sndCannonCharge != NULL )
 		{
@@ -1113,6 +1025,21 @@ void CPropJeep::ChargeCannon( void )
 		}
 
 		return;
+	}
+	else
+	{
+		float flChargeAmount = ( gpGlobals->curtime - m_flCannonChargeStartTime ) / MAX_GAUSS_CHARGE_TIME;
+		if ( flChargeAmount > 1.0f )
+		{
+			flChargeAmount = 1.0f;
+		}
+
+		float rumble = flChargeAmount * 0.5f;
+
+		if( m_hPlayer )
+		{
+			m_hPlayer->RumbleEffect( RUMBLE_FLAT_LEFT, (int)(rumble * 100), RUMBLE_FLAG_UPDATE_SCALE );
+		}
 	}
 
 	//TODO: Add muzzle effect?
@@ -1128,6 +1055,11 @@ void CPropJeep::StopChargeSound( void )
 	if ( m_sndCannonCharge != NULL )
 	{
 		(CSoundEnvelopeController::GetController()).SoundFadeOut( m_sndCannonCharge, 0.1f );
+	}
+
+	if( m_hPlayer )
+	{
+		m_hPlayer->RumbleEffect( RUMBLE_FLAT_LEFT, 0, RUMBLE_FLAG_STOP );
 	}
 }
 
@@ -1352,30 +1284,34 @@ void CPropJeep::DriveVehicle( float flFrameTime, CUserCmd *ucmd, int iButtonsDow
 		}
 	}*/
 		
-	// If we're holding down an attack button, update our state
-	if ( IsOverturned() == false )
+	// Only handle the cannon if the vehicle has one
+	if ( m_bHasGun )
 	{
-		if ( iButtons & IN_ATTACK )
+		// If we're holding down an attack button, update our state
+		if ( IsOverturned() == false )
 		{
-			if ( m_bCannonCharging )
+			if ( iButtons & IN_ATTACK )
 			{
-				FireChargedCannon();
+				if ( m_bCannonCharging )
+				{
+					FireChargedCannon();
+				}
+				else
+				{
+					FireCannon();
+				}
 			}
-			else
+			else if ( iButtons & IN_ATTACK2 )
 			{
-				FireCannon();
+				ChargeCannon();
 			}
 		}
-		else if ( iButtons & IN_ATTACK2 )
-		{
-			ChargeCannon();
-		}
-	}
 
-	// If we've released our secondary button, fire off our cannon
-	if ( ( iButtonsReleased & IN_ATTACK2 ) && ( m_bCannonCharging ) )
-	{
-		FireChargedCannon();
+		// If we've released our secondary button, fire off our cannon
+		if ( ( iButtonsReleased & IN_ATTACK2 ) && ( m_bCannonCharging ) )
+		{
+			FireChargedCannon();
+		}
 	}
 
 	BaseClass::DriveVehicle( flFrameTime, ucmd, iButtonsDown, iButtonsReleased );
@@ -1491,11 +1427,11 @@ void CPropJeep::EnterVehicle( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropJeep::ExitVehicle( int iRole )
+void CPropJeep::ExitVehicle( int nRole )
 {
 	HeadlightTurnOff();
 
-	BaseClass::ExitVehicle(iRole);
+	BaseClass::ExitVehicle( nRole );
 
 	//If the player has exited, stop charging
 	StopChargeSound();
@@ -1680,6 +1616,19 @@ void CPropJeep::InputFinishRemoveTauCannon( inputdata_t &inputdata )
 	m_bHasGun = false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropJeep::OnRestore( void )
+{
+	IServerVehicle *pServerVehicle = GetServerVehicle();
+	if ( pServerVehicle != NULL )
+	{
+		// Restore the passenger information we're holding on to
+		pServerVehicle->RestorePassengerInfo();
+	}
+}
+
 //========================================================================================================================================
 // JEEP FOUR WHEEL PHYSICS VEHICLE SERVER VEHICLE
 //========================================================================================================================================
@@ -1714,10 +1663,9 @@ int CJeepFourWheelServerVehicle::GetExitAnimToUse( Vector &vecEyeExitEndpoint, b
 		// HACK: We know the tau-cannon removed exit anim uses the first upright anim's exit details
 		trace_t tr;
 		Vector vehicleExitOrigin;
-		QAngle vehicleExitAngles;
 
 		// Ensure the endpoint is clear by dropping a point down from above
-		pAnimating->GetAttachment( m_ExitAnimations[0].iAttachment, vehicleExitOrigin, vehicleExitAngles );
+		pAnimating->GetAttachment( m_ExitAnimations[0].iAttachment, vehicleExitOrigin );
 		vehicleExitOrigin -= VEC_VIEW;
 		Vector vecMove = Vector(0,0,64);
 		Vector vecStart = vehicleExitOrigin + vecMove;

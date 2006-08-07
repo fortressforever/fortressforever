@@ -43,6 +43,7 @@ public:
 	void WaitTillLand( void );
 	void DieThink( void );
 	void LimitVelocity( void );
+	virtual bool SUB_AllowedToFade( void );
 
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
@@ -67,6 +68,16 @@ public:
 		return m_hSprite.Get();
 	}
 
+	void SetFlame( CBaseEntity *pFlame )
+	{
+		m_hFlame = pFlame;	
+	}
+
+	CBaseEntity *GetFlame( void )
+	{
+		return m_hFlame.Get();
+	}
+
 	DECLARE_DATADESC();
 
 
@@ -76,6 +87,7 @@ public:
 	int		m_cBloodDecals;
 	int		m_material;
 	float	m_lifeTime;
+	bool	m_bForceRemove;
 
 	CHandle<CBasePlayer>	m_hPhysicsAttacker;
 	float					m_flLastPhysicsInfluenceTime;
@@ -86,6 +98,7 @@ private:
 	int		m_bloodColor;
 
 	EHANDLE m_hSprite;
+	EHANDLE m_hFlame;
 };
 
 class CRagGib : public CBaseAnimating

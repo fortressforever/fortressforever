@@ -1,9 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
 // Purpose: 
 //
-// $NoKeywords: $
-//=============================================================================//
+//=============================================================================
 
 #include "cbase.h"
 #include "func_tank.h"
@@ -36,6 +35,7 @@
 #include "effect_dispatch_data.h"
 #include "te_effect_dispatch.h"
 #include "props.h"
+#include "rumble_shared.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -71,9 +71,16 @@ BEGIN_DATADESC( CFuncTank )
 	DEFINE_KEYFIELD( m_iBulletDamage, FIELD_INTEGER, "bullet_damage" ),
 	DEFINE_KEYFIELD( m_iBulletDamageVsPlayer, FIELD_INTEGER, "bullet_damage_vs_player" ),
 	DEFINE_KEYFIELD( m_iszMaster, FIELD_STRING, "master" ),
+	
+#ifdef HL2_EPISODIC	
+	DEFINE_KEYFIELD( m_iszAmmoType, FIELD_STRING, "ammotype" ),
+	DEFINE_FIELD( m_iAmmoType, FIELD_INTEGER ),
+#else
 	DEFINE_FIELD( m_iSmallAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iMediumAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iLargeAmmoType, FIELD_INTEGER ),
+#endif // HL2_EPISODIC
+
 	DEFINE_KEYFIELD( m_soundStartRotate, FIELD_SOUNDNAME, "rotatestartsound" ),
 	DEFINE_KEYFIELD( m_soundStopRotate, FIELD_SOUNDNAME, "rotatestopsound" ),
 	DEFINE_KEYFIELD( m_soundLoopRotate, FIELD_SOUNDNAME, "rotatesound" ),
@@ -341,7 +348,7 @@ void CFuncTank::InputFindNPCToManTank( inputdata_t &inputdata )
 		return;
 
 	// NPC assigned to man the func_tank?
-	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, inputdata.value.StringID(), NULL );
+	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, inputdata.value.StringID() );
 	if ( pEntity )
 	{
 		CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
@@ -533,7 +540,7 @@ int CFuncTank::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"State: Inactive",sizeof(tempstr));
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 		
 		// -------------------
@@ -541,7 +548,7 @@ int CFuncTank::DrawDebugTextOverlays(void)
 		// --------------------
 		Q_snprintf(tempstr,sizeof(tempstr),"Fire Rate: %f",m_fireRate);
 
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 		
 		// --------------
@@ -555,7 +562,7 @@ int CFuncTank::DrawDebugTextOverlays(void)
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Target:   -  ");
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		// --------------
@@ -569,7 +576,7 @@ int CFuncTank::DrawDebugTextOverlays(void)
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Aim Pos:    -  ");
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 	}
@@ -723,13 +730,18 @@ void CFuncTank::Spawn( void )
 {
 	Precache();
 
+#ifdef HL2_EPISODIC
+	m_iAmmoType = GetAmmoDef()->Index( STRING( m_iszAmmoType ) );
+#else
 	m_iSmallAmmoType	= GetAmmoDef()->Index("Pistol");
 	m_iMediumAmmoType	= GetAmmoDef()->Index("SMG1");
 	m_iLargeAmmoType	= GetAmmoDef()->Index("AR2");
+#endif // HL2_EPISODIC
 
 	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
 	SetSolid( SOLID_VPHYSICS );
 	SetModel( STRING( GetModelName() ) );
+	AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 
 	if ( HasSpawnFlags(SF_TANK_NOTSOLID) )
 	{
@@ -885,6 +897,12 @@ void CFuncTank::Precache( void )
 		PrecacheScriptSound( STRING(m_soundLoopRotate) );
 
 	PrecacheScriptSound( "Func_Tank.BeginUse" );
+	
+	// Precache the combine cannon
+	if ( m_iEffectHandling == EH_COMBINE_CANNON )
+	{
+		PrecacheScriptSound( "weapon_functank.CombineCannon.Single" );
+	}
 }
 
 void CFuncTank::UpdateOnRemove( void )
@@ -962,7 +980,7 @@ bool CFuncTank::OnControls( CBaseEntity *pTest )
 		// Find our control volume
 		if ( m_iszControlVolume != NULL_STRING )
 		{
-			m_hControlVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszControlVolume, NULL ) );
+			m_hControlVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszControlVolume ) );
 		}
 
 		if (( !m_hControlVolume ) && IsControllable() )
@@ -1089,7 +1107,12 @@ void CFuncTank::StopControl()
 	if ( IsActive() || (IsControllable() && !HasController()) )
 	{
 		// Delay the think to find controllers a bit
+#ifdef FUNCTANK_AUTOUSE
+		m_flNextControllerSearch = gpGlobals->curtime + 1.0f;
+#else
 		m_flNextControllerSearch = gpGlobals->curtime + 5.0f;
+#endif//FUNCTANK_AUTOUSE
+
 		SetNextThink( m_flNextControllerSearch );
 	}
 
@@ -1138,7 +1161,7 @@ void CFuncTank::ControllerPostFrame( void )
 		}
 	}
 	
-	Fire( bulletCount, WorldBarrelPosition(), forward, pPlayer );
+	Fire( bulletCount, WorldBarrelPosition(), forward, pPlayer, false );
 	
 	// HACKHACK -- make some noise (that the AI can hear)
 	CSoundEnt::InsertSound( SOUND_COMBAT, WorldSpaceCenter(), FUNCTANK_FIREVOLUME, 0.2 );
@@ -1188,7 +1211,7 @@ bool CFuncTank::NPC_FindManPoint( Vector &vecPos )
 {
 	if ( m_iszNPCManPoint != NULL_STRING )
 	{	
-		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_iszNPCManPoint, NULL );
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_iszNPCManPoint );
 		if ( pEntity )
 		{
 			vecPos = pEntity->GetAbsOrigin();
@@ -1256,8 +1279,23 @@ void CFuncTank::NPC_Fire( void )
 		}
 	}
 
+	bool bIgnoreSpread = false;
+
+  	CBaseEntity *pEnemy = pNPC->GetEnemy();
+	if ( HasSpawnFlags( SF_TANK_HACKPLAYERHIT ) && pEnemy && pEnemy->IsPlayer() )
+	{
+		// Every third shot should be fired directly at the player
+		if ( m_nBulletCount%2 == 0 )
+		{
+			Vector vecBodyTarget = pEnemy->BodyTarget( vecBarrelEnd, false );
+			vecForward = (vecBodyTarget - vecBarrelEnd);
+			VectorNormalize( vecForward );
+			bIgnoreSpread = true;
+		}
+	}
+
 	// Fire the bullet(s).
-	Fire( 1, vecBarrelEnd, vecForward, m_hController );
+	Fire( 1, vecBarrelEnd, vecForward, m_hController, bIgnoreSpread );
 	--m_nBulletCount;
 
 	// Check ammo counts and dismount when empty.
@@ -1411,7 +1449,7 @@ void CFuncTank::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 			// Find our control volume
 			if ( m_iszControlVolume != NULL_STRING )
 			{
-				m_hControlVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszControlVolume, NULL ) );
+				m_hControlVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszControlVolume ) );
 			}
 
 			if (( !m_hControlVolume ) && IsControllable() )
@@ -1496,6 +1534,72 @@ void CFuncTank::Think( void )
 			}
 		}
 
+#ifdef FUNCTANK_AUTOUSE
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+		bool bThinkFast = false;
+
+		if( pPlayer )
+		{
+			if ( !m_hControlVolume )
+			{
+				// Find our control volume
+				if ( m_iszControlVolume != NULL_STRING )
+				{
+					m_hControlVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszControlVolume ) );
+				}
+
+				if (( !m_hControlVolume ) && IsControllable() )
+				{
+					Msg( "ERROR: Couldn't find control volume for player-controllable func_tank %s.\n", STRING(GetEntityName()) );
+					return;
+				}
+			}
+
+			if ( m_hControlVolume )
+			{
+				if( m_hControlVolume->IsTouching( pPlayer ) && pPlayer->FInViewCone(WorldSpaceCenter()) )
+				{
+					// If my control volume is touching a player that's facing the mounted gun, automatically use the gun.
+					// !!!BUGBUG - this only works in cases where the player can see the gun whilst standing in the control 
+					// volume. (This works just fine for all func_tanks mounted on combine walls and small barriers)
+					variant_t emptyVariant;
+					AcceptInput( "Use", pPlayer, pPlayer, emptyVariant, USE_TOGGLE );
+				}
+				else
+				{
+					// If the player is nearby, think faster for snappier response to XBox auto mounting
+					float flDistSqr = GetAbsOrigin().DistToSqr( pPlayer->GetAbsOrigin() );
+
+					if( flDistSqr <= Square(360) )
+					{
+						bThinkFast = true;
+					}
+				}
+			}
+		}
+
+		// Keep thinking, in case they turn NPC finding back on
+		if ( !HasController() )
+		{
+			if( bThinkFast )
+			{
+				SetNextThink( gpGlobals->curtime + 0.1f );
+			}
+			else
+			{
+				SetNextThink( gpGlobals->curtime + 2.0f );
+			}
+		}
+
+		if( bThinkFast )
+		{
+			m_flNextControllerSearch = gpGlobals->curtime + 0.1f;
+		}
+		else
+		{
+			m_flNextControllerSearch = gpGlobals->curtime + 2.0f;
+		}
+#else
 		// Keep thinking, in case they turn NPC finding back on
 		if ( !HasController() )
 		{
@@ -1503,6 +1607,7 @@ void CFuncTank::Think( void )
 		}
 
 		m_flNextControllerSearch = gpGlobals->curtime + 2.0f;
+#endif//FUNCTANK_AUTOUSE
 	}
 
 	// refresh the matrix
@@ -1573,7 +1678,16 @@ void CFuncTank::CalcPlayerCrosshairTarget( Vector *pVecTarget )
 	trace_t	tr;
 	
 	vecStart = pPlayer->EyePosition();
-	vecDir = pPlayer->EyeDirection3D();
+
+	if ( !IsXbox() )
+	{
+		vecDir = pPlayer->EyeDirection3D();
+	}
+	else
+	{
+		// Use autoaim as the eye dir.
+		vecDir = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+	}
 	
 	// Make sure to start the trace outside of the player's bbox!
 	UTIL_TraceLine( vecStart + vecDir * 24, vecStart + vecDir * 8192, MASK_OPAQUE_AND_NPCS, this, COLLISION_GROUP_NONE, &tr );
@@ -2002,7 +2116,7 @@ void CFuncTank::FiringSequence( const Vector &barrelEnd, const Vector &forward, 
 		{
 			// NOTE: Set m_fireLast first so that Fire can adjust it
 			m_fireLast = gpGlobals->curtime;
-			Fire( bulletCount, barrelEnd, forward, pAttacker );
+			Fire( bulletCount, barrelEnd, forward, pAttacker, false );
 		}
 	}
 	else
@@ -2023,12 +2137,25 @@ void CFuncTank::DoMuzzleFlash( void )
 		pAnim->DoMuzzleFlash();
 
 		// Do the AR2 muzzle flash
-		CEffectData data;
-		data.m_nEntIndex = pAnim->entindex();
-		data.m_nAttachmentIndex = m_nBarrelAttachment;
-		data.m_flScale = 1.0f;
-		data.m_fFlags = MUZZLEFLASH_COMBINE;
-		DispatchEffect( "MuzzleFlash", data );
+		if ( m_iEffectHandling == EH_COMBINE_CANNON )
+		{
+			CEffectData data;
+			data.m_nAttachmentIndex = m_nBarrelAttachment;
+			data.m_nEntIndex = pAnim->entindex();
+			
+			// FIXME: Create a custom entry here!
+			DispatchEffect( "ChopperMuzzleFlash", data );
+		}
+		else
+		{
+			CEffectData data;
+			data.m_nEntIndex = pAnim->entindex();
+			data.m_nAttachmentIndex = m_nBarrelAttachment;
+			data.m_flScale = 1.0f;
+			data.m_fFlags = MUZZLEFLASH_COMBINE;
+
+			DispatchEffect( "MuzzleFlash", data );
+		}
 	}
 }
 
@@ -2038,8 +2165,14 @@ void CFuncTank::DoMuzzleFlash( void )
 //-----------------------------------------------------------------------------
 const char *CFuncTank::GetTracerType( void )
 {
-	if ( m_iEffectHandling == EH_AR2 )
+	switch( m_iEffectHandling )
+	{
+	case EH_AR2:
 		return "AR2Tracer";
+
+	case EH_COMBINE_CANNON:
+		return "HelicopterTracer";
+	}
 
 	return NULL;
 }
@@ -2051,7 +2184,7 @@ const char *CFuncTank::GetTracerType( void )
 //			forward - 
 //			pAttacker - 
 //-----------------------------------------------------------------------------
-void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	// If we have a specific effect handler, apply it's effects
 	if ( m_iEffectHandling == EH_AR2 )
@@ -2060,6 +2193,13 @@ void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &fo
 
 		// Play the AR2 sound
 		EmitSound( "Weapon_functank.Single" );
+	}
+	else if ( m_iEffectHandling == EH_COMBINE_CANNON )
+	{
+		DoMuzzleFlash();
+
+		// Play the cannon sound
+		EmitSound( "weapon_functank.CombineCannon.Single" );
 	}
 	else
 	{
@@ -2081,6 +2221,16 @@ void CFuncTank::Fire( int bulletCount, const Vector &barrelEnd, const Vector &fo
 			pSprite->SetScale( m_spriteScale );
 		}
 	}
+
+	if( pAttacker && pAttacker->IsPlayer() )
+	{
+#ifdef _XBOX
+		UTIL_PlayerByIndex(1)->RumbleEffect( RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART | RUMBLE_FLAG_RANDOM_AMPLITUDE );
+#else	
+		CSoundEnt::InsertSound( SOUND_MOVE_AWAY, barrelEnd + forward * 32.0f, 32.0f, 0.2f, pAttacker, SOUNDENT_CHANNEL_WEAPON );
+#endif
+	}
+
 
 	m_OnFire.FireOutput(this, this);
 	m_bReadyToFire = false;
@@ -2233,15 +2383,14 @@ bool CFuncTank::HasLOSTo( CBaseEntity *pEntity )
 	
 	CBaseEntity	*pHitEntity = tr.m_pEnt;
 	
-	CBasePlayer *pPlayer = ToBasePlayer( pEntity );
-
-	// Is player in a vehicle? if so, verify vehicle is target and return if so (so npc shoots at vehicle)
-	if ( pPlayer && pPlayer->IsInAVehicle() && pHitEntity )
+	// Is entity in a vehicle? if so, verify vehicle is target and return if so (so npc shoots at vehicle)
+	CBaseCombatCharacter *pCCEntity = pEntity->MyCombatCharacterPointer();
+	if ( pCCEntity != NULL && pCCEntity->IsInAVehicle() )
 	{
 		// Ok, player in vehicle, check if vehicle is target we're looking at, fire if it is
 		// Also, check to see if the owner of the entity is the vehicle, in which case it's valid too.
 		// This catches vehicles that use bone followers.
-		CBaseEntity	*pVehicle  = pPlayer->GetVehicle()->GetVehicleEnt();
+		CBaseEntity	*pVehicle  = pCCEntity->GetVehicle()->GetVehicleEnt();
 		if ( pHitEntity == pVehicle || pHitEntity->GetOwnerEntity() == pVehicle )
 			return true;
 	}
@@ -2257,14 +2406,14 @@ class CFuncTankGun : public CFuncTank
 public:
 	DECLARE_CLASS( CFuncTankGun, CFuncTank );
 
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 };
 LINK_ENTITY_TO_CLASS( func_tank, CFuncTankGun );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	int i;
 
@@ -2272,7 +2421,15 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	info.m_iShots = 1;
 	info.m_vecSrc = barrelEnd;
 	info.m_vecDirShooting = forward;
-	info.m_vecSpread = gTankSpread[m_spread];
+	if ( bIgnoreSpread )
+	{
+		info.m_vecSpread = gTankSpread[0];
+	}
+	else
+	{
+		info.m_vecSpread = gTankSpread[m_spread];
+	}
+
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iTracerFreq = 1;
 	info.m_iDamage = m_iBulletDamage;
@@ -2280,6 +2437,16 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	info.m_pAttacker = pAttacker;
 	info.m_pAdditionalIgnoreEnt = GetParent();
 
+#ifdef HL2_EPISODIC
+	if ( m_iAmmoType != -1 )
+	{
+		for ( i = 0; i < bulletCount; i++ )
+		{
+			info.m_iAmmoType = m_iAmmoType;
+			FireBullets( info );
+		}
+	}
+#else
 	for ( i = 0; i < bulletCount; i++ )
 	{
 		switch( m_bulletType )
@@ -2304,8 +2471,9 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 			break;
 		}
 	}
+#endif // HL2_EPISODIC
 
-	CFuncTank::Fire( bulletCount, barrelEnd, forward, pAttacker );
+	CFuncTank::Fire( bulletCount, barrelEnd, forward, pAttacker, bIgnoreSpread );
 }
 
 // #############################################################################
@@ -2318,7 +2486,7 @@ public:
 	DECLARE_DATADESC();
 
 	void Precache();
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 
 	float		m_flPulseSpeed;
 	float		m_flPulseWidth;
@@ -2360,7 +2528,7 @@ void CFuncTankPulseLaser::Precache(void)
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-void CFuncTankPulseLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker )
+void CFuncTankPulseLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	// --------------------------------------------------
 	//  Get direction vectors for spread
@@ -2400,7 +2568,7 @@ void CFuncTankPulseLaser::Fire( int bulletCount, const Vector &barrelEnd, const 
 		}
 
 	}
-	CFuncTank::Fire( bulletCount, barrelEnd, vecForward, pAttacker );
+	CFuncTank::Fire( bulletCount, barrelEnd, vecForward, pAttacker, bIgnoreSpread );
 }
 
 // #############################################################################
@@ -2411,7 +2579,7 @@ class CFuncTankLaser : public CFuncTank
 	DECLARE_CLASS( CFuncTankLaser, CFuncTank );
 public:
 	void	Activate( void );
-	void	Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void	Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	void	Think( void );
 	CEnvLaser *GetLaser( void );
 
@@ -2455,7 +2623,7 @@ CEnvLaser *CFuncTankLaser::GetLaser( void )
 	if ( m_pLaser )
 		return m_pLaser;
 
-	CBaseEntity *pLaser = gEntList.FindEntityByName( NULL, m_iszLaserName, NULL );
+	CBaseEntity *pLaser = gEntList.FindEntityByName( NULL, m_iszLaserName );
 	while ( pLaser )
 	{
 		// Found the landmark
@@ -2466,7 +2634,7 @@ CEnvLaser *CFuncTankLaser::GetLaser( void )
 		}
 		else
 		{
-			pLaser = gEntList.FindEntityByName( pLaser, m_iszLaserName, NULL );
+			pLaser = gEntList.FindEntityByName( pLaser, m_iszLaserName );
 		}
 	}
 
@@ -2483,7 +2651,7 @@ void CFuncTankLaser::Think( void )
 }
 
 
-void CFuncTankLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	int i;
 	trace_t tr;
@@ -2501,7 +2669,7 @@ void CFuncTankLaser::Fire( int bulletCount, const Vector &barrelEnd, const Vecto
 			m_pLaser->FireAtPoint( tr );
 			m_pLaser->SetNextThink( TICK_NEVER_THINK );
 		}
-		CFuncTank::Fire( bulletCount, barrelEnd, forward, this );
+		CFuncTank::Fire( bulletCount, barrelEnd, forward, this, bIgnoreSpread );
 	}
 }
 
@@ -2511,7 +2679,7 @@ public:
 	DECLARE_CLASS( CFuncTankRocket, CFuncTank );
 
 	void Precache( void );
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	virtual float GetShotSpeed() { return m_flRocketSpeed; }
 
 protected:
@@ -2534,7 +2702,7 @@ void CFuncTankRocket::Precache( void )
 	CFuncTank::Precache();
 }
 
-void CFuncTankRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	CMissile *pRocket = (CMissile *) CBaseEntity::Create( "rpg_missile", barrelEnd, GetAbsAngles(), this );
 	
@@ -2550,7 +2718,7 @@ void CFuncTankRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vect
 		pRocket->SetDamage( m_iBulletDamageVsPlayer );
 	}
 
-	CFuncTank::Fire( bulletCount, barrelEnd, forward, this );
+	CFuncTank::Fire( bulletCount, barrelEnd, forward, this, bIgnoreSpread );
 }
 
 
@@ -2566,7 +2734,7 @@ public:
 	void Precache( void );
 	virtual void Spawn();
 	virtual void Activate();
-	virtual void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	virtual void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	virtual void ControllerPostFrame();
 	virtual void OnStopControlled();
 	virtual const char *GetTracerType( void );
@@ -2642,7 +2810,7 @@ void CFuncTankAirboatGun::Activate()
 
 	if ( m_iszAirboatGunModel != NULL_STRING )
 	{
-		m_hAirboatGunModel = dynamic_cast<CBaseAnimating*>( gEntList.FindEntityByName( NULL, m_iszAirboatGunModel, NULL ) );
+		m_hAirboatGunModel = dynamic_cast<CBaseAnimating*>( gEntList.FindEntityByName( NULL, m_iszAirboatGunModel ) );
 		if ( m_hAirboatGunModel )
 		{
 			m_nGunBarrelAttachment = m_hAirboatGunModel->LookupAttachment( "muzzle" );
@@ -2745,8 +2913,7 @@ Vector CFuncTankAirboatGun::WorldBarrelPosition( void )
 	}
 
 	Vector vecOrigin;
-	QAngle vecAngles;
-	m_hAirboatGunModel->GetAttachment( m_nGunBarrelAttachment, vecOrigin, vecAngles );
+	m_hAirboatGunModel->GetAttachment( m_nGunBarrelAttachment, vecOrigin );
 	return vecOrigin;
 }
 
@@ -2799,7 +2966,7 @@ void CFuncTankAirboatGun::DoImpactEffect( trace_t &tr, int nDamageType )
 //-----------------------------------------------------------------------------
 #define AIRBOAT_GUN_HEAVY_SHOT_INTERVAL	0.2f
 
-void CFuncTankAirboatGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankAirboatGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 	int ammoType = pAmmoDef->Index( "AirboatGun" );
@@ -2849,7 +3016,7 @@ public:
 	void Precache( void );
 	virtual void Spawn();
 	virtual void UpdateOnRemove();
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	virtual void Think();
 	virtual float GetShotSpeed() { return m_flRocketSpeed; }
 
@@ -2948,7 +3115,7 @@ void CFuncTankAPCRocket::FireDying( const Vector &barrelEnd )
 	}
 }
 
-void CFuncTankAPCRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankAPCRocket::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	static float s_pSide[] = { 0.966, 0.866, 0.5, -0.5, -0.866, -0.966 };
 
@@ -2973,7 +3140,7 @@ void CFuncTankAPCRocket::Fire( int bulletCount, const Vector &barrelEnd, const V
 	CAPCMissile *pRocket = (CAPCMissile *) CAPCMissile::Create( barrelEnd, angles, vecVelocity, this );
 	pRocket->IgniteDelay();
 
-	CFuncTank::Fire( bulletCount, barrelEnd, forward, this );
+	CFuncTank::Fire( bulletCount, barrelEnd, forward, this, bIgnoreSpread );
 
 	if ( --m_nBulletCount <= 0 )
 	{
@@ -3569,7 +3736,7 @@ public:
 
 	void Precache( void );
 	void FiringSequence( const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	void ShootGun(void);
 	void Spawn();
 	void SetNextAttack( float flWait );
@@ -3674,7 +3841,7 @@ void CFuncTankMortar::ShootGun( void )
 	UpdateMatrix();
 	forward = m_parentMatrix.ApplyRotation( forward );
 
-	Fire( 1, WorldBarrelPosition(), forward, m_pAttacker );
+	Fire( 1, WorldBarrelPosition(), forward, m_pAttacker, false );
 }
 
 
@@ -3692,7 +3859,7 @@ void CFuncTankMortar::FiringSequence( const Vector &barrelEnd, const Vector &for
 	}
 }	
 
-void CFuncTankMortar::Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker )
+void CFuncTankMortar::Fire( int bulletCount, const Vector &barrelEnd, const Vector &vecForward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	Vector vecProjectedPosition = vec3_invalid;
 	trace_t tr;
@@ -3773,7 +3940,7 @@ void CFuncTankMortar::Fire( int bulletCount, const Vector &barrelEnd, const Vect
 	VectorNormalize( vecFinalDir );
 
 	CMortarShell::Create( barrelEnd, tr.endpos, vecFinalDir, m_fireDelay, m_flWarningTime, m_incomingSound );
-	BaseClass::Fire( bulletCount, barrelEnd, vecForward, this );
+	BaseClass::Fire( bulletCount, barrelEnd, vecForward, this, bIgnoreSpread );
 }
 
 //-----------------------------------------------------------------------------
@@ -3785,7 +3952,7 @@ public:
 	DECLARE_CLASS( CFuncTankPhysCannister, CFuncTank );
 	DECLARE_DATADESC();
 
-	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 
 protected:
 	string_t				m_iszBarrelVolume;
@@ -3804,14 +3971,14 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFuncTankPhysCannister::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker )
+void CFuncTankPhysCannister::Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread )
 {
 	// Find our barrel volume
 	if ( !m_hBarrelVolume )
 	{
 		if ( m_iszBarrelVolume != NULL_STRING )
 		{
-			m_hBarrelVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszBarrelVolume, NULL ) );
+			m_hBarrelVolume = dynamic_cast<CBaseTrigger*>( gEntList.FindEntityByName( NULL, m_iszBarrelVolume ) );
 		}
 
 		if ( !m_hBarrelVolume )

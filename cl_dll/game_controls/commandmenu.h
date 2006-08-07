@@ -52,6 +52,7 @@ private:
 		virtual void UpdateCustomItem(KeyValues * params, MenuItem * item ) {}; // maybe change your item
 		virtual void OnCustomItem(KeyValues * params) {}; // a custom item was pressed
 		virtual bool CheckRules(const char *rule, const char *ruledata); // check a menu item rule
+		virtual void SetVisible(bool state);
 
 	// DON'T touch anything below !
 

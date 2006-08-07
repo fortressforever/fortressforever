@@ -107,7 +107,7 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 	{
 		return "unconnected";
 	}
-		
+	
 	return m_szName[iIndex];
 }
 

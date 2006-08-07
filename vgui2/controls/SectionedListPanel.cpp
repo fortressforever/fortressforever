@@ -876,7 +876,7 @@ void SectionedListPanel::ApplySettings(KeyValues *inResourceData)
 	}
 	if (IsProportional())
 	{
-		m_iLineSpacing = scheme()->GetProportionalScaledValue(m_iLineSpacing);
+		m_iLineSpacing = scheme()->GetProportionalScaledValueEx(GetScheme(), m_iLineSpacing);
 	}
 }
 

@@ -35,6 +35,7 @@ private:
 	CNetworkVar( bool,	m_bNeedPump );		// When emptied completely
 	CNetworkVar( bool,	m_bDelayedFire1 );	// Fire primary when finished reloading
 	CNetworkVar( bool,	m_bDelayedFire2 );	// Fire secondary when finished reloading
+	CNetworkVar( bool,	m_bDelayedReload );	// Reload when finished pump
 
 public:
 	virtual const Vector& GetBulletSpread( void )
@@ -77,18 +78,23 @@ BEGIN_NETWORK_TABLE( CWeaponShotgun, DT_WeaponShotgun )
 	RecvPropBool( RECVINFO( m_bNeedPump ) ),
 	RecvPropBool( RECVINFO( m_bDelayedFire1 ) ),
 	RecvPropBool( RECVINFO( m_bDelayedFire2 ) ),
+	RecvPropBool( RECVINFO( m_bDelayedReload ) ),
 #else
 	SendPropBool( SENDINFO( m_bNeedPump ) ),
 	SendPropBool( SENDINFO( m_bDelayedFire1 ) ),
 	SendPropBool( SENDINFO( m_bDelayedFire2 ) ),
+	SendPropBool( SENDINFO( m_bDelayedReload ) ),
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponShotgun )
 	DEFINE_PRED_FIELD( m_bNeedPump, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDelayedFire1, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDelayedFire2, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bDelayedReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
+#endif
 
 LINK_ENTITY_TO_CLASS( weapon_shotgun, CWeaponShotgun );
 PRECACHE_WEAPON_REGISTER(weapon_shotgun);
@@ -118,6 +124,9 @@ IMPLEMENT_ACTTABLE(CWeaponShotgun);
 //-----------------------------------------------------------------------------
 bool CWeaponShotgun::StartReload( void )
 {
+	if ( m_bNeedPump )
+		return false;
+
 	CBaseCombatCharacter *pOwner  = GetOwner();
 	
 	if ( pOwner == NULL )
@@ -129,15 +138,6 @@ bool CWeaponShotgun::StartReload( void )
 	if (m_iClip1 >= GetMaxClip1())
 		return false;
 
-	// If shotgun totally emptied then a pump animation is needed
-	
-	//NOTENOTE: This is kinda lame because the player doesn't get strong feedback on when the reload has finished,
-	//			without the pump.  Technically, it's incorrect, but it's good for feedback...
-
-	if (m_iClip1 <= 0)
-	{
-		m_bNeedPump = true;
-	}
 
 	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
@@ -256,6 +256,12 @@ void CWeaponShotgun::Pump( void )
 		return;
 	
 	m_bNeedPump = false;
+
+	if ( m_bDelayedReload )
+	{
+		m_bDelayedReload = false;
+		StartReload();
+	}
 	
 	WeaponSound( SPECIAL1 );
 
@@ -325,11 +331,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
 
-	if( m_iClip1 )
-	{
-		// pump so long as some rounds are left.
-		m_bNeedPump = true;
-	}
+	m_bNeedPump = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -378,11 +380,7 @@ void CWeaponShotgun::SecondaryAttack( void )
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
 	}
 
-	if( m_iClip1 )
-	{
-		// pump so long as some rounds are left.
-		m_bNeedPump = true;
-	}
+	m_bNeedPump = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -396,17 +394,22 @@ void CWeaponShotgun::ItemPostFrame( void )
 		return;
 	}
 
+	if ( m_bNeedPump && ( pOwner->m_nButtons & IN_RELOAD ) )
+	{
+		m_bDelayedReload = true;
+	}
+
 	if (m_bInReload)
 	{
 		// If I'm primary firing and have one round stop reloading and fire
-		if ((pOwner->m_nButtons & IN_ATTACK ) && (m_iClip1 >=1))
+		if ((pOwner->m_nButtons & IN_ATTACK ) && (m_iClip1 >=1) && !m_bNeedPump )
 		{
 			m_bInReload		= false;
 			m_bNeedPump		= false;
 			m_bDelayedFire1 = true;
 		}
-		// If I'm secondary firing and have one round stop reloading and fire
-		else if ((pOwner->m_nButtons & IN_ATTACK2 ) && (m_iClip1 >=2))
+		// If I'm secondary firing and have two rounds stop reloading and fire
+		else if ((pOwner->m_nButtons & IN_ATTACK2 ) && (m_iClip1 >=2) && !m_bNeedPump )
 		{
 			m_bInReload		= false;
 			m_bNeedPump		= false;

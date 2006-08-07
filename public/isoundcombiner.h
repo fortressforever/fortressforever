@@ -26,7 +26,7 @@ struct CombinerEntry
 	float	startoffset;
 };
 
-class ISoundCombiner
+abstract_class ISoundCombiner
 {
 public:
 	virtual ~ISoundCombiner() {}

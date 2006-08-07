@@ -58,6 +58,8 @@ public:
 	bool IsFileWritable( char const *pFileName, const char *pPathID = 0 ) {return false;}
 	bool SetFileWritable( char const *pFileName, bool writable, const char *pPathID = 0 ) {return false;}
 	long GetFileTime( const char *pFileName, const char *pPathID = 0 ) { return 0; }
+	bool ReadFile( const char *pFileName, const char *pPath, CUtlBuffer &buf, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL ) {return false;}
+	bool WriteFile( const char *pFileName, const char *pPath, CUtlBuffer &buf ) {return false;}
 };
 
 MyFileSystem g_MyFS;

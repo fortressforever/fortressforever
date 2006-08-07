@@ -16,6 +16,7 @@ void GetRagdollCurSequenceWithDeathPose( C_BaseAnimating *entity, matrix3x4_t *c
 
 	Vector vPrevOrigin = entity->GetAbsOrigin();
 
+	entity->ForceAllInterpolate();
 	entity->Interpolate( flTime );
 	
 	if ( activity != ACT_INVALID )

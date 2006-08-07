@@ -53,7 +53,7 @@ protected:
 	CNetworkVar( float, m_flSize );
 	CNetworkVar( bool, m_bUseHitboxes );
 
-	float	m_flLifetime;
+	CNetworkVar( float, m_flLifetime );
 	bool	m_bPlayingSound;
 };
 

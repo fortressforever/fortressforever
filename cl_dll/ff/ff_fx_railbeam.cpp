@@ -145,7 +145,13 @@ void FX_RailBeam(int entindex, const Vector &target, float scale)
 //-----------------------------------------------------------------------------
 void RailBeamCallback(const CEffectData &data)
 {
-	FX_RailBeam(data.m_nEntIndex, data.m_vOrigin, data.m_flScale);
+	FX_RailBeam(
+#ifdef GAME_DLL
+		data.m_nEntIndex
+#else
+		data.m_hEntity.GetEntryIndex()
+#endif
+		, data.m_vOrigin, data.m_flScale);
 }
 
 DECLARE_CLIENT_EFFECT("RailBeam", RailBeamCallback);

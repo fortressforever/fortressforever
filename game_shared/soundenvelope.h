@@ -42,12 +42,12 @@ struct envelopeDescription_t
 
 class IRecipientFilter;
 
-class CSoundEnvelopeController
+abstract_class CSoundEnvelopeController
 {
 public:
 	virtual void		SystemReset( void ) = 0;
 	virtual void		SystemUpdate( void ) = 0;
-	virtual void		Play( CSoundPatch *pSound, float volume, float pitch ) = 0;
+	virtual void		Play( CSoundPatch *pSound, float volume, float pitch, float flStartTime = 0 ) = 0;
 	virtual void		CommandAdd( CSoundPatch *pSound, float executeDeltaTime, soundcommands_t command, float commandTime, float value ) = 0;
 	virtual void		CommandClear( CSoundPatch *pSound ) = 0;
 	virtual void		Shutdown( CSoundPatch *pSound ) = 0;
@@ -72,6 +72,8 @@ public:
 
 	virtual string_t	SoundGetName( CSoundPatch *pSound ) = 0;
 	static	CSoundEnvelopeController &GetController( void );
+
+	virtual void		SoundSetCloseCaptionDuration( CSoundPatch *pSound, float flDuration ) = 0;
 };
 
 

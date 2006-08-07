@@ -46,6 +46,7 @@ ConVar	g_debug_turret_ceiling( "g_debug_turret_ceiling", "0" );
 #define SF_CEILING_TURRET_AUTOACTIVATE		0x00000020
 #define SF_CEILING_TURRET_STARTINACTIVE		0x00000040
 #define SF_CEILING_TURRET_NEVERRETIRE		0x00000080
+#define SF_CEILING_TURRET_OUT_OF_AMMO		0x00000100
 
 //Heights
 #define	CEILING_TURRET_RETRACT_HEIGHT	24
@@ -57,6 +58,7 @@ int ACT_CEILING_TURRET_CLOSE;
 int ACT_CEILING_TURRET_OPEN_IDLE;
 int ACT_CEILING_TURRET_CLOSED_IDLE;
 int ACT_CEILING_TURRET_FIRE;
+int ACT_CEILING_TURRET_DRYFIRE;
 
 //Turret states
 enum turretState_e
@@ -112,6 +114,8 @@ public:
 	float	MaxYawSpeed( void );
 
 	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
+
+	virtual bool CanBeAnEnemyOf( CBaseEntity *pEnemy );
 
 	Class_T	Classify( void ) 
 	{
@@ -250,6 +254,7 @@ void CNPC_CeilingTurret::Precache( void )
 	ADD_CUSTOM_ACTIVITY( CNPC_CeilingTurret, ACT_CEILING_TURRET_CLOSED_IDLE );
 	ADD_CUSTOM_ACTIVITY( CNPC_CeilingTurret, ACT_CEILING_TURRET_OPEN_IDLE );
 	ADD_CUSTOM_ACTIVITY( CNPC_CeilingTurret, ACT_CEILING_TURRET_FIRE );
+	ADD_CUSTOM_ACTIVITY( CNPC_CeilingTurret, ACT_CEILING_TURRET_DRYFIRE );
 
 	PrecacheScriptSound( "NPC_CeilingTurret.Retire" );
 	PrecacheScriptSound( "NPC_CeilingTurret.Deploy" );
@@ -260,6 +265,8 @@ void CNPC_CeilingTurret::Precache( void )
 	PrecacheScriptSound( "NPC_CeilingTurret.Ping" );
 	PrecacheScriptSound( "NPC_CeilingTurret.Die" );
 
+	PrecacheScriptSound( "NPC_FloorTurret.DryFire" );
+	
 	BaseClass::Precache();
 }
 
@@ -316,6 +323,9 @@ void CNPC_CeilingTurret::Spawn( void )
 
 	//Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
+
+	// Don't allow us to skip animation setup because our attachments are critical to us!
+	SetBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
 }
 
 //-----------------------------------------------------------------------------
@@ -661,8 +671,14 @@ void CNPC_CeilingTurret::ActiveThink( void )
 		//Fire the gun
 		if ( DotProduct( vecDirToEnemy, vecMuzzleDir ) >= 0.9848 ) // 10 degree slop
 		{
-			SetActivity( ACT_RESET );
-			SetActivity( (Activity) ACT_CEILING_TURRET_FIRE );
+			if ( m_spawnflags & SF_CEILING_TURRET_OUT_OF_AMMO )
+			{
+				SetActivity( (Activity) ACT_CEILING_TURRET_DRYFIRE );
+			}
+			else
+			{
+				SetActivity( (Activity) ACT_CEILING_TURRET_FIRE );
+			}
 			
 			//Fire the weapon
 			Shoot( vecMuzzle, vecMuzzleDir );
@@ -704,10 +720,14 @@ void CNPC_CeilingTurret::SearchThink( void )
 	}
 
 	//Acquire the target
-	if ( GetEnemy() == NULL )
+ 	if ( GetEnemy() == NULL )
 	{
 		GetSenses()->Look( CEILING_TURRET_RANGE );
-		SetEnemy( BestEnemy() );
+		CBaseEntity *pEnemy = BestEnemy();
+		if ( pEnemy )
+		{
+			SetEnemy( pEnemy );
+		}
 	}
 
 	//If we've found a target, spin up the barrel and start to attack
@@ -788,6 +808,22 @@ void CNPC_CeilingTurret::AutoSearchThink( void )
 //-----------------------------------------------------------------------------
 void CNPC_CeilingTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy )
 {
+	if ( m_spawnflags & SF_CEILING_TURRET_OUT_OF_AMMO )
+	{
+		EmitSound( "NPC_FloorTurret.DryFire");
+		EmitSound( "NPC_CeilingTurret.Activate" );
+
+  		if ( RandomFloat( 0, 1 ) > 0.7 )
+		{
+			m_flShotTime = gpGlobals->curtime + random->RandomFloat( 0.5, 1.5 );
+		}
+		else
+		{
+			m_flShotTime = gpGlobals->curtime;
+		}
+		return;
+	}
+
 	FireBulletsInfo_t info;
 
 	if ( GetEnemy() != NULL )
@@ -830,6 +866,8 @@ void CNPC_CeilingTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnem
 //-----------------------------------------------------------------------------
 bool CNPC_CeilingTurret::PreThink( turretState_e state )
 {
+	CheckPVSCondition();
+
 	//Animate
 	StudioFrameAdvance();
 
@@ -1069,4 +1107,21 @@ void CNPC_CeilingTurret::SetHeight( float height )
 	}
 
 	SetCollisionBounds( mins, maxs );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pEnemy - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_CeilingTurret::CanBeAnEnemyOf( CBaseEntity *pEnemy )
+{
+	// If we're out of ammo, make friendly companions ignore us
+	if ( m_spawnflags & SF_CEILING_TURRET_OUT_OF_AMMO )
+	{
+		if ( pEnemy->Classify() == CLASS_PLAYER_ALLY_VITAL )
+			return false;
+	} 
+
+	return BaseClass::CanBeAnEnemyOf( pEnemy );
 }

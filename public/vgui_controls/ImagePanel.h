@@ -33,6 +33,7 @@ public:
 	virtual void SetImage(IImage *image);
 	virtual void SetImage(const char *imageName);
 	virtual IImage *GetImage();
+	char *GetImageName();
 
 	// sets whether or not the image should scale to fit the size of the ImagePanel (defaults to false)
 	void SetShouldScaleImage( bool state );

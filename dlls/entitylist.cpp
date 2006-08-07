@@ -12,11 +12,17 @@
 #include "collisionutils.h"
 #include "UtlSortVector.h"
 #include "tier0/vprof.h"
-
+#include "mapentities.h"
+#include "client.h"
+#include "ai_initutils.h"
+#include "globalstate.h"
+#include "datacache/imdlcache.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
+CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
+void SceneManager_ClientActive( CBasePlayer *player );
+
 static CUtlVector<IServerNetworkable*> g_DeleteList;
 
 CGlobalEntityList gEntList;
@@ -113,7 +119,7 @@ void AimTarget_ForceRepopulateList()
 
 
 // used to sort the think list by nextthink
-int CompareEntityThinkTimes( const unsigned short *pIndex0, const unsigned short *pIndex1 )
+int __cdecl CompareEntityThinkTimes( const unsigned short *pIndex0, const unsigned short *pIndex1 )
 {
 	float thinkTime0 = CBaseEntity::Instance( *pIndex0 )->GetNextThink();
 	float thinkTime1 = CBaseEntity::Instance( *pIndex1 )->GetNextThink();
@@ -225,6 +231,7 @@ public:
 			// already in the list? (had think or sim last time, now has both - or had both last time, now just one)
 			if ( m_entinfoIndex[index] == 0xFFFF )
 			{
+				MEM_ALLOC_CREDIT();
 				m_entinfoIndex[index] = m_simThinkList.AddToTail( (unsigned short)index );
 			}
 		}
@@ -283,6 +290,7 @@ public:
 	}
 	void AddEntity( CBaseEntity *pEntity )
 	{
+		MEM_ALLOC_CREDIT();
 		m_list.AddToTail( (unsigned short)pEntity->GetRefEHandle().GetEntryIndex() );
 	}
 	void PostClientMessagesSent()
@@ -394,6 +402,7 @@ void CGlobalEntityList::Clear( void )
 		IServerNetworkable *ent = GetServerNetworkable( hCur );
 		if ( ent )
 		{
+			MDLCACHE_CRITICAL_SECTION();
 			// Force UpdateOnRemove to be called
 			UTIL_Remove( ent );
 		}
@@ -543,7 +552,7 @@ CBaseEntity *CGlobalEntityList::FindEntityByClassname( CBaseEntity *pStartEntity
 //			pActivator - The activator entity if this was called from an input
 //				or Use handler.
 //-----------------------------------------------------------------------------
-CBaseEntity *FindEntityProcedural( const char *szName, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityProcedural( const char *szName, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	//
 	// Check for the name escape character.
@@ -581,6 +590,10 @@ CBaseEntity *FindEntityProcedural( const char *szName, CBaseEntity *pSearchingEn
 		{
 			return pActivator;
 		}
+		else if ( FStrEq( pName, "caller" ) )
+		{
+			return pCaller;
+		}
 		else if ( FStrEq( pName, "picker" ) )
 		{
 			return FindPickerEntity( UTIL_PlayerByIndex(1) );
@@ -607,7 +620,7 @@ CBaseEntity *FindEntityProcedural( const char *szName, CBaseEntity *pSearchingEn
 //			pActivator - Activator entity if this was called from an input
 //				handler or Use handler.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityByName( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pActivator, CBaseEntity *pCaller )
+CBaseEntity *CGlobalEntityList::FindEntityByName( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller, IEntityFindFilter *pFilter )
 {
 	if ( !szName || szName[0] == 0 )
 		return NULL;
@@ -618,7 +631,7 @@ CBaseEntity *CGlobalEntityList::FindEntityByName( CBaseEntity *pStartEntity, con
 		// Avoid an infinite loop, only find one match per procedural search!
 		//
 		if (pStartEntity == NULL)
-			return FindEntityProcedural( szName, pCaller, pActivator );
+			return FindEntityProcedural( szName, pSearchingEntity, pActivator, pCaller );
 
 		return NULL;
 	}
@@ -638,12 +651,16 @@ CBaseEntity *CGlobalEntityList::FindEntityByName( CBaseEntity *pStartEntity, con
 			continue;
 
 		if ( ent->NameMatches( szName ) )
+		{
+			if ( pFilter && !pFilter->ShouldFindEntity(ent) )
+				continue;
+
 			return ent;
+		}
 	}
 
 	return NULL;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -749,7 +766,7 @@ CBaseEntity *CGlobalEntityList::FindEntityInSphere( CBaseEntity *pStartEntity, c
 //				or Use handler, NULL otherwise.
 // Output : Returns a pointer to the found entity, NULL if none.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityByNameNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityByNameNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	CBaseEntity *pEntity = NULL;
 
@@ -763,7 +780,7 @@ CBaseEntity *CGlobalEntityList::FindEntityByNameNearest( const char *szName, con
 	}
 
 	CBaseEntity *pSearch = NULL;
-	while ((pSearch = gEntList.FindEntityByName( pSearch, szName, pActivator )) != NULL)
+	while ((pSearch = gEntList.FindEntityByName( pSearch, szName, pSearchingEntity, pActivator, pCaller )) != NULL)
 	{
 		if ( !pSearch->edict() )
 			continue;
@@ -793,7 +810,7 @@ CBaseEntity *CGlobalEntityList::FindEntityByNameNearest( const char *szName, con
 //				or Use handler, NULL otherwise.
 // Output : Returns a pointer to the found entity, NULL if none.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityByNameWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityByNameWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	//
 	// Check for matching class names within the search radius.
@@ -802,10 +819,10 @@ CBaseEntity *CGlobalEntityList::FindEntityByNameWithin( CBaseEntity *pStartEntit
 	float flMaxDist2 = flRadius * flRadius;
 	if (flMaxDist2 == 0)
 	{
-		return gEntList.FindEntityByName( pEntity, szName, pActivator );
+		return gEntList.FindEntityByName( pEntity, szName, pSearchingEntity, pActivator, pCaller );
 	}
 
-	while ((pEntity = gEntList.FindEntityByName( pEntity, szName, pActivator )) != NULL)
+	while ((pEntity = gEntList.FindEntityByName( pEntity, szName, pSearchingEntity, pActivator, pCaller )) != NULL)
 	{
 		if ( !pEntity->edict() )
 			continue;
@@ -912,11 +929,11 @@ CBaseEntity *CGlobalEntityList::FindEntityByClassnameWithin( CBaseEntity *pStart
 //				or Use handler, NULL otherwise.
 // Output : Returns a pointer to the found entity, NULL if none.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityGeneric( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityGeneric( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	CBaseEntity *pEntity = NULL;
 
-	pEntity = gEntList.FindEntityByName( pStartEntity, szName, pActivator );
+	pEntity = gEntList.FindEntityByName( pStartEntity, szName, pSearchingEntity, pActivator, pCaller );
 	if (!pEntity)
 	{
 		pEntity = gEntList.FindEntityByClassname( pStartEntity, szName );
@@ -938,11 +955,11 @@ CBaseEntity *CGlobalEntityList::FindEntityGeneric( CBaseEntity *pStartEntity, co
 //				or Use handler, NULL otherwise.
 // Output : Returns a pointer to the found entity, NULL if none.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityGenericWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityGenericWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	CBaseEntity *pEntity = NULL;
 
-	pEntity = gEntList.FindEntityByNameWithin( pStartEntity, szName, vecSrc, flRadius, pActivator );
+	pEntity = gEntList.FindEntityByNameWithin( pStartEntity, szName, vecSrc, flRadius, pSearchingEntity, pActivator, pCaller );
 	if (!pEntity)
 	{
 		pEntity = gEntList.FindEntityByClassnameWithin( pStartEntity, szName, vecSrc, flRadius );
@@ -963,11 +980,11 @@ CBaseEntity *CGlobalEntityList::FindEntityGenericWithin( CBaseEntity *pStartEnti
 //				or Use handler, NULL otherwise.
 // Output : Returns a pointer to the found entity, NULL if none.
 //-----------------------------------------------------------------------------
-CBaseEntity *CGlobalEntityList::FindEntityGenericNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator )
+CBaseEntity *CGlobalEntityList::FindEntityGenericNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
 	CBaseEntity *pEntity = NULL;
 
-	pEntity = gEntList.FindEntityByNameNearest( szName, vecSrc, flRadius, pActivator );
+	pEntity = gEntList.FindEntityByNameNearest( szName, vecSrc, flRadius, pSearchingEntity, pActivator, pCaller );
 	if (!pEntity)
 	{
 		pEntity = gEntList.FindEntityByClassnameNearest( szName, vecSrc, flRadius );
@@ -1232,6 +1249,17 @@ void CGlobalEntityList::OnRemoveEntity( IHandleEntity *pEnt, CBaseHandle handle 
 	m_iNumEnts--;
 }
 
+void CGlobalEntityList::NotifyCreateEntity( CBaseEntity *pEnt )
+{
+	if ( !pEnt )
+		return;
+
+	//DevMsg(2,"Deleted %s\n", pBaseEnt->GetClassname() );
+	for ( int i = m_entityListeners.Count()-1; i >= 0; i-- )
+	{
+		m_entityListeners[i]->OnEntityCreated( pEnt );
+	}
+}
 
 void CGlobalEntityList::NotifySpawn( CBaseEntity *pEnt )
 {
@@ -1463,12 +1491,31 @@ void CEntityTouchManager::FrameUpdatePostEntityThink()
 	}
 }
 
-// On hook to rule them all...
-// Since most of the little list managers in here only need one or two of the game
-// system callbacks, this hook is a game system that passes them the appropriate callbacks
-class CEntityListSystem : public CAutoGameSystem
+class CRespawnEntitiesFilter : public IMapEntityFilter
 {
 public:
+	virtual bool ShouldCreateEntity( const char *pClassname )
+	{
+		// Create everything but the world
+		return Q_stricmp( pClassname, "worldspawn" ) != 0;
+	}
+
+	virtual CBaseEntity* CreateNextEntity( const char *pClassname )
+	{
+		return CreateEntityByName( pClassname );
+	}
+};
+
+// One hook to rule them all...
+// Since most of the little list managers in here only need one or two of the game
+// system callbacks, this hook is a game system that passes them the appropriate callbacks
+class CEntityListSystem : public CAutoGameSystemPerFrame
+{
+public:
+	CEntityListSystem( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+		m_bRespawnAllEntities = false;
+	}
 	void LevelInitPreEntity()
 	{
 		g_NotifyList.LevelInitPreEntity();
@@ -1498,24 +1545,89 @@ public:
 	void FrameUpdatePostEntityThink()
 	{
 		g_TouchManager.FrameUpdatePostEntityThink();
+
+		if ( m_bRespawnAllEntities )
+		{
+			m_bRespawnAllEntities = false;
+
+			// Don't change globalstate owing to deletion here
+			GlobalEntity_EnableStateUpdates( false );
+
+			// Remove all entities
+			int nPlayerIndex = -1;
+			CBaseEntity *pEnt = gEntList.FirstEnt();
+			while ( pEnt )
+			{
+				CBaseEntity *pNextEnt = gEntList.NextEnt( pEnt );
+				if ( pEnt->IsPlayer() )
+				{
+					nPlayerIndex = pEnt->entindex();
+				}
+				if ( !pEnt->IsEFlagSet( EFL_KEEP_ON_RECREATE_ENTITIES ) )
+				{
+					UTIL_Remove( pEnt );
+				}
+				pEnt = pNextEnt;
+			}
+			
+			gEntList.CleanupDeleteList();
+
+			GlobalEntity_EnableStateUpdates( true );
+
+			// Allows us to immediately re-use the edict indices we just freed to avoid edict overflow
+			engine->AllowImmediateEdictReuse();
+
+			// Reset node counter used during load
+			CNodeEnt::m_nNodeCount = 0;
+
+			CRespawnEntitiesFilter filter;
+			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
+
+			// Allocate a CBasePlayer for pev, and call spawn
+			if ( nPlayerIndex >= 0 )
+			{
+				edict_t *pEdict = engine->PEntityOfEntIndex( nPlayerIndex );
+				ClientPutInServer( pEdict, "unnamed" );
+				ClientActive( pEdict, false );
+
+				CBasePlayer *pPlayer = ( CBasePlayer * )CBaseEntity::Instance( pEdict );
+				SceneManager_ClientActive( pPlayer );
+			}
+		}
 	}
+
+	bool m_bRespawnAllEntities;
 };
 
-static CEntityListSystem g_EntityListSystem;
+static CEntityListSystem g_EntityListSystem( "CEntityListSystem" );
+
+//-----------------------------------------------------------------------------
+// Respawns all entities in the level
+//-----------------------------------------------------------------------------
+void RespawnEntities()
+{
+	g_EntityListSystem.m_bRespawnAllEntities = true;
+}
+
+static ConCommand restart_entities( "respawn_entities", RespawnEntities, "Respawn all the entities in the map." );
 
 class CSortedEntityList
 {
 public:
-	CSortedEntityList() : m_sortedList(EntityReportLess), m_emptyCount(0) {}
+	CSortedEntityList() : m_sortedList(), m_emptyCount(0) {}
 
 	typedef CBaseEntity *ENTITYPTR;
-	static bool EntityReportLess( const ENTITYPTR &src1, const ENTITYPTR &src2, void *pCtx )
+	class CEntityReportLess
 	{
-		if ( stricmp( src1->GetClassname(), src2->GetClassname() ) < 0 )
-			return true;
-
-		return false;
-	}
+	public:
+		bool Less( const ENTITYPTR &src1, const ENTITYPTR &src2, void *pCtx )
+		{
+			if ( stricmp( src1->GetClassname(), src2->GetClassname() ) < 0 )
+				return true;
+	
+			return false;
+		}
+	};
 
 	void AddEntityToList( CBaseEntity *pEntity )
 	{
@@ -1566,7 +1678,7 @@ public:
 		}
 	}
 private:
-	CUtlSortVector< CBaseEntity *> m_sortedList;
+	CUtlSortVector< CBaseEntity *, CEntityReportLess > m_sortedList;
 	int		m_emptyCount;
 };
 

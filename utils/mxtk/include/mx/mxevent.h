@@ -46,7 +46,8 @@ public:
 		NCMouseDrag,
 		Close,
 		PosChanged,
-		Char
+		Char,
+		ParentNotify
 	};
 
 	enum { MouseLeftButton = 1, MouseRightButton = 2, MouseMiddleButton = 4};

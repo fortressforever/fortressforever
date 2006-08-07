@@ -52,11 +52,11 @@ void CHud::Think(void)
 
 		// If it's a vgui panel, hide/show as appropriate
 		vgui::Panel *pPanel = dynamic_cast<vgui::Panel*>(m_HudList[i]);
-		if ( pPanel )
+		if ( pPanel && pPanel->IsVisible() != visible )
 		{
 			pPanel->SetVisible( visible );
 		}
-		else
+		else if ( !pPanel )
 		{
 			// All HUD elements should now derive from vgui!!!
 			Assert( 0 );

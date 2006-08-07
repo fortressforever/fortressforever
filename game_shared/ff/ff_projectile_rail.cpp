@@ -173,7 +173,12 @@ void CFFProjectileRail::RailTouch(CBaseEntity *pOther)
 
 				data.m_vOrigin = tr2.endpos;
 				data.m_vNormal = vForward;
+
+#ifdef GAME_DLL
 				data.m_nEntIndex = tr2.fraction != 1.0f;
+#else
+				data.m_hEntity = NULL; // Mirv: FIXME
+#endif
 			
 				DispatchEffect("RailImpact", data);
 			}
@@ -216,7 +221,12 @@ void CFFProjectileRail::RailTouch(CBaseEntity *pOther)
 
 			data.m_vOrigin = tr.endpos;
 			data.m_vNormal = vForward;
+
+#ifdef GAME_DLL
 			data.m_nEntIndex = 0;
+#else
+			data.m_hEntity = NULL;	// FIXME
+#endif
 		
 			DispatchEffect("RailImpact", data);
 			

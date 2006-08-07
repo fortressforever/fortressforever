@@ -13,6 +13,7 @@
 #include "npc_antlion.h"
 #include "monstermaker.h"
 #include "igamesystem.h"
+#include "ai_hint.h"
 
 //
 // Antlion maker class
@@ -20,6 +21,8 @@
 
 #define	SF_ANTLIONMAKER_RANDOM_SPAWN_NODE	0x00000400
 #define	SF_ANTLIONMAKER_SPAWN_CLOSE_TO_TARGET	0x00000800
+#define	SF_ANTLIONMAKER_RANDOM_FIGHT_TARGET	0x00001000
+#define	SF_ANTLIONMAKER_DO_BLOCKEDEFFECTS	0x00002000
 
 class CAntlionTemplateMaker : public CTemplateNPCMaker
 {
@@ -29,6 +32,9 @@ class CAntlionTemplateMaker : public CTemplateNPCMaker
 
 			CAntlionTemplateMaker( void );
 			~CAntlionTemplateMaker( void );
+
+	virtual int DrawDebugTextOverlays( void );
+	virtual void DrawDebugGeometryOverlays( void );
 
 	void	MakeNPC( void );
 	void	ChildPostSpawn( CAI_BaseNPC *pChild );
@@ -42,6 +48,7 @@ class CAntlionTemplateMaker : public CTemplateNPCMaker
 	void	InputSetMaxPool( inputdata_t &inputdata );
 	void	InputSetPoolRegenAmount( inputdata_t &inputdata );
 	void	InputSetPoolRegenTime( inputdata_t &inputdata );
+	void	InputChangeDestinationGroup( inputdata_t &inputdata );
 
 	void	Activate( void );
 	
@@ -60,11 +67,11 @@ class CAntlionTemplateMaker : public CTemplateNPCMaker
 	void	CreateProxyTarget( const Vector &position );
 	void	DestroyProxyTarget( void );
 
-	void	SetFightTarget( string_t strTarget );
+	void	SetFightTarget( string_t strTarget, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
 	void	SetFightTarget( CBaseEntity *pEntity );
 	void	SetFightTarget( const Vector &position );
 	
-	void	SetFollowTarget( string_t strTarget );
+	void	SetFollowTarget( string_t strTarget, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
 	void	SetFollowTarget( CBaseEntity *pEntity );
 
 	void	SetChildMoveState( AntlionMoveState_e state );
@@ -76,6 +83,21 @@ class CAntlionTemplateMaker : public CTemplateNPCMaker
 
 	CBaseEntity	*GetFightTarget( void );
 	CBaseEntity *GetFollowTarget( void );
+
+	virtual void Enable( void );
+	virtual void Disable( void );
+
+
+	void	BlockedCheckFunc( void );
+	void	FindNodesCloseToPlayer( void );
+	void	DoBlockedEffects( CBaseEntity *pBlocker, Vector vOrigin );
+
+	CBaseEntity	*AllHintsFromClusterBlocked( CAI_Hint *pNode, bool &bChosenHintBlocked );
+
+	void	ActivateAllSpores( void );
+	void	ActivateSpore( const char* sporename, Vector vOrigin );
+	void	DisableSpore( const char* sporename );
+	void	DisableAllSpores( void );
 
 protected:
 
@@ -92,6 +114,7 @@ protected:
 	void		PoolRegenThink( void );
 
 protected:
+	// FIXME: The m_strSpawnGroup is redundant to the m_iszDestinationGroup in the base class NPC template maker
 	string_t	m_strSpawnGroup;	// if present, spawn children on the nearest node of this group (to the player)
 	string_t	m_strSpawnTarget;	// name of target to spawn near
 	float		m_flSpawnRadius;	// radius around target to attempt to spawn in
@@ -120,6 +143,13 @@ protected:
 	
 	int			m_iSkinCount;
 
+	float		m_flBlockedBumpTime;
+
+	bool		m_bBlocked;
+	COutputEvent m_OnAllBlocked;
+
+	bool		m_bCreateSpores;
+		
 	DECLARE_DATADESC();
 };
 
@@ -130,6 +160,10 @@ protected:
 class CAntlionMakerManager : public CAutoGameSystem
 {
 public:
+	CAntlionMakerManager( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	void	LevelInitPostEntity( void );
 
 	void	BroadcastFightGoal( const Vector &vFightGoal );

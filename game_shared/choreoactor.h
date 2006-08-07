@@ -10,9 +10,11 @@
 #pragma once
 #endif
 
-#include "utlvector.h"
+#include "tier1/utlvector.h"
 
 class CChoreoChannel;
+class CChoreoScene;
+class CUtlBuffer;
 
 //-----------------------------------------------------------------------------
 // Purpose: The actor is the atomic element of a scene
@@ -28,6 +30,10 @@ public:
 					CChoreoActor( const char *name );
 	// Assignment
 	CChoreoActor&	operator = ( const CChoreoActor& src );
+
+	// Serialization
+	void			SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene );
+	bool			RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene );
 
 	// Accessors
 	void			SetName( const char *name );

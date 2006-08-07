@@ -178,12 +178,22 @@ private:
 };
 
 
-#define RIFF_WAVE			MAKEID('W','A','V','E')
-#define WAVE_FMT			MAKEID('f','m','t',' ')
-#define WAVE_DATA			MAKEID('d','a','t','a')
-#define WAVE_FACT			MAKEID('f','a','c','t')
-#define WAVE_CUE			MAKEID('c','u','e',' ')
-#define WAVE_SAMPLER		MAKEID('s','m','p','l')
-#define WAVE_VALVEDATA		MAKEID('V','D','A','T')
+#define RIFF_WAVE				MAKEID('W','A','V','E')
+#define WAVE_FMT				MAKEID('f','m','t',' ')
+#define WAVE_DATA				MAKEID('d','a','t','a')
+#define WAVE_FACT				MAKEID('f','a','c','t')
+#define WAVE_CUE				MAKEID('c','u','e',' ')
+#define WAVE_SAMPLER			MAKEID('s','m','p','l')
+#define WAVE_VALVEDATA			MAKEID('V','D','A','T')
+#define WAVE_PADD				MAKEID('P','A','D','D')
+#define WAVE_LIST				MAKEID('L','I','S','T') 
+
+#ifndef WAVE_FORMAT_PCM
+#define WAVE_FORMAT_PCM			0x0001
+#endif
+#ifndef WAVE_FORMAT_ADPCM
+#define WAVE_FORMAT_ADPCM		0x0002
+#endif
+#define WAVE_FORMAT_XBOX_ADPCM	0x0069
 
 #endif // RIFF_H

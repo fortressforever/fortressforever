@@ -344,6 +344,30 @@ int	CAI_Squad::GetVisibleSquadMembers( CAI_BaseNPC *pMember )
 }
 
 //-------------------------------------
+//
+//-------------------------------------
+CAI_BaseNPC *CAI_Squad::GetSquadMemberNearestTo( const Vector &vecLocation )
+{
+	CAI_BaseNPC *pNearest = NULL;
+	float		flNearest = FLT_MAX;
+
+	for ( int i = 0; i < m_SquadMembers.Count(); i++ )
+	{
+		float flDist;
+		flDist = m_SquadMembers[i]->GetAbsOrigin().DistToSqr( vecLocation );
+
+		if( flDist < flNearest )
+		{
+			flNearest = flDist;
+			pNearest = m_SquadMembers[i];
+		}
+	}
+
+	Assert( pNearest != NULL );
+	return pNearest;
+}
+
+//-------------------------------------
 // Purpose: Returns true if given entity is in the squad
 //-------------------------------------
 bool CAI_Squad::SquadIsMember( CBaseEntity *pMember )
@@ -476,7 +500,10 @@ void CAI_Squad::SquadNewEnemy( CBaseEntity *pEnemy )
 				   gpGlobals->curtime - pMember->GetEnemyLastTimeSeen() > 3.0 ) )
 			{
 				// give them a new enemy
-				pMember->SetEnemy( pEnemy );
+				if( !hl2_episodic.GetBool() || pMember->IsValidEnemy(pEnemy) )
+				{
+					pMember->SetEnemy( pEnemy );
+				}
 				// pMember->SetLastAttackTime( 0 );
 			}
 		}

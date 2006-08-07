@@ -59,10 +59,6 @@ BEGIN_RECV_TABLE(C_BaseCombatCharacter, DT_BaseCombatCharacter)
 	RecvPropDataTable( "bcc_localdata", 0, 0, &REFERENCE_RECV_TABLE(DT_BCCLocalPlayerExclusive) ),
 	RecvPropEHandle( RECVINFO( m_hActiveWeapon ) ),
 
-#ifdef TF2_CLIENT_DLL
-	RecvPropInt( RECVINFO( m_iPowerups ) ),
-#endif
-
 END_RECV_TABLE()
 
 

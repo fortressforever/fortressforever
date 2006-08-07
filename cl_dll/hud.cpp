@@ -383,7 +383,7 @@ void CHudTexture::DrawSelf( int x, int y, int w, int h, Color& clr ) const
 	}
 }
 
-void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color& clr ) const
+void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color& clr ) const
 {
 	if ( bRenderUsingFont )
 	{
@@ -397,7 +397,7 @@ void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw
 		vgui::surface()->DrawSetTextPos( x, y );
 
 		vgui::CharRenderInfo info;
-		if (vgui::surface()->DrawGetUnicodeCharRenderInfo(cCharacterInFont, info))
+		if ( vgui::surface()->DrawGetUnicodeCharRenderInfo( cCharacterInFont, info ) )
 		{
 			if ( cropy )
 			{
@@ -434,10 +434,15 @@ void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw
 		vgui::surface()->DrawSetColor( clr );
 		vgui::surface()->DrawTexturedSubRect( 
 			x, y, 
-			x + cropw, y + croph, 
+			x + finalWidth, y + finalHeight, 
 			tCoords[ 0 ], tCoords[ 1 ], 
 			tCoords[ 2 ], tCoords[ 3 ] );
 	}
+}
+
+void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color& clr ) const
+{
+	DrawSelfCropped( x, y, cropx, cropy, cropw, croph, cropw, croph, clr );
 }
 
 //-----------------------------------------------------------------------------
@@ -672,9 +677,17 @@ void CHud::RemoveHudElement( CHudElement *pHudElement )
 //-----------------------------------------------------------------------------
 float CHud::GetSensitivity( void )
 {
+#ifndef _XBOX
 	return m_flMouseSensitivity;
+#else
+	return 1.0f;
+#endif
 }
 
+float CHud::GetFOVSensitivityAdjust()
+{
+	return m_flFOVSensitivityAdjust;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Return true if the passed in sections of the HUD shouldn't be drawn
 //-----------------------------------------------------------------------------

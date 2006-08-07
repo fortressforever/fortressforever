@@ -42,7 +42,14 @@ extern ConVar ffdev_nail_speed;
 
 void FF_FX_Projectile_Nail_Callback(const CEffectData &data)
 {
-	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, ffdev_nail_speed.GetFloat(), FF_PROJECTILE_NAIL, data.m_nEntIndex);
+	tempents->FFProjectile(data.m_vOrigin, data.m_vAngles, ffdev_nail_speed.GetFloat(), FF_PROJECTILE_NAIL, 
+
+#ifdef GAME_DLL
+		data.m_nEntIndex
+#else
+		data.m_hEntity.GetEntryIndex()
+#endif
+		);
 }
 
 DECLARE_CLIENT_EFFECT( "EjectBrass_9mm", FF_FX_EjectBrass_9mm_Callback );

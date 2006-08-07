@@ -12,30 +12,45 @@
 
 
 #include "stringregistry.h"
+#include "tier1/utlstring.h"
 class CEnvSoundscape;
 
-class CSoundscapeSystem : public CAutoGameSystem
+class CSoundscapeSystem : public CAutoGameSystemPerFrame
 {
 public:
+	CSoundscapeSystem( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+	}
+
 	// game system
-	virtual bool Init();
-	virtual void Shutdown();
-	virtual void FrameUpdatePostEntityThink();
-	virtual void LevelInitPreEntity();
+	virtual bool Init( void );
+	virtual void Shutdown( void );
+	virtual void FrameUpdatePostEntityThink( void );
+	virtual void LevelInitPreEntity( void );
+	virtual void LevelInitPostEntity();
 
 	virtual void AddSoundscapeFile( const char *filename );
 	int	GetSoundscapeIndex( const char *pName );
 	bool IsValidIndex( int index );
 
+	void FlushSoundscapes( void );
 	void AddSoundscapeEntity( CEnvSoundscape *pSoundscape );
 	void RemoveSoundscapeEntity( CEnvSoundscape *pSoundscape );
-	void PrintDebugInfo();
+	void PrintDebugInfo( void );
+
+#ifdef _XBOX
+	void AddSoundscapeSounds( KeyValues *pSoundscape, int soundscapeIndex );
+	void PrecacheSounds( int soundscapeIndex );
+#endif
 
 private:
 	CStringRegistry		m_soundscapes;
 	int					m_soundscapeCount;
 	CUtlVector<CEnvSoundscape *>	m_soundscapeEntities;
 	int					m_activeIndex;
+#ifdef _XBOX
+	CUtlVector< CUtlVector< CUtlString > >	m_soundscapeSounds;
+#endif
 };
 
 extern CSoundscapeSystem g_SoundscapeSystem;

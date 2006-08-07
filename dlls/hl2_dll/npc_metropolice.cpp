@@ -574,11 +574,11 @@ void CNPC_MetroPolice::Precache( void )
 {
 	if ( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
 	{
-		SetModelName( MAKE_STRING("models/police_cheaple.mdl" ) );
+		SetModelName( AllocPooledString("models/police_cheaple.mdl" ) );
 	}
 	else
 	{
-		SetModelName( MAKE_STRING("models/police.mdl") );
+		SetModelName( AllocPooledString("models/police.mdl") );
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );
@@ -588,6 +588,7 @@ void CNPC_MetroPolice::Precache( void )
 	PrecacheScriptSound( "NPC_Metropolice.Shove" );
 	PrecacheScriptSound( "NPC_MetroPolice.WaterSpeech" );
 	PrecacheScriptSound( "NPC_MetroPolice.HidingSpeech" );
+	enginesound->PrecacheSentenceGroup( "METROPOLICE" );
 
 	BaseClass::Precache();
 }
@@ -614,6 +615,11 @@ bool CNPC_MetroPolice::CreateComponents()
 void CNPC_MetroPolice::Spawn( void )
 {
 	Precache();
+
+#ifdef _XBOX
+	// Always fade the corpse
+	AddSpawnFlags( SF_NPC_FADE_CORPSE );
+#endif // _XBOX
 
 	SetModel( STRING( GetModelName() ) );
 
@@ -2440,7 +2446,7 @@ void CNPC_MetroPolice::InputEnableManhackToss( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::InputSetPoliceGoal( inputdata_t &inputdata )
 {
-	CBaseEntity *pGoal = gEntList.FindEntityByName( NULL, inputdata.value.String(), NULL );
+	CBaseEntity *pGoal = gEntList.FindEntityByName( NULL, inputdata.value.String() );
 
 	if ( pGoal == NULL )
 	{
@@ -2483,7 +2489,7 @@ void CNPC_MetroPolice::AlertSound( void )
 // Purpose: 
 //
 //-----------------------------------------------------------------------------
-void CNPC_MetroPolice::DeathSound( void )
+void CNPC_MetroPolice::DeathSound( const CTakeDamageInfo &info )
 {
 	if ( IsOnFire() )
 		return;
@@ -2632,7 +2638,7 @@ void CNPC_MetroPolice::IdleSound( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_MetroPolice::PainSound( void )
+void CNPC_MetroPolice::PainSound( const CTakeDamageInfo &info )
 {
 	if ( gpGlobals->curtime < m_flNextPainSoundTime )
 		return;
@@ -2780,6 +2786,13 @@ void CNPC_MetroPolice::OnAnimEventStartDeployManhack( void )
 	pManhack->SetLocalOrigin( vecOrigin );
 	pManhack->SetLocalAngles( vecAngles );
 	pManhack->AddSpawnFlags( (SF_MANHACK_PACKED_UP|SF_MANHACK_CARRIED|SF_NPC_WAIT_FOR_SCRIPT) );
+	
+	// Also fade if our parent is marked to do it
+	if ( HasSpawnFlags( SF_NPC_FADE_CORPSE ) )
+	{
+		pManhack->AddSpawnFlags( SF_NPC_FADE_CORPSE );
+	}
+
 	pManhack->Spawn();
 
 	// Make us move with his hand until we're deployed
@@ -5431,7 +5444,7 @@ DEFINE_SCHEDULE
 	"		TASK_STORE_LASTPOSITION			0"
 	"		TASK_GET_CHASE_PATH_TO_ENEMY	300"
 	"		TASK_RUN_PATH_FOR_UNITS			150"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
+	"		TASK_STOP_MOVING				1"
 	"		TASK_FACE_ENEMY			0"
 	""
 	"	Interrupts"
@@ -5805,6 +5818,7 @@ DEFINE_SCHEDULE
 	"	Tasks"
 	"		TASK_GET_PATH_TO_TARGET		0"
 	"		TASK_MOVE_TO_TARGET_RANGE	50"
+	"		TASK_STOP_MOVING			0"
 	"		TASK_FACE_TARGET			0"
 	"		TASK_ANNOUNCE_ATTACK		1"	// 1 = primary attack
 	"		TASK_PLAY_SEQUENCE			ACTIVITY:ACT_MELEE_ATTACK1"

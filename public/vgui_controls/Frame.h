@@ -47,6 +47,7 @@ public:
 
 	// closes the dialog
 	MESSAGE_FUNC( Close, "Close" );
+	MESSAGE_FUNC( CloseModal, "CloseModal" );
 
 	// sets the dialog to delete self on close
 	virtual void SetDeleteSelfOnClose( bool state );
@@ -94,16 +95,36 @@ public:
 	// set whether the title bar should be rendered
 	virtual void SetTitleBarVisible( bool state );
 
+	// When moving via caption, don't let any part of window go outside parent's bounds
+	virtual void SetClipToParent( bool state );
+	virtual bool GetClipToParent() const;
+
+	// Set to true to make the caption height small
+	virtual void SetSmallCaption( bool state );
+	virtual bool IsSmallCaption() const;
+
+	virtual int GetDraggerSize();
+	virtual int GetCornerSize();
+	virtual int GetBottomRightSize();
+	virtual int GetCaptionHeight();
+
 	/* CUSTOM MESSAGE HANDLING
 		"SetTitle"
 			input:	"text"	- string to set the title to be
 	*/
 
+	// Load the control settings 
+	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL);
+
+	void SetChainKeysToParent( bool state );
+	bool CanChainKeysToParent() const;
+
+	// Shows the dialog in a modal fashion
+	virtual void DoModal();
+
 protected:
 	// Respond to mouse presses
 	virtual void OnMousePressed(MouseCode code);
-	// Respond to Key presses.
-	virtual void OnKeyCodePressed(KeyCode code);
 	// Respond to Key typing
 	virtual void OnKeyCodeTyped(KeyCode code);
 	virtual void OnKeyTyped(wchar_t unichar);
@@ -116,6 +137,8 @@ protected:
 	virtual void PerformLayout();
 	// Respond when a close message is recieved.  Can be called directly to close a frame.
 	virtual void OnClose();
+	// Respond to a window finishing its closure. i.e. when a fading window has fully finished its fadeout.
+	virtual void OnFinishedClose();
 	// Minimize the window on the taskbar.
 	MESSAGE_FUNC( OnMinimize, "Minimize" );
 	// Called when minimize-to-systray button is pressed (does nothing by default)
@@ -124,8 +147,6 @@ protected:
 	MESSAGE_FUNC( OnCloseFrameButtonPressed, "CloseFrameButtonPressed" );
 	// Add the child to the focus nav group
 	virtual void OnChildAdded(VPANEL child);
-	// Load the control settings 
-	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL);
 	// settings
 	virtual void ApplySettings(KeyValues *inResourceData);
 	// records the settings into the resource data
@@ -204,6 +225,12 @@ private:
 	int m_iClientInsetX, m_iClientInsetY;
 	int m_iTitleTextInsetX;
 	Menu *_sysMenu;
+	bool m_bClipToParent;
+	bool m_bSmallCaption;
+	int m_nGripperWidth;
+	bool	m_bChainKeysToParent;
+	bool	m_bPrimed;
+	VPANEL	m_hPreviousModal;
 };
 
 } // namespace vgui

@@ -81,7 +81,7 @@ extern char **myargv;
 int Q_filelength (FileHandle_t f);
 int	FileTime (char *path);
 
-void	Q_mkdir (char *path);
+void	Q_mkdir( char *path );
 
 char *ExpandArg (char *path);	// expand relative to CWD
 char *ExpandPath (char *path);	// expand relative to gamedir
@@ -139,8 +139,9 @@ extern	char		com_token[1024];
 
 char *copystring(const char *s);
 
-void	CreatePath (char *path);
-void	QCopyFile (char *from, char *to);
+void	CreatePath( char *path );
+void	QCopyFile( char *from, char *to );
+void	SafeCreatePath( char *path );
 
 extern	qboolean		archive;
 extern	char			archivedir[1024];

@@ -122,14 +122,27 @@ enum SoundFlags_t
 	SND_DELAY			= (1<<4),		// sound has an initial delay
 	SND_STOP_LOOPING	= (1<<5),		// stop all looping sounds on the entity.
 	SND_SPEAKER			= (1<<6),		// being played again by a microphone through a speaker
+ 
+	SND_SHOULDPAUSE		= (1<<7),		// this sound should be paused if the game is paused
+#if defined( _XBOX )
+	SND_XBOX_UI			= (1<<8),		// It's an xbox UI sound, don't suppress when game UI is active (in the menu system) ... all other sounds are paused
+	SND_XBOX_LOOP		= (1<<8)
+#endif
 };
 
-#define SND_FLAG_BITS_ENCODE 7
+#define SND_FLAG_BITS_ENCODE 8
 
 #define MAX_SOUND_INDEX_BITS	13
 #define	MAX_SOUNDS				(1<<MAX_SOUND_INDEX_BITS)
 
+#if !defined( IN_XBOX_CODELINE )
+// +/-4096 msec
 #define MAX_SOUND_DELAY_MSEC_ENCODE_BITS	(13)
+#else
+// +/-65536 msec, 64 seconds
+#define MAX_SOUND_DELAY_MSEC_ENCODE_BITS	(17)
+#endif
+
 // Subtract one to leave room for the sign bit
 #define MAX_SOUND_DELAY_MSEC				(1<<(MAX_SOUND_DELAY_MSEC_ENCODE_BITS-1))    // 4096 msec or about 4 seconds
 

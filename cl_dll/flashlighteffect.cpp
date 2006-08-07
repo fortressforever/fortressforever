@@ -12,6 +12,11 @@
 #include "view.h"
 #include "engine/ivdebugoverlay.h"
 
+#ifdef HL2_EPISODIC
+	#include "c_basehlplayer.h"
+#endif
+
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -123,16 +128,25 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 	FlashlightState_t state;
 
 	Vector end = vecPos + r_flashlightoffsety.GetFloat() * vecUp;
-	
-	// Trace a line outward, skipping the player model and the view model.
-	trace_t pmEye;
-	CTraceFilterSkipPlayerAndViewModel traceFilter;
-	
-	//Eye -> EyeForward
-	UTIL_TraceHull( end, vecPos + vecForward * r_flashlightfar.GetFloat(), Vector( -4, -4, -4 ), Vector ( 4, 4, 4 ), MASK_OPAQUE_AND_NPCS & (~CONTENTS_HITBOX), &traceFilter, &pmEye );
 
-	state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat();
-	state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat();
+	trace_t pmEye, pmEyeBack;
+	CTraceFilterSkipPlayerAndViewModel traceFilter;
+
+	UTIL_TraceHull( vecPos, end, Vector( -4, -4, -4 ), Vector ( 4, 4, 4 ), MASK_SOLID & ~(CONTENTS_HITBOX), &traceFilter, &pmEye );
+
+	if ( pmEye.fraction != 1.0f )
+	{
+		end = vecPos;
+	}
+
+	int iMask = MASK_OPAQUE_AND_NPCS;
+	iMask &= ~CONTENTS_HITBOX;
+	iMask |= CONTENTS_WINDOW;
+
+	// Trace a line outward, skipping the player model and the view model.
+	//Eye -> EyeForward
+	UTIL_TraceHull( end, vecPos + vecForward * r_flashlightfar.GetFloat(), Vector( -4, -4, -4 ), Vector ( 4, 4, 4 ), iMask, &traceFilter, &pmEye );
+	UTIL_TraceHull( end, vecPos - vecForward * 128, Vector( -4, -4, -4 ), Vector ( 4, 4, 4 ), iMask, &traceFilter, &pmEyeBack );
 
 	float flDist;
 	float flLength = (pmEye.endpos - end).Length();
@@ -146,7 +160,12 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 		flDist = 0.0f;
 	}
 
+
 	m_flDistMod = Lerp( 0.3f, m_flDistMod, flDist );
+
+	float flMaxDist = (pmEyeBack.endpos - end).Length();
+	if( m_flDistMod > flMaxDist )
+		m_flDistMod = flMaxDist;
 
 	Vector vStartPos = end;
 	Vector vEndPos = pmEye.endpos;
@@ -171,7 +190,53 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 	state.m_vecLightDirection = vDir;
 
 	state.m_fQuadraticAtten = r_flashlightquadratic.GetFloat();
-	state.m_fLinearAtten = r_flashlightlinear.GetFloat();
+
+	bool bFlicker = false;
+
+#ifdef HL2_EPISODIC
+	
+	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+	if ( pPlayer && pPlayer->m_HL2Local.m_flSuitPower <= 10.0f )
+	{
+		float flScale = SimpleSplineRemapVal( pPlayer->m_HL2Local.m_flSuitPower, 10.0f, 4.8f, 1.0f, 0.0f );
+		flScale = clamp( flScale, 0.0f, 1.0f );
+
+		if ( flScale < 0.35f )
+		{
+			float flFlicker = cosf( gpGlobals->curtime * 6.0f ) * sinf( gpGlobals->curtime * 15.0f );
+			
+			if ( flFlicker > 0.25f && flFlicker < 0.75f )
+			{
+				// On
+				state.m_fLinearAtten = r_flashlightlinear.GetFloat() * flScale;
+			}
+			else
+			{
+				// Off
+				state.m_fLinearAtten = 0.0f;
+			}
+		}
+		else
+		{
+			float flNoise = cosf( gpGlobals->curtime * 7.0f ) * sinf( gpGlobals->curtime * 25.0f );
+			state.m_fLinearAtten = r_flashlightlinear.GetFloat() * flScale + 1.5f * flNoise;
+		}
+
+		state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat() - ( 16.0f * (1.0f-flScale) );
+		state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat() - ( 16.0f * (1.0f-flScale) );
+		
+		bFlicker = true;
+	}
+
+#endif
+	
+	if ( bFlicker == false )
+	{
+		state.m_fLinearAtten = r_flashlightlinear.GetFloat();
+		state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat();
+		state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat();
+	}
+
 	state.m_fConstantAtten = r_flashlightconstant.GetFloat();
 	state.m_Color.Init( 1.0f, 1.0f, 1.0f );
 	state.m_NearZ = r_flashlightnear.GetFloat();

@@ -67,7 +67,9 @@ void W_Precache(void)
 	g_sModelIndexBloodDrop = CBaseEntity::PrecacheModel ("sprites/blood.vmt"); // splattered blood 
 	g_sModelIndexLaser = CBaseEntity::PrecacheModel( (char *)g_pModelNameLaser );
 	g_sModelIndexLaserDot = CBaseEntity::PrecacheModel("sprites/laserdot.vmt");
-	
+
+	CBaseEntity::PrecacheModel ("effects/bubble.vmt");//bubble trails
+
 	CBaseEntity::PrecacheModel("sprites/fire1.vmt"); // Precache C_EntityFlame
 	CBaseEntity::PrecacheModel("models/weapons/w_bullet.mdl");
 
@@ -84,7 +86,7 @@ int CBaseCombatWeapon::UpdateTransmitState( void)
 	// about whether or not to transmit it.
 	if ( GetOwner() )
 	{	
-		return SetTransmitState( FL_EDICT_DONTSEND );
+		return SetTransmitState( FL_EDICT_PVSCHECK );
 	}
 	else
 	{
@@ -137,8 +139,23 @@ void CBaseCombatWeapon::Operator_FrameUpdate( CBaseCombatCharacter *pOperator )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pEvent - 
+//			*pOperator - 
+//-----------------------------------------------------------------------------
 void CBaseCombatWeapon::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
 {
+	if ( (pEvent->type & AE_TYPE_NEWEVENTSYSTEM) && (pEvent->type & AE_TYPE_SERVER) )
+	{
+		if ( pEvent->event == AE_NPC_WEAPON_FIRE )
+		{
+			bool bSecondary = (atoi( pEvent->options ) != 0);
+			Operator_ForceNPCFire( pOperator, bSecondary );
+			return;
+		}
+	}
+
 	DevWarning( 2, "Unhandled animation event %d from %s --> %s\n", pEvent->event, pOperator->GetClassname(), GetClassname() );
 }
 
@@ -185,78 +202,116 @@ CBaseEntity* CBaseCombatWeapon::Respawn( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Weapons ignore other weapons when LOS tracing
+//-----------------------------------------------------------------------------
+class CWeaponLOSFilter : public CTraceFilterSkipTwoEntities
+{
+	DECLARE_CLASS( CWeaponLOSFilter, CTraceFilterSkipTwoEntities );
+public:
+	CWeaponLOSFilter::CWeaponLOSFilter( IHandleEntity *pHandleEntity, IHandleEntity *pHandleEntity2, int collisionGroup ) :
+		CTraceFilterSkipTwoEntities( pHandleEntity, pHandleEntity2, collisionGroup )
+	{
+	}
+	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
+	{
+		CBaseEntity *pEntity = (CBaseEntity *)pServerEntity;
+
+		if ( pEntity->GetCollisionGroup() == COLLISION_GROUP_WEAPON )
+			return false;
+
+		return BaseClass::ShouldHitEntity( pServerEntity, contentsMask );
+	}
+};
+
+//-----------------------------------------------------------------------------
 // Purpose: Check the weapon LOS for an owner at an arbitrary position
 //			If bSetConditions is true, LOS related conditions will also be set
-// Input  :
-// Output :
 //-----------------------------------------------------------------------------
 bool CBaseCombatWeapon::WeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions )
 {
 	// --------------------
 	// Check for occlusion
 	// --------------------
-	CAI_BaseNPC* npcOwner	= m_hOwner.Get()->MyNPCPointer();
+	CAI_BaseNPC* npcOwner = m_hOwner.Get()->MyNPCPointer();
 
 	// Find its relative shoot position
 	Vector vecRelativeShootPosition;
 	VectorSubtract( npcOwner->Weapon_ShootPosition(), npcOwner->GetAbsOrigin(), vecRelativeShootPosition );
-	Vector barrelPos		= ownerPos + vecRelativeShootPosition;
+	Vector barrelPos = ownerPos + vecRelativeShootPosition;
+
+	// Use the custom LOS trace filter
+	CWeaponLOSFilter traceFilter( m_hOwner.Get(), npcOwner->GetEnemy(), COLLISION_GROUP_BREAKABLE_GLASS );
 	trace_t tr;
-	UTIL_TraceLine( barrelPos, targetPos, MASK_SHOT, m_hOwner.Get(), COLLISION_GROUP_BREAKABLE_GLASS, &tr);
+	UTIL_TraceLine( barrelPos, targetPos, MASK_SHOT, &traceFilter, &tr );
+
+	// See if we completed the trace without interruption
 	if ( tr.fraction == 1.0 )
 	{
 		if ( ai_debug_shoot_positions.GetBool() )
-			NDebugOverlay::Line(barrelPos,targetPos, 0, 255, 0, false, 1.0 );
+		{
+			NDebugOverlay::Line( barrelPos, targetPos, 0, 255, 0, false, 1.0 );
+		}
+
 		return true;
 	}
 
-	CBaseEntity			 *pBE  = tr.m_pEnt;
+	CBaseEntity	*pHitEnt = tr.m_pEnt;
 
-	CBasePlayer *pPlayer = ToBasePlayer( npcOwner->GetEnemy() );
+	CBasePlayer *pEnemyPlayer = ToBasePlayer( npcOwner->GetEnemy() );
+
 	// is player in a vehicle? if so, verify vehicle is target and return if so (so npc shoots at vehicle)
-	if ( pPlayer && pPlayer->IsInAVehicle() )
+	if ( pEnemyPlayer && pEnemyPlayer->IsInAVehicle() )
 	{
 		// Ok, player in vehicle, check if vehicle is target we're looking at, fire if it is
 		// Also, check to see if the owner of the entity is the vehicle, in which case it's valid too.
 		// This catches vehicles that use bone followers.
-		CBaseEntity	*pVehicle  = pPlayer->GetVehicle()->GetVehicleEnt();
-		if ( pBE == pVehicle || pBE->GetOwnerEntity() == pVehicle )
+		CBaseEntity	*pVehicle  = pEnemyPlayer->GetVehicle()->GetVehicleEnt();
+		if ( pHitEnt == pVehicle || pHitEnt->GetOwnerEntity() == pVehicle )
 			return true;
 	}
 
-	if (pBE == npcOwner->GetEnemy())
+	// Hitting our enemy is a success case
+	if ( pHitEnt == npcOwner->GetEnemy() )
 	{
 		if ( ai_debug_shoot_positions.GetBool() )
-			NDebugOverlay::Line(barrelPos,targetPos, 0, 255, 0, false, 1.0 );
+		{
+			NDebugOverlay::Line( barrelPos, targetPos, 0, 255, 0, false, 1.0 );
+		}
+
 		return true;
 	}
 
 	// If a vehicle is blocking the view, grab its driver and use that as the combat character
 	CBaseCombatCharacter *pBCC;
-	IServerVehicle *pVehicle = pBE->GetServerVehicle();
+	IServerVehicle *pVehicle = pHitEnt->GetServerVehicle();
 	if ( pVehicle )
 	{
 		pBCC = pVehicle->GetPassenger( );
 	}
 	else
 	{
-		pBCC = ToBaseCombatCharacter( pBE );
+		pBCC = ToBaseCombatCharacter( pHitEnt );
 	}
 
-	if (pBCC) 
+	if ( pBCC ) 
 	{
-		if (npcOwner->IRelationType( pBCC ) == D_HT)
+		if ( npcOwner->IRelationType( pBCC ) == D_HT )
 			return true;
 
-		if (bSetConditions)
+		if ( bSetConditions )
 		{
-			npcOwner->SetCondition(COND_WEAPON_BLOCKED_BY_FRIEND);
+			npcOwner->SetCondition( COND_WEAPON_BLOCKED_BY_FRIEND );
 		}
 	}
-	else if (bSetConditions)
+	else if ( bSetConditions )
 	{
-		npcOwner->SetCondition(COND_WEAPON_SIGHT_OCCLUDED);
-		npcOwner->SetEnemyOccluder(pBE);
+		npcOwner->SetCondition( COND_WEAPON_SIGHT_OCCLUDED );
+		npcOwner->SetEnemyOccluder( pHitEnt );
+
+		if( ai_debug_shoot_positions.GetBool() )
+		{
+			NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 0, 0, false, 1.0 );
+		}
 	}
 
 	return false;
@@ -527,6 +582,11 @@ void CBaseCombatWeapon::CheckRespawn( void )
 class CWeaponList : public CAutoGameSystem
 {
 public:
+	CWeaponList( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
+
 	virtual void LevelShutdownPostEntity()  
 	{ 
 		m_list.Purge();
@@ -544,7 +604,7 @@ public:
 	CUtlLinkedList< CBaseCombatWeapon * > m_list;
 };
 
-CWeaponList g_WeaponList;
+CWeaponList g_WeaponList( "CWeaponList" );
 
 void OnBaseCombatWeaponCreated( CBaseCombatWeapon *pWeapon )
 {
@@ -589,7 +649,7 @@ int CBaseCombatWeapon::GetAvailableWeaponsInBox( CBaseCombatWeapon **pList, int 
 int	CBaseCombatWeapon::ObjectCaps( void )
 { 
 	int caps = BaseClass::ObjectCaps();
-	if ( !IsFollowingEntity() )
+	if ( !IsFollowingEntity() && !HasSpawnFlags(SF_WEAPON_NO_PLAYER_PICKUP) )
 	{
 		caps |= FCAP_IMPULSE_USE;
 	}

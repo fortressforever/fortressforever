@@ -718,9 +718,10 @@ public:
 	//
 	// surface info flags
 	//
-	enum { SURF_BUMPED             = 0x1,  
-		   SURF_NOCOLLISION		   = 0x2,
-		   SURF_RAY_COLLISION_ONLY = 0x4 };
+	enum { SURF_BUMPED				= 0x1,  
+		   SURF_NOPHYSICS_COLL		= 0x2,
+		   SURF_NOHULL_COLL			= 0x4,
+		   SURF_NORAY_COLL			= 0x8 };
 
 	enum { MAX_DISP_POWER = MAX_MAP_DISP_POWER };
 	enum { MAX_VERT_COUNT = MAX_DISPVERTS };

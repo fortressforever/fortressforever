@@ -98,7 +98,7 @@ public:
 
 
 
-class IPlayerInfo
+abstract_class IPlayerInfo
 {
 public:
 	// returns the players name (UTF-8 encoded)
@@ -149,7 +149,7 @@ public:
 
 
 #define INTERFACEVERSION_PLAYERINFOMANAGER			"PlayerInfoManager002"
-class IPlayerInfoManager
+abstract_class IPlayerInfoManager
 {
 public:
 	virtual IPlayerInfo *GetPlayerInfo( edict_t *pEdict ) = 0;
@@ -159,7 +159,7 @@ public:
 
 
 
-class IBotController
+abstract_class IBotController
 {
 public:
 	// change the bots position
@@ -184,7 +184,7 @@ public:
 
 
 #define INTERFACEVERSION_PLAYERBOTMANAGER			"BotManager001"
-class IBotManager
+abstract_class IBotManager
 {
 public:
 	virtual IBotController *GetBotController( edict_t *pEdict ) = 0;

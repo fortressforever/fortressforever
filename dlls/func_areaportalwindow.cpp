@@ -67,7 +67,7 @@ void CFuncAreaPortalWindow::Activate()
 	BaseClass::Activate();
 	
 	// Find our background model.
-	CBaseEntity *pBackground = gEntList.FindEntityByName( NULL, m_iBackgroundBModelName, NULL );
+	CBaseEntity *pBackground = gEntList.FindEntityByName( NULL, m_iBackgroundBModelName );
 	if( pBackground )
 	{
 		m_iBackgroundModelIndex  = modelinfo->GetModelIndex( STRING( pBackground->GetModelName() ) );
@@ -75,7 +75,7 @@ void CFuncAreaPortalWindow::Activate()
 	}
 
 	// Find our target and steal its bmodel.
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_target );
 	if( pTarget )
 	{
 		SetModel( STRING(pTarget->GetModelName()) );
@@ -85,25 +85,33 @@ void CFuncAreaPortalWindow::Activate()
 }
 
 
-
-bool CFuncAreaPortalWindow::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor )
+bool CFuncAreaPortalWindow::IsWindowOpen( const Vector &vOrigin, float fovDistanceAdjustFactor )
 {
-	if( !BaseClass::UpdateVisibility( vOrigin, fovDistanceAdjustFactor ) )
-		return false;
-
 	Vector vecLocalOrigin;
 	CollisionProp()->WorldToCollisionSpace( vOrigin, &vecLocalOrigin );
 	float flDist = CalcDistanceToAABB( CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs(), vecLocalOrigin );
 	flDist *= fovDistanceAdjustFactor;
 	if( flDist > (m_flFadeDist + FADE_DIST_BUFFER) )
 	{
-		engine->SetAreaPortalState( m_portalNumber, false );
 		return false;
 	}
 	else
 	{
-		engine->SetAreaPortalState( m_portalNumber, true );
 		return true;
+	}
+}
+
+
+bool CFuncAreaPortalWindow::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient )
+{
+	if ( IsWindowOpen( vOrigin, fovDistanceAdjustFactor ) )
+	{
+		return BaseClass::UpdateVisibility( vOrigin, fovDistanceAdjustFactor, bIsOpenOnClient );
+	}
+	else
+	{
+		bIsOpenOnClient = false;
+		return false;
 	}
 }
 

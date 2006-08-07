@@ -13,6 +13,7 @@
 #include "IEffects.h"
 #include "ai_squad.h"
 #include "ai_utils.h"
+#include "ai_senses.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -21,6 +22,8 @@
 #define SF_ENEMY_FINDER_APC_VIS (1 << 17)
 #define SF_ENEMY_FINDER_SHORT_MEMORY (1 << 18)
 #define SF_ENEMY_FINDER_ENEMY_ALLOWED (1 << 19)
+
+ConVar  ai_debug_enemyfinders( "ai_debug_enemyfinders", "0" );
 
 
 class CNPC_EnemyFinder : public CAI_BaseNPC
@@ -37,25 +40,37 @@ public:
 	void	Precache( void );
 	void	Spawn( void );
 	void	StartNPC ( void );
+	void	PrescheduleThink();
 	bool 	ShouldAlwaysThink();
 	void	UpdateEfficiency( bool bInPVS )	{ SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); SetMoveEfficiency( AIME_NORMAL ); }
 	void	GatherConditions( void );
+	bool	ShouldChooseNewEnemy();
 	bool	IsValidEnemy( CBaseEntity *pTarget );
 	bool	CanBeAnEnemyOf( CBaseEntity *pEnemy ) { return HasSpawnFlags( SF_ENEMY_FINDER_ENEMY_ALLOWED ); }
 	bool	FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **ppBlocker );
 	Class_T Classify( void );
+	bool CanBeSeenBy( CAI_BaseNPC *pNPC ) { return CanBeAnEnemyOf( pNPC ); } // allows entities to be 'invisible' to NPC senses.
 
 	virtual int	SelectSchedule( void );
+	virtual void DrawDebugGeometryOverlays( void );
 
 	// Input handlers.
 	void InputTurnOn( inputdata_t &inputdata );
 	void InputTurnOff( inputdata_t &inputdata );
+
+	virtual	void Wake( bool bFireOutput = true );
 
 private:
 	int		m_nStartOn;
 	float	m_flMinSearchDist;
 	float	m_flMaxSearchDist;
 	CAI_FreePass m_PlayerFreePass;
+	CSimpleSimTimer m_ChooseEnemyTimer;
+
+	bool	m_bEnemyStatus;
+
+	COutputEvent m_OnLostEnemies;
+	COutputEvent m_OnAcquireEnemies;
 
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
@@ -78,6 +93,7 @@ IMPLEMENT_CUSTOM_AI( npc_enemyfinder, CNPC_EnemyFinder );
 BEGIN_DATADESC( CNPC_EnemyFinder )
 
 	DEFINE_EMBEDDED( m_PlayerFreePass ),
+	DEFINE_EMBEDDED( m_ChooseEnemyTimer ),
 
 	// Inputs
 	DEFINE_INPUT( m_nStartOn,			FIELD_INTEGER,	"StartOn" ),
@@ -85,8 +101,13 @@ BEGIN_DATADESC( CNPC_EnemyFinder )
 	DEFINE_INPUT( m_flMinSearchDist,	FIELD_FLOAT,	"MinSearchDist" ),
 	DEFINE_INPUT( m_flMaxSearchDist,	FIELD_FLOAT,	"MaxSearchDist" ),
 
+	DEFINE_FIELD( m_bEnemyStatus, FIELD_BOOLEAN ),
+
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
+
+	DEFINE_OUTPUT( m_OnLostEnemies, "OnLostEnemies"),
+	DEFINE_OUTPUT( m_OnAcquireEnemies, "OnAcquireEnemies"),
 
 END_DATADESC()
 
@@ -126,6 +147,7 @@ void CNPC_EnemyFinder::InputTurnOff( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_EnemyFinder::Precache( void )
 {
+	PrecacheModel( "models/roller.mdl" );
 	BaseClass::Precache();
 }
 
@@ -138,6 +160,7 @@ void CNPC_EnemyFinder::Spawn( void )
 {
 	Precache();
 
+	SetModel( "models/roller.mdl" );
 	// This is a dummy model that is never used!
 	UTIL_SetSize(this, vec3_origin, vec3_origin);
 
@@ -149,6 +172,8 @@ void CNPC_EnemyFinder::Spawn( void )
 	AddFlag( FL_NPC );
 
 	SetSolid( SOLID_NONE );
+
+	m_bEnemyStatus = false;
 
 	if (m_flFieldOfView < -1.0)
 	{
@@ -191,6 +216,16 @@ int CNPC_EnemyFinder::SelectSchedule( void )
 	return SCHED_EFINDER_SEARCH;
 }
 
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+void CNPC_EnemyFinder::Wake( bool bFireOutput )
+{
+	BaseClass::Wake( bFireOutput );
+
+	//Enemy finder is not allowed to become visible.
+	AddEffects( EF_NODRAW );
+}
 
 //------------------------------------------------------------------------------
 //
@@ -241,7 +276,18 @@ bool CNPC_EnemyFinder::FVisible( CBaseEntity *pTarget, int traceMask, CBaseEntit
 	return (tr.fraction == 1.0);
 }
 
-	
+
+//------------------------------------------------------------------------------
+bool CNPC_EnemyFinder::ShouldChooseNewEnemy()
+{
+	if ( m_ChooseEnemyTimer.Expired() )
+	{
+		m_ChooseEnemyTimer.Set( 0.3 );
+		return true;
+	}
+	return false;
+}
+
 //------------------------------------------------------------------------------
 // Purpose : Override base class to check range and visibility
 // Input   :
@@ -259,24 +305,32 @@ bool CNPC_EnemyFinder::IsValidEnemy( CBaseEntity *pTarget )
 	if ( !FBitSet( m_spawnflags, SF_ENEMY_FINDER_CHECK_VIS) )
 		return true;
 
-	// Make sure I can see the target from my position
-	trace_t tr;
+	if ( GetSenses()->DidSeeEntity( pTarget ) )
+		return true;
 
 	// Trace from launch position to target position.  
 	// Use position above actual barral based on vertical launch speed
 	Vector vStartPos = GetAbsOrigin();
 	Vector vEndPos	 = pTarget->EyePosition();
 
-	CBaseEntity *pVehicle = NULL;
+	// Test our line of sight to the target
+	trace_t tr;
+	AI_TraceLOS( vStartPos, vEndPos, this, &tr );
+
+	// If the player is in a vehicle, see if we can see that instead
 	if ( pTarget->IsPlayer() )
 	{
 		CBasePlayer *pPlayer = assert_cast<CBasePlayer*>(pTarget);
-		pVehicle = pPlayer->GetVehicleEntity();
+		if ( tr.m_pEnt == pPlayer->GetVehicleEntity() )
+			return true;
 	}
 
-	CTraceFilterSkipTwoEntities traceFilter( pTarget, pVehicle, COLLISION_GROUP_NONE );
-	AI_TraceLine( vStartPos, vEndPos, MASK_SHOT, &traceFilter, &tr );
-	return (tr.fraction == 1.0);
+	// Line must be clear
+	if ( tr.fraction == 1.0f || tr.m_pEnt == pTarget )
+		return true;
+
+	// Otherwise we can't see anything
+	return false;
 }
 
 
@@ -307,6 +361,53 @@ void CNPC_EnemyFinder::StartNPC ( void )
 	if (!m_nStartOn)
 	{
 		SetThink(NULL);
+	}
+}
+
+//------------------------------------------------------------------------------
+void CNPC_EnemyFinder::PrescheduleThink()
+{
+	BaseClass::PrescheduleThink();
+
+	bool bHasEnemies = GetEnemies()->NumEnemies() > 0;
+	
+	if ( GetEnemies()->NumEnemies() > 0 )
+	{
+		//If I haven't seen my enemy in half a second then we'll assume he's gone.
+		if ( gpGlobals->curtime - GetEnemyLastTimeSeen() >= 0.5f )
+		{
+			bHasEnemies = false;
+		}
+	}
+
+	if ( m_bEnemyStatus != bHasEnemies )
+	{
+		if ( bHasEnemies )
+		{
+			m_OnAcquireEnemies.FireOutput( this, this );
+		}
+		else
+		{
+			m_OnLostEnemies.FireOutput( this, this );
+		}
+		
+		m_bEnemyStatus = bHasEnemies;
+	}
+
+	if( ai_debug_enemyfinders.GetBool() )
+	{
+		m_debugOverlays |= OVERLAY_BBOX_BIT;
+
+		if( IsInSquad() && GetSquad()->NumMembers() > 1 )
+		{
+			AISquadIter_t iter;
+			CAI_BaseNPC *pSquadmate = m_pSquad ? m_pSquad->GetFirstMember( &iter ) : NULL;
+			while ( pSquadmate )
+			{
+				NDebugOverlay::Line( WorldSpaceCenter(), pSquadmate->EyePosition(), 255, 255, 0, false, 0.1f );
+				pSquadmate = m_pSquad->GetNextMember( &iter );
+			}
+		}
 	}
 }
 
@@ -345,6 +446,7 @@ void CNPC_EnemyFinder::GatherConditions()
 	m_PlayerFreePass.Update();
 	BaseClass::GatherConditions();
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //
@@ -370,6 +472,24 @@ Class_T	CNPC_EnemyFinder::Classify( void )
 	return CLASS_NONE;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Add a visualizer to the text, if turned on
+//-----------------------------------------------------------------------------
+void CNPC_EnemyFinder::DrawDebugGeometryOverlays( void )
+{
+	// Turn on npc_relationships if we're displaying text
+	int oldDebugOverlays = m_debugOverlays;
+	if ( m_debugOverlays & OVERLAY_TEXT_BIT )
+	{
+		m_debugOverlays |= OVERLAY_NPC_RELATION_BIT;
+	}
+
+	// Draw our base overlays
+	BaseClass::DrawDebugGeometryOverlays();
+
+	// Restore the old values
+	m_debugOverlays = oldDebugOverlays;
+}
 
 //-----------------------------------------------------------------------------
 //

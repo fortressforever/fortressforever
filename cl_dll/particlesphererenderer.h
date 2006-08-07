@@ -34,7 +34,8 @@ public:
 		const Vector &vOriginalPos,
 		const Vector &vTransformedPos,
 		float flAlpha,			// value 0 - 255.4
-		float flParticleSize ); 
+		float flParticleSize,
+		float flAngle = 0.0f ); 
 
 	void		RenderParticle_AddColor( 
 		ParticleDraw *pDraw, 
@@ -156,7 +157,8 @@ inline void CParticleSphereRenderer::RenderParticle(
 	const Vector &vOriginalPos,
 	const Vector &vTransformedPos,
 	float flAlpha,
-	float flParticleSize )
+	float flParticleSize,
+	float flAngle )
 {
 	// Make sure they called StartRender on us so we were able to set the directional light parameters.
 #ifdef _DEBUG
@@ -177,12 +179,14 @@ inline void CParticleSphereRenderer::RenderParticle(
 	
 	ClampColor( vColor );
 
-	RenderParticle_Color255Size(
+	RenderParticle_Color255SizeNormalAngle(
 		pDraw,
 		vTransformedPos,
 		vColor,			// ambient color
 		flAlpha,		// alpha
-		flParticleSize );
+		flParticleSize,
+		vec3_origin,
+		flAngle );
 }
 
 inline void CParticleSphereRenderer::RenderParticle_AddColor( 

@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef EFFECT_DISPATCH_DATA_H
 #define EFFECT_DISPATCH_DATA_H
@@ -28,6 +28,9 @@
 
 #endif
 
+// NOTE: These flags are specifically *not* networked; so it's placed above the max effect flag bits
+#define EFFECTDATA_NO_RECORD 0x80000000
+
 #define MAX_EFFECT_FLAG_BITS 8
 
 // This is the class that holds whatever data we're sending down to the client to make the effect.
@@ -39,21 +42,21 @@ public:
 	Vector m_vNormal;
 	QAngle m_vAngles;
 	int		m_fFlags;
+#ifdef CLIENT_DLL
+	ClientEntityHandle_t m_hEntity;
+#else
 	int		m_nEntIndex;
+#endif
 	float	m_flScale;
 	float	m_flMagnitude;
 	float	m_flRadius;
 	int		m_nAttachmentIndex;
 	short	m_nSurfaceProp;
 
-	// Some TF2 specific things
 	int		m_nMaterial;
 	int		m_nDamageType;
 	int		m_nHitBox;
 	
-	// not networked, helper for clientside entity which don't have an entity index (-1):
-	CBaseEntity *m_pEntity;
-
 	unsigned char	m_nColor;
 
 // Don't mess with stuff below here. DispatchEffect handles all of this.
@@ -66,7 +69,11 @@ public:
 		m_vAngles.Init();
 
 		m_fFlags = 0;
+#ifdef CLIENT_DLL
+		m_hEntity = INVALID_EHANDLE_INDEX;
+#else
 		m_nEntIndex = 0;
+#endif
 		m_flScale = 1.f;
 		m_nAttachmentIndex = 0;
 		m_nSurfaceProp = 0;
@@ -79,11 +86,15 @@ public:
 		m_nHitBox = 0;
 
 		m_nColor = 0;
-
-		m_pEntity = NULL;
 	}
 
 	int GetEffectNameIndex() { return m_iEffectName; }
+
+#ifdef CLIENT_DLL
+	IClientRenderable *GetRenderable() const;
+	C_BaseEntity *GetEntity() const;
+	int entindex() const;
+#endif
 
 private:
 

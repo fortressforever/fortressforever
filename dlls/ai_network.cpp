@@ -15,12 +15,14 @@
 #include "ai_link.h"
 #include "ai_navigator.h"
 #include "world.h"
+#include "ai_moveprobe.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 ConVar ai_no_node_cache( "ai_no_node_cache", "0" );
 
+extern float MOVE_HEIGHT_EPSILON;
 
 //-----------------------------------------------------------------------------
 
@@ -31,7 +33,7 @@ CAI_Network*		g_pBigAINet;
 
 //-----------------------------------------------------------------------------
 
-class INodeListFilter
+abstract_class INodeListFilter
 {
 public:
 	virtual bool	NodeIsValid( CAI_Node &node ) = 0;
@@ -138,7 +140,7 @@ CAI_Network::~CAI_Network()
 			CAI_Node *pNode = m_pAInode[node];
 			Assert( pNode && pNode->m_iID == node );
 
-			for ( int link = 0; link < pNode->m_iNumLinks; link++ )
+			for ( int link = 0; link < pNode->NumLinks(); link++ )
 			{
 				CAI_Link *pLink = pNode->m_Links[link];
 				if ( pLink )
@@ -281,7 +283,8 @@ int	CAI_Network::NearestNodeToPoint( CAI_BaseNPC *pNPC, const Vector &vecOrigin,
 								m_pAInode[cachedNode]->GetPosition(pNPC->GetHullType()) + pNPC->GetViewOffset() : 
 								m_pAInode[cachedNode]->GetOrigin();
 
-			AI_TraceLine ( vecOrigin, vTestLoc, MASK_NPCSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr );
+			CTraceFilterNav traceFilter( pNPC, true, pNPC, COLLISION_GROUP_NONE );
+			AI_TraceLine ( vecOrigin, vTestLoc, MASK_NPCSOLID_BRUSHONLY, &traceFilter, &tr );
 
 			if ( tr.fraction != 1.0 )
 				cachedNode = NO_NODE;
@@ -342,7 +345,10 @@ int	CAI_Network::NearestNodeToPoint( CAI_BaseNPC *pNPC, const Vector &vecOrigin,
 								m_pAInode[smallest]->GetPosition(pNPC->GetHullType()) + pNPC->GetNodeViewOffset() : 
 								m_pAInode[smallest]->GetOrigin();
 
-			AI_TraceLine ( vecOrigin, vTestLoc, MASK_NPCSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr );
+			Vector vecVisOrigin = vecOrigin + Vector(0,0,1);
+
+			CTraceFilterNav traceFilter( pNPC, true, pNPC, COLLISION_GROUP_NONE );
+			AI_TraceLine ( vecVisOrigin, vTestLoc, MASK_NPCSOLID_BRUSHONLY, &traceFilter, &tr );
 
 			if ( tr.fraction != 1.0 )
 				continue;

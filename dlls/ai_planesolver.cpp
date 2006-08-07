@@ -21,8 +21,14 @@
 
 //-----------------------------------------------------------------------------
 
+#ifndef AI_STRONG_OPTIMIZATIONS
 const float PLANE_SOLVER_THINK_FREQUENCY = 0.0;
-const float MAX_PROBE_DIST = 120.0;
+const float MAX_PROBE_DIST = 10.0*12.0;
+#else
+const float PLANE_SOLVER_THINK_FREQUENCY = 0.2;
+const float MAX_PROBE_DIST = 8.0*12.0;
+#endif
+
 
 //#define PROFILE_PLANESOLVER 1
 

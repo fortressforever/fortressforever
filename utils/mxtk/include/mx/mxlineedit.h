@@ -45,6 +45,9 @@ public:
 	// ACCESSORS
 	int getMaxLength () const;
 
+	void	clear();
+	void	getText( char *buf, size_t bufsize );
+
 private:
 	// NOT IMPLEMENTED
 	mxLineEdit (const mxLineEdit&);

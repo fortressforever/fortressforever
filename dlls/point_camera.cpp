@@ -108,7 +108,7 @@ void CPointCamera::SetActive( bool bActive )
 	if ( m_bActive != bActive )
 	{
 		m_bActive = bActive;
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
 	}
 }
 

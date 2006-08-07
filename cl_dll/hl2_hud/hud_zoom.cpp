@@ -32,8 +32,9 @@ class CHudZoom : public vgui::Panel, public CHudElement
 	DECLARE_CLASS_SIMPLE( CHudZoom, vgui::Panel );
 
 public:
-			CHudZoom( const char *pElementName );
+	CHudZoom( const char *pElementName );
 	
+	bool	ShouldDraw( void );
 	void	Init( void );
 	void	LevelInit( void );
 
@@ -44,6 +45,7 @@ protected:
 private:
 	bool	m_bZoomOn;
 	float	m_flZoomStartTime;
+	bool	m_bPainted;
 
 	CPanelAnimationVarAliasType( float, m_flCircle1Radius, "Circle1Radius", "66", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flCircle2Radius, "Circle2Radius", "74", "proportional_float" );
@@ -51,7 +53,6 @@ private:
 	CPanelAnimationVarAliasType( float, m_flDashHeight, "DashHeight", "4", "proportional_float" );
 
 	CMaterialReference m_ZoomMaterial;
-
 };
 
 DECLARE_HUDELEMENT( CHudZoom );
@@ -75,6 +76,7 @@ CHudZoom::CHudZoom( const char *pElementName ) : CHudElement(pElementName), Base
 void CHudZoom::Init( void )
 {
 	m_bZoomOn = false;
+	m_bPainted = false;
 	m_flZoomStartTime = -999.0f;
 	m_ZoomMaterial.Init( "vgui/zoom", TEXTURE_GROUP_VGUI );
 }
@@ -99,20 +101,47 @@ void CHudZoom::ApplySchemeSettings( vgui::IScheme *scheme )
 	SetFgColor(scheme->GetColor("ZoomReticleColor", GetFgColor()));
 
 	int screenWide, screenTall;
-	surface()->GetScreenSize(screenWide, screenTall);
+	GetHudSize(screenWide, screenTall);
 	SetBounds(0, 0, screenWide, screenTall);
 }
 
-#define	ZOOM_FADE_TIME	0.4f
+//-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudZoom::ShouldDraw( void )
+{
+	bool bNeedsDraw = false;
 
+	C_BaseHLPlayer *pPlayer = dynamic_cast<C_BaseHLPlayer *>(C_BasePlayer::GetLocalPlayer());
+	if ( pPlayer == NULL )
+		return false;
+
+	if ( pPlayer->m_HL2Local.m_bZooming )
+	{
+		// need to paint
+		bNeedsDraw = true;
+	}
+	else if ( m_bPainted )
+	{
+		// keep painting until state is finished
+		bNeedsDraw = true;
+	}
+
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
+}
+
+#define	ZOOM_FADE_TIME	0.4f
 //-----------------------------------------------------------------------------
 // Purpose: draws the zoom effect
 //-----------------------------------------------------------------------------
 void CHudZoom::Paint( void )
 {
+	m_bPainted = false;
+
 	// see if we're zoomed any
 	C_BaseHLPlayer *pPlayer = dynamic_cast<C_BaseHLPlayer *>(C_BasePlayer::GetLocalPlayer());
-	
 	if ( pPlayer == NULL )
 		return;
 
@@ -223,4 +252,6 @@ void CHudZoom::Paint( void )
 
 	meshBuilder.End();
 	pMesh->Draw();
+
+	m_bPainted = true;
 }

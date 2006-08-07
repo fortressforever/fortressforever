@@ -402,6 +402,11 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 END_RECV_TABLE( )
 
+BEGIN_PREDICTION_DATA( C_FFPlayer )
+	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
+END_PREDICTION_DATA()
+
 class C_FFRagdoll : public C_BaseAnimatingOverlay
 {
 public:
@@ -428,7 +433,7 @@ private:
 
 	C_FFRagdoll( const C_FFRagdoll & ) {}
 
-	void Interp_Copy( VarMapping_t *pDest, CBaseEntity *pSourceEntity, VarMapping_t *pSrc );
+	void Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity );
 
 	void CreateRagdoll();
 
@@ -466,24 +471,29 @@ C_FFRagdoll::~C_FFRagdoll()
 	PhysCleanupFrictionSounds( this );
 }
 
-void C_FFRagdoll::Interp_Copy( VarMapping_t *pDest, CBaseEntity *pSourceEntity, VarMapping_t *pSrc )
+void C_FFRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
 {
-	if ( !pDest || !pSrc )
+	if ( !pSourceEntity )
 		return;
-
-	if ( pDest->m_Entries.Count() != pSrc->m_Entries.Count() )
+	
+	VarMapping_t *pSrc = pSourceEntity->GetVarMapping();
+	VarMapping_t *pDest = GetVarMapping();
+    	
+	// Find all the VarMapEntry_t's that represent the same variable.
+	for ( int i = 0; i < pDest->m_Entries.Count(); i++ )
 	{
-		Assert( false );
-		return;
+		VarMapEntry_t *pDestEntry = &pDest->m_Entries[i];
+		for ( int j=0; j < pSrc->m_Entries.Count(); j++ )
+		{
+			VarMapEntry_t *pSrcEntry = &pSrc->m_Entries[j];
+			if ( !Q_strcmp( pSrcEntry->watcher->GetDebugName(),
+				pDestEntry->watcher->GetDebugName() ) )
+			{
+				pDestEntry->watcher->Copy( pSrcEntry->watcher );
+				break;
+			}
+		}
 	}
-
-	int c = pDest->m_Entries.Count();
-	for ( int i = 0; i < c; i++ )
-	{
-		pDest->m_Entries[ i ].watcher->Copy( pSrc->m_Entries[i].watcher );
-	}
-
-	Interp_Copy( pDest->m_pBaseClassVarMapping, pSourceEntity, pSrc->m_pBaseClassVarMapping );
 }
 
 void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
@@ -522,6 +532,8 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 
 	//FX_Blood(pTrace->endpos, pTrace->endpos - pTrace->startpos, 128.0f, 1.0f, 1.0f, 1.0f);
 	UTIL_BloodDrips(pTrace->endpos, pTrace->endpos - pTrace->startpos, BLOOD_COLOR_RED, 40);
+
+	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
 
 
@@ -543,7 +555,7 @@ void C_FFRagdoll::CreateRagdoll()
 		bool bRemotePlayer = (pPlayer != C_BasePlayer::GetLocalPlayer());			
 		if ( bRemotePlayer )
 		{
-			Interp_Copy( varMap, pPlayer, pPlayer->C_BaseAnimatingOverlay::GetVarMapping() );
+			Interp_Copy( pPlayer );
 
 			SetAbsAngles( pPlayer->GetRenderAngles() );
 			GetRotationInterpolator().Reset();

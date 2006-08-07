@@ -12,6 +12,8 @@
 #include "vstdlib/strtools.h"
 #include "builddisp.h"
 #include "vstdlib/ICommandLine.h"
+#include "keyvalues.h"
+#include "materialsub.h"
 
 // undefine to make plane finding use linear sort
 #define	USE_HASHING
@@ -63,6 +65,7 @@ int		c_boxbevels;
 int		c_edgebevels;
 int		c_areaportals;
 int		c_clipbrushes;
+int		g_ClipTexinfo = -1;
 
 void TestExpandBrushes (void);
 
@@ -833,6 +836,10 @@ ChunkFileResult_t LoadDispInfoKeyCallback(const char *szKey, const char *szValue
 	{
 		CChunkFile::ReadKeyValueVector3( szValue, pMapDispInfo->startPosition );
 	}
+	else if( !stricmp( szKey, "flags" ) )
+	{
+		CChunkFile::ReadKeyValueInt( szValue, pMapDispInfo->flags );
+	}
 #if 0 // old data
 	else if (!stricmp( szKey, "alpha" ) )
 	{
@@ -1166,6 +1173,125 @@ ChunkFileResult_t HandleNoDynamicShadowsEnt( entity_t *pMapEnt )
 }
 
 
+static ChunkFileResult_t LoadOverlayDataTransitionKeyCallback( const char *szKey, const char *szValue, mapoverlay_t *pOverlay )
+{
+	if ( !stricmp( szKey, "material" ) )
+	{
+		// Get the material name.
+		const char *pMaterialName = szValue;
+		if( g_ReplaceMaterials )
+		{
+			pMaterialName = ReplaceMaterialName( szValue );
+		}
+
+		Assert( strlen( pMaterialName ) < OVERLAY_MAP_STRLEN );
+		if ( strlen( pMaterialName ) >= OVERLAY_MAP_STRLEN )
+		{
+			Error( "Overlay Material Name > OVERLAY_MAP_STRLEN" );
+			return ChunkFile_Fail;
+		}
+		strcpy( pOverlay->szMaterialName, pMaterialName );	
+	}
+	else if ( !stricmp( szKey, "StartU") )
+	{
+		CChunkFile::ReadKeyValueFloat( szValue, pOverlay->flU[0] );
+	}
+	else if ( !stricmp( szKey, "EndU" ) )
+	{
+		CChunkFile::ReadKeyValueFloat( szValue, pOverlay->flU[1] );
+	}
+	else if ( !stricmp( szKey, "StartV" ) )
+	{
+		CChunkFile::ReadKeyValueFloat( szValue, pOverlay->flV[0] );
+	}
+	else if ( !stricmp( szKey, "EndV" ) )
+	{
+		CChunkFile::ReadKeyValueFloat( szValue, pOverlay->flV[1] );
+	}
+	else if ( !stricmp( szKey, "BasisOrigin" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecOrigin );
+	}
+	else if ( !stricmp( szKey, "BasisU" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecBasis[0] );
+	}
+	else if ( !stricmp( szKey, "BasisV" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecBasis[1] );
+	}
+	else if ( !stricmp( szKey, "BasisNormal" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecBasis[2] );
+	}
+	else if ( !stricmp( szKey, "uv0" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecUVPoints[0] );
+	}
+	else if ( !stricmp( szKey, "uv1" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecUVPoints[1] );
+	}
+	else if ( !stricmp( szKey, "uv2" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecUVPoints[2] );
+	}
+	else if ( !stricmp( szKey, "uv3" ) )
+	{
+		CChunkFile::ReadKeyValueVector3( szValue, pOverlay->vecUVPoints[3] );
+	}
+	else if ( !stricmp( szKey, "sides" ) )
+	{
+		const char *pSideList = szValue;
+		char *pTmpList = ( char* )_alloca( strlen( pSideList ) + 1 );
+		strcpy( pTmpList, pSideList );
+		const char *pScan = strtok( pTmpList, " " );
+		if ( !pScan )
+			return ChunkFile_Fail;
+
+		pOverlay->aSideList.Purge();
+		pOverlay->aFaceList.Purge();
+
+		do
+		{
+			int nSideId;
+			if ( sscanf( pScan, "%d", &nSideId ) == 1 )
+			{
+				pOverlay->aSideList.AddToTail( nSideId );
+			}
+		} while ( ( pScan = strtok( NULL, " " ) ) );
+	}
+
+	return ChunkFile_Ok;
+}
+
+static ChunkFileResult_t LoadOverlayDataTransitionCallback( CChunkFile *pFile, int nParam )
+{
+	int iOverlay = g_aMapWaterOverlays.AddToTail();
+	mapoverlay_t *pOverlay = &g_aMapWaterOverlays[iOverlay];
+	if ( !pOverlay )
+		return ChunkFile_Fail;
+
+	pOverlay->nId = ( MAX_MAP_OVERLAYS + 1 ) + g_aMapWaterOverlays.Count() - 1;
+	pOverlay->m_nRenderOrder = 0;
+
+	ChunkFileResult_t eResult = pFile->ReadChunk( ( KeyHandler_t )LoadOverlayDataTransitionKeyCallback, pOverlay );
+	return eResult;
+}
+
+static ChunkFileResult_t LoadOverlayTransitionCallback( CChunkFile *pFile, int nParam )
+{
+	CChunkHandlerMap Handlers;
+	Handlers.AddHandler( "overlaydata", ( ChunkHandler_t )LoadOverlayDataTransitionCallback, 0 );
+	pFile->PushHandlers( &Handlers );
+
+	ChunkFileResult_t eResult = pFile->ReadChunk( NULL, NULL );
+
+	pFile->PopHandlers();
+
+	return eResult;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Iterates all brushes in a ladder entity, generates its mins and maxs.
 //          These are stored in the object, since the brushes are going to go away.
@@ -1245,6 +1371,7 @@ ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
 	CChunkHandlerMap Handlers;
 	Handlers.AddHandler("solid", (ChunkHandler_t)LoadSolidCallback, &LoadEntity);
 	Handlers.AddHandler("connections", (ChunkHandler_t)LoadConnectionsCallback, &LoadEntity);
+	Handlers.AddHandler( "overlaytransition", ( ChunkHandler_t )LoadOverlayTransitionCallback, 0 );
 
 	//
 	// Read the entity chunk.
@@ -1370,6 +1497,13 @@ ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
 			return ( ChunkFile_Ok );
 		}
 
+		if ( !strcmp( "info_overlay_transition", pClassName ) )
+		{
+			// Clear out this entity.
+			mapent->epairs = NULL;
+			return ( ChunkFile_Ok );
+		}
+
 		if ( Q_stricmp( pClassName, "info_no_dynamic_shadow" ) == 0 )
 		{
 			return HandleNoDynamicShadowsEnt( mapent );
@@ -1470,29 +1604,6 @@ void ForceFuncAreaPortalWindowContents()
 	}
 }
 
-void BuildLinuxDataForMultiplayer()
-{
-	if ( g_writelinuxphysics || CommandLine()->FindParm( "-nolinuxdata" ) )
-		return;
-
-	for( int i=0; i < num_entities; i++ )
-	{
-		entity_t *e = &entities[i];
-
-		const char *pClassName = ValueForKey( e, "classname" );
-		if ( !Q_strcasecmp(pClassName, "info_player_terrorist") || // cstrike
-			!Q_strcasecmp(pClassName, "info_player_deathmatch") || // dm
-			!Q_strcasecmp(pClassName, "info_player_teamspawn") || // tfc
-			!Q_strcasecmp(pClassName, "info_player_axis") || // dod
-			!Q_strcasecmp(pClassName, "info_player_coop") ) // coop
-		{
-			Msg("Detected multiplayer map, building linux dedicated server data\n");
-			g_writelinuxphysics = true;
-			return;
-		}
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Loads a VMF or MAP file. If the file has a .MAP extension, the MAP
 //			loader is used, otherwise the file is assumed to be in VMF format.
@@ -1585,6 +1696,7 @@ void LoadMapFile(const char *pszFileName)
 
 		// Update the overlay/side list(s).
 		Overlay_UpdateSideLists();
+		OverlayTransition_UpdateSideLists();
 	}
 	else
 	{
@@ -1593,7 +1705,6 @@ void LoadMapFile(const char *pszFileName)
 
 
 	ForceFuncAreaPortalWindowContents();
-	BuildLinuxDataForMultiplayer();
 }
 
 
@@ -1739,6 +1850,11 @@ ChunkFileResult_t LoadSideKeyCallback(const char *szKey, const char *szValue, Lo
 	else if (!stricmp(szKey, "material"))
 	{
 		// Get the material name.
+		if( g_ReplaceMaterials )
+		{
+			szValue = ReplaceMaterialName( szValue );
+		}
+
 		strcpy(pSideInfo->td.name, szValue);
 		g_MapError.TextureState(szValue);
 
@@ -1775,6 +1891,10 @@ ChunkFileResult_t LoadSideKeyCallback(const char *szKey, const char *szValue, Lo
 			pSideInfo->td.lightmapWorldUnitsPerLuxel = g_defaultLuxelSize; 
 		}
 		pSideInfo->td.lightmapWorldUnitsPerLuxel *= g_luxelScale;
+		if (pSideInfo->td.lightmapWorldUnitsPerLuxel < g_minLuxelScale)
+		{
+			pSideInfo->td.lightmapWorldUnitsPerLuxel = g_minLuxelScale;
+		}
 	}
 	else if (!stricmp(szKey, "contents"))
 	{
@@ -1922,6 +2042,10 @@ ChunkFileResult_t LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity
 		{
 			if (b->contents & (CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP) )
 			{
+				if ( g_ClipTexinfo < 0 )
+				{
+					g_ClipTexinfo = b->original_sides[0].texinfo;
+				}
 				c_clipbrushes++;
 				for (int i=0 ; i<b->numsides ; i++)
 				{

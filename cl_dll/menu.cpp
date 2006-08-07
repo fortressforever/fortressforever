@@ -350,6 +350,16 @@ void CHudMenu::ProcessText( void )
 		m_nHeight += l->height;
 	}
 }
+//-----------------------------------------------------------------------------
+// Purpose: Local method to hide a menu, mirroring code found in
+//          MsgFunc_ShowMenu.
+//-----------------------------------------------------------------------------
+void CHudMenu::HideMenu( void )
+{
+	m_bMenuTakesInput = false;
+	m_flShutoffTime = gpGlobals->realtime + m_flOpenCloseTime;
+	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("MenuClose");
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Local method to bring up a menu, mirroring code found in
@@ -438,10 +448,7 @@ void CHudMenu::MsgFunc_ShowMenu( bf_read &msg)
 	}
 	else
 	{
-		m_bMenuTakesInput = false;
-		m_flShutoffTime = gpGlobals->realtime + m_flOpenCloseTime;
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("MenuClose");
-		//m_bMenuDisplayed = false; // no valid slots means that the menu should be turned off
+		HideMenu();
 	}
 
 	m_fWaitingForMore = NeedMore;
@@ -460,7 +467,7 @@ void CHudMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
 	int screenWide, screenTall;
 	int x, y;
 	GetPos(x, y);
-	vgui::surface()->GetScreenSize(screenWide, screenTall);
+	GetHudSize(screenWide, screenTall);
 	SetBounds(0, y, screenWide, screenTall - y);
 
 	ProcessText();

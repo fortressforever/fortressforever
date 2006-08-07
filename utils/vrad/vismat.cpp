@@ -31,6 +31,8 @@ Use the PVS to accelerate if available
 */
 
 #define TEST_EPSILON	0.1
+#define PLANE_TEST_EPSILON  0.01 // patch must be this much in front of the plane to be considered "in front"
+#define PATCH_FACE_OFFSET  0.1 // push patch origins off from the face by this amount to avoid self collisions
 
 dleaf_t* PointInLeaf (int iNode, Vector const& point)
 {
@@ -127,10 +129,17 @@ void TestPatchToPatch( int ndxPatch1, int ndxPatch2, int head, transfer_t *trans
 	// if bit has not already been set
 	//  && v2 is not behind light plane
 	//  && v2 is visible from v1
-	if ( DotProduct (patch2->origin, patch->normal) > patch->planeDist + 1.01
-	  && TestLine (patch->origin, patch2->origin, head, iThread) == CONTENTS_EMPTY )
+	if ( DotProduct( patch2->origin, patch->normal ) > patch->planeDist + PLANE_TEST_EPSILON )
 	{
-		MakeTransfer( ndxPatch1, ndxPatch2, transfers );
+		// push out origins from face so that don't intersect their owners
+		Vector p1, p2;
+		VectorAdd( patch->origin, patch->normal, p1 );
+		VectorAdd( patch2->origin, patch2->normal, p2 );
+		// FIXME: make a TestLine that knows the two faces and planes and won't collide with them.
+		if ( TestLine( p1, p2, head, iThread ) == CONTENTS_EMPTY )
+		{
+			MakeTransfer( ndxPatch1, ndxPatch2, transfers );
+		}
 	}
 }
 
@@ -154,7 +163,7 @@ void TestPatchToFace (unsigned patchnum, int facenum, int head, transfer_t *tran
 
 	patch_t *pNextPatch;
 
-	if ( patch2 && DotProduct(patch->origin, patch2->normal) > patch2->planeDist + 1.01 )
+	if ( patch2 && DotProduct(patch->origin, patch2->normal) > patch2->planeDist + PLANE_TEST_EPSILON )
 	{
 		// we need to do a real test
 		for( ; patch2; patch2 = pNextPatch )
@@ -200,7 +209,7 @@ void AddDispsToClusterTable( void )
 	for( int ndxFace = 0; ndxFace < numfaces; ndxFace++ )
 	{
 		// search for displacement faces
-		if( dfaces[ndxFace].dispinfo == -1 )
+		if( g_pFaces[ndxFace].dispinfo == -1 )
 			continue;
 
 		//

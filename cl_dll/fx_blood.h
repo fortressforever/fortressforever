@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#include "tier0/memdbgon.h"
+
 class CBloodSprayEmitter : public CSimpleEmitter
 {
 public:
@@ -58,7 +60,7 @@ public:
 			}
 
 			pParticle->m_vecVelocity *= decay;
-			pParticle->m_vecVelocity[2] -= ( 25.0f * timeDelta );
+			pParticle->m_vecVelocity[2] -= ( m_flGravity * timeDelta );
 		}
 	}
 
@@ -68,5 +70,7 @@ private:
 
 	CBloodSprayEmitter( const CBloodSprayEmitter & );
 };
+
+#include "tier0/memdbgoff.h"
 
 #endif // FX_BLOOD_H

@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include <vgui/IPanel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
@@ -39,6 +40,8 @@
 
 using namespace vgui;
 
+DECLARE_BUILD_FACTORY( EditablePanel );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -48,7 +51,6 @@ EditablePanel::EditablePanel(Panel *parent, const char *panelName) : Panel(paren
 	m_pszConfigName = NULL;
 	m_iConfigID = 0;
 	m_pDialogVariables = NULL;
-	GetSize(_baseWide, _baseTall);
 
 	// add ourselves to the build group
 	SetBuildGroup(GetBuildGroup());
@@ -63,11 +65,11 @@ EditablePanel::EditablePanel(Panel *parent, const char *panelName, HScheme hSche
 	m_pszConfigName = NULL;
 	m_iConfigID = 0;
 	m_pDialogVariables = NULL;
-	GetSize(_baseWide, _baseTall);
 
 	// add ourselves to the build group
 	SetBuildGroup(GetBuildGroup());
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
@@ -124,6 +126,7 @@ void EditablePanel::OnKeyCodeTyped(KeyCode code)
 	}
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Callback for when the panel size has been changed
 //-----------------------------------------------------------------------------
@@ -132,62 +135,70 @@ void EditablePanel::OnSizeChanged(int wide, int tall)
 	BaseClass::OnSizeChanged(wide, tall);
 	InvalidateLayout();
 
-	int dx = wide - _baseWide;
-	int dy = tall - _baseTall;
-
 	for (int i = 0; i < GetChildCount(); i++)
 	{
 		// perform auto-layout on the child panel
 		Panel *child = GetChild(i);
-		if (!child)
+		if ( !child )
 			continue;
 
-		int x, y, w, t;
-		child->GetBounds(x, y, w, t);
+		int x, y, w, h;
+		child->GetBounds( x, y, w, h );
 
-		if (child->GetPinCorner() == PIN_TOPRIGHT || child->GetPinCorner() == PIN_BOTTOMRIGHT)
+		int px, py;
+		child->GetPinOffset( px, py );
+
+		int ox, oy;
+		child->GetResizeOffset( ox, oy );
+
+		int ex;
+		int ey;
+
+		AutoResize_e resize = child->GetAutoResize(); 
+		bool bResizeHoriz = ( resize == AUTORESIZE_RIGHT || resize == AUTORESIZE_DOWNANDRIGHT );
+		bool bResizeVert = ( resize == AUTORESIZE_DOWN || resize == AUTORESIZE_DOWNANDRIGHT );
+
+		PinCorner_e pinCorner = child->GetPinCorner();
+		if ( pinCorner == PIN_TOPRIGHT || pinCorner == PIN_BOTTOMRIGHT )
 		{
 			// move along with the right edge
-			x += dx;
+			ex = wide + px;
+			x = bResizeHoriz ? ox : ex - w;
+		}
+		else
+		{
+			x = px;
+			ex = bResizeHoriz ? wide + ox : px + w;
 		}
 
-		if (child->GetPinCorner() == PIN_BOTTOMLEFT || child->GetPinCorner() == PIN_BOTTOMRIGHT)
+		if ( pinCorner == PIN_BOTTOMLEFT || pinCorner == PIN_BOTTOMRIGHT )
 		{
-			// move along with the lower edge
-			y += dy;
+			// move along with the right edge
+			ey = tall + py;
+			y = bResizeVert ? oy : ey - h;
+		}
+		else
+		{
+			y = py;
+			ey = bResizeVert ? tall + oy : py + h;
 		}
 
-		// check for resize
-		if (child->GetAutoResize() == AUTORESIZE_RIGHT || child->GetAutoResize() == AUTORESIZE_DOWNANDRIGHT)
+		// Clamp..
+		if ( ex < x )
 		{
-			w += dx;
+			ex = x;
+		}
+		if ( ey < y )
+		{
+			ey = y;
 		}
 
-		if (child->GetAutoResize() == AUTORESIZE_DOWN || child->GetAutoResize() == AUTORESIZE_DOWNANDRIGHT)
-		{
-			t += dy;
-		}
-
-		// make sure the child isn't too big...
-		if(x+w>wide)
-		{
-			continue;
-		}
-		
-		if(y+t>tall)
-		{
-			continue;
-		}
-
-		child->SetBounds(x, y, w, t);
+		child->SetBounds( x, y, ex - x, ey - y );
 		child->InvalidateLayout();
 	}
 	Repaint();
-
-	// update the baselines
-	_baseWide = wide;
-	_baseTall = tall;
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -611,11 +622,12 @@ void EditablePanel::OnClose()
 //-----------------------------------------------------------------------------
 bool EditablePanel::RequestInfo(KeyValues *data)
 {
+#ifndef _XBOX
 	if (!stricmp(data->GetName(), "BuildDialog"))
 	{
 		// a build dialog is being requested, give it one
 		// a bit hacky, but this is a case where vgui.dll needs to reach out
-		data->SetPtr("PanelPtr", new BuildModeDialog((BuildGroup *)data->GetPtr("BuildGroupPtr")));
+		data->SetPtr("PanelPtr", new BuildModeDialog( (BuildGroup *)data->GetPtr("BuildGroupPtr")));
 		return true;
 	}
 	else if (!stricmp(data->GetName(), "ControlFactory"))
@@ -627,7 +639,7 @@ bool EditablePanel::RequestInfo(KeyValues *data)
 			return true;
 		}
 	}
-
+#endif
 	return BaseClass::RequestInfo(data);
 }
 
@@ -720,9 +732,6 @@ void EditablePanel::ApplySettings(KeyValues *inResourceData)
 	Panel::ApplySettings(inResourceData);
 
 	_buildGroup->ApplySettings(inResourceData);
-
-	// reset the auto-resize baselines
-	GetSize(_baseWide, _baseTall);
 }
 
 
@@ -966,87 +975,13 @@ KeyValues *EditablePanel::GetDialogVariables()
 //-----------------------------------------------------------------------------
 Panel *EditablePanel::CreateControlByName(const char *controlName)
 {
-	if (!stricmp(controlName, "Label"))
+#ifndef _XBOX
+	Panel *fromFactory = CBuildFactoryHelper::InstancePanel( controlName );
+	if ( fromFactory )
 	{
-		return new Label(NULL, NULL, "Label");
+		return fromFactory;
 	}
-	else if (!stricmp(controlName, "Button"))
-	{
-		return new Button(NULL, NULL, "Button");
-	}
-	else if (!stricmp(controlName, "CheckButton"))
-	{
-		return new CheckButton(NULL, NULL, "CheckButton");
-	}
-	else if (!stricmp(controlName, "ComboBox"))
-	{
-		return new ComboBox(NULL, NULL, 5, true);
-	}
-	else if (!stricmp(controlName, "Menu"))
-	{
-		return new Menu(NULL, "Menu");
-	}
-	else if (!stricmp(controlName, "MenuItem"))
-	{
-		return new MenuItem(NULL, NULL, "MenuItem");
-	}
-	else if (!stricmp(controlName, "MessageBox"))
-	{
-		return new MessageBox("MessageBox", "MessageBoxText");
-	}
-	else if (!stricmp(controlName, "ProgressBar"))
-	{
-		return new ProgressBar(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "RadioButton"))
-	{
-		return new RadioButton(NULL, NULL, "RadioButton");
-	}
-	else if (!stricmp(controlName, "ScrollBar"))
-	{
-		return new ScrollBar(NULL, NULL, false);
-	}
-	else if (!stricmp(controlName, "TextEntry"))
-	{
-		return new TextEntry(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "RichText"))
-	{
-		return new RichText(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "ToggleButton"))
-	{
-		return new ToggleButton(NULL, NULL, "ToggleButton");
-	}
-	else if (!stricmp(controlName, "ImagePanel"))
-	{
-		return new ImagePanel(NULL, "ResourceImagePanel");
-	}
-	else if (!stricmp(controlName, "AnimatingImagePanel"))
-	{
-		return new AnimatingImagePanel(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "Panel"))
-	{
-		return new Panel(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "Divider"))
-	{
-		return new Divider(NULL, "Divider");
-	}
-    else if (!stricmp(controlName, "URLLabel"))
-    {
-        return new URLLabel(NULL, NULL, "URLLabel", NULL);
-    }
-	else if (!stricmp(controlName, "EditablePanel"))
-	{
-		return new EditablePanel(NULL, NULL);
-	}
-	else if (!stricmp(controlName, "BitmapImagePanel"))
-	{
-		return new CBitmapImagePanel(NULL, "BitmapImagePanel");
-	}
-
+#endif
 
 	return NULL;
 }

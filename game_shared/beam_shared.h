@@ -124,6 +124,8 @@ public:
 	int GetBrightness( void ) const;
 	float GetFrame( void ) const;
 	float GetScrollRate( void ) const;
+	float GetHDRColorScale( void ) const;
+	void SetHDRColorScale( float flScale ) { m_flHDRColorScale = flScale; }
 
 
 	// Call after you change start/end positions
@@ -149,13 +151,7 @@ public:
 	void LiveForTime( float time );
 	void BeamDamageInstant( trace_t *ptr, float damage );
 
-// Only supported in TF2 right now
-#if defined( TF2_CLIENT_DLL )
-	virtual bool	ShouldPredict( void )
-	{
-		return true;
-	}
-#endif
+	virtual const char *GetDecalName( void ) { return "BigShot"; }
 
 #if defined( CLIENT_DLL )
 // IClientEntity overrides.
@@ -186,6 +182,7 @@ private:
 
 protected:
 	CNetworkVar( float, m_flFrameRate );
+	CNetworkVar( float, m_flHDRColorScale );
 	float		m_flFireTime;
 	float		m_flDamage;			// Damage per second to touchers.
 	CNetworkVar( int, m_nNumBeamEnts );
@@ -197,7 +194,9 @@ private:
 #if !defined( CLIENT_DLL )
 	void InputNoise( inputdata_t &inputdata );
  	void InputWidth( inputdata_t &inputdata );
-
+	void InputColorRedValue( inputdata_t &inputdata );
+	void InputColorBlueValue( inputdata_t &inputdata );
+	void InputColorGreenValue( inputdata_t &inputdata );
 #endif
 
 	// Beam Data Elements
@@ -399,6 +398,10 @@ inline float CBeam::GetScrollRate( void ) const
 	return m_fSpeed; 
 }
 
+inline float CBeam::GetHDRColorScale( void ) const
+{
+	return m_flHDRColorScale;
+}
 
 inline void CBeam::LiveForTime( float time ) 
 { 

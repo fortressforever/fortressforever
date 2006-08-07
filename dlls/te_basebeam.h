@@ -22,7 +22,7 @@
 
 #include "basetempentity.h"
 
-class CTEBaseBeam : public CBaseTempEntity
+abstract_class CTEBaseBeam : public CBaseTempEntity
 {
 public:
 

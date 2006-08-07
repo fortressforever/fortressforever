@@ -52,14 +52,14 @@ CAI_Link *CAI_Node::GetLink( int destNodeId )
 //-----------------------------------------------------------------------------
 void CAI_Node::AddLink(CAI_Link *newLink)
 {
-	if ( m_iNumLinks == AI_MAX_NODE_LINKS )
+	if ( NumLinks() == AI_MAX_NODE_LINKS )
 	{
 		DevMsg( "Node %d has too many links\n", m_iID );
 		return;
 	}
 
 #ifdef _DEBUG
-	for (int link=0;link<m_iNumLinks;link++)
+	for (int link=0;link<NumLinks();link++)
 	{
 		if (m_Links[link] == newLink)
 		{
@@ -72,7 +72,6 @@ void CAI_Node::AddLink(CAI_Link *newLink)
 #endif
 
 	m_Links.AddToTail( newLink );
-	m_iNumLinks++;
 }
 
 
@@ -84,7 +83,7 @@ void CAI_Node::AddLink(CAI_Link *newLink)
 //-----------------------------------------------------------------------------
 CAI_Link* CAI_Node::HasLink(int nNodeID)
 {
-	for (int link=0;link<m_iNumLinks;link++)
+	for (int link=0;link<NumLinks();link++)
 	{
 		// If node has link to myself, than add link to my list of links
 		if (m_Links[link]->DestNodeID(m_iID) == nNodeID)
@@ -104,7 +103,7 @@ CAI_Link* CAI_Node::HasLink(int nNodeID)
 void CAI_Node::ShuffleLinks(void)
 {
 	m_iFirstShuffledLink++;
-	if (m_iFirstShuffledLink >= m_iNumLinks)
+	if (m_iFirstShuffledLink >= NumLinks())
 	{
 		m_iFirstShuffledLink = 0;
 	}
@@ -119,9 +118,9 @@ void CAI_Node::ShuffleLinks(void)
 CAI_Link* CAI_Node::GetShuffeledLink(int nNum)
 {
 	int nLinkID = m_iFirstShuffledLink + nNum;
-	if (nLinkID >= m_iNumLinks)
+	if (nLinkID >= NumLinks())
 	{
-		nLinkID -= m_iNumLinks;
+		nLinkID -= NumLinks();
 	}
 	return m_Links[nLinkID];
 }
@@ -264,7 +263,6 @@ CAI_Node::CAI_Node( int id, const Vector &origin, float yaw  )
 	m_eNodeType		= NODE_GROUND;
 	m_eNodeInfo		= 0;
 
-	m_iNumLinks				= 0;
 	m_iFirstShuffledLink	= 0;
 
 	m_pHint					= NULL;

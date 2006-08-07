@@ -271,8 +271,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	{
 		int wide, tall;
 		imageList->GetImage(i)->GetSize(wide, tall);
-		DevMsg( "Image changed from %d x %d to %d %d", wide, tall, (int)scheme()->GetProportionalScaledValue(wide), (int)scheme()->GetProportionalScaledValue(tall) );
-		imageList->GetImage(i)->SetSize(scheme()->GetProportionalScaledValue(wide), scheme()->GetProportionalScaledValue(tall));
+		imageList->GetImage(i)->SetSize(scheme()->GetProportionalScaledValueEx( GetScheme(),wide), scheme()->GetProportionalScaledValueEx( GetScheme(),tall));
 	}*/
 	// <-- Mirv: Image resizing made things a mess
 

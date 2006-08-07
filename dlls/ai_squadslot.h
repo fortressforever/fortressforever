@@ -17,7 +17,10 @@
 #define	MAX_SQUADSLOTS 32
 
 //=========================================================
-// These are the default shared conditions
+// These are the default shared squad slots
+//
+// NOTE: If you add a new squad slot here, make sure you
+// update GetSquadSlotDebugName()
 //=========================================================
 enum SQUAD_SLOT_t {
 
@@ -42,5 +45,6 @@ enum SQUAD_SLOT_t {
 	// ======================================
 	LAST_SHARED_SQUADSLOT,		
 };
+
 
 #endif	//SQUADSLOT_H

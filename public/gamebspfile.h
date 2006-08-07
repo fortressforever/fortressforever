@@ -26,6 +26,7 @@ enum
 	GAMELUMP_DETAIL_PROPS		= 'dprp',
 	GAMELUMP_DETAIL_PROP_LIGHTING	= 'dplt',
 	GAMELUMP_STATIC_PROPS		= 'sprp',
+	GAMELUMP_DETAIL_PROP_LIGHTING_HDR	= 'dplh', // fixme: need to make use of this
 };
 
 // Versions...
@@ -35,6 +36,7 @@ enum
 	GAMELUMP_DETAIL_PROP_LIGHTING_VERSION	= 0,
 	GAMELUMP_STATIC_PROPS_VERSION	= 5,
 	GAMELUMP_STATIC_PROP_LIGHTING_VERSION	= 0,
+	GAMELUMP_DETAIL_PROP_LIGHTING_HDR_VERSION	= 0,
 };
 
 
@@ -50,10 +52,14 @@ enum DetailPropOrientation_t
 	DETAIL_PROP_ORIENT_SCREEN_ALIGNED_VERTICAL,
 };
 
+// NOTE: If DetailPropType_t enum changes, change CDetailModel::QuadsToDraw
+// in detailobjectsystem.cpp
 enum DetailPropType_t
 {
 	DETAIL_PROP_TYPE_MODEL = 0,
 	DETAIL_PROP_TYPE_SPRITE,
+	DETAIL_PROP_TYPE_SHAPE_CROSS,
+	DETAIL_PROP_TYPE_SHAPE_TRI,
 };
 
 
@@ -87,7 +93,9 @@ struct DetailObjectLump_t
 	ColorRGBExp32	m_Lighting;
 	unsigned int	m_LightStyles; 
 	unsigned char	m_LightStyleCount;
-	unsigned char	m_Padding[3];	// FIXME: Remove when we rev the detail lump again..
+	unsigned char   m_SwayAmount;		// how much do the details sway
+	unsigned char	m_ShapeAngle;		// angle param for shaped sprites
+	unsigned char   m_ShapeSize;		// size param for shaped sprites
 	unsigned char	m_Orientation;	// See DetailPropOrientation_t
 	unsigned char	m_Padding2[3];	// FIXME: Remove when we rev the detail lump again..
 	unsigned char	m_Type;	// See DetailPropType_t
@@ -122,8 +130,12 @@ enum
 	STATIC_PROP_NO_SHADOW	= 0x10,
 	STATIC_PROP_SCREEN_SPACE_FADE	= 0x20,
 
-	// This mask includes all flags settable in WC
-	STATIC_PROP_WC_MASK		= 0x10,
+	STATIC_PROP_NO_PER_VERTEX_LIGHTING = 0x40,				// in vrad, compute lighting at
+															// lighting origin, not for each vertex
+	
+	STATIC_PROP_NO_SELF_SHADOWING = 0x80,					// disable self shadowing in vrad
+
+	STATIC_PROP_WC_MASK		= 0xd0,							// all flags settable in hammer (?)
 };
 
 struct StaticPropDictLump_t

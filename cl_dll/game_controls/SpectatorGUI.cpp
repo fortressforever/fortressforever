@@ -40,7 +40,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifndef _XBOX
 extern IGameUIFuncs *gameuifuncs; // for key binding details
+#endif
 
 // void DuckMessage(const char *str); // from vgui_teamfortressviewport.cpp
 
@@ -105,9 +107,9 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	m_pViewOptions->SetText("#Spec_Modes");
 	m_pConfigSettings->SetText("#Spec_Options");
 
-	m_pPlayerList->SetOpenDirection( ComboBox::UP );
-	m_pViewOptions->SetOpenDirection( ComboBox::UP );
-	m_pConfigSettings->SetOpenDirection( ComboBox::UP );
+	m_pPlayerList->SetOpenDirection( Menu::MenuDirection_e::UP );
+	m_pViewOptions->SetOpenDirection( Menu::MenuDirection_e::UP );
+	m_pConfigSettings->SetOpenDirection( Menu::MenuDirection_e::UP );
 
 	// create view config menu
 	CommandMenu * menu = new CommandMenu(m_pViewOptions, "spectatormenu", gViewPortInterface);
@@ -141,7 +143,7 @@ void CSpectatorMenu::ApplySchemeSettings(IScheme *pScheme)
 void CSpectatorMenu::PerformLayout()
 {
 	int w,h;
-	surface()->GetScreenSize(w, h);
+	GetHudSize(w, h);
 
 	// fill the screen
 	SetSize(w,GetTall());
@@ -343,14 +345,15 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::PerformLayout()
 {
-	int w,h;
-	surface()->GetScreenSize(w, h);
-
+	int w,h,x,y;
+	GetHudSize(w, h);
+	
 	// fill the screen
 	SetBounds(0,0,w,h);
 
 	// stretch the bottom bar across the screen
-	m_pBottomBarBlank->SetWide( w );
+	m_pBottomBarBlank->GetPos(x,y);
+	m_pBottomBarBlank->SetSize( w, h - y );
 }
 
 //-----------------------------------------------------------------------------
@@ -454,7 +457,7 @@ void CSpectatorGUI::Update()
 	int wide, tall;
 	int bx, by, bwide, btall;
 
-	surface()->GetScreenSize(wide, tall);
+	GetHudSize(wide, tall);
 	m_pTopBar->GetBounds( bx, by, bwide, btall );
 
 	IGameResources *gr = GameResources();
@@ -495,7 +498,7 @@ void CSpectatorGUI::Update()
 
 	// update player name filed, text & color
 
-	if ( playernum > 0 && gr)
+	if ( playernum > 0 && playernum < gpGlobals->maxClients && gr)
 	{
 		Color c = gr->GetTeamColor( gr->GetTeam(playernum) ); // Player's team color
 
@@ -505,7 +508,7 @@ void CSpectatorGUI::Update()
 		wcscpy( playerText, L"Unable to find #Spec_PlayerItem*" );
 		memset( playerName, 0x0, sizeof( playerName ) * sizeof( wchar_t ) );
 
-		localize()->ConvertANSIToUnicode( gr->GetPlayerName( playernum ), playerName, sizeof( playerName ) );
+		localize()->ConvertANSIToUnicode( UTIL_SafeName(gr->GetPlayerName( playernum )), playerName, sizeof( playerName ) );
 		int iHealth = gr->GetHealth( playernum );
 		if ( iHealth > 0  && gr->IsAlive(playernum) )
 		{
@@ -518,6 +521,10 @@ void CSpectatorGUI::Update()
 		}
 
 		m_pPlayerLabel->SetText( playerText );
+	}
+	else
+	{
+		m_pPlayerLabel->SetText( L"" );
 	}
 
 	// update extra info field
@@ -637,7 +644,7 @@ void CSpectatorMenu::Update( void )
 
 		wchar_t playerText[ 80 ], playerName[ 64 ], *team, teamText[ 64 ];
 		char localizeTeamName[64];
-		localize()->ConvertANSIToUnicode( gr->GetPlayerName(iPlayerIndex), playerName, sizeof( playerName ) );
+		localize()->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName(iPlayerIndex) ), playerName, sizeof( playerName ) );
 		const char * teamname = gr->GetTeamName( gr->GetTeam(iPlayerIndex) );
 		if ( teamname )
 		{	
@@ -790,24 +797,30 @@ CON_COMMAND( spec_mode, "Set spectator mode" )
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() && engine->IsPlayingDemo() )
+	if ( engine->IsHLTV() )
 	{
 		int mode;
 
 		if ( engine->Cmd_Argc() == 2 )
 		{
 			mode = Q_atoi( engine->Cmd_Argv(1) );
+			HLTVCamera()->SetMode( mode );
 		}
-		else
+		else if ( engine->IsPlayingDemo() )
 		{
-			mode = HLTVCamera()->GetObserverMode()+1;
+			// during HLTV demo playback we all all spectator modes
+			mode = HLTVCamera()->GetMode()+1;
 
 			if ( mode > OBS_MODE_ROAMING )
 				mode = OBS_MODE_IN_EYE;
+			
+			// handle the command clientside
+			HLTVCamera()->SetMode( mode );
 		}
-
-		// handle the command clientside
-		HLTVCamera()->SetMode( mode );
+		else
+		{
+			HLTVCamera()->ToggleChaseAsFirstPerson();
+		}
 	}
 	else
 	{

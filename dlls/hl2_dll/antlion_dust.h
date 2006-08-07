@@ -24,8 +24,9 @@ public:
 
 	CNetworkVector( m_vecOrigin );
 	CNetworkVar( QAngle, m_vecAngles );
+	CNetworkVar( bool, m_bBlockedSpawner );
 };
 
-void UTIL_CreateAntlionDust( const Vector &origin, const QAngle &angles );
+void UTIL_CreateAntlionDust( const Vector &origin, const QAngle &angles, bool bBlockedSpawner = false );
 
 #endif	//ANTLION_DUST_H

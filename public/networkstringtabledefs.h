@@ -52,7 +52,7 @@ public:
 	virtual const char		*GetString( int stringNumber ) = 0;
 	virtual void			SetStringUserData( int stringNumber, int length, const void *userdata ) = 0;
 	virtual const void		*GetStringUserData( int stringNumber, int *length ) = 0;
-	virtual int				FindStringIndex( char const *string ) = 0; // returns -1 if not found
+	virtual int				FindStringIndex( char const *string ) = 0; // returns INVALID_STRING_INDEX if not found
 
 	// Callbacks
 	virtual void			SetStringChangedCallback( void *object, pfnStringChanged changeFunc ) = 0;
@@ -73,6 +73,7 @@ public:
 	virtual INetworkStringTable	*GetTable( TABLEID stringTable ) const = 0;
 	virtual int					GetNumTables( void ) const = 0;
 
+	virtual INetworkStringTable	*CreateStringTableEx( const char *tableName, int maxentries, int userdatafixedsize = 0, int userdatanetworkbits = 0, bool bIsFilenames = false ) = 0;
 };
 
 #endif // NETWORKSTRINGTABLEDEFS_H

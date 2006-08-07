@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="tgadiff"
 	ProjectGUID="{0CE0AF8A-A977-4538-9D63-BCB76DE1BAC6}"
-	SccProjectName="tgadiff"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -23,38 +23,43 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="0"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\..\public,..\..\public\tier1"
-				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;TGALOADER_USE_FOPEN;TGAWRITER_USE_FOPEN"
+				PreprocessorDefinitions="NDEBUG;_WIN32;_CONSOLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Release/tgadiff.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
 				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\$(TargetName).exe"/>
+				Outputs="..\..\..\bin\$(TargetName).exe;..\..\..\bin\$(TargetName).pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Release/tgadiff.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc,libcmtd.lib"
 				ProgramDatabaseFile=".\Release/tgadiff.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
@@ -95,30 +100,34 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\public,..\..\public\tier1"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;TGALOADER_USE_FOPEN;TGAWRITER_USE_FOPEN"
+				PreprocessorDefinitions="_DEBUG;_WIN32;_CONSOLE"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
+				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Debug/tgadiff.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
 				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\$(TargetName).exe"/>
+				Outputs="..\..\..\bin\$(TargetName).exe;..\..\..\bin\$(TargetName).pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Debug/tgadiff.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc,libcmt.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/tgadiff.pdb"
 				SubSystem="1"
@@ -156,83 +165,48 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\..\public\imageloader.cpp">
-			</File>
-			<File
-				RelativePath="..\..\public\mathlib.cpp">
+				RelativePath="..\..\public\tier0\memoverride.cpp">
 			</File>
 			<File
 				RelativePath="tgadiff.cpp">
 			</File>
-			<File
-				RelativePath="..\..\public\tgaloader.cpp">
-			</File>
-			<File
-				RelativePath="..\..\public\tgawriter.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\utlbuffer.cpp">
-			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl">
+			Name="Link Libraries"
+			Filter="">
+			<File
+				RelativePath="..\..\lib\public\bitmap.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\mathlib.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier0.lib">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier1.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier2.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\vstdlib.lib">
+			</File>
 		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-		</Filter>
-		<File
-			RelativePath="..\..\lib\public\nvtc.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\tier0.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\vstdlib.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

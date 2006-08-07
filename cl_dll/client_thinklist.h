@@ -26,13 +26,16 @@
 #define INVALID_THINK_HANDLE ClientThinkList()->GetInvalidThinkHandle()
 
 
-class CClientThinkList : public IGameSystem
+class CClientThinkList : public IGameSystemPerFrame
 {
 public:
 
 							CClientThinkList();
 	virtual					~CClientThinkList();
 	
+	virtual char const		*Name() { return "CClientThinkList"; }
+	virtual bool			IsPerFrame() { return true; }
+
 	// Set the next time at which you want to think. You can also use
 	// one of the CLIENT_THINK_ defines.
 	void					SetNextClientThink( ClientEntityHandle_t hEnt, float nextTime );
@@ -60,6 +63,7 @@ public:
 	virtual void LevelShutdownPreEntity();
 	virtual void LevelShutdownPostEntity();
 	virtual void PreRender();
+	virtual void PostRender() { }
 	virtual void Update( float frametime );
 	virtual void OnSave() {}
 	virtual void OnRestore() {}

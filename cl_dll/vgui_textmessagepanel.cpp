@@ -37,19 +37,14 @@ public:
 		TYPE_FONT,
 	};
 
-	typedef struct message_s
+	struct message_t
 	{
-		int		type;
-		struct	message_s *next;
-
-		// Could make a union
-		int			x, y;
-
-		int			r, g, b, a;
-		wchar_t		ch;
-
 		vgui::HFont	font;
-	} message_t;
+		short		x, y;
+		wchar_t		ch;
+		byte		type;
+		byte		r, g, b, a;
+	};
 
 						CTextMessagePanel( vgui::VPANEL parent );
 	virtual				~CTextMessagePanel( void );
@@ -71,6 +66,12 @@ public:
 	// Get character data for textmessage text
 	virtual int			GetFontInfo( FONTABC *pABCs, vgui::HFont hFont );
 
+	virtual void		ApplySchemeSettings( vgui::IScheme *pScheme )
+	{
+		BaseClass::ApplySchemeSettings( pScheme );
+		SetSize( ScreenWidth(), ScreenHeight() );
+		SetPos( 0, 0 );
+	}
 
 private:
 	message_t			*AllocMessage( void );
@@ -78,9 +79,7 @@ private:
 
 	vgui::HFont			m_hFont;
 	vgui::HFont			m_hDefaultFont;
-	message_t			m_Messages[ MAX_TEXTMESSAGE_CHARS ];
-	message_t			*m_pActive;
-	message_t			*m_pFree;
+	CUtlVector< message_t > m_Messages;
 };
 
 //-----------------------------------------------------------------------------
@@ -155,14 +154,7 @@ int CTextMessagePanel::GetFontInfo( FONTABC *pABCs, vgui::HFont hFont )
 //-----------------------------------------------------------------------------
 void CTextMessagePanel::Reset( void )
 {
-	m_pActive = NULL;
-	int i;
-	for( i = 0; i < MAX_TEXTMESSAGE_CHARS-1; i++ )
-	{
-		m_Messages[ i ].next = &m_Messages[ i + 1 ];
-	}
-	m_Messages[ i ].next = NULL;
-	m_pFree = &m_Messages[ 0 ];
+	m_Messages.Purge();
 	SetVisible( false );
 }
 
@@ -174,14 +166,10 @@ CTextMessagePanel::message_t *CTextMessagePanel::AllocMessage( void )
 {
 	CTextMessagePanel::message_t *msg;
 
-	if ( !m_pFree )
+	if ( m_Messages.Count() >= MAX_TEXTMESSAGE_CHARS )
 		return NULL;
 
-	msg = m_pFree;
-	m_pFree = m_pFree->next;
-
-	msg->next = m_pActive;
-	m_pActive = msg;
+	msg = &m_Messages[ m_Messages.AddToTail() ];
 
 	msg->type = TYPE_UNKNOWN;
 	msg->x = 0;
@@ -191,7 +179,9 @@ CTextMessagePanel::message_t *CTextMessagePanel::AllocMessage( void )
 	msg->g = 0;
 	msg->b = 0;
 	msg->a = 0;
+
 	SetVisible( true );
+
 	return msg;
 }
 
@@ -291,7 +281,7 @@ void CTextMessagePanel::OnTick( void )
 //-----------------------------------------------------------------------------
 bool CTextMessagePanel::ShouldDraw( void )
 {
-	if ( !m_pActive )
+	if ( !m_Messages.Count() )
 		return false;
 
 	return true;
@@ -302,26 +292,16 @@ bool CTextMessagePanel::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 void CTextMessagePanel::Paint() 
 {
-	CTextMessagePanel::message_t *msg = m_pActive;
-	
-	// Reverse
-	CTextMessagePanel::message_t *newlist = NULL, *next;
-	while ( msg )
-	{
-		next = msg->next;
-		msg->next = newlist;
-		newlist = msg;
-		msg = next;
-	}
+	CTextMessagePanel::message_t *msg;
 
-	m_pActive = newlist;
-	msg = newlist;
 	int xpos = 0, ypos = 0;
-
 	vgui::surface()->DrawSetTextFont( m_hFont );
 
-	while ( msg )
+	int messageCount = m_Messages.Count();
+	for ( int i = 0 ; i < messageCount; ++i )
 	{
+		msg = &m_Messages[ i ];
+	
 		switch ( msg->type )
 		{
 		default:
@@ -352,7 +332,6 @@ void CTextMessagePanel::Paint()
 			}
 			break;
 		}
-		msg = msg->next;
 	}
 
 	Reset();

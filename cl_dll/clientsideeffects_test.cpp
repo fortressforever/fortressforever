@@ -185,6 +185,10 @@ FX_Tracer
 class CBulletWhizTimer : public CAutoGameSystem
 {
 public:
+	CBulletWhizTimer( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	void LevelInitPreEntity()
 	{
 		m_nextWhizTime = 0;
@@ -194,7 +198,7 @@ public:
 };
 
 // Client-side tracking for whiz noises
-CBulletWhizTimer g_BulletWhiz;
+CBulletWhizTimer g_BulletWhiz( "CBulletWhizTimer" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 

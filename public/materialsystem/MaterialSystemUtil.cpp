@@ -1,15 +1,15 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
-#include "materialsystem/materialsystemutil.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/ITexture.h"
-#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/MaterialSystemUtil.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/itexture.h"
+#include "materialsystem/imaterialsystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -22,12 +22,12 @@
 //-----------------------------------------------------------------------------
 // constructor, destructor
 //-----------------------------------------------------------------------------
-CMaterialReference::CMaterialReference( char const* pMaterialName, const char *pTextureGroupName ) : m_pMaterial( 0 )
+CMaterialReference::CMaterialReference( char const* pMaterialName, const char *pTextureGroupName, bool bComplain ) : m_pMaterial( 0 )
 {
 	if (pMaterialName)
 	{
 		Assert( pTextureGroupName );
-		Init(pMaterialName, pTextureGroupName);
+		Init( pMaterialName, pTextureGroupName, bComplain );
 	}
 }
 
@@ -39,29 +39,51 @@ CMaterialReference::~CMaterialReference()
 //-----------------------------------------------------------------------------
 // Attach to a material
 //-----------------------------------------------------------------------------
-void CMaterialReference::Init( char const* pMaterialName, const char *pTextureGroupName )
+void CMaterialReference::Init( char const* pMaterialName, const char *pTextureGroupName, bool bComplain )
 {
-	m_pMaterial = materials->FindMaterial(pMaterialName, pTextureGroupName);
-	Assert( m_pMaterial );
-	if (m_pMaterial)
-		m_pMaterial->IncrementReferenceCount();
+	IMaterial *pMaterial = materials->FindMaterial( pMaterialName, pTextureGroupName, bComplain);
+	Assert( pMaterial );
+	if ( pMaterial != m_pMaterial )
+	{
+		Shutdown();
+		m_pMaterial = pMaterial;
+		if ( m_pMaterial )
+		{
+			m_pMaterial->IncrementReferenceCount();
+		}
+	}
+}
+
+void CMaterialReference::Init( const char *pMaterialName, KeyValues *pVMTKeyValues )
+{
+	// CreateMaterial has a refcount of 1
+	Shutdown();
+	m_pMaterial = materials->CreateMaterial( pMaterialName, pVMTKeyValues );
 }
 
 void CMaterialReference::Init( IMaterial* pMaterial )
 {
-	m_pMaterial = pMaterial;
-	if (m_pMaterial)
+	if ( m_pMaterial != pMaterial )
 	{
-		m_pMaterial->IncrementReferenceCount();
+		Shutdown();
+		m_pMaterial = pMaterial;
+		if ( m_pMaterial )
+		{
+			m_pMaterial->IncrementReferenceCount();
+		}
 	}
 }
 
 void CMaterialReference::Init( CMaterialReference& ref )
 {
-	m_pMaterial = ref.m_pMaterial;
-	if (m_pMaterial)
+	if ( m_pMaterial != ref.m_pMaterial )
 	{
-		m_pMaterial->IncrementReferenceCount();
+		Shutdown();
+		m_pMaterial = ref.m_pMaterial;
+		if (m_pMaterial)
+		{
+			m_pMaterial->IncrementReferenceCount();
+		}
 	}
 }
 
@@ -89,6 +111,24 @@ CTextureReference::CTextureReference( ) : m_pTexture(NULL)
 {
 }
 
+CTextureReference::CTextureReference( const CTextureReference &ref )
+{
+	m_pTexture = ref.m_pTexture;
+	if( m_pTexture )
+	{
+		m_pTexture->IncrementReferenceCount();
+	}
+}
+
+void CTextureReference::operator=( CTextureReference &ref )
+{
+	m_pTexture = ref.m_pTexture;
+	if( m_pTexture )
+	{
+		m_pTexture->IncrementReferenceCount();
+	}
+}
+
 CTextureReference::~CTextureReference( )
 {
 	Shutdown();
@@ -97,6 +137,16 @@ CTextureReference::~CTextureReference( )
 //-----------------------------------------------------------------------------
 // Attach to a texture
 //-----------------------------------------------------------------------------
+void CTextureReference::Init( char const* pTextureName, const char *pTextureGroupName, bool bComplain )
+{
+	Shutdown();
+	m_pTexture = materials->FindTexture( pTextureName, pTextureGroupName, bComplain );
+	if ( m_pTexture )
+	{
+		m_pTexture->IncrementReferenceCount();
+	}
+}
+
 void CTextureReference::Init( ITexture* pTexture )
 {
 	Shutdown();
@@ -108,23 +158,30 @@ void CTextureReference::Init( ITexture* pTexture )
 	}
 }
 
-void CTextureReference::InitRenderTarget( int w, int h, RenderTargetSizeMode_t sizeMode, ImageFormat fmt, MaterialRenderTargetDepth_t depth )
+void CTextureReference::InitProceduralTexture( const char *pTextureName, const char *pTextureGroupName, int w, int h, ImageFormat fmt, int nFlags )
 {
 	Shutdown();
 
+	m_pTexture = materials->CreateProceduralTexture( pTextureName, pTextureGroupName, w, h, fmt, nFlags );
+	if ( m_pTexture )
+	{
+		m_pTexture->IncrementReferenceCount();
+	}
+}
+
+void CTextureReference::InitRenderTarget( int w, int h, RenderTargetSizeMode_t sizeMode, ImageFormat fmt, MaterialRenderTargetDepth_t depth, bool bHDR )
+{
+	Shutdown();
+
+	int textureFlags = TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT;
+	if( depth == MATERIAL_RT_DEPTH_ONLY )
+		textureFlags |= TEXTUREFLAGS_POINTSAMPLE;
+
 	// NOTE: Refcount returned by CreateRenderTargetTexture is 1
-	m_pTexture = materials->CreateRenderTargetTexture( w, h, sizeMode, fmt, depth );
-#ifdef _DEBUG
-	ITexture *pSaveRenderTarget = materials->GetRenderTarget();
-	int saveX, saveY, saveWidth, saveHeight;
-	materials->GetViewport( saveX, saveY, saveWidth, saveHeight );
-	materials->SetRenderTarget( m_pTexture );
-	materials->Viewport( 0, 0, w, h );
-	materials->ClearColor4ub( 0, 0, 0, 0 );
-	materials->ClearBuffers( true, false );
-	materials->SetRenderTarget( pSaveRenderTarget );
-	materials->Viewport( saveX, saveY, saveWidth, saveHeight );
-#endif
+	m_pTexture = materials->CreateNamedRenderTargetTextureEx( NULL, w, h, sizeMode, fmt, 
+		depth, textureFlags, 
+		bHDR ? CREATERENDERTARGETFLAGS_HDR : 0 );
+
 	Assert( m_pTexture );
 }
 

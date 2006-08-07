@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Header: $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef IMATERIALSYSTEMHARDWARECONFIG_H
 #define IMATERIALSYSTEMHARDWARECONFIG_H
@@ -14,7 +14,7 @@
 #endif
 
 
-#include "interface.h"
+#include "tier1/interface.h"
 
 
 //-----------------------------------------------------------------------------
@@ -22,6 +22,13 @@
 //-----------------------------------------------------------------------------
 #define MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION		"MaterialSystemHardwareConfig012"
 
+// HDRFIXME NOTE: must match common_ps_fxc.h
+enum HDRType_t
+{
+	HDR_TYPE_NONE,
+	HDR_TYPE_INTEGER,
+	HDR_TYPE_FLOAT,
+};
 
 //-----------------------------------------------------------------------------
 // Material system configuration
@@ -97,6 +104,18 @@ public:
 	virtual bool SupportsSRGB() const = 0;
 
 	virtual bool IsAAEnabled() const = 0;	// Is antialiasing being used?
+
+	// NOTE: Anything after this was added after shipping HL2.
+	virtual int GetVertexTextureCount() const = 0;
+	virtual int GetMaxVertexTextureDimension() const = 0;
+
+	virtual int  MaxTextureDepth() const = 0;
+
+	virtual HDRType_t GetHDRType() const = 0;
+	virtual HDRType_t GetHardwareHDRType() const = 0;
+
+	virtual bool SupportsPixelShaders_2_b() const = 0;
+	virtual bool SupportsStreamOffset() const = 0;
 };
 
 #endif // IMATERIALSYSTEMHARDWARECONFIG_H

@@ -1,23 +1,26 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #if !defined( UTIL_REGISTRY_H )
 #define UTIL_REGISTRY_H
 #ifdef _WIN32
 #pragma once
 #endif
 
+#include "tier0/platform.h"
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Interface to registry
 //-----------------------------------------------------------------------------
-class IRegistry
+abstract_class IRegistry
 {
 public:
 	// Init/shutdown
-	virtual void			Init( const char *platformName ) = 0;
+	virtual bool			Init( const char *platformName ) = 0;
 	virtual void			Shutdown( void ) = 0;
 
 	// Read/write integers
@@ -25,10 +28,21 @@ public:
 	virtual void			WriteInt( const char *key, int value ) = 0;
 
 	// Read/write strings
-	virtual const char		*ReadString( const char *key, const char *defaultValue = NULL ) = 0;
+	virtual const char		*ReadString( const char *key, const char *defaultValue = 0 ) = 0;
 	virtual void			WriteString( const char *key, const char *value ) = 0;
+
+	// Read/write helper methods
+	virtual int				ReadInt( const char *pKeyBase, const char *pKey, int defaultValue = 0 ) = 0;
+	virtual void			WriteInt( const char *pKeyBase, const char *key, int value ) = 0;
+	virtual const char		*ReadString( const char *pKeyBase, const char *key, const char *defaultValue ) = 0;
+	virtual void			WriteString( const char *pKeyBase, const char *key, const char *value ) = 0;
 };
 
 extern IRegistry *registry;
+
+// Creates it and calls Init
+IRegistry *InstanceRegistry( char const *subDirectoryUnderValve );
+// Calls Shutdown and deletes it
+void ReleaseInstancedRegistry( IRegistry *reg );
 
 #endif // UTIL_REGISTRY_H

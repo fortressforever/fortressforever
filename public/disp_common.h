@@ -23,7 +23,7 @@ class CCoreDispInfo;
 // ----------------------------------------------------------------------------- //
 
 // This class provides a set of utility functions for displacements that work in the tools and the engine.
-class CDispUtilsHelper
+abstract_class CDispUtilsHelper
 {
 // Derived classes must implement these.
 public:

@@ -21,16 +21,27 @@ public:
 		size = -1;
 	}
 
-	char				mapname[ 128 ];
+	char const *GetMapName() const
+	{
+		return mapname;
+	}
+
+	void SetMapName( char const *newname )
+	{
+		Q_strncpy( mapname, newname, sizeof( mapname ) );
+	}
+
 	DISPATCHFUNCTION	factory;
 	int					size;
+private:
+	char				mapname[ 40 ];
 };
 
 class CClassMap : public IClassMap
 {
 public:
-	virtual void		Add( const char *mapname, const char *classname, int size, DISPATCHFUNCTION factory /*= 0*/ );
-	virtual const char *Lookup( const char *classname );
+	virtual void			Add( const char *mapname, const char *classname, int size, DISPATCHFUNCTION factory /*= 0*/ );
+	virtual const char		*Lookup( const char *classname );
 	virtual C_BaseEntity	*CreateEntity( const char *mapname );
 	virtual int				GetClassSize( const char *classname );
 
@@ -58,7 +69,7 @@ void CClassMap::Add( const char *mapname, const char *classname, int size, DISPA
 	}
 
 	classentry_t element;
-	Q_strncpy( element.mapname, mapname, sizeof( element.mapname ) );
+	element.SetMapName( mapname );
 	element.factory = factory;
 	element.size = size;
 	m_ClassDict.Insert( classname, element );
@@ -74,7 +85,7 @@ const char *CClassMap::Lookup( const char *classname )
 		return NULL;
 
 	lookup = m_ClassDict.Element( index );
-	return lookup.mapname;
+	return lookup.GetMapName();
 }
 
 C_BaseEntity *CClassMap::CreateEntity( const char *mapname )
@@ -88,13 +99,13 @@ C_BaseEntity *CClassMap::CreateEntity( const char *mapname )
 		if ( !lookup )
 			continue;
 
-		if ( Q_strcmp( lookup->mapname, mapname ) )
+		if ( Q_strcmp( lookup->GetMapName(), mapname ) )
 			continue;
 
 		if ( !lookup->factory )
 		{
 #if defined( _DEBUG )
-			Msg( "No factory for %s/%s\n", lookup->mapname, m_ClassDict.GetElementName( i ) );
+			Msg( "No factory for %s/%s\n", lookup->GetMapName(), m_ClassDict.GetElementName( i ) );
 #endif
 			continue;
 		}
@@ -116,7 +127,7 @@ int CClassMap::GetClassSize( const char *classname )
 		if ( !lookup )
 			continue;
 
-		if ( Q_strcmp( lookup->mapname, classname ) )
+		if ( Q_strcmp( lookup->GetMapName(), classname ) )
 			continue;
 
 		return lookup->size;

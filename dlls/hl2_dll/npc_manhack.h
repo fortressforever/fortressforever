@@ -51,9 +51,9 @@ class CSoundPatch;
 //-----------------------------------------------------------------------------
 // Manhack 
 //-----------------------------------------------------------------------------
-class CNPC_Manhack : public CAI_BasePhysicsFlyingBot, public CDefaultPlayerPickupVPhysics
+class CNPC_Manhack : public CNPCBaseInteractive<CAI_BasePhysicsFlyingBot>, public CDefaultPlayerPickupVPhysics
 {
-DECLARE_CLASS( CNPC_Manhack, CAI_BasePhysicsFlyingBot );
+DECLARE_CLASS( CNPC_Manhack, CNPCBaseInteractive<CAI_BasePhysicsFlyingBot> );
 DECLARE_SERVERCLASS();
 
 public:
@@ -78,7 +78,7 @@ public:
 
 	virtual bool	CreateVPhysics( void );
 
-	virtual void	DeathSound( void );
+	virtual void	DeathSound( const CTakeDamageInfo &info );
 	virtual bool	ShouldGib( const CTakeDamageInfo &info );
 
 	Activity		NPC_TranslateActivity( Activity baseAct );
@@ -121,6 +121,7 @@ public:
 
 	void			PostNPCInit( void );
 
+	void			GatherConditions();
 	void			PrescheduleThink( void );
 
 	void			SpinBlades(float flInterval);
@@ -150,6 +151,25 @@ public:
 	virtual void	OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason );
 
 	CBasePlayer *HasPhysicsAttacker( float dt );
+
+	float GetMaxEnginePower();
+
+	// INPCInteractive Functions
+	virtual bool	CanInteractWith( CAI_BaseNPC *pUser ) { return false; } // Disabled for now (sjb)
+	virtual	bool	HasBeenInteractedWith()	{ return m_bHackedByAlyx; }
+	virtual void	NotifyInteraction( CAI_BaseNPC *pUser )
+	{
+		// Turn the sprites off and on again so their colors will change.
+		KillSprites(0.0f);
+		m_bHackedByAlyx = true; 
+		StartEye();
+	}
+
+	virtual void	InputPowerdown( inputdata_t &inputdata )
+	{
+		m_iHealth = 0;
+	}
+
 
 	DEFINE_CUSTOM_AI;
 
@@ -184,6 +204,11 @@ private:
 
 	// Are we being held by the physcannon?
 	bool IsHeldByPhyscannon( );
+
+	void StartLoitering( const Vector &vecLoiterPosition );
+	void StopLoitering() { m_vecLoiterPosition = vec3_invalid; m_fTimeNextLoiterPulse = gpGlobals->curtime; }
+	bool IsLoitering() { return m_vecLoiterPosition != vec3_invalid; }
+	void Loiter();
 
 	//
 	// Movement variables.
@@ -236,6 +261,13 @@ private:
 	int				m_nLastWaterLevel;
 	bool			m_bDoSwarmBehavior;
 	bool			m_bGib;
+
+	bool			m_bHeld;
+	bool			m_bHackedByAlyx;
+	Vector			m_vecLoiterPosition;
+	float			m_fTimeNextLoiterPulse;
+
+	float			m_flBumpSuppressTime;
 
 	CNetworkVar( int,	m_nEnginePitch1 );
 	CNetworkVar( int,	m_nEnginePitch2 );

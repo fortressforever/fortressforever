@@ -17,6 +17,7 @@
 #include "vstdlib/strtools.h"
 #include "pacifier.h"
 #include "messbuf.h"
+#include "bsplib.h"
 #include "consolewnd.h"
 #include "vismat.h"
 #include "vmpi_filesystem.h"
@@ -28,13 +29,9 @@
 #include "vmpi_tools_shared.h"
 
 
-#define VMPI_VRAD_PACKET_ID						1
-	// Sub packet IDs.
-	#define VMPI_SUBPACKETID_VIS_LEAFS			0
-	#define VMPI_SUBPACKETID_BUILDFACELIGHTS	1
 
-// DistributeWork owns this packet ID.
-#define VMPI_DISTRIBUTEWORK_PACKETID			2
+
+CUtlVector<char> g_LightResultsFilename;
 
 
 extern int total_transfer;
@@ -47,7 +44,18 @@ extern void BuildPatchLights( int facenum );
 // Handle VRAD packets.
 bool VRAD_DispatchFn( MessageBuffer *pBuf, int iSource, int iPacketID )
 {
-	return false;
+	switch( pBuf->data[1] )
+	{
+		case VMPI_SUBPACKETID_PLIGHTDATA_RESULTS:
+		{
+			const char *pFilename = &pBuf->data[2];
+			g_LightResultsFilename.CopyArray( pFilename, strlen( pFilename ) + 1 );
+			return true;
+		}
+		
+		default:		
+			return false;
+	}
 }
 CDispatchReg g_VRADDispatchReg( VMPI_VRAD_PACKET_ID, VRAD_DispatchFn ); // register to handle the messages we want
 CDispatchReg g_DistributeWorkReg( VMPI_DISTRIBUTEWORK_PACKETID, DistributeWorkDispatch );
@@ -108,7 +116,7 @@ void SerializeFace( MessageBuffer * pmb, int facenum )
 {
 	int i, n;
 
-	dface_t     * f  = &dfaces[facenum];
+	dface_t     * f  = &g_pFaces[facenum];
 	facelight_t * fl = &facelight[facenum];
 
 	pmb->write(f, sizeof(dface_t));
@@ -138,7 +146,7 @@ void UnSerializeFace( MessageBuffer * pmb, int facenum )
 {
 	int i, n;
 
-	dface_t     * f  = &dfaces[facenum];
+	dface_t     * f  = &g_pFaces[facenum];
 	facelight_t * fl = &facelight[facenum];
 
 	if (pmb->read(f, sizeof(dface_t)) < 0) Error("BS1");
@@ -193,12 +201,6 @@ void MPI_ProcessFaces( int iThread, int iWorkUnit, MessageBuffer *pBuf )
 void RunMPIBuildFacelights()
 {
 	g_CPUTime.Init();
-
-	if ( !g_bMPIMaster )
-	{
-		// Tell the master we're ready for work.
-		VMPI_FileSystem_DisableFileAccess();	// used for now until it can handle sending files amidst regular mpivrad traffic.
-	}
 
     Msg( "%-20s ", "BuildFaceLights:" );
 	StartPacifier("");
@@ -365,9 +367,48 @@ void RunMPIBuildVisLeafs()
 		Msg( "%% worker CPU utilization during PortalFlow: %.1f\n", 
 			(g_CPUTime.GetSeconds() * 100.0f / elapsed) / numthreads );
 
-		Msg( "VRAD worker finished. Over and out.\n" );
-		VMPI_SetCurrentStage( "worker done" );
-		CmdLib_Exit( 0 );
+		//Msg( "VRAD worker finished. Over and out.\n" );
+		//VMPI_SetCurrentStage( "worker done" );
+		//CmdLib_Exit( 0 );
 	}
 }
+
+
+
+void VMPI_DistributeLightData()
+{
+	if ( !g_bUseMPI )
+		return;
+
+	if ( g_bMPIMaster )
+	{
+		const char *pVirtualFilename = "--plightdata--";
+		VMPI_FileSystem_CreateVirtualFile( pVirtualFilename, pdlightdata->Base(), pdlightdata->Count() );
+
+		char cPacketID[2] = { VMPI_VRAD_PACKET_ID, VMPI_SUBPACKETID_PLIGHTDATA_RESULTS };
+		VMPI_Send2Chunks( cPacketID, sizeof( cPacketID ), pVirtualFilename, strlen( pVirtualFilename ) + 1, VMPI_PERSISTENT );
+	}
+	else
+	{
+		VMPI_SetCurrentStage( "VMPI_DistributeLightData" );
+
+		// Wait until we've received the filename from the master.
+		while ( g_LightResultsFilename.Count() == 0 )
+		{
+			VMPI_DispatchNextMessage();
+		}
+
+		// Open 
+		FileHandle_t fp = g_pFileSystem->Open( g_LightResultsFilename.Base(), "rb", VMPI_VIRTUAL_FILES_PATH_ID );
+		if ( !fp )
+			Error( "Can't open '%s' to read lighting info.", g_LightResultsFilename.Base() );
+
+		int size = g_pFileSystem->Size( fp );
+		pdlightdata->EnsureCount( size );
+		g_pFileSystem->Read( pdlightdata->Base(), size, fp );
+	
+		g_pFileSystem->Close( fp );
+	}
+}
+
 

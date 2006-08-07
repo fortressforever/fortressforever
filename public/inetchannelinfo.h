@@ -65,6 +65,7 @@ public:
 	virtual float		GetPacketTime( int flow, int frame_number ) const = 0; // time when packet was send
 	virtual int			GetPacketBytes( int flow, int frame_number, int group ) const = 0; // group size of this packet
 	virtual bool		GetStreamProgress( int flow, int *received, int *total ) const = 0;  // TCP progress if transmitting
+	virtual float		GetTimeSinceLastReceived( void ) const = 0;	// get time since last recieved packet in seconds
 };
 
 #endif // INETCHANNELINFO_H

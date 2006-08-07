@@ -28,11 +28,12 @@ class CHudCrosshair : public CHudElement, public vgui::Panel
 public:
 	CHudCrosshair( const char *pElementName );
 
-	void				SetCrosshairAngle( const QAngle& angle );
-	void				SetCrosshair( CHudTexture *texture, Color& clr );
-	void				ResetCrosshair();
-	void				DrawCrosshair( void );
-  	bool				HasCrosshair( void )		{ return ( m_pCrosshair != NULL ); }
+	void			SetCrosshairAngle( const QAngle& angle );
+	void			SetCrosshair( CHudTexture *texture, Color& clr );
+	void			ResetCrosshair();
+	void			DrawCrosshair( void );
+  	bool			HasCrosshair( void ) { return ( m_pCrosshair != NULL ); }
+	bool			ShouldDraw();
 
 protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
@@ -40,13 +41,13 @@ protected:
 
 private:
 	// Crosshair sprite and colors
-	CHudTexture			*m_pCrosshair;
-	CHudTexture			*m_pDefaultCrosshair;
-	Color				m_clrCrosshair;
-	QAngle				m_vecCrossHairOffsetAngle;
+	CHudTexture		*m_pCrosshair;
+	CHudTexture		*m_pDefaultCrosshair;
+	Color			m_clrCrosshair;
+	QAngle			m_vecCrossHairOffsetAngle;
 
-	QAngle				m_curViewAngles;
-	Vector				m_curViewOrigin;
+	QAngle			m_curViewAngles;
+	Vector			m_curViewOrigin;
 };
 
 

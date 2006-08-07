@@ -260,9 +260,7 @@ public:
 		CFFBot *pPlayer = static_cast<CFFBot *>( CreateEntityByName( "ff_bot" ) );
 		if ( pPlayer )
 		{
-			char trimmedName[MAX_PLAYER_NAME_LENGTH];
-			Q_strncpy( trimmedName, playername, sizeof( trimmedName ) );
-			pPlayer->PlayerData()->netname = AllocPooledString( trimmedName );
+			pPlayer->SetPlayerName( playername );
 		}
 
 		return pPlayer;

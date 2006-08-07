@@ -11,6 +11,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include "tier0/platform.h"
 
 #if defined( _WIN32 )
 #pragma once

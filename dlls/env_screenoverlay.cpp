@@ -162,3 +162,69 @@ void CEnvScreenOverlay::InputStopOverlay( inputdata_t &inputdata )
 	m_flStartTime = -1;
 	m_bIsActive = false; 
 }
+
+// ====================================================================================
+//
+//  Screen-space effects
+//
+// ====================================================================================
+
+class CEnvScreenEffect : public CPointEntity
+{
+	DECLARE_CLASS( CEnvScreenEffect, CPointEntity );
+public:
+	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
+
+	// We always want to be sent to the client
+	CEnvScreenEffect( void ) { 	AddEFlags( EFL_FORCE_CHECK_TRANSMIT ); }
+	virtual int UpdateTransmitState( void )	{ return SetTransmitState( FL_EDICT_ALWAYS ); }
+
+private:
+
+	void InputStartEffect( inputdata_t &inputdata );
+	void InputStopEffect( inputdata_t &inputdata );
+
+	CNetworkVar( float, m_flDuration );
+	CNetworkVar( int, m_nType );
+};
+
+LINK_ENTITY_TO_CLASS( env_screeneffect, CEnvScreenEffect );
+
+// CEnvScreenEffect
+BEGIN_DATADESC( CEnvScreenEffect )
+	DEFINE_KEYFIELD( m_nType, FIELD_INTEGER, "type" ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "StartEffect", InputStartEffect ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "StopEffect", InputStopEffect ),
+END_DATADESC()
+
+IMPLEMENT_SERVERCLASS_ST( CEnvScreenEffect, DT_EnvScreenEffect )
+	SendPropFloat( SENDINFO( m_flDuration ), 0, SPROP_NOSCALE ),
+	SendPropInt( SENDINFO( m_nType ), 32, SPROP_UNSIGNED ),
+END_SEND_TABLE()
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CEnvScreenEffect::InputStartEffect( inputdata_t &inputdata )
+{
+	// Take the duration as our value
+	m_flDuration = inputdata.value.Float();
+
+	EntityMessageBegin( this );
+		WRITE_BYTE( 0 );
+	MessageEnd();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CEnvScreenEffect::InputStopEffect( inputdata_t &inputdata )
+{
+	m_flDuration = inputdata.value.Float();
+
+	// Send the stop notification
+	EntityMessageBegin( this );
+		WRITE_BYTE( 1 );
+	MessageEnd();
+}

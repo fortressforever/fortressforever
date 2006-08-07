@@ -17,6 +17,149 @@ ConVar sv_pushaway_clientside( "sv_pushaway_clientside", "0", FCVAR_REPLICATED, 
 ConVar sv_pushaway_player_force( "sv_pushaway_player_force", "200000", FCVAR_REPLICATED | FCVAR_CHEAT, "How hard the player is pushed away from physics objects (falls off with inverse square of distance)." );
 ConVar sv_pushaway_max_player_force( "sv_pushaway_max_player_force", "10000", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum of how hard the player is pushed away from physics objects." );
 
+#ifdef CLIENT_DLL
+ConVar sv_turbophysics( "sv_turbophysics", "0", FCVAR_REPLICATED, "Turns on turbo physics" );
+#else
+extern ConVar sv_turbophysics;
+#endif
+
+//-----------------------------------------------------------------------------------------------------
+bool IsPushAwayEntity( CBaseEntity *pEnt )
+{
+	if ( pEnt == NULL )
+		return false;
+
+	if ( pEnt->GetCollisionGroup() != COLLISION_GROUP_PUSHAWAY )
+	{
+		// Try backing away from doors that are currently rotating, to prevent blocking them
+#ifndef CLIENT_DLL
+		if ( FClassnameIs( pEnt, "func_door_rotating" ) )
+		{
+			CBaseDoor *door = dynamic_cast<CBaseDoor *>(pEnt);
+			if ( !door )
+			{
+				return false;
+			}
+
+			if ( door->m_toggle_state != TS_GOING_UP && door->m_toggle_state != TS_GOING_DOWN )
+			{
+				return false;
+			}
+		}
+		else if ( FClassnameIs( pEnt, "prop_door_rotating" ) )
+		{
+			CBasePropDoor *door = dynamic_cast<CBasePropDoor *>(pEnt);
+			if ( !door )
+			{
+				return false;
+			}
+
+			if ( !door->IsDoorOpening() && !door->IsDoorClosing() )
+			{
+				return false;
+			}
+		}
+		else
+#endif // !CLIENT_DLL
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------------------------------
+bool IsPushableEntity( CBaseEntity *pEnt )
+{
+	if ( pEnt == NULL )
+		return false;
+
+	if ( sv_turbophysics.GetBool() )
+	{
+		if ( pEnt->GetCollisionGroup() == COLLISION_GROUP_NONE )
+		{
+#ifdef CLIENT_DLL
+			if ( FClassnameIs( pEnt, "class CPhysicsPropMultiplayer" ) )
+#else
+			if ( FClassnameIs( pEnt, "prop_physics_multiplayer" ) )
+#endif // CLIENT_DLL
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------------------------------
+#ifndef CLIENT_DLL
+bool IsBreakableEntity( CBaseEntity *pEnt )
+{
+	if ( pEnt == NULL )
+		return false;
+
+	// If we won't be able to break it, don't try
+	if ( pEnt->m_takedamage != DAMAGE_YES )
+		return false;
+
+	if ( pEnt->GetCollisionGroup() != COLLISION_GROUP_PUSHAWAY && pEnt->GetCollisionGroup() != COLLISION_GROUP_BREAKABLE_GLASS && pEnt->GetCollisionGroup() != COLLISION_GROUP_NONE )
+		return false;
+
+	if ( pEnt->m_iHealth > 200 )
+		return false;
+
+	IMultiplayerPhysics *pPhysicsInterface = dynamic_cast< IMultiplayerPhysics * >( pEnt );
+	if ( pPhysicsInterface )
+	{
+		if ( pPhysicsInterface->GetMultiplayerPhysicsMode() != PHYSICS_MULTIPLAYER_SOLID )
+			return false;
+	}
+	else
+	{
+		if ((FClassnameIs( pEnt, "func_breakable" ) || FClassnameIs( pEnt, "func_breakable_surf" )))
+		{
+			if (FClassnameIs( pEnt, "func_breakable_surf" ))
+			{
+				// don't try to break it if it has already been broken
+				CBreakableSurface *surf = static_cast< CBreakableSurface * >( pEnt );
+
+				if ( surf->m_bIsBroken )
+					return false;
+			}
+		}
+		else if ( pEnt->PhysicsSolidMaskForEntity() & CONTENTS_PLAYERCLIP )
+		{
+			// hostages and players use CONTENTS_PLAYERCLIP, so we can use it to ignore them
+			return false;
+		}
+	}
+
+	IBreakableWithPropData *pBreakableInterface = dynamic_cast< IBreakableWithPropData * >( pEnt );
+	if ( pBreakableInterface )
+	{
+		// Bullets don't damage it - ignore
+		if ( pBreakableInterface->GetDmgModBullet() <= 0.0f )
+		{
+			return false;
+		}
+	}
+
+	CBreakableProp *pProp = dynamic_cast< CBreakableProp * >( pEnt );
+	if ( pProp )
+	{
+		// It takes a large amount of damage to even scratch it - ignore
+		if ( pProp->m_iMinHealthDmg >= 50 )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+#endif // !CLIENT_DLL
+
 //-----------------------------------------------------------------------------------------------------
 int GetPushawayEnts( CBaseCombatCharacter *pPushingEntity, CBaseEntity **ents, int nMaxEnts, float flPlayerExpand, int PartitionMask, CPushAwayEnumerator *enumerator )
 {
@@ -58,6 +201,10 @@ void AvoidPushawayProps( CBaseCombatCharacter *pPlayer, CUserCmd *pCmd )
 	int nEnts = GetPushawayEnts( pPlayer, props, ARRAYSIZE( props ), 0.0f, PARTITION_ENGINE_SOLID_EDICTS, NULL );
 #endif
 
+	const Vector & ourCenter = pPlayer->WorldSpaceCenter();
+	Vector nearestPropPoint;
+	Vector nearestPlayerPoint;
+
 	for ( int i=0; i < nEnts; i++ )
 	{
 		// Don't respond to this entity on the client unless it has PHYSICS_MULTIPLAYER_FULL set.
@@ -79,12 +226,46 @@ void AvoidPushawayProps( CBaseCombatCharacter *pPlayer, CUserCmd *pCmd )
 
 		// Push away from the collision point. The closer our center is to the collision point,
 		// the harder we push away.
-		Vector vPushAway = (pPlayer->WorldSpaceCenter() - props[i]->WorldSpaceCenter());
+		props[i]->CollisionProp()->CalcNearestPoint( ourCenter, &nearestPropPoint );
+		pPlayer->CollisionProp()->CalcNearestPoint( nearestPropPoint, &nearestPlayerPoint );
+		Vector vPushAway = (nearestPlayerPoint - nearestPropPoint);
 		float flDist = VectorNormalize( vPushAway );
+
+		const float MaxPushawayDistance = 5.0f;
+		if ( flDist > MaxPushawayDistance && !pPlayer->CollisionProp()->IsPointInBounds( nearestPropPoint ) )
+		{
+			continue;
+		}
+
+		// If we're not pushing, try from our center to the nearest edge of the prop
+		if ( vPushAway.IsZero() )
+		{
+			vPushAway = (ourCenter - nearestPropPoint);
+			flDist = VectorNormalize( vPushAway );
+		}
+
+		// If we're still not pushing, try from our center to the center of the prop
+		if ( vPushAway.IsZero() )
+		{
+			vPushAway = (ourCenter - props[i]->WorldSpaceCenter());
+			flDist = VectorNormalize( vPushAway );
+		}
+
 		flDist = max( flDist, 1 );
 
 		float flForce = sv_pushaway_player_force.GetFloat() / flDist * mass;
 		flForce = min( flForce, sv_pushaway_max_player_force.GetFloat() );
+
+#ifndef CLIENT_DLL
+		pPlayer->PushawayTouch( props[i] );
+
+		// We can get right up next to rotating doors before they start to move, so scale back our force so we don't go flying
+		if ( FClassnameIs( props[i], "func_door_rotating" ) || FClassnameIs( props[i], "prop_door_rotating" ) )
+#endif
+		{
+			flForce *= 0.25f;
+		}
+
 		vPushAway *= flForce;
 
 		pCmd->forwardmove += vPushAway.Dot( currentdir );

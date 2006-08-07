@@ -15,19 +15,18 @@
 
 static void PixelvisDrawChanged( ConVar *pPixelvisVar, const char *pOld );
 
-ConVar r_pixelvis_partial( "r_pixelvis_partial", "1" );
+ConVar r_pixelvisibility_partial( "r_pixelvisibility_partial", "1" );
 ConVar r_dopixelvisibility( "r_dopixelvisibility", "1" );
 ConVar r_drawpixelvisibility( "r_drawpixelvisibility", "0", 0, "Show the occlusion proxies", PixelvisDrawChanged );
+ConVar r_pixelvisibility_spew( "r_pixelvisibility_spew", "0" );
+
 extern ConVar building_cubemaps;
 
 const float MIN_PROXY_PIXELS = 5.0f;
 
-void PixelVisibility_DrawProxy( OcclusionQueryObjectHandle_t queryHandle, Vector origin, float scale, IMaterial *pMaterial, bool screenspace )
+float PixelVisibility_DrawProxy( OcclusionQueryObjectHandle_t queryHandle, Vector origin, float scale, float proxyAspect, IMaterial *pMaterial, bool screenspace )
 {
 	Vector point;
-	IMesh* pMesh = materials->GetDynamicMesh( true, NULL, NULL, pMaterial );
-
-	CMeshBuilder meshBuilder;
 
 	// don't expand this with distance to fit pixels or the sprite will poke through
 	// only expand the parts perpendicular to the view
@@ -60,16 +59,46 @@ void PixelVisibility_DrawProxy( OcclusionQueryObjectHandle_t queryHandle, Vector
 	forwardScale = 0.0f;
 	// 
 
+	Vector verts[5];
+	const float sqrt2 = 0.707106781f; // sqrt(2) - keeps all vectors the same length from origin
+	scale *= sqrt2;
+	float scale45x = scale;
+	float scale45y = scale / proxyAspect;
+	verts[0] = origin - CurrentViewForward() * forwardScale;					  // the apex of the pyramid
+	verts[1] = origin + CurrentViewUp() * scale45y - CurrentViewRight() * scale45x; // these four form the base
+	verts[2] = origin + CurrentViewUp() * scale45y + CurrentViewRight() * scale45x; // the pyramid is a sprite with a point that
+	verts[3] = origin - CurrentViewUp() * scale45y + CurrentViewRight() * scale45x; // pokes back toward the camera through any nearby 
+	verts[4] = origin - CurrentViewUp() * scale45y - CurrentViewRight() * scale45x; // geometry
+
+	// get screen coords of edges
+	Vector screen[4];
+	for ( int i = 0; i < 4; i++ )
+	{
+		extern int ScreenTransform( const Vector& point, Vector& screen );
+		if ( ScreenTransform( verts[i+1], screen[i] ) )
+			return 0;
+	}
+
+	// compute area and screen-clipped area
+	float w = screen[1].x - screen[0].x;
+	float h = screen[0].y - screen[3].y;
+	float ws = min(1.0f, screen[1].x) - max(-1.0f, screen[0].x);
+	float hs = min(1.0f, screen[0].y) - max(-1.0f, screen[3].y);
+	float area = w*h; // area can be zero when we ALT-TAB
+	float areaClipped = ws*hs;
+	float ratio = 0.0f;
+	if ( area != 0 )
+	{
+		// compute the ratio of the area not clipped by the frustum to total area
+		ratio = areaClipped / area;
+		ratio = clamp(ratio, 0.0f, 1.0f);
+	}
+
+	IMesh* pMesh = materials->GetDynamicMesh( true, NULL, NULL, pMaterial );
+
+	CMeshBuilder meshBuilder;
 	materials->BeginOcclusionQueryDrawing( queryHandle );
 	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, 4 );
-	Vector verts[5];
-	float scale45 = scale * 0.707106781f;// sqrt(2) - keeps all vectors the same length from origin
-	verts[0] = origin - CurrentViewForward() * forwardScale;					  // the apex of the pyramid
-	verts[1] = origin + CurrentViewUp() * scale45 - CurrentViewRight() * scale45; // these four form the base
-	verts[2] = origin + CurrentViewUp() * scale45 + CurrentViewRight() * scale45; // the pyramid is a sprite with a point that
-	verts[3] = origin - CurrentViewUp() * scale45 + CurrentViewRight() * scale45; // pokes back toward the camera through any nearby 
-	verts[4] = origin - CurrentViewUp() * scale45 - CurrentViewRight() * scale45; // geometry
-
 	// draw a pyramid
 	for ( int i = 0; i < 4; i++ )
 	{
@@ -113,6 +142,9 @@ void PixelVisibility_DrawProxy( OcclusionQueryObjectHandle_t queryHandle, Vector
 	pMesh->Draw();
 #endif
 	materials->EndOcclusionQueryDrawing( queryHandle );
+
+	// fraction clipped by frustum
+	return ratio;
 }
 
 class CPixelVisSet
@@ -131,6 +163,7 @@ public:
 
 public:
 	float			proxySize;
+	float			proxyAspect;
 	float			fadeTimeInv;
 	unsigned short	queryList;
 	unsigned short	serial;
@@ -144,6 +177,7 @@ void CPixelVisSet::Init( const pixelvis_queryparams_t &params )
 {
 	Assert( params.bSetup );
 	proxySize = params.proxySize;
+	proxyAspect = params.proxyAspect;
 	if ( params.fadeTime > 0.0f )
 	{
 		fadeTimeInv = 1.0f / params.fadeTime;
@@ -177,12 +211,13 @@ public:
 	bool IsForView( int viewID );
 	bool IsActive();
 	float GetFractionVisible( float fadeTimeInv );
-	void IssueQuery( float proxySize, IMaterial *pMaterial, bool sizeIsScreenSpace );
-	void IssueCountingQuery( float proxySize, IMaterial *pMaterial, bool sizeIsScreenSpace );
+	void IssueQuery( float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace );
+	void IssueCountingQuery( float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace );
 	void SetView( int viewID ) 
 	{ 
 		m_viewID = viewID;	
 		m_brightnessTarget = 0.0f;
+		m_clipFraction = 1.0f;
 		m_frameIssued = -1;
 		m_failed = false;
 		m_wasQueriedThisFrame = false;
@@ -194,6 +229,7 @@ public:
 	int								m_frameIssued;
 private:
 	float							m_brightnessTarget;
+	float							m_clipFraction;
 	OcclusionQueryObjectHandle_t	m_queryHandle;
 	OcclusionQueryObjectHandle_t	m_queryHandleCount;
 	unsigned short					m_wasQueriedThisFrame : 1;
@@ -246,23 +282,23 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 		m_wasQueriedThisFrame = true;
 		int pixels = -1;
 		int pixelsPossible = -1;
-		if ( r_pixelvis_partial.GetBool() )
+		if ( r_pixelvisibility_partial.GetBool() )
 		{
 			if ( m_frameIssued != -1 )
 			{
 				pixelsPossible = materials->OcclusionQuery_GetNumPixelsRendered( m_queryHandleCount );
 				pixels = materials->OcclusionQuery_GetNumPixelsRendered( m_queryHandle );
 			}
-#if 0
-			if ( CurrentViewID() == 0 ) 
+
+			if ( r_pixelvisibility_spew.GetBool() && CurrentViewID() == 0 ) 
 			{
-				DevMsg(1,"Pixels visible for %d, %d, %d (%d)\n", m_queryHandle, pixels, pixelsPossible, gpGlobals->framecount );
+				DevMsg( 1, "Pixels visible: %d (qh:%d) Pixels possible: %d (qh:%d) (frame:%d)\n", pixels, m_queryHandle, pixelsPossible, m_queryHandleCount, gpGlobals->framecount );
 			}
-#endif
+
 			if ( pixels < 0 || pixelsPossible < 0 )
 			{
 				m_failed = m_frameIssued != -1 ? true : false;
-				return m_brightnessTarget;
+				return m_brightnessTarget * m_clipFraction;
 			}
 			m_hasValidQueryResults = true;
 
@@ -284,10 +320,16 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 			{
 				pixels = materials->OcclusionQuery_GetNumPixelsRendered( m_queryHandle );
 			}
+
+			if ( r_pixelvisibility_spew.GetBool() && CurrentViewID() == 0 ) 
+			{
+				DevMsg( 1, "Pixels visible: %d (qh:%d) (frame:%d)\n", pixels, m_queryHandle, gpGlobals->framecount );
+			}
+
 			if ( pixels < 0 )
 			{
 				m_failed = m_frameIssued != -1 ? true : false;
-				return m_brightnessTarget;
+				return m_brightnessTarget * m_clipFraction;
 			}
 			m_hasValidQueryResults = true;
 			if ( m_frameIssued == gpGlobals->framecount-1 )
@@ -309,22 +351,30 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 		}
 	}
 
-	return m_brightnessTarget;
+	return m_brightnessTarget * m_clipFraction;
 }
 
-void CPixelVisibilityQuery::IssueQuery( float proxySize, IMaterial *pMaterial, bool sizeIsScreenSpace )
+void CPixelVisibilityQuery::IssueQuery( float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace )
 {
 	if ( !m_failed )
 	{
 		Assert( IsValid() );
-		PixelVisibility_DrawProxy( m_queryHandle, m_origin, proxySize, pMaterial, sizeIsScreenSpace );
+
+		if ( r_pixelvisibility_spew.GetBool() && CurrentViewID() == 0 ) 
+		{
+			DevMsg( 1, "Draw Proxy: qh:%d org:<%d,%d,%d> (frame:%d)\n", m_queryHandle, (int)m_origin[0], (int)m_origin[1], (int)m_origin[2], gpGlobals->framecount );
+		}
+
+		m_clipFraction = PixelVisibility_DrawProxy( m_queryHandle, m_origin, proxySize, proxyAspect, pMaterial, sizeIsScreenSpace );
+
+
 	}
 	m_frameIssued = gpGlobals->framecount;
 	m_wasQueriedThisFrame = false;
 	m_failed = false;
 }
 
-void CPixelVisibilityQuery::IssueCountingQuery( float proxySize, IMaterial *pMaterial, bool sizeIsScreenSpace )
+void CPixelVisibilityQuery::IssueCountingQuery( float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace )
 {
 	if ( !m_failed )
 	{
@@ -339,7 +389,7 @@ void CPixelVisibilityQuery::IssueCountingQuery( float proxySize, IMaterial *pMat
 		float dot = DotProduct(CurrentViewForward(), origin);
 		origin = CurrentViewOrigin() + dot * CurrentViewForward();
 #endif
-		PixelVisibility_DrawProxy( m_queryHandleCount, m_origin, proxySize, pMaterial, sizeIsScreenSpace );
+		PixelVisibility_DrawProxy( m_queryHandleCount, m_origin, proxySize, proxyAspect, pMaterial, sizeIsScreenSpace );
 	}
 }
 
@@ -353,6 +403,7 @@ CLIENTEFFECT_REGISTER_END()
 class CPixelVisibilitySystem : public CAutoGameSystem
 {
 public:
+	
 	// GameSystem: Level init, shutdown
 	virtual void LevelInitPreEntity();
 	virtual void LevelShutdownPostEntity();
@@ -394,7 +445,7 @@ private:
 
 static CPixelVisibilitySystem g_PixelVisibilitySystem;
 
-CPixelVisibilitySystem::CPixelVisibilitySystem()
+CPixelVisibilitySystem::CPixelVisibilitySystem() : CAutoGameSystem( "CPixelVisibilitySystem" )
 {
 	m_hwCanTestGlows = true;
 	m_drawQueries = false;
@@ -402,7 +453,7 @@ CPixelVisibilitySystem::CPixelVisibilitySystem()
 // Level init, shutdown
 void CPixelVisibilitySystem::LevelInitPreEntity()
 {
-	m_hwCanTestGlows = r_dopixelvisibility.GetBool();
+	m_hwCanTestGlows = r_dopixelvisibility.GetBool() && engine->GetDXSupportLevel() >= 80;
 	if ( m_hwCanTestGlows )
 	{
 		unsigned short query = materials->CreateOcclusionQueryObject();
@@ -454,6 +505,8 @@ float CPixelVisibilitySystem::GetFractionVisible( const pixelvis_queryparams_t &
 	m_queryList[node].m_origin = params.position;
 	float fraction = m_queryList[node].GetFractionVisible( pSet->fadeTimeInv );
 	pSet->MarkActive();
+
+
 	return fraction;
 }
 
@@ -469,7 +522,7 @@ void CPixelVisibilitySystem::EndView()
 	materials->Bind( pProxy );
 
 	// BUGBUG: If you draw both queries, the measure query fails for some reason.
-	if ( r_pixelvis_partial.GetBool() && !r_drawpixelvisibility.GetBool())
+	if ( r_pixelvisibility_partial.GetBool() && !m_drawQueries )
 	{
 		materials->DepthRange( 0.0f, 0.01f );
 		unsigned short node = m_setList.Head( m_activeSetsList );
@@ -479,7 +532,7 @@ void CPixelVisibilitySystem::EndView()
 			unsigned short queryNode = FindQueryForView( pSet, CurrentViewID() );
 			if ( queryNode != m_queryList.InvalidIndex() )
 			{
-				m_queryList[queryNode].IssueCountingQuery( pSet->proxySize, pProxy, pSet->sizeIsScreenSpace );
+				m_queryList[queryNode].IssueCountingQuery( pSet->proxySize, pSet->proxyAspect, pProxy, pSet->sizeIsScreenSpace );
 			}
 			node = m_setList.Next( node );
 		}
@@ -494,7 +547,7 @@ void CPixelVisibilitySystem::EndView()
 			unsigned short queryNode = FindQueryForView( pSet, CurrentViewID() );
 			if ( queryNode != m_queryList.InvalidIndex() )
 			{
-				m_queryList[queryNode].IssueQuery( pSet->proxySize, pProxy, pSet->sizeIsScreenSpace );
+				m_queryList[queryNode].IssueQuery( pSet->proxySize, pSet->proxyAspect, pProxy, pSet->sizeIsScreenSpace );
 			}
 			node = m_setList.Next( node );
 		}

@@ -150,6 +150,9 @@ protected:
 	// FIXME: Work this back into the base class
 	virtual bool ShouldUseFixedPatrolLogic() { return false; }
 
+	// Deal with teleportation
+	void Teleported();
+
 private:
 
 	CPathTrack		*BestPointOnPath( CPathTrack *pPath, const Vector &targetPos, float avoidRadius, bool visible, bool bFarthestPointOnPath );

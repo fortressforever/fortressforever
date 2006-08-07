@@ -40,12 +40,12 @@ void CBoneMergeCache::UpdateCache()
 	if ( !m_pOwner )
 		return;
 
-	studiohdr_t *pOwnerHdr = m_pOwner->GetModelPtr();
+	CStudioHdr *pOwnerHdr = m_pOwner->GetModelPtr();
 	if ( !pOwnerHdr )
 		return;
 
 	C_BaseAnimating *pTestFollow = m_pOwner->FindFollowedEntity();
-	studiohdr_t *pTestHdr = (pTestFollow ? pTestFollow->GetModelPtr() : NULL);
+	CStudioHdr *pTestHdr = (pTestFollow ? pTestFollow->GetModelPtr() : NULL);
 	if ( pTestFollow != m_pFollow || pTestHdr != m_pFollowHdr || pOwnerHdr != m_pOwnerHdr )
 	{
 		m_MergedBones.Purge();
@@ -58,13 +58,13 @@ void CBoneMergeCache::UpdateCache()
 			m_pFollowHdr = pTestHdr;
 			m_pOwnerHdr = pOwnerHdr;
 
-			m_BoneMergeBits.SetSize( pOwnerHdr->numbones / 8 + 1 );
+			m_BoneMergeBits.SetSize( pOwnerHdr->numbones() / 8 + 1 );
 			memset( m_BoneMergeBits.Base(), 0, m_BoneMergeBits.Count() );
 
 			mstudiobone_t *pOwnerBones = m_pOwnerHdr->pBone( 0 );
 			
 			m_nFollowBoneSetupMask = BONE_USED_BY_BONE_MERGE;
-			for ( int i = 0; i < m_pOwnerHdr->numbones; i++ )
+			for ( int i = 0; i < m_pOwnerHdr->numbones(); i++ )
 			{
 				int parentBoneIndex = Studio_BoneIndexByName( m_pFollowHdr, pOwnerBones[i].pszName() );
 				if ( parentBoneIndex < 0 )
@@ -82,7 +82,7 @@ void CBoneMergeCache::UpdateCache()
 				{
 					m_nFollowBoneSetupMask = BONE_USED_BY_ANYTHING;
 					Warning("Performance warning: Mark bone '%s' in model '%s' as being used by bone merge in the .qc!\n",
-						m_pFollowHdr->pBone( parentBoneIndex )->pszName(), m_pFollowHdr->name ); 
+						m_pFollowHdr->pBone( parentBoneIndex )->pszName(), m_pFollowHdr->pszName() ); 
 				}
 			}
 

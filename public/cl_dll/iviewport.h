@@ -22,7 +22,7 @@
 
 class KeyValues;
 
-class IViewPortPanel
+abstract_class IViewPortPanel
 {
 	
 public:
@@ -43,7 +43,7 @@ public:
 	virtual void SetParent( vgui::VPANEL parent ) = 0;
 };
 
-class IViewPort
+abstract_class IViewPort
 {
 public:
 	virtual void UpdateAllPanels( void ) = 0;

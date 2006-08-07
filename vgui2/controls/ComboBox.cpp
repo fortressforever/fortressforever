@@ -92,6 +92,12 @@ void ComboBoxButton::OnCursorExited()
 
 } // namespace vgui
 
+vgui::Panel *ComboBox_Factory()
+{
+	return new ComboBox( NULL, NULL, 5, true );
+}
+DECLARE_BUILD_FACTORY_CUSTOM( ComboBox, ComboBox_Factory );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 // Input  : parent - parent class
@@ -116,7 +122,7 @@ ComboBox::ComboBox(Panel *parent, const char *panelName, int numLines, bool allo
 	SetNumberOfEditLines(numLines);
 
 	m_bHighlight = false;
-	m_iDirection = DOWN;
+	m_iDirection = Menu::MenuDirection_e::DOWN;
 	m_iOpenOffsetY = 0;
 }
 
@@ -145,8 +151,9 @@ void ComboBox::SetNumberOfEditLines( int numLines )
 int ComboBox::AddItem(const char *itemText, const KeyValues *userData)
 {
 	// when the menu item is selected it will send the custom message "SetText"
-	return m_pDropDown->AddMenuItem(itemText, new KeyValues("SetText", "text", itemText), this, userData);
+	return m_pDropDown->AddMenuItem( itemText, new KeyValues("SetText", "text", itemText), this, userData );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Add an item to the drop down
@@ -163,6 +170,19 @@ int ComboBox::AddItem(const wchar_t *itemText, const KeyValues *userData)
 	localize()->ConvertUnicodeToANSI(itemText, ansi, sizeof(ansi));
 	return m_pDropDown->AddMenuItem(ansi, kv, this, userData);
 }
+
+
+//-----------------------------------------------------------------------------
+// Removes a single item
+//-----------------------------------------------------------------------------
+void ComboBox::DeleteItem( int itemID )
+{
+	if ( !m_pDropDown->IsValidMenuID(itemID))
+		return;
+
+	m_pDropDown->DeleteItem( itemID );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Updates a current item to the drop down
@@ -281,7 +301,14 @@ void ComboBox::PerformLayout()
 
 	BaseClass::PerformLayout();
 
-	m_pButton->SetBounds((wide - tall)+4, 2, tall - 2, tall - 2);
+	HFont buttonFont = m_pButton->GetFont();
+	int fontTall = surface()->GetFontTall( buttonFont );
+
+	int buttonSize = min( tall, fontTall );
+
+	int buttonY = ( ( tall - 1 ) - buttonSize ) / 2;
+
+	m_pButton->SetBounds( wide - buttonSize - 4, buttonY, buttonSize, buttonSize );
 	if ( IsEditable() )
 	{
 		SetCursor(dc_ibeam);
@@ -301,53 +328,11 @@ void ComboBox::PerformLayout()
 //-----------------------------------------------------------------------------
 void ComboBox::DoMenuLayout()
 {
-	// move the menu to the correct place below the button
-	int x, y, wide, tall;;
-	GetSize(wide, tall);
-
-	if ( m_iDirection == CURSOR )
-	{
-		// force the menu to appear where the mouse button was pressed
-		input()->GetCursorPos(x, y);
-	}
-	else if ( m_iDirection == ALIGN_WITH_PARENT && GetVParent() )
-	{
-	   x = 0, y = tall;
-	   ParentLocalToScreen(x, y);
-	   x -= 1; // take border into account
-	   y += m_iOpenOffsetY;
-	}
-	else
-	{
-		x = 0, y = tall;
-		LocalToScreen(x, y);
-	}
-
-	int mwide, mtall, bwide, btall;
-	m_pDropDown->GetSize(mwide, mtall);
-	GetSize(bwide, btall);
-
-	switch (m_iDirection)
-	{
-	case UP:
-		y -= mtall;
-		y -= btall;
-		m_pDropDown->SetPos(x, y - 1);
-		break;
-
-	case DOWN:
-		m_pDropDown->SetPos(x, y + 1);
-		break;
-
-	case LEFT:
-	case RIGHT:
-	default:
-		m_pDropDown->SetPos(x + 1, y + 1);
-		break;
-	};
+	m_pDropDown->PositionRelativeToPanel( this, m_iDirection, m_iOpenOffsetY );
 
 	// reset the width of the drop down menu to be the width of the combo box
 	m_pDropDown->SetFixedWidth(GetWide());
+	m_pDropDown->ForceCalculateWidth();
 
 }
 
@@ -374,6 +359,7 @@ KeyValues *ComboBox::GetActiveItemUserData()
 	return m_pDropDown->GetItemUserData(GetActiveItem());
 }	
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -382,13 +368,20 @@ KeyValues *ComboBox::GetItemUserData(int itemID)
 	return m_pDropDown->GetItemUserData(itemID);
 }	
 
+
 //-----------------------------------------------------------------------------
 // Purpose: data accessor
 //-----------------------------------------------------------------------------
-void ComboBox::GetItemText(int itemID, wchar_t *text, int bufLenInBytes)
+void ComboBox::GetItemText( int itemID, wchar_t *text, int bufLenInBytes )
 {
-	m_pDropDown->GetItemText(itemID, text, bufLenInBytes);
+	m_pDropDown->GetItemText( itemID, text, bufLenInBytes );
 }
+
+void ComboBox::GetItemText( int itemID, char *text, int bufLenInBytes )
+{
+	m_pDropDown->GetItemText( itemID, text, bufLenInBytes );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -689,6 +682,19 @@ void ComboBox::OnCursorExited()
 void ComboBox::OnMenuItemSelected()
 {
 	m_bHighlight = true;
+	// For editable cbs, fill in the text field from whatever is chosen from the dropdown...
+	if ( m_bAllowEdit )
+	{
+		int idx = GetActiveItem();
+		if ( idx >= 0 )
+		{
+			wchar_t name[ 256 ];
+			GetItemText( idx, name, sizeof( name ) );
+
+			OnSetText( name );
+		}
+	}
+
 	Repaint();
 }
 
@@ -847,8 +853,14 @@ void ComboBox::MoveAlongMenuItemList(int direction)
 //-----------------------------------------------------------------------------
 // Purpose: Sets the direction from the menu button the menu should open
 //-----------------------------------------------------------------------------
-void ComboBox::SetOpenDirection(MenuDirection_e direction)
+void ComboBox::SetOpenDirection(Menu::MenuDirection_e direction)
 {
 	m_iDirection = direction;
 }
 
+void ComboBox::SetFont( HFont font )
+{
+	BaseClass::SetFont( font );
+
+	m_pDropDown->SetFont( font );
+}

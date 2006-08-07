@@ -17,27 +17,32 @@
 
 class CViewportClientSystem : public IGameSystem
 {
+public:
+	CViewportClientSystem()
+	{
+	}
+
+	virtual char const *Name() { return "CViewportClientSystem"; }
+	virtual bool IsPerFrame() { return false; }
+
 	// Init, shutdown
-	bool Init()
+	virtual bool Init()
 	{
 		g_pClientMode->Layout();
 		return true;
 	}
 
-	void Shutdown() {}
-	void LevelInitPreEntity() {}
-	void LevelInitPostEntity() {}
-	void LevelShutdownPreEntity() {}
-	void LevelShutdownPostEntity() {}
-	void PreRender() {}
-	void Update( float frametime ) {}
-	void SafeRemoveIfDesired() {}
+	virtual void Shutdown() {}
+	virtual void LevelInitPreEntity() {}
+	virtual void LevelInitPostEntity() {}
+	virtual void LevelShutdownPreEntity() {}
+	virtual void LevelShutdownPostEntity() {}
+	virtual void SafeRemoveIfDesired() {}
 
 	virtual void OnSave() {}
 	virtual void OnRestore() {}
+
 };
-
-
 
 static CViewportClientSystem g_ViewportClientSystem;
 

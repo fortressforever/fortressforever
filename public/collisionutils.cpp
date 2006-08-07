@@ -6,6 +6,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include "collisionutils.h"
 #include "cmodel.h"
 #include "mathlib.h"
@@ -19,7 +21,6 @@
 #include "tier0/memdbgon.h"
 
 #define UNINIT		-99999.0
-
 
 //-----------------------------------------------------------------------------
 // Clears the trace
@@ -587,14 +588,16 @@ bool IsBoxIntersectingBoxExtents( const Vector& boxCenter1, const Vector& boxHal
 bool IsOBBIntersectingOBB( const Vector &vecOrigin1, const QAngle &vecAngles1, const Vector& boxMin1, const Vector& boxMax1, 
 						   const Vector &vecOrigin2, const QAngle &vecAngles2, const Vector& boxMin2, const Vector& boxMax2, float flTolerance )
 {
-	if ( vecAngles1 == vecAngles2 )
+	// FIXME: Simple case AABB check doesn't work because the min and max extents are not oriented based on the angle
+	// this fast check would only be good for cubes.
+	/*if ( vecAngles1 == vecAngles2 )
 	{
 		const Vector &vecDelta = vecOrigin2 - vecOrigin1;
 		Vector vecOtherMins, vecOtherMaxs;
 		VectorAdd( boxMin2, vecDelta, vecOtherMins );
 		VectorAdd( boxMax2, vecDelta, vecOtherMaxs );
 		return IsBoxIntersectingBox( boxMin1, boxMax1, vecOtherMins, vecOtherMaxs );
-	}
+	}*/
 
 	// OBB test...
 	cplane_t plane;
@@ -606,8 +609,8 @@ bool IsOBBIntersectingOBB( const Vector &vecOrigin1, const QAngle &vecAngles1, c
 //-----------------------------------------------------------------------------
 // returns true if there's an intersection between box and ray
 //-----------------------------------------------------------------------------
-bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
-							const Vector& origin, const Vector& delta, float flTolerance )
+bool FASTCALL IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
+									const Vector& origin, const Vector& delta, float flTolerance )
 {
 	Assert( boxMin[0] <= boxMax[0] );
 	Assert( boxMin[1] <= boxMax[1] );
@@ -665,9 +668,9 @@ bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax,
 //-----------------------------------------------------------------------------
 // returns true if there's an intersection between box and ray
 //-----------------------------------------------------------------------------
-bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
-						   const Vector& origin, const Vector& delta,
-					       const Vector& invDelta, float flTolerance )
+bool FASTCALL IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
+									const Vector& origin, const Vector& delta,
+									const Vector& invDelta, float flTolerance )
 {
 	Assert( boxMin[0] <= boxMax[0] );
 	Assert( boxMin[1] <= boxMax[1] );
@@ -727,7 +730,7 @@ bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax,
 //-----------------------------------------------------------------------------
 // Intersects a ray with a aabb, return true if they intersect
 //-----------------------------------------------------------------------------
-bool IsBoxIntersectingRay( const Vector& vecBoxMin, const Vector& vecBoxMax, const Ray_t& ray, float flTolerance )
+bool FASTCALL IsBoxIntersectingRay( const Vector& vecBoxMin, const Vector& vecBoxMax, const Ray_t& ray, float flTolerance )
 {
 	if ( !ray.m_IsSwept )
 	{
@@ -2602,3 +2605,61 @@ bool IsBoxIntersectingTriangle( const Vector &vecBoxCenter, const Vector &vecBox
 
 	return true;
 }
+
+// NOTE: JAY: This is untested code based on Real-time Collision Detection by Ericson
+#if 0
+Vector CalcClosestPointOnTriangle( const Vector &P, const Vector &v0, const Vector &v1, const Vector &v2 )
+{
+	Vector e0 = v1 - v0;
+	Vector e1 = v2 - v0;
+	Vector p0 = P - v0;
+
+	// voronoi region of v0
+	float d1 = DotProduct( e0, p0 );
+	float d2 = DotProduct( e1, p0 );
+	if (d1 <= 0.0f && d2 <= 0.0f)
+		return v0;
+
+	// voronoi region of v1
+	Vector p1 = P - v1;
+	float d3 = DotProduct( e0, p1 );
+	float d4 = DotProduct( e1, p1 );
+	if (d3 >=0.0f && d4 <= d3)
+		return v1;
+
+	// voronoi region of e0 (v0-v1)
+	float ve2 = d1*d4 - d3*d2;
+	if ( ve2 <= 0.0f && d1 >= 0.0f && d3 <= 0.0f )
+	{
+		float v = d1 / (d1-d3);
+		return v0 + v * e0;
+	}
+	// voronoi region of v2
+	Vector p2 = P - v2;
+	float d5 = DotProduct( e0, p2 );
+	float d6 = DotProduct( e1, p2 );
+	if (d6 >= 0.0f && d5 <= d6)
+		return v2;
+	// voronoi region of e1
+	float ve1 = d5*d2 - d1*d6;
+	if (ve1 <= 0.0f && d2 >= 0.0f && d6 >= 0.0f)
+	{
+		float w = d2 / (d2-d6);
+		return v0 + w * e1;
+	}
+	// voronoi region on e2
+	float ve0 = d3*d6 - d5*d4;
+	if ( ve0 <= 0.0f && (d4-d3) >= 0.0f && (d5-d6) >= 0.0f )
+	{
+		float w = (d4-d3)/((d4-d3) + (d5-d6));
+		return v1 + w * (v2-v1);
+	}
+	// voronoi region of v0v1v2 triangle
+	float denom = 1.0f / (ve0+ve1+ve2);
+	float v = ve1*denom;
+	float w = ve2 * denom;
+	return v0 + e0 * v + e1 * w;
+}
+#endif
+
+#endif // !_STATIC_LINKED || _SHARED_LIB

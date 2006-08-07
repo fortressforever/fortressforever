@@ -88,7 +88,7 @@ public:
 	vec_t	LengthSqr(void) const;
 
 	// return true if this vector is (0,0) within tolerance
-	bool IsZero( float tolerance = 0.01f )
+	bool IsZero( float tolerance = 0.01f ) const
 	{
 		return (x > -tolerance && x < tolerance &&
 				y > -tolerance && y < tolerance);

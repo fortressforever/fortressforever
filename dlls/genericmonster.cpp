@@ -15,6 +15,7 @@
 #include "KeyValues.h"
 #include "engine/IEngineSound.h"
 #include "physics_bone_follower.h"
+#include "ai_baseactor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -191,14 +192,15 @@ void CGenericNPC::Precache()
 	PrecacheScriptSound( "GenericNPC.GunSound" );
 }	
 
-
+// a really large health is set to make sure these never die.
+const int TOO_MUCH_HEALTH_TO_DIE = 1000;
 //=======================================================================================
 // Furniture: A dumb "NPC" that is uses in scripted sequences
 //			  where an NPC needs to be frame locked with a prop.
 //=======================================================================================
-class CNPC_Furniture : public CAI_BaseNPC
+class CNPC_Furniture : public CAI_BaseActor
 {
-	DECLARE_CLASS( CNPC_Furniture, CAI_BaseNPC );
+	DECLARE_CLASS( CNPC_Furniture, CAI_BaseActor );
 	DECLARE_DATADESC();
 public:
 	void	Spawn( void );
@@ -213,6 +215,19 @@ public:
 	void	UpdateOnRemove( void );
 	int		SelectSchedule( void );
 	void	OnRestore( void );
+	int		OnTakeDamage( const CTakeDamageInfo &info )
+	{
+		if ( m_iHealth <= info.GetDamage() )
+			m_iHealth = info.GetDamage() + TOO_MUCH_HEALTH_TO_DIE;
+		return BaseClass::OnTakeDamage(info);
+	}
+
+	void DrawDebugGeometryOverlays(void);
+
+	void SetPlayerAvoidState( void );
+	void InputDisablePlayerCollision( inputdata_t &inputdata );
+	void InputEnablePlayerCollision( inputdata_t &inputdata );
+	void UpdateBoneFollowerState( void );
 
 private:
 	// Contained Bone Follower manager
@@ -229,6 +244,8 @@ LINK_ENTITY_TO_CLASS( npc_furniture, CNPC_Furniture );
 BEGIN_DATADESC( CNPC_Furniture )
 	// 	This is reconstructed in CreateVPhysics
 	// DEFINE_EMBEDDED( m_pBoneFollowerManager ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"DisablePlayerCollision", InputDisablePlayerCollision ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"EnablePlayerCollision", InputEnablePlayerCollision ),
 	
 END_DATADESC()
 
@@ -249,14 +266,16 @@ void CNPC_Furniture::Spawn( )
 	AddSolidFlags( FSOLID_NOT_SOLID );
 
 	SetBloodColor( DONT_BLEED );
-	m_iHealth = 80000; //wow
+	m_iHealth = TOO_MUCH_HEALTH_TO_DIE; //wow
 	m_takedamage = DAMAGE_AIM;
 	SetSequence( 0 );
 	SetCycle( 0 );
 	SetNavType( NAV_FLY );
 	AddFlag( FL_FLY );
 
-	CapabilitiesAdd( bits_CAP_MOVE_FLY );
+	CapabilitiesAdd( bits_CAP_MOVE_FLY | bits_CAP_TURN_HEAD | bits_CAP_ANIMATEDFACE );
+
+	AddEFlags( EFL_NO_MEGAPHYSCANNON_RAGDOLL );
 
 //	pev->nextthink += 1.0;
 //	SetThink (WalkMonsterDelay);
@@ -350,6 +369,43 @@ bool CNPC_Furniture::CreateVPhysics( void )
 	return true;
 }
 
+void CNPC_Furniture::InputDisablePlayerCollision( inputdata_t &inputdata )
+{
+	SetCollisionGroup( COLLISION_GROUP_NPC_ACTOR );
+	UpdateBoneFollowerState();
+}
+
+void CNPC_Furniture::InputEnablePlayerCollision( inputdata_t &inputdata )
+{
+	SetCollisionGroup( COLLISION_GROUP_NPC );
+	UpdateBoneFollowerState();
+}
+
+void CNPC_Furniture::UpdateBoneFollowerState( void )
+{
+	if ( m_pBoneFollowerManager )
+	{
+		physfollower_t* pBone = m_pBoneFollowerManager->GetBoneFollower( 0 );
+
+		if ( pBone && pBone->hFollower && pBone->hFollower->GetCollisionGroup() != GetCollisionGroup() )
+		{
+			for ( int i = 0; i < m_pBoneFollowerManager->GetNumBoneFollowers(); i++ )
+			{
+				pBone = m_pBoneFollowerManager->GetBoneFollower( i );
+
+				if ( pBone && pBone->hFollower )
+				{
+					pBone->hFollower->SetCollisionGroup( GetCollisionGroup() );
+				}
+			}
+		}
+	}
+}
+
+void CNPC_Furniture::SetPlayerAvoidState( void )
+{
+
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -416,4 +472,13 @@ void CNPC_Furniture::OnRestore( void )
 
 	BaseClass::OnRestore();
 }
+void CNPC_Furniture::DrawDebugGeometryOverlays( void )
+{
+	//ugh
+	if ( m_debugOverlays & OVERLAY_NPC_ZAP_BIT )
+	{
+		m_debugOverlays &= ~OVERLAY_NPC_ZAP_BIT;
+	}
 
+	BaseClass::DrawDebugGeometryOverlays();
+}

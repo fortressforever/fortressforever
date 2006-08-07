@@ -30,9 +30,13 @@
 
 #define NUM_NPC_DEBUG_OVERLAYS	  50
 
+#ifndef AI_STRONG_OPTIMIZATIONS
 const float MAX_LOCAL_NAV_DIST_GROUND = 50 * 12;
 const float MAX_LOCAL_NAV_DIST_FLY = 750 * 12;
-ConVar test_nav_opt("test_nav_opt", "1");
+#else
+const float MAX_LOCAL_NAV_DIST_GROUND = 25 * 12;
+const float MAX_LOCAL_NAV_DIST_FLY = 375 * 12;
+#endif
 
 //-----------------------------------------------------------------------------
 // CAI_Pathfinder
@@ -828,7 +832,7 @@ AI_Waypoint_t *CAI_Pathfinder::BuildComplexRoute( Navigation_t navType, const Ve
 	
 	unsigned int collideFlags = (buildFlags & bits_BUILD_IGNORE_NPCS) ? MASK_NPCSOLID_BRUSHONLY : MASK_NPCSOLID;
 
-	bool bCheckGround = (test_nav_opt.GetBool() && (GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK)) ? false : true;
+	bool bCheckGround = (GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK) ? false : true;
 
 	if ( flTotalDist <= maxLocalNavDistance )
 	{
@@ -863,14 +867,17 @@ AI_Waypoint_t *CAI_Pathfinder::BuildComplexRoute( Navigation_t navType, const Ve
 		
 		if (buildFlags & bits_BUILD_TRIANG)
 		{
-			float flTotalDist = ComputePathDistance( navType, vStart, vEnd );
-
-			AI_Waypoint_t *triangRoute = BuildTriangulationRoute(vStart, vEnd, pTarget, 
-				endFlags, nodeID, flYaw, flTotalDist - moveTrace.flDistObstructed, navType);
-
-			if (triangRoute)
+			if ( !AIStrongOpt() || ( GetOuter()->GetState() == NPC_STATE_SCRIPT || GetOuter()->IsCurSchedule( SCHED_SCENE_GENERIC, false ) ) )
 			{
-				return triangRoute;
+				float flTotalDist = ComputePathDistance( navType, vStart, vEnd );
+
+				AI_Waypoint_t *triangRoute = BuildTriangulationRoute(vStart, vEnd, pTarget, 
+					endFlags, nodeID, flYaw, flTotalDist - moveTrace.flDistObstructed, navType);
+
+				if (triangRoute)
+				{
+					return triangRoute;
+				}
 			}
 		}
 		
@@ -967,10 +974,12 @@ bool CAI_Pathfinder::CanGiveWay( const Vector& vStart, const Vector& vEnd, CBase
 	CAI_BaseNPC *pNPCBlocker = pBlocker->MyNPCPointer();
 	if (pNPCBlocker && pNPCBlocker->edict()) 
 	{
-		if (pNPCBlocker->IRelationType( GetOuter() ) == D_LI)
+		Disposition_t eDispBlockerToMe = pNPCBlocker->IRelationType( GetOuter() );
+		if ( ( eDispBlockerToMe == D_LI ) || ( eDispBlockerToMe == D_NU ) )
 		{
 			return true;
 		}
+		
 		return false;
 
 		// FIXME: this is called in route creation, not navigation.  It shouldn't actually make
@@ -1174,93 +1183,106 @@ void CAI_Pathfinder::UnlockRouteNodes( AI_Waypoint_t *pPath )
 //-----------------------------------------------------------------------------
 // Purpose: Attempts to build a radial route around the given center position
 //			over a given arc size
-//			If a full route isn't possible, will return whatever portion is
-//			possible
 //
 // Input  : vStartPos	- where route should start from
 //			vCenterPos	- the center of the arc
+//			vGoalPos	- ultimate goal position
 //			flRadius	- radius of the arc
-//			flArc		- how long should the path be in degrees
+//			flArc		- how long should the path be (in degrees)
 //			bClockwise	- the direction we are heading
 // Output : The route
 //-----------------------------------------------------------------------------
-AI_Waypoint_t *CAI_Pathfinder::BuildRadialRoute(const Vector &vStartPos, const Vector &vCenterPos, float flRadius, float flArc, float flStepDist, bool bClockwise, float goalTolerance, bool bAirRoute /*= false*/ )
+AI_Waypoint_t *CAI_Pathfinder::BuildRadialRoute( const Vector &vStartPos, const Vector &vCenterPos, const Vector &vGoalPos, float flRadius, float flArc, float flStepDist, bool bClockwise, float goalTolerance, bool bAirRoute /*= false*/ )
 {
 	// ------------------------------------------------------------------------------
 	// Make sure we have a minimum distance between nodes.  For the given 
-	// radius, calculate the angular step necesary for this distance.
+	// radius, calculate the angular step necessary for this distance.
 	// IMPORTANT: flStepDist must be large enough that given the 
 	//			  NPC's movment speed that it can come to a stop
 	// ------------------------------------------------------------------------------
-	float flAngleStep = 2*atan((0.5*flStepDist)/flRadius);	
+	float flAngleStep = 2.0f * atan((0.5f*flStepDist)/flRadius);	
 
 	// Flip direction if clockwise
-	if (bClockwise)
+	if ( bClockwise )
 	{
 		flArc		*= -1;
 		flAngleStep *= -1;
 	}
 
-	// -----------------------------------------------------------------	
-	//  Calculate the start angle on the arc in world coordinates
-	// -----------------------------------------------------------------	
-	Vector vStartDir	= (vStartPos - vCenterPos);
-	VectorNormalize(vStartDir);
+	// Calculate the start angle on the arc in world coordinates
+	Vector vStartDir = ( vStartPos - vCenterPos );
+	VectorNormalize( vStartDir );
+
+	// Get our control angles
 	float flStartAngle	= DEG2RAD(UTIL_VecToYaw(vStartDir));
 	float flEndAngle	= flStartAngle + DEG2RAD(flArc);
 
-	// -----------------------------------------------------------------	
-	//  Offset set our first node by one arc step so NPC doesn't run
-	//  perpendicular to the arc when starting a different radius
-	// -----------------------------------------------------------------	
+	//  Offset set our first node by one arc step so NPC doesn't run perpendicular to the arc when starting a different radius
 	flStartAngle += flAngleStep;
 
-	AI_Waypoint_t*	pPrevRoute	= NULL;
-	AI_Waypoint_t*	pNextRoute	= NULL;
-	AI_Waypoint_t*  pLastNode	= NULL;
-	Vector			vLastPos	= vStartPos;
+	AI_Waypoint_t*	pHeadRoute	= NULL;	// Pointer to the beginning of the route chains
+	AI_Waypoint_t*	pNextRoute	= NULL; // Next leg of the route
+	AI_Waypoint_t*  pLastRoute	= NULL; // The last route chain added to the head
+	Vector			vLastPos	= vStartPos; // Last position along the arc in worldspace
+	int				fRouteBits = ( bAirRoute ) ? bits_BUILD_FLY : bits_BUILD_GROUND; // Whether this is an air route or not
+	float			flCurAngle = flStartAngle; // Starting angle
 	Vector			vNextPos;
-	for (float flCurAngle = flStartAngle; 
-		 ((bClockwise == true) ? (flCurAngle >= flEndAngle) : (flCurAngle <= flEndAngle));	
-		 flCurAngle+=flAngleStep)
+	
+	// Start iterating through our arc
+	while( 1 )
 	{
-		vNextPos		= vCenterPos;
-		float	fSin	= sin(flCurAngle);
-		float	fCos	= cos(flCurAngle);
-		vNextPos.x		+= flRadius * fCos;
-		vNextPos.y		+= flRadius * fSin;
+		// See if we've ended our run
+		if ( ( bClockwise && flCurAngle <= flEndAngle ) || ( !bClockwise && flCurAngle >= flEndAngle ) )
+			break;
+		
+		// Get our next position along the arc
+		vNextPos	= vCenterPos;
+		vNextPos.x	+= flRadius * cos( flCurAngle );
+		vNextPos.y	+= flRadius * sin( flCurAngle );
 
-		pNextRoute = BuildLocalRoute(vLastPos,vNextPos,NULL,NULL, NO_NODE, bAirRoute ? bits_BUILD_FLY : bits_BUILD_GROUND, goalTolerance);
-		if (!pNextRoute)
+		// Build a route from the last position to the current one
+		pNextRoute = BuildLocalRoute( vLastPos, vNextPos, NULL, NULL, NO_NODE, fRouteBits, goalTolerance);
+		
+		// If we can't find a route, we failed
+		if ( pNextRoute == NULL )
+			return NULL;
+
+		// Don't simplify the route (otherwise we'll cut corners where we don't want to!
+		pNextRoute->ModifyFlags( bits_WP_DONT_SIMPLIFY, true );
+			
+		if ( pHeadRoute )
 		{
-			// Mark last node as the goal
-			if (pPrevRoute)
-			{
-				pLastNode->ModifyFlags( bits_WP_TO_GOAL, true );
-			}
-			return pPrevRoute;
+			// Tack the routes together
+			AddWaypointLists( pHeadRoute, pNextRoute );
 		}
 		else
 		{
-			pNextRoute->ModifyFlags( bits_WP_DONT_SIMPLIFY, true );
-			pLastNode = pNextRoute;
-			if (pPrevRoute)
-			{
-				AddWaypointLists(pPrevRoute,pNextRoute);
-			}
-			else
-			{
-				pPrevRoute = pNextRoute;
-			}
+			// Otherwise we're now the previous route
+			pHeadRoute = pNextRoute;
 		}
-		vLastPos = vNextPos;
+		
+		// Move our position
+		vLastPos  = vNextPos;
+		pLastRoute = pNextRoute;
+
+		// Move our current angle
+		flCurAngle += flAngleStep;
 	}
 
-	if (pLastNode)
-	{
-		pLastNode->ModifyFlags( bits_WP_TO_GOAL, true );
-	}
-	return pPrevRoute;
+	// Append a path to the final position
+	pLastRoute = BuildLocalRoute( vLastPos, vGoalPos, NULL, NULL, NO_NODE, bAirRoute ? bits_BUILD_FLY : bits_BUILD_GROUND, goalTolerance );	
+	if ( pLastRoute == NULL )
+		return NULL;
+
+	// Allow us to simplify the last leg of the route
+	pLastRoute->ModifyFlags( bits_WP_DONT_SIMPLIFY, false );
+	pLastRoute->ModifyFlags( bits_WP_TO_GOAL, true );
+
+	// Add them together
+	AddWaypointLists( pHeadRoute, pLastRoute );
+	
+	// Give back the complete route
+	return pHeadRoute;
 }
 
 
@@ -1570,6 +1592,7 @@ bool CAI_Pathfinder::Triangulate( Navigation_t navType, const Vector &vecStart, 
 {
 	if ( GetOuter()->IsFlaggedEfficient() )
 		return false;
+
 	Assert( pApex );
 
 	AI_PROFILE_SCOPE( CAI_Pathfinder_Triangulate );

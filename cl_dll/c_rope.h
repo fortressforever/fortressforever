@@ -17,7 +17,6 @@
 #include "rope_shared.h"
 #include "bitvec.h"
 
-extern ConVar r_ropebatch;
 
 class KeyValues;
 class C_BaseAnimating;
@@ -126,7 +125,6 @@ public:
 
 private:
 	
-	bool			ShouldUseFakeAA() const;
 	void			FinishInit( const char *pMaterialName );
 
 	void			RunRopeSimulation( float flSeconds );
@@ -136,7 +134,6 @@ private:
 	bool			DidEndPointMove( int iPt );
 	bool			DetectRestingState( bool &bApplyWind );
 
-	void			DrawBeams();
 	void			UpdateBBox();
 	bool			InitRopePhysics();
 	
@@ -201,6 +198,7 @@ private:
 
 	// Instantaneous force
 	Vector			m_flImpulse;
+	Vector			m_flPreviousImpulse;
 
 	// Simulated wind gusts.
 	float			m_flCurrentGustTimer;
@@ -225,10 +223,10 @@ void Rope_ResetCounters();
 //
 // Rope Manager
 //
-class IRopeManager
+abstract_class IRopeManager
 {
 public:
-
+	virtual						~IRopeManager() {}
 	virtual void				ResetRenderCache( void ) = 0;
 	virtual void				AddToRenderCache( C_RopeKeyframe *pRope ) = 0;
 	virtual void				DrawRenderCache( void ) = 0;

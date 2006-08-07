@@ -16,7 +16,7 @@
 class IMaterial;
 class KeyValues;
 
-class IMaterialProxy
+abstract_class IMaterialProxy
 {
 public:
 	virtual bool Init( IMaterial* pMaterial, KeyValues *pKeyValues ) = 0;

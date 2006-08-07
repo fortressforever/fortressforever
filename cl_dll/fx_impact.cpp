@@ -61,11 +61,15 @@ IterationRetval_t CRagdollEnumerator::EnumElement( IHandleEntity *pHandleEntity 
 	return ITERATION_CONTINUE;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool FX_AffectRagdolls( Vector vecOrigin, Vector vecStart, int iDamageType )
 {
+	// don't do this when lots of ragdolls are simulating
+	if ( s_RagdollLRU.CountRagdolls(true) > 1 )
+		return false;
 	Ray_t shotRay;
 	shotRay.Init( vecStart, vecOrigin );
 
@@ -266,7 +270,7 @@ void PlayImpactSound( CBaseEntity *pEntity, trace_t &tr, Vector &vecServerOrigin
 		else
 		{
 			CLocalPlayerFilter filter;
-			C_BaseEntity::EmitSound( filter, NULL, pbulletImpactSoundName, &vecOrigin );
+			C_BaseEntity::EmitSound( filter, NULL, pbulletImpactSoundName, pdata->soundhandles.bulletImpact, &vecOrigin );
 		}
 
 		return;
@@ -294,16 +298,10 @@ void SetImpactSoundRoute( ImpactSoundRouteFn fn )
 //			*iHitbox - 
 //			*iEntIndex - 
 //-----------------------------------------------------------------------------
-C_BaseEntity *ParseImpactData( const CEffectData &data, Vector *vecOrigin, Vector *vecStart, Vector *vecShotDir, short &nSurfaceProp, int &iMaterial, int &iDamageType, int &iHitbox )
+C_BaseEntity *ParseImpactData( const CEffectData &data, Vector *vecOrigin, Vector *vecStart, 
+	Vector *vecShotDir, short &nSurfaceProp, int &iMaterial, int &iDamageType, int &iHitbox )
 {
-	C_BaseEntity *pEntity = ClientEntityList().GetEnt( data.m_nEntIndex );
-
-	if ( !pEntity )
-	{
-		// maybe a clientside entity without index ?
-		pEntity = data.m_pEntity;
-	}
-
+	C_BaseEntity *pEntity = data.GetEntity( );
 	*vecOrigin = data.m_vOrigin;
 	*vecStart = data.m_vStart;
 	nSurfaceProp = data.m_nSurfaceProp;

@@ -20,6 +20,8 @@
 #include "threadhelpers.h"
 #include "vstdlib/random.h"
 #include "vmpi_tools_shared.h"
+#include <conio.h>
+#include "scratchpad_helpers.h"
 
 
 #define VMPI_VVIS_PACKET_ID						1
@@ -387,6 +389,126 @@ DWORD WINAPI PortalMCThreadFn( LPVOID p )
 }
 
 
+void MCThreadCleanupFn()
+{
+	g_MCThreadExitEvent.SetEvent();
+}
+		
+
+// --------------------------------------------------------------------------------- //
+// Cheesy hack to let them stop the job early and keep the results of what has
+// been done so far.
+// --------------------------------------------------------------------------------- //
+
+class CVisDistributeWorkMaster : public IDistributeWorkMaster
+{
+public:
+	CVisDistributeWorkMaster()
+	{
+		m_bExitedEarly = false;
+		m_iState = STATE_NONE;
+	}
+	
+	virtual bool Update()
+	{
+		if ( kbhit() )
+		{
+			int key = toupper( getch() );
+			if ( m_iState == STATE_NONE )
+			{
+				if ( key == 'M' )
+				{
+					m_iState = STATE_AT_MENU;
+					Warning("\n\n"
+						"----------------------\n"
+						"1. Write scratchpad file.\n"
+						"2. Exit early and use fast vis for remaining portals.\n"
+						"\n"
+						"0. Exit menu.\n"
+						"----------------------\n"
+						"\n"
+						);
+				}
+			}
+			else if ( m_iState == STATE_AT_MENU )
+			{
+				if ( key == '1' )
+				{
+					Warning( 
+						"\n"
+						"\nWriting scratchpad file."
+						"\nCommand line: scratchpad3dviewer -file scratch.pad\n"
+						"\nRed portals are the portals that are fast vis'd." 
+						"\n"
+						);
+					m_iState = STATE_NONE;
+					IScratchPad3D *pPad = ScratchPad3D_Create( "scratch.pad" );
+					if ( pPad )
+					{
+						ScratchPad_DrawWorld( pPad, false );
+						
+						// Draw the portals that haven't been vis'd.
+						for ( int i=0; i < g_numportals*2; i++ )
+						{
+							portal_t *p = sorted_portals[i];
+							ScratchPad_DrawWinding( pPad, p->winding->numpoints, p->winding->points, Vector( 1, 0, 0 ), Vector( .3, .3, .3 ) );
+						}
+						
+						pPad->Release();
+					}
+				}
+				else if ( key == '2' )
+				{
+					// Exit the process early.
+					m_bExitedEarly = true;
+					return true;
+				}
+				else if ( key == '0' )
+				{
+					m_iState = STATE_NONE;
+					Warning( "\n\nExited menu.\n\n" );
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+public:
+	enum
+	{
+		STATE_NONE,
+		STATE_AT_MENU
+	};
+	
+	bool m_bExitedEarly;
+	int m_iState; // STATE_ enum.
+};
+
+
+CVisDistributeWorkMaster g_VisDistributeWorkMaster;
+
+
+void CheckExitedEarly()
+{
+	if ( g_VisDistributeWorkMaster.m_bExitedEarly )
+	{
+		Warning( "\nExited early, using fastvis results...\n" );
+		Warning( "Exited early, using fastvis results...\n" );
+		
+		// Use the fastvis results for portals that we didn't get results for.
+		for ( int i=0; i < g_numportals*2; i++ )
+		{
+			if ( sorted_portals[i]->status != stat_done )
+			{
+				sorted_portals[i]->portalvis = sorted_portals[i]->portalflood;
+				sorted_portals[i]->status = stat_done;
+			}
+		}
+	}
+}
+
+
 //-----------------------------------------
 //
 // Run PortalFlow across all available processing nodes
@@ -447,6 +569,10 @@ void RunMPIPortalFlow()
 		// Make a thread to listen for the data on the multicast socket.
 		DWORD dwDummy = 0;
 		g_MCThreadExitEvent.Init( false, false );
+
+		// Make sure we kill the MC thread if the app exits ungracefully.
+		CmdLib_AtCleanup( MCThreadCleanupFn );
+		
 		g_hMCThread = CreateThread( 
 			NULL,
 			0,
@@ -463,6 +589,9 @@ void RunMPIPortalFlow()
 
 	VMPI_SetCurrentStage( "RunMPIBasePortalFlow" );
 
+
+	g_pDistributeWorkMaster = &g_VisDistributeWorkMaster;
+
 	g_CPUTime.Init();
 	double elapsed = DistributeWork( 
 		g_numportals * 2,		// # work units
@@ -470,6 +599,10 @@ void RunMPIPortalFlow()
 		ProcessPortalFlow,		// Worker function to process work units
 		ReceivePortalFlow		// Master function to receive work results
 		);
+		
+	g_pDistributeWorkMaster = NULL;
+
+	CheckExitedEarly();
 
 	// Stop the multicast stuff.
 	VMPI_DeletePortalMCSocket();

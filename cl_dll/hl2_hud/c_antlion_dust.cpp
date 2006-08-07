@@ -74,6 +74,7 @@ public:
 
 	Vector		m_vecOrigin;
 	QAngle		m_vecAngles;
+	bool		m_bBlockedSpawner;
 
 protected:
 	void		GetDustColor( Vector &color );
@@ -85,6 +86,7 @@ EXPOSE_PROTOTYPE_EFFECT( AntlionDust, C_TEAntlionDust );
 IMPLEMENT_CLIENTCLASS_EVENT_DT( C_TEAntlionDust, DT_TEAntlionDust, CTEAntlionDust )
 	RecvPropVector(RECVINFO( m_vecOrigin )),
 	RecvPropVector(RECVINFO( m_vecAngles )),
+	RecvPropBool(RECVINFO( m_bBlockedSpawner )),
 END_RECV_TABLE()
 
 //==================================================
@@ -96,6 +98,7 @@ C_TEAntlionDust::C_TEAntlionDust()
 	m_MaterialHandle	= INVALID_MATERIAL_HANDLE;
 	m_vecOrigin.Init();
 	m_vecAngles.Init();
+	m_bBlockedSpawner = false;
 }
 
 C_TEAntlionDust::~C_TEAntlionDust()
@@ -119,6 +122,7 @@ void C_TEAntlionDust::PostDataUpdate( DataUpdateType_t updateType )
 
 	pDustEmitter->SetSortOrigin( m_vecOrigin );
 	pDustEmitter->SetNearClip( 32, 64 );
+	pDustEmitter->GetBinding().SetBBox( m_vecOrigin - Vector( 32, 32, 32 ), m_vecOrigin + Vector( 32, 32, 32 ) );
 
 	m_MaterialHandle = pDustEmitter->GetPMaterial( "particle/particle_smokegrenade" );
 
@@ -128,8 +132,15 @@ void C_TEAntlionDust::PostDataUpdate( DataUpdateType_t updateType )
 
 	SimpleParticle	*pParticle;
 
+	int iParticleCount = 48;
+
+	if ( m_bBlockedSpawner == true )
+	{
+		iParticleCount = 24;
+	}
+
 	//Spawn the dust
-	for ( int i = 0; i < 48; i++ )
+	for ( int i = 0; i < iParticleCount; i++ )
 	{
 		//Offset this dust puff's origin
 		offset[0] = random->RandomFloat( -DUST_RADIUS, DUST_RADIUS );

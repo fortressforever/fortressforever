@@ -186,7 +186,7 @@ struct SoundInfo_t
 			WRITE_DELTA_SINT( vOrigin.y, COORD_INTEGER_BITS + 1 );
 			WRITE_DELTA_SINT( vOrigin.z, COORD_INTEGER_BITS + 1 );
 
-			WRITE_DELTA_SINT( nSpeakerEntity, MAX_EDICT_BITS );
+			WRITE_DELTA_SINT( nSpeakerEntity, MAX_EDICT_BITS + 1 );
 		}
 	};
 
@@ -268,7 +268,7 @@ struct SoundInfo_t
 			READ_DELTA_SINT( vOrigin.y, COORD_INTEGER_BITS + 1 );
 			READ_DELTA_SINT( vOrigin.z, COORD_INTEGER_BITS + 1 );
 
-			READ_DELTA_SINT( nSpeakerEntity, MAX_EDICT_BITS );
+			READ_DELTA_SINT( nSpeakerEntity, MAX_EDICT_BITS + 1 );
 		}
 	}
 };

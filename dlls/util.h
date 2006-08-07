@@ -79,13 +79,14 @@ T *_CreateEntity( T *newClass, const char *className )
 
 
 // This is the glue that hooks .MAP entity class names to our CPP classes
-class IEntityFactoryDictionary
+abstract_class IEntityFactoryDictionary
 {
 public:
 	virtual void InstallFactory( IEntityFactory *pFactory, const char *pClassName ) = 0;
 	virtual IServerNetworkable *Create( const char *pClassName ) = 0;
 	virtual void Destroy( const char *pClassName, IServerNetworkable *pNetworkable ) = 0;
 	virtual IEntityFactory *FindFactory( const char *pClassName ) = 0;
+	virtual const char *GetCannonicalName( const char *pClassName ) = 0;
 };
 
 IEntityFactoryDictionary *EntityFactoryDictionary();
@@ -95,11 +96,12 @@ inline bool CanCreateEntityClass( const char *pszClassname )
 	return ( EntityFactoryDictionary() != NULL && EntityFactoryDictionary()->FindFactory( pszClassname ) != NULL );
 }
 
-class IEntityFactory
+abstract_class IEntityFactory
 {
 public:
 	virtual IServerNetworkable *Create( const char *pClassName ) = 0;
 	virtual void Destroy( IServerNetworkable *pNetworkable ) = 0;
+	virtual size_t GetEntitySize() = 0;
 };
 
 template <class T>
@@ -123,6 +125,11 @@ public:
 		{
 			pNetworkable->Release();
 		}
+	}
+
+	virtual size_t GetEntitySize()
+	{
+		return sizeof(T);
 	}
 };
 
@@ -317,6 +324,7 @@ void		UTIL_EmitAmbientSound	( int entindex, const Vector &vecOrigin, const char 
 void		UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount );
 void		UTIL_ScreenShake		( const Vector &center, float amplitude, float frequency, float duration, float radius, ShakeCommand_t eCommand, bool bAirShake=false );
 void		UTIL_ScreenShakeObject	( CBaseEntity *pEnt, const Vector &center, float amplitude, float frequency, float duration, float radius, ShakeCommand_t eCommand, bool bAirShake=false );
+void		UTIL_ViewPunch			( const Vector &center, QAngle angPunch, float radius, bool bInAir );
 void		UTIL_ShowMessage		( const char *pString, CBasePlayer *pPlayer );
 void		UTIL_ShowMessageAll		( const char *pString );
 void		UTIL_ScreenFadeAll		( const color32 &color, float fadeTime, float holdTime, int flags );
@@ -591,6 +599,11 @@ inline float UTIL_DistApprox2D( const Vector &vec1, const Vector &vec2 )
 	return fabs(dx) + fabs(dy);
 }
 
+// Find out if an entity is facing another entity or position within a given tolerance range
+bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, const Vector &vecPosition, float flDotTolerance, float *pflDot = NULL );
+bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, CBaseEntity *pTarget, float flDotTolerance, float *pflDot = NULL );
+
+void UTIL_GetDebugColorForRelationship( int nRelationship, int &r, int &g, int &b );
 
 struct datamap_t;
 extern const char	*UTIL_FunctionToName( datamap_t *pMap, void *function );
@@ -600,5 +613,7 @@ int UTIL_GetCommandClientIndex( void );
 CBasePlayer *UTIL_GetCommandClient( void );
 
 AngularImpulse WorldToLocalRotation( const VMatrix &localToWorld, const Vector &worldAxis, float rotation );
+
+bool UTIL_LoadAndSpawnEntitiesFromScript( CUtlVector <CBaseEntity*> &entities, const char *pScriptFile, const char *pBlock, bool bActivate = true );
 
 #endif // UTIL_H

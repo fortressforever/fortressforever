@@ -16,7 +16,7 @@
 // Purpose: Interface that entities can use to redirect scoring to other entities.
 //			i.e. A rocket redirects scoring to the player that fired it.
 //-----------------------------------------------------------------------------
-class IScorer
+abstract_class IScorer
 {
 public:
 	// Return the entity that should receive the score

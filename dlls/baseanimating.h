@@ -12,12 +12,16 @@
 
 #include "baseentity.h"
 #include "entityoutput.h"
+#include "studio.h"
 
 struct animevent_t;
 struct matrix3x4_t;
 class CIKContext;
 class KeyValues;
 FORWARD_DECLARE_HANDLE( memhandle_t );
+
+#define	BCF_NO_ANIMATION_SKIP	( 1 << 0 )	// Do not allow PVS animation skipping (mostly for attachments being critical to an entity)
+#define	BCF_IS_IN_SPAWN			( 1 << 1 )	// Is currently inside of spawn, always evaluate animations
 
 class CBaseAnimating : public CBaseEntity
 {
@@ -45,7 +49,7 @@ public:
 
 	virtual void OnRestore();
 
-	studiohdr_t *GetModelPtr( void );
+	CStudioHdr *GetModelPtr( void );
 
 	virtual CBaseAnimating*	GetBaseAnimating() { return this; }
 
@@ -76,18 +80,21 @@ public:
 	inline void						SetPlaybackRate( float rate );
 
 	inline int GetSequence() { return m_nSequence; }
-	inline void SetSequence(int nSequence) { m_nSequence = nSequence; }
+	// inline void SetSequence(int nSequence) { Assert( GetModelPtr( ) && nSequence >= 0 && nSequence < GetModelPtr( )->GetNumSeq() );  m_nSequence = nSequence; }
+	void SetSequence(int nSequence);
 	/* inline */ void ResetSequence(int nSequence);
-	int		GetSequenceFlags( int iSequence );
 	// FIXME: push transitions support down into CBaseAnimating?
 	virtual bool IsActivityFinished( void ) { return m_bSequenceFinished; }
 	inline bool IsSequenceFinished( void ) { return m_bSequenceFinished; }
 	inline bool SequenceLoops( void ) { return m_bSequenceLoops; }
 	inline float SequenceDuration( void ) { return SequenceDuration( m_nSequence ); }
-	float	SequenceDuration( int iSequence );
-	float	GetSequenceCycleRate( int iSequence );
-	float	GetLastVisibleCycle( int iSequence );
-	float	GetSequenceGroundSpeed( int iSequence );
+	float	SequenceDuration( CStudioHdr *pStudioHdr, int iSequence );
+	inline float SequenceDuration( int iSequence ) { return SequenceDuration(GetModelPtr(), iSequence); }
+	float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
+	inline float	GetSequenceCycleRate( int iSequence ) { return GetSequenceCycleRate(GetModelPtr(),iSequence); }
+	float	GetLastVisibleCycle( CStudioHdr *pStudioHdr, int iSequence );
+	float	GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence );
+	inline float GetSequenceGroundSpeed( int iSequence ) { return GetSequenceGroundSpeed(GetModelPtr(), iSequence); }
 	void	ResetActivityIndexes ( void );
 	void    ResetEventIndexes ( void );
 	int		SelectWeightedSequence ( Activity activity );
@@ -98,7 +105,8 @@ public:
 	KeyValues *GetSequenceKeyValues( int iSequence );
 
 	float GetSequenceMoveYaw( int iSequence );
-	float GetSequenceMoveDist( int iSequence );
+	float GetSequenceMoveDist( CStudioHdr *pStudioHdr, int iSequence );
+	inline float GetSequenceMoveDist( int iSequence ) { return GetSequenceMoveDist(GetModelPtr(),iSequence);}
 	void  GetSequenceLinearMotion( int iSequence, Vector *pVec );
 	const char *GetSequenceName( int iSequence );
 	const char *GetSequenceActivityName( int iSequence );
@@ -113,7 +121,7 @@ public:
 	virtual bool IsRagdoll();
 	virtual bool CanBecomeRagdoll( void ); //Check if this entity will ragdoll when dead.
 
-	virtual	void GetSkeleton( Vector pos[], Quaternion q[], int boneMask );
+	virtual	void GetSkeleton( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], int boneMask );
 
 	virtual void GetBoneTransform( int iBone, matrix3x4_t &pBoneToWorld );
 	virtual void SetupBones( matrix3x4_t *pBoneToWorld, int boneMask );
@@ -122,13 +130,19 @@ public:
 
 	bool HasAnimEvent( int nSequence, int nEvent );
 	virtual	void DispatchAnimEvents ( CBaseAnimating *eventHandler ); // Handle events that have happend since last time called up until X seconds into the future
-	virtual void HandleAnimEvent( animevent_t *pEvent ) { return; };
+	virtual void HandleAnimEvent( animevent_t *pEvent );
 
-	int		LookupPoseParameter( const char *szName );
-	float	SetPoseParameter( const char *szName, float flValue );
-	float	SetPoseParameter( int iParameter, float flValue );
+	int		LookupPoseParameter( CStudioHdr *pStudioHdr, const char *szName );
+	inline int	LookupPoseParameter( const char *szName ) { return LookupPoseParameter(GetModelPtr(), szName); }
+
+	float	SetPoseParameter( CStudioHdr *pStudioHdr, const char *szName, float flValue );
+	inline float SetPoseParameter( const char *szName, float flValue ) { return SetPoseParameter( GetModelPtr(), szName, flValue ); }
+	float	SetPoseParameter( CStudioHdr *pStudioHdr, int iParameter, float flValue );
+	inline float SetPoseParameter( int iParameter, float flValue ) { return SetPoseParameter( GetModelPtr(), iParameter, flValue ); }
+
 	float	GetPoseParameter( const char *szName );
 	float	GetPoseParameter( int iParameter );
+	bool	GetPoseParameterRange( int index, float &minValue, float &maxValue );
 	bool	HasPoseParameter( int iSequence, const char *szName );
 	bool	HasPoseParameter( int iSequence, int iParameter );
 	float	EdgeLimitPoseParameter( int iParameter, float flValue, float flBase = 0.0f );
@@ -143,7 +157,6 @@ public:
 	int  FindTransitionSequence( int iCurrentSequence, int iGoalSequence, int *piDir );
 	int  GetEntryNode( int iSequence );
 	int  GetExitNode( int iSequence );
-	float  GetExitPhase( int iSequence );
 	
 	void GetEyeballs( Vector &origin, QAngle &angles ); // ?? remove ??
 
@@ -228,7 +241,8 @@ public:
 	virtual int DrawDebugTextOverlays( void );
 	
 	// See note in code re: bandwidth usage!!!
-	virtual void		DrawServerHitboxes( float duration = 0.0f, bool monocolor = false );
+	void				DrawServerHitboxes( float duration = 0.0f, bool monocolor = false );
+	void				DrawRawSkeleton( matrix3x4_t boneToWorld[], int boneMask, bool noDepthTest = true, float duration = 0.0f, bool monocolor = false );
 
 	void				SetModelWidthScale( float scale, float change_duration = 0.0f );
 	float				GetModelWidthScale() const;
@@ -252,29 +266,49 @@ public:
 	// Fire
 	virtual void Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 	virtual void Extinguish() { RemoveFlag( FL_ONFIRE ); }
-	int IsOnFire() { return (GetFlags() & FL_ONFIRE); }
+	bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
 	void Scorch( int rate, int floor );
 	void InputIgnite( inputdata_t &inputdata );
 
 	// Dissolve, returns true if the ragdoll has been created
-	bool Dissolve( const char *pMaterialName, float flStartTime, bool bNPCOnly = true, int nDissolveType = 0 );
-	int IsDissolving() { return (GetFlags() & FL_DISSOLVING); }
+	bool Dissolve( const char *pMaterialName, float flStartTime, bool bNPCOnly = true, int nDissolveType = 0, Vector vDissolverOrigin = vec3_origin, int iMagnitude = 0 );
+	bool IsDissolving() { return ( (GetFlags() & FL_DISSOLVING) != 0 ); }
 	void TransferDissolveFrom( CBaseAnimating *pAnim );
 
 	// animation needs
 	float				m_flGroundSpeed;	// computed linear movement rate for current sequence
 	float				m_flLastEventCheck;	// cycle index of when events were last checked
 
+	virtual void SetLightingOriginRelative( CBaseEntity *pLightingOriginRelative );
+	void SetLightingOriginRelative( string_t strLightingOriginRelative );
+	CBaseEntity *GetLightingOriginRelative();
+
 	virtual void SetLightingOrigin( CBaseEntity *pLightingOrigin );
+	void SetLightingOrigin( string_t strLightingOrigin );
 	CBaseEntity *GetLightingOrigin();
 
 	const float* GetPoseParameterArray() { return m_flPoseParameter.Base(); }
 	const float* GetEncodedControllerArray() { return m_flEncodedController.Base(); }
 
+	void BuildMatricesWithBoneMerge( const CStudioHdr *pStudioHdr, const QAngle& angles, 
+		const Vector& origin, const Vector pos[MAXSTUDIOBONES],
+		const Quaternion q[MAXSTUDIOBONES], matrix3x4_t bonetoworld[MAXSTUDIOBONES],
+		CBaseAnimating *pParent, CBoneCache *pParentCache );
+
+	void	SetFadeDistance( float minFadeDist, float maxFadeDist );
+
+	int		GetBoneCacheFlags( void ) { return m_fBoneCacheFlags; }
+	inline void	SetBoneCacheFlags( unsigned short fFlag ) { m_fBoneCacheFlags |= fFlag; }
+	inline void	ClearBoneCacheFlags( unsigned short fFlag ) { m_fBoneCacheFlags &= ~fFlag; }
+
+	bool PrefetchSequence( int iSequence );
+
 private:
-	void StudioFrameAdvanceInternal( float flInterval );
-	void SetLightingOrigin( string_t strLightingOrigin );
-	void InputSetLightingOriginHack( inputdata_t &inputdata );
+	void StudioFrameAdvanceInternal( CStudioHdr *pStudioHdr, float flInterval );
+	void InputSetLightingOriginRelative( inputdata_t &inputdata );
+	void InputSetLightingOrigin( inputdata_t &inputdata );
+
+	bool CanSkipAnimation( void );
 
 public:
 	CNetworkVar( int, m_nForceBone );
@@ -332,11 +366,24 @@ private:
 	CNetworkVar( unsigned char, m_nMuzzleFlashParity );
 
 	CNetworkHandle( CBaseEntity, m_hLightingOrigin );
-	string_t m_iszLightingOrigin;	// for reading from the file only
+	CNetworkHandle( CBaseEntity, m_hLightingOriginRelative );
+
+	string_t m_iszLightingOriginRelative;	// for reading from the file only
+	string_t m_iszLightingOrigin;			// for reading from the file only
+
 	memhandle_t		m_boneCacheHandle;
+	unsigned short	m_fBoneCacheFlags;		// Used for bone cache state on model
+
+protected:
+	CNetworkVar( float, m_fadeMinDist );	// Point at which fading is absolute
+	CNetworkVar( float, m_fadeMaxDist );	// Point at which fading is inactive
+	CNetworkVar( float, m_flFadeScale );	// Scale applied to min / max
 
 public:
 	COutputEvent m_OnIgnite;
+
+private:
+	CStudioHdr			*m_pStudioHdr;
 
 // FIXME: necessary so that cyclers can hack m_bSequenceFinished
 friend class CFlexCycler;
@@ -377,6 +424,16 @@ inline CBaseEntity *CBaseAnimating::GetLightingOrigin()
 	return m_hLightingOrigin;
 }
 
+inline void CBaseAnimating::SetLightingOriginRelative( CBaseEntity *pLightingOriginRelative )
+{
+	m_hLightingOriginRelative = pLightingOriginRelative;
+}
+
+inline CBaseEntity *CBaseAnimating::GetLightingOriginRelative()
+{
+	return m_hLightingOriginRelative;
+}
+
 //-----------------------------------------------------------------------------
 // Cycle access
 //-----------------------------------------------------------------------------
@@ -395,7 +452,7 @@ EXTERN_SEND_TABLE(DT_BaseAnimating);
 
 
 
-#define ANIMATION_SEQUENCE_BITS			10	// 1024 sequences
+#define ANIMATION_SEQUENCE_BITS			11	// 2048 sequences
 #define ANIMATION_SKIN_BITS				10	// 1024 body skin selections FIXME: this seems way high
 #define ANIMATION_BODY_BITS				32	// body combinations
 #define ANIMATION_HITBOXSET_BITS		2	// hit box sets 

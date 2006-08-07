@@ -86,6 +86,7 @@ public:
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	NotifyShouldTransmit( ShouldTransmitState_t state );
+	virtual void	Simulate( void );
 
 public:
 	
@@ -100,6 +101,13 @@ public:
 	float				m_flGlowProxySize;
 };
 
+static void RecvProxy_HDRColorScale( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	C_LightGlow *pLightGlow = ( C_LightGlow * )pStruct;
+
+	pLightGlow->m_Glow.m_flHDRColorScale = pData->m_Value.m_Float;
+}
+
 IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_LightGlow, DT_LightGlow, CLightGlow )
 	RecvPropInt( RECVINFO(m_clrRender), 0, RecvProxy_IntToColor32 ),
 	RecvPropInt( RECVINFO( m_nHorizontalSize ) ),
@@ -112,6 +120,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_LightGlow, DT_LightGlow, CLightGlow )
 	RecvPropQAngles( RECVINFO_NAME( m_angNetworkAngles, m_angRotation ) ),
 	RecvPropInt( RECVINFO_NAME(m_hNetworkMoveParent, moveparent), 0, RecvProxy_IntToMoveParent ),
 	RecvPropFloat(RECVINFO(m_flGlowProxySize)),
+	RecvPropFloat("HDRColorScale", 0, SIZEOF_IGNORE, 0, RecvProxy_HDRColorScale),
 END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -124,6 +133,12 @@ m_nHorizontalSize( 0 ), m_nVerticalSize( 0 ), m_nMinDist( 0 ), m_nMaxDist( 0 )
 	m_Glow.m_bInSky = false;
 }
 
+void C_LightGlow::Simulate( void )
+{
+	BaseClass::Simulate();
+
+	m_Glow.m_vPos = GetAbsOrigin();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

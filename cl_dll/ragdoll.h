@@ -19,13 +19,13 @@
 #define RAGDOLL_VISUALIZE	0
 
 class C_BaseEntity;
-struct studiohdr_t;
+class CStudioHdr;
 struct mstudiobone_t;
 class Vector;
 class IPhysicsObject;
 class CBoneAccessor;
 
-class IRagdoll
+abstract_class IRagdoll
 {
 public:
 	virtual ~IRagdoll() {}
@@ -49,7 +49,7 @@ public:
 	
 	void Init( 
 		C_BaseEntity *ent, 
-		studiohdr_t *pstudiohdr, 
+		CStudioHdr *pstudiohdr, 
 		const Vector &forceVector, 
 		int forceBone, 
 		const CBoneAccessor &pPrevBones, 
@@ -67,17 +67,25 @@ public:
 	virtual int RagdollBoneCount() const { return m_ragdoll.listCount; }
 	
 
-	void	SetInitialBonePosition( studiohdr_t *pstudiohdr, const CBoneAccessor &pDesiredBonePosition );
+	void	SetInitialBonePosition( CStudioHdr *pstudiohdr, const CBoneAccessor &pDesiredBonePosition );
 
 	bool IsValid() { return m_ragdoll.listCount > 0; }
 
+	void ResetRagdollSleepAfterTime( void );
+
 private:
+
+	void			CheckSettleStationaryRagdoll();
+	void			PhysForceRagdollToSleep();
+
 	ragdoll_t	m_ragdoll;
 	Vector		m_mins, m_maxs;
 	Vector		m_origin;
 	float		m_radius;
 	float		m_lastUpdate;
 	bool		m_allAsleep;
+	Vector		m_vecLastOrigin;
+	float		m_flLastOriginChangeTime;
 
 #if RAGDOLL_VISUALIZE
 	matrix3x4_t			m_savedBone1[MAXSTUDIOBONES];
@@ -93,7 +101,7 @@ public:
 
 CRagdoll *CreateRagdoll( 
 	C_BaseEntity *ent, 
-	studiohdr_t *pstudiohdr, 
+	CStudioHdr *pstudiohdr, 
 	const Vector &forceVector, 
 	int forceBone, 
 	const CBoneAccessor &pPrevBones, 

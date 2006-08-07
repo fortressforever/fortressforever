@@ -225,9 +225,9 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 			if( iPos )
 			{
 				// Copy buffer to text
-				Q_strcat( szText, szBuffer );
+				Q_strncat( szText, szBuffer, sizeof(szText) );
 				// Clear buffer
-				Q_strcpy( szBuffer, "\0" );
+				Q_strncpy( szBuffer, "\0", sizeof(szBuffer) );
 				// Reset
 				iPos = 0;
 			}
@@ -238,7 +238,7 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 			if( FF_ParsePercentCommand( pEdict, pBeg[ 1 ], szTempText, 1025 ) )
 			{
 				// Add to text
-				Q_strcat( szText, szTempText );
+				Q_strncat( szText, szTempText, sizeof(szText) );
 
 				// % commands are 2 characters long (for now)
 				iAdjust = 2;
@@ -267,9 +267,9 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 	if( iPos )
 	{
 		// Copy buffer to text
-		Q_strcat( szText, szBuffer );
+		Q_strncat( szText, szBuffer, sizeof(szText) );
 		// Clear buffer
-		Q_strcpy( szBuffer, "\0" );
+		Q_strncpy( szBuffer, "\0", sizeof(szBuffer) );
 		// Reset
 		iPos = 0;
 	}
@@ -297,7 +297,8 @@ void Host_Say( edict_t *pEdict, bool teamonly )
 		pPlayer->CheckChatText( p, 127 );	// though the buffer szTemp that p points to is 256, 
 											// chat text is capped to 127 in CheckChatText above
 
-		Assert( STRING( pPlayer->pl.netname ) );
+		Assert( strlen( pPlayer->GetPlayerName() ) > 0 );
+
 		bSenderDead = ( pPlayer->m_lifeState != LIFE_ALIVE );
 	}
 	else
@@ -507,7 +508,7 @@ CON_COMMAND_F( cast_hull, "Tests hull collision detection", FCVAR_CHEAT )
 			tr.m_pEnt->GetAbsOrigin().x, tr.m_pEnt->GetAbsOrigin().y, tr.m_pEnt->GetAbsOrigin().z,
 			tr.m_pEnt->GetAbsAngles().x, tr.m_pEnt->GetAbsAngles().y, tr.m_pEnt->GetAbsAngles().z );
 		DevMsg(1, "Hit: hitbox %d, hitgroup %d, physics bone %d, solid %d, surface %s, surfaceprop %s\n", tr.hitbox, tr.hitgroup, tr.physicsbone, tr.m_pEnt->GetSolid(), tr.surface.name, physprops->GetPropName( tr.surface.surfaceProps ) );
-		NDebugOverlay::SweptBox( start, tr.endpos, -extents, extents, vec3_angle, 0, 0, 255, false, 10 );
+		NDebugOverlay::SweptBox( start, tr.endpos, -extents, extents, vec3_angle, 0, 0, 255, 0, 10 );
 		Vector end = tr.endpos;// - tr.plane.normal * DotProductAbs( tr.plane.normal, extents );
 		NDebugOverlay::Line( end, end + tr.plane.normal * 24, 255, 255, 64, false, 10 );
 	}
@@ -589,13 +590,13 @@ void KillTargets( const char *pKillTargetName )
 	CBaseEntity *pentKillTarget = NULL;
 
 	DevMsg( 2, "KillTarget: %s\n", pKillTargetName );
-	pentKillTarget = gEntList.FindEntityByName( NULL, pKillTargetName, NULL );
+	pentKillTarget = gEntList.FindEntityByName( NULL, pKillTargetName );
 	while ( pentKillTarget )
 	{
 		UTIL_Remove( pentKillTarget );
 
 		DevMsg( 2, "killing %s\n", STRING( pentKillTarget->m_iClassname ) );
-		pentKillTarget = gEntList.FindEntityByName( pentKillTarget, pKillTargetName, NULL );
+		pentKillTarget = gEntList.FindEntityByName( pentKillTarget, pKillTargetName );
 	}
 }
 
@@ -866,7 +867,7 @@ void CC_Player_Give( void )
 		// Dirty hack to avoid suit playing it's pickup sound
 		if ( !stricmp( item_to_give, "item_suit" ) )
 		{
-			pPlayer->EquipSuit();
+			pPlayer->EquipSuit( false );
 			return;
 		}
 

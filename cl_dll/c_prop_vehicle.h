@@ -27,9 +27,9 @@ public:
 // IVehicle overrides.
 public:
 
-	virtual C_BasePlayer* GetPassenger( int nRole );
-	virtual int	GetPassengerRole( C_BasePlayer *pEnt );
-	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_DRIVER ) { return false; }
+	virtual C_BaseCombatCharacter* GetPassenger( int nRole );
+	virtual int	GetPassengerRole( C_BaseCombatCharacter *pEnt );
+	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_ROLE_DRIVER ) { return false; }
 	virtual void GetVehicleViewPosition( int nRole, Vector *pOrigin, QAngle *pAngles );
 
 	virtual void SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move ) {}
@@ -79,7 +79,7 @@ public:
 
 protected:
 
-	virtual void OnEnteredVehicle( C_BasePlayer *pPlayer );
+	virtual void OnEnteredVehicle( C_BaseCombatCharacter *pPassenger );
 	virtual void RestrictView( float *pYawBounds, float *pPitchBounds, float *pRollBounds, QAngle &vecViewAngles );
 	virtual void SetVehicleFOV( float flFOV ) { m_flFOV = flFOV; }
 

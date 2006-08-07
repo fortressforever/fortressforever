@@ -21,6 +21,7 @@ enum busyinterrupt_t
 	BA_INT_PLAYER,		// The Player's presence interrupts this busy anim
 	BA_INT_AMBUSH,		// We're waiting to ambush enemies. Don't break on danger sounds in front of us.
 	BA_INT_COMBAT,		// Only break out if we're shot at.
+	BA_INT_ZOMBIESLUMP,	// Zombies who are slumped on the ground.
 };
 
 enum busyanimparts_t
@@ -37,9 +38,11 @@ struct busyanim_t
 	string_t			iszName;
 	Activity			iActivities[BA_MAX_ANIMS];
 	string_t			iszSequences[BA_MAX_ANIMS];
+	string_t			iszSounds[BA_MAX_ANIMS];
 	float				flMinTime;		// Min time spent in this busy animation
 	float				flMaxTime;		// Max time spent in this busy animation. 0 means continue until interrupted.
 	busyinterrupt_t		iBusyInterruptType;
+	bool				bUseAutomovement;
 };
 
 #define NO_MAX_TIME -1
@@ -73,11 +76,12 @@ public:
 		TASK_ACTBUSY_TELEPORT_TO_BUSY,
 		TASK_ACTBUSY_WALK_PATH_TO_BUSY,
 		TASK_ACTBUSY_GET_PATH_TO_ACTBUSY,
+		TASK_ACTBUSY_VERIFY_EXIT,
 		NEXT_TASK,
 		
 		// Conditions
-		//COND_LEAD_FOLLOWER_LOST = BaseClass::NEXT_CONDITION,
-		//NEXT_CONDITION
+		COND_ACTBUSY_LOST_SEE_ENTITY = BaseClass::NEXT_CONDITION,
+		NEXT_CONDITION,
 	};
 	
 	virtual const char *GetName() {	return "ActBusy"; }
@@ -85,9 +89,10 @@ public:
 	void	Enable( CAI_ActBusyGoal *pGoal, float flRange, bool bVisibleOnly );
 	void	SetBusySearchRange( float flRange );
 	void	Disable( void );
-	void	ForceActBusy( CAI_ActBusyGoal *pGoal, CAI_Hint *pHintNode = NULL, float flMaxTime = NO_MAX_TIME, bool bVisibleOnly = false, bool bTeleportToBusy = false, Activity activity = ACT_INVALID );
+	void	ForceActBusy( CAI_ActBusyGoal *pGoal, CAI_Hint *pHintNode = NULL, float flMaxTime = NO_MAX_TIME, bool bVisibleOnly = false, bool bTeleportToBusy = false, bool bUseNearestBusy = false, CBaseEntity *pSeeEntity = NULL, Activity activity = ACT_INVALID );
 	void	ForceActBusyLeave( bool bVisibleOnly = false );
 	void	StopBusying( void );
+	bool	IsStopBusying();
 	bool	CanSelectSchedule( void );
 	bool	IsCurScheduleOverridable( void );
 	bool	ShouldIgnoreSound( CSound *pSound );
@@ -103,23 +108,35 @@ public:
 	bool	IsInterruptable( void );
 	bool	ShouldPlayerAvoid( void );
 	void	SetUseRenderBounds( bool bUseBounds ) { m_bUseRenderBoundsForCollision = bUseBounds; }
+	void	ComputeAndSetRenderBounds();
+	bool	CanFlinch( void );
+	bool	CanRunAScriptedNPCInteraction( bool bForced );
+	void	OnScheduleChange();
+	bool	QueryHearSound( CSound *pSound );
 
 	// Returns true if the current NPC is acting busy, or moving to an actbusy
 	bool	IsActive( void );
+	// Returns true if the current NPC is actually acting busy (i.e. inside an act busy anim)
+	bool	IsInsideActBusy( void ) { return m_bBusy; }
 
 private:
 	virtual int		SelectSchedule( void );
+	int				SelectScheduleForLeaving( void );
+	int				SelectScheduleWhileNotBusy( int iBase );
+	int				SelectScheduleWhileBusy( void );
 	virtual void	StartTask( const Task_t *pTask );
 	virtual void	RunTask( const Task_t *pTask );
 	void			NotifyBusyEnding( void );
 	bool			HasAnimForActBusy( int iActBusy, busyanimparts_t AnimPart );
 	bool			PlayAnimForActBusy( busyanimparts_t AnimPart );
+	void			PlaySoundForActBusy( busyanimparts_t AnimPart ); 
 
 private:
 	bool			m_bEnabled;
 	bool			m_bForceActBusy;
 	Activity		m_ForcedActivity;
 	bool			m_bTeleportToBusy;
+	bool			m_bUseNearestBusy;
 	bool			m_bLeaving;
 	bool			m_bVisibleOnly;
 	bool			m_bUseRenderBoundsForCollision;
@@ -133,6 +150,11 @@ private:
 	bool			m_bInQueue;
 	int				m_iCurrentBusyAnim;
 	CHandle<CAI_ActBusyGoal> m_hActBusyGoal;
+	bool			m_bNeedToSetBounds;
+	EHANDLE			m_hSeeEntity;
+	float			m_fTimeLastSawSeeEntity;
+	bool			m_bExitedBusyToDueLostSeeEntity;
+	bool			m_bExitedBusyToDueSeeEnemy;
 
 	DEFINE_CUSTOM_SCHEDULE_PROVIDER;
 };
@@ -155,10 +177,12 @@ public:
 	virtual void NPCStartedLeavingBusy( CAI_BaseNPC *pNPC );
 	virtual void NPCFinishedBusy( CAI_BaseNPC *pNPC );
 	virtual void NPCLeft( CAI_BaseNPC *pNPC );
+	virtual void NPCLostSeeEntity( CAI_BaseNPC *pNPC );
+	virtual void NPCSeeEnemy( CAI_BaseNPC *pNPC );
 
 protected:
-	CAI_ActBusyBehavior *GetBusyBehaviorForNPC( const char *pszActorName, CBaseEntity *pActivator, const char *sInputName );
-	CAI_ActBusyBehavior *GetBusyBehaviorForNPC( CBaseEntity *pEntity, CBaseEntity *pActivator, const char *sInputName );
+	CAI_ActBusyBehavior *GetBusyBehaviorForNPC( const char *pszActorName, CBaseEntity *pActivator, CBaseEntity *pCaller, const char *sInputName );
+	CAI_ActBusyBehavior *GetBusyBehaviorForNPC( CBaseEntity *pEntity, const char *sInputName );
 
 	void		 EnableGoal( CAI_BaseNPC *pAI );
 
@@ -178,6 +202,8 @@ protected:
 	COutputEHANDLE	m_OnNPCStartedBusy;
 	COutputEHANDLE	m_OnNPCFinishedBusy;
 	COutputEHANDLE	m_OnNPCLeft;
+	COutputEHANDLE	m_OnNPCLostSeeEntity;
+	COutputEHANDLE	m_OnNPCSeeEnemy;
 };
 
 // Maximum number of nodes allowed in an actbusy queue

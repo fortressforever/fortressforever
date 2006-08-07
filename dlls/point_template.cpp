@@ -73,6 +73,10 @@ class CPointTemplatePrecacher : public CAutoGameSystem
 {
 public:
 
+	CPointTemplatePrecacher( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	void AddToPrecache( CBaseEntity *ent )
 	{
 		m_Ents.AddToTail( EHANDLE( ent ) );
@@ -107,7 +111,7 @@ private:
 	CUtlVector< CHandle< CPointTemplate > >	m_Ents;
 };
 
-CPointTemplatePrecacher g_PointTemplatePrecacher;
+CPointTemplatePrecacher g_PointTemplatePrecacher( "CPointTemplatePrecacher" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -157,7 +161,7 @@ void CPointTemplate::StartBuildingTemplates( void )
 			CBaseEntity	*pEntity = NULL;
 			int iOldNum = m_hTemplateEntities.Count();
 			// Add all the entities with the matching targetname
-			while ( (pEntity = gEntList.FindEntityByName( pEntity, STRING(m_iszTemplateEntityNames[i]), NULL )) != NULL )
+			while ( (pEntity = gEntList.FindEntityByName( pEntity, STRING(m_iszTemplateEntityNames[i]) )) != NULL )
 			{
 				m_hTemplateEntities.AddToTail( pEntity );
 			}
@@ -282,12 +286,14 @@ void CPointTemplate::PerformPrecache()
 
 		// Some templates have Entity I/O connecting the entities within the template.
 		// Unique versions of these templates need to be created whenever they're instanced.
+		int nStringSize;
 		if ( AllowNameFixup() && Templates_IndexRequiresEntityIOFixup( iTemplateIndex ) )
 		{
 			// This template requires instancing. 
 			// Create a new mapdata block and ask the template system to fill it in with
 			// a unique version (with fixed Entity I/O connections).
 			pMapData = Templates_GetEntityIOFixedMapData( iTemplateIndex );
+			
 		}
 		else
 		{
@@ -295,8 +301,10 @@ void CPointTemplate::PerformPrecache()
 			pMapData = (char*)STRING( Templates_FindByIndex( iTemplateIndex ) );
 		}
 
+		nStringSize = Templates_GetStringSize( iTemplateIndex );
+
 		// Create the entity from the mapdata
-		MapEntity_PrecacheEntity( pMapData );
+		MapEntity_PrecacheEntity( pMapData, nStringSize );
 	}
 }
 

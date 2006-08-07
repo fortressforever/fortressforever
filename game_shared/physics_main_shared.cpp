@@ -29,7 +29,7 @@
 #include "tier0/memdbgon.h"
 
 // memory pool for storing links between entities
-static CMemoryPool g_EdictTouchLinks( sizeof(touchlink_t), 512, CMemoryPool::GROW_NONE, "g_EdictTouchLinks");
+static CMemoryPool g_EdictTouchLinks( sizeof(touchlink_t), 1024, CMemoryPool::GROW_NONE, "g_EdictTouchLinks");
 static CMemoryPool g_EntityGroundLinks( sizeof( groundlink_t ), MAX_EDICTS, CMemoryPool::GROW_NONE, "g_EntityGroundLinks");
 static CUtlMultiList<positionwatcher_t, unsigned short>	g_PositionWatcherList;
 
@@ -456,58 +456,54 @@ static bool g_bCleanupDatObject = true;
 //-----------------------------------------------------------------------------
 void CBaseEntity::PhysicsCheckForEntityUntouch( void )
 {
-	Assert( g_pNextLink == NULL ); 
+	touchlink_t *link, *nextLink;
 
-	touchlink_t *link; 
+	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK );
+	if ( root )
+	{
+		bool saveCleanup = g_bCleanupDatObject;
+		g_bCleanupDatObject = false;
 
-	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK ); 
-	if ( root ) 
-	{ 
-		bool saveCleanup = g_bCleanupDatObject; 
-		g_bCleanupDatObject = false; 
+		link = root->nextLink;
+		while ( link != root )
+		{
+			nextLink = link->nextLink;
 
-		link = root->nextLink; 
-		while ( link != root ) 
-		{ 
-			g_pNextLink = link->nextLink; 
+			// these touchlinks are not polled.  The ents are touching due to an outside
+			// system that will add/delete them as necessary (vphysics in this case)
+			if ( link->touchStamp == TOUCHSTAMP_EVENT_DRIVEN )
+			{
+				// refresh the touch call
+				PhysicsTouch( link->entityTouched );
+			}
+			else
+			{
+				// check to see if the touch stamp is up to date
+				if ( link->touchStamp != touchStamp )
+				{
+					// stamp is out of data, so entities are no longer touching
+					// remove self from other entities touch list
+					PhysicsNotifyOtherOfUntouch( this, link->entityTouched );
 
-			// these touchlinks are not polled. The ents are touching due to an outside 
-			// system that will add/delete them as necessary (vphysics in this case) 
-			if ( link->touchStamp == TOUCHSTAMP_EVENT_DRIVEN ) 
-			{ 
-				// refresh the touch call 
-				PhysicsTouch( link->entityTouched ); 
-			} 
-			else 
-			{ 
-				// check to see if the touch stamp is up to date 
-				if ( link->touchStamp != touchStamp ) 
-				{ 
-					// stamp is out of data, so entities are no longer touching 
-					// remove self from other entities touch list 
-					PhysicsNotifyOtherOfUntouch( this, link->entityTouched ); 
+					// remove other entity from this list
+					PhysicsRemoveToucher( this, link );
+				}
+			}
 
-					// remove other entity from this list 
-					PhysicsRemoveToucher( this, link ); 
-				} 
-			} 
+			link = nextLink;
+		}
 
-			link = g_pNextLink; 
-		} 
+		g_bCleanupDatObject = saveCleanup;
 
-		g_bCleanupDatObject = saveCleanup; 
+		// Nothing left in list, destroy root
+		if ( root->nextLink == root &&
+			root->prevLink == root )
+		{
+			DestroyDataObject( TOUCHLINK );
+		}
+	}
 
-		// Nothing left in list, destroy root 
-		if ( root->nextLink == root && 
-			root->prevLink == root ) 
-		{ 
-			DestroyDataObject( TOUCHLINK ); 
-		} 
-	} 
-
-	g_pNextLink = NULL; 
-
-	SetCheckUntouch( false );  
+	SetCheckUntouch( false );
 }
 
 //-----------------------------------------------------------------------------
@@ -834,7 +830,10 @@ touchlink_t *CBaseEntity::PhysicsMarkEntityAsTouched( CBaseEntity *other )
 				// update stamp
 				link->touchStamp = touchStamp;
 				
-				PhysicsTouch( other );
+				if ( !CBaseEntity::sm_bDisableTouchFuncs )
+				{
+					PhysicsTouch( other );
+				}
 
 				// no more to do
 				return link;
@@ -870,7 +869,10 @@ touchlink_t *CBaseEntity::PhysicsMarkEntityAsTouched( CBaseEntity *other )
 	if ( bShouldTouch && !other->IsSolidFlagSet(FSOLID_TRIGGER) )
 	{
 		link->flags |= FTOUCHLINK_START_TOUCH;
-		PhysicsStartTouch( other );
+		if ( !CBaseEntity::sm_bDisableTouchFuncs )
+		{
+			PhysicsStartTouch( other );
+		}
 	}
 
 	return link;
@@ -1569,7 +1571,9 @@ void CBaseEntity::PhysicsRigidChild( void )
 	// We have to do this regardless owing to hierarchy
 	if ( VPhysicsGetObject() )
 	{
-		VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), vec3_angle, true, gpGlobals->frametime );
+		int solidType = GetSolid();
+		bool bAxisAligned = ( solidType == SOLID_BBOX || solidType == SOLID_NONE ) ? true : false;
+		VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), bAxisAligned ? vec3_angle : GetAbsAngles(), true, gpGlobals->frametime );
 	}
 #endif
 
@@ -1952,6 +1956,23 @@ void CBaseEntity::SetGroundEntity( CBaseEntity *ground )
 {
 	if ( m_hGroundEntity.Get() == ground )
 		return;
+
+#ifdef GAME_DLL
+	// this can happen in-between updates to the held object controller (physcannon, +USE)
+	// so trap it here and release held objects when they become player ground
+	if ( ground && IsPlayer() && ground->GetMoveType()== MOVETYPE_VPHYSICS )
+	{
+		CBasePlayer *pPlayer = ToBasePlayer(this);
+		IPhysicsObject *pPhysGround = ground->VPhysicsGetObject();
+		if ( pPhysGround && pPlayer )
+		{
+			if ( pPhysGround->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
+			{
+				pPlayer->ForceDropOfCarriedPhysObjects( ground );
+			}
+		}
+	}
+#endif
 
 	CBaseEntity *oldGround = m_hGroundEntity;
 	m_hGroundEntity = ground;

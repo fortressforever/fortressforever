@@ -84,6 +84,7 @@ private:
 	int		m_iCurrentHistorySlot;
 	bool	m_bDoNotDraw;
 	wchar_t m_wcsAmmoFullMsg[16];
+	bool	m_bNeedsDraw;
 
 	CHudTexture *m_pHudAmmoTypes[MAX_AMMO_TYPES];	// |-- Mirv: Generic ammo icons
 

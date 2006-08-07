@@ -326,7 +326,7 @@ private:
 //-----------------------------------------------------------------------------
 // An interface passed into the OnSave method of all entities
 //-----------------------------------------------------------------------------
-class IEntitySaveUtils
+abstract_class IEntitySaveUtils
 {
 public:
 	// Adds a level transition save dependency

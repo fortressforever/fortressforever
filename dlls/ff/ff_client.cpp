@@ -99,7 +99,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBaseTFPlayer for pev, and call spawn
 	CFFPlayer *pPlayer = CFFPlayer::CreatePlayer( "player", pEdict );
-	pPlayer->PlayerData()->netname = AllocPooledString( playername );
+	pPlayer->SetPlayerName( playername );
 }
 
 
@@ -171,7 +171,6 @@ void GameStartFrame( void )
 		return;
 
 	gpGlobals->teamplay = teamplay.GetInt() ? true : false;
-	Bot_RunAll();
 }
 
 //=========================================================

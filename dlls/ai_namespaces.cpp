@@ -42,6 +42,7 @@ void CAI_GlobalNamespace::Clear()
 
 void CAI_GlobalNamespace::AddSymbol( const char *pszSymbol, int symbolID )
 {
+	MEM_ALLOC_CREDIT();
 	AssertMsg( symbolID != -1, "Invalid symbol id passed to CAI_GlobalNamespace::AddSymbol()" );
 	if (symbolID == -1 )
 		return;

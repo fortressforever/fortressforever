@@ -11,6 +11,7 @@
 #include "vgui_controls/Frame.h"
 #include "vgui_controls/Label.h"
 #include "hud_numericdisplay.h"
+#include "vgui/ISurface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -28,6 +29,15 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		BaseClass::ApplySchemeSettings( pScheme );
+
+		int w, h;
+		w = ScreenWidth();
+		h = ScreenHeight();
+
+		// center the dialog
+		int wide, tall;
+		GetSize( wide, tall );
+		SetPos( ( w - wide ) / 2, ( h - tall ) / 2 );
 	}
 
 	virtual void PaintBackground()
@@ -51,6 +61,10 @@ private:
 //-----------------------------------------------------------------------------
 CLoadingDiscPanel::CLoadingDiscPanel( vgui::VPANEL parent ) : BaseClass( NULL, "CLoadingDiscPanel" )
 {
+	int w, h;
+	w = ScreenWidth();
+	h = ScreenHeight();
+
 	SetParent( parent );
 	SetProportional( true );
 	SetScheme( "ClientScheme" );
@@ -65,7 +79,7 @@ CLoadingDiscPanel::CLoadingDiscPanel( vgui::VPANEL parent ) : BaseClass( NULL, "
 	// center the dialog
 	int wide, tall;
 	GetSize( wide, tall );
-	SetPos( ( ScreenWidth() - wide ) / 2, ( ScreenHeight() - tall ) / 2 );
+	SetPos( ( w - wide ) / 2, ( h - tall ) / 2 );
 }
 
 //-----------------------------------------------------------------------------
@@ -137,7 +151,6 @@ public:
 			m_pPauseDiscPanel->SetVisible( bVisible );
 		}
 	}
-
 };
 
 static CLoadingDisc g_LoadingDisc;

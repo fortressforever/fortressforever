@@ -131,11 +131,17 @@ public:
 	DECLARE_SERVERCLASS();
 
 	SporeExplosion( void );
+	void Spawn( void );
 
 	static SporeExplosion*		CreateSporeExplosion();
 
+	void InputEnable( inputdata_t &inputdata );
+	void InputDisable( inputdata_t &inputdata );
+
 //Data members
 public:
+
+	bool m_bDisabled;
 
 	CNetworkVar( float, m_flSpawnRate );
 	CNetworkVar( float, m_flParticleLifetime );
@@ -143,7 +149,8 @@ public:
 	CNetworkVar( float, m_flEndSize );
 	CNetworkVar( float, m_flSpawnRadius );
 
-	bool		m_bEmit;
+	CNetworkVar( bool, m_bEmit );
+	CNetworkVar( bool, m_bDontRemove );
 };
 
 //==================================================

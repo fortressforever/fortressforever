@@ -1625,8 +1625,7 @@ void SaveAnimation( s_source_t *source, CUtlBuffer& buf )
 void Save_SMD( char const *filename, s_source_t *source )
 {
 	// Text buffer
-	CUtlBuffer buf( 0, 0, true );	// NOTE: this is tied to the utlbuffer version in rel, it should 
-									// be specifying CUtlBuffer::TEXT_BUFFER in src_main.
+	CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
 
 	buf.Printf( "version 1\n" );
 
@@ -3207,6 +3206,11 @@ int main (int argc, char **argv)
 	// ??
 	Q_FileBase( g_outfile, g_outfile, sizeof( g_outfile ) );
 
+	// Verbose stuff
+	if (!g_quiet)
+	{
+		vprint( 0, "%s, %s, %s, path %s\n", qdir, gamedir, g_outfile );
+	}
 	// ??
 	Q_DefaultExtension(g_outfile, ".smd", sizeof( g_outfile ) );
 	
@@ -3226,6 +3230,7 @@ int main (int argc, char **argv)
 	// Load source and target data
 	s_source_t *pSource = Load_Source( filenames[sourceanim].String(), "smd", false, false );
 	s_source_t *pTarget = Load_Source( filenames[targetskel].String(), "smd", false, false );
+
 
 	//
 	s_template_t *pTemplate = NULL;

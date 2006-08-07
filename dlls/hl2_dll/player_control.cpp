@@ -103,7 +103,7 @@ void CPlayer_Control::ControlActivate( void )
 	pPlayer->pl.v_angle	= GetLocalAngles();
 	pPlayer->SetViewOffset( vec3_origin );
 
-	UpdateTransmitState();
+	DispatchUpdateTransmitState();
 }
 
 
@@ -133,7 +133,7 @@ void CPlayer_Control::ControlDeactivate( void )
 	pPlayer->SetViewOffset( m_vSaveViewOffset );
 	pPlayer->SetControlClass( CLASS_NONE );
 
-	UpdateTransmitState();
+	DispatchUpdateTransmitState();
 }
 
 

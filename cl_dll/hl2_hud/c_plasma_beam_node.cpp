@@ -141,7 +141,7 @@ void CPlasmaSpray::RenderParticles( CParticleRenderIterator *pIterator )
 		// NOTE: We need to do everything in screen space
 		Vector  delta;
 		Vector	start;
-		TransformParticle(g_ParticleMgr.GetModelView(), pParticle->m_Pos, start);
+		TransformParticle(ParticleMgr()->GetModelView(), pParticle->m_Pos, start);
 		float sortKey = start.z;
 
 		Vector3DMultiply( CurrentWorldToViewMatrix(), pParticle->m_vecVelocity, delta );

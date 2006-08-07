@@ -28,6 +28,7 @@ class CNPC_Barnacle;
 #define NUM_BARNACLE_GIBS	4
 
 #define	SF_BARNACLE_CHEAP_DEATH	(1<<16)	// Don't spawn as many gibs
+#define	SF_BARNACLE_AMBUSH	(1<<17)	// Start with tongue retracted and wait for input.
 
 //-----------------------------------------------------------------------------
 // Purpose: This is the entity we place at the top & bottom of the tongue, to create a vphysics spring
@@ -44,6 +45,7 @@ public:
 	virtual void UpdateOnRemove( );
 	virtual void VPhysicsUpdate( IPhysicsObject *pPhysics );
 
+	virtual int	UpdateTransmitState( void );
 	bool						CreateSpring( CBaseAnimating *pTongueRoot );
 	static CBarnacleTongueTip	*CreateTongueTip( CNPC_Barnacle *pBarnacle, CBaseAnimating *pTongueRoot, const Vector &vecOrigin, const QAngle &vecAngles );
 	static CBarnacleTongueTip	*CreateTongueRoot( const Vector &vecOrigin, const QAngle &vecAngles );
@@ -75,6 +77,7 @@ public:
 	virtual void	HandleAnimEvent( animevent_t *pEvent );
 	void			Event_Killed( const CTakeDamageInfo &info );
 	int				OnTakeDamage_Alive( const CTakeDamageInfo &info );
+	void			PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot );
 
 	// The tongue's vphysics updated
 	void OnTongueTipUpdated();
@@ -89,6 +92,7 @@ private:
 	void SwallowPrey( void );
 	void WaitTillDead ( void );
  	void AttachTongueToTarget( CBaseEntity *pTouchEnt, Vector vecGrabPos );
+	CRagdollProp *AttachRagdollToTongue( CBaseAnimating *pAnimating );
 	void RemoveRagdoll( bool bDestroyRagdoll );
 	void LostPrey( bool bRemoveRagdoll );
 	void BitePrey( void );
@@ -130,6 +134,10 @@ private:
 
 	void UpdatePlayerContraint( void );
 
+	void InputDropTongue( inputdata_t &inputdata );
+	void InputSetDropTongueSpeed( inputdata_t &inputdata );
+	void DropTongue( void );
+
 	CNetworkVar( float, m_flAltitude );
 	int				m_cGibs;				// barnacle loads up on gibs each time it kills something.
 	bool			m_bLiftingPrey;			// true when the prey's on the tongue and being lifted to the mouth
@@ -158,7 +166,9 @@ private:
 	int							m_nShakeCount;
 
 	float						m_flNextBloodTime;
+#ifndef _XBOX
 	int							m_nBloodColor;
+#endif
 	Vector						m_vecBloodPos;
 
 	float						m_flBarnaclePullSpeed;
@@ -167,6 +177,7 @@ private:
 	Vector						m_vLastEnemyPos;
 	float						m_flLastPull;
 	CSimpleSimTimer				m_StuckTimer;
+	bool						m_bSwallowingBomb;
 
 	DEFINE_CUSTOM_AI;
 };

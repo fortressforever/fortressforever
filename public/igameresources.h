@@ -12,7 +12,7 @@ class Color;
 class Vector;
 
 
-class IGameResources
+abstract_class IGameResources
 {
 public:
 	virtual	~IGameResources() {};

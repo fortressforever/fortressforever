@@ -23,12 +23,15 @@
 #include "ehandle.h"
 #include "iclientunknown.h"
 #include "client_thinklist.h"
+#if !defined( NO_ENTITY_PREDICTION )
 #include "predictableid.h"
+#endif
 #include "soundflags.h"
 #include "shareddefs.h"
 #include "networkvar.h"
 #include "interpolatedvar.h"
 #include "collisionproperty.h"
+#include "toolframework/itoolentity.h"
 
 class C_Team;
 class IPhysicsObject;
@@ -36,6 +39,7 @@ class IClientVehicle;
 class CPredictionCopy;
 class C_BasePlayer;
 struct studiohdr_t;
+class CStudioHdr;
 class CDamageModifier;
 class IRecipientFilter;
 class CUserCmd;
@@ -49,6 +53,7 @@ class C_RecipientFilter;
 class CTakeDamageInfo;
 class C_BaseCombatCharacter;
 class CEntityMapData;
+class ConVar;
 
 struct CSoundParameters;
 
@@ -107,9 +112,14 @@ enum CollideType_t
 	ENTITY_SHOULD_COLLIDE_RESPOND
 };
 
-struct VarMapEntry_t
+class VarMapEntry_t
 {
-	int					type;
+	
+
+public:
+	unsigned short		type;
+	unsigned short		m_bNeedsToInterpolate;	// Set to false when this var doesn't
+												// need Interpolate() called on it anymore.
 	void				*data;
 	IInterpolatedVar	*watcher;
 };
@@ -118,69 +128,16 @@ struct VarMapping_t
 {
 	VarMapping_t()
 	{
-		m_bInitialized = false;
-		m_pBaseClassVarMapping = NULL;
+		m_nInterpolatedEntries = 0;
 	}
 
 	CUtlVector< VarMapEntry_t >	m_Entries;
-	bool						m_bInitialized;
-	VarMapping_t				*m_pBaseClassVarMapping;
+	int m_nInterpolatedEntries;
 };
 
-#define DECLARE_INTERPOLATION_GUTS()								\
-public:																\
-	void AddVar( void *data, IInterpolatedVar *watcher, int type, bool bSetup=false )	\
-	{																\
-		VarMapEntry_t map;											\
-		map.data = data;											\
-		map.watcher = watcher;										\
-		map.type = type;											\
-																	\
-		m_VarMap.m_Entries.AddToTail( map );						\
-		if ( bSetup )												\
-		{															\
-			watcher->Setup( data, type );							\
-			watcher->SetInterpolationAmount( GetInterpolationAmount( watcher->GetType() ) ); \
-		}															\
-	}																\
-	void RemoveVar( void *data )									\
-	{																\
-		for ( int i=0; i < m_VarMap.m_Entries.Count(); i++ )		\
-		{															\
-			if ( m_VarMap.m_Entries[i].data == data )				\
-			{														\
-				m_VarMap.m_Entries.Remove( i );						\
-				return;												\
-			}														\
-		}															\
-		Assert( !"RemoveVar" );											\
-	}																\
-	VarMapping_t	m_VarMap;
+																	
 
-
-#define DECLARE_INTERPOLATION()										\
-	DECLARE_INTERPOLATION_GUTS();									\
-	virtual VarMapping_t *GetVarMapping(void)						\
-	{																\
-		if ( !m_VarMap.m_bInitialized )								\
-		{															\
-			m_VarMap.m_bInitialized = true;							\
-			m_VarMap.m_pBaseClassVarMapping = BaseClass::GetVarMapping(); \
-		}															\
-		return &m_VarMap;											\
-	}															
-
-#define DECLARE_INTERPOLATION_NOBASE()								\
-	DECLARE_INTERPOLATION_GUTS();									\
-	virtual VarMapping_t *GetVarMapping(void)						\
-	{																\
-		if ( !m_VarMap.m_bInitialized )								\
-		{															\
-			m_VarMap.m_bInitialized = true;							\
-			m_VarMap.m_pBaseClassVarMapping = NULL;					\
-		}															\
-		return &m_VarMap;											\
-	}	
+#define DECLARE_INTERPOLATION
 
 
 // How many data slots to use when in multiplayer.
@@ -200,6 +157,7 @@ typedef C_BaseEntity* (*DISPATCHFUNCTION)( void );
 #include "touchlink.h"
 #include "groundlink.h"
 
+#if !defined( NO_ENTITY_PREDICTION )
 //-----------------------------------------------------------------------------
 // Purpose: For fully client side entities we use this information to determine
 //  authoritatively if the server has acknowledged creating this entity, etc.
@@ -223,6 +181,7 @@ struct PredictionContext
 	// The entity to whom we are attached
 	CHandle< C_BaseEntity >		m_hServerEntity;
 };
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: think contexts
@@ -243,6 +202,7 @@ struct thinkfunc_t
 // Entity flags that only exist on the client.
 #define ENTCLIENTFLAG_GETTINGSHADOWRENDERBOUNDS	0x0001		// Tells us if we're getting the real ent render bounds or the shadow render bounds.
 #define ENTCLIENTFLAG_DONTUSEIK					0x0002		// Don't use IK on this entity even if its model has IK.
+#define ENTCLIENTFLAG_ALWAYS_INTERPOLATE		0x0004		// Used by view models.
 
 
 //-----------------------------------------------------------------------------
@@ -254,12 +214,12 @@ class C_BaseEntity : public IClientEntity
 	DECLARE_CLASS_NOBASE( C_BaseEntity );
 
 	friend class CPrediction;
+	friend void cc_cl_interp_all_changed( ConVar *var, const char *pOldString );
 
 public:
 	DECLARE_DATADESC();
 	DECLARE_CLIENTCLASS();
 	DECLARE_PREDICTABLE();
-	DECLARE_INTERPOLATION_NOBASE();
 
 									C_BaseEntity();
 	virtual							~C_BaseEntity();
@@ -302,9 +262,10 @@ public:
 
 
 	void							Interp_SetupMappings( VarMapping_t *map );
-	void							Interp_LatchChanges( VarMapping_t *map, int changeType, float changetime);
-	void							Interp_Reset( VarMapping_t *map );
-	void							Interp_Interpolate( VarMapping_t *map, float currentTime );
+	
+	// Returns 1 if there are no more changes (ie: we could call RemoveFromInterpolationList).
+	int								Interp_Interpolate( VarMapping_t *map, float currentTime );
+	
 	void							Interp_RestoreToLastNetworked( VarMapping_t *map );
 	void							Interp_UpdateInterpolationAmounts( VarMapping_t *map );
 	void							Interp_HierarchyUpdateInterpolationAmounts();
@@ -336,6 +297,17 @@ public:
 	virtual void SetRefEHandle( const CBaseHandle &handle );
 	virtual const CBaseHandle& GetRefEHandle() const;
 
+	void					SetToolHandle( HTOOLHANDLE handle );
+	HTOOLHANDLE				GetToolHandle() const;
+
+	void					EnableInToolView( bool bEnable );
+	bool					IsEnabledInToolView() const;
+
+	void					SetToolRecording( bool recording );
+	bool					IsToolRecording() const;
+	bool					HasRecordedThisFrame() const;
+	void					RecordToolMessage();
+
 	virtual void					Release();
 	virtual ICollideable*			GetCollideable()		{ return &m_Collision; }
 	virtual IClientNetworkable*		GetClientNetworkable()	{ return this; }
@@ -350,13 +322,14 @@ public:
 
 	virtual const Vector&			GetRenderOrigin( void );
 	virtual const QAngle&			GetRenderAngles( void );
+	virtual const matrix3x4_t &		RenderableToWorldTransform();
 	virtual bool					IsTransparent( void );
 	virtual bool					UsesFrameBufferTexture();
 	virtual const model_t			*GetModel( void ) const;
 	virtual int						DrawModel( int flags );
 	virtual void					ComputeFxBlend( void );
 	virtual int						GetFxBlend( void );
-	virtual bool					LODTest();
+	virtual bool					LODTest() { return true; }   // NOTE: UNUSED
 	virtual void					GetRenderBounds( Vector& mins, Vector& maxs );
 	virtual IPVSNotify*				GetPVSNotifyInterface();
 	virtual void					GetRenderBoundsWorldspace( Vector& absMins, Vector& absMaxs );
@@ -424,6 +397,15 @@ public:
 
 	virtual ClientThinkHandle_t		GetThinkHandle();
 	virtual void					SetThinkHandle( ClientThinkHandle_t hThink );
+
+
+public:
+
+	void AddVar( void *data, IInterpolatedVar *watcher, int type, bool bSetup=false );
+	void RemoveVar( void *data, bool bAssert=true );
+	VarMapping_t* GetVarMapping();
+
+	VarMapping_t	m_VarMap;
 
 
 public:
@@ -503,13 +485,13 @@ public:
 	void SetNetworkOrigin( const Vector& org );
 	void SetNetworkAngles( const QAngle& ang );
 
-	virtual const Vector&			GetLocalOrigin( void ) const;
-	virtual void					SetLocalOrigin( const Vector& origin );
+	const Vector&					GetLocalOrigin( void ) const;
+	void							SetLocalOrigin( const Vector& origin );
 	vec_t							GetLocalOriginDim( int iDim ) const;		// You can use the X_INDEX, Y_INDEX, and Z_INDEX defines here.
 	void							SetLocalOriginDim( int iDim, vec_t flValue );
 
-	virtual const QAngle&			GetLocalAngles( void ) const;
-	virtual void					SetLocalAngles( const QAngle& angles );
+	const QAngle&					GetLocalAngles( void ) const;
+	void							SetLocalAngles( const QAngle& angles );
 	vec_t							GetLocalAnglesDim( int iDim ) const;		// You can use the X_INDEX, Y_INDEX, and Z_INDEX defines here.
 	void							SetLocalAnglesDim( int iDim, vec_t flValue );
 
@@ -523,6 +505,8 @@ public:
 
 	int								GetModelIndex( void ) const;
 	void							SetModelIndex( int index );
+
+	virtual int						ValidateModelIndex( int index );	///< Returns either the same index, or another valid model index
 
 	// These methods return a *world-aligned* box relative to the absorigin of the entity.
 	// This is used for collision purposes and is *not* guaranteed
@@ -598,6 +582,9 @@ public:
 	// Return false to indicate sound is not audible
 	virtual bool					GetSoundSpatialization( SpatializationInfo_t& info );
 
+	// Attachments
+	virtual int						LookupAttachment( const char *pAttachmentName ) { return -1; }
+	virtual bool					GetAttachment( int number, matrix3x4_t &matrix );
 	virtual	bool					GetAttachment( int number, Vector &origin, QAngle &angles );
 
 	// Team handling
@@ -614,26 +601,31 @@ public:
 
 	// See CSoundEmitterSystem
 	void	EmitSound( const char *soundname, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
+	void	EmitSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
 	void	StopSound( const char *soundname );
+	void	StopSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
 	void	GenderExpandString( char const *in, char *out, int maxlen );
 
 	static float GetSoundDuration( const char *soundname, char const *actormodel );
 
 	static bool	GetParametersForSound( const char *soundname, CSoundParameters &params, const char *actormodel );
-	static const char *GetWavFileForSound( const char *soundname, const char *actormodel );
+	static bool	GetParametersForSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, CSoundParameters &params, const char *actormodel );
 
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
+	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, HSOUNDSCRIPTHANDLE& handle, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
 	static void StopSound( int iEntIndex, const char *soundname );
 	static soundlevel_t LookupSoundLevel( const char *soundname );
+	static soundlevel_t LookupSoundLevel( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
 
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const EmitSound_t & params );
+	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const EmitSound_t & params, HSOUNDSCRIPTHANDLE& handle );
 
 	static void StopSound( int iEntIndex, int iChannel, const char *pSample );
 
 	static void EmitAmbientSound( int entindex, const Vector& origin, const char *soundname, int flags = 0, float soundtime = 0.0f, float *duration = NULL );
 
 	// These files need to be listed in scripts/game_sounds_manifest.txt
-	static void PrecacheScriptSound( const char *soundname );
+	static HSOUNDSCRIPTHANDLE PrecacheScriptSound( const char *soundname );
 	static void PrefetchScriptSound( const char *soundname );
 
 	// For each client who appears to be a valid recipient, checks the client has disabled CC and if so, removes them from 
@@ -702,6 +694,9 @@ public:
 
 	virtual RenderGroup_t			GetRenderGroup();
 
+	virtual void					GetToolRecordingState( KeyValues *msg );
+	virtual void					CleanupToolRecordingState( KeyValues *msg );
+
 	// The value returned by here determines whether or not (and how) the entity
 	// is put into the spatial partition.
 	virtual CollideType_t			ShouldCollide();
@@ -718,13 +713,14 @@ public:
 	// Set appropriate flags and store off data when these fields are about to change
 	virtual	void					OnLatchInterpolatedVariables( int flags );
 	// Initialize things given a new model.
-	virtual studiohdr_t				*OnNewModel();
+	virtual CStudioHdr				*OnNewModel();
 
 	bool							IsSimulatedEveryTick() const;
 	bool							IsAnimatedEveryTick() const;
 	void							SetSimulatedEveryTick( bool sim );
 	void							SetAnimatedEveryTick( bool anim );
 
+	void							Interp_Reset( VarMapping_t *map );
 	virtual void					ResetLatched();
 	
 	float							GetInterpolationAmount( int flags );
@@ -732,8 +728,11 @@ public:
 
 	// Interpolate the position for rendering
 	virtual bool					Interpolate( float currentTime );
+
+	// reset interpolant optimizations to force stuff to interpolate 
+	void							ForceAllInterpolate();
 	// Did the object move so far that it shouldn't interpolate?
-	virtual bool					Teleported( void );
+	bool							Teleported( void );
 	// Is this a submodel of the world ( *1 etc. in name ) ( brush models only )
 	virtual bool					IsSubModel( void );
 	// Deal with EF_* flags
@@ -768,6 +767,13 @@ public:
 	// Should this object receive shadows?
 	virtual bool					ShouldReceiveProjectedTextures( int flags );
 
+	// Shadow-related methods
+	virtual bool IsShadowDirty( );
+	virtual void MarkShadowDirty( bool bDirty );
+	virtual IClientRenderable *GetShadowParent();
+	virtual IClientRenderable *FirstShadowChild();
+	virtual IClientRenderable *NextShadowPeer();
+
 	// Sets up a render handle so the leaf system will draw this entity.
 	void							AddToLeafSystem();
 	void							AddToLeafSystem( RenderGroup_t group );
@@ -788,10 +794,6 @@ public:
 
 	// The spawn time of this entity
 	float							SpawnTime() const { return m_flSpawnTime; }
-
-	// Defaults to false. If this is true, then the entity won't destroy its think handles
-	// and client entity handles when it is destroyed.
-	void							SetPredictedEntity( bool bPredicted );
 
 	virtual bool					IsClientCreated( void ) const;
 
@@ -814,7 +816,7 @@ public:
 	void							InitPredictable( void );
 	void							ShutdownPredictable( void );
 
-	void							SetPredictable( bool state );
+	virtual void					SetPredictable( bool state );
 	bool							GetPredictable( void ) const;
 	void							PreEntityPacketReceived( int commands_acknowledged );
 	void							PostEntityPacketReceived( void );
@@ -862,6 +864,7 @@ public:
 public:
 	void							SetSize( const Vector &vecMin, const Vector &vecMax ); // UTIL_SetSize( pev, mins, maxs );
 	char const						*GetClassname( void );
+	char const						*GetDebugName( void );
 	static int						PrecacheModel( const char *name ); 
 	static bool						PrecacheSound( const char *name );
 	static void						PrefetchSound( const char *name );
@@ -886,13 +889,14 @@ public:
 	// Determine approximate velocity based on updates from server
 	void					EstimateAbsVelocity( Vector& vel );
 
+#if !defined( NO_ENTITY_PREDICTION )
 	// The player drives simulation of this entity
 	void					SetPlayerSimulated( C_BasePlayer *pOwner );
 	bool					IsPlayerSimulated( void ) const;
 	CBasePlayer				*GetSimulatingPlayer( void );
 	void					UnsetPlayerSimulated( void );
-
-	// Sorry folks, here lies TF2-specific stuff that really has no other place to go
+#endif
+	
 	virtual bool			CanBePoweredUp( void ) { return false; }
 	virtual bool			AttemptToPowerup( int iPowerup, float flTime, float flAmount = 0, C_BaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL ) { return false; }
 
@@ -909,6 +913,10 @@ public:
 
 	void					PhysicsStep( void );
 
+protected:
+	static bool				sm_bDisableTouchFuncs;	// Disables PhysicsTouch and PhysicsStartTouch function calls
+
+public:
 	touchlink_t				*PhysicsMarkEntityAsTouched( C_BaseEntity *other );
 	void					PhysicsTouch( C_BaseEntity *pentOther );
 	void					PhysicsStartTouch( C_BaseEntity *pentOther );
@@ -1001,7 +1009,7 @@ public:
 	virtual C_BaseCombatCharacter	*MyCombatCharacterPointer( void ) { return NULL; }
 	virtual bool					IsNPC( void ) { return false; }
 	C_AI_BaseNPC					*MyNPCPointer( void ); 
-	// TF2 specific
+	
 	virtual bool					IsBaseObject( void ) const { return false; }
 
 	// Returns the eye point + angles (used for viewing + shooting)
@@ -1094,10 +1102,12 @@ public:
 
 	// For shadows rendering the correct body + sequence...
 	virtual int GetBody() { return 0; }
+	virtual int GetSkin() { return 0; }
 
 	// Stubs on client
 	void	NetworkStateManualMode( bool activate )		{ }
 	void	NetworkStateChanged()						{ }
+	void	NetworkStateChanged( void *pVar )			{ }
 	void	NetworkStateSetUpdateInterval( float N )	{ }
 	void	NetworkStateForceUpdate()					{ }
 
@@ -1143,12 +1153,17 @@ public:
 
 	void CreateModelInstance();
 
+	// Sets the origin + angles to match the last position received
+	void MoveToLastReceivedPosition( bool force = false );
+
 protected:
 	// Only meant to be called from subclasses
 	void DestroyModelInstance();
 
 	// Interpolate entity
-	void UpdatePosition();
+	static void ProcessTeleportList();
+	static void ProcessInterpolatedList();
+	static void CheckInterpolatedVarParanoidMeasurement();
 
 	// overrideable rules if an entity should interpolate
 	virtual bool ShouldInterpolate();
@@ -1162,11 +1177,8 @@ protected:
 	// For non-players
 	int	PhysicsClipVelocity (const Vector& in, const Vector& normal, Vector& out, float overbounce );
 
-	// Sets the origin + angles to match the last position received
-	void MoveToLastReceivedPosition( bool force = false );
-
 	// Allow entities to perform client-side fades
-	virtual unsigned char GetClientSideFade() { return 255; }
+    virtual unsigned char GetClientSideFade() { return 255; }
 
 protected:
 	// Two part guts of Interpolate(). Shared with C_BaseAnimating.
@@ -1177,7 +1189,8 @@ protected:
 	};
 
 	// Returns INTERPOLATE_STOP or INTERPOLATE_CONTINUE.
-	int BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles );
+	// bNoMoreChanges is set to 1 if you can call RemoveFromInterpolationList on the entity.
+	int BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles, int &bNoMoreChanges );
 	void BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, int nChangeFlags );
 
 
@@ -1202,9 +1215,17 @@ public:
 	static bool						IsClient( void );
 	static char const				*GetDLLType( void );
 	static void	SetAbsQueriesValid( bool bValid );
-	static void EnableAbsRecomputations( bool bEnable );
-	static bool IsAbsRecomputationsEnabled( void );
 	static bool IsAbsQueriesValid( void );
+
+	// Enable/disable abs recomputations on a stack.
+	static void PushEnableAbsRecomputations( bool bEnable );
+	static void PopEnableAbsRecomputations();
+
+	// This requires the abs recomputation stack to be empty and just sets the global state. 
+	// It should only be used at the scope of the frame loop.
+	static void EnableAbsRecomputations( bool bEnable );		
+	
+	static bool IsAbsRecomputationsEnabled( void );
 
 
 	// Bloat the culling bbox past the parent ent's bbox in local space if EF_BONEMERGE_FASTCULL is set.
@@ -1229,10 +1250,13 @@ public:
 	int								index;	
 
 	// Render information
-	int								m_nRenderFX;
-	int								m_nRenderFXBlend;
+	unsigned char					m_nRenderFX;
+	unsigned char					m_nRenderFXBlend;
 
-	CNetworkVar( color32, m_clrRender );
+	// Entity flags that are only for the client (ENTCLIENTFLAG_ defines).
+	unsigned short					m_EntClientFlags;
+
+	CNetworkColor32( m_clrRender );
 
 private:
 	
@@ -1248,27 +1272,34 @@ public:
 	float							m_flSimulationTime;
 	float							m_flOldSimulationTime;
 	
-	// Entity flags that are only for the client (ENTCLIENTFLAG_ defines).
-	unsigned short					m_EntClientFlags;
-
 
 private:
 	// Effects to apply
 	int								m_fEffects;
-	int								m_nRenderMode;
-	int								m_nOldRenderMode;
+	unsigned char 					m_nRenderMode;
+	unsigned char 					m_nOldRenderMode;
 
 public:
+	// Used to store the state we were added to the BSP as, so it can
+	// reinsert the entity if the state changes.
+	ClientRenderHandle_t			m_hRender;	// link into spatial partition
+
+	// Interpolation says don't draw yet
+	bool							m_bReadyToDraw;
+
+	// Should we be interpolating?
+	static bool						IsInterpolationEnabled();
+
 
 	// 
 	int								m_nNextThinkTick;
 	int								m_nLastThinkTick;
 
 	// Object model index
-	int								m_nModelIndex;
+	short							m_nModelIndex;
 
-	int								m_takedamage;
-	int								m_lifeState;
+	char							m_takedamage;
+	char							m_lifeState;
 
 	int								m_iHealth;
 	// BEG: Added by Mulchman
@@ -1279,12 +1310,15 @@ public:
 
 	// was pev->speed
 	float							m_flSpeed;
+
 	// Team Handling
 	int								m_iTeamNum;
 
+#if !defined( NO_ENTITY_PREDICTION )
 	// Certain entities (projectiles) can be created on the client
 	CPredictableId					m_PredictableID;
 	PredictionContext				*m_pPredictionContext;
+#endif
 
 	// used so we know when things are no longer touching
 	int								touchStamp;	
@@ -1326,23 +1360,27 @@ protected:
 	int								m_nFXComputeFrame;
 #endif
 
-	// Interpolation says don't draw yet
-	bool							m_bReadyToDraw;
-	bool							m_bDrawnOnce;
-
 	// FIXME: Should I move the functions handling these out of C_ClientEntity
 	// and into C_BaseEntity? Then we could make these private.
 	// Client handle
 	CBaseHandle m_RefEHandle;	// Reference ehandle. Used to generate ehandles off this entity.
 
-	// Used to store the state we were added to the BSP as, so it can
-	// reinsert the entity if the state changes.
-	ClientRenderHandle_t			m_hRender;	// link into spatial partition
+private:
+	// Set by tools if this entity should route "info" to various tools listening to HTOOLENTITIES
+#ifndef NO_TOOLFRAMEWORK
+	bool							m_bEnabledInToolView;
+	bool							m_bToolRecording;
+	HTOOLHANDLE						m_ToolHandle;
+	int								m_nLastRecordedFrame;
+#endif
 
+protected:
 	// pointer to the entity's physics object (vphysics.dll)
 	IPhysicsObject					*m_pPhysicsObject;	
 
+#if !defined( NO_ENTITY_PREDICTION )
 	bool							m_bPredictionEligible;
+#endif
 
 	int								m_nSimulationTick;
 
@@ -1353,9 +1391,6 @@ protected:
 
 	// Object eye position
 	Vector							m_vecViewOffset;
-
-	// Should we be interpolating?
-	static bool						IsInterpolationEnabled();
 
 	// Allow studio models to tell us what their m_nBody value is
 	virtual int						GetStudioBody( void ) { return 0; }
@@ -1373,6 +1408,9 @@ private:
 	
 	// Check which entities want to be drawn and add them to the leaf system.
 	static void	AddVisibleEntities();
+
+	// For entities marked for recording, post bone messages to IToolSystems
+	static void ToolRecordEntities();
 
 	// Computes the base velocity
 	void UpdateBaseVelocity( void );
@@ -1438,18 +1476,13 @@ private:
 
 //	QAngle							m_vecAbsAngVelocity;
 
+#if !defined( NO_ENTITY_PREDICTION )
 	// It's still in the list for "fixup purposes" and simulation, but don't try to render it any more...
 	bool							m_bDormantPredictable;
 
 	// So we can clean it up
 	int								m_nIncomingPacketEntityBecameDormant;
-
-	// See SetPredictedEntity.
-	bool							m_bPredictedEntity;
-
-	// For client/server entities, true if the entity goes outside the PVS.
-	// Unused for client only entities.
-	bool							m_bDormant;
+#endif
 
 	// The spawn time of the entity
 	float							m_flSpawnTime;
@@ -1479,10 +1512,20 @@ private:
 	// Object movetype
 	MoveType_t						m_MoveType;
 	MoveCollide_t					m_MoveCollide;
+	unsigned char					m_iParentAttachment; // 0 if we're relative to the parent's absorigin and absangles.
+	unsigned char					m_iOldParentAttachment;
+
+	unsigned char					m_nWaterLevel;
+	unsigned char					m_nWaterType;
+	// For client/server entities, true if the entity goes outside the PVS.
+	// Unused for client only entities.
+	bool							m_bDormant;
+	// Prediction system
+	bool							m_bPredictable;
+
 
 	// Hierarchy
 	CHandle<C_BaseEntity>			m_pMoveParent;
-	unsigned char					m_iParentAttachment; // 0 if we're relative to the parent's absorigin and absangles.
 	CHandle<C_BaseEntity>			m_pMoveChild;
 	CHandle<C_BaseEntity>			m_pMovePeer;
 	CHandle<C_BaseEntity>			m_pMovePrevPeer;
@@ -1501,11 +1544,9 @@ private:
 	float							m_flShadowCastDistance;
 	EHANDLE							m_ShadowDirUseOtherEntity;
 
-	int								m_nWaterLevel;
 	EHANDLE							m_hGroundEntity;
 	float							m_flGroundChangeTime;
 
-	int								m_nWaterType;
 
 	// Friction.
 	float							m_flFriction;       
@@ -1536,15 +1577,21 @@ private:
 	// used to cull collision tests
 	int								m_CollisionGroup;
 
-	// Prediction system
-	bool							m_bPredictable;
-
+#if !defined( NO_ENTITY_PREDICTION )
 	// For storing prediction results and pristine network state
 	byte							*m_pIntermediateData[ MULTIPLAYER_BACKUP ];
 	byte							*m_pOriginalData;
 
 	bool							m_bIsPlayerSimulated;
-	
+#endif
+
+	CNetworkVar( bool, m_bSimulatedEveryTick );
+	CNetworkVar( bool, m_bAnimatedEveryTick );
+	CNetworkVar( bool, m_bAlternateSorting );
+
+	//Adrian
+	unsigned char					m_iTextureFrameIndex;
+
 	// Bbox visualization
 	unsigned char					m_fBBoxVisFlags;
 
@@ -1552,8 +1599,10 @@ private:
 	// OnDataChanged calls in the same frame if the client receives multiple packets.
 	int								m_DataChangeEventRef;
 
+#if !defined( NO_ENTITY_PREDICTION )
 	// Player who is driving my simulation
 	CHandle< CBasePlayer >			m_hPlayerSimulationOwner;
+#endif
 
 	// The owner!
 	EHANDLE							m_hOwnerEntity;
@@ -1569,15 +1618,25 @@ private:
 
 	static bool						s_bInterpolate;
 	
-	//Adrian
-	int								m_iTextureFrameIndex;
-
-	CNetworkVar( bool, m_bSimulatedEveryTick );
-	CNetworkVar( bool, m_bAnimatedEveryTick );
-
 	int								m_fDataObjectTypes;
 
 	AimEntsListHandle_t				m_AimEntsListHandle;
+
+	
+public:
+	float							m_fRenderingClipPlane[4]; //world space clip plane when drawing
+	bool							m_bEnableRenderingClipPlane; //true to use the custom clip plane when drawing
+	float *							GetRenderClipPlane( void ); // Rendering clip plane, should be 4 floats, return value of NULL indicates a disabled render clip plane
+
+protected:
+
+	void AddToInterpolationList();
+	void RemoveFromInterpolationList();
+	unsigned short m_InterpolationListEntry;	// Entry into g_InterpolationList (or g_InterpolationList.InvalidIndex if not in the list).
+	
+	void AddToTeleportList();
+	void RemoveFromTeleportList();
+	unsigned short m_TeleportListEntry;
 };
 
 EXTERN_RECV_TABLE(DT_BaseEntity);
@@ -1844,16 +1903,6 @@ inline void C_BaseEntity::SetWaterLevel( int nLevel )
 	m_nWaterLevel = nLevel;
 }
 
-inline int C_BaseEntity::GetWaterType() const
-{
-	return m_nWaterType;
-}
-
-inline void C_BaseEntity::SetWaterType( int nType )
-{
-	m_nWaterType = nType;
-}
-
 inline float C_BaseEntity::GetElasticity( void )	const			
 { 
 	return m_flElasticity; 
@@ -1861,7 +1910,7 @@ inline float C_BaseEntity::GetElasticity( void )	const
 
 inline const color32 CBaseEntity::GetRenderColor() const
 {
-	return m_clrRender;
+	return m_clrRender.Get();
 }
 
 inline void C_BaseEntity::SetRenderColor( byte r, byte g, byte b )
@@ -1972,13 +2021,55 @@ inline Vector	C_BaseEntity::EarPosition( void ) const			// position of ears
 	return const_cast<C_BaseEntity*>(this)->EarPosition();
 }
 
+inline VarMapping_t* C_BaseEntity::GetVarMapping()
+{
+	return &m_VarMap;
+}
 
 //-----------------------------------------------------------------------------
 // Should we be interpolating?
 //-----------------------------------------------------------------------------
-inline bool	CBaseEntity::IsInterpolationEnabled()
+inline bool	C_BaseEntity::IsInterpolationEnabled()
 {
 	return s_bInterpolate;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : handle - 
+// Output : inline void
+//-----------------------------------------------------------------------------
+inline void C_BaseEntity::SetToolHandle( HTOOLHANDLE handle )
+{
+#ifndef NO_TOOLFRAMEWORK
+	m_ToolHandle = handle;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : inline HTOOLHANDLE
+//-----------------------------------------------------------------------------
+inline HTOOLHANDLE C_BaseEntity::GetToolHandle() const
+{
+#ifndef NO_TOOLFRAMEWORK
+	return m_ToolHandle;
+#else
+	return (HTOOLHANDLE)0;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+inline bool C_BaseEntity::IsEnabledInToolView() const
+{
+#ifndef NO_TOOLFRAMEWORK
+	return m_bEnabledInToolView;
+#else
+	return false;
+#endif
 }
 
 C_BaseEntity *CreateEntityByName( const char *className );

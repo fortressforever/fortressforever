@@ -1,14 +1,16 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $Date:         $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "IEffects.h"
+#include "tier1/keyvalues.h"
+#include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -59,18 +61,48 @@ void C_TEMetalSparks::Precache( void )
 
 
 //-----------------------------------------------------------------------------
+// Recording
+//-----------------------------------------------------------------------------
+static inline void RecordMetalSparks( const Vector &start, const Vector &direction )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	if ( clienttools->IsInRecordingMode() )
+	{
+		KeyValues *msg = new KeyValues( "TempEntity" );
+
+ 		msg->SetInt( "te", TE_METAL_SPARKS );
+ 		msg->SetString( "name", "TE_MetalSparks" );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		msg->SetFloat( "originx", start.x );
+		msg->SetFloat( "originy", start.y );
+		msg->SetFloat( "originz", start.z );
+		msg->SetFloat( "directionx", direction.x );
+		msg->SetFloat( "directiony", direction.y );
+		msg->SetFloat( "directionz", direction.z );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : bool - 
 //-----------------------------------------------------------------------------
 void C_TEMetalSparks::PostDataUpdate( DataUpdateType_t updateType )
 {
 	g_pEffects->MetalSparks( m_vecPos, m_vecDir );
+	RecordMetalSparks( m_vecPos, m_vecDir );
 }
 
 void TE_MetalSparks( IRecipientFilter& filter, float delay,
 	const Vector* pos, const Vector* dir )
 {
 	g_pEffects->MetalSparks( *pos, *dir );
+	RecordMetalSparks( *pos, *dir );
 }
 
 //-----------------------------------------------------------------------------
@@ -84,20 +116,45 @@ public:
 	virtual void	PostDataUpdate( DataUpdateType_t updateType );
 };
 
+
+//-----------------------------------------------------------------------------
+// Recording
+//-----------------------------------------------------------------------------
+static inline void RecordArmorRicochet( const Vector &start, const Vector &direction )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	if ( clienttools->IsInRecordingMode() )
+	{
+		KeyValues *msg = new KeyValues( "TempEntity" );
+
+ 		msg->SetInt( "te", TE_ARMOR_RICOCHET );
+ 		msg->SetString( "name", "TE_ArmorRicochet" );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		msg->SetFloat( "originx", start.x );
+		msg->SetFloat( "originy", start.y );
+		msg->SetFloat( "originz", start.z );
+		msg->SetFloat( "directionx", direction.x );
+		msg->SetFloat( "directiony", direction.y );
+		msg->SetFloat( "directionz", direction.z );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Client side version of API
-// Input  : msg_dest - 
-//			delay - 
-//			origin - 
-//			*recipient - 
-//			pos - 
-//			dir - 
 //-----------------------------------------------------------------------------
 void TE_ArmorRicochet( IRecipientFilter& filter, float delay,
 	const Vector* pos, const Vector* dir )
 {
 	g_pEffects->Ricochet( *pos, *dir );
+	RecordArmorRicochet( *pos, *dir );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -106,6 +163,7 @@ void TE_ArmorRicochet( IRecipientFilter& filter, float delay,
 void C_TEArmorRicochet::PostDataUpdate( DataUpdateType_t updateType )
 {
 	g_pEffects->Ricochet( m_vecPos, m_vecDir );
+	RecordArmorRicochet( m_vecPos, m_vecDir );
 }
 
 // Expose the TE to the engine.

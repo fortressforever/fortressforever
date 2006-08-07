@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $Date:         $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #if !defined( CLIENTENTITYLIST_H )
 #define CLIENTENTITYLIST_H
 #ifdef _WIN32
@@ -32,8 +32,9 @@ class C_BaseEntity;
 #define INPVS_THISFRAME		0x0002		// Accumulated as different views are rendered during the frame and used to notify the entity if
 										// it is not in the PVS anymore (at the end of the frame).
 							   
+class IClientEntityListener;
 
-class C_BaseEntityClassList
+abstract_class C_BaseEntityClassList
 {
 public:
 	C_BaseEntityClassList();
@@ -143,6 +144,10 @@ public:
 	ICollideable*			GetCollideableFromHandle( ClientEntityHandle_t hEnt );
 	IClientThinkable*		GetClientThinkableFromHandle( ClientEntityHandle_t hEnt );
 
+	// Convenience methods to convert between entindex + ClientEntityHandle_t
+	ClientEntityHandle_t	EntIndexToHandle( int entnum );
+	int						HandleToEntIndex( ClientEntityHandle_t handle );
+
 	// Is a handle valid?
 	bool					IsHandleValid( ClientEntityHandle_t handle ) const;
 
@@ -167,6 +172,15 @@ public:
 
 	// Get the list of all PVS notifiers.
 	CUtlLinkedList<CPVSNotifyInfo,unsigned short>& GetPVSNotifiers();
+
+	CUtlVector<IClientEntityListener *>	m_entityListeners;
+
+	// add a class that gets notified of entity events
+	void AddListenerEntity( IClientEntityListener *pListener );
+	void RemoveListenerEntity( IClientEntityListener *pListener );
+
+	void NotifyCreateEntity( C_BaseEntity *pEnt );
+	void NotifyRemoveEntity( C_BaseEntity *pEnt );
 
 private:
 
@@ -236,7 +250,6 @@ private:
 //-----------------------------------------------------------------------------
 // Inline methods
 //-----------------------------------------------------------------------------
-
 inline bool	CClientEntityList::IsHandleValid( ClientEntityHandle_t handle ) const
 {
 	return handle.Get() != 0;
@@ -259,6 +272,18 @@ inline CUtlLinkedList<CClientEntityList::CPVSNotifyInfo,unsigned short>& CClient
 
 
 //-----------------------------------------------------------------------------
+// Convenience methods to convert between entindex + ClientEntityHandle_t
+//-----------------------------------------------------------------------------
+inline ClientEntityHandle_t CClientEntityList::EntIndexToHandle( int entnum )
+{
+	if ( entnum < -1 )
+		return INVALID_EHANDLE_INDEX;
+	IClientUnknown *pUnk = GetListedEntity( entnum );
+	return pUnk ? pUnk->GetRefEHandle() : INVALID_EHANDLE_INDEX; 
+}
+
+
+//-----------------------------------------------------------------------------
 // Returns the client entity list
 //-----------------------------------------------------------------------------
 extern CClientEntityList *cl_entitylist;
@@ -267,6 +292,15 @@ inline CClientEntityList& ClientEntityList()
 {
 	return *cl_entitylist;
 }
+
+// Implement this class and register with entlist to receive entity create/delete notification
+class IClientEntityListener
+{
+public:
+	virtual void OnEntityCreated( C_BaseEntity *pEntity ) {};
+	//virtual void OnEntitySpawned( C_BaseEntity *pEntity ) {};
+	virtual void OnEntityDeleted( C_BaseEntity *pEntity ) {};
+};
 
 
 #endif // CLIENTENTITYLIST_H

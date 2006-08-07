@@ -57,7 +57,7 @@ protected:
 	virtual void OnMouseWheeled(int delta);
 
 private:
-	MESSAGE_FUNC( OnCheckButtonChecked, "CheckButtonChecked" );
+	MESSAGE_FUNC_PARAMS( OnCheckButtonChecked, "CheckButtonChecked", pParams );
 	MESSAGE_FUNC( OnScrollBarSliderMoved, "ScrollBarSliderMoved" );
 
 	struct CheckItem_t

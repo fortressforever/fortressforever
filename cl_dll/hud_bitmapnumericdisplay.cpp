@@ -156,7 +156,7 @@ void CHudBitmapNumericDisplay::PaintNumbers(int xpos, int ypos, int value, Color
 		digit = value / pos;
 		value = value % pos;
 		
-		if( bStart || digit > 0 || pos <= pow(10,numSigDigits-1) )
+		if( bStart || digit > 0 || pos <= pow(10.0f,numSigDigits-1) )
 		{
 			bStart = true;
 			m_pNumbers[digit]->DrawSelf( xpos, ypos, width, height, col );

@@ -2,9 +2,7 @@
 //
 // Purpose: 
 //
-// $NoKeywords: $
-//
-//=============================================================================//
+//=====================================================================================//
 
 #ifndef IMESH_H
 #define IMESH_H
@@ -41,7 +39,7 @@ enum
 //-----------------------------------------------------------------------------
 // The Mesh memory descriptor
 //-----------------------------------------------------------------------------
-struct MeshDesc_t
+struct MeshDescV1_t
 {
 	// These can be set to zero if there are pointers to dummy buffers, when the
 	// actual buffer format doesn't contain the data but it needs to be safe to
@@ -55,7 +53,9 @@ struct MeshDesc_t
 	int m_VertexSize_TexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
 	int m_VertexSize_TangentS;
 	int m_VertexSize_TangentT;
+#ifndef _XBOX
 	int m_VertexSize_TangentSxT;
+#endif
 	int m_VertexSize_UserData;
 
 	int m_ActualVertexSize;	// Size of the vertices.. Some of the m_VertexSize_ elements above
@@ -69,30 +69,175 @@ struct MeshDesc_t
 	int m_NumBoneWeights;
 
 	// Pointers to our current vertex data
-	float* m_pPosition;
-	float* m_pBoneWeight;
-#ifndef NEW_SKINNING
-	unsigned char* m_pBoneMatrixIndex;
+	float			*m_pPosition;
+
+#ifndef _XBOX
+	float			*m_pBoneWeight;
 #else
-	float* m_pBoneMatrixIndex;
+	// compressed vertex
+	unsigned char	*m_pBoneWeight;
 #endif
 
-	float* m_pNormal;
-	unsigned char* m_pColor;
-	unsigned char* m_pSpecular;
-	float* m_pTexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
+#ifndef NEW_SKINNING
+	unsigned char	*m_pBoneMatrixIndex;
+#else
+	float			*m_pBoneMatrixIndex;
+#endif
+
+#ifndef _XBOX
+	float			*m_pNormal;
+#else
+	// compressed vertex
+	unsigned char	*m_pNormal;
+#endif
+
+	unsigned char	*m_pColor;
+	unsigned char	*m_pSpecular;
+	float			*m_pTexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
 
 	// Tangent space *associated with one particular set of texcoords*
-	float* m_pTangentS;
-	float* m_pTangentT;
-	float* m_pTangentSxT;
+#ifndef _XBOX
+	float			*m_pTangentS;
+	float			*m_pTangentT;
+	float			*m_pTangentSxT;
+#else
+	// compressed vertex
+	unsigned char	*m_pTangentS;
+	unsigned char	*m_pTangentT;
+#endif
 
 	// user data
-	float* m_pUserData;
+#ifndef _XBOX
+	float			*m_pUserData;
+#else
+	// compressed vertex
+	unsigned char	*m_pUserData;
+#endif
 
 	// Pointers to the index data
-	unsigned short* m_pIndices;
+	unsigned short	*m_pIndices;
 };
+
+
+#ifndef _XBOX
+struct MeshDesc_t : public MeshDescV1_t
+{
+	// For b/w compatibility.
+	void GetMeshDescV1( MeshDescV1_t &out ) const;
+
+	// NEW SHIT AT THE END
+	// Size of the index data measured in unsigned shorts. 
+	// 1 if the device is active, 0 if the device isn't active.
+	// Faster than doing if checks for null m_pIndices if someone is
+	// trying to write the m_pIndices while the device is inactive.
+	unsigned char m_IndexSize;
+};
+#else
+struct MeshDesc_t
+{
+	// For b/w compatibility.
+	void GetMeshDescV1( MeshDescV1_t &out ) const;
+
+	// These can be set to zero if there are pointers to dummy buffers, when the
+	// actual buffer format doesn't contain the data but it needs to be safe to
+	// use all the CMeshBuilder functions.
+	unsigned char m_VertexSize_Position;
+	unsigned char m_VertexSize_BoneWeight;
+	unsigned char m_VertexSize_BoneMatrixIndex;
+	unsigned char m_VertexSize_Normal;
+	unsigned char m_VertexSize_Color;
+	unsigned char m_VertexSize_Specular;
+	unsigned char m_VertexSize_TexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
+	unsigned char m_VertexSize_TangentS;
+	unsigned char m_VertexSize_TangentT;
+	unsigned char m_VertexSize_UserData;
+
+	unsigned char m_ActualVertexSize;	// Size of the vertices.. Some of the m_VertexSize_ elements above
+										// are set to this value and some are set to zero depending on which
+										// fields exist in a buffer's vertex format.
+
+	// Number of bone weights per vertex...
+	unsigned char m_NumBoneWeights;
+
+	// Size of the index data measured in unsigned shorts. 
+	// 1 if the device is active, 0 if the device isn't active.
+	// Faster than doing if checks for null m_pIndices if someone is
+	// trying to write the m_pIndices while the device is inactive.
+	unsigned char m_IndexSize;
+
+	// The first vertex index
+	int	m_FirstVertex;
+
+	// Pointers to our current vertex data
+	float			*m_pPosition;
+
+	// compressed vertex
+	unsigned char	*m_pBoneWeight;
+
+	// compressed vertex
+	unsigned char	*m_pUserData;
+
+	// compressed vertex
+	unsigned char	*m_pNormal;
+
+	// compressed vertex
+	unsigned char	*m_pTangentS;
+	unsigned char	*m_pTangentT;
+
+
+#	ifndef NEW_SKINNING
+	unsigned char	*m_pBoneMatrixIndex;
+#	else
+	float			*m_pBoneMatrixIndex;
+#	endif
+
+	unsigned char	*m_pColor;
+	unsigned char	*m_pSpecular;
+	float			*m_pTexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
+
+	// Pointers to the index data
+	unsigned short	*m_pIndices;
+};
+#endif
+
+inline void MeshDesc_t::GetMeshDescV1( MeshDescV1_t &out ) const
+{
+	out.m_VertexSize_Position = out.m_VertexSize_Position;
+	out.m_VertexSize_BoneWeight = out.m_VertexSize_BoneWeight;
+	out.m_VertexSize_BoneMatrixIndex = out.m_VertexSize_BoneMatrixIndex;
+	out.m_VertexSize_Normal = out.m_VertexSize_Normal;
+	out.m_VertexSize_Color = out.m_VertexSize_Color;
+	out.m_VertexSize_Specular = out.m_VertexSize_Specular;
+	
+	for ( int i=0; i < VERTEX_MAX_TEXTURE_COORDINATES; i++ )
+	{
+		out.m_VertexSize_TexCoord[i] = out.m_VertexSize_TexCoord[i];
+		out.m_pTexCoord[i] = out.m_pTexCoord[i];
+	}
+	
+	out.m_VertexSize_TangentS = out.m_VertexSize_TangentS;
+	out.m_VertexSize_TangentT = out.m_VertexSize_TangentT;
+
+#ifndef _XBOX
+	out.m_VertexSize_TangentSxT = out.m_VertexSize_TangentSxT;
+	out.m_pTangentSxT = out.m_pTangentSxT;
+#endif
+
+	out.m_VertexSize_UserData = out.m_VertexSize_UserData;
+	out.m_ActualVertexSize = out.m_ActualVertexSize;
+	out.m_NumBoneWeights = out.m_NumBoneWeights;
+	out.m_FirstVertex = out.m_FirstVertex;
+	out.m_pPosition = out.m_pPosition;
+	out.m_pBoneWeight = out.m_pBoneWeight;
+	out.m_pBoneMatrixIndex = out.m_pBoneMatrixIndex;
+	out.m_pNormal = out.m_pNormal;
+	out.m_pColor = out.m_pColor;
+	out.m_pSpecular = out.m_pSpecular;
+	out.m_pTangentS = out.m_pTangentS;
+	out.m_pTangentT = out.m_pTangentT;
+	out.m_pUserData = out.m_pUserData;
+	out.m_pIndices = out.m_pIndices;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -126,36 +271,35 @@ inline CPrimList::CPrimList( int firstIndex, int numIndices )
 //-----------------------------------------------------------------------------
 struct ModelVertexDX7_t
 {
-	Vector m_vecPosition;
-	Vector2D m_flBoneWeights;
-	unsigned int m_nBoneIndices;
-	Vector m_vecNormal;
-	unsigned int m_nColor;	// ARGB
-	Vector2D m_vecTexCoord;
+	Vector			m_vecPosition;
+	Vector2D		m_flBoneWeights;
+	unsigned int	m_nBoneIndices;
+	Vector			m_vecNormal;
+	unsigned int	m_nColor;	// ARGB
+	Vector2D		m_vecTexCoord;
 };
 
 struct ModelVertexDX8_t	: public ModelVertexDX7_t
 {
-	Vector4D m_vecUserData;
+	Vector4D		m_vecUserData;
 };
-
 
 //-----------------------------------------------------------------------------
 // Interface to the mesh
 //-----------------------------------------------------------------------------
-class IMesh
+abstract_class IMesh
 {
 public:
-
+	// Old version, for backward compat
 	// Locks/ unlocks the mesh, providing space for numVerts and numIndices.
 	// numIndices of -1 means don't lock the index buffer...
-	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t& desc ) = 0;
+	virtual void LockMeshOld( int numVerts, int numIndices, MeshDescV1_t& desc ) = 0;
 
 	// Unlocks the mesh, indicating	how many verts and indices we actually used
-	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t& desc ) = 0;
+	virtual void UnlockMeshOld( int numVerts, int numIndices, MeshDescV1_t& desc ) = 0;
 
 	// Locks mesh for modifying
-	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t& desc ) = 0;
+	virtual void ModifyBeginOld( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDescV1_t& desc ) = 0;
 	virtual void ModifyEnd() = 0;
 
 	// Helper methods to create various standard index buffer types
@@ -197,14 +341,42 @@ public:
 		CMeshBuilder &builder ) = 0;
 
 	// Spews the mesh data
-	virtual void Spew( int numVerts, int numIndices, MeshDesc_t const& desc ) = 0;
+	virtual void Spew( int numVerts, int numIndices, const MeshDescV1_t & desc ) = 0;
 
 	// Call this in debug mode to make sure our data is good.
-	virtual void ValidateData( int numVerts, int numIndices, MeshDesc_t const& desc ) = 0;
-
+	virtual void ValidateData( int numVerts, int numIndices, const MeshDescV1_t & desc ) = 0;
+#ifndef _XBOX
 	// Causes the software vertex shader to be applied to the mesh
 	virtual void CallSoftwareVertexShader( CMeshBuilder *pMeshBuilder ) = 0;
+#endif
+
+	// New version
+	// Locks/unlocks the mesh, providing space for numVerts and numIndices.
+	// numIndices of -1 means don't lock the index buffer...
+	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t& desc ) = 0;
+	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t& desc ) = 0;
+	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t& desc ) = 0;
+
+#ifdef _XBOX
+	virtual unsigned ComputeMemoryUsed() = 0;
+#endif
+
+	virtual int NumIndices() const = 0;
+	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t& desc ) = 0;
+
+#ifndef _XBOX
+	virtual void SetFlexMesh( IMesh *pMesh, int nVertexOffset ) = 0;
+#else
+	virtual void SetFlexMesh( IMesh *pMesh, float *pFlexVerts ) = 0;
+#endif
+
+	virtual void DisableFlexMesh() = 0;
+
+	virtual void MarkAsDrawn() = 0;
 };
+
+
+#include "meshreader.h"
 
 
 //-----------------------------------------------------------------------------
@@ -221,6 +393,7 @@ public:
 
 	// Locks the vertex buffer, can specify arbitrary index lists
 	// (must use the Index() call below)
+	void Begin( IMesh* pMesh, MaterialPrimitiveType_t type, int numVertices, int numIndices, int *nFirstVertex );
 	void Begin( IMesh* pMesh, MaterialPrimitiveType_t type, int numVertices, int numIndices );
 
 	// Use this when you're done writing
@@ -244,6 +417,9 @@ public:
 	// Resets the mesh builder so it points to the start of everything again
 	void Reset();
 
+	// Returns the size of the vertex
+	int VertexSize() { return m_ActualVertexSize; }
+
 	// Returns the base vertex memory pointer
 	void* BaseVertexData();
 
@@ -264,14 +440,31 @@ public:
 	int GetCurrentIndex();
 
 	// Data retrieval...
-	float const* Position( ) const;
-	float const* Normal( ) const;
+	float const* Position() const;
+#ifndef _XBOX
+	float const* Normal() const;
+#else
+	unsigned char const *PackedNormal() const;
+#endif
 	unsigned int Color() const;
+	unsigned char *SpecularPtr() const;
+
 	float const* TexCoord( int stage ) const;
-	float const* TangentS( ) const;
-	float const* TangentT( ) const;
-	float const* TangentSxT( ) const;
+
+#ifndef _XBOX
+	float const* TangentS() const;
+	float const* TangentT() const;
+	float const* TangentSxT() const;
+#else
+	unsigned char const *PackedTangentS() const;
+	unsigned char const *PackedTangentT() const;
+#endif
+
+#ifndef _XBOX
 	float const* BoneWeight() const;
+#else
+	unsigned char const *PackedBoneWeight() const;
+#endif
 	int NumBoneWeights() const;
 #ifndef NEW_SKINNING
 	unsigned char* BoneMatrix() const;
@@ -287,6 +480,8 @@ public:
 	// normal setting
 	void Normal3f( float nx, float ny, float nz );
 	void Normal3fv( float const *n );
+	void NormalDelta3fv( float const *n );
+	void NormalDelta3f( float nx, float ny, float nz );
 
 	// color setting
 	void Color3f( float r, float g, float b );
@@ -313,6 +508,7 @@ public:
 	void Specular4ubv( unsigned char const *c );
 
 	// texture coordinate setting
+	void TexCoord1f( int stage, float s );
 	void TexCoord2f( int stage, float s, float t );
 	void TexCoord2fv( int stage, float const *st );
 	void TexCoord3f( int stage, float s, float t, float u );
@@ -327,10 +523,10 @@ public:
 
 	void TangentT3f( float tx, float ty, float tz );
 	void TangentT3fv( float const* t );
-
+#ifndef _XBOX
 	void TangentSxT3f( float sxtx, float sxty, float sxtz );
 	void TangentSxT3fv( float const* sxt );
-
+#endif
 	// bone weights
 	void BoneWeight( int idx, float weight );
 
@@ -349,6 +545,7 @@ public:
 	// Fast Vertex! No need to call advance vertex, and no random access allowed. 
 	// WARNING - these are low level functions that are intended only for use
 	// in the software vertex skinner.
+#ifndef _XBOX
 	void FastVertex( const ModelVertexDX7_t &vertex );
 	void FastVertexSSE( const ModelVertexDX7_t &vertex );
 
@@ -361,6 +558,9 @@ public:
 
 	void FastVertex( const ModelVertexDX8_t &vertex );
 	void FastVertexSSE( const ModelVertexDX8_t &vertex );
+#else
+	void VertexDX8ToXBox( const ModelVertexDX8_t &vertex );
+#endif
 
 	// Add number of verts and current vert since FastVertexxx routines do not update.
 	void FastAdvanceNVertices(int n);	
@@ -399,9 +599,13 @@ private:
 	bool m_GenerateIndices;
 
 	// Optimization: Pointer to the current pos, norm, texcoord, and color
-	mutable float	*m_pCurrPosition;
-	mutable float	*m_pCurrNormal;
-	mutable float	*m_pCurrTexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
+	mutable float			*m_pCurrPosition;
+#ifndef _XBOX
+	mutable float			*m_pCurrNormal;
+#else
+	mutable unsigned char	*m_pCurrNormal;
+#endif
+	mutable float			*m_pCurrTexCoord[VERTEX_MAX_TEXTURE_COORDINATES];
 	mutable unsigned char	*m_pCurrColor;
 };
 
@@ -475,6 +679,10 @@ inline void CMeshBuilder::ComputeNumVertsAndIndices( MaterialPrimitiveType_t typ
 	default:
 		Assert(0);
 	}
+
+	// FIXME: need to get this from meshdx8.cpp, or move it to somewhere common
+	Assert( m_MaxVertices <= 32768 );
+	Assert( m_MaxIndices <= 32768 );
 }
 
 inline int CMeshBuilder::IndicesFromVertices( MaterialPrimitiveType_t type, int numVerts )
@@ -538,6 +746,13 @@ inline void CMeshBuilder::Begin( IMesh* pMesh, MaterialPrimitiveType_t type, int
 
 	// Point to the start of the index and vertex buffers
 	Reset();
+}
+
+inline void CMeshBuilder::Begin( IMesh* pMesh, MaterialPrimitiveType_t type, int numVertices, int numIndices, int *nFirstVertex )
+{
+	Begin( pMesh, type, numVertices, numIndices );
+
+	*nFirstVertex = m_FirstVertex * m_ActualVertexSize;
 }
 
 inline void CMeshBuilder::Begin( IMesh* pMesh, MaterialPrimitiveType_t type, int numVertices, int numIndices )
@@ -605,16 +820,23 @@ inline void CMeshBuilder::End( bool spewData, bool bDraw )
 			m_pMesh->GenerateSequentialIndexBuffer( m_pIndices, m_NumIndices, m_FirstVertex );
 		}
 	}
-
+#ifndef _XBOX
 	if( m_NumVertices > 0 )
 	{
 		m_pMesh->CallSoftwareVertexShader( this );
 	}
-	
+#endif
 	if (spewData)
-		m_pMesh->Spew( m_NumVertices, m_NumIndices, *this );
+	{
+		MeshDescV1_t v1;
+		GetMeshDescV1( v1 );
+		m_pMesh->Spew( m_NumVertices, m_NumIndices, v1 );
+	}
+	
 #ifdef _DEBUG
-	m_pMesh->ValidateData( m_NumVertices, m_NumIndices, *this );
+	MeshDescV1_t v1;
+	GetMeshDescV1( v1 );
+	m_pMesh->ValidateData( m_NumVertices, m_NumIndices, v1 );
 #endif
 
 	// Unlock our buffers
@@ -658,7 +880,7 @@ inline void CMeshBuilder::BeginModify( IMesh* pMesh, int firstVertex, int numVer
 	m_bModify = true;
 
 	// Locks mesh for modifying
-	pMesh->ModifyBegin( firstVertex, numVertices, firstIndex, numIndices, *this );
+	pMesh->ModifyBeginEx( false, firstVertex, numVertices, firstIndex, numIndices, *this );
 
 	// Point to the start of the buffers..
 	Reset();
@@ -670,9 +892,15 @@ inline void CMeshBuilder::EndModify( bool spewData )
 	Assert( m_bModify );	// Make sure they called BeginModify.
 
 	if (spewData)
-		m_pMesh->Spew( m_NumVertices, m_NumIndices, *this );
+	{
+		MeshDescV1_t v1;
+		GetMeshDescV1( v1 );
+		m_pMesh->Spew( m_NumVertices, m_NumIndices, v1 );
+	}
 #ifdef _DEBUG
-	m_pMesh->ValidateData( m_NumVertices, m_NumIndices, *this );
+	MeshDescV1_t v1;
+	GetMeshDescV1( v1 );
+	m_pMesh->ValidateData( m_NumVertices, m_NumIndices, v1 );
 #endif
 
 	// Unlocks mesh
@@ -737,13 +965,17 @@ inline void CMeshBuilder::SelectVertex( int idx )
 	Assert( (idx >= 0) && (idx < m_MaxVertices) );
 	m_CurrentVertex = idx;
 
-	m_pCurrPosition = OffsetFloatPointer( m_pPosition, m_CurrentVertex, m_VertexSize_Position );
-	m_pCurrNormal = OffsetFloatPointer( m_pNormal, m_CurrentVertex, m_VertexSize_Normal );
+	m_pCurrPosition    = OffsetFloatPointer( m_pPosition, m_CurrentVertex, m_VertexSize_Position );
+#ifndef _XBOX
+	m_pCurrNormal      = OffsetFloatPointer( m_pNormal, m_CurrentVertex, m_VertexSize_Normal );
+#else
+	m_pCurrNormal      = m_pNormal + m_CurrentVertex * m_VertexSize_Normal;
+#endif
 	m_pCurrTexCoord[0] = OffsetFloatPointer( m_pTexCoord[0], m_CurrentVertex, m_VertexSize_TexCoord[0] );
 	m_pCurrTexCoord[1] = OffsetFloatPointer( m_pTexCoord[1], m_CurrentVertex, m_VertexSize_TexCoord[1] );
 	m_pCurrTexCoord[2] = OffsetFloatPointer( m_pTexCoord[2], m_CurrentVertex, m_VertexSize_TexCoord[2] );
 	m_pCurrTexCoord[3] = OffsetFloatPointer( m_pTexCoord[3], m_CurrentVertex, m_VertexSize_TexCoord[3] );
-	m_pCurrColor = m_pColor + m_CurrentVertex * m_VertexSize_Color;
+	m_pCurrColor       = m_pColor + m_CurrentVertex * m_VertexSize_Color;
 }
 
 inline void CMeshBuilder::SelectVertexFromIndex( int idx )
@@ -756,7 +988,7 @@ inline void CMeshBuilder::SelectVertexFromIndex( int idx )
 inline void CMeshBuilder::SelectIndex( int idx )
 {
 	Assert( (idx >= 0) && (idx < m_NumIndices) );
-	m_CurrentIndex = idx;
+	m_CurrentIndex = idx * m_IndexSize;
 }
 
 
@@ -769,7 +1001,11 @@ inline void CMeshBuilder::AdvanceVertex()
 		m_NumVertices = m_CurrentVertex;
 	
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
+#ifndef _XBOX
 	IncrementFloatPointer( m_pCurrNormal, m_VertexSize_Normal );
+#else
+	m_pCurrNormal += m_VertexSize_Normal;
+#endif
 	IncrementFloatPointer( m_pCurrTexCoord[0], m_VertexSize_TexCoord[0] );
 	IncrementFloatPointer( m_pCurrTexCoord[1], m_VertexSize_TexCoord[1] );
 	IncrementFloatPointer( m_pCurrTexCoord[2], m_VertexSize_TexCoord[2] );
@@ -784,7 +1020,11 @@ inline void CMeshBuilder::AdvanceVertices( int nVerts )
 		m_NumVertices = m_CurrentVertex;
 	
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position*nVerts );
+#ifndef _XBOX
 	IncrementFloatPointer( m_pCurrNormal, m_VertexSize_Normal*nVerts );
+#else
+	m_pCurrNormal +=  m_VertexSize_Normal*nVerts;
+#endif
 	IncrementFloatPointer( m_pCurrTexCoord[0], m_VertexSize_TexCoord[0]*nVerts );
 	IncrementFloatPointer( m_pCurrTexCoord[1], m_VertexSize_TexCoord[1]*nVerts );
 	IncrementFloatPointer( m_pCurrTexCoord[2], m_VertexSize_TexCoord[2]*nVerts );
@@ -794,15 +1034,20 @@ inline void CMeshBuilder::AdvanceVertices( int nVerts )
 
 inline void CMeshBuilder::AdvanceIndex()
 {
-	if (++m_CurrentIndex > m_NumIndices)
+	m_CurrentIndex += m_IndexSize;
+	if ( m_CurrentIndex > m_NumIndices )
+	{
 		m_NumIndices = m_CurrentIndex; 
+	}
 }
 
 inline void CMeshBuilder::AdvanceIndices( int nIndices )
 {
-	m_CurrentIndex += nIndices;
-	if (m_CurrentIndex > m_NumIndices)
+	m_CurrentIndex += nIndices * m_IndexSize;
+	if ( m_CurrentIndex > m_NumIndices )
+	{
 		m_NumIndices = m_CurrentIndex; 
+	}
 }
 
 inline int CMeshBuilder::GetCurrentVertex()
@@ -904,11 +1149,19 @@ inline float const* CMeshBuilder::Position( ) const
 	return m_pCurrPosition;
 }
 
-inline float const* CMeshBuilder::Normal( )	const
+#ifndef _XBOX
+inline float const* CMeshBuilder::Normal()	const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return m_pCurrNormal;
 }
+#else
+inline unsigned char const* CMeshBuilder::PackedNormal() const
+{
+	Assert( m_CurrentVertex < m_MaxVertices );
+	return m_pCurrNormal;
+}
+#endif
 
 inline unsigned int CMeshBuilder::Color( ) const
 {
@@ -917,35 +1170,67 @@ inline unsigned int CMeshBuilder::Color( ) const
 	return (m_pCurrColor[0] << 16) | (m_pCurrColor[1] << 8) | (m_pCurrColor[2]) | (m_pCurrColor[3] << 24);
 }
 
+inline unsigned char *CMeshBuilder::SpecularPtr() const
+{
+	Assert( m_CurrentVertex < m_MaxVertices );
+	return m_pSpecular + m_CurrentVertex * m_VertexSize_Specular;
+}
+
 inline float const* CMeshBuilder::TexCoord( int stage ) const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return m_pCurrTexCoord[stage];
 }
 
-inline float const* CMeshBuilder::TangentS( ) const
+#ifndef _XBOX
+inline float const* CMeshBuilder::TangentS() const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return OffsetFloatPointer( m_pTangentS, m_CurrentVertex, m_VertexSize_TangentS );
 }
+#else
+inline unsigned char const* CMeshBuilder::PackedTangentS() const
+{
+	Assert( m_CurrentVertex < m_MaxVertices );
+	return m_pTangentS;
+}
+#endif
 
-inline float const* CMeshBuilder::TangentT( ) const
+#ifndef _XBOX
+inline float const* CMeshBuilder::TangentT() const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return OffsetFloatPointer( m_pTangentT, m_CurrentVertex, m_VertexSize_TangentT );
 }
+#else
+inline unsigned char const* CMeshBuilder::PackedTangentT() const
+{
+	Assert( m_CurrentVertex < m_MaxVertices );
+	return m_pTangentT;
+}
+#endif
 
+#ifndef _XBOX
 inline float const* CMeshBuilder::TangentSxT( ) const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return OffsetFloatPointer( m_pTangentSxT, m_CurrentVertex, m_VertexSize_TangentSxT );
 }
+#endif
 
+#ifndef _XBOX
 inline float const* CMeshBuilder::BoneWeight() const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
 	return OffsetFloatPointer( m_pBoneWeight, m_CurrentVertex, m_VertexSize_BoneWeight );
 }
+#else
+inline unsigned char const* CMeshBuilder::PackedBoneWeight() const
+{
+	Assert( m_CurrentVertex < m_MaxVertices );
+	return m_pBoneWeight + m_CurrentVertex * m_VertexSize_BoneWeight;
+}
+#endif
 
 inline int CMeshBuilder::NumBoneWeights() const
 {
@@ -953,7 +1238,6 @@ inline int CMeshBuilder::NumBoneWeights() const
 }
 
 #ifndef NEW_SKINNING
-
 inline unsigned char* CMeshBuilder::BoneMatrix() const
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
@@ -979,10 +1263,7 @@ inline unsigned short const* CMeshBuilder::Index( )	const
 //-----------------------------------------------------------------------------
 inline void CMeshBuilder::Index( unsigned short idx )
 {
-	if( !m_pIndices )
-	{
-		return;
-	}
+	Assert( m_pIndices );
 	Assert( m_CurrentIndex < m_MaxIndices );
 	m_pIndices[m_CurrentIndex] = (unsigned short)(m_FirstVertex + idx);
 }
@@ -996,7 +1277,8 @@ inline void CMeshBuilder::FastIndex( unsigned short idx )
 	Assert( m_pIndices );
 	Assert( m_CurrentIndex < m_MaxIndices );
 	m_pIndices[m_CurrentIndex] = (unsigned short)(m_FirstVertex + idx);
-	m_NumIndices = ++m_CurrentIndex;	
+	m_CurrentIndex += m_IndexSize;
+	m_NumIndices = m_CurrentIndex;	
 }
 
 
@@ -1013,6 +1295,7 @@ inline void CMeshBuilder::FastAdvanceNVertices( int n )
 //-----------------------------------------------------------------------------
 // Fast Vertex! No need to call advance vertex, and no random access allowed
 //-----------------------------------------------------------------------------
+#ifndef _XBOX
 inline void CMeshBuilder::FastVertex( const ModelVertexDX7_t &vertex )
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
@@ -1048,7 +1331,9 @@ inline void CMeshBuilder::FastVertex( const ModelVertexDX7_t &vertex )
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
 	//m_NumVertices = ++m_CurrentVertex;
 }
+#endif
 
+#ifndef _XBOX
 inline void CMeshBuilder::FastVertexSSE( const ModelVertexDX7_t &vertex )
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
@@ -1076,7 +1361,9 @@ inline void CMeshBuilder::FastVertexSSE( const ModelVertexDX7_t &vertex )
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
 	//m_NumVertices = ++m_CurrentVertex;
 }
+#endif
 
+#ifndef _XBOX
 inline void CMeshBuilder::Fast4VerticesSSE( 
 	ModelVertexDX7_t const *vtx_a,
 	ModelVertexDX7_t const *vtx_b,
@@ -1132,7 +1419,9 @@ inline void CMeshBuilder::Fast4VerticesSSE(
 #endif
 	IncrementFloatPointer( m_pCurrPosition, 4*m_VertexSize_Position );
 }
+#endif
 
+#ifndef _XBOX
 inline void CMeshBuilder::FastVertex( const ModelVertexDX8_t &vertex )
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
@@ -1172,7 +1461,9 @@ inline void CMeshBuilder::FastVertex( const ModelVertexDX8_t &vertex )
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
 //	m_NumVertices = ++m_CurrentVertex;
 }
+#endif
 
+#ifndef _XBOX
 inline void CMeshBuilder::FastVertexSSE( const ModelVertexDX8_t &vertex )
 {
 	Assert( m_CurrentVertex < m_MaxVertices );
@@ -1202,7 +1493,81 @@ inline void CMeshBuilder::FastVertexSSE( const ModelVertexDX8_t &vertex )
 	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
 //	m_NumVertices = ++m_CurrentVertex;
 }
+#endif
 
+//-----------------------------------------------------------------------------
+// Copies a formatted vertex into the xbox format
+//-----------------------------------------------------------------------------
+#ifdef _XBOX
+inline void CMeshBuilder::VertexDX8ToXBox( const ModelVertexDX8_t &vertex )
+{
+	// xboxissue - the desire is to have the fastest source to destination copy
+	// unpacked sources and packed targets prevents any SSE due to non-alignment
+	// the sources *must* be changed to be in packed format
+	Assert( m_CurrentVertex < m_MaxVertices );
+
+	// get the start of the data
+	unsigned char *pDst = (unsigned char*)m_pCurrPosition;
+
+	memcpy( pDst, vertex.m_vecPosition.Base(), 3*sizeof(float) );
+	pDst += 3*sizeof( float );
+
+	if ( m_VertexSize_BoneWeight )
+	{
+		// pack bone weights
+		Assert( vertex.m_flBoneWeights[0] >= 0 && vertex.m_flBoneWeights[0] <= 1.0f );
+		Assert( vertex.m_flBoneWeights[1] >= 0 && vertex.m_flBoneWeights[1] <= 1.0f );
+		((unsigned short*)pDst)[0] = Float2Int( vertex.m_flBoneWeights[0] * 32767.0f );
+		((unsigned short*)pDst)[1] = Float2Int( vertex.m_flBoneWeights[1] * 32767.0f );
+		pDst += 2*sizeof( unsigned short );
+
+		if ( m_VertexSize_BoneMatrixIndex )
+		{
+			*(unsigned int*)pDst = vertex.m_nBoneIndices;
+			pDst += sizeof( unsigned int );
+		}
+	}
+
+	if ( m_VertexSize_Normal )
+	{
+		// pack normal
+		PackNormal( (float*)vertex.m_vecNormal.Base(), (unsigned int*)pDst );
+		pDst += sizeof( unsigned int );
+	}
+
+	if ( m_VertexSize_Color )
+	{
+		*(unsigned int*)pDst = vertex.m_nColor;
+		pDst += sizeof( unsigned int );
+	}
+
+	if ( m_VertexSize_TexCoord[0] )
+	{
+		memcpy( pDst, vertex.m_vecTexCoord.Base(), 2*sizeof( float ) );
+		pDst += 2*sizeof( float );
+	}
+
+	if ( m_VertexSize_UserData )
+	{
+		// pack user data
+		// user data needs to be a valid normal, find source and fix
+		Assert( vertex.m_vecUserData[0] >= -1.0f && vertex.m_vecUserData[0] <= 1.0f );
+		Assert( vertex.m_vecUserData[1] >= -1.0f && vertex.m_vecUserData[1] <= 1.0f );
+		Assert( vertex.m_vecUserData[2] >= -1.0f && vertex.m_vecUserData[2] <= 1.0f );
+		// scale from [-1..1] to [0..255], fixup in shader
+		pDst[0] = FastFToC( vertex.m_vecUserData[0]*0.5f + 0.5f );
+		pDst[1] = FastFToC( vertex.m_vecUserData[1]*0.5f + 0.5f );
+		pDst[2] = FastFToC( vertex.m_vecUserData[2]*0.5f + 0.5f );
+		pDst[3] = vertex.m_vecUserData[3] < 0 ? 0 : 255;
+		pDst += 4*sizeof( char );
+	}
+
+	// ensure code is synced with the mesh builder that established the offsets
+	Assert( pDst - (unsigned char*)m_pCurrPosition == m_VertexSize_Position );
+
+	IncrementFloatPointer( m_pCurrPosition, m_VertexSize_Position );
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Position setting methods
@@ -1240,10 +1605,14 @@ inline void	CMeshBuilder::Normal3f( float nx, float ny, float nz )
 	Assert( ny >= -1.05f && ny <= 1.05f );
 	Assert( nz >= -1.05f && nz <= 1.05f );
 
+#ifndef _XBOX
 	float *pDst = m_pCurrNormal;
 	*pDst++ = nx;
 	*pDst++ = ny;
 	*pDst = nz;
+#else
+	PackNormal( nx, ny, nz, (unsigned int*)m_pCurrNormal );
+#endif
 }
 
 inline void	CMeshBuilder::Normal3fv( float const *n )
@@ -1255,21 +1624,37 @@ inline void	CMeshBuilder::Normal3fv( float const *n )
 	Assert( n[1] >= -1.05f && n[1] <= 1.05f );
 	Assert( n[2] >= -1.05f && n[2] <= 1.05f );
 
+#ifndef _XBOX
 	float *pDst = m_pCurrNormal;
 	*pDst++ = *n++;
 	*pDst++ = *n++;
 	*pDst = *n;
+#else
+	PackNormal( n[0], n[1], n[2], (unsigned int*)m_pCurrNormal );
+#endif
 }
 
-
-//-----------------------------------------------------------------------------
-// Fast color conversion from float to unsigned char
-//-----------------------------------------------------------------------------
-inline unsigned char FastFToC( float c )
+inline void	CMeshBuilder::NormalDelta3f( float nx, float ny, float nz )
 {
-	volatile float dc;
-	dc = c * 255.0f + ( float )( 1 << 23 );
-	return *(unsigned char*)&dc;
+	Assert( m_pNormal );
+	Assert( IsFinite(nx) && IsFinite(ny) && IsFinite(nz) );
+
+	float *pDst = m_pCurrNormal;
+	*pDst++ = nx;
+	*pDst++ = ny;
+	*pDst = nz;
+}
+
+inline void	CMeshBuilder::NormalDelta3fv( float const *n )
+{
+	Assert(n);
+	Assert( m_pNormal && m_pCurrNormal );
+	Assert( IsFinite(n[0]) && IsFinite(n[1]) && IsFinite(n[2]) );
+
+	float *pDst = m_pCurrNormal;
+	*pDst++ = *n++;
+	*pDst++ = *n++;
+	*pDst = *n;
 }
 
 
@@ -1443,6 +1828,15 @@ inline void CMeshBuilder::Specular4ubv( unsigned char const *c )
 //-----------------------------------------------------------------------------
 // Texture coordinate setting methods
 //-----------------------------------------------------------------------------
+inline void CMeshBuilder::TexCoord1f( int stage, float s )
+{
+	Assert( m_pTexCoord[stage] && m_pCurrTexCoord[stage] );
+	Assert( IsFinite(s) );
+
+	float *pDst = m_pCurrTexCoord[stage];
+	*pDst = s;
+}
+
 inline void	CMeshBuilder::TexCoord2f( int stage, float s, float t )
 {
 	Assert( m_pTexCoord[stage] && m_pCurrTexCoord[stage] );
@@ -1517,10 +1911,15 @@ inline void CMeshBuilder::TangentS3f( float sx, float sy, float sz )
 	Assert( m_pTangentS );
 	Assert( IsFinite(sx) && IsFinite(sy) && IsFinite(sz) );
 
+#ifndef _XBOX
 	float* pTangentS = OffsetFloatPointer( m_pTangentS, m_CurrentVertex, m_VertexSize_TangentS );
 	*pTangentS++ = sx;
 	*pTangentS++ = sy;
 	*pTangentS = sz;
+#else
+	unsigned char *pTangentS = m_pTangentS + m_CurrentVertex * m_VertexSize_TangentS;
+	PackNormal( sx, sy, sz, (unsigned int*)pTangentS );
+#endif
 }
 
 inline void CMeshBuilder::TangentS3fv( float const* s )
@@ -1529,10 +1928,15 @@ inline void CMeshBuilder::TangentS3fv( float const* s )
 	Assert( m_pTangentS );
 	Assert( IsFinite(s[0]) && IsFinite(s[1]) && IsFinite(s[2]) );
 
+#ifndef _XBOX
 	float* pTangentS = OffsetFloatPointer( m_pTangentS, m_CurrentVertex, m_VertexSize_TangentS );
 	*pTangentS++ = *s++;
 	*pTangentS++ = *s++;
 	*pTangentS = *s;
+#else
+	unsigned char *pTangentS = m_pTangentS + m_CurrentVertex * m_VertexSize_TangentS;
+	PackNormal( s[0], s[1], s[2], (unsigned int*)pTangentS );
+#endif
 }
 
 inline void CMeshBuilder::TangentT3f( float tx, float ty, float tz )
@@ -1540,10 +1944,15 @@ inline void CMeshBuilder::TangentT3f( float tx, float ty, float tz )
 	Assert( m_pTangentT );
 	Assert( IsFinite(tx) && IsFinite(ty) && IsFinite(tz) );
 
+#ifndef _XBOX
 	float* pTangentT = OffsetFloatPointer( m_pTangentT, m_CurrentVertex, m_VertexSize_TangentT );
 	*pTangentT++ = tx;
 	*pTangentT++ = ty;
 	*pTangentT = tz;
+#else
+	unsigned char *pTangentT = m_pTangentT + m_CurrentVertex * m_VertexSize_TangentT;
+	PackNormal( tx, ty, tz, (unsigned int*)pTangentT );
+#endif
 }
 
 inline void CMeshBuilder::TangentT3fv( float const* t )
@@ -1552,12 +1961,18 @@ inline void CMeshBuilder::TangentT3fv( float const* t )
 	Assert( m_pTangentT );
 	Assert( IsFinite(t[0]) && IsFinite(t[1]) && IsFinite(t[2]) );
 
+#ifndef _XBOX
 	float* pTangentT = OffsetFloatPointer( m_pTangentT, m_CurrentVertex, m_VertexSize_TangentT );
 	*pTangentT++ = *t++;
 	*pTangentT++ = *t++;
 	*pTangentT = *t;
+#else
+	unsigned char *pTangentT = m_pTangentT + m_CurrentVertex * m_VertexSize_TangentT;
+	PackNormal( t[0], t[1], t[2], (unsigned int*)pTangentT );
+#endif
 }
 
+#ifndef _XBOX
 inline void CMeshBuilder::TangentSxT3f( float sxtx, float sxty, float sxtz )
 {
 	Assert( m_pTangentSxT );
@@ -1568,7 +1983,9 @@ inline void CMeshBuilder::TangentSxT3f( float sxtx, float sxty, float sxtz )
 	*pTangentSxT++ = sxty;
 	*pTangentSxT = sxtz;
 }
+#endif
 
+#ifndef _XBOX
 inline void CMeshBuilder::TangentSxT3fv( float const* sxt )
 {
 	Assert( sxt );
@@ -1580,6 +1997,7 @@ inline void CMeshBuilder::TangentSxT3fv( float const* sxt )
 	*pTangentSxT++ = *sxt++;
 	*pTangentSxT = *sxt;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Bone weight setting methods
@@ -1588,15 +2006,21 @@ inline void CMeshBuilder::TangentSxT3fv( float const* sxt )
 inline void CMeshBuilder::BoneWeight( int idx, float weight )
 {
 	Assert( m_pBoneWeight );
-	Assert( IsFinite(weight) );
+	Assert( IsFinite( weight ) );
 	Assert( idx >= 0 );
 
 	// This test is here because on fixed function, we store n-1
 	// bone weights, but on vertex shaders, we store all n
-	if (idx < m_NumBoneWeights)
+	if ( idx < m_NumBoneWeights )
 	{
+#ifndef _XBOX
 		float* pBoneWeight = OffsetFloatPointer( m_pBoneWeight, m_CurrentVertex, m_VertexSize_BoneWeight );
 		pBoneWeight[idx] = weight;
+#else
+		Assert( weight >= 0 && weight <= 1.0f );
+		unsigned short* pBoneWeight = (unsigned short*)(m_pBoneWeight + m_CurrentVertex * m_VertexSize_BoneWeight);
+		pBoneWeight[idx] = Float2Int( weight * 32767.0f ); 
+#endif
 	}
 }
 
@@ -1605,8 +2029,9 @@ inline void CMeshBuilder::BoneMatrix( int idx, int matrixIdx )
 	Assert( m_pBoneMatrixIndex );
 	Assert( idx >= 0 );
 	Assert( idx < 4 );
+
 	// garymcthack
-	if( matrixIdx == BONE_MATRIX_INDEX_INVALID )
+	if ( matrixIdx == BONE_MATRIX_INDEX_INVALID )
 	{
 		matrixIdx = 0;
 	}
@@ -1625,14 +2050,28 @@ inline void CMeshBuilder::BoneMatrix( int idx, int matrixIdx )
 //-----------------------------------------------------------------------------
 // Generic per-vertex data setting method
 //-----------------------------------------------------------------------------
-
 inline void CMeshBuilder::UserData( float const* pData )
 {
-	Assert(pData);
+	Assert( pData );
+#ifndef _XBOX
 	int userDataSize = 4; // garymcthack
-	float* pUserData = OffsetFloatPointer( m_pUserData, m_CurrentVertex, m_VertexSize_UserData );
+	float *pUserData = OffsetFloatPointer( m_pUserData, m_CurrentVertex, m_VertexSize_UserData );
 	memcpy( pUserData, pData, sizeof( float ) * userDataSize );
-}
+#else
+	// pack user data
+	unsigned char *pUserData = (unsigned char*)(m_pUserData + m_CurrentVertex * m_VertexSize_UserData);
 
+	// user data needs to be a valid normal, find source and fix
+	Assert( pData[0] >= -1.0f && pData[0] <= 1.0f );
+	Assert( pData[1] >= -1.0f && pData[1] <= 1.0f );
+	Assert( pData[2] >= -1.0f && pData[2] <= 1.0f );
+
+	// scale from [-1..1] to [0..255], fixup in shader
+	pUserData[0] = FastFToC( pData[0]*0.5f + 0.5f );
+	pUserData[1] = FastFToC( pData[1]*0.5f + 0.5f );
+	pUserData[2] = FastFToC( pData[2]*0.5f + 0.5f );
+	pUserData[3] = pData[3] < 0 ? 0 : 255;
+#endif
+}
 
 #endif // IVERTEXBUFFER_H

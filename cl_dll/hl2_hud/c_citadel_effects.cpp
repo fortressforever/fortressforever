@@ -249,7 +249,7 @@ void C_CitadelEnergyCore::UpdateCharging( float percentage )
 
 	int numParticles = floor( 4.0f * percentage );
 
-	for ( i = 0; i < numParticles; i++ )
+	for ( int i = 0; i < numParticles; i++ )
 	{
 		dist = random->RandomFloat( 4.0f * percentage, 64.0f * percentage );
 
@@ -387,7 +387,7 @@ void C_CitadelEnergyCore::UpdateDischarging( void )
 	Vector	offset;
 	float	dist;
 
-	for ( i = 0; i < 4; i++ )
+	for ( int i = 0; i < 4; i++ )
 	{
 		dist = random->RandomFloat( 4.0f * m_flScale, 64.0f * m_flScale );
 

@@ -57,16 +57,24 @@ public:
 	virtual void SetOKButtonText(const char *buttonText);
 	virtual void SetOKButtonText(const wchar_t *wszButtonText);
 
+	// Cancel button (off by default)
+	void SetCancelButtonVisible(bool state);
+ 	void SetCancelButtonText(const char *buttonText);
+	void SetCancelButtonText(const wchar_t *wszButtonText);
+	void SetCancelCommand( KeyValues *command );
+
 	// Toggles visibility of the close box.
 	virtual void DisableCloseButton(bool state);
 
+	virtual void OnCommand( const char *pCommand );
+
 protected:
 	virtual void PerformLayout();
-	virtual void OnClose();
 	virtual void ApplySchemeSettings(IScheme *pScheme);
 
 protected:
 	Button				*m_pOkButton;
+	Button				*m_pCancelButton;
 	Label				*m_pMessageLabel;
 
 private:
@@ -74,8 +82,10 @@ private:
 
 	void Init();
 	
-	KeyValues			*m_OkCommand;
+	KeyValues *m_OkCommand;
+	KeyValues *m_CancelCommand;
 	vgui::Frame *m_pFrameOver;
+	bool m_bNoAutoClose;
 };
 
 } // namespace vgui

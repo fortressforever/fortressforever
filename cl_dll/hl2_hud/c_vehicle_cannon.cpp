@@ -39,10 +39,10 @@ public:
 	virtual void GetVehicleViewPosition( int nRole, Vector *pOrigin, QAngle *pAngles );
 	virtual void GetVehicleFOV( float &flFOV ) { flFOV = 0.0f; }
 	virtual void DrawHudElements();
-	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_DRIVER ) { return false; }
+	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_ROLE_DRIVER ) { return false; }
 	virtual void UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUserCmd *pCmd ) {}
-	virtual C_BasePlayer* GetPassenger( int nRole );
-	virtual int	GetPassengerRole( C_BasePlayer *pEnt );
+	virtual C_BaseCombatCharacter *GetPassenger( int nRole );
+	virtual int	GetPassengerRole( C_BaseCombatCharacter *pPassenger );
 	virtual void GetVehicleClipPlanes( float &flZNear, float &flZFar ) const;
 	virtual int GetPrimaryAmmoType() const { return -1; }
 	virtual int GetPrimaryAmmoCount() const { return -1; }
@@ -113,7 +113,7 @@ C_PropCannon::C_PropCannon( void )
 //-----------------------------------------------------------------------------
 void C_PropCannon::PreDataUpdate( DataUpdateType_t updateType )
 {
-	BaseClass::OnPreDataChanged( updateType );
+	BaseClass::PreDataUpdate( updateType );
 
 	m_hPrevPlayer = m_hPlayer;
 }
@@ -121,23 +121,23 @@ void C_PropCannon::PreDataUpdate( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-C_BasePlayer* C_PropCannon::GetPassenger( int nRole )
+C_BaseCombatCharacter *C_PropCannon::GetPassenger( int nRole )
 {
-	if (nRole == VEHICLE_DRIVER)
+	if ( nRole == VEHICLE_ROLE_DRIVER )
 		return m_hPlayer.Get();
+
 	return NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Returns the role of the passenger
 //-----------------------------------------------------------------------------
-int	C_PropCannon::GetPassengerRole( C_BasePlayer *pEnt )
+int	C_PropCannon::GetPassengerRole( C_BaseCombatCharacter *pPassenger )
 {
-	if (m_hPlayer.Get() == pEnt)
-	{
-		return VEHICLE_DRIVER;
-	}
-	return -1;
+	if ( m_hPlayer.Get() == pPassenger )
+		return VEHICLE_ROLE_DRIVER;
+
+	return VEHICLE_ROLE_NONE;
 }
 
 //-----------------------------------------------------------------------------

@@ -29,6 +29,7 @@ public:
 
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint( void );
+	virtual void	PerformLayout();
 
 private:
 	CHudCrosshair *m_pCrosshair;
@@ -60,6 +61,23 @@ void CHudWeapon::ApplySchemeSettings( IScheme *scheme )
 	m_pCrosshair = GET_HUDELEMENT( CHudCrosshair );
 	//Assert( m_pCrosshair );
 }
+
+
+//-----------------------------------------------------------------------------
+// Performs layout
+//-----------------------------------------------------------------------------
+void CHudWeapon::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	vgui::Panel *pParent = GetParent();
+
+	int w, h;
+	pParent->GetSize( w, h );
+	SetPos( 0, 0 );
+	SetSize( w, h );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 

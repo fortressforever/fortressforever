@@ -8,6 +8,13 @@
 // This is where all common code for pixel shaders go.
 #include "common_fxc.h"
 
+// Put global skip commands here. . make sure and check that the appropriate vars are defined
+// so these aren't used on the wrong shaders!
+// --------------------------------------------------------------------------------
+// Ditch all fastpath attemps if we are doing LIGHTING_PREVIEW.
+//	SKIP: defined $LIGHTING_PREVIEW && defined $FASTPATH && $LIGHTING_PREVIEW && $FASTPATH
+// --------------------------------------------------------------------------------
+
 #define LIGHTTYPE_NONE				0
 #define LIGHTTYPE_STATIC			1
 #define LIGHTTYPE_SPOT				2
@@ -33,9 +40,9 @@ static const int g_AmbientLightTypeArray[22] = {
 
 static const int g_LocalLightType0Array[22] = {
 	LIGHTTYPE_NONE, LIGHTTYPE_NONE, 
-	LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
+	LIGHTTYPE_NONE, LIGHTTYPE_SPOT,  LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
 	LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL,
-	LIGHTTYPE_NONE, LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
+	LIGHTTYPE_NONE, LIGHTTYPE_SPOT,  LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, LIGHTTYPE_SPOT, 
 	LIGHTTYPE_SPOT, LIGHTTYPE_POINT, LIGHTTYPE_POINT, LIGHTTYPE_DIRECTIONAL
 };
 
@@ -80,6 +87,10 @@ const float4x4 cModelViewProj			: register(c4);
 const float4x4 cViewProj				: register(c8);
 const float4x4 cModelView				: register(c12);
 
+// Only cFlexScale.x is used
+// It is a binary value used to switch on/off the addition of the flex delta stream
+const float4 cFlexScale					: register(c13);
+
 const float4 cFogParams					: register(c16);
 #define cFogEndOverFogRange cFogParams.x
 #define cFogOne cFogParams.y
@@ -100,6 +111,7 @@ struct LightInfo
 };
 
 LightInfo cLightInfo[2]					: register(c27);
+#define LIGHT_0_POSITION_REG						c29
 
 const float4 cModulationColor			: register(c37);
 
@@ -115,9 +127,46 @@ const float4 cModulationColor			: register(c37);
 #define SHADER_SPECIFIC_CONST_9 c47
 
 static const int cModel0Index = 48;
-const float4x3 cModel[16]				: register(c48);
+const float4x3 cModel[16]					: register(c48);
+// last cmodel is c95 for dx80, c204 for dx90
 
-// last cmodel is c95
+
+#define DOT_PRODUCT_FACTORS_CONST c240
+const float4 cDotProductFactors[4]			: register( DOT_PRODUCT_FACTORS_CONST );
+
+#define MORPH_FACTORS_CONST c244
+const float4 cMorphFactors[8]				: register( MORPH_FACTORS_CONST );
+
+#define VERTEX_TEXTURE_DIM_CONST c252
+const float2 cVertexTextureDim[4]			: register( VERTEX_TEXTURE_DIM_CONST );
+
+
+//-----------------------------------------------------------------------------
+// Methods to sample specific fields of the vertex textures.
+// Note that x and y are *unnormalized*
+//-----------------------------------------------------------------------------
+float SampleVertexTexture( sampler2D vt, int stage, float flElement, float flField )
+{
+	// Compute normalized x + y values. 
+	// Note that pixel centers are at integer coords, *not* at 0.5!
+	float4 t;
+	t.x = flField / ( cVertexTextureDim[stage].y - 1.0f );
+	t.y = flElement / ( cVertexTextureDim[stage].x - 1.0f );
+	t.z = t.w = 0.f;
+	return tex2Dlod( vt, t ).x;
+}
+
+
+//-----------------------------------------------------------------------------
+// Returns the factor associated w/ a morph target
+//-----------------------------------------------------------------------------
+float GetMorphFactor( float flMorphTargetId )
+{
+	float flMorphIndex = flMorphTargetId / 4;
+	float flMorphComponent = fmod( flMorphTargetId, 4 );
+	return dot( cMorphFactors[flMorphIndex], cDotProductFactors[flMorphComponent] );
+}
+
 
 float RangeFog( const float3 projPos )
 {
@@ -492,6 +541,13 @@ float3 DoLighting( const float3 worldPos, const float3 worldNormal,
 	{
 		returnColor = float3( 0.0f, 0.0f, 0.0f );
 	}
+	else if( staticLightType == LIGHTTYPE_NONE && 
+			 ambientLightType == LIGHTTYPE_AMBIENT &&
+			 localLightType0 == LIGHTTYPE_NONE &&
+			 localLightType1 == LIGHTTYPE_NONE )
+	{
+		returnColor = AmbientLight( worldNormal );
+	}
 	else if( staticLightType == LIGHTTYPE_STATIC && 
 			 ambientLightType == LIGHTTYPE_NONE &&
 			 localLightType0 == LIGHTTYPE_NONE &&
@@ -583,4 +639,93 @@ float2 ComputeSphereMapTexCoords( in float3 reflectionVector )
 	tmp.xy = ooLen * tmp.xy + 1.0f;
 
 	return tmp.xy * cHalf;
+}
+
+//-----------------------------------------------------------------------------
+//
+// Bumped lighting helper functions
+//
+//-----------------------------------------------------------------------------
+
+float3 Compute_SpotLightVertexColor( const float3 worldPos, const float3 worldNormal, int lightNum )
+{
+	// Direct mapping of current code
+	float3 lightDir = cLightInfo[lightNum].pos - worldPos;
+
+	// normalize light direction, maintain temporaries for attenuation
+	float lightDistSquared = dot( lightDir, lightDir );
+	float ooLightDist = rsqrt( lightDistSquared );
+	lightDir *= ooLightDist;
+	
+	float3 attenuationFactors;
+	attenuationFactors = dst( lightDistSquared, ooLightDist );
+
+	float flDistanceAttenuation = dot( attenuationFactors, cLightInfo[lightNum].atten );
+	flDistanceAttenuation = 1.0f / flDistanceAttenuation;
+	
+	// There's an additional falloff we need to make to get the edges looking good
+	// and confine the light within a sphere.
+	float flLinearFactor = saturate( 1.0f - lightDistSquared * cLightInfo[lightNum].atten.w ); 
+	flDistanceAttenuation *= flLinearFactor;
+
+	float flCosTheta = dot( cLightInfo[lightNum].dir, -lightDir );
+	float flAngularAtten = (flCosTheta - cLightInfo[lightNum].spotParams.z) * cLightInfo[lightNum].spotParams.w;
+	flAngularAtten = max( 0.0f, flAngularAtten );
+	flAngularAtten = pow( flAngularAtten, cLightInfo[lightNum].spotParams.x );
+	flAngularAtten = min( 1.0f, flAngularAtten );
+
+	return flDistanceAttenuation * flAngularAtten * cLightInfo[lightNum].color;
+}
+
+float3 Compute_PointLightVertexColor( const float3 worldPos, const float3 worldNormal, int lightNum )
+{
+	// Get light direction
+	float3 lightDir = cLightInfo[lightNum].pos - worldPos;
+
+	// Get light distance squared.
+	float lightDistSquared = dot( lightDir, lightDir );
+
+	// Get 1/lightDistance
+	float ooLightDist = rsqrt( lightDistSquared );
+
+	// Normalize light direction
+	lightDir *= ooLightDist;
+
+	// compute distance attenuation factors.
+	float3 attenuationFactors;
+	attenuationFactors.x = 1.0f;
+	attenuationFactors.y = lightDistSquared * ooLightDist;
+	attenuationFactors.z = lightDistSquared;
+
+	float flDistanceAtten = 1.0f / dot( cLightInfo[lightNum].atten.xyz, attenuationFactors );
+
+	// There's an additional falloff we need to make to get the edges looking good
+	// and confine the light within a sphere.
+	float flLinearFactor = saturate( 1.0f - lightDistSquared * cLightInfo[lightNum].atten.w ); 
+	flDistanceAtten *= flLinearFactor;
+
+	return flDistanceAtten * cLightInfo[lightNum].color;
+}
+
+float3 ComputeDirectionalLightVertexColor( const float3 worldNormal, int lightNum )
+{
+	return cLightInfo[lightNum].color;
+}
+
+float3 GetVertexColorForLight( const float3 worldPos, const float3 worldNormal, 
+				int lightNum, int lightType )
+{
+	if( lightType == LIGHTTYPE_SPOT )
+	{
+		return Compute_SpotLightVertexColor( worldPos, worldNormal, lightNum );
+	}
+	else if( lightType == LIGHTTYPE_POINT )
+	{
+		return Compute_PointLightVertexColor( worldPos, worldNormal, lightNum );
+	}
+	else if( lightType == LIGHTTYPE_DIRECTIONAL )
+	{
+		return ComputeDirectionalLightVertexColor( worldNormal, lightNum );
+	}
+	return float3( 0.0f, 0.0f, 0.0f );
 }

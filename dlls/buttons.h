@@ -133,6 +133,14 @@ public:
 	void InputDisableUpdateTarget( inputdata_t &inputdata );
 	void InputEnableUpdateTarget( inputdata_t &inputdata );
 
+	void InputEnable( inputdata_t &inputdata );
+	void InputDisable( inputdata_t &inputdata );
+
+	virtual void Enable( void );
+	virtual void Disable( void );
+
+	bool	m_bDisabled;
+
 	COutputFloat m_Position;
 	COutputEvent m_OnUnpressed;
 	COutputEvent m_OnFullyOpen;

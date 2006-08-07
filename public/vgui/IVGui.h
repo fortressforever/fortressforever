@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef IVGUI_H
 #define IVGUI_H
@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-#include "interface.h"
+#include "tier1/interface.h"
 #include <vgui/VGUI.h>
 
 #include "appframework/IAppSystem.h"
@@ -26,7 +26,10 @@ namespace vgui
 typedef unsigned long HPanel;
 typedef int HContext;
 
-#define DEFAULT_VGUI_CONTEXT ((vgui::HContext)~0)
+enum
+{
+	DEFAULT_VGUI_CONTEXT = ((vgui::HContext)~0)
+};
 
 // safe handle to a panel - can be converted to and from a VPANEL
 typedef unsigned long HPanel;
@@ -34,7 +37,7 @@ typedef unsigned long HPanel;
 //-----------------------------------------------------------------------------
 // Purpose: Interface to core vgui components
 //-----------------------------------------------------------------------------
-class IVGui : public IBaseInterface, public IAppSystem
+class IVGui : public IAppSystem
 {
 public:
 	// must be called first - provides interfaces for vgui to access
@@ -100,7 +103,7 @@ public:
 	virtual bool GetShouldVGuiControlSleep() = 0;
 };
 
-#define VGUI_IVGUI_INTERFACE_VERSION "VGUI_ivgui006"
+#define VGUI_IVGUI_INTERFACE_VERSION "VGUI_ivgui007"
 
 };
 

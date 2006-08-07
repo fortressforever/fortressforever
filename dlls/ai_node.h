@@ -84,6 +84,8 @@ enum NodeInfoBits_e
 	//bits_LARGE_CENTERED_HULL		13
 
 	bits_DONT_DROP				=	( 1 << 14 ),
+	
+	/****** NOTE: will need to change node graph save/load code if exceed 16 bits here ******/
 
 
 
@@ -108,8 +110,8 @@ public:
 	CAI_Hint*		GetHint()					{ return m_pHint; }
 	void			SetHint( CAI_Hint *pHint )	{ m_pHint = pHint; }
 
-	int				NumLinks() const		{ return m_iNumLinks; }
-	void			ClearLinks()			{ m_Links.RemoveAll(); m_iNumLinks = 0; }
+	int				NumLinks() const		{ return m_Links.Count(); }
+	void			ClearLinks()			{ m_Links.Purge(); }
 	CAI_Link *		GetLink( int destNodeId );
 	CAI_Link *		GetLinkByIndex( int i )	{ return m_Links[i]; }
 
@@ -140,32 +142,23 @@ public:
 	bool			NeedsRebuild() const	{ return ( ( m_eNodeInfo & bits_NODE_WC_NEED_REBUILD ) != 0 ); }
 
 	void			AddLink(CAI_Link *newLink);
-public:
-	int				m_iID;					// ID for this node
 
-private:
+	int				m_iID;					// ID for this node
 	Vector			m_vOrigin;				// location of this node in space
-public:
+
 	float			m_flVOffset[NUM_HULLS];			// vertical offset for each hull type, assuming ground node, 0 otherwise
 	float			m_flYaw;				// NPC on this node should face this yaw to face the hint, or climb a ladder
 
 	NodeType_e		m_eNodeType;			// The type of node
 
 	int				m_eNodeInfo;			// bits that tell us more about this nodes
-public:
-
-	int				m_iNumLinks;			// number of links to this node
-	CUtlVector<CAI_Link *> m_Links;		// growable array of links to this node
 
 	int				m_zone;
+	CUtlVector<CAI_Link *> m_Links;		// growable array of links to this node
 
-public:
-	
 	float			m_flNextUseTime;		// When can I be used again?
 	CAI_Hint*		m_pHint;				// hint attached to this node
 	int				m_iFirstShuffledLink;				// first link to check
-
-public:
 };
 
 

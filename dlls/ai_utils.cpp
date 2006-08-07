@@ -9,6 +9,8 @@
 #include "ai_memory.h"
 #include "ai_basenpc.h"
 #include "ai_senses.h"
+#include "ai_moveprobe.h"
+#include "vphysics/object_hash.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -32,6 +34,7 @@ BEGIN_SIMPLE_DATADESC( CAI_ShotRegulator )
 	DEFINE_FIELD( m_flMaxRestInterval, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flMinBurstInterval, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flMaxBurstInterval, FIELD_FLOAT ),
+	DEFINE_FIELD( m_bDisabled, FIELD_BOOLEAN ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -49,6 +52,7 @@ CAI_ShotRegulator::CAI_ShotRegulator() : m_nMinBurstShots(1), m_nMaxBurstShots(1
 	m_flNextShotTime = -1;
 	m_nBurstShotsRemaining = 1;
 	m_bInRestInterval = false;
+	m_bDisabled = false;
 }
 
 
@@ -120,6 +124,7 @@ void CAI_ShotRegulator::GetBurstInterval( float *pMinBurstInterval, float *pMaxB
 //-----------------------------------------------------------------------------
 void CAI_ShotRegulator::Reset( bool bStartShooting )
 {
+	m_bDisabled = false;
 	m_nBurstShotsRemaining = random->RandomInt( m_nMinBurstShots, m_nMaxBurstShots );
 	if ( bStartShooting )
 	{
@@ -139,7 +144,7 @@ void CAI_ShotRegulator::Reset( bool bStartShooting )
 //-----------------------------------------------------------------------------
 bool CAI_ShotRegulator::ShouldShoot() const
 { 
-	return ( m_flNextShotTime <= gpGlobals->curtime ); 
+	return ( !m_bDisabled && (m_flNextShotTime <= gpGlobals->curtime) ); 
 }
 
 
@@ -208,6 +213,21 @@ void CAI_ShotRegulator::OnFiredWeapon()
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_ShotRegulator::EnableShooting( void )
+{
+	m_bDisabled = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_ShotRegulator::DisableShooting( void )
+{
+	m_bDisabled = true;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -471,3 +491,60 @@ bool CAI_FreePass::ShouldAllowFVisible(bool bBaseResult )
 	return bIsVisible;
 }
 
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+string_t g_iszFuncBrushClassname = NULL_STRING;
+
+//-----------------------------------------------------------------------------
+CTraceFilterNav::CTraceFilterNav( CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup ) : 
+	CTraceFilterSimple( passedict, collisionGroup ),
+	m_pProber(pProber),
+	m_bIgnoreTransientEntities(bIgnoreTransientEntities)
+{
+	m_bCheckCollisionTable = g_EntityCollisionHash->IsObjectInHash( pProber );
+}
+
+//-----------------------------------------------------------------------------
+bool CTraceFilterNav::ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
+{
+	IServerEntity *pServerEntity = (IServerEntity*)pHandleEntity;
+	CBaseEntity *pEntity = (CBaseEntity *)pServerEntity;
+
+	if ( m_pProber == pEntity )
+		return false;
+
+	if ( m_pProber->GetMoveProbe()->ShouldBrushBeIgnored( pEntity ) == true )
+		return false;
+
+#ifdef HL1_DLL 
+	if ( ( contentsMask & CONTENTS_MOVEABLE ) == 0 )
+	{
+		if ( pEntity->ClassMatches( "func_pushable" ) )
+			return false;
+	}
+#endif
+
+	if ( m_bIgnoreTransientEntities && (pEntity->IsPlayer() || pEntity->IsNPC() ) )
+		return false;
+
+	//Adrian - If I'm flagged as using the new collision method, then ignore the player when trying
+	//to check if I can get somewhere.
+	if ( m_pProber->ShouldPlayerAvoid() && pEntity->IsPlayer() )
+		return false;
+
+	if ( pEntity->IsNavIgnored() )
+		return false;
+
+	if ( m_bCheckCollisionTable )
+	{
+		if ( g_EntityCollisionHash->IsObjectPairInHash( m_pProber, pEntity ) )
+			return false;
+	}
+
+	if ( m_pProber->ShouldProbeCollideAgainstEntity( pEntity ) == false )
+		return false;
+
+	return CTraceFilterSimple::ShouldHitEntity( pHandleEntity, contentsMask );
+}

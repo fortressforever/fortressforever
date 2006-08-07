@@ -13,16 +13,17 @@
 
 typedef enum { GLOBAL_OFF = 0, GLOBAL_ON = 1, GLOBAL_DEAD = 2 } GLOBALESTATE;
 
-extern void			GlobalEntity_SetState( int globalIndex, GLOBALESTATE state );
-extern void			GlobalEntity_SetMap( int globalIndex, string_t mapname );
-extern int			GlobalEntity_Add( const char *pGlobalname, const char *pMapName, GLOBALESTATE state );
+void		GlobalEntity_SetState( int globalIndex, GLOBALESTATE state );
+void		GlobalEntity_SetMap( int globalIndex, string_t mapname );
+int			GlobalEntity_Add( const char *pGlobalname, const char *pMapName, GLOBALESTATE state );
 
-extern int			GlobalEntity_GetIndex( const char *pGlobalname );
-extern GLOBALESTATE GlobalEntity_GetState( int globalIndex );
-extern const char	*GlobalEntity_GetMap( int globalIndex );
-extern const char	*GlobalEntity_GetName( int globalIndex );
+int			GlobalEntity_GetIndex( const char *pGlobalname );
+GLOBALESTATE GlobalEntity_GetState( int globalIndex );
+const char	*GlobalEntity_GetMap( int globalIndex );
+const char	*GlobalEntity_GetName( int globalIndex );
 
-extern int			GlobalEntity_GetNumGlobals( void );
+int			GlobalEntity_GetNumGlobals( void );
+void		GlobalEntity_EnableStateUpdates( bool bEnable );
 
 inline int GlobalEntity_Add( string_t globalname, string_t mapName, GLOBALESTATE state )
 {

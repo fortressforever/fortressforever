@@ -13,6 +13,9 @@
 #include "locksounds.h"
 #include "entityoutput.h"
 
+//Since I'm here, might as well explain how these work.  Base.fgd is the file that connects
+//flags to entities.  It is full of lines with this number, a label, and a default value.
+//Voila, dynamicly generated checkboxes on the Flags tab of Entity Properties.
 
 // doors
 #define SF_DOOR_ROTATE_YAW			0		// yaw by default
@@ -29,7 +32,9 @@
 #define SF_DOOR_PTOUCH				1024 // player touch opens
 #define SF_DOOR_LOCKED				2048	// Door is initially locked
 #define SF_DOOR_SILENT				4096	// Door plays no audible sound, and does not alert NPCs when opened
-// FLAGS ABOVE THIS ARE USED BY SUBCLASSES!
+#define	SF_DOOR_USE_CLOSES			8192	// Door can be +used to close before its autoreturn delay has expired.
+#define SF_DOOR_SILENT_TO_NPCS		16384	// Does not alert NPC's when opened.
+#define SF_DOOR_IGNORE_USE			32768	// Completely ignores player +use commands.
 
 
 class CBaseDoor : public CBaseToggle
@@ -98,13 +103,14 @@ public:
 	
 	byte	m_bLockedSentence;	
 	byte	m_bUnlockedSentence;
-	bool	m_bLocked;				// Whether the door is locked
-	float	m_flBlockDamage;		// Damage inflicted when blocked.
 	bool	m_bForceClosed;			// If set, always close, even if we're blocked.
 	bool	m_bDoorGroup;
-
+	bool	m_bLocked;				// Whether the door is locked
+	bool	m_bIgnoreDebris;
+	float	m_flBlockDamage;		// Damage inflicted when blocked.
 	string_t	m_NoiseMoving;		//Start/Looping sound
 	string_t	m_NoiseArrived;		//End sound
+	string_t	m_ChainTarget;		///< Entity name to pass Touch and Use events to
 
 	CNetworkVar( float, m_flWaveHeight );
 
@@ -129,6 +135,14 @@ public:
 	
 	bool		ShouldLoopMoveSound( void ) { return m_bLoopMoveSound; }
 	bool		m_bLoopMoveSound;			// Move sound loops until stopped
+
+private:
+	void ChainUse( void );	///< Chains +use on through to m_ChainTarget
+	void ChainTouch( CBaseEntity *pOther );	///< Chains touch on through to m_ChainTarget
+	void SetChaining( bool chaining )	{ m_isChaining = chaining; }	///< Latch to prevent recursion
+	bool m_isChaining;
+
+	void CloseAreaPortalsThink( void );	///< Delays turning off area portals when closing doors to prevent visual artifacts
 };
 
 #endif // DOORS_H

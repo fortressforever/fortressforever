@@ -40,12 +40,14 @@
 // unused 
 // NOTE: If it's visible, grab from the top + update LAST_VISIBLE_CONTENTS
 // if not visible, then grab from the bottom.
-#define CONTENTS_UNUSED3		0x200
-#define CONTENTS_UNUSED4		0x400
-#define CONTENTS_UNUSED5		0x800
-#define CONTENTS_UNUSED6		0x1000
-#define CONTENTS_UNUSED7		0x2000
+#define CONTENTS_UNUSED5		0x200
+#define CONTENTS_UNUSED6		0x4000
 
+#define CONTENTS_TEAM1			0x800	// per team contents used to differentiate collisions 
+#define CONTENTS_TEAM2			0x1000	// between players and objects on different teams
+
+// ignore CONTENTS_OPAQUE on surfaces that have SURF_NODRAW
+#define CONTENTS_IGNORE_NODRAW_OPAQUE	0x2000
 
 // hits entities which are MOVETYPE_PUSH (doors, plats, etc.)
 #define CONTENTS_MOVEABLE		0x4000
@@ -83,7 +85,7 @@
 #define	SURF_WARP		0x0008		// turbulent water warp
 #define	SURF_TRANS		0x0010
 #define SURF_WET		0x0020	// the surface is wet
-#define	SURF_FLOWING	0x0040	// scroll towards angle
+#define	SURF_TRIGGER	0x0040	// FIXME: This is an xbox hack to work around elimination of trigger surfaces, which breaks occluders
 #define	SURF_NODRAW		0x0080	// don't bother referencing the texture
 
 #define	SURF_HINT		0x0100	// make a primary bsp splitter
@@ -110,14 +112,20 @@
 #define	MASK_NPCSOLID				(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_GRATE)
 // water physics in these contents
 #define	MASK_WATER					(CONTENTS_WATER|CONTENTS_MOVEABLE|CONTENTS_SLIME)
-// everything that blocks line of sight
+// everything that blocks line of sight for AI, lighting, etc
 #define	MASK_OPAQUE					(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_OPAQUE)
-// everything that blocks line of sight, but with monsters added.
+// everything that blocks line of sight for AI, lighting, etc, but with monsters added.
 #define MASK_OPAQUE_AND_NPCS		(MASK_OPAQUE|CONTENTS_MONSTER)
+// everything that blocks line of sight for players
+#define	MASK_VISIBLE					(MASK_OPAQUE|CONTENTS_IGNORE_NODRAW_OPAQUE)
+// everything that blocks line of sight for players, but with monsters added.
+#define MASK_VISIBLE_AND_NPCS		(MASK_OPAQUE_AND_NPCS|CONTENTS_IGNORE_NODRAW_OPAQUE)
 // bullets see these as solid
 #define	MASK_SHOT					(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEBRIS|CONTENTS_HITBOX)
 // non-raycasted weapons see this as solid (includes grates)
 #define MASK_SHOT_HULL				(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEBRIS|CONTENTS_GRATE)
+// hits solids (not grates) and passes through everything else
+#define MASK_SHOT_PORTAL			(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW)
 // everything normally solid, except monsters (world+brush only)
 #define MASK_SOLID_BRUSHONLY		(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW|CONTENTS_GRATE)
 // everything normally solid for player movement, except monsters (world+brush only)

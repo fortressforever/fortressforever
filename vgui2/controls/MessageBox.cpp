@@ -23,6 +23,12 @@ using namespace vgui;
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
 
+vgui::Panel *MessageBox_Factory()
+{
+	return new MessageBox("MessageBox", "MessageBoxText");
+}
+
+DECLARE_BUILD_FACTORY_CUSTOM( MessageBox, MessageBox_Factory );
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -59,10 +65,16 @@ void MessageBox::Init()
 	SetSizeable(false);
 	
 	m_pOkButton = new Button(this, NULL, "#MessageBox_OK");
-	m_pOkButton->SetCommand("Close");
+	m_pOkButton->SetCommand( "OnOk" );
 	m_pOkButton->AddActionSignalTarget(this);
 
-	m_OkCommand = NULL;
+	m_pCancelButton = new Button(this, NULL, "#MessageBox_Cancel");
+	m_pCancelButton->SetCommand( "OnCancel" );
+	m_pCancelButton->AddActionSignalTarget(this);
+	m_pCancelButton->SetVisible( false );
+
+	m_OkCommand = m_CancelCommand = NULL;
+	m_bNoAutoClose = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -74,8 +86,40 @@ MessageBox::~MessageBox()
 	{
 		m_OkCommand->deleteThis();
 	}
+	if ( m_CancelCommand )
+	{
+		m_CancelCommand->deleteThis();
+	}
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: size the message label properly
+//-----------------------------------------------------------------------------
+void MessageBox::OnCommand( const char *pCommand )
+{
+	if ( !Q_stricmp( pCommand, "OnOk" ) )
+	{
+		if ( m_OkCommand )
+		{
+			PostActionSignal(m_OkCommand->MakeCopy());
+		}
+	}
+	else if ( !Q_stricmp( pCommand, "OnCancel" ) )
+	{
+		if ( m_CancelCommand )
+		{
+			PostActionSignal(m_CancelCommand->MakeCopy());
+		}
+	}
+
+	if ( !m_bNoAutoClose )
+	{
+		OnShutdownRequest();
+	}
+}
+
+	
 //-----------------------------------------------------------------------------
 // Purpose: size the message label properly
 //-----------------------------------------------------------------------------
@@ -196,31 +240,38 @@ void MessageBox::PerformLayout()
 	btnTall = max(oldTall, btnTall + 10);
 	m_pOkButton->SetSize(btnWide, btnTall);
 
+	int btnWide2 = 0, btnTall2 = 0;
+	if ( m_pCancelButton->IsVisible() )
+	{
+		m_pCancelButton->GetSize(oldWide, oldTall);
+		
+		m_pCancelButton->GetContentSize(btnWide2, btnTall2);
+		btnWide2 = max(oldWide, btnWide2 + 10);
+		btnTall2 = max(oldTall, btnTall2 + 10);
+		m_pCancelButton->SetSize(btnWide2, btnTall2);
+	}
+
 	boxWidth = max(boxWidth, m_pMessageLabel->GetWide() + 100);
-	boxWidth = max(boxWidth, btnWide * 2 + 100);
+	boxWidth = max(boxWidth, (btnWide + btnWide2) * 2 + 30);
 	SetSize(boxWidth, boxTall);
 
 	GetSize(boxWidth, boxTall);
 
 	m_pMessageLabel->SetPos((wide/2)-(m_pMessageLabel->GetWide()/2) + x, y + 15);
-	m_pOkButton->SetPos((wide/2)-(m_pOkButton->GetWide()/2) + x, tall - m_pOkButton->GetTall() - 15);
+	if ( !m_pCancelButton->IsVisible() )
+	{
+		m_pOkButton->SetPos((wide/2)-(m_pOkButton->GetWide()/2) + x, tall - m_pOkButton->GetTall() - 15);
+	}
+	else
+	{
+		m_pOkButton->SetPos((wide/4)-(m_pOkButton->GetWide()/2) + x, tall - m_pOkButton->GetTall() - 15);
+		m_pCancelButton->SetPos((3*wide/4)-(m_pOkButton->GetWide()/2) + x, tall - m_pOkButton->GetTall() - 15);
+	}
 
 	BaseClass::PerformLayout();
 	GetSize(boxWidth, boxTall);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Deletes self when closed
-//-----------------------------------------------------------------------------
-void MessageBox::OnClose()
-{
-	BaseClass::OnClose();
-
-	if ( m_OkCommand )
-	{
-		PostActionSignal(m_OkCommand->MakeCopy());
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Set a string command to be sent when the OK button is pressed.
@@ -281,11 +332,43 @@ void MessageBox::SetOKButtonText(const wchar_t *wszButtonText)
 	InvalidateLayout();
 }
 
+
+//-----------------------------------------------------------------------------
+// Cancel button (off by default)
+//-----------------------------------------------------------------------------
+void MessageBox::SetCancelButtonVisible(bool state)
+{
+	m_pCancelButton->SetVisible(state);
+	InvalidateLayout();
+}
+
+void MessageBox::SetCancelButtonText(const char *buttonText)
+{
+	m_pCancelButton->SetText(buttonText);
+	InvalidateLayout();
+}
+
+void MessageBox::SetCancelButtonText(const wchar_t *wszButtonText)
+{
+	m_pCancelButton->SetText(wszButtonText);
+	InvalidateLayout();
+}
+
+void MessageBox::SetCancelCommand( KeyValues *command )
+{
+	if (m_CancelCommand)
+	{
+		m_CancelCommand->deleteThis();
+	}
+	m_CancelCommand = command;
+}
+
+	
 //-----------------------------------------------------------------------------
 // Purpose: Toggles visibility of the close box.
 //-----------------------------------------------------------------------------
 void MessageBox::DisableCloseButton(bool state)
 {
 	BaseClass::SetCloseButtonVisible(state);
-	m_pOkButton->SetCommand("");
+	m_bNoAutoClose = true;
 }

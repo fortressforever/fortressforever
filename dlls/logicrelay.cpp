@@ -1,13 +1,13 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose: A message forwarder. Fires an OnTrigger output when triggered, and
-//			can be disabled to prevent forwarding outputs.
+// A message forwarder. Fires an OnTrigger output when triggered, and can be
+// disabled to prevent forwarding outputs.
 //
-//			Useful as an intermediary between one entity and another for turning
-//			on or off an I/O connection, or as a container for holding a set of
-//			outputs that can be triggered from multiple places.
+// Useful as an intermediary between one entity and another for turning on or
+// off an I/O connection, or as a container for holding a set of outputs that
+// can be triggered from multiple places.
 //
-//=============================================================================//
+//=============================================================================
 
 #include "cbase.h"
 #include "entityinput.h"
@@ -40,6 +40,7 @@ BEGIN_DATADESC( CLogicRelay )
 
 	// Outputs
 	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
+	DEFINE_OUTPUT(m_OnSpawn, "OnSpawn"),
 
 END_DATADESC()
 
@@ -54,7 +55,40 @@ CLogicRelay::CLogicRelay(void)
 
 
 //------------------------------------------------------------------------------
-// Purpose: Turns on the relay, allowing it to firing outputs.
+// Kickstarts a think if we have OnSpawn connections.
+//------------------------------------------------------------------------------
+void CLogicRelay::Activate()
+{
+	BaseClass::Activate();
+	
+	if ( m_OnSpawn.NumberOfElements() > 0)
+	{
+		SetNextThink( gpGlobals->curtime + 0.01 );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// If we have OnSpawn connections, this is called shortly after spawning to
+// fire the OnSpawn output.
+//-----------------------------------------------------------------------------
+void CLogicRelay::Think()
+{
+	// Fire an output when we spawn. This is used for self-starting an entity
+	// template -- since the logic_relay is inside the template, it gets all the
+	// name and I/O connection fixup, so can target other entities in the template.
+	m_OnSpawn.FireOutput( this, this );
+
+	// We only get here if we had OnSpawn connections, so this is safe.
+	if ( m_spawnflags & SF_REMOVE_ON_FIRE )
+	{
+		UTIL_Remove(this);
+	}
+}
+
+
+//------------------------------------------------------------------------------
+// Purpose: Turns on the relay, allowing it to fire outputs.
 //------------------------------------------------------------------------------
 void CLogicRelay::InputEnable( inputdata_t &inputdata )
 {

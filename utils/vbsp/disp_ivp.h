@@ -42,6 +42,6 @@ public:
 };
 
 
-extern void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, dmodel_t *pModel, int contentsMask, bool useMOOP );
+extern void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, dmodel_t *pModel, int contentsMask );
 
 #endif // DISP_IVP_H

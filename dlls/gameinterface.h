@@ -37,7 +37,7 @@ public:
 	virtual void			GetPlayerLimits( int& minplayers, int& maxplayers, int &defaultMaxPlayers ) const;
 	
 	// returns number of delay ticks if player is in Replay mode (0 = no delay)
-	virtual int				GetReplayDelay( edict_t *player );
+	virtual int				GetReplayDelay( edict_t *player, int& entity );
 	// Anything this game .dll wants to add to the bug reporter text (e.g., the entity/model under the picker crosshair)
 	//  can be added here
 	virtual void			GetBugReportInfo( char *buf, int buflen );
@@ -75,7 +75,11 @@ public:
 
 	virtual void			PreSave( CSaveRestoreData * );
 	virtual void			Save( CSaveRestoreData * );
-	virtual void			GetSaveComment( char *comment, int maxlength );
+	virtual void			GetSaveComment( char *comment, int maxlength ) { return GetSaveCommentEx( comment, maxlength, 0, 0 ); }
+	virtual void			GetSaveCommentEx( char *comment, int maxlength, float flMinutes, float flSeconds );
+#ifdef _XBOX
+	virtual void			GetTitleName( const char *pMapName, char* pTitleBuff, int titleBuffSize );
+#endif
 	virtual void			WriteSaveHeaders( CSaveRestoreData * );
 
 	virtual void			ReadRestoreHeaders( CSaveRestoreData * );
@@ -87,6 +91,10 @@ public:
 
 	virtual CStandardSendProxies*	GetStandardSendProxies();
 
+	virtual void			PostInit();
+	virtual void			Think( bool finalTick );
+
+	float	m_fAutoSaveDangerousTime;
 
 private:
 

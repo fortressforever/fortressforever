@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="vprojtomake"
 	ProjectGUID="{EA55446E-BC04-491C-A9F0-605DFCBB213A}"
-	SccProjectName="&quot;$/Src/utils/vprojtomake&quot;, XPQDAAAA"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -52,6 +52,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\v
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\lib\public"
+				IgnoreDefaultLibraryNames="LIBCMT"
 				ProgramDatabaseFile=".\Release/vprojtomake.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
@@ -121,6 +122,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\v
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\lib\public"
+				IgnoreDefaultLibraryNames="LIBCMT"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/vprojtomake.pdb"
 				GenerateMapFile="TRUE"
@@ -346,7 +348,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\v
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\Public\basetypes.h">
+				RelativePath="..\..\Public\tier0\basetypes.h">
 			</File>
 			<File
 				RelativePath="..\..\Public\tier1\characterset.h">
@@ -407,18 +409,22 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\v
 				Name="Release|Win32">
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist  ..\..\..\bin\vprojtomake.exe attrib -r ..\..\..\bin\vprojtomake.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\vprojtomake.exe
-"/>
+					Description=""
+					CommandLine=""/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|Win32">
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist  ..\..\..\bin\vprojtomake.exe attrib -r ..\..\..\bin\vprojtomake.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\vprojtomake.exe
-"/>
+					Description=""
+					CommandLine=""/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\..\lib\public\tier1.lib">
+		</File>
+		<File
+			RelativePath="..\..\lib\public\tier2.lib">
 		</File>
 		<File
 			RelativePath="..\..\lib\public\vstdlib.lib">
@@ -426,17 +432,15 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\v
 				Name="Release|Win32">
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist  ..\..\..\bin\vprojtomake.exe attrib -r ..\..\..\bin\vprojtomake.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\vprojtomake.exe
-"/>
+					Description=""
+					CommandLine=""/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|Win32">
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist  ..\..\..\bin\vprojtomake.exe attrib -r ..\..\..\bin\vprojtomake.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin\vprojtomake.exe
-"/>
+					Description=""
+					CommandLine=""/>
 			</FileConfiguration>
 		</File>
 	</Files>

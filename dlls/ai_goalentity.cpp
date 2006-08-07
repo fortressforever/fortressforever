@@ -54,6 +54,8 @@ void CAI_GoalEntity::OnRestore()
 {
 	BaseClass::OnRestore();
 
+	ExitDormant();
+
 	if ( ( m_flags & ACTIVE ) )
 		gEntList.AddListenerEntity( this );
 }
@@ -99,7 +101,7 @@ void CAI_GoalEntity::ResolveNames()
 		{
 			case ST_ENTNAME:
 			{
-				pEntity = gEntList.FindEntityByName( pEntity, m_iszActor, NULL );
+				pEntity = gEntList.FindEntityByName( pEntity, m_iszActor );
 				break;
 			}
 			
@@ -123,7 +125,7 @@ void CAI_GoalEntity::ResolveNames()
 		}
 	}
 		
-	m_hGoalEntity = gEntList.FindEntityByName( NULL, m_iszGoal, NULL );
+	m_hGoalEntity = gEntList.FindEntityByName( NULL, m_iszGoal );
 }
 
 //-------------------------------------
@@ -191,10 +193,38 @@ void CAI_GoalEntity::InputDeactivate( inputdata_t &inputdata )
 		gEntList.RemoveListenerEntity( this );
 		UpdateActors();
 		m_flags &= ~ACTIVE;
+
 		for ( int i = 0; i < m_actors.Count(); i++ )
 		{
 			DisableGoal( m_actors[i] );
 		}		
+	}
+}
+
+//-------------------------------------
+
+void CAI_GoalEntity::EnterDormant( void )
+{
+	if ( m_flags & ACTIVE )
+	{
+		m_flags |= DORMANT;
+		for ( int i = 0; i < m_actors.Count(); i++ )
+		{
+			DisableGoal( m_actors[i] );
+		}
+	}
+}
+
+//-------------------------------------
+
+void CAI_GoalEntity::ExitDormant( void )
+{
+	if ( m_flags & DORMANT )
+	{
+		m_flags &= ~DORMANT;
+
+		inputdata_t ignored;
+		InputUpdateActors( ignored );
 	}
 }
 

@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -38,11 +39,15 @@ using namespace vgui;
 
 static const int DRAW_OFFSET_X = 3,DRAW_OFFSET_Y = 1; 
 
+DECLARE_BUILD_FACTORY( TextEntry );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 TextEntry::TextEntry(Panel *parent, const char *panelName) : Panel(parent, panelName)
 {
+	SetTriplePressAllowed( true );
+
 	_font = INVALID_FONT;
 	_smallfont = INVALID_FONT;
 
@@ -93,9 +98,14 @@ TextEntry::TextEntry(Panel *parent, const char *panelName) : Panel(parent, panel
 	_recalculateBreaksIndex = 0;
 	
 	_selectAllOnFirstFocus = false;
+	_selectAllOnFocusAlways = false;
 
 	//position the cursor so it is at the end of the text
 	GotoTextEnd();
+
+	SetDropEnabled( true, 1.0f );
+	// If keyboard focus is in an edit control, don't chain keyboard mappings up to parents since it could mess with typing in text.
+	SetAllowKeyBindingChainToParent( false );
 }
 
 
@@ -130,6 +140,21 @@ void TextEntry::ApplySchemeSettings(IScheme *pScheme)
 	_smallfont = pScheme->GetFont( "DefaultVerySmall", IsProportional() );
 
 	SetFont( _font );
+}
+
+void TextEntry::SetSelectionTextColor( const Color& clr )
+{
+	_selectionTextColor = clr;
+}
+
+void TextEntry::SetSelectionBgColor( const Color& clr )
+{
+	_selectionColor = clr;
+}
+
+void TextEntry::SetSelectionUnfocusedBgColor( const Color& clr )
+{
+	_defaultSelectionBG2Color = clr;
 }
 
 //-----------------------------------------------------------------------------
@@ -171,14 +196,13 @@ void TextEntry::OnKillFocus()
 			return;
 	}
 	
-    if (IsEditable())
-    {
-    	// clear any selection
-	    SelectNone();
-    }
+   	// clear any selection
+    SelectNone();
 
 	// move the cursor to the start
 //	GotoTextStart();
+
+	PostActionSignal( new KeyValues( "TextKillFocus" ) );
 
 	// chain
 	BaseClass::OnKillFocus();
@@ -407,6 +431,12 @@ void TextEntry::CursorToPixelSpace(int cursorPos, int &cx, int &cy)
 //-----------------------------------------------------------------------------
 int TextEntry::PixelToCursorSpace(int cx, int cy)
 {
+	
+	int w, h;
+	GetSize(w, h);
+	cx = clamp(cx, 0, w+100);
+	cy = clamp(cy, 0, h);
+
 	_putCursorAtEnd = false; //	Start off assuming we clicked somewhere in the text
 	
 	int fontTall = surface()->GetFontTall(_font);
@@ -507,11 +537,21 @@ int TextEntry::DrawChar(wchar_t ch, HFont font, int index, int x, int y)
 		{
 			// draw background selection color
             VPANEL focus = input()->GetFocus();
+			Color bgColor;
+			bool hasFocus = HasFocus();
+			bool childOfFocus = focus && ipanel()->HasParent(focus, GetVPanel());
+
             // if one of the children of the SectionedListPanel has focus, then 'we have focus' if we're selected
-            if (HasFocus() || (focus && ipanel()->HasParent(focus, GetVPanel())))
-    			surface()->DrawSetColor(_selectionColor);
+            if ( hasFocus || childOfFocus )
+			{
+    			bgColor = _selectionColor;
+			}
             else
-    			surface()->DrawSetColor(_defaultSelectionBG2Color);
+			{
+    			bgColor =_defaultSelectionBG2Color;
+			}
+
+			surface()->DrawSetColor(bgColor);
 
 			surface()->DrawFilledRect(x, y, x + charWide, y + 1 + fontTall);
 			
@@ -622,8 +662,6 @@ void TextEntry::PaintBackground()
 	
 	int lineBreakIndexIndex = 0;
 	int startIndex = GetStartDrawIndex(lineBreakIndexIndex);
-	
-	
 	int remembery = y;
 
 	int oldEnd = m_TextStream.Count();
@@ -811,7 +849,9 @@ void TextEntry::PaintBackground()
 		if ( composing )
 		{
 			LocalToScreen( x, y );
+#ifndef _XBOX
 			input()->SetCandidateWindowPos( x, y );
+#endif
 		}
 	}
 
@@ -1367,7 +1407,12 @@ void TextEntry::OnMousePressed(MouseCode code)
 {
 	if (code == MOUSE_LEFT)
 	{
-		SelectCheck();
+		bool keepChecking = SelectCheck( true );
+		if ( !keepChecking )
+		{
+			BaseClass::OnMousePressed( code );
+			return;
+		}
 		
 		// move the cursor to where the mouse was pressed
 		int x, y;
@@ -1423,6 +1468,24 @@ void TextEntry::OnMouseReleased(MouseCode code)
 			// nullify selection
 			_select[0] = -1;
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : code - 
+//-----------------------------------------------------------------------------
+void TextEntry::OnMouseTriplePressed( MouseCode code )
+{
+	BaseClass::OnMouseTriplePressed( code );
+
+	// left triple clicking on a word selects all
+	if (code == MOUSE_LEFT)
+	{
+		// move the cursor just as if you single clicked.
+		OnMousePressed(code);
+
+		SelectAllText( false );
 	}
 }
 
@@ -1714,6 +1777,7 @@ void TextEntry::OnKeyCodeTyped(KeyCode code)
 		case KEY_PAGEUP:
 			{
 				int val = 0;
+				fallThrough = (!_multiline) && (!_vertScrollBar);
 				if (_vertScrollBar)
 				{
 					val = _vertScrollBar->GetValue();
@@ -1744,6 +1808,7 @@ void TextEntry::OnKeyCodeTyped(KeyCode code)
 		case KEY_PAGEDOWN:
 			{
 				int val = 0;
+				fallThrough = (!_multiline) && (!_vertScrollBar);
 				if (_vertScrollBar)
 				{
 					val = _vertScrollBar->GetValue();
@@ -1905,19 +1970,89 @@ void TextEntry::OnKeyFocusTicked()
 	}
 }
 
+Panel *TextEntry::GetDragPanel()
+{
+	if ( input()->IsMouseDown( MOUSE_LEFT ) )
+	{
+		int x, y;
+		input()->GetCursorPos(x, y);
+		ScreenToLocal(x, y);
+		int cursor = PixelToCursorSpace(x, y);
+	
+		int cx0, cx1;
+		bool check = GetSelectedRange( cx0, cx1 );
+
+		if ( check && cursor >= cx0 && cursor < cx1 )
+		{
+			// Don't deselect in this case!!!
+			return BaseClass::GetDragPanel();
+		}
+		return NULL;
+	}
+
+	return BaseClass::GetDragPanel();
+}
+
+void TextEntry::OnCreateDragData( KeyValues *msg )
+{
+	BaseClass::OnCreateDragData( msg );
+
+	char txt[ 256 ];
+	GetText( txt, sizeof( txt ) );
+
+	int r0, r1;
+	if ( GetSelectedRange( r0, r1 ) && r0 != r1 )
+	{
+		int len = r1 - r0;
+		if ( len > 0 && r0 < 1024 )
+		{
+			char selection[ 512 ];
+			Q_strncpy( selection, &txt[ r0 ], len + 1 );
+			selection[ len ] = 0;
+			msg->SetString( "text", selection );
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Check if we are selecting text (so we can highlight it)
 //-----------------------------------------------------------------------------
-void TextEntry::SelectCheck()
+bool TextEntry::SelectCheck( bool fromMouse /*=false*/ )
 {
+	bool bret = true;
 	if (!HasFocus() || !(input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT)))
 	{
-		_select[0] = -1;
+		bool deselect = true;
+		int cx0, cx1;
+		if ( fromMouse && 
+			GetDragPanel() != NULL )
+		{
+			// move the cursor to where the mouse was pressed
+			int x, y;
+			input()->GetCursorPos(x, y);
+			ScreenToLocal(x, y);
+			int cursor = PixelToCursorSpace(x, y);
+		
+			bool check = GetSelectedRange( cx0, cx1 );
+
+			if ( check && cursor >= cx0 && cursor < cx1 )
+			{
+				// Don't deselect in this case!!!
+				deselect = false;
+				bret = false;
+			}
+		}
+
+		if ( deselect )
+		{
+			_select[0] = -1;
+		}
 	}
 	else if (_select[0] == -1)
 	{
 		_select[0] = _cursorPos;
 	}
+	return bret;
 }
 
 //-----------------------------------------------------------------------------
@@ -3226,6 +3361,10 @@ int TextEntry::GetStartDrawIndex(int &lineBreakIndexIndex)
 		// check to see if the cursor is off the screen-multiline case
 		HFont font = _font;
 		int displayLines = GetTall() / (surface()->GetFontTall(font) + DRAW_OFFSET_Y);
+		if (displayLines < 1)
+		{
+			displayLines = 1;
+		}
 		if (numLines > displayLines)
 		{
 			int cursorLine = GetCursorLine();
@@ -3259,34 +3398,45 @@ int TextEntry::GetStartDrawIndex(int &lineBreakIndexIndex)
 		{
 			// check to see if cursor is off the right side of screen-single line case
 			// get cursor's x coordinate in pixel space
-			int x = DRAW_OFFSET_X;
-			for (int i = _currentStartIndex; i < m_TextStream.Count(); i++)
+			bool done = false;
+			while ( !done )
 			{
-				wchar_t ch = m_TextStream[i];			
-				if (_hideText)
+				done = true;
+				int x = DRAW_OFFSET_X;
+				for (int i = _currentStartIndex; i < m_TextStream.Count(); i++)
 				{
-					ch = '*';
+					done = false;
+					wchar_t ch = m_TextStream[i];			
+					if (_hideText)
+					{
+						ch = '*';
+					}
+					
+					// if we've found the position, break
+					if (_cursorPos == i)
+					{
+						break;
+					}
+					
+					// add to the current position		
+					x += getCharWidth(font, ch);				
 				}
 				
-				// if we've found the position, break
-				if (_cursorPos == i)
+				if ( x >= GetWide() )
 				{
-					break;
+					_currentStartIndex++;
+					// Keep searching...
+					continue;
 				}
 				
-				// add to the current position		
-				x += getCharWidth(font, ch);				
-			}
-			
-			if ( x >=  GetWide() )
-			{
-				_currentStartIndex++;
-			}
-			else if ( x <= 0 )
-			{
-				// dont go past the Start of buffer
-				if (_currentStartIndex > 0)
-					_currentStartIndex--;
+				if ( x <= 0 )
+				{
+					// dont go past the Start of buffer
+					if (_currentStartIndex > 0)
+						_currentStartIndex--;
+				}
+
+				break;
 			}
 		}
 	}
@@ -3549,6 +3699,12 @@ void TextEntry::SelectAllOnFirstFocus( bool status )
 	_selectAllOnFirstFocus = status;
 }
 
+void TextEntry::SelectAllOnFocusAlways( bool status )
+{
+	_selectAllOnFirstFocus = status;
+	_selectAllOnFocusAlways = status;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: called when the text entry receives focus
 //-----------------------------------------------------------------------------
@@ -3560,7 +3716,10 @@ void TextEntry::OnSetFocus()
 		_select[0] = 0;
 		_select[1] = m_TextStream.Count();
 		_cursorPos = _select[1]; // cursor at end of line
-		_selectAllOnFirstFocus = false;
+		if ( !_selectAllOnFocusAlways )
+		{
+			_selectAllOnFirstFocus = false;
+		}
     }
 	else if (input()->IsKeyDown(KEY_TAB) || input()->WasKeyReleased(KEY_TAB))
 	{
@@ -3660,6 +3819,7 @@ void TextEntry::CompositionString( const wchar_t *compstr )
 
 void TextEntry::ShowIMECandidates()
 {
+#ifndef _XBOX
 	HideIMECandidates();
 
 	int c = input()->GetCandidateListCount();
@@ -3753,7 +3913,7 @@ void TextEntry::ShowIMECandidates()
 			m_pIMECandidates->SetPos(cx - menuWide, cy - menuTall-GetTall());
 		}
 	}
-
+#endif
 }
 
 void TextEntry::HideIMECandidates()
@@ -3768,6 +3928,7 @@ void TextEntry::HideIMECandidates()
 
 void TextEntry::UpdateIMECandidates()
 {
+#ifndef _XBOX
 	if ( !m_pIMECandidates )
 		return;
 
@@ -3832,6 +3993,7 @@ void TextEntry::UpdateIMECandidates()
 			m_pIMECandidates->SetCurrentlyHighlightedItem( id );
 		}
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -3860,4 +4022,96 @@ void TextEntry::FlipToLastIME()
 void TextEntry::SetDrawLanguageIDAtLeft( bool state )
 {
 	m_bDrawLanguageIDAtLeft = state;
+}
+
+bool TextEntry::GetDropContextMenu( Menu *menu, CUtlVector< KeyValues * >& msglist )
+{
+	menu->AddMenuItem( "replace", "#TextEntry_ReplaceText", "replace", this );
+	menu->AddMenuItem( "append", "#TextEntry_AppendText", "append", this );
+	menu->AddMenuItem( "prepend", "#TextEntry_PrependText", "prepend", this );
+	return true;
+}
+
+bool TextEntry::IsDroppable( CUtlVector< KeyValues * >& msglist )
+{
+	if ( msglist.Count() != 1 )
+		return false;
+
+	if ( !IsEnabled() )
+		return false;
+
+	KeyValues *msg = msglist[ 0 ];
+
+	const wchar_t *txt = msg->GetWString( "text", L"" );
+	if ( !txt || txt[ 0 ] == L'\0' )
+		return false;
+
+	return true;
+}
+
+void TextEntry::OnPanelDropped( CUtlVector< KeyValues * >& msglist )
+{
+	if ( msglist.Count() != 1 )
+		return;
+
+	KeyValues *data = msglist[ 0 ];
+
+	const wchar_t *newText = data->GetWString( "text" );
+	if ( !newText || newText[ 0 ] == L'\0' )
+		return;
+
+	char const *cmd = data->GetString( "command" );
+	if ( !Q_stricmp( cmd, "replace" ) ||
+		 !Q_stricmp( cmd, "default" ) )
+	{
+		SetText( newText );
+		_dataChanged = true;
+		FireActionSignal();
+	}
+	else if ( !Q_stricmp( cmd, "append" ) )
+	{
+		int newLen = wcslen( newText );
+		int curLen = m_TextStream.Count();
+
+		size_t outsize = sizeof( wchar_t ) * ( newLen + curLen + 1 );
+		wchar_t *out = (wchar_t *)_alloca( outsize );
+		Q_memset( out, 0, outsize );
+		wcsncpy( out, m_TextStream.Base(), curLen );
+		wcsncat( out, newText, wcslen( newText ) );
+		out[ newLen + curLen ] = L'\0';
+		SetText( out );
+		_dataChanged = true;
+		FireActionSignal();
+	}
+	else if ( !Q_stricmp( cmd, "prepend" ) )
+	{
+		int newLen = wcslen( newText );
+		int curLen = m_TextStream.Count();
+
+		size_t outsize = sizeof( wchar_t ) * ( newLen + curLen + 1 );
+		wchar_t *out = (wchar_t *)_alloca( outsize );
+		Q_memset( out, 0, outsize );
+		wcsncpy( out, newText, wcslen( newText ) );
+		wcsncat( out, m_TextStream.Base(), curLen );
+		out[ newLen + curLen ] = L'\0';
+		SetText( out );
+		_dataChanged = true;
+		FireActionSignal();
+	}
+}
+
+int TextEntry::GetTextLength() const
+{
+	return m_TextStream.Count();
+}
+
+bool TextEntry::IsTextFullySelected() const 
+{
+	if ( _select[ 0 ] != 0 )
+		return false;
+
+	if ( _select[ 1 ] != GetTextLength() )
+		return false;
+
+	return true;
 }

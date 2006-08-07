@@ -39,12 +39,11 @@ public:
 	void VidInit( void );
 	void OnThink( void );
 	void MsgFunc_Battery(bf_read &msg );
+	bool ShouldDraw();
 	
 private:
 	int		m_iBat;	
 	int		m_iNewBat;
-	float	m_fFade;
-	int		m_iGhostBat;
 };
 
 DECLARE_HUDELEMENT( CHudBattery );
@@ -74,9 +73,6 @@ void CHudBattery::Init( void )
 //-----------------------------------------------------------------------------
 void CHudBattery::Reset( void )
 {
-	m_iGhostBat	= 0;
-	m_fFade		= 0;
-
 	SetLabelText(vgui::localize()->Find("#Valve_Hud_SUIT"));
 	SetDisplayValue(m_iBat);
 }
@@ -87,6 +83,18 @@ void CHudBattery::Reset( void )
 void CHudBattery::VidInit( void )
 {
 	Reset();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudBattery::ShouldDraw( void )
+{
+	bool bNeedsDraw = ( m_iBat != m_iNewBat ) || ( GetAlpha() > 0 );
+
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
 //-----------------------------------------------------------------------------
@@ -125,8 +133,6 @@ void CHudBattery::OnThink( void )
 		}
 	}
 
-	m_fFade = 200;
-	m_iGhostBat = m_iNewBat;
 	m_iBat = m_iNewBat;
 
 	SetDisplayValue(m_iBat);

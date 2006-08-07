@@ -21,6 +21,8 @@
 #include "view_shared.h"
 #include "viewrender.h"
 
+ConVar r_DrawBeams( "r_DrawBeams", "1", FCVAR_CHEAT, "0=Off, 1=Normal, 2=Wireframe" );
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -113,10 +115,10 @@ public:
 private:
 	void					FreeDeadTrails( BeamTrail_t **trail );
 	void					UpdateBeam( Beam_t *pbeam, float frametime );
-	void					DrawBeamWithHalo( Beam_t* pbeam,int frame,int rendermode,float *color, float *srcColor, const model_t *sprite,const model_t *halosprite);
-	void					DrawBeamFollow( const model_t* pSprite, Beam_t *pbeam, int frame, int rendermode, float frametime, const float* color );
-	void					DrawLaser( Beam_t* pBeam, int frame, int rendermode, float* color, model_t const* sprite, model_t const* halosprite );
-	void					DrawTesla( Beam_t* pBeam, int frame, int rendermode, float* color, model_t const* sprite );
+	void					DrawBeamWithHalo( Beam_t* pbeam,int frame,int rendermode,float *color, float *srcColor, const model_t *sprite,const model_t *halosprite, float flHDRColorScale );
+	void					DrawBeamFollow( const model_t* pSprite, Beam_t *pbeam, int frame, int rendermode, float frametime, const float* color, float flHDRColorScale = 1.0f );
+	void					DrawLaser( Beam_t* pBeam, int frame, int rendermode, float* color, model_t const* sprite, model_t const* halosprite, float flHDRColorScale = 1.0f );
+	void					DrawTesla( Beam_t* pBeam, int frame, int rendermode, float* color, model_t const* sprite, float flHDRColorScale = 1.0f );
 
 	bool					RecomputeBeamEndpoints( Beam_t *pbeam );
 
@@ -135,17 +137,29 @@ private:
 private:
 	enum
 	{
-		// Max simultaneous beams
-		MAX_BEAMS			= 128,
+
+#ifndef _XBOX
 		// default max # of particles at one time
 		DEFAULT_PARTICLES	= 2048,
+#else
+		DEFAULT_PARTICLES   = 1024,
+#endif
+
 		// no fewer than this no matter what's on the command line
 		MIN_PARTICLES		= 512,	
+
+#ifndef _XBOX
+		// Maximum length of the free list.
+		BEAM_FREELIST_MAX	= 32
+#else
+		BEAM_FREELIST_MAX   = 4
+#endif
+
 	};
 
-	Beam_t					m_Beams[  MAX_BEAMS ];
 	Beam_t					*m_pActiveBeams;
 	Beam_t					*m_pFreeBeams;
+	int						m_nBeamFreeListLength;
 
 	BeamTrail_t				*m_pBeamTrails;
 	BeamTrail_t				*m_pActiveTrails;
@@ -157,6 +171,7 @@ private:
 static CViewRenderBeams s_ViewRenderBeams;
 IViewRenderBeams *beams = ( IViewRenderBeams * )&s_ViewRenderBeams;
 
+CUniformRandomStream beamRandom;
 //-----------------------------------------------------------------------------
 // Global methods
 //-----------------------------------------------------------------------------
@@ -173,7 +188,7 @@ static void Noise( float *noise, int divs, float scale )
 		return;
 
 	// Noise is normalized to +/- scale
-	noise[ div2 ] = (noise[0] + noise[divs]) * 0.5 + scale * random->RandomFloat(-1, 1);
+	noise[ div2 ] = (noise[0] + noise[divs]) * 0.5 + scale * beamRandom.RandomFloat(-1, 1);
 	if ( div2 > 1 )
 	{
 		Noise( &noise[div2], div2, scale * 0.5 );
@@ -276,6 +291,7 @@ void Beam_t::Reset()
 	m_hRenderHandle = INVALID_CLIENT_RENDER_HANDLE;
 	m_bCalculatedNoise = false;
 	m_queryHandleHalo = NULL;
+	m_flHDRColorScale = 1.0f;
 }
 
 
@@ -296,6 +312,15 @@ const QAngle& Beam_t::GetRenderAngles( void )
 {
 	return vec3_angle;
 }
+
+const matrix3x4_t &Beam_t::RenderableToWorldTransform()
+{
+	static matrix3x4_t mat;
+	SetIdentityMatrix( mat );
+	PositionMatrix( GetRenderOrigin(), mat );
+	return mat;
+}
+
 
 void Beam_t::GetRenderBounds( Vector& mins, Vector& maxs )
 {
@@ -380,11 +405,6 @@ void Beam_t::ComputeBounds( )
 	}
 }
 
-bool Beam_t::LODTest()
-{
-	return true;
-}
-
 bool Beam_t::ShouldDraw( void )
 {
 	return true;
@@ -405,8 +425,26 @@ int	Beam_t::GetFxBlend( )
 	return 255;
 }
 
+extern bool g_bRenderingScreenshot;
+extern ConVar r_drawviewmodel;
+
 int Beam_t::DrawModel( int flags )
 {
+	// Tracker 16432:  If rendering a savegame screenshot don't draw beams 
+	//   who have viewmodels as their attached entity
+	if ( g_bRenderingScreenshot || !r_drawviewmodel.GetBool() )
+	{
+		// If the beam is attached
+		for (int i=0;i<MAX_BEAM_ENTS;i++)
+		{
+			C_BaseViewModel *vm = dynamic_cast<C_BaseViewModel *>(entity[i].Get());
+			if ( vm )
+			{
+				return 0;
+			}
+		}
+	}
+
 	s_ViewRenderBeams.DrawBeam( this );
 	return 0;
 }
@@ -424,10 +462,14 @@ int Beam_t::DrawModel( int flags )
 
 CViewRenderBeams::CViewRenderBeams( void ) : m_pBeamTrails(0)
 {
+	m_pFreeBeams = NULL;
+	m_pActiveBeams = NULL;
+	m_nBeamFreeListLength = 0;
 }
 
 CViewRenderBeams::~CViewRenderBeams( void )
 {
+	ClearBeams();
 }
 
 
@@ -459,29 +501,33 @@ void CViewRenderBeams::InitBeams( void )
 //-----------------------------------------------------------------------------
 void CViewRenderBeams::ClearBeams( void )
 {
-	int i;
-
-	m_pFreeBeams = &m_Beams[ 0 ];
-	m_pActiveBeams = NULL;
-
-	for ( i = 0; i < MAX_BEAMS; i++ )
+	Beam_t *next = NULL;
+	for( ; m_pActiveBeams; m_pActiveBeams = next )
 	{
-		m_Beams[i].Reset();
-		m_Beams[i].next = &m_Beams[i+1];
+		next = m_pActiveBeams->next;
+		delete m_pActiveBeams;
 	}
 
-	m_Beams[MAX_BEAMS-1].next = NULL;
-
-	// Also clear any particles used by beams
-	m_pFreeTrails = &m_pBeamTrails[0];
-	m_pActiveTrails = NULL;
-
-	for (i=0 ;i<m_nNumBeamTrails ; i++)
+	for( ; m_pFreeBeams; m_pFreeBeams = next )
 	{
-		m_pBeamTrails[i].next = &m_pBeamTrails[i+1];
+		next = m_pFreeBeams->next;
+		delete m_pFreeBeams;
 	}
-	m_pBeamTrails[m_nNumBeamTrails-1].next = NULL;
 
+	m_nBeamFreeListLength = 0;
+
+	if ( m_nNumBeamTrails )
+	{
+		// Also clear any particles used by beams
+		m_pFreeTrails = &m_pBeamTrails[0];
+		m_pActiveTrails = NULL;
+
+		for (int i=0 ;i<m_nNumBeamTrails ; i++)
+		{
+			m_pBeamTrails[i].next = &m_pBeamTrails[i+1];
+		}
+		m_pBeamTrails[m_nNumBeamTrails-1].next = NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -491,7 +537,13 @@ void CViewRenderBeams::ClearBeams( void )
 void CViewRenderBeams::ShutdownBeams( void )
 {
 	if (m_pBeamTrails)
+	{
 		delete[] m_pBeamTrails;
+		m_pActiveTrails = NULL;
+		m_pBeamTrails = NULL;
+		m_pFreeTrails = NULL;
+		m_nNumBeamTrails = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -500,11 +552,23 @@ void CViewRenderBeams::ShutdownBeams( void )
 //-----------------------------------------------------------------------------
 Beam_t *CViewRenderBeams::BeamAlloc( bool bRenderable )
 {
-	if ( !m_pFreeBeams )
-		return NULL;
+	Beam_t*	pBeam = NULL; 
 
-	Beam_t*	pBeam   = m_pFreeBeams;
-	m_pFreeBeams	= pBeam->next;
+	if ( m_pFreeBeams )
+	{
+		pBeam = m_pFreeBeams;
+		m_pFreeBeams  = pBeam->next;
+		m_nBeamFreeListLength--;
+	}
+	else
+	{
+		pBeam = new Beam_t();
+		if( !pBeam )
+		{
+			DevMsg( "ERROR: failed to alloc Beam_t!\n" );
+			Assert( pBeam );
+		}
+	}
 	pBeam->next		= m_pActiveBeams;
 	m_pActiveBeams	= pBeam;
 
@@ -535,9 +599,18 @@ void CViewRenderBeams::BeamFree( Beam_t* pBeam )
 	// Clear us out
 	pBeam->Reset();
 
-	// Now link into free list;
-	pBeam->next = m_pFreeBeams;
-	m_pFreeBeams = pBeam;
+	if( m_nBeamFreeListLength < BEAM_FREELIST_MAX )
+	{
+		m_nBeamFreeListLength++;
+
+		// Now link into free list;
+		pBeam->next = m_pFreeBeams;
+		m_pFreeBeams = pBeam;
+	}
+	else
+	{
+		delete pBeam;
+	}
 }
 
 
@@ -1383,6 +1456,12 @@ void CViewRenderBeams::UpdateBeam( Beam_t *pbeam, float frametime )
 		return;
 	}
 
+	// if we are paused, force random numbers used by noise to generate the same value every frame
+	if ( frametime == 0.0f )
+	{
+		beamRandom.SetSeed( (int)gpGlobals->curtime );
+	}
+
 	// If FBEAM_ONLYNOISEONCE is set, we don't want to move once we've first calculated noise
 	if ( !(pbeam->flags & FBEAM_ONLYNOISEONCE ) )
 	{
@@ -1390,7 +1469,7 @@ void CViewRenderBeams::UpdateBeam( Beam_t *pbeam, float frametime )
 	}
 	else
 	{
-		pbeam->freq += frametime * random->RandomFloat(1,2);
+		pbeam->freq += frametime * beamRandom.RandomFloat(1,2);
 	}
 
 	// OPTIMIZE: Do this every frame?
@@ -1581,7 +1660,7 @@ void CViewRenderBeams::UpdateTempEntBeams( void )
 //			*color - 
 //-----------------------------------------------------------------------------
 void CViewRenderBeams::DrawBeamFollow( const model_t* pSprite, Beam_t *pbeam, 
-	int frame, int rendermode, float frametime, const float* color )
+	int frame, int rendermode, float frametime, const float* color, float flHDRColorScale )
 {
 	BeamTrail_t		*particles;
 	BeamTrail_t		*pnew;
@@ -1676,7 +1755,8 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 											float*			color,
 											float*			srcColor,
 											const model_t	*sprite,
-											const model_t	*halosprite)
+											const model_t	*halosprite,
+											float			flHDRColorScale )
 {
 	Vector beamDir = pbeam->attachment[1] - pbeam->attachment[0];
 	VectorNormalize( beamDir );
@@ -1725,14 +1805,14 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 	{
 		DrawSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, pbeam->attachment[0],
 			pbeam->delta, pbeam->width, pbeam->endWidth, pbeam->amplitude, pbeam->freq, pbeam->speed,
-			pbeam->segments, pbeam->flags, scaleColor, pbeam->fadeLength );
+			pbeam->segments, pbeam->flags, scaleColor, pbeam->fadeLength, flHDRColorScale );
 	}
 	else
 	{
 		// Draw primary beam just shy of its end so it doesn't clip
 		DrawSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, pbeam->attachment[0], 
 			pbeam->delta, pbeam->width, pbeam->width, pbeam->amplitude, pbeam->freq, pbeam->speed, 
-			2, pbeam->flags, scaleColor, pbeam->fadeLength );
+			2, pbeam->flags, scaleColor, pbeam->fadeLength, flHDRColorScale );
 	}
 
 	Vector vSource = pbeam->attachment[0];
@@ -1756,7 +1836,7 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 		float haloColor[3];
 		VectorScale( srcColor, colorFade * haloFractionVisible, haloColor );
 
-		BeamDrawHalo( halosprite, frame, kRenderGlow, vSource, haloScale, haloColor );
+		BeamDrawHalo( halosprite, frame, kRenderGlow, vSource, haloScale, haloColor, flHDRColorScale );
 	}
 }
 
@@ -1764,7 +1844,7 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 //------------------------------------------------------------------------------
 // Purpose : Draw a beam based upon the viewpoint
 //------------------------------------------------------------------------------
-void CViewRenderBeams::DrawLaser( Beam_t *pbeam, int frame, int rendermode, float *color, const model_t *sprite, const model_t *halosprite )
+void CViewRenderBeams::DrawLaser( Beam_t *pbeam, int frame, int rendermode, float *color, const model_t *sprite, const model_t *halosprite, float flHDRColorScale )
 {
 	float	color2[3];
 	VectorCopy( color, color2 );
@@ -1819,9 +1899,9 @@ void CViewRenderBeams::DrawLaser( Beam_t *pbeam, int frame, int rendermode, floa
 //------------------------------------------------------------------------------
 // Purpose : Draw a fibrous tesla beam
 //------------------------------------------------------------------------------
-void CViewRenderBeams::DrawTesla( Beam_t *pbeam, int frame, int rendermode, float *color, const model_t *sprite )
+void CViewRenderBeams::DrawTesla( Beam_t *pbeam, int frame, int rendermode, float *color, const model_t *sprite, float flHDRColorScale )
 {
-	DrawTeslaSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->endWidth, pbeam->amplitude, pbeam->freq, pbeam->speed, pbeam->segments, pbeam->flags, color, pbeam->fadeLength);
+	DrawTeslaSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->endWidth, pbeam->amplitude, pbeam->freq, pbeam->speed, pbeam->segments, pbeam->flags, color, pbeam->fadeLength, flHDRColorScale );
 }
 
 //-----------------------------------------------------------------------------
@@ -1832,6 +1912,9 @@ void CViewRenderBeams::DrawTesla( Beam_t *pbeam, int frame, int rendermode, floa
 void CViewRenderBeams::DrawBeam( Beam_t *pbeam )
 {
 	Assert( pbeam->delta.IsValid() );
+
+	if ( !r_DrawBeams.GetInt() )
+		return;
 
 	// Don't draw really short beams
 	if (pbeam->delta.Length() < 0.1)
@@ -1888,53 +1971,53 @@ void CViewRenderBeams::DrawBeam( Beam_t *pbeam )
 	case TE_BEAMDISK:
 		DrawDisk( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, 
 			pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->amplitude, 
-			pbeam->freq, pbeam->speed, pbeam->segments, color );
+			pbeam->freq, pbeam->speed, pbeam->segments, color, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMCYLINDER:
 		DrawCylinder( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, 
 			pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->amplitude, 
-			pbeam->freq, pbeam->speed, pbeam->segments, color );
+			pbeam->freq, pbeam->speed, pbeam->segments, color, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMPOINTS:
 		if (halosprite)
 		{	
-			DrawBeamWithHalo( pbeam, frame, rendermode, color, srcColor, sprite, halosprite);
+			DrawBeamWithHalo( pbeam, frame, rendermode, color, srcColor, sprite, halosprite, pbeam->m_flHDRColorScale );
 		}
 		else
 		{
 			DrawSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, frame, rendermode, 
 				pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->endWidth, 
 				pbeam->amplitude, pbeam->freq, pbeam->speed, pbeam->segments, 
-				pbeam->flags, color, pbeam->fadeLength );
+				pbeam->flags, color, pbeam->fadeLength, pbeam->m_flHDRColorScale );
 		}
 		break;
 
 	case TE_BEAMFOLLOW:
-		DrawBeamFollow( sprite, pbeam, frame, rendermode, gpGlobals->frametime, color );
+		DrawBeamFollow( sprite, pbeam, frame, rendermode, gpGlobals->frametime, color, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMRING:
 	case TE_BEAMRINGPOINT:
 		DrawRing( NOISE_DIVISIONS, pbeam->rgNoise, Noise, sprite, frame, rendermode, 
 			pbeam->attachment[0], pbeam->delta, pbeam->width, pbeam->amplitude, 
-			pbeam->freq, pbeam->speed, pbeam->segments, color );
+			pbeam->freq, pbeam->speed, pbeam->segments, color, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMSPLINE:
 		DrawSplineSegs( NOISE_DIVISIONS, pbeam->rgNoise, sprite, halosprite,
 			pbeam->haloScale, frame, rendermode, pbeam->numAttachments,
 			pbeam->attachment, pbeam->width, pbeam->endWidth, pbeam->amplitude,
-			pbeam->freq, pbeam->speed, pbeam->segments, pbeam->flags, color, pbeam->fadeLength );
+			pbeam->freq, pbeam->speed, pbeam->segments, pbeam->flags, color, pbeam->fadeLength, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMLASER:
-		DrawLaser( pbeam, frame, rendermode, color, sprite, halosprite);
+		DrawLaser( pbeam, frame, rendermode, color, sprite, halosprite, pbeam->m_flHDRColorScale );
 		break;
 
 	case TE_BEAMTESLA:
-		DrawTesla( pbeam, frame, rendermode, color, sprite );
+		DrawTesla( pbeam, frame, rendermode, color, sprite, pbeam->m_flHDRColorScale );
 		break;
 
 	default:
@@ -2131,6 +2214,9 @@ void CViewRenderBeams::DrawBeam( C_Beam* pbeam )
 				return;
 		}
 	}
+
+	beam.m_flHDRColorScale = pbeam->GetHDRColorScale();
+
 	// Draw it
 	UpdateBeam( &beam, gpGlobals->frametime );
 	DrawBeam( &beam );

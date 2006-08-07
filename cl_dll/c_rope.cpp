@@ -23,8 +23,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar r_ropebatch( "r_ropebatch", "1" );
-
 void RecvProxy_RecomputeSprings( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	// Have the regular proxy store the data.
@@ -62,7 +60,6 @@ END_RECV_TABLE()
 #define ROPE_IMPULSE_DECAY	0.95
 
 static ConVar rope_shake( "rope_shake", "0" );
-static ConVar rope_drawlines( "rope_drawlines", "0" );
 static ConVar rope_subdiv( "rope_subdiv", "2", 0, "Rope subdivision amount", true, 0, true, MAX_ROPE_SUBDIVS );
 static ConVar rope_collide( "rope_collide", "1", 0, "Collide rope with the world" );
 
@@ -81,6 +78,15 @@ static ConVar r_ropetranslucent( "r_ropetranslucent", "1");
 
 static ConVar rope_wind_dist( "rope_wind_dist", "1000", 0, "Don't use CPU applying small wind gusts to ropes when they're past this distance." );
 static ConVar rope_averagelight( "rope_averagelight", "1", 0, "Makes ropes use average of cubemap lighting instead of max intensity." );
+
+
+static ConVar rope_rendersolid( "rope_rendersolid", "1" );
+
+static ConVar rope_solid_minwidth( "rope_solid_minwidth", "0.6" );
+static ConVar rope_solid_maxwidth( "rope_solid_maxwidth", "1" );
+
+static ConVar rope_solid_minalpha( "rope_solid_minalpha", "0.0" );
+static ConVar rope_solid_maxalpha( "rope_solid_maxalpha", "1" );
 
 
 static CCycleCount	g_RopeCollideTicks;
@@ -135,6 +141,9 @@ struct RopeSegData_t
 	int			m_nSegmentCount;
 	CBeamSeg	m_Segments[MAX_ROPE_SEGMENTS];
 	float		m_BackWidths[MAX_ROPE_SEGMENTS];
+
+	// If this is less than rope_solid_minwidth and rope_solid_minalpha is 0, then we can avoid drawing..
+	float		m_flMaxBackWidth;
 };
 
 class CRopeManager : public IRopeManager
@@ -180,6 +189,13 @@ IRopeManager *RopeManager()
 	return &s_RopeManager;
 }
 
+
+inline bool ShouldUseFakeAA( IMaterial *pBackMaterial )
+{
+	return pBackMaterial && rope_smooth.GetInt() && engine->GetDXSupportLevel() > 70 && !g_pMaterialSystemHardwareConfig->IsAAEnabled();
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -222,8 +238,9 @@ void CRopeManager::AddToRenderCache( C_RopeKeyframe *pRope )
 	}
 	
 	// Find the current rope list.
+	int iRenderCache = 0;
 	int nRenderCacheCount = m_aRenderCache.Count();
-	for ( int iRenderCache = 0; iRenderCache < nRenderCacheCount; ++iRenderCache )
+	for ( ; iRenderCache < nRenderCacheCount; ++iRenderCache )
 	{
 		if ( ( pRope->GetSolidMaterial() == m_aRenderCache[iRenderCache].m_pSolidMaterial ) &&
 			 ( pRope->GetBackMaterial() == m_aRenderCache[iRenderCache].m_pBackMaterial ) )
@@ -290,15 +307,19 @@ void CRopeManager::DrawRenderCache( void )
 		}
 
 		// Render the non-solid portion of the ropes.
-		bool bRenderNonSolid = ( m_aRenderCache[iRenderCache].m_pBackMaterial && rope_smooth.GetInt() && engine->GetDXSupportLevel() > 70 && !g_pMaterialSystemHardwareConfig->IsAAEnabled());
+		bool bRenderNonSolid = ShouldUseFakeAA( m_aRenderCache[iRenderCache].m_pBackMaterial );
 		if ( bRenderNonSolid )
 		{
 			RenderNonSolidRopes( m_aRenderCache[iRenderCache].m_pBackMaterial, nVertCount, nIndexCount );
 		}
 
 		// Render the solid portion of the ropes.
-		RenderSolidRopes( m_aRenderCache[iRenderCache].m_pSolidMaterial, nVertCount, nIndexCount, bRenderNonSolid );
+		if ( rope_rendersolid.GetInt() )
+		{
+			RenderSolidRopes( m_aRenderCache[iRenderCache].m_pSolidMaterial, nVertCount, nIndexCount, bRenderNonSolid );
+		}
 	}
+	ResetSegmentCache( 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -347,12 +368,29 @@ void CRopeManager::RenderSolidRopes( IMaterial *pMaterial, int nVertCount, int n
 		int nVerts = 0;
 		for ( int iSegmentCache = 0; iSegmentCache < m_nSegmentCacheCount; ++iSegmentCache )
 		{
+			RopeSegData_t *pSegData = &m_aSegmentCache[iSegmentCache];
+			
+			// If it's all going to be 0 alpha, then just skip drawing this one.
+			if ( rope_solid_minalpha.GetFloat() == 0.0 && pSegData->m_flMaxBackWidth <= rope_solid_minwidth.GetFloat() )
+				continue;
+
 			int nSegmentCount = m_aSegmentCache[iSegmentCache].m_nSegmentCount;
 			beamSegment.Start( nSegmentCount, pMaterial, &meshBuilder, nVerts );
 			for ( int iSegment = 0; iSegment < nSegmentCount; ++iSegment )
 			{
-				m_aSegmentCache[iSegmentCache].m_Segments[iSegment].m_flAlpha = 0.3f;
-				m_aSegmentCache[iSegmentCache].m_Segments[iSegment].m_flWidth = m_aSegmentCache[iSegmentCache].m_BackWidths[iSegment];
+				CBeamSeg *pSeg = &m_aSegmentCache[iSegmentCache].m_Segments[iSegment];
+				pSeg->m_flWidth = m_aSegmentCache[iSegmentCache].m_BackWidths[iSegment];
+
+				// To avoid aliasing, the "solid" version of the rope on xbox is just "more solid",
+				// and it has its own values controlling its alpha.
+				pSeg->m_flAlpha = RemapVal( pSeg->m_flWidth, 
+					rope_solid_minwidth.GetFloat(),
+					rope_solid_maxwidth.GetFloat(),
+					rope_solid_minalpha.GetFloat(),
+					rope_solid_maxalpha.GetFloat() );
+				
+				pSeg->m_flAlpha = clamp( pSeg->m_flAlpha, 0.0f, 1.0f );
+				
 				beamSegment.NextSeg( &m_aSegmentCache[iSegmentCache].m_Segments[iSegment] );
 			}
 			beamSegment.End();
@@ -384,8 +422,13 @@ void CRopeManager::RenderSolidRopes( IMaterial *pMaterial, int nVertCount, int n
 //-----------------------------------------------------------------------------
 void CRopeManager::ResetSegmentCache( int nMaxSegments )
 {
+	MEM_ALLOC_CREDIT();
 	m_nSegmentCacheCount = 0;
-	m_aSegmentCache.EnsureCount( nMaxSegments );
+	if ( nMaxSegments )
+		m_aSegmentCache.EnsureCount( nMaxSegments );
+	else
+		m_aSegmentCache.Purge();
+
 }
 
 //-----------------------------------------------------------------------------
@@ -867,12 +910,6 @@ void C_RopeKeyframe::OnDataChanged( DataUpdateType_t updateType )
 }
 
 
-inline bool C_RopeKeyframe::ShouldUseFakeAA() const
-{
-	return m_pBackMaterial && rope_smooth.GetInt() && engine->GetDXSupportLevel() > 70 && !g_pMaterialSystemHardwareConfig->IsAAEnabled();
-}
-
-
 void C_RopeKeyframe::FinishInit( const char *pMaterialName )
 {
 	// Get the material from the material system.	
@@ -914,7 +951,7 @@ void C_RopeKeyframe::RunRopeSimulation( float flSeconds )
 
 	// Now count how many links touched something.
 	m_nLinksTouchingSomething = 0;
-	for ( i=0; i < m_nSegments; i++ )
+	for ( int i=0; i < m_nSegments; i++ )
 	{
 		if ( m_LinksTouchingSomething[i] )
 			++m_nLinksTouchingSomething;
@@ -953,12 +990,12 @@ void C_RopeKeyframe::ClientThink()
 
 			static float basicScale = 50;
 			m_vWindDir *= basicScale;
-			m_vWindDir *= RemapVal( rand(), 0, RAND_MAX, -1, 1 );
+			m_vWindDir *= RandomFloat( -1.0f, 1.0f );
 			
 			m_flCurrentGustTimer = 0;
-			m_flCurrentGustLifetime = RemapVal( rand(), 0, RAND_MAX, 2, 3 );
+			m_flCurrentGustLifetime = RandomFloat( 2.0f, 3.0f );
 
-			m_flTimeToNextGust = RemapVal( rand(), 0, RAND_MAX, 2, 4 );
+			m_flTimeToNextGust = RandomFloat( 3.0f, 4.0f );
 		}
 
 		UpdateBBox();
@@ -989,16 +1026,7 @@ int C_RopeKeyframe::DrawModel( int flags )
 			return 0;
 	}
 
-	if ( r_ropebatch.GetInt() )
-	{
-		RopeManager()->AddToRenderCache( this );
-	}
-	else
-	{
-		// Draw beams.
-		DrawBeams();
-	}
-
+	RopeManager()->AddToRenderCache( this );
 	return 1;
 }
 
@@ -1111,15 +1139,18 @@ bool C_RopeKeyframe::DetectRestingState( bool &bApplyWind )
 	Vector &vEnd1 = m_RopePhysics.GetFirstNode()->m_vPos;
 	Vector &vEnd2 = m_RopePhysics.GetLastNode()->m_vPos;
 	
-	if ( m_RopeFlags & ROPE_NO_WIND )
-	{
-	}
-	else
+	if ( !( m_RopeFlags & ROPE_NO_WIND ) )
 	{
 		// Don't apply wind if more than half of the nodes are touching something.
 		float flDist1 = CalcDistanceToLineSegment( MainViewOrigin(), vEnd1, vEnd2 );
 		if( m_nLinksTouchingSomething < (m_RopePhysics.NumNodes() >> 1) )
 			bApplyWind = flDist1 < rope_wind_dist.GetFloat();
+	}
+
+	if ( m_flPreviousImpulse != m_flImpulse )
+	{
+		m_flPreviousImpulse = m_flImpulse;
+		return false;
 	}
 
 	return !AnyPointsMoved() && !bApplyWind && !rope_shake.GetInt();
@@ -1181,6 +1212,7 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 	}
 
 	pSegmentData->m_nSegmentCount = nSegmentCount;
+	pSegmentData->m_flMaxBackWidth = 0;
 
 	// Figure out texture scale.
 	float flPixelsPerInch = 4.0f / m_TextureScale;
@@ -1189,7 +1221,7 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 	float flActualInc = ( flTotalTexCoord / nTotalPoints ) / ( float )m_TextureHeight;
 
 	// First draw a translucent rope underneath the solid rope for an antialiasing effect.
-	if ( ShouldUseFakeAA() )
+	if ( ShouldUseFakeAA( m_pBackMaterial ) )
 	{
 		// Compute screen width
 		float flScreenWidth = ScreenWidth();
@@ -1202,7 +1234,7 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 
 		float flMinScreenSpaceWidth = rope_smooth_minwidth.GetFloat();
 		float flMaxAlphaScreenSpaceWidth = rope_smooth_maxalphawidth.GetFloat();
-
+		
 		float flTexCoord = m_flCurScroll;
 		for ( int iSegment = 0; iSegment < nSegmentCount; ++iSegment )
 		{
@@ -1210,7 +1242,8 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 
 			// Right here, we need to specify a width that will be 1 pixel larger in screen space.
 			float zCoord = CurrentViewForward().Dot( pSegmentData->m_Segments[iSegment].m_vPos - CurrentViewOrigin() );
-				
+			zCoord = max( zCoord, 0.1f );
+							
 			float flScreenSpaceWidth = m_Width * flHalfScreenWidth / zCoord;
 			if ( flScreenSpaceWidth < flMinScreenSpaceWidth )
 			{
@@ -1235,6 +1268,10 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 				{
 					pSegmentData->m_BackWidths[iSegment] = 0.0f;
 				}
+				else
+				{
+					pSegmentData->m_flMaxBackWidth = max( pSegmentData->m_flMaxBackWidth, pSegmentData->m_BackWidths[iSegment] );
+				}
 			}
 
 			// Get the next texture coordinate.
@@ -1258,197 +1295,6 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData )
 		}
 	}
 }
-
-void C_RopeKeyframe::DrawBeams()
-{
-	if( !r_drawropes.GetBool() )
-		return;
-
-	CTimeAdder adder( &g_RopeDrawTicks );
-
-	// Draw lines for now.
-	if( !m_pMaterial )
-		return;
-
-	CBeamSegDraw beamDraw;
-	Vector *pLightValues = mat_fullbright.GetInt() ? g_FullBright_LightValues : m_LightValues;
-
-	float *pSubdivs;
-	int nSubdivs;
-	UpdateRopeSubdivs( &pSubdivs, &nSubdivs );
-
-	
-	Vector vPositions[ROPE_MAX_SEGMENTS + (ROPE_MAX_SEGMENTS-1) * MAX_ROPE_SUBDIVS];
-	Vector vColors[ROPE_MAX_SEGMENTS + (ROPE_MAX_SEGMENTS-1) * MAX_ROPE_SUBDIVS];
-	int nPointsSpecified = 0;
-
-
-	int iPrev = 0;
-	for( int i=0; i < m_RopePhysics.NumNodes(); i++ )
-	{
-		Vector &vCur = m_RopePhysics.GetNode(i)->m_vPredicted;
-		
-		vPositions[nPointsSpecified] = vCur;
-		vColors[nPointsSpecified++] = pLightValues[i] * m_vColorMod;
-
-		if( (i+1) < m_RopePhysics.NumNodes() )
-		{
-			// Draw a midpoint to the next segment.
-			int iNext = i+1;
-			int iNextNext = i+2;
-			if( iNext >= m_RopePhysics.NumNodes() )
-			{
-				iNext = iNextNext = m_RopePhysics.NumNodes() - 1;
-			}
-			else if( iNextNext >= m_RopePhysics.NumNodes() )
-			{
-				iNextNext = m_RopePhysics.NumNodes() - 1;
-			}
-
-			Vector vColorInc = ((pLightValues[i+1] - pLightValues[i]) * m_vColorMod) / (nSubdivs+1);
-			for( int iSubdiv=0; iSubdiv < nSubdivs; iSubdiv++ )
-			{
-				vColors[nPointsSpecified] = vColors[nPointsSpecified-1] + vColorInc;
-
-				Catmull_Rom_Spline( 
-					m_RopePhysics.GetNode(iPrev)->m_vPredicted,
-					m_RopePhysics.GetNode(i)->m_vPredicted,
-					m_RopePhysics.GetNode(iNext)->m_vPredicted,
-					m_RopePhysics.GetNode(iNextNext)->m_vPredicted,
-					pSubdivs[iSubdiv], 
-					vPositions[nPointsSpecified] );
-			
-				++nPointsSpecified;
-				Assert( nPointsSpecified <= ARRAYSIZE( vPositions ) );
-			}
-
-			iPrev = i;
-		}
-	}
-
-
-	// Figure out texture scale.
-	float flPixelsPerInch = 4.0f / m_TextureScale;
-	float flTotalTexCoord = flPixelsPerInch * (m_RopeLength + m_Slack + ROPESLACK_FUDGEFACTOR);
-	int nTotalPoints = (m_RopePhysics.NumNodes()-1) * nSubdivs + 1;
-	float flActualInc = (flTotalTexCoord / nTotalPoints) / (float)m_TextureHeight;
-
-	// Compute screen width
-	float flScreenWidth = ScreenWidth();
-	float flHalfScreenWidth = flScreenWidth / 2.f;
-
-	//float flRopeLength = ( vPositions[0] - vPositions[nPointsSpecified-1] ).Length();
-	//float flProjectedRopeLength = 
-
-	// Determine the 
-	// First draw a translucent rope underneath the solid rope for an antialiasing effect.
-	float backWidths[ROPE_MAX_SEGMENTS + (ROPE_MAX_SEGMENTS-1) * MAX_ROPE_SUBDIVS];
-	if ( ShouldUseFakeAA() )
-	{
-		float flExtraScreenSpaceWidth = rope_smooth_enlarge.GetFloat();
-
-		float flMinAlpha = rope_smooth_minalpha.GetFloat();
-		float flMaxAlpha = rope_smooth_maxalpha.GetFloat();
-
-		float flMinScreenSpaceWidth = rope_smooth_minwidth.GetFloat();
-		float flMaxAlphaScreenSpaceWidth = rope_smooth_maxalphawidth.GetFloat();
-
-		beamDraw.Start( (m_RopePhysics.NumNodes()-1) * (nSubdivs+1) + 1, m_pBackMaterial );
-
-		/*engine->GetDXSupportLevel()  <= 70 */ 
-
-			CBeamSeg seg;
-			seg.m_flTexCoord = m_flCurScroll;
-			m_flCurScroll += m_flScrollSpeed * gpGlobals->frametime;
-
-			for ( i=0; i < nPointsSpecified; i++ )
-			{
-				seg.m_vPos = vPositions[i];
-				seg.m_vColor = vColors[i];
-
-				// Right here, we need to specify a width that will be 1 pixel larger in screen space.
-				float zCoord = CurrentViewForward().Dot( seg.m_vPos - CurrentViewOrigin() );
-				
-				float flScreenSpaceWidth = m_Width * flHalfScreenWidth / zCoord;
-				if ( flScreenSpaceWidth < flMinScreenSpaceWidth )
-				{
-					seg.m_flAlpha = flMinAlpha;
-					seg.m_flWidth = flMinScreenSpaceWidth * zCoord / flHalfScreenWidth;
-					backWidths[i] = 0;
-				}
-				else
-				{
-					if ( flScreenSpaceWidth > flMaxAlphaScreenSpaceWidth )
-						seg.m_flAlpha = flMaxAlpha;
-					else
-						seg.m_flAlpha = RemapVal( flScreenSpaceWidth, flMinScreenSpaceWidth, flMaxAlphaScreenSpaceWidth, flMinAlpha, flMaxAlpha );
-
-					seg.m_flWidth = m_Width;
-					backWidths[i] = m_Width - (zCoord * flExtraScreenSpaceWidth) / flScreenWidth;
-					if ( backWidths[i] < 0 )
-						backWidths[i] = 0;
-				}
-
-				beamDraw.NextSeg( &seg );
-				
-				seg.m_flTexCoord += flActualInc;
-			}
-
-		beamDraw.End();
-	}
-	else
-	{
-		// If rope_smooth is off, just set it up to write m_Width in the next pass.
-		for ( i=0; i < nPointsSpecified; i++ )
-			backWidths[i] = m_Width;
-	}
-
-
-	// Now draw the solid version of the curve.
-	beamDraw.Start( (m_RopePhysics.NumNodes()-1) * (nSubdivs+1) + 1, m_pMaterial );
-
-		CBeamSeg seg;
-		seg.m_flWidth = m_Width;
-		seg.m_flTexCoord = m_flCurScroll;
-		m_flCurScroll += m_flScrollSpeed * gpGlobals->frametime;
-		seg.m_flAlpha = 0.3f;
-
-		for ( i=0; i < nPointsSpecified; i++ )
-		{
-			seg.m_vPos = vPositions[i];
-			seg.m_vColor = vColors[i];
-			seg.m_flWidth = backWidths[i];
-			
-			beamDraw.NextSeg( &seg );
-			
-			seg.m_flTexCoord += flActualInc;
-		}
-
-	beamDraw.End();
-
-
-	if( rope_drawlines.GetInt() )
-	{
-		IMaterial *pMat = materials->FindMaterial( "vgui/white", TEXTURE_GROUP_OTHER );
-		IMesh *pMesh = materials->GetDynamicMesh( true, NULL, NULL, pMat );
-		CMeshBuilder builder;
-		builder.Begin( pMesh, MATERIAL_LINES, m_RopePhysics.NumNodes()-1 );
-			
-			for( int i=0; i < m_RopePhysics.NumNodes()-1; i++ )
-			{
-				builder.Color3f( 1, 0, 0 );
-				builder.Position3f( VectorExpand( m_RopePhysics.GetNode(i)->m_vPredicted ) );
-				builder.AdvanceVertex();
-
-				builder.Color3f(  0, 0, 1 );
-				builder.Position3f( VectorExpand( m_RopePhysics.GetNode(i+1)->m_vPredicted ) );
-				builder.AdvanceVertex();
-			}
-
-		builder.End( false, true );
-	}
-}
-
 
 void C_RopeKeyframe::UpdateBBox()
 {
@@ -1478,7 +1324,9 @@ bool C_RopeKeyframe::InitRopePhysics()
 		return 0;
 
 	if( m_bPhysicsInitted )
+	{
 		return true;
+	}
 
 	// Must have both entities to work.
 	m_bPrevEndPointPos[0] = GetEndPointPos( 0, m_vPrevEndPointPos[0] );
@@ -1518,7 +1366,7 @@ bool C_RopeKeyframe::InitRopePhysics()
 	// Set our bounds for visibility.
 	UpdateBBox();
 
-	m_flTimeToNextGust = RemapVal( rand(), 0, RAND_MAX, 1, 3 );
+	m_flTimeToNextGust = RandomFloat( 1.0f, 3.0f );
 	m_bPhysicsInitted = true;
 	
 	return true;

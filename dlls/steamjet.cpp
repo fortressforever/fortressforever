@@ -23,6 +23,7 @@ IMPLEMENT_SERVERCLASS_ST(CSteamJet, DT_SteamJet)
 	SendPropInt(SENDINFO(m_bFaceLeft), 1, SPROP_UNSIGNED), // For support of legacy env_steamjet, which faced left instead of forward.
 	SendPropInt(SENDINFO(m_nType), 32, SPROP_UNSIGNED),
 	SendPropInt( SENDINFO(m_spawnflags), 8, SPROP_UNSIGNED ),
+	SendPropFloat(SENDINFO(m_flRollSpeed), 0, SPROP_NOSCALE),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( env_steam, CSteamJet );
@@ -36,6 +37,7 @@ BEGIN_DATADESC( CSteamJet )
 	DEFINE_KEYFIELD( m_EndSize,		FIELD_FLOAT,	"EndSize" ),
 	DEFINE_KEYFIELD( m_InitialState,	FIELD_BOOLEAN,	"InitialState" ),
 	DEFINE_KEYFIELD( m_nType,		FIELD_INTEGER,	"Type" ),
+	DEFINE_KEYFIELD( m_flRollSpeed, FIELD_FLOAT, "RollSpeed" ),
 
 	//Regular fields
 	DEFINE_FIELD( m_bEmit, FIELD_INTEGER ),
@@ -54,7 +56,10 @@ BEGIN_DATADESC( CSteamJet )
 END_DATADESC()
 
 
-
+CSteamJet::CSteamJet( void )
+{
+	m_flRollSpeed = 8.0f;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Called before spawning, after key values have been set.
 //-----------------------------------------------------------------------------

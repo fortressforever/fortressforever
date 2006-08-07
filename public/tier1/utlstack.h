@@ -4,6 +4,7 @@
 //
 // $NoKeywords: $
 //
+// A stack based on a growable array
 //=============================================================================//
 
 #ifndef UTLSTACK_H
@@ -60,6 +61,7 @@ public:
 	// Pops the stack
 	void Pop();
 	void Pop( T& oldTop );
+	void PopMultiple( int num );
 
 	// Makes sure we have enough memory allocated to store a requested # of elements
 	void EnsureCapacity( int num );
@@ -271,6 +273,15 @@ void CUtlStack<T>::Pop( T& oldTop )
 	assert( m_Size > 0 );
 	oldTop = Top();
 	Pop();
+}
+
+template< class T >
+void CUtlStack<T>::PopMultiple( int num )
+{
+	assert( m_Size >= num );
+	for ( int i = 0; i < num; ++i )
+		Destruct( &Element( m_Size - i - 1 ) );
+	m_Size -= num;
 }
 
 

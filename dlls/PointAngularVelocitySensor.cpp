@@ -21,6 +21,7 @@ enum
 	AVELOCITY_SENSOR_NO_LAST_RESULT = -2
 };
 
+ConVar g_debug_angularsensor( "g_debug_angularsensor", "0", FCVAR_CHEAT );
 
 class CPointAngularVelocitySensor : public CPointEntity
 {
@@ -37,6 +38,7 @@ private:
 	float SampleAngularVelocity(CBaseEntity *pEntity);
 	int CompareToThreshold(CBaseEntity *pEntity, float flThreshold, bool bFireVelocityOutput);
 	void FireCompareOutput(int nCompareResult, CBaseEntity *pActivator);
+	void DrawDebugLines( void );
 
 	// Input handlers
 	void InputTest( inputdata_t &inputdata );
@@ -48,6 +50,9 @@ private:
 	float m_flFireInterval;
 	float m_flLastAngVelocity;
 	QAngle m_lastOrientation;
+
+	Vector m_vecAxis;
+	bool m_bUseHelper;
 
 	// Outputs
 	COutputFloat m_AngularVelocity;
@@ -85,6 +90,9 @@ BEGIN_DATADESC( CPointAngularVelocitySensor )
 	DEFINE_OUTPUT(m_OnEqualTo, "OnEqualTo"),
 	DEFINE_OUTPUT(m_AngularVelocity, "AngularVelocity"),
 
+	DEFINE_KEYFIELD( m_vecAxis, FIELD_VECTOR, "axis" ),
+	DEFINE_KEYFIELD( m_bUseHelper, FIELD_BOOLEAN, "usehelper" ),
+
 END_DATADESC()
 
 
@@ -107,7 +115,7 @@ void CPointAngularVelocitySensor::Activate(void)
 {
 	BaseClass::Activate();
 
-	m_hTargetEntity = gEntList.FindEntityByName(NULL, m_target, NULL);
+	m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target );
 
 	if (m_hTargetEntity)
 	{
@@ -115,6 +123,38 @@ void CPointAngularVelocitySensor::Activate(void)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draws magic lines...
+//-----------------------------------------------------------------------------
+void CPointAngularVelocitySensor::DrawDebugLines( void )
+{
+	if ( m_hTargetEntity )
+	{
+		Vector vForward, vRight, vUp;
+		AngleVectors( m_hTargetEntity->GetAbsAngles(), &vForward, &vRight, &vUp );
+
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vForward * 64, 255, 0, 0, false, 0 );
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vRight * 64, 0, 255, 0, false, 0 );
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vUp * 64, 0, 0, 255, false, 0 );
+	}
+
+	if ( m_bUseHelper == true )
+	{
+		QAngle Angles;
+		Vector vAxisForward, vAxisRight, vAxisUp;
+
+		Vector vLine = m_vecAxis - GetAbsOrigin();
+
+		VectorNormalize( vLine );
+
+		VectorAngles( vLine, Angles );
+		AngleVectors( Angles, &vAxisForward, &vAxisRight, &vAxisUp );
+
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vAxisForward * 64, 255, 0, 0, false, 0 );
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vAxisRight * 64, 0, 255, 0, false, 0 );
+		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + vAxisUp * 64, 0, 0, 255, false, 0 );
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the magnitude of the entity's angular velocity.
@@ -129,23 +169,46 @@ float CPointAngularVelocitySensor::SampleAngularVelocity(CBaseEntity *pEntity)
 			Vector vecVelocity;
 			AngularImpulse vecAngVelocity;
 			pPhys->GetVelocity(&vecVelocity, &vecAngVelocity);
+
 			QAngle angles;
 			pPhys->GetPosition( NULL, &angles );
+
+			float dt = gpGlobals->curtime - GetLastThink();
+			if ( dt == 0 )
+				dt = 0.1;
+
 			// HACKHACK: We don't expect a real 'delta' orientation here, just enough of an error estimate to tell if this thing
 			// is trying to move, but failing.
 			QAngle delta = angles - m_lastOrientation;
-			if ( delta.Length() < 1 )
+
+			if ( ( delta.Length() / dt )  < ( vecAngVelocity.Length() * 0.01 ) )
 			{
 				return 0.0f;
 			}
 			m_lastOrientation = angles;
-			return vecAngVelocity.Length();
+
+			if ( m_bUseHelper == false )
+			{
+				return vecAngVelocity.Length();
+			}
+			else
+			{
+				Vector vLine = m_vecAxis - GetAbsOrigin();
+				VectorNormalize( vLine );
+
+				Vector vecWorldAngVelocity;
+				pPhys->LocalToWorldVector( &vecWorldAngVelocity, vecAngVelocity );
+				float flDot = DotProduct( vecWorldAngVelocity, vLine );
+
+				return flDot;
+			}
 		}
 	}
 	else
 	{
 		QAngle vecAngVel = pEntity->GetLocalAngularVelocity();
 		float flMax = max(fabs(vecAngVel[PITCH]), fabs(vecAngVel[YAW]));
+
 		return max(flMax, fabs(vecAngVel[ROLL]));
 	}
 
@@ -167,6 +230,11 @@ int CPointAngularVelocitySensor::CompareToThreshold(CBaseEntity *pEntity, float 
 	}
 
 	float flAngVelocity = SampleAngularVelocity(pEntity);
+
+	if ( g_debug_angularsensor.GetBool() )
+	{
+		DrawDebugLines();
+	}
 
 	if (bFireVelocityOutput && (flAngVelocity != m_flLastAngVelocity))
 	{
@@ -263,4 +331,3 @@ void CPointAngularVelocitySensor::FireCompareOutput( int nCompareResult, CBaseEn
 		m_OnGreaterThanOrEqualTo.FireOutput(pActivator, this);
 	}
 }
-

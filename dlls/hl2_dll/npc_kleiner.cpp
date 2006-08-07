@@ -78,11 +78,18 @@ int CNPC_Kleiner::GetSoundInterests ( void )
 //-----------------------------------------------------------------------------
 void CNPC_Kleiner::Spawn()
 {
+	// Allow custom model usage (mostly for monitors)
+	char *szModel = (char *)STRING( GetModelName() );
+	if (!szModel || !*szModel)
+	{
+		szModel = "models/kleiner.mdl";
+		SetModelName( AllocPooledString(szModel) );
+	}
+
 	Precache();
+	SetModel( szModel );
 
 	BaseClass::Spawn();
-
-	SetModel( "models/kleiner.mdl" );
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
@@ -108,7 +115,7 @@ void CNPC_Kleiner::Spawn()
 //-----------------------------------------------------------------------------
 void CNPC_Kleiner::Precache()
 {
-	PrecacheModel( "models/kleiner.mdl" );
+	PrecacheModel( STRING( GetModelName() ) );
 	
 	BaseClass::Precache();
 }	

@@ -728,7 +728,7 @@ void CInfoAPCMissileHint::Activate( )
 {
 	BaseClass::Activate();
 
-	m_hTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
+	m_hTarget = gEntList.FindEntityByName( NULL, m_target );
 	if ( m_hTarget == NULL )
 	{
 		DevWarning( "%s: Could not find target '%s'!\n", GetClassname(), STRING( m_target ) );
@@ -1295,12 +1295,15 @@ BEGIN_NETWORK_TABLE( CWeaponRPG, DT_WeaponRPG )
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
+
 BEGIN_PREDICTION_DATA( CWeaponRPG )
 	DEFINE_PRED_FIELD( m_bInitialStateUpdate, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bGuiding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bHideGuiding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
+#endif
 
 #ifndef CLIENT_DLL
 acttable_t	CWeaponRPG::m_acttable[] = 

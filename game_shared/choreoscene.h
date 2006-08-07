@@ -19,9 +19,11 @@ class CEventRelativeTag;
 class CUtlBuffer;
 class CFlexAnimationTrack;
 
-#include "utlvector.h"
-#include "utldict.h"
+#include "tier1/utlvector.h"
+#include "tier1/utldict.h"
+#include "bitvec.h"
 #include "expressionsample.h"
+#include "choreoevent.h"
 
 class ISceneTokenProcessor;
 
@@ -32,7 +34,7 @@ class ISceneTokenProcessor;
 //-----------------------------------------------------------------------------
 // Purpose: Container for chereographed scene of events for actors
 //-----------------------------------------------------------------------------
-class CChoreoScene
+class CChoreoScene : public ICurveDataAccessor
 {
 public:
 	// Construction
@@ -41,6 +43,17 @@ public:
 
 	// Assignment
 	CChoreoScene&	operator=(const CChoreoScene& src );
+
+// ICurveDataAccessor methods
+	virtual bool	CurveHasEndTime();
+	virtual int		CurveGetSampleCount();
+	virtual CExpressionSample *CurveGetBoundedSample( int idx, bool& bClamped );
+	virtual int		GetDefaultCurveType();
+	// Serialization
+	bool			SaveBinary( char const *pszBinaryFileName, char const *pPathID, unsigned int nTextVersionCRC );
+
+	bool			RestoreFromBuffer( CUtlBuffer& buf, char const *filename );
+	static bool		GetCRCFromBuffer( CUtlBuffer& buf, unsigned int& crc );
 
 	enum
 	{
@@ -72,7 +85,8 @@ public:
 	static void		ParseRamp( ISceneTokenProcessor *tokenizer, CChoreoEvent *e );
 	static void		ParseSceneRamp( ISceneTokenProcessor *tokenizer, CChoreoScene *scene );
 	static void		ParseScaleSettings( ISceneTokenProcessor *tokenizer, CChoreoScene *scene );
-
+	static void		ParseEdgeInfo( ISceneTokenProcessor *tokenizer, EdgeInfo_t *edgeinfo );
+ 
 	// Debugging
 	void			SceneMsg( const char *pFormat, ... );
 	void			Print( void );
@@ -164,33 +178,62 @@ public:
 
 	int				GetSceneRampCount( void );
 	CExpressionSample *GetSceneRamp( int index );
-	void			AddSceneRamp( float time, float value, bool selected );
+	CExpressionSample *AddSceneRamp( float time, float value, bool selected );
 	void			DeleteSceneRamp( int index );
 	void			ClearSceneRamp( void );
 	void			ResortSceneRamp( void );
 	// remove any samples after endtime
 	void			RemoveOutOfRangeSceneRampSamples( void );
 
+	EdgeInfo_t			*GetSceneRampEdgeInfo( int idx );
+
+	void				SceneRampSetEdgeInfo( bool leftEdge, int curveType, float zero );
+	void				SceneRampGetEdgeInfo( bool leftEdge, int& curveType, float& zero ) const;
+	void				SceneRampSetEdgeActive( bool leftEdge, bool state );
+	bool				SceneRampIsEdgeActive( bool leftEdge ) const;
+	int					SceneRampGetEdgeCurveType( bool leftEdge ) const;
+	float				SceneRampGetEdgeZeroValue( bool leftEdge ) const;
+
 	// Puts in dummy start/end samples to spline to zero ( or 0.5 for
 	//  left/right data) at the origins
-	CExpressionSample	*GetBoundedSceneRamp( int number );
+	CExpressionSample	*GetBoundedSceneRamp( int number, bool& bClamped );
 
 	// Global intensity for scene
 	float			GetSceneRampIntensity( float time );
 
 	int				GetTimeZoom( char const *tool );
 	void			SetTimeZoom( char const *tool, int tz );
+	int				TimeZoomFirst();
+	int				TimeZoomNext( int i );
+	int				TimeZoomInvalid() const;
+	char const		*TimeZoomName( int i );
 
 	void			ReconcileCloseCaption();
 
 	char const		*GetFilename() const;
+	void			SetFileName( char const *fn );
 
 	bool			HasUnplayedSpeech();
 	bool			HasFlexAnimation();
 	void			SetBackground( bool bIsBackground );
 	bool			IsBackground( void );
 
+	void			ClearPauseEventDependencies();
+
+	bool			HasEventsOfType( CChoreoEvent::EVENTTYPE type ) const;
+	void			RemoveEventsExceptTypes( int* typeList, int count );
+
+	// This is set by the engine to signify that we're not modifying the data and 
+	//  therefore we can precompute the end time
+	static	bool	s_bEditingDisabled; 
+
 private:
+
+	void			SaveToBuffer( CUtlBuffer& buf, unsigned int nTextVersionCRC );
+
+	void			SaveSceneRampToBuffer( CUtlBuffer& buf );
+	bool			ParseSceneRampFromBuffer( CUtlBuffer& buf );
+
 	// Simulation stuff
 	enum
 	{
@@ -238,7 +281,7 @@ private:
 	CChoreoEvent	*ParseEvent( CChoreoActor *actor, CChoreoChannel *channel );
 	CChoreoChannel	*ParseChannel( CChoreoActor *actor );
 	CChoreoActor	*ParseActor( void );
-
+	   
 	void			ParseFPS( void );
 	void			ParseSnap( void );
 
@@ -265,8 +308,9 @@ private:
 	void			DestroyEvent( CChoreoEvent *event );
 
 
-	void			ClearPauseEventDependencies();
 	void			AddPauseEventDependency( CChoreoEvent *pauseEvent, CChoreoEvent *suppressed );
+
+	void			InternalDetermineEventTypes();
 
 	// Global object storage
 	CUtlVector < CChoreoEvent * >	m_Events;
@@ -312,20 +356,24 @@ private:
 	char			m_szMapname[ MAX_MAPNAME ];
 
 	bool			m_bSubScene;
-
 	bool			m_bUseFrameSnap;
 	int				m_nSceneFPS;
 
 	// Global scene ramp/envelope
 	CUtlVector< CExpressionSample > m_SceneRamp;
+	EdgeInfo_t		m_SceneRampEdgeInfo[ 2 ];
 
 	CUtlDict< int, int >	m_TimeZoomLookup;
 	char			m_szFileName[ MAX_SCENE_FILENAME ];
 
+	CBitVec< CChoreoEvent::NUM_TYPES > m_bitvecHasEventOfType;
+
 	// tag to suppress vcd when others are playing
-	bool			m_bIsBackground;
+	bool			m_bIsBackground : 1;
 
 	int				m_nLastPauseEvent;
+	// This only gets updated if it's loaded from a buffer which means we're not in an editor
+	float			m_flPrecomputedStopTime;
 };
 
 CChoreoScene *ChoreoLoadScene( 

@@ -110,7 +110,7 @@ int CPathCorner::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"Target:   -  ",sizeof(tempstr));
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -131,7 +131,7 @@ void CPathCorner::DrawDebugGeometryOverlays(void)
 
 		if (m_target != NULL_STRING)
 		{
-			CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
+			CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_target );
 			if (pTarget)
 			{
 				NDebugOverlay::Line(GetAbsOrigin(),pTarget->GetAbsOrigin(),255,100,100,true,0.0);

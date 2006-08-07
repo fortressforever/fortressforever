@@ -5,8 +5,6 @@
 // $NoKeywords: $
 //=============================================================================//
 
-
-
 #include "vbsp.h"
 #include "detail.h"
 #include "physdll.h"
@@ -16,6 +14,9 @@
 #include "vstdlib/icommandline.h"
 #include "materialsystem/imaterialsystem.h"
 #include "map.h"
+#include "tools_minidump.h"
+#include "materialsub.h"
+#include "loadcmdline.h"
 
 extern	float g_maxLightmapDimension;
 
@@ -47,11 +48,15 @@ qboolean	g_bLowPriority = false;
 qboolean	g_DumpStaticProps = false;
 bool		g_bLightIfMissing = false;
 bool		g_snapAxialPlanes = false;
-bool		g_writelinuxphysics = true;
 bool		g_bKeepStaleZip = false;
+bool		g_NodrawTriggers = false;
+bool		g_DisableWaterLighting = false;
+bool		g_bAllowDetailCracks = false;
+bool		g_bNoVirtualMesh = false;
 
 float		g_defaultLuxelSize = DEFAULT_LUXEL_SIZE;
 float		g_luxelScale = 1.0f;
+float		g_minLuxelScale = 1.0f;
 bool		g_BumpAll = false;
 
 int			g_nDXLevel = 90; // default dxlevel if you don't specify it on the command-line.
@@ -598,9 +603,10 @@ static void EmitOccluderBrushes()
 		GenerateOccluderSideList( entity_num, sideList );
 		for ( int i = faceList.Count(); --i >= 0; )
 		{
-			// Skip nodraw surfaces
+			// Skip nodraw surfaces, but not triggers that have been marked as nodraw
 			face_t *f = faceList[i];
-			if ( texinfo[f->texinfo].flags & SURF_NODRAW )
+			if ( ( texinfo[f->texinfo].flags & SURF_NODRAW ) &&
+				 (( texinfo[f->texinfo].flags & SURF_TRIGGER ) == 0 ) )
 				continue;
 
 			// Only emit faces that appear in the side list of the occluder
@@ -837,12 +843,7 @@ void PrintCommandLine( int argc, char **argv )
 }
 
 
-/*
-============
-main
-============
-*/
-int main (int argc, char **argv)
+int RunVBSP( int argc, char **argv )
 {
 	int		i;
 	double		start, end;
@@ -852,6 +853,14 @@ int main (int argc, char **argv)
 	MathLib_Init( 2.2f, 2.2f, 0.0f, OVERBRIGHT, false, false, false, false );
 	InstallSpewFunction();
 	SpewActivate( "developer", 1 );
+	
+	CmdLib_InitFileSystem( argv[ argc-1 ], true );
+
+	Q_StripExtension( ExpandArg( argv[ argc-1 ] ), source, sizeof( source ) );
+	Q_FileBase( source, mapbase, sizeof( mapbase ) );
+	strlwr( mapbase );
+
+	LoadCmdLineFromFile( argc, argv, mapbase, "vbsp" );
 
 	Msg( "Valve Software - vbsp.exe (%s)\n", __DATE__ );
 
@@ -962,11 +971,6 @@ int main (int argc, char **argv)
 			Msg ("snap axial = true\n");
 			g_snapAxialPlanes = true;
 		}
-		else if ( !stricmp(argv[i],"-nolinuxdata" ))
-		{
-			Msg ("Write linux physics data = false\n");
-			g_writelinuxphysics = false;
-		}
 #if 0
 		else if (!stricmp(argv[i], "-maxlightmapdim"))
 		{
@@ -1018,6 +1022,13 @@ int main (int argc, char **argv)
 			g_luxelScale = atof( argv[i+1] );
 			i++;
 		}
+		else if( !strcmp( argv[i], "-minluxelscale" ) )
+		{
+			g_minLuxelScale = atof( argv[i+1] );
+			if (g_minLuxelScale < 1)
+				g_minLuxelScale = 1;
+			i++;
+		}
 		else if( !stricmp( argv[i], "-dxlevel" ) )
 		{
 			g_nDXLevel = atoi( argv[i+1] );
@@ -1050,6 +1061,32 @@ int main (int argc, char **argv)
 		else if ( !stricmp( argv[i], "-keepstalezip" ) )
 		{
 			g_bKeepStaleZip = true;
+		}
+		else if ( !stricmp( argv[i], "-xbox" ) )
+		{
+			// enable mandatory xbox extensions
+			g_NodrawTriggers = true;
+			g_DisableWaterLighting = true;
+		}
+		else if ( !stricmp( argv[i], "-allowdetailcracks"))
+		{
+			g_bAllowDetailCracks = true;
+		}
+		else if ( !stricmp( argv[i], "-novirtualmesh"))
+		{
+			g_bNoVirtualMesh = true;
+		}
+		else if ( !stricmp( argv[i], "-replacematerials" ) )
+		{
+			g_ReplaceMaterials = true;
+		}
+		else if ( !stricmp(argv[i], "-nodrawtriggers") )
+		{
+			g_NodrawTriggers = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-FullMinidumps" ) )
+		{
+			EnableFullMinidumps( true );
 		}
 		else if (argv[i][0] == '-')
 		{
@@ -1084,9 +1121,6 @@ int main (int argc, char **argv)
 			"                what affects visibility.\n"
 			"  -nowater    : Get rid of water brushes.\n"
 			"  -low        : Run as an idle-priority process.\n"
-			"  -nolinuxdata: By default, it writes physics data for linux servers.\n"
-			"                This parameter disables writing linux physics data\n"
-			"                into the map.\n"
 			"\n"
 			"  -vproject <directory> : Override the VPROJECT environment variable.\n"
 			"  -game <directory>     : Same as -vproject.\n"
@@ -1118,8 +1152,6 @@ int main (int argc, char **argv)
 				"  -leaktest    : Stop processing the map if a leak is detected. Whether or not\n"
 				"                 this flag is set, a leak file will be written out at\n"
 				"                 <vmf filename>.lin, and it can be imported into Hammer.\n"
-				"  -nolinuxdata : Force it to not write physics data for linux multiplayer\n"
-				"                 servers, even if there are multiplayer entities in the map.\n"
 				"  -bumpall     : Force all surfaces to be bump mapped.\n"
 				"  -snapaxial   : Snap axial planes to integer coordinates.\n"
 				"  -block # #      : Control the grid size mins that vbsp chops the level on.\n"
@@ -1127,19 +1159,24 @@ int main (int argc, char **argv)
 				"  -dumpstaticprops: Dump static props to staticprop*.txt\n"
 				"  -dumpcollide    : Write files with collision info.\n"
 				"  -luxelscale #   : Scale all lightmaps by this amount (default: 1.0).\n"
+				"  -minluxelscale #: No luxel scale will be lower than this amount (default: 1.0).\n"
 				"  -lightifmissing : Force lightmaps to be generated for all surfaces even if\n"
 				"                    they don't need lightmaps.\n"
 				"  -keepstalezip   : Keep the BSP's zip files intact but regenerate everything\n"
 				"                    else.\n"
+				"  -virtualdispphysics : Use virtual (not precomputed) displacement collision models\n"
+				"  -xbox           : Enable mandatory xbox options\n"
+				"  -replacematerials : Substitute materials according to materialsub.txt in content\\maps\n"
+				"  -FullMinidumps  : Write large minidumps on crash.\n"
 				);
 			}
 
+		DeleteCmdLine( argc, argv );
+		CmdLib_Cleanup();
 		CmdLib_Exit( 1 );
 	}
 
 	start = Plat_FloatTime();
-
-	Q_StripExtension( ExpandArg (argv[i]), source, sizeof( source ) );
 
 	// Run in the background?
 	if( g_bLowPriority )
@@ -1162,8 +1199,6 @@ int main (int argc, char **argv)
 
 	ThreadSetDefault ();
 	numthreads = 1;		// multiple threads aren't helping...
-	
-	CmdLib_InitFileSystem( argv[i], true );
 
 	// Setup the logfile.
 	char logFile[512];
@@ -1183,11 +1218,6 @@ int main (int argc, char **argv)
 	InitMaterialSystem( materialPath, CmdLib_GetFileSystemFactory() );
 	Msg( "materialPath: %s\n", materialPath );
 	
-	LoadEmitDetailObjectDictionary( gamedir );
-
-	Q_FileBase( source, mapbase, sizeof( mapbase ) );
-	strlwr( mapbase );
-
 	// delete portal and line files
 	sprintf (path, "%s.prt", source);
 	remove (path);
@@ -1200,6 +1230,12 @@ int main (int argc, char **argv)
 	char platformBSPFileName[1024];
 	GetPlatformMapPath( source, platformBSPFileName, g_nDXLevel, 1024 );
 	
+	// if we're combining materials, load the script file
+	if ( g_ReplaceMaterials )
+	{
+		LoadMaterialReplacementKeys( gamedir, mapbase );
+	}
+
 	//
 	// if onlyents, just grab the entites and resave
 	//
@@ -1250,6 +1286,7 @@ int main (int argc, char **argv)
 		EmitStaticProps();
 
 		// Place detail props found in .vmf and based on material properties
+		LoadEmitDetailObjectDictionary( gamedir );
 		EmitDetailObjects();
 
 		WriteBSPFile (platformBSPFileName);
@@ -1274,10 +1311,11 @@ int main (int argc, char **argv)
 			Cubemap_FixupBrushSidesMaterials();
 			Cubemap_AttachDefaultCubemapToSpecularSides();
 			Cubemap_ClearUnusedTexInfos();
+			Cubemap_AddUnreferencedCubemaps();
 		}
 		SetModelNumbers ();
 		SetLightStyles ();
-
+		LoadEmitDetailObjectDictionary( gamedir );
 		ProcessModels ();
 	}
 
@@ -1287,7 +1325,24 @@ int main (int argc, char **argv)
 	GetHourMinuteSecondsString( (int)( end - start ), str, sizeof( str ) );
 	Msg( "%s elapsed\n", str );
 
+	DeleteCmdLine( argc, argv );
+	DeleteMaterialReplacementKeys();
+	ShutdownMaterialSystem();
 	CmdLib_Cleanup();
 	return 0;
 }
+
+
+/*
+============
+main
+============
+*/
+int main (int argc, char **argv)
+{
+	// Install an exception handler.
+	SetupDefaultToolsMinidumpHandler();
+	return RunVBSP( argc, argv );
+}
+
 

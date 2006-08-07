@@ -11,8 +11,12 @@
 #include "tier0/dbg.h"
 #include "tier0/fasttimer.h"
 #include "tier0/l2cache.h"
+#include "tier0/threadtools.h"
 
+// VProf is enabled by default in all configurations -except- XBOX Retail.
+#if !( defined(_XBOX) && defined(_RETAIL) )
 #define VPROF_ENABLED
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -31,8 +35,8 @@
 
 #define VPROF_VTUNE_GROUP
 
-#define	VPROF( name )						VPROF_(name, 0, VPROF_BUDGETGROUP_OTHER_UNACCOUNTED, false, 0)
-#define	VPROF_ASSERT_ACCOUNTED( name )		VPROF_(name, 0, VPROF_BUDGETGROUP_OTHER_UNACCOUNTED, true, 0)
+#define	VPROF( name )						VPROF_(name, 1, VPROF_BUDGETGROUP_OTHER_UNACCOUNTED, false, 0)
+#define	VPROF_ASSERT_ACCOUNTED( name )		VPROF_(name, 1, VPROF_BUDGETGROUP_OTHER_UNACCOUNTED, true, 0)
 #define	VPROF_( name, detail, group, bAssertAccounted, budgetFlags )		VPROF_##detail(name,group, bAssertAccounted, budgetFlags)
 
 #define VPROF_BUDGET( name, group )					VPROF_BUDGET_FLAGS(name, group, BUDGETFLAG_OTHER)
@@ -40,6 +44,11 @@
 
 #define VPROF_SCOPE_BEGIN( tag )	do { VPROF( tag )
 #define VPROF_SCOPE_END()			} while (0)
+
+#define VPROF_ONLY( expression )	expression
+
+#define VPROF_ENTER_SCOPE( name )			g_VProfCurrentProfile.EnterScope( name, 1, VPROF_BUDGETGROUP_OTHER_UNACCOUNTED, false, 0 )
+#define VPROF_EXIT_SCOPE()					g_VProfCurrentProfile.ExitScope()
 
 #define VPROF_BUDGET_GROUP_ID_UNACCOUNTED 0
 
@@ -79,13 +88,21 @@
 #define VPROF_BUDGETGROUP_PREDICTION				_T("Prediction")
 #define VPROF_BUDGETGROUP_INTERPOLATION				_T("Interpolation")
 #define VPROF_BUDGETGROUP_SWAP_BUFFERS				_T("Swap Buffers")
-#define VPROF_BUDGETGROUP_AINET						_T("AINet")
+#define VPROF_BUDGETGROUP_PLAYER					_T("Player")
 #define VPROF_BUDGETGROUP_OCCLUSION					_T("Occlusion")
 #define VPROF_BUDGETGROUP_OVERLAYS					_T("Overlays")
+#define VPROF_BUDGETGROUP_TOOLS						_T("Tools")
 #define VPROF_BUDGETGROUP_LIGHTCACHE				_T("Light Cache")
 #define VPROF_BUDGETGROUP_DISP_RAYTRACES			_T("Displacement Ray Traces")
 #define VPROF_BUDGETGROUP_DISP_HULLTRACES			_T("Displacement Hull Traces")
+#define VPROF_BUDGETGROUP_TEXTURE_CACHE				_T("Texture Cache")
 	
+#ifdef _XBOX
+// update flags
+#define VPROF_UPDATE_BUDGET				0x01	// send budget data every frame
+#define VPROF_UPDATE_TEXTURE_GLOBAL		0x02	// send global texture data every frame
+#define VPROF_UPDATE_TEXTURE_PERFRAME	0x04	// send perframe texture data every frame
+#endif
 
 //-------------------------------------
 
@@ -134,6 +151,11 @@
 
 #define VPROF_SCOPE_BEGIN( tag )	do {
 #define VPROF_SCOPE_END()			} while (0)
+
+#define VPROF_ONLY( expression )	((void)0)
+
+#define VPROF_ENTER_SCOPE( name )
+#define VPROF_EXIT_SCOPE()
 
 #define VPROF_INCREMENT_COUNTER(name,amount)			((void)0)
 #define VPROF_INCREMENT_GROUP_COUNTER(name,group,amount) ((void)0)
@@ -200,6 +222,8 @@ public:
 	double GetPrevTimeLessChildren();
 	double GetTotalTimeLessChildren();
 
+	void ClearPrevTime();
+
 	int GetL2CacheMisses();
 
 	// Not used in the common case...
@@ -232,11 +256,13 @@ private:
 private:
 	const tchar *m_pszName;
 	CFastTimer	m_Timer;
-	
+
+#ifndef _XBOX	
 	// L2 Cache data.
 	CL2Cache	m_L2Cache;
 	int			m_iCurL2CacheMiss;
 	int			m_iTotalL2CacheMiss;
+#endif
 
 	int			m_nRecursions;
 	
@@ -260,8 +286,7 @@ private:
 	int m_iClientData;
 	int m_iUniqueNodeID;
 	
-#ifdef _WIN32
-#else
+#if !defined(_WIN32) || defined(_XBOX)
 	void *operator new( size_t );
 	void operator delete( void * );
 #endif
@@ -284,8 +309,9 @@ enum VProfReportType_t
 	VPRT_LIST_BY_AVG_TIME_LESS_CHILDREN				= ( 1 << 6 ),
 	VPRT_LIST_BY_PEAK_TIME							= ( 1 << 7 ),
 	VPRT_LIST_BY_PEAK_OVER_AVERAGE					= ( 1 << 8 ),
+	VPRT_LIST_TOP_ITEMS_ONLY						= ( 1 << 9 ),
 
-	VPRT_FULL = (0xffffffff & ~VPRT_HIERARCHY_TIME_PER_FRAME_AND_COUNT_ONLY),
+	VPRT_FULL = (0xffffffff & ~(VPRT_HIERARCHY_TIME_PER_FRAME_AND_COUNT_ONLY|VPRT_LIST_TOP_ITEMS_ONLY)),
 };
 
 enum CounterGroup_t
@@ -311,6 +337,13 @@ public:
 	
 	void Start();
 	void Stop();
+
+#ifdef _XBOX
+	// piggyback to profiler
+	void VXProfileStart();
+	void VXProfileUpdate();
+	void VXEnableUpdateMode(int event, bool bEnable);
+#endif
 
 	void EnterScope( const tchar *pszName, int detailLevel, const tchar *pBudgetGroupName, bool bAssertAccounted );
 	void EnterScope( const tchar *pszName, int detailLevel, const tchar *pBudgetGroupName, bool bAssertAccounted, int budgetFlags );
@@ -377,10 +410,12 @@ public:
 	const tchar *GetCounterNameAndValue( int index, int &val ) const;
 	CounterGroup_t GetCounterGroup( int index ) const;
 
+#ifndef _XBOX
 	// Performance monitoring events.
 	void PMEInitialized( bool bInit )		{ m_bPMEInit = bInit; }
 	void PMEEnable( bool bEnable )			{ m_bPMEEnabled = bEnable; }
 	bool UsePME( void )						{ return ( m_bPMEInit && m_bPMEEnabled ); }
+#endif
 
 #ifdef DBGFLAG_VALIDATE
 	void Validate( CValidator &validator, tchar *pchName );		// Validate our internal structures
@@ -433,14 +468,20 @@ protected:
 	int			m_nBudgetGroupNames;
 	void		(*m_pNumBudgetGroupsChangedCallBack)(void);
 
+#ifndef _XBOX
 	// Performance monitoring events.
 	bool		m_bPMEInit;
 	bool		m_bPMEEnabled;
+#endif
 
 	int m_Counters[MAXCOUNTERS];
 	char m_CounterGroups[MAXCOUNTERS]; // (These are CounterGroup_t's).
 	tchar *m_CounterNames[MAXCOUNTERS];
 	int m_NumCounters;
+
+#ifdef _XBOX
+	int m_UpdateMode;
+#endif
 };
 
 //-------------------------------------
@@ -679,9 +720,19 @@ inline double CVProfNode::GetPrevTimeLessChildren()
 }
 
 //-----------------------------------------------------------------------------
+inline void CVProfNode::ClearPrevTime()
+{
+	m_PrevFrameTime.Init();
+}
+
+//-----------------------------------------------------------------------------
 inline int CVProfNode::GetL2CacheMisses( void )
 { 
+#ifndef _XBOX
 	return m_L2Cache.GetL2CacheMisses(); 
+#else
+	return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -716,7 +767,12 @@ inline bool CVProfile::AtRoot() const
 inline void CVProfile::Start()	
 { 
 	if ( ++m_enabled == 1 )
+	{
 		m_Root.EnterScope();
+#ifdef _XBOX
+		VXProfileStart();
+#endif
+	}
 }
 
 //-------------------------------------
@@ -731,7 +787,7 @@ inline void CVProfile::Stop()
 
 inline void CVProfile::EnterScope( const tchar *pszName, int detailLevel, const tchar *pBudgetGroupName, bool bAssertAccounted, int budgetFlags )
 {
-	if ( m_enabled != 0 || !m_fAtRoot ) // if became disabled, need to unwind back to root before stopping
+	if ( ( m_enabled != 0 || !m_fAtRoot ) && ThreadInMainThread() ) // if became disabled, need to unwind back to root before stopping
 	{
 		// Only account for vprof stuff on the primary thread.
 		//if( !Plat_IsPrimaryThread() )
@@ -763,7 +819,7 @@ inline void CVProfile::EnterScope( const tchar *pszName, int detailLevel, const 
 
 inline void CVProfile::ExitScope()
 {
-	if ( !m_fAtRoot || m_enabled != 0 )
+	if ( ( !m_fAtRoot || m_enabled != 0 ) && ThreadInMainThread() )
 	{
 		// Only account for vprof stuff on the primary thread.
 		//if( !Plat_IsPrimaryThread() )

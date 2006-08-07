@@ -256,7 +256,7 @@ public:
 	Vector	GetDropoffFinishPosition( Vector vecOrigin, CAI_BaseNPC *pNPC, Vector vecMins, Vector vecMaxs );
 	void	LandCommon( void );
 
-	Class_T Classify( void ) { return CLASS_COMBINE; }
+	Class_T Classify( void ) { return CLASS_COMBINE_GUNSHIP; }
 
 	// Drop the soldier container
 	void	DropSoldierContainer( );
@@ -319,6 +319,10 @@ private:
 	string_t	m_sDustoffPoints[ DROPSHIP_MAX_SOLDIERS ];	
 	int			m_iCurrentTroopExiting;
 	EHANDLE		m_hLastTroopToLeave;
+
+	// Template for rollermines dropped by this dropship
+	string_t	m_sRollermineTemplate;
+	string_t	m_sRollermineTemplateData;
 
 	// Cached attachment points
 	int			m_iMuzzleAttachment;
@@ -395,6 +399,10 @@ void CCombineDropshipContainer::Spawn()
 	SetSolid( SOLID_VPHYSICS );
 
 	BaseClass::Spawn();
+
+#ifdef _XBOX
+	AddEffects( EF_NOSHADOW );
+#endif //_XBOX
 
 	m_iHealth = m_iMaxHealth = sk_dropship_container_health.GetFloat();
 }
@@ -715,6 +723,9 @@ BEGIN_DATADESC( CNPC_CombineDropship )
 
 	DEFINE_KEYFIELD( m_iszAPCVehicleName, FIELD_STRING,	"APCVehicleName" ),
 
+	DEFINE_KEYFIELD( m_sRollermineTemplate, FIELD_STRING,	"RollermineTemplate" ),
+	DEFINE_FIELD( m_sRollermineTemplateData, FIELD_STRING ),
+
 	DEFINE_ARRAY( m_sNPCTemplateData, FIELD_STRING, DROPSHIP_MAX_SOLDIERS ),
 	DEFINE_KEYFIELD( m_sNPCTemplate[0], FIELD_STRING,	"NPCTemplate" ),
 	DEFINE_KEYFIELD( m_sNPCTemplate[1], FIELD_STRING,	"NPCTemplate2" ),
@@ -783,6 +794,10 @@ void CNPC_CombineDropship::Spawn( void )
 	Precache( );
 	SetModel( "models/combine_dropship.mdl" );
 
+#ifdef _XBOX
+	AddEffects( EF_NOSHADOW );
+#endif //_XBOX
+
 	InitPathingData( DROPSHIP_ARRIVE_DIST, DROPSHIP_MIN_CHASE_DIST_DIFF, DROPSHIP_AVOID_DIST );
 
 	m_iContainerMoveType = MOVETYPE_NONE;
@@ -844,7 +859,7 @@ void CNPC_CombineDropship::Spawn( void )
 	case CRATE_APC:
 		{
 			m_soldiersToDrop = 0;
-			m_hContainer = (CBaseAnimating*)gEntList.FindEntityByName( NULL, m_iszAPCVehicleName, NULL );
+			m_hContainer = (CBaseAnimating*)gEntList.FindEntityByName( NULL, m_iszAPCVehicleName );
 			if ( !m_hContainer )
 			{
 				Warning("Unable to find APC %s\n", STRING( m_iszAPCVehicleName ) ); 		
@@ -964,6 +979,21 @@ void CNPC_CombineDropship::Activate( void )
 {
 	BaseClass::Activate();
 
+	if ( !m_sRollermineTemplateData )
+	{
+		m_sRollermineTemplateData = NULL_STRING;
+		if ( m_sRollermineTemplate != NULL_STRING )
+		{
+			// This must be the first time we're activated, not a load from save game.
+			// Look up the template in the template database.
+			m_sRollermineTemplateData = Templates_FindByTargetName(STRING(m_sRollermineTemplate));
+			if ( m_sRollermineTemplateData == NULL_STRING )
+			{
+				Warning( "npc_combinedropship %s: Rollermine Template %s not found!\n", STRING(GetEntityName()), STRING(m_sRollermineTemplate) );
+			}
+		}
+	}
+
 	// Don't do anything if we don't have any templates
 	if ( m_iCrateType == CRATE_SOLDIER && !m_sNPCTemplate[0] )
 		return;
@@ -1033,6 +1063,11 @@ void CNPC_CombineDropship::Precache( void )
 	PrecacheScriptSound( "NPC_CombineDropship.OnGroundRotorLoop" );
 	PrecacheScriptSound( "NPC_CombineDropship.DescendingWarningLoop" );
 	PrecacheScriptSound( "NPC_CombineDropship.NearRotorLoop" );
+
+	if ( m_sRollermineTemplate != NULL_STRING )
+	{
+		UTIL_PrecacheOther( "npc_rollermine" );
+	}
 
 	BaseClass::Precache();
 
@@ -1568,7 +1603,7 @@ void CNPC_CombineDropship::LandCommon( void )
 	// Do we have a land target?
 	if ( m_iszLandTarget != NULL_STRING )
 	{
-		CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_iszLandTarget, NULL );
+		CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_iszLandTarget );
 		if ( !pTarget )
 		{
 			Warning("npc_combinedropship %s couldn't find land target named %s\n", STRING(GetEntityName()), STRING(m_iszLandTarget) );
@@ -1743,7 +1778,7 @@ void CNPC_CombineDropship::InputPickup( inputdata_t &inputdata )
 		Warning("npc_combinedropship %s tried to pickup with no specified pickup target.\n", STRING(GetEntityName()) );
 		return;
 	}
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, iszTargetName, NULL );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, iszTargetName );
 	if ( !pTarget )
 	{
 		Warning("npc_combinedropship %s couldn't find pickup target named %s\n", STRING(GetEntityName()), STRING(iszTargetName) );
@@ -2372,7 +2407,7 @@ Vector CNPC_CombineDropship::GetDropoffFinishPosition( Vector vecOrigin, CAI_Bas
 //-----------------------------------------------------------------------------
 void CNPC_CombineDropship::InputNPCFinishDustoff( inputdata_t &inputdata )
 {
-	CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, inputdata.value.StringID(), NULL );
+	CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, inputdata.value.StringID(), NULL, inputdata.pActivator, inputdata.pCaller );
 	if ( !pEnt )
 		return;
 
@@ -2386,7 +2421,7 @@ void CNPC_CombineDropship::InputNPCFinishDustoff( inputdata_t &inputdata )
 	CBaseEntity *pDustoff = NULL;
 	if ( m_sDustoffPoints[m_iCurrentTroopExiting-1] != NULL_STRING )
 	{
-		pDustoff = gEntList.FindEntityByName( NULL, m_sDustoffPoints[m_iCurrentTroopExiting-1], NULL );
+		pDustoff = gEntList.FindEntityByName( NULL, m_sDustoffPoints[m_iCurrentTroopExiting-1] );
 		if ( !pDustoff )
 		{
 			Warning("npc_combinedropship %s couldn't find dustoff target named %s\n", STRING(GetEntityName()), STRING(m_sDustoffPoints[m_iCurrentTroopExiting-1]) );
@@ -2471,7 +2506,7 @@ float CNPC_CombineDropship::GetAltitude( void )
 //-----------------------------------------------------------------------------
 void CNPC_CombineDropship::DropMine( void )
 {
-	NPC_Rollermine_DropFromPoint( GetAbsOrigin(), this );
+	NPC_Rollermine_DropFromPoint( GetAbsOrigin(), this, STRING(m_sRollermineTemplateData) );
 }
 
 //------------------------------------------------------------------------------

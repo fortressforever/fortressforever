@@ -135,7 +135,7 @@ void CTEParticleRenderer::RenderParticles( CParticleRenderIterator *pIterator )
 	{
 		// Render.
 		Vector tPos;
-		TransformParticle(g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos);
+		TransformParticle(ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos);
 		float sortKey = tPos.z;
 
 		Vector vColor(pParticle->m_Color[0]/255.9f, pParticle->m_Color[1]/255.9f, pParticle->m_Color[2]/255.9f);
@@ -149,7 +149,6 @@ void CTEParticleRenderer::RenderParticles( CParticleRenderIterator *pIterator )
 		pParticle = (const StandardParticle_t*)pIterator->GetNext( sortKey );
 	}
 }
-
 
 void CTEParticleRenderer::SimulateParticles( CParticleSimulateIterator *pIterator )
 {

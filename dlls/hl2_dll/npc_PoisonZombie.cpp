@@ -96,6 +96,7 @@ envelopePoint_t envPoisonZombieBreatheVolumeOffShort[] =
 enum
 {
 	SCHED_ZOMBIE_POISON_RANGE_ATTACK2 = LAST_BASE_ZOMBIE_SCHEDULE,
+	SCHED_ZOMBIE_POISON_RANGE_ATTACK1,
 };
 
 
@@ -184,7 +185,7 @@ public:
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
 
-	void PainSound( void );
+	void PainSound( const CTakeDamageInfo &info );
 	void AlertSound( void );
 	void IdleSound( void );
 	void AttackSound( void );
@@ -612,9 +613,8 @@ Vector CNPC_PoisonZombie::HeadTarget( const Vector &posSrc )
 	Assert( iCrabAttachment > 0 );
 
 	Vector vecPosition;
-	QAngle angles;
 
-	GetAttachment( iCrabAttachment, vecPosition, angles );
+	GetAttachment( iCrabAttachment, vecPosition );
 
 	return vecPosition;
 }
@@ -672,6 +672,12 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 		CBlackHeadcrab *pCrab = (CBlackHeadcrab *)CreateNoSpawn( GetHeadcrabClassname(), EyePosition(), vec3_angle, this );
 		pCrab->AddSpawnFlags( SF_NPC_FALL_TO_GROUND );
 		
+		// Fade if our parent is supposed to
+		if ( HasSpawnFlags( SF_NPC_FADE_CORPSE ) )
+		{
+			pCrab->AddSpawnFlags( SF_NPC_FADE_CORPSE );
+		}
+
 		// make me the crab's owner to avoid collision issues
 		pCrab->SetOwnerEntity( this );
 
@@ -917,6 +923,11 @@ int CNPC_PoisonZombie::TranslateSchedule( int scheduleType )
 		return SCHED_ZOMBIE_POISON_RANGE_ATTACK2;
 	}
 
+	if ( scheduleType == SCHED_RANGE_ATTACK1 )
+	{
+		return SCHED_ZOMBIE_POISON_RANGE_ATTACK1;
+	}
+
 	if ( scheduleType == SCHED_COMBAT_FACE && IsUnreachable( GetEnemy() ) )
 		return SCHED_TAKE_COVER_FROM_ENEMY;
 
@@ -967,13 +978,14 @@ void CNPC_PoisonZombie::IdleSound( void )
 	{
 		BreatheOffShort();
 		EmitSound( "NPC_PoisonZombie.Idle" );
+		MakeAISpookySound( 360.0f );
 	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Play a random pain sound.
 //-----------------------------------------------------------------------------
-void CNPC_PoisonZombie::PainSound( void )
+void CNPC_PoisonZombie::PainSound( const CTakeDamageInfo &info )
 {
 	// Don't make pain sounds too often.
 	if ( m_flNextPainSoundTime <= gpGlobals->curtime )
@@ -1096,6 +1108,20 @@ AI_BEGIN_CUSTOM_NPC( npc_poisonzombie, CNPC_PoisonZombie )
 		"		TASK_FACE_IDEAL							0"
 		"		TASK_RANGE_ATTACK2						0"
 
+		"	Interrupts"
+		"		COND_NO_PRIMARY_AMMO"
+	)
+
+	DEFINE_SCHEDULE
+	(
+		SCHED_ZOMBIE_POISON_RANGE_ATTACK1,
+
+		"	Tasks"
+		"		TASK_STOP_MOVING		0"
+		"		TASK_FACE_ENEMY			0"
+		"		TASK_ANNOUNCE_ATTACK	1"	// 1 = primary attack
+		"		TASK_RANGE_ATTACK1		0"
+		""
 		"	Interrupts"
 		"		COND_NO_PRIMARY_AMMO"
 	)

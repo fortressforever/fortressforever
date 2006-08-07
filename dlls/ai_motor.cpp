@@ -76,6 +76,7 @@ BEGIN_SIMPLE_DATADESC( CAI_Motor )
 	DEFINE_FIELD( m_nDismountSequence,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_vecDismount,		FIELD_VECTOR ),
 	DEFINE_UTLVECTOR( m_facingQueue,	FIELD_EMBEDDED ), 
+	DEFINE_FIELD( m_bYawLocked,			FIELD_BOOLEAN ),
 	//							m_pMoveProbe
 END_DATADESC()
 
@@ -90,6 +91,7 @@ CAI_Motor::CAI_Motor(CAI_BaseNPC *pOuter)
 	m_YawSpeed = 0;
 	m_vecVelocity = Vector( 0, 0, 0 );
 	m_pMoveProbe = NULL;
+	m_bYawLocked = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -353,7 +355,7 @@ void CAI_Motor::MoveJumpStart( const Vector &velocity )
 {
 	// take the npc off the ground and throw them in the air
 	SetSmoothedVelocity( velocity );
-	SetGravity( 1.0 );
+	SetGravity( GetOuter()->GetJumpGravity() );
 	SetGroundEntity( NULL );
 
 	SetActivity( ACT_JUMP );
@@ -399,6 +401,8 @@ AIMoveResult_t CAI_Motor::MoveJumpStop()
 	}
 
 	SetMoveInterval( 0 );
+
+	SetGravity( 1.0f );
 
 	return AIMR_OK;
 }
@@ -447,6 +451,12 @@ float CAI_Motor::IdealVelocity( void )
 {
 	// FIXME: this should be a per-entity setting so run speeds are not based on animation speeds
 	return GetIdealSpeed() * GetPlaybackRate();
+}
+
+//-----------------------------------------------------------------------------
+
+void CAI_Motor::ResetMoveCalculations()
+{ 
 }
 
 //-----------------------------------------------------------------------------
@@ -731,6 +741,10 @@ float AI_ClampYaw( float yawSpeedPerSec, float current, float target, float time
 //-----------------------------------------------------------------------------
 void CAI_Motor::UpdateYaw( int yawSpeed )
 {
+	// Don't do this if our yaw is locked
+	if ( IsYawLocked() )
+		return;
+
 	GetOuter()->SetUpdatedYaw();
 
 	float ideal, current, newYaw;
@@ -781,9 +795,10 @@ float CAI_Motor::DeltaIdealYaw ( void )
 
 //-----------------------------------------------------------------------------
 
-void CAI_Motor::SetIdealYawToTarget( const Vector &target, float noise )
+void CAI_Motor::SetIdealYawToTarget( const Vector &target, float noise, float offset )
 { 
 	float base = CalcIdealYaw( target );
+	base += offset;
 	if ( noise > 0 )
 	{
 		noise *= 0.5;

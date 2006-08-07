@@ -54,6 +54,8 @@ public:
 
 	void	SetSporeEmitterState( bool state = true );
 
+	bool	ShouldDisplayHUDHint() { return true; }
+
 	DECLARE_DATADESC();
 
 protected:

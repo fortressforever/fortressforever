@@ -111,7 +111,6 @@ struct DeathNoticeItem {
 static int DEATHNOTICE_DISPLAY_TIME = 6;
 
 // Robin HACKHACK: HL2 doesn't use deathmsgs, so I just forced these down below our minimap.
-// It should be positioned by TF2/HL2 separately, and TF2 should position it according to the minimap position
 #define DEATHNOTICE_TOP		YRES( 0 )//YRES( 140 )	// Was: 20
 
 DeathNoticeItem rgDeathNoticeList[ MAX_DEATHNOTICES + 1 ];
@@ -200,13 +199,7 @@ void CHudDeathNotice::Paint()
 				Color col = g_PR->GetTeamColor(rgDeathNoticeList[i].iKillerTeam);
 				surface()->DrawSetTextColor( col );
 			}
-
-			const wchar_t *p = killer;
-			while ( *p )
-			{
-				surface()->DrawUnicodeChar( *p++ );
-			}
-	
+			surface()->DrawUnicodeString( killer );
 			surface()->DrawGetTextPos( x, y );
 			x += 5;
 		}
@@ -231,12 +224,7 @@ void CHudDeathNotice::Paint()
 			Color col = g_PR->GetTeamColor(rgDeathNoticeList[i].iVictimTeam);
 			surface()->DrawSetTextColor( col );
 		}
-
-		const wchar_t *p = victim;
-		while ( *p )
-		{
-			surface()->DrawUnicodeChar( *p++ );
-		}
+		surface()->DrawUnicodeString( victim );
 	}
 }
 

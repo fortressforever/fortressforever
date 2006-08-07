@@ -9,6 +9,7 @@
 #include "cbase.h"
 #include "player.h"
 #include "mathlib.h"
+#include "env_speaker.h"
 #include "ai_speech.h"
 #include "stringregistry.h"
 #include "gamerules.h"
@@ -24,49 +25,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-// ===================================================================================
-//
-// Speaker class. Used for announcements per level, for door lock/unlock spoken voice. 
-//
-
 #define SF_SPEAKER_START_SILENT		1
 #define SF_SPEAKER_EVERYWHERE		2
 
 extern ISaveRestoreOps *responseSystemSaveRestoreOps;
 #include "saverestore.h"
-
-class CSpeaker : public CPointEntity
-{
-public:
-	DECLARE_CLASS( CSpeaker, CPointEntity );
-
-	void Spawn( void );
-	void Precache( void );
-	
-	DECLARE_DATADESC();
-
-	virtual int	ObjectCaps( void ) { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
-
-	virtual IResponseSystem *GetResponseSystem() { return m_pInstancedResponseSystem; }
-
-	virtual int	Save( ISave &save );
-	virtual int	Restore( IRestore &restore );
-
-protected:
-
-	void SpeakerThink( void );
-
-	void InputTurnOn( inputdata_t &inputdata );
-	void InputTurnOff( inputdata_t &inputdata );
-	void InputToggle( inputdata_t &inputdata );
-
-	float	m_delayMin;
-	float	m_delayMax;
-
-	string_t	m_iszRuleScriptFile;
-	string_t	m_iszConcept;
-	IResponseSystem *m_pInstancedResponseSystem;
-};
 
 LINK_ENTITY_TO_CLASS( env_speaker, CSpeaker );
 

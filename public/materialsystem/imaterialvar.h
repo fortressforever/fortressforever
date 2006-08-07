@@ -57,6 +57,9 @@ public:
 	static IMaterialVar* Create( IMaterial* pMaterial, char const* pKey );
 	static void Destroy( IMaterialVar* pVar );
 	static MaterialVarSym_t	GetSymbol( char const* pName );
+	static MaterialVarSym_t	FindSymbol( char const* pName );
+	static bool SymbolMatches( char const* pName, MaterialVarSym_t symbol );
+	static void DeleteUnreferencedTextures( bool enable );
 
 	virtual char const *	GetName( void ) const = 0;
 	virtual MaterialVarSym_t	GetNameAsSymbol() const = 0;
@@ -109,6 +112,8 @@ public:
 
 	// Copy....
 	virtual void			CopyFrom( IMaterialVar *pMaterialVar ) = 0;
+
+	virtual void			SetValueAutodetectType( char const *val ) = 0;
 };
 
 #endif // IMATERIALVAR_H

@@ -21,6 +21,7 @@
 #include "ai_network.h"
 #include "ai_schedule.h"
 #include "ai_networkmanager.h"
+#include "ai_utils.h"
 #include "basetempentity.h"
 #include "world.h"
 #include "mempool.h"
@@ -381,6 +382,8 @@ BEGIN_DATADESC( CWorld )
 	DEFINE_KEYFIELD( m_flMinOccluderArea, FIELD_FLOAT, "minoccluderarea" ),
 	DEFINE_KEYFIELD( m_flMaxPropScreenSpaceWidth, FIELD_FLOAT, "maxpropscreenwidth" ),
 	DEFINE_KEYFIELD( m_flMinPropScreenSpaceWidth, FIELD_FLOAT, "minpropscreenwidth" ),
+	DEFINE_KEYFIELD( m_iszDetailSpriteMaterial, FIELD_STRING, "detailmaterial" ),
+	DEFINE_KEYFIELD( m_bColdWorld,		FIELD_BOOLEAN, "coldworld" ),
 
 END_DATADESC()
 
@@ -395,6 +398,8 @@ IMPLEMENT_SERVERCLASS_ST(CWorld, DT_WORLD)
 	SendPropFloat	(SENDINFO(m_flMinOccluderArea), 0, SPROP_NOSCALE ),
 	SendPropFloat	(SENDINFO(m_flMaxPropScreenSpaceWidth), 0, SPROP_NOSCALE ),
 	SendPropFloat	(SENDINFO(m_flMinPropScreenSpaceWidth), 0, SPROP_NOSCALE ),
+	SendPropStringT (SENDINFO(m_iszDetailSpriteMaterial) ),
+	SendPropInt		(SENDINFO(m_bColdWorld), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
 //
@@ -440,16 +445,24 @@ bool CWorld::KeyValue( const char *szKeyName, const char *szValue )
 
 
 extern bool		g_fGameOver;
+static CWorld *g_WorldEntity = NULL;
+
+CWorld* GetWorldEntity()
+{
+	return g_WorldEntity;
+}
 
 CWorld::CWorld( )
 {
-	AddEFlags( EFL_NO_AUTO_EDICT_ATTACH );
+	AddEFlags( EFL_NO_AUTO_EDICT_ATTACH | EFL_KEEP_ON_RECREATE_ENTITIES );
 	NetworkProp()->AttachEdict( INDEXENT(RequiredEdictIndex()) );
 	ActivityList_Init();
 	EventList_Init();
 	
 	SetSolid( SOLID_BSP );
 	SetMoveType( MOVETYPE_NONE );
+
+	m_bColdWorld = false;
 }
 
 CWorld::~CWorld( )
@@ -462,6 +475,7 @@ CWorld::~CWorld( )
 		delete g_pGameRules;
 		g_pGameRules = NULL;
 	}
+	g_WorldEntity = NULL;
 }
 
 
@@ -505,14 +519,12 @@ void CWorld::Spawn( void )
 	// NOTE:  SHOULD NEVER BE ANYTHING OTHER THAN 1!!!
 	SetModelIndex( 1 );
 	// world model
-	SetModelName( MAKE_STRING( modelinfo->GetModelName( GetModel() ) ) );
+	SetModelName( AllocPooledString( modelinfo->GetModelName( GetModel() ) ) );
 	AddFlag( FL_WORLDBRUSH );
 
 	g_EventQueue.Init();
 	Precache( );
 }
-
-static CWorld *g_WorldEntity = NULL;
 
 static const char *g_DefaultLightstyles[] =
 {
@@ -546,11 +558,6 @@ static const char *g_DefaultLightstyles[] =
 	"mmnnmmnnnmmnn",
 };
 
-
-CWorld* GetWorldEntity()
-{
-	return g_WorldEntity;
-}
 
 const char *GetDefaultLightstyleString( int styleIndex )
 {
@@ -682,6 +689,8 @@ void CWorld::Precache( void )
 			pMessage->SetNextThink( gpGlobals->curtime + 1.0f );
 		}
 	}
+
+	g_iszFuncBrushClassname = AllocPooledString("func_brush");
 }
 
 //-----------------------------------------------------------------------------
@@ -714,3 +723,7 @@ void CWorld::SetStartDark( bool startdark )
 	m_bStartDark = startdark;
 }
 
+bool CWorld::IsColdWorld( void )
+{
+	return m_bColdWorld;
+}

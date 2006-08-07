@@ -167,9 +167,6 @@ void CFish::Event_Killed( const CTakeDamageInfo &info )
 {
 	m_takedamage = DAMAGE_NO;
 	m_lifeState = LIFE_DEAD;
-
-	// make sure state gets transmitted to client
-	NetworkStateChanged();
 }
 
 
@@ -286,14 +283,14 @@ float CFish::Avoid( void )
 	float leftDanger = 0.0f;
 
 	// slightly right of forward
-	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + m_avoidRange * (m_forward + sideOffset * m_perp), MASK_SOLID, this, COLLISION_GROUP_NONE, &result );
+	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + m_avoidRange * (m_forward + sideOffset * m_perp), MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &result );
 	if (result.fraction < 1.0f)
 	{
 		rightDanger = 1.0f - result.fraction;
 	}
 
 	// slightly left of forward
-	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + m_avoidRange * (m_forward - sideOffset * m_perp), MASK_SOLID, this, COLLISION_GROUP_NONE, &result );
+	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + m_avoidRange * (m_forward - sideOffset * m_perp), MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &result );
 	if (result.fraction < 1.0f)
 	{
 		// steer away
@@ -701,7 +698,7 @@ void CFishPool::Update( void )
 				if (!m_fishes[j]->IsAlive())
 					continue;
 
-				UTIL_TraceLine( m_fishes[i]->GetAbsOrigin(), m_fishes[j]->GetAbsOrigin(), MASK_SOLID, m_fishes[i], COLLISION_GROUP_NONE, &result );
+				UTIL_TraceLine( m_fishes[i]->GetAbsOrigin(), m_fishes[j]->GetAbsOrigin(), MASK_PLAYERSOLID, m_fishes[i], COLLISION_GROUP_NONE, &result );
 				if (result.fraction >= 1.0f)
 				{
 					// the fish can see each other

@@ -91,7 +91,7 @@ int	CAmmoDef::NPCDamage(int nAmmoIndex)
 	}
 	else
 	{
-		return m_AmmoType[nAmmoIndex].pMaxCarry;
+		return m_AmmoType[nAmmoIndex].pNPCDmg;
 	}
 }
 

@@ -37,6 +37,8 @@ public:
 	MenuItem(Menu *parent, const char *panelName, const wchar_t *wszText, Menu *cascadeMenu = NULL, bool checkable = false);
 	~MenuItem();
 
+	virtual void Paint();
+
 	// Activate the menu item as if it had been selected by the user
 	virtual void FireActionSignal();
 
@@ -100,6 +102,10 @@ public:
 
 	Menu *GetParentMenu();
 
+	void SetCurrentKeyBinding( char const *keyName );
+
+	virtual void GetContentSize( int& cw, int &ch );
+
 protected:
 	void OnKeyCodeReleased(KeyCode code);
 	void OnMenuClose();
@@ -118,6 +124,8 @@ private:
 	TextImage *m_pCascadeArrow; // little arrow that appears to the right of menuitems that open a menu
 	Image *m_pCheck;  // the check that appears to the left of checked menu items
 	TextImage *m_pBlankCheck;  // a blank image same size as the check for when items are not checked.
+
+	TextImage	*m_pCurrentKeyBinding; // An optional indicator for the key currently bound to this menu item
 
 	KeyValues *m_pUserData;
 

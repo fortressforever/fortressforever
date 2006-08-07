@@ -4,6 +4,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
+
 #include "cbase.h"
 // identifier was truncated to '255' characters in the debug information
 #pragma warning(disable: 4786)
@@ -11,10 +13,10 @@
 #include "ProxyEntity.h"
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/ITexture.h"
-#include "TGALoader.h"
+#include "bitmap/TGALoader.h"
 #include "view.h"
+#include "datacache/idatacache.h"
 #include "materialsystem/IMaterial.h"
-#include "cache_user.h"
 #include "vtf/vtf.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -91,7 +93,9 @@ private:
 	int m_CamoPatternNumColors;
 	int m_CamoPatternWidth;
 	int m_CamoPatternHeight;
+#if 0
 	cache_user_t m_camoImageDataCache;
+#endif
 	unsigned char m_CamoPalette[256][3];
 	// these represent that part of the entitiy's bounding box that we 
 	// want to cast rays through to get colors for the camo
@@ -116,7 +120,9 @@ CCamoMaterialProxy::CCamoMaterialProxy() : m_TextureRegen(this)
 #if 0
 	m_InstanceDataSize = 0;
 #endif
+#if 0
 	memset( &m_camoImageDataCache, 0,sizeof( m_camoImageDataCache ) );
+#endif
 	m_pointsInNormalizedBox = NULL;
 #if 0
 	m_InstanceDataListHead = NULL;
@@ -460,7 +466,7 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 #if 0
 	// hack - need to figure out a name to attach that isn't too long.
 	m_pCamoPatternImage = 
-		( unsigned char * )engineCache->FindByName( &m_camoImageDataCache, "camopattern" );
+		( unsigned char * )datacache->FindByName( &m_camoImageDataCache, "camopattern" );
 	
 	if( m_pCamoPatternImage )
 	{
@@ -471,6 +477,7 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 	
 	enum ImageFormat indexImageFormat;
 	int indexImageSize;
+#ifndef _XBOX
 	float dummyGamma;
 	if( !TGALoader::GetInfo( m_pCamoPatternTextureVar->GetStringValue(), 
 		&m_CamoPatternWidth, &m_CamoPatternHeight, &indexImageFormat, &dummyGamma ) )
@@ -479,6 +486,12 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		m_pCamoTextureVar = NULL;
 		return;
 	}
+#else
+	// xboxissue - no tga support, why implemented this way
+	Assert( 0 );
+	m_pCamoTextureVar = NULL;
+	return;
+#endif
 	
 	if( indexImageFormat != IMAGE_FORMAT_I8 )
 	{
@@ -487,10 +500,10 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		return;
 	}
 	
-	indexImageSize = ImageLoader::GetMemRequired( m_CamoPatternWidth, m_CamoPatternHeight, indexImageFormat, false );
+	indexImageSize = ImageLoader::GetMemRequired( m_CamoPatternWidth, m_CamoPatternHeight, 1, indexImageFormat, false );
 #if 0
 	m_pCamoPatternImage = ( unsigned char * )
-		engineCache->Alloc( &m_camoImageDataCache, indexImageSize, "camopattern" );
+		datacache->Alloc( &m_camoImageDataCache, indexImageSize, "camopattern" );
 #endif
 	m_pCamoPatternImage = ( unsigned char * )new unsigned char[indexImageSize];
 	if( !m_pCamoPatternImage )
@@ -499,6 +512,7 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		return;
 	}
 	
+#ifndef _XBOX
 	if( !TGALoader::Load( m_pCamoPatternImage, m_pCamoPatternTextureVar->GetStringValue(),
 		m_CamoPatternWidth, m_CamoPatternHeight, IMAGE_FORMAT_I8, dummyGamma, false ) )
 	{
@@ -506,6 +520,10 @@ void CCamoMaterialProxy::LoadCamoPattern( void )
 		m_pCamoTextureVar = NULL;
 		return;
 	}
+#else
+	// xboxissue - no tga support, why is the camo done this way?
+	Assert( 0 );
+#endif
 	
 	bool colorUsed[256];
 	int colorRemap[256];

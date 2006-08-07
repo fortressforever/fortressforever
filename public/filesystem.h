@@ -1,20 +1,23 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
+#include <limits.h>
+
+#include "tier0/threadtools.h"
+#include "tier0/memalloc.h"
+#include "tier1/interface.h"
+#include "tier1/utlsymbol.h"
+#include "appframework/IAppSystem.h"
+
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
+
 #ifdef _WIN32
 #pragma once
-#endif
-
-#include "interface.h"
-#include "appframework/IAppSystem.h"
-#ifdef _LINUX
-#include <limits.h> // PATH_MAX define
 #endif
 
 //-----------------------------------------------------------------------------
@@ -22,24 +25,32 @@
 //-----------------------------------------------------------------------------
 
 class CUtlBuffer;
+class KeyValues;
+
 typedef void * FileHandle_t;
 typedef int FileFindHandle_t;
 typedef void (*FileSystemLoggingFunc_t)( const char *fileName, const char *accessType );
 typedef int WaitForResourcesHandle_t;
 
-// The handle is a CUtlSymbol for the dirname and the same for the filename, the accessor
-//  copies them into a static char buffer for return.
-typedef void *FileNameHandle_t;
 
+#ifdef _XBOX
+typedef void* HANDLE;
+#endif
 //-----------------------------------------------------------------------------
 // Enums used by the interface
 //-----------------------------------------------------------------------------
 
+#ifndef _XBOX
+#define FILESYSTEM_MAX_SEARCH_PATHS 128
+#else
+#define FILESYSTEM_MAX_SEARCH_PATHS 16
+#endif
+
 enum FileSystemSeek_t
 {
-	FILESYSTEM_SEEK_HEAD = 0,
-	FILESYSTEM_SEEK_CURRENT,
-	FILESYSTEM_SEEK_TAIL,
+	FILESYSTEM_SEEK_HEAD	= SEEK_SET,
+	FILESYSTEM_SEEK_CURRENT = SEEK_CUR,
+	FILESYSTEM_SEEK_TAIL	= SEEK_END,
 };
 
 enum
@@ -75,6 +86,104 @@ enum FileWarningLevel_t
 
 };
 
+// In non-retail builds, enable the file blocking access tracking stuff...
+#if defined( TRACK_BLOCKING_IO )
+enum FileBlockingWarning_t
+{
+	// Report how long synchronous i/o took to complete
+	FILESYSTEM_BLOCKING_SYNCHRONOUS = 0,
+	// Report how long async i/o took to complete if AsyncFileFinished caused it to load via "blocking" i/o
+	FILESYSTEM_BLOCKING_ASYNCHRONOUS_BLOCK,
+	// Report how long async i/o took to complete
+	FILESYSTEM_BLOCKING_ASYNCHRONOUS,
+	// Report how long the async "callback" took
+	FILESYSTEM_BLOCKING_CALLBACKTIMING,
+
+	FILESYSTEM_BLOCKING_NUMBINS,
+};
+
+#pragma pack(1)
+class FileBlockingItem
+{
+public:
+	enum
+	{
+		FB_ACCESS_OPEN = 1,
+		FB_ACCESS_CLOSE = 2,
+		FB_ACCESS_READ = 3,
+		FB_ACCESS_WRITE = 4,
+		FB_ACCESS_APPEND = 5,
+		FB_ACCESS_SIZE = 6
+	};
+
+	FileBlockingItem() :
+		m_ItemType( (FileBlockingWarning_t)0 ),
+		m_flElapsed( 0.0f ),
+		m_nAccessType( 0 )
+	{
+		SetFileName( NULL );
+	}
+
+	FileBlockingItem( int type, char const *filename, float elapsed, int accessType ) :
+		m_ItemType( (FileBlockingWarning_t)type ),
+		m_flElapsed( elapsed ),
+		m_nAccessType( accessType )
+	{
+		SetFileName( filename );
+	}
+
+	void SetFileName( char const *filename )
+	{
+		if ( !filename )
+		{
+			m_szFilename[ 0 ] = 0;
+			return;
+		}
+
+		int len = Q_strlen( filename );
+		if ( len >= sizeof( m_szFilename ) )
+		{
+			Q_strncpy( m_szFilename, &filename[ len - sizeof( m_szFilename ) + 1 ], sizeof( m_szFilename ) );
+		}
+		else
+		{
+			Q_strncpy( m_szFilename, filename, sizeof( m_szFilename ) );
+		}
+	}
+
+	char const *GetFileName() const
+	{
+		return m_szFilename;
+	}
+
+	FileBlockingWarning_t	m_ItemType;
+	float					m_flElapsed;
+	byte					m_nAccessType;
+private:
+
+	char					m_szFilename[ 32 ];
+};
+#pragma pack()
+
+class IBlockingFileItemList
+{
+public:
+	
+	// You can't call any of the below calls without locking first
+	virtual void	LockMutex() = 0;
+	virtual void	UnlockMutex() = 0;
+
+	virtual int		First() const = 0;
+	virtual int		Next( int i ) const = 0;
+	virtual int		InvalidIndex() const = 0;
+
+	virtual const	FileBlockingItem& Get( int index ) const = 0;
+
+	virtual void	Reset() = 0;
+};
+
+#endif // TRACK_BLOCKING_IO
+
 enum FilesystemMountRetval_t
 {
 	FILESYSTEM_MOUNT_OK = 0,
@@ -87,6 +196,11 @@ enum SearchPathAdd_t
 	PATH_ADD_TO_TAIL,	// Last path searched
 };
 
+enum FilesystemOpenExFlags_t
+{
+	FSOPEN_UNBUFFERED	= ( 1 << 0 ),
+};
+
 #define FILESYSTEM_INVALID_HANDLE	( FileHandle_t )0
 
 //-----------------------------------------------------------------------------
@@ -95,24 +209,32 @@ enum SearchPathAdd_t
 
 struct FileSystemStatistics
 {
-	size_t nReads,		
-		   nWrites,		
-		   nBytesRead,
-		   nBytesWritten,
-		   nSeeks;
+	CInterlockedUInt	nReads,		
+						nWrites,		
+						nBytesRead,
+						nBytesWritten,
+						nSeeks;
 };
 
 //-----------------------------------------------------------------------------
-// Main file system interface
+// File system allocation functions. Client must free on failure
+//-----------------------------------------------------------------------------
+typedef void *(*FSAllocFunc_t)( const char *pszFilename, unsigned nBytes );
+
+//-----------------------------------------------------------------------------
+// Asynchronous support types
 //-----------------------------------------------------------------------------
 
-// This is the minimal interface that can be implemented to provide access to
-// a named set of files.
-#define BASEFILESYSTEM_INTERFACE_VERSION		"VBaseFileSystem007"
+DECLARE_POINTER_HANDLE(FSAsyncControl_t);
+DECLARE_POINTER_HANDLE(FSAsyncFile_t);
+const FSAsyncFile_t FS_INVALID_ASYNC_FILE = (FSAsyncFile_t)(0x0000ffff);
 
-// async file status
-enum fsasync_t
+//---------------------------------------------------------
+// Async file status
+//---------------------------------------------------------
+enum FSAsyncStatus_t
 {
+	FSASYNC_ERR_ALIGNMENT    = -6,	// read parameters invalid for unbuffered IO
 	FSASYNC_ERR_FAILURE      = -5,	// hard subsystem failure
 	FSASYNC_ERR_READING      = -4,	// read error on file
 	FSASYNC_ERR_NOMEMORY     = -3,	// out of memory for file read
@@ -120,36 +242,61 @@ enum fsasync_t
 	FSASYNC_ERR_FILEOPEN     = -1,	// filename could not be opened (bad path, not exist, etc)
 	FSASYNC_OK               = 0,	// operation is successful
 	FSASYNC_STATUS_PENDING,			// file is properly queued, waiting for service
-	FSASYNC_STATUS_READING,			// file is being accessed
+	FSASYNC_STATUS_INPROGRESS,		// file is being accessed
 	FSASYNC_STATUS_ABORTED,			// file was aborted by caller
+	FSASYNC_STATUS_UNSERVICED,		// file is not yet queued
 };
 
-// modifier flags
-#define FSASYNC_FLAGS_ALLOCNOFREE		0x01	// do the allocation for dataPtr, but don't free
-#define FSASYNC_FLAGS_NOSEARCHPATHS		0x02	// filename is absolute
-#define FSASYNC_FLAGS_FREEDATAPTR		0x04	// free the memory for the dataPtr post callback
-
-struct asyncFileList_s;
-typedef struct asyncFileList_s	asyncFileList_t;
-
-// optional completion callback for each async file serviced (or failed)
-// call is not reentrant, async i/o guaranteed suspended until return
-typedef void (*asyncFileCallbackPtr_t)(const asyncFileList_t *asyncFilePtr, int numReadBytes, fsasync_t err);
-
-// caller provided params
-typedef struct asyncFileList_s
+//---------------------------------------------------------
+// Async request flags
+//---------------------------------------------------------
+enum FSAsyncFlags_t
 {
-	char					*filename;			// file system name
-	void					*dataPtr;			// optional, system will alloc/free if NULL
-	int						fileStartOffset;	// optional initial seek_set, 0=beginning
-	int						maxDataBytes;		// optional read clamp, -1=exist test, 0=full read
-	asyncFileCallbackPtr_t	callbackPtr;		// optional completion callback
-	int						asyncID;			// caller's unique file identifier
-	int						priority;			// inter list priority, 0=lowest
-	int						flags;				// behavior modifier
-} asyncFileList_t;
+	FSASYNC_FLAGS_ALLOCNOFREE		= ( 1 << 0 ),	// do the allocation for dataPtr, but don't free
+	FSASYNC_FLAGS_NOSEARCHPATHS		= ( 1 << 1 ),	// filename is absolute
+	FSASYNC_FLAGS_FREEDATAPTR		= ( 1 << 2 ),	// free the memory for the dataPtr post callback
+	FSASYNC_FLAGS_RAWIO				= ( 1 << 3 ),	// request an unbuffered IO. On Win32 & XBox implies alignment restrictions.
+	FSASYNC_FLAGS_SYNC				= ( 1 << 4 ),	// Actually perform the operation synchronously. Used to simplify client code paths
+	FSASYNC_FLAGS_NULLTERMINATE		= ( 1 << 5 ),	// allocate an extra byte and null terminate the buffer read in
+};
 
-class IBaseFileSystem
+//---------------------------------------------------------
+// Optional completion callback for each async file serviced (or failed)
+// call is not reentrant, async i/o guaranteed suspended until return
+// Note: If you change the signature of the callback, you will have to account for it in FileSystemV12 (toml [4/18/2005] )
+//---------------------------------------------------------
+struct FileAsyncRequest_t;
+typedef void (*FSAsyncCallbackFunc_t)(const FileAsyncRequest_t &request, int nBytesRead, FSAsyncStatus_t err);
+
+//---------------------------------------------------------
+// Description of an async request
+//---------------------------------------------------------
+struct FileAsyncRequest_t
+{
+	FileAsyncRequest_t()	{ memset( this, 0, sizeof(*this) ); hSpecificAsyncFile = FS_INVALID_ASYNC_FILE;	}
+	const char *			pszFilename;		// file system name
+	void *					pData;				// optional, system will alloc/free if NULL
+	int						nOffset;			// optional initial seek_set, 0=beginning
+	int						nBytes;				// optional read clamp, -1=exist test, 0=full read
+	FSAsyncCallbackFunc_t	pfnCallback;		// optional completion callback
+	void *					pContext;			// caller's unique file identifier
+	int						priority;			// inter list priority, 0=lowest
+	unsigned				flags;				// behavior modifier
+	const char *			pszPathID;			// path ID (NOTE: this field is here to remain binary compatible with release HL2 filesystem interface)
+	FSAsyncFile_t			hSpecificAsyncFile; // Optional hint obtained using AsyncBeginRead()
+	FSAllocFunc_t			pfnAlloc;			// custom allocator. can be null. not compatible with FSASYNC_FLAGS_FREEDATAPTR
+};
+
+
+//-----------------------------------------------------------------------------
+// Base file system interface
+//-----------------------------------------------------------------------------
+
+// This is the minimal interface that can be implemented to provide access to
+// a named set of files.
+#define BASEFILESYSTEM_INTERFACE_VERSION		"VBaseFileSystem011"
+
+abstract_class IBaseFileSystem
 {
 public:
 	virtual int				Read( void* pOutput, int size, FileHandle_t file ) = 0;
@@ -173,17 +320,55 @@ public:
 	virtual bool			SetFileWritable( char const *pFileName, bool writable, const char *pPathID = 0 ) = 0;
 
 	virtual long			GetFileTime( const char *pFileName, const char *pPathID = 0 ) = 0;
+
+	//--------------------------------------------------------
+	// Reads/writes files to utlbuffers. Use this for optimal read performance when doing open/read/close
+	//--------------------------------------------------------
+	virtual bool			ReadFile( const char *pFileName, const char *pPath, CUtlBuffer &buf, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL ) = 0;
+	virtual bool			WriteFile( const char *pFileName, const char *pPath, CUtlBuffer &buf ) = 0;
+
+#ifdef _XBOX
+	virtual bool			IsFileOnLocalHDD( const char *pFileName, const char *pPath, int &pathID, unsigned int &offset, unsigned int &length ) = 0; 
+	virtual bool			GetSearchPathFromId( int pathID, char *pPath, int nPathLen, bool &bIsPackFile ) = 0;
+#endif
 };
 
 
+//-----------------------------------------------------------------------------
+// Main file system interface
+//-----------------------------------------------------------------------------
 
-#define FILESYSTEM_INTERFACE_VERSION			"VFileSystem012"
+#define FILESYSTEM_INTERFACE_VERSION			"VFileSystem017"
 
-class IFileSystem : public IBaseFileSystem, public IAppSystem
+abstract_class IFileSystem : public IAppSystem, public IBaseFileSystem
 {
 public:
-	// Remove all search paths (including write path?)
-	virtual void			RemoveAllSearchPaths( void ) = 0;
+	//--------------------------------------------------------
+	// Optional hooks to notify file system that application is initializing,
+	// needed if want to use convars in filesystem
+	//--------------------------------------------------------
+	virtual bool			ConnectApp( CreateInterfaceFn factory ) = 0;
+	virtual InitReturnVal_t	InitApp() = 0;
+	virtual void			ShutdownApp() = 0;
+	virtual void			DisconnectApp() = 0;
+
+	//--------------------------------------------------------
+	// Steam operations
+	//--------------------------------------------------------
+
+	virtual bool			IsSteam() const = 0;
+
+	// Supplying an extra app id will mount this app in addition 
+	// to the one specified in the environment variable "steamappid"
+	// 
+	// If nExtraAppId is < -1, then it will mount that app ID only.
+	// (Was needed by the dedicated server b/c the "SteamAppId" env var only gets passed to steam.dll
+	// at load time, so the dedicated couldn't pass it in that way).
+	virtual	FilesystemMountRetval_t MountSteamContent( int nExtraAppId = -1 ) = 0;
+
+	//--------------------------------------------------------
+	// Search path manipulation
+	//--------------------------------------------------------
 
 	// Add paths in priority order (mod dir, game dir, ....)
 	// If one or more .pak files are in the specified directory, then they are
@@ -194,6 +379,31 @@ public:
 	//   even before the mod's file system path ).
 	virtual void			AddSearchPath( const char *pPath, const char *pathID, SearchPathAdd_t addType = PATH_ADD_TO_TAIL ) = 0;
 	virtual bool			RemoveSearchPath( const char *pPath, const char *pathID = 0 ) = 0;
+
+	// Remove all search paths (including write path?)
+	virtual void			RemoveAllSearchPaths( void ) = 0;
+
+	// Remove search paths associated with a given pathID
+	virtual void			RemoveSearchPaths( const char *szPathID ) = 0;
+
+	// This is for optimization. If you mark a path ID as "by request only", then files inside it
+	// will only be accessed if the path ID is specifically requested. Otherwise, it will be ignored.
+	// If there are currently no search paths with the specified path ID, then it will still
+	// remember it in case you add search paths with this path ID.
+	virtual void			MarkPathIDByRequestOnly( const char *pPathID, bool bRequestOnly ) = 0;
+
+	// converts a partial path into a full path
+	virtual const char		*RelativePathToFullPath( const char *pFileName, const char *pPathID, char *pLocalPath, int localPathBufferSize ) = 0;
+
+	// Returns the search path, each path is separated by ;s. Returns the length of the string returned
+	virtual int				GetSearchPath( const char *pathID, bool bGetPackFiles, char *pPath, int nMaxLen ) = 0;
+
+	// interface for custom pack files > 4Gb
+	virtual bool			AddPackFile( const char *fullpath, const char *pathID ) = 0;
+
+	//--------------------------------------------------------
+	// File manipulation operations
+	//--------------------------------------------------------
 
 	// Deletes a file (on the WritePath)
 	virtual void			RemoveFile( char const* pRelativePath, const char *pathID = 0 ) = 0;
@@ -209,6 +419,12 @@ public:
 
 	virtual void			FileTimeToString( char* pStrip, int maxCharsIncludingTerminator, long fileTime ) = 0;
 
+	//--------------------------------------------------------
+	// Open file operations
+	//--------------------------------------------------------
+
+	virtual void			SetBufferSize( FileHandle_t file, unsigned nBytes ) = 0;
+
 	virtual bool			IsOk( FileHandle_t file ) = 0;
 
 	virtual bool			EndOfFile( FileHandle_t file ) = 0;
@@ -216,9 +432,17 @@ public:
 	virtual char			*ReadLine( char *pOutput, int maxChars, FileHandle_t file ) = 0;
 	virtual int				FPrintf( FileHandle_t file, char *pFormat, ... ) = 0;
 
+	//--------------------------------------------------------
+	// Dynamic library operations
+	//--------------------------------------------------------
+
 	// load/unload modules
 	virtual CSysModule 		*LoadModule( const char *pFileName, const char *pPathID = 0, bool bValidatedDllOnly = true ) = 0;
 	virtual void			UnloadModule( CSysModule *pModule ) = 0;
+
+	//--------------------------------------------------------
+	// File searching operations
+	//--------------------------------------------------------
 
 	// FindFirst/FindNext. Also see FindFirstEx.
 	virtual const char		*FindFirst( const char *pWildCard, FileFindHandle_t *pHandle ) = 0;
@@ -226,6 +450,18 @@ public:
 	virtual bool			FindIsDirectory( FileFindHandle_t handle ) = 0;
 	virtual void			FindClose( FileFindHandle_t handle ) = 0;
 
+	// Same as FindFirst, but you can filter by path ID, which can make it faster.
+	virtual const char		*FindFirstEx( 
+		const char *pWildCard, 
+		const char *pPathID,
+		FileFindHandle_t *pHandle
+		) = 0;
+
+	//--------------------------------------------------------
+	// File name and directory operations
+	//--------------------------------------------------------
+
+	// FIXME: This method is obsolete! Use RelativePathToFullPath instead!
 	// converts a partial path into a full path
 	virtual const char		*GetLocalPath( const char *pFileName, char *pLocalPath, int localPathBufferSize ) = 0;
 
@@ -236,27 +472,53 @@ public:
 	// Gets the current working directory
 	virtual bool			GetCurrentDirectory( char* pDirectory, int maxlen ) = 0;
 
-	// Dump to printf/OutputDebugString the list of files that have not been closed
-	virtual void			PrintOpenedFiles( void ) = 0;
-	virtual void			PrintSearchPaths( void ) = 0;
+	//--------------------------------------------------------
+	// Filename dictionary operations
+	//--------------------------------------------------------
 
-	// output
-	virtual void			SetWarningFunc( void (*pfnWarning)( const char *fmt, ... ) ) = 0;
-	virtual void			SetWarningLevel( FileWarningLevel_t level ) = 0;
-	virtual void			AddLoggingFunc( void (*pfnLogFunc)( const char *fileName, const char *accessType ) ) = 0;
-	virtual void			RemoveLoggingFunc( FileSystemLoggingFunc_t logFunc ) = 0;
+	virtual FileNameHandle_t	FindOrAddFileName( char const *pFileName ) = 0;
+	virtual bool				String( const FileNameHandle_t& handle, char *buf, int buflen ) = 0;
 
-	// asynchronous file loading
-	virtual fsasync_t			AsyncFilePrefetch(int numFiles, const asyncFileList_t *fileListPtr) = 0;
-	virtual fsasync_t			AsyncFileFinish(int asyncID, bool wait) = 0;
-	virtual fsasync_t			AsyncFileAbort(int asyncID) = 0;
-	virtual fsasync_t			AsyncFileStatus(int asyncID) = 0;
-	virtual fsasync_t			AsyncFlush() = 0;
+	//--------------------------------------------------------
+	// Asynchronous file operations
+	//--------------------------------------------------------
 
-	// Returns the file system statistics retreived by the implementation.  Returns NULL if not supported.
-	virtual const FileSystemStatistics *GetFilesystemStatistics() = 0;
+	//------------------------------------
+	// Global operations
+	//------------------------------------
+			FSAsyncStatus_t	AsyncRead( const FileAsyncRequest_t &request, FSAsyncControl_t *phControl = NULL )	{ return AsyncReadMultiple( &request, 1, phControl ); 	}
+	virtual FSAsyncStatus_t	AsyncReadMultiple( const FileAsyncRequest_t *pRequests, int nRequests,  FSAsyncControl_t *phControls = NULL ) = 0;
+	virtual FSAsyncStatus_t	AsyncAppend(const char *pFileName, const void *pSrc, int nSrcBytes, bool bFreeMemory, FSAsyncControl_t *pControl = NULL ) = 0;
+	virtual FSAsyncStatus_t	AsyncAppendFile(const char *pAppendToFileName, const char *pAppendFromFileName, FSAsyncControl_t *pControl = NULL ) = 0;
+	virtual void			AsyncFinishAll( int iToPriority = INT_MIN ) = 0;
+	virtual void			AsyncFinishAllWrites() = 0;
+	virtual FSAsyncStatus_t	AsyncFlush() = 0;
+	virtual bool			AsyncSuspend() = 0;
+	virtual bool			AsyncResume() = 0;
 
-	// remote resource management
+	//------------------------------------
+	// Functions to hold a file open if planning on doing mutiple reads. Use is optional,
+	// and is taken only as a hint
+	//------------------------------------
+	virtual FSAsyncStatus_t	AsyncBeginRead( const char *pszFile, FSAsyncFile_t *phFile ) = 0;
+	virtual FSAsyncStatus_t	AsyncEndRead( FSAsyncFile_t hFile ) = 0;
+
+	//------------------------------------
+	// Request management
+	//------------------------------------
+	virtual FSAsyncStatus_t	AsyncFinish( FSAsyncControl_t hControl, bool wait = true ) = 0;
+	virtual FSAsyncStatus_t	AsyncGetResult( FSAsyncControl_t hControl, void **ppData, int *pSize ) = 0;
+	virtual FSAsyncStatus_t	AsyncAbort( FSAsyncControl_t hControl ) = 0;
+	virtual FSAsyncStatus_t	AsyncStatus( FSAsyncControl_t hControl ) = 0;
+	// set a new priority for a file already in the queue
+	virtual FSAsyncStatus_t	AsyncSetPriority(FSAsyncControl_t hControl, int newPriority) = 0;
+	virtual void			AsyncAddRef( FSAsyncControl_t hControl ) = 0;
+	virtual void			AsyncRelease( FSAsyncControl_t hControl ) = 0;
+
+	//--------------------------------------------------------
+	// Remote resource management
+	//--------------------------------------------------------
+
 	// starts waiting for resources to be available
 	// returns FILESYSTEM_INVALID_HANDLE if there is nothing to wait on
 	virtual WaitForResourcesHandle_t WaitForResources( const char *resourcelist ) = 0;
@@ -276,58 +538,153 @@ public:
 	// copies file out of pak/bsp/steam cache onto disk (to be accessible by third-party code)
 	virtual void			GetLocalCopy( const char *pFileName ) = 0;
 
-	virtual FileNameHandle_t	FindOrAddFileName( char const *pFileName ) = 0;
-	virtual bool				String( const FileNameHandle_t& handle, char *buf, int buflen ) = 0;
+	//--------------------------------------------------------
+	// Debugging operations
+	//--------------------------------------------------------
 
+	// Dump to printf/OutputDebugString the list of files that have not been closed
+	virtual void			PrintOpenedFiles( void ) = 0;
+	virtual void			PrintSearchPaths( void ) = 0;
+
+	// output
+	virtual void			SetWarningFunc( void (*pfnWarning)( const char *fmt, ... ) ) = 0;
+	virtual void			SetWarningLevel( FileWarningLevel_t level ) = 0;
+	virtual void			AddLoggingFunc( void (*pfnLogFunc)( const char *fileName, const char *accessType ) ) = 0;
+	virtual void			RemoveLoggingFunc( FileSystemLoggingFunc_t logFunc ) = 0;
+
+	// Returns the file system statistics retreived by the implementation.  Returns NULL if not supported.
+	virtual const FileSystemStatistics *GetFilesystemStatistics() = 0;
+
+	//--------------------------------------------------------
+	// Start of new functions after Lost Coast release (7/05)
+	//--------------------------------------------------------
+
+	virtual FileHandle_t	OpenEx( const char *pFileName, const char *pOptions, unsigned flags = 0, const char *pathID = 0, char **ppszResolvedFilename = NULL ) = 0;
+
+	// Extended version of read provides more context to allow for more optimal reading
+	virtual int				ReadEx( void* pOutput, int sizeDest, int size, FileHandle_t file ) = 0;
+	virtual int				ReadFileEx( const char *pFileName, const char *pPath, void **ppBuf, bool bNullTerminate = false, bool bOptimalAlloc = false, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL ) = 0;
+
+	virtual FileNameHandle_t	FindFileName( char const *pFileName ) = 0;
+
+#if defined( TRACK_BLOCKING_IO )
+	virtual void				EnableBlockingFileAccessTracking( bool state ) = 0;
+	virtual bool				IsBlockingFileAccessEnabled() const = 0;
+
+	virtual IBlockingFileItemList *RetrieveBlockingFileAccessInfo() = 0;
+#endif
+
+	virtual void PurgePreloadedData() = 0;
+	virtual void PreloadData() = 0;
+
+	// Fixme, we could do these via a string embedded into the compiled data, etc...
+	enum KeyValuesPreloadType_t
+	{
+		TYPE_VMT,
+		TYPE_SOUNDEMITTER,
+		TYPE_SOUNDSCAPE,
+
+		NUM_PRELOAD_TYPES
+	};
+
+	virtual void LoadCompiledKeyValues( KeyValuesPreloadType_t type, char const *archiveFile ) = 0;
+
+	// If the "PreloadedData" hasn't been purged, then this'll try and instance the KeyValues using the fast path of compiled keyvalues loaded during startup.
+	// Otherwise, it'll just fall through to the regular KeyValues loading routines
+	virtual KeyValues	*LoadKeyValues( KeyValuesPreloadType_t type, char const *filename, char const *pPathID = 0 ) = 0;
+	virtual bool		LoadKeyValues( KeyValues& head, KeyValuesPreloadType_t type, char const *filename, char const *pPathID = 0 ) = 0;
+	virtual bool		ExtractRootKeyName( KeyValuesPreloadType_t type, char *outbuf, size_t bufsize, char const *filename, char const *pPathID = 0 ) = 0;
+
+	virtual FSAsyncStatus_t	AsyncWrite(const char *pFileName, const void *pSrc, int nSrcBytes, bool bFreeMemory, bool bAppend = false, FSAsyncControl_t *pControl = NULL ) = 0;
+	// Async read functions with memory blame
+	FSAsyncStatus_t	AsyncReadCreditAlloc( const FileAsyncRequest_t &request, const char *pszFile, int line, FSAsyncControl_t *phControl = NULL )	{ return AsyncReadMultipleCreditAlloc( &request, 1, pszFile, line, phControl ); 	}
+	virtual FSAsyncStatus_t	AsyncReadMultipleCreditAlloc( const FileAsyncRequest_t *pRequests, int nRequests, const char *pszFile, int line, FSAsyncControl_t *phControls = NULL ) = 0;
+
+	virtual bool GetFileTypeForFullPath( char const *pFullPath, wchar_t *buf, size_t bufSizeInBytes ) = 0;
+
+	//--------------------------------------------------------
+	//--------------------------------------------------------
+	virtual bool		ReadToBuffer( FileHandle_t hFile, CUtlBuffer &buf, int nMaxBytes = 0, FSAllocFunc_t pfnAlloc = NULL ) = 0;
+
+	//--------------------------------------------------------
+	// Optimal IO operations
+	//--------------------------------------------------------
+	virtual bool GetOptimalIOConstraints( FileHandle_t hFile, unsigned *pOffsetAlign, unsigned *pSizeAlign, unsigned *pBufferAlign ) = 0;
+	inline unsigned GetOptimalReadSize( FileHandle_t hFile, unsigned nLogicalSize );
+	virtual void *AllocOptimalReadBuffer( FileHandle_t hFile, unsigned nSize = 0, unsigned nOffset = 0 ) = 0;
+	virtual void FreeOptimalReadBuffer( void * ) = 0;
+
+	//--------------------------------------------------------
 	//
-	// new functions appended after "VFileSystem012" first release (but without a version roll!)
-	//
-	//
-	virtual bool			IsOk2( FileHandle_t file ) = 0;
-	virtual void			RemoveSearchPaths( const char *szPathID ) = 0;
+	//--------------------------------------------------------
+	virtual void BeginMapAccess() = 0;
+	virtual void EndMapAccess() = 0;
 
-	virtual bool			IsSteam() const = 0;
+	// Returns true on success, otherwise false if it can't be resolved
+	virtual bool FullPathToRelativePathEx( const char *pFullpath, const char *pPathId, char *pRelative, int maxlen ) = 0;
 
-	// Supplying an extra app id will mount this app in addition 
-	// to the one specified in the environment variable "SteamAppId".
-	// 
-	// If nExtraAppId is < -1, then it will mount that app ID only.
-	// (Was needed by the dedicated server b/c the "SteamAppId" env var only gets passed to steam.dll
-	// at load time, so the dedicated couldn't pass it in that way).
-	virtual	FilesystemMountRetval_t MountSteamContent( int nExtraAppId = -1 ) = 0;
-
-	// Same as FindFirst, but you can filter by path ID, which can make it faster.
-	virtual const char		*FindFirstEx( 
-		const char *pWildCard, 
-		const char *pPathID,
-		FileFindHandle_t *pHandle
-		) = 0;
-
-	// This is for optimization. If you mark a path ID as "by request only", then files inside it
-	// will only be accessed if the path ID is specifically requested. Otherwise, it will be ignored.
-	//
-	// If there are currently no search paths with the specified path ID, then it will still
-	// remember it in case you add search paths with this path ID.
-	virtual void			MarkPathIDByRequestOnly( const char *pPathID, bool bRequestOnly ) = 0;
-
-	// set a new priority for a file already in the queue
-	virtual fsasync_t		AsyncFileSetPriority(int asyncID, int newPriority) = 0;
-
-	// interface for custom pack files > 4Gb
-	virtual bool			AddPackFile( const char *fullpath, const char *pathID ) = 0;
-
-	// async write (should be moved up next to the other async calls next time the interface is rev'd)
-	virtual fsasync_t		AsyncFileWrite(const char *pFileName, const void *pSrc, int nSrcBytes, bool bFreeMemory) = 0;
-	// appends the latter file to the former
-	virtual fsasync_t		AsyncFileAppendFile(const char *pDestFileName, const char *pSrcFileName) = 0;
-
-	// blocks until all async file writes are completed
-	virtual void			AsyncFileFinishAllWrites() = 0;
+	virtual int GetPathIndex( const FileNameHandle_t &handle ) = 0;
+	virtual long GetPathTime( const char *pPath, const char *pPathID ) = 0;
 };
 
+//-----------------------------------------------------------------------------
+
+#if defined(_XBOX) && !defined(_RETAIL)
+extern char g_szXBOXProfileLastFileOpened[1024];
+#define SetLastProfileFileRead( s ) Q_strcpy( g_szXBOXProfileLastFileOpened, pFileName )
+#define GetLastProfileFileRead() (&g_szXBOXProfileLastFileOpened[0])
+#else
+#define SetLastProfileFileRead( s ) ((void)0)
+#define GetLastProfileFileRead() NULL
+#endif
+
+#if defined(_XBOX) && defined(_BASETSD_H_)
+class CXboxDiskCacheSetter
+{
+public:
+	CXboxDiskCacheSetter( SIZE_T newSize )
+	{
+		m_oldSize = XGetFileCacheSize();
+		XSetFileCacheSize( newSize );
+	}
+
+	~CXboxDiskCacheSetter()
+	{
+		XSetFileCacheSize( m_oldSize );
+	}
+private:
+	SIZE_T m_oldSize;
+};
+#define DISK_INTENSIVE() CXboxDiskCacheSetter cacheSetter( 1024*1024 )
+#else
+#define DISK_INTENSIVE() ((void)0)
+#endif
+
+//-----------------------------------------------------------------------------
+
+inline unsigned IFileSystem::GetOptimalReadSize( FileHandle_t hFile, unsigned nLogicalSize ) 
+{ 
+	unsigned align; 
+	if ( IsPC() && GetOptimalIOConstraints( hFile, &align, NULL, NULL ) ) 
+		return AlignValue( nLogicalSize, align );
+	else if ( IsXbox() )
+		return AlignValue( nLogicalSize, 512 );
+	else
+		return nLogicalSize;
+}
+
+//-----------------------------------------------------------------------------
 
 // We include this here so it'll catch compile errors in VMPI early.
 #include "filesystem_passthru.h"
 
+//-----------------------------------------------------------------------------
+// Async memory tracking
+//-----------------------------------------------------------------------------
+
+#if (defined(_DEBUG) || defined(USE_MEM_DEBUG))
+#define AsyncRead( a, b ) AsyncReadCreditAlloc( a, __FILE__, __LINE__, b )
+#define AsyncReadMutiple( a, b, c ) AsyncReadMultipleCreditAlloc( a, b, __FILE__, __LINE__, c )
+#endif
 
 #endif // FILESYSTEM_H

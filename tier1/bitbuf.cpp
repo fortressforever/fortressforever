@@ -231,10 +231,17 @@ bool bf_write::WriteBits(const void *pInData, int nBits)
 	unsigned char *pOut = (unsigned char*)pInData;
 	int nBitsLeft = nBits;
 
-	
+	if((m_iCurBit+nBits) > m_nDataBits)
+	{
+		SetOverflowFlag();
+		CallErrorHandler( BITBUFERROR_BUFFER_OVERRUN, GetDebugName() );
+		return false;
+	}
+
 	// Get output dword-aligned.
 	while(((unsigned long)pOut & 3) != 0 && nBitsLeft >= 8)
 	{
+
 		WriteUBitLong( *pOut, 8, false );
 		++pOut;
 		nBitsLeft -= 8;
@@ -247,6 +254,7 @@ bool bf_write::WriteBits(const void *pInData, int nBits)
 		int numbits = numbytes << 3;
 		
 		// Bounds checking..
+		// TODO: May not need this check anymore
 		if((m_iCurBit+numbits) > m_nDataBits)
 		{
 			m_iCurBit = m_nDataBits;

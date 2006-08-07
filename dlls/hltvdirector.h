@@ -36,10 +36,12 @@ public:
 		IGameEvent	*m_Event;	// IGameEvent
 };
 
-class CHLTVDirector : public IGameEventListener2, public CBaseGameSystem, public IHLTVDirector
+class CHLTVDirector : public IGameEventListener2, public CBaseGameSystemPerFrame, public IHLTVDirector
 {
 public:
 	DECLARE_CLASS_NOBASE( CHLTVDirector );
+
+	virtual char const *Name() { return "CHLTVDirector"; }
 
 	CHLTVDirector();
 	virtual ~CHLTVDirector();
@@ -65,11 +67,16 @@ public: // CBaseGameSystem overrides
 	virtual void	FrameUpdatePostEntityThink();
 	virtual void	LevelInitPostEntity();
 
+			bool	SetCameraMan( int iPlayerIndex );
+			int		GetCameraMan() { return m_iCameraManIndex; }
+
+
 protected:
 
 	virtual void	StartNewShot();	
 	virtual void	StartRandomShot();
-	virtual void	StartBestFixedCameraShot();
+	virtual void	StartDelayMessage();
+	virtual void	StartBestFixedCameraShot(bool bForce);
 	virtual void	StartBestPlayerCameraShot();
 	virtual void	StartFixedCameraShot(int iCamera, int iTarget);
 	virtual void	UpdateSettings();
@@ -99,15 +106,15 @@ protected:
 		
 	int				m_nNumFixedCameras;	//number of cameras in current map
 	CBaseEntity		*m_pFixedCameras[MAX_NUM_CAMERAS]; // fixed cameras (point_viewcontrol)
-	CBaseEntity		*m_pCameraTargets[MAX_NUM_CAMERAS]; // targets for fixed cameras
-
+	
 	int				m_nNumActivePlayers;	//number of cameras in current map
 	CBasePlayer		*m_pActivePlayers[MAX_PLAYERS]; // fixed cameras (point_viewcontrol)
+	int				m_iCameraManIndex;		// entity index of camera man or 0
 	
 	CUtlRBTree<CGameEvent>	m_EventHistory;
 };
 
 extern IGameSystem* HLTVDirectorSystem();
-extern IHLTVDirector* HLTVDirector();
+extern CHLTVDirector* HLTVDirector();
 
 #endif // HLTVDIRECTOR_H

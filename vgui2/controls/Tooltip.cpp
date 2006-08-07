@@ -25,7 +25,7 @@
 
 using namespace vgui;
 
-static TextEntry *s_pTooltipWindow = NULL;
+static vgui::DHANDLE< TextEntry > s_TooltipWindow;
 static int s_iTooltipWindowCount = 0;
 
 //-----------------------------------------------------------------------------
@@ -33,21 +33,21 @@ static int s_iTooltipWindowCount = 0;
 //-----------------------------------------------------------------------------
 Tooltip::Tooltip(Panel *parent, const char *text) 
 {
-	if (!s_pTooltipWindow)
+	if (!s_TooltipWindow.Get())
 	{
-		s_pTooltipWindow = new TextEntry(NULL, "tooltip");
+		s_TooltipWindow = new TextEntry(NULL, "tooltip");
 	}
 	s_iTooltipWindowCount++;
 
 	// this line prevents the main window from losing focus
 	// when a tooltip pops up
-	s_pTooltipWindow->MakePopup(false, true);
+	s_TooltipWindow->MakePopup(false, true);
 	
 	SetText(text);
-	s_pTooltipWindow->SetText(m_Text.Base());
-	s_pTooltipWindow->SetEditable(false);
-	s_pTooltipWindow->SetMultiline(true);
-	s_pTooltipWindow->SetVisible(false);
+	s_TooltipWindow->SetText(m_Text.Base());
+	s_TooltipWindow->SetEditable(false);
+	s_TooltipWindow->SetMultiline(true);
+	s_TooltipWindow->SetVisible(false);
 
 	_displayOnOneLine = false;
 	_makeVisible = false;
@@ -64,8 +64,11 @@ Tooltip::~Tooltip()
 {
 	if (--s_iTooltipWindowCount < 1)
 	{
-		delete s_pTooltipWindow;
-		s_pTooltipWindow = NULL;
+		if ( s_TooltipWindow.Get() )
+		{
+			s_TooltipWindow->MarkForDeletion();
+		}
+		s_TooltipWindow = NULL;
 	}
 }
 
@@ -98,9 +101,9 @@ void Tooltip::SetText(const char *text)
 	}
 	m_Text.AddToTail('\0');
 	
-	if (s_pTooltipWindow)
+	if (s_TooltipWindow.Get())
 	{
-		s_pTooltipWindow->SetText(m_Text.Base());
+		s_TooltipWindow->SetText(m_Text.Base());
 	}
 }
 
@@ -109,7 +112,10 @@ void Tooltip::SetText(const char *text)
 //-----------------------------------------------------------------------------
 void Tooltip::ApplySchemeSettings(IScheme *pScheme)
 {
-	s_pTooltipWindow->SetFont(pScheme->GetFont("DefaultSmall", s_pTooltipWindow->IsProportional()));
+	if ( s_TooltipWindow.Get() )
+	{
+		s_TooltipWindow->SetFont(pScheme->GetFont("DefaultSmall", s_TooltipWindow->IsProportional()));
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -141,8 +147,11 @@ int Tooltip::GetTooltipDelay()
 //-----------------------------------------------------------------------------
 void Tooltip::ShowTooltip(Panel *currentPanel)
 {
-	s_pTooltipWindow->SetText(m_Text.Base());
-	s_pTooltipWindow->SetParent(currentPanel);
+	if ( s_TooltipWindow.Get() )
+	{
+		s_TooltipWindow->SetText(m_Text.Base());
+		s_TooltipWindow->SetParent(currentPanel);
+	}
 	_makeVisible = true;
 
 	PerformLayout();
@@ -159,13 +168,19 @@ void Tooltip::PerformLayout()
 		return;	
 
 	// we're ready, just make us visible
-	s_pTooltipWindow->SetVisible(true);
+	if ( !s_TooltipWindow.Get() )
+	{
+		return;
+	}
 
-	IScheme *pScheme = scheme()->GetIScheme( s_pTooltipWindow->GetScheme() );
+	s_TooltipWindow->SetVisible(true);
+	s_TooltipWindow->MakePopup(false, true);
 
-	s_pTooltipWindow->SetBgColor(s_pTooltipWindow->GetSchemeColor("Tooltip.BgColor", s_pTooltipWindow->GetBgColor(), pScheme));
-	s_pTooltipWindow->SetFgColor(s_pTooltipWindow->GetSchemeColor("Tooltip.TextColor", s_pTooltipWindow->GetFgColor(), pScheme));
-	s_pTooltipWindow->SetBorder(pScheme->GetBorder("ToolTipBorder"));
+	IScheme *pScheme = scheme()->GetIScheme( s_TooltipWindow->GetScheme() );
+
+	s_TooltipWindow->SetBgColor(s_TooltipWindow->GetSchemeColor("Tooltip.BgColor", s_TooltipWindow->GetBgColor(), pScheme));
+	s_TooltipWindow->SetFgColor(s_TooltipWindow->GetSchemeColor("Tooltip.TextColor", s_TooltipWindow->GetFgColor(), pScheme));
+	s_TooltipWindow->SetBorder(pScheme->GetBorder("ToolTipBorder"));
 
 	// get cursor position
 	int cursorX, cursorY;
@@ -175,7 +190,7 @@ void Tooltip::PerformLayout()
 	//m_pTextEntry->InvalidateLayout(true);
 	SizeTextWindow();
 	int menuWide, menuTall;
-	s_pTooltipWindow->GetSize(menuWide, menuTall);
+	s_TooltipWindow->GetSize(menuWide, menuTall);
 	
 	// work out where the cursor is and therefore the best place to put the menu
 	int wide, tall;
@@ -188,12 +203,12 @@ void Tooltip::PerformLayout()
 		if (tall - menuTall > cursorY)
 		{
 			// menu hanging down
-			s_pTooltipWindow->SetPos(cursorX, cursorY);
+			s_TooltipWindow->SetPos(cursorX, cursorY);
 		}
 		else
 		{
 			// menu hanging up
-			s_pTooltipWindow->SetPos(cursorX, cursorY - menuTall - 20);
+			s_TooltipWindow->SetPos(cursorX, cursorY - menuTall - 20);
 		}
 	}
 	else
@@ -202,12 +217,12 @@ void Tooltip::PerformLayout()
 		if (tall - menuTall > cursorY)
 		{
 			// menu hanging down
-			s_pTooltipWindow->SetPos(cursorX - menuWide, cursorY);
+			s_TooltipWindow->SetPos(cursorX - menuWide, cursorY);
 		}
 		else
 		{
 			// menu hanging up
-			s_pTooltipWindow->SetPos(cursorX - menuWide, cursorY - menuTall - 20 );
+			s_TooltipWindow->SetPos(cursorX - menuWide, cursorY - menuTall - 20 );
 		}
 	}	
 }
@@ -217,43 +232,46 @@ void Tooltip::PerformLayout()
 //-----------------------------------------------------------------------------
 void Tooltip::SizeTextWindow()
 {
+	if ( !s_TooltipWindow.Get() )
+		return;
+
 	if (_displayOnOneLine)
 	{
 		// We want the tool tip to be one line
-		s_pTooltipWindow->SetMultiline(false);
-		s_pTooltipWindow->SetToFullWidth();
+		s_TooltipWindow->SetMultiline(false);
+		s_TooltipWindow->SetToFullWidth();
 	}
 	else
 	{
 		// We want the tool tip to be one line
-		s_pTooltipWindow->SetMultiline(false);
-		s_pTooltipWindow->SetToFullWidth();
+		s_TooltipWindow->SetMultiline(false);
+		s_TooltipWindow->SetToFullWidth();
 		int wide, tall;
-		s_pTooltipWindow->GetSize( wide, tall );
+		s_TooltipWindow->GetSize( wide, tall );
 		double newWide = sqrt( (2.0/1) * wide * tall );
 		double newTall = (1/2) * newWide;
-		s_pTooltipWindow->SetMultiline(true);
-		s_pTooltipWindow->SetSize((int)newWide, (int)newTall );
-		s_pTooltipWindow->SetToFullHeight();
+		s_TooltipWindow->SetMultiline(true);
+		s_TooltipWindow->SetSize((int)newWide, (int)newTall );
+		s_TooltipWindow->SetToFullHeight();
 		
-		s_pTooltipWindow->GetSize( wide, tall );
+		s_TooltipWindow->GetSize( wide, tall );
 		
-		if (( wide < 100 ) && ( s_pTooltipWindow->GetNumLines() == 2) ) 
+		if (( wide < 100 ) && ( s_TooltipWindow->GetNumLines() == 2) ) 
 		{
-			s_pTooltipWindow->SetMultiline(false);
-			s_pTooltipWindow->SetToFullWidth();	
+			s_TooltipWindow->SetMultiline(false);
+			s_TooltipWindow->SetToFullWidth();	
 		}
 		else
 		{
 			
 			while ( (float)wide/(float)tall < 2 )
 			{
-				s_pTooltipWindow->SetSize( wide + 1, tall );
-				s_pTooltipWindow->SetToFullHeight();
-				s_pTooltipWindow->GetSize( wide, tall );
+				s_TooltipWindow->SetSize( wide + 1, tall );
+				s_TooltipWindow->SetToFullHeight();
+				s_TooltipWindow->GetSize( wide, tall );
 			}
 		}
-		s_pTooltipWindow->GetSize( wide, tall );
+		s_TooltipWindow->GetSize( wide, tall );
 	//	ivgui()->DPrintf("End Ratio: %f\n", (float)wide/(float)tall);		
 	}
 }
@@ -280,6 +298,9 @@ void Tooltip::SetTooltipFormatToMultiLine()
 //-----------------------------------------------------------------------------
 void Tooltip::HideTooltip()
 {
-	s_pTooltipWindow->SetVisible(false);
+	if ( s_TooltipWindow.Get() )
+	{
+		s_TooltipWindow->SetVisible(false);
+	}
 	_makeVisible = false;
 }

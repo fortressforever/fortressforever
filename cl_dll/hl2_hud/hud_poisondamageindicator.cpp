@@ -76,14 +76,19 @@ void CHudPoisonDamageIndicator::Reset( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
 //-----------------------------------------------------------------------------
 bool CHudPoisonDamageIndicator::ShouldDraw( void )
 {
-	if ( !CHudElement::ShouldDraw() )
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
 		return false;
 
-	return true;
+	bool bNeedsDraw = ( ( pPlayer->IsPoisoned() != m_bDamageIndicatorVisible ) || ( GetAlpha() > 0 ) );
+
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
 //-----------------------------------------------------------------------------

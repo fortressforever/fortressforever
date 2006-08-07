@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #include "cbase.h"
 #include "c_baseanimating.h"
@@ -28,6 +28,9 @@ public:
 
 // IParticleEffect overrides.
 public:
+	virtual bool	ShouldSimulate() const { return m_bSimulate; }
+	virtual void	SetShouldSimulate( bool bSim ) { m_bSimulate = bSim; }
+
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 
@@ -63,8 +66,10 @@ private:
 	float m_flMaxParticleSize;
 	int m_nOldSequence;
 	float m_flSequenceScale;
+	bool m_bSimulate;
 };
 
+REGISTER_EFFECT( C_EnvParticleScript );
 
 //-----------------------------------------------------------------------------
 // Datatable
@@ -80,6 +85,7 @@ END_RECV_TABLE()
 C_EnvParticleScript::C_EnvParticleScript()
 {
 	m_flMaxParticleSize = 0.0f;
+	m_bSimulate = true;
 }
 
 
@@ -103,7 +109,7 @@ void C_EnvParticleScript::OnDataChanged( DataUpdateType_t updateType )
 
 	if(updateType == DATA_UPDATE_CREATED)
 	{
-		g_ParticleMgr.AddEffect( &m_ParticleEffect, this );
+		ParticleMgr()->AddEffect( &m_ParticleEffect, this );
 	}
 
 	if ( m_nOldSequence != GetSequence() )
@@ -134,7 +140,7 @@ void C_EnvParticleScript::CreateParticle( const char *pAttachmentName, const cha
 	// Get the sprite size from the material's materialvars
 	bool bFound = false;
 	IMaterialVar *pMaterialVar = NULL;
-	IMaterial *pMaterial = g_ParticleMgr.PMaterialToIMaterial( hMat );
+	IMaterial *pMaterial = ParticleMgr()->PMaterialToIMaterial( hMat );
 	if ( pMaterial )
 	{
 		pMaterialVar = pMaterial->FindVar( "$spritesize", &bFound, false );
@@ -254,7 +260,7 @@ void C_EnvParticleScript::RenderParticles( CParticleRenderIterator *pIterator )
 	while ( pParticle )
 	{
 		Vector vecRenderPos;
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, vecRenderPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, vecRenderPos );
 		float sortKey = vecRenderPos.z;
 
 		Vector color( 1, 1, 1 );

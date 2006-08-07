@@ -14,7 +14,7 @@
 #include "edict.h"
 #include "networkvar.h"
 // Only care about this stuff in game/client .dlls
-#if defined( CLIENT_DLL ) || defined( GAME_DLL )
+#if defined( CLIENT_DLL )
 #include "predictable_entity.h"
 #endif
 
@@ -54,8 +54,11 @@ public:
 
 // NOTE:  Only care about this stuff in game/client dlls
 // Put at end in case it has any effect on size of structure
-#if defined( CLIENT_DLL ) || defined( GAME_DLL )
+#if defined( GAME_DLL )
 	DECLARE_SIMPLE_DATADESC();
+#endif
+
+#if defined( CLIENT_DLL )
 	DECLARE_PREDICTABLE();
 #endif
 };

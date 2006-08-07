@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
-//=============================================================================//
+//===========================================================================//
 
 #ifndef COMBATWEAPON_SHARED_H
 #define COMBATWEAPON_SHARED_H
@@ -29,9 +29,15 @@ extern void OnBaseCombatWeaponDestroyed( CBaseCombatWeapon * );
 class CBasePlayer;
 class CBaseCombatCharacter;
 class IPhysicsConstraint;
+class CUserCmd;
+
+// How many times to display altfire hud hints
+#define WEAPON_ALTFIRE_HUD_HINT_COUNT	1
 
 //Start with a constraint in place (don't drop to floor)
-#define	SF_WEAPON_START_CONSTRAINED	(1<<0)		
+#define	SF_WEAPON_START_CONSTRAINED	(1<<0)	
+#define SF_WEAPON_NO_PLAYER_PICKUP	(1<<1)
+#define SF_WEAPON_NO_PHYSCANNON_PUNT (1<<2)
 
 //Percent
 #define	CLIP_PERC_THRESHOLD		0.75f	
@@ -142,6 +148,8 @@ public:
 	// Weapon Pickup For Player
 	virtual void			SetPickupTouch( void );
 	virtual void 			DefaultTouch( CBaseEntity *pOther );	// default weapon touch
+	virtual bool			ShouldDisplayHUDHint();
+	virtual void			DisplayAltFireHudHint();					
 
 	// Weapon client handling
 	virtual void			SetViewModelIndex( int index = 0 );
@@ -162,7 +170,7 @@ public:
 	virtual bool			HasSecondaryAmmo( void );					// Returns true is weapon has ammo
 	bool					UsesPrimaryAmmo( void );					// returns true if the weapon actually uses primary ammo
 	bool					UsesSecondaryAmmo( void );					// returns true if the weapon actually uses secondary ammo
-
+	
 	virtual bool			CanHolster( void ) { return TRUE; };		// returns true if the weapon can be holstered
 	virtual bool			DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt );
 	virtual bool			CanDeploy( void ) { return true; }			// return true if the weapon's allowed to deploy
@@ -182,6 +190,11 @@ public:
 	virtual void			HandleFireOnEmpty();					// Called when they have the attack button down
 																	// but they are out of ammo. The default implementation
 																	// either reloads, switches weapons, or plays an empty sound.
+#ifdef CLIENT_DLL
+	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles ) {}
+#endif
+
+	virtual bool			IsWeaponZoomed() { return false; }		// Is this weapon in its 'zoomed in' mode?
 
 	// Reloading
 	virtual	void			CheckReload( void );
@@ -215,6 +228,9 @@ public:
 	virtual void			StopWeaponSound( WeaponSound_t sound_type );
 	virtual const WeaponProficiencyInfo_t *GetProficiencyValues();
 
+	// Autoaim
+	virtual float			GetMaxAutoAimDeflection() { return 0.99f; }
+
 	// TF Sprinting functions
 	virtual bool			StartSprinting( void ) { return false; };
 	virtual bool			StopSprinting( void ) { return false; };
@@ -246,6 +262,9 @@ public:
 	void					Lock( float lockTime, CBaseEntity *pLocker );
 	bool					IsLocked( CBaseEntity *pAsker );
 
+	//All weapons can be picked up by NPCs by default
+	virtual bool			CanBePickedUpByNPCs( void ) { return true;	}
+
 public:
 
 	// Weapon info accessors for data in the weapon's data file
@@ -266,6 +285,7 @@ public:
 	virtual char const		*GetName( void ) const;
 	virtual char const		*GetPrintName( void ) const;
 	virtual char const		*GetShootSound( int iIndex ) const;
+	virtual int				GetRumbleEffect() const;
 	virtual bool			UsesClipsForAmmo1( void ) const;
 	virtual bool			UsesClipsForAmmo2( void ) const;
 	bool					IsMeleeWeapon() const;
@@ -299,6 +319,8 @@ public:
 	virtual Activity		ActivityOverride( Activity baseAct, bool *pRequired );
 	virtual	acttable_t*		ActivityList( void ) { return NULL; }
 	virtual	int				ActivityListCount( void ) { return 0; }
+
+	virtual void			Activate( void );
 
 public:
 // Server Only Methods
@@ -339,6 +361,7 @@ public:
 
 	virtual void			Operator_FrameUpdate( CBaseCombatCharacter  *pOperator );
 	virtual void			Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+	virtual void			Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary ) { return; }
 	// NOTE: This should never be called when a character is operating the weapon.  Animation events should be
 	// routed through the character, and then back into CharacterAnimEvent() 
 	void					HandleAnimEvent( animevent_t *pEvent );
@@ -391,6 +414,9 @@ public:
 	WEAPON_FILE_INFO_HANDLE	GetWeaponFileInfoHandle() { return m_hWeaponFileInfo; }
 
 	virtual int				GetWorldModelIndex( void );
+
+	virtual void			GetToolRecordingState( KeyValues *msg );
+
 #endif // End client-only methods
 
 private:
@@ -447,6 +473,7 @@ public:
 	CNetworkVar( int, m_iClip1 );				// number of shots left in the primary weapon clip, -1 it not used
 	CNetworkVar( int, m_iClip2 );				// number of shots left in the secondary weapon clip, -1 it not used
 	bool					m_bFiresUnderwater;		// true if this weapon can fire underwater
+	bool					m_bAltFiresUnderwater;		// true if this weapon can fire underwater
 	float					m_fMinRange1;			// What's the closest this weapon can be used?
 	float					m_fMinRange2;			// What's the closest this weapon can be used?
 	float					m_fMaxRange1;			// What's the furthest this weapon can be used?
@@ -467,6 +494,10 @@ public:
 private:
 	WEAPON_FILE_INFO_HANDLE	m_hWeaponFileInfo;
 	IPhysicsConstraint		*m_pConstraint;
+
+	int						m_iHudHintCount;		// How many times has this weapon displayed its HUD hint?
+	bool					m_bHudHintDisplayed;	// Have we displayed a HUD hint since this weapon was deployed?
+	float					m_flHudHintPollTime;	// When to poll the weapon again for whether it should display a hud hint.
 	
 	// Server only
 #if !defined( CLIENT_DLL )

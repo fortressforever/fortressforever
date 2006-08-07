@@ -708,7 +708,7 @@ const char *CGamePlayerTeam::TargetTeamName( const char *pszTargetName, CBaseEnt
 {
 	CBaseEntity *pTeamEntity = NULL;
 
-	while ((pTeamEntity = gEntList.FindEntityByName( pTeamEntity, pszTargetName, pActivator )) != NULL)
+	while ((pTeamEntity = gEntList.FindEntityByName( pTeamEntity, pszTargetName, NULL, pActivator )) != NULL)
 	{
 		if ( FClassnameIs( pTeamEntity, "game_team_master" ) )
 			return pTeamEntity->TeamID();

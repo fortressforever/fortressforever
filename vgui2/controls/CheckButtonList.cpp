@@ -177,11 +177,20 @@ void CheckButtonList::SetItemCheckable(int itemID, bool state)
 //-----------------------------------------------------------------------------
 // Purpose: Forwards up check button selected message
 //-----------------------------------------------------------------------------
-void CheckButtonList::OnCheckButtonChecked()
+void CheckButtonList::OnCheckButtonChecked( KeyValues *pParams )
 {
-	if (!m_bIgnoreCheckSignals)
+	if ( !m_bIgnoreCheckSignals )
 	{
-		PostActionSignal(new KeyValues("CheckButtonChecked"));
+		vgui::Panel *pPanel = (vgui::Panel *)pParams->GetPtr( "panel" );
+		int c = m_CheckItems.Count();
+		for ( int i = 0; i < c; ++i )
+		{
+			if ( pPanel == m_CheckItems[i].checkButton )
+			{
+				PostActionSignal( new KeyValues( "CheckButtonChecked", "itemid", i ) );
+				break;
+			}
+		}
 	}
 }
 

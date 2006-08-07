@@ -13,6 +13,7 @@
 #include "choreoevent.h"
 #include "choreoscene.h"
 #include "utlrbtree.h"
+#include "tier1/utlbuffer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -233,9 +234,9 @@ void CChoreoChannel::ReconcileGestureTimes()
 
 		if ( !previous )
 		{
-			event->SetStartTime( 0.0f );
+			// event->SetStartTime( 0.0f );
 		}
-		else
+		else if ( previous->GetSyncToFollowingGesture() )
 		{
 			// TODO: ask the sequence for what tags to match
 
@@ -516,4 +517,46 @@ bool CChoreoChannel::GetSortedCombinedEventList( char const *cctoken, CUtlRBTree
 	}
 
 	return ( events.Count() > 0 ) ? true : false;
+}
+
+void CChoreoChannel::SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
+{
+	buf.PutString( GetName() );
+	int c = GetNumEvents();
+	Assert( c <= 65535 );
+
+	buf.PutShort( c );
+	for ( int i = 0; i < c; i++ )
+	{
+		CChoreoEvent *e = GetEvent( i );
+		Assert( e );
+		e->SaveToBuffer( buf, pScene );
+	}
+
+	buf.PutChar( GetActive() ? 1 : 0 );
+}
+
+bool CChoreoChannel::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene, CChoreoActor *pActor )
+{
+	char sz[ 256 ];
+	buf.GetString( sz, sizeof( sz ) );
+	SetName( sz );
+
+	int numEvents = (int)buf.GetShort();
+	for ( int i = 0 ; i < numEvents; ++i )
+	{
+		CChoreoEvent *e = pScene->AllocEvent();
+		if ( e->RestoreFromBuffer( buf, pScene ) )
+		{
+			AddEvent( e );
+			e->SetChannel( this );
+			e->SetActor( pActor );
+			continue;
+		}
+		return false;
+	}
+
+	SetActive( buf.GetChar() == 1 ? true : false );
+
+	return true;
 }

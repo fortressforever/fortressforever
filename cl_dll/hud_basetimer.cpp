@@ -40,10 +40,7 @@ void CHudBaseTimer::PaintTime(HFont font, int xpos, int ypos, int mins, int secs
 	swprintf(unicode, L"%d:%.2d", mins, secs);
 	
 	surface()->DrawSetTextPos(xpos, ypos);
-	for (wchar_t *ch = unicode; *ch != 0; ch++)
-	{
-		surface()->DrawUnicodeChar(*ch);
-	}
+	surface()->DrawUnicodeString( unicode );
 }
 
 void CHudBaseTimer::Paint()

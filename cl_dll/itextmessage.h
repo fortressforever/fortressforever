@@ -19,7 +19,7 @@
 #include "vgui/VGUI.h"
 #include "fontabc.h"
 
-class ITextMessage 
+abstract_class ITextMessage 
 {
 public:
 	virtual void		Create( vgui::VPANEL parent ) = 0;

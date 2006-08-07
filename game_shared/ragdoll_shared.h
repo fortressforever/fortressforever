@@ -20,6 +20,7 @@ struct matrix3x4_t;
 
 struct vcollide_t;
 struct studiohdr_t;
+class CStudioHdr;
 class CBoneAccessor;
 
 #include "vector.h"
@@ -28,6 +29,11 @@ class CBoneAccessor;
 // UNDONE: Remove and make dynamic?
 #define RAGDOLL_MAX_ELEMENTS	24
 #define RAGDOLL_INDEX_BITS		5			// NOTE 1<<RAGDOLL_INDEX_BITS >= RAGDOLL_MAX_ELEMENTS
+
+#define CORE_DISSOLVE_FADE_START 0.2f
+#define CORE_DISSOLVE_MODEL_FADE_START 0.1f
+#define CORE_DISSOLVE_MODEL_FADE_LENGTH 0.05f
+#define CORE_DISSOLVE_FADEIN_LENGTH 0.1f
 
 struct ragdollelement_t
 {
@@ -60,7 +66,7 @@ struct ragdollparams_t
 {
 	void		*pGameData;
 	vcollide_t	*pCollide;
-	studiohdr_t *pStudioHdr;
+	CStudioHdr	*pStudioHdr;
 	int			modelIndex;
 	Vector		forcePosition;
 	Vector		forceVector;
@@ -74,24 +80,32 @@ struct ragdollparams_t
 //-----------------------------------------------------------------------------
 // This hooks the main game systems callbacks to allow the AI system to manage memory
 //-----------------------------------------------------------------------------
-class CRagdollLRURetirement : public CAutoGameSystem
+class CRagdollLRURetirement : public CAutoGameSystemPerFrame
 {
 public:
+	CRagdollLRURetirement( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+	}
+
 	// Methods of IGameSystem
 	virtual void Update( float frametime );
 	virtual void FrameUpdatePostEntityThink( void );
 
 	// Move it to the top of the LRU
-	void MoveToTopOfLRU( CBaseAnimating *pRagdoll );
+	void MoveToTopOfLRU( CBaseAnimating *pRagdoll, bool bImportant = false );
 	void SetMaxRagdollCount( int iMaxCount ){ m_iMaxRagdolls = iMaxCount; }
 
 	virtual void LevelInitPreEntity( void );
+	int CountRagdolls( bool bOnlySimulatingRagdolls ) { return bOnlySimulatingRagdolls ? m_iSimulatedRagdollCount : m_iRagdollCount; }
 
 private:
 	typedef CHandle<CBaseAnimating> CRagdollHandle;
 	CUtlLinkedList< CRagdollHandle > m_LRU; 
+	CUtlLinkedList< CRagdollHandle > m_LRUImportantRagdolls; 
 
 	int m_iMaxRagdolls;
+	int m_iSimulatedRagdollCount;
+	int m_iRagdollCount;
 };
 
 extern CRagdollLRURetirement s_RagdollLRU;
@@ -126,7 +140,7 @@ bool RagdollGetBoneMatrix( const ragdoll_t &ragdoll, CBoneAccessor &pBoneToWorld
 
 // Parse the ragdoll and obtain the mapping from each physics element index to a bone index
 // returns num phys elements
-int RagdollExtractBoneIndices( int *boneIndexOut, studiohdr_t *pStudioHdr, vcollide_t *pCollide );
+int RagdollExtractBoneIndices( int *boneIndexOut, CStudioHdr *pStudioHdr, vcollide_t *pCollide );
 
 // computes an exact bbox of the ragdoll's physics objects
 void RagdollComputeExactBbox( const ragdoll_t &ragdoll, const Vector &origin, Vector &outMins, Vector &outMaxs );

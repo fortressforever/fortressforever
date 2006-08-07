@@ -145,8 +145,7 @@ void CAI_Spotlight::CreateSpotlightEntities( void )
 	}
 	else
 	{
-		QAngle vecAngles;
-		GetOuter()->GetAttachment( m_nSpotlightAttachment, vecStartPoint, vecAngles );
+		GetOuter()->GetAttachment( m_nSpotlightAttachment, vecStartPoint );
 	}
 
 	Vector vecEndPoint;
@@ -227,19 +226,18 @@ void CAI_Spotlight::SetSpotlightTargetDirection( const Vector &vSpotlightTargetD
 //------------------------------------------------------------------------------
 bool CAI_Spotlight::ConstrainToCone( Vector *pDirection )
 {
-	QAngle vecAngles;
+	Vector vecOrigin, vecForward;
 	if ( m_nSpotlightAttachment == 0 ) 
 	{
+		QAngle vecAngles;
 		vecAngles = GetOuter()->GetAbsAngles();
+		AngleVectors( vecAngles, &vecForward );
 	}
 	else
 	{
-		Vector vecOrigin;
-		GetOuter()->GetAttachment( m_nSpotlightAttachment, vecOrigin, vecAngles );
+		GetOuter()->GetAttachment( m_nSpotlightAttachment, vecOrigin, &vecForward );
 	}
 
-	Vector vecForward;
-	AngleVectors( vecAngles, &vecForward );
 
 	if ( m_flConstraintAngle == 0.0f )
 	{

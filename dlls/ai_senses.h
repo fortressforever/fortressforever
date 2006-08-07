@@ -8,7 +8,8 @@
 #ifndef AI_SENSES_H
 #define AI_SENSES_H
 
-#include "utlvector.h"
+#include "tier1/utlvector.h"
+#include "tier1/utlmap.h"
 #include "simtimer.h"
 #include "ai_component.h"
 #include "soundent.h"
@@ -36,9 +37,6 @@ enum seentype_t
 };
 
 
-const float AI_STANDARD_NPC_SEARCH_TIME = .25;
-const float AI_EFFICIENT_NPC_SEARCH_TIME = .55;
-
 //-----------------------------------------------------------------------------
 // class CAI_ScriptConditions
 //
@@ -53,9 +51,9 @@ public:
 		m_LastLookDist(-1),
 		m_TimeLastLook(-1),
 		m_iAudibleList(0),
-		m_HighPriorityTimer(0.15),	// every other thinks (5Hz)
-		m_NPCsTimer(AI_STANDARD_NPC_SEARCH_TIME),	// every third think (~3Hz)
-		m_MiscTimer(0.45)			// every fifth think (2Hz)
+		m_TimeLastLookHighPriority( -1 ),
+		m_TimeLastLookNPCs( -1 ),
+		m_TimeLastLookMisc( -1 )
 	{
 		m_SeenArrays[0] = &m_SeenHighPriority;
 		m_SeenArrays[1] = &m_SeenNPCs;
@@ -80,9 +78,13 @@ public:
 
 	CSound *		GetFirstHeardSound( AISoundIter_t *pIter );
 	CSound *		GetNextHeardSound( AISoundIter_t *pIter );
-	CSound *		GetClosestSound( bool fScent = false, int validTypes = ALL_SOUNDS | ALL_SCENTS );
+	CSound *		GetClosestSound( bool fScent = false, int validTypes = ALL_SOUNDS | ALL_SCENTS, bool bUsePriority = true );
 
 	bool 			CanHearSound( CSound *pSound );
+
+	//---------------------------------
+	
+	float			GetTimeLastUpdate( CBaseEntity *pEntity );
 
 	//---------------------------------
 
@@ -116,9 +118,9 @@ private:
 	
 	CUtlVector<EHANDLE> *m_SeenArrays[3];
 	
-	CSimTimer		m_HighPriorityTimer;
-	CSimTimer		m_NPCsTimer;
-	CSimTimer		m_MiscTimer;
+	float			m_TimeLastLookHighPriority;
+	float			m_TimeLastLookNPCs;
+	float			m_TimeLastLookMisc;
 };
 
 //-----------------------------------------------------------------------------

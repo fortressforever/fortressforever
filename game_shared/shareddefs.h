@@ -106,6 +106,13 @@ public:
 #define HUD_PRINTCENTER		4
 
 //===================================================================================================================
+// Close caption flags
+#define CLOSE_CAPTION_WARNIFMISSING	( 1<<0 )
+#define CLOSE_CAPTION_FROMPLAYER	( 1<<1 )
+#define CLOSE_CAPTION_GENDER_MALE	( 1<<2 )
+#define CLOSE_CAPTION_GENDER_FEMALE	( 1<<3 )
+
+//===================================================================================================================
 // Hud Element hiding flags
 #define	HIDEHUD_WEAPONSELECTION		( 1<<0 )	// Hide ammo count & weapon selection
 #define	HIDEHUD_FLASHLIGHT			( 1<<1 )
@@ -137,7 +144,7 @@ public:
 // The Source engine is really designed for 32 or less players.  If you raise this number above 32, you better know what you are doing
 //  and have a good answer for a bunch of perf question related to player simulation, thinking logic, tracelines, networking overhead, etc.
 // But if you are brave or are doing something interesting, go for it...   ywb 9/22/03
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL )
+#if defined( CSTRIKE_DLL )
 	#define MAX_PLAYERS				64  // Absolute max players supported
 #else
 	#define MAX_PLAYERS				32  // Absolute max players supported
@@ -229,8 +236,9 @@ enum
 	MUZZLEFLASH_COMBINE,
 	MUZZLEFLASH_357,
 	MUZZLEFLASH_RPG,
+	MUZZLEFLASH_COMBINE_TURRET,
 
-	MUZZLEFLASH_FIRSTPERSON		= 0x80,
+	MUZZLEFLASH_FIRSTPERSON		= 0x100,
 };
 
 // Tracer Flags
@@ -250,9 +258,10 @@ enum
 	ENTITY_DISSOLVE_NORMAL = 0,
 	ENTITY_DISSOLVE_ELECTRICAL,
 	ENTITY_DISSOLVE_ELECTRICAL_LIGHT,
+	ENTITY_DISSOLVE_CORE,
 
 	// NOTE: Be sure to up the bits if you make more dissolve types
-	ENTITY_DISSOLVE_BITS = 2
+	ENTITY_DISSOLVE_BITS = 3
 };
 
 // ---------------------------
@@ -313,7 +322,10 @@ enum PLAYER_ANIM
 #define AUTOAIM_5DEGREES  0.08715574274766
 #define AUTOAIM_8DEGREES  0.1391731009601
 #define AUTOAIM_10DEGREES 0.1736481776669
-#define AUTOAIM_20DEGREES 0.1736481776669*2	//FIXME: Okay fine, this isn't exactly right
+#define AUTOAIM_20DEGREES 0.3490658503989
+
+#define AUTOAIM_SCALE_DEFAULT		1.0f
+#define AUTOAIM_SCALE_DIRECT_ONLY	0.0f
 
 // instant damage
 
@@ -358,6 +370,9 @@ enum PLAYER_ANIM
 #define DMG_BLAST_SURFACE	(1<<27)		// A blast on the surface of water that cannot harm things underwater
 #define DMG_DIRECT			(1<<28)
 #define DMG_BUCKSHOT		(1<<29)		// not quite a bullet. Little, rounder, different.
+
+// NOTE: DO NOT ADD ANY MORE CUSTOM DMG_ TYPES. MODS USE THE DMG_LASTGENERICFLAG BELOW, AND
+//		 IF YOU ADD NEW DMG_ TYPES, THEIR TYPES WILL BE HOSED. WE NEED A BETTER SOLUTION.
 
 // TODO: keep this up to date so all the mod-specific flags don't overlap anything.
 #define DMG_LASTGENERICFLAG	DMG_BUCKSHOT
@@ -433,9 +448,11 @@ typedef enum
 //-----------------------------------------------------------------------------
 enum PassengerRole_t
 {
-	VEHICLE_DRIVER = 0,		// There can be only one
+	VEHICLE_ROLE_NONE = -1,
 
-	VEHICLE_LAST_COMMON_ROLE,
+	VEHICLE_ROLE_DRIVER = 0,	// Only one driver
+	
+	LAST_SHARED_VEHICLE_ROLE,
 };
 
 //-----------------------------------------------------------------------------
@@ -457,8 +474,10 @@ enum
 	EFL_KILLME	=				(1<<0),	// This entity is marked for death -- This allows the game to actually delete ents at a safe time
 	EFL_DORMANT	=				(1<<1),	// Entity is dormant, no updates to client
 	EFL_NOCLIP_ACTIVE =			(1<<2),	// Lets us know when the noclip command is active.
-
 	EFL_SETTING_UP_BONES =		(1<<3),	// Set while a model is setting up its bones.
+	EFL_KEEP_ON_RECREATE_ENTITIES = (1<<4), // This is a special entity that should not be deleted when we restart entities only
+
+	EFL_HAS_PLAYER_CHILD=		(1<<4),	// One of the child entities is a player.
 
 	EFL_DIRTY_SHADOWUPDATE =	(1<<5),	// Client only- need shadow manager to update the shadow...
 	EFL_NOTIFY =				(1<<6),	// Another entity is watching events on this entity (used by teleport)
@@ -651,7 +670,7 @@ struct ModelWidthScale
 #include "soundflags.h"
 
 struct CSoundParameters;
-
+typedef short HSOUNDSCRIPTHANDLE;
 //-----------------------------------------------------------------------------
 // Purpose: Aggregates and sets default parameters for EmitSound function calls
 //-----------------------------------------------------------------------------
@@ -671,7 +690,8 @@ struct EmitSound_t
 		m_bWarnOnMissingCloseCaption( false ),
 		m_bWarnOnDirectWaveReference( false ),
 		m_nSpeakerEntity( -1 ),
-		m_UtlVecSoundOrigin()
+		m_UtlVecSoundOrigin(),
+		m_hSoundScriptHandle( -1 )
 	{
 	}
 
@@ -691,6 +711,9 @@ struct EmitSound_t
 	bool						m_bWarnOnDirectWaveReference;
 	int							m_nSpeakerEntity;
 	mutable CUtlVector< Vector >	m_UtlVecSoundOrigin;  // Actual sound origin(s) (can be multiple if sound routed through speaker entity(ies) )
+	mutable HSOUNDSCRIPTHANDLE		m_hSoundScriptHandle;
 };
+
+#define MAX_ACTORS_IN_SCENE 16
 
 #endif // SHAREDDEFS_H

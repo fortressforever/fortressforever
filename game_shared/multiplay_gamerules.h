@@ -66,6 +66,7 @@ public:
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
 	virtual bool  FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker );
+	virtual bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
 // Client spawn/respawn control
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
@@ -99,6 +100,7 @@ public:
 	virtual int ItemShouldRespawn( CItem *pItem );
 	virtual float FlItemRespawnTime( CItem *pItem );
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
+	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 
 // Ammo retrieval
 	virtual void PlayerGotAmmo( CBaseCombatCharacter *pPlayer, char *szName, int iCount );
@@ -123,7 +125,7 @@ public:
 
 // NPCs
 	virtual bool FAllowNPCs( void );
-
+	
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) { GoToIntermission(); }
 

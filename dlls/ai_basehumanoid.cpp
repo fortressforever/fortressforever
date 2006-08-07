@@ -63,6 +63,10 @@ void CAI_BaseHumanoid::CheckAmmo( void )
 	if (!GetActiveWeapon())
 		return;
 
+	// Don't do this while holstering / unholstering
+	if ( IsWeaponStateChanging() )
+		return;
+
 	if (GetActiveWeapon()->UsesPrimaryAmmo())
 	{
 		if (!GetActiveWeapon()->HasPrimaryAmmo() )
@@ -222,7 +226,7 @@ void CAI_BaseHumanoid::StartTaskRangeAttack1( const Task_t *pTask )
 	// Can't shoot if we're in the rest interval; fail the schedule
 	if ( GetShotRegulator()->IsInRestInterval() )
 	{
-		TaskFail( FAIL_NO_SHOOT );
+		TaskFail( "Shot regulator in rest interval" );
 		return;
 	}
 
@@ -294,6 +298,12 @@ void CAI_BaseHumanoid::RunTaskRangeAttack1( const Task_t *pTask )
 
 	if ( IsActivityFinished() )
 	{
+		if ( !GetEnemy() || !GetEnemy()->IsAlive() )
+		{
+			TaskComplete();
+			return;
+		}
+
 		if ( !GetShotRegulator()->IsInRestInterval() )
 		{
 			if ( GetShotRegulator()->ShouldShoot() )

@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include <crtmemdebug.h>
 #include "vgui_int.h"
@@ -31,6 +31,7 @@
 #include "engine/IStaticPropMgr.h"
 #include "hud_basechat.h"
 #include "hud_crosshair.h"
+#include "view_shared.h"
 #include "env_wind_shared.h"
 #include "detailobjectsystem.h"
 #include "clienteffectprecachesystem.h"
@@ -55,12 +56,13 @@
 #include "saverestore.h"
 #include "physics_saverestore.h"
 #include "igameevents.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/idatacache.h"
+#include "datacache/imdlcache.h"
 #include "kbutton.h"
 #include "vstdlib/icommandline.h"
 #include "gamerules_register.h"
 #include "vgui_controls/AnimationController.h"
-#include "tgawriter.h"
+#include "bitmap/tgawriter.h"
 #include "c_world.h"
 #include "perfvisualbenchmark.h"	
 #include "soundemittersystem/isoundemittersystembase.h"
@@ -70,7 +72,18 @@
 #include "c_vguiscreen.h"
 #include "imessagechars.h"
 #include "cl_dll/IGameClientExports.h"
+#include "client_factorylist.h"
 #include "ragdoll_shared.h"
+#include "rendertexture.h"
+#include "view_scene.h"
+#include "iclientmode.h"
+#include "con_nprint.h"
+#include "materialsystem/icolorcorrection.h"
+#include "inputsystem/iinputsystem.h"
+#include "appframework/IAppSystemGroup.h"
+#include "scenefilecache/ISceneFileCache.h"
+#include "tier2/tier2.h"
+#include "avi/iavi.h"
 
 // BEG: Added by Mulchman for team menu at level start up
 #include <cl_dll/iviewport.h>
@@ -79,17 +92,17 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern IClientMode *GetClientModeNormal();
+
 // IF YOU ADD AN INTERFACE, EXTERN IT IN THE HEADER FILE.
 IVEngineClient	*engine = NULL;
 IVModelRender *modelrender = NULL;
 IVEfx *effects = NULL;
-ICvar *cvar = NULL;
 IVRenderView *render = NULL;
 IVDebugOverlay *debugoverlay = NULL;
-IMaterialSystem *materials = NULL;
 IMaterialSystemStub *materials_stub = NULL;
-IMaterialSystemHardwareConfig *g_pMaterialSystemHardwareConfig = NULL;
-IVEngineCache *engineCache = NULL;
+IDataCache *datacache = NULL;
+IMDLCache *mdlcache = NULL;
 IVModelInfoClient *modelinfo = NULL;
 IEngineVGui *enginevgui = NULL;
 INetworkStringTableContainer *networkstringtable = NULL;
@@ -107,24 +120,49 @@ IEngineTrace *enginetrace = NULL;
 IGameUIFuncs *gameuifuncs = NULL;
 IGameEventManager2 *gameeventmanager = NULL;
 ISoundEmitterSystemBase *soundemitterbase = NULL;
+IInputSystem *inputsystem = NULL;
+ISceneFileCache *scenefilecache = NULL;
+IAvi *avi = NULL;
 
 IGameSystem *SoundEmitterSystem();
+IGameSystem *ToolFrameworkClientSystem();
+
+static bool g_bRequestCacheUsedMaterials = false;
+void RequestCacheUsedMaterials()
+{
+	g_bRequestCacheUsedMaterials = true;
+}
+
+void ProcessCacheUsedMaterials()
+{
+	if ( !g_bRequestCacheUsedMaterials )
+	{
+		return;
+	}
+
+	g_bRequestCacheUsedMaterials = false;
+	if ( materials )
+	{
+        materials->CacheUsedMaterials();
+	}
+}
 
 // String tables
 INetworkStringTable *g_StringTableEffectDispatch = NULL;
 INetworkStringTable *g_StringTableVguiScreen = NULL;
 INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
+INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 
 static CGlobalVarsBase dummyvars( true );
 // So stuff that might reference gpGlobals during DLL initialization won't have a NULL pointer.
 // Once the engine calls Init on this DLL, this pointer gets assigned to the shared data in the engine
 CGlobalVarsBase *gpGlobals = &dummyvars;
-
 class CHudChat;
-
 class CViewRender;
 extern CViewRender g_DefaultViewRender;
+
+extern void StopAllRumbleEffects( void );
 
 static C_BaseEntityClassList *s_pClassLists = NULL;
 C_BaseEntityClassList::C_BaseEntityClassList()
@@ -207,10 +245,46 @@ public:
 
 EXPOSE_SINGLE_INTERFACE( CGameClientExports, IGameClientExports, GAMECLIENTEXPORTS_INTERFACE_VERSION );
 
+class CClientDLLSharedAppSystems : public IClientDLLSharedAppSystems
+{
+public:
+	CClientDLLSharedAppSystems()
+	{
+		AddAppSystem( "soundemittersystem.dll", SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
+		AddAppSystem( "scenefilecache.dll", SCENE_FILE_CACHE_INTERFACE_VERSION );
+	}
+
+	virtual int	Count()
+	{
+		return m_Systems.Count();
+	}
+	virtual char const *GetDllName( int idx )
+	{
+		return m_Systems[ idx ].m_pModuleName;
+	}
+	virtual char const *GetInterfaceName( int idx )
+	{
+		return m_Systems[ idx ].m_pInterfaceName;
+	}
+private:
+	void AddAppSystem( char const *moduleName, char const *interfaceName )
+	{
+		AppSystemInfo_t sys;
+		sys.m_pModuleName = moduleName;
+		sys.m_pInterfaceName = interfaceName;
+		m_Systems.AddToTail( sys );
+	}
+
+	CUtlVector< AppSystemInfo_t >	m_Systems;
+};
+
+EXPOSE_SINGLE_INTERFACE( CClientDLLSharedAppSystems, IClientDLLSharedAppSystems, CLIENT_DLL_SHARED_APPSYSTEMS );
+
 
 //-----------------------------------------------------------------------------
 // Helper interface for voice.
 //-----------------------------------------------------------------------------
+#ifndef _XBOX
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
 {
 public:
@@ -229,8 +303,103 @@ public:
 	}
 };
 static CHLVoiceStatusHelper g_VoiceStatusHelper;
+#endif
+
+//-----------------------------------------------------------------------------
+// Code to display which entities are having their bones setup each frame.
+//-----------------------------------------------------------------------------
+
+ConVar cl_ShowBoneSetupEnts( "cl_ShowBoneSetupEnts", "0", 0, "Show which entities are having their bones setup each frame." );
+
+class CBoneSetupEnt
+{
+public:
+	char m_ModelName[128];
+	int m_Index;
+	int m_Count;
+};
+
+bool BoneSetupCompare( const CBoneSetupEnt &a, const CBoneSetupEnt &b )
+{
+	return a.m_Index < b.m_Index;
+}
+
+CUtlRBTree<CBoneSetupEnt> g_BoneSetupEnts( BoneSetupCompare );
 
 
+void TrackBoneSetupEnt( C_BaseAnimating *pEnt )
+{
+#ifdef _DEBUG
+	if ( IsRetail() )
+		return;
+		
+	if ( !cl_ShowBoneSetupEnts.GetInt() )
+		return;
+
+	CBoneSetupEnt ent;
+	ent.m_Index = pEnt->entindex();
+	unsigned short i = g_BoneSetupEnts.Find( ent );
+	if ( i == g_BoneSetupEnts.InvalidIndex() )
+	{
+		Q_strncpy( ent.m_ModelName, modelinfo->GetModelName( pEnt->GetModel() ), sizeof( ent.m_ModelName ) );
+		ent.m_Count = 1;
+		g_BoneSetupEnts.Insert( ent );
+	}
+	else
+	{
+		g_BoneSetupEnts[i].m_Count++;
+	}
+#endif
+}
+
+void DisplayBoneSetupEnts()
+{
+#ifdef _DEBUG
+	if ( IsRetail() )
+		return;
+	
+	if ( !cl_ShowBoneSetupEnts.GetInt() )
+		return;
+
+	unsigned short i;
+	int nElements = 0;
+	for ( i=g_BoneSetupEnts.FirstInorder(); i != g_BoneSetupEnts.LastInorder(); i=g_BoneSetupEnts.NextInorder( i ) )
+		++nElements;
+		
+	engine->Con_NPrintf( 0, "%d bone setup ents (name/count/entindex) ------------", nElements );
+
+	con_nprint_s printInfo;
+	printInfo.time_to_live = -1;
+	printInfo.fixed_width_font = true;
+	printInfo.color[0] = printInfo.color[1] = printInfo.color[2] = 1;
+	
+	printInfo.index = 2;
+	for ( i=g_BoneSetupEnts.FirstInorder(); i != g_BoneSetupEnts.LastInorder(); i=g_BoneSetupEnts.NextInorder( i ) )
+	{
+		CBoneSetupEnt *pEnt = &g_BoneSetupEnts[i];
+		
+		if ( pEnt->m_Count >= 3 )
+		{
+			printInfo.color[0] = 1;
+			printInfo.color[1] = printInfo.color[2] = 0;
+		}
+		else if ( pEnt->m_Count == 2 )
+		{
+			printInfo.color[0] = (float)200 / 255;
+			printInfo.color[1] = (float)220 / 255;
+			printInfo.color[2] = 0;
+		}
+		else
+		{
+			printInfo.color[0] = printInfo.color[0] = printInfo.color[0] = 1;
+		}
+		engine->Con_NXPrintf( &printInfo, "%25s / %3d / %3d", pEnt->m_ModelName, pEnt->m_Count, pEnt->m_Index );
+		printInfo.index++;
+	}
+
+	g_BoneSetupEnts.RemoveAll();
+#endif
+}
 
 
 //-----------------------------------------------------------------------------
@@ -260,9 +429,9 @@ public:
 	// Mouse Input Interfaces
 	virtual void					IN_ActivateMouse( void );
 	virtual void					IN_DeactivateMouse( void );
-	virtual void					IN_MouseEvent ( int mstate, bool down );
-	virtual void					IN_Accumulate ( void );
-	virtual void					IN_ClearStates ( void );
+	virtual void					IN_MouseEvent( int mstate, bool down );
+	virtual void					IN_Accumulate( void );
+	virtual void					IN_ClearStates( void );
 	virtual bool					IN_IsKeyDown( const char *name, bool& isdown );
 	// Raw signal
 	virtual int						IN_KeyEvent( int eventcode, int keynum, const char *pszCurrentBinding );
@@ -275,7 +444,7 @@ public:
 
 
 	virtual void					View_Render( vrect_t *rect );
-	virtual void					RenderView( const CViewSetup &view, bool drawViewmodel );
+	virtual void					RenderView( const CViewSetup &view, int nClearFlags, bool drawViewmodel );
 	virtual void					View_Fade( ScreenFade_t *pSF );
 	
 	virtual void					SetCrosshairAngle( const QAngle& angle );
@@ -311,6 +480,17 @@ public:
 	virtual void			EmitCloseCaption( char const *captionname, float duration );
 
 	virtual CStandardRecvProxies* GetStandardRecvProxies();
+
+	virtual bool			CanRecordDemo( char *errorMsg, int length ) const;
+
+	// save game screenshot writing
+	virtual void			WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height );
+
+	// See RenderViewInfo_t
+	virtual void			RenderViewEx( const CViewSetup &view, int nClearFlags, int whatToDraw );
+
+	// Gets the location of the player viewpoint
+	virtual bool			GetPlayerView( CViewSetup &playerView );
 
 public:
 	void PrecacheMaterial( const char *pMaterialName );
@@ -395,33 +575,64 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	// Hook up global variables
 	gpGlobals = pGlobals;
 
+	ConnectTier1Libraries( &appSystemFactory, 1 );
+	ConnectTier2Libraries( &appSystemFactory, 1 );
+
 	// We aren't happy unless we get all of our interfaces.
-	if(
-		(engine = (IVEngineClient *)appSystemFactory( VENGINE_CLIENT_INTERFACE_VERSION, NULL )) == NULL ||
-		(modelrender = (IVModelRender *)appSystemFactory( VENGINE_HUDMODEL_INTERFACE_VERSION, NULL )) == NULL ||
-		(effects = (IVEfx *)appSystemFactory( VENGINE_EFFECTS_INTERFACE_VERSION, NULL )) == NULL ||
-		(cvar = (ICvar *)appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION, NULL )) == NULL ||
-		(enginetrace = (IEngineTrace *)appSystemFactory( INTERFACEVERSION_ENGINETRACE_CLIENT, NULL )) == NULL ||
-		(render = (IVRenderView *)appSystemFactory( VENGINE_RENDERVIEW_INTERFACE_VERSION, NULL )) == NULL ||
-		(debugoverlay = (IVDebugOverlay *)appSystemFactory( VDEBUG_OVERLAY_INTERFACE_VERSION, NULL )) == NULL ||
-		(materials = (IMaterialSystem *)appSystemFactory( MATERIAL_SYSTEM_INTERFACE_VERSION, NULL )) == NULL ||
-		(engineCache = (IVEngineCache*)appSystemFactory(VENGINE_CACHE_INTERFACE_VERSION, NULL )) == NULL ||
-		(modelinfo = (IVModelInfoClient *)appSystemFactory(VMODELINFO_CLIENT_INTERFACE_VERSION, NULL )) == NULL ||
-		(enginevgui = (IEngineVGui *)appSystemFactory(VENGINE_VGUI_VERSION, NULL )) == NULL ||
-		(networkstringtable = (INetworkStringTableContainer *)appSystemFactory(INTERFACENAME_NETWORKSTRINGTABLECLIENT,NULL)) == NULL ||
-		(partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL ||
-		(shadowmgr = (IShadowMgr *)appSystemFactory(ENGINE_SHADOWMGR_INTERFACE_VERSION, NULL)) == NULL ||
-		(staticpropmgr = (IStaticPropMgrClient *)appSystemFactory(INTERFACEVERSION_STATICPROPMGR_CLIENT, NULL)) == NULL ||
-		(enginesound = (IEngineSound *)appSystemFactory(IENGINESOUND_CLIENT_INTERFACE_VERSION, NULL)) == NULL ||
-		(filesystem = (IFileSystem *)appSystemFactory(FILESYSTEM_INTERFACE_VERSION, NULL)) == NULL ||
-		(random = (IUniformRandomStream *)appSystemFactory(VENGINE_CLIENT_RANDOM_INTERFACE_VERSION, NULL)) == NULL ||
-		(gameuifuncs = (IGameUIFuncs * )appSystemFactory( VENGINE_GAMEUIFUNCS_VERSION, NULL )) == NULL ||
-		(gameeventmanager = (IGameEventManager2 *)appSystemFactory(INTERFACEVERSION_GAMEEVENTSMANAGER2,NULL)) == NULL ||
-		(soundemitterbase = (ISoundEmitterSystemBase *)appSystemFactory(SOUNDEMITTERSYSTEM_INTERFACE_VERSION, NULL)) == NULL 
-		)
-	{
+	// please don't collapse this into one monolithic boolean expression (impossible to debug)
+	if ( (engine = (IVEngineClient *)appSystemFactory( VENGINE_CLIENT_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
-	}
+	if ( (modelrender = (IVModelRender *)appSystemFactory( VENGINE_HUDMODEL_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (effects = (IVEfx *)appSystemFactory( VENGINE_EFFECTS_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (enginetrace = (IEngineTrace *)appSystemFactory( INTERFACEVERSION_ENGINETRACE_CLIENT, NULL )) == NULL )
+		return false;
+	if ( (render = (IVRenderView *)appSystemFactory( VENGINE_RENDERVIEW_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (debugoverlay = (IVDebugOverlay *)appSystemFactory( VDEBUG_OVERLAY_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (datacache = (IDataCache*)appSystemFactory(DATACACHE_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (mdlcache = (IMDLCache*)appSystemFactory(MDLCACHE_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (modelinfo = (IVModelInfoClient *)appSystemFactory(VMODELINFO_CLIENT_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+	if ( (enginevgui = (IEngineVGui *)appSystemFactory(VENGINE_VGUI_VERSION, NULL )) == NULL )
+		return false;
+	if ( (networkstringtable = (INetworkStringTableContainer *)appSystemFactory(INTERFACENAME_NETWORKSTRINGTABLECLIENT,NULL)) == NULL )
+		return false;
+	if ( (partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
+		return false;
+	if ( (shadowmgr = (IShadowMgr *)appSystemFactory(ENGINE_SHADOWMGR_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (staticpropmgr = (IStaticPropMgrClient *)appSystemFactory(INTERFACEVERSION_STATICPROPMGR_CLIENT, NULL)) == NULL )
+		return false;
+	if ( (enginesound = (IEngineSound *)appSystemFactory(IENGINESOUND_CLIENT_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (filesystem = (IFileSystem *)appSystemFactory(FILESYSTEM_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (random = (IUniformRandomStream *)appSystemFactory(VENGINE_CLIENT_RANDOM_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (gameuifuncs = (IGameUIFuncs * )appSystemFactory( VENGINE_GAMEUIFUNCS_VERSION, NULL )) == NULL )
+		return false;
+	if ( (gameeventmanager = (IGameEventManager2 *)appSystemFactory(INTERFACEVERSION_GAMEEVENTSMANAGER2,NULL)) == NULL )
+		return false;
+	if ( (soundemitterbase = (ISoundEmitterSystemBase *)appSystemFactory(SOUNDEMITTERSYSTEM_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( IsPC() && !colorcorrection )
+		return false;
+	if ( (inputsystem = (IInputSystem *)appSystemFactory(INPUTSYSTEM_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (avi = (IAvi *)appSystemFactory(AVI_INTERFACE_VERSION, NULL)) == NULL )
+		return false;
+	if ( (scenefilecache = (ISceneFileCache *)appSystemFactory( SCENE_FILE_CACHE_INTERFACE_VERSION, NULL )) == NULL )
+		return false;
+
+	factorylist_t factories;
+	factories.appSystemFactory = appSystemFactory;
+	factories.physicsFactory = physicsFactory;
+	FactoryList_Store( factories );
 
 	// Yes, both the client and game .dlls will try to Connect, the soundemittersystem.dll will handle this gracefully
 	if ( !soundemitterbase->Connect( appSystemFactory ) )
@@ -432,16 +643,16 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if ( CommandLine()->FindParm( "-textmode" ) )
 		g_bTextMode = true;
 
+	if ( CommandLine()->FindParm( "-makedevshots" ) )
+		g_MakingDevShots = true;
+
+#ifndef _XBOX
 	// Not fatal if the material system stub isn't around.
 	materials_stub = (IMaterialSystemStub*)appSystemFactory( MATERIAL_SYSTEM_STUB_INTERFACE_VERSION, NULL );
+#endif
 
-	g_pMaterialSystemHardwareConfig = materials->GetHardwareConfig( MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION, NULL );
 	if( !g_pMaterialSystemHardwareConfig )
-	{
 		return false;
-	}
-
-	SetScreenSize();
 
 	// Hook up the gaussian random number generator
 	s_GaussianRandomStream.AttachToStream( random );
@@ -449,13 +660,13 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	// Initialize the console variables.
 	ConCommandBaseMgr::OneTimeInit(&g_ConVarAccessor);
 
-	if(!Initializer::InitializeAllObjects())
+	if (!Initializer::InitializeAllObjects())
 		return false;
 
-	if(!g_ParticleMgr.Init(MAX_TOTAL_PARTICLES, materials))
+	if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
 		return false;
 
-	if(!VGui_Startup( appSystemFactory ))
+	if (!VGui_Startup( appSystemFactory ))
 		return false;
 
 	g_pMatSystemSurface = (IMatSystemSurface*)vgui::surface()->QueryInterface( MAT_SYSTEM_SURFACE_INTERFACE_VERSION ); 
@@ -467,6 +678,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	// Client Leaf System has to be initialized first, since DetailObjectSystem uses it
 	IGameSystem::Add( GameStringSystem() );
 	IGameSystem::Add( SoundEmitterSystem() );
+	if ( ToolsEnabled() )
+	{
+		IGameSystem::Add( ToolFrameworkClientSystem() );
+	}
 	IGameSystem::Add( ClientLeafSystem() );
 	IGameSystem::Add( DetailObjectSystem() );
 	IGameSystem::Add( ViewportClientSystem() );
@@ -488,12 +703,12 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	g_pClientMode->Init();
 
-	if( !IGameSystem::InitAllSystems() )
+	if ( !IGameSystem::InitAllSystems() )
 		return false;
 
 	g_pClientMode->Enable();
 
-	if( !view )
+	if ( !view )
 	{
 		view = ( IViewRender * )&g_DefaultViewRender;
 	}
@@ -512,15 +727,15 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	// Register user messages..
 	CUserMessageRegister::RegisterAll();
 
+#ifndef _XBOX
 	ClientVoiceMgr_Init();
-
-	TGAWriter::SetFileSystem( appSystemFactory );
 
 	// Embed voice status icons inside chat element
 	{
 		vgui::VPANEL parent = enginevgui->GetPanel( PANEL_CLIENTDLL );
 		GetClientVoiceMgr()->Init( &g_VoiceStatusHelper, parent );
 	}
+#endif
 
 	if ( !PhysicsDLLInit( physicsFactory ) )
 		return false;
@@ -546,7 +761,9 @@ void CHLClient::Shutdown( void )
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
+#ifndef _XBOX
 	ClientVoiceMgr_Shutdown();
+#endif
 
 	Initializer::FreeAllObjects();
 
@@ -567,7 +784,11 @@ void CHLClient::Shutdown( void )
 	ClearKeyValuesCache();
 
 	g_pMatSystemSurface = NULL;
+
+	DisconnectTier2Libraries( );
+	DisconnectTier1Libraries( );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -579,7 +800,9 @@ void CHLClient::Shutdown( void )
 int CHLClient::HudVidInit( void )
 {
 	gHUD.VidInit();
+#ifndef _XBOX
 	GetClientVoiceMgr()->VidInit();
+#endif
 
 	return 1;
 }
@@ -588,12 +811,8 @@ int CHLClient::HudVidInit( void )
 // Method used to allow the client to filter input messages before the 
 // move record is transmitted to the server
 //-----------------------------------------------------------------------------
-
 void CHLClient::HudProcessInput( bool bActive )
 {
-	// Q: Why isn't this done be the engine when it deals with all other input?
-	input->ControllerCommands();
-
 	g_pClientMode->ProcessInput( bActive );
 }
 
@@ -604,10 +823,9 @@ void CHLClient::HudProcessInput( bool bActive )
 void CHLClient::HudUpdate( bool bActive )
 {
 	float frametime = gpGlobals->frametime;
-	SetScreenSize();
-
+#ifndef _XBOX
 	GetClientVoiceMgr()->Frame( frametime );
-
+#endif
 	gHUD.UpdateHud( bActive );
 
 	C_BaseAnimating::AllowBoneAccess( true, false ); 
@@ -654,7 +872,9 @@ ClientClass *CHLClient::GetAllClasses( void )
 //-----------------------------------------------------------------------------
 void CHLClient::IN_ActivateMouse( void )
 {
+#ifndef _XBOX
 	input->ActivateMouse();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -662,7 +882,9 @@ void CHLClient::IN_ActivateMouse( void )
 //-----------------------------------------------------------------------------
 void CHLClient::IN_DeactivateMouse( void )
 {
+#ifndef _XBOX
 	input->DeactivateMouse();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -671,7 +893,9 @@ void CHLClient::IN_DeactivateMouse( void )
 //-----------------------------------------------------------------------------
 void CHLClient::IN_MouseEvent ( int mstate, bool down )
 {
+#ifndef _XBOX
 	input->MouseEvent( mstate, down );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -679,7 +903,9 @@ void CHLClient::IN_MouseEvent ( int mstate, bool down )
 //-----------------------------------------------------------------------------
 void CHLClient::IN_Accumulate ( void )
 {
+#ifndef _XBOX
 	input->AccumulateMouse();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -727,6 +953,7 @@ void CHLClient::ExtraMouseSample( float frametime, bool active )
 
 	C_BaseAnimating::AllowBoneAccess( true, false ); 
 
+	MDLCACHE_CRITICAL_SECTION();
 	input->ExtraMouseSample( frametime, active );
 
 	C_BaseAnimating::AllowBoneAccess( false, false );
@@ -746,6 +973,7 @@ void CHLClient::CreateMove ( int sequence_number, float input_sample_frametime, 
 
 	C_BaseAnimating::AllowBoneAccess( true, false ); 
 
+	MDLCACHE_CRITICAL_SECTION();
 	input->CreateMove( sequence_number, input_sample_frametime, active );
 
 	C_BaseAnimating::AllowBoneAccess( false, false );
@@ -799,6 +1027,17 @@ void CHLClient::View_Render( vrect_t *rect )
 	view->Render( rect );
 }
 
+
+//-----------------------------------------------------------------------------
+// Gets the location of the player viewpoint
+//-----------------------------------------------------------------------------
+bool CHLClient::GetPlayerView( CViewSetup &playerView )
+{
+	playerView = *view->GetPlayerViewSetup();
+	return true;
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pSF - 
@@ -809,7 +1048,6 @@ void CHLClient::View_Fade( ScreenFade_t *pSF )
 		vieweffects->Fade( *pSF );
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Per level init
 //-----------------------------------------------------------------------------
@@ -819,6 +1057,8 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	if (g_bLevelInitialized)
 		return;
 	g_bLevelInitialized = true;
+
+	input->LevelInit();
 
 	vieweffects->LevelInit();
 	
@@ -834,21 +1074,30 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	clienteffects->Flush();
 	view->LevelInit();
 	tempents->LevelInit();
+	ResetToneMapping(1.0);
 
 	IGameSystem::LevelInitPreEntityAllSystems(pMapName);
 
 	ResetWindspeed();
 
+#if !defined( NO_ENTITY_PREDICTION )
 	// don't do prediction if single player!
 	// don't set direct because of FCVAR_USERINFO
 	if ( (gpGlobals->maxClients > 1) && !engine->IsHLTV() )
 	{
-		engine->ClientCmd( "cl_predict 1" );
+		if ( !cl_predict.GetBool() )
+		{
+			engine->ClientCmd( "cl_predict 1" );
+		}
 	}
 	else
 	{
-		engine->ClientCmd( "cl_predict 0" );
+		if ( cl_predict.GetBool() )
+		{
+			engine->ClientCmd( "cl_predict 0" );
+		}
 	}
+#endif
 
 	// Check low violence settings for this map
 	g_RagdollLVManager.SetLowViolence( pMapName );
@@ -914,9 +1163,13 @@ void CHLClient::LevelShutdown( void )
 	// Now do the post-entity shutdown of all systems
 	IGameSystem::LevelShutdownPostEntityAllSystems();
 
+	view->LevelShutdown();
+
 	tempents->LevelShutdown();
 	beams->ClearBeams();
-	g_ParticleMgr.RemoveAllEffects();
+	ParticleMgr()->RemoveAllEffects();
+	
+	StopAllRumbleEffects();
 
 	gHUD.LevelShutdown();
 
@@ -930,8 +1183,14 @@ void CHLClient::LevelShutdown( void )
 	gViewPortInterface->ShowPanel( PANEL_CLASS, false );
 
 	internalCenterPrint->Clear();
+#ifndef _XBOX
 	messagechars->Clear();
+#endif
 	UncacheAllMaterials();
+
+#ifdef _XBOX
+	ReleaseRenderTargets();
+#endif
 }
 
 
@@ -940,9 +1199,9 @@ void CHLClient::LevelShutdown( void )
 // Input  : &vs - 
 //			drawViewmodel - 
 //-----------------------------------------------------------------------------
-void CHLClient::RenderView( const CViewSetup &vs, bool drawViewmodel )
+void CHLClient::RenderView( const CViewSetup &vs, int nClearFlags, bool drawViewmodel )
 {
-	view->RenderView( vs, drawViewmodel );
+	view->RenderView( vs, nClearFlags, drawViewmodel );
 }
 
 
@@ -1001,7 +1260,9 @@ int CHLClient::GetSpriteSize( void ) const
 //-----------------------------------------------------------------------------
 void CHLClient::VoiceStatus( int entindex, qboolean bTalking )
 {
+#ifndef _XBOX
 	GetClientVoiceMgr()->UpdateSpeakerStatus( entindex, !!bTalking );
+#endif
 }
 
 
@@ -1012,6 +1273,8 @@ void OnMaterialStringTableChanged( void *object, INetworkStringTable *stringTabl
 {
 	// Make sure this puppy is precached
 	gHLClient.PrecacheMaterial( newString );
+
+	RequestCacheUsedMaterials();
 }
 
 //-----------------------------------------------------------------------------
@@ -1023,6 +1286,19 @@ void OnVguiScreenTableChanged( void *object, INetworkStringTable *stringTable, i
 	vgui::Panel *pPanel = PanelMetaClassMgr()->CreatePanelMetaClass( newString, 100, NULL, NULL );
 	if ( pPanel )
 		PanelMetaClassMgr()->DestroyPanelMetaClass( pPanel );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Preload the string on the client (if single player it should already be in the cache from the server!!!)
+// Input  : *object - 
+//			*stringTable - 
+//			stringNumber - 
+//			*newString - 
+//			*newData - 
+//-----------------------------------------------------------------------------
+void OnSceneStringTableChanged( void *object, INetworkStringTable *stringTable, int stringNumber, const char *newString, void const *newData )
+{
+	scenefilecache->FindOrAddScene( newString );
 }
 
 //-----------------------------------------------------------------------------
@@ -1055,6 +1331,11 @@ void CHLClient::InstallStringTableCallback( const char *tableName )
 	else if ( !Q_strcasecmp( tableName, "InfoPanel" ) )
 	{
 		g_pStringTableInfoPanel = networkstringtable->FindTable( tableName );
+	}
+	else if ( !Q_strcasecmp( tableName, "Scenes" ) )
+	{
+		g_pStringTableClientSideChoreoScenes = networkstringtable->FindTable( tableName );
+		g_pStringTableClientSideChoreoScenes->SetStringChangedCallback( NULL, OnSceneStringTableChanged );
 	}
 
 
@@ -1202,7 +1483,7 @@ void UpdatePVSNotifiers()
 void OnRenderStart()
 {
 	VPROF( "OnRenderStart" );
-	CEngineCacheCriticalSection engineCacheCriticalSection( engineCache );
+	MDLCACHE_CRITICAL_SECTION();
 
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 	C_BaseEntity::SetAbsQueriesValid( false );
@@ -1261,13 +1542,17 @@ void OnRenderStart()
 	// Update particle effects (eventually, the effects should use Simulate() instead of having
 	// their own update system).
 	{
-		VPROF_BUDGET( "g_ParticleMgr.Update", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-		g_ParticleMgr.Simulate( gpGlobals->frametime );
+		VPROF_BUDGET( "ParticleMgr()->Update", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
+		ParticleMgr()->Simulate( gpGlobals->frametime );
 	}
 
 	// Now that the view model's position is setup and aiments are marked dirty, update
 	// their positions so they're in the leaf system correctly.
 	C_BaseEntity::CalcAimEntPositions();
+
+	// For entities marked for recording, post bone messages to IToolSystems
+	if ( ToolsEnabled() )
+		C_BaseEntity::ToolRecordEntities();
 
 	// Finally, link all the entities into the leaf system right before rendering.
 	C_BaseEntity::AddVisibleEntities();
@@ -1280,7 +1565,10 @@ void OnRenderEnd()
 	C_BaseAnimating::AllowBoneAccess( false, false );
 
 	UpdatePVSNotifiers();
+
+	DisplayBoneSetupEnts();
 }
+
 
 
 void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
@@ -1295,6 +1583,7 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 	case FRAME_RENDER_START:
 		{
 			VPROF( "CHLClient::FrameStageNotify FRAME_RENDER_START" );
+
 			// Last thing before rendering, run simulation.
 			OnRenderStart();
 		}
@@ -1319,6 +1608,8 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 		break;
 	case FRAME_NET_UPDATE_END:
 		{
+			ProcessCacheUsedMaterials();
+
 			// reenable abs recomputation since now all entities have been updated
 			C_BaseEntity::EnableAbsRecomputations( true );
 			C_BaseEntity::SetAbsQueriesValid( true );
@@ -1415,9 +1706,8 @@ void CHLClient::DispatchOnRestore()
 	{
 		if ( g_RestoredEntities[i] != NULL )
 		{
-			engineCache->EnterCriticalSection();
+			MDLCACHE_CRITICAL_SECTION();
 			g_RestoredEntities[i]->OnRestore();
-			engineCache->ExitCriticalSection();
 		}
 	}
 	g_RestoredEntities.RemoveAll();
@@ -1433,7 +1723,7 @@ void CHLClient::WriteSaveGameScreenshot( const char *pFilename )
 void CHLClient::EmitSentenceCloseCaption( char const *tokenstream )
 {
 	extern ConVar closecaption;
-
+	
 	if ( !closecaption.GetBool() )
 		return;
 
@@ -1464,3 +1754,26 @@ CStandardRecvProxies* CHLClient::GetStandardRecvProxies()
 	return &g_StandardRecvProxies;
 }
 
+bool CHLClient::CanRecordDemo( char *errorMsg, int length ) const
+{
+	if ( GetClientModeNormal() )
+	{
+		return GetClientModeNormal()->CanRecordDemo( errorMsg, length );
+	}
+
+	return true;
+}
+
+// NEW INTERFACES
+// save game screenshot writing
+void CHLClient::WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height )
+{
+	view->WriteSaveGameScreenshotOfSize( pFilename, width, height );
+}
+
+// See RenderViewInfo_t
+void CHLClient::RenderViewEx( const CViewSetup &setup, int nClearFlags, int whatToDraw )
+{
+	VPROF("RenderViewEx");
+	view->RenderViewEx( setup, nClearFlags, whatToDraw );
+}

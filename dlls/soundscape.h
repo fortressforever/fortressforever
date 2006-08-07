@@ -33,6 +33,8 @@ public:
 	void InputDisable( inputdata_t &inputdata );
 	void InputToggleEnabled( inputdata_t &inputdata );
 
+	string_t GetSoundscapeName() const {return m_soundscapeName;}
+
 
 private:
 

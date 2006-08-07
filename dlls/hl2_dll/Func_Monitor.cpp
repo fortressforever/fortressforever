@@ -86,7 +86,7 @@ void CFuncMonitor::ReleaseCameraLink()
 void CFuncMonitor::SetCameraByName(const char *szName)
 {
 	ReleaseCameraLink();
-	CBaseEntity *pBaseEnt = gEntList.FindEntityByName( NULL, szName, NULL );
+	CBaseEntity *pBaseEnt = gEntList.FindEntityByName( NULL, szName );
 	if( pBaseEnt )
 	{
 		CPointCamera *pCamera = dynamic_cast<CPointCamera *>( pBaseEnt );

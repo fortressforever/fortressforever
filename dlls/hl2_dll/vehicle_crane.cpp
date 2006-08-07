@@ -18,6 +18,7 @@
 #include "npc_vehicledriver.h"
 #include "vehicle_crane.h"
 #include "hl2_player.h"
+#include "rumble_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -182,7 +183,7 @@ void CPropCrane::Activate( void )
 		return;
 	}
 
-	m_hCraneMagnet = dynamic_cast<CPhysMagnet *>(gEntList.FindEntityByName( NULL, STRING(m_iszMagnetName), NULL ));
+	m_hCraneMagnet = dynamic_cast<CPhysMagnet *>(gEntList.FindEntityByName( NULL, STRING(m_iszMagnetName) ));
 	if ( !m_hCraneMagnet )
 	{
 		Warning( "prop_vehicle_crane %s failed to find magnet %s.\n", STRING(GetEntityName()), STRING(m_iszMagnetName) );
@@ -420,8 +421,7 @@ void CPropCrane::DrawDebugGeometryOverlays(void)
 		int iIndex = m_hCraneMagnet->LookupAttachment("magnetcable_a");
 		if ( iIndex >= 0 )
 		{
-			QAngle vecAngles;
-			m_hCraneMagnet->GetAttachment( iIndex, vecPoint, vecAngles );
+			m_hCraneMagnet->GetAttachment( iIndex, vecPoint );
 		}
 
 		NDebugOverlay::Line( m_hCraneTip->GetAbsOrigin(), vecPoint, 255,255,255, true, 0.1 );
@@ -433,27 +433,39 @@ void CPropCrane::DrawDebugGeometryOverlays(void)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropCrane::EnterVehicle( CBasePlayer *pPlayer )
+void CPropCrane::EnterVehicle( CBaseCombatCharacter *pPassenger )
 {
-	if ( !pPlayer )
+	if ( pPassenger == NULL )
 		return;
 
-	// Remove any player who may be in the vehicle at the moment
-	if ( m_hPlayer )
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
+	if ( pPlayer != NULL )
 	{
-		ExitVehicle(VEHICLE_DRIVER);
+		// Remove any player who may be in the vehicle at the moment
+		if ( m_hPlayer )
+		{
+			ExitVehicle( VEHICLE_ROLE_DRIVER );
+		}
+
+		m_hPlayer = pPlayer;
+		m_playerOn.FireOutput( pPlayer, this, 0 );
+
+	m_hPlayer->RumbleEffect( RUMBLE_FLAT_BOTH, 0, RUMBLE_FLAG_LOOP );
+	m_hPlayer->RumbleEffect( RUMBLE_FLAT_BOTH, 10, RUMBLE_FLAG_UPDATE_SCALE );
+
+		m_ServerVehicle.SoundStart();
 	}
-
-	m_hPlayer = pPlayer;
-	m_playerOn.FireOutput( pPlayer, this, 0 );
-
-	m_ServerVehicle.SoundStart();
+	else
+	{
+		// NPCs not yet supported - jdw
+		Assert( 0 );
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropCrane::ExitVehicle( int iRole )
+void CPropCrane::ExitVehicle( int nRole )
 {
 	CBasePlayer *pPlayer = m_hPlayer;
 	if ( !pPlayer )
@@ -483,7 +495,19 @@ void CPropCrane::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pH
 	// If the player's entering/exiting the vehicle, prevent movement
 	if ( !m_bEnterAnimOn && !m_bExitAnimOn )
 	{
-		DriveCrane( ucmd->buttons, player->m_afButtonPressed );
+		int buttons = ucmd->buttons;
+		if ( !(buttons & (IN_MOVELEFT|IN_MOVERIGHT)) )
+		{
+			if ( ucmd->sidemove < 0 )
+			{
+				buttons |= IN_MOVELEFT;
+			}
+			else if ( ucmd->sidemove > 0 )
+			{
+				buttons |= IN_MOVERIGHT;
+			}
+		}
+		DriveCrane( buttons, player->m_afButtonPressed );
 	}
 
 	// Run the crane's movement
@@ -545,6 +569,23 @@ void CPropCrane::DriveCrane( int iDriverButtons, int iButtonsPressed, float flNP
 		m_flTurn = UTIL_Approach( 0, m_flTurn, m_flTurnDecel * gpGlobals->frametime );
 		m_iTurning = TURNING_NOT;
 	}
+
+#ifdef _XBOX 
+	if ( m_hPlayer )
+	{
+		float maxTurn = GetMaxTurnRate();
+		static float maxRumble = 0.35f;
+		static float minRumble = 0.1f;
+		float rumbleRange = maxRumble - minRumble;
+		float rumble;
+
+		float factor = fabs(m_flTurn) / maxTurn;
+		factor = min( factor, 1.0f );
+		rumble = minRumble + (rumbleRange * factor);
+
+		m_hPlayer->RumbleEffect( RUMBLE_FLAT_BOTH, (int)(rumble * 100), RUMBLE_FLAG_UPDATE_SCALE );
+	}
+#endif // XBOX
 
 	SetLocalAngularVelocity( QAngle(0,m_flTurn * 10,0) );
 
@@ -862,6 +903,21 @@ void CPropCrane::SetNPCDriver( CNPC_VehicleDriver *pDriver )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Allows us to turn off the rumble
+//-----------------------------------------------------------------------------
+void CPropCrane::PreExitVehicle( CBaseCombatCharacter *pPlayer, int nRole )
+{
+	if ( pPlayer != m_hPlayer )
+		return;
+
+	if ( m_hPlayer != NULL )
+	{
+		// Stop rumbles
+		m_hPlayer->RumbleEffect( RUMBLE_FLAT_BOTH, 0, RUMBLE_FLAG_STOP );
+	}
+}
+
 //========================================================================================================================================
 // CRANE VEHICLE SERVER VEHICLE
 //========================================================================================================================================
@@ -875,7 +931,7 @@ CPropCrane *CCraneServerVehicle::GetCrane( void )
 //-----------------------------------------------------------------------------
 void CCraneServerVehicle::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles )
 {
-	Assert( nRole == VEHICLE_DRIVER );
+	Assert( nRole == VEHICLE_ROLE_DRIVER );
 	CBasePlayer *pPlayer = ToBasePlayer( GetDrivableVehicle()->GetDriver() );
 	Assert( pPlayer );
 
@@ -1030,8 +1086,7 @@ bool CCraneTip::CreateConstraint( CBaseAnimating *pCraneMagnet, IPhysicsConstrai
 	int iIndex = pCraneMagnet->LookupAttachment("magnetcable_a");
 	if ( iIndex >= 0 )
 	{
-		QAngle vecAngles;
-		pCraneMagnet->GetAttachment( iIndex, vecPoint, vecAngles );
+		pCraneMagnet->GetAttachment( iIndex, vecPoint );
 	}
 
 	// Create our spring

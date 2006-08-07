@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 // This defines the client-side SmokeTrail entity. It can also be used without
 // an entity, in which case you must pass calls to it and set its position each frame.
 
@@ -48,6 +48,8 @@ public:
 // C_BaseEntity.
 public:
 	virtual	void	OnDataChanged(DataUpdateType_t updateType);
+
+	virtual void	CleanupToolRecordingState( KeyValues *msg );
 
 // IPrototypeAppEffect.
 public:
@@ -227,14 +229,17 @@ public:
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 
+
 public:
 	float	m_flSpawnRate;
 	float	m_flParticleLifetime;
 	float	m_flStartSize;
 	float	m_flEndSize;
 	float	m_flSpawnRadius;
+	float	m_flPreviousSpawnRate;
 
 	bool	m_bEmit;
+	bool	m_bDontRemove;
 
 private:
 	C_SporeExplosion( const C_SporeExplosion & );

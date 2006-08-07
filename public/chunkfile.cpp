@@ -44,6 +44,9 @@
 #include "Vector4D.h"
 #include "vstdlib/strtools.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 //
 // Fixes an infinite loop that occurs when loading certain VMFs. The bug
 // occurs with Worldcraft built with DevStudio SP4.
@@ -730,6 +733,23 @@ bool CChunkFile::ReadKeyValuePoint(const char *pszValue, Vector &Point)
 //			pfVector - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
+bool CChunkFile::ReadKeyValueVector2(const char *pszValue, Vector2D &vec)
+{
+	if (pszValue != NULL)
+	{
+		return ( sscanf( pszValue, "[%f %f]", &vec.x, &vec.y) == 2 );
+	}
+
+	return(false);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : pszValue - 
+//			pfVector - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
 bool CChunkFile::ReadKeyValueVector3(const char *pszValue, Vector &vec)
 {
 	if (pszValue != NULL)
@@ -875,9 +895,22 @@ ChunkFileResult_t CChunkFile::WriteKeyValuePoint(const char *pszKey, const Vecto
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : pszKey - 
-//			fVector - 
-// Output : 
+//-----------------------------------------------------------------------------
+ChunkFileResult_t CChunkFile::WriteKeyValueVector2(const char *pszKey, const Vector2D &vec)
+{
+	if (pszKey != NULL)
+	{
+		char szBuf[MAX_KEYVALUE_LEN];
+		Q_snprintf( szBuf, sizeof( szBuf ), "\"%s\" \"[%g %g]\"", pszKey, (double)vec.x, (double)vec.y );
+		return(WriteLine(szBuf));
+	}
+
+	return(ChunkFile_Ok);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CChunkFile::WriteKeyValueVector3(const char *pszKey, const Vector &vec)
 {

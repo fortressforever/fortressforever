@@ -1235,9 +1235,9 @@ const char *CFFGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer 
 
 			// Convert to ansi on client!
 			
-			Q_strcpy( szLocation, szTeam );
-			Q_strcat( szLocation, " " );
-			Q_strcat( szLocation, pffPlayer->GetLocation() );
+			Q_strncpy( szLocation, szTeam, sizeof(szLocation) );
+			Q_strncat( szLocation, " ", sizeof(szLocation) );
+			Q_strncat( szLocation, pffPlayer->GetLocation(), sizeof(szLocation) );
 
 			return szLocation;
 		}

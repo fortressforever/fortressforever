@@ -56,8 +56,8 @@ public:
 	void HandleAnimEvent( animevent_t *pEvent );
 	Activity NPC_TranslateActivity( Activity eNewActivity );
 
-	void PainSound();
-	void DeathSound();
+	void PainSound( const CTakeDamageInfo &info );
+	void DeathSound( const CTakeDamageInfo &info );
 	
 	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 	Vector GetActualShootPosition( const Vector &shootOrigin );
@@ -288,14 +288,14 @@ void CNPC_Monk::Spawn()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void CNPC_Monk::PainSound()
+void CNPC_Monk::PainSound( const CTakeDamageInfo &info )
 {
 	SpeakIfAllowed( TLK_WOUND );
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void CNPC_Monk::DeathSound()
+void CNPC_Monk::DeathSound( const CTakeDamageInfo &info )
 {
 	// Sentences don't play on dead NPCs
 	SentenceStop();

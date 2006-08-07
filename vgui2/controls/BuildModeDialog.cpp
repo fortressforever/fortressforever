@@ -48,6 +48,24 @@ struct PanelItem_t
 	int m_iType;
 };
 
+class CSmallTextEntry : public TextEntry
+{
+	DECLARE_CLASS_SIMPLE( CSmallTextEntry, TextEntry );
+public:
+
+	CSmallTextEntry( Panel *parent, char const *panelName ) :
+		BaseClass( parent, panelName )
+	{
+	}
+
+	virtual void ApplySchemeSettings( IScheme *scheme )
+	{
+		BaseClass::ApplySchemeSettings( scheme );
+
+		SetFont( scheme->GetFont( "DefaultVerySmall" ) );
+	}
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Holds a list of all the edit fields for the currently selected panel
 //-----------------------------------------------------------------------------
@@ -171,15 +189,18 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-BuildModeDialog::BuildModeDialog(BuildGroup *buildGroup) : Frame(NULL, NULL)
+BuildModeDialog::BuildModeDialog(BuildGroup *buildGroup) : Frame(buildGroup->GetContextPanel(), "BuildModeDialog")
 {
 	SetMinimumSize(300, 256);
-	SetSize(300, 400);
+	SetSize(300, 420);
 	m_pCurrentPanel = NULL;
+	m_pEditableParents = NULL;
+	m_pEditableChildren = NULL;
 	m_pBuildGroup = buildGroup;
 	_undoSettings = NULL;
 	_copySettings = NULL;
 	_autoUpdate = false;
+	MakePopup();
 	SetTitle("VGUI Build Mode Editor", true);
 
 	CreateControls();
@@ -215,19 +236,75 @@ void BuildModeDialog::OnClose()
 	}
 }
 
+class CBuildModeNavCombo : public ComboBox
+{
+	DECLARE_CLASS_SIMPLE( CBuildModeNavCombo, ComboBox );
+public:
+
+	CBuildModeNavCombo(Panel *parent, const char *panelName, int numLines, bool allowEdit, bool getParents, Panel *context ) : 
+		BaseClass( parent, panelName, numLines, allowEdit ),
+		m_bParents( getParents )
+	{
+		m_hContext = context;
+	}
+	
+	virtual void OnShowMenu(Menu *menu)
+	{
+		menu->DeleteAllItems();
+		if ( !m_hContext.Get() )
+			return;
+
+		if ( m_bParents )
+		{
+			Panel *p = m_hContext->GetParent();
+			while ( p )
+			{
+				EditablePanel *ep = dynamic_cast < EditablePanel * >( p );
+				if ( ep && ep->GetBuildGroup() )
+				{
+					KeyValues *kv = new KeyValues( "Panel" );
+					kv->SetPtr( "ptr", p );
+					char const *text = ep->GetName() ? ep->GetName() : "unnamed";
+					menu->AddMenuItem( text, new KeyValues("SetText", "text", text), GetParent(), kv );
+				}
+				p = p->GetParent();
+			}
+		}
+		else
+		{
+			int i;
+			int c = m_hContext->GetChildCount();
+			for ( i = 0; i < c; ++i )
+			{
+				EditablePanel *ep = dynamic_cast < EditablePanel * >( m_hContext->GetChild( i ) );
+				if ( ep && ep->IsVisible() && ep->GetBuildGroup() )
+				{
+					KeyValues *kv = new KeyValues( "Panel" );
+					kv->SetPtr( "ptr", ep );
+					char const *text = ep->GetName() ? ep->GetName() : "unnamed";
+					menu->AddMenuItem( text, new KeyValues("SetText", "text", text), GetParent(), kv );
+				}
+			}
+		}
+	}
+private:
+	bool	m_bParents;
+	vgui::PHandle m_hContext;
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Creates the build mode editing controls
 //-----------------------------------------------------------------------------
 void BuildModeDialog::CreateControls()
 {
+	int i;
 	m_pPanelList = new PanelList;
 	m_pPanelList->m_pResourceData = new KeyValues( "BuildDialog" );
 	m_pPanelList->m_pControls = new PanelListPanel(this, "BuildModeControls");
 
 	// file to edit combo box is first
 	m_pFileSelectionCombo = new ComboBox(this, "FileSelectionCombo", 10, false);
-	for (int i = 0; i < m_pBuildGroup->GetRegisteredControlSettingsFileCount(); i++)
+	for ( i = 0; i < m_pBuildGroup->GetRegisteredControlSettingsFileCount(); i++)
 	{
 		m_pFileSelectionCombo->AddItem(m_pBuildGroup->GetRegisteredControlSettingsFileByIndex(i), NULL);
 	}
@@ -236,51 +313,71 @@ void BuildModeDialog::CreateControls()
 		m_pFileSelectionCombo->SetEnabled(false);
 	}
 
+	int buttonH = 18;
+
 	// status info at top of dialog
 	m_pStatusLabel = new Label(this, "StatusLabel", "[nothing currently selected]");
 	m_pStatusLabel->SetTextColorState(Label::CS_DULL);
+	m_pStatusLabel->SetTall( buttonH );
 	m_pDivider = new Divider(this, "Divider");
 	// drop-down combo box for adding new controls
-	m_pAddNewControlCombo = new ComboBox(this, NULL, 15, false);
-	m_pAddNewControlCombo->SetSize(116, 24);
-	m_pAddNewControlCombo->SetOpenDirection(ComboBox::UP);
+	m_pAddNewControlCombo = new ComboBox(this, NULL, 30, false);
+	m_pAddNewControlCombo->SetSize(116, buttonH);
+	m_pAddNewControlCombo->SetOpenDirection(Menu::MenuDirection_e::DOWN);
+
+	m_pEditableParents = new CBuildModeNavCombo( this, NULL, 15, false, true, m_pBuildGroup->GetContextPanel() );
+	m_pEditableParents->SetSize(116, buttonH);
+	m_pEditableParents->SetOpenDirection(Menu::MenuDirection_e::DOWN);
+
+	m_pEditableChildren = new CBuildModeNavCombo( this, NULL, 15, false, false, m_pBuildGroup->GetContextPanel() );
+	m_pEditableChildren->SetSize(116, buttonH);
+	m_pEditableChildren->SetOpenDirection(Menu::MenuDirection_e::DOWN);
 
 	// controls that can be added
 	// this list comes from controls EditablePanel can create by name.
 	int defaultItem = m_pAddNewControlCombo->AddItem("None", NULL);
-	m_pAddNewControlCombo->AddItem("Button", NULL);
-	m_pAddNewControlCombo->AddItem("CheckButton", NULL);
-	m_pAddNewControlCombo->AddItem("ComboBox", NULL);
-	m_pAddNewControlCombo->AddItem("Divider", NULL);
-	m_pAddNewControlCombo->AddItem("ImagePanel", NULL);
-	m_pAddNewControlCombo->AddItem("Label", NULL);
-	m_pAddNewControlCombo->AddItem("URLLabel", NULL);
-	m_pAddNewControlCombo->AddItem("ProgressBar", NULL);
-	m_pAddNewControlCombo->AddItem("RadioButton", NULL);
-	m_pAddNewControlCombo->AddItem("TextEntry", NULL);
-	m_pAddNewControlCombo->AddItem("ToggleButton", NULL);
+
+	CUtlVector< char const * >	names;
+	CBuildFactoryHelper::GetFactoryNames( names );
+	// Sort the names
+	CUtlRBTree< char const *, int > sorted( 0, 0, StringLessThan );
+
+	for ( i = 0; i < names.Count(); ++i )
+	{
+		sorted.Insert( names[ i ] );
+	}
+
+	for ( i = sorted.FirstInorder(); i != sorted.InvalidIndex(); i = sorted.NextInorder( i ) )
+	{
+		m_pAddNewControlCombo->AddItem( sorted[ i ], NULL );
+	}
+
 	m_pAddNewControlCombo->ActivateItem(defaultItem);
 
 	m_pExitButton = new Button(this, "ExitButton", "&Exit");
-	m_pExitButton->SetSize(64, 24);
+	m_pExitButton->SetSize(64, buttonH);
 
 	m_pSaveButton = new Button(this, "SaveButton", "&Save");
-	m_pSaveButton->SetSize(64, 24);
+	m_pSaveButton->SetSize(64, buttonH);
 	
 	m_pApplyButton = new Button(this, "ApplyButton", "&Apply");
-	m_pApplyButton->SetSize(64, 24);
+	m_pApplyButton->SetSize(64, buttonH);
+
+	m_pReloadLocalization = new Button( this, "Localization", "&Reload Localization" );
+	m_pReloadLocalization->SetSize( 100, buttonH );
 
 	m_pExitButton->SetCommand("Exit");
 	m_pSaveButton->SetCommand("Save");
 	m_pApplyButton->SetCommand("Apply");
+	m_pReloadLocalization->SetCommand( new KeyValues( "ReloadLocalization" ) );
 
 	m_pDeleteButton = new Button(this, "DeletePanelButton", "Delete");
-	m_pDeleteButton->SetSize(64, 24);
+	m_pDeleteButton->SetSize(64, buttonH);
 	m_pDeleteButton->SetCommand("DeletePanel");
 
 	m_pVarsButton = new MenuButton(this, "VarsButton", "Variables");
-	m_pVarsButton->SetSize(72, 24);
-	m_pVarsButton->SetOpenDirection(MenuButton::UP);
+	m_pVarsButton->SetSize(72, buttonH);
+	m_pVarsButton->SetOpenDirection(Menu::MenuDirection_e::UP);
 	
 	// iterate the vars
 	KeyValues *vars = m_pBuildGroup->GetDialogVariables();
@@ -313,6 +410,27 @@ void BuildModeDialog::CreateControls()
 	m_pAddNewControlCombo->SetTabPosition(5);
 	m_pSaveButton->SetTabPosition(6);
 	m_pExitButton->SetTabPosition(7);
+
+	m_pEditableParents->SetTabPosition( 8 );
+	m_pEditableChildren->SetTabPosition( 9 );
+	m_pReloadLocalization->SetTabPosition( 10 );
+}
+
+void BuildModeDialog::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	HFont font =  pScheme->GetFont( "DefaultVerySmall" );
+	m_pStatusLabel->SetFont( font );
+	m_pReloadLocalization->SetFont( font );
+	m_pExitButton->SetFont( font );
+	m_pSaveButton->SetFont( font );
+	m_pApplyButton->SetFont( font );
+	m_pAddNewControlCombo->SetFont( font );
+	m_pEditableParents->SetFont( font );
+	m_pEditableChildren->SetFont( font );
+	m_pDeleteButton->SetFont( font );
+	m_pVarsButton->SetFont( font );
 }
 
 //-----------------------------------------------------------------------------
@@ -323,7 +441,7 @@ void BuildModeDialog::PerformLayout()
 	BaseClass::PerformLayout();
 
 	// layout parameters
-	const int BORDER_GAP = 16, YGAP_SMALL = 4, YGAP_LARGE = 8, TITLE_HEIGHT = 24, BOTTOM_CONTROLS_HEIGHT = 96, XGAP = 6;
+	const int BORDER_GAP = 16, YGAP_SMALL = 4, YGAP_LARGE = 8, TITLE_HEIGHT = 24, BOTTOM_CONTROLS_HEIGHT = 145, XGAP = 6;
 
 	int wide, tall;
 	GetSize(wide, tall);
@@ -368,6 +486,17 @@ void BuildModeDialog::PerformLayout()
 
 	ypos -= (YGAP_LARGE  + m_pVarsButton->GetTall());
 
+	xpos = BORDER_GAP;
+	m_pEditableParents->SetPos( xpos, ypos );
+	m_pEditableChildren->SetPos( xpos + 150, ypos );
+
+	ypos -= (YGAP_LARGE + 18 );
+	xpos = BORDER_GAP;
+	m_pReloadLocalization->SetPos( xpos, ypos );
+
+	ypos -= (YGAP_LARGE  + m_pVarsButton->GetTall());
+	xpos = BORDER_GAP;
+
 	// edit buttons
 	m_pVarsButton->SetPos(xpos, ypos);
 	xpos += (XGAP + m_pVarsButton->GetWide());
@@ -375,6 +504,7 @@ void BuildModeDialog::PerformLayout()
 	xpos += (XGAP + m_pDeleteButton->GetWide());
 	m_pAddNewControlCombo->SetPos(xpos, ypos);
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Deletes all the controls from the panel
@@ -419,6 +549,15 @@ const char *ParseTokenFromString( const char **string )
 	// return a pointer to the static buffer
 	return buf;
 }
+
+void BuildModeDialog::OnTextKillFocus()
+{
+	if ( !m_pCurrentPanel )
+		return;
+
+	ApplyDataToControls();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: sets up the current control to edit
@@ -488,9 +627,11 @@ void BuildModeDialog::SetActiveControl(Panel *controlToEdit)
 		// get the field name
 		const char *fieldName = ParseTokenFromString(&controlDesc);
 
+		int itemHeight = 18;
+
 		// build a control & label
 		Label *label = new Label(this, NULL, fieldName);
-		label->SetSize(96, 24);
+		label->SetSize(96, itemHeight);
 		label->SetContentAlignment(Label::a_east);
 
 		TextEntry *edit = NULL;
@@ -540,20 +681,41 @@ void BuildModeDialog::SetActiveControl(Panel *controlToEdit)
 			editButton->SetParent(this);
 			editButton->AddActionSignalTarget(this);
 			editButton->SetTabPosition(tabPosition++);
+			editButton->SetTall( itemHeight );
 			label->SetAssociatedControl(editButton);
 		}
 		else
 		{
 			// normal string edit
-			edit = new TextEntry(this, NULL);
+			edit = new CSmallTextEntry(this, NULL);
 		}
 
 		if (edit)
 		{
+			edit->SetTall( itemHeight );
 			edit->SetParent(this);
 			edit->AddActionSignalTarget(this);
 			edit->SetTabPosition(tabPosition++);
 			label->SetAssociatedControl(edit);
+		}
+
+		HFont smallFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmall" );
+
+		if ( label )
+		{
+			label->SetFont( smallFont );
+		}
+		if ( edit )
+		{
+			edit->SetFont( smallFont );
+		}
+		if ( editCombo )
+		{
+			editCombo->SetFont( smallFont );
+		}
+		if ( editButton )
+		{
+			editButton->SetFont( smallFont );
 		}
 
 		// add to our control list
@@ -752,9 +914,6 @@ void BuildModeDialog::ApplyDataToControls()
 		}
 	}
 
-	// reload localization files
-	localize()->ReloadLocalizationFiles(filesystem());
-
 	// create a section to store settings
 	// m_pPanelList->m_pResourceData->getSection( m_pCurrentPanel->GetName(), true );
 	KeyValues *dat = new KeyValues( m_pCurrentPanel->GetName() );
@@ -789,6 +948,11 @@ void BuildModeDialog::ApplyDataToControls()
 
 	// dat is built, hand it back to the control
 	m_pCurrentPanel->ApplySettings( dat );
+
+	if ( m_pBuildGroup->GetContextPanel() )
+	{
+		m_pBuildGroup->GetContextPanel()->Repaint();
+	}
 
 	m_pApplyButton->SetEnabled(false);
 	m_pSaveButton->SetEnabled(true);
@@ -957,6 +1121,32 @@ void BuildModeDialog::OnTextChanged( Panel *panel )
 		}
 	}
 
+	if ( panel == m_pEditableChildren )
+	{
+		KeyValues *kv = m_pEditableChildren->GetActiveItemUserData();
+		if ( kv )
+		{
+			EditablePanel *ep = reinterpret_cast< EditablePanel * >( kv->GetPtr( "ptr" ) );
+			if ( ep )
+			{
+				ep->ActivateBuildMode();
+			}
+		}
+	}
+
+	if ( panel == m_pEditableParents )
+	{
+		KeyValues *kv = m_pEditableParents->GetActiveItemUserData();
+		if ( kv )
+		{
+			EditablePanel *ep = reinterpret_cast< EditablePanel * >( kv->GetPtr( "ptr" ) );
+			if ( ep )
+			{
+				ep->ActivateBuildMode();
+			}
+		}
+	}
+
 	if (m_pCurrentPanel && m_pCurrentPanel->IsBuildModeEditable())
 	{
 		m_pApplyButton->SetEnabled(true);
@@ -1065,4 +1255,60 @@ void BuildModeDialog::OnPanelMoved()
 void BuildModeDialog::OnSetClipboardText(const char *text)
 {
 	system()->SetClipboardText(text, strlen(text));
+}
+
+void BuildModeDialog::OnCreateNewControl( char const *text )
+{
+	if ( !Q_stricmp( text, "None" ) )
+		return;
+
+	OnNewControl( text, m_nClick[ 0 ], m_nClick[ 1 ] );
+}
+
+void BuildModeDialog::OnShowNewControlMenu()
+{
+	if ( !m_pBuildGroup )
+		return;
+
+	int i;
+
+	input()->GetCursorPos( m_nClick[ 0 ], m_nClick[ 1 ] );
+	m_pBuildGroup->GetContextPanel()->ScreenToLocal( m_nClick[ 0 ], m_nClick[ 1 ] );
+
+	if ( m_hContextMenu )
+		delete m_hContextMenu.Get();
+
+	m_hContextMenu = new Menu( this, "NewControls" );
+
+	// Show popup menu
+	m_hContextMenu->AddMenuItem( "None", "None", new KeyValues( "CreateNewControl", "text", "None" ), this );
+
+	CUtlVector< char const * >	names;
+	CBuildFactoryHelper::GetFactoryNames( names );
+	// Sort the names
+	CUtlRBTree< char const *, int > sorted( 0, 0, StringLessThan );
+
+	for ( i = 0; i < names.Count(); ++i )
+	{
+		sorted.Insert( names[ i ] );
+	}
+
+	for ( i = sorted.FirstInorder(); i != sorted.InvalidIndex(); i = sorted.NextInorder( i ) )
+	{
+		m_hContextMenu->AddMenuItem( sorted[ i ], sorted[ i ], new KeyValues( "CreateNewControl", "text", sorted[ i ] ), this );
+	}
+
+	Menu::PlaceContextMenu( this, m_hContextMenu );
+}
+
+void BuildModeDialog::OnReloadLocalization()
+{
+	// reload localization files
+	localize()->ReloadLocalizationFiles(filesystem());
+}
+
+bool BuildModeDialog::IsBuildGroupEnabled()
+{
+	// Don't ever edit the actual build dialog!!!
+	return false;
 }

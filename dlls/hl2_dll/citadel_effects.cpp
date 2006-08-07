@@ -10,33 +10,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-// ============================================================================
-//
-//  Energy core - charges up and then releases energy from its position
-//
-// ============================================================================
-
-class CCitadelEnergyCore : public CBaseEntity
-{
-	DECLARE_CLASS( CCitadelEnergyCore, CBaseEntity );
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
-
-public:
-	void	InputStartCharge( inputdata_t &inputdata );
-	void	InputStartDischarge( inputdata_t &inputdata );
-	void	InputStop( inputdata_t &inputdata );
-
-	virtual void Precache();
-	void	Spawn( void );
-
-private:
-	CNetworkVar( float, m_flScale );
-	CNetworkVar( int, m_nState );
-	CNetworkVar( float, m_flDuration );
-	CNetworkVar( float, m_flStartTime );
-};
-
 LINK_ENTITY_TO_CLASS( env_citadel_energy_core, CCitadelEnergyCore );
 
 BEGIN_DATADESC( CCitadelEnergyCore )
@@ -76,10 +49,12 @@ void CCitadelEnergyCore::Spawn( void )
 {
 	Precache();
 
+	UTIL_SetSize( this, Vector( -8, -8, -8 ), Vector( 8, 8, 8 ) );
+
 	// See if we start active
 	if ( HasSpawnFlags( SF_ENERGYCORE_START_ON ) )
 	{
-		m_nState = ENERGYCORE_STATE_DISCHARGING;
+		m_nState = (int)ENERGYCORE_STATE_DISCHARGING;
 		m_flStartTime = gpGlobals->curtime;
 	}
 
@@ -93,7 +68,7 @@ void CCitadelEnergyCore::Spawn( void )
 //-----------------------------------------------------------------------------
 void CCitadelEnergyCore::InputStartCharge( inputdata_t &inputdata )
 {
-	m_nState = ENERGYCORE_STATE_CHARGING;
+	m_nState = (int)ENERGYCORE_STATE_CHARGING;
 	m_flDuration = inputdata.value.Float();
 	m_flStartTime = gpGlobals->curtime;
 }
@@ -104,7 +79,7 @@ void CCitadelEnergyCore::InputStartCharge( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CCitadelEnergyCore::InputStartDischarge( inputdata_t &inputdata )
 {
-	m_nState = ENERGYCORE_STATE_DISCHARGING;
+	m_nState = (int)ENERGYCORE_STATE_DISCHARGING;
 	m_flStartTime = gpGlobals->curtime;
 }
 
@@ -114,7 +89,44 @@ void CCitadelEnergyCore::InputStartDischarge( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CCitadelEnergyCore::InputStop( inputdata_t &inputdata )
 {
-	m_nState = ENERGYCORE_STATE_OFF;
+	m_nState = (int)ENERGYCORE_STATE_OFF;
 	m_flDuration = inputdata.value.Float();
 	m_flStartTime = gpGlobals->curtime;
+}
+
+CBaseViewModel *IsViewModelMoveParent( CBaseEntity *pEffect )
+{
+	if ( pEffect->GetMoveParent() )
+	{
+		CBaseViewModel *pViewModel = dynamic_cast<CBaseViewModel *>( pEffect->GetMoveParent() );
+
+		if ( pViewModel )
+		{
+			return pViewModel;
+		}
+	}
+
+	return NULL;
+}
+
+int CCitadelEnergyCore::UpdateTransmitState( void )
+{
+	if ( IsViewModelMoveParent( this ) )
+	{
+		return SetTransmitState( FL_EDICT_FULLCHECK );
+	}
+
+	return BaseClass::UpdateTransmitState();
+}
+
+int CCitadelEnergyCore::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	CBaseViewModel *pViewModel = IsViewModelMoveParent( this );
+
+	if ( pViewModel )
+	{
+		return pViewModel->ShouldTransmit( pInfo );
+	}
+
+	return BaseClass::ShouldTransmit( pInfo );
 }

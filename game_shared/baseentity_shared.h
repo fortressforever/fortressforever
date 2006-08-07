@@ -11,6 +11,9 @@
 #pragma once
 #endif
 
+
+extern ConVar hl2_episodic;
+
 // Simple shared header file for common base entities
 
 // entity capabilities
@@ -19,7 +22,7 @@
 #define		FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions 
 // UNDONE: This will ignore transition volumes (trigger_transition), but not the PVS!!!
 #define		FCAP_FORCE_TRANSITION		0x00000004		// ALWAYS goes across transitions
-#define		FCAP_NOTIFY_NOT_IN_TRANSITION 0x00000008		// If outside the transition area, entity will be called through OnOutsideTransition()
+#define		FCAP_NOTIFY_ON_TRANSITION	0x00000008		// Entity will receive Inside/Outside transition inputs when a transition occurs
 
 #define		FCAP_IMPULSE_USE			0x00000010		// can be used by the player
 #define		FCAP_CONTINUOUS_USE			0x00000020		// can be used by the player
@@ -58,8 +61,14 @@ enum InvalidatePhysicsBits_t
 #include "c_baseanimating.h"
 #else
 #include "baseentity.h"
+
+#ifdef HL2_EPISODIC
+	#include "info_darknessmode_lightsource.h"
+#endif // HL2_EPISODIC
+
 #endif
 
+#if !defined( NO_ENTITY_PREDICTION )
 // CBaseEntity inlines
 inline bool CBaseEntity::IsPlayerSimulated( void ) const
 {
@@ -70,15 +79,16 @@ inline CBasePlayer *CBaseEntity::GetSimulatingPlayer( void )
 {
 	return m_hPlayerSimulationOwner;
 }
+#endif
 
 inline MoveType_t CBaseEntity::GetMoveType() const
 {
-	return m_MoveType;
+	return (MoveType_t)(unsigned char)m_MoveType;
 }
 
 inline MoveCollide_t CBaseEntity::GetMoveCollide() const
 {
-	return m_MoveCollide;
+	return (MoveCollide_t)(unsigned char)m_MoveCollide;
 }
 
 //-----------------------------------------------------------------------------
@@ -184,10 +194,24 @@ inline int CBaseEntity::GetEffects( void ) const
 
 inline void CBaseEntity::RemoveEffects( int nEffects ) 
 { 
+#if !defined( CLIENT_DLL )
+#ifdef HL2_EPISODIC
+	if ( nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
+	{
+		// Hack for now, to avoid player emitting radius with his flashlight
+		if ( !IsPlayer() )
+		{
+			RemoveEntityFromDarknessCheck( this );
+		}
+	}
+#endif // HL2_EPISODIC
+#endif // !CLIENT_DLL
+
 	m_fEffects &= ~nEffects;
 	if ( nEffects & EF_NODRAW )
 #ifndef CLIENT_DLL
-		UpdateTransmitState();
+		AddEFlags( EFL_DIRTY_PVS_INFORMATION );
+		DispatchUpdateTransmitState();
 #else
 		UpdateVisibility();
 #endif
@@ -195,9 +219,22 @@ inline void CBaseEntity::RemoveEffects( int nEffects )
 
 inline void CBaseEntity::ClearEffects( void ) 
 { 
+#if !defined( CLIENT_DLL )
+#ifdef HL2_EPISODIC
+	if ( m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
+	{
+		// Hack for now, to avoid player emitting radius with his flashlight
+		if ( !IsPlayer() )
+		{
+			RemoveEntityFromDarknessCheck( this );
+		}
+	}
+#endif // HL2_EPISODIC
+#endif // !CLIENT_DLL
+
 	m_fEffects = 0;
 #ifndef CLIENT_DLL
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
 #else
 		UpdateVisibility();
 #endif

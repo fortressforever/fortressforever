@@ -8,6 +8,8 @@
 
 #include "dt_utlvector_recv.h"
 
+#include "tier0/memdbgon.h"
+
 
 extern char *s_ClientElementNames[MAX_ARRAY_ELEMENTS];
 

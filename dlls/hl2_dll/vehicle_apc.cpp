@@ -102,8 +102,11 @@ BEGIN_DATADESC( CPropAPC )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Destroy", InputDestroy ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "FireMissileAt", InputFireMissileAt ),
-	DEFINE_OUTPUT( m_OnDeath, "OnDeath" ),
-	DEFINE_OUTPUT( m_OnFiredMissile, "OnFiredMissile" ),
+
+	DEFINE_OUTPUT( m_OnDeath,				"OnDeath" ),
+	DEFINE_OUTPUT( m_OnFiredMissile,		"OnFiredMissile" ),
+	DEFINE_OUTPUT( m_OnDamaged,				"OnDamaged" ),
+	DEFINE_OUTPUT( m_OnDamagedByPlayer,		"OnDamagedByPlayer" ),
 
 END_DATADESC()
 
@@ -155,6 +158,11 @@ void CPropAPC::Spawn( void )
 	SetPoseParameter( "vehicle_weapon_yaw", 90 );
 
 	CreateAPCLaserDot();
+
+	if ( IsXbox() )
+	{
+		AddFlag( FL_AIMTARGET );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -167,6 +175,18 @@ void CPropAPC::CreateAPCLaserDot( void )
 	{
 		m_hLaserDot = CreateLaserDot( GetAbsOrigin(), this, false );
 	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CPropAPC::ShouldAttractAutoAim( CBaseEntity *pAimingEnt )
+{
+	if( IsXbox() && pAimingEnt->IsPlayer() && GetDriver() )
+	{
+		return true;
+	}
+
+	return BaseClass::ShouldAttractAutoAim( pAimingEnt );
 }
 
 //-----------------------------------------------------------------------------
@@ -184,9 +204,8 @@ void CPropAPC::Activate()
 	int nMachineGunRefAttachment = LookupAttachment( "gun_def" );
 
 	Vector vecWorldBarrelPos;
-	QAngle worldBarrelAngle;
 	matrix3x4_t matRefToWorld;
-	GetAttachment( m_nMachineGunMuzzleAttachment, vecWorldBarrelPos, worldBarrelAngle );
+	GetAttachment( m_nMachineGunMuzzleAttachment, vecWorldBarrelPos );
 	GetAttachment( nMachineGunRefAttachment, matRefToWorld );
 	VectorITransform( vecWorldBarrelPos, matRefToWorld, m_vecBarrelPos );
 }
@@ -221,7 +240,7 @@ void CPropAPC::CreateServerVehicle( void )
 // Purpose: 
 // Input  : *pMoveData - 
 //-----------------------------------------------------------------------------
-Class_T	CPropAPC::ClassifyPassenger( CBasePlayer *pPassenger, Class_T defaultClassification )
+Class_T	CPropAPC::ClassifyPassenger( CBaseCombatCharacter *pPassenger, Class_T defaultClassification )
 { 
 	return CLASS_COMBINE;	
 }
@@ -256,6 +275,17 @@ Vector CPropAPC::EyePosition( )
 	return vecEyePosition;
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+Vector CPropAPC::BodyTarget( const Vector &posSrc, bool bNoisy ) 
+{
+	if ( IsXbox() )
+	{
+		return WorldSpaceCenter();
+	}
+
+	return BaseClass::BodyTarget( posSrc, bNoisy );
+}
 	
 //-----------------------------------------------------------------------------
 // Add a smoke trail since we've taken more damage
@@ -282,18 +312,18 @@ void CPropAPC::AddSmokeTrail( const Vector &vecPos )
 
 	++m_nSmokeTrailCount;
 
-	pSmokeTrail->m_SpawnRate = 20;
-	pSmokeTrail->m_ParticleLifetime = 4.0f;
+	pSmokeTrail->m_SpawnRate = 4;
+	pSmokeTrail->m_ParticleLifetime = 5.0f;
 	pSmokeTrail->m_StartColor.Init( 0.7f, 0.7f, 0.7f );
 	pSmokeTrail->m_EndColor.Init( 0.6, 0.6, 0.6 );
-	pSmokeTrail->m_StartSize = 15;
-	pSmokeTrail->m_EndSize = 50;
-	pSmokeTrail->m_SpawnRadius = 15;
-	pSmokeTrail->m_Opacity = 0.75f;
-	pSmokeTrail->m_MinSpeed = 10;
-	pSmokeTrail->m_MaxSpeed = 20;
-	pSmokeTrail->m_MinDirectedSpeed	= 100.0f;
-	pSmokeTrail->m_MaxDirectedSpeed	= 120.0f;
+	pSmokeTrail->m_StartSize = 32;
+	pSmokeTrail->m_EndSize = 64;
+	pSmokeTrail->m_SpawnRadius = 4;
+	pSmokeTrail->m_Opacity = 0.5f;
+	pSmokeTrail->m_MinSpeed = 16;
+	pSmokeTrail->m_MaxSpeed = 16;
+	pSmokeTrail->m_MinDirectedSpeed	= 16.0f;
+	pSmokeTrail->m_MaxDirectedSpeed	= 16.0f;
 	pSmokeTrail->SetLifetime( 5 );
 	pSmokeTrail->SetParent( this, nAttachment );
 
@@ -412,7 +442,7 @@ void CPropAPC::Event_Killed( const CTakeDamageInfo &info )
 
 	// TODO: make the gibs spawn in sync with the delayed explosions
 	int nGibs = random->RandomInt( 1, 4 );
-	for ( i = 0; i < nGibs; i++)
+	for ( int i = 0; i < nGibs; i++)
 	{
 		// Throw a flaming, smoking chunk.
 		CGib *pChunk = CREATE_ENTITY( CGib, "gib" );
@@ -462,7 +492,15 @@ void CPropAPC::Event_Killed( const CTakeDamageInfo &info )
 
 	UTIL_ScreenShake( vecAbsPoint, 25.0, 150.0, 1.0, 750.0f, SHAKE_START );
 
-	Ignite( 60, false );
+	if( hl2_episodic.GetBool() )
+	{
+		// EP1 perf hit
+		Ignite( 6, false );
+	}
+	else
+	{
+		Ignite( 60, false );
+	}
 
 	m_lifeState = LIFE_DYING;
 
@@ -491,7 +529,7 @@ void CPropAPC::InputDestroy( inputdata_t &inputdata )
 void CPropAPC::InputFireMissileAt( inputdata_t &inputdata )
 {
 	string_t strMissileTarget = MAKE_STRING( inputdata.value.String() );
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, strMissileTarget, NULL );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, strMissileTarget, NULL, inputdata.pActivator, inputdata.pCaller );
 	if ( pTarget == NULL )
 	{
 		DevWarning( "%s: Could not find target '%s'!\n", GetClassname(), STRING( strMissileTarget ) );
@@ -509,6 +547,13 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 {
 	if ( m_iHealth == 0 )
 		return 0;
+
+	m_OnDamaged.FireOutput( info.GetAttacker(), this );
+
+	if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+	{
+		m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
+	}
 
 	CTakeDamageInfo dmgInfo = info;
 	if ( dmgInfo.GetDamageType() & (DMG_BLAST | DMG_AIRBOAT) )
@@ -617,6 +662,14 @@ void CPropAPC::Think( void )
 			ResetSequence( iSequence );
 			ResetClientsideFrame();
 		}
+	}
+
+	if (m_debugOverlays & OVERLAY_NPC_KILL_BIT)
+	{
+		CTakeDamageInfo info( this, this, m_iHealth, DMG_BLAST );
+		info.SetDamagePosition( WorldSpaceCenter() );
+		info.SetDamageForce( Vector( 0, 0, 1 ) );
+		TakeDamage( info );
 	}
 }
 
@@ -787,11 +840,8 @@ void CPropAPC::FireMachineGun( void )
 	}
 
 	Vector vecMachineGunShootPos;
-	QAngle vecMachineGunAngles;
-	GetAttachment( m_nMachineGunMuzzleAttachment, vecMachineGunShootPos, vecMachineGunAngles );
-
 	Vector vecMachineGunDir;
-	AngleVectors( vecMachineGunAngles, &vecMachineGunDir );
+	GetAttachment( m_nMachineGunMuzzleAttachment, vecMachineGunShootPos, &vecMachineGunDir );
 	
 	// Fire the round
 	int	bulletType = GetAmmoDef()->Index("AR2");
@@ -807,8 +857,7 @@ void CPropAPC::FireMachineGun( void )
 //-----------------------------------------------------------------------------
 void CPropAPC::GetRocketShootPosition( Vector *pPosition )
 {
-	QAngle vecRocketAngles;
-	GetAttachment( m_nRocketAttachment, *pPosition, vecRocketAngles );
+	GetAttachment( m_nRocketAttachment, *pPosition );
 }
 
 
@@ -850,8 +899,16 @@ void CPropAPC::CreateCorpse( )
 				pObj->AddVelocity( &vecVelocity, &angImpulse );
 			}
 			pGib->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+		}	
+		if( hl2_episodic.GetBool() )
+		{
+			// EP1 perf hit
+			pGib->Ignite( 6, false );
 		}
-		pGib->Ignite( 60, false );
+		else
+		{
+			pGib->Ignite( 60, false );
+		}
 	}
 
 	AddSolidFlags( FSOLID_NOT_SOLID );
@@ -979,6 +1036,18 @@ float CPropAPC::MaxAttackRange() const
 	return ROCKET_ATTACK_RANGE_MAX;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropAPC::OnRestore( void )
+{
+	IServerVehicle *pServerVehicle = GetServerVehicle();
+	if ( pServerVehicle != NULL )
+	{
+		// Restore the passenger information we're holding on to
+		pServerVehicle->RestorePassengerInfo();
+	}
+}
 
 //========================================================================================================================================
 // APC FOUR WHEEL PHYSICS VEHICLE SERVER VEHICLE

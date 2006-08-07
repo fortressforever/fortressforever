@@ -39,6 +39,7 @@ AI_EnemyInfo_t::AI_EnemyInfo_t(void)
 	bDangerMemory = 0;
 	bEludedMe = 0;
 	bUnforgettable = 0;
+	bMobbedMe = 0;
 }
 
  
@@ -142,6 +143,7 @@ BEGIN_SIMPLE_DATADESC( AI_EnemyInfo_t )
 	DEFINE_FIELD( bDangerMemory, 	FIELD_BOOLEAN ),
 	DEFINE_FIELD( bEludedMe, 		FIELD_BOOLEAN ),
 	DEFINE_FIELD( bUnforgettable,	FIELD_BOOLEAN ),
+	DEFINE_FIELD( bMobbedMe,		FIELD_BOOLEAN ),
 	// NOT SAVED nextEMemory
 END_DATADESC()
 
@@ -486,13 +488,13 @@ float CAI_Enemies::TimeLastReacquired( CBaseEntity *pEnemy )
 //			was not found returns last memory of danger position if it exists
 // Output : Returns false is no position is known
 //-----------------------------------------------------------------------------
-float CAI_Enemies::LastTimeSeen( CBaseEntity *pEnemy)
+float CAI_Enemies::LastTimeSeen( CBaseEntity *pEnemy, bool bCheckDangerMemory /*= true*/ )
 {
 	// I've never seen something that doesn't exist
 	if (!pEnemy)
 		return 0;
 
-	AI_EnemyInfo_t *pMemory = Find( pEnemy, true );
+	AI_EnemyInfo_t *pMemory = Find( pEnemy, bCheckDangerMemory );
 	if ( pMemory )
 		return pMemory->timeLastSeen;
 
@@ -605,6 +607,14 @@ void CAI_Enemies::SetUnforgettable( CBaseEntity *pEnemy, bool bUnforgettable )
 	AI_EnemyInfo_t *pMemory = Find( pEnemy );
 	if ( pMemory )
 		pMemory->bUnforgettable = bUnforgettable;
+}
+
+//-----------------------------------------------------------------------------
+void CAI_Enemies::SetMobbedMe( CBaseEntity *pEnemy, bool bMobbedMe )
+{
+	AI_EnemyInfo_t *pMemory = Find( pEnemy );
+	if ( pMemory )
+		pMemory->bMobbedMe = bMobbedMe;
 }
 
 //-----------------------------------------------------------------------------

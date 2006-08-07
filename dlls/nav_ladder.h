@@ -71,6 +71,8 @@ public:
 	float m_length;									///< the length of the ladder
 	float m_width;
 
+	Vector GetPosAtHeight( float height ) const;	///< Compute x,y coordinate of the ladder at a given height
+
 	CNavArea *m_topForwardArea;						///< the area at the top of the ladder
 	CNavArea *m_topLeftArea;					
 	CNavArea *m_topRightArea;					

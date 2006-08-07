@@ -18,6 +18,8 @@
 
 ConVar ai_debug_directnavprobe("ai_debug_directnavprobe", "0");
 
+const float TIME_DELAY_FULL_DIRECT_PROBE = ( !AIStrongOpt() ) ? 0.25 : 0.35;
+
 //-----------------------------------------------------------------------------
 
 BEGIN_SIMPLE_DATADESC(CAI_LocalNavigator)
@@ -120,7 +122,7 @@ bool CAI_LocalNavigator::MoveCalcDirect( AILocalMoveGoal_t *pMoveGoal, bool bOnl
 
 		if ( bOnlyCurThink ) // Outer code claims to have done a validation (probably a simplify operation)
 		{
-			m_FullDirectTimer.Set( 0.25 );
+			m_FullDirectTimer.Set( TIME_DELAY_FULL_DIRECT_PROBE );
 		}
 
 		// First, check the probable move for this cycle
@@ -143,7 +145,7 @@ bool CAI_LocalNavigator::MoveCalcDirect( AILocalMoveGoal_t *pMoveGoal, bool bOnl
 
 			}
 
-			if ( ai_debug_directnavprobe.GetBool() )
+			if ( !IsRetail() && ai_debug_directnavprobe.GetBool() )
 			{
 				if ( !bTraceClear )
 				{
@@ -235,7 +237,7 @@ bool CAI_LocalNavigator::MoveCalcDirect( AILocalMoveGoal_t *pMoveGoal, bool bOnl
 
 	m_LastMoveGoal = *pMoveGoal;
 	if ( bRetVal && m_FullDirectTimer.Expired() )
-		m_FullDirectTimer.Set( 0.25 );
+		m_FullDirectTimer.Set( TIME_DELAY_FULL_DIRECT_PROBE );
 
 	return bRetVal;
 }

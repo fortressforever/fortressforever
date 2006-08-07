@@ -25,6 +25,7 @@ public:
 
 						ParticleSmokeGrenade();
 
+	virtual int			UpdateTransmitState( void );
 
 public:
 
@@ -33,6 +34,9 @@ public:
 
 	// Set the times it fades out at.
 	void				SetFadeTime(float startTime, float endTime);
+
+	// Set time to fade out relative to current time
+	void				SetRelativeFadeTime(float startTime, float endTime);
 
 
 public:

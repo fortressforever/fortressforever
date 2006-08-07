@@ -84,6 +84,17 @@ public:
 		return false;
 	}
 
+	bool TargetMoved2D( CBaseEntity *pEntity )
+	{
+		if ( IsMarkSet() && pEntity != NULL )
+		{
+			float distance = ( m_vMark.AsVector2D() - pEntity->GetAbsOrigin().AsVector2D() ).Length();
+			if ( distance > m_flMarkTolerance )
+				return true;
+		}
+		return false;
+	}
+
 	Vector GetMarkPos() { return m_vMark; }
 	
 private:
@@ -152,6 +163,10 @@ public:
 
 	// Causes us to potentially delay our shooting time
 	void FireNoEarlierThan( float flTime );
+
+	// Prevent/Allow shooting
+	void EnableShooting( void );
+	void DisableShooting( void );
 	
 private:
 	float	m_flNextShotTime;
@@ -160,6 +175,7 @@ private:
 	unsigned short	m_nMinBurstShots, m_nMaxBurstShots;
 	float	m_flMinRestInterval, m_flMaxRestInterval;
 	float	m_flMinBurstInterval, m_flMaxBurstInterval;
+	bool	m_bDisabled;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -261,5 +277,19 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+
+class CTraceFilterNav : public CTraceFilterSimple
+{
+public:
+	CTraceFilterNav( CAI_BaseNPC *pProber, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup );
+	bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask );
+
+private:
+	CAI_BaseNPC *m_pProber;
+	bool m_bIgnoreTransientEntities;
+	bool m_bCheckCollisionTable;
+};
+
+extern string_t g_iszFuncBrushClassname;
 
 #endif // AI_UTILS_H

@@ -417,8 +417,8 @@ void EmitFace( face_t *f, qboolean onNode )
 	int		i;
 	int		e;
 
-	void SubdivideFaceBySubdivSize( face_t *f ); // garymcthack
-	SubdivideFaceBySubdivSize( f );
+//	void SubdivideFaceBySubdivSize( face_t *f ); // garymcthack
+//	SubdivideFaceBySubdivSize( f );
     
 	// set initial output number
 	f->outputnumber = -1;
@@ -517,6 +517,12 @@ void EmitFace( face_t *f, qboolean onNode )
 		if ( nOverlayCount > 0 )
 		{
 			Overlay_AddFaceToLists( ( numfaces - 1 ), pSide );
+		}
+
+		nOverlayCount = pSide->aWaterOverlayIds.Count();
+		if ( nOverlayCount > 0 )
+		{
+			OverlayTransition_AddFaceToLists( ( numfaces - 1 ), pSide );
 		}
 	}
 }
@@ -651,6 +657,224 @@ void MarkNoShadowFaces()
 #endif
 }
 
+struct texinfomap_t
+{
+	int refCount;
+	int outputIndex;
+};
+struct texdatamap_t
+{
+	int refCount;
+	int outputIndex;
+};
+
+// Find the best used texinfo to remap this brush side
+int FindMatchingBrushSideTexinfo( int sideIndex, const texinfomap_t *pMap )
+{
+	dbrushside_t &side = dbrushsides[sideIndex];
+	// find one with the same flags & surfaceprops (even if the texture name is different)
+	int sideTexFlags = texinfo[side.texinfo].flags;
+	int sideTexData = texinfo[side.texinfo].texdata;
+	int sideSurfaceProp = g_SurfaceProperties[sideTexData];
+	for ( int j = 0; j < texinfo.Count(); j++ )
+	{
+		if ( pMap[j].refCount > 0 && 
+			texinfo[j].flags == sideTexFlags && 
+			g_SurfaceProperties[texinfo[j].texdata] == sideSurfaceProp )
+		{
+			// found one
+			return j;
+		}
+	}
+
+	// can't find a better match
+	return side.texinfo;
+}
+
+// Remove all unused texinfos and rebuild array
+void ComapctTexinfoArray( texinfomap_t *pMap )
+{
+	CUtlVector<texinfo_t> old;
+	old.CopyArray( texinfo.Base(), texinfo.Count() );
+	texinfo.RemoveAll();
+	int firstSky = -1;
+	for ( int i = 0; i < old.Count(); i++ )
+	{
+		if ( !pMap[i].refCount )
+		{
+			pMap[i].outputIndex = -1;
+			continue;
+		}
+		// only add one sky texinfo
+		if ( old[i].flags & SURF_SKY )
+		{
+			if ( firstSky < 0 )
+			{
+				firstSky = texinfo.AddToTail( old[i] );
+			}
+			pMap[i].outputIndex = firstSky;
+			continue;
+		}
+		pMap[i].outputIndex = texinfo.AddToTail( old[i] );
+	}
+}
+
+void CompactTexdataArray( texdatamap_t *pMap )
+{
+	CUtlVector<char>	oldStringData;
+	oldStringData.CopyArray( g_TexDataStringData.Base(), g_TexDataStringData.Count() );
+	g_TexDataStringData.RemoveAll();
+	CUtlVector<int>		oldStringTable;
+	oldStringTable.CopyArray( g_TexDataStringTable.Base(), g_TexDataStringTable.Count() );
+	g_TexDataStringTable.RemoveAll();
+	CUtlVector<dtexdata_t> oldTexData;
+	oldTexData.CopyArray( dtexdata, numtexdata );
+	// clear current table and rebuild
+	numtexdata = 0;
+	for ( int i = 0; i < oldTexData.Count(); i++ )
+	{
+		// unreferenced, note in map and skip
+		if ( !pMap[i].refCount )
+		{
+			pMap[i].outputIndex = -1;
+			continue;
+		}
+		pMap[i].outputIndex = numtexdata;
+
+		// get old string and re-add to table
+		const char *pString = &oldStringData[oldStringTable[oldTexData[i].nameStringTableID]];
+		int nameIndex = TexDataStringTable_AddOrFindString( pString );
+		// copy old texdata and fixup with new name in compacted table
+		dtexdata[numtexdata] = oldTexData[i];
+		dtexdata[numtexdata].nameStringTableID = nameIndex;
+		numtexdata++;
+	}
+}
+
+void CompactTexinfos()
+{
+	Msg("Compacting texture/material tables...\n");
+	texinfomap_t *texinfoMap = new texinfomap_t[texinfo.Count()];
+	texdatamap_t *texdataMap = new texdatamap_t[numtexdata];
+	memset( texinfoMap, 0, sizeof(texinfoMap[0])*texinfo.Count() );
+	memset( texdataMap, 0, sizeof(texdataMap[0])*numtexdata );
+	int i;
+	// get texinfos referenced by faces
+	for ( i = 0; i < numfaces; i++ )
+	{
+		texinfoMap[dfaces[i].texinfo].refCount++;
+	}
+	// get texinfos referenced by brush sides
+	for ( i = 0; i < numbrushsides; i++ )
+	{
+		// not referenced by any visible geometry
+		Assert( dbrushsides[i].texinfo >=  0 );
+		if ( !texinfoMap[dbrushsides[i].texinfo].refCount )
+		{
+			dbrushsides[i].texinfo = FindMatchingBrushSideTexinfo( i, texinfoMap );
+			// didn't find anything suitable, go ahead and reference it
+			if ( !texinfoMap[dbrushsides[i].texinfo].refCount )
+			{
+				texinfoMap[dbrushsides[i].texinfo].refCount++;
+			}
+		}
+	}
+	// get texinfos referenced by overlays
+	for ( i = 0; i < g_nOverlayCount; i++ )
+	{
+		texinfoMap[g_Overlays[i].nTexInfo].refCount++;
+	}
+	for ( i = 0; i < numleafwaterdata; i++ )
+	{
+		if ( dleafwaterdata[i].surfaceTexInfoID >= 0 )
+		{
+			texinfoMap[dleafwaterdata[i].surfaceTexInfoID].refCount++;
+		}
+	}
+	for ( i = 0; i < *pNumworldlights; i++ )
+	{
+		if ( dworldlights[i].texinfo >= 0 )
+		{
+			texinfoMap[dworldlights[i].texinfo].refCount++;
+		}
+	}
+	for ( i = 0; i < g_nWaterOverlayCount; i++ )
+	{
+		if ( g_WaterOverlays[i].nTexInfo >= 0 )
+		{
+			texinfoMap[g_WaterOverlays[i].nTexInfo].refCount++;
+		}
+	}
+	// reference all used texdatas
+	for ( i = 0; i < texinfo.Count(); i++ )
+	{
+		if ( texinfoMap[i].refCount > 0 )
+		{
+			texdataMap[texinfo[i].texdata].refCount++;
+		}
+	}
+
+	int oldCount = texinfo.Count();
+	int oldTexdataCount = numtexdata;
+	int oldTexdataString = g_TexDataStringData.Count();
+	ComapctTexinfoArray( texinfoMap );
+	CompactTexdataArray( texdataMap );
+	int count = 0;
+	for ( i = 0; i < texinfo.Count(); i++ )
+	{
+		int mapIndex = texdataMap[texinfo[i].texdata].outputIndex;
+		Assert( mapIndex >= 0 );
+		texinfo[i].texdata = mapIndex;
+		const char *pName = TexDataStringTable_GetString( dtexdata[texinfo[i].texdata].nameStringTableID );
+	}
+	// remap texinfos on faces
+	for ( i = 0; i < numfaces; i++ )
+	{
+		Assert( texinfoMap[dfaces[i].texinfo].outputIndex >= 0 );
+		dfaces[i].texinfo = texinfoMap[dfaces[i].texinfo].outputIndex;
+	}
+	// remap texinfos on brushsides
+	for ( i = 0; i < numbrushsides; i++ )
+	{
+		Assert( texinfoMap[dbrushsides[i].texinfo].outputIndex >= 0 );
+		dbrushsides[i].texinfo = texinfoMap[dbrushsides[i].texinfo].outputIndex;
+	}
+	// remap texinfos on overlays
+	for ( i = 0; i < g_nOverlayCount; i++ )
+	{
+		g_Overlays[i].nTexInfo = texinfoMap[g_Overlays[i].nTexInfo].outputIndex;
+	}
+	// remap leaf water data
+	for ( i = 0; i < numleafwaterdata; i++ )
+	{
+		if ( dleafwaterdata[i].surfaceTexInfoID >= 0 )
+		{
+			dleafwaterdata[i].surfaceTexInfoID = texinfoMap[dleafwaterdata[i].surfaceTexInfoID].outputIndex;
+		}
+	}
+	// remap world lights
+	for ( i = 0; i < *pNumworldlights; i++ )
+	{
+		if ( dworldlights[i].texinfo >= 0 )
+		{
+			dworldlights[i].texinfo = texinfoMap[dworldlights[i].texinfo].outputIndex;
+		}
+	}
+	// remap water overlays
+	for ( i = 0; i < g_nWaterOverlayCount; i++ )
+	{
+		if ( g_WaterOverlays[i].nTexInfo >= 0 )
+		{
+			g_WaterOverlays[i].nTexInfo = texinfoMap[g_WaterOverlays[i].nTexInfo].outputIndex;
+		}
+	}
+
+	Msg("Reduced %d texinfos to %d\n", oldCount, texinfo.Count() );
+	Msg("Reduced %d texdatas to %d (%d bytes to %d)\n", oldTexdataCount, numtexdata, oldTexdataString, g_TexDataStringData.Count() );
+
+	delete[] texinfoMap;
+	delete[] texdataMap;
+}
 
 /*
 ============
@@ -800,8 +1024,6 @@ void SetLightStyles (void)
 
 }
 
-//===========================================================
-
 /*
 ============
 EmitBrushes
@@ -836,6 +1058,10 @@ void EmitBrushes (void)
 			numbrushsides++;
 			cp->planenum = b->original_sides[j].planenum;
 			cp->texinfo = b->original_sides[j].texinfo;
+			if ( cp->texinfo == -1 )
+			{
+				cp->texinfo = g_ClipTexinfo;
+			}
 			cp->bevel = b->original_sides[j].bevel;
 		}
 
@@ -927,6 +1153,9 @@ void DiscoverMacroTextures()
 	for ( int iFace=0; iFace < numfaces; iFace++ )
 	{
 		texinfo_t *pTexInfo = &texinfo[dfaces[iFace].texinfo];
+		if ( pTexInfo->texdata < 0 )
+			continue;
+
 		dtexdata_t *pTexData = &dtexdata[pTexInfo->texdata];
 		const char *pMaterialName = &g_TexDataStringData[ g_TexDataStringTable[pTexData->nameStringTableID] ];
 		
@@ -1012,14 +1241,10 @@ void EndBSPFile (void)
 
 	// Emit overlay data.
 	Overlay_EmitOverlayFaces();
+	OverlayTransition_EmitOverlayFaces();
 
 	// phys collision needs dispinfo to operate (needs to generate phys collision for displacement surfs)
-	EmitPhysCollision(true);
-	if ( g_writelinuxphysics )
-	{
-		Msg( "Emitting linux collision data (use -nolinuxdata to disable).\n" );
-		EmitPhysCollision(false); // emit the non MOPP version of the lump
-	}
+	EmitPhysCollision();
 
 	// We can't calculate this properly until vvis (since we need vis to do this), so we set
 	// to zero everywhere by default.
@@ -1039,6 +1264,9 @@ void EndBSPFile (void)
 
 	// Doing this here because stuff about may filter out entities
 	UnparseEntities ();
+	
+	// remove unused texinfos
+	CompactTexinfos();
 
 	// Figure out which faces want macro textures.
 	DiscoverMacroTextures();

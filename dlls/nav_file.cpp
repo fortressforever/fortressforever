@@ -61,7 +61,7 @@ public:
 
 		if (i < 0)
 		{
-			assert( false && "PlaceDirectory::GetIndex failure" );
+			Assert( false && "PlaceDirectory::GetIndex failure" );
 			return 0;
 		}
 
@@ -74,7 +74,7 @@ public:
 		if (place == UNDEFINED_PLACE)
 			return;
 
-		assert( place < 1000 );
+		Assert( place < 1000 );
 
 		if (IsKnown( place ))
 			return;
@@ -92,7 +92,7 @@ public:
 
 		if (i >= m_directory.Count())
 		{
-			assert( false && "PlaceDirectory::IndexToPlace: Invalid entry" );
+			Assert( false && "PlaceDirectory::IndexToPlace: Invalid entry" );
 			return UNDEFINED_PLACE;
 		}
 
@@ -408,6 +408,8 @@ void CNavArea::Load( FileHandle_t file, unsigned int version )
 	filesystem->Read( &m_neZ, sizeof(float), file );
 	filesystem->Read( &m_swZ, sizeof(float), file );
 
+	CheckWaterLevel();
+
 	// load connections (IDs) to adjacent areas
 	// in the enum order NORTH, EAST, SOUTH, WEST
 	for( int d=0; d<NUM_DIRECTIONS; d++ )
@@ -582,7 +584,20 @@ void CNavArea::Load( FileHandle_t file, unsigned int version )
 				NavLadderConnect connect;
 				filesystem->Read( &connect.id, sizeof(unsigned int), file );
 
-				m_ladder[dir].AddToTail( connect );
+				bool alreadyConnected = false;
+				for ( int j=0; j<m_ladder[dir].Count(); ++j )
+				{
+					if ( m_ladder[dir][j].id == connect.id )
+					{
+						alreadyConnected = true;
+						break;
+					}
+				}
+
+				if ( !alreadyConnected )
+				{
+					m_ladder[dir].AddToTail( connect );
+				}
 			}
 		}
 	}
@@ -911,11 +926,43 @@ inline void COM_FixSlashes( char *pname )
 #endif
 }
 
+static void WarnIfMeshNeedsAnalysis( void )
+{
+	// Quick check to warn about needing to analyze: nav_strip, nav_delete, etc set
+	// every CNavArea's m_approachCount to 0, and delete their m_spotEncounterList.
+	// So, if no area has either, odds are good we need an analyze.
+	{
+		bool hasApproachAreas = false;
+		bool hasSpotEncounters = false;
+
+		FOR_EACH_LL( TheNavAreaList, it )
+		{
+			CNavArea *area = TheNavAreaList[ it ];
+			if ( area->GetApproachInfoCount() )
+			{
+				hasApproachAreas = true;
+			}
+
+			if ( area->GetSpotEncounterCount() )
+			{
+				hasSpotEncounters = true;
+			}
+		}
+
+		if ( !hasApproachAreas || !hasSpotEncounters )
+		{
+			Warning( "The nav mesh needs a full nav_analyze\n" );
+		}
+	}
+}
+
 /**
  * Store Navigation Mesh to a file
  */
 bool CNavMesh::Save( void ) const
 {
+	WarnIfMeshNeedsAnalysis();
+
 	const char *filename = GetFilename();
 	if (filename == NULL)
 		return false;
@@ -924,6 +971,14 @@ bool CNavMesh::Save( void ) const
 	// Store the NAV file
 	//
 	COM_FixSlashes( const_cast<char *>(filename) );
+
+	// get size of source bsp file for later (before we open the nav file for writing, in
+	// case of failure)
+	char *bspFilename = GetBspFilename( filename );
+	if (bspFilename == NULL)
+	{
+		return false;
+	}
 
 	FileHandle_t file = filesystem->Open( filename, "wb" );
 
@@ -951,13 +1006,8 @@ bool CNavMesh::Save( void ) const
 	unsigned int version = NavCurrentVersion;
 	filesystem->Write( &version, sizeof(unsigned int), file );
 
-
-	// get size of source bsp file and store it in the nav file
+	// store the size of source bsp file in the nav file
 	// so we can test if the bsp changed since the nav file was made
-	char *bspFilename = GetBspFilename( filename );
-	if (bspFilename == NULL)
-		return false;
-
 	unsigned int bspSize = filesystem->Size( bspFilename );
 	DevMsg( "Size of bsp file '%s' is %u bytes.\n", bspFilename, bspSize );
 
@@ -1041,7 +1091,13 @@ static NavErrorType CheckNavFile( const char *bspFilename )
 	Q_strncpy( filename, bspPathname, sizeof( filename ) );
 	Q_SetExtension( filename, ".nav", sizeof( filename ) );
 
-	FileHandle_t file = filesystem->Open( filename, "rb" );
+	bool navIsInBsp = false;
+	FileHandle_t file = filesystem->Open( filename, "rb", "MOD" );	// this ignores .nav files embedded in the .bsp ...
+	if ( !file )
+	{
+		navIsInBsp = true;
+		file = filesystem->Open( filename, "rb", "GAME" );	// ... and this looks for one if it's the only one around.
+	}
 
 	if (!file)
 	{
@@ -1074,7 +1130,7 @@ static NavErrorType CheckNavFile( const char *bspFilename )
 	// verify size
 	unsigned int bspSize = filesystem->Size( bspPathname );
 
-	if (bspSize != saveBspSize)
+	if (bspSize != saveBspSize && !navIsInBsp)
 	{
 		return NAV_FILE_OUT_OF_DATE;
 	}
@@ -1135,7 +1191,13 @@ NavErrorType CNavMesh::Load( void )
 	char filename[256];
 	Q_snprintf( filename, sizeof( filename ), "maps\\%s.nav", STRING( gpGlobals->mapname ) );
 
-	FileHandle_t file = filesystem->Open( filename, "rb" );
+	bool navIsInBsp = false;
+	FileHandle_t file = filesystem->Open( filename, "rb", "MOD" );	// this ignores .nav files embedded in the .bsp ...
+	if ( !file )
+	{
+		navIsInBsp = true;
+		file = filesystem->Open( filename, "rb", "GAME" );	// ... and this looks for one if it's the only one around.
+	}
 
 	if (!file)
 	{
@@ -1179,7 +1241,7 @@ NavErrorType CNavMesh::Load( void )
 
 		unsigned int bspSize = filesystem->Size( bspFilename );
 
-		if (bspSize != saveBspSize)
+		if (bspSize != saveBspSize && !navIsInBsp)
 		{
 			if ( engine->IsDedicatedServer() )
 			{
@@ -1294,6 +1356,8 @@ NavErrorType CNavMesh::Load( void )
 	m_isLoaded = true;
 
 	filesystem->Close( file );
+
+	WarnIfMeshNeedsAnalysis();
 
 	return NAV_OK;
 }

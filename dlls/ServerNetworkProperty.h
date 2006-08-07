@@ -60,6 +60,7 @@ public:
 	// See CNetStateMgr for details about these functions.
 	void NetworkStateForceUpdate();
 	void NetworkStateChanged();
+	void NetworkStateChanged( unsigned short offset );
 
 	// This is useful for entities that don't change frequently or that the client
 	// doesn't need updates on very often. If you use this mode, the server will only try to
@@ -157,6 +158,22 @@ inline void CServerNetworkProperty::NetworkStateChanged()
 	{
 		if ( m_pPev )
 			m_pPev->StateChanged();
+	}
+}
+
+inline void CServerNetworkProperty::NetworkStateChanged( unsigned short varOffset )
+{ 
+	// If we're using the timer, then ignore this call.
+	if ( m_TimerEvent.IsRegistered() )
+	{
+		// If we're waiting for a timer event, then queue the change so it happens
+		// when the timer goes off.
+		m_bPendingStateChange = true;
+	}
+	else
+	{
+		if ( m_pPev )
+			m_pPev->StateChanged( varOffset );
 	}
 }
 

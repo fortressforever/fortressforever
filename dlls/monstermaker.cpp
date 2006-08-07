@@ -7,6 +7,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "datacache/imdlcache.h"
 #include "entityapi.h"
 #include "entityoutput.h"
 #include "ai_basenpc.h"
@@ -19,6 +20,14 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+static void DispatchActivate( CBaseEntity *pEntity )
+{
+	bool bAsyncAnims = mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, false );
+	pEntity->Activate();
+	mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, bAsyncAnims );
+}
+
 
 LINK_ENTITY_TO_CLASS( info_npc_spawn_destination, CNPCSpawnDestination );
 
@@ -87,11 +96,14 @@ BEGIN_DATADESC( CBaseNPCMaker )
 	// Outputs
 	DEFINE_OUTPUT( m_OnAllSpawned,		"OnAllSpawned" ),
 	DEFINE_OUTPUT( m_OnAllSpawnedDead,	"OnAllSpawnedDead" ),
+	DEFINE_OUTPUT( m_OnAllLiveChildrenDead,	"OnAllLiveChildrenDead" ),
 	DEFINE_OUTPUT( m_OnSpawnNPC,		"OnSpawnNPC" ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC( MakerThink ),
 
+	DEFINE_FIELD( m_hIgnoreEntity, FIELD_EHANDLE ),
+	DEFINE_KEYFIELD( m_iszIngoreEnt, FIELD_STRING, "IgnoreEntity" ), 
 END_DATADESC()
 
 
@@ -135,7 +147,7 @@ bool CBaseNPCMaker::HumanHullFits( const Vector &vecLocation )
 					NAI_Hull::Mins(HULL_HUMAN),
 					NAI_Hull::Maxs(HULL_HUMAN),
 					MASK_NPCSOLID,
-					NULL,
+					m_hIgnoreEntity,
 					COLLISION_GROUP_NONE,
 					&tr );
 
@@ -153,6 +165,11 @@ bool CBaseNPCMaker::CanMakeNPC( bool bIgnoreSolidEntities )
 	if ( m_nMaxLiveChildren > 0 && m_nLiveChildren >= m_nMaxLiveChildren )
 	{// not allowed to make a new one yet. Too many live ones out right now.
 		return false;
+	}
+
+	if ( m_iszIngoreEnt != NULL_STRING )
+	{
+		m_hIgnoreEntity = gEntList.FindEntityByName( NULL, m_iszIngoreEnt );
 	}
 
 	Vector mins = GetAbsOrigin() - Vector( 34, 34, 0 );
@@ -185,7 +202,7 @@ bool CBaseNPCMaker::CanMakeNPC( bool bIgnoreSolidEntities )
 									NAI_Hull::Mins(HULL_HUMAN),
 									NAI_Hull::Maxs(HULL_HUMAN),
 									MASK_NPCSOLID,
-									NULL,
+									m_hIgnoreEntity,
 									COLLISION_GROUP_NONE,
 									&tr );
 
@@ -428,7 +445,7 @@ void CNPCMaker::MakeNPC( void )
 
 	DispatchSpawn( pent );
 	pent->SetOwnerEntity( this );
-	pent->Activate();
+	DispatchActivate( pent );
 
 	if ( m_ChildTargetName != NULL_STRING )
 	{
@@ -481,6 +498,10 @@ void CBaseNPCMaker::ChildPostSpawn( CAI_BaseNPC *pChild )
 
 		bFound = false;
 	}
+	if ( m_hIgnoreEntity != NULL )
+	{
+		pChild->SetOwnerEntity( m_hIgnoreEntity );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -508,6 +529,8 @@ void CBaseNPCMaker::DeathNotice( CBaseEntity *pVictim )
 
 	if ( m_nLiveChildren <= 0 )
 	{
+		m_OnAllLiveChildrenDead.FireOutput( this, this );
+
 		// See if we've exhausted our supply of NPCs
 		if ( ( (m_spawnflags & SF_NPCMAKER_INF_CHILD) == false ) && IsDepleted() )
 		{
@@ -533,10 +556,12 @@ BEGIN_DATADESC( CTemplateNPCMaker )
 	DEFINE_KEYFIELD( m_iszDestinationGroup, FIELD_STRING, "DestinationGroup" ),
 	DEFINE_KEYFIELD( m_CriterionVisibility, FIELD_INTEGER, "CriterionVisibility" ),
 	DEFINE_KEYFIELD( m_CriterionDistance, FIELD_INTEGER, "CriterionDistance" ),
+	DEFINE_KEYFIELD( m_iMinSpawnDistance, FIELD_INTEGER, "MinSpawnDistance" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "SpawnNPCInRadius", InputSpawnInRadius ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "SpawnNPCInLine", InputSpawnInLine ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "ChangeDestinationGroup", InputChangeDestinationGroup ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetMinimumSpawnDistance", InputSetMinimumSpawnDistance ),
 
 END_DATADESC()
 
@@ -598,7 +623,7 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 	}
 
 	// Collect all the qualifiying destination ents
-	pEnt = gEntList.FindEntityByName( NULL, m_iszDestinationGroup, NULL );
+	pEnt = gEntList.FindEntityByName( NULL, m_iszDestinationGroup );
 
 	if( !pEnt )
 	{
@@ -644,7 +669,7 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 			}
 		}
 
-		pEnt = gEntList.FindEntityByName( pEnt, m_iszDestinationGroup, NULL );
+		pEnt = gEntList.FindEntityByName( pEnt, m_iszDestinationGroup );
 	}
 
 	if( count < 1 )
@@ -680,6 +705,9 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 				Vector vecTest = pDestinations[ i ]->GetAbsOrigin();
 				float flDist = ( vecTest - pPlayer->GetAbsOrigin() ).Length();
 
+				if ( m_iMinSpawnDistance != 0 && m_iMinSpawnDistance > flDist )
+					continue;
+
 				if( flDist < flNearest && HumanHullFits( vecTest ) )
 				{
 					flNearest = flDist;
@@ -698,6 +726,9 @@ CNPCSpawnDestination *CTemplateNPCMaker::FindSpawnDestination()
 			{
 				Vector vecTest = pDestinations[ i ]->GetAbsOrigin();
 				float flDist = ( vecTest - pPlayer->GetAbsOrigin() ).Length();
+
+				if ( m_iMinSpawnDistance != 0 && m_iMinSpawnDistance > flDist )
+					continue;
 
 				if( flDist > flFarthest && HumanHullFits( vecTest ) )
 				{
@@ -794,7 +825,7 @@ void CTemplateNPCMaker::MakeNPC( void )
 
 	DispatchSpawn( pent );
 	pent->SetOwnerEntity( this );
-	pent->Activate();
+	DispatchActivate( pent );
 
 	ChildPostSpawn( pent );
 
@@ -847,7 +878,7 @@ void CTemplateNPCMaker::MakeNPCInLine( void )
 
 	DispatchSpawn( pent );
 	pent->SetOwnerEntity( this );
-	pent->Activate();
+	DispatchActivate( pent );
 
 	ChildPostSpawn( pent );
 
@@ -948,7 +979,7 @@ void CTemplateNPCMaker::MakeNPCInRadius( void )
 	DispatchSpawn( pent );
 
 	pent->SetOwnerEntity( this );
-	pent->Activate();
+	DispatchActivate( pent );
 
 	ChildPostSpawn( pent );
 
@@ -993,4 +1024,11 @@ bool CTemplateNPCMaker::PlaceNPCInRadius( CAI_BaseNPC *pNPC )
 void CTemplateNPCMaker::InputChangeDestinationGroup( inputdata_t &inputdata )
 {
 	m_iszDestinationGroup = inputdata.value.StringID();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CTemplateNPCMaker::InputSetMinimumSpawnDistance( inputdata_t &inputdata )
+{
+	m_iMinSpawnDistance = inputdata.value.Int();
 }

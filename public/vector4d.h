@@ -18,6 +18,9 @@
 // For rand(). We really need a library!
 #include <stdlib.h>
 
+// For SSE
+#include <xmmintrin.h>
+
 // For vec_t, put this somewhere else?
 #include "basetypes.h"
 
@@ -98,7 +101,7 @@ public:
 	vec_t	LengthSqr(void) const;
 
 	// return true if this vector is (0,0,0,0) within tolerance
-	bool IsZero( float tolerance = 0.01f )
+	bool IsZero( float tolerance = 0.01f ) const
 	{
 		return (x > -tolerance && x < tolerance &&
 				y > -tolerance && y < tolerance &&
@@ -147,7 +150,16 @@ class __attribute__((aligned(16))) Vector4DAligned : public Vector4D
 #endif
 {
 public:
-	Vector4DAligned() {}
+	Vector4DAligned(void) {}
+	Vector4DAligned( vec_t X, vec_t Y, vec_t Z, vec_t W );
+
+	inline void Set( vec_t X, vec_t Y, vec_t Z, vec_t W );
+
+	inline void InitZero( void );
+
+	__m128 &AsM128() { return *(__m128*)&x; }
+	const __m128 &AsM128() const { return *(const __m128*)&x; } 
+
 private:
 	// No copy constructors allowed if we're in optimal mode
 	Vector4DAligned(Vector4DAligned const& vOther);
@@ -174,6 +186,10 @@ void Vector4DMultiply( Vector4D const& a, Vector4D const& b, Vector4D& result );
 void Vector4DDivide( Vector4D const& a, vec_t b, Vector4D& result );
 void Vector4DDivide( Vector4D const& a, Vector4D const& b, Vector4D& result );
 void Vector4DMA( Vector4D const& start, float s, Vector4D const& dir, Vector4D& result );
+
+// Vector4DAligned arithmetic
+void Vector4DMultiplyAligned( Vector4DAligned const& a, vec_t b, Vector4DAligned& result );
+
 
 #define Vector4DExpand( v ) (v).x, (v).y, (v).z, (v).w
 
@@ -595,6 +611,61 @@ inline vec_t Vector4D::DistToSqr(const Vector4D &vOther) const
 	return delta.LengthSqr();
 }
 
+
+//-----------------------------------------------------------------------------
+// Vector4DAligned routines
+//-----------------------------------------------------------------------------
+
+inline Vector4DAligned::Vector4DAligned( vec_t X, vec_t Y, vec_t Z, vec_t W )
+{ 
+	x = X; y = Y; z = Z; w = W;
+	Assert( IsValid() );
+}
+
+inline void Vector4DAligned::Set( vec_t X, vec_t Y, vec_t Z, vec_t W )
+{ 
+	x = X; y = Y; z = Z; w = W;
+	Assert( IsValid() );
+}
+inline void Vector4DAligned::InitZero( void )
+{ 
+	this->AsM128() = _mm_set1_ps( 0.0f );
+	Assert( IsValid() );
+}
+
+inline void Vector4DMultiplyAligned( Vector4DAligned const& a, Vector4DAligned const& b, Vector4DAligned& c )
+{
+	Assert( a.IsValid() && b.IsValid() );
+	c.x = a.x * b.x;
+	c.y = a.y * b.y;
+	c.z = a.z * b.z;
+	c.w = a.w * b.w;
+}
+
+inline void Vector4DWeightMAD( vec_t w, Vector4DAligned const& vInA, Vector4DAligned& vOutA, Vector4DAligned const& vInB, Vector4DAligned& vOutB )
+{
+	Assert( vInA.IsValid() && vInB.IsValid() && IsFinite(w) );
+	vOutA.x += vInA.x * w;
+	vOutA.y += vInA.y * w;
+	vOutA.z += vInA.z * w;
+	vOutA.w += vInA.w * w;
+
+	vOutB.x += vInB.x * w;
+	vOutB.y += vInB.y * w;
+	vOutB.z += vInB.z * w;
+	vOutB.w += vInB.w * w;
+}
+
+inline void Vector4DWeightMADSSE( vec_t w, Vector4DAligned const& vInA, Vector4DAligned& vOutA, Vector4DAligned const& vInB, Vector4DAligned& vOutB )
+{
+	Assert( vInA.IsValid() && vInB.IsValid() && IsFinite(w) );
+
+    __m128 packed = _mm_set1_ps( w );						// Replicate scalar float out to 4 components
+
+	// 4D SSE Vector MAD
+	vOutA.AsM128() = _mm_add_ps( vOutA.AsM128(), _mm_mul_ps( vInA.AsM128(), packed ) );
+	vOutB.AsM128() = _mm_add_ps( vOutB.AsM128(), _mm_mul_ps( vInB.AsM128(), packed ) );
+}
 
 #endif // _cplusplus
 

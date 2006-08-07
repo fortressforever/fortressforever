@@ -52,11 +52,19 @@ BEGIN_SIMPLE_DATADESC( CAI_BlendedMotor )
 	//	DEFINE_FIELD( m_flNextTurnAct, FIELD_TIME ),
 	//	DEFINE_FIELD( m_flPredictiveSpeedAdjust, FIELD_FLOAT ),
 	//	DEFINE_FIELD( m_flReactiveSpeedAdjust, FIELD_FLOAT ),
-	//	DEFINE_FIELD( m_flPrevOrigin1, FIELD_POSITION ),
-	//	DEFINE_FIELD( m_flPrevOrigin2, FIELD_POSITION ),
+	//	DEFINE_FIELD( m_vecPrevOrigin1, FIELD_POSITION ),
+	//	DEFINE_FIELD( m_vecPrevOrigin2, FIELD_POSITION ),
 
 END_DATADESC()
 
+//-------------------------------------
+
+void CAI_BlendedMotor::ResetMoveCalculations()
+{
+	BaseClass::ResetMoveCalculations();
+	m_scriptMove.RemoveAll();
+	m_scriptTurn.RemoveAll();
+}
 
 //-------------------------------------
 
@@ -93,8 +101,8 @@ void CAI_BlendedMotor::MoveStart()
 		ResetGoalSequence();
 	}
 
-	m_flPrevOrigin2 = GetAbsOrigin();
-	m_flPrevOrigin1 = GetAbsOrigin();
+	m_vecPrevOrigin2 = GetAbsOrigin();
+	m_vecPrevOrigin1 = GetAbsOrigin();
 
 	m_bDeceleratingToGoal = false;
 }
@@ -307,7 +315,6 @@ void CAI_BlendedMotor::SetMoveScriptAnim( float flNewSpeed )
 	{
 		m_nSavedTranslatedGoalActivity = activity;
 		m_nInteriorSequence = ACT_INVALID;
-		pNavigator->SetArrivalSequence( ACT_INVALID );
 		m_nGoalSequence = pNavigator->GetArrivalSequence( m_nPrimarySequence );
 	}
 
@@ -640,6 +647,10 @@ AIMotorMoveResult_t CAI_BlendedMotor::MoveFlyExecute( const AILocalMoveGoal_t &m
 
 float CAI_BlendedMotor::OverrideMaxYawSpeed( Activity activity )
 {
+	// Don't do this is we're locked
+	if ( IsYawLocked() )
+		return 0.0f;
+
 	switch( activity )
 	{
 	case ACT_TURN_LEFT:
@@ -661,6 +672,10 @@ float CAI_BlendedMotor::OverrideMaxYawSpeed( Activity activity )
 
 void CAI_BlendedMotor::UpdateYaw( int speed )
 {
+	// Don't do this is we're locked
+	if ( IsYawLocked() )
+		return;
+
 	GetOuter()->UpdateTurnGesture( );
 	BaseClass::UpdateYaw( speed );
 }
@@ -669,8 +684,16 @@ void CAI_BlendedMotor::UpdateYaw( int speed )
 
 void CAI_BlendedMotor::RecalculateYawSpeed() 
 { 
+	// Don't do this is we're locked
+	if ( IsYawLocked() )
+	{
+		SetYawSpeed( 0.0f );
+		return;
+	}
+
 	if (GetOuter()->HasMemory( bits_MEMORY_TURNING ))
 		return;
+
 	SetYawSpeed( CalcYawSpeed() ); 
 }
 
@@ -723,8 +746,8 @@ void CAI_BlendedMotor::BuildMoveScript( const AILocalMoveGoal_t &move, AIMoveTra
 	BuildVelocityScript( move );
 	BuildTurnScript( move );
 
-	/*
-	if (m_debugOverlays & OVERLAY_NPC_SELECTED_BIT)
+/*
+	if (GetOuter()->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT)
 	{
 		int i;
 #if 1
@@ -735,7 +758,10 @@ void CAI_BlendedMotor::BuildMoveScript( const AILocalMoveGoal_t &move, AIMoveTra
 
 			NDebugOverlay::Box( m_scriptMove[i].vecLocation, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 0,255,255, 0, 0.1 );
 
-			NDebugOverlay::Line( m_scriptMove[i].vecLocation, m_scriptMove[i].vecLocation + Vector( 0,0,m_scriptMove[i].flMaxVelocity), 0,255,255, true, 0.1 );
+			//NDebugOverlay::Line( m_scriptMove[i].vecLocation, m_scriptMove[i].vecLocation + Vector( 0,0,m_scriptMove[i].flMaxVelocity), 0,255,255, true, 0.1 );
+
+			Vector vecMidway = m_scriptMove[i].vecLocation + ((m_scriptMove[i-1].vecLocation - m_scriptMove[i].vecLocation) * 0.5);
+			NDebugOverlay::Text( vecMidway, UTIL_VarArgs( "%d", i ), false, 0.1 );
 		}
 #endif
 #if 0
@@ -749,7 +775,7 @@ void CAI_BlendedMotor::BuildMoveScript( const AILocalMoveGoal_t &move, AIMoveTra
 		}
 #endif
 	}
-	*/
+*/
 }	
 
 
@@ -1021,14 +1047,13 @@ void CAI_BlendedMotor::BuildVelocityScript( const AILocalMoveGoal_t &move )
 		if ((GetOuter()->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT))
 		{
 			Msg("m_flPredictiveSpeedAdjust %.3f  %.1f %.1f\n", m_flPredictiveSpeedAdjust, flHeight, flDist );
-		}
-		NDebugOverlay::Box( move.directTrace.vEndPosition, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 0,255,255, 0, 0.12 );
+			NDebugOverlay::Box( move.directTrace.vEndPosition, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 0,255,255, 0, 0.12 );
 		*/
 	}
 	if (npc_height_adjust.GetBool())
 	{
-		float flDist = (GetAbsOrigin() - m_flPrevOrigin2).Length2D();
-		float flHeight = GetAbsOrigin().z - m_flPrevOrigin2.z;
+		float flDist = (move.thinkTrace.vEndPosition - m_vecPrevOrigin2).Length2D();
+		float flHeight = move.thinkTrace.vEndPosition.z - m_vecPrevOrigin2.z;
 		float flDelta;
 
 		if (flDist > 0)
@@ -1044,15 +1069,24 @@ void CAI_BlendedMotor::BuildVelocityScript( const AILocalMoveGoal_t &move )
 		newSpeedAdjust = clamp( newSpeedAdjust, 0.5, 1.0 );
 
 		// debounce speed adjust
-		m_flReactiveSpeedAdjust = m_flReactiveSpeedAdjust * 0.5 + newSpeedAdjust * 0.5;
+		if (newSpeedAdjust < m_flReactiveSpeedAdjust)
+		{
+			m_flReactiveSpeedAdjust = m_flReactiveSpeedAdjust * 0.2 + newSpeedAdjust * 0.8;
+		}
+		else
+		{
+			m_flReactiveSpeedAdjust = m_flReactiveSpeedAdjust * 0.5 + newSpeedAdjust * 0.5;
+		}
 
 		// filter through origins
-		m_flPrevOrigin2 = m_flPrevOrigin1;
-		m_flPrevOrigin1 = GetAbsOrigin();
+		m_vecPrevOrigin2 = m_vecPrevOrigin1;
+		m_vecPrevOrigin1 = GetAbsOrigin();
 
 		/*
 		if ((GetOuter()->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT))
 		{
+			NDebugOverlay::Box( m_vecPrevOrigin2, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 255,0,255, 0, 0.12 );
+			NDebugOverlay::Box( move.thinkTrace.vEndPosition, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 255,0,255, 0, 0.12 );
 			Msg("m_flReactiveSpeedAdjust %.3f  %.1f %.1f\n", m_flReactiveSpeedAdjust, flHeight, flDist );
 		}
 		*/
@@ -1606,7 +1640,7 @@ bool CAI_BlendedMotor::AddTurnGesture( float flYD )
 		return false;
 	}
 
-	if (GetOuter()->IsMoving())
+	if ( GetOuter()->IsMoving() || GetOuter()->IsCrouching() )
 	{
 		return false;
 	}

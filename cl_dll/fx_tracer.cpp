@@ -22,7 +22,6 @@ Vector GetTracerOrigin( const CEffectData &data )
 	Vector vecStart = data.m_vStart;
 	QAngle vecAngles;
 
-	int iEntIndex = data.m_nEntIndex;
 	int iAttachment = data.m_nAttachmentIndex;;
 
 	// Attachment?
@@ -31,16 +30,17 @@ Vector GetTracerOrigin( const CEffectData &data )
 		C_BaseViewModel *pViewModel = NULL;
 
 		// If the entity specified is a weapon being carried by this player, use the viewmodel instead
-		C_BaseEntity *pEnt = ClientEntityList().GetEnt( iEntIndex );
-		if ( !pEnt )
+		IClientRenderable *pRenderable = data.GetRenderable();
+		if ( !pRenderable )
 			return vecStart;
 
+		C_BaseEntity *pEnt = data.GetEntity();
 #ifdef HL2MP
-		if ( pEnt->IsDormant() )
+		if ( pEnt && pEnt->IsDormant() )
 			return vecStart;
 #endif
 
-		C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>(pEnt);
+		C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>( pEnt );
 		if ( pWpn && pWpn->IsCarriedByLocalPlayer() )
 		{
 			C_BasePlayer *player = ToBasePlayer( pWpn->GetOwner() );
@@ -49,14 +49,15 @@ Vector GetTracerOrigin( const CEffectData &data )
 			if ( pViewModel )
 			{
 				// Get the viewmodel and use it instead
-				pEnt = pViewModel;
+				pRenderable = pViewModel;
 			}
 		}
 
 		// Get the attachment origin
-		if ( !pEnt->GetAttachment( iAttachment, vecStart, vecAngles ) )
+		if ( !pRenderable->GetAttachment( iAttachment, vecStart, vecAngles ) )
 		{
-			DevMsg( "GetTracerOrigin: Couldn't find attachment %d on model %s\n", iAttachment, pEnt->GetModelName() );
+			DevMsg( "GetTracerOrigin: Couldn't find attachment %d on model %s\n", iAttachment, 
+				modelinfo->GetModelName( pRenderable->GetModel() ) );
 		}
 	}
 
@@ -76,7 +77,7 @@ void TracerCallback( const CEffectData &data )
 	Vector vecStart = GetTracerOrigin( data );
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
-	int iEntIndex = data.m_nEntIndex;
+	int iEntIndex = data.entindex();
 
 	if ( iEntIndex && iEntIndex == player->index )
 	{

@@ -8,6 +8,10 @@
 #include "ff_fx_shared.h"
 #include "ff_weapon_base.h"
 
+#ifndef CLIENT_DLL
+	#include "ilagcompensationmanager.h"
+#endif
+
 #ifdef CLIENT_DLL
 
 #include "fx_impact.h"
@@ -62,9 +66,9 @@
 		CLocalPlayerFilter filter;
 		C_BaseEntity::EmitSound( filter, NULL, pSoundName, &vEndPos );
 
-		i = g_GroupedSounds.AddToTail();
-		g_GroupedSounds[i].m_SoundName = pSoundName;
-		g_GroupedSounds[i].m_vPos = vEndPos;
+		int j = g_GroupedSounds.AddToTail();
+		g_GroupedSounds[j].m_SoundName = pSoundName;
+		g_GroupedSounds[j].m_vPos = vEndPos;
 	}
 
 
@@ -185,6 +189,11 @@ void FX_FireBullets(
 	
 	StartGroupingSounds();
 
+#if !defined (CLIENT_DLL)
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
+#endif
+
 	for ( int iBullet=0; iBullet < pWeaponInfo->m_iBullets; iBullet++ )
 	{
 		RandomSeed( iSeed );	// init random system with this seed
@@ -207,6 +216,10 @@ void FX_FireBullets(
 			x,y,
 			flSniperRifleCharge ); // added by Mulchman 9/20/2005
 	}
+
+#if !defined (CLIENT_DLL)
+	lagcompensation->FinishLagCompensation( pPlayer );
+#endif
 
 	EndGroupingSounds();
 }

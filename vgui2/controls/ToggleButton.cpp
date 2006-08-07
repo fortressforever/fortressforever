@@ -16,6 +16,8 @@
 
 using namespace vgui;
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( ToggleButton, ToggleButton );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------

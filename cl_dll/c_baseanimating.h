@@ -20,6 +20,7 @@
 // Shared activities
 #include "ai_activity.h"
 #include "animationlayer.h"
+#include "sequence_transitioner.h"
 #include "bone_accessor.h"
 #include "bone_merge_cache.h"
 #include "ragdoll_shared.h"
@@ -40,6 +41,8 @@ class CIKState;
 class ConVar;
 class C_RopeKeyframe;
 class CBoneBitList;
+class CBoneList;
+class KeyValues;
 FORWARD_DECLARE_HANDLE( memhandle_t );
 
 extern ConVar vcollide_wireframe;
@@ -63,29 +66,6 @@ public:
 	QAngle	m_angRotation;
 };
 
-
-class CSequenceTransitioner
-{
-public:
-	void Update( 
-		// Describe the current animation state with these parameters.
-		studiohdr_t *hdr,
-		int nCurSequence, 
-		float flCurCycle,
-		float flCurPlaybackRate,
-		float flCurTime,
-		
-		// Even if the sequence hasn't changed, you can force it to interpolate from the previous
-		// spot in the same sequence to the current spot in the same sequence by setting this to true.
-		bool bForceNewSequence,
-
-		// Follows EF_NOINTERP.
-		bool bInterpolate
-		);
-
-public:
-	CUtlVector< C_AnimationLayer >	m_animationQueue;
-};
 
 typedef unsigned int			ClientSideAnimationListHandle_t;
 
@@ -119,9 +99,16 @@ public:
 
 	float	GetAnimTimeInterval( void ) const;
 
+	virtual unsigned char	GetClientSideFade( void );
+
 	// Get bone controller values.
 	virtual void	GetBoneControllers(float controllers[MAXSTUDIOBONECTRLS]);
 	virtual float	SetBoneController ( int iController, float flValue );
+
+	int GetNumFlexControllers( void );
+	const char *GetFlexDescFacs( int iFlexDesc );
+	const char *GetFlexControllerName( int iFlexController );
+	const char *GetFlexControllerType( int iFlexController );
 
 	virtual void	GetAimEntOrigin( IClientEntity *pAttachedTo, Vector *pAbsOrigin, QAngle *pAbsAngles );
 
@@ -134,24 +121,24 @@ public:
 
 	// base model functionality
 	float		  ClampCycle( float cycle, bool isLooping );
-	virtual void GetPoseParameters( float poseParameter[MAXSTUDIOPOSEPARAM] );
-	virtual void BuildTransformations( Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
+	virtual void GetPoseParameters( CStudioHdr *pStudioHdr, float poseParameter[MAXSTUDIOPOSEPARAM] );
+	virtual void BuildTransformations( CStudioHdr *pStudioHdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
 	virtual void ApplyBoneMatrixTransform( matrix3x4_t& transform );
  	virtual int	VPhysicsGetObjectList( IPhysicsObject **pList, int listMax );
 
-	const mstudioposeparamdesc_t &GetPoseParameterPtr( const char *pName );
-
 	// model specific
 	virtual bool SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime );
+	virtual void UpdateIKLocks( float currentTime );
 	virtual void CalculateIKLocks( float currentTime );
 	virtual int DrawModel( int flags );
 	virtual int InternalDrawModel( int flags );
 	
 	//
 	virtual CMouthInfo *GetMouth();
-	virtual void	ControlMouth();
+	virtual void	ControlMouth( CStudioHdr *pStudioHdr );
 	
-	virtual void DoAnimationEvents( void );
+	// override in sub-classes
+	virtual void DoAnimationEvents( CStudioHdr *pStudio );
 	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options );
 
 	// Parses and distributes muzzle flash events
@@ -160,25 +147,35 @@ public:
 	// virtual	void AllocateMaterials( void );
 	// virtual	void FreeMaterials( void );
 
-	virtual studiohdr_t *OnNewModel( void );
-	studiohdr_t	*GetModelPtr() const;
+	virtual CStudioHdr *OnNewModel( void );
+	CStudioHdr	*GetModelPtr() const;
+	
+	virtual void SetPredictable( bool state );
 
 	// C_BaseClientShader **p_ClientShaders;
 
-	virtual	void StandardBlendingRules( Vector pos[], Quaternion q[], float currentTime, int boneMask );
-	void UnragdollBlend( studiohdr_t *hdr, Vector pos[], Quaternion q[], float currentTime );
+	virtual	void StandardBlendingRules( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );
+	void UnragdollBlend( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime );
 
-	void MaintainSequenceTransitions( float flCycle, float flPoseParameter[], Vector pos[], Quaternion q[], int boneMask );
+	void MaintainSequenceTransitions( CStudioHdr *hdr, float flCycle, float flPoseParameter[], Vector pos[], Quaternion q[], int boneMask );
 
-	virtual void AccumulateLayers( studiohdr_t *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
+	virtual void AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
 
 	// Attachments
 	int		LookupAttachment( const char *pAttachmentName );
 	int		LookupRandomAttachment( const char *pAttachmentNameSubstring );
 
-	int		LookupPoseParameter( const char *szName );
-	float	SetPoseParameter( const char *szName, float flValue );
-	float	SetPoseParameter( int iParameter, float flValue );
+	int		LookupPoseParameter( CStudioHdr *pStudioHdr, const char *szName );
+	inline int LookupPoseParameter( const char *szName ) { return LookupPoseParameter(GetModelPtr(), szName); }
+
+	float	SetPoseParameter( CStudioHdr *pStudioHdr, const char *szName, float flValue );
+	inline float SetPoseParameter( const char *szName, float flValue ) { return SetPoseParameter( GetModelPtr(), szName, flValue ); }
+	float	SetPoseParameter( CStudioHdr *pStudioHdr, int iParameter, float flValue );
+	inline float SetPoseParameter( int iParameter, float flValue ) { return SetPoseParameter( GetModelPtr(), iParameter, flValue ); }
+
+	float	GetPoseParameter( int iPoseParameter );
+
+	bool	GetPoseParameterRange( int iPoseParameter, float &minValue, float &maxValue );
 
 	int		LookupBone( const char *szName );
 	void	GetBonePosition( int iBone, Vector &origin, QAngle &angles );
@@ -243,6 +240,9 @@ public:
 
 	// For shadows rendering the correct body + sequence...
 	virtual int GetBody()			{ return m_nBody; }
+	virtual int GetSkin()			{ return m_nSkin; }
+
+	bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
 
 	inline float					GetPlaybackRate();
 	inline void						SetPlaybackRate( float rate );
@@ -253,11 +253,13 @@ public:
 	int								GetSequence();
 	void							SetSequence(int nSequence);
 	inline void						ResetSequence(int nSequence);
-	float							GetSequenceGroundSpeed( int iSequence );
-	int								GetSequenceFlags( int iSequence );
-	bool							IsSequenceLooping( int iSequence );
-	float							GetSequenceMoveDist( int iSequence );
+	float							GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence );
+	inline float					GetSequenceGroundSpeed( int iSequence ) { return GetSequenceGroundSpeed(GetModelPtr(), iSequence); }
+	bool							IsSequenceLooping( CStudioHdr *pStudioHdr, int iSequence );
+	inline bool						IsSequenceLooping( int iSequence ) { return IsSequenceLooping(GetModelPtr(),iSequence); }
+	float							GetSequenceMoveDist( CStudioHdr *pStudioHdr, int iSequence );
 	void							GetSequenceLinearMotion( int iSequence, Vector *pVec );
+	void							GetBlendedLinearVelocity( Vector *pVec );
 	int								LookupSequence ( const char *label );
 	int								LookupActivity( const char *label );
 	char const						*GetSequenceName( int iSequence ); 
@@ -267,7 +269,7 @@ public:
 
 	// Clientside animation
 	virtual float					FrameAdvance( float flInterval = 0.0f );
-	virtual float					GetSequenceCycleRate( int iSequence );
+	virtual float					GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 	virtual void					UpdateClientSideAnimation();
 	void							ClientSideAnimationChanged();
 	virtual unsigned int			ComputeClientSideAnimationFlags();
@@ -283,7 +285,7 @@ public:
 	int GetBodygroupCount( int iGroup );
 	int GetNumBodyGroups( void );
 
-	class CBoneCache				*GetBoneCache();
+	class CBoneCache				*GetBoneCache( CStudioHdr *pStudioHdr );
 	void							SetHitboxSet( int setnum );
 	void							SetHitboxSetByName( const char *setname );
 	int								GetHitboxSet( void );
@@ -314,7 +316,6 @@ public:
 	// Wrappers for CBoneAccessor.
 	const matrix3x4_t&				GetBone( int iBone ) const;
 	matrix3x4_t&					GetBoneForWrite( int iBone );
-	
 
 	// Used for debugging. Will produce asserts if someone tries to setup bones or
 	// attachments before it's allowed.
@@ -341,17 +342,27 @@ public:
 
 	void InitRopes();
 
+	// Sometimes the server wants to update the client's cycle to get the two to run in sync (for proper hit detection)
+	virtual void SetServerIntendedCycle( float intended ) { intended; }
+	virtual float GetServerIntendedCycle( void ) { return -1.0f; }
+
 	// For prediction
 	int								SelectWeightedSequence ( int activity );
 	void							ResetSequenceInfo( void );
 	float							SequenceDuration( void );
-	float							SequenceDuration( int iSequence );
+	float							SequenceDuration( CStudioHdr *pStudioHdr, int iSequence );
+	inline float					SequenceDuration( int iSequence ) { return SequenceDuration(GetModelPtr(), iSequence); }
 	int								FindTransitionSequence( int iCurrentSequence, int iGoalSequence, int *piDir );
 
 	virtual void					GetRagdollPreSequence( matrix3x4_t *preBones, float flTime );
 	virtual void					GetRagdollCurSequence( matrix3x4_t *curBones, float flTime );
 
 	void							RagdollMoved( void );
+
+	virtual void					GetToolRecordingState( KeyValues *msg );
+	virtual void					CleanupToolRecordingState( KeyValues *msg );
+
+	void							RecordBones( CStudioHdr *hdr, KeyValues *kvBones );
 
 protected:
 	// View models scale their attachment positions to account for FOV. To get the unmodified
@@ -368,9 +379,15 @@ protected:
 	virtual int						GetStudioBody( void ) { return m_nBody; }
 
 private:
+	CBoneList*						RecordBones( CStudioHdr *hdr );
+
 	virtual bool					CalcAttachments();
 	bool							PutAttachment( int number, const Vector &origin, const QAngle &angles );
 	void							TermRopes();
+
+	void							UpdateRelevantInterpolatedVars();
+	void							AddBaseAnimatingInterpolatedVars();
+	void							RemoveBaseAnimatingInterpolatedVars();
 
 public:
 	CRagdoll						*m_pRagdoll;
@@ -411,7 +428,14 @@ protected:
 	// Client-side animation
 	bool							m_bClientSideFrameReset;
 
+protected:
+
+	float							m_fadeMinDist;
+	float							m_fadeMaxDist;
+	float							m_flFadeScale;
+
 private:
+
 	float							m_flGroundSpeed;	// computed linear movement rate for current sequence
 	float							m_flLastEventCheck;	// cycle index of when events were last checked
 	bool							m_bSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
@@ -463,7 +487,7 @@ private:
 	CInterpolatedVar< float >		m_iv_flCycle;
 	float							m_flOldCycle;
 	int								m_nOldSequence;
-	CBoneMergeCache					m_BoneMergeCache;	// This caches the strcmp lookups that it has to do
+	CBoneMergeCache					*m_pBoneMergeCache;	// This caches the strcmp lookups that it has to do
 														// when merg
 	
 	CUtlVector< matrix3x4_t >		m_CachedBoneData; // never access this directly. Use m_BoneAccessor.
@@ -472,13 +496,17 @@ private:
 	// Calculated attachment points
 	CUtlVector<CAttachmentData>		m_Attachments;
 
-	void							SetupBones_AttachmentHelper();
+	void							SetupBones_AttachmentHelper( CStudioHdr *pStudioHdr );
 
 	EHANDLE							m_hLightingOrigin;
+	EHANDLE							m_hLightingOriginRelative;
 
 	// These are compared against each other to determine if the entity should muzzle flash.
 	CNetworkVar( unsigned char, m_nMuzzleFlashParity );
 	unsigned char m_nOldMuzzleFlashParity;
+
+private:
+	mutable CStudioHdr				*m_pStudioHdr;
 };
 
 enum 
@@ -518,6 +546,7 @@ public:
 	void	FadeOut( void );
 
 	bool m_bFadeOut;
+	bool m_bImportant;
 	float m_flEffectTime;
 
 private:

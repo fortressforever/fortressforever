@@ -20,11 +20,19 @@
 #include "ai_navigator.h"
 #include "ai_moveprobe.h"
 #include "sceneentity.h"
+#include "ai_baseactor.h"
+#include "datacache/imdlcache.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 static ConVar scene_allowoverrides( "scene_allowoverrides", "1", 0, "When playing back a choreographed scene, allow per-model expression overrides." );
+#ifndef _XBOX
+#define AllowSceneOverrides() scene_allowoverrides.GetBool()
+#else
+#define AllowSceneOverrides() 0
+#endif
+
 static ConVar scene_showlook( "scene_showlook", "0", FCVAR_ARCHIVE, "When playing back, show the directions of look events." );
 static ConVar scene_showmoveto( "scene_showmoveto", "0", FCVAR_ARCHIVE, "When moving, show the end location." );
 
@@ -33,16 +41,29 @@ static ConVar scene_showmoveto( "scene_showmoveto", "0", FCVAR_ARCHIVE, "When mo
 // Fake layer # to force HandleProcessSceneEvent to actually allocate the layer during npc think time instead of in between.
 #define REQUEST_DEFERRED_LAYER_ALLOCATION	-2
 
+extern bool g_bClientFlex;
+
 // ---------------------------------------------------------------------
 //
 // CBaseFlex -- physically simulated brush rectangular solid
 //
 // ---------------------------------------------------------------------
 
+void* SendProxy_FlexWeights( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
+{
+	// Don't any flexweights to client unless scene_clientflex.GetBool() is false
+	if ( !g_bClientFlex )
+		return (void*)pVarData;
+	else
+		return NULL;	
+}	
+
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_FlexWeights );
 
 // SendTable stuff.
 IMPLEMENT_SERVERCLASS_ST(CBaseFlex, DT_BaseFlex)
-	SendPropArray3	(SENDINFO_ARRAY3(m_flexWeight), SendPropFloat(SENDINFO_ARRAY(m_flexWeight), 12, SPROP_ROUNDDOWN, 0.0f, 1.0f ) ),
+// Note we can't totally disabled flexweights transmission since some things like blink and eye tracking are still done by the server
+	SendPropArray3	(SENDINFO_ARRAY3(m_flexWeight), SendPropFloat(SENDINFO_ARRAY(m_flexWeight), 12, SPROP_ROUNDDOWN, 0.0f, 1.0f ) /*, SendProxy_FlexWeights*/ ),
 	SendPropInt		(SENDINFO(m_blinktoggle), 1, SPROP_UNSIGNED ),
 	SendPropVector	(SENDINFO(m_viewtarget), -1, SPROP_COORD),
 #ifdef HL2_DLL
@@ -72,9 +93,6 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( funCBaseFlex, CBaseFlex ); // meaningless independant class!!
 
-BEGIN_PREDICTION_DATA( CBaseFlex )
-END_PREDICTION_DATA()
-
 CBaseFlex::CBaseFlex( void ) : 
 	m_LocalToGlobal( 0, 0, FlexSettingLessFunc )
 {
@@ -94,6 +112,8 @@ CBaseFlex::~CBaseFlex( void )
 
 void CBaseFlex::SetModel( const char *szModelName )
 {
+	MDLCACHE_CRITICAL_SECTION();
+
 	BaseClass::SetModel( szModelName );
 
 	for (int i = 0; i < GetNumFlexControllers(); i++)
@@ -112,7 +132,7 @@ void CBaseFlex::SetFlexWeight( int index, float value )
 {
 	if (index >= 0 && index < GetNumFlexControllers())
 	{
-		studiohdr_t *pstudiohdr = GetModelPtr( );
+		CStudioHdr *pstudiohdr = GetModelPtr( );
 		if (! pstudiohdr)
 			return;
 
@@ -132,7 +152,7 @@ float CBaseFlex::GetFlexWeight( int index )
 {
 	if (index >= 0 && index < GetNumFlexControllers())
 	{
-		studiohdr_t *pstudiohdr = GetModelPtr( );
+		CStudioHdr *pstudiohdr = GetModelPtr( );
 		if (! pstudiohdr)
 			return 0;
 
@@ -329,6 +349,15 @@ bool CBaseFlex::ClearSceneEvent( CSceneEventInfo *info, bool fastKill, bool canc
 			if ( canceled )
 			{
 				StopSound( info->m_pEvent->GetParameters() );
+
+#ifdef HL2_EPISODIC
+				// If we were holding the semaphore because of this speech, release it
+				CAI_BaseActor *pBaseActor = dynamic_cast<CAI_BaseActor*>(this);
+				if ( pBaseActor )
+				{
+					pBaseActor->GetExpresser()->ForceNotSpeaking();
+				}
+#endif
 			}
 		}
 		return true;
@@ -444,7 +473,7 @@ bool CBaseFlex::HandleStartSequenceSceneEvent( CSceneEventInfo *info, CChoreoSce
 	SetLayerNoRestore( info->m_iLayer, true );
 	SetLayerWeight( info->m_iLayer, 0.0 );
 
-	bool looping = ((GetSequenceFlags( info->m_nSequence ) & STUDIO_LOOPING) != 0);
+	bool looping = ((GetSequenceFlags( GetModelPtr(), info->m_nSequence ) & STUDIO_LOOPING) != 0);
 	if (!looping)
 	{
 		// figure out the animtime when this was frame 0
@@ -487,7 +516,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 	}
 
 	// FIXME: this seems like way too much code
-	info->m_bIsPosture = false;
+	info->m_bIsGesture = false;
 	KeyValues *seqKeyValues = GetSequenceKeyValues( info->m_nSequence );
 	if (seqKeyValues)
 	{
@@ -499,7 +528,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 
 			if (pkvType)
 			{
-				info->m_bIsPosture = (stricmp( pkvType->GetString(), "posture" ) == 0) ? true : false;
+				info->m_bIsGesture = (stricmp( pkvType->GetString(), "gesture" ) == 0) ? true : false;
 			}
 		}
 
@@ -545,7 +574,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 
 		if ( pkvAllFaceposer )
 		{
-			studiohdr_t *pstudiohdr = GetModelPtr();
+			CStudioHdr *pstudiohdr = GetModelPtr();
 			
 			mstudioseqdesc_t &seqdesc = pstudiohdr->pSeqdesc( info->m_nSequence );
 			mstudioanimdesc_t &animdesc = pstudiohdr->pAnimdesc( pstudiohdr->iRelativeAnim( info->m_nSequence, seqdesc.anim(0,0) ) );
@@ -593,7 +622,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 	// FIXME: move priority of base animation so that layers can be inserted before
 	// FIXME: query stopping, post idle layer to figure out correct weight
 	//			GetIdleLayerWeight()?
-	if (info->m_bIsPosture && IsMoving())
+	if (!info->m_bIsGesture && IsMoving())
 	{
 		info->m_flWeight = 0.0;
 	}
@@ -609,7 +638,7 @@ bool CBaseFlex::HandleStartGestureSceneEvent( CSceneEventInfo *info, CChoreoScen
 	SetLayerDuration( info->m_iLayer, event->GetDuration() );
 	SetLayerWeight( info->m_iLayer, 0.0 );
 
-	bool looping = ((GetSequenceFlags( info->m_nSequence ) & STUDIO_LOOPING) != 0);
+	bool looping = ((GetSequenceFlags( GetModelPtr(), info->m_nSequence ) & STUDIO_LOOPING) != 0);
 	if ( looping )
 	{
 		DevMsg( 1, "vcd error, gesture %s of model %s is marked as STUDIO_LOOPING!\n", 
@@ -699,6 +728,9 @@ bool CBaseFlex::StartSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, CCh
 
 	case CChoreoEvent::SPEAK:
 		return true;
+	
+	case CChoreoEvent::EXPRESSION: // These are handled client-side
+		return true;
 	}
 
 	return false;
@@ -780,23 +812,27 @@ bool CBaseFlex::CheckSceneEventCompletion( CSceneEventInfo *info, float currentt
 				// check movement, check arrival
 				if (npc->GetNavigator()->IsGoalActive())
 				{
-					float preload = event->GetEndTime() - currenttime;
-					if (preload < 0)
+					const Task_t *pCurTask = npc->GetTask();
+					if ( pCurTask && (pCurTask->iTask == TASK_PLAY_SCENE || pCurTask->iTask == TASK_WAIT_FOR_MOVEMENT ) )
 					{
-						//Msg("%.1f: no preload\n", currenttime );
+						float preload = event->GetEndTime() - currenttime;
+						if (preload < 0)
+						{
+							//Msg("%.1f: no preload\n", currenttime );
+							return false;
+						}
+						float t = npc->GetTimeToNavGoal();
+
+						// Msg("%.1f: preload (%s:%.1f) %.1f %.1f\n", currenttime, event->GetName(), event->GetEndTime(), preload, t );
+
+						// FIXME: t is zero if no path can be built!
+
+						if (t > 0.0f && t <= preload)
+						{
+							return true;
+						}
 						return false;
 					}
-					float t = npc->GetTimeToNavGoal();
-
-					// Msg("%.1f: preload (%s:%.1f) %.1f %.1f\n", currenttime, event->GetName(), event->GetEndTime(), preload, t );
-
-					// FIXME: t is zero if no path can be built!
-
-					if (t > 0.0f && t <= preload)
-					{
-						return true;
-					}
-					return false;
 				}
 				else if (info->m_bHasArrived)
 				{
@@ -818,6 +854,7 @@ bool CBaseFlex::CheckSceneEventCompletion( CSceneEventInfo *info, float currentt
 //-----------------------------------------------------------------------------
 void CBaseFlex::ProcessSceneEvents( void )
 {
+	VPROF( "CBaseFlex::ProcessSceneEvents" );
 	// slowly decay to netural expression
 	int i;
 	for ( i = 0; i < GetNumFlexControllers(); i++)
@@ -852,15 +889,19 @@ class CFlexSceneFileManager : CAutoGameSystem
 {
 public:
 
+	CFlexSceneFileManager( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	virtual bool Init()
 	{
 		// Trakcer 16692:  Preload these at startup to avoid hitch first time we try to load them during actual gameplay
-		FindSceneFile( NULL, "phonemes" );
-		FindSceneFile( NULL, "phonemes_weak" );
-		FindSceneFile( NULL, "phonemes_strong" );
+		FindSceneFile( NULL, "phonemes", true );
+		FindSceneFile( NULL, "phonemes_weak", true );
+		FindSceneFile( NULL, "phonemes_strong", true );
 #if defined( HL2_DLL )
-		FindSceneFile( NULL, "random" );
-		FindSceneFile( NULL, "randomAlert" );
+		FindSceneFile( NULL, "random", true );
+		FindSceneFile( NULL, "randomAlert", true );
 #endif
 		return true;
 	}
@@ -888,7 +929,7 @@ public:
 		}
 	}
 
-	const void *FindSceneFile( CBaseFlex *instance, const char *filename )
+	const void *FindSceneFile( CBaseFlex *instance, const char *filename, bool allowBlockingIO )
 	{
 		// See if it's already loaded
 		int i;
@@ -902,20 +943,18 @@ public:
 				return file->buffer;
 			}
 		}
-		
-		// Load file into memory
-		FileHandle_t file = filesystem->Open( UTIL_VarArgs( "expressions/%s.vfe", filename ), "rb" );
 
-		if ( !file )
+		if ( !allowBlockingIO )
+		{
 			return NULL;
+		}
 
-		int len = filesystem->Size( file );
+		// Load file into memory
+		void *buffer = NULL;
+		int len = filesystem->ReadFileEx( UTIL_VarArgs( "expressions/%s.vfe", filename ), "GAME", &buffer, false, true );
 
-		// read the file
-		byte *buffer = new unsigned char[ len ];
-		Assert( buffer );
-		filesystem->Read( buffer, len, file );
-		filesystem->Close( file );
+		if ( !len )
+			return NULL;
 
 		// Create scene entry
 		CFlexSceneFile *pfile = new CFlexSceneFile;
@@ -941,7 +980,7 @@ private:
 		{
 			CFlexSceneFile *file = m_FileList[ 0 ];
 			m_FileList.Remove( 0 );
-			delete[] file->buffer;
+			filesystem->FreeOptimalReadBuffer( file->buffer );
 			delete file;
 		}
 	}
@@ -950,7 +989,7 @@ private:
 };
 
 // Singleton manager
-CFlexSceneFileManager g_FlexSceneFileManager;
+CFlexSceneFileManager g_FlexSceneFileManager( "CFlexSceneFileManager" );
 
 //-----------------------------------------------------------------------------
 // Purpose: Each CBaseFlex maintains a UtlRBTree of mappings, one for each loaded flex scene file it uses.  This is used to
@@ -1027,16 +1066,58 @@ int CBaseFlex::FlexControllerLocalToGlobal( const flexsettinghdr_t *pSettinghdr,
 const void *CBaseFlex::FindSceneFile( const char *filename )
 {
 	// Ask manager to get the globally cached scene instead.
-	return g_FlexSceneFileManager.FindSceneFile( this, filename );
+	return g_FlexSceneFileManager.FindSceneFile( this, filename, false );
 }
+
+ConVar	ai_expression_optimization( "ai_expression_optimization", "0", FCVAR_NONE, "Disable npc background expressions when you can't see them." );
+ConVar	ai_expression_frametime( "ai_expression_frametime", "0.05", FCVAR_NONE, "Maximum frametime to still play background expressions." );
 
 //-----------------------------------------------------------------------------
 // Various methods to process facial SceneEvents: 
 //-----------------------------------------------------------------------------
 bool CBaseFlex::ProcessFlexAnimationSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event )
 {
+	VPROF( "CBaseFlex::ProcessFlexAnimationSceneEvent" );
+
 	if ( event->HasEndTime() )
 	{
+		// don't bother with flex animation if the player can't see you
+		CAI_BaseNPC *myNpc = MyNPCPointer( );
+		if (myNpc)
+		{
+			if (!myNpc->HasCondition( COND_IN_PVS ))
+				return true;
+
+			if (ai_expression_optimization.GetBool())
+			{
+				if (scene->IsBackground())
+				{
+					// if framerate too slow, disable
+					if (gpGlobals->frametime > ai_expression_frametime.GetFloat())
+					{
+						info->m_bHasArrived = true;
+						info->m_flNext = gpGlobals->curtime + RandomFloat( 0.7, 1.2 );
+					}
+					// only check occasionally
+					else if (info->m_flNext <= gpGlobals->curtime)
+					{
+						CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
+						// if not in view, disable
+						info->m_bHasArrived = (pPlayer && !pPlayer->FInViewCone( this ) );
+						info->m_flNext = gpGlobals->curtime + RandomFloat( 0.7, 1.2 );
+					}
+
+					if (info->m_bHasArrived)
+					{
+						// NDebugOverlay::Box( myNpc->GetAbsOrigin(), myNpc->GetHullMins(), myNpc->GetHullMaxs(), 255, 0, 0, 0, 0.22 );
+						return true;
+					}
+					// NDebugOverlay::Box( myNpc->GetAbsOrigin(), myNpc->GetHullMins(), myNpc->GetHullMaxs(), 0, 255, 0, 0, 0.22 );
+				}
+			}
+		}
+
 		AddFlexAnimation( info );
 	}
 	return true;
@@ -1047,6 +1128,8 @@ bool CBaseFlex::ProcessFlexSettingSceneEvent( CSceneEventInfo *info, CChoreoScen
 	// Flexanimations have to have an end time!!!
 	if ( !event->HasEndTime() )
 		return true;
+
+	VPROF( "CBaseFlex::ProcessFlexSettingSceneEvent" );
 
 	// Look up the actual strings
 	const char *scenefile	= event->GetParameters();
@@ -1060,18 +1143,18 @@ bool CBaseFlex::ProcessFlexSettingSceneEvent( CSceneEventInfo *info, CChoreoScen
 		if ( pExpHdr )
 		{
 			const flexsettinghdr_t  *pOverrideHdr = NULL;
-			
+
 			// Find overrides, if any exist
-			studiohdr_t	*hdr = GetModelPtr();
+			CStudioHdr	*hdr;
 			
-			if ( hdr && scene_allowoverrides.GetBool() )
+			if ( AllowSceneOverrides() && ( hdr = GetModelPtr() ) != NULL )
 			{
 				char overridefile[ 512 ];
 				char shortname[ 128 ];
 				char modelname[ 128 ];
 				
 				//Q_strncpy( modelname, modelinfo->GetModelName( model ) ,sizeof(modelname));
-				Q_strncpy( modelname, hdr->name ,sizeof(modelname));
+				Q_strncpy( modelname, hdr->pszName() ,sizeof(modelname));
 				
 				// Fix up the name
 				Q_FileBase( modelname, shortname, sizeof( shortname ) );
@@ -1080,10 +1163,10 @@ bool CBaseFlex::ProcessFlexSettingSceneEvent( CSceneEventInfo *info, CChoreoScen
 				
 				pOverrideHdr = ( const flexsettinghdr_t * )FindSceneFile( overridefile );
 			}
-			
+
 			float scenetime = scene->GetTime();
 			
-			float scale = event->GetIntensity( scenetime );
+			float scale = event->GetIntensity( event, scenetime );
 			
 			// Add the named expression
 			AddFlexSetting( name, scale, pExpHdr, pOverrideHdr, !info->m_bStarted );
@@ -1098,6 +1181,8 @@ bool CBaseFlex::ProcessFacingSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 	// make sure target exists
 	if (info->m_hTarget == NULL)
 		return false;
+
+	VPROF( "CBaseFlex::ProcessFacingSceneEvent" );
 
 	// make sure we're still able to play this command
 	if (!EnterSceneSequence( true ))
@@ -1127,7 +1212,7 @@ bool CBaseFlex::ProcessFacingSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 
 		// Msg("%f : %f - %f\n", scene->GetTime(), event->GetStartTime(), event->GetEndTime() );
 		// FIXME: why are the splines ill behaved at the end?
-		float intensity = event->GetIntensity( scene->GetTime() );
+		float intensity = event->GetIntensity( event, scene->GetTime() );
 		if (info->m_bIsMoving)
 		{
 			myNpc->AddFacingTarget( info->m_hTarget, intensity, 0.2 );
@@ -1211,6 +1296,8 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 	if (!myNpc)
 		return false;
 
+	VPROF( "CBaseFlex::ProcessMoveToSceneEvent" );
+
 	// make sure we're still able to play this command
 	if (!EnterSceneSequence( true ))
 	{
@@ -1223,10 +1310,10 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 		return true;
 	}
 
-	if (!info->m_bIsMoving && !IsMoving())
+	const Task_t *pCurTask = myNpc->GetTask();
+	if (!info->m_bIsMoving && (!IsMoving() || pCurTask->iTask == TASK_STOP_MOVING) )
 	{
-		const Task_t *pCurTask = myNpc->GetTask();
-		if ( pCurTask && (pCurTask->iTask == TASK_PLAY_SCENE || pCurTask->iTask == TASK_WAIT_FOR_MOVEMENT ) )
+		if ( pCurTask && (pCurTask->iTask == TASK_PLAY_SCENE || pCurTask->iTask == TASK_WAIT_FOR_MOVEMENT || pCurTask->iTask == TASK_STOP_MOVING ) )
 		{
 			Activity moveActivity = DetermineExpressionMoveActivity( event, myNpc );
 			// AI_NavGoal_t goal( info->m_hTarget->EyePosition(), moveActivity, AIN_HULL_TOLERANCE );
@@ -1235,6 +1322,11 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 			float flDistTolerance;
 			flDistTolerance = myNpc->GetHullWidth() / 2.0;
 			// flDistTolerance = AIN_HULL_TOLERANCE;
+
+			if (event->m_bForceShortMovement)
+			{
+				flDistTolerance = 0.1f;
+			}
 
 			AI_NavGoal_t goal( GOALTYPE_TARGETENT, moveActivity, flDistTolerance, AIN_UPDATE_TARGET_POS );
 
@@ -1332,17 +1424,24 @@ bool CBaseFlex::ProcessMoveToSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 
 bool CBaseFlex::ProcessLookAtSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event )
 {
+	VPROF( "CBaseFlex::ProcessLookAtSceneEvent" );
 	CAI_BaseNPC *myNpc = MyNPCPointer( );
 	if (myNpc && info->m_hTarget != NULL)
 	{
-		float intensity = event->GetIntensity( scene->GetTime() );
-		myNpc->AddLookTarget( info->m_hTarget, intensity, 0.2 );
+		float intensity = event->GetIntensity( event, scene->GetTime() );
+
+		// clamp in-ramp to 0.3 seconds
+		float flDuration = scene->GetTime() - event->GetStartTime();
+		float flMaxIntensity = flDuration < 0.3f ? SimpleSpline( flDuration / 0.3f ) : 1.0f;
+		intensity = clamp( intensity, 0.0f, flMaxIntensity );
+
+		myNpc->AddLookTarget( info->m_hTarget, intensity, 0.1 );
 		if (scene_showlook.GetBool() && info->m_hTarget)
 		{
 			Vector tmp = info->m_hTarget->EyePosition() - myNpc->EyePosition();
 			VectorNormalize( tmp );
 			Vector p0 = myNpc->EyePosition();
-			NDebugOverlay::VertArrow( p0, p0 + tmp * (4 + 16 * intensity ), 4, 255, 255, 255, 255, true, 0.12 );
+			NDebugOverlay::VertArrow( p0, p0 + tmp * (4 + 16 * intensity ), 4, 255, 255, 255, 0, true, 0.12 );
 		}
 	}
 	return true;
@@ -1354,13 +1453,15 @@ bool CBaseFlex::ProcessLookAtSceneEvent( CSceneEventInfo *info, CChoreoScene *sc
 //-----------------------------------------------------------------------------
 bool CBaseFlex::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event )
 {
+	VPROF( "CBaseFlex::ProcessSceneEvent" );
 	switch ( event->GetType() )
 	{
 	case CChoreoEvent::FLEXANIMATION:
 		return ProcessFlexAnimationSceneEvent( info, scene, event );
 
 	case CChoreoEvent::EXPRESSION:
-		return ProcessFlexSettingSceneEvent( info, scene, event );
+		return true;
+//		return ProcessFlexSettingSceneEvent( info, scene, event );
 
 	case CChoreoEvent::SEQUENCE:
 		return ProcessSequenceSceneEvent( info, scene, event );
@@ -1390,7 +1491,21 @@ bool CBaseFlex::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, C
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseFlex::IsRunningSceneMoveToEvent()
+{
+	for ( int i = m_SceneEvents.Count() - 1; i >= 0; i-- )
+	{
+		CSceneEventInfo *info = &m_SceneEvents[ i ];
+		CChoreoEvent *event = info->m_pEvent;
+		if ( event && event->GetType() == CChoreoEvent::MOVETO )
+			return true;
+	}
 
+	return false;
+}
 
 
 flexsetting_t const *CBaseFlex::FindNamedSetting( flexsettinghdr_t const *pSettinghdr, const char *expr )
@@ -1453,6 +1568,11 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 	if ( !info )
 		return;
 
+	// don't bother with flex animation if the player can't see you
+	CAI_BaseNPC *myNpc = MyNPCPointer( );
+	if (myNpc && !myNpc->HasCondition( COND_IN_PVS ))
+		return;
+
 	CChoreoEvent *event = info->m_pEvent;
 	if ( !event )
 		return;
@@ -1478,14 +1598,29 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 
 				track->SetFlexControllerIndex( 0, FindFlexController( name ), 0 );
 
+				if ( CAI_BaseActor::IsServerSideFlexController( name ) )
+				{
+					Assert( !"Should stereo controllers ever be server side only?" );
+					track->SetServerSide( true );
+				}
+
 				Q_strncpy( name, "left_" ,sizeof(name));
 				Q_strncat( name, track->GetFlexControllerName(),sizeof(name), COPY_ALL_CHARACTERS );
 
 				track->SetFlexControllerIndex( 0, FindFlexController( name ), 1 );
+
+				if ( CAI_BaseActor::IsServerSideFlexController( name ) )
+				{
+					Assert( !"Should stereo controllers ever be server side only?" );
+					track->SetServerSide( true );
+				}
 			}
 			else
 			{
 				track->SetFlexControllerIndex( 0, FindFlexController( (char *)track->GetFlexControllerName() ) );
+
+				// Only non-combo tracks can be server side
+				track->SetServerSide( CAI_BaseActor::IsServerSideFlexController( track->GetFlexControllerName() ) );
 			}
 		}
 
@@ -1493,11 +1628,10 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 	}
 
 	float scenetime = scene->GetTime();
-
-	float weight = event->GetIntensity( scenetime );
-
 	// decay if this is a background scene and there's other flex animations playing
-	weight = weight * info->UpdateWeight( this );
+	float weight = event->GetIntensity( event, scenetime ) * info->UpdateWeight( this );
+	{
+	VPROF( "AddFlexAnimation_SetFlexWeight" );
 
 	// Compute intensity for each track in animation and apply
 	// Iterate animation tracks
@@ -1509,6 +1643,10 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 
 		// Disabled
 		if ( !track->IsTrackActive() )
+			continue;
+
+		// If we are doing client side flexing, skip all tracks which are not server side
+		if ( g_bClientFlex && !track->IsServerSide() )
 			continue;
 
 		// Map track flex controller to global name
@@ -1539,6 +1677,7 @@ void CBaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 				SetFlexWeight( controller, orig * (1 - weight) + flIntensity * weight );
 			}
 		}
+	}
 	}
 
 	info->m_bStarted = true;
@@ -1589,7 +1728,7 @@ void CBaseFlex::AddFlexSetting( const char *expr, float scale,
 	pSetting = pSettinghdr->pTranslatedSetting( i );
 
 	// Check for overrides
-	if ( pOverrideHdr )
+	if ( AllowSceneOverrides() && pOverrideHdr )
 	{
 		// Get name from setting
 		const char *resolvedName = pSetting->pszName();
@@ -1656,7 +1795,7 @@ bool CBaseFlex::ProcessGestureSceneEvent( CSceneEventInfo *info, CChoreoScene *s
 		
 		SetLayerCycle( info->m_iLayer, flCycle );
 
-		float flWeight = event->GetIntensity( scene->GetTime() );
+		float flWeight = event->GetIntensity( event, scene->GetTime() );
 
 		/*
 		if (stricmp( event->GetParameters(), "m_g_arms_crossed" ) == 0)
@@ -1666,7 +1805,7 @@ bool CBaseFlex::ProcessGestureSceneEvent( CSceneEventInfo *info, CChoreoScene *s
 		*/
 
 		// fade out/in if npc is moving
-		if (info->m_bIsPosture)
+		if (!info->m_bIsGesture)
 		{
 			if (IsMoving())
 			{
@@ -1726,7 +1865,7 @@ bool CBaseFlex::ProcessSequenceSceneEvent( CSceneEventInfo *info, CChoreoScene *
 
 	if (info->m_iLayer >= 0)
 	{
-		float flWeight = event->GetIntensity( scene->GetTime() );
+		float flWeight = event->GetIntensity( event, scene->GetTime() );
 
 		// force layer to zero weight in newly allocated, fixed bug with inter-think spawned sequences blending in badly
 		if (bNewlyAllocated)
@@ -1758,7 +1897,7 @@ bool CBaseFlex::ProcessSequenceSceneEvent( CSceneEventInfo *info, CChoreoScene *
 		float spline = 3 * info->m_flWeight * info->m_flWeight - 2 * info->m_flWeight * info->m_flWeight * info->m_flWeight;
 		SetLayerWeight( info->m_iLayer, flWeight * spline );
 
-		bool looping = ((GetSequenceFlags( info->m_nSequence ) & STUDIO_LOOPING) != 0);
+		bool looping = ((GetSequenceFlags( GetModelPtr(), info->m_nSequence ) & STUDIO_LOOPING) != 0);
 		if (!looping)
 		{
 			float dt =  scene->GetTime() - event->GetStartTime();
@@ -2204,6 +2343,25 @@ void CFlexCycler::Think( void )
 				// Msg( "%s %.3f\n", predef_flexcontroller_names[i], predef_flexcontroller_values[j][i] );
 			}
 		}
+		else if ( pszExpression && (pszExpression[0] == '1') && (pszExpression[1] == '\0') ) // 1 for maxed controller values
+		{
+			for ( int i=0; i < GetNumFlexControllers(); i++ )
+			{
+				// Max everything out...
+				m_flextarget[i] = 1.0f;
+				SetFlexWeight( i, m_flextarget[i] );
+			}
+		}
+		else if ( pszExpression && (pszExpression[0] == '^') && (pszExpression[1] == '\0') ) // ^ for sine wave
+		{
+			for ( int i=0; i < GetNumFlexControllers(); i++ )
+			{
+				// Throw a differently offset sine wave on all of the flex controllers
+				float fFlexTime = i * (1.0f / (float)GetNumFlexControllers()) + gpGlobals->curtime;
+				m_flextarget[i] = sinf( fFlexTime ) * 0.5f + 0.5f;
+				SetFlexWeight( i, m_flextarget[i] );
+			}
+		}
 		else if (pszExpression && pszExpression[0] != '\0' && strcmp(pszExpression, "+") != 0)
 		{
 			char szExpression[128];
@@ -2259,7 +2417,7 @@ void CFlexCycler::Think( void )
 				}
 				pszExpression++;
 			}
-		} 
+		}
 		else if (m_flextime < gpGlobals->curtime)
 		{
 			// m_flextime = gpGlobals->curtime + 1.0; // RandomFloat( 0.1, 0.5 );

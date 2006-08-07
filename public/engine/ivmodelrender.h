@@ -45,12 +45,36 @@ enum
 	MODEL_INSTANCE_INVALID = (ModelInstanceHandle_t)~0
 };
 
+struct ModelRenderInfo_t
+{
+	int flags;
+	IClientRenderable *pRenderable;
+	ModelInstanceHandle_t instance;
+	int entity_index;
+	const model_t *pModel;
+	Vector origin;
+	QAngle angles; 
+	int skin;
+	int body;
+	int hitboxset;
+	const matrix3x4_t *pModelToWorld;
+	const matrix3x4_t *pLightingOffset;
+	const Vector *pLightingOrigin;
+
+	ModelRenderInfo_t()
+	{
+		pModelToWorld = NULL;
+		pLightingOffset = NULL;
+		pLightingOrigin = NULL;
+	}
+};
+
 // UNDONE: Move this to hud export code, subsume previous functions
-class IVModelRender
+abstract_class IVModelRender
 {
 public:
 	virtual int		DrawModel(	int flags,
-								IClientRenderable *cliententity,
+								IClientRenderable *pRenderable,
 								ModelInstanceHandle_t instance,
 								int entity_index, 
 								const model_t *model, 
@@ -104,10 +128,18 @@ public:
 	virtual void DrawModelShadow( IClientRenderable *pRenderable, int body ) = 0;
 
 	// This gets called when overbright, etc gets changed to recompute static prop lighting.
-	virtual void RecomputeStaticLighting( ModelInstanceHandle_t handle ) = 0;
+	virtual bool RecomputeStaticLighting( ModelInstanceHandle_t handle ) = 0;
 
 	virtual void ReleaseAllStaticPropColorData( void ) = 0;
 	virtual void RestoreAllStaticPropColorData( void ) = 0;
+
+	// Extended version of drawmodel
+	virtual int	DrawModelEx( ModelRenderInfo_t &pInfo ) = 0;
+
+	// Shadow rendering extended version
+	virtual void DrawModelShadowEx( IClientRenderable *pRenderable, int body, int skin ) = 0;
+
+	virtual int	DrawModelExStaticProp( ModelRenderInfo_t &pInfo ) = 0;
 };
 
 

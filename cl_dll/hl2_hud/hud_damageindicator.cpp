@@ -157,7 +157,9 @@ void CHudDamageIndicator::Init()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
 //-----------------------------------------------------------------------------
 bool CHudDamageIndicator::ShouldDraw()
 {
@@ -524,6 +526,6 @@ void CHudDamageIndicator::ApplySchemeSettings(vgui::IScheme *pScheme)
 	SetPaintBackgroundEnabled(false);
 
 	int wide, tall;
-	surface()->GetScreenSize(wide, tall);
+	GetHudSize(wide, tall);
 	SetSize(wide, tall);
 }

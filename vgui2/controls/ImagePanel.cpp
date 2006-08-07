@@ -22,6 +22,8 @@
 
 using namespace vgui;
 
+DECLARE_BUILD_FACTORY( ImagePanel );
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -240,3 +242,7 @@ Color ImagePanel::GetFillColor()
 	return m_FillColor;
 }
 
+char *ImagePanel::GetImageName()
+{
+	return m_pszImageName;
+}

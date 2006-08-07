@@ -1,8 +1,19 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
-// Purpose:
+// To give an NPC the ability to shoot while moving:
 //
-//=============================================================================//
+// - In the NPC's Spawn function, add:
+//		CapabilitiesAdd( bits_CAP_MOVE_SHOOT );
+//
+// - The NPC must either have a weapon (return non-NULL from GetActiveWeapon)
+//	  or must have bits_CAP_INNATE_RANGE_ATTACK1 or bits_CAP_INNATE_RANGE_ATTACK2.
+//
+// - Support the activities ACT_WALK_AIM and/or ACT_RUN_AIM in the NPC.
+//
+// - Support the activity ACT_GESTURE_RANGE_ATTACK1 as a gesture that plays
+//	 over ACT_WALK_AIM and ACT_RUN_AIM.
+//
+//=============================================================================
 
 #include "cbase.h"
 
@@ -20,12 +31,16 @@ BEGIN_SIMPLE_DATADESC( CAI_MoveAndShootOverlay )
 	DEFINE_FIELD( m_bMovingAndShooting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bNoShootWhileMove, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_initialDelay, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flSuspendUntilTime, FIELD_TIME ),
 END_DATADESC()
+
+#define MOVESHOOT_DO_NOT_SUSPEND	-1.0f
 
 //-------------------------------------
 
 CAI_MoveAndShootOverlay::CAI_MoveAndShootOverlay() : m_bMovingAndShooting(false), m_initialDelay(0)
 {
+	m_flSuspendUntilTime = MOVESHOOT_DO_NOT_SUSPEND;
 	m_bNoShootWhileMove = false;
 }
 
@@ -38,10 +53,19 @@ void CAI_MoveAndShootOverlay::NoShootWhileMove()
 
 //-------------------------------------
 
-void CAI_MoveAndShootOverlay::StartShootWhileMove( )
+bool CAI_MoveAndShootOverlay::HasAvailableRangeAttack()
+{
+	return ( ( GetOuter()->GetActiveWeapon() != NULL ) ||
+			( GetOuter()->CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK1 ) ||
+			( GetOuter()->CapabilitiesGet() & bits_CAP_INNATE_RANGE_ATTACK2 ) );
+}
+
+//-------------------------------------
+
+void CAI_MoveAndShootOverlay::StartShootWhileMove()
 {
 	if ( GetOuter()->GetState() == NPC_STATE_SCRIPT || 
-		 !GetOuter()->GetActiveWeapon() ||
+		 !HasAvailableRangeAttack() ||
 		 !GetOuter()->HaveSequenceForActivity( GetOuter()->TranslateActivity( ACT_WALK_AIM ) ) ||
 		 !GetOuter()->HaveSequenceForActivity( GetOuter()->TranslateActivity( ACT_RUN_AIM ) ) )
 	{
@@ -78,6 +102,13 @@ bool CAI_MoveAndShootOverlay::CanAimAtEnemy()
 			  !pOuter->HasCondition( COND_ENEMY_OCCLUDED ) )
 	{
 		result = true;
+	}
+
+	// If we don't have a weapon, stop
+	// This catches NPCs who holster their weapons while running
+	if ( !HasAvailableRangeAttack() )
+	{
+		result = false;
 	}
 
 	if ( resetConditions )
@@ -137,6 +168,11 @@ void CAI_MoveAndShootOverlay::RunShootWhileMove()
 	if ( m_bNoShootWhileMove )
 		return;
 
+	if ( gpGlobals->curtime < m_flSuspendUntilTime )
+		return;
+
+	m_flSuspendUntilTime = MOVESHOOT_DO_NOT_SUSPEND;
+
 	CAI_BaseNPC *pOuter = GetOuter();
 
 	// keep enemy if dead but try to look for a new one
@@ -179,7 +215,7 @@ void CAI_MoveAndShootOverlay::RunShootWhileMove()
 		return;
 	}
 
-	Assert( pOuter->GetActiveWeapon() ); // This should have been caught at task start
+	Assert( HasAvailableRangeAttack() ); // This should have been caught at task start
 
 	Activity activity;
 	bool bIsReloading = false;
@@ -189,7 +225,7 @@ void CAI_MoveAndShootOverlay::RunShootWhileMove()
 		bIsReloading = pOuter->IsPlayingGesture( activity );
 	}
 
-	if ( !bIsReloading && pOuter->GetActiveWeapon() )
+	if ( !bIsReloading && HasAvailableRangeAttack() )
 	{
 		// time to fire?
 		if ( pOuter->HasCondition( COND_CAN_RANGE_ATTACK1, false ) )
@@ -247,6 +283,14 @@ void CAI_MoveAndShootOverlay::EndShootWhileMove()
 		m_bMovingAndShooting = false;
 		GetOuter()->OnEndMoveAndShoot();
 	}
+}
+
+//-------------------------------------
+
+void CAI_MoveAndShootOverlay::SuspendMoveAndShoot( float flDuration )
+{
+	EndShootWhileMove();
+	m_flSuspendUntilTime = gpGlobals->curtime + flDuration;
 }
 
 //-------------------------------------

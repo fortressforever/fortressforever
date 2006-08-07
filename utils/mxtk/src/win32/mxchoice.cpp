@@ -33,7 +33,7 @@ mxChoice::mxChoice (mxWindow *parent, int x, int y, int w, int h, int id)
 	HWND hwndParent = (HWND) ((mxWidget *) parent)->getHandle ();
 
 	void *handle = (void *) CreateWindowEx (0, "COMBOBOX", "", WS_VISIBLE | WS_CHILD | WS_VSCROLL | CBS_DROPDOWNLIST,
-				x, y, w, h + 100, hwndParent,
+				x, y, w, h + 500, hwndParent,
 				(HMENU) id, (HINSTANCE) GetModuleHandle (NULL), NULL);
 	
 	SendMessage ((HWND) handle, WM_SETFONT, (WPARAM) (HFONT) GetStockObject (ANSI_VAR_FONT), MAKELPARAM (TRUE, 0));

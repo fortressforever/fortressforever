@@ -24,6 +24,7 @@ public:
 	DECLARE_DATADESC();
 
 					CRopeKeyframe();
+	virtual			~CRopeKeyframe();
 
 	// Create a rope and attach it to two entities.
 	// Attachment points on the entities are optional.
@@ -79,8 +80,8 @@ public:
 	void			DieAtNextRest( void );
 
 	virtual int		UpdateTransmitState(void);
-	virtual int 	ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual void	SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
+	virtual void	SetParent( CBaseEntity *pParentEntity, int iAttachment );
 
 // Input functions.
 public:
@@ -120,6 +121,8 @@ public:
 	virtual void NotifyPositionChanged( CBaseEntity *pEntity );
 
 private:
+
+	void			SetAttachmentPoint( CBaseHandle &hOutEnt, short &iOutAttachment, CBaseEntity *pEnt, int iAttachment );
 
 	// This is normally called by Activate but if you create the rope at runtime,
 	// you must call it after you have setup its variables.

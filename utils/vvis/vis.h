@@ -17,8 +17,8 @@
 
 #define	PORTALFILE	"PRT1"
 
-extern bool g_bUseRadius;			// prototyping TF2, "radius vis" solution
-extern double g_VisRadius;			// the radius for the TF2 "radius vis"
+extern bool g_bUseRadius;			
+extern double g_VisRadius;			
 
 typedef struct
 {

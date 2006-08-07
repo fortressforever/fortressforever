@@ -156,8 +156,17 @@ public:
 	void	InputRollCredits( inputdata_t &inputdata );
 	void	InputRollOutroCredits( inputdata_t &inputdata );
 	void	InputShowLogo( inputdata_t &inputdata );
+	void	InputSetLogoLength( inputdata_t &inputdata );
 
 	COutputEvent m_OnCreditsDone;
+
+	virtual void OnRestore();
+private:
+
+	void		RollOutroCredits();
+
+	bool		m_bRolledOutroCredits;
+	float		m_flLogoLength;
 };
 
 LINK_ENTITY_TO_CLASS( env_credits, CCredits );
@@ -166,7 +175,11 @@ BEGIN_DATADESC( CCredits )
 	DEFINE_INPUTFUNC( FIELD_VOID, "RollCredits", InputRollCredits ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "RollOutroCredits", InputRollOutroCredits ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowLogo", InputShowLogo ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetLogoLength", InputSetLogoLength ),
 	DEFINE_OUTPUT( m_OnCreditsDone, "OnCreditsDone"),
+
+	DEFINE_FIELD( m_bRolledOutroCredits, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_flLogoLength, FIELD_FLOAT )
 END_DATADESC()
 
 void CCredits::Spawn( void )
@@ -189,9 +202,21 @@ static ConCommand creditsdone("creditsdone", CreditsDone_f );
 
 extern ConVar sv_unlockedchapters;
 
-void CCredits::InputRollOutroCredits( inputdata_t &inputdata )
+void CCredits::OnRestore()
 {
-	sv_unlockedchapters.SetValue( "14" );
+	BaseClass::OnRestore();
+
+	if ( m_bRolledOutroCredits )
+	{
+		// Roll them again so that the client .dll will send the "creditsdone" message and we'll
+		//  actually get back to the main menu
+		RollOutroCredits();
+	}
+}
+
+void CCredits::RollOutroCredits()
+{
+	sv_unlockedchapters.SetValue( "15" );
 	
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 
@@ -203,6 +228,14 @@ void CCredits::InputRollOutroCredits( inputdata_t &inputdata )
 	MessageEnd();
 }
 
+void CCredits::InputRollOutroCredits( inputdata_t &inputdata )
+{
+	RollOutroCredits();
+
+	// In case we save restore
+	m_bRolledOutroCredits = true;
+}
+
 void CCredits::InputShowLogo( inputdata_t &inputdata )
 {
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
@@ -210,9 +243,23 @@ void CCredits::InputShowLogo( inputdata_t &inputdata )
 	CSingleUserRecipientFilter user( pPlayer );
 	user.MakeReliable();
 
-	UserMessageBegin( user, "CreditsMsg" );
-		WRITE_BYTE( 1 );
-	MessageEnd();
+	if ( m_flLogoLength )
+	{
+		UserMessageBegin( user, "LogoTimeMsg" );
+			WRITE_FLOAT( m_flLogoLength );
+		MessageEnd();
+	}
+	else
+	{
+		UserMessageBegin( user, "CreditsMsg" );
+			WRITE_BYTE( 1 );
+		MessageEnd();
+	}
+}
+
+void CCredits::InputSetLogoLength( inputdata_t &inputdata )
+{
+	m_flLogoLength = inputdata.value.Float();
 }
 
 void CCredits::InputRollCredits( inputdata_t &inputdata )

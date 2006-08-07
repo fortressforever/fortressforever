@@ -61,12 +61,6 @@ public:
 	void InputExplode(inputdata_t &data);
 	void InputWake( inputdata_t &data );
 
-	virtual void VPhysicsUpdate( IPhysicsObject *pPhysics )
-	{
-		NetworkStateChanged();
-		BaseClass::VPhysicsUpdate( pPhysics );
-	}
-
 	bool TestCollision( const Ray_t &ray, unsigned int mask, trace_t& trace );
 
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );

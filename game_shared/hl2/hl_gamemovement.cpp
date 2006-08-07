@@ -8,6 +8,7 @@
 #include "in_buttons.h"
 #include "func_ladder.h"
 #include "utlrbtree.h"
+#include "hl2_shareddefs.h"
 
 #if defined( CLIENT_DLL )
 
@@ -24,6 +25,8 @@
 
 static ConVar sv_autoladderdismount( "sv_autoladderdismount", "1", FCVAR_REPLICATED, "Automatically dismount from ladders when you reach the end (don't have to +USE)." );
 static ConVar sv_ladderautomountdot( "sv_ladderautomountdot", "0.4", FCVAR_REPLICATED, "When auto-mounting a ladder by looking up its axis, this is the tolerance for looking now directly along the ladder axis." );
+
+static ConVar xc_newladders( "xc_newladders", IsXbox() ? "1" : "0", FCVAR_REPLICATED, "Stick forward is ALWAYS up, stick back is ALWAYS down" );
 
 class CReservePlayerSpot;
 
@@ -50,6 +53,8 @@ public:
 	virtual bool LadderMove( void );
 	virtual bool OnLadder( trace_t &trace );
 	virtual int GetCheckInterval( IntervalType_t type );
+	virtual void	SetGroundEntity( CBaseEntity *newGround );
+
 private:
 
 	// See if we are pressing use near a ladder "mount" point and if so, latch us onto the ladder
@@ -75,7 +80,7 @@ private:
 	void		SwallowUseKey();
 
 	// Returns true if the player will auto-exit the ladder via a dismount node
-	bool		ExitLadderViaDismountNode( CFuncLadder *ladder, bool strict );
+	bool		ExitLadderViaDismountNode( CFuncLadder *ladder, bool strict, bool useAlternate = false );
 	void		GetSortedDismountNodeList( const Vector &org, float radius, CFuncLadder *ladder, CUtlRBTree< NearbyDismount_t, int >& list );
 
 	LadderMove_t *GetLadderMove();
@@ -525,13 +530,18 @@ void CHL2GameMovement::GetSortedDismountNodeList( const Vector &org, float radiu
 //			*ladder - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool strict )
+bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool strict, bool useAlternate )
 {
 	// Find the best ladder exit node
 	float bestDot = -99999.0f;
 	float bestDistance = 99999.0f;
 	Vector bestDest;
 	bool found = false;
+
+	// For 'alternate' dismount
+	bool foundAlternate = false;
+	Vector alternateDest;
+	float alternateDist = 99999.0f;
 
 	CUtlRBTree< NearbyDismount_t, int >	nearbyDismounts( 0, 0, NearbyDismountLessFunc );
 
@@ -578,6 +588,13 @@ bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool stri
 		// We're not facing at it...ignore
 		if ( dot < 0.5f )
 		{
+			if( useAlternate && d < alternateDist )
+			{
+				alternateDest = org;
+				alternateDist = d;
+				foundAlternate = true;
+			}
+
 			continue;
 		}
 
@@ -601,6 +618,17 @@ bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool stri
 
 		StartForcedMove( false, player->MaxSpeed(), bestDest, NULL );
 		return true;
+	}
+
+	if( useAlternate )
+	{
+		// Desperate. Don't refuse to let a person off of a ladder if it can be helped. Use the
+		// alternate dismount if there is one.
+		if( foundAlternate && alternateDist <= 60.0f )
+		{
+			StartForcedMove( false, player->MaxSpeed(), alternateDest, NULL );
+			return true;
+		}
 	}
 
 	return false;
@@ -699,7 +727,8 @@ void CHL2GameMovement::FullLadderMove()
 
 	float dist = min( dist1sqr, dist2sqr );
 	bool neardismountnode = ( dist < 16.0f * 16.0f ) ? true : false;
-	bool neardismountnode2 = ( dist < 4.0f * 4.0f ) ? true : false;
+	float ladderUnitsPerTick = ( MAX_CLIMB_SPEED * gpGlobals->interval_per_tick );
+	bool neardismountnode2 = ( dist < ladderUnitsPerTick * ladderUnitsPerTick ) ? true : false;
 
 	// Really close to node, cvar is set, and pressing a key, then simulate a +USE
 	bool auto_dismount_use = ( neardismountnode2 && 
@@ -741,7 +770,7 @@ void CHL2GameMovement::FullLadderMove()
 		// Otherwise, if the move would leave the ladder, disallow it.
 		if ( pressed_use )
 		{
-			if ( ExitLadderViaDismountNode( ladder, false ) )
+			if ( ExitLadderViaDismountNode( ladder, false, IsXbox() ) )
 			{
 				// See if they +used a dismount point mid-span..
 				return;
@@ -766,7 +795,7 @@ void CHL2GameMovement::FullLadderMove()
 	}
 
 	// Try auto exit, if possible
-	if ( ExitLadderViaDismountNode( ladder, false ) )
+	if ( ExitLadderViaDismountNode( ladder, false, pressed_use ) )
 	{
 		return;
 	}
@@ -918,15 +947,21 @@ bool CHL2GameMovement::LookingAtLadder( CFuncLadder *ladder )
 	Vector closest;
 	CalcClosestPointOnLineSegment( mv->m_vecAbsOrigin, bottom, top, closest, NULL );
 
+	// Flatten our view direction to 2D
+	Vector flatForward = m_vecForward;
+	flatForward.z = 0.0f;
+
+	// Because the ladder itself is not a solid, the player's origin may actually be 
+	// permitted to pass it, and that will screw up our dot product.
+	// So back up the player's origin a bit to do the facing calculation.
+	Vector vecAdjustedOrigin = mv->m_vecAbsOrigin - 8.0f * flatForward;
+
 	// Figure out vector from player to closest point on ladder
-	Vector vecToLadder = closest - mv->m_vecAbsOrigin;
+	Vector vecToLadder = closest - vecAdjustedOrigin;
 
 	// Flatten it to 2D
 	Vector flatLadder = vecToLadder;
 	flatLadder.z = 0.0f;
-	// Flatten our view direction to 2D
-	Vector flatForward = m_vecForward;
-	flatForward.z = 0.0f;
 
 	// Normalize the vectors (unnecessary)
 	VectorNormalize( flatLadder );
@@ -935,8 +970,10 @@ bool CHL2GameMovement::LookingAtLadder( CFuncLadder *ladder )
 	// Compute dot product to see if forward is in same direction as vec to ladder
 	float facingDot = flatForward.Dot( flatLadder );
 
-	// Facing same direction if dot > = 0.0f...
-	bool facingladder = facingDot >= 0.0f;
+	float requiredDot = ( IsXbox() ) ? 0.5 : 0.0;
+
+	// Facing same direction if dot > = requiredDot...
+	bool facingladder = ( facingDot >= requiredDot );
 
 	return facingladder;
 }
@@ -1005,7 +1042,7 @@ bool CHL2GameMovement::LadderMove( void )
 	if ( !ladder && !pressed_use )
 	{
 		// If flying through air, allow mounting ladders if we are facing < 15 degress from the ladder and we are close
-		if ( !ladder )
+		if ( !ladder && !xc_newladders.GetBool())
 		{
 			// Tracker 6625:  Don't need to be leaping to auto mount using this method...
 			// But if we are on the ground, then we must not be backing into the ladder (Tracker 12961)
@@ -1164,6 +1201,21 @@ bool CHL2GameMovement::LadderMove( void )
 			}
 		}
 
+#ifdef _XBOX
+		if( xc_newladders.GetBool() )
+		{
+			// Stick up climbs up, stick down climbs down. No matter which way you're looking.
+			if ( mv->m_nButtons & IN_FORWARD )
+			{
+				factor = 1.0f;
+			}
+			else if( mv->m_nButtons & IN_BACK )
+			{
+				factor = -1.0f;
+			}
+		}
+#endif//_XBOX
+
 		mv->m_vecVelocity = MAX_CLIMB_SPEED * factor * ladderUp;
 	}
 	else
@@ -1172,6 +1224,33 @@ bool CHL2GameMovement::LadderMove( void )
 	}
 
 	return true;
+}
+
+void CHL2GameMovement::SetGroundEntity( CBaseEntity *newGround )
+{
+	CBaseEntity *oldGround = player->GetGroundEntity();
+	Vector vecBaseVelocity = player->GetBaseVelocity();
+
+	//Adrian: Special case for combine balls.
+	if ( newGround && newGround->GetCollisionGroup() == HL2COLLISION_GROUP_COMBINE_BALL_NPC )
+	{
+		return;
+	}
+	else if ( !oldGround && newGround )
+	{
+		// Subtract ground velocity at instant we hit ground jumping
+		vecBaseVelocity -= newGround->GetAbsVelocity(); 
+		vecBaseVelocity.z = newGround->GetAbsVelocity().z;
+	}
+	else if ( oldGround && !newGround )
+	{
+		// Add in ground velocity at instant we started jumping
+		vecBaseVelocity += oldGround->GetAbsVelocity();
+		vecBaseVelocity.z = oldGround->GetAbsVelocity().z;
+	}
+
+	player->SetBaseVelocity( vecBaseVelocity );
+	player->SetGroundEntity( newGround );
 }
 
 

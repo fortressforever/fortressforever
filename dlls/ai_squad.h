@@ -106,6 +106,7 @@ public:
 	CAI_BaseNPC	*			SquadMemberInRange( const Vector &vecLocation, float flDist );
 	CAI_BaseNPC *			NearestSquadMember( CAI_BaseNPC *pMember );
 	int						GetVisibleSquadMembers( CAI_BaseNPC *pMember );
+	CAI_BaseNPC *			GetSquadMemberNearestTo( const Vector &vecLocation );
 	bool					SquadIsMember( CBaseEntity *pMember );
 	bool					IsLeader( CAI_BaseNPC *pLeader );
 	CAI_BaseNPC				*GetLeader( void );

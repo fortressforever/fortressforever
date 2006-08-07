@@ -88,10 +88,8 @@ public:
 
 // IParticleEffect overrides.	
 public:
-
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
-
 
 private:
 					CTEParticleRenderer( const char *pDebugName );

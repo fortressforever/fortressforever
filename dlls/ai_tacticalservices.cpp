@@ -51,6 +51,8 @@ int g_AIDebugFindCoverNode = -1;
 BEGIN_SIMPLE_DATADESC(CAI_TacticalServices)
 	//						m_pNetwork	(not saved)
 	//						m_pPathfinder	(not saved)
+	DEFINE_FIELD( m_bAllowFindLateralLos, FIELD_BOOLEAN ),
+
 END_DATADESC();
 
 //-------------------------------------
@@ -367,19 +369,18 @@ int CAI_TacticalServices::FindCoverNode(const Vector &vNearPos, const Vector &vT
 		list.RemoveAtHead();
 
 		CAI_Node *pNode = GetNetwork()->GetNode(nodeIndex);
-
 		Vector nodeOrigin = pNode->GetPosition(GetHullType());
-		Activity nCoverActivity = GetOuter()->GetCoverActivity( pNode->GetHint() );
-		Vector   vEyePos		= nodeOrigin + GetOuter()->EyeOffset(nCoverActivity);
 
 		float dist = (vNearPos - nodeOrigin).LengthSqr();
-		
 		if (dist >= flMinDistSqr && dist < flMaxDistSqr)
 		{
-			// Check if this location will block the threat's line of sight to me
-			if (GetOuter()->IsCoverPosition(vThreatEyePos, vEyePos))
+			Activity nCoverActivity = GetOuter()->GetCoverActivity( pNode->GetHint() );
+			Vector vEyePos = nodeOrigin + GetOuter()->EyeOffset(nCoverActivity);
+
+			if ( GetOuter()->IsValidCover( nodeOrigin, pNode->GetHint() ) )
 			{
-				if ( GetOuter()->IsValidCover( nodeOrigin, pNode->GetHint() ) )
+				// Check if this location will block the threat's line of sight to me
+				if (GetOuter()->IsCoverPosition(vThreatEyePos, vEyePos))
 				{
 					// --------------------------------------------------------
 					// Don't let anyone else use this node for a while
@@ -404,12 +405,12 @@ int CAI_TacticalServices::FindCoverNode(const Vector &vNearPos, const Vector &vT
 				}
 				else
 				{
-					DebugFindCover( pNode->GetId(), vEyePos, vThreatEyePos, 0, 0, 255 );
+					DebugFindCover( pNode->GetId(), vEyePos, vThreatEyePos, 255, 0, 0 );
 				}
 			}
 			else
 			{
-				DebugFindCover( pNode->GetId(), vEyePos, vThreatEyePos, 255, 0, 0 );
+				DebugFindCover( pNode->GetId(), vEyePos, vThreatEyePos, 0, 0, 255 );
 			}
 		}
 
@@ -633,6 +634,11 @@ bool CAI_TacticalServices::FindLateralLos( const Vector &vecThreat, Vector *pRes
 {
 	AI_PROFILE_SCOPE( CAI_TacticalServices_FindLateralLos );
 
+	if( !m_bAllowFindLateralLos )
+	{
+		return false;
+	}
+
 	Vector	vecLeftTest;
 	Vector	vecRightTest;
 	Vector	vecStepRight;
@@ -650,15 +656,26 @@ bool CAI_TacticalServices::FindLateralLos( const Vector &vecThreat, Vector *pRes
 		}
 	}
 
+	int iChecks = COVER_CHECKS;
+	int iDelta = COVER_DELTA;
+
+	// If we're limited in how far we're allowed to move laterally, don't bother checking past it
+	int iMaxLateralDelta = GetOuter()->GetMaxTacticalLateralMovement();
+	if ( iMaxLateralDelta != MAXTACLAT_IGNORE && iMaxLateralDelta < iDelta )
+	{
+		iChecks = 1;
+		iDelta = iMaxLateralDelta;
+	}
+
 	Vector right;
 	AngleVectors( GetLocalAngles(), NULL, &right, NULL );
-	vecStepRight = right * COVER_DELTA;
+	vecStepRight = right * iDelta;
 	vecStepRight.z = 0;
 
 	vecLeftTest = vecRightTest = GetLocalOrigin();
  	vecCheckStart = vecThreat;
 
-	for ( i = 0 ; i < COVER_CHECKS ; i++ )
+	for ( i = 0 ; i < iChecks; i++ )
 	{
 		vecLeftTest = vecLeftTest - vecStepRight;
 		vecRightTest = vecRightTest + vecStepRight;

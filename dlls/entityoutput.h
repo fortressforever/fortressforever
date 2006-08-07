@@ -72,13 +72,14 @@ public:
 
 	fieldtype_t ValueFieldType() { return m_Value.FieldType(); }
 
+	void FireOutput( variant_t Value, CBaseEntity *pActivator, CBaseEntity *pCaller, float fDelay = 0 );
+
 protected:
 	variant_t m_Value;
 	CEventAction *m_ActionList;
 	DECLARE_SIMPLE_DATADESC();
 
 	CBaseEntityOutput() { m_ActionList = NULL; } // this class cannot be created, only it's children
-	void FireOutput( variant_t Value, CBaseEntity *pActivator, CBaseEntity *pCaller, float fDelay = 0 );
 
 private:
 	CBaseEntityOutput( CBaseEntityOutput& ); // protect from accidental copying

@@ -31,8 +31,8 @@ struct LodScriptData_t;
 #define MAXSTUDIOBODYPARTS		32
 #define MAXSTUDIOMESHES			256
 #define MAXSTUDIOEVENTS			1024
-#define MAXSTUDIOFLEXKEYS		128
-#define MAXSTUDIOFLEXRULES		256
+#define MAXSTUDIOFLEXKEYS		512
+#define MAXSTUDIOFLEXRULES		1024
 #define MAXSTUDIOBONEWEIGHTS	3
 #define MAXSTUDIOCMDS			64
 #define MAXSTUDIOMOVEKEYS		64
@@ -86,6 +86,8 @@ EXTERN	bool		g_centerstaticprop;
 EXTERN	bool		g_realignbones;
 EXTERN	bool		g_definebones;
 
+EXTERN  byte		g_constdirectionalightdot;
+
 // Methods associated with the key value text block
 extern CUtlVector< char >	g_KeyValueText;
 int		KeyValueTextSize( CUtlVector< char > *pKeyValue );
@@ -113,19 +115,6 @@ struct s_boneweight_t
 };
 
 
-struct s_vertexinfo_t
-{
-	// wtf is this doing here?
-	int		material;
-
-	int		firstref;
-	int		lastref;
-
-	int		flexmask;
-	int		numflex;
-	int		flexoffset;
-};
-
 struct s_tmpface_t
 {
 	int	material;
@@ -139,6 +128,18 @@ struct s_face_t
 	unsigned long		a, b, c;
 };
 
+
+struct s_vertexinfo_t
+{
+	int				material;
+	int				mesh;
+	s_boneweight_t	globalBoneweight;
+	Vector			position;	
+	Vector			normal;
+	Vector4D		tangentS;
+	Vector2D		texcoord;
+	int				bLoD;
+};
 
 //============================================================================
 
@@ -173,6 +174,7 @@ struct s_bonetable_t
 	int				surfacePropIndex;
 	Quaternion		qAlignment;
 	bool			bDontCollapse;
+	Vector			posrange;
 };
 EXTERN	s_bonetable_t g_bonetable[MAXSTUDIOSRCBONES];
 extern int findGlobalBone( const char *name );	// finds a named bone in the global bone table
@@ -339,6 +341,7 @@ struct s_linearmove_t
 #define CMD_COUNTERROTATE 17
 #define CMD_SETBONE 18
 #define CMD_WORLDSPACEBLEND 19
+#define CMD_MATCHBLEND 20
 
 struct s_animation_t;
 struct s_ikrule_t;
@@ -384,7 +387,18 @@ struct s_animcmd_t
 		struct
 		{
 			s_animation_t	*ref;
+			int				srcframe;
+			int				destframe;
+			int				destpre;
+			int				destpost;
 		} match;
+
+		struct
+		{
+			s_animation_t	*ref;
+			int				startframe;
+			int				loops;
+		} world;
 
 		struct 
 		{
@@ -536,8 +550,9 @@ struct s_animation_t
 	int				numanim[MAXSTUDIOSRCBONES][6];
 	mstudioanimvalue_t *anim[MAXSTUDIOSRCBONES][6];
 
-	int				weightlist;
+	// int				weightlist;
 	float			weight[MAXSTUDIOSRCBONES];
+	float			posweight[MAXSTUDIOSRCBONES];
 
 	int				numcmds;
 	s_animcmd_t		cmds[MAXSTUDIOCMDS];
@@ -584,6 +599,7 @@ struct s_autolayer_t
 	char			name[MAXSTUDIONAME];
 	int				sequence;
 	int				flags;
+	int				pose;
 	float			start;
 	float			peak;
 	float			tail;
@@ -745,12 +761,7 @@ struct s_vertanim_t
 struct s_loddata_t
 {
 	int				numvertices;
-	s_boneweight_t	*globalBoneweight;
-	s_vertexinfo_t	*vertexInfo;
-	Vector			*vertex;	
-	Vector			*normal;
-	Vector4D		*tangentS;
-	Vector2D		*texcoord;
+	s_vertexinfo_t	*vertex;
 
 	int				numfaces;
 	s_face_t		*face;
@@ -787,15 +798,12 @@ struct s_source_t
 	int				meshindex[MAXSTUDIOSKINS];	// mesh to skin index
 	s_mesh_t		mesh[MAXSTUDIOSKINS];
 
+	// vertex info about local bone weighting
+	s_boneweight_t	*localBoneweight;
+
 	// model global copy of vertices
 	int				numvertices;
-	s_boneweight_t	*localBoneweight;	// vertex info about local bone weighting
-	s_boneweight_t	*globalBoneweight;	// vertex info about global bone weighting
-	s_vertexinfo_t	*vertexInfo;		// generic vertex info
-	Vector			*vertex;	
-	Vector			*normal;
-	Vector4D		*tangentS;
-	Vector2D		*texcoord;
+	s_vertexinfo_t	*vertex;
 
 	int numfaces;
 	s_face_t *face;						// vertex indexs per face
@@ -922,6 +930,8 @@ struct s_flexkey_t
 	int		original;
 	float	split;
 
+	float	decay;
+
 	// extracted and remapped vertex animations
 	int				numvanims;
 	s_vertanim_t	*vanim;
@@ -932,7 +942,7 @@ EXTERN int g_numflexkeys;
 EXTERN s_flexkey_t g_flexkey[MAXSTUDIOFLEXKEYS];
 EXTERN s_flexkey_t *g_defaultflexkey;
 
-#define MAX_OPS 128
+#define MAX_OPS 512
 
 struct s_flexop_t
 {
@@ -971,11 +981,16 @@ EXTERN	s_bodypart_t g_bodypart[MAXSTUDIOBODYPARTS];
 
 struct s_weightlist_t
 {
+	// weights, indexed by numbones per weightlist
 	char			name[MAXSTUDIONAME];
 	int				numbones;
 	char			bonename[MAXWEIGHTSPERLIST][MAXSTUDIONAME];
 	float			boneweight[MAXWEIGHTSPERLIST];
-	float			weight[MAXSTUDIOBONES]; // unified weightlist
+	float			boneposweight[MAXWEIGHTSPERLIST];
+
+	// weights, indexed by global bone index
+	float			weight[MAXSTUDIOBONES];
+	float			posweight[MAXSTUDIOBONES];
 };
 
 EXTERN	int	g_numweightlist;
@@ -1046,6 +1061,26 @@ EXTERN int g_numquatinterpbones;
 EXTERN s_quatinterpbone_t g_quatinterpbones[MAXSTUDIOBONES];
 EXTERN int g_quatinterpbonemap[MAXSTUDIOBONES]; // map used quatinterpbone's to source axisinterpbone's
 
+
+struct s_aimatbone_t
+{
+	char			bonename[MAXSTUDIONAME];
+	int				bone;
+	char			parentname[MAXSTUDIONAME];
+	int				parent;
+	char			aimname[MAXSTUDIONAME];
+	int				aimAttach;
+	int				aimBone;
+	Vector			aimvector;
+	Vector			upvector;
+	Vector			basepos;
+};
+
+EXTERN int g_numaimatbones;
+EXTERN s_aimatbone_t g_aimatbones[MAXSTUDIOBONES];
+EXTERN int g_aimatbonemap[MAXSTUDIOBONES]; // map used aimatpbone's to source aimatpbone's (may be optimized out)
+
+
 struct s_forcedhierarchy_t
 {
 	char			parentname[MAXSTUDIONAME];
@@ -1075,6 +1110,16 @@ EXTERN int g_numlimitrotation;
 EXTERN s_limitrotation_t g_limitrotation[MAXSTUDIOBONES];
 
 extern int BuildTris (s_trianglevert_t (*x)[3], s_mesh_t *y, byte **ppdata );
+
+
+struct s_bonesaveframe_t
+{
+	char		name[ MAXSTUDIOHITBOXSETNAME ];
+	bool		bSavePos;
+	bool		bSaveRot;
+};
+
+EXTERN CUtlVector< s_bonesaveframe_t > g_bonesaveframe;
 
 EXTERN	int is_v1support;
 
@@ -1111,6 +1156,7 @@ extern char *stristr( const char *string, const char *string2 );
 
 void CalcBoneTransforms( s_animation_t *panimation, int frame, matrix3x4_t* pBoneToWorld );
 void CalcBoneTransforms( s_animation_t *panimation, s_animation_t *pbaseanimation, int frame, matrix3x4_t* pBoneToWorld );
+void CalcBoneTransformsCycle( s_animation_t *panimation, s_animation_t *pbaseanimation, float flCycle, matrix3x4_t* pBoneToWorld );
 
 // Returns surface property for a given joint
 char* GetSurfaceProp ( char const* pJointName );
@@ -1287,6 +1333,8 @@ extern bool g_bVerifyOnly;
 extern bool g_bUseBoneInBBox;
 extern bool g_bLockBoneLengths;
 extern bool g_bOverridePreDefinedBones;
+extern bool g_bXbox;
+extern int g_minLod;
 
 EXTERN int g_numcollapse;
 EXTERN char *g_collapse[MAXSTUDIOSRCBONES];
@@ -1302,4 +1350,12 @@ extern void MdlWarning( char const *pMsg, ... );
 extern void CreateMakefile_AddDependency( const char *pFileName );
 
 extern bool ComparePath( const char *a, const char *b );
+
+extern byte IsByte( int val );
+extern char IsChar( int val );
+extern int IsInt24( int val );
+extern short IsShort( int val );
+extern unsigned short IsUShort( int val );
+
+
 

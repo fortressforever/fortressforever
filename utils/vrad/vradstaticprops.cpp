@@ -23,9 +23,13 @@
 #include "PhysDll.h"
 #include "phyfile.h"
 #include "collisionutils.h"
+#include "pacifier.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/hardwareverts.h"
 
 static void SetCurrentModel( studiohdr_t *pStudioHdr );
-static void FreeCurrentModelVertexes();
+
+#define ALIGN_TO_POW2(x,y) (((x)+(y-1))&~(y-1))
 
 //-----------------------------------------------------------------------------
 // Globals
@@ -60,6 +64,9 @@ public:
 	// IBSPTreeDataEnumerator
 	bool FASTCALL EnumerateElement( int userId, int context );
 
+	// iterate all the instanced static props and compute their vertex lighting
+	void ComputeLighting( int iThread );
+
 private:
 	// Methods associated with unserializing static props
 	void UnserializeModelDict( CUtlBuffer& buf );
@@ -77,21 +84,33 @@ private:
 	// Unique static prop models
 	struct StaticPropDict_t
 	{
-		vcollide_t	m_loadedModel;
-		CPhysCollide* m_pModel;
-		Vector	m_Mins;		// Bounding box is in local coordinates
-		Vector	m_Maxs;
+		vcollide_t		m_loadedModel;
+		CPhysCollide*	m_pModel;
+		Vector			m_Mins;			// Bounding box is in local coordinates
+		Vector			m_Maxs;
+		studiohdr_t*	m_pStudioHdr;
+		CUtlBuffer		m_VtxBuf;
 	};
 
-	// A static prop
+	struct MeshData_t
+	{
+		CUtlVector<Vector>	m_Verts;
+		int					m_nLod;
+	};
+
+	// A static prop instance
 	struct CStaticProp
 	{
-		Vector	m_Origin;
-		QAngle	m_Angles;
-		Vector	m_mins;
-		Vector	m_maxs;
-		int		m_ModelIdx;
-		BSPTreeDataHandle_t	m_Handle;
+		Vector					m_Origin;
+		QAngle					m_Angles;
+		Vector					m_mins;
+		Vector					m_maxs;
+		Vector					m_LightingOrigin;
+		int						m_ModelIdx;
+		BSPTreeDataHandle_t		m_Handle;
+		CUtlVector<MeshData_t>	m_MeshData;
+		bool					m_bLightingOriginValid;
+		int                     m_Flags;
 	};
 
 	// Enumeration context
@@ -106,6 +125,12 @@ private:
 	CUtlVector <CStaticProp>		m_StaticProps;
 
 	IBSPTreeData*	m_pBSPTreeData;
+
+	bool m_bIgnoreStaticPropTrace;
+
+	void ComputeLighting( CStaticProp &prop, int iThread, int prop_index );
+	void SerializeLighting();
+	void AddPolysForRayTrace();
 };
 
 
@@ -113,10 +138,10 @@ private:
 // Expose IVradStaticPropMgr to vrad
 //-----------------------------------------------------------------------------
 
+static CVradStaticPropMgr	g_StaticPropMgr;
 IVradStaticPropMgr* StaticPropMgr()
 {
-	static CVradStaticPropMgr	s_StaticPropMgr;
-	return &s_StaticPropMgr;
+	return &g_StaticPropMgr;
 }
 
 
@@ -127,6 +152,9 @@ IVradStaticPropMgr* StaticPropMgr()
 CVradStaticPropMgr::CVradStaticPropMgr()
 {
 	m_pBSPTreeData = CreateBSPTreeData();
+
+	// set to ignore static prop traces
+	m_bIgnoreStaticPropTrace = false;
 }
 
 CVradStaticPropMgr::~CVradStaticPropMgr()
@@ -183,40 +211,22 @@ bool IsStaticProp( studiohdr_t* pHdr )
 	return true;
 }
 
+
 //-----------------------------------------------------------------------------
 // Load a file into a Utlbuf
 //-----------------------------------------------------------------------------
-
 static bool LoadFile( char const* pFileName, CUtlBuffer& buf )
 {
-	FileHandle_t fp;
-
-	// load the model
-	if( (fp = g_pFileSystem->Open(pFileName, "rb" )) == NULL)
+	if ( !g_pFullFileSystem )
 		return false;
 
-	// Get the file size
-	int size = g_pFileSystem->Size( fp );
-	if (size == 0)
-	{
-		g_pFileSystem->Close( fp );
-		return false;
-	}
-
-	buf.EnsureCapacity( size );
-	g_pFileSystem->Read( buf.PeekPut(), size, fp );
-	g_pFileSystem->Close( fp );
-
-	buf.SeekPut( CUtlBuffer::SEEK_HEAD, size );
-	buf.SeekGet( CUtlBuffer::SEEK_HEAD, 0 );
-
-	return true;
+	return g_pFullFileSystem->ReadFile( pFileName, NULL, buf );
 }
+
 
 //-----------------------------------------------------------------------------
 // Constructs the file name from the model name
 //-----------------------------------------------------------------------------
-
 static char const* ConstructFileName( char const* pModelName )
 {
 	static char buf[1024];
@@ -340,6 +350,36 @@ bool LoadStudioCollisionModel( char const* pModelName, CUtlBuffer& buf )
 	return true;
 }
 
+bool LoadVTXFile( char const* pModelName, const studiohdr_t *pStudioHdr, CUtlBuffer& buf )
+{
+	char	filename[MAX_PATH];
+
+	// construct filename
+	Q_StripExtension( pModelName, filename, sizeof( filename ) );
+	strcat( filename, g_bXBox ? ".xbox.vtx" : ".dx80.vtx" );
+
+	if ( !LoadFile( filename, buf ) )
+	{
+		Warning( "Error! Unable to load file \"%s\"\n", filename );
+		return false;
+	}
+
+	OptimizedModel::FileHeader_t* pVtxHdr = (OptimizedModel::FileHeader_t *)buf.Base();
+
+	// Check that it's valid
+	if ( pVtxHdr->version != OPTIMIZED_MODEL_FILE_VERSION )
+	{
+		Warning( "Error! Invalid VTX file version: %d, expected %d \"%s\"\n", pVtxHdr->version, OPTIMIZED_MODEL_FILE_VERSION, filename );
+		return false;
+	}
+	if ( pVtxHdr->checkSum != pStudioHdr->checksum )
+	{
+		Warning( "Error! Invalid VTX file checksum: %d, expected %d \"%s\"\n", pVtxHdr->checkSum, pStudioHdr->checksum, filename );
+		return false;
+	}
+
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Gets a vertex position from a strip index
@@ -407,10 +447,11 @@ void CVradStaticPropMgr::CreateCollisionModel( char const* pModelName )
 	CUtlBuffer bufvtx;
 	CUtlBuffer bufphy;
 
-	int i = m_StaticPropDict.AddToTail( );
-	m_StaticPropDict[i].m_pModel = 0;
+	int i = m_StaticPropDict.AddToTail();
+	m_StaticPropDict[i].m_pModel = NULL;
+	m_StaticPropDict[i].m_pStudioHdr = NULL;
 
-	if (!LoadStudioModel( pModelName, buf ))
+	if ( !LoadStudioModel( pModelName, buf ) )
 	{
 		VectorCopy( vec3_origin, m_StaticPropDict[i].m_Mins );
 		VectorCopy( vec3_origin, m_StaticPropDict[i].m_Maxs );
@@ -421,8 +462,6 @@ void CVradStaticPropMgr::CreateCollisionModel( char const* pModelName )
 
 	// necessary for vertex access
 	SetCurrentModel( pHdr );
-
-//	OptimizedModel::FileHeader_t* pVtxHdr = (OptimizedModel::FileHeader_t*)bufvtx.Base();
 
 	VectorCopy( pHdr->hull_min, m_StaticPropDict[i].m_Mins );
 	VectorCopy( pHdr->hull_max, m_StaticPropDict[i].m_Maxs );
@@ -449,11 +488,19 @@ void CVradStaticPropMgr::CreateCollisionModel( char const* pModelName )
 		// mark this as unused
 		m_StaticPropDict[i].m_loadedModel.solidCount = 0;
 
-	//	CPhysCollide* pPhys = CreatePhysCollide( pHdr, pVtxHdr );
+		// CPhysCollide* pPhys = CreatePhysCollide( pHdr, pVtxHdr );
 		m_StaticPropDict[i].m_pModel = ComputeConvexHull( pHdr );
 	}
 
-	FreeCurrentModelVertexes();
+	// clone it
+	m_StaticPropDict[i].m_pStudioHdr = (studiohdr_t *)malloc( buf.Size() );
+	memcpy( m_StaticPropDict[i].m_pStudioHdr, (studiohdr_t*)buf.Base(), buf.Size() );
+
+	if ( !LoadVTXFile( pModelName, m_StaticPropDict[i].m_pStudioHdr, m_StaticPropDict[i].m_VtxBuf ) )
+	{
+		// failed, leave state identified as disabled
+		m_StaticPropDict[i].m_VtxBuf.Purge();
+	}
 }
 
 
@@ -477,15 +524,18 @@ void CVradStaticPropMgr::UnserializeModels( CUtlBuffer& buf )
 	int count = buf.GetInt();
 
 	m_StaticProps.AddMultipleToTail(count);
-	for ( int i = 0; i < count; ++i )
+	for ( int i = 0; i < count; ++i )				  
 	{
 		StaticPropLump_t lump;
 		buf.Get( &lump, sizeof(StaticPropLump_t) );
 		
 		VectorCopy( lump.m_Origin, m_StaticProps[i].m_Origin );
 		VectorCopy( lump.m_Angles, m_StaticProps[i].m_Angles );
+		VectorCopy( lump.m_LightingOrigin, m_StaticProps[i].m_LightingOrigin );
+		m_StaticProps[i].m_bLightingOriginValid = ( lump.m_Flags & STATIC_PROP_USE_LIGHTING_ORIGIN ) > 0;
 		m_StaticProps[i].m_ModelIdx = lump.m_PropType;
 		m_StaticProps[i].m_Handle = TREEDATA_INVALID_HANDLE;
+		m_StaticProps[i].m_Flags = lump.m_Flags;
 
 		// Add the prop to the tree for collision, but only if it isn't
 		// marked as not casting a shadow
@@ -513,7 +563,7 @@ void CVradStaticPropMgr::UnserializeStaticProps()
 
 	if ( GetGameLump( handle ) )
 	{
-		CUtlBuffer buf( GetGameLump(handle), size );
+		CUtlBuffer buf( GetGameLump(handle), size, CUtlBuffer::READ_ONLY );
 		UnserializeModelDict( buf );
 
 		// Skip the leaf list data
@@ -553,6 +603,20 @@ void CVradStaticPropMgr::Shutdown()
 	for (int i = m_StaticProps.Size(); --i >= 0; )
 	{
 		RemovePropFromTree( i );
+	}
+
+	// Remove all static prop model data
+	for (int i = m_StaticPropDict.Size(); --i >= 0; )
+	{
+		studiohdr_t *pStudioHdr = m_StaticPropDict[i].m_pStudioHdr;
+		if ( pStudioHdr )
+		{
+			if ( pStudioHdr->pVertexBase )
+			{
+				free( pStudioHdr->pVertexBase );
+			}
+			free( pStudioHdr );
+		}
 	}
 
 	m_pBSPTreeData->Shutdown();
@@ -603,6 +667,12 @@ bool CVradStaticPropMgr::EnumerateLeaf( int leaf, int context )
 
 bool CVradStaticPropMgr::ClipRayToStaticProps( PropTested_t& propTested, Ray_t const& ray )
 {
+	if ( m_bIgnoreStaticPropTrace )
+	{
+		// as if the trace passes right through
+		return false;
+	}
+
 	StartRayTest( propTested );
 
 	EnumContext_t ctx;
@@ -615,6 +685,12 @@ bool CVradStaticPropMgr::ClipRayToStaticProps( PropTested_t& propTested, Ray_t c
 
 bool CVradStaticPropMgr::ClipRayToStaticPropsInLeaf( PropTested_t& propTested, Ray_t const& ray, int leaf )
 {
+	if ( m_bIgnoreStaticPropTrace )
+	{
+		// as if the trace passes right through
+		return false;
+	}
+
 	EnumContext_t ctx;
 	ctx.m_pRay = &ray;
 	ctx.m_pPropTested = &propTested;
@@ -637,6 +713,523 @@ void CVradStaticPropMgr::StartRayTest( PropTested_t& propTested )
 	}
 }
 
+void ComputeLightmapColor( dface_t* pFace, Vector &color )
+{
+	texinfo_t* pTex = &texinfo[pFace->texinfo];
+	if ( pTex->flags & SURF_SKY )
+	{
+		// sky ambient already accounted for in direct component
+		return;
+	}
+}
+
+bool PositionInSolid( Vector &position )
+{
+	int ndxLeaf = PointLeafnum( position );
+	if ( dleafs[ndxLeaf].contents & CONTENTS_SOLID )
+	{
+		// position embedded in solid
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Trace from a vertex to each direct light source, accumulating its contribution.
+//-----------------------------------------------------------------------------
+void ComputeDirectLightingAtPoint( Vector &position, Vector &normal, Vector &outColor, int iThread,
+								   int static_prop_id_to_skip=-1)
+{
+	sampleLightOutput_t	sampleOutput;
+
+	outColor.Init();
+
+	// Iterate over all direct lights and accumulate their contribution
+	int cluster = ClusterFromPoint( position );
+	for ( directlight_t *dl = activelights; dl != NULL; dl = dl->next )
+	{
+		if ( dl->light.style )
+		{
+			// skip lights with style
+			continue;
+		}
+
+		// is this lights cluster visible?
+		if ( !PVSCheck( dl->pvs, cluster ) )
+			continue;
+
+		// push the vertex towards the light to avoid surface acne
+		Vector adjusted_pos = position;
+		Vector fudge=dl->light.origin-position;
+		VectorNormalize( fudge );
+		fudge *= 1.0;
+		adjusted_pos += fudge;
+
+		if ( !GatherSampleLight(
+				 sampleOutput, dl, -1, adjusted_pos, &normal, 1, iThread, true,
+				 static_prop_id_to_skip ) )
+			continue;
+		
+		VectorMA( outColor, sampleOutput.falloff * sampleOutput.dot[0], dl->light.intensity, outColor );
+	}
+}
+
+// identifies a vertex embedded in solid
+// lighting will be copied from nearest valid neighbor
+struct badVertex_t
+{
+	int		m_ColorVertex;
+	Vector	m_Position;
+	Vector	m_Normal;
+};
+
+// a final colored vertex
+struct colorVertex_t
+{
+	Vector	m_Color;
+	Vector	m_Position;
+	bool	m_bValid;
+};
+
+//-----------------------------------------------------------------------------
+// Trace rays from each unique vertex, accumulating direct and indirect
+// sources at each ray termination. Use the winding data to distribute the unique vertexes
+// into the rendering layout.
+//-----------------------------------------------------------------------------
+void CVradStaticPropMgr::ComputeLighting( CStaticProp &prop, int iThread, int prop_index )
+{
+	Vector						samplePosition;
+	Vector						sampleNormal;
+	CUtlVector<colorVertex_t>	colorVerts; 
+	CUtlVector<badVertex_t>		badVerts;
+
+	StaticPropDict_t &dict = m_StaticPropDict[prop.m_ModelIdx];
+	studiohdr_t	*pStudioHdr = dict.m_pStudioHdr;
+	OptimizedModel::FileHeader_t *pVtxHdr = (OptimizedModel::FileHeader_t *)dict.m_VtxBuf.Base();
+	if ( !pStudioHdr || !pVtxHdr )
+	{
+		// must have model and its verts for lighting computation
+		// game will fallback to fullbright
+		return;
+	}
+
+	// for access to this model's vertexes
+	SetCurrentModel( pStudioHdr );
+
+	for ( int bodyID = 0; bodyID < pStudioHdr->numbodyparts; ++bodyID )
+	{
+		OptimizedModel::BodyPartHeader_t* pVtxBodyPart = pVtxHdr->pBodyPart( bodyID );
+		mstudiobodyparts_t *pBodyPart = pStudioHdr->pBodypart( bodyID );
+
+		for ( int modelID = 0; modelID < pBodyPart->nummodels; ++modelID )
+		{
+			OptimizedModel::ModelHeader_t* pVtxModel = pVtxBodyPart->pModel( modelID );
+			mstudiomodel_t *pStudioModel = pBodyPart->pModel( modelID );
+
+			// light all unique vertexes
+			colorVerts.EnsureCount( pStudioModel->numvertices );
+			memset( colorVerts.Base(), 0, colorVerts.Count() * sizeof(colorVertex_t) );
+
+			int numVertexes = 0;
+			for ( int meshID = 0; meshID < pStudioModel->nummeshes; ++meshID )
+			{
+				mstudiomesh_t *pStudioMesh = pStudioModel->pMesh( meshID );
+				const mstudio_meshvertexdata_t *vertData = pStudioMesh->GetVertexData();
+				for ( int vertexID = 0; vertexID < pStudioMesh->numvertices; ++vertexID )
+				{
+					// transform position and normal into world coordinate system
+					matrix3x4_t	matrix;
+					AngleMatrix( prop.m_Angles, prop.m_Origin, matrix );
+					VectorTransform( *vertData->Position( vertexID ), matrix, samplePosition );
+					AngleMatrix( prop.m_Angles, matrix );
+					VectorTransform( *vertData->Normal( vertexID ), matrix, sampleNormal );
+
+					if ( (! (prop.m_Flags & STATIC_PROP_NO_PER_VERTEX_LIGHTING ) ) &&
+						 PositionInSolid( samplePosition ) )
+					{
+						// vertex is in solid, add to the bad list, and recover later
+						badVertex_t badVertex;
+						badVertex.m_ColorVertex = numVertexes;
+						badVertex.m_Position = samplePosition;
+						badVertex.m_Normal = sampleNormal;
+						badVerts.AddToTail( badVertex );			
+					}
+					else
+					{
+						Vector direct_pos=samplePosition;
+						int skip_prop=-1;
+
+						Vector directColor(0,0,0);
+						if (prop.m_Flags & STATIC_PROP_NO_PER_VERTEX_LIGHTING )
+						{
+							if (prop.m_bLightingOriginValid)
+								VectorCopy( prop.m_LightingOrigin, direct_pos );
+							else
+								VectorCopy( prop.m_Origin, direct_pos );
+							skip_prop = prop_index;
+						}
+						if ( prop.m_Flags & STATIC_PROP_NO_SELF_SHADOWING )
+							skip_prop = prop_index;
+
+						
+						ComputeDirectLightingAtPoint( direct_pos,
+													  sampleNormal, directColor, iThread,
+													  skip_prop );
+						Vector indirectColor(0,0,0);
+
+						if (g_bShowStaticPropNormals)
+						{
+							directColor= sampleNormal;
+							directColor += Vector(1.0,1.0,1.0);
+							directColor *= 50.0;
+						}
+						else
+							if (numbounce >= 1)
+								ComputeIndirectLightingAtPoint( samplePosition, sampleNormal, 
+																indirectColor, iThread, true );
+
+						colorVerts[numVertexes].m_bValid = true;
+						colorVerts[numVertexes].m_Position = samplePosition;
+						VectorAdd( directColor, indirectColor, colorVerts[numVertexes].m_Color );
+					}
+
+					numVertexes++;
+				}
+			}
+
+			// color in the bad vertexes
+			// when entire model has no lighting origin and no valid neighbors
+			// must punt, leave black coloring
+			if ( badVerts.Count() && ( prop.m_bLightingOriginValid || badVerts.Count() != numVertexes ) )
+			{
+				for ( int nBadVertex = 0; nBadVertex < badVerts.Count(); nBadVertex++ )
+				{		
+					Vector bestPosition;
+					if ( prop.m_bLightingOriginValid )
+					{
+						// use the specified lighting origin
+						VectorCopy( prop.m_LightingOrigin, bestPosition );
+					}
+					else
+					{
+						// find the closest valid neighbor
+						int best = 0;
+						float closest = FLT_MAX;
+						for ( int nColorVertex = 0; nColorVertex < numVertexes; nColorVertex++ )
+						{
+							if ( !colorVerts[nColorVertex].m_bValid )
+							{
+								// skip invalid neighbors
+								continue;
+							}
+							Vector delta;
+							VectorSubtract( colorVerts[nColorVertex].m_Position, badVerts[nBadVertex].m_Position, delta );
+							float distance = VectorLength( delta );
+							if ( distance < closest )
+							{
+								closest = distance;
+								best    = nColorVertex;
+							}
+						}
+
+						// use the best neighbor as the direction to crawl
+						VectorCopy( colorVerts[best].m_Position, bestPosition );
+					}
+
+					// crawl toward best position
+					// sudivide to determine a closer valid point to the bad vertex, and re-light
+					Vector midPosition;
+					int numIterations = 20;
+					while ( --numIterations > 0 )
+					{
+						VectorAdd( bestPosition, badVerts[nBadVertex].m_Position, midPosition );
+						VectorScale( midPosition, 0.5f, midPosition );
+						if ( PositionInSolid( midPosition ) )
+							break;
+						bestPosition = midPosition;
+					}
+
+					// re-light from better position
+					Vector directColor;
+					ComputeDirectLightingAtPoint( bestPosition, badVerts[nBadVertex].m_Normal, directColor, iThread );
+
+					Vector indirectColor;
+					ComputeIndirectLightingAtPoint( bestPosition, badVerts[nBadVertex].m_Normal,
+													indirectColor, iThread, true );
+
+					// save results, not changing valid status
+					// to ensure this offset position is not considered as a viable candidate
+					colorVerts[badVerts[nBadVertex].m_ColorVertex].m_Position = bestPosition;
+					VectorAdd( directColor, indirectColor, colorVerts[badVerts[nBadVertex].m_ColorVertex].m_Color );
+				}
+			}
+			
+			// discard bad verts
+			badVerts.Purge();
+
+			// distribute the lighting results
+			for ( int nLod = 0; nLod < pVtxHdr->numLODs; nLod++ )
+			{
+				OptimizedModel::ModelLODHeader_t *pVtxLOD = pVtxModel->pLOD( nLod );
+
+				for ( int nMesh = 0; nMesh < pStudioModel->nummeshes; ++nMesh )
+				{
+					mstudiomesh_t* pMesh = pStudioModel->pMesh( nMesh );
+					OptimizedModel::MeshHeader_t* pVtxMesh = pVtxLOD->pMesh( nMesh );
+
+					for ( int nGroup = 0; nGroup < pVtxMesh->numStripGroups; ++nGroup )
+					{
+						OptimizedModel::StripGroupHeader_t* pStripGroup = pVtxMesh->pStripGroup( nGroup );
+						int nMeshIdx = prop.m_MeshData.AddToTail();
+						prop.m_MeshData[nMeshIdx].m_Verts.AddMultipleToTail( pStripGroup->numVerts );
+						prop.m_MeshData[nMeshIdx].m_nLod = nLod;
+
+						for ( int nVertex = 0; nVertex < pStripGroup->numVerts; ++nVertex )
+						{
+							int nIndex = pMesh->vertexoffset + pStripGroup->pVertex( nVertex )->origMeshVertID;
+
+							Assert( nIndex < pStudioModel->numvertices );
+							prop.m_MeshData[nMeshIdx].m_Verts[nVertex] = colorVerts[nIndex].m_Color;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Write the lighitng to bsp pak lump
+//-----------------------------------------------------------------------------
+void CVradStaticPropMgr::SerializeLighting()
+{
+	char		filename[MAX_PATH];
+	CUtlBuffer	utlBuf;
+
+	// illuminate them all
+	int count = m_StaticProps.Count();
+	if ( !count )
+	{
+		// nothing to do
+		return;
+	}
+
+	char mapName[MAX_PATH];
+	Q_FileBase( source, mapName, sizeof( mapName ) );
+
+	int size;
+	for (int i = 0; i < count; ++i)
+	{
+		sprintf( filename, "sp_%d.vhv", i );
+
+		int totalVertexes = 0;
+		for ( int j=0; j<m_StaticProps[i].m_MeshData.Count(); j++ )
+		{
+			totalVertexes += m_StaticProps[i].m_MeshData[j].m_Verts.Count();
+		}
+
+		// allocate a buffer with enough padding for alignment
+		size = sizeof( HardwareVerts::FileHeader_t ) + 
+				m_StaticProps[i].m_MeshData.Count()*sizeof(HardwareVerts::MeshHeader_t) +
+				totalVertexes*4 + 2*512;
+		utlBuf.EnsureCapacity( size );
+		Q_memset( utlBuf.Base(), 0, size );
+
+		HardwareVerts::FileHeader_t *pVhvHdr = (HardwareVerts::FileHeader_t *)utlBuf.Base();
+
+		// align to start of vertex data
+		unsigned char *pVertexData = (unsigned char *)(sizeof( HardwareVerts::FileHeader_t ) + m_StaticProps[i].m_MeshData.Count()*sizeof(HardwareVerts::MeshHeader_t));
+		pVertexData = (unsigned char*)pVhvHdr + ALIGN_TO_POW2( (unsigned int)pVertexData, 512 );
+
+		// construct header
+		pVhvHdr->m_nVersion     = VHV_VERSION;
+		pVhvHdr->m_nChecksum    = m_StaticPropDict[m_StaticProps[i].m_ModelIdx].m_pStudioHdr->checksum;
+		pVhvHdr->m_nVertexFlags = VERTEX_COLOR;
+		pVhvHdr->m_nVertexSize  = 4;
+		pVhvHdr->m_nVertexes    = totalVertexes;
+		pVhvHdr->m_nMeshes      = m_StaticProps[i].m_MeshData.Count();
+
+		for (int n=0; n<pVhvHdr->m_nMeshes; n++)
+		{
+			// construct mesh dictionary
+			HardwareVerts::MeshHeader_t *pMesh = pVhvHdr->pMesh( n );
+			pMesh->m_nLod      = m_StaticProps[i].m_MeshData[n].m_nLod;
+			pMesh->m_nVertexes = m_StaticProps[i].m_MeshData[n].m_Verts.Count();
+			pMesh->m_nOffset   = (unsigned int)pVertexData - (unsigned int)pVhvHdr; 
+
+			// construct vertexes
+			for (int k=0; k<pMesh->m_nVertexes; k++)
+			{
+				Vector &vector = m_StaticProps[i].m_MeshData[n].m_Verts[k];
+
+				ColorRGBExp32 rgbColor;
+				VectorToColorRGBExp32( vector, rgbColor );
+				unsigned char dstColor[4];
+				ConvertRGBExp32ToRGBA8888( &rgbColor, dstColor );
+
+				// b,g,r,a order
+				pVertexData[0] = dstColor[2];
+				pVertexData[1] = dstColor[1];
+				pVertexData[2] = dstColor[0];
+				pVertexData[3] = dstColor[3];
+				pVertexData += 4;
+			}
+		}
+
+		// align to end of file
+		pVertexData = (unsigned char *)((unsigned int)pVertexData - (unsigned int)pVhvHdr);
+		pVertexData = (unsigned char*)pVhvHdr + ALIGN_TO_POW2( (unsigned int)pVertexData, 512 );
+
+		AddBufferToPack( filename, (void*)pVhvHdr, pVertexData - (unsigned char*)pVhvHdr, false );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Computes lighting for the static props.
+// Must be after all other surface lighting has been computed for the indirect sampling.
+//-----------------------------------------------------------------------------
+void CVradStaticPropMgr::ComputeLighting( int iThread )
+{
+	// illuminate them all
+	int count = m_StaticProps.Count();
+	if ( !count )
+	{
+		// nothing to do
+		return;
+	}
+
+	StartPacifier( "Computing static prop lighting : " );
+
+	// ensure any traces against us are ignored because we have no inherit lighting contribution
+	m_bIgnoreStaticPropTrace = true;
+
+	for (int i = 0; i < count; ++i)
+	{
+		UpdatePacifier( (float)i / (float)count );
+		ComputeLighting( m_StaticProps[i], iThread, i );
+	}
+
+	// restore default
+	m_bIgnoreStaticPropTrace = false;
+
+	// save data to bsp
+	SerializeLighting();
+
+	EndPacifier( true );
+}
+
+//-----------------------------------------------------------------------------
+// Adds all static prop polys to the ray trace store.
+//-----------------------------------------------------------------------------
+void CVradStaticPropMgr::AddPolysForRayTrace( void )
+{
+	int count = m_StaticProps.Count();
+	if ( !count )
+	{
+		// nothing to do
+		return;
+	}
+
+	for ( int nProp = 0; nProp < count; ++nProp )
+	{
+		CStaticProp &prop = m_StaticProps[nProp];
+		if ( prop.m_Flags & STATIC_PROP_NO_SHADOW )
+			continue;
+
+		StaticPropDict_t &dict = m_StaticPropDict[prop.m_ModelIdx];
+		studiohdr_t	*pStudioHdr = dict.m_pStudioHdr;
+		OptimizedModel::FileHeader_t *pVtxHdr = (OptimizedModel::FileHeader_t *)dict.m_VtxBuf.Base();
+		if ( !pStudioHdr || !pVtxHdr )
+		{
+			// must have model and its verts for decoding triangles
+			return;
+		}
+
+		// for access to this model's vertexes
+		SetCurrentModel( pStudioHdr );
+	
+		// meshes are deeply hierarchial, divided between three stores, follow the white rabbit
+		// body parts -> models -> lod meshes -> strip groups -> strips
+		// the vertices and indices are pooled, the trick is knowing the offset to determine your indexed base 
+		for ( int bodyID = 0; bodyID < pStudioHdr->numbodyparts; ++bodyID )
+		{
+			OptimizedModel::BodyPartHeader_t* pVtxBodyPart = pVtxHdr->pBodyPart( bodyID );
+			mstudiobodyparts_t *pBodyPart = pStudioHdr->pBodypart( bodyID );
+
+			for ( int modelID = 0; modelID < pBodyPart->nummodels; ++modelID )
+			{
+				OptimizedModel::ModelHeader_t* pVtxModel = pVtxBodyPart->pModel( modelID );
+				mstudiomodel_t *pStudioModel = pBodyPart->pModel( modelID );
+
+				// assuming lod 0, could iterate if required
+				int nLod = 0;
+				OptimizedModel::ModelLODHeader_t *pVtxLOD = pVtxModel->pLOD( nLod );
+
+				for ( int nMesh = 0; nMesh < pStudioModel->nummeshes; ++nMesh )
+				{
+					mstudiomesh_t* pMesh = pStudioModel->pMesh( nMesh );
+					OptimizedModel::MeshHeader_t* pVtxMesh = pVtxLOD->pMesh( nMesh );
+					const mstudio_meshvertexdata_t *vertData = pMesh->GetVertexData();
+
+					for ( int nGroup = 0; nGroup < pVtxMesh->numStripGroups; ++nGroup )
+					{
+						OptimizedModel::StripGroupHeader_t* pStripGroup = pVtxMesh->pStripGroup( nGroup );
+
+						int nStrip;
+						for ( nStrip = 0; nStrip < pStripGroup->numStrips; nStrip++ )
+						{
+							OptimizedModel::StripHeader_t *pStrip = pStripGroup->pStrip( nStrip );
+
+							if ( pStrip->flags & OptimizedModel::STRIP_IS_TRILIST )
+							{
+								for ( int i = 0; i < pStrip->numIndices; i += 3 )
+								{
+									int idx = pStrip->indexOffset + i;
+
+									unsigned short i1 = *pStripGroup->pIndex( idx );
+									unsigned short i2 = *pStripGroup->pIndex( idx + 1 );
+									unsigned short i3 = *pStripGroup->pIndex( idx + 2 );
+
+									int vertex1 = pStripGroup->pVertex( i1 )->origMeshVertID;
+									int vertex2 = pStripGroup->pVertex( i2 )->origMeshVertID;
+									int vertex3 = pStripGroup->pVertex( i3 )->origMeshVertID;
+
+									// transform position into world coordinate system
+									matrix3x4_t	matrix;
+									AngleMatrix( prop.m_Angles, prop.m_Origin, matrix );
+
+									Vector position1;
+									Vector position2;
+									Vector position3;
+									VectorTransform( *vertData->Position( vertex1 ), matrix, position1 );
+									VectorTransform( *vertData->Position( vertex2 ), matrix, position2 );
+									VectorTransform( *vertData->Position( vertex3 ), matrix, position3 );
+// 		printf( "\ngl 3\n" );
+// 		printf( "gl %6.3f %6.3f %6.3f 1 0 0\n", XYZ(position1));
+// 		printf( "gl %6.3f %6.3f %6.3f 0 1 0\n", XYZ(position2));
+// 		printf( "gl %6.3f %6.3f %6.3f 0 0 1\n", XYZ(position3));
+									g_RtEnv.AddTriangle( nProp,
+														 position1, position2, position3,
+														 Vector(0,0,0));
+								}
+							}
+							else
+							{
+								// all tris expected to be discrete tri lists
+								// must fixme if stripping ever occurs
+								printf("unexpected strips found\n");
+								Assert( 0 );
+								return;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 static studiohdr_t *g_pActiveStudioHdr;
 static void SetCurrentModel( studiohdr_t *pStudioHdr )
 {
@@ -644,23 +1237,11 @@ static void SetCurrentModel( studiohdr_t *pStudioHdr )
 	g_pActiveStudioHdr = pStudioHdr;
 }
 
-static void FreeCurrentModelVertexes()
-{
-	Assert( g_pActiveStudioHdr );
-
-	if ( g_pActiveStudioHdr->pVertexBase )
-	{
-		free( g_pActiveStudioHdr->pVertexBase );
-		g_pActiveStudioHdr->pVertexBase = NULL;
-	}
-}
-
 const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 {
-	char				fileName[260];
+	char				fileName[MAX_PATH];
 	FileHandle_t		fileHandle;
 	vertexFileHeader_t	*pVvdHdr;
-	vertexFileHeader_t	*pNewVvdHdr;
 
 	Assert( g_pActiveStudioHdr );
 
@@ -674,7 +1255,7 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 	// mandatory callback to make requested data resident
 	// load and persist the vertex file
 	strcpy( fileName, "models/" );	
-	strcat( fileName, g_pActiveStudioHdr->name );
+	strcat( fileName, g_pActiveStudioHdr->pszName() );
 	Q_StripExtension( fileName, fileName, sizeof( fileName ) );
 	strcat( fileName, ".vvd" );
 
@@ -711,24 +1292,6 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 		Error("Error Vertex File %s checksum %d should be %d\n", fileName, pVvdHdr->checksum, g_pActiveStudioHdr->checksum);
 	}
 
-	if (pVvdHdr->numFixups)
-	{
-		// need to perform mesh relocation fixups
-		// allocate a new copy
-		pNewVvdHdr = (vertexFileHeader_t *)malloc( size );
-		if (!pNewVvdHdr)
-		{
-			Error( "Error allocating %d bytes for Vertex File '%s'\n", size, fileName );
-		}
-
-		Studio_LoadVertexes( pVvdHdr, pNewVvdHdr, 0, true );
-
-		// discard original
-		free( pVvdHdr );
-
-		pVvdHdr = pNewVvdHdr;
-	}
-
 	g_pActiveStudioHdr->pVertexBase = (void*)pVvdHdr; 
 
 	vertexdata.pVertexData  = (byte *)pVvdHdr + pVvdHdr->vertexDataStart;
@@ -736,5 +1299,3 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 
 	return &vertexdata;
 }
-
-

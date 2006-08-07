@@ -37,6 +37,9 @@ BEGIN_DATADESC(CScriptIntro)
 	DEFINE_FIELD( m_flFadeDuration, FIELD_FLOAT ),
 	DEFINE_FIELD( m_hCameraEntity, FIELD_EHANDLE ),
 
+	DEFINE_KEYFIELD( m_bAlternateFOV, FIELD_BOOLEAN, "alternatefovchange" ),
+
+
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_STRING, "SetCameraViewEntity", InputSetCameraViewEntity ),
 	DEFINE_INPUTFUNC(FIELD_INTEGER, "SetBlendMode", InputSetBlendMode ),
@@ -66,6 +69,8 @@ IMPLEMENT_SERVERCLASS_ST( CScriptIntro, DT_ScriptIntro )
 	SendPropInt( SENDINFO( m_iNextFOV ), 9 ),
 	SendPropFloat( SENDINFO( m_flNextFOVBlendTime ), 10 ),
 	SendPropFloat( SENDINFO( m_flFOVBlendStartTime ), 10 ),
+
+	SendPropBool( SENDINFO( m_bAlternateFOV ) ),
 
 	// Fades
 	SendPropFloat( SENDINFO( m_flFadeAlpha ), 10 ),
@@ -113,7 +118,7 @@ void CScriptIntro::InputSetCameraViewEntity( inputdata_t &inputdata )
 	if ( iszEntityName == NULL_STRING )
 		return;
 
-	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszEntityName, NULL );
+	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszEntityName, NULL, inputdata.pActivator, inputdata.pCaller );
 	if ( !pEntity )
 	{
 		Warning("script_intro %s couldn't find SetCameraViewEntity named %s\n", STRING(GetEntityName()), STRING(iszEntityName) );

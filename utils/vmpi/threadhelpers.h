@@ -12,7 +12,7 @@
 #endif
 
 
-#include "utllinkedlist.h"
+#include "tier1/utllinkedlist.h"
 
 
 #define SIZEOF_CS	24	// sizeof( CRITICAL_SECTION )

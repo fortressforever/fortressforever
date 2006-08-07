@@ -46,6 +46,7 @@ class CAI_BaseActor : public CAI_ExpresserHost<CAI_BaseHumanoid>
 	//friend CFlexWeight;
 
 public:
+
 	// FIXME: this method is lame, isn't there some sort of template thing that would get rid of the Outer pointer?
 
 	void	Init( PoseParameter_t &index, const char *szName ) { index = (PoseParameter_t)LookupPoseParameter( szName ); };
@@ -54,7 +55,19 @@ public:
 
 	float	ClampWithBias( PoseParameter_t index, float value, float base );
 
-	void	Init( FlexWeight_t &index, const char *szName ) { index = (FlexWeight_t)FindFlexController( szName ); };
+	// Note, you must add all names to this static function in order for Init to work
+	static bool	IsServerSideFlexController( char const *szName );
+
+	void	Init( FlexWeight_t &index, const char *szName ) 
+	{ 
+		// Make this fatal!!!
+		if ( !IsServerSideFlexController( szName ) )
+		{
+			Error( "You forgot to add flex controller %s to list in CAI_BaseActor::IsServerSideFlexController()." );
+		}
+
+		index = (FlexWeight_t)FindFlexController( szName ); 
+	}
 	void	Set( FlexWeight_t index, float flValue ) { SetFlexWeight( (int)index, flValue ); }
 	float	Get( FlexWeight_t index ) { return GetFlexWeight( (int)index ); }
 
@@ -112,6 +125,9 @@ public:
 	virtual bool 			PickRandomLookTarget( AILookTargetArgs_t *pArgs );
 	virtual void			MakeRandomLookTarget( AILookTargetArgs_t *pArgs, float minTime, float maxTime );
 	virtual bool			HasActiveLookTargets( void );
+	virtual void 			OnSelectedLookTarget( AILookTargetArgs_t *pArgs ) { return; }
+	virtual void 			ClearLookTarget( CBaseEntity *pTarget );
+	virtual void			ExpireCurrentRandomLookTarget() { m_flNextRandomLookTime = gpGlobals->curtime - 0.1f; }
 
 	virtual void			StartTaskRangeAttack1( const Task_t *pTask );
 
@@ -259,6 +275,12 @@ private:
 	bool RandomFaceFlex( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event );
 	bool RandomHeadFlex( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event );
 	float m_flextarget[64];
+
+public:
+	virtual bool UseSemaphore( void );
+
+protected:
+	bool	m_bDontUseSemaphore;
 
 public:
 	//---------------------------------

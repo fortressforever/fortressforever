@@ -41,7 +41,17 @@ public:
 	void InputSetFarZ( inputdata_t &data );
 	void InputSetAngles( inputdata_t &inputdata );
 
+	void InputSetColorLerpTo(inputdata_t &data);
+	void InputSetColorSecondaryLerpTo(inputdata_t &data);
+	void InputSetStartDistLerpTo(inputdata_t &data);
+	void InputSetEndDistLerpTo(inputdata_t &data);
+
+	void InputStartFogTransition(inputdata_t &data);
+
 	int CFogController::DrawDebugTextOverlays(void);
+
+	void SetLerpValues( void );
+	void Spawn( void );
 
 	DECLARE_DATADESC();
 
@@ -49,6 +59,7 @@ public:
 public:
 	fogparams_t	m_fog;
 	bool m_bUseAngles;
+	int   m_iChangedVariables;
 
 	static CFogController *s_pFogController;
 };
@@ -71,8 +82,14 @@ BEGIN_DATADESC( CFogController )
 	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetFarZ",		InputSetFarZ ),
 	DEFINE_INPUTFUNC( FIELD_STRING,		"SetAngles",	InputSetAngles ),
 
+	DEFINE_INPUTFUNC( FIELD_COLOR32,	"SetColorLerpTo",		InputSetColorLerpTo ),
+	DEFINE_INPUTFUNC( FIELD_COLOR32,	"SetColorSecondaryLerpTo",	InputSetColorSecondaryLerpTo ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetStartDistLerpTo",	InputSetStartDistLerpTo ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetEndDistLerpTo",	InputSetEndDistLerpTo ),
+	DEFINE_INPUTFUNC( FIELD_VOID,		"StartFogTransition", InputStartFogTransition ),
+
 	// Quiet classcheck
-	// DEFINE_FIELD( m_fog, fogparams_t ),
+	//DEFINE_EMBEDDED( m_fog ),
 
 	DEFINE_KEYFIELD( m_bUseAngles,			FIELD_BOOLEAN,	"use_angles" ),
 	DEFINE_KEYFIELD( m_fog.colorPrimary,	FIELD_COLOR32,	"fogcolor" ),
@@ -83,6 +100,17 @@ BEGIN_DATADESC( CFogController )
 	DEFINE_KEYFIELD( m_fog.start,			FIELD_FLOAT,	"fogstart" ),
 	DEFINE_KEYFIELD( m_fog.end,				FIELD_FLOAT,	"fogend" ),
 	DEFINE_KEYFIELD( m_fog.farz,			FIELD_FLOAT,	"farz" ),
+	DEFINE_KEYFIELD( m_fog.duration,		FIELD_FLOAT,	"foglerptime" ),
+
+	DEFINE_THINKFUNC( SetLerpValues ),
+
+	DEFINE_FIELD( m_iChangedVariables, FIELD_INTEGER ),
+
+	DEFINE_FIELD( m_fog.lerptime, FIELD_TIME ),
+	DEFINE_FIELD( m_fog.colorPrimaryLerpTo, FIELD_COLOR32 ),
+	DEFINE_FIELD( m_fog.colorSecondaryLerpTo, FIELD_COLOR32 ),
+	DEFINE_FIELD( m_fog.startLerpTo, FIELD_FLOAT ),
+	DEFINE_FIELD( m_fog.endLerpTo, FIELD_FLOAT ),
 
 END_DATADESC()
 
@@ -120,6 +148,13 @@ CFogController::~CFogController()
 	}
 }
 
+void CFogController::Spawn( void )
+{
+	BaseClass::Spawn();
+
+	m_fog.colorPrimaryLerpTo = m_fog.colorPrimary;
+	m_fog.colorSecondaryLerpTo = m_fog.colorSecondary;
+}
 
 //-----------------------------------------------------------------------------
 // Activate!
@@ -229,44 +264,107 @@ int CFogController::DrawDebugTextOverlays(void)
 		char tempstr[512];
 
 		Q_snprintf(tempstr,sizeof(tempstr),"State: %s",(m_fog.enable)?"On":"Off");
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"Start: %3.0f",m_fog.start);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"End  : %3.0f",m_fog.end);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		color32 color = m_fog.colorPrimary;
 		Q_snprintf(tempstr,sizeof(tempstr),"1) Red  : %i",color.r);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"1) Green: %i",color.g);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"1) Blue : %i",color.b);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		color = m_fog.colorSecondary;
 		Q_snprintf(tempstr,sizeof(tempstr),"2) Red  : %i",color.r);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"2) Green: %i",color.g);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		Q_snprintf(tempstr,sizeof(tempstr),"2) Blue : %i",color.b);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
+}
+
+#define FOG_CONTROLLER_COLORPRIMARY_LERP 1
+#define FOG_CONTROLLER_COLORSECONDARY_LERP 2
+#define FOG_CONTROLLER_START_LERP 4
+#define FOG_CONTROLLER_END_LERP 8
+
+void CFogController::InputSetColorLerpTo(inputdata_t &data)
+{
+	m_iChangedVariables |= FOG_CONTROLLER_COLORPRIMARY_LERP;
+	m_fog.colorPrimaryLerpTo = data.value.Color32();
+}
+
+void CFogController::InputSetColorSecondaryLerpTo(inputdata_t &data)
+{
+	m_iChangedVariables |= FOG_CONTROLLER_COLORSECONDARY_LERP;
+	m_fog.colorSecondaryLerpTo = data.value.Color32();
+}
+
+void CFogController::InputSetStartDistLerpTo(inputdata_t &data)
+{
+	m_iChangedVariables |= FOG_CONTROLLER_START_LERP;
+	m_fog.startLerpTo = data.value.Float();
+}
+
+void CFogController::InputSetEndDistLerpTo(inputdata_t &data)
+{
+	m_iChangedVariables |= FOG_CONTROLLER_END_LERP;
+	m_fog.endLerpTo = data.value.Float();
+}
+
+void CFogController::InputStartFogTransition(inputdata_t &data)
+{
+	SetThink( &CFogController::SetLerpValues );
+
+	m_fog.lerptime = gpGlobals->curtime + m_fog.duration + 0.1;
+    SetNextThink( gpGlobals->curtime + m_fog.duration );
+}
+
+void CFogController::SetLerpValues( void )
+{
+	if ( m_iChangedVariables & FOG_CONTROLLER_COLORPRIMARY_LERP )
+	{
+		m_fog.colorPrimary = m_fog.colorPrimaryLerpTo;
+	}
+
+	if ( m_iChangedVariables & FOG_CONTROLLER_COLORSECONDARY_LERP )
+	{
+		m_fog.colorSecondary = m_fog.colorSecondaryLerpTo;
+	} 
+
+	if ( m_iChangedVariables & FOG_CONTROLLER_START_LERP )
+	{
+		m_fog.start = m_fog.startLerpTo;
+	}
+
+	if ( m_iChangedVariables & FOG_CONTROLLER_END_LERP )
+	{
+		m_fog.end = m_fog.endLerpTo;
+	}
+
+	m_iChangedVariables = 0;
+	m_fog.lerptime = gpGlobals->curtime;
 }
 
 
@@ -279,17 +377,27 @@ int CFogController::DrawDebugTextOverlays(void)
 //			fogStart - 
 //			fogEnd - 
 //-----------------------------------------------------------------------------
-void GetWorldFogParams( fogparams_t &fog )
+bool GetWorldFogParams( fogparams_t &fog )
 {
 	if ( CFogController::s_pFogController )
 	{
-		fog = CFogController::s_pFogController->m_fog;
+		if ( Q_memcmp( &fog, CFogController::s_pFogController, sizeof(fog) ))
+		{
+			fog = CFogController::s_pFogController->m_fog;
+			return true;
+		}
 	}
 	else
 	{
-		// No fog controller in this level. Use default fog parameters.
-		fog.farz = -1;
-		fog.enable = false;
+		if ( fog.farz != -1 || fog.enable != false )
+		{
+			// No fog controller in this level. Use default fog parameters.
+			fog.farz = -1;
+			fog.enable = false;
+			return true;
+		}
 	}
+
+	return false;
 }
 

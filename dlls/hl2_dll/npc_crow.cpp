@@ -88,6 +88,11 @@ void CNPC_Crow::Spawn( void )
 {
 	BaseClass::Spawn();
 
+#ifdef _XBOX
+	// Always fade the corpse
+	AddSpawnFlags( SF_NPC_FADE_CORPSE );
+#endif // _XBOX
+
 	char *szModel = (char *)STRING( GetModelName() );
 	if (!szModel || !*szModel)
 	{
@@ -325,7 +330,7 @@ void CNPC_Crow::InputFlyAway( inputdata_t &inputdata )
 
 	if ( sTarget != NULL_STRING )// this npc has a target
 	{
-		CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, sTarget, NULL );
+		CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, sTarget );
 
 		if ( pEnt )
 		{
@@ -373,16 +378,6 @@ bool CNPC_Crow::OverrideMove( float flInterval )
 
 	if ( IsFlying() )
 	{
-		//ARGH! Fix this up! THIS SHOULD NEVER HAPPEN!!! WHY GOD WHY!!??!
-		if ( IsCurSchedule( SCHED_CROW_IDLE_FLY ) == false &&
-			 IsCurSchedule( SCHED_CROW_FLY_AWAY ) == false && 
-			 IsCurSchedule( SCHED_CROW_FLY ) == false )
-		{
-			SetSchedule( SCHED_CROW_FLY );
-			SetFlyingState( FlyState_Flying );
-			SetIdealActivity ( ACT_FLY );
-		}
-
 		if ( GetNavigator()->GetPath()->GetCurWaypoint() )
 		{
 			if ( m_flLastStuckCheck <= gpGlobals->curtime )
@@ -427,9 +422,9 @@ bool CNPC_Crow::OverrideMove( float flInterval )
 		}
 		else
 		{
-			SetIdealActivity( (Activity)ACT_CROW_LAND );
-			SetFlyingState( FlyState_Landing );
-			TaskMovementComplete();
+			SetSchedule( SCHED_CROW_IDLE_FLY );
+			SetFlyingState( FlyState_Flying );
+			SetIdealActivity ( ACT_FLY );
 		}
 		return true;
 	}
@@ -493,7 +488,7 @@ void CNPC_Crow::MoveCrowFly( float flInterval )
 	//
 	// Determine the goal of our movement.
 	//
-	Vector vecMoveGoal;
+	Vector vecMoveGoal = GetAbsOrigin();
 
 	if ( GetNavigator()->IsGoalActive() )
 	{
@@ -507,7 +502,10 @@ void CNPC_Crow::MoveCrowFly( float flInterval )
 			GetNavigator()->ProgressFlyPath( params ); // ignore result, crow handles completion directly
 
 			// Fly towards the hint.
-			vecMoveGoal = GetNavigator()->GetCurWaypointPos();
+			if ( GetNavigator()->GetPath()->GetCurWaypoint() )
+			{
+				vecMoveGoal = GetNavigator()->GetCurWaypointPos();
+			}
 		}
 	}
 	else
@@ -737,7 +735,7 @@ void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 		newInfo.SetDamage( m_iMaxHealth );
 
-		PainSound();
+		PainSound( newInfo );
 		newInfo.SetDamageForce( puntDir );
 	}
 
@@ -1282,7 +1280,7 @@ void CNPC_Crow::AlertSound( void )
 }
 
 
-void CNPC_Crow::PainSound( void )
+void CNPC_Crow::PainSound( const CTakeDamageInfo &info )
 {
 	if ( m_iBirdType != BIRDTYPE_CROW )
 		 return;
@@ -1291,7 +1289,7 @@ void CNPC_Crow::PainSound( void )
 }
 
 
-void CNPC_Crow::DeathSound( void )
+void CNPC_Crow::DeathSound( const CTakeDamageInfo &info )
 {
 	if ( m_iBirdType != BIRDTYPE_CROW )
 		 return;
@@ -1356,13 +1354,13 @@ int CNPC_Crow::DrawDebugTextOverlays( void )
 	{
 		char tempstr[512];
 		Q_snprintf( tempstr, sizeof( tempstr ), "morale: %d", m_nMorale );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 
 		if ( GetEnemy() != NULL )
 		{
 			Q_snprintf( tempstr, sizeof( tempstr ), "enemy (dist): %s (%g)", GetEnemy()->GetClassname(), ( double )m_flEnemyDist );
-			NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+			EntityText( nOffset, tempstr, 0 );
 			nOffset++;
 		}
 	}

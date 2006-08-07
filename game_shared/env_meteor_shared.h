@@ -114,7 +114,7 @@ private:
 //
 // Meteor Factory Interface
 //
-class IMeteorFactory
+abstract_class IMeteorFactory
 {
 public:
 

@@ -34,8 +34,8 @@ C_PhysicsProp::C_PhysicsProp( void )
 {
 	m_pPhysicsObject = NULL;
 	m_takedamage = DAMAGE_YES;
-	// default this to true so that static lighting will get recomputed when we 
-	// go to sleep
+
+	// default true so static lighting will get recomputed when we go to sleep
 	m_bAwakeLastTime = true;
 }
 
@@ -57,15 +57,23 @@ ConVar r_visualizeproplightcaching( "r_visualizeproplightcaching", "0" );
 int C_PhysicsProp::InternalDrawModel( int flags )
 {
 	VPROF( "C_PhysicsProp::InternalDrawModel" );
+
 	//-----------------------------------------------------------------------------
 	// Overriding C_BaseAnimating::InternalDrawModel so that we can detect when the
 	// prop is asleep.  This allows us to bake the lighting for the model.
 	//-----------------------------------------------------------------------------
 	if ( !GetModel() )
+	{
 		return 0;
+	}
+
+	if ( IsEffectActive( EF_ITEM_BLINK ) )
+	{
+		flags |= STUDIO_ITEM_BLINK;
+	}
 
 	// This should never happen, but if the server class hierarchy has bmodel entities derived from CBaseAnimating or does a
-	//  SetModel with the wrong type of model, this could occur.
+	// SetModel with the wrong type of model, this could occur.
 	if ( modelinfo->GetModelType( GetModel() ) != mod_studio )
 	{
 		return BaseClass::DrawModel( flags );
@@ -73,31 +81,40 @@ int C_PhysicsProp::InternalDrawModel( int flags )
 
 	// Make sure hdr is valid for drawing
 	if ( !GetModelPtr() )
+	{
+		// inhibit drawing and state setting until all data available
 		return 0;
+	}
 
 	CreateModelInstance();
 
-	if( r_PhysPropStaticLighting.GetBool() && m_bAwakeLastTime != m_bAwake )
+	if ( r_PhysPropStaticLighting.GetBool() && m_bAwakeLastTime != m_bAwake )
 	{
-		if( m_bAwakeLastTime && !m_bAwake )
+		if ( m_bAwakeLastTime && !m_bAwake )
 		{
-			// bake lighting now since we just went to sleep.
-			modelrender->RecomputeStaticLighting( GetModelInstance() );
-			if( r_visualizeproplightcaching.GetBool() )
+			// transition to sleep, bake lighting now, once
+			if ( !modelrender->RecomputeStaticLighting( GetModelInstance() ) )
+			{
+				// not valid for drawing
+				return 0;
+			}
+
+			if ( r_visualizeproplightcaching.GetBool() )
 			{
 				float color[] = { 0.0f, 1.0f, 0.0f, 1.0f };
 				render->SetColorModulation( color );
 			}
 		}
-		else if( r_visualizeproplightcaching.GetBool() )
+		else if ( r_visualizeproplightcaching.GetBool() )
 		{
 			float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 			render->SetColorModulation( color );
 		}
 	}
 
-	if( !m_bAwake && r_PhysPropStaticLighting.GetBool() )
+	if ( !m_bAwake && r_PhysPropStaticLighting.GetBool() )
 	{
+		// going to sleep, have static lighting
 		flags |= STUDIO_STATIC_LIGHTING;
 	}
 	
@@ -134,6 +151,7 @@ int C_PhysicsProp::InternalDrawModel( int flags )
 		}
 	}
 
+	// track state
 	m_bAwakeLastTime = m_bAwake;
 	
 	return drawn;

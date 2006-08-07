@@ -13,9 +13,17 @@
 #pragma once
 #endif
 
-class VMatrix;
+
 #include <vgui/VGUI.h>
 #include "vgui/isurface.h"
+
+
+//-----------------------------------------------------------------------------
+// Forward declarations
+//-----------------------------------------------------------------------------
+class VMatrix;
+class IMaterial;
+
 
 //-----------------------------------------------------------------------------
 // Callbacks for mouse getting + setting
@@ -34,7 +42,7 @@ typedef void (*PlaySoundFunc_t)(const char *pFileName);
 // An extra interface implemented by the material system implementation of vgui::ISurface
 //
 //-----------------------------------------------------------------------------
-#define MAT_SYSTEM_SURFACE_INTERFACE_VERSION "MatSystemSurface003"
+#define MAT_SYSTEM_SURFACE_INTERFACE_VERSION "MatSystemSurface005"
 class IMatSystemSurface : public vgui::ISurface
 {
 public:
@@ -85,6 +93,9 @@ public:
 	// (N isn't necessary 480 because the panel may not be 4x3)
 	// The width + height specified are the size of the panel in world coordinates
 	virtual void DrawPanelIn3DSpace( vgui::VPANEL pRootPanel, const VMatrix &panelCenterToWorld, int nPixelWidth, int nPixelHeight, float flWorldWidth, float flWorldHeight ) = 0; 
+
+	// Binds a material to a surface texture ID
+	virtual void DrawSetTextureMaterial( int id, IMaterial *pMaterial ) = 0;
 };
 
 

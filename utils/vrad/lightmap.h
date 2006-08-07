@@ -99,18 +99,9 @@ struct lightinfo_t
 
 	Vector	modelorg;		// for origined bmodels
 
-	Vector	textureOrigin;
-	Vector	worldToTextureSpace[2];	// s = (world - texorg) . worldtotex[0]
-	Vector	textureToWorldSpace[2];	// world = texorg + s * textoworld[0]
-
 	Vector	luxelOrigin;
-	Vector	worldToLuxelSpace[2]; // s = (world - texorg) . worldtotex[0]
-	Vector	luxelToWorldSpace[2]; // world = texorg + s * textoworld[0]
-	
-	//	vec_t	exactmins[2], exactmaxs[2]; not used anymore.
-	
-	int		lightmapTextureMinsInLuxels[2];
-	int		lightmapTextureSizeInLuxels[2];
+	Vector	worldToLuxelSpace[2]; // s = (world - luxelOrigin) . worldToLuxelSpace[0], t = (world - luxelOrigin) . worldToLuxelSpace[1]
+	Vector	luxelToWorldSpace[2]; // world = luxelOrigin + s * luxelToWorldSpace[0] + t * luxelToWorldSpace[1]
 
 	int		facenum;
 	dface_t	*face;

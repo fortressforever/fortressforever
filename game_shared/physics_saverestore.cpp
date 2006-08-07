@@ -14,6 +14,7 @@
 #include "physics_saverestore.h"
 #include "saverestoretypes.h"
 #include "gamestringpool.h"
+#include "datacache/imdlcache.h"
 
 #if !defined( CLIENT_DLL )
 #include "entitylist.h"
@@ -45,7 +46,7 @@ BEGIN_SIMPLE_DATADESC( PhysBlockHeader_t )
 	DEFINE_FIELD( pWorldObject, FIELD_INTEGER ),	
 END_DATADESC()
 
-
+#if defined(_STATIC_LINKED) && defined(CLIENT_DLL)
 const char *g_ppszPhysTypeNames[PIID_NUM_TYPES] =
 {
 	"Unknown",
@@ -59,6 +60,7 @@ const char *g_ppszPhysTypeNames[PIID_NUM_TYPES] =
 	"IPhysicsMotionController",
 	"IPhysicsVehicleController",
 };
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -262,6 +264,7 @@ public:
 		
 		if ( iQueued != m_QueuedRestores.InvalidIndex() )
 		{
+			MDLCACHE_CRITICAL_SECTION();
 			if ( pOwner->ShouldSavePhysics() && header.nObjects > 0 )
 			{
 				QueuedItem_t *pItem = m_QueuedRestores[iQueued]->FindItem( header.fieldName );
@@ -415,6 +418,9 @@ public:
 	
 	void QueueSave( CBaseEntity *pOwner, typedescription_t *pTypeDesc, void **ppPhysObj, PhysInterfaceId_t type )
 	{
+		if ( !pOwner )
+			return;
+
 		bool fOnlyNotingExistence = !pOwner->ShouldSavePhysics();
 		
 		QueuedItem_t item;

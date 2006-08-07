@@ -108,7 +108,7 @@ void CTriggerWeaponDissolve::Activate( void )
 
 	CBaseEntity *pEntity = NULL;
 
-	while ( ( pEntity = gEntList.FindEntityByName( pEntity, m_strEmitterName, NULL ) ) != NULL )
+	while ( ( pEntity = gEntList.FindEntityByName( pEntity, m_strEmitterName ) ) != NULL )
 	{
 		m_pConduitPoints.AddToTail( pEntity );
 	}
@@ -549,8 +549,6 @@ void CWateryDeathLeech::LeechThink( void )
 		else
 			 SetRenderColorA( UTIL_Approach( 255, m_clrRender->a, speed ) );
 
-		NetworkStateChanged();
-
 		if ( m_clrRender->a == 0 )
 		{
 			UTIL_Remove(this);
@@ -714,7 +712,9 @@ void CTriggerWateryDeath::Touch( CBaseEntity *pOther )
 			m_flPainValue = WD_MAX_DAMAGE;
 		}
 
-		CTakeDamageInfo info = CTakeDamageInfo( this, this, m_flPainValue, DMG_SLASH );
+		// Use DMG_GENERIC & make the target inflict the damage on himself.
+		// This ensures that if the target is the player, the damage isn't modified by skill
+		CTakeDamageInfo info = CTakeDamageInfo( pOther, pOther, m_flPainValue, DMG_GENERIC );
 
 		GuessDamageForce( &info, (pOther->GetAbsOrigin() - GetAbsOrigin()), pOther->GetAbsOrigin() );
 		pOther->TakeDamage( info );

@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include "cbase.h"
 #include "c_prop_vehicle.h"
 #include "hud.h"		
@@ -160,23 +161,23 @@ C_PropVehicleDriveable::~C_PropVehicleDriveable()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-C_BasePlayer* C_PropVehicleDriveable::GetPassenger( int nRole )
+C_BaseCombatCharacter *C_PropVehicleDriveable::GetPassenger( int nRole )
 {
-	if (nRole == VEHICLE_DRIVER)
+	if ( nRole == VEHICLE_ROLE_DRIVER )
 		return m_hPlayer.Get();
+
 	return NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Returns the role of the passenger
 //-----------------------------------------------------------------------------
-int	C_PropVehicleDriveable::GetPassengerRole( C_BasePlayer *pEnt )
+int	C_PropVehicleDriveable::GetPassengerRole( C_BaseCombatCharacter *pPassenger )
 {
-	if (m_hPlayer.Get() == pEnt)
-	{
-		return VEHICLE_DRIVER;
-	}
-	return -1;
+	if ( m_hPlayer.Get() == pPassenger )
+		return VEHICLE_ROLE_DRIVER;
+
+	return VEHICLE_ROLE_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -218,7 +219,7 @@ void C_PropVehicleDriveable::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 ShadowType_t C_PropVehicleDriveable::ShadowCastType()
 {
-	studiohdr_t *pStudioHdr = GetModelPtr();
+	CStudioHdr *pStudioHdr = GetModelPtr();
 	if ( !pStudioHdr )
 		return SHADOWS_NONE;
 
@@ -419,7 +420,7 @@ void C_PropVehicleDriveable::UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUser
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_PropVehicleDriveable::OnEnteredVehicle( C_BasePlayer *pPlayer )
+void C_PropVehicleDriveable::OnEnteredVehicle( C_BaseCombatCharacter *pPassenger )
 {
 }
 

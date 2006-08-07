@@ -163,7 +163,7 @@ void CNPC_VehicleDriver::Activate( void )
 		return;
 	}
 
-	m_hVehicleEntity = (gEntList.FindEntityByName( NULL, STRING(m_iszVehicleName), NULL ));
+	m_hVehicleEntity = (gEntList.FindEntityByName( NULL, STRING(m_iszVehicleName) ));
 	if ( !m_hVehicleEntity )
 	{
 		Warning( "npc_vehicledriver %s couldn't find his vehicle named %s.\n", STRING(GetEntityName()), STRING(m_iszVehicleName) );
@@ -746,6 +746,13 @@ bool CNPC_VehicleDriver::OverridePathMove( float flInterval )
 	AngularImpulse angVel;
 	Vector vecVelocity;
 	IPhysicsObject *pVehiclePhysics = m_hVehicleEntity->VPhysicsGetObject();
+
+	if( !pVehiclePhysics )
+	{
+		// I think my vehicle has been destroyed.
+		return false;
+	}
+
 	pVehiclePhysics->GetVelocity( &vecVelocity, &angVel );
 	float flSpeed = vecVelocity.Length();
 	float flIncTime = gpGlobals->curtime - GetLastThink();
@@ -1095,7 +1102,7 @@ void CNPC_VehicleDriver::InputGotoPathCorner( inputdata_t &inputdata )
 	string_t iszPathName = inputdata.value.StringID();
 	if ( iszPathName != NULL_STRING )
 	{
-		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszPathName, NULL );
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszPathName );
 		if ( !pEntity )
 		{
 			Warning("npc_vehicledriver %s couldn't find entity named %s\n", STRING(GetEntityName()), STRING(iszPathName) );

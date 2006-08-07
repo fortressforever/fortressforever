@@ -11,6 +11,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include <stdio.h>
 #include <string.h>
 #include "stringregistry.h"
@@ -19,6 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
 
 //-----------------------------------------------------------------------------
 // Purpose: This class wraps the containers that do the actual work
@@ -142,3 +144,4 @@ unsigned short CStringRegistry::InvalidIndex() const
 	return m_pStringList->InvalidIndex();
 }
 
+#endif // _STATIC_LINKED && CLIENT_DLL

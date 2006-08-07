@@ -13,7 +13,7 @@
 
 #include "iplayeranimstate.h"
 #include "studio.h"
-
+#include "sequence_Transitioner.h"
 
 #ifdef CLIENT_DLL
 	class C_BaseAnimatingOverlay;
@@ -21,7 +21,6 @@
 #else
 	class CBaseAnimatingOverlay;
 #endif
-
 
 // If a guy is moving slower than this, then he's considered to not be moving
 // (so he goes to his idle animation at full playback rate rather than his walk 
@@ -57,7 +56,7 @@ public:
 // CBasePlayerAnimState declaration.
 // ------------------------------------------------------------------------------------------------ //
 
-class CBasePlayerAnimState : virtual public IPlayerAnimState
+abstract_class CBasePlayerAnimState : virtual public IPlayerAnimState
 {
 public:
 	DECLARE_CLASS_NOBASE( CBasePlayerAnimState );
@@ -105,7 +104,7 @@ public:
 	// This is called near the start of each frame.
 	// The base class figures out the main sequence and the aim sequence, and derived
 	// classes can overlay whatever other animations they want.
-	virtual void ComputeSequences();
+	virtual void ComputeSequences( CStudioHdr *pStudioHdr );
 
 	// This is called to figure out what the main activity is. The mod-specific class 
 	// overrides this to handle events like jumping, firing, etc.
@@ -115,14 +114,15 @@ public:
 	// animation prefixes and suffixes and calls CalcSequenceIndex().
 	virtual int CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle ) = 0;
 
-#ifdef CLIENT_DLL
+	// This lets server-controlled idle sequences to play unchanged on the client
+	virtual bool ShouldChangeSequences( void ) const;
+
 	// If this returns true, then it will blend the current aim layer sequence with an idle aim layer
 	// sequence based on how fast the character is moving, so it doesn't play the upper-body run at
 	// full speed if he's moving really slowly.
 	//
 	// We return false on this for animations that don't have blends, like reloads.
 	virtual bool ShouldBlendAimSequenceToIdle();
-#endif
 
 	// For the body left/right rotation, some models use a pose parameter and some use a bone controller.
 	virtual float SetOuterBodyYaw( float flValue );
@@ -138,7 +138,11 @@ public:
 
 	// Display Con_NPrint output about the animation state. This is called if
 	// we're on the client and if cl_showanimstate holds the current entity's index.
+	void DebugShowAnimStateFull( int iStartLine );
+
 	virtual void DebugShowAnimState( int iStartLine );
+	void AnimStatePrintf( int iLine, const char *pMsg, ... );
+	void AnimStateLog( const char *pMsg, ... );
 
 	// Calculate the playback rate for movement layer
 	virtual float CalcMovementPlaybackRate( bool *bIsMoving );
@@ -147,9 +151,12 @@ public:
 	// internal ACT comparisons using the base activity
 	virtual Activity TranslateActivity( Activity actDesired ) { return actDesired; }
 
+	// Allow inheriting classes to override SelectWeightedSequence
+	virtual int SelectWeightedSequence( Activity activity );
+
 public:
 	
-	void				GetPoseParameters( float poseParameter[MAXSTUDIOPOSEPARAM] );
+	void				GetPoseParameters( CStudioHdr *pStudioHdr, float poseParameter[MAXSTUDIOPOSEPARAM] );
 
 	CBaseAnimatingOverlay	*GetOuter() const;
 
@@ -161,7 +168,7 @@ protected:
 
 	// Sets up the string you specify, looks for that sequence and returns the index. 
 	// Complains in the console and returns 0 if it can't find it.
-	int CalcSequenceIndex( const char *pBaseName, ... );
+	virtual int CalcSequenceIndex( const char *pBaseName, ... );
 
 	Activity GetCurrentMainSequenceActivity() const;
 
@@ -180,9 +187,11 @@ protected:
 
 protected:
 	int					ConvergeAngles( float goal,float maxrate, float maxgap, float dt, float& current );
-	virtual void		ComputePoseParam_MoveYaw();
-	virtual void		ComputePoseParam_BodyPitch();
+	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
+	virtual void		ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_BodyYaw();
+
+	virtual void		ResetGroundSpeed( void );
 
 protected:
 	// The player's eye yaw and pitch angles.
@@ -235,11 +244,6 @@ private:
 
 private:
 	
-	// Ground speed interpolators.
-#ifdef CLIENT_DLL
-	float m_flLastGroundSpeedUpdateTime;
-	CInterpolatedVar<float> m_iv_flMaxGroundSpeed;
-#endif
 	float m_flMaxGroundSpeed;
 
 	float m_flLastAnimationStateClearTime;
@@ -256,7 +260,6 @@ private:
 
 	Vector2D			m_vLastMovePose;
 
-#ifdef CLIENT_DLL
 	void UpdateAimSequenceLayers(
 		float flCycle,
 		int iFirstLayer,
@@ -270,7 +273,6 @@ private:
 	// This gives us smooth transitions between aim anim sequences on the client.
 	CSequenceTransitioner	m_IdleSequenceTransitioner;
 	CSequenceTransitioner	m_SequenceTransitioner;
-#endif
 };
 
 extern float g_flLastBodyPitch, g_flLastBodyYaw, m_flLastMoveYaw;

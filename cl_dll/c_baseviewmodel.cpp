@@ -15,6 +15,9 @@
 #include "vmatrix.h"
 #include "cl_animevent.h"
 #include "eventlist.h"
+#include "tools/bonelist.h"
+#include <KeyValues.h>
+#include "hltvcamera.h"
 #include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -24,11 +27,12 @@
 	ConVar cl_righthand( "cl_righthand", "1", FCVAR_ARCHIVE, "Use right-handed view models." );
 #endif
 
+void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg );
 
 void FormatViewModelAttachment( Vector &vOrigin, bool bInverse )
 {
 	// Presumably, SetUpView has been called so we know our FOV and render origin.
-	const CViewSetup *pViewSetup = view->GetViewSetup();
+	const CViewSetup *pViewSetup = view->GetPlayerViewSetup();
 	
 	float worldx = tan( pViewSetup->fov * M_PI/360.0 );
 	float viewx = tan( pViewSetup->fovViewmodel * M_PI/360.0 );
@@ -36,8 +40,9 @@ void FormatViewModelAttachment( Vector &vOrigin, bool bInverse )
 	// aspect ratio cancels out, so only need one factor
 	// the difference between the screen coordinates of the 2 systems is the ratio
 	// of the coefficients of the projection matrices (tan (fov/2) is that coefficient)
-	float factor = worldx / viewx;
+	float factorX = worldx / viewx;
 
+	float factorY = factorX;
 	
 	// Get the coordinates in the viewer's space.
 	Vector tmp = vOrigin - pViewSetup->origin;
@@ -46,10 +51,10 @@ void FormatViewModelAttachment( Vector &vOrigin, bool bInverse )
 	// Now squash X and Y.
 	if ( bInverse )
 	{
-		if ( factor != 0 )
+		if ( factorX != 0 && factorY != 0 )
 		{
-			vTransformed.x /= factor;
-			vTransformed.y /= factor;
+			vTransformed.x /= factorX;
+			vTransformed.y /= factorY;
 		}
 		else
 		{
@@ -59,9 +64,11 @@ void FormatViewModelAttachment( Vector &vOrigin, bool bInverse )
 	}
 	else
 	{
-		vTransformed.x *= factor;
-		vTransformed.y *= factor;
+		vTransformed.x *= factorX;
+		vTransformed.y *= factorY;
 	}
+
+
 
 	// Transform back to world space.
 	Vector vOut = (MainViewRight() * vTransformed.x) + (MainViewUp() * vTransformed.y) + (MainViewForward() * vTransformed.z);
@@ -122,6 +129,7 @@ void C_BaseViewModel::FireEvent( const Vector& origin, const QAngle& angles, int
 
 bool C_BaseViewModel::Interpolate( float currentTime )
 {
+	CStudioHdr *pStudioHdr = GetModelPtr();
 	// Make sure we reset our animation information if we've switch sequences
 	UpdateAnimationParity();
 
@@ -147,7 +155,7 @@ bool C_BaseViewModel::Interpolate( float currentTime )
 		elapsed_time = 0;
 	}
 
-	float dt = elapsed_time * GetSequenceCycleRate( GetSequence() );
+	float dt = elapsed_time * GetSequenceCycleRate( pStudioHdr, GetSequence() );
 	if ( dt >= 1.0f )
 	{
 		if ( !IsSequenceLooping( GetSequence() ) )
@@ -189,7 +197,7 @@ void C_BaseViewModel::ApplyBoneMatrixTransform( matrix3x4_t& transform )
 
 		// We could get MATERIAL_VIEW here, but this is called sometimes before the renderer
 		// has set that matrix. Luckily, this is called AFTER the CViewSetup has been initialized.
-		const CViewSetup *pSetup = view->GetViewSetup();
+		const CViewSetup *pSetup = view->GetPlayerViewSetup();
 		AngleMatrix( pSetup->angles, pSetup->origin, viewMatrixInverse );
 		MatrixInvert( viewMatrixInverse, viewMatrix );
 
@@ -216,6 +224,21 @@ void C_BaseViewModel::ApplyBoneMatrixTransform( matrix3x4_t& transform )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: check if weapon viewmodel should be drawn
+//-----------------------------------------------------------------------------
+bool C_BaseViewModel::ShouldDraw()
+{
+	if ( engine->IsHLTV() )
+	{
+		return ( HLTVCamera()->GetMode() == OBS_MODE_IN_EYE &&
+				 HLTVCamera()->GetPrimaryTarget() == GetOwner()	);
+	}
+	else
+	{
+		return BaseClass::ShouldDraw();
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Render the weapon. Draw the Viewmodel if the weapon's being carried

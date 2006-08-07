@@ -21,7 +21,7 @@ IPredictionSystem *IPredictionSystem::g_pPredictionSystems = NULL;
 
 
 //-----------------------------------------------------------------------------
-// Sets up the move data for TF2
+// Sets up the move data 
 //-----------------------------------------------------------------------------
 class CFFPlayerMove : public CPlayerMove
 {

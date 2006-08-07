@@ -31,18 +31,23 @@ enum RenderGroup_t
 	RENDER_GROUP_VIEW_MODEL_TRANSLUCENT, // transparent overlays etc
 	RENDER_GROUP_OTHER,	// Unclassfied. Won't get drawn.
 
+	RENDER_GROUP_COUNT_VERSION_1,
+
+	RENDER_GROUP_OPAQUE_STATIC,
+	RENDER_GROUP_OPAQUE_BRUSH,
+
 	// This one's always gotta be last
 	RENDER_GROUP_COUNT
 };
 
-
-#define CLIENTLEAFSYSTEM_INTERFACE_VERSION	"ClientLeafSystem001"
+#define CLIENTLEAFSYSTEM_INTERFACE_VERSION_1 "ClientLeafSystem001"
+#define CLIENTLEAFSYSTEM_INTERFACE_VERSION	"ClientLeafSystem002"
 
 
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
-class IClientLeafSystemEngine
+abstract_class IClientLeafSystemEngine
 {
 public:
 	// Adds and removes renderables from the leaf lists

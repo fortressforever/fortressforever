@@ -17,7 +17,7 @@ class CUserCmd;
 class C_BaseCombatWeapon;
 struct kbutton_t;
 
-class IInput
+abstract_class IInput
 {
 public:
 	// Initialization/shutdown of the subsystem
@@ -42,10 +42,12 @@ public:
 	virtual int			KeyEvent( int eventcode, int keynum, const char *pszCurrentBinding ) = 0;
 	// Look for key
 	virtual kbutton_t	*FindKey( const char *name ) = 0;
+
 	// Issue commands from controllers
 	virtual void		ControllerCommands( void ) = 0;
 	// Extra initialization for some joysticks
 	virtual void		Joystick_Advanced( void ) = 0;
+
 	// Accumulate mouse delta
 	virtual void		AccumulateMouse( void ) = 0;
 	// Notify about mouse event
@@ -53,15 +55,16 @@ public:
 	// Activate/deactivate mouse
 	virtual void		ActivateMouse( void ) = 0;
 	virtual void		DeactivateMouse( void ) = 0;
+
 	// Clear mouse state data
 	virtual void		ClearStates( void ) = 0;
 	// Retrieve lookspring setting
 	virtual float		GetLookSpring( void ) = 0;
+
 	// Retrieve mouse position
 	virtual void		GetFullscreenMousePos( int *mx, int *my, int *unclampedx = 0, int *unclampedy = 0 ) = 0;
 	virtual void		SetFullscreenMousePos( int mx, int my ) = 0;
 	virtual void		ResetMouse( void ) = 0;
-
 	virtual	float		GetLastForwardMove( void ) = 0;
 
 	// Third Person camera ( TODO/FIXME:  Move this to a separate interface? )
@@ -85,6 +88,8 @@ public:
 	// IK back channel info
 	virtual void		AddIKGroundContactInfo( int entindex, float minheight, float maxheight ) = 0;
 #endif
+
+	virtual void		LevelInit( void ) = 0;
 
 	// Causes an input to have to be re-pressed to become active
 	virtual void		ClearInputButton( int bits ) = 0;

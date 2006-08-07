@@ -18,8 +18,9 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#ifndef _XBOX
 #include <windows.h>
-
+#endif
 #undef PostMessage
 
 #pragma warning( disable: 4800 )	// forcing value to bool 'true' or 'false' (performance warning)

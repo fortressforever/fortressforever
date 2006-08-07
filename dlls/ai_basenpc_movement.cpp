@@ -17,6 +17,7 @@
 #include "ai_motor.h"
 #include "ai_navigator.h"
 #include "ai_hint.h"
+#include "scripted.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -162,6 +163,7 @@ bool CAI_BaseNPC::IsCurTaskContinuousMove()
 	{
 	case TASK_WAIT_FOR_MOVEMENT:
 	case TASK_MOVE_TO_TARGET_RANGE:
+	case TASK_MOVE_TO_GOAL_RANGE:
 	case TASK_WEAPON_RUN_PATH:
 	case TASK_PLAY_SCENE:
 	case TASK_RUN_PATH_TIMED:
@@ -253,7 +255,7 @@ float CAI_BaseNPC::OpenDoorAndWait( CBaseEntity *pDoor )
 			CBaseEntity *pTarget = NULL;
 			for (;;)
 			{
-				pTarget = gEntList.FindEntityByName( pTarget, pDoor->GetEntityName(), NULL );
+				pTarget = gEntList.FindEntityByName( pTarget, pDoor->GetEntityName() );
 
 				if ( pTarget != pDoor )
 				{
@@ -421,6 +423,11 @@ bool CAI_BaseNPC::AutoMovement( float flInterval, CBaseEntity *pTarget, AIMoveTr
 	{
 		// DevMsg( "%.2f : (%.1f) %.1f %.1f %.1f\n", gpGlobals->curtime, (newPos - GetLocalOrigin()).Length(), newPos.x, newPos.y, newAngles.y );
 	
+		if ( m_hCine )
+		{
+			m_hCine->ModifyScriptedAutoMovement( &newPos );
+		}
+
 		if (GetMoveType() == MOVETYPE_STEP)
 		{
 			if (!(GetFlags() & FL_FLY))

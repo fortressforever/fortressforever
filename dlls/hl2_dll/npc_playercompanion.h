@@ -16,12 +16,20 @@
 #include "ai_behavior_lead.h"
 #include "ai_behavior_actbusy.h"
 
+
+#ifdef HL2_EPISODIC
+#include "ai_behavior_operator.h"
+#include "ai_behavior_passenger_companion.h"
+#endif
+
 #if defined( _WIN32 )
 #pragma once
 #endif
 
 enum AIReadiness_t
 {
+	AIRL_PANIC = -2,
+	AIRL_STEALTH = -1,
 	AIRL_RELAXED = 0,
 	AIRL_STIMULATED,
 	AIRL_AGITATED,
@@ -34,10 +42,27 @@ enum AIReadinessUse_t
 	AIRU_ONLY_PLAYER_SQUADMATES,
 };
 
+
+class CCompanionActivityRemap : public CActivityRemap
+{
+public:
+
+	AIReadiness_t	m_readiness;
+	ThreeState_t	m_fAiming;
+	bool			m_bWeaponRequired;
+};
+
+// Readiness modes that only change due to mapmaker scripts
+#define READINESS_MIN_VALUE			-2
+#define READINESS_MODE_PANIC		-2
+#define READINESS_MODE_STEALTH		-1
+
+// Readiness modes that change normally
 #define READINESS_VALUE_RELAXED		0.1f
 #define READINESS_VALUE_STIMULATED	0.95f
 #define READINESS_VALUE_AGITATED	1.0f
 
+class CPhysicsProp;
 
 //-----------------------------------------------------------------------------
 //
@@ -75,6 +100,7 @@ public:
 
 	CSound			*GetBestSound( int validTypes = ALL_SOUNDS );
 	bool			QueryHearSound( CSound *pSound );
+	bool			QuerySeeEntity( CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC = false );
 	bool			ShouldIgnoreSound( CSound * );
 	
 	int 			SelectSchedule();
@@ -85,7 +111,10 @@ public:
 	virtual int 	SelectScheduleCombat();
 	int 			SelectSchedulePlayerPush();
 
+	virtual bool	CanReload( void );
+
 	virtual bool	ShouldDeferToFollowBehavior();
+	bool			ShouldDeferToPassengerBehavior( void );
 
 	bool			IsValidReasonableFacing( const Vector &vecSightDir, float sightDist );
 	
@@ -97,14 +126,18 @@ public:
 	Activity		TranslateActivityReadiness( Activity activity );
 	Activity		NPC_TranslateActivity( Activity eNewActivity );
 	void 			HandleAnimEvent( animevent_t *pEvent );
+	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 
 	int				GetSoundInterests();
 	
 	void 			Touch( CBaseEntity *pOther );
 
-	virtual bool	IgnorePlayerPushing( void ) { return false; }
+	virtual bool	IgnorePlayerPushing( void );
 
 	void			ModifyOrAppendCriteria( AI_CriteriaSet& set );
+	void			Activate( void );
+
+	void			PrepareReadinessRemap( void );
 
 	//---------------------------------
 	// Readiness
@@ -118,11 +151,39 @@ protected:
 	void			SetReadinessValue( float flSet );
 	void			SetReadinessSensitivity( float flSensitivity ) { m_flReadinessSensitivity = flSensitivity; }
 	virtual void	UpdateReadiness();
+	virtual float	GetReadinessDecay();
+	bool			IsInScriptedReadinessState( void ) { return (m_flReadiness < 0 ); }
+
+	CUtlVector< CCompanionActivityRemap > m_activityMappings;
 
 public:
 	float			GetReadinessValue()	{ return m_flReadiness; }
 	int				GetReadinessLevel();
 	void			SetReadinessLevel( int iLevel, bool bOverrideLock, bool bSlam );
+	void			LockReadiness( float duration = -1.0f ); // Defaults to indefinitely locked
+	void			UnlockReadiness( void );
+
+	virtual			void ReadinessLevelChanged( int iPriorLevel ) { 	}
+
+	void			InputGiveWeapon( inputdata_t &inputdata );
+
+#ifdef HL2_EPISODIC
+	//---------------------------------
+	// Vehicle passenger
+	//---------------------------------
+	void			InputEnterVehicle( inputdata_t &inputdata );
+	void			InputExitVehicle( inputdata_t &inputdata );
+	bool			CanEnterVehicle( void );
+	bool			CanExitVehicle( void );
+
+	virtual void	UpdateEfficiency( bool bInPVS );
+	virtual bool	IsInAVehicle( void );
+	virtual	IServerVehicle *GetVehicle( void );
+	virtual CBaseEntity *GetVehicleEntity( void );
+
+#endif // HL2_EPISODIC
+
+public:
 
 	//---------------------------------
 	//---------------------------------
@@ -137,7 +198,7 @@ public:
 	bool			FindNewAimTarget();
 	void			OnNewLookTarget();
 	bool			ShouldBeAiming();
-	bool			IsAllowedToAim();
+	virtual bool	IsAllowedToAim();
 	bool			HasAimLOS( CBaseEntity *pAimTarget );
 	void			AimGun();
 	CBaseEntity		*GetAlternateMoveShootTarget();
@@ -158,8 +219,10 @@ public:
 	bool 			FCanCheckAttacks();
 	Vector 			GetActualShootPosition( const Vector &shootOrigin );
 	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
+	bool			ShouldLookForBetterWeapon();
 	bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
 	void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
+	void			PickupWeapon( CBaseCombatWeapon *pWeapon );
 	
 	bool 			FindCoverPos( CBaseEntity *pEntity, Vector *pResult);
 	bool			FindCoverPosInRadius( CBaseEntity *pEntity, const Vector &goalPos, float coverRadius, Vector *pResult );
@@ -172,6 +235,7 @@ public:
 	static bool		IsMortar( CBaseEntity *pEntity );
 	static bool		IsSniper( CBaseEntity *pEntity );
 	static bool		IsTurret(  CBaseEntity *pEntity );
+	static bool		IsGunship( CBaseEntity *pEntity );
 	
 	//---------------------------------
 	// Damage handling
@@ -199,10 +263,14 @@ public:
 	// Inputs
 	//---------------------------------
 	void 			InputOutsideTransition( inputdata_t &inputdata );
+	void			InputSetReadinessPanic( inputdata_t &inputdata );
+	void			InputSetReadinessStealth( inputdata_t &inputdata );
 	void			InputSetReadinessLow( inputdata_t &inputdata );
 	void			InputSetReadinessMedium( inputdata_t &inputdata );
 	void			InputSetReadinessHigh( inputdata_t &inputdata );
 	void			InputLockReadiness( inputdata_t &inputdata );
+
+	bool			AllowReadinessValueChange( void );
 
 protected:
 	//-----------------------------------------------------
@@ -212,9 +280,11 @@ protected:
 	{
 		COND_PC_HURTBYFIRE = BaseClass::NEXT_CONDITION,
 		COND_PC_SAFE_FROM_MORTAR,
+		COND_PC_BECOMING_PASSENGER,
 		NEXT_CONDITION,
 
 		SCHED_PC_COWER = BaseClass::NEXT_SCHEDULE,
+		SCHED_PC_MOVE_TOWARDS_COVER_FROM_BEST_SOUND,
 		SCHED_PC_TAKE_COVER_FROM_BEST_SOUND,
 		SCHED_PC_FLEE_FROM_BEST_SOUND,
 		SCHED_PC_FAIL_TAKE_COVER_TURRET,
@@ -254,12 +324,17 @@ private:
 protected:
 	//-----------------------------------------------------
 
-	CAI_AssaultBehavior		m_AssaultBehavior;
-	CAI_FollowBehavior		m_FollowBehavior;
-	CAI_StandoffBehavior	m_StandoffBehavior;
-	CAI_LeadBehavior		m_LeadBehavior;
-	CAI_ActBusyBehavior		m_ActBusyBehavior;
+	virtual CAI_FollowBehavior &GetFollowBehavior( void ) { return m_FollowBehavior; }
 
+	CAI_AssaultBehavior				m_AssaultBehavior;
+	CAI_FollowBehavior				m_FollowBehavior;
+	CAI_StandoffBehavior			m_StandoffBehavior;
+	CAI_LeadBehavior				m_LeadBehavior;
+	CAI_ActBusyBehavior				m_ActBusyBehavior;
+#ifdef HL2_EPISODIC
+	CAI_OperatorBehavior			m_OperatorBehavior;
+	CAI_PassengerBehaviorCompanion	m_PassengerBehavior;
+#endif
 	//-----------------------------------------------------
 
 	// Readiness is a value that's fed by various events in the NPC's AI. It is used
@@ -282,14 +357,29 @@ protected:
 
 	EHANDLE m_hAimTarget;
 
+#ifdef HL2_EPISODIC
+	CHandle<CPhysicsProp>	m_hFlare;
+#endif // HL2_EPISODIC
+
 	//-----------------------------------------------------
 
 	static string_t gm_iszMortarClassname;
 	static string_t gm_iszFloorTurretClassname;
 	static string_t gm_iszGroundTurretClassname;
 	static string_t gm_iszShotgunClassname;
+	static string_t	gm_iszRollerMineClassname;
 
 	//-----------------------------------------------------
+
+	void	InputEnableAlwaysTransition( inputdata_t &inputdata );
+	void	InputDisableAlwaysTransition( inputdata_t &inputdata );
+	bool	m_bAlwaysTransition;
+	bool	m_bDontPickupWeapons;
+
+	void	InputEnableWeaponPickup( inputdata_t &inputdata );
+	void	InputDisableWeaponPickup( inputdata_t &inputdata );
+
+	COutputEvent	m_OnWeaponPickup;
 
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;

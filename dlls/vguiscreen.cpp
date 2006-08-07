@@ -66,7 +66,7 @@ bool CVGuiScreen::KeyValue( const char *szKeyName, const char *szValue )
 {
 	//!! temp hack, until worldcraft is fixed
 	// strip the # tokens from (duplicate) key names
-	char *s = strchr( szKeyName, '#' );
+	char *s = (char *)strchr( szKeyName, '#' );
 	if ( s )
 	{
 		*s = '\0';
@@ -129,7 +129,7 @@ void CVGuiScreen::Spawn()
 	SetSolid( SOLID_OBB );
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	SetActualSize( m_flWidth, m_flHeight );
-	m_fScreenFlags = VGUI_SCREEN_ACTIVE;
+	m_fScreenFlags.Set( VGUI_SCREEN_ACTIVE );
 
 	m_takedamage = DAMAGE_NO;
 	AddFlag( FL_NOTARGET );
@@ -182,10 +182,8 @@ void CVGuiScreen::SetActive( bool bActive )
 		}
 		else
 		{
-			m_fScreenFlags |= VGUI_SCREEN_ACTIVE;
+			m_fScreenFlags.Set(  m_fScreenFlags | VGUI_SCREEN_ACTIVE );
 		}
-
-		NetworkStateChanged();
 	}
 }
 
@@ -212,10 +210,8 @@ void CVGuiScreen::SetAttachedToViewModel( bool bAttached )
 		}
 		else
 		{
-			m_fScreenFlags |= VGUI_SCREEN_ATTACHED_TO_VIEWMODEL;
+			m_fScreenFlags.Set( m_fScreenFlags | VGUI_SCREEN_ATTACHED_TO_VIEWMODEL );
 		}
-
-		NetworkStateChanged();
 	}
 }
 
@@ -250,10 +246,8 @@ void CVGuiScreen::MakeVisibleOnlyToTeammates( bool bActive )
 		}
 		else
 		{
-			m_fScreenFlags |= VGUI_SCREEN_VISIBLE_TO_TEAMMATES;
+			m_fScreenFlags.Set(  m_fScreenFlags | VGUI_SCREEN_VISIBLE_TO_TEAMMATES );
 		}
-
-		NetworkStateChanged();
 	}
 }
 
@@ -285,7 +279,7 @@ int CVGuiScreen::UpdateTransmitState()
 	{
 		// Let the parent object trigger the send. This is more efficient than having it call CBaseEntity::ShouldTransmit
 		// for all the vgui screens in the map.
-		return SetTransmitState( FL_EDICT_DONTSEND );
+		return SetTransmitState( FL_EDICT_PVSCHECK );
 	}
 	else
 	{
@@ -329,8 +323,6 @@ void CVGuiScreen::SetActualSize( float flWidth, float flHeight )
 		mins.y = flHeight;
 
 	UTIL_SetSize( this, mins, maxs );
-
-	NetworkStateChanged();
 }
 
 

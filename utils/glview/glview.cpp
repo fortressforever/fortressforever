@@ -15,11 +15,13 @@
 #include <math.h>
 #include "cmdlib.h"
 #include "mathlib.h"
+#include "cmodel.h"
 #include "vstdlib/strtools.h"
 #include "physdll.h"
 #include "phyfile.h"
 #include "vphysics_interface.h"
 #include "vstdlib/icommandline.h"
+#include "tier0/vprof.h"
 
 HDC		camdc;
 HGLRC	baseRC;
@@ -51,6 +53,7 @@ int g_UseBlending      = 0;	   // Toggle to use blending mode or not
 BOOL g_bReadPortals    = 0;	   // Did we read in a portal file?
 BOOL g_bNoDepthPortals = 0;    // Do we zbuffer the lines of the portals?
 int g_nPortalHighlight = -1;	// The leaf we're viewing
+int g_nLeafHighlight = -1;	// The leaf we're viewing
 BOOL g_bShowList1      = 1;	   // Show regular polygons?
 BOOL g_bShowList2      = 1;	   // Show portals?
 BOOL g_bShowLines      = 0;    // Show outlines of faces
@@ -67,6 +70,7 @@ void AppKeyUp( int key );
 BOOL ReadDisplacementFile( const char *filename );
 void DrawDisplacementData( void );
 
+#define BENCHMARK_PHY 0
 
 /*
 =================
@@ -92,10 +96,10 @@ void Error (char *error, ...)
 float	origin[3] = {32, 32, 48};
 float	angles[3];
 float	forward[3], right[3], vup[3], vpn[3], vright[3];
-float	width = 640;
-float	height = 480;
+float	width = 1024;
+float	height = 768;
 
-#define	SPEED_MOVE	320		// Units / second (run speed of HL)
+float g_flMovementSpeed	= 320.f;		// Units / second (run speed of HL)
 #define	SPEED_TURN	90		// Degrees / second
 
 #define	VK_COMMA		188
@@ -194,28 +198,28 @@ void Cam_Update( float frametime )
 {
 	if ( Test_Key( 'W' ) )
 	{
-		VectorMA (origin, SPEED_MOVE*frametime, vpn, origin);
+		VectorMA (origin, g_flMovementSpeed*frametime, vpn, origin);
 	}
 	if ( Test_Key( 'S' ) )
 	{
-		VectorMA (origin, -SPEED_MOVE*frametime, vpn, origin);
+		VectorMA (origin, -g_flMovementSpeed*frametime, vpn, origin);
 	}
 	if ( Test_Key( 'A' ) )
 	{
-		VectorMA (origin, -SPEED_MOVE*frametime, vright, origin);
+		VectorMA (origin, -g_flMovementSpeed*frametime, vright, origin);
 	}
 	if ( Test_Key( 'D' ) )
 	{
-		VectorMA (origin, SPEED_MOVE*frametime, vright, origin);
+		VectorMA (origin, g_flMovementSpeed*frametime, vright, origin);
 	}
 
 	if ( Test_Key( VK_UP ) )
 	{
-		VectorMA (origin, SPEED_MOVE*frametime, forward, origin);
+		VectorMA (origin, g_flMovementSpeed*frametime, forward, origin);
 	}
 	if ( Test_Key( VK_DOWN ) )
 	{
-		VectorMA (origin, -SPEED_MOVE*frametime, forward, origin);
+		VectorMA (origin, -g_flMovementSpeed*frametime, forward, origin);
 	}
 
 	if ( Test_Key( VK_LEFT ) )
@@ -228,11 +232,11 @@ void Cam_Update( float frametime )
 	}
 	if ( Test_Key( 'F' ) )
 	{
-		origin[2] += SPEED_MOVE*frametime;
+		origin[2] += g_flMovementSpeed*frametime;
 	}
 	if ( Test_Key( 'C' ) )
 	{
-		origin[2] -= SPEED_MOVE*frametime;
+		origin[2] -= g_flMovementSpeed*frametime;
 	}
 	if ( Test_Key( VK_INSERT ) )
 	{
@@ -296,7 +300,7 @@ void Draw (void)
 
     screenaspect = (float)width/height;
 	yfov = 2*atan((float)height/width)*180/M_PI;
-    gluPerspective (yfov,  screenaspect,  4,  8192);
+    gluPerspective (yfov,  screenaspect,  6,  20000);
 
     glRotatef (-90,  1, 0, 0);	    // put Z going up
     glRotatef (90,  0, 0, 1);	    // put Z going up
@@ -321,10 +325,16 @@ void Draw (void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (g_UseBlending)
+	{
 		glEnable(GL_BLEND);// YWB TESTING
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE); // Enable face culling, just in case...
+	}
 	else
+	{
 		glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+	}
 	glDepthFunc (GL_LEQUAL);
 
 	if( g_bDisp )
@@ -450,7 +460,291 @@ void ReadPolyFileType(const char *name, int nList, BOOL drawLines)
 	}
 }
 
-void ReadPHYFile(const char *name, int nList)
+#if BENCHMARK_PHY
+#define NUM_COLLISION_TESTS 2500
+#include "gametrace.h"
+#include "fmtstr.h"
+
+
+struct testlist_t
+{
+	Vector start;
+	Vector end;
+	Vector normal;
+	bool hit;
+};
+
+const float baselineTotal = 120.16f;
+const float baselineRay = 28.25f;
+const float baselineBox = 91.91f;
+#define IMPROVEMENT_FACTOR(x,baseline) (baseline/(x))
+#define IMPROVEMENT_PERCENT(x,baseline) (((baseline-(x)) / baseline) * 100.0f)
+
+testlist_t g_Traces[NUM_COLLISION_TESTS];
+void Benchmark_PHY( const CPhysCollide *pCollide )
+{
+	int i;
+	Msg( "Testing collision system\n" );
+	Vector start = vec3_origin;
+	static Vector *targets = NULL;
+	static bool first = true;
+	static float test[2] = {1,1};
+	if ( first )
+	{
+		float radius = 0;
+		float theta = 0;
+		float phi = 0;
+		for ( int i = 0; i < NUM_COLLISION_TESTS; i++ )
+		{
+			radius += NUM_COLLISION_TESTS * 123.123f;
+			radius = fabs(fmod(radius, 128));
+			theta += NUM_COLLISION_TESTS * 0.76f;
+			theta = fabs(fmod(theta, DEG2RAD(360)));
+			phi += NUM_COLLISION_TESTS * 0.16666666f;
+			phi = fabs(fmod(phi, DEG2RAD(180)));
+
+			float st, ct, sp, cp;
+			SinCos( theta, &st, &ct );
+			SinCos( phi, &sp, &cp );
+			st = sin(theta);
+			ct = cos(theta);
+			sp = sin(phi);
+			cp = cos(phi);
+
+			g_Traces[i].start.x = radius * ct * sp;
+			g_Traces[i].start.y = radius * st * sp;
+			g_Traces[i].start.z = radius * cp;
+		}
+		first = false;
+	}
+
+	float duration = 0;
+	Vector size[2];
+	size[0].Init(0,0,0);
+	size[1].Init(16,16,16);
+	unsigned int dots = 0;
+
+#if VPROF_LEVEL > 0 
+	g_VProfCurrentProfile.Reset();
+	g_VProfCurrentProfile.ResetPeaks();
+	g_VProfCurrentProfile.Start();
+#endif
+	unsigned int hitCount = 0;
+	double startTime = Plat_FloatTime();
+	trace_t tr;
+	for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+	{
+		physcollision->TraceBox( g_Traces[i].start, start, -size[0], size[0], pCollide, vec3_origin, vec3_angle, &tr );
+		if ( tr.DidHit() )
+		{
+			g_Traces[i].end = tr.endpos;
+			g_Traces[i].normal = tr.plane.normal;
+			g_Traces[i].hit = true;
+			hitCount++;
+		}
+		else
+		{
+			g_Traces[i].hit = false;
+		}
+	}
+	for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+	{
+		physcollision->TraceBox( g_Traces[i].start, start, -size[1], size[1], pCollide, vec3_origin, vec3_angle, &tr );
+	}
+	duration = Plat_FloatTime() - startTime;
+	{
+	unsigned int msSupp = physcollision->ReadStat( 100 );
+	unsigned int msGJK = physcollision->ReadStat( 101 );
+	unsigned int msMesh = physcollision->ReadStat( 102 );
+	CFmtStr str("%d ms total %d ms gjk %d mesh solve\n", msSupp, msGJK, msMesh );
+	OutputDebugStr( str.Access() );
+	}
+
+#if VPROF_LEVEL > 0 
+	g_VProfCurrentProfile.MarkFrame();
+	g_VProfCurrentProfile.Stop();
+	g_VProfCurrentProfile.Reset();
+	g_VProfCurrentProfile.ResetPeaks();
+	g_VProfCurrentProfile.Start();
+#endif
+	hitCount = 0;
+	startTime = Plat_FloatTime();
+	for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+	{
+		physcollision->TraceBox( g_Traces[i].start, start, -size[0], size[0], pCollide, vec3_origin, vec3_angle, &tr );
+		if ( tr.DidHit() )
+		{
+			g_Traces[i].end = tr.endpos;
+			g_Traces[i].normal = tr.plane.normal;
+			g_Traces[i].hit = true;
+			hitCount++;
+		}
+		else
+		{
+			g_Traces[i].hit = false;
+		}
+#if VPROF_LEVEL > 0 
+		g_VProfCurrentProfile.MarkFrame();
+#endif
+	}
+	double midTime = Plat_FloatTime();
+	for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+	{
+		physcollision->TraceBox( g_Traces[i].start, start, -size[1], size[1], pCollide, vec3_origin, vec3_angle, &tr );
+#if VPROF_LEVEL > 0 
+		g_VProfCurrentProfile.MarkFrame();
+#endif
+	}
+	double endTime = Plat_FloatTime();
+	duration = endTime - startTime;
+	{
+	CFmtStr str("%d collisions in %.2f ms [%.2f X] %d hits\n", NUM_COLLISION_TESTS, duration*1000, IMPROVEMENT_FACTOR(duration*1000.0f, baselineTotal), hitCount );
+	OutputDebugStr( str.Access() );
+	}
+	{
+		float rayTime = (midTime - startTime) * 1000.0f;
+		float boxTime = (endTime - midTime)*1000.0f;
+		CFmtStr str("%.2f ms rays [%.2f X] %.2f ms boxes [%.2f X]\n", rayTime, IMPROVEMENT_FACTOR(rayTime, baselineRay), boxTime, IMPROVEMENT_FACTOR(boxTime, baselineBox));
+		OutputDebugStr( str.Access() );
+	}
+
+	{
+	unsigned int msSupp = physcollision->ReadStat( 100 );
+	unsigned int msGJK = physcollision->ReadStat( 101 );
+	unsigned int msMesh = physcollision->ReadStat( 102 );
+	CFmtStr str("%d ms total %d ms gjk %d mesh solve\n", msSupp, msGJK, msMesh );
+	OutputDebugStr( str.Access() );
+	}
+#if VPROF_LEVEL > 0 
+	g_VProfCurrentProfile.Stop();
+	g_VProfCurrentProfile.OutputReport( VPRT_FULL & ~VPRT_HIERARCHY, NULL );
+#endif
+
+	// draw the traces in yellow
+	glColor3f( 1.0f, 1.0f, 0.0f );
+	glBegin( GL_LINES );
+	for ( int i = 0; i < NUM_COLLISION_TESTS; i++ )
+	{
+		if ( !g_Traces[i].hit )
+			continue;
+		glVertex3fv( g_Traces[i].end.Base() );
+		Vector tmp = g_Traces[i].end + g_Traces[i].normal * 10.0f;
+		glVertex3fv( tmp.Base() );
+	}
+	glEnd();
+}
+#endif
+
+struct phyviewparams_t
+{ 
+	Vector mins;
+	Vector maxs;
+	Vector offset;
+	QAngle angles;
+	int outputType;
+	
+	void Defaults()
+	{
+		ClearBounds(mins, maxs);
+		offset.Init();
+		outputType = GL_POLYGON;
+		angles.Init();
+	}
+};
+
+
+void AddVCollideToList( phyheader_t &header, vcollide_t &collide, phyviewparams_t &params )
+{
+	matrix3x4_t xform;
+	AngleMatrix( params.angles, params.offset, xform );
+	ClearBounds( params.mins, params.maxs );
+	for ( int i = 0; i < header.solidCount; i++ )
+	{
+		Vector *outVerts;
+		ICollisionQuery *pQuery = physcollision->CreateQueryModel( collide.solids[i] );
+		for ( int j = 0; j < pQuery->ConvexCount(); j++ )
+		{
+			for ( int k = 0; k < pQuery->TriangleCount(j); k++ )
+			{
+				Vector verts[3];
+				pQuery->GetTriangleVerts( j, k, verts );
+				Vector v0,v1,v2;
+				VectorTransform( verts[0], xform, v0 );
+				VectorTransform( verts[1], xform, v1 );
+				VectorTransform( verts[2], xform, v2 );
+				AddPointToBounds( v0, params.mins, params.maxs );
+				AddPointToBounds( v1, params.mins, params.maxs );
+				AddPointToBounds( v2, params.mins, params.maxs );
+
+				glBegin(params.outputType);
+				glColor3ub( 255, 0, 0 );
+				glVertex3fv( v0.Base() );
+				glColor3ub( 0, 255, 0 );
+				glVertex3fv( v1.Base() );
+				glColor3ub( 0, 0, 255 );
+				glVertex3fv( v2.Base() );
+				glEnd();
+			}
+		}
+		physcollision->DestroyQueryModel( pQuery );
+	}
+}
+
+void GL_DrawLine( const Vector &start, const Vector &dir, float length, int r, int g, int b )
+{
+	Vector end = start + (dir*length);
+	glBegin( GL_LINES );
+	glColor3ub(r,g,b);
+	glVertex3fv( start.Base() );
+	glVertex3fv( end.Base() );
+	glEnd();
+}
+
+void GL_DrawBox( Vector origin, float size, int r, int g, int b )
+{
+	Vector mins = origin - Vector(size,size,size);
+	Vector maxs = origin + Vector(size,size,size);
+	const float *v[2] = {mins.Base(), maxs.Base()};
+
+	Vector start, end;
+	{
+		for ( int i = 0; i < 3; i++ )
+		{
+			int a0 = i;
+			int a1 = (i+1)%3;
+			int a2 = (i+2)%3;
+			for ( int j = 0; j < 2; j++ )
+			{
+				for ( int k = 0; k < 2; k++ )
+				{
+					start[a0] = v[0][a0];
+					end[a0] = v[1][a0];
+					start[a1] = v[j][a1];
+					end[a1] = v[j][a1];
+					start[a2] = v[k][a2];
+					end[a2] = v[k][a2];
+					GL_DrawLine( start, end-start, 1, r, g, b );
+				}
+			}
+		}
+	}
+	for ( int axis = 0; axis < 3; axis++ )
+	{
+		int a0 = axis;
+		int a1 = (axis+1)%3;
+		int a2 = (axis+2)%3;
+		start[a0] = v[0][a0];
+		end[a0] = v[1][a0];
+		start[a1] = 0.5f *(v[0][a1]+v[1][a1]);
+		end[a1] = 0.5f *(v[0][a1]+v[1][a1]);
+		start[a2] = 0.5f *(v[0][a2]+v[1][a2]);
+		end[a2] = 0.5f *(v[0][a2]+v[1][a2]);
+		GL_DrawLine( start, end-start, 1, r, g, b );
+	}
+}
+
+
+void ReadPHYFile(const char *name, phyviewparams_t &params )
 {
 	FILE *fp = fopen (name, "rb");
 	if (!fp)
@@ -473,49 +767,32 @@ void ReadPHYFile(const char *name, int nList)
 
 	vcollide_t collide;
 	physcollision->VCollideLoad( &collide, header.solidCount, (const char *)buf, fileSize );
+#if 0
+	Vector start0( -3859.1199, -2050.8674, 64.031250 );
+	Vector end0(-3859.2246, -2051.2817, 64.031250 );
+	Vector modelPosition(-3840,-2068.0000, 82.889099);
+	QAngle modelAngles(0,90,0);
 
-	int i;
-	for (i = 0; i < 3; i++)  // Find the center point so we can put the viewer there by default
-		g_Center[i] = 0.0f;
-
-	glNewList (nList, GL_COMPILE);
-
-	for ( i = 0; i < header.solidCount; i++ )
 	{
-		Vector *outVerts;
-		int vertCount = physcollision->CreateDebugMesh( collide.solids[i], &outVerts );
-		int triCount = vertCount / 3;
-		int vert = 0;
-		for ( int j = 0; j < triCount; j++ )
+		Ray_t ray;
+		ray.Init( start0, end0, Vector(-16,-16,0), Vector(16,16,72));
+		trace_t tr;
+		physcollision->TraceBox( ray, collide.solids[0], modelPosition, modelAngles, &tr );
+		Assert(!tr.startsolid);
+		if ( tr.DidHit() )
 		{
-			g_Center += outVerts[vert+0];
-			g_Center += outVerts[vert+1];
-			g_Center += outVerts[vert+2];
-			g_nTotalPoints += 3;
-
-			glBegin(GL_POLYGON);
-			glColor3ub( 255, 0, 0 );
-			glVertex3fv( outVerts[vert].Base() );
-			vert++;
-			glColor3ub( 0, 255, 0 );
-			glVertex3fv( outVerts[vert].Base() );
-			vert++;
-			glColor3ub( 0, 0, 255 );
-			glVertex3fv( outVerts[vert].Base() );
-			vert++;
-			glEnd();
-		}
-		physcollision->DestroyDebugMesh( vertCount, outVerts );
-	}
-	glEndList ();
-	if (g_nTotalPoints > 0)  // Avoid division by zero
-	{
-		for (i = 0; i < 3; i++)
-		{
-			g_Center[i] = g_Center[i]/(float)g_nTotalPoints; // Calculate center...
-			origin[i] = g_Center[i];
+			Ray_t ray2;
+			ray2.Init( tr.endpos, tr.endpos, Vector(-16,-16,0), Vector(16,16,72));
+			trace_t tr2;
+			physcollision->TraceBox( ray2, collide.solids[0], modelPosition, modelAngles, &tr2 );
+ 			Assert(!tr2.startsolid);
 		}
 	}
+#endif
+#if BENCHMARK_PHY
+	Benchmark_PHY( collide.solids[0] );
+#endif
+	AddVCollideToList( header, collide, params );
 }
 
 void ReadPolyFile (const char *name)
@@ -523,14 +800,31 @@ void ReadPolyFile (const char *name)
 	char ext[4];
 	Q_ExtractFileExtension( name, ext, 4 );
 
-	if ( !Q_stricmp( ext, "phy" ) )
+	bool isPHX = !Q_stricmp( ext, "phx" );
+	bool isPHY = !Q_stricmp( ext, "phy" );
+	if ( isPHY || isPHX )
 	{
 		FileSystem_Init( name, 0, FS_INIT_COMPATIBILITY_MODE );
 		CreateInterfaceFn physicsFactory = GetPhysicsFactory();
 		physcollision = (IPhysicsCollision *)physicsFactory( VPHYSICS_COLLISION_INTERFACE_VERSION, NULL );
 		if ( physcollision )
 		{
-			ReadPHYFile( name, 1 );
+			phyviewparams_t params;
+			params.Defaults();
+			glNewList (1, GL_COMPILE);
+			ReadPHYFile( name, params );
+			Vector tmp = (params.mins + params.maxs) * 0.5;
+			tmp.CopyToArray(origin);
+			if ( isPHX )
+			{
+				params.offset.y = (params.maxs.y - params.mins.y) * 1.25f;
+				params.outputType = GL_LINE_LOOP;
+				char newname[1024];
+				Q_strncpy( newname, name, sizeof(newname));
+				Q_SetExtension( newname, ".phy", sizeof(newname));
+				ReadPHYFile(newname, params);
+			}
+			glEndList ();
 		}
 	}
 	else
@@ -555,7 +849,7 @@ void ReadPortalFile (char *name)
 	char szDummy[80];
 	int nNumLeafs;
 	int nNumPortals;
-	int nDummy;
+	int nLeafIndex[2];
 
 	f = fopen (name, "r");
 	if (!f)
@@ -574,7 +868,7 @@ void ReadPortalFile (char *name)
 
 	while (1)
 	{
-		r = fscanf(f, "%i %i %i ", &numverts, &nDummy, &nDummy);
+		r = fscanf(f, "%i %i %i ", &numverts, &nLeafIndex[0], &nLeafIndex[1]);
 		if (!r || r == EOF)
 			break;
 
@@ -586,7 +880,7 @@ void ReadPortalFile (char *name)
 			if (!r || (r != 3) || r == EOF)
 				break;
 
-			if ( c == g_nPortalHighlight )
+			if ( c == g_nPortalHighlight || nLeafIndex[0] == g_nLeafHighlight || nLeafIndex[1] == g_nLeafHighlight )
 			{
 				glColor4f (1.0, 0.0, 0.0, 1.0);   
 			}
@@ -960,8 +1254,8 @@ void WCam_Create (HINSTANCE hInstance)
 
 	WCam_Register (hInstance);
 
-	w = 640;
-	h = 480;
+	w = ::width;
+	h = ::height;
 
 	nScx = GetSystemMetrics(SM_CXSCREEN);
 	nScy = GetSystemMetrics(SM_CYSCREEN);
@@ -1038,6 +1332,17 @@ void AppRender( void )
 	}
 }
 
+SpewRetval_t Sys_SpewFunc( SpewType_t type, const char *pMsg )
+{
+	OutputDebugString( pMsg );
+	if( type == SPEW_ASSERT )
+		return SPEW_DEBUGGER;
+	else if( type == SPEW_ERROR )
+		return SPEW_ABORT;
+	else
+		return SPEW_CONTINUE;
+}
+
 
 /*
 ==================
@@ -1067,13 +1372,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 	{
 		g_bReadPortals = 1;
 		g_nPortalHighlight = CommandLine()->ParmValue( "-portalhighlight", -1 );
+		g_nLeafHighlight = CommandLine()->ParmValue( "-leafhighlight", -1 );
 	}
+	g_flMovementSpeed = CommandLine()->ParmValue( "-speed", 320 );
 
 	if( CommandLine()->CheckParm( "-disp") )
 	{
 		ReadDisplacementFile( pFileName );
 		g_bDisp = TRUE;
 	}
+	SpewOutputFunc( Sys_SpewFunc );
 
 	// Any chunk of original left is the filename.
 	if (pFileName && pFileName[0] && !g_bDisp )

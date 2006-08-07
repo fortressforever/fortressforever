@@ -10,10 +10,12 @@
 #pragma once
 #endif
 
-#include "utldict.h"
+#include "tier1/utlrbtree.h"
+#include "tier1/utlsymbol.h"
 #include "interval.h"
+#include "compressed_vector.h"
 
-extern const char *SplitContext( const char *raw, char *key, int keylen, char *value, int valuelen );
+extern const char *SplitContext( const char *raw, char *key, int keylen, char *value, int valuelen, float *duration );
 
 
 class AI_CriteriaSet
@@ -37,9 +39,73 @@ public:
 
 private:
 
-	KeyValues	*m_pCriteria;
-	CUtlDict< KeyValues *, int > m_Lookup;
+	struct CritEntry_t
+	{
+		CritEntry_t() :
+				criterianame( UTL_INVAL_SYMBOL ),
+				weight( 0.0f )
+		{
+			value[ 0 ] = 0;
+		}
+
+		CritEntry_t( const CritEntry_t& src )
+		{
+			criterianame = src.criterianame;
+			value[ 0 ] = 0;
+			weight = src.weight;
+			SetValue( src.value );
+		}
+
+		CritEntry_t& operator=( const CritEntry_t& src )
+		{
+			if ( this == &src )
+				return *this;
+
+			criterianame = src.criterianame;
+			weight = src.weight;
+			SetValue( src.value );
+
+			return *this;
+		}
+
+		static bool LessFunc( const CritEntry_t& lhs, const CritEntry_t& rhs )
+		{
+			return Q_stricmp( lhs.criterianame.String(), rhs.criterianame.String() ) < 0 ? true : false;
+		}
+
+		void SetValue( char const *str )
+		{
+			if ( !str )
+			{
+				value[ 0 ] = 0;
+			}
+			else
+			{
+				Q_strncpy( value, str, sizeof( value ) );
+			}
+		}
+				
+		CUtlSymbol criterianame;
+		char		value[ 64 ];
+		float		weight;
+	};
+
+	CUtlRBTree< CritEntry_t, short > m_Lookup;
 };
+
+#pragma pack(1)
+template<typename T>
+struct response_interval_t
+{
+	T start;
+	T range;
+
+	interval_t &ToInterval( interval_t &dest ) const	{ dest.start = start; dest.range = range; return dest; }
+	void FromInterval( const interval_t &from )			{ start = from.start; range = from.range; }
+	float Random() const								{ interval_t temp = { start, range }; return RandomInterval( temp ); }
+};
+
+typedef response_interval_t<float16_with_assign> responseparams_interval_t;
 
 struct AI_ResponseParams
 {
@@ -47,29 +113,39 @@ struct AI_ResponseParams
 
 	enum
 	{
-		RG_DELAYAFTERSPEAK = (1<<0),
-		RG_SPEAKONCE = (1<<1),
-		RG_ODDS = (1<<2),
-		RG_RESPEAKDELAY = (1<<3),
-		RG_SOUNDLEVEL = (1<<4),
-		RG_DONT_USE_SCENE = (1<<5),
+		RG_DELAYAFTERSPEAK =	(1<<0),
+		RG_SPEAKONCE =			(1<<1),
+		RG_ODDS =				(1<<2),
+		RG_RESPEAKDELAY =		(1<<3),
+		RG_SOUNDLEVEL =			(1<<4),
+		RG_DONT_USE_SCENE =		(1<<5),
+		RG_STOP_ON_NONIDLE =	(1<<6),
+		RG_WEAPONDELAY =		(1<<7),
 	};
 
 	AI_ResponseParams()
 	{
 		flags = 0;
 		odds = 100;
-		Q_memset( &delay, 0, sizeof( delay ) );
-		Q_memset( &respeakdelay, 0, sizeof( respeakdelay ) );
-		Q_memset( &soundlevel, 0, sizeof( soundlevel ) );
+		delay.start = 0;
+		delay.range = 0;
+		respeakdelay.start = 0;
+		respeakdelay.range = 0;
+		weapondelay.start = 0;
+		weapondelay.range = 0;
+		soundlevel = 0;
 	}
 
-	int						flags;
-	int						odds;
-	interval_t				delay;
-	interval_t				respeakdelay;
-	soundlevel_t			soundlevel;
+	responseparams_interval_t				delay;			//4
+	responseparams_interval_t				respeakdelay;	//8
+	responseparams_interval_t				weapondelay;	//12
+
+	short					odds;							//14
+
+	byte					flags;							//15
+	byte 					soundlevel;						//16
 };
+#pragma pack()
 
 //-----------------------------------------------------------------------------
 // Purpose: Generic container for a response to a match to a criteria set
@@ -99,16 +175,22 @@ public:
 
 	void	Release();
 
-	const char *	GetName() const;
-	const char *	GetResponse() const;
+	void			GetName( char *buf, size_t buflen ) const;
+	void			GetResponse( char *buf, size_t buflen ) const;
 	const AI_ResponseParams *GetParams() const { return &m_Params; }
-	ResponseType_t	GetType() const { return m_Type; }
+	ResponseType_t	GetType() const { return (ResponseType_t)m_Type; }
 	soundlevel_t	GetSoundLevel() const;
 	float			GetRespeakDelay() const;
+	float			GetWeaponDelay() const;
 	bool			GetSpeakOnce() const;
 	bool			ShouldntUseScene( ) const;
+	bool			ShouldBreakOnNonIdle( void ) const;
 	int				GetOdds() const;
 	float			GetDelay() const;
+
+	void			SetContext( const char *context );
+	const char *	GetContext( void ) const { return m_szContext; }
+
 
 	void Describe();
 
@@ -118,26 +200,29 @@ public:
 				const char *responseName, 
 				const AI_CriteriaSet& criteria, 
 				const AI_ResponseParams& responseparams,
-				const char *matchingRule );
+				const char *matchingRule,
+				const char *applyContext );
 
 	static const char *DescribeResponse( ResponseType_t type );
 
-private:
 	enum
 	{
-		MAX_RESPONSE_NAME = 128,
-		MAX_RULE_NAME = 128
+		MAX_RESPONSE_NAME = 64,
+		MAX_RULE_NAME = 64
 	};
 
-	ResponseType_t	m_Type;
+
+private:
+	byte			m_Type;
 	char			m_szResponseName[ MAX_RESPONSE_NAME ];
+	char			m_szMatchingRule[ MAX_RULE_NAME ];
 
 	// The initial criteria to which we are responsive
 	AI_CriteriaSet	*m_pCriteria;
 
 	AI_ResponseParams m_Params;
 
-	char			m_szMatchingRule[ MAX_RULE_NAME ];
+	char *			m_szContext;
 };
 
 #endif // AI_CRITERIA_H

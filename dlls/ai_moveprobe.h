@@ -42,7 +42,8 @@ class CAI_MoveProbe : public CAI_Component
 {
 public:
 
-	CAI_MoveProbe(CAI_BaseNPC *pOuter);
+	CAI_MoveProbe( CAI_BaseNPC *pOuter );
+	~CAI_MoveProbe();
 	
 	// ----------------------------------------------------
 	// Queries & probes
@@ -76,6 +77,8 @@ public:
 	bool				TestGroundMove( const Vector &vecActualStart, const Vector &vecDesiredEnd, 
 										unsigned int collisionMask, float pctToCheckStandPositions, unsigned flags, AIMoveTrace_t *pMoveTrace ) const;
 
+	bool				ShouldBrushBeIgnored( CBaseEntity *pEntity );
+
 private:
 	struct CheckStepArgs_t
 	{
@@ -100,7 +103,7 @@ private:
 	
 	bool				CheckStep( const CheckStepArgs_t &args, CheckStepResult_t *pResult ) const;
 	void				SetupCheckStepTraceListData( const CheckStepArgs_t &args ) const;
-	void				ResetTraceListData() const	{ const_cast<CAI_MoveProbe *>(this)->m_TraceListData.Reset(); }
+	void				ResetTraceListData() const	{ if ( m_pTraceListData ) const_cast<CAI_MoveProbe *>(this)->m_pTraceListData->Reset(); }
 	bool				OldCheckStandPosition( const Vector &vecStart, unsigned int collisionMask ) const;
 
 	// these check connections between positions in space, regardless of routes
@@ -122,10 +125,9 @@ private:
 	float				StepHeight() const;
 	bool				CanStandOn( CBaseEntity *pSurface ) const;
 
-	string_t			m_iszFuncBrushClass;
 	bool				m_bIgnoreTransientEntities;
 
-	CTraceListData		m_TraceListData;
+	CTraceListData *	m_pTraceListData;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -150,7 +152,5 @@ inline bool CAI_MoveProbe::TestGroundMove( const Vector &vecActualStart, const V
 {
 	return TestGroundMove( vecActualStart, vecDesiredEnd, collisionMask, 100, flags, pMoveTrace ); // floor ignore flag will override 100%
 }
-
-//=============================================================================
 
 #endif // AI_MOVEPROBE_H

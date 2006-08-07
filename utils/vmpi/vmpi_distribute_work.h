@@ -15,6 +15,18 @@
 #include "utlvector.h"
 
 
+class IDistributeWorkMaster
+{
+public:
+	// Called every 200ms or so as it does the work.
+	// Return true to stop distributing work.
+	virtual bool Update() = 0;
+};
+
+// Before calling DistributeWork, you can set this and it'll call your Update() function.
+extern IDistributeWorkMaster *g_pDistributeWorkMaster;
+
+
 // You must append data to pBuf with the work unit results.
 typedef void (*ProcessWorkUnitFn)( int iThread, int iWorkUnit, MessageBuffer *pBuf );
 

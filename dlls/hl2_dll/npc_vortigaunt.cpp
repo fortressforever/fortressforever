@@ -150,6 +150,7 @@ BEGIN_DATADESC( CNPC_Vortigaunt )
 	DEFINE_FIELD( m_bExtractingBugbait,		FIELD_BOOLEAN),
 	DEFINE_FIELD( m_iLeftHandAttachment,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_iRightHandAttachment,	FIELD_INTEGER ),
+	DEFINE_FIELD( m_hHealTarget,			FIELD_EHANDLE ),
 
 	//								m_AssaultBehavior	(auto saved by AI)
 	//								m_LeadBehavior		(auto saved by AI)
@@ -269,6 +270,22 @@ void CNPC_Vortigaunt::StartTask( const Task_t *pTask )
 	switch ( pTask->iTask)
 	{
 
+	case TASK_VORTIGAUNT_GET_HEAL_TARGET:
+	{
+		// Sets our target to the entity that we cached earlier.
+		if ( !m_hHealTarget )
+		{
+			TaskFail( FAIL_NO_TARGET );
+		}
+		else
+		{
+			SetTarget( m_hHealTarget );
+			TaskComplete();
+		}
+		
+		break;
+	}
+	
 	case TASK_VORTIGAUNT_EXTRACT_WARMUP:
 	{
 		ResetIdealActivity( (Activity) ACT_VORTIGAUNT_TO_ACTION );
@@ -739,11 +756,16 @@ int CNPC_Vortigaunt::RangeAttack1Conditions( float flDot, float flDist )
 		return( COND_NONE );
 	}
 
+	// dvs: Allow up-close range attacks for episodic as the vort's melee
+	// attack is rather ineffective.
+	#ifndef HL2_EPISODIC
 	if ( flDist <= 70 )
 	{
 		return( COND_TOO_CLOSE_TO_ATTACK );
 	}
-	else if ( flDist > 1500 * 12 )	// 1500ft max
+	else
+	#endif // HL2_EPISODIC
+	if ( flDist > 1500 * 12 )	// 1500ft max
 	{
 		return( COND_TOO_FAR_TO_ATTACK );
 	}
@@ -899,7 +921,8 @@ void CNPC_Vortigaunt::HandleAnimEvent( animevent_t *pEvent )
 				int iNumAttempts = 4;
 				Vector vecToVort = (WorldSpaceCenter() - vecSpawnOrigin);
 				float flDistance = VectorNormalize( vecToVort ) / (iNumAttempts-1);
-				for (int i = 0; i < iNumAttempts; i++ )
+				int i = 0;
+				for (; i < iNumAttempts; i++ )
 				{
 					trace_t tr;
 					CTraceFilterSkipTwoEntities traceFilter( GetTarget(), this, COLLISION_GROUP_NONE );
@@ -1278,7 +1301,6 @@ void CNPC_Vortigaunt::Precache()
 // Init talk data
 void CNPC_Vortigaunt::TalkInit()
 {
-	
 	BaseClass::TalkInit();
 
 	// vortigaunt will try to talk to friends in this order:
@@ -1288,6 +1310,7 @@ void CNPC_Vortigaunt::TalkInit()
 	// get voice for head - just one barney voice for now
 	GetExpresser()->SetVoicePitch( 100 );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1304,7 +1327,7 @@ void CNPC_Vortigaunt::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 			if ( !Speak( TLK_USE ) )
 			{
 				// If we haven't said hi, say that first
-				if ( !GetExpresser()->SpokeConcept( TLK_HELLO ) )
+				if ( !SpokeConcept( TLK_HELLO ) )
 				{
 					Speak( TLK_HELLO );
 				}
@@ -1316,7 +1339,7 @@ void CNPC_Vortigaunt::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 			else
 			{
 				// Don't say hi after you've said your +USE speech
-				GetExpresser()->SetSpokeConcept( TLK_HELLO, NULL );	
+				SetSpokeConcept( TLK_HELLO, NULL );	
 			}
 		}
 	}
@@ -1375,7 +1398,7 @@ int	CNPC_Vortigaunt::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //=========================================================
 // PainSound
 //=========================================================
-void CNPC_Vortigaunt::PainSound ( void )
+void CNPC_Vortigaunt::PainSound( const CTakeDamageInfo &info )
 {
 	if (gpGlobals->curtime < m_painTime)
 		return;
@@ -1388,7 +1411,7 @@ void CNPC_Vortigaunt::PainSound ( void )
 //=========================================================
 // DeathSound 
 //=========================================================
-void CNPC_Vortigaunt::DeathSound ( void )
+void CNPC_Vortigaunt::DeathSound( const CTakeDamageInfo &info )
 {
 	Speak( VORT_DIE );
 }
@@ -1552,6 +1575,9 @@ bool CNPC_Vortigaunt::ShouldHealTarget( void )
 	if ( m_NPCState == NPC_STATE_COMBAT )
 		return false;
 
+	if ( GetEnemy() )
+		return false;
+
 	if ( IsCurSchedule( SCHED_VORTIGAUNT_EXTRACT_BUGBAIT ) )
 		return false;
 
@@ -1559,7 +1585,7 @@ bool CNPC_Vortigaunt::ShouldHealTarget( void )
 	if ( IsLeading() )
 		return false;
 
-	// Need LOS to the player
+	// Need to be looking at the player
 	if ( !HasCondition( COND_SEE_PLAYER ) )
 		return false;
 
@@ -1587,7 +1613,8 @@ bool CNPC_Vortigaunt::ShouldHealTarget( void )
 			m_iCurrentRechargeGoal = pPlayer->ArmorValue() + sk_vortigaunt_armor_charge.GetInt();
 			if ( m_iCurrentRechargeGoal > 100 )
 				m_iCurrentRechargeGoal = 100;
-			SetTarget( pEntity );
+				
+			m_hHealTarget = pEntity;
 			return true;
 		}
 	}
@@ -1755,7 +1782,9 @@ bool CNPC_Vortigaunt::HandleInteraction(int interactionType, void *data, CBaseCo
 			SetGroundEntity( NULL );
 		}
 		SetIdealState( NPC_STATE_PRONE );
-		PainSound();
+		
+		CTakeDamageInfo info;
+		PainSound( info );
 		return true;
 	}
 	return false;
@@ -1904,13 +1933,12 @@ void CNPC_Vortigaunt::ArmBeam( int side, int beamType )
 void CNPC_Vortigaunt::DefendBeams( void )
 {
 	Vector vBeamStart;
-	QAngle vBeamAng;
 
 	// -----------
 	// Left hand
 	// -----------
 	int i;
-	GetAttachment( 1, vBeamStart, vBeamAng );
+	GetAttachment( 1, vBeamStart );
 	for (i=0;i<4;i++)
 	{
 		Vector vBeamPos = vBeamStart;
@@ -1930,7 +1958,7 @@ void CNPC_Vortigaunt::DefendBeams( void )
 	// -----------
 	// Right hand
 	// -----------
-	GetAttachment( 2, vBeamStart, vBeamAng );
+	GetAttachment( 2, vBeamStart );
 	for (i=4;i<VORTIGAUNT_MAX_BEAMS;i++)
 	{
 		Vector vBeamPos = vBeamStart;
@@ -2303,7 +2331,7 @@ void CNPC_Vortigaunt::InputDisableArmorRecharge( inputdata_t &data )
 //-----------------------------------------------------------------------------
 void CNPC_Vortigaunt::InputChargeTarget( inputdata_t &data )
 {
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, data.value.String(), data.pActivator );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, data.value.String(), NULL, data.pActivator, data.pCaller );
 
 	// Must be valid
 	if ( pTarget == NULL )
@@ -2320,12 +2348,13 @@ void CNPC_Vortigaunt::InputChargeTarget( inputdata_t &data )
 		return;
 	}
 
-	// Keep this as our target
-	SetTarget( pTarget );
+	m_hHealTarget = pTarget;
+	
 	m_iCurrentRechargeGoal = playerArmor + sk_vortigaunt_armor_charge.GetInt();
 	if ( m_iCurrentRechargeGoal > 100 )
 		m_iCurrentRechargeGoal = 100;
 	m_bForceArmorRecharge = true;
+
 	SetCondition( COND_PROVOKED );
 }
 
@@ -2335,7 +2364,7 @@ void CNPC_Vortigaunt::InputChargeTarget( inputdata_t &data )
 //-----------------------------------------------------------------------------
 void CNPC_Vortigaunt::InputExtractBugbait( inputdata_t &data )
 {
-	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, data.value.String(), data.pActivator );
+	CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, data.value.String(), NULL, data.pActivator, data.pCaller );
 
 	// Must be valid
 	if ( pTarget == NULL )
@@ -2351,6 +2380,33 @@ void CNPC_Vortigaunt::InputExtractBugbait( inputdata_t &data )
 	m_bExtractingBugbait = true;
 	SetSchedule( SCHED_VORTIGAUNT_EXTRACT_BUGBAIT );
 }
+
+
+//-----------------------------------------------------------------------------
+// The vort overloads the CNPC_PlayerCompanion version because he uses different
+// rules. The player companion rules looked too sensitive to muck with.
+//-----------------------------------------------------------------------------
+bool CNPC_Vortigaunt::OnObstructionPreSteer( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult )
+{
+	if ( pMoveGoal->directTrace.flTotalDist - pMoveGoal->directTrace.flDistObstructed < GetHullWidth() * 1.5 )
+	{
+		CAI_BaseNPC *pBlocker = pMoveGoal->directTrace.pObstruction->MyNPCPointer();
+		if ( pBlocker && pBlocker->IsPlayerAlly() && !pBlocker->IsMoving() && !pBlocker->IsInAScript() )
+		{
+			if ( pBlocker->ConditionInterruptsCurSchedule( COND_GIVE_WAY ) || 
+				 pBlocker->ConditionInterruptsCurSchedule( COND_PLAYER_PUSHING ) )
+			{
+				// HACKHACK
+				pBlocker->GetMotor()->SetIdealYawToTarget( WorldSpaceCenter() );
+				pBlocker->SetSchedule( SCHED_MOVE_AWAY );
+			}
+
+		}
+	}
+
+	return BaseClass::OnObstructionPreSteer( pMoveGoal, distClear, pResult );
+}
+
 
 //------------------------------------------------------------------------------
 //
@@ -2374,6 +2430,7 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 
 	DECLARE_TASK( TASK_VORTIGAUNT_EXTRACT_WARMUP )
 	DECLARE_TASK( TASK_VORTIGAUNT_EXTRACT_COOLDOWN )
+	DECLARE_TASK( TASK_VORTIGAUNT_GET_HEAL_TARGET )
 
 	DECLARE_ACTIVITY(ACT_VORTIGAUNT_AIM)
 	DECLARE_ACTIVITY(ACT_VORTIGAUNT_START_HEAL)
@@ -2422,9 +2479,6 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		"		TASK_WAIT						0.2" // Wait a sec before killing beams
 		""
 		"	Interrupts"
-		"		COND_CAN_MELEE_ATTACK1"
-		"		COND_HEAVY_DAMAGE"
-		"		COND_HEAR_DANGER"
 	);
 
 	//=========================================================
@@ -2491,10 +2545,12 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		SCHED_VORTIGAUNT_HEAL,
 
 		"	Tasks"
+		"		TASK_VORTIGAUNT_GET_HEAL_TARGET	0"
 		"		TASK_STOP_MOVING				0"
 		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_VORTIGAUNT_STAND"
 		"		TASK_GET_PATH_TO_TARGET			0"
 		"		TASK_MOVE_TO_TARGET_RANGE		128"				// Move within 128 of target ent (client)
+		"		TASK_STOP_MOVING				0"
 		"		TASK_FACE_PLAYER				0"
 		"		TASK_SPEAK_SENTENCE				0"					// VORT_HEAL_SENTENCE
 		"		TASK_VORTIGAUNT_HEAL_WARMUP		0"
@@ -2594,6 +2650,7 @@ AI_BEGIN_CUSTOM_NPC( npc_vortigaunt, CNPC_Vortigaunt )
 		"		TASK_STOP_MOVING					0"
 		"		TASK_GET_PATH_TO_TARGET				0"
 		"		TASK_MOVE_TO_TARGET_RANGE			128"				// Move within 128 of target ent (client)
+		"		TASK_STOP_MOVING					0"
 		"		TASK_VORTIGAUNT_WAIT_FOR_PLAYER		0"
 		"		TASK_SPEAK_SENTENCE					2"					// Start extracting sentence
 		"		TASK_WAIT_FOR_SPEAK_FINISH			1"

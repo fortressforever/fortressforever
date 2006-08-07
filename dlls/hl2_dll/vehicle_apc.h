@@ -49,12 +49,13 @@ public:
 	virtual void Spawn(void);
 	virtual void Activate();
 	virtual void UpdateOnRemove( void );
+	virtual void OnRestore( void );
 
 	// CPropVehicle
 	virtual void	CreateServerVehicle( void );
 	virtual void	DriveVehicle( float flFrameTime, CUserCmd *ucmd, int iButtonsDown, int iButtonsReleased );
 	virtual void	ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMoveData );
-	virtual Class_T	ClassifyPassenger( CBasePlayer *pPassenger, Class_T defaultClassification );
+	virtual Class_T	ClassifyPassenger( CBaseCombatCharacter *pPassenger, Class_T defaultClassification );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 	virtual float	DamageModifier ( CTakeDamageInfo &info );
 
@@ -73,6 +74,8 @@ public:
 	void			DoMuzzleFlash( void );
 
 	virtual Vector	EyePosition( );				// position of eyes
+	Vector			BodyTarget( const Vector &posSrc, bool bNoisy );
+
 	
 	virtual void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
@@ -115,6 +118,9 @@ private:
 
 	void CreateAPCLaserDot( void );
 
+	virtual bool ShouldAttractAutoAim( CBaseEntity *pAimingEnt );
+
+
 private:
 	// Danger sounds made by the APC
 	float	m_flDangerSoundTime;
@@ -146,6 +152,8 @@ private:
 
 	COutputEvent m_OnDeath;
 	COutputEvent m_OnFiredMissile;
+	COutputEvent m_OnDamaged;
+	COutputEvent m_OnDamagedByPlayer;
 
 	DECLARE_DATADESC();
 };

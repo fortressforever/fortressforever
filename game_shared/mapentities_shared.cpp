@@ -4,12 +4,14 @@
 //
 //=============================================================================//
 
+
 #include "cbase.h"
 #include "mapentities_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
 
 static const char *s_BraceChars = "{}()\'";
 static bool s_BraceCharacters[256];
@@ -199,6 +201,7 @@ skipwhite:
 	return data;
 }
 
+#endif // !STATIC_LINKED || CLIENT_DLL
 
 /* ================= CEntityMapData definition ================ */
 
@@ -274,6 +277,11 @@ bool CEntityMapData::GetNextKey( char *keyName, char *value )
 //-----------------------------------------------------------------------------
 bool CEntityMapData::SetValue( const char *keyName, char *NewValue, int nKeyInstance )
 {
+	// If this is -1, the size of the string is unknown and cannot be safely modified!
+	Assert( m_nEntDataSize != -1 );
+	if ( m_nEntDataSize == -1 )
+		return false;
+
 	char token[MAPKEY_MAXLENGTH];
 	char *inputData = m_pEntData;
 	char *prevData;
@@ -311,12 +319,15 @@ bool CEntityMapData::SetValue( const char *keyName, char *NewValue, int nKeyInst
 				}
 
 				int iNewValueLen = Q_strlen(newvaluebuf);
-				int iPadding = iNewValueLen - Q_strlen( token ) - 1; // -1 for the whitespace
+				int iPadding = iNewValueLen - Q_strlen( token ) - 2;	// -2 for the quotes (token doesn't have them)
 
-				Q_strncpy( prevData+1, newvaluebuf, iNewValueLen+1 );	// +1 for the whitespace
-				Q_strcat( prevData, postData );
+				// prevData has a space at the start, seperating the value from the key.
+				// Add 1 to prevData when pasting in the new Value, to account for the space.
+				Q_strncpy( prevData+1, newvaluebuf, iNewValueLen+1 );	// +1 for the null terminator
+				Q_strcat( prevData, postData, m_nEntDataSize - ((prevData-m_pEntData)+1) );
 
 				m_pCurrentKey += iPadding;
+				delete [] postData;
 				return true;
 			}
 		}

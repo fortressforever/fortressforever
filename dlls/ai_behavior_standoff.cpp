@@ -445,6 +445,20 @@ void CAI_StandoffBehavior::GatherConditions()
 		else
 			SetActive( false );
 	}
+	else if ( GetOuter()->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT )
+	{
+		if( DrawBattleLines.GetInt() != 0 )
+		{
+			if ( IsBehindBattleLines( GetAbsOrigin() ) )
+			{
+				NDebugOverlay::Box( GetOuter()->GetAbsOrigin(), -Vector(48,48,4), Vector(48,48,4), 255,0,0,8, 0.1 );
+			}
+			else
+			{
+				NDebugOverlay::Box( GetOuter()->GetAbsOrigin(), -Vector(48,48,4), Vector(48,48,4), 0,255,0,8, 0.1 );
+			}
+		}
+	}
 }
 
 //-------------------------------------
@@ -803,9 +817,22 @@ bool CAI_StandoffBehavior::IsBehindBattleLines( const Vector &point )
 		vecToPoint.z = 0;
 		
 		if ( DotProduct( m_BattleLines[i].normal, vecToPoint ) > 0 )
+		{
+			if( DrawBattleLines.GetInt() != 0 )
+			{
+				NDebugOverlay::Box( point, -Vector(48,48,4), Vector(48,48,4), 0,255,0,8, 1 );
+				NDebugOverlay::Line( point, GetOuter()->GetAbsOrigin(), 0,255,0,true, 1 );
+			}
 			return false;
+		}
 	}
 	
+	if( DrawBattleLines.GetInt() != 0 )
+	{
+		NDebugOverlay::Box( point, -Vector(48,48,4), Vector(48,48,4), 255,0,0,8, 1 );
+		NDebugOverlay::Line( point, GetOuter()->GetAbsOrigin(), 255,0,0,true, 1 );
+	}
+
 	return true;
 }
 
@@ -1068,6 +1095,9 @@ void CAI_MappedActivityBehavior_Temporary::UpdateTranslateActivityMap()
 		{	AIP_CROUCHING, 	ACT_WALK_AIM, 			NULL, 				ACT_WALK_CROUCH_AIM, 		},
 		{	AIP_CROUCHING, 	ACT_RUN_AIM, 			NULL, 				ACT_RUN_CROUCH_AIM, 		},
 		{	AIP_CROUCHING,	ACT_RELOAD,				NULL, 				ACT_RELOAD_LOW,				},
+		{	AIP_CROUCHING,	ACT_RANGE_ATTACK_SMG1,	NULL,				ACT_RANGE_ATTACK_SMG1_LOW,	},
+		{	AIP_CROUCHING,	ACT_RANGE_ATTACK_AR2,	NULL,				ACT_RANGE_ATTACK_AR2_LOW,	},
+		
 		//----
 		{	AIP_PEEKING, 	ACT_IDLE,				NULL,				ACT_RANGE_AIM_LOW,			},
 		{	AIP_PEEKING, 	ACT_IDLE_ANGRY,			NULL,				ACT_RANGE_AIM_LOW,			},

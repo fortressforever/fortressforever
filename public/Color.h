@@ -74,14 +74,25 @@ public:
 		return _color[index];
 	}
 
+	const unsigned char &operator[](int index) const
+	{
+		return _color[index];
+	}
+
 	bool operator == (const Color &rhs) const
 	{
 		return ( *((int *)this) == *((int *)&rhs) );
 	}
 
-	bool operator != (Color &rhs) const
+	bool operator != (const Color &rhs) const
 	{
 		return !(operator==(rhs));
+	}
+
+	Color &operator=( const Color &rhs )
+	{
+		SetRawColor( rhs.GetRawColor() );
+		return *this;
 	}
 
 private:

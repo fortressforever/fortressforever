@@ -153,7 +153,7 @@ void CMessageEntity::DrawOverlays(void)
 	// display text if they are within range
 	char tempstr[512];
 	Q_snprintf( tempstr, sizeof(tempstr), "%s", STRING(m_messageText) );
-	NDebugOverlay::EntityText(entindex(), 0, tempstr, 0);
+	EntityText( 0, tempstr, 0);
 }
 
 //-----------------------------------------------------------------------------

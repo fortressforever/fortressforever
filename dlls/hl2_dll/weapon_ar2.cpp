@@ -24,7 +24,12 @@
 #include "te_effect_dispatch.h"
 #include "prop_combine_ball.h"
 #include "beam_shared.h"
-#include "npc_combine.h"
+#ifdef HL2_EPISODIC 
+	#include "npc_combine_episodic.h"
+#else
+	#include "npc_combine.h"
+#endif//HL2_EPISODIC
+#include "rumble_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -114,6 +119,8 @@ CWeaponAR2::CWeaponAR2( )
 
 	m_nShotsFired	= 0;
 	m_nVentPose		= -1;
+
+	m_bAltFiresUnderwater = false;
 }
 
 void CWeaponAR2::Precache( void )
@@ -214,9 +221,11 @@ void CWeaponAR2::DelayedAttack( void )
 	
 	WeaponSound( WPN_DOUBLE );
 
+	pOwner->RumbleEffect(RUMBLE_SHOTGUN_DOUBLE, 0, RUMBLE_FLAG_RESTART );
+
 	// Fire the bullets
 	Vector vecSrc	 = pOwner->Weapon_ShootPosition( );
-	Vector vecAiming = pOwner->GetAutoaimVector( AUTOAIM_2DEGREES );
+	Vector vecAiming = pOwner->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
 	Vector impactPoint = vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
 
 	// Fire the bullets
@@ -275,6 +284,12 @@ void CWeaponAR2::SecondaryAttack( void )
 	m_bShotDelayed = true;
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flDelayedFire = gpGlobals->curtime + 0.5f;
 
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	if( pPlayer )
+	{
+		pPlayer->RumbleEffect(RUMBLE_AR2_ALT_FIRE, 0, RUMBLE_FLAG_RESTART );
+	}
+
 	SendWeaponAnim( ACT_VM_FIDGET );
 	WeaponSound( SPECIAL1 );
 }
@@ -304,6 +319,108 @@ bool CWeaponAR2::Reload( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+// Input  : *pOperator - 
+//-----------------------------------------------------------------------------
+void CWeaponAR2::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles )
+{
+	Vector vecShootOrigin, vecShootDir;
+
+	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+	ASSERT( npc != NULL );
+
+	if ( bUseWeaponAngles )
+	{
+		QAngle	angShootDir;
+		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
+		AngleVectors( angShootDir, &vecShootDir );
+	}
+	else 
+	{
+		vecShootOrigin = pOperator->Weapon_ShootPosition();
+		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
+	}
+
+	WeaponSoundRealtime( SINGLE_NPC );
+
+	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
+
+	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+
+	// NOTENOTE: This is overriden on the client-side
+	// pOperator->DoMuzzleFlash();
+
+	m_iClip1 = m_iClip1 - 1;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponAR2::FireNPCSecondaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles )
+{
+	WeaponSound( WPN_DOUBLE );
+
+	CNPC_Combine *pSoldier;
+
+	pSoldier = dynamic_cast<CNPC_Combine*>(GetOwner());
+
+	if( !pSoldier )
+		return;
+
+	// Fire!
+	Vector vecSrc;
+	Vector vecAiming;
+
+	if ( bUseWeaponAngles )
+	{
+		QAngle	angShootDir;
+		GetAttachment( LookupAttachment( "muzzle" ), vecSrc, angShootDir );
+		AngleVectors( angShootDir, &vecAiming );
+	}
+	else 
+	{
+		vecSrc = pSoldier->Weapon_ShootPosition( );
+		vecAiming = pSoldier->GetAltFireTarget() - vecSrc;
+		VectorNormalize( vecAiming );
+	}
+
+	Vector impactPoint = vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
+
+	float flAmmoRatio = 1.0f;
+	float flDuration = RemapValClamped( flAmmoRatio, 0.0f, 1.0f, 0.5f, sk_weapon_ar2_alt_fire_duration.GetFloat() );
+	float flRadius = RemapValClamped( flAmmoRatio, 0.0f, 1.0f, 4.0f, sk_weapon_ar2_alt_fire_radius.GetFloat() );
+
+	// Fire the bullets
+	Vector vecVelocity = vecAiming * 1000.0f;
+
+	// Fire the combine ball
+	CreateCombineBall(	vecSrc, 
+		vecVelocity, 
+		flRadius, 
+		sk_weapon_ar2_alt_fire_mass.GetFloat(),
+		flDuration,
+		pSoldier );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponAR2::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
+{
+	if ( bSecondary )
+	{
+		FireNPCSecondaryAttack( pOperator, true );
+	}
+	else
+	{
+		// Ensure we have enough rounds in the clip
+		m_iClip1++;
+
+		FireNPCPrimaryAttack( pOperator, true );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 // Input  : *pEvent - 
 //			*pOperator - 
 //-----------------------------------------------------------------------------
@@ -313,60 +430,13 @@ void CWeaponAR2::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChara
 	{ 
 		case EVENT_WEAPON_AR2:
 			{
-				Vector vecShootOrigin, vecShootDir;
-				vecShootOrigin = pOperator->Weapon_ShootPosition();
-
-				CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-				ASSERT( npc != NULL );
-				vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-
-				WeaponSoundRealtime( SINGLE_NPC );
-
-				CSoundEnt::InsertSound( SOUND_COMBAT, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator );
-
-				pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
-				
-				// NOTENOTE: This is overriden on the client-side
-				// pOperator->DoMuzzleFlash();
-				
-				m_iClip1 = m_iClip1 - 1;
+				FireNPCPrimaryAttack( pOperator, false );
 			}
 			break;
 
 		case EVENT_WEAPON_AR2_ALTFIRE:
 			{
-				WeaponSound( WPN_DOUBLE );
-
-				CNPC_Combine *pSoldier;
-
-				pSoldier = dynamic_cast<CNPC_Combine*>(GetOwner());
-
-				if( !pSoldier )
-					return;
-
-				// Fire!
-				Vector vecSrc	 = pSoldier->Weapon_ShootPosition( );
-				Vector vecAiming;
-
-				vecAiming = pSoldier->GetAltFireTarget() - vecSrc;
-				VectorNormalize( vecAiming );
-
-				Vector impactPoint = vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
-
-				float flAmmoRatio = 1.0f;
-				float flDuration = RemapValClamped( flAmmoRatio, 0.0f, 1.0f, 0.5f, sk_weapon_ar2_alt_fire_duration.GetFloat() );
-				float flRadius = RemapValClamped( flAmmoRatio, 0.0f, 1.0f, 4.0f, sk_weapon_ar2_alt_fire_radius.GetFloat() );
-
-				// Fire the bullets
-				Vector vecVelocity = vecAiming * 1000.0f;
-
-				// Fire the combine ball
-				CreateCombineBall(	vecSrc, 
-									vecVelocity, 
-									flRadius, 
-									sk_weapon_ar2_alt_fire_mass.GetFloat(),
-									flDuration,
-									pSoldier );
+				FireNPCSecondaryAttack( pOperator, false );
 			}
 			break;
 

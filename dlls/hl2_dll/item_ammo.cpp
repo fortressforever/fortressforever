@@ -786,7 +786,7 @@ void CItem_AmmoCrate::Precache( void )
 //-----------------------------------------------------------------------------
 void CItem_AmmoCrate::SetupCrate( void )
 {
-	SetModelName( MAKE_STRING( m_lpzModelNames[m_nAmmoType] ) );
+	SetModelName( AllocPooledString( m_lpzModelNames[m_nAmmoType] ) );
 	
 	m_nAmmoIndex = GetAmmoDef()->Index( m_lpzAmmoNames[m_nAmmoType] );
 }

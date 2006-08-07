@@ -74,11 +74,7 @@ public:
 	void* operator new( size_t stAllocateBlock, int nBlockUse, const char *pFileName, int nLine )  
 	{ 
 		Assert( stAllocateBlock != 0 );
-#if defined(_DEBUG) || defined(USE_MEM_DEBUG)
-		void *pMem = _malloc_dbg( stAllocateBlock, nBlockUse, pFileName, nLine );
-#else
-		void *pMem = malloc( stAllocateBlock );
-#endif
+		void *pMem = g_pMemAlloc->Alloc( stAllocateBlock, pFileName, nLine );
 		memset( pMem, 0, stAllocateBlock );
 		return pMem;												
 	}

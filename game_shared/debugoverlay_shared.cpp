@@ -173,7 +173,20 @@ void NDebugOverlay::EntityText( int entityID, int text_offset, const char *text,
 {
 	if ( debugoverlay )
 	{
-		debugoverlay->AddEntityTextOverlay( entityID, text_offset, duration, r, g, b, a, text );
+		debugoverlay->AddEntityTextOverlay( entityID, text_offset, duration, 
+			(int)clamp(r * 255.f,0.f,255.f), (int)clamp(g * 255.f,0.f,255.f), (int)clamp(b * 255.f,0.f,255.f), 
+			(int)clamp(a * 255.f,0.f,255.f), text );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw entity text overlay at a specific position
+//-----------------------------------------------------------------------------
+void NDebugOverlay::EntityTextAtPosition( const Vector &origin, int text_offset, const char *text, float duration, int r, int g, int b, int a )
+{
+	if ( debugoverlay )
+	{
+		debugoverlay->AddTextOverlayRGB( origin, text_offset, duration, r, g, b, a, text );
 	}
 }
 
@@ -422,12 +435,26 @@ void NDebugOverlay::HorzArrow( const Vector &startPos, const Vector &endPos, flo
 	Vector p6 = endPos - lineDir * width + sideDir * radius;
 	Vector p7 =	startPos + sideDir * radius;
 
+	// Outline the arrow
 	Line(p1, p2, r,g,b,noDepthTest,flDuration);
 	Line(p2, p3, r,g,b,noDepthTest,flDuration);
 	Line(p3, p4, r,g,b,noDepthTest,flDuration);
 	Line(p4, p5, r,g,b,noDepthTest,flDuration);
 	Line(p5, p6, r,g,b,noDepthTest,flDuration);
 	Line(p6, p7, r,g,b,noDepthTest,flDuration);
+
+	if ( a > 0 )
+	{
+		// Fill us in with triangles
+		Triangle( p5, p4, p3, r, g, b, a, noDepthTest, flDuration ); // Tip
+		Triangle( p1, p7, p6, r, g, b, a, noDepthTest, flDuration ); // Shaft
+		Triangle( p6, p2, p1, r, g, b, a, noDepthTest, flDuration );
+
+		// And backfaces
+		Triangle( p3, p4, p5, r, g, b, a, noDepthTest, flDuration ); // Tip
+		Triangle( p6, p7, p1, r, g, b, a, noDepthTest, flDuration ); // Shaft
+		Triangle( p1, p2, p6, r, g, b, a, noDepthTest, flDuration );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -461,11 +488,41 @@ void NDebugOverlay::VertArrow( const Vector &startPos, const Vector &endPos, flo
 	Vector p6 = endPos - lineDir * width + upVec * radius;
 	Vector p7 =	startPos + upVec * radius;
 
+	// Outline the arrow
 	Line(p1, p2, r,g,b,noDepthTest,flDuration);
 	Line(p2, p3, r,g,b,noDepthTest,flDuration);
 	Line(p3, p4, r,g,b,noDepthTest,flDuration);
 	Line(p4, p5, r,g,b,noDepthTest,flDuration);
 	Line(p5, p6, r,g,b,noDepthTest,flDuration);
 	Line(p6, p7, r,g,b,noDepthTest,flDuration);
+
+	if ( a > 0 )
+	{
+		// Fill us in with triangles
+		Triangle( p5, p4, p3, r, g, b, a, noDepthTest, flDuration ); // Tip
+		Triangle( p1, p7, p6, r, g, b, a, noDepthTest, flDuration ); // Shaft
+		Triangle( p6, p2, p1, r, g, b, a, noDepthTest, flDuration );
+
+		// And backfaces
+		Triangle( p3, p4, p5, r, g, b, a, noDepthTest, flDuration ); // Tip
+		Triangle( p6, p7, p1, r, g, b, a, noDepthTest, flDuration ); // Shaft
+		Triangle( p1, p2, p6, r, g, b, a, noDepthTest, flDuration );
+	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draw an axis
+//-----------------------------------------------------------------------------
+void NDebugOverlay::Axis( const Vector &position, const QAngle &angles, float size, bool noDepthTest, float flDuration )
+{
+	Vector xvec, yvec, zvec;
+	AngleVectors( angles, &xvec, &yvec, &zvec );
+	
+	xvec = position + (size * xvec);
+	yvec = position - (size * yvec); // Left is positive
+	zvec = position + (size * zvec);
+
+	Line( position, xvec, 255, 0, 0, noDepthTest, flDuration );
+	Line( position, yvec, 0, 255, 0, noDepthTest, flDuration );
+	Line( position, zvec, 0, 0, 255, noDepthTest, flDuration );
+}

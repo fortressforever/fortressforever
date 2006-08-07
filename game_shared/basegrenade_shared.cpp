@@ -76,9 +76,6 @@ BEGIN_NETWORK_TABLE( CBaseGrenade, DT_BaseGrenade )
 	SendPropVector( SENDINFO( m_vecVelocity ), 0, SPROP_NOSCALE ), 
 	// HACK: Use same flag bits as player for now
 	SendPropInt			( SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED, SendProxy_CropFlagsToPlayerFlagBitsLength ),
-
-	SendPropTime( SENDINFO( m_flNextAttack ) ),
-
 #else
 	RecvPropFloat( RECVINFO( m_flDamage ) ),
 	RecvPropFloat( RECVINFO( m_DmgRadius ) ),
@@ -90,12 +87,12 @@ BEGIN_NETWORK_TABLE( CBaseGrenade, DT_BaseGrenade )
 	RecvPropVector( RECVINFO(m_vecVelocity), 0, RecvProxy_LocalVelocity ),
 
 	RecvPropInt( RECVINFO( m_fFlags ) ),
-
-	RecvPropTime( RECVINFO( m_flNextAttack ) ),
 #endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( grenade, CBaseGrenade );
+
+#if defined( CLIENT_DLL )
 
 BEGIN_PREDICTION_DATA( CBaseGrenade  )
 
@@ -112,6 +109,8 @@ BEGIN_PREDICTION_DATA( CBaseGrenade  )
 //	DEFINE_FIELD( m_iszBounceSound, FIELD_STRING ),
 
 END_PREDICTION_DATA()
+
+#endif
 
 // Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
 #define SF_DETONATE		0x0001
@@ -135,11 +134,18 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	Vector vecAbsOrigin = GetAbsOrigin();
 	int contents = UTIL_PointContents ( vecAbsOrigin );
 
+#if defined( TF_DLL )
+	// Since this code only runs on the server, make sure it shows the tempents it creates.
+	// This solves a problem with remote detonating the pipebombs (client wasn't seeing the explosion effect)
+	CDisablePredictionFiltering disabler;
+#endif
+
 	if ( pTrace->fraction != 1.0 )
 	{
 		Vector vecNormal = pTrace->plane.normal;
 		surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
 		CPASFilter filter( vecAbsOrigin );
+
 		te->Explosion( filter, -1.0, // don't apply cl_interp delay
 			&vecAbsOrigin,
 			!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
@@ -264,6 +270,8 @@ void CBaseGrenade::Detonate( void )
 {
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
+
+	SetThink( NULL );
 
 	vecSpot = GetAbsOrigin() + Vector ( 0 , 0 , 8 );
 	UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -32 ), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, & tr);

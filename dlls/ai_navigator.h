@@ -304,7 +304,7 @@ public:
 	virtual bool		SetGoalTarget( CBaseEntity *pEntity, const Vector &offset );
 	
 	// Fancy pathing
-	bool				SetRadialGoal( const Vector &center, float radius, float arc, float stepDist, bool bClockwise, bool bAirRoute = false );
+	bool				SetRadialGoal( const Vector &destination, const Vector &center, float radius, float arc, float stepDist, bool bClockwise, bool bAirRoute = false );
 	bool 				SetRandomGoal( float minPathLength, const Vector &dir = vec3_origin );
 	bool 				SetRandomGoal( const Vector &from, float minPathLength, const Vector &dir = vec3_origin );
 	bool				SetDirectGoal( const Vector &goalPos, Navigation_t navType = NAV_GROUND );
@@ -556,7 +556,7 @@ private:
 		float scanDist;
 		float radius;
 		float increment;
-		float maxSamples;
+		int maxSamples;
 	};
 
 	bool 				ShouldAttemptSimplifyTo( const Vector &pos );
@@ -641,8 +641,6 @@ private:
 
 	int					m_nNavFailCounter;
 	float				m_flLastNavFailTime;
-	
-	//---------------------------------
 public:
 	DECLARE_SIMPLE_DATADESC();
 };

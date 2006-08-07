@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="vtf2tga"
 	ProjectGUID="{2A1F656C-053C-46A4-AE33-304C1D865E0C}"
-	SccProjectName="&quot;$/Src/utils/vtf2tga&quot;, IAWDAAAA"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -23,39 +23,44 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="0"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\..\Public,..\..\Public\tier1,..\common"
-				PreprocessorDefinitions="NDEBUG;TGAWRITER_USE_FOPEN;WIN32;_CONSOLE"
+				PreprocessorDefinitions="NDEBUG;_WIN32;_CONSOLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
+				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Release/vtf2tga.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
 				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\$(TargetName).exe"/>
+				Outputs="..\..\..\bin\$(TargetName).exe;..\..\..\bin\$(TargetName).pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Release/vtf2tga.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc,libcmtd.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/vtf2tga.pdb"
 				GenerateMapFile="TRUE"
@@ -99,32 +104,35 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\Public,..\..\Public\tier1"
-				PreprocessorDefinitions="_DEBUG;TGAWRITER_USE_FOPEN;WIN32;_CONSOLE"
+				PreprocessorDefinitions="_DEBUG;_WIN32;_CONSOLE"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
+				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Debug/vtf2tga.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"
 				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\$(TargetName).exe"/>
+				Outputs="..\..\..\bin\$(TargetName).exe;..\..\..\bin\$(TargetName).pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Debug/vtf2tga.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libc"
+				IgnoreDefaultLibraryNames="libc,libcmt.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/vtf2tga.pdb"
 				SubSystem="1"
@@ -162,16 +170,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\..\Public\ImageLoader.cpp">
-			</File>
-			<File
-				RelativePath="..\..\Public\Mathlib.cpp">
-			</File>
-			<File
-				RelativePath="..\..\Public\TGAWriter.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\utlbuffer.cpp">
+				RelativePath="..\..\public\tier0\memoverride.cpp">
 			</File>
 			<File
 				RelativePath="vtf2tga.cpp">
@@ -184,7 +183,7 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 				RelativePath="..\..\Public\amd3dx.h">
 			</File>
 			<File
-				RelativePath="..\..\Public\basetypes.h">
+				RelativePath="..\..\Public\tier0\basetypes.h">
 			</File>
 			<File
 				RelativePath="..\..\Public\commonmacros.h">
@@ -194,9 +193,6 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			</File>
 			<File
 				RelativePath="..\..\public\tier0\fasttimer.h">
-			</File>
-			<File
-				RelativePath="..\..\Public\ImageLoader.h">
 			</File>
 			<File
 				RelativePath="..\..\Public\MATHLIB.H">
@@ -218,9 +214,6 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			</File>
 			<File
 				RelativePath="..\..\public\vstdlib\strtools.h">
-			</File>
-			<File
-				RelativePath="..\..\Public\TGAWriter.h">
 			</File>
 			<File
 				RelativePath="..\..\public\tier1\utlbuffer.h">
@@ -245,57 +238,73 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 		</Filter>
-		<File
-			RelativePath="..\..\lib\public\tier0.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\vstdlib.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\vtf.lib">
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
+		<Filter
+			Name="Link Libraries"
+			Filter="">
+			<File
+				RelativePath="..\..\lib\public\bitmap.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\mathlib.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier0.lib">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier1.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier2.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\vstdlib.lib">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\vtf.lib">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

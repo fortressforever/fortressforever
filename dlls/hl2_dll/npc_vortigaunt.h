@@ -60,6 +60,9 @@ public:
 	void			StartTask( const Task_t *pTask );
 	int				ObjectCaps( void ) { return UsableNPCObjectCaps( BaseClass::ObjectCaps() ); }
 	int				OnTakeDamage_Alive( const CTakeDamageInfo &info );
+
+	// Navigation/Locomotion
+	bool			OnObstructionPreSteer( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
 	
 	void			DeclineFollowing( void );
 	bool			CanBeUsedAsAFriend( void );
@@ -71,8 +74,8 @@ public:
 	bool			IsValidEnemy( CBaseEntity *pEnemy );
 	bool			IsLeading( void ) { return ( GetRunningBehavior() == &m_LeadBehavior && m_LeadBehavior.HasGoal() ); }
 
-	void			DeathSound( void );
-	void			PainSound( void );
+	void			DeathSound( const CTakeDamageInfo &info );
+	void			PainSound( const CTakeDamageInfo &info );
 	
 	void			TalkInit( void );
 
@@ -125,6 +128,7 @@ private:
 		TASK_VORTIGAUNT_EXTRACT_COOLDOWN,
 		TASK_VORTIGAUNT_FIRE_EXTRACT_OUTPUT,
 		TASK_VORTIGAUNT_WAIT_FOR_PLAYER,
+		TASK_VORTIGAUNT_GET_HEAL_TARGET,
 	};
 
 	//=========================================================
@@ -175,6 +179,8 @@ private:
 	int				m_nLastArmorAmt;		// Player armor at end of last heal
 	int				m_iSuitSound;			// 0 = off, 1 = startup, 2 = going
 	float			m_flSuitSoundTime;
+	EHANDLE			m_hHealTarget;			// The person that I'm going to heal.
+	
 	void			HealBeam( int side );
 	bool			IsHealPositionValid( void );
 	bool			CheckHealPosition( void );

@@ -183,8 +183,10 @@ public:
 	void UpdateBlocked( void );									///< Updates the (un)blocked status of the nav area
 	void CheckFloor( CBaseEntity *ignore );						///< Checks if there is a floor under the nav area, in case a breakable floor is gone
 	bool IsBlocked( void ) const		{ return m_isBlocked; }
+	void CheckWaterLevel( void );
+	bool IsUnderwater( void ) const		{ return m_isUnderwater; }
 
-	bool IsOverlapping( const Vector &pos ) const;				///< return true if 'pos' is within 2D extents of area.
+	bool IsOverlapping( const Vector &pos, float tolerance = 0.0f ) const;	///< return true if 'pos' is within 2D extents of area.
 	bool IsOverlapping( const CNavArea *area ) const;			///< return true if 'area' overlaps our 2D extents
 	bool IsOverlappingX( const CNavArea *area ) const;			///< return true if 'area' overlaps our X extent
 	bool IsOverlappingY( const CNavArea *area ) const;			///< return true if 'area' overlaps our Y extent
@@ -196,6 +198,7 @@ public:
 	float GetDistanceSquaredToPoint( const Vector &pos ) const;	///< return shortest distance between point and this area
 	bool IsDegenerate( void ) const;							///< return true if this area is badly formed
 	bool IsRoughlySquare( void ) const;							///< return true if this area is approximately square
+	bool IsFlat( void ) const;									///< return true if this area is approximately flat
 
 	bool IsEdge( NavDirType dir ) const;						///< return true if there are no bi-directional links on the given side
 
@@ -227,16 +230,20 @@ public:
 
 	SpotEncounter *GetSpotEncounter( const CNavArea *from, const CNavArea *to );	///< given the areas we are moving between, return the spots we will encounter
 	void ComputeSpotEncounters( void );							///< compute spot encounter data - for map learning
+	int GetSpotEncounterCount( void ) const				{ return m_spotEncounterList.Count(); }
 
 	//- "danger" ----------------------------------------------------------------------------------------
 	void IncreaseDanger( int teamID, float amount );			///< increase the danger of this area for the given team
 	float GetDanger( int teamID );								///< return the danger of this area (decays over time)
 
+	//- extents -----------------------------------------------------------------------------------------
 	float GetSizeX( void ) const			{ return m_extent.hi.x - m_extent.lo.x; }
 	float GetSizeY( void ) const			{ return m_extent.hi.y - m_extent.lo.y; }
 	const Extent &GetExtent( void ) const	{ return m_extent; }
 	const Vector &GetCenter( void ) const	{ return m_center; }
 	const Vector &GetCorner( NavCornerType corner ) const;
+	void SetCorner( NavCornerType corner, const Vector& newPosition );
+	void ComputeNormal( Vector *normal, bool alternate = false ) const;	///< Computes the area's normal based on m_extent.lo.  If 'alternate' is specified, m_extent.hi is used instead.
 
 	//- approach areas ----------------------------------------------------------------------------------
 	struct ApproachInfo
@@ -293,16 +300,17 @@ public:
 	void Draw( void ) const;					///< draw area for debugging & editing
 	void DrawConnectedAreas( void ) const;
 	void DrawHidingSpots( void ) const;
-	void DrawMarkedCorner( NavCornerType corner ) const;
 	bool SplitEdit( bool splitAlongX, float splitEdge, CNavArea **outAlpha = NULL, CNavArea **outBeta = NULL );	///< split this area into two areas at the given edge
 	bool MergeEdit( CNavArea *adj );							///< merge this area and given adjacent area 
 	bool SpliceEdit( CNavArea *other );							///< create a new area between this area and given area 
-	void RaiseCorner( NavCornerType corner, int amount );		///< raise/lower a corner (or all corners if corner == NUM_CORNERS)
+	void RaiseCorner( NavCornerType corner, int amount, bool raiseAdjacentCorners = true );	///< raise/lower a corner (or all corners if corner == NUM_CORNERS)
 	void PlaceOnGround( NavCornerType corner, float inset = 0.0f );	///< places a corner (or all corners if corner == NUM_CORNERS) on the ground
+	NavCornerType GetCornerUnderCursor( void ) const;
+	bool GetCornerHotspot( NavCornerType corner, Vector hotspot[NUM_CORNERS] ) const;	///< returns true if the corner is under the cursor
 
 	//- ladders -----------------------------------------------------------------------------------------
-	void AddLadderUp( CNavLadder *ladder )		{ NavLadderConnect tmp; tmp.ladder = ladder; m_ladder[ CNavLadder::LADDER_UP ].AddToTail( tmp ); }
-	void AddLadderDown( CNavLadder *ladder )	{ NavLadderConnect tmp; tmp.ladder = ladder; m_ladder[ CNavLadder::LADDER_DOWN ].AddToTail( tmp ); }
+	void AddLadderUp( CNavLadder *ladder );
+	void AddLadderDown( CNavLadder *ladder );
 
 private:
 	friend class CNavMesh;
@@ -311,6 +319,20 @@ private:
 	void Initialize( void );									///< to keep constructors consistent
 	static bool m_isReset;										///< if true, don't bother cleaning up in destructor since everything is going away
 
+	/*
+	extent.lo
+		nw           ne
+		 +-----------+
+		 | +-->x     |
+		 | |         |
+		 | v         |
+		 | y         |
+		 |           |
+		 +-----------+
+		sw           se
+					extent.hi
+	*/
+
 	static unsigned int m_nextID;								///< used to allocate unique IDs
 	unsigned int m_id;											///< unique area ID
 	Extent m_extent;											///< extents of area in world coords (NOTE: lo.z is not necessarily the minimum Z, but corresponds to Z at point (lo.x, lo.y), etc
@@ -318,6 +340,7 @@ private:
 	unsigned short m_attributeFlags;							///< set of attribute bit flags (see NavAttributeType)
 	Place m_place;												///< place descriptor
 	bool m_isBlocked;											///< if true, some part of the world is preventing movement through this nav area
+	bool m_isUnderwater;										///< true if the center of the area is underwater
 
 	/// height of the implicit corners
 	float m_neZ;
@@ -370,6 +393,9 @@ private:
 
 	//---------------------------------------------------------------------------------------------------
 	CNavNode *m_node[ NUM_CORNERS ];							///< nav nodes at each corner of the area
+
+	void ResetNodes( void );									///< nodes are going away as part of an incremental nav generation
+	bool HasNodes( void ) const;
 
 	void FinishMerge( CNavArea *adjArea );						///< recompute internal data once nodes have been adjusted during merge
 	void MergeAdjacentConnections( CNavArea *adjArea );			///< for merging with "adjArea" - pick up all of "adjArea"s connections

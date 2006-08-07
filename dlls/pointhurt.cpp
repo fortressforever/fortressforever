@@ -117,7 +117,7 @@ void CPointHurt::HurtThink( void )
 		CBaseEntity	*pEnt = NULL;
 			
 		CTakeDamageInfo info( this, m_pActivator, m_nDamage, m_bitsDamageType );
-		while ( ( pEnt = gEntList.FindEntityByName( pEnt, m_strTarget, m_pActivator ) ) != NULL )
+		while ( ( pEnt = gEntList.FindEntityByName( pEnt, m_strTarget, NULL, m_pActivator ) ) != NULL )
 		{
 			GuessDamageForce( &info, (pEnt->GetAbsOrigin() - GetAbsOrigin()), pEnt->GetAbsOrigin() );
 			pEnt->TakeDamage( info );

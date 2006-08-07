@@ -749,7 +749,6 @@ face_t *FixTjuncs (node_t *headnode, face_t *pLeafFaceList)
 	c_uniqueverts = 0;
 	c_faceoverflows = 0;
 	EmitNodeFaceVertexes_r (headnode);
-	EmitLeafFaceVertexes( &pLeafFaceList );
 
 	// UNDONE: This count is wrong with tjuncs off on details - since 
 
@@ -759,10 +758,21 @@ face_t *FixTjuncs (node_t *headnode, face_t *pLeafFaceList)
 	c_degenerate = 0;
 	c_facecollapse = 0;
 	c_tjunctions = 0;
-	if (!notjunc)
+	
+	if ( g_bAllowDetailCracks )
 	{
 		FixEdges_r (headnode);
+		EmitLeafFaceVertexes( &pLeafFaceList );
 		FixLeafFaceEdges( &pLeafFaceList );
+	}
+	else
+	{
+		EmitLeafFaceVertexes( &pLeafFaceList );
+		if (!notjunc)
+		{
+			FixEdges_r (headnode);
+			FixLeafFaceEdges( &pLeafFaceList );
+		}
 	}
 
 

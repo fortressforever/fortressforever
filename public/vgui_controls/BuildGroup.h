@@ -20,6 +20,7 @@
 #include <vgui/IScheme.h>
 #include <vgui_controls/Controls.h>
 #include <vgui_controls/PHandle.h>
+#include "tier1/utlhandletable.h"
 
 class KeyValues;
 
@@ -32,6 +33,8 @@ namespace vgui
 //-----------------------------------------------------------------------------
 class BuildGroup
 {
+	DECLARE_HANDLES( BuildGroup, 20 );
+
 public:
 	BuildGroup(Panel *parentPanel, Panel *contextPanel);
 	~BuildGroup();
@@ -91,8 +94,8 @@ public:
 
 	virtual void PanelAdded(Panel* panel);
 
-	virtual void MousePressed(MouseCode code,Panel* panel);
-	virtual void MouseReleased(MouseCode code,Panel* panel);
+	virtual bool MousePressed(MouseCode code,Panel* panel);
+	virtual bool MouseReleased(MouseCode code,Panel* panel);
 
 	// Get the list of panels that are currently selected
 	virtual CUtlVector<PHandle> *GetControlGroup();
@@ -121,10 +124,12 @@ public:
 	KeyValues *GetDialogVariables();
 
 protected:
-	virtual void CursorMoved(int x, int y, Panel *panel);
-	virtual void MouseDoublePressed(MouseCode code, Panel *panel);
-	virtual void KeyCodeTyped(KeyCode code, Panel *panel);
+	virtual bool CursorMoved(int x, int y, Panel *panel);
+	virtual bool MouseDoublePressed(MouseCode code, Panel *panel);
+	virtual bool KeyCodeTyped(KeyCode code, Panel *panel);
+	virtual bool KeyCodeReleased(KeyCode code, Panel *panel );
 	virtual void ApplySchemeSettings(IScheme *pScheme);
+	virtual bool KeyTyped( wchar_t unichar, Panel *panel );
 
 	virtual HCursor GetCursor(Panel *panel);
 
@@ -134,7 +139,6 @@ private:
 	void ActivateBuildDialog();
 	void DeleteAllControlsCreatedByControlSettingsFile();
 	
-
 	bool      _enabled;
 	int       _snapX;
 	int       _snapY;
@@ -147,6 +151,7 @@ private:
 	MouseCode _dragMouseCode;
 	int       _dragStartPanelPos[2];
 	int       _dragStartCursorPos[2];
+	int		  _dragStartPanelSize[ 2 ];
 	Panel   * _currentPanel;
 	CUtlVector<PHandle> _panelDar;
 	char	*m_pResourceName;
@@ -159,11 +164,17 @@ private:
 	CUtlVector<int> _groupDeltaY;	   // y offsets of panels in group from the selected panel
 	Label	*_rulerNumber[4];  // 4 numbers to label rulers with
 	bool	_showRulers;	   // toggles ruler display
-
 	CUtlVector<CUtlSymbol> m_RegisteredControlSettingsFiles;
 
 	friend class Panel;
 };
+
+
+//-----------------------------------------------------------------------------
+// Handle to a build group
+//-----------------------------------------------------------------------------
+typedef CUtlHandle<BuildGroup> HBuildGroup;
+
 
 } // namespace vgui
 

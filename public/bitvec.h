@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
-//=============================================================================//
+//===========================================================================//
 
 #ifndef BITVEC_H
 #define BITVEC_H
@@ -10,8 +10,8 @@
 #pragma once
 #endif
 
-#include <assert.h>
-#include "basetypes.h"
+#include "tier0/dbg.h"
+#include "tier0/basetypes.h"
 
 
 class CBitVecAccessor
@@ -51,6 +51,7 @@ public:
 	
 	// Get the state of a bit.
 	unsigned long	Get( unsigned long iBit ) const;
+	bool			IsBitSet( unsigned long iBit ) const;
 
 	// Set or clear a bit.
 	void			Set( unsigned long iBit );
@@ -159,7 +160,7 @@ inline CBitVec<NUM_BITS>& CBitVec<NUM_BITS>::operator=(CBitVec<NUM_BITS> const &
 template<int NUM_BITS>
 inline CBitVecAccessor CBitVec<NUM_BITS>::operator[](int i)	
 {
-	assert(i >= 0 && i < GetNumBits());
+	Assert(i >= 0 && i < GetNumBits());
 	return CBitVecAccessor(m_DWords, i);
 }
 
@@ -168,7 +169,7 @@ template< int SIZE >
 inline void CBitVec<SIZE>::ClearAll( int nBits )
 {
 	int nDWords = PAD_NUMBER( nBits, 32 ) >> 5;
-	assert( nDWords <= NUM_DWORDS );
+	Assert( nDWords <= NUM_DWORDS );
 	
 	for( int i=0; i < nDWords; i++ )
 		m_DWords[i] = 0;
@@ -178,7 +179,7 @@ template< int SIZE >
 inline void CBitVec<SIZE>::SetAll( int nBits )
 {
 	int nDWords = PAD_NUMBER( nBits, 32 ) >> 5;
-	assert( nDWords <= NUM_DWORDS );
+	Assert( nDWords <= NUM_DWORDS );
 	
 	for( int i=0; i < nDWords; i++ )
 		m_DWords[i] = 0xFFFFFFFF;
@@ -187,21 +188,27 @@ inline void CBitVec<SIZE>::SetAll( int nBits )
 template< int SIZE >
 inline unsigned long CBitVec<SIZE>::Get( unsigned long iBit ) const
 {
-	assert( iBit < SIZE );
+	Assert( iBit < SIZE );
 	return m_DWords[iBit >> 5] & (1 << (iBit & 31));
+}
+
+template< int SIZE >
+bool CBitVec<SIZE>::IsBitSet( unsigned long iBit ) const
+{
+	return ( m_DWords[iBit >> 5] & (1 << (iBit & 31)) ) != 0;
 }
 
 template< int SIZE >
 inline void CBitVec<SIZE>::Set( unsigned long iBit )
 {
-	assert( iBit < SIZE );
+	Assert( iBit < SIZE );
 	m_DWords[iBit >> 5] |= (1 << (iBit & 31));
 }
 
 template< int SIZE >
 inline void CBitVec<SIZE>::Clear( unsigned long iBit )
 {
-	assert( iBit < SIZE );
+	Assert( iBit < SIZE );
 	m_DWords[iBit >> 5] &= ~(1 << (iBit & 31));
 }
 
@@ -218,7 +225,7 @@ template< int SIZE >
 inline void CBitVec<SIZE>::Copy( CBitVec<SIZE> const &other, int nBits )
 {
 	int nBytes = PAD_NUMBER( nBits, 8 ) >> 3;
-	assert( nBytes <= NUM_DWORDS*4 );
+	Assert( nBytes <= NUM_DWORDS*4 );
 	memcpy( m_DWords, other.m_DWords, nBytes );
 }
 
@@ -227,7 +234,7 @@ template< int SIZE >
 inline bool CBitVec<SIZE>::Compare( CBitVec<SIZE> const &other, int nBits )
 {
 	int nBytes = PAD_NUMBER( nBits, 8 ) >> 3;
-	assert( nBytes <= NUM_DWORDS*4 );
+	Assert( nBytes <= NUM_DWORDS*4 );
 
 	return memcmp( m_DWords, other.m_DWords, nBytes ) == 0;
 }
@@ -260,7 +267,7 @@ inline int CBitVec<NUM_BITS>::GetNumDWords() const
 template<int NUM_BITS>
 inline unsigned long CBitVec<NUM_BITS>::GetDWord(int i) const
 {
-	assert(i >= 0 && i < NUM_DWORDS);
+	Assert(i >= 0 && i < NUM_DWORDS);
 	return m_DWords[i];
 }
 
@@ -268,7 +275,7 @@ inline unsigned long CBitVec<NUM_BITS>::GetDWord(int i) const
 template<int NUM_BITS>
 inline void CBitVec<NUM_BITS>::SetDWord(int i, unsigned long val)
 {
-	assert(i >= 0 && i < NUM_DWORDS);
+	Assert(i >= 0 && i < NUM_DWORDS);
 	m_DWords[i] = val;
 }
 

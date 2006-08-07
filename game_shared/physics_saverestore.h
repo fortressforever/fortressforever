@@ -33,7 +33,7 @@ ISaveRestoreOps *GetPhysObjSaveRestoreOps( PhysInterfaceId_t );
 
 //-----------------------------------------------------------------------------
 
-class IPhysSaveRestoreManager
+abstract_class IPhysSaveRestoreManager
 {
 public:
 	virtual void NoteBBox( const Vector &mins, const Vector &maxs, CPhysCollide * ) = 0;

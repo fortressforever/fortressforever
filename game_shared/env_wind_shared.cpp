@@ -168,7 +168,7 @@ void CEnvWindShared::UpdateWindSound( float flTotalWindSpeed )
 //-----------------------------------------------------------------------------
 
 #define WIND_ACCELERATION	150.0f	// wind speed can accelerate this many units per second
-#define WIND_DECELERATION	500.0f	// wind speed can decelerate this many units per second
+#define WIND_DECELERATION	15.0f	// wind speed can decelerate this many units per second
 
 float CEnvWindShared::WindThink( float flTime )
 {
@@ -246,6 +246,10 @@ float CEnvWindShared::WindThink( float flTime )
 			// set up for another gust later
 			m_bGusting = false;
 			m_flSwitchTime += m_flMinGustDelay + m_Stream.RandomFloat( 0, m_flMaxGustDelay );
+
+#ifndef CLIENT_DLL
+			m_OnGustEnd.FireOutput( NULL, NULL );
+#endif
 		}
 		else
 		{
@@ -258,8 +262,12 @@ float CEnvWindShared::WindThink( float flTime )
 			// set up to stop the gust in a short while
 			m_bGusting = true;
 
+#ifndef CLIENT_DLL
+			m_OnGustStart.FireOutput( NULL, NULL );
+#endif
+
 			// !!!HACKHACK - gust duration tied to the length of a particular wave file
-			m_flSwitchTime += 10.0f;
+			m_flSwitchTime += m_flGustDuration;
 		}
 	}
 }

@@ -25,6 +25,11 @@
 #include "IEffects.h"
 #include "props.h"
 #include "physics_npc_solver.h"
+#include "physics_prop_ragdoll.h"
+
+#ifdef HL2_EPISODIC
+#include "episodic/ai_behavior_passenger_zombie.h"
+#endif	// HL2_EPISODIC
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -40,6 +45,13 @@
 
 // If flying at an enemy, and this close or closer, start playing the maul animation!!
 #define FASTZOMBIE_MAUL_RANGE	300
+
+#ifdef HL2_EPISODIC
+
+int AE_PASSENGER_PHYSICS_PUSH;
+int AE_FASTZOMBIE_VEHICLE_LEAP;
+
+#endif // HL2_EPISODIC
 
 enum
 {
@@ -180,6 +192,7 @@ enum
 	SCHED_FASTZOMBIE_UNSTICK_JUMP,
 	SCHED_FASTZOMBIE_CLIMBING_UNSTICK_JUMP,
 	SCHED_FASTZOMBIE_MELEE_ATTACK1,
+	SCHED_FASTZOMBIE_TORSO_MELEE_ATTACK1,
 };
 
 
@@ -240,8 +253,10 @@ public:
 	void Event_Killed( const CTakeDamageInfo &info );
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
 
-	void PainSound( void );
-	void DeathSound( void ); 
+	virtual Vector GetAutoAimCenter() { return WorldSpaceCenter() - Vector( 0, 0, 12.0f ); }
+
+	void PainSound( const CTakeDamageInfo &info );
+	void DeathSound( const CTakeDamageInfo &info ); 
 	void AlertSound( void );
 	void IdleSound( void );
 	void AttackSound( void );
@@ -274,6 +289,25 @@ public:
 	virtual const char *GetLegsModel( void );
 	virtual const char *GetTorsoModel( void );
 
+//=============================================================================
+#ifdef HL2_EPISODIC
+
+public:
+	virtual bool	CreateBehaviors( void );
+	virtual void	VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
+	virtual	void	UpdateEfficiency( bool bInPVS );
+	virtual bool	IsInAVehicle( void );
+	void			InputAttachToVehicle( inputdata_t &inputdata );
+	void			VehicleLeapAttackTouch( CBaseEntity *pOther );
+
+private:
+	void			VehicleLeapAttack( void );
+	bool			CanEnterVehicle( CPropJeepEpisodic *pVehicle );
+
+	CAI_PassengerBehaviorZombie		m_PassengerBehavior;
+
+#endif	// HL2_EPISODIC
+//=============================================================================
 
 protected:
 
@@ -303,6 +337,8 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( npc_fastzombie, CFastZombie );
+LINK_ENTITY_TO_CLASS( npc_fastzombie_torso, CFastZombie );
+
 
 BEGIN_DATADESC( CFastZombie )
 
@@ -322,6 +358,11 @@ BEGIN_DATADESC( CFastZombie )
 	DEFINE_ENTITYFUNC( LeapAttackTouch ),
 	DEFINE_ENTITYFUNC( ClimbTouch ),
 	DEFINE_SOUNDPATCH( m_pLayer2 ),
+
+#ifdef HL2_EPISODIC
+	DEFINE_ENTITYFUNC( VehicleLeapAttackTouch ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "AttachToVehicle", InputAttachToVehicle ),
+#endif	// HL2_EPISODIC
 
 END_DATADESC()
 
@@ -345,6 +386,9 @@ static const char *s_pLegsModel = "models/gibs/fast_zombie_legs.mdl";
 void CFastZombie::Precache( void )
 {
 	PrecacheModel("models/zombie/fast.mdl");
+#ifdef HL2_EPISODIC
+	PrecacheModel("models/zombie/Fast_torso.mdl");
+#endif
 	PrecacheModel( "models/gibs/fast_zombie_torso.mdl" );
 	PrecacheModel( "models/gibs/fast_zombie_legs.mdl" );
 	
@@ -390,6 +434,34 @@ void CFastZombie::OnScheduleChange( void )
 //---------------------------------------------------------
 int CFastZombie::SelectSchedule ( void )
 {
+
+// ========================================================
+#ifdef HL2_EPISODIC
+
+	// If our enemy is in a vehicle, we want to attach to that vehicle
+	if ( GetEnemy() != NULL )
+	{
+		CBaseCombatCharacter *pCCEnemy = GetEnemy()->MyCombatCharacterPointer();	
+		if ( pCCEnemy != NULL && pCCEnemy->IsInAVehicle() )
+		{
+			CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(pCCEnemy->GetVehicleEntity() );
+			if ( pVehicle && CanEnterVehicle( pVehicle ) )
+			{
+				m_PassengerBehavior.Enable( pVehicle );
+			}
+		}
+	}
+
+	// Defer all decisions to the behavior if it's running
+	if ( m_PassengerBehavior.CanSelectSchedule() )
+	{
+		DeferSchedulingToBehavior( &m_PassengerBehavior );
+		return BaseClass::SelectSchedule();
+	}
+
+#endif //HL2_EPISODIC
+// ========================================================
+
 	if ( HasCondition( COND_ZOMBIE_RELEASECRAB ) )
 	{
 		// Death waits for no man. Or zombie. Or something.
@@ -588,12 +660,27 @@ void CFastZombie::Spawn( void )
 
 	m_fIsTorso = m_fIsHeadless = false;
 
+	if( FClassnameIs( this, "npc_fastzombie" ) )
+	{
+		m_fIsTorso = false;
+	}
+	else
+	{
+		// This was placed as an npc_fastzombie_torso
+		m_fIsTorso = true;
+	}
+
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 	m_iHealth			= 50;
 	m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_CLIMB | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 /* | bits_CAP_INNATE_MELEE_ATTACK1 */);
+
+	if ( m_fIsTorso == true )
+	{
+		CapabilitiesRemove( bits_CAP_MOVE_JUMP | bits_CAP_INNATE_RANGE_ATTACK1 );
+	}
 
 	m_flNextAttack = gpGlobals->curtime;
 
@@ -628,8 +715,6 @@ const char *CFastZombie::GetHeadcrabModel( void )
 {
 	return "models/headcrab.mdl";
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -681,7 +766,7 @@ void CFastZombie::SetZombieModel( void )
 
 	if ( m_fIsTorso )
 	{
-		SetModel( "models/gibs/fast_zombie_torso.mdl" );
+		SetModel( "models/zombie/fast_torso.mdl" );
 		SetHullType(HULL_TINY);
 	}
 	else
@@ -819,12 +904,13 @@ void CFastZombie::AttackSound( void )
 void CFastZombie::IdleSound( void )
 {
 	EmitSound( "NPC_FastZombie.Idle" );
+	MakeAISpookySound( 360.0f );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Play a random pain sound.
 //-----------------------------------------------------------------------------
-void CFastZombie::PainSound( void )
+void CFastZombie::PainSound( const CTakeDamageInfo &info )
 {
 	if ( m_pLayer2 )
 		ENVELOPE_CONTROLLER.SoundPlayEnvelope( m_pLayer2, SOUNDCTRL_CHANGE_VOLUME, envFastZombieVolumePain, ARRAYSIZE(envFastZombieVolumePain) );
@@ -834,7 +920,7 @@ void CFastZombie::PainSound( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CFastZombie::DeathSound( void ) 
+void CFastZombie::DeathSound( const CTakeDamageInfo &info ) 
 {
 	EmitSound( "NPC_FastZombie.Die" );
 }
@@ -947,7 +1033,7 @@ int CFastZombie::RangeAttack1Conditions( float flDot, float flDist )
 	// only check half the distance. (the first part of the jump)
 	vecDirToEnemy = vecDirToEnemy * 0.5;
 
-	AI_TraceHull( WorldSpaceCenter(), WorldSpaceCenter() + vecDirToEnemy, vecHullMin, vecHullMax, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+	AI_TraceHull( WorldSpaceCenter(), WorldSpaceCenter() + vecDirToEnemy, vecHullMin, vecHullMax, MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
 
 	if( tr.fraction != 1.0 )
 	{
@@ -957,7 +1043,6 @@ int CFastZombie::RangeAttack1Conditions( float flDot, float flDist )
 
 	return COND_CAN_RANGE_ATTACK1;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1013,6 +1098,30 @@ void CFastZombie::HandleAnimEvent( animevent_t *pEvent )
 		ClawAttack( GetClawAttackRange(), 3, QAngle( -3, 5, -3 ), right, ZOMBIE_BLOOD_LEFT_HAND );
 		return;
 	}
+
+//=============================================================================
+#ifdef HL2_EPISODIC
+
+	// FIXME: Bridge into the behavior instead
+	if ( pEvent->event == AE_PASSENGER_PHYSICS_PUSH )
+	{
+		float flForce = (float) atof( pEvent->options );
+		m_PassengerBehavior.AddPhysicsPush( flForce );
+		EmitSound( "MetalVehicle.ImpactHard" );
+		SoundInit();
+		SetAngrySoundState();
+		EmitSound( "NPC_FastZombie.Scream" );
+		return;
+	}
+
+	if ( pEvent->event == AE_FASTZOMBIE_VEHICLE_LEAP )
+	{
+		VehicleLeapAttack();
+		return;
+	}
+
+#endif // HL2_EPISODIC
+//=============================================================================
 
 	BaseClass::HandleAnimEvent( pEvent );
 }
@@ -1290,7 +1399,14 @@ int CFastZombie::TranslateSchedule( int scheduleType )
 		break;
 
 	case SCHED_MELEE_ATTACK1:
-		return SCHED_FASTZOMBIE_MELEE_ATTACK1;
+		if ( m_fIsTorso == true )
+		{
+			return SCHED_FASTZOMBIE_TORSO_MELEE_ATTACK1;
+		}
+		else
+		{
+			return SCHED_FASTZOMBIE_MELEE_ATTACK1;
+		}
 		break;
 
 	case SCHED_FASTZOMBIE_UNSTICK_JUMP:
@@ -1316,7 +1432,7 @@ Activity CFastZombie::NPC_TranslateActivity( Activity baseAct )
 {
 	if ( baseAct == ACT_CLIMB_DOWN )
 		return ACT_CLIMB_UP;
-
+	
 	return BaseClass::NPC_TranslateActivity( baseAct );
 }
 
@@ -1324,6 +1440,12 @@ Activity CFastZombie::NPC_TranslateActivity( Activity baseAct )
 //---------------------------------------------------------
 void CFastZombie::LeapAttackTouch( CBaseEntity *pOther )
 {
+	if ( !pOther->IsSolid() )
+	{
+		// Touching a trigger or something.
+		return;
+	}
+
 	// Stop the zombie and knock the player back
 	Vector vecNewVelocity( 0, 0, GetAbsVelocity().z );
 	SetAbsVelocity( vecNewVelocity );
@@ -1348,7 +1470,17 @@ void CFastZombie::ClimbTouch( CBaseEntity *pOther )
 		Vector vecDir = pOther->WorldSpaceCenter() - WorldSpaceCenter();
 		vecDir.z = 0.0; // planar
 		VectorNormalize( vecDir );
-		pOther->VelocityPunch( vecDir * 200 );
+
+		if( IsXbox() )
+		{
+			vecDir *= 400.0f;
+		}
+		else
+		{
+			vecDir *= 200.0f;
+		}
+
+		pOther->VelocityPunch( vecDir );
 
 		if ( GetActivity() != ACT_CLIMB_DISMOUNT || 
 			 ( pOther->GetGroundEntity() == NULL &&
@@ -1485,7 +1617,7 @@ void CFastZombie::OnChangeActivity( Activity NewActivity )
 	{
 		// Scream!!!!
 		EmitSound( "NPC_FastZombie.Frenzy" );
-		SetPlaybackRate( random->RandomFloat( .9, 1.1 ) );
+		SetPlaybackRate( random->RandomFloat( .9, 1.1 ) );	
 	}
 
 	if( NewActivity == ACT_JUMP )
@@ -1598,6 +1730,10 @@ void CFastZombie::EndAttackJump( void )
 //-----------------------------------------------------------------------------
 void CFastZombie::BuildScheduleTestBits( void )
 {
+#ifdef HL2_EPISODIC
+	SetCustomInterruptCondition( COND_PROVOKED );
+#endif	// HL2_EPISODIC
+
 	// Any schedule that makes us climb should break if we touch player
 	if ( GetActivity() == ACT_CLIMB_UP || GetActivity() == ACT_CLIMB_DOWN || GetActivity() == ACT_CLIMB_DISMOUNT)
 	{
@@ -1636,7 +1772,40 @@ void CFastZombie::Event_Killed( const CTakeDamageInfo &info )
 	CPASAttenuationFilter filter( this );
 	EmitSound( filter, entindex(), "NPC_FastZombie.NoSound" );
 
-	BaseClass::Event_Killed( info );
+#if 0
+
+	// Become a server-side ragdoll and create a constraint at the hand
+	if ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_INSIDE )
+	{
+		IPhysicsObject *pVehiclePhys = m_PassengerBehavior.GetTargetVehicle()->GetServerVehicle()->GetVehicleEnt()->VPhysicsGetObject();
+		CBaseAnimating *pVehicleAnimating = m_PassengerBehavior.GetTargetVehicle()->GetServerVehicle()->GetVehicleEnt()->GetBaseAnimating();
+		int nRightHandBone = 31;//GetBaseAnimating()->LookupBone( "ValveBiped.Bip01_R_Finger2" );
+		Vector vecRightHandPos;
+		QAngle vecRightHandAngle;
+		GetAttachment( LookupAttachment( "Blood_Right" ), vecRightHandPos, vecRightHandAngle );
+		CTakeDamageInfo dInfo( GetEnemy(), GetEnemy(), RandomVector( -200, 200 ), WorldSpaceCenter(), 50.0f, DMG_CRUSH );
+		//CBaseEntity *pRagdoll = CreateServerRagdoll( GetBaseAnimating(), 0, dInfo, COLLISION_GROUP_DEBRIS );
+
+		/*
+		GetBaseAnimating()->GetBonePosition( nRightHandBone, vecRightHandPos, vecRightHandAngle );
+
+		CBaseEntity *pRagdoll = CreateServerRagdollAttached(	GetBaseAnimating(), 
+																vec3_origin, 
+																-1, 
+																COLLISION_GROUP_DEBRIS, 
+																pVehiclePhys,
+																pVehicleAnimating, 
+																0, 
+																vecRightHandPos,
+																nRightHandBone,	
+																vec3_origin );*/
+
+	}
+#endif
+
+	CTakeDamageInfo dInfo = info;
+	//dInfo.SetDamageType( info.GetDamageType() | DMG_REMOVENORAGDOLL );
+	BaseClass::Event_Killed( dInfo );
 }
 
 //-----------------------------------------------------------------------------
@@ -1659,6 +1828,164 @@ bool CFastZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamage
 
 	return false;
 }
+
+//=============================================================================
+#ifdef HL2_EPISODIC
+
+//-----------------------------------------------------------------------------
+// Purpose: Add the passenger behavior to our repertoire
+//-----------------------------------------------------------------------------
+bool CFastZombie::CreateBehaviors( void )
+{
+	AddBehavior( &m_PassengerBehavior );
+
+	return BaseClass::CreateBehaviors();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get on the vehicle!
+//-----------------------------------------------------------------------------
+void CFastZombie::InputAttachToVehicle( inputdata_t &inputdata )
+{
+	// Interrupt us
+	SetCondition( COND_PROVOKED );
+
+	// Find the target vehicle
+	CBaseEntity *pEntity = FindNamedEntity( inputdata.value.String() );
+	CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(pEntity);
+
+	// Get in the car if it's valid
+	if ( pVehicle && CanEnterVehicle( pVehicle ) )
+	{
+		// Set her into a "passenger" behavior
+		m_PassengerBehavior.Enable( pVehicle );
+		m_PassengerBehavior.EnterVehicle();
+	}
+
+	RemoveSpawnFlags( SF_NPC_GAG );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Passed along from the vehicle's callback list
+//-----------------------------------------------------------------------------
+void CFastZombie::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
+{
+	// Only do the override while riding on a vehicle
+	if ( m_PassengerBehavior.CanSelectSchedule() == false || m_PassengerBehavior.GetPassengerState() != PASSENGER_STATE_INSIDE )
+	{
+		BaseClass::VPhysicsCollision( index, pEvent );
+		return;
+	}
+
+	int damageType = 0;
+	float flDamage = CalculatePhysicsImpactDamage( index, pEvent, gZombiePassengerImpactDamageTable, 1.0, true, damageType );
+
+	if ( flDamage > 0  )
+	{
+		Vector damagePos;
+		pEvent->pInternalData->GetContactPoint( damagePos );
+		Vector damageForce = pEvent->postVelocity[index] * pEvent->pObjects[index]->GetMass();
+		CTakeDamageInfo info( this, this, damageForce, damagePos, flDamage, (damageType|DMG_VEHICLE) );
+		TakeDamage( info );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: FIXME: Fold this into LeapAttack using different jump targets!
+//-----------------------------------------------------------------------------
+void CFastZombie::VehicleLeapAttack( void )
+{
+	CBaseEntity *pEnemy = GetEnemy();
+	if ( pEnemy == NULL )
+		return;
+
+	Vector vecEnemyPos;
+	UTIL_PredictedPosition( pEnemy, 1.0f, &vecEnemyPos );
+
+	// Move
+	SetGroundEntity( NULL );
+	BeginAttackJump();
+	LeapAttackSound();
+
+	// Take him off ground so engine doesn't instantly reset FL_ONGROUND.
+	UTIL_SetOrigin( this, GetLocalOrigin() + Vector( 0 , 0 , 1 ));
+
+	// FIXME: This should be the exact position we'll enter at, but this approximates it generally
+	vecEnemyPos[2] += 16;
+
+	Vector vecMins = GetHullMins();
+	Vector vecMaxs = GetHullMaxs();
+	Vector vecJumpDir = VecCheckToss( this, GetAbsOrigin(), vecEnemyPos, 0.1f, 1.0f, false, &vecMins, &vecMaxs );
+
+	SetAbsVelocity( vecJumpDir );
+	m_flNextAttack = gpGlobals->curtime + 2.0f;
+	SetTouch( &CFastZombie::VehicleLeapAttackTouch );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CFastZombie::CanEnterVehicle( CPropJeepEpisodic *pVehicle )
+{
+	if ( pVehicle == NULL )
+		return false;
+
+	return pVehicle->NPC_CanEnterVehicle( this, false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: FIXME: Move into behavior?
+// Input  : *pOther - 
+//-----------------------------------------------------------------------------
+void CFastZombie::VehicleLeapAttackTouch( CBaseEntity *pOther )
+{
+	if ( pOther->GetServerVehicle() )
+	{
+		m_PassengerBehavior.EnterVehicle();
+
+		// HACK: Stop us cold
+		SetLocalVelocity( vec3_origin );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Determine whether we're in a vehicle or not
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CFastZombie::IsInAVehicle( void )
+{
+	// Must be active and getting in/out of vehicle
+	if ( m_PassengerBehavior.IsEnabled() && m_PassengerBehavior.GetPassengerState() != PASSENGER_STATE_OUTSIDE )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Override our efficiency so that we don't jitter when we're in the middle
+//			of our enter/exit animations.
+// Input  : bInPVS - Whether we're in the PVS or not
+//-----------------------------------------------------------------------------
+void CFastZombie::UpdateEfficiency( bool bInPVS )
+{ 
+	// If we're transitioning and in the PVS, we override our efficiency
+	if ( IsInAVehicle() && bInPVS )
+	{
+		PassengerState_e nState = m_PassengerBehavior.GetPassengerState();
+		if ( nState == PASSENGER_STATE_ENTERING || nState == PASSENGER_STATE_EXITING )
+		{
+			SetEfficiency( AIE_NORMAL );
+			return;
+		}
+	}
+
+	// Do the default behavior
+	BaseClass::UpdateEfficiency( bInPVS );
+}
+
+#endif	// HL2_EPISODIC
+//=============================================================================
 
 //-----------------------------------------------------------------------------
 
@@ -1685,6 +2012,12 @@ AI_BEGIN_CUSTOM_NPC( npc_fastzombie, CFastZombie )
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_GALLOP_RIGHT )
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_CLIMB_LEFT )
 	DECLARE_ANIMEVENT( AE_FASTZOMBIE_CLIMB_RIGHT )
+
+#ifdef HL2_EPISODIC
+	// FIXME: Move!
+	DECLARE_ANIMEVENT( AE_PASSENGER_PHYSICS_PUSH )
+	DECLARE_ANIMEVENT( AE_FASTZOMBIE_VEHICLE_LEAP )
+#endif	// HL2_EPISODIC
 
 	//=========================================================
 	// 
@@ -1747,12 +2080,35 @@ AI_BEGIN_CUSTOM_NPC( npc_fastzombie, CFastZombie )
 		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CHASE_ENEMY"
 		"		TASK_FASTZOMBIE_VERIFY_ATTACK	0"
 		"		TASK_PLAY_SEQUENCE_FACE_ENEMY	ACTIVITY:ACT_FASTZOMBIE_BIG_SLASH"
+
 		""
 		"	Interrupts"
 		"		COND_NEW_ENEMY"
 		"		COND_ENEMY_DEAD"
 		"		COND_ENEMY_OCCLUDED"
 	);
+
+	//=========================================================
+	// > Melee_Attack1
+	//=========================================================
+	DEFINE_SCHEDULE
+		(
+		SCHED_FASTZOMBIE_TORSO_MELEE_ATTACK1,
+
+		"	Tasks"
+		"		TASK_STOP_MOVING				0"
+		"		TASK_FACE_ENEMY					0"
+		"		TASK_MELEE_ATTACK1				0"
+		"		TASK_MELEE_ATTACK1				0"
+		"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_CHASE_ENEMY"
+		"		TASK_FASTZOMBIE_VERIFY_ATTACK	0"
+
+		""
+		"	Interrupts"
+		"		COND_NEW_ENEMY"
+		"		COND_ENEMY_DEAD"
+		"		COND_ENEMY_OCCLUDED"
+		);
 
 AI_END_CUSTOM_NPC()
 

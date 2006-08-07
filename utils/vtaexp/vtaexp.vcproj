@@ -4,8 +4,8 @@
 	Version="7.10"
 	Name="vtaexp"
 	ProjectGUID="{018A7CD6-C40A-463D-86B1-2AF2D0F4B2CD}"
-	SccProjectName="&quot;$/Src/utils/vtaexp&quot;, APACAAAA"
-	SccLocalPath=".">
+	SccProjectName=""
+	SccLocalPath="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>

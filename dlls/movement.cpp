@@ -163,7 +163,7 @@ void CPathKeyFrame::CalculateFrameDuration( void )
 //-----------------------------------------------------------------------------
 void CPathKeyFrame::Link( void )
 {
-	m_pNextKey = dynamic_cast<CPathKeyFrame*>( gEntList.FindEntityByName(NULL, m_iNextKey, NULL ) );
+	m_pNextKey = dynamic_cast<CPathKeyFrame*>( gEntList.FindEntityByName(NULL, m_iNextKey ) );
 
 	if ( m_pNextKey )
 	{

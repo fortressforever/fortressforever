@@ -6,6 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "baseviewmodel_shared.h"
+#include "datacache/imdlcache.h"
 
 #if defined( CLIENT_DLL )
 #include "iprediction.h"
@@ -28,6 +29,7 @@ CBaseViewModel::CBaseViewModel()
 #if defined( CLIENT_DLL )
 	// NOTE: We do this here because the color is never transmitted for the view model.
 	m_nOldAnimationParity = 0;
+	m_EntClientFlags |= ENTCLIENTFLAG_ALWAYS_INTERPOLATE;
 #endif
 	SetRenderColor( 255, 255, 255, 255 );
 
@@ -77,10 +79,6 @@ void CBaseViewModel::Spawn( void )
 #define VGUI_CONTROL_PANELS
 #endif
 
-#ifdef TF2_DLL
-#define VGUI_CONTROL_PANELS
-#endif
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -115,6 +113,8 @@ void CBaseViewModel::SpawnControlPanels()
 	{
 		return;
 	}
+
+	MDLCACHE_CRITICAL_SECTION();
 
 	// FIXME: Deal with dynamically resizing control panels?
 
@@ -204,10 +204,6 @@ void CBaseViewModel::SpawnControlPanels()
 		pScreen->SetActualSize( flWidth, flHeight );
 		pScreen->SetActive( false );
 		pScreen->MakeVisibleOnlyToTeammates( false );
-	
-#ifdef TF2_DLL
-		pScreen->SetOverlayMaterial( SCREEN_OVERLAY_MATERIAL );
-#endif
 		pScreen->SetAttachedToViewModel( true );
 		int nScreen = m_hScreens.AddToTail( );
 		m_hScreens[nScreen].Set( pScreen );
@@ -470,9 +466,7 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	SendPropInt( SENDINFO( m_nResetEventsParity ), EF_PARITY_BITS, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nMuzzleFlashParity ), EF_MUZZLEFLASH_BITS, SPROP_UNSIGNED ),
 
-#if !defined( TF2_DLL ) && !defined( TF2_CLIENT_DLL )
 	SendPropArray	(SendPropFloat(SENDINFO_ARRAY(m_flPoseParameter),	8, 0, 0.0f, 1.0f), m_flPoseParameter),
-#endif
 #else
 	RecvPropInt		(RECVINFO(m_nModelIndex)),
 	RecvPropInt		(RECVINFO(m_nSkin)),
@@ -489,11 +483,11 @@ BEGIN_NETWORK_TABLE_NOBASE(CBaseViewModel, DT_BaseViewModel)
 	RecvPropInt( RECVINFO( m_nResetEventsParity )),
 	RecvPropInt( RECVINFO( m_nMuzzleFlashParity )),
 
-#if !defined( TF2_DLL ) && !defined( TF2_CLIENT_DLL )
 	RecvPropArray(RecvPropFloat(RECVINFO(m_flPoseParameter[0]) ), m_flPoseParameter ),
 #endif
-#endif
 END_NETWORK_TABLE()
+
+#ifdef CLIENT_DLL
 
 BEGIN_PREDICTION_DATA( CBaseViewModel )
 
@@ -516,9 +510,6 @@ BEGIN_PREDICTION_DATA( CBaseViewModel )
 
 END_PREDICTION_DATA()
 
-
-#ifdef CLIENT_DLL
-
 void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	CBaseViewModel *model = (CBaseViewModel *)pStruct;
@@ -527,24 +518,6 @@ void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pO
 		model->SetSequence(pData->m_Value.m_Int);
 		model->m_flAnimTime = gpGlobals->curtime;
 		model->SetCycle(0);
-
-#ifdef CSTRIKE_DLL
-		// HACK: prevents the reload animation from restarting erroneously because of a prediction error.
-		CBaseCombatWeapon *weapon = model->GetOwningWeapon();
-		if (weapon != NULL)
-		{
-			int curActivity = weapon->GetSequenceActivity( pData->m_Value.m_Int );
-
-			if ( curActivity == ACT_VM_RELOAD || curActivity == ACT_VM_RELOAD_SILENCED )
-			{
-				weapon->m_bInReloadAnimation = true;
-			}
-			else
-			{
-				weapon->m_bInReloadAnimation = false;
-			}
-		}
-#endif // CSTRIKE_DLL
 	}
 }
 

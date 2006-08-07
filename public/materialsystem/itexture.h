@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 
 #ifndef ITEXTURE_H
 #define ITEXTURE_H
@@ -13,7 +13,9 @@
 #pragma once
 #endif
 
-enum ImageFormat;
+#include "tier0/platform.h"
+#include "bitmap/imageformat.h" // ImageFormat defn.
+
 class IVTFTexture;
 class ITexture;
 struct Rect_t;
@@ -24,7 +26,7 @@ struct Rect_t;
 // cause this interface to be called. It will also be called upon
 // mode switch, or on other occasions where the bits are discarded.
 //-----------------------------------------------------------------------------
-class ITextureRegenerator
+abstract_class ITextureRegenerator
 {
 public:
 	// This will be called when the texture bits need to be regenerated.
@@ -39,7 +41,7 @@ public:
 	virtual void Release() = 0;
 };
 
-class ITexture
+abstract_class ITexture
 {
 public:
 	// Various texture polling methods
@@ -72,6 +74,27 @@ public:
 
 	// Returns true if the texture data couldn't be loaded.
 	virtual bool IsError() const = 0;
+
+	// NOTE: Stuff after this is added after shipping HL2.
+
+	// For volume textures
+	virtual bool IsVolumeTexture() const = 0;
+	virtual int GetMappingDepth() const = 0;
+	virtual int GetActualDepth() const = 0;
+
+	virtual ImageFormat GetImageFormat() const = 0;
+
+	// Various information about the texture
+	virtual bool IsRenderTarget() const = 0;
+	virtual bool IsCubeMap() const = 0;
+	virtual bool IsNormalMap() const = 0;
+	virtual bool IsProcedural() const = 0;
+#ifdef _XBOX
+	virtual int GetTextureFlags() const = 0;
+	virtual bool ForceIntoCache( bool bSyncWait ) = 0;
+#endif
+
+	virtual void DeleteIfUnreferenced() = 0;
 };
 
 

@@ -22,7 +22,7 @@
 #include "igamesystem.h"
 #include "interval.h"
 #include "vphysics/object_hash.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 
 #if !defined( CLIENT_DLL )
 
@@ -48,6 +48,8 @@ void AddRestoredEntity( C_BaseEntity *pEntity );
 
 #define MAX_ENTITYARRAY 1024
 #define ZERO_TIME ((FLT_MAX*-0.5))
+// A bit arbitrary, but unlikely to collide with any saved games...
+#define TICK_NEVER_THINK_ENCODE	( INT_MAX - 3 )
 
 ASSERT_INVARIANT( sizeof(EHandlePlaceholder_t) == sizeof(EHANDLE) );
 
@@ -751,7 +753,7 @@ bool CSave::WriteBasicField( const char *pname, void *pData, datamap_t *pRootMap
 bool CSave::WriteField( const char *pname, void *pData, datamap_t *pRootMap, typedescription_t *pField )
 {
 #ifdef _DEBUG
-	Log( pname, pField->fieldType, pData, pField->fieldSize );
+	Log( pname, (fieldtype_t)pField->fieldType, pData, pField->fieldSize );
 #endif
 
 	if ( pField->fieldType <= FIELD_CUSTOM )
@@ -790,7 +792,6 @@ int CSave::WriteFields( const char *pname, const void *pBaseData, datamap_t *pRo
 		pTest = &pFields[ i ];
 
 		void *pOutputData = ( (char *)pBaseData + pTest->fieldOffset[ TD_OFFSET_NORMAL ] );
-
 		if ( !ShouldSaveField( pOutputData, pTest ) )
 			continue;
 			
@@ -1025,20 +1026,8 @@ void CSave::WriteTime( const float *data, int count )
 
 void CSave::WriteTick( const char *pname, const int *data, int count )
 {
-	int i;
-	int tmp;
-
 	WriteHeader( pname, sizeof(int) * count );
-	
-	int baseTick = TIME_TO_TICKS( m_pGameInfo->GetBaseTime() );
-
-	for ( i = 0; i < count; i++ )
-	{
-		// Always encode time as a delta from the current time so it can be re-based if loaded in a new level
-		// Times of 0 are never written to the file, so they will be restored as 0, not a relative time
-		tmp = data[i] - baseTick;
-		WriteData( (const char *)&tmp, sizeof(int) );
-	}
+	WriteTick( data, count );
 }
 
 //-------------------------------------
@@ -1054,7 +1043,16 @@ void CSave::WriteTick( const int *data, int count )
 	{
 		// Always encode time as a delta from the current time so it can be re-based if loaded in a new level
 		// Times of 0 are never written to the file, so they will be restored as 0, not a relative time
-		tmp = data[i] - baseTick;
+		tmp = data[ i ];
+		if ( data[ i ] == TICK_NEVER_THINK )
+		{
+			tmp = TICK_NEVER_THINK_ENCODE;
+		}
+		else
+		{
+			// Rebase it...
+			tmp -= baseTick;
+		}
 		WriteData( (const char *)&tmp, sizeof(int) );
 	}
 }
@@ -1242,7 +1240,7 @@ bool CSave::WriteGameField( const char *pname, void *pData, datamap_t *pRootMap,
 				const model_t *pModel = modelinfo->GetModel( nModelIndex );
 				if ( pModel )
 				{
-					strModelName = MAKE_STRING( modelinfo->GetModelName( pModel ) );
+					strModelName = AllocPooledString( modelinfo->GetModelName( pModel ) );
 				}
 				WriteString( pField->fieldName, (string_t *)&strModelName, pField->fieldSize );
 			}
@@ -2151,7 +2149,16 @@ int CRestore::ReadTick( int *pValue, int count, int nBytesAvailable )
 	
 	for ( int i = nRead - 1; i >= 0; i-- )
 	{
-		pValue[i] += baseTick;
+		if ( pValue[ i ] != TICK_NEVER_THINK_ENCODE )
+		{
+			// Rebase it
+			pValue[i] += baseTick;
+		}
+		else
+		{
+			// Slam to -1 value
+			pValue[ i ] = TICK_NEVER_THINK;
+		}
 	}
 	
 	return nRead;
@@ -2247,6 +2254,7 @@ private:
 void CEntitySaveUtils::PreSave()
 {
 	Assert( !m_pLevelAdjacencyDependencyHash );
+	MEM_ALLOC_CREDIT();
 	m_pLevelAdjacencyDependencyHash = physics->CreateObjectPairHash();
 }
 
@@ -2418,6 +2426,7 @@ void CEntitySaveRestoreBlockHandler::Save( ISave *pSave )
 		CBaseEntity *pEnt = pEntInfo->hEnt;
 		if ( pEnt && !( pEnt->ObjectCaps() & FCAP_DONT_SAVE ) )
 		{
+			MDLCACHE_CRITICAL_SECTION();
 #if !defined( CLIENT_DLL )
 			AssertMsg( !pEnt->edict() || ( pEnt->m_iClassname != NULL_STRING && 
 										   (STRING(pEnt->m_iClassname)[0] != 0) && 
@@ -2607,10 +2616,20 @@ void CEntitySaveRestoreBlockHandler::Restore( IRestore *pRestore, bool createPla
 	// Create entity list
 	int i;
 	bool restoredWorld = false;
+
+	for ( i = 0; i < pSaveData->NumEntities(); i++ )
+	{
+		pEntInfo = pSaveData->GetEntityInfo( i );
+		pent = ClientEntityList().GetBaseEntity( pEntInfo->restoreentityindex );
+		pEntInfo->hEnt = pent;
+	}
+
 	// Blast saved data into entities
 	for ( i = 0; i < pSaveData->NumEntities(); i++ )
 	{
 		pEntInfo = pSaveData->GetEntityInfo( i );
+
+		bool bRestoredCorrectly = false;
 		// FIXME, need to translate save spot to real index here using lookup table transmitted from server
 		//Assert( !"Need translation still" );
 		if ( pEntInfo->restoreentityindex >= 0 )
@@ -2629,6 +2648,7 @@ void CEntitySaveRestoreBlockHandler::Restore( IRestore *pRestore, bool createPla
 				{
 					// Call the OnRestore method
 					AddRestoredEntity( pent );
+					bRestoredCorrectly = true;
 				}
 			}
 		}
@@ -2648,9 +2668,16 @@ void CEntitySaveRestoreBlockHandler::Restore( IRestore *pRestore, bool createPla
 					{
 						pEntInfo->hEnt = pent;
 						AddRestoredEntity( pent );
+						bRestoredCorrectly = true;
 					}
 				}
 			}
+		}
+
+		if ( !bRestoredCorrectly )
+		{
+			pEntInfo->hEnt = NULL;
+			pEntInfo->restoreentityindex = -1;
 		}
 	}
 
@@ -2778,7 +2805,7 @@ CBaseEntity *CEntitySaveRestoreBlockHandler::FindGlobalEntity( string_t classnam
 
 bool CEntitySaveRestoreBlockHandler::DoRestoreEntity( CBaseEntity *pEntity, IRestore *pRestore )
 {
-	CEngineCacheCriticalSection engineCacheCriticalSection( engineCache );
+	MDLCACHE_CRITICAL_SECTION();
 
 	EHANDLE hEntity;
 	
@@ -2927,8 +2954,13 @@ CSaveRestoreData *SaveInit( int size )
 {
 	CSaveRestoreData	*pSaveData;
 
+#ifdef DISABLE_DEBUG_HISTORY
 	if ( size <= 0 )
 		size = 2*1024*1024;		// Reserve 2048K for now, UNDONE: Shrink this after compressing strings
+#else
+	if ( size <= 0 )
+		size = 3*1024*1024;		// Reserve 3096K for now, UNDONE: Shrink this after compressing strings
+#endif
 
 	int numentities;
 
@@ -3136,7 +3168,7 @@ public:
 	void AddBlockHandler( ISaveRestoreBlockHandler *pHandler )
 	{
 		// Grody, but... while this class is still isolated in saverestore.cpp, this seems like a fine time to assert:
-		AssertMsg( pHandler == &g_EntitySaveRestoreBlockHandler || m_Handlers.Count() >= 1 && m_Handlers[0] == &g_EntitySaveRestoreBlockHandler, "Expected entity save load to always be first" );
+		AssertMsg( pHandler == &g_EntitySaveRestoreBlockHandler || (m_Handlers.Count() >= 1 && m_Handlers[0] == &g_EntitySaveRestoreBlockHandler), "Expected entity save load to always be first" );
 
 		Assert( pHandler != this );
 		m_Handlers.AddToTail( pHandler );
@@ -3181,9 +3213,9 @@ private:
 //-------------------------------------
 
 BEGIN_SIMPLE_DATADESC( SaveRestoreBlockHeader_t )
-	DEFINE_ARRAY(szName,		FIELD_CHARACTER, MAX_BLOCK_NAME_LEN + 1), 
+	DEFINE_ARRAY(szName,	FIELD_CHARACTER, MAX_BLOCK_NAME_LEN + 1), 
 	DEFINE_FIELD(locHeader,	FIELD_INTEGER), 
-	DEFINE_FIELD(locBody,		FIELD_INTEGER), 
+	DEFINE_FIELD(locBody,	FIELD_INTEGER), 
 END_DATADESC()
 
 //-------------------------------------
@@ -3318,6 +3350,8 @@ int CreateEntityTransitionList( CSaveRestoreData *pSaveData, int levelMask )
 		// NOTE: pent can be NULL because UTIL_RemoveImmediate (called below) removes all in hierarchy
 		if ( !pent )
 			continue;
+
+		MDLCACHE_CRITICAL_SECTION();
 
 		if ( !(pEntInfo->flags & FENTTABLE_PLAYER) && UTIL_EntityInSolid( pent ) )
 		{

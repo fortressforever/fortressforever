@@ -26,6 +26,8 @@ extern ConVar r_FadeProps;
 CRagdoll::CRagdoll()
 {
 	m_ragdoll.listCount = 0;
+	m_vecLastOrigin.Init();
+	m_flLastOriginChangeTime = - 1.0f;
 }
 
 #define DEFINE_RAGDOLL_ELEMENT( i ) \
@@ -85,7 +87,7 @@ void CRagdoll::BuildRagdollBounds( C_BaseEntity *ent )
 
 void CRagdoll::Init( 
 	C_BaseEntity *ent, 
-	studiohdr_t *pstudiohdr, 
+	CStudioHdr *pstudiohdr, 
 	const Vector &forceVector, 
 	int forceBone, 
 	const CBoneAccessor &pPrevBones, 
@@ -107,6 +109,12 @@ void CRagdoll::Init(
 	RagdollCreate( m_ragdoll, params, physenv );
 	RagdollActivate( m_ragdoll, params.pCollide, ent->GetModelIndex() );
 
+	// It's moving now...
+	m_flLastOriginChangeTime = gpGlobals->curtime;
+
+	// So traces hit it.
+	ent->AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
+
 	if ( !m_ragdoll.listCount )
 		return;
 
@@ -120,8 +128,8 @@ void CRagdoll::Init(
 	}
 
 #if RAGDOLL_VISUALIZE
-	memcpy( m_savedBone1, &pPrevBones[0], sizeof(matrix3x4_t) * pstudiohdr->numbones );
-	memcpy( m_savedBone2, &pBoneToWorld[0], sizeof(matrix3x4_t) * pstudiohdr->numbones );
+	memcpy( m_savedBone1, &pPrevBones[0], sizeof(matrix3x4_t) * pstudiohdr->numbones() );
+	memcpy( m_savedBone2, &pBoneToWorld[0], sizeof(matrix3x4_t) * pstudiohdr->numbones() );
 #endif
 }
 
@@ -189,6 +197,65 @@ void CRagdoll::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			RagdollSolveSeparation( m_ragdoll, pEntity );
 		}
 	}
+
+	// See if we should go to sleep...
+	CheckSettleStationaryRagdoll();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+//-----------------------------------------------------------------------------
+void CRagdoll::PhysForceRagdollToSleep()
+{
+	for ( int i = 0; i < m_ragdoll.listCount; i++ )
+	{
+		if ( m_ragdoll.list[i].pObject )
+		{
+			PhysForceClearVelocity( m_ragdoll.list[i].pObject );
+			m_ragdoll.list[i].pObject->Sleep();
+		}
+	}
+}
+
+#define RAGDOLL_SLEEP_TOLERANCE	1.0f
+static ConVar ragdoll_sleepaftertime( "ragdoll_sleepaftertime", "3.5f", 0, "After this many seconds of being basically stationary, the ragdoll will go to sleep." );
+
+void CRagdoll::CheckSettleStationaryRagdoll()
+{
+	Vector delta = GetRagdollOrigin() - m_vecLastOrigin;
+	m_vecLastOrigin = GetRagdollOrigin();
+	for ( int i = 0; i < 3; ++i )
+	{
+		// It's still moving...
+		if ( fabs( delta[ i ] ) > RAGDOLL_SLEEP_TOLERANCE )
+		{
+			m_flLastOriginChangeTime = gpGlobals->curtime;
+			// Msg( "%d [%p] Still moving\n", gpGlobals->tickcount, this );
+			return;
+		}
+	}
+
+	// It's totally asleep, don't worry about forcing it to settle
+	if ( m_allAsleep )
+		return;
+
+	// Msg( "%d [%p] Settling\n", gpGlobals->tickcount, this );
+
+	// It has stopped moving, see if it
+	float dt = gpGlobals->curtime - m_flLastOriginChangeTime;
+	if ( dt < ragdoll_sleepaftertime.GetFloat() )
+		return;
+
+	// Msg( "%d [%p] FORCE SLEEP\n",gpGlobals->tickcount, this );
+
+	// Force it to go to sleep
+	PhysForceRagdollToSleep();
+}
+
+void CRagdoll::ResetRagdollSleepAfterTime( void )
+{
+	m_flLastOriginChangeTime = gpGlobals->curtime;
 }
 
 void CRagdoll::DrawWireframe()
@@ -233,7 +300,7 @@ void CRagdoll::DrawWireframe()
 #endif
 }
 
-void CRagdoll::SetInitialBonePosition( studiohdr_t *pstudiohdr, const CBoneAccessor &pDesiredBonePosition )
+void CRagdoll::SetInitialBonePosition( CStudioHdr *pstudiohdr, const CBoneAccessor &pDesiredBonePosition )
 {
 	for ( int i = 0; i < m_ragdoll.listCount; i++ )
 	{
@@ -242,13 +309,13 @@ void CRagdoll::SetInitialBonePosition( studiohdr_t *pstudiohdr, const CBoneAcces
 	}
 
 #if RAGDOLL_VISUALIZE
-	memcpy( m_savedBone3, &pDesiredBonePosition[0], sizeof(matrix3x4_t) * pstudiohdr->numbones );
+	memcpy( m_savedBone3, &pDesiredBonePosition[0], sizeof(matrix3x4_t) * pstudiohdr->numbones() );
 #endif
 }
 
 CRagdoll *CreateRagdoll( 
 	C_BaseEntity *ent, 
-	studiohdr_t *pstudiohdr, 
+	CStudioHdr *pstudiohdr, 
 	const Vector &forceVector, 
 	int forceBone, 
 	const CBoneAccessor &pPrevBones, 
@@ -261,7 +328,7 @@ CRagdoll *CreateRagdoll(
 
 	if ( !pRagdoll->IsValid() )
 	{
-		Msg("Bad ragdoll for %s\n", pstudiohdr->name );
+		Msg("Bad ragdoll for %s\n", pstudiohdr->pszName() );
 		delete pRagdoll;
 		pRagdoll = NULL;
 		return pRagdoll;
@@ -287,14 +354,14 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 
 	virtual int InternalDrawModel( int flags );
-	virtual studiohdr_t *OnNewModel( void );
+	virtual CStudioHdr *OnNewModel( void );
 	virtual unsigned char GetClientSideFade();
 	virtual void	SetupWeights( void );
 
 	void GetRenderBounds( Vector& theMins, Vector& theMaxs );
 	virtual void AddEntity( void );
-	virtual void AccumulateLayers( studiohdr_t *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
-	virtual void BuildTransformations( Vector *pos, Quaternion q[], const matrix3x4_t &cameraTransform, int boneMask, CBoneBitList &boneComputed );
+	virtual void AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
+	virtual void BuildTransformations( CStudioHdr *pStudioHdr, Vector *pos, Quaternion q[], const matrix3x4_t &cameraTransform, int boneMask, CBoneBitList &boneComputed );
 	IPhysicsObject *GetElement( int elementNum );
 	virtual void UpdateOnRemove();
 
@@ -311,11 +378,6 @@ public:
 private:
 	C_ServerRagdoll( const C_ServerRagdoll &src );
 
-	// Networked vars.
-	float		m_fadeMinDist;
-	float		m_fadeMaxDist;
-	float 		m_flFadeScale;
-
 	typedef CHandle<C_BaseAnimating> CBaseAnimatingHandle;
 	CNetworkVar( CBaseAnimatingHandle, m_hUnragdoll );
 	CNetworkVar( float, m_flBlendWeight );
@@ -331,13 +393,12 @@ IMPLEMENT_CLIENTCLASS_DT(C_ServerRagdoll, DT_Ragdoll, CRagdollProp)
 	RecvPropEHandle(RECVINFO(m_hUnragdoll)),
 	RecvPropFloat(RECVINFO(m_flBlendWeight)),
 	RecvPropInt(RECVINFO(m_nOverlaySequence)),
-	RecvPropFloat( RECVINFO( m_fadeMinDist ) ), 
-	RecvPropFloat( RECVINFO( m_fadeMaxDist ) ), 
-	RecvPropFloat( RECVINFO( m_flFadeScale ) ), 
 END_RECV_TABLE()
 
 
-C_ServerRagdoll::C_ServerRagdoll( void )
+C_ServerRagdoll::C_ServerRagdoll( void ) :
+	m_iv_ragPos("C_ServerRagdoll::m_iv_ragPos"),
+	m_iv_ragAngles("C_ServerRagdoll::m_iv_ragAngles")
 {
 	m_elementCount = 0;
 
@@ -378,9 +439,9 @@ int C_ServerRagdoll::InternalDrawModel( int flags )
 }
 
 
-studiohdr_t *C_ServerRagdoll::OnNewModel( void )
+CStudioHdr *C_ServerRagdoll::OnNewModel( void )
 {
-	studiohdr_t *hdr = BaseClass::OnNewModel();
+	CStudioHdr *hdr = BaseClass::OnNewModel();
 
 	if ( !m_elementCount )
 	{
@@ -393,6 +454,8 @@ studiohdr_t *C_ServerRagdoll::OnNewModel( void )
 		}
 		else
 			m_elementCount = RagdollExtractBoneIndices( m_boneIndex, hdr, pCollide );
+		m_iv_ragPos.SetMaxCount( m_elementCount );
+		m_iv_ragAngles.SetMaxCount( m_elementCount );
 	}
 
 	return hdr;
@@ -405,27 +468,27 @@ void C_ServerRagdoll::SetupWeights( void )
 {
 	BaseClass::SetupWeights( );
 
-	static float destweight[128];
+	static float destweight[MAXSTUDIOFLEXDESC];
 	static bool bIsInited = false;
 
-	studiohdr_t *hdr = GetModelPtr();
+	CStudioHdr *hdr = GetModelPtr();
 	if ( !hdr )
 	{
 		return;
 	}
 
-	if (hdr->numflexdesc > 0)
+	if (hdr->numflexdesc() > 0)
 	{
 		if (!bIsInited)
 		{
 			int i;
-			for (i = 0; i < 128; i++)
+			for (i = 0; i < MAXSTUDIOFLEXDESC; i++)
 			{
 				destweight[i] = 0.0f;
 			}
 			bIsInited = true;
 		}
-		modelrender->SetFlexWeights( hdr->numflexdesc, destweight );
+		modelrender->SetFlexWeights( hdr->numflexdesc(), destweight );
 	}
 
 	if (m_iEyeAttachment > 0)
@@ -463,7 +526,7 @@ void C_ServerRagdoll::AddEntity( void )
 	m_flBlendWeightCurrent = Approach( m_flBlendWeight, m_flBlendWeightCurrent, gpGlobals->frametime * 5.0f );
 }
 
-void C_ServerRagdoll::AccumulateLayers( studiohdr_t *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask )
+void C_ServerRagdoll::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask )
 {
 	BaseClass::AccumulateLayers( hdr, pos, q, poseparam, currentTime, boneMask );
 
@@ -473,13 +536,10 @@ void C_ServerRagdoll::AccumulateLayers( studiohdr_t *hdr, Vector pos[], Quaterni
 	}
 }
 
-void C_ServerRagdoll::BuildTransformations( Vector *pos, Quaternion q[], const matrix3x4_t &cameraTransform, int boneMask, CBoneBitList &boneComputed )
+void C_ServerRagdoll::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t &cameraTransform, int boneMask, CBoneBitList &boneComputed )
 {
-	studiohdr_t *hdr = GetModelPtr();
 	if ( !hdr )
-	{
 		return;
-	}
 	matrix3x4_t bonematrix;
 	bool boneSimulated[MAXSTUDIOBONES];
 
@@ -519,7 +579,7 @@ void C_ServerRagdoll::BuildTransformations( Vector *pos, Quaternion q[], const m
 		}
 	}
 
-	for ( i = 0; i < hdr->numbones; i++ ) 
+	for ( i = 0; i < hdr->numbones(); i++ ) 
 	{
 		if ( !( hdr->pBone( i )->flags & boneMask ) )
 			continue;
@@ -626,11 +686,10 @@ public:
 		return BaseClass::SetupBones( pBoneToWorldOut, nMaxBones, boneMask, currentTime );
 	}
 
-	virtual void BuildTransformations( Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
+	virtual void BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
 	{
 		VPROF_BUDGET( "C_ServerRagdollAttached::SetupBones", VPROF_BUDGETGROUP_CLIENT_ANIMATION );
 
-		studiohdr_t *hdr = GetModelPtr();
 		if ( !hdr )
 			return;
 
@@ -653,7 +712,7 @@ public:
 			parent->GetCachedBoneMatrix( m_boneIndexAttached, boneToWorld );
 			VectorTransform( m_attachmentPointBoneSpace, boneToWorld, worldOrigin );
 		}
-		BaseClass::BuildTransformations( pos, q, cameraTransform, boneMask, boneComputed );
+		BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
 
 		if ( parent )
 		{
@@ -667,7 +726,7 @@ public:
 			m_vecOffset = offset;
 		}
 
-		for ( int i = 0; i < hdr->numbones; i++ )
+		for ( int i = 0; i < hdr->numbones(); i++ )
 		{
 			if ( !( hdr->pBone( i )->flags & boneMask ) )
 				continue;

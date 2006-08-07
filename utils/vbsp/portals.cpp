@@ -1010,7 +1010,7 @@ float AngleOffset( float flBaseAngle, float flTestAngle )
 }
 
 
-int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, float flTolerance )
+int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, int nMaxIndexMapPoints, float flTolerance )
 {
 	float flToleranceSqr = flTolerance * flTolerance;
 
@@ -1026,6 +1026,9 @@ int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, float
 		}
 		if ( j == nUniquePoints )
 		{
+			if ( nUniquePoints >= nMaxIndexMapPoints )
+				Error( "FindUniquePoints: overflowed unique point list (size %d).", nMaxIndexMapPoints );
+
 			indexMap[nUniquePoints++] = i;
 		}
 	}
@@ -1044,11 +1047,10 @@ int Convex2D( Vector2D const *pPoints, int nPoints, int *indices, int nMaxIndice
 	if( nPoints == 0 )
 		return 0;
 
-	nPoints = min( nPoints, ARRAYSIZE( indexMap ) );
 
 	// If we don't collapse the points into a unique set, we can loop around forever
 	// and max out nMaxIndices.
-	nPoints = FindUniquePoints( pPoints, nPoints, indexMap, 0.1f );
+	nPoints = FindUniquePoints( pPoints, nPoints, indexMap, ARRAYSIZE( indexMap ), 0.1f );
 	memset( touched, 0, nPoints*sizeof(touched[0]) );
 
 	// Find the (lower) left side.

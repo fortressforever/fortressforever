@@ -1,12 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ========//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
 //=============================================================================//
-	   
-                  
 #ifndef DBG_H
 #define DBG_H
 
@@ -21,6 +19,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifdef _LINUX
+#define __cdecl
+#endif
 
 //-----------------------------------------------------------------------------
 // dll export stuff
@@ -42,7 +43,6 @@
 #define DBG_INTERFACE	extern
 #define DBG_OVERLOAD	
 #define DBG_CLASS		
-
 #endif // BUILD_AS_DLL
 
 //-----------------------------------------------------------------------------
@@ -189,10 +189,18 @@ DBG_INTERFACE void   _SpewInfo( SpewType_t type, tchar const* pFile, int line );
 DBG_INTERFACE SpewRetval_t   _SpewMessage( tchar const* pMsg, ... );
 DBG_INTERFACE SpewRetval_t   _DSpewMessage( tchar const *pGroupName, int level, tchar const* pMsg, ... );
 DBG_INTERFACE void _ExitOnFatalAssert( tchar const* pFile, int line );
+#ifndef _XBOX
 DBG_INTERFACE bool ShouldUseNewAssertDialog();
+#else
+#define ShouldUseNewAssertDialog()	0
+#endif
 
+#ifndef _XBOX
 // Returns true if they want to break in the debugger.
 DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar *pExpression );
+#else
+#define DoNewAssertDialog(a,b,c)	0
+#endif
 
 /* Used to define macros, never use these directly. */
 
@@ -239,6 +247,7 @@ DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar 
 #define  AssertFatalEquals( _exp, _expectedValue )				AssertFatalMsg2( (_exp) == (_expectedValue), _T("Expected %d but got %d!"), (_expectedValue), (_exp) ) 
 #define  AssertFatalFloatEquals( _exp, _expectedValue, _tol )   AssertFatalMsg2( fabs((_exp) - (_expectedValue)) <= (_tol), _T("Expected %f but got %f!"), (_expectedValue), (_exp) )
 #define  VerifyFatal( _exp )									AssertFatal( _exp )
+#define  VerifyEqualsFatal( _exp, _expectedValue )				AssertFatalEquals( _exp, _expectedValue )
 
 #define  AssertFatalMsg1( _exp, _msg, a1 )									AssertFatalMsg( _exp, CDbgFmtMsg( _msg, a1 ))
 #define  AssertFatalMsg2( _exp, _msg, a1, a2 )								AssertFatalMsg( _exp, CDbgFmtMsg( _msg, a1, a2 ))
@@ -261,6 +270,7 @@ DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar 
 #define  AssertFatalEquals( _exp, _expectedValue )				((void)0)
 #define  AssertFatalFloatEquals( _exp, _expectedValue, _tol )	((void)0)
 #define  VerifyFatal( _exp )									(_exp)
+#define  VerifyEqualsFatal( _exp, _expectedValue )				(_exp)
 
 #define  AssertFatalMsg1( _exp, _msg, a1 )									((void)0)
 #define  AssertFatalMsg2( _exp, _msg, a1, a2 )								((void)0)
@@ -289,6 +299,7 @@ DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar 
 #define  AssertEquals( _exp, _expectedValue )              	AssertMsg2( (_exp) == (_expectedValue), _T("Expected %d but got %d!"), (_expectedValue), (_exp) ) 
 #define  AssertFloatEquals( _exp, _expectedValue, _tol )  	AssertMsg2( fabs((_exp) - (_expectedValue)) <= (_tol), _T("Expected %f but got %f!"), (_expectedValue), (_exp) )
 #define  Verify( _exp )           							Assert( _exp )
+#define  VerifyEquals( _exp, _expectedValue )           	AssertEquals( _exp, _expectedValue )
 
 #define  AssertMsg1( _exp, _msg, a1 )									AssertMsg( _exp, CDbgFmtMsg( _msg, a1 ) )
 #define  AssertMsg2( _exp, _msg, a1, a2 )								AssertMsg( _exp, CDbgFmtMsg( _msg, a1, a2 ) )
@@ -310,7 +321,8 @@ DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar 
 #define  AssertFunc( _exp, _f )								((void)0)
 #define  AssertEquals( _exp, _expectedValue )				((void)0)
 #define  AssertFloatEquals( _exp, _expectedValue, _tol )	((void)0)
-#define  Verify( _exp )			  (_exp)
+#define  Verify( _exp )										(_exp)
+#define  VerifyEquals( _exp, _expectedValue )           	(_exp)
 
 #define  AssertMsg1( _exp, _msg, a1 )									((void)0)
 #define  AssertMsg2( _exp, _msg, a1, a2 )								((void)0)
@@ -326,6 +338,7 @@ DBG_INTERFACE bool DoNewAssertDialog( const tchar *pFile, int line, const tchar 
 #endif // DBGFLAG_ASSERT
 
 
+#if !defined(_XBOX) || !defined(_RETAIL)
 
 /* These are always compiled in */
 DBG_INTERFACE void Msg( tchar const* pMsg, ... );
@@ -339,6 +352,18 @@ DBG_INTERFACE void DLog( tchar const *pGroupName, int level, tchar const *pMsg, 
 
 DBG_INTERFACE void Error( tchar const *pMsg, ... );
 
+#else
+
+inline void Msg( ... ) {}
+inline void DMsg( ... ) {}
+inline void Warning( tchar const *pMsg, ... ) {}
+inline void DWarning( ... ) {}
+inline void Log( ... ) {}
+inline void DLog( ... ) {}
+inline void Error( ... ) {}
+
+#endif
+
 // You can use this macro like a runtime assert macro.
 // If the condition fails, then Error is called with the message. This macro is called
 // like AssertMsg, where msg must be enclosed in parenthesis:
@@ -351,6 +376,8 @@ DBG_INTERFACE void Error( tchar const *pMsg, ... );
 	{						\
 		Error msg;			\
 	}
+
+#if !defined(_XBOX) || !defined(_RETAIL)
 
 /* A couple of super-common dynamic spew messages, here for convenience */
 /* These looked at the "developer" group */
@@ -375,6 +402,18 @@ DBG_INTERFACE void NetLog( int level, tchar const *pMsg, ... );
 
 void ValidateSpew( class CValidator &validator );
 
+#else
+
+inline void DevMsg( ... ) {}
+inline void DevWarning( ... ) {}
+inline void DevLog( ... ) {}
+inline void ConMsg( ... ) {}
+inline void ConLog( ... ) {}
+inline void NetMsg( ... ) {}
+inline void NetWarning( ... ) {}
+inline void NetLog( ... ) {}
+
+#endif
 
 /* Code macros, debugger interface */
 
@@ -393,13 +432,30 @@ void ValidateSpew( class CValidator &validator );
 #endif /* _DEBUG */
 
 //-----------------------------------------------------------------------------
+
+#ifndef _RETAIL
+class CScopeMsg
+{
+public:
+	CScopeMsg( const char *pszScope )
+	{
+		m_pszScope = pszScope;
+		Msg( "%s { ", pszScope );
+	}
+	~CScopeMsg()
+	{
+		Msg( "} %s", m_pszScope );
+	}
+	const char *m_pszScope;
+};
+#define SCOPE_MSG( msg ) CScopeMsg scopeMsg( msg )
+#else
+#define SCOPE_MSG( msg )
+#endif
+
+
+//-----------------------------------------------------------------------------
 // Macro to assist in asserting constant invariants during compilation
-
-#define UID_PREFIX generated_id_
-#define UID_CAT1(a,c) a ## c
-#define UID_CAT2(a,c) UID_CAT1(a,c)
-#define UNIQUE_ID UID_CAT2(UID_PREFIX,__LINE__)
-
 
 #ifdef _DEBUG
 #define COMPILE_TIME_ASSERT( pred )	switch(0){case 0:case pred:;}
@@ -604,7 +660,7 @@ public:
 		return Set( m_Value & val ); 
 	}
 	
-	operator const Type() const 
+	operator const Type&() const 
 	{
 		return m_Value; 
 	}

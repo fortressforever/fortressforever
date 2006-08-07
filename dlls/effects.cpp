@@ -289,7 +289,7 @@ void CEnvTracer::Activate( void )
 {
 	BaseClass::Activate();
 
-	CBaseEntity *pEnd = gEntList.FindEntityByName( NULL, m_target, NULL );
+	CBaseEntity *pEnd = gEntList.FindEntityByName( NULL, m_target );
 	if (pEnd != NULL)
 	{
 		m_vecEnd = pEnd->GetLocalOrigin();
@@ -348,13 +348,17 @@ protected:
 	int		m_iGibModelIndex;
 	float	m_flGibVelocity;
 	QAngle	m_angGibRotation;
+	float	m_flGibAngVelocity;
 	float	m_flVariance;
 	float	m_flGibLife;
 	int		m_nSimulationType;
 	int		m_nMaxGibModelFrame;
 	float	m_flDelay;
+	
+	bool	m_bNoGibShadows;
 
 	bool	m_bIsSprite;
+	string_t m_iszLightingOrigin;
 
 	// ----------------
 	//	Inputs
@@ -371,12 +375,16 @@ BEGIN_DATADESC( CGibShooter )
 	DEFINE_KEYFIELD( m_nSimulationType, FIELD_INTEGER, "Simulation" ),
 	DEFINE_KEYFIELD( m_flDelay, FIELD_FLOAT, "delay" ),
 	DEFINE_KEYFIELD( m_angGibRotation, FIELD_VECTOR, "gibangles" ),
+	DEFINE_KEYFIELD( m_flGibAngVelocity, FIELD_FLOAT, "gibanglevelocity"),
 	DEFINE_FIELD( m_bIsSprite, FIELD_BOOLEAN ),
 
 	DEFINE_FIELD( m_iGibCapacity, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iGibMaterial, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iGibModelIndex, FIELD_INTEGER ),
 	DEFINE_FIELD( m_nMaxGibModelFrame, FIELD_INTEGER ),
+
+	DEFINE_KEYFIELD( m_iszLightingOrigin, FIELD_STRING, "LightingOrigin" ),
+	DEFINE_KEYFIELD( m_bNoGibShadows, FIELD_BOOLEAN, "nogibshadows" ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Shoot", InputShoot ),
@@ -457,6 +465,12 @@ CGib *CGibShooter::CreateGib ( void )
 	}
 
 	pGib->m_nBody = random->RandomInt ( 1, m_nMaxGibModelFrame - 1 );// avoid throwing random amounts of the 0th gib. (skull).
+
+	if ( m_iszLightingOrigin != NULL_STRING )
+	{
+		// Make the gibs use the lighting origin
+		pGib->SetLightingOrigin( m_iszLightingOrigin );
+	}
 
 	return pGib;
 }
@@ -539,12 +553,30 @@ CBaseEntity *CGibShooter::SpawnGib( const Vector &vecShootDir, float flSpeed )
 				pGib->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 				IPhysicsObject *pPhysicsObject = pGib->VPhysicsInitNormal( SOLID_VPHYSICS, pGib->GetSolidFlags(), false );
 				pGib->SetMoveType( MOVETYPE_VPHYSICS );	  
-				
+                				
 				if ( pPhysicsObject )
 				{
 					// Set gib velocity
 					Vector vVel		= vecShootDir * flSpeed;
 					pPhysicsObject->AddVelocity(&vVel, NULL);
+
+					AngularImpulse torque;
+					torque.x = m_flGibAngVelocity * random->RandomFloat( 0.1f, 1.0f );
+					torque.y = m_flGibAngVelocity * random->RandomFloat( 0.1f, 1.0f );
+					torque.z = 0.0f;
+					torque *= pPhysicsObject->GetMass();
+
+					pPhysicsObject->ApplyTorqueCenter( torque );
+
+#ifndef HL1_DLL
+					if( HasSpawnFlags( SF_SHOOTER_STRICT_REMOVE ) ) 
+#endif
+					{
+						pGib->m_bForceRemove = true;
+						pGib->SetNextThink( gpGlobals->curtime + pGib->m_lifeTime );
+						pGib->SetThink ( &CGib::DieThink );
+					}
+
 				}
 				else
 				{
@@ -611,6 +643,7 @@ class CEnvShooter : public CGibShooter
 public:
 	DECLARE_CLASS( CEnvShooter, CGibShooter );
 
+	CEnvShooter() { m_flGibGravityScale = 1.0f; }
 	void		Precache( void );
 	bool		KeyValue( const char *szKeyName, const char *szValue );
 
@@ -622,12 +655,14 @@ public:
 
 	int m_nSkin;
 	float m_flGibScale;
+	float m_flGibGravityScale;
 };
 
 BEGIN_DATADESC( CEnvShooter )
 
 	DEFINE_KEYFIELD( m_nSkin, FIELD_INTEGER, "skin" ),
 	DEFINE_KEYFIELD( m_flGibScale, FIELD_FLOAT ,"scale" ),
+	DEFINE_KEYFIELD( m_flGibGravityScale, FIELD_FLOAT, "gibgravityscale" ),
 
 END_DATADESC()
 
@@ -718,6 +753,8 @@ CGib *CEnvShooter::CreateGib ( void )
 	pGib->m_nRenderFX = m_nRenderFX;
 	pGib->m_nSkin = m_nSkin;
 	pGib->m_lifeTime = gpGlobals->curtime + m_flGibLife;
+
+	pGib->SetGravity( m_flGibGravityScale );
 		
 	// Spawn a flaming gib
 	if ( HasSpawnFlags( SF_SHOOTER_FLAMING ) )
@@ -727,7 +764,19 @@ CGib *CEnvShooter::CreateGib ( void )
 		if ( pFlame != NULL )
 		{
 			pFlame->SetLifetime( pGib->m_lifeTime );
+			pGib->SetFlame( pFlame );
 		}
+	}
+
+	if ( m_iszLightingOrigin != NULL_STRING )
+	{
+		// Make the gibs use the lighting origin
+		pGib->SetLightingOrigin( m_iszLightingOrigin );
+	}
+
+	if( m_bNoGibShadows )
+	{
+		pGib->AddEffects( EF_NOSHADOW );
 	}
 
 	return pGib;
@@ -1397,7 +1446,7 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
 	SetNextThink( gpGlobals->curtime );
 }
 
-
+#ifndef _XBOX
 //=========================================================
 // func_precipitation - temporary snow solution for first HL2 
 // technology demo
@@ -1424,7 +1473,7 @@ END_DATADESC()
 
 // Just send the normal entity crap
 IMPLEMENT_SERVERCLASS_ST( CPrecipitation, DT_Precipitation)
-	SendPropInt( SENDINFO( m_nPrecipType ), 1, SPROP_UNSIGNED )
+	SendPropInt( SENDINFO( m_nPrecipType ), Q_log2( NUM_PRECIPITATION_TYPES ) + 1, SPROP_UNSIGNED )
 END_SEND_TABLE()
 
 
@@ -1435,6 +1484,11 @@ CPrecipitation::CPrecipitation()
 
 void CPrecipitation::Spawn( void )							   
 {
+	PrecacheMaterial( "effects/fleck_ash1" );
+	PrecacheMaterial( "effects/fleck_ash2" );
+	PrecacheMaterial( "effects/fleck_ash3" );
+	PrecacheMaterial( "effects/ember_swirling001" );
+
 	Precache();
 	SetSolid( SOLID_NONE );							// Remove model & collisions
 	SetMoveType( MOVETYPE_NONE );
@@ -1446,7 +1500,7 @@ void CPrecipitation::Spawn( void )
 
 	m_nRenderMode = kRenderEnvironmental;
 }
-
+#endif
 
 //-----------------------------------------------------------------------------
 // EnvWind - global wind info
@@ -1479,6 +1533,7 @@ BEGIN_DATADESC( CEnvWind )
 	DEFINE_KEYFIELD( m_EnvWindShared.m_flMinGustDelay, FIELD_FLOAT, "mingustdelay" ),
 	DEFINE_KEYFIELD( m_EnvWindShared.m_flMaxGustDelay, FIELD_FLOAT, "maxgustdelay" ),
 	DEFINE_KEYFIELD( m_EnvWindShared.m_iGustDirChange, FIELD_INTEGER, "gustdirchange" ),
+	DEFINE_KEYFIELD( m_EnvWindShared.m_flGustDuration, FIELD_FLOAT, "gustduration" ),
 //	DEFINE_KEYFIELD( m_EnvWindShared.m_iszGustSound, FIELD_STRING, "gustsound" ),
 
 // Just here to quiet down classcheck
@@ -1486,6 +1541,9 @@ BEGIN_DATADESC( CEnvWind )
 
 	DEFINE_FIELD( m_EnvWindShared.m_iWindDir, FIELD_INTEGER ),
 	DEFINE_FIELD( m_EnvWindShared.m_flWindSpeed, FIELD_FLOAT ),
+
+	DEFINE_OUTPUT( m_EnvWindShared.m_OnGustStart, "OnGustStart" ),
+	DEFINE_OUTPUT( m_EnvWindShared.m_OnGustEnd,	"OnGustEnd" ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( WindThink ),
@@ -1509,6 +1567,7 @@ BEGIN_SEND_TABLE_NOBASE(CEnvWindShared, DT_EnvWindShared)
 	SendPropFloat	(SENDINFO(m_flInitialWindSpeed),0, SPROP_NOSCALE ),
 	SendPropFloat	(SENDINFO(m_flStartTime),	 0, SPROP_NOSCALE ),
 
+	SendPropFloat	(SENDINFO(m_flGustDuration), 0, SPROP_NOSCALE),
 	// Sound related
 //	SendPropInt		(SENDINFO(m_iszGustSound),	10, SPROP_UNSIGNED ),
 END_SEND_TABLE()
@@ -1533,7 +1592,6 @@ void CEnvWind::Spawn( void )
 	AddEffects( EF_NODRAW );
 
 	m_EnvWindShared.Init( entindex(), 0, gpGlobals->frametime, GetLocalAngles().y, 0 );
-	NetworkStateChanged( );
 
 	SetThink( &CEnvWind::WindThink );
 	SetNextThink( gpGlobals->curtime );
@@ -2060,7 +2118,7 @@ void CEnvGunfire::Activate( void )
 	// Find my target
 	if (m_target != NULL_STRING)
 	{
-		m_hTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
+		m_hTarget = gEntList.FindEntityByName( NULL, m_target );
 	}
 
 	BaseClass::Activate();
@@ -2230,3 +2288,68 @@ void EffectsPrecache( void *pUser )
 PRECACHE_REGISTER_FN( EffectsPrecache );
 
 
+class CEnvViewPunch : public CPointEntity
+{
+public:
+
+	DECLARE_CLASS( CEnvViewPunch, CPointEntity );
+
+	virtual void Spawn();
+
+	// Input handlers
+	void InputViewPunch( inputdata_t &inputdata );
+
+private:
+
+	float m_flRadius;
+	QAngle m_angViewPunch;
+
+	void DoViewPunch();
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS( env_viewpunch, CEnvViewPunch );
+
+BEGIN_DATADESC( CEnvViewPunch )
+
+	DEFINE_KEYFIELD( m_angViewPunch, FIELD_VECTOR, "punchangle" ),
+	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "ViewPunch", InputViewPunch ),
+
+END_DATADESC()
+
+#define SF_PUNCH_EVERYONE	0x0001		// Don't check radius
+#define SF_PUNCH_IN_AIR		0x0002		// Punch players in air
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CEnvViewPunch::Spawn( void )
+{
+	SetSolid( SOLID_NONE );
+	SetMoveType( MOVETYPE_NONE );
+	
+	if ( GetSpawnFlags() & SF_PUNCH_EVERYONE )
+	{
+		m_flRadius = 0;
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CEnvViewPunch::DoViewPunch()
+{
+	bool bAir = (GetSpawnFlags() & SF_PUNCH_IN_AIR) ? true : false;
+	UTIL_ViewPunch( GetAbsOrigin(), m_angViewPunch, m_flRadius, bAir );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CEnvViewPunch::InputViewPunch( inputdata_t &inputdata )
+{
+	DoViewPunch();
+}

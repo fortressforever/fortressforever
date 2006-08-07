@@ -16,6 +16,11 @@
 
 void TerrainMod_Add( TerrainModType type, const CTerrainModParams &params )
 {
+	if ( IsXbox() )
+	{
+		return;
+	}
+
 	// Move players out of the way so they don't get stuck on the terrain.
 	float playerStartHeights[MAX_PLAYERS];
 
@@ -64,5 +69,3 @@ void TerrainMod_Add( TerrainModType type, const CTerrainModParams &params )
 		pPlayer->SetLocalOrigin( trace.endpos );
 	}
 }
-
-

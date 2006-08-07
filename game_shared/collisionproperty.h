@@ -116,6 +116,7 @@ public:
 	// *centered at the world space center* bounding the collision representation 
 	// of the entity. NOTE: The world space center *may* move when the entity rotates.
 	float			BoundingRadius() const;
+	float			BoundingRadius2D() const;
 
 	// Returns the center of the OBB in collision space
 	const Vector &	OBBCenter( ) const;
@@ -223,18 +224,17 @@ private:
 
 	CNetworkVector( m_vecMins );
 	CNetworkVector( m_vecMaxs );
+	float m_flRadius;
 
-	// One of the SOLID_ defines. Use GetSolid/SetSolid.
-	CNetworkVar( SolidType_t, m_Solid );			
 	CNetworkVar( unsigned short, m_usSolidFlags );
 
 	// Spatial partition
 	SpatialPartitionHandle_t m_Partition;
-
 	CNetworkVar( unsigned char, m_nSurroundType );
 
-	float m_flRadius;
-	CNetworkVar( float, m_flTriggerBloat );
+	// One of the SOLID_ defines. Use GetSolid/SetSolid.
+	CNetworkVar( unsigned char, m_nSolidType );			
+	CNetworkVar( unsigned char , m_triggerBloat );
 
 	// SUCKY: We didn't use to have to store this previously
 	// but storing it here means that we can network it + avoid a ton of
@@ -243,8 +243,13 @@ private:
 	CNetworkVector( m_vecSpecifiedSurroundingMaxs );
 
 	// Cached off world-aligned surrounding bounds
-	Vector m_vecSurroundingMins;
-	Vector m_vecSurroundingMaxs;
+#if 0
+	short	m_surroundingMins[3];
+	short	m_surroundingMaxs[3];
+#else
+	Vector	m_vecSurroundingMins;
+	Vector	m_vecSurroundingMaxs;
+#endif
 
 	// pointer to the entity's physics object (vphysics.dll)
 	//IPhysicsObject	*m_pPhysicsObject;
@@ -313,7 +318,7 @@ inline float CCollisionProperty::BoundingRadius() const
 inline bool CCollisionProperty::IsBoundsDefinedInEntitySpace() const
 {
 	return (( m_usSolidFlags & FSOLID_FORCE_WORLD_ALIGNED ) == 0 ) &&
-			( m_Solid != SOLID_BBOX ) && ( m_Solid != SOLID_NONE );
+			( m_nSolidType != SOLID_BBOX ) && ( m_nSolidType != SOLID_NONE );
 }
 
 inline void CCollisionProperty::ClearSolidFlags( void )
@@ -343,7 +348,7 @@ inline bool CCollisionProperty::IsSolidFlagSet( int flagMask ) const
 
 inline bool CCollisionProperty::IsSolid() const
 {
-	return ::IsSolid( m_Solid, m_usSolidFlags );
+	return ::IsSolid( (SolidType_t)(unsigned char)m_nSolidType, m_usSolidFlags );
 }
 
 

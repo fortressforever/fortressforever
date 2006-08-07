@@ -72,8 +72,7 @@ IMPLEMENT_SERVERCLASS_ST( CFuncSmokeVolume, DT_FuncSmokeVolume )
 	SendPropFloat( SENDINFO( m_RotationSpeed ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_MovementSpeed ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_Density ), 0, SPROP_NOSCALE ),
-	SendPropInt( SENDINFO(m_spawnflags), 8, SPROP_UNSIGNED ),
-	SendPropDataTable( SENDINFO_DT( m_Collision ), &REFERENCE_SEND_TABLE(DT_CollisionProperty) ),
+	SendPropInt( SENDINFO(m_spawnflags), 8, SPROP_UNSIGNED )
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( func_smokevolume, CFuncSmokeVolume );

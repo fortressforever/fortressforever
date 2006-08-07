@@ -1,17 +1,39 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
+#include <direct.h>
 #include "mathlib.h"
-#include "tgawriter.h"
+#include "bitmap/tgawriter.h"
 #include "vstdlib/strtools.h"
 #include "vtf/vtf.h"
-#include "UtlBuffer.h"
+#include "tier1/UtlBuffer.h"
 #include "tier0/dbg.h"
 #include "vstdlib/ICommandLine.h"
+#include "tier1/utlbuffer.h"
+#include "tier2/tier2.h"
+#include "filesystem.h"
+
+
+//-----------------------------------------------------------------------------
+// HDRFIXME: move this somewhere else.
+//-----------------------------------------------------------------------------
+static void PFMWrite( float *pFloatImage, const char *pFilename, int width, int height )
+{
+	FILE *fp;
+	fp = fopen( pFilename, "wb" );
+	fprintf( fp, "PF\n%d %d\n-1.000000\n", width, height );
+	int i;
+	for( i = height-1; i >= 0; i-- )
+	{
+		float *pRow = &pFloatImage[3 * width * i];
+		fwrite( pRow, width * sizeof( float ) * 3, 1, fp );
+	}
+	fclose( fp );
+}
 
 SpewRetval_t VTF2TGAOutputFunc( SpewType_t spewType, char const *pMsg )
 {
@@ -34,9 +56,11 @@ int main( int argc, char **argv )
 	SpewOutputFunc( VTF2TGAOutputFunc );
 	CommandLine()->CreateCmdLine( argc, argv );
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 1.0f, false, false, false, false );
+	InitDefaultFileSystem();
 
-	const char *pVTFFileName = CommandLine()->ParmValue("-i" );
-	const char *pTGAFileName = CommandLine()->ParmValue("-o" );
+	const char *pVTFFileName = CommandLine()->ParmValue( "-i" );
+	const char *pTGAFileName = CommandLine()->ParmValue( "-o" );
+	bool bGenerateMipLevels = CommandLine()->CheckParm( "-mip" ) != NULL;
 	if ( !pVTFFileName )
 	{
 		Usage();
@@ -47,13 +71,33 @@ int main( int argc, char **argv )
 		pTGAFileName = pVTFFileName;
 	}
 
-	bool bGenerateMipLevels = CommandLine()->CheckParm("-mip") != NULL;
+	char pCurrentDirectory[MAX_PATH];
+	if ( _getcwd( pCurrentDirectory, sizeof(pCurrentDirectory) ) == NULL )
+	{
+		fprintf( stderr, "Unable to get the current directory\n" );
+		return -1;
+	}
+	Q_StripTrailingSlash( pCurrentDirectory );
+
+	char pBuf[MAX_PATH];
+	if ( !Q_IsAbsolutePath( pTGAFileName ) )
+	{
+		Q_snprintf( pBuf, sizeof(pBuf), "%s\\%s", pCurrentDirectory, pTGAFileName );
+	}
+	else
+	{
+		Q_strncpy( pBuf, pTGAFileName, sizeof(pBuf) );
+	}
+	Q_FixSlashes( pBuf );
+
+	char pOutFileNameBase[MAX_PATH];
+	Q_StripExtension( pBuf, pOutFileNameBase, MAX_PATH );
 
 	char pActualVTFFileName[MAX_PATH];
 	Q_strncpy( pActualVTFFileName, pVTFFileName, MAX_PATH );
 	if ( !Q_strstr( pActualVTFFileName, ".vtf" ) )
 	{
-		Q_strcat( pActualVTFFileName, ".vtf" ); 
+		Q_strcat( pActualVTFFileName, ".vtf", MAX_PATH ); 
 	}
 
 	FILE *vtfFp = fopen( pActualVTFFileName, "rb" );
@@ -69,8 +113,9 @@ int main( int argc, char **argv )
 
 	CUtlBuffer buf;
 	buf.EnsureCapacity( srcVTFLength );
-	fread( buf.Base(), 1, srcVTFLength, vtfFp );
+	int nBytesRead = fread( buf.Base(), 1, srcVTFLength, vtfFp );
 	fclose( vtfFp );
+	buf.SeekPut( CUtlBuffer::SEEK_HEAD, nBytesRead );
 
 	IVTFTexture *pTex = CreateVTFTexture();
 	if (!pTex->Unserialize( buf ))
@@ -87,6 +132,7 @@ int main( int argc, char **argv )
 	Msg( "TEXTUREFLAGS_TRILINEAR=%s\n", ( pTex->Flags() & TEXTUREFLAGS_TRILINEAR ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_CLAMPS=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPS ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_CLAMPT=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPT ) ? "true" : "false" );
+	Msg( "TEXTUREFLAGS_CLAMPU=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPU ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_ANISOTROPIC=%s\n", ( pTex->Flags() & TEXTUREFLAGS_ANISOTROPIC ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_HINT_DXT5=%s\n", ( pTex->Flags() & TEXTUREFLAGS_HINT_DXT5 ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_NOCOMPRESS=%s\n", ( pTex->Flags() & TEXTUREFLAGS_NOCOMPRESS ) ? "true" : "false" );
@@ -125,101 +171,150 @@ int main( int argc, char **argv )
 	ImageFormat srcFormat = pTex->Format();
 	Msg( "vtf format: %s\n", ImageLoader::GetName( srcFormat ) );
 		
-	int frameNum = 0;
-
-	int iTGANameLen = Q_strlen( pTGAFileName );
+	int iTGANameLen = Q_strlen( pOutFileNameBase );
 
 	int iFaceCount = pTex->FaceCount();
+	int nFrameCount = pTex->FrameCount();
 	bool bIsCubeMap = pTex->IsCubeMap();
 
 	int iLastMipLevel = bGenerateMipLevels ? pTex->MipCount() - 1 : 0;
-	for ( int iMipLevel = 0; iMipLevel <= iLastMipLevel; ++iMipLevel )
+	for( int iFrame = 0; iFrame < nFrameCount; ++iFrame )
 	{
-		for (int iCubeFace = 0; iCubeFace < iFaceCount; ++iCubeFace)
+		for ( int iMipLevel = 0; iMipLevel <= iLastMipLevel; ++iMipLevel )
 		{
-			// Construct output filename
-			char *pTempNameBuf = (char *)stackalloc( iTGANameLen + 12 );
-			Q_strncpy( pTempNameBuf, pTGAFileName, iTGANameLen + 1 );
-			char *pExt = Q_strrchr( pTempNameBuf, '.' );
-			if (pExt)
+			int iWidth, iHeight, iDepth;
+			pTex->ComputeMipLevelDimensions( iMipLevel, &iWidth, &iHeight, &iDepth );
+
+			// Don't output really small textures.. it pukes out photoshop
+			if ( ( iWidth < 2 ) || ( iHeight < 2 ) )
+				continue;
+
+			for (int iCubeFace = 0; iCubeFace < iFaceCount; ++iCubeFace)
 			{
-				pExt = 0;
-			}
-
-			if (bIsCubeMap)
-			{
-				static const char *pCubeFaceName[7] = { "rt", "lf", "bk", "ft", "up", "dn", "sph" };
-				Q_strcat( pTempNameBuf, pCubeFaceName[iCubeFace] ); 
-			}
-
-			if (iLastMipLevel != 0)
-			{
-				char pTemp[3];
-				Q_snprintf( pTemp, 3, "_%d", iMipLevel );
-				Q_strcat( pTempNameBuf, pTemp ); 
-			}
-
-			Q_strcat( pTempNameBuf, ".tga" ); 
-
-			unsigned char *pSrcImage = pTex->ImageData( 0, iCubeFace, iMipLevel );
-
-			int iWidth, iHeight;
-			pTex->ComputeMipLevelDimensions( iMipLevel, &iWidth, &iHeight );
-
-			ImageFormat dstFormat;
-
-			if( ImageLoader::IsTransparent( srcFormat ) )
-			{
-				dstFormat = IMAGE_FORMAT_BGRA8888;
-			}
-			else
-			{
-				dstFormat = IMAGE_FORMAT_BGR888;
-			}
-		//	dstFormat = IMAGE_FORMAT_RGBA8888;
-		//	dstFormat = IMAGE_FORMAT_RGB888;
-		//	dstFormat = IMAGE_FORMAT_BGRA8888;
-		//	dstFormat = IMAGE_FORMAT_BGR888;
-		//	dstFormat = IMAGE_FORMAT_BGRA5551;
-		//	dstFormat = IMAGE_FORMAT_BGR565;
-		//	dstFormat = IMAGE_FORMAT_BGRA4444;
-		//	printf( "dstFormat: %s\n", ImageLoader::GetName( dstFormat ) );
-			unsigned char *pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, dstFormat, false )];
-			if( !ImageLoader::ConvertImageFormat( pSrcImage, srcFormat, 
-				pDstImage, dstFormat, iWidth, iHeight, 0, 0 ) )
-			{
-				Error( "Error converting from %s to %s\n",
-					ImageLoader::GetName( srcFormat ), ImageLoader::GetName( dstFormat ) );
-				exit( -1 );
-			}
-
-			if( ImageLoader::IsTransparent( dstFormat ) && ( dstFormat != IMAGE_FORMAT_RGBA8888 ) )
-			{
-				unsigned char *tmpImage = pDstImage;
-				pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, IMAGE_FORMAT_RGBA8888, false )];
-				if( !ImageLoader::ConvertImageFormat( tmpImage, dstFormat, pDstImage, IMAGE_FORMAT_RGBA8888,
-					iWidth, iHeight, 0, 0 ) )
+				for ( int z = 0; z < iDepth; ++z )
 				{
-					Error( "Error converting from %s to %s\n",
-						ImageLoader::GetName( dstFormat ), ImageLoader::GetName( IMAGE_FORMAT_RGBA8888 ) );
+					// Construct output filename
+					char *pTempNameBuf = (char *)stackalloc( iTGANameLen + 12 );
+					Q_strncpy( pTempNameBuf, pOutFileNameBase, iTGANameLen + 1 );
+					char *pExt = Q_strrchr( pTempNameBuf, '.' );
+					if ( pExt )
+					{
+						pExt = 0;
+					}
+
+					if ( bIsCubeMap )
+					{
+						Assert( pTex->Depth() == 1 ); // shouldn't this be 1 instead of 0?
+						static const char *pCubeFaceName[7] = { "rt", "lf", "bk", "ft", "up", "dn", "sph" };
+						Q_strcat( pTempNameBuf, pCubeFaceName[iCubeFace], iTGANameLen + 12 ); 
+					}
+
+					if ( nFrameCount > 1 )
+					{
+						char pTemp[4];
+						Q_snprintf( pTemp, 4, "%03d", iFrame );
+						Q_strcat( pTempNameBuf, pTemp, iTGANameLen + 12 ); 
+					}
+
+					if ( iLastMipLevel != 0 )
+					{
+						char pTemp[8];
+						Q_snprintf( pTemp, 8, "_mip%d", iMipLevel );
+						Q_strcat( pTempNameBuf, pTemp, iTGANameLen + 12 ); 
+					}
+
+					if ( pTex->Depth() > 1 )
+					{
+						char pTemp[6];
+						Q_snprintf( pTemp, 6, "_z%03d", z );
+						Q_strcat( pTempNameBuf, pTemp, iTGANameLen + 12 ); 
+					}
+
+					if( srcFormat == IMAGE_FORMAT_RGBA16161616F )
+					{
+						Q_strcat( pTempNameBuf, ".pfm", iTGANameLen + 12 ); 
+					}
+					else
+					{
+						Q_strcat( pTempNameBuf, ".tga", iTGANameLen + 12 ); 
+					}
+
+					unsigned char *pSrcImage = pTex->ImageData( iFrame, iCubeFace, iMipLevel, 0, 0, z );
+
+					ImageFormat dstFormat;
+					if( srcFormat == IMAGE_FORMAT_RGBA16161616F )
+					{
+						dstFormat = IMAGE_FORMAT_RGB323232F;
+					}
+					else
+					{
+						if( ImageLoader::IsTransparent( srcFormat ) )
+						{
+							dstFormat = IMAGE_FORMAT_BGRA8888;
+						}
+						else
+						{
+							dstFormat = IMAGE_FORMAT_BGR888;
+						}
+					}
+				//	dstFormat = IMAGE_FORMAT_RGBA8888;
+				//	dstFormat = IMAGE_FORMAT_RGB888;
+				//	dstFormat = IMAGE_FORMAT_BGRA8888;
+				//	dstFormat = IMAGE_FORMAT_BGR888;
+				//	dstFormat = IMAGE_FORMAT_BGRA5551;
+				//	dstFormat = IMAGE_FORMAT_BGR565;
+				//	dstFormat = IMAGE_FORMAT_BGRA4444;
+				//	printf( "dstFormat: %s\n", ImageLoader::GetName( dstFormat ) );
+					unsigned char *pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, 1, dstFormat, false )];
+					if( !ImageLoader::ConvertImageFormat( pSrcImage, srcFormat, 
+						pDstImage, dstFormat, iWidth, iHeight, 0, 0 ) )
+					{
+						Error( "Error converting from %s to %s\n",
+							ImageLoader::GetName( srcFormat ), ImageLoader::GetName( dstFormat ) );
+						exit( -1 );
+					}
+
+					if( dstFormat != IMAGE_FORMAT_RGB323232F )
+					{
+						if( ImageLoader::IsTransparent( dstFormat ) && ( dstFormat != IMAGE_FORMAT_RGBA8888 ) )
+						{
+							unsigned char *tmpImage = pDstImage;
+							pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, 1, IMAGE_FORMAT_RGBA8888, false )];
+							if( !ImageLoader::ConvertImageFormat( tmpImage, dstFormat, pDstImage, IMAGE_FORMAT_RGBA8888,
+								iWidth, iHeight, 0, 0 ) )
+							{
+								Error( "Error converting from %s to %s\n",
+									ImageLoader::GetName( dstFormat ), ImageLoader::GetName( IMAGE_FORMAT_RGBA8888 ) );
+							}
+							dstFormat = IMAGE_FORMAT_RGBA8888;
+						}
+						else if( !ImageLoader::IsTransparent( dstFormat ) && ( dstFormat != IMAGE_FORMAT_RGB888 ) )
+						{
+							unsigned char *tmpImage = pDstImage;
+							pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, 1, IMAGE_FORMAT_RGB888, false )];
+							if( !ImageLoader::ConvertImageFormat( tmpImage, dstFormat, pDstImage, IMAGE_FORMAT_RGB888,
+								iWidth, iHeight, 0, 0 ) )
+							{
+								Error( "Error converting from %s to %s\n",
+									ImageLoader::GetName( dstFormat ), ImageLoader::GetName( IMAGE_FORMAT_RGB888 ) );
+							}
+							dstFormat = IMAGE_FORMAT_RGB888;
+						}
+
+						CUtlBuffer outBuffer;
+						TGAWriter::WriteToBuffer( pDstImage, outBuffer, iWidth, iHeight,
+							dstFormat, dstFormat );
+						if ( !g_pFullFileSystem->WriteFile( pTempNameBuf, NULL, outBuffer ) )
+						{
+							fprintf( stderr, "unable to write %s\n", pTempNameBuf );
+						}
+					}
+					else
+					{
+						PFMWrite( ( float * )pDstImage, pTempNameBuf, iWidth, iHeight );
+					}
 				}
-				dstFormat = IMAGE_FORMAT_RGBA8888;
 			}
-			else if( !ImageLoader::IsTransparent( dstFormat ) && ( dstFormat != IMAGE_FORMAT_RGB888 ) )
-			{
-				unsigned char *tmpImage = pDstImage;
-				pDstImage = new unsigned char[ImageLoader::GetMemRequired( iWidth, iHeight, IMAGE_FORMAT_RGB888, false )];
-				if( !ImageLoader::ConvertImageFormat( tmpImage, dstFormat, pDstImage, IMAGE_FORMAT_RGB888,
-					iWidth, iHeight, 0, 0 ) )
-				{
-					Error( "Error converting from %s to %s\n",
-						ImageLoader::GetName( dstFormat ), ImageLoader::GetName( IMAGE_FORMAT_RGB888 ) );
-				}
-				dstFormat = IMAGE_FORMAT_RGB888;
-			}
-			
-			TGAWriter::Write( pDstImage, pTempNameBuf, iWidth, iHeight,
-				dstFormat, dstFormat );
 		}
 	}
 

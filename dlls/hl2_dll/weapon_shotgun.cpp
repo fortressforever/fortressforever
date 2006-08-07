@@ -44,7 +44,16 @@ public:
 
 	virtual const Vector& GetBulletSpread( void )
 	{
+		static Vector vitalAllyCone = VECTOR_CONE_3DEGREES;
 		static Vector cone = VECTOR_CONE_10DEGREES;
+
+		if( GetOwner() && (GetOwner()->Classify() == CLASS_PLAYER_ALLY_VITAL) )
+		{
+			// Give Alyx's shotgun blasts more a more directed punch. She needs
+			// to be at least as deadly as she would be with her pistol to stay interesting (sjb)
+			return vitalAllyCone;
+		}
+
 		return cone;
 	}
 
@@ -65,6 +74,8 @@ public:
 	void DryFire( void );
 	virtual float GetFireRate( void ) { return 0.7; };
 
+	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
+	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 
 	DECLARE_ACTTABLE();
@@ -91,14 +102,14 @@ acttable_t	CWeaponShotgun::m_acttable[] =
 	{ ACT_IDLE,						ACT_IDLE_SMG1,					true },	// FIXME: hook to shotgun unique
 
 	{ ACT_RANGE_ATTACK1,			ACT_RANGE_ATTACK_SHOTGUN,			true },
-	{ ACT_RELOAD,					ACT_RELOAD_SMG1,					true },
+	{ ACT_RELOAD,					ACT_RELOAD_SHOTGUN,					false },
 	{ ACT_WALK,						ACT_WALK_RIFLE,						true },
 	{ ACT_IDLE_ANGRY,				ACT_IDLE_ANGRY_SHOTGUN,				true },
 
 // Readiness activities (not aiming)
 	{ ACT_IDLE_RELAXED,				ACT_IDLE_SHOTGUN_RELAXED,		false },//never aims
 	{ ACT_IDLE_STIMULATED,			ACT_IDLE_SHOTGUN_STIMULATED,	false },
-	{ ACT_IDLE_AGITATED,			ACT_IDLE_SHOTGUN_STIMULATED,	false },//always aims
+	{ ACT_IDLE_AGITATED,			ACT_IDLE_SHOTGUN_AGITATED,		false },//always aims
 
 	{ ACT_WALK_RELAXED,				ACT_WALK_RIFLE_RELAXED,			false },//never aims
 	{ ACT_WALK_STIMULATED,			ACT_WALK_RIFLE_STIMULATED,		false },
@@ -131,8 +142,8 @@ acttable_t	CWeaponShotgun::m_acttable[] =
 	{ ACT_RUN_CROUCH_AIM,			ACT_RUN_CROUCH_AIM_RIFLE,			true },
 	{ ACT_GESTURE_RANGE_ATTACK1,	ACT_GESTURE_RANGE_ATTACK_SHOTGUN,	true },
 	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_SHOTGUN_LOW,		true },
-	{ ACT_RELOAD_LOW,				ACT_RELOAD_SMG1_LOW,				true },
-	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SMG1,			true },
+	{ ACT_RELOAD_LOW,				ACT_RELOAD_SHOTGUN_LOW,				false },
+	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_SHOTGUN,			false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponShotgun);
@@ -140,6 +151,45 @@ IMPLEMENT_ACTTABLE(CWeaponShotgun);
 void CWeaponShotgun::Precache( void )
 {
 	CBaseCombatWeapon::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pOperator - 
+//-----------------------------------------------------------------------------
+void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles )
+{
+	Vector vecShootOrigin, vecShootDir;
+	CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+	ASSERT( npc != NULL );
+	WeaponSound( SINGLE_NPC );
+	pOperator->DoMuzzleFlash();
+	m_iClip1 = m_iClip1 - 1;
+
+	if ( bUseWeaponAngles )
+	{
+		QAngle	angShootDir;
+		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
+		AngleVectors( angShootDir, &vecShootDir );
+	}
+	else 
+	{
+		vecShootOrigin = pOperator->Weapon_ShootPosition();
+		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
+	}
+
+	pOperator->FireBullets( 8, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponShotgun::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
+{
+	// Ensure we have enough rounds in the clip
+	m_iClip1++;
+
+	FireNPCPrimaryAttack( pOperator, true );
 }
 
 //-----------------------------------------------------------------------------
@@ -153,17 +203,7 @@ void CWeaponShotgun::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatC
 	{
 		case EVENT_WEAPON_SHOTGUN_FIRE:
 		{
-			Vector vecShootOrigin, vecShootDir;
-			vecShootOrigin = pOperator->Weapon_ShootPosition();
-			CAI_BaseNPC *npc = pOperator->MyNPCPointer();
-			ASSERT( npc != NULL );
-			WeaponSound( SINGLE_NPC );
-			pOperator->DoMuzzleFlash();
-			m_iClip1 = m_iClip1 - 1;
-
-			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-
-			pOperator->FireBullets( 8, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+			FireNPCPrimaryAttack( pOperator, false );
 		}
 		break;
 
@@ -371,7 +411,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	m_iClip1 -= 1;
 
 	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
-	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
+	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
 
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 1.0 );
 	
@@ -380,7 +420,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	
 	pPlayer->ViewPunch( QAngle( random->RandomFloat( -2, -1 ), random->RandomFloat( -2, 2 ), 0 ) );
 
-	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2 );
+	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2, GetOwner() );
 
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -426,7 +466,7 @@ void CWeaponShotgun::SecondaryAttack( void )
 	m_iClip1 -= 2;	// Shotgun uses same clip for primary and secondary attacks
 
 	Vector vecSrc	 = pPlayer->Weapon_ShootPosition();
-	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
+	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
 
 	// Fire the bullets
 	pPlayer->FireBullets( 12, vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );

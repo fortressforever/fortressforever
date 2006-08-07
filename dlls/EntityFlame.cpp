@@ -38,6 +38,7 @@ IMPLEMENT_SERVERCLASS_ST( CEntityFlame, DT_EntityFlame )
 	SendPropFloat( SENDINFO( m_flSize ), 16, SPROP_NOSCALE ),
 	SendPropEHandle( SENDINFO( m_hEntAttached ) ),
 	SendPropInt( SENDINFO( m_bUseHitboxes), 1, SPROP_UNSIGNED ),
+	SendPropTime( SENDINFO(m_flLifetime) )
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( entityflame, CEntityFlame );
@@ -268,6 +269,14 @@ void CEntityFlame::FlameThink( void )
 		// that is on fire takes without worrying about the flame's position relative to the bodytarget (which is the
 		// distance that the radius damage code uses to determine how much damage to inflict)
 		m_hEntAttached->TakeDamage( CTakeDamageInfo( this, this, FLAME_DIRECT_DAMAGE, DMG_BURN | DMG_DIRECT ) );
+
+		if( !m_hEntAttached->IsNPC() && hl2_episodic.GetBool() )
+		{
+			const float ENTITYFLAME_MOVE_AWAY_DIST = 24.0f;
+			// Make a sound near my origin, and up a little higher (in case I'm on the ground, so NPC's still hear it)
+			CSoundEnt::InsertSound( SOUND_MOVE_AWAY, GetAbsOrigin(), ENTITYFLAME_MOVE_AWAY_DIST, 0.1f, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
+			CSoundEnt::InsertSound( SOUND_MOVE_AWAY, GetAbsOrigin() + Vector( 0, 0, 48.0f ), ENTITYFLAME_MOVE_AWAY_DIST, 0.1f, this, SOUNDENT_CHANNEL_REPEATING );
+		}
 	}
 	else
 	{

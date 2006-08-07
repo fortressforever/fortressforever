@@ -5,30 +5,10 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#include <assert.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <UtlVector.h>
+#include "vgui_controls/pch_vgui_controls.h"
 
-#include <vgui/IInput.h>
-#include <vgui/IScheme.h>
-#include <vgui/ISystem.h>
-#include <vgui/ISurface.h>
-#include <vgui/ILocalize.h>
-#include <vgui/Cursor.h>
-#include <vgui/KeyCode.h>
-#include <KeyValues.h>
-#include <vgui/MouseCode.h>
-
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/Menu.h>
-#include <vgui_controls/ScrollBar.h>
-#include <vgui_controls/Controls.h>
-
-#include "filesystem.h"
-
-// memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
+// memdbgon must be the last include file in a .cpp file
+#include "tier0/memdbgon.h"
 
 enum
 {
@@ -84,13 +64,54 @@ public:
 			PostActionSignal(new KeyValues("ClickPanel", "index", _textIndex));
 		}
 	}
-	
+
 private:
 	int _textIndex;
+};
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Panel used only to draw the interior border region
+//-----------------------------------------------------------------------------
+class RichTextInterior : public Panel
+{
+	DECLARE_CLASS_SIMPLE( RichTextInterior, Panel );
+
+public:
+	RichTextInterior( RichText *pParent, const char *pchName ) : BaseClass( pParent, pchName )  
+	{
+		SetKeyBoardInputEnabled( false );
+		SetMouseInputEnabled( false );
+		SetPaintBackgroundEnabled( false );
+		SetPaintEnabled( false );
+		m_pRichText = pParent;
+	}
+
+	// bugbug johnc: currently disabled until appearance merge
+	/*
+	virtual IAppearance *GetAppearance()
+	{
+		if ( m_pRichText->IsScrollbarVisible() )
+			return m_pAppearanceScrollbar;
+
+		return BaseClass::GetAppearance();
+	}
+
+	virtual void ApplySchemeSettings( IScheme *pScheme )
+	{
+		BaseClass::ApplySchemeSettings( pScheme );
+		m_pAppearanceScrollbar = FindSchemeAppearance( pScheme, "scrollbar_visible" );
+	}
+	*/
+
+private:
+	RichText *m_pRichText;
+//	IAppearance *m_pAppearanceScrollbar;    
 };
 	
 };	// namespace vgui
 
+DECLARE_BUILD_FACTORY( RichText );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -109,6 +130,7 @@ RichText::RichText(Panel *parent, const char *panelName) : BaseClass(parent, pan
 	_recalcSavedRenderState = true;
 	_maxCharCount = (64 * 1024);
 	AddActionSignalTarget(this);
+	m_pInterior = new RichTextInterior( this, NULL );
 
 	//a -1 for _select[0] means that the selection is empty
 	_select[0] = -1;
@@ -158,6 +180,15 @@ RichText::~RichText()
 {
 	delete [] m_pszInitialText;
 	delete m_pEditMenu;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void RichText::SetDrawOffsets( int ofsx, int ofsy )
+{
+	_drawOffsetX = ofsx;
+	_drawOffsetY = ofsy;
 }
 
 //-----------------------------------------------------------------------------
@@ -239,18 +270,30 @@ void RichText::OnKillFocus()
 	BaseClass::OnKillFocus();
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Wipe line breaks after the size of a panel has been changed
 //-----------------------------------------------------------------------------
-void RichText::OnSizeChanged(int newWide, int newTall)
+void RichText::OnSizeChanged( int wide, int tall )
 {
-	BaseClass::OnSizeChanged(newWide, newTall);
+	BaseClass::OnSizeChanged( wide, tall );
 
    	// blow away the line breaks list 
 	_invalidateVerticalScrollbarSlider = true;
 	InvalidateLineBreakStream();
 	InvalidateLayout();
+
+	if ( _vertScrollBar->IsVisible() )
+	{
+		_vertScrollBar->MakeReadyForUse();
+		m_pInterior->SetBounds( 0, 0, wide - _vertScrollBar->GetWide(), tall );
+	}
+	else
+	{
+		m_pInterior->SetBounds( 0, 0, wide, tall );
+	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Set the text array
@@ -443,45 +486,47 @@ int RichText::PixelToCursorSpace(int cx, int cy)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Draws a character in the panel
-// Input:	ch	- character to draw
+// Purpose: Draws a string of characters in the panel
+// Input:	iFirst - Index of the first character to draw
+//			iLast - Index of the last character to draw
+//			renderState - Render state to use
 //			font- font to use
-//			x,y	- pixel location to draw char at
 // Output:	returns the width of the character drawn
 //-----------------------------------------------------------------------------
-int RichText::DrawChar(wchar_t ch, TRenderState &renderState, HFont font, int index)
+int RichText::DrawString(int iFirst, int iLast, TRenderState &renderState, HFont font)
 {
-	// add to the current position
-	if (!iswcntrl(ch))
+	// Calculate the render size
+	int fontTall = surface()->GetFontTall(font);
+	// BUGBUG John: This won't exactly match the rendered size
+	int charWide = 0;
+	for ( int i = iFirst; i <= iLast; i++ )
 	{
-		int charWide = surface()->GetCharacterWidth(font, ch);
-		int fontTall = surface()->GetFontTall(font);
-
-		// draw selection, if any
-		int selection0 = -1, selection1 = -1;
-		GetSelectedRange(selection0, selection1);
-		
-		if (index >= selection0 && index < selection1)
-		{
-			// draw background selection color
-			surface()->DrawSetColor(_selectionColor);
-			surface()->DrawFilledRect(renderState.x, renderState.y, renderState.x + charWide, renderState.y + 1 + fontTall);
-			
-			// reset text color
-			surface()->DrawSetTextColor(_selectionTextColor);
-		}
-		else
-		{
-			surface()->DrawSetTextColor(renderState.textColor);
-		}
-		
-		surface()->DrawSetTextPos(renderState.x, renderState.y);
-		surface()->DrawUnicodeChar(ch);
-		
-		return charWide;
+		char ch = m_TextStream[i];
+		charWide += surface()->GetCharacterWidth(font, ch);
 	}
-	
-	return 0;
+
+	// draw selection, if any
+	int selection0 = -1, selection1 = -1;
+	GetSelectedRange(selection0, selection1);
+		
+	if (iFirst >= selection0 && iFirst < selection1)
+	{
+		// draw background selection color
+		surface()->DrawSetColor(_selectionColor);
+		surface()->DrawFilledRect(renderState.x, renderState.y, renderState.x + charWide, renderState.y + 1 + fontTall);
+		
+		// reset text color
+		surface()->DrawSetTextColor(_selectionTextColor);
+	}
+	else
+	{
+		surface()->DrawSetTextColor(renderState.textColor);
+	}
+		
+	surface()->DrawSetTextPos(renderState.x, renderState.y);
+	surface()->DrawPrintText(&m_TextStream[iFirst], iLast - iFirst + 1);
+		
+	return charWide;
 }
 
 //-----------------------------------------------------------------------------
@@ -504,7 +549,7 @@ void RichText::FinishingURL(int x, int y)
 //-----------------------------------------------------------------------------
 // Purpose: Draws the text in the panel
 //-----------------------------------------------------------------------------
-void RichText::PaintBackground()
+void RichText::Paint()
 {
 	// draw background
 	Color col = GetBgColor();
@@ -515,13 +560,20 @@ void RichText::PaintBackground()
 	surface()->DrawSetTextFont(_font);
 		
 	// hide all the clickable panels until we know where they are to reside
-	for (int j = 0; j < _clickableTextPanels.GetCount(); j++)
+	for (int j = 0; j < _clickableTextPanels.Count(); j++)
 	{
 		_clickableTextPanels[j]->SetVisible(false);
 	}
 
 	if (!m_TextStream.Count())
 		return;
+
+	// Check line breaks one last time because it's possible that someone added text to the control after OnThink() but before rendering...
+	//  e.g., debug code going to developer console can do this
+	if ( m_bRecalcLineBreaks )
+	{
+		CheckRecalcLineBreaks();
+	}
 	
 	int lineBreakIndexIndex = 0;
 	int startIndex = GetStartDrawIndex(lineBreakIndexIndex);
@@ -552,11 +604,13 @@ void RichText::PaintBackground()
 	renderState.y = _drawOffsetY;
 	
 	// draw the text
-	for (int i = startIndex; i < m_TextStream.Count() && renderState.y < tall; i++)
-	{
-		wchar_t ch = m_TextStream[i];
+	int selection0 = -1, selection1 = -1;
+	GetSelectedRange(selection0, selection1);
 
-		// update our current render state based on the formatting and color streams
+	for (int i = startIndex; i < m_TextStream.Count() && renderState.y < tall; )
+	{
+		// 1.
+		// Update our current render state based on the formatting and color streams
 		if (UpdateRenderState(i, renderState))
 		{
 			// check for url state change
@@ -583,6 +637,7 @@ void RichText::PaintBackground()
 			}
 		}
 		
+		// 2.
 		// if we've passed a line break go to that
 		if (m_LineBreaks[lineBreakIndexIndex] == i)
 		{
@@ -607,8 +662,54 @@ void RichText::PaintBackground()
 			}
 		}
 
-		// draw the character and update xposition  
-		renderState.x += DrawChar(ch, renderState, _font, i);
+		// 3.
+		// Calculate the range of text to draw all at once
+		int iLast = m_TextStream.Count() - 1;
+		
+		// Stop at the next line break
+		if ( m_LineBreaks[lineBreakIndexIndex] <= iLast )
+			iLast = m_LineBreaks[lineBreakIndexIndex] - 1;
+
+		// Stop at the next format change
+		if ( m_FormatStream.IsValidIndex(renderState.formatStreamIndex) && 
+			m_FormatStream[renderState.formatStreamIndex].textStreamIndex <= iLast )
+		{
+			iLast = m_FormatStream[renderState.formatStreamIndex].textStreamIndex - 1;
+		}
+
+		// Stop when entering or exiting the selected range
+		if ( i < selection0 && iLast >= selection0 )
+			iLast = selection0 - 1;
+		if ( i >= selection0 && i <= selection1 && iLast > selection1 )
+			iLast = selection1;
+
+		// Handle non-drawing characters specially
+		for ( int iT = i; iT <= iLast; iT++ )
+		{
+			if ( iswcntrl(m_TextStream[iT]) )
+			{
+				iLast = iT - 1;
+				break;
+			}
+		}
+
+		// 4.
+		// Draw the current text range
+		if ( iLast < i )
+		{
+			if ( m_TextStream[i] == '\t' )
+			{
+				int dxTabWidth = 8 * surface()->GetCharacterWidth(_font, ' ');
+
+				renderState.x = ( dxTabWidth * ( 1 + ( renderState.x / dxTabWidth ) ) );
+			}
+			i++;
+		}
+		else
+		{
+			renderState.x += DrawString(i, iLast, renderState, _font);
+			i = iLast + 1;
+		}
 	}
 
 	if (renderState.textClickable)
@@ -623,7 +724,7 @@ void RichText::PaintBackground()
 int RichText::GetClickableTextIndexStart(int startIndex)
 {
 	// cycle to the right url panel	for what is visible	after the startIndex.
-	for (int i = 0; i < _clickableTextPanels.GetCount(); i++)
+	for (int i = 0; i < _clickableTextPanels.Count(); i++)
 	{
 		if (_clickableTextPanels[i]->GetTextIndex() > startIndex)
 		{
@@ -655,6 +756,7 @@ void RichText::RecalculateDefaultState(int startIndex)
 
 //-----------------------------------------------------------------------------
 // Purpose: updates a render state based on the formatting and color streams
+// Output:	true if we changed the render state
 //-----------------------------------------------------------------------------
 bool RichText::UpdateRenderState(int textStreamPos, TRenderState &renderState)
 {
@@ -668,7 +770,11 @@ bool RichText::UpdateRenderState(int textStreamPos, TRenderState &renderState)
 
 		int indentChange = m_FormatStream[renderState.formatStreamIndex].pixelsIndent - renderState.pixelsIndent;
 		renderState.pixelsIndent = m_FormatStream[renderState.formatStreamIndex].pixelsIndent;
-		renderState.x += indentChange;
+
+		if (indentChange)
+		{
+			renderState.x = renderState.pixelsIndent + _drawOffsetX;
+		}
 
 		//!! for supporting old functionality, store off state in globals
 		_pixelsIndent = renderState.pixelsIndent;
@@ -720,6 +826,11 @@ void RichText::GenerateRenderStateForTextStreamIndex(int textStreamIndex, TRende
 // Purpose: Called pre render
 //-----------------------------------------------------------------------------
 void RichText::OnThink()
+{
+	CheckRecalcLineBreaks();
+}
+
+void RichText::CheckRecalcLineBreaks()
 {
 	if (m_bRecalcLineBreaks)
 	{
@@ -809,7 +920,7 @@ void RichText::InsertIndentChange(int pixelsIndent)
 //-----------------------------------------------------------------------------
 // Purpose: Inserts character Start for clickable text, eg. URLS
 //-----------------------------------------------------------------------------
-void RichText::InsertClickableTextStart()
+void RichText::InsertClickableTextStart( const char *pchClickAction )
 {
 	// see if indent change already exists in text stream
 	TFormatStream &prevItem = m_FormatStream[m_FormatStream.Count() - 1];
@@ -828,6 +939,7 @@ void RichText::InsertClickableTextStart()
 		TFormatStream streamItem = prevItem;
 		streamItem.textClickable = true;
 		streamItem.textStreamIndex = m_TextStream.Count();
+		streamItem.m_sClickableTextAction = pchClickAction;
 		m_FormatStream.AddToTail(streamItem);
 	}
 
@@ -935,8 +1047,10 @@ void RichText::RecalculateLineBreaks()
 	for (int i = startChar; i < m_TextStream.Count(); ++i)
 	{
 		wchar_t ch = m_TextStream[i];
+		renderState.x = x;
 		if (UpdateRenderState(i, renderState))
 		{
+			x = renderState.x;
 			int preI = i;
 			
 			// check for clickable text
@@ -945,9 +1059,9 @@ void RichText::RecalculateLineBreaks()
 				if (renderState.textClickable)
 				{
 					// make a new clickable text panel
-					if (clickableTextNum >= _clickableTextPanels.GetCount())
+					if (clickableTextNum >= _clickableTextPanels.Count())
 					{
-						_clickableTextPanels.AddElement(new ClickPanel(this));
+						_clickableTextPanels.AddToTail(new ClickPanel(this));
 					}
 					
 					ClickPanel *clickPanel = _clickableTextPanels[clickableTextNum++];
@@ -990,7 +1104,7 @@ void RichText::RecalculateLineBreaks()
 		}
 				
 		// check to see if the word is past the end of the line [wordStartIndex, i)
-		if ((x + charWidth + _pixelsIndent) >= wide || ch == '\r' || ch == '\n')
+		if ((x + charWidth) >= wide || ch == '\r' || ch == '\n')
 		{
 			// add another line
 			AddAnotherLine(x, y);
@@ -1003,7 +1117,7 @@ void RichText::RecalculateLineBreaks()
 				// set the break at the current character
 				m_LineBreaks.AddToTail(i);
 			}
-			else if (wordStartedOnNewLine)
+			else if (wordStartedOnNewLine || iswspace(ch) ) // catch the "blah             " case wrapping around a line
 			{
 				// word is longer than a line, so set the break at the current cursor
 				m_LineBreaks.AddToTail(i);
@@ -1014,9 +1128,9 @@ void RichText::RecalculateLineBreaks()
 					int oldIndex = _clickableTextPanels[clickableTextNum - 1]->GetTextIndex();
 					
 					// make a new clickable text panel
-					if (clickableTextNum >= _clickableTextPanels.GetCount())
+					if (clickableTextNum >= _clickableTextPanels.Count())
 					{
-						_clickableTextPanels.AddElement(new ClickPanel(this));
+						_clickableTextPanels.AddToTail(new ClickPanel(this));
 					}
 					
 					ClickPanel *clickPanel = _clickableTextPanels[clickableTextNum++];
@@ -1849,6 +1963,16 @@ void RichText::GetText(int offset, wchar_t *buf, int bufLenInBytes)
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: gets text from the buffer
+//-----------------------------------------------------------------------------
+void RichText::GetText(int offset, char *pch, int bufLenInBytes)
+{
+	wchar_t rgwchT[4096];
+	GetText(offset, rgwchT, sizeof(rgwchT));
+	localize()->ConvertUnicodeToANSI(rgwchT, pch, bufLenInBytes);
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Set the font of the buffer text 
 //-----------------------------------------------------------------------------
 void RichText::SetFont(HFont font)
@@ -1916,6 +2040,11 @@ void RichText::OnClickPanel(int index)
 	}
 	
 	wBuf[outIndex] = 0;
+
+    if ( m_FormatStream[renderState.formatStreamIndex].m_sClickableTextAction )
+	{
+		localize()->ConvertANSIToUnicode( m_FormatStream[renderState.formatStreamIndex].m_sClickableTextAction.String(), wBuf, sizeof( wBuf ) );
+	}
 
 	PostActionSignal(new KeyValues("TextClicked", "text", wBuf));
 	OnTextClicked(wBuf);
@@ -2091,7 +2220,7 @@ int RichText::ParseTextStringForUrls(const char *text, int startPos, char *resul
 	{
 		bool bURLFound = false;
 		
-		if (!_strnicmp(text + i, "www.", 4))
+		if (!Q_strnicmp(text + i, "www.", 4))
 		{
 			// scan ahead for another '.'
 			bool bPeriodFound = false;
@@ -2110,19 +2239,27 @@ int RichText::ParseTextStringForUrls(const char *text, int startPos, char *resul
 				bURLFound = true;
 			}
 		}
-		else if (!_strnicmp(text + i, "http://", 7))
+		else if (!Q_strnicmp(text + i, "http://", 7))
 		{
 			bURLFound = true;
 		}
-		else if (!_strnicmp(text + i, "ftp://", 6))
+		else if (!Q_strnicmp(text + i, "ftp://", 6))
 		{
 			bURLFound = true;
 		}
-		else if (!_strnicmp(text + i, "mailto:", 7))
+		else if (!Q_strnicmp(text + i, "steam://", 8))
 		{
 			bURLFound = true;
 		}
-		else if (!_strnicmp(text + i, "\\\\", 2))
+		else if (!Q_strnicmp(text + i, "steambeta://", 12))
+		{
+			bURLFound = true;
+		}
+		else if (!Q_strnicmp(text + i, "mailto:", 7))
+		{
+			bURLFound = true;
+		}
+		else if (!Q_strnicmp(text + i, "\\\\", 2))
 		{
 			bURLFound = true;
 		}
@@ -2175,3 +2312,37 @@ void RichText::OnTextClicked(const wchar_t *wszText)
 
 	system()->ShellExecute("open", ansi); 
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: data accessor
+//-----------------------------------------------------------------------------
+bool RichText::IsScrollbarVisible()
+{
+	return _vertScrollBar->IsVisible();
+}
+
+
+#ifdef DBGFLAG_VALIDATE
+//-----------------------------------------------------------------------------
+// Purpose: Run a global validation pass on all of our data structures and memory
+//			allocations.
+// Input:	validator -		Our global validator object
+//			pchName -		Our name (typically a member var in our container)
+//-----------------------------------------------------------------------------
+void RichText::Validate( CValidator &validator, char *pchName )
+{
+	validator.Push( "vgui::RichText", this, pchName );
+
+	m_TextStream.Validate( validator, "m_TextStream" );
+	m_FormatStream.Validate( validator, "m_FormatStream" );
+	m_LineBreaks.Validate( validator, "m_TextStream" );
+	_clickableTextPanels.Validate( validator, "_clickableTextPanels" );
+	validator.ClaimMemory( m_pszInitialText );
+
+	BaseClass::Validate( validator, "vgui::RichText" );
+
+	validator.Pop();
+}
+#endif // DBGFLAG_VALIDATE
+

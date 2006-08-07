@@ -4,8 +4,8 @@
 	Version="7.10"
 	Name="smdlexp"
 	ProjectGUID="{E8699E31-F261-4277-8EBB-3B33F2EFCC89}"
-	SccProjectName="&quot;$/Src/utils/smdlexp&quot;, KKGBAAAA"
-	SccLocalPath=".">
+	SccProjectName=""
+	SccLocalPath="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>

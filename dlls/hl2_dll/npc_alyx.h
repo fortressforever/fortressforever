@@ -29,11 +29,9 @@ public:
 	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	bool	ShouldLookForBetterWeapon() { return false; }
 	bool	IsReadinessCapable() { return false; }
-	void	DeathSound(void);
+	void	DeathSound( const CTakeDamageInfo &info );
 
 	EHANDLE	m_hEmpTool;
-
-	CAI_HolsterBehavior		m_HolsterBehavior;
 
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;

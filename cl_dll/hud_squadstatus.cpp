@@ -32,6 +32,7 @@ public:
 	virtual void Init( void );
 	virtual void Reset( void );
 	virtual void OnThink( void );
+	bool ShouldDraw();
 
 	void MsgFunc_SquadMemberDied(bf_read &msg);
 
@@ -96,6 +97,28 @@ void CHudSquadStatus::Init( void )
 void CHudSquadStatus::Reset( void )
 {
 	Init();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudSquadStatus::ShouldDraw( void )
+{
+	bool bNeedsDraw = false;
+
+	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+	bNeedsDraw = ( pPlayer->m_HL2Local.m_iSquadMemberCount > 0 ||
+					( pPlayer->m_HL2Local.m_iSquadMemberCount != m_iSquadMembers ) || 
+					( pPlayer->m_HL2Local.m_fSquadInFollowMode != m_bSquadMembersFollowing ) ||
+					( m_iSquadMembers > 0 ) ||
+					( m_LastMemberColor[3] > 0 ) );
+		
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
 //-----------------------------------------------------------------------------

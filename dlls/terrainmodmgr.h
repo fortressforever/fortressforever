@@ -11,9 +11,8 @@
 #pragma once
 #endif
 
-
-#include "terrainmod.h"
 #include "vector.h"
+#include "terrainmod.h"
 
 // Apply a terrain mod.
 // The mod is applied on the server, and sent to all clients so they can apply it.

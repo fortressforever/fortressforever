@@ -48,12 +48,14 @@ BEGIN_DATADESC( CEntityDissolve )
 	DEFINE_FIELD( m_flFadeOutModelLength, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flFadeOutStart, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flFadeOutLength, FIELD_FLOAT ),
-	DEFINE_FIELD( m_nDissolveType, FIELD_INTEGER ),
+	DEFINE_KEYFIELD( m_nDissolveType, FIELD_INTEGER, "dissolvetype" ),
+	DEFINE_FIELD( m_vDissolverOrigin, FIELD_VECTOR ),
+	DEFINE_KEYFIELD( m_nMagnitude, FIELD_INTEGER, "magnitude" ),
 
 	DEFINE_FUNCTION( DissolveThink ),
 	DEFINE_FUNCTION( ElectrocuteThink ),
 
-	DEFINE_INPUTFUNC( FIELD_VOID, "Dissolve", InputDissolve ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "Dissolve", InputDissolve ),
 
 END_DATADESC()
 
@@ -70,6 +72,8 @@ IMPLEMENT_SERVERCLASS_ST( CEntityDissolve, DT_EntityDissolve )
 	SendPropFloat( SENDINFO( m_flFadeOutStart ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_flFadeOutLength ), 0, SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_nDissolveType ), ENTITY_DISSOLVE_BITS, SPROP_UNSIGNED ),
+	SendPropVector	(SENDINFO(m_vDissolverOrigin), 0, SPROP_NOSCALE ),
+	SendPropInt( SENDINFO( m_nMagnitude ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( env_entity_dissolver, CEntityDissolve );
@@ -81,6 +85,7 @@ LINK_ENTITY_TO_CLASS( env_entity_dissolver, CEntityDissolve );
 CEntityDissolve::CEntityDissolve( void )
 {
 	m_flStartTime	= 0.0f;
+	m_nMagnitude = 250;
 }
 
 CEntityDissolve::~CEntityDissolve( void )
@@ -131,17 +136,19 @@ void CEntityDissolve::Spawn()
 	m_flFadeOutStart = DISSOLVE_FADE_OUT_START_TIME;
 	m_flFadeOutLength = DISSOLVE_FADE_OUT_END_TIME - DISSOLVE_FADE_OUT_START_TIME;
 
+	if ( m_nDissolveType == ENTITY_DISSOLVE_CORE )
+	{
+		m_flFadeInStart = 0.0f;
+		m_flFadeOutStart = CORE_DISSOLVE_FADE_START;
+		m_flFadeOutModelStart = CORE_DISSOLVE_MODEL_FADE_START;
+		m_flFadeOutModelLength = CORE_DISSOLVE_MODEL_FADE_LENGTH;
+		m_flFadeInLength = CORE_DISSOLVE_FADEIN_LENGTH;
+	}
+
 	m_nRenderMode = kRenderTransColor;
 	SetRenderColor( 255, 255, 255, 255 );
 	m_nRenderFX = kRenderFxNone;
 
-	// Turn them into debris
-	CBaseAnimating *pTarget = ( GetMoveParent() ) ? GetMoveParent()->GetBaseAnimating() : NULL;
-	if ( pTarget )
-	{
-		pTarget->SetCollisionGroup( COLLISION_GROUP_DISSOLVING );
-	}
-	
 	SetThink( &CEntityDissolve::DissolveThink );
 	if ( gpGlobals->curtime > m_flStartTime )
 	{
@@ -161,17 +168,20 @@ void CEntityDissolve::Spawn()
 //-----------------------------------------------------------------------------
 void CEntityDissolve::InputDissolve( inputdata_t &inputdata )
 {
-	if (m_target == NULL_STRING)
-		return;
+	string_t strTarget = inputdata.value.StringID();
+
+	if (strTarget == NULL_STRING)
+	{
+		strTarget = m_target;
+	}
 
 	CBaseEntity *pTarget = NULL;
-	while ((pTarget = gEntList.FindEntityGeneric(pTarget, STRING(m_target), this, inputdata.pActivator)) != NULL)
+	while ((pTarget = gEntList.FindEntityGeneric(pTarget, STRING(strTarget), this, inputdata.pActivator)) != NULL)
 	{
-		// Combat characters know how to catch themselves on fire.
-		CBaseCombatCharacter *pBCC = pTarget->MyCombatCharacterPointer();
-		if (pBCC)
+		CBaseAnimating *pBaseAnim = pTarget->GetBaseAnimating();
+		if (pBaseAnim)
 		{
-			pBCC->Dissolve( NULL, gpGlobals->curtime );
+			pBaseAnim->Dissolve( NULL, gpGlobals->curtime, false, m_nDissolveType, GetAbsOrigin(), m_nMagnitude );
 		}
 	}
 }
@@ -237,7 +247,7 @@ CEntityDissolve *CEntityDissolve::Create( CBaseEntity *pTarget, const char *pMat
 		}
 	}
 
-	pDissolve->SetModelName( MAKE_STRING(pMaterialName) );
+	pDissolve->SetModelName( AllocPooledString(pMaterialName) );
 	pDissolve->AttachToEntity( pTarget );
 	pDissolve->SetStartTime( flStartTime );
 	pDissolve->Spawn();
@@ -305,12 +315,18 @@ void CEntityDissolve::SetStartTime( float flStartTime )
 void CEntityDissolve::DissolveThink( void )
 {
 	CBaseAnimating *pTarget = ( GetMoveParent() ) ? GetMoveParent()->GetBaseAnimating() : NULL;
+
+	if ( GetModelName() == NULL_STRING && pTarget == NULL )
+		 return;
 	
 	if ( pTarget == NULL )
 	{
 		UTIL_Remove( this );
 		return;
 	}
+
+	// Turn them into debris
+	pTarget->SetCollisionGroup( COLLISION_GROUP_DISSOLVING );
 
 	if ( pTarget && pTarget->GetFlags() & FL_TRANSRAGDOLL )
 	{

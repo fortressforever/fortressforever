@@ -20,13 +20,74 @@ class C_FireSprite : public C_Sprite
 {
 	DECLARE_CLASS( C_FireSprite, C_Sprite );
 
+private:
+	virtual int DrawModel( int flags )
+	{
+		if ( m_bFadeFromAbove )
+		{
+			// The sprites become less visible the more you look down or up at them
+			Vector vToPos = GetLocalOrigin() - CurrentViewOrigin();
+			VectorNormalize( vToPos );
+
+			float fUpAmount = vToPos.z;
+
+			int iAlpha = 255;
+
+			if ( fUpAmount < -0.75f )
+				iAlpha = 0;
+			else if ( fUpAmount < -0.65f )
+				iAlpha = 255 - (int)( ( fUpAmount + 0.65f ) * 10.0f * -255.0f );
+			else if ( fUpAmount > 0.85f )
+				iAlpha = 0;
+			else if ( fUpAmount > 0.75f )
+				iAlpha = 255 - (int)( ( fUpAmount - 0.75f ) * 10.0f * 255.0f );
+
+			SetColor( iAlpha, iAlpha, iAlpha );
+		}
+
+		return BaseClass::DrawModel( flags );
+	}
+
 public:
 	Vector	m_vecMoveDir;
+	bool	m_bFadeFromAbove;
 };
 
+class C_FireFromAboveSprite : public C_Sprite
+{
+	DECLARE_CLASS( C_FireFromAboveSprite, C_Sprite );
 
+	virtual int DrawModel( int flags )
+	{
+		// The sprites become more visible the more you look down or up at them
+		Vector vToPos = GetLocalOrigin() - CurrentViewOrigin();
+		VectorNormalize( vToPos );
 
+		float fUpAmount = vToPos.z;
+
+		int iAlpha = 0;
+
+		if ( fUpAmount < -0.85f )
+			iAlpha = 255;
+		else if ( fUpAmount < -0.65f )
+			iAlpha = (int)( ( fUpAmount + 0.65f ) * 5.0f * -255.0f );
+		else if ( fUpAmount > 0.75f )
+			iAlpha = 255;
+		else if ( fUpAmount > 0.55f )
+			iAlpha = (int)( ( fUpAmount - 0.55f ) * 5.0f * 255.0f );
+
+		SetColor( iAlpha, iAlpha, iAlpha );
+
+		return BaseClass::DrawModel( flags );
+	}
+};
+
+#ifdef _XBOX
+// XBox reduces the flame count
+#define	NUM_CHILD_FLAMES	1
+#else
 #define	NUM_CHILD_FLAMES	4
+#endif
 
 #define	SMOKE_RISE_RATE		92.0f
 #define	SMOKE_LIFETIME		2.0f
@@ -34,19 +95,22 @@ public:
 
 #define	FLAME_CHILD_SPREAD	64.0f
 #define	FLAME_SOURCE_HEIGHT	128.0f
+#define	FLAME_FROM_ABOVE_SOURCE_HEIGHT	32.0f
 
 //==================================================
 // C_FireSmoke
 //==================================================
 
 //NOTENOTE: Mirrored in dlls/fire_smoke.h
-#define	bitsFIRESMOKE_NONE				0x00000000
-#define	bitsFIRESMOKE_ACTIVE			0x00000001
-#define	bitsFIRESMOKE_SMOKE				0x00000002
-#define	bitsFIRESMOKE_SMOKE_COLLISION	0x00000004
-#define	bitsFIRESMOKE_GLOW				0x00000008
+#define	bitsFIRESMOKE_NONE					0x00000000
+#define	bitsFIRESMOKE_ACTIVE				0x00000001
+#define	bitsFIRESMOKE_SMOKE					0x00000002
+#define	bitsFIRESMOKE_SMOKE_COLLISION		0x00000004
+#define	bitsFIRESMOKE_GLOW					0x00000008
+#define	bitsFIRESMOKE_VISIBLE_FROM_ABOVE	0x00000010
 
 #define	OVERLAY_MAX_VISIBLE_RANGE	512.0f
+
 
 class C_FireSmoke : public C_BaseEntity
 {
@@ -87,6 +151,7 @@ public:
 	float	m_flScaleTime;
 	int		m_nFlags;
 	int		m_nFlameModelIndex;
+	int		m_nFlameFromAboveModelIndex;
 
 //Client-side only
 public:
@@ -110,8 +175,9 @@ protected:
 	//CSmartPtr<CEmberEffect> m_pEmberEmitter;
 	CSmartPtr<CLitSmokeEmitter> m_pSmokeEmitter;
 
-	C_FireSprite		m_entFlames[NUM_CHILD_FLAMES];
-	float				m_entFlameScales[NUM_CHILD_FLAMES];
+	C_FireSprite			m_entFlames[NUM_CHILD_FLAMES];
+	C_FireFromAboveSprite	m_entFlamesFromAbove[NUM_CHILD_FLAMES];
+	float					m_entFlameScales[NUM_CHILD_FLAMES];
 
 	TimedEvent			m_tParticleSpawn;
 
@@ -216,12 +282,15 @@ public:
 	C_EntityFlame( void );
 	~C_EntityFlame( void );
 
+	void UpdateOnRemove( void );
+	void CleanUpRagdollOnRemove( void );
 	void OnDataChanged( DataUpdateType_t updateType );
 	RenderGroup_t GetRenderGroup();
 	void Simulate( void );
 
 	EHANDLE			m_hEntAttached;				// The entity that we are burning (attached to).
 	bool			m_bUseHitboxes;
+	bool			m_bCreatedClientside;
 	virtual void	ClientThink( void );
 
 	C_FireSmoke *m_pFireSmoke[NUM_HITBOX_FIRES];
@@ -236,6 +305,8 @@ protected:
 	CSmartPtr<CEmberEffect> m_pEmitter;
 	TimedEvent		m_ParticleSpawn;
 	bool			m_bAttachedToHitboxes;
+	float			m_flLifetime;
+	bool			m_bStartedFading;
 
 	const model_t	*m_pCachedModel;				// Holds the model pointer to detect when it changes
 

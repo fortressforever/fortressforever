@@ -10,11 +10,10 @@
 #include "c_weapon__stubs.h"
 #include "materialsystem/IMaterial.h"
 #include "ClientEffectPrecacheSystem.h"
+#include "beamdraw.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-extern void DrawHalo( IMaterial* pMaterial, const Vector &source, float scale, float const *color );
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
 CLIENTEFFECT_MATERIAL( "effects/stunstick" )

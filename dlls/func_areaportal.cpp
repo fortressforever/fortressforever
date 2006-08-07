@@ -40,7 +40,7 @@ public:
 	void InputClose( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );
 
-	virtual bool	UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor );
+	virtual bool	UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient );
 
 	DECLARE_DATADESC();
 
@@ -122,12 +122,18 @@ void CAreaPortal::InputToggle( inputdata_t &inputdata )
 }
 
 
-bool CAreaPortal::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor )
+bool CAreaPortal::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient )
 {
-	if( !BaseClass::UpdateVisibility( vOrigin, fovDistanceAdjustFactor ) )
+	if ( m_state )
+	{
+		// We're not closed, so give the base class a chance to close it.
+		return BaseClass::UpdateVisibility( vOrigin, fovDistanceAdjustFactor, bIsOpenOnClient );
+	}
+	else
+	{
+		bIsOpenOnClient = false;
 		return false;
-
-	return UpdateState();
+	}
 }
 
 

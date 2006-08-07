@@ -112,10 +112,7 @@ void CHudNumericDisplay::PaintNumbers(HFont font, int xpos, int ypos, int value)
 	}
 
 	surface()->DrawSetTextPos(xpos, ypos);
-	for (wchar_t *ch = unicode; *ch != 0; ch++)
-	{
-		surface()->DrawUnicodeChar(*ch);
-	}
+	surface()->DrawUnicodeString( unicode );
 }
 
 //-----------------------------------------------------------------------------
@@ -126,10 +123,7 @@ void CHudNumericDisplay::PaintLabel( void )
 	surface()->DrawSetTextFont(m_hTextFont);
 	surface()->DrawSetTextColor(GetFgColor());
 	surface()->DrawSetTextPos(text_xpos, text_ypos);
-	for (wchar_t *wch = m_LabelText; *wch != 0; wch++)
-	{
-		surface()->DrawUnicodeChar(*wch);
-	}
+	surface()->DrawUnicodeString( m_LabelText );
 }
 
 //-----------------------------------------------------------------------------

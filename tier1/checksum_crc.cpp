@@ -3,6 +3,7 @@
 // Purpose: Generic CRC functions
 //
 //=============================================================================//
+
 #include "basetypes.h"
 #include "commonmacros.h"
 #include "checksum_crc.h"

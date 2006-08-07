@@ -10,14 +10,26 @@
 #pragma once
 #endif
 
-// handle to single instance of a steam client
-// bugbug johnc: rename all this to HUserSession / IUserSession so that it makes sense
-typedef int32 HSteamClientUser;
+#include "steamtypes.h"
+#include "steamclientpublic.h"
+
+// handle to a communication pipe to the Steam client
+typedef int32 HSteamPipe;
+// handle to single instance of a steam user
+typedef int32 HSteamUser;
+
+#ifndef DLL_EXPORT
+#define DLL_EXPORT 
+#endif
 
 // interface predec
 class ISteamUser;
+class ISteamGameServer;
+class ISteamFriends;
+class ISteamBilling;
+class ISteamUtils;
 class IVAC;
-struct StatsVConn_t;
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to creating a new steam instance, or to
@@ -27,44 +39,67 @@ struct StatsVConn_t;
 class ISteamClient
 {
 public:
-	// creates a global instance of a steam client, so that other processes can share it
+	// Creates a communication pipe to the Steam client
+	virtual HSteamPipe CreateSteamPipe() = 0;
+
+	// Releases a previously created communications pipe
+	virtual bool BReleaseSteamPipe( HSteamPipe hSteamPipe ) = 0;
+
+	// creates a global instance of a steam user, so that other processes can share it
 	// used by the steam UI, to share it's account info/connection with any games it launches
 	// fails (returns NULL) if an existing instance already exists
-	virtual HSteamClientUser CreateGlobalInstance() = 0;
+	virtual HSteamUser CreateGlobalUser( HSteamPipe *phSteamPipe ) = 0;
 
-	// connects to an existing global instance, failing if none exists
+	// connects to an existing global user, failing if none exists
 	// used by the game to coordinate with the steamUI
-    virtual HSteamClientUser ConnectToGlobalInstance() = 0;
+	virtual HSteamUser ConnectToGlobalUser( HSteamPipe hSteamPipe ) = 0;
 
-	// used by game servers, create a steam client that won't be shared with anyone else
-	virtual HSteamClientUser CreateLocalInstance() = 0;
+	// used by game servers, create a steam user that won't be shared with anyone else
+	virtual HSteamUser CreateLocalUser( HSteamPipe *phSteamPipe ) = 0;
 
-	// removes an allocated instance
-	virtual void ReleaseInstance( HSteamClientUser hUser ) = 0;
+	// removes an allocated user
+	virtual void ReleaseUser( HSteamPipe hSteamPipe, HSteamUser hUser ) = 0;
 
 	// retrieves the ISteamUser interface associated with the handle
-	virtual ISteamUser *GetISteamUser( HSteamClientUser hSteamClientUser, const char *pchVersion ) = 0;
+	virtual ISteamUser *GetISteamUser( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
 
 	// retrieves the IVac interface associated with the handle
 	// there is normally only one instance of VAC running, but using this connects it to the right user/account
-	virtual IVAC *GetIVAC( HSteamClientUser hSteamClientUser ) = 0;
+	virtual IVAC *GetIVAC( HSteamUser hSteamUser ) = 0;
 
-	// runs a single frame, letting the clients update and maintain themselves
-	// bugbug johnc this will be removed when the client has it's own thread
-	virtual bool BMainLoop( uint64 sTimeCurrentTime, bool bStressMode ) = 0;
+	// retrieves the ISteamGameServer interface associated with the handle
+	virtual ISteamGameServer *GetISteamGameServer( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
 
-	// test interfaces
-	virtual void Test_SetSpew( const char *pchGroup, int nSpewLevel ) = 0;
-	virtual void Test_SetSpewFunc( void * /*SpewOutputFunc_t*/ func ) = 0;
-	virtual void Test_OverrideIPs( uint unPublicIP, uint unPrivateIP ) = 0;
-	virtual void Test_SetServerLoadState( bool bBusy, bool bCritical ) = 0;
-	virtual void Test_SetStressMode( bool bClientStressMode ) = 0;
-	virtual StatsVConn_t &Test_GetStatsVConn() = 0;
-	virtual void Test_RemoveAllClients() = 0; 
+	// set the local IP and Port to bind to
+	// this must be set before CreateLocalUser()
+	virtual void SetLocalIPBinding( uint32 unIP, uint16 usPort ) = 0; 
+
+	// returns the name of a universe
+	virtual const char *GetUniverseName( EUniverse eUniverse ) = 0;
+
+	// returns the ISteamFriends interface
+	virtual ISteamFriends *GetISteamFriends( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
+
+	// returns the ISteamUtils interface
+	virtual ISteamUtils *GetISteamUtils( HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
+
+	// returns the ISteamBilling interface
+	virtual ISteamBilling *GetISteamBilling( HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
 };
 
+#define STEAMCLIENT_INTERFACE_VERSION		"SteamClient006"
 
-#define STEAMCLIENT_INTERFACE_VERSION		"SteamClient002"
+
+// For GoldSRC we need a C API as the C++ ABI changed from the GoldSRC compiler 
+// (GCC 2.95.3) to the Source/Steam3 one (GCC 3.4.1)
+// C functions we export for the C API, maps to ISteamClient functions 
+DLL_EXPORT HSteamPipe Steam_CreateSteamPipe();
+DLL_EXPORT bool Steam_BReleaseSteamPipe( HSteamPipe hSteamPipe );
+DLL_EXPORT HSteamUser Steam_CreateLocalUser( HSteamPipe *phSteamPipe );
+DLL_EXPORT HSteamUser Steam_CreateGlobalUser( HSteamPipe *phSteamPipe );
+DLL_EXPORT HSteamUser Steam_ConnectToGlobalUser( HSteamPipe hSteamPipe );
+DLL_EXPORT void Steam_ReleaseUser( HSteamPipe hSteamPipe, HSteamUser hUser );
+DLL_EXPORT void Steam_SetLocalIPBinding( uint32 unIP, uint16 usLocalPort );
 
 
 #endif // ISTEAMCLIENT_H

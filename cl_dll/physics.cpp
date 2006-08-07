@@ -28,9 +28,7 @@
 // file system interface
 extern IFileSystem *filesystem;
 
-ConVar	cl_phys_timescale( "cl_phys_timescale", "1", FCVAR_CHEAT, "Sets the scale of time for client-side physics (ragdolls)" );
-
-extern ConVar phys_rolling_drag;
+ConVar	cl_phys_timescale( "cl_phys_timescale", "1.0", FCVAR_CHEAT, "Sets the scale of time for client-side physics (ragdolls)" );
 
 //FIXME: Replicated from server end, consolidate?
 
@@ -103,18 +101,22 @@ bool PhysicsDLLInit( CreateInterfaceFn physicsFactory )
 	return true;
 }
 
+#define DEFAULT_XBOX_CLIENT_VPHYSICS_TICK	0.025		// 25ms ticks on xbox ragdolls
 void PhysicsLevelInit( void )
 {
 	physenv = physics->CreateEnvironment();
 	assert( physenv );
+	{
+	MEM_ALLOC_CREDIT();
 	g_EntityCollisionHash = physics->CreateObjectPairHash();
+	}
 
 	// TODO: need to get the right factory function here
 	//physenv->SetDebugOverlay( appSystemFactory );
 	physenv->SetGravity( Vector(0, 0, -sv_gravity.GetFloat() ) );
 	// 15 ms per tick
 	// NOTE: Always run client physics at this rate - helps keep ragdolls stable
-	physenv->SetSimulationTimestep( DEFAULT_TICK_INTERVAL );
+	physenv->SetSimulationTimestep( IsXbox() ? DEFAULT_XBOX_CLIENT_VPHYSICS_TICK : DEFAULT_TICK_INTERVAL );
 	physenv->SetCollisionEventHandler( &g_Collisions );
 	physenv->SetCollisionSolver( &g_Collisions );
 
@@ -181,6 +183,49 @@ int CCollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1
 	if ( g_EntityCollisionHash->IsObjectPairInHash( pObj0, pObj1 ) )
 		return 0;
 
+#if 0
+	int solid0 = pEntity0->GetSolid();
+	int solid1 = pEntity1->GetSolid();
+	int nSolidFlags0 = pEntity0->GetSolidFlags();
+	int nSolidFlags1 = pEntity1->GetSolidFlags();
+#endif
+
+	int movetype0 = pEntity0->GetMoveType();
+	int movetype1 = pEntity1->GetMoveType();
+
+	// entities with non-physical move parents or entities with MOVETYPE_PUSH
+	// are considered as "AI movers".  They are unchanged by collision; they exert
+	// physics forces on the rest of the system.
+	bool aiMove0 = (movetype0==MOVETYPE_PUSH) ? true : false;
+	bool aiMove1 = (movetype1==MOVETYPE_PUSH) ? true : false;
+
+	if ( pEntity0->GetMoveParent() )
+	{
+		// if the object & its parent are both MOVETYPE_VPHYSICS, then this must be a special case
+		// like a prop_ragdoll_attached
+		if ( !(movetype0 == MOVETYPE_VPHYSICS && pEntity0->GetRootMoveParent()->GetMoveType() == MOVETYPE_VPHYSICS) )
+		{
+			aiMove0 = true;
+		}
+	}
+	if ( pEntity1->GetMoveParent() )
+	{
+		// if the object & its parent are both MOVETYPE_VPHYSICS, then this must be a special case.
+		if ( !(movetype1 == MOVETYPE_VPHYSICS && pEntity1->GetRootMoveParent()->GetMoveType() == MOVETYPE_VPHYSICS) )
+		{
+			aiMove1 = true;
+		}
+	}
+
+	// AI movers don't collide with the world/static/pinned objects or other AI movers
+	if ( (aiMove0 && !pObj1->IsMoveable()) ||
+		(aiMove1 && !pObj0->IsMoveable()) ||
+		(aiMove0 && aiMove1) )
+		return 0;
+
+	// two objects under shadow control should not collide.  The AI will figure it out
+	if ( pObj0->GetShadowController() && pObj1->GetShadowController() )
+		return 0;
 	return 1;
 }
 
@@ -191,14 +236,14 @@ int CCollisionEvent::ShouldSolvePenetration( IPhysicsObject *pObj0, IPhysicsObje
 }
 
 
-// This just encloses a change I (MikeD) made, in case it causes problems.
-#define DECAL_FIX
-
-
 // A class that implements an IClientSystem for physics
-class CPhysicsSystem : public CAutoGameSystem
+class CPhysicsSystem : public CAutoGameSystemPerFrame
 {
 public:
+	CPhysicsSystem( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+	}
+
 	// HACKHACK: PhysicsDLLInit() is called explicitly because it requires a parameter
 	virtual bool Init();
 	virtual void Shutdown();
@@ -212,9 +257,6 @@ public:
 	
 	virtual void LevelShutdownPostEntity();
 
-	// Called before rendering
-	virtual void PreRender ( );
-
 	void AddImpactSound( void *pGameData, IPhysicsObject *pObject, int surfaceProps, int surfacePropsHit, float volume, float speed );
 
 	virtual void Update( float frametime );
@@ -225,7 +267,7 @@ private:
 	physicssound::soundlist_t m_impactSounds;
 };
 
-static CPhysicsSystem g_PhysicsSystem;
+static CPhysicsSystem g_PhysicsSystem( "CPhysicsSystem" );
 // singleton to hook into the client system
 IGameSystem *PhysicsGameSystem( void )
 {
@@ -282,12 +324,6 @@ void CPhysicsSystem::LevelShutdownPostEntity()
 	g_PhysWorldObject = NULL;
 }
 
-// Called before rendering
-void CPhysicsSystem::PreRender ( )
-{
-}
-
-
 void CPhysicsSystem::AddImpactSound( void *pGameData, IPhysicsObject *pObject, int surfaceProps, int surfacePropsHit, float volume, float speed )
 {
 	physicssound::AddImpactSound( m_impactSounds, pGameData, SOUND_FROM_WORLD, CHAN_STATIC, pObject, surfaceProps, surfacePropsHit, volume, speed );
@@ -296,9 +332,8 @@ void CPhysicsSystem::AddImpactSound( void *pGameData, IPhysicsObject *pObject, i
 
 void CPhysicsSystem::Update( float frametime )
 {
-	#ifndef DECAL_FIX
-		PhysicsSimulate();
-	#endif
+	// THIS WAS MOVED TO POST-ENTITY SIM
+	//PhysicsSimulate();
 }
 
 
@@ -342,9 +377,7 @@ void CPhysicsSystem::PhysicsSimulate()
 
 void PhysicsSimulate()
 {
-	#ifdef DECAL_FIX
-		g_PhysicsSystem.PhysicsSimulate();
-	#endif
+	g_PhysicsSystem.PhysicsSimulate();
 }
 
 
@@ -400,28 +433,28 @@ void CCollisionEvent::FrameUpdate( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CCollisionEvent::UpdateTouchEvents( void ) 
-{ 
-	// Turn on buffering in case new touch events occur during processing 
-	bool bOldTouchEvents = m_bBufferTouchEvents; 
-	m_bBufferTouchEvents = true; 
-	for ( int i = 0; i < m_touchEvents.Count(); i++ ) 
-	{ 
-		const touchevent_t &event = m_touchEvents[i]; 
-		if ( event.touchType == TOUCH_START ) 
-		{ 
-			DispatchStartTouch( event.pEntity0, event.pEntity1 ); 
-		} 
-		else 
-		{ 
-			// TOUCH_END 
-			DispatchEndTouch( event.pEntity0, event.pEntity1 ); 
-		} 
-	} 
+void CCollisionEvent::UpdateTouchEvents( void )
+{
+	// Turn on buffering in case new touch events occur during processing
+	bool bOldTouchEvents = m_bBufferTouchEvents;
+	m_bBufferTouchEvents = true;
+	for ( int i = 0; i < m_touchEvents.Count(); i++ )
+	{
+		const touchevent_t &event = m_touchEvents[i];
+		if ( event.touchType == TOUCH_START )
+		{
+			DispatchStartTouch( event.pEntity0, event.pEntity1 );
+		}
+		else
+		{
+			// TOUCH_END
+			DispatchEndTouch( event.pEntity0, event.pEntity1 );
+		}
+	}
 
-	m_touchEvents.RemoveAll(); 
-	m_bBufferTouchEvents = bOldTouchEvents; 
-} 
+	m_touchEvents.RemoveAll();
+	m_bBufferTouchEvents = bOldTouchEvents;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -830,7 +863,7 @@ IPhysicsObject *GetWorldPhysObject ( void )
 	return g_PhysWorldObject;
 }
 
-void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, const char *pSoundName, float flVolume )
+void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, const char *pSoundName, HSOUNDSCRIPTHANDLE& handle, float flVolume )
 {
 	if ( !pEntity )
 		return;
@@ -845,7 +878,7 @@ void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, const cha
 			return;
 
 		CSoundParameters params;
-		if ( !CBaseEntity::GetParametersForSound( pSoundName, params, NULL ) )
+		if ( !CBaseEntity::GetParametersForSound( pSoundName, handle, params, NULL ) )
 			return;
 
 		if ( !pFriction->pObject )

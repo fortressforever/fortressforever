@@ -70,7 +70,7 @@ C_EntityParticleTrail::C_EntityParticleTrail( void )
 
 C_EntityParticleTrail::~C_EntityParticleTrail()
 {
-	g_ParticleMgr.RemoveEffect( &m_ParticleEffect );
+	ParticleMgr()->RemoveEffect( &m_ParticleEffect );
 }
 
 
@@ -95,14 +95,14 @@ void C_EntityParticleTrail::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void C_EntityParticleTrail::Start( )
 {
-	if( g_ParticleMgr.AddEffect( &m_ParticleEffect, this ) == false )
+	if( ParticleMgr()->AddEffect( &m_ParticleEffect, this ) == false )
 		return;
 
 	const char *pMaterialName = GetMaterialNameFromIndex( m_iMaterialName );
 	if ( !pMaterialName )
 		return;
 
-	m_hMaterial	= g_ParticleMgr.GetPMaterial( pMaterialName );	
+	m_hMaterial	= ParticleMgr()->GetPMaterial( pMaterialName );	
 	m_teParticleSpawn.Init( 150 );
 }
 
@@ -214,7 +214,7 @@ inline void C_EntityParticleTrail::RenderParticles( CParticleRenderIterator *pIt
 
 		// Render
 		Vector	tPos;
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = tPos.z;
 
 		Vector	color = Vector( pParticle->m_uchColor[0] / 255.0f, pParticle->m_uchColor[1] / 255.0f, pParticle->m_uchColor[2] / 255.0f );

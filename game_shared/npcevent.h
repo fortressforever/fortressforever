@@ -16,7 +16,7 @@ class CBaseAnimating;
 struct animevent_t
 {
 	int				event;
-	char			*options;
+	const char		*options;
 	float			cycle;
 	float			eventtime;
 	int				type;

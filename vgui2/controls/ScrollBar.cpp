@@ -109,6 +109,21 @@ public:
 
 }
 
+vgui::Panel *ScrollBar_Vertical_Factory()
+{
+	return new ScrollBar(NULL, NULL, true );
+}
+
+vgui::Panel *ScrollBar_Horizontal_Factory()
+{
+	return new ScrollBar(NULL, NULL, false );
+}
+
+DECLARE_BUILD_FACTORY_CUSTOM_ALIAS( ScrollBar, ScrollBar_Vertical, ScrollBar_Vertical_Factory );
+DECLARE_BUILD_FACTORY_CUSTOM_ALIAS( ScrollBar, ScrollBar_Horizontal, ScrollBar_Horizontal_Factory );
+// Default is a horizontal one
+DECLARE_BUILD_FACTORY_CUSTOM( ScrollBar, ScrollBar_Horizontal_Factory );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -146,6 +161,7 @@ ScrollBar::ScrollBar(Panel *parent, const char *panelName, bool vertical) : Pane
 	Panel::SetPaintBackgroundEnabled(false);
 	Panel::SetPaintEnabled(true);
 	SetButtonPressedScrollValue(20);
+	SetBlockDragChaining( true );
 
 	Validate();
 }
@@ -164,7 +180,7 @@ void ScrollBar::ApplySchemeSettings(IScheme *pScheme)
 		int value = atoi(resourceString);
 		if (IsProportional())
 		{
-			value = scheme()->GetProportionalScaledValue(value);
+			value = scheme()->GetProportionalScaledValueEx(GetScheme(), value);
 		}
 
 		if (_slider && _slider->IsVertical())

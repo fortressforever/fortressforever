@@ -13,11 +13,14 @@
 
 
 #include "convar.h"
-
+#include "iviewrender.h"
+#include "view_shared.h"
 #include "rendertexture.h"
+#include "materialsystem/ITexture.h"
 
 
 extern ConVar mat_wireframe;
+extern ConVar building_cubemaps;
 
 
 // Transform into view space (translate and rotate the camera into the origin).
@@ -28,23 +31,79 @@ void ViewTransform( const Vector &worldSpace, Vector &viewSpace );
 int ScreenTransform( const Vector& point, Vector& screen );
 
 extern ConVar r_updaterefracttexture;
+extern int g_viewscene_refractUpdateFrame;
 
-inline void UpdateRefractTexture( void )
+inline void UpdateRefractTexture( int x, int y, int w, int h, bool bForceUpdate = false )
 {
-	if ( !r_updaterefracttexture.GetBool() )
-	{
+	if ( !IsRetail() && !r_updaterefracttexture.GetBool() )
 		return;
-	}
+
 	ITexture *pTexture = GetPowerOfTwoFrameBufferTexture();
-	materials->CopyRenderTargetToTexture( pTexture );
+	if ( IsPC() || bForceUpdate || gpGlobals->framecount != g_viewscene_refractUpdateFrame )
+	{
+		// forced or only once per frame 
+		Rect_t rect;
+		rect.x = x;
+		rect.y = y;
+		rect.width = w;
+		rect.height = h;
+		materials->CopyRenderTargetToTextureEx( pTexture, 0, &rect, NULL );
+
+		g_viewscene_refractUpdateFrame = gpGlobals->framecount;
+	}
 	materials->SetFrameBufferCopyTexture( pTexture );
 }
 
-inline void UpdateScreenEffectTexture( int textureIndex )
+inline void UpdateRefractTexture( bool bForceUpdate = false )
 {
-	ITexture *pTexture = GetFullFrameFrameBufferTexture( textureIndex );
-	materials->CopyRenderTargetToTexture( pTexture );
-	materials->SetFrameBufferCopyTexture( pTexture, textureIndex );
+	const CViewSetup *pViewSetup = view->GetViewSetup();
+	UpdateRefractTexture( pViewSetup->x, pViewSetup->y, pViewSetup->width, pViewSetup->height, bForceUpdate );
 }
+
+inline void UpdateScreenEffectTexture( int textureIndex, int x, int y, int w, int h, bool bDestFullScreen = false, Rect_t *pActualRect = NULL )
+{
+	Rect_t srcRect;
+	srcRect.x = x;
+	srcRect.y = y;
+	srcRect.width = w;
+	srcRect.height = h;
+
+	ITexture *pTexture = GetFullFrameFrameBufferTexture( textureIndex );
+	int nSrcWidth, nSrcHeight;
+	materials->GetRenderTargetDimensions( nSrcWidth, nSrcHeight );
+	int nDestWidth = pTexture->GetActualWidth();
+	int nDestHeight = pTexture->GetActualHeight();
+
+	Rect_t destRect = srcRect;
+	if( !bDestFullScreen && ( nSrcWidth > nDestWidth || nSrcHeight > nDestHeight ) )
+	{
+		// the source and target sizes aren't necessarily the same (specifically in dx7 where 
+		// nonpow2 rendertargets aren't supported), so lets figure it out here.
+		float scaleX = ( float )nDestWidth / ( float )nSrcWidth;
+		float scaleY = ( float )nDestHeight / ( float )nSrcHeight;
+		destRect.x = srcRect.x * scaleX;
+		destRect.y = srcRect.y * scaleY;
+		destRect.width = srcRect.width * scaleX;
+		destRect.height = srcRect.height * scaleY;
+		destRect.x = clamp( destRect.x, 0, nDestWidth );
+		destRect.y = clamp( destRect.y, 0, nDestHeight );
+		destRect.width = clamp( destRect.width, 0, nDestWidth - destRect.x );
+		destRect.height = clamp( destRect.height, 0, nDestHeight - destRect.y );
+	}
+
+	materials->CopyRenderTargetToTextureEx( pTexture, 0, &srcRect, bDestFullScreen ? NULL : &destRect );
+	materials->SetFrameBufferCopyTexture( pTexture, textureIndex );
+
+	if ( pActualRect )
+	{
+		pActualRect->x = destRect.x;
+		pActualRect->y = destRect.y;
+		pActualRect->width = destRect.width;
+		pActualRect->height = destRect.height;
+	}
+}
+
+// reset the tonem apping to a constant value, and clear the filter bank
+void ResetToneMapping(float value);
 
 #endif // VIEW_SCENE_H

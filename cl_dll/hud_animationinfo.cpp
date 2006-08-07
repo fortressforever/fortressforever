@@ -94,13 +94,9 @@ void CHudAnimationInfo::ApplySchemeSettings( IScheme *scheme )
 	SetPaintBackgroundEnabled( false );
 }
 
-
 bool CHudAnimationInfo::ShouldDraw()
 {
-	if ( !m_pWatch )
-		return false;
-
-	return CHudElement::ShouldDraw();
+	return ( m_pWatch && CHudElement::ShouldDraw() );
 }
 
 void CHudAnimationInfo::PaintString( int& x, int &y, const char *sz, Color *pLegendColor )
@@ -217,9 +213,6 @@ void CHudAnimationInfo::PaintMappingInfo( int& x, int& y, Panel *element, PanelA
 
 void CHudAnimationInfo::Paint()
 {
-	if ( !ShouldDraw() )
-		return;
-
 	vgui::Panel *panel = m_pWatch;
 	if ( !panel )
 		return;
@@ -244,7 +237,6 @@ void CHudAnimationInfo::Paint()
 	PaintString( x, y, sz, NULL );
 	Q_snprintf( sz, sizeof( sz ), "%-30s %-20s (%i %i)", "Size", "size", bounds[2], bounds[3] );
 	PaintString( x, y, sz, NULL );
-
 }
 
 

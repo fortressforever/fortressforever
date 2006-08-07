@@ -313,9 +313,8 @@ void CEnvEffectsScript::HandleAnimEvent ( animevent_t *pEvent )
 			{
 				if ( pCurrent->m_bStopFollowOnKill == true )
 				{
-					QAngle dummyAngles;
 					Vector vOrigin;
-					GetAttachment( pCurrent->m_pTrail->m_nAttachment, vOrigin, dummyAngles );
+					GetAttachment( pCurrent->m_pTrail->m_nAttachment, vOrigin );
 
 					pCurrent->m_pTrail->StopFollowingEntity();
 
@@ -333,9 +332,8 @@ void CEnvEffectsScript::HandleAnimEvent ( animevent_t *pEvent )
 			{
 				if ( pCurrent->m_bStopFollowOnKill == true )
 				{
-					QAngle dummyAngles;
 					Vector vOrigin;
-					GetAttachment( pCurrent->m_pSprite->m_nAttachment, vOrigin, dummyAngles );
+					GetAttachment( pCurrent->m_pSprite->m_nAttachment, vOrigin );
 
 					pCurrent->m_pSprite->StopFollowingEntity();
 

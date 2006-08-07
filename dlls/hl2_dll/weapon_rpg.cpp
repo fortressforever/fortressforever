@@ -25,6 +25,11 @@
 #include "smoke_trail.h"
 #include "collisionutils.h"
 #include "hl2_shareddefs.h"
+#include "rumble_shared.h"
+
+#ifdef HL2_DLL
+	extern int g_interactionPlayerLaunchedRPG;
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -94,6 +99,7 @@ BEGIN_DATADESC( CMissile )
 	DEFINE_FIELD( m_flMarkDeadTime,			FIELD_TIME ),
 	DEFINE_FIELD( m_flGracePeriodEndsAt,	FIELD_TIME ),
 	DEFINE_FIELD( m_flDamage,				FIELD_FLOAT ),
+	DEFINE_FIELD( m_bCreateDangerSounds,	FIELD_BOOLEAN ),
 	
 	// Function Pointers
 	DEFINE_FUNCTION( MissileTouch ),
@@ -114,6 +120,7 @@ class CWeaponRPG;
 CMissile::CMissile()
 {
 	m_hRocketTrail = NULL;
+	m_bCreateDangerSounds = false;
 }
 
 CMissile::~CMissile()
@@ -147,10 +154,10 @@ void CMissile::Spawn( void )
 	SetModel("models/weapons/w_missile_launch.mdl");
 	UTIL_SetSize( this, -Vector(4,4,4), Vector(4,4,4) );
 
-	SetTouch( MissileTouch );
+	SetTouch( &CMissile::MissileTouch );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
-	SetThink( IgniteThink );
+	SetThink( &CMissile::IgniteThink );
 	
 	SetNextThink( gpGlobals->curtime + 0.3f );
 	SetDamage( 200.0f );
@@ -253,7 +260,7 @@ void CMissile::AccelerateThink( void )
 	AngleVectors( GetLocalAngles(), &vecForward );
 	SetAbsVelocity( vecForward * RPG_SPEED );
 
-	SetThink( SeekThink );
+	SetThink( &CMissile::SeekThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 }
 
@@ -308,7 +315,7 @@ void CMissile::ShotDown( void )
 		m_hRocketTrail->m_bDamaged = true;
 	}
 
-	SetThink( AugerThink );
+	SetThink( &CMissile::AugerThink );
 	SetNextThink( gpGlobals->curtime );
 	m_flAugerTime = gpGlobals->curtime + 1.5f;
 	m_flMarkDeadTime = gpGlobals->curtime + 0.75;
@@ -328,7 +335,7 @@ void CMissile::ShotDown( void )
 void CMissile::DoExplosion( void )
 {
 	// Explode
-	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), 200, 
+	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, 
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
 }
 
@@ -432,15 +439,20 @@ void CMissile::IgniteThink( void )
 	AngleVectors( GetLocalAngles(), &vecForward );
 	SetAbsVelocity( vecForward * RPG_SPEED );
 
-	SetThink( SeekThink );
+	SetThink( &CMissile::SeekThink );
 	SetNextThink( gpGlobals->curtime );
 
 	if ( m_hOwner && m_hOwner->GetOwner() )
 	{
 		CBasePlayer *pPlayer = ToBasePlayer( m_hOwner->GetOwner() );
 
-		color32 white = { 255,225,205,64 };
-		UTIL_ScreenFade( pPlayer, white, 0.1f, 0.0f, FFADE_IN );
+		if ( pPlayer )
+		{
+			color32 white = { 255,225,205,64 };
+			UTIL_ScreenFade( pPlayer, white, 0.1f, 0.0f, FFADE_IN );
+
+			pPlayer->RumbleEffect( RUMBLE_RPG_MISSILE, 0, RUMBLE_FLAG_RESTART );
+		}
 	}
 
 	CreateSmokeTrail();
@@ -552,6 +564,15 @@ void CMissile::SeekThink( void )
 		}
 	}
 
+	if( hl2_episodic.GetBool() )
+	{
+		if( flBestDist <= ( GetAbsVelocity().Length() * 2.5f ) && FVisible( pBestDot->GetAbsOrigin() ) )
+		{
+			// Scare targets
+			CSoundEnt::InsertSound( SOUND_DANGER, pBestDot->GetAbsOrigin(), CMissile::EXPLOSION_RADIUS, 0.2f, pBestDot, SOUNDENT_CHANNEL_REPEATED_DANGER, NULL );
+		}
+	}
+
 	//If we have a dot target
 	if ( pBestDot == NULL )
 	{
@@ -573,6 +594,16 @@ void CMissile::SeekThink( void )
 	Vector	vTargetDir;
 	VectorSubtract( targetPos, GetAbsOrigin(), vTargetDir );
 	float flDist = VectorNormalize( vTargetDir );
+
+	if( pLaserDot->GetTargetEntity() != NULL && flDist <= 240.0f && hl2_episodic.GetBool() )
+	{
+		// Prevent the missile circling the Strider like a Halo in ep1_c17_06. If the missile gets within 20
+		// feet of a Strider, tighten up the turn speed of the missile so it can break the halo and strike. (sjb 4/27/2006)
+		if( pLaserDot->GetTargetEntity()->ClassMatches( "npc_strider" ) )
+		{
+			flHomingSpeed *= 1.75f;
+		}
+	}
 
 	Vector	vDir	= GetAbsVelocity();
 	float	flSpeed	= VectorNormalize( vDir );
@@ -611,6 +642,17 @@ void CMissile::SeekThink( void )
 
 	// Think as soon as possible
 	SetNextThink( gpGlobals->curtime );
+
+#ifdef HL2_EPISODIC
+
+	if ( m_bCreateDangerSounds == true )
+	{
+		trace_t tr;
+		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 0.5, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+
+		CSoundEnt::InsertSound( SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
+	}
+#endif
 }
 
 
@@ -696,7 +738,7 @@ void CInfoAPCMissileHint::Activate( )
 {
 	BaseClass::Activate();
 
-	m_hTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
+	m_hTarget = gEntList.FindEntityByName( NULL, m_target );
 	if ( m_hTarget == NULL )
 	{
 		DevWarning( "%s: Could not find target '%s'!\n", GetClassname(), STRING( m_target ) );
@@ -836,6 +878,7 @@ BEGIN_DATADESC( CAPCMissile )
 	DEFINE_THINKFUNC( BeginSeekThink ),
 	DEFINE_THINKFUNC( AugerStartThink ),
 	DEFINE_THINKFUNC( ExplodeThink ),
+	DEFINE_THINKFUNC( APCSeekThink ),
 
 	DEFINE_FUNCTION( APCMissileTouch ),
 
@@ -878,8 +921,14 @@ void CAPCMissile::Init()
 	SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize( this, vec3_origin, vec3_origin );
 	CreateSmokeTrail();
-	SetTouch( APCMissileTouch );
+	SetTouch( &CAPCMissile::APCMissileTouch );
 	m_flLastHomingSpeed = APC_HOMING_SPEED;
+	CreateDangerSounds( true );
+
+	if ( IsXbox() )
+	{
+		AddFlag( FL_AIMTARGET );
+	}
 }
 
 
@@ -913,7 +962,7 @@ void CAPCMissile::IgniteDelay( void )
 {
 	m_flIgnitionTime = gpGlobals->curtime + 0.3f;
 
-	SetThink( BeginSeekThink );
+	SetThink( &CAPCMissile::BeginSeekThink );
 	SetNextThink( m_flIgnitionTime );
 	Init();
 	AddSolidFlags( FSOLID_NOT_SOLID );
@@ -922,7 +971,7 @@ void CAPCMissile::IgniteDelay( void )
 void CAPCMissile::AugerDelay( float flDelay )
 {
 	m_flIgnitionTime = gpGlobals->curtime;
-	SetThink( AugerStartThink );
+	SetThink( &CAPCMissile::AugerStartThink );
 	SetNextThink( gpGlobals->curtime + flDelay );
 	Init();
 	DisableGuiding();
@@ -935,14 +984,14 @@ void CAPCMissile::AugerStartThink()
 		m_hRocketTrail->m_bDamaged = true;
 	}
 	m_flAugerTime = gpGlobals->curtime + random->RandomFloat( 1.0f, 2.0f );
-	SetThink( AugerThink );
+	SetThink( &CAPCMissile::AugerThink );
 	SetNextThink( gpGlobals->curtime );
 }
 
 void CAPCMissile::ExplodeDelay( float flDelay )
 {
 	m_flIgnitionTime = gpGlobals->curtime;
-	SetThink( ExplodeThink );
+	SetThink( &CAPCMissile::ExplodeThink );
 	SetNextThink( gpGlobals->curtime + flDelay );
 	Init();
 	DisableGuiding();
@@ -952,8 +1001,37 @@ void CAPCMissile::ExplodeDelay( float flDelay )
 void CAPCMissile::BeginSeekThink( void )
 {
  	RemoveSolidFlags( FSOLID_NOT_SOLID );
-	SetThink( SeekThink );
+	SetThink( &CAPCMissile::APCSeekThink );
 	SetNextThink( gpGlobals->curtime );
+}
+
+void CAPCMissile::APCSeekThink( void )
+{
+	BaseClass::SeekThink();
+
+	bool bFoundDot = false;
+
+	//If we can't find a dot to follow around then just send me wherever I'm facing so I can blow up in peace.
+	for( CLaserDot *pEnt = GetLaserDotList(); pEnt != NULL; pEnt = pEnt->m_pNext )
+	{
+		if ( !pEnt->IsOn() )
+			continue;
+
+		if ( pEnt->GetOwnerEntity() != GetOwnerEntity() )
+			continue;
+
+		bFoundDot = true;
+	}
+
+	if ( bFoundDot == false )
+	{
+		Vector	vDir	= GetAbsVelocity();
+		VectorNormalize ( vDir );
+
+		SetAbsVelocity( vDir * 800 );
+
+		SetThink( NULL );
+	}
 }
 
 void CAPCMissile::ExplodeThink()
@@ -1004,8 +1082,11 @@ void CAPCMissile::DoExplosion( void )
 	}
 	else
 	{
-		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), 
-			APC_MISSILE_DAMAGE, 100, true, 20000 );
+#ifdef HL2_EPISODIC
+		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), this, APC_MISSILE_DAMAGE, 100, true, 20000 );
+#else
+		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), APC_MISSILE_DAMAGE, 100, true, 20000 );
+#endif
 	}
 }
 
@@ -1281,6 +1362,16 @@ CWeaponRPG::~CWeaponRPG()
 		UTIL_Remove( m_hLaserDot );
 		m_hLaserDot = NULL;
 	}
+
+	if ( m_hLaserMuzzleSprite )
+	{
+		UTIL_Remove( m_hLaserMuzzleSprite );
+	}
+
+	if ( m_hLaserBeam )
+	{
+		UTIL_Remove( m_hLaserBeam );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1467,6 +1558,8 @@ void CWeaponRPG::PrimaryAttack( void )
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 	WeaponSound( SINGLE );
 
+	pOwner->RumbleEffect( RUMBLE_SHOTGUN_SINGLE, 0, RUMBLE_FLAG_RESTART );
+
 	// Check to see if we should trigger any RPG firing triggers
 	int iCount = g_hWeaponFireTriggers.Count();
 	for ( int i = 0; i < iCount; i++ )
@@ -1476,6 +1569,22 @@ void CWeaponRPG::PrimaryAttack( void )
 			if ( FClassnameIs( g_hWeaponFireTriggers[i], "trigger_rpgfire" ) )
 			{
 				g_hWeaponFireTriggers[i]->ActivateMultiTrigger( pOwner );
+			}
+		}
+	}
+
+	if( hl2_episodic.GetBool() )
+	{
+		CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+		int nAIs = g_AI_Manager.NumAIs();
+
+		string_t iszStriderClassname = AllocPooledString( "npc_strider" );
+
+		for ( int i = 0; i < nAIs; i++ )
+		{
+			if( ppAIs[ i ]->m_iClassname == iszStriderClassname )
+			{
+				ppAIs[ i ]->DispatchInteraction( g_interactionPlayerLaunchedRPG, NULL, m_hMissile );
 			}
 		}
 	}
@@ -1550,7 +1659,7 @@ void CWeaponRPG::ItemPostFrame( void )
 	}
 
 	// Supress our guiding effects if we're lowered
-	if ( GetIdealActivity() == ACT_VM_IDLE_LOWERED )
+	if ( GetIdealActivity() == ACT_VM_IDLE_LOWERED || GetIdealActivity() == ACT_VM_RELOAD )
 	{
 		SuppressGuiding();
 	}
@@ -1725,6 +1834,7 @@ void CWeaponRPG::Drop( const Vector &vecVelocity )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+extern ConVar hl2_xbox_aiming;
 void CWeaponRPG::UpdateLaserPosition( Vector vecMuzzlePos, Vector vecEndPos )
 {
 	if ( vecMuzzlePos == vec3_origin || vecEndPos == vec3_origin )
@@ -1735,7 +1845,16 @@ void CWeaponRPG::UpdateLaserPosition( Vector vecMuzzlePos, Vector vecEndPos )
 
 		vecMuzzlePos = pPlayer->Weapon_ShootPosition();
 		Vector	forward;
-		pPlayer->EyeVectors( &forward );
+
+		if( hl2_xbox_aiming.GetBool() == true && hl2_episodic.GetBool() == false )
+		{
+			forward = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
+		}
+		else
+		{
+			pPlayer->EyeVectors( &forward );
+		}
+
 		vecEndPos = vecMuzzlePos + ( forward * MAX_TRACE_LENGTH );
 	}
 
@@ -1813,6 +1932,36 @@ bool CWeaponRPG::Reload( void )
 	SendWeaponAnim( ACT_VM_RELOAD );
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CWeaponRPG::WeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions )
+{
+	bool bResult = BaseClass::WeaponLOSCondition( ownerPos, targetPos, bSetConditions );
+
+	if( bResult )
+	{
+		CAI_BaseNPC* npcOwner = GetOwner()->MyNPCPointer();
+
+		if( npcOwner )
+		{
+			trace_t tr;
+
+			Vector vecRelativeShootPosition;
+			VectorSubtract( npcOwner->Weapon_ShootPosition(), npcOwner->GetAbsOrigin(), vecRelativeShootPosition );
+			Vector vecMuzzle = ownerPos + vecRelativeShootPosition;
+			Vector vecShootDir = npcOwner->GetActualShootTrajectory( vecMuzzle );
+
+			// Make sure I have a good 10 feet of wide clearance in front, or I'll blow my teeth out.
+			AI_TraceHull( vecMuzzle, vecMuzzle + vecShootDir * (10.0f*12.0f), Vector( -24, -24, -24 ), Vector( 24, 24, 24 ), MASK_NPCSOLID, NULL, &tr );
+
+			if( tr.fraction != 1.0f )
+				bResult = false;
+		}
+	}
+
+	return bResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -2055,7 +2204,7 @@ CLaserDot *CLaserDot::Create( const Vector &origin, CBaseEntity *pOwner, bool bV
 
 	pLaserDot->SetOwnerEntity( pOwner );
 
-	pLaserDot->SetContextThink( LaserThink, gpGlobals->curtime + 0.1f, g_pLaserDotThink );
+	pLaserDot->SetContextThink( &CLaserDot::LaserThink, gpGlobals->curtime + 0.1f, g_pLaserDotThink );
 	pLaserDot->SetSimulatedEveryTick( true );
 
 	if ( !bVisibleDot )

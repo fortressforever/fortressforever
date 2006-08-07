@@ -60,10 +60,20 @@ private:
 		};																		\
 	static CHudElementHelper g_##className##_Helper( Create_##className##, depth );
 
+#define DECLARE_NAMED_HUDELEMENT( className, panelName )						\
+	static CHudElement *Create_##panelName##( void )							\
+		{																		\
+			return new className( #panelName );									\
+		};																		\
+	static CHudElementHelper g_##panelName##_Helper( Create_##panelName##, 50 );
 
 // This macro can be used to get a pointer to a specific hud element
 #define GET_HUDELEMENT( className )												\
 	(##className##*)gHUD.FindElement( #className )
+
+#define GET_NAMED_HUDELEMENT( className, panelName )							\
+	(##className##*)gHUD.FindElement( #panelName )
+
 
 // Things that inherit from vgui::Panel, too, will have ambiguous new operators
 //  so this should disambiguate them

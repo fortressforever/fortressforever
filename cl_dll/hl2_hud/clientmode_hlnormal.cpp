@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: Draws the normal TF2 or HL2 HUD.
+// Purpose: Draws the normal HUD.
 //
 // $Workfile:     $
 // $Date:         $
@@ -15,6 +15,7 @@
 #include <vgui/ISurface.h>
 #include <vgui_controls/AnimationController.h>
 #include "iinput.h"
+#include "ienginevgui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -83,7 +84,7 @@ void ClientModeHLNormal::Init()
 	BaseClass::Init();
 
 	// Load up the combine control panel scheme
-	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFile( "resource/CombinePanelScheme.res", "CombineScheme" );
+	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), IsXbox() ? "resource/ClientScheme.res" : "resource/CombinePanelScheme.res", "CombineScheme" );
 	if (!g_hVGuiCombineScheme)
 	{
 		Warning( "Couldn't load combine panel scheme!\n" );

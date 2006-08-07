@@ -23,6 +23,7 @@ class CBasePlayer;
 #if defined( CLIENT_DLL )
 #define CSprite C_Sprite
 #include "c_pixel_visibility.h"
+class CEngineSprite;
 
 class C_SpriteRenderer
 {
@@ -41,7 +42,7 @@ public:
 	} SPRITETYPE;
 	
 	// Determine sprite orientation
-	void							GetSpriteAxes( SPRITETYPE type, 
+	static void							GetSpriteAxes( SPRITETYPE type, 
 										const Vector& origin,
 										const QAngle& angles,
 										Vector& forward, 
@@ -49,7 +50,7 @@ public:
 										Vector& up );
 
 	// Sprites can alter blending amount
-	virtual float					GlowBlend( const Vector& entorigin, int rendermode, int renderfx, int alpha, float *scale );
+	virtual float					GlowBlend( CEngineSprite *psprite, const Vector& entorigin, int rendermode, int renderfx, int alpha, float *scale );
 
 	// Draws tempent as a sprite
 	int								DrawSprite( 
@@ -66,13 +67,14 @@ public:
 										int r, 
 										int g, 
 										int b,
-										float scale
+										float scale,
+										float flHDRColorScale = 1.0f
 										);
 
 protected:
 	pixelvis_handle_t	m_queryHandle;
 	float				m_flGlowProxySize;
-
+	float				m_flHDRColorScale;
 };
 
 #endif
@@ -131,6 +133,9 @@ public:
 	void InputHideSprite( inputdata_t &inputdata );
 	void InputShowSprite( inputdata_t &inputdata );
 	void InputToggleSprite( inputdata_t &inputdata );
+	void InputColorRedValue( inputdata_t &inputdata );
+	void InputColorBlueValue( inputdata_t &inputdata );
+	void InputColorGreenValue( inputdata_t &inputdata );
 #endif
 
 	inline void SetAttachment( CBaseEntity *pEntity, int attachment )
@@ -165,6 +170,7 @@ public:
 
 	float GetScale( void ) { return m_flSpriteScale; }
 	int	GetBrightness( void ) { return m_nBrightness; }
+	float GetHDRColorScale( void ) { return m_flHDRColorScale; }
 
 	inline void FadeAndDie( float duration ) 
 	{ 
@@ -216,18 +222,10 @@ public:
 	virtual int		GetRenderBrightness( void );
 
 	virtual int		DrawModel( int flags );
-	virtual const Vector& GetRenderOrigin();
-	virtual void GetRenderBounds( Vector &vecMins, Vector &vecMaxs );
-	virtual float GlowBlend( const Vector& entorigin, int rendermode, int renderfx, int alpha, float *scale );
-
-
-// Only supported in TF2 right now
-#if defined( TF2_CLIENT_DLL )
-	virtual bool	ShouldPredict( void )
-	{
-		return true;
-	}
-#endif
+	virtual const	Vector& GetRenderOrigin();
+	virtual void	GetRenderBounds( Vector &vecMins, Vector &vecMaxs );
+	virtual float	GlowBlend( CEngineSprite *psprite, const Vector& entorigin, int rendermode, int renderfx, int alpha, float *scale );
+	virtual void	GetToolRecordingState( KeyValues *msg );
 
 	virtual void	ClientThink( void );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
@@ -250,6 +248,7 @@ private:
 	CNetworkVar( float, m_flScaleTime );
 	CNetworkVar( bool, m_bWorldSpaceScale );
 	CNetworkVar( float, m_flGlowProxySize );
+	CNetworkVar( float, m_flHDRColorScale );
 
 	float		m_flLastTime;
 	float		m_flMaxFrame;

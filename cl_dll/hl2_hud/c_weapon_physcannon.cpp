@@ -57,7 +57,7 @@ bool C_WeaponPhysCannon::SetupEmitter( void )
 {
 	if ( !m_pLocalEmitter.IsValid() )
 	{
-		m_pLocalEmitter = CLocalSpaceEmitter::Create( "physpowerup", entindex(), LookupAttachment( "core" ) );
+		m_pLocalEmitter = CLocalSpaceEmitter::Create( "physpowerup", GetRefEHandle(), LookupAttachment( "core" ) );
 
 		if ( m_pLocalEmitter.IsValid() == false )
 			return false;
@@ -200,6 +200,9 @@ int C_WeaponPhysCannon::DrawModel( int flags )
 
 	if ( gpGlobals->frametime == 0 )
 		return BaseClass::DrawModel( flags );
+
+	if ( !m_bReadyToDraw )
+		return 0;
 
 	m_bWasUpgraded = true;
 
@@ -351,7 +354,7 @@ int C_WeaponPhysCannon::DrawModel( int flags )
 
 		Vector offset;
 
-		for ( i = 0; i < 4; i++ )
+		for ( int i = 0; i < 4; i++ )
 		{
 			offset = coreOrigin + RandomVector( -32.0f, 32.0f );
 

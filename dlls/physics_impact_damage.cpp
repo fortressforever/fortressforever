@@ -246,7 +246,7 @@ float ReadDamageTable( impactentry_t *pTable, int tableCount, float impulse, boo
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, const impactdamagetable_t &table, float energyScale, bool allowStaticDamage, int &damageType )
+float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, const impactdamagetable_t &table, float energyScale, bool allowStaticDamage, int &damageType, bool bDamageFromHeldObjects )
 {
 	damageType = DMG_CRUSH;
 	int otherIndex = !index;
@@ -280,11 +280,20 @@ float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, co
 	if ( energyScale <= 0.0f )
 		return 0;
 
-	const int gameFlagsNoDamage = FVPHYSICS_CONSTRAINT_STATIC | FVPHYSICS_PLAYER_HELD | FVPHYSICS_NO_IMPACT_DMG;
+	const int gameFlagsNoDamage = FVPHYSICS_CONSTRAINT_STATIC | FVPHYSICS_NO_IMPACT_DMG;
+
 	// NOTE: Crushing damage is handled by stress calcs in vphysics update functions, this is ONLY impact damage
-	// this is a non-moving object due to a constraint, or being held by the player - no damage
+	// this is a non-moving object due to a constraint - no damage
 	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & gameFlagsNoDamage )
 		return 0;
+
+	// If it doesn't take damage from held objects and the object is being held - no damage
+	if ( !bDamageFromHeldObjects && ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_PLAYER_HELD ) )
+	{
+		// If it doesn't take damage from held objects - no damage
+		if ( !bDamageFromHeldObjects )
+			return 0;
+	}
 
 	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_MULTIOBJECT_ENTITY )
 	{
@@ -323,6 +332,16 @@ float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, co
 	}
 
 	float otherMass = pEvent->pObjects[otherIndex]->GetMass();
+
+	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
+	{
+		// if the player is holding the object, use it's real mass (player holding reduced the mass)
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		if ( pPlayer )
+		{
+			otherMass = pPlayer->GetHeldObjectMass( pEvent->pObjects[otherIndex] );
+		}
+	}
 
 	// NOTE: sum the mass of each object in this system for the purpose of damage
 	if ( pEvent->pEntities[otherIndex] && (pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_MULTIOBJECT_ENTITY) )
@@ -443,7 +462,7 @@ float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, co
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-float CalculateDefaultPhysicsDamage( int index, gamevcollisionevent_t *pEvent, float energyScale, bool allowStaticDamage, int &damageType, string_t iszDamageTableName )
+float CalculateDefaultPhysicsDamage( int index, gamevcollisionevent_t *pEvent, float energyScale, bool allowStaticDamage, int &damageType, string_t iszDamageTableName, bool bDamageFromHeldObjects )
 {
 	// If we have a specified damage table, find it and use it instead
 	if ( iszDamageTableName != NULL_STRING )
@@ -451,19 +470,36 @@ float CalculateDefaultPhysicsDamage( int index, gamevcollisionevent_t *pEvent, f
 		for ( int i = 0; i < ARRAYSIZE(gDamageTableRegistry); i++ )
 		{
 			if ( !Q_strcmp( gDamageTableRegistry[i].pszTableName, STRING(iszDamageTableName) ) )
-				return CalculatePhysicsImpactDamage( index, pEvent, *(gDamageTableRegistry[i].pTable), energyScale, allowStaticDamage, damageType );
+				return CalculatePhysicsImpactDamage( index, pEvent, *(gDamageTableRegistry[i].pTable), energyScale, allowStaticDamage, damageType, bDamageFromHeldObjects );
 		}
 
 		Warning("Failed to find custom physics damage table name: %s\n", STRING(iszDamageTableName) );
 	}
 
-	return CalculatePhysicsImpactDamage( index, pEvent, gDefaultNPCImpactDamageTable, energyScale, allowStaticDamage, damageType );
+	return CalculatePhysicsImpactDamage( index, pEvent, gDefaultNPCImpactDamageTable, energyScale, allowStaticDamage, damageType, bDamageFromHeldObjects );
 }
 
+static bool IsPhysicallyControlled( CBaseEntity *pEntity, IPhysicsObject *pPhysics )
+{
+	bool isPhysical = false;
+	if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
+	{
+		isPhysical = true;
+	}
+	else
+	{
+		if ( pPhysics->GetShadowController() )
+		{
+			isPhysical = pPhysics->GetShadowController()->IsPhysicallyControlled();
+		}
+	}
+	return isPhysical;
+}
 float CalculateObjectStress( IPhysicsObject *pObject, CBaseEntity *pInputOwnerEntity, vphysics_objectstress_t *pOutput )
 {
 	CUtlVector< CBaseEntity * > pObjectList;
 	CUtlVector< Vector >		objectForce;
+	bool hasLargeObject = false;
 
 	// add a slot for static objects
 	pObjectList.AddToTail( NULL );
@@ -512,8 +548,15 @@ float CalculateObjectStress( IPhysicsObject *pObject, CBaseEntity *pInputOwnerEn
 			}
 			else
 			{
+				if ( pOther->GetMass() >= VPHYSICS_LARGE_OBJECT_MASS )
+				{
+					if ( pInputOwnerEntity->GetGroundEntity() != pOtherEntity)
+					{
+						hasLargeObject = true;
+					}
+				}
 				// moveable, non-friendly
-
+				
 				// aggregate contacts over each object to avoid greater stress in multiple contact cases
 				// NOTE: Contacts should be in order, so this shouldn't ever search, but just in case
 				outIndex = pObjectList.Count();
@@ -532,7 +575,7 @@ float CalculateObjectStress( IPhysicsObject *pObject, CBaseEntity *pInputOwnerEn
 				}
 			}
 
-			if ( outIndex != 0 && pInputOwnerEntity->GetMoveType() != MOVETYPE_VPHYSICS && pOtherEntity->GetMoveType() != MOVETYPE_VPHYSICS )
+			if ( outIndex != 0 && pInputOwnerEntity->GetMoveType() != MOVETYPE_VPHYSICS && !IsPhysicallyControlled(pOtherEntity, pOther) )
 			{
 				// UNDONE: Test this!  This is to remove any shadow/shadow stress.  The game should handle this with blocked/damage
 				force = 0.0f;
@@ -685,6 +728,7 @@ float CalculateObjectStress( IPhysicsObject *pObject, CBaseEntity *pInputOwnerEn
 		pOutput->exertedStress = internalForce.Length();
 		pOutput->receivedStress = externalForce.Length();
 		pOutput->hasNonStaticStress = pObjectList.Count() > 2 ? true : false;
+		pOutput->hasLargeObjectContact = hasLargeObject;
 	}
 
 	// sum is now kg 

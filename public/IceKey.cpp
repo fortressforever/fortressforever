@@ -2,6 +2,8 @@
 //			Taken from public domain code, as written by Matthew Kwan - July 1996
 //			http://www.darkside.com.au/ice/
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include "IceKey.H"
 
 #pragma warning(disable: 4244)
@@ -387,3 +389,5 @@ IceKey::blockSize () const
 {
 	return (8);
 }
+
+#endif // !_STATIC_LINKED || _SHARED_LIB

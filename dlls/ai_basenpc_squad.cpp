@@ -196,6 +196,44 @@ void CAI_BaseNPC::RemoveFromSquad()
 }
 
 //-----------------------------------------------------------------------------
+void CAI_BaseNPC::CheckSquad()
+{
+	if( !IsInSquad() )
+		return;
+
+	if( !GetSquad()->IsLeader(this) )
+		return;
+
+	AISquadIter_t iter;
+	CAI_BaseNPC *pSquadmate = m_pSquad->GetFirstMember( &iter );
+	while ( pSquadmate )
+	{
+		if( IRelationType(pSquadmate) < D_LI )
+		{
+			bool bWarn = true;
+
+			if( hl2_episodic.GetBool() )
+			{
+				if( FClassnameIs(pSquadmate, "npc_rollermine") || FClassnameIs(pSquadmate, "npc_manhack") )
+				{
+					// These two items set their Class to NONE when held by the player, which makes all of 
+					// their squadmates complain that an enemy is in the squad. Suppress this.
+					bWarn = false;
+				}
+			}
+
+			if( bWarn )
+			{
+				Warning( "ERROR: Squad '%s' has enemies in it!\n", GetSquad()->GetName() );
+				Warning( "%s doesn't like %s\n\n", GetDebugName(), pSquadmate->GetDebugName() );
+			}
+		}
+
+		pSquadmate = m_pSquad->GetNextMember( &iter );
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Returns the number of weapons of this type currently owned by squad members.
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::NumWeaponsInSquad( const char *pszWeaponClassname )

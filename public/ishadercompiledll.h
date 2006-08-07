@@ -16,7 +16,7 @@
 #define SHADER_COMPILE_INTERFACE_VERSION "shadercompiledll_0"
 
 // This is the DLL interface to ShaderCompile
-class IShaderCompileDLL
+abstract_class IShaderCompileDLL
 {
 public:
 	// All vrad.exe does is load the VRAD DLL and run this.

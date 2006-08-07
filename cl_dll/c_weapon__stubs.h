@@ -14,7 +14,7 @@
 #include "client_class.h"
 
 // This is an ugly hack to link client classes to weapons for now
-//  these will be removed once we predict all weapons, especially TF2 weapons
+//  these will be removed once we predict all weapons
 #define STUB_WEAPON_CLASS_IMPLEMENT( entityName, className )		\
 	BEGIN_PREDICTION_DATA( className )								\
 	END_PREDICTION_DATA()											\

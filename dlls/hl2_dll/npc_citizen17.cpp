@@ -63,6 +63,8 @@ ConVar	npc_citizen_explosive_resist( "npc_citizen_explosive_resist", "0" );
 ConVar	npc_citizen_auto_player_squad( "npc_citizen_auto_player_squad", "1" );
 ConVar	npc_citizen_auto_player_squad_allow_use( "npc_citizen_auto_player_squad_allow_use", "0" );
 
+ConVar	npc_citizen_dont_precache_all( "npc_citizen_dont_precache_all", "0" );
+
 ConVar player_squad_autosummon_time( "player_squad_autosummon_time", "5" );
 ConVar player_squad_autosummon_move_tolerance( "player_squad_autosummon_move_tolerance", "20" );
 ConVar player_squad_autosummon_player_tolerance( "player_squad_autosummon_player_tolerance", "10" );
@@ -79,6 +81,9 @@ enum SquadSlot_T
 
 const float HEAL_MOVE_RANGE = 30*12;
 const float HEAL_TARGET_RANGE = 120; // 10 feet
+
+// player must be at least this distance away from an enemy before we fire an RPG at him
+const float RPG_SAFE_DISTANCE = CMissile::EXPLOSION_RADIUS + 64.0;
 
 // Animation events
 int AE_CITIZEN_GET_PACKAGE;
@@ -153,7 +158,7 @@ public:
 
 	int ObjectCaps()
 	{
-		int caps = ( BaseClass::ObjectCaps() | FCAP_NOTIFY_NOT_IN_TRANSITION );
+		int caps = ( BaseClass::ObjectCaps() | FCAP_NOTIFY_ON_TRANSITION );
 
 		if ( m_bNotInTransition )
 			caps |= FCAP_DONT_SAVE;
@@ -249,6 +254,9 @@ static const char *g_ppszModelLocs[] =
 	"Group03%s",
 };
 
+#define IsExcludedHead( type, bMedic, iHead) false // see XBox codeline for an implementation
+
+
 //---------------------------------------------------------
 // Citizen activities
 //---------------------------------------------------------
@@ -283,6 +291,7 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_FIELD( 		m_flPlayerGiveAmmoTime, 	FIELD_TIME ),
 	DEFINE_KEYFIELD(	m_iszAmmoSupply, 			FIELD_STRING,	"ammosupply" ),
 	DEFINE_KEYFIELD(	m_iAmmoAmount, 				FIELD_INTEGER,	"ammoamount" ),
+	DEFINE_FIELD( 		m_bRPGAvoidPlayer, 			FIELD_BOOLEAN ),
 	DEFINE_FIELD( 		m_bShouldPatrol, 			FIELD_BOOLEAN ),
 	DEFINE_FIELD( 		m_iszOriginalSquad, 		FIELD_STRING ),
 	DEFINE_FIELD( 		m_flTimeJoinedPlayerSquad,	FIELD_TIME ),
@@ -296,17 +305,20 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_FIELD(		m_flTimePlayerStare,		FIELD_TIME ),
 	DEFINE_FIELD(		m_flTimeNextHealStare,		FIELD_TIME ),
 	DEFINE_FIELD( 		m_hSavedFollowGoalEnt,		FIELD_EHANDLE ),
-	DEFINE_FIELD(		m_bDontUseSemaphore,		FIELD_BOOLEAN ),
+	DEFINE_KEYFIELD(	m_bNotifyNavFailBlocked,	FIELD_BOOLEAN, "notifynavfailblocked" ),
+	DEFINE_KEYFIELD(	m_bNeverLeavePlayerSquad,	FIELD_BOOLEAN, "neverleaveplayersquad" ),
+	DEFINE_KEYFIELD(	m_iszDenyCommandConcept,	FIELD_STRING, "denycommandconcept" ),
 
 	DEFINE_OUTPUT(		m_OnJoinedPlayerSquad,	"OnJoinedPlayerSquad" ),
 	DEFINE_OUTPUT(		m_OnLeftPlayerSquad,	"OnLeftPlayerSquad" ),
 	DEFINE_OUTPUT(		m_OnFollowOrder,		"OnFollowOrder" ),
 	DEFINE_OUTPUT(		m_OnStationOrder,		"OnStationOrder" ),
 	DEFINE_OUTPUT(		m_OnPlayerUse,			"OnPlayerUse" ),
+	DEFINE_OUTPUT(		m_OnNavFailBlocked,		"OnNavFailBlocked" ),
 
+	DEFINE_INPUTFUNC( FIELD_VOID,	"RemoveFromPlayerSquad", InputRemoveFromPlayerSquad ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"StartPatrolling",	InputStartPatrolling ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"StopPatrolling",	InputStopPatrolling ),
-	DEFINE_INPUTFUNC( FIELD_STRING,	"GiveWeapon",	InputGiveWeapon ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetCommandable",	InputSetCommandable ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetMedicOn",	InputSetMedicOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetMedicOff",	InputSetMedicOff ),
@@ -342,10 +354,14 @@ void CNPC_Citizen::Precache()
 	SelectModel();
 	SelectExpressionType();
 
-	PrecacheAllOfType( m_Type );
+	if ( !npc_citizen_dont_precache_all.GetBool() )
+		PrecacheAllOfType( m_Type );
+	else
+		PrecacheModel( STRING( GetModelName() ) );
 
 	if ( NameMatches( "matt" ) )
 		PrecacheModel( "models/props_canal/mattpipe.mdl" );
+
 	PrecacheModel( INSIGNIA_MODEL );
 
 	PrecacheScriptSound( "NPC_Citizen.FootstepLeft" );
@@ -362,11 +378,11 @@ void CNPC_Citizen::Precache()
 		{
 			PrecacheInstancedScene( ScaredExpressions[i].szExpressions[j] );
 		}
-		for ( j = 0; j < ARRAYSIZE(NormalExpressions[i].szExpressions); j++ )
+		for ( int j = 0; j < ARRAYSIZE(NormalExpressions[i].szExpressions); j++ )
 		{
 			PrecacheInstancedScene( NormalExpressions[i].szExpressions[j] );
 		}
-		for ( j = 0; j < ARRAYSIZE(AngryExpressions[i].szExpressions); j++ )
+		for ( int j = 0; j < ARRAYSIZE(AngryExpressions[i].szExpressions); j++ )
 		{
 			PrecacheInstancedScene( AngryExpressions[i].szExpressions[j] );
 		}
@@ -385,12 +401,22 @@ void CNPC_Citizen::PrecacheAllOfType( CitizenType_t type )
 	int nHeads = ARRAYSIZE( g_ppszRandomHeads );
 	int i;
 	for ( i = 0; i < nHeads; ++i )
-		PrecacheModel( CFmtStr( "models/Humans/%s/%s", (const char *)(CFmtStr(g_ppszModelLocs[m_Type], "")), g_ppszRandomHeads[i] ) );
+	{
+		if ( !IsExcludedHead( type, false, i ) )
+		{
+			PrecacheModel( CFmtStr( "models/Humans/%s/%s", (const char *)(CFmtStr(g_ppszModelLocs[m_Type], "")), g_ppszRandomHeads[i] ) );
+		}
+	}
 
 	if ( m_Type == CT_REBEL )
 	{
 		for ( i = 0; i < nHeads; ++i )
-			PrecacheModel( CFmtStr( "models/Humans/%s/%s", (const char *)(CFmtStr(g_ppszModelLocs[m_Type], "m")), g_ppszRandomHeads[i] ) );
+		{
+			if ( !IsExcludedHead( type, true, i ) )
+			{
+				PrecacheModel( CFmtStr( "models/Humans/%s/%s", (const char *)(CFmtStr(g_ppszModelLocs[m_Type], "m")), g_ppszRandomHeads[i] ) );
+			}
+		}
 	}
 }
 
@@ -399,6 +425,11 @@ void CNPC_Citizen::PrecacheAllOfType( CitizenType_t type )
 void CNPC_Citizen::Spawn()
 {
 	BaseClass::Spawn();
+
+#ifdef _XBOX
+	// Always fade the corpse
+	AddSpawnFlags( SF_NPC_FADE_CORPSE );
+#endif // _XBOX
 
 	if ( ShouldAutosquad() )
 	{
@@ -414,6 +445,8 @@ void CNPC_Citizen::Spawn()
 	if ( IsAmmoResupplier() )
 		m_nSkin = 2;
 	
+	m_bRPGAvoidPlayer = false;
+
 	m_bShouldPatrol = false;
 	m_iHealth = sk_citizen_health.GetFloat();
 	
@@ -452,6 +485,8 @@ void CNPC_Citizen::Spawn()
 	}
 
 	m_flTimePlayerStare = FLT_MAX;
+
+	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL | EFL_NO_PHYSCANNON_INTERACTION );
 
 	NPCInit();
 
@@ -499,7 +534,7 @@ struct HeadCandidate_t
 	int iHead;
 	int nHeads;
 
-	static int Sort( const HeadCandidate_t *pLeft, const HeadCandidate_t *pRight )
+	static int __cdecl Sort( const HeadCandidate_t *pLeft, const HeadCandidate_t *pRight )
 	{
 		return ( pLeft->nHeads - pRight->nHeads );
 	}
@@ -520,63 +555,6 @@ void CNPC_Citizen::SelectModel()
 	}
 
 	const char *pszModelName = NULL;
-
-	if( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD | SF_CITIZEN_RANDOM_HEAD_MALE | SF_CITIZEN_RANDOM_HEAD_FEMALE ) || GetModelName() == NULL_STRING )
-	{
-		Assert( m_iHead == -1 );
-		char gender = ( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD_MALE ) ) ? 'm' : 
-					  ( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD_FEMALE ) ) ? 'f' : 0;
-
-		RemoveSpawnFlags( SF_CITIZEN_RANDOM_HEAD | SF_CITIZEN_RANDOM_HEAD_MALE | SF_CITIZEN_RANDOM_HEAD_FEMALE );
-		if( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
-		{
-			SetModelName( MAKE_STRING("models/humans/male_cheaple.mdl" ) );
-			return;
-		}
-		else
-		{
-			// Count the heads
-			int headCounts[ARRAYSIZE(g_ppszRandomHeads)] = { 0 };
-			int i;
-
-			for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
-			{
-				CNPC_Citizen *pCitizen = dynamic_cast<CNPC_Citizen *>(g_AI_Manager.AccessAIs()[i]);
-				if ( pCitizen && pCitizen != this && pCitizen->m_iHead >= 0 && pCitizen->m_iHead < ARRAYSIZE(g_ppszRandomHeads) )
-				{
-					headCounts[pCitizen->m_iHead]++;
-				}
-			}
-
-			// Find all candidates
-			CUtlVectorFixed<HeadCandidate_t, ARRAYSIZE(g_ppszRandomHeads)> candidates;
-
-			for ( i = 0; i < ARRAYSIZE(g_ppszRandomHeads); i++ )
-			{
-				if ( !gender || g_ppszRandomHeads[i][0] == gender )
-				{
-					HeadCandidate_t candidate = { i, headCounts[i] };
-					candidates.AddToTail( candidate );
-				}
-			}
-
-			Assert( candidates.Count() );
-			candidates.Sort( &HeadCandidate_t::Sort );
-
-			int iSmallestCount = candidates[0].nHeads;
-			int iLimit;
-
-			for ( iLimit = 0; iLimit < candidates.Count(); iLimit++ )
-			{
-				if ( candidates[iLimit].nHeads > iSmallestCount )
-					break;
-			}
-
-			m_iHead = candidates[random->RandomInt( 0, iLimit - 1 )].iHead;
-			pszModelName = g_ppszRandomHeads[m_iHead];
-			SetModelName(NULL_STRING);
-		}
-	}
 
 	if ( m_Type == CT_DEFAULT )
 	{
@@ -614,6 +592,66 @@ void CNPC_Citizen::SelectModel()
 			m_Type = CT_DOWNTRODDEN;
 	}
 
+	if( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD | SF_CITIZEN_RANDOM_HEAD_MALE | SF_CITIZEN_RANDOM_HEAD_FEMALE ) || GetModelName() == NULL_STRING )
+	{
+		Assert( m_iHead == -1 );
+		char gender = ( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD_MALE ) ) ? 'm' : 
+					  ( HasSpawnFlags( SF_CITIZEN_RANDOM_HEAD_FEMALE ) ) ? 'f' : 0;
+
+		RemoveSpawnFlags( SF_CITIZEN_RANDOM_HEAD | SF_CITIZEN_RANDOM_HEAD_MALE | SF_CITIZEN_RANDOM_HEAD_FEMALE );
+		if( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
+		{
+			SetModelName( AllocPooledString("models/humans/male_cheaple.mdl" ) );
+			return;
+		}
+		else
+		{
+			// Count the heads
+			int headCounts[ARRAYSIZE(g_ppszRandomHeads)] = { 0 };
+			int i;
+
+			for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
+			{
+				CNPC_Citizen *pCitizen = dynamic_cast<CNPC_Citizen *>(g_AI_Manager.AccessAIs()[i]);
+				if ( pCitizen && pCitizen != this && pCitizen->m_iHead >= 0 && pCitizen->m_iHead < ARRAYSIZE(g_ppszRandomHeads) )
+				{
+					headCounts[pCitizen->m_iHead]++;
+				}
+			}
+
+			// Find all candidates
+			CUtlVectorFixed<HeadCandidate_t, ARRAYSIZE(g_ppszRandomHeads)> candidates;
+
+			for ( i = 0; i < ARRAYSIZE(g_ppszRandomHeads); i++ )
+			{
+				if ( !gender || g_ppszRandomHeads[i][0] == gender )
+				{
+					if ( !IsExcludedHead( m_Type, IsMedic(), i ) )
+					{
+						HeadCandidate_t candidate = { i, headCounts[i] };
+						candidates.AddToTail( candidate );
+					}
+				}
+			}
+
+			Assert( candidates.Count() );
+			candidates.Sort( &HeadCandidate_t::Sort );
+
+			int iSmallestCount = candidates[0].nHeads;
+			int iLimit;
+
+			for ( iLimit = 0; iLimit < candidates.Count(); iLimit++ )
+			{
+				if ( candidates[iLimit].nHeads > iSmallestCount )
+					break;
+			}
+
+			m_iHead = candidates[random->RandomInt( 0, iLimit - 1 )].iHead;
+			pszModelName = g_ppszRandomHeads[m_iHead];
+			SetModelName(NULL_STRING);
+		}
+	}
+
 	Assert( pszModelName || GetModelName() != NULL_STRING );
 
 	if ( !pszModelName )
@@ -630,7 +668,7 @@ void CNPC_Citizen::SelectModel()
 			{
 				for ( int i = 0; i < ARRAYSIZE(g_ppszRandomHeads); i++ )
 				{
-					if ( stricmp( g_ppszRandomHeads[i], pszModelName ) == 0 )
+					if ( Q_stricmp( g_ppszRandomHeads[i], pszModelName ) == 0 )
 					{
 						m_iHead = i;
 						break;
@@ -732,10 +770,10 @@ string_t CNPC_Citizen::GetModelName() const
 	// If the model refers to an obsolete model, pretend it was blank
 	// so that we pick the new default model.
 	//
-	if (!strnicmp(STRING(iszModelName), "models/c17_", 11) ||
-		!strnicmp(STRING(iszModelName), "models/male", 11) ||
-		!strnicmp(STRING(iszModelName), "models/female", 13) ||
-		!strnicmp(STRING(iszModelName), "models/citizen", 14))
+	if (!Q_strnicmp(STRING(iszModelName), "models/c17_", 11) ||
+		!Q_strnicmp(STRING(iszModelName), "models/male", 11) ||
+		!Q_strnicmp(STRING(iszModelName), "models/female", 13) ||
+		!Q_strnicmp(STRING(iszModelName), "models/citizen", 14))
 	{
 		return NULL_STRING;
 	}
@@ -824,6 +862,15 @@ void CNPC_Citizen::OnChangeRunningBehavior( CAI_BehaviorBase *pOldBehavior,  CAI
 void CNPC_Citizen::GatherConditions()
 {
 	BaseClass::GatherConditions();
+
+	if( IsInPlayerSquad() && hl2_episodic.GetBool() )
+	{
+		// Leave the player squad if someone has made me neutral to player.
+		if( IRelationType(UTIL_GetLocalPlayer()) == D_NU )
+		{
+			RemoveFromPlayerSquad();
+		}
+	}
 
 	if ( !SpokeConcept( TLK_JOINPLAYER ) && IsRunningScriptedSceneWithSpeech( this, true ) )
 	{
@@ -999,6 +1046,16 @@ void CNPC_Citizen::BuildScheduleTestBits()
 	if( GetCurSchedule()->HasInterrupt( COND_IDLE_INTERRUPT ) )
 	{
 		SetCustomInterruptCondition( COND_BETTER_WEAPON_AVAILABLE );
+	}
+
+	if( IsMedic() && m_AssaultBehavior.IsRunning() && !IsMoving() )
+	{
+		if( !IsCurSchedule(SCHED_RELOAD) )
+		{
+			SetCustomInterruptCondition( COND_CIT_PLAYERHEALREQUEST );
+		}
+
+		SetCustomInterruptCondition( COND_CIT_COMMANDHEAL );
 	}
 }
 
@@ -1305,7 +1362,19 @@ int CNPC_Citizen::TranslateSchedule( int scheduleType )
 				}
 			}
 			else
-				return SCHED_CITIZEN_RANGE_ATTACK1_RPG;
+			{
+				CBasePlayer *pPlayer = AI_GetSinglePlayer();
+				if ( pPlayer && GetEnemy() && ( ( GetEnemy()->GetAbsOrigin() - 
+					pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
+				{
+					// Don't fire our RPG at an enemy too close to the player
+					return SCHED_STANDOFF;
+				}
+				else
+				{
+					return SCHED_CITIZEN_RANGE_ATTACK1_RPG;
+				}
+			}
 		}
 		break;
 	}
@@ -1391,9 +1460,10 @@ void CNPC_Citizen::StartTask( const Task_t *pTask )
 		break;
 	
 	case TASK_CIT_RPG_AUGER:
+		m_bRPGAvoidPlayer = false;
 		SetWait( 15.0 ); // maximum time auger before giving up
 		break;
-	
+
 	case TASK_CIT_SPEAK_MOURNING:
 		if ( !IsSpeaking() && CanSpeakAfterMyself() )
 		{
@@ -1504,14 +1574,6 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 					return;
 				}
 
-				// Abort if we've lost our enemy
-				if ( !GetEnemy() )
-				{
-					pRPG->StopGuiding();
-					TaskFail( FAIL_NO_ENEMY );
-					return;
-				}
-
 				// Has the RPG detonated?
 				if ( !pRPG->GetMissile() )
 				{
@@ -1520,26 +1582,53 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 					return;
 				}
 
-				// Is our enemy occluded?
-				if ( HasCondition( COND_ENEMY_OCCLUDED ) )
-				{
-					// Turn off the laserdot, but don't stop augering
-					pRPG->StopGuiding();
-					return;
-				}
-				else if ( pRPG->IsGuiding() == false )
-				{
-					pRPG->StartGuiding();
-				}
-
-				// Pull the laserdot towards the target
 				Vector vecLaserPos = pRPG->GetNPCLaserPosition();
-				Vector vecToTarget = (GetEnemy()->BodyTarget(GetAbsOrigin(), false) - vecLaserPos);
-				float distToMove = VectorNormalize( vecToTarget );
-				if ( distToMove > 90 )
-					distToMove = 90;
 
-				vecLaserPos += vecToTarget * distToMove;
+				if ( !m_bRPGAvoidPlayer )
+				{
+					// Abort if we've lost our enemy
+					if ( !GetEnemy() )
+					{
+						pRPG->StopGuiding();
+						TaskFail( FAIL_NO_ENEMY );
+						return;
+					}
+
+					// Is our enemy occluded?
+					if ( HasCondition( COND_ENEMY_OCCLUDED ) )
+					{
+						// Turn off the laserdot, but don't stop augering
+						pRPG->StopGuiding();
+						return;
+					}
+					else if ( pRPG->IsGuiding() == false )
+					{
+						pRPG->StartGuiding();
+					}
+
+					Vector vecEnemyPos = GetEnemy()->BodyTarget(GetAbsOrigin(), false);
+					CBasePlayer *pPlayer = AI_GetSinglePlayer();
+					if ( pPlayer && ( ( vecEnemyPos - pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
+					{
+						m_bRPGAvoidPlayer = true;
+						Speak( TLK_WATCHOUT );
+					}
+					else
+					{
+						// Pull the laserdot towards the target
+						Vector vecToTarget = (vecEnemyPos - vecLaserPos);
+						float distToMove = VectorNormalize( vecToTarget );
+						if ( distToMove > 90 )
+							distToMove = 90;
+						vecLaserPos += vecToTarget * distToMove;
+					}
+				}
+
+				if ( m_bRPGAvoidPlayer )
+				{
+					// Pull the laserdot up
+					vecLaserPos.z += 90;
+				}
 
 				if ( IsWaitFinished() )
 				{
@@ -1555,6 +1644,7 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 				pRPG->UpdateNPCLaserPosition( vecLaserPos );
 			}
 			break;
+
 		default:
 			BaseClass::RunTask( pTask );
 			break;
@@ -1571,6 +1661,11 @@ void CNPC_Citizen::TaskFail( AI_TaskFailureCode_t code )
 	if ( IsCurSchedule( SCHED_CITIZEN_HEAL ) )
 	{
 		m_flPlayerHealTime 	= gpGlobals->curtime + sk_citizen_heal_ally_delay.GetFloat();
+	}
+
+	if( code == FAIL_NO_ROUTE_BLOCKED && m_bNotifyNavFailBlocked )
+	{
+		m_OnNavFailBlocked.FireOutput( this, this );
 	}
 
 	BaseClass::TaskFail( code );
@@ -1642,14 +1737,6 @@ void CNPC_Citizen::HandleAnimEvent( animevent_t *pEvent )
 		BaseClass::HandleAnimEvent( pEvent );
 		break;
 	}
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void CNPC_Citizen::PickupWeapon( CBaseCombatWeapon *pWeapon )
-{
-	BaseClass::PickupWeapon( pWeapon );
-	SpeakIfAllowed( TLK_NEWWEAPON );
 }
 
 //------------------------------------------------------------------------------
@@ -2287,6 +2374,12 @@ void CNPC_Citizen::MoveOrder( const Vector &vecDest, CAI_BaseNPC **Allies, int n
 	if ( !AI_IsSinglePlayer() )
 		return;
 
+	if( hl2_episodic.GetBool() && m_iszDenyCommandConcept != NULL_STRING )
+	{
+		SpeakCommandResponse( STRING(m_iszDenyCommandConcept) );
+		return;
+	}
+
 	CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetLocalPlayer();
 
 	m_AutoSummonTimer.Set( player_squad_autosummon_time.GetFloat() );
@@ -2471,6 +2564,9 @@ void CNPC_Citizen::RemoveFromPlayerSquad()
 		m_FollowBehavior.SetFollowGoal( m_hSavedFollowGoalEnt );
 
 	SetCondition( COND_PLAYER_REMOVED_FROM_SQUAD );
+
+	// Don't evaluate the player squad for 2 seconds. 
+	gm_PlayerSquadEvaluateTimer.Set( 2.0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -2539,8 +2635,9 @@ void CNPC_Citizen::UpdatePlayerSquad()
 
 			CNPC_Citizen *pCitizen = assert_cast<CNPC_Citizen *>(pPlayerSquadMember);
 
-			if ( pCitizen->m_FollowBehavior.GetFollowTarget() &&
-				!pCitizen->m_FollowBehavior.FollowTargetVisible() && 
+			if ( !pCitizen->m_bNeverLeavePlayerSquad &&
+				 pCitizen->m_FollowBehavior.GetFollowTarget() &&
+				 !pCitizen->m_FollowBehavior.FollowTargetVisible() && 
 				 pCitizen->m_FollowBehavior.GetNumFailedFollowAttempts() > 0 && 
 				 gpGlobals->curtime - pCitizen->m_FollowBehavior.GetTimeFailFollowStarted() > 20 &&
 				 ( fabsf(( pCitizen->m_FollowBehavior.GetFollowTarget()->GetAbsOrigin().z - pCitizen->GetAbsOrigin().z )) > 196 ||
@@ -2935,7 +3032,7 @@ struct SquadMemberInfo_t
 	float			distSq;
 };
 
-int SquadSortFunc( const SquadMemberInfo_t *pLeft, const SquadMemberInfo_t *pRight )
+int __cdecl SquadSortFunc( const SquadMemberInfo_t *pLeft, const SquadMemberInfo_t *pRight )
 {
 	if ( pLeft->bSeesPlayer && !pRight->bSeesPlayer )
 	{
@@ -3097,27 +3194,11 @@ bool CNPC_Citizen::HandleInteraction(int interactionType, void *data, CBaseComba
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Returns the activity for the given hint type.
-//-----------------------------------------------------------------------------
-Activity CNPC_Citizen::GetHintActivity( short sHintType, Activity HintsActivity )
-{
-	if ( sHintType == HINT_HEALTH_KIT )
-	{
-		// TODO: We don't have an activity for this, so just idle for a bit
-		return ACT_IDLE_ANGRY;
-	}
-
-	return BaseClass::GetHintActivity( sHintType, HintsActivity );
-}
-
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CNPC_Citizen::FValidateHintType( CAI_Hint *pHint )
 {
 	switch( pHint->HintType() )
 	{
-	case HINT_URBAN_SHELTER:
-	case HINT_HEALTH_KIT:
 	case HINT_WORLD_VISUALLY_INTERESTING:
 		return true;
 		break;
@@ -3136,9 +3217,12 @@ bool CNPC_Citizen::CanHeal()
 	if ( !IsMedic() && !IsAmmoResupplier() )
 		return false;
 
-	// If I'm not armed, my priority should be to arm myself.
-	if ( IsMedic() && !GetActiveWeapon() )
-		return false;
+	if( !hl2_episodic.GetBool() )
+	{
+		// If I'm not armed, my priority should be to arm myself.
+		if ( IsMedic() && !GetActiveWeapon() )
+			return false;
+	}
 
 	if ( IsInAScript() || (m_NPCState == NPC_STATE_SCRIPT) )
 		return false;
@@ -3161,12 +3245,10 @@ bool CNPC_Citizen::ShouldHealTarget( CBaseEntity *pTarget, bool bActiveUse )
 
 	bool bTargetIsPlayer = pTarget->IsPlayer();
 
-	// Don't heal or give ammo to players in vehicles
-	if ( bTargetIsPlayer )
-	{
-		if ( ToBasePlayer(pTarget)->IsInAVehicle() )
-			return false;
-	}
+	// Don't heal or give ammo to targets in vehicles
+	CBaseCombatCharacter *pCCTarget = pTarget->MyCombatCharacterPointer();
+	if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
+		return false;
 
 	if ( IsMedic() )
 	{
@@ -3349,34 +3431,9 @@ void CNPC_Citizen::InputStopPatrolling( inputdata_t &inputdata )
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void CNPC_Citizen::InputGiveWeapon( inputdata_t &inputdata )
+void CNPC_Citizen::OnGivenWeapon( CBaseCombatWeapon *pNewWeapon )
 {
-	// Give the citizen the specified weapon
-	string_t iszWeaponName = inputdata.value.StringID();
-	if ( iszWeaponName != NULL_STRING )
-	{
-		CBaseCombatWeapon *pWeapon = Weapon_Create( STRING(iszWeaponName) );
-		if ( !pWeapon )
-		{
-			Warning( "Couldn't create weapon specified in citizen %s's GiveWeapon input: %s\n", STRING(GetEntityName()), STRING(iszWeaponName) );
-			return;
-		}
-
-		// If I have a weapon already, drop it
-		if ( GetActiveWeapon() )
-		{
-			Weapon_Drop( GetActiveWeapon() );
-		}
-
-		// If I have a name, make my weapon match it with "_weapon" appended
-		if ( GetEntityName() != NULL_STRING )
-		{
-			pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", GetEntityName())) );
-		}
-		Weapon_Equip( pWeapon );
-
-		FixupMattWeapon();
-	}
+	FixupMattWeapon();
 }
 
 //------------------------------------------------------------------------------
@@ -3430,9 +3487,9 @@ void CNPC_Citizen::InputSpeakIdleResponse( inputdata_t &inputdata )
 	SpeakIfAllowed( TLK_ANSWER, NULL, true );
 }
 
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void CNPC_Citizen::DeathSound()
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPC_Citizen::DeathSound( const CTakeDamageInfo &info )
 {
 	// Sentences don't play on dead NPCs
 	SentenceStop();
@@ -3442,19 +3499,8 @@ void CNPC_Citizen::DeathSound()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void CNPC_Citizen::FearSound()
+void CNPC_Citizen::FearSound( void )
 {
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if this citizen responded to the requested concept
-//-----------------------------------------------------------------------------
-bool CNPC_Citizen::RespondedTo( const char *ResponseConcept )
-{
-	if ( SpeakIfAllowed( ResponseConcept ) )
-		return true;
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -3467,11 +3513,7 @@ bool CNPC_Citizen::UseSemaphore( void )
 	if ( HasSpawnFlags(SF_CITIZEN_IGNORE_SEMAPHORE) )
 		return false;
 
-	// If we're responding to a +USE, don't grab the semaphore
-	if ( m_bDontUseSemaphore )
-		return false;
-
-	return true;
+	return BaseClass::UseSemaphore();
 }
 
 //-----------------------------------------------------------------------------
@@ -3502,9 +3544,6 @@ AI_BEGIN_CUSTOM_NPC( npc_citizen, CNPC_Citizen )
 	//Events
 	DECLARE_ANIMEVENT( AE_CITIZEN_GET_PACKAGE )
 
-	// AI Interaction for being hit by a physics object
-	DECLARE_INTERACTION(g_interactionHitByPlayerThrownPhysObj)
-
 	//=========================================================
 	// > SCHED_SCI_HEAL
 	//=========================================================
@@ -3515,6 +3554,7 @@ AI_BEGIN_CUSTOM_NPC( npc_citizen, CNPC_Citizen )
 		"	Tasks"
 		"		TASK_GET_PATH_TO_TARGET				0"
 		"		TASK_MOVE_TO_TARGET_RANGE			50"
+		"		TASK_STOP_MOVING					0"
 		"		TASK_FACE_IDEAL						0"
 //		"		TASK_SAY_HEAL						0"
 //		"		TASK_PLAY_SEQUENCE_FACE_TARGET		ACTIVITY:ACT_ARM"
@@ -3535,7 +3575,6 @@ AI_BEGIN_CUSTOM_NPC( npc_citizen, CNPC_Citizen )
 		"		TASK_STOP_MOVING			0"
 		"		TASK_FACE_ENEMY				0"
 		"		TASK_ANNOUNCE_ATTACK		1"	// 1 = primary attack
-		"		TASK_WAIT					1"
 		"		TASK_RANGE_ATTACK1			0"
 		"		TASK_CIT_RPG_AUGER			1"
 		""
@@ -3639,6 +3678,10 @@ AI_END_CUSTOM_NPC()
 
 //==================================================================================================================
 // CITIZEN PLAYER-RESPONSE SYSTEM
+//
+// NOTE: This system is obsolete, and left here for legacy support.
+//		 It has been superseded by the ai_eventresponse system.
+//
 //==================================================================================================================
 CHandle<CCitizenResponseSystem>	g_pCitizenResponseSystem = NULL;
 
@@ -3748,7 +3791,7 @@ void CCitizenResponseSystem::ResponseThink()
 					}
 
 					// Found one?
-					if ( pNearestCitizen && ((CNPC_Citizen*)pNearestCitizen)->RespondedTo( CitizenResponseConcepts[i] ) )
+					if ( pNearestCitizen && ((CNPC_Citizen*)pNearestCitizen)->RespondedTo( CitizenResponseConcepts[i], false ) )
 					{
 						m_flResponseAddedTime[i] = 0;
 						m_flNextResponseTime = gpGlobals->curtime + CITIZEN_RESPONSE_REFIRE_TIME;
@@ -3842,7 +3885,7 @@ int CNPC_Citizen::DrawDebugTextOverlays( void )
 		char tempstr[512];
 
 		Q_snprintf(tempstr,sizeof(tempstr),"Expression type: %s", szExpressionTypes[m_ExpressionType]);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;

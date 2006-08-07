@@ -53,6 +53,8 @@ public:
 	void TurnOff( void );
 	void Toggle( void );
 	
+	const char *GetDecalName( void ){ return STRING( m_iszDecal );}
+
 	inline bool ServerSide( void )
 	{
 		if ( m_life == 0 && !HasSpawnFlags(SF_BEAM_RING) )
@@ -84,6 +86,8 @@ public:
 	string_t	m_iFilterName;
 	EHANDLE		m_hFilter;
 
+	string_t		m_iszDecal;
+
 	COutputEvent	m_OnTouchedByEntity;
 };
 
@@ -106,6 +110,7 @@ BEGIN_DATADESC( CEnvBeam )
 	DEFINE_KEYFIELD( m_radius, FIELD_FLOAT, "Radius" ),
 	DEFINE_KEYFIELD( m_TouchType, FIELD_INTEGER, "TouchType" ),
 	DEFINE_KEYFIELD( m_iFilterName,	FIELD_STRING,	"filtername" ),
+	DEFINE_KEYFIELD( m_iszDecal, FIELD_STRING, "decalname" ),
 
 	DEFINE_FIELD( m_hFilter,	FIELD_EHANDLE ),
 
@@ -220,7 +225,7 @@ void CEnvBeam::Activate( void )
 	// Get a handle to my filter entity if there is one
 	if (m_iFilterName != NULL_STRING)
 	{
-		m_hFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iFilterName, NULL ));
+		m_hFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iFilterName ));
 	}
 
 	BaseClass::Activate();
@@ -535,7 +540,7 @@ bool CEnvBeam::PassesTouchFilters(CBaseEntity *pOther)
 	if( fPassedSoFar )
 	{
 		CBaseFilter* pFilter = (CBaseFilter*)(m_hFilter.Get());
-		return (!pFilter) ? true : pFilter->PassesFilter(pOther);
+		return (!pFilter) ? true : pFilter->PassesFilter( this, pOther );
 	}
 
 	return false;
@@ -695,8 +700,8 @@ void CEnvBeam::RandomPoint( const Vector &vecSrc )
 //-----------------------------------------------------------------------------
 void CEnvBeam::BeamUpdateVars( void )
 {
-	CBaseEntity *pStart = gEntList.FindEntityByName( NULL, m_iszStartEntity, NULL );
-	CBaseEntity *pEnd = gEntList.FindEntityByName( NULL, m_iszEndEntity, NULL );
+	CBaseEntity *pStart = gEntList.FindEntityByName( NULL, m_iszStartEntity );
+	CBaseEntity *pEnd = gEntList.FindEntityByName( NULL, m_iszEndEntity );
 
 	if (( pStart == NULL ) || ( pEnd == NULL ))
 	{
@@ -712,7 +717,7 @@ void CEnvBeam::BeamUpdateVars( void )
 	// because SetAbsStartPos actually sets the entity's origin.
 	if ( ( pEnd == this ) && ( pStart != this ) )
 	{
-		Warning("env_beams cannot have the end entity be the beam itself\n"
+		DevMsg("env_beams cannot have the end entity be the beam itself\n"
 			"unless the start entity is also the beam itself!\n" );
 		Assert(0);
 	}

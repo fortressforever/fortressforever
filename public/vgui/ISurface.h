@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef ISURFACE_H
 #define ISURFACE_H
@@ -14,10 +14,13 @@
 
 #include <vgui/VGUI.h>
 #include <vgui/IHTML.h> // CreateHTML, PaintHTML 
-#include "interface.h"
+#include "tier1/interface.h"
+#include "bitmap/imageformat.h"
 
 #include "appframework/IAppSystem.h"
 #include "Vector2D.h"  // must be before the namespace line
+
+#include "IVguiMatInfo.h"
 
 #ifdef CreateFont
 #undef CreateFont
@@ -32,6 +35,7 @@ class Color;
 namespace vgui
 {
 
+class IImage;
 class Image;
 class Point;
 
@@ -112,7 +116,7 @@ struct IntRect
 //-----------------------------------------------------------------------------
 // Purpose: Wraps contextless windows system functions
 //-----------------------------------------------------------------------------
-class ISurface : public IBaseInterface, public IAppSystem
+class ISurface : public IAppSystem
 {
 public:
 	// call to Shutdown surface; surface can no longer be used after this is called
@@ -163,6 +167,12 @@ public:
 	virtual bool IsTextureIDValid(int id) = 0;
 
 	virtual int CreateNewTextureID( bool procedural = false ) = 0;
+#ifdef _XBOX
+	virtual void DestroyTextureID( int id ) = 0;
+	virtual bool IsCachedForRendering( int id, bool bSyncWait ) = 0;
+	virtual void CopyFrontBufferToBackBuffer() = 0;
+	virtual void UncacheUnusedMaterials() = 0;
+#endif
 
 	virtual void GetScreenSize(int &wide, int &tall) = 0;
 	virtual void SetAsTopMost(VPANEL panel, bool state) = 0;
@@ -233,11 +243,13 @@ public:
 		FONTFLAG_ADDITIVE		= 0x100,
 		FONTFLAG_OUTLINE		= 0x200,
 		FONTFLAG_CUSTOM			= 0x400,		// custom generated font - never fall back to asian compatibility mode
+		FONTFLAG_BITMAP			= 0x800,		// compiled bitmap font - no fallbacks
 	};
+
 	virtual bool SetFontGlyphSet(HFont font, const char *windowsFontName, int tall, int weight, int blur, int scanlines, int flags) = 0;
+
 	// adds a custom font file (only supports true type font files (.ttf) for now)
 	virtual bool AddCustomFontFile(const char *fontFileName) = 0;
-
 
 	// returns the details about the font
 	virtual int GetFontTall(HFont font) = 0;
@@ -311,10 +323,35 @@ public:
 
 	// video mode changing
 	virtual void OnScreenSizeChanged( int nOldWidth, int nOldHeight ) = 0;
+#if !defined( _XBOX )
+	virtual vgui::HCursor	CreateCursorFromFile( char const *curOrAniFile, char const *pPathID = 0 ) = 0;
+#endif
+	// create IVguiMatInfo object ( IMaterial wrapper in VguiMatSurface, NULL in CWin32Surface )
+	virtual IVguiMatInfo *DrawGetTextureMatInfoFactory( int id ) = 0;
+
+	virtual void PaintTraverseEx(VPANEL panel, bool paintPopups = false ) = 0;
+
+	virtual float GetZPos() const = 0;
+
+	// From the Xbox
+	virtual void SetPanelForInput( VPANEL vpanel ) = 0;
+	virtual void DrawFilledRectFade( int x0, int y0, int x1, int y1, unsigned int alpha0, unsigned int alpha1, bool bHorizontal ) = 0;
+	virtual void DrawSetTextureRGBAEx(int id, const unsigned char *rgba, int wide, int tall, ImageFormat imageFormat ) = 0;
+	virtual void DrawSetTextScale(float sx, float sy) = 0;
+	virtual bool SetBitmapFontGlyphSet(HFont font, const char *windowsFontName, float scalex, float scaley, int flags) = 0;
+	// adds a bitmap font file
+	virtual bool AddBitmapFontFile(const char *fontFileName) = 0;
+	// sets a symbol for the bitmap font
+	virtual void SetBitmapFontName( const char *pName, const char *pFontFilename ) = 0;
+	// gets the bitmap font filename
+	virtual const char *GetBitmapFontName( const char *pName ) = 0;
+
+	virtual IImage *GetIconImageForFullPath( char const *pFullPath ) = 0;
+	virtual void DrawUnicodeString( const wchar_t *pwString, FontDrawType_t drawType = FONT_DRAW_DEFAULT ) = 0;
 };
 
 }
 
-#define VGUI_SURFACE_INTERFACE_VERSION "VGUI_Surface028"
+#define VGUI_SURFACE_INTERFACE_VERSION "VGUI_Surface030"
 
 #endif // ISURFACE_H

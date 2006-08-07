@@ -116,6 +116,17 @@ float CAI_Path::GetPathDistanceToGoal( const Vector &startPos )
 
 //-----------------------------------------------------------------------------
 
+Activity CAI_Path::SetMovementActivity(Activity activity)
+{ 
+	Assert( activity != ACT_RESET && activity != ACT_INVALID );
+	//Msg("Set movement to %s\n", ActivityList_NameForIndex(activity) );
+
+	m_sequence = ACT_INVALID;
+	return (m_activity = activity);	
+}
+
+//-----------------------------------------------------------------------------
+
 Activity CAI_Path::GetArrivalActivity( ) const
 {
 	if ( !m_Waypoints.IsEmpty() )

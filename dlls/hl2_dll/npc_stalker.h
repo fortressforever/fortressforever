@@ -13,16 +13,18 @@
 
 #include "ai_basenpc.h"
 #include "entityoutput.h"
-
+#include "ai_behavior.h"
+#include "ai_behavior_actbusy.h"
 
 class CBeam;
 class CSprite;
 class CScriptedTarget;
 
+typedef CAI_BehaviorHost<CAI_BaseNPC> CAI_BaseStalker;
 
-class CNPC_Stalker : public CAI_BaseNPC
+class CNPC_Stalker : public CAI_BaseStalker
 {
-	DECLARE_CLASS( CNPC_Stalker, CAI_BaseNPC );
+	DECLARE_CLASS( CNPC_Stalker, CAI_BaseStalker );
 
 public:
 	float			m_flNextAttackSoundTime;
@@ -44,21 +46,16 @@ public:
 	float				m_bPlayingHitFlesh;
 	CBeam*				m_pBeam;
 	CSprite*			m_pLightGlow;
+	int					m_iPlayerAggression;
+	float				m_flNextScreamTime;
+
 	void				KillAttackBeam(void);
 	void				DrawAttackBeam(void);
 	void				CalcBeamPosition(void);
 	Vector				LaserStartPosition(Vector vStalkerPos);
 
-
-	// ------------------------------
-	//	Scripted Target Burns
-	// ------------------------------
-	CScriptedTarget*	m_pScriptedTarget;		// My current scripted target
-	void				SetScriptedTarget( CScriptedTarget *pScriptedTarget );
-
 	Vector				m_vLaserCurPos;			// Last position successfully burned
 	bool				InnateWeaponLOSCondition( const Vector &ownerPos, const Vector &targetPos, bool bSetConditions );
-	Vector				ScriptedBurnPosition(void);
 	
 	// ------------------------------
 	//	Dormancy
@@ -69,8 +66,13 @@ public:
 public:
 	void			Spawn( void );
 	void			Precache( void );
+	bool			CreateBehaviors();
 	float			MaxYawSpeed( void );
 	Class_T			Classify ( void );
+
+	void			PrescheduleThink();
+
+	bool			IsValidEnemy( CBaseEntity *pEnemy );
 	
 	void			StartTask( const Task_t *pTask );
 	void			RunTask( const Task_t *pTask );
@@ -80,6 +82,7 @@ public:
 	void			OnScheduleChange();
 
 	void			StalkerThink(void);
+	void			NotifyDeadFriend( CBaseEntity *pFriend );
 
 	int				MeleeAttack1Conditions ( float flDot, float flDist );
 	int				RangeAttack1Conditions ( float flDot, float flDist );
@@ -90,10 +93,9 @@ public:
 	float			GetHintDelay( short sHintType );
 
 	void			IdleSound( void );
-	void			DeathSound( void );
-	void			PainSound( void );
+	void			DeathSound( const CTakeDamageInfo &info );
+	void			PainSound( const CTakeDamageInfo &info );
 
-	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 	void			Event_Killed( const CTakeDamageInfo &info );
 	void			DoSmokeEffect( const Vector &position );
 
@@ -105,6 +107,9 @@ public:
 
 	DECLARE_DATADESC();
 	DEFINE_CUSTOM_AI;
+
+private:
+	CAI_ActBusyBehavior		m_ActBusyBehavior;
 };
 
 #endif // NPC_STALKER_H

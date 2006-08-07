@@ -13,6 +13,9 @@
 #include "view_shared.h"
 #include "texture_group_names.h"
 #include "vstdlib/icommandline.h"
+#include "keyvalues.h"
+#include "ScreenSpaceEffects.h"
+#include "materialsystem/imaterialsystemhardwareconfig.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -179,5 +182,116 @@ void C_EnvScreenOverlay::ClientThink( void )
 	{
 		m_iCurrentOverlay++;
 		StartCurrentOverlay();
+	}
+}
+
+// Effect types
+enum 
+{
+	SCREENEFFECT_EP2_ADVISOR_STUN,
+	SCREENEFFECT_EP1_INTRO,
+};
+
+// ============================================================================
+//  Screenspace effect
+// ============================================================================
+
+class C_EnvScreenEffect : public C_BaseEntity
+{
+	DECLARE_CLASS( C_EnvScreenEffect, C_BaseEntity );
+public:
+	DECLARE_CLIENTCLASS();
+
+	virtual void ReceiveMessage( int classID, bf_read &msg );
+
+private:
+	float	m_flDuration;
+	int		m_nType;
+};
+
+IMPLEMENT_CLIENTCLASS_DT( C_EnvScreenEffect, DT_EnvScreenEffect, CEnvScreenEffect )
+	RecvPropFloat( RECVINFO( m_flDuration ) ),
+	RecvPropInt( RECVINFO( m_nType ) ),
+END_RECV_TABLE()
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : classID - 
+//			&msg - 
+//-----------------------------------------------------------------------------
+void C_EnvScreenEffect::ReceiveMessage( int classID, bf_read &msg )
+{
+	// Make sure our IDs match
+	if ( classID != GetClientClass()->m_ClassID )
+	{
+		// Message is for subclass
+		BaseClass::ReceiveMessage( classID, msg );
+		return;
+	}
+
+	int messageType = msg.ReadByte();
+	switch( messageType )
+	{
+		// Effect turning on
+		case 0: // FIXME: Declare
+			{		
+				// Create a keyvalue block to set these params
+				KeyValues *pKeys = new KeyValues( "keys" );
+				if ( pKeys == NULL )
+					return;
+
+				if ( m_nType == SCREENEFFECT_EP1_INTRO )
+				{
+					if( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80 )
+					{
+						return;
+					}
+
+					// Set our keys
+					pKeys->SetFloat( "duration", m_flDuration );
+					pKeys->SetInt( "fadeout", 0 );
+
+					g_pScreenSpaceEffects->SetScreenSpaceEffectParams( "episodic_intro", pKeys );
+					g_pScreenSpaceEffects->EnableScreenSpaceEffect( "episodic_intro" );
+				}
+				else if ( m_nType == SCREENEFFECT_EP2_ADVISOR_STUN )
+				{
+					// Set our keys
+					pKeys->SetFloat( "duration", m_flDuration );
+
+					g_pScreenSpaceEffects->SetScreenSpaceEffectParams( "episodic_stun", pKeys );
+					g_pScreenSpaceEffects->EnableScreenSpaceEffect( "episodic_stun" );
+				}
+                
+				pKeys->deleteThis();
+			}
+			break;
+
+		// Effect turning off
+		case 1:	// FIXME: Declare
+			
+			if ( m_nType == SCREENEFFECT_EP1_INTRO )
+			{
+				if( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80 )
+				{
+					return;
+				}
+				// Create a keyvalue block to set these params
+				KeyValues *pKeys = new KeyValues( "keys" );
+				if ( pKeys == NULL )
+					return;
+
+				// Set our keys
+				pKeys->SetFloat( "duration", m_flDuration );
+				pKeys->SetInt( "fadeout", 1 );
+
+				g_pScreenSpaceEffects->SetScreenSpaceEffectParams( "episodic_intro", pKeys );
+			}
+			else if ( m_nType == SCREENEFFECT_EP2_ADVISOR_STUN )
+			{
+				g_pScreenSpaceEffects->DisableScreenSpaceEffect( "episodic_stun" );
+			}
+
+			break;
 	}
 }

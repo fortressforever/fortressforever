@@ -29,10 +29,14 @@ enum
 	MENUBARINDENT = 4, // indent from top and bottom of panel.
 };
 
+DECLARE_BUILD_FACTORY( MenuBar );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-MenuBar::MenuBar(Panel *parent, const char *panelName) : Panel(parent, panelName)
+MenuBar::MenuBar(Panel *parent, const char *panelName) : 
+	Panel(parent, panelName),
+	m_nRightEdge( 0 )
 {
 }
 
@@ -164,6 +168,9 @@ void MenuBar::ApplySchemeSettings(IScheme *pScheme)
 	// get the borders we need
 	SetBorder(pScheme->GetBorder("ButtonBorder"));
 
+	// get the background color
+	SetBgColor(pScheme->GetColor( "MenuBar.BgColor", GetBgColor() ));
+
 }
 
 
@@ -188,8 +195,20 @@ void MenuBar::PerformLayout()
 
 		x += nWide + MENUBARINDENT;
 	}
+
+	m_nRightEdge = x;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Get the size of the menus in the bar (so other children can be added to menu bar)
+// Input  : w - 
+//			int&h - 
+//-----------------------------------------------------------------------------
+void MenuBar::GetContentSize( int& w, int&h )
+{
+	w = m_nRightEdge + 2;
+	h = GetTall();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Message map

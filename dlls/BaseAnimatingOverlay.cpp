@@ -22,14 +22,6 @@
 extern ConVar ai_sequence_debug;
 
 
-// Do this so we can initialize the CAnimationLayers while they sit in the 
-void UtlVector_InitializeAllocatedElements( CAnimationLayer *pBase, int count )
-{
-	for ( int i=0; i < count; i++ )
-		pBase[i].Init();
-}
-
-
 BEGIN_SIMPLE_DATADESC( CAnimationLayer )
 
 	DEFINE_FIELD( m_fFlags, FIELD_INTEGER ),
@@ -49,6 +41,8 @@ BEGIN_SIMPLE_DATADESC( CAnimationLayer )
 	DEFINE_FIELD( m_nOrder, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flLastEventCheck, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flLastAccess, FIELD_TIME ),
+	DEFINE_FIELD( m_flLayerAnimtime, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flLayerFadeOuttime, FIELD_FLOAT ),
 
 END_DATADESC()
 
@@ -62,19 +56,16 @@ BEGIN_DATADESC( CBaseAnimatingOverlay )
 
 END_DATADESC()
 
-BEGIN_PREDICTION_DATA( CBaseAnimatingOverlay )
-END_PREDICTION_DATA()
-
 
 #define ORDER_BITS			4
 #define WEIGHT_BITS			8
 
 BEGIN_SEND_TABLE_NOBASE(CAnimationLayer, DT_Animationlayer)
-	SendPropInt		(SENDINFO_NAME(m_nSequence,sequence),	ANIMATION_SEQUENCE_BITS,SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_flCycle,cycle),		ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_flPrevCycle,prevcycle),ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_flWeight,weight),		WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_nOrder,order),			ORDER_BITS,				SPROP_UNSIGNED),
+	SendPropInt		(SENDINFO(m_nSequence),		ANIMATION_SEQUENCE_BITS,SPROP_UNSIGNED),
+	SendPropFloat	(SENDINFO(m_flCycle),		ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
+	SendPropFloat	(SENDINFO(m_flPrevCycle),	ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
+	SendPropFloat	(SENDINFO(m_flWeight),		WEIGHT_BITS,			0,	0.0f,	1.0f),
+	SendPropInt		(SENDINFO(m_nOrder),		ORDER_BITS,				SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 
@@ -86,51 +77,6 @@ BEGIN_SEND_TABLE_NOBASE( CBaseAnimatingOverlay, DT_OverlayVars )
 END_SEND_TABLE()
 
 
-/*
-BEGIN_SEND_TABLE( CBaseAnimatingOverlay, DT_OverlayVars )
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[0].m_nSequence,sequence0),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[0].m_flCycle,cycle0),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[0].m_flPrevCycle,prevcycle0),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[0].m_flWeight,weight0),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[0].m_nOrder,order0),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[1].m_nSequence,sequence1),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[1].m_flCycle,cycle1),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[1].m_flPrevCycle,prevcycle1),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[1].m_flWeight,weight1),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[1].m_nOrder,order1),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[2].m_nSequence,sequence2),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[2].m_flCycle,cycle2),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[2].m_flPrevCycle,prevcycle2),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[2].m_flWeight,weight2),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[2].m_nOrder,order2),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[3].m_nSequence,sequence3),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[3].m_flCycle,cycle3),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[3].m_flPrevCycle,prevcycle3),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[3].m_flWeight,weight3),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[3].m_nOrder,order3),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[4].m_nSequence,sequence4),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[4].m_flCycle,cycle4),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[4].m_flPrevCycle,prevcycle4),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[4].m_flWeight,weight4),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[4].m_nOrder,order4),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[5].m_nSequence,sequence5),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[5].m_flCycle,cycle5),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[5].m_flPrevCycle,prevcycle5),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[5].m_flWeight,weight5),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[5].m_nOrder,order5),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[6].m_nSequence,sequence6),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[6].m_flCycle,cycle6),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[6].m_flPrevCycle,prevcycle6),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[6].m_flWeight,weight6),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[6].m_nOrder,order6),					ORDER_BITS,				SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[7].m_nSequence,sequence7),				ANIMATION_SEQUENCE_BITS,			SPROP_UNSIGNED),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[7].m_flCycle,cycle7),					ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[7].m_flPrevCycle,prevcycle7),			ANIMATION_CYCLE_BITS,	SPROP_ROUNDDOWN,	0.0f,   1.0f),
-	SendPropFloat	(SENDINFO_NAME(m_AnimOverlay[7].m_flWeight,weight7),				WEIGHT_BITS,			0,	0.0f,	1.0f),
-	SendPropInt		(SENDINFO_NAME(m_AnimOverlay[7].m_nOrder,order7),					ORDER_BITS,				SPROP_UNSIGNED),
-END_SEND_TABLE()
-*/
-
 IMPLEMENT_SERVERCLASS_ST( CBaseAnimatingOverlay, DT_BaseAnimatingOverlay )
 	// These are in their own separate data table so CCSPlayer can exclude all of these.
 	SendPropDataTable( "overlay_vars", 0, &REFERENCE_SEND_TABLE( DT_OverlayVars ) )
@@ -141,12 +87,13 @@ END_SEND_TABLE()
 
 CAnimationLayer::CAnimationLayer( )
 {
-	Init( );
+	Init( NULL );
 }
 
 
-void CAnimationLayer::Init( )
+void CAnimationLayer::Init( CBaseAnimatingOverlay *pOverlay )
 {
+	m_pOwnerEntity = pOverlay;
 	m_fFlags = 0;
 	m_flWeight = 0;
 	m_flCycle = 0;
@@ -155,11 +102,13 @@ void CAnimationLayer::Init( )
 	m_nActivity = ACT_INVALID;
 	m_nSequence = 0;
 	m_nPriority = 0;
-	m_nOrder = CBaseAnimatingOverlay::MAX_OVERLAYS;
+	m_nOrder.Set( CBaseAnimatingOverlay::MAX_OVERLAYS );
 	m_flKillRate = 100.0;
 	m_flKillDelay = 0.0;
 	m_flPlaybackRate = 1.0;
 	m_flLastAccess = gpGlobals->curtime;
+	m_flLayerAnimtime = 0;
+	m_flLayerFadeOuttime = 0;
 }
 
 
@@ -270,10 +219,11 @@ void CBaseAnimatingOverlay::VerifyOrder( void )
 	}
 
 	// make sure they're sequential
-	for ( i = 0; i <= maxOrder; i++ )
-	{
-		Assert( layer[i] != MAX_OVERLAYS);
-	}
+	// Aim layers are allowed to have gaps, and we are moving aim blending to server
+//	for ( i = 0; i <= maxOrder; i++ )
+//	{
+//		Assert( layer[i] != MAX_OVERLAYS);
+//	}
 
 	/*
 	for ( i = 0; i < MAX_OVERLAYS; i++ )
@@ -290,7 +240,7 @@ void CBaseAnimatingOverlay::VerifyOrder( void )
 				m_AnimOverlay[ j ].IsKillMe(),
 				m_AnimOverlay[ j ].m_flKillDelay
 				);
-			NDebugOverlay::EntityText( entindex(), i, tempstr, 0.1 );
+			EntityText( i, tempstr, 0.1 );
 		}
 	}
 	*/
@@ -315,53 +265,55 @@ void CBaseAnimatingOverlay::StudioFrameAdvance ()
 
 	for ( int i = 0; i < m_AnimOverlay.Count(); i++ )
 	{
-		if (m_AnimOverlay[ i ].IsActive())
+		CAnimationLayer *pLayer = &m_AnimOverlay[i];
+		
+		if (pLayer->IsActive())
 		{
 			// Assert( !m_AnimOverlay[ i ].IsAbandoned() );
-			if (m_AnimOverlay[ i ].IsKillMe())
+			if (pLayer->IsKillMe())
 			{
-				if (m_AnimOverlay[ i ].m_flKillDelay > 0)
+				if (pLayer->m_flKillDelay > 0)
 				{
-					m_AnimOverlay[ i ].m_flKillDelay -= flAdvance;
-					m_AnimOverlay[ i ].m_flKillDelay = clamp( 	m_AnimOverlay[ i ].m_flKillDelay, 0.0, 1.0 );
+					pLayer->m_flKillDelay -= flAdvance;
+					pLayer->m_flKillDelay = clamp( 	pLayer->m_flKillDelay, 0.0, 1.0 );
 				}
-				else if (m_AnimOverlay[ i ].m_flWeight != 0.0f)
+				else if (pLayer->m_flWeight != 0.0f)
 				{
 					// give it at least one frame advance cycle to propagate 0.0 to client
-					m_AnimOverlay[ i ].m_flWeight -= m_AnimOverlay[ i ].m_flKillRate * flAdvance;
-					m_AnimOverlay[ i ].m_flWeight = clamp( 	m_AnimOverlay[ i ].m_flWeight, 0.0, 1.0 );
+					pLayer->m_flWeight -= pLayer->m_flKillRate * flAdvance;
+					pLayer->m_flWeight = clamp( 	pLayer->m_flWeight, 0.0, 1.0 );
 				}
 				else
 				{
 					// shift the other layers down in order
 					if (ai_sequence_debug.GetBool() == true && m_debugOverlays & OVERLAY_NPC_SELECTED_BIT)
 					{
-						Msg("removing %d (%d): %s : %5.3f (%.3f)\n", i, m_AnimOverlay[ i ].m_nOrder, GetSequenceName( m_AnimOverlay[ i ].m_nSequence ), m_AnimOverlay[ i ].m_flCycle, m_AnimOverlay[ i ].m_flWeight );
+						Msg("removing %d (%d): %s : %5.3f (%.3f)\n", i, pLayer->m_nOrder.Get(), GetSequenceName( pLayer->m_nSequence ), pLayer->m_flCycle.Get(), pLayer->m_flWeight.Get() );
 					}
 					FastRemoveLayer( i );
 					// needs at least one thing cycle dead to trigger sequence change
-					m_AnimOverlay[ i ].Dying();
+					pLayer->Dying();
 					continue;
 				}
 			}
 
-			m_AnimOverlay[ i ].StudioFrameAdvance( flAdvance, this );
-			if ( m_AnimOverlay[ i ].m_bSequenceFinished && (m_AnimOverlay[ i ].IsAutokill()) )
+			pLayer->StudioFrameAdvance( flAdvance, this );
+			if ( pLayer->m_bSequenceFinished && (pLayer->IsAutokill()) )
 			{
-				m_AnimOverlay[ i ].m_flWeight = 0.0f;
-				m_AnimOverlay[ i ].KillMe();
+				pLayer->m_flWeight = 0.0f;
+				pLayer->KillMe();
 			}
 		}
-		else if (m_AnimOverlay[ i ].IsDying())
+		else if (pLayer->IsDying())
 		{
-			m_AnimOverlay[ i ].Dead();	
+			pLayer->Dead();	
 		}
-		else if (m_AnimOverlay[ i ].m_flWeight > 0.0)
+		else if (pLayer->m_flWeight > 0.0)
 		{
-			// a layer that's not supposed to be active but is.
-			Assert( 0 );
-			m_AnimOverlay[ i ].Init();
-			m_AnimOverlay[ i ].Dying();
+			// Now that the server blends, it is turning off layers all the time.  Having a weight left over
+			// when you're no longer marked as active is now harmless and commonplace.  Just clean up.
+			pLayer->Init( this );
+			pLayer->Dying();
 		}
 	}
 
@@ -377,7 +329,7 @@ void CBaseAnimatingOverlay::StudioFrameAdvance ()
 					Msg(" %d abandoned %.2f (%.2f)\n", i, gpGlobals->curtime, m_AnimOverlay[ i ].m_flLastAccess );
 				}
 				*/
-				Msg(" %d (%d): %s : %5.3f (%.3f)\n", i, m_AnimOverlay[ i ].m_nOrder, GetSequenceName( m_AnimOverlay[ i ].m_nSequence ), m_AnimOverlay[ i ].m_flCycle, m_AnimOverlay[ i ].m_flWeight );
+				Msg(" %d (%d): %s : %5.3f (%.3f)\n", i, m_AnimOverlay[ i ].m_nOrder.Get(), GetSequenceName( m_AnimOverlay[ i ].m_nSequence ), m_AnimOverlay[ i ].m_flCycle.Get(), m_AnimOverlay[ i ].m_flWeight.Get() );
 			}
 		}
 	}
@@ -407,11 +359,16 @@ void CAnimationLayer::DispatchAnimEvents( CBaseAnimating *eventHandler, CBaseAni
 {
   	animevent_t	event;
 
-	studiohdr_t *pstudiohdr = pOwner->GetModelPtr( );
+	CStudioHdr *pstudiohdr = pOwner->GetModelPtr( );
 
 	if ( !pstudiohdr )
 	{
 		Assert(!"CBaseAnimating::DispatchAnimEvents: model missing");
+		return;
+	}
+
+	if ( !pstudiohdr->SequencesAvailable() )
+	{
 		return;
 	}
 
@@ -471,12 +428,16 @@ void CAnimationLayer::DispatchAnimEvents( CBaseAnimating *eventHandler, CBaseAni
 
 
 
-void CBaseAnimatingOverlay::GetSkeleton( Vector pos[], Quaternion q[], int boneMask )
+void CBaseAnimatingOverlay::GetSkeleton( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], int boneMask )
 {
-	studiohdr_t *pStudioHdr = (studiohdr_t *)modelinfo->GetModelExtraData( GetModel() );
 	if(!pStudioHdr)
 	{
 		Assert(!"CBaseAnimating::GetSkeleton() without a model");
+		return;
+	}
+
+	if (!pStudioHdr->SequencesAvailable())
+	{
 		return;
 	}
 
@@ -488,10 +449,11 @@ void CBaseAnimatingOverlay::GetSkeleton( Vector pos[], Quaternion q[], int boneM
 	{
 		for (int i = 0; i < m_AnimOverlay.Count(); i++)
 		{
-			if (m_AnimOverlay[i].m_flWeight > 0)
+			CAnimationLayer &pLayer = m_AnimOverlay[i];
+			if( (pLayer.m_flWeight > 0) && pLayer.IsActive() )
 			{
 				// UNDONE: Is it correct to use overlay weight for IK too?
-				AccumulatePose( pStudioHdr, m_pIk, pos, q, m_AnimOverlay[i].m_nSequence, m_AnimOverlay[i].m_flCycle, GetPoseParameterArray(), boneMask, m_AnimOverlay[i].m_flWeight, gpGlobals->curtime );
+				AccumulatePose( pStudioHdr, m_pIk, pos, q, pLayer.m_nSequence, pLayer.m_flCycle, GetPoseParameterArray(), boneMask, pLayer.m_flWeight, gpGlobals->curtime );
 			}
 		}
 	}
@@ -520,11 +482,14 @@ void CBaseAnimatingOverlay::OnRestore( )
 	int i;
 
 	// force order of unused layers to current MAX_OVERLAYS
+	// and Tracker 48843 (Alyx skating after restore) restore the owner entity ptr (otherwise the network layer won't get NetworkStateChanged signals until the layer is re-Init()'ed
 	for (i = 0; i < m_AnimOverlay.Count(); i++)
 	{
+		m_AnimOverlay[i].m_pOwnerEntity = this;
+
 		if ( !m_AnimOverlay[i].IsActive())
 		{
-			m_AnimOverlay[i].m_nOrder = MAX_OVERLAYS;
+			m_AnimOverlay[i].m_nOrder.Set( MAX_OVERLAYS );
 		}
 	}
 
@@ -669,10 +634,10 @@ int	CBaseAnimatingOverlay::AddLayeredSequence( int sequence, int iPriority )
 		m_AnimOverlay[i].m_flBlendOut = 0.0f;
 		m_AnimOverlay[i].m_bSequenceFinished = false;
 		m_AnimOverlay[i].m_flLastEventCheck = 0;
-		m_AnimOverlay[i].m_bLooping = ((GetSequenceFlags( sequence ) & STUDIO_LOOPING) != 0);
+		m_AnimOverlay[i].m_bLooping = ((GetSequenceFlags( GetModelPtr(), sequence ) & STUDIO_LOOPING) != 0);
 		if (ai_sequence_debug.GetBool() == true && m_debugOverlays & OVERLAY_NPC_SELECTED_BIT)
 		{
-			Msg("%5.3f : adding %d (%d): %s : %5.3f (%.3f)\n", gpGlobals->curtime, i, m_AnimOverlay[ i ].m_nOrder, GetSequenceName( m_AnimOverlay[ i ].m_nSequence ), m_AnimOverlay[ i ].m_flCycle, m_AnimOverlay[ i ].m_flWeight );
+			Msg("%5.3f : adding %d (%d): %s : %5.3f (%.3f)\n", gpGlobals->curtime, i, m_AnimOverlay[ i ].m_nOrder.Get(), GetSequenceName( m_AnimOverlay[ i ].m_nSequence ), m_AnimOverlay[ i ].m_flCycle.Get(), m_AnimOverlay[ i ].m_flWeight.Get() );
 		}
 	}
 
@@ -728,14 +693,14 @@ int CBaseAnimatingOverlay::AllocateLayer( int iPriority )
 	if (iOpenLayer == -1)
 	{
 		iOpenLayer = m_AnimOverlay.AddToTail();
-		m_AnimOverlay[iOpenLayer].Init();
+		m_AnimOverlay[iOpenLayer].Init( this );
 	}
 
 	// make sure there's always an empty unused layer so that history slots will be available on the client when it is used
 	if (iNumOpen == 0)
 	{
 		i = m_AnimOverlay.AddToTail();
-		m_AnimOverlay[i].Init();
+		m_AnimOverlay[i].Init( this );
 	}
 
 	for (i = 0; i < m_AnimOverlay.Count(); i++)
@@ -1116,7 +1081,7 @@ void CBaseAnimatingOverlay::FastRemoveLayer( int iLayer )
 			m_AnimOverlay[ j ].m_nOrder--;
 		}
 	}
-	m_AnimOverlay[ iLayer ].Init( );
+	m_AnimOverlay[ iLayer ].Init( this );
 
 	VerifyOrder();
 }
@@ -1141,5 +1106,15 @@ void CBaseAnimatingOverlay::SetNumAnimOverlays( int num )
 	}
 }
 
+bool CBaseAnimatingOverlay::HasActiveLayer( void )
+{
+	for (int j = 0; j < m_AnimOverlay.Count(); j++ )
+	{
+		if ( m_AnimOverlay[ j ].IsActive() )
+			return true;
+	}
+
+	return false;
+}
 
 //-----------------------------------------------------------------------------

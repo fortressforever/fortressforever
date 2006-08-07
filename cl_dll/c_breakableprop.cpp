@@ -18,41 +18,24 @@
 #include "tier0/memdbgon.h"
 
 IMPLEMENT_CLIENTCLASS_DT(C_BreakableProp, DT_BreakableProp, CBreakableProp)
-	RecvPropFloat( RECVINFO( m_fadeMinDist ) ), 
-	RecvPropFloat( RECVINFO( m_fadeMaxDist ) ), 
-	RecvPropFloat( RECVINFO( m_flFadeScale ) ), 
 END_RECV_TABLE()
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 C_BreakableProp::C_BreakableProp( void )
 {
-	// disabled by default, must be set by mapper
-	m_fadeMinDist = -1.0f;	
-	m_fadeMaxDist = 0;
-	m_flFadeScale = 1;
-	
 	m_takedamage = DAMAGE_YES;
 }
 
-
 //-----------------------------------------------------------------------------
-// Fade out
+// Purpose: 
 //-----------------------------------------------------------------------------
-unsigned char C_BreakableProp::GetClientSideFade()
-{
-	return UTIL_ComputeEntityFade( this, m_fadeMinDist, m_fadeMaxDist, m_flFadeScale );
-
-}
-
 void C_BreakableProp::SetFadeMinMax( float fademin, float fademax )
 {
 	m_fadeMinDist = fademin;
 	m_fadeMaxDist = fademax;
 }
-
 
 //-----------------------------------------------------------------------------
 // Copy fade from another breakable prop

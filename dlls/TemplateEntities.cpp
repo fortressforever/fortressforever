@@ -21,6 +21,7 @@
 #include "point_template.h"
 #include "eventqueue.h"
 #include "TemplateEntities.h"
+#include "utldict.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -34,7 +35,7 @@ int MapEntity_GetNumKeysInEntity( const char *pEntData );
 
 struct TemplateEntityData_t
 {
-	char		pszName[MAPKEY_MAXLENGTH];
+	const char	*pszName;
 	char		*pszMapData;
 	string_t	iszMapData;
 	int			iMapDataLength;
@@ -80,7 +81,7 @@ int Templates_Add(CBaseEntity *pEntity, const char *pszMapData, int nLen)
 	}
 
 	TemplateEntityData_t *pEntData = (TemplateEntityData_t *)malloc(sizeof(TemplateEntityData_t));
-	Q_strncpy( pEntData->pszName, pszName, MAPKEY_MAXLENGTH );
+	pEntData->pszName = strdup( pszName );
 
 	// We may modify the values of the keys in this mapdata chunk later on to fix Entity I/O
 	// connections. For this reason, we need to ensure we have enough memory to do that.
@@ -132,6 +133,15 @@ string_t Templates_FindByIndex( int iIndex )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int Templates_GetStringSize( int iIndex )
+{
+	Assert( iIndex < g_Templates.Count() );
+	return g_Templates[iIndex]->iMapDataLength;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Looks up a template entity by name, returning the map data blob as
 //			a null-terminated string containing key/value pairs.
 //			NOTE: This can't handle multiple templates with the same targetname.
@@ -171,7 +181,7 @@ void Templates_ReconnectIOForGroup( CPointTemplate *pGroup )
 	{
 		grouptemplate_t newGroupTemplate;
 		newGroupTemplate.iIndex = pGroup->GetTemplateIndexForTemplate(i);
-		newGroupTemplate.pMapDataParser = new CEntityMapData( g_Templates[ newGroupTemplate.iIndex ]->pszMapData );
+		newGroupTemplate.pMapDataParser = new CEntityMapData( g_Templates[ newGroupTemplate.iIndex ]->pszMapData, g_Templates[ newGroupTemplate.iIndex ]->iMapDataLength );
 		Assert( newGroupTemplate.pMapDataParser );
 		newGroupTemplate.pMapDataParser->ExtractValue( "targetname", newGroupTemplate.pszName );
 		newGroupTemplate.bChangeTargetname = false;
@@ -181,39 +191,36 @@ void Templates_ReconnectIOForGroup( CPointTemplate *pGroup )
 
 	if (pGroup->AllowNameFixup())
 	{
+		char keyName[MAPKEY_MAXLENGTH];
+		char value[MAPKEY_MAXLENGTH];
+		char valueclipped[MAPKEY_MAXLENGTH];
+		
 		// Now go through all the entities in the group and parse their mapdata keyvalues.
 		// We're looking for any values that match targetnames of any of the group entities.
 		for ( i = 0; i < iCount; i++ )
 		{
-			char keyName[MAPKEY_MAXLENGTH];
-			char lastKeyName[MAPKEY_MAXLENGTH];
-			char value[MAPKEY_MAXLENGTH];
-			char valueclipped[MAPKEY_MAXLENGTH];
-
+			// We need to know what instance of each key we're changing.
+			// Store a table of the count of the keys we've run into.
+			CUtlDict< int, int > KeyInstanceCount;
 			CEntityMapData *mapData = GroupTemplates[i].pMapDataParser;
 
 			// Loop through our keys
 			if ( !mapData->GetFirstKey(keyName, value) )
 				continue;
 
-			lastKeyName[0] = 0;
-			int nKeyInstance = 0;
-
 			do 
 			{
-				if ( !stricmp( keyName, lastKeyName ) )
-				{
-					++nKeyInstance;
-				}
-				else
-				{
-					nKeyInstance = 0;
-				}
-				Q_strncpy( lastKeyName, keyName, MAPKEY_MAXLENGTH );
-				
 				// Ignore targetnames
 				if ( !stricmp( keyName, "targetname" ) )
 					continue;
+
+				// Add to the count for this 
+				int idx = KeyInstanceCount.Find( keyName );
+				if ( idx == KeyInstanceCount.InvalidIndex() )
+				{
+					idx = KeyInstanceCount.Insert( keyName, 0 );
+				}
+				KeyInstanceCount[idx]++;
 
 				// Entity I/O values are stored as "Targetname,<data>", so we need to see if there's a ',' in the string
 				char *sValue = value;
@@ -238,18 +245,25 @@ void Templates_ReconnectIOForGroup( CPointTemplate *pGroup )
 						Msg("Template Connection Found: Key %s (\"%s\") in entity named \"%s\"(%d) matches entity %d's targetname\n", keyName, sValue, GroupTemplates[i].pszName, i, iTName );
 					}
 
+					char newvalue[MAPKEY_MAXLENGTH];
+
+					// Get the current key instance. (-1 because it's this one we're changing)
+					int nKeyInstance = KeyInstanceCount[idx] - 1;
+
 					// Add our IO value to the targetname
 					// We need to append it if this isn't an Entity I/O value, or prepend it to the ',' if it is
 					if ( s )
 					{
-						Q_strncat( valueclipped, ENTITYIO_FIXUP_STRING, sizeof(valueclipped), COPY_ALL_CHARACTERS );
-						Q_strncat( valueclipped, s, sizeof(valueclipped), COPY_ALL_CHARACTERS );
-						mapData->SetValue( keyName, valueclipped, nKeyInstance );
+						Q_strncpy( newvalue, valueclipped, MAPKEY_MAXLENGTH );
+						Q_strncat( newvalue, ENTITYIO_FIXUP_STRING, sizeof(newvalue), COPY_ALL_CHARACTERS );
+						Q_strncat( newvalue, s, sizeof(newvalue), COPY_ALL_CHARACTERS );
+						mapData->SetValue( keyName, newvalue, nKeyInstance );
 					}
 					else
 					{
-						Q_strncat( value, ENTITYIO_FIXUP_STRING, sizeof(value), COPY_ALL_CHARACTERS );
-						mapData->SetValue( keyName, value, nKeyInstance );
+						Q_strncpy( newvalue, sValue, MAPKEY_MAXLENGTH );
+						Q_strncat( newvalue, ENTITYIO_FIXUP_STRING, sizeof(newvalue), COPY_ALL_CHARACTERS );
+						mapData->SetValue( keyName, newvalue, nKeyInstance );
 					}
 					
 					// Remember we changed this targetname
@@ -295,7 +309,7 @@ void Templates_StartUniqueInstance( void )
 	g_iCurrentTemplateInstance++;
 
 	// Make sure there's enough room to fit it into the string
-	int iMax = pow(10, (strlen(ENTITYIO_FIXUP_STRING)-1));	// -1 for the &
+	int iMax = pow(10.0f, (int)((strlen(ENTITYIO_FIXUP_STRING) - 1)));	// -1 for the &
 	if ( g_iCurrentTemplateInstance >= iMax )
 	{
 		// We won't hit this.
@@ -367,6 +381,7 @@ void Templates_RemoveAll(void)
 	{
 		TemplateEntityData_t *pTemplate = g_Templates.Element(i);
 
+		free((void *)pTemplate->pszName);
 		free(pTemplate->pszMapData);
 		if ( pTemplate->pszFixedMapData )
 		{
@@ -386,13 +401,17 @@ void Templates_RemoveAll(void)
 class CTemplatesHook : public CAutoGameSystem
 {
 public:
+	CTemplatesHook( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	virtual void LevelShutdownPostEntity( void )
 	{
 		Templates_RemoveAll();
 	}
 };
 
-CTemplatesHook g_TemplateEntityHook;
+CTemplatesHook g_TemplateEntityHook( "CTemplatesHook" );
 
 
 //-----------------------------------------------------------------------------
@@ -448,6 +467,7 @@ public:
 	{
 		if ( m_fDoLoad )
 		{
+			Templates_RemoveAll();
 			g_Templates.Purge();
 			g_iCurrentTemplateInstance = pRestore->ReadInt();
 
@@ -458,7 +478,9 @@ public:
 				pRestore->ReadAll( pNewTemplate );
 
 				int sizeData = 0;//pRestore->SkipHeader();
-				pRestore->ReadString( pNewTemplate->pszName, MAPKEY_MAXLENGTH, sizeData );
+				char szName[MAPKEY_MAXLENGTH];
+				pRestore->ReadString( szName, MAPKEY_MAXLENGTH, sizeData );
+				pNewTemplate->pszName = strdup( szName );
 				//sizeData = pRestore->SkipHeader();
 				pNewTemplate->pszMapData = (char *)malloc( pNewTemplate->iMapDataLength );
 				pRestore->ReadString( pNewTemplate->pszMapData, pNewTemplate->iMapDataLength, sizeData );

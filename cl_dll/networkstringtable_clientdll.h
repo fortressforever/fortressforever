@@ -21,5 +21,6 @@ extern INetworkStringTable *g_StringTableVguiScreen;
 extern INetworkStringTable *g_StringTableEffectDispatch;
 extern INetworkStringTable *g_StringTableMaterials;
 extern INetworkStringTable *g_pStringTableInfoPanel;
+extern INetworkStringTable *g_pStringTableClientSideChoreoScenes;
 
 #endif // NETWORKSTRINGTABLE_CLIENTDLL_H

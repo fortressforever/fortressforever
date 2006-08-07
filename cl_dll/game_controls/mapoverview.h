@@ -17,14 +17,17 @@
 #include <igameevents.h>
 #include <shareddefs.h>
 #include <const.h>
+#include "hudelement.h"
 
 
 #define MAX_TRAIL_LENGTH	30
 #define OVERVIEW_MAP_SIZE	1024	// an overview map is 1024x1024 pixels
 
-class CMapOverview : public vgui::Panel, public IViewPortPanel, public IGameEventListener2
-{
+typedef bool ( *FnCustomMapOverviewObjectPaint )( int textureID, Vector pos, float scale, float angle, const char *text, Color *textColor, float status, Color *statusColor );
 
+
+class CMapOverview : public CHudElement, public vgui::Panel
+{
 	DECLARE_CLASS_SIMPLE( CMapOverview, vgui::Panel );
 
 public:	
@@ -36,8 +39,10 @@ public:
 		MAP_MODE_FULL
 	};
 
-	CMapOverview( IViewPort *pViewPort );
+	CMapOverview( const char *pElementName );
 	virtual ~CMapOverview();
+
+	virtual bool ShouldDraw( void );
 
 protected:	// private structures & types
 	
@@ -74,17 +79,24 @@ protected:	// private structures & types
 		float	endtime;	// time stop showing object
 		float	size;		// object size
 		float	status;		// green status bar [0..1], -1 = disabled
+		Color	statusColor;	// color of status bar
+		int		flags;		// MAB_OBJECT_*
+		const char *text;	// text to draw underneath the icon
 	} MapObject_t;
+
+#define MAP_OBJECT_ALIGN_TO_MAP	(1<<0)
 
 public: // IViewPortPanel interface:
 
 	virtual const char *GetName( void ) { return PANEL_OVERVIEW; }
 	virtual void SetData(KeyValues *data);
 	virtual void Reset();
+	virtual void OnThink();
 	virtual void Update();
 	virtual bool NeedsUpdate( void );
 	virtual bool HasInputElements( void ) { return false; }
 	virtual void ShowPanel( bool bShow );
+	virtual void Init( void );
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -117,7 +129,6 @@ public:
 	virtual void SetTime( float time );
 	virtual void SetMode( int mode );
 	virtual bool SetTeamColor(int team, Color color);
-	virtual void SetZoom( float zoom, float time = 0.0f );
 	virtual void SetFollowAngle(bool state);
 	virtual void SetFollowEntity(int entindex); // 0 = off
 	virtual void SetCenter( const Vector2D &mappos); 
@@ -128,9 +139,12 @@ public:
 	virtual int		AddObject( const char *icon, int entity, float timeToLive ); // returns object ID, 0 = no entity, -1 = forever
 	virtual void	SetObjectIcon( int objectID, const char *icon, float size );  // icon world size
 	virtual void	SetObjectText( int objectID, const char *text, Color color ); // text under icon
-	virtual void	SetObjectStatus( int objectID, float value ); // status bar under icon
+	virtual void	SetObjectStatus( int objectID, float value, Color statusColor ); // status bar under icon
 	virtual void	SetObjectPosition( int objectID, const Vector &position, const QAngle &angle ); // world pos/angles
-	virtual void	RemoveObject( int objectID ); 
+	virtual void 	AddObjectFlags( int objectID, int flags );
+	virtual void 	SetObjectFlags( int objectID, int flags );
+	virtual void	RemoveObject( int objectID );
+	virtual void	RemoveObjectByIndex( int index );
 	
 	// rules that define if you can see a player on the overview or not
 	virtual bool CanPlayerBeSeen(MapPlayer_t *player);
@@ -151,27 +165,29 @@ protected:
 	virtual void	UpdatePlayerTrails();
 	virtual void	ResetRound();
 	virtual void	InitTeamColorsAndIcons();
+	virtual void	UpdateSizeAndPosition();
 
 	bool			IsInPanel(Vector2D &pos);
 	MapPlayer_t*	GetPlayerByUserID( int userID );
 	int				AddIconTexture(const char *filename);
 	Vector2D		MapToPanel( const Vector2D &mappos );
 	int				GetPixelOffset( float height );
-	void			UpdateSizeAndPosition();
-	void			UpdateZoom();
 	void			UpdateFollowEntity();
 	void			UpdatePlayers();
 	void			UpdateObjects(); // objects bound to entities 
 	MapObject_t*	FindObjectByID(int objectID);
 
-	bool			DrawIcon(	int textureID,
+	virtual bool	DrawIcon( MapObject_t *obj );
+
+	/*virtual bool	DrawIcon(	int textureID,
 								Vector pos,
 								float scale,
 								float angle,
 								const char *text = NULL,
 								Color *textColor = NULL,
 								float status = -1,
-								Color *statusColor = NULL );
+								Color *statusColor = NULL,
+								int objectType = OBJECT_TYPE_NORMAL );*/
 	
 	int				m_nMode;
 	Vector2D		m_vPosition;
@@ -205,19 +221,19 @@ protected:
 	bool	m_bRotateMap;	// if true roatate map around 90 degress, so it fits better to 4:3 screen ratio
 
 	int		m_nFollowEntity;// entity number to follow, 0 = off
-	float	m_fZoom;		// current zoom n = overview panel shows 1/n^2 of whole map 
-	float	m_fTragetZoom;	// target value we are zooming to
-	float	m_fZoomSpeed;	// zoom change per second
+	CPanelAnimationVar( float, m_fZoom, "zoom", "1.0" );	// current zoom n = overview panel shows 1/n^2 of whole map'
 	float	m_fFullZoom;	// best zoom factor for full map view (1.0 is map is a square) 
 	Vector2D m_ViewOrigin;	// map coordinates that are in the center of the pverview panel
 	Vector2D m_MapCenter;	// map coordinates that are in the center of the pverview panel
 
 	float	m_fNextUpdateTime;
-	float	m_fViewAngle;	// rototaion of overview map
+	float	m_fViewAngle;	// rotation of overview map
 	float	m_fWorldTime;	// current world time
 	float   m_fNextTrailUpdate; // next time to update player trails
 	float	m_fTrailUpdateInterval; // if -1 don't show trails
 	bool	m_bFollowAngle;	// if true, map rotates with view angle
+
+
 	
 };
 

@@ -115,7 +115,6 @@ private:
 
 	float					m_flTimeGrabbed;
 	IPhysicsConstraint		*m_pConstraint;
-	float					m_flMotionEnableTime;
 	int						m_iMineState;
 
 	COutputEvent	m_OnPulledUp;

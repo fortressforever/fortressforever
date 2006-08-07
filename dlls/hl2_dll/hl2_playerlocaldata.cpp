@@ -22,7 +22,11 @@ BEGIN_SEND_TABLE_NOBASE( CHL2PlayerLocalData, DT_HL2Local )
 	SendPropInt( SENDINFO(m_iSquadMedicCount) ),
 	SendPropBool( SENDINFO(m_fSquadInFollowMode) ),
 	SendPropBool( SENDINFO(m_bWeaponLowered) ),
+	SendPropEHandle( SENDINFO(m_hAutoAimTarget) ),
+	SendPropVector( SENDINFO(m_vecAutoAimPoint) ),
 	SendPropEHandle( SENDINFO(m_hLadder) ),
+	SendPropBool( SENDINFO(m_bDisplayReticle) ),
+	SendPropBool( SENDINFO(m_bStickyAutoAim) ),
 END_SEND_TABLE()
 
 BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
@@ -33,6 +37,8 @@ BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
 	DEFINE_FIELD( m_iSquadMedicCount, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fSquadInFollowMode, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bWeaponLowered, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bDisplayReticle, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bStickyAutoAim, FIELD_BOOLEAN ),
 
 	// Ladder related stuff
 	DEFINE_FIELD( m_hLadder, FIELD_EHANDLE ),
@@ -44,6 +50,8 @@ CHL2PlayerLocalData::CHL2PlayerLocalData()
 	m_flSuitPower = 0.0;
 	m_bZooming = false;
 	m_bWeaponLowered = false;
+	m_hAutoAimTarget.Set(NULL);
 	m_hLadder.Set(NULL);
+	m_bDisplayReticle = false;
 }
 

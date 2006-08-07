@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 
 #ifndef IMATERIAL_H
 #define IMATERIAL_H
@@ -13,8 +13,8 @@
 #pragma once
 #endif
 
-#include "imageloader.h"
-#include "imaterialsystem.h"
+#include "bitmap/imageformat.h"
+#include "materialsystem/imaterialsystem.h"
 
 //-----------------------------------------------------------------------------
 // forward declaraions
@@ -48,8 +48,12 @@ enum VertexFormatFlags_t
 	// Indicates this is a vertex shader
 	VERTEX_FORMAT_VERTEX_SHADER = 0x0100,
 
+	// Indicates this format shouldn't be bloated to cache align it
+	// (only used for VertexUsage)
+	VERTEX_FORMAT_USE_EXACT_FORMAT = 0x0200,
+
 	// Update this if you add or remove bits...
-	VERTEX_LAST_BIT = 8,
+	VERTEX_LAST_BIT = 9,
 
 	VERTEX_BONE_WEIGHT_BIT = VERTEX_LAST_BIT + 1,
 	USER_DATA_SIZE_BIT = VERTEX_LAST_BIT + 4,
@@ -113,6 +117,23 @@ inline bool UsesVertexShader( VertexFormat_t vertexFormat )
 
 
 //-----------------------------------------------------------------------------
+// Enumeration for the various fields capable of being morphed
+//-----------------------------------------------------------------------------
+enum MorphFormatFlags_t
+{
+	MORPH_POSITION	= 0x0001,	// 3D
+	MORPH_NORMAL	= 0x0002,	// 3D
+	MORPH_WRINKLE	= 0x0004,	// 1D
+};
+
+
+//-----------------------------------------------------------------------------
+// The morph format type
+//-----------------------------------------------------------------------------
+typedef unsigned int MorphFormat_t;
+
+
+//-----------------------------------------------------------------------------
 // shader state flags, can be read from the FLAGS materialvar.
 // Also can be read or written to with the Set/GetMaterialVarFlags() call
 // Also make sure you add/remove a string associated
@@ -163,7 +184,7 @@ enum MaterialVarFlags_t
 enum MaterialVarFlags2_t
 {
 	// NOTE: These are for $flags2!!!!!
-	MATERIAL_VAR2_SUPPORTS_TEXKILL					= (1 << 0),
+//	UNUSED											= (1 << 0),
 
 	MATERIAL_VAR2_LIGHTING_UNLIT					= 0,
 	MATERIAL_VAR2_LIGHTING_VERTEX_LIT				= (1 << 1),
@@ -182,9 +203,10 @@ enum MaterialVarFlags2_t
 	// GR - HDR path puts lightmap alpha in separate texture...
 	MATERIAL_VAR2_BLEND_WITH_LIGHTMAP_ALPHA			= (1 << 8),
 	MATERIAL_VAR2_NEEDS_BAKED_LIGHTING_SNAPSHOTS	= (1 << 9),
-	MATERIAL_VAR2_USE_FLASHLIGHT						= (1 << 10),
+	MATERIAL_VAR2_USE_FLASHLIGHT					= (1 << 10),
 	MATERIAL_VAR2_USE_FIXED_FUNCTION_BAKED_LIGHTING = (1 << 11),
 	MATERIAL_VAR2_NEEDS_FIXED_FUNCTION_FLASHLIGHT	= (1 << 12),
+	MATERIAL_VAR2_USE_EDITOR						= (1 << 13),
 };
 
 
@@ -202,7 +224,7 @@ enum PreviewImageRetVal_t
 //-----------------------------------------------------------------------------
 // material interface
 //-----------------------------------------------------------------------------
-class IMaterial
+abstract_class IMaterial
 {
 public:
 	// Get the name of the material.  This is a full path to 
@@ -211,6 +233,7 @@ public:
 	virtual const char *	GetName() const = 0;
 	virtual const char *	GetTextureGroupName() const = 0;
 
+#ifndef _XBOX
 	// Get the preferred size/bitDepth of a preview image of a material.
 	// This is the sort of image that you would use for a thumbnail view
 	// of a material, or in WorldCraft until it uses materials to render.
@@ -224,7 +247,7 @@ public:
 	virtual PreviewImageRetVal_t GetPreviewImage( unsigned char *data, 
 												 int width, int height,
 												 ImageFormat imageFormat ) const = 0;
-											    
+#endif											    
 	// 
 	virtual int				GetMappingWidth( ) = 0;
 	virtual int				GetMappingHeight( ) = 0;
@@ -276,13 +299,13 @@ public:
 
 	// returns true if this material uses a material proxy
 	virtual bool			HasProxy( void ) const = 0;
-
+#ifndef _XBOX
 	// returns true if there is a software vertex shader.  Software vertex shaders are
 	// different from "WillPreprocessData" in that all the work is done on the verts
 	// before calling the shader instead of between passes.  Software vertex shaders are
 	// preferred when possible.
 	virtual bool			UsesSoftwareVertexShader( void ) const = 0;
-
+#endif
 	virtual bool			UsesEnvCubemap( void ) = 0;
 
 	virtual bool			NeedsTangentSpace( void ) = 0;
@@ -344,6 +367,19 @@ public:
 	// Gets the current alpha modulation
 	virtual float			GetAlphaModulation() = 0;
 	virtual void			GetColorModulation( float *r, float *g, float *b ) = 0;
+#ifndef _XBOX
+	// Gets the morph format
+	virtual MorphFormat_t	GetMorphFormat() const = 0;
+#endif
+	
+	// fast find that stores the index of the found var in the string table in local cache
+	virtual IMaterialVar *	FindVarFast( char const *pVarName, unsigned int *pToken ) = 0;
+
+	// Sets new VMT shader parameters for the material
+	virtual void			SetShaderAndParams( KeyValues *pKeyValues ) = 0;
+	virtual const char *	GetShaderName() const = 0;
+
+	virtual void			DeleteIfUnreferenced() = 0;
 };
 
 

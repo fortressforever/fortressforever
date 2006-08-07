@@ -151,10 +151,12 @@
 	#define GetTickCount		GetTickCount__USE_VCR_MODE
 	
 	
+#ifndef _XBOX
 	#if defined( timeGetTime )
 		#undef timeGetTime
 	#endif
 	#define timeGetTime			timeGetTime__USE_VCR_MODE
+#endif
 
 
 	#if defined( clock )
@@ -275,10 +277,12 @@
 	#endif
 	#define WaitForSingleObject	WaitForSingleObject__USE_VCR_MODE
 
+#ifndef _XBOX
 	#if defined( EnterCriticalSection )
 		#undef EnterCriticalSection
 	#endif
 	#define EnterCriticalSection EnterCriticalSection__USE_VCR_MODE
+#endif
 
 #endif
 

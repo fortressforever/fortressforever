@@ -18,7 +18,7 @@
 #include "tier0/memdbgon.h"
 
 #define	THUMPER_DUST_LIFETIME		2.0f
-#define THUMPER_MAX_PARTICLES		32
+#define THUMPER_MAX_PARTICLES		24
 
 
 extern IPhysicsSurfaceProps *physprops;
@@ -49,12 +49,12 @@ public:
 	{
 		pParticle->m_flRoll += pParticle->m_flRollDelta * timeDelta;
 		
-		pParticle->m_flRollDelta += pParticle->m_flRollDelta * ( timeDelta * -2.0f );
+		pParticle->m_flRollDelta += pParticle->m_flRollDelta * ( timeDelta * -4.0f );
 
 		//Cap the minimum roll
-		if ( fabs( pParticle->m_flRollDelta ) < 0.5f )
+		if ( fabs( pParticle->m_flRollDelta ) < 0.25f )
 		{
-			pParticle->m_flRollDelta = ( pParticle->m_flRollDelta > 0.0f ) ? 0.5f : -0.5f;
+			pParticle->m_flRollDelta = ( pParticle->m_flRollDelta > 0.0f ) ? 0.25f : -0.25f;
 		}
 
 		return pParticle->m_flRoll;
@@ -82,122 +82,81 @@ void FX_ThumperDust( const CEffectData &data )
 	vecDustColor.z = 0.52f;
 
 	CSmartPtr<ThumperDustEmitter> pSimple = ThumperDustEmitter::Create( "thumperdust" );
+
+	C_BaseEntity *pEnt = C_BaseEntity::Instance( data.m_hEntity );
+	if ( pEnt )
+	{
+		Vector vWorldMins, vWorldMaxs;
+		float scale = pEnt->CollisionProp()->BoundingRadius();
+		vWorldMins[0] = data.m_vOrigin[0] - scale;
+		vWorldMins[1] = data.m_vOrigin[1] - scale;
+		vWorldMins[2] = data.m_vOrigin[2] - scale;
+		vWorldMaxs[0] = data.m_vOrigin[0] + scale;
+		vWorldMaxs[1] = data.m_vOrigin[1] + scale;
+		vWorldMaxs[2] = data.m_vOrigin[2] + scale;
+		pSimple->GetBinding().SetBBox( vWorldMins, vWorldMaxs, true );
+	}
+
 	pSimple->SetSortOrigin( data.m_vOrigin );
-	pSimple->SetNearClip( 16, 24 );
+	pSimple->SetNearClip( 32, 64 );
 
 	SimpleParticle	*pParticle = NULL;
 
 	Vector	offset;
 
+	//int	numPuffs = IsXbox() ? THUMPER_MAX_PARTICLES/2 : THUMPER_MAX_PARTICLES;
 	int	numPuffs = THUMPER_MAX_PARTICLES;
 
 	PMaterialHandle	hMaterial[2];
-	
 	hMaterial[0] = pSimple->GetPMaterial("particle/particle_smokegrenade");
 	hMaterial[1] = pSimple->GetPMaterial("particle/particle_noisesphere");
 
-	float flTime = data.m_flScale / 128;
-
-	float yaw;
-	Vector forward, vRight, vForward;
-
-	vForward = Vector( 0, 1, 0 );
-	vRight = Vector( 1, 0, 0 );
-
-	
+	float flYaw = 0;
+	float flIncr = (2*M_PI) / (float) numPuffs; // Radians
+	Vector forward;
 	Vector vecColor;
-	Vector vecFinalColor;
 	int i = 0;
+
+	float flScale = min( data.m_flScale, 255 );
+
+	// Setup the color for these particles
+	engine->ComputeLighting( data.m_vOrigin, NULL, true, vecColor );
+	VectorLerp( vecColor, vecDustColor, 0.5, vecColor );
+	vecColor *= 255;
 
 	for ( i = 0; i < numPuffs; i++ )
 	{
-		yaw = ( (float) i / (float) numPuffs ) * 360.0f;
-		forward = ( vRight * sin( DEG2RAD( yaw) ) ) + ( vForward * cos( DEG2RAD( yaw ) ) );
-		VectorNormalize( forward );
+		flYaw += flIncr;
+		SinCos( flYaw, &forward.y, &forward.x );	
+		forward.z = 0.0f;
 
 		offset = ( RandomVector( -4.0f, 4.0f ) + data.m_vOrigin ) + ( forward * 128.0f );
 
-		trace_t	tr;
-		UTIL_TraceLine( offset + Vector( 0, 0, 128 ), offset + Vector( 0, 0, -128 ), (MASK_SOLID_BRUSHONLY|CONTENTS_WATER), NULL, COLLISION_GROUP_NONE, &tr );
-
-
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof(SimpleParticle), hMaterial[random->RandomInt(0,1)], tr.endpos );
-
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof(SimpleParticle), hMaterial[random->RandomInt(0,1)], offset );
 		if ( pParticle != NULL )
 		{	
-
 			pParticle->m_flLifetime		= 0.0f;
-			pParticle->m_flDieTime		= flTime + random->RandomFloat( flTime, flTime * 2 );
+			pParticle->m_flDieTime		= 1.5f;
 	
-			Vector dir = (tr.endpos - data.m_vOrigin);
+			Vector dir = (offset - data.m_vOrigin);
 			float length = dir.Length();
 			VectorNormalize( dir );
 
 			pParticle->m_vecVelocity	= dir * ( length * 2.0f );
 			pParticle->m_vecVelocity[2]	= data.m_flScale / 3;
 
-			engine->ComputeLighting( offset, NULL, true, vecColor );
-			
-			VectorLerp( vecColor, vecDustColor, 0.5, vecColor );
-
-			vecFinalColor = vecColor;
-
-			pParticle->m_uchColor[0]	= vecFinalColor[0]*255;
-			pParticle->m_uchColor[1]	= vecFinalColor[1]*255;
-			pParticle->m_uchColor[2]	= vecFinalColor[2]*255;
+			pParticle->m_uchColor[0]	= vecColor[0];
+			pParticle->m_uchColor[1]	= vecColor[1];
+			pParticle->m_uchColor[2]	= vecColor[2];
 
 			pParticle->m_uchStartAlpha	= random->RandomInt( 64, 96 );
 			pParticle->m_uchEndAlpha	= 0;
 
-			pParticle->m_uchStartSize	= data.m_flScale / ( random->RandomInt( 3, 4 )  + flTime);
-			pParticle->m_uchEndSize		= data.m_flScale;
+			pParticle->m_uchStartSize	= flScale * 0.25f;
+			pParticle->m_uchEndSize		= flScale * 0.5f;
 
 			pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-			pParticle->m_flRollDelta	= random->RandomFloat( -8.0f, 8.0f );
-		}
-	}
-
-	for ( i = 0; i < numPuffs; i++ )
-	{
-		offset[0] = random->RandomFloat( -data.m_flScale, data.m_flScale );
-		offset[1] = random->RandomFloat( -data.m_flScale, data.m_flScale );
-		offset[2] = 0;
-		offset += data.m_vOrigin;
-
-		trace_t	tr;
-		UTIL_TraceLine( offset + Vector( 0, 0, 128 ), offset + Vector( 0, 0, -128 ), (MASK_SOLID_BRUSHONLY|CONTENTS_WATER), NULL, COLLISION_GROUP_NONE, &tr );
-
-
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof(SimpleParticle), hMaterial[random->RandomInt(0,1)], offset );
-	
-		if ( pParticle != NULL )
-		{			
-			pParticle->m_flLifetime		= 0.0f;
-			pParticle->m_flDieTime		= flTime + random->RandomFloat( flTime, flTime * 2 );
-
-			Vector dir = Vector( 0, 0, -1 );
-			float length = 15;
-
-			pParticle->m_vecVelocity	= dir * ( length * 4.0f );
-			pParticle->m_vecVelocity[2]	= data.m_flScale / 4;
-
-			engine->ComputeLighting( offset, NULL, true, vecColor );
-			VectorLerp( vecColor, vecDustColor, 0.5, vecColor );
-		
-			vecFinalColor = vecColor;
-
-			pParticle->m_uchColor[0]	= vecFinalColor[0]*255;
-			pParticle->m_uchColor[1]	= vecFinalColor[1]*255;
-			pParticle->m_uchColor[2]	= vecFinalColor[2]*255;
-
-			pParticle->m_uchStartAlpha	= random->RandomInt( 64, 96 );
-			pParticle->m_uchEndAlpha	= 0;
-
-			pParticle->m_uchStartSize	= data.m_flScale / ( random->RandomInt( 3, 4 )  + flTime);
-			pParticle->m_uchEndSize		= data.m_flScale + ( 20 * flTime );
-
-			pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-			pParticle->m_flRollDelta	= random->RandomFloat( -4.0f, 4.0f );
+			pParticle->m_flRollDelta	= random->RandomFloat( -6.0f, 6.0f );
 		}
 	}
 }

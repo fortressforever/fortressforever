@@ -57,6 +57,7 @@ void* SendProxy_TestProxyToggle( const SendProp *pProp, const void *pStructBase,
 		return NULL;
 	}
 }
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_TestProxyToggle );
 
 
 // ---------------------------------------------------------------------------------------- //

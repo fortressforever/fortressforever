@@ -22,7 +22,7 @@ class C_BaseEntity;
 //-----------------------------------------------------------------------------
 // Purpose: All client vehicles must implement this interface.
 //-----------------------------------------------------------------------------
-class IClientVehicle : public IVehicle
+abstract_class IClientVehicle : public IVehicle
 {
 public:
 	// When a player is in a vehicle, here's where the camera will be

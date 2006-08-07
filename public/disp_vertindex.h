@@ -23,12 +23,12 @@ class CVertIndex
 {
 public:
 				CVertIndex();
-				CVertIndex( int ix, int iy );
+				CVertIndex( short ix, short iy );
 	
-	void		Init( int ix, int iy );
+	void		Init( short ix, short iy );
 
-	int&		operator[]( int i );
-	int const&	operator[]( int i ) const;
+	short&		operator[]( short i );
+	short const&	operator[]( short i ) const;
 	void		operator+=( CVertIndex const &other );
 	void		operator-=( CVertIndex const &other );
 	CVertIndex	operator+( CVertIndex const &other ) const;
@@ -41,7 +41,7 @@ public:
 
 public:
 
-	int			x, y;
+	short			x, y;
 };
 
 
@@ -67,31 +67,31 @@ inline CVertIndex::CVertIndex()
 }
 
 
-inline CVertIndex::CVertIndex( int ix, int iy )
+inline CVertIndex::CVertIndex( short ix, short iy )
 {
 	x = ix;
 	y = iy;
 }
 
 
-inline void CVertIndex::Init( int ix, int iy )
+inline void CVertIndex::Init( short ix, short iy )
 {
 	x = ix;
 	y = iy;
 }
 
 
-inline int& CVertIndex::operator[]( int i )
+inline short& CVertIndex::operator[]( short i )
 {
 	Assert( i >= 0 && i <= 1 );
-	return ((int*)this)[i];
+	return ((short*)this)[i];
 }
 
 
-inline int const& CVertIndex::operator[]( int i ) const
+inline short const& CVertIndex::operator[]( short i ) const
 {
 	Assert( i >= 0 && i <= 1 );
-	return ((int*)this)[i];
+	return ((short*)this)[i];
 }
 
 

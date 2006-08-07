@@ -28,6 +28,8 @@
 #include "tier0/vprof.h"
 #include "particles_localspace.h"
 #include "physpropclientside.h"
+#include "vstdlib/ICommandLine.h"
+#include "datacache/imdlcache.h"
 #include "c_te_effect_dispatch.h"	// |-- Mirv: Needed for client nail
 
 // NOTE: Always include this last!
@@ -37,22 +39,23 @@ extern ConVar muzzleflash_light;
 
 #define TENT_WIND_ACCEL 50
 
-//Precahce the effects
+//Precache the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectMuzzleFlash )
-CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle1" )
-CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle3" )
-CLIENTEFFECT_MATERIAL( "sprites/ar2_muzzle4" )
-CLIENTEFFECT_MATERIAL( "sprites/muzzleflash4" )
-CLIENTEFFECT_MATERIAL( "particle/fire" )
-
+CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
+CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_noz" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_noz" )
 
+CLIENTEFFECT_MATERIAL( "effects/muzzleflash1" )
+CLIENTEFFECT_MATERIAL( "effects/muzzleflash2" )
+CLIENTEFFECT_MATERIAL( "effects/muzzleflash3" )
+CLIENTEFFECT_MATERIAL( "effects/muzzleflash4" )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash1_noz" )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash2_noz" )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash3_noz" )
 CLIENTEFFECT_MATERIAL( "effects/muzzleflash4_noz" )
 
+CLIENTEFFECT_MATERIAL( "effects/strider_muzzle" )
 CLIENTEFFECT_REGISTER_END()
 
 //Whether or not to eject brass from weapons
@@ -85,6 +88,7 @@ C_LocalTempEntity::C_LocalTempEntity()
 	m_vecTempEntAngVelocity.Init();
 	m_vecNormal.Init();
 #endif
+	m_pfnDrawHelper = 0;
 }
 
 
@@ -145,20 +149,28 @@ int C_LocalTempEntity::DrawStudioModel( int flags )
 		return drawn;
 	
 	// Make sure m_pstudiohdr is valid for drawing
+	MDLCACHE_CRITICAL_SECTION();
 	if ( !GetModelPtr() )
 		return drawn;
 
-	drawn = modelrender->DrawModel( 
-		flags, 
-		this,
-		MODEL_INSTANCE_INVALID,
-		index, 
-		GetModel(),
-		GetAbsOrigin(),
-		GetAbsAngles(),
-		m_nSkin,
-		m_nBody,
-		m_nHitboxSet );
+	if ( m_pfnDrawHelper )
+	{
+		drawn = ( *m_pfnDrawHelper )( this, flags );
+	}
+	else
+	{
+		drawn = modelrender->DrawModel( 
+			flags, 
+			this,
+			MODEL_INSTANCE_INVALID,
+			index, 
+			GetModel(),
+			GetAbsOrigin(),
+			GetAbsAngles(),
+			m_nSkin,
+			m_nBody,
+			m_nHitboxSet );
+	}
 	return drawn;
 }
 
@@ -324,7 +336,12 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				data.m_vOrigin = newOrigin;
 				data.m_vNormal = pm.plane.normal;
 				data.m_nSurfaceProp = pm.surface.surfaceProps;
+
+#ifdef GAME_DLL
 				data.m_nEntIndex = pm.GetEntityIndex();
+#else
+				data.m_hEntity = pm.m_pEnt;
+#endif
 
 				// The actual effect isn't needed
 				if (flags & FTENT_FFOPTEFFECT)
@@ -588,6 +605,122 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This helper keeps track of batches of "breakmodels" so that they can all share the lighting origin
+//  of the first of the group (because the server sends down 15 chunks at a time, and rebuilding 15 light cache
+//  entries for a map with a lot of worldlights is really slow).
+//-----------------------------------------------------------------------------
+class CBreakableHelper
+{
+public:
+	void	Insert( C_LocalTempEntity *entity, bool isSlave );
+	void	Remove( C_LocalTempEntity *entity );
+
+	void	Clear();
+
+	const Vector *GetLightingOrigin( C_LocalTempEntity *entity );
+
+private:
+
+	// A context is the first master until the next one, which starts a new context
+	struct BreakableList_t
+	{
+		unsigned int		context;
+		C_LocalTempEntity	*entity;
+	};
+
+	CUtlLinkedList< BreakableList_t, unsigned short >	m_Breakables;
+	unsigned int			m_nCurrentContext;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Adds brekable to list, starts new context if needed
+// Input  : *entity - 
+//			isSlave - 
+//-----------------------------------------------------------------------------
+void CBreakableHelper::Insert( C_LocalTempEntity *entity, bool isSlave )
+{
+	// A master signifies the start of a new run of broken objects
+	if ( !isSlave )
+	{
+		++m_nCurrentContext;
+	}
+	
+	BreakableList_t entry;
+	entry.context = m_nCurrentContext;
+	entry.entity = entity;
+
+	m_Breakables.AddToTail( entry );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Removes all instances of entity in the list
+// Input  : *entity - 
+//-----------------------------------------------------------------------------
+void CBreakableHelper::Remove( C_LocalTempEntity *entity )
+{
+	for ( unsigned short i = m_Breakables.Head(); i != m_Breakables.InvalidIndex() ; )
+	{
+		unsigned short n = m_Breakables.Next( i );
+
+		if ( m_Breakables[ i ].entity == entity )
+		{
+			m_Breakables.Remove( i );
+		}
+
+		i = n;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: For a given breakable, find the "first" or head object and use it's current
+//  origin as the lighting origin for the entire group of objects
+// Input  : *entity - 
+// Output : const Vector
+//-----------------------------------------------------------------------------
+const Vector *CBreakableHelper::GetLightingOrigin( C_LocalTempEntity *entity )
+{
+	unsigned int nCurContext = 0;
+	C_LocalTempEntity *head = NULL;
+	FOR_EACH_LL( m_Breakables, i )
+	{
+		BreakableList_t& e = m_Breakables[ i ];
+
+		if ( e.context != nCurContext )
+		{
+			nCurContext = e.context;
+			head = e.entity;
+		}
+
+		if ( e.entity == entity )
+		{
+			Assert( head );
+			return head ? &head->GetAbsOrigin() : NULL;
+		}
+	}
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Wipe breakable helper list
+// Input  :  - 
+//-----------------------------------------------------------------------------
+void CBreakableHelper::Clear()
+{
+	m_Breakables.RemoveAll();
+	m_nCurrentContext = 0;
+}
+
+static CBreakableHelper g_BreakableHelper;
+
+//-----------------------------------------------------------------------------
+// Purpose: See if it's in the breakable helper list and, if so, remove
+// Input  :  - 
+//-----------------------------------------------------------------------------
+void C_LocalTempEntity::OnRemoveTempEntity()
+{
+	g_BreakableHelper.Remove( this );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -777,6 +910,39 @@ void CTempEnts::BubbleTrail( const Vector &start, const Vector &end, float flWat
 #define SHARD_VOLUME 12.0	// on shard ever n^3 units
 
 //-----------------------------------------------------------------------------
+// Purpose: Only used by BreakModel temp ents for now.  Allows them to share a single
+//  lighting origin amongst a group of objects.  If the master object goes away, the next object
+//  in the group becomes the new lighting origin, etc.
+// Input  : *entity - 
+//			flags - 
+// Output : int
+//-----------------------------------------------------------------------------
+int BreakModelDrawHelper( C_LocalTempEntity *entity, int flags )
+{
+	ModelRenderInfo_t sInfo;
+	sInfo.flags = flags;
+	sInfo.pRenderable = entity;
+	sInfo.instance = MODEL_INSTANCE_INVALID;
+	sInfo.entity_index = entity->index;
+	sInfo.pModel = entity->GetModel();
+	sInfo.origin = entity->GetRenderOrigin();
+	sInfo.angles = entity->GetRenderAngles();
+	sInfo.skin = entity->m_nSkin;
+	sInfo.body = entity->m_nBody;
+	sInfo.hitboxset = entity->m_nHitboxSet;
+
+	// This is the main change, look up a lighting origin from the helper singleton
+	const Vector *pLightingOrigin = g_BreakableHelper.GetLightingOrigin( entity );
+	if ( pLightingOrigin )
+	{
+		sInfo.pLightingOrigin = pLightingOrigin;
+	}
+
+	int drawn = modelrender->DrawModelEx( sInfo );
+	return drawn;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Create model shattering shards
 // Input  : *pos - 
 //			*size - 
@@ -793,16 +959,16 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 	int					i, frameCount;
 	C_LocalTempEntity			*pTemp;
 	const model_t		*pModel;
-	char				type;
 
 	if (!modelIndex) 
 		return;
 
-	type = flags & BREAK_TYPEMASK;
-
 	pModel = modelinfo->GetModel( modelIndex );
 	if ( !pModel )
 		return;
+
+	// See g_BreakableHelper above for notes...
+	bool isSlave = ( flags & BREAK_SLAVE ) ? true : false;
 
 	frameCount = modelinfo->GetModelFrameCount( pModel );
 
@@ -835,7 +1001,7 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 			return;
 
 		// keep track of break_type, so we know how to play sound on collision
-		pTemp->hitSound = type;
+		pTemp->hitSound = flags;
 		
 		if ( modelinfo->GetModelType( pModel ) == mod_sprite )
 		{
@@ -861,7 +1027,7 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 			pTemp->flags |= FTENT_SMOKETRAIL;
 		}
 
-		if ((type == BREAK_GLASS) || (flags & BREAK_TRANS))
+		if ((flags & BREAK_GLASS) || (flags & BREAK_TRANS))
 		{
 			pTemp->SetRenderMode( kRenderTransTexture );
 			pTemp->SetRenderColorA( 128 );
@@ -879,10 +1045,16 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 							dir[2] + random->RandomFloat(   0,randRange) ) );
 
 		pTemp->die = gpGlobals->curtime + life + random->RandomFloat(0,1);	// Add an extra 0-1 secs of life
+
+		// We use a special rendering function because these objects will want to share their lighting
+		//  origin with the first/master object.  Prevents a huge spike in Light Cache building in maps
+		//  with many worldlights.
+		pTemp->SetDrawHelper( BreakModelDrawHelper );
+		g_BreakableHelper.Insert( pTemp, isSlave );
 	}
 }
 
-void CTempEnts::PhysicsProp( int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, int flags )
+void CTempEnts::PhysicsProp( int modelindex, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects )
 {
 	C_PhysPropClientside *pEntity = C_PhysPropClientside::CreateNew();
 	
@@ -898,9 +1070,11 @@ void CTempEnts::PhysicsProp( int modelindex, const Vector& pos, const QAngle &an
 	}
 
 	pEntity->SetModelName( modelinfo->GetModelName(model) );
+	pEntity->m_nSkin = skin;
 	pEntity->SetAbsOrigin( pos );
 	pEntity->SetAbsAngles( angles );
 	pEntity->SetPhysicsMode( PHYSICS_MULTIPLAYER_CLIENTSIDE );
+	pEntity->SetEffects( effects );
 
 	if ( !pEntity->Initialize() )
 	{
@@ -1456,7 +1630,7 @@ C_LocalTempEntity * CTempEnts::SpawnTempModel( model_t *pModel, const Vector &ve
 //			attachmentIndex - 
 //			firstPerson - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, bool firstPerson )
+void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachmentIndex, bool firstPerson )
 {
 	// Mirv: Optionally disable'd muzzle flashes
 	if (ffdev_disablemuzzleflashes.GetBool())
@@ -1479,59 +1653,59 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 	case MUZZLEFLASH_COMBINE:
 		if ( firstPerson )
 		{
-			MuzzleFlash_Combine_Player( entityIndex, attachmentIndex );
+			MuzzleFlash_Combine_Player( hEntity, attachmentIndex );
 		}
 		else
 		{
-			MuzzleFlash_Combine_NPC( entityIndex, attachmentIndex );
+			MuzzleFlash_Combine_NPC( hEntity, attachmentIndex );
 		}
 		break;
 
 	case MUZZLEFLASH_SMG1:
 		if ( firstPerson )
 		{
-			MuzzleFlash_SMG1_Player( entityIndex, attachmentIndex );
+			MuzzleFlash_SMG1_Player( hEntity, attachmentIndex );
 		}
 		else
 		{
-			MuzzleFlash_SMG1_NPC( entityIndex, attachmentIndex );
+			MuzzleFlash_SMG1_NPC( hEntity, attachmentIndex );
 		}
 		break;
 
 	case MUZZLEFLASH_PISTOL:
 		if ( firstPerson )
 		{
-			MuzzleFlash_Pistol_Player( entityIndex, attachmentIndex );
+			MuzzleFlash_Pistol_Player( hEntity, attachmentIndex );
 		}
 		else
 		{
-			MuzzleFlash_Pistol_NPC( entityIndex, attachmentIndex );
+			MuzzleFlash_Pistol_NPC( hEntity, attachmentIndex );
 		}
 		break;
 	case MUZZLEFLASH_SHOTGUN:
 		if ( firstPerson )
 		{
-			MuzzleFlash_Shotgun_Player( entityIndex, attachmentIndex );
+			MuzzleFlash_Shotgun_Player( hEntity, attachmentIndex );
 		}
 		else
 		{
-			MuzzleFlash_Shotgun_NPC( entityIndex, attachmentIndex );
+			MuzzleFlash_Shotgun_NPC( hEntity, attachmentIndex );
 		}
 		break;
 	case MUZZLEFLASH_357:
 		if ( firstPerson )
 		{
-			MuzzleFlash_357_Player( entityIndex, attachmentIndex );
+			MuzzleFlash_357_Player( hEntity, attachmentIndex );
 		}
 		break;
 	case MUZZLEFLASH_RPG:
 		if ( firstPerson )
 		{
-			// MuzzleFlash_RPG_Player( entityIndex, attachmentIndex );
+			// MuzzleFlash_RPG_Player( hEntity, attachmentIndex );
 		}
 		else
 		{
-			MuzzleFlash_RPG_NPC( entityIndex, attachmentIndex );
+			MuzzleFlash_RPG_NPC( hEntity, attachmentIndex );
 		}
 		break;
 		break;
@@ -1549,7 +1723,7 @@ void CTempEnts::MuzzleFlash( int type, int entityIndex, int attachmentIndex, boo
 // Input  : *pos1 - 
 //			type - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type, int entityIndex, bool firstPerson )
+void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type, ClientEntityHandle_t hEntity, bool firstPerson )
 {
 #ifdef CSTRIKE_DLL
 
@@ -1575,32 +1749,16 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	switch ( type )
 	{
 	//
-	// AR2
-	//
-	case MUZZLEFLASH_AR2:
-		if ( firstPerson )
-		{
-			MuzzleFlash_AR2_Player( pos1, angles, entityIndex );
-		}
-		else
-		{
-			MuzzleFlash_AR2_NPC( pos1, angles, entityIndex );
-		}
-		break;
-
-	//
 	// Shotgun
 	//
 	case MUZZLEFLASH_SHOTGUN:
 		if ( firstPerson )
 		{
-			//FIXME: These should go away
-			MuzzleFlash_Shotgun_Player( entityIndex, 1 );
+			MuzzleFlash_Shotgun_Player( hEntity, 1 );
 		}
 		else
 		{
-			//FIXME: These should go away
-			MuzzleFlash_Shotgun_NPC( entityIndex, 1 );
+			MuzzleFlash_Shotgun_NPC( hEntity, 1 );
 		}
 		break;
 
@@ -1609,13 +1767,11 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	case MUZZLEFLASH_SMG1:
 		if ( firstPerson )
 		{
-			//FIXME: These should go away
-			MuzzleFlash_SMG1_Player( entityIndex, 1 );
+			MuzzleFlash_SMG1_Player( hEntity, 1 );
 		}
 		else
 		{
-			//FIXME: These should go away
-			MuzzleFlash_SMG1_NPC( entityIndex, 1 );
+			MuzzleFlash_SMG1_NPC( hEntity, 1 );
 		}
 		break;
 
@@ -1624,12 +1780,11 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	case MUZZLEFLASH_PISTOL:
 		if ( firstPerson )
 		{
-			MuzzleFlash_Pistol_Player( entityIndex, 1 );
+			MuzzleFlash_Pistol_Player( hEntity, 1 );
 		}
 		else
 		{
-			//FIXME: These should go away
-			MuzzleFlash_Pistol_NPC( entityIndex, 1 );
+			MuzzleFlash_Pistol_NPC( hEntity, 1 );
 		}
 		break;
 
@@ -1637,12 +1792,12 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 		if ( firstPerson )
 		{
 			//FIXME: These should go away
-			MuzzleFlash_Combine_Player( entityIndex, 1 );
+			MuzzleFlash_Combine_Player( hEntity, 1 );
 		}
 		else
 		{
 			//FIXME: These should go away
-			MuzzleFlash_Combine_NPC( entityIndex, 1 );
+			MuzzleFlash_Combine_NPC( hEntity, 1 );
 		}
 		break;
 	
@@ -1719,6 +1874,7 @@ void CTempEnts::Clear( void )
 	}
 
 	m_TempEnts.RemoveAll();
+	g_BreakableHelper.Clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -1755,6 +1911,19 @@ C_LocalTempEntity *CTempEnts::TempEntAlloc( const Vector& org, model_t *model )
 	pTemp->m_RenderGroup = RENDER_GROUP_OTHER;
 	pTemp->AddToLeafSystem( pTemp->m_RenderGroup );
 
+	if ( CommandLine()->CheckParm( "-tools" ) != NULL )
+	{
+#ifdef _DEBUG
+		static bool first = true;
+		if ( first )
+		{
+			Msg( "Currently not recording tempents, since recording them as entites causes them to be deleted as entities, even though they were allocated through the tempent pool. (crash)\n" );
+			first = false;
+		}
+#endif
+//		ClientEntityList().AddNonNetworkableEntity(	pTemp );
+	}
+
 	return pTemp;
 }
 
@@ -1781,6 +1950,8 @@ void CTempEnts::TempEntFree( int index )
 
 		// Cleanup its data.
 		pTemp->RemoveFromLeafSystem();
+
+		pTemp->OnRemoveTempEntity();
 	
 		m_TempEntsPool.Free( pTemp );
 	}
@@ -1853,6 +2024,11 @@ C_LocalTempEntity *CTempEnts::TempEntAllocHigh( const Vector& org, model_t *mode
 
 	pTemp->m_RenderGroup = RENDER_GROUP_OTHER;
 	pTemp->AddToLeafSystem( pTemp->m_RenderGroup );
+
+	if ( CommandLine()->CheckParm( "-tools" ) != NULL )
+	{
+		ClientEntityList().AddNonNetworkableEntity(	pTemp );
+	}
 
 	return pTemp;
 }
@@ -2044,7 +2220,7 @@ int CTempEnts::AddVisibleTempEntity( C_LocalTempEntity *pEntity )
 		{
 			pEntity->AddToLeafSystem( pEntity->m_RenderGroup );
 		}
-		
+
 		return 1;
 	}
 	return 0;
@@ -2229,143 +2405,44 @@ void CTempEnts::Shutdown()
 	LevelShutdown();
 }
 
-//==================================================
-// Purpose: 
-// Input: 
-//==================================================
-
-void CTempEnts::MuzzleFlash_AR2_Player( const Vector &origin, const QAngle &angles, int entityIndex )
+//-----------------------------------------------------------------------------
+// Purpose: Cache off all material references
+// Input  : *pEmitter - Emitter used for material lookup
+//-----------------------------------------------------------------------------
+inline void CTempEnts::CacheMuzzleFlashes( void )
 {
-#if 1
-
-	float	scale = 1.5f;
-	Vector	forward, offset;
-
-	AngleVectors( angles, &forward );
-	float flScale = random->RandomFloat( scale-0.25f, scale );
-
-	if ( flScale < 0.5f )
+	int i;
+	for ( i = 0; i < 4; i++ )
 	{
-		flScale = 0.5f;
+		if ( m_Material_MuzzleFlash_Player[i] == NULL )
+		{
+			m_Material_MuzzleFlash_Player[i] = ParticleMgr()->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", i+1 ) );
+		}
 	}
 
-	//
-	// Flash
-	//
-	C_LocalTempEntity *pTemp;
-
-	for ( int i = 1; i < 9; i++ )
+	for ( i = 0; i < 4; i++ )
 	{
-		offset = origin + (forward * (i*8.0f*flScale));
-
-		pTemp = TempEntAllocHigh( offset, (model_t *) m_pSpriteAR2Flash[random->RandomInt(0,3)] );
-		
-		if ( pTemp == NULL )
-			return;
-
-		//Setup our colors and type
-		pTemp->SetRenderMode( kRenderTransAdd );
-		pTemp->SetRenderColor( 164, 164, 164+random->RandomInt(0,64), 255 );
-		pTemp->tempent_renderamt= 255;
-		pTemp->m_nRenderFX		= kRenderFxNone;
-		pTemp->flags			= FTENT_PERSIST;
-		pTemp->die				= gpGlobals->curtime + 0.025f;
-		pTemp->m_flFrame		= 0;
-		pTemp->m_flFrameMax		= 0;
-		
-		pTemp->SetLocalOrigin( offset );
-		pTemp->SetLocalAngles( vec3_angle );
-		
-		pTemp->SetVelocity( vec3_origin );
-		
-		//Scale and rotate
-		pTemp->m_flSpriteScale	= ( (random->RandomFloat( 6.0f, 8.0f ) * (12-(i))/9) * flScale ) / 32;
-		pTemp->SetLocalAnglesDim( Z_INDEX, random->RandomInt( 0, 360 ) );
-
-		pTemp->AddToLeafSystem();
+		if ( m_Material_MuzzleFlash_NPC[i] == NULL )
+		{
+			m_Material_MuzzleFlash_NPC[i] = ParticleMgr()->GetPMaterial( VarArgs( "effects/muzzleflash%d", i+1 ) );
+		}
 	}
 
-	//Flare
-	pTemp = TempEntAlloc( origin, (model_t *) m_pSpriteMuzzleFlash[0] );
-	
-	if ( pTemp == NULL )
-		return;
-
-	//Setup our colors and type
-	pTemp->SetRenderMode( kRenderTransAdd );
-	pTemp->SetRenderColor( 255, 255, 255, 255 );
-	pTemp->tempent_renderamt= 255;
-	pTemp->m_nRenderFX		= kRenderFxNone;
-	pTemp->flags			= FTENT_PERSIST;
-	pTemp->die				= gpGlobals->curtime + 0.025f;
-	pTemp->m_flFrame		= 0;
-	pTemp->m_flFrameMax		= 0;
-	
-	pTemp->SetLocalOrigin( origin );
-	pTemp->SetLocalAngles( vec3_angle );
-	
-	pTemp->SetVelocity( vec3_origin );
-	
-	//Scale and rotate
-	pTemp->m_flSpriteScale	= random->RandomFloat( 0.05f, 0.1f );
-	pTemp->SetLocalAnglesDim( Z_INDEX, random->RandomInt( 0, 360 ) );
-
-	pTemp->AddToLeafSystem();
-
-#else
-
-	C_LocalTempEntity *pTemp = TempEntAlloc( origin, (model_t *) m_pSpriteMuzzleFlash[0] );
-	
-	if ( pTemp == NULL )
-		return;
-
-	//Setup our colors and type
-	pTemp->m_nRenderMode	= kRenderTransAdd;
-	pTemp->m_clrRender.r	= 255;
-	pTemp->m_clrRender.g	= 255;
-	pTemp->m_clrRender.b	= 255;
-	pTemp->m_clrRender.a	= 255;
-	pTemp->tempent_renderamt= 255;
-	pTemp->m_nRenderFX		= kRenderFxNone;
-	pTemp->flags			= FTENT_NONE;
-	pTemp->die				= gpGlobals->curtime + 0.025f;
-	pTemp->m_flFrame		= 0;
-	pTemp->m_flFrameMax		= 0;
-	
-	pTemp->SetLocalOrigin( origin );
-	pTemp->SetLocalAngles( vec3_angle );
-	
-	pTemp->SetVelocity( vec3_origin );
-	
-	//Scale and rotate
-	pTemp->m_flSpriteScale		= random->RandomFloat( 0.1f, 0.15f );
-	pTemp->SetAnglesDim( Z_INDEX, (360.0f/6.0f) * random->RandomInt( 0, 5 ) );
-
-	pTemp->AddToLeafSystem();
-
-	//
-	// Smoke
-	//
-
-	Vector forward, start, end;
-
-	AngleVectors( angles, &forward );
-
-	start   = (Vector) origin - ( forward * 8 );
-	end		= (Vector) origin + ( forward * random->RandomFloat( 48, 128 ) );
-
-	unsigned int	flags = 0;
-
-	if ( random->RandomInt( 0, 1 ) )
+	for ( i = 0; i < 2; i++ )
 	{
-		flags |= FXSTATICLINE_FLIP_HORIZONTAL;
+		if ( m_Material_Combine_MuzzleFlash_Player[i] == NULL )
+		{
+			m_Material_Combine_MuzzleFlash_Player[i] = ParticleMgr()->GetPMaterial( VarArgs( "effects/combinemuzzle%d_noz", i+1 ) );
+		}
 	}
 
-	const char *text = ( random->RandomInt( 0, 1 ) ) ? "sprites/ar2_muzzle3" : "sprites/ar2_muzzle4";
-
-	FX_AddStaticLine( start, end, random->RandomFloat( 8.0f, 14.0f ), 0.01f, text, flags );
-
-#endif
+	for ( i = 0; i < 2; i++ )
+	{
+		if ( m_Material_Combine_MuzzleFlash_NPC[i] == NULL )
+		{
+			m_Material_Combine_MuzzleFlash_NPC[i] = ParticleMgr()->GetPMaterial( VarArgs( "effects/combinemuzzle%d", i+1 ) );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2373,10 +2450,12 @@ void CTempEnts::MuzzleFlash_AR2_Player( const Vector &origin, const QAngle &angl
 // Input  : entityIndex - 
 //			attachmentIndex - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash_Combine_Player( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Combine_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Combine_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex, FLE_VIEWMODEL );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", hEntity, attachmentIndex, FLE_VIEWMODEL );
+
+	CacheMuzzleFlashes();
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -2390,7 +2469,7 @@ void CTempEnts::MuzzleFlash_Combine_Player( int entityIndex, int attachmentIndex
 	{
 		offset = (forward * (i*8.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/combinemuzzle%d_noz", random->RandomInt(1,2) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_Combine_MuzzleFlash_Player[random->RandomInt(0,1)], offset );
 			
 		if ( pParticle == NULL )
 			return;
@@ -2414,7 +2493,7 @@ void CTempEnts::MuzzleFlash_Combine_Player( int entityIndex, int attachmentIndex
 	}
 
 	// Tack on the smoke
-	pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/combinemuzzle%d_noz", random->RandomInt(1,2) ) ), vec3_origin );
+	pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_Combine_MuzzleFlash_Player[random->RandomInt(0,1)], vec3_origin );
 		
 	if ( pParticle == NULL )
 		return;
@@ -2444,10 +2523,10 @@ void CTempEnts::MuzzleFlash_Combine_Player( int entityIndex, int attachmentIndex
 //			&angles - 
 //			entityIndex - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Combine_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Strider", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_Strider", entityIndex, attachmentIndex );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_Strider", hEntity, attachmentIndex );
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -2494,7 +2573,7 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 50.0f, 150.0f );
 
 	// Diagonal flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (dir * (i*flScale));
 
@@ -2525,7 +2604,7 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 50.0f, 150.0f );
 
 	// Diagonal flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (-dir * (i*flScale));
 
@@ -2556,7 +2635,7 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 50.0f, 150.0f );
 
 	// Top flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (dir * (i*flScale));
 
@@ -2609,7 +2688,7 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 	Vector		origin;
 	
 	// Grab the origin out of the transform for the attachment
-	if ( FX_GetAttachmentTransform( entityIndex, attachmentIndex, matAttachment ) )
+	if ( FX_GetAttachmentTransform( hEntity, attachmentIndex, matAttachment ) )
 	{
 		origin.x = matAttachment[0][3];
 		origin.y = matAttachment[1][3];
@@ -2624,18 +2703,22 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 
 	if ( muzzleflash_light.GetBool() )
 	{
-		dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
+		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntityFromHandle( hEntity );
+		if ( pEnt )
+		{
+			dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + pEnt->entindex() );
 
-		el->origin	= origin;
+			el->origin	= origin;
 
-		el->color.r = 64;
-		el->color.g = 128;
-		el->color.b = 255;
-		el->color.exponent = 5;
+			el->color.r = 64;
+			el->color.g = 128;
+			el->color.b = 255;
+			el->color.exponent = 5;
 
-		el->radius	= random->RandomInt( 32, 128 );
-		el->decay	= el->radius / 0.05f;
-		el->die		= gpGlobals->curtime + 0.05f;
+			el->radius	= random->RandomInt( 32, 128 );
+			el->decay	= el->radius / 0.05f;
+			el->die		= gpGlobals->curtime + 0.05f;
+		}
 	}
 }
 
@@ -2644,32 +2727,30 @@ void CTempEnts::MuzzleFlash_Combine_NPC( int entityIndex, int attachmentIndex )
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_AR2_NPC( const Vector &origin, const QAngle &angles, int entityIndex )
+void CTempEnts::MuzzleFlash_AR2_NPC( const Vector &origin, const QAngle &angles, ClientEntityHandle_t hEntity )
 {
 	//Draw the cloud of fire
-	FX_MuzzleEffect( origin, angles, 1.0f, entityIndex );
+	FX_MuzzleEffect( origin, angles, 1.0f, hEntity );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : &origin - 
-//			&angles - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash_SMG1_NPC( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_SMG1_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	//Draw the cloud of fire
-	FX_MuzzleEffectAttached( 1.0f, entityIndex, attachmentIndex, NULL, true );
+	FX_MuzzleEffectAttached( 1.0f, hEntity, attachmentIndex, NULL, true );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : &origin - 
-//			&angles - 
 //-----------------------------------------------------------------------------
-void CTempEnts::MuzzleFlash_SMG1_Player( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_SMG1_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_SMG1_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_SMG1_Player", entityIndex, attachmentIndex, FLE_VIEWMODEL );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_SMG1_Player", hEntity, attachmentIndex, FLE_VIEWMODEL );
+
+	CacheMuzzleFlashes();
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -2683,7 +2764,7 @@ void CTempEnts::MuzzleFlash_SMG1_Player( int entityIndex, int attachmentIndex )
 	{
 		offset = (forward * (i*8.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", random->RandomInt(1,4) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 			
 		if ( pParticle == NULL )
 			return;
@@ -2712,24 +2793,28 @@ void CTempEnts::MuzzleFlash_SMG1_Player( int entityIndex, int attachmentIndex )
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_Shotgun_Player( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Shotgun_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Shotgun_Player" );
 
 	pSimple->SetDrawBeforeViewModel( true );
 
+	CacheMuzzleFlashes();
+
 	Vector origin;
 	QAngle angles;
 
 	// Get our attachment's transformation matrix
-	FX_GetAttachmentTransform( entityIndex, attachmentIndex, &origin, &angles );
+	FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
+
+	pSimple->GetBinding().SetBBox( origin - Vector( 4, 4, 4 ), origin + Vector( 4, 4, 4 ) );
 
 	Vector forward;
 	AngleVectors( angles, &forward, NULL, NULL );
 
 	SimpleParticle *pParticle;
-	Vector			offset;
+	Vector offset;
 
 	float flScale = random->RandomFloat( 1.25f, 1.5f );
 
@@ -2738,7 +2823,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( int entityIndex, int attachmentIndex
 	{
 		offset = origin + (forward * (i*8.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", random->RandomInt(1,4) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 			
 		if ( pParticle == NULL )
 			return;
@@ -2767,10 +2852,10 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( int entityIndex, int attachmentIndex
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_Shotgun_NPC( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	//Draw the cloud of fire
-	FX_MuzzleEffectAttached( 0.75f, entityIndex, attachmentIndex );
+	FX_MuzzleEffectAttached( 0.75f, hEntity, attachmentIndex );
 
 	QAngle	angles;
 
@@ -2779,16 +2864,11 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( int entityIndex, int attachmentIndex )
 
 	// Setup the origin.
 	Vector	origin;
-	C_BaseEntity *pEnt = ClientEntityList().GetEnt( entityIndex );
-	if ( pEnt )
-	{
-		pEnt->GetAttachment( attachmentIndex, origin, angles );
-	}
-	else
-	{
+	IClientRenderable *pRenderable = ClientEntityList().GetClientRenderableFromHandle( hEntity );
+	if ( !pRenderable )
 		return;
-	}
 
+	pRenderable->GetAttachment( attachmentIndex, origin, angles );
 	AngleVectors( angles, &forward );
 
 	//Embers less often
@@ -2880,18 +2960,22 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( int entityIndex, int attachmentIndex )
 //==================================================
 // Purpose: 
 //==================================================
-void CTempEnts::MuzzleFlash_357_Player( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_357_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_357_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_357_Player" );
 
 	pSimple->SetDrawBeforeViewModel( true );
 
+	CacheMuzzleFlashes();
+
 	Vector origin;
 	QAngle angles;
 
 	// Get our attachment's transformation matrix
-	FX_GetAttachmentTransform( entityIndex, attachmentIndex, &origin, &angles );
+	FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
+
+	pSimple->GetBinding().SetBBox( origin - Vector( 4, 4, 4 ), origin + Vector( 4, 4, 4 ) );
 
 	Vector forward;
 	AngleVectors( angles, &forward, NULL, NULL );
@@ -2934,7 +3018,7 @@ void CTempEnts::MuzzleFlash_357_Player( int entityIndex, int attachmentIndex )
 	{
 		offset = origin + (forward * (i*8.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", random->RandomInt(1,4) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 			
 		if ( pParticle == NULL )
 			return;
@@ -2963,18 +3047,21 @@ void CTempEnts::MuzzleFlash_357_Player( int entityIndex, int attachmentIndex )
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_Pistol_Player( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Pistol_Player( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Pistol_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Pistol_Player" );
-
 	pSimple->SetDrawBeforeViewModel( true );
+
+	CacheMuzzleFlashes();
 
 	Vector origin;
 	QAngle angles;
 
 	// Get our attachment's transformation matrix
-	FX_GetAttachmentTransform( entityIndex, attachmentIndex, &origin, &angles );
+	FX_GetAttachmentTransform( hEntity, attachmentIndex, &origin, &angles );
+
+	pSimple->GetBinding().SetBBox( origin - Vector( 4, 4, 4 ), origin + Vector( 4, 4, 4 ) );
 
 	Vector forward;
 	AngleVectors( angles, &forward, NULL, NULL );
@@ -3020,7 +3107,7 @@ void CTempEnts::MuzzleFlash_Pistol_Player( int entityIndex, int attachmentIndex 
 	{
 		offset = origin + (forward * (i*4.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/muzzleflash%d_noz", random->RandomInt(1,4) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), m_Material_MuzzleFlash_Player[random->RandomInt(0,3)], offset );
 			
 		if ( pParticle == NULL )
 			return;
@@ -3049,9 +3136,9 @@ void CTempEnts::MuzzleFlash_Pistol_Player( int entityIndex, int attachmentIndex 
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_Pistol_NPC( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_Pistol_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
-	FX_MuzzleEffectAttached( 0.5f, entityIndex, attachmentIndex, NULL, true );
+	FX_MuzzleEffectAttached( 0.5f, hEntity, attachmentIndex, NULL, true );
 }
 
 
@@ -3062,10 +3149,10 @@ void CTempEnts::MuzzleFlash_Pistol_NPC( int entityIndex, int attachmentIndex )
 // Input: 
 //==================================================
 
-void CTempEnts::MuzzleFlash_RPG_NPC( int entityIndex, int attachmentIndex )
+void CTempEnts::MuzzleFlash_RPG_NPC( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	//Draw the cloud of fire
-	FX_MuzzleEffectAttached( 1.5f, entityIndex, attachmentIndex );
+	FX_MuzzleEffectAttached( 1.5f, hEntity, attachmentIndex );
 
 }
 

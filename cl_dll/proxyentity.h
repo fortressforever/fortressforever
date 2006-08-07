@@ -17,7 +17,7 @@ enum MaterialVarType_t;
 //-----------------------------------------------------------------------------
 // Base class all material proxies should inherit from
 //-----------------------------------------------------------------------------
-class CEntityMaterialProxy : public IMaterialProxy
+abstract_class CEntityMaterialProxy : public IMaterialProxy
 {
 public:
 	virtual void Release( void );

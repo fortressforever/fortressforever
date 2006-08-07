@@ -115,7 +115,7 @@ bspbrush_t *IntersectBrush (bspbrush_t *a, bspbrush_t *b)
 		in = back;
 	}
 
-	if (in == a)
+	if (in == a || !in)
 		return NULL;
 
 	in->next = NULL;

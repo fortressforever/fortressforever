@@ -4,6 +4,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
+
 #include "cbase.h"
 #include "c_breakableprop.h"
 #include "c_physicsprop.h"
@@ -89,7 +91,8 @@ unsigned int C_DynamicProp::ComputeClientSideAnimationFlags()
 {
 	if ( GetSequence() != -1 )
 	{
-		if ( GetSequenceCycleRate(GetSequence()) != 0.0f )
+		CStudioHdr *pStudioHdr = GetModelPtr();
+		if ( GetSequenceCycleRate(pStudioHdr, GetSequence()) != 0.0f )
 		{
 			return BaseClass::ComputeClientSideAnimationFlags();
 		}
@@ -139,6 +142,10 @@ void C_BasePropDoor::OnDataChanged( DataUpdateType_t type )
 		SetSolid(SOLID_VPHYSICS);
 		VPhysicsInitShadow( false, false );
 	}
+	else if ( VPhysicsGetObject() )
+	{
+		VPhysicsGetObject()->UpdateShadow( GetAbsOrigin(), GetAbsAngles(), false, TICK_INTERVAL );
+	}
 }
 
 bool C_BasePropDoor::TestCollision( const Ray_t &ray, unsigned int mask, trace_t& trace )
@@ -146,7 +153,7 @@ bool C_BasePropDoor::TestCollision( const Ray_t &ray, unsigned int mask, trace_t
 	if ( !VPhysicsGetObject() )
 		return false;
 
-	studiohdr_t *pStudioHdr = GetModelPtr( );
+	CStudioHdr *pStudioHdr = GetModelPtr( );
 	if (!pStudioHdr)
 		return false;
 
@@ -164,7 +171,7 @@ bool C_BasePropDoor::TestCollision( const Ray_t &ray, unsigned int mask, trace_t
 // ------------------------------------------------------------------------------------------ //
 // Special version of func_physbox.
 // ------------------------------------------------------------------------------------------ //
-
+#ifndef _XBOX
 class CPhysBoxMultiplayer : public CPhysBox, public IMultiplayerPhysics
 {
 public:
@@ -219,8 +226,20 @@ class CPhysicsPropMultiplayer : public CPhysicsProp, public IMultiplayerPhysics
 		return !m_bAwake;
 	}
 
+	virtual void ComputeWorldSpaceSurroundingBox( Vector *mins, Vector *maxs )
+	{
+		Assert( mins != NULL && maxs != NULL );
+		if ( !mins || !maxs )
+			return;
+
+		// Take our saved collision bounds, and transform into world space
+		TransformAABB( EntityToWorldTransform(), m_collisionMins, m_collisionMaxs, *mins, *maxs );
+	}
+
 	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	CNetworkVar( float, m_fMass );
+	CNetworkVector( m_collisionMins );
+	CNetworkVector( m_collisionMaxs );
 
 	DECLARE_CLIENTCLASS();
 };
@@ -228,4 +247,7 @@ class CPhysicsPropMultiplayer : public CPhysicsProp, public IMultiplayerPhysics
 IMPLEMENT_CLIENTCLASS_DT( CPhysicsPropMultiplayer, DT_PhysicsPropMultiplayer, CPhysicsPropMultiplayer )
 	RecvPropInt( RECVINFO( m_iPhysicsMode ) ),
 	RecvPropFloat( RECVINFO( m_fMass ) ),
+	RecvPropVector( RECVINFO( m_collisionMins ) ),
+	RecvPropVector( RECVINFO( m_collisionMaxs ) ),
 END_RECV_TABLE()
+#endif

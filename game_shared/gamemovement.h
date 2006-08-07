@@ -74,7 +74,7 @@ protected:
 
 	void			CheckWaterJump(void );
 
-	void			WaterMove( void );
+	virtual void	WaterMove( void );
 
 	void			WaterJump( void );
 
@@ -90,7 +90,10 @@ protected:
 
 	// Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 	virtual void	WalkMove( void );
-		
+
+	// Try to keep a walking player on the ground when running down slopes etc
+	void			StayOnGround( void );
+
 	// Handle MOVETYPE_WALK.
 	virtual void	FullWalkMove();
 
@@ -144,6 +147,8 @@ protected:
 	virtual bool	OnLadder( trace_t &trace );
 	virtual float	LadderDistance( void ) const { return 2.0f; }	///< Returns the distance a player can be from a ladder and still attach to it
 	virtual unsigned int LadderMask( void ) const { return MASK_PLAYERSOLID; }
+	virtual float	ClimbSpeed( void ) const { return MAX_CLIMB_SPEED; }
+	virtual float	LadderLateralMultiplier( void ) const { return 1.0f; }
 
 	// See if the player has a bogus velocity value.
 	void			CheckVelocity( void );
@@ -165,7 +170,7 @@ protected:
 	// Check if the point is in water.
 	// Sets refWaterLevel and refWaterType appropriately.
 	// If in water, applies current to baseVelocity, and returns true.
-	bool			CheckWater( void );
+	virtual bool			CheckWater( void );
 	
 	// Determine if player is in water, on ground, etc.
 	virtual void CategorizePosition( void );
@@ -217,13 +222,17 @@ protected:
 	// Figures out how the constraint should slow us down
 	float			ComputeConstraintSpeedFactor( void );
 
-	void			SetGroundEntity( CBaseEntity *newGround );
+	virtual void	SetGroundEntity( CBaseEntity *newGround );
+
+	void			StepMove( Vector &vecDestination, trace_t &trace );
+
+	#define BRUSH_ONLY true
+	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 
 private:
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );
 
-	void			StepMove( Vector &vecDestination, trace_t &trace );
 
 protected:
 	
@@ -241,6 +250,7 @@ protected:
 
 	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
 };
+
 
 //-----------------------------------------------------------------------------
 // Traces player movement + position

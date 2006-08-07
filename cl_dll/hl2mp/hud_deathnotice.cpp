@@ -217,11 +217,7 @@ void CHudDeathNotice::Paint()
 			// Draw killer's name
 			surface()->DrawSetTextPos( x, y );
 			surface()->DrawSetTextFont( m_hTextFont );
-			const wchar_t *p = killer;
-			while ( *p )
-			{
-				surface()->DrawUnicodeChar( *p++ );
-			}
+			surface()->DrawUnicodeString( killer );
 			surface()->DrawGetTextPos( x, y );
 		}
 
@@ -237,11 +233,7 @@ void CHudDeathNotice::Paint()
 		// Draw victims name
 		surface()->DrawSetTextPos( x, y );
 		surface()->DrawSetTextFont( m_hTextFont );	//reset the font, draw icon can change it
-		const wchar_t *p = victim;
-		while ( *p )
-		{
-			surface()->DrawUnicodeChar( *p++ );
-		}
+		surface()->DrawUnicodeString( victim );
 	}
 
 	// Now retire any death notices that have expired

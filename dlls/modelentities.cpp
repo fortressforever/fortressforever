@@ -24,11 +24,11 @@ BEGIN_DATADESC( CFuncBrush )
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputTurnOff ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Toggle", InputToggle ),
-
 	DEFINE_KEYFIELD( m_iDisabled, FIELD_INTEGER, "StartDisabled" ),
 	DEFINE_KEYFIELD( m_iSolidity, FIELD_INTEGER, "Solidity" ),
 	DEFINE_KEYFIELD( m_bSolidBsp, FIELD_BOOLEAN, "solidbsp" ),
 	DEFINE_KEYFIELD( m_iszExcludedClass, FIELD_STRING, "excludednpc" ),
+	DEFINE_KEYFIELD( m_bInvertExclusion, FIELD_BOOLEAN, "invert_exclusion" ),
 
 END_DATADESC()
 
@@ -37,7 +37,8 @@ void CFuncBrush::Spawn( void )
 {
 	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
 
-	SetSolid( SOLID_BSP );
+	SetSolid( SOLID_VPHYSICS );
+	AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 
 	if ( m_iSolidity == BRUSHSOLID_NEVER )
 	{
@@ -91,7 +92,7 @@ int CFuncBrush::DrawDebugTextOverlays( void )
 	{
 		char tempstr[512];
 		Q_snprintf( tempstr,sizeof(tempstr), "angles: %g %g %g", (double)GetLocalAngles()[PITCH], (double)GetLocalAngles()[YAW], (double)GetLocalAngles()[ROLL] );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 	}
 

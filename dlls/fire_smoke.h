@@ -44,9 +44,10 @@ public:
 //==================================================
 
 //NOTENOTE: Mirrored in cl_dll/c_fire_smoke.cpp
-#define	bitsFIRESMOKE_SMOKE				0x00000002
-#define	bitsFIRESMOKE_SMOKE_COLLISION	0x00000004
-#define	bitsFIRESMOKE_GLOW				0x00000008
+#define	bitsFIRESMOKE_SMOKE					0x00000002
+#define	bitsFIRESMOKE_SMOKE_COLLISION		0x00000004
+#define	bitsFIRESMOKE_GLOW					0x00000008
+#define	bitsFIRESMOKE_VISIBLE_FROM_ABOVE	0x00000010
 
 class CFireSmoke : public CBaseFire
 {
@@ -60,6 +61,7 @@ public:
 	void	Precache();
 	void	EnableSmoke( int state = true );
 	void	EnableGlow( int state = true );
+	void	EnableVisibleFromAbove( int state = true );
 	
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
@@ -68,6 +70,7 @@ public:
 
 	//Client-side
 	CNetworkVar( int, m_nFlameModelIndex );
+	CNetworkVar( int, m_nFlameFromAboveModelIndex );
 
 	//Server-side
 };

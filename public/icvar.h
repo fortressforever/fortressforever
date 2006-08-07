@@ -10,13 +10,15 @@
 #pragma once
 #endif
 
-#include "convar.h"
-#include "interface.h"
+#include "tier1/convar.h"
+#include "tier1/interface.h"
+#include "appframework/IAppSystem.h"
+
 
 //-----------------------------------------------------------------------------
 // Purpose: DLL interface to ConVars/ConCommands
 //-----------------------------------------------------------------------------
-class ICvar
+abstract_class ICvar : public IAppSystem
 {
 public:
 	// Try to register cvar
@@ -32,10 +34,21 @@ public:
 
 	// Get first ConCommandBase to allow iteration
 	virtual ConCommandBase	*GetCommands( void ) = 0;
+
+	// Removes all cvars with flag bit set
+	virtual void			UnlinkVariables( int flag ) = 0;
+
+	// Install a global change callback (to be called when any convar changes) 
+	virtual void			InstallGlobalChangeCallback( FnChangeCallback callback ) = 0;
+	virtual void			CallGlobalChangeCallback( ConVar *var, char const *pOldString ) = 0;
 };
 
-#define VENGINE_CVAR_INTERFACE_VERSION "VEngineCvar002"
+#define VENGINE_CVAR_INTERFACE_VERSION "VEngineCvar003"
 
 extern ICvar *cvar;
+
+DLL_EXPORT void SetCVarIF( ICvar *pCVarIF );
+DLL_EXPORT ICvar *GetCVarIF( void );
+
 
 #endif // ICVAR_H

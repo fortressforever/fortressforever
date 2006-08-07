@@ -25,7 +25,7 @@ CUtlLinkedList<CFuncAreaPortalBase*, unsigned short> g_AreaPortals;
 BEGIN_DATADESC( CFuncAreaPortalBase )
 
 	DEFINE_FIELD( m_portalNumber,			FIELD_INTEGER ),
-//	DEFINE_FIELD( m_AreaPortalsElement,	FIELD_SHORT ),
+	DEFINE_KEYFIELD( m_iPortalVersion,		FIELD_INTEGER, "PortalVersion" )
 
 END_DATADESC()
 
@@ -36,6 +36,7 @@ CFuncAreaPortalBase::CFuncAreaPortalBase()
 {
 	m_portalNumber = -1;
 	m_AreaPortalsElement = g_AreaPortals.AddToTail( this );
+	m_iPortalVersion = 0;
 }
 
 
@@ -45,8 +46,10 @@ CFuncAreaPortalBase::~CFuncAreaPortalBase()
 }
 
 
-bool CFuncAreaPortalBase::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor )
+bool CFuncAreaPortalBase::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient )
 {
+	// NOTE: We leave bIsOpenOnClient alone on purpose here. See the header for a description of why.
+	
 	if( m_portalNumber == -1 )
 		return false;
 
@@ -59,7 +62,6 @@ bool CFuncAreaPortalBase::UpdateVisibility( const Vector &vOrigin, float fovDist
 	if( plane.DistTo( vOrigin ) + VIEWER_PADDING > 0 )
 		bOpen = true;
 
-	engine->SetAreaPortalState( m_portalNumber, bOpen );
 	return bOpen;
 }
 

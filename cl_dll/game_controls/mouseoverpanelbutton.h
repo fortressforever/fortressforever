@@ -37,6 +37,13 @@ public:
 		int x,y, wide, tall;
 		templatePanel->GetBounds( x, y, wide, tall );
 		m_pPanel->SetBounds( x, y, wide, tall );
+		int px, py;
+		templatePanel->GetPinOffset( px, py );
+		int rx, ry;
+		templatePanel->GetResizeOffset( rx, ry );
+		// Apply pin settings from template, too
+		m_pPanel->SetAutoResize( templatePanel->GetPinCorner(), templatePanel->GetAutoResize(), px, py, rx, ry );
+
 	}
 
 	void ShowPage( )
@@ -86,6 +93,15 @@ public:
 		
 		return classPanel;
 	}
+
+#ifdef REFRESH_CLASSMENU_TOOL
+
+	void RefreshClassPage( void )
+	{
+		m_pPanel->LoadControlSettings( GetClassPage( GetName() ) );
+	}
+
+#endif
 
 	virtual void ApplySettings( KeyValues *resourceData ) 
 	{

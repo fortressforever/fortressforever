@@ -9,6 +9,7 @@
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "iefx.h"
+#include "fx.h"
 #include "decals.h"
 #include "materialsystem/IMaterialSystem.h"
 #include "filesystem.h"
@@ -19,6 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifndef _XBOX
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePlayerDecal )
 CLIENTEFFECT_MATERIAL( "decals/playerlogo01" )
 #if !defined(HL2_DLL) || defined(HL2MP)
@@ -97,6 +99,7 @@ CLIENTEFFECT_MATERIAL( "decals/playerlogo63" )
 CLIENTEFFECT_MATERIAL( "decals/playerlogo64" )
 #endif
 CLIENTEFFECT_REGISTER_END()
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Player Decal TE
@@ -118,8 +121,6 @@ public:
 	int				m_nPlayer;
 	Vector			m_vecOrigin;
 	int				m_nEntity;
-
-	const ConVar	*m_pDecals;
 };
 
 //-----------------------------------------------------------------------------
@@ -130,8 +131,6 @@ C_TEPlayerDecal::C_TEPlayerDecal( void )
 	m_nPlayer = 0;
 	m_vecOrigin.Init();
 	m_nEntity = 0;
-
-	m_pDecals = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,7 +145,6 @@ C_TEPlayerDecal::~C_TEPlayerDecal( void )
 //-----------------------------------------------------------------------------
 void C_TEPlayerDecal::Precache( void )
 {
-	m_pDecals = cvar->FindVar( "r_decals" );
 }
 
 //-----------------------------------------------------------------------------
@@ -160,6 +158,7 @@ void C_TEPlayerDecal::Precache( void )
 void TE_PlayerDecal( IRecipientFilter& filter, float delay,
 	const Vector* pos, int player, int entity  )
 {
+#ifndef _XBOX
 	// No valid target?
 	C_BaseEntity *ent = cl_entitylist->GetEnt( entity );
 	if ( !ent )
@@ -219,6 +218,7 @@ void TE_PlayerDecal( IRecipientFilter& filter, float delay,
 		0, 
 		0,
 		rgbaColor );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -227,12 +227,14 @@ void TE_PlayerDecal( IRecipientFilter& filter, float delay,
 //-----------------------------------------------------------------------------
 void C_TEPlayerDecal::PostDataUpdate( DataUpdateType_t updateType )
 {
+#ifndef _XBOX
 	// Decals disabled?
-	if ( m_pDecals && !m_pDecals->GetBool() )
+	if ( !r_decals.GetBool() )
 		return;
 
 	CLocalPlayerFilter filter;
 	TE_PlayerDecal(  filter, 0.0f, &m_vecOrigin, m_nPlayer, m_nEntity );
+#endif
 }
 
 IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEPlayerDecal, DT_TEPlayerDecal, CTEPlayerDecal)

@@ -17,16 +17,17 @@
 typedef const char *AIConcept_t;
 
 // Speak concepts
-#define CONCEPT_LEAD_START				"TLK_LEAD_START"
-#define CONCEPT_LEAD_ARRIVAL			"TLK_LEAD_ARRIVAL"
-#define CONCEPT_LEAD_SUCCESS			"TLK_LEAD_SUCCESS"
-#define CONCEPT_LEAD_FAILURE			"lead_fail"
-#define CONCEPT_LEAD_COMING_BACK		"TLK_LEAD_COMINGBACK"
-#define CONCEPT_LEAD_CATCHUP			"TLK_LEAD_CATCHUP"
-#define CONCEPT_LEAD_RETRIEVE			"TLK_LEAD_RETRIEVE"
-#define CONCEPT_LEAD_ATTRACTPLAYER		"TLK_LEAD_ATTRACTPLAYER"
-#define CONCEPT_LEAD_WAITOVER			"TLK_LEAD_WAITOVER"
-#define CONCEPT_LEAD_MISSINGWEAPON		"TLK_LEAD_MISSING_WEAPON"
+#define TLK_LEAD_START				"TLK_LEAD_START"
+#define TLK_LEAD_ARRIVAL			"TLK_LEAD_ARRIVAL"
+#define TLK_LEAD_SUCCESS			"TLK_LEAD_SUCCESS"
+#define TLK_LEAD_FAILURE			"lead_fail"
+#define TLK_LEAD_COMINGBACK			"TLK_LEAD_COMINGBACK"
+#define TLK_LEAD_CATCHUP			"TLK_LEAD_CATCHUP"
+#define TLK_LEAD_RETRIEVE			"TLK_LEAD_RETRIEVE"
+#define TLK_LEAD_ATTRACTPLAYER		"TLK_LEAD_ATTRACTPLAYER"
+#define TLK_LEAD_WAITOVER			"TLK_LEAD_WAITOVER"
+#define TLK_LEAD_MISSINGWEAPON		"TLK_LEAD_MISSING_WEAPON"
+#define TLK_LEAD_IDLE				"TLK_LEAD_IDLE"
 
 //-----------------------------------------------------------------------------
 // class CAI_LeadBehavior
@@ -73,7 +74,16 @@ struct AI_LeadArgs_t
 	unsigned 	flags;
 	float		flWaitDistance;
 	float		flLeadDistance;
+	float		flRetrieveDistance;
+	float		flSuccessDistance;
 	bool		bRun;
+	int			iRetrievePlayer;
+	int			iRetrieveWaitForSpeak;
+	int			iComingBackWaitForSpeak;
+	bool		bStopScenesWhenPlayerLost;
+	bool		bDontSpeakStart;
+	bool		bLeadDuringCombat;
+	bool		bGagLeader;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -96,13 +106,13 @@ public:
 
 	virtual const char *GetName() {	return "Lead"; }
 
+	virtual int	DrawDebugTextOverlays( int text_offset );
+
 	void LeadPlayer( const AI_LeadArgs_t &leadArgs, CAI_LeadBehaviorHandler *pSink = NULL );
 	void StopLeading( void );
 
 	virtual bool CanSelectSchedule();
 	void BeginScheduleSelection();
-
-	virtual Activity NPC_TranslateActivity( Activity activity );
 
 	virtual bool IsCurTaskContinuousMove();
 
@@ -121,13 +131,17 @@ public:
 		// Schedules
 		SCHED_LEAD_PLAYER = BaseClass::NEXT_SCHEDULE,
 		SCHED_LEAD_PAUSE,
+		SCHED_LEAD_PAUSE_COMBAT,
 		SCHED_LEAD_RETRIEVE,
 		SCHED_LEAD_RETRIEVE_WAIT,
 		SCHED_LEAD_SUCCEED,
 		SCHED_LEAD_AWAIT_SUCCESS,
 		SCHED_LEAD_WAITFORPLAYER,
+		SCHED_LEAD_WAITFORPLAYERIDLE,
 		SCHED_LEAD_PLAYERNEEDSWEAPON,
 		SCHED_LEAD_SPEAK_START,
+		SCHED_LEAD_SPEAK_THEN_RETRIEVE_PLAYER,
+		SCHED_LEAD_SPEAK_THEN_LEAD_PLAYER,
 		NEXT_SCHEDULE,
 		
 		// Tasks
@@ -142,6 +156,7 @@ public:
 		TASK_LEAD_SPEAK_START,
 		TASK_LEAD_MOVE_TO_RANGE,
 		TASK_LEAD_RETRIEVE_WAIT,
+		TASK_LEAD_WALK_PATH,
 		NEXT_TASK,
 		
 		// Conditions
@@ -152,6 +167,7 @@ public:
 		COND_LEAD_SUCCESS,
 		COND_LEAD_HAVE_FOLLOWER_LOS,
 		COND_LEAD_FOLLOWER_MOVED_FROM_MARK,
+		COND_LEAD_FOLLOWER_MOVING_TOWARDS_ME,
 		NEXT_CONDITION
 
 	};
@@ -160,8 +176,12 @@ private:
 
 	void GatherConditions();
 	virtual int SelectSchedule();
+	virtual int TranslateSchedule( int scheduleType );
 	virtual void StartTask( const Task_t *pTask );
 	virtual void RunTask( const Task_t *pTask );
+
+	bool GetClosestPointOnRoute( const Vector &targetPos, Vector *pVecClosestPoint );
+	bool PlayerIsAheadOfMe( bool bForce = false );
 
 	bool Speak( AIConcept_t concept );
 	bool IsSpeaking();
@@ -188,17 +208,23 @@ private:
 	Vector		m_waitpoint;
 	float		m_waitdistance;
 	float		m_leaddistance;
+	float		m_retrievedistance;
+	float		m_successdistance;
 	string_t	m_weaponname;
 	bool		m_run;
+	bool		m_gagleader;
 	bool		m_hasspokenstart;
 	bool		m_hasspokenarrival;
+	bool		m_hasPausedScenes;
 	float		m_flSpeakNextNagTime;
 	float		m_flWeaponSafetyTimeOut;
+	float		m_flNextLeadIdle;
+	bool		m_bInitialAheadTest;
 	CAI_MoveMonitor m_MoveMonitor;
 	
 	CRandStopwatch	m_LostTimer;
 	CRandStopwatch  m_LostLOSTimer;
-	
+
 	DEFINE_CUSTOM_SCHEDULE_PROVIDER;
 
 	DECLARE_DATADESC();

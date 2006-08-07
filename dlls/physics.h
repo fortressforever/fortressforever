@@ -34,6 +34,13 @@ extern ConVar phys_timescale;
 struct objectparams_t;
 extern IPhysicsGameTrace	*physgametrace;
 
+class IPhysicsCollisionSolver;
+class IPhysicsCollisionEvent;
+class IPhysicsObjectEvent;
+extern IPhysicsCollisionSolver * const g_pCollisionSolver;
+extern IPhysicsCollisionEvent * const g_pCollisionEventHandler;
+extern IPhysicsObjectEvent * const g_pObjectEventHandler;
+
 // HACKHACK: We treat anything >= 500kg as a special "large mass" that does more impact damage
 // and has special recovery on crushing/killing other objects
 // also causes screen shakes on impact with static/world objects
@@ -58,13 +65,17 @@ struct triggerevent_t
 {
 	CBaseEntity		*pTriggerEntity;
 	IPhysicsObject	*pTriggerPhysics;
+	CBaseEntity		*pEntity;
 	IPhysicsObject	*pObject;
+	bool			bStart;
 
-	inline void Init( CBaseEntity *triggerEntity, IPhysicsObject *triggerPhysics, IPhysicsObject *object )
+	inline void Init( CBaseEntity *triggerEntity, IPhysicsObject *triggerPhysics, CBaseEntity *entity, IPhysicsObject *object, bool startTouch )
 	{
 		pTriggerEntity = triggerEntity;
 		pTriggerPhysics= triggerPhysics;
+		pEntity = entity;
 		pObject = object;
+		bStart = startTouch;
 	}
 	inline void Clear()
 	{
@@ -75,8 +86,10 @@ struct triggerevent_t
 // parse solid parameter overrides out of a string 
 void PhysSolidOverride( solid_t &solid, string_t overrideScript );
 
+extern CEntityList *g_pShadowEntities;
 void PhysAddShadow( CBaseEntity *pEntity );
 void PhysRemoveShadow( CBaseEntity *pEntity );
+bool PhysHasShadow( CBaseEntity *pEntity );
 
 void PhysEnableFloating( IPhysicsObject *pObject, bool bEnable );
 
@@ -97,6 +110,9 @@ void PhysCallbackImpulse( IPhysicsObject *pPhysicsObject, const Vector &vecCente
 // Sets the velocity at a later time
 void PhysCallbackSetVelocity( IPhysicsObject *pPhysicsObject, const Vector &vecVelocity );
 
+// queue up a delete on this object
+void PhysCallbackRemove(IServerNetworkable *pRemove);
+
 bool PhysGetDamageInflictorVelocityStartOfFrame( IPhysicsObject *pInflictor, Vector &velocity, AngularImpulse &angVelocity );
 
 // force a physics entity to sleep immediately
@@ -112,7 +128,7 @@ bool PhysShouldCollide( IPhysicsObject *pObj0, IPhysicsObject *pObj1 );
 bool PhysIsInCallback();
 bool PhysIsFinalTick();
 
-void PhysGetTriggerEvent( triggerevent_t *pEvent, CBaseEntity *pTrigger );
+bool PhysGetTriggerEvent( triggerevent_t *pEvent, CBaseEntity *pTrigger );
 IPhysicsObject *FindPhysicsObjectByName( const char *pName );
 
 struct masscenteroverride_t
@@ -154,5 +170,6 @@ void PhysSetMassCenterOverride( masscenteroverride_t &override );
 // NOTE: this removes the entry from the table as well as retrieving it
 void PhysGetMassCenterOverride( CBaseEntity *pEntity, vcollide_t *pCollide, solid_t &solidOut );
 float PhysGetEntityMass( CBaseEntity *pEntity );
+void PhysSetEntityGameFlags( CBaseEntity *pEntity, unsigned short flags );
 
 #endif		// PHYSICS_H

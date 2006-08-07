@@ -181,10 +181,12 @@ void C_Team::ClientThink()
 //-----------------------------------------------------------------------------
 C_Team *GetLocalTeam( void )
 {
-	if ( !engine )
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if ( !player )
 		return NULL;
 	
-	return GetPlayersTeam( engine->GetLocalPlayer() );
+	return GetPlayersTeam( player->index );
 }
 
 //-----------------------------------------------------------------------------

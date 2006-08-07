@@ -43,7 +43,12 @@ public:
 	virtual void SetTickCaptions(const char *left, const char *right);
 	virtual void SetNumTicks(int ticks);
 	virtual void SetThumbWidth( int width );
-
+	
+	// If you click on the slider outside of the nob, the nob jumps
+	// to the click position, and if this setting is enabled, the nob
+	// is then draggable from the new position until the mouse is released
+	virtual void SetDragOnRepositionNob( bool state );
+	virtual bool IsDragOnRepositionNob() const;
 
 protected:
 	virtual void OnSizeChanged(int wide, int tall);
@@ -56,15 +61,17 @@ protected:
 	virtual const char *GetDescription();
 	virtual void OnKeyCodeTyped(KeyCode code);
 
-private:
+	virtual void DrawNob();
+	virtual void DrawTicks();
+	virtual void DrawTickLabels();
+
+	virtual void GetTrackRect( int &x, int &y, int &w, int &h );
+
+protected:
 	virtual void RecomputeNobPosFromValue();
 	virtual void RecomputeValueFromNobPos();
 	virtual void SendSliderMovedMessage();
-	virtual void GetTrackRect( int &x, int &y, int &w, int &h );
-	void DrawNob();
-	void DrawTicks();
-	void DrawTickLabels();
-	
+
 	bool _dragging;
 	int _nobPos[2];
 	int _nobDragStartPos[2];
@@ -85,6 +92,7 @@ private:
 	Color m_DisabledTextColor2;
 
 	int		m_nNumTicks;
+	bool	m_bIsDragOnRepositionNob;
 };
 
 }

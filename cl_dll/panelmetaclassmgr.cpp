@@ -323,6 +323,8 @@ bool CPanelMetaClassMgrImp::ParseMetaClassList( const char* pFileName,
 //-----------------------------------------------------------------------------
 void CPanelMetaClassMgrImp::LoadMetaClassDefinitionFile( const char *pFileName )
 {
+	MEM_ALLOC_CREDIT();
+
 	// Blat out previous metaclass definitions read in from this file...
 	int i = m_MetaClassKeyValues.Find( pFileName );
 	if (i != m_MetaClassKeyValues.InvalidIndex() )

@@ -25,7 +25,7 @@ class IClientUnknown;
 //-----------------------------------------------------------------------------
 // Purpose: Exposes IClientEntity's to engine
 //-----------------------------------------------------------------------------
-class IClientEntityList
+abstract_class IClientEntityList
 {
 public:
 	// Get IClientNetworkable interface for specified entity

@@ -24,6 +24,7 @@ int				 CAI_BaseNPC::m_iNumEvents	= 0;
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::AddEventToSR(const char *eventName, int eventID) 
 {
+	MEM_ALLOC_CREDIT();
 	Assert( m_pEventSR );
 
 	m_pEventSR->AddString( eventName, eventID );

@@ -112,6 +112,8 @@ public:
 	bool			HasInteraction( propdata_interactions_t Interaction ) { return ( m_iInteractions & (1 << Interaction) ) != 0; }
 	void			SetPhysicsMode(int iMode){}
 	int				GetPhysicsMode() { return PHYSICS_MULTIPLAYER_SOLID; }
+	void			SetMultiplayerBreakMode( mp_break_t mode ) {}
+	mp_break_t		GetMultiplayerBreakMode( void ) const { return MULTIPLAYER_BREAK_DEFAULT; }
 
 protected:
 	float		m_angle;

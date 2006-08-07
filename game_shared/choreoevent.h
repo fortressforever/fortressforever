@@ -17,10 +17,14 @@ class CChoreoEvent;
 class CChoreoScene;
 class IChoreoEventCallback; 
 class CAudioMixer;
+class CUtlBuffer;
 
-#include "utlvector.h"
+#include <string>
+#include "tier1/utlvector.h"
 #include "expressionsample.h"
 #include "networkvar.h"
+
+typedef std::string ChoreoStr_t;
 
 //-----------------------------------------------------------------------------
 // Purpose: SPEAK events can have "relative tags" that other objects can reference
@@ -50,7 +54,7 @@ public:
 
 protected:
 
-	char			m_szName[ MAX_EVENTTAG_LENGTH ];
+	ChoreoStr_t		m_Name;
 	float			m_flPercentage;
 	CChoreoEvent	*m_pOwner;
 };
@@ -98,7 +102,7 @@ public:
 
 protected:
 
-	char			m_szName[ MAX_EVENTTAG_LENGTH ];
+	ChoreoStr_t		m_Name;
 	float			m_flPercentage; 
 	bool			m_bLocked:1;
 	bool			m_bLinear:1;
@@ -155,6 +159,9 @@ public:
 	float				GetMin( int type = 0 );
 	float				GetMax( int type = 0 );
 
+	bool				IsInverted( void );
+	void				SetInverted( bool isInverted );
+
 	int					GetNumSamples( int type = 0 );
 	CExpressionSample	*GetSample( int index, int type = 0 );
 
@@ -164,7 +171,7 @@ public:
 	// returns scaled value for absolute time per left/right side
 	float				GetIntensity( float time, int side = 0 );
 
-	void				AddSample( float time, float value, int type = 0 );
+	CExpressionSample	*AddSample( float time, float value, int type = 0 );
 	void				RemoveSample( int index, int type = 0 );
 	void				Clear( void );
 
@@ -172,7 +179,7 @@ public:
 
 	// Puts in dummy start/end samples to spline to zero ( or 0.5 for
 	//  left/right data) at the origins
-	CExpressionSample	*GetBoundedSample( int number, int type = 0 );
+	CExpressionSample	*GetBoundedSample( int number, bool& bClamped, int type = 0 );
 
 	int					GetFlexControllerIndex( int side = 0 );
 	int					GetRawFlexControllerIndex( int side = 0 );
@@ -185,6 +192,17 @@ public:
 	float				GetSampleIntensity( float time );
 	float				GetBalanceIntensity( float time );
 
+	void				SetEdgeInfo( bool leftEdge, int curveType, float zero );
+	void				GetEdgeInfo( bool leftEdge, int& curveType, float& zero ) const;
+	void				SetEdgeActive( bool leftEdge, bool state );
+	bool				IsEdgeActive( bool leftEdge ) const;
+	int					GetEdgeCurveType( bool leftEdge ) const;
+	float				GetEdgeZeroValue( bool leftEdge ) const;
+
+	float				GetDefaultEdgeZeroPos() const;
+
+	void				SetServerSide( bool state );
+	bool				IsServerSide() const;
 private:
 	// remove any samples after endtime
 	void				RemoveOutOfRangeSamples( int type );
@@ -194,16 +212,11 @@ private:
 
 public:
 	// returns the fractional (0..1) value for "zero" based on Min/Max ranges
-	float				GetZeroValue( int type );
+	float				GetZeroValue( int type, bool leftSide );
+
 
 private:
 	char				*m_pControllerName;
-
-	// Is track active
-	bool				m_bActive;
-
-	// Is this a combo (magnitude + stereo) track
-	bool				m_bCombo;
 
 	// base track has range, combo is always 0..1
 	float				m_flMin;
@@ -212,16 +225,28 @@ private:
 	// 0 == magnitude
 	// 1 == left/right
 	CUtlVector< CExpressionSample > m_Samples[ 2 ];
-	int					m_nFlexControllerIndex[ 2 ];
-	int					m_nFlexControllerIndexRaw[ 2 ];
+	int								m_nFlexControllerIndex[ 2 ];
+	int								m_nFlexControllerIndexRaw[ 2 ];
+
+	// For left and right edge of type 0 flex data ( magnitude track )
+	EdgeInfo_t				m_EdgeInfo[ 2 ];
 
 	CChoreoEvent		*m_pEvent;
+
+	// Is track active
+	bool				m_bActive:1;
+
+	// Is this a combo (magnitude + stereo) track
+	bool				m_bCombo:1;
+	bool				m_bServerSide:1;
+
+	bool				m_bInverted; // track is displayed 1..0 instead of 0..1
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: The generic scene event type
 //-----------------------------------------------------------------------------
-class CChoreoEvent
+class CChoreoEvent : public ICurveDataAccessor
 {
 public:
 	// Type of event this object represents
@@ -316,6 +341,15 @@ public:
 
 	~CChoreoEvent( void );
 
+// ICurveDataAccessor methods
+	virtual bool	CurveHasEndTime();
+	virtual int		CurveGetSampleCount();
+	virtual CExpressionSample *CurveGetBoundedSample( int idx, bool& bClamped );
+	virtual int		GetDefaultCurveType();
+	// Serialization
+	void			SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene );
+	bool			RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene );
+
 	// Accessors
 	EVENTTYPE		GetType( void );
 	void			SetType( EVENTTYPE type );
@@ -345,22 +379,38 @@ public:
 	void			SetDistanceToTarget( float distancetotarget );
 	float			GetDistanceToTarget( void );
 
+	void			SetForceShortMovement( bool bForceShortMovement );
+	bool			GetForceShortMovement( void );
+
+	void			SetSyncToFollowingGesture( bool bSyncToFollowingGesture );
+	bool			GetSyncToFollowingGesture( void );
+
 	int				GetRampCount( void );
 	CExpressionSample *GetRamp( int index );
-	void			AddRamp( float time, float value, bool selected );
+	CExpressionSample *AddRamp( float time, float value, bool selected );
 	void			DeleteRamp( int index );
 	void			ClearRamp( void );
 	void			ResortRamp( void );
 	// remove any samples after endtime
 	void			RemoveOutOfRangeRampSamples( void );
 
+	EdgeInfo_t			*GetRampEdgeInfo( int idx );
+
+	void				RampSetEdgeInfo( bool leftEdge, int curveType, float zero );
+	void				RampGetEdgeInfo( bool leftEdge, int& curveType, float& zero ) const;
+	void				RampSetEdgeActive( bool leftEdge, bool state );
+	bool				RampIsEdgeActive( bool leftEdge ) const;
+	int					RampGetEdgeCurveType( bool leftEdge ) const;
+	float				RampGetEdgeZeroValue( bool leftEdge ) const;
+
 	// Puts in dummy start/end samples to spline to zero ( or 0.5 for
 	//  left/right data) at the origins
-	CExpressionSample	*GetBoundedRamp( int number );
-	float			GetRampIntensity( float time );
+	CExpressionSample	*GetBoundedRamp( int number, bool& bClamped );
+
+	static float	GetRampIntensity( ICurveDataAccessor *data, float time );
 
 	// Calculates weighting for a given time
-	float			GetIntensity( float time );
+	float			GetIntensity( ICurveDataAccessor *data, float time );
 
 	// Calculates 0..1 completion for a given time
 	float			GetCompletion( float time );
@@ -536,9 +586,17 @@ public:
 
 private:
 
+	// Declare copy constructor private to prevent accidental usage...
+					CChoreoEvent(const CChoreoEvent& src );
+
+	void SaveRampToBuffer( CUtlBuffer& buf );
+	bool RestoreRampFromBuffer( CUtlBuffer& buf );
+	void SaveFlexAnimationsToBuffer( CUtlBuffer& buf );
+	bool RestoreFlexAnimationsFromBuffer( CUtlBuffer& buf );
+
 	float			GetBoundedAbsoluteTagPercentage( AbsTagType type, int tagnum );
 
-	float			_GetIntensity( float time );
+	float			_GetIntensity( ICurveDataAccessor *data, float time );
 
 	// String bounds
 	enum
@@ -551,14 +609,17 @@ private:
 	void			Init( CChoreoScene *scene );
 
 	// Type of event
-	EVENTTYPE		m_fType;
+	byte			m_fType;
+
+	// Close caption type
+	byte			m_ccType;
 
 	// Name of event
-	char			m_szName[ MAX_CHOREOEVENT_NAME ];
+	ChoreoStr_t		m_Name;
 
 	// Event parameters
-	char			m_szParameters[ MAX_PARAMETERS_STRING ];
-	char			m_szParameters2[ MAX_PARAMETERS_STRING ];
+	ChoreoStr_t		m_Parameters;
+	ChoreoStr_t		m_Parameters2;
 
 	// Event start time
 	float			m_flStartTime;
@@ -573,19 +634,13 @@ private:
 	int				m_nNumLoops; // -1 == no limit
 	int				m_nLoopsRemaining;
 
-	bool			m_bFixedLength;
-
 	// Event ramp
 	CUtlVector< CExpressionSample > m_Ramp;
-
-	// True if this event must be "finished" before the next section can be started
-	//  after playback is paused from a globalevent
-	bool			m_bResumeCondition;
+	EdgeInfo_t		m_RampEdgeInfo[ 2 ];
 
 	// Start time is computed based on length of item referenced by tagged name
-	bool			m_bUsesTag;
-	char			m_szTagName[ MAX_TAGNAME_STRING ];
-	char			m_szTagWavName[ MAX_TAGNAME_STRING ];
+	ChoreoStr_t		m_TagName;
+	ChoreoStr_t		m_TagWavName;
 
 	// Associated actor
 	CChoreoActor	*m_pActor;
@@ -598,10 +653,7 @@ private:
 
 	CUtlVector < CFlexAnimationTrack * > m_FlexAnimationTracks;
 
-	bool			m_bTrackLookupSet;
-
 	CChoreoScene	*m_pSubScene;
-	bool			m_bProcessing;
 	CAudioMixer		*m_pMixer;
 
 	// Scene which owns this event
@@ -610,33 +662,45 @@ private:
 	int				m_nPitch;
 	int				m_nYaw;
 
-	bool			m_bLockBodyFacing;
 	float			m_flDistanceToTarget;
-
-	// Purely for save/load
-	bool			m_bMarkedForSave;
 
 	int				m_nGlobalID;
 
-	CLOSECAPTION	m_ccType;
-	char			m_szCCToken[ MAX_CCTOKEN_STRING ];
-	bool			m_bUsingCombinedSoundFile;
+	ChoreoStr_t		m_CCToken;
 	unsigned int	m_uRequiredCombinedChecksum; 
 	// on master only, the combined file must have the same checksum to be useable
 	int				m_nNumSlaves;
 	// Only set on master, helps UI draw underbar
 	float			m_flLastSlaveEndTime;	
 	// true if the cc token was found in the cc manager's database
-	bool			m_bCCTokenValid;   
-	bool			m_bCombinedUsingGenderToken;
-
-	bool			m_bSuppressCaptionAttenuation;
 
 	CUtlVector< CChoreoEvent * >	m_Dependencies;
+
 public:
 	// used only during scrubbing of looping sequences
 	float			m_flPrevCycle;
 	float			m_flPrevTime;
+
+	// Flags
+
+	bool			m_bFixedLength:1;
+	// True if this event must be "finished" before the next section can be started
+	//  after playback is paused from a globalevent
+	bool			m_bResumeCondition:1;
+	bool			m_bUsesTag:1;
+	bool			m_bTrackLookupSet:1;
+	bool			m_bProcessing:1;
+	bool			m_bLockBodyFacing:1;
+	// Purely for save/load
+	bool			m_bMarkedForSave:1;
+	bool			m_bUsingCombinedSoundFile:1;
+	bool			m_bCCTokenValid:1;   
+	bool			m_bCombinedUsingGenderToken:1;
+
+	bool			m_bSuppressCaptionAttenuation:1;
+
+	bool			m_bForceShortMovement:1;
+	bool			m_bSyncToFollowingGesture:1;
 };
 
 #endif // CHOREOEVENT_H

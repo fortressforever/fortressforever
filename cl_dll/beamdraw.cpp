@@ -4,6 +4,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
+
 #include "cbase.h"
 #include "beamdraw.h"
 #include "enginesprite.h"
@@ -12,15 +14,16 @@
 #include "iviewrender.h"
 #include "engine/ivmodelinfo.h"
 #include "fx_line.h"
+#include "materialsystem/imaterialvar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar r_DrawBeams( "r_DrawBeams", "1", FCVAR_CHEAT  );
-
-
 extern ConVar mat_wireframe;
-static IMaterial *g_pWireframeMaterial = NULL;
+extern ConVar r_drawsprites;
+extern ConVar r_DrawBeams;
+
+static IMaterial *g_pBeamWireframeMaterial;
 
 // ------------------------------------------------------------------------------------------ //
 // CBeamSegDraw implementation.
@@ -42,13 +45,11 @@ void CBeamSegDraw::Start( int nSegs, IMaterial *pMaterial, CMeshBuilder *pMeshBu
 		m_pMeshBuilder = NULL;
 		m_nMeshVertCount = 0;
 
-		if ( mat_wireframe.GetInt() )
+		if ( mat_wireframe.GetInt() || r_DrawBeams.GetInt() == 2 )
 		{
-			if ( !g_pWireframeMaterial )
-				g_pWireframeMaterial = materials->FindMaterial("shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER);
-			
-			if ( g_pWireframeMaterial )
-				pMaterial = g_pWireframeMaterial;
+			if ( !g_pBeamWireframeMaterial )
+				g_pBeamWireframeMaterial = materials->FindMaterial("shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER);
+			pMaterial = g_pBeamWireframeMaterial;
 		}
 
 		IMesh *pMesh = materials->GetDynamicMesh( true, NULL, NULL, pMaterial );
@@ -255,10 +256,11 @@ CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, in
 	if( !material )
 		return NULL;
 	
-	if ( mat_wireframe.GetBool() )
+	if ( mat_wireframe.GetBool() || r_DrawBeams.GetInt() == 2 )
 	{
-		IMaterial *pWireframe = materials->FindMaterial("shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER);
-		materials->Bind( pWireframe, NULL );
+		if ( !g_pBeamWireframeMaterial )
+			g_pBeamWireframeMaterial = materials->FindMaterial( "shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER );
+		materials->Bind( g_pBeamWireframeMaterial, NULL );
 		return psprite;
 	}
 	
@@ -277,10 +279,20 @@ CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, in
 //			source - 
 //			color - 
 //-----------------------------------------------------------------------------
-void DrawHalo(IMaterial* pMaterial, const Vector& source, float scale, float const* color )
+void DrawHalo(IMaterial* pMaterial, const Vector& source, float scale, float const* color, float flHDRColorScale )
 {
+	static unsigned int nHDRColorScaleCache = 0;
 	Vector		point, screen;
 	
+	if( pMaterial )
+	{
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
+
 	IMesh* pMesh = materials->GetDynamicMesh( );
 
 	CMeshBuilder meshBuilder;
@@ -320,106 +332,6 @@ void DrawHalo(IMaterial* pMaterial, const Vector& source, float scale, float con
 	meshBuilder.End();
 	pMesh->Draw();
 }
-
-static inline void DrawSpriteModel_Helper( CEngineSprite *psprite, const Vector &origin, float scale, int r, int g, int b, int a, const Vector& forward, const Vector& right, const Vector& up )
-{
-	Vector point;
-	IMesh* pMesh = materials->GetDynamicMesh( );
-
-	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
-
-	unsigned char color[4];
-	color[0] = r;
-	color[1] = g;
-	color[2] = b;
-	color[3] = a;
-
-	meshBuilder.Color4ubv (color);
-	meshBuilder.TexCoord2f (0, 0, 1);
-	VectorMA (origin, psprite->GetDown() * scale, up, point);
-	VectorMA (point, psprite->GetLeft() * scale, right, point);
-	meshBuilder.Position3fv (point.Base());
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ubv (color);
-	meshBuilder.TexCoord2f (0, 0, 0);
-	VectorMA (origin, psprite->GetUp() * scale, up, point);
-	VectorMA (point, psprite->GetLeft() * scale, right, point);
-	meshBuilder.Position3fv (point.Base());
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ubv (color);
-	meshBuilder.TexCoord2f (0, 1, 0);
-	VectorMA (origin, psprite->GetUp() * scale, up, point);
-	VectorMA (point, psprite->GetRight() * scale, right, point);
-	meshBuilder.Position3fv (point.Base());
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ubv (color);
-	meshBuilder.TexCoord2f (0, 1, 1);
-	VectorMA (origin, psprite->GetDown() * scale, up, point);
-	VectorMA (point, psprite->GetRight() * scale, right, point);
-	meshBuilder.Position3fv (point.Base());
-	meshBuilder.AdvanceVertex();
-	
-	meshBuilder.End();
-	pMesh->Draw();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Generic sprite model renderer
-// Input  : *baseentity - 
-//			*psprite - 
-//			fscale - 
-//			frame - 
-//			rendermode - 
-//			r - 
-//			g - 
-//			b - 
-//			a - 
-//			forward - 
-//			right - 
-//			up - 
-//-----------------------------------------------------------------------------
-void DrawSpriteModel( IClientEntity *baseentity, CEngineSprite *psprite, const Vector &origin, float fscale, float frame, 
-	int rendermode, int r, int g, int b, int a, const Vector& forward, const Vector& right, const Vector& up )
-{
-	float			scale;
-	IMaterial	*material;
-	
-	// don't even bother culling, because it's just a single
-	// polygon without a surface cache
-	//	frame = R_GetSpriteFrame( psprite, frame );
-	if ( fscale > 0 )
-		scale = fscale;
-	else
-		scale = 1.0;
-	
-	if( rendermode == kRenderNormal )
-		render->SetBlend( 1.0 );
-	
-	material = psprite->GetMaterial();
-	if( !material )
-	{
-		return;
-	}
-	psprite->SetRenderMode( rendermode );
-	psprite->SetFrame( frame );
-
-	materials->Bind( material, (IClientRenderable*)baseentity );
-
-	DrawSpriteModel_Helper( psprite, origin, scale, r, g, b, a, forward, right, up );
-	
-	extern ConVar mat_wireframe;
-	if( mat_wireframe.GetBool() )
-	{
-		IMaterial *pMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
-		materials->Bind( pMaterial, NULL );
-		DrawSpriteModel_Helper( psprite, origin, scale, r, g, b, a, forward, right, up );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Assumes the material has already been bound
@@ -524,13 +436,10 @@ static void ComputeBeamPerpendicular( const Vector &vecBeamDelta, Vector *pPerp 
 void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 				float frame, int rendermode, const Vector& source, const Vector& delta, 
 				float startWidth, float endWidth, float scale, float freq, float speed, int segments,
-				int flags, float* color, float fadeLength )
+				int flags, float* color, float fadeLength, float flHDRColorScale )
 {
 	int				i, noiseIndex, noiseStep;
 	float			div, length, fraction, factor, vLast, vStep, brightness;
-
-	if( !r_DrawBeams.GetInt() )
-		return;
 	
 	Assert( fadeLength >= 0.0f );
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
@@ -539,6 +448,17 @@ void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 
 	if ( segments < 2 )
 		return;
+
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
 	
 	length = VectorLength( delta );
 	float flMaxWidth = max(startWidth, endWidth) * 0.5f;
@@ -722,7 +642,7 @@ void CalcSegOrigin( Vector *vecOut, int iPoint, int noise_divisions, float *prgN
 
 	// Iterator to resample noise waveform (it needs to be generated in powers of 2)
 	int noiseStep = (int)((float)(noise_divisions-1) * div * 65536.0f);
-	int noiseIndex = (iPoint+1) * noiseStep;
+	int noiseIndex = (iPoint) * noiseStep;
 
 	// Sine noise beams have different length calculations
 	if ( flags & FBEAM_SINENOISE )
@@ -769,13 +689,10 @@ void CalcSegOrigin( Vector *vecOut, int iPoint, int noise_divisions, float *prgN
 void DrawTeslaSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 				float frame, int rendermode, const Vector&  source, const Vector&  delta, 
 				float startWidth, float endWidth, float scale, float freq, float speed, int segments,
-				int flags, float* color, float fadeLength )
+				int flags, float* color, float fadeLength, float flHDRColorScale )
 {
 	int				i;
 	float			div, length, fraction, vLast, vStep, brightness;
-
-	if( !r_DrawBeams.GetInt() )
-		return;
 	
 	Assert( fadeLength >= 0.0f );
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
@@ -785,6 +702,17 @@ void DrawTeslaSegs( int noise_divisions, float *prgNoise, const model_t* spritem
 	if ( segments < 2 )
 		return;
 	
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
+
 	if ( segments > noise_divisions )		// UNDONE: Allow more segments?
 		segments = noise_divisions;
 
@@ -917,7 +845,7 @@ void DrawTeslaSegs( int noise_divisions, float *prgNoise, const model_t* spritem
 	{
 		DrawTeslaSegs( noise_divisions, prgNoise, spritemodel, frame, rendermode, 
 			vecStart, vecEnd, flWidth, flEndWidth, scale, freq, speed, segments,
-			flags, color, fadeLength );
+			flags, color, fadeLength, flHDRColorScale );
 	}
 }
 
@@ -941,7 +869,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 				const model_t* beammodel, const model_t* halomodel, float flHaloScale,
 				float frame, int rendermode, int numAttachments, Vector* attachment, 
 				float startWidth, float endWidth, float scale, float freq, float speed, int segments,
-				int flags, float* color, float fadeLength )
+				int flags, float* color, float fadeLength, float flHDRColorScale )
 {
 	int				noiseIndex, noiseStep;
 	float			div, length, fraction, factor, vLast, vStep, brightness;
@@ -954,11 +882,21 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 	if ( !pBeamSprite )
 		return;
 
-	
 	// Figure out the number of segments.
 	if ( segments < 2 )
 		return;
 	
+	IMaterial *pMaterial = pBeamSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int		nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
+
 	if ( segments > noise_divisions )		// UNDONE: Allow more segments?
 		segments = noise_divisions;
 
@@ -1224,7 +1162,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 				VectorScale( color, fade, haloColor );
 				materials->Bind(pHaloMaterial);
 				float curWidth = (fBestFraction*(endSegWidth-startSegWidth))+startSegWidth;
-				DrawHalo(pHaloMaterial,vHaloPos,flHaloScale*curWidth/endWidth,haloColor);
+				DrawHalo(pHaloMaterial,vHaloPos,flHaloScale*curWidth/endWidth,haloColor, flHDRColorScale);
 			}
 		}
 	}
@@ -1237,7 +1175,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 	if (pHaloMaterial)
 	{
 		materials->Bind(pHaloMaterial);
-		DrawHalo(pHaloMaterial,pEnd,flHaloScale,scaledColor);
+		DrawHalo(pHaloMaterial,pEnd,flHaloScale,scaledColor, flHDRColorScale);
 	}
 }
 
@@ -1252,13 +1190,13 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 //			*color - 
 //-----------------------------------------------------------------------------
 void BeamDrawHalo( const model_t* spritemodel, float frame, int rendermode, 
-				  const Vector& source, float scale, float* color )
+				  const Vector& source, float scale, float* color, float flHDRColorScale )
 {
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
 	if ( !pSprite )
 		return;
 
-	DrawHalo( pSprite->GetMaterial(), source, scale, color );
+	DrawHalo( pSprite->GetMaterial(), source, scale, color, flHDRColorScale );
 }
 
 //-----------------------------------------------------------------------------
@@ -1279,12 +1217,13 @@ void BeamDrawHalo( const model_t* spritemodel, float frame, int rendermode,
 //-----------------------------------------------------------------------------
 void DrawDisk( int noise_divisions, float *prgNoise, const model_t* spritemodel, 
 			  float frame, int rendermode, const Vector&  source, const Vector& delta, 
-			  float width, float scale, float freq, float speed, int segments, float* color )
+			  float width, float scale, float freq, float speed, int segments, float* color, float flHDRColorScale )
 {
 	int				i;
 	float			div, length, fraction, vLast, vStep;
 	Vector			point;
 	float			w;
+	static unsigned int		nHDRColorScaleCache = 0;
 
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
 	if ( !pSprite )
@@ -1293,6 +1232,16 @@ void DrawDisk( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 	if ( segments < 2 )
 		return;
 	
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
+
 	if ( segments > noise_divisions )		// UNDONE: Allow more segments?
 		segments = noise_divisions;
 
@@ -1366,7 +1315,7 @@ void DrawDisk( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 void DrawCylinder( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 				  float frame, int rendermode, const Vector&  source, const Vector& delta, 
 				  float width, float scale, float freq, float speed, int segments, 
-				  float* color )
+				  float* color, float flHDRColorScale )
 {
 	int				i;
 	float			div, length, fraction, vLast, vStep;
@@ -1379,6 +1328,17 @@ void DrawCylinder( int noise_divisions, float *prgNoise, const model_t* spritemo
 	if ( segments < 2 )
 		return;
 	
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int		nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
+
 	if ( segments > noise_divisions )		// UNDONE: Allow more segments?
 		segments = noise_divisions;
 
@@ -1440,7 +1400,7 @@ void DrawCylinder( int noise_divisions, float *prgNoise, const model_t* spritemo
 void DrawRing( int noise_divisions, float *prgNoise, void (*pfnNoise)( float *noise, int divs, float scale ), 
 			  const model_t* spritemodel, float frame, int rendermode,
 			  const Vector& source, const Vector& delta, float width, 
-			  float amplitude, float freq, float speed, int segments, float *color )
+			  float amplitude, float freq, float speed, int segments, float *color, float flHDRColorScale )
 {
 	int				i, j, noiseIndex, noiseStep;
 	float			div, length, fraction, factor, vLast, vStep;
@@ -1452,6 +1412,17 @@ void DrawRing( int noise_divisions, float *prgNoise, void (*pfnNoise)( float *no
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
 	if ( !pSprite )
 		return;
+
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int		nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
 
 	VectorCopy( delta, d );
 
@@ -1522,12 +1493,15 @@ void DrawRing( int noise_divisions, float *prgNoise, void (*pfnNoise)( float *no
 		point[2] = xaxis[2] * x + yaxis[2] * y + center[2];
 
 		// Distort using noise
-		factor = prgNoise[(noiseIndex>>16) & 0x7F] * scale;
-		VectorMA( point, factor, CurrentViewUp(), point );
+		if ( scale != 0.0f )
+		{
+			factor = prgNoise[(noiseIndex>>16) & 0x7F] * scale;
+			VectorMA( point, factor, CurrentViewUp(), point );
 
-		// Rotate the noise along the perpendicluar axis a bit to keep the bolt from looking diagonal
-		factor = prgNoise[(noiseIndex>>16) & 0x7F] * scale * cos(fraction*M_PI*3*8+freq);
-		VectorMA( point, factor, CurrentViewRight(), point );
+			// Rotate the noise along the perpendicluar axis a bit to keep the bolt from looking diagonal
+			factor = prgNoise[(noiseIndex>>16) & 0x7F] * scale * cos(fraction*M_PI*3*8+freq);
+			VectorMA( point, factor, CurrentViewRight(), point );
+		}
 		
 		// Transform point into screen space
 		ScreenTransform( point, screen );
@@ -1590,7 +1564,7 @@ void DrawRing( int noise_divisions, float *prgNoise, void (*pfnNoise)( float *no
 void DrawBeamFollow( const model_t* spritemodel, BeamTrail_t* pHead, int frame, int rendermode, 
 					Vector& delta, Vector& screen, Vector& screenLast, float die,
 					const Vector& source, int flags, float width, float amplitude, 
-					float freq, float* color )
+					float freq, float* color, float flHDRColorScale )
 {
 	float			fraction;
 	float			div;
@@ -1602,6 +1576,17 @@ void DrawBeamFollow( const model_t* spritemodel, BeamTrail_t* pHead, int frame, 
 	CEngineSprite *pSprite = Draw_SetSpriteTexture( spritemodel, frame, rendermode );
 	if ( !pSprite )
 		return;
+
+	IMaterial *pMaterial = pSprite->GetMaterial();
+	if( pMaterial )
+	{
+		static unsigned int		nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( flHDRColorScale );
+		}
+	}
 
 	// UNDONE: This won't work, screen and screenLast must be extrapolated here to fix the
 	// first beam segment for this trail
@@ -1710,7 +1695,7 @@ P1 = control
 P2 = end
 P(t) = (1-t)^2 * P0 + 2t(1-t)*P1 + t^2 * P2
 */
-void DrawBeamQuadratic( const Vector &start, const Vector &control, const Vector &end, float width, const Vector &color, float scrollOffset )
+void DrawBeamQuadratic( const Vector &start, const Vector &control, const Vector &end, float width, const Vector &color, float scrollOffset, float flHDRColorScale )
 {
 	int subdivisions = 16;
 

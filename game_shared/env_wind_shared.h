@@ -163,6 +163,8 @@ public:
 	CNetworkVar( float, m_flMinGustDelay );	// min time between gusts
 	CNetworkVar( float, m_flMaxGustDelay );	// max time between gusts
 
+	CNetworkVar( float, m_flGustDuration );	// max time between gusts
+
 	CNetworkVar( int, m_iGustDirChange );	// max number of degrees wind dir changes on gusts.
 	int m_iszGustSound;		// name of the wind sound to play for gusts.
 	int m_iWindDir;			// wind direction (yaw)
@@ -170,6 +172,11 @@ public:
 
 	CNetworkVar( int, m_iInitialWindDir );
 	CNetworkVar( float, m_flInitialWindSpeed );
+
+#ifndef CLIENT_DLL
+	COutputEvent m_OnGustStart;
+	COutputEvent m_OnGustEnd;
+#endif
 
 private:
 	struct WindAveEvent_t

@@ -38,7 +38,6 @@ enum ShaderMaterialVars_t
 	BASETEXTURE,
 	FRAME,
 	BASETEXTURETRANSFORM,
-	ALBEDO,
 	FLASHLIGHTTEXTURE,
 	FLASHLIGHTTEXTUREFRAME,
 
@@ -62,17 +61,20 @@ public:
 	virtual char const* GetParamHelp( int paramIndex ) const;
 	virtual ShaderParamType_t GetParamType( int paramIndex ) const;
 	virtual char const* GetParamDefault( int paramIndex ) const;
+	virtual int GetParamFlags( int nParamIndex ) const;
 
 	virtual void InitShaderParams( IMaterialVar** ppParams, const char *pMaterialName );
 	virtual void InitShaderInstance( IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName, const char *pTextureGroupName );
 	virtual void DrawElements( IMaterialVar **params, int nModulationFlags, 
 		IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI );
+#ifndef _XBOX
 	virtual	const SoftwareVertexShader_t GetSoftwareVertexShader() const { return m_SoftwareVertexShader; }
-	virtual int ComputeModulationFlags( IMaterialVar** params, bool bFlashlight );
+#endif
+	virtual int ComputeModulationFlags( IMaterialVar** params, IShaderDynamicAPI* pShaderAPI );
 	virtual bool NeedsPowerOfTwoFrameBufferTexture( IMaterialVar **params ) const { return false; }
 	virtual bool NeedsFullFrameBufferTexture( IMaterialVar **params ) const { return false; }
 
-protected:
+public:
 	// These functions must be implemented by the shader
 	virtual void OnInitShaderParams( IMaterialVar** ppParams, const char *pMaterialName ) {}
 	virtual void OnInitShaderInstance( IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName ) = 0;
@@ -96,6 +98,9 @@ protected:
 
 	// Are we using graphics?
 	bool IsUsingGraphics();
+
+	// Are we using editor materials?
+	bool CanUseEditorMaterials();
 
 	// Gets the builder...
 	CMeshBuilder* MeshBuilder();
@@ -147,6 +152,9 @@ protected:
 	void SetModulationShadowState( int tintVar = -1 );
 	void SetModulationDynamicState( int tintVar = -1 );
 
+	// Helpers for HDR
+	bool IsHDREnabled( void );
+
 	// Loads the identity matrix into the texture
 	void LoadIdentity( MaterialMatrixMode_t matrixMode );
 
@@ -195,15 +203,19 @@ protected:
 		int frameVar, int maskOffsetVar, int maskScaleVar, int tintVar = -1 );
 
 	bool UsingFlashlight( IMaterialVar **params ) const;
+	bool UsingEditor( IMaterialVar **params ) const;
 
-	void DrawFlashlight_dx70( IMaterialVar** params, IShaderDynamicAPI *pShaderAPI, IShaderShadow* pShaderShadow, 
-			int flashlightTextureVar, int flashlightTextureFrameVar );
+	void DrawFlashlight_dx70( IMaterialVar** params, IShaderDynamicAPI *pShaderAPI, 
+							  IShaderShadow* pShaderShadow, 
+							  int flashlightTextureVar, int flashlightTextureFrameVar, 
+							  bool suppress_lighting = false );
 
 	void SetFlashlightFixedFunctionTextureTransform( MaterialMatrixMode_t matrix );
 
 protected:
+#ifndef _XBOX
 	SoftwareVertexShader_t m_SoftwareVertexShader;
-
+#endif
 	static const char *s_pTextureGroupName; // Current material's texture group name.
 	static IMaterialVar **s_ppParams;
 	static IShaderShadow *s_pShaderShadow;

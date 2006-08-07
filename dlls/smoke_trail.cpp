@@ -460,18 +460,24 @@ IMPLEMENT_SERVERCLASS_ST( SporeExplosion, DT_SporeExplosion )
 	SendPropFloat	(SENDINFO(m_flStartSize), -1, SPROP_NOSCALE),
 	SendPropFloat	(SENDINFO(m_flEndSize), -1, SPROP_NOSCALE),
 	SendPropFloat	(SENDINFO(m_flSpawnRadius), -1, SPROP_NOSCALE),
+	SendPropBool	(SENDINFO(m_bEmit) ),
+	SendPropBool	(SENDINFO(m_bDontRemove) ),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( env_sporeexplosion, SporeExplosion );
 
 BEGIN_DATADESC( SporeExplosion )
 
-	DEFINE_FIELD( m_flSpawnRate, FIELD_FLOAT ),
+	DEFINE_KEYFIELD( m_flSpawnRate, FIELD_FLOAT, "spawnrate" ),
 	DEFINE_FIELD( m_flParticleLifetime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flStartSize, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flEndSize, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flSpawnRadius, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bEmit, FIELD_BOOLEAN ),
+	DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "startdisabled" ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 
 END_DATADESC()
 
@@ -483,6 +489,17 @@ SporeExplosion::SporeExplosion( void )
 	m_flEndSize				= 0.0f;
 	m_flSpawnRadius			= 16.0f;
 	SetRenderColor( 255, 255, 255, 255 );
+	m_bEmit = true;
+	m_bDisabled = false;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void SporeExplosion::Spawn( void )
+{
+	BaseClass::Spawn();
+
+	m_bEmit = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -509,6 +526,20 @@ SporeExplosion *SporeExplosion::CreateSporeExplosion()
 	}
 
 	return NULL;
+}
+
+void SporeExplosion::InputEnable( inputdata_t &inputdata )
+{
+	m_bDontRemove = true;
+	m_bDisabled = false;
+	m_bEmit = true;
+}
+
+void SporeExplosion::InputDisable( inputdata_t &inputdata )
+{
+	m_bDontRemove = true;
+	m_bDisabled = true;
+	m_bEmit = false;
 }
 
 BEGIN_DATADESC( CFireTrail )

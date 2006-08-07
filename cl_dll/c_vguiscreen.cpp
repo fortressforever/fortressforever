@@ -51,6 +51,7 @@ CUtlDict<KeyValues*, int> g_KeyValuesCache;
 
 KeyValues* CacheKeyValuesForFile( const char *pFilename )
 {
+	MEM_ALLOC_CREDIT();
 	int i = g_KeyValuesCache.Find( pFilename );
 	if ( i == g_KeyValuesCache.InvalidIndex() )
 	{
@@ -67,6 +68,7 @@ KeyValues* CacheKeyValuesForFile( const char *pFilename )
 
 void ClearKeyValuesCache()
 {
+	MEM_ALLOC_CREDIT();
 	for ( int i=g_KeyValuesCache.First(); i != g_KeyValuesCache.InvalidIndex(); i=g_KeyValuesCache.Next( i ) )
 	{
 		g_KeyValuesCache[i]->deleteThis();

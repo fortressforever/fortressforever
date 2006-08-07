@@ -54,6 +54,25 @@ void CHudSuitPower::Reset( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudSuitPower::ShouldDraw()
+{
+	bool bNeedsDraw = false;
+
+	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+	// needs draw if suit power changed or animation in progress
+	bNeedsDraw = ( ( pPlayer->m_HL2Local.m_flSuitPower != m_flSuitPower ) || ( m_AuxPowerColor[3] > 0 ) );
+
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudSuitPower::OnThink( void )
@@ -74,7 +93,7 @@ void CHudSuitPower::OnThink( void )
 		// we've reached max power
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("SuitAuxPowerMax");
 	}
-	else if ( flCurrentPower < 100.0f && m_flSuitPower >= 100.0f )
+	else if ( flCurrentPower < 100.0f && (m_flSuitPower >= 100.0f || m_flSuitPower == SUITPOWER_INIT) )
 	{
 		// we've lost power
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("SuitAuxPowerNotMax");
@@ -107,7 +126,6 @@ void CHudSuitPower::OnThink( void )
 		}
 	}
 
-
 	m_flSuitPower = flCurrentPower;
 }
 
@@ -122,7 +140,7 @@ void CHudSuitPower::Paint()
 
 	// get bar chunks
 	int chunkCount = m_flBarWidth / (m_flBarChunkWidth + m_flBarChunkGap);
-	int enabledChunks = (int)((float)chunkCount * (m_flSuitPower / 100.0f) + 0.5f );
+	int enabledChunks = (int)((float)chunkCount * (m_flSuitPower * 1.0f/100.0f) + 0.5f );
 
 	// see if we've changed power state
 	int lowPower = 0;
@@ -149,18 +167,18 @@ void CHudSuitPower::Paint()
 	// draw the suit power bar
 	surface()->DrawSetColor( m_AuxPowerColor );
 	int xpos = m_flBarInsetX, ypos = m_flBarInsetY;
-	{for (int i = 0; i < enabledChunks; i++)
+	for (int i = 0; i < enabledChunks; i++)
 	{
 		surface()->DrawFilledRect( xpos, ypos, xpos + m_flBarChunkWidth, ypos + m_flBarHeight );
 		xpos += (m_flBarChunkWidth + m_flBarChunkGap);
-	}}
+	}
 	// draw the exhausted portion of the bar.
 	surface()->DrawSetColor( Color( m_AuxPowerColor[0], m_AuxPowerColor[1], m_AuxPowerColor[2], m_iAuxPowerDisabledAlpha ) );
-	{for (int i = enabledChunks; i < chunkCount; i++)
+	for (int i = enabledChunks; i < chunkCount; i++)
 	{
 		surface()->DrawFilledRect( xpos, ypos, xpos + m_flBarChunkWidth, ypos + m_flBarHeight );
 		xpos += (m_flBarChunkWidth + m_flBarChunkGap);
-	}}
+	}
 
 	// draw our name
 	surface()->DrawSetTextFont(m_hTextFont);

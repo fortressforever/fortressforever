@@ -35,9 +35,13 @@ protected:
 };
 
 #ifdef HL2_CLIENT_DLL
-class CAntlionGibManager : public CAutoGameSystem
+class CAntlionGibManager : public CAutoGameSystemPerFrame
 {
 public:
+	CAntlionGibManager( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+	}
+
 	// Methods of IGameSystem
 	virtual void Update( float frametime );
 	virtual void LevelInitPreEntity( void );

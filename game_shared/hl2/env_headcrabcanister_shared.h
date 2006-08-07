@@ -31,7 +31,7 @@ public:
 	CEnvHeadcrabCanisterShared();
 
 	// Initialization.
-	void InitInWorld( float flLaunchTime, const Vector &vecStartPosition, const QAngle &vecStartAngles, const Vector &vecDirection, const Vector &vecImpactPosition );
+	void InitInWorld( float flLaunchTime, const Vector &vecStartPosition, const QAngle &vecStartAngles, const Vector &vecDirection, const Vector &vecImpactPosition, bool bLaunchedFromWithinWorld = false );
 	void InitInSkybox( float flLaunchTime, const Vector &vecStartPosition, const QAngle &vecStartAngles, const Vector &vecDirection, const Vector &vecImpactPosition, const Vector &vecSkyboxOrigin, float flSkyboxScale );
 
 	// Returns the position of the object at a given time.
@@ -64,6 +64,8 @@ public:
 	CNetworkVar( float, m_flZAcceleration );
 	CNetworkVar( float, m_flHorizSpeed );
 
+	CNetworkVar( bool, m_bLaunchedFromWithinWorld );
+
 	CNetworkVector( m_vecParabolaDirection );
 
 	// The time at which the canister enters the skybox
@@ -89,7 +91,7 @@ private:
 //
 // HeadcrabCanister Factory Interface
 //
-class IHeadcrabCanisterFactory
+abstract_class IHeadcrabCanisterFactory
 {
 public:
 

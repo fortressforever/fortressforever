@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
 // Purpose: Implements many of the entities that control logic flow within a map.
 //
-//=============================================================================//
+//=============================================================================
 
 #include "cbase.h"
 #include "entityinput.h"
@@ -11,10 +11,16 @@
 #include "mathlib.h"
 #include "globalstate.h"
 #include "ndebugoverlay.h"
+#include "saverestore_utlvector.h"
 #include "vstdlib/random.h"
+#include "gameinterface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+
+extern CServerGameDLL g_ServerGameDLL;
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Compares a set of integer inputs to the one main input
@@ -80,7 +86,7 @@ void CLogicCompareInteger::InputValue( inputdata_t &inputdata )
 	if ( !m_AllIntCompares.m_bUpdatedThisFrame )
 	{
 		// TODO: need to add this event with a lower priority, so it gets called after all inputs have arrived
-		g_EventQueue.AddEvent( this, "ForceRecompare", 0, inputdata.pActivator, this, inputdata.nOutputID );
+		g_EventQueue.AddEvent( this, "CompareValues", 0, inputdata.pActivator, this, inputdata.nOutputID );
 		m_AllIntCompares.m_bUpdatedThisFrame = TRUE;
 	}
 }
@@ -421,7 +427,7 @@ void CLogicLineToEntity::Activate(void)
 
 	if (m_target != NULL_STRING)
 	{
-		m_EndEntity = gEntList.FindEntityByName(NULL, m_target, NULL);
+		m_EndEntity = gEntList.FindEntityByName( NULL, m_target );
 
 		//
 		// If we were given a bad measure target, just measure sound where we are.
@@ -439,7 +445,7 @@ void CLogicLineToEntity::Activate(void)
 
 	if (m_SourceName != NULL_STRING)
 	{
-		m_StartEntity = gEntList.FindEntityByName(NULL, m_SourceName, NULL);
+		m_StartEntity = gEntList.FindEntityByName( NULL, m_SourceName );
 
 		//
 		// If we were given a bad measure target, just measure sound where we are.
@@ -508,8 +514,12 @@ public:
 	float m_flOut1;		// Output value when input is m_fInMin
 	float m_flOut2;		// Output value when input is m_fInMax
 
+	bool  m_bEnabled;
+
 	// Inputs
 	void InputValue( inputdata_t &inputdata );
+	void InputEnable( inputdata_t &inputdata );
+	void InputDisable( inputdata_t &inputdata );
 
 	// Outputs
 	COutputFloat m_OutValue;
@@ -530,6 +540,11 @@ BEGIN_DATADESC( CMathRemap )
 	DEFINE_KEYFIELD(m_flInMax, FIELD_FLOAT, "in2"),
 	DEFINE_KEYFIELD(m_flOut1, FIELD_FLOAT, "out1"),
 	DEFINE_KEYFIELD(m_flOut2, FIELD_FLOAT, "out2"),
+
+	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
 
 END_DATADESC()
 
@@ -559,8 +574,25 @@ void CMathRemap::Spawn(void)
 		m_flInMin = m_flInMax;
 		m_flInMax = flTemp;
 	}
+
+	m_bEnabled = true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CMathRemap::InputEnable( inputdata_t &inputdata )
+{
+	m_bEnabled = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CMathRemap::InputDisable( inputdata_t &inputdata )
+{
+	m_bEnabled = false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler that is called when the input value changes.
@@ -580,7 +612,11 @@ void CMathRemap::InputValue( inputdata_t &inputdata )
 		// Remap the input value to the desired output range and update the output.
 		//
 		float flRemappedValue = m_flOut1 + (((flValue - m_flInMin) * (m_flOut2 - m_flOut1)) / (m_flInMax - m_flInMin));
-		m_OutValue.Set(flRemappedValue, inputdata.pActivator, this);
+
+		if ( m_bEnabled == true )
+		{
+			m_OutValue.Set(flRemappedValue, inputdata.pActivator, this);
+		}
 	}
 }
 
@@ -686,6 +722,37 @@ void CMathColorBlend::InputValue( inputdata_t &inputdata )
 
 
 //-----------------------------------------------------------------------------
+// Console command to set the state of a global
+//-----------------------------------------------------------------------------
+void CC_Global_Set()
+{
+	const char *szGlobal = engine->Cmd_Argv(1);
+	const char *szState = engine->Cmd_Argv(2);
+
+	if ( szGlobal == NULL || szState == NULL )
+	{
+		Msg( "Usage: global_set <globalname> <state>: Sets the state of the given env_global (0 = OFF, 1 = ON, 2 = DEAD).\n" );
+		return;
+	}
+
+	int nState = atoi( szState );
+
+	int nIndex = GlobalEntity_GetIndex( szGlobal );
+
+	if ( nIndex >= 0 )
+	{
+		GlobalEntity_SetState( nIndex, ( GLOBALESTATE )nState );
+	}
+	else
+	{
+		GlobalEntity_Add( szGlobal, STRING( gpGlobals->mapname ), ( GLOBALESTATE )nState );
+	}
+}
+
+static ConCommand global_set( "global_set", CC_Global_Set, "global_set <globalname> <state>: Sets the state of the given env_global (0 = OFF, 1 = ON, 2 = DEAD).", FCVAR_CHEAT );
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Holds a global state that can be queried by other entities to change
 //			their behavior, such as "predistaster".
 //-----------------------------------------------------------------------------
@@ -742,6 +809,15 @@ void CEnvGlobal::Spawn( void )
 		UTIL_Remove( this );
 		return;
 	}
+
+#ifdef HL2_EPISODIC
+	// if we modify the state of the physics cannon, make sure we precache the ragdoll boogie zap sound
+	if ( ( m_globalstate != NULL_STRING ) && ( stricmp( STRING( m_globalstate ), "super_phys_gun" ) == 0 ) )
+	{
+		PrecacheScriptSound( "RagdollBoogie.Zap" );
+	}
+#endif
+
 	if ( FBitSet( m_spawnflags, SF_GLOBAL_SET ) )
 	{
 		if ( !GlobalEntity_IsInTable( m_globalstate ) )
@@ -843,7 +919,7 @@ int CEnvGlobal::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr),"State: %s",STRING(m_globalstate));
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		GLOBALESTATE nState = GlobalEntity_GetState( m_globalstate );
@@ -862,7 +938,7 @@ int CEnvGlobal::DrawDebugTextOverlays(void)
 			Q_strncpy(tempstr,"Value: DEAD",sizeof(tempstr));
 			break;
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -1077,6 +1153,8 @@ private:
 	bool KeyValue(const char *szKeyName, const char *szValue);
 	void Spawn(void);
 
+	int DrawDebugTextOverlays(void);
+
 	void UpdateOutValue(CBaseEntity *pActivator, float fNewValue);
 
 	// Inputs
@@ -1172,6 +1250,33 @@ void CMathCounter::Spawn( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draw any debug text overlays
+// Input  :
+// Output : Current text offset from the top
+//-----------------------------------------------------------------------------
+int CMathCounter::DrawDebugTextOverlays( void ) 
+{
+	int text_offset = BaseClass::DrawDebugTextOverlays();
+
+	if (m_debugOverlays & OVERLAY_TEXT_BIT) 
+	{
+		char tempstr[512];
+
+		Q_snprintf(tempstr,sizeof(tempstr),"    min value: %f", m_flMin);
+		EntityText(text_offset,tempstr,0);
+		text_offset++;
+
+		Q_snprintf(tempstr,sizeof(tempstr),"    max value: %f", m_flMax);
+		EntityText(text_offset,tempstr,0);
+		text_offset++;
+
+		Q_snprintf(tempstr,sizeof(tempstr),"current value: %f", m_OutValue.Get());
+		EntityText(text_offset,tempstr,0);
+		text_offset++;
+	}
+	return text_offset;
+}
 
 //-----------------------------------------------------------------------------
 // Change min/max
@@ -1338,11 +1443,18 @@ class CLogicCase : public CLogicalEntity
 private:
 	string_t m_nCase[MAX_LOGIC_CASES];
 
+	int m_nShuffleCases;
+	int m_nLastShuffleCase;
+	unsigned char m_uchShuffleCaseMap[MAX_LOGIC_CASES];
+
 	void Spawn(void);
+
+	int BuildCaseMap(unsigned char *puchMap);
 
 	// Inputs
 	void InputValue( inputdata_t &inputdata );
 	void InputPickRandom( inputdata_t &inputdata );
+	void InputPickRandomShuffle( inputdata_t &inputdata );
 
 	// Outputs
 	COutputEvent m_OnCase[MAX_LOGIC_CASES];		// Fired when the input value matches one of the case values.
@@ -1376,10 +1488,15 @@ BEGIN_DATADESC( CLogicCase )
 	DEFINE_KEYFIELD(m_nCase[13], FIELD_STRING, "Case14"),
 	DEFINE_KEYFIELD(m_nCase[14], FIELD_STRING, "Case15"),
 	DEFINE_KEYFIELD(m_nCase[15], FIELD_STRING, "Case16"),
+	
+	DEFINE_FIELD( m_nShuffleCases, FIELD_INTEGER ),
+	DEFINE_FIELD( m_nLastShuffleCase, FIELD_INTEGER ),
+	DEFINE_ARRAY( m_uchShuffleCaseMap, FIELD_CHARACTER, MAX_LOGIC_CASES ),
 
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_INPUT, "InValue", InputValue),
 	DEFINE_INPUTFUNC(FIELD_VOID, "PickRandom", InputPickRandom),
+	DEFINE_INPUTFUNC(FIELD_VOID, "PickRandomShuffle", InputPickRandomShuffle),
 
 	// Outputs
 	DEFINE_OUTPUT(m_OnCase[0], "OnCase01"),
@@ -1411,6 +1528,7 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CLogicCase::Spawn( void )
 {
+	m_nLastShuffleCase = -1;
 }
 
 
@@ -1437,28 +1555,37 @@ void CLogicCase::InputValue( inputdata_t &inputdata )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Makes the case statement choose a case at random.
+// Count the number of valid cases, building a packed array
+// that maps 0..NumCases to the actual CaseX values.
+//
+// This allows our zany mappers to set up cases sparsely if they desire.
+// NOTE: assumes pnMap points to an array of MAX_LOGIC_CASES
 //-----------------------------------------------------------------------------
-void CLogicCase::InputPickRandom( inputdata_t &inputdata )
+int CLogicCase::BuildCaseMap(unsigned char *puchCaseMap)
 {
-	//
-	// Count the number of valid cases, building a packed array
-	// that maps 0..NumCases to the actual CaseX values.
-	//
-	// This allows our zany mappers to set up cases sparsely if they desire.
-	//
-	int nCaseMap[MAX_LOGIC_CASES];
-	memset(nCaseMap, 0, sizeof(nCaseMap));
+	memset(puchCaseMap, 0, sizeof(unsigned char) * MAX_LOGIC_CASES);
 
 	int nNumCases = 0;
 	for (int i = 0; i < MAX_LOGIC_CASES; i++)
 	{
 		if (m_OnCase[i].NumberOfElements() > 0)
 		{
-			nCaseMap[nNumCases] = i;
+			puchCaseMap[nNumCases] = (unsigned char)i;
 			nNumCases++;
 		}
 	}
+	
+	return nNumCases;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Makes the case statement choose a case at random.
+//-----------------------------------------------------------------------------
+void CLogicCase::InputPickRandom( inputdata_t &inputdata )
+{
+	unsigned char uchCaseMap[MAX_LOGIC_CASES];
+	int nNumCases = BuildCaseMap( uchCaseMap );
 
 	//
 	// Choose a random case from the ones that were set up by the level designer.
@@ -1466,7 +1593,7 @@ void CLogicCase::InputPickRandom( inputdata_t &inputdata )
 	if ( nNumCases > 0 )
 	{
 		int nRandom = random->RandomInt(0, nNumCases - 1);
-		int nCase = nCaseMap[nRandom];
+		int nCase = (unsigned char)uchCaseMap[nRandom];
 
 		Assert(nCase < MAX_LOGIC_CASES);
 
@@ -1474,6 +1601,67 @@ void CLogicCase::InputPickRandom( inputdata_t &inputdata )
 		{
 			m_OnCase[nCase].FireOutput( inputdata.pActivator, this );
 		}
+	}
+	else
+	{
+		DevMsg( 1, "Firing PickRandom input on logic_case %s with no cases set up\n", GetDebugName() );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Makes the case statement choose a case at random.
+//-----------------------------------------------------------------------------
+void CLogicCase::InputPickRandomShuffle( inputdata_t &inputdata )
+{
+	int nAvoidCase = -1;
+	int nCaseCount = m_nShuffleCases;
+	
+	if ( nCaseCount == 0 )
+	{
+		// Starting a new shuffle batch.
+		nCaseCount = m_nShuffleCases = BuildCaseMap( m_uchShuffleCaseMap );
+		
+		if ( ( m_nShuffleCases > 1 ) && ( m_nLastShuffleCase != -1 ) )
+		{
+			// Remove the previously picked case from the case map for this pick only.
+			// This avoids repeats across shuffle batch boundaries.		
+			nAvoidCase = m_nLastShuffleCase;
+			
+			for (int i = 0; i < m_nShuffleCases; i++ )
+			{
+				if ( m_uchShuffleCaseMap[i] == nAvoidCase )
+				{
+					unsigned char uchSwap = m_uchShuffleCaseMap[i];
+					m_uchShuffleCaseMap[i] = m_uchShuffleCaseMap[nCaseCount - 1];
+					m_uchShuffleCaseMap[nCaseCount - 1] = uchSwap;
+					nCaseCount--;
+					break;
+				}
+			}
+		}
+	}
+	
+	//
+	// Choose a random case from the ones that were set up by the level designer.
+	// Never repeat a case within a shuffle batch, nor consecutively across batches.
+	//
+	if ( nCaseCount > 0 )
+	{
+		int nRandom = random->RandomInt( 0, nCaseCount - 1 );
+
+		int nCase = m_uchShuffleCaseMap[nRandom];
+		Assert(nCase < MAX_LOGIC_CASES);
+
+		if (nCase < MAX_LOGIC_CASES)
+		{
+			m_OnCase[nCase].FireOutput( inputdata.pActivator, this );
+		}
+		
+		m_uchShuffleCaseMap[nRandom] = m_uchShuffleCaseMap[m_nShuffleCases - 1];
+		m_nShuffleCases--;
+
+		m_nLastShuffleCase = nCase;
 	}
 	else
 	{
@@ -1605,8 +1793,22 @@ void CLogicCompare::DoCompare(CBaseEntity *pActivator, float flInValue)
 class CLogicBranch : public CLogicalEntity
 {
 	DECLARE_CLASS( CLogicBranch, CLogicalEntity );
+	
+public:
+
+	void UpdateOnRemove();
+
+	void AddLogicBranchListener( CBaseEntity *pEntity );
+	inline bool GetLogicBranchState();
 
 private:
+
+	enum LogicBranchFire_t
+	{
+		LOGIC_BRANCH_FIRE,
+		LOGIC_BRANCH_NO_FIRE,
+	};
+
 	// Inputs
 	void InputSetValue( inputdata_t &inputdata );
 	void InputSetValueTest( inputdata_t &inputdata );
@@ -1614,9 +1816,11 @@ private:
 	void InputToggleTest( inputdata_t &inputdata );
 	void InputTest( inputdata_t &inputdata );
 
-	void DoTest(CBaseEntity *pActivator, bool bInValue);
+	void UpdateValue(bool bNewValue, CBaseEntity *pActivator, LogicBranchFire_t eFire);
 
 	bool m_bInValue;					// Place to hold the last input value for a future test.
+	
+	CUtlVector<EHANDLE> m_Listeners;	// A list of logic_branch_listeners that are monitoring us.
 
 	// Outputs
 	COutputEvent m_OnTrue;				// Fired when the value is true.
@@ -1633,8 +1837,10 @@ BEGIN_DATADESC( CLogicBranch )
 	// Keys
 	DEFINE_KEYFIELD(m_bInValue, FIELD_BOOLEAN, "InitialValue"),
 
+	DEFINE_UTLVECTOR( m_Listeners, FIELD_EHANDLE ),
+
 	// Inputs
-	DEFINE_INPUT(m_bInValue, FIELD_BOOLEAN, "SetValue"),
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetValue", InputSetValue),
 	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetValueTest", InputSetValueTest),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
 	DEFINE_INPUTFUNC(FIELD_VOID, "ToggleTest", InputToggleTest),
@@ -1647,25 +1853,49 @@ BEGIN_DATADESC( CLogicBranch )
 END_DATADESC()
 
 
-
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CLogicBranch::UpdateOnRemove()
+{
+	for ( int i = 0; i < m_Listeners.Count(); i++ )
+	{
+		CBaseEntity *pEntity = m_Listeners.Element( i ).Get();
+		if ( pEntity )
+		{
+			g_EventQueue.AddEvent( this, "_OnLogicBranchRemoved", 0, this, this );
+		}
+	}
+	
+	BaseClass::UpdateOnRemove();
+}
+	
 
 //-----------------------------------------------------------------------------
-// Purpose: Input handler to set a new input value and perform the test.
+// Purpose: Input handler to set a new input value without firing outputs.
 // Input  : Boolean value to set.
 //-----------------------------------------------------------------------------
-void CLogicBranch::InputSetValueTest( inputdata_t &inputdata )
+void CLogicBranch::InputSetValue( inputdata_t &inputdata )
 {
-	m_bInValue = inputdata.value.Bool();
-	DoTest( inputdata.pActivator, m_bInValue );
+	UpdateValue( inputdata.value.Bool(), inputdata.pActivator, LOGIC_BRANCH_NO_FIRE );
 }
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Input handler for toggling the boolean value.
+// Purpose: Input handler to set a new input value and fire appropriate outputs.
+// Input  : Boolean value to set.
+//-----------------------------------------------------------------------------
+void CLogicBranch::InputSetValueTest( inputdata_t &inputdata )
+{
+	UpdateValue( inputdata.value.Bool(), inputdata.pActivator, LOGIC_BRANCH_FIRE );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Input handler for toggling the boolean value without firing outputs.
 //-----------------------------------------------------------------------------
 void CLogicBranch::InputToggle( inputdata_t &inputdata )
 {
-	m_bInValue = !m_bInValue;
+	UpdateValue( !m_bInValue, inputdata.pActivator, LOGIC_BRANCH_NO_FIRE );
 }
 
 
@@ -1675,8 +1905,7 @@ void CLogicBranch::InputToggle( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CLogicBranch::InputToggleTest( inputdata_t &inputdata )
 {
-	m_bInValue = !m_bInValue;
-	DoTest( inputdata.pActivator, m_bInValue );
+	UpdateValue( !m_bInValue, inputdata.pActivator, LOGIC_BRANCH_FIRE );
 }
 
 
@@ -1685,7 +1914,7 @@ void CLogicBranch::InputToggleTest( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CLogicBranch::InputTest( inputdata_t &inputdata )
 {
-	DoTest( inputdata.pActivator, m_bInValue );
+	UpdateValue( m_bInValue, inputdata.pActivator, LOGIC_BRANCH_FIRE );
 }
 
 
@@ -1694,15 +1923,52 @@ void CLogicBranch::InputTest( inputdata_t &inputdata )
 //			the test result.
 // Input  : bInValue - 
 //-----------------------------------------------------------------------------
-void CLogicBranch::DoTest(CBaseEntity *pActivator, bool bInValue)
+void CLogicBranch::UpdateValue( bool bNewValue, CBaseEntity *pActivator, LogicBranchFire_t eFire )
 {
-	if (bInValue)
+	if ( m_bInValue != bNewValue )
 	{
-		m_OnTrue.FireOutput(pActivator, this);
+		m_bInValue = bNewValue;
+
+		for ( int i = 0; i < m_Listeners.Count(); i++ )
+		{
+			CBaseEntity *pEntity = m_Listeners.Element( i ).Get();
+			if ( pEntity )
+			{
+				g_EventQueue.AddEvent( pEntity, "_OnLogicBranchChanged", 0, this, this );
+			}
+		}
 	}
-	else
+
+	if ( eFire == LOGIC_BRANCH_FIRE )
 	{
-		m_OnFalse.FireOutput(pActivator, this);
+		if ( m_bInValue )
+		{
+			m_OnTrue.FireOutput( pActivator, this );
+		}
+		else
+		{
+			m_OnFalse.FireOutput( pActivator, this );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Accessor for logic_branchlist to test the value of the branch on demand.
+//-----------------------------------------------------------------------------
+bool CLogicBranch::GetLogicBranchState()
+{
+	return m_bInValue;
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CLogicBranch::AddLogicBranchListener( CBaseEntity *pEntity )
+{
+	if ( m_Listeners.Find( pEntity ) == -1 )
+	{
+		m_Listeners.AddToTail( pEntity );
 	}
 }
 
@@ -1716,6 +1982,7 @@ class CLogicAutosave : public CLogicalEntity
 private:
 	// Inputs
 	void InputSave( inputdata_t &inputdata );
+	void InputSaveDangerous( inputdata_t &inputdata );
 
 	DECLARE_DATADESC();
 	bool m_bForceNewLevelUnit;
@@ -1727,6 +1994,7 @@ BEGIN_DATADESC( CLogicAutosave )
 	DEFINE_KEYFIELD( m_bForceNewLevelUnit, FIELD_BOOLEAN, "NewLevelUnit" ),
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Save", InputSave ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SaveDangerous", InputSaveDangerous ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -1738,7 +2006,35 @@ void CLogicAutosave::InputSave( inputdata_t &inputdata )
 	{
 		engine->ClearSaveDir();
 	}
+
 	engine->ServerCommand( "autosave\n" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Save safely!
+//-----------------------------------------------------------------------------
+void CLogicAutosave::InputSaveDangerous( inputdata_t &inputdata )
+{
+	if ( g_ServerGameDLL.m_fAutoSaveDangerousTime != 0.0f && g_ServerGameDLL.m_fAutoSaveDangerousTime >= gpGlobals->curtime )
+	{
+		// A previous dangerous auto save was waiting to become safe
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
+
+		if ( pPlayer->GetDeathTime() == 0.0f || pPlayer->GetDeathTime() > gpGlobals->curtime )
+		{
+			// The player isn't dead, so make the dangerous auto save safe
+			engine->ServerCommand( "autosavedangerousissafe\n" );
+		}
+	}
+
+	if ( m_bForceNewLevelUnit )
+	{
+		engine->ClearSaveDir();
+	}
+
+	engine->ServerCommand( "autosavedangerous\n" );
+
+	g_ServerGameDLL.m_fAutoSaveDangerousTime = gpGlobals->curtime + inputdata.value.Float();
 }
 
 class CLogicCollisionPair : public CLogicalEntity
@@ -1818,3 +2114,208 @@ BEGIN_DATADESC( CLogicCollisionPair )
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( logic_collision_pair, CLogicCollisionPair );
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+#define MAX_LOGIC_BRANCH_NAMES 16
+
+class CLogicBranchList : public CLogicalEntity
+{
+	DECLARE_CLASS( CLogicBranchList, CLogicalEntity );
+
+	void Spawn();
+	void Activate();
+
+private:
+
+	enum LogicBranchListenerLastState_t
+	{
+		LOGIC_BRANCH_LISTENER_NOT_INIT = 0,
+		LOGIC_BRANCH_LISTENER_ALL_TRUE,
+		LOGIC_BRANCH_LISTENER_ALL_FALSE,
+		LOGIC_BRANCH_LISTENER_MIXED,
+	};
+
+	void DoTest( CBaseEntity *pActivator );
+
+	string_t m_nLogicBranchNames[MAX_LOGIC_BRANCH_NAMES];
+	CUtlVector<EHANDLE> m_LogicBranchList;
+	LogicBranchListenerLastState_t m_eLastState;
+
+	// Inputs
+	void Input_OnLogicBranchRemoved( inputdata_t &inputdata );
+	void Input_OnLogicBranchChanged( inputdata_t &inputdata );
+	void InputTest( inputdata_t &inputdata );
+
+	// Outputs
+	COutputEvent m_OnAllTrue;			// Fired when all the registered logic_branches become true.
+	COutputEvent m_OnAllFalse;			// Fired when all the registered logic_branches become false.
+	COutputEvent m_OnMixed;				// Fired when one of the registered logic branches changes, but not all are true or false.
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS(logic_branch_listener, CLogicBranchList);
+
+
+BEGIN_DATADESC( CLogicBranchList )
+
+	// Silence, classcheck!
+	//DEFINE_ARRAY( m_nCase, FIELD_STRING, MAX_LOGIC_BRANCH_NAMES ),
+
+	// Keys
+	DEFINE_KEYFIELD( m_nLogicBranchNames[0], FIELD_STRING, "Branch01" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[1], FIELD_STRING, "Branch02" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[2], FIELD_STRING, "Branch03" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[3], FIELD_STRING, "Branch04" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[4], FIELD_STRING, "Branch05" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[5], FIELD_STRING, "Branch06" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[6], FIELD_STRING, "Branch07" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[7], FIELD_STRING, "Branch08" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[8], FIELD_STRING, "Branch09" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[9], FIELD_STRING, "Branch10" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[10], FIELD_STRING, "Branch11" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[11], FIELD_STRING, "Branch12" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[12], FIELD_STRING, "Branch13" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[13], FIELD_STRING, "Branch14" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[14], FIELD_STRING, "Branch15" ),
+	DEFINE_KEYFIELD( m_nLogicBranchNames[15], FIELD_STRING, "Branch16" ),
+	
+	DEFINE_UTLVECTOR( m_LogicBranchList, FIELD_EHANDLE ),
+	
+	DEFINE_FIELD( m_eLastState, FIELD_INTEGER ),
+
+	// Inputs
+	DEFINE_INPUTFUNC( FIELD_INPUT, "Test", InputTest ),
+	DEFINE_INPUTFUNC( FIELD_INPUT, "_OnLogicBranchChanged", Input_OnLogicBranchChanged ),
+	DEFINE_INPUTFUNC( FIELD_INPUT, "_OnLogicBranchRemoved", Input_OnLogicBranchRemoved ),
+
+	// Outputs
+	DEFINE_OUTPUT( m_OnAllTrue, "OnAllTrue" ),
+	DEFINE_OUTPUT( m_OnAllFalse, "OnAllFalse" ),
+	DEFINE_OUTPUT( m_OnMixed, "OnMixed" ),
+
+END_DATADESC()
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Called before spawning, after key values have been set.
+//-----------------------------------------------------------------------------
+void CLogicBranchList::Spawn( void )
+{
+}
+
+
+//-----------------------------------------------------------------------------
+// Finds all the logic_branches that we are monitoring and register ourselves with them.
+//-----------------------------------------------------------------------------
+void CLogicBranchList::Activate( void )
+{
+	for ( int i = 0; i < MAX_LOGIC_BRANCH_NAMES; i++ )
+	{
+		CBaseEntity *pEntity = NULL;
+		while ( ( pEntity = gEntList.FindEntityGeneric( pEntity, STRING( m_nLogicBranchNames[i] ), this ) ) != NULL )
+		{
+			if ( FClassnameIs( pEntity, "logic_branch" ) )
+			{
+				CLogicBranch *pBranch = (CLogicBranch *)pEntity;
+				pBranch->AddLogicBranchListener( this );
+				m_LogicBranchList.AddToTail( pBranch );
+			}
+			else
+			{
+				DevWarning( "logic_branchlist %s refers to entity %s, which is not a logic_branch\n", GetDebugName(), pEntity->GetDebugName() );
+			}
+		}
+	}
+	
+	BaseClass::Activate();
+}
+
+
+//-----------------------------------------------------------------------------
+// Called when a monitored logic branch is deleted from the world, since that
+// might affect our final result.
+//-----------------------------------------------------------------------------
+void CLogicBranchList::Input_OnLogicBranchRemoved( inputdata_t &inputdata )
+{
+	int nIndex = m_LogicBranchList.Find( inputdata.pActivator );
+	if ( nIndex != -1 )
+	{
+		m_LogicBranchList.FastRemove( nIndex );
+	}
+
+	// See if this logic_branch's deletion affects the final result.
+	DoTest( inputdata.pActivator );
+}
+
+
+//-----------------------------------------------------------------------------
+// Called when the value of a monitored logic branch changes.
+//-----------------------------------------------------------------------------
+void CLogicBranchList::Input_OnLogicBranchChanged( inputdata_t &inputdata )
+{
+	DoTest( inputdata.pActivator );
+}
+
+
+//-----------------------------------------------------------------------------
+// Input handler to manually test the monitored logic branches and fire the
+// appropriate output.
+//-----------------------------------------------------------------------------
+void CLogicBranchList::InputTest( inputdata_t &inputdata )
+{
+	// Force an output.
+	m_eLastState = LOGIC_BRANCH_LISTENER_NOT_INIT;
+
+	DoTest( inputdata.pActivator );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CLogicBranchList::DoTest( CBaseEntity *pActivator )
+{
+	bool bOneTrue = false;
+	bool bOneFalse = false;
+	
+	for ( int i = 0; i < m_LogicBranchList.Count(); i++ )
+	{
+		CLogicBranch *pBranch = (CLogicBranch *)m_LogicBranchList.Element( i ).Get();
+		if ( pBranch->GetLogicBranchState() )
+		{
+			bOneTrue = true;
+		}
+		else
+		{
+			bOneFalse = true;
+		}
+	}
+
+	// Only fire the output if the new result differs from the last result.
+	if ( bOneTrue && !bOneFalse )
+	{
+		if ( m_eLastState != LOGIC_BRANCH_LISTENER_ALL_TRUE )
+		{
+			m_OnAllTrue.FireOutput( pActivator, this );
+			m_eLastState = LOGIC_BRANCH_LISTENER_ALL_TRUE;
+		}
+	}
+	else if ( bOneFalse && !bOneTrue )
+	{
+		if ( m_eLastState != LOGIC_BRANCH_LISTENER_ALL_FALSE )
+		{
+			m_OnAllFalse.FireOutput( pActivator, this );
+			m_eLastState = LOGIC_BRANCH_LISTENER_ALL_FALSE;
+		}
+	}
+	else
+	{
+		if ( m_eLastState != LOGIC_BRANCH_LISTENER_MIXED )
+		{
+			m_OnMixed.FireOutput( pActivator, this );
+			m_eLastState = LOGIC_BRANCH_LISTENER_MIXED;
+		}
+	}
+}

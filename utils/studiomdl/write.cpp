@@ -42,6 +42,7 @@ extern int numcommandnodes;
 // the beginning of the buffer.
 
 bool FixupToSortedLODVertexes( studiohdr_t *pStudioHdr );
+bool Clamp_RootLOD(  studiohdr_t *phdr );
 
 
 /*
@@ -61,6 +62,8 @@ static byte *pBlockStart;
 #define ALIGN16( a ) a = (byte *)((int)((byte *)a + 15) & ~ 15)
 #define ALIGN32( a ) a = (byte *)((int)((byte *)a + 31) & ~ 31)
 #define ALIGN64( a ) a = (byte *)((int)((byte *)a + 63) & ~ 63)
+#define ALIGN512( a ) a = (byte *)((int)((byte *)a + 511) & ~ 511)
+// make sure kalloc aligns to maximum alignment size
 
 #define FILEBUFFER (8 * 1024 * 1024)
 
@@ -74,7 +77,7 @@ struct stringtable_t
 {
 	byte	*base;
 	int		*ptr;
-	char	*string;
+	const char	*string;
 	int		dupindex;
 	byte	*addr;
 };
@@ -95,7 +98,7 @@ static void BeginStringTable(  )
 // Purpose: add a string to the file-global string table.
 //			Keep track of fixup locations
 //-----------------------------------------------------------------------------
-static void AddToStringTable( void *base, int *ptr, char *string )
+static void AddToStringTable( void *base, int *ptr, const char *string )
 {
 	for (int i = 0; i < numStrings; i++)
 	{
@@ -121,7 +124,7 @@ static void AddToStringTable( void *base, int *ptr, char *string )
 // Purpose: Write out stringtable
 //			fixup local pointers
 //-----------------------------------------------------------------------------
-static void WriteStringTable( )
+static byte *WriteStringTable( byte *pData )
 {
 	// force null at first address
 	strings[0].addr = pData;
@@ -151,6 +154,7 @@ static void WriteStringTable( )
 		}
 	}
 	ALIGN4( pData );
+	return pData;
 }
 
 
@@ -175,8 +179,8 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 
 	// save bone info
 	pbone = (mstudiobone_t *)pData;
-	phdr->numbones = g_numbones;
-	phdr->boneindex = (pData - pStart);
+	phdr->numbones = IsChar( g_numbones );
+	phdr->boneindex = IsInt24( pData - pStart );
 
 	char* pSurfacePropName = GetDefaultSurfaceProp( );
 	AddToStringTable( phdr, &phdr->surfacepropindex, pSurfacePropName );
@@ -260,6 +264,26 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 		}
 	}
 
+	// write aim at bones
+	if (g_numaimatbones)
+	{
+		mstudioaimatbone_t *pProc = (mstudioaimatbone_t *)pData;
+		for (i = 0; i < g_numaimatbones; i++)
+		{
+			j = g_aimatbonemap[i];
+			k = g_aimatbones[j].bone;
+			pbone[k].procindex		= (byte *)&pProc[i] - (byte *)&pbone[k];
+			pbone[k].proctype		= g_aimatbones[j].aimAttach == -1 ? STUDIO_PROC_AIMATBONE : STUDIO_PROC_AIMATATTACH;
+			pProc[i].parent			= g_aimatbones[j].parent;
+			pProc[i].aim			= g_aimatbones[j].aimAttach == -1 ? g_aimatbones[j].aimBone : g_aimatbones[j].aimAttach;
+			pProc[i].aimvector		= g_aimatbones[j].aimvector;
+			pProc[i].upvector		= g_aimatbones[j].upvector;
+			pProc[i].basepos		= g_aimatbones[j].basepos;
+		}
+		pData += g_numaimatbones * sizeof( mstudioaimatbone_t );
+		ALIGN4( pData );
+	}
+
 	// map g_bonecontroller to bones
 	for (i = 0; i < g_numbones; i++) 
 	{
@@ -297,11 +321,10 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 		}
 	}
 
-
 	// save g_bonecontroller info
 	pbonecontroller = (mstudiobonecontroller_t *)pData;
-	phdr->numbonecontrollers = g_numbonecontrollers;
-	phdr->bonecontrollerindex = (pData - pStart);
+	phdr->numbonecontrollers = IsChar( g_numbonecontrollers );
+	phdr->bonecontrollerindex = IsInt24( pData - pStart );
 
 	for (i = 0; i < g_numbonecontrollers; i++) 
 	{
@@ -316,8 +339,8 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 
 	// save attachment info
 	pattachment = (mstudioattachment_t *)pData;
-	phdr->numlocalattachments = g_numattachments;
-	phdr->localattachmentindex = (pData - pStart);
+	phdr->numlocalattachments = IsChar( g_numattachments );
+	phdr->localattachmentindex = IsInt24( pData - pStart );
 
 	for (i = 0; i < g_numattachments; i++) 
 	{
@@ -330,11 +353,11 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 	ALIGN4( pData );
 	
 	// save hitbox sets
-	phdr->numhitboxsets = g_hitboxsets.Size();
+	phdr->numhitboxsets = IsChar( g_hitboxsets.Size() );
 
 	// Remember start spot
 	mstudiohitboxset_t *hitboxset = (mstudiohitboxset_t *)pData;
-	phdr->hitboxsetindex = ( pData - pStart );
+	phdr->hitboxsetindex = IsInt24( pData - pStart );
 
 	pData += phdr->numhitboxsets * sizeof( mstudiohitboxset_t );
 	ALIGN4( pData );
@@ -357,14 +380,7 @@ static void WriteBoneInfo( studiohdr_t *phdr )
 			VectorCopy( set->hitbox[i].bmin, pbbox[i].bbmin );
 			VectorCopy( set->hitbox[i].bmax, pbbox[i].bbmax );
 			pbbox[i].szhitboxnameindex = 0;
-
-			// NJS: Just a cosmetic change, next time the model format is rebuilt, please use the NEXT_MODEL_FORMAT_REVISION.
-			// also, do a grep to find the corresponding #ifdefs.
-			#ifdef NEXT_MODEL_FORMAT_REVISION
-				AddToStringTable( &(pbbox[i]), &(pbbox[i].szhitboxnameindex), set->hitbox[i].hitboxname );	
-			#else
-				AddToStringTable( phdr, &(pbbox[i].szhitboxnameindex), set->hitbox[i].hitboxname );	
-			#endif
+			AddToStringTable( &(pbbox[i]), &(pbbox[i].szhitboxnameindex), set->hitbox[i].hitboxname );	
 		}
 
 		pData += hitboxset->numhitboxes * sizeof( mstudiobbox_t );
@@ -402,8 +418,8 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 	// save g_sequence info
 	pseqdesc = (mstudioseqdesc_t *)pData;
 	pbaseseqdesc = pseqdesc;
-	phdr->numlocalseq = g_sequence.Count();
-	phdr->localseqindex = (pData - pStart);
+	phdr->numlocalseq = IsShort( g_sequence.Count() );
+	phdr->localseqindex = IsInt24( (pData - pStart) );
 	pData += g_sequence.Count() * sizeof( mstudioseqdesc_t );
 
 	bool bErrors = false;
@@ -456,22 +472,22 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 		pseqdesc->activity		= g_sequence[i].activity;
 		pseqdesc->actweight		= g_sequence[i].actweight;
 
-		VectorCopy( g_sequence[i].bmin, pseqdesc->bbmin );
-		VectorCopy( g_sequence[i].bmax, pseqdesc->bbmax );
+		pseqdesc->bbmin			= g_sequence[i].bmin;
+		pseqdesc->bbmax			= g_sequence[i].bmax;
 
 		pseqdesc->fadeintime	= g_sequence[i].fadeintime;
 		pseqdesc->fadeouttime	= g_sequence[i].fadeouttime;
 
 		pseqdesc->localentrynode	= g_sequence[i].entrynode; 
 		pseqdesc->localexitnode		= g_sequence[i].exitnode;
-		pseqdesc->entryphase	= g_sequence[i].entryphase;
-		pseqdesc->exitphase		= g_sequence[i].exitphase;
+		//pseqdesc->entryphase	= g_sequence[i].entryphase;
+		//pseqdesc->exitphase		= g_sequence[i].exitphase;
 		pseqdesc->nodeflags		= g_sequence[i].nodeflags;
 
 		// save events
 		pevent					= (mstudioevent_t *)pData;
-		pseqdesc->numevents		= g_sequence[i].numevents;
-		pseqdesc->eventindex	= (pData - pSequenceStart);
+		pseqdesc->numevents		= IsByte( g_sequence[i].numevents );
+		pseqdesc->eventindex	= IsInt24( (pData - pSequenceStart) );
 		pData += pseqdesc->numevents * sizeof( mstudioevent_t );
 		for (j = 0; j < g_sequence[i].numevents; j++)
 		{
@@ -502,7 +518,8 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 				 						
 			
 			// printf("%4d : %d %f\n", pevent[j].event, g_sequence[i].event[j].frame, pevent[j].cycle );
-			memcpy( pevent[j].options, g_sequence[i].event[j].options, sizeof( pevent[j].options ) );
+			// AddToStringTable( &pevent[j], &pevent[j].szoptionindex, g_sequence[i].event[j].options );
+			strcpy( pevent[j].options, g_sequence[i].event[j].options );
 		}
 		ALIGN4( pData );
 
@@ -511,18 +528,30 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 
 		// save autolayers
 		mstudioautolayer_t *pautolayer			= (mstudioautolayer_t *)pData;
-		pseqdesc->numautolayers	= g_sequence[i].numautolayers;
-		pseqdesc->autolayerindex = (pData - pSequenceStart);
+		pseqdesc->numautolayers	= IsChar( g_sequence[i].numautolayers );
+		pseqdesc->autolayerindex = IsInt24( (pData - pSequenceStart) );
 		pData += pseqdesc->numautolayers * sizeof( mstudioautolayer_t );
 		for (j = 0; j < g_sequence[i].numautolayers; j++)
 		{
 			pautolayer[j].iSequence = g_sequence[i].autolayer[j].sequence;
+			pautolayer[j].iPose		= g_sequence[i].autolayer[j].pose;
 			pautolayer[j].flags		= g_sequence[i].autolayer[j].flags;
-			pautolayer[j].start		= g_sequence[i].autolayer[j].start / (g_sequence[i].panim[0][0]->numframes - 1);
-			pautolayer[j].peak		= g_sequence[i].autolayer[j].peak / (g_sequence[i].panim[0][0]->numframes - 1);
-			pautolayer[j].tail		= g_sequence[i].autolayer[j].tail / (g_sequence[i].panim[0][0]->numframes - 1);
-			pautolayer[j].end		= g_sequence[i].autolayer[j].end / (g_sequence[i].panim[0][0]->numframes - 1);
+			if (!(pautolayer[j].flags & STUDIO_AL_POSE))
+			{
+				pautolayer[j].start		= g_sequence[i].autolayer[j].start / (g_sequence[i].panim[0][0]->numframes - 1);
+				pautolayer[j].peak		= g_sequence[i].autolayer[j].peak / (g_sequence[i].panim[0][0]->numframes - 1);
+				pautolayer[j].tail		= g_sequence[i].autolayer[j].tail / (g_sequence[i].panim[0][0]->numframes - 1);
+				pautolayer[j].end		= g_sequence[i].autolayer[j].end / (g_sequence[i].panim[0][0]->numframes - 1);
+			}
+			else
+			{
+				pautolayer[j].start		= g_sequence[i].autolayer[j].start;
+				pautolayer[j].peak		= g_sequence[i].autolayer[j].peak;
+				pautolayer[j].tail		= g_sequence[i].autolayer[j].tail;
+				pautolayer[j].end		= g_sequence[i].autolayer[j].end;
+			}
 		}
+
 
 		// save boneweights
 		float *pweight = 0;
@@ -568,8 +597,8 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 
 		// save iklocks
 		mstudioiklock_t *piklock	= (mstudioiklock_t *)pData;
-		pseqdesc->numiklocks		= g_sequence[i].numiklocks;
-		pseqdesc->iklockindex		= (pData - pSequenceStart);
+		pseqdesc->numiklocks		= IsChar( g_sequence[i].numiklocks );
+		pseqdesc->iklockindex		= IsInt24( (pData - pSequenceStart) );
 		pData += pseqdesc->numiklocks * sizeof( mstudioiklock_t );
 		ALIGN4( pData );
 
@@ -629,8 +658,8 @@ static void WriteSequenceInfo( studiohdr_t *phdr )
 	}
 
 	ptransition	= (byte *)pData;
-	phdr->numlocalnodes = g_numxnodes;
-	phdr->localnodeindex = (pData - pStart);
+	phdr->numlocalnodes = IsChar( g_numxnodes );
+	phdr->localnodeindex = IsInt24( pData - pStart );
 	pData += g_numxnodes * g_numxnodes * sizeof( byte );
 	ALIGN4( pData );
 	for (i = 0; i < g_numxnodes; i++)
@@ -683,14 +712,14 @@ int numAxis[4] = { 0, 0, 0, 0 };
 int numPos[4] = { 0, 0, 0, 0 };
 int useRaw = 0;
 
-byte *WriteAnimationData( s_animation_t *srcanim, byte *pData, byte *pStart )
+byte *WriteAnimationData( s_animation_t *srcanim, byte *pData )
 {
 	int j, k, n;
 
 	mstudioanim_t	*destanim = (mstudioanim_t *)pData;
 
 	pData += sizeof( *destanim );
-	destanim->bone = -1;
+	destanim->bone = 255;
 
 	mstudioanim_t	*prevanim = NULL;
 
@@ -826,12 +855,115 @@ byte *WriteAnimationData( s_animation_t *srcanim, byte *pData, byte *pStart )
 }
 
 
+byte *WriteIkErrors( s_animation_t *srcanim, byte *pData )
+{
+	int j, k;
+
+	// write IK error keys
+	mstudioikrule_t *pikruledata = (mstudioikrule_t *)pData;
+	pData += srcanim->numikrules * sizeof( *pikruledata );
+	ALIGN4( pData );
+
+	for (j = 0; j < srcanim->numikrules; j++)
+	{
+		mstudioikrule_t *pikrule = pikruledata + j;
+
+		pikrule->index	= srcanim->ikrule[j].index;
+
+		pikrule->chain	= srcanim->ikrule[j].chain;
+		pikrule->bone	= srcanim->ikrule[j].bone;
+		pikrule->type	= srcanim->ikrule[j].type;
+		pikrule->slot	= srcanim->ikrule[j].slot;
+		pikrule->pos	= srcanim->ikrule[j].pos;
+		pikrule->q		= srcanim->ikrule[j].q;
+		pikrule->height	= srcanim->ikrule[j].height;
+		pikrule->floor	= srcanim->ikrule[j].floor;
+		pikrule->radius = srcanim->ikrule[j].radius;
+
+		if (srcanim->numframes > 1.0)
+		{
+			pikrule->start	= srcanim->ikrule[j].start / (srcanim->numframes - 1.0f);
+			pikrule->peak	= srcanim->ikrule[j].peak / (srcanim->numframes - 1.0f);
+			pikrule->tail	= srcanim->ikrule[j].tail / (srcanim->numframes - 1.0f);
+			pikrule->end	= srcanim->ikrule[j].end / (srcanim->numframes - 1.0f);
+			pikrule->contact= srcanim->ikrule[j].contact / (srcanim->numframes - 1.0f);
+		}
+		else
+		{
+			pikrule->start	= 0.0f;
+			pikrule->peak	= 0.0f;
+			pikrule->tail	= 1.0f;
+			pikrule->end	= 1.0f;
+			pikrule->contact= 0.0f;
+		}
+
+		/*
+		printf("%d %d %d %d : %.2f %.2f %.2f %.2f\n", 
+			srcanim->ikrule[j].start, srcanim->ikrule[j].peak, srcanim->ikrule[j].tail, srcanim->ikrule[j].end, 
+			pikrule->start, pikrule->peak, pikrule->tail, pikrule->end );
+		*/
+
+		pikrule->iStart = srcanim->ikrule[j].start;
+
+#if 0
+		// uncompressed
+		pikrule->ikerrorindex = (pData - (byte*)pikrule);
+		mstudioikerror_t *perror = (mstudioikerror_t *)pData;
+		pData += srcanim->ikrule[j].numerror * sizeof( *perror );
+
+		for (k = 0; k < srcanim->ikrule[j].numerror; k++)
+		{
+			perror[k].pos = srcanim->ikrule[j].pError[k].pos;
+			perror[k].q = srcanim->ikrule[j].pError[k].q;
+		}
+#endif
+#if 1
+		// skip writting the header if there's no IK data
+		for (k = 0; k < 6; k++)
+		{
+			if (srcanim->ikrule[j].numanim[k]) break;
+		}
+
+		if (k == 6)
+			continue;
+
+		// compressed
+		pikrule->compressedikerrorindex = (pData - (byte*)pikrule);
+		mstudiocompressedikerror_t *pCompressed = (mstudiocompressedikerror_t *)pData;
+		pData += sizeof( *pCompressed );
+
+		for (k = 0; k < 6; k++)
+		{
+			pCompressed->scale[k] = srcanim->ikrule[j].scale[k];
+			pCompressed->offset[k] = (pData - (byte*)pCompressed);
+			int size = srcanim->ikrule[j].numanim[k] * sizeof( mstudioanimvalue_t );
+			memmove( pData, srcanim->ikrule[j].anim[k], size );
+			pData += size;
+		}
+
+		if (strlen( srcanim->ikrule[j].attachment ) > 0)
+		{
+			// don't use string table, we're probably not in the same file.
+			int size = strlen( srcanim->ikrule[j].attachment ) + 1;
+			strcpy( (char *)pData, srcanim->ikrule[j].attachment );
+			pikrule->szattachmentindex = pData - (byte *)pikrule;
+			pData += size;
+		}
+
+		ALIGN4( pData );
+
+#endif
+		// AddToStringTable( pikrule, &pikrule->szattachmentindex, srcanim->ikrule[j].attachment );
+	}
+
+	return pData;
+}
 
 
 
 static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t *phdr, int *outcount )
 {
-	int i, j, k;
+	int i, j;
 
 	mstudioanimdesc_t	*panimdesc;
 
@@ -908,28 +1040,66 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 		// panimdesc[i].automoveposindex = srcanim->automoveposindex;
 		// panimdesc[i].automoveangleindex = srcanim->automoveangleindex;
 
-		VectorCopy( srcanim->bmin, panimdesc[i].bbmin );
-		VectorCopy( srcanim->bmax, panimdesc[i].bbmax );		
-
 		if (!pBlockStart)
 		{
-			panimdesc[i].animindex	= (pData - (byte *)(&panimdesc[i]));
-			pData = WriteAnimationData( srcanim, pData, pStart );
+			panimdesc[i].animindex	= IsInt24( pData - (byte *)(&panimdesc[i]) );
+			pData = WriteAnimationData( srcanim, pData );
+			if ( srcanim->numikrules )
+			{
+				panimdesc[i].ikruleindex = IsInt24( pData - (byte *)(&panimdesc[i]) );
+				panimdesc[i].numikrules = IsChar( srcanim->numikrules );
+				pData = WriteIkErrors( srcanim, pData );
+			}
 		}
 		else
 		{
 			static int iCurAnim = 0;
-			byte *pBlockEnd = WriteAnimationData( srcanim, pBlockData, pBlockStart );
-			
+
+			// align all animation data to cache line boundaries
+			ALIGN16( pBlockData );
+
+			byte *pIkData = WriteAnimationData( srcanim, pBlockData );
+			byte *pBlockEnd = WriteIkErrors( srcanim, pIkData );
+
 			if (g_numanimblocks == 0)
 			{
 				g_numanimblocks = 1;
+				// XBox, align each anim block to 512 for fast io
+				byte *pBlockData2 = pBlockData;
+				ALIGN512( pBlockData2 );
+
+				int size = pBlockEnd - pBlockData;
+				int shift = pBlockData2 - pBlockData;
+
+				memmove( pBlockData2, pBlockData, size );
+				memset( pBlockData, 0, shift );
+
+				pBlockData = pBlockData2;
+				pIkData = pIkData + shift;
+				pBlockEnd = pBlockEnd + shift;
+
 				g_animblock[g_numanimblocks].start = pBlockData;
 				g_numanimblocks++;
 			}
-			else if (pBlockEnd - g_animblock[g_numanimblocks-1].start > 16 * 1024)
+			else if (pBlockEnd - g_animblock[g_numanimblocks-1].start > g_animblocksize)
 			{
-				g_animblock[g_numanimblocks].start = g_animblock[g_numanimblocks-1].end;
+				// the data we just wrote went over the boundry
+				// XBox, align each anim block to 512 for fast io
+				byte *pBlockData2 = pBlockData;
+				ALIGN512( pBlockData2 );
+
+				int size = pBlockEnd - pBlockData;
+				int shift = pBlockData2 - pBlockData;
+
+				memmove( pBlockData2, pBlockData, size );
+				memset( pBlockData, 0, shift );
+
+				pBlockData = pBlockData2;
+				pIkData = pIkData + shift;
+				pBlockEnd = pBlockEnd + shift;
+
+				g_animblock[g_numanimblocks-1].end = pBlockData;
+				g_animblock[g_numanimblocks].start = pBlockData;
 				g_animblock[g_numanimblocks].iStartAnim = i;
 
 				g_numanimblocks++;
@@ -938,11 +1108,20 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 					MdlError( "Too many animation blocks\n");
 				}
 			}
+
+			if ( i == animcount - 1 )
+			{
+				// fixup size for last block
+				// XBox, align each anim block to 512 for fast io 
+				ALIGN512( pBlockEnd );
+			}
 			g_animblock[g_numanimblocks-1].iEndAnim = i;
 			g_animblock[g_numanimblocks-1].end = pBlockEnd;
 
-			panimdesc[i].animblock	= g_numanimblocks-1;
-			panimdesc[i].animindex	= (pBlockData - g_animblock[panimdesc[i].animblock].start);
+			panimdesc[i].animblock	= IsChar( g_numanimblocks-1 );
+			panimdesc[i].animindex	= IsInt24( pBlockData - g_animblock[panimdesc[i].animblock].start );
+			panimdesc[i].numikrules = IsChar( srcanim->numikrules );
+			panimdesc[i].animblockikruleindex = IsInt24( pIkData - g_animblock[panimdesc[i].animblock].start );
 			pBlockData = pBlockEnd;
 		}
 
@@ -974,8 +1153,8 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 		s_animation_t *anim = anims[ i ];
 
 		// panimdesc[i].entrancevelocity = anim->entrancevelocity;
-		panimdesc[i].nummovements = anim->numpiecewisekeys;
-		panimdesc[i].movementindex = (pData - (byte*)&panimdesc[i]);
+		panimdesc[i].nummovements = IsChar( anim->numpiecewisekeys );
+		panimdesc[i].movementindex = IsInt24( pData - (byte*)&panimdesc[i] );
 
 		mstudiomovement_t	*pmove = (mstudiomovement_t *)pData;
 		pData += panimdesc[i].nummovements * sizeof( *pmove );
@@ -994,93 +1173,82 @@ static byte *WriteAnimations( byte *pData, byte *pStart, int group, studiohdr_t 
 		}
 	}
 
-	// write IK error keys
+	// only write zero frames if the animation data is demand loaded
+	if (!pBlockStart)
+		return pData;
+
+
+	// calculate what bones should be have zero frame saved out
+	if (g_bonesaveframe.Count() == 0)
+	{
+		for (j = 0; j < g_numbones; j++)
+		{
+			if ((g_bonetable[j].parent == -1) || (g_bonetable[j].posrange.Length() > 2.0))
+			{
+				g_bonetable[j].flags |= BONE_HAS_SAVEFRAME_POS;
+			}
+			g_bonetable[j].flags |= BONE_HAS_SAVEFRAME_ROT;
+
+			if ((!g_quiet) && (g_bonetable[j].flags & (BONE_HAS_SAVEFRAME_POS | BONE_HAS_SAVEFRAME_ROT)))
+			{
+				printf("$BoneSaveFrame \"%s\"", g_bonetable[j].name );
+				if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_POS)
+					printf(" position" );
+				if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_ROT)
+					printf(" rotation" );
+				printf("\n");
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < g_bonesaveframe.Count(); i++)
+		{
+			j = findGlobalBone( g_bonesaveframe[i].name );
+
+			if (j != -1)
+			{
+				if (g_bonesaveframe[i].bSavePos)
+				{
+					g_bonetable[j].flags |= BONE_HAS_SAVEFRAME_POS;
+					phdr->pBone(j)->flags |= BONE_HAS_SAVEFRAME_POS;
+				}
+				if (g_bonesaveframe[i].bSaveRot)
+				{
+					g_bonetable[j].flags |= BONE_HAS_SAVEFRAME_ROT;
+					phdr->pBone(j)->flags |= BONE_HAS_SAVEFRAME_ROT;
+				}
+			}
+		}
+	}
+
+	// write zero frames
+	int *pZeroframeindex = (int *)pData;
+	phdr->zeroframecacheindex = (byte *)pZeroframeindex - (byte *)phdr;
+	pData += animcount * sizeof( int );
+
 	for (i = 0; i < animcount; i++) 
 	{
 		s_animation_t *anim = anims[ i ];
 
-		if (anim->numikrules)
+		pZeroframeindex[i] = pData - pStart;
+
+		for (j = 0; j < g_numbones; j++)
 		{
-			panimdesc[i].numikrules = anim->numikrules;
-			panimdesc[i].ikruleindex = (pData - (byte*)&panimdesc[i]);
-
-			mstudioikrule_t *pikrule = (mstudioikrule_t *)pData;
-			pData += panimdesc[i].numikrules * sizeof( *pikrule );
-			ALIGN4( pData );
-
-			for (j = 0; j < panimdesc[i].numikrules; j++)
+			if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_POS)
 			{
-				pikrule->index	= anim->ikrule[j].index;
-
-				pikrule->chain	= anim->ikrule[j].chain;
-				pikrule->bone	= anim->ikrule[j].bone;
-				pikrule->type	= anim->ikrule[j].type;
-				pikrule->slot	= anim->ikrule[j].slot;
-				pikrule->pos	= anim->ikrule[j].pos;
-				pikrule->q		= anim->ikrule[j].q;
-				pikrule->height	= anim->ikrule[j].height;
-				pikrule->floor	= anim->ikrule[j].floor;
-				pikrule->radius = anim->ikrule[j].radius;
-
-				if (anim->numframes > 1.0)
+				*(Vector48 *)pData = anim->sanim[0][j].pos;
+				pData += sizeof( Vector48 );
+			}
+			if (g_bonetable[j].flags & BONE_HAS_SAVEFRAME_ROT)
+			{
+				if ((anim->flags & STUDIO_DELTA) == 0)
 				{
-					pikrule->start	= anim->ikrule[j].start / (anim->numframes - 1.0f);
-					pikrule->peak	= anim->ikrule[j].peak / (anim->numframes - 1.0f);
-					pikrule->tail	= anim->ikrule[j].tail / (anim->numframes - 1.0f);
-					pikrule->end	= anim->ikrule[j].end / (anim->numframes - 1.0f);
-					pikrule->contact= anim->ikrule[j].contact / (anim->numframes - 1.0f);
+					Quaternion q;
+					AngleQuaternion( anim->sanim[0][j].rot, q );
+					*((Quaternion32 *)pData) = q;
+					pData += sizeof( Quaternion48 );
 				}
-				else
-				{
-					pikrule->start	= 0.0f;
-					pikrule->peak	= 0.0f;
-					pikrule->tail	= 1.0f;
-					pikrule->end	= 1.0f;
-					pikrule->contact= 0.0f;
-				}
-
-
-				/*
-				printf("%d %d %d %d : %.2f %.2f %.2f %.2f\n", 
-					anim->ikrule[j].start, anim->ikrule[j].peak, anim->ikrule[j].tail, anim->ikrule[j].end, 
-					pikrule->start, pikrule->peak, pikrule->tail, pikrule->end );
-				*/
-
-				pikrule->iStart = anim->ikrule[j].start;
-
-#if 0
-				// uncompressed
-				pikrule->ikerrorindex = (pData - (byte*)pikrule);
-				mstudioikerror_t *perror = (mstudioikerror_t *)pData;
-				pData += anim->ikrule[j].numerror * sizeof( *perror );
-
-				for (k = 0; k < anim->ikrule[j].numerror; k++)
-				{
-					perror[k].pos = anim->ikrule[j].pError[k].pos;
-					perror[k].q = anim->ikrule[j].pError[k].q;
-				}
-#endif
-#if 1
-				// compressed
-				pikrule->compressedikerrorindex = (pData - (byte*)pikrule);
-				mstudiocompressedikerror_t *pCompressed = (mstudiocompressedikerror_t *)pData;
-				pData += sizeof( *pCompressed );
-
-				for (k = 0; k < 6; k++)
-				{
-					pCompressed->scale[k] = anim->ikrule[j].scale[k];
-					pCompressed->offset[k] = (pData - (byte*)pCompressed);
-					int size = anim->ikrule[j].numanim[k] * sizeof( mstudioanimvalue_t );
-					memmove( pData, anim->ikrule[j].anim[k], size );
-					pData += size;
-				}
-
-				ALIGN4( pData );
-
-#endif
-				AddToStringTable( pikrule, &pikrule->szattachmentindex, anim->ikrule[j].attachment );
-
-				pikrule++;
 			}
 		}
 	}
@@ -1095,8 +1263,8 @@ static void WriteTextures( studiohdr_t *phdr )
 
 	// save texture info
 	mstudiotexture_t *ptexture = (mstudiotexture_t *)pData;
-	phdr->numtextures = g_nummaterials;
-	phdr->textureindex = (pData - pStart);
+	phdr->numtextures = IsChar( g_nummaterials );
+	phdr->textureindex = IsInt24( pData - pStart );
 	pData += g_nummaterials * sizeof( mstudiotexture_t );
 	for (i = 0; i < g_nummaterials; i++) 
 	{
@@ -1106,8 +1274,8 @@ static void WriteTextures( studiohdr_t *phdr )
 	ALIGN4( pData );
 
 	int *cdtextureoffset = (int *)pData;
-	phdr->numcdtextures = numcdtextures;
-	phdr->cdtextureindex = (pData - pStart);
+	phdr->numcdtextures = IsChar( numcdtextures );
+	phdr->cdtextureindex = IsInt24( pData - pStart );
 	pData += numcdtextures * sizeof( int );
 	for (i = 0; i < numcdtextures; i++) 
 	{
@@ -1140,7 +1308,6 @@ static void WriteVertices( studiohdr_t *phdr )
 {
 	char			fileName[260];
 	s_loddata_t		*pLodDataSrc;
-	FileHandle_t	handle;
 	byte			*pStart;
 	byte			*pData;
 	int				i;
@@ -1210,17 +1377,17 @@ static void WriteVertices( studiohdr_t *phdr )
 //			printf( "saving bone weight %d for model %d at 0x%p\n",
 //				j, i, &pbone[j] );
 
-			VectorCopy( pLodDataSrc->vertex[j], pVert[j].m_vecPosition );
-			VectorCopy( pLodDataSrc->normal[j], pVert[j].m_vecNormal );
-			Vector2DCopy( pLodDataSrc->texcoord[j], pVert[j].m_vecTexCoord );
+			VectorCopy( pLodDataSrc->vertex[j].position, pVert[j].m_vecPosition );
+			VectorCopy( pLodDataSrc->vertex[j].normal, pVert[j].m_vecNormal );
+			Vector2DCopy( pLodDataSrc->vertex[j].texcoord, pVert[j].m_vecTexCoord );
 
 			mstudioboneweight_t *pBoneWeight = &pVert[j].m_BoneWeights;
 			memset( pBoneWeight, 0, sizeof( mstudioboneweight_t ) );
-			pBoneWeight->numbones = pLodDataSrc->globalBoneweight[j].numbones;
+			pBoneWeight->numbones = pLodDataSrc->vertex[j].globalBoneweight.numbones;
 			for (k = 0; k < pBoneWeight->numbones; k++)
 			{
-				pBoneWeight->bone[k]   = pLodDataSrc->globalBoneweight[j].bone[k];
-				pBoneWeight->weight[k] = pLodDataSrc->globalBoneweight[j].weight[k];
+				pBoneWeight->bone[k]   = pLodDataSrc->vertex[j].globalBoneweight.bone[k];
+				pBoneWeight->weight[k] = pLodDataSrc->vertex[j].globalBoneweight.weight[k];
 			}
 		}
 
@@ -1251,7 +1418,7 @@ static void WriteVertices( studiohdr_t *phdr )
 		pData += pLodDataSrc->numvertices * sizeof( Vector4D );
 		for (j = 0; j < pLodDataSrc->numvertices; j++)
 		{
-			Vector4DCopy( pLodDataSrc->tangentS[j], ptangents[j] );
+			Vector4DCopy( pLodDataSrc->vertex[j].tangentS, ptangents[j] );
 #ifdef _DEBUG
 			float w = ptangents[j].w;
 			Assert( w == 1.0f || w == -1.0f );
@@ -1269,9 +1436,8 @@ static void WriteVertices( studiohdr_t *phdr )
 		printf( "total      %7d bytes\n", pData - pStart );
 	}
 
-	handle = SafeOpenWrite( fileName );
-	SafeWrite( handle, pStart, pData - pStart);
-	g_pFileSystem->Close( handle );
+	// fileHeader->length = pData - pStart;
+	SaveFile( fileName, pStart, pData - pStart );
 }
 
 static void WriteModel( studiohdr_t *phdr )
@@ -1293,8 +1459,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// write bodypart info
 	pbodypart = (mstudiobodyparts_t *)pData;
-	phdr->numbodyparts = g_numbodyparts;
-	phdr->bodypartindex = (pData - pStart);
+	phdr->numbodyparts = IsChar( g_numbodyparts );
+	phdr->bodypartindex = IsInt24( pData - pStart );
 	pData += g_numbodyparts * sizeof( mstudiobodyparts_t );
 
 	pmodel = (mstudiomodel_t *)pData;
@@ -1303,17 +1469,17 @@ static void WriteModel( studiohdr_t *phdr )
 	for (i = 0, j = 0; i < g_numbodyparts; i++)
 	{
 		AddToStringTable( &pbodypart[i], &pbodypart[i].sznameindex, g_bodypart[i].name );
-		pbodypart[i].nummodels		= g_bodypart[i].nummodels;
+		pbodypart[i].nummodels		= IsChar( g_bodypart[i].nummodels );
 		pbodypart[i].base			= g_bodypart[i].base;
-		pbodypart[i].modelindex		= ((byte *)&pmodel[j]) - (byte *)&pbodypart[i];
+		pbodypart[i].modelindex		= IsInt24( ((byte *)&pmodel[j]) - (byte *)&pbodypart[i] );
 		j += g_bodypart[i].nummodels;
 	}
 	ALIGN4( pData );
 
 	// write global flex names
 	mstudioflexdesc_t *pflexdesc = (mstudioflexdesc_t *)pData;
-	phdr->numflexdesc			= g_numflexdesc;
-	phdr->flexdescindex			= (pData - pStart);
+	phdr->numflexdesc			= IsInt24( g_numflexdesc );
+	phdr->flexdescindex			= IsInt24( pData - pStart );
 	pData += g_numflexdesc * sizeof( mstudioflexdesc_t );
 	ALIGN4( pData );
 
@@ -1326,8 +1492,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// write global flex controllers
 	mstudioflexcontroller_t *pflexcontroller = (mstudioflexcontroller_t *)pData;
-	phdr->numflexcontrollers	= g_numflexcontrollers;
-	phdr->flexcontrollerindex	= (pData - pStart);
+	phdr->numflexcontrollers	= IsChar( g_numflexcontrollers );
+	phdr->flexcontrollerindex	= IsInt24( pData - pStart );
 	pData += g_numflexcontrollers * sizeof( mstudioflexcontroller_t );
 	ALIGN4( pData );
 
@@ -1343,8 +1509,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// write flex rules
 	mstudioflexrule_t *pflexrule = (mstudioflexrule_t *)pData;
-	phdr->numflexrules			= g_numflexrules;
-	phdr->flexruleindex			= (pData - pStart);
+	phdr->numflexrules			= IsInt24( g_numflexrules );
+	phdr->flexruleindex			= IsInt24( pData - pStart );
 	pData += g_numflexrules * sizeof( mstudioflexrule_t );
 	ALIGN4( pData );
 
@@ -1370,8 +1536,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// write ik chains
 	mstudioikchain_t *pikchain = (mstudioikchain_t *)pData;
-	phdr->numikchains			= g_numikchains;
-	phdr->ikchainindex			= (pData - pStart);
+	phdr->numikchains			= IsChar( g_numikchains );
+	phdr->ikchainindex			= IsInt24( pData - pStart );
 	pData += g_numikchains * sizeof( mstudioikchain_t );
 	ALIGN4( pData );
 
@@ -1395,8 +1561,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// save autoplay locks
 	mstudioiklock_t *piklock = (mstudioiklock_t *)pData;
-	phdr->numlocalikautoplaylocks	= g_numikautoplaylocks;
-	phdr->localikautoplaylockindex	= (pData - pStart);
+	phdr->numlocalikautoplaylocks	= IsChar( g_numikautoplaylocks );
+	phdr->localikautoplaylockindex	= IsInt24( pData - pStart );
 	pData += g_numikautoplaylocks * sizeof( mstudioiklock_t );
 	ALIGN4( pData );
 
@@ -1410,8 +1576,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// save mouth info
 	mstudiomouth_t *pmouth = (mstudiomouth_t *)pData;
-	phdr->nummouths = g_nummouths;
-	phdr->mouthindex = (pData - pStart);
+	phdr->nummouths = IsChar( g_nummouths );
+	phdr->mouthindex = IsInt24( pData - pStart );
 	pData += g_nummouths * sizeof( mstudiomouth_t );
 	ALIGN4( pData );
 
@@ -1423,8 +1589,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// save pose parameters
 	mstudioposeparamdesc_t *ppose = (mstudioposeparamdesc_t *)pData;
-	phdr->numlocalposeparameters = g_numposeparameters;
-	phdr->localposeparamindex = (pData - pStart);
+	phdr->numlocalposeparameters = IsChar( g_numposeparameters );
+	phdr->localposeparamindex = IsInt24( pData - pStart );
 	pData += g_numposeparameters * sizeof( mstudioposeparamdesc_t );
 	ALIGN4( pData );
 
@@ -1451,6 +1617,7 @@ static void WriteModel( studiohdr_t *phdr )
 		byte *pModelStart = (byte *)(&pmodel[i]);
 		
 		strcpy( pmodel[i].name, g_model[i]->filename );
+		// AddToStringTable( &pmodel[i], &pmodel[i].sznameindex, g_model[i]->filename );
 
 		// pmodel[i].mrmbias = g_model[i]->mrmbias;
 		// pmodel[i].minresolution = g_model[i]->minresolution;
@@ -1511,8 +1678,8 @@ static void WriteModel( studiohdr_t *phdr )
 		// save eyeballs
 		mstudioeyeball_t *peyeball;
 		peyeball					= (mstudioeyeball_t *)pData;
-		pmodel[i].numeyeballs		= g_model[i]->numeyeballs;
-		pmodel[i].eyeballindex		= (pData - pModelStart);
+		pmodel[i].numeyeballs		= IsChar( g_model[i]->numeyeballs );
+		pmodel[i].eyeballindex		= IsInt24( pData - pModelStart );
 		pData += g_model[i]->numeyeballs * sizeof( mstudioeyeball_t );
 			
 		ALIGN4( pData );
@@ -1585,7 +1752,7 @@ static void WriteModel( studiohdr_t *phdr )
 
 			if (pmesh[m].numflexes)
 			{
-				pmesh[m].flexindex	= (pData - (byte *)&pmesh[m]);
+				pmesh[m].flexindex	= IsInt24( pData - (byte *)&pmesh[m] );
 				mstudioflex_t *pflex = (mstudioflex_t *)pData;
 				pData += pmesh[m].numflexes * sizeof( mstudioflex_t );
 				ALIGN4( pData );
@@ -1620,11 +1787,11 @@ static void WriteModel( studiohdr_t *phdr )
 						if (n >= 0 && n < pmesh[m].numvertices)
 						{
 							pvertanim->index = n;
-							pvertanim->delta = pvanim->pos;
 							pvertanim->speed = 255.0F*pvanim->speed;
 							pvertanim->side  = 255.0F*pvanim->side;
-							pvertanim->ndelta = pvanim->normal;
-							Vector tmp = pvertanim->delta;
+							pvertanim->SetDeltaFloat( pvanim->pos );
+							pvertanim->SetNDeltaFloat( pvanim->normal );
+							// Vector tmp = pvertanim->delta;
 
 							pvertanim++;
 
@@ -1657,8 +1824,8 @@ static void WriteModel( studiohdr_t *phdr )
 	ALIGN4( pData );
 
 	mstudiomodelgroup_t *pincludemodel = (mstudiomodelgroup_t *)pData;
-	phdr->numincludemodels = g_numincludemodels;
-	phdr->includemodelindex = (pData - pStart);
+	phdr->numincludemodels = IsChar( g_numincludemodels );
+	phdr->includemodelindex = IsInt24( pData - pStart );
 	pData += g_numincludemodels * sizeof( mstudiomodelgroup_t );
 
 	for (i = 0; i < g_numincludemodels; i++)
@@ -1669,8 +1836,8 @@ static void WriteModel( studiohdr_t *phdr )
 
 	// save animblock group info
 	mstudioanimblock_t *panimblock = (mstudioanimblock_t *)pData;
-	phdr->numanimblocks = g_numanimblocks;
-	phdr->animblockindex = (pData - pStart);
+	phdr->numanimblocks = IsChar( g_numanimblocks );
+	phdr->animblockindex = IsInt24( pData - pStart );
 	pData += phdr->numanimblocks * sizeof( mstudioanimblock_t );
 	ALIGN4( pData );
 
@@ -1678,6 +1845,7 @@ static void WriteModel( studiohdr_t *phdr )
 	{
 		panimblock[i].datastart = g_animblock[i].start - pBlockStart;
 		panimblock[i].dataend = g_animblock[i].end - pBlockStart;
+		// printf("block %d : %x %x (%x)\n", i, panimblock[i].datastart, panimblock[i].dataend, panimblock[i].dataend - panimblock[i].datastart );
 	}
 	AddToStringTable( phdr, &phdr->szanimblocknameindex, g_animblockname );
 }
@@ -1709,28 +1877,6 @@ static void AssignMeshIDs( studiohdr_t *pStudioHdr )
 		}
 	}
 }
-
-#if 0
-static void WriteStringTable( studiohdr_t *phdr )
-{
-	int i;
-
-	phdr->stringtableindex = ( pData - pStart );
-
-	int *pstringtable = (int *)pData;
-	phdr->stringtableindex = ( pData - pStart );
-	pData += numstrings * sizeof( int );
-
-	for ( i = 0 ; i < numstrings ; i++ )
-	{
-		pstringtable[i] = ( pData - pStart );
-		stringtable[i].offset = ( pData - pStart );
-		memcpy( pData, stringtable[ i ].pstring, strlen( stringtable[ i ].pstring ) + 1 );
-		pData += strlen( stringtable[ i ].pstring ) + 1;
-	}
-	ALIGN4( pData );
-}
-#endif
 
 	
 void LoadMaterials( studiohdr_t *phdr )
@@ -1775,6 +1921,7 @@ void LoadMaterials( studiohdr_t *phdr )
 				{
 					phdr->pTexture( i )->flags = 1;
 				}
+				phdr->pTexture( i )->used = 1;
 			}
 		}
 	}
@@ -1854,13 +2001,23 @@ void WriteModelFiles(void)
 
 	Q_StripExtension( outname, outname, sizeof( outname ) );
 
+	if (g_bXbox && g_animblocksize == 0 && g_numani > 2)
+	{
+		g_animblocksize = 16 * 1024;
+	}
+		
 	if (g_animblocksize != 0)
 	{
 		// write the non-default g_sequence group data to separate files
 		sprintf( g_animblockname, "models/%s.ani", outname );
 
+		strcpy( filename, gamedir );
+		strcat( filename, g_animblockname );	
+
+		EnsureFileDirectoryExists( filename );
+
 		if (!g_bVerifyOnly)
-			blockouthandle = SafeOpenWrite (g_animblockname);
+			blockouthandle = SafeOpenWrite( filename );
 
 		pBlockStart = (byte *)kalloc( 1, FILEBUFFER );
 		pBlockData = pBlockStart;
@@ -1881,7 +2038,6 @@ void WriteModelFiles(void)
 	phdr->version = STUDIO_VERSION;
 
 	strcat (outname, ".mdl");
-	strcpy( phdr->name, outname );
 
 	// strcpy( outname, ExpandPath( outname ) );
 
@@ -1909,8 +2065,8 @@ void WriteModelFiles(void)
 	if (!g_bVerifyOnly)
 		modelouthandle = SafeOpenWrite (filename);
 
-	VectorCopy( eyeposition, phdr->eyeposition );
-	VectorCopy( illumposition, phdr->illumposition );
+	phdr->eyeposition = eyeposition;
+	phdr->illumposition = illumposition;
 
 	if ( !g_wrotebbox && g_sequence.Count() > 0)
 	{
@@ -1927,18 +2083,21 @@ void WriteModelFiles(void)
 		VectorCopy( vec3_origin, cbox[1] );
 	}
 
-	VectorCopy( bbox[0], phdr->hull_min ); 
-	VectorCopy( bbox[1], phdr->hull_max ); 
-	VectorCopy( cbox[0], phdr->view_bbmin ); 
-	VectorCopy( cbox[1], phdr->view_bbmax ); 
+	phdr->hull_min = bbox[0]; 
+	phdr->hull_max = bbox[1]; 
+	phdr->view_bbmin = cbox[0]; 
+	phdr->view_bbmax = cbox[1]; 
 
 	phdr->flags = gflags;
 	phdr->mass = GetCollisionModelMass();	
-
+	phdr->constdirectionallightdot = g_constdirectionalightdot;
 
 	pData = (byte *)phdr + sizeof( studiohdr_t );
 
 	BeginStringTable( );
+
+	strcpy( phdr->name, outname );
+	// AddToStringTable( phdr, &phdr->sznameindex, outname );
 
 	WriteBoneInfo( phdr );
 	if( !g_quiet )
@@ -1984,7 +2143,7 @@ void WriteModelFiles(void)
 	}
 	total  = pData - pStart;
 
-	WriteStringTable( );
+	pData = WriteStringTable( pData );
 
 	total  = pData - pStart;
 
@@ -2012,6 +2171,14 @@ void WriteModelFiles(void)
 	{
 		printf("total      %7d\n", phdr->length );
 	}
+
+	// Load materials for this model via the material system so that the
+	// optimizer can ask questions about the materials.
+	char materialDir[256];
+	strcpy( materialDir, gamedir );
+	strcat( materialDir, "materials" );	
+	InitMaterialSystem( materialDir );
+	LoadMaterials( phdr );
 
 	SafeWrite( modelouthandle, pStart, phdr->length );
 
@@ -2061,15 +2228,6 @@ void WriteModelFiles(void)
 	}
 #endif
 
-	// Load materials for this model via the material system so that the
-	// optimizer can ask questions about the materials.
-	// NOTE: This data won't be included in the mdl file since it is
-	// already written.
-	char materialDir[256];
-	strcpy( materialDir, gamedir );
-	strcat( materialDir, "materials" );	
-	InitMaterialSystem( materialDir );
-	LoadMaterials( phdr );
 	OptimizedModel::WriteOptimizedFiles( phdr, g_bodypart );
 
 	// now have external finalized vtx (windings) and vvd (vertexes)
@@ -2078,6 +2236,11 @@ void WriteModelFiles(void)
 	if (!FixupToSortedLODVertexes( phdr ))
 	{
 		MdlError("Aborted vertex sort fixup on '%s':\n", filename);
+	}
+
+	if (!Clamp_RootLOD( phdr ))
+	{
+		MdlError("Aborted root lod shift '%s':\n", filename);
 	}
 
 	if ( g_bPerf )
@@ -2759,6 +2922,7 @@ bool FixupVVDFile(const char *fileName,  const studiohdr_t *pStudioHdr, const vo
 		memcpy(&pTangent_new[i], pFlatTangents[oldIndex], sizeof(Vector4D));
 	}
 
+	// pFileHdr_new->length =  pData_new-pStart_new;
 	SaveFile((char*)fileName, pStart_new, pData_new-pStart_new);
 
 	free(pStart_base);
@@ -2849,6 +3013,7 @@ bool FixupVTXFile(const char *fileName, const studiohdr_t *pStudioHdr, const ver
 		}
 	}
 
+	// pVtxHdr->length = VtxLen;
 	SaveFile((char*)fileName, pVtxBuff, VtxLen);
 
 	free(pVtxBuff);
@@ -2967,7 +3132,7 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	int								numVertexPools;
 	int								VtxLen;
 	int								i;
-	const char						*vtxPrefixes[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx"};
+	const char						*vtxPrefixes[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".xbox.vtx"};
 
 	strcpy( filename, gamedir );
 //	if( *g_pPlatformName )
@@ -2984,7 +3149,15 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	// all vtx files enumerate model's lod verts, but differ in their mesh makeup
 	// use xxx.dx80.vtx to establish which vertexes are used by each lod
 	strcpy( tmpFileName, filename );
-	strcat( tmpFileName, ".dx80.vtx" );
+	if ( !g_bXbox )
+	{
+		strcat( tmpFileName, ".dx80.vtx" );
+	}
+	else
+	{
+		// must use the target we are building for
+		strcat( tmpFileName, ".xbox.vtx" );
+	}
 	VtxLen = LoadFile( tmpFileName, &pVtxBuff );
 
 	// build the sorted vertex tables
@@ -3039,3 +3212,405 @@ bool FixupToSortedLODVertexes(studiohdr_t *pStudioHdr)
 	// success
 	return true;
 }
+
+
+byte IsByte( int val )
+{
+	if (val < 0 || val > 0xFF)
+	{
+		MdlError("byte conversion out of range %d\n", val );
+	}
+	return val;
+}
+
+char IsChar( int val )
+{
+	if (val < -0x80 || val > 0x7F)
+	{
+		MdlError("char conversion out of range %d\n", val );
+	}
+	return val;
+}
+
+int IsInt24( int val )
+{
+	if (val < -0x800000 || val > 0x7FFFFF)
+	{
+		MdlError("int24 conversion out of range %d\n", val );
+	}
+	return val;
+}
+
+
+short IsShort( int val )
+{
+	if (val < -0x8000 || val > 0x7FFF)
+	{
+		MdlError("short conversion out of range %d\n", val );
+	}
+	return val;
+}
+
+unsigned short IsUShort( int val )
+{
+	if (val < 0 || val > 0xFFFF)
+	{
+		MdlError("ushort conversion out of range %d\n", val );
+	}
+	return val;
+}
+
+
+bool Clamp_MDL_LODS( const char *fileName, int rootLOD )
+{
+	studiohdr_t *pStudioHdr;
+	int			len;
+
+	len  = LoadFile((char*)fileName, (void **)&pStudioHdr);
+
+	Studio_SetRootLOD( pStudioHdr, rootLOD );
+
+#if 0
+	// shift down bone LOD masks
+	int iBone;
+	for ( iBone = 0; iBone < pStudioHdr->numbones; iBone++)
+	{
+		mstudiobone_t *pBone = pStudioHdr->pBone( iBone );
+
+		int nLodID;
+		for ( nLodID = 0; nLodID < rootLOD; nLodID++)
+		{
+			int iLodMask = BONE_USED_BY_VERTEX_LOD0 << nLodID;
+
+			if (pBone->flags & (BONE_USED_BY_VERTEX_LOD0 << rootLOD))
+			{
+				pBone->flags = pBone->flags | iLodMask;
+			}
+			else
+			{
+				pBone->flags = pBone->flags & (~iLodMask);
+			}
+		}
+	}
+#endif
+
+	SaveFile( (char *)fileName, pStudioHdr, len );
+
+	return true;
+}
+
+
+
+
+bool Clamp_VVD_LODS( const char *fileName, int rootLOD )
+{
+	vertexFileHeader_t *pTempVvdHdr;
+	int			len;
+
+	len  = LoadFile((char*)fileName, (void **)&pTempVvdHdr);
+
+	int newLength = Studio_VertexDataSize( pTempVvdHdr, rootLOD, true );
+
+	// printf("was %d now %d\n", len, newLength );
+
+	vertexFileHeader_t *pNewVvdHdr = (vertexFileHeader_t *)calloc( newLength, 1 );
+
+	Studio_LoadVertexes( pTempVvdHdr, pNewVvdHdr, rootLOD, true );
+
+	if (!g_quiet)
+	{
+		printf ("---------------------\n");
+		printf ("writing %s:\n", fileName);
+		printf( "vertices   (%d vertices)\n", pNewVvdHdr->numLODVertexes[ 0 ] );
+	}
+
+	// pNewVvdHdr->length = newLength;
+
+	SaveFile( (char *)fileName, pNewVvdHdr, newLength );
+
+	return true;
+}
+
+
+bool Clamp_VTX_LODS( const char *fileName, int rootLOD, studiohdr_t *pStudioHdr )
+{
+	int i, j, k, m, n;
+	int nLodID;
+	int size;
+
+	OptimizedModel::FileHeader_t *pVtxHdr;
+	int			len;
+
+	len  = LoadFile((char*)fileName, (void **)&pVtxHdr);
+
+	OptimizedModel::FileHeader_t *pNewVtxHdr = (OptimizedModel::FileHeader_t *)calloc( FILEBUFFER, 1 );
+
+	byte *pData = (byte *)pNewVtxHdr;
+	pData += sizeof( OptimizedModel::FileHeader_t );
+	ALIGN4( pData );
+
+	// header
+	pNewVtxHdr->version = pVtxHdr->version;
+	pNewVtxHdr->vertCacheSize = pVtxHdr->vertCacheSize;
+	pNewVtxHdr->maxBonesPerStrip = pVtxHdr->maxBonesPerStrip;
+	pNewVtxHdr->maxBonesPerTri = pVtxHdr->maxBonesPerTri;
+	pNewVtxHdr->maxBonesPerVert = pVtxHdr->maxBonesPerVert;
+	pNewVtxHdr->checkSum = pVtxHdr->checkSum;
+	pNewVtxHdr->numLODs = pVtxHdr->numLODs;
+
+	// material replacement list
+	pNewVtxHdr->materialReplacementListOffset = (pData - (byte *)pNewVtxHdr);
+	pData += pVtxHdr->numLODs * sizeof( OptimizedModel::MaterialReplacementListHeader_t );
+	// ALIGN4( pData );
+
+	BeginStringTable( );
+
+	// allocate replacement list arrays
+	for ( nLodID = rootLOD; nLodID < pVtxHdr->numLODs; nLodID++ )
+	{
+		OptimizedModel::MaterialReplacementListHeader_t *pReplacementList = pVtxHdr->pMaterialReplacementList( nLodID );
+		OptimizedModel::MaterialReplacementListHeader_t *pNewReplacementList = pNewVtxHdr->pMaterialReplacementList( nLodID );
+
+		pNewReplacementList->numReplacements = pReplacementList->numReplacements;
+		pNewReplacementList->replacementOffset = (pData - (byte *)pNewReplacementList);
+		pData += pNewReplacementList->numReplacements * sizeof( OptimizedModel::MaterialReplacementHeader_t );
+		// ALIGN4( pData );
+
+		for (i = 0; i < pReplacementList->numReplacements; i++)
+		{
+			OptimizedModel::MaterialReplacementHeader_t *pReplacement = pReplacementList->pMaterialReplacement( i );
+			OptimizedModel::MaterialReplacementHeader_t *pNewReplacement = pNewReplacementList->pMaterialReplacement( i );
+
+			pNewReplacement->materialID = pReplacement->materialID;
+			AddToStringTable( pNewReplacement, &pNewReplacement->replacementMaterialNameOffset, pReplacement->pMaterialReplacementName() );
+		}
+	}
+	pData = WriteStringTable( pData );
+
+	// link previous LODs to higher LODs
+	for ( nLodID = 0; nLodID < rootLOD; nLodID++ )
+	{
+		OptimizedModel::MaterialReplacementListHeader_t *pRootReplacementList = pNewVtxHdr->pMaterialReplacementList( rootLOD );
+		OptimizedModel::MaterialReplacementListHeader_t *pNewReplacementList = pNewVtxHdr->pMaterialReplacementList( nLodID );
+
+		int delta = (byte *)pRootReplacementList - (byte *)pNewReplacementList;
+
+		pNewReplacementList->numReplacements = pRootReplacementList->numReplacements;
+		pNewReplacementList->replacementOffset = pRootReplacementList->replacementOffset + delta;
+	}
+
+	// body parts
+	pNewVtxHdr->numBodyParts = pStudioHdr->numbodyparts;
+	pNewVtxHdr->bodyPartOffset = (pData - (byte *)pNewVtxHdr);
+	pData += pNewVtxHdr->numBodyParts * sizeof( OptimizedModel::BodyPartHeader_t );
+	// ALIGN4( pData );
+
+	// Iterate over every body part...
+	for ( i = 0; i < pStudioHdr->numbodyparts; i++ )
+	{
+		mstudiobodyparts_t* pBodyPart = pStudioHdr->pBodypart(i);
+		OptimizedModel::BodyPartHeader_t* pVtxBodyPart = pVtxHdr->pBodyPart(i);
+		OptimizedModel::BodyPartHeader_t* pNewVtxBodyPart = pNewVtxHdr->pBodyPart(i);
+
+		pNewVtxBodyPart->numModels = pBodyPart->nummodels;
+		pNewVtxBodyPart->modelOffset = (pData - (byte *)pNewVtxBodyPart);
+		pData += pNewVtxBodyPart->numModels * sizeof( OptimizedModel::ModelHeader_t );
+		// ALIGN4( pData );
+
+		// Iterate over every submodel...
+		for (j = 0; j < pBodyPart->nummodels; ++j)
+		{
+			mstudiomodel_t* pModel = pBodyPart->pModel(j);
+			OptimizedModel::ModelHeader_t* pVtxModel = pVtxBodyPart->pModel(j);
+			OptimizedModel::ModelHeader_t* pNewVtxModel = pNewVtxBodyPart->pModel(j);
+
+			pNewVtxModel->numLODs = pVtxModel->numLODs;
+			pNewVtxModel->lodOffset = (pData - (byte *)pNewVtxModel);
+			pData += pNewVtxModel->numLODs * sizeof( OptimizedModel::ModelLODHeader_t );
+			ALIGN4( pData );
+
+			for ( nLodID = rootLOD; nLodID < pVtxModel->numLODs; nLodID++ )
+			{
+				OptimizedModel::ModelLODHeader_t *pVtxLOD = pVtxModel->pLOD( nLodID );
+				OptimizedModel::ModelLODHeader_t *pNewVtxLOD = pNewVtxModel->pLOD( nLodID );
+
+				pNewVtxLOD->numMeshes = pVtxLOD->numMeshes;
+				pNewVtxLOD->switchPoint = pVtxLOD->switchPoint;
+				pNewVtxLOD->meshOffset = (pData - (byte *)pNewVtxLOD);
+				pData += pNewVtxLOD->numMeshes * sizeof( OptimizedModel::MeshHeader_t );
+				ALIGN4( pData );
+
+				// Iterate over all the meshes....
+				for (k = 0; k < pModel->nummeshes; ++k)
+				{
+					Assert( pModel->nummeshes == pVtxLOD->numMeshes );
+					mstudiomesh_t* pMesh = pModel->pMesh(k);
+					OptimizedModel::MeshHeader_t* pVtxMesh = pVtxLOD->pMesh(k);
+					OptimizedModel::MeshHeader_t* pNewVtxMesh = pNewVtxLOD->pMesh(k);
+
+					pNewVtxMesh->numStripGroups = pVtxMesh->numStripGroups;
+					pNewVtxMesh->flags = pVtxMesh->flags;
+					pNewVtxMesh->stripGroupHeaderOffset = (pData - (byte *)pNewVtxMesh);
+					pData += pNewVtxMesh->numStripGroups * sizeof( OptimizedModel::StripGroupHeader_t );
+
+					// printf("part %d : model %d : lod %d : mesh %d : strips %d : offset %d\n", i, j, nLodID, k, pVtxMesh->numStripGroups, pVtxMesh->stripGroupHeaderOffset );
+
+					for (m = 0; m < pVtxMesh->numStripGroups; m++)
+					{
+						OptimizedModel::StripGroupHeader_t *pStripGroup = pVtxMesh->pStripGroup( m );
+						OptimizedModel::StripGroupHeader_t *pNewStripGroup = pNewVtxMesh->pStripGroup( m );
+
+						// int delta = ((byte *)pStripGroup - (byte *)pVtxHdr) - ((byte *)pNewStripGroup - (byte *)pNewVtxHdr);
+
+						pNewStripGroup->numVerts = pStripGroup->numVerts;
+						pNewStripGroup->vertOffset = (pData - (byte *)pNewStripGroup);
+						size = pNewStripGroup->numVerts * sizeof( OptimizedModel::Vertex_t );
+						memcpy( pData, pStripGroup->pVertex(0), size );
+						pData += size;
+
+						pNewStripGroup->numIndices = pStripGroup->numIndices;
+						pNewStripGroup->indexOffset = (pData - (byte *)pNewStripGroup);
+						size = pNewStripGroup->numIndices * sizeof( unsigned short );
+						memcpy( pData, pStripGroup->pIndex(0), size );
+						pData += size;
+
+						pNewStripGroup->numStrips = pStripGroup->numStrips;
+						pNewStripGroup->stripOffset = (pData - (byte *)pNewStripGroup);
+						size = pNewStripGroup->numStrips * sizeof( OptimizedModel::StripHeader_t );
+						pData += size;
+
+						pNewStripGroup->flags = pStripGroup->flags;
+
+						/*
+						printf("\tnumVerts %d %d :\n", pStripGroup->numVerts, pStripGroup->vertOffset );
+						printf("\tnumIndices %d %d :\n", pStripGroup->numIndices, pStripGroup->indexOffset );
+						printf("\tnumStrips %d %d :\n", pStripGroup->numStrips, pStripGroup->stripOffset );
+						*/
+
+						for (n = 0; n < pStripGroup->numStrips; n++)
+						{
+							OptimizedModel::StripHeader_t *pStrip = pStripGroup->pStrip( n );
+							OptimizedModel::StripHeader_t *pNewStrip = pNewStripGroup->pStrip( n );
+
+							pNewStrip->numIndices = pStrip->numIndices;
+							pNewStrip->indexOffset = pStrip->indexOffset;
+
+							pNewStrip->numVerts = pStrip->numVerts;
+							pNewStrip->vertOffset = pStrip->vertOffset;
+
+							pNewStrip->numBones = pStrip->numBones;
+							pNewStrip->flags = pStrip->flags;
+
+							pNewStrip->numBoneStateChanges = pStrip->numBoneStateChanges;
+							pNewStrip->boneStateChangeOffset = (pData - (byte *)pNewStrip);
+							size = pNewStrip->numBoneStateChanges * sizeof( OptimizedModel::BoneStateChangeHeader_t );
+							memcpy( pData, pStrip->pBoneStateChange(0), size );
+							pData += size;
+
+							/*
+							printf("\t\tnumIndices %d %d :\n", pNewStrip->numIndices, pNewStrip->indexOffset );
+							printf("\t\tnumVerts %d %d :\n", pNewStrip->numVerts, pNewStrip->vertOffset );
+							printf("\t\tnumBoneStateChanges %d %d :\n", pNewStrip->numBoneStateChanges, pNewStrip->boneStateChangeOffset );
+							*/
+							// printf("(%d)\n", delta );
+						}
+						// printf("(%d)\n", delta );
+					}
+				}
+			}
+		}
+	}
+
+	// Iterate over every body part...
+	for ( i = 0; i < pStudioHdr->numbodyparts; i++ )
+	{
+		mstudiobodyparts_t* pBodyPart = pStudioHdr->pBodypart(i);
+
+		// Iterate over every submodel...
+		for (j = 0; j < pBodyPart->nummodels; ++j)
+		{
+			// link previous LODs to higher LODs
+			for ( nLodID = 0; nLodID < rootLOD; nLodID++ )
+			{
+				OptimizedModel::ModelLODHeader_t *pVtxLOD = pVtxHdr->pBodyPart(i)->pModel(j)->pLOD(nLodID);
+				OptimizedModel::ModelLODHeader_t *pRootVtxLOD = pNewVtxHdr->pBodyPart(i)->pModel(j)->pLOD(rootLOD);
+				OptimizedModel::ModelLODHeader_t *pNewVtxLOD = pNewVtxHdr->pBodyPart(i)->pModel(j)->pLOD(nLodID);
+
+				pNewVtxLOD->numMeshes = pRootVtxLOD->numMeshes;
+				pNewVtxLOD->switchPoint = pVtxLOD->switchPoint;
+
+				int delta = (byte *)pRootVtxLOD - (byte *)pNewVtxLOD;
+				pNewVtxLOD->meshOffset = pRootVtxLOD->meshOffset + delta;
+			}
+		}
+	}
+
+	int newLen = pData - (byte *)pNewVtxHdr;
+	// printf("len %d : %d\n", len, newLen );
+
+	// pNewVtxHdr->length = newLen;
+
+	if (!g_quiet)
+	{
+		printf ("writing %s:\n", fileName);
+		printf( "everything (%d bytes)\n", newLen );
+	}
+	SaveFile( (char *)fileName, pNewVtxHdr, newLen );
+
+	free( pNewVtxHdr );
+
+	return true;
+}
+
+
+
+
+bool Clamp_RootLOD( studiohdr_t *phdr )
+{
+	char	filename[260];
+	char	tmpFileName[260];
+	int		i;
+	const char						*vtxPrefixes[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".xbox.vtx"};
+
+	int rootLOD = g_minLod;
+
+	if (rootLOD > g_ScriptLODs.Size() - 1)
+	{
+		rootLOD = g_ScriptLODs.Size() -1;
+	}
+
+	if (rootLOD == 0)
+	{
+		return true;
+	}
+
+	strcpy( filename, gamedir );
+	strcat( filename, "models/" );	
+	strcat( filename, outname );
+	Q_StripExtension( filename, filename, sizeof( filename ) );
+
+	// shift the files so that g_minLod is the root LOD
+	strcpy( tmpFileName, filename );
+	strcat( tmpFileName, ".mdl" );
+	Clamp_MDL_LODS( tmpFileName, rootLOD );
+
+	strcpy( tmpFileName, filename );
+	strcat( tmpFileName, ".vvd" );
+	Clamp_VVD_LODS( tmpFileName, rootLOD );
+
+	for (i=0; i<ARRAYSIZE(vtxPrefixes); i++)
+	{
+		// fixup ???.vtx
+		strcpy( tmpFileName, filename );
+		strcat( tmpFileName, vtxPrefixes[i] );
+		Clamp_VTX_LODS( tmpFileName, rootLOD, phdr );
+	}
+
+	return true;
+}
+
+
+
+
+
+

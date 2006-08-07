@@ -39,6 +39,7 @@ BEGIN_SIMPLE_DATADESC( CSound )
 	DEFINE_FIELD( m_iNext,				FIELD_SHORT ),
 	DEFINE_FIELD( m_ownerChannelIndex,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_vecOrigin,			FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_bHasOwner,			FIELD_BOOLEAN ),
 //	DEFINE_FIELD( m_iMyIndex,			FIELD_INTEGER ),
 
 END_DATADESC()
@@ -132,7 +133,7 @@ const Vector &CSound::GetSoundReactOrigin( void )
 	{
 	case SOUND_BULLET_IMPACT:
 	case SOUND_PHYSICS_DANGER:
-		if( m_hOwner )
+		if( m_hOwner.Get() != NULL )
 		{
 			// We really want the origin of this sound's 
 			// owner.
@@ -149,7 +150,7 @@ const Vector &CSound::GetSoundReactOrigin( void )
 
 	if( m_iType & SOUND_CONTEXT_REACT_TO_SOURCE )
 	{
-		if( m_hOwner )
+		if( m_hOwner.Get() != NULL )
 		{
 			return m_hOwner->GetAbsOrigin();
 		}
@@ -158,9 +159,9 @@ const Vector &CSound::GetSoundReactOrigin( void )
 	// Check for types with additional context.
 	if( m_iType & SOUND_DANGER )
 	{
-		if( (m_iType & SOUND_CONTEXT_FROM_SNIPER) || (m_iType & SOUND_CONTEXT_FROM_LAUNCHER) )
+		if( (m_iType & SOUND_CONTEXT_FROM_SNIPER) )
 		{
-			if( m_hOwner )
+			if( m_hOwner.Get() != NULL )
 			{
 				// Be afraid of the sniper's location, not where the bullet will hit.
 				return m_hOwner->GetAbsOrigin();
@@ -203,6 +204,7 @@ bool CSoundEnt::InitSoundEnt()
 		Warning( "**COULD NOT CREATE SOUNDENT**\n" );
 		return false;
 	}
+	g_pSoundEnt->AddEFlags( EFL_KEEP_ON_RECREATE_ENTITIES );
 	return true;
 }
 
@@ -270,7 +272,7 @@ void CSoundEnt::Think ( void )
 
 	while ( iSound != SOUNDLIST_EMPTY )
 	{
-		if ( m_SoundPool[ iSound ].m_flExpireTime <= gpGlobals->curtime && (!m_SoundPool[ iSound ].m_bNoExpirationTime) )
+		if ( (m_SoundPool[ iSound ].m_flExpireTime <= gpGlobals->curtime && (!m_SoundPool[ iSound ].m_bNoExpirationTime)) || !m_SoundPool[iSound].ValidateOwner() )
 		{
 			int iNext = m_SoundPool[ iSound ].m_iNext;
 
@@ -421,57 +423,12 @@ int CSoundEnt::IAllocSound( void )
 // InsertSound - Allocates a free sound and fills it with 
 // sound info.
 //=========================================================
-void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration )
+void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration, CBaseEntity *pOwner, int soundChannelIndex, CBaseEntity *pSoundTarget )
 {
 	int	iThisSound;
 
 	if ( !g_pSoundEnt )
-	{
-		// no sound ent!
 		return;
-	}
-
-	iThisSound = g_pSoundEnt->IAllocSound();
-
-	if ( iThisSound == SOUNDLIST_EMPTY )
-	{
-		Msg( "Could not AllocSound() for InsertSound() (Game DLL)\n" );
-		return;
-	}
-
-	CSound *pSound;
-
-	pSound = &g_pSoundEnt->m_SoundPool[ iThisSound ];
-
-	pSound->SetSoundOrigin( vecOrigin );
-	pSound->m_iType = iType;
-	pSound->m_iVolume = iVolume;
-	pSound->m_flOcclusionScale = 0.5;
-	pSound->m_flExpireTime = gpGlobals->curtime + flDuration;
-	pSound->m_bNoExpirationTime = false;
-	pSound->m_hOwner = NULL;
-
-	if( displaysoundlist.GetInt() == 1 )
-	{
-		Msg("  Added Sound! Type:%d  Duration:%f\n", pSound->SoundType(), flDuration );
-	}
-	if( displaysoundlist.GetInt() == 2 && (iType & SOUND_DANGER) )
-	{
-		Msg("  Added Danger Sound! Duration:%f\n", flDuration );
-	}
-}
-
-//=========================================================
-//=========================================================
-void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration, CBaseEntity *pOwner, int soundChannelIndex )
-{
-	int	iThisSound;
-
-	if ( !g_pSoundEnt )
-	{
-		// no sound ent!
-		return;
-	}
 
 	if( soundChannelIndex == SOUNDENT_CHANNEL_UNSPECIFIED )
 	{
@@ -487,7 +444,7 @@ void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, f
 
 	if ( iThisSound == SOUNDLIST_EMPTY )
 	{
-		Msg( "Could not AllocSound() for InsertSound() (DLL)\n" );
+		DevMsg( "Could not AllocSound() for InsertSound() (Game DLL)\n" );
 		return;
 	}
 
@@ -502,11 +459,28 @@ void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, f
 	pSound->m_flExpireTime = gpGlobals->curtime + flDuration;
 	pSound->m_bNoExpirationTime = false;
 	pSound->m_hOwner.Set( pOwner );
+	pSound->m_hTarget.Set( pSoundTarget );
 	pSound->m_ownerChannelIndex = soundChannelIndex;
 
-	if( displaysoundlist.GetBool() )
+	// Keep track of whether this sound had an owner when it was made. If the sound has a long duration,
+	// the owner could disappear by the time someone hears this sound, so we have to look at this boolean
+	// and throw out sounds who have a NULL owner but this field set to true. (sjb) 12/2/2005
+	if( pOwner )
+	{
+		pSound->m_bHasOwner = true;
+	}
+	else
+	{
+		pSound->m_bHasOwner = false;
+	}
+
+	if( displaysoundlist.GetInt() == 1 )
 	{
 		Msg("  Added Sound! Type:%d  Duration:%f\n", pSound->SoundType(), flDuration );
+	}
+	if( displaysoundlist.GetInt() == 2 && (iType & SOUND_DANGER) )
+	{
+		Msg("  Added Danger Sound! Duration:%f\n", flDuration );
 	}
 }
 
@@ -560,7 +534,7 @@ void CSoundEnt::Initialize ( void )
 
 		if ( iSound == SOUNDLIST_EMPTY )
 		{
-			Msg( "Could not AllocSound() for Client Reserve! (DLL)\n" );
+			DevMsg( "Could not AllocSound() for Client Reserve! (DLL)\n" );
 			return;
 		}
 
@@ -698,7 +672,7 @@ CSound*	CSoundEnt::GetLoudestSoundOfType( int iType, const Vector &vecEarPositio
 	{
 		pSound = SoundPointerForIndex( iThisSound );
 
-		if ( pSound && pSound->m_iType == iType )
+		if ( pSound && pSound->m_iType == iType && pSound->ValidateOwner() )
 		{
 			flDist = ( pSound->GetSoundOrigin() - vecEarPosition ).Length();
 
@@ -727,16 +701,29 @@ CSound*	CSoundEnt::GetLoudestSoundOfType( int iType, const Vector &vecEarPositio
 class CAISound : public CPointEntity
 {
 public:
+	CAISound()
+	{
+		// Initialize these new keyvalues appropriately
+		// in order to support legacy instances of ai_sound.
+		m_iSoundContext = 0x00000000;
+		m_iVolume = 0;
+		m_flDuration = 0.3;
+	}
+
 	DECLARE_CLASS( CAISound, CPointEntity );
 
 	DECLARE_DATADESC();
 
 	// data
 	int			m_iSoundType;
+	int			m_iSoundContext;
+	int			m_iVolume;
+	float		m_flDuration;
 	string_t	m_iszProxyEntityName;
 
 	// Input handlers
 	void InputInsertSound( inputdata_t &inputdata );
+	void InputEmitAISound( inputdata_t &inputdata );
 };
 
 LINK_ENTITY_TO_CLASS( ai_sound, CAISound );
@@ -744,13 +731,18 @@ LINK_ENTITY_TO_CLASS( ai_sound, CAISound );
 BEGIN_DATADESC( CAISound )
 
 	DEFINE_KEYFIELD( m_iSoundType, FIELD_INTEGER, "soundtype" ),
+	DEFINE_KEYFIELD( m_iSoundContext, FIELD_INTEGER, "soundcontext" ),
+	DEFINE_KEYFIELD( m_iVolume, FIELD_INTEGER, "volume" ),
+	DEFINE_KEYFIELD( m_flDuration, FIELD_FLOAT, "duration" ),
 	DEFINE_KEYFIELD( m_iszProxyEntityName, FIELD_STRING, "locationproxy" ),
+
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "InsertSound", InputInsertSound ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EmitAISound", InputEmitAISound ),
 
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: *** OBSOLETE **** Here for legacy support only!
 //-----------------------------------------------------------------------------
 void CAISound::InputInsertSound( inputdata_t &inputdata )
 {
@@ -762,7 +754,7 @@ void CAISound::InputInsertSound( inputdata_t &inputdata )
 
 	if( m_iszProxyEntityName != NULL_STRING )
 	{
-		CBaseEntity *pProxy = gEntList.FindEntityByName( NULL, m_iszProxyEntityName, NULL );
+		CBaseEntity *pProxy = gEntList.FindEntityByName( NULL, m_iszProxyEntityName );
 
 		if( pProxy )
 		{
@@ -774,7 +766,28 @@ void CAISound::InputInsertSound( inputdata_t &inputdata )
 		}
 	}
 
-	g_pSoundEnt->InsertSound( m_iSoundType, vecLocation, iVolume, 0.3, this );
+	g_pSoundEnt->InsertSound( m_iSoundType, vecLocation, iVolume, m_flDuration, this );
+}
+
+void CAISound::InputEmitAISound( inputdata_t &inputdata )
+{
+	Vector vecLocation = GetAbsOrigin();
+
+	if( m_iszProxyEntityName != NULL_STRING )
+	{
+		CBaseEntity *pProxy = gEntList.FindEntityByName( NULL, m_iszProxyEntityName );
+
+		if( pProxy )
+		{
+			vecLocation = pProxy->GetAbsOrigin();
+		}
+		else
+		{
+			DevWarning("Warning- ai_sound cannot find proxy entity named '%s'. Using self.\n", STRING(m_iszProxyEntityName) );
+		}
+	}
+
+	g_pSoundEnt->InsertSound( m_iSoundType | m_iSoundContext, vecLocation, m_iVolume, m_flDuration, this );
 }
 
 

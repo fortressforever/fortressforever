@@ -89,6 +89,8 @@ public:
 
 	int				m_DistMax;
 
+	float			m_FallSpeed;	// extra 'gravity'
+
 
 public:
 

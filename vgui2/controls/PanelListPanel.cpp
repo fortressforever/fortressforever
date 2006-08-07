@@ -44,8 +44,8 @@ PanelListPanel::PanelListPanel( vgui::Panel *parent, char const *panelName ) : P
 
 	if ( IsProportional() )
 	{
-		m_iDefaultHeight = scheme()->GetProportionalScaledValue( DEFAULT_HEIGHT );
-		m_iPanelBuffer = scheme()->GetProportionalScaledValue( PANELBUFFER );
+		m_iDefaultHeight = scheme()->GetProportionalScaledValueEx( GetScheme(), DEFAULT_HEIGHT );
+		m_iPanelBuffer = scheme()->GetProportionalScaledValueEx( GetScheme(), PANELBUFFER );
 	}
 	else
 	{
@@ -61,6 +61,12 @@ PanelListPanel::~PanelListPanel()
 {
 	// free data from table
 	DeleteAllItems();
+}
+
+void PanelListPanel::SetVerticalBufferPixels( int buffer )
+{
+	m_iPanelBuffer = buffer;
+	InvalidateLayout();
 }
 
 //-----------------------------------------------------------------------------

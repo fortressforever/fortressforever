@@ -87,10 +87,9 @@ class IRestore;
 struct animevent_t;
 
 struct studiohdr_t;
-
+class CStudioHdr;
 
 extern void FireTargets( const char *targetName, CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
 
 // people gib if their health is <= this at the time of death
 #define	GIB_HEALTH_VALUE	-30
@@ -123,6 +122,12 @@ enum
 class CAI_BaseNPC;
 class CAI_ScriptedSequence;
 class CSound;
+
+#ifdef _XBOX
+//#define FUNCTANK_AUTOUSE  We haven't made the decision to use this yet (sjb)
+#else
+#undef FUNCTANK_AUTOUSE
+#endif//_XBOX
 
 // This is a precompiled header.  Include a bunch of common stuff.
 // This is kind of ugly in that it adds a bunch of dependency where it isn't needed.

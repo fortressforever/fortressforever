@@ -7,6 +7,7 @@
 
 #include <vgui/IScheme.h>
 #include <vgui/IVGui.h>
+#include "vgui/ISurface.h"
 #include <KeyValues.h>
 
 #include <vgui_controls/Controls.h>
@@ -66,6 +67,8 @@ private:
 	MenuItem *_menuItem;
 };
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( MenuItem, MenuItem );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 // Input:	parent - the parent of this menu item, usually a menu
@@ -80,6 +83,7 @@ MenuItem::MenuItem(Menu *parent, const char *panelName, const char *text, Menu *
 	m_bCheckable = checkable;
 	SetButtonActivationType(ACTIVATE_ONRELEASED);
 	m_pUserData = NULL;
+	m_pCurrentKeyBinding = NULL;
 
 	// only one arg should be passed in.
 	Assert (!(cascadeMenu && checkable));
@@ -101,6 +105,7 @@ MenuItem::MenuItem(Menu *parent, const char *panelName, const wchar_t *wszText, 
 	m_bCheckable = checkable;
 	SetButtonActivationType(ACTIVATE_ONRELEASED);
 	m_pUserData = NULL;
+	m_pCurrentKeyBinding = NULL;
 
 	// only one arg should be passed in.
 	Assert (!(cascadeMenu && checkable));
@@ -120,6 +125,7 @@ MenuItem::~MenuItem()
 	{
 		m_pUserData->deleteThis();
 	}
+	delete m_pCurrentKeyBinding;
 }
 
 //-----------------------------------------------------------------------------
@@ -147,9 +153,8 @@ void MenuItem::Init( void )
 	}
 
 	SetButtonBorderEnabled( false );
-	SetContentAlignment( Label::a_west );
 	SetUseCaptureMouse( false );
-	SetContentAlignment(a_west);
+	SetContentAlignment( Label::a_west );
 
 	// note menus handle all the sizing of menuItem panels
 }
@@ -394,6 +399,12 @@ void MenuItem::ApplySchemeSettings(IScheme *pScheme)
 		( static_cast<MenuItemCheckImage *>(m_pCheck) )->ResizeImageToContent();
 	}
 
+	if ( m_pCurrentKeyBinding )
+	{
+		m_pCurrentKeyBinding->SetFont(pScheme->GetFont("Default", IsProportional() ));
+		m_pCurrentKeyBinding->ResizeImageToContent();
+	}
+
 	// Have the menu redo the layout
 	// Get the parent to resize
 	Menu * parent = GetParentMenu();
@@ -556,4 +567,81 @@ void MenuItem::SetUserData(const KeyValues *kv)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Passing in NULL removes this object
+// Input  : *keyName - 
+//-----------------------------------------------------------------------------
+void MenuItem::SetCurrentKeyBinding( char const *keyName )
+{
+	if ( !keyName )
+	{
+		delete m_pCurrentKeyBinding;
+		m_pCurrentKeyBinding = NULL;
+		return;
+	}
 
+	if ( !m_pCurrentKeyBinding )
+	{
+		m_pCurrentKeyBinding = new TextImage( keyName );
+	}
+	else
+	{
+		char curtext[ 256 ];
+		m_pCurrentKeyBinding->GetText( curtext, sizeof( curtext ) );
+		if ( !Q_strcmp( curtext, keyName ) )
+			return;
+
+		m_pCurrentKeyBinding->SetText( keyName );
+	}
+
+	InvalidateLayout( false, true );
+}
+
+#define KEYBINDING_INSET 5
+
+void MenuItem::Paint()
+{
+	BaseClass::Paint();
+	if ( !m_pCurrentKeyBinding )
+		return;
+
+	int w, h;
+	GetSize( w,  h );
+	int iw, ih;
+	m_pCurrentKeyBinding->GetSize( iw, ih );
+
+	int x = w - iw - KEYBINDING_INSET;
+	int y = ( h - ih ) / 2;
+
+	if ( IsEnabled() )
+	{
+		m_pCurrentKeyBinding->SetPos( x, y );
+		m_pCurrentKeyBinding->SetColor( GetButtonFgColor() );
+		m_pCurrentKeyBinding->Paint();
+	}
+	else
+	{
+		m_pCurrentKeyBinding->SetPos( x + 1 , y + 1 );
+		m_pCurrentKeyBinding->SetColor( GetDisabledFgColor1() );
+		m_pCurrentKeyBinding->Paint();
+
+		surface()->DrawFlushText();
+
+		m_pCurrentKeyBinding->SetPos( x, y );
+		m_pCurrentKeyBinding->SetColor( GetDisabledFgColor2() );
+		m_pCurrentKeyBinding->Paint();
+	}
+}
+
+void MenuItem::GetContentSize( int& cw, int &ch )
+{
+	BaseClass::GetContentSize( cw, ch );
+	if ( !m_pCurrentKeyBinding )
+		return;
+
+	int iw, ih;
+	m_pCurrentKeyBinding->GetSize( iw, ih );
+
+	cw += iw + KEYBINDING_INSET;
+	ch = max( ch, ih );
+}

@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="xwad"
 	ProjectGUID="{B850012C-98A2-42F7-B023-9F65C448D938}"
-	SccProjectName="xwad"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -37,10 +37,11 @@
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\bin\xwad.exe attrib -r ..\..\..\bin\xwad.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin
-"
-				Outputs="..\..\..\bin\xwad.exe"/>
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb"
+				Outputs="..\..\..\bin\xwad.exe;..\..\..\bin\xwad.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Debug/xwad.exe"
@@ -100,10 +101,11 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\bin\xwad.exe attrib -r ..\..\..\bin\xwad.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin
-"
-				Outputs="..\..\..\bin\xwad.exe"/>
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb"
+				Outputs="..\..\..\bin\xwad.exe;..\..\..\bin\xwad.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Release/xwad.exe"

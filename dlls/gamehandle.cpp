@@ -5,10 +5,10 @@
 //=============================================================================//
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include "winlite.h"
 extern HMODULE win32DLLHandle;
-#elif _LINUX
+#elif defined(_LINUX)
 #include <stdio.h>
 #include "tier0/dbg.h"
 #endif
@@ -18,9 +18,9 @@ extern HMODULE win32DLLHandle;
 
 void *GetGameModuleHandle()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	return (void *)win32DLLHandle;
-#elif _LINUX
+#elif defined(_LINUX)
 	Assert(0);
 	return NULL; // NOT implemented
 #else

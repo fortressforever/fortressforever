@@ -93,9 +93,6 @@ public:
 	void Spawn( void );
 	void Precache( void );
 
-	Class_T Classify( void );
-	Disposition_t IRelationType( CBaseEntity *pTarget );
-
 	void SetZombieModel( void );
 	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
@@ -106,9 +103,9 @@ public:
 	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
 
+#ifndef HL2_EPISODIC
 	void CheckFlinches() {} // Zombie has custom flinch code
-
-	void PostscheduleThink( void );
+#endif // HL2_EPISODIC
 
 	Activity NPC_TranslateActivity( Activity newActivity );
 
@@ -132,14 +129,15 @@ public:
 	void Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 	void Extinguish();
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
+	bool IsHeavyDamage( const CTakeDamageInfo &info );
 	bool IsSquashed( const CTakeDamageInfo &info );
 	void BuildScheduleTestBits( void );
 
 	void PrescheduleThink( void );
 	int SelectSchedule ( void );
 
-	void PainSound( void );
-	void DeathSound();
+	void PainSound( const CTakeDamageInfo &info );
+	void DeathSound( const CTakeDamageInfo &info );
 	void AlertSound( void );
 	void IdleSound( void );
 	void AttackSound( void );
@@ -164,8 +162,6 @@ private:
 	CRandSimTimer 		 m_DurationDoorBash;
 	CSimTimer 	  		 m_NextTimeToStartDoorBash;
 
-	bool				 m_bIsSlumped;
-	
 	Vector				 m_vPositionCharged;
 };
 
@@ -225,7 +221,6 @@ BEGIN_DATADESC( CZombie )
 	DEFINE_FIELD( m_flDoorBashYaw, FIELD_FLOAT ),
 	DEFINE_EMBEDDED( m_DurationDoorBash ),
 	DEFINE_EMBEDDED( m_NextTimeToStartDoorBash ),
-	DEFINE_FIELD( m_bIsSlumped, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_vPositionCharged, FIELD_POSITION_VECTOR ),
 
 END_DATADESC()
@@ -261,33 +256,6 @@ void CZombie::Precache( void )
 	PrecacheScriptSound( "NPC_BaseZombie.Moan4" );
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-Class_T CZombie::Classify( void )
-{
-	if ( m_bIsSlumped )
-		return CLASS_NONE;
-
-	return BaseClass::Classify();
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-Disposition_t CZombie::IRelationType( CBaseEntity *pTarget )
-{
-	// Slumping should not affect Zombie's opinion of others
-	if ( m_bIsSlumped )
-	{
-		m_bIsSlumped = false;
-		Disposition_t result = BaseClass::IRelationType( pTarget );
-		m_bIsSlumped = true;
-		return result;
-	}
-
-	return BaseClass::IRelationType( pTarget );
-}
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CZombie::Spawn( void )
@@ -309,8 +277,6 @@ void CZombie::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_GREEN );
 	m_iHealth			= sk_zombie_health.GetFloat();
 	m_flFieldOfView		= 0.2;
-
-	m_bIsSlumped = false;
 
 	CapabilitiesClear();
 
@@ -347,7 +313,7 @@ void CZombie::PrescheduleThink( void )
 //-----------------------------------------------------------------------------
 int CZombie::SelectSchedule ( void )
 {
-	if( HasCondition( COND_PHYSICS_DAMAGE ) )
+	if( HasCondition( COND_PHYSICS_DAMAGE ) && !m_ActBusyBehavior.IsActive() )
 	{
 		return SCHED_FLINCH_PHYSICS;
 	}
@@ -405,7 +371,7 @@ void CZombie::AttackMissSound( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CZombie::PainSound( void )
+void CZombie::PainSound( const CTakeDamageInfo &info )
 {
 	// We're constantly taking damage when we are on fire. Don't make all those noises!
 	if ( IsOnFire() )
@@ -418,7 +384,7 @@ void CZombie::PainSound( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CZombie::DeathSound() 
+void CZombie::DeathSound( const CTakeDamageInfo &info ) 
 {
 	EmitSound( "Zombie.Die" );
 }
@@ -453,13 +419,14 @@ void CZombie::IdleSound( void )
 		return;
 	}
 
-	if( m_bIsSlumped )
+	if( IsSlumped() )
 	{
 		// Sleeping zombies are quiet.
 		return;
 	}
 
 	EmitSound( "Zombie.Idle" );
+	MakeAISpookySound( 360.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -551,7 +518,7 @@ void CZombie::MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize )
 //---------------------------------------------------------
 bool CZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold )
 {
-	if( m_bIsSlumped ) 
+	if( IsSlumped() ) 
 	{
 		// Never break apart a slouched zombie. This is because the most fun
 		// slouched zombies to kill are ones sleeping leaning against explosive
@@ -650,17 +617,6 @@ int CZombie::TranslateSchedule( int scheduleType )
 		return SCHED_ZOMBIE_FAIL;
 
 	return BaseClass::TranslateSchedule( scheduleType );
-}
-
-//---------------------------------------------------------
-
-void CZombie::PostscheduleThink( void )
-{
-	int sequence = GetSequence();
-	if ( sequence != -1 )
-	{
-		m_bIsSlumped = ( strncmp( GetSequenceName( sequence ), "slump", 5 ) == 0 );
-	}
 }
 
 //---------------------------------------------------------
@@ -818,7 +774,7 @@ Activity CZombie::SelectDoorBash()
 //---------------------------------------------------------
 void CZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
 {
-	if( !IsOnFire() && IsAlive() )
+ 	if( !IsOnFire() && IsAlive() )
 	{
 		BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
@@ -853,7 +809,8 @@ void CZombie::Extinguish()
 //---------------------------------------------------------
 int CZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
-	if( inputInfo.GetDamageType() & DMG_BUCKSHOT )
+#ifndef HL2_EPISODIC
+	if ( inputInfo.GetDamageType() & DMG_BUCKSHOT )
 	{
 		if( !m_fIsTorso && inputInfo.GetDamage() > (m_iMaxHealth/3) )
 		{
@@ -864,8 +821,41 @@ int CZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 			AddGesture( ACT_GESTURE_FLINCH_HEAD );
 		}
 	}
+#endif // HL2_EPISODIC
 
 	return BaseClass::OnTakeDamage_Alive( inputInfo );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CZombie::IsHeavyDamage( const CTakeDamageInfo &info )
+{
+#ifdef HL2_EPISODIC
+	if ( info.GetDamageType() & DMG_BUCKSHOT )
+	{
+		if ( !m_fIsTorso && info.GetDamage() > (m_iMaxHealth/3) )
+			return true;
+	}
+
+	// Randomly treat all damage as heavy
+	if ( info.GetDamageType() & (DMG_BULLET | DMG_BUCKSHOT) )
+	{
+		// Don't randomly flinch if I'm melee attacking
+		if ( !HasCondition(COND_CAN_MELEE_ATTACK1) && (RandomFloat() > 0.5) )
+		{
+			// Randomly forget I've flinched, so that I'll be forced to play a big flinch
+			// If this doesn't happen, it means I may not fully flinch if I recently flinched
+			if ( RandomFloat() > 0.75 )
+			{
+				Forget(bits_MEMORY_FLINCHED);
+			}
+
+			return true;
+		}
+	}
+#endif // HL2_EPISODIC
+
+	return BaseClass::IsHeavyDamage(info);
 }
 
 //---------------------------------------------------------
@@ -899,7 +889,7 @@ void CZombie::BuildScheduleTestBits( void )
 {
 	BaseClass::BuildScheduleTestBits();
 
-	if( !m_fIsTorso && !IsCurSchedule( SCHED_FLINCH_PHYSICS ) )
+	if( !m_fIsTorso && !IsCurSchedule( SCHED_FLINCH_PHYSICS ) && !m_ActBusyBehavior.IsActive() )
 	{
 		SetCustomInterruptCondition( COND_PHYSICS_DAMAGE );
 	}
@@ -965,7 +955,7 @@ AI_BEGIN_CUSTOM_NPC( npc_zombie, CZombie )
 		"		TASK_ZOMBIE_CHARGE_ENEMY		0"
 		"		TASK_WALK_PATH					0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
-		"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_MELEE_ATTACK1" /* placeholder until frustration/rage/fence shake animation available */
+		"		TASK_PLAY_SEQUENCE				ACTIVITY:ACT_ZOMBIE_TANTRUM" /* placeholder until frustration/rage/fence shake animation available */
 		""
 		"	Interrupts"
 		"		COND_ZOMBIE_RELEASECRAB"

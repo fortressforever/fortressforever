@@ -13,6 +13,7 @@
 
 #include "interface.h"
 #include "vector.h"
+#include "utlvector.h"
 #include "basehandle.h"
 
 
@@ -36,7 +37,7 @@ class ICollideable;
 //-----------------------------------------------------------------------------
 // Interface for static props
 //-----------------------------------------------------------------------------
-class IStaticPropMgr
+abstract_class IStaticPropMgr
 {
 public:
 	// Create physics representations of props
@@ -53,7 +54,7 @@ public:
 	virtual ICollideable *GetStaticPropByIndex( int propIndex ) = 0;
 };
 
-class IStaticPropMgrClient : public IStaticPropMgr
+abstract_class IStaticPropMgrClient : public IStaticPropMgr
 {
 public:
 	// Recomputes the static prop opacity given a view origin
@@ -70,11 +71,28 @@ public:
 	// Gets the lighting + material color of a static prop
 	virtual void	GetStaticPropMaterialColorAndLighting( trace_t* pTrace,
 		int staticPropIndex, Vector& lighting, Vector& matColor ) = 0;
+
+	
+	//===================================================================
+	virtual void GetAllStaticProps( CUtlVector<ICollideable *> *pOutput ) = 0; //testing function that will eventually be removed
+	virtual void GetAllStaticPropsInAABB( const Vector &vMins, const Vector &vMaxs, CUtlVector<ICollideable *> *pOutput ) = 0; //get all static props that exist wholly or partially in an AABB
+	virtual void GetAllStaticPropsInOBB( const Vector &ptOrigin, const Vector &vExtent1, const Vector &vExtent2, const Vector &vExtent3, CUtlVector<ICollideable *> *pOutput ) = 0; //get all static props that exist wholly or partially in an OBB
+	//===================================================================
+
+	virtual void DrawStaticProps( IClientRenderable **pProps, int count ) = 0;
 };
 
 class IStaticPropMgrServer : public IStaticPropMgr
 {
 public:
+
+
+	
+	//===================================================================
+	virtual void GetAllStaticProps( CUtlVector<ICollideable *> *pOutput ) = 0; //testing function that will eventually be removed
+	virtual void GetAllStaticPropsInAABB( const Vector &vMins, const Vector &vMaxs, CUtlVector<ICollideable *> *pOutput ) = 0; //get all static props that exist wholly or partially in an AABB
+	virtual void GetAllStaticPropsInOBB( const Vector &ptOrigin, const Vector &vExtent1, const Vector &vExtent2, const Vector &vExtent3, CUtlVector<ICollideable *> *pOutput ) = 0; //get all static props that exist wholly or partially in an OBB
+	//===================================================================
 };
 
 

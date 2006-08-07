@@ -147,6 +147,12 @@ void CreateCrossbowBolt( const Vector &vecOrigin, const Vector &vecDirection )
 void StickRagdollNow( const Vector &vecOrigin, const Vector &vecDirection )
 {
 	Ray_t	shotRay;
+	trace_t tr;
+	
+	UTIL_TraceLine( vecOrigin, vecOrigin + vecDirection * 16, MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr );
+
+	if ( tr.surface.flags & SURF_SKY )
+		return;
 
 	Vector vecEnd = vecOrigin - vecDirection * 128;
 

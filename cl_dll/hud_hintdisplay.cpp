@@ -29,6 +29,7 @@ public:
 	void Init();
 	void Reset();
 	void MsgFunc_HintText( bf_read &msg );
+	bool ShouldDraw();
 
 	bool SetHintText( const char *text );
 
@@ -40,11 +41,13 @@ private:
 	CUtlVector<vgui::Label *> m_Labels;
 	vgui::HFont m_hSmallFont, m_hLargeFont;
 	char m_szHintText[128];
+	int		m_iBaseY;
 
 	CPanelAnimationVarAliasType( float, m_iTextX, "text_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextY, "text_ypos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextGapX, "text_xgap", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextGapY, "text_ygap", "8", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_iYOffset, "YOffset", "0", "proportional_float" );
 };
 
 DECLARE_HUDELEMENT( CHudHintDisplay );
@@ -91,14 +94,36 @@ void CHudHintDisplay::ApplySchemeSettings( vgui::IScheme *pScheme )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudHintDisplay::ShouldDraw( void )
+{
+	return ( ( GetAlpha() > 0 ) && CHudElement::ShouldDraw() );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Updates the label color each frame
 //-----------------------------------------------------------------------------
 void CHudHintDisplay::OnThink()
 {
 	for (int i = 0; i < m_Labels.Count(); i++)
 	{
-		m_Labels[i]->SetFgColor(GetFgColor());
+		if ( IsXbox() && 0 != ( i & 1 ) )
+		{
+			// Don't change the fg color for buttons (even numbered labels)
+			m_Labels[i]->SetAlpha( GetFgColor().a() );
+		}
+		else
+		{
+			m_Labels[i]->SetFgColor(GetFgColor());
+		}
 	}
+
+	int ox, oy;
+	GetPos(ox, oy);
+	SetPos( ox, m_iBaseY + m_iYOffset );
 }
 
 //-----------------------------------------------------------------------------
@@ -160,6 +185,8 @@ bool CHudHintDisplay::SetHintText( const char *text )
 		// put it in a label
 		vgui::Label *label = vgui::SETUP_PANEL(new vgui::Label(this, NULL, token));
 
+		bool bIsBitmap = false;
+
 		// modify the label if necessary
 		if ( isVar )
 		{
@@ -177,11 +204,22 @@ bool CHudHintDisplay::SetHintText( const char *text )
 
 			//!! change some key names into better names
 			char friendlyName[64];
-			Q_snprintf( friendlyName, sizeof(friendlyName), "%s", key );
+			Q_snprintf( friendlyName, sizeof(friendlyName), "#%s", key );
 			Q_strupr( friendlyName );
 
-			// set the new text
-			label->SetText( friendlyName );
+			// set the variable text - key may need to be localized (button images for example)
+			wchar_t *locName = vgui::localize()->Find( friendlyName );
+			if ( !locName || wcslen(locName) <= 0)
+			{
+				label->SetText( friendlyName + 1 );
+			}
+			else
+			{
+				// Assuming localized vars must be using a bitmap image. *May* not be the case, but since
+				// keyboard bindings have never been locaized in the past, they probably won't in the future either.
+				bIsBitmap = true;
+				label->SetText( locName );
+			}
 		}
 		else
 		{
@@ -192,13 +230,21 @@ bool CHudHintDisplay::SetHintText( const char *text )
 		label->SetPaintBorderEnabled( false );
 		label->SizeToContents();
 		label->SetContentAlignment( vgui::Label::a_west );
-		label->SetFgColor( GetFgColor() );
+		if ( bIsBitmap && isVar )
+		{
+			// Don't change the color of the button art
+			label->SetFgColor( Color(255,255,255,255) );
+		}
+		else
+		{
+			label->SetFgColor( GetFgColor() );
+		}
 		m_Labels.AddToTail( vgui::SETUP_PANEL(label) );
 	}
 
 	// find the bounds we need to show
 	int widest1 = 0, widest2 = 0;
-	{for (int i = 0; i < m_Labels.Count(); i++)
+	for (int i = 0; i < m_Labels.Count(); i++)
 	{
 		vgui::Label *label = m_Labels[i];
 		
@@ -218,17 +264,47 @@ bool CHudHintDisplay::SetHintText( const char *text )
 				widest1 = label->GetWide();
 			}
 		}
-	}}
-	int tallest = vgui::surface()->GetFontTall( m_hLargeFont );
+	}
+
+	int tallest1 = 0, tallest2 = 0;
+	for (int i = 0; i < m_Labels.Count(); i++)
+	{
+		vgui::Label *label = m_Labels[i];
+		
+		if (i & 1)
+		{
+			// help text
+			if (label->GetTall() > tallest2)
+			{
+				tallest2 = label->GetTall();
+			}
+		}
+		else
+		{
+			// variable
+			if (label->GetTall() > tallest1)
+			{
+				tallest1 = label->GetTall();
+			}
+		}
+	}
+	int tallest = max( tallest1, tallest2 );
 
 	// position the labels
 	int col1_x = m_iTextX;
 	int col2_x = m_iTextX + widest1 + m_iTextGapX;
 	int col_y = m_iTextY;
 
-	int col_y_extra = ((vgui::surface()->GetFontTall(m_hLargeFont) - vgui::surface()->GetFontTall(m_hSmallFont)) / 2);
+	// Difference between the variable and the help text
+	int col_y_extra = ( (tallest1 - tallest2) / 2 );
+	if ( col_y_extra < 0 )
+	{
+		// text is taller than the variable (multi-line text).
+		// Push the variable's y down by subtracting the negative value.
+		col_y -= col_y_extra;
+	}
 
-	{for (int i = 0; i < m_Labels.Count(); i++)
+	for (int i = 0; i < m_Labels.Count(); i++)
 	{
 		vgui::Label *label = m_Labels[i];
 		
@@ -244,7 +320,7 @@ bool CHudHintDisplay::SetHintText( const char *text )
 			// variable
 			label->SetPos( col1_x, col_y );
 		}
-	}}
+	}
 
 	// move ourselves relative to our start position
 	int newWide = col2_x + widest2 + m_iTextX;
@@ -270,6 +346,8 @@ bool CHudHintDisplay::SetHintText( const char *text )
 	SetPos( ox, oy );
 	SetSize( newWide, newTall );
 
+	m_iBaseY = oy;
+
 	return true;
 }
 
@@ -292,7 +370,6 @@ void CHudHintDisplay::MsgFunc_HintText( bf_read &msg )
 	char szString[2048];
 	msg.ReadString( szString, sizeof(szString) );
 	
-
 	// make it visible
 	if ( SetHintText( szString ) )
 	{

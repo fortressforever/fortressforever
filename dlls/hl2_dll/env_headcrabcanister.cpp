@@ -134,7 +134,7 @@ private:
 private:
 	CNetworkVar( bool, m_bLanded );
 
-	CEnvHeadcrabCanisterShared	m_Shared;
+	CNetworkVarEmbedded( CEnvHeadcrabCanisterShared, m_Shared );
 	CHandle<CSpriteTrail> m_hTrail;
 	CHandle<SmokeTrail>	m_hSmokeTrail;
 	int m_nHeadcrabType;
@@ -147,6 +147,7 @@ private:
 	bool m_bLaunched;
 	bool m_bOpened;
 	float m_flSmokeLifetime;
+	string_t m_iszLaunchPositionName;
 
 	COutputEHANDLE m_OnLaunched;
 	COutputEvent m_OnImpacted;
@@ -175,6 +176,7 @@ BEGIN_DATADESC( CEnvHeadcrabCanister )
 	DEFINE_KEYFIELD( m_nHeadcrabType,					FIELD_INTEGER,	"HeadcrabType" ),
 	DEFINE_KEYFIELD( m_nHeadcrabCount,					FIELD_INTEGER,	"HeadcrabCount" ),
 	DEFINE_KEYFIELD( m_flSmokeLifetime,					FIELD_FLOAT, "SmokeLifetime" ),
+	DEFINE_KEYFIELD( m_iszLaunchPositionName,			FIELD_STRING, "LaunchPositionName" ),
 	DEFINE_FIELD( m_vecImpactPosition,					FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_bIncomingSoundStarted,				FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bHasDetonated,						FIELD_BOOLEAN ),
@@ -256,7 +258,19 @@ void CEnvHeadcrabCanister::Spawn( void )
 	Precache();
 	BaseClass::Spawn();
 
-	if ( !HasSpawnFlags( SF_START_IMPACTED ) )
+	// Do we have a position to launch from?
+	if ( m_iszLaunchPositionName != NULL_STRING )
+	{
+		// It doesn't have any real presence at first.
+		SetSolid( SOLID_NONE );
+
+		m_vecImpactPosition = GetAbsOrigin();
+		m_bIncomingSoundStarted = false;
+		m_bLanded = false;
+		m_bHasDetonated = false;
+		m_bOpened = false;
+	}
+	else if ( !HasSpawnFlags( SF_START_IMPACTED ) )
 	{
 		// It doesn't have any real presence at first.
 		SetSolid( SOLID_NONE );
@@ -359,7 +373,32 @@ void CEnvHeadcrabCanister::ComputeWorldEntryPoint( Vector *pStartPosition, QAngl
 CSkyCamera *CEnvHeadcrabCanister::PlaceCanisterInWorld()
 {
 	CSkyCamera *pCamera = NULL;
-	if ( DetectInSkybox() )
+
+	// Are we launching from a point? If so, use that point.
+	if ( m_iszLaunchPositionName != NULL_STRING )
+	{
+		// Get the launch position entity
+		CBaseEntity *pLaunchPos = gEntList.FindEntityByName( NULL, m_iszLaunchPositionName );
+		if ( !pLaunchPos )
+		{
+			Warning("%s (%s) could not find an entity matching LaunchPositionName of '%s'\n", GetEntityName(), GetDebugName(), STRING(m_iszLaunchPositionName) );
+			SUB_Remove();
+		}
+		else
+		{
+			SetupWorldModel();
+
+			Vector vecForward, vecImpactDirection;
+			GetVectors( &vecForward, NULL, NULL );
+			VectorMultiply( vecForward, -1.0f, vecImpactDirection );
+
+			m_Shared.InitInWorld( gpGlobals->curtime, pLaunchPos->GetAbsOrigin(), GetAbsAngles(), 
+				vecImpactDirection, m_vecImpactPosition, true );
+			SetThink( &CEnvHeadcrabCanister::HeadcrabCanisterWorldThink );
+			SetNextThink( gpGlobals->curtime );
+		}
+	}
+	else if ( DetectInSkybox() )
 	{
 		pCamera = GetEntitySkybox();
 
@@ -681,7 +720,7 @@ void CEnvHeadcrabCanister::HeadcrabCanisterSpawnHeadcrabThink()
 		// So we don't collide with the canister
 		// NOTE: Hierarchical attachment is necessary here to get the animations to work
 		pHeadCrab->SetOwnerEntity( this );
-		pHeadCrab->Spawn();
+		DispatchSpawn( pHeadCrab );
 		pHeadCrab->SetParent( this, nHeadCrabAttachment );
 		pHeadCrab->SetLocalOrigin( vec3_origin );
 		pHeadCrab->SetLocalAngles( vec3_angle );
@@ -864,8 +903,11 @@ void CEnvHeadcrabCanister::Detonate( )
 	// If we're supposed to be removed, do that now
 	if ( HasSpawnFlags( SF_REMOVE_ON_IMPACT ) )
 	{
-		// Lock us now that we've stopped
-		SetLanded();
+		SetAbsOrigin( m_vecImpactPosition );
+		SetModel( ENV_HEADCRABCANISTER_BROKEN_MODEL );
+		SetMoveType( MOVETYPE_NONE );
+		AddEffects( EF_NOINTERP );
+		m_bLanded = true;
 		
 		// Become invisible so our trail can finish up
 		AddEffects( EF_NODRAW );

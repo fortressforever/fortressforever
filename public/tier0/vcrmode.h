@@ -9,13 +9,16 @@
 //
 // $NoKeywords: $
 //=============================================================================//
-
 #ifndef VCRMODE_H
 #define VCRMODE_H
+
+#ifdef _WIN32
+#include <process.h>
+#endif
+
 #ifdef _WIN32
 #pragma once
 #endif
-
 
 #include "tier0/platform.h"
 #include "tier0/vcr_shared.h"
@@ -25,14 +28,25 @@ void BuildCmdLine( int argc, tchar **argv );
 tchar *GetCommandLine();
 #endif
 
+#ifdef _XBOX
+#define NO_VCR 1
+#endif
+
+
 // Enclose lines of code in this if you don't want anything in them written to or read from the VCR file.
+#ifndef NO_VCR
 #define NOVCR(x)	\
 {\
-	g_pVCR->SetEnabled(0);\
+	VCRSetEnabled(0);\
 	x;\
-	g_pVCR->SetEnabled(1);\
+	VCRSetEnabled(1);\
 }
-
+#else
+#define NOVCR(x)	\
+{\
+	x;\
+}
+#endif
 
 // ---------------------------------------------------------------------- //
 // Definitions.
@@ -50,7 +64,9 @@ typedef enum
 // Functions.
 // ---------------------------------------------------------------------- //
 
-class IVCRHelpers
+#ifndef NO_VCR
+
+abstract_class IVCRHelpers
 {
 public:
 	virtual void	ErrorMessage( const tchar *pMsg ) = 0;
@@ -59,13 +75,12 @@ public:
 
 
 // Used by the vcrtrace program.
-class IVCRTrace
+abstract_class IVCRTrace
 {
 public:
 	virtual VCREvent	ReadEvent() = 0;
 	virtual void		Read( void *pDest, int size ) = 0;
 };
-
 
 typedef struct VCR_s
 {
@@ -147,6 +162,7 @@ typedef struct VCR_s
 	// If pEventName is null, then verification is not performed.
 	void		(*GenericRecord)( const tchar *pEventName, const void *pData, int len );
 	
+
 	// Returns the number of bytes written in the generic event.
 	// If bForceLenSame is true, then it will error out unless the value in the VCR file is the same as maxLen.
 	int			(*GenericPlayback)( const tchar *pEventName, void *pOutData, int maxLen, bool bForceLenSame );
@@ -184,12 +200,96 @@ typedef struct VCR_s
 
 	// Works like GenericValue, except upon playback it will verify that pData's contents are the same as it was during recording.
 	void		(*GenericValueVerify)( const tchar *pEventName, const void *pData, int maxLen );
-} VCR_t;
 
+	unsigned long (*Hook_WaitForMultipleObjects)( uint32 nHandles, const void **pHandles, int bWaitAll, uint32 timeout );
+
+} VCR_t;
 
 // In the launcher, this is created by vcrmode.c. 
 // In the engine, this is set when the launcher initializes its DLL.
 PLATFORM_INTERFACE VCR_t *g_pVCR;
 
+#endif
+
+
+#ifndef NO_VCR
+#define VCRStart								g_pVCR->Start
+#define VCREnd									g_pVCR->End
+#define VCRGetVCRTraceInterface					g_pVCR->GetVCRTraceInterface
+#define VCRGetMode								g_pVCR->GetMode
+#define VCRSetEnabled							g_pVCR->SetEnabled
+#define VCRSyncToken							g_pVCR->SyncToken
+#define VCRGenericString						g_pVCR->GenericString
+#define VCRGenericValueVerify					g_pVCR->GenericValueVerify
+#define VCRHook_Sys_FloatTime					g_pVCR->Hook_Sys_FloatTime
+#define VCRHook_PeekMessage						g_pVCR->Hook_PeekMessage
+#define VCRHook_RecordGameMsg					g_pVCR->Hook_RecordGameMsg
+#define VCRHook_RecordEndGameMsg				g_pVCR->Hook_RecordEndGameMsg
+#define VCRHook_PlaybackGameMsg					g_pVCR->Hook_PlaybackGameMsg
+#define VCRHook_recvfrom						g_pVCR->Hook_recvfrom
+#define VCRHook_GetCursorPos					g_pVCR->Hook_GetCursorPos
+#define VCRHook_ScreenToClient					g_pVCR->Hook_ScreenToClient
+#define VCRHook_Cmd_Exec						g_pVCR->Hook_Cmd_Exec
+#define VCRHook_GetCommandLine					g_pVCR->Hook_GetCommandLine
+#define VCRHook_RegOpenKeyEx					g_pVCR->Hook_RegOpenKeyEx
+#define VCRHook_RegSetValueEx					g_pVCR->Hook_RegSetValueEx
+#define VCRHook_RegQueryValueEx					g_pVCR->Hook_RegQueryValueEx
+#define VCRHook_RegCreateKeyEx					g_pVCR->Hook_RegCreateKeyEx
+#define VCRHook_RegCloseKey						g_pVCR->Hook_RegCloseKey
+#define VCRHook_GetNumberOfConsoleInputEvents	g_pVCR->Hook_GetNumberOfConsoleInputEvents
+#define VCRHook_ReadConsoleInput				g_pVCR->Hook_ReadConsoleInput
+#define VCRHook_LocalTime						g_pVCR->Hook_LocalTime
+#define VCRHook_GetKeyState						g_pVCR->Hook_GetKeyState
+#define VCRHook_recv							g_pVCR->Hook_recv
+#define VCRHook_send							g_pVCR->Hook_send
+#define VCRGenericRecord						g_pVCR->GenericRecord
+#define VCRGenericPlayback						g_pVCR->GenericPlayback
+#define VCRGenericValue							g_pVCR->GenericValue
+#define VCRGetPercentCompleted					g_pVCR->GetPercentCompleted
+#define VCRHook_CreateThread					g_pVCR->Hook_CreateThread
+#define VCRHook_WaitForSingleObject				g_pVCR->Hook_WaitForSingleObject
+#define VCRHook_EnterCriticalSection			g_pVCR->Hook_EnterCriticalSection
+#define VCRHook_Time							g_pVCR->Hook_Time
+#define VCRHook_WaitForMultipleObjects( a, b, c, d) g_pVCR->Hook_WaitForMultipleObjects( a, (const void **)b, c, d)
+#else
+#define VCRStart( a, b, c )						(1)
+#define VCREnd									((void)(0))
+#define VCRGetVCRTraceInterface					(NULL)
+#define VCRGetMode()							(VCR_Disabled)
+#define VCRSetEnabled( a )						((void)(0))
+#define VCRSyncToken( a )						((void)(0))
+#define VCRGenericRecord						MUST_IFDEF_OUT_GenericRecord
+#define VCRGenericPlayback						MUST_IFDEF_OUT_GenericPlayback
+#define VCRGenericValue							MUST_IFDEF_OUT_GenericValue
+#define VCRGenericString						MUST_IFDEF_OUT_GenericString
+#define VCRGenericValueVerify					MUST_IFDEF_OUT_GenericValueVerify
+#define VCRGetPercentCompleted					(0.0)
+#define VCRHook_Sys_FloatTime					Sys_FloatTime
+#define VCRHook_PeekMessage						PeekMessage
+#define VCRHook_RecordGameMsg					RecordGameMsg
+#define VCRHook_RecordEndGameMsg				RecordEndGameMsg
+#define VCRHook_PlaybackGameMsg					PlaybackGameMsg
+#define VCRHook_recvfrom						recvfrom
+#define VCRHook_GetCursorPos					GetCursorPos
+#define VCRHook_ScreenToClient					ScreenToClient
+#define VCRHook_Cmd_Exec( a )					((void)(0))
+#define VCRHook_GetCommandLine					GetCommandLine
+#define VCRHook_RegOpenKeyEx					RegOpenKeyEx
+#define VCRHook_RegSetValueEx					RegSetValueEx
+#define VCRHook_RegQueryValueEx					RegQueryValueEx
+#define VCRHook_RegCreateKeyEx					RegCreateKeyEx
+#define VCRHook_RegCloseKey						RegCloseKey
+#define VCRHook_GetNumberOfConsoleInputEvents	GetNumberOfConsoleInputEvents
+#define VCRHook_ReadConsoleInput				ReadConsoleInput
+#define VCRHook_LocalTime( a )					memset(a, 0, sizeof(*a));
+#define VCRHook_GetKeyState						GetKeyState
+#define VCRHook_recv							recv
+#define VCRHook_send							send
+#define VCRHook_CreateThread					(void*)_beginthreadex
+#define VCRHook_WaitForSingleObject				WaitForSingleObject
+#define VCRHook_EnterCriticalSection			EnterCriticalSection
+#define VCRHook_WaitForMultipleObjects( a, b, c, d) WaitForMultipleObjects( a, (const HANDLE *)b, c, d)
+#define VCRHook_Time							Time
+#endif
 
 #endif // VCRMODE_H

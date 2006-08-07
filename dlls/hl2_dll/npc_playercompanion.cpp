@@ -25,6 +25,10 @@
 #include "ai_squad.h"
 #include "ai_squadslot.h"
 #include "ai_tacticalservices.h"
+#include "ai_interactions.h"
+#include "filesystem.h"
+#include "collisionutils.h"
+#include <KeyValues.h>
 
 ConVar ai_debug_readiness("ai_debug_readiness", "0" );
 ConVar ai_use_readiness("ai_use_readiness", "1" ); // 0 = off, 1 = on, 2 = on for player squad only
@@ -32,14 +36,20 @@ ConVar ai_readiness_decay( "ai_readiness_decay", "120" );// How many seconds it 
 ConVar ai_new_aiming( "ai_new_aiming", "1" );
 
 #define GetReadinessUse()	ai_use_readiness.GetInt()
-#define GetReadinessDecay() ai_readiness_decay.GetFloat()
+
+extern ConVar g_debug_transitions;
+
+#define PLAYERCOMPANION_TRANSITION_SEARCH_DISTANCE		(100*12)
+
+int AE_COMPANION_PRODUCE_FLARE;
+int AE_COMPANION_LIGHT_FLARE;
+int AE_COMPANION_RELEASE_FLARE;
 
 //-----------------------------------------------------------------------------
 // An aimtarget becomes invalid if it gets this close
 //-----------------------------------------------------------------------------
 #define COMPANION_AIMTARGET_NEAREST		24.0f
 #define COMPANION_AIMTARGET_NEAREST_SQR	576.0f
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -57,13 +67,28 @@ BEGIN_DATADESC( CNPC_PlayerCompanion )
 //	DEFINE_FIELD( m_FollowBehavior,		CAI_FollowBehavior ),
 //	DEFINE_FIELD( m_StandoffBehavior,	CAI_StandoffBehavior ),
 //	DEFINE_FIELD( m_LeadBehavior,		CAI_LeadBehavior ),
-//						m_ActBusyBehavior
+//  DEFINE_FIELD( m_OperatorBehavior,	FIELD_EMBEDDED ),
+//					m_ActBusyBehavior
+//					m_PassengerBehavior
 
 	DEFINE_INPUTFUNC( FIELD_VOID,	"OutsideTransition",	InputOutsideTransition ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessPanic",	InputSetReadinessPanic ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessStealth",	InputSetReadinessStealth ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessLow",		InputSetReadinessLow ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessMedium",	InputSetReadinessMedium ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetReadinessHigh",		InputSetReadinessHigh ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT,	"LockReadiness",		InputLockReadiness ),
+
+//------------------------------------------------------------------------------
+#ifdef HL2_EPISODIC
+	DEFINE_FIELD( m_hFlare, FIELD_EHANDLE ),
+
+	DEFINE_INPUTFUNC( FIELD_STRING,	"EnterVehicle",			InputEnterVehicle ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"ExitVehicle",			InputExitVehicle ),
+#endif	// HL2_EPISODIC
+//------------------------------------------------------------------------------
+
+	DEFINE_INPUTFUNC( FIELD_STRING, "GiveWeapon",			InputGiveWeapon ),
 
 	DEFINE_FIELD( m_flReadiness,			FIELD_FLOAT ),
 	DEFINE_FIELD( m_flReadinessSensitivity,	FIELD_FLOAT ),
@@ -76,6 +101,17 @@ BEGIN_DATADESC( CNPC_PlayerCompanion )
 
 	DEFINE_FIELD( m_hAimTarget,				FIELD_EHANDLE ),
 
+	DEFINE_KEYFIELD( m_bAlwaysTransition, FIELD_BOOLEAN, "AlwaysTransition" ),
+	DEFINE_KEYFIELD( m_bDontPickupWeapons, FIELD_BOOLEAN, "DontPickupWeapons" ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableAlwaysTransition", InputEnableAlwaysTransition ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableAlwaysTransition", InputDisableAlwaysTransition ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableWeaponPickup", InputEnableWeaponPickup ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableWeaponPickup", InputDisableWeaponPickup ),
+
+	DEFINE_OUTPUT( m_OnWeaponPickup, "OnWeaponPickup" ),
+
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -87,17 +123,31 @@ string_t CNPC_PlayerCompanion::gm_iszMortarClassname;
 string_t CNPC_PlayerCompanion::gm_iszFloorTurretClassname;
 string_t CNPC_PlayerCompanion::gm_iszGroundTurretClassname;
 string_t CNPC_PlayerCompanion::gm_iszShotgunClassname;
+string_t CNPC_PlayerCompanion::gm_iszRollerMineClassname;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
 bool CNPC_PlayerCompanion::CreateBehaviors()
 {
+#ifdef HL2_EPISODIC
+	AddBehavior( &m_PassengerBehavior );
+#endif // HL2_EPISODIC	
+
 	AddBehavior( &m_ActBusyBehavior );
+
+#ifdef HL2_EPISODIC
+	AddBehavior( &m_OperatorBehavior );
+	AddBehavior( &m_StandoffBehavior );
+	AddBehavior( &m_AssaultBehavior );
+	AddBehavior( &m_FollowBehavior );
+	AddBehavior( &m_LeadBehavior );
+#else
 	AddBehavior( &m_AssaultBehavior );
 	AddBehavior( &m_StandoffBehavior );
 	AddBehavior( &m_FollowBehavior );
 	AddBehavior( &m_LeadBehavior );
+#endif//HL2_EPISODIC
 	
 	return BaseClass::CreateBehaviors();
 }
@@ -110,8 +160,14 @@ void CNPC_PlayerCompanion::Precache()
 	gm_iszFloorTurretClassname = AllocPooledString( "npc_turret_floor" );
 	gm_iszGroundTurretClassname = AllocPooledString( "npc_turret_ground" );
 	gm_iszShotgunClassname = AllocPooledString( "weapon_shotgun" );
+	gm_iszRollerMineClassname = AllocPooledString( "npc_rollermine" );
 
 	PrecacheModel( STRING( GetModelName() ) );
+	
+#ifdef HL2_EPISODIC
+	// The flare we're able to pull out
+	PrecacheModel( "models/props_junk/flare.mdl" );
+#endif // HL2_EPISODIC
 
 	BaseClass::Precache();
 }
@@ -158,6 +214,10 @@ void CNPC_PlayerCompanion::Spawn()
 	m_flReadinessLockedUntil = 0.0f;
 
 	m_AnnounceAttackTimer.Set( 10, 30 );
+
+#ifdef HL2_EPISODIC
+	m_hFlare = NULL;
+#endif // HL2_EPISODIC
 }
 
 
@@ -180,8 +240,6 @@ int CNPC_PlayerCompanion::Restore( IRestore &restore )
 int CNPC_PlayerCompanion::ObjectCaps() 
 { 
 	int caps = UsableNPCObjectCaps( BaseClass::ObjectCaps() );
-	if ( IsInPlayerSquad() || ( m_FollowBehavior.GetFollowTarget() && m_FollowBehavior.GetFollowTarget()->IsPlayer() ) )
-		caps |= FCAP_NOTIFY_NOT_IN_TRANSITION;
 	return caps; 
 }
 
@@ -189,7 +247,7 @@ int CNPC_PlayerCompanion::ObjectCaps()
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::ShouldAlwaysThink() 
 { 
-	return ( BaseClass::ShouldAlwaysThink() || ( m_FollowBehavior.GetFollowTarget() && m_FollowBehavior.GetFollowTarget()->IsPlayer() ) ); 
+	return ( BaseClass::ShouldAlwaysThink() || ( GetFollowBehavior().GetFollowTarget() && GetFollowBehavior().GetFollowTarget()->IsPlayer() ) ); 
 }
 
 //-----------------------------------------------------------------------------
@@ -248,7 +306,6 @@ void CNPC_PlayerCompanion::GatherConditions()
 {
 	BaseClass::GatherConditions();
 
-
 	if ( AI_IsSinglePlayer() )
 	{
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
@@ -267,7 +324,18 @@ void CNPC_PlayerCompanion::GatherConditions()
 			{
 				if ( HasCondition( COND_SEE_PLAYER ) && (GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() < Square(25 * 12) )
 				{
-					AddToSquad( GetPlayerSquadName() );
+					if ( hl2_episodic.GetBool() )
+					{
+						// Don't stomp our squad if we're in one
+						if ( GetSquad() == NULL )
+						{
+							AddToSquad( GetPlayerSquadName() );
+						}
+					}
+					else
+					{
+						AddToSquad( GetPlayerSquadName() );
+					}
 				}
 			}
 		}
@@ -281,10 +349,10 @@ void CNPC_PlayerCompanion::GatherConditions()
 			m_AnnounceAttackTimer.Set( 4, 8 );
 		}
 
-		if ( m_FollowBehavior.GetFollowTarget() && 
-			 ( m_FollowBehavior.GetFollowTarget()->IsPlayer() || GetCommandGoal() != vec3_invalid ) && 
-			 m_FollowBehavior.IsMovingToFollowTarget() && 
-			 m_FollowBehavior.GetGoalRange() > 0.1 &&
+		if ( GetFollowBehavior().GetFollowTarget() && 
+			 ( GetFollowBehavior().GetFollowTarget()->IsPlayer() || GetCommandGoal() != vec3_invalid ) && 
+			 GetFollowBehavior().IsMovingToFollowTarget() && 
+			 GetFollowBehavior().GetGoalRange() > 0.1 &&
 			 BaseClass::GetIdealSpeed() > 0.1 )
 		{
 			Vector vPlayerToFollower = GetAbsOrigin() - pPlayer->GetAbsOrigin();
@@ -293,9 +361,9 @@ void CNPC_PlayerCompanion::GatherConditions()
 			bool bDoSpeedBoost = false;
 			if ( !HasCondition( COND_IN_PVS ) )
 				bDoSpeedBoost = true;
-			else if ( m_FollowBehavior.GetFollowTarget()->IsPlayer() )
+			else if ( GetFollowBehavior().GetFollowTarget()->IsPlayer() )
 			{
-				if ( dist > m_FollowBehavior.GetGoalRange() * 2 )
+				if ( dist > GetFollowBehavior().GetGoalRange() * 2 )
 				{
 					float dot = vPlayerToFollower.Dot( pPlayer->EyeDirection3D() );
 					if ( dot < 0 )
@@ -307,7 +375,7 @@ void CNPC_PlayerCompanion::GatherConditions()
 
 			if ( bDoSpeedBoost )
 			{
-				float lag = dist / m_FollowBehavior.GetGoalRange();
+				float lag = dist / GetFollowBehavior().GetGoalRange();
 
 				float mult;
 				
@@ -330,7 +398,11 @@ void CNPC_PlayerCompanion::GatherConditions()
 		}
 	}
 
-	UpdateReadiness();
+	// Update our readiness if we're 
+	if ( IsReadinessCapable() )
+	{
+		UpdateReadiness();
+	}
 
 	PredictPlayerPush();
 
@@ -397,6 +469,9 @@ void CNPC_PlayerCompanion::BuildScheduleTestBits()
 {
 	BaseClass::BuildScheduleTestBits();
 	
+	// Always interrupt to get into the car
+	SetCustomInterruptCondition( COND_PC_BECOMING_PASSENGER );
+
 	if ( IsCurSchedule(SCHED_RANGE_ATTACK1) )
 	{
 		SetCustomInterruptCondition( COND_PLAYER_PUSHING );
@@ -470,16 +545,42 @@ bool CNPC_PlayerCompanion::QueryHearSound( CSound *pSound )
 }
 
 //-----------------------------------------------------------------------------
+
+bool CNPC_PlayerCompanion::QuerySeeEntity( CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC )
+{
+	CAI_BaseNPC *pOther = pEntity->MyNPCPointer(); 
+	if ( pOther && 
+		 ( pOther->GetState() == NPC_STATE_ALERT || GetState() == NPC_STATE_ALERT ||  pOther->GetState() == NPC_STATE_COMBAT || GetState() == NPC_STATE_COMBAT ) && 
+		 pOther->IsPlayerAlly() )
+	{
+		return true;
+	}
+
+	return BaseClass::QuerySeeEntity( pEntity, bOnlyHateOrFearIfNPC );
+}
+
+
+
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::ShouldIgnoreSound( CSound *pSound )
 {
 	if ( !BaseClass::ShouldIgnoreSound( pSound ) )
 	{
 		if ( pSound->IsSoundType( SOUND_DANGER ) && !SoundIsVisible(pSound) )
-		{
 			return true;
+
+#ifdef HL2_EPISODIC
+		// Ignore vehicle sounds when we're driving in them
+		if ( pSound->m_hOwner && pSound->m_hOwner->GetServerVehicle() != NULL )
+		{
+			if ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_INSIDE && 
+				m_PassengerBehavior.GetTargetVehicle() == pSound->m_hOwner->GetServerVehicle()->GetVehicleEnt() )
+				return true;
 		}
+#endif // HL2_EPISODIC
 	}
+
 	return false;
 }
 
@@ -488,6 +589,15 @@ bool CNPC_PlayerCompanion::ShouldIgnoreSound( CSound *pSound )
 int CNPC_PlayerCompanion::SelectSchedule()
 {
 	m_bMovingAwayFromPlayer = false;
+
+#ifdef HL2_EPISODIC
+	// Always defer to passenger if it's running
+	if ( ShouldDeferToPassengerBehavior() )
+	{
+		DeferSchedulingToBehavior( &m_PassengerBehavior );
+		return BaseClass::SelectSchedule();
+	}
+#endif // HL2_EPISODIC
 
 	int nSched = SelectFlinchSchedule();
 	if ( nSched != SCHED_NONE )
@@ -503,7 +613,7 @@ int CNPC_PlayerCompanion::SelectSchedule()
 
 	if ( ShouldDeferToFollowBehavior() )
 	{
-		DeferSchedulingToBehavior( &m_FollowBehavior );
+		DeferSchedulingToBehavior( &(GetFollowBehavior()) );
 	}
 	else if ( !BehaviorSelectSchedule() )
 	{
@@ -558,7 +668,7 @@ int CNPC_PlayerCompanion::SelectScheduleDanger()
 
 	if ( GetEnemy() && 
 		m_FakeOutMortarTimer.Expired() && 
-		m_FollowBehavior.GetFollowTarget() && 
+		GetFollowBehavior().GetFollowTarget() && 
 		IsMortar( GetEnemy() ) && 
 		assert_cast<CAI_BaseNPC *>(GetEnemy())->GetEnemy() == this && 
 		assert_cast<CAI_BaseNPC *>(GetEnemy())->FInViewCone( this ) &&
@@ -602,7 +712,7 @@ int CNPC_PlayerCompanion::SelectSchedulePriorityAction()
 	int schedule = SelectSchedulePlayerPush();
 	if ( schedule != SCHED_NONE )
 	{
-		if ( m_FollowBehavior.IsRunning() )
+		if ( GetFollowBehavior().IsRunning() )
 			KeepRunningBehavior();
 		return schedule;
 	}
@@ -629,9 +739,25 @@ int CNPC_PlayerCompanion::SelectSchedulePlayerPush()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::IgnorePlayerPushing( void )
+{
+	if ( hl2_episodic.GetBool() )
+	{
+		// Ignore player pushes if we're leading him
+		if ( m_LeadBehavior.IsRunning() && m_LeadBehavior.HasGoal() )
+			return true;
+		if ( m_AssaultBehavior.IsRunning() && m_AssaultBehavior.OnStrictAssault() )
+			return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 int CNPC_PlayerCompanion::SelectScheduleCombat()
 {
-	if ( HasCondition ( COND_NO_PRIMARY_AMMO ) || HasCondition(COND_LOW_PRIMARY_AMMO) )
+	if ( CanReload() && (HasCondition ( COND_NO_PRIMARY_AMMO ) || HasCondition(COND_LOW_PRIMARY_AMMO)) )
 	{
 		return SCHED_HIDE_AND_RELOAD;
 	}
@@ -640,18 +766,36 @@ int CNPC_PlayerCompanion::SelectScheduleCombat()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::CanReload( void )
+{
+	if ( IsRunningDynamicInteraction() )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::ShouldDeferToFollowBehavior()
 {
-	if ( !m_FollowBehavior.CanSelectSchedule() || !m_FollowBehavior.FarFromFollowTarget() )
+	if ( !GetFollowBehavior().CanSelectSchedule() || !GetFollowBehavior().FarFromFollowTarget() )
 		return false;
 		
-	if ( m_StandoffBehavior.CanSelectSchedule() && !m_StandoffBehavior.IsBehindBattleLines( m_FollowBehavior.GetFollowTarget()->GetAbsOrigin() ) )
+	if ( m_StandoffBehavior.CanSelectSchedule() && !m_StandoffBehavior.IsBehindBattleLines( GetFollowBehavior().GetFollowTarget()->GetAbsOrigin() ) )
 		return false;
 
 	if ( HasCondition(COND_BETTER_WEAPON_AVAILABLE) && !GetActiveWeapon() )
 	{
 		// Unarmed allies should arm themselves as soon as the opportunity presents itself.
+		return false;
+	}
+
+	// I don't know why I have to write this @#*$&# piece of code, since I've already placed Assault Behavior 
+	// ABOVE the Follow behavior in precedence. (sjb)
+	if( m_AssaultBehavior.CanSelectSchedule() && hl2_episodic.GetBool() )
+	{
 		return false;
 	}
 	
@@ -699,7 +843,7 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 			// Everyone with less than half a clip takes turns reloading when not fighting.
 			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 
-			if( pWeapon->UsesClipsForAmmo1() && pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .5 ) && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_RELOAD ) )
+			if( CanReload() && pWeapon->UsesClipsForAmmo1() && pWeapon->Clip1() < ( pWeapon->GetMaxClip1() * .5 ) && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_RELOAD ) )
 			{
 				if ( AI_IsSinglePlayer() )
 				{
@@ -721,7 +865,20 @@ int CNPC_PlayerCompanion::TranslateSchedule( int scheduleType )
 		return SCHED_PC_COWER;
 
 	case SCHED_TAKE_COVER_FROM_BEST_SOUND:
-		return SCHED_PC_TAKE_COVER_FROM_BEST_SOUND;
+		{
+			CSound *pSound = GetBestSound(SOUND_DANGER);
+
+			if( pSound && pSound->m_hOwner )
+			{
+				if( pSound->m_hOwner->IsNPC() && FClassnameIs( pSound->m_hOwner, "npc_zombine" ) )
+				{
+					// Run fully away from a Zombine with a grenade.
+					return SCHED_PC_TAKE_COVER_FROM_BEST_SOUND;
+				}
+			}
+
+			return SCHED_PC_MOVE_TOWARDS_COVER_FROM_BEST_SOUND;
+		}
 
 	case SCHED_FLEE_FROM_BEST_SOUND:
 		return SCHED_PC_FLEE_FROM_BEST_SOUND;
@@ -868,16 +1025,103 @@ void CNPC_PlayerCompanion::RunTask( const Task_t *pTask )
 }
 
 //-----------------------------------------------------------------------------
+// Parses this NPC's activity remap from the actremap.txt file
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::PrepareReadinessRemap( void )
+{
+	CUtlVector< CActivityRemap > entries;
+	UTIL_LoadActivityRemapFile( "scripts/actremap.txt", "npc_playercompanion", entries );
+
+	for ( int i = 0; i < entries.Count(); i++ )
+	{
+		CCompanionActivityRemap ActRemap;
+		Q_memcpy( &ActRemap, &entries[i], sizeof( CActivityRemap ) );
+
+		KeyValues *pExtraBlock = ActRemap.GetExtraKeyValueBlock();
+
+		if ( pExtraBlock )
+		{
+			KeyValues *pKey = pExtraBlock->GetFirstSubKey();
+
+			while ( pKey )
+			{
+				const char *pKeyName = pKey->GetName();
+				const char *pKeyValue = pKey->GetString();
+
+				if ( !stricmp( pKeyName, "readiness" ) )
+				{
+					if ( !stricmp( pKeyValue, "AIRL_PANIC" ) )
+					{
+						ActRemap.m_readiness = AIRL_PANIC;
+					}
+					else if ( !stricmp( pKeyValue, "AIRL_STEALTH" ) )
+					{
+						ActRemap.m_readiness = AIRL_STEALTH;
+					}
+					else if ( !stricmp( pKeyValue, "AIRL_RELAXED" ) )
+					{
+						ActRemap.m_readiness = AIRL_RELAXED;
+					}
+					else if ( !stricmp( pKeyValue, "AIRL_STIMULATED" ) )
+					{
+						ActRemap.m_readiness = AIRL_STIMULATED;
+					}
+					else if ( !stricmp( pKeyValue, "AIRL_AGITATED" ) )
+					{
+						ActRemap.m_readiness = AIRL_AGITATED;
+					}
+				}
+				else if ( !stricmp( pKeyName, "aiming" ) )
+				{
+					if ( !stricmp( pKeyValue, "TRS_NONE" ) )
+					{
+						ActRemap.m_fAiming = TRS_NONE;
+					}
+					else if ( !stricmp( pKeyValue, "TRS_FALSE" ) )
+					{
+						ActRemap.m_fAiming = TRS_FALSE;
+					}
+					else if ( !stricmp( pKeyValue, "TRS_TRUE" ) )
+					{
+						ActRemap.m_fAiming = TRS_TRUE;
+					}
+				} 
+				else if ( !stricmp( pKeyName, "weaponrequired" ) )
+				{
+					if ( !stricmp( pKeyValue, "TRUE" ) )
+					{
+						ActRemap.m_bWeaponRequired = true;
+					}
+					else if ( !stricmp( pKeyValue, "FALSE" ) )
+					{
+						ActRemap.m_bWeaponRequired = false;
+					}
+				}
+
+				pKey = pKey->GetNextKey();
+			}
+		}
+
+		const char *pActName = ActivityList_NameForIndex( (int)ActRemap.mappedActivity );
+
+		if ( GetActivityID( pActName ) == ACT_INVALID )
+		{
+			AddActivityToSR( pActName, (int)ActRemap.mappedActivity );
+		}
+
+		m_activityMappings.AddToTail( ActRemap );
+	}
+}
+
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-struct ActivityMapping_t
+void CNPC_PlayerCompanion::Activate( void )
 {
-	Activity 		activity;
-	AIReadiness_t	readiness;
-	ThreeState_t	fAiming;
-	Activity		mappedActivity;
-};
+	BaseClass::Activate();
 
+	PrepareReadinessRemap();
+}
 
 Activity CNPC_PlayerCompanion::TranslateActivityReadiness( Activity activity )
 {
@@ -885,42 +1129,21 @@ Activity CNPC_PlayerCompanion::TranslateActivityReadiness( Activity activity )
 	if ( m_ActBusyBehavior.IsActive() )
 		return activity;
 
-	if ( GetActiveWeapon() && m_bReadinessCapable && 
+	if ( m_bReadinessCapable && 
 		 ( GetReadinessUse() == AIRU_ALWAYS || 
 		   ( GetReadinessUse() == AIRU_ONLY_PLAYER_SQUADMATES && (IsInPlayerSquad()||Classify()==CLASS_PLAYER_ALLY_VITAL) ) ) )
 	{
-		static ActivityMapping_t activityMappings[] =
-		{
-			{	ACT_IDLE,	AIRL_RELAXED, 		TRS_NONE, 	ACT_IDLE_RELAXED		},
-			{	ACT_IDLE,	AIRL_STIMULATED, 	TRS_FALSE, 	ACT_IDLE_STIMULATED		},
-			{	ACT_IDLE,	AIRL_STIMULATED, 	TRS_TRUE, 	ACT_IDLE_AIM_STIMULATED	},
-			{	ACT_IDLE,	AIRL_AGITATED, 		TRS_NONE, 	ACT_IDLE_AGITATED		},
-
-			{	ACT_IDLE_ANGRY,	AIRL_RELAXED, 		TRS_NONE, 	ACT_IDLE_RELAXED		},
-			{	ACT_IDLE_ANGRY,	AIRL_STIMULATED, 	TRS_FALSE, 	ACT_IDLE_STIMULATED		},
-			{	ACT_IDLE_ANGRY,	AIRL_STIMULATED, 	TRS_TRUE, 	ACT_IDLE_AIM_STIMULATED	},
-			{	ACT_IDLE_ANGRY,	AIRL_AGITATED, 		TRS_NONE, 	ACT_IDLE_AGITATED		},
-
-			{	ACT_WALK,	AIRL_RELAXED, 		TRS_NONE, 	ACT_WALK_RELAXED		},
-			{	ACT_WALK,	AIRL_STIMULATED,	TRS_FALSE, 	ACT_WALK_STIMULATED		},
-			{	ACT_WALK,	AIRL_STIMULATED, 	TRS_TRUE, 	ACT_WALK_AIM_STIMULATED	},
-			{	ACT_WALK,	AIRL_AGITATED, 		TRS_FALSE, 	ACT_WALK_AGITATED		},
-
-			{	ACT_RUN,	AIRL_RELAXED, 		TRS_NONE, 	ACT_RUN_RELAXED			},
-			{	ACT_RUN,	AIRL_STIMULATED, 	TRS_FALSE, 	ACT_RUN_STIMULATED		},
-			{	ACT_RUN,	AIRL_STIMULATED, 	TRS_TRUE, 	ACT_RUN_AIM_STIMULATED	},
-			{	ACT_RUN,	AIRL_AGITATED, 		TRS_FALSE, 	ACT_RUN_AGITATED		},
-		};
-
 		bool bShouldAim = ShouldBeAiming();
 
-		for ( int i = 0; i < ARRAYSIZE(activityMappings); i++ )
+		for ( int i = 0; i < m_activityMappings.Count(); i++ )
 		{
-			if ( activity == activityMappings[i].activity && 
-				 GetReadinessLevel() == activityMappings[i].readiness &&
-				 ( activityMappings[i].fAiming == TRS_NONE || ( ( activityMappings[i].fAiming == TRS_TRUE ) == bShouldAim ) ) )
+			CCompanionActivityRemap actremap = m_activityMappings[i];
+
+			if ( activity == actremap.activity && GetReadinessLevel() == actremap.m_readiness &&
+				( ( actremap.m_bWeaponRequired == false && GetActiveWeapon() == NULL ) ||
+				( ( actremap.m_bWeaponRequired == true && GetActiveWeapon() ) && ( actremap.m_fAiming == TRS_NONE || ( ( actremap.m_fAiming == TRS_TRUE ) == bShouldAim ) ) ) ) )
 			{
-				return activityMappings[i].mappedActivity;
+				return actremap.mappedActivity;
 			}
 		}
 	}
@@ -957,9 +1180,69 @@ Activity CNPC_PlayerCompanion::NPC_TranslateActivity( Activity activity )
 }
 
 //------------------------------------------------------------------------------
+// Purpose: Handle animation events
 //------------------------------------------------------------------------------
 void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 {
+#ifdef HL2_EPISODIC
+	// Create a flare and parent to our hand
+	if ( pEvent->event == AE_COMPANION_PRODUCE_FLARE )
+	{
+		m_hFlare = dynamic_cast<CPhysicsProp *>(CreateEntityByName( "prop_physics" ));
+		if ( m_hFlare != NULL )
+		{
+			// Set the model
+			m_hFlare->SetModel( "models/props_junk/flare.mdl" );
+			
+			// Set the parent attachment
+			m_hFlare->SetParent( this );
+			m_hFlare->SetParentAttachment( "SetParentAttachment", pEvent->options, false );
+		}
+
+		return;
+	}
+
+	// Start the flare up with proper fanfare
+	if ( pEvent->event == AE_COMPANION_LIGHT_FLARE )
+	{
+		if ( m_hFlare != NULL )
+		{
+			m_hFlare->CreateFlare( 5*60.0f );
+		}
+		
+		return;
+	}
+
+	// Drop the flare to the ground
+	if ( pEvent->event == AE_COMPANION_RELEASE_FLARE )
+	{
+		// Detach
+		m_hFlare->SetParent( NULL );
+		m_hFlare->Spawn();
+
+		// Disable collisions between the NPC and the flare
+		PhysDisableEntityCollisions( this, m_hFlare );
+
+		// TODO: Find the velocity of the attachment point, at this time, in the animation cycle
+
+		// Construct a toss velocity
+		Vector vecToss;
+		AngleVectors( GetAbsAngles(), &vecToss );
+		VectorNormalize( vecToss );
+		vecToss *= random->RandomFloat( 64.0f, 72.0f );
+		vecToss[2] += 64.0f;
+
+		// Throw it
+		IPhysicsObject *pObj = m_hFlare->VPhysicsGetObject();
+		pObj->ApplyForceCenter( vecToss );
+
+		// Forget about the flare at this point
+		m_hFlare = NULL;
+
+		return;
+	}
+#endif // HL2_EPISODIC
+
 	switch( pEvent->event )
 	{
 	case EVENT_WEAPON_RELOAD:
@@ -977,6 +1260,28 @@ void CNPC_PlayerCompanion::HandleAnimEvent( animevent_t *pEvent )
 		BaseClass::HandleAnimEvent( pEvent );
 		break;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:  This is a generic function (to be implemented by sub-classes) to
+//			 handle specific interactions between different types of characters
+//			 (For example the barnacle grabbing an NPC)
+// Input  :  Constant for the type of interaction
+// Output :	 true  - if sub-class has a response for the interaction
+//			 false - if sub-class has no response
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
+{
+	if (interactionType == g_interactionHitByPlayerThrownPhysObj )
+	{
+		if ( IsOkToSpeakInResponseToPlayer() )
+		{
+			Speak( TLK_PLYR_PHYSATK );
+		}
+		return true;
+	}
+
+	return BaseClass::HandleInteraction( interactionType, data, sourceEnt );
 }
 
 //------------------------------------------------------------------------------
@@ -1026,6 +1331,32 @@ void CNPC_PlayerCompanion::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 	{
 		set.AppendCriteria( "hurt_by_fire", "1" );
 	}
+
+	if ( m_bReadinessCapable )
+	{
+		switch( GetReadinessLevel() )
+		{
+		case AIRL_PANIC:
+			set.AppendCriteria( "readiness", "panic" );
+			break;
+
+		case AIRL_STEALTH:
+			set.AppendCriteria( "readiness", "stealth" );
+			break;
+
+		case AIRL_RELAXED:
+			set.AppendCriteria( "readiness", "relaxed" );
+			break;
+
+		case AIRL_STIMULATED:
+			set.AppendCriteria( "readiness", "stimulated" );
+			break;
+
+		case AIRL_AGITATED:
+			set.AppendCriteria( "readiness", "agitated" );
+			break;
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1035,13 +1366,17 @@ bool CNPC_PlayerCompanion::IsReadinessCapable()
 	if ( GlobalEntity_GetState("gordon_precriminal") == GLOBAL_ON )
 		return false;
 
+#ifndef HL2_EPISODIC
+	// Allow episodic companions to use readiness even if unarmed. This allows for the panicked 
+	// citizens in ep1_c17_05 (sjb)
 	if( !GetActiveWeapon() )
 		return false;
+#endif
 
-	if( LookupActivity("ACT_IDLE_AIM_RIFLE_STIMULATED") == ACT_INVALID )
+	if( GetActiveWeapon() && LookupActivity("ACT_IDLE_AIM_RIFLE_STIMULATED") == ACT_INVALID )
 		return false;
 
-	if( FClassnameIs( GetActiveWeapon(), "weapon_rpg" ) )
+	if( GetActiveWeapon() && FClassnameIs( GetActiveWeapon(), "weapon_rpg" ) )
 		return false;
 
 	return true;
@@ -1061,10 +1396,25 @@ void CNPC_PlayerCompanion::AddReadiness( float flAdd, bool bOverrideLock )
 //-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::SubtractReadiness( float flSub, bool bOverrideLock )
 {
-	if( IsReadinessLocked() && !bOverrideLock )
+ 	if( IsReadinessLocked() && !bOverrideLock )
 		return;
 
-	SetReadinessValue( GetReadinessValue() - flSub );
+	// Prevent readiness from going below 0 (below 0 is only for scripted states)
+	SetReadinessValue( max(GetReadinessValue() - flSub, 0) );
+}
+
+//-----------------------------------------------------------------------------
+// This method returns false if the NPC is not allowed to change readiness at this point.
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::AllowReadinessValueChange( void )
+{
+	if ( GetIdealActivity() == ACT_IDLE || GetIdealActivity() == ACT_WALK || GetIdealActivity() == ACT_RUN )
+		return true;
+
+	if ( HasActiveLayer() == true )
+		return false;
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1072,10 +1422,13 @@ void CNPC_PlayerCompanion::SubtractReadiness( float flSub, bool bOverrideLock )
 //-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::SetReadinessValue( float flSet )
 {
+	if ( AllowReadinessValueChange() == false )
+		return;
+
 	int priorReadiness = GetReadinessLevel();
 
 	flSet = min( 1.0f, flSet );
-	flSet = max( 0.0, flSet );
+	flSet = max( READINESS_MIN_VALUE, flSet );
 
 	m_flReadiness = flSet;
 
@@ -1085,6 +1438,16 @@ void CNPC_PlayerCompanion::SetReadinessValue( float flSet )
 		// Interrupt IDLE schedules (if we're playing one) so that 
 		// we can pick the proper animation.
 		SetCondition( COND_IDLE_INTERRUPT );
+
+		// Force us to recalculate our animation. If we don't do this,
+		// our translated activity may change, but not our root activity,
+		// and then we won't actually visually change anims.
+		ResetActivity();
+
+		//Force the NPC to recalculate it's arrival sequence since it'll most likely be wrong now that we changed readiness level.
+		GetNavigator()->SetArrivalSequence( ACT_INVALID );
+
+		ReadinessLevelChanged( priorReadiness );
 	}
 }
 
@@ -1101,6 +1464,14 @@ void CNPC_PlayerCompanion::SetReadinessLevel( int iLevel, bool bOverrideLock, bo
 
 	switch( iLevel )
 	{
+	case AIRL_PANIC:
+		if( bSlam )
+			SetReadinessValue( READINESS_MODE_PANIC );
+		break;
+	case AIRL_STEALTH:
+		if( bSlam )
+			SetReadinessValue( READINESS_MODE_STEALTH );
+		break;
 	case AIRL_RELAXED:
 		if( bSlam || GetReadinessValue() < READINESS_VALUE_RELAXED )
 			SetReadinessValue( READINESS_VALUE_RELAXED );
@@ -1123,7 +1494,20 @@ void CNPC_PlayerCompanion::SetReadinessLevel( int iLevel, bool bOverrideLock, bo
 //-----------------------------------------------------------------------------
 int	CNPC_PlayerCompanion::GetReadinessLevel()
 {
-	if( m_flReadiness <= READINESS_VALUE_RELAXED || m_bReadinessCapable == false )
+	if ( m_bReadinessCapable == false )
+		return AIRL_RELAXED;
+
+	if( m_flReadiness == READINESS_MODE_PANIC )
+	{
+		return AIRL_PANIC;
+	}
+
+	if( m_flReadiness == READINESS_MODE_STEALTH )
+	{
+		return AIRL_STEALTH;
+	}
+
+	if( m_flReadiness <= READINESS_VALUE_RELAXED )
 	{
 		return AIRL_RELAXED;
 	}
@@ -1140,19 +1524,23 @@ int	CNPC_PlayerCompanion::GetReadinessLevel()
 //-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::UpdateReadiness()
 {
-	if( HasCondition(COND_HEAR_COMBAT) || HasCondition(COND_HEAR_BULLET_IMPACT)	)
-		SetReadinessLevel( AIRL_STIMULATED, false, false );
-
-	if( HasCondition(COND_HEAR_DANGER) || HasCondition(COND_SEE_ENEMY) )
-		SetReadinessLevel( AIRL_AGITATED, false, false );
-
-	if( m_flReadiness > 0.0f && GetReadinessDecay() > 0 )
+	// Only update readiness if it's not in a scripted state
+	if ( !IsInScriptedReadinessState() )
 	{
-		// Decay.
-		SubtractReadiness( ( 0.1 * (1.0f/GetReadinessDecay())) * m_flReadinessSensitivity );
+		if( HasCondition(COND_HEAR_COMBAT) || HasCondition(COND_HEAR_BULLET_IMPACT)	)
+			SetReadinessLevel( AIRL_STIMULATED, false, false );
+
+		if( HasCondition(COND_HEAR_DANGER) || HasCondition(COND_SEE_ENEMY) )
+			SetReadinessLevel( AIRL_AGITATED, false, false );
+
+		if( m_flReadiness > 0.0f && GetReadinessDecay() > 0 )
+		{
+			// Decay.
+			SubtractReadiness( ( 0.1 * (1.0f/GetReadinessDecay())) * m_flReadinessSensitivity );
+		}
 	}
 
-	if( ai_debug_readiness.GetBool() && AI_IsSinglePlayer() )
+ 	if( ai_debug_readiness.GetBool() && AI_IsSinglePlayer() )
 	{
 		// Draw the readiness-o-meter
 		Vector vecSpot;
@@ -1163,21 +1551,49 @@ void CNPC_PlayerCompanion::UpdateReadiness()
 		Vector right;
 		UTIL_PlayerByIndex( 1 )->GetVectors( NULL, &right, NULL );
 
-		vecSpot = EyePosition() + vecOffset;
-		NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 255, 255, false, 0.1 );
+		if ( IsInScriptedReadinessState() )
+ 		{
+			// Just print the name of the scripted state
+			vecSpot = EyePosition() + vecOffset;
 
-		vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_RELAXED );
-		NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 0, 255, 0, false, 0.1 );
+			if( GetReadinessLevel() == AIRL_STEALTH )
+			{
+				NDebugOverlay::Text( vecSpot, "Stealth", true, 0.1 );
+			}
+			else if( GetReadinessLevel() == AIRL_PANIC )
+			{
+				NDebugOverlay::Text( vecSpot, "Panic", true, 0.1 );
+			}
+			else
+			{
+				NDebugOverlay::Text( vecSpot, "Unspecified", true, 0.1 );
+			}
+		}
+		else
+		{
+			vecSpot = EyePosition() + vecOffset;
+			NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 255, 255, false, 0.1 );
 
-		vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_STIMULATED );
-		NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 255, 0, false, 0.1 );
+			vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_RELAXED );
+			NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 0, 255, 0, false, 0.1 );
 
-		vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_AGITATED );
-		NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 0, 0, false, 0.1 );
+			vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_STIMULATED );
+			NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 255, 0, false, 0.1 );
 
-		vecSpot = EyePosition() + vecOffset;
-		NDebugOverlay::Line( vecSpot, vecSpot + Vector( 0, 0, BARLENGTH * GetReadinessValue() ), 255, 255, 0, false, 0.1 );
+			vecSpot = EyePosition() + vecOffset + Vector( 0, 0, BARLENGTH * READINESS_VALUE_AGITATED );
+			NDebugOverlay::Line( vecSpot, vecSpot + right * GRADLENGTH, 255, 0, 0, false, 0.1 );
+
+			vecSpot = EyePosition() + vecOffset;
+			NDebugOverlay::Line( vecSpot, vecSpot + Vector( 0, 0, BARLENGTH * GetReadinessValue() ), 255, 255, 0, false, 0.1 );
+		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+float CNPC_PlayerCompanion::GetReadinessDecay()
+{
+	return ai_readiness_decay.GetFloat();
 }
 
 //-----------------------------------------------------------------------------
@@ -1194,8 +1610,13 @@ void CNPC_PlayerCompanion::SetAimTarget( CBaseEntity *pTarget )
 		m_hAimTarget = NULL;
 	}
 
-	Activity NewActivity = CNPC_PlayerCompanion::TranslateActivityReadiness(GetActivity());
-	if (NewActivity != GetActivity())
+	Activity NewActivity = NPC_TranslateActivity(GetActivity());
+
+	//Don't set the ideal activity to an activity that might not be there.
+	if ( SelectWeightedSequence( NewActivity ) == ACT_INVALID )
+		 return;
+
+	if (NewActivity != GetActivity() )
 	{
 		SetIdealActivity( NewActivity );
 	}
@@ -1222,7 +1643,7 @@ void CNPC_PlayerCompanion::StopAiming( char *pszReason )
 
 	SetAimTarget(NULL);
 
-	Activity NewActivity = CNPC_PlayerCompanion::TranslateActivityReadiness(GetActivity());
+	Activity NewActivity = NPC_TranslateActivity(GetActivity());
 	if (NewActivity != GetActivity())
 	{
 		SetIdealActivity( NewActivity );
@@ -1270,41 +1691,42 @@ bool CNPC_PlayerCompanion::PickTacticalLookTarget( AILookTargetArgs_t *pArgs )
 	flMaxLookTime = flMinLookTime + random->RandomFloat( 0.0f, 0.5f );
 	pArgs->flDuration = random->RandomFloat( flMinLookTime, flMaxLookTime );
 
-#if 0
-	// Use ai_looktargets
-	CAI_LookTarget *pLookTarget = CAI_LookTarget::GetFirstLookTarget();
-	while( pLookTarget )
+	if( HasCondition(COND_SEE_PLAYER) && hl2_episodic.GetBool() )
 	{
-		if( pLookTarget->IsEligible(this) && FInViewCone(pLookTarget) && FVisible(pLookTarget) )
+		// 1/3rd chance to authoritatively look at player
+		if( random->RandomInt( 0, 2 ) == 0 )
 		{
-			// Tack a bit of extra time on.
-			pLookTarget->Reserve( pArgs->flDuration + 4.0f );
-			pArgs->hTarget = pLookTarget;
+			pArgs->hTarget = AI_GetSinglePlayer();
 			return true;
 		}
-
-		pLookTarget = CAI_LookTarget::GetNextLookTarget( pLookTarget );
 	}
-#else
+
 	// Use hint nodes
 	CAI_Hint *pHint;
 	CHintCriteria hintCriteria;
 
-	hintCriteria.SetHintTypeRange( HINT_WORLD_VISUALLY_INTERESTING, HINT_WORLD_VISUALLY_INTERESTING_DONT_AIM );
+	hintCriteria.AddHintType( HINT_WORLD_VISUALLY_INTERESTING );
+	hintCriteria.AddHintType( HINT_WORLD_VISUALLY_INTERESTING_DONT_AIM );
+	hintCriteria.AddHintType( HINT_WORLD_VISUALLY_INTERESTING_STEALTH );
 	hintCriteria.SetFlag( bits_HINT_NODE_VISIBLE | bits_HINT_NODE_IN_VIEWCONE | bits_HINT_NPC_IN_NODE_FOV );
 	hintCriteria.AddIncludePosition( GetAbsOrigin(), COMPANION_MAX_TACTICAL_TARGET_DIST );
 
-	pHint = CAI_HintManager::FindHint( this, hintCriteria );
+	{
+		AI_PROFILE_SCOPE( CNPC_PlayerCompanion_FindHint_PickTacticalLookTarget );
+  		pHint = CAI_HintManager::FindHint( this, hintCriteria );
+	}
 	
 	if( pHint )
 	{
 		pArgs->hTarget = pHint;
 		
-		// Turn this node off for a few seconds to stop others aiming at the same thing.
-		pHint->DisableForSeconds( 5.0f );
+		// Turn this node off for a few seconds to stop others aiming at the same thing (except for stealth nodes)
+		if ( pHint->HintType() != HINT_WORLD_VISUALLY_INTERESTING_STEALTH )
+		{
+			pHint->DisableForSeconds( 5.0f );
+		}
 		return true;
 	}
-#endif
 
 	// See what the base class thinks.
 	return BaseClass::PickTacticalLookTarget( pArgs );
@@ -1585,7 +2007,7 @@ CBaseEntity *CNPC_PlayerCompanion::GetAlternateMoveShootTarget()
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::IsValidEnemy( CBaseEntity *pEnemy )
 {
-	if ( m_FollowBehavior.GetFollowTarget() && m_FollowBehavior.GetFollowTarget()->IsPlayer() && IsSniper( pEnemy ) )
+	if ( GetFollowBehavior().GetFollowTarget() && GetFollowBehavior().GetFollowTarget()->IsPlayer() && IsSniper( pEnemy ) )
 	{
 		AI_EnemyInfo_t *pInfo = GetEnemies()->Find( pEnemy );
 		if ( pInfo )
@@ -1642,13 +2064,23 @@ void CNPC_PlayerCompanion::OnUpdateShotRegulator()
 	{
 		if( GetAbsOrigin().DistTo( GetEnemy()->GetAbsOrigin() ) <= PC_LARGER_BURST_RANGE )
 		{
-			// Longer burst
-			GetShotRegulator()->SetBurstShotsRemaining( GetShotRegulator()->GetBurstShotsRemaining() * 2 );
+			if( hl2_episodic.GetBool() )
+			{
+				// Longer burst
+				int longBurst = random->RandomInt( 10, 15 );
+				GetShotRegulator()->SetBurstShotsRemaining( longBurst );
+				GetShotRegulator()->SetRestInterval( 0.1, 0.2 );
+			}
+			else
+			{
+				// Longer burst
+				GetShotRegulator()->SetBurstShotsRemaining( GetShotRegulator()->GetBurstShotsRemaining() * 2 );
 
-			// Shorter Rest interval
-			float flMinInterval, flMaxInterval;
-			GetShotRegulator()->GetRestInterval( &flMinInterval, &flMaxInterval );
-			GetShotRegulator()->SetRestInterval( flMinInterval * 0.6f, flMaxInterval * 0.6f );
+				// Shorter Rest interval
+				float flMinInterval, flMaxInterval;
+				GetShotRegulator()->GetRestInterval( &flMinInterval, &flMaxInterval );
+				GetShotRegulator()->SetRestInterval( flMinInterval * 0.6f, flMaxInterval * 0.6f );
+			}
 		}
 	}
 }
@@ -1728,10 +2160,29 @@ bool CNPC_PlayerCompanion::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::ShouldLookForBetterWeapon()
+{
+	if ( m_bDontPickupWeapons )
+		return false;
+
+	return BaseClass::ShouldLookForBetterWeapon();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	BaseClass::Weapon_Equip( pWeapon );
 	m_bReadinessCapable = IsReadinessCapable();
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CNPC_PlayerCompanion::PickupWeapon( CBaseCombatWeapon *pWeapon )
+{
+	BaseClass::PickupWeapon( pWeapon );
+	SpeakIfAllowed( TLK_NEWWEAPON );
+	m_OnWeaponPickup.FireOutput( this, this );
 }
 
 //-----------------------------------------------------------------------------
@@ -1744,7 +2195,7 @@ CNPC_PlayerCompanion *			g_pMultiCoverSearcher;
 
 //-------------------------------------
 
-int MultiCoverCompare( AI_EnemyInfo_t * const *ppLeft, AI_EnemyInfo_t * const *ppRight )
+int __cdecl MultiCoverCompare( AI_EnemyInfo_t * const *ppLeft, AI_EnemyInfo_t * const *ppRight )
 {
 	const AI_EnemyInfo_t *pLeft = *ppLeft;
 	const AI_EnemyInfo_t *pRight = *ppRight;
@@ -1902,7 +2353,9 @@ bool CNPC_PlayerCompanion::FindCoverPosInRadius( CBaseEntity *pEntity, const Vec
 	}
 
 	if ( !result )
+	{
 		result = BaseClass::FindCoverPosInRadius( pEntity, goalPos, coverRadius, pResult );
+	}
 	
 	CleanupCoverSearch();
 
@@ -2062,6 +2515,15 @@ bool CNPC_PlayerCompanion::IsTurret( CBaseEntity *pEntity )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::IsGunship( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+	return (pEntity->Classify() == CLASS_COMBINE_GUNSHIP );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 int CNPC_PlayerCompanion::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	if( info.GetAttacker() )
@@ -2097,6 +2559,7 @@ int CNPC_PlayerCompanion::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CNPC_PlayerCompanion::OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttackerEnt )
 {
+	AI_PROFILE_SCOPE( CNPC_PlayerCompanion_OnFriendDamaged );
 	BaseClass::OnFriendDamaged( pSquadmate, pAttackerEnt );
 
 	CAI_BaseNPC *pAttacker = pAttackerEnt->MyNPCPointer();
@@ -2178,6 +2641,7 @@ bool CNPC_PlayerCompanion::FValidateHintType( CAI_Hint *pHint )
 	{
 	case HINT_PLAYER_SQUAD_TRANSITON_POINT:
 	case HINT_WORLD_VISUALLY_INTERESTING_DONT_AIM:
+	case HINT_PLAYER_ALLY_MOVE_AWAY_DEST:
 		return true;
 		break;
 
@@ -2205,7 +2669,7 @@ bool CNPC_PlayerCompanion::ValidateNavGoal()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-
+#define COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS	18.0f
 bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 {
 	bool overrode = BaseClass::OverrideMove( flInterval );
@@ -2213,10 +2677,19 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 	{
 		string_t iszEnvFire = FindPooledString( "env_fire" );
 
+#ifdef HL2_EPISODIC			
+		string_t iszNPCTurretFloor = FindPooledString( "npc_turret_floor" );
+		string_t iszEntityFlame = FindPooledString( "entityflame" );
+#endif // HL2_EPISODIC
+
 		string_t classNames[] =
 		{
 			FindPooledString( "combine_mine" ),
 			iszEnvFire,
+#ifdef HL2_EPISODIC			
+			iszEntityFlame,
+			iszNPCTurretFloor,
+#endif // HL2_EPISODIC
 		};
 
 		if ( IsCurSchedule( SCHED_TAKE_COVER_FROM_BEST_SOUND ) )
@@ -2249,6 +2722,32 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 							}
 						}
 					}
+#ifdef HL2_EPISODIC			
+					else if ( pEntity->m_iClassname == iszNPCTurretFloor )
+					{
+						UTIL_TraceLine( WorldSpaceCenter(), pEntity->WorldSpaceCenter(), MASK_OPAQUE, pEntity, COLLISION_GROUP_NONE, &tr );
+						if (tr.fraction == 1.0 && !tr.startsolid)
+						{
+							float radius = 1.1 * pEntity->CollisionProp()->BoundingRadius2D(); 
+							GetLocalNavigator()->AddObstacle( pEntity->WorldSpaceCenter(), radius, AIMST_AVOID_OBJECT );
+						}
+					}
+					else if( pEntity->m_iClassname == iszEntityFlame && pEntity->GetParent() && !pEntity->GetParent()->IsNPC() )
+					{
+						float flDist = pEntity->WorldSpaceCenter().DistTo( WorldSpaceCenter() );
+
+						if( flDist > COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS )
+						{
+							// If I'm not in the flame, prevent me from getting close to it.
+							// If I AM in the flame, avoid placing an obstacle until the flame frightens me away from itself.
+							UTIL_TraceLine( WorldSpaceCenter(), pEntity->WorldSpaceCenter(), MASK_OPAQUE, pEntity, COLLISION_GROUP_NONE, &tr );
+							if (tr.fraction == 1.0 && !tr.startsolid)
+							{
+								GetLocalNavigator()->AddObstacle( pEntity->WorldSpaceCenter(), COMPANION_EPISODIC_AVOID_ENTITY_FLAME_RADIUS, AIMST_AVOID_OBJECT );
+							}
+						}
+					}
+#endif // HL2_EPISODIC
 					else
 					{
 						CBounceBomb *pBomb = dynamic_cast<CBounceBomb *>(pEntity);
@@ -2273,6 +2772,7 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 
 
 //-----------------------------------------------------------------------------
+// Purpose: 
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::MovementCost( int moveType, const Vector &vecStart, const Vector &vecEnd, float *pCost )
 {
@@ -2305,6 +2805,30 @@ bool CNPC_PlayerCompanion::MovementCost( int moveType, const Vector &vecStart, c
 				bResult = true;
 			}
 		}
+
+#ifdef HL2_EPISODIC
+
+		// Test the node connection against an approximated sphere representing the body of the vehicle
+		if ( m_PassengerBehavior.IsEnabled() && m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_OUTSIDE )
+		{
+			CPropVehicleDriveable *pVehicle = m_PassengerBehavior.GetTargetVehicle();
+			if ( pVehicle != NULL )
+			{
+				// Intersect a ray between the vehicle and our node path
+				// FIXME: Vehicles tend to report odd bounds; clarification is needed as to why - jdw
+				Vector vecForward;
+				pVehicle->GetVectors( &vecForward, NULL, NULL );
+				Vector vecCenter = pVehicle->WorldSpaceCenter() - ( vecForward * 32.0f );
+
+				// FIXME: Below is an approximation for the EP2 buggy
+				if ( IsRayIntersectingSphere( vecStart, (vecEnd-vecStart), vecCenter, pVehicle->CollisionProp()->BoundingRadius2D()*0.65f ) )
+				{
+					*pCost = FLT_MAX; // Don't use this link!
+					bResult = true;
+				}
+			}
+		}
+#endif // HL2_EPISODIC
 	}
 	return bResult;
 }
@@ -2375,12 +2899,17 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 	if ( !AI_IsSinglePlayer() )
 		return;
 
+	if ( !m_bAlwaysTransition && !IsInPlayerSquad() && ( !GetFollowBehavior().GetFollowTarget() || !GetFollowBehavior().GetFollowTarget()->IsPlayer() ) )
+		return;
+
 	CBaseEntity *pPlayer = UTIL_GetLocalPlayer();
 	const Vector &playerPos = pPlayer->GetAbsOrigin();
 
-	bool bPathToPlayer = ( Classify() == CLASS_PLAYER_ALLY_VITAL );
+	// Mark us as already having succeeded if we're vital or always meant to come with the player
+	bool bAlwaysTransition = ( ( Classify() == CLASS_PLAYER_ALLY_VITAL ) || m_bAlwaysTransition );
+	bool bPathToPlayer = bAlwaysTransition;
 
-	if ( Classify() != CLASS_PLAYER_ALLY_VITAL )
+	if ( bAlwaysTransition == false )
 	{
 		AI_Waypoint_t *pPathToPlayer = GetPathfinder()->BuildRoute( GetAbsOrigin(), playerPos, pPlayer, 0 );
 
@@ -2404,7 +2933,7 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 	bool bMadeIt = false;
 	Vector teleportLocation;
 
-	CAI_Hint *pHint = CAI_HintManager::FindHint( this, HINT_PLAYER_SQUAD_TRANSITON_POINT, bits_HINT_NODE_NEAREST, 60*12, &playerPos );
+	CAI_Hint *pHint = CAI_HintManager::FindHint( this, HINT_PLAYER_SQUAD_TRANSITON_POINT, bits_HINT_NODE_NEAREST, PLAYERCOMPANION_TRANSITION_SEARCH_DISTANCE, &playerPos );
 	while ( pHint )
 	{
 		pHint->Lock(this);
@@ -2437,11 +2966,19 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 				break;
 			}
 		}
-		pHint = CAI_HintManager::FindHint( this, HINT_PLAYER_SQUAD_TRANSITON_POINT, bits_HINT_NODE_NEAREST, 32*12, &playerPos );
+		else
+		{
+			if ( g_debug_transitions.GetBool() )
+			{
+				NDebugOverlay::Box( teleportLocation, GetHullMins(), GetHullMaxs(), 255,0,0, 8, 999 );
+			}
+		}
+		pHint = CAI_HintManager::FindHint( this, HINT_PLAYER_SQUAD_TRANSITON_POINT, bits_HINT_NODE_NEAREST, PLAYERCOMPANION_TRANSITION_SEARCH_DISTANCE, &playerPos );
 	}
 	if ( !bMadeIt )
 	{
-		if ( Classify() == CLASS_PLAYER_ALLY_VITAL )
+		// Force us if we didn't find a normal route
+		if ( bAlwaysTransition )
 		{
 			bMadeIt = FindSpotForNPCInRadius( &teleportLocation, pPlayer->GetAbsOrigin(), this, 32.0*1.414, true );
 			if ( !bMadeIt )
@@ -2450,9 +2987,29 @@ void CNPC_PlayerCompanion::InputOutsideTransition( inputdata_t &inputdata )
 	}
 
 	if ( bMadeIt )
+	{
 		Teleport( &teleportLocation, NULL, NULL );
+	}
 	else
+	{
 		DevMsg( 2, "NPC \"%s\" failed to find a suitable transition a point\n", STRING(GetEntityName()) );
+	}
+
+	BaseClass::InputOutsideTransition( inputdata );
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputSetReadinessPanic( inputdata_t &inputdata )
+{
+	SetReadinessLevel( AIRL_PANIC, true, true );
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputSetReadinessStealth( inputdata_t &inputdata )
+{
+	SetReadinessLevel( AIRL_STEALTH, true, true );
 }
 
 //------------------------------------------------------------------------------
@@ -2481,17 +3038,234 @@ void CNPC_PlayerCompanion::InputSetReadinessHigh( inputdata_t &inputdata )
 void CNPC_PlayerCompanion::InputLockReadiness( inputdata_t &inputdata )
 {
 	float value = inputdata.value.Float();
+	LockReadiness( value );
+}
 
-	if( value == -1.0f )
+//-----------------------------------------------------------------------------
+// Purpose: Locks the readiness state of the NCP
+// Input  : time - if -1, the lock is effectively infinite
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::LockReadiness( float duration )
+{
+	if ( duration == -1.0f )
 	{
 		m_flReadinessLockedUntil = FLT_MAX;
 	}
 	else
 	{
-		m_flReadinessLockedUntil = gpGlobals->curtime + value;
+		m_flReadinessLockedUntil = gpGlobals->curtime + duration;
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Unlocks the readiness state
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::UnlockReadiness( void )
+{
+	// Set to the past
+	m_flReadinessLockedUntil = gpGlobals->curtime - 0.1f;
+}
+
+//------------------------------------------------------------------------------
+#ifdef HL2_EPISODIC
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::ShouldDeferToPassengerBehavior( void )
+{
+	if ( m_PassengerBehavior.CanSelectSchedule() )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Determines if this player companion is capable of entering a vehicle
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::CanEnterVehicle( void )
+{
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::CanExitVehicle( void )
+{
+	// See if we can exit our vehicle
+	CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(m_PassengerBehavior.GetTargetVehicle());
+	if ( pVehicle != NULL && pVehicle->NPC_CanExitVehicle( this, true ) == false )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &inputdata - contains the entity name of the vehicle to enter
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputEnterVehicle( inputdata_t &inputdata )
+{
+	// Must be allowed to do this
+	if ( CanEnterVehicle() == false )
+		return;
+
+	// Find the target vehicle
+	CBaseEntity *pEntity = FindNamedEntity( inputdata.value.String() );
+	CPropJeepEpisodic *pVehicle = dynamic_cast<CPropJeepEpisodic *>(pEntity);
+
+	// Get in the car if it's valid
+	if ( pVehicle != NULL && pVehicle->NPC_CanEnterVehicle( this, true ) )
+	{
+		// Set her into a "passenger" behavior
+		m_PassengerBehavior.Enable( pVehicle );
+		m_PassengerBehavior.EnterVehicle();
+		
+		// Only do this if we're outside the vehicle
+		if ( m_PassengerBehavior.GetPassengerState() == PASSENGER_STATE_OUTSIDE )
+		{
+			SetCondition( COND_PC_BECOMING_PASSENGER );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputExitVehicle( inputdata_t &inputdata )
+{
+	// See if we're allowed to exit the vehicle
+	if ( CanExitVehicle() == false )
+		return;
+
+	m_PassengerBehavior.ExitVehicle();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_PlayerCompanion::IsInAVehicle( void )
+{
+	// Must be active and getting in/out of vehicle
+	if ( m_PassengerBehavior.IsEnabled() && m_PassengerBehavior.GetPassengerState() != PASSENGER_STATE_OUTSIDE )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : IServerVehicle - 
+//-----------------------------------------------------------------------------
+IServerVehicle *CNPC_PlayerCompanion::GetVehicle( void )
+{
+	if ( IsInAVehicle() )
+	{
+		CPropVehicleDriveable *pDriveableVehicle = m_PassengerBehavior.GetTargetVehicle();
+		if ( pDriveableVehicle != NULL )
+			return pDriveableVehicle->GetServerVehicle();
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : CBaseEntity
+//-----------------------------------------------------------------------------
+CBaseEntity *CNPC_PlayerCompanion::GetVehicleEntity( void )
+{
+	if ( IsInAVehicle() )
+	{
+		CPropVehicleDriveable *pDriveableVehicle = m_PassengerBehavior.GetTargetVehicle();
+			return pDriveableVehicle;
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Override our efficiency so that we don't jitter when we're in the middle
+//			of our enter/exit animations.
+// Input  : bInPVS - Whether we're in the PVS or not
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::UpdateEfficiency( bool bInPVS )
+{ 
+	// If we're transitioning and in the PVS, we override our efficiency
+	if ( IsInAVehicle() && bInPVS )
+	{
+		PassengerState_e nState = m_PassengerBehavior.GetPassengerState();
+		if ( nState == PASSENGER_STATE_ENTERING || nState == PASSENGER_STATE_EXITING )
+		{
+			SetEfficiency( AIE_NORMAL );
+			return;
+		}
+	}
+
+	// Do the default behavior
+	BaseClass::UpdateEfficiency( bInPVS );
+}
+
+
+#endif	//HL2_EPISODIC
+//------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Purpose: Always transition along with the player
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputEnableAlwaysTransition( inputdata_t &inputdata )
+{
+	m_bAlwaysTransition = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop always transitioning along with the player
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputDisableAlwaysTransition( inputdata_t &inputdata )
+{
+	m_bAlwaysTransition = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop picking up weapons from the ground
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputEnableWeaponPickup( inputdata_t &inputdata )
+{
+	m_bDontPickupWeapons = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Return to default behavior of picking up better weapons on the ground
+//-----------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputDisableWeaponPickup( inputdata_t &inputdata )
+{
+	m_bDontPickupWeapons = true;
+}
+
+//------------------------------------------------------------------------------
+// Purpose: Give the NPC in question the weapon specified
+//------------------------------------------------------------------------------
+void CNPC_PlayerCompanion::InputGiveWeapon( inputdata_t &inputdata )
+{
+	// Give the NPC the specified weapon
+	string_t iszWeaponName = inputdata.value.StringID();
+	if ( iszWeaponName != NULL_STRING )
+	{
+		if( Classify() == CLASS_PLAYER_ALLY_VITAL )
+		{
+			m_iszPendingWeapon = iszWeaponName;
+		}
+		else
+		{
+			GiveWeapon( iszWeaponName );
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -2501,20 +3275,33 @@ void CNPC_PlayerCompanion::InputLockReadiness( inputdata_t &inputdata )
 
 AI_BEGIN_CUSTOM_NPC( player_companion_base, CNPC_PlayerCompanion )
 
+	// AI Interaction for being hit by a physics object
+	DECLARE_INTERACTION(g_interactionHitByPlayerThrownPhysObj)
+	DECLARE_INTERACTION(g_interactionPlayerPuntedHeavyObject)
+
 	DECLARE_CONDITION( COND_PC_HURTBYFIRE )
 	DECLARE_CONDITION( COND_PC_SAFE_FROM_MORTAR )
+	DECLARE_CONDITION( COND_PC_BECOMING_PASSENGER )
 
 	DECLARE_TASK( TASK_PC_WAITOUT_MORTAR )
 	DECLARE_TASK( TASK_PC_GET_PATH_OFF_COMPANION )
 
+	DECLARE_ANIMEVENT( AE_COMPANION_PRODUCE_FLARE )
+	DECLARE_ANIMEVENT( AE_COMPANION_LIGHT_FLARE )
+	DECLARE_ANIMEVENT( AE_COMPANION_RELEASE_FLARE )
+
 	//=========================================================
 	// > TakeCoverFromBestSound
 	//
-	//			hide from the loudest sound source
+	//	Find cover and move towards it, but only do so for a short
+	//  time. This is appropriate when the dangerous item is going
+	//  to detonate very soon. This way our NPC doesn't run a great
+	//  distance from an object that explodes shortly after the NPC
+	//  gets underway.
 	//=========================================================
 	DEFINE_SCHEDULE
 	(
-		SCHED_PC_TAKE_COVER_FROM_BEST_SOUND,
+		SCHED_PC_MOVE_TOWARDS_COVER_FROM_BEST_SOUND,
 
 		"	Tasks"
 		"		 TASK_SET_FAIL_SCHEDULE				SCHEDULE:SCHED_FLEE_FROM_BEST_SOUND"
@@ -2522,15 +3309,35 @@ AI_BEGIN_CUSTOM_NPC( player_companion_base, CNPC_PlayerCompanion )
 		"		 TASK_SET_TOLERANCE_DISTANCE		24"
 		"		 TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION	0"
 		"		 TASK_FIND_COVER_FROM_BEST_SOUND	0"
-		"		 TASK_RUN_PATH_TIMED				1.5"
+		"		 TASK_RUN_PATH_TIMED				1.0"
+		"		 TASK_STOP_MOVING					0"
 		"		 TASK_FACE_SAVEPOSITION				0"
 		"		 TASK_SET_ACTIVITY					ACTIVITY:ACT_IDLE"	// Translated to cover
 		""
 		"	Interrupts"
-		"		COND_NEW_ENEMY"
 		"		COND_PC_SAFE_FROM_MORTAR"
 	)
 
+	DEFINE_SCHEDULE
+	(
+	SCHED_PC_TAKE_COVER_FROM_BEST_SOUND,
+
+	"	Tasks"
+	"		 TASK_SET_FAIL_SCHEDULE								SCHEDULE:SCHED_FLEE_FROM_BEST_SOUND"
+	"		 TASK_STOP_MOVING									0"
+	"		 TASK_SET_TOLERANCE_DISTANCE						24"
+	"		 TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION	0"
+	"		 TASK_FIND_COVER_FROM_BEST_SOUND					0"
+	"		 TASK_RUN_PATH										0"
+	"		 TASK_WAIT_FOR_MOVEMENT								0"
+	"		 TASK_STOP_MOVING									0"
+	"		 TASK_FACE_SAVEPOSITION								0"
+	"		 TASK_SET_ACTIVITY									ACTIVITY:ACT_IDLE"	// Translated to cover
+	""
+	"	Interrupts"
+	"		COND_NEW_ENEMY"
+	"		COND_PC_SAFE_FROM_MORTAR"
+	)
 
 	DEFINE_SCHEDULE	
 	(

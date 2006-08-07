@@ -9,6 +9,8 @@
 #include "cbase.h"
 #include "vstdlib/ICommandLine.h"
 #include "igamesystem.h"
+#include "filesystem.h"
+#include <KeyValues.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -112,6 +114,9 @@ void CPointDevShotCamera::DevShotThink_Setup( void )
 	// Hide stuff
 	engine->ClientCommand( pPlayer->edict(), "developer 0" );
 	engine->ClientCommand( pPlayer->edict(), "cl_drawhud 0" );
+	engine->ClientCommand( pPlayer->edict(), "sv_cheats 1" );
+	engine->ClientCommand( pPlayer->edict(), "god" );
+	engine->ClientCommand( pPlayer->edict(), "notarget" );
 
 	pPlayer->AddSolidFlags( FSOLID_NOT_SOLID );
 	pPlayer->EnableControl(FALSE);
@@ -124,7 +129,7 @@ void CPointDevShotCamera::DevShotThink_Setup( void )
 		pPlayer->GetActiveWeapon()->AddEffects( EF_NODRAW );
 	}
 
-	UpdateTransmitState();
+	DispatchUpdateTransmitState();
 
 	// Now take the shot next frame
 	SetThink( &CPointDevShotCamera::DevShotThink_TakeShot );
@@ -172,13 +177,19 @@ void CPointDevShotCamera::DevShotThink_PostShot( void )
 //-----------------------------------------------------------------------------
 // Purpose: Game system to detect maps without cameras in them, and move on
 //-----------------------------------------------------------------------------
-class CDevShotSystem : public CAutoGameSystem
+class CDevShotSystem : public CAutoGameSystemPerFrame
 {
 public:
+
+	CDevShotSystem( char const *name ) : CAutoGameSystemPerFrame( name )
+	{
+	}
+
 	virtual void LevelInitPreEntity()
 	{
 		m_bIssuedNextMapCommand = false;
 		g_iDevShotCameraCount = 0;
+		m_bParsedMapFile = false;
 	}
 
 	virtual void SafeRemoveIfDesired( void )
@@ -200,22 +211,58 @@ public:
 		if ( m_bIssuedNextMapCommand )
 			return;
 
-		if ( !gEntList.FindEntityByClassname( NULL, "point_devshot_camera" ) )
+		if ( !m_bParsedMapFile )
 		{
-			Warning( "Devshots: No point_devshot_camera in %s. Moving to next map.\n", STRING( gpGlobals->mapname ) );
+			m_bParsedMapFile = true;
 
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayerOrListenServerHost();
-			if ( pPlayer )
+			// See if we've got a camera file to import cameras from
+			char szFullName[512];
+			Q_snprintf(szFullName,sizeof(szFullName), "maps/%s.txt", STRING( gpGlobals->mapname ));
+			KeyValues *pkvMapCameras = new KeyValues( "MapCameras" );
+			if ( pkvMapCameras->LoadFromFile( filesystem, szFullName, "MOD" ) )
 			{
-				engine->ClientCommand( pPlayer->edict(), "devshots_nextmap" );
-				m_bIssuedNextMapCommand = true;
-				return;
+				Warning( "Devshots: Loading point_devshot_camera positions from %s. \n", szFullName );
+
+				// Get each camera, and add it to our list
+				KeyValues *pkvCamera = pkvMapCameras->GetFirstSubKey();
+				while ( pkvCamera )
+				{
+					// Get camera name
+					const char *pCameraName = pkvCamera->GetName();
+
+					// Make a camera, and move it to the position specified
+					CPointDevShotCamera	*pCamera = (CPointDevShotCamera*)CreateEntityByName( "point_devshot_camera" );
+					Assert( pCamera );
+					pCamera->KeyValue( "cameraname", pCameraName );
+					pCamera->KeyValue( "origin", pkvCamera->GetString( "origin", "0 0 0" ) );
+					pCamera->KeyValue( "angles", pkvCamera->GetString( "angles", "0 0 0" ) );
+					pCamera->KeyValue( "FOV", pkvCamera->GetString( "FOV", "75" ) );
+					DispatchSpawn( pCamera );
+					pCamera->Activate();
+
+					// Move to next camera
+					pkvCamera = pkvCamera->GetNextKey();
+				}
+			}
+
+			if ( !g_iDevShotCameraCount )
+			{
+				Warning( "Devshots: No point_devshot_camera in %s. Moving to next map.\n", STRING( gpGlobals->mapname ) );
+
+				CBasePlayer *pPlayer = UTIL_GetLocalPlayerOrListenServerHost();
+				if ( pPlayer )
+				{
+					engine->ClientCommand( pPlayer->edict(), "devshots_nextmap" );
+					m_bIssuedNextMapCommand = true;
+					return;
+				}
 			}
 		}
 	}
 
 private:
 	bool	m_bIssuedNextMapCommand;
+	bool	m_bParsedMapFile;
 };
 
-CDevShotSystem	DevShotSystem;
+CDevShotSystem	DevShotSystem( "CDevShotSystem" );

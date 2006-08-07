@@ -17,6 +17,7 @@
 #include "IClientEntityInternal.h"
 #include "engine/ishadowmgr.h"
 #include "IVRenderView.h"
+#include "toolframework/IToolEntity.h"
 
 //-----------------------------------------------------------------------------
 // Forward decls
@@ -34,18 +35,11 @@ enum ShadowReceiver_t
 	SHADOW_RECEIVER_STUDIO_MODEL,
 };
 
-enum ClientShadowFlags_t
-{
-	SHADOW_FLAGS_USE_RENDER_TO_TEXTURE	= (SHADOW_FLAGS_LAST_FLAG<<1),
-	SHADOW_FLAGS_ANIMATING_SOURCE		= (SHADOW_FLAGS_LAST_FLAG<<2),
-	// Update this if you add flags
-	CLIENT_SHADOW_FLAGS_LAST_FLAG		= SHADOW_FLAGS_ANIMATING_SOURCE
-};
 
 //-----------------------------------------------------------------------------
 // The class responsible for dealing with shadows on the client side
 //-----------------------------------------------------------------------------
-class IClientShadowMgr : public IGameSystem
+abstract_class IClientShadowMgr : public IGameSystemPerFrame
 {
 public:
 	// Create, destroy shadows
@@ -64,7 +58,7 @@ public:
 
 	// Used to cause shadows to be re-projected against the world.
 	virtual void AddToDirtyShadowList( ClientShadowHandle_t handle, bool force = false ) = 0;
-	virtual void AddToDirtyShadowList( C_BaseEntity *pEntity, bool force = false ) = 0;
+	virtual void AddToDirtyShadowList( IClientRenderable *pRenderable, bool force = false ) = 0;
 
 	// deals with shadows being added to shadow receivers
 	virtual void AddShadowToReceiver( ClientShadowHandle_t handle,
@@ -90,6 +84,17 @@ public:
 
 	// Marks the render-to-texture shadow as needing to be re-rendered
 	virtual void MarkRenderToTextureShadowDirty( ClientShadowHandle_t handle ) = 0;
+
+	// Advance the frame
+	virtual void AdvanceFrame() = 0;
+
+	// Set and clear flashlight target renderable
+	virtual void SetFlashlightTarget( ClientShadowHandle_t shadowHandle, EHANDLE targetEntity ) = 0;
+
+	// Set flashlight light world flag
+	virtual void SetFlashlightLightWorld( ClientShadowHandle_t shadowHandle, bool bLightWorld ) = 0;
+
+	virtual void SetShadowsDisabled( bool bDisabled ) = 0;
 };
 
 

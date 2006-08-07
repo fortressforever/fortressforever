@@ -53,7 +53,7 @@ const VMatrix &CurrentWorldToViewMatrix();
 const Vector &CurrentViewForward();
 const Vector &CurrentViewRight();
 const Vector &CurrentViewUp();
-int CurrentViewID();
+enum view_id_t CurrentViewID();
 
 void AllowCurrentViewAccess( bool allow );
 bool IsCurrentViewAccessAllowed();

@@ -29,9 +29,11 @@ public:
 	void SetChaseCamParams( float flOffset, float flDistance, float flTheta, float flPhi  );
 	void SpecNextPlayer( bool bInverse );
 	void SpecNamedPlayer( const char *szPlayerName );
+	void ToggleChaseAsFirstPerson();
 
-	int  GetObserverMode();	// returns current camera mode
-	C_BaseEntity *GetObserverTarget();  // return primary target
+	int  GetMode();	// returns current camera mode
+	C_BaseEntity *GetPrimaryTarget();  // return primary target
+	void SetPrimaryTarget( int nEntity); // set the primary obs target
 	C_BaseEntity *GetCameraMan();  // return camera entity if any
 
 	void CreateMove(CUserCmd *cmd);
@@ -43,10 +45,14 @@ protected:
 	void CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 
+	void SmoothCameraAngle( QAngle& targetAngle );
+	void SetCameraAngle( QAngle& targetAngle );
+
 	int			m_nCameraMode; // current camera mode
 	int			m_iCameraMan; // camera man entindex or 0
 	Vector		m_vCamOrigin;  //current camera origin
 	QAngle		m_aCamAngle;   //current camera angle
+	QAngle		m_aAdjustAngle;   //dynamic angle adjustment to avoid obstacles
 	int			m_iTraget1;	// first tracked target or 0
 	int			m_iTraget2; // second tracked target or 0
 	float		m_flFOV; // current FOV
@@ -56,11 +62,12 @@ protected:
 	float		m_flTheta; // view angle horizontal 
 	float		m_flPhi; // view angle vertical
 	float		m_flInertia; // camera inertia 0..100
+	float		m_flLastAngleUpdateTime;
+	bool		m_bChaseAsFirstPerson;
 };
 
+
 extern C_HLTVCamera *HLTVCamera();	// get Singelton
-
-
 
 
 

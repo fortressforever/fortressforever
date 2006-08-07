@@ -16,7 +16,7 @@
 
 
 
-class CBaseHeadcrab : public CAI_BaseNPC
+abstract_class CBaseHeadcrab : public CAI_BaseNPC
 {
 	DECLARE_CLASS( CBaseHeadcrab, CAI_BaseNPC );
 
@@ -41,6 +41,7 @@ public:
 	bool	CorpseGib( const CTakeDamageInfo &info );
 	void	Touch( CBaseEntity *pOther );
 	Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
+	float	GetAutoAimRadius() { return 12.0f; }
 	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	void	Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 
@@ -55,6 +56,8 @@ public:
 	void	Event_Killed( const CTakeDamageInfo &info );
 	void	BuildScheduleTestBits( void );
 	bool	FValidateHintType( CAI_Hint *pHint );
+
+	bool	IsJumping( void ) { return m_bMidJump; }
 
 	virtual void BiteSound( void ) = 0;
 	virtual void AttackSound( void ) {};
@@ -72,6 +75,21 @@ public:
 	void	CrawlFromCanister();
 
 	virtual	bool		AllowedToIgnite( void ) { return true; }
+
+	virtual bool CanBeAnEnemyOf( CBaseEntity *pEnemy );
+
+	bool	IsHangingFromCeiling( void ) 
+	{ 
+#ifdef HL2_EPISODIC
+		return m_bHangingFromCeiling;	
+#else
+		return false;
+#endif
+	}
+
+	virtual void PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot );
+
+	void DropFromCeiling( void );
 
 	DEFINE_CUSTOM_AI;
 	DECLARE_DATADESC();
@@ -97,6 +115,9 @@ protected:
 	void InputBurrowImmediate( inputdata_t &inputdata );
 	void InputUnburrow( inputdata_t &inputdata );
 
+	void InputStartHangingFromCeiling( inputdata_t &inputdata );
+	void InputDropFromCeiling( inputdata_t &inputdata );
+
 	int CalcDamageInfo( CTakeDamageInfo *pInfo );
 	void CreateDust( bool placeDecal = true );
 
@@ -117,10 +138,14 @@ protected:
 	bool	m_bBurrowed;
 	bool	m_bHidden;
 	bool	m_bMidJump;
+	bool	m_bAttackFailed;		// whether we ran into a wall during a jump.
 
 	float	m_flBurrowTime;
 	int		m_nContext;			// for FValidateHintType context
 	int		m_nJumpFromCanisterDir;
+
+	bool	m_bHangingFromCeiling;
+	float	m_flIlluminatedTime;
 };
 
 
@@ -141,8 +166,8 @@ public:
 	Activity NPC_TranslateActivity( Activity eNewActivity );
 
 	void	BiteSound( void );
-	void	PainSound( void );
-	void	DeathSound( void );
+	void	PainSound( const CTakeDamageInfo &info );
+	void	DeathSound( const CTakeDamageInfo &info );
 	void	IdleSound( void );
 	void	AlertSound( void );
 	void	AttackSound( void );
@@ -162,7 +187,7 @@ public:
 
 	void	Precache( void );
 	void	Spawn( void );
-	bool	QuerySeeEntity(CBaseEntity *pSightEnt);
+	bool	QuerySeeEntity(CBaseEntity *pSightEnt, bool bOnlyHateOrFearIfNPC = false);
 
 	float	MaxYawSpeed( void );
 
@@ -180,8 +205,8 @@ public:
 	Vector	m_vecJumpVel;
 
 	void	BiteSound( void );
-	void	PainSound( void );
-	void	DeathSound( void );
+	void	PainSound( const CTakeDamageInfo &info );
+	void	DeathSound( const CTakeDamageInfo &info );
 	void	IdleSound( void );
 	void	AlertSound( void );
 	void	AttackSound( void );
@@ -234,8 +259,8 @@ public:
 
 	bool IsHeavyDamage( const CTakeDamageInfo &info );
 
-	virtual void PainSound( void );
-	virtual void DeathSound( void );
+	virtual void PainSound( const CTakeDamageInfo &info );
+	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual void IdleSound( void );
 	virtual void AlertSound( void );
 	virtual void ImpactSound( void );

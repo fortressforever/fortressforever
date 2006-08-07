@@ -39,13 +39,19 @@ LINK_ENTITY_TO_CLASS( aitesthull, CAI_TestHull );
 //-----------------------------------------------------------------------------
 CAI_TestHull*	CAI_TestHull::pTestHull			= NULL;
 
+#ifdef CSTRIKE_DLL
+#define PLAYER_MODEL "models/player/ct_urban.mdl"
+#else
+#define PLAYER_MODEL "models/player.mdl"
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Make sure we have a "player.mdl" hull to test with
 //-----------------------------------------------------------------------------
 void CAI_TestHull::Precache()
 {
 	BaseClass::Precache();
-	PrecacheModel( "models/player.mdl" );
+	PrecacheModel( PLAYER_MODEL );
 }
 
 //=========================================================
@@ -55,7 +61,7 @@ void CAI_TestHull::Spawn(void)
 {
 	Precache();
 
-	SetModel( "models/player.mdl" );
+	SetModel( PLAYER_MODEL );
 
 	// Set an initial hull size (this will change later)
 	SetHullType(HULL_HUMAN);
@@ -206,7 +212,7 @@ int CNodeEnt::Spawn( const char *pMapData )
 		}
 		else
 		{
-			DevMsg("WARNING: Hint node (HammerID: %d) with no hint type!\n", m_NodeData.nWCNodeID );
+			Warning("info_hint (HammerID: %d, position (%.2f, %.2f, %.2f)) with no hint type.\n", m_NodeData.nWCNodeID, m_NodeData.vecPosition.x, m_NodeData.vecPosition.y, m_NodeData.vecPosition.z );
 		}
 		UTIL_RemoveImmediate( this );
 		return -1;

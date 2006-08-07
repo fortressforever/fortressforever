@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: 
 //
@@ -11,6 +11,22 @@
 #pragma once
 #endif
 
+#include "convar.h"
+#include "vector.h"
+#include "materialsystem/MaterialSystemUtil.h"
+
+
+//-----------------------------------------------------------------------------
+// Flags passed in with view setup
+//-----------------------------------------------------------------------------
+enum ClearFlags_t
+{
+	VIEW_CLEAR_COLOR = 0x1,
+	VIEW_CLEAR_DEPTH = 0x2,
+	VIEW_CLEAR_FULL_TARGET = 0x4,
+};
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Renderer setup data.  
 //-----------------------------------------------------------------------------
@@ -19,10 +35,12 @@ class CViewSetup
 public:
 	CViewSetup()
 	{
-		m_bForceAspectRatio1To1 = false;
+		m_flAspectRatio = 0.0f;
 		m_bRenderToSubrectOfLargerScreen = false;
-		bForceClearWholeRenderTarget = false;
-		m_bUseRenderTargetAspectRatio = false;
+		m_bDoBloomAndToneMapping = true;
+		m_bOffCenter = false;
+		m_bCacheFullSceneState = false;
+//		m_bUseExplicitViewVector = false;
 	}
 
 // shared by 2D & 3D views
@@ -38,13 +56,6 @@ public:
 	int			width;				
 	// height of view window
 	int			height;				
-
-	// clear the color buffer before rendering this view?
-	bool		clearColor;			
-	// clear the Depth buffer before rendering this view?
-	bool		clearDepth;			
-	// NOTE: This is for a workaround on ATI with building cubemaps.  Clearing just the viewport doesn't seem to work properly.
-	bool		bForceClearWholeRenderTarget;
 
 // the rest are only used by 3D views
 
@@ -80,15 +91,28 @@ public:
 	// local Z coordinate of far plane of camera ( when rendering view model )
 	float		zFarViewmodel;		
 
-	bool		m_bForceAspectRatio1To1;
-
 	// set to true if this is to draw into a subrect of the larger screen
 	// this really is a hack, but no more than the rest of the way this class is used
 	bool		m_bRenderToSubrectOfLargerScreen;
 
-	// Use this for situations like water where you want to render the aspect ratio of the
-	// back buffer into a square (or otherwise) render target.
-	bool		m_bUseRenderTargetAspectRatio;
+	// The aspect ratio to use for computing the perspective projection matrix
+	// (0.0f means use the viewport)
+	float		m_flAspectRatio;
+
+	// Controls for off-center projection (needed for poster rendering)
+	bool		m_bOffCenter;
+	float		m_flOffCenterTop;
+	float		m_flOffCenterBottom;
+	float		m_flOffCenterLeft;
+	float		m_flOffCenterRight;
+
+	// Control that the SFM needs to tell the engine not to do certain post-processing steps
+	bool		m_bDoBloomAndToneMapping;
+
+	// Cached mode for certain full-scene per-frame varying state such as sun entity coverage
+	bool		m_bCacheFullSceneState;
 };
+
+
 
 #endif // VIEW_SHARED_H

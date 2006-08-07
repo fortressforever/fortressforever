@@ -48,8 +48,8 @@ public:
 
 		m_flPredictiveSpeedAdjust = 1.0f;
 		m_flReactiveSpeedAdjust = 1.0f;
-		m_flPrevOrigin1.Init();
-		m_flPrevOrigin2.Init();
+		m_vecPrevOrigin1.Init();
+		m_vecPrevOrigin2.Init();
 
 		m_prevYaw = 0.0f;
 		m_doTurn = 0.0f;
@@ -61,6 +61,7 @@ public:
 	void 	MoveClimbStart( const Vector &climbDest, const Vector &climbDir, float climbDist, float yaw );
 	void 	MoveJumpStart( const Vector &velocity );
 
+	void	ResetMoveCalculations();
 	void	MoveStart();
 	void	ResetGoalSequence();
 	void	MoveStop();
@@ -175,8 +176,8 @@ private:
 
 	float			m_flPredictiveSpeedAdjust;		// predictive speed adjust from probing slope 
 	float			m_flReactiveSpeedAdjust;		// reactive speed adjust when slope movement detected
-	Vector			m_flPrevOrigin1;
-	Vector			m_flPrevOrigin2;
+	Vector			m_vecPrevOrigin1;
+	Vector			m_vecPrevOrigin2;
 
 	//---------------------------------
 
@@ -216,6 +217,7 @@ public:
 
 	CAI_Motor *CreateMotor()
 	{
+		MEM_ALLOC_CREDIT();
 		return new CAI_BlendedMotor( this );
 	}
 

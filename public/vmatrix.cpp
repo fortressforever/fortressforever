@@ -6,6 +6,8 @@
 //
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include "basetypes.h"
 #include "vmatrix.h"
 #include "mathlib.h"
@@ -210,6 +212,11 @@ VMatrix& VMatrix::operator=(const VMatrix &mOther)
 	m[3][3] = mOther.m[3][3];
 
 	return *this;
+}
+
+bool VMatrix::operator==( const VMatrix& src ) const
+{
+	return !memcmp( src.m, m, sizeof(m) );
 }
 
 void VMatrix::MatrixMul( const VMatrix &vm, VMatrix &out ) const
@@ -1212,4 +1219,6 @@ void FrustumPlanesFromMatrix( const VMatrix &clipToWorld, Frustum_t &frustum )
 		Vector( 1.0f, 0.0f, 0.0f ), Vector( 0.0f, 0.0f, 1.0f ), Vector( 1.0f, 0.0f, 1.0f ), normal, dist );
 	frustum.SetPlane( FRUSTUM_BOTTOM, PLANE_ANYZ, normal, dist );
 }
+
+#endif // !_STATIC_LINKED || _SHARED_LIB
 

@@ -11,6 +11,7 @@
 #pragma once
 #endif
 
+#if !defined( NO_ENTITY_PREDICTION )
 //-----------------------------------------------------------------------------
 // Purpose: Wraps 32bit predictID to allow access and creation
 //-----------------------------------------------------------------------------
@@ -68,5 +69,7 @@ private:
 		 unsigned int instance	: 4;	// 32
 	} m_PredictableID;
 };
+
+#endif
 
 #endif // PREDICTABLEID_H

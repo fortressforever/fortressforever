@@ -178,8 +178,9 @@ int TestLine_r (int node, const Vector& start, const Vector& stop, Ray_t& ray, P
 			return CONTENTS_SOLID;
 
 		// Try static props...
-		if (StaticPropMgr()->ClipRayToStaticPropsInLeaf( propTested, ray, leafNumber ))
-			return CONTENTS_SOLID;
+		if ( ! g_bStaticPropPolys )
+			if (StaticPropMgr()->ClipRayToStaticPropsInLeaf( propTested, ray, leafNumber ))
+				return CONTENTS_SOLID;
 
         // no occlusion
         return 0;
@@ -220,14 +221,35 @@ int TestLine_r (int node, const Vector& start, const Vector& stop, Ray_t& ray, P
 PropTested_t s_PropTested[MAX_TOOL_THREADS+1];
 DispTested_t s_DispTested[MAX_TOOL_THREADS+1];
 
-int TestLine (const Vector& start, const Vector& stop, int node, int iThread )
+int TestLine (const Vector& start, const Vector& stop, int node, int iThread, 
+			  int static_prop_index_to_ignore )
 {
 	// Compute a bitfield, one per prop and disp...
 	StaticPropMgr()->StartRayTest( s_PropTested[iThread] );
 	StaticDispMgr()->StartRayTest( s_DispTested[iThread] );
 	Ray_t ray;
 	ray.Init( start, stop, vec3_origin, vec3_origin );
-	return TestLine_r( node, start, stop, ray, s_PropTested[iThread], s_DispTested[iThread] );
+	int hit=TestLine_r( node, start, stop, ray, s_PropTested[iThread], s_DispTested[iThread] );
+	if (hit == 0)
+	{
+		// check against our triangle soup list
+		FourRays myrays;
+		myrays.origin.DuplicateVector(start); //Vector(80,-179,65)); //start);
+		myrays.direction.DuplicateVector(stop); //Vector(80,-179,681)); //stop);
+		myrays.direction-=myrays.origin;
+		__m128 len=myrays.direction.length();
+		myrays.direction *= MMReciprocal( len );
+		RayTracingResult rt_result;
+		g_RtEnv.Trace4Rays(myrays, Four_Zeros, len, &rt_result, static_prop_index_to_ignore );
+		if ( (rt_result.HitIds[0] != -1) &&
+			 (rt_result.HitDistance.m128_f32[0] < len.m128_f32[0] ) )
+		{
+			return CONTENTS_SOLID;
+		}
+		else
+			return 0;		
+	}
+	return hit;
 }
 
 
@@ -540,7 +562,8 @@ void DM_RecursiveHullCheck( CToolTrace *trace, int num, float p1f, float p2f, co
 	DM_RecursiveHullCheck (trace, node->children[side^1], midf, p2f, mid, p2);
 }
 
-texinfo_t *TestLine_Surface( int node, const Vector& start, const Vector& stop, int iThread, bool canRecurse )
+texinfo_t *TestLine_Surface( int node, const Vector& start, const Vector& stop, int iThread, 
+							 bool canRecurse, int static_prop_index_to_ignore )
 {
 	Assert( start.IsValid() && stop.IsValid() );
 
@@ -565,9 +588,21 @@ texinfo_t *TestLine_Surface( int node, const Vector& start, const Vector& stop, 
 	//
 	// general sweeping through world
 	//
-	DM_RecursiveHullCheck( &trace, node, 0, 1, start, stop );
+ 	DM_RecursiveHullCheck( &trace, node, 0, 1, start, stop );
 
 	if ( trace.startsolid )
+		return 0;
+
+	FourRays myrays;
+	myrays.origin.DuplicateVector(start);
+	myrays.direction.DuplicateVector(stop);
+	myrays.direction-=myrays.origin;
+	__m128 len=myrays.direction.length();
+	myrays.direction *= MMReciprocal( len );
+	RayTracingResult rt_result;
+	g_RtEnv.Trace4Rays(myrays, Four_Zeros, len, &rt_result, static_prop_index_to_ignore );
+	if ( (rt_result.HitIds[0] != -1) &&
+		 (rt_result.HitDistance.m128_f32[0] < len.m128_f32[0] ) )
 		return 0;
 
 	// Now clip the ray to the displacement surfaces
@@ -580,8 +615,8 @@ texinfo_t *TestLine_Surface( int node, const Vector& start, const Vector& stop, 
 	if ( StaticDispMgr()->ClipRayToDisp( s_DispTested[iThread], ray ) )
 		return 0;
 
-	// Now clip the ray to the static props
-	if ( trace.fraction != 1.0 )
+ 	// Now clip the ray to the static props
+	if ( ( trace.fraction != 1.0 ) && (! g_bStaticPropPolys) )
 	{
 		Vector end;
 		VectorSubtract( stop, start, end );

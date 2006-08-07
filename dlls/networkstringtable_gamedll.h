@@ -15,9 +15,6 @@
 
 class CStringTableSaveRestoreOps;
 
-
-extern INetworkStringTableContainer *networkstringtable;
-
 // String tables used by the game DLL
 #define MAX_VGUI_SCREEN_STRING_BITS		8
 #define MAX_VGUI_SCREEN_STRINGS			( 1 << MAX_VGUI_SCREEN_STRING_BITS )
@@ -27,8 +24,14 @@ extern INetworkStringTableContainer *networkstringtable;
 #define MAX_MATERIAL_STRINGS			( 1 << MAX_MATERIAL_STRING_BITS )
 #define OVERLAY_MATERIAL_INVALID_STRING	( MAX_MATERIAL_STRINGS - 1 )
 
+#define MAX_CHOREO_SCENES_STRING_BITS	12
+#define MAX_CHOREO_SCENES_STRINGS		( 1 << MAX_CHOREO_SCENES_STRING_BITS )
+#define CHOREO_SCENES_INVALID_STRING	( MAX_CHOREO_SCENES_STRINGS - 1 )
+
+extern INetworkStringTableContainer *networkstringtable;
 extern INetworkStringTable *g_pStringTableVguiScreen;
 extern INetworkStringTable *g_pStringTableEffectDispatch;
+extern INetworkStringTable *g_pStringTableClientSideChoreoScenes;
 
 #define MAX_INFOPANEL_STRINGS			128
 

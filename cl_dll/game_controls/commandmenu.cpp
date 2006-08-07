@@ -74,6 +74,8 @@ void CommandMenu::OnMessage(const KeyValues *params, VPANEL fromPanel)
 			{
 				convar->SetValue( 1 );
 			}
+
+			UpdateMenu();
 		}
 		else
 		{
@@ -219,6 +221,16 @@ void CommandMenu::UpdateMenu()
 			}
 		}
 	}
+}
+
+void CommandMenu::SetVisible(bool state)
+{
+	if ( state && !IsVisible() )
+	{
+		UpdateMenu();
+	}
+
+	BaseClass::SetVisible( state );
 }
 
 bool CommandMenu::CheckRules(const char *rule, const char *ruledata)

@@ -51,6 +51,10 @@ public:
 	void	DelayThink();
 	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
 	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
+	void	SetCombineSpawned( bool combineSpawned ) { m_combineSpawned = combineSpawned; }
+	bool	IsCombineSpawned( void ) const { return m_combineSpawned; }
+	void	SetPunted( bool punt ) { m_punted = punt; }
+	bool	WasPunted( void ) const { return m_punted; }
 
 protected:
 	CHandle<CSprite>		m_pMainGlow;
@@ -58,6 +62,8 @@ protected:
 
 	float	m_flNextBlipTime;
 	bool	m_inSolid;
+	bool	m_combineSpawned;
+	bool	m_punted;
 };
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
@@ -69,6 +75,8 @@ BEGIN_DATADESC( CGrenadeFrag )
 	DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_flNextBlipTime, FIELD_TIME ),
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_punted, FIELD_BOOLEAN ),
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
@@ -113,6 +121,9 @@ void CGrenadeFrag::Spawn( void )
 	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FREQUENCY;
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
+
+	m_combineSpawned	= false;
+	m_punted			= false;
 
 	BaseClass::Spawn();
 }
@@ -282,6 +293,11 @@ void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 	m_bHasWarnedAI = true;
 #endif
 
+#ifdef HL2_EPISODIC
+	SetThrower( pPhysGunUser );
+	SetPunted( true );
+#endif
+
 	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
 }
 
@@ -339,7 +355,7 @@ int CGrenadeFrag::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	return BaseClass::OnTakeDamage( inputInfo );
 }
 
-CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer )
+CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )
 {
 	// Don't set the owner here, or the player can't interact with grenades he's thrown
 	CGrenadeFrag *pGrenade = (CGrenadeFrag *)CBaseEntity::Create( "npc_grenade_frag", position, angles, pOwner );
@@ -348,7 +364,29 @@ CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, 
 	pGrenade->SetVelocity( velocity, angVelocity );
 	pGrenade->SetThrower( ToBaseCombatCharacter( pOwner ) );
 	pGrenade->m_takedamage = DAMAGE_EVENTS_ONLY;
+	pGrenade->SetCombineSpawned( combineSpawned );
 
 	return pGrenade;
 }
 
+bool Fraggrenade_WasPunted( const CBaseEntity *pEntity )
+{
+	const CGrenadeFrag *pFrag = dynamic_cast<const CGrenadeFrag *>( pEntity );
+	if ( pFrag )
+	{
+		return pFrag->WasPunted();
+	}
+
+	return false;
+}
+
+bool Fraggrenade_WasCreatedByCombine( const CBaseEntity *pEntity )
+{
+	const CGrenadeFrag *pFrag = dynamic_cast<const CGrenadeFrag *>( pEntity );
+	if ( pFrag )
+	{
+		return pFrag->IsCombineSpawned();
+	}
+
+	return false;
+}

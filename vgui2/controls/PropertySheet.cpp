@@ -13,14 +13,16 @@
 #include <vgui/KeyCode.h>
 #include <KeyValues.h>
 #include <vgui/MouseCode.h>
-
+#include <vgui/ISurface.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Controls.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/PropertySheet.h>
 #include <vgui_controls/ComboBox.h>
 #include <vgui_controls/Panel.h>
+#include <vgui_controls/ToolWindow.h>
 #include <vgui_controls/TextImage.h>
+#include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/PropertyPage.h>
 #include "vgui_controls/AnimationController.h"
 
@@ -32,11 +34,81 @@ using namespace vgui;
 namespace vgui
 {
 
+class ContextLabel : public Label
+{
+	DECLARE_CLASS_SIMPLE( ContextLabel, Label );
+public:
+
+	ContextLabel( Button *parent, char const *panelName, char const *text ):
+		BaseClass( (Panel *)parent, panelName, text ),
+		m_pTabButton( parent )
+	{
+		SetBlockDragChaining( true );
+	}
+
+	virtual void OnMousePressed( MouseCode code )
+	{
+		if ( m_pTabButton )
+		{
+			m_pTabButton->FireActionSignal();
+		}
+	}
+
+	virtual void OnMouseReleased( MouseCode code )
+	{
+		BaseClass::OnMouseReleased( code );
+
+		if ( GetParent() )
+		{
+			GetParent()->OnCommand( "ShowContextMenu" );
+		}
+	}
+
+	virtual void ApplySchemeSettings( IScheme *pScheme )
+	{
+		BaseClass::ApplySchemeSettings( pScheme );
+
+		HFont marlett = pScheme->GetFont( "Marlett" );
+		SetFont( marlett );
+		SetTextInset( 0, 0 );
+		SetContentAlignment( Label::a_northwest );
+
+		if ( GetParent() )
+		{
+			SetFgColor( pScheme->GetColor( "Button.TextColor", GetParent()->GetFgColor() ) );
+			SetBgColor( GetParent()->GetBgColor() );
+		}
+	}
+private:
+
+	Button	*m_pTabButton;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Helper for drag drop
+// Input  : msglist - 
+// Output : static PropertySheet
+//-----------------------------------------------------------------------------
+static PropertySheet *IsDroppingSheet( CUtlVector< KeyValues * >& msglist )
+{
+	if ( msglist.Count() == 0 )
+		return NULL;
+
+	KeyValues *data = msglist[ 0 ];
+	PropertySheet *sheet = reinterpret_cast< PropertySheet * >( data->GetPtr( "propertysheet" ) );
+	if ( sheet )
+		return sheet;
+
+	return NULL;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: A single tab
 //-----------------------------------------------------------------------------
 class PageTab : public Button
 {
+	DECLARE_CLASS_SIMPLE( PageTab, Button );
+
 private:
 	bool _active;
 	Color _textColor;
@@ -44,16 +116,168 @@ private:
 	int m_bMaxTabWidth;
 	IBorder *m_pActiveBorder;
 	IBorder *m_pNormalBorder;
+	PropertySheet	*m_pParent;
+	Panel			*m_pPage;
+	ImagePanel		*m_pImage;
+	char			*m_pszImageName;
+	bool			m_bShowContextLabel;
+	ContextLabel			*m_pContextLabel;
 
 public:
-	PageTab(Panel *parent, const char *panelName, const char *text, int maxTabWidth) : Button(parent, panelName, text) 
+	PageTab(PropertySheet *parent, const char *panelName, const char *text, char const *imageName, int maxTabWidth, Panel *page, bool showContextButton ) : 
+		Button( (Panel *)parent, panelName, text),
+		m_pParent( parent ),
+		m_pPage( page ),
+		m_pImage( 0 ),
+		m_pszImageName( 0 ),
+		m_bShowContextLabel( showContextButton )
 	{
 		SetCommand(new KeyValues("TabPressed"));
 		_active = false;
 		m_bMaxTabWidth = maxTabWidth;
+		SetDropEnabled( true );
+		SetDragEnabled( m_pParent->IsDraggableTab() );
+		if ( imageName )
+		{
+			m_pImage = new ImagePanel( this, text );
+			int buflen = Q_strlen( imageName ) + 1;
+			m_pszImageName = new char[ buflen ];
+			Q_strncpy( m_pszImageName, imageName, buflen );
+
+		}
+		SetMouseClickEnabled( MOUSE_RIGHT, true );
+		m_pContextLabel = m_bShowContextLabel ? new ContextLabel( this, "Context", "9" ) : NULL;
 	}
 
-	~PageTab() {}
+	~PageTab()
+	{
+		delete[] m_pszImageName;
+	}
+
+	virtual void Paint()
+	{
+		BaseClass::Paint();
+	}
+
+	virtual bool IsDroppable( CUtlVector< KeyValues * >&msglist )
+	{
+		// It's never droppable, but should activate
+		FireActionSignal();
+		SetSelected(true);
+		Repaint();
+		if ( !GetParent() )
+			return false;
+
+		PropertySheet *sheet = IsDroppingSheet( msglist );
+		if ( sheet )
+		{
+			return GetParent()->IsDroppable( msglist );
+		}
+
+		// Defer to active page...
+		Panel *active = m_pParent->GetActivePage();
+		if ( !active || !active->IsDroppable( msglist ) )
+			return false;
+
+		return active->IsDroppable( msglist );
+	}
+
+	virtual void OnDroppablePanelPaint( CUtlVector< KeyValues * >& msglist, CUtlVector< Panel * >& dragPanels )
+	{
+		PropertySheet *sheet = IsDroppingSheet( msglist );
+		if ( sheet )
+		{
+			Panel *target = GetParent()->GetDropTarget( msglist );
+			if ( target )
+			{
+			// Fixme, mouse pos could be wrong...
+				target->OnDroppablePanelPaint( msglist, dragPanels );
+				return;
+			}
+		}
+
+		// Just highlight the tab if dropping onto active page via the tab
+		BaseClass::OnDroppablePanelPaint( msglist, dragPanels );
+	}
+
+	virtual void OnPanelDropped( CUtlVector< KeyValues * >& msglist )
+	{
+		PropertySheet *sheet = IsDroppingSheet( msglist );
+		if ( sheet )
+		{
+			Panel *target = GetParent()->GetDropTarget( msglist );
+			if ( target )
+			{
+			// Fixme, mouse pos could be wrong...
+				target->OnPanelDropped( msglist );
+			}
+		}
+
+		// Defer to active page...
+		Panel *active = m_pParent->GetActivePage();
+		if ( !active || !active->IsDroppable( msglist ) )
+			return;
+
+		active->OnPanelDropped( msglist );
+	}
+
+	virtual void OnDragFailed( CUtlVector< KeyValues * >& msglist )
+	{
+		PropertySheet *sheet = IsDroppingSheet( msglist );
+		if ( !sheet )
+			return;
+
+		// Create a new property sheet
+		if ( m_pParent->IsDraggableTab() )
+		{
+			if ( msglist.Count() == 1 )
+			{
+				KeyValues *data = msglist[ 0 ];
+                int screenx = data->GetInt( "screenx" );
+				int screeny = data->GetInt( "screeny" );
+
+				// m_pParent->ScreenToLocal( screenx, screeny );
+				if ( !m_pParent->IsWithin( screenx, screeny ) )
+				{
+					Panel *page = reinterpret_cast< Panel * >( data->GetPtr( "propertypage" ) );
+					PropertySheet *sheet = reinterpret_cast< PropertySheet * >( data->GetPtr( "propertysheet" ) );
+					char const *title = data->GetString( "tabname", "" );
+					if ( !page || !sheet )
+						return;
+					
+					// Can only create if sheet was part of a ToolWindow derived object
+					ToolWindow *tw = dynamic_cast< ToolWindow * >( sheet->GetParent() );
+					if ( tw )
+					{
+						IToolWindowFactory *factory = tw->GetToolWindowFactory();
+						if ( factory )
+						{
+							bool hasContextMenu = sheet->PageHasContextMenu( page );
+							sheet->RemovePage( page );
+							factory->InstanceToolWindow( tw->GetParent(), sheet->ShouldShowContextButtons(), page, title, hasContextMenu );
+
+							if ( sheet->GetNumPages() == 0 )
+							{
+								tw->MarkForDeletion();
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	virtual void OnCreateDragData( KeyValues *msg )
+	{
+		Assert( m_pParent->IsDraggableTab() );
+
+		msg->SetPtr( "propertypage", m_pPage );
+		msg->SetPtr( "propertysheet", m_pParent );
+		char sz[ 256 ];
+		GetText( sz, sizeof( sz ) );
+		msg->SetString( "tabname", sz  );
+		msg->SetString( "text", sz );
+	}
 
 	virtual void ApplySchemeSettings(IScheme *pScheme)
 	{
@@ -65,13 +289,49 @@ public:
 		m_pActiveBorder = pScheme->GetBorder("TabActiveBorder");
 		m_pNormalBorder = pScheme->GetBorder("TabBorder");
 
-		int wide, tall;
-		int contentWide, contentTall;
-		GetSize(wide, tall);
-		GetContentSize(contentWide, contentTall);
+		if ( m_pImage )
+		{
+			ClearImages();
+			m_pImage->SetImage(scheme()->GetImage(m_pszImageName, false));
+			AddImage( m_pImage->GetImage(), 2 );
+			int w, h;
+			m_pImage->GetSize( w, h );
+			w += m_pContextLabel ? 10 : 0;
+			if ( m_pContextLabel )
+			{
+				m_pImage->SetPos( 10, 0 );
+			}
+			SetSize( w + 4, h + 2 );
+		}
+		else
+		{
+			int wide, tall;
+			int contentWide, contentTall;
+			GetSize(wide, tall);
+			GetContentSize(contentWide, contentTall);
 
-		wide = max(m_bMaxTabWidth, contentWide + 10);  // 10 = 5 pixels margin on each side
-		SetSize(wide, tall);
+			wide = max(m_bMaxTabWidth, contentWide + 10);  // 10 = 5 pixels margin on each side
+			wide += m_pContextLabel ? 10 : 0;
+			SetSize(wide, tall);
+		}
+
+		if ( m_pContextLabel )
+		{
+			SetTextInset( 12, 0 );
+		}
+	}
+
+	virtual void OnCommand( char const *cmd )
+	{
+		if ( !Q_stricmp( cmd, "ShowContextMenu" ) )
+		{
+			KeyValues *kv = new KeyValues("OpenContextMenu");
+			kv->SetPtr( "page", m_pPage );
+			kv->SetPtr( "contextlabel", m_pContextLabel );
+			PostActionSignal( kv );
+			return;
+		}
+		BaseClass::OnCommand( cmd );		
 	}
 
 	IBorder *GetBorder(bool depressed, bool armed, bool selected, bool keyfocus)
@@ -110,32 +370,24 @@ public:
 	//Fire action signal when mouse is pressed down instead  of on release.
 	virtual void OnMousePressed(MouseCode code) 
 	{
-        
 		// check for context menu open
-		if (code == MOUSE_RIGHT)
+		if (!IsEnabled())
+			return;
+		
+		if (!IsMouseClickEnabled(code))
+			return;
+		
+		if (IsUseCaptureMouseEnabled())
 		{
-			PostActionSignal(new KeyValues("OpenContextMenu", "itemID", -1));
-		}
-		else
-		{
-			if (!IsEnabled())
-				return;
-			
-			if (!IsMouseClickEnabled(code))
-				return;
-			
-			if (IsUseCaptureMouseEnabled())
 			{
-				{
-					RequestFocus();
-					FireActionSignal();
-					SetSelected(true);
-					Repaint();
-				}
-				
-				// lock mouse input to going to this button
-				input()->SetMouseCapture(GetVPanel());
+				RequestFocus();
+				FireActionSignal();
+				SetSelected(true);
+				Repaint();
 			}
+			
+			// lock mouse input to going to this button
+			input()->SetMouseCapture(GetVPanel());
 		}
 	}
 
@@ -150,17 +402,38 @@ public:
 		// make sure the button gets unselected
 		SetSelected(false);
 		Repaint();
+
+		if (code == MOUSE_RIGHT)
+		{
+			KeyValues *kv = new KeyValues("OpenContextMenu");
+			kv->SetPtr( "page", m_pPage );
+			kv->SetPtr( "contextlabel", m_pContextLabel );
+			PostActionSignal( kv );
+		}
+	}
+
+	virtual void PerformLayout()
+	{
+		BaseClass::PerformLayout();
+
+		if ( m_pContextLabel )
+		{
+			int w, h;
+			GetSize( w, h );
+			m_pContextLabel->SetBounds( 0, 0, 10, h );
+		}
 	}
 };
 
 }; // namespace vgui
 
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-PropertySheet::PropertySheet(Panel *parent, const char *panelName) : Panel(parent, panelName)
+PropertySheet::PropertySheet(
+	Panel *parent, 
+	const char *panelName, 
+	bool draggableTabs /*= false*/ ) : BaseClass(parent, panelName)
 {
 	_activePage = NULL;
 	_activeTab = NULL;
@@ -170,12 +443,22 @@ PropertySheet::PropertySheet(Panel *parent, const char *panelName) : Panel(paren
 	_combo = NULL;
     _tabFocus = false;
 	m_flPageTransitionEffectTime = 0.0f;
+	m_bSmallTabs = false;
+	m_tabFont = 0;
+	m_bDraggableTabs = draggableTabs;
+
+	if ( m_bDraggableTabs )
+	{
+		SetDropEnabled( true );
+	}
+
+	m_bKBNavigationEnabled = true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor, associates pages with a combo box
 //-----------------------------------------------------------------------------
-PropertySheet::PropertySheet(Panel *parent, const char *panelName, ComboBox *combo) : Panel(parent, panelName)
+PropertySheet::PropertySheet(Panel *parent, const char *panelName, ComboBox *combo) : BaseClass(parent, panelName)
 {
 	_activePage = NULL;
 	_activeTab = NULL;
@@ -186,6 +469,9 @@ PropertySheet::PropertySheet(Panel *parent, const char *panelName, ComboBox *com
 	_showTabs = false;
     _tabFocus = false;
 	m_flPageTransitionEffectTime = 0.0f;
+	m_bSmallTabs = false;
+	m_tabFont = 0;
+	m_bDraggableTabs = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -196,18 +482,97 @@ PropertySheet::~PropertySheet()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: ToolWindow uses this to drag tools from container to container by dragging the tab
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool PropertySheet::IsDraggableTab() const
+{
+	return m_bDraggableTabs;
+}
+
+void PropertySheet::SetDraggableTabs( bool state )
+{
+	m_bDraggableTabs = state;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Lower profile tabs
+// Input  : state - 
+//-----------------------------------------------------------------------------
+void PropertySheet::SetSmallTabs( bool state )
+{
+	m_bSmallTabs = state;
+	m_tabFont = scheme()->GetIScheme( GetScheme() )->GetFont( m_bSmallTabs ? "DefaultVerySmall" : "Default" );
+	int c = m_PageTabs.Count();
+	for ( int i = 0; i < c ; ++i )
+	{
+		PageTab *tab = m_PageTabs[ i ];
+		Assert( tab );
+		tab->SetFont( m_tabFont );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool PropertySheet::IsSmallTabs() const
+{
+	return m_bSmallTabs;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : state - 
+//-----------------------------------------------------------------------------
+void PropertySheet::ShowContextButtons( bool state )
+{
+	m_bContextButton = state;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool PropertySheet::ShouldShowContextButtons() const
+{
+	return m_bContextButton;
+}
+
+int PropertySheet::FindPage( Panel *page ) const
+{
+	int c = m_Pages.Count();
+	for ( int i = 0; i < c; ++i )
+	{
+		if ( m_Pages[ i ].page == page )
+			return i;
+	}
+
+	return m_Pages.InvalidIndex();
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: adds a page to the sheet
 //-----------------------------------------------------------------------------
-void PropertySheet::AddPage(Panel *page, const char *title)
+void PropertySheet::AddPage(Panel *page, const char *title, char const *imageName /*= NULL*/, bool bHasContextMenu /*= false*/ )
 {
 	if (!page)
 		return;
 
 	// don't add the page if we already have it
-	if (m_Pages.HasElement(page))
+	if ( FindPage( page ) != m_Pages.InvalidIndex() )
 		return;
 
-	PageTab *tab = new PageTab(this, "tab", title, _tabWidth);
+	PageTab *tab = new PageTab(this, "tab", title, imageName, _tabWidth, page, m_bContextButton && bHasContextMenu );
+	if ( m_bDraggableTabs )
+	{
+		tab->SetDragEnabled( true );
+	}
+
+	tab->SetFont( m_tabFont );
 	if(_showTabs)
 	{
 		tab->AddActionSignalTarget(this);
@@ -218,14 +583,30 @@ void PropertySheet::AddPage(Panel *page, const char *title)
 	}
 	m_PageTabs.AddToTail(tab);
 
-	m_Pages.AddToTail(page);
+	Page_t info;
+	info.page = page;
+	info.contextMenu = m_bContextButton && bHasContextMenu;
+	
+	m_Pages.AddToTail( info );
 
 	page->SetParent(this);
 	page->AddActionSignalTarget(this);
 	PostMessage(page, new KeyValues("ResetData"));
 
 	page->SetVisible(false);
+	InvalidateLayout();
+
+	if (!_activePage)
+	{
+		// first page becomes the active page
+		ChangeActiveTab( 0 );
+		if ( _activePage )
+		{
+			_activePage->RequestFocus( 0 );
+		}
+	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -233,7 +614,7 @@ void PropertySheet::AddPage(Panel *page, const char *title)
 void PropertySheet::SetActivePage(Panel *page)
 {
 	// walk the list looking for this page
-	int index = m_Pages.Find(page);
+	int index = FindPage( page );
 	if (!m_Pages.IsValidIndex(index))
 		return;
 
@@ -257,7 +638,7 @@ void PropertySheet::ResetAllData()
 	// iterate all the dialogs resetting them
 	for (int i = 0; i < m_Pages.Count(); i++)
 	{
-		ipanel()->SendMessage(m_Pages[i]->GetVPanel(), new KeyValues("ResetData"), GetVPanel());
+		ipanel()->SendMessage(m_Pages[i].page->GetVPanel(), new KeyValues("ResetData"), GetVPanel());
 	}
 }
 
@@ -269,7 +650,7 @@ void PropertySheet::ApplyChanges()
 	// iterate all the dialogs resetting them
 	for (int i = 0; i < m_Pages.Count(); i++)
 	{
-		ipanel()->SendMessage(m_Pages[i]->GetVPanel(), new KeyValues("ApplyChanges"), GetVPanel());
+		ipanel()->SendMessage(m_Pages[i].page->GetVPanel(), new KeyValues("ApplyChanges"), GetVPanel());
 	}
 }
 
@@ -328,7 +709,7 @@ int PropertySheet::GetActivePageNum()
 {
 	for (int i = 0; i < m_Pages.Count(); i++)
 	{
-		if (m_Pages[i] == _activePage) 
+		if (m_Pages[i].page == _activePage) 
 		{
 			return i;
 		}
@@ -427,6 +808,8 @@ void PropertySheet::ApplySchemeSettings(IScheme *pScheme)
 
 	SetBorder(pBorder);
 	m_flPageTransitionEffectTime = atof(pScheme->GetResourceString("PropertySheet.TransitionEffectTime"));
+
+	m_tabFont = pScheme->GetFont( m_bSmallTabs ? "DefaultVerySmall" : "Default" );
 }
 
 //-----------------------------------------------------------------------------
@@ -459,21 +842,15 @@ void PropertySheet::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	if (!_activePage)
-	{
-		// first page becomes the active page
-		ChangeActiveTab(0);
-		if (_activePage)
-			_activePage->RequestFocus(0);
-	}
-
 	int x, y, wide, tall;
 	GetBounds(x, y, wide, tall);
 	if (_activePage)
 	{
+		int tabHeight = IsSmallTabs() ? 14 : 28;
+
 		if(_showTabs)
 		{
-			_activePage->SetBounds(0, 28, wide, tall - 28);
+			_activePage->SetBounds(0, tabHeight, wide, tall - tabHeight);
 		}
 		else
 		{
@@ -493,16 +870,18 @@ void PropertySheet::PerformLayout()
 	{
 		for (int i = 0; i < limit; i++)
 		{
+			int tabHeight = IsSmallTabs() ? 13 : 27;
+
             int width, tall;
             m_PageTabs[i]->GetSize(width, tall);
 			if (m_PageTabs[i] == _activeTab)
 			{
 				// active tab is taller
-				_activeTab->SetBounds(xtab, 2, width, 27);
+				_activeTab->SetBounds(xtab, 2, width, tabHeight);
 			}
 			else
 			{
-				m_PageTabs[i]->SetBounds(xtab, 4, width, 25);
+				m_PageTabs[i]->SetBounds(xtab, 4, width, tabHeight - 2);
 			}
 			m_PageTabs[i]->SetVisible(true);
 			xtab += (width + 1);
@@ -557,7 +936,7 @@ Panel *PropertySheet::GetPage(int i)
 		return NULL;
 	}
 
-	return m_Pages[i];
+	return m_Pages[i].page;
 }
 
 
@@ -600,59 +979,97 @@ void PropertySheet::SetPageEnabled(const char *title, bool state)
 	}
 }
 
+void PropertySheet::RemoveAllPages()
+{
+	int c = m_Pages.Count();
+	for ( int i = c - 1; i >= 0 ; --i )
+	{
+		RemovePage( m_Pages[ i ].page );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: deletes the page associated with panel
+// Input  : *panel - the panel of the page to remove
+//-----------------------------------------------------------------------------
+void PropertySheet::RemovePage(Panel *panel) 
+{
+	int location = FindPage( panel );
+	if ( location == m_Pages.InvalidIndex() )
+		return;
+
+	// Since it's being deleted, don't animate!!!
+	m_hPreviouslyActivePage = NULL;
+	_activeTab = NULL;
+
+	// ASSUMPTION = that the number of pages equals number of tabs
+	if( _showTabs )
+	{
+		m_PageTabs[location]->RemoveActionSignalTarget( this );
+	}
+	// now remove the tab
+	PageTab *tab  = m_PageTabs[ location ];
+	m_PageTabs.Remove( location );
+	tab->MarkForDeletion();
+	
+	// Remove from page list
+	m_Pages.Remove( location );
+
+	// Unparent
+	panel->SetParent( (Panel *)NULL );
+
+	if ( _activePage == panel ) 
+	{
+		_activePage = NULL;
+		// if this page is currently active, backup to the page before this.
+		ChangeActiveTab( max( location - 1, 0 ) ); 
+	}
+
+	PerformLayout();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: deletes the page associated with panel
 // Input  : *panel - the panel of the page to remove
 //-----------------------------------------------------------------------------
 void PropertySheet::DeletePage(Panel *panel) 
 {
-	if (! m_Pages.HasElement(panel))
-		return;
-
-	int location = m_Pages.Find(panel);
-	if (_activePage == panel) 
-	{
-		// if this page is currently active, backup to the page before this.
-		ChangeActiveTab( location - 1 ); 
-	}
-	//	changeActiveTab( 0 ); 
-
-	// ASSUMPTION = that the number of pages equals number of tabs
-	if(_showTabs)
-	{
-		m_PageTabs[location]->RemoveActionSignalTarget(this);
-	}
-	// now remove the panels
-	PageTab *tab  = m_PageTabs[location];
-	m_PageTabs.Remove(location);
-	tab->MarkForDeletion();
-	
-	m_Pages.FindAndRemove(panel);
+	Assert( panel );
+	RemovePage( panel );
 	panel->MarkForDeletion();
-
-	PerformLayout();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: flips to the new tab, sending out all the right notifications
 //			flipping to a tab activates the tab.
 //-----------------------------------------------------------------------------
-void PropertySheet::ChangeActiveTab(int index)
+void PropertySheet::ChangeActiveTab( int index )
 {
-	if (!m_Pages.IsValidIndex(index))
-		return;
-
-	if (m_Pages[index] == _activePage)
+	if ( !m_Pages.IsValidIndex( index ) )
 	{
-		_activeTab->RequestFocus();
+		_activeTab = NULL;
+		if ( m_Pages.Count() > 0 )
+		{
+			_activePage = NULL;
+			ChangeActiveTab( 0 );
+		}
+		return;
+	}
+
+	if ( m_Pages[index].page == _activePage )
+	{
+		if ( _activeTab )
+		{
+			_activeTab->RequestFocus();
+		}
 		_tabFocus = true;
 		return;
 	}
 
-	// make sure any distant tab is completely hidden (since the prior page could still be fading out)
-	if (m_hPreviouslyActivePage.Get())
+	int c = m_Pages.Count();
+	for ( int i = 0; i < c; ++i )
 	{
-		m_hPreviouslyActivePage->SetVisible(false);
+		m_Pages[ i ].page->SetVisible( false );
 	}
 
 	m_hPreviouslyActivePage = _activePage;
@@ -678,7 +1095,7 @@ void PropertySheet::ChangeActiveTab(int index)
 	}
 
 	// flip page
-	_activePage = m_Pages[index];
+	_activePage = m_Pages[index].page;
 	_activeTab = m_PageTabs[index];
 	_activeTabIndex = index;
 
@@ -705,6 +1122,7 @@ void PropertySheet::ChangeActiveTab(int index)
 		_combo->ActivateItemByRow(index);
 	}
 
+	_activePage->MakeReadyForUse();
 
 	// transition effect
 	if (m_flPageTransitionEffectTime)
@@ -716,7 +1134,6 @@ void PropertySheet::ChangeActiveTab(int index)
 		}
 
 		// fade in the new page
-		_activePage->MakeReadyForUse();
 		_activePage->SetAlpha(0);
 		GetAnimationController()->RunAnimationCommand(_activePage, "Alpha", 255.0f, m_flPageTransitionEffectTime / 2, m_flPageTransitionEffectTime / 2, AnimationController::INTERPOLATOR_LINEAR);
 	}
@@ -727,6 +1144,7 @@ void PropertySheet::ChangeActiveTab(int index)
 			// no transition, just hide the previous page
 			m_hPreviouslyActivePage->SetVisible(false);
 		}
+		_activePage->SetAlpha( 255 );
 	}
 
 	// notify
@@ -767,10 +1185,16 @@ Panel *PropertySheet::HasHotkey(wchar_t key)
 //-----------------------------------------------------------------------------
 // Purpose: catches the opencontextmenu event
 //-----------------------------------------------------------------------------
-void PropertySheet::OnOpenContextMenu()
+void PropertySheet::OnOpenContextMenu( KeyValues *params )
 {
 	// tell parent
-	PostActionSignal(new KeyValues("OpenContextMenu"));
+	KeyValues *kv = params->MakeCopy();
+	PostActionSignal( kv );
+	Panel *page = reinterpret_cast< Panel * >( params->GetPtr( "page" ) );
+	if ( page )
+	{
+		PostMessage( page->GetVPanel(), params->MakeCopy() );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -778,22 +1202,44 @@ void PropertySheet::OnOpenContextMenu()
 //-----------------------------------------------------------------------------
 void PropertySheet::OnKeyCodeTyped(KeyCode code)
 {
-	switch (code)
+	bool shift = (input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT));
+	bool ctrl = (input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL));
+	bool alt = (input()->IsKeyDown(KEY_LALT) || input()->IsKeyDown(KEY_RALT));
+	
+	if ( ctrl && shift && alt && code == KEY_B)
 	{
-		// for now left and right arrows just open or close submenus if they are there.
-	case KEY_RIGHT:
+		// enable build mode
+		EditablePanel *ep = dynamic_cast< EditablePanel * >( GetActivePage() );
+		if ( ep )
 		{
-			ChangeActiveTab(_activeTabIndex+1);
+			ep->ActivateBuildMode();
+			return;
+		}
+	}
+
+	if ( IsKBNavigationEnabled() )
+	{
+		switch (code)
+		{
+			// for now left and right arrows just open or close submenus if they are there.
+		case KEY_RIGHT:
+			{
+				ChangeActiveTab(_activeTabIndex+1);
+				break;
+			}
+		case KEY_LEFT:
+			{
+				ChangeActiveTab(_activeTabIndex-1);
+				break;
+			}
+		default:
+			BaseClass::OnKeyCodeTyped(code);
 			break;
 		}
-	case KEY_LEFT:
-		{
-			ChangeActiveTab(_activeTabIndex-1);
-			break;
-		}
-	default:
+	}
+	else
+	{
 		BaseClass::OnKeyCodeTyped(code);
-		break;
 	}
 }
 
@@ -875,4 +1321,167 @@ void PropertySheet::OnFindDefaultButton()
     {
         PostMessage(GetVParent(), new KeyValues("FindDefaultButton"));
     }
+}
+
+bool PropertySheet::PageHasContextMenu( Panel *page ) const
+{
+	int pageNum = FindPage( page );
+	if ( pageNum == m_Pages.InvalidIndex() )
+		return false;
+
+	return m_Pages[ pageNum ].contextMenu;
+}
+
+void PropertySheet::OnPanelDropped( CUtlVector< KeyValues * >& msglist )
+{
+	if ( msglist.Count() != 1 )
+	{
+		return;
+	}
+
+	PropertySheet *sheet = IsDroppingSheet( msglist );
+	if ( !sheet )
+	{
+		// Defer to active page
+		if ( _activePage && _activePage->IsDropEnabled() )
+		{
+			return _activePage->OnPanelDropped( msglist );
+		}
+		return;
+	}
+
+	KeyValues *data = msglist[ 0 ];
+
+	Panel *page = reinterpret_cast< Panel * >( data->GetPtr( "propertypage" ) );
+	char const *title = data->GetString( "tabname", "" );
+	if ( !page || !sheet )
+		return;
+
+	// Can only create if sheet was part of a ToolWindow derived object
+	ToolWindow *tw = dynamic_cast< ToolWindow * >( sheet->GetParent() );
+	if ( tw )
+	{
+		IToolWindowFactory *factory = tw->GetToolWindowFactory();
+		if ( factory )
+		{
+			bool showContext = sheet->PageHasContextMenu( page );
+			sheet->RemovePage( page );
+			if ( sheet->GetNumPages() == 0 )
+			{
+				tw->MarkForDeletion();
+			}
+
+			AddPage( page, title, NULL, showContext );
+		}
+	}
+}
+
+bool PropertySheet::IsDroppable( CUtlVector< KeyValues * >& msglist )
+{
+	if ( !m_bDraggableTabs )
+		return false;
+
+	if ( msglist.Count() != 1 )
+	{
+		return false;
+	}
+
+	int mx, my;
+	input()->GetCursorPos( mx, my );
+	ScreenToLocal( mx, my );
+
+	int tabHeight = IsSmallTabs() ? 14 : 28;
+	if ( my > tabHeight )
+		return false;
+
+	PropertySheet *sheet = IsDroppingSheet( msglist );
+	if ( !sheet )
+	{
+		return false;
+	}
+
+	if ( sheet == this )
+		return false;
+
+	return true;
+}
+
+// Mouse is now over a droppable panel
+void PropertySheet::OnDroppablePanelPaint( CUtlVector< KeyValues * >& msglist, CUtlVector< Panel * >& dragPanels )
+{
+	// Convert this panel's bounds to screen space
+	int x, y, w, h;
+
+	GetSize( w, h );
+
+	int tabHeight = IsSmallTabs() ? 14 : 28;
+	h = tabHeight + 4;
+
+	x = y = 0;
+	LocalToScreen( x, y );
+
+	surface()->DrawSetColor( GetDropFrameColor() );
+	// Draw 2 pixel frame
+	surface()->DrawOutlinedRect( x, y, x + w, y + h );
+	surface()->DrawOutlinedRect( x+1, y+1, x + w-1, y + h-1 );
+
+	if ( !IsDroppable( msglist ) )
+	{
+		return;
+	}
+
+	if ( !_showTabs )
+	{
+		return;
+	}
+
+	// Draw a fake new tab...
+
+	x = 0;
+	y = 2;
+	w = 1;
+	h = tabHeight;
+
+	int last = m_PageTabs.Count();
+	if ( last != 0 )
+	{
+		m_PageTabs[ last - 1 ]->GetBounds( x, y, w, h );
+	}
+
+	// Compute left edge of "fake" tab
+
+	x += ( w + 1 );
+
+	// Compute size of new panel
+	KeyValues *data = msglist[ 0 ];
+	char const *text = data->GetString( "tabname", "" );
+	Assert( text );
+
+	PageTab *fakeTab = new PageTab( this, "FakeTab", text, NULL, _tabWidth, NULL, false );
+	fakeTab->SetBounds( x, 4, w, tabHeight - 4 );
+	fakeTab->SetFont( m_tabFont );
+	SETUP_PANEL( fakeTab );
+	fakeTab->Repaint();
+	surface()->SolveTraverse( fakeTab->GetVPanel(), true );
+	surface()->PaintTraverse( fakeTab->GetVPanel() );
+	delete fakeTab;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : state - 
+//-----------------------------------------------------------------------------
+void PropertySheet::SetKBNavigationEnabled( bool state )
+{
+	m_bKBNavigationEnabled = state;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool PropertySheet::IsKBNavigationEnabled() const
+{
+	return m_bKBNavigationEnabled;
 }

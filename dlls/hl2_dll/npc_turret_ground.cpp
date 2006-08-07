@@ -4,7 +4,7 @@
 //
 //=============================================================================//
 #include "cbase.h"
-#include "ai_basenpc.h"
+#include "npc_turret_ground.h"
 #include "ai_default.h"
 #include "ai_task.h"
 #include "ai_schedule.h"
@@ -18,7 +18,6 @@
 #include "npcevent.h"
 #include "IEffects.h"
 #include "ammodef.h"
-#include "smoke_trail.h"
 #include "beam_shared.h"
 #include "explode.h"
 #include "te_effect_dispatch.h"
@@ -33,111 +32,6 @@ ConVar ai_newgroundturret ( "ai_newgroundturret", "0" );
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-//=========================================================
-//=========================================================
-class CNPC_GroundTurret : public CAI_BaseNPC
-{
-public:
-	DECLARE_CLASS( CNPC_GroundTurret, CAI_BaseNPC );
-	DECLARE_DATADESC();
-
-	void	Precache( void );
-	void	Spawn( void );
-	bool	CreateVPhysics( void );
-	void	PrescheduleThink();
-	Class_T Classify( void );
-
-	void PostNPCInit();
-
-	// Damage & Death
-	int OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	void Event_Killed( const CTakeDamageInfo &info );
-	void DeathEffects();
-	bool CanBecomeRagdoll( void ) { return false; }
-	void DeathSound( void );
-
-	// Combat
-	void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
-	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
-	{
-		return VECTOR_CONE_5DEGREES;
-	}
-
-
-	// Sensing 
-	void GatherConditions();
-	Vector EyePosition();
-	bool FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **ppBlocker );
-	bool QuerySeeEntity( CBaseEntity *pEntity);
-
-	
-	bool IsOpeningOrClosing() { return (GetAbsVelocity().z != 0.0f); }
-	bool IsEnabled()
-	{
-		if( ai_newgroundturret.GetBool() )
-		{
-			return true;
-		}
-
-		return m_bEnabled;
-	}
-	bool IsOpen();
-
-	// Tasks & Schedules
-	void StartTask( const Task_t *pTask );
-	void RunTask( const Task_t *pTask );
-	virtual int SelectSchedule( void );
-	virtual int TranslateSchedule( int scheduleType );
-
-	// Activities & Animation
-	Activity	NPC_TranslateActivity( Activity eNewActivity );
-	void		Shoot();
-	void		Scan();
-	void		ProjectBeam( const Vector &vecStart, const Vector &vecDir, int width, int brightness, float duration );
-
-	// Local
-	void SetActive( bool bActive ) {}
-
-	// Inputs
-	void InputEnable( inputdata_t &inputdata );
-	void InputDisable( inputdata_t &inputdata );
-
-	// Outputs
-	COutputEvent	m_OnAreaClear;
-
-	DEFINE_CUSTOM_AI;
-
-private:
-	//-----------------------------------------------------
-	// Conditions, Schedules, Tasks
-	//-----------------------------------------------------
-	enum 
-	{
-		SCHED_GROUND_TURRET_IDLE = BaseClass::NEXT_SCHEDULE,
-		SCHED_GROUND_TURRET_ATTACK,
-
-		TASK_GROUNDTURRET_SCAN = BaseClass::NEXT_TASK,
-	};
-
-	int			m_iAmmoType;
-	SmokeTrail	*m_pSmoke;
-
-	bool		m_bEnabled;
-
-	float		m_flTimeNextShoot;
-	float		m_flTimeLastSawEnemy;
-	Vector		m_vecSpread;
-	bool		m_bHasExploded;
-	int			m_iDeathSparks;
-	float		m_flSensingDist;
-	bool		m_bSeeEnemy;
-	float		m_flTimeNextPing;
-	
-	Vector		m_vecClosedPos;
-
-	Vector		m_vecLightOffset;
-};
 
 LINK_ENTITY_TO_CLASS( npc_turret_ground, CNPC_GroundTurret );
 
@@ -165,6 +59,8 @@ BEGIN_DATADESC( CNPC_GroundTurret )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
+
+	// DEFINE_FIELD( m_ShotSounds, FIELD_SHORT ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -176,7 +72,7 @@ void CNPC_GroundTurret::Precache( void )
 	PrecacheModel( "models/combine_turrets/ground_turret.mdl" );
 
 	PrecacheScriptSound( "NPC_CeilingTurret.Deploy" );
-	PrecacheScriptSound( "NPC_FloorTurret.ShotSounds" );
+	m_ShotSounds = PrecacheScriptSound( "NPC_FloorTurret.ShotSounds" );
 	PrecacheScriptSound( "NPC_FloorTurret.Die" );
 	PrecacheScriptSound( "NPC_FloorTurret.Ping" );
 	PrecacheScriptSound( "DoSpark" );
@@ -373,7 +269,8 @@ void CNPC_GroundTurret::DeathEffects()
 	if( !m_bHasExploded )
 	{
 		//ExplosionCreate( GetAbsOrigin(), QAngle( 0, 0, 1 ), this, 150, 150, false );
-		DeathSound();
+		CTakeDamageInfo info;
+		DeathSound( info );
 		m_bHasExploded = true;
 		SetNextThink( gpGlobals->curtime + 0.5 );
 	}
@@ -395,7 +292,7 @@ void CNPC_GroundTurret::DeathEffects()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CNPC_GroundTurret::DeathSound()
+void CNPC_GroundTurret::DeathSound( const CTakeDamageInfo &info )
 {
 	EmitSound("NPC_FloorTurret.Die");
 }
@@ -513,7 +410,7 @@ bool CNPC_GroundTurret::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEnti
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-bool CNPC_GroundTurret::QuerySeeEntity( CBaseEntity *pEntity)
+bool CNPC_GroundTurret::QuerySeeEntity( CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC)
 {
 	float flDist;
 
@@ -521,10 +418,22 @@ bool CNPC_GroundTurret::QuerySeeEntity( CBaseEntity *pEntity)
 
 	if( flDist <= m_flSensingDist * m_flSensingDist )
 	{
-		return true;
+		return BaseClass::QuerySeeEntity(pEntity, bOnlyHateOrFearIfNPC);
 	}
 
 	return false;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+bool CNPC_GroundTurret::IsEnabled()
+{
+	if( ai_newgroundturret.GetBool() )
+	{
+		return true;
+	}
+
+	return m_bEnabled;
 }
 
 //---------------------------------------------------------
@@ -644,7 +553,7 @@ void CNPC_GroundTurret::Shoot()
 	data.m_fFlags = MUZZLEFLASH_COMBINE;
 	DispatchEffect( "MuzzleFlash", data );
 
-	EmitSound( "NPC_FloorTurret.ShotSounds" );
+	EmitSound( "NPC_FloorTurret.ShotSounds", m_ShotSounds );
 
 	m_flTimeNextShoot = gpGlobals->curtime + 0.09;
 }

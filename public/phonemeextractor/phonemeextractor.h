@@ -29,7 +29,7 @@ typedef enum
 	SR_RESULT_FAILED
 } SR_RESULT;
 
-class IPhonemeExtractor
+abstract_class IPhonemeExtractor
 {
 public:
 	virtual PE_APITYPE	GetAPIType() const = 0;

@@ -48,6 +48,8 @@ public:
 	
 	float		GetDamageForActivity( Activity hitActivity );
 
+	bool		CanBePickedUpByNPCs( void ) { return false;	}		
+
 private:
 
 	CNetworkVar( bool, m_bActive );

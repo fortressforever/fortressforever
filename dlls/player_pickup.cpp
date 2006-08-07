@@ -59,6 +59,17 @@ bool Pickup_OnAttemptPhysGunPickup( CBaseEntity *pPickedUpObject, CBasePlayer *p
 	return true;
 }
 
+CBaseEntity	*Pickup_OnFailedPhysGunPickup( CBaseEntity *pPickedUpObject, Vector vPhysgunPos )
+{
+	IPlayerPickupVPhysics *pPickup = dynamic_cast<IPlayerPickupVPhysics *>(pPickedUpObject);
+	if ( pPickup )
+	{
+		return pPickup->OnFailedPhysGunPickup( vPhysgunPos );
+	}
+
+	return NULL;
+}
+
 bool Pickup_GetPreferredCarryAngles( CBaseEntity *pObject, CBasePlayer *pPlayer, matrix3x4_t &localToWorld, QAngle &outputAnglesWorldSpace )
 {
 	IPlayerPickupVPhysics *pPickup = dynamic_cast<IPlayerPickupVPhysics *>(pObject);
@@ -91,6 +102,54 @@ AngularImpulse Pickup_PhysGunLaunchAngularImpulse( CBaseEntity *pObject )
 		return pPickup->PhysGunLaunchAngularImpulse();
 	}
 	return RandomAngularImpulse( -600, 600 );
+}
+
+Vector Pickup_DefaultPhysGunLaunchVelocity( const Vector &vecForward, float flMass )
+{
+#ifdef HL2_DLL
+	// Calculate the velocity based on physcannon rules
+	float flForceMax = physcannon_maxforce.GetFloat();
+	float flForce = flForceMax;
+
+	float mass = flMass;
+	if ( mass > 100 )
+	{
+		mass = min( mass, 1000 );
+		float flForceMin = physcannon_minforce.GetFloat();
+		flForce = SimpleSplineRemapVal( mass, 100, 600, flForceMax, flForceMin );
+	}
+
+	return ( vecForward * flForce );
+#endif
+
+	// Do the simple calculation
+	return ( vecForward * flMass );
+}
+
+Vector Pickup_PhysGunLaunchVelocity( CBaseEntity *pObject, const Vector &vecForward )
+{
+	// The object must be valid
+	if ( pObject == NULL )
+	{
+		Assert( 0 );
+		return vec3_origin;
+	}
+
+	// Shouldn't ever get here with a non-vphysics object.
+	IPhysicsObject *pPhysicsObject = pObject->VPhysicsGetObject();
+	if ( pPhysicsObject == NULL )
+	{
+		Assert( 0 );
+		return vec3_origin;
+	}
+
+	// Call the pickup entity's callback
+	IPlayerPickupVPhysics *pPickup = dynamic_cast<IPlayerPickupVPhysics *>(pObject);
+	if ( pPickup != NULL )
+		return pPickup->PhysGunLaunchVelocity( vecForward, pPhysicsObject->GetMass() );
+
+	// Do our default behavior
+	return Pickup_DefaultPhysGunLaunchVelocity(	vecForward, pPhysicsObject->GetMass() );
 }
 
 bool Pickup_ShouldPuntUseLaunchForces( CBaseEntity *pObject )

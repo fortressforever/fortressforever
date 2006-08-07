@@ -16,6 +16,7 @@
 #include "fx_quad.h"
 #include "fx.h"
 #include "c_pixel_visibility.h"
+#include "particles_ez.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -33,6 +34,8 @@ CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1_nocull" )
 CLIENTEFFECT_MATERIAL( "effects/combinemuzzle2_nocull" )
 CLIENTEFFECT_MATERIAL( "effects/yellowflare_noz" )
 CLIENTEFFECT_REGISTER_END()
+
+PMaterialHandle g_Material_Spark = NULL;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -57,39 +60,76 @@ bool EffectOccluded( const Vector &pos, pixelvis_handle_t *queryHandle )
 }
 
 
-CSimpleGlowEmitter::CSimpleGlowEmitter( const char *pDebugName, const Vector &sortOrigin )
+CSimpleGlowEmitter::CSimpleGlowEmitter( const char *pDebugName, const Vector &sortOrigin, float flDeathTime )
 	: CSimpleEmitter( pDebugName )
 {
 	SetSortOrigin( sortOrigin );
 	m_queryHandle = 0;
-	m_wasTested = false;
-	m_isVisible = false;
+	m_wasTested = 0;
+	m_isVisible = 0;
 	m_startTime = gpGlobals->curtime;
+	m_flDeathTime = flDeathTime;
 }
 	
-CSimpleGlowEmitter *CSimpleGlowEmitter::Create( const char *pDebugName, const Vector &sortOrigin )
+CSimpleGlowEmitter *CSimpleGlowEmitter::Create( const char *pDebugName, const Vector &sortOrigin, float flDeathTime )
 {
-	return new CSimpleGlowEmitter( pDebugName, sortOrigin );
+	return new CSimpleGlowEmitter( pDebugName, sortOrigin, flDeathTime );
 }
 
 
 void CSimpleGlowEmitter::SimulateParticles( CParticleSimulateIterator *pIterator )
 {
-	if ( !m_wasTested )
-		return;
-
-	if ( !m_isVisible )
+	if ( gpGlobals->curtime > m_flDeathTime )
 	{
 		pIterator->RemoveAllParticles();
 		return;
 	}
 
+	if ( !WasTestedInView(1<<0) )
+		return;
+
 	BaseClass::SimulateParticles( pIterator );
+}
+
+bool CSimpleGlowEmitter::WasTestedInView( unsigned char viewMask )
+{
+	return (m_wasTested & viewMask) ? true : false;
+}
+
+bool CSimpleGlowEmitter::IsVisibleInView( unsigned char viewMask )
+{
+	return (m_isVisible & viewMask) ? true : false;
+}
+
+void CSimpleGlowEmitter::SetTestedInView( unsigned char viewMask, bool bTested )
+{
+	m_wasTested &= ~viewMask;
+	if ( bTested )
+	{
+		m_wasTested |= viewMask;
+	}
+}
+
+void CSimpleGlowEmitter::SetVisibleInView( unsigned char viewMask, bool bVisible )
+{
+	m_isVisible &= ~viewMask;
+	if ( bVisible )
+	{
+		m_isVisible |= viewMask;
+	}
+}
+
+unsigned char CSimpleGlowEmitter::CurrentViewMask() const
+{
+	int viewId = (int)CurrentViewID();
+	viewId = clamp(viewId, 0, 7);
+	return 1<<viewId;
 }
 
 void CSimpleGlowEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 {
-	if ( !m_wasTested )
+	unsigned char viewMask = CurrentViewMask();
+	if ( !WasTestedInView(CurrentViewMask()) )
 	{
 		pixelvis_queryparams_t params;
 		params.Init(GetSortOrigin());
@@ -99,16 +139,16 @@ void CSimpleGlowEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		{
 			if ( (gpGlobals->curtime - m_startTime) <= 0.1f )
 				return;
-			m_isVisible = false;
+			SetVisibleInView(viewMask, false);
 		}
 		else
 		{
-			m_isVisible = true;
+			SetVisibleInView(viewMask, true);
 		}
 
-		m_wasTested = true;
+		SetTestedInView(viewMask, true);
 	}
-	if ( !m_isVisible )
+	if ( !IsVisibleInView(viewMask) )
 		return;
 
 	BaseClass::RenderParticles( pIterator );
@@ -167,10 +207,10 @@ void CTrailParticles::RenderParticles( CParticleRenderIterator *pIterator )
 		Vector	start, delta;
 
 		//NOTE: We need to do everything in screen space
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, start );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, start );
 		float sortKey = start.z;
 
-		Vector3DMultiply( g_ParticleMgr.GetModelView(), pParticle->m_vecVelocity, delta );
+		Vector3DMultiply( ParticleMgr()->GetModelView(), pParticle->m_vecVelocity, delta );
 		
 		float	color[4];
 		float	ramp = 1.0;
@@ -264,7 +304,10 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 		return;
 	}
 
-	PMaterialHandle hMaterial	= pSparkEmitter->GetPMaterial( "effects/spark" );
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = pSparkEmitter->GetPMaterial( "effects/spark" );
+	}
 
 	//Setup our collision information
 	pSparkEmitter->Setup( (Vector &) pos, 
@@ -288,7 +331,7 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	TrailParticle	*pParticle;
 	for ( i = 0; i < numSparks; i++ )
 	{
-		pParticle = (TrailParticle *) pSparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, pos );
+		pParticle = (TrailParticle *) pSparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, pos );
 
 		if ( pParticle == NULL )
 			return;
@@ -313,9 +356,38 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 		Color32Init( pParticle->m_color, 255, 255, 255, 255 );
 	}
 
+#ifdef _XBOX
+
+	//
+	// Cap
+	//
+
+	SimpleParticle sParticle;
+
+	sParticle.m_Pos = pos;
+	sParticle.m_flLifetime		= 0.0f;
+	sParticle.m_flDieTime		= 0.2f;
+
+	sParticle.m_vecVelocity.Init();
+
+	sParticle.m_uchColor[0]	= 255;
+	sParticle.m_uchColor[1]	= 255;
+	sParticle.m_uchColor[2]	= 255;
+	sParticle.m_uchStartAlpha	= 255;
+	sParticle.m_uchEndAlpha	= 255;
+	sParticle.m_uchStartSize	= nMagnitude * random->RandomInt( 4, 8 );
+	sParticle.m_uchEndSize		= 0;
+	sParticle.m_flRoll			= random->RandomInt( 0, 360 );
+	sParticle.m_flRollDelta	= 0.0f;
+
+	AddSimpleParticle( &sParticle, ParticleMgr()->GetPMaterial( "effects/yellowflare" ) );
+
+#else
+
 	//
 	// Little sparks
 	//
+	
 	CSmartPtr<CTrailParticles> pSparkEmitter2	= CTrailParticles::Create( "FX_ElectricSpark 2" );
 
 	if ( !pSparkEmitter2 )
@@ -323,8 +395,6 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 		Assert(0);
 		return;
 	}
-
-	hMaterial	= pSparkEmitter2->GetPMaterial( "effects/spark" );
 
 	pSparkEmitter2->SetSortOrigin( pos );
 	
@@ -336,7 +406,7 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	// Dump out sparks
 	for ( i = 0; i < numSparks; i++ )
 	{
-		pParticle = (TrailParticle *) pSparkEmitter2->AddParticle( sizeof(TrailParticle), hMaterial, pos );
+		pParticle = (TrailParticle *) pSparkEmitter2->AddParticle( sizeof(TrailParticle), g_Material_Spark, pos );
 
 		if ( pParticle == NULL )
 			return;
@@ -359,11 +429,10 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 		Color32Init( pParticle->m_color, 255, 255, 255, 255 );
 	}
 
-
 	//
 	// Caps
 	//
-	CSmartPtr<CSimpleGlowEmitter> pSimple = CSimpleGlowEmitter::Create( "FX_ElectricSpark 3", pos );
+	CSmartPtr<CSimpleGlowEmitter> pSimple = CSimpleGlowEmitter::Create( "FX_ElectricSpark 3", pos, gpGlobals->curtime + 0.2 );
 
 	// NOTE: None of these will render unless the effect is visible!
 	//
@@ -412,7 +481,6 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	sParticle->m_flRoll			= random->RandomInt( 0, 360 );
 	sParticle->m_flRollDelta	= random->RandomFloat( -1.0f, 1.0f );
 
-
 	//
 	// Smoke
 	//
@@ -459,6 +527,8 @@ void FX_ElectricSpark( const Vector &pos, int nMagnitude, int nTrailLength, cons
 	dl->radius	= random->RandomFloat(16,32);
 	dl->die		= gpGlobals->curtime + 0.001;
 	*/
+
+#endif	// !_XBOX
 }
 
 //-----------------------------------------------------------------------------
@@ -497,16 +567,19 @@ void FX_MetalScrape( Vector &position, Vector &normal )
 
 	int	numSparks = random->RandomInt( 4, 8 );
 	
-	TrailParticle	*pParticle;
-	PMaterialHandle	hMaterial = sparkEmitter->GetPMaterial( "effects/spark" );
-	Vector			dir;
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = sparkEmitter->GetPMaterial( "effects/spark" );
+	}
 
+	Vector	dir;
+	TrailParticle *pParticle;
 	float	length	= 0.06f;
 
 	//Dump out sparks
 	for ( int i = 0; i < numSparks; i++ )
 	{
-		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, offset );
 
 		if ( pParticle == NULL )
 			return;
@@ -551,7 +624,7 @@ void FX_MetalSpark( const Vector &position, const Vector &direction, const Vecto
 
 	CSmartPtr<CTrailParticles> sparkEmitter = CTrailParticles::Create( "FX_MetalSpark 1" );
 
-	if ( !sparkEmitter )
+	if ( sparkEmitter == NULL )
 		return;
 
 	//Setup our information
@@ -560,19 +633,23 @@ void FX_MetalSpark( const Vector &position, const Vector &direction, const Vecto
 	sparkEmitter->SetVelocityDampen( 8.0f );
 	sparkEmitter->SetGravity( METAL_SPARK_GRAVITY );
 	sparkEmitter->SetCollisionDamped( METAL_SPARK_DAMPEN );
+	sparkEmitter->GetBinding().SetBBox( offset - Vector( 32, 32, 32 ), offset + Vector( 32, 32, 32 ) );
 
 	int	numSparks = random->RandomInt( 4, 8 ) * ( iScale * 2 );
 	
-	TrailParticle	*pParticle;
-	PMaterialHandle	hMaterial = sparkEmitter->GetPMaterial( "effects/spark" );
-	Vector			dir;
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = sparkEmitter->GetPMaterial( "effects/spark" );
+	}
 
+	TrailParticle	*pParticle;
+	Vector	dir;
 	float	length	= 0.1f;
 
 	//Dump out sparks
 	for ( int i = 0; i < numSparks; i++ )
 	{
-		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, offset );
 
 		if ( pParticle == NULL )
 			return;
@@ -651,7 +728,12 @@ void FX_Sparks( const Vector &pos, int nMagnitude, int nTrailLength, const Vecto
 	}
 	else
 	{
-		hMaterial = pSparkEmitter->GetPMaterial( "effects/spark" );
+		if ( g_Material_Spark == NULL )
+		{
+			g_Material_Spark = pSparkEmitter->GetPMaterial( "effects/spark" );
+		}
+
+		hMaterial = g_Material_Spark;
 	}
 
 	//Setup our collision information
@@ -712,7 +794,12 @@ void FX_Sparks( const Vector &pos, int nMagnitude, int nTrailLength, const Vecto
 	}
 	else
 	{
-		hMaterial = pSparkEmitter->GetPMaterial( "effects/spark" );
+		if ( g_Material_Spark == NULL )
+		{
+			g_Material_Spark = pSparkEmitter2->GetPMaterial( "effects/spark" );
+		}
+		
+		hMaterial = g_Material_Spark;
 	}
 
 	pSparkEmitter2->SetSortOrigin( pos );
@@ -800,6 +887,11 @@ void FX_EnergySplash( const Vector &pos, const Vector &normal, int nFlags )
 	pEmitter = CSimpleEmitter::Create( "C_EntityDissolve" );
 	pEmitter->SetSortOrigin( pos );
 
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = pEmitter->GetPMaterial( "effects/spark" );
+	}
+
 	// Anime ground effects
 	for ( int j = 0; j < 8; j++ )
 	{
@@ -809,7 +901,7 @@ void FX_EnergySplash( const Vector &pos, const Vector &normal, int nFlags )
 
 		offset += pos;
 
-		sParticle = (SimpleParticle *) pEmitter->AddParticle( sizeof(SimpleParticle), pEmitter->GetPMaterial( "effects/spark" ), offset );
+		sParticle = (SimpleParticle *) pEmitter->AddParticle( sizeof(SimpleParticle), g_Material_Spark, offset );
 		
 		if ( sParticle == NULL )
 			return;
@@ -873,16 +965,19 @@ void FX_MicroExplosion( Vector &position, Vector &normal )
 
 	int	numSparks = random->RandomInt( 8, 16 );
 	
-	TrailParticle	*pParticle;
-	PMaterialHandle	hMaterial = sparkEmitter->GetPMaterial( "effects/spark" );
-	Vector			dir, vOfs;
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = sparkEmitter->GetPMaterial( "effects/spark" );
+	}
 
+	TrailParticle	*pParticle;
+	Vector	dir, vOfs;
 	float	length = 0.2f;
 
 	//Fast lines
 	for ( int i = 0; i < numSparks; i++ )
 	{
-		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, offset );
 
 		if ( pParticle )
 		{
@@ -964,7 +1059,10 @@ void FX_Explosion( Vector& origin, Vector& normal, char materialType )
 	float g = pow( diffuseColor[1], 1.0f/2.2f ) * baseColor[1];
 	float b = pow( diffuseColor[2], 1.0f/2.2f ) * baseColor[2];
 
-	PMaterialHandle hMaterial	= pSparkEmitter->GetPMaterial( "effects/spark" );
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = pSparkEmitter->GetPMaterial( "effects/spark" );
+	}
 
 	// Setup our collision information
 	pSparkEmitter->Setup(	offset, 
@@ -985,7 +1083,7 @@ void FX_Explosion( Vector& origin, Vector& normal, char materialType )
 	int i;
 	for ( i = 0; i < numSparks; i++ )
 	{
-		TrailParticle *pParticle = (TrailParticle *) pSparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+		TrailParticle *pParticle = (TrailParticle *) pSparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, offset );
 
 		if ( pParticle == NULL )
 			break;
@@ -1383,8 +1481,12 @@ void FX_SparkFan( Vector &position, Vector &normal )
 						METAL_SCRAPE_DAMPEN, 
 						bitsPARTICLE_TRAIL_VELOCITY_DAMPEN );
 
+	if ( g_Material_Spark == NULL )
+	{
+		g_Material_Spark = sparkEmitter->GetPMaterial( "effects/spark" );
+	}
+
 	TrailParticle	*pParticle;
-	PMaterialHandle	hMaterial = sparkEmitter->GetPMaterial( "effects/spark" );
 	Vector			dir;
 
 	float	length	= 0.06f;
@@ -1392,8 +1494,7 @@ void FX_SparkFan( Vector &position, Vector &normal )
 	//Dump out sparks
 	for ( int i = 0; i < 35; i++ )
 	{
-		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
-
+		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), g_Material_Spark, offset );
 		if ( pParticle == NULL )
 			return;
 

@@ -8,6 +8,7 @@
 #include "fx.h"
 #include "decals.h"
 #include "fx_quad.h"
+#include "fx_sparks.h"
 
 #include "tier0/vprof.h"
 
@@ -121,8 +122,66 @@ DECLARE_CLIENT_EFFECT( "Impact", ImpactCallback );
 //-----------------------------------------------------------------------------
 void FX_AirboatGunImpact( const Vector &origin, const Vector &normal, float scale )
 {
+#ifdef _XBOX
+
+	Vector offset = origin + ( normal * 1.0f );
+
+	CSmartPtr<CTrailParticles> sparkEmitter = CTrailParticles::Create( "FX_MetalSpark 1" );
+
+	if ( sparkEmitter == NULL )
+		return;
+
+	//Setup our information
+	sparkEmitter->SetSortOrigin( offset );
+	sparkEmitter->SetFlag( bitsPARTICLE_TRAIL_VELOCITY_DAMPEN );
+	sparkEmitter->SetVelocityDampen( 8.0f );
+	sparkEmitter->SetGravity( 800.0f );
+	sparkEmitter->SetCollisionDamped( 0.25f );
+	sparkEmitter->GetBinding().SetBBox( offset - Vector( 32, 32, 32 ), offset + Vector( 32, 32, 32 ) );
+
+	int	numSparks = random->RandomInt( 4, 8 );
+
+	TrailParticle	*pParticle;
+	PMaterialHandle	hMaterial = sparkEmitter->GetPMaterial( "effects/spark" );
+	Vector			dir;
+
+	float	length	= 0.1f;
+
+	//Dump out sparks
+	for ( int i = 0; i < numSparks; i++ )
+	{
+		pParticle = (TrailParticle *) sparkEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+
+		if ( pParticle == NULL )
+			return;
+
+		pParticle->m_flLifetime	= 0.0f;
+		pParticle->m_flDieTime	= random->RandomFloat( 0.05f, 0.1f );
+
+		float	spreadOfs = random->RandomFloat( 0.0f, 2.0f );
+
+		dir[0] = normal[0] + random->RandomFloat( -(0.5f*spreadOfs), (0.5f*spreadOfs) );
+		dir[1] = normal[1] + random->RandomFloat( -(0.5f*spreadOfs), (0.5f*spreadOfs) );
+		dir[2] = normal[2] + random->RandomFloat( -(0.5f*spreadOfs), (0.5f*spreadOfs) );
+
+		VectorNormalize( dir );
+
+		pParticle->m_flWidth		= random->RandomFloat( 1.0f, 4.0f );
+		pParticle->m_flLength		= random->RandomFloat( length*0.25f, length );
+
+		pParticle->m_vecVelocity	= dir * random->RandomFloat( (128.0f*(2.0f-spreadOfs)), (512.0f*(2.0f-spreadOfs)) );
+
+		Color32Init( pParticle->m_color, 255, 255, 255, 255 );
+	}
+
+#else
+
+	// Normal metal spark
 	FX_MetalSpark( origin, normal, normal, (int) scale );
 
+#endif // _XBOX
+
+	// Add a quad to highlite the hit point
 	FX_AddQuad( origin, 
 				normal, 
 				random->RandomFloat( 16, 32 ),
@@ -161,11 +220,15 @@ void ImpactAirboatGunCallback( const CEffectData &data )
 		return;
 	}
 
+#if !defined( _XBOX )
 	// If we hit, perform our custom effects and play the sound. Don't create decals
 	if ( Impact( vecOrigin, vecStart, iMaterial, iDamageType, iHitbox, pEntity, tr, IMPACT_NODECAL | IMPACT_REPORT_RAGDOLL_IMPACTS ) )
 	{
 		FX_AirboatGunImpact( vecOrigin, tr.plane.normal, 2 );
 	}
+#else
+	FX_AirboatGunImpact( vecOrigin, tr.plane.normal, 1 );
+#endif
 }
 
 DECLARE_CLIENT_EFFECT( "AirboatGunImpact", ImpactAirboatGunCallback );
@@ -196,7 +259,7 @@ void ImpactHelicopterCallback( const CEffectData &data )
 	// If we hit, perform our custom effects and play the sound. Don't create decals
 	if ( Impact( vecOrigin, vecStart, iMaterial, iDamageType, iHitbox, pEntity, tr, IMPACT_NODECAL | IMPACT_REPORT_RAGDOLL_IMPACTS ) )
 	{
-		FX_AirboatGunImpact( vecOrigin, tr.plane.normal, 2 );
+		FX_AirboatGunImpact( vecOrigin, tr.plane.normal, IsXbox() ? 1 : 2 );
 
 		// Only do metal + computer custom effects
 		if ( (iMaterial == CHAR_TEX_METAL) || (iMaterial == CHAR_TEX_COMPUTER) )

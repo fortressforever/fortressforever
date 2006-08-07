@@ -148,7 +148,7 @@ void CLookDoor::MoveThink(void)
 	// --------------------------------
 	if (m_hLooker == NULL)
 	{
-		m_hLooker = (CBaseEntity*)gEntList.FindEntityByName( NULL, m_target, NULL );
+		m_hLooker = (CBaseEntity*)gEntList.FindEntityByName( NULL, m_target );
 
 		if (m_hLooker == NULL)
 		{

@@ -4,6 +4,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
+
 #include "cbase.h"
 #include "hud.h"
 #include "kbutton.h"
@@ -27,7 +29,7 @@
 
 //-------------------------------------------------- Global Variables
 
-static ConVar cam_command( "cam_command", "0", FCVAR_CHEAT | FCVAR_ARCHIVE );	 // tells camera to go to thirdperson
+static ConVar cam_command( "cam_command", "0", FCVAR_CHEAT );	 // tells camera to go to thirdperson
 static ConVar cam_snapto( "cam_snapto", "0", FCVAR_ARCHIVE );	 // snap to thirdperson view
 static ConVar cam_idealyaw( "cam_idealyaw", "90", FCVAR_ARCHIVE );	 // thirdperson yaw
 static ConVar cam_idealpitch( "cam_idealpitch", "0", FCVAR_ARCHIVE );	 // thirperson pitch
@@ -44,6 +46,8 @@ static ConVar c_orthoheight( "c_orthoheight",   "100", FCVAR_ARCHIVE );
 
 static kbutton_t cam_pitchup, cam_pitchdown, cam_yawleft, cam_yawright;
 static kbutton_t cam_in, cam_out, cam_move;
+
+extern const ConVar *sv_cheats = NULL;
 
 // API Wrappers
 
@@ -212,6 +216,18 @@ void CInput::CAM_Think( void )
 	
 	if( !m_fCameraInThirdPerson )
 		return;
+
+	if ( !sv_cheats )
+	{
+		sv_cheats = cvar->FindVar( "sv_cheats" );
+	}
+
+	// If cheats have been disabled, pull us back out of third-person view.
+	if ( sv_cheats && !sv_cheats->GetBool() )
+	{
+		CAM_ToFirstPerson();
+		return;
+	}
 	
 	camAngles[ PITCH ] = cam_idealpitch.GetFloat();
 	camAngles[ YAW ] = cam_idealyaw.GetFloat();
@@ -222,9 +238,13 @@ void CInput::CAM_Think( void )
 	if (m_fCameraMovingWithMouse)
 	{
 		int cpx, cpy;
-		
+#ifndef _XBOX		
 		//get windows cursor position
 		GetMousePos (cpx, cpy);
+#else
+		//xboxfixme
+		cpx = cpy = 0;
+#endif
 		
 		m_nCameraX = cpx;
 		m_nCameraY = cpy;
@@ -305,8 +325,9 @@ void CInput::CAM_Think( void )
 				m_nCameraOldX=m_nCameraX;
 				m_nCameraOldY=m_nCameraY;
 			}
-
+#ifndef _XBOX
 			ResetMouse();
+#endif
 		}
 	}
 	
@@ -367,7 +388,9 @@ void CInput::CAM_Think( void )
 		//since we are done with the mouse
 		m_nCameraOldX=m_nCameraX*gHUD.GetSensitivity();
 		m_nCameraOldY=m_nCameraY*gHUD.GetSensitivity();
+#ifndef _XBOX
 		ResetMouse();
+#endif
 	}
 	
 	// update ideal
@@ -405,9 +428,6 @@ void CInput::CAM_Think( void )
 	m_vecCameraOffset[ 2 ] = dist;
 }
 
-extern void KeyDown( kbutton_t *b, bool bIgnoreKey = false );
-extern void KeyUp( kbutton_t *b, bool bIgnoreKey = false );
-
 void CAM_PitchUpDown(void) { KeyDown( &cam_pitchup ); }
 void CAM_PitchUpUp(void) { KeyUp( &cam_pitchup ); }
 void CAM_PitchDownDown(void) { KeyDown( &cam_pitchdown ); }
@@ -431,10 +451,13 @@ void CInput::CAM_ToThirdPerson(void)
 { 
 	QAngle viewangles;
 
-// Do allow third person in TF2 for now
-#if !defined( TF2_CLIENT_DLL ) && !defined( CSTRIKE_DLL )
-
+#if !defined( CSTRIKE_DLL )
 #if !defined( _DEBUG )
+
+// Do allow third person in TF for now
+#if defined ( TF_CLIENT_DLL )
+		// This is empty intentionally!
+#else
 	if ( gpGlobals->maxClients > 1 )
 	{
 		// no thirdperson in multiplayer.
@@ -442,6 +465,7 @@ void CInput::CAM_ToThirdPerson(void)
 	}
 #endif
 
+#endif
 #endif
 
 	engine->GetViewAngles( viewangles );
@@ -528,9 +552,12 @@ void CInput::CAM_StartMouseMove(void)
 
 			m_fCameraMovingWithMouse=true;
 			m_fCameraInterceptingMouse=true;
-			
+#ifndef _XBOX			
 			GetMousePos(cpx, cpy);
-
+#else
+			// xboxfixme
+			cpx = cpy = 0;
+#endif
 			m_nCameraX = cpx;
 			m_nCameraY = cpy;
 
@@ -590,7 +617,12 @@ void CInput::CAM_StartDistance(void)
 		  m_fCameraDistanceMove=true;
 		  m_fCameraMovingWithMouse=true;
 		  m_fCameraInterceptingMouse=true;
+#ifndef _XBOX
 		  GetMousePos(cpx, cpy);
+#else
+		  // xboxfixme
+		  cpx = cpy = 0;
+#endif
 
 		  m_nCameraX = cpx;
 		  m_nCameraY = cpy;

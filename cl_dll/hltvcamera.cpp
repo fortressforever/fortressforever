@@ -11,12 +11,18 @@
 #include "prediction.h"
 #include "movevars_shared.h"
 #include "in_buttons.h"
+#include "text_message.h"
+#include "vgui_controls/controls.h"
+#include "vgui/ILocalize.h"
+#include "vguicenterprint.h"
+#include "cl_dll\iviewport.h"
 #include <KeyValues.h>
 
 #ifdef CSTRIKE_DLL
 	#include "c_cs_player.h"
 #endif
 
+ConVar spec_autodirector( "spec_autodirector", "1", FCVAR_CLIENTDLL, "Auto-director chooses best view modes while spectating" );
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,6 +36,16 @@ static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
+
+// converts all '\r' characters to '\n', so that the engine can deal with the properly
+// returns a pointer to str
+static wchar_t* ConvertCRtoNL( wchar_t *str )
+{
+	for ( wchar_t *ch = str; *ch != 0; ch++ )
+		if ( *ch == L'\r' )
+			*ch = L'\n';
+	return str;
+}
 
 static C_HLTVCamera s_HLTVCamera;
 
@@ -51,8 +67,7 @@ void C_HLTVCamera::Init()
 	gameeventmanager->AddListener( this, "hltv_cameraman", false );
 	gameeventmanager->AddListener( this, "hltv_fixed", false );
 	gameeventmanager->AddListener( this, "hltv_chase", false );
-	gameeventmanager->AddListener( this, "hltv_fov", false );
-	gameeventmanager->AddListener( this, "hltv_inertia", false );
+	gameeventmanager->AddListener( this, "hltv_message", false );
 	
 	Reset();
 }
@@ -69,174 +84,192 @@ void C_HLTVCamera::Reset()
 	m_iTraget1 = m_iTraget2 = 0;
 	m_flFOV = 90;
 	m_flDistance = m_flLastDistance = 96.0f;
-	m_flInertia = 10.0f;
+	m_flInertia = 3.0f;
 	m_flPhi = 0;
 	m_flTheta = 0;
 	m_flOffset = 0;
 
 	m_vCamOrigin.Init();
 	m_aCamAngle.Init();
+	m_aAdjustAngle.Init();
+	m_bChaseAsFirstPerson = false;
+	
 }
 
 void C_HLTVCamera::CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
 {
-	bool bManual = false;	// chase camera controlled manually
+	bool bManual = !spec_autodirector.GetBool();	// chase camera controlled manually
+	
+ 	Vector targetOrigin1, targetOrigin2, cameraOrigin, forward;
 
-	if ( m_iTraget1 == 0 )
+ 	if ( m_iTraget1 == 0 )
 		return;
 
 	// get primary target, also translates to ragdoll
-	C_BaseEntity *target1 = GetObserverTarget();
+	C_BaseEntity *target1 = GetPrimaryTarget();
 
-	if ( !target1 )
+ 	if ( !target1 ) 
 		return;
+	
+	if ( target1->IsAlive() && target1->IsDormant() )
+		return;
+
+	targetOrigin1 = target1->GetRenderOrigin();
+
+	if ( !target1->IsAlive() )
+	{
+		targetOrigin1 += VEC_DEAD_VIEWHEIGHT;
+	}
+	else if ( target1->GetFlags() & FL_DUCKING )
+	{
+		targetOrigin1 += VEC_DUCK_VIEW;
+	}
+	else
+	{
+		targetOrigin1 += VEC_VIEW;
+	}
 
 	// get secondary target if set
 	C_BaseEntity *target2 = NULL;
 
-	if ( m_iTraget2 > 0 )
+	if ( m_iTraget2 > 0 && (m_iTraget2 != m_iTraget1) && !bManual )
 	{
 		target2 = ClientEntityList().GetBaseEntity( m_iTraget2 );
 
+		// if target is out PVS and not dead, it's not valid
+		if ( target2 && target2->IsDormant() && target2->IsAlive() )
+			target2 = NULL;
+
 		if ( target2 )
 		{
-			// if target is out PVS and not dead, it's not valid
-			if ( target2->IsDormant() && target2->IsAlive() )
-				target2 = NULL;
+			targetOrigin2 = target2->GetRenderOrigin();
 
-		}
-	}
-
-	Vector targetOrigin, cameraOrigin, forward;
-	QAngle cameraAngles;
-
-	if ( target2 )
-	{
-		forward = target2->GetRenderOrigin() - target1->GetRenderOrigin();
-		VectorAngles( forward, cameraAngles );
-		cameraAngles.z = 0; // no ROLL
-	}
-	else
-	{
-		if ( engine->IsPlayingDemo() )
-		{
-			engine->GetViewAngles( cameraAngles );
-			bManual = true;
-		}
-		else
-		{
-			cameraAngles = target1->EyeAngles();
-			cameraAngles.x = 0; // no PITCH
-			cameraAngles.z = 0; // no ROLL
-		}
-	}
-
-	// GetRenderOrigin() returns ragdoll pos if player is ragdolled
-	targetOrigin = target1->GetRenderOrigin();
-
-	if ( bManual )
-	{
-		if ( target1->GetFlags() & FL_DUCKING )
-		{
-			targetOrigin.z += VEC_DUCK_VIEW.z;
-		}
-		else
-		{
-			targetOrigin.z += VEC_VIEW.z;
-		}
-		
-	}
-	else
-	{
-		targetOrigin.z += m_flOffset; // add offset
-	}
-
-	// apply angle offset & smoothing
-	if ( !bManual )
-	{
-		QAngle angleOffset(  m_flPhi, m_flTheta, 0 );
-		cameraAngles += angleOffset;
-	
-		// smooth angles over time
-		InterpolateAngles( m_aCamAngle,	cameraAngles, cameraAngles, m_flInertia/100.0f );
-	}
-
-	AngleVectors( cameraAngles, &forward );
-
-	VectorNormalize( forward );
-
-	// smooth distance over time
-	if ( m_flLastDistance < m_flDistance )
-	{
-		// grow distance by 32 unit a second
-		m_flLastDistance += gpGlobals->frametime * 32.0f; 
-
-		// but not more than m_flDistance
-		m_flLastDistance = min( m_flDistance, m_flLastDistance );
-	}
-	else
-	{
-		m_flLastDistance = m_flDistance;
-	}
-
-	// calc optimal camera position
-	VectorMA(targetOrigin, -m_flLastDistance, forward, cameraOrigin );
-
-	int tries = bManual?1:3;
-
-	while ( tries > 0 )
-	{
-		// clip against walls
-		trace_t trace;
-		C_BaseEntity::EnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
-		UTIL_TraceHull( targetOrigin, cameraOrigin, WALL_MIN, WALL_MAX, MASK_SOLID, target1, COLLISION_GROUP_NONE, &trace );
-		C_BaseEntity::EnableAbsRecomputations( true );
-
-		if (trace.fraction < 1.0)
-		{
-			// we hit a wall, correct position and distance
-			float dist = VectorLength( trace.endpos -  targetOrigin );
-
-			// if distance is to small and not the last try...
-			if ( dist < 48.0f && tries > 1 )
+			if ( !target2->IsAlive() )
 			{
-				// camera is really close to target, move it up a bit
-				cameraOrigin.z += 24.0f;
-				tries--; // try again
+				targetOrigin2 += VEC_DEAD_VIEWHEIGHT;
+			}
+			else if ( target2->GetFlags() & FL_DUCKING )
+			{
+				targetOrigin2 += VEC_DUCK_VIEW;
 			}
 			else
 			{
-				// distance is fine
-				cameraOrigin = trace.endpos;
-				m_flLastDistance = VectorLength( cameraOrigin -  targetOrigin );
-				tries = 0; // stop 
+				targetOrigin2 += VEC_VIEW;
 			}
-		}
-		else
-		{
-			tries = 0; // everything is fine, done
 		}
 	}
 
-	// if we have 2 targets look at point between them
-	if ( target2 )
-	{
-		forward = target2->GetRenderOrigin() - target1->GetRenderOrigin();
-		VectorMA( target1->GetRenderOrigin(), 0.5f, forward, targetOrigin );
-		forward = targetOrigin - cameraOrigin;
+	QAngle cameraAngles;
 
-		VectorAngles( forward, cameraAngles );
+	if ( bManual )
+	{
+ 		engine->GetViewAngles( cameraAngles );
+	}
+	else if ( target2 )
+	{
+ 		forward = targetOrigin2 - targetOrigin1;
+        VectorAngles( forward, cameraAngles );
+        cameraAngles.z = 0; // no ROLL
+	}
+	else
+	{
+		cameraAngles = target1->EyeAngles();
+		cameraAngles.x = 0; // no PITCH
 		cameraAngles.z = 0; // no ROLL
 	}
 
-	VectorCopy( cameraAngles, m_aCamAngle );
+	// apply angle offset & smoothing
+
+	QAngle angleOffset(  m_flPhi, m_flTheta, 0 );
+
+ 	if ( !bManual )
+	{
+		if ( !target1->IsAlive() )
+		{
+			angleOffset.x = 15;
+		}
+
+		cameraAngles += angleOffset;
+	}
+
+	AngleVectors( cameraAngles+m_aAdjustAngle, &forward );
+
+	VectorNormalize( forward );
+
+	// calc optimal camera position
+	VectorMA(targetOrigin1, -m_flDistance, forward, cameraOrigin );
+
+ 	targetOrigin1.z += m_flOffset; // add offset
+
+	// clip against walls
+ 	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( targetOrigin1, cameraOrigin, WALL_MIN, WALL_MAX, MASK_SOLID, target1, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+
+  	float dist = VectorLength( trace.endpos -  targetOrigin1 );
+
+	// grow distance by 32 unit a second
+  	m_flLastDistance += gpGlobals->frametime * 32.0f; 
+
+  	if ( dist > m_flLastDistance )
+	{
+		VectorMA(targetOrigin1, -m_flLastDistance, forward, cameraOrigin );
+	}
+ 	else
+	{
+		// if camera is really close to target, move it up a bit
+     	if ( (dist < 48.0f) && !bManual )
+		{
+			if ( m_flPhi > 0  && m_aAdjustAngle.y > -180)
+			{
+				m_aAdjustAngle.y -= gpGlobals->frametime*45;
+			}
+			else if ( m_aAdjustAngle.y < 180 )
+			{
+				m_aAdjustAngle.y += gpGlobals->frametime*45;
+			}
+
+			if ( m_aAdjustAngle.x < 45  )
+			{
+				m_aAdjustAngle.x += gpGlobals->frametime*15; // try higher next time move 
+			}
+		}
+
+		cameraOrigin = trace.endpos;
+		m_flLastDistance = dist;
+	}
+	
+  	if ( m_iTraget2 && !bManual)
+	{
+		if ( target2 )
+		{
+			// if we have 2 targets look at point between them
+			forward = (targetOrigin1+targetOrigin2)/2 - cameraOrigin;
+ 			QAngle angle;
+			VectorAngles( forward, angle );
+			cameraAngles.y = angle.y;
+		}
+
+
+		NormalizeAngles( cameraAngles );
+		cameraAngles.x = clamp( cameraAngles.x, -60, 60 );
+
+
+		SmoothCameraAngle( cameraAngles );
+	}
+	else
+	{
+		SetCameraAngle( cameraAngles );
+	}
+ 	
 	VectorCopy( cameraOrigin, m_vCamOrigin );
 
 	VectorCopy( m_aCamAngle, eyeAngles );
 	VectorCopy( m_vCamOrigin, eyeOrigin );
 }
 
-int C_HLTVCamera::GetObserverMode()
+int C_HLTVCamera::GetMode()
 {
 	if ( m_iCameraMan > 0 )
 	{
@@ -249,7 +282,7 @@ int C_HLTVCamera::GetObserverMode()
 	return m_nCameraMode;	
 }
 
-C_BaseEntity* C_HLTVCamera::GetObserverTarget()
+C_BaseEntity* C_HLTVCamera::GetPrimaryTarget()
 {
 	if ( m_iCameraMan > 0 )
 	{
@@ -281,9 +314,16 @@ void C_HLTVCamera::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 	if ( !pPlayer )
 		return;
 
+	if ( !pPlayer->IsAlive() )
+	{
+		// if dead, show from 3rd person
+		CalcChaseCamView( eyeOrigin, eyeAngles, fov );
+		return;
+	}
+
 	m_aCamAngle	= pPlayer->EyeAngles();
 	m_vCamOrigin = pPlayer->GetAbsOrigin();
-	fov = m_flFOV =	pPlayer->GetFOV();
+	m_flFOV = pPlayer->GetFOV();
 
 	if ( pPlayer->GetFlags() & FL_DUCKING )
 	{
@@ -296,7 +336,17 @@ void C_HLTVCamera::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 
 	eyeOrigin = m_vCamOrigin;
 	eyeAngles = m_aCamAngle;
-	
+	fov = m_flFOV;
+
+	pPlayer->CalcViewModelView( eyeOrigin, eyeAngles);
+
+	C_BaseViewModel *pViewModel = pPlayer->GetViewModel( 0 );
+
+	if ( pViewModel )
+	{
+		Assert( pViewModel->GetOwner() == pPlayer );
+		pViewModel->UpdateVisibility();
+	}
 }
 
 void C_HLTVCamera::CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
@@ -325,7 +375,9 @@ void C_HLTVCamera::CalcFixedView(Vector& eyeOrigin, QAngle& eyeAngles, float& fo
 	if ( traget )
 	{
 		// if we're chasing a target, change viewangles
-		VectorAngles( traget->GetAbsOrigin() - m_vCamOrigin, m_aCamAngle );
+		QAngle angle;
+		VectorAngles( (traget->GetAbsOrigin()+VEC_VIEW) - m_vCamOrigin, angle );
+		SmoothCameraAngle( angle );
 	}
 }
 
@@ -361,8 +413,45 @@ void C_HLTVCamera::CalcView(Vector& origin, QAngle& angles, float& fov)
 
 void C_HLTVCamera::SetMode(int iMode)
 {
-	Assert( iMode > OBS_MODE_NONE && iMode <= OBS_MODE_ROAMING );
+	if ( m_nCameraMode == iMode )
+		return;
+
+    Assert( iMode > OBS_MODE_NONE && iMode <= OBS_MODE_ROAMING );
+
 	m_nCameraMode = iMode;
+}
+
+void C_HLTVCamera::SetPrimaryTarget( int nEntity ) 
+{
+ 	if ( m_iTraget1 == nEntity )
+		return;
+
+	m_iTraget1 = nEntity;
+
+	if ( GetMode() == OBS_MODE_ROAMING )
+	{
+		Vector vOrigin;
+		QAngle aAngles;
+		float flFov;
+
+		CalcChaseCamView( vOrigin,  aAngles, flFov );
+
+		prediction->SetViewOrigin( vOrigin );
+		prediction->SetViewAngles( aAngles );
+	}
+	else if ( GetMode() == OBS_MODE_CHASE )
+	{
+		C_BaseEntity* target = ClientEntityList().GetEnt( m_iTraget1 );
+		if ( target )
+		{
+			QAngle eyeAngle = target->EyeAngles();
+			prediction->SetViewAngles( eyeAngle );
+		}
+	}
+
+	m_aAdjustAngle.Init();
+	m_flLastDistance = m_flDistance;
+	m_flLastAngleUpdateTime = -1;
 }
 
 void C_HLTVCamera::SpecNextPlayer( bool bInverse )
@@ -403,7 +492,7 @@ void C_HLTVCamera::SpecNextPlayer( bool bInverse )
 		break; // found a new player
 	}
 
-	m_iTraget1 = index;
+	SetPrimaryTarget( index );
 }
 
 void C_HLTVCamera::SpecNamedPlayer( const char *szPlayerName )
@@ -422,7 +511,7 @@ void C_HLTVCamera::SpecNamedPlayer( const char *szPlayerName )
 		if ( pPlayer->IsObserver() && pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
 			continue;
 
-		m_iTraget1 = index;
+		SetPrimaryTarget( index );
 		return;
 	}
 }
@@ -437,7 +526,48 @@ void C_HLTVCamera::FireGameEvent( IGameEvent * event)
 	if ( Q_strcmp( "game_newmap", type ) == 0 )
 	{
 		Reset();	// reset all camera settings
+
+		// show spectator UI
+		if ( !gViewPortInterface )
+			return;
+
+		if ( engine->IsPlayingDemo() )
+        {
+			// for demo playback show full menu
+			gViewPortInterface->ShowPanel( PANEL_SPECMENU, true );
+
+			SetMode( OBS_MODE_ROAMING );
+		}
+		else
+		{
+			// during live broadcast only show black bars
+			gViewPortInterface->ShowPanel( PANEL_SPECGUI, true );
+		}
+
 		return;
+	}
+
+	else if ( Q_strcmp( "hltv_message", type ) == 0 )
+	{
+		wchar_t outputBuf[1024];
+		const char *pszText = event->GetString( "text", "" );
+		
+		char *tmpStr = hudtextmessage->LookupString( pszText );
+		const wchar_t *pBuf = vgui::localize()->Find( tmpStr );
+		if ( pBuf )
+		{
+			// Copy pBuf into szBuf[i].
+			int nMaxChars = sizeof( outputBuf ) / sizeof( wchar_t );
+			wcsncpy( outputBuf, pBuf, nMaxChars );
+			outputBuf[nMaxChars-1] = 0;
+		}
+		else
+		{
+			vgui::localize()->ConvertANSIToUnicode( tmpStr, outputBuf, sizeof(outputBuf) );
+		}
+
+		internalCenterPrint->Print( ConvertCRtoNL( outputBuf ) );
+		return ;
 	}
 
 	else if ( Q_strcmp( "hltv_cameraman", type ) == 0 )
@@ -445,49 +575,81 @@ void C_HLTVCamera::FireGameEvent( IGameEvent * event)
 		Reset();
 
 		m_nCameraMode = OBS_MODE_ROAMING;
+		m_iCameraMan = event->GetInt( "index" ); 
 		
-		if ( event->GetBool("active") )
-		{
-			m_iCameraMan = event->GetInt( "index" ); 
-		}
-		else 
-		{
-			m_iCameraMan = 0;
-		}
-
 		return;
 	}
 
 	else if ( Q_strcmp( "hltv_fixed", type ) == 0 )
 	{
-		m_nCameraMode = OBS_MODE_FIXED;
+		if ( m_nCameraMode != OBS_MODE_FIXED )
+		{
+			SetMode( OBS_MODE_FIXED );
+			m_flFOV = event->GetFloat( "fov" );
+		}
+
 		m_iCameraMan  = 0;
 		
 		m_vCamOrigin.x = event->GetInt( "posx" );
 		m_vCamOrigin.y = event->GetInt( "posy" );
 		m_vCamOrigin.z = event->GetInt( "posz" );
 
-		m_aCamAngle.x = event->GetInt( "theta" );
-		m_aCamAngle.y = event->GetInt( "phi" );
-		m_aCamAngle.z = 0; // no roll yet
+		QAngle angle;
+		angle.x = event->GetInt( "theta" );
+		angle.y = event->GetInt( "phi" );
+		angle.z = 0; // no roll yet
 
-		m_iTraget1 = event->GetInt( "target" );
+		SetPrimaryTarget( event->GetInt( "target" ) );
+
+		if ( m_iTraget1 == 0 )
+		{
+			SetCameraAngle( angle );
+		}
+		else
+		{
+			m_flLastAngleUpdateTime = -1;
+		}
 		
+				
 		return;
 	}
 
 	else if ( Q_strcmp( "hltv_chase", type ) == 0 )
 	{
-		m_nCameraMode = OBS_MODE_CHASE;
+		bool bInEye	= m_bChaseAsFirstPerson;
+
+		if ( spec_autodirector.GetBool() )
+		{
+			// use is in auto mode, let director decide what view mode we want
+ 			bInEye = event->GetInt( "ineye" );
+		}
+
+		if ( bInEye )
+		{
+			SetMode( OBS_MODE_IN_EYE );
+		}
+		else
+		{
+			SetMode( OBS_MODE_CHASE );
+		}
+
 		m_iCameraMan  = 0;
 				
-		m_iTraget1		= event->GetInt( "target1" );
 		m_iTraget2		= event->GetInt( "target2" );
 		m_flDistance	= event->GetFloat( "distance", m_flDistance );
 		m_flOffset		= event->GetFloat( "offset", m_flOffset );
 		m_flTheta		= event->GetFloat( "theta", m_flTheta );
 		m_flPhi			= event->GetFloat( "phi", m_flPhi );
-						
+		m_flFOV			= 90;
+ 		m_flInertia		= event->GetFloat( "inertia", 30.f ) / 10.f;
+
+		// if inertia is not set use standard value
+		if ( m_flInertia <= 0 )
+			m_flInertia = 3.0f;
+
+
+		SetPrimaryTarget( event->GetInt( "target1" ) );
+							
 		return;
 	}
 }
@@ -543,4 +705,45 @@ void C_HLTVCamera::CreateMove( CUserCmd *cmd)
 	VectorMA( origin, TICK_INTERVAL, wishvel, origin );
 
 	prediction->SetViewOrigin( origin );
+}
+
+void C_HLTVCamera::SetCameraAngle( QAngle& targetAngle )
+{
+	m_aCamAngle	= targetAngle;
+ 	NormalizeAngles( m_aCamAngle );
+	m_flLastAngleUpdateTime = gpGlobals->realtime;
+}
+
+void C_HLTVCamera::SmoothCameraAngle( QAngle& targetAngle )
+{
+	if ( m_flLastAngleUpdateTime > 0 )
+	{
+		float deltaTime = gpGlobals->realtime - m_flLastAngleUpdateTime;
+
+		deltaTime = clamp( deltaTime*m_flInertia, 0.01, 1);
+
+		InterpolateAngles( m_aCamAngle, targetAngle, m_aCamAngle, deltaTime );
+	}
+	else
+	{
+		m_aCamAngle = targetAngle;
+	}
+
+	m_flLastAngleUpdateTime = gpGlobals->realtime;
+}
+
+void C_HLTVCamera::ToggleChaseAsFirstPerson()
+{
+	spec_autodirector.SetValue( 0 );
+
+	m_bChaseAsFirstPerson = !m_bChaseAsFirstPerson;
+
+	if ( m_bChaseAsFirstPerson  )
+	{
+		SetMode( OBS_MODE_IN_EYE );
+	}
+	else
+	{
+		SetMode( OBS_MODE_CHASE );
+	}
 }

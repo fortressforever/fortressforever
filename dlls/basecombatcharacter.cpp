@@ -34,9 +34,12 @@
 #include "globalstate.h"
 #include "items.h"
 #include "movevars_shared.h"
+#include "RagdollBoogie.h"
+#include "rumble_shared.h"
 
 #ifdef HL2_DLL
 #include "weapon_physcannon.h"
+#include "hl2_gamerules.h"
 #endif
 
 #include "ff_player.h"
@@ -56,15 +59,16 @@ extern int	g_interactionBarnacleVictimReleased;
 extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
+ConVar ai_force_serverside_ragdoll( "ai_force_serverside_ragdoll", "0" );
+
+#ifndef _RETAIL
+ConVar ai_use_visibility_cache( "ai_use_visibility_cache", "1" );
+#define ShouldUseVisibilityCache() ai_use_visibility_cache.GetBool()
+#else
+#define ShouldUseVisibilityCache() true
+#endif
 
 BEGIN_DATADESC( CBaseCombatCharacter )
-
-#ifdef TF2_DLL
-	DEFINE_FIELD( m_iPowerups, FIELD_INTEGER ),
-	DEFINE_ARRAY( m_flPowerupAttemptTimes, FIELD_TIME, MAX_POWERUPS ),
-	DEFINE_ARRAY( m_flPowerupEndTimes, FIELD_TIME, MAX_POWERUPS ),
-	DEFINE_FIELD( m_flFractionalBoost, FIELD_FLOAT ),
-#endif
 
 	DEFINE_FIELD( m_flNextAttack, FIELD_TIME ),
 	DEFINE_FIELD( m_eHull, FIELD_INTEGER ),
@@ -84,14 +88,11 @@ BEGIN_DATADESC( CBaseCombatCharacter )
 	DEFINE_AUTO_ARRAY( m_iAmmo, FIELD_INTEGER ),
 	DEFINE_AUTO_ARRAY( m_hMyWeapons, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hActiveWeapon, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_bForceServerRagdoll, FIELD_BOOLEAN ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "KilledNPC", InputKilledNPC ),
 
 END_DATADESC()
-
-
-BEGIN_PREDICTION_DATA( CBaseCombatCharacter )
-END_PREDICTION_DATA()
 
 
 BEGIN_SIMPLE_DATADESC( Relationship_t )
@@ -113,6 +114,10 @@ Relationship_t**	CBaseCombatCharacter::m_DefaultRelationship	= NULL;
 class CCleanupDefaultRelationShips : public CAutoGameSystem
 {
 public:
+	CCleanupDefaultRelationShips( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	virtual void Shutdown()
 	{
 		if ( !CBaseCombatCharacter::m_DefaultRelationship )
@@ -128,14 +133,15 @@ public:
 	}
 };
 
-static CCleanupDefaultRelationShips g_CleanupDefaultRelationships;
+static CCleanupDefaultRelationShips g_CleanupDefaultRelationships( "CCleanupDefaultRelationShips" );
 
 void *SendProxy_SendBaseCombatCharacterLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
 {
-	CBaseCombatCharacter *pBCC = ( CBaseCombatCharacter * )pStruct;
 	// Only send to local player if this is a player
 	pRecipients->ClearAllRecipients();
-	if ( pBCC )
+	
+	CBaseCombatCharacter *pBCC = ( CBaseCombatCharacter * )pStruct;
+	if ( pBCC != NULL)
 	{
 		if ( pBCC->IsPlayer() )
 		{
@@ -144,19 +150,20 @@ void *SendProxy_SendBaseCombatCharacterLocalDataTable( const SendProp *pProp, co
 		else
 		{
 			// If it's a vehicle, send to "driver" (e.g., operator of tf2 manned guns)
-			IServerVehicle *v = pBCC->GetServerVehicle();
-			if ( v )
+			IServerVehicle *pVehicle = pBCC->GetServerVehicle();
+			if ( pVehicle != NULL )
 			{
-				CBasePlayer *driver = v->GetPassenger();
-				if ( driver )
+				CBaseCombatCharacter *pDriver = pVehicle->GetPassenger();
+				if ( pDriver != NULL )
 				{
-					pRecipients->SetOnly( driver->entindex() - 1 );
+					pRecipients->SetOnly( pDriver->entindex() - 1 );
 				}
 			}
 		}
 	}
 	return ( void * )pVarData;
 }
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendBaseCombatCharacterLocalDataTable );
 
 // Only send active weapon index to local player
 BEGIN_SEND_TABLE_NOBASE( CBaseCombatCharacter, DT_BCCLocalPlayerExclusive )
@@ -172,10 +179,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
 	SendPropDataTable( "bcc_localdata", 0, &REFERENCE_SEND_TABLE(DT_BCCLocalPlayerExclusive), SendProxy_SendBaseCombatCharacterLocalDataTable ),
 
 	SendPropEHandle( SENDINFO( m_hActiveWeapon ) ),
-
-#ifdef TF2_DLL
-	SendPropInt( SENDINFO(m_iPowerups), MAX_POWERUPS, SPROP_UNSIGNED ), 
-#endif
 
 END_SEND_TABLE()
 
@@ -274,6 +277,144 @@ void CBaseCombatCharacter::CorpseFade( void )
 	AddEffects( EF_NOINTERP );
 	SUB_StartFadeOut();
 }
+
+//-----------------------------------------------------------------------------
+// Visibility caching
+//-----------------------------------------------------------------------------
+
+struct VisibilityCacheEntry_t
+{
+	CBaseEntity *pEntity1;
+	CBaseEntity *pEntity2;
+	EHANDLE		pBlocker;
+	float		time;
+};
+
+class CVisibilityCacheEntryLess
+{
+public:
+	CVisibilityCacheEntryLess( int ) {}
+	bool operator!() const { return false; }
+	bool operator()( const VisibilityCacheEntry_t &lhs, const VisibilityCacheEntry_t &rhs ) const
+	{
+		return ( memcmp( &lhs, &rhs, offsetof( VisibilityCacheEntry_t, pBlocker ) ) < 0 );
+	}
+};
+
+static CUtlRBTree<VisibilityCacheEntry_t, unsigned short, CVisibilityCacheEntryLess> g_VisibilityCache;
+const float VIS_CACHE_ENTRY_LIFE = ( !IsXbox() ) ? .090 : .500;
+
+bool CBaseCombatCharacter::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **ppBlocker )
+{
+	VPROF( "CBaseCombatCharacter::FVisible" );
+
+	if ( traceMask != MASK_OPAQUE || !ShouldUseVisibilityCache() || pEntity == this )
+	{
+		return BaseClass::FVisible( pEntity, traceMask, ppBlocker );
+	}
+
+	VisibilityCacheEntry_t cacheEntry;
+
+	if ( this < pEntity )
+	{
+		cacheEntry.pEntity1 = this;
+		cacheEntry.pEntity2 = pEntity;
+	}
+	else
+	{
+		cacheEntry.pEntity1 = pEntity;
+		cacheEntry.pEntity2 = this;
+	}
+
+	int iCache = g_VisibilityCache.Find( cacheEntry );
+
+	if ( iCache != g_VisibilityCache.InvalidIndex() )
+	{
+		if ( gpGlobals->curtime - g_VisibilityCache[iCache].time < VIS_CACHE_ENTRY_LIFE )
+		{
+			bool bCachedResult = !g_VisibilityCache[iCache].pBlocker.IsValid();
+			if ( bCachedResult )
+			{
+				if ( ppBlocker )
+				{
+					*ppBlocker = g_VisibilityCache[iCache].pBlocker;
+					if ( !*ppBlocker )
+					{
+						*ppBlocker = GetWorldEntity();
+					}
+				}
+			}
+			else
+			{
+				if ( ppBlocker )
+				{
+					*ppBlocker = NULL;
+				}
+			}
+			return bCachedResult;
+		}
+	}
+	else
+	{
+		if ( g_VisibilityCache.Count() != g_VisibilityCache.InvalidIndex() )
+		{
+			iCache = g_VisibilityCache.Insert( cacheEntry );
+		}
+		else
+		{
+			return BaseClass::FVisible( pEntity, traceMask, ppBlocker );
+		}
+	}
+
+	CBaseEntity *pBlocker = NULL;
+	if ( ppBlocker == NULL )
+	{
+		ppBlocker = &pBlocker;
+	}
+
+	bool bResult = BaseClass::FVisible( pEntity, traceMask, ppBlocker );
+
+	if ( !bResult )
+	{
+		g_VisibilityCache[iCache].pBlocker = *ppBlocker;
+	}
+	else
+	{
+		g_VisibilityCache[iCache].pBlocker = NULL;
+	}
+
+	g_VisibilityCache[iCache].time = gpGlobals->curtime;
+
+	return bResult;
+}
+
+void CBaseCombatCharacter::ResetVisibilityCache( CBaseCombatCharacter *pBCC )
+{
+	VPROF( "CBaseCombatCharacter::ResetVisibilityCache" );
+	if ( !pBCC )
+	{
+		g_VisibilityCache.RemoveAll();
+		return;
+	}
+
+	int i = g_VisibilityCache.FirstInorder();
+	CUtlVector<unsigned short> removals;
+	while ( i != g_VisibilityCache.InvalidIndex() )
+	{
+		if ( g_VisibilityCache[i].pEntity1 == pBCC || g_VisibilityCache[i].pEntity2 == pBCC )
+		{
+			removals.AddToTail( i );
+		}
+		i = g_VisibilityCache.NextInorder( i );
+	}
+
+	for ( i = 0; i < removals.Count(); i++ )
+	{
+		g_VisibilityCache.RemoveAt( removals[i] );
+	}
+}
+
+//-----------------------------------------------------------------------------
 
 //=========================================================
 // FInViewCone - returns true is the passed ent is in
@@ -391,6 +532,8 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 
 	// Default so that spawned entities have this set
 	m_impactEnergyScale = 1.0f;
+
+	m_bForceServerRagdoll = ai_force_serverside_ragdoll.GetBool();
 }
 
 //------------------------------------------------------------------------------
@@ -400,6 +543,7 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 //------------------------------------------------------------------------------
 CBaseCombatCharacter::~CBaseCombatCharacter( void )
 {
+	ResetVisibilityCache( this );
 }
 
 //-----------------------------------------------------------------------------
@@ -757,6 +901,10 @@ bool CTraceFilterMelee::ShouldHitEntity( IHandleEntity *pHandleEntity, int conte
 				{
 					pEntity->TakeDamage( info );
 				}
+				
+				// Put a combat sound in
+				CSoundEnt::InsertSound( SOUND_COMBAT, info.GetDamagePosition(), 200, 0.2f, info.GetAttacker() );
+
 				m_pHit = pEntity;
 				return true;
 			}
@@ -833,6 +981,12 @@ CBaseEntity *CBaseCombatCharacter::CheckTraceHullAttack( const Vector &vStart, c
 		enginetrace->TraceRay( ray, MASK_SHOT_HULL, &traceFilter, &tr );
 
 		pEntity = traceFilter.m_pHit;
+	}
+
+	if( pEntity && !pEntity->CanBeHitByMeleeAttack(this) )
+	{
+		// If we touched something, but it shouldn't be hit, return nothing.
+		pEntity = NULL;
 	}
 
 	return pEntity;
@@ -1015,6 +1169,56 @@ Vector CBaseCombatCharacter::CalcDamageForceVector( const CTakeDamageInfo &info 
 	return vec3_origin;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::FixupBurningServerRagdoll( CBaseEntity *pRagdoll )
+{
+	if ( !IsOnFire() )
+		return;
+
+	// Move the fire effects entity to the ragdoll
+	CEntityFlame *pFireChild = dynamic_cast<CEntityFlame *>( GetEffectEntity() );
+	if ( pFireChild )
+	{
+		SetEffectEntity( NULL );
+		pRagdoll->AddFlag( FL_ONFIRE );
+		pFireChild->SetAbsOrigin( pRagdoll->GetAbsOrigin() );
+		pFireChild->AttachToEntity( pRagdoll );
+		pFireChild->AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
+ 		pRagdoll->SetEffectEntity( pFireChild );
+
+		color32 color = GetRenderColor();
+		pRagdoll->SetRenderColor( color.r, color.g, color.b );
+	}
+}
+
+bool CBaseCombatCharacter::BecomeRagdollBoogie( CBaseEntity *pKiller, const Vector &forceVector, float duration, int flags )
+{
+	Assert( CanBecomeRagdoll() );
+
+	CTakeDamageInfo info( pKiller, pKiller, 1.0f, DMG_GENERIC );
+
+	info.SetDamageForce( forceVector );
+
+	CBaseEntity *pRagdoll = CreateServerRagdoll( this, 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+
+	pRagdoll->SetCollisionBounds( CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs() );
+
+	CRagdollBoogie::Create( pRagdoll, 200, gpGlobals->curtime, duration, flags );
+
+	CTakeDamageInfo ragdollInfo( pKiller, pKiller, 10000.0, DMG_GENERIC | DMG_REMOVENORAGDOLL );
+	ragdollInfo.SetDamagePosition(WorldSpaceCenter());
+	ragdollInfo.SetDamageForce( Vector( 0, 0, 1) );
+	TakeDamage( ragdollInfo );
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector )
 {
 	if ( (info.GetDamageType() & DMG_VEHICLE) && !g_pGameRules->IsMultiplayer() )
@@ -1046,25 +1250,51 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 #endif
 		// in single player create ragdolls on the server when the player hits someone
 		// with their vehicle - for more dramatic death/collisions
-		CreateServerRagdoll( this, m_nForceBone, info2, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, info2, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		FixupBurningServerRagdoll( pRagdoll );
 		RemoveDeferred();
 		return true;
 	}
 
-#ifdef HL2_DLL	
-	// Mega physgun requires everything to be a server-side ragdoll
-	if ( ( GlobalEntity_GetState("super_phys_gun") == GLOBAL_ON ) && !IsPlayer() )
-	{
-		//FIXME: This is fairly leafy to be here, but time is short!
-		if ( FClassnameIs( this, "npc_combine_s" ) )
-		{
-			CreateServerRagdoll( this, m_nForceBone, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-		}
+	//Fix up the force applied to server side ragdolls. This fixes magnets not affecting them.
+	CTakeDamageInfo newinfo = info;
+	newinfo.SetDamageForce( forceVector );
 
+#ifdef HL2_EPISODIC
+	// Burning corpses are server-side in episodic, if we're in darkness mode
+	if ( IsOnFire() && HL2GameRules()->IsAlyxInDarknessMode() )
+	{
+		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_DEBRIS );
+		FixupBurningServerRagdoll( pRagdoll );
 		RemoveDeferred();
 		return true;
 	}
 #endif
+
+#ifdef HL2_DLL	
+	// Mega physgun requires everything to be a server-side ragdoll
+	if ( m_bForceServerRagdoll == true || ( HL2GameRules()->MegaPhyscannonActive() == true ) && !IsPlayer() && Classify() != CLASS_PLAYER_ALLY_VITAL && Classify() != CLASS_PLAYER_ALLY )
+	{
+		//FIXME: This is fairly leafy to be here, but time is short!
+		if ( CanBecomeServerRagdoll() )
+		{
+			CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+			FixupBurningServerRagdoll( pRagdoll );
+			PhysSetEntityGameFlags( pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS );
+		}
+
+		RemoveDeferred();
+
+		return true;
+	}
+
+	if( hl2_episodic.GetBool() && Classify() == CLASS_PLAYER_ALLY_VITAL )
+	{
+		CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		RemoveDeferred();
+		return true;
+	}
+#endif //HL2_DLL
 
 	return BecomeRagdollOnClient( forceVector );
 }
@@ -1147,6 +1377,7 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 		// Tell my killer that he got me!
 		if( info.GetAttacker() )
 		{
+			info.GetAttacker()->Event_KilledOther(this, info);
 			g_EventQueue.AddEvent( info.GetAttacker(), "KilledNPC", 0.3, this, this );
 		}
 
@@ -1193,6 +1424,36 @@ void CBaseCombatCharacter::ThrowDirForWeaponStrip( CBaseCombatWeapon *pWeapon, c
 	// This is necessary for the physgun upgrade scene.
 	if ( FClassnameIs( pWeapon, "weapon_physcannon" ) )
 	{
+		if( hl2_episodic.GetBool() )
+		{
+			// It has been discovered that it's possible to throw the physcannon out of the world this way.
+			// So try to find a direction to throw the physcannon that's legal.
+			Vector vecOrigin = EyePosition();
+			Vector vecRight;
+
+			CrossProduct( vecForward, Vector( 0, 0, 1), vecRight );
+
+			Vector vecTest[ 4 ];
+			vecTest[0] = vecForward;
+			vecTest[1] = -vecForward;
+			vecTest[2] = vecRight;
+			vecTest[3] = -vecRight;
+
+			trace_t tr;
+			int i;
+			for( i = 0 ; i < 4 ; i++ )
+			{
+				UTIL_TraceLine( vecOrigin, vecOrigin + vecTest[ i ] * 48.0f, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+				if ( !tr.startsolid && tr.fraction == 1.0f )
+				{
+					*pVecThrowDir = vecTest[ i ];
+					return;
+				}
+			}
+		}
+
+		// Well, fall through to what we did before we tried to make this a bit more robust.
 		*pVecThrowDir = vecForward;
 	}
 	else
@@ -1342,21 +1603,38 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 	// If I'm an NPC, fill the weapon with ammo before I drop it.
 	if ( GetFlags() & FL_NPC )
 	{
-		pWeapon->m_iClip1 = pWeapon->GetDefaultClip1();
-		pWeapon->m_iClip2 = pWeapon->GetDefaultClip2();
-
-		if( FClassnameIs( pWeapon, "weapon_smg1" ) )
+		if ( pWeapon->UsesClipsForAmmo1() )
 		{
-			// Drop enough ammo to kill 2 of me.
-			// Figure out how much damage one piece of this type of ammo does to this type of enemy.
-			float flAmmoDamage = g_pGameRules->GetAmmoDamage( UTIL_PlayerByIndex(1), this, pWeapon->GetPrimaryAmmoType() );
-			pWeapon->m_iClip1 = (GetMaxHealth() / flAmmoDamage) * 2;
+			pWeapon->m_iClip1 = pWeapon->GetDefaultClip1();
+
+			if( FClassnameIs( pWeapon, "weapon_smg1" ) )
+			{
+				// Drop enough ammo to kill 2 of me.
+				// Figure out how much damage one piece of this type of ammo does to this type of enemy.
+				float flAmmoDamage = g_pGameRules->GetAmmoDamage( UTIL_PlayerByIndex(1), this, pWeapon->GetPrimaryAmmoType() );
+				pWeapon->m_iClip1 = (GetMaxHealth() / flAmmoDamage) * 2;
+			}
+		}
+		if ( pWeapon->UsesClipsForAmmo2() )
+		{
+			pWeapon->m_iClip2 = pWeapon->GetDefaultClip2();
+		}
+
+		if ( IsXbox() )
+		{
+			pWeapon->AddEffects( EF_ITEM_BLINK );
 		}
 	}
 
 	if ( IsPlayer() )
 	{
 		Vector vThrowPos = Weapon_ShootPosition() - Vector(0,0,12);
+
+		if( UTIL_PointContents(vThrowPos) & CONTENTS_SOLID )
+		{
+			Msg("Weapon spawning in solid!\n");
+		}
+
 		pWeapon->SetAbsOrigin( vThrowPos );
 
 		QAngle gunAngles;
@@ -1368,12 +1646,12 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 		int iBIndex = -1;
 		int iWeaponBoneIndex = -1;
 
-		studiohdr_t *hdr = pWeapon->GetModelPtr();
+		CStudioHdr *hdr = pWeapon->GetModelPtr();
 		// If I have a hand, set the weapon position to my hand bone position.
-		if ( hdr && hdr->numbones > 0 )
+		if ( hdr && hdr->numbones() > 0 )
 		{
 			// Assume bone zero is the root
-			for ( iWeaponBoneIndex = 0; iWeaponBoneIndex < hdr->numbones; ++iWeaponBoneIndex )
+			for ( iWeaponBoneIndex = 0; iWeaponBoneIndex < hdr->numbones(); ++iWeaponBoneIndex )
 			{
 				iBIndex = LookupBone( hdr->pBone( iWeaponBoneIndex )->pszName() );
 				// Found one!
@@ -1471,12 +1749,12 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 //-----------------------------------------------------------------------------
 // Lighting origin
 //-----------------------------------------------------------------------------
-void CBaseCombatCharacter::SetLightingOrigin( CBaseEntity *pLightingOrigin )
+void CBaseCombatCharacter::SetLightingOriginRelative( CBaseEntity *pLightingOrigin )
 {
-	BaseClass::SetLightingOrigin( pLightingOrigin );
+	BaseClass::SetLightingOriginRelative( pLightingOrigin );
 	if ( GetActiveWeapon() )
 	{
-		GetActiveWeapon()->SetLightingOrigin( pLightingOrigin );
+		GetActiveWeapon()->SetLightingOriginRelative( pLightingOrigin );
 	}
 }
 
@@ -1580,7 +1858,7 @@ void CBaseCombatCharacter::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	SetCurrentWeaponProficiency( proficiency );
 
 	// Pass the lighting origin over to the weapon if we have one
-	pWeapon->SetLightingOrigin( GetLightingOrigin() );
+	pWeapon->SetLightingOriginRelative( GetLightingOriginRelative() );
 }
 
 //-----------------------------------------------------------------------------
@@ -1714,7 +1992,9 @@ bool CBaseCombatCharacter::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
 			Activity translatedActivity = NPC_TranslateActivity( (Activity)(pTable->weaponAct) );
 
 			if ( SelectWeightedSequence(translatedActivity) == ACTIVITY_NOT_AVAILABLE )
+			{
 				return false;
+			}
 		}
 	}
 
@@ -1794,6 +2074,8 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 
 	if (!m_takedamage)
 		return 0;
+
+	m_iDamageCount++;
 
 	if ( info.GetDamageType() & DMG_SHOCK )
 	{
@@ -1974,6 +2256,8 @@ void CBaseCombatCharacter::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways 
 	}
 	else
 	{
+		// The check for EF_NODRAW is useless because the weapon will be networked anyway. In CBaseCombatWeapon::
+		// UpdateTransmitState all weapons with owners will transmit to clients in the PVS.
 		if ( m_hActiveWeapon && !m_hActiveWeapon->IsEffectActive( EF_NODRAW ) )
 			m_hActiveWeapon->SetTransmit( pInfo, bAlways );
 	}
@@ -2037,6 +2321,26 @@ void CBaseCombatCharacter::AddEntityRelationship ( CBaseEntity* pEntity, Disposi
 	m_Relationship[index].priority		= ( priority != DEF_RELATIONSHIP_PRIORITY ) ? priority : 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Removes an entity relationship from our list
+// Input  : *pEntity - Entity with whom the relationship should be ended
+// Output : True is entity was removed, false if it was not found
+//-----------------------------------------------------------------------------
+bool CBaseCombatCharacter::RemoveEntityRelationship( CBaseEntity *pEntity )
+{
+	// Find the entity in our list, if it exists
+	for ( int i = m_Relationship.Count()-1; i >= 0; i-- ) 
+	{
+		if ( m_Relationship[i].entity == pEntity )
+		{
+			// Done, remove it
+			m_Relationship.Remove( i );
+			return true;
+		}
+	}
+
+	return false;
+}
 
 //-----------------------------------------------------------------------------
 // Allocates default relationships
@@ -2069,6 +2373,19 @@ void CBaseCombatCharacter::SetDefaultRelationship(Class_T nClass, Class_T nClass
 		m_DefaultRelationship[nClass][nClassTarget].priority	= nPriority;
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Fetch the default (ignore ai_relationship changes) relationship
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+Disposition_t CBaseCombatCharacter::GetDefaultRelationshipDisposition( Class_T nClassTarget )
+{
+	Assert( m_DefaultRelationship != NULL );
+
+	return m_DefaultRelationship[Classify()][nClassTarget].disposition;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: describes the relationship between two types of NPC.
@@ -2202,6 +2519,19 @@ bool CBaseCombatCharacter::Weapon_IsOnGround( CBaseCombatWeapon *pWeapon )
 //-----------------------------------------------------------------------------
 CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 {
+	bool bConservative = false;
+
+#ifdef HL2_DLL
+	if( hl2_episodic.GetBool() && !GetActiveWeapon() )
+	{
+		// Unarmed citizens are conservative in their weapon finding
+		if ( Classify() != CLASS_PLAYER_ALLY_VITAL )
+		{
+			bConservative = true;
+		}
+	}
+#endif
+
 	CBaseCombatWeapon *weaponList[64];
 	CBaseCombatWeapon *pBestWeapon = NULL;
 
@@ -2219,6 +2549,9 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 		CBaseCombatWeapon *pWeapon = weaponList[i];
 		Assert(pWeapon);
 		pWeapon->GetVelocity( &velocity, NULL );
+
+		if ( pWeapon->CanBePickedUpByNPCs() == false )
+			continue;
 
 		if ( velocity.LengthSqr() > 1 || !Weapon_CanUse(pWeapon) )
 			continue;
@@ -2243,6 +2576,12 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 		}
 
 		float fCurDist = (pWeapon->GetLocalOrigin() - GetLocalOrigin()).Length();
+
+		// Give any reserved weapon a bonus
+		if( pWeapon->HasSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP ) )
+		{
+			fCurDist *= 0.5f;
+		}
 
 		if ( pBestWeapon )
 		{
@@ -2278,6 +2617,11 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 
 			if ( tr.startsolid || (tr.fraction < 1.0) )
 				continue;
+		}
+		else if( bConservative )
+		{
+			// Skip it.
+			continue;
 		}
 
 		if( FVisible(pWeapon) )
@@ -2353,7 +2697,7 @@ int CBaseCombatCharacter::GiveAmmo( int iCount, const char *szName, bool bSuppre
 ConVar	phys_stressbodyweights( "phys_stressbodyweights", "5.0" );
 void CBaseCombatCharacter::VPhysicsUpdate( IPhysicsObject *pPhysics )
 {
-	ApplyStressDamage( pPhysics );
+	ApplyStressDamage( pPhysics, false );
 	BaseClass::VPhysicsUpdate( pPhysics );
 }
 
@@ -2376,12 +2720,24 @@ float CBaseCombatCharacter::CalculatePhysicsStressDamage( vphysics_objectstress_
 	return 0;
 }
 
-void CBaseCombatCharacter::ApplyStressDamage( IPhysicsObject *pPhysics )
+void CBaseCombatCharacter::ApplyStressDamage( IPhysicsObject *pPhysics, bool bRequireLargeObject )
 {
+#ifdef HL2_DLL
+	if( Classify() == CLASS_PLAYER_ALLY || Classify() == CLASS_PLAYER_ALLY_VITAL )
+	{
+		// Bypass stress completely for allies and vitals.
+		if( hl2_episodic.GetBool() )
+			return;
+	}
+#endif//HL2_DLL
+
 	vphysics_objectstress_t stressOut;
 	float damage = CalculatePhysicsStressDamage( &stressOut, pPhysics );
 	if ( damage > 0 )
 	{
+		if ( bRequireLargeObject && !stressOut.hasLargeObjectContact )
+			return;
+
 		//Msg("Stress! %.2f / %.2f\n", stressOut.exertedStress, stressOut.receivedStress );
 		CTakeDamageInfo dmgInfo( GetWorldEntity(), GetWorldEntity(), vec3_origin, vec3_origin, damage, DMG_CRUSH );
 		dmgInfo.SetDamageForce( Vector( 0, 0, -stressOut.receivedStress * sv_gravity.GetFloat() * gpGlobals->frametime ) );
@@ -2428,7 +2784,15 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 
 	// Player can't damage himself if he's was physics attacker *on this frame*
 	// which can occur owing to ordering issues it appears.
-	float flOtherAttackerTime = ( GlobalEntity_GetState("super_phys_gun") == GLOBAL_ON ) ? 1.0f : 0.0f;
+	float flOtherAttackerTime = 0.0f;
+
+#ifdef HL2_DLL
+	if ( HL2GameRules()->MegaPhyscannonActive() == true )
+	{
+		flOtherAttackerTime = 1.0f;
+	}
+#endif
+
 	if ( this == pOther->HasPhysicsAttacker( flOtherAttackerTime ) )
 		return;
 
@@ -2455,8 +2819,8 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 	IServerVehicle *vehicleOther = pOther->GetServerVehicle();
 	if ( vehicleOther )
 	{
-		CBasePlayer *pPlayer = vehicleOther->GetPassenger();
-		if ( pPlayer )
+		CBaseCombatCharacter *pPassenger = vehicleOther->GetPassenger();
+		if ( pPassenger != NULL )
 		{
 			// flag as vehicle damage
 			damageType |= DMG_VEHICLE;
@@ -2464,6 +2828,19 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 			float len = damageForce.Length();
 			damageForce.z += len*phys_upimpactforcescale.GetFloat();
 			//Msg("Force %.1f / %.1f\n", damageForce.Length(), damageForce.z );
+
+			if ( pPassenger->IsPlayer() )
+			{
+				CBasePlayer *pPlayer = assert_cast<CBasePlayer *>(pPassenger);
+				if( damage >= GetMaxHealth() )
+				{
+					pPlayer->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
+				}
+				else
+				{
+					pPlayer->RumbleEffect( RUMBLE_PISTOL, 0, RUMBLE_FLAG_RESTART );
+				}
+			}
 		}
 	}
 
@@ -2492,10 +2869,6 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 //-----------------------------------------------------------------------------	
 void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore )
 {
-	// NOTE: I did this this way so I wouldn't have to change a whole bunch of
-	// code unnecessarily. We need TF2 specific rules for RadiusDamage, so I moved
-	// the implementation of radius damage into gamerules. All existing code calls
-	// this method, which calls the game rules method
 	g_pGameRules->RadiusDamage( info, vecSrc, flRadius, iClassIgnore, pEntityIgnore );
 
 	// Let the world know if this was an explosion.
@@ -2505,7 +2878,7 @@ void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRa
 		// be less than 128 units.
 		float soundRadius = max( 128.0f, flRadius * 1.5 );
 
-		CSoundEnt::InsertSound( SOUND_COMBAT | SOUND_CONTEXT_EXPLOSION, vecSrc, soundRadius, 1.0, info.GetInflictor() );
+		CSoundEnt::InsertSound( SOUND_COMBAT | SOUND_CONTEXT_EXPLOSION, vecSrc, soundRadius, 0.25, info.GetInflictor() );
 	}
 }
 

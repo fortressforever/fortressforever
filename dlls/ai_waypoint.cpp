@@ -98,9 +98,9 @@ void CAI_WaypointList::PrependWaypoints( AI_Waypoint_t *pWaypoints )
 
 //-------------------------------------
 
-void CAI_WaypointList::PrependWaypoint( const Vector &newPoint, Navigation_t navType, unsigned waypointFlags )
+void CAI_WaypointList::PrependWaypoint( const Vector &newPoint, Navigation_t navType, unsigned waypointFlags, float flYaw )
 {
-	PrependWaypoints( new AI_Waypoint_t( newPoint, 0, navType, waypointFlags, NO_NODE ) );
+	PrependWaypoints( new AI_Waypoint_t( newPoint, flYaw, navType, waypointFlags, NO_NODE ) );
 }
 
 //-------------------------------------

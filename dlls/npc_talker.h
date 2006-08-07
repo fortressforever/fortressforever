@@ -15,9 +15,11 @@
 #include <time.h>
 #endif
 
+#ifndef _XBOX
 #pragma warning(push)
 #include <set>
 #pragma warning(pop)
+#endif
 
 #ifdef _WIN32
 #pragma once
@@ -41,6 +43,7 @@
 #include "ai_behavior.h"
 #include "ai_behavior_follow.h"
 
+#include "tier0/memdbgon.h"
 
 //=========================================================
 // Talking NPC base class
@@ -237,7 +240,15 @@ protected:
 	//---------------------------------
 
 	DECLARE_DATADESC();
+#ifndef _XBOX
 	DEFINE_CUSTOM_AI;
+#else
+public:
+	DEFINE_CUSTOM_AI;
+private:
+#endif
 };
+
+#include "tier0/memdbgoff.h"
 
 #endif		//TALKNPC_H

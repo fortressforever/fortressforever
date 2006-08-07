@@ -16,7 +16,7 @@
 #include "basetypes.h"
 #include "tier0/dbg.h"
 #include "vstdlib/strtools.h"
-
+#include <stddef.h>
 
 // Max number of properties in a datatable and its children.
 #define MAX_DATATABLES		1024	// must be a power of 2.
@@ -31,10 +31,6 @@
 
 #define DT_MAX_STRING_BITS			9
 #define DT_MAX_STRING_BUFFERSIZE	(1<<DT_MAX_STRING_BITS)	// Maximum length of a string that can be sent.
-
-#ifndef offsetof
-#define offsetof(s,m)	(size_t)&(((s *)0)->m)
-#endif
 
 #define STRINGBUFSIZE(className, varName)	sizeof( ((className*)0)->varName )
 
@@ -68,7 +64,14 @@
 
 #define SPROP_CHANGES_OFTEN		(1<<10)	// this is an often changed field, moved to head of sendtable so it gets a small index
 
-#define SPROP_NUMFLAGBITS		11
+#define SPROP_IS_A_VECTOR_ELEM	(1<<11)	// Set automatically if SPROP_VECTORELEM is used.
+
+#define SPROP_COLLAPSIBLE		(1<<12)	// Set automatically if it's a datatable with an offset of 0 that doesn't change the pointer
+										// (ie: for all automatically-chained base classes).
+										// In this case, it can get rid of this SendPropDataTable altogether and spare the
+										// trouble of walking the hierarchy more than necessary.
+
+#define SPROP_NUMFLAGBITS		13
 
 
 // Used by the SendProp and RecvProp functions to disable debug checks on type sizes.
@@ -94,6 +97,9 @@ typedef enum
 	DPT_String,
 	DPT_Array,	// An array of the base types (can't be of datatables).
 	DPT_DataTable,
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+	DPT_Quaternion,
+#endif
 	DPT_NUMSendPropTypes
 } SendPropType;
 
@@ -120,6 +126,12 @@ public:
 							Q_snprintf( text, sizeof(text), "(%.3f,%.3f,%.3f)", 
 								m_Vector[0], m_Vector[1], m_Vector[2] );
 							break;
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+						case DPT_Quaternion :
+							Q_snprintf( text, sizeof(text), "(%.3f,%.3f,%.3f %.3f)", 
+								m_Vector[0], m_Vector[1], m_Vector[2], m_Vector[3] );
+							break;
+#endif
 						case DPT_String : 
 							if ( m_pString ) 
 								return m_pString;
@@ -146,7 +158,11 @@ public:
 		long	m_Int;
 		char	*m_pString;
 		void	*m_pData;	// For DataTables.
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+		float	m_Vector[4];
+#else
 		float	m_Vector[3];
+#endif
 	};
 	SendPropType	m_Type;
 };

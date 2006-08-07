@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include "TokenReader.h"
+#include "tokenreader.h"
 #include "tier0/platform.h"
 #include "vstdlib/strtools.h"
 #include "tier0/dbg.h"

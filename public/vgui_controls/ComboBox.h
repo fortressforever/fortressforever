@@ -53,10 +53,13 @@ public:
 	virtual void SetItemEnabled(const char *itemText, bool state);
 	virtual void SetItemEnabled(int itemID, bool state);
 	
+	// Removes a single item
+	void DeleteItem( int itemID );
+
 	// Remove all items from the drop down menu
-	virtual void RemoveAll();
+	void RemoveAll();
 	// deprecated, use above
-	virtual void DeleteAllItems()	{ RemoveAll(); }
+	void DeleteAllItems()	{ RemoveAll(); }
 
 	// Sorts the items in the list - FIXME does nothing
 	virtual void SortItems();
@@ -70,12 +73,13 @@ public:
 	// Activate the item in the menu list,as if that 
 	// menu item had been selected by the user
 	MESSAGE_FUNC_INT( ActivateItem, "ActivateItem", itemID );
-	virtual void ActivateItemByRow(int row);
+	void ActivateItemByRow(int row);
 
-	virtual int GetActiveItem();
-	virtual KeyValues *GetActiveItemUserData();
-	virtual KeyValues *GetItemUserData(int itemID);
-	virtual void GetItemText(int itemID, wchar_t *text, int bufLenInBytes);
+	int GetActiveItem();
+	KeyValues *GetActiveItemUserData();
+	KeyValues *GetItemUserData(int itemID);
+	void GetItemText( int itemID, wchar_t *text, int bufLenInBytes );
+	void GetItemText( int itemID, char *text, int bufLenInBytes );
 
 	// sets a custom menu to use for the dropdown
 	virtual void SetMenu( Menu *menu );
@@ -96,17 +100,9 @@ public:
 	virtual void DoClick();
 	virtual void OnSizeChanged(int wide, int tall);
 
-	enum MenuDirection_e
-	{
-		LEFT,
-		RIGHT,
-		UP,
-		DOWN,
-		CURSOR,	// make the menu appear under the mouse cursor
-		ALIGN_WITH_PARENT, // make the menu appear under the parent
-	};
+	virtual void SetOpenDirection(Menu::MenuDirection_e direction);
 
-	virtual void SetOpenDirection(MenuDirection_e direction);
+	virtual void SetFont( HFont font );
 
 protected:
 	// overrides
@@ -135,7 +131,7 @@ private:
 
 	bool 				m_bAllowEdit;
 	bool 				m_bHighlight;
-	MenuDirection_e 	m_iDirection;
+	Menu::MenuDirection_e 	m_iDirection;
 	int 				m_iOpenOffsetY;
 };
 

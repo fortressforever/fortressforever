@@ -62,6 +62,7 @@ private:
 	CNetworkVar( float, m_flNextFOVBlendTime );
 	CNetworkVar( float, m_flFOVBlendStartTime );
 	CNetworkVar( int, m_iFOV );
+	CNetworkVar( bool, m_bAlternateFOV );
 
 	// Fades
 	CNetworkArray( float, m_flFadeColor, 3 );

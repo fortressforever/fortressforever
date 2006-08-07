@@ -15,12 +15,6 @@
 #pragma once
 #endif
 
-#ifdef TF2_DLL
-#include "tf_shareddefs.h"
-
-#define POWERUP_THINK_CONTEXT	"PowerupThink"
-#endif
-
 #include "cbase.h"
 #include "baseentity.h"
 #include "baseflex.h"
@@ -133,6 +127,10 @@ public:
 	int					TakeHealth( float flHealth, int bitsDamageType );
 	void				CauseDeath( const CTakeDamageInfo &info );
 
+	virtual	bool		FVisible ( CBaseEntity *pEntity, int traceMask = MASK_OPAQUE, CBaseEntity **ppBlocker = NULL );
+	virtual bool		FVisible( const Vector &vecTarget, int traceMask = MASK_OPAQUE, CBaseEntity **ppBlocker = NULL )	{ return BaseClass::FVisible( vecTarget, traceMask, ppBlocker ); }
+	static void			ResetVisibilityCache( CBaseCombatCharacter *pBCC = NULL );
+
 	virtual bool		FInViewCone( CBaseEntity *pEntity );
 	virtual bool		FInViewCone( const Vector &vecSpot );
 
@@ -200,6 +198,8 @@ public:
 	virtual bool			AddPlayerItem( CBaseCombatWeapon *pItem ) { return false; }
 	virtual bool			RemovePlayerItem( CBaseCombatWeapon *pItem ) { return false; }
 
+	virtual bool			CanBecomeServerRagdoll( void ) { return true; }
+
 	// -----------------------
 	// Damage
 	// -----------------------
@@ -227,6 +227,7 @@ public:
 	virtual bool			ShouldGib( const CTakeDamageInfo &info ) { return false; }	// Always ragdoll, unless specified by the leaf class
 
 	float GetDamageAccumulator() { return m_flDamageAccumulator; }
+	int	  GetDamageCount( void ) { return m_iDamageCount; }	// # of times NPC has been damaged.  used for tracking 1-shot kills.
 
 	// Character killed (only fired once)
 	virtual void			Event_Killed( const CTakeDamageInfo &info );
@@ -244,6 +245,9 @@ public:
 	// character died and should become a ragdoll now
 	// return true if converted to a ragdoll, false to use AI death
 	virtual bool			BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector );
+	virtual void			FixupBurningServerRagdoll( CBaseEntity *pRagdoll );
+
+	virtual bool			BecomeRagdollBoogie( CBaseEntity *pKiller, const Vector &forceVector, float duration, int flags );
 
 	CBaseEntity				*FindHealthItem( const Vector &vecPosition, const Vector &range );
 
@@ -257,7 +261,9 @@ public:
 	virtual void			VPhysicsShadowCollision( int index, gamevcollisionevent_t *pEvent );
 	virtual void			VPhysicsUpdate( IPhysicsObject *pPhysics );
 	float					CalculatePhysicsStressDamage( vphysics_objectstress_t *pStressOut, IPhysicsObject *pPhysics );
-	void					ApplyStressDamage( IPhysicsObject *pPhysics );
+	void					ApplyStressDamage( IPhysicsObject *pPhysics, bool bRequireLargeObject );
+
+	virtual void			PushawayTouch( CBaseEntity *pOther ) {}
 
 	void SetImpactEnergyScale( float fScale ) { m_impactEnergyScale = fScale; }
 
@@ -266,12 +272,18 @@ public:
 	virtual Disposition_t	IRelationType( CBaseEntity *pTarget );
 	virtual int				IRelationPriority( CBaseEntity *pTarget );
 
-	virtual void			SetLightingOrigin( CBaseEntity *pLightingOrigin );
+	virtual void			SetLightingOriginRelative( CBaseEntity *pLightingOrigin );
 
 protected:
 	Relationship_t			*FindEntityRelationship( CBaseEntity *pTarget );
 
 public:
+	
+	// Vehicle queries
+	virtual bool	IsInAVehicle( void ) { return false; }
+	virtual IServerVehicle *GetVehicle( void ) { return NULL; }
+	virtual CBaseEntity *GetVehicleEntity( void ) { return NULL; }
+
 	// Blood color (see BLOOD_COLOR_* macros in baseentity.h)
 	void SetBloodColor( int nBloodColor );
 
@@ -294,7 +306,9 @@ public:
 	// Relationships
 	static void			AllocateDefaultRelationships( );
 	static void			SetDefaultRelationship( Class_T nClass, Class_T nClassTarget,  Disposition_t nDisposition, int nPriority );
+	Disposition_t		GetDefaultRelationshipDisposition( Class_T nClassTarget );
 	virtual void		AddEntityRelationship( CBaseEntity *pEntity, Disposition_t nDisposition, int nPriority );
+	virtual bool		RemoveEntityRelationship( CBaseEntity *pEntity );
 	virtual void		AddClassRelationship( Class_T nClass, Disposition_t nDisposition, int nPriority );
 
 	// Nav hull type
@@ -321,36 +335,12 @@ public:
 	float				GetNextAttack() const { return m_flNextAttack; }
 	void				SetNextAttack( float flWait ) { m_flNextAttack = flWait; }
 
-#ifdef TF2_DLL
-public:
-
-	// TF2 Powerups
-	virtual bool		CanBePoweredUp( void );
-	bool				HasPowerup( int iPowerup );
-	virtual	bool		CanPowerupNow( int iPowerup );		// Return true if I can be powered by this powerup right now
-	virtual	bool		CanPowerupEver( int iPowerup );		// Return true if I ever accept this powerup type
-
-	void				SetPowerup( int iPowerup, bool bState, float flTime = 0, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	bool		AttemptToPowerup( int iPowerup, float flTime, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	float		PowerupDuration( int iPowerup, float flTime );
-	virtual	void		PowerupStart( int iPowerup, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL );
-	virtual	void		PowerupEnd( int iPowerup );
-
-	void				PowerupThink( void );
-	virtual	void		PowerupThink( int iPowerup );
+	bool				m_bForceServerRagdoll;
 
 public:
-
-	CNetworkVar( int, m_iPowerups );
-	float				m_flPowerupAttemptTimes[ MAX_POWERUPS ];
-	float				m_flPowerupEndTimes[ MAX_POWERUPS ];
-	float				m_flFractionalBoost;	// POWERUP_BOOST health fraction - specific powerup data
-
-#endif
-
-protected:
 	// returns the last body region that took damage
 	int	LastHitGroup() const				{ return m_LastHitGroup; }
+protected:
 	void SetLastHitGroup( int nHitGroup )	{ m_LastHitGroup = nHitGroup; }
 
 public:
@@ -385,8 +375,9 @@ private:
 	static Relationship_t**		m_DefaultRelationship;
 
 	// attack/damage
-	int					m_LastHitGroup;		// the last body region that took damage
-	float				m_flDamageAccumulator; // so very small amounts of damage do not get lost.
+	int					m_LastHitGroup;			// the last body region that took damage
+	float				m_flDamageAccumulator;	// so very small amounts of damage do not get lost.
+	int					m_iDamageCount;			// # of times NPC has been damaged.  used for tracking 1-shot kills.
 	
 	// Weapon proficiency gets calculated each time an NPC changes his weapon, and then
 	// cached off as the CurrentWeaponProficiency.
@@ -409,14 +400,6 @@ protected:
 
 	friend class CCleanupDefaultRelationShips;
 };
-
-#ifdef TF2_DLL
-// Powerup Inlines
-inline bool CBaseCombatCharacter::CanBePoweredUp( void )							{ return true; }
-inline float CBaseCombatCharacter::PowerupDuration( int iPowerup, float flTime )	{ return flTime; }
-inline void	CBaseCombatCharacter::PowerupEnd( int iPowerup )						{ return; }
-inline void	CBaseCombatCharacter::PowerupThink( int iPowerup )						{ return; }
-#endif
 
 EXTERN_SEND_TABLE(DT_BaseCombatCharacter);
 

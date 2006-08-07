@@ -2,12 +2,10 @@
 //
 // Purpose: 
 //
-// $NoKeywords: $
 //
 //=============================================================================//
 
 #include "mempool.h"
-
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
@@ -36,6 +34,13 @@ void CMemoryPool::SetErrorReportFunc( MemoryPoolReportFunc_t func )
 
 CMemoryPool::CMemoryPool(int blockSize, int numElements, int growMode, const char *pszAllocOwner)
 {
+#ifdef _XBOX
+	if( numElements > 0 && growMode != GROW_NONE )
+	{
+		numElements = 1;
+	}
+#endif
+
 	m_BlockSize = blockSize < sizeof(void*) ? sizeof(void*) : blockSize;
 	m_BlocksPerBlob = numElements;
 	m_PeakAlloc = 0;
@@ -261,7 +266,7 @@ void *CMemoryPool::AllocZero( unsigned int amount )
 	void *mem = Alloc( amount );
 	if ( mem )
 	{
-		Q_memset( mem, 0x00, amount );
+		V_memset( mem, 0x00, amount );
 	}
 	return mem;
 }
@@ -301,6 +306,5 @@ void CMemoryPool::Free( void *memBlock )
 	// the list head is now the new block
 	m_pHeadOfFreeList = memBlock;
 }
-
 
 

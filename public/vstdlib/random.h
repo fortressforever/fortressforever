@@ -10,8 +10,8 @@
 #define VSTDLIB_RANDOM_H
 
 #include "vstdlib/vstdlib.h"
-#include "basetypes.h"
-#include "interface.h"
+#include "tier0/basetypes.h"
+#include "tier1/interface.h"
 
 #define NTAB 32
 

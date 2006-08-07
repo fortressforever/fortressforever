@@ -16,7 +16,6 @@
 C_EnvelopeFX::C_EnvelopeFX( void )
 {
 	m_active = false;
-	m_active = false;
 }
 
 C_EnvelopeFX::~C_EnvelopeFX()
@@ -24,6 +23,13 @@ C_EnvelopeFX::~C_EnvelopeFX()
 	RemoveRenderable();
 }
 
+const matrix3x4_t & C_EnvelopeFX::RenderableToWorldTransform()
+{
+	static matrix3x4_t mat;
+	SetIdentityMatrix( mat );
+	PositionMatrix( GetRenderOrigin(), mat );
+	return mat;
+}
 
 void C_EnvelopeFX::RemoveRenderable()
 {

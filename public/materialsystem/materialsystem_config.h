@@ -28,6 +28,7 @@ enum MaterialSystem_Config_Flags_t
 	MATSYS_VIDCFG_FLAGS_ENABLE_PARALLAX_MAPPING		= ( 1 << 9 ),
 	MATSYS_VIDCFG_FLAGS_USE_Z_PREFILL				= ( 1 << 10 ),
 	MATSYS_VIDCFG_FLAGS_REDUCE_FILLRATE				= ( 1 << 11 ),
+	MATSYS_VIDCFG_FLAGS_ENABLE_HDR					= ( 1 << 12 ),
 };
 
 struct MaterialSystemHardwareIdentifier_t
@@ -42,7 +43,7 @@ struct MaterialSystem_Config_t
 	bool Windowed() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_WINDOWED ) != 0; }
 	bool Resizing() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_RESIZING ) != 0; }
 	bool WaitForVSync() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_NO_WAIT_FOR_VSYNC ) == 0; }
-	bool Stencil() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_STENCIL ) != 0; }
+	bool Stencil() const { return (m_Flags & MATSYS_VIDCFG_FLAGS_STENCIL ) != 0; }
 	bool ForceTrilinear() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR ) != 0; }
 	bool ForceHWSync() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_FORCE_HWSYNC ) != 0; }
 	bool UseSpecular() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_DISABLE_SPECULAR ) == 0; }
@@ -50,6 +51,7 @@ struct MaterialSystem_Config_t
 	bool UseParallaxMapping() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_ENABLE_PARALLAX_MAPPING ) != 0; }
 	bool UseZPrefill() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_USE_Z_PREFILL ) != 0; }
 	bool ReduceFillrate() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_REDUCE_FILLRATE ) != 0; }
+	bool HDREnabled() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_ENABLE_HDR ) != 0; }
 	
 	void SetFlag( unsigned int flag, bool val )
 	{

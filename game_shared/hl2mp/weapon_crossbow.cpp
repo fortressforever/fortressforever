@@ -464,10 +464,12 @@ BEGIN_NETWORK_TABLE( CWeaponCrossbow, DT_WeaponCrossbow )
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponCrossbow )
 	DEFINE_PRED_FIELD( m_bInZoom, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bMustReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
+#endif
 
 LINK_ENTITY_TO_CLASS( weapon_crossbow, CWeaponCrossbow );
 
@@ -797,7 +799,11 @@ void CWeaponCrossbow::DoLoadEffect( void )
 
 	CEffectData	data;
 
+#ifdef CLIENT_DLL
+	data.m_hEntity = pViewModel->GetRefEHandle();
+#else
 	data.m_nEntIndex = pViewModel->entindex();
+#endif
 	data.m_nAttachmentIndex = 1;
 
 	DispatchEffect( "CrossbowLoad", data );

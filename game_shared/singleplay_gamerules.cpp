@@ -189,6 +189,13 @@ bool CSingleplayRules::IsMultiplayer( void )
 
 	//=========================================================
 	//=========================================================
+	bool CSingleplayRules::AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+	{
+		return true;
+	}
+
+	//=========================================================
+	//=========================================================
 	void CSingleplayRules::PlayerSpawn( CBasePlayer *pPlayer )
 	{
 		// Player no longer gets all weapons to start.
@@ -313,6 +320,14 @@ bool CSingleplayRules::IsMultiplayer( void )
 	Vector CSingleplayRules::VecItemRespawnSpot( CItem *pItem )
 	{
 		return pItem->GetAbsOrigin();
+	}
+
+	//=========================================================
+	// What angles should this item use to respawn?
+	//=========================================================
+	QAngle CSingleplayRules::VecItemRespawnAngles( CItem *pItem )
+	{
+		return pItem->GetAbsAngles();
 	}
 
 	//=========================================================

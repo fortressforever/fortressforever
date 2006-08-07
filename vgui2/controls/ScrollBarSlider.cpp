@@ -39,6 +39,7 @@ ScrollBarSlider::ScrollBarSlider(Panel *parent, const char *panelName, bool vert
 	_buttonOffset=0;
 	_ScrollBarSliderBorder=NULL;
 	RecomputeNobPosFromValue();
+	SetBlockDragChaining( true );
 }
 
 //-----------------------------------------------------------------------------
@@ -110,8 +111,8 @@ void ScrollBarSlider::RecomputeNobPosFromValue()
 	int wide, tall;
 	GetPaintSize(wide, tall);
 
-	float fwide = (float)wide;
-	float ftall = (float)tall - 1;
+	float fwide = (float)( wide - 1 );
+	float ftall = (float)( tall - 1 );
 	float frange = (float)(_range[1] -_range[0]);
 	float fvalue = (float)(_value - _range[0]);
 	float frangewindow = (float)(_rangeWindow);
@@ -176,8 +177,8 @@ void ScrollBarSlider::RecomputeValueFromNobPos()
 	int wide, tall;
 	GetPaintSize(wide, tall);
 
-	float fwide = (float)wide;
-	float ftall = (float)tall;
+	float fwide = (float)( wide - 1 );
+	float ftall = (float)( tall - 1 );
 	float frange = (float)( _range[1] - _range[0] );
 	float fvalue = (float)( _value - _range[0] );
 	float fnob = (float)_nobPos[0];

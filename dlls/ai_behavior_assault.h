@@ -16,6 +16,11 @@
 #include "ai_moveshoot.h"
 #include "ai_utils.h"
 
+enum RallySelectMethod_t
+{
+	RALLY_POINT_SELECT_DEFAULT = 0,
+	RALLY_POINT_SELECT_RANDOM,
+};
 
 enum AssaultCue_t
 {
@@ -85,6 +90,9 @@ public:
 	string_t	m_RallySequenceName;
 	float		m_flAssaultDelay;
 	int			m_iPriority;
+	int			m_iStrictness;
+	bool		m_bForceCrouch;
+	bool		m_bIsUrgent;
 
 	COutputEvent	m_OnArrival;
 
@@ -111,6 +119,11 @@ public:
 		m_bAllowDiversion = inputdata.value.Bool();
 	}
 
+	void 			InputSetForceClear( inputdata_t &inputdata )
+	{
+		m_bInputForcedClear = inputdata.value.Bool();
+	}
+
 public:
 	string_t		m_AssaultHintGroup;
 	string_t		m_NextAssaultPointName;
@@ -118,7 +131,12 @@ public:
 	float			m_flAssaultTimeout;
 	bool			m_bClearOnContact;
 	bool			m_bAllowDiversion;
+	float			m_flAllowDiversionRadius;
 	bool			m_bNeverTimeout;
+	int				m_iStrictness;
+	bool			m_bForceCrouch;
+	bool			m_bIsUrgent;
+	bool			m_bInputForcedClear;
 
 	COutputEvent	m_OnArrival;
 
@@ -135,6 +153,11 @@ public:
 	CAI_AssaultBehavior();
 	
 	virtual const char *GetName() {	return "Assault"; }
+	virtual int	DrawDebugTextOverlays( int text_offset );
+
+	virtual void OnRestore();
+
+	bool CanRunAScriptedNPCInteraction( bool bForced );
 
 	virtual bool 	CanSelectSchedule();
 	virtual void	BeginScheduleSelection();
@@ -144,11 +167,13 @@ public:
 	bool HasHitAssaultPoint() { return m_bHitAssaultPoint; }
 
 	void ClearAssaultPoint( void );
+	void OnHitAssaultPoint( void );
 	bool PollAssaultCue( void );
 	void ReceiveAssaultCue( AssaultCue_t cue );
 	bool HasAssaultCue( void ) { return m_AssaultCue != CUE_NO_ASSAULT; }
-	bool AssaultHasBegun() { return m_ReceivedAssaultCue == m_AssaultCue; }
+	bool AssaultHasBegun();
 
+	void GatherConditions( void );
 	void StartTask( const Task_t *pTask );
 	void RunTask( const Task_t *pTask );
 	void BuildScheduleTestBits();
@@ -157,12 +182,19 @@ public:
 	void ClearSchedule();
 
 	void InitializeBehavior();
-	void SetParameters( string_t rallypointname, AssaultCue_t assaultcue );
+	void SetParameters( string_t rallypointname, AssaultCue_t assaultcue, int rallySelectMethod );
 	void SetParameters( CBaseEntity *pRallyEnt, AssaultCue_t assaultcue );
 
+	bool IsAllowedToDivert( void );
 	bool IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
+	float GetMaxTacticalLateralMovement( void );
 
 	void UpdateOnRemove();
+
+	bool OnStrictAssault( void	);
+	bool UpdateForceCrouch( void );
+	bool IsForcingCrouch( void );
+	bool IsUrgent( void );
 
 	CRallyPoint *FindBestRallyPointInRadius( const Vector &vecCenter, float flRadius );;
 
@@ -221,6 +253,8 @@ private:
 	float			m_flLastSawAnEnemyAt;
 
 	float			m_flTimeDeferScheduleSelection;
+
+	string_t		m_AssaultPointName;
 
 	//---------------------------------
 	

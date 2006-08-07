@@ -44,20 +44,20 @@ int CAI_LookTarget::DrawDebugTextOverlays(void)
 		if( !IsEnabled() )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"DISABLED" );
-			NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+			EntityText(text_offset,tempstr,0);
 			text_offset++;
 		}
 
 		if( IsEligible( NULL ) )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Eligible" );
-			NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+			EntityText(text_offset,tempstr,0);
 			text_offset++;
 		}
 		else
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"NOT Eligible for selection");
-			NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+			EntityText(text_offset,tempstr,0);
 			text_offset++;
 		}
 	}

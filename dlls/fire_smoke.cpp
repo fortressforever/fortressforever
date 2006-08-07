@@ -96,6 +96,7 @@ IMPLEMENT_SERVERCLASS_ST( CFireSmoke, DT_FireSmoke )
 	SendPropFloat(	SENDINFO( m_flScaleTime ),	0,	SPROP_NOSCALE),
 	SendPropInt(	SENDINFO( m_nFlags ),		8,  SPROP_UNSIGNED ),
 	SendPropModelIndex(	SENDINFO( m_nFlameModelIndex ) ),
+	SendPropModelIndex(	SENDINFO( m_nFlameFromAboveModelIndex ) ),
 END_SEND_TABLE()
 
 //Data description 
@@ -105,7 +106,7 @@ BEGIN_DATADESC( CFireSmoke )
 	DEFINE_FIELD( m_flScale,			FIELD_FLOAT ),
 	DEFINE_FIELD( m_flScaleTime,		FIELD_FLOAT ),
 	DEFINE_FIELD( m_nFlags,				FIELD_INTEGER ),
-	DEFINE_FIELD( m_nFlameModelIndex,	FIELD_INTEGER ),
+	DEFINE_FIELD( m_nFlameFromAboveModelIndex,	FIELD_INTEGER ),
 
 END_DATADESC()
 
@@ -138,6 +139,10 @@ void CFireSmoke::Precache()
 {
 	BaseClass::Precache();
 	m_nFlameModelIndex	= PrecacheModel( "sprites/fire1.vmt" );
+	
+	// This asset doesn't appear to exist anymore. What's going on? 
+	// Commenting this out so that level designers don't get a red error about missing material. (sjb)
+	//m_nFlameFromAboveModelIndex	= PrecacheModel( "sprites/flamefromabove.vmt" );
 }
 
 void CFireSmoke::Spawn()
@@ -174,5 +179,17 @@ void CFireSmoke::EnableGlow( int state )
 	else
 	{
 		m_nFlags &= ~bitsFIRESMOKE_GLOW;
+	}
+}
+
+void CFireSmoke::EnableVisibleFromAbove( int state )
+{
+	if ( state )
+	{
+		m_nFlags |= bitsFIRESMOKE_VISIBLE_FROM_ABOVE;
+	}
+	else
+	{
+		m_nFlags &= ~bitsFIRESMOKE_VISIBLE_FROM_ABOVE;
 	}
 }

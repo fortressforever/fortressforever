@@ -155,10 +155,17 @@ private:
                                 radial_t *pRadial, int ndxRadial, bool bBump, int lightStyle );
 
 	void RadialPatchBuild( CVRADDispColl *pDispTree, radial_t *pRadial, bool bBump );
-	void RadialLuxelAddPatch( int ndxFace, Vector const &luxelPt, Vector const &luxelNormal, float radius,
-                              radial_t *pRadial, int ndxRadial, bool bBump );
+	void RadialLuxelAddPatch( int ndxFace, Vector const &luxelPt, 
+											Vector const &luxelNormal,  float radius, 
+											radial_t *pRadial, int ndxRadial, bool bBump,
+											CUtlVector<patch_t*> &interestingPatches );
 
 	bool IsNeighbor( int iDispFace, int iNeighborFace );
+
+	void GetInterestingPatchesForLuxels( 
+		int ndxFace,
+		CUtlVector<patch_t*> &interestingPatches,
+		float patchSampleRadius );
 
 private:
 
@@ -445,7 +452,7 @@ void CVRadDispMgr::UnserializeDisps( void )
 	//
 	for( int ndxFace = 0; ndxFace < numfaces; ndxFace++ )
 	{
-		dface_t *pFace = &dfaces[ndxFace];
+		dface_t *pFace = &g_pFaces[ndxFace];
 		if( ValidDispFace( pFace ) )
 		{
 			DispBuilderInit( builderDisps[pFace->dispinfo], pFace, ndxFace );
@@ -544,7 +551,7 @@ void CVRadDispMgr::SubdividePatch( int ndxPatch )
 		return;
 
 	// get the displacement tree;
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[pPatch->faceNumber].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[pPatch->faceNumber].dispinfo];
     CVRADDispColl *pTree = dispTree.m_pDispTree;	
 	if( !pTree )
 		return;
@@ -724,7 +731,7 @@ void CVRadDispMgr::GetDispSurfNormal( int ndxFace, Vector &pt, Vector &ptNormal,
 									  bool bInside )
 {
 	// get the displacement surface data
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	
 	// find the parameterized displacement indices
@@ -754,7 +761,7 @@ void CVRadDispMgr::GetDispSurfNormal( int ndxFace, Vector &pt, Vector &ptNormal,
 //-----------------------------------------------------------------------------
 void CVRadDispMgr::GetDispSurf( int ndxFace, CVRADDispColl **ppDispTree )
 {
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
     *ppDispTree = dispTree.m_pDispTree;
 }
 
@@ -809,7 +816,7 @@ bool CVRadDispMgr::DispRayDistance_EnumerateElement( int userId, CBSPDispRayDist
 		if (output.dist < pCtx->m_Distance)
 		{
 			pCtx->m_Distance = output.dist;
-			pCtx->m_pSurface = &dfaces[dispTree.m_pDispTree->GetParentIndex()];
+			pCtx->m_pSurface = &g_pFaces[dispTree.m_pDispTree->GetParentIndex()];
 
 			// Get the luxel coordinate
 			ComputePointFromBarycentric( 
@@ -1062,7 +1069,7 @@ void CVRadDispMgr::RadialLuxelAddSamples( int ndxFace, Vector const &luxelPt, Ve
 							//
 							// check for similar lightstyles
 							//
-							dface_t	*pFace = &dfaces[ndxFaceLight];
+							dface_t	*pFace = &g_pFaces[ndxFaceLight];
 							if( pFace )
 							{
 								int ndxNeighborStyle = -1;
@@ -1105,7 +1112,7 @@ void CVRadDispMgr::RadialLuxelBuild( CVRADDispColl *pDispTree, radial_t *pRadial
 	//
 	int ndxFace = pDispTree->GetParentIndex();
 
-	dface_t *pFace = &dfaces[ndxFace];
+	dface_t *pFace = &g_pFaces[ndxFace];
 	facelight_t *pFaceLight = &facelight[ndxFace];
 
 	// get the influence radius
@@ -1133,7 +1140,7 @@ radial_t *CVRadDispMgr::BuildLuxelRadial( int ndxFace, int ndxStyle, bool bBump 
 	//
 	// step 1: get the displacement surface to be lit
 	//
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	if( !pDispTree )
 		return NULL;
@@ -1273,8 +1280,21 @@ float GetPatchRadius2( patch_t *pPatch )
 //-----------------------------------------------------------------------------
 void CVRadDispMgr::RadialLuxelAddPatch( int ndxFace, Vector const &luxelPt, 
 									    Vector const &luxelNormal,  float radius, 
-									    radial_t *pRadial, int ndxRadial, bool bBump )
+									    radial_t *pRadial, int ndxRadial, bool bBump,
+									    CUtlVector<patch_t*> &interestingPatches )
 {
+#ifdef SAMPLEHASH_QUERY_ONCE
+	for ( int i=0; i < interestingPatches.Count(); i++ )
+	{
+		patch_t *pPatch = interestingPatches[i];	
+		bool bNeighborBump = texinfo[g_pFaces[pPatch->faceNumber].texinfo].flags & SURF_BUMPLIGHT ? true : false;
+		
+		Vector patchLight[NUM_BUMP_VECTS+1];
+		GetPatchLight( pPatch, bBump, patchLight );
+		AddPatchLightToRadial( pPatch->origin, pPatch->normal, patchLight, radius*radius,
+								luxelPt, luxelNormal, pRadial, ndxRadial, bBump, bNeighborBump );
+	}
+#else
 	// calculate one over the voxel size
 	float ooVoxelSize = 1.0f / SAMPLEHASH_VOXEL_SIZE;
 
@@ -1288,6 +1308,7 @@ void CVRadDispMgr::RadialLuxelAddPatch( int ndxFace, Vector const &luxelPt,
 		voxelMax[axis] = ( int )( ( luxelPt[axis] + radius ) * ooVoxelSize ) + 1;
 	}
 
+	unsigned short curIterationKey = IncrementPatchIterationKey();
 	PatchSampleData_t patchData;	
 	for ( int ndxZ = voxelMin[2]; ndxZ < voxelMax[2] + 1; ndxZ++ )
 	{
@@ -1308,16 +1329,123 @@ void CVRadDispMgr::RadialLuxelAddPatch( int ndxFace, Vector const &luxelPt,
 					{
 						int ndxPatch = pPatchData->m_ndxPatches.Element( ndx );
 						patch_t *pPatch = &patches.Element( ndxPatch );
-						if ( pPatch  )
+						if ( pPatch && pPatch->m_IterationKey != curIterationKey )
 						{
+							pPatch->m_IterationKey = curIterationKey;
+							
 							if ( IsNeighbor( ndxFace, pPatch->faceNumber ) )
 							{									
-								bool bNeighborBump = texinfo[dfaces[pPatch->faceNumber].texinfo].flags & SURF_BUMPLIGHT ? true : false;
+								bool bNeighborBump = texinfo[g_pFaces[pPatch->faceNumber].texinfo].flags & SURF_BUMPLIGHT ? true : false;
 								
 								Vector patchLight[NUM_BUMP_VECTS+1];
 								GetPatchLight( pPatch, bBump, patchLight );
 								AddPatchLightToRadial( pPatch->origin, pPatch->normal, patchLight, radius*radius,
 									                   luxelPt, luxelNormal, pRadial, ndxRadial, bBump, bNeighborBump );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+#endif
+}
+
+
+void CVRadDispMgr::GetInterestingPatchesForLuxels( 
+	int ndxFace,
+	CUtlVector<patch_t*> &interestingPatches,
+	float patchSampleRadius )
+{
+	facelight_t *pFaceLight = &facelight[ndxFace]; 
+
+	// Get the max bounds of all voxels that these luxels touch.
+	Vector vLuxelMin( FLT_MAX, FLT_MAX, FLT_MAX );
+	Vector vLuxelMax( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+	for ( int i=0; i < pFaceLight->numluxels; i++ )
+	{
+		VectorMin( pFaceLight->luxel[i], vLuxelMin, vLuxelMin );
+		VectorMax( pFaceLight->luxel[i], vLuxelMax, vLuxelMax );
+	}
+		
+	int allVoxelMin[3], allVoxelMax[3];
+	for ( int axis = 0; axis < 3; axis++ )
+	{
+		allVoxelMin[axis] = ( int )( ( vLuxelMin[axis] - patchSampleRadius ) / SAMPLEHASH_VOXEL_SIZE );
+		allVoxelMax[axis] = ( int )( ( vLuxelMax[axis] + patchSampleRadius ) / SAMPLEHASH_VOXEL_SIZE ) + 1;
+	}
+	int allVoxelSize[3] = { allVoxelMax[0] - allVoxelMin[0], allVoxelMax[1] - allVoxelMin[1], allVoxelMax[2] - allVoxelMin[2] };
+
+
+	// Now figure out exactly which voxels these luxels touch.
+	CUtlVector<unsigned char> voxelBits;
+	voxelBits.SetSize( ((allVoxelSize[0] * allVoxelSize[1] * allVoxelSize[2]) + 7) / 8 );
+	memset( voxelBits.Base(), 0, voxelBits.Count() );
+	
+	for ( int i=0; i < pFaceLight->numluxels; i++ )
+	{
+		int voxelMin[3], voxelMax[3];
+		for ( axis=0; axis < 3; axis++ )
+		{
+			voxelMin[axis] = ( int )( ( pFaceLight->luxel[i][axis] - patchSampleRadius ) / SAMPLEHASH_VOXEL_SIZE );
+			voxelMax[axis] = ( int )( ( pFaceLight->luxel[i][axis] + patchSampleRadius ) / SAMPLEHASH_VOXEL_SIZE ) + 1;
+		}
+
+		for ( int x=voxelMin[0]; x < voxelMax[0]; x++ )
+		{
+			for	( int y=voxelMin[1]; y < voxelMax[1]; y++ )
+			{
+				for ( int z=voxelMin[2]; z < voxelMax[2]; z++ )
+				{
+					int iBit = (z - allVoxelMin[2])*(allVoxelSize[0]*allVoxelSize[1]) + 
+						(y-allVoxelMin[1])*allVoxelSize[0] + 
+						(x-allVoxelMin[0]);
+					voxelBits[iBit>>3] |= (1 << (iBit & 7));
+				}
+			}
+		}
+	}
+	
+	
+	// Now get the list of patches that touch those voxels.	
+	unsigned short curIterationKey = IncrementPatchIterationKey();
+
+	for ( int x=0; x < allVoxelSize[0]; x++ )
+	{
+		for ( int y=0; y < allVoxelSize[1]; y++ )
+		{
+			for ( int z=0; z < allVoxelSize[2]; z++ )
+			{
+				// Make sure this voxel has any luxels that care about it.
+				int iBit = z*(allVoxelSize[0]*allVoxelSize[1]) + y*allVoxelSize[0] + x;
+				unsigned char val = voxelBits[iBit>>3] & (1 << (iBit & 7));
+				if ( !val )
+					continue;
+				
+				PatchSampleData_t patchData;	
+				patchData.x = (x + allVoxelMin[0]) * 100;
+				patchData.y = (y + allVoxelMin[1]) * 10;
+				patchData.z = (z + allVoxelMin[2]);
+				
+				UtlHashHandle_t handle = g_PatchSampleHashTable.Find( patchData );
+				if ( handle != g_PatchSampleHashTable.InvalidHandle() )
+				{
+					PatchSampleData_t *pPatchData = &g_PatchSampleHashTable.Element( handle );
+					
+					// For all patches that touch this hash table element..
+					for ( int ndx = 0; ndx < pPatchData->m_ndxPatches.Count(); ndx++ )
+					{
+						int ndxPatch = pPatchData->m_ndxPatches.Element( ndx );
+						patch_t *pPatch = &patches.Element( ndxPatch );
+						
+						// If we haven't touched the patch already and it's a valid neighbor, then we want to use it.
+						if ( pPatch && pPatch->m_IterationKey != curIterationKey )
+						{
+							pPatch->m_IterationKey = curIterationKey;
+							
+							if ( IsNeighbor( ndxFace, pPatch->faceNumber ) )
+							{
+								interestingPatches.AddToTail( pPatch );
 							}
 						}
 					}
@@ -1337,21 +1465,31 @@ void CVRadDispMgr::RadialPatchBuild( CVRADDispColl *pDispTree, radial_t *pRadial
 	// get data lighting data
 	//
 	int ndxFace = pDispTree->GetParentIndex();
-//	dface_t *pFace = &dfaces[ndxFace];
 	facelight_t *pFaceLight = &facelight[ndxFace];
 
 	// get the influence radius
 	float radius2 = pDispTree->GetPatchSampleRadius2();
 	float radius = ( float )sqrt( radius2 );
 
+	CUtlVector<patch_t*> interestingPatches;
+#ifdef SAMPLEHASH_QUERY_ONCE
+	GetInterestingPatchesForLuxels( ndxFace, interestingPatches, radius );
+#endif
+
 	int radialSize = pRadial->w * pRadial->h;
 	for( int ndxRadial = 0; ndxRadial < radialSize; ndxRadial++ )
 	{
-		RadialLuxelAddPatch( ndxFace, pFaceLight->luxel[ndxRadial], pFaceLight->luxelNormals[ndxRadial],
-						     radius, pRadial, ndxRadial, bBump );
+		RadialLuxelAddPatch( 
+			ndxFace, 
+			pFaceLight->luxel[ndxRadial], 
+			pFaceLight->luxelNormals[ndxRadial],
+			radius, 
+			pRadial, 
+			ndxRadial, 
+			bBump,
+			interestingPatches );
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1365,7 +1503,7 @@ radial_t *CVRadDispMgr::BuildPatchRadial( int ndxFace, bool bBump )
 	//
 	// step 1: get the displacement surface to be lit
 	//
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	if( !pDispTree )
 		return NULL;
@@ -1398,7 +1536,7 @@ void CVRadDispMgr::InsertSamplesDataIntoHashTable( void )
 
 	for( int ndxFace = 0; ndxFace < numfaces; ndxFace++ )
 	{
-		dface_t *pFace = &dfaces[ndxFace];
+		dface_t *pFace = &g_pFaces[ndxFace];
 		facelight_t *pFaceLight = &facelight[ndxFace];
 		if( !pFace || !pFaceLight )
 			continue;
@@ -1463,7 +1601,7 @@ void CVRadDispMgr::InsertPatchSampleDataIntoHashTable( void )
 
 	for( int ndxFace = 0; ndxFace < numfaces; ndxFace++ )
 	{
-		dface_t *pFace = &dfaces[ndxFace];
+		dface_t *pFace = &g_pFaces[ndxFace];
 		facelight_t *pFaceLight = &facelight[ndxFace];
 		if( !pFace || !pFaceLight )
 			continue;
@@ -1526,7 +1664,7 @@ void CVRadDispMgr::EndTimer( void )
 bool CVRadDispMgr::BuildDispSamples( lightinfo_t *pLightInfo, facelight_t *pFaceLight, int ndxFace )
 {
 	// get the tree assosciated with the face
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	if( !pDispTree )
 		return false;
@@ -1646,7 +1784,7 @@ bool CVRadDispMgr::BuildDispSamples( lightinfo_t *pLightInfo, facelight_t *pFace
 	// statistics - warning?!
 	if( pFaceLight->numsamples == 0 )
 	{
-		Msg( "BuildDispSamples: WARNING - no samples %d\n", pLightInfo->face - dfaces );
+		Msg( "BuildDispSamples: WARNING - no samples %d\n", pLightInfo->face - g_pFaces );
 	}
  
 	if (bTempAllocationNecessary)
@@ -1673,7 +1811,7 @@ buildDispSamplesError:
 bool CVRadDispMgr::BuildDispLuxels( lightinfo_t *pLightInfo, facelight_t *pFaceLight, int ndxFace )
 {
 	// get the tree assosciated with the face
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	if( !pDispTree )
 		return false;
@@ -1725,7 +1863,7 @@ bool CVRadDispMgr::BuildDispLuxels( lightinfo_t *pLightInfo, facelight_t *pFaceL
 bool CVRadDispMgr::BuildDispSamplesAndLuxels_DoFast( lightinfo_t *pLightInfo, facelight_t *pFaceLight, int ndxFace )
 {
 	// get the tree assosciated with the face
-	DispCollTree_t &dispTree = m_DispTrees[dfaces[ndxFace].dispinfo];
+	DispCollTree_t &dispTree = m_DispTrees[g_pFaces[ndxFace].dispinfo];
 	CVRADDispColl *pDispTree = dispTree.m_pDispTree;
 	if( !pDispTree )
 		return false;

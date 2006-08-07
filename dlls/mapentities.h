@@ -15,7 +15,7 @@
 
 // This class provides hooks into the map-entity loading process that allows CS to do some tricks
 // when restarting the round. The main trick it tries to do is recreate all 
-class IMapEntityFilter
+abstract_class IMapEntityFilter
 {
 public:
 	virtual bool ShouldCreateEntity( const char *pClassname ) = 0;
@@ -28,7 +28,7 @@ public:
 void MapEntity_ParseAllEntities( const char *pMapData, IMapEntityFilter *pFilter=NULL, bool bActivateEntities=false );
 
 const char *MapEntity_ParseEntity( CBaseEntity *&pEntity, const char *pEntData, IMapEntityFilter *pFilter );
-void MapEntity_PrecacheEntity( const char *pEntData );
+void MapEntity_PrecacheEntity( const char *pEntData, int &nStringSize );
 
 
 //-----------------------------------------------------------------------------

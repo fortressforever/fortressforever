@@ -29,6 +29,7 @@ BEGIN_SIMPLE_DATADESC( CEnvHeadcrabCanisterShared )
 	DEFINE_FIELD( m_flInitialZSpeed,			FIELD_FLOAT ),
 	DEFINE_FIELD( m_flZAcceleration,			FIELD_FLOAT ),
 	DEFINE_FIELD( m_flHorizSpeed,				FIELD_FLOAT ),
+	DEFINE_FIELD( m_bLaunchedFromWithinWorld,	FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_vecSkyboxOrigin,			FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecParabolaDirection,		FIELD_VECTOR ),
 	DEFINE_FIELD( m_flSkyboxScale,				FIELD_FLOAT ),
@@ -49,6 +50,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CEnvHeadcrabCanisterShared, DT_EnvHeadcrabCanisterSh
 	SendPropFloat	( SENDINFO( m_flInitialZSpeed ),		0, SPROP_NOSCALE ),
 	SendPropFloat	( SENDINFO( m_flZAcceleration ),		0, SPROP_NOSCALE ),
 	SendPropFloat	( SENDINFO( m_flHorizSpeed ),			0, SPROP_NOSCALE ),
+	SendPropBool	( SENDINFO( m_bLaunchedFromWithinWorld ) ),
 	
 	SendPropVector	( SENDINFO( m_vecStartPosition ),       0, SPROP_NOSCALE ),	
 	SendPropVector	( SENDINFO( m_vecEnterWorldPosition ),  0, SPROP_NOSCALE ),	
@@ -69,6 +71,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CEnvHeadcrabCanisterShared, DT_EnvHeadcrabCanisterSh
 	RecvPropFloat	( RECVINFO( m_flInitialZSpeed ) ),	
 	RecvPropFloat	( RECVINFO( m_flZAcceleration ) ),	
 	RecvPropFloat	( RECVINFO( m_flHorizSpeed ) ),	
+	RecvPropBool	( RECVINFO( m_bLaunchedFromWithinWorld ) ),	
 
 	RecvPropVector	( RECVINFO( m_vecStartPosition ) ),	
 	RecvPropVector	( RECVINFO( m_vecEnterWorldPosition ) ),	
@@ -112,16 +115,19 @@ CEnvHeadcrabCanisterShared::CEnvHeadcrabCanisterShared()
 //-----------------------------------------------------------------------------
 void CEnvHeadcrabCanisterShared::InitInWorld( float flLaunchTime, 
 	const Vector &vecStartPosition, const QAngle &vecStartAngles, 
-	const Vector &vecDirection, const Vector &vecImpactPosition )
+	const Vector &vecDirection, const Vector &vecImpactPosition, bool bLaunchedFromWithinWorld )
 {
-	// Move the start position inward if it's too close
-	Vector vecDelta;
-	VectorSubtract( vecStartPosition, vecImpactPosition, vecDelta );
-	VectorNormalize( vecDelta );
+	Vector vecActualStartPosition = vecStartPosition;
+	if ( !bLaunchedFromWithinWorld )
+	{
+		// Move the start position inward if it's too close
+		Vector vecDelta;
+		VectorSubtract( vecStartPosition, vecImpactPosition, vecDelta );
+		VectorNormalize( vecDelta );
 
-	Vector vecActualStartPosition;
-	VectorMA( vecImpactPosition, m_flFlightTime * m_flFlightSpeed, vecDelta, vecActualStartPosition );
-
+		VectorMA( vecImpactPosition, m_flFlightTime * m_flFlightSpeed, vecDelta, vecActualStartPosition );
+	}
+ 
 	// Setup initial parametric state.
 	m_flLaunchTime = flLaunchTime;
 	m_vecStartPosition = vecActualStartPosition;
@@ -130,6 +136,28 @@ void CEnvHeadcrabCanisterShared::InitInWorld( float flLaunchTime,
 	m_vecStartAngles = vecStartAngles;
 	m_flWorldEnterTime = 0.0f;
 	m_bInSkybox = false;
+	m_bLaunchedFromWithinWorld = bLaunchedFromWithinWorld;
+ 
+	if ( m_bLaunchedFromWithinWorld )
+	{
+		m_flSkyboxScale = 1;
+		m_vecSkyboxOrigin = vec3_origin;
+
+		float flLength = m_vecDirection.Get().AsVector2D().Length();
+		VectorSubtract(vecImpactPosition, vecStartPosition, m_vecParabolaDirection.GetForModify());
+		m_vecParabolaDirection.GetForModify().z = 0;
+		float flTotalDistance = VectorNormalize( m_vecParabolaDirection.GetForModify() );
+		m_vecDirection.GetForModify().x = flLength * m_vecParabolaDirection.Get().x;
+		m_vecDirection.GetForModify().y = flLength * m_vecParabolaDirection.Get().y;
+ 
+		m_flHorizSpeed = flTotalDistance / m_flFlightTime;
+		m_flWorldEnterTime = 0;
+ 
+		float flFinalZSpeed = m_vecDirection.Get().z * m_flHorizSpeed;
+		m_flFlightSpeed = sqrt( m_flHorizSpeed * m_flHorizSpeed + flFinalZSpeed * flFinalZSpeed );
+		m_flInitialZSpeed = (2.0f * ( vecImpactPosition.z - vecStartPosition.z ) - flFinalZSpeed * m_flFlightTime) / m_flFlightTime;
+		m_flZAcceleration = (flFinalZSpeed - m_flInitialZSpeed) / m_flFlightTime;
+	}
 }
 
 
@@ -164,6 +192,7 @@ void CEnvHeadcrabCanisterShared::InitInSkybox( float flLaunchTime,
 	m_vecDirection = vecDirection;
 	m_vecStartAngles = vecStartAngles;
 	m_bInSkybox = true;
+	m_bLaunchedFromWithinWorld = false;
 
 	// Compute parabolic course
 	// Assume the x velocity remains constant.
@@ -230,7 +259,7 @@ void CEnvHeadcrabCanisterShared::GetPositionAtTime( float flTime, Vector &vecPos
 	}
 
 	VMatrix initToWorld;
-	if ( m_bInSkybox )
+	if ( m_bLaunchedFromWithinWorld || m_bInSkybox )
 	{
 		VectorMA( m_vecStartPosition, flDeltaTime * m_flHorizSpeed, m_vecParabolaDirection, vecPosition );
 		vecPosition.z += m_flInitialZSpeed * flDeltaTime + 0.5f * m_flZAcceleration * flDeltaTime * flDeltaTime;
@@ -245,7 +274,7 @@ void CEnvHeadcrabCanisterShared::GetPositionAtTime( float flTime, Vector &vecPos
 
 		Vector vecUp;
 		CrossProduct( vecForward, vecLeft, vecUp );
-
+ 
 		initToWorld.SetBasisVectors( vecForward, vecLeft, vecUp );
 	}
 	else

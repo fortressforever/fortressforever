@@ -55,6 +55,7 @@ public:
 
 	CNetworkVar( int, m_DistMax );
 
+	CNetworkVar( float, m_FallSpeed );
 
 public:
 
@@ -92,6 +93,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFunc_Dust, DT_Func_Dust )
 	SendPropInt( SENDINFO(m_DustFlags), DUST_NUMFLAGS, SPROP_UNSIGNED ),
 
 	SendPropModelIndex( SENDINFO(m_nModelIndex) ),
+	SendPropFloat( SENDINFO(m_FallSpeed), 0, SPROP_NOSCALE ),
 	SendPropDataTable( SENDINFO_DT( m_Collision ), &REFERENCE_SEND_TABLE(DT_CollisionProperty) ),
 END_SEND_TABLE()
 
@@ -109,6 +111,7 @@ BEGIN_DATADESC( CFunc_Dust )
 	DEFINE_KEYFIELD( m_LifetimeMax,	FIELD_INTEGER,	"LifetimeMax" ),
 	DEFINE_KEYFIELD( m_DistMax,		FIELD_INTEGER,	"DistMax" ),
 	DEFINE_FIELD( m_iAlpha,			FIELD_INTEGER ),
+	DEFINE_KEYFIELD( m_FallSpeed,	FIELD_FLOAT,	"FallSpeed" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn",  InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff )
@@ -138,6 +141,7 @@ CFunc_DustMotes::CFunc_DustMotes()
 CFunc_Dust::CFunc_Dust()
 {
 	m_DustFlags = DUSTFLAGS_ON;
+	m_FallSpeed = 0.0f;
 }
 
 
@@ -152,8 +156,6 @@ void CFunc_Dust::Spawn()
 	SetModel( STRING( GetModelName() ) );
 	//AddSolidFlags( FSOLID_NOT_SOLID );
 	AddSolidFlags( FSOLID_VOLUME_CONTENTS );
-
-	NetworkStateChanged();
 
 	//Since keyvalues can arrive in any order, and UTIL_StringToColor32 stomps alpha,
 	//install the alpha value here.
@@ -207,7 +209,6 @@ void CFunc_Dust::InputTurnOn( inputdata_t &inputdata )
 	if( !(m_DustFlags & DUSTFLAGS_ON) )
 	{
 		m_DustFlags |= DUSTFLAGS_ON;
-		NetworkStateChanged();
 	}
 }
 
@@ -217,7 +218,6 @@ void CFunc_Dust::InputTurnOff( inputdata_t &inputdata )
 	if( m_DustFlags & DUSTFLAGS_ON )
 	{
 		m_DustFlags &= ~DUSTFLAGS_ON;
-		NetworkStateChanged();
 	}
 }
 

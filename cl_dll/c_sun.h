@@ -68,14 +68,18 @@ public:
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
-
 public:
 	C_SunGlowOverlay	m_Overlay;
 	C_SunGlowOverlay	m_GlowOverlay;
 	
+	color32				m_clrOverlay;
 	int					m_nSize;
+	int					m_nOverlaySize;
 	Vector				m_vDirection;
 	bool				m_bOn;
+
+	int					m_nMaterial;
+	int					m_nOverlayMaterial;
 };
 
 

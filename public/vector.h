@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: 
 //
@@ -16,11 +16,24 @@
 #include <math.h>
 #include <float.h>
 
+#ifdef _WIN32
+#define FORCEINLINE_VECTOR FORCEINLINE
+#else
+#define FORCEINLINE_VECTOR extern __inline__ FORCEINLINE
+#endif
+
+
 // For vec_t, put this somewhere else?
 #include "basetypes.h"
 
 // For rand(). We really need a library!
 #include <stdlib.h>
+
+// For MMX intrinsics
+#include <emmintrin.h>
+#ifdef _LINUX
+#include <xmmintrin.h>
+#endif
 
 #include "tier0/dbg.h"
 #include "vector2d.h"
@@ -97,12 +110,12 @@ public:
 	bool operator!=(const Vector& v) const;	
 
 	// arithmetic operations
-	FORCEINLINE Vector&	operator+=(const Vector &v);			
-	FORCEINLINE Vector&	operator-=(const Vector &v);		
-	FORCEINLINE Vector&	operator*=(const Vector &v);			
+	FORCEINLINE Vector&	operator+=(const Vector &v);
+	FORCEINLINE Vector&	operator-=(const Vector &v);
+	FORCEINLINE Vector&	operator*=(const Vector &v);
 	FORCEINLINE Vector&	operator*=(float s);
 	FORCEINLINE Vector&	operator/=(const Vector &v);		
-	FORCEINLINE Vector&	operator/=(float s);					
+	FORCEINLINE Vector&	operator/=(float s);
 
 	// negate the vector components
 	void	Negate(); 
@@ -118,7 +131,7 @@ public:
 	}
 
 	// return true if this vector is (0,0,0) within tolerance
-	bool IsZero( float tolerance = 0.01f )
+	bool IsZero( float tolerance = 0.01f ) const
 	{
 		return (x > -tolerance && x < tolerance &&
 				y > -tolerance && y < tolerance &&
@@ -197,6 +210,67 @@ private:
 };
 
 
+
+
+
+
+//=========================================================
+// 4D Short Vector (aligned on 8-byte boundary)
+//=========================================================
+#ifdef _WIN32
+class __declspec(align(8)) ShortVector
+#elif _LINUX
+class __attribute__((aligned(8))) ShortVector
+#endif
+{
+public:
+
+	short x, y, z, w;
+
+
+	// Initialization
+	void Init(short ix = 0, short iy = 0, short iz = 0, short iw = 0 );
+
+	__m64 &AsM64() { return *(__m64*)&x; }
+	const __m64 &AsM64() const { return *(const __m64*)&x; } 
+
+	// Setter
+	void Set( const ShortVector& vOther );
+	void Set( const short ix, const short iy, const short iz, const short iw );
+
+	// array access...
+	short operator[](int i) const;
+	short& operator[](int i);
+
+	// Base address...
+	short* Base();
+	short const* Base() const;
+
+	// equality
+	bool operator==(const ShortVector& v) const;
+	bool operator!=(const ShortVector& v) const;	
+
+	// Arithmetic operations
+	FORCEINLINE ShortVector& operator+=(const ShortVector &v);			
+	FORCEINLINE ShortVector& operator-=(const ShortVector &v);		
+	FORCEINLINE ShortVector& operator*=(const ShortVector &v);			
+	FORCEINLINE ShortVector& operator*=(float s);
+	FORCEINLINE ShortVector& operator/=(const ShortVector &v);		
+	FORCEINLINE ShortVector& operator/=(float s);					
+	FORCEINLINE ShortVector operator*(float fl) const;
+
+private:
+
+	// No copy constructors allowed if we're in optimal mode
+//	ShortVector(ShortVector const& vOther);
+
+	// No assignment operators either...
+//	ShortVector& operator=( ShortVector const& src );
+
+};
+
+
+
 //-----------------------------------------------------------------------------
 // Allows us to specifically pass the vector by value when we need to
 //-----------------------------------------------------------------------------
@@ -268,18 +342,18 @@ private:
 //-----------------------------------------------------------------------------
 
 // Vector clear
-FORCEINLINE void VectorClear( Vector& a );
+FORCEINLINE_VECTOR void VectorClear( Vector& a );
 
 // Copy
-FORCEINLINE void VectorCopy( const Vector& src, Vector& dst );
+FORCEINLINE_VECTOR void VectorCopy( const Vector& src, Vector& dst );
 
 // Vector arithmetic
-FORCEINLINE void VectorAdd( const Vector& a, const Vector& b, Vector& result );
-FORCEINLINE void VectorSubtract( const Vector& a, const Vector& b, Vector& result );
-FORCEINLINE void VectorMultiply( const Vector& a, vec_t b, Vector& result );
-FORCEINLINE void VectorMultiply( const Vector& a, const Vector& b, Vector& result );
-FORCEINLINE void VectorDivide( const Vector& a, vec_t b, Vector& result );
-FORCEINLINE void VectorDivide( const Vector& a, const Vector& b, Vector& result );
+FORCEINLINE_VECTOR void VectorAdd( const Vector& a, const Vector& b, Vector& result );
+FORCEINLINE_VECTOR void VectorSubtract( const Vector& a, const Vector& b, Vector& result );
+FORCEINLINE_VECTOR void VectorMultiply( const Vector& a, vec_t b, Vector& result );
+FORCEINLINE_VECTOR void VectorMultiply( const Vector& a, const Vector& b, Vector& result );
+FORCEINLINE_VECTOR void VectorDivide( const Vector& a, vec_t b, Vector& result );
+FORCEINLINE_VECTOR void VectorDivide( const Vector& a, const Vector& b, Vector& result );
 inline void VectorScale ( const Vector& in, vec_t scale, Vector& result );
 // void VectorMA( const Vector& start, float s, const Vector& dir, Vector& result );
 
@@ -297,7 +371,7 @@ bool VectorsAreEqual( const Vector& src1, const Vector& src2, float tolerance = 
 inline vec_t VectorLength( const Vector& v );
 
 // Dot Product
-FORCEINLINE vec_t DotProduct(const Vector& a, const Vector& b);
+FORCEINLINE_VECTOR vec_t DotProduct(const Vector& a, const Vector& b);
 
 // Cross product
 void CrossProduct(const Vector& a, const Vector& b, Vector& result );
@@ -474,7 +548,7 @@ inline bool Vector::operator!=( const Vector& src ) const
 // Copy
 //-----------------------------------------------------------------------------
 
-FORCEINLINE void VectorCopy( const Vector& src, Vector& dst )
+FORCEINLINE_VECTOR void VectorCopy( const Vector& src, Vector& dst )
 {
 	CHECK_VALID(src);
 	dst.x = src.x;
@@ -499,7 +573,7 @@ inline void Vector::Negate()
 	x = -x; y = -y; z = -z; 
 } 
 
-FORCEINLINE  Vector& Vector::operator+=(const Vector& v)	
+FORCEINLINE_VECTOR  Vector& Vector::operator+=(const Vector& v)	
 { 
 	CHECK_VALID(*this);
 	CHECK_VALID(v);
@@ -507,7 +581,7 @@ FORCEINLINE  Vector& Vector::operator+=(const Vector& v)
 	return *this;
 }
 
-FORCEINLINE  Vector& Vector::operator-=(const Vector& v)	
+FORCEINLINE_VECTOR  Vector& Vector::operator-=(const Vector& v)	
 { 
 	CHECK_VALID(*this);
 	CHECK_VALID(v);
@@ -515,7 +589,7 @@ FORCEINLINE  Vector& Vector::operator-=(const Vector& v)
 	return *this;
 }
 
-FORCEINLINE  Vector& Vector::operator*=(float fl)	
+FORCEINLINE_VECTOR  Vector& Vector::operator*=(float fl)	
 {
 	x *= fl;
 	y *= fl;
@@ -524,7 +598,7 @@ FORCEINLINE  Vector& Vector::operator*=(float fl)
 	return *this;
 }
 
-FORCEINLINE  Vector& Vector::operator*=(const Vector& v)	
+FORCEINLINE_VECTOR  Vector& Vector::operator*=(const Vector& v)	
 { 
 	CHECK_VALID(v);
 	x *= v.x;
@@ -534,7 +608,7 @@ FORCEINLINE  Vector& Vector::operator*=(const Vector& v)
 	return *this;
 }
 
-FORCEINLINE  Vector& Vector::operator/=(float fl)	
+FORCEINLINE_VECTOR  Vector& Vector::operator/=(float fl)	
 {
 	Assert( fl != 0.0f );
 	float oofl = 1.0f / fl;
@@ -545,7 +619,7 @@ FORCEINLINE  Vector& Vector::operator/=(float fl)
 	return *this;
 }
 
-FORCEINLINE  Vector& Vector::operator/=(const Vector& v)	
+FORCEINLINE_VECTOR  Vector& Vector::operator/=(const Vector& v)	
 { 
 	CHECK_VALID(v);
 	Assert( v.x != 0.0f && v.y != 0.0f && v.z != 0.0f );
@@ -556,7 +630,160 @@ FORCEINLINE  Vector& Vector::operator/=(const Vector& v)
 	return *this;
 }
 
-FORCEINLINE void VectorAdd( const Vector& a, const Vector& b, Vector& c )
+
+
+//-----------------------------------------------------------------------------
+//
+// Inlined Short Vector methods
+//
+//-----------------------------------------------------------------------------
+
+
+inline void ShortVector::Init( short ix, short iy, short iz, short iw )    
+{ 
+	x = ix; y = iy; z = iz; w = iw;
+}
+
+FORCEINLINE_VECTOR void ShortVector::Set( const ShortVector& vOther )
+{
+   x = vOther.x;
+   y = vOther.y;
+   z = vOther.z;
+   w = vOther.w;
+}
+
+FORCEINLINE_VECTOR void ShortVector::Set( const short ix, const short iy, const short iz, const short iw )
+{
+   x = ix;
+   y = iy;
+   z = iz;
+   w = iw;
+}
+
+
+//-----------------------------------------------------------------------------
+// Array access
+//-----------------------------------------------------------------------------
+inline short ShortVector::operator[](int i) const
+{
+	Assert( (i >= 0) && (i < 4) );
+	return ((short*)this)[i];
+}
+
+inline short& ShortVector::operator[](int i)
+{
+	Assert( (i >= 0) && (i < 4) );
+	return ((short*)this)[i];
+}
+
+//-----------------------------------------------------------------------------
+// Base address...
+//-----------------------------------------------------------------------------
+inline short* ShortVector::Base()
+{
+	return (short*)this;
+}
+
+inline short const* ShortVector::Base() const
+{
+	return (short const*)this;
+}
+
+
+//-----------------------------------------------------------------------------
+// comparison
+//-----------------------------------------------------------------------------
+
+inline bool ShortVector::operator==( const ShortVector& src ) const
+{
+	return (src.x == x) && (src.y == y) && (src.z == z) && (src.w == w);
+}
+
+inline bool ShortVector::operator!=( const ShortVector& src ) const
+{
+	return (src.x != x) || (src.y != y) || (src.z != z) || (src.w != w);
+}
+
+
+
+//-----------------------------------------------------------------------------
+// standard math operations
+//-----------------------------------------------------------------------------
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator+=(const ShortVector& v)	
+{ 
+	x+=v.x; y+=v.y; z += v.z; w += v.w;
+	return *this;
+}
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator-=(const ShortVector& v)	
+{ 
+	x-=v.x; y-=v.y; z -= v.z; w -= v.w;
+	return *this;
+}
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator*=(float fl)	
+{
+	x *= fl;
+	y *= fl;
+	z *= fl;
+	w *= fl;
+	return *this;
+}
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator*=(const ShortVector& v)	
+{ 
+	x *= v.x;
+	y *= v.y;
+	z *= v.z;
+	w *= v.w;
+	return *this;
+}
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator/=(float fl)	
+{
+	Assert( fl != 0.0f );
+	float oofl = 1.0f / fl;
+	x *= oofl;
+	y *= oofl;
+	z *= oofl;
+	w *= oofl;
+	return *this;
+}
+
+FORCEINLINE_VECTOR  ShortVector& ShortVector::operator/=(const ShortVector& v)	
+{ 
+	Assert( v.x != 0 && v.y != 0 && v.z != 0 && v.w != 0 );
+	x /= v.x;
+	y /= v.y;
+	z /= v.z;
+	w /= v.w;
+	return *this;
+}
+
+FORCEINLINE_VECTOR void ShortVectorMultiply( const ShortVector& src, float fl, ShortVector& res )
+{
+	Assert( IsFinite(fl) );
+	res.x = src.x * fl;
+	res.y = src.y * fl;
+	res.z = src.z * fl;
+	res.w = src.w * fl;
+}
+
+FORCEINLINE_VECTOR ShortVector ShortVector::operator*(float fl) const
+{ 
+	ShortVector res;
+	ShortVectorMultiply( *this, fl, res );
+	return res;	
+}
+
+
+
+
+// =======================
+
+
+FORCEINLINE_VECTOR void VectorAdd( const Vector& a, const Vector& b, Vector& c )
 {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
@@ -565,7 +792,7 @@ FORCEINLINE void VectorAdd( const Vector& a, const Vector& b, Vector& c )
 	c.z = a.z + b.z;
 }
 
-FORCEINLINE void VectorSubtract( const Vector& a, const Vector& b, Vector& c )
+FORCEINLINE_VECTOR void VectorSubtract( const Vector& a, const Vector& b, Vector& c )
 {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
@@ -574,7 +801,7 @@ FORCEINLINE void VectorSubtract( const Vector& a, const Vector& b, Vector& c )
 	c.z = a.z - b.z;
 }
 
-FORCEINLINE void VectorMultiply( const Vector& a, vec_t b, Vector& c )
+FORCEINLINE_VECTOR void VectorMultiply( const Vector& a, vec_t b, Vector& c )
 {
 	CHECK_VALID(a);
 	Assert( IsFinite(b) );
@@ -583,7 +810,7 @@ FORCEINLINE void VectorMultiply( const Vector& a, vec_t b, Vector& c )
 	c.z = a.z * b;
 }
 
-FORCEINLINE void VectorMultiply( const Vector& a, const Vector& b, Vector& c )
+FORCEINLINE_VECTOR void VectorMultiply( const Vector& a, const Vector& b, Vector& c )
 {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
@@ -599,7 +826,7 @@ inline void VectorScale ( const Vector& in, vec_t scale, Vector& result )
 }
 
 
-FORCEINLINE void VectorDivide( const Vector& a, vec_t b, Vector& c )
+FORCEINLINE_VECTOR void VectorDivide( const Vector& a, vec_t b, Vector& c )
 {
 	CHECK_VALID(a);
 	Assert( b != 0.0f );
@@ -609,7 +836,7 @@ FORCEINLINE void VectorDivide( const Vector& a, vec_t b, Vector& c )
 	c.z = a.z * oob;
 }
 
-FORCEINLINE void VectorDivide( const Vector& a, const Vector& b, Vector& c )
+FORCEINLINE_VECTOR void VectorDivide( const Vector& a, const Vector& b, Vector& c )
 {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
@@ -619,7 +846,7 @@ FORCEINLINE void VectorDivide( const Vector& a, const Vector& b, Vector& c )
 	c.z = a.z / b.z;
 }
 
-void VectorMA( const Vector& start, float s, const Vector& dir, Vector& result )
+void __cdecl VectorMA( const Vector& start, float s, const Vector& dir, Vector& result )
 #if 0
 {
 	CHECK_VALID(start);
@@ -670,7 +897,7 @@ inline Vector &AllocTempVector()
 //-----------------------------------------------------------------------------
 // dot, cross
 //-----------------------------------------------------------------------------
-FORCEINLINE vec_t DotProduct(const Vector& a, const Vector& b) 
+FORCEINLINE_VECTOR vec_t DotProduct(const Vector& a, const Vector& b) 
 { 
 	CHECK_VALID(a);
 	CHECK_VALID(b);
@@ -688,6 +915,8 @@ inline void CrossProduct(const Vector& a, const Vector& b, Vector& result )
 {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
+	Assert( &a != &result );
+	Assert( &b != &result );
 	result.x = a.y*b.z - a.z*b.y;
 	result.y = a.z*b.x - a.x*b.z;
 	result.z = a.x*b.y - a.y*b.x;
@@ -999,12 +1228,24 @@ class RadianEuler;
 class Quaternion				// same data-layout as engine's vec4_t,
 {								//		which is a vec_t[4]
 public:
-	inline Quaternion(void)							{ }
+	inline Quaternion(void)	{ 
+	
+	// Initialize to NAN to catch errors
+#ifdef _DEBUG
+#ifdef VECTOR_PARANOIA
+		x = y = z = w = VEC_T_NAN;
+#endif
+#endif
+	}
+	inline Quaternion(vec_t ix, vec_t iy, vec_t iz, vec_t iw) : x(ix), y(iy), z(iz), w(iw) { }
 	inline Quaternion(RadianEuler const &angle);	// evil auto type promotion!!!
 
 	inline void Init(vec_t ix=0.0f, vec_t iy=0.0f, vec_t iz=0.0f, vec_t iw=0.0f)	{ x = ix; y = iy; z = iz; w = iw; }
 
 	bool IsValid() const;
+
+	bool operator==( const Quaternion &src ) const;
+	bool operator!=( const Quaternion &src ) const;
 
 	// array access...
 	vec_t operator[](int i) const;
@@ -1017,7 +1258,6 @@ public:
 //-----------------------------------------------------------------------------
 // Array access
 //-----------------------------------------------------------------------------
-
 inline vec_t& Quaternion::operator[](int i)
 {
 	Assert( (i >= 0) && (i < 4) );
@@ -1029,6 +1269,21 @@ inline vec_t Quaternion::operator[](int i) const
 	Assert( (i >= 0) && (i < 4) );
 	return ((vec_t*)this)[i];
 }
+
+
+//-----------------------------------------------------------------------------
+// Equality test
+//-----------------------------------------------------------------------------
+inline bool Quaternion::operator==( const Quaternion &src ) const
+{
+	return ( x == src.x ) && ( y == src.y ) && ( z == src.z ) && ( w == src.w );
+}
+
+inline bool Quaternion::operator!=( const Quaternion &src ) const
+{
+	return !operator==( src );
+}
+
 
 //-----------------------------------------------------------------------------
 // Radian Euler QAngle aligned to axis (NOT ROLL/PITCH/YAW)
@@ -1505,18 +1760,18 @@ extern float (FASTCALL *pfVectorNormalize)(Vector& v);
 extern void (FASTCALL *pfVectorNormalizeFast)(Vector& v);
 
 // FIXME: Change this back to a #define once we get rid of the vec_t version
-FORCEINLINE float VectorNormalize( Vector& v )
+FORCEINLINE_VECTOR float VectorNormalize( Vector& v )
 {
 	return (*pfVectorNormalize)(v);
 }
 
 // FIXME: Obsolete version of VectorNormalize, once we remove all the friggin float*s
-FORCEINLINE float VectorNormalize( float * v )
+FORCEINLINE_VECTOR float VectorNormalize( float * v )
 {
 	return VectorNormalize(*(reinterpret_cast<Vector *>(v)));
 }
 
-FORCEINLINE void VectorNormalizeFast( Vector& v )
+FORCEINLINE_VECTOR void VectorNormalizeFast( Vector& v )
 {
 	(*pfVectorNormalizeFast)(v);
 }

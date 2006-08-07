@@ -12,6 +12,7 @@
 #include "studio.h"
 #include "optimize.h"
 #include "cmdlib.h"
+#include "studiomdl.h"
 
 extern void MdlError( char const *pMsg, ... );
 
@@ -20,13 +21,11 @@ static IStudioRender *g_pStudioRender = NULL;
 static void UpdateStudioRenderConfig( void );
 static StudioRenderConfig_t s_StudioRenderConfig;
 
-class CStudioDataCache : public IStudioDataCache
+class CStudioDataCache : public CBaseAppSystem<IStudioDataCache>
 {
 public:
 	bool VerifyHeaders( studiohdr_t *pStudioHdr );
 	vertexFileHeader_t *CacheVertexData( studiohdr_t *pStudioHdr );
-	OptimizedModel::FileHeader_t *CacheIndexData( studiohdr_t *pStudioHdr );
-//	studiohwdata_t *CacheHWData( studiohdr_t *pStudioHdr );
 };
 
 static CStudioDataCache	g_StudioDataCache;
@@ -58,19 +57,6 @@ vertexFileHeader_t *CStudioDataCache::CacheVertexData( studiohdr_t *pStudioHdr )
 {
 	// minimal implementation - return persisted data
 	return (vertexFileHeader_t*)pStudioHdr->pVertexBase;
-}
-
-/*
-=================
-CacheIndexData
-
-Cache model's specified dynamic data
-=================
-*/
-OptimizedModel::FileHeader_t *CStudioDataCache::CacheIndexData( studiohdr_t *pStudioHdr )
-{
-	// minimal implementation - return persisted data
-	return (OptimizedModel::FileHeader_t*)pStudioHdr->pIndexBase;
 }
 
 void InitStudioRender( void )
@@ -117,7 +103,7 @@ static void UpdateStudioRenderConfig( void )
 	s_StudioRenderConfig.bFlex = true;
 	s_StudioRenderConfig.bEyes = true;
 	s_StudioRenderConfig.bWireframe = false;
-	s_StudioRenderConfig.bNormals = false;
+	s_StudioRenderConfig.SetNormals( false );
 	s_StudioRenderConfig.skin = 0;
 	s_StudioRenderConfig.maxDecalsPerModel = 0;
 	s_StudioRenderConfig.bWireframeDecals = false;
@@ -154,7 +140,7 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 	DrawModelInfo_t					drawModelInfo;
 	studiohwdata_t					studioHWData;
 	int								vvdSize;
-	const char						*prefix[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx"};
+	const char						*prefix[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".xbox.vtx"};
 
 	if (!pStudioHdr->numbodyparts)
 	{
@@ -245,7 +231,7 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		pStudioHdr->pVertexBase = (void *)pVvdHdr;
 		pStudioHdr->pIndexBase  = (void *)pVtxHdr;
 
-		g_pStudioRender->LoadModel( pStudioHdr, &studioHWData );
+		g_pStudioRender->LoadModel( pStudioHdr, pVtxHdr, &studioHWData );
 		memset( &drawModelInfo, 0, sizeof( DrawModelInfo_t ) );
 		drawModelInfo.m_pStudioHdr = pStudioHdr;
 		drawModelInfo.m_pHardwareData = &studioHWData;	

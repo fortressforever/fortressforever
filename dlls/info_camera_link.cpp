@@ -96,13 +96,13 @@ void CInfoCameraLink::Activate()
 
 	if ( !m_hTargetEntity )
 	{
-		m_hTargetEntity = gEntList.FindEntityByName( NULL, STRING(m_target), NULL );
+		m_hTargetEntity = gEntList.FindEntityByName( NULL, STRING(m_target) );
 	}
 }
 
 void CInfoCameraLink::SetCameraByName(const char *szName)
 {
-	CBaseEntity *pBaseEnt = gEntList.FindEntityByName( NULL, szName, NULL );
+	CBaseEntity *pBaseEnt = gEntList.FindEntityByName( NULL, szName );
 	if( pBaseEnt )
 	{
 		m_hCamera = dynamic_cast<CPointCamera *>( pBaseEnt );
