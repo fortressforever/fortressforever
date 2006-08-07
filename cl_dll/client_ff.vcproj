@@ -41,12 +41,7 @@
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				Description="Copying to destination folder"
-				CommandLine="if exist &quot;e:\steam\steamapps\SourceMods\newfftest\bin\client.dll&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\newfftest\bin\client.dll&quot;
-copy &quot;$(TargetDir)&quot;client.dll &quot;e:\steam\steamapps\SourceMods\newfftest\bin&quot;
-"
-				Outputs="e:\steam\steamapps\SourceMods\newfftest\bin\client.dll"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
@@ -73,7 +68,9 @@ copy &quot;$(TargetDir)&quot;client.dll &quot;e:\steam\steamapps\SourceMods\newf
 				TypeLibraryName=".\client___Win32_Debug_DoD/client.tlb"
 				HeaderFileName=""/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				Description="Copying client dll"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -2527,10 +2524,10 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -2773,10 +2770,10 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
@@ -3361,6 +3358,9 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 				RelativePath=".\ff\c_ff_env_sparkler.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\c_ff_item_flag.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\c_ff_materialproxies.cpp">
 			</File>
 			<File
@@ -3398,6 +3398,12 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 			</File>
 			<File
 				RelativePath=".\ff\ff_fx_conc_emitter.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_concbits.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_fx_concbits.h">
 			</File>
 			<File
 				RelativePath=".\ff\ff_fx_empzap.cpp">
@@ -3461,6 +3467,9 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_armor.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_boxes.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_boxes.h">
