@@ -34,17 +34,10 @@ private:
 
 bool CProxyAmmo::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
 {
-	bool bModifier;
-	IMaterialVar *pModifier = pMaterial->FindVar("$digitindex", &bModifier, false);
+	CFloatInput TextureScrollRate;
+	TextureScrollRate.Init(pMaterial, pKeyValues, "digitindex", -1.0f);
 
-	if (!bModifier)
-	{
-		m_iModifier = -1;
-	}
-	else
-	{
-		m_iModifier = pModifier->GetIntValue();
-	}
+	m_iModifier = (int) TextureScrollRate.GetFloat();
 
 	return CResultProxy::Init(pMaterial, pKeyValues);
 }
