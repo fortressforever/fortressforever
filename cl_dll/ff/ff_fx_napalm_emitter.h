@@ -31,9 +31,10 @@ public:
 	Vector			m_vVelocity;
 	float			m_flDieTime;
 	float			m_flLifetime;
-	unsigned char	m_uchColor[3];
+	unsigned char	m_uchColor[4];
 	bool			m_bStartFire;
 	bool			m_bReverseSize;
+	float			m_flScale;
 };
 
 class CNapalmEmitter : public CParticleEffect
