@@ -927,7 +927,7 @@ CStudioHdr *C_BaseAnimating::GetModelPtr() const
 	// GetModelPtr() is often called before OnNewModel() so go ahead and set it up first chance.
 #ifdef _DEBUG
 	IDataCacheSection *pModelCache = datacache->FindSection( "ModelData" );
-	AssertOnce( pModelCache->IsFrameLocking() );
+	//AssertOnce( pModelCache->IsFrameLocking() );	// |-- Mirv: Okay.
 #endif
 	if (!m_pStudioHdr)
 	{

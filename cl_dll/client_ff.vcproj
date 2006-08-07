@@ -1851,18 +1851,6 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 					RelativePath=".\game_controls\baseviewport.cpp">
 				</File>
 				<File
-					RelativePath="game_controls\buymenu.cpp">
-					<FileConfiguration
-						Name="Debug FF|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="game_controls\buysubmenu.cpp">
-				</File>
-				<File
 					RelativePath="game_controls\classmenu.cpp">
 				</File>
 				<File
@@ -1873,6 +1861,12 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 				</File>
 				<File
 					RelativePath=".\entity_client_tools.cpp">
+				</File>
+				<File
+					RelativePath=".\game_controls\mapguidemenu.cpp">
+				</File>
+				<File
+					RelativePath=".\game_controls\mapguidemenu.h">
 				</File>
 				<File
 					RelativePath="game_controls\MapOverview.cpp">
