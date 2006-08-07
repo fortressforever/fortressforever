@@ -53,8 +53,8 @@ float flame_tex_coords[][4] =
 	{ 0.5f,		0.625f,	0.5f, 1.0f},	//frame 12
 	{ 0.625f,	0.75f,	0.5f, 1.0f}		//frame 13
 };
-#define NUM_FLAME_FRAMES	15
-ConVar nap_burst_flame_framerate("ffdev_nap_burst_flame_framerate","7",0,"Framerate of the fire \"sprites\".");
+#define NUM_FLAME_FRAMES	14
+ConVar nap_burst_flame_framerate("ffdev_nap_burst_flame_framerate","12",0,"Framerate of the fire \"sprites\".");
 
 //========================================================================
 // Client effect precache table
@@ -223,46 +223,43 @@ void CNapalmEmitter::SimulateParticles( CParticleSimulateIterator *pIterator )
 inline void RenderParticle_ColorSizeFrame(
 									 ParticleDraw* pDraw,									
 									 const Vector &pos,
-									 const Vector &color,
-									 const float alpha,
+									 const unsigned char ubColor[4],
 									 const float size,
 									 const int frame
 									 )
 {
 	// Don't render totally transparent particles.
-	if( alpha < 0.001f )
+	if (ubColor[3] < 1)
 		return;
+
+//#define frame 0
 
 	CMeshBuilder *pBuilder = pDraw->GetMeshBuilder();
 	if( !pBuilder )
 		return;
 
-	unsigned char ubColor[4];
-	ubColor[0] = (unsigned char)RoundFloatToInt( color.x * 254.9f );
-	ubColor[1] = (unsigned char)RoundFloatToInt( color.y * 254.9f );
-	ubColor[2] = (unsigned char)RoundFloatToInt( color.z * 254.9f );
-	ubColor[3] = (unsigned char)RoundFloatToInt( alpha * 254.9f );
-
 	// Add the 4 corner vertices.
-	pBuilder->Position3f( pos.x-size, pos.y-size, pos.z );
+	pBuilder->Position3f( pos.x-size, pos.y, pos.z );
 	pBuilder->Color4ubv( ubColor );
 	pBuilder->TexCoord2f( 0, flame_tex_coords[frame][0], flame_tex_coords[frame][3] );
 	pBuilder->AdvanceVertex();
 
-	pBuilder->Position3f( pos.x-size, pos.y+size, pos.z );
+	pBuilder->Position3f( pos.x-size, pos.y+size * 4, pos.z );
 	pBuilder->Color4ubv( ubColor );
 	pBuilder->TexCoord2f( 0, flame_tex_coords[frame][0], flame_tex_coords[frame][2] );
 	pBuilder->AdvanceVertex();
 
-	pBuilder->Position3f( pos.x+size, pos.y+size, pos.z );
+	pBuilder->Position3f( pos.x+size, pos.y+size * 4, pos.z );
 	pBuilder->Color4ubv( ubColor );
 	pBuilder->TexCoord2f( 0, flame_tex_coords[frame][1], flame_tex_coords[frame][2] );
 	pBuilder->AdvanceVertex();
 
-	pBuilder->Position3f( pos.x+size, pos.y-size, pos.z );
+	pBuilder->Position3f( pos.x+size, pos.y, pos.z );
 	pBuilder->Color4ubv( ubColor );
 	pBuilder->TexCoord2f( 0, flame_tex_coords[frame][1], flame_tex_coords[frame][3] );
 	pBuilder->AdvanceVertex();
+
+//#undef frame
 }
 
 //========================================================================
@@ -298,17 +295,19 @@ void CNapalmEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		}
 		else if(pParticle->m_iType == eNapalmFlame)
 		{
-			Vector vColor = Vector(pParticle->m_uchColor[0] / 255.0f,
-				pParticle->m_uchColor[1] / 255.0f,
-				pParticle->m_uchColor[2] / 255.0f);
+			int frame = Float2Int(pParticle->m_flLifetime * nap_burst_flame_framerate.GetFloat());
 
-			int frame = Float2Int(pParticle->m_flLifetime * nap_burst_flame_framerate.GetFloat()) % NUM_FLAME_FRAMES;
+			// Is this quicker than modulas?
+			while (frame >= NUM_FLAME_FRAMES)
+				frame -= NUM_FLAME_FRAMES;
+
+			float flDie = clamp(pParticle->m_flDieTime - pParticle->m_flLifetime, 0.0f, 1.0f);
+
 			RenderParticle_ColorSizeFrame(
 				pIterator->GetParticleDraw(),
 				tPos,
-				vColor,
-				1.0f,
-				nap_burst_flame_scale.GetFloat(),
+				pParticle->m_uchColor,
+				pParticle->m_flScale * flDie,
 				frame
 				);
 		}
@@ -339,13 +338,15 @@ void CNapalmEmitter::StartFire(const Vector &pos)
 		pFireParticle->m_Pos = pos;
 		pFireParticle->m_vVelocity.Init();
 		pFireParticle->m_flLifetime = 0;
-		pFireParticle->m_flDieTime = nap_burst_flame_time.GetFloat();;
+		pFireParticle->m_flDieTime = nap_burst_flame_time.GetFloat() * random->RandomFloat(0.7f, 1.3f);
 		pFireParticle->m_uchColor[0] = 255;
-		pFireParticle->m_uchColor[1] = 255;
-		pFireParticle->m_uchColor[2] = 255;
+		pFireParticle->m_uchColor[1] = 
+		pFireParticle->m_uchColor[2] = random->RandomInt(160, 255);
+		pFireParticle->m_uchColor[3] = random->RandomInt(230, 250);
 		pFireParticle->m_bStartFire = false;
+		pFireParticle->m_flScale = nap_burst_flame_scale.GetFloat() * random->RandomFloat(0.7f, 1.3f);
 	}
-	NapalmParticle *pHeatParticle = (NapalmParticle*)AddParticle( sizeof( NapalmParticle ), m_hHeatwaveMaterial, pos );
+	/*NapalmParticle *pHeatParticle = (NapalmParticle*)AddParticle( sizeof( NapalmParticle ), m_hHeatwaveMaterial, pos );
 	if(pHeatParticle)
 	{
 		pHeatParticle->m_iType = eHeatwave;
@@ -357,5 +358,5 @@ void CNapalmEmitter::StartFire(const Vector &pos)
 		pHeatParticle->m_uchColor[1] = 255;
 		pHeatParticle->m_uchColor[2] = 255;
 		pHeatParticle->m_bStartFire = false;
-	}
+	}*/
 }
