@@ -17,7 +17,7 @@
 #ifndef NVTC_H
 #define NVTC_H
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 #include <ddraw.h>
 #endif
 
@@ -34,7 +34,7 @@
 #define _S3TC_ENCODE_ALPHA_MASK			0xff00
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 // common encoding types
 //@@@TBD
 

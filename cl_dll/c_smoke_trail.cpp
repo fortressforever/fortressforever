@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "c_smoke_trail.h"
 #include "fx.h"
@@ -13,6 +13,9 @@
 #include "c_te_effect_dispatch.h"
 #include "glow_overlay.h"
 #include "fx_explosion.h"
+#include "tier1/keyvalues.h"
+#include "toolframework_client.h"
+#include "view.h"
 #include "ff_projectile_base.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -193,6 +196,17 @@ C_SmokeTrail::C_SmokeTrail()
 
 C_SmokeTrail::~C_SmokeTrail()
 {
+	if ( ToolsEnabled() && clienttools->IsInRecordingMode() && m_pSmokeEmitter.IsValid() && m_pSmokeEmitter->GetToolParticleEffectId() != TOOLPARTICLESYSTEMID_INVALID )
+	{
+		KeyValues *msg = new KeyValues( "ParticleSystem_ActivateEmitter" );
+		msg->SetInt( "id", m_pSmokeEmitter->GetToolParticleEffectId() );
+		msg->SetInt( "emitter", 0 );
+		msg->SetInt( "active", false );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+
 	if ( m_pParticleMgr )
 	{
 		m_pParticleMgr->RemoveEffect( &m_ParticleEffect );
@@ -246,7 +260,7 @@ void C_SmokeTrail::OnDataChanged(DataUpdateType_t updateType)
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-		Start( &g_ParticleMgr, NULL );
+		Start( ParticleMgr(), NULL );
 	}
 }
 
@@ -384,6 +398,142 @@ void C_SmokeTrail::SimulateParticles( CParticleSimulateIterator *pIterator )
 }
 
 
+//-----------------------------------------------------------------------------
+// This is called after sending this entity's recording state
+//-----------------------------------------------------------------------------
+
+void C_SmokeTrail::CleanupToolRecordingState( KeyValues *msg )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	BaseClass::CleanupToolRecordingState( msg );
+
+	// Generally, this is used to allow the entity to clean up
+	// allocated state it put into the message, but here we're going
+	// to use it to send particle system messages because we
+	// know the grenade has been recorded at this point
+	if ( !clienttools->IsInRecordingMode() || !m_pSmokeEmitter.IsValid() )
+		return;
+	
+	// For now, we can't record smoketrails that don't have a moveparent
+	C_BaseEntity *pEnt = GetMoveParent();
+	if ( !pEnt )
+		return;
+
+	bool bEmitterActive = m_bEmit && ( ( m_StopEmitTime == 0 ) || ( m_StopEmitTime > gpGlobals->curtime ) );
+
+	// NOTE: Particle system destruction message will be sent by the particle effect itself.
+	if ( m_pSmokeEmitter->GetToolParticleEffectId() == TOOLPARTICLESYSTEMID_INVALID )
+	{
+		int nId = m_pSmokeEmitter->AllocateToolParticleEffectId();
+
+		KeyValues *msg = new KeyValues( "ParticleSystem_Create" );
+		msg->SetString( "name", "C_SmokeTrail" );
+		msg->SetInt( "id", nId );
+		msg->SetFloat( "time", gpGlobals->curtime );
+
+		KeyValues *pRandomEmitter = msg->FindKey( "DmeRandomEmitter", true );
+		pRandomEmitter->SetInt( "count", m_SpawnRate );	// particles per second, when duration is < 0
+		pRandomEmitter->SetFloat( "duration", -1 );
+		pRandomEmitter->SetInt( "active", bEmitterActive );
+
+		KeyValues *pEmitterParent1 = pRandomEmitter->FindKey( "emitter1", true );
+		pEmitterParent1->SetFloat( "randomamount", 0.5f );
+		KeyValues *pEmitterParent2 = pRandomEmitter->FindKey( "emitter2", true );
+		pEmitterParent2->SetFloat( "randomamount", 0.5f );
+
+		KeyValues *pEmitter = pEmitterParent1->FindKey( "DmeSpriteEmitter", true );
+		pEmitter->SetString( "material", "particle/particle_smokegrenade" );
+
+		KeyValues *pInitializers = pEmitter->FindKey( "initializers", true );
+
+		// FIXME: Until we can interpolate ent logs during emission, this can't work
+		KeyValues *pPosition = pInitializers->FindKey( "DmePositionPointToEntityInitializer", true );
+		pPosition->SetPtr( "entindex", (void*)pEnt->entindex() );
+		pPosition->SetInt( "attachmentIndex", m_nAttachment );
+		pPosition->SetFloat( "randomDist", m_SpawnRadius );
+		pPosition->SetFloat( "startx", pEnt->GetAbsOrigin().x );
+		pPosition->SetFloat( "starty", pEnt->GetAbsOrigin().y );
+		pPosition->SetFloat( "startz", pEnt->GetAbsOrigin().z );
+
+		KeyValues *pLifetime = pInitializers->FindKey( "DmeRandomLifetimeInitializer", true );
+		pLifetime->SetFloat( "minLifetime", m_ParticleLifetime );
+ 		pLifetime->SetFloat( "maxLifetime", m_ParticleLifetime );
+
+		KeyValues *pVelocity = pInitializers->FindKey( "DmeAttachmentVelocityInitializer", true );
+		pVelocity->SetPtr( "entindex", (void*)entindex() );
+		pVelocity->SetFloat( "minAttachmentSpeed", m_MinDirectedSpeed );
+ 		pVelocity->SetFloat( "maxAttachmentSpeed", m_MaxDirectedSpeed );
+ 		pVelocity->SetFloat( "minRandomSpeed", m_MinSpeed );
+ 		pVelocity->SetFloat( "maxRandomSpeed", m_MaxSpeed );
+
+		KeyValues *pRoll = pInitializers->FindKey( "DmeRandomRollInitializer", true );
+		pRoll->SetFloat( "minRoll", 0.0f );
+ 		pRoll->SetFloat( "maxRoll", 360.0f );
+
+		KeyValues *pRollSpeed = pInitializers->FindKey( "DmeRandomRollSpeedInitializer", true );
+		pRollSpeed->SetFloat( "minRollSpeed", -1.0f );
+ 		pRollSpeed->SetFloat( "maxRollSpeed", 1.0f );
+
+		KeyValues *pColor = pInitializers->FindKey( "DmeRandomValueColorInitializer", true );
+		Color c( 
+			clamp( m_StartColor.x * 255.0f, 0, 255 ),
+			clamp( m_StartColor.y * 255.0f, 0, 255 ),
+			clamp( m_StartColor.z * 255.0f, 0, 255 ), 255 );
+		pColor->SetColor( "startColor", c );
+		pColor->SetFloat( "minStartValueDelta", -0.2f );
+ 		pColor->SetFloat( "maxStartValueDelta", 0.2f );
+		pColor->SetColor( "endColor", Color( 0, 0, 0, 255 ) );
+
+		KeyValues *pAlpha = pInitializers->FindKey( "DmeRandomAlphaInitializer", true );
+		int nMinAlpha = 255 * m_Opacity * 0.75f;
+		int nMaxAlpha = 255 * m_Opacity * 1.25f;
+		pAlpha->SetInt( "minStartAlpha", 0 );
+		pAlpha->SetInt( "maxStartAlpha", 0 );
+		pAlpha->SetInt( "minEndAlpha", clamp( nMinAlpha, 0, 255 ) );
+		pAlpha->SetInt( "maxEndAlpha", clamp( nMaxAlpha, 0, 255 ) );
+
+		KeyValues *pSize = pInitializers->FindKey( "DmeRandomSizeInitializer", true );
+		pSize->SetFloat( "minStartSize", m_StartSize );
+		pSize->SetFloat( "maxStartSize", m_StartSize );
+		pSize->SetFloat( "minEndSize", m_EndSize );
+		pSize->SetFloat( "maxEndSize", m_EndSize );
+
+		KeyValues *pUpdaters = pEmitter->FindKey( "updaters", true );
+	    
+		pUpdaters->FindKey( "DmePositionVelocityUpdater", true );
+		pUpdaters->FindKey( "DmeRollUpdater", true );
+
+		KeyValues *pRollSpeedUpdater = pUpdaters->FindKey( "DmeRollSpeedAttenuateUpdater", true );
+		pRollSpeedUpdater->SetFloat( "attenuation", 1.0f - 8.0f / 30.0f );
+		pRollSpeedUpdater->SetFloat( "attenuationTme", 1.0f / 30.0f );
+		pRollSpeedUpdater->SetFloat( "minRollSpeed", 0.5f );
+
+		pUpdaters->FindKey( "DmeAlphaSineUpdater", true );
+		pUpdaters->FindKey( "DmeColorUpdater", true );
+		pUpdaters->FindKey( "DmeSizeUpdater", true );
+
+		KeyValues *pEmitter2 = pEmitter->MakeCopy();
+		pEmitter2->SetString( "material", "particle/particle_noisesphere" );
+		pEmitterParent2->AddSubKey( pEmitter2 );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+	else 
+	{
+		KeyValues *msg = new KeyValues( "ParticleSystem_ActivateEmitter" );
+		msg->SetInt( "id", m_pSmokeEmitter->GetToolParticleEffectId() );
+		msg->SetInt( "emitter", 0 );
+		msg->SetInt( "active", bEmitterActive );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
+
 //==================================================
 // RocketTrail
 //==================================================
@@ -496,7 +646,7 @@ void C_RocketTrail::OnDataChanged(DataUpdateType_t updateType)
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-		Start( &g_ParticleMgr, NULL );
+		Start( ParticleMgr(), NULL );
 	}
 }
 
@@ -791,6 +941,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SporeExplosion, DT_SporeExplosion, SporeExplosion )
 	RecvPropFloat(RECVINFO(m_flStartSize)),
 	RecvPropFloat(RECVINFO(m_flEndSize)),
 	RecvPropFloat(RECVINFO(m_flSpawnRadius)),
+	RecvPropBool(RECVINFO(m_bEmit)),
+	RecvPropBool(RECVINFO(m_bDontRemove)),
 END_RECV_TABLE()
 
 C_SporeExplosion::C_SporeExplosion( void )
@@ -807,6 +959,7 @@ C_SporeExplosion::C_SporeExplosion( void )
 	m_teParticleSpawn.Init( 32 );
 
 	m_bEmit = true;
+	m_bDontRemove = false;
 }
 
 C_SporeExplosion::~C_SporeExplosion()
@@ -827,9 +980,18 @@ void C_SporeExplosion::OnDataChanged( DataUpdateType_t updateType )
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
+		m_flPreviousSpawnRate = m_flSpawnRate;
 		m_teParticleSpawn.Init( m_flSpawnRate );
-		Start( &g_ParticleMgr, NULL );
+		Start( ParticleMgr(), NULL );
 	}
+	else if( m_bEmit )
+	{
+		// Just been turned on by the server.
+		m_flPreviousSpawnRate = m_flSpawnRate;
+		m_teParticleSpawn.Init( m_flSpawnRate );
+	}
+
+	m_pSporeEffect->SetDontRemove( m_bDontRemove );
 }
 
 //-----------------------------------------------------------------------------
@@ -919,17 +1081,42 @@ void C_SporeExplosion::AddParticles( void )
 	sParticle->m_vecVelocity	= dir * Helper_RandomFloat( 64.0f, 128.0f );
 }
 
+
+ConVar cl_sporeclipdistance( "cl_sporeclipdistance", "512", FCVAR_CHEAT | FCVAR_CLIENTDLL );
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : fTimeDelta - 
 //-----------------------------------------------------------------------------
 void C_SporeExplosion::Update( float fTimeDelta )
 {
-	float tempDelta = fTimeDelta;
-	
-	while ( m_teParticleSpawn.NextEvent( tempDelta ) )
+	if( m_bEmit )
 	{
-		AddParticles();
+		float tempDelta = fTimeDelta;
+
+		float flDist = (MainViewOrigin() - GetAbsOrigin()).Length();
+
+		//Lower the spawnrate by half if we're far away from it.
+		if ( cl_sporeclipdistance.GetFloat() <= flDist )
+		{
+			if ( m_flSpawnRate == m_flPreviousSpawnRate )
+			{
+				m_flPreviousSpawnRate = m_flSpawnRate * 0.5f;
+				m_teParticleSpawn.ResetRate( m_flPreviousSpawnRate );
+			}
+		}
+		else
+		{
+			if ( m_flSpawnRate != m_flPreviousSpawnRate )
+			{
+				m_flPreviousSpawnRate = m_flSpawnRate;
+				m_teParticleSpawn.ResetRate( m_flPreviousSpawnRate );
+			}
+		}
+
+		while ( m_teParticleSpawn.NextEvent( tempDelta ) )
+		{
+			AddParticles();
+		}
 	}
 }
 
@@ -1108,7 +1295,7 @@ void C_SporeTrail::OnDataChanged( DataUpdateType_t updateType )
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-		Start( &g_ParticleMgr, NULL );
+		Start( ParticleMgr(), NULL );
 	}
 }
 

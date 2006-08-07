@@ -31,6 +31,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define CLOSE_AREAPORTAL_THINK_CONTEXT "CloseAreaportalThink"
+
 BEGIN_DATADESC( CBaseDoor )
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
@@ -39,6 +41,7 @@ BEGIN_DATADESC( CBaseDoor )
 	DEFINE_FIELD( m_bUnlockedSentence, FIELD_CHARACTER ),	
 	DEFINE_KEYFIELD( m_NoiseMoving, FIELD_SOUNDNAME, "noise1" ),
 	DEFINE_KEYFIELD( m_NoiseArrived, FIELD_SOUNDNAME, "noise2" ),
+	DEFINE_KEYFIELD( m_ChainTarget, FIELD_STRING, "chainstodoor" ),
 	// DEFINE_FIELD( m_ls, locksound_t ),
 	DEFINE_KEYFIELD( m_ls.sLockedSound, FIELD_SOUNDNAME, "locked_sound" ),
 	DEFINE_KEYFIELD( m_ls.sUnlockedSound, FIELD_SOUNDNAME, "unlocked_sound" ),
@@ -55,6 +58,7 @@ BEGIN_DATADESC( CBaseDoor )
 #endif
 
 	DEFINE_KEYFIELD( m_bLoopMoveSound, FIELD_BOOLEAN, "loopmovesound" ),
+	DEFINE_KEYFIELD( m_bIgnoreDebris, FIELD_BOOLEAN, "ignoredebris" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Open", InputOpen ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Close", InputClose ),
@@ -80,6 +84,7 @@ BEGIN_DATADESC( CBaseDoor )
 	DEFINE_FUNCTION( DoorHitTop ),
 	DEFINE_FUNCTION( DoorHitBottom ),
 	DEFINE_THINKFUNC( MovingSoundThink ),
+	DEFINE_THINKFUNC( CloseAreaPortalsThink ),
 
 END_DATADESC()
 
@@ -293,12 +298,27 @@ void CBaseDoor::Spawn()
 		if ( HasSpawnFlags(SF_DOOR_PASSABLE) )
 		{
 			//normal door
+			AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 			AddSolidFlags( FSOLID_NOT_SOLID );
 		}
 
 		if ( HasSpawnFlags( SF_DOOR_NONSOLID_TO_PLAYER ) )
 		{
 			SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR );
+		}
+		if ( m_bIgnoreDebris )
+		{
+			// both of these flags want to set the collision group and 
+			// there isn't a combo group
+			Assert( !HasSpawnFlags( SF_DOOR_NONSOLID_TO_PLAYER ) );
+			if ( HasSpawnFlags( SF_DOOR_NONSOLID_TO_PLAYER ) )
+			{
+				Warning("Door %s with conflicting collision settings, removing ignoredebris\n", GetDebugName() );
+			}
+			else
+			{
+				SetCollisionGroup( COLLISION_GROUP_INTERACTIVE );
+			}
 		}
 	}
 
@@ -557,6 +577,9 @@ void CBaseDoor::Precache( void )
 //-----------------------------------------------------------------------------
 void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 {
+	if( m_ChainTarget != NULL_STRING )
+		ChainTouch( pOther );
+
 	// Ignore touches by anything but players.
 	if ( !pOther->IsPlayer() )
 	{
@@ -622,9 +645,19 @@ void CBaseDoor::DoorTouch( CBaseEntity *pOther )
 bool CBaseDoor::PassesBlockTouchFilter(CBaseEntity *pOther)
 {
 	CBaseFilter* pFilter = (CBaseFilter*)(m_hBlockFilter.Get());
-	return ( pFilter && pFilter->PassesFilter(pOther) );
+	return ( pFilter && pFilter->PassesFilter( this, pOther ) );
 }
 #endif
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Delays turning off area portals when closing doors to prevent visual artifacts
+//-----------------------------------------------------------------------------
+void CBaseDoor::CloseAreaPortalsThink( void )
+{
+	UpdateAreaPortals( false );
+	SetContextThink( NULL, gpGlobals->curtime, CLOSE_AREAPORTAL_THINK_CONTEXT );
+}
 
 
 //-----------------------------------------------------------------------------
@@ -633,6 +666,9 @@ bool CBaseDoor::PassesBlockTouchFilter(CBaseEntity *pOther)
 //-----------------------------------------------------------------------------
 void CBaseDoor::UpdateAreaPortals( bool isOpen )
 {
+	// cancel pending close
+	SetContextThink( NULL, gpGlobals->curtime, CLOSE_AREAPORTAL_THINK_CONTEXT );
+
 	if ( IsRotatingDoor() && HasSpawnFlags(SF_DOOR_START_OPEN) ) // logic inverted when using rot doors that start open
 		isOpen = !isOpen;
 
@@ -662,6 +698,9 @@ void CBaseDoor::UpdateAreaPortals( bool isOpen )
 void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	m_hActivator = pActivator;
+
+	if( m_ChainTarget != NULL_STRING )
+		ChainUse();
 
 	// We can't +use this if it can't be +used
 	if ( m_hActivator != NULL && m_hActivator->IsPlayer() && HasSpawnFlags( SF_DOOR_PUSE ) == false )
@@ -696,6 +735,54 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Passes Use along to certain named doors.
+//-----------------------------------------------------------------------------
+void CBaseDoor::ChainUse( void )
+{
+	if ( m_isChaining )
+		return;
+
+	CBaseEntity *ent = NULL;
+	while ( ( ent = gEntList.FindEntityByName( ent, m_ChainTarget, NULL ) ) != NULL )
+	{
+		if ( ent == this )
+			continue;
+
+		CBaseDoor *door = dynamic_cast< CBaseDoor * >( ent );
+		if ( door )
+		{
+			door->SetChaining( true );
+			door->Use( m_hActivator, NULL, USE_TOGGLE, 0.0f ); // only the first param is used
+			door->SetChaining( false );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Passes Touch along to certain named doors.
+//-----------------------------------------------------------------------------
+void CBaseDoor::ChainTouch( CBaseEntity *pOther )
+{
+	if ( m_isChaining )
+		return;
+
+	CBaseEntity *ent = NULL;
+	while ( ( ent = gEntList.FindEntityByName( ent, m_ChainTarget, NULL ) ) != NULL )
+	{
+		if ( ent == this )
+			continue;
+
+		CBaseDoor *door = dynamic_cast< CBaseDoor * >( ent );
+		if ( door )
+		{
+			door->SetChaining( true );
+			door->Touch( pOther );
+			door->SetChaining( false );
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Closes the door if it is not already closed.
@@ -809,8 +896,11 @@ int CBaseDoor::DoorActivate( )
 		// door should open
 		// play door unlock sounds
 		PlayLockSounds(this, &m_ls, FALSE, FALSE);
-		
-		DoorGoUp();
+
+		if ( m_toggle_state != TS_AT_TOP && m_toggle_state != TS_GOING_UP )
+		{
+			DoorGoUp();
+		}
 	}
 
 	return 1;
@@ -852,16 +942,25 @@ void CBaseDoor::DoorGoUp( void )
 			
 			if ( !HasSpawnFlags( SF_DOOR_ONEWAY ) && m_vecMoveAng.y ) 		// Y axis rotation, move away from the player
 			{
-				Vector vec = m_hActivator->GetAbsOrigin() - GetAbsOrigin();
-				QAngle angles = m_hActivator->GetAbsAngles();
-				angles.x = 0;
-				angles.z = 0;
-				Vector forward;
-				AngleVectors( angles, &forward );
-				Vector vnext = (m_hActivator->GetAbsOrigin() + (forward * 10)) - GetAbsOrigin();
-				if ( (vec.x*vnext.y - vec.y*vnext.x) < 0 )
+				// Positive is CCW, negative is CW, so make 'sign' 1 or -1 based on which way we want to open.
+				// Important note:  All doors face East at all times, and twist their local angle to open.
+				//					So you can't look at the door's facing to determine which way to open.
+
+				Vector nearestPoint;
+				CollisionProp()->CalcNearestPoint( m_hActivator->GetAbsOrigin(), &nearestPoint );
+				Vector activatorToNearestPoint = nearestPoint - m_hActivator->GetAbsOrigin();
+				activatorToNearestPoint.z = 0;
+
+				Vector activatorToOrigin = GetAbsOrigin() - m_hActivator->GetAbsOrigin();
+				activatorToOrigin.z = 0;
+
+				// Point right hand at door hinge, curl hand towards closest spot on door, if thumb
+				// is up, open door CW.  -- Department of Basic Cross Product Understanding for Noobs
+				Vector cross = activatorToOrigin.Cross( activatorToNearestPoint );
+
+				if( cross.z > 0.0f )
 				{
-					sign = -1.0;
+					sign = -1.0f;	
 				}
 			}
 		}
@@ -1002,7 +1101,8 @@ void CBaseDoor::DoorHitBottom( void )
 		m_OnFullyClosed.FireOutput(m_hActivator, this);
 	}
 
-	UpdateAreaPortals( false );
+	// Close the area portals just after the door closes, to prevent visual artifacts in multiplayer games
+	SetContextThink( &CBaseDoor::CloseAreaPortalsThink, gpGlobals->curtime + 0.5f, CLOSE_AREAPORTAL_THINK_CONTEXT );
 }
 
 

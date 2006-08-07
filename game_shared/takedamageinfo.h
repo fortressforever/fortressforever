@@ -69,6 +69,7 @@ public:
 
 	int				GetAmmoType() const;
 	void			SetAmmoType( int iAmmoType );
+	const char *	GetAmmoName() const;
 
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
 	void			Set( CBaseEntity *pInflictor, CBaseEntity *pAttacker, const Vector &damageForce, const Vector &damagePosition, float flDamage, int bitsDamageType, int iKillType = 0, Vector *reportedPosition = NULL );

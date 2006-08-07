@@ -16,8 +16,10 @@
 #include "macro_texture.h"
 #include "vmpi_tools_shared.h"
 #include "leaf_ambient_lighting.h"
+#include "tools_minidump.h"
+#include "loadcmdline.h"
 
-#define ALLOWOPTIONS (0 || _DEBUG)
+#define ALLOWDEBUGOPTIONS (0 || _DEBUG)
 
 
 /*
@@ -28,14 +30,6 @@ NOTES
 every surface must be divided into at least two patches each axis
 
 */
-
-//patch_t		patches[MAX_PATCHES];
-//unsigned		num_patches;
-//patch_t		*face_patches[MAX_MAP_FACES];
-//patch_t		*face_parents[MAX_MAP_FACES];
-//patch_t		*cluster_children[MAX_MAP_CLUSTERS];
-//Vector		emitlight[MAX_PATCHES];
-//Vector		addlight[MAX_PATCHES];
 
 CUtlVector<patch_t>		patches;			
 CUtlVector<int>			facePatches;		// constains all patches, children first
@@ -54,8 +48,8 @@ int			fakeplanes;
 
 unsigned	numbounce = 100; // 25; /* Originally this was 8 */
 
-float		maxchop = 64;
-float		minchop = 64;
+float		maxchop = 4; // coarsest allowed number of luxel widths for a patch
+float		minchop = 4; // "-chop" tightest number of luxel widths for a patch, used on edges
 qboolean	dumppatches;
 bool	    bDumpNormals = false;
 bool		bRed2Black = true;
@@ -72,6 +66,8 @@ float		dlight_threshold = 0.1;  // was DIRECT_LIGHT constant
 char		source[MAX_PATH] = "";
 char		platformPath[MAX_PATH] = "";
 
+char		level_name[MAX_PATH] = "";	// map filename, without extension or path info
+
 char		global_lights[MAX_PATH] = "";
 char		designer_lights[MAX_PATH] = "";
 char		level_lights[MAX_PATH] = "";
@@ -82,6 +78,16 @@ char		incrementfile[_MAX_PATH] = "";
 IIncremental *g_pIncremental = 0;
 bool		g_bInterrupt = false;	// Wsed with background lighting in WC. Tells VRAD
 									// to stop lighting.
+
+float g_SunAngularExtent=0.0;
+bool g_dofinal=false;
+int g_nCompressConstantThreshold = 2;
+
+bool g_bLargeDispSampleRadius = false;
+
+bool g_bOnlyStaticProps = false;
+bool g_bShowStaticPropNormals = false;
+
 
 float		gamma = 0.5;
 float		indirect_sun = 1.0;
@@ -104,9 +110,16 @@ qboolean	g_bLowPriority = false;
 qboolean	g_bLogHashData = false;
 bool		g_bNoDetailLighting = false;
 double		g_flStartTime;
+bool		g_bXBox = false;
+bool		g_bExportLightmaps = false;
+bool		g_bStaticPropLighting = false;
+bool        g_bStaticPropPolys = false;
 
 CUtlVector<byte> g_FacesVisibleToLights;
 
+RayTracingEnvironment g_RtEnv;
+
+dface_t *g_pFaces=0;
 
 /*
 ===================================================================
@@ -243,6 +256,43 @@ void LightForTexture( const char *name, Vector& result )
 	int		i;
 
 	result[ 0 ] = result[ 1 ] = result[ 2 ] = 0;
+
+	char baseFilename[ MAX_PATH ];
+
+	if ( Q_strncmp( "maps/", name, 5 ) == 0 )
+	{
+		// this might be a patch texture for cubemaps.  try to parse out the original filename.
+		if ( Q_strncmp( level_name, name + 5, Q_strlen( level_name ) ) == 0 )
+		{
+			const char *base = name + 5 + Q_strlen( level_name );
+			if ( *base == '/' )
+			{
+				++base; // step past the path separator
+
+				// now we've gotten rid of the 'maps/level_name/' part, so we're left with
+				// 'originalName_%d_%d_%d'.
+				strcpy( baseFilename, base );
+				bool foundSeparators = true;
+				for ( int i=0; i<3; ++i )
+				{
+					char *underscore = Q_strrchr( baseFilename, '_' );
+					if ( underscore && *underscore )
+					{
+						*underscore = '\0';
+					}
+					else
+					{
+						foundSeparators = false;
+					}
+				}
+
+				if ( foundSeparators )
+				{
+					name = baseFilename;
+				}
+			}
+		}
+	}
 
 	for (i=0 ; i<num_texlights ; i++)
 	{
@@ -405,7 +455,7 @@ MakePatchForFace
 float	totalarea;
 void MakePatchForFace (int fn, winding_t *w)
 {
-	dface_t     *f = dfaces + fn;
+	dface_t     *f = g_pFaces + fn;
 	float	    area;
 	patch_t		*patch;
 	Vector		centroid(0,0,0);
@@ -456,7 +506,7 @@ void MakePatchForFace (int fn, winding_t *w)
 	// compute a separate scale for chop - since the patch "scale" is the texture scale
 	// we want textures with higher resolution lighting to be chopped up more
 	float chopscale[2];
-	chopscale[0] = chopscale[1] = 1.0f;
+	chopscale[0] = chopscale[1] = 16.0f;
     if ( texscale )
     {
         // Compute the texture "scale" in s,t
@@ -474,9 +524,9 @@ void MakePatchForFace (int fn, winding_t *w)
 					tx->lightmapVecsLuxelsPerWorldUnits[i][j];
 			}
             patch->scale[i] = sqrt( patch->scale[i] );
-			chopscale[i] = sqrt( chopscale[i] ) * 16.0f;
+			chopscale[i] = sqrt( chopscale[i] );
         }
-    }
+	}
     else
 	{
 		patch->scale[0] = patch->scale[1] = 1.0f;
@@ -487,11 +537,9 @@ void MakePatchForFace (int fn, winding_t *w)
 	patch->sky = IsSky( f );
 
 	// chop scaled up lightmaps coarser
-	patch->chop = maxchop / ((chopscale[0]+chopscale[1])/2);
-	if (patch->chop < maxchop)
-	{
-		patch->chop = maxchop;
-	}
+	patch->luxscale = ((chopscale[0]+chopscale[1])/2);
+	patch->chop = maxchop;
+
 
 #ifdef STATIC_FOG
     patch->fog = FALSE;
@@ -526,7 +574,6 @@ void MakePatchForFace (int fn, winding_t *w)
 	VectorSubtract( patch->origin, face_offset[fn], face_centroids[fn] ); 
 
 	VectorCopy( patch->plane->normal, patch->normal );
-	VectorAdd (patch->origin, patch->normal, patch->origin);
 
 	WindingBounds (w, patch->face_mins, patch->face_maxs);
 	VectorCopy( patch->face_mins, patch->mins );
@@ -537,14 +584,14 @@ void MakePatchForFace (int fn, winding_t *w)
 	// Chop all texlights very fine.
 	if ( !VectorCompare( patch->baselight, vec3_origin ) )
 	{
-		patch->chop = do_extra ? minchop / 2 : minchop;
+		// patch->chop = do_extra ? maxchop / 2 : maxchop;
 		tx->flags |= SURF_LIGHT;
 	}
 
 	// get rid of do extra functionality on displacement surfaces
 	if( ValidDispFace( f ) )
 	{
-		patch->chop = minchop;
+		patch->chop = maxchop;
 	}
 
 	// FIXME: If we wanted to add a dependency from vrad to the material system,
@@ -622,7 +669,7 @@ void MakePatches (void)
 			fn = mod->firstface + j;
 			face_entity[fn] = ent;
 			VectorCopy (origin, face_offset[fn]);
-			f = &dfaces[fn];
+			f = &g_pFaces[fn];
 			if( f->dispinfo == -1 )
 			{
 	            w = WindingFromFace (f, origin );
@@ -656,7 +703,7 @@ SUBDIVIDE
 //-----------------------------------------------------------------------------
 bool PreventSubdivision( patch_t *patch )
 {
-	dface_t *f = dfaces + patch->faceNumber;
+	dface_t *f = g_pFaces + patch->faceNumber;
 	texinfo_t *tx = &texinfo[f->texinfo];
 
 	if (tx->flags & SURF_NOCHOP)
@@ -689,31 +736,37 @@ int CreateChildPatch( int nParentIndex, winding_t *pWinding, float flArea, const
 	child->child1 = patches.InvalidIndex();
 	child->child2 = patches.InvalidIndex();
 	child->parent = nParentIndex;
+	child->m_IterationKey = 0;
 
 	child->winding = pWinding;
 	child->area = flArea;
 
 	VectorCopy( vecCenter, child->origin );
-	if ( ValidDispFace( dfaces + child->faceNumber ) )
+	if ( ValidDispFace( g_pFaces + child->faceNumber ) )
 	{
 		// shouldn't get here anymore!!
 		Msg( "SubdividePatch: Error - Should not be here!\n" );
 		StaticDispMgr()->GetDispSurfNormal( child->faceNumber, child->origin, child->normal, true );
-		child->origin += child->normal;
 	}
 	else
 	{
 		GetPhongNormal( child->faceNumber, child->origin, child->normal );
-		child->origin += child->plane->normal;
 	}
 
 	child->planeDist = child->plane->dist;
 	WindingBounds(child->winding, child->mins, child->maxs);
 
-	// Subdivide patch even more if on the edge of the face; this is a hack!
+	if ( !VectorCompare( child->baselight, vec3_origin ) )
+	{
+		// don't check edges on surf lights
+		return nChildIndex;
+	}
+
+	// Subdivide patch towards minchop if on the edge of the face
 	Vector total;
-	VectorSubtract (child->maxs, child->mins, total);
-	if ( (total[0] < child->chop) && (total[1] < child->chop) && (total[2] < child->chop) )
+	VectorSubtract( child->maxs, child->mins, total );
+	VectorScale( total, child->luxscale, total );
+	if ( child->chop > minchop && (total[0] < child->chop) && (total[1] < child->chop) && (total[2] < child->chop) )
 	{
 		for ( int i=0; i<3; ++i )
 		{
@@ -757,6 +810,7 @@ void SubdividePatch( int ndxPatch )
 
 	// subdivide along the widest axis
 	VectorSubtract (patch->maxs, patch->mins, total);
+	VectorScale( total, patch->luxscale, total );
 	for (i=0 ; i<3 ; i++)
 	{
 		if ( total[i] > widest )
@@ -765,7 +819,7 @@ void SubdividePatch( int ndxPatch )
 			widest = total[i];
 		}
 
-		if ( (total[i] > patch->chop) && (total[i] > minchop) )
+		if ( (total[i] >= patch->chop) && (total[i] >= minchop) )
 		{
 			bSubdivide = true;
 		}
@@ -774,12 +828,12 @@ void SubdividePatch( int ndxPatch )
 	if ((!bSubdivide) && widest_axis != -1)
 	{
 		// make more square
-		if (total[widest_axis] > total[(widest_axis + 1) % 3] * 3 && total[widest_axis] > total[(widest_axis + 2) % 3] * 3)
+		if (total[widest_axis] > total[(widest_axis + 1) % 3] * 2 && total[widest_axis] > total[(widest_axis + 2) % 3] * 2)
 		{
 			if (patch->chop > minchop)
 			{
 				bSubdivide = true;
-				patch->chop = patch->chop / 2;
+				patch->chop = max( minchop, patch->chop / 2 );
 			}
 		}
 	}
@@ -851,7 +905,7 @@ void SubdividePatches (void)
 
 		if (!do_fast)
 		{
-			if( dfaces[patch->faceNumber].dispinfo == -1 )
+			if( g_pFaces[patch->faceNumber].dispinfo == -1 )
 			{
 				SubdividePatch( i );
 			}
@@ -976,7 +1030,15 @@ void MakeTransfer( int ndxPatch1, int ndxPatch2, transfer_t *all_transfers )
 	patch_t *patch = &patches.Element( ndxPatch1 );
 	patch_t *patch2 = &patches.Element( ndxPatch2 );
 
+	if (IsSky( &g_pFaces[ patch2->faceNumber ] ) )
+		return;
+
 	// overflow check!
+	if ( patch->numtransfers >= MAX_PATCHES )
+	{
+		return;
+	}
+
 	transfer = &all_transfers[patch->numtransfers];
 
 	// calculate transferemnce
@@ -1017,7 +1079,7 @@ void MakeTransfer( int ndxPatch1, int ndxPatch2, transfer_t *all_transfers )
 	transfer->patch = patch2 - patches.Base();
 
 	// FIXME: why is this not trans?
-	transfer->transfer = (patch2->area*scale) / (dist*dist);
+	transfer->transfer = trans;
 
 	patch->numtransfers++;
 }
@@ -1277,7 +1339,7 @@ void GatherLight (int threadnum, void *pUserData)
 
    			GetPhongNormal( patch->faceNumber, patch->origin, normals[0] );
 
-			texinfo_t *pTexinfo = &texinfo[dfaces[patch->faceNumber].texinfo];
+			texinfo_t *pTexinfo = &texinfo[g_pFaces[patch->faceNumber].texinfo];
 			// use facenormal along with the smooth normal to build the three bump map vectors
 			GetBumpNormals( pTexinfo->textureVecsTexelsPerWorldUnits[0], 
 				pTexinfo->textureVecsTexelsPerWorldUnits[1], patch->normal, 
@@ -1308,7 +1370,7 @@ void GatherLight (int threadnum, void *pUserData)
 					dot = DotProduct( delta, normals[i] );
 					if ( dot <= 0 )
 					{
-						Assert( i > 0 ); // if this hits, then the transfer shouldn't be here.  It doesn't face the flat normal of this face!
+//						Assert( i > 0 ); // if this hits, then the transfer shouldn't be here.  It doesn't face the flat normal of this face!
 						continue;
 					}
 					bumpTransfer = v * dot;
@@ -1528,7 +1590,7 @@ void RadWorld_Start()
 }
 
 
-// This function should fill in the indices into dfaces[] for the faces
+// This function should fill in the indices into g_pFaces[] for the faces
 // with displacements that touch the specified leaf.
 void STUB_GetDisplacementsTouchingLeaf( int iLeaf, CUtlVector<int> &dispFaces )
 {
@@ -1661,7 +1723,7 @@ void MakeAllScales (void)
 
 		for ( int i=0; i < numfaces; i++ )
 		{
-			dface_t *f = &dfaces[i];
+			dface_t *f = &g_pFaces[i];
 
 			// Draw the face's outline, then put text for its face index on it too.
 			CUtlVector<Vector> points;
@@ -1777,14 +1839,6 @@ bool RadWorld_Go()
 			BounceLight ();
 		}
 
-		if ( g_bUseMPI && !g_bMPIMaster )
-		{
-			//
-			// This is the last use of the MPI slaves
-			//
-			CmdLib_Exit( 0 );
-		}
-
 		//
 		// displacement surface luxel accumulation (make threaded!!!)
 		//
@@ -1795,7 +1849,12 @@ bool RadWorld_Go()
 
 		// blend bounced light into direct light and save
 		VMPI_SetCurrentStage( "FinalLightFace" );
-		RunThreadsOnIndividual (numfaces, true, FinalLightFace);
+		if ( !g_bUseMPI || g_bMPIMaster )
+			RunThreadsOnIndividual (numfaces, true, FinalLightFace);
+		
+		// Distribute the lighting data to workers.
+		VMPI_DistributeLightData();
+			
 		Msg("FinalLightFace Done\n"); fflush(stdout);
 	}
 
@@ -1836,16 +1895,14 @@ void VRAD_LoadBSP( char const *pFilename )
 		SetLowPriority();
 	}
 
-	Q_StripExtension( pFilename, source, sizeof( source ) );
-	CmdLib_InitFileSystem( source );
+	strcpy( level_name, source );
 
 	// This must come after InitFileSystem because the file system pointer might change.
 	if ( dumppatches )
 		InitDumpPatchesFiles();
 
 	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
-	// so we strip off the filename and prepend qdir here.
-	Q_FileBase( source, source, sizeof( source ) );
+	// so we prepend qdir here.
 	strcpy( source, ExpandPath( source ) );
 
 	if ( !g_bUseMPI )
@@ -1890,6 +1947,28 @@ void VRAD_LoadBSP( char const *pFilename )
 	Msg( "Loading %s\n", platformPath );
 	VMPI_SetCurrentStage( "LoadBSPFile" );
 	LoadBSPFile (platformPath);
+	
+	// now, set whether or not static prop lighting is present
+	if (g_bStaticPropLighting)
+		g_LevelFlags |= LVLFLAGS_BAKED_STATIC_PROP_LIGHTING;
+	else
+		g_LevelFlags &= ~LVLFLAGS_BAKED_STATIC_PROP_LIGHTING;
+
+	// now, we need to set our face ptr depending upon hdr, and if hdr, init it
+	if (g_bHDR)
+	{
+		g_pFaces = dfaces_hdr;
+		if (numfaces_hdr==0)
+		{
+			numfaces_hdr = numfaces;
+			memcpy( dfaces_hdr, dfaces, numfaces*sizeof(dfaces[0]) );
+		}
+	}
+	else
+	{
+		g_pFaces = dfaces;
+	}
+
 
 	ParseEntities ();
 
@@ -1916,16 +1995,23 @@ void VRAD_LoadBSP( char const *pFilename )
 	clusterChildren.SetSize( MAX_MAP_CLUSTERS );
 
 	int ndx;
-	for( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
+	for ( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
 	{
 		facePatches[ndx] = facePatches.InvalidIndex();
 		faceParents[ndx] = faceParents.InvalidIndex();
 	}
 
-	for( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
+	for ( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
 	{
 		clusterChildren[ndx] = clusterChildren.InvalidIndex();
 	}
+
+	if ( g_bStaticPropPolys )
+	{
+		StaticPropMgr()->AddPolysForRayTrace();
+	}
+
+	g_RtEnv.SetupAccelerationStructure();
 
 	RadWorld_Start();
 
@@ -1941,29 +2027,59 @@ void VRAD_LoadBSP( char const *pFilename )
 }
 
 
-void VRAD_Finish()
+void VRAD_ComputeOtherLighting()
 {
 	// Compute lighting for the bsp file
 	if ( !g_bNoDetailLighting )
 	{
 		ComputeDetailPropLighting( THREADINDEX_MAIN );
 	}
+
 	ComputePerLeafAmbientLighting();
 
-	if (verbose)
-		PrintBSPFileSizes ();
+	if ( g_bXBox && g_nCompressConstantThreshold != 0 )
+	{
+		CompressConstantLightmaps( g_nCompressConstantThreshold );
+	}
+
+	// bake the static props high quality vertex lighting into the bsp
+	if ( !do_fast && g_bStaticPropLighting )
+	{
+		StaticPropMgr()->ComputeLighting( THREADINDEX_MAIN );
+	}
+
+	if ( g_bXBox )
+	{
+		// page and palettize all the surface lightmaps
+		// this must be LAST because the process is destructive
+		// e.g. lightstyles are destroyed to serialize correctly
+		BuildPalettedLightmaps();
+	}
+}
+
+void VRAD_Finish()
+{
+	Msg( "Ready to Finish\n" ); 
+	fflush( stdout );
+
+	if ( verbose )
+	{
+		PrintBSPFileSizes();
+	}
 
 	Msg( "Writing %s\n", platformPath );
 	VMPI_SetCurrentStage( "WriteBSPFile" );
-	WriteBSPFile (platformPath);
+	WriteBSPFile(platformPath);
 
-	if( dumppatches )
+	if ( dumppatches )
 	{
-		for( int ndx = 0; ndx < 4; ndx++ )
+		for ( int ndx = 0; ndx < 4; ndx++ )
 		{
 			g_pFileSystem->Close( pFileSamples[ndx] );
 		}
 	}
+
+	StaticPropMgr()->Shutdown();
 
 	double end = Plat_FloatTime();
 	
@@ -1987,10 +2103,39 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 {
 	*onlydetail = false;
 
+	// default to LDR
+	SetHDRMode( false );
 	int i;
 	for( i=1 ; i<argc ; i++ )
 	{
-		if (!strcmp(argv[i],"-dump"))
+		if ( !stricmp( argv[i], "-xbox" ) )
+		{
+			// building for xbox
+			g_bXBox = true;
+			g_bStaticPropLighting = true;
+		}
+		else if ( !stricmp( argv[i], "-StaticPropLighting" ) )
+		{
+			g_bStaticPropLighting = true;
+		}
+		else if ( !stricmp( argv[i], "-StaticPropNormals" ) )
+		{
+			g_bShowStaticPropNormals = true;
+		}
+		else if ( !stricmp( argv[i], "-OnlyStaticProps" ) )
+		{
+			g_bOnlyStaticProps = true;
+		}
+		else if ( !stricmp( argv[i], "-StaticPropPolys" ) )
+		{
+			g_bStaticPropPolys = true;
+		}
+		else if ( !stricmp( argv[i], "-exportLightmaps" ) )
+		{
+			// export xbox lightmap pages
+			g_bExportLightmaps = true;
+		}
+		else if ( !strcmp(argv[i], "-dump") )
 		{
 			dumppatches = true;
 		}
@@ -2005,6 +2150,10 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		else if( !stricmp( argv[i], "-dumpnormals" ) )
 		{
 			bDumpNormals = true;
+		}
+		else if ( !stricmp( argv[i], "-LargeDispSampleRadius" ) )
+		{
+			g_bLargeDispSampleRadius = true;
 		}
 		else if (!stricmp(argv[i],"-bounce"))
 		{
@@ -2068,6 +2217,10 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		{
 			do_fast = true;
 		}
+		else if (!stricmp(argv[i],"-final"))
+		{
+			g_dofinal=true;
+		}
 		else if (!stricmp(argv[i],"-centersamples"))
 		{
 			do_centersamples = true;
@@ -2114,6 +2267,20 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		{
 			*onlydetail = true;
 		}
+		else if (!stricmp(argv[i],"-softsun"))
+		{
+			if ( ++i < argc )
+			{
+				g_SunAngularExtent=atof(argv[i]);
+				g_SunAngularExtent=sin((M_PI/180.0)*g_SunAngularExtent);
+				printf("sun extent=%f\n",g_SunAngularExtent);
+			}
+			else
+			{
+				Warning("Error: expected an angular extent value (0..180) '-softsun'\n" );
+				return 1;
+			}
+		}
 		else if ( !stricmp( argv[i], "-maxdispsamplesize" ) )
 		{
 			if ( ++i < argc )
@@ -2133,15 +2300,6 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		else if ( stricmp( argv[i], "-steam" ) == 0 )
 		{
 		}
-		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
-		{
-			if ( stricmp( argv[i], "-mpi" ) == 0 )
-				g_bUseMPI = true;
-		
-			// Any other args that start with -mpi are ok too.
-			if ( i == argc - 1 )
-				break;
-		}
 		else if ( stricmp( argv[i], "-allowdebug" ) == 0 )
 		{
 			// Don't need to do anything, just don't error out.
@@ -2153,13 +2311,41 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		{
 			++i;
 		}
-#if ALLOWOPTIONS
+		else if ( !Q_stricmp( argv[i], "-FullMinidumps" ) )
+		{
+			EnableFullMinidumps( true );
+		}
+		else if ( !Q_stricmp( argv[i], "-hdr" ) )
+		{
+			SetHDRMode( true );
+		}
+		else if ( !Q_stricmp( argv[i], "-ldr" ) )
+		{
+			SetHDRMode( false );
+		}
+		else if ( !Q_stricmp( argv[i], "-compressconstant" ))
+		{
+			if ( ++i < argc )
+			{
+				g_nCompressConstantThreshold = (int)atof(argv[i]);
+			}
+			else
+			{
+				g_nCompressConstantThreshold = -1;
+			}
+
+			if ( g_nCompressConstantThreshold < 0 )
+			{
+				Warning("Error: -compressconstant <n> (n = [0..768])\n");
+				return 1;
+			}
+		}
 		else if (!stricmp(argv[i],"-maxchop"))
 		{
 			if ( ++i < argc )
 			{
 				maxchop = (float)atof (argv[i]);
-				if ( maxchop < 2 )
+				if ( maxchop < 1 )
 				{
 					Warning("Error: expected positive value after '-maxchop'\n" );
 					return 1;
@@ -2181,10 +2367,7 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 					Warning("Error: expected positive value after '-chop'\n" );
 					return 1;
 				}
-				if ( minchop < 32 )
-				{
-					Warning("WARNING: Chop values below 32 are not recommended.  Use -extra instead.\n");
-				}
+				minchop = min( minchop, maxchop );
 			}
 			else
 			{
@@ -2192,6 +2375,7 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 				return 1;
 			}
 		}
+#if ALLOWDEBUGOPTIONS
 		else if (!stricmp(argv[i],"-scale"))
 		{
 			if ( ++i < argc )
@@ -2259,6 +2443,18 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			}
 		}
 #endif
+		// NOTE: the -mpi checks must come last here because they allow the previous argument 
+		// to be -mpi as well. If it game before something else like -game, then if the previous
+		// argument was -mpi and the current argument was something valid like -game, it would skip it.
+		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
+		{
+			if ( stricmp( argv[i], "-mpi" ) == 0 )
+				g_bUseMPI = true;
+		
+			// Any other args that start with -mpi are ok too.
+			if ( i == argc - 1 )
+				break;
+		}
 		else
 		{
 			break;
@@ -2293,6 +2489,7 @@ void PrintUsage( int argc, char **argv )
 		"  -v (or -verbose): Turn on verbose output (also shows more command\n"
 		"  -bounce #       : Set max number of bounces (default: 100).\n"
 		"  -fast           : Quick and dirty lighting.\n"
+		"  -final          : High quality processing.\n"
 		"  -low            : Run as an idle-priority process.\n"
 		"  -mpi            : Use VMPI to distribute computations.\n"
 		"  -rederror       : Show errors in red.\n"
@@ -2325,6 +2522,21 @@ void PrintUsage( int argc, char **argv )
 		"  -loghash        : Log the sample hash table to samplehash.txt.\n"
 		"  -onlydetail     : Only light detail props and per-leaf lighting.\n"
 		"  -maxdispsamplesize #: Set max displacement sample size (default: 512).\n"
+		"  -softsun <n>    : Treat the sun as an area light source of size <n> degrees."
+		"                    Produces soft shadows.\n"
+		"                    Recommended values are between 0 and 5. Default is 0.\n"
+		"  -FullMinidumps  : Write large minidumps on crash.\n"
+		"  -chop           : Smallest number of luxel widths for a bounce patch, used on edges\n"
+		"  -maxchop		   : Coarsest allowed number of luxel widths for a patch, used in face interiors\n"
+		"\n"
+		"  -LargeDispSampleRadius: This can be used if there are splotches of bounced light\n"
+		"                          on terrain. The compile will take longer, but it will gather\n"
+		"                          light across a wider area.\n"
+		"  -compressconstant <n> : compress lightmaps whose color variation is less than n units.\n"
+        "  -StaticPropLighting   : generate backed static prop vertex lighting\n"
+        "  -StaticPropPolys   : Perform shadow tests of static props at polygon precision\n"
+        "  -OnlyStaticProps   : Only perform direct static prop lighting (vrad debug option)\n"
+		"  -StaticPropNormals : when lighting static props, just show their normal vector\n"
 		);
 }
 
@@ -2343,32 +2555,29 @@ int RunVRAD( int argc, char **argv )
 
 	bool onlydetail;
 	int i = ParseCommandLine( argc, argv, &onlydetail );
-
 	if (i != argc - 1)
 	{
 		PrintUsage( argc, argv );
+		DeleteCmdLine( argc, argv );
 		CmdLib_Exit( 1 );
 	}
 
 	VRAD_LoadBSP( argv[i] );
 
-	if (!onlydetail)
+	if ( (! onlydetail) && (! g_bOnlyStaticProps ) )
+	{
 		RadWorld_Go();
+	}
 
-	Msg("Ready to Finish\n"); fflush(stdout);
+	VRAD_ComputeOtherLighting();
+
 	VRAD_Finish();
 
 	VMPI_SetCurrentStage( "master done" );
 
+	DeleteCmdLine( argc, argv );
 	CmdLib_Cleanup();
 	return 0;
-}
-
-
-LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
-{
-	VMPI_ExceptionFilter( ExceptionInfo->ExceptionRecord->ExceptionCode );
-	return EXCEPTION_EXECUTE_HANDLER; // (never gets here anyway)
 }
 
 
@@ -2381,21 +2590,18 @@ int VRAD_Main(int argc, char **argv)
 	// This must come first.
 	VRAD_SetupMPI( argc, argv );
 
+	// Initialize the filesystem, so additional commandline options can be loaded
+	Q_StripExtension( argv[ argc - 1 ], source, sizeof( source ) );
+	CmdLib_InitFileSystem( argv[ argc - 1 ] );
+	Q_FileBase( source, source, sizeof( source ) );
 
+	LoadCmdLineFromFile( argc, argv, source, "vrad" );
 	if ( g_bUseMPI && !g_bMPIMaster )
-	{
-		// VMPI workers should catch crashes and asserts and suchlike and fail gracefully instead 
-		// of pestering the person with dialogs.
-		LPTOP_LEVEL_EXCEPTION_FILTER pOldFilter = SetUnhandledExceptionFilter( VExceptionFilter );
-		int ret = RunVRAD( argc, argv );
-		SetUnhandledExceptionFilter( pOldFilter );
-
-		return ret;
-	}
+		SetupToolsMinidumpHandler( VMPI_ExceptionFilter );
 	else
-	{
-		return RunVRAD( argc, argv );
-	}
+		SetupDefaultToolsMinidumpHandler();
+	
+	return RunVRAD( argc, argv );
 }
 
 

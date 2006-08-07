@@ -70,6 +70,7 @@ public:
 	virtual int 		MoveJumpExecute();
 	virtual AIMoveResult_t MoveJumpStop();
 
+	virtual void		ResetMoveCalculations();
 	virtual	void		MoveStart();
 	virtual	void		MoveStop();
 	virtual void		MovePaused();
@@ -103,7 +104,7 @@ public:
 	void 				SetIdealYaw( const Vector &vecFacing)	{ SetIdealYaw( UTIL_VecToYaw( vecFacing )); }
 
 	// Set ideal yaw based on a specified target
-	void 				SetIdealYawToTarget( const Vector &target, float noise = 0.0 );
+	void 				SetIdealYawToTarget( const Vector &target, float noise = 0.0, float offset = 0.0 );
 
 	// Set the ideal yaw and run the current or specified timestep worth of rotation. Note 
 	// it is not correct to call any "update" variant of these methods more
@@ -147,6 +148,10 @@ public:
 	float				GetSequenceGroundSpeed( int iSequence );
 
 	float				CalcIntervalMove();
+
+	// Yaw locking
+	bool	IsYawLocked( void ) const { return m_bYawLocked; }
+	void	SetYawLocked( bool state ) { m_bYawLocked = state; }
 
 protected:
 
@@ -204,6 +209,8 @@ protected: // made protected while animation transition details worked out, priv
 	// --------------------------------
 	
 	CAI_MoveProbe *		m_pMoveProbe;
+
+	bool				m_bYawLocked;
 
 	//---------------------------------
 public:

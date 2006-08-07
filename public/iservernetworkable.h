@@ -42,8 +42,15 @@ public:
 
 	CBitVec<MAX_EDICTS>	*m_pTransmitEdict;	// entity n is already marked for transmission
 	CBitVec<MAX_EDICTS>	*m_pTransmitAlways; // entity n is always send even if not in PVS (HLTV only)
+	
 	int 	m_AreasNetworked; // number of networked areas 
 	int		m_Areas[MAX_WORLD_AREAS]; // the areas
+	
+	// This is used to determine visibility, so if the previous state
+	// is the same as the current state (along with pvs and areas networked),
+	// then the parts of the map that the player can see haven't changed.
+	byte	m_AreaFloodNums[MAX_MAP_AREAS];
+	int		m_nMapAreas;
 };
 
 //-----------------------------------------------------------------------------

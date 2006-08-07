@@ -41,6 +41,7 @@ public:
 	CNetworkVar( int, m_nOuterMaxDist );
 
 	CNetworkVar( float, m_flGlowProxySize );
+	CNetworkVar( float, m_flHDRColorScale );
 };
 
 
@@ -56,6 +57,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CLightGlow, DT_LightGlow )
 	SendPropQAngles	(SENDINFO(m_angRotation), 13, 0, SendProxy_Angles ),
 	SendPropEHandle (SENDINFO_NAME(m_hMoveParent, moveparent)),
 	SendPropFloat( SENDINFO(m_flGlowProxySize ), 6,	SPROP_ROUNDUP,	0.0f,	64.0f ),
+	SendPropFloat( SENDINFO_NAME( m_flHDRColorScale, HDRColorScale ), 0,	SPROP_NOSCALE,	0.0f,	100.0f ),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( env_lightglow, CLightGlow );
@@ -68,6 +70,7 @@ BEGIN_DATADESC( CLightGlow )
 	DEFINE_KEYFIELD( m_nMaxDist,			FIELD_INTEGER,	"MaxDist" ),
 	DEFINE_KEYFIELD( m_nOuterMaxDist,		FIELD_INTEGER,	"OuterMaxDist" ),
 	DEFINE_KEYFIELD( m_flGlowProxySize,		FIELD_FLOAT,	"GlowProxySize" ),
+	DEFINE_KEYFIELD( m_flHDRColorScale,		FIELD_FLOAT,	"HDRColorScale" ),
 	DEFINE_INPUTFUNC( FIELD_COLOR32, "Color",  InputColor ),
 
 END_DATADESC()
@@ -114,8 +117,6 @@ void CLightGlow::Activate()
 		Warning( "env_lightglow outermaxdist too large (%d should be %d).\n", m_nOuterMaxDist, LIGHTGLOW_OUTERMAXDIST_MAX_VALUE );
 		m_nOuterMaxDist = LIGHTGLOW_OUTERMAXDIST_MAX_VALUE;
 	}
-	
-	NetworkStateChanged();
 }
 
 void CLightGlow::InputColor(inputdata_t &inputdata)

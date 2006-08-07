@@ -82,7 +82,7 @@ MaterialSystemMaterial_t GetMatIDFromDisp( mapdispinfo_t *pMapDisp )
 
 // adds all displacement faces as a series of convex objects
 // UNDONE: Only add the displacements for this model?
-void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, dmodel_t *pModel, int contentsMask, bool useMOOP)
+void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, dmodel_t *pModel, int contentsMask)
 {
 	int dispIndex;
 
@@ -128,7 +128,20 @@ void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, 
 			Assert( indices.Count() > 0 );
 			Assert( indices.Count() % 3 == 0 );	// Make sure indices are a multiple of 3.
 			int nTriCount = indices.Count() / 3;
-
+			triCount += nTriCount;
+			if ( triCount >= 65536 )
+			{
+				// don't put more than 64K tris in any single collision model
+				CPhysCollide *pCollide = physcollision->ConvertPolysoupToCollide( pTerrainPhysics, false );
+				if ( pCollide )
+				{
+					collisionList.AddToTail( new CPhysCollisionEntryStaticMesh( pCollide, NULL ) );	
+				}
+				// Throw this polysoup away and start over for the remaining triangles
+				physcollision->PolysoupDestroy( pTerrainPhysics );
+				pTerrainPhysics = physcollision->PolysoupCreate();
+				triCount = nTriCount;
+			}
 			Vector tmpVerts[3];
 			for ( int iTri = 0; iTri < nTriCount; ++iTri )
 			{
@@ -154,7 +167,7 @@ void Disp_AddCollisionModels( CUtlVector<CPhysCollisionEntry *> &collisionList, 
 		}
 
 		// convert the whole grid's polysoup to a collide and store in the collision list
-		CPhysCollide *pCollide = physcollision->ConvertPolysoupToCollide( pTerrainPhysics, useMOOP );
+		CPhysCollide *pCollide = physcollision->ConvertPolysoupToCollide( pTerrainPhysics, false );
 		if ( pCollide )
 		{
 			collisionList.AddToTail( new CPhysCollisionEntryStaticMesh( pCollide, NULL ) );	

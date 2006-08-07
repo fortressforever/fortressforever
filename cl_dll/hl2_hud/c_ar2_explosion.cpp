@@ -10,6 +10,7 @@
 #include "particle_util.h"
 #include "surfinfo.h"
 #include "baseparticleentity.h"
+#include "materialsystem/imaterialsystemhardwareconfig.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -176,7 +177,7 @@ void C_AR2Explosion::OnDataChanged(DataUpdateType_t updateType)
 
 	if(updateType == DATA_UPDATE_CREATED)
 	{
-		Start(&g_ParticleMgr, NULL);
+		Start(ParticleMgr(), NULL);
 	}
 }
 
@@ -202,7 +203,11 @@ void C_AR2Explosion::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArg
 	// Center of explosion.
 	Vector vCenter = GetAbsOrigin(); // HACKHACK.. when the engine bug is fixed, use origin.
 
-	
+	if ( IsXbox() )
+	{
+		m_ParticleEffect.SetBBox( vCenter-Vector(300,300,300), vCenter+Vector(300,300,300) );
+	}
+
 	#ifdef PARTICLEPROTOTYPE_APP
 		float surfSize = 10000;
 		nSurfInfos = 1;
@@ -232,11 +237,19 @@ void C_AR2Explosion::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArg
 
 	int nParticles = 0;
 
+	int iParticlesToSpawn = NUM_AR2_EXPLOSION_PARTICLES;
+
+	// In DX7, much fewer particles
+	if ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80 )
+	{
+		iParticlesToSpawn *= 0.25;
+	}
+
 	if(nSurfInfos > 0)
 	{
 		// For nParticles*N, generate a ray and cast it out. If it hits anything, spawn a particle there.
 		int nTestsPerParticle=3;
-		for(int i=0; i < NUM_AR2_EXPLOSION_PARTICLES; i++)
+		for(int i=0; i < iParticlesToSpawn; i++)
 		{
 			for(int iTest=0; iTest < nTestsPerParticle; iTest++)
 			{
@@ -313,7 +326,7 @@ void C_AR2Explosion::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArg
 	}	
 
 	// build interior smoke particles
-	for(int i=nParticles; i < NUM_AR2_EXPLOSION_PARTICLES; i++)
+	for(int i=nParticles; i < iParticlesToSpawn; i++)
 	{
 		Vector randVec = RandomVector(-1,1);
 		VectorNormalize( randVec );
@@ -439,7 +452,7 @@ void C_AR2Explosion::RenderParticles( CParticleRenderIterator *pIterator )
 				alpha = AR2_DUST_ALPHA * ( 1.0f - lifetimePercent );
 			}
 
-			alpha *= GetAlphaDistanceFade( tPos, 50, 150 );
+			alpha *= GetAlphaDistanceFade( tPos, IsXbox() ? 100 : 50, IsXbox() ? 200 : 150 );
 
 			RenderParticle_ColorSizeAngle(
 				pIterator->GetParticleDraw(),

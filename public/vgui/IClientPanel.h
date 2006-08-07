@@ -84,6 +84,10 @@ public:
 
 	// returns the name of the module this panel is part of
 	virtual const char *GetModuleName() = 0;
+
+#ifdef _XBOX
+	virtual int GetAlpha() = 0;
+#endif
 };
 
 } // namespace vgui

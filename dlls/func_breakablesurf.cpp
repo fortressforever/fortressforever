@@ -23,6 +23,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+// Spawn flags
+#define SF_BREAKABLESURF_CRACK_DECALS				0x00000001
+#define SF_BREAKABLESURF_DAMAGE_FROM_HELD_OBJECTS	0x00000002
+
 //#############################################################################
 //  > CWindowPane
 //#############################################################################
@@ -195,19 +199,40 @@ void CBreakableSurface::Precache(void)
 {
 	UTIL_PrecacheOther( "window_pane" );
 
-	PrecacheMaterial( "models/brokenglass/glassbroken_solid" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_01a" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_01b" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_01c" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_01d" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_02a" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_02b" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_02c" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_02d" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_03a" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_03b" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_03c" );
-	PrecacheMaterial( "models/brokenglass/glassbroken_03d" );
+	// Load the edge types and styles for the specific surface type
+	if (m_nSurfaceType == SHATTERSURFACE_TILE)
+	{
+		PrecacheMaterial( "models/brokentile/tilebroken_03a" );
+		PrecacheMaterial( "models/brokentile/tilebroken_03b" );
+		PrecacheMaterial( "models/brokentile/tilebroken_03c" );
+		PrecacheMaterial( "models/brokentile/tilebroken_03d" );
+
+		PrecacheMaterial( "models/brokentile/tilebroken_02a" );
+		PrecacheMaterial( "models/brokentile/tilebroken_02b" );
+		PrecacheMaterial( "models/brokentile/tilebroken_02c" );
+		PrecacheMaterial( "models/brokentile/tilebroken_02d" );
+
+		PrecacheMaterial( "models/brokentile/tilebroken_01a" );
+		PrecacheMaterial( "models/brokentile/tilebroken_01b" );
+		PrecacheMaterial( "models/brokentile/tilebroken_01c" );
+		PrecacheMaterial( "models/brokentile/tilebroken_01d" );
+	}
+	else
+	{
+		PrecacheMaterial( "models/brokenglass/glassbroken_solid" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_01a" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_01b" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_01c" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_01d" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_02a" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_02b" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_02c" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_02d" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_03a" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_03b" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_03c" );
+		PrecacheMaterial( "models/brokenglass/glassbroken_03d" );
+	}
 
 	BaseClass::Precache();
 }
@@ -1161,7 +1186,10 @@ void CBreakableSurface::VPhysicsCollision( int index, gamevcollisionevent_t *pEv
 	if ( !m_bIsBroken )
 	{
 		int damageType = 0;
-		float damage = CalculateDefaultPhysicsDamage( index, pEvent, 1.0, false, damageType );
+		string_t iszDamageTable = ( ( m_nSurfaceType == SHATTERSURFACE_GLASS ) ? ( "glass" ) : ( NULL_STRING ) );
+		bool bDamageFromHeldObjects = ( ( m_spawnflags & SF_BREAKABLESURF_DAMAGE_FROM_HELD_OBJECTS ) != 0 );
+		float damage = CalculateDefaultPhysicsDamage( index, pEvent, 1.0, false, damageType, iszDamageTable, bDamageFromHeldObjects );
+
 		if ( damage > 10 )
 		{
 			// HACKHACK: Reset mass to get correct collision response for the object breaking this
@@ -1178,6 +1206,39 @@ void CBreakableSurface::VPhysicsCollision( int index, gamevcollisionevent_t *pEv
 			CBaseEntity *pInflictor = pEvent->pEntities[otherIndex];
 			CTakeDamageInfo info( pInflictor, pInflictor, normal, damagePos, damage, damageType );
 			PhysCallbackDamage( this, info, *pEvent, index );
+		}
+		else if ( damage > 0 )
+		{
+			if ( m_spawnflags & SF_BREAKABLESURF_CRACK_DECALS )
+			{
+
+				Vector normal, damagePos;
+				pEvent->pInternalData->GetSurfaceNormal( normal );
+				if ( index == 0 )
+				{
+					normal *= -1.0f;
+				}
+				pEvent->pInternalData->GetContactPoint( damagePos );
+
+				trace_t tr;
+				UTIL_TraceLine ( damagePos - normal, damagePos + normal, MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr );
+
+				// Only place decals and draw effects if we hit something valid
+				if ( tr.m_pEnt && tr.m_pEnt == this )
+				{
+					// Build the impact data
+					CEffectData data;
+					data.m_vOrigin = tr.endpos;
+					data.m_vStart = tr.startpos;
+					data.m_nSurfaceProp = tr.surface.surfaceProps;
+					data.m_nDamageType = DMG_CLUB;
+					data.m_nHitBox = tr.hitbox;
+					data.m_nEntIndex = entindex();
+
+					// Send it on its way
+					DispatchEffect( "Impact", data );
+				}
+			}
 		}
 	}
 	BaseClass::VPhysicsCollision( index, pEvent );

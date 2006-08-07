@@ -55,6 +55,8 @@ BEGIN_RECV_TABLE( C_World, DT_World )
 	RecvPropFloat(RECVINFO(m_flMinOccluderArea)),
 	RecvPropFloat(RECVINFO(m_flMaxPropScreenSpaceWidth)),
 	RecvPropFloat(RECVINFO(m_flMinPropScreenSpaceWidth)),
+	RecvPropString(RECVINFO(m_iszDetailSpriteMaterial)),
+	RecvPropInt(RECVINFO(m_bColdWorld)),
 END_RECV_TABLE()
 
 

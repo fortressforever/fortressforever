@@ -18,6 +18,8 @@ private:
 	typedef CEventLog BaseClass;
 
 public:
+	virtual char const *Name() { return "CHL2EventLog"; }
+
 	virtual ~CHL2EventLog() {};
 
 public:

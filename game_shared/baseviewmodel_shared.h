@@ -74,14 +74,10 @@ public:
 
 	virtual CBaseCombatWeapon *GetOwningWeapon( void );
 
-	// Only support prediction in TF2 for now
-#if defined( TF2_DLL ) || defined( TF2_CLIENT_DLL )
-	// All predicted weapons need to implement and return true
-	virtual bool			IsPredicted( void ) const
-	{ 
+	virtual bool			IsSelfAnimating()
+	{
 		return true;
 	}
-#endif
 
 #if !defined( CLIENT_DLL )
 	virtual int				UpdateTransmitState( void );
@@ -90,19 +86,6 @@ public:
 #else
 
 	virtual RenderGroup_t	GetRenderGroup();
-
-// Only supported in TF2 right now
-#if defined( TF2_CLIENT_DLL )
-
-	virtual bool ShouldPredict( void )
-	{
-		if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() )
-			return true;
-
-		return BaseClass::ShouldPredict();
-	}
-
-#endif
 
 
 	virtual void			FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options );
@@ -117,6 +100,7 @@ public:
 
 	virtual void			ApplyBoneMatrixTransform( matrix3x4_t& transform );
 
+	virtual bool			ShouldDraw();
 	virtual int				DrawModel( int flags );
 	int						DrawOverriddenViewmodel( int flags );
 	virtual int				GetFxBlend( void );
@@ -138,7 +122,6 @@ public:
 
 	// See C_StudioModel's definition of this.
 	virtual void			UncorrectViewModelAttachment( Vector &vOrigin );
-protected:
 
 	// (inherited from C_BaseAnimating)
 	virtual void			FormatViewModelAttachment( int nAttachment, Vector &vecOrigin, QAngle &angle );

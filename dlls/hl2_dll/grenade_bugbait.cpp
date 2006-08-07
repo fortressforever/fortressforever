@@ -12,7 +12,6 @@
 #include "engine/IEngineSound.h"
 #include "npc_bullseye.h"
 #include "entitylist.h"
-#include "npc_combine.h"
 #include "antlion_maker.h"
 #include "eventqueue.h"
 
@@ -137,8 +136,9 @@ void CGrenadeBugBait::Precache( void )
 //-----------------------------------------------------------------------------
 void CGrenadeBugBait::BugBaitTouch( CBaseEntity *pOther )
 {
+	// Don't hit triggers or water
 	Assert( pOther );
-	if ( !pOther->IsSolid() )
+	if ( pOther->IsSolidFlagSet(FSOLID_TRIGGER|FSOLID_VOLUME_CONTENTS) )
 		return;
 
 	if ( m_pSporeTrail != NULL )
@@ -224,7 +224,7 @@ bool CGrenadeBugBait::ActivateBugbaitTargets( CBaseEntity *pOwner, Vector vecOri
 				// Must be a soldier
 				if ( FClassnameIs( pList[i], "npc_combine_s") )
 				{
-					CNPC_Combine *pCombine = assert_cast<CNPC_Combine *>(pList[i]);
+					CAI_BaseNPC *pCombine = pList[i]->MyNPCPointer();
 
 					if ( pCombine != NULL )
 					{
@@ -241,7 +241,6 @@ bool CGrenadeBugBait::ActivateBugbaitTargets( CBaseEntity *pOwner, Vector vecOri
 				}
 			}
 		}
-
 	}
 	// Iterate over all sensors to see if they detected this impact
 	for ( CBugBaitSensor *pSensor = GetBugBaitSensorList(); pSensor != NULL; pSensor = pSensor->m_pNext )

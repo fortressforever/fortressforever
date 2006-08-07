@@ -95,6 +95,8 @@ public:
 
 	float	GetHeatLevel()	{ return m_flHeatLevel; }
 
+	virtual int UpdateTransmitState();
+
 	void DrawDebugGeometryOverlays(void) 
 	{
 		if (m_debugOverlays & OVERLAY_BBOX_BIT) 
@@ -104,7 +106,7 @@ public:
 				NDebugOverlay::EntityBounds(this, 88, 255, 128, 0 ,0);
 				char tempstr[512];
 				Q_snprintf( tempstr, sizeof(tempstr), "Heat: %.1f", m_flHeatAbsorb );
-				NDebugOverlay::EntityText(entindex(),1,tempstr, 0);
+				EntityText(1,tempstr, 0);
 			}
 			else if ( !IsBurning() )
 			{
@@ -558,6 +560,9 @@ CFire::CFire( void )
 	//Spreading
 	m_flHeatAbsorb = 8.0f;
 	m_flHeatLevel = 0;
+
+	// Must be in the constructor!
+	AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 }
 
 //-----------------------------------------------------------------------------
@@ -700,6 +705,12 @@ void CFire::Spawn( void )
 	}
 }
 
+int CFire::UpdateTransmitState()
+{
+	// Don't want to be FL_EDICT_DONTSEND because our fire entity may make us transmit.
+	return SetTransmitState( FL_EDICT_PVSCHECK );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -732,6 +743,7 @@ void CFire::SpawnEffect( fireType_e type, float scale )
 			CFireSmoke	*fireSmoke = (CFireSmoke *) CreateEntityByName( "_firesmoke" );
 			fireSmoke->EnableSmoke( ( m_spawnflags & SF_FIRE_SMOKELESS )==false );
 			fireSmoke->EnableGlow( ( m_spawnflags & SF_FIRE_NO_GLOW )==false );
+			fireSmoke->EnableVisibleFromAbove( ( m_spawnflags & SF_FIRE_VISIBLE_FROM_ABOVE )!=false );
 			
 			pEffect			= fireSmoke;
 			m_nFireType		= FIRE_NATURAL;

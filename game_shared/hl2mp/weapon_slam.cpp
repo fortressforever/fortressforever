@@ -53,6 +53,8 @@ BEGIN_NETWORK_TABLE( CWeapon_SLAM, DT_Weapon_SLAM )
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
+
 BEGIN_PREDICTION_DATA( CWeapon_SLAM )
 	DEFINE_PRED_FIELD( m_tSlamState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDetonatorArmed, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -64,6 +66,8 @@ BEGIN_PREDICTION_DATA( CWeapon_SLAM )
 	DEFINE_PRED_FIELD( m_bAttachSatchel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bAttachTripmine, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
+
+#endif
 
 LINK_ENTITY_TO_CLASS( weapon_slam, CWeapon_SLAM );
 PRECACHE_WEAPON_REGISTER(weapon_slam);
@@ -112,7 +116,7 @@ void CWeapon_SLAM::Spawn( )
 
 	FallInit();// get ready to fall down
 
-	m_tSlamState		= SLAM_SATCHEL_THROW;
+	m_tSlamState		= (int)SLAM_SATCHEL_THROW;
 	m_flWallSwitchTime	= 0;
 
 	// Give 1 piece of default ammo when first picked up
@@ -981,7 +985,7 @@ bool CWeapon_SLAM::Deploy( void )
 
 	SetModel( GetViewModel() );
 
-	m_tSlamState		= SLAM_SATCHEL_THROW;
+	m_tSlamState		= (int)SLAM_SATCHEL_THROW;
 
 	// ------------------------------
 	// Pick the right draw animation
@@ -1032,7 +1036,7 @@ bool CWeapon_SLAM::Deploy( void )
 //-----------------------------------------------------------------------------
 CWeapon_SLAM::CWeapon_SLAM(void)
 {
-	m_tSlamState			= SLAM_SATCHEL_THROW;
+	m_tSlamState			= (int)SLAM_SATCHEL_THROW;
 	m_bDetonatorArmed		= false;
 	m_bNeedReload			= true;
 	m_bClearReload			= false;

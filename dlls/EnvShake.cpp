@@ -68,8 +68,7 @@ public:
 	inline	float	Amplitude( void ) { return m_Amplitude; }
 	inline	float	Frequency( void ) { return m_Frequency; }
 	inline	float	Duration( void ) { return m_Duration; }
-	inline	float	Radius( void ) { return m_Radius; }
-
+	float			Radius( bool bPlayers = true );
 	inline	void	SetAmplitude( float amplitude ) { m_Amplitude = amplitude; }
 	inline	void	SetFrequency( float frequency ) { m_Frequency = frequency; }
 	inline	void	SetDuration( float duration ) { m_Duration = duration; }
@@ -114,6 +113,8 @@ END_DATADESC()
 #define SF_SHAKE_INAIR		0x0004		// Shake players in air
 #define SF_SHAKE_PHYSICS	0x0008		// Shake physically (not just camera)
 #define SF_SHAKE_ROPES		0x0010		// Shake ropes too.
+#define SF_SHAKE_NO_VIEW	0x0020		// DON'T shake the view (only ropes and/or physics objects)
+#define SF_SHAKE_NO_RUMBLE	0x0040		// DON'T Rumble the XBox Controller
 
 
 //-----------------------------------------------------------------------------
@@ -127,6 +128,16 @@ CEnvShake::~CEnvShake( void )
 	}
 }
 
+
+float CEnvShake::Radius(bool bPlayers)
+{
+	// The radius for players is zero if SF_SHAKE_EVERYONE is set
+	if ( bPlayers && HasSpawnFlags(SF_SHAKE_EVERYONE))
+		return 0;
+	return m_Radius;
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Sets default member values when spawning.
 //-----------------------------------------------------------------------------
@@ -138,6 +149,11 @@ void CEnvShake::Spawn( void )
 	if ( GetSpawnFlags() & SF_SHAKE_EVERYONE )
 	{
 		m_Radius = 0;
+	}
+	
+	if ( HasSpawnFlags( SF_SHAKE_NO_VIEW ) && !HasSpawnFlags( SF_SHAKE_PHYSICS ) && !HasSpawnFlags( SF_SHAKE_ROPES ) )
+	{
+		DevWarning( "env_shake %s with \"Don't shake view\" spawnflag set without \"Shake physics\" or \"Shake ropes\" spawnflags set.", GetDebugName() );
 	}
 }
 
@@ -161,12 +177,15 @@ void CEnvShake::OnRestore( void )
 //-----------------------------------------------------------------------------
 void CEnvShake::ApplyShake( ShakeCommand_t command )
 {
-	bool air = (GetSpawnFlags() & SF_SHAKE_INAIR) ? true : false;
-	UTIL_ScreenShake( GetAbsOrigin(), Amplitude(), Frequency(), Duration(), Radius(), command, air );
-	
+	if ( !HasSpawnFlags( SF_SHAKE_NO_VIEW ) )
+	{
+		bool air = (GetSpawnFlags() & SF_SHAKE_INAIR) ? true : false;
+		UTIL_ScreenShake( GetAbsOrigin(), Amplitude(), Frequency(), Duration(), Radius(), command, air );
+	}
+		
 	if ( GetSpawnFlags() & SF_SHAKE_ROPES )
 	{
-		CRopeKeyframe::ShakeRopes( GetAbsOrigin(), Radius(), Frequency() );
+		CRopeKeyframe::ShakeRopes( GetAbsOrigin(), Radius(false), Frequency() );
 	}
 
 	if ( GetSpawnFlags() & SF_SHAKE_PHYSICS )
@@ -179,6 +198,7 @@ void CEnvShake::ApplyShake( ShakeCommand_t command )
 		switch( command )
 		{
 		case SHAKE_START:
+		case SHAKE_START_NORUMBLE:
 			{
 				m_stopTime = gpGlobals->curtime + Duration();
 				m_nextShake = 0;
@@ -186,14 +206,15 @@ void CEnvShake::ApplyShake( ShakeCommand_t command )
 				SetNextThink( gpGlobals->curtime );
 				m_currentAmp = Amplitude();
 				CBaseEntity *list[1024];
-				float radius = Radius();
+				float radius = Radius(false);
 				
 				// probably checked "Shake Everywhere" do a big radius
 				if ( !radius )
 				{
-					radius = MAX_COORD_INTEGER;
+					radius = 512;
 				}
 				Vector extents = Vector(radius, radius, radius);
+				extents.z = max(extents.z, 100);
 				Vector mins = GetAbsOrigin() - extents;
 				Vector maxs = GetAbsOrigin() + extents;
 				int count = UTIL_EntitiesInBox( list, 1024, mins, maxs, 0 );
@@ -228,12 +249,20 @@ void CEnvShake::ApplyShake( ShakeCommand_t command )
 	}
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Input handler that starts the screen shake.
 //-----------------------------------------------------------------------------
 void CEnvShake::InputStartShake( inputdata_t &inputdata )
 {
-	ApplyShake( SHAKE_START );
+	if( HasSpawnFlags(SF_SHAKE_NO_RUMBLE) )
+	{
+		ApplyShake( SHAKE_START_NORUMBLE );
+	}
+	else
+	{
+		ApplyShake( SHAKE_START );
+	}
 }
 
 
@@ -286,7 +315,7 @@ void CEnvShake::Think( void )
 		// make the force it point mostly up
 		m_maxForce.z = 4;
 		VectorNormalize( m_maxForce );
-		m_maxForce *= m_currentAmp * 10;	// amplitude is the acceleration of a 10kg object
+		m_maxForce *= m_currentAmp * 400;	// amplitude is the acceleration of a 100kg object
 	}
 
 	float fraction = ( m_stopTime - gpGlobals->curtime ) / Duration();

@@ -1017,7 +1017,7 @@ void CFuncTrain::SetupTarget( void )
 	// Find our target whenever we don't have one (level transition)
 	if ( !m_hCurrentTarget )
 	{
-		CBaseEntity	*pTarg = gEntList.FindEntityByName( NULL, m_target, NULL );
+		CBaseEntity	*pTarg = gEntList.FindEntityByName( NULL, m_target );
 
 		if ( pTarg == NULL )
 		{
@@ -1045,7 +1045,7 @@ void CFuncTrain::Spawn( void )
 	
 	if ( !m_target )
 	{
-		Warning("FuncTrain with no target\n");
+		Warning("FuncTrain '%s' has no target.\n", GetDebugName());
 	}
 	
 	if ( m_flBlockDamage == 0 )
@@ -1253,16 +1253,16 @@ int CFuncTrackTrain::DrawDebugTextOverlays( void )
 	{
 		char tempstr[512];
 		Q_snprintf( tempstr,sizeof(tempstr), "angles: %g %g %g", (double)GetLocalAngles()[PITCH], (double)GetLocalAngles()[YAW], (double)GetLocalAngles()[ROLL] );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 
 		float flCurSpeed = GetLocalVelocity().Length();
 		Q_snprintf( tempstr,sizeof(tempstr), "current speed (goal): %g (%g)", (double)flCurSpeed, (double)m_flSpeed );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 
 		Q_snprintf( tempstr,sizeof(tempstr), "max speed: %g", (double)m_maxSpeed );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 	}
 
@@ -2130,12 +2130,14 @@ void CFuncTrackTrain::Next( void )
 	{
 		if ( pNext != NULL )
 		{
+			NDebugOverlay::Line( GetAbsOrigin(), pNext->GetAbsOrigin(), 255, 0, 0, true, 0.1 );
 			NDebugOverlay::Line( pNext->GetAbsOrigin(), pNext->GetAbsOrigin() + Vector( 0,0,32), 255, 0, 0, true, 0.1 );
 			NDebugOverlay::Box( pNext->GetAbsOrigin(), Vector( -8, -8, -8 ), Vector( 8, 8, 8 ), 255, 0, 0, 0, 0.1 );
 		}
 
 		if ( pNextNext != NULL )
 		{
+			NDebugOverlay::Line( GetAbsOrigin(), pNextNext->GetAbsOrigin(), 0, 255, 0, true, 0.1 );
 			NDebugOverlay::Line( pNextNext->GetAbsOrigin(), pNextNext->GetAbsOrigin() + Vector( 0,0,32), 0, 255, 0, true, 0.1 );
 			NDebugOverlay::Box( pNextNext->GetAbsOrigin(), Vector( -8, -8, -8 ), Vector( 8, 8, 8 ), 0, 255, 0, 0, 0.1 );
 		}
@@ -2322,7 +2324,7 @@ bool CFuncTrackTrain::OnControls( CBaseEntity *pTest )
 
 void CFuncTrackTrain::Find( void )
 {
-	m_ppath = (CPathTrack *)gEntList.FindEntityByName( NULL, m_target, NULL );
+	m_ppath = (CPathTrack *)gEntList.FindEntityByName( NULL, m_target );
 	if ( !m_ppath )
 		return;
 
@@ -2471,7 +2473,9 @@ void CFuncTrackTrain::Spawn( void )
 	m_dir = 1;
 
 	if ( !m_target )
-		Msg( "FuncTrain with no target" );
+	{
+		Msg("FuncTrackTrain '%s' has no target.\n", GetDebugName());
+	}
 
 	SetModel( STRING( GetModelName() ) );
 	SetMoveType( MOVETYPE_PUSH );
@@ -2585,7 +2589,7 @@ void CFuncTrainControls::Find( void )
 
 	do 
 	{
-		pTarget = gEntList.FindEntityByName( pTarget, m_target, NULL );
+		pTarget = gEntList.FindEntityByName( pTarget, m_target );
 	} while ( pTarget && !FClassnameIs(pTarget, "func_tracktrain") );
 
 	if ( !pTarget )
@@ -2739,18 +2743,18 @@ void CFuncTrackChange::Find( void )
 	// Find track entities
 	CBaseEntity *target;
 
-	target = gEntList.FindEntityByName( NULL, m_trackTopName, NULL );
+	target = gEntList.FindEntityByName( NULL, m_trackTopName );
 	if ( target )
 	{
 		m_trackTop = (CPathTrack*) target;
-		target = gEntList.FindEntityByName( NULL, m_trackBottomName, NULL );
+		target = gEntList.FindEntityByName( NULL, m_trackBottomName );
 		if ( target )
 		{
 			m_trackBottom = (CPathTrack*) target;
-			target = gEntList.FindEntityByName( NULL, m_trainName, NULL );
+			target = gEntList.FindEntityByName( NULL, m_trainName );
 			if ( target )
 			{
-				m_train = (CFuncTrackTrain *)gEntList.FindEntityByName( NULL, m_trainName, NULL );
+				m_train = (CFuncTrackTrain *)gEntList.FindEntityByName( NULL, m_trainName );
 				if ( !m_train )
 				{
 					Warning( "Can't find train for track change! %s\n", STRING(m_trainName) );
@@ -2768,7 +2772,7 @@ void CFuncTrackChange::Find( void )
 			{
 				Warning( "Can't find train for track change! %s\n", STRING(m_trainName) );
 				Assert(0);
-				target = gEntList.FindEntityByName( NULL, m_trainName, NULL );
+				target = gEntList.FindEntityByName( NULL, m_trainName );
 			}
 		}
 		else

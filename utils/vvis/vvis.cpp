@@ -19,6 +19,9 @@
 #include "vstdlib/icommandline.h"
 #include "vmpi_tools_shared.h"
 #include "ilaunchabledll.h"
+#include "tools_minidump.h"
+#include "loadcmdline.h"
+
 
 int			g_numportals;
 int			portalclusters;
@@ -383,7 +386,6 @@ void LoadPortals (char *name)
 	int			leafnums[2];
 	plane_t		plane;
 
-
 	FILE *f;
 
 	// Open the portal file.
@@ -418,7 +420,7 @@ void LoadPortals (char *name)
 		fclose( f );
 
 		// Open the temp file up.
-		f = fopen( tempFile, "r" );
+		f = fopen( tempFile, "rSTD" ); // read only, sequential, temporary, delete on close
 	}
 	else
 	{
@@ -500,7 +502,7 @@ void LoadPortals (char *name)
 	// create forward portal
 		l = &leafs[leafnums[0]];
 		if (l->numportals == MAX_PORTALS_ON_LEAF)
-			Error ("Leaf (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X to view the problem.", i );
+			Error ("Leaf %d (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X or -leafhighlight L to view the problem.", leafnums[0], i );
 		l->portals[l->numportals] = p;
 		l->numportals++;
 		
@@ -514,7 +516,7 @@ void LoadPortals (char *name)
 	// create backwards portal
 		l = &leafs[leafnums[1]];
 		if (l->numportals == MAX_PORTALS_ON_LEAF)
-			Error ("Leaf (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X to view the problem.", i );
+			Error ("Leaf %d (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X or -leafhighlight L to view the problem.", leafnums[1], i );
 		l->portals[l->numportals] = p;
 		l->numportals++;
 		
@@ -924,14 +926,9 @@ int ParseCommandLine( int argc, char **argv )
 		{
 			g_bLowPriority = true;
 		}
-		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
+		else if ( !Q_stricmp( argv[i], "-FullMinidumps" ) )
 		{
-			if ( stricmp( argv[i], "-mpi" ) == 0 )
-				g_bUseMPI = true;
-		
-			// Any other args that start with -mpi are ok too.
-			if ( i == argc - 1 )
-				break;
+			EnableFullMinidumps( true );
 		}
 		else if ( !Q_stricmp( argv[i], CMDLINEOPTION_NOVCONFIG ) )
 		{
@@ -943,6 +940,18 @@ int ParseCommandLine( int argc, char **argv )
 		else if ( !stricmp( argv[i], "-allowdebug" ) || !stricmp( argv[i], "-steam" ) )
 		{
 			// nothing to do here, but don't bail on this option
+		}
+		// NOTE: the -mpi checks must come last here because they allow the previous argument 
+		// to be -mpi as well. If it game before something else like -game, then if the previous
+		// argument was -mpi and the current argument was something valid like -game, it would skip it.
+		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
+		{
+			if ( stricmp( argv[i], "-mpi" ) == 0 )
+				g_bUseMPI = true;
+		
+			// Any other args that start with -mpi are ok too.
+			if ( i == argc - 1 )
+				break;
 		}
 		else if (argv[i][0] == '-')
 		{
@@ -996,6 +1005,7 @@ void PrintUsage( int argc, char **argv )
 		"  -nosort         : Don't sort portals (sorting is an optimization).\n"
 		"  -tmpin          : Make portals come from \\tmp\\<mapname>.\n"
 		"  -tmpout         : Make portals come from \\tmp\\<mapname>.\n"
+		"  -FullMinidumps  : Write large minidumps on crash.\n"
 		);
 }
 
@@ -1011,24 +1021,27 @@ int RunVVis( int argc, char **argv )
 
 	verbose = false;
 
+	Q_StripExtension( argv[ argc - 1 ], source, sizeof( source ) );
+	CmdLib_InitFileSystem( argv[ argc - 1 ] );
+
+	Q_FileBase( source, source, sizeof( source ) );
+
+	LoadCmdLineFromFile( argc, argv, source, "vvis" );
 	int i = ParseCommandLine( argc, argv );
+
+	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
+	// so we prepend qdir here.
+	strcpy( source, ExpandPath( source ) );
 
 	if (i != argc - 1)
 	{
 		PrintUsage( argc, argv );
+		DeleteCmdLine( argc, argv );
 		CmdLib_Exit( 1 );
 	}
 
 	start = Plat_FloatTime();
 
-
-	Q_StripExtension( argv[i], source, sizeof( source ) );
-	CmdLib_InitFileSystem( argv[i] );
-
-	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
-	// so we strip off the filename and prepend qdir here.
-	Q_FileBase( source, source, sizeof( source ) );
-	strcpy( source, ExpandPath( source ) );
 
 	if (!g_bUseMPI)
 	{
@@ -1085,7 +1098,6 @@ int RunVVis( int argc, char **argv )
 	LoadPortals (portalfile);
 
 	CalcVis ();
-
 	CalcPAS ();
 
 	// We need a mapping from cluster to leaves, since the PVS
@@ -1107,16 +1119,9 @@ int RunVVis( int argc, char **argv )
 	GetHourMinuteSecondsString( (int)( end - start ), str, sizeof( str ) );
 	Msg( "%s elapsed\n", str );
 
+	DeleteCmdLine( argc, argv );
 	CmdLib_Cleanup();
 	return 0;
-}
-
-
-
-LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
-{
-	VMPI_ExceptionFilter( ExceptionInfo->ExceptionRecord->ExceptionCode );
-	return EXCEPTION_EXECUTE_HANDLER; // (never gets here anyway)
 }
 
 
@@ -1135,21 +1140,13 @@ int main (int argc, char **argv)
 
 	VVIS_SetupMPI( argc, argv );
 
-
+	// Install an exception handler.
 	if ( g_bUseMPI && !g_bMPIMaster )
-	{
-		// VMPI workers should catch crashes and asserts and suchlike and fail gracefully instead 
-		// of pestering the person with dialogs.
-		LPTOP_LEVEL_EXCEPTION_FILTER pOldFilter = SetUnhandledExceptionFilter( VExceptionFilter );
-		int ret = RunVVis( argc, argv );
-		SetUnhandledExceptionFilter( pOldFilter );
-
-		return ret;
-	}
+		SetupToolsMinidumpHandler( VMPI_ExceptionFilter );
 	else
-	{
-		return RunVVis( argc, argv );
-	}
+		SetupDefaultToolsMinidumpHandler();
+
+	return RunVVis( argc, argv );
 }
 
 

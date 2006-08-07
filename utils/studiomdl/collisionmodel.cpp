@@ -133,7 +133,7 @@ int FindLocalBoneNamed( const s_source_t *pSource, const char *pName )
 		int i;
 		for ( i = 0; i < pSource->numbones; i++ )
 		{
-			if ( !strcmpi( pName, pSource->localBone[i].name ) )
+			if ( !stricmp( pName, pSource->localBone[i].name ) )
 				return i;
 		}
 
@@ -141,7 +141,7 @@ int FindLocalBoneNamed( const s_source_t *pSource, const char *pName )
 
 		for ( i = 0; i < pSource->numbones; i++ )
 		{
-			if ( !strcmpi( pName, pSource->localBone[i].name ) )
+			if ( !stricmp( pName, pSource->localBone[i].name ) )
 				return i;
 		}
 	}
@@ -342,7 +342,7 @@ int CJointedModel::BoneIndex( const char *pName )
 	pName = RenameBone( pName );
 	for ( int boneIndex = 0; boneIndex < m_pModel->numbones; boneIndex++ )
 	{
-		if ( !strcmpi( m_pModel->localBone[boneIndex].name, pName ) )
+		if ( !stricmp( m_pModel->localBone[boneIndex].name, pName ) )
 			return boneIndex;
 	}
 
@@ -396,7 +396,7 @@ int CJointedModel::CollisionIndex( const char *pName )
 	int index = 0;
 	while ( pList )
 	{
-		if ( !strcmpi( pName, pList->m_name ) )
+		if ( !stricmp( pName, pList->m_name ) )
 			return index;
 		
 		pList = pList->m_pNext;
@@ -450,7 +450,7 @@ void CJointedModel::SortCollisionList( void )
 				if ( j == i )
 					continue;
 
-				if ( !strcmpi( pPhys->m_parent, pArray[j]->m_name ) )
+				if ( !stricmp( pPhys->m_parent, pArray[j]->m_name ) )
 					break;
 			}
 
@@ -524,7 +524,7 @@ CPhysCollisionModel *CJointedModel::GetCollisionModel( const char *pName )
 	CPhysCollisionModel *pList = m_pCollisionList;
 	while ( pList )
 	{
-		if ( !strcmpi( pName, pList->m_name ) )
+		if ( !stricmp( pName, pList->m_name ) )
 			return pList;
 		
 		pList = pList->m_pNext;
@@ -728,7 +728,7 @@ void ConvertToWorldSpace( CJointedModel &joints, s_source_t *psource, Vector *wo
 
 			matrix3x4_t boneToPose;
 			ConcatTransforms( psource->boneToPose[localBone], g_bonetable[globalBone].srcRealign, boneToPose );
-			VectorITransform( psource->vertex[i], boneToPose, tmp2 );
+			VectorITransform( psource->vertex[i].position, boneToPose, tmp2 );
 
 			// now transform to that bone's world-space position in this animation
 			VectorTransform(tmp2, boneToWorld[globalBone], tmp );
@@ -762,7 +762,7 @@ void ConvertToBoneSpace( s_source_t *psource, int boneIndex, Vector *boneVerts )
 
 	for (i = 0; i < psource->numvertices; i++)
 	{
-		VectorITransform(psource->vertex[i], boneToPose, boneVerts[i] );
+		VectorITransform(psource->vertex[i].position, boneToPose, boneVerts[i] );
 	}
 }
 
@@ -780,7 +780,7 @@ bool FaceHasVertOnBone( const CJointedModel &joints, s_source_t *pmodel, s_face_
 	int j;
 	s_boneweight_t *pweight;
 
-	pweight = pmodel->globalBoneweight + face->a;
+	pweight = &pmodel->vertex[ face->a ].globalBoneweight;
 	for ( j = 0; j < pweight->numbones; j++ )
 	{
 		// Discover the local bone index for this bone
@@ -793,7 +793,7 @@ bool FaceHasVertOnBone( const CJointedModel &joints, s_source_t *pmodel, s_face_
 		}
 	}
 
-	pweight = pmodel->globalBoneweight + face->b;
+	pweight = &pmodel->vertex[ face->b ].globalBoneweight;
 	for ( j = 0; j < pweight->numbones; j++ )
 	{
 		// Discover the local bone index for this bone
@@ -806,7 +806,7 @@ bool FaceHasVertOnBone( const CJointedModel &joints, s_source_t *pmodel, s_face_
 		}
 	}
 
-	pweight = pmodel->globalBoneweight + face->c;
+	pweight = &pmodel->vertex[ face->c ].globalBoneweight;
 	for ( j = 0; j < pweight->numbones; j++ )
 	{
 		// Discover the local bone index for this bone
@@ -855,7 +855,7 @@ int CopyVertsByBone( Vector **verts, Vector *worldVerts, const CJointedModel &jo
 	// loop through each vert to find those assigned to this bone
 	for ( int i = 0; i < pmodel->numvertices; i++ )
 	{
-		s_boneweight_t *pweight = pmodel->globalBoneweight + i;
+		s_boneweight_t *pweight = &pmodel->vertex[ i ].globalBoneweight;
 
 		// look at each assignment for this vert
 		for ( int j = 0; j < pweight->numbones; j++ )
@@ -949,8 +949,8 @@ void BuildVertWeldTable( int *weldTable, s_source_t *pmodel )
 		bool found = false;
 		for ( int j = 0; j < i; j++ )
 		{
-			if ( VectorCompare( pmodel->vertex[j], pmodel->vertex[i] ) &&
-				 DotProduct( pmodel->normal[j], pmodel->normal[i] ) > normal_blend )
+			if ( VectorCompare( pmodel->vertex[j].position, pmodel->vertex[i].position ) &&
+				 DotProduct( pmodel->vertex[j].normal, pmodel->vertex[i].normal ) > normal_blend )
 			{
 				found = true;
 				weldTable[i] = j;
@@ -1054,7 +1054,7 @@ CPhysCollisionModel *FindObjectInList( CPhysCollisionModel *pHead, const char *p
 {
 	while ( pHead )
 	{
-		if ( !strcmpi( pName, pHead->m_name ) )
+		if ( !stricmp( pName, pHead->m_name ) )
 			break;
 		pHead = pHead->m_pNext;
 	}
@@ -1536,11 +1536,12 @@ int ProcessSingleBody( CJointedModel &joints )
 		{
 			if ( !g_badCollide )
 			{
-				MdlWarning("COSTLY COLLISION MODEL!!!! (%d parts)\n\07\nTruncating model!!!!\n", elements.Size() );
+				MdlWarning("COSTLY COLLISION MODEL!!!! (%d parts)\nTruncating model!!!!\n", elements.Size() );
 				elements.Purge();
 				if ( boundingVolume.pHull )
 				{
 					elements.AddToTail( boundingVolume.pHull );
+					boundingVolume.pHull = NULL;
 				}
 			}
 			else
@@ -1825,7 +1826,7 @@ void ParseCollisionCommands( CJointedModel &joints )
 			joints.ForceMassCenter( center );
 		}
 		// joint commands
-		else if ( !strcmp( command, "$jointskip" ) )
+		else if ( !stricmp( command, "$jointskip" ) )
 		{
 			argCount = ReadArgs( args, 1 );
 			CCmd_JointSkip( joints, args[0] );
@@ -1945,10 +1946,6 @@ static bool LoadSurfaceProps( const char *pMaterialFilename )
 	if ( !physprops )
 		return false;
 
-	// already loaded
-	if ( physprops->SurfacePropCount() )
-		return false;
-
 	FileHandle_t fp = g_pFileSystem->Open( pMaterialFilename, "rb", TOOLS_READ_PATH_ID );
 	if ( fp == FILESYSTEM_INVALID_HANDLE )
 		return false;
@@ -1969,6 +1966,10 @@ static bool LoadSurfaceProps( const char *pMaterialFilename )
 
 void LoadSurfacePropsAll()
 {
+	// already loaded
+	if ( physprops->SurfacePropCount() )
+		return;
+
 	const char *SURFACEPROP_MANIFEST_FILE = "scripts/surfaceproperties_manifest.txt";
 	KeyValues *manifest = new KeyValues( SURFACEPROP_MANIFEST_FILE );
 	if ( manifest->LoadFromFile( g_pFileSystem, SURFACEPROP_MANIFEST_FILE, "GAME" ) )
@@ -2027,12 +2028,6 @@ int DoCollisionModel( bool separateJoints )
 		g_nummaterials = nummaterials;
 
 		pmodel->texmap[0] = 0;
-
-		int i;
-		for (i = 0; i < pmodel->numvertices; i++)
-		{
-			pmodel->vertexInfo[i].material	= 0;
-		}
 	}
 
 	// all bones map to themselves by default
@@ -2240,7 +2235,7 @@ void BuildRagdollConstraint( CPhysCollisionModel *pPhys, constraint_ragdollparam
 		{
 			MdlError("Rotation constraint on bone \"%s\" which does not appear in collision model!!!\n", pList->m_pJointName );
 		}
-		else if ( (!pListModel->m_parent || g_JointedModel.CollisionIndex(pListModel->m_parent) < 0) && strcmpi( pList->m_pJointName, g_JointedModel.m_rootName ) )
+		else if ( (!pListModel->m_parent || g_JointedModel.CollisionIndex(pListModel->m_parent) < 0) && stricmp( pList->m_pJointName, g_JointedModel.m_rootName ) )
 		{
 			MdlError("Rotation constraint on bone \"%s\" which has no parent!!!\n", pList->m_pJointName );
 		}
@@ -2491,6 +2486,28 @@ void CollisionModel_Write( long checkSum )
 		{
 			MdlWarning("Error writing %s!!!\n", filename );
 		}
+#if defined(IN_XBOX_CODELINE)
+		// on xbox, go ahead and convert the model to compressed/simplified form
+		{
+			char out[1024];
+			g_pFullFileSystem->RelativePathToFullPath( "makephx.exe", "EXECUTABLE_PATH", out, sizeof(out) );
+			extern int 
+				errno;
+			int ret;
+			if (g_quiet)
+			{
+				ret = _spawnl(_P_WAIT, out, "makephx.exe", "-quiet", filename, NULL);
+			}
+			else
+			{
+				ret = _spawnl(_P_WAIT, out, "makephx.exe", filename, NULL);
+			}
+			if ( ret < 0 )
+			{
+				Msg("Error %d building PHX file\n", errno );
+			}
+		}
+#endif
 	}
 }
 

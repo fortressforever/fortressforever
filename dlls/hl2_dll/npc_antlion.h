@@ -14,6 +14,7 @@
 #include "ai_blended_movement.h"
 #include "soundent.h"
 #include "ai_behavior_follow.h"
+#include "ai_behavior_assault.h"
 
 class CAntlionTemplateMaker;
 
@@ -86,18 +87,20 @@ public:
 	void		StartTask( const Task_t *pTask );
 	void		RunTask( const Task_t *pTask );
 	void		IdleSound( void );
-	void		PainSound( void );
+	void		PainSound( const CTakeDamageInfo &info );
 	void		Precache( void );
 	void		Spawn( void );
+	int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	void		TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	void		BuildScheduleTestBits( void );
 	void		GatherConditions( void );
 	void		PrescheduleThink( void );
 	void		BurrowUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	bool		CreateVPhysics();
 				
 	bool		IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos ) const;
 	bool		HandleInteraction( int interactionType, void *data, CBaseCombatCharacter *sender = NULL );
-	bool		QuerySeeEntity( CBaseEntity *pEntity );
+	bool		QuerySeeEntity( CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC = false );
 	bool		ShouldPlayIdleSound( void );
 	bool		OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );
 	bool		IsValidEnemy(CBaseEntity *pEnemy);
@@ -151,6 +154,11 @@ public:
 	virtual void StopLoopingSounds( void );
 	bool    AllowedToBePushed( void );
 
+	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = true );
+	virtual float GetAutoAimRadius() { return 36.0f; }
+
+	void	ClearBurrowPoint( const Vector &origin );
+
 private:
 
 	inline CBaseEntity *EntityToWatch( void );
@@ -172,7 +180,6 @@ private:
 	void	InputHearBugbait( inputdata_t &inputdata );
 
 	bool	FindBurrow( const Vector &origin, float distance, int type, bool excludeNear = true );
-	void	ClearBurrowPoint( const Vector &origin );
 	void	CreateDust( bool placeDecal = true );
 
 	bool	ValidBurrowPoint( const Vector &point );
@@ -195,15 +202,21 @@ private:
 	int		SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	bool	IsFirmlyOnGround( void );
 
+	virtual void Ignite ( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner );
+
 	float	m_flIdleDelay;
 	float	m_flBurrowTime;
 	float	m_flJumpTime;
 	float	m_flAlertRadius;
 	float	m_flPounceTime;
 
+	int		m_iUnBurrowAttempts;
+
 	int		m_iContext;			//for FValidateHintType context
 
 	CAI_AntlionFollowBehavior	m_FollowBehavior;
+	CAI_AssaultBehavior			m_AssaultBehavior;
+
 
 	AntlionMoveState_e	m_MoveState;
 
@@ -233,6 +246,9 @@ private:
 	bool		m_bLoopingStarted;
 
 	bool		m_bForcedStuckJump;
+	int			m_nBodyBone;
+
+	HSOUNDSCRIPTHANDLE	m_hFootstep;
 
 	DEFINE_CUSTOM_AI;
 

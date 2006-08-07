@@ -7,6 +7,8 @@
 //=============================================================================//
 #include "cbase.h"
 
+#if !defined( NO_ENTITY_PREDICTION )
+
 #if defined( CLIENT_DLL )
 
 #include "IGameSystem.h"
@@ -1770,6 +1772,9 @@ public:
 	// Called before rendering
 	virtual void PreRender ( ) {}
 
+	// Called after rendering
+	virtual void PostRender() {}
+
 	// Gets called each frame
 	virtual void Update( float frametime ) {}
 
@@ -1958,3 +1963,4 @@ void CPredictionCopyTester::RunTests( void )
 }
 
 #endif // CLIENT_DLL
+#endif // !NO_ENTITY_PREDICTION )

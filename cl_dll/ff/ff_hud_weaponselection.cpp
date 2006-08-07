@@ -441,7 +441,7 @@ void CHudWeaponSelection::ApplySchemeSettings(vgui::IScheme *pScheme)
 	int screenWide, screenTall;
 	int x, y;
 	GetPos(x, y);
-	surface()->GetScreenSize(screenWide, screenTall);
+	GetHudSize(screenWide, screenTall);
 	SetBounds(0, y, screenWide, screenTall - y);
 }
 

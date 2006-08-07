@@ -210,7 +210,7 @@ public:
 	void			Set(AI_Waypoint_t* route);
 
 	void 			PrependWaypoints( AI_Waypoint_t *pWaypoints );
-	void 			PrependWaypoint( const Vector &newPoint, Navigation_t navType, unsigned waypointFlags );
+	void 			PrependWaypoint( const Vector &newPoint, Navigation_t navType, unsigned waypointFlags, float flYaw = 0 );
 	
 	bool 			IsEmpty() const				{ return ( m_pFirstWaypoint == NULL ); }
 	

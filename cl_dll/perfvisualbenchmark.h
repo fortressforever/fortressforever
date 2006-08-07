@@ -20,7 +20,7 @@
 #include <igameevents.h>
 #include <igamesystem.h>
 
-class CPerfVisualBenchmark : public CBaseGameSystem
+class CPerfVisualBenchmark : public CBaseGameSystemPerFrame
 {
 	
 public:
@@ -28,6 +28,8 @@ public:
 	virtual ~CPerfVisualBenchmark();
 
 public: // CBaseGameSystem overrides
+
+	virtual char const *Name() { return "CPerfVisualBenchmark"; }
 
 	virtual bool Init();
 	virtual void PreRender( );

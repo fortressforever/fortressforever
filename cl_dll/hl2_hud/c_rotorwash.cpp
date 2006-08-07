@@ -24,6 +24,8 @@ CLIENTEFFECT_REGISTER_END()
 //  Rotorwash particle emitter
 // ==============================================
 
+#ifndef _XBOX
+
 class WashEmitter : public CSimpleEmitter
 {
 public:
@@ -68,6 +70,8 @@ private:
 	WashEmitter( const WashEmitter & );
 };
 
+#endif // !_XBOX
+
 // ==============================================
 //  Rotorwash entity
 // ==============================================
@@ -88,11 +92,15 @@ public:
 	
 protected:
 
-	void InitSpawner( void );
-
 	float	m_flAltitude;
 
+	PMaterialHandle m_hWashMaterial[2];
+	PMaterialHandle m_hWaterMaterial[2];
+
+#ifndef _XBOX
+	void InitSpawner( void );
 	CSmartPtr<WashEmitter>	m_pSimple;
+#endif // !XBOX
 };
 
 IMPLEMENT_CLIENTCLASS_DT( C_RotorWashEmitter, DT_RotorWashEmitter, CRotorWashEmitter)
@@ -104,9 +112,16 @@ END_RECV_TABLE()
 //-----------------------------------------------------------------------------
 C_RotorWashEmitter::C_RotorWashEmitter( void )
 {
-	m_pSimple = NULL;
+#ifndef _XBOX
+	m_pSimple =  NULL;
+	m_hWashMaterial[0] = NULL;
+	m_hWashMaterial[1] = NULL;
+	m_hWaterMaterial[0] = NULL;
+	m_hWaterMaterial[1] = NULL;
+#endif // !_XBOX
 }
 
+#ifndef _XBOX
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -118,6 +133,7 @@ void C_RotorWashEmitter::InitSpawner( void )
 	m_pSimple = WashEmitter::Create( "wash" );
 	m_pSimple->SetNearClip( 128, 256 );
 }
+#endif // !XBOX
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -131,7 +147,9 @@ void C_RotorWashEmitter::OnDataChanged( DataUpdateType_t updateType )
 	{
 		SetNextClientThink( gpGlobals->curtime + ROTORWASH_THINK_INTERVAL );
 
+#ifndef _XBOX
 		InitSpawner();
+#endif // !XBOX
 	}
 }
 
@@ -143,7 +161,6 @@ void C_RotorWashEmitter::ClientThink( void )
 	SetNextClientThink( gpGlobals->curtime + ROTORWASH_THINK_INTERVAL );
 
 	trace_t	tr;
-
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin()+(Vector(0, 0, -1024)), (MASK_SOLID_BRUSHONLY|CONTENTS_WATER|CONTENTS_SLIME), NULL, COLLISION_GROUP_NONE, &tr );
 
 	if ( /*!m_bIgnoreSolid && */(tr.fraction == 1.0f || tr.startsolid || tr.allsolid) )
@@ -152,6 +169,8 @@ void C_RotorWashEmitter::ClientThink( void )
 	// If we hit the skybox, don't do it either
 	if ( tr.surface.flags & SURF_SKY )
 		return;
+
+	float heightScale = RemapValClamped( tr.fraction * 1024, 512, 1024, 1.0f, 0.0f );
 
 	Vector vecDustColor;
 
@@ -174,6 +193,8 @@ void C_RotorWashEmitter::ClientThink( void )
 		vecDustColor.z = 0.25f;
 	}
 
+#ifndef _XBOX
+
 	InitSpawner();
 
 	if ( m_pSimple.IsValid() == false )
@@ -181,37 +202,38 @@ void C_RotorWashEmitter::ClientThink( void )
 
 	m_pSimple->SetSortOrigin( GetAbsOrigin() );
 
-	SimpleParticle	*pParticle;
-
-	float heightScale = RemapValClamped( tr.fraction * 1024, 512, 1024, 1.0f, 0.0f );
-
-	Vector	offset;
-
-	PMaterialHandle	hMaterial[2];
+	PMaterialHandle	*hMaterial;
 	
+	// Cache and set our material based on the surface we're over (ie. water)
 	if ( tr.contents & (CONTENTS_WATER|CONTENTS_SLIME) )
 	{
-		hMaterial[0] = m_pSimple->GetPMaterial("effects/splash1");
-		hMaterial[1] = m_pSimple->GetPMaterial("effects/splash2");
+		if ( m_hWaterMaterial[0] == NULL )
+		{
+			m_hWaterMaterial[0] = m_pSimple->GetPMaterial("effects/splash1");
+			m_hWaterMaterial[1] = m_pSimple->GetPMaterial("effects/splash2");
+		}
+		hMaterial = m_hWaterMaterial;
 	}
 	else
 	{
-		hMaterial[0] = m_pSimple->GetPMaterial("particle/particle_smokegrenade");
-		hMaterial[1] = m_pSimple->GetPMaterial("particle/particle_noisesphere");
+		if ( m_hWashMaterial[0] == NULL )
+		{
+			m_hWashMaterial[0] = m_pSimple->GetPMaterial("particle/particle_smokegrenade");
+			m_hWashMaterial[1] = m_pSimple->GetPMaterial("particle/particle_noisesphere");
+		}
+		hMaterial = m_hWashMaterial;
 	}
 
-	Vector	color;
+#endif // !XBOX
 
 	// If we're above water, make ripples
 	if ( tr.contents & (CONTENTS_WATER|CONTENTS_SLIME) )
 	{
 		float flScale = random->RandomFloat( 7.5f, 8.5f );
 
-		trace_t	watertrace;
 		Vector	color = Vector( 0.8f, 0.8f, 0.75f );
 		Vector startPos = tr.endpos + Vector(0,0,8);
 		Vector endPos = tr.endpos + Vector(0,0,-64);
-		//UTIL_TraceLine( startPos, endPos, MASK_WATER, NULL, COLLISION_GROUP_NONE, &watertrace );
 
 		if ( tr.fraction < 1.0f )
 		{
@@ -233,23 +255,24 @@ void C_RotorWashEmitter::ClientThink( void )
 		}
 	}
 
-	int	numRingSprites = 32;
-	float yaw;
-	Vector forward, vRight, vForward;
+#ifndef _XBOX
+	int		numRingSprites = 32;
+	float	yaw = random->RandomFloat( 0, 2*M_PI ); // Randomly placed on the unit circle
+	float	yawIncr = (2*M_PI) / numRingSprites;
+	Vector	vecForward;
+	Vector	offset;
+	SimpleParticle	*pParticle;
 
-	vForward = Vector( 0, 1, 0 );
-	vRight = Vector( 1, 0, 0 );
-
-	//Find area ambient light color and use it to tint smoke
-	//Vector	worldLight = WorldGetLightForPoint( offset, true );
-
+	// Draw the rings
 	for ( int i = 0; i < numRingSprites; i++ )
 	{
-		yaw = ( (float) i / (float) numRingSprites ) * 360.0f;
-		forward = ( vRight * sin( DEG2RAD( yaw) ) ) + ( vForward * cos( DEG2RAD( yaw ) ) );
-		VectorNormalize( forward );
+		// Get our x,y on the unit circle
+		SinCos( yaw, &vecForward.y, &vecForward.x );
+		
+		// Increment ahead
+		yaw += yawIncr;
 
-		offset = ( RandomVector( -4.0f, 4.0f ) + tr.endpos ) + ( forward * 128.0f );
+		offset = ( RandomVector( -4.0f, 4.0f ) + tr.endpos ) + ( vecForward * 128.0f );
 
 		pParticle = (SimpleParticle *) m_pSimple->AddParticle( sizeof(SimpleParticle), hMaterial[random->RandomInt(0,1)], offset );
 
@@ -258,7 +281,7 @@ void C_RotorWashEmitter::ClientThink( void )
 			pParticle->m_flLifetime = 0.0f;
 			pParticle->m_flDieTime	= random->RandomFloat( 0.25f, 1.0f );
 
-			pParticle->m_vecVelocity = forward * random->RandomFloat( 1000, 1500 );
+			pParticle->m_vecVelocity = vecForward * random->RandomFloat( 1000, 1500 );
 		
 			#if __EXPLOSION_DEBUG
 			debugoverlay->AddLineOverlay( m_vecOrigin, m_vecOrigin + pParticle->m_vecVelocity, 255, 0, 0, false, 3 );
@@ -285,4 +308,5 @@ void C_RotorWashEmitter::ClientThink( void )
 			pParticle->m_flRollDelta	= random->RandomFloat( -16.0f, 16.0f );
 		}
 	}
+#endif // !XBOX
 }

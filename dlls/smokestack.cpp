@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "smokestack.h"
 #include "particle_light.h"
+#include "filesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -23,6 +24,7 @@ IMPLEMENT_SERVERCLASS_ST(CSmokeStack, DT_SmokeStack)
 	SendPropFloat(SENDINFO(m_JetLength), 0, SPROP_NOSCALE),
 	SendPropInt(SENDINFO(m_bEmit), 1, SPROP_UNSIGNED),
 	SendPropFloat(SENDINFO(m_flBaseSpread), 0, SPROP_NOSCALE),
+	SendPropFloat(SENDINFO( m_flRollSpeed ), 0, SPROP_NOSCALE ),
 
 	// Note: the base color is specified in the smokestack entity, but the directional
 	// and ambient light must come from env_particlelight entities.
@@ -59,6 +61,7 @@ BEGIN_DATADESC( CSmokeStack )
 	DEFINE_KEYFIELD( m_InitialState,	FIELD_BOOLEAN,	"InitialState" ),
 	DEFINE_KEYFIELD( m_flBaseSpread,	FIELD_FLOAT,	"BaseSpread" ),
 	DEFINE_KEYFIELD( m_flTwist,		FIELD_FLOAT,	"Twist" ),
+	DEFINE_KEYFIELD( m_flRollSpeed, FIELD_FLOAT,	"Roll" ),
 
 	DEFINE_FIELD( m_strMaterialModel, FIELD_STRING ),
 	DEFINE_FIELD( m_iMaterialModel,FIELD_INTEGER ),
@@ -103,6 +106,7 @@ CSmokeStack::CSmokeStack()
 	m_vWind.GetForModify().Init();
 	m_WindAngle = m_WindSpeed = 0;
 	m_iMaterialModel = -1;
+	m_flRollSpeed = 0.0f;
 }
 
 
@@ -195,7 +199,27 @@ bool CSmokeStack::KeyValue( const char *szKeyName, const char *szValue )
 			m_strMaterialModel = AllocPooledString( str );
 		}
 		
-		m_iMaterialModel = PrecacheModel( STRING( m_strMaterialModel ) );
+		const char *pName = STRING( m_strMaterialModel );
+		char szStrippedName[512];
+
+		m_iMaterialModel = PrecacheModel( pName );
+		Q_StripExtension( pName, szStrippedName, Q_strlen(pName)+1 );
+
+		int iLength = Q_strlen( szStrippedName );
+		szStrippedName[iLength-1] = '\0';
+
+		int iCount = 1;
+		char str[512];
+		Q_snprintf( str, sizeof( str ), "%s%d.vmt", szStrippedName, iCount );
+		
+		while ( filesystem->FileExists( UTIL_VarArgs( "materials/%s", str ) ) )
+		{
+			PrecacheModel( str );
+			iCount++;
+			
+			Q_snprintf( str, sizeof( str ), "%s%d.vmt", szStrippedName, iCount );
+		}
+
 		return true;
 	}
 	else

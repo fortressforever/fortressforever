@@ -33,7 +33,12 @@ void ACTracerCallback( const CEffectData &data )
 	Vector vecStart = GetTracerOrigin( data );
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
+
+#ifdef GAME_DLL
 	int iEntIndex = data.m_nEntIndex;
+#else
+	int iEntIndex = data.m_hEntity.GetEntryIndex();
+#endif
 
 	if ( iEntIndex && iEntIndex == player->index )
 	{
@@ -93,7 +98,12 @@ void SGTracerCallback( const CEffectData &data )
 	Vector vecStart = GetTracerOrigin( data );
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
+
+#ifdef GAME_DLL
 	int iEntIndex = data.m_nEntIndex;
+#else
+	int iEntIndex = data.m_hEntity.GetEntryIndex();
+#endif
 
 	if ( iEntIndex && iEntIndex == player->index )
 	{

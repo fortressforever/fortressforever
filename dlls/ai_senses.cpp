@@ -18,14 +18,18 @@
 #include "tier0/memdbgon.h"
 
 // Use this to disable caching and other optimizations in senses
-//#define AI_SENSES_HOMOGENOUS_TREATMENT 1
-//#define DEBUG_SENSES 1
+#define DEBUG_SENSES 1
 
 #ifdef DEBUG_SENSES
 #define AI_PROFILE_SENSES(tag) AI_PROFILE_SCOPE(tag)
 #else
 #define AI_PROFILE_SENSES(tag) ((void)0)
 #endif
+
+const float AI_STANDARD_NPC_SEARCH_TIME = .25;
+const float AI_EFFICIENT_NPC_SEARCH_TIME = .35;
+const float AI_HIGH_PRIORITY_SEARCH_TIME = 0.15;
+const float AI_MISC_SEARCH_TIME  = 0.45;
 
 //-----------------------------------------------------------------------------
 
@@ -62,9 +66,11 @@ BEGIN_SIMPLE_DATADESC( CAI_Senses )
 	DEFINE_UTLVECTOR(m_SeenNPCs, 		FIELD_EHANDLE ),
 	DEFINE_UTLVECTOR(m_SeenMisc, 		FIELD_EHANDLE ),
 	//								m_SeenArrays		(not saved, rebuilt)
-	DEFINE_EMBEDDED(m_HighPriorityTimer ),
-	DEFINE_EMBEDDED(m_NPCsTimer ),
-	DEFINE_EMBEDDED(m_MiscTimer ),
+
+	// Could fold these three and above timer into one concept, but would invalidate savegames
+	DEFINE_FIELD( m_TimeLastLookHighPriority, 	FIELD_TIME	),
+	DEFINE_FIELD( m_TimeLastLookNPCs, 	FIELD_TIME	),
+	DEFINE_FIELD( m_TimeLastLookMisc, 	FIELD_TIME	),
 
 END_DATADESC()
 
@@ -143,10 +149,10 @@ bool CAI_Senses::ShouldSeeEntity( CBaseEntity *pSightEnt )
 	if ( pSightEnt->m_spawnflags & SF_NPC_WAIT_TILL_SEEN )
 		return false;
 
-	if ( !pSightEnt->CanBeSeen() )
+	if ( !pSightEnt->CanBeSeenBy( GetOuter() ) )
 		return false;
 	
-	if ( !GetOuter()->QuerySeeEntity( pSightEnt ) )
+	if ( !GetOuter()->QuerySeeEntity( pSightEnt, true ) )
 		return false;
 
 	return true;
@@ -357,10 +363,10 @@ bool CAI_Senses::Look( CBaseEntity *pSightEnt )
 int CAI_Senses::LookForHighPriorityEntities( int iDistance )
 {
 	int nSeen = 0;
-	if ( m_HighPriorityTimer.Expired() )
+	if ( gpGlobals->curtime - m_TimeLastLookHighPriority > AI_HIGH_PRIORITY_SEARCH_TIME )
 	{
 		AI_PROFILE_SENSES(CAI_Senses_LookForHighPriorityEntities);
-		m_HighPriorityTimer.Reset();
+		m_TimeLastLookHighPriority = gpGlobals->curtime;
 		
 		BeginGather();
 	
@@ -381,24 +387,6 @@ int CAI_Senses::LookForHighPriorityEntities( int iDistance )
 			}
 		}
 	
-#if OTHER_IMPORTANT_ENTITIES_NOT_BAKED
-		// @TODO (toml 10-18-02): for now, not doing this so dont have to deal with
-		// enemy or target changing, requiring a fixup of cached data
-		
-		// Enemy
-		if ( GetOuter()->GetEnemy() && !GetOuter()->GetEnemy()->IsPlayer() )
-		{
-			if ( origin.DistToSqr(GetOuter()->GetEnemy()->GetAbsOrigin()) < distSq && Look( GetOuter()->GetEnemy() ) )
-				nSeen++;
-		}
-		
-		// Target
-		if ( GetOuter()->GetTarget() && !GetOuter()->GetTarget()->IsPlayer() )
-		{
-			if ( origin.DistToSqr(GetOuter()->GetTarget()->GetAbsOrigin()) < distSq && Look( GetOuter()->GetTarget() ) )
-				nSeen++;
-		}
-#endif
 		EndGather( nSeen, &m_SeenHighPriority );
     }
     else
@@ -421,28 +409,27 @@ int CAI_Senses::LookForNPCs( int iDistance )
 	bool bRemoveStaleFromCache = false;
 	float distSq = ( iDistance * iDistance );
 	const Vector &origin = GetAbsOrigin();
-	if ( m_NPCsTimer.Expired() )
+	AI_Efficiency_t efficiency = GetOuter()->GetEfficiency();
+	float timeNPCs = ( efficiency < AIE_VERY_EFFICIENT ) ? AI_STANDARD_NPC_SEARCH_TIME : AI_EFFICIENT_NPC_SEARCH_TIME;
+	if ( gpGlobals->curtime - m_TimeLastLookNPCs > timeNPCs )
 	{
 		AI_PROFILE_SENSES(CAI_Senses_LookForNPCs);
-		AI_Efficiency_t efficiency = GetOuter()->GetEfficiency();
 
-		m_NPCsTimer.Reset( ( efficiency < AIE_VERY_EFFICIENT ) ? AI_STANDARD_NPC_SEARCH_TIME : AI_EFFICIENT_NPC_SEARCH_TIME );
+		m_TimeLastLookNPCs = gpGlobals->curtime;
 
-		if ( GetOuter()->GetEfficiency() < AIE_SUPER_EFFICIENT )
+		if ( efficiency < AIE_SUPER_EFFICIENT )
 		{
-			int nSeen = 0;
+			int i, nSeen = 0;
 
 			BeginGather();
 
 			CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 			
-			for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
+			for ( i = 0; i < g_AI_Manager.NumAIs(); i++ )
 			{
-#if OTHER_IMPORTANT_ENTITIES_NOT_BAKED
-				if ( ppAIs[i] != GetOuter()->GetTarget() && ppAIs[i] != GetOuter()->GetEnemy() )
-#endif
+				if ( ppAIs[i] != GetOuter() && ( ppAIs[i]->ShouldNotDistanceCull() || origin.DistToSqr(ppAIs[i]->GetAbsOrigin()) < distSq ) )
 				{
-					if ( ppAIs[i] != GetOuter() && ( ppAIs[i]->ShouldNotDistanceCull() || origin.DistToSqr(ppAIs[i]->GetAbsOrigin()) < distSq ) && Look( ppAIs[i] ) )
+					if ( Look( ppAIs[i] ) )
 					{
 						nSeen++;
 					}
@@ -485,10 +472,10 @@ int CAI_Senses::LookForObjects( int iDistance )
 	const int BOX_QUERY_MASK = FL_OBJECT;
 	int	nSeen = 0;
 
-	if ( m_MiscTimer.Expired() )
+	if ( gpGlobals->curtime - m_TimeLastLookMisc > AI_MISC_SEARCH_TIME )
 	{
 		AI_PROFILE_SENSES(CAI_Senses_LookForObjects);
-		m_MiscTimer.Reset();
+		m_TimeLastLookMisc = gpGlobals->curtime;
 		
 		BeginGather();
 
@@ -521,6 +508,19 @@ int CAI_Senses::LookForObjects( int iDistance )
     }
 
 	return nSeen;
+}
+
+//-----------------------------------------------------------------------------
+
+float CAI_Senses::GetTimeLastUpdate( CBaseEntity *pEntity )
+{
+	if ( !pEntity )
+		return 0;
+	if ( pEntity->IsPlayer() )
+		return m_TimeLastLookHighPriority;
+	if ( pEntity->IsNPC() )
+		return m_TimeLastLookNPCs;
+	return m_TimeLastLookMisc;
 }
 
 //-----------------------------------------------------------------------------
@@ -568,10 +568,11 @@ CSound* CAI_Senses::GetNextHeardSound( AISoundIter_t *pIter )
 
 //-----------------------------------------------------------------------------
 
-CSound *CAI_Senses::GetClosestSound( bool fScent, int validTypes )
+CSound *CAI_Senses::GetClosestSound( bool fScent, int validTypes, bool bUsePriority )
 {
 	float flBestDist = MAX_COORD_RANGE*MAX_COORD_RANGE;// so first nearby sound will become best so far.
 	float flDist;
+	int iBestPriority = SOUND_PRIORITY_VERY_LOW;
 	
 	AISoundIter_t iter;
 	
@@ -587,12 +588,17 @@ CSound *CAI_Senses::GetClosestSound( bool fScent, int validTypes )
 		{
 			if( pCurrent->IsSoundType( validTypes ) && !GetOuter()->ShouldIgnoreSound( pCurrent ) )
 			{
-				flDist = ( pCurrent->GetSoundOrigin() - earPosition ).LengthSqr();
-
-				if ( flDist < flBestDist )
+				if( !bUsePriority || GetOuter()->GetSoundPriority(pCurrent) >= iBestPriority )
 				{
-					pResult = pCurrent;
-					flBestDist = flDist;
+					flDist = ( pCurrent->GetSoundOrigin() - earPosition ).LengthSqr();
+
+					if ( flDist < flBestDist )
+					{
+						pResult = pCurrent;
+						flBestDist = flDist;
+
+						iBestPriority = GetOuter()->GetSoundPriority(pCurrent);
+					}
 				}
 			}
 		}
@@ -625,6 +631,12 @@ void CAI_Senses::PerformSensing( void )
 
 void CAI_SensedObjectsManager::Init()
 {
+	CBaseEntity *pEnt = NULL;
+	while ( ( pEnt = gEntList.NextEnt( pEnt ) ) != NULL )
+	{
+		OnEntitySpawned( pEnt );
+	}
+
 	gEntList.AddListenerEntity( this );
 }
 
@@ -689,6 +701,9 @@ void CAI_SensedObjectsManager::OnEntityDeleted( CBaseEntity *pEntity )
 
 void CAI_SensedObjectsManager::AddEntity( CBaseEntity *pEntity )
 {
+	if ( m_SensedObjects.Find( pEntity ) != m_SensedObjects.InvalidIndex() )
+		return;
+
 	// We shouldn't be adding players or NPCs to this list
 	Assert( !pEntity->IsPlayer() && !pEntity->IsNPC() );
 

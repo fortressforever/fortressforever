@@ -17,7 +17,7 @@
 
 class IEntityListener;
 
-class CBaseEntityClassList
+abstract_class CBaseEntityClassList
 {
 public:
 	CBaseEntityClassList();
@@ -56,6 +56,13 @@ public:
 	}
 
 	static T *m_pClassList;
+};
+
+// Derive a class from this if you want to filter entity list searches
+abstract_class IEntityFindFilter
+{
+public:
+	virtual bool ShouldFindEntity( CBaseEntity *pEntity ) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -104,6 +111,7 @@ public:
 	void PostClientMessagesSent();
 
 	// entity is about to be removed, notify the listeners
+	void NotifyCreateEntity( CBaseEntity *pEnt );
 	void NotifySpawn( CBaseEntity *pEnt );
 	void NotifyRemoveEntity( CBaseHandle hEnt );
 	// iteration functions
@@ -128,35 +136,36 @@ public:
 	// search functions
 	bool		 IsEntityPtr( void *pTest );
 	CBaseEntity *FindEntityByClassname( CBaseEntity *pStartEntity, const char *szName );
-	CBaseEntity *FindEntityByName( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pActivator, CBaseEntity *pCaller = NULL );
-	CBaseEntity *FindEntityByName( CBaseEntity *pStartEntity, string_t iszName, CBaseEntity *pActivator, CBaseEntity *pCaller = NULL )
+	CBaseEntity *FindEntityByName( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL, IEntityFindFilter *pFilter = NULL );
+	CBaseEntity *FindEntityByName( CBaseEntity *pStartEntity, string_t iszName, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL, IEntityFindFilter *pFilter = NULL )
 	{
-		return FindEntityByName( pStartEntity, STRING(iszName), pActivator, pCaller );
+		return FindEntityByName( pStartEntity, STRING(iszName), pSearchingEntity, pActivator, pCaller, pFilter );
 	}
 	CBaseEntity *FindEntityInSphere( CBaseEntity *pStartEntity, const Vector &vecCenter, float flRadius );
 	CBaseEntity *FindEntityByTarget( CBaseEntity *pStartEntity, const char *szName );
 	CBaseEntity *FindEntityByModel( CBaseEntity *pStartEntity, const char *szModelName );
 
-	CBaseEntity *FindEntityByNameNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL );
-	CBaseEntity *FindEntityByNameWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL );
+	CBaseEntity *FindEntityByNameNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
+	CBaseEntity *FindEntityByNameWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
 	CBaseEntity *FindEntityByClassnameNearest( const char *szName, const Vector &vecSrc, float flRadius );
 	CBaseEntity *FindEntityByClassnameWithin( CBaseEntity *pStartEntity , const char *szName, const Vector &vecSrc, float flRadius );
 
-	CBaseEntity *FindEntityGeneric( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL );
-	CBaseEntity *FindEntityGenericWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL );
-	CBaseEntity *FindEntityGenericNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL );
+	CBaseEntity *FindEntityGeneric( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
+	CBaseEntity *FindEntityGenericWithin( CBaseEntity *pStartEntity, const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
+	CBaseEntity *FindEntityGenericNearest( const char *szName, const Vector &vecSrc, float flRadius, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pActivator = NULL, CBaseEntity *pCaller = NULL );
 	
 	CBaseEntity *FindEntityNearestFacing( const Vector &origin, const Vector &facing, float threshold);
 	CBaseEntity *FindEntityClassNearestFacing( const Vector &origin, const Vector &facing, float threshold, char *classname);
 	CBaseEntity *FindEntityByNetname( CBaseEntity *pStartEntity, const char *szModelName );
 
+	CBaseEntity *FindEntityProcedural( const char *szName, CBaseEntity *pActivator = NULL, CBaseEntity *pSearchingEntity = NULL, CBaseEntity *pCaller = NULL );
+	
 	CBaseEntity *FindEntityByOwner(CBaseEntity *pStartEntity, const CBaseEntity *pOwner);	// |-- Mirv: Useful method
 	CBaseEntity *FindEntityByClassT( CBaseEntity *pStartEntity, int szClassT );	// |-- Mulch
 	CBaseEntity *FindEntityByOwnerAndClassname( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, const char *szClassname ); // |- Mulch
 	CBaseEntity *FindEntityByOwnerAndClassT( CBaseEntity *pStartEntity, const CBaseEntity *pOwner, int szClassT ); // |- Mulch
 
 	CGlobalEntityList();
-
 
 // CBaseEntityList overrides.
 protected:
@@ -216,7 +225,7 @@ inline CBaseEntity* CGlobalEntityList::GetBaseEntity( CBaseHandle hEnt ) const
 template <class ENT_TYPE>
 inline bool FindEntityByName( const char *pszName, ENT_TYPE **ppResult)
 {
-	CBaseEntity *pBaseEntity = gEntList.FindEntityByName( NULL, pszName, NULL );
+	CBaseEntity *pBaseEntity = gEntList.FindEntityByName( NULL, pszName );
 	
 	if ( pBaseEntity )
 		*ppResult = dynamic_cast<ENT_TYPE *>( pBaseEntity );
@@ -229,14 +238,14 @@ inline bool FindEntityByName( const char *pszName, ENT_TYPE **ppResult)
 template <>
 inline bool FindEntityByName<CBaseEntity>( const char *pszName, CBaseEntity **ppResult)
 {
-	*ppResult = gEntList.FindEntityByName( NULL, pszName, NULL );
+	*ppResult = gEntList.FindEntityByName( NULL, pszName );
 	return ( *ppResult != NULL );
 }
 
 template <>
 inline bool FindEntityByName<CAI_BaseNPC>( const char *pszName, CAI_BaseNPC **ppResult)
 {
-	CBaseEntity *pBaseEntity = gEntList.FindEntityByName( NULL, pszName, NULL );
+	CBaseEntity *pBaseEntity = gEntList.FindEntityByName( NULL, pszName );
 	
 	if ( pBaseEntity )
 		*ppResult = pBaseEntity->MyNPCPointer();
@@ -303,7 +312,7 @@ struct notify_system_event_params_t
 };
 
 
-class INotify
+abstract_class INotify
 {
 public:
 	// Add notification for an entity

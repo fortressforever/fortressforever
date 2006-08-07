@@ -64,6 +64,8 @@ public:
 		where state is 1 on selection, 0 on deselection
 	*/
 
+	void		SetVerticalBufferPixels( int buffer );
+
 protected:
 	// overrides
 	virtual void OnSizeChanged(int wide, int tall);

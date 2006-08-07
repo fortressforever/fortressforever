@@ -22,6 +22,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define STICK_EXTENTS	400.0f
+
+
 #define DUST_SPEED			5		// speed at which dust starts
 #define REAR_AXLE			1		// indexes of axlex
 #define	FRONT_AXLE			0
@@ -31,6 +34,10 @@
 #define BRAKE_BACK_FORWARD_SCALAR	2.0f
 ConVar r_vehicleDrawDebug( "r_vehicleDrawDebug", "0", FCVAR_CHEAT );
 ConVar r_vehicleBrakeRate( "r_vehicleBrakeRate", "1.5", FCVAR_CHEAT );
+
+ConVar xbox_throttlebias("xbox_throttlebias", "100", FCVAR_ARCHIVE );
+ConVar xbox_throttlespoof("xbox_throttlespoof", "200", FCVAR_ARCHIVE );
+ConVar xbox_autothrottle("xbox_autothrottle", "1", FCVAR_ARCHIVE );
 
 // remaps an angular variable to a 3 band function:
 // 0 <= t < start :		f(t) = 0
@@ -669,12 +676,12 @@ int CFourWheelVehiclePhysics::DrawDebugTextOverlays( int nOffset )
 	const vehicle_operatingparams_t &params = m_pVehicle->GetOperatingParams();
 	char tempstr[512];
 	Q_snprintf( tempstr,sizeof(tempstr), "Speed %.1f  T/S/B (%.0f/%.0f/%.1f)", params.speed, m_controls.throttle, m_controls.steering, m_controls.brake );
-	NDebugOverlay::EntityText( m_pOuter->entindex(), nOffset, tempstr, 0 );
+	m_pOuter->EntityText( nOffset, tempstr, 0 );
 	nOffset++;
 	Msg( "%s", tempstr );
 
 	Q_snprintf( tempstr,sizeof(tempstr), "Gear: %d, RPM %4d", params.gear, (int)params.engineRPM );
-	NDebugOverlay::EntityText( m_pOuter->entindex(), nOffset, tempstr, 0 );
+	m_pOuter->EntityText( nOffset, tempstr, 0 );
 	nOffset++;
 	Msg( " %s\n", tempstr );
 
@@ -1023,15 +1030,25 @@ void CFourWheelVehiclePhysics::SteeringTurn( float carSpeed, const vehicleparams
 //-----------------------------------------------------------------------------
 void CFourWheelVehiclePhysics::SteeringTurnAnalog( float carSpeed, const vehicleparams_t &vehicleData, float sidemove )
 {
+
+	// OLD Code
+#if 0
 	float flSteeringRate = STEERING_BASE_RATE;
 
-	float factor = clamp( fabs( sidemove ) / 400.0f, 0.0f, 1.0f );
+	float factor = clamp( fabs( sidemove ) / STICK_EXTENTS, 0.0f, 1.0f );
 
 	factor *= 30;
 	flSteeringRate *= log( factor );
 	flSteeringRate *= gpGlobals->frametime;
 
-	SetSteering( sidemove < 0.0f ? 1 : -1, flSteeringRate );
+	SetSteering( sidemove < 0.0f ? -1 : 1, flSteeringRate );
+#else
+	// This is tested with gamepads with analog sticks.  It gives full analog control
+	// allowing the player to hold shallow turns.
+	float steering = sidemove / STICK_EXTENTS;
+	steering = clamp( steering, -1.0f, 1.0f );
+	SetSteering( steering, 0 );
+#endif
 
 	// Neutralize
 	m_nTurnLeftCount = 2;
@@ -1052,6 +1069,45 @@ void CFourWheelVehiclePhysics::UpdateDriverControls( CUserCmd *cmd, float flFram
 	// Get current speed in miles/hour.
 	float flCarSign = carState.speed >= 0.0f ? 1.0f : -1.0f;
 	float carSpeed = fabs(INS2MPH(carState.speed));
+
+#ifdef _XBOX
+	float in = cmd->sidemove;
+	float out;
+
+	if( cmd->forwardmove >= 0.0f )
+	{
+		bool negative = (in < 0);
+		in = fabs(in);
+
+		if( in <= 150 )
+		{
+			out = RemapVal( in, 0, 150, 0, 100 );
+		}
+		else
+		{
+			out = RemapVal( in, 150, 400, 100, 400 );
+		}
+
+		if( negative )
+		{
+			out = -out;
+		}
+
+		cmd->sidemove = out;
+	}
+
+	// If going forward and turning hard, keep the throttle applied.
+	if( xbox_autothrottle.GetBool() && cmd->forwardmove > 0.0f )
+	{
+		if( carSpeed > GetMaxSpeed() * 0.75 )
+		{
+			if( fabs(cmd->sidemove) > cmd->forwardmove )
+			{
+				cmd->forwardmove = STICK_EXTENTS;
+			}
+		}
+	}
+#endif//XBOX
 
 #if 0
 	// Set save data.
@@ -1083,6 +1139,140 @@ void CFourWheelVehiclePhysics::UpdateDriverControls( CUserCmd *cmd, float flFram
 	m_controls.brakepedal = false;	
 	bool bThrottle;
 
+	//-------------------------------------------------------------------------
+	// Analog throttle biasing - This code gives the player a bit of control stick
+	// 'slop' in the opposite direction that they are driving. If a player is 
+	// driving forward and makes a hard turn in which the stick actually goes
+	// below neutral (toward reverse), this code continues to propel the car 
+	// forward unless the player makes a significant motion towards reverse.
+	// (The inverse is true when driving in reverse and the stick is moved slightly forward)
+	//-------------------------------------------------------------------------
+	CBaseEntity *pDriver = m_pOuterServerVehicle->GetDriver();
+	CBasePlayer *pPlayerDriver;
+	float flBiasThreshold = xbox_throttlebias.GetFloat();
+
+	if( pDriver && pDriver->IsPlayer() )
+	{
+		pPlayerDriver = dynamic_cast<CBasePlayer*>(pDriver);
+
+		if( cmd->forwardmove == 0.0f && (fabs(cmd->sidemove) < 200.0f) )
+		{
+			// If the stick goes neutral, clear out the bias. When the bias is neutral, it will begin biasing
+			// in whichever direction the user next presses the analog stick.
+			pPlayerDriver->SetVehicleAnalogControlBias( VEHICLE_ANALOG_BIAS_NONE );
+		}
+		else if( cmd->forwardmove > 0.0f)
+		{
+			if( pPlayerDriver->GetVehicleAnalogControlBias() == VEHICLE_ANALOG_BIAS_REVERSE )
+			{
+				// Player is pushing forward, but the controller is currently biased for reverse driving.
+				// Must pass a threshold to be accepted as forward input. Otherwise we just spoof a reduced reverse input 
+				// to keep the car moving in the direction the player probably expects.
+				if( cmd->forwardmove < flBiasThreshold )
+				{
+					cmd->forwardmove = -xbox_throttlespoof.GetFloat();
+				}
+				else
+				{
+					// Passed the threshold. Allow the direction change to occur.
+					pPlayerDriver->SetVehicleAnalogControlBias( VEHICLE_ANALOG_BIAS_FORWARD );
+				}
+			}
+			else if( pPlayerDriver->GetVehicleAnalogControlBias() == VEHICLE_ANALOG_BIAS_NONE )
+			{
+				pPlayerDriver->SetVehicleAnalogControlBias( VEHICLE_ANALOG_BIAS_FORWARD );
+			}
+		}
+		else if( cmd->forwardmove < 0.0f )
+		{
+			if( pPlayerDriver->GetVehicleAnalogControlBias() == VEHICLE_ANALOG_BIAS_FORWARD )
+			{
+				// Inverse of above logic
+				if( cmd->forwardmove > -flBiasThreshold )
+				{
+					cmd->forwardmove = xbox_throttlespoof.GetFloat();
+				}
+				else
+				{
+					pPlayerDriver->SetVehicleAnalogControlBias( VEHICLE_ANALOG_BIAS_REVERSE );
+				}
+			}
+			else if( pPlayerDriver->GetVehicleAnalogControlBias() == VEHICLE_ANALOG_BIAS_NONE )
+			{
+				pPlayerDriver->SetVehicleAnalogControlBias( VEHICLE_ANALOG_BIAS_REVERSE );
+			}
+		}
+	}
+
+#ifdef _XBOX
+	//=========================
+	//=========================
+	if( cmd->forwardmove > 0.0f )
+	{
+		float flAnalogThrottle = cmd->forwardmove / STICK_EXTENTS;
+
+		flAnalogThrottle = clamp( flAnalogThrottle, 0.25f, 1.0f );
+
+		bThrottle = true;
+		if ( m_controls.throttle < 0 )
+		{
+			m_controls.throttle = 0;
+		}
+
+		float flMaxThrottle = max( 0.1, m_maxThrottle - ( m_maxThrottle * m_flThrottleReduction ) );
+		m_controls.throttle = Approach( flMaxThrottle * flAnalogThrottle, m_controls.throttle, flFrameTime * m_throttleRate );
+
+		// Apply the brake.
+		if ( ( flCarSign < 0.0f ) && m_controls.bHasBrakePedal )
+		{
+			m_controls.brake = Approach( BRAKE_MAX_VALUE, m_controls.brake, flFrameTime * r_vehicleBrakeRate.GetFloat() * BRAKE_BACK_FORWARD_SCALAR );
+			m_controls.brakepedal = true;	
+			m_controls.throttle = 0.0f;
+			bThrottle = false;
+		}
+		else
+		{
+			m_controls.brake = 0.0f;
+		}
+	}
+	else if( cmd->forwardmove < 0.0f )
+	{
+		float flAnalogBrake = fabs(cmd->forwardmove / STICK_EXTENTS);
+
+		flAnalogBrake = clamp( flAnalogBrake, 0.25f, 1.0f );
+
+		bThrottle = true;
+		if ( m_controls.throttle > 0 )
+		{
+			m_controls.throttle = 0;
+		}
+
+		float flMaxThrottle = min( -0.1, m_flMaxRevThrottle - ( m_flMaxRevThrottle * m_flThrottleReduction ) );
+		m_controls.throttle = Approach( flMaxThrottle * flAnalogBrake, m_controls.throttle, flFrameTime * m_throttleRate );
+
+		// Apply the brake.
+		if ( ( flCarSign > 0.0f ) && m_controls.bHasBrakePedal )
+		{
+			m_controls.brake = Approach( BRAKE_MAX_VALUE, m_controls.brake, flFrameTime * r_vehicleBrakeRate.GetFloat() );
+			m_controls.brakepedal = true;
+			m_controls.throttle = 0.0f;
+			bThrottle = false;
+		}
+		else
+		{
+			m_controls.brake = 0.0f;
+		}
+	}
+	else
+	{
+		bThrottle = false;
+		m_controls.throttle = 0;
+		m_controls.brake = 0.0f;
+	}
+
+	//=========================
+	//=========================
+#else
 	if ( nButtons & IN_FORWARD )
 	{
 		bThrottle = true;
@@ -1137,6 +1327,7 @@ void CFourWheelVehiclePhysics::UpdateDriverControls( CUserCmd *cmd, float flFram
 		m_controls.throttle = 0;
 		m_controls.brake = 0.0f;
 	}
+#endif//_XBOX
 
 	if ( ( nButtons & IN_SPEED ) && !IsEngineDisabled() )
 	{

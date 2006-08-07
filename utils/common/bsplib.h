@@ -25,6 +25,8 @@ class Vector2D;
 struct portal_t;
 class CUtlBuffer;
 
+// this is only true in vrad
+extern bool g_bHDR;
 
 // default width/height of luxels in world units.
 #define DEFAULT_LUXEL_SIZE ( 16.0f )
@@ -53,11 +55,14 @@ extern	int			    visdatasize;
 extern	byte		    dvisdata[MAX_MAP_VISIBILITY];
 extern	dvis_t		    *dvis;
 
-extern	CUtlVector<byte> dlightdata;
+extern	CUtlVector<byte> dlightdataHDR;
+extern	CUtlVector<byte> dlightdataLDR;
+extern	CUtlVector<byte> *pdlightdata;
 extern	CUtlVector<char> dentdata;
 
 extern	int			    numleafs;
-extern	dleaf_t		    dleafs[MAX_MAP_LEAFS];
+extern	dleaf_t			dleafs[MAX_MAP_LEAFS];
+extern	CUtlVector<CompressedLightCube> *g_pLeafAmbientLighting;
 extern	unsigned short  g_LeafMinDistToWater[MAX_MAP_LEAFS];
 
 extern	int			    numplanes;
@@ -101,6 +106,9 @@ extern	unsigned short	g_primindices[MAX_MAP_PRIMINDICES];
 extern	int			    numfaces;
 extern	dface_t		    dfaces[MAX_MAP_FACES];
 
+extern	int			    numfaces_hdr;
+extern	dface_t		    dfaces_hdr[MAX_MAP_FACES];
+
 extern	int			    numedges;
 extern	dedge_t		    dedges[MAX_MAP_EDGES];
 
@@ -125,10 +133,8 @@ extern	dbrush_t	    dbrushes[MAX_MAP_BRUSHES];
 extern	int			    numbrushsides;
 extern	dbrushside_t	dbrushsides[MAX_MAP_BRUSHSIDES];
 
-extern  int			    numworldlights;
-extern  dworldlight_t   dworldlights[MAX_MAP_WORLDLIGHTS];
-
-extern CUtlVector<byte>	g_DispLightmapAlpha;
+extern  int			    *pNumworldlights;
+extern  dworldlight_t   *dworldlights;
 
 extern Vector			g_ClipPortalVerts[MAX_MAP_PORTALVERTS];
 extern int				g_nClipPortalVerts;
@@ -139,11 +145,11 @@ extern int				g_nCubemapSamples;
 extern int				g_nOverlayCount;
 extern doverlay_t		g_Overlays[MAX_MAP_OVERLAYS];
 
-// These should really be CUtlVectors
-extern char				g_TexDataStringData[MAX_MAP_TEXDATA_STRING_DATA];
-extern int				g_nTexDataStringData;
-extern int				g_TexDataStringTable[MAX_MAP_TEXDATA_STRING_DATA];
-extern int				g_nTexDataStringTable;
+extern int				g_nWaterOverlayCount;
+extern dwateroverlay_t	g_WaterOverlays[MAX_MAP_WATEROVERLAYS];
+
+extern CUtlVector<char>	g_TexDataStringData;
+extern CUtlVector<int>	g_TexDataStringTable;
 
 // JAY: portals in the BSP file
 // These are the portal data structures (points to verts, leafs, planes)
@@ -172,13 +178,17 @@ extern CUtlVector<doccluderdata_t>	g_OccluderData;
 extern CUtlVector<doccluderpolydata_t>	g_OccluderPolyData;
 extern CUtlVector<int>	g_OccluderVertexIndices;
 
+extern CUtlVector<dlightmappage_t>		g_dLightmapPages;
+extern CUtlVector<dlightmappageinfo_t>	g_dLightmapPageInfos;
+
+// level flags
+extern uint32 g_LevelFlags;								// see LVLFLAGS_xxx in bspfile.h
+
 // ---------------------------------------------------------------   portals
 
 // physics collision data
 extern	byte		*g_pPhysCollide;
 extern	int			g_PhysCollideSize;
-extern	byte		*g_pPhysCollideSurface;
-extern	int			g_PhysCollideSurfaceSize;
 
 // Embedded pack/pak file
 void				ClearPackFile( void );
@@ -186,6 +196,9 @@ void				AddFileToPack( const char *pRelativeName, const char *fullpath );
 void				AddBufferToPack( const char *pRelativeName, void *data, int length, bool bTextMode );
 bool				FileExistsInPack( const char *pRelativeName );
 bool				ReadFileFromPack( const char *pRelativeName, bool bTextMode, CUtlBuffer &buf );
+void				RemoveFileFromPack( const char *pRelativeName );
+int					GetNextFilename( int id, char *pBuffer, int bufferSize, int &fileSize );
+void				ForceAlignment( bool bAlign, unsigned int sectorSize );
 
 //-----------------------------------------------------------------------------
 // Handle to a game lump
@@ -240,12 +253,16 @@ int					TexDataStringTable_AddOrFindString( const char *pString );
 void DecompressVis (byte *in, byte *decompressed);
 int CompressVis (byte *vis, byte *dest);
 
+void	OpenBSPFile (char *filename);
+void	CloseBSPFile (void);
 void	LoadBSPFile (char *filename);
 void	LoadBSPFile_FileSystemOnly (char *filename);
 void	LoadBSPFileTexinfo (char *filename);	// just for qdata
-void	WriteBSPFile (char *filename);
+void	WriteBSPFile (char *filename, char* xzpLumpFilename = NULL);
 void	PrintBSPFileSizes (void);
 void	PrintBSPPackDirectory(void);
+
+void	WriteLumpToFile( char *filename, int lump );
 
 //===============
 
@@ -334,6 +351,7 @@ void BuildClusterTable( );
 
 void GetPlatformMapPath( const char *pMapPath, char *pPlatformMapPath, int dxlevel, int maxLength );
 
+void SetHDRMode( bool bHDR );
 
 // ----------------------------------------------------------------------------- //
 // Helper accessors for the various structures.
@@ -341,7 +359,7 @@ void GetPlatformMapPath( const char *pMapPath, char *pPlatformMapPath, int dxlev
 
 inline ColorRGBExp32* dface_AvgLightColor( dface_t *pFace, int nLightStyleIndex ) 
 { 
-	return (ColorRGBExp32*)&dlightdata[pFace->lightofs - (nLightStyleIndex+1) * 4];
+	return (ColorRGBExp32*)&(*pdlightdata)[pFace->lightofs - (nLightStyleIndex+1) * 4];
 }
 
 inline const char* TexInfo_TexName( int iTexInto )

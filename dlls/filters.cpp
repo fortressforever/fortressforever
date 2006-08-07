@@ -7,6 +7,8 @@
 #include "cbase.h"
 #include "filters.h"
 #include "entitylist.h"
+#include "ai_squad.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -31,15 +33,15 @@ END_DATADESC()
 
 //-----------------------------------------------------------------------------
 
-bool CBaseFilter::PassesFilterImpl(CBaseEntity *pEntity)
+bool CBaseFilter::PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
 {
 	return true;
 }
 
 
-bool CBaseFilter::PassesFilter(CBaseEntity *pEntity)
+bool CBaseFilter::PassesFilter( CBaseEntity *pCaller, CBaseEntity *pEntity )
 {
-	bool baseResult = PassesFilterImpl(pEntity);
+	bool baseResult = PassesFilterImpl( pCaller, pEntity );
 	return (m_bNegated) ? !baseResult : baseResult;
 }
 
@@ -51,11 +53,10 @@ bool CBaseFilter::PassesDamageFilter(const CTakeDamageInfo &info)
 }
 
 
-bool CBaseFilter::PassesDamageFilterImpl(const CTakeDamageInfo &info)
+bool CBaseFilter::PassesDamageFilterImpl( const CTakeDamageInfo &info )
 {
-	return PassesFilterImpl( info.GetAttacker() );
+	return PassesFilterImpl( NULL, info.GetAttacker() );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for testing the activator. If the activator passes the
@@ -63,7 +64,7 @@ bool CBaseFilter::PassesDamageFilterImpl(const CTakeDamageInfo &info)
 //-----------------------------------------------------------------------------
 void CBaseFilter::InputTestActivator( inputdata_t &inputdata )
 {
-	if (PassesFilter( inputdata.pActivator ))
+	if ( PassesFilter( inputdata.pCaller, inputdata.pActivator ) )
 	{
 		m_OnPass.FireOutput( inputdata.pActivator, this );
 	}
@@ -95,7 +96,7 @@ class CFilterMultiple : public CBaseFilter
 	string_t	m_iFilterName[MAX_FILTERS];
 	EHANDLE		m_hFilter[MAX_FILTERS];
 
-	bool PassesFilterImpl(CBaseEntity *pEntity);
+	bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity );
 	bool PassesDamageFilterImpl(const CTakeDamageInfo &info);
 	void Activate(void);
 };
@@ -134,7 +135,7 @@ void CFilterMultiple::Activate( void )
 	{
 		if (m_iFilterName[i] != NULL_STRING)
 		{
-			m_hFilter[i] = gEntList.FindEntityByName( NULL, m_iFilterName[i], NULL );
+			m_hFilter[i] = gEntList.FindEntityByName( NULL, m_iFilterName[i] );
 		}
 	}
 }
@@ -144,7 +145,7 @@ void CFilterMultiple::Activate( void )
 // Purpose: Returns true if the entity passes our filter, false if not.
 // Input  : pEntity - Entity to test.
 //-----------------------------------------------------------------------------
-bool CFilterMultiple::PassesFilterImpl(CBaseEntity *pEntity)
+bool CFilterMultiple::PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
 {
 	// Test against each filter
 	if (m_nFilterType == FILTER_AND)
@@ -154,7 +155,7 @@ bool CFilterMultiple::PassesFilterImpl(CBaseEntity *pEntity)
 			if (m_hFilter[i] != NULL)
 			{
 				CBaseFilter* pFilter = (CBaseFilter *)(m_hFilter[i].Get());
-				if (!pFilter->PassesFilter(pEntity))
+				if (!pFilter->PassesFilter( pCaller, pEntity ) )
 				{
 					return false;
 				}
@@ -169,7 +170,7 @@ bool CFilterMultiple::PassesFilterImpl(CBaseEntity *pEntity)
 			if (m_hFilter[i] != NULL)
 			{
 				CBaseFilter* pFilter = (CBaseFilter *)(m_hFilter[i].Get());
-				if (pFilter->PassesFilter(pEntity))
+				if (pFilter->PassesFilter( pCaller, pEntity ) )
 				{
 					return true;
 				}
@@ -231,7 +232,7 @@ class CFilterName : public CBaseFilter
 public:
 	string_t m_iFilterName;
 
-	bool PassesFilterImpl(CBaseEntity *pEntity)
+	bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
 	{
 		// special check for !player as GetEntityName for player won't return "!player" as a name
 		if(FStrEq(STRING(m_iFilterName), "!player"))
@@ -279,7 +280,7 @@ class CFilterClass : public CBaseFilter
 public:
 	string_t m_iFilterClass;
 
-	bool PassesFilterImpl(CBaseEntity *pEntity)
+	bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
 	{
 		return pEntity->ClassMatches( STRING(m_iFilterClass) );
 	}
@@ -306,7 +307,7 @@ class FilterTeam : public CBaseFilter
 public:
 	int		m_iFilterTeam;
 
-	bool PassesFilterImpl(CBaseEntity *pEntity)
+	bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
 	{
 	 	return ( pEntity->GetTeamNumber() == m_iFilterTeam );
 	}
@@ -332,7 +333,7 @@ class FilterDamageType : public CBaseFilter
 
 protected:
 
-	bool PassesFilterImpl(CBaseEntity *pEntity)
+	bool PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity )
 	{
 		ASSERT( false );
 	 	return true;
@@ -355,3 +356,242 @@ BEGIN_DATADESC( FilterDamageType )
 
 END_DATADESC()
 
+// ###################################################################
+//	> CFilterEnemy
+// ###################################################################
+
+#define SF_FILTER_ENEMY_NO_LOSE_AQUIRED	(1<<0)
+
+class CFilterEnemy : public CBaseFilter
+{
+	DECLARE_CLASS( CFilterEnemy, CBaseFilter );
+	DECLARE_DATADESC();
+
+public:
+
+	virtual bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity );
+	virtual bool PassesDamageFilterImpl( const CTakeDamageInfo &info );
+
+private:
+
+	bool	PassesNameFilter( CBaseEntity *pCaller );
+	bool	PassesProximityFilter( CBaseEntity *pCaller, CBaseEntity *pEnemy );
+	bool	PassesMobbedFilter( CBaseEntity *pCaller, CBaseEntity *pEnemy );
+
+	string_t	m_iszEnemyName;				// Name or classname
+	float		m_flRadius;					// Radius (enemies are acquired at this range)
+	float		m_flOuterRadius;			// Outer radius (enemies are LOST at this range)
+	int		m_nMaxSquadmatesPerEnemy;	// Maximum number of squadmates who may share the same enemy
+	string_t	m_iszPlayerName;			// "!player"
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFilterEnemy::PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity )
+{
+	if ( pCaller == NULL || pEntity == NULL )
+		return false;
+
+	// If asked to, we'll never fail to pass an already acquired enemy
+	//	This allows us to use test criteria to initially pick an enemy, then disregard the test until a new enemy comes along
+	if ( HasSpawnFlags( SF_FILTER_ENEMY_NO_LOSE_AQUIRED ) && ( pEntity == pCaller->GetEnemy() ) )
+		return true;
+
+	// This is a little weird, but it's saying that if we're not the entity we're excluding the filter to, then just pass it throughZ
+	if ( PassesNameFilter( pEntity ) == false )
+		return true;
+
+	if ( PassesProximityFilter( pCaller, pEntity ) == false )
+		return false;
+
+	// NOTE: This can result in some weird NPC behavior if used improperly
+	if ( PassesMobbedFilter( pCaller, pEntity ) == false )
+		return false;
+
+	// The filter has been passed, meaning:
+	//	- If we wanted all criteria to fail, they have
+	//  - If we wanted all criteria to succeed, they have
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFilterEnemy::PassesDamageFilterImpl( const CTakeDamageInfo &info )
+{
+	// NOTE: This function has no meaning to this implementation of the filter class!
+	Assert( 0 );
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Tests the enemy's name or classname
+// Input  : *pEnemy - Entity being assessed
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CFilterEnemy::PassesNameFilter( CBaseEntity *pEnemy )
+{
+	// If there is no name specified, we're not using it
+	if ( m_iszEnemyName	== NULL_STRING )
+		return true;
+
+	// Cache off the special case player name
+	if ( m_iszPlayerName == NULL_STRING )
+	{
+		m_iszPlayerName = FindPooledString( "!player" );
+	}
+
+	if ( m_iszEnemyName == m_iszPlayerName )
+	{
+		if ( pEnemy->IsPlayer() )
+		{
+			if ( m_bNegated )
+				return false;
+
+			return true;
+		}
+	}
+
+	// May be either a targetname or classname
+	bool bNameOrClassnameMatches = ( m_iszEnemyName == pEnemy->GetEntityName() || m_iszEnemyName == pEnemy->m_iClassname );
+
+	// We only leave this code block in a state meaning we've "succeeded" in any context
+	if ( m_bNegated )
+	{
+		// We wanted the names to not match, but they did
+		if ( bNameOrClassnameMatches )
+			return false;
+	}
+	else
+	{
+		// We wanted them to be the same, but they weren't
+		if ( bNameOrClassnameMatches == false )
+			return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Tests the enemy's proximity to the caller's position
+// Input  : *pCaller - Entity assessing the target
+//			*pEnemy - Entity being assessed
+// Output : Returns true if potential enemy passes this filter stage
+//-----------------------------------------------------------------------------
+bool CFilterEnemy::PassesProximityFilter( CBaseEntity *pCaller, CBaseEntity *pEnemy )
+{
+	// If there is no radius specified, we're not testing it
+	if ( m_flRadius <= 0.0f )
+		return true;
+
+	// We test the proximity differently when we've already picked up this enemy before
+	bool bAlreadyEnemy = ( pCaller->GetEnemy() == pEnemy );
+
+	// Get our squared length to the enemy from the caller
+	float flDistToEnemySqr = ( pCaller->GetAbsOrigin() - pEnemy->GetAbsOrigin() ).LengthSqr();
+
+	// Two radii are used to control oscillation between true/false cases
+	// The larger radius is either specified or defaulted to be double or half the size of the inner radius
+	float flLargerRadius = m_flOuterRadius;
+	if ( flLargerRadius == 0 )
+	{
+		flLargerRadius = ( m_bNegated ) ? (m_flRadius*0.5f) : (m_flRadius*2.0f);
+	}
+
+	float flSmallerRadius = m_flRadius;
+	if ( flSmallerRadius > flLargerRadius )
+	{
+		swap( flLargerRadius, flSmallerRadius );
+	}
+
+	float flDist;	
+	if ( bAlreadyEnemy )
+	{
+		flDist = ( m_bNegated ) ? flSmallerRadius : flLargerRadius;
+	}
+	else
+	{
+		flDist = ( m_bNegated ) ? flLargerRadius : flSmallerRadius;
+	}
+
+	// Test for success
+	if ( flDistToEnemySqr <= (flDist*flDist) )
+	{
+		// We wanted to fail but didn't
+		if ( m_bNegated )
+			return false;
+
+		return true;
+	}
+	
+	// We wanted to succeed but didn't
+	if ( m_bNegated == false )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Attempt to govern how many squad members can target any given entity
+// Input  : *pCaller - Entity assessing the target
+//			*pEnemy - Entity being assessed
+// Output : Returns true if potential enemy passes this filter stage
+//-----------------------------------------------------------------------------
+bool CFilterEnemy::PassesMobbedFilter( CBaseEntity *pCaller, CBaseEntity *pEnemy )
+{
+	// Must be a valid candidate
+	CAI_BaseNPC *pNPC = pCaller->MyNPCPointer();
+	if ( pNPC == NULL || pNPC->GetSquad() == NULL )
+		return true;
+
+	// Make sure we're checking for this
+	if ( m_nMaxSquadmatesPerEnemy <= 0 )
+		return true;
+
+	AISquadIter_t iter;
+	int nNumMatchingSquadmates = 0;
+	
+	// Look through our squad members to see how many of them are already mobbing this entity
+	for ( CAI_BaseNPC *pSquadMember = pNPC->GetSquad()->GetFirstMember( &iter ); pSquadMember != NULL; pSquadMember = pNPC->GetSquad()->GetNextMember( &iter ) )
+	{
+		// Disregard ourself
+		if ( pSquadMember == pNPC )
+			continue;
+
+		// If the enemies match, count it
+		if ( pSquadMember->GetEnemy() == pEnemy )
+		{
+			nNumMatchingSquadmates++;
+
+			// If we're at or passed the max we stop
+			if ( nNumMatchingSquadmates >= m_nMaxSquadmatesPerEnemy )
+			{
+				// We wanted to find more than allowed and we did
+				if ( m_bNegated )
+					return true;
+				
+				// We wanted to be less but we're not
+				return false;
+			}
+		}
+	}
+
+	// We wanted to find more than the allowed amount but we didn't
+	if ( m_bNegated )
+		return false;
+
+	return true;
+}
+
+LINK_ENTITY_TO_CLASS( filter_enemy, CFilterEnemy );
+
+BEGIN_DATADESC( CFilterEnemy )
+	
+	DEFINE_KEYFIELD( m_iszEnemyName, FIELD_STRING, "filtername" ),
+	DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "filter_radius" ),
+	DEFINE_KEYFIELD( m_flOuterRadius, FIELD_FLOAT, "filter_outer_radius" ),
+	DEFINE_KEYFIELD( m_nMaxSquadmatesPerEnemy, FIELD_INTEGER, "filter_max_per_enemy" ),
+
+END_DATADESC()

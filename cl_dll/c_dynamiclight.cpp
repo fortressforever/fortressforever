@@ -72,6 +72,8 @@ void C_DynamicLight::OnDataChanged(DataUpdateType_t updateType)
 	{
 		SetNextClientThink(gpGlobals->curtime + 0.05);
 	}
+
+	BaseClass::OnDataChanged( updateType );
 }
 
 
@@ -141,9 +143,11 @@ void C_DynamicLight::ClientThink(void)
 		VectorMA( GetAbsOrigin(), m_Radius, forward, end );
 
 		trace_t		pm;
+		C_BaseEntity::PushEnableAbsRecomputations( false );	 // HACK don't recompute positions while doing RayTrace
 		UTIL_TraceLine( GetAbsOrigin(), end, MASK_NPCWORLDSTATIC, NULL, COLLISION_GROUP_NONE, &pm );
+		C_BaseEntity::PopEnableAbsRecomputations();
 		VectorCopy( pm.endpos, m_pSpotlightEnd->origin );
-
+		
 		if (pm.fraction == 1.0f)
 		{
 			m_pSpotlightEnd->die = gpGlobals->curtime;

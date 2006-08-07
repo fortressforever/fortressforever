@@ -6,6 +6,7 @@
 //
 //=============================================================================//
 
+
 #include "dt_send.h"
 #include "mathlib.h"
 #include "vector.h"
@@ -14,6 +15,12 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#if !defined(_STATIC_LINKED) || defined(GAME_DLL)
+
+
+static CNonModifiedPointerProxy *s_pNonModifiedPointerProxyHead = NULL;
+
 
 void SendProxy_UInt8ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 void SendProxy_UInt16ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
@@ -50,7 +57,15 @@ char *s_ElementNames[MAX_ARRAY_ELEMENTS] =
 };
 
 
-CStandardSendProxies::CStandardSendProxies()
+CNonModifiedPointerProxy::CNonModifiedPointerProxy( SendTableProxyFn fn )
+{
+	m_pNext = s_pNonModifiedPointerProxyHead;
+	s_pNonModifiedPointerProxyHead = this;
+	m_Fn = fn;
+}
+
+
+CStandardSendProxiesV1::CStandardSendProxiesV1()
 {
 	m_Int8ToInt32 = SendProxy_Int8ToInt32;
 	m_Int16ToInt32 = SendProxy_Int16ToInt32;
@@ -62,6 +77,14 @@ CStandardSendProxies::CStandardSendProxies()
 	
 	m_FloatToFloat = SendProxy_FloatToFloat;
 	m_VectorToVector = SendProxy_VectorToVector;
+}
+
+CStandardSendProxies::CStandardSendProxies()
+{	
+	m_DataTableToDataTable = SendProxy_DataTableToDataTable;
+	m_SendLocalDataTable = SendProxy_SendLocalDataTable;
+	m_ppNonModifiedPointerProxies = &s_pNonModifiedPointerProxyHead;
+	
 }
 CStandardSendProxies g_StandardSendProxies;
 
@@ -101,6 +124,18 @@ void SendProxy_VectorToVector( const SendProp *pProp, const void *pStruct, const
 	pOut->m_Vector[1] = v[1];
 	pOut->m_Vector[2] = v[2];
 }
+
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+void SendProxy_QuaternionToQuaternion( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
+{
+	Quaternion& q = *(Quaternion*)pData;
+	Assert( q.IsValid() );
+	pOut->m_Vector[0] = q[0];
+	pOut->m_Vector[1] = q[1];
+	pOut->m_Vector[2] = q[2];
+	pOut->m_Vector[3] = q[3];
+}
+#endif
 
 void SendProxy_Int8ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
@@ -150,6 +185,23 @@ void* SendProxy_DataTablePtrToDataTable( const SendProp *pProp, const void *pStr
 static void SendProxy_Empty( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: If the recipient is the same as objectID, go ahead and iterate down
+//  the m_Local stuff, otherwise, act like it wasn't there at all.
+// This way, only the local player receives information about him/herself.
+// Input  : *pVarData - 
+//			*pOut - 
+//			objectID - 
+//-----------------------------------------------------------------------------
+
+void* SendProxy_SendLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
+{
+	pRecipients->SetOnly( objectID - 1 );
+	return ( void * )pVarData;
+}
+
+
 
 
 
@@ -281,6 +333,43 @@ SendProp SendPropVector(
 	return ret;
 }
 
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+SendProp SendPropQuaternion(
+	char *pVarName,
+	int offset,
+	int sizeofVar,
+	int nBits,					// Number of bits to use when encoding.
+	int flags,
+	float fLowValue,			// For floating point, low and high values.
+	float fHighValue,			// High value. If HIGH_DEFAULT, it's (1<<nBits).
+	SendVarProxyFn varProxy
+	)
+{
+	SendProp ret;
+
+	if(varProxy == SendProxy_QuaternionToQuaternion)
+	{
+		Assert(sizeofVar == sizeof(Quaternion));
+	}
+
+	if ( nBits == 32 )
+		flags |= SPROP_NOSCALE;
+
+	ret.m_Type = DPT_Quaternion;
+	ret.m_pVarName = pVarName;
+	ret.SetOffset( offset );
+	ret.m_nBits = nBits;
+	ret.SetFlags( flags );
+	ret.m_fLowValue = fLowValue;
+	ret.m_fHighValue = fHighValue;
+	ret.m_fHighLowMul = AssignRangeMultiplier( ret.m_nBits, ret.m_fHighValue - ret.m_fLowValue );
+	ret.SetProxyFn( varProxy );
+	if( ret.GetFlags() & (SPROP_COORD | SPROP_NOSCALE | SPROP_NORMAL) )
+		ret.m_nBits = 0;
+
+	return ret;
+}
+#endif
 
 SendProp SendPropAngle(
 	char *pVarName,
@@ -347,7 +436,7 @@ SendProp SendPropQAngles(
 
 	return ret;
 }
-
+  
 SendProp SendPropInt(
 	char *pVarName,
 	int offset,
@@ -499,6 +588,11 @@ SendProp SendPropDataTable(
 	{
 		ret.SetFlags( SPROP_PROXY_ALWAYS_YES );
 	}
+	
+	if ( varProxy == SendProxy_DataTableToDataTable && offset == 0 )
+	{
+		ret.SetFlags( SPROP_COLLAPSIBLE );
+	}
 
 	return ret;
 }
@@ -609,3 +703,4 @@ void SendTable::Construct( SendProp *pProps, int nProps, char *pNetTableName )
 	m_bHasBeenWritten = false;
 }
 
+#endif

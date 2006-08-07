@@ -42,7 +42,7 @@ enum SentencePriority_t
 //-----------------------------------------------------------------------------
 // This is the met of the class
 //-----------------------------------------------------------------------------
-class CAI_SentenceBase : public CAI_Component 
+abstract_class CAI_SentenceBase : public CAI_Component 
 {
 	DECLARE_CLASS_NOBASE( CAI_SentenceBase );
 	DECLARE_SIMPLE_DATADESC();

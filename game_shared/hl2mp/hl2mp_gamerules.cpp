@@ -21,6 +21,7 @@
 	#include "game.h"
 	#include "items.h"
 	#include "entitylist.h"
+	#include "mapentities.h"
 	#include "in_buttons.h"
 	#include <ctype.h>
 	#include "voice_gamemgr.h"
@@ -29,14 +30,19 @@
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
+	#include "hl2mp_gameinterface.h"
 
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
 #endif
 
+extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
+
 
 ConVar sv_hl2mp_weapon_respawn_time( "sv_hl2mp_weapon_respawn_time", "20", FCVAR_GAMEDLL | FCVAR_NOTIFY );
 ConVar sv_hl2mp_item_respawn_time( "sv_hl2mp_item_respawn_time", "30", FCVAR_GAMEDLL | FCVAR_NOTIFY );
+ConVar mp_restartgame( "mp_restartgame", "0", 0, "If non-zero, game will restart in the specified number of seconds" );
+ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY );
 
 extern ConVar mp_chattime;
 
@@ -82,6 +88,49 @@ static HL2MPViewVectors g_HL2MPViewVectors(
 	Vector(-16, -16, 0 ),	  //m_vCrouchTraceMin
 	Vector( 16,  16,  60 )	  //m_vCrouchTraceMax
 );
+
+static const char *s_PreserveEnts[] =
+{
+	"ai_network",
+	"ai_hint",
+	"hl2mp_gamerules",
+	"team_manager",
+	"player_manager",
+	"env_soundscape",
+	"env_soundscape_proxy",
+	"env_soundscape_triggerable",
+	"env_sun",
+	"env_wind",
+	"env_fog_controller",
+	"func_brush",
+	"func_wall",
+	"func_buyzone",
+	"func_illusionary",
+	"infodecal",
+	"info_projecteddecal",
+	"info_node",
+	"info_target",
+	"info_node_hint",
+	"info_player_deathmatch",
+	"info_player_combine",
+	"info_player_rebel",
+	"info_map_parameters",
+	"keyframe_rope",
+	"move_rope",
+	"info_ladder",
+	"player",
+	"point_viewcontrol",
+	"scene_manager",
+	"shadow_control",
+	"sky_camera",
+	"soundent",
+	"trigger_soundscape",
+	"viewmodel",
+	"predicted_viewmodel",
+	"worldspawn",
+	"point_devshot_camera",
+	"", // END Marker
+};
 
 
 
@@ -147,8 +196,12 @@ CHL2MPRules::CHL2MPRules()
 
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
+	m_flGameStartTime = 0;
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
+	m_tmNextPeriodicThink = 0;
+	m_flRestartGameTime = 0;
+	m_bCompleteReset = false;
 
 #endif
 }
@@ -227,7 +280,7 @@ void CHL2MPRules::Think( void )
 {
 
 #ifndef CLIENT_DLL
-
+	
 	CGameRules::Think();
 
 	if ( g_fGameOver )   // someone else quit the game already
@@ -241,10 +294,10 @@ void CHL2MPRules::Think( void )
 		return;
 	}
 
-	float flTimeLimit = mp_timelimit.GetFloat() * 60;
+//	float flTimeLimit = mp_timelimit.GetFloat() * 60;
 	float flFragLimit = fraglimit.GetFloat();
 	
-	if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
+	if ( GetMapRemainingTime() < 0 )
 	{
 		GoToIntermission();
 		return;
@@ -277,6 +330,17 @@ void CHL2MPRules::Think( void )
 				}
 			}
 		}
+	}
+
+	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
+	{
+		CheckRestartGame();
+		m_tmNextPeriodicThink = gpGlobals->curtime + 1.0;
+	}
+
+	if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
+	{
+		RestartGame();
 	}
 
 	ManageObjectRelocation();
@@ -316,7 +380,7 @@ bool CHL2MPRules::CheckGameOver()
 		// check to see if we should change levels now
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
-			ChangeLevel(); // intermission is over
+			ChangeLevel(); // intermission is over			
 		}
 
 		return true;
@@ -492,6 +556,14 @@ Vector CHL2MPRules::VecItemRespawnSpot( CItem *pItem )
 }
 
 //=========================================================
+// What angles should this item use to respawn?
+//=========================================================
+QAngle CHL2MPRules::VecItemRespawnAngles( CItem *pItem )
+{
+	return pItem->GetOriginalSpawnAngles();
+}
+
+//=========================================================
 // At what time in the future may this Item respawn?
 //=========================================================
 float CHL2MPRules::FlItemRespawnTime( CItem *pItem )
@@ -649,6 +721,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		event->SetInt("userid", pVictim->GetUserID() );
 		event->SetInt("attacker", killer_ID );
 		event->SetString("weapon", killer_weapon_name );
+		event->SetInt( "priority", 7 );
 		gameeventmanager->FireEvent( event );
 	}
 #endif
@@ -708,6 +781,10 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 			}
 		}
 	}
+	if ( sv_report_client_settings.GetInt() == 1 )
+	{
+		UTIL_LogPrintf( "\"%s\" cl_cmdrate = \"%s\"\n", pHL2Player->GetPlayerName(), engine->GetClientConVarValue( pHL2Player->entindex(), "cl_cmdrate" ));
+	}
 
 	BaseClass::ClientSettingsChanged( pPlayer );
 #endif
@@ -739,6 +816,20 @@ const char *CHL2MPRules::GetGameDescription( void )
 	return "Deathmatch"; 
 } 
 
+
+float CHL2MPRules::GetMapRemainingTime()
+{
+	// if timelimit is disabled, return 0
+	if ( mp_timelimit.GetInt() <= 0 )
+		return 0;
+
+	// timelimit is in minutes
+
+	float timeleft = (m_flGameStartTime + mp_timelimit.GetInt() * 60.0f ) - gpGlobals->curtime;
+
+	return timeleft;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -749,16 +840,16 @@ void CHL2MPRules::Precache( void )
 
 bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
+	if ( collisionGroup0 > collisionGroup1 )
+	{
+		// swap so that lowest is always first
+		swap(collisionGroup0,collisionGroup1);
+	}
+
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
 		collisionGroup1 == COLLISION_GROUP_WEAPON )
 	{
 		return false;
-	}
-
-	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS && collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
-	{
-		// let debris and multiplayer objects collide
-		return true;
 	}
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
@@ -869,4 +960,204 @@ CAmmoDef *GetAmmoDef()
 		return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
 	}
 
+#endif
+
+#ifndef CLIENT_DLL
+
+bool FindInList( const char **pStrings, const char *pToFind )
+{
+	int i = 0;
+	while ( pStrings[i][0] != 0 )
+	{
+		if ( Q_stricmp( pStrings[i], pToFind ) == 0 )
+			return true;
+		i++;
+	}
+
+	return false;
+}
+
+void CHL2MPRules::CheckRestartGame( void )
+{
+	// Restart the game if specified by the server
+	int iRestartDelay = mp_restartgame.GetInt();
+
+	if ( iRestartDelay > 0 )
+	{
+		if ( iRestartDelay > 60 )
+			iRestartDelay = 60;
+
+
+		// let the players know
+		char strRestartDelay[64];
+		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
+
+		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
+		m_bCompleteReset = true;
+		mp_restartgame.SetValue( 0 );
+	}
+}
+
+void CHL2MPRules::RestartGame()
+{
+	// bounds check
+	if ( mp_timelimit.GetInt() < 0 )
+	{
+		mp_timelimit.SetValue( 0 );
+	}
+	m_flGameStartTime = gpGlobals->curtime;
+	if ( !IsFinite( m_flGameStartTime.Get() ) )
+	{
+		Warning( "Trying to set a NaN game start time\n" );
+		m_flGameStartTime.GetForModify() = 0.0f;
+	}
+
+	CleanUpMap();
+	
+	// now respawn all players
+	for (int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
+
+		if ( !pPlayer )
+			continue;
+
+		if ( pPlayer->GetActiveWeapon() )
+		{
+			pPlayer->GetActiveWeapon()->Holster();
+		}
+		pPlayer->RemoveAllItems( true );
+		respawn( pPlayer, false );
+		pPlayer->Reset();
+	}
+
+	// Respawn entities (glass, doors, etc..)
+
+	CTeam *pRebels = GetGlobalTeam( TEAM_REBELS );
+	CTeam *pCombine = GetGlobalTeam( TEAM_COMBINE );
+
+	if ( pRebels )
+	{
+		pRebels->SetScore( 0 );
+	}
+
+	if ( pCombine )
+	{
+		pCombine->SetScore( 0 );
+	}
+
+	m_flIntermissionEndTime = 0;
+	m_flRestartGameTime = 0.0;		
+	m_bCompleteReset = false;
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "round_start" );
+	if ( event )
+	{
+		event->SetInt("fraglimit", 0 );
+		event->SetInt( "priority", 6 ); // HLTV event priority, not transmitted
+
+		event->SetString("objective","DEATHMATCH");
+
+		gameeventmanager->FireEvent( event );
+	}
+}
+
+void CHL2MPRules::CleanUpMap()
+{
+	// Recreate all the map entities from the map data (preserving their indices),
+	// then remove everything else except the players.
+
+	// Get rid of all entities except players.
+	CBaseEntity *pCur = gEntList.FirstEnt();
+	while ( pCur )
+	{
+		CBaseHL2MPCombatWeapon *pWeapon = dynamic_cast< CBaseHL2MPCombatWeapon* >( pCur );
+		// Weapons with owners don't want to be removed..
+		if ( pWeapon )
+		{
+			if ( !pWeapon->GetPlayerOwner() )
+			{
+				UTIL_Remove( pCur );
+			}
+		}
+		// remove entities that has to be restored on roundrestart (breakables etc)
+		else if ( !FindInList( s_PreserveEnts, pCur->GetClassname() ) )
+		{
+			UTIL_Remove( pCur );
+		}
+
+		pCur = gEntList.NextEnt( pCur );
+	}
+
+	// Really remove the entities so we can have access to their slots below.
+	gEntList.CleanupDeleteList();
+
+	// Cancel all queued events, in case a func_bomb_target fired some delayed outputs that
+	// could kill respawning CTs
+	g_EventQueue.Clear();
+
+	// Now reload the map entities.
+	class CHL2MPMapEntityFilter : public IMapEntityFilter
+	{
+	public:
+		virtual bool ShouldCreateEntity( const char *pClassname )
+		{
+			// Don't recreate the preserved entities.
+			if ( !FindInList( s_PreserveEnts, pClassname ) )
+			{
+				return true;
+			}
+			else
+			{
+				// Increment our iterator since it's not going to call CreateNextEntity for this ent.
+				if ( m_iIterator != g_MapEntityRefs.InvalidIndex() )
+					m_iIterator = g_MapEntityRefs.Next( m_iIterator );
+
+				return false;
+			}
+		}
+
+
+		virtual CBaseEntity* CreateNextEntity( const char *pClassname )
+		{
+			if ( m_iIterator == g_MapEntityRefs.InvalidIndex() )
+			{
+				// This shouldn't be possible. When we loaded the map, it should have used 
+				// CCSMapLoadEntityFilter, which should have built the g_MapEntityRefs list
+				// with the same list of entities we're referring to here.
+				Assert( false );
+				return NULL;
+			}
+			else
+			{
+				CMapEntityRef &ref = g_MapEntityRefs[m_iIterator];
+				m_iIterator = g_MapEntityRefs.Next( m_iIterator );	// Seek to the next entity.
+
+				if ( ref.m_iEdict == -1 || engine->PEntityOfEntIndex( ref.m_iEdict ) )
+				{
+					// Doh! The entity was delete and its slot was reused.
+					// Just use any old edict slot. This case sucks because we lose the baseline.
+					return CreateEntityByName( pClassname );
+				}
+				else
+				{
+					// Cool, the slot where this entity was is free again (most likely, the entity was 
+					// freed above). Now create an entity with this specific index.
+					return CreateEntityByName( pClassname, ref.m_iEdict );
+				}
+			}
+		}
+
+	public:
+		int m_iIterator; // Iterator into g_MapEntityRefs.
+	};
+	CHL2MPMapEntityFilter filter;
+	filter.m_iIterator = g_MapEntityRefs.Head();
+
+	// DO NOT CALL SPAWN ON info_node ENTITIES!
+
+	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
+}
 #endif

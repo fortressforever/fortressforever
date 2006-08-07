@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 //-----------------------------------------------------------------------------
 // Purpose: a global list of all the entities in the game.  All iteration through
@@ -126,6 +126,19 @@ int CClientEntityList::GetMaxEntities( void )
 {
 	return m_iMaxServerEnts;
 }
+
+
+//-----------------------------------------------------------------------------
+// Convenience methods to convert between entindex + ClientEntityHandle_t
+//-----------------------------------------------------------------------------
+int CClientEntityList::HandleToEntIndex( ClientEntityHandle_t handle )
+{
+	if ( handle == INVALID_EHANDLE_INDEX )
+		return -1;
+	C_BaseEntity *pEnt = GetBaseEntityFromHandle( handle );
+	return pEnt ? pEnt->entindex() : -1; 
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Because m_iNumServerEnts != last index
@@ -275,6 +288,20 @@ void CClientEntityList::RemovePVSNotifier( IClientUnknown *pUnknown )
 #endif
 }
 
+void CClientEntityList::AddListenerEntity( IClientEntityListener *pListener )
+{
+	if ( m_entityListeners.Find( pListener ) >= 0 )
+	{
+		AssertMsg( 0, "Can't add listeners multiple times\n" );
+		return;
+	}
+	m_entityListeners.AddToTail( pListener );
+}
+
+void CClientEntityList::RemoveListenerEntity( IClientEntityListener *pListener )
+{
+	m_entityListeners.FindAndRemove( pListener );
+}
 
 void CClientEntityList::OnAddEntity( IHandleEntity *pEnt, CBaseHandle handle )
 {
@@ -312,11 +339,19 @@ void CClientEntityList::OnAddEntity( IHandleEntity *pEnt, CBaseHandle handle )
 		{
 			 m_iNumClientNonNetworkable++;
 		}
+
+		//DevMsg(2,"Created %s\n", pBaseEnt->GetClassname() );
+		for ( int i = m_entityListeners.Count()-1; i >= 0; i-- )
+		{
+			m_entityListeners[i]->OnEntityCreated( pBaseEntity );
+		}
 	}
 	else
 	{
 		pCache->m_BaseEntitiesIndex = m_BaseEntities.InvalidIndex();
 	}
+
+
 }
 
 
@@ -351,12 +386,66 @@ void CClientEntityList::OnRemoveEntity( IHandleEntity *pEnt, CBaseHandle handle 
 		{
 			 m_iNumClientNonNetworkable--;
 		}
+
+		//DevMsg(2,"Deleted %s\n", pBaseEnt->GetClassname() );
+		for ( int i = m_entityListeners.Count()-1; i >= 0; i-- )
+		{
+			m_entityListeners[i]->OnEntityDeleted( pBaseEntity );
+		}
 	}
 
 	if ( pCache->m_BaseEntitiesIndex != m_BaseEntities.InvalidIndex() )
 		m_BaseEntities.Remove( pCache->m_BaseEntitiesIndex );
 
 	pCache->m_BaseEntitiesIndex = m_BaseEntities.InvalidIndex();
+}
+
+
+// Use this to iterate over all the C_BaseEntities.
+C_BaseEntity* CClientEntityList::FirstBaseEntity() const
+{
+	const CEntInfo *pList = FirstEntInfo();
+	while ( pList )
+	{
+		if ( pList->m_pEntity )
+		{
+			IClientUnknown *pUnk = static_cast<IClientUnknown*>( pList->m_pEntity );
+			C_BaseEntity *pRet = pUnk->GetBaseEntity();
+			if ( pRet )
+				return pRet;
+		}
+		pList = pList->m_pNext;
+	}
+
+	return NULL;
+
+}
+
+C_BaseEntity* CClientEntityList::NextBaseEntity( C_BaseEntity *pEnt ) const
+{
+	if ( pEnt == NULL )
+		return FirstBaseEntity();
+
+	// Run through the list until we get a C_BaseEntity.
+	const CEntInfo *pList = GetEntInfoPtr( pEnt->GetRefEHandle() );
+	if ( pList )
+	{
+		pList = NextEntInfo(pList);
+	}
+
+	while ( pList )
+	{
+		if ( pList->m_pEntity )
+		{
+			IClientUnknown *pUnk = static_cast<IClientUnknown*>( pList->m_pEntity );
+			C_BaseEntity *pRet = pUnk->GetBaseEntity();
+			if ( pRet )
+				return pRet;
+		}
+		pList = pList->m_pNext;
+	}
+	
+	return NULL; 
 }
 
 
@@ -414,4 +503,3 @@ C_BaseEntity* C_BaseEntityIterator::Next()
 
 	return NULL;
 }
-

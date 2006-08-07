@@ -43,5 +43,10 @@
 #define CL_EVENT_SPRITEGROUP_DESTROY	6003
 #define CL_EVENT_FOOTSTEP_LEFT			6004
 #define CL_EVENT_FOOTSTEP_RIGHT			6005
+#define CL_EVENT_MFOOTSTEP_LEFT			6006 // Footstep sounds based on material underfoot.
+#define CL_EVENT_MFOOTSTEP_RIGHT		6007
+#define CL_EVENT_MFOOTSTEP_LEFT_LOUD	6008 // Loud material impact sounds from feet attachments
+#define CL_EVENT_MFOOTSTEP_RIGHT_LOUD	6009
+
 
 #endif // CL_ANIMEVENT_H

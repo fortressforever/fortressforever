@@ -25,7 +25,7 @@
 class CTimedEventMgr;
 
 
-class IEventRegisterCallback
+abstract_class IEventRegisterCallback
 {
 public:
 	virtual void FireEvent() = 0;
@@ -59,10 +59,10 @@ private:
 private:
 	
 	CTimedEventMgr *m_pEventMgr;
-	bool m_bRegistered;
 	float m_flNextEventTime;
 	float m_flUpdateInterval;
 	IEventRegisterCallback *m_pCallback;
+	bool m_bRegistered;
 };
 
 

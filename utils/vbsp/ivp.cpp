@@ -37,7 +37,7 @@ typedef CBitVec<MAX_MAP_LEAFS> leafbitarray_t;
 #define VPHYSICS_SHRINK		(0.5f)	// shrink BSP brushes by this much for collision
 #define VPHYSICS_MERGE		0.01f	// merge verts closer than this
 
-void EmitPhysCollision( bool useMOPP );
+void EmitPhysCollision();
 
 IPhysicsCollision *physcollision = NULL;
 extern IPhysicsSurfaceProps *physprops;
@@ -1338,14 +1338,17 @@ static void ConvertWorldBrushesToPhysCollide( CUtlVector<CPhysCollisionEntry *> 
 }
 
 // adds any world, terrain, and water collision models to the collision list
-static void BuildWorldPhysModel( CUtlVector<CPhysCollisionEntry *> &collisionList, float shrinkSize, float mergeTolerance, bool useMOPP )
+static void BuildWorldPhysModel( CUtlVector<CPhysCollisionEntry *> &collisionList, float shrinkSize, float mergeTolerance )
 {
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, MASK_SOLID );
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, CONTENTS_PLAYERCLIP );
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, CONTENTS_MONSTERCLIP );
 
 	// if there's terrain, save it off as a static mesh/polysoup
-	Disp_AddCollisionModels( collisionList, &dmodels[0], MASK_SOLID, useMOPP );
+	if ( g_bNoVirtualMesh || !physcollision->SupportsVirtualMesh() )
+	{
+		Disp_AddCollisionModels( collisionList, &dmodels[0], MASK_SOLID );
+	}
 	ConvertWaterModelToPhysCollide( collisionList, 0, shrinkSize, mergeTolerance );
 }
 
@@ -1491,7 +1494,7 @@ static void ClearLeafWaterData( void )
 //		dleafwaterdata		: This is an output from this file.
 // from vbsp.h:
 //		g_SurfaceProperties : This is an input to this file.
-void EmitPhysCollision( bool useMOPP )
+void EmitPhysCollision()
 {
 	ClearLeafWaterData();
 	
@@ -1524,7 +1527,7 @@ void EmitPhysCollision( bool useMOPP )
 		{
 			// world is the only model that processes water separately.
 			// other brushes are assumed to be completely solid or completely liquid
-			BuildWorldPhysModel( collisionList[i], NO_SHRINK, VPHYSICS_MERGE, useMOPP);
+			BuildWorldPhysModel( collisionList[i], NO_SHRINK, VPHYSICS_MERGE);
 		}
 		else
 		{
@@ -1550,22 +1553,30 @@ void EmitPhysCollision( bool useMOPP )
 			totalSize += collisionList[i][j]->GetCollisionBinarySize() + sizeof(int);
 		}
 
-		if ( i == 0 && s_WorldPropList.Count() )
+		// These sections only appear in the world's collision text
+		if ( i == 0 )
 		{
-			pTextBuffer[i]->WriteText( "materialtable {\n" );
-			for ( j = 0; j < s_WorldPropList.Count(); j++ )
+			if ( !g_bNoVirtualMesh && physcollision->SupportsVirtualMesh() )
 			{
-				int propIndex = s_WorldPropList[j];
-				if ( propIndex < 0 )
-				{
-					pTextBuffer[i]->WriteIntKey( "default", j+1 );
-				}
-				else
-				{
-					pTextBuffer[i]->WriteIntKey( physprops->GetPropName( propIndex ), j+1 );
-				}
+				pTextBuffer[i]->WriteText("virtualterrain {}\n");
 			}
-			pTextBuffer[i]->WriteText( "}\n" );
+			if ( s_WorldPropList.Count() )
+			{
+				pTextBuffer[i]->WriteText( "materialtable {\n" );
+				for ( j = 0; j < s_WorldPropList.Count(); j++ )
+				{
+					int propIndex = s_WorldPropList[j];
+					if ( propIndex < 0 )
+					{
+						pTextBuffer[i]->WriteIntKey( "default", j+1 );
+					}
+					else
+					{
+						pTextBuffer[i]->WriteIntKey( physprops->GetPropName( propIndex ), j+1 );
+					}
+				}
+				pTextBuffer[i]->WriteText( "}\n" );
+			}
 		}
 
 		pTextBuffer[i]->Terminate();
@@ -1581,20 +1592,10 @@ void EmitPhysCollision( bool useMOPP )
 
 	// DWORD align the lump because AddLump assumes that it is DWORD aligned.
 	byte *ptr ;
-	if ( useMOPP )
-	{
-		g_PhysCollideSize = totalSize + (physModelCount * sizeof(dphysmodel_t));
-		g_pPhysCollide = (byte *)malloc(( g_PhysCollideSize + 3 ) & ~3 );
-		memset( g_pPhysCollide, 0, g_PhysCollideSize );
-		ptr = g_pPhysCollide;
-	}
-	else
-	{
-		g_PhysCollideSurfaceSize = totalSize + (physModelCount * sizeof(dphysmodel_t));
-		g_pPhysCollideSurface = (byte *)malloc(( g_PhysCollideSurfaceSize + 3 ) & ~3 );
-		memset( g_pPhysCollideSurface, 0, g_PhysCollideSurfaceSize );
-		ptr = g_pPhysCollideSurface;
-	}
+	g_PhysCollideSize = totalSize + (physModelCount * sizeof(dphysmodel_t));
+	g_pPhysCollide = (byte *)malloc(( g_PhysCollideSize + 3 ) & ~3 );
+	memset( g_pPhysCollide, 0, g_PhysCollideSize );
+	ptr = g_pPhysCollide;
 
 	for ( i = 0; i < nummodels; i++ )
 	{
@@ -1647,16 +1648,8 @@ void EmitPhysCollision( bool useMOPP )
 	model.solidCount = 0;
 	memcpy( ptr, &model, sizeof(model) );
 	ptr += sizeof(model);
-	if ( useMOPP )
-	{
-		Assert( (ptr-g_pPhysCollide) == g_PhysCollideSize);
-		Msg("done (%d) (%d bytes)\n", (int)(Plat_FloatTime() - start), g_PhysCollideSize );
-	}
-	else
-	{
-		Assert( (ptr-g_pPhysCollideSurface) == g_PhysCollideSurfaceSize);
-		Msg("done (%d) (%d bytes)\n", (int)(Plat_FloatTime() - start), g_PhysCollideSurfaceSize );
-	}
+	Assert( (ptr-g_pPhysCollide) == g_PhysCollideSize);
+	Msg("done (%d) (%d bytes)\n", (int)(Plat_FloatTime() - start), g_PhysCollideSize );
 
 	// UNDONE: Collision models (collisionList) memory leak!
 }

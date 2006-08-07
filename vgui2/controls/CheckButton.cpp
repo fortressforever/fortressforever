@@ -73,6 +73,8 @@ private:
 	CheckButton *_CheckButton;
 };
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CheckButton, CheckButton );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------

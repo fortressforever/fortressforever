@@ -26,10 +26,10 @@ void CLitSmokeEmitter::Init( const char *materialName, Vector sortOrigin )
 {
 	m_hSmokeMaterial = GetPMaterial( materialName );
 	
-	IMaterial *pMaterial = g_ParticleMgr.PMaterialToIMaterial( m_hSmokeMaterial );
+	IMaterial *pMaterial = ParticleMgr()->PMaterialToIMaterial( m_hSmokeMaterial );
 	if ( pMaterial )
 	{
-		m_Renderer.Init( &g_ParticleMgr, pMaterial );
+		m_Renderer.Init( ParticleMgr(), pMaterial );
 	}
 
 	SetSortOrigin( sortOrigin );
@@ -96,7 +96,7 @@ void CLitSmokeEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		// Transform.						   
 		Vector tPos;
 
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = tPos.z;
 		
 		float alpha255 = ( ( (float) pParticle->m_uchColor[3]/255.0f ) * sin( M_PI_F * tLifetime ) ) * 255.0f;

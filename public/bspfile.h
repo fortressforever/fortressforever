@@ -19,7 +19,9 @@
 #define IDBSPHEADER	(('P'<<24)+('S'<<16)+('B'<<8)+'V')
 		// little-endian "VBSP"
 
-#define BSPVERSION 19
+// MINBSPVERSION is the minimum acceptable version.  The engine will load MINBSPVERSION through BSPVERSION
+#define MINBSPVERSION 19
+#define BSPVERSION 20
 
 
 // This needs to match the value in gl_lightmap.h
@@ -93,7 +95,8 @@
 #define	MAX_MAP_TEXTURES	1024
 #define MAX_MAP_WORLDLIGHTS	8192
 #define MAX_MAP_CUBEMAPSAMPLES 1024
-#define MAX_MAP_OVERLAYS	    512
+#define MAX_MAP_OVERLAYS	    512 
+#define MAX_MAP_WATEROVERLAYS	16384
 #define MAX_MAP_TEXDATA_STRING_DATA		256000
 #define MAX_MAP_TEXDATA_STRING_TABLE	65536
 
@@ -233,87 +236,93 @@ typedef enum
 
 enum
 {
-	LUMP_ENTITIES		= 0,		// *
-	LUMP_PLANES			= 1,		// *
-// JAY: This is texdata now, previously LUMP_TEXTURES
-	LUMP_TEXDATA		= 2,		// 
-	LUMP_VERTEXES		= 3,		// *
-	LUMP_VISIBILITY		= 4,		// *
-	LUMP_NODES			= 5,		// *
-	LUMP_TEXINFO		= 6,		// *
-	LUMP_FACES			= 7,		// *
-	LUMP_LIGHTING		= 8,		// *
-	LUMP_OCCLUSION		= 9,
-	LUMP_LEAFS			= 10,		// *
-
-//#define	LUMP_			11		
-
-	LUMP_EDGES			= 12,		// *
-	LUMP_SURFEDGES		= 13,		// *
-	LUMP_MODELS			= 14,		// *
-	LUMP_WORLDLIGHTS	= 15,		// 
-
-	LUMP_LEAFFACES		= 16,		// *
-	LUMP_LEAFBRUSHES	= 17,		// *
-	LUMP_BRUSHES		= 18,		// *
-	LUMP_BRUSHSIDES		= 19,		// *
-	LUMP_AREAS			= 20,		// *
-	LUMP_AREAPORTALS	= 21,		// *
-	LUMP_PORTALS		= 22,
-	LUMP_CLUSTERS		= 23,
-	LUMP_PORTALVERTS	= 24,
-	LUMP_CLUSTERPORTALS = 25,
-	LUMP_DISPINFO		= 26,
-	LUMP_ORIGINALFACES	= 27,
-
-	LUMP_PHYSCOLLIDE	= 29,
-	LUMP_VERTNORMALS	= 30,
-	LUMP_VERTNORMALINDICES		= 31,
-
-	LUMP_DISP_LIGHTMAP_ALPHAS	= 32,
-	LUMP_DISP_VERTS = 33,						// CDispVerts
-	
+	LUMP_ENTITIES					= 0,	// *
+	LUMP_PLANES						= 1,	// *
+	LUMP_TEXDATA					= 2,	// JAY: This is texdata now, previously LUMP_TEXTURES
+	LUMP_VERTEXES					= 3,	// *
+	LUMP_VISIBILITY					= 4,	// *
+	LUMP_NODES						= 5,	// *
+	LUMP_TEXINFO					= 6,	// *
+	LUMP_FACES						= 7,	// *
+	LUMP_LIGHTING					= 8,	// *
+	LUMP_OCCLUSION					= 9,
+	LUMP_LEAFS						= 10,	// *
+	// UNUSED
+	LUMP_EDGES						= 12,	// *
+	LUMP_SURFEDGES					= 13,	// *
+	LUMP_MODELS						= 14,	// *
+	LUMP_WORLDLIGHTS				= 15,	// 
+	LUMP_LEAFFACES					= 16,	// *
+	LUMP_LEAFBRUSHES				= 17,	// *
+	LUMP_BRUSHES					= 18,	// *
+	LUMP_BRUSHSIDES					= 19,	// *
+	LUMP_AREAS						= 20,	// *
+	LUMP_AREAPORTALS				= 21,	// *
+	LUMP_PORTALS					= 22,
+	LUMP_CLUSTERS					= 23,
+	LUMP_PORTALVERTS				= 24,
+	LUMP_CLUSTERPORTALS				= 25,
+	LUMP_DISPINFO					= 26,
+	LUMP_ORIGINALFACES				= 27,
+	// UNUSED
+	LUMP_PHYSCOLLIDE				= 29,
+	LUMP_VERTNORMALS				= 30,
+	LUMP_VERTNORMALINDICES			= 31,
+	LUMP_DISP_LIGHTMAP_ALPHAS		= 32,
+	LUMP_DISP_VERTS					= 33,		// CDispVerts
 	LUMP_DISP_LIGHTMAP_SAMPLE_POSITIONS = 34,	// For each displacement
 												//     For each lightmap sample
 												//         byte for index
 												//         if 255, then index = next byte + 255
 												//         3 bytes for barycentric coordinates
-
 	// The game lump is a method of adding game-specific lumps
 	// FIXME: Eventually, all lumps could use the game lump system
-	LUMP_GAME_LUMP = 35,
-
-	LUMP_LEAFWATERDATA	= 36,
-
-	LUMP_PRIMITIVES		= 37,
-	LUMP_PRIMVERTS		= 38,
-	LUMP_PRIMINDICES	= 39,
-
+	LUMP_GAME_LUMP					= 35,
+	LUMP_LEAFWATERDATA				= 36,
+	LUMP_PRIMITIVES					= 37,
+	LUMP_PRIMVERTS					= 38,
+	LUMP_PRIMINDICES				= 39,
 	// A pak file can be embedded in a .bsp now, and the file system will search the pak
 	//  file first for any referenced names, before deferring to the game directory 
 	//  file system/pak files and finally the base directory file system/pak files.
-	LUMP_PAKFILE		= 40,
-	LUMP_CLIPPORTALVERTS= 41,
+	LUMP_PAKFILE					= 40,
+	LUMP_CLIPPORTALVERTS			= 41,
 	// A map can have a number of cubemap entities in it which cause cubemap renders
 	// to be taken after running vrad.
-	LUMP_CUBEMAPS		= 42,
+	LUMP_CUBEMAPS					= 42,
+	LUMP_TEXDATA_STRING_DATA		= 43,
+	LUMP_TEXDATA_STRING_TABLE		= 44,
+	LUMP_OVERLAYS					= 45,
+	LUMP_LEAFMINDISTTOWATER			= 46,
+	LUMP_FACE_MACRO_TEXTURE_INFO	= 47,
+	LUMP_DISP_TRIS					= 48,
+	LUMP_PHYSCOLLIDESURFACE			= 49,	// deprecated.  We no longer use win32-speicifc havok compression on terrain
+	LUMP_WATEROVERLAYS              = 50,
+	LUMP_LIGHTMAPPAGES				= 51,	// xbox: alternate lightdata implementation
+	LUMP_LIGHTMAPPAGEINFOS          = 52,	// xbox: indexed by faces for alternate lightdata
 
-	LUMP_TEXDATA_STRING_DATA	= 43,
-	LUMP_TEXDATA_STRING_TABLE	= 44,
-	LUMP_OVERLAYS				= 45,
-	LUMP_LEAFMINDISTTOWATER		= 46,
-	LUMP_FACE_MACRO_TEXTURE_INFO = 47,
-	LUMP_DISP_TRIS = 48,
-	LUMP_PHYSCOLLIDESURFACE	= 49,
+	// optional lumps for HDR
+	LUMP_LIGHTING_HDR				= 53,
+	LUMP_WORLDLIGHTS_HDR			= 54,
+	LUMP_LEAF_AMBIENT_LIGHTING_HDR	= 55,	// NOTE: this data overrides part of the data stored in LUMP_LEAFS.
+	LUMP_LEAF_AMBIENT_LIGHTING		= 56,	// NOTE: this data overrides part of the data stored in LUMP_LEAFS.
+
+	LUMP_XZIPPAKFILE				= 57,   // xbox: maps may now have xzp's instead of zips stored. 
+	LUMP_FACES_HDR					= 58,	// HDR maps may have different face data.
+	LUMP_MAP_FLAGS                  = 59,   // extended level-wide flags. not present in all levels
+
 };
 
 
 // Lumps that have versions are listed here
 enum
 {
-	LUMP_LIGHTING_VERSION = 1,
-	LUMP_FACES_VERSION = 1,
-	LUMP_OCCLUSION_VERSION = 2,
+	LUMP_LIGHTING_VERSION          = 1,
+	LUMP_FACES_VERSION             = 1,
+	LUMP_OCCLUSION_VERSION         = 2,
+	LUMP_LIGHTMAPPAGES_VERSION     = 1,
+	LUMP_LIGHTMAPPAGEINFOS_VERSION = 1,
+	LUMP_LEAFS_VERSION			   = 1,
 };
 
 
@@ -335,6 +344,22 @@ struct dheader_t
 	int			version;	
 	lump_t		lumps[HEADER_LUMPS];
 	int			mapRevision;				// the map's revision (iteration, version) number (added BSPVERSION 6)
+};
+
+#define LVLFLAGS_BAKED_STATIC_PROP_LIGHTING 1				// was processed bye vrad with -staticproplighting
+
+struct dflagslump_t
+{
+	uint32 m_LevelFlags;									// LVLFLAGS_xxx
+};
+
+struct lumpfileheader_t
+{
+	int				lumpOffset;
+	int				lumpID;
+	int				lumpVersion;	
+	int				lumpLength;
+	int				mapRevision;				// the map's revision (iteration, version) number (added BSPVERSION 6)
 };
 
 struct dgamelumpheader_t
@@ -681,7 +706,7 @@ inline void dface_t::SetDynamicShadowsEnabled( bool bEnabled )
 #define LEAF_FLAGS_RADIAL		0x02		// This leaf culled away some portals due to radial vis
 
 
-struct dleaf_t
+struct dleaf_version_0_t
 {
 	int				contents;			// OR of all brushes (not needed?)
 
@@ -702,6 +727,31 @@ struct dleaf_t
 
 	// Precaculated light info for entities.
 	CompressedLightCube m_AmbientLighting;
+};
+
+// version 1
+struct dleaf_t
+{
+	int				contents;			// OR of all brushes (not needed?)
+
+	short			cluster;
+
+	short			area:9;
+	short			flags:7;			// Per leaf flags.
+
+	short			mins[3];			// for frustum culling
+	short			maxs[3];
+
+	unsigned short	firstleafface;
+	unsigned short	numleaffaces;
+
+	unsigned short	firstleafbrush;
+	unsigned short	numleafbrushes;
+	short			leafWaterDataID; // -1 for not in water
+
+	// NOTE: removed this for version 1 and moved into separate lump "LUMP_LEAF_AMBIENT_LIGHTING" or "LUMP_LEAF_AMBIENT_LIGHTING_HDR"
+	// Precaculated light info for entities.
+//	CompressedLightCube m_AmbientLighting;
 };
 
 struct dbrushside_t
@@ -888,6 +938,58 @@ inline unsigned short doverlay_t::GetRenderOrder() const
 	return (m_nFaceCountAndRenderOrder >> (16 - OVERLAY_RENDER_ORDER_NUM_BITS));
 }
 
+#define WATEROVERLAY_BSP_FACE_COUNT				256
+#define WATEROVERLAY_RENDER_ORDER_NUM_BITS		2
+#define WATEROVERLAY_NUM_RENDER_ORDERS			(1<<WATEROVERLAY_RENDER_ORDER_NUM_BITS)
+#define WATEROVERLAY_RENDER_ORDER_MASK			0xC000	// top 2 bits set
+struct dwateroverlay_t
+{
+	int				nId;
+	short			nTexInfo;
+
+	// Accessors..
+	void			SetFaceCount( unsigned short count );
+	unsigned short	GetFaceCount() const;
+	void			SetRenderOrder( unsigned short order );
+	unsigned short	GetRenderOrder() const;
+
+private:
+
+	unsigned short	m_nFaceCountAndRenderOrder;
+
+public:
+
+	int				aFaces[WATEROVERLAY_BSP_FACE_COUNT];
+	float			flU[2];
+	float			flV[2];
+	Vector			vecUVPoints[4];
+	Vector			vecOrigin;
+	Vector			vecBasisNormal;
+};
+
+inline void dwateroverlay_t::SetFaceCount( unsigned short count )
+{
+	Assert( count >= 0 && (count & WATEROVERLAY_RENDER_ORDER_MASK) == 0 );
+	m_nFaceCountAndRenderOrder &= WATEROVERLAY_RENDER_ORDER_MASK;
+	m_nFaceCountAndRenderOrder |= (count & ~WATEROVERLAY_RENDER_ORDER_MASK);
+}
+
+inline unsigned short dwateroverlay_t::GetFaceCount() const
+{
+	return m_nFaceCountAndRenderOrder & ~WATEROVERLAY_RENDER_ORDER_MASK;
+}
+
+inline void dwateroverlay_t::SetRenderOrder( unsigned short order )
+{
+	Assert( order >= 0 && order < WATEROVERLAY_NUM_RENDER_ORDERS );
+	m_nFaceCountAndRenderOrder &= ~WATEROVERLAY_RENDER_ORDER_MASK;
+	m_nFaceCountAndRenderOrder |= ( order << ( 16 - WATEROVERLAY_RENDER_ORDER_NUM_BITS ) );	// leave 2 bits for render order.
+}
+
+inline unsigned short dwateroverlay_t::GetRenderOrder() const
+{
+	return ( m_nFaceCountAndRenderOrder >> ( 16 - WATEROVERLAY_RENDER_ORDER_NUM_BITS ) );
+}
 
 #ifndef _DEF_BYTE_
 #define _DEF_BYTE_
@@ -909,5 +1011,22 @@ struct epair_t
 	char	*key;
 	char	*value;
 };
+
+// finalized page of surface's lightmaps
+#define MAX_LIGHTMAPPAGE_WIDTH	256
+#define MAX_LIGHTMAPPAGE_HEIGHT	128
+typedef struct
+{
+	byte	data[MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT];
+	byte	palette[256*4];
+} dlightmappage_t;
+
+typedef struct
+{
+	byte			page;			// lightmap page [0..?]
+	byte			offset[2];		// offset into page (s,t)
+	byte			pad;			// unused
+	ColorRGBExp32	avgColor;		// average used for runtime lighting calcs
+} dlightmappageinfo_t;
 
 #endif // BSPFILE_H

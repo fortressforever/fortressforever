@@ -7,7 +7,13 @@
 
 #ifndef OPTIMIZE_H
 #define OPTIMIZE_H
+
+#ifdef _WIN32
 #pragma once
+#endif
+
+#include "studio.h"
+
 
 // NOTE: You can change this without affecting the vtx file format.
 #define MAX_NUM_BONES_PER_TRI ( MAX_NUM_BONES_PER_VERT * 3 )
@@ -76,8 +82,9 @@ struct StripHeader_t
 };
 
 enum StripGroupFlags_t {
-	STRIPGROUP_IS_FLEXED	= 0x01,
-	STRIPGROUP_IS_HWSKINNED	= 0x02
+	STRIPGROUP_IS_FLEXED		= 0x01,
+	STRIPGROUP_IS_HWSKINNED		= 0x02,
+	STRIPGROUP_IS_DELTA_FLEXED	= 0x04
 };
 
 // a locking group

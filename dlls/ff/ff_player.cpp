@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL1.
 //
 // $NoKeywords: $
-//=============================================================================
+//=============================================================================//
 
 #include "cbase.h"
 #include "ff_player.h"
@@ -476,11 +476,11 @@ void CFFPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitA
 {
 	BaseClass::LeaveVehicle( vecExitPoint, vecExitAngles );
 
-	//teleoprt physics shadow too
-	Vector newPos = GetAbsOrigin();
-	QAngle newAng = GetAbsAngles();
+	//teleport physics shadow too
+	// Vector newPos = GetAbsOrigin();
+	// QAngle newAng = GetAbsAngles();
 
-	Teleport( &newPos, &newAng, &vec3_origin );
+	// Teleport( &newPos, &newAng, &vec3_origin );
 }
 
 void CFFPlayer::PreThink(void)
@@ -2350,7 +2350,7 @@ void CFFPlayer::Command_DispenserText( void )
 		// Add iTempLen of the chunk
 		Q_strncat( m_szCustomDispenserText, pszTemp, sizeof( m_szCustomDispenserText ), iTempLen );
 		// Add the space
-		Q_strcat( m_szCustomDispenserText, " " );
+		Q_strncat( m_szCustomDispenserText, " ", sizeof(m_szCustomDispenserText) );
 
 		// Increase running len total + 1 to account
 		// for the space we just added too

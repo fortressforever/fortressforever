@@ -13,7 +13,12 @@
 #include "interface.h"
 
 #define WIN32_LEAN_AND_MEAN
+#ifndef _XBOX
 #include <windows.h>
+#else
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#endif
 
 class IUnicodeWindows : public IBaseInterface
 {

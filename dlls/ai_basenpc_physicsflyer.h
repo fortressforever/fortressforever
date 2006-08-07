@@ -17,7 +17,7 @@
 //-----------------------------------------------------------------------------
 // The combot.
 //-----------------------------------------------------------------------------
-class CAI_BasePhysicsFlyingBot : public CAI_BaseNPC, public IMotionEvent
+abstract_class CAI_BasePhysicsFlyingBot : public CAI_BaseNPC, public IMotionEvent
 {
 	DECLARE_CLASS( CAI_BasePhysicsFlyingBot, CAI_BaseNPC );
 public:

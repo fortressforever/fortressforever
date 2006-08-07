@@ -1,3 +1,5 @@
+$dynamic_compile = defined $ENV{"dynamic_shaders"} && $ENV{"dynamic_shaders"} != 0;
+
 $depnum = 0;
 
 $shaderoutputdir = "shaders";
@@ -98,7 +100,15 @@ sub DoAsmShader
 			$incfile = $shadertype . "tmp9\\$shaderbase.inc ";
 		}
 	}
-	print MAKEFILE $incfile . "$shaderoutputdir\\$shadertype\\$shaderbase.vcs: $shadername @dep\n";
+	if( $dynamic_compile && $shadertype eq "fxc" )
+	{
+		print MAKEFILE $incfile . ": ..\\..\\devtools\\bin\\updateshaders.pl ..\\..\\devtools\\bin\\" . $shadertype . "_prep.pl $shadername @dep\n";
+	}
+	else
+	{
+		print MAKEFILE $incfile . "$shaderoutputdir\\$shadertype\\$shaderbase.vcs: ..\\..\\devtools\\bin\\updateshaders.pl ..\\..\\devtools\\bin\\" . $shadertype . "_prep.pl $shadername @dep\n";
+	}
+	
 
 	my $xboxswitch = "";
 	if( $g_xbox )
@@ -107,7 +117,7 @@ sub DoAsmShader
 	}
 	print MAKEFILE "\t$g_SourceDir\\devtools\\bin\\perl.exe $g_SourceDir\\devtools\\bin\\" . $shadertype . "_prep.pl $xboxswitch -shaderoutputdir $shaderoutputdir -source \"$g_SourceDir\" $shadername\n";
 	my $filename;
-	if( $shadertype eq "fxc" )
+	if( $shadertype eq "fxc" && !$dynamic_compile )
 	{
 		print MAKEFILE "\techo $shadername>> filestocopy.txt\n";
 		my $dep;
@@ -160,7 +170,7 @@ while( 1 )
 	{
 		$nv3x = 1;
 	}
-	elsif( $inputbase =~ m/-shaderoutputdir/ )
+	elsif( $inputbase =~ m/-shaderoutputdir/i )
 	{
 		$shaderoutputdir = shift;
 	}
@@ -206,7 +216,10 @@ foreach $shader ( @srcfiles )
 			print MAKEFILE " $shadertype" . "tmp9\\" . $shaderbase . "\.inc";
 		}
 	}
-	print MAKEFILE " $shaderoutputdir\\$shadertype\\$shaderbase\.vcs";
+	if( !$dynamic_compile || $shadertype ne "fxc" )
+	{
+		print MAKEFILE " $shaderoutputdir\\$shadertype\\$shaderbase\.vcs";
+	}
 }
 print MAKEFILE "\n\n";
 

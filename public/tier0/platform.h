@@ -6,17 +6,18 @@
 //
 //=============================================================================//
 	   
-
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
 #include "wchartypes.h"
+#include "basetypes.h"
 #include "tier0/valve_off.h"
 
 #ifdef _WIN32
 #pragma once
 #endif
 
+// feature enables
 #define NEW_SOFTWARE_LIGHTING
 
 // need this for _alloca
@@ -25,6 +26,43 @@
 
 // need this for memset
 #include <string.h>
+
+#ifdef _RETAIL
+#define IsRetail() true 
+#else
+#define IsRetail() false
+#endif
+
+#ifdef _DEBUG
+#define IsRelease() false
+#define IsDebug() true
+#else
+#define IsRelease() true
+#define IsDebug() false
+#endif
+
+#ifdef _WIN32
+#define IsLinux() false
+#ifndef _XBOX
+#define IsPC() true
+#define IsConsole() false
+#define IsXbox() false
+#else
+#ifndef _CONSOLE
+#define _CONSOLE
+#endif
+#define IsPC() false
+#define IsConsole() true
+#define IsXbox() true
+#endif
+#elif defined(_LINUX)
+#define IsPC() true
+#define IsConsole() false
+#define IsXbox() false
+#define IsLinux() true
+#else
+#error
+#endif
 
 typedef unsigned char uint8;
 
@@ -74,6 +112,14 @@ typedef double float64;
 // for when we don't care about how many bits we use
 typedef unsigned int uint;
 
+#define XBOX_DVD_SECTORSIZE	2048
+#define XBOX_HDD_SECTORSIZE	512
+
+// Custom windows messages for Xbox input
+#define WM_XREMOTECOMMAND			WM_USER + 100
+#define WM_XCONTROLLER_KEY			WM_USER + 101
+#define WM_XCONTROLLER_UNPLUGGED	WM_USER + 102
+
 // This can be used to ensure the size of pointers to members when declaring
 // a pointer type for a class that has only been forward declared
 #ifdef _MSC_VER
@@ -82,6 +128,33 @@ typedef unsigned int uint;
 #else
 #define SINGLE_INHERITANCE  
 #define MULTIPLE_INHERITANCE 
+#endif
+
+#ifdef _MSC_VER
+#define NO_VTABLE __declspec( novtable )
+#else
+#define NO_VTABLE
+#endif
+
+// This can be used to declare an abstract (interface only) class. 
+// Classes marked abstract should not be instantiated.  If they are, and access violation will occur.
+//
+// Example of use:
+// 
+// abstract_class CFoo
+// {
+//      ...
+// }
+//
+// MSDN __declspec(novtable) documentation: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclang/html/_langref_novtable.asp
+//
+// Note: NJS: This is not enabled for regular PC, due to not knowing the implications of exporting a class with no no vtable.
+//       It's probable that this shouldn't be an issue, but an experiment should be done to verify this.
+//
+#ifndef _XBOX
+#define abstract_class class
+#else
+#define abstract_class class NO_VTABLE
 #endif
 
 /*
@@ -179,6 +252,15 @@ typedef void * HINSTANCE;
 #endif
 
 #ifdef _WIN32
+	#define SELECTANY __declspec(selectany)
+#elif _LINUX
+	#define SELECTANY __attribute__((weak))
+#else
+	#define SELECTANY static
+#endif
+
+#if defined(_WIN32) && !defined(_XBOX)
+
 // Used for dll exporting and importing
 #define  DLL_EXPORT   extern "C" __declspec( dllexport ) 
 #define  DLL_IMPORT   extern "C" __declspec( dllimport )
@@ -190,8 +272,8 @@ typedef void * HINSTANCE;
 // Can't use extern "C" when DLL exporting a global
 #define  DLL_GLOBAL_EXPORT   extern __declspec( dllexport ) 
 #define  DLL_GLOBAL_IMPORT   extern __declspec( dllimport )
-#elif defined _LINUX
 
+#elif defined _LINUX
 // Used for dll exporting and importing
 #define  DLL_EXPORT   extern "C" 
 #define  DLL_IMPORT   extern "C" 
@@ -204,6 +286,15 @@ typedef void * HINSTANCE;
 #define  DLL_GLOBAL_EXPORT   extern
 #define  DLL_GLOBAL_IMPORT   extern 
 
+#elif defined(_XBOX)
+
+#define  DLL_EXPORT				extern   
+#define  DLL_IMPORT				extern
+#define  DLL_CLASS_EXPORT  
+#define  DLL_CLASS_IMPORT   
+#define  DLL_GLOBAL_EXPORT   
+#define  DLL_GLOBAL_IMPORT   
+
 #else
 #error "Unsupported Platform."
 #endif
@@ -211,12 +302,19 @@ typedef void * HINSTANCE;
 // Used for standard calling conventions
 #ifdef _WIN32
 	#define  STDCALL				__stdcall
-	#define  FASTCALL			   __fastcall
-	#define  FORCEINLINE		   __forceinline	
+	#define  FASTCALL				__fastcall
+	#define  FORCEINLINE			__forceinline	
+	// GCC 3.4.1 has a bug in supporting forced inline of templated functions
+	// this macro lets us not force inlining in that case
+	#define  FORCEINLINE_TEMPLATE		__forceinline	
 #else
 	#define  STDCALL
-	#define  FASTCALL			   
-	#define  FORCEINLINE		   inline
+	#define  FASTCALL 
+	#define  FORCEINLINE			__attribute__ ((always_inline))
+	// GCC 3.4.1 has a bug in supporting forced inline of templated functions
+	// this macro lets us not force inlining in that case
+	#define  FORCEINLINE_TEMPLATE
+	#define  __stdcall			__attribute__ ((__stdcall__)) 
 #endif
 
 // Force a function call site -not- to inlined. (useful for profiling)
@@ -277,8 +375,20 @@ typedef void * HINSTANCE;
 #pragma warning(disable : 4121)	// warning C4121: 'symbol' : alignment of a member was sensitive to packing
 #pragma warning(disable : 4530)	// warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc (disabled due to std headers having exception syntax)
 #endif
+
+#if _MSC_VER >= 1400
+#pragma warning(disable : 4996)	// functions declared deprecated
 #endif
 
+
+#endif
+
+// When we port to 64 bit, we'll have to resolve the int, ptr vs size_t 32/64 bit problems...
+#if !defined( _WIN64 )
+#pragma warning( disable : 4267 )	// conversion from 'size_t' to 'int', possible loss of data
+#pragma warning( disable : 4311 )	// pointer truncation from 'char *' to 'int'
+#pragma warning( disable : 4312 )	// conversion from 'unsigned int' to 'memhandle_t' of greater size
+#endif
 
 //-----------------------------------------------------------------------------
 // FP exception handling
@@ -418,7 +528,7 @@ inline float DWordSwapAsm<float>( float f )
 // The typically used methods. 
 //-------------------------------------
 
-#if defined(__i386__)
+#if defined(__i386__) || defined(_XBOX)
 #define LITTLE_ENDIAN 1
 #endif
 

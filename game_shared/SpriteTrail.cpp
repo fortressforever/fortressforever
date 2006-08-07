@@ -52,9 +52,11 @@ END_DATADESC()
 
 BEGIN_DATADESC( CSpriteTrail )
 
-	DEFINE_FIELD( m_flLifeTime,			FIELD_FLOAT ),
-	DEFINE_FIELD( m_flStartWidth,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_flEndWidth,			FIELD_FLOAT ),
+	DEFINE_KEYFIELD( m_flLifeTime,			FIELD_FLOAT, "lifetime" ),
+	DEFINE_KEYFIELD( m_flStartWidth,		FIELD_FLOAT, "startwidth" ),
+	DEFINE_KEYFIELD( m_flEndWidth,			FIELD_FLOAT, "endwidth" ),
+	DEFINE_KEYFIELD( m_iszSpriteName,		FIELD_STRING, "spritename" ),
+	DEFINE_KEYFIELD( m_bAnimate,			FIELD_BOOLEAN, "animate" ),
 	DEFINE_FIELD( m_flStartWidthVariance,	FIELD_FLOAT ),
 	DEFINE_FIELD( m_flTextureRes,		FIELD_FLOAT ),
 	DEFINE_FIELD( m_flMinFadeLength,	FIELD_FLOAT ),
@@ -105,13 +107,11 @@ BEGIN_NETWORK_TABLE( CSpriteTrail, DT_SpriteTrail )
 #endif
 END_NETWORK_TABLE()
 
-
 //-----------------------------------------------------------------------------
 // Prediction
 //-----------------------------------------------------------------------------
 BEGIN_PREDICTION_DATA( CSpriteTrail )
 END_PREDICTION_DATA()
-
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -129,6 +129,42 @@ CSpriteTrail::CSpriteTrail( void )
 	m_flEndWidth = -1.0f;
 }
 
+void CSpriteTrail::Spawn( void )
+{
+#ifdef CLIENT_DLL
+	BaseClass::Spawn();
+#else
+
+	if ( GetModelName() != NULL_STRING )
+	{
+		BaseClass::Spawn();
+		return;
+	}
+
+	SetModelName( m_iszSpriteName );
+	BaseClass::Spawn();
+
+	SetSolid( SOLID_NONE );
+	SetMoveType( MOVETYPE_NOCLIP );
+
+	SetCollisionBounds( vec3_origin, vec3_origin );
+	TurnOn();
+
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Sets parameters of the sprite trail
+//-----------------------------------------------------------------------------
+void CSpriteTrail::Precache( void ) 
+{
+	BaseClass::Precache();
+
+	if ( m_iszSpriteName != NULL_STRING )
+	{
+		PrecacheModel( STRING(m_iszSpriteName) );
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Sets parameters of the sprite trail

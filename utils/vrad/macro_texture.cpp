@@ -9,9 +9,9 @@
 #include "bsplib.h"
 #include "cmdlib.h"
 #include "vtf/vtf.h"
-#include "utldict.h"
-#include "utlbuffer.h"
-#include "imageloader.h"
+#include "tier1/utldict.h"
+#include "tier1/utlbuffer.h"
+#include "bitmap/imageformat.h"
 
 
 class CMacroTextureData

@@ -28,9 +28,6 @@ BEGIN_DATADESC( CNPC_Alyx )
 
 	DEFINE_FIELD( m_hEmpTool, FIELD_EHANDLE ),
 
-// These are auto-saved by AI
-//	DEFINE_FIELD( m_HolsterBehavior, FIELD_EMBEDDED ),
-
 END_DATADESC()
 
 int AE_ALYX_EMPTOOL_ATTACHMENT;
@@ -102,8 +99,6 @@ void CNPC_Alyx::HandleAnimEvent( animevent_t *pEvent )
 //=========================================================
 bool CNPC_Alyx::CreateBehaviors()
 {
-	AddBehavior( &m_HolsterBehavior );
-	
 	return BaseClass::CreateBehaviors();
 }
 
@@ -256,7 +251,7 @@ void CNPC_Alyx::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 //-----------------------------------------------------------------------------
 
-void CNPC_Alyx::DeathSound(void)
+void CNPC_Alyx::DeathSound( const CTakeDamageInfo &info )
 {
 	// Sentences don't play on dead NPCs
 	SentenceStop();

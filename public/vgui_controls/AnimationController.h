@@ -32,7 +32,7 @@ public:
 	~AnimationController();
 
 	// sets which script file to use
-	bool SetScriptFile(const char *fileName, bool wipeAll = false );
+	bool SetScriptFile( VPANEL sizingPanel, const char *fileName, bool wipeAll = false );
 
 	// reloads the currently set script file
 	void ReloadScriptFile();
@@ -67,10 +67,12 @@ public:
 	};
 
 	// runs the specific animation command (doesn't use script file at all)
-	void RunAnimationCommand(vgui::Panel *panel, const char *variable, float targetValue, float startDelaySeconds, float durationSeconds, Interpolators_e interpolator);
-	void RunAnimationCommand(vgui::Panel *panel, const char *variable, Color targetValue, float startDelaySeconds, float durationSeconds, Interpolators_e interpolator);
+	void RunAnimationCommand(vgui::Panel *panel, const char *variable, float targetValue, float startDelaySeconds, float durationSeconds, Interpolators_e interpolator, float animParameter = 0 );
+	void RunAnimationCommand(vgui::Panel *panel, const char *variable, Color targetValue, float startDelaySeconds, float durationSeconds, Interpolators_e interpolator, float animParameter = 0 );
 
 private:
+	bool UpdateScreenSize();
+	
 	bool LoadScriptFile(const char *fileName);
 	bool ParseScriptFile(char *pMem, int length);
 
@@ -239,6 +241,9 @@ private:
 	static RelativeAlignmentLookup g_AlignmentLookup[];
 
 	int		GetRelativeOffset( AnimAlign_t& cmd, bool xcoord );
+
+	VPANEL			m_hSizePanel;
+	int				m_nScreenBounds[ 4 ];
 };
 
 // singleton accessor for use only by other vgui_controls

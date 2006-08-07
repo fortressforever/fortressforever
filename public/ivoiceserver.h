@@ -17,7 +17,7 @@
 #define INTERFACEVERSION_VOICESERVER	"VoiceServer001"
 
 
-class IVoiceServer
+abstract_class IVoiceServer
 {
 public:
 	virtual			~IVoiceServer()	{}

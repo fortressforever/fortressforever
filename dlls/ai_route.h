@@ -75,7 +75,7 @@ public:
 	// The activity to use during motion
 	//---------------------------------
 	Activity		GetMovementActivity() const					{ return m_activity;				}
-	Activity		SetMovementActivity(Activity activity)		{ return (m_activity = activity);	}
+	Activity		SetMovementActivity(Activity activity);
 	int				GetMovementSequence() const 				{ return m_sequence;				}
 	int				SetMovementSequence(int sequence)			{ return (m_sequence = sequence);	}
 

@@ -11,7 +11,7 @@
 #include "physics_saverestore.h"
 #include "ai_basenpc.h"
 #include "vphysics/constraints.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 #include "bone_setup.h"
 #include "physics_prop_ragdoll.h"
 #include "KeyValues.h"
@@ -58,9 +58,6 @@ IMPLEMENT_SERVERCLASS_ST(CRagdollProp, DT_Ragdoll)
 	SendPropEHandle(SENDINFO( m_hUnragdoll ) ),
 	SendPropFloat(SENDINFO(m_flBlendWeight), 8, SPROP_ROUNDDOWN, 0.0f, 1.0f ),
 	SendPropInt(SENDINFO(m_nOverlaySequence), 11),
-	SendPropFloat( SENDINFO( m_fadeMinDist ), 0, SPROP_NOSCALE ),
-	SendPropFloat( SENDINFO( m_fadeMaxDist ), 0, SPROP_NOSCALE ),
-	SendPropFloat( SENDINFO( m_flFadeScale ), 0, SPROP_NOSCALE ),
 END_SEND_TABLE()
 
 #define DEFINE_RAGDOLL_ELEMENT( i ) \
@@ -79,10 +76,8 @@ BEGIN_DATADESC(CRagdollProp)
 	DEFINE_FIELD( m_allAsleep, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_hDamageEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hKiller, FIELD_EHANDLE ),
-	DEFINE_INPUT( m_fadeMinDist, FIELD_FLOAT, "fademindist" ),
-	DEFINE_INPUT( m_fadeMaxDist, FIELD_FLOAT, "fademaxdist" ),
-	DEFINE_KEYFIELD( m_flDefaultFadeScale, FIELD_FLOAT, "fadescale" ),
-	DEFINE_FIELD( m_flFadeScale, FIELD_FLOAT ),
+
+	DEFINE_INPUTFUNC( FIELD_VOID, "StartRagdollBoogie", InputStartRadgollBoogie ),
 
 	DEFINE_FIELD( m_hUnragdoll, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bFirstCollisionAfterLaunch, FIELD_BOOLEAN ),
@@ -147,13 +142,16 @@ void CRagdollProp::DisableAutoFade()
 	
 void CRagdollProp::Spawn( void )
 {
+	// Starts out as the default fade scale value
+	m_flDefaultFadeScale = m_flFadeScale;
+
 	// NOTE: If this fires, then the assert or the datadesc is wrong!  (see DEFINE_RAGDOLL_ELEMENT above)
 	Assert( RAGDOLL_MAX_ELEMENTS == 24 );
 	Precache();
 	SetModel( STRING( GetModelName() ) );
 
-	studiohdr_t *pStudioHdr = GetModelPtr( );
-	if ( pStudioHdr->flags & STUDIOHDR_FLAGS_NO_FORCED_FADE )
+	CStudioHdr *pStudioHdr = GetModelPtr( );
+	if ( pStudioHdr->flags() & STUDIOHDR_FLAGS_NO_FORCED_FADE )
 	{
 		DisableAutoFade();
 	}
@@ -203,12 +201,16 @@ void CRagdollProp::OnSave( IEntitySaveUtils *pUtils )
 
 void CRagdollProp::OnRestore()
 {
-	BaseClass::OnRestore();
-	if ( !m_ragdoll.listCount )
-		return;
+	// rebuild element 0 since it isn't saved
+	// NOTE: This breaks the rules - the pointer needs to get fixed in Restore()
 	m_ragdoll.list[0].pObject = VPhysicsGetObject();
 	m_ragdoll.list[0].parentIndex = -1;
 	m_ragdoll.list[0].originParentSpace.Init();
+
+	BaseClass::OnRestore();
+	if ( !m_ragdoll.listCount )
+		return;
+
 	// JAY: Reset collision relationships
 	RagdollSetupCollisions( m_ragdoll, modelinfo->GetVCollide( GetModelIndex() ), GetModelIndex() );
 	VPhysicsUpdate( VPhysicsGetObject() );
@@ -719,6 +721,7 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 
 	if ( activateRagdoll )
 	{
+		MEM_ALLOC_CREDIT();
 		RagdollActivate( m_ragdoll, params.pCollide, GetModelIndex() );
 	}
 
@@ -806,16 +809,19 @@ void CRagdollProp::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 	// Not really ideal, but it'll work for now
 	UpdateModelWidthScale();
 
-	CEngineCacheCriticalSection cacheCriticalSection( engineCache );
-	studiohdr_t *pStudioHdr = GetModelPtr( );
+	MDLCACHE_CRITICAL_SECTION();
+	CStudioHdr *pStudioHdr = GetModelPtr( );
 	bool sim[MAXSTUDIOBONES];
-	memset( sim, 0, pStudioHdr->numbones );
+	memset( sim, 0, pStudioHdr->numbones() );
 
 	int i;
 
+	CBoneAccessor boneaccessor( pBoneToWorld );
 	for ( i = 0; i < m_ragdoll.listCount; i++ )
 	{
-		CBoneAccessor boneaccessor( pBoneToWorld );
+		// during restore this may be NULL
+		if ( !m_ragdoll.list[i].pObject )
+			continue;
 
 		if ( RagdollGetBoneMatrix( m_ragdoll, boneaccessor, i ) )
 		{
@@ -824,12 +830,17 @@ void CRagdollProp::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 	}
 
 	mstudiobone_t *pbones = pStudioHdr->pBone( 0 );
-	for ( i = 0; i < pStudioHdr->numbones; i++ )
+	for ( i = 0; i < pStudioHdr->numbones(); i++ )
 	{
 		if ( sim[i] )
 			continue;
+		
+		if ( !(pbones[i].flags & boneMask) )
+			continue;
 
-		MatrixCopy( pBoneToWorld[pbones[i].parent], pBoneToWorld[ i ] );
+		matrix3x4_t matBoneLocal;
+		AngleMatrix( pbones[i].rot, pbones[i].pos, matBoneLocal );
+		ConcatTransforms( pBoneToWorld[pbones[i].parent], matBoneLocal, pBoneToWorld[i]);
 	}
 }
 
@@ -843,7 +854,7 @@ bool CRagdollProp::TestCollision( const Ray_t &ray, unsigned int mask, trace_t& 
 	}
 #endif
 
-	studiohdr_t *pStudioHdr = GetModelPtr( );
+	CStudioHdr *pStudioHdr = GetModelPtr( );
 	if (!pStudioHdr)
 		return false;
 
@@ -914,7 +925,7 @@ void CRagdollProp::VPhysicsUpdate( IPhysicsObject *pPhysics )
 		return;
 
 	m_lastUpdateTickCount = gpGlobals->tickcount;
-	NetworkStateChanged();
+	//NetworkStateChanged();
 
 	matrix3x4_t boneToWorld[MAXSTUDIOBONES];
 	QAngle angles;
@@ -1084,12 +1095,15 @@ int CRagdollProp::DrawDebugTextOverlays(void)
 			float mass = 0;
 			for ( int i = 0; i < m_ragdoll.listCount; i++ )
 			{
-				mass += m_ragdoll.list[i].pObject->GetMass();
+				if ( m_ragdoll.list[i].pObject != NULL )
+				{
+					mass += m_ragdoll.list[i].pObject->GetMass();
+				}
 			}
 
 			char tempstr[512];
 			Q_snprintf(tempstr, sizeof(tempstr),"Mass: %.2f kg / %.2f lb (%s)", mass, kg2lbs(mass), GetMassEquivalent(mass) );
-			NDebugOverlay::EntityText(entindex(), text_offset, tempstr, 0);
+			EntityText( text_offset, tempstr, 0);
 			text_offset++;
 		}
 	}
@@ -1201,6 +1215,7 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 
 	CRagdollProp *pRagdoll = (CRagdollProp *)CBaseEntity::CreateNoSpawn( "prop_ragdoll", pAnimating->GetAbsOrigin(), vec3_angle, NULL );
 	pRagdoll->CopyAnimationDataFrom( pAnimating );
+	pRagdoll->SetOwnerEntity( pAnimating );
 
 	pRagdoll->InitRagdollAnimation();
 	matrix3x4_t pBoneToWorld[MAXSTUDIOBONES], pBoneToWorldNext[MAXSTUDIOBONES];
@@ -1218,14 +1233,23 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	pRagdoll->SetKiller( info.GetInflictor() );
 	pRagdoll->SetSourceClassName( pAnimating->GetClassname() );
 
+	// NPC_STATE_DEAD npc's will have their COND_IN_PVS cleared, so this needs to force SetupBones to happen
+	unsigned short fPrevFlags = pAnimating->GetBoneCacheFlags();
+	pAnimating->SetBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
+
 	// UNDONE: Extract velocity from bones via animation (like we do on the client)
 	// UNDONE: For now, just move each bone by the total entity velocity if set.
 	pAnimating->SetupBones( pBoneToWorld, BONE_USED_BY_ANYTHING );
+
+	// Reset previous bone flags
+	pAnimating->ClearBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
+	pAnimating->SetBoneCacheFlags( fPrevFlags );
+
 	memcpy( pBoneToWorldNext, pBoneToWorld, sizeof(pBoneToWorld) );
 	Vector vel = pAnimating->GetAbsVelocity();
 	if ( vel.LengthSqr() > 0 )
 	{
-		int numbones = pAnimating->GetModelPtr()->numbones;
+		int numbones = pAnimating->GetModelPtr()->numbones();
 		for ( int i = 0; i < numbones; i++ )
 		{
 			Vector pos;
@@ -1346,7 +1370,7 @@ void CRagdollPropAttached::InitRagdollAttached(
 	int ragdollAttachedIndex = 0;
 	if ( parentBoneAttach > 0 )
 	{
-		studiohdr_t *pStudioHdr = GetModelPtr();
+		CStudioHdr *pStudioHdr = GetModelPtr();
 		mstudiobone_t *pBone = pStudioHdr->pBone( parentBoneAttach );
 		ragdollAttachedIndex = pBone->physicsbone;
 	}
@@ -1415,6 +1439,10 @@ void CRagdollPropAttached::InitRagdollAttached(
 
 CRagdollProp *CreateServerRagdollAttached( CBaseAnimating *pAnimating, const Vector &vecForce, int forceBone, int collisionGroup, IPhysicsObject *pAttached, CBaseAnimating *pParentEntity, int boneAttach, const Vector &originAttached, int parentBoneAttach, const Vector &boneOrigin )
 {
+	// Return immediately if the model doesn't have a vcollide
+	if ( modelinfo->GetVCollide( pAnimating->GetModelIndex() ) == NULL )
+		return NULL;
+
 	CRagdollPropAttached *pRagdoll = (CRagdollPropAttached *)CBaseEntity::CreateNoSpawn( "prop_ragdoll_attached", pAnimating->GetAbsOrigin(), vec3_angle, NULL );
 	pRagdoll->CopyAnimationDataFrom( pAnimating );
 
@@ -1468,6 +1496,17 @@ void CRagdollProp::GetAngleOverrideFromCurrentState( char *pOut, int size )
 	}
 }
 
+void CRagdollProp::InputStartRadgollBoogie( inputdata_t &inputdata )
+{
+	float duration = inputdata.value.Float();
+
+	if( duration <= 0.0f )
+	{
+		duration = 5.0f;
+	}
+
+	CRagdollBoogie::Create( this, 100, gpGlobals->curtime, duration, 0 );
+}
 
 void Ragdoll_GetAngleOverrideString( char *pOut, int size, CBaseEntity *pEntity )
 {

@@ -128,6 +128,7 @@ public:
 	virtual void	UpdateOnRemove( void );
 	
 	// AI
+	void			UpdateEfficiency( bool bInPVS )	{ SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); SetMoveEfficiency( AIME_NORMAL ); }
 	virtual void	PrescheduleThink( void );
 	virtual int		TranslateSchedule( int scheduleType );
 	virtual int		SelectSchedule( void );

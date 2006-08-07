@@ -108,6 +108,9 @@ public:
 private:
 
 	CCycleCount	m_Duration;
+#ifdef DEBUG_FASTTIMER
+	bool m_bRunning;		// Are we currently running?
+#endif
 };
 
 
@@ -378,6 +381,9 @@ inline double CCycleCount::GetSeconds() const
 inline void CFastTimer::Start()
 {
 	m_Duration.Sample();
+#ifdef DEBUG_FASTTIMER
+	m_bRunning = true;
+#endif
 }
 
 
@@ -386,6 +392,9 @@ inline void CFastTimer::End()
 	CCycleCount cnt;
 	cnt.Sample();
 	m_Duration.m_Int64 = cnt.m_Int64 - m_Duration.m_Int64;
+#ifdef DEBUG_FASTTIMER
+	m_bRunning = false;
+#endif
 }
 
 inline CCycleCount CFastTimer::GetDurationInProgress() const
@@ -408,6 +417,9 @@ inline unsigned long CFastTimer::GetClockSpeed()
 
 inline CCycleCount const& CFastTimer::GetDuration() const
 {
+#ifdef DEBUG_FASTTIMER
+	assert( !m_bRunning );
+#endif
 	return m_Duration;
 }
 

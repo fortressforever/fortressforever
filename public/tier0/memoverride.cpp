@@ -11,7 +11,7 @@
 
 #undef PROTECTED_THINGS_ENABLE   // allow use of _vsnprintf
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 #define WIN_32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -23,6 +23,11 @@
 #include <string.h>
 #include <stdio.h>
 #include "memdbgoff.h"
+
+// Tags this DLL as debug
+#if _DEBUG
+DLL_EXPORT void BuiltDebug() {}
+#endif
 
 #ifdef _WIN32
 // ARG: crtdbg is necessary for certain definitions below,
@@ -38,12 +43,12 @@
 #ifdef NDEBUG
 #undef _DEBUG
 #endif
-
 #elif _LINUX
 #define __cdecl
 #endif
 
-#ifdef _WIN32
+
+#if defined(_WIN32) && !defined(_XBOX)
 const char *MakeModuleFileName()
 {
 	if ( g_pMemAlloc->IsDebugHeap() )
@@ -55,6 +60,17 @@ const char *MakeModuleFileName()
 		VirtualQuery( &dummy, &mbi, sizeof(mbi) );
 
 		GetModuleFileName( reinterpret_cast<HMODULE>(mbi.AllocationBase), pszModuleName, MAX_PATH );
+		char *pDot = strrchr( pszModuleName, '.' );
+		if ( pDot )
+		{
+			char *pSlash = strrchr( pszModuleName, '\\' );
+			if ( pSlash )
+			{
+				pszModuleName = pSlash + 1;
+				*pDot = 0;
+			}
+		}
+
 		return pszModuleName;
 	}
 	return NULL;
@@ -96,29 +112,37 @@ inline void *ReallocUnattributed( void *pMem, size_t nSize )
 //-----------------------------------------------------------------------------
 // Standard functions in the CRT that we're going to override to call our allocator
 //-----------------------------------------------------------------------------
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_STATIC_LINKED)
 // this magic only works under win32
 // under linux this malloc() overrides the libc malloc() and so we
 // end up in a recursion (as g_pMemAlloc->Alloc() calls malloc)
+#if _MSC_VER >= 1400
+#define ALLOC_CALL _CRTNOALIAS _CRTRESTRICT 
+#define FREE_CALL _CRTNOALIAS 
+#else
+#define ALLOC_CALL
+#define FREE_CALL
+#endif
+
 extern "C"
 {
 	
-void *malloc( size_t nSize )
+ALLOC_CALL void *malloc( size_t nSize )
 {
 	return AllocUnattributed( nSize );
 }
 
-void free( void *pMem )
+FREE_CALL void free( void *pMem )
 {
 	g_pMemAlloc->Free(pMem);
 }
 
-void *realloc( void *pMem, size_t nSize )
+ALLOC_CALL void *realloc( void *pMem, size_t nSize )
 {
 	return ReallocUnattributed( pMem, nSize );
 }
 
-void *calloc( size_t nCount, size_t nElementSize )
+ALLOC_CALL void *calloc( size_t nCount, size_t nElementSize )
 {
 	void *pMem = AllocUnattributed( nElementSize * nCount );
 	memset(pMem, 0, nElementSize * nCount);
@@ -126,7 +150,6 @@ void *calloc( size_t nCount, size_t nElementSize )
 }
 
 } // end extern "C"
-#endif
 
 //-----------------------------------------------------------------------------
 // Non-standard MSVC functions that we're going to override to call our allocator
@@ -181,7 +204,8 @@ void *__cdecl _nh_malloc( size_t nSize, int )
 
 void *__cdecl _expand( void *pMem, size_t nSize )
 {
-	return g_pMemAlloc->Expand(pMem, nSize);
+	Assert( 0 );
+	return NULL;
 }
 
 unsigned int _amblksiz = 16; //BYTES_PER_PARA;
@@ -247,59 +271,61 @@ void *realloc_db( void *pMem, size_t nSize, const char *pFileName, int nLine )
 	
 } // end extern "C"
 
-
-
-//-----------------------------------------------------------------------------
-// Prevents us from using an inappropriate new or delete method,
-// ensures they are here even when linking against debug or release static libs
-//-----------------------------------------------------------------------------
-void *operator new( unsigned int nSize )
-{
-	return AllocUnattributed( nSize );
-}
-
-void *operator new( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
-{
-	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-}
-
-void operator delete( void *pMem )
-{
-	g_pMemAlloc->Free( pMem );
-}
-
-void *operator new[] ( unsigned int nSize )
-{
-	return AllocUnattributed( nSize );
-}
-
-void *operator new[] ( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
-{
-	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-}
-
-void operator delete[] ( void *pMem )
-{
-	g_pMemAlloc->Free( pMem );
-}
-
-
 //-----------------------------------------------------------------------------
 // These methods are standard MSVC heap initialization + shutdown methods
 //-----------------------------------------------------------------------------
 extern "C"
 {
 
-int __cdecl _heap_init()
-{
-	return g_pMemAlloc != NULL;
+	int __cdecl _heap_init()
+	{
+		return g_pMemAlloc != NULL;
+	}
+
+	void __cdecl _heap_term()
+	{
+	}
+
 }
 
-void __cdecl _heap_term()
+#endif
+
+
+//-----------------------------------------------------------------------------
+// Prevents us from using an inappropriate new or delete method,
+// ensures they are here even when linking against debug or release static libs
+//-----------------------------------------------------------------------------
+#ifndef NO_MEMOVERRIDE_NEW_DELETE
+void *__cdecl operator new( unsigned int nSize )
 {
+	return AllocUnattributed( nSize );
 }
-	
+
+void *__cdecl operator new( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
+{
+	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
 }
+
+void __cdecl operator delete( void *pMem )
+{
+	g_pMemAlloc->Free( pMem );
+}
+
+void *__cdecl operator new[] ( unsigned int nSize )
+{
+	return AllocUnattributed( nSize );
+}
+
+void *__cdecl operator new[] ( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
+{
+	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
+}
+
+void __cdecl operator delete[] ( void *pMem )
+{
+	g_pMemAlloc->Free( pMem );
+}
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -307,6 +333,7 @@ void __cdecl _heap_term()
 // NOTE: These have to be here for release + debug builds in case we
 // link to a debug static lib!!!
 //-----------------------------------------------------------------------------
+#ifndef _STATIC_LINKED
 #ifdef _WIN32
 
 // This here just hides the internal file names, etc of allocations
@@ -338,7 +365,7 @@ private:
 
 
 #define AttribIfCrt() CAttibCRT _attrib(nBlockUse)
-#elif _LINUX
+#elif defined(_LINUX)
 #define AttribIfCrt()
 #endif // _WIN32
 
@@ -379,8 +406,8 @@ void *__cdecl _realloc_dbg( void *pMem, size_t nNewSize, int nBlockUse,
 void *__cdecl _expand_dbg( void *pMem, size_t nNewSize, int nBlockUse,
 							const char *pFileName, int nLine )
 {
-	AttribIfCrt();
-	return g_pMemAlloc->Expand(pMem, nNewSize, pFileName, nLine);
+	Assert( 0 );
+	return NULL;
 }
 
 void __cdecl _free_dbg( void *pMem, int nBlockUse )
@@ -403,16 +430,16 @@ size_t __cdecl _msize_dbg( void *pMem, int nBlockUse )
 #ifdef _WIN32
 
 #if defined(_DEBUG) && _MSC_VER >= 1300
-void    __cdecl _aligned_free_base(
+FREE_CALL void    __cdecl _aligned_free_base(
         void *
         );
 
-void *  __cdecl _aligned_malloc_base(
+ALLOC_CALL void *  __cdecl _aligned_malloc_base(
         size_t,
         size_t
         );
 
-void * __cdecl _aligned_malloc(
+ALLOC_CALL void * __cdecl _aligned_malloc(
         size_t size,
         size_t align
         )
@@ -420,7 +447,7 @@ void * __cdecl _aligned_malloc(
     return _aligned_malloc_base(size, align);
 }
 
-void __cdecl _aligned_free(
+FREE_CALL void __cdecl _aligned_free(
         void *memblock
         )
 {
@@ -437,7 +464,6 @@ void __cdecl _aligned_free(
 // Override some the _CRT debugging allocation methods in MSVC
 //-----------------------------------------------------------------------------
 #ifdef _WIN32
-
 
 extern "C"
 {
@@ -559,20 +585,23 @@ int __cdecl _CrtDbgReport( int nRptType, const char * szFile,
 	return g_pMemAlloc->CrtDbgReport( nRptType, szFile, nLine, szModule, output );
 }
 
-	
+int __cdecl _CrtReportBlockType(const void * pUserData)
+{
+	return 0;
+}
+
+
 } // end extern "C"
 #endif // _WIN32
 
 // Most files include this file, so when it's used it adds an extra .ValveDbg section,
 // to help identify debug binaries.
 #ifdef _WIN32
-
 	#ifndef NDEBUG // _DEBUG
 		#pragma data_seg("ValveDBG") 
-
 		volatile const char* DBG = "*** DEBUG STUB ***";                     
-
 	#endif
+#endif
 
 #endif
 

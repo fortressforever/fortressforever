@@ -9,6 +9,7 @@
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "iefx.h"
+#include "fx.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,8 +37,6 @@ public:
 	Vector			m_vecOrigin;
 	int				m_nEntity;
 	int				m_nIndex;
-
-	const ConVar	*m_pDecals;
 };
 
 //-----------------------------------------------------------------------------
@@ -48,8 +47,6 @@ C_TEBSPDecal::C_TEBSPDecal( void )
 	m_vecOrigin.Init();
 	m_nEntity = 0;
 	m_nIndex = 0;
-
-	m_pDecals = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -64,7 +61,6 @@ C_TEBSPDecal::~C_TEBSPDecal( void )
 //-----------------------------------------------------------------------------
 void C_TEBSPDecal::Precache( void )
 {
-	m_pDecals = cvar->FindVar( "r_decals" );
 }
 
 void TE_BSPDecal( IRecipientFilter& filter, float delay,
@@ -77,9 +73,7 @@ void TE_BSPDecal( IRecipientFilter& filter, float delay,
 		return;
 	}
 
-	const ConVar *decals = cvar->FindVar( "r_decals" );
-
-	if ( decals && decals->GetInt() )
+	if ( r_decals.GetInt() )
 	{
 		effects->DecalShoot( index, entity, ent->GetModel(), ent->GetAbsOrigin(), ent->GetAbsAngles(), *pos, 0, FDECAL_PERMANENT );
 	}
@@ -98,7 +92,7 @@ void C_TEBSPDecal::PostDataUpdate( DataUpdateType_t updateType )
 		return;
 	}
 
-	if ( m_pDecals && m_pDecals->GetInt() )
+	if ( r_decals.GetInt() )
 	{
 		effects->DecalShoot( m_nIndex, m_nEntity, ent->GetModel(), ent->GetAbsOrigin(), ent->GetAbsAngles(), m_vecOrigin, 0, FDECAL_PERMANENT );
 	}

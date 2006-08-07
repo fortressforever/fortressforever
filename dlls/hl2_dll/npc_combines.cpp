@@ -85,7 +85,7 @@ void CNPC_CombineS::Precache()
 {
 	const char *pModelName = STRING( GetModelName() );
 
-	if( !stricmp( pModelName, "models/combine_super_soldier.mdl" ) )
+	if( !Q_stricmp( pModelName, "models/combine_super_soldier.mdl" ) )
 	{
 		m_fIsElite = true;
 	}
@@ -109,7 +109,7 @@ void CNPC_CombineS::Precache()
 }
 
 
-void CNPC_CombineS::DeathSound( void )
+void CNPC_CombineS::DeathSound( const CTakeDamageInfo &info )
 {
 	// NOTE: The response system deals with this at the moment
 	if ( GetFlags() & FL_DISSOLVING )
@@ -171,13 +171,13 @@ void CNPC_CombineS::PrescheduleThink( void )
 //-----------------------------------------------------------------------------
 void CNPC_CombineS::BuildScheduleTestBits( void )
 {
-	BaseClass::BuildScheduleTestBits();
-
 	//Interrupt any schedule with physics danger (as long as I'm not moving or already trying to block)
 	if ( m_flGroundSpeed == 0.0 && !IsCurSchedule( SCHED_FLINCH_PHYSICS ) )
 	{
 		SetCustomInterruptCondition( COND_HEAR_PHYSICS_DANGER );
 	}
+
+	BaseClass::BuildScheduleTestBits();
 }
 
 //-----------------------------------------------------------------------------
@@ -204,40 +204,6 @@ float CNPC_CombineS::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDama
 	}
 
 	return BaseClass::GetHitgroupDamageMultiplier( iHitGroup, info );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-int CNPC_CombineS::TakeDamage( const CTakeDamageInfo &info )
-{
-	if( info.GetInflictor() && info.GetInflictor()->VPhysicsGetObject() )
-	{
-		// Hit by a physics object! Was I blocking?
-		if( m_fIsBlocking )
-		{
-			IPhysicsObject *pPhysObject;
-
-			pPhysObject = info.GetInflictor()->VPhysicsGetObject();
-
-			if( pPhysObject )
-			{
-				// Only deflect objects of relatively low mass
-				//DevMsg( "MASS: %f\n", pPhysObject->GetMass() );
-
-				if( pPhysObject->GetMass() <= 30.0 )
-				{
-					// No damage from light objects (tuned for melons)
-					return 0;
-				}
-			}
-		}
-	}
-
-	BaseClass::TakeDamage( info );
-	return 0;
 }
 
 
@@ -307,28 +273,33 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 		// Elites drop alt-fire ammo, so long as they weren't killed by dissolving.
 		if( IsElite() )
 		{
-			CBaseEntity *pItem = DropItem( "item_ammo_ar2_altfire", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-
-			if ( pItem )
+#ifdef HL2_EPISODIC
+			if ( HasSpawnFlags( SF_COMBINE_NO_AR2DROP ) == false )
+#endif
 			{
-				IPhysicsObject *pObj = pItem->VPhysicsGetObject();
+				CBaseEntity *pItem = DropItem( "item_ammo_ar2_altfire", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
 
-				if ( pObj )
+				if ( pItem )
 				{
-					Vector			vel		= RandomVector( -64.0f, 64.0f );
-					AngularImpulse	angImp	= RandomAngularImpulse( -300.0f, 300.0f );
+					IPhysicsObject *pObj = pItem->VPhysicsGetObject();
 
-					vel[2] = 0.0f;
-					pObj->AddVelocity( &vel, &angImp );
-				}
-
-				if( info.GetDamageType() & DMG_DISSOLVE )
-				{
-					CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating*>(pItem);
-
-					if( pAnimating )
+					if ( pObj )
 					{
-						pAnimating->Dissolve( NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL );
+						Vector			vel		= RandomVector( -64.0f, 64.0f );
+						AngularImpulse	angImp	= RandomAngularImpulse( -300.0f, 300.0f );
+
+						vel[2] = 0.0f;
+						pObj->AddVelocity( &vel, &angImp );
+					}
+
+					if( info.GetDamageType() & DMG_DISSOLVE )
+					{
+						CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating*>(pItem);
+
+						if( pAnimating )
+						{
+							pAnimating->Dissolve( NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL );
+						}
 					}
 				}
 			}
@@ -343,11 +314,14 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 			pHL2GameRules->NPC_DroppedHealth();
 		}
 		
-		// Attempt to drop a grenade
-		if ( pHL2GameRules->NPC_ShouldDropGrenade( pPlayer ) )
+		if ( HasSpawnFlags( SF_COMBINE_NO_GRENADEDROP ) == false )
 		{
-			DropItem( "weapon_frag", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-			pHL2GameRules->NPC_DroppedGrenade();
+			// Attempt to drop a grenade
+			if ( pHL2GameRules->NPC_ShouldDropGrenade( pPlayer ) )
+			{
+				DropItem( "weapon_frag", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
+				pHL2GameRules->NPC_DroppedGrenade();
+			}
 		}
 	}
 
@@ -385,6 +359,12 @@ bool CNPC_CombineS::IsHeavyDamage( const CTakeDamageInfo &info )
 		int iHalfMax = sk_plr_dmg_buckshot.GetFloat() * sk_plr_num_shotgun_pellets.GetInt() * 0.5;
 		if ( info.GetDamage() >= iHalfMax )
 			return true;
+	}
+
+	// Rollermine shocks
+	if( (info.GetDamageType() & DMG_SHOCK) && hl2_episodic.GetBool() )
+	{
+		return true;
 	}
 
 	return BaseClass::IsHeavyDamage( info );

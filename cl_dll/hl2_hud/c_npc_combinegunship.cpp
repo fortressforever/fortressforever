@@ -111,7 +111,7 @@ public:
 // NOTE: Beam widths are half-widths or radii, so this is a beam that represents a cylinder with 2" radius
 const float NARROW_BEAM_WIDTH = 32;
 const float WIDE_BEAM_WIDTH = 2;
-const float FLARE_SIZE = 256;
+const float FLARE_SIZE = 128;
 const float	DARK_SIZE = 16;
 const float AFTERGLOW_SIZE = 64;
 
@@ -424,6 +424,18 @@ public:
 		BaseClass::OnDataChanged( updateType );
 
 		m_cannonFX.Update( this, m_vecHitPos );
+	}
+
+	virtual RenderGroup_t GetRenderGroup()
+	{
+		if ( hl2_episodic.GetBool() == true )
+		{
+			return RENDER_GROUP_TWOPASS;
+		}
+		else
+		{
+			return BaseClass::GetRenderGroup();
+		}
 	}
 
 private:

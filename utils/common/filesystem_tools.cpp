@@ -18,6 +18,7 @@
 #include "filesystem_tools.h"
 #include "vstdlib/ICommandLine.h"
 #include "KeyValues.h"
+#include "tier2/tier2.h"
 
 #ifdef MPI
 	#include "vmpi.h"
@@ -36,7 +37,6 @@
 IBaseFileSystem *g_pFileSystem = NULL;
 
 // These are only used for tools that need the search paths that the engine's file system provides.
-IFileSystem			*g_pFullFileSystem = NULL;
 CSysModule			*g_pFullFileSystemModule = NULL;
 
 // ---------------------------------------------------------------------------
@@ -62,6 +62,9 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 		bool bSteam;
 		if ( FileSystem_GetFileSystemDLLName( fileSystemDLLName, MAX_PATH, bSteam ) != FS_OK )
 			return false;
+
+		// If we're under Steam we need extra setup to let us find the proper modules
+		FileSystem_SetupSteamInstallPath();
 
 		// Next, load the module, call Connect/Init.
 		CFSLoadModuleInfo loadModuleInfo;
@@ -93,7 +96,8 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 		g_pFileSystem = g_pFullFileSystem = loadModuleInfo.m_pFileSystem;
 		g_pFullFileSystemModule = loadModuleInfo.m_pModule;
 
-		
+		FileSystem_AddSearchPath_Platform( g_pFullFileSystem, loadModuleInfo.m_GameInfoPath );
+
 		// Set qdir.
 		if ( !pFilename )
 			pFilename = ".";
@@ -123,6 +127,7 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 			return false;
 
 		g_pFullFileSystem->RemoveAllSearchPaths();
+		g_pFullFileSystem->AddSearchPath( "../platform", "PLATFORM" );
 		g_pFullFileSystem->AddSearchPath( ".", "GAME" );
 
 		g_pFileSystem = g_pFullFileSystem;
@@ -191,8 +196,7 @@ CreateInterfaceFn FileSystem_GetFactory()
 	if ( g_bUseMPI )
 		return VMPI_FileSystem_GetFactory();
 #endif
-
-return Sys_GetFactory( g_pFullFileSystemModule );
+	return Sys_GetFactory( g_pFullFileSystemModule );
 }
 
 

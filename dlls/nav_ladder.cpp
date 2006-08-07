@@ -380,8 +380,8 @@ void CNavLadder::DrawLadder( void ) const
 	while ( bottomRight.z < topRight.z )
 	{
 		NavDrawLine( bottomRight, bottomLeft, ladderColor );
-		bottomRight.z += GenerationStepSize/2;
-		bottomLeft.z += GenerationStepSize/2;
+		bottomRight += up * (GenerationStepSize/2);
+		bottomLeft += up * (GenerationStepSize/2);
 	}
 
 	// Draw connector lines ---------------------------------------------------
@@ -606,3 +606,28 @@ bool CNavLadder::IsInUse( const CBasePlayer *ignore ) const
 	IsLadderFreeFunctor	isLadderFree( this, ignore );
 	return !ForEachPlayer( isLadderFree );
 }
+
+//--------------------------------------------------------------------------------------------------------------
+Vector CNavLadder::GetPosAtHeight( float height ) const
+{
+	if ( height < m_bottom.z )
+	{
+		return m_bottom;
+	}
+
+	if ( height > m_top.z )
+	{
+		return m_top;
+	}
+
+	if ( m_top.z == m_bottom.z )
+	{
+		return m_top;
+	}
+
+	float percent = ( height - m_bottom.z ) / ( m_top.z - m_bottom.z );
+
+	return m_top * percent + m_bottom * ( 1.0f - percent );
+}
+
+//--------------------------------------------------------------------------------------------------------------

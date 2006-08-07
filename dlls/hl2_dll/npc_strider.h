@@ -13,9 +13,13 @@
 #include "ai_utils.h"
 #include "smoke_trail.h"
 #include "physics_bone_follower.h"
+#include "physics_prop_ragdoll.h"
+
 #if defined( _WIN32 )
 #pragma once
 #endif
+
+#include "tier0/memdbgon.h"
 
 class CNPC_Strider;
 class CNPC_Bullseye;
@@ -41,7 +45,7 @@ void AdjustStriderNodePosition( CAI_Network *pNetwork, CAI_Node *pNode );
 //
 //-----------------------------------------------------------------------------
 
-class IMinigunHost
+abstract_class IMinigunHost
 {
 public:
 	virtual void ShootMinigun( const Vector *pTarget, float aimError, const Vector &vecSpread = vec3_origin ) = 0;
@@ -51,6 +55,16 @@ public:
 	virtual void OnMinigunStartShooting( CBaseEntity *pTarget ) = 0;
 	virtual void OnMinigunStopShooting( CBaseEntity *pTarget ) = 0;
 	virtual CAI_BaseNPC *GetEntity() = 0;
+};
+
+abstract_class IStriderMinigunHost : public IMinigunHost
+{
+public:
+	virtual float GetMinigunRateOfFire() = 0;
+	virtual float GetMinigunOnTargetTime() = 0;
+	virtual float GetMinigunShootDuration() = 0;
+	virtual float GetMinigunShootDowntime() = 0;
+	virtual float GetMinigunShootVariation() = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -64,7 +78,7 @@ const int NUM_STRIDER_IK_TARGETS = 6;
 //---------------------------------------------------------
 
 class CNPC_Strider : public CAI_BlendingHost<CAI_BaseNPC>,
-					 public IMinigunHost
+					 public IStriderMinigunHost
 {
 	DECLARE_CLASS( CNPC_Strider, CAI_BaseNPC );
 	DECLARE_SERVERCLASS();
@@ -85,6 +99,8 @@ public:
 	void			OnRestore();
 
 	Class_T			Classify();
+
+	virtual float	GetAutoAimRadius() { return 80.0f; }
 
 	int				DrawDebugTextOverlays();
 
@@ -117,6 +133,7 @@ public:
 	int				TranslateSchedule( int scheduleType );
 	void			StartTask( const Task_t *pTask );
 	void			RunTask( const Task_t *pTask );
+	bool			HandleInteraction( int interactionType, void *data, CBaseCombatCharacter* sourceEnt );
 	void			HandleAnimEvent( animevent_t *pEvent );
 
 	Disposition_t	IRelationType( CBaseEntity *pTarget );
@@ -133,12 +150,18 @@ public:
 	void			InputSetCannonTarget( inputdata_t &inputdata );
 	void			InputFlickRagdoll( inputdata_t &inputdata );
 	void			InputCrouch( inputdata_t &inputdata );
+	void			InputCrouchInstantly( inputdata_t &inputdata );
 	void			InputStand( inputdata_t &inputdata );
 	void			InputSetHeight( inputdata_t &inputdata );
 	void			InputSetTargetPath( inputdata_t &inputdata );
 	void 			InputClearTargetPath( inputdata_t &inputdata );
 	void			InputDisableCrouchWalk( inputdata_t &inputdata );
 	void			InputEnableCrouchWalk( inputdata_t &inputdata );
+	void			InputEnableAggressiveBehavior( inputdata_t &inputdata );
+	void			InputDisableAggressiveBehavior( inputdata_t &inputdata );
+	void			InputStopShootingMinigunForSeconds( inputdata_t &inputdata );
+	void			InputDisableCrouch( inputdata_t &inputdata );
+	void			InputDisableMoveToLOS( inputdata_t &inputdata );
 
 	//---------------------------------
 	// Combat
@@ -177,8 +200,9 @@ public:
 	//	Sounds & speech
 	//---------------------------------
 	void			AlertSound();
-	void			PainSound();
-	void			DeathSound();
+	void			PainSound( const CTakeDamageInfo &info );
+	void			DeathSound( const CTakeDamageInfo &info );
+	void			HuntSound();
 
 	//---------------------------------
 	// Damage handling
@@ -187,6 +211,7 @@ public:
 	int				OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	int				TakeDamageFromCombineBall( const CTakeDamageInfo &info );
 	void			Event_Killed( const CTakeDamageInfo &info );
+	void			RagdollDeathEffect( CRagdollProp *pRagdoll, float flDuration );
 	bool			BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector );
 	void			StartSmoking();
 	void			StopSmoking( float flDelay = 0.1 );
@@ -209,9 +234,11 @@ public:
 
 	bool			IsInCrouchedPosture() { return GetIdealHeight() < GetMaxHeight() * .5; }
 	bool			IsInStandingPosture() { return !IsInCrouchedPosture(); }
-	bool			IsCrouching();
-	bool			IsStanding();
+	bool			IsStriderCrouching();
+	bool			IsStriderStanding();
 	void			SetupGlobalModelData();
+
+	virtual bool	CanBecomeServerRagdoll( void ) { return false;	}
 	
 	//---------------------------------
 	// Navigation & Movement
@@ -266,8 +293,15 @@ public:
 	void			NewTarget() { m_flTargetAcquiredTime = gpGlobals->curtime; }
 	void			OnMinigunStartShooting( CBaseEntity *pTarget ) {};
 	void			OnMinigunStopShooting( CBaseEntity *pTarget );
+	float			GetMinigunRateOfFire();
+	float			GetMinigunOnTargetTime();
+	float			GetMinigunShootDuration();
+	float			GetMinigunShootDowntime();
+	float			GetMinigunShootVariation();
 
 	CAI_BaseNPC *	GetEntity() { return this; }
+
+	bool			IsUsingAggressiveBehavior() { return m_bUseAggressiveBehavior; }
 
 	//---------------------------------
 	// Cannon
@@ -288,10 +322,6 @@ public:
 	bool			TestCollision( const Ray_t &ray, unsigned int mask, trace_t& trace );
 
 	// Conservative collision volumes
-	static Vector gm_cullBoxStandMins;
-	static Vector gm_cullBoxStandMaxs;
-	static Vector gm_cullBoxCrouchMins;
-	static Vector gm_cullBoxCrouchMaxs;
 	static float gm_strideLength;
 
 public:
@@ -333,6 +363,7 @@ private:
 		SCHED_STRIDER_ATTACK_CANNON_TARGET,
 		SCHED_STRIDER_CHASE_ENEMY,
 		SCHED_STRIDER_COMBAT_FACE,
+		SCHED_STRIDER_AGGRESSIVE_COMBAT_STAND,
 		SCHED_STRIDER_ESTABLISH_LINE_OF_FIRE_CANNON,
 		SCHED_STRIDER_FALL_TO_GROUND,
 
@@ -363,6 +394,7 @@ private:
 
 	CStriderMinigun *m_pMinigun;
 	int				m_miniGunAmmo;
+	int				m_miniGunDirectAmmo;
 	float			m_nextShootTime;
 	float			m_nextStompTime;
 	float			m_ragdollTime;
@@ -394,7 +426,10 @@ private:
 	float			m_flTargetAcquiredTime;
 	bool			m_bCrouchLocked; // Designer made the strider crouch. Don't let the AI stand him up.
 	bool			m_bNoCrouchWalk;
-	
+	bool			m_bDontCrouch;
+	bool			m_bNoMoveToLOS;
+	bool			m_bFastCrouch;
+
 	float			m_idealHeight;
 	float			m_HeightVelocity;
 
@@ -408,6 +443,13 @@ private:
 	string_t		m_strTrackName;
 
 	EHANDLE			m_hFocus;
+
+	float			m_flTimeLastAlertSound;
+	float			m_flTimeNextHuntSound;
+	bool			m_bUseAggressiveBehavior;
+	float			m_flTimePlayerMissileDetected;
+	EHANDLE			m_hPlayersMissile;
+	bool			m_bMinigunUseDirectFire;
 
 	CHandle<SmokeTrail> m_hSmoke;
 
@@ -488,20 +530,20 @@ public:
 	DECLARE_DATADESC();
 
 	void		Init();
-	void		SetTarget( IMinigunHost *pHost, CBaseEntity *pTarget, bool bOverrideEnemy = false );
+	void		SetTarget( IStriderMinigunHost *pHost, CBaseEntity *pTarget, bool bOverrideEnemy = false );
 	CBaseEntity *GetTarget()		{ return m_hTarget.Get(); }
-	void		Think( IMinigunHost *pHost, float dt );
+	void		Think( IStriderMinigunHost *pHost, float dt );
 	void		SetState( int newState );
 	bool		ShouldFindTarget( IMinigunHost *pHost );
-	void 		AimAtPoint( IMinigunHost *pHost, const Vector &vecPoint, bool bSnap = false );
-	void 		AimAtTarget( IMinigunHost *pHost, CBaseEntity *pTarget, bool bSnap = false );
-	void 		ShootAtTarget( IMinigunHost *pHost, CBaseEntity *pTarget, float shootTime );
-	void 		StartShooting( IMinigunHost *pHost, CBaseEntity *pTarget, float duration );
+	void 		AimAtPoint( IStriderMinigunHost *pHost, const Vector &vecPoint, bool bSnap = false );
+	void 		AimAtTarget( IStriderMinigunHost *pHost, CBaseEntity *pTarget, bool bSnap = false );
+	void 		ShootAtTarget( IStriderMinigunHost *pHost, CBaseEntity *pTarget, float shootTime );
+	void 		StartShooting( IStriderMinigunHost *pHost, CBaseEntity *pTarget, float duration );
 	void 		ExtendShooting( float timeExtend );
 	void 		SetShootDuration( float duration );
-	void 		StopShootingForSeconds( IMinigunHost *pHost, CBaseEntity *pTarget, float duration );
+	void 		StopShootingForSeconds( IStriderMinigunHost *pHost, CBaseEntity *pTarget, float duration );
 	bool 		IsPegged( int dir = MINIGUN_PEGGED_DONT_CARE );
-	bool 		CanStartShooting( IMinigunHost *pHost, CBaseEntity *pTargetEnt );
+	bool 		CanStartShooting( IStriderMinigunHost *pHost, CBaseEntity *pTargetEnt );
 	float 		GetBurstTimeRemaining() { return m_burstTime - gpGlobals->curtime; }
 
 	void 		RecordShotOnTarget()			{ m_iOnTargetShots++; }
@@ -549,6 +591,8 @@ class CSparkTrail : public CPointEntity
 
 	DECLARE_DATADESC();
 };
+
+#include "tier0/memdbgoff.h"
 
 #endif // NPC_STRIDER_H
 

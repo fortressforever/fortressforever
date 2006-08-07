@@ -396,5 +396,4 @@ void CEnvMeteorSpawnerShared::AddToTargetList( const Vector &vecPosition, float 
 	int iTarget = m_aTargets.AddToTail();
 	m_aTargets[iTarget].m_vecPosition = vecPosition;
 	m_aTargets[iTarget].m_flRadius = flRadius;
-	NetworkStateChanged();
 }

@@ -209,8 +209,8 @@ void CVariableBitStringBase::ReallocInts( int numInts )
 	if ( numInts == 1 )
 	{
 		m_iBitStringStorage = *m_pInt;
-		m_pInt = &m_iBitStringStorage;
 		free( m_pInt );
+		m_pInt = &m_iBitStringStorage;
 		return;
 	}
 

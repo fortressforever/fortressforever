@@ -60,6 +60,8 @@ public:
 
 	float		m_flProxyRadius;
 
+	float		m_flHDRColorScale;
+
 public:
 
 	// After creating the overlay, call this to add it to the active list.
@@ -68,13 +70,13 @@ public:
 	void			Deactivate();
 	
 	// Render all the active overlays.
-	static void		DrawOverlays();
-	static void		UpdateSkyOverlays( float zFar );
+	static void		DrawOverlays( bool bCacheFullSceneState );
+	static void		UpdateSkyOverlays( float zFar, bool bCacheFullSceneState );
 
 protected:
 
-	void			UpdateGlowObstruction( const Vector &vToGlow );
-	void			UpdateSkyGlowObstruction( float zFar );
+	void			UpdateGlowObstruction( const Vector &vToGlow, bool bCacheFullSceneState );
+	void			UpdateSkyGlowObstruction( float zFar, bool bCacheFullSceneState );
 
 	virtual void	CalcSpriteColorAndSize( 
 		float flDot,
@@ -91,9 +93,12 @@ protected:
 		Vector &vUp,
 		Vector &vRight );
 
-	virtual void	Draw();
+	virtual void	Draw( bool bCacheFullSceneState );
+	float			CalcGlowAspect();
 	
 	float			m_flGlowObstructionScale;	
+	bool			m_bCacheGlowObstruction;			// Flags to cache obstruction scales
+	bool			m_bCacheSkyObstruction;				// Used in IFM poster rendering
 
 private:
 	short			m_bActivated;
@@ -106,7 +111,7 @@ class CWarpOverlay : public CGlowOverlay
 {
 protected:
 	
-	virtual void Draw( void );
+	virtual void Draw( bool bCacheFullSceneState );
 };
 
 #endif // GLOW_OVERLAY_H

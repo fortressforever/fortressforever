@@ -12,10 +12,6 @@
 #include "panelmetaclassmgr.h"
 #include "vgui_BitmapImage.h"
 
-#ifdef TF2_CLIENT_DLL
-#include "hud_commander_statuspanel.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -150,12 +146,6 @@ void CBitmapPanel::Paint( void )
 //-----------------------------------------------------------------------------
 void CBitmapPanel::OnCursorEntered()
 {
-#ifdef TF2_CLIENT_DLL
-	if ( m_szMouseOverText[ 0 ] )
-	{
-		StatusPrint( TYPE_HINT, "%s", m_szMouseOverText );
-	}
-#endif
 }
 
 
@@ -164,12 +154,6 @@ void CBitmapPanel::OnCursorEntered()
 //-----------------------------------------------------------------------------
 void CBitmapPanel::OnCursorExited()
 {
-#ifdef TF2_CLIENT_DLL
-	if ( m_szMouseOverText[ 0 ] )
-	{
-		StatusClear();
-	}
-#endif
 }
 
 

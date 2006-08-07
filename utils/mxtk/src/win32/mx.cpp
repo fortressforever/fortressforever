@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tier1/UtlVector.h"
 
 
 #define WM_MOUSEWHEEL                   0x020A
@@ -39,6 +40,42 @@ static mxWindow *g_idleWindow = 0;
 static MSG msg;
 static HWND g_hwndToolTipControl = 0;
 static bool isClosing = false;
+static HACCEL g_hAcceleratorTable = NULL;
+
+void mx::createAccleratorTable( int numentries, Accel_t *entries )
+{
+	CUtlVector< ACCEL > accelentries;
+
+	for ( int i = 0; i < numentries; ++i )
+	{
+		const Accel_t& entry = entries[ i ];
+
+		ACCEL add;
+		add.key = entry.key;
+		add.cmd = entry.command;
+		add.fVirt = 0;
+		if ( entry.flags & ACCEL_ALT )
+		{
+			add.fVirt |= FALT;
+		}
+		if ( entry.flags & ACCEL_CONTROL )
+		{
+			add.fVirt |= FCONTROL;
+		}
+		if ( entry.flags & ACCEL_SHIFT )
+		{
+			add.fVirt |= FSHIFT;
+		}
+		if ( entry.flags & ACCEL_VIRTKEY )
+		{
+			add.fVirt |= FVIRTKEY;
+		}
+
+		accelentries.AddToTail( add );
+	}
+
+	g_hAcceleratorTable = ::CreateAcceleratorTable( accelentries.Base(), accelentries.Count() );
+}
 
 
 
@@ -490,6 +527,40 @@ static LRESULT CALLBACK WndProc (HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM
 	}
 	break;
 
+	case WM_PARENTNOTIFY:
+		{
+			mxWindow *window = (mxWindow *) GetWindowLong (hwnd, GWL_USERDATA);
+			if (window)
+			{
+				if ( wParam == WM_LBUTTONDOWN ||
+					 wParam == WM_MBUTTONDOWN ||
+					 wParam == WM_RBUTTONDOWN /*||
+					 wParam & WM_XBUTTONDOWN*/ )
+				{
+					mxEvent event;
+					event.event = mxEvent::ParentNotify;
+					event.x = (short)LOWORD (lParam);
+					event.y = (short)HIWORD (lParam);
+					event.buttons = 0;
+					event.modifiers = 0;
+
+					if ( wParam == WM_LBUTTONDOWN )
+						event.buttons |= mxEvent::MouseLeftButton;
+
+					if ( wParam == WM_RBUTTONDOWN )
+						event.buttons |= mxEvent::MouseRightButton;
+
+					if ( wParam == WM_MBUTTONDOWN )
+						event.buttons |= mxEvent::MouseMiddleButton;
+
+					window->handleEvent (&event);
+					RecursiveHandleEvent( window, &event );
+					return 0;
+				}
+			}
+		}
+		break;
+
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -866,8 +937,12 @@ mx::run()
 				break;
 			}
 
-			TranslateMessage (&msg);
-			DispatchMessage (&msg);
+			if ( !g_hAcceleratorTable ||
+				!TranslateAccelerator( (HWND)g_mainWindow->getHandle (), g_hAcceleratorTable, &msg )) 
+			{
+				TranslateMessage( &msg );
+				DispatchMessage( &msg );
+			}
 			messagecount++;
 
 			if ( messagecount > 10 )
@@ -990,6 +1065,12 @@ mx::quit ()
 
 	if (g_hwndToolTipControl)
 		DestroyWindow (g_hwndToolTipControl);
+
+	if ( g_hAcceleratorTable )
+	{
+		DestroyAcceleratorTable( g_hAcceleratorTable );
+		g_hAcceleratorTable = 0;
+	}
 
 	PostQuitMessage (0);
 	UnregisterClass ("mx_class", (HINSTANCE) GetModuleHandle (NULL));

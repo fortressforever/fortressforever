@@ -39,7 +39,7 @@ public:
 	{
 	}
 
-	virtual int	ObjectCaps()	{ return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int	ObjectCaps()	{ return ((BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_NOTIFY_ON_TRANSITION); }
 	
 	virtual void	Spawn();
 	virtual void	OnRestore();
@@ -48,6 +48,11 @@ public:
 	virtual void 	InputUpdateActors( inputdata_t &inputdata );
 	virtual void 	InputDeactivate( inputdata_t &inputdata );
 	
+	// Goal entities can become Dormant if they're left behind on previous maps.
+	// Transitioning back to the map with cause a dormant goal entity to reactivate itself.
+	void			EnterDormant( void );
+	void			ExitDormant( void );
+
 	bool 			IsActive();
 	
 	int 			NumActors();
@@ -80,9 +85,10 @@ private:
 	{
 		ACTIVE			= 0x01,
 		RESOLVED_NAME 	= 0x02,
+		DORMANT			= 0x04,
 	};
 	
-	enum SearchType_t
+	enum SearchType_t	
 	{
 		ST_ENTNAME,
 		ST_CLASSNAME,

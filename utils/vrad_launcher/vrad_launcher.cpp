@@ -62,6 +62,15 @@ int main(int argc, char* argv[])
 
 	CommandLine()->CreateCmdLine( argc, argv );
 
+	// check whether they used the -both switch. If this is specified, vrad will be run
+	// twice, once with -hdr and once without
+	int both_arg=0;
+	for(int arg=1;arg<argc;arg++)
+		if (Q_stricmp(argv[arg],"-both")==0)
+		{
+			both_arg=arg;
+		}
+
 	char fullPath[512], redirectFilename[512];
 	MakeFullPath( argv[0], fullPath, sizeof( fullPath ) );
 	Q_StripFilename( fullPath );
@@ -88,39 +97,50 @@ int main(int argc, char* argv[])
 		fclose( fp );
 	}
 
-	// If it didn't load the module above, then use the 
-	if ( !pModule )
-	{
-		strcpy( dllName, "vrad.dll" );
-		pModule = Sys_LoadModule( dllName );
-	}
-
-	if( !pModule )
-	{
-		printf( "vrad_launcher error: can't load %s\n%s", dllName, GetLastErrorString() );
-		return 1;
-	}
-
-	CreateInterfaceFn fn = Sys_GetFactory( pModule );
-	if( !fn )
-	{
-		printf( "vrad_launcher error: can't get factory from vrad.dll\n" );
-		Sys_UnloadModule( pModule );
-		return 2;
-	}
-
-	int retCode = 0;
-	IVRadDLL *pDLL = (IVRadDLL*)fn( VRAD_INTERFACE_VERSION, &retCode );
-	if( !pDLL )
-	{
-		printf( "vrad_launcher error: can't get IVRadDLL interface from vrad.dll\n" );
-		Sys_UnloadModule( pModule );
-		return 3;
-	}
-
-	int returnValue = pDLL->main( argc, argv );
-	Sys_UnloadModule( pModule );
+	int returnValue;
 	
+	for(int mode=0;mode<2;mode++)
+	{
+		if (mode && (! both_arg))
+			continue;
+		
+
+		// If it didn't load the module above, then use the 
+		if ( !pModule )
+		{
+			strcpy( dllName, "vrad.dll" );
+			pModule = Sys_LoadModule( dllName );
+		}
+		
+		if( !pModule )
+		{
+			printf( "vrad_launcher error: can't load %s\n%s", dllName, GetLastErrorString() );
+			return 1;
+		}
+		
+		CreateInterfaceFn fn = Sys_GetFactory( pModule );
+		if( !fn )
+		{
+			printf( "vrad_launcher error: can't get factory from vrad.dll\n" );
+			Sys_UnloadModule( pModule );
+			return 2;
+		}
+		
+		int retCode = 0;
+		IVRadDLL *pDLL = (IVRadDLL*)fn( VRAD_INTERFACE_VERSION, &retCode );
+		if( !pDLL )
+		{
+			printf( "vrad_launcher error: can't get IVRadDLL interface from vrad.dll\n" );
+			Sys_UnloadModule( pModule );
+			return 3;
+		}
+		
+		if (both_arg)
+			strcpy(argv[both_arg],(mode)?"-hdr":"-ldr");
+		returnValue = pDLL->main( argc, argv );
+		Sys_UnloadModule( pModule );
+		pModule=0;
+	}
 	return returnValue;
 }
 

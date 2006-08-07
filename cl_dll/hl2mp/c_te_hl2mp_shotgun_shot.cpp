@@ -103,7 +103,7 @@ void C_TEHL2MPFireBullets::CreateEffects( void )
 						CEffectData data;
 						data.m_vStart = tr.startpos;
 						data.m_vOrigin = tr.endpos;
-						data.m_nEntIndex = pWpn->entindex();
+						data.m_hEntity = pWpn->GetRefEHandle();
 						data.m_flScale = 0.0f;
 						data.m_fFlags |= TRACER_FLAG_USEATTACHMENT;
 						// Stomp the start, since it's not going to be used anyway

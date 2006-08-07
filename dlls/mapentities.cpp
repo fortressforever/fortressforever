@@ -19,8 +19,17 @@
 #include "mapentities.h"
 #include "wcedit.h"
 #include "stringregistry.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 #include "world.h"
+#include "toolframework/iserverenginetools.h"
+
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#include "xbox/xbox_core.h"
+#endif
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -90,7 +99,7 @@ void FreeContainingEntity( edict_t *ed )
 //			pEnt2 - 
 // Output : Returns -1, 0, or 1 per qsort spec.
 //-----------------------------------------------------------------------------
-static int CompareSpawnOrder(HierarchicalSpawn_t *pEnt1, HierarchicalSpawn_t *pEnt2)
+static int __cdecl CompareSpawnOrder(HierarchicalSpawn_t *pEnt1, HierarchicalSpawn_t *pEnt2)
 {
 	if (pEnt1->m_nDepth == pEnt2->m_nDepth)
 	{
@@ -124,9 +133,15 @@ static int ComputeSpawnHierarchyDepth_r( CBaseEntity *pEntity )
 	if (pEntity->m_iParent == NULL_STRING)
 		return 1;
 
-	CBaseEntity *pParent = gEntList.FindEntityByName(NULL, pEntity->m_iParent, NULL);
+	CBaseEntity *pParent = gEntList.FindEntityByName( NULL, pEntity->m_iParent );
 	if (!pParent)
 		return 1;
+	
+	if (pParent == pEntity)
+	{
+		Warning( "LEVEL DESIGN ERROR: Entity %s is parented to itself!\n", pEntity->GetDebugName() );
+		return 1;
+	}
 
 	return 1 + ComputeSpawnHierarchyDepth_r( pParent );
 }
@@ -153,6 +168,7 @@ static void ComputeSpawnHierarchyDepth( int nEntities, HierarchicalSpawn_t *pSpa
 
 static void SortSpawnListByHierarchy( int nEntities, HierarchicalSpawn_t *pSpawnList )
 {
+	MEM_ALLOC_CREDIT();
 	g_pClassnameSpawnPriority = new CStringRegistry;
 	// this will cause the entities to be spawned in the indicated order
 	// Highest string ID spawns first.  String ID is spawn priority.
@@ -167,6 +183,8 @@ static void SortSpawnListByHierarchy( int nEntities, HierarchicalSpawn_t *pSpawn
 	g_pClassnameSpawnPriority->AddString( "phys_lengthconstraint", 8 );
 	g_pClassnameSpawnPriority->AddString( "phys_ragdollconstraint", 8 );
 	g_pClassnameSpawnPriority->AddString( "info_mass_center", 8 ); // spawn these before physbox/prop_physics
+	g_pClassnameSpawnPriority->AddString( "trigger_vphysics_motion", 8 ); // spawn these before physbox/prop_physics
+
 	g_pClassnameSpawnPriority->AddString( "prop_physics", 7 );
 	// Sort the entities (other than the world) by hierarchy depth, in order to spawn them in
 	// that order. This insures that each entity's parent spawns before it does so that
@@ -188,7 +206,7 @@ void SetupParentsForSpawnList( int nEntities, HierarchicalSpawn_t *pSpawnList )
 		CBaseEntity *pEntity = pSpawnList[nEntity].m_pEntity;
 		if ( pEntity )
 		{
-			CBaseEntity *pParent = gEntList.FindEntityByName(NULL, pEntity->m_iParent, NULL);
+			CBaseEntity *pParent = gEntList.FindEntityByName( NULL, pEntity->m_iParent );
 			if ((pParent != NULL) && (pParent->edict() != NULL))
 			{
 				pEntity->SetParent( pParent ); 
@@ -214,6 +232,14 @@ void RememberInitialEntityPositions( int nEntities, HierarchicalSpawn_t *pSpawnL
 
 void SpawnAllEntities( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bActivateEntities )
 {
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	char sz[ 128 ];
+	Q_snprintf( sz, sizeof( sz ), "SpawnAllEntities(%d)", nEntities );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
+
 	int nEntity;
 	for (nEntity = 0; nEntity < nEntities; nEntity++)
 	{
@@ -240,24 +266,35 @@ void SpawnAllEntities( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bAct
 		}
 	}
 
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	Q_snprintf( sz, sizeof( sz ), "SpawnAllEntities(%d) -activate", nEntities );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
 	if ( bActivateEntities )
 	{
 		VPROF( "MapEntity_ParseAllEntities_Activate");
+		bool bAsyncAnims = mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, false );
 		for (nEntity = 0; nEntity < nEntities; nEntity++)
 		{
 			CBaseEntity *pEntity = pSpawnList[nEntity].m_pEntity;
 
 			if ( pEntity )
 			{
-				engineCache->EnterCriticalSection();
+				MDLCACHE_CRITICAL_SECTION();
 				pEntity->Activate();
-				engineCache->ExitCriticalSection();
 			}
 		}
+		mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, bAsyncAnims );
 	}
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	Q_snprintf( sz, sizeof( sz ), "SpawnAllEntities(%d) -done activating", nEntities );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Only called on BSP load. Parses and spawns all the entities in the BSP.
@@ -274,9 +311,20 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 
 	char szTokenBuffer[MAPKEY_MAXLENGTH];
 
-	//
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	char sz[ 128 ];
+	Q_snprintf( sz, sizeof( sz ), "MapEntity_ParseAllEntities():Start" );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
+	// Allow the tools to spawn different things
+	if ( serverenginetools )
+	{
+		pMapData = serverenginetools->GetEntityData( pMapData );
+	}
+
 	//  Loop through all entities in the map data, creating each.
-	//
 	for ( ; true; pMapData = MapEntity_SkipToNextEntity(pMapData, szTokenBuffer) )
 	{
 		//
@@ -381,7 +429,12 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 			nEntities++;
 		}
 	}
-
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	Q_snprintf( sz, sizeof( sz ), "Template Spawn:Start" );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
 	// Now loop through all our point_template entities and tell them to make templates of everything they're pointing to
 	int iTemplates = pPointTemplates.Count();
 	for ( int i = 0; i < iTemplates; i++ )
@@ -429,7 +482,21 @@ void MapEntity_ParseAllEntities(const char *pMapData, IMapEntityFilter *pFilter,
 		pPointTemplate->FinishBuildingTemplates();
 	}
 
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	Q_snprintf( sz, sizeof( sz ), "Template Spawn:Finish" );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
+
 	SpawnHierarchicalList( nEntities, pSpawnList, bActivateEntities );
+
+#if !defined( _RETAIL )
+#if defined( _XBOX )
+	Q_snprintf( sz, sizeof( sz ), "SpawnHierarchicalList" );
+	XBX_rTimeStampLog( Plat_FloatTime(), sz );
+#endif
+#endif
 }
 
 void SpawnHierarchicalList( int nEntities, HierarchicalSpawn_t *pSpawnList, bool bActivateEntities )
@@ -460,9 +527,9 @@ void SpawnHierarchicalList( int nEntities, HierarchicalSpawn_t *pSpawnList, bool
 // Purpose: 
 // Input  : *pEntData - 
 //-----------------------------------------------------------------------------
-void MapEntity_PrecacheEntity( const char *pEntData )
+void MapEntity_PrecacheEntity( const char *pEntData, int &nStringSize )
 {
-	CEntityMapData entData( (char*)pEntData );
+	CEntityMapData entData( (char*)pEntData, nStringSize );
 	char className[MAPKEY_MAXLENGTH];
 	
 	if (!entData.ExtractValue("classname", className))

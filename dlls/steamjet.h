@@ -22,6 +22,7 @@
 class CSteamJet : public CBaseParticleEntity
 {
 public:
+	CSteamJet();
 	DECLARE_CLASS( CSteamJet, CBaseParticleEntity );
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
@@ -49,6 +50,7 @@ public:
 	bool			m_InitialState;
 
 	CNetworkVar( int, m_nType );		// Type of steam (normal, heatwave)
+	CNetworkVar( float, m_flRollSpeed );
 };
 
 #endif // STEAMJET_H

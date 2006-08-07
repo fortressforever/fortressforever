@@ -54,11 +54,14 @@ ConVar	mp_timelimit( "mp_timelimit",
 					  FCVAR_NOTIFY|FCVAR_REPLICATED,
 					  "game time per map in minutes" );
 
+#ifdef GAME_DLL
+
 ConVar	tv_delaymapchange( "tv_delaymapchange",
 					 "0",
 					 FCVAR_NOTIFY|FCVAR_REPLICATED,
 					 "Delays map change until broadcast is complete" );
 					  					  
+#endif
 
 
 //=========================================================
@@ -372,6 +375,13 @@ bool CMultiplayRules::IsMultiplayer( void )
 			break;
 		}
 	} 
+
+	//=========================================================
+	//=========================================================
+	bool CMultiplayRules::AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+	{
+		return true;
+	}
 
 	//=========================================================
 	//=========================================================
@@ -786,6 +796,14 @@ bool CMultiplayRules::IsMultiplayer( void )
 	Vector CMultiplayRules::VecItemRespawnSpot( CItem *pItem )
 	{
 		return pItem->GetAbsOrigin();
+	}
+
+	//=========================================================
+	// What angles should this item use to respawn?
+	//=========================================================
+	QAngle CMultiplayRules::VecItemRespawnAngles( CItem *pItem )
+	{
+		return pItem->GetAbsAngles();
 	}
 
 	//=========================================================

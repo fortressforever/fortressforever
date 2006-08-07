@@ -173,8 +173,11 @@ private:
 CNetGraphPanel::CNetGraphPanel( vgui::VPANEL parent )
 : BaseClass( NULL, "CNetGraphPanel" )
 {
+	int w, h;
+	vgui::surface()->GetScreenSize( w, h );
+
 	SetParent( parent );
-	SetSize( ScreenWidth(), ScreenHeight() );
+	SetSize( w, h );
 	SetPos( 0, 0 );
 	SetVisible( false );
 	SetCursor( null );
@@ -259,6 +262,11 @@ void CNetGraphPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	g_pMatSystemSurface->GetTextSize( m_hFont, ustr, m_EstimatedWidth, textTall );
 
 	assert( m_hFont );
+
+	int w, h;
+	vgui::surface()->GetScreenSize( w, h );
+	SetSize( w, h );
+	SetPos( 0, 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -903,11 +911,14 @@ void CNetGraphPanel::Paint()
 		net_scale.SetValue( 0.1f );
 	}
 
+	int sw, sh;
+	vgui::surface()->GetScreenSize( sw, sh );
+
 	// Get screen rectangle
 	vrect.x			= 0;
 	vrect.y			= 0;
-	vrect.width		= ScreenWidth();
-	vrect.height	= ScreenHeight();
+	vrect.width		= sw;
+	vrect.height	= sh;
 
 
 	w = min( (int)TIMINGS, m_EstimatedWidth );

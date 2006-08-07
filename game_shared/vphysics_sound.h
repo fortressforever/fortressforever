@@ -87,7 +87,9 @@ namespace physicssound
 			impactsound_t &sound = list.GetElement(i);
 			// UNDONE: Compare entity or channel somehow?
 			// UNDONE: Doing one slot per entity is too noisy.  So now we use one slot per material
-			if ( surfaceProps == sound.surfaceProps )
+
+			// heuristic - after 4 impacts sounds in one frame, start merging everything
+			if ( surfaceProps == sound.surfaceProps || list.Count() > 4 )
 			{
 				// UNDONE: Store instance volume separate from aggregate volume and compare that?
 				if ( volume > sound.volume )

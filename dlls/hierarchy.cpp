@@ -36,8 +36,10 @@ void UnlinkChild( CBaseEntity *pParent, CBaseEntity *pChild )
 			// Clear hierarchy bits for this guy
 			pList->m_hMoveParent.Set( NULL );
 			pList->m_hMovePeer.Set( NULL );
-			pList->UpdateTransmitState();	
+			pList->DispatchUpdateTransmitState();	
 			pList->OnEntityEvent( ENTITY_EVENT_PARENT_CHANGED, NULL );
+			
+			pParent->RecalcHasPlayerChildBit();
 			return;
 		}
 		else
@@ -56,8 +58,9 @@ void LinkChild( CBaseEntity *pParent, CBaseEntity *pChild )
 	pChild->m_hMovePeer.Set( pParent->FirstMoveChild() );
 	pParent->m_hMoveChild.Set( pChild );
 	pChild->m_hMoveParent.Set( pParent );
-	pChild->UpdateTransmitState();
+	pChild->DispatchUpdateTransmitState();
 	pChild->OnEntityEvent( ENTITY_EVENT_PARENT_CHANGED, NULL );
+	pParent->RecalcHasPlayerChildBit();
 }
 
 void TransferChildren( CBaseEntity *pOldParent, CBaseEntity *pNewParent )

@@ -174,7 +174,7 @@ void C_ParticleFire::OnDataChanged(DataUpdateType_t updateType)
 
 	if(updateType == DATA_UPDATE_CREATED)
 	{
-		Start(&g_ParticleMgr, NULL);
+		Start(ParticleMgr(), NULL);
 	}
 }
 

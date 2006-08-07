@@ -90,9 +90,14 @@ public:
 	void InputAction( inputdata_t &inputdata );
 	void InputHandBrakeOn( inputdata_t &inputdata );
 	void InputHandBrakeOff( inputdata_t &inputdata );
+
 	DECLARE_DATADESC();
 
-
+#ifdef HL2_EPISODIC
+	void AddPhysicsChild( CBaseEntity *pChild );
+	void RemovePhysicsChild( CBaseEntity *pChild );
+#endif //HL2_EPISODIC
+		
 protected:
 	// engine sounds
 	void SoundInit();
@@ -100,23 +105,46 @@ protected:
 	void SoundUpdate( const vehicle_operatingparams_t &params, const vehicleparams_t &vehicle );
 	void CalcWheelData( vehicleparams_t &vehicle );
 	void ResetControls();
+	
+	// Upright strength of the controller (angular limit)
+	virtual float GetUprightStrength( void ) { return 0.0f; }
+	virtual float GetUprightTime( void ) { return 5.0f; }
 
 protected:
 	CFourWheelVehiclePhysics		m_VehiclePhysics;
 	unsigned int					m_nVehicleType;
 	string_t						m_vehicleScript;
 
+#ifdef HL2_EPISODIC
+	CUtlVector<EHANDLE>				m_hPhysicsChildren;	// List of entities who wish to get physics callbacks from the vehicle
+#endif //HL2_EPISODIC
+
 private:
 	Vector							m_vecSmoothedVelocity;
 
 	CHandle<CBasePlayer>			m_hPhysicsAttacker;
+
 	float							m_flLastPhysicsInfluenceTime;
+};
+
+//=============================================================================
+// NPC Passenger Carrier interface
+
+class INPCPassengerCarrier
+{
+public:
+	virtual bool	NPC_CanEnterVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) = 0;
+	virtual bool	NPC_CanExitVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) = 0;
+	virtual bool	NPC_AddPassenger( CAI_BaseNPC *pPassenger, string_t strRoleName, int nSeatID ) = 0;
+	virtual bool	NPC_RemovePassenger( CAI_BaseNPC *pPassenger ) = 0;
+	virtual void	NPC_FinishedEnterVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) = 0;
+	virtual void	NPC_FinishedExitVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) = 0;
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Drivable four wheel physics vehicles
 //-----------------------------------------------------------------------------
-class CPropVehicleDriveable : public CPropVehicle, public IDrivableVehicle
+class CPropVehicleDriveable : public CPropVehicle, public IDrivableVehicle, public INPCPassengerCarrier
 {
 	DECLARE_CLASS( CPropVehicleDriveable, CPropVehicle );
 	DECLARE_SERVERCLASS();
@@ -173,12 +201,12 @@ public:
 	virtual bool		CanExitVehicle( CBaseEntity *pEntity );
 	virtual void		SetVehicleEntryAnim( bool bOn ) { m_bEnterAnimOn = bOn; }
 	virtual void		SetVehicleExitAnim( bool bOn, Vector vecEyeExitEndpoint ) { m_bExitAnimOn = bOn; if ( bOn ) m_vecEyeExitEndpoint = vecEyeExitEndpoint; }
-	virtual void		EnterVehicle( CBasePlayer *pPlayer );
+	virtual void		EnterVehicle( CBaseCombatCharacter *pPassenger );
 
-	virtual bool		AllowBlockedExit( CBasePlayer *pPlayer, int iRole ) { return true; }
-	virtual bool		AllowMidairExit( CBasePlayer *pPlayer, int iRole ) { return false; }
-	virtual void		PreExitVehicle( CBasePlayer *pPlayer, int iRole ) {}
-	virtual void		ExitVehicle( int iRole );
+	virtual bool		AllowBlockedExit( CBaseCombatCharacter *pPassenger, int nRole ) { return true; }
+	virtual bool		AllowMidairExit( CBaseCombatCharacter *pPassenger, int nRole ) { return false; }
+	virtual void		PreExitVehicle( CBaseCombatCharacter *pPassenger, int nRole ) {}
+	virtual void		ExitVehicle( int nRole );
 
 	// If this is a vehicle, returns the vehicle interface
 	virtual IServerVehicle *GetServerVehicle() { return m_pServerVehicle; }
@@ -204,6 +232,7 @@ protected:
 
 	CNetworkHandle( CBasePlayer, m_hPlayer );
 public:
+
 	CNetworkVar( int, m_nSpeed );
 	CNetworkVar( int, m_nRPM );
 	CNetworkVar( float, m_flThrottle );
@@ -221,6 +250,20 @@ public:
 	// NPC Driver
 	CHandle<CNPC_VehicleDriver>	 m_hNPCDriver;
 	EHANDLE						 m_hKeepUpright;
+
+	// --------------------------------
+	// NPC Passengers
+public:
+
+	virtual bool	NPC_CanEnterVehicle( CAI_BaseNPC *pPassenger, bool bCompanion );
+	virtual bool	NPC_CanExitVehicle( CAI_BaseNPC *pPassenger, bool bCompanion );
+	virtual bool	NPC_AddPassenger( CAI_BaseNPC *pPassenger, string_t strRoleName, int nSeatID );
+	virtual bool 	NPC_RemovePassenger( CAI_BaseNPC *pPassenger );
+	virtual void	NPC_FinishedEnterVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) {} 
+	virtual void	NPC_FinishedExitVehicle( CAI_BaseNPC *pPassenger, bool bCompanion ) {}
+
+	// NPC Passengers
+	// --------------------------------
 
 protected:
 	// Entering / Exiting

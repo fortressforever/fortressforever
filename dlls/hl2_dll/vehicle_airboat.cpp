@@ -22,6 +22,7 @@
 #include "weapon_rpg.h"
 #include "vphysics/constraints.h"
 #include "world.h"
+#include "rumble_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -66,6 +67,8 @@ static ConVar sk_airboat_drain_rate("sk_airboat_drain_rate", "10" );
 static ConVar hud_airboathint_numentries( "hud_airboathint_numentries", "10", FCVAR_NONE );
 static ConVar airboat_fatal_stress( "airboat_fatal_stress", "5000", FCVAR_NONE, "Amount of stress in kg that would kill the airboat driver." );
 
+extern ConVar autoaim_max_dist;
+
 class CPropAirboat : public CPropVehicleDriveable
 {
 	DECLARE_CLASS( CPropAirboat, CPropVehicleDriveable );
@@ -100,7 +103,7 @@ public:
 
 	virtual bool	AllowBlockedExit( CBasePlayer *pPlayer, int nRole ) { return false; }
 	virtual void	PreExitVehicle( CBasePlayer *pPlayer, int nRole );
-	virtual void	ExitVehicle( int iRole );
+	virtual void	ExitVehicle( int nRole );
 
 	void			ComputePDControllerCoefficients( float *pCoefficientsOut, float flFrequency, float flDampening, float flDeltaTime );
 	void			DampenForwardMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
@@ -124,6 +127,7 @@ public:
 	void ClearForcedExit() { m_bForcedExit = false; }
 
 	// Input handlers.
+	void InputWake( inputdata_t &inputdata );
 	void InputExitVehicle( inputdata_t &inputdata );
 	void InputEnableGun( inputdata_t &inputdata );
 	void InputStartRotorWashForces( inputdata_t &inputdata );
@@ -245,6 +249,9 @@ private:
 	CNetworkVar( Vector, m_vecPhysVelocity );
 
 	CNetworkVar( int, m_nExactWaterLevel );
+
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nWaterLevel );
+
 };
 
 IMPLEMENT_SERVERCLASS_ST( CPropAirboat, DT_PropAirboat )
@@ -312,6 +319,7 @@ BEGIN_DATADESC( CPropAirboat )
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartRotorWashForces", InputStartRotorWashForces ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StopRotorWashForces", InputStopRotorWashForces ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ExitVehicle", InputExitVehicle ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "Wake", InputWake ),
 
 END_DATADESC()
 
@@ -398,7 +406,6 @@ void CPropAirboat::Spawn( void )
 	//CreateAntiFlipConstraint();
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Create a ragdoll constraint that prevents us from flipping.
 //-----------------------------------------------------------------------------
@@ -454,6 +461,16 @@ void CPropAirboat::Activate()
 	m_nSplashAttachment = LookupAttachment( "splash_pt" );
 
 	CreateSounds();
+
+	CBaseServerVehicle *pServerVehicle = dynamic_cast<CBaseServerVehicle *>(GetServerVehicle());
+	if ( pServerVehicle )
+	{
+		if( pServerVehicle->GetPassenger() )
+		{
+			// If a boat comes back from a save game with a driver, make sure the engine rumble starts up.
+			pServerVehicle->StartEngineRumble();
+		}
+	}
 
 	//CreatePlayerBlocker();
 	//EnablePlayerBlocker( true );
@@ -552,6 +569,17 @@ void CPropAirboat::InputExitVehicle( inputdata_t &inputdata )
 
 
 //-----------------------------------------------------------------------------
+// Purpose: Force the airboat to wake up. This was needed to fix a last-minute
+//			bug for the XBox -- the airboat didn't fall with the platform
+//			in d1_canals_10b.
+//-----------------------------------------------------------------------------
+void CPropAirboat::InputWake( inputdata_t &inputdata )
+{
+	VPhysicsGetObject()->Wake();
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Input handler to enable or disable the airboat's mounted gun.
 //-----------------------------------------------------------------------------
 void CPropAirboat::InputEnableGun( inputdata_t &inputdata )
@@ -641,6 +669,19 @@ void CPropAirboat::PreExitVehicle( CBasePlayer *pPlayer, int nRole )
 	// Stop shooting.
 	m_nGunState = GUN_STATE_IDLE;
 
+#ifdef _XBOX 
+	CBaseEntity *pDriver = GetDriver();
+	CBasePlayer *pPlayerDriver;
+	if( pDriver && pDriver->IsPlayer() )
+	{
+		pPlayerDriver = dynamic_cast<CBasePlayer*>(pDriver);
+		if( pPlayerDriver )
+		{
+			pPlayerDriver->RumbleEffect( RUMBLE_AIRBOAT_GUN, 0, RUMBLE_FLAG_STOP );
+		}
+	}
+#endif
+
 	BaseClass::PreExitVehicle( pPlayer, nRole );
 }
 
@@ -649,13 +690,13 @@ void CPropAirboat::PreExitVehicle( CBasePlayer *pPlayer, int nRole )
 // Purpose: Called when exiting, after completing the exit animation.
 // Input  : iRole - 
 //-----------------------------------------------------------------------------
-void CPropAirboat::ExitVehicle( int iRole )
+void CPropAirboat::ExitVehicle( int nRole )
 {
 	CBaseEntity *pDriver = GetDriver();
 
 	//EnablePlayerBlocker( true );
 
-	BaseClass::ExitVehicle( iRole );
+	BaseClass::ExitVehicle( nRole );
 
 	if (!pDriver)
 		return;
@@ -718,7 +759,7 @@ Vector CPropAirboat::BodyTarget( const Vector &posSrc, bool bNoisy )
 	QAngle angles;
 	if ( GetServerVehicle()->GetPassenger() )
 	{
-		GetServerVehicle()->GetVehicleViewPosition( VEHICLE_DRIVER, &vecPosition, &angles );
+		GetServerVehicle()->GetVehicleViewPosition( VEHICLE_ROLE_DRIVER, &vecPosition, &angles );
 	}
 	else
 	{
@@ -802,6 +843,10 @@ void CPropAirboat::DoImpactEffect( trace_t &tr, int nDamageType )
 	if ( m_flLastImpactEffectTime == gpGlobals->curtime )
 		return;
 
+	// Randomly drop out
+	if ( random->RandomInt( 0, 5 ) )
+		return;
+
 	m_flLastImpactEffectTime = gpGlobals->curtime;
 	UTIL_ImpactTrace( &tr, nDamageType, "AirboatGunImpact" );
 } 
@@ -856,7 +901,7 @@ void CPropAirboat::VPhysicsFriction( IPhysicsObject *pObject, float energy, int 
 	surfacedata_t *psurf = physprops->GetSurfaceData( surfaceProps );
 	const char *pSoundName = physprops->GetString( psurf->sounds.scrapeRough );
 
-	PhysFrictionSound( this, pObject, pSoundName, flVolume );
+	PhysFrictionSound( this, pObject, pSoundName, psurf->soundhandles.scrapeRough, flVolume );
 }
 
 
@@ -984,7 +1029,23 @@ void CPropAirboat::RechargeAmmo(void)
 void CPropAirboat::ComputeAimPoint( Vector *pVecAimPoint )
 {
 	Vector vecEyeDirection;
-	m_hPlayer->EyeVectors( &vecEyeDirection, NULL, NULL );
+
+	if ( IsXbox() )
+	{
+		// Use autoaim as the eye dir.
+		autoaim_params_t params;
+
+		params.m_fScale = AUTOAIM_SCALE_DEFAULT * 10.0f;
+		params.m_fMaxDist = autoaim_max_dist.GetFloat();
+		m_hPlayer->GetAutoaimVector( params );
+
+		vecEyeDirection = params.m_vecAutoAimDir;
+	}
+	else
+	{
+		m_hPlayer->EyeVectors( &vecEyeDirection, NULL, NULL );
+	}
+
 	Vector vecEndPos;
 	VectorMA( m_hPlayer->EyePosition(), MAX_TRACE_LENGTH, vecEyeDirection, vecEndPos );
 	trace_t	trace;
@@ -1017,9 +1078,15 @@ void CPropAirboat::Think(void)
 	CollisionProp()->NormalizedToWorldSpace( Vector( 0.5f, 0.5f, 1.0f ), &startPos );
 	CollisionProp()->NormalizedToWorldSpace( Vector( 0.5f, 0.5f, 0.0f ), &endPos );
 
-	// Look for water along that volume
+	// Look for water along that volume.
+	// Make a very vertically thin box and sweep it along the ray.
+	Vector vecMins = CollisionProp()->OBBMins();
+	Vector vecMaxs = CollisionProp()->OBBMaxs();
+	vecMins.z = -0.1f;
+	vecMaxs.z = 0.1f;
+
 	trace_t	tr;
-	UTIL_TraceHull( startPos, endPos, CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs(), (CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceHull( startPos, endPos, vecMins, vecMaxs, (CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &tr );
 
 	// If we hit something, then save off the info
 	if ( tr.fraction != 1.0f )
@@ -1052,7 +1119,7 @@ void CPropAirboat::Think(void)
 		// The first few time we get into the jeep, print the jeep help
 		if ( m_iNumberOfEntries < hud_airboathint_numentries.GetInt() )
 		{
-			UTIL_HudHintText( m_hPlayer, "#Valve_Hint_AirboatKeys" );
+			UTIL_HudHintText( m_hPlayer, "#Valve_Hint_BoatKeys" );
 			m_iNumberOfEntries++;
 		}
 		
@@ -1478,8 +1545,8 @@ void CPropAirboat::FireGun( )
 {
 	// Get the gun position.
 	Vector	vecGunPosition;
-	QAngle	vecGunAngles;
-	GetAttachment( m_nGunBarrelAttachment, vecGunPosition, vecGunAngles );
+	Vector vecForward;
+	GetAttachment( m_nGunBarrelAttachment, vecGunPosition, &vecForward );
 	
 	// NOTE: For the airboat, unable to fire really means the aim is clamped
 	Vector vecAimPoint;
@@ -1491,8 +1558,6 @@ void CPropAirboat::FireGun( )
 	else
 	{
 		// We hit the clamp; just fire whichever way the gun is facing
-		Vector vecForward;
-		AngleVectors( vecGunAngles, &vecForward );
 		VectorMA( vecGunPosition, 1000.0f, vecForward, vecAimPoint );
 	}
 	
@@ -1531,6 +1596,17 @@ void CPropAirboat::FireGun( )
 
 	FireBullets( info );
 
+	CBaseEntity *pDriver = GetDriver();
+	CBasePlayer *pPlayerDriver;
+	if( pDriver && pDriver->IsPlayer() )
+	{
+		pPlayerDriver = dynamic_cast<CBasePlayer*>(pDriver);
+		if( pPlayerDriver )
+		{
+			pPlayerDriver->RumbleEffect( RUMBLE_AIRBOAT_GUN, 0, RUMBLE_FLAG_LOOP|RUMBLE_FLAG_ONLYONE );
+		}
+	}
+
 	DoMuzzleFlash();
 
 	// NOTE: This must occur after FireBullets
@@ -1554,8 +1630,12 @@ void CPropAirboat::FireGun( )
 	Vector vecEyeDirection, vecEyePosition;
 	if ( !m_bUnableToFire )
 	{
+#if defined(IN_XBOX_CODELINE)
+		GetAttachment( m_nGunBarrelAttachment, vecEyePosition, &vecEyeDirection );
+#else
 		vecEyePosition = m_hPlayer->EyePosition();
 		m_hPlayer->EyeVectors( &vecEyeDirection, NULL, NULL );
+#endif
 	}
 	else
 	{
@@ -1601,6 +1681,8 @@ void CPropAirboat::FireGun( )
 
 void CPropAirboat::UpdateGunState( CUserCmd *ucmd )
 {
+	bool bStopRumble = false;
+
 	if ( ucmd->buttons & IN_ATTACK )
 	{
 		if ( m_nGunState == GUN_STATE_IDLE )
@@ -1617,6 +1699,7 @@ void CPropAirboat::UpdateGunState( CUserCmd *ucmd )
 			if ( m_nAmmoCount == 0 )
 			{
 				EmitSound( "Airboat.FireGunRevDown" );
+				bStopRumble = true;
 //				RemoveAllGestures();
 			}
 		}
@@ -1628,11 +1711,28 @@ void CPropAirboat::UpdateGunState( CUserCmd *ucmd )
 			if ( m_nAmmoCount != 0 )
 			{
 				EmitSound( "Airboat.FireGunRevDown" );
+				bStopRumble = true;
 //				RemoveAllGestures();
 			}
 			m_nGunState = GUN_STATE_IDLE;
 		}
 	}
+
+#ifdef _XBOX 
+	if( bStopRumble )
+	{
+		CBaseEntity *pDriver = GetDriver();
+		CBasePlayer *pPlayerDriver;
+		if( pDriver && pDriver->IsPlayer() )
+		{
+			pPlayerDriver = dynamic_cast<CBasePlayer*>(pDriver);
+			if( pPlayerDriver )
+			{
+				pPlayerDriver->RumbleEffect( RUMBLE_AIRBOAT_GUN, 0, RUMBLE_FLAG_STOP );
+			}
+		}
+	}
+#endif
 }
 
 
@@ -1869,11 +1969,8 @@ void CPropAirboat::CreateSplash( int nSplashType )
 		return;
 
 	Vector vecSplashPoint;
-	QAngle vecSplashAngles;
-	GetAttachment( m_nSplashAttachment, vecSplashPoint, vecSplashAngles );
-
 	Vector vecForward, vecUp;
-	AngleVectors( vecSplashAngles, &vecForward, &vecUp, NULL );
+	GetAttachment( m_nSplashAttachment, vecSplashPoint, &vecForward, &vecUp, NULL );
 
 	CEffectData	data;
 	data.m_fFlags = 0;

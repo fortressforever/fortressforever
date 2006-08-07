@@ -28,10 +28,12 @@ RecvProp RecvPropTime(
 	int offset, 
 	int sizeofVar=SIZEOF_IGNORE );
 
+#if !defined( NO_ENTITY_PREDICTION )
 RecvProp RecvPropPredictableId(
 	char *pVarName, 
 	int offset, 
 	int sizeofVar=SIZEOF_IGNORE );
+#endif
 
 RecvProp RecvPropEHandle(
 	char *pVarName, 

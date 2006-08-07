@@ -35,6 +35,8 @@
 class CDirtySpatialPartitionEntityList : public CAutoGameSystem, public IPartitionQueryCallback
 {
 public:
+	CDirtySpatialPartitionEntityList( char const *name );
+
 	// Members of IGameSystem
 	virtual bool Init();
 	virtual void Shutdown();
@@ -45,7 +47,6 @@ public:
 
 	void AddEntity( CBaseEntity *pEntity );
 	
-	CDirtySpatialPartitionEntityList();
 	~CDirtySpatialPartitionEntityList();
 
 
@@ -57,13 +58,13 @@ private:
 //-----------------------------------------------------------------------------
 // Singleton instance
 //-----------------------------------------------------------------------------
-static CDirtySpatialPartitionEntityList s_DirtyKDTree;
+static CDirtySpatialPartitionEntityList s_DirtyKDTree( "CDirtySpatialPartitionEntityList" );
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
 //-----------------------------------------------------------------------------
-CDirtySpatialPartitionEntityList::CDirtySpatialPartitionEntityList()
+CDirtySpatialPartitionEntityList::CDirtySpatialPartitionEntityList( char const *name ) : CAutoGameSystem( name )
 {
 	m_DirtyEntities.Purge();
 }
@@ -120,22 +121,43 @@ void CDirtySpatialPartitionEntityList::OnPreQuery()
 		return;
 #endif
 
+	CUtlVector< CBaseHandle > vecStillDirty;
+
 	int nDirtyEntityCount = m_DirtyEntities.Count();
 	while ( nDirtyEntityCount > 0 )
 	{
+		CBaseHandle handle;
+		handle = m_DirtyEntities[nDirtyEntityCount-1];
+
 #ifndef CLIENT_DLL
-		CBaseEntity *pEntity = gEntList.GetBaseEntity( m_DirtyEntities[nDirtyEntityCount-1] );
+		CBaseEntity *pEntity = gEntList.GetBaseEntity( handle );
 #else
-		CBaseEntity *pEntity = cl_entitylist->GetBaseEntityFromHandle( m_DirtyEntities[nDirtyEntityCount-1] );
+		CBaseEntity *pEntity = cl_entitylist->GetBaseEntityFromHandle( handle );
 #endif
+		
 		m_DirtyEntities.FastRemove( nDirtyEntityCount-1 );
 
 		if ( pEntity )
 		{
-			pEntity->CollisionProp()->UpdatePartition();
+			// If an entity is in the middle of bone setup, don't call UpdatePartition
+			//  which can cause it to redo bone setup on the same frame causing a recursive
+			//  call to bone setup.
+			if ( !pEntity->IsEFlagSet( EFL_SETTING_UP_BONES ) )
+			{
+				pEntity->CollisionProp()->UpdatePartition();
+			}
+			else
+			{
+				vecStillDirty.AddToTail( handle );
+			}
 		}
 
 		nDirtyEntityCount = m_DirtyEntities.Count();
+	}
+
+	if ( vecStillDirty.Count() > 0 )
+	{
+		m_DirtyEntities = vecStillDirty;
 	}
 }
 
@@ -152,11 +174,11 @@ void CDirtySpatialPartitionEntityList::OnPreQuery()
 //		DEFINE_FIELD( m_pOuter, FIELD_CLASSPTR ),
 		DEFINE_GLOBAL_FIELD( m_vecMins, FIELD_VECTOR ),
 		DEFINE_GLOBAL_FIELD( m_vecMaxs, FIELD_VECTOR ),
-		DEFINE_KEYFIELD( m_Solid, FIELD_INTEGER, "solid" ),
+		DEFINE_KEYFIELD( m_nSolidType, FIELD_CHARACTER, "solid" ),
 		DEFINE_FIELD( m_usSolidFlags, FIELD_SHORT ),
 		DEFINE_FIELD( m_nSurroundType, FIELD_CHARACTER ),
 		DEFINE_FIELD( m_flRadius, FIELD_FLOAT ),
-		DEFINE_FIELD( m_flTriggerBloat, FIELD_FLOAT ),
+		DEFINE_FIELD( m_triggerBloat, FIELD_CHARACTER ),
 		DEFINE_FIELD( m_vecSpecifiedSurroundingMins, FIELD_VECTOR ),
 		DEFINE_FIELD( m_vecSpecifiedSurroundingMaxs, FIELD_VECTOR ),
 		DEFINE_FIELD( m_vecSurroundingMins, FIELD_VECTOR ),
@@ -166,8 +188,7 @@ void CDirtySpatialPartitionEntityList::OnPreQuery()
 
 	END_DATADESC()
 
-#endif
-
+#else
 
 //-----------------------------------------------------------------------------
 // Prediction
@@ -176,12 +197,13 @@ BEGIN_PREDICTION_DATA_NO_BASE( CCollisionProperty )
 
 	DEFINE_PRED_FIELD( m_vecMins, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecMaxs, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_Solid, FIELD_SHORT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nSolidType, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_usSolidFlags, FIELD_SHORT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flTriggerBloat, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_triggerBloat, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
 
+#endif
 
 //-----------------------------------------------------------------------------
 // Networking
@@ -226,18 +248,9 @@ static void RecvProxy_VectorDirtySurround( const CRecvProxyData *pData, void *pS
 
 static void RecvProxy_IntDirtySurround( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	if ( *((int*)pOut) != pData->m_Value.m_Int )
+	if ( *((unsigned char*)pOut) != pData->m_Value.m_Int )
 	{
-		*((int*)pOut) = pData->m_Value.m_Int;
-		((CCollisionProperty*)pStruct)->MarkSurroundingBoundsDirty();
-	}
-}
-
-static void RecvProxy_FloatDirtySurround( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	if ( *((float*)pOut) != pData->m_Value.m_Float )
-	{
-		*((float*)pOut) = pData->m_Value.m_Float;
+		*((unsigned char*)pOut) = pData->m_Value.m_Int;
 		((CCollisionProperty*)pStruct)->MarkSurroundingBoundsDirty();
 	}
 }
@@ -261,19 +274,19 @@ BEGIN_NETWORK_TABLE_NOBASE( CCollisionProperty, DT_CollisionProperty )
 #ifdef CLIENT_DLL
 	RecvPropVector( RECVINFO(m_vecMins), 0, RecvProxy_OBBMins ),
 	RecvPropVector( RECVINFO(m_vecMaxs), 0, RecvProxy_OBBMaxs ),
-	RecvPropInt( "solid", 0, SIZEOF_IGNORE, 0, RecvProxy_Solid ),
-	RecvPropInt( "solidflags", 0, SIZEOF_IGNORE, 0, RecvProxy_SolidFlags ),
+	RecvPropInt( RECVINFO( m_nSolidType ),		0, RecvProxy_Solid ),
+	RecvPropInt( RECVINFO( m_usSolidFlags ),	0, RecvProxy_SolidFlags ),
 	RecvPropInt( RECVINFO(m_nSurroundType), 0, RecvProxy_IntDirtySurround ),
-	RecvPropFloat( RECVINFO(m_flTriggerBloat), 0, RecvProxy_FloatDirtySurround ), 
+	RecvPropInt( RECVINFO(m_triggerBloat), 0, RecvProxy_IntDirtySurround ), 
 	RecvPropVector( RECVINFO(m_vecSpecifiedSurroundingMins), 0, RecvProxy_VectorDirtySurround ),
 	RecvPropVector( RECVINFO(m_vecSpecifiedSurroundingMaxs), 0, RecvProxy_VectorDirtySurround ),
 #else
 	SendPropVector( SENDINFO(m_vecMins), 0, SPROP_NOSCALE),
 	SendPropVector( SENDINFO(m_vecMaxs), 0, SPROP_NOSCALE),
-	SendPropInt("solid", 0, SIZEOF_IGNORE,       3, SPROP_UNSIGNED, SendProxy_Solid ),
-	SendPropInt("solidflags", 0, SIZEOF_IGNORE,  FSOLID_MAX_BITS, SPROP_UNSIGNED, SendProxy_SolidFlags ),
+	SendPropInt( SENDINFO( m_nSolidType ),		3, SPROP_UNSIGNED, SendProxy_Solid ),
+	SendPropInt( SENDINFO( m_usSolidFlags ),	FSOLID_MAX_BITS, SPROP_UNSIGNED, SendProxy_SolidFlags ),
 	SendPropInt( SENDINFO( m_nSurroundType ), SURROUNDING_TYPE_BIT_COUNT, SPROP_UNSIGNED ),
-	SendPropFloat( SENDINFO(m_flTriggerBloat), 0, SPROP_NOSCALE),
+	SendPropInt( SENDINFO(m_triggerBloat), 0, SPROP_UNSIGNED),
 	SendPropVector( SENDINFO(m_vecSpecifiedSurroundingMins), 0, SPROP_NOSCALE),
 	SendPropVector( SENDINFO(m_vecSpecifiedSurroundingMaxs), 0, SPROP_NOSCALE),
 #endif
@@ -305,9 +318,9 @@ void CCollisionProperty::Init( CBaseEntity *pEntity )
 	m_vecMins.GetForModify().Init();
 	m_vecMaxs.GetForModify().Init();
 	m_flRadius = 0.0f;
-	m_flTriggerBloat = 0.0f;
+	m_triggerBloat = 0;
 	m_usSolidFlags = 0;
-	m_Solid = SOLID_NONE;
+	m_nSolidType = SOLID_NONE;
 
 	// NOTE: This replicates previous behavior; we may always want to use BEST_COLLISION_BOUNDS
 	m_nSurroundType = USE_OBB_COLLISION_BOUNDS;
@@ -399,7 +412,7 @@ void CCollisionProperty::CheckForUntouch()
 //-----------------------------------------------------------------------------
 void CCollisionProperty::SetSolid( SolidType_t val )
 {
-	if ( m_Solid == val )
+	if ( m_nSolidType == val )
 		return;
 
 #ifndef CLIENT_DLL
@@ -438,7 +451,7 @@ void CCollisionProperty::SetSolid( SolidType_t val )
 #endif
 	}
 
-	m_Solid = val;
+	m_nSolidType = val;
 
 #ifndef CLIENT_DLL
 	m_pOuter->CollisionRulesChanged();
@@ -454,7 +467,7 @@ void CCollisionProperty::SetSolid( SolidType_t val )
 
 SolidType_t CCollisionProperty::GetSolid() const
 {
-	return m_Solid;
+	return (SolidType_t)m_nSolidType.Get();
 }
 
 
@@ -475,7 +488,7 @@ void CCollisionProperty::SetSolidFlags( int flags )
 		MarkSurroundingBoundsDirty();
 	}
 
-	if ( (oldFlags & FSOLID_NOT_SOLID) != (m_usSolidFlags & FSOLID_NOT_SOLID) )
+	if ( (oldFlags & (FSOLID_NOT_SOLID|FSOLID_TRIGGER)) != (m_usSolidFlags & (FSOLID_NOT_SOLID|FSOLID_TRIGGER)) )
 	{
 		m_pOuter->CollisionRulesChanged();
 	}
@@ -537,12 +550,29 @@ void CCollisionProperty::SetCollisionBounds( const Vector& mins, const Vector &m
 		
 	m_vecMins = mins;
 	m_vecMaxs = maxs;
+	
+	//ASSERT_COORD( mins );
+	//ASSERT_COORD( maxs );
 
 	Vector vecSize;
 	VectorSubtract( maxs, mins, vecSize );
 	m_flRadius = vecSize.Length() * 0.5f;
 
 	MarkSurroundingBoundsDirty();
+}
+
+
+//-----------------------------------------------------------------------------
+// Lazily calculates the 2D bounding radius. If we do this enough, we should
+// calculate this in SetCollisionBounds above and cache the results in a data member!
+//-----------------------------------------------------------------------------
+float CCollisionProperty::BoundingRadius2D() const
+{
+	Vector vecSize;
+	VectorSubtract( m_vecMaxs, m_vecMins, vecSize );
+
+	vecSize.z = 0;	
+	return vecSize.Length() * 0.5f;
 }
 
 
@@ -570,17 +600,18 @@ void CCollisionProperty::WorldSpaceTriggerBounds( Vector *pVecWorldMins, Vector 
 		return;
 
 	// Don't bloat below, we don't want to trigger it with our heads
-	pVecWorldMins->x -= m_flTriggerBloat;
-	pVecWorldMins->y -= m_flTriggerBloat;
+	pVecWorldMins->x -= m_triggerBloat;
+	pVecWorldMins->y -= m_triggerBloat;
 
-	pVecWorldMaxs->x += m_flTriggerBloat;
-	pVecWorldMaxs->y += m_flTriggerBloat;
-	pVecWorldMaxs->z += m_flTriggerBloat * 0.5f;
+	pVecWorldMaxs->x += m_triggerBloat;
+	pVecWorldMaxs->y += m_triggerBloat;
+	pVecWorldMaxs->z += (float)m_triggerBloat * 0.5f;
 }
 
 void CCollisionProperty::UseTriggerBounds( bool bEnable, float flBloat )
 {
-	m_flTriggerBloat = flBloat;
+	Assert( flBloat <= 127.0f );
+	m_triggerBloat = (char )flBloat;
 	if ( bEnable )
 	{
 		AddSolidFlags( FSOLID_USE_TRIGGER_BOUNDS );
@@ -690,15 +721,6 @@ void CCollisionProperty::RandomPointInBounds( const Vector &vecNormalizedMins, c
 void CCollisionProperty::CollisionAABBToWorldAABB( const Vector &entityMins, 
 	const Vector &entityMaxs, Vector *pWorldMins, Vector *pWorldMaxs ) const
 {
-	if ( IsSolidFlagSet(FSOLID_ROOT_PARENT_ALIGNED) )
-	{
-		matrix3x4_t mat;
-		// Get Root Parent's axes - align box to those
-		MatrixCopy( *GetRootParentToWorldTransform(), mat );
-		MatrixSetColumn( GetCollisionOrigin(), 3, mat );
-		TransformAABB( mat, entityMins, entityMaxs, *pWorldMins, *pWorldMaxs );
-		return;
-	}
 	if ( !IsBoundsDefinedInEntitySpace() || (GetCollisionAngles() == vec3_angle) )
 	{
 		VectorAdd( entityMins, GetCollisionOrigin(), *pWorldMins );
@@ -1011,6 +1033,9 @@ void CCollisionProperty::SetSurroundingBoundsType( SurroundingBoundsType_t type,
 		m_vecSpecifiedSurroundingMaxs = *pMaxs;
 		m_vecSurroundingMins = *pMins;
 		m_vecSurroundingMaxs = *pMaxs;
+
+		ASSERT_COORD( m_vecSurroundingMins );
+		ASSERT_COORD( m_vecSurroundingMaxs );
 	}
 }
 
@@ -1071,6 +1096,9 @@ void CCollisionProperty::WorldSpaceSurroundingBounds( Vector *pVecMins, Vector *
 		ComputeSurroundingBox( pVecMins, pVecMaxs );
 		VectorSubtract( *pVecMins, vecAbsOrigin, m_vecSurroundingMins );
 		VectorSubtract( *pVecMaxs, vecAbsOrigin, m_vecSurroundingMaxs );
+		
+		ASSERT_COORD( m_vecSurroundingMins );
+		ASSERT_COORD( m_vecSurroundingMaxs );
 	}
 	else
 	{
@@ -1192,6 +1220,9 @@ void CCollisionProperty::UpdatePartition( )
 			CreatePartitionHandle();
 			UpdateServerPartitionMask();
 		}
+#else
+		if ( GetPartitionHandle() == PARTITION_INVALID_HANDLE )
+			return;
 #endif
 
 		// We don't need to bother if it's not a trigger or solid

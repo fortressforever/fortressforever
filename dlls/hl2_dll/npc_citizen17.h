@@ -83,7 +83,12 @@ public:
 	virtual void	SelectModel();
 	void			SelectExpressionType();
 	void			Activate();
+	virtual void	OnGivenWeapon( CBaseCombatWeapon *pNewWeapon );
 	void			FixupMattWeapon();
+
+#ifdef HL2_EPISODIC
+	virtual float	GetJumpGravity() const		{ return 1.8f; }
+#endif//HL2_EPISODIC
 
 	void			OnRestore();
 	
@@ -127,7 +132,6 @@ public:
 	void 			HandleAnimEvent( animevent_t *pEvent );
 	void			TaskFail( AI_TaskFailureCode_t code );
 
-	void			PickupWeapon( CBaseCombatWeapon *pWeapon );
 	void 			PickupItem( CBaseEntity *pItem );
 
 	void 			SimpleUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
@@ -183,7 +187,7 @@ public:
 	void			RemoveFromPlayerSquad();
 	void 			TogglePlayerSquadState();
 	void			UpdatePlayerSquad();
-	static int		PlayerSquadCandidateSortFunc( const SquadCandidate_t *, const SquadCandidate_t * );
+	static int __cdecl PlayerSquadCandidateSortFunc( const SquadCandidate_t *, const SquadCandidate_t * );
 	void 			FixupPlayerSquad();
 	void 			ClearFollowTarget();
 	void 			UpdateFollowCommandPoint();
@@ -204,7 +208,6 @@ public:
 	//---------------------------------
 	// Hints
 	//---------------------------------
-	Activity		GetHintActivity( short sHintType, Activity HintsActivity );
 	bool			FValidateHintType ( CAI_Hint *pHint );
 
 	//---------------------------------
@@ -222,9 +225,9 @@ public:
 	//---------------------------------
 	// Inputs
 	//---------------------------------
+	void			InputRemoveFromPlayerSquad( inputdata_t &inputdata ) { RemoveFromPlayerSquad(); }
 	void 			InputStartPatrolling( inputdata_t &inputdata );
 	void 			InputStopPatrolling( inputdata_t &inputdata );
-	void			InputGiveWeapon( inputdata_t &inputdata );
 	void			InputSetCommandable( inputdata_t &inputdata );
 	void			InputSetMedicOn( inputdata_t &inputdata );
 	void			InputSetMedicOff( inputdata_t &inputdata );
@@ -235,14 +238,12 @@ public:
 	//---------------------------------
 	//	Sounds & speech
 	//---------------------------------
-	void			FearSound(void);
-	void			DeathSound(void);
+	void			FearSound( void );
+	void			DeathSound( const CTakeDamageInfo &info );
 	bool			UseSemaphore( void );
 
-	// Citizen responses
-	bool 			RespondedTo( const char *ResponseConcept );
-
 	virtual void	OnChangeRunningBehavior( CAI_BehaviorBase *pOldBehavior,  CAI_BehaviorBase *pNewBehavior );
+
 private:
 	//-----------------------------------------------------
 	// Conditions, Schedules, Tasks
@@ -282,11 +283,13 @@ private:
 	float			m_flPlayerGiveAmmoTime;
 	string_t		m_iszAmmoSupply;
 	int				m_iAmmoAmount;
+	bool			m_bRPGAvoidPlayer;
 	bool			m_bShouldPatrol;
 	string_t		m_iszOriginalSquad;
 	float			m_flTimeJoinedPlayerSquad;
 	bool			m_bWasInPlayerSquad;
 	float			m_flTimeLastCloseToPlayer;
+	string_t		m_iszDenyCommandConcept;
 
 	CSimpleSimTimer	m_AutoSummonTimer;
 	Vector			m_vAutoSummonAnchor;
@@ -309,17 +312,22 @@ private:
 	COutputEvent		m_OnFollowOrder;
 	COutputEvent		m_OnStationOrder; 
 	COutputEvent		m_OnPlayerUse;
+	COutputEvent		m_OnNavFailBlocked;
 
 	//-----------------------------------------------------
 	CAI_FuncTankBehavior	m_FuncTankBehavior;
 
 	CHandle<CAI_FollowGoal>	m_hSavedFollowGoalEnt;
 
-	bool					m_bDontUseSemaphore;
+	bool					m_bNotifyNavFailBlocked;
+	bool					m_bNeverLeavePlayerSquad; // Don't leave the player squad unless killed, or removed via Entity I/O. 
 	
 	//-----------------------------------------------------
 	
 	DECLARE_DATADESC();
+#ifdef _XBOX
+protected:
+#endif
 	DEFINE_CUSTOM_AI;
 };
 
@@ -343,6 +351,10 @@ inline bool CNPC_Citizen::VeryFarFromCommandGoal()
 
 //==============================================================================
 // CITIZEN PLAYER-RESPONSE SYSTEM
+//
+// NOTE: This system is obsolete, and left here for legacy support.
+//		 It has been superseded by the ai_eventresponse system.
+//
 //==============================================================================
 #define CITIZEN_RESPONSE_DISTANCE			768			// Maximum distance for responding citizens
 #define CITIZEN_RESPONSE_REFIRE_TIME		15.0		// Time after giving a response before giving any more

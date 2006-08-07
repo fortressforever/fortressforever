@@ -18,6 +18,7 @@
 #include "soundflags.h"
 #include "irecipientfilter.h"
 #include "utlvector.h"
+#include "engine/SndInfo.h"
 
 //-----------------------------------------------------------------------------
 // forward declaration
@@ -51,8 +52,7 @@ class Vector;
 #define IENGINESOUND_CLIENT_INTERFACE_VERSION	"IEngineSoundClient003"
 #define IENGINESOUND_SERVER_INTERFACE_VERSION	"IEngineSoundServer003"
 
-
-class IEngineSound
+abstract_class IEngineSound
 {
 public:
 	// Precache a particular sample
@@ -102,6 +102,18 @@ public:
 //	virtual EntChannel_t	CreateEntChannel() = 0;
 
 	virtual float GetDistGainFromSoundLevel( soundlevel_t soundlevel, float dist ) = 0;
+
+	// Client .dll only functions
+	virtual int		GetGuidForLastSoundEmitted() = 0;
+	virtual bool	IsSoundStillPlaying( int guid ) = 0;
+	virtual void	StopSoundByGuid( int guid ) = 0;
+	// Set's master volume (0.0->1.0)
+	virtual void	SetVolumeByGuid( int guid, float fvol ) = 0;
+
+	// Retrieves list of all active sounds
+	virtual void	GetActiveSounds( CUtlVector< SndInfo_t >& sndlist ) = 0;
+
+	virtual void	PrecacheSentenceGroup( const char *pGroupName ) = 0;
 };
 
 

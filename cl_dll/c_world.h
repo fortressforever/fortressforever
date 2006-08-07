@@ -38,12 +38,15 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void PreDataUpdate( DataUpdateType_t updateType );
 
-	inline float GetWaveHeight() const
-	{
-		return m_flWaveHeight;
-	}
+	float GetWaveHeight() const;
+	const char *GetDetailSpriteMaterial() const;
 
 public:
+	enum
+	{
+		MAX_DETAIL_SPRITE_MATERIAL_NAME_LENGTH = 256,
+	};
+
 	float	m_flWaveHeight;
 	Vector	m_WorldMins;
 	Vector	m_WorldMaxs;
@@ -52,10 +55,22 @@ public:
 	float	m_flMinOccluderArea;
 	float	m_flMinPropScreenSpaceWidth;
 	float	m_flMaxPropScreenSpaceWidth;
+	bool	m_bColdWorld;
 
 private:
 	void	RegisterSharedActivities( void );
+	char	m_iszDetailSpriteMaterial[MAX_DETAIL_SPRITE_MATERIAL_NAME_LENGTH];
 };
+
+inline float C_World::GetWaveHeight() const
+{
+	return m_flWaveHeight;
+}
+
+inline const char *C_World::GetDetailSpriteMaterial() const
+{
+	return m_iszDetailSpriteMaterial;
+}
 
 void ClientWorldFactoryInit();
 void ClientWorldFactoryShutdown();

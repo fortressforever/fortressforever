@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $Date:         $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #if !defined( IVIEWRENDER_H )
 #define IVIEWRENDER_H
 #ifdef _WIN32
@@ -45,6 +45,7 @@ enum DrawFlags_t
 	DF_MONITOR				= 0x10000,	// Currently rendering a monitor.
 	DF_SAVEGAMESCREENSHOT	= 0x20000,
 	DF_CLIP_SKYBOX			= 0x40000,
+	DF_UPDATELIGHTMAPS		= 0x80000,
 };
 
 
@@ -56,7 +57,7 @@ class C_BaseEntity;
 struct vrect_t;
 class C_BaseViewModel;
 
-class IViewRender
+abstract_class IViewRender
 {
 public:
 	// SETUP
@@ -65,6 +66,7 @@ public:
 
 	// Clear any systems between levels
 	virtual void		LevelInit( void ) = 0;
+	virtual void		LevelShutdown( void ) = 0;
 
 	// Shutdown
 	virtual void		Shutdown( void ) = 0;
@@ -77,7 +79,7 @@ public:
 	// Called to render the entire scene
 	virtual	void		Render( vrect_t *rect ) = 0;
 	// Called to render just a particular setup ( for timerefresh and envmap creation )
-	virtual void		RenderView( const CViewSetup &view, bool drawViewmodel ) = 0;
+	virtual void		RenderView( const CViewSetup &view, int nClearFlags, bool drawViewmodel ) = 0;
 
 	// What are we currently rendering? Returns a combination of DF_ flags.
 	virtual int GetDrawFlags() = 0;
@@ -92,10 +94,15 @@ public:
 
 	virtual bool		ShouldDrawBrushModels( void ) = 0;
 
+	virtual const CViewSetup *GetPlayerViewSetup( void ) const = 0;
 	virtual const CViewSetup *GetViewSetup( void ) const = 0;
 
 	virtual void		AddVisOrigin( const Vector& origin ) = 0;
 	virtual void		DisableVis( void ) = 0;
+
+	// Used to force visibility calculations to use this as the view point and leaf (instead of the camera position)
+	virtual void		ForceVisOverride ( VisOverrideData_t& visData ) = 0;
+	virtual void		ForceViewLeaf  ( int iViewLeaf ) = 0;
 
 	virtual int			FrameNumber() const = 0;
 	virtual int			BuildWorldListsNumber() const = 0;
@@ -111,6 +118,19 @@ public:
 	virtual IMaterial	*GetScreenOverlayMaterial( ) = 0;
 
 	virtual void		WriteSaveGameScreenshot( const char *pFilename ) = 0;
+	virtual void		WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height ) = 0;
+
+	// See RenderViewInfo_t
+	virtual void		RenderViewEx( const CViewSetup &view, int nClearFlags, int whatToDraw ) = 0;
+
+	// Draws another rendering over the top of the screen
+	virtual void		QueueOverlayRenderView( const CViewSetup &view, int nClearFlags, int whatToDraw ) = 0;
+
+	// Returns znear and zfar
+	virtual float		GetZNear() = 0;
+	virtual float		GetZFar() = 0;
+
+	virtual void		GetScreenFadeDistances( float *min, float *max ) = 0;
 };
 
 extern IViewRender *view;

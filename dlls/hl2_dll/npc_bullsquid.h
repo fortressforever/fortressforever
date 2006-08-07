@@ -28,9 +28,9 @@ public:
 	Class_T	Classify( void );
 	
 	void IdleSound( void );
-	void PainSound( void );
+	void PainSound( const CTakeDamageInfo &info );
 	void AlertSound( void );
-	void DeathSound ( void );
+	void DeathSound( const CTakeDamageInfo &info );
 	void AttackSound( void );
 	void GrowlSound( void );
 

@@ -86,10 +86,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBaseTFPlayer for pev, and call spawn
 	CHL2MP_Player *pPlayer = CHL2MP_Player::CreatePlayer( "player", pEdict );
-
-	char trimmedName[MAX_PLAYER_NAME_LENGTH];
-	Q_strncpy( trimmedName, playername, sizeof( trimmedName ) );
-	pPlayer->PlayerData()->netname = AllocPooledString( trimmedName );
+	pPlayer->SetPlayerName( playername );
 }
 
 

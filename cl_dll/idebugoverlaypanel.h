@@ -23,7 +23,7 @@ namespace vgui
 	class Panel;
 }
 
-class IDebugOverlayPanel
+abstract_class IDebugOverlayPanel
 {
 public:
 	virtual void		Create( vgui::VPANEL parent ) = 0;

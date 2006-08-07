@@ -6,6 +6,7 @@
 //
 //=============================================================================//
 
+
 #include "dt_recv.h"
 #include "vector.h"
 #include "vstdlib/strtools.h"
@@ -13,6 +14,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
 
 char *s_ClientElementNames[MAX_ARRAY_ELEMENTS] =
 {
@@ -159,6 +162,36 @@ RecvProp RecvPropVector(
 
 	return ret;
 }
+
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+
+RecvProp RecvPropQuaternion(
+	char *pVarName, 
+	int offset, 
+	int sizeofVar,	// Handled by RECVINFO macro, but set to SIZEOF_IGNORE if you don't want to bother.
+	int flags, 
+	RecvVarProxyFn varProxy
+	)
+{
+	RecvProp ret;
+
+	// Debug type checks.
+	#ifdef _DEBUG
+		if(varProxy == RecvProxy_QuaternionToQuaternion)
+		{
+			Assert(sizeofVar == sizeof(Quaternion));
+		}
+	#endif
+
+	ret.m_pVarName = pVarName;
+	ret.SetOffset( offset );
+	ret.m_RecvType = DPT_Quaternion;
+	ret.m_Flags = flags;
+	ret.SetProxyFn( varProxy );
+
+	return ret;
+}
+#endif
 
 RecvProp RecvPropInt(
 	char *pVarName, 
@@ -315,6 +348,17 @@ void RecvProxy_VectorToVector( const CRecvProxyData *pData, void *pStruct, void 
 	((float*)pOut)[2] = v[2];
 }
 
+void RecvProxy_QuaternionToQuaternion( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	const float *v = pData->m_Value.m_Vector;
+	
+	Assert( IsFinite( v[0] ) && IsFinite( v[1] ) && IsFinite( v[2] ) && IsFinite( v[3] ) );
+	((float*)pOut)[0] = v[0];
+	((float*)pOut)[1] = v[1];
+	((float*)pOut)[2] = v[2];
+	((float*)pOut)[3] = v[3];
+}
+
 void RecvProxy_Int32ToInt8( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	*((unsigned char*)pOut) = *((unsigned char*)&pData->m_Value.m_Int);
@@ -358,5 +402,4 @@ void DataTableRecvProxy_PointerDataTable( const RecvProp *pProp, void **pOut, vo
 	*pOut = *((void**)pData);
 }
 
-
-
+#endif

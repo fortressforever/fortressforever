@@ -34,7 +34,9 @@ public:
 	CNetworkQAngle( m_angRotation );
 	CNetworkVector( m_vecVelocity );
 	CNetworkVar( int, m_nModelIndex );
+	CNetworkVar( int, m_nSkin );
 	CNetworkVar( int, m_nFlags );
+	CNetworkVar( int, m_nEffects );
 };
 
 //-----------------------------------------------------------------------------
@@ -48,7 +50,9 @@ CTEPhysicsProp::CTEPhysicsProp( const char *name ) :
 	m_angRotation.Init();
 	m_vecVelocity.Init();
 	m_nModelIndex		= 0;
+	m_nSkin				= 0;
 	m_nFlags			= 0;
+	m_nEffects			= 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -75,11 +79,13 @@ void CTEPhysicsProp::Test( const Vector& current_origin, const QAngle& current_a
 {
 	// Fill in data
 	m_nModelIndex = CBaseEntity::PrecacheModel( "models/gibs/hgibs.mdl" );
+	m_nSkin = 0;
 	m_vecOrigin = current_origin;
 	m_angRotation = current_angles;
 	
 	m_vecVelocity.Init( random->RandomFloat( -10, 10 ), random->RandomFloat( -10, 10 ), random->RandomFloat( 0, 20 ) );
 	m_nFlags = 0;
+	m_nEffects = 0;
 	
 	Vector forward, right;
 
@@ -103,20 +109,24 @@ IMPLEMENT_SERVERCLASS_ST(CTEPhysicsProp, DT_TEPhysicsProp)
 	SendPropAngle( SENDINFO_VECTORELEM(m_angRotation, 2), 13 ),
 	SendPropVector( SENDINFO(m_vecVelocity), -1, SPROP_COORD),
 	SendPropModelIndex( SENDINFO(m_nModelIndex) ),
+	SendPropInt( SENDINFO(m_nSkin), ANIMATION_SKIN_BITS),
 	SendPropInt( SENDINFO(m_nFlags), 2, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO(m_nEffects), EF_MAX_BITS, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 // Singleton to fire TEBreakModel objects
 static CTEPhysicsProp s_TEPhysicsProp( "physicsprop" );
 
 void TE_PhysicsProp( IRecipientFilter& filter, float delay,
-	int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, int flags )
+	int modelindex, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects )
 {
 	s_TEPhysicsProp.m_vecOrigin		= pos;
 	s_TEPhysicsProp.m_angRotation	= angles;
 	s_TEPhysicsProp.m_vecVelocity	= vel;
 	s_TEPhysicsProp.m_nModelIndex	= modelindex;	
+	s_TEPhysicsProp.m_nSkin			= skin;
 	s_TEPhysicsProp.m_nFlags		= flags;
+	s_TEPhysicsProp.m_nEffects		= effects;
 
 	// Send it over the wire
 	s_TEPhysicsProp.Create( filter, delay );

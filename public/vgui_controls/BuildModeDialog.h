@@ -47,10 +47,14 @@ public:
 			input:	"PanelPtr"	- panel to set active control to edit to
 	*/	
 
+	MESSAGE_FUNC( OnShowNewControlMenu, "ShowNewControlMenu" );
+
 protected:
 	virtual void PerformLayout();
 	virtual void OnClose();
 	virtual void OnCommand( const char *command );
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual bool IsBuildGroupEnabled();
 
 private:
 	void CreateControls();
@@ -69,6 +73,9 @@ private:
 	void ShowHelp();
 	MESSAGE_FUNC( ShutdownBuildMode, "Close" );
 	MESSAGE_FUNC( OnPanelMoved, "PanelMoved" );
+	MESSAGE_FUNC( OnTextKillFocus, "TextKillFocus" );
+	MESSAGE_FUNC( OnReloadLocalization, "ReloadLocalization" );
+	MESSAGE_FUNC_CHARPTR( OnCreateNewControl, "CreateNewControl", text );
 
 	MESSAGE_FUNC_CHARPTR( OnSetClipboardText, "SetClipboardText", text );
 
@@ -85,6 +92,7 @@ private:
 	Button *m_pApplyButton;
 	Button *m_pExitButton;
 	Button *m_pDeleteButton;
+	Button *m_pReloadLocalization;
 	MenuButton *m_pVarsButton;
 
 	bool _autoUpdate;
@@ -93,6 +101,7 @@ private:
 	KeyValues *_undoSettings; // settings for the Undo command
 	KeyValues *_copySettings; // settings for the Copy/Paste command
 	char _copyClassName[255];
+	int			m_nClick[ 2 ];
 
 	void RemoveAllControls( void );
 	void UpdateEditControl(PanelItem_t &panelItem, const char *datstring);
@@ -106,6 +115,11 @@ private:
 		TYPE_CORNER,
 		TYPE_LOCALIZEDSTRING,
 	};
+
+	vgui::DHANDLE< Menu >	m_hContextMenu;
+
+	ComboBox	*m_pEditableParents;
+	ComboBox	*m_pEditableChildren;
 
 	friend class PanelList;
 };

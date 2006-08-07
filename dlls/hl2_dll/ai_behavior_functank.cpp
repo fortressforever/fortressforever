@@ -174,6 +174,8 @@ void CAI_FuncTankBehavior::Dismount( void )
 		SetFuncTank( NULL );
 	}
 
+	GetOuter()->SetDesiredWeaponState( DESIREDWEAPONSTATE_UNHOLSTERED );
+
 	m_bMounted = false;
 
 	// Set this condition to force breakout of any func_tank behavior schedules
@@ -194,7 +196,13 @@ int CAI_FuncTankBehavior::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// If we've been hit by the player, and the player's not targetable 
 	// by our func_tank, get off the tank.
 	CBaseEntity *pAttacker = info.GetAttacker();
-	if ( m_hFuncTank && pAttacker && pAttacker->IsPlayer() )
+	bool bValidDismountAttacker = (pAttacker && pAttacker->IsPlayer());
+
+#ifdef HL2_EPISODIC 
+	bValidDismountAttacker = true;
+#endif
+
+	if ( m_hFuncTank && bValidDismountAttacker == true )
 	{
 		if ( !m_hFuncTank->IsEntityInViewCone( pAttacker ) )
 		{
@@ -252,7 +260,7 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 		{
 			if ( !m_hFuncTank )
 			{
-				TaskFail( FAIL_NO_TARGET  );
+				TaskFail( FAIL_NO_TARGET );
 				return;
 			}
 			
@@ -271,6 +279,33 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 
 			GetMotor()->SetIdealYawToTarget( m_hFuncTank->GetAbsOrigin() );
 			GetOuter()->SetTurnActivity(); 
+			break;
+		}
+
+	case TASK_HOLSTER_WEAPON:
+		{
+			if ( !m_hFuncTank )
+			{
+				TaskFail( FAIL_NO_TARGET );
+				return;
+			}
+
+			if ( GetOuter()->IsWeaponHolstered() || !GetOuter()->CanHolsterWeapon() )
+			{
+				GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_JUST_MOUNTED );
+
+				// We are at the correct position and facing for the func_tank, mount it.
+				m_hFuncTank->StartControl( GetOuter() );
+				GetOuter()->ClearEnemyMemory();
+				m_bMounted = true;
+				TaskComplete();
+
+				GetOuter()->SetIdealActivity( ACT_IDLE_MANNEDGUN );
+			}
+			else
+			{
+				GetOuter()->SetDesiredWeaponState( DESIREDWEAPONSTATE_HOLSTERED );
+			}
 			break;
 		}
 
@@ -350,7 +385,7 @@ void CAI_FuncTankBehavior::StartTask( const Task_t *pTask )
 		{
 			if ( !m_hFuncTank )
 			{
-				TaskFail( FAIL_NO_TARGET  );
+				TaskFail( FAIL_NO_TARGET );
 				return;
 			}
 			break;
@@ -378,6 +413,16 @@ void CAI_FuncTankBehavior::RunTask( const Task_t *pTask )
 
 			if ( GetOuter()->FacingIdeal() )
 			{
+				TaskComplete();
+			}
+			break;
+		}
+	case TASK_HOLSTER_WEAPON:
+		{
+			Assert( m_hFuncTank );
+
+			if ( GetOuter()->IsWeaponHolstered() )
+			{
 				GetOuter()->SpeakSentence( FUNCTANK_SENTENCE_JUST_MOUNTED );
 
 				// We are at the correct position and facing for the func_tank, mount it.
@@ -388,6 +433,7 @@ void CAI_FuncTankBehavior::RunTask( const Task_t *pTask )
 
 				GetOuter()->SetIdealActivity( ACT_IDLE_MANNEDGUN );
 			}
+
 			break;
 		}
 	case TASK_FIRE_FUNCTANK:
@@ -526,7 +572,10 @@ void CAI_FuncTankBehavior::GatherConditions()
 	}
 
 	if ( !m_hFuncTank )
+	{
 		m_bMounted = false;
+		GetOuter()->SetDesiredWeaponState( DESIREDWEAPONSTATE_UNHOLSTERED );
+	}
 }
 
 
@@ -647,6 +696,7 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER( CAI_FuncTankBehavior )
 
 	DECLARE_TASK( TASK_GET_PATH_TO_FUNCTANK )
 	DECLARE_TASK( TASK_FACE_FUNCTANK )
+	DECLARE_TASK( TASK_HOLSTER_WEAPON )
 	DECLARE_TASK( TASK_FIRE_FUNCTANK )
 	DECLARE_TASK( TASK_SCAN_LEFT_FUNCTANK )
 	DECLARE_TASK( TASK_SCAN_RIGHT_FUNCTANK )
@@ -669,6 +719,7 @@ AI_BEGIN_CUSTOM_SCHEDULE_PROVIDER( CAI_FuncTankBehavior )
 		"		TASK_WAIT_FOR_MOVEMENT		0"
 		"		TASK_STOP_MOVING			0"
 		"		TASK_FACE_FUNCTANK			0"
+		"		TASK_HOLSTER_WEAPON			0"
 		"	"
 		"	Interrupts"
 		"		COND_FUNCTANK_DISMOUNT"

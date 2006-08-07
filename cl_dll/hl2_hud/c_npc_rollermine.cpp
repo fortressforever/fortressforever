@@ -11,8 +11,7 @@
 #include "materialsystem/IMaterial.h"
 #include "model_types.h"
 #include "ClientEffectPrecacheSystem.h"
-
-extern void DrawHalo( IMaterial* pMaterial, const Vector &source, float scale, float const *color );
+#include "beamdraw.h"
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheRollermine )
 CLIENTEFFECT_MATERIAL( "effects/rollerglow" )
@@ -28,18 +27,28 @@ public:
 
 	int		DrawModel( int flags );
 
-	RenderGroup_t GetRenderGroup( void ) {	return RENDER_GROUP_TRANSLUCENT_ENTITY;	}
+	RenderGroup_t GetRenderGroup( void ) 
+	{	
+		if ( m_bIsOpen )
+			return RENDER_GROUP_TRANSLUCENT_ENTITY;	
+		else
+			return RENDER_GROUP_OPAQUE_ENTITY;
+	}
 
 private:
 	C_RollerMine( const C_RollerMine & ) {}
 
 	bool	m_bIsOpen;
 	float	m_flActiveTime;
+	bool	m_bHackedByAlyx;
+	bool	m_bPowerDown;
 };
 
 IMPLEMENT_CLIENTCLASS_DT( C_RollerMine, DT_RollerMine, CNPC_RollerMine )
 	RecvPropInt( RECVINFO( m_bIsOpen ) ),
 	RecvPropFloat( RECVINFO( m_flActiveTime ) ),
+	RecvPropInt( RECVINFO( m_bHackedByAlyx ) ),
+	RecvPropInt( RECVINFO( m_bPowerDown ) ),
 END_RECV_TABLE()
 
 #define	NUM_ATTACHMENTS	11
@@ -91,9 +100,26 @@ int C_RollerMine::DrawModel( int flags )
 			beamInfo.m_flSpeed = 0.0;
 			beamInfo.m_nStartFrame = 0.0;
 			beamInfo.m_flFrameRate = 1.0f;
-			beamInfo.m_flRed = 255.0f;;
-			beamInfo.m_flGreen = 255.0f;
-			beamInfo.m_flBlue = 255.0f;
+
+			if ( m_bPowerDown )
+			{
+				beamInfo.m_flRed = 255.0f;;
+				beamInfo.m_flGreen = 64.0f;
+				beamInfo.m_flBlue = 64.0f;
+			}
+			else if ( m_bHackedByAlyx )
+			{
+				beamInfo.m_flRed = 240.0f;;
+				beamInfo.m_flGreen = 200.0f;
+				beamInfo.m_flBlue = 80.0f;
+			}
+			else
+			{
+				beamInfo.m_flRed = 255.0f;;
+				beamInfo.m_flGreen = 255.0f;
+				beamInfo.m_flBlue = 255.0f;
+			}
+
 			beamInfo.m_nSegments = 4;
 			beamInfo.m_bRenderable = true;
 			beamInfo.m_nFlags = 0;
@@ -103,14 +129,38 @@ int C_RollerMine::DrawModel( int flags )
 			// Draw the halo
 			float	color[3];
 
-			color[0] = color[1] = color[2] = 0.15f;
+			if ( m_bHackedByAlyx )
+			{
+				color[0] = 0.25f;
+				color[1] = 0.05f;
+				color[2] = 0.0f;
+			}
+			else
+			{
+				color[0] = color[1] = color[2] = 0.15f;
+			}
 
 			IMaterial *pMaterial = materials->FindMaterial( "effects/rollerglow", NULL, false );
 
 			materials->Bind( pMaterial );
 			DrawHalo( pMaterial, GetAbsOrigin(), random->RandomFloat( 6.0f*scale, 6.5f*scale ), color );
 
-			color[0] = color[1] = color[2] = random->RandomFloat( 0.25f, 0.5f );
+			if ( m_bPowerDown )
+			{
+				color[0] = random->RandomFloat( 0.80f, 1.00f );
+				color[1] = random->RandomFloat( 0.10f, 0.25f );
+				color[2] = 0.0f;
+			}
+			else if ( m_bHackedByAlyx )
+			{
+				color[0] = random->RandomFloat( 0.25f, 0.75f );
+				color[1] = random->RandomFloat( 0.10f, 0.25f );
+				color[2] = 0.0f;
+			}
+			else
+			{
+				color[0] = color[1] = color[2] = random->RandomFloat( 0.25f, 0.5f );
+			}
 
 			Vector attachOrigin;
 			QAngle attachAngles;

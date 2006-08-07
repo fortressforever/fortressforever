@@ -23,6 +23,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+static ConVar soundpatch_captionlength( "soundpatch_captionlength", "2.0", FCVAR_REPLICATED, "How long looping soundpatch captions should display for." );
+
 // Envelope
 // This is a class that controls a ramp for a sound (pitch / volume / etc)
 class CSoundEnvelope
@@ -238,6 +240,7 @@ public:
 		g_SoundPatchCount++;
 		m_iszSoundName = NULL_STRING;
 		m_iszSoundScriptName = NULL_STRING;
+		m_flCloseCaptionDuration = soundpatch_captionlength.GetFloat();
 	}
 	~CSoundPatch()
 	{
@@ -257,10 +260,13 @@ public:
 	void	Shutdown( void );
 	bool	Update( float time, float deltaTime );
 	void	Reset( void );
-	void	StartSound( void );
+	void	StartSound( float flStartTime = 0 );
 	void	ResumeSound( void );
 	int		IsPlaying( void ) { return m_isPlaying; }
 	void	AddPlayerPost( CBasePlayer *pPlayer );
+	void	SetCloseCaptionDuration( float flDuration ) { m_flCloseCaptionDuration = flDuration; }
+
+	void	SetBaseFlags( int iFlags ) { m_baseFlags = iFlags; }
 	
 	// Returns the ent index
 	int		EntIndex() const;
@@ -282,9 +288,12 @@ private:
 	EHANDLE			m_hEnt;
 	int				m_entityChannel;
 	int				m_flags;
+	int				m_baseFlags;
 	int				m_isPlaying;
 	float			m_flScriptVolume;	// Volume for this sound in sounds.txt
 	CCopyRecipientFilter m_Filter;
+
+	float			m_flCloseCaptionDuration;
 
 #ifdef _DEBUG
 	// Used to get the classname of the entity associated with the sound
@@ -315,9 +324,11 @@ BEGIN_SIMPLE_DATADESC( CSoundPatch )
 	DEFINE_FIELD( m_hEnt, FIELD_EHANDLE ),	
 	DEFINE_FIELD( m_entityChannel, FIELD_INTEGER ),	
 	DEFINE_FIELD( m_flags, FIELD_INTEGER ),	
+	DEFINE_FIELD( m_baseFlags, FIELD_INTEGER ),
 	DEFINE_FIELD( m_isPlaying, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flScriptVolume, FIELD_FLOAT ),
 	DEFINE_EMBEDDED( m_Filter ),
+	DEFINE_FIELD( m_flCloseCaptionDuration, FIELD_FLOAT ),
 
 	// Not saved, it's debug only
 //  DEFINE_FIELD( m_iszClassName, FIELD_STRING ),
@@ -368,7 +379,7 @@ void CSoundPatch::Init( IRecipientFilter *pFilter, CBaseEntity *pEnt, int channe
 	m_shutdownTime = 0;
 	m_flLastTime = 0;
 	m_Filter.Init( pFilter );
-
+	m_baseFlags = 0;
 
 #ifdef _DEBUG
 	if ( pEnt )
@@ -544,12 +555,10 @@ void CSoundPatch::Reset( void )
 	m_shutdownTime = 0;
 }
 
-static ConVar soundpatch_captionlength( "soundpatch_captionlength", "2.0", FCVAR_REPLICATED, "How long looping soundpatch captions should display for." );
-
 //-----------------------------------------------------------------------------
 // Purpose: Start playing the sound - send updates to the client
 //-----------------------------------------------------------------------------
-void CSoundPatch::StartSound( void )
+void CSoundPatch::StartSound( float flStartTime )
 {
 //	Msg( "Start sound %s\n", m_pszSoundName );
 	m_flags = 0;
@@ -560,12 +569,17 @@ void CSoundPatch::StartSound( void )
 		ep.m_pSoundName = STRING(m_iszSoundName);
 		ep.m_flVolume = GetVolumeForEngine();
 		ep.m_SoundLevel = m_soundlevel;
-		ep.m_nFlags = SND_CHANGE_VOL;
+		ep.m_nFlags = (SND_CHANGE_VOL | m_baseFlags);
 		ep.m_nPitch = (int)m_pitch.Value();
 		ep.m_bEmitCloseCaption = false;
 
+		if ( flStartTime )
+		{
+			ep.m_flSoundTime = flStartTime;
+		}
+
 		CBaseEntity::EmitSound( m_Filter, EntIndex(), ep );
-		CBaseEntity::EmitCloseCaption( m_Filter, EntIndex(), STRING( m_iszSoundScriptName ), ep.m_UtlVecSoundOrigin, soundpatch_captionlength.GetFloat(), true );
+		CBaseEntity::EmitCloseCaption( m_Filter, EntIndex(), STRING( m_iszSoundScriptName ), ep.m_UtlVecSoundOrigin, m_flCloseCaptionDuration, true );
 	}
 	m_isPlaying = true;
 }
@@ -585,7 +599,7 @@ void CSoundPatch::ResumeSound( void )
 			ep.m_pSoundName = STRING(m_iszSoundName);
 			ep.m_flVolume = GetVolumeForEngine();
 			ep.m_SoundLevel = m_soundlevel;
-			ep.m_nFlags = SND_CHANGE_VOL | SND_CHANGE_PITCH;
+			ep.m_nFlags = (SND_CHANGE_VOL | SND_CHANGE_PITCH | m_baseFlags);
 			ep.m_nPitch = (int)m_pitch.Value();
 
 			CBaseEntity::EmitSound( m_Filter, EntIndex(), ep );
@@ -617,7 +631,7 @@ void CSoundPatch::AddPlayerPost( CBasePlayer *pPlayer )
 		ep.m_pSoundName = STRING(m_iszSoundName);
 		ep.m_flVolume = GetVolumeForEngine();
 		ep.m_SoundLevel = m_soundlevel;
-		ep.m_nFlags = SND_CHANGE_VOL;
+		ep.m_nFlags = (SND_CHANGE_VOL | m_baseFlags);
 		ep.m_nPitch = (int)m_pitch.Value();
 
 		CBaseEntity::EmitSound( filter, EntIndex(), ep );
@@ -672,13 +686,13 @@ bool SoundCommandLessFunc( const SOUNDCOMMANDPTR &lhs, const SOUNDCOMMANDPTR &rh
 
 
 // This implements the sound controller
-class CSoundControllerImp : public CSoundEnvelopeController, public CAutoGameSystem
+class CSoundControllerImp : public CSoundEnvelopeController, public CAutoGameSystemPerFrame
 {
 	//-----------------------------------------------------------------------------
 	// internal functions, private to this file
 	//-----------------------------------------------------------------------------
 public:
-	CSoundControllerImp( void )
+	CSoundControllerImp( void ) : CAutoGameSystemPerFrame( "CSoundControllerImp" )
 	{
 		m_commandList.SetLessFunc( SoundCommandLessFunc );
 	}
@@ -696,7 +710,7 @@ public:
 public:
 
 	// Start this sound playing, or reset if already playing with new volume/pitch
-	void			Play( CSoundPatch *pSound, float volume, float pitch );
+	void			Play( CSoundPatch *pSound, float volume, float pitch, float flStartTime = 0 );
 	void			CommandAdd( CSoundPatch *pSound, float executeDeltaTime, soundcommands_t command, float commandTime, float commandValue );
 	
 	void			SystemReset( void );
@@ -717,6 +731,7 @@ public:
 	float			SoundGetPitch( CSoundPatch *pSound );
 	float			SoundGetVolume( CSoundPatch *pSound );
 	string_t		SoundGetName( CSoundPatch *pSound ) { return pSound->GetName(); }
+	void			SoundSetCloseCaptionDuration( CSoundPatch *pSound, float flDuration ) { pSound->SetCloseCaptionDuration(flDuration); }
 
 	float			SoundPlayEnvelope( CSoundPatch *pSound, soundcommands_t soundCommand, envelopePoint_t *points, int numPoints );
 	float			SoundPlayEnvelope( CSoundPatch *pSound, soundcommands_t soundCommand, envelopeDescription_t *envelope );
@@ -733,8 +748,7 @@ public:
 		SystemUpdate();
 	}
 #else
-	// CAutoServerSystem
-	void PreClientUpdate()
+	virtual void PreClientUpdate()
 	{
 		SystemUpdate();
 	}
@@ -792,7 +806,7 @@ void CSoundControllerImp::RemoveFromList( CSoundPatch *pSound )
 //-----------------------------------------------------------------------------
 // Start this sound playing, or reset if already playing with new volume/pitch
 //-----------------------------------------------------------------------------
-void CSoundControllerImp::Play( CSoundPatch *pSound, float volume, float pitch )
+void CSoundControllerImp::Play( CSoundPatch *pSound, float volume, float pitch, float flStartTime )
 {
 	// reset the vars
 	pSound->Reset();
@@ -808,7 +822,7 @@ void CSoundControllerImp::Play( CSoundPatch *pSound, float volume, float pitch )
 	else
 	{
 		m_soundList.AddToTail( pSound );
-		pSound->StartSound();
+		pSound->StartSound( flStartTime );
 	}
 }
 
@@ -1062,6 +1076,11 @@ CSoundPatch *CSoundControllerImp::SoundCreate( IRecipientFilter& filter, int nEn
 	pSound->Init( &filter, hEnt.Get(), es.m_nChannel, es.m_pSoundName, es.m_SoundLevel );
 	pSound->ChangeVolume( es.m_flVolume, 0 );
 	pSound->ChangePitch( es.m_nPitch, 0 );
+
+	if ( es.m_nFlags & SND_SHOULDPAUSE )
+	{
+		pSound->SetBaseFlags( SND_SHOULDPAUSE );
+	}
 
 	return pSound;
 }

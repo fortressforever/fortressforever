@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #include "materialsystem/IMaterialSystem.h"
 #include "materialsystem/MaterialSystem_Config.h"
@@ -12,10 +12,10 @@
 #include <windows.h>
 #include "FileSystem.h"
 #include "cmdlib.h"
+#include "tier2/tier2.h"
 
 extern void MdlError( char const *pMsg, ... );
 
-IMaterialSystem *g_pMaterialSystem = NULL;
 CreateInterfaceFn g_MatSysFactory = NULL;
 CreateInterfaceFn g_ShaderAPIFactory = NULL;
 

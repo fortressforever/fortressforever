@@ -29,6 +29,7 @@ namespace NDebugOverlay
 	void	Line( const Vector &origin, const Vector &target, int r, int g, int b, bool noDepthTest, float flDuration ) {}
 	void	Triangle( const Vector &p1, const Vector &p2, const Vector &p3, int r, int g, int b, int a, bool noDepthTest, float duration ) {}
 	void	EntityText( int entityID, int text_offset, const char *text, float flDuration, int r = 255, int g = 255, int b = 255, int a = 255) {}
+	void	EntityTextAtPosition( const Vector &origin, int text_offset, const char *text, float flDuration, int r = 255, int g = 255, int b = 255, int a = 255) {}
 	void	Grid( const Vector &vPosition ) {}
 	void	Text( const Vector &origin, const char *text, bool bViewCheck, float flDuration ) {}
 	void	ScreenText( float fXpos, float fYpos, const char *text, int r, int g, int b, int a, float flDuration) {}

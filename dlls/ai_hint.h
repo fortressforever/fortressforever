@@ -10,6 +10,7 @@
 #pragma once
 
 #include "ai_initutils.h"
+#include "tier1/utlmap.h"
 
 //Flags for FindHintNode
 #define bits_HINT_NODE_NONE						0x00000000
@@ -29,6 +30,8 @@
 //
 // hints - these MUST coincide with the HINTS listed under
 // info_node in the FGD file!
+//
+// For debugging, they must also coincide with g_pszHintDescriptions.
 //
 //-----------------------------------------------------------------------------
 enum Hint_e
@@ -51,6 +54,7 @@ enum Hint_e
 	HINT_WORLD_VISUALLY_INTERESTING,
 	HINT_WORLD_VISUALLY_INTERESTING_DONT_AIM,
 	HINT_WORLD_INHIBIT_COMBINE_MINES,
+	HINT_WORLD_VISUALLY_INTERESTING_STEALTH,
 
 	HINT_TACTICAL_COVER_MED	= 100,
 	HINT_TACTICAL_COVER_LOW,
@@ -58,13 +62,13 @@ enum Hint_e
 	HINT_TACTICAL_PINCH,				// Exit / entrance to an arena
 	HINT_NOT_USED_TACTICAL_GUARD,
 	HINT_TACTICAL_ENEMY_DISADVANTAGED,	//Disadvantageous position for the enemy
-	HINT_HEALTH_KIT,
+	HINT_NOT_USED_HEALTH_KIT,
 
 	HINT_NOT_USED_URBAN_STREETCORNER = 200,
 	HINT_NOT_USED_URBAN_STREETLAMP,
 	HINT_NOT_USED_URBAN_DARK_SPOT,
 	HINT_NOT_USED_URBAN_POSTER,
-	HINT_URBAN_SHELTER,
+	HINT_NOT_USED_URBAN_SHELTER,
 
 	HINT_NOT_USED_ASSASSIN_SECLUDED = 300,
 	HINT_NOT_USED_ASSASSIN_RAFTERS,
@@ -75,15 +79,15 @@ enum Hint_e
 	HINT_ANTLION_THUMPER_FLEE_POINT,
 
 	HINT_HEADCRAB_BURROW_POINT = 450,
+	HINT_HEADCRAB_EXIT_POD_POINT,
 
-	HINT_ROLLER_PATROL_POINT = 500,
-	HINT_ROLLER_CLEANUP_POINT,
+	HINT_NOT_USED_ROLLER_PATROL_POINT = 500,
+	HINT_NOT_USED_ROLLER_CLEANUP_POINT,
 
 	HINT_NOT_USED_PSTORM_ROCK_SPAWN = 600,
 
 	HINT_CROW_FLYTO_POINT = 700,
 
-	 // TF2 Hints
 	HINT_BUG_PATROL_POINT = 800,
 
 	// HL2 Hints
@@ -92,6 +96,8 @@ enum Hint_e
 	HINT_PLAYER_SQUAD_TRANSITON_POINT = 902,
 	HINT_NPC_EXIT_POINT = 903,
 	HINT_STRIDER_NODE = 904,
+
+	HINT_PLAYER_ALLY_MOVE_AWAY_DEST = 950,
 
 	// HL1 port hints
 	HINT_HL1_WORLD_MACHINERY = 1000,
@@ -102,6 +108,8 @@ enum Hint_e
 	// CS port hints
 	HINT_CSTRIKE_HOSTAGE_ESCAPE = 1100,
 };
+const char *GetHintTypeDescription( Hint_e iHintType );
+const char *GetHintTypeDescription( CAI_Hint *pHint );
 
 //-----------------------------------------------------------------------------
 // CHintCriteria
@@ -123,6 +131,8 @@ public:
 
 	int			GetFirstHintType( void ) const	{ return m_iFirstHintType; }
 	int			GetLastHintType( void ) const	{ return m_iLastHintType; }
+	bool		MatchesHintType( int hintType ) const;
+	bool		MatchesSingleHintType() const;
 
 	bool		HasIncludeZones( void )	const	{ return ( m_zoneInclude.Count() != 0 ); }
 	bool		HasExcludeZones( void )	const	{ return ( m_zoneExclude.Count() != 0 ); }
@@ -131,9 +141,13 @@ public:
 	void		AddExcludePosition( const Vector &position, float radius );
 	void		SetHintType( int hintType );
 	void		SetHintTypeRange( int firstType, int lastType );
+	void		AddHintType( int hintType );
 
 	bool		InIncludedZone( const Vector &testPosition ) const;
 	bool		InExcludedZone( const Vector &testPosition ) const;
+
+	int			NumHintTypes() const;
+	int			GetHintType( int idx ) const;
 
 private:
 
@@ -147,6 +161,8 @@ private:
 
 	void		AddZone( zoneList_t &list, const Vector &position, float radius );
 	bool		InZone( const zoneList_t &zone, const Vector &testPosition ) const;
+
+	CUtlVector<int> m_HintTypes;
 
 	int			m_iFlags;
 	int			m_iFirstHintType;
@@ -165,6 +181,19 @@ class CAI_Node;
 
 DECLARE_POINTER_HANDLE(AIHintIter_t);
 
+class CAIHintVector : public CUtlVector< CAI_Hint * >
+{
+public:
+	CAIHintVector() : CUtlVector< CAI_Hint * >( 1, 0 )
+	{
+	}
+
+	CAIHintVector( const CAIHintVector& src )
+	{
+		CopyArray( src.Base(), src.Count() );
+	}
+};
+
 class CAI_HintManager
 {
 	friend class CAI_Hint;
@@ -175,6 +204,8 @@ public:
 
 	static void			AddHint( CAI_Hint *pTestHint );
 	static void			RemoveHint( CAI_Hint *pTestHint );
+	static void			AddHintByType( CAI_Hint *pHint );
+	static void			RemoveHintByType( CAI_Hint *pHintToRemove );
 
 	// Interface for searching the hint node list
 	static CAI_Hint		*FindHint( CAI_BaseNPC *pNPC, const Vector &position, const CHintCriteria &hintCriteria );
@@ -189,16 +220,30 @@ public:
 	static int			FindAllHints( CAI_BaseNPC *pNPC, const CHintCriteria &hintCriteria, CUtlVector<CAI_Hint *> *pResult )		{ return FindAllHints( pNPC, pNPC->GetAbsOrigin(), hintCriteria, pResult ); }
 	static int			GetFlags( const char *token );
 
-	static CAI_Hint		*GetFirstHint( AIHintIter_t *pIter )					{ *pIter = (AIHintIter_t)gm_pAllHints; return gm_pAllHints; }
+	static CAI_Hint		*GetFirstHint( AIHintIter_t *pIter );					
 	static CAI_Hint		*GetNextHint( AIHintIter_t *pIter );
-
-	static void			SetLastFoundHint( CAI_Hint *pHint ) { gm_pLastFoundHint = pHint; }
 
 	static void DumpHints();
 
 private:
-	static CAI_Hint		*gm_pLastFoundHint;			// Last used hint 
-	static CAI_Hint		*gm_pAllHints;				// A linked list of all hints
+	enum
+	{
+		// MUST BE POWER OF 2
+		HINT_HISTORY = (1<<3),
+		HINT_HISTORY_MASK = (HINT_HISTORY-1)
+	};
+
+	static CAI_Hint		*AddFoundHint( CAI_Hint *hint );
+	static int			GetFoundHintCount();
+	static CAI_Hint		*GetFoundHint( int index );
+	static CAI_Hint		*GetLastFoundHint();
+	static void			ResetFoundHints();
+	static bool			IsInFoundHintList( CAI_Hint *hint );
+
+	static int			gm_nFoundHintIndex;
+	static CAI_Hint		*gm_pLastFoundHints[ HINT_HISTORY ];			// Last used hint 
+	static CAIHintVector gm_AllHints;				// A linked list of all hints
+	static CUtlMap< int,  CAIHintVector >	gm_TypedHints;
 };
 
 //-----------------------------------------------------------------------------
@@ -225,7 +270,7 @@ public:
 	string_t			GetGroup( void ) const			{ return m_NodeData.strGroup;	}
 	CBaseEntity			*User( void ) const				{ return m_hHintOwner; };
 	Hint_e				HintType( void ) const			{ return (Hint_e)m_NodeData.nHintType;  };
-	void				SetHintType( int hintType )		{ m_NodeData.nHintType = hintType; };
+	void				SetHintType( int hintType, bool force = false );
 	string_t			HintActivityName( void ) const	{ return m_NodeData.iszActivityName; }
 	int					GetTargetNode( void ) const		{ return m_nTargetNodeID; }
 	bool				IsDisabled( void ) const		{ return (m_NodeData.iDisabled != 0); }
@@ -244,21 +289,23 @@ public:
 	int					GetNodeId()	{ return m_NodeData.nNodeID; }
 	int					GetWCId()	{ return m_NodeData.nWCNodeID; }
 
-	bool				HintMatchesCriteria( CAI_BaseNPC *pNPC, const CHintCriteria &hintCriteria, const Vector &position, float *flNearestDistance, bool bIgnoreLock = false );
+	bool				HintMatchesCriteria( CAI_BaseNPC *pNPC, const CHintCriteria &hintCriteria, const Vector &position, float *flNearestDistance, bool bIgnoreLock = false, bool bIgnoreHintType = false );
+	bool				IsInNodeFOV( CBaseEntity *pOther );
 
 private:
 	void				Spawn( void );
+	virtual void		Activate();
 	int					DrawDebugTextOverlays(void);
 	virtual int			ObjectCaps( void ) { return (BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
 	virtual void		OnRestore();
 	bool				IsViewable( void );
-	bool				IsInNodeFOV( CBaseEntity *pOther );
 
 	// Input handlers
 	void				InputEnableHint( inputdata_t &inputdata );
 	void				InputDisableHint( inputdata_t &inputdata );
 
 private:
+
 	HintNodeData		m_NodeData;
 	int					m_nTargetNodeID;
 	EHANDLE				m_hHintOwner;			// Is hint locked (being used by NPC / NPC en-route to use it)
@@ -270,7 +317,6 @@ private:
 
 	// The next hint in list of all hints
 	friend class CAI_HintManager;
-	CAI_Hint			*m_pNextHint;				
 
 	DECLARE_DATADESC();
 };

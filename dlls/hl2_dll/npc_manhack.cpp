@@ -37,6 +37,7 @@
 #include "weapon_physcannon.h"
 #include "physics_prop_ragdoll.h"
 #include "soundent.h"
+#include "ammodef.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -146,6 +147,13 @@ BEGIN_DATADESC( CNPC_Manhack )
 
 	DEFINE_FIELD( m_bDirtyPitch,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bGib,					FIELD_BOOLEAN),
+	DEFINE_FIELD( m_bHeld,					FIELD_BOOLEAN),
+	
+	DEFINE_FIELD( m_bHackedByAlyx,			FIELD_BOOLEAN),
+	DEFINE_FIELD( m_vecLoiterPosition,		FIELD_POSITION_VECTOR),
+	DEFINE_FIELD( m_fTimeNextLoiterPulse,	FIELD_TIME),
+
+	DEFINE_FIELD( m_flBumpSuppressTime,		FIELD_TIME ),
 
 	DEFINE_FIELD( m_bBladesActive,			FIELD_BOOLEAN),
 	DEFINE_FIELD( m_flBladeSpeed,				FIELD_FLOAT),
@@ -182,6 +190,8 @@ BEGIN_DATADESC( CNPC_Manhack )
 
 	DEFINE_ENTITYFUNC( CrashTouch ),
 
+	DEFINE_BASENPCINTERACTABLE_DATADESC(),
+
 END_DATADESC()
 
 
@@ -190,8 +200,7 @@ LINK_ENTITY_TO_CLASS( npc_manhack, CNPC_Manhack );
 IMPLEMENT_SERVERCLASS_ST(CNPC_Manhack, DT_NPC_Manhack)
 	SendPropIntWithMinusOneFlag	(SENDINFO(m_nEnginePitch1), 8 ),
 	SendPropFloat(SENDINFO(m_flEnginePitch1Time), 0, SPROP_NOSCALE),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_nEnginePitch2), 8 ),
-	SendPropFloat(SENDINFO(m_flEnginePitch1Time), 0, SPROP_NOSCALE),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nEnginePitch2), 8 )
 END_SEND_TABLE()
 
 
@@ -216,6 +225,7 @@ CNPC_Manhack::CNPC_Manhack()
 	m_flEnginePitch1Time = 0;
 	m_flEnginePitch1Time = 0;
 	m_bDoSwarmBehavior = true;
+	m_flBumpSuppressTime = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -230,7 +240,7 @@ CNPC_Manhack::~CNPC_Manhack()
 //-----------------------------------------------------------------------------
 Class_T	CNPC_Manhack::Classify(void)
 {
-	return(CLASS_MANHACK);
+	return (m_bHeld||m_bHackedByAlyx) ? CLASS_PLAYER_ALLY : CLASS_MANHACK; 
 }
 
 
@@ -245,6 +255,18 @@ void CNPC_Manhack::Event_Dying(void)
 	BaseClass::Event_Dying();
 }
 
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPC_Manhack::GatherConditions()
+{
+	BaseClass::GatherConditions();
+
+	if( IsLoitering() && GetEnemy() )
+	{
+		StopLoitering();
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -323,7 +345,7 @@ void CNPC_Manhack::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDi
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_Manhack::DeathSound( void )
+void CNPC_Manhack::DeathSound( const CTakeDamageInfo &info )
 {
 	StopSound("NPC_Manhack.Stunned");
 	CPASAttenuationFilter filter2( this, "NPC_Manhack.Die" );
@@ -563,6 +585,10 @@ void CNPC_Manhack::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 			// It also can take physics damage from a combine ball.
 			TakeDamageFromPhysicsImpact( index, pEvent );
 		}
+		else if ( m_iHealth <= 0 )
+		{
+			TakeDamageFromPhysicsImpact( index, pEvent );
+		}
 
 		StopBurst( true );
 	}
@@ -644,6 +670,12 @@ int	CNPC_Manhack::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	// Hafta make a copy of info cause we might need to scale damage.(sjb)
 	CTakeDamageInfo tdInfo = info;
+
+	if( tdInfo.GetAmmoType() == GetAmmoDef()->Index("SniperRound") )
+	{
+		// Unfortunately, this is the easiest way to stop the sniper killing manhacks in one shot.
+		tdInfo.SetDamage( m_iMaxHealth>>1 );
+	}
 
 	if (info.GetDamageType() & DMG_PHYSGUN )
 	{
@@ -737,7 +769,7 @@ int	CNPC_Manhack::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// tdInfo.SetDamage( 1.0 );
 
 		m_flEngineStallTime = gpGlobals->curtime + 0.5f;
-		StopBurst( false );
+		StopBurst( true );
 	}
 	else
 	{
@@ -994,6 +1026,52 @@ int CNPC_Manhack::TranslateSchedule( int scheduleType )
 	return BaseClass::TranslateSchedule(scheduleType);
 }
 
+#define MAX_LOITER_DIST_SQR 144 // (12 inches sqr)
+void CNPC_Manhack::Loiter()
+{
+	//NDebugOverlay::Line( GetAbsOrigin(), m_vecLoiterPosition, 255, 255, 255, false, 0.1 );
+
+	// Friendly manhack is loitering.
+	if( !m_bHeld )
+	{
+		float distSqr = m_vecLoiterPosition.DistToSqr(GetAbsOrigin());
+
+		if( distSqr > MAX_LOITER_DIST_SQR )
+		{
+			Vector vecDir = m_vecLoiterPosition - GetAbsOrigin();
+			VectorNormalize( vecDir );
+
+			// Move back to our loiter position.
+			if( gpGlobals->curtime > m_fTimeNextLoiterPulse )
+			{
+				// Apply a pulse of force if allowed right now.
+				if( distSqr > MAX_LOITER_DIST_SQR * 4.0f )
+				{
+					//Msg("Big Pulse\n");
+					m_vForceVelocity = vecDir * 12.0f;
+				}
+				else
+				{
+					//Msg("Small Pulse\n");
+					m_vForceVelocity = vecDir * 6.0f;
+				}
+
+				m_fTimeNextLoiterPulse = gpGlobals->curtime + 1.0f;
+			}
+			else
+			{
+				m_vForceVelocity = vec3_origin;
+			}
+		}
+		else
+		{
+			// Counteract velocity to slow down.
+			Vector velocity = GetCurrentVelocity();
+			m_vForceVelocity = velocity * -0.5;
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1008,13 +1086,13 @@ void CNPC_Manhack::MaintainGroundHeight( void )
 
 	trace_t	tr;
 	AI_TraceHull(	GetAbsOrigin(), 
-					GetAbsOrigin() - Vector( 0, 0, minGroundHeight ), 
-					GetHullMins(), 
-					GetHullMaxs(), 
-					(MASK_NPCSOLID_BRUSHONLY), 
-					this, 
-					COLLISION_GROUP_NONE, 
-					&tr );
+		GetAbsOrigin() - Vector( 0, 0, minGroundHeight ), 
+		GetHullMins(), 
+		GetHullMaxs(), 
+		(MASK_NPCSOLID_BRUSHONLY), 
+		this, 
+		COLLISION_GROUP_NONE, 
+		&tr );
 
 	if ( tr.fraction != 1.0f )
 	{
@@ -1036,10 +1114,17 @@ bool CNPC_Manhack::OverrideMove( float flInterval )
 	if( HasSpawnFlags(SF_MANHACK_PACKED_UP|SF_MANHACK_CARRIED) )
 		return true;
 
-	MaintainGroundHeight();
+	if( IsLoitering() )
+	{
+		Loiter();
+	}
+	else
+	{
+		MaintainGroundHeight();
+	}
 
 	// So cops, etc. will try to avoid them
-	if ( !HasSpawnFlags( SF_MANHACK_NO_DANGER_SOUNDS ) )
+	if ( !HasSpawnFlags( SF_MANHACK_NO_DANGER_SOUNDS ) && !m_bHeld )
 	{
 		CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 75, flInterval, this );
 	}
@@ -1058,7 +1143,7 @@ bool CNPC_Manhack::OverrideMove( float flInterval )
 	{
 		bool bReducible = GetNavigator()->GetPath()->GetCurWaypoint()->IsReducible();
 		const float strictTolerance = 64.0;
-//		NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, 10 ), 255, 0, 0, true, 0.1);
+		//NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + Vector(0, 0, 10 ), 255, 0, 0, true, 0.1);
   		if ( ProgressFlyPath( flInterval, GetEnemy(), MoveCollisionMask(), bReducible, strictTolerance ) == AINPP_COMPLETE )
 			return true;
 	}
@@ -1084,7 +1169,7 @@ bool CNPC_Manhack::OverrideMove( float flInterval )
 		// -------------------------------------
 		if (GetEnemy())
 		{
-			TurnHeadToTarget(flInterval, GetEnemy()->GetAbsOrigin() );
+			TurnHeadToTarget(flInterval, GetEnemy()->EyePosition() );
 		}
 	}
 
@@ -1167,7 +1252,7 @@ void CNPC_Manhack::MoveToTarget(float flInterval, const Vector &vMoveTarget)
 		// Steer towards our enemy if we're able to
 		if ( GetEnemy() != NULL )
 		{
-			Vector steerDir = ( GetEnemy()->WorldSpaceCenter() - GetAbsOrigin() );
+			Vector steerDir = ( GetEnemy()->EyePosition() - GetAbsOrigin() );
 			zDist = fabs( steerDir.z );
 			VectorNormalize( steerDir );
 
@@ -1195,7 +1280,11 @@ void CNPC_Manhack::MoveToTarget(float flInterval, const Vector &vMoveTarget)
 
 		flDist	= FLT_MAX;
 		myDecay	 = 0.3f;
+#ifdef _XBOX
 		myAccel	 = 500;
+#else
+		myAccel	 = 400;
+#endif // _XBOX
 		myZAccel = min( 500, zDist / flInterval );
 	}
 	else
@@ -1401,6 +1490,10 @@ void CNPC_Manhack::Slice( CBaseEntity *pHitEntity, float flInterval, trace_t &tr
 		// If we hit a prop, we want it to break immediately
 		flDamage = pHitEntity->GetHealth();
 	}
+	else if ( pHitEntity->IsNPC() && IRelationType( pHitEntity ) == D_HT  && FClassnameIs( pHitEntity, "npc_combine_s" ) ) 
+	{
+		flDamage *= 6.0f;
+	}
 
 	if (flDamage < 1.0f)
 	{
@@ -1467,6 +1560,10 @@ void CNPC_Manhack::Slice( CBaseEntity *pHitEntity, float flInterval, trace_t &tr
 void CNPC_Manhack::Bump( CBaseEntity *pHitEntity, float flInterval, trace_t &tr )
 {
 	if ( !VPhysicsGetObject() )
+		return;
+
+	// Surpressing this behavior
+	if ( m_flBumpSuppressTime > gpGlobals->curtime )
 		return;
 
 	if ( pHitEntity->GetMoveType() == MOVETYPE_VPHYSICS && pHitEntity->Classify()!=CLASS_MANHACK )
@@ -1539,26 +1636,41 @@ void CNPC_Manhack::Bump( CBaseEntity *pHitEntity, float flInterval, trace_t &tr 
 
 			// For decals and sparks we must trace a line in the direction of the surface norm
 			// that we hit.
-			AI_TraceLine( GetAbsOrigin(), GetAbsOrigin() - (tr.plane.normal * 24),MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+			trace_t	decalTrace;
+			AI_TraceLine( GetAbsOrigin(), GetAbsOrigin() - (tr.plane.normal * 24),MASK_SOLID, this, COLLISION_GROUP_NONE, &decalTrace );
 
-			if ( tr.fraction != 1.0 )
+			if ( decalTrace.fraction != 1.0 )
 			{
 				// Leave decal only if colliding horizontally
-				if ((DotProduct(Vector(0,0,1),tr.plane.normal)<0.5) && (DotProduct(Vector(0,0,-1),tr.plane.normal)<0.5))
+				if ((DotProduct(Vector(0,0,1),decalTrace.plane.normal)<0.5) && (DotProduct(Vector(0,0,-1),decalTrace.plane.normal)<0.5))
 				{
-					UTIL_DecalTrace( &tr, "ManhackCut" );
+					UTIL_DecalTrace( &decalTrace, "ManhackCut" );
 				}
 			}
 		}
 		
-		VectorNormalize( moveVec );
-		float hitAngle = -DotProduct( tr.plane.normal, -moveVec );
+		// See if we will not have a valid surface
+		if ( tr.allsolid || tr.startsolid )
+		{
+			// Build a fake reflection back along our current velocity because we can't know how to reflect off
+			// a non-existant surface! -- jdw
 
-		Vector vReflection = 2.0 * tr.plane.normal * hitAngle + -moveVec;
+			Vector vecRandomDir = RandomVector( -1.0f, 1.0f );
+			SetCurrentVelocity( vecRandomDir * 50.0f );
+			m_flBumpSuppressTime = gpGlobals->curtime + 0.5f;
+		}
+		else
+		{
+			// This is a valid hit and we can deflect properly
+			
+			VectorNormalize( moveVec );
+			float hitAngle = -DotProduct( tr.plane.normal, -moveVec );
 
-		float deflectSpeed = clamp( GetCurrentVelocity().Length(), 100, 400 );
+			Vector vReflection = 2.0 * tr.plane.normal * hitAngle + -moveVec;
 
-		SetCurrentVelocity( GetCurrentVelocity() + vReflection * deflectSpeed );
+			float flSpeed = GetCurrentVelocity().Length();
+			SetCurrentVelocity( GetCurrentVelocity() + vReflection * flSpeed * 0.5f );
+		}
 	}
 
 	// -------------------------------------------------------------
@@ -1626,6 +1738,13 @@ void CNPC_Manhack::CheckCollisions(float flInterval)
 	{
 		PhysicsMarkEntitiesAsTouching( tr.m_pEnt, tr );
 		pHitEntity = tr.m_pEnt;
+
+		if( m_bHeld && tr.m_pEnt->MyNPCPointer() && tr.m_pEnt->MyNPCPointer()->IsPlayerAlly() )
+		{
+			// Don't slice Alyx when she approaches to hack. We need a better solution for this!!
+			//Msg("Ignoring!\n");
+			return;
+		}
 
 		if ( pHitEntity != NULL && 
 			 pHitEntity->m_takedamage == DAMAGE_YES && 
@@ -1748,7 +1867,7 @@ void CNPC_Manhack::MoveExecute_Alive(float flInterval)
 	// FIXME: move this
 	VPhysicsGetObject()->Wake();
 
-	if( m_fEnginePowerScale < 1.0 && gpGlobals->curtime > m_flWaterSuspendTime )
+	if( m_fEnginePowerScale < GetMaxEnginePower() && gpGlobals->curtime > m_flWaterSuspendTime )
 	{
 		// Power is low, and we're no longer stuck in water, so bring power up.
 		m_fEnginePowerScale += 0.05;
@@ -1774,7 +1893,7 @@ void CNPC_Manhack::MoveExecute_Alive(float flInterval)
 			Vector vecCurrentDir = GetCurrentVelocity();
 			VectorNormalize( vecCurrentDir );
 
-			Vector vecToEnemy = ( GetEnemy()->WorldSpaceCenter() - WorldSpaceCenter() );
+			Vector vecToEnemy = ( GetEnemy()->EyePosition() - WorldSpaceCenter() );
 			VectorNormalize( vecToEnemy );
 
 			float flDot = DotProduct( vecCurrentDir, vecToEnemy );
@@ -1809,7 +1928,11 @@ void CNPC_Manhack::MoveExecute_Alive(float flInterval)
 	SetCurrentVelocity( vCurrentVelocity + m_vForceVelocity );
 	m_vForceVelocity = vec3_origin;
 
-	AddNoiseToVelocity( noiseScale );
+	if( !m_bHackedByAlyx || GetEnemy() )
+	{
+		// If hacked and no enemy, don't drift!
+		AddNoiseToVelocity( noiseScale );
+	}
 
 	LimitSpeed( 200, ManhackMaxSpeed() );
 
@@ -2240,6 +2363,11 @@ void CNPC_Manhack::Spawn(void)
 {
 	Precache();
 
+#ifdef _XBOX
+	// Always fade the corpse
+	AddSpawnFlags( SF_NPC_FADE_CORPSE );
+#endif // _XBOX
+
 	SetModel( "models/manhack.mdl" );
 	SetHullType(HULL_TINY_CENTERED); 
 	SetHullSizeNormal();
@@ -2272,6 +2400,8 @@ void CNPC_Manhack::Spawn(void)
 	}
 		 
 	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL );
+	AddEffects( EF_NOSHADOW );
+
 	SetBloodColor( DONT_BLEED );
 	SetCurrentVelocity( vec3_origin );
 	m_vForceVelocity.Init();
@@ -2300,7 +2430,7 @@ void CNPC_Manhack::Spawn(void)
 	SetNoiseMod( MANHACK_NOISEMOD_HIDE, MANHACK_NOISEMOD_HIDE, MANHACK_NOISEMOD_HIDE );
 
 	// Start out with full power! 
-	m_fEnginePowerScale = 1.0;
+	m_fEnginePowerScale = GetMaxEnginePower();
 	
 	// find panels
 	m_iPanel1 = LookupPoseParameter( "Panel1" );
@@ -2320,6 +2450,10 @@ void CNPC_Manhack::Spawn(void)
 	
 	// don't be an NPC, we want to collide with debris stuff
 	SetCollisionGroup( COLLISION_GROUP_NONE );
+
+	m_bHeld = false;
+	m_bHackedByAlyx = false;
+	StopLoitering();
 }
 
 //-----------------------------------------------------------------------------
@@ -2331,9 +2465,19 @@ void CNPC_Manhack::StartEye( void )
 	if ( m_pEyeGlow == NULL )
 	{
 		m_pEyeGlow = CSprite::SpriteCreate( MANHACK_GLOW_SPRITE, GetLocalOrigin(), false );
-		m_pEyeGlow->SetTransparency( kRenderTransAdd, 255, 0, 0, 128, kRenderFxNoDissipation );
 		m_pEyeGlow->SetAttachment( this, LookupAttachment( "Eye" ) );
-		m_pEyeGlow->SetColor( 255, 0, 0 );
+		
+		if( m_bHackedByAlyx )
+		{
+			m_pEyeGlow->SetTransparency( kRenderTransAdd, 0, 255, 0, 128, kRenderFxNoDissipation );
+			m_pEyeGlow->SetColor( 0, 255, 0 );
+		}
+		else
+		{
+			m_pEyeGlow->SetTransparency( kRenderTransAdd, 255, 0, 0, 128, kRenderFxNoDissipation );
+			m_pEyeGlow->SetColor( 255, 0, 0 );
+		}
+
 		m_pEyeGlow->SetBrightness( 164, 0.1f );
 		m_pEyeGlow->SetScale( 0.25f, 0.1f );
 		m_pEyeGlow->SetAsTemporary();
@@ -2343,9 +2487,19 @@ void CNPC_Manhack::StartEye( void )
 	if ( m_pLightGlow == NULL )
 	{
 		m_pLightGlow = CSprite::SpriteCreate( MANHACK_GLOW_SPRITE, GetLocalOrigin(), false );
-		m_pLightGlow->SetTransparency( kRenderTransAdd, 255, 0, 0, 128, kRenderFxNoDissipation );
 		m_pLightGlow->SetAttachment( this, LookupAttachment( "Light" ) );
-		m_pLightGlow->SetColor( 255, 0, 0 );
+
+		if( m_bHackedByAlyx )
+		{
+			m_pLightGlow->SetTransparency( kRenderTransAdd, 0, 255, 0, 128, kRenderFxNoDissipation );
+			m_pLightGlow->SetColor( 0, 255, 0 );
+		}
+		else
+		{
+			m_pLightGlow->SetTransparency( kRenderTransAdd, 255, 0, 0, 128, kRenderFxNoDissipation );
+			m_pLightGlow->SetColor( 255, 0, 0 );
+		}
+
 		m_pLightGlow->SetBrightness( 164, 0.1f );
 		m_pLightGlow->SetScale( 0.25f, 0.1f );
 		m_pLightGlow->SetAsTemporary();
@@ -2766,8 +2920,11 @@ bool CNPC_Manhack::IsInEffectiveTargetZone( CBaseEntity *pTarget )
 	
 	// Get the enemies top and bottom point
 	pTarget->CollisionProp()->NormalizedToWorldSpace( Vector(0.0f,0.0f,1.0f), &vecMaxPos );
+#ifdef _XBOX
+	pTarget->CollisionProp()->NormalizedToWorldSpace( Vector(0.0f,0.0f,0.5f), &vecMinPos ); // Only half the body is valid
+#else
 	pTarget->CollisionProp()->NormalizedToWorldSpace( Vector(0.0f,0.0f,0.0f), &vecMinPos );
-
+#endif // _XBOX
 	// See if we're within that range
 	if ( ourHeight > vecMinPos.z && ourHeight < vecMaxPos.z )
 		return true;
@@ -2835,6 +2992,10 @@ void CNPC_Manhack::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 
 	if ( reason == PUNTED_BY_CANNON )
 	{
+		StopLoitering();
+
+		m_bHeld = false;
+
 		// There's about to be a massive change in velocity. 
 		// Think immediately so we can do our slice traces, etc.
 		SetNextThink( gpGlobals->curtime + 0.01f );
@@ -2848,6 +3009,7 @@ void CNPC_Manhack::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 		// Suppress collisions between the manhack and the player; we're currently bumping
 		// almost certainly because it's not purely a physics object.
 		SetOwnerEntity( pPhysGunUser );
+		m_bHeld = true;
 	}
 }
 
@@ -2861,6 +3023,8 @@ void CNPC_Manhack::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reaso
 {
 	// Stop suppressing collisions between the manhack and the player
 	SetOwnerEntity( NULL );
+
+	m_bHeld = false;
 
 	if ( Reason == LAUNCHED_BY_CANNON )
 	{
@@ -2877,9 +3041,26 @@ void CNPC_Manhack::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reaso
 	}
 	else
 	{
+		if( m_bHackedByAlyx && !GetEnemy() )
+		{
+			// If a hacked manhack is released in peaceable conditions, 
+			// just loiter, don't zip off.
+			StartLoitering( GetAbsOrigin() );
+		}
+
 		m_hPhysicsAttacker = NULL;
 		m_flLastPhysicsInfluenceTime = 0;
 	}
+}
+
+void CNPC_Manhack::StartLoitering( const Vector &vecLoiterPosition )
+{
+	//Msg("Start Loitering\n");
+
+	m_vTargetBanking = vec3_origin;
+	m_vecLoiterPosition = GetAbsOrigin();
+	m_vForceVelocity = vec3_origin;
+	SetCurrentVelocity( vec3_origin );
 }
 
 CBasePlayer *CNPC_Manhack::HasPhysicsAttacker( float dt )
@@ -2892,6 +3073,20 @@ CBasePlayer *CNPC_Manhack::HasPhysicsAttacker( float dt )
 	}
 	return NULL;
 }
+
+//-----------------------------------------------------------------------------
+// Manhacks that have been hacked by Alyx get more engine power (fly faster)
+//-----------------------------------------------------------------------------
+float CNPC_Manhack::GetMaxEnginePower()
+{
+	if( m_bHackedByAlyx )
+	{
+		return 2.0f;
+	}
+
+	return 1.0f;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3027,7 +3222,15 @@ void CNPC_Manhack::SetEyeState( int state )
 			if ( m_pEyeGlow )
 			{
 				//Toggle our state
-				m_pEyeGlow->SetColor( 255, 0, 0 );
+				if( m_bHackedByAlyx )
+				{
+					m_pEyeGlow->SetColor( 0, 255, 0 );
+				}
+				else
+				{
+					m_pEyeGlow->SetColor( 255, 0, 0 );
+				}
+
 				m_pEyeGlow->SetScale( 0.25f, 0.5f );
 				m_pEyeGlow->SetBrightness( 164, 0.1f );
 				m_pEyeGlow->m_nRenderFX = kRenderFxNone;
@@ -3035,7 +3238,15 @@ void CNPC_Manhack::SetEyeState( int state )
 			
 			if ( m_pLightGlow )
 			{
-				m_pLightGlow->SetColor( 255, 0, 0 );
+				if( m_bHackedByAlyx )
+				{
+					m_pLightGlow->SetColor( 0, 255, 0 );
+				}
+				else
+				{
+					m_pLightGlow->SetColor( 255, 0, 0 );
+				}
+
 				m_pLightGlow->SetScale( 0.25f, 0.5f );
 				m_pLightGlow->SetBrightness( 164, 0.1f );
 				m_pLightGlow->m_nRenderFX = kRenderFxNone;

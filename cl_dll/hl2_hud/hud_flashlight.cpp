@@ -111,10 +111,7 @@ void CHudFlashlight::Paint()
 	surface()->DrawSetTextFont(m_hTextFont);
 	surface()->DrawSetTextColor(m_TextColor);
 	surface()->DrawSetTextPos(text_xpos, text_ypos);
-	for (wchar_t *wch = text; *wch != 0; wch++)
-	{
-		surface()->DrawUnicodeChar(*wch);
-	}
+	surface()->DrawUnicodeString( text );
 }
 
 

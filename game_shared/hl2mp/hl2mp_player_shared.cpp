@@ -9,6 +9,7 @@
 
 #ifdef CLIENT_DLL
 #include "c_hl2mp_player.h"
+#include "prediction.h"
 #define CRecipientFilter C_RecipientFilter
 #else
 #include "hl2mp_player.h"
@@ -71,6 +72,12 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 {
 	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() )
 		return;
+
+#if defined( CLIENT_DLL )
+	// during prediction play footstep sounds only once
+	if ( !prediction->IsFirstTimePredicted() )
+		return;
+#endif
 
 	if ( GetFlags() & FL_DUCKING )
 		return;
@@ -153,7 +160,7 @@ void CPlayerAnimState::Update()
 	m_angRender = GetOuter()->GetLocalAngles();
 
 	ComputePoseParam_BodyYaw();
-	ComputePoseParam_BodyPitch();
+	ComputePoseParam_BodyPitch(GetOuter()->GetModelPtr());
 	ComputePoseParam_BodyLookYaw();
 
 	ComputePlaybackRate();
@@ -304,7 +311,7 @@ void CPlayerAnimState::ComputePoseParam_BodyYaw( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPlayerAnimState::ComputePoseParam_BodyPitch( void )
+void CPlayerAnimState::ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr )
 {
 	// Get pitch from v_angle
 	float flPitch = GetOuter()->GetLocalAngles()[ PITCH ];
@@ -320,12 +327,7 @@ void CPlayerAnimState::ComputePoseParam_BodyPitch( void )
 	m_angRender = absangles;
 
 	// See if we have a blender for pitch
-	int aim_pitch = GetOuter()->LookupPoseParameter( "aim_pitch" );
-
-	if ( aim_pitch >= 0 )
-	{
-		GetOuter()->SetPoseParameter( aim_pitch, flPitch );
-	}
+	GetOuter()->SetPoseParameter( pStudioHdr, "aim_pitch", flPitch );
 }
 
 //-----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
 //
 // Purpose: Implements an entity that measures sound volume at a point in a map.
 //
@@ -7,7 +7,7 @@
 //
 //			It does not hear danger sounds since they are not technically sounds.
 //
-//=============================================================================//
+//=============================================================================
 
 #include "cbase.h"
 #include "entityinput.h"
@@ -131,12 +131,12 @@ void CEnvMicrophone::Activate(void)
 	// Get a handle to my filter entity if there is one
 	if (m_iszListenFilter != NULL_STRING)
 	{
-		m_hListenFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iszListenFilter, NULL ));
+		m_hListenFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iszListenFilter ));
 	}
 
 	if (m_target != NULL_STRING)
 	{
-		m_hMeasureTarget = gEntList.FindEntityByName(NULL, STRING(m_target), NULL);
+		m_hMeasureTarget = gEntList.FindEntityByName(NULL, STRING(m_target) );
 
 		//
 		// If we were given a bad measure target, just measure sound where we are.
@@ -254,10 +254,22 @@ void CEnvMicrophone::InputSetSpeakerName( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 bool CEnvMicrophone::CanHearSound(CSound *pSound, float &flVolume)
 {
+	flVolume = 0;
+
 	if ( m_bDisabled )
 	{
-		flVolume = 0;
 		return false;
+	}
+
+	// Cull out sounds except from specific entities
+	CBaseFilter *pFilter = m_hListenFilter.Get();
+	if ( pFilter )
+	{
+		CBaseEntity *pSoundOwner = pSound->m_hOwner.Get();
+		if ( !pSoundOwner || !pFilter->PassesFilter( this, pSoundOwner ) )
+		{
+			return false;
+		}
 	}
 
 	float flDistance = (pSound->GetSoundOrigin() - m_hMeasureTarget->GetAbsOrigin()).Length();
@@ -270,7 +282,9 @@ bool CEnvMicrophone::CanHearSound(CSound *pSound, float &flVolume)
 
 	// Over our max range?
 	if ( m_flMaxRange && flDistance > m_flMaxRange )
+	{
 		return false;
+	}
 
 	if (flDistance <= pSound->Volume() * m_flSensitivity)
 	{
@@ -279,7 +293,6 @@ bool CEnvMicrophone::CanHearSound(CSound *pSound, float &flVolume)
 		return true;
 	}
 
-	flVolume = 0;
 	return false;
 }
 
@@ -305,7 +318,7 @@ bool CEnvMicrophone::CanHearSound( int entindex, soundlevel_t soundlevel, float 
 	CBaseFilter *pFilter = m_hListenFilter.Get();
 	if ( pFilter )
 	{
-		if ( !pEntity || !pFilter->PassesFilter(pEntity) )
+		if ( !pEntity || !pFilter->PassesFilter( this, pEntity ) )
 		{
 			flVolume = 0;
 			return false;
@@ -437,7 +450,7 @@ MicrophoneResult_t CEnvMicrophone::SoundPlayed( int entindex, const char *soundn
 		// find players, and we need to be able to specify !player for a speaker.
 		if ( m_iszSpeakerName != NULL_STRING )
 		{
-			m_hSpeaker = gEntList.FindEntityByName(NULL, STRING(m_iszSpeakerName), NULL);
+			m_hSpeaker = gEntList.FindEntityByName(NULL, STRING(m_iszSpeakerName) );
 
 			if ( !m_hSpeaker )
 			{

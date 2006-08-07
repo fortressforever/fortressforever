@@ -5,7 +5,6 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#include <assert.h>
 #include <stdio.h>
 
 #define PROTECTED_THINGS_DISABLE
@@ -33,8 +32,8 @@
 #include <vgui_controls/Menu.h>
 #include <vgui_controls/Tooltip.h>
 
-// memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
+// memdbgon must be the last include file in a .cpp file
+#include "tier0/memdbgon.h"
 
 using namespace vgui;
 
@@ -57,141 +56,85 @@ enum
 #endif
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+//
+// Button at the top of columns used to re-sort
+//
 //-----------------------------------------------------------------------------
 class ColumnButton : public Button
 {
 public:
-	ColumnButton(vgui::Panel *parent, const char *name, const char *text) : Button(parent, name, text)
-	{
-	}
+	ColumnButton(vgui::Panel *parent, const char *name, const char *text);
 
-	virtual void ApplySchemeSettings(IScheme *pScheme)
-	{
-		Button::ApplySchemeSettings(pScheme);
+	// Inherited from Button
+	virtual void ApplySchemeSettings(IScheme *pScheme);
+	virtual void OnMousePressed(MouseCode code);
 
-		SetContentAlignment(Label::a_west);
-		SetFont(pScheme->GetFont("DefaultSmall", IsProportional()));
-	}
-
-	// Don't request focus.
-	// This will keep items in the listpanel selected.
-	virtual void OnMousePressed(MouseCode code)
-	{
-		if (!IsEnabled())
-			return;
-
-		if (code == MOUSE_RIGHT)
-		{
-			OpenColumnChoiceMenu();
-			return;
-		}
-		
-		if (!IsMouseClickEnabled(code))
-			return;
-		
-		if (IsUseCaptureMouseEnabled())
-		{
-			{
-				SetSelected(true);
-				Repaint();
-			}
-			
-			// lock mouse input to going to this button
-			input()->SetMouseCapture(GetVPanel());
-		}
-	}
-
-	void OpenColumnChoiceMenu()
-	{
-		CallParentFunction(new KeyValues("OpenColumnChoiceMenu"));
-	}
+	void OpenColumnChoiceMenu();
 };
 
+ColumnButton::ColumnButton(vgui::Panel *parent, const char *name, const char *text) : Button(parent, name, text)
+{
+	SetBlockDragChaining( true );
+}
+
+void ColumnButton::ApplySchemeSettings(IScheme *pScheme)
+{
+	Button::ApplySchemeSettings(pScheme);
+
+	SetContentAlignment(Label::a_west);
+	SetFont(pScheme->GetFont("DefaultSmall", IsProportional()));
+}
+
+// Don't request focus.
+// This will keep items in the listpanel selected.
+void ColumnButton::OnMousePressed(MouseCode code)
+{
+	if (!IsEnabled())
+		return;
+
+	if (code == MOUSE_RIGHT)
+	{
+		OpenColumnChoiceMenu();
+		return;
+	}
+	
+	if (!IsMouseClickEnabled(code))
+		return;
+	
+	if (IsUseCaptureMouseEnabled())
+	{
+		{
+			SetSelected(true);
+			Repaint();
+		}
+		
+		// lock mouse input to going to this button
+		input()->SetMouseCapture(GetVPanel());
+	}
+}
+
+void ColumnButton::OpenColumnChoiceMenu()
+{
+	CallParentFunction(new KeyValues("OpenColumnChoiceMenu"));
+}
+
+
 //-----------------------------------------------------------------------------
+//
 // Purpose: Handles resizing of columns
+//
 //-----------------------------------------------------------------------------
 class Dragger : public Panel
 {
 public:
-	Dragger(int column)
-	{
-		m_iDragger = column;
-		SetPaintBackgroundEnabled(false);
-		SetPaintEnabled(false);
-		SetPaintBorderEnabled(false);
-		SetCursor(dc_sizewe);
-		m_bDragging = false;
-		m_bMovable = true; // movable by default
-		m_iDragPos = 0;
-	}
+	Dragger(int column);
 
-	virtual void OnMousePressed(MouseCode code)
-	{
-		if (m_bMovable)
-		{
-			input()->SetMouseCapture(GetVPanel());
-			
-			int x, y;
-			input()->GetCursorPos(x, y);
-			m_iDragPos = x;
-			m_bDragging = true;
-		}
-	}
-
-	virtual void OnMouseDoublePressed(MouseCode code)
-	{
-		if (m_bMovable)
-		{
-			// resize the column to the size of it's contents
-			PostMessage(GetParent(), new KeyValues("ResizeColumnToContents", "column", m_iDragger));
-		}
-	}
-
-	virtual void OnMouseReleased(MouseCode code)
-	{
-		if (m_bMovable)
-		{
-			input()->SetMouseCapture(NULL);
-			m_bDragging = false;
-		}
-	}
-
-	virtual void OnCursorMoved(int x, int y)
-	{
-		if (m_bDragging)
-		{
-			input()->GetCursorPos(x, y);
-			KeyValues *msg = new KeyValues("ColumnResized");
-			msg->SetInt("column", m_iDragger);
-			msg->SetInt("delta", x - m_iDragPos);
-			m_iDragPos = x;
-			if (GetVParent())
-			{
-				ivgui()->PostMessage(GetVParent(), msg, GetVPanel());
-			}
-		}
-	}
-
-	virtual void SetMovable(bool state)
-	{
-		m_bMovable = state;
-		// disable cursor change if the dragger is not movable
-		if( IsVisible() )
-		{
-			if (state)
-			{
-				// if its not movable we stick with the default arrow
-				// if parent windows Start getting fancy cursors we should probably retrive a parent
-				// cursor and set it to that
-				SetCursor(dc_sizewe); 
-			}
-			else 
-			{
-				SetCursor(dc_arrow); 
-			}
-		}
-	}
+	// Inherited from Panel
+	virtual void OnMousePressed(MouseCode code);
+	virtual void OnMouseDoublePressed(MouseCode code);
+	virtual void OnMouseReleased(MouseCode code);
+	virtual void OnCursorMoved(int x, int y);
+	virtual void SetMovable(bool state);
 
 private:
 	int m_iDragger;
@@ -199,6 +142,89 @@ private:
 	int m_iDragPos;
 	bool m_bMovable; // whether this dragger is movable using mouse or not
 };
+
+
+Dragger::Dragger(int column)
+{
+	m_iDragger = column;
+	SetPaintBackgroundEnabled(false);
+	SetPaintEnabled(false);
+	SetPaintBorderEnabled(false);
+	SetCursor(dc_sizewe);
+	m_bDragging = false;
+	m_bMovable = true; // movable by default
+	m_iDragPos = 0;
+	SetBlockDragChaining( true );
+}
+
+void Dragger::OnMousePressed(MouseCode code)
+{
+	if (m_bMovable)
+	{
+		input()->SetMouseCapture(GetVPanel());
+		
+		int x, y;
+		input()->GetCursorPos(x, y);
+		m_iDragPos = x;
+		m_bDragging = true;
+	}
+}
+
+void Dragger::OnMouseDoublePressed(MouseCode code)
+{
+	if (m_bMovable)
+	{
+		// resize the column to the size of it's contents
+		PostMessage(GetParent(), new KeyValues("ResizeColumnToContents", "column", m_iDragger));
+	}
+}
+
+void Dragger::OnMouseReleased(MouseCode code)
+{
+	if (m_bMovable)
+	{
+		input()->SetMouseCapture(NULL);
+		m_bDragging = false;
+	}
+}
+
+void Dragger::OnCursorMoved(int x, int y)
+{
+	if (m_bDragging)
+	{
+		input()->GetCursorPos(x, y);
+		KeyValues *msg = new KeyValues("ColumnResized");
+		msg->SetInt("column", m_iDragger);
+		msg->SetInt("delta", x - m_iDragPos);
+		m_iDragPos = x;
+		if (GetVParent())
+		{
+			ivgui()->PostMessage(GetVParent(), msg, GetVPanel());
+		}
+	}
+}
+
+void Dragger::SetMovable(bool state)
+{
+	m_bMovable = state;
+	// disable cursor change if the dragger is not movable
+	if( IsVisible() )
+	{
+		if (state)
+		{
+			// if its not movable we stick with the default arrow
+			// if parent windows Start getting fancy cursors we should probably retrive a parent
+			// cursor and set it to that
+			SetCursor(dc_sizewe); 
+		}
+		else 
+		{
+			SetCursor(dc_arrow); 
+		}
+	}
+}
+
+
 
 namespace vgui
 {
@@ -226,6 +252,7 @@ static SortFunc *s_pSortFunc = NULL;
 static bool s_bSortAscending = true;
 static SortFunc *s_pSortFuncSecondary = NULL;
 static bool s_bSortAscendingSecondary = true;
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Basic sort function, for use in qsort
@@ -275,6 +302,7 @@ static int __cdecl AscendingSortFunc(const void *elem1, const void *elem2)
 
 	return result;
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Default column sorting function, puts things in alpabetical order
@@ -405,11 +433,19 @@ bool ListPanel::RBTreeLessFunc(vgui::ListPanel::IndexItem_t &item1, vgui::ListPa
 	return (result > 0);
 }
 
+
+DECLARE_BUILD_FACTORY( ListPanel );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 ListPanel::ListPanel(Panel *parent, const char *panelName) : Panel(parent, panelName)
 {
+	m_bIgnoreDoubleClick = false;
+	m_bMultiselectEnabled = true;
+	m_iEditModeItemID = 0;
+	m_iEditModeColumn = 0;
+
 	m_iHeaderHeight = 20;
 	m_iRowHeight = 20;
 	m_bCanSelectIndividualCells = false;
@@ -572,6 +608,7 @@ void ListPanel::AddColumnHeader(int index, const char *columnName, const char *c
 	column.m_bTypeIsText = !(columnFlags & COLUMN_IMAGE);
 	column.m_bHidden = false;
 	column.m_bUnhidable = (columnFlags & COLUMN_UNHIDABLE);
+	column.m_nContentAlignment = Label::a_west;
 
 	Dragger *dragger = new Dragger(index);
 	dragger->SetParent(this);
@@ -588,7 +625,7 @@ void ListPanel::AddColumnHeader(int index, const char *columnName, const char *c
 	column.m_pSortFunc = NULL;
 	
 	// Set the SortedTree less than func to the generic RBTreeLessThanFunc
-	m_ColumnsData[columnDataIndex].m_SortedTree.SetLessFunc((bool (__cdecl *)(const struct vgui::ListPanel::IndexItem_t &,const struct vgui::ListPanel::IndexItem_t &))RBTreeLessFunc);
+	m_ColumnsData[columnDataIndex].m_SortedTree.SetLessFunc((IndexRBTree_t::LessFunc_t)RBTreeLessFunc);
 
 	// go through all the headers and make sure their Command has the right column ID
 	ResetColumnHeaderCommands();
@@ -610,7 +647,7 @@ void ListPanel::AddColumnHeader(int index, const char *columnName, const char *c
 //-----------------------------------------------------------------------------
 void ListPanel::ResortColumnRBTree(int col)
 {
-	assert(m_CurrentColumns.IsValidIndex(col));
+	Assert(m_CurrentColumns.IsValidIndex(col));
 
 	unsigned char dataColumnIndex = m_CurrentColumns[col];
 	int columnHistoryIndex = m_ColumnsHistory.Find(dataColumnIndex);
@@ -649,7 +686,7 @@ void ListPanel::ResortColumnRBTree(int col)
 			dataItem->m_SortedTreeIndexes.AddToTail();
 		}
 
-		assert( dataItem->m_SortedTreeIndexes.IsValidIndex(columnHistoryIndex) );
+		Assert( dataItem->m_SortedTreeIndexes.IsValidIndex(columnHistoryIndex) );
 
 		dataItem->m_SortedTreeIndexes[columnHistoryIndex] = rbtree.Insert(item);
 	}
@@ -678,6 +715,11 @@ void ListPanel::SetColumnHeaderText(int col, const char *text)
 void ListPanel::SetColumnHeaderText(int col, wchar_t *text)
 {
 	m_ColumnsData[m_CurrentColumns[col]].m_pHeader->SetText(text);
+}
+
+void ListPanel::SetColumnTextAlignment( int col, int align )
+{
+	m_ColumnsData[m_CurrentColumns[col]].m_nContentAlignment = align;
 }
 
 //-----------------------------------------------------------------------------
@@ -820,6 +862,12 @@ int ListPanel::AddItem( const KeyValues *item, unsigned int userData, bool bScro
 	FastSortListPanelItem *newitem = new FastSortListPanelItem;
 	newitem->kv = item->MakeCopy();
 	newitem->userData = userData;
+	newitem->m_pDragData = NULL;
+	newitem->m_bImage = newitem->kv->GetInt( "image" ) != 0 ? true : false;
+	newitem->m_nImageIndex = newitem->kv->GetInt( "image" );
+	newitem->m_nImageIndexSelected = newitem->kv->GetInt( "imageSelected" );
+	newitem->m_pIcon = reinterpret_cast< IImage * >( newitem->kv->GetPtr( "iconImage" ) );
+
 	int itemID = m_DataItems.AddToTail(newitem);
 	int displayRow = m_VisibleItems.AddToTail(itemID);
 	newitem->visible = true;
@@ -910,6 +958,52 @@ int ListPanel::GetItemCurrentRow(int itemID)
 {
 	return m_VisibleItems.Find(itemID);
 }
+
+
+//-----------------------------------------------------------------------------
+// Attaches drag data to a particular item 
+//-----------------------------------------------------------------------------
+void ListPanel::SetItemDragData( int itemID, const KeyValues *data )
+{
+	ListPanelItem *pItem = m_DataItems[ itemID ];
+	if ( pItem->m_pDragData )
+	{
+		pItem->m_pDragData->deleteThis();
+	}
+	pItem->m_pDragData = data->MakeCopy();
+}
+
+
+//-----------------------------------------------------------------------------
+// Attaches drag data to a particular item 
+//-----------------------------------------------------------------------------
+void ListPanel::OnCreateDragData( KeyValues *msg )
+{
+	int nCount = GetSelectedItemsCount();
+	if ( nCount == 0 )
+		return;
+
+	for ( int i = 0; i < nCount; ++i )
+	{
+		int nItemID = GetSelectedItem( i );
+
+		KeyValues *pDragData = m_DataItems[ nItemID ]->m_pDragData;
+		if ( pDragData )
+		{
+			KeyValues *pDragDataCopy = pDragData->MakeCopy();
+			msg->AddSubKey( pDragDataCopy );
+		}
+	}
+
+	// Add the keys of the last item directly into the root also
+	int nLastItemID = GetSelectedItem( nCount - 1 );
+	KeyValues *pLastItemDrag = m_DataItems[ nLastItemID ]->m_pDragData;
+	if ( pLastItemDrag )
+	{
+		pLastItemDrag->CopySubkeys( msg );
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1052,6 +1146,27 @@ void ListPanel::RereadAllItems()
 	InvalidateLayout();
 }
 
+
+//-----------------------------------------------------------------------------
+// Cleans up allocations associated with a particular item
+//-----------------------------------------------------------------------------
+void ListPanel::CleanupItem( FastSortListPanelItem *data )
+{
+	if ( data )
+	{
+		if (data->kv)
+		{
+			data->kv->deleteThis();
+		}
+		if (data->m_pDragData)
+		{
+			data->m_pDragData->deleteThis();
+		}
+		delete data;
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Removes an item at the specified item
 //-----------------------------------------------------------------------------
@@ -1080,11 +1195,7 @@ void ListPanel::RemoveItem(int itemID)
 
 	// remove from data
 	m_DataItems.Remove(itemID);
-	if (data->kv)
-	{
-		data->kv->deleteThis();
-	}
-	delete data;
+	CleanupItem( data );
 	InvalidateLayout();
 
 }
@@ -1102,19 +1213,13 @@ void ListPanel::RemoveAll()
 
 	FOR_EACH_LL( m_DataItems, index )
 	{
-		if ( m_DataItems[index] )
-		{
-			if ( m_DataItems[index]->kv )
-			{
-				m_DataItems[index]->kv->deleteThis();
-			}
-			delete m_DataItems[index];
-		}
+		FastSortListPanelItem *pItem = m_DataItems[index];
+		CleanupItem( pItem );
 	}
 
 	m_DataItems.RemoveAll();
 	m_VisibleItems.RemoveAll();
-	m_SelectedItems.RemoveAll();
+	ClearSelectedItems();
 
 	InvalidateLayout();
 }
@@ -1169,43 +1274,56 @@ int ListPanel::GetSelectedColumn()
 	return m_iSelectedColumn;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Clears all selected rows
 //-----------------------------------------------------------------------------
 void ListPanel::ClearSelectedItems()
 {
 	m_SelectedItems.RemoveAll();
+	m_LastItemSelected = -1;
+	m_iSelectedColumn = -1;
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void ListPanel::AddSelectedItem(int itemID)
+void ListPanel::AddSelectedItem( int itemID )
 {
 	if ( !m_DataItems.IsValidIndex(itemID) )
 		return;
 
-	assert(!m_SelectedItems.HasElement(itemID));
+	Assert( !m_SelectedItems.HasElement( itemID ) );
 
-	m_SelectedItems.AddToTail(itemID);
-	PostActionSignal(new KeyValues("ItemSelected"));
+	m_LastItemSelected = itemID;
+	m_SelectedItems.AddToTail( itemID );
+	PostActionSignal( new KeyValues("ItemSelected") );
 	Repaint();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void ListPanel::SetSingleSelectedItem(int itemID)
+void ListPanel::SetSingleSelectedItem( int itemID )
 {
 	ClearSelectedItems();
 	AddSelectedItem(itemID);
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void ListPanel::SetSelectedCell(int itemID, int col)
 {
+	if ( !m_bCanSelectIndividualCells )
+	{
+		SetSingleSelectedItem(itemID);
+		return;
+	}
+
 	// make sure it's a valid cell
 	if ( !m_DataItems.IsValidIndex(itemID) )
 		return;
@@ -1213,15 +1331,10 @@ void ListPanel::SetSelectedCell(int itemID, int col)
 	if ( !m_CurrentColumns.IsValidIndex(col) )
 		return;
 	
+	SetSingleSelectedItem( itemID );
 	m_iSelectedColumn = col;
-	SetSingleSelectedItem(itemID);
-
-	// notify all watchers
-	PostActionSignal(new KeyValues("ItemSelected"));
-
-	// redraw
-	Repaint();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: returns the data held by a specific cell
@@ -1251,11 +1364,27 @@ void ListPanel::GetCellText(int itemID, int col, wchar_t *wbuffer, int bufferSiz
 		return;
 	}
 
-	const wchar_t *val = itemData->GetWString( key, L"" );
+	char const *val = itemData->GetString( key, "" );
 	if ( !val || !key[ 0 ] )
 		return;
 
-	wcsncpy( wbuffer, val, bufferSize/sizeof(wchar_t) );
+	const wchar_t *wval = NULL;
+
+	if ( val[ 0 ] == '#' )
+	{
+		StringIndex_t si = localize()->FindIndex( val + 1 );
+		if ( si != INVALID_STRING_INDEX )
+		{
+			wval = localize()->GetValueByIndex( si );
+		}
+	}
+
+	if ( !wval )
+	{
+		wval = itemData->GetWString( key, L"" );
+	}
+
+	wcsncpy( wbuffer, wval, bufferSize/sizeof(wchar_t) );
 	wbuffer[ (bufferSize/sizeof(wchar_t)) - 1 ] = 0;
 }
 
@@ -1306,12 +1435,14 @@ IImage *ListPanel::GetCellImage(int itemID, int col) //, ImagePanel *&buffer)
 //-----------------------------------------------------------------------------
 Panel *ListPanel::GetCellRenderer(int itemID, int col)
 {
-	assert( m_pTextImage );
-	assert( m_pImagePanel );
+	Assert( m_pTextImage );
+	Assert( m_pImagePanel );
 	
 	column_t &column = m_ColumnsData[ m_CurrentColumns[col] ];
 
 	IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+
+	m_pLabel->SetContentAlignment( (Label::Alignment)column.m_nContentAlignment );
 
 	if ( column.m_bTypeIsText ) 
 	{
@@ -1321,18 +1452,21 @@ Panel *ListPanel::GetCellRenderer(int itemID, int col)
 		GetCellText( itemID, col, tempText, 256 );
 		KeyValues *item = GetItem( itemID );
 		m_pTextImage->SetText(tempText);
-        int wide, tall;
-        m_pTextImage->GetContentSize(wide, tall);
+        int cw, tall;
+        m_pTextImage->GetContentSize(cw, tall);
 
 		// set cell size
 		Panel *header = column.m_pHeader;
-	    wide = header->GetWide();
-		m_pTextImage->SetSize( wide - 5, tall);
+	    int wide = header->GetWide();
+		m_pTextImage->SetSize( min( cw, wide - 5 ), tall);
 
+		m_pLabel->SetTextImageIndex( 0 );
 		m_pLabel->SetImageAtIndex(0, m_pTextImage, 3);
 			
+		bool selected = false;
 		if ( m_SelectedItems.HasElement(itemID) && ( !m_bCanSelectIndividualCells || col == m_iSelectedColumn ) )
 		{
+			selected = true;
             VPANEL focus = input()->GetFocus();
             // if one of the children of the SectionedListPanel has focus, then 'we have focus' if we're selected
             if (HasFocus() || (focus && ipanel()->HasParent(focus, GetVParent())))
@@ -1345,11 +1479,15 @@ Panel *ListPanel::GetCellRenderer(int itemID, int col)
                 m_pLabel->SetBgColor(GetSchemeColor("ListPanel.SelectedOutOfFocusBgColor", pScheme));
             }
 
-			if ( item->GetInt("disabled", 0) == 0 )
+			if ( item->IsEmpty("cellcolor") == false )
+			{
+	            m_pTextImage->SetColor( item->GetColor( "cellcolor" ) );
+			}
+			else if ( item->GetInt("disabled", 0) == 0 )
 			{
 	            m_pTextImage->SetColor(m_SelectionFgColor);
 			}
-			else
+			else 
 			{
 	            m_pTextImage->SetColor(m_DisabledSelectionFgColor);
 			}
@@ -1358,7 +1496,11 @@ Panel *ListPanel::GetCellRenderer(int itemID, int col)
 		}
 		else
 		{
-			if ( item->GetInt("disabled", 0) == 0 )
+			if ( item->IsEmpty("cellcolor") == false )
+			{
+	            m_pTextImage->SetColor( item->GetColor( "cellcolor" ) );
+			}
+			else if ( item->GetInt("disabled", 0) == 0 )
 			{
 				m_pTextImage->SetColor(m_LabelFgColor);
 			}
@@ -1367,6 +1509,32 @@ Panel *ListPanel::GetCellRenderer(int itemID, int col)
 				m_pTextImage->SetColor(m_DisabledColor);
 			}
 			m_pLabel->SetPaintBackgroundEnabled(false);
+		}
+
+		FastSortListPanelItem *listItem = m_DataItems[ itemID ];
+		if ( col == 0 &&
+			listItem->m_bImage && m_pImageList )
+		{
+			IImage *pImage = NULL;
+			if ( listItem->m_pIcon )
+			{
+				pImage = listItem->m_pIcon;
+			}
+			else
+			{
+				int imageIndex = selected ? listItem->m_nImageIndexSelected : listItem->m_nImageIndex;
+				if ( m_pImageList->IsValidIndex(imageIndex) )
+				{
+					pImage = m_pImageList->GetImage(imageIndex);
+				}
+			}
+
+			if ( pImage )
+			{
+				m_pLabel->SetTextImageIndex( 1 );
+				m_pLabel->SetImageAtIndex(0, pImage, 0);
+				m_pLabel->SetImageAtIndex(1, m_pTextImage, 3);
+			}
 		}
 		
 		return m_pLabel;
@@ -1612,7 +1780,7 @@ void ListPanel::PerformLayout()
 		}
 
 		// shrink from the most right column to minimum width until we can fit them all
-		assert(totalDesiredWidth > buttonMaxXPos);
+		Assert(totalDesiredWidth > buttonMaxXPos);
 		for ( i = nColumns-1; i >= 0 ; i--)
 		{
 			column_t &column = m_ColumnsData[m_CurrentColumns[i]];
@@ -1640,8 +1808,61 @@ void ListPanel::PerformLayout()
 		{
 			// we shouldn't ever get here since we already checked if we had to force below min width
 			// we'd rather draw badly than cause an infinte loop
-			//assert (i != -1);
+			//Assert (i != -1);
 			break;
+		}
+	}
+
+	// setup edit mode
+	if ( m_hEditModePanel.Get() )
+	{
+		m_iTableStartX = 0; 
+		m_iTableStartY = m_iHeaderHeight + 1;
+
+		int nTotalRows = m_VisibleItems.Count();
+		int nRowsPerPage = GetRowsPerPage();
+
+		// find the first visible item to display
+		int nStartItem = 0;
+		if (nRowsPerPage <= nTotalRows)
+		{
+			nStartItem = m_vbar->GetValue();
+		}
+
+		bool bDone = false;
+		int drawcount = 0;
+		for (int i = nStartItem; i < nTotalRows && !bDone; i++)
+		{
+			int x = 0;
+			if (!m_VisibleItems.IsValidIndex(i))
+				continue;
+
+			int itemID = m_VisibleItems[i];
+			
+			// iterate the columns
+			for (int j = 0; j < m_CurrentColumns.Count(); j++)
+			{
+				Panel *header = m_ColumnsData[m_CurrentColumns[j]].m_pHeader;
+
+				if (!header->IsVisible())
+					continue;
+
+				int wide = header->GetWide();
+
+				if ( itemID == m_iEditModeItemID &&
+					 j == m_iEditModeColumn )
+				{
+
+					m_hEditModePanel->SetPos( x + m_iTableStartX + 2, (drawcount * m_iRowHeight) + m_iTableStartY);
+					m_hEditModePanel->SetSize( wide, m_iRowHeight - 1 );
+
+					bDone = true;
+				}
+
+				x += wide;
+			}
+
+			drawcount++;
 		}
 	}
 
@@ -1676,24 +1897,27 @@ void ListPanel::Paint()
 	m_iTableStartX = 0; 
 	m_iTableStartY = m_iHeaderHeight + 1;
 
-	float totalrows = (float) m_VisibleItems.Count();
-	int rowsperpage = (int) GetRowsPerPage();
+	int nTotalRows = m_VisibleItems.Count();
+	int nRowsPerPage = GetRowsPerPage();
 
 	// find the first visible item to display
-	int startitem = 0;
-	if (rowsperpage <= totalrows)
+	int nStartItem = 0;
+	if (nRowsPerPage <= nTotalRows)
 	{
-		startitem = m_vbar->GetValue();
+		nStartItem = m_vbar->GetValue();
 	}
+
+	int vbarInset = m_vbar->IsVisible() ? m_vbar->GetWide() : 0;
+	int maxw = wide - vbarInset - 8;
 
 //	debug timing functions
 //	double startTime, endTime;
 //	startTime = system()->GetCurrentTime();
 
 	// iterate through and draw each cell
-	bool done = false;
+	bool bDone = false;
 	int drawcount = 0;
-	for (int i = startitem; i < m_VisibleItems.Count() && !done; i++)
+	for (int i = nStartItem; i < nTotalRows && !bDone; i++)
 	{
 		int x = 0;
 		if (!m_VisibleItems.IsValidIndex(i))
@@ -1723,8 +1947,13 @@ void ListPanel::Paint()
 				{
 					render->SetVisible(true);
 				}
-				render->SetPos( x + m_iTableStartX + 2, (drawcount * m_iRowHeight) + m_iTableStartY);
-				render->SetSize( wide, m_iRowHeight - 1 );
+				int xpos = x + m_iTableStartX + 2;
+
+				render->SetPos( xpos, (drawcount * m_iRowHeight) + m_iTableStartY);
+
+				int right = min( xpos + wide, maxw );
+				int usew = right - xpos;
+				render->SetSize( usew, m_iRowHeight - 1 );
 
 				// mark the panel to draw immediately (since it will probably be recycled to draw other cells)
 				render->Repaint();
@@ -1733,7 +1962,7 @@ void ListPanel::Paint()
 				render->GetClipRect(x0, y0, x1, y1);
 				if ((y1 - y0) < (m_iRowHeight - 3))
 				{
-					done = true;
+					bDone = true;
 					break;
 				}
 				surface()->PaintTraverse(render->GetVPanel());
@@ -1783,166 +2012,152 @@ void ListPanel::PaintBackground()
 	BaseClass::PaintBackground();
 }
 
+
+//-----------------------------------------------------------------------------
+// Handles multiselect 
+//-----------------------------------------------------------------------------
+void ListPanel::HandleMultiSelection( int itemID, int row, int column )
+{
+	// deal with 'multiple' row selection
+
+	// convert the last item selected to a row so we can multiply select by rows NOT items
+	int lastSelectedRow = (m_LastItemSelected != -1) ? m_VisibleItems.Find( m_LastItemSelected ) : row;
+	int startRow, endRow;
+	if ( row < lastSelectedRow )
+	{
+		startRow = row;
+		endRow = lastSelectedRow;
+	}
+	else
+	{
+		startRow = lastSelectedRow;
+		endRow = row;
+	}
+
+	// clear the selection if neither control key was down - we are going to readd ALL selected items
+	// in case the user changed the 'direction' of the shift add
+	if ( !input()->IsKeyDown(KEY_LCONTROL) && !input()->IsKeyDown(KEY_RCONTROL) )
+	{
+		ClearSelectedItems();
+	}
+
+	// add any items that we haven't added
+	for (int i = startRow; i <= endRow; i++)
+	{
+		// get the item indexes for these rows
+		int selectedItemID = m_VisibleItems[i];
+		if ( !m_SelectedItems.HasElement(selectedItemID) )
+		{
+			AddSelectedItem( selectedItemID );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Handles multiselect 
+//-----------------------------------------------------------------------------
+void ListPanel::HandleAddSelection( int itemID, int row, int column )
+{
+	// dealing with row selection
+	if ( m_SelectedItems.HasElement( itemID ) )
+	{
+		// this row is already selected, remove
+		m_SelectedItems.FindAndRemove( itemID );
+		m_LastItemSelected = itemID;
+	}
+	else
+	{
+		// add the row to the selection
+		AddSelectedItem( itemID );
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void ListPanel::OnMousePressed(MouseCode code)
+void ListPanel::UpdateSelection( MouseCode code, int x, int y, int row, int column )
+{
+	// make sure we're clicking on a real item
+	if ( row < 0 || row >= m_VisibleItems.Count() )
+	{
+		ClearSelectedItems();
+		return;
+	}
+
+	int itemID = m_VisibleItems[ row ];
+
+	// if we've right-clicked on a selection, don't change the selection
+	if ( code == MOUSE_RIGHT && m_SelectedItems.HasElement( itemID ) )
+		return;
+
+	if ( m_bCanSelectIndividualCells )
+	{
+		if ( input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL) )
+		{
+			// we're ctrl selecting the same cell, clear it
+			if ( ( m_LastItemSelected == itemID ) && ( m_iSelectedColumn == column ) && ( m_SelectedItems.Count() == 1 ) )
+			{
+				ClearSelectedItems();
+			}
+			else
+			{
+				SetSelectedCell( itemID, column );
+			}
+		}
+		else
+		{
+			SetSelectedCell( itemID, column );
+		}
+		return;
+	}
+
+	if ( !m_bMultiselectEnabled )
+	{
+		SetSingleSelectedItem( itemID );
+		return;
+	}
+
+	if ( input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT) ) 
+	{
+		// check for multi-select
+		HandleMultiSelection( itemID, row, column );
+	}
+	else if ( input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL) )
+	{
+		// check for row-add select
+		HandleAddSelection( itemID, row, column );
+	}
+	else
+	{
+		// no CTRL or SHIFT keys
+		// reset the selection Start point
+//			if ( ( m_LastItemSelected != itemID ) || ( m_SelectedItems.Count() > 1 ) )
+		{
+			SetSingleSelectedItem( itemID );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void ListPanel::OnMousePressed( MouseCode code )
 {
 	if (code == MOUSE_LEFT || code == MOUSE_RIGHT)
 	{
-		// determine where we were pressed
-		int x, y, row, column;
-		input()->GetCursorPos(x, y);
-		GetCellAtPos(x, y, row, column);
-
-		if ( m_LastItemSelected < 0 && m_VisibleItems.Count() > 0 && row < m_VisibleItems.Count())
-		{	
-			// we don't have a selected item, choose the first one
-			m_LastItemSelected = 0;
-		}
-
-		if ( m_LastItemSelected != -1 )	// possible if there are no items
+		if ( m_VisibleItems.Count() > 0 )
 		{
-			int itemID = -1;
-			if (m_VisibleItems.IsValidIndex(row))
-			{
-				itemID = m_VisibleItems[row];
-			}
-			if ( code == MOUSE_RIGHT && m_SelectedItems.HasElement(itemID) )
-			{
-				// if we've right-clicked on a selection, don't change the selection
-	
-			}
-			else if (row >= 0 && row < m_VisibleItems.Count())	// make sure we're clicking on a real item
-			{
-				int iSelectedColumn = -1;
+			// determine where we were pressed
+			int x, y, row, column;
+			input()->GetCursorPos(x, y);
+			GetCellAtPos(x, y, row, column);
 
-				// if we're selecting individual cells, figure out the column
-				if ( m_bCanSelectIndividualCells )
-				{
-					// only do column-specific positioning on single row select
-					ScreenToLocal(x, y);
-
-					// walk the columns, see where we are
-					int i;
-					for ( i = 0; i < m_CurrentColumns.Count() ; i++ )
-					{
-						// see if we are in this cell
-						int cellX, cellY, w, t;
-						GetCellBounds(row, i, cellX, cellY, w, t);
-						if ( x >= cellX && x <= ( cellX + w ) )
-						{
-							iSelectedColumn = i;
-							break;
-						}
-					}
-				}
-
-				// check for multi-select
-				if ( input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT) ) 
-				{
-					// no mulitple selecting of individual cells
-					if ( m_bCanSelectIndividualCells )
-					{
-						if ( !m_SelectedItems.HasElement(itemID) )
-						{
-							ClearSelectedItems();
-							AddSelectedItem(itemID);
-							m_LastItemSelected = itemID;
-						}
-					}
-					else	// deal with 'multiple' row selection
-					{
-						// convert the last item selected to a row so we can multiply select by rows NOT items
-						int lastSelectedRow = m_VisibleItems.Find(m_LastItemSelected);
-						int startRow, endRow;
-						if ( row < lastSelectedRow )
-						{
-							startRow = row;
-							endRow = lastSelectedRow;
-						}
-						else
-						{
-							startRow = lastSelectedRow;
-							endRow = row;
-						}
-					
-						// clear the selection if neither control key was down - we are going to readd ALL selected items
-						// in case the user changed the 'direction' of the shift add
-						if ( !input()->IsKeyDown(KEY_LCONTROL) && !input()->IsKeyDown(KEY_RCONTROL) )
-						{
-							ClearSelectedItems();
-						}
-	
-						// add any items that we haven't added
-						for (int i = startRow; i <= endRow; i++)
-						{
-							// get the item indexes for these rows
-							int selectedItemID = m_VisibleItems[i];
-							if ( !m_SelectedItems.HasElement(selectedItemID) )
-							{
-								AddSelectedItem(selectedItemID);
-							}
-						}
-					}
-				}
-				// check for row-add select
-				else if ( input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL) )
-				{
-					// are we dealing with individual cell selection
-					if ( m_bCanSelectIndividualCells )
-					{
-						// if we're already in this row, check if the columns match up
-						if ( m_SelectedItems.HasElement(itemID) )
-						{
-							// we're ctrl selecting the same cell, clear it
-							if ( m_iSelectedColumn == iSelectedColumn )
-							{
-								ClearSelectedItems();
-							}
-						}
-						else
-						{
-							// new row, so it doesn't matter if the columns line up
-							ClearSelectedItems();
-							AddSelectedItem(itemID);
-						}
-					}
-					else 	// dealing with row selection
-					{
-						if (m_SelectedItems.HasElement(itemID))
-						{
-							// this row is already selected, remove
-							m_SelectedItems.FindAndRemove(itemID);
-						}
-						else
-						{
-							// add the row to the selection
-							AddSelectedItem(itemID);
-						}
-					}
-	
-					m_LastItemSelected = itemID;
-				}
-				else	// no CTRL or SHIFT keys
-				{
-					// reset the selection Start point
-					m_LastItemSelected = itemID;
-					SetSingleSelectedItem(itemID);
-				}
-	
-				// if we're selecting individual cells
-				if ( m_SelectedItems.Count() == 1 && m_bCanSelectIndividualCells )
-				{
-					m_iSelectedColumn = iSelectedColumn;
-					SetSelectedCell(itemID, m_iSelectedColumn);
-				}
-				else
-				{
-					Repaint();
-				}	
-			}
+			UpdateSelection( code, x, y, row, column );
 		}
+
 		// get the key focus
 		RequestFocus();
 	}
@@ -1950,14 +2165,14 @@ void ListPanel::OnMousePressed(MouseCode code)
 	// check for context menu open
 	if (code == MOUSE_RIGHT)
 	{
-		if (m_SelectedItems.Count() > 0)
+		if ( m_SelectedItems.Count() > 0 )
 		{
-			PostActionSignal(new KeyValues("OpenContextMenu", "itemID", m_SelectedItems[0]));
+			PostActionSignal( new KeyValues("OpenContextMenu", "itemID", m_SelectedItems[0] ));
 		}
 		else
 		{
 			// post it, but with the invalid row
-			PostActionSignal(new KeyValues("OpenContextMenu", "itemID", -1));
+			PostActionSignal( new KeyValues("OpenContextMenu", "itemID", -1 ));
 		}
 	}
 }
@@ -1967,6 +2182,13 @@ void ListPanel::OnMousePressed(MouseCode code)
 //-----------------------------------------------------------------------------
 void ListPanel::OnMouseWheeled(int delta)
 {
+	if (m_hEditModePanel.Get())
+	{
+		// ignore mouse wheel in edit mode, forward right up to parent
+		CallParentFunction(new KeyValues("MouseWheeled", "delta", delta));
+		return;
+	}
+
 	int val = m_vbar->GetValue();
 	val -= (delta * 3);
 	m_vbar->SetValue(val);
@@ -1984,7 +2206,7 @@ void ListPanel::OnMouseDoublePressed(MouseCode code)
 		OnMousePressed(code);
 
 		// post up an enter key being hit if anything was selected
-		if (GetSelectedItemsCount() > 0)
+		if (GetSelectedItemsCount() > 0 && !m_bIgnoreDoubleClick )
 		{
 			OnKeyCodeTyped(KEY_ENTER);
 		}
@@ -1996,83 +2218,93 @@ void ListPanel::OnMouseDoublePressed(MouseCode code)
 //-----------------------------------------------------------------------------
 void ListPanel::OnKeyCodeTyped(KeyCode code)
 {
-	if (m_VisibleItems.Count() == 0)
+	if (m_hEditModePanel.Get())
+	{
+		// ignore arrow keys in edit mode
+		// forward right up to parent so that tab focus change doesn't occur
+		CallParentFunction(new KeyValues("KeyCodeTyped", "code", code));
+		return;
+	}
+
+	int nTotalRows = m_VisibleItems.Count();
+	int nTotalColumns = m_CurrentColumns.Count();
+	if ( nTotalRows == 0 )
 		return;
 
 	// calculate info for adjusting scrolling
-	int startitem = GetStartItem();
-	float totalrows = (float) m_VisibleItems.Count();
-	int rowsperpage = (int) GetRowsPerPage();
+	int nStartItem = GetStartItem();
+	int nRowsPerPage = (int)GetRowsPerPage();
 
-	int selectedRow = 0;
-	if ( m_DataItems.IsValidIndex(m_LastItemSelected))
+	int nSelectedRow = 0;
+	if ( m_DataItems.IsValidIndex( m_LastItemSelected ) )
 	{
-		selectedRow = m_VisibleItems.Find(m_LastItemSelected);
+		nSelectedRow = m_VisibleItems.Find( m_LastItemSelected );
 	}
+ 	int nSelectedColumn = m_iSelectedColumn;
 
 	switch (code)
 	{
 	case KEY_HOME:
-		selectedRow = 0;
+		nSelectedRow = 0;
 		break;
 
 	case KEY_END:
-		selectedRow = m_VisibleItems.Count() - 1;
+		nSelectedRow = nTotalRows - 1;
 		break;
 
 	case KEY_PAGEUP:
-		if (selectedRow <= startitem)
+		if (nSelectedRow <= nStartItem)
 		{
 			// move up a page
-			selectedRow -= (rowsperpage - 1);
+			nSelectedRow -= (nRowsPerPage - 1);
 		}
 		else
 		{
 			// move to the top of the current page
-			selectedRow = startitem;
+			nSelectedRow = nStartItem;
 		}
 		break;
 
 	case KEY_PAGEDOWN:
-		if (selectedRow >= (startitem + rowsperpage-1))
+		if (nSelectedRow >= (nStartItem + nRowsPerPage-1))
 		{
 			// move down a page
-			selectedRow += (rowsperpage - 1);
+			nSelectedRow += (nRowsPerPage - 1);
 		}
 		else
 		{
 			// move to the bottom of the current page
-			selectedRow = startitem + (rowsperpage - 1);
+			nSelectedRow = nStartItem + (nRowsPerPage - 1);
 		}
 		break;
 
 	case KEY_UP:
-		selectedRow -= 1;
+		nSelectedRow -= 1;
 		break;
 
 	case KEY_DOWN:
-		selectedRow += 1;
+		nSelectedRow += 1;
 		break;
 
 	case KEY_LEFT:
-		if (m_bCanSelectIndividualCells && GetSelectedItemsCount() == 1 && m_iSelectedColumn >= 0)
+		if (m_bCanSelectIndividualCells && (GetSelectedItemsCount() == 1) && (nSelectedColumn >= 0) )
 		{
-			m_iSelectedColumn--;
-			if (m_iSelectedColumn < 0)
+			nSelectedColumn--;
+			if (nSelectedColumn < 0)
 			{
-				m_iSelectedColumn = 0;
+				nSelectedColumn = 0;
 			}
 			break;
 		}
 		// fall through
 
 	case KEY_RIGHT:
-		if (m_bCanSelectIndividualCells && GetSelectedItemsCount() == 1 && m_iSelectedColumn >= 0)
+		if (m_bCanSelectIndividualCells && (GetSelectedItemsCount() == 1) && (nSelectedColumn >= 0) )
 		{
-			m_iSelectedColumn++;
-			if (m_iSelectedColumn >= m_CurrentColumns.Count())
+			nSelectedColumn++;
+			if (nSelectedColumn >= nTotalColumns)
 			{
-				m_iSelectedColumn = m_CurrentColumns.Count() - 1;
+				nSelectedColumn = nTotalColumns - 1;
 			}
 			break;
 		}
@@ -2085,33 +2317,36 @@ void ListPanel::OnKeyCodeTyped(KeyCode code)
 	};
 
 	// make sure newly selected item is a valid range
-	selectedRow = clamp(selectedRow, 0, m_VisibleItems.Count() - 1);
+	nSelectedRow = clamp(nSelectedRow, 0, nTotalRows - 1);
 
-	m_LastItemSelected = m_VisibleItems[selectedRow];
+	int row = m_VisibleItems[ nSelectedRow ];
 
-	// make it so only one line is selected now
-	SetSingleSelectedItem(m_LastItemSelected);
+	// This will select the cell if in single select mode, or the row in multiselect mode
+	if ( ( row != m_LastItemSelected ) || ( nSelectedColumn != m_iSelectedColumn ) || ( m_SelectedItems.Count() > 1 ) )
+	{
+		SetSelectedCell( row, nSelectedColumn );
+	}
 
 	// move the newly selected item to within the visible range
-	if ( rowsperpage < totalrows )
+	if ( nRowsPerPage < nTotalRows )
 	{
-		int startitem = m_vbar->GetValue();
-		if ( selectedRow < startitem )
+		int nStartItem = m_vbar->GetValue();
+		if ( nSelectedRow < nStartItem )
 		{
 			// move the list back to match
-			m_vbar->SetValue(selectedRow);
+			m_vbar->SetValue( nSelectedRow );
 		}
-		else if ( selectedRow >= startitem + rowsperpage )
+		else if ( nSelectedRow >= nStartItem + nRowsPerPage )
 		{
 			// move list forward to match
-			m_vbar->SetValue(selectedRow - rowsperpage + 1);
+			m_vbar->SetValue( nSelectedRow - nRowsPerPage + 1);
 		}
 	}
 
 	// redraw
 	InvalidateLayout();
-	Repaint();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2495,6 +2730,20 @@ void ListPanel::SetItemVisible(int itemID, bool state)
 	}
 }
 
+
+//-----------------------------------------------------------------------------
+// Is the item visible?
+//-----------------------------------------------------------------------------
+bool ListPanel::IsItemVisible( int itemID )
+{
+	if ( !m_DataItems.IsValidIndex(itemID) )
+		return false;
+
+	FastSortListPanelItem *data = (FastSortListPanelItem*) m_DataItems[itemID];
+	return data->visible;
+}
+
+	
 //-----------------------------------------------------------------------------
 // Purpose: sets whether the item is disabled or not (effects item color)
 //-----------------------------------------------------------------------------
@@ -2534,6 +2783,20 @@ int ListPanel::GetStartItem()
 void ListPanel::SetSelectIndividualCells(bool state)
 {
 	m_bCanSelectIndividualCells = state;
+}
+
+
+//-----------------------------------------------------------------------------
+// whether or not multiple cells/rows can be selected
+//-----------------------------------------------------------------------------
+void ListPanel::SetMultiselectEnabled( bool bState )
+{
+	m_bMultiselectEnabled = bState;
+}
+
+bool ListPanel::IsMultiselectEnabled() const
+{
+	return m_bMultiselectEnabled;
 }
 
 //-----------------------------------------------------------------------------
@@ -2600,7 +2863,7 @@ void ListPanel::ResizeColumnToContents(int column)
 
 	// start with the size of the column text
 	int wide = 0, minRequiredWidth = 0, tall = 0;
-	col.m_pHeader->GetContentSize(minRequiredWidth, tall);
+	col.m_pHeader->GetContentSize( minRequiredWidth, tall );
 
 	// iterate every item
 	for (int i = 0; i < m_VisibleItems.Count(); i++)
@@ -2618,11 +2881,14 @@ void ListPanel::ResizeColumnToContents(int column)
 
 		m_pTextImage->GetContentSize(wide, tall);
 
-		if (wide > minRequiredWidth)
+		if ( wide > minRequiredWidth )
 		{
-			minRequiredWidth = wide + 2;
+			minRequiredWidth = wide;
 		}
 	}
+
+	// Introduce a slight buffer between columns
+	minRequiredWidth += 4;
 
 	// call the resize
 	col.m_pHeader->GetSize(wide, tall);
@@ -2648,7 +2914,7 @@ void ListPanel::OnToggleColumnVisible(int col)
 void ListPanel::ApplyUserConfigSettings(KeyValues *userConfig)
 {
 	// read which columns are hidden
-	for ( int i = 0 ; i < m_CurrentColumns.Count() ; i++ )
+	for ( int i = 0; i < m_CurrentColumns.Count(); i++ )
 	{
 		char name[64];
 		_snprintf(name, sizeof(name), "%d_hidden", i);
@@ -2661,6 +2927,14 @@ void ListPanel::ApplyUserConfigSettings(KeyValues *userConfig)
 		else if (hidden == 1)
 		{
 			SetColumnVisible(i, false);
+		}
+
+		_snprintf(name, sizeof(name), "%d_width", i);
+		int nWidth = userConfig->GetInt( name, -1 );
+		if ( nWidth >= 0 )
+		{
+			column_t &column = m_ColumnsData[m_CurrentColumns[i]];
+			column.m_pHeader->SetWide( nWidth );
 		}
 	}
 }
@@ -2678,6 +2952,9 @@ void ListPanel::GetUserConfigSettings(KeyValues *userConfig)
 		char name[64];
 		_snprintf(name, sizeof(name), "%d_hidden", i);
 		userConfig->SetInt(name, column.m_bHidden ? 1 : 0);
+
+		_snprintf(name, sizeof(name), "%d_width", i);
+		userConfig->SetInt( name, column.m_pHeader->GetWide() );
 	}
 }
 
@@ -2695,4 +2972,45 @@ bool ListPanel::HasUserConfigSettings()
 void ListPanel::SetAllowUserModificationOfColumns(bool allowed)
 {
 	m_bAllowUserAddDeleteColumns = allowed;
+}
+
+void ListPanel::SetIgnoreDoubleClick( bool state )
+{
+	m_bIgnoreDoubleClick = state;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: set up a field for editing
+//-----------------------------------------------------------------------------
+void ListPanel::EnterEditMode(int itemID, int column, vgui::Panel *editPanel)
+{
+	m_hEditModePanel = editPanel;
+	m_iEditModeItemID = itemID;
+	m_iEditModeColumn = column;
+	editPanel->SetParent(this);
+	editPanel->SetVisible(true);
+	editPanel->RequestFocus();
+	editPanel->MoveToFront();
+	InvalidateLayout();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: leaves editing mode
+//-----------------------------------------------------------------------------
+void ListPanel::LeaveEditMode()
+{
+	if (m_hEditModePanel.Get())
+	{
+		m_hEditModePanel->SetVisible(false);
+		m_hEditModePanel->SetParent((Panel *)NULL);
+		m_hEditModePanel = NULL;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: returns true if we are currently in inline editing mode
+//-----------------------------------------------------------------------------
+bool ListPanel::IsInEditMode()
+{
+	return (m_hEditModePanel.Get() != NULL);
 }

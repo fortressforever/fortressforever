@@ -27,6 +27,10 @@ public:
 	virtual void Precache( void );
 	virtual void Spawn( void );
 	virtual void Activate( void );
+	virtual void OnRestore( void );
+
+	virtual float GetAutoAimRadius() { return m_fAutoaimRadius; }
+	virtual bool ShouldAttractAutoAim( CBaseEntity *pAimingEnt ) { return ((GetFlags() & FL_AIMTARGET) != 0); }
 
 	Class_T Classify( void );
 	void	Event_Killed( const CTakeDamageInfo &info );
@@ -45,6 +49,7 @@ public:
 	void	SetPainPartner( CBaseEntity *pOther );
 	void	InputTargeted( inputdata_t &inputdata );
 	void	InputReleased( inputdata_t &inputdata );
+	virtual bool CanBecomeServerRagdoll( void ) { return false;	}
 
 
 
@@ -54,6 +59,7 @@ protected:
 	COutputEvent	m_OnTargeted;
 	COutputEvent	m_OnReleased;
 	bool			m_bPerfectAccuracy;	// Entities that shoot at me should be perfectly accurate
+	float			m_fAutoaimRadius;	// How much to influence player's autoaim.
 
 	DECLARE_DATADESC();
 };
@@ -65,6 +71,7 @@ int FindBullseyesInCone( CBaseEntity **pList, int listMax, const Vector &coneOri
 #define	SF_BULLSEYE_ENEMYDAMAGEONLY	(1 << 18)
 #define	SF_BULLSEYE_BLEED			(1 << 19)
 #define SF_BULLSEYE_PERFECTACC		(1 << 20)
+#define SF_BULLSEYE_VPHYSICSSHADOW  (1 << 21)
 
 
 #endif	// NPC_BULLSEYE_H

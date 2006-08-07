@@ -34,5 +34,7 @@
 #define IN_WEAPON1		(1 << 20)	// weapon defines these bits
 #define IN_WEAPON2		(1 << 21)	// weapon defines these bits
 #define IN_BULLRUSH		(1 << 22)
+#define IN_GRENADE1		(1 << 23)	// grenade 1
+#define IN_GRENADE2		(1 << 24)	// grenade 2
 
 #endif // IN_BUTTONS_H

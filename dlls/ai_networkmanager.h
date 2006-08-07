@@ -56,6 +56,7 @@ public:
 	static void		DeleteAllAINetworks();
 
 	void			FixupHints();
+	void			MarkDontSaveGraph();
 
 public:
 	CAI_NetworkEditTools *	GetEditOps() { return m_pEditOps; }
@@ -76,11 +77,12 @@ private:
 
 
 	bool m_fInitalized;
+	bool	m_bDontSaveGraph;
 };
 
 //-----------------------------------------------------------------------------
 
-class CAI_NetworkBuildHelper : public CLogicalEntity
+abstract_class CAI_NetworkBuildHelper : public CLogicalEntity
 {
 	DECLARE_CLASS( CAI_NetworkBuildHelper, CLogicalEntity );
 

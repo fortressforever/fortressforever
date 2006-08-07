@@ -47,45 +47,56 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 
 	m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
 	SetPaintBackgroundEnabled( false );
+
+    SetSize( ScreenWidth(), ScreenHeight() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHudCrosshair::ShouldDraw( void )
+{
+	bool bNeedsDraw;
+
+	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+	// draw a crosshair only if alive or spectating in eye
+	if ( IsXbox() )
+	{
+		bNeedsDraw = m_pCrosshair && 
+			!engine->IsDrawingLoadingImage() &&
+			!engine->IsPaused() && 
+			!pPlayer->IsSuitEquipped() &&
+			g_pClientMode->ShouldDrawCrosshair() &&
+			!( pPlayer->GetFlags() & FL_FROZEN ) &&
+			( pPlayer->entindex() == render->GetViewEntity() ) &&
+			( pPlayer->IsAlive() ||	( pPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) || ( cl_observercrosshair.GetBool() && pPlayer->GetObserverMode() == OBS_MODE_ROAMING ) );
+	}
+	else
+	{
+		bNeedsDraw = m_pCrosshair && 
+			crosshair.GetInt() &&
+			!engine->IsDrawingLoadingImage() &&
+			!engine->IsPaused() && 
+			g_pClientMode->ShouldDrawCrosshair() &&
+			!( pPlayer->GetFlags() & FL_FROZEN ) &&
+			( pPlayer->entindex() == render->GetViewEntity() ) &&
+			( pPlayer->IsAlive() ||	( pPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) || ( cl_observercrosshair.GetBool() && pPlayer->GetObserverMode() == OBS_MODE_ROAMING ) );
+	}
+
+	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
 void CHudCrosshair::Paint( void )
 {
-	if ( !crosshair.GetInt() )
-		return;
-
-	if ( !g_pClientMode->ShouldDrawCrosshair() )
-		return;
-
 	if ( !m_pCrosshair )
 		return;
 
-	if ( engine->IsDrawingLoadingImage() || engine->IsPaused() )
-		return;
-	
-	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
-
-	if ( !pPlayer )
-		return;
-
-	// draw a crosshair only if alive or spectating in eye
-	bool shouldDraw = false;
-	if ( pPlayer->IsAlive() )
-		shouldDraw = true;
-
-	if ( pPlayer->GetObserverMode() == OBS_MODE_IN_EYE )
-		shouldDraw = true;
-
-	if ( pPlayer->GetObserverMode() == OBS_MODE_ROAMING && cl_observercrosshair.GetBool() )
-		shouldDraw = true;
-
-	if ( !shouldDraw )
-		return;
-
-	if ( pPlayer->GetFlags() & FL_FROZEN )
-		return;
-
-	if ( pPlayer->entindex() != render->GetViewEntity() )
+	if ( !IsCurrentViewAccessAllowed() )
 		return;
 
 	m_curViewAngles = CurrentViewAngles();
@@ -98,7 +109,7 @@ void CHudCrosshair::Paint( void )
 	// MattB - m_vecCrossHairOffsetAngle is the autoaim angle.
 	// if we're not using autoaim, just draw in the middle of the 
 	// screen
-	if( m_vecCrossHairOffsetAngle != vec3_angle )
+	if ( m_vecCrossHairOffsetAngle != vec3_angle )
 	{
 		QAngle angles;
 		Vector forward;

@@ -45,6 +45,7 @@ public:
 
 private:
 	void InputRecharge( inputdata_t &inputdata );
+	
 	float MaxJuice() const;
 	void UpdateJuice( int newJuice );
 
@@ -143,7 +144,7 @@ int CRecharge::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr),"Charge left: %i", m_iJuice );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -344,8 +345,11 @@ public:
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual int	ObjectCaps( void ) { return (BaseClass::ObjectCaps() | m_iCaps ); }
 
+	void SetInitialCharge( void );
+
 private:
 	void InputRecharge( inputdata_t &inputdata );
+	void InputSetCharge( inputdata_t &inputdata );
 	float MaxJuice() const;
 	void UpdateJuice( int newJuice );
 	void Precache( void );
@@ -360,6 +364,7 @@ private:
 	
 	int		m_nState;
 	int		m_iCaps;
+	int		m_iMaxJuice;
 	
 	COutputFloat m_OutRemainingCharge;
 	COutputEvent m_OnHalfEmpty;
@@ -380,6 +385,7 @@ BEGIN_DATADESC( CNewRecharge )
 	DEFINE_FIELD( m_flSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_nState, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iCaps, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iMaxJuice, FIELD_INTEGER ),
 
 	// Function Pointers
 	DEFINE_FUNCTION( Off ),
@@ -393,6 +399,7 @@ BEGIN_DATADESC( CNewRecharge )
 	DEFINE_FIELD( m_flJuice, FIELD_FLOAT ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Recharge", InputRecharge ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetCharge", InputSetCharge ),
 	
 END_DATADESC()
 
@@ -437,6 +444,24 @@ void CNewRecharge::Precache( void )
 
 }
 
+void CNewRecharge::SetInitialCharge( void )
+{
+	if ( HasSpawnFlags( SF_KLEINER_RECHARGER ) )
+	{
+		// The charger in Kleiner's lab.
+		m_iMaxJuice =  25.0f;
+		return;
+	}
+
+	if ( HasSpawnFlags( SF_CITADEL_RECHARGER ) )
+	{
+		m_iMaxJuice =  sk_suitcharger_citadel.GetFloat();
+		return;
+	}
+
+	m_iMaxJuice =  sk_suitcharger.GetFloat();
+}
+
 void CNewRecharge::Spawn()
 {
 	Precache( );
@@ -449,6 +474,8 @@ void CNewRecharge::Spawn()
 	AddEffects( EF_NOSHADOW );
 
 	ResetSequence( LookupSequence( "idle" ) );
+
+	SetInitialCharge();
 
 	UpdateJuice( MaxJuice() );
 
@@ -478,7 +505,7 @@ int CNewRecharge::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr),"Charge left: %i", m_iJuice );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -488,9 +515,10 @@ void CNewRecharge::StudioFrameAdvance( void )
 {
 	m_flPlaybackRate = 0;
 
-	float flMaxJuice = MaxJuice();
-	
-	SetCycle( 1.0f - (float)( m_flJuice / flMaxJuice ) );
+	float flMaxJuice = MaxJuice() + 0.1f;
+	float flNewJuice = 1.0f - (float)( m_flJuice / flMaxJuice );
+
+	SetCycle( flNewJuice );
 //	Msg( "Cycle: %f - Juice: %d - m_flJuice :%f - Interval: %f\n", (float)GetCycle(), (int)m_iJuice, (float)m_flJuice, GetAnimTimeInterval() );
 
 	if ( !m_flPrevAnimTime )
@@ -511,18 +539,7 @@ void CNewRecharge::StudioFrameAdvance( void )
 //-----------------------------------------------------------------------------
 float CNewRecharge::MaxJuice()	const
 {
-	if ( HasSpawnFlags( SF_KLEINER_RECHARGER ) )
-	{
-		// The charger in Kleiner's lab.
-		return 25.0f;
-	}
-
-	if ( HasSpawnFlags( SF_CITADEL_RECHARGER ) )
-	{
-		return sk_suitcharger_citadel.GetFloat();
-	}
-	
-	return sk_suitcharger.GetFloat();
+	return m_iMaxJuice;
 }
 
 
@@ -558,6 +575,16 @@ void CNewRecharge::UpdateJuice( int newJuice )
 void CNewRecharge::InputRecharge( inputdata_t &inputdata )
 {
 	Recharge();
+}
+
+void CNewRecharge::InputSetCharge( inputdata_t &inputdata )
+{
+	ResetSequence( LookupSequence( "idle" ) );
+
+	int iJuice = inputdata.value.Int();
+
+	m_flJuice = m_iMaxJuice = m_iJuice = iJuice;
+	StudioFrameAdvance();
 }
 
 void CNewRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )

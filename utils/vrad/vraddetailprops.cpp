@@ -18,7 +18,8 @@
 #include "studio.h"
 #include "pacifier.h"
 #include "vraddetailprops.h"
-
+#include "mathlib/halton.h"
+#include "messbuf.h"
 
 bool LoadStudioModel( char const* pModelName, CUtlBuffer& buf );
 
@@ -74,8 +75,9 @@ void DumpRayToGlView( Ray_t const& ray, float dist, Vector* pColor, const char *
 //-----------------------------------------------------------------------------
 // This puppy is used to construct the game lumps
 //-----------------------------------------------------------------------------
-static CUtlVector<DetailPropLightstylesLump_t>	s_DetailPropLightStyleLump;
-
+static CUtlVector<DetailPropLightstylesLump_t>	s_DetailPropLightStyleLumpLDR;
+static CUtlVector<DetailPropLightstylesLump_t>	s_DetailPropLightStyleLumpHDR;
+static CUtlVector<DetailPropLightstylesLump_t> *s_pDetailPropLightStyleLump = &s_DetailPropLightStyleLumpLDR;
 
 //-----------------------------------------------------------------------------
 // An amount to add to each model to get to the model center
@@ -83,12 +85,22 @@ static CUtlVector<DetailPropLightstylesLump_t>	s_DetailPropLightStyleLump;
 CUtlVector<Vector> g_ModelCenterOffset;
 CUtlVector<Vector> g_SpriteCenterOffset;
 
+void VRadDetailProps_SetHDRMode( bool bHDR )
+{
+	if( bHDR )
+	{
+		s_pDetailPropLightStyleLump = &s_DetailPropLightStyleLumpHDR;
+	}
+	else
+	{
+		s_pDetailPropLightStyleLump = &s_DetailPropLightStyleLumpLDR;
+	}
+}
 
 //-----------------------------------------------------------------------------
-// Finds ambient lights
+// Finds ambient sky lights
 //-----------------------------------------------------------------------------
-
-static directlight_t* FindAmbientLight()
+static directlight_t* FindAmbientSkyLight()
 {
 	static directlight_t *s_pCachedSkylight = NULL;
 
@@ -161,6 +173,7 @@ static void ComputeMaxDirectLighting( DetailObjectLump_t& prop, Vector* maxcolor
 			s_Warned = true;
 		}
 
+		// fill with debug color
 		for ( int i = 0; i < MAX_LIGHTSTYLES; ++i)
 		{
 			maxcolor[i].Init(1,0,0);
@@ -182,7 +195,7 @@ static void ComputeMaxDirectLighting( DetailObjectLump_t& prop, Vector* maxcolor
 			continue;
 
 		// is this lights cluster visible?
-		if ( (dl->pvs[ (cluster)>>3] & (1<< (cluster & 7)) ) )
+		if ( PVSCheck( dl->pvs, cluster ) )
 		{
 			lights.AddToTail(dl);
 			VectorSubtract( dl->light.origin, origin, delta );
@@ -323,7 +336,7 @@ static void ComputeLightmapColorDisplacement(
 	if ( SurfHasBumpedLightmaps( pFace ) )
 		offset *= ( NUM_BUMP_VECTS + 1 );
 
-	ColorRGBExp32* pLightmap = (ColorRGBExp32*)&dlightdata[pFace->lightofs];
+	ColorRGBExp32* pLightmap = (ColorRGBExp32*)&(*pdlightdata)[pFace->lightofs];
 	pLightmap += dt * smax + ds;
 	for (int maps = 0 ; maps < MAXLIGHTMAPS && pFace->styles[maps] != 255 ; ++maps)
 	{
@@ -362,7 +375,7 @@ public:
 		VectorMA( ray.m_Start, f, ray.m_Delta, pt );
 
 		dnode_t* pNode = &dnodes[node];
-		dface_t* pFace = &dfaces[pNode->firstface];
+		dface_t* pFace = &g_pFaces[pNode->firstface];
 		for (int i=0 ; i < pNode->numfaces ; ++i, ++pFace)
 		{
 			// Don't take into account faces that are int a leaf
@@ -409,7 +422,7 @@ public:
 		{
 			Assert( pLeaf->firstleafface + i < numleaffaces );
 			Assert( dleaffaces[pLeaf->firstleafface + i] < numfaces );
-			dface_t* pFace = &dfaces[dleaffaces[pLeaf->firstleafface + i]];
+			dface_t* pFace = &g_pFaces[dleaffaces[pLeaf->firstleafface + i]];
 
 			// Don't test displacement faces; we need to check another list
 			if ( pFace->dispinfo != -1 )
@@ -531,9 +544,8 @@ public:
 DispTested_t CLightSurface::s_DispTested;
 
 //-----------------------------------------------------------------------------
-// Computes lighting for a single detal prop
+// Computes ambient lighting along a specified ray.
 //-----------------------------------------------------------------------------
-
 void CalcRayAmbientLighting(
 	const Vector &vStart,
 	const Vector &vEnd,
@@ -543,7 +555,7 @@ void CalcRayAmbientLighting(
 	Ray_t ray;
 	ray.Init( vStart, vEnd, vec3_origin, vec3_origin );
 
-	directlight_t *pSkyLight = FindAmbientLight();
+	directlight_t *pSkyLight = FindAmbientSkyLight();
 
 	colorSum.Init();
 
@@ -562,8 +574,10 @@ void CalcRayAmbientLighting(
 	}
 }
 
-
-void ComputeAmbientLightingAtPoint( 
+//-----------------------------------------------------------------------------
+// Compute ambient lighting component at specified position.
+//-----------------------------------------------------------------------------
+static void ComputeAmbientLightingAtPoint( 
 	const Vector &origin, 
 	Vector radcolor[NUMVERTEXNORMALS],
 	Vector color[MAX_LIGHTSTYLES] )
@@ -573,7 +587,6 @@ void ComputeAmbientLightingAtPoint(
 	// be important
 
 	// sample world by casting N rays distributed across a sphere
-	;
 	Vector upend;
 
 	int j;
@@ -599,6 +612,94 @@ void ComputeAmbientLightingAtPoint(
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Trace hemispherical rays from a vertex, accumulating indirect
+// sources at each ray termination.
+//-----------------------------------------------------------------------------
+void ComputeIndirectLightingAtPoint( Vector &position, Vector &normal, Vector &outColor,
+									 int iThread, bool force_fast )
+{
+	Ray_t			ray;
+	CLightSurface	surfEnum;
+
+	outColor.Init();
+
+	int nSamples = NUMVERTEXNORMALS;
+	if ( do_fast || force_fast )
+		nSamples /= 4;
+	else if ( g_dofinal )
+		nSamples *= 16;
+
+	float totalDot = 0;
+	DirectionalSampler_t sampler;
+	for (int j = 0; j < nSamples; j++)
+	{
+		Vector samplingNormal = sampler.NextValue();
+		float dot = DotProduct( normal, samplingNormal );
+		if ( dot <= EQUAL_EPSILON )
+		{
+			// reject angles behind our plane
+			continue;
+		}
+
+		totalDot += dot;
+
+		// trace to determine surface
+		Vector vEnd;
+		VectorScale( samplingNormal, MAX_TRACE_LENGTH, vEnd );
+		VectorAdd( position, vEnd, vEnd );
+
+		ray.Init( position, vEnd, vec3_origin, vec3_origin );
+		if ( !surfEnum.FindIntersection( ray ) )
+			continue;
+
+		// get color from surface lightmap
+		texinfo_t* pTex = &texinfo[surfEnum.m_pSurface->texinfo];
+		if ( !pTex || pTex->flags & SURF_SKY )
+		{
+			// ignore contribution from sky
+			// sky ambient already accounted for during direct pass
+			continue;
+		}
+
+		if ( surfEnum.m_pSurface->styles[0] == 255 )
+		{
+			// no light affcts this face
+			continue;
+		}
+
+
+		Vector lightmapColor;
+		if ( surfEnum.m_pSurface->dispinfo == -1 )
+		{
+			ColorRGBExp32* pAvgLightmapColor = dface_AvgLightColor( surfEnum.m_pSurface, 0 );
+			ColorRGBExp32ToVector( *pAvgLightmapColor, lightmapColor );
+		}
+		else
+		{
+			// get color from displacement
+			int smax = ( surfEnum.m_pSurface->m_LightmapTextureSizeInLuxels[0] ) + 1;
+			int tmax = ( surfEnum.m_pSurface->m_LightmapTextureSizeInLuxels[1] ) + 1;
+
+			// luxelcoord is in the space of the accumulated lightmap page; we need to convert
+			// it to be in the space of the surface
+			int ds = clamp( (int)surfEnum.m_LuxelCoord.x, 0, smax-1 );
+			int dt = clamp( (int)surfEnum.m_LuxelCoord.y, 0, tmax-1 );
+
+			ColorRGBExp32* pLightmap = (ColorRGBExp32*)&(*pdlightdata)[surfEnum.m_pSurface->lightofs];
+			pLightmap += dt * smax + ds;
+			ColorRGBExp32ToVector( *pLightmap, lightmapColor );
+		}
+
+		VectorMultiply( lightmapColor, dtexdata[pTex->texdata].reflectivity, lightmapColor );
+		VectorAdd( outColor, lightmapColor, outColor );
+	}
+
+	if ( totalDot )
+	{
+		VectorScale( outColor, 1.0f/totalDot, outColor );
+	}
+}
 
 static void ComputeAmbientLighting( DetailObjectLump_t& prop, Vector color[MAX_LIGHTSTYLES] )
 {
@@ -614,6 +715,7 @@ static void ComputeAmbientLighting( DetailObjectLump_t& prop, Vector color[MAX_L
 			s_Warned = true;
 		}
 
+		// fill with debug color
 		for ( int i = 0; i < MAX_LIGHTSTYLES; ++i)
 		{
 			color[i].Init(1,0,0);
@@ -642,7 +744,7 @@ static void ComputeLighting( DetailObjectLump_t& prop, int iThread )
 	// Get the max influence of all direct lights
 	ComputeMaxDirectLighting( prop, directColor, iThread );
 
-	// Get the ambient lighting + lightstyles
+	// Get the ambient lighting + lightstyles	  
 	ComputeAmbientLighting( prop, ambColor );
 
 	// Base lighting
@@ -651,7 +753,8 @@ static void ComputeLighting( DetailObjectLump_t& prop, int iThread )
 	VectorToColorRGBExp32( totalColor, prop.m_Lighting );
 
 	bool hasLightstyles = false;
-
+	prop.m_LightStyleCount = 0;
+	
 	// lightstyles
 	for (int i = 1; i < MAX_LIGHTSTYLES; ++i )
 	{
@@ -663,14 +766,13 @@ static void ComputeLighting( DetailObjectLump_t& prop, int iThread )
 		{
 			if (!hasLightstyles)
 			{
-				prop.m_LightStyles = s_DetailPropLightStyleLump.Size();
-				prop.m_LightStyleCount = 0;
+				prop.m_LightStyles = s_pDetailPropLightStyleLump->Size();
 				hasLightstyles = true;
 			}
 
-			int j = s_DetailPropLightStyleLump.AddToTail();
-			VectorToColorRGBExp32( totalColor, s_DetailPropLightStyleLump[j].m_Lighting );
-			s_DetailPropLightStyleLump[j].m_Style = i;
+			int j = s_pDetailPropLightStyleLump->AddToTail();
+			VectorToColorRGBExp32( totalColor, (*s_pDetailPropLightStyleLump)[j].m_Lighting );
+			(*s_pDetailPropLightStyleLump)[j].m_Style = i;
 			++prop.m_LightStyleCount;
 		}
 	}
@@ -735,7 +837,7 @@ static int UnserializeDetailProps( DetailObjectLump_t*& pProps )
 		return 0;
 
 	// Unserialize
-	CUtlBuffer buf( GetGameLump(handle), GameLumpSize( handle ) );
+	CUtlBuffer buf( GetGameLump(handle), GameLumpSize( handle ), CUtlBuffer::READ_ONLY );
 
 	UnserializeModelDict( buf );
 	UnserializeSpriteDict( buf );
@@ -755,24 +857,98 @@ static int UnserializeDetailProps( DetailObjectLump_t*& pProps )
 //-----------------------------------------------------------------------------
 // Writes the detail lighting lump
 //-----------------------------------------------------------------------------
-static void WriteDetailLightingLump()
+static void WriteDetailLightingLump( int lumpID, int lumpVersion, CUtlVector<DetailPropLightstylesLump_t> &lumpData )
 {
-	GameLumpHandle_t handle = GetGameLumpHandle(GAMELUMP_DETAIL_PROP_LIGHTING);
+	GameLumpHandle_t handle = GetGameLumpHandle(lumpID);
 	if (handle != InvalidGameLump())
 		DestroyGameLump(handle);
-	int lightsize = s_DetailPropLightStyleLump.Size() * sizeof(DetailPropLightstylesLump_t);
+	int lightsize = lumpData.Size() * sizeof(DetailPropLightstylesLump_t);
 	int lumpsize = lightsize + sizeof(int);
 
-	handle = CreateGameLump( GAMELUMP_DETAIL_PROP_LIGHTING, lumpsize, 0, GAMELUMP_DETAIL_PROP_LIGHTING_VERSION );
+	handle = CreateGameLump( lumpID, lumpsize, 0, lumpVersion );
 
 	// Serialize the data
 	CUtlBuffer buf( GetGameLump(handle), lumpsize );
-	buf.PutInt( s_DetailPropLightStyleLump.Size() );
+	buf.PutInt( lumpData.Size() );
 	if (lightsize)
-		buf.Put( s_DetailPropLightStyleLump.Base(), lightsize );
+		buf.Put( lumpData.Base(), lightsize );
+}
+
+static void WriteDetailLightingLumps( void )
+{
+	WriteDetailLightingLump( GAMELUMP_DETAIL_PROP_LIGHTING, GAMELUMP_DETAIL_PROP_LIGHTING_VERSION, s_DetailPropLightStyleLumpLDR );
+	WriteDetailLightingLump( GAMELUMP_DETAIL_PROP_LIGHTING_HDR, GAMELUMP_DETAIL_PROP_LIGHTING_HDR_VERSION, s_DetailPropLightStyleLumpHDR );
+}
+
+// need to do this so that if we are building HDR data, the LDR data is intact, and vice versa.s
+void UnserializeDetailPropLighting( int lumpID, int lumpVersion, CUtlVector<DetailPropLightstylesLump_t> &lumpData )
+{
+	GameLumpHandle_t handle = GetGameLumpHandle( lumpID );
+
+	if( handle == InvalidGameLump() )
+	{
+		return;
+	}
+
+	if (GetGameLumpVersion(handle) != lumpVersion)
+		return;
+
+	// Unserialize
+	CUtlBuffer buf( GetGameLump(handle), GameLumpSize( handle ), CUtlBuffer::READ_ONLY );
+
+	int count = buf.GetInt();
+	if( !count )
+	{
+		return;
+	}
+	lumpData.SetCount( count );
+	int lightsize = lumpData.Size() * sizeof(DetailPropLightstylesLump_t);
+	buf.Get( lumpData.Base(), lightsize );
+}
+
+DetailObjectLump_t *g_pMPIDetailProps = NULL;
+
+void VMPI_ProcessDetailPropWU( int iThread, int iWorkUnit, MessageBuffer *pBuf )
+{
+	CUtlVector<DetailPropLightstylesLump_t> *pDetailPropLump = s_pDetailPropLightStyleLump;
+
+	DetailObjectLump_t& prop = g_pMPIDetailProps[iWorkUnit];
+	ComputeLighting( prop, iThread );
+
+	// Send the results back...	
+	pBuf->write( &prop.m_Lighting, sizeof( prop.m_Lighting ) );
+	pBuf->write( &prop.m_LightStyleCount, sizeof( prop.m_LightStyleCount ) );
+	pBuf->write( &prop.m_LightStyles, sizeof( prop.m_LightStyles ) );
+	
+	for ( int i=0; i < prop.m_LightStyleCount; i++ )
+	{
+		DetailPropLightstylesLump_t *l = &pDetailPropLump->Element( i + prop.m_LightStyles );
+		pBuf->write( &l->m_Lighting, sizeof( l->m_Lighting ) );
+		pBuf->write( &l->m_Style, sizeof( l->m_Style ) );
+	}
 }
 
 
+void VMPI_ReceiveDetailPropWU( int iWorkUnit, MessageBuffer *pBuf, int iWorker )
+{
+	CUtlVector<DetailPropLightstylesLump_t> *pDetailPropLump = s_pDetailPropLightStyleLump;
+
+	DetailObjectLump_t& prop = g_pMPIDetailProps[iWorkUnit];
+
+	pBuf->read( &prop.m_Lighting, sizeof( prop.m_Lighting ) );
+	pBuf->read( &prop.m_LightStyleCount, sizeof( prop.m_LightStyleCount ) );
+	pBuf->read( &prop.m_LightStyles, sizeof( prop.m_LightStyles ) );
+	
+	pDetailPropLump->EnsureCount( prop.m_LightStyles + prop.m_LightStyleCount );
+	
+	for ( int i=0; i < prop.m_LightStyleCount; i++ )
+	{
+		DetailPropLightstylesLump_t *l = &pDetailPropLump->Element( i + prop.m_LightStyles );
+		pBuf->read( &l->m_Lighting, sizeof( l->m_Lighting ) );
+		pBuf->read( &l->m_Style, sizeof( l->m_Style ) );
+	}
+}
+	
 //-----------------------------------------------------------------------------
 // Computes lighting for the detail props
 //-----------------------------------------------------------------------------
@@ -783,6 +959,16 @@ void ComputeDetailPropLighting( int iThread )
 	int count = UnserializeDetailProps( pProps );
 	if (!count)
 		return;
+
+	// unserialize the lump that we aren't computing.
+	if( g_bHDR )
+	{
+		UnserializeDetailPropLighting( GAMELUMP_DETAIL_PROP_LIGHTING, GAMELUMP_DETAIL_PROP_LIGHTING_VERSION, s_DetailPropLightStyleLumpLDR );
+	}
+	else
+	{
+		UnserializeDetailPropLighting( GAMELUMP_DETAIL_PROP_LIGHTING_HDR, GAMELUMP_DETAIL_PROP_LIGHTING_HDR_VERSION, s_DetailPropLightStyleLumpHDR );
+	}
 
 	// Needed for our computations
 	BuildExponentTable();
@@ -796,6 +982,6 @@ void ComputeDetailPropLighting( int iThread )
 	}
 
 	// Write detail prop lightstyle lump...
-	WriteDetailLightingLump();
+	WriteDetailLightingLumps();
 	EndPacifier( true );
 }

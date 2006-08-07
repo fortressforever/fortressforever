@@ -38,6 +38,7 @@ enum SCOND_t
 	COND_SEE_DISLIKE,
 	COND_SEE_ENEMY,
 	COND_LOST_ENEMY,
+	COND_ENEMY_WENT_NULL,	// What most people think COND_LOST_ENEMY is: This condition is set in the edge case where you had an enemy last think, but don't have one this think.
 	COND_ENEMY_OCCLUDED,	// Can't see m_hEnemy
 	COND_TARGET_OCCLUDED,	// Can't see m_hTargetEnt
 	COND_HAVE_ENEMY_LOS,
@@ -62,6 +63,7 @@ enum SCOND_t
 	COND_ENEMY_UNREACHABLE,	// Not connected to me via node graph
 
 	COND_SEE_PLAYER,
+	COND_LOST_PLAYER,
 	COND_SEE_NEMESIS,
 	COND_TASK_FAILED,
 	COND_SCHEDULE_DONE,
@@ -87,10 +89,13 @@ enum SCOND_t
 	COND_HEAR_BULLET_IMPACT,
 	COND_HEAR_PHYSICS_DANGER,
 	COND_HEAR_MOVE_AWAY,
+	COND_HEAR_SPOOKY,				// Zombies make this when Alyx is in darkness mode
 
 	COND_NO_HEAR_DANGER,			// Since we can't use ~CONDITION. Mutually exclusive with COND_HEAR_DANGER
 
 	COND_FLOATING_OFF_GROUND,
+
+	COND_MOBBED_BY_ENEMIES,			// Surrounded by a large number of enemies melee attacking me. (Zombies or Antlions, usually).
 
 	// Commander stuff
 	COND_RECEIVED_ORDERS,

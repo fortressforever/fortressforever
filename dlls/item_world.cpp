@@ -13,7 +13,7 @@
 #include "iservervehicle.h"
 
 #ifdef HL2MP
-	#include "hl2mp_gamerules.h"
+#include "hl2mp_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -37,7 +37,7 @@ LINK_ENTITY_TO_CLASS(world_items, CWorldItem);
 
 BEGIN_DATADESC( CWorldItem )
 
-	DEFINE_FIELD( m_iType, FIELD_INTEGER ),
+DEFINE_FIELD( m_iType, FIELD_INTEGER ),
 
 END_DATADESC()
 
@@ -86,19 +86,19 @@ void CWorldItem::Spawn( void )
 
 BEGIN_DATADESC( CItem )
 
-	DEFINE_FIELD( m_bActivateWhenAtRest,	 FIELD_BOOLEAN ),
+DEFINE_FIELD( m_bActivateWhenAtRest,	 FIELD_BOOLEAN ),
 
-	// Function Pointers
-	DEFINE_ENTITYFUNC( ItemTouch ),
-	DEFINE_THINKFUNC( Materialize ),
-	DEFINE_THINKFUNC( ComeToRest ),
+// Function Pointers
+DEFINE_ENTITYFUNC( ItemTouch ),
+DEFINE_THINKFUNC( Materialize ),
+DEFINE_THINKFUNC( ComeToRest ),
 
-#ifdef HL2MP
-	DEFINE_THINKFUNC( FallThink ),
+#if defined( HL2MP )
+DEFINE_THINKFUNC( FallThink ),
 #endif
 
-	// Outputs
-	DEFINE_OUTPUT(m_OnPlayerTouch, "OnPlayerTouch"),
+// Outputs
+DEFINE_OUTPUT(m_OnPlayerTouch, "OnPlayerTouch"),
 
 END_DATADESC()
 
@@ -142,11 +142,22 @@ bool CItem::CreateItemVPhysicsObject( void )
 //-----------------------------------------------------------------------------
 void CItem::Spawn( void )
 {
+	if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	SetSolid( SOLID_BBOX );
 	SetBlocksLOS( false );
 	AddEFlags( EFL_NO_ROTORWASH_PUSH );
 	
+	if( IsXbox() )
+	{
+		AddEffects( EF_ITEM_BLINK );
+	}
+
 	// This will make them not collide with the player, but will collide
 	// against other items + weapons
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
@@ -154,21 +165,21 @@ void CItem::Spawn( void )
 	SetTouch(&CItem::ItemTouch);
 
 	if ( CreateItemVPhysicsObject() == false )
-		 return;
-	
+		return;
+
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 
-#ifdef HL2MP
+#if defined( HL2MP )
 	SetThink( &CItem::FallThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 #endif
-	
+
 }
 
 void CItem::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( pActivator );
-	
+
 	if ( pPlayer )
 	{
 		pPlayer->PickupObject( this );
@@ -200,7 +211,12 @@ void CItem::OnEntityEvent( EntityEvent_t event, void *pEventData )
 	switch( event )
 	{
 	case ENTITY_EVENT_WATER_TOUCH:
-		ComeToRest();
+		{
+			// Delay rest for a sec, to avoid changing collision 
+			// properties inside a collision callback.
+			SetThink( &CItem::ComeToRest );
+			SetNextThink( gpGlobals->curtime + 0.1f );
+		}
 		break;
 	}
 }
@@ -219,7 +235,7 @@ void CItem::ComeToRest( void )
 	}
 }
 
-#ifdef HL2MP
+#if defined( HL2MP )
 
 //-----------------------------------------------------------------------------
 // Purpose: Items that have just spawned run this think to catch them when 
@@ -256,6 +272,69 @@ void CItem::FallThink ( void )
 #endif
 
 //-----------------------------------------------------------------------------
+// Purpose: Used to tell whether an item may be picked up by the player.  This
+//			accounts for solid obstructions being in the way.
+// Input  : *pItem - item in question
+//			*pPlayer - player attempting the pickup
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
+{
+	if ( pItem == NULL || pPlayer == NULL )
+		return false;
+
+	// For now, always allow a vehicle riding player to pick up things they're driving over
+	if ( pPlayer->IsInAVehicle() )
+		return true;
+
+	// Get our test positions
+	Vector vecStartPos;
+	IPhysicsObject *pPhysObj = pItem->VPhysicsGetObject();
+	if ( pPhysObj != NULL )
+	{
+		// Use the physics hull's center
+		QAngle vecAngles;
+		pPhysObj->GetPosition( &vecStartPos, &vecAngles );
+	}
+	else
+	{
+		// Use the generic bbox center
+		vecStartPos = pItem->CollisionProp()->WorldSpaceCenter();
+	}
+
+	Vector vecEndPos = pPlayer->EyePosition();
+
+	// FIXME: This is the simple first try solution towards the problem.  We need to take edges and shape more into account
+	//		  for this to be fully robust.
+
+	// Trace between to see if we're occluded
+	trace_t tr;
+	CTraceFilterSkipTwoEntities filter( pPlayer, pItem, COLLISION_GROUP_NONE );
+	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_SOLID, &filter, &tr );
+
+	// Occluded
+	// FIXME: For now, we exclude starting in solid because there are cases where this doesn't matter
+	if ( tr.fraction < 1.0f )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Whether or not the item can be touched and picked up by the player, taking
+//			into account obstructions and other hinderances
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CItem::ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer )
+{
+	// Vanilla HL2 can always touch the item
+	if ( hl2_episodic.GetBool() == false )
+		return true;
+
+	return UTIL_ItemCanBeTouchedByPlayer( this, pPlayer );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : pOther - 
 //-----------------------------------------------------------------------------
@@ -286,7 +365,11 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	if (MyTouch( pPlayer ))
+	// Must be a valid pickup scenario (no blocking)
+	if ( ItemCanBeTouchedByPlayer( pPlayer ) == false )
+		return;
+
+	if ( MyTouch( pPlayer ) )
 	{
 		m_OnPlayerTouch.FireOutput(pOther, this);
 
@@ -304,7 +387,7 @@ void CItem::ItemTouch( CBaseEntity *pOther )
 			UTIL_Remove( this );
 
 #ifdef HL2MP
-	HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
+			HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
 #endif
 		}
 	}
@@ -326,9 +409,13 @@ CBaseEntity* CItem::Respawn( void )
 	AddSolidFlags( FSOLID_TRIGGER );
 
 	UTIL_SetOrigin( this, g_pGameRules->VecItemRespawnSpot( this ) );// blip to whereever you should respawn.
+	SetAbsAngles( g_pGameRules->VecItemRespawnAngles( this ) );// set the angles.
 
+#if !defined( TF_DLL )
 	UTIL_DropToFloor( this, MASK_SOLID );
-	
+#endif
+
+	RemoveAllDecals(); //remove any decals
 
 	SetThink ( &CItem::Materialize );
 	SetNextThink( gpGlobals->curtime + g_pGameRules->FlItemRespawnTime( this ) );

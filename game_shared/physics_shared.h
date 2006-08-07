@@ -23,6 +23,7 @@ extern IPhysicsObject		*g_PhysWorldObject;
 extern IPhysics				*physics;
 extern IPhysicsCollision	*physcollision;
 extern IPhysicsEnvironment	*physenv;
+extern IPhysicsEnvironment	*physenv_main;
 extern IPhysicsSurfaceProps *physprops;
 extern IPhysicsObjectPairHash *g_EntityCollisionHash;
 
@@ -89,7 +90,7 @@ struct fluidevent_t
 };
 
 void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, float energy, int surfaceProps, int surfacePropsHit );
-void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, const char *pSoundName, float flVolume );
+void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, const char *pSoundName, HSOUNDSCRIPTHANDLE& handle, float flVolume );
 void PhysCleanupFrictionSounds( CBaseEntity *pEntity );
 void PhysFrictionEffect( Vector &vecPos, Vector vecVel, float energy, int surfaceProps, int surfacePropsHit );
 

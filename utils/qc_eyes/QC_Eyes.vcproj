@@ -38,10 +38,12 @@
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\bin\qc_eyes.exe attrib -r ..\..\..\bin\qc_eyes.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin\qc_eyes.exe
-"
-				Outputs="..\..\..\bin\qc_eyes.exe"/>
+				CommandLine="
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb"
+				Outputs="..\..\..\bin\qc_eyes.exe;..\..\..\bin\qc_eyes.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Release/QC_Eyes.exe"
@@ -104,10 +106,12 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\qc_eyes.exe
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\bin\qc_eyes.exe attrib -r ..\..\..\bin\qc_eyes.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin\qc_eyes.exe
-"
-				Outputs="..\..\..\bin\qc_eyes.exe"/>
+				CommandLine="
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb"
+				Outputs="..\..\..\bin\qc_eyes.exe;..\..\..\bin\qc_eyes.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile=".\Debug/QC_Eyes.exe"

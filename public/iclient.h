@@ -11,12 +11,13 @@
 #endif
 
 #include <inetmsghandler.h>
+#include "tier0/platform.h"
 #include "userid.h"
 
 class IServer;
 class INetMessage;
 
-class IClient : public INetChannelHandler
+abstract_class IClient : public INetChannelHandler
 {
 public:
 	virtual	~IClient() {}

@@ -13,7 +13,7 @@
 #endif
 
 #include "vgui/VGUI.h"
-#include "vgui_controls/Panel.h"
+#include "vgui_controls/EditablePanel.h"
 #include "vgui_controls/PHandle.h"
 #include "UtlVector.h"
 
@@ -21,21 +21,25 @@ namespace vgui
 {
 
 class PageTab;
+class ImagePanel;
 
 //-----------------------------------------------------------------------------
 // Purpose: Tabbed property sheet.  Holds and displays a set of Panel's
 //-----------------------------------------------------------------------------
-class PropertySheet : public Panel
+class PropertySheet : public EditablePanel
 {
-	DECLARE_CLASS_SIMPLE( PropertySheet, Panel );
+	DECLARE_CLASS_SIMPLE( PropertySheet, EditablePanel );
 
 public:
-	PropertySheet(Panel *parent, const char *panelName);
+	PropertySheet(Panel *parent, const char *panelName, bool draggableTabs = false );
 	PropertySheet(Panel *parent, const char *panelName,ComboBox *combo);
 	~PropertySheet();
 
+	virtual bool IsDraggableTab() const;
+	void		SetDraggableTabs( bool state );
+
 	// Adds a page to the sheet.  The first page added becomes the active sheet.
-	virtual void AddPage(Panel *page, const char *title);
+	virtual void AddPage(Panel *page, const char *title, char const *imageName = NULL, bool showContextMenu = false );
 
 	// sets the current page
 	virtual void SetActivePage(Panel *page);
@@ -45,6 +49,9 @@ public:
 
 	// Gets a pointer to the currently active page.
 	virtual Panel *GetActivePage();
+
+	// Removes (but doesn't delete) all pages
+	virtual void	RemoveAllPages();
 
 	// reloads the data in all the property page
 	virtual void ResetAllData();
@@ -61,7 +68,9 @@ public:
 	virtual Panel *GetPage(int i);
 
 	// deletes this panel from the sheet
-	virtual void DeletePage(Panel *panel) ;
+	virtual void DeletePage(Panel *panel);
+	// removes this panel from the sheet, sets its parent to NULL, but does not delete it
+	virtual void RemovePage(Panel *panel);
 
 	// returns the current activated tab
 	virtual Panel *GetActiveTab();
@@ -84,12 +93,32 @@ public:
 	// enable the page with title "title" 
 	virtual void EnablePage(const char *title);
 
+	virtual void SetSmallTabs( bool state );
+	virtual bool IsSmallTabs() const;
+
 	/* MESSAGES SENT TO PAGES
 		"PageShow"	- sent when a page is shown
 		"PageHide"	- sent when a page is hidden
 		"ResetData"	- sent when the data should be reloaded from doc
 		"ApplyChanges" - sent when data should be written to doc
 	*/
+
+	virtual void OnPanelDropped( CUtlVector< KeyValues * >& msglist );
+	virtual bool IsDroppable( CUtlVector< KeyValues * >& msglist );
+	// Mouse is now over a droppable panel
+	virtual void OnDroppablePanelPaint( CUtlVector< KeyValues * >& msglist, CUtlVector< Panel * >& dragPanels );
+	
+	void		ShowContextButtons( bool state );
+	bool		ShouldShowContextButtons() const;
+
+	int			FindPage( Panel *page ) const;
+
+	bool		PageHasContextMenu( Panel *page ) const;
+
+	void		SetKBNavigationEnabled( bool state );
+	bool		IsKBNavigationEnabled() const;
+
+	virtual bool HasUserConfigSettings() { return true; }
 
 protected:
 	virtual void PaintBorder();
@@ -103,7 +132,7 @@ protected:
 	// internal message handlers
 	MESSAGE_FUNC_PTR( OnTabPressed, "TabPressed", panel );
 	MESSAGE_FUNC_PTR_WCHARPTR( OnTextChanged, "TextChanged", panel, text );
-	MESSAGE_FUNC( OnOpenContextMenu, "OpenContextMenu" );
+	MESSAGE_FUNC_PARAMS( OnOpenContextMenu, "OpenContextMenu", params );
 	MESSAGE_FUNC( OnApplyButtonEnable, "ApplyButtonEnable" );
 	// called when default button has been set
 	MESSAGE_FUNC_PTR( OnDefaultButtonSet, "DefaultButtonSet", button );
@@ -116,7 +145,19 @@ private:
 	// enable/disable the page with title "title" 
 	virtual void SetPageEnabled(const char *title,bool state);
 
-	CUtlVector<Panel *> m_Pages;
+	struct Page_t
+	{
+		Page_t() :
+			page( 0 ),
+			contextMenu( false )
+		{
+		}
+
+		Panel	*page;
+		bool	contextMenu;
+	};
+
+	CUtlVector<Page_t> m_Pages;
 	CUtlVector<PageTab *> m_PageTabs;
 	Panel *_activePage;
 	PageTab *_activeTab;
@@ -128,6 +169,11 @@ private:
 
 	PHandle m_hPreviouslyActivePage;
 	float m_flPageTransitionEffectTime;
+	bool	m_bSmallTabs;
+	HFont	m_tabFont;
+	bool	m_bDraggableTabs;
+	bool	m_bContextButton;
+	bool	m_bKBNavigationEnabled;
 };
 
 }; // namespace vgui

@@ -80,7 +80,7 @@ bool StudioKeyValues( studiohdr_t* pStudioHdr, KeyValues *pValue )
 	if ( !pStudioHdr )
 		return false;
 
-	return pValue->LoadFromBuffer( pStudioHdr->name, pStudioHdr->KeyValueText() );
+	return pValue->LoadFromBuffer( pStudioHdr->pszName(), pStudioHdr->KeyValueText() );
 }
 
 
@@ -100,7 +100,7 @@ isstaticprop_ret IsStaticProp( studiohdr_t* pHdr )
 		return RET_FAIL_NOT_MARKED_STATIC_PROP;
 
 	// If it's got a propdata section in the model's keyvalues, it's not allowed to be a prop_static
-	KeyValues *modelKeyValues = new KeyValues(pHdr->name);
+	KeyValues *modelKeyValues = new KeyValues(pHdr->pszName());
 	if ( StudioKeyValues( pHdr, modelKeyValues ) )
 	{
 		KeyValues *sub = modelKeyValues->FindKey("prop_data");
@@ -143,26 +143,8 @@ static int AddStaticPropDictLump( char const* pModelName )
 //-----------------------------------------------------------------------------
 bool LoadStudioModel( char const* pModelName, char const* pEntityType, CUtlBuffer& buf )
 {
-	// No luck, gotta build it	
-	FileHandle_t fp;
-
-	// load the model
-	if( (fp = g_pFileSystem->Open( pModelName, "rb" )) == FILESYSTEM_INVALID_HANDLE)
+	if ( !g_pFullFileSystem->ReadFile( pModelName, NULL, buf ) )
 		return false;
-
-	// Get the file size
-	int size = g_pFileSystem->Size( fp );
-	if (size == 0)
-	{
-		g_pFileSystem->Close(fp);
-		return false;
-	}
-
-	buf.EnsureCapacity( size );
-	g_pFileSystem->Read( buf.PeekPut(), size, fp );
-	g_pFileSystem->Close( fp );
-
-	buf.SeekGet( CUtlBuffer::SEEK_HEAD, 0 );
 
 	// Check that it's valid
 	if (strncmp ((const char *) buf.PeekGet(), "IDST", 4) &&
@@ -610,6 +592,15 @@ void EmitStaticProps()
 			{
 				build.m_Flags |= STATIC_PROP_NO_SHADOW;
 			}
+			if (IntForKey( &entities[i], "disablevertexlighting" ) == 1)
+			{
+				build.m_Flags |= STATIC_PROP_NO_PER_VERTEX_LIGHTING;
+			}
+			if (IntForKey( &entities[i], "disableselfshadowing" ) == 1)
+			{
+				build.m_Flags |= STATIC_PROP_NO_SELF_SHADOWING;
+			}
+
 			if (IntForKey( &entities[i], "screenspacefade" ) == 1)
 			{
 				build.m_Flags |= STATIC_PROP_SCREEN_SPACE_FADE;
@@ -681,7 +672,6 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 	char				fileName[260];
 	FileHandle_t		fileHandle;
 	vertexFileHeader_t	*pVvdHdr;
-	vertexFileHeader_t	*pNewVvdHdr;
 
 	Assert( g_pActiveStudioHdr );
 
@@ -695,7 +685,7 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 	// mandatory callback to make requested data resident
 	// load and persist the vertex file
 	strcpy( fileName, "models/" );	
-	strcat( fileName, g_pActiveStudioHdr->name );
+	strcat( fileName, g_pActiveStudioHdr->pszName() );
 	Q_StripExtension( fileName, fileName, sizeof( fileName ) );
 	strcat( fileName, ".vvd" );
 
@@ -730,24 +720,6 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 	if (pVvdHdr->checksum != g_pActiveStudioHdr->checksum)
 	{
 		Error("Error Vertex File %s checksum %d should be %d\n", fileName, pVvdHdr->checksum, g_pActiveStudioHdr->checksum);
-	}
-
-	if (pVvdHdr->numFixups)
-	{
-		// need to perform mesh relocation fixups
-		// allocate a new copy
-		pNewVvdHdr = (vertexFileHeader_t *)malloc( size );
-		if (!pNewVvdHdr)
-		{
-			Error( "Error allocating %d bytes for Vertex File '%s'\n", size, fileName );
-		}
-
-		Studio_LoadVertexes( pVvdHdr, pNewVvdHdr, 0, true );
-
-		// discard original
-		free( pVvdHdr );
-
-		pVvdHdr = pNewVvdHdr;
 	}
 
 	g_pActiveStudioHdr->pVertexBase = (void*)pVvdHdr; 

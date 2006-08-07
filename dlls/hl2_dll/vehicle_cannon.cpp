@@ -48,9 +48,10 @@ static const char *pCannonFollowerBoneNames[] =
 
 #define CANNON_PROJECTILE_MODEL "models/props_combine/headcrabcannister01a.mdl"
 
-ConVar g_cannon_reloadtime( "g_cannon_reloadtime", "5", FCVAR_CHEAT | FCVAR_GAMEDLL );
-ConVar g_cannon_max_traveltime( "g_cannon_max_traveltime", "10", FCVAR_CHEAT | FCVAR_GAMEDLL );
+ConVar g_cannon_reloadtime( "g_cannon_reloadtime", "3", FCVAR_CHEAT | FCVAR_GAMEDLL );
+ConVar g_cannon_max_traveltime( "g_cannon_max_traveltime", "1.5", FCVAR_CHEAT | FCVAR_GAMEDLL );
 ConVar g_cannon_debug( "g_cannon_debug", "0", FCVAR_CHEAT | FCVAR_GAMEDLL );
+ConVar g_cannon_damageandradius( "g_cannon_damageandradius", "512", FCVAR_CHEAT | FCVAR_GAMEDLL );
 
 // Turning stats
 enum
@@ -101,11 +102,11 @@ public:
 	virtual bool		CanExitVehicle( CBaseEntity *pEntity );
 	virtual void		SetVehicleEntryAnim( bool bOn ) { m_bEnterAnimOn = bOn; }
 	virtual void		SetVehicleExitAnim( bool bOn, Vector vecEyeExitEndpoint ) { m_bExitAnimOn = bOn; if ( bOn ) m_vecEyeExitEndpoint = vecEyeExitEndpoint; }
-	virtual void		EnterVehicle( CBasePlayer *pPlayer );
-	virtual bool		AllowBlockedExit( CBasePlayer *pPlayer, int iRole ) { return true; }
-	virtual bool		AllowMidairExit( CBasePlayer *pPlayer, int nRole ) { return false; }
-	virtual void		PreExitVehicle( CBasePlayer *pPlayer, int iRole ) {}
-	virtual void		ExitVehicle( int iRole );
+	virtual void		EnterVehicle( CBaseCombatCharacter *pPassenger );
+	virtual bool		AllowBlockedExit( CBaseCombatCharacter *pPassenger, int nRole ) { return true; }
+	virtual bool		AllowMidairExit( CBaseCombatCharacter *pPassenger, int nRole ) { return false; }
+	virtual void		PreExitVehicle( CBaseCombatCharacter *pPassenger, int nRole ) {}
+	virtual void		ExitVehicle( int nRole );
 
 	
 	// If this is a vehicle, returns the vehicle interface
@@ -126,6 +127,7 @@ public:
 	void	InitCannonSpeeds( void );
 	void	RunCraneMovement( float flTime );
 	void	LaunchProjectile( void );
+	void	ProjectileExplosion( void );
 
 private:
 	
@@ -183,6 +185,7 @@ BEGIN_DATADESC( CPropCannon )
 
 	DEFINE_FIELD( m_iTurning, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flTurn, FIELD_FLOAT ),
+	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ), 
 
 	DEFINE_FIELD( m_bExtending, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flExtension, FIELD_FLOAT ),
@@ -293,27 +296,36 @@ CBaseEntity *CPropCannon::GetDriver( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropCannon::EnterVehicle( CBasePlayer *pPlayer )
+void CPropCannon::EnterVehicle( CBaseCombatCharacter *pPassenger )
 {
-	if ( !pPlayer )
+	if ( pPassenger == NULL )
 		return;
 
-	// Remove any player who may be in the vehicle at the moment
-	if ( m_hPlayer )
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
+	if ( pPlayer != NULL )
 	{
-		ExitVehicle( VEHICLE_DRIVER );
+		// Remove any player who may be in the vehicle at the moment
+		if ( m_hPlayer )
+		{
+			ExitVehicle( VEHICLE_ROLE_DRIVER );
+		}
+
+		m_hPlayer = pPlayer;
+		m_playerOn.FireOutput( pPlayer, this, 0 );
+
+		//m_ServerVehicle.SoundStart();
 	}
-
-	m_hPlayer = pPlayer;
-	m_playerOn.FireOutput( pPlayer, this, 0 );
-
-	//m_ServerVehicle.SoundStart();
+	else
+	{
+		// NPCs not supported yet - jdw
+		Assert( 0 );
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropCannon::ExitVehicle( int iRole )
+void CPropCannon::ExitVehicle( int nRole )
 {
 	CBasePlayer *pPlayer = m_hPlayer;
 	if ( !pPlayer )
@@ -492,6 +504,17 @@ void CPropCannon::ItemPostFrame( CBasePlayer *player )
 
 }
 
+void CPropCannon::ProjectileExplosion( void )
+{
+	ExplosionCreate( m_vCrashPoint, vec3_angle, NULL, 512, 512, false );
+
+	// do damage
+	CTakeDamageInfo info( this, this, g_cannon_damageandradius.GetInt(), DMG_BLAST );
+
+	info.SetDamagePosition( m_vCrashPoint );
+	RadiusDamage( info, m_vCrashPoint, g_cannon_damageandradius.GetInt(), CLASS_NONE, NULL );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -551,7 +574,7 @@ void CPropCannon::Think( void )
 		{
 			if ( m_vCrashPoint != vec3_origin )
 			{
-				ExplosionCreate( m_vCrashPoint, vec3_angle, NULL, 512, 512, true );
+				ProjectileExplosion();
 			}
 
 			CEffectData	data;
@@ -598,7 +621,7 @@ void CPropCannon::LaunchProjectile( void )
 
 	int iFailSafe = 0;
 	
-	while ( bCollided == false && iFailSafe < 1000 )
+	while ( bCollided == false && iFailSafe < 100000 )
 	{
 		Vector vOldOrigin = vOrigin;
 		vOrigin = vOrigin + vVelocity * gpGlobals->frametime;
@@ -623,6 +646,8 @@ void CPropCannon::LaunchProjectile( void )
 			bInSky = false;
 		}
 
+		iFailSafe++;
+
 		if ( pm.fraction != 1.0f && bInSky == false )
 		{
 			bCollided = true;
@@ -644,14 +669,18 @@ void CPropCannon::LaunchProjectile( void )
 	if ( flTravelTime > g_cannon_max_traveltime.GetFloat() )
 	{
 		flTravelTime = g_cannon_max_traveltime.GetFloat();
-		vOrigin = vec3_origin; 
+
+		if ( bCollided == false )
+		{
+			vOrigin = vec3_origin; 
+		}
 	}
 
 	m_flFlyTime = gpGlobals->curtime + flTravelTime;
 	m_vCrashPoint = vOrigin;
 
 	m_flNextAttackTime = gpGlobals->curtime + g_cannon_reloadtime.GetFloat();
-
+	
 	EmitSound( "HeadcrabCanister.LaunchSound" );
 
 	UTIL_ScreenShake( GetDriver()->GetAbsOrigin(), 50.0, 150.0, 1.0, 750, SHAKE_START, true );
@@ -691,7 +720,7 @@ void CPropCannon::UpdateOnRemove( void )
 //-----------------------------------------------------------------------------
 void CCannonServerVehicle::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles )
 {
-	Assert( nRole == VEHICLE_DRIVER );
+	Assert( nRole == VEHICLE_ROLE_DRIVER );
 	CBasePlayer *pPlayer = ToBasePlayer( GetDrivableVehicle()->GetDriver() );
 	Assert( pPlayer );
 

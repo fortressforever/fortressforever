@@ -44,12 +44,14 @@ enum
 
 	// Contexts begin here.
 	SOUND_CONTEXT_FROM_SNIPER		= 0x00100000, // additional context for SOUND_DANGER
-	SOUND_CONTEXT_FROM_LAUNCHER		= 0x00200000,
+	SOUND_CONTEXT_GUNFIRE			= 0x00200000, // Added to SOUND_COMBAT
 	SOUND_CONTEXT_MORTAR			= 0x00400000, // Explosion going to happen here.
 	SOUND_CONTEXT_COMBINE_ONLY		= 0x00800000, // Only combine can hear sounds marked this way
 	SOUND_CONTEXT_REACT_TO_SOURCE	= 0x01000000, // React to sound source's origin, not sound's location
 	SOUND_CONTEXT_EXPLOSION			= 0x02000000, // Context added to SOUND_COMBAT, usually.
 	SOUND_CONTEXT_EXCLUDE_COMBINE	= 0x04000000, // Combine do NOT hear this
+	SOUND_CONTEXT_DANGER_APPROACH   = 0x08000000, // Treat as a normal danger sound if you see the source, otherwise turn to face source.
+	SOUND_CONTEXT_ALLIES_ONLY		= 0x10000000, // Only player allies can hear this sound
 
 	ALL_CONTEXTS			= 0xFFF00000,
 
@@ -63,11 +65,15 @@ enum
 enum
 {
 	SOUNDENT_CHANNEL_UNSPECIFIED = 0,
+	SOUNDENT_CHANNEL_REPEATING,
 	SOUNDENT_CHANNEL_REPEATED_DANGER,	// for things that make danger sounds frequently.
 	SOUNDENT_CHANNEL_REPEATED_PHYSICS_DANGER,
 	SOUNDENT_CHANNEL_WEAPON,
 	SOUNDENT_CHANNEL_INJURY,
 	SOUNDENT_CHANNEL_BULLET_IMPACT,
+	SOUNDENT_CHANNEL_NPC_FOOTSTEP,
+	SOUNDENT_CHANNEL_SPOOKY_NOISE,		// made by zombies in darkness
+	SOUNDENT_CHANNEL_ZOMBINE_GRENADE,
 };
 
 enum
@@ -79,6 +85,16 @@ enum
 #define SOUNDENT_VOLUME_SHOTGUN		1500.0
 #define SOUNDENT_VOLUME_PISTOL		1500.0
 #define SOUNDENT_VOLUME_EMPTY		 500.0 // volume of the "CLICK" when you have no bullets
+
+enum
+{
+	SOUND_PRIORITY_VERY_LOW = -2,
+	SOUND_PRIORITY_LOW,
+	SOUND_PRIORITY_NORMAL = 0,
+	SOUND_PRIORITY_HIGH,
+	SOUND_PRIORITY_VERY_HIGH,
+	SOUND_PRIORITY_HIGHEST,
+};
 
 //=========================================================
 // CSound - an instance of a sound in the world.
@@ -103,8 +119,11 @@ public:
 	float	OccludedVolume() { return m_iVolume * m_flOcclusionScale; }
 	int		NextSound() const;
 	void	Reset ( void );
+	int		SoundChannel( void ) const;
+	bool	ValidateOwner() const;
 
 	EHANDLE	m_hOwner;				// sound's owner
+	EHANDLE	m_hTarget;				// Sounds's target - an odd concept. For a gunfire sound, the target is the entity being fired at
 	int		m_iVolume;				// how loud the sound is
 	float	m_flOcclusionScale;		// How loud the sound is when occluded by the world. (volume * occlusionscale)
 	int		m_iType;				// what type of sound this is
@@ -119,6 +138,8 @@ private:
 	int		m_ownerChannelIndex;
 
 	Vector	m_vecOrigin;	// sound's location in space
+
+	bool	m_bHasOwner;	// Lets us know if this sound was created with an owner. In case the owner goes null.
 
 #ifdef DEBUG
 	int		m_iMyIndex;		// debugging
@@ -167,7 +188,18 @@ inline int CSound::NextSound() const
 	return m_iNext;
 }
 
+inline int CSound::SoundChannel( void ) const
+{
+	return m_ownerChannelIndex;
+}
 
+// The owner is considered valid if:
+//		-The sound never had an assigned owner (quite common)
+//		-The sound was assigned an owner and that owner still exists
+inline bool CSound::ValidateOwner( void ) const
+{
+	return ( !m_bHasOwner || (m_hOwner.Get() != NULL) );
+}
 
 //=========================================================
 // CSoundEnt - a single instance of this entity spawns when
@@ -195,8 +227,7 @@ public:
 	void Initialize ( void );
 	int ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	static void		InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration );
-	static void		InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration, CBaseEntity *pOwner, int soundChannelIndex = SOUNDENT_CHANNEL_UNSPECIFIED );
+	static void		InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration, CBaseEntity *pOwner = NULL, int soundChannelIndex = SOUNDENT_CHANNEL_UNSPECIFIED, CBaseEntity *pSoundTarget = NULL );
 	static void		FreeSound ( int iSound, int iPrevious );
 	static int		ActiveList( void );// return the head of the active list
 	static int		FreeList( void );// return the head of the free list

@@ -291,6 +291,8 @@ bool CBaseHelicopter::FireGun( void )
 //------------------------------------------------------------------------------
 void CBaseHelicopter::HelicopterThink( void )
 {
+	CheckPVSCondition();
+
 	SetNextThink( gpGlobals->curtime + HELICOPTER_THINK_INTERVAL );
 
 	// Don't keep this around for more than one frame.
@@ -821,7 +823,7 @@ void CBaseHelicopter::UpdatePlayerDopplerShift( )
 
 		// UNDONE: this needs to send different sounds to every player for multiplayer.	
 		// FIXME: this isn't the correct way to find a player!!!
-		pPlayer = gEntList.FindEntityByName( NULL, "!player", this );
+		pPlayer = gEntList.FindEntityByName( NULL, "!player" );
 		if (pPlayer)
 		{
 			Vector dir;
@@ -1500,7 +1502,6 @@ bool CBaseHelicopter::ChooseEnemy( void )
 		return false;
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

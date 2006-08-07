@@ -39,6 +39,7 @@ public:
 	int		m_iPrevFOV;
 	float	m_flNextFOVBlendTime;
 	float	m_flFOVBlendStartTime;
+	bool	m_bAlternateFOV;
 
 	// Our intro data block
 	IntroData_t		m_IntroData;
@@ -99,12 +100,13 @@ IMPLEMENT_CLIENTCLASS_DT( C_ScriptIntro, DT_ScriptIntro, CScriptIntro )
 	RecvPropFloat( RECVINFO( m_flNextBlendTime ) ),
 	RecvPropFloat( RECVINFO( m_flBlendStartTime ) ),
 	RecvPropBool( RECVINFO( m_bActive ) ),
-
+	
 	// Fov & fov blends 
 	RecvPropInt( RECVINFO( m_iFOV ) ),
 	RecvPropInt( RECVINFO( m_iNextFOV ) ),
 	RecvPropFloat( RECVINFO( m_flNextFOVBlendTime ), 0, RecvProxy_IntroFOV ),
 	RecvPropFloat( RECVINFO( m_flFOVBlendStartTime ) ),
+	RecvPropBool( RECVINFO( m_bAlternateFOV ) ),
 
 	// Fades
 	RecvPropFloat( RECVINFO( m_flFadeAlpha ) ),
@@ -322,17 +324,34 @@ void C_ScriptIntro::CalculateFOV( void )
 	// Calculate the FOV
 	if ( m_flNextFOVBlendTime >= gpGlobals->curtime )
 	{
-		if ( (m_flNextFOVBlendTime - m_flFOVBlendStartTime) != 0 )
+		if ( m_bAlternateFOV == true )
 		{
-			m_IntroData.m_playerViewFOV = RemapValClamped( gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime, m_iFOVAtStartBlend, m_iNextFOV );
+			float deltaTime = (float)( gpGlobals->curtime - m_flFOVBlendStartTime ) / ( m_flNextFOVBlendTime - m_flFOVBlendStartTime );
 
-			//Msg("FOV BLENDING: curtime %.2f    StartedAt %.2f    FinishAt: %.2f\n", gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime );
-			//Msg("			   Perc:   %.2f    Start: %d	End: %d		FOV: %.2f\n", RemapValClamped( gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime, 0.0, 1.0 ), m_iFOVAtStartBlend, m_iNextFOV, m_IntroData.m_playerViewFOV );
+			if ( deltaTime >= 1.0f )
+			{
+				//If we're past the zoom time, just take the new value and stop transitioning
+				m_IntroData.m_playerViewFOV = m_iNextFOV;
+			}
+			else
+			{
+				m_IntroData.m_playerViewFOV = SimpleSplineRemapVal( deltaTime, 0.0f, 1.0f, m_iFOVAtStartBlend, m_iNextFOV );
+			}
 		}
 		else
 		{
-			//Msg("FOV BLENDING: JUMPED TO NEXT FOV (%d)\n", m_iNextFOV );
-			m_IntroData.m_playerViewFOV = m_iNextFOV;
+			if ( (m_flNextFOVBlendTime - m_flFOVBlendStartTime) != 0 )
+			{
+				m_IntroData.m_playerViewFOV = RemapValClamped( gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime, m_iFOVAtStartBlend, m_iNextFOV );
+
+				//Msg("FOV BLENDING: curtime %.2f    StartedAt %.2f    FinishAt: %.2f\n", gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime );
+				//Msg("			   Perc:   %.2f    Start: %d	End: %d		FOV: %.2f\n", RemapValClamped( gpGlobals->curtime, m_flFOVBlendStartTime, m_flNextFOVBlendTime, 0.0, 1.0 ), m_iFOVAtStartBlend, m_iNextFOV, m_IntroData.m_playerViewFOV );
+			}
+			else
+			{
+				//Msg("FOV BLENDING: JUMPED TO NEXT FOV (%d)\n", m_iNextFOV );
+				m_IntroData.m_playerViewFOV = m_iNextFOV;
+			}
 		}
 	}
 }

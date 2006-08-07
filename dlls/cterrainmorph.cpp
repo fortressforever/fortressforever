@@ -6,6 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#if !defined(IN_XBOX_CODELINE)
 #include "baseentity.h"
 #include "terrainmodmgr.h"
 #include "terrainmodmgr_shared.h"
@@ -220,3 +221,4 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS(tectonic, CTerrainMorph);
 LINK_ENTITY_TO_CLASS(env_terrainmorph, CTerrainMorph);
 
+#endif

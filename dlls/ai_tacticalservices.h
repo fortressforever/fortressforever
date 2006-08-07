@@ -25,6 +25,7 @@ public:
 	 :	CAI_Component(pOuter),
 		m_pNetwork( NULL )
 	{
+		m_bAllowFindLateralLos = true;
 	}
 	
 	void Init( CAI_Network *pNetwork );
@@ -38,6 +39,8 @@ public:
 	bool			FindLateralCover( const Vector &vecThreat, float flMinDist, Vector *pResult );
 	bool			FindLateralCover( const Vector &vecThreat, float flMinDist, float distToCheck, int numChecksPerDir, Vector *pResult );
 	bool			FindLateralCover( const Vector &vNearPos, const Vector &vecThreat, float flMinDist, float distToCheck, int numChecksPerDir, Vector *pResult );
+
+	void			AllowFindLateralLos( bool bAllow ) { m_bAllowFindLateralLos = bAllow; }
 
 private:
 	// Checks lateral cover
@@ -59,6 +62,8 @@ private:
 	
 	CAI_Network *m_pNetwork;
 	CAI_Pathfinder *m_pPathfinder;
+
+	bool	m_bAllowFindLateralLos;	// Allows us to turn Lateral LOS checking on/off. 
 
 	DECLARE_SIMPLE_DATADESC();
 };

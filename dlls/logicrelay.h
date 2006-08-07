@@ -18,8 +18,10 @@ class CLogicRelay : public CLogicalEntity
 public:
 	DECLARE_CLASS( CLogicRelay, CLogicalEntity );
 
-	CLogicRelay(void);
-	void RefireThink(void);
+	CLogicRelay();
+
+	void Activate();
+	void Think();
 
 	// Input handlers
 	void InputEnable( inputdata_t &inputdata );
@@ -33,6 +35,7 @@ public:
 
 	// Outputs
 	COutputEvent m_OnTrigger;
+	COutputEvent m_OnSpawn;
 	
 private:
 

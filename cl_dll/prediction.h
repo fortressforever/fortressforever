@@ -54,7 +54,9 @@ public:
 	virtual bool	InPrediction( void ) const;
 	virtual bool	IsFirstTimePredicted( void ) const;
 
+#if !defined( NO_ENTITY_PREDICTION )
 	virtual int		GetIncomingPacketNumber( void ) const;
+#endif
 
 	float			GetIdealPitch( void ) const 
 	{
@@ -120,6 +122,7 @@ private:
 
 	void			SmoothViewOnMovingPlatform( C_BasePlayer *pPlayer, Vector& offset );
 
+#if !defined( NO_ENTITY_PREDICTION )
 // Data
 protected:
 	// Last object the player was standing on
@@ -127,21 +130,25 @@ protected:
 private:
 	bool			m_bInPrediction;
 	bool			m_bFirstTimePredicted;
-	int				m_nIncomingPacketNumber;
 	bool			m_bOldCLPredictValue;
 
-	float			m_flIdealPitch;
 
 	// Last network origin for local player
-	Vector			m_vecCurrentNetworkOrigin;
 	int				m_nPreviousStartFrame;
 
 	int				m_nCommandsPredicted;
 	int				m_nServerCommandsAcknowledged;
 	int				m_bPreviousAckHadErrors;
+	int				m_nIncomingPacketNumber;
+
+#endif
+	float			m_flIdealPitch;
+
 };
  
+#if !defined( NO_ENTITY_PREDICTION )
 extern ConVar	cl_predict;
+#endif
 
 extern CPrediction *prediction;
 

@@ -27,11 +27,14 @@ public:
 	void Precache( void );
 	void Spawn( void );
 
+	virtual int	ObjectCaps() { return BaseClass::ObjectCaps() | FCAP_WCEDIT_POSITION; };
+
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 
 	void InputKill( inputdata_t &data );
 
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
+	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 
 protected:
 	virtual void OnBreak( const Vector &vecVelocity, const AngularImpulse &angVel, CBaseEntity *pBreaker );
@@ -93,8 +96,14 @@ void CItem_ItemCrate::Precache( void )
 //-----------------------------------------------------------------------------
 void CItem_ItemCrate::Spawn( void )
 { 
+	if ( g_pGameRules->IsAllowedToSpawn( this ) == false )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+
 	DisableAutoFade();
-	SetModelName( MAKE_STRING( ITEM_CRATE_MODEL_NAME ) );
+	SetModelName( AllocPooledString( ITEM_CRATE_MODEL_NAME ) );
 
 	if ( NULL_STRING == m_strItemClass )
 	{
@@ -142,7 +151,8 @@ int CItem_ItemCrate::OnTakeDamage( const CTakeDamageInfo &info )
 void CItem_ItemCrate::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 {
 	float flDamageScale = 1.0f;
-	if ( FClassnameIs( pEvent->pEntities[!index], "prop_vehicle_airboat" )	)
+	if ( FClassnameIs( pEvent->pEntities[!index], "prop_vehicle_airboat" ) ||
+		 FClassnameIs( pEvent->pEntities[!index], "prop_vehicle_jeep" ) )
 	{
 		flDamageScale = 100.0f;
 	}
@@ -218,4 +228,29 @@ void CItem_ItemCrate::OnBreak( const Vector &vecVelocity, const AngularImpulse &
 			pSpawn->SetNextThink( gpGlobals->curtime );
 		}
 	}
+}
+
+void CItem_ItemCrate::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
+{
+	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
+
+#ifdef HL2_EPISODIC
+	if ( reason == PUNTED_BY_CANNON )
+	{
+		Vector vForward;
+		AngleVectors( pPhysGunUser->EyeAngles(), &vForward, NULL, NULL );
+		Vector vForce = Pickup_PhysGunLaunchVelocity( this, vForward );
+		AngularImpulse angular = AngularImpulse( 0, 0, 0 );
+
+		IPhysicsObject *pPhysics = VPhysicsGetObject();
+
+		if ( pPhysics )
+		{
+			pPhysics->AddVelocity( &vForce, &angular );
+		}
+
+		TakeDamage( CTakeDamageInfo( pPhysGunUser, pPhysGunUser, GetHealth(), DMG_GENERIC ) );
+	}
+#endif
+
 }

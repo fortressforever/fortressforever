@@ -15,7 +15,7 @@
 
 class IMaterialProxy;
 
-class IMaterialProxyFactory
+abstract_class IMaterialProxyFactory
 {
 public:
 	virtual IMaterialProxy *CreateProxy( const char *proxyName ) = 0;

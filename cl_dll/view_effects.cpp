@@ -14,6 +14,7 @@
 #include "viewrender.h"
 #include "con_nprint.h"
 #include "saverestoretypes.h"
+#include "c_rumble.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -63,6 +64,7 @@ struct screenshake_t
 	float	nextShake;
 	Vector	offset;
 	float	angle;
+	int		command;
 
 	DECLARE_SIMPLE_DATADESC();
 };
@@ -214,10 +216,12 @@ void CViewEffects::CalcShake( void )
 	// We'll accumulate the aggregate shake for this frame into these data members.
 	m_vecShakeAppliedOffset.Init(0, 0, 0);
 	m_flShakeAppliedAngle = 0;
+	float flRumbleAngle = 0;
 
 	bool bShow = shake_show.GetBool();
 
 	int nShakeCount = m_ShakeList.Count();
+
 	for ( int nShake = nShakeCount - 1; nShake >= 0; nShake-- )
 	{
 		screenshake_t *pShake = m_ShakeList.Element( nShake );
@@ -286,15 +290,29 @@ void CViewEffects::CalcShake( void )
 		// Sine wave that slowly settles to zero
 		fraction = fraction * sin( gpGlobals->curtime * freq );
 		
-		// Add to view origin
-		m_vecShakeAppliedOffset += pShake->offset * fraction;
-		
-		// Add to roll
-		m_flShakeAppliedAngle += pShake->angle * fraction;
+		if( pShake->command != SHAKE_START_NORUMBLE )
+		{
+			// As long as this isn't a NO RUMBLE effect, then accumulate rumble
+			flRumbleAngle += pShake->angle * fraction;
+		}
+
+		if( pShake->command != SHAKE_START_RUMBLEONLY )
+		{
+			// As long as this isn't a RUMBLE ONLY effect, then accumulate screen shake
+			
+			// Add to view origin
+			m_vecShakeAppliedOffset += pShake->offset * fraction;
+
+			// Add to roll
+			m_flShakeAppliedAngle += pShake->angle * fraction;
+		}
 
 		// Drop amplitude a bit, less for higher frequency shakes
 		pShake->amplitude -= pShake->amplitude * ( gpGlobals->frametime / (pShake->duration * pShake->frequency) );
 	}
+
+	// Feed this to the rumble system!
+	UpdateScreenShakeRumble( flRumbleAngle );
 }
 
 
@@ -360,7 +378,7 @@ screenshake_t *CViewEffects::FindLongestShake()
 //-----------------------------------------------------------------------------
 void CViewEffects::Shake( ScreenShake_t &data )
 {
-	if ( ( data.command == SHAKE_START ) && ( m_ShakeList.Count() < MAX_SHAKES ) )
+	if ( ( data.command == SHAKE_START || data.command == SHAKE_START_RUMBLEONLY ) && ( m_ShakeList.Count() < MAX_SHAKES ) )
 	{
 		screenshake_t *pNewShake = new screenshake_t;
 			
@@ -369,6 +387,7 @@ void CViewEffects::Shake( ScreenShake_t &data )
 		pNewShake->duration = data.duration;
 		pNewShake->nextShake = 0;
 		pNewShake->endtime = gpGlobals->curtime + data.duration;
+		pNewShake->command = data.command;
 
 		m_ShakeList.AddToTail( pNewShake );
 	}
@@ -619,7 +638,7 @@ void CViewEffects::Save( ISave *pSave )
 	// Save the view shakes
 	iCount = m_ShakeList.Count();
 	pSave->WriteInt( &iCount );
-	for ( i = 0; i < iCount; i++ )
+	for ( int i = 0; i < iCount; i++ )
 	{
 		pSave->StartBlock();
 		pSave->WriteAll( m_ShakeList[i] );
@@ -658,7 +677,7 @@ void CViewEffects::Restore( IRestore *pRestore, bool fCreatePlayers )
 
 		// Read in the view shakes
 		iCount = pRestore->ReadInt();
-		for ( i = 0; i < iCount; i++ )
+		for ( int i = 0; i < iCount; i++ )
 		{
 			screenshake_t *pNewShake = new screenshake_t;
 

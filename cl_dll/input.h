@@ -16,6 +16,7 @@
 #include "vector.h"
 #include "kbutton.h"
 #include "ehandle.h"
+#include "inputsystem/AnalogCode.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -57,17 +58,22 @@ public:
 	virtual		float		KeyState( kbutton_t *key );
 	virtual		int			KeyEvent( int eventcode, int keynum, const char *pszCurrentBinding );
 	virtual		kbutton_t	*FindKey( const char *name );
+
 	virtual		void		ControllerCommands( void );
 	virtual		void		Joystick_Advanced( void );
+
 	virtual		void		AccumulateMouse( void );
 	virtual		void		MouseEvent( int mstate, bool down );
 	virtual		void		ActivateMouse( void );
 	virtual		void		DeactivateMouse( void );
+
 	virtual		void		ClearStates( void );
 	virtual		float		GetLookSpring( void );
+
 	virtual		void		GetFullscreenMousePos( int *mx, int *my, int *unclampedx = NULL, int *unclampedy = NULL );
 	virtual		void		SetFullscreenMousePos( int mx, int my );
 	virtual		void		ResetMouse( void );
+
 //	virtual		bool		IsNoClipping( void );
 	virtual		float		GetLastForwardMove( void );
 	virtual		void		ClearInputButton( int bits );
@@ -92,13 +98,13 @@ public:
 	// IK back channel info
 	virtual		void		AddIKGroundContactInfo( int entindex, float minheight, float maxheight );
 #endif
+	virtual		void		LevelInit( void );
 
 // Private Implementation
 private:
 	// Implementation specific initialization
 	void		Init_Camera( void );
 	void		Init_Keyboard( void );
-	void		Init_Joystick( void );
 	void		Init_Mouse( void );
 	void		Shutdown_Keyboard( void );
 	// Add a named key to the list queryable by the engine
@@ -118,18 +124,16 @@ private:
 	void		ScaleMouse( float *x, float *y );
 	void		ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float mouse_y );
 	void		MouseMove ( CUserCmd *cmd );
+
 	// Joystick  movement input helpers
 	void		ControllerMove ( float frametime, CUserCmd *cmd );
 	void		JoyStickMove ( float frametime, CUserCmd *cmd );
-	bool		ReadJoystick( void );
-	unsigned long *RawValuePointer( int axis );
+	float		ScaleAxisValue( const float axisValue, const float axisThreshold );
 
 	// Call this to get the cursor position. The call will be logged in the VCR file if there is one.
 	void		GetMousePos(int &x, int &y);
 	void		SetMousePos(int x, int y);
-
 	void		GetWindowCenter( int&x, int& y );
-
 	// Called once per frame to allow convar overrides to acceleration settings when mouse is active
 	void		CheckMouseAcclerationVars();
 
@@ -140,39 +144,19 @@ private:
 		unsigned int AxisFlags;
 		unsigned int AxisMap;
 		unsigned int ControlMap;
-		unsigned long *pRawValue;
 	} joy_axis_t;
 
 	void		DescribeJoystickAxis( char const *axis, joy_axis_t *mapping );
-	char const *DescribeAxis( int index );
+	char const	*DescribeAxis( int index );
 
 	enum
 	{
-		JOY_AXIS_X = 0,
-		JOY_AXIS_Y,
-		JOY_AXIS_Z,
-		JOY_AXIS_R,
-		JOY_AXIS_U,
-		JOY_AXIS_V,
-	};
-
-	enum
-	{
-		MOUSE_BUTTON_COUNT = 5
-	};
-
-	enum
-	{
-		JOY_MAX_AXES = 6,
-	};
-
-	enum
-	{
-		AxisNada = 0,
-		AxisForward,
-		AxisLook,
-		AxisSide,
-		AxisTurn
+		GAME_AXIS_NONE = 0,
+		GAME_AXIS_FORWARD,
+		GAME_AXIS_PITCH,
+		GAME_AXIS_SIDE,
+		GAME_AXIS_YAW,
+		MAX_GAME_AXES
 	};
 
 	enum
@@ -195,20 +179,8 @@ private:
 	bool		m_fMouseInitialized;
 	// Is the mosue active?
 	bool		m_fMouseActive;
-	// Is there a joystick?
-	bool		m_fJoystickAvailable;
 	// Has the joystick advanced initialization been run?
 	bool		m_fJoystickAdvancedInit;
-	// Does the joystick have a POV control?
-	bool		m_fJoystickHasPOVControl;
-	// Number of buttons on joystick
-	int			m_nJoystickButtons;
-	// Which joystick are we using?
-	int			m_nJoystickID;
-	unsigned int m_nJoystickFlags;
-	// Old Joystick button states
-	unsigned int m_nJoystickOldButtons;
-	unsigned int m_nJoystickOldPOVState;
 	// Number of mouse buttons
 	int			m_nMouseButtons;
 	// Old button states
@@ -229,7 +201,7 @@ private:
 	// Are the parameters valid
 	bool		m_fMouseParmsValid;
 	// Joystick Axis data
-	joy_axis_t m_rgAxes[ JOY_MAX_AXES ];
+	joy_axis_t m_rgAxes[ MAX_JOYSTICK_AXES ];
 	// List of queryable keys
 	CKeyboardKey *m_pKeys;
 	
@@ -274,5 +246,13 @@ extern kbutton_t in_moveleft;
 extern kbutton_t in_moveright;
 extern kbutton_t in_forward;
 extern kbutton_t in_back;
+extern kbutton_t in_joyspeed;
+
+extern class ConVar in_joystick;
+extern class ConVar joy_autosprint;
+
+extern void KeyDown( kbutton_t *b, bool bIgnoreKey = false );
+extern void KeyUp( kbutton_t *b, bool bIgnoreKey = false );
+
 
 #endif // INPUT_H

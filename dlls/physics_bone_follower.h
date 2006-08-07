@@ -44,6 +44,8 @@ public:
 
 	physfollower_t *GetBoneFollower( int iFollowerIndex );
 
+	int		GetNumBoneFollowers( void ){ return m_iNumBones; }
+
 private:
 	bool CreatePhysicsFollower( physfollower_t &follow, const char *pBoneName );
 

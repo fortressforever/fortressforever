@@ -68,6 +68,23 @@
 #define K_CAPSLOCK		175
 
 //
+// joystick axis "buttons". Allows each direction on an analog axis
+// to be treated by the engine as a button press. (ie, L/R Triggers on Xbox controller)
+//
+#define K_AXISX_POS		191
+#define	K_AXISX_NEG		192
+#define K_AXISY_POS		193
+#define	K_AXISY_NEG		194
+#define K_AXISZ_POS		195
+#define	K_AXISZ_NEG		196
+#define K_AXISR_POS		197
+#define	K_AXISR_NEG		198
+#define K_AXISU_POS		199
+#define	K_AXISU_NEG		200
+#define K_AXISV_POS		201
+#define	K_AXISV_NEG		202
+
+//
 // joystick buttons
 //
 #define	K_JOY1			203
@@ -114,8 +131,6 @@
 #define K_MWHEELDOWN	239
 #define K_MWHEELUP		240
 
-#define K_PAUSE			255
-
 //
 // mouse buttons generate virtual keys
 //
@@ -124,5 +139,35 @@
 #define	K_MOUSE3		243
 #define K_MOUSE4		244
 #define K_MOUSE5		245
+
+#define K_PAUSE			255
+
+// Xbox engine keys - use the same values defined for similar device on the PC
+#define	K_XBUTTON_A				K_JOY1
+#define	K_XBUTTON_B				K_JOY2
+#define	K_XBUTTON_X				K_JOY3
+#define	K_XBUTTON_Y				K_JOY4
+#define	K_XBUTTON_BLACK			K_AUX5 // Xbox
+#define	K_XBUTTON_WHITE			K_AUX6 // Xbox
+#define	K_XBUTTON_LBUTTON		K_AUX5 // Xbox 360
+#define	K_XBUTTON_RBUTTON		K_AUX6 // Xbox 360
+#define	K_XBUTTON_START			K_AUX7
+#define	K_XBUTTON_BACK			K_AUX8
+#define	K_XBUTTON_STICK1		K_AUX9
+#define	K_XBUTTON_STICK2		K_AUX10
+#define	K_XBUTTON_UP			K_AUX29
+#define	K_XBUTTON_RIGHT			K_AUX30
+#define	K_XBUTTON_DOWN			K_AUX31
+#define	K_XBUTTON_LEFT			K_AUX32
+#define K_XSTICK1_RIGHT			K_AXISX_POS
+#define K_XSTICK1_LEFT			K_AXISX_NEG		
+#define K_XSTICK1_UP			K_AXISY_POS
+#define K_XSTICK1_DOWN			K_AXISY_NEG
+#define	K_XBUTTON_LTRIGGER		K_AXISZ_POS
+#define	K_XBUTTON_RTRIGGER		K_AXISZ_NEG
+#define K_XSTICK2_RIGHT			K_AXISR_POS
+#define K_XSTICK2_LEFT			K_AXISR_NEG
+#define K_XSTICK2_UP			K_AXISU_POS
+#define K_XSTICK2_DOWN			K_AXISU_NEG
 
 #endif // KEYDEFS_H

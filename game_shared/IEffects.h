@@ -30,7 +30,7 @@ typedef CGameTrace trace_t;
 // Client-server neutral effects interface
 //-----------------------------------------------------------------------------
 #define IEFFECTS_INTERFACE_VERSION	"IEffects001"
-class IEffects : public IPredictionSystem
+abstract_class IEffects : public IPredictionSystem
 {
 public:
 	//
@@ -67,6 +67,9 @@ public:
 	// other client-server neutral interface?
 	virtual float Time() = 0;
 	virtual bool IsServer() = 0;
+
+	// Used by the playback system to suppress sounds
+	virtual void SuppressEffectsSounds( bool bSuppress ) = 0;
 };
 
 

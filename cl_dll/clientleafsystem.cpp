@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
@@ -6,8 +6,8 @@
 // $NoKeywords: $
 //
 // This file contains code to allow us to associate client data with bsp leaves.
-//
-//=============================================================================//
+//===========================================================================//
+
 #include "cbase.h"
 #include "ClientLeafSystem.h"
 #include "UtlBidirectionalSet.h"
@@ -34,6 +34,8 @@ static ConVar r_portalsopenall( "r_portalsopenall", "1", FCVAR_CHEAT, "Open all 
 class CClientLeafSystem : public IClientLeafSystem, public ISpatialLeafEnumerator
 {
 public:
+	virtual char const *Name() { return "CClientLeafSystem"; }
+
 	// constructor, destructor
 	CClientLeafSystem();
 	virtual ~CClientLeafSystem();
@@ -42,10 +44,11 @@ public:
 	bool Init() { return true; }
 	void Shutdown() {}
 
+	virtual bool IsPerFrame() { return true; }
+
 	void PreRender();
-	void Update( float frametime ) 
-	{
-	}
+	void PostRender() { }
+	void Update( float frametime ) { }
 
 	void LevelInitPreEntity();
 	void LevelInitPostEntity() {}
@@ -76,6 +79,7 @@ public:
 	virtual void CollateRenderablesInLeaf( int leaf, int worldListLeafIndex, SetupRenderInfo_t &info );
 	virtual void DrawStaticProps( bool enable );
 	virtual void DrawSmallEntities( bool enable );
+	virtual void EnableAlternateSorting( ClientRenderHandle_t handle, bool bEnable );
 
 	// Adds a renderable to a set of leaves
 	virtual void AddRenderableToLeaves( ClientRenderHandle_t handle, int nLeafCount, unsigned short *pLeaves );
@@ -99,14 +103,17 @@ public:
 	// Adds a shadow to a leaf
 	void AddShadowToLeaf( int leaf, ClientLeafShadowHandle_t handle );
 
-	// Singleton instance...
-	static CClientLeafSystem s_ClientLeafSystem;
-
-private:
 	// Fill in a list of the leaves this renderable is in.
 	// Returns -1 if the handle is invalid.
 	int GetRenderableLeaves( ClientRenderHandle_t handle, int leaves[128] );
 
+	// Get leaves this renderable is in
+	virtual bool GetRenderableLeaf ( ClientRenderHandle_t handle, int* pOutLeaf, const int* pInIterator = 0, int* pOutIterator = 0 );
+
+	// Singleton instance...
+	static CClientLeafSystem s_ClientLeafSystem;
+
+private:
 	// Creates a new renderable
 	void NewRenderable( IClientRenderable* pRenderable, RenderGroup_t type, int flags = 0 );
 
@@ -185,6 +192,7 @@ private:
 		RENDER_FLAGS_BRUSH_MODEL	= 0x04,
 		RENDER_FLAGS_STUDIO_MODEL	= 0x08,
 		RENDER_FLAGS_HASCHANGED		= 0x10,
+		RENDER_FLAGS_ALTERNATE_SORTING = 0x20,
 	};
 
 	// All the information associated with a particular handle
@@ -267,12 +275,39 @@ CClientLeafSystem CClientLeafSystem::s_ClientLeafSystem;
 IClientLeafSystem *g_pClientLeafSystem = &CClientLeafSystem::s_ClientLeafSystem;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CClientLeafSystem, IClientLeafSystem, CLIENTLEAFSYSTEM_INTERFACE_VERSION, CClientLeafSystem::s_ClientLeafSystem );
 
+void CalcRenderableWorldSpaceAABB_Fast( IClientRenderable *pRenderable, Vector &absMin, Vector &absMax );
 
 //-----------------------------------------------------------------------------
 // Helper functions.
 //-----------------------------------------------------------------------------
 void DefaultRenderBoundsWorldspace( IClientRenderable *pRenderable, Vector &absMins, Vector &absMaxs )
 {
+	// Tracker 37433:  This fixes a bug where if the stunstick is being wielded by a combine soldier, the fact that the stick was
+	//  attached to the soldier's hand would move it such that it would get frustum culled near the edge of the screen.
+	C_BaseEntity *pEnt = pRenderable->GetIClientUnknown()->GetBaseEntity();
+	if ( pEnt && pEnt->IsFollowingEntity() )
+	{
+		C_BaseEntity *pParent = pEnt->GetFollowedEntity();
+		if ( pParent )
+		{
+			// Get the parent's abs space world bounds.
+			CalcRenderableWorldSpaceAABB_Fast( pParent, absMins, absMaxs );
+
+			// Add the maximum of our local render bounds. This is making the assumption that we can be at any
+			// point and at any angle within the parent's world space bounds.
+			Vector vAddMins, vAddMaxs;
+			pEnt->GetRenderBounds( vAddMins, vAddMaxs );
+			// if our origin is actually farther away than that, expand again
+			float radius = pEnt->GetLocalOrigin().Length();
+
+			float flBloatSize = max( vAddMins.Length(), vAddMaxs.Length() );
+			flBloatSize = max(flBloatSize, radius);
+			absMins -= Vector( flBloatSize, flBloatSize, flBloatSize );
+			absMaxs += Vector( flBloatSize, flBloatSize, flBloatSize );
+			return;
+		}
+	}
+
 	Vector mins, maxs;
 	pRenderable->GetRenderBounds( mins, maxs );
 
@@ -302,6 +337,39 @@ inline void CalcRenderableWorldSpaceAABB(
 	Vector &absMaxs )
 {
 	pRenderable->GetRenderBoundsWorldspace( absMins, absMaxs );
+}
+
+
+// This gets an AABB for the renderable, but it doesn't cause a parent's bones to be setup.
+// This is used for placement in the leaves, but the more expensive version is used for culling.
+void CalcRenderableWorldSpaceAABB_Fast( IClientRenderable *pRenderable, Vector &absMin, Vector &absMax )
+{
+	C_BaseEntity *pEnt = pRenderable->GetIClientUnknown()->GetBaseEntity();
+	if ( pEnt && pEnt->IsFollowingEntity() )
+	{
+		C_BaseEntity *pParent = pEnt->GetMoveParent();
+		Assert( pParent );
+
+		// Get the parent's abs space world bounds.
+		CalcRenderableWorldSpaceAABB_Fast( pParent, absMin, absMax );
+
+		// Add the maximum of our local render bounds. This is making the assumption that we can be at any
+		// point and at any angle within the parent's world space bounds.
+		Vector vAddMins, vAddMaxs;
+		pEnt->GetRenderBounds( vAddMins, vAddMaxs );
+		// if our origin is actually farther away than that, expand again
+		float radius = pEnt->GetLocalOrigin().Length();
+
+		float flBloatSize = max( vAddMins.Length(), vAddMaxs.Length() );
+		flBloatSize = max(flBloatSize, radius);
+		absMin -= Vector( flBloatSize, flBloatSize, flBloatSize );
+		absMax += Vector( flBloatSize, flBloatSize, flBloatSize );
+	}
+	else
+	{
+		// Start out with our own render bounds. Since we don't have a parent, this won't incur any nasty 
+		CalcRenderableWorldSpaceAABB( pRenderable, absMin, absMax );
+	}
 }
 
 
@@ -339,6 +407,8 @@ void CClientLeafSystem::DrawSmallEntities( bool enable )
 //-----------------------------------------------------------------------------
 void CClientLeafSystem::LevelInitPreEntity()
 {
+	MEM_ALLOC_CREDIT();
+
 	m_Renderables.EnsureCapacity( 1024 );
 	m_RenderablesInLeaf.EnsureCapacity( 1024 );
 	m_ShadowsInLeaf.EnsureCapacity( 256 );
@@ -456,7 +526,14 @@ void CClientLeafSystem::CreateRenderableHandle( IClientRenderable* pRenderable, 
 	if (group == RENDER_GROUP_TRANSLUCENT_ENTITY)
 		bTwoPass = modelinfo->IsTranslucentTwoPass( pRenderable->GetModel() );
 
-	int flags = bIsStaticProp ? RENDER_FLAGS_STATIC_PROP : 0;
+	int flags = 0;
+	if ( bIsStaticProp )
+	{
+		flags = RENDER_FLAGS_STATIC_PROP;
+		if ( group == RENDER_GROUP_OPAQUE_ENTITY )
+			group = RENDER_GROUP_OPAQUE_STATIC;
+	}
+
 	if (bTwoPass)
 		flags |= RENDER_FLAGS_TWOPASS;
 
@@ -475,9 +552,25 @@ void CClientLeafSystem::ChangeRenderableRenderGroup( ClientRenderHandle_t handle
 
 
 //-----------------------------------------------------------------------------
+// Use alternate translucent sorting algorithm (draw translucent objects in the furthest leaf they lie in)
+//-----------------------------------------------------------------------------
+void CClientLeafSystem::EnableAlternateSorting( ClientRenderHandle_t handle, bool bEnable )
+{
+	RenderableInfo_t &info = m_Renderables[handle];
+	if ( bEnable )
+	{
+		info.m_Flags |= RENDER_FLAGS_ALTERNATE_SORTING;
+	}
+	else
+	{
+		info.m_Flags &= ~RENDER_FLAGS_ALTERNATE_SORTING; 
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Add/remove renderable
 //-----------------------------------------------------------------------------
-
 void CClientLeafSystem::AddRenderable( IClientRenderable* pRenderable, RenderGroup_t group )
 {
 	// force a relink we we try to draw it for the first time
@@ -546,6 +639,72 @@ int CClientLeafSystem::GetRenderableLeaves( ClientRenderHandle_t handle, int lea
 	return nLeaves;
 }
 
+
+//-----------------------------------------------------------------------------
+// Retrieve leaf handles to leaves a renderable is in
+// the pOutLeaf parameter is filled with the leaf the renderable is in.
+// If pInIterator is not specified, pOutLeaf is the first leaf in the list.
+// if pInIterator is specified, that iterator is used to return the next leaf
+// in the list in pOutLeaf.
+// the pOutIterator parameter is filled with the iterater which index to the pOutLeaf returned.
+//
+// Returns false on failure cases where pOutLeaf will be invalid. CHECK THE RETURN!
+//-----------------------------------------------------------------------------
+bool CClientLeafSystem::GetRenderableLeaf(ClientRenderHandle_t handle, int* pOutLeaf, const int* pInIterator /* = 0 */, int* pOutIterator /* = 0  */)
+{
+	// bail on invalid handle
+	if ( !m_Renderables.IsValidIndex( handle ) )
+		return false;
+
+	// bail on no output value pointer
+	if ( !pOutLeaf )
+		return false;
+
+	// an iterator was specified
+	if ( pInIterator )
+	{
+		int iter = *pInIterator;
+
+		// test for invalid iterator
+		if ( iter == m_RenderablesInLeaf.InvalidIndex() )
+			return false;
+
+		int iterNext =  m_RenderablesInLeaf.NextBucket( iter );
+
+		// test for end of list
+		if ( iterNext == m_RenderablesInLeaf.InvalidIndex() )
+			return false;
+
+		// Give the caller the iterator used
+		if ( pOutIterator )
+		{
+			*pOutIterator = iterNext;
+		}
+		
+		// set output value to the next leaf
+		*pOutLeaf = m_RenderablesInLeaf.Bucket( iterNext );
+
+	}
+	else // no iter param, give them the first bucket in the renderable's list
+	{
+		int iter = m_RenderablesInLeaf.FirstBucket( handle );
+
+		if ( iter == m_RenderablesInLeaf.InvalidIndex() )
+			return false;
+
+		// Set output value to this leaf
+		*pOutLeaf = m_RenderablesInLeaf.Bucket( iter );
+
+		// give this iterator to caller
+		if ( pOutIterator )
+		{
+			*pOutIterator = iter;
+		}
+		
+	}
+	
+	return true;
+}
 
 bool CClientLeafSystem::IsRenderableInPVS( IClientRenderable *pRenderable )
 {
@@ -782,19 +941,15 @@ void CClientLeafSystem::EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pL
 	{
 		int leaf = pLeaves[i];
 
-		// Add all shadows in the leaf to the renderable...
 		unsigned short j = m_ShadowsInLeaf.FirstElement( leaf );
 		while ( j != m_ShadowsInLeaf.InvalidIndex() )
 		{
 			ClientLeafShadowHandle_t shadow = m_ShadowsInLeaf.Element(j);
 			ShadowInfo_t& info = m_Shadows[shadow];
 
-			// Add each shadow exactly once to each renderable
 			if (info.m_EnumCount != m_ShadowEnum)
 			{
-				if (!pEnum->EnumShadow(info.m_Shadow))
-					return;
-
+				pEnum->EnumShadow(info.m_Shadow);
 				info.m_EnumCount = m_ShadowEnum;
 			}
 
@@ -866,7 +1021,8 @@ void CClientLeafSystem::InsertIntoTree( ClientRenderHandle_t handle )
 	// NOTE: The render bounds here are relative to the renderable's coordinate system
 	IClientRenderable* pRenderable = m_Renderables[handle].m_pRenderable;
 	Vector absMins, absMaxs;
-	CalcRenderableWorldSpaceAABB( pRenderable, absMins, absMaxs );
+	
+	CalcRenderableWorldSpaceAABB_Fast( pRenderable, absMins, absMaxs );
 	Assert( absMins.IsValid() && absMaxs.IsValid() );
 
 	ISpatialQuery* pQuery = engine->GetBSPTreeQuery();
@@ -906,6 +1062,10 @@ void CClientLeafSystem::RemoveFromTree( ClientRenderHandle_t handle )
 void CClientLeafSystem::RenderableChanged( ClientRenderHandle_t handle )
 {
 	Assert ( handle != INVALID_CLIENT_RENDER_HANDLE );
+	Assert( m_Renderables.IsValidIndex( handle ) );
+	if ( !m_Renderables.IsValidIndex( handle ) )
+		return;
+
 	if ( (m_Renderables[handle].m_Flags & RENDER_FLAGS_HASCHANGED ) == 0 )
 	{
 		m_Renderables[handle].m_Flags |= RENDER_FLAGS_HASCHANGED;
@@ -935,6 +1095,7 @@ inline bool CClientLeafSystem::IsViewModelRenderGroup( RenderGroup_t group ) con
 //-----------------------------------------------------------------------------
 void CClientLeafSystem::AddToViewModelList( ClientRenderHandle_t handle )
 {
+	MEM_ALLOC_CREDIT();
 	Assert( m_ViewModels.Find( handle ) == m_ViewModels.InvalidIndex() );
 	m_ViewModels.AddToTail( handle );
 }
@@ -1039,6 +1200,13 @@ void CClientLeafSystem::ComputeTranslucentRenderLeaf( int count, LeafIndex_t *pL
 					info.m_RenderLeaf = leaf;
 				}
 				info.m_RenderFrame = frameNumber;
+			}
+			else if ( info.m_Flags & RENDER_FLAGS_ALTERNATE_SORTING )
+			{
+				if( info.m_RenderGroup == RENDER_GROUP_TRANSLUCENT_ENTITY )
+				{
+					info.m_RenderLeaf = leaf;
+				}
 			}
 			idx = m_RenderablesInLeaf.NextElement(idx); 
 		}
@@ -1183,33 +1351,11 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 				continue;
 		}
 
-#ifdef TF2_CLIENT_DLL
-		if (info.m_flRenderDistSq != 0.0f)
-		{
-			Vector mins, maxs;
-			renderable.m_pRenderable->GetRenderBounds( mins, maxs );
-
-			if ((maxs.z - mins.z) < 100)
-			{
-				Vector vCenter;
-				VectorLerp( mins, maxs, 0.5f, vCenter );
-				vCenter += renderable.m_pRenderable->GetRenderOrigin();
-
-				float flDistSq = info.m_vecRenderOrigin.DistToSqr( vCenter );
-				if (info.m_flRenderDistSq <= flDistSq)
-					continue;
-			}
-		}
-#endif
-
-		// LOD cull...
-		if ( !renderable.m_pRenderable->LODTest() )
-			continue;
-
 		if( renderable.m_RenderGroup != RENDER_GROUP_TRANSLUCENT_ENTITY )
 		{
+			RenderGroup_t group = (RenderGroup_t)renderable.m_RenderGroup;
 			AddRenderableToRenderList( *info.m_pRenderList, renderable.m_pRenderable, 
-				worldListLeafIndex, (RenderGroup_t)renderable.m_RenderGroup, handle);
+				worldListLeafIndex, group, handle);
 		}
 		else
 		{
@@ -1229,7 +1375,7 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 
 	// Do detail objects.
 	// These don't have render handles!
-	if( info.m_bDrawDetailObjects && ShouldDrawDetailObjectsInLeaf( leaf, info.m_nDetailBuildFrame ) )
+	if ( IsPC() && info.m_bDrawDetailObjects && ShouldDrawDetailObjectsInLeaf( leaf, info.m_nDetailBuildFrame ) )
 	{
 		idx = m_Leaf[leaf].m_FirstDetailProp;
 		int count = m_Leaf[leaf].m_DetailPropCount;

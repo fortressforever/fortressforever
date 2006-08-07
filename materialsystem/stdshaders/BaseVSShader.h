@@ -15,6 +15,7 @@
 
 #include "shaderlib/cshader.h"
 #include "shaderlib/baseshader.h"
+#include <renderparm.h>
 
 
 //-----------------------------------------------------------------------------
@@ -28,7 +29,8 @@ enum
 //-----------------------------------------------------------------------------
 // Helper macro for vertex shaders
 //-----------------------------------------------------------------------------
-#define BEGIN_VS_SHADER(name,help)	__BEGIN_SHADER_INTERNAL( CBaseVSShader, name, help )
+#define BEGIN_VS_SHADER_FLAGS(_name, _help, _flags)	__BEGIN_SHADER_INTERNAL( CBaseVSShader, _name, _help, _flags )
+#define BEGIN_VS_SHADER(_name,_help)	__BEGIN_SHADER_INTERNAL( CBaseVSShader, _name, _help, 0 )
 
 
 // GR - indication of alpha usage
@@ -77,7 +79,6 @@ class CBaseVSShader : public CBaseShader
 {
 public:
 
-protected:
 	// Loads bump lightmap coordinates into the pixel shader
 	void LoadBumpLightmapCoordinateAxes_PixelShader( int pixelReg );
 
@@ -87,8 +88,16 @@ protected:
 	// Pixel and vertex shader constants....
 	void SetPixelShaderConstant( int pixelReg, int constantVar );
 
+	// Pixel and vertex shader constants....
+	void SetPixelShaderConstantGammaToLinear( int pixelReg, int constantVar );
+
 	// This version will put constantVar into x,y,z, and constantVar2 into the w
 	void SetPixelShaderConstant( int pixelReg, int constantVar, int constantVar2 );
+	void SetPixelShaderConstantGammaToLinear( int pixelReg, int constantVar, int constantVar2 );
+
+	// Helpers for setting constants that need to be converted to linear space (from gamma space).
+	void SetVertexShaderConstantGammaToLinear( int var, float const* pVec, int numConst = 1, bool bForce = false );
+	void SetPixelShaderConstantGammaToLinear( int var, float const* pVec, int numConst = 1, bool bForce = false );
 
 	void SetVertexShaderConstant( int vertexReg, int constantVar );
 
@@ -121,6 +130,7 @@ protected:
 
 	// Sets up ambient light cube...
 	void SetAmbientCubeDynamicStateVertexShader( );
+	float GetAmbientLightCubeLuminance( );
 
 	// Helpers for dealing with envmaptint
 	void SetEnvMapTintPixelShaderDynamicState( int pixelReg, int tintVar, int alphaVar, bool bConvertFromGammaToLinear = false );
@@ -132,10 +142,29 @@ protected:
 	void SetModulationVertexShaderDynamicState();
 	void SetModulationPixelShaderDynamicState( int modulationVar );
 	void SetModulationPixelShaderDynamicState_LinearColorSpace( int modulationVar );
+	void SetModulationPixelShaderDynamicState_LinearColorSpace_LinearScale( int modulationVar, float flScale );
+
+	// Sets a color + alpha into shader constants
+	void SetColorVertexShaderConstant( int nVertexReg, int colorVar, int alphaVar );
+	void SetColorPixelShaderConstant( int nPixelReg, int colorVar, int alphaVar );
 
 	//
 	// Standard shader passes!
 	//
+
+	void InitParamsUnlitGeneric_DX8( 
+		int baseTextureVar,
+		int detailScaleVar,
+		int envmapOptionalVar,
+		int envmapVar,
+		int envmapTintVar, 
+		int envmapMaskScaleVar );
+
+	void InitUnlitGeneric_DX8( 
+		int baseTextureVar,
+		int detailVar,
+		int envmapVar,
+		int envmapMaskVar );
 
 	// Dx8 Unlit Generic pass
 	void VertexShaderUnlitGenericPass( bool doSkin, int baseTextureVar, int frameVar, 
@@ -169,7 +198,7 @@ protected:
 														  bool bBaseTexture,
 														  bool bBaseAlphaEnvmapMask,
 														  bool bDetail );
-	void DrawWorldBaseTexture( int baseTextureVar, int baseTextureTransformVar, int frameVar );
+	void DrawWorldBaseTexture( int baseTextureVar, int baseTextureTransformVar, int frameVar, int colorVar, int alphaVar );
 	void DrawWorldBumpedDiffuseLighting( int bumpmapVar, int bumpFrameVar,
 		int bumpTransformVar, bool bMultiply );
 	void DrawWorldBumpedSpecularLighting( int envmapMaskVar, int envmapMaskFrame,
@@ -182,7 +211,7 @@ protected:
 	void DrawBaseTextureBlend( int baseTextureVar, int baseTextureTransformVar, 
 		int baseTextureFrameVar,
 		int baseTexture2Var, int baseTextureTransform2Var, 
-		int baseTextureFrame2Var );
+		int baseTextureFrame2Var, int colorVar, int alphaVar );
 	void DrawWorldBumpedDiffuseLighting_Base_ps14( int bumpmapVar, int bumpFrameVar,
 		int bumpTransformVar, int baseTextureVar, int baseTextureTransformVar, int frameVar );
 	void DrawWorldBumpedDiffuseLighting_Blend_ps14( int bumpmapVar, int bumpFrameVar, int bumpTransformVar, 
@@ -194,136 +223,12 @@ protected:
 		int envmapMaskVar, int envmapMaskFrame,
 		int envmapVar, 
 		int envmapFrameVar,
-		int envmapTintVar, int alphaVar,
+		int envmapTintVar, int colorVar, int alphaVar,
 		int envmapContrastVar, int envmapSaturationVar, int frameVar, int fresnelReflectionVar,
 		bool doBaseTexture2 = false,
 		int baseTexture2Var = -1, int baseTextureTransform2Var = -1,
 		int baseTextureFrame2Var = -1 
 		);
-
-	void InitParamsVertexLitAndUnlitGeneric_DX9( 
-		const char *pMaterialName,
-		bool bVertexLitGeneric,
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar, 
-		int selfIllumTintVar,
-		int detailVar, 		int detailFrameVar, 	int detailScaleVar, 
-		int envmapVar, 		int envmapFrameVar, 	
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int bumpmapVar,    	int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar, int envmapSaturationVar, int alphaTestReferenceVar, 
-		int parallaxMapVar, int parallaxMapScaleVar, int parallaxMapBiasVar, 
-		int albedoVar, int flashlightTextureVar, int flashlightTextureFrameVar );
-
-	void InitVertexLitAndUnlitGeneric_DX9( 
-		const char *pMaterialName,
-		bool bVertexLitGeneric,
-		int baseTextureVar,	int frameVar,			int baseTextureTransformVar, 
-		int selfIllumTintVar,
-		int detailVar, 		int detailFrameVar, 	int detailScaleVar, 
-		int envmapVar, 		int envmapFrameVar, 
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int bumpmapVar,    	int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar, int envmapSaturationVar, int alphaTestReferenceVar, 
-		int parallaxMapVar, int parallaxMapScaleVar, int flashlightTextureVar, 
-		int flashlightTextureFrameVar );
-
-	void DrawVertexLitAndUnlitGeneric_DX9( 
-		bool bVertexLitGeneric,
-		int baseTextureVar,	int frameVar,			int baseTextureTransformVar, 
-		int selfIllumTintVar,
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int bumpmapVar, 	int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar, int envmapSaturationVar, int alphaTestReferenceVar, int parallaxMapVar, 
-		int parallaxMapScaleVar, int parallaxMapBiasVar,
-		int flashlightTextureVar, int flashlightTextureFrameVar );
-
-	void InitParamsUnlitGeneric_DX9(
-		const char *pMaterialName,
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar, 
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar,  
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	int envmapContrastVar,	int envmapSaturationVar,
-		int alphaTestReferenceVar, int flashlightTextureVar, int flashlightTextureFrameVar  );
-
-	void InitUnlitGeneric_DX9( 
-		const char *pMaterialName,
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar, 
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	int envmapContrastVar,	int envmapSaturationVar,
-		int alphaTestReferenceVar, int flashlightTextureVar, int flashlightTextureFrameVar );
-
-	void DrawUnlitGeneric_DX9( 
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar, 
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	int envmapContrastVar,	int envmapSaturationVar,
-		int alphaTestReferenceVar, int flashlightTextureVar, int flashlightTextureFrameVar );
-
-	// HDR-related methods
-	void InitParamsVertexLitAndUnlitGeneric_HDR(
-		const char *pMaterialName,
-		bool bVertexLitGeneric,													 
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar,
-		int selfIllumTintVar,
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	
-		int bumpmapVar,     int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar,	int envmapSaturationVar );
-
-	void InitVertexLitAndUnlitGeneric_HDR(
-		const char *pMaterialName,
-		bool bVertexLitGeneric,													 
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar,
-		int selfIllumTintVar,
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	
-		int bumpmapVar,     int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar,	int envmapSaturationVar );
-
-	void InitUnlitGeneric_HDR( 
-		const char *pMaterialName,
-		int baseTextureVar, int frameVar,			int baseTextureTransformVar, 
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar,	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar,	int envmapContrastVar,	int envmapSaturationVar );
-
-	void DrawVertexLitAndUnlitGeneric_HDR( 
-		bool bVertexLitGeneric,
-		int baseTextureVar,	int frameVar,			int baseTextureTransformVar, 
-		int selfIllumTintVar,
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar,		int detailScaleVar, 
-		int envmapVar,		int envmapFrameVar, 
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int bumpmapVar, 	int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar, int envmapSaturationVar );
-
-	void DrawUnlitGeneric_HDR( 
-		int baseTextureVar,	int frameVar,			int baseTextureTransformVar, 
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar, 	int detailScaleVar, 
-		int envmapVar, 		int envmapFrameVar, 
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int envmapContrastVar, int envmapSaturationVar );
 	
 	// Computes the shader index for vertex lit materials
 	int ComputeVertexLitShaderIndex( bool bVertexLitGeneric, bool hasBump, bool hasEnvmap, bool hasVertexColor, bool bHasNormal ) const;
@@ -333,14 +238,42 @@ protected:
 	// Helper for setting up flashlight constants
 	void SetFlashlightVertexShaderConstants( bool bBump, int bumpTransformVar, bool bSetTextureTransforms );
 
-	void DrawFlashlight_dx80( IMaterialVar** params, IShaderDynamicAPI *pShaderAPI, IShaderShadow* pShaderShadow, bool bBump,
-										int bumpmapVar, int bumpmapFrame, int bumpTransform, int flashlightTextureVar, int flashlightTextureFrameVar,
-										bool bLightmappedGeneric, bool bWorldVertexTransition, int nWorldVertexTransitionPassID, int baseTexture2Var,
-										int baseTexture2FrameVar );
-	void DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAPI *pShaderAPI, IShaderShadow* pShaderShadow, bool bBump,
-										int bumpmapVar, int bumpmapFrame, int bumpTransform, int flashlightTextureVar, int flashlightTextureFrameVar,
-										bool bLightmappedGeneric, bool bWorldVertexTransition, int baseTexture2Var,
-										int baseTexture2FrameVar, int bumpmap2Var, int bumpmap2Frame );
+	void DrawFlashlight_dx80( IMaterialVar** params, IShaderDynamicAPI *pShaderAPI, IShaderShadow* pShaderShadow, 
+		bool bBump, int bumpmapVar, int bumpmapFrame, int bumpTransform, int flashlightTextureVar, 
+		int flashlightTextureFrameVar, bool bLightmappedGeneric, bool bWorldVertexTransition, 
+		int nWorldVertexTransitionPassID, int baseTexture2Var, int baseTexture2FrameVar,
+		bool bTeeth=false, int nTeethForwardVar=0, int nTeethIllumFactorVar=0 );
+
+	struct DrawFlashlight_dx90_Vars_t
+	{
+		DrawFlashlight_dx90_Vars_t() 
+		{ 
+			// set all ints to -1
+			memset( this, 0xFF, sizeof(DrawFlashlight_dx90_Vars_t) ); 
+			// set all bools to a default value.
+			m_bBump = false;
+			m_bLightmappedGeneric = false;
+			m_bWorldVertexTransition = false;
+			m_bTeeth = false;
+		}
+		bool m_bBump;
+		bool m_bLightmappedGeneric;
+		bool m_bWorldVertexTransition;
+		bool m_bTeeth;
+		int m_nBumpmapVar;
+		int m_nBumpmapFrame;
+		int m_nBumpTransform;
+		int m_nFlashlightTextureVar;
+		int m_nFlashlightTextureFrameVar;
+		int m_nBaseTexture2Var;
+		int m_nBaseTexture2FrameVar;
+		int m_nBumpmap2Var;
+		int m_nBumpmap2Frame;
+		int m_nTeethForwardVar;
+		int m_nTeethIllumFactorVar;
+	};
+	void DrawFlashlight_dx90( IMaterialVar** params, 
+		IShaderDynamicAPI *pShaderAPI, IShaderShadow* pShaderShadow, DrawFlashlight_dx90_Vars_t &vars );
 	void SetWaterFogColorPixelShaderConstantLinear( int reg );
 	void SetWaterFogColorPixelShaderConstantGamma( int reg );
 private:
@@ -351,20 +284,27 @@ private:
 		int envMapFrameVar, int envmapMaskVar, int envmapMaskFrameVar,
 		int envmapMaskScaleVar, int envmapTintVar );
 
-	void DrawVertexLitAndUnlitGenericPass_HDR( 
-		bool bVertexLitGeneric,
-		int baseTextureVar,	int frameVar,			int baseTextureTransformVar, 
-		int selfIllumTintVar,
-		int brightnessTextureVar,
-		int detailVar,		int detailFrameVar, 	int detailScaleVar, 
-		int envmapVar, 		int envmapFrameVar, 
-		int envmapMaskVar, 	int envmapMaskFrameVar, int envmapMaskTransformVar,
-		int envmapTintVar, 
-		int bumpmapVar, 	int bumpFrameVar,		int bumpTransformVar,
-		int envmapContrastVar, int envmapSaturationVar,
-		BlendType_t blendType, bool alphaTest, int pass );
+	// Converts a color + alpha into a vector4
+	void ColorVarsToVector( int colorVar, int alphaVar, Vector4D &color );
+
 };
 
+FORCEINLINE void SetFlashLightColorFromState( FlashlightState_t const &state, IShaderDynamicAPI *pShaderAPI, int nPSRegister=28 )
+{
+	float tmscale= ( pShaderAPI->GetToneMappingScaleLinear() ).x;
+	tmscale=1.0/tmscale;
+	float const *color=state.m_Color.Base();
+	float psconsts[4]={ tmscale*color[0], tmscale*color[1], tmscale*color[2], color[3] };
+	pShaderAPI->SetPixelShaderConstant( nPSRegister, (float *) psconsts );
+}
+
+
+class ConVar;
+
+#ifdef _DEBUG
+extern ConVar mat_envmaptintoverride;
+extern ConVar mat_envmaptintscale;
+#endif
 
 
 #endif // BASEVSSHADER_H

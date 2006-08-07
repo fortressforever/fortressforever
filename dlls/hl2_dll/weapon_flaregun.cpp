@@ -34,7 +34,10 @@ BEGIN_DATADESC( CFlare )
 	DEFINE_FIELD( m_bFading,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bLight,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bSmoke,			FIELD_BOOLEAN ),
-
+	DEFINE_FIELD( m_bPropFlare,		FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bInActiveList,	FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_pNextFlare,		FIELD_CLASSPTR ),
+	
 	//Input functions
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Start", InputStart ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Die", InputDie ),
@@ -53,11 +56,47 @@ IMPLEMENT_SERVERCLASS_ST( CFlare, DT_Flare )
 	SendPropFloat( SENDINFO( m_flScale ), 0, SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_bLight ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bSmoke ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_bPropFlare ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE()
+
+CFlare *CFlare::activeFlares = NULL;
+
+CFlare *CFlare::GetActiveFlares( void )
+{
+	return CFlare::activeFlares;
+}
 
 Class_T CFlare::Classify( void )
 {
 	return CLASS_FLARE; 
+}
+
+CBaseEntity *CreateFlare( Vector vOrigin, QAngle Angles, CBaseEntity *pOwner, float flDuration )
+{
+	CFlare *pFlare = CFlare::Create( vOrigin, Angles, pOwner, flDuration );
+
+	if ( pFlare )
+	{
+		pFlare->m_bPropFlare = true;
+	}
+
+	return pFlare;
+}
+
+void KillFlare( CBaseEntity *pOwnerEntity, CBaseEntity *pEntity, float flKillTime )
+{
+	CFlare *pFlare = dynamic_cast< CFlare *>( pEntity );
+
+	if ( pFlare )
+	{
+		float flDieTime = (pFlare->m_flTimeBurnOut - gpGlobals->curtime) - flKillTime;
+
+		if ( flDieTime > 1.0f )
+		{
+			pFlare->Die( flDieTime );
+			pOwnerEntity->SetNextThink( gpGlobals->curtime + flDieTime + 3.0f );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -73,13 +112,19 @@ CFlare::CFlare( void )
 	m_flNextDamage	= gpGlobals->curtime;
 	m_lifeState		= LIFE_ALIVE;
 	m_iHealth		= 100;
+	m_bPropFlare	= false;
+	m_bInActiveList	= false;
+	m_pNextFlare	= NULL;
 }
 
 CFlare::~CFlare()
 {
 	CSoundEnvelopeController::GetController().SoundDestroy( m_pBurnSound );
 	m_pBurnSound = NULL;
+
+	RemoveFromActiveFlares();
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -242,6 +287,11 @@ void CFlare::FlareThink( void )
 {
 	float	deltaTime = ( m_flTimeBurnOut - gpGlobals->curtime );
 
+	if ( !m_bInActiveList && ( ( deltaTime > FLARE_BLIND_TIME ) || ( m_flTimeBurnOut == -1.0f ) ) )
+	{
+		AddToActiveFlares();
+	}
+
 	if ( m_flTimeBurnOut != -1.0f )
 	{
 		//Fading away
@@ -250,6 +300,12 @@ void CFlare::FlareThink( void )
 			m_bFading = true;
 			CSoundEnvelopeController::GetController().SoundChangePitch( m_pBurnSound, 60, deltaTime );
 			CSoundEnvelopeController::GetController().SoundFadeOut( m_pBurnSound, deltaTime );
+		}
+
+		// if flare is no longer bright, remove it from active flare list
+		if ( m_bInActiveList && ( deltaTime <= FLARE_BLIND_TIME ) )
+		{
+			RemoveFromActiveFlares();
 		}
 
 		//Burned out
@@ -534,7 +590,51 @@ void CFlare::InputLaunch( inputdata_t &inputdata )
 	Launch( direction, speed );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Removes flare from active flare list
+//-----------------------------------------------------------------------------
+void CFlare::RemoveFromActiveFlares( void )
+{
+	CFlare *pFlare;
+	CFlare *pPrevFlare;
 
+	if ( !m_bInActiveList )
+		return;
+
+	pPrevFlare = NULL;
+	for( pFlare = CFlare::activeFlares; pFlare != NULL; pFlare = pFlare->m_pNextFlare )
+	{
+		if ( pFlare == this )
+		{
+			if ( pPrevFlare )
+			{
+				pPrevFlare->m_pNextFlare = m_pNextFlare;
+			}
+			else
+			{
+				activeFlares = m_pNextFlare;
+			}
+			break;
+		}
+		pPrevFlare = pFlare;
+	}
+
+	m_pNextFlare = NULL;
+	m_bInActiveList = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Adds flare to active flare list
+//-----------------------------------------------------------------------------
+void CFlare::AddToActiveFlares( void )
+{
+	if ( !m_bInActiveList )
+	{
+		m_pNextFlare = CFlare::activeFlares;
+		CFlare::activeFlares = this;
+		m_bInActiveList = true;
+	}
+}
 
 #if 0
 

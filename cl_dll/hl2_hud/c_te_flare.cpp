@@ -42,12 +42,16 @@ public:
 	float	m_flScale;
 	bool	m_bLight;
 	bool	m_bSmoke;
+	bool	m_bPropFlare;
 	pixelvis_handle_t m_queryHandle;
 
 
 private:
 	C_Flare( const C_Flare & );
+	TimedEvent	m_teSmokeSpawn;
 
+	int		m_iAttachment;
+	
 	SimpleParticle	*m_pParticle[2];
 };
 
@@ -56,6 +60,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_Flare, DT_Flare, CFlare )
 	RecvPropFloat( RECVINFO( m_flScale ) ),
 	RecvPropInt( RECVINFO( m_bLight ) ),
 	RecvPropInt( RECVINFO( m_bSmoke ) ),
+	RecvPropInt( RECVINFO( m_bPropFlare ) ),
 END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -69,9 +74,12 @@ C_Flare::C_Flare() : CSimpleEmitter( "C_Flare" )
 
 	m_bLight		= true;
 	m_bSmoke		= true;
+	m_bPropFlare	= false;
 
 	SetDynamicallyAllocated( false );
 	m_queryHandle = 0;
+
+	m_iAttachment = -1;
 }
 
 
@@ -102,6 +110,10 @@ void C_Flare::OnDataChanged( DataUpdateType_t updateType )
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
 		SetSortOrigin( GetAbsOrigin() );
+		if ( m_bSmoke )
+		{
+			m_teSmokeSpawn.Init( 8 );
+		}
 	}
 
 	BaseClass::OnDataChanged( updateType );
@@ -189,11 +201,17 @@ void C_Flare::Update( float timeDelta )
 	//Check for LOS
 	pixelvis_queryparams_t params;
 	params.Init(GetAbsOrigin());
+	params.proxySize = 8.0f; // Inches
 	
 	float visible = PixelVisibility_FractionVisible( params, &m_queryHandle );
 
 	float	fColor;
+#ifdef HL2_CLIENT_DLL
 	float	baseScale = m_flScale;
+#else
+	// NOTE!!!  This is bigger by a factor of 1.2 to deal with fixing a bug from HL2.  See dlight_t.h
+	float	baseScale = m_flScale * 1.2f;
+#endif
 
 	//Account for fading out
 	if ( ( m_flTimeBurnOut != -1.0f ) && ( ( m_flTimeBurnOut - gpGlobals->curtime ) <= 10.0f ) )
@@ -234,48 +252,98 @@ void C_Flare::Update( float timeDelta )
 	{
 		dlight_t *dl= effects->CL_AllocDlight( index );
 
-		dl->origin	= GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = dl->color.b = random->RandomInt( 32, 64 );
-		dl->radius	= baseScale * random->RandomFloat( 110.0f, 128.0f );
-		dl->die		= gpGlobals->curtime;
+		
+
+		if ( m_bPropFlare == false )
+		{
+			dl->origin	= GetAbsOrigin();
+			dl->color.r = 255;
+			dl->die		= gpGlobals->curtime + 0.1f;
+
+			dl->radius	= baseScale * random->RandomFloat( 110.0f, 128.0f );
+			dl->color.g = dl->color.b = random->RandomInt( 32, 64 );
+		}
+		else
+		{
+			if ( m_iAttachment == -1 )
+			{
+				m_iAttachment =  LookupAttachment( "fuse" );
+			}
+
+			if ( m_iAttachment != -1 )
+			{
+				Vector effect_origin;
+				QAngle effect_angles;
+				
+				GetAttachment( m_iAttachment, effect_origin, effect_angles );
+
+				//Raise the light a little bit away from the flare so it lights it up better.
+				dl->origin	= effect_origin + Vector( 0, 0, 4 );
+				dl->color.r = 255;
+				dl->die		= gpGlobals->curtime + 0.1f;
+
+				dl->radius	= baseScale * random->RandomFloat( 245.0f, 256.0f );
+				dl->color.g = dl->color.b = random->RandomInt( 95, 128 );
+		
+				dlight_t *el= effects->CL_AllocElight( index );
+
+				el->origin	= effect_origin;
+				el->color.r = 255;
+				el->color.g = dl->color.b = random->RandomInt( 95, 128 );
+				el->radius	= baseScale * random->RandomFloat( 260.0f, 290.0f );
+				el->die		= gpGlobals->curtime + 0.1f;
+			}
+		}
 	}
 
 	//
 	// Smoke
 	//
 
+	float dt = timeDelta;
+
 	if ( m_bSmoke )
 	{
-		Vector	smokeOrg = GetAbsOrigin();
+		while ( m_teSmokeSpawn.NextEvent( dt ) )
+		{
+			Vector	smokeOrg = GetAbsOrigin();
 
-		Vector	flareScreenDir = ( smokeOrg - MainViewOrigin() );
-		VectorNormalize( flareScreenDir );
+			Vector	flareScreenDir = ( smokeOrg - MainViewOrigin() );
+			VectorNormalize( flareScreenDir );
 
-		smokeOrg = smokeOrg + ( flareScreenDir * 2.0f );
-		smokeOrg[2] += baseScale * 4.0f;
+			smokeOrg = smokeOrg + ( flareScreenDir * 2.0f );
+			smokeOrg[2] += baseScale * 4.0f;
 
-		SimpleParticle *sParticle = (SimpleParticle *) AddParticle( sizeof( SimpleParticle ), GetPMaterial( "particle/particle_noisesphere" ), smokeOrg );
+			SimpleParticle *sParticle = (SimpleParticle *) AddParticle( sizeof( SimpleParticle ), GetPMaterial( "particle/particle_noisesphere" ), smokeOrg );
+				
+			if ( sParticle == NULL )
+				return;
+
+			sParticle->m_flLifetime		= 0.0f;
+			sParticle->m_flDieTime		= 1.0f;
 			
-		if ( sParticle == NULL )
-			return;
+			sParticle->m_vecVelocity	= Vector( random->RandomFloat( -16.0f, 16.0f ), random->RandomFloat( -16.0f, 16.0f ), random->RandomFloat( 8.0f, 16.0f ) + 32.0f );
 
-		sParticle->m_flLifetime		= 0.0f;
-		sParticle->m_flDieTime		= 1.0f;
-		
-		sParticle->m_vecVelocity	= Vector( random->RandomFloat( -16.0f, 16.0f ), random->RandomFloat( -16.0f, 16.0f ), random->RandomFloat( 8.0f, 16.0f ) + 32.0f );
+			if ( m_bPropFlare )
+			{
+				sParticle->m_uchColor[0]	= 255;
+				sParticle->m_uchColor[1]	= 100;
+				sParticle->m_uchColor[2]	= 100;
+			}
+			else
+			{
+				sParticle->m_uchColor[0]	= 255;
+				sParticle->m_uchColor[1]	= 48;
+				sParticle->m_uchColor[2]	= 48;
+			}
 
-		fColor = random->RandomInt( 64, 128 );
-
-		sParticle->m_uchColor[0]	= fColor+64;
-		sParticle->m_uchColor[1]	= fColor;
-		sParticle->m_uchColor[2]	= fColor;
-		sParticle->m_uchStartAlpha	= random->RandomInt( 16, 32 );
-		sParticle->m_uchEndAlpha	= 0;
-		sParticle->m_uchStartSize	= random->RandomInt( 2, 4 );
-		sParticle->m_uchEndSize		= sParticle->m_uchStartSize * 6.0f;
-		sParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		sParticle->m_flRollDelta	= random->RandomFloat( -2.0f, 2.0f );
+			sParticle->m_uchStartAlpha	= random->RandomInt( 64, 90 );
+			sParticle->m_uchEndAlpha	= 0;
+			sParticle->m_uchStartSize	= random->RandomInt( 2, 4 );
+			sParticle->m_uchEndSize		= sParticle->m_uchStartSize * 8.0f;
+			sParticle->m_flRoll			= random->RandomInt( 0, 2*M_PI );
+			sParticle->m_flRollDelta	= random->RandomFloat( -(M_PI/6.0f), M_PI/6.0f );
+		}
 	}
 
 	if ( !bVisible )

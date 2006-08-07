@@ -57,7 +57,7 @@ public:
 
 	const CEntInfo *FirstEntInfo() const;
 	const CEntInfo *NextEntInfo( const CEntInfo *pInfo ) const;
-	const CEntInfo *GetEntInfoPtr( const CBaseHandle &hEnt );
+	const CEntInfo *GetEntInfoPtr( const CBaseHandle &hEnt ) const;
 	const CEntInfo *GetEntInfoPtrByIndex( int index ) const;
 
 // Overridables.
@@ -193,7 +193,7 @@ inline const CEntInfo *CBaseEntityList::NextEntInfo( const CEntInfo *pInfo ) con
 	return pInfo->m_pNext;
 }
 
-inline const CEntInfo *CBaseEntityList::GetEntInfoPtr( const CBaseHandle &hEnt )
+inline const CEntInfo *CBaseEntityList::GetEntInfoPtr( const CBaseHandle &hEnt ) const
 {
 	int iSlot = hEnt.GetEntryIndex();
 	return &m_EntPtrArray[iSlot];

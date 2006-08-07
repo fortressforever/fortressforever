@@ -52,11 +52,18 @@ public:
 	virtual void HideClientUI();
 	virtual bool AllowedToPrintText( void );
 	
+#ifndef _XBOX
 	virtual int GetViewPortScheme() { return m_pBackGround->GetScheme(); }
 	virtual VPANEL GetViewPortPanel() { return m_pBackGround->GetVParent(); }
+#endif
 	virtual AnimationController *GetAnimationController() { return m_pAnimController; }
 
-	virtual void ShowBackGround(bool bShow) { m_pBackGround->SetVisible( bShow ); }
+	virtual void ShowBackGround(bool bShow) 
+	{ 
+#ifndef _XBOX
+		m_pBackGround->SetVisible( bShow ); 
+#endif
+	}
 
 	virtual int GetDeathMessageStartHeight( void );	
 
@@ -67,7 +74,7 @@ public: // IGameEventListener:
 
 
 protected:
-
+#ifndef _XBOX
 	class CBackGroundPanel : public vgui::Frame
 	{
 	private:
@@ -93,7 +100,7 @@ protected:
 		virtual void PerformLayout() 
 		{
 			int w,h;
-			surface()->GetScreenSize(w, h);
+			GetHudSize(w, h);
 
 			// fill the screen
 			SetBounds(0,0,w,h);
@@ -108,7 +115,7 @@ protected:
 		}
 
 	};
-
+#endif
 protected:
 
 	virtual void Paint();
@@ -118,8 +125,9 @@ protected:
 protected:
 	IGameUIFuncs*		m_GameuiFuncs; // for key binding details
 	IGameEventManager2*	m_GameEventManager;
+#ifndef _XBOX
 	CBackGroundPanel	*m_pBackGround;
-
+#endif
 	CUtlVector<IViewPortPanel*> m_Panels;
 	
 	bool				m_bHasParent; // Used to track if child windows have parents or not.
@@ -128,9 +136,7 @@ protected:
 	IViewPortPanel		*m_pLastActivePanel;
 	vgui::HCursor		m_hCursorNone;
 	vgui::AnimationController *m_pAnimController;
-	
-	CUtlQueue<IViewPortPanel*> m_PendingDialogs; // a queue of menus to display, the top of the stack is the 
-												// menu that is currently displayed
+	int					m_OldSize[2];
 };
 
 

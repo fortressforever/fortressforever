@@ -635,7 +635,7 @@ void CNPC_CraneDriver::InputForcePickup( inputdata_t &inputdata )
 	{
 		// Turn the magnet off now to drop anything we might have already on the magnet
 		m_hCrane->TurnMagnetOff();
-		m_hPickupTarget = gEntList.FindEntityByName( NULL, iszPickupName, NULL );
+		m_hPickupTarget = gEntList.FindEntityByName( NULL, iszPickupName, NULL, inputdata.pActivator, inputdata.pCaller );
 		m_bForcedPickup = true;
 		m_bForcedDropoff = false;
 		SetCondition( COND_PROVOKED );
@@ -652,7 +652,7 @@ void CNPC_CraneDriver::InputForceDrop( inputdata_t &inputdata )
 	string_t iszDropName = inputdata.value.StringID();
 	if ( iszDropName != NULL_STRING )
 	{
-		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszDropName, NULL );
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, iszDropName, NULL, inputdata.pActivator, inputdata.pCaller );
 		if ( !pEntity )
 		{
 			Warning("Crane couldn't find entity named %s\n", STRING(iszDropName) );

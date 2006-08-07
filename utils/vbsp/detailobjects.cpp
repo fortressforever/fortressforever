@@ -48,6 +48,9 @@ struct DetailModel_t
 	Vector2D	m_Pos[2];
 	Vector2D	m_Tex[2];
 	float		m_flRandomScaleStdDev;
+	unsigned char m_ShapeSize;
+	unsigned char m_ShapeAngle;
+	unsigned char m_SwayAmount;
 };
 
 struct DetailObjectGroup_t
@@ -138,7 +141,26 @@ static void ParseDetailGroup( int detailId, KeyValues* pGroupKeyValues )
 				const char *pSpriteData = pIter->GetString( "sprite", 0 );
 				if (pSpriteData)
 				{
-					model.m_Type = DETAIL_PROP_TYPE_SPRITE;
+					const char *pProcModelType = pIter->GetString( "sprite_shape", 0 );
+
+					if ( pProcModelType )
+					{
+						if ( !Q_stricmp( pProcModelType, "cross" ) )
+						{
+							model.m_Type = DETAIL_PROP_TYPE_SHAPE_CROSS;
+						}
+						else if ( !Q_stricmp( pProcModelType, "tri" ) )
+						{
+							model.m_Type = DETAIL_PROP_TYPE_SHAPE_TRI;
+						}
+						else
+							model.m_Type = DETAIL_PROP_TYPE_SPRITE;
+					}					
+					else
+					{
+						// card sprite
+                        model.m_Type = DETAIL_PROP_TYPE_SPRITE;
+					}
 
 					model.m_Tex[0].Init();
 					model.m_Tex[1].Init();
@@ -173,6 +195,19 @@ static void ParseDetailGroup( int detailId, KeyValues* pGroupKeyValues )
 					}
 
 					model.m_flRandomScaleStdDev = pIter->GetFloat( "spriterandomscale", 0.0f );
+
+					// sway is a percent of max sway, cl_detail_max_sway
+					float flSway = clamp( pIter->GetFloat( "sway", 0.0f ), 0.0, 1.0 );
+					model.m_SwayAmount = (unsigned char)( 255.0 * flSway );
+
+					// shape angle
+					// for the tri shape, this is the angle each side is fanned out
+					model.m_ShapeAngle = pIter->GetInt( "shape_angle", 0 );
+
+					// shape size
+					// for the tri shape, this is the distance from the origin to the center of a side
+					float flShapeSize = clamp( pIter->GetFloat( "shape_size", 0.0f ), 0.0, 1.0 );
+					model.m_ShapeSize = (unsigned char)( 255.0 * flShapeSize );
 				}
 			}
 
@@ -243,17 +278,39 @@ static void ParseDetailObjectFile( KeyValues& keyValues )
 
 
 //-----------------------------------------------------------------------------
+// Finds the name of the detail.vbsp file to use
+//-----------------------------------------------------------------------------
+static const char *FindDetailVBSPName( void )
+{
+	for( int i = 0; i < num_entities; i++ )
+	{
+		char* pEntity = ValueForKey( &entities[i], "classname" );
+		if ( !strcmp( pEntity, "worldspawn" ) )
+		{
+			const char *pDetailVBSP = ValueForKey( &entities[i], "detailvbsp" );
+			if ( !pDetailVBSP || !pDetailVBSP[0] ) 
+			{
+				pDetailVBSP = "detail.vbsp";
+			}
+			return pDetailVBSP;
+		}
+	}
+	return "detail.vbsp";
+}
+
+
+//-----------------------------------------------------------------------------
 // Loads up the detail object dictionary
 //-----------------------------------------------------------------------------
 void LoadEmitDetailObjectDictionary( const char* pGameDir )
 {
 	// Set the required global lights filename and try looking in qproject
-	KeyValues * values = new KeyValues("detail.vbsp");
-	if (!values->LoadFromFile( g_pFileSystem, "detail.vbsp"))
-		return;
-
-	ParseDetailObjectFile( *values );
-
+	const char *pDetailVBSP = FindDetailVBSPName();
+	KeyValues * values = new KeyValues( pDetailVBSP );
+	if ( values->LoadFromFile( g_pFileSystem, pDetailVBSP ) )
+	{
+		ParseDetailObjectFile( *values );
+	}
 	values->deleteThis();
 }
 
@@ -435,7 +492,9 @@ static void AddDetailToLump( const char* pModelName, const Vector& pt, const QAn
 //-----------------------------------------------------------------------------
 // Add a detail sprite to the lump.
 //-----------------------------------------------------------------------------
-static void AddDetailSpriteToLump( const Vector &vecOrigin, const QAngle &vecAngles, int nOrientation, const Vector2D *pPos, const Vector2D *pTex, float flScale )
+static void AddDetailSpriteToLump( const Vector &vecOrigin, const QAngle &vecAngles, int nOrientation,
+								  const Vector2D *pPos, const Vector2D *pTex, float flScale, int iType,
+									int iShapeAngle = 0, int iShapeSize = 0, int iSwayAmount = 0 )
 {
 	// Insert an element into the object dictionary if it aint there...
 	int i = s_DetailObjectLump.AddToTail( );
@@ -457,10 +516,26 @@ static void AddDetailSpriteToLump( const Vector &vecOrigin, const QAngle &vecAng
 	objectLump.m_LightStyles = -1;
 	objectLump.m_LightStyleCount = 0;
 	objectLump.m_Orientation = nOrientation;
-	objectLump.m_Type = DETAIL_PROP_TYPE_SPRITE;
+	objectLump.m_Type = iType;
 	objectLump.m_flScale = flScale;
+	objectLump.m_ShapeAngle = iShapeAngle;
+	objectLump.m_ShapeSize = iShapeSize;
+	objectLump.m_SwayAmount = iSwayAmount;
 }
 
+static void AddDetailSpriteToLump( const Vector &vecOrigin, const QAngle &vecAngles, DetailModel_t const& model, float flScale )
+{
+	AddDetailSpriteToLump( vecOrigin,
+		vecAngles,
+		model.m_Orientation,
+		model.m_Pos,
+		model.m_Tex,
+		flScale,
+		model.m_Type,
+		model.m_ShapeAngle,
+		model.m_ShapeSize,
+		model.m_SwayAmount );
+}
 
 //-----------------------------------------------------------------------------
 // Got a detail! Place it on the surface...
@@ -534,7 +609,9 @@ static void PlaceDetail( DetailModel_t const& model, const Vector& pt, const Vec
 		AddDetailToLump( model.m_ModelName.String(), pt, angles, model.m_Orientation );
 		break;
 
+	// Sprites and procedural models made from sprites
 	case DETAIL_PROP_TYPE_SPRITE:
+	default:
 		{
 			float flScale = 1.0f;
 			if ( model.m_flRandomScaleStdDev != 0.0f ) 
@@ -542,7 +619,7 @@ static void PlaceDetail( DetailModel_t const& model, const Vector& pt, const Vec
 				flScale = fabs( RandomGaussianFloat( 1.0f, model.m_flRandomScaleStdDev ) );
 			}
 
-			AddDetailSpriteToLump( pt, angles, model.m_Orientation, model.m_Pos, model.m_Tex, flScale );
+			AddDetailSpriteToLump( pt, angles, model, flScale );
 		}
 		break;
 	}
@@ -721,11 +798,13 @@ static void SetLumpData( )
 
 	GameLumpHandle_t handle = GetGameLumpHandle(GAMELUMP_DETAIL_PROPS);
 	if (handle != InvalidGameLump())
+	{
 		DestroyGameLump(handle);
+	}
 	int nDictSize = s_DetailObjectDictLump.Count() * sizeof(DetailObjectDictLump_t);
 	int nSpriteDictSize = s_DetailSpriteDictLump.Count() * sizeof(DetailSpriteDictLump_t);
 	int nObjSize = s_DetailObjectLump.Count() * sizeof(DetailObjectLump_t);
-	int nSize = nDictSize + nSpriteDictSize + nObjSize + 3 * sizeof(int);
+	int nSize = nDictSize + nSpriteDictSize + nObjSize + (3 * sizeof(int));
 
 	handle = CreateGameLump( GAMELUMP_DETAIL_PROPS, nSize, 0, GAMELUMP_DETAIL_PROPS_VERSION );
 
@@ -733,13 +812,19 @@ static void SetLumpData( )
 	CUtlBuffer buf( GetGameLump(handle), nSize );
 	buf.PutInt( s_DetailObjectDictLump.Count() );
 	if (nDictSize)
+	{
 		buf.Put( s_DetailObjectDictLump.Base(), nDictSize );
+	}
 	buf.PutInt( s_DetailSpriteDictLump.Count() );
 	if (nSpriteDictSize)
+	{
 		buf.Put( s_DetailSpriteDictLump.Base(), nSpriteDictSize );
+	}
 	buf.PutInt( s_DetailObjectLump.Count() );
 	if (nObjSize)
+	{
 		buf.Put( s_DetailObjectLump.Base(), nObjSize );
+	}
 }
 
 
@@ -843,7 +928,7 @@ void EmitDetailModels()
 			tex[0] /= flTextureSize;
 			tex[1] /= flTextureSize;
 
-			AddDetailSpriteToLump( origin, angles, nOrientation, pos, tex, 1.0f );
+			AddDetailSpriteToLump( origin, angles, nOrientation, pos, tex, 1.0f, DETAIL_PROP_TYPE_SPRITE );
 
 			// strip this ent from the .bsp file
 			entities[i].epairs = 0;

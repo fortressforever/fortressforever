@@ -146,6 +146,9 @@ protected:
 	void OnRestore();
 
 	void UpdateTranslateActivityMap();
+
+	// Standoff overrides base AI crouch handling
+	bool		IsCrouching( void ) { return false; }
 	
 private:
 	

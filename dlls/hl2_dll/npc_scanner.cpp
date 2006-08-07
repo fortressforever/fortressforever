@@ -57,7 +57,12 @@
 
 #define SCANNER_FLASH_MIN_DIST			900		// How far does flash effect enemy
 #define SCANNER_FLASH_MAX_DIST			1200	// How far does flash effect enemy
+
+#ifdef _XBOX
+#define	SCANNER_FLASH_MAX_VALUE			164		// XBox brightness
+#else
 #define	SCANNER_FLASH_MAX_VALUE			240		// How bright is maximum flash
+#endif
 
 #define SCANNER_PHOTO_NEAR_DIST			64
 #define SCANNER_PHOTO_FAR_DIST			128
@@ -175,8 +180,11 @@ DECLARE_CLASS( CNPC_CScanner, CAI_BasePhysicsFlyingBot );
 public:
 	CNPC_CScanner();
 
+	virtual void	UpdateEfficiency( bool bInPVS );
+
 	Class_T			Classify( void ) { return(CLASS_SCANNER); }
 	int				GetSoundInterests( void ) { return (SOUND_WORLD|SOUND_COMBAT|SOUND_PLAYER|SOUND_DANGER); }
+	virtual float	GetAutoAimRadius() { return 12.0f; }
 
 	void			GatherConditions( void );
 	void			Event_Killed( const CTakeDamageInfo &info );
@@ -203,9 +211,9 @@ public:
 	Disposition_t	IRelationType(CBaseEntity *pTarget);
 
 	void			IdleSound( void );
-	void			DeathSound( void );
+	void			DeathSound( const CTakeDamageInfo &info );
 	void			AlertSound( void );
-	void			PainSound( void );
+	void			PainSound( const CTakeDamageInfo &info );
 
 	void			NPCThink( void );
 	
@@ -242,6 +250,8 @@ public:
 	void			InputSetDistanceOverride( inputdata_t &inputdata );
 
 	void			InspectTarget( inputdata_t &inputdata, ScannerFlyMode_t eFlyMode );
+
+	virtual bool	CanBecomeServerRagdoll( void ) { return false;	}
 
 public:
 	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
@@ -304,6 +314,9 @@ public:
 	Vector			SpotlightCurrentPos(void);
 	void			SpotlightCreate(void);
 	void			SpotlightDestroy(void);
+
+protected:
+	void			BecomeClawScanner( void ) { m_bIsClawScanner = true; }
 
 private:
 	bool	MovingToInspectTarget( void );
@@ -567,6 +580,12 @@ CNPC_CScanner::CNPC_CScanner()
 //-----------------------------------------------------------------------------
 void CNPC_CScanner::Spawn(void)
 {
+#ifdef _XBOX
+	// Always fade the corpse
+	AddSpawnFlags( SF_NPC_FADE_CORPSE );
+	AddEffects( EF_NOSHADOW );
+#endif // _XBOX
+
 	// Check for user error
 	if (m_flSpotlightMaxLength <= 0)
 	{
@@ -710,6 +729,14 @@ void CNPC_CScanner::Activate()
 	m_pEyeFlash->SetScale( 1.4 );
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void CNPC_CScanner::UpdateEfficiency( bool bInPVS )	
+{
+	SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); 
+	SetMoveEfficiency( AIME_NORMAL ); 
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -952,6 +979,20 @@ void CNPC_CScanner::Gib( void )
 		BaseClass::Event_Killed( m_KilledInfo );
 	}
 
+	// Add a random chance of spawning a battery...
+	if ( !HasSpawnFlags(SF_NPC_NO_WEAPON_DROP) && random->RandomFloat( 0.0f, 1.0f) < 0.3f )
+	{
+		CItem *pBattery = (CItem*)CreateEntityByName("item_battery");
+		if ( pBattery )
+		{
+			pBattery->SetAbsOrigin( GetAbsOrigin() );
+			pBattery->SetAbsVelocity( GetAbsVelocity() );
+			pBattery->SetLocalAngularVelocity( GetLocalAngularVelocity() );
+			pBattery->ActivateWhenAtRest();
+			pBattery->Spawn();
+		}
+	}
+
 	DeployMine();
 
 	UTIL_Remove(this);
@@ -1052,8 +1093,6 @@ void CNPC_CScanner::Event_Killed( const CTakeDamageInfo &info )
 
 	DeployMine();
 
-	m_OnDeath.FireOutput( info.GetAttacker(), this );
-
 	ClearInspectTarget();
 
 	// Interrupt whatever schedule I'm on
@@ -1061,20 +1100,6 @@ void CNPC_CScanner::Event_Killed( const CTakeDamageInfo &info )
 
 	// Remove spotlight
 	SpotlightDestroy();
-
-	// Add a random chance of spawning a battery...
-	if ( !HasSpawnFlags(SF_NPC_NO_WEAPON_DROP) && random->RandomFloat( 0.0f, 1.0f) < 0.3f )
-	{
-		CItem *pBattery = (CItem*)CreateEntityByName("item_battery");
-		if ( pBattery )
-		{
-			pBattery->SetAbsOrigin( GetAbsOrigin() );
-			pBattery->SetAbsVelocity( GetAbsVelocity() );
-			pBattery->SetLocalAngularVelocity( GetLocalAngularVelocity() );
-			pBattery->ActivateWhenAtRest();
-			pBattery->Spawn();
-		}
-	}
 
 	// Remove sprite
 	UTIL_Remove(m_pEyeFlash);
@@ -1086,6 +1111,8 @@ void CNPC_CScanner::Event_Killed( const CTakeDamageInfo &info )
 		Vector vecDelta = GetLocalOrigin() - GetEnemy()->GetLocalOrigin();
 		if ( ( vecDelta.z > 120 ) && ( vecDelta.Length() > 360 ) )
 		{	
+			// If I'm divebombing, don't take any more damage. It will make Event_Killed() be called again.
+			// This is especially bad if someone machineguns the divebombing scanner. 
 			AttackDivebomb();
 			return;
 		}
@@ -1264,7 +1291,7 @@ void CNPC_CScanner::AlertSound(void)
 //------------------------------------------------------------------------------
 // Purpose:
 //------------------------------------------------------------------------------
-void CNPC_CScanner::DeathSound(void)
+void CNPC_CScanner::DeathSound( const CTakeDamageInfo &info )
 {
 	ScannerEmitSound( "Die" );
 }
@@ -1290,7 +1317,7 @@ void CNPC_CScanner::IdleSound(void)
 //-----------------------------------------------------------------------------
 // Purpose: Plays a sound when hurt.
 //-----------------------------------------------------------------------------
-void CNPC_CScanner::PainSound(void)
+void CNPC_CScanner::PainSound( const CTakeDamageInfo &info )
 {
 	ScannerEmitSound( "Pain" );
 }
@@ -1389,6 +1416,7 @@ void CNPC_CScanner::Precache(void)
 		PrecacheScriptSound( "NPC_SScanner.DeployMine" );
 
 		PrecacheScriptSound( "NPC_SScanner.FlyLoop" );
+		UTIL_PrecacheOther( "combine_mine" );
 	}
 	else
 	{
@@ -2961,6 +2989,8 @@ void CNPC_CScanner::AttackDivebomb( void )
 		SpotlightDestroy();
 	}
 
+	m_takedamage = DAMAGE_NO;
+
 	StartSmokeTrail();
 }
 
@@ -4118,7 +4148,7 @@ int CNPC_CScanner::DrawDebugTextOverlays(void)
 
 		char tempstr[512];
 		Q_snprintf( tempstr, sizeof(tempstr), "speed (max): %.2f (%.2f)", vel.Length(), m_flSpeed );
-		NDebugOverlay::EntityText( entindex(), nOffset, tempstr, 0 );
+		EntityText( nOffset, tempstr, 0 );
 		nOffset++;
 	}
 
@@ -4162,9 +4192,8 @@ void CNPC_CScanner::UpdateHead( float flInterval )
 	CBaseEntity *pTarget = EntityToWatch();
 
 	Vector	vLookPos;
-	QAngle	vLookAngle;
 
-	if ( GetAttachment( "eyes", vLookPos, vLookAngle ) == false )
+	if ( !HasCondition( COND_IN_PVS ) || GetAttachment( "eyes", vLookPos ) == false )
 	{
 		vLookPos = EyePosition();
 	}
@@ -4617,3 +4646,33 @@ AI_BEGIN_CUSTOM_NPC( npc_cscanner, CNPC_CScanner )
 
 	
 AI_END_CUSTOM_NPC()
+
+//-----------------------------------------------------------------------------
+// Claw Scanner
+//
+// Scanner that always spawns as a claw scanner
+//-----------------------------------------------------------------------------
+	
+class CNPC_ClawScanner : public CNPC_CScanner
+{
+DECLARE_CLASS( CNPC_ClawScanner, CNPC_CScanner );
+
+public:
+	CNPC_ClawScanner();
+	DECLARE_DATADESC();
+};
+
+BEGIN_DATADESC( CNPC_ClawScanner )
+END_DATADESC()
+
+
+LINK_ENTITY_TO_CLASS(npc_clawscanner, CNPC_ClawScanner);
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CNPC_ClawScanner::CNPC_ClawScanner()
+{
+	// override our superclass's setting
+	BecomeClawScanner();
+}

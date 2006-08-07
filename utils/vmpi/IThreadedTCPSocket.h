@@ -147,7 +147,7 @@ public:
 ITCPConnectSocket* ThreadedTCP_CreateListener( 
 	IHandlerCreator *pHandlerCreator,	// This handles messages from the socket.
 	const unsigned short port,			// Listen on this port.
-	int nQueueLength = -1				// How many connections 
+	int nQueueLength = 5				// How many connections 
 	);
 
 

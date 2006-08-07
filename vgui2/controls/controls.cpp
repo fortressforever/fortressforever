@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include <FileSystem.h>
 
 #include <stdio.h>
@@ -66,6 +67,7 @@ vgui::IPanel *ipanel()
 IFileSystem *g_pFileSystemInterface = NULL;
 IFileSystem *filesystem()
 {
+	Assert( g_pFileSystemInterface );
 	return g_pFileSystemInterface;
 }
 
@@ -111,13 +113,14 @@ bool VGui_InitInterfacesList( const char *moduleName, CreateInterfaceFn *factory
 	// If you hit this error, then you need to include memoverride.cpp in the project somewhere or else
 	// you'll get crashes later when vgui_controls allocates KeyValues and vgui tries to delete them.
 #if !defined(NO_MALLOC_OVERRIDE)
+#ifndef _XBOX
 	if ( _heapmin() != 1 )
 	{
 		Assert( false );
 		Error( "Must include memoverride.cpp in your project." );
 	}
 #endif
-	
+#endif	
 	// keep a record of this module name
 	strncpy(g_szControlsModuleName, moduleName, sizeof(g_szControlsModuleName));
 	g_szControlsModuleName[sizeof(g_szControlsModuleName) - 1] = 0;

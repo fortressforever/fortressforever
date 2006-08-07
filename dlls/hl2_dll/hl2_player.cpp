@@ -1,8 +1,8 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL2.
 //
-//=============================================================================
+//=============================================================================//
 
 #include "cbase.h"
 #include "hl2_player.h"
@@ -39,12 +39,20 @@
 #include "npc_barnacle.h"
 #include "entitylist.h"
 #include "env_zoom.h"
+#include "hl2_gamerules.h"
+#include "prop_combine_ball.h"
+#include "datacache/imdlcache.h"
+#include "eventqueue.h"
+
+#ifdef HL2_EPISODIC
+#include "npc_alyx_episodic.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
 extern ConVar weapon_showproficiency;
+extern ConVar autoaim_max_dist;
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -68,6 +76,10 @@ ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "190" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
 
+ConVar hl2_xbox_aiming( "hl2_xbox_aiming", "1" );
+
+ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
+
 #ifdef HL2MP
 	#define	HL2_WALK_SPEED 150
 	#define	HL2_NORM_SPEED 190
@@ -78,6 +90,9 @@ ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
 	#define	HL2_SPRINT_SPEED hl2_sprintspeed.GetFloat()
 #endif
 
+#ifdef _XBOX 
+	#define AUTOSPRINT_MIN_DURATION	1.0f
+#endif//_XBOX
 
 ConVar player_showpredictedposition( "player_showpredictedposition", "0" );
 ConVar player_showpredictedposition_timestep( "player_showpredictedposition_timestep", "1.0" );
@@ -87,6 +102,77 @@ ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
 
 ConVar sv_infinite_aux_power( "sv_infinite_aux_power", "0", FCVAR_CHEAT );
 
+ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CC_ToggleZoom( void )
+{
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if( pPlayer )
+	{
+		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+		if( pHL2Player && pHL2Player->IsSuitEquipped() )
+		{
+			pHL2Player->ToggleZoom();
+		}
+	}
+}
+
+static ConCommand toggle_zoom("toggle_zoom", CC_ToggleZoom, "Toggles zoom display" );
+
+// ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_CHEAT ); // Links us to the client's version
+ConVar xc_crouch_range( "xc_crouch_range", "0.85", FCVAR_ARCHIVE, "Percentarge [1..0] of joystick range to allow ducking within" );	// Only 1/2 of the range is used
+ConVar xc_use_crouch_limiter( "xc_use_crouch_limiter", "0", FCVAR_ARCHIVE, "Use the crouch limiting logic on the controller" );
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CC_ToggleDuck( void )
+{
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	if ( pPlayer == NULL )
+		return;
+
+	// Cannot be frozen
+	if ( pPlayer->GetFlags() & FL_FROZEN )
+		return;
+
+	static bool		bChecked = false;
+	static ConVar *pCVcl_forwardspeed = NULL;
+	if ( !bChecked )
+	{
+		bChecked = true;
+		pCVcl_forwardspeed = ( ConVar * )cvar->FindVar( "cl_forwardspeed" );
+	}
+
+
+	// If we're not ducked, do extra checking
+	if ( xc_use_crouch_limiter.GetBool() )
+	{
+		if ( pPlayer->GetToggledDuckState() == false )
+		{
+			float flForwardSpeed = 400.0f;
+			if ( pCVcl_forwardspeed )
+			{
+				flForwardSpeed = pCVcl_forwardspeed->GetFloat();
+			}
+
+			flForwardSpeed = max( 1.0f, flForwardSpeed );
+
+			// Make sure we're not in the blindspot on the crouch detection
+			float flStickDistPerc = ( pPlayer->GetStickDist() / flForwardSpeed ); // Speed is the magnitude
+			if ( flStickDistPerc > xc_crouch_range.GetFloat() )
+				return;
+		}
+	}
+
+	// Toggle the duck
+	pPlayer->ToggleDuck();
+}
+
+static ConCommand toggle_duck("toggle_duck", CC_ToggleDuck, "Toggles duck" );
 
 #ifndef HL2MP
 LINK_ENTITY_TO_CLASS( player, CHL2_Player );
@@ -118,6 +204,12 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 
+	/*
+	// These are initialized every time the player calls Activate()
+	DEFINE_FIELD( m_bIsAutoSprinting, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_fAutoSprintMinTime, FIELD_TIME ),
+	*/
+
 	// 	Field is used within a single tick, no need to save restore
 	// DEFINE_FIELD( m_bPlayUseDenySound, FIELD_BOOLEAN ),  
 	//							m_pPlayerAISquad reacquired on load
@@ -140,12 +232,31 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flLastDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flTargetFindTime, FIELD_TIME ),
 
-	DEFINE_FIELD( m_flAdmireGlovesAnimTime, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flAdmireGlovesAnimTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flFlashlightPowerDrainScale, FIELD_FLOAT ),
+	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
+
+	DEFINE_FIELD( m_hLockedAutoAimEntity, FIELD_EHANDLE ),
+
+	DEFINE_EMBEDDED( m_LowerWeaponTimer ),
+	DEFINE_EMBEDDED( m_AutoaimTimer ),
 
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgnoreFallDamage", InputIgnoreFallDamage ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "OnSquadMemberKilled", OnSquadMemberKilled ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableFlashlight", InputDisableFlashlight ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableFlashlight", InputEnableFlashlight ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "ForceDropPhysObjects", InputForceDropPhysObjects ),
+
 	DEFINE_SOUNDPATCH( m_sndLeeches ),
 	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
+
+	DEFINE_FIELD( m_flArmorReductionTime, FIELD_TIME ),
+	DEFINE_FIELD( m_iArmorReductionFrom, FIELD_INTEGER ),
+
+	DEFINE_FIELD( m_flTimeUseSuspended, FIELD_TIME ),
+
+	//DEFINE_FIELD( m_hPlayerProxy, FIELD_EHANDLE ), //Shut up class check!
 
 END_DATADESC()
 
@@ -153,6 +264,10 @@ CHL2_Player::CHL2_Player()
 {
 	m_nNumMissPositions	= 0;
 	m_pPlayerAISquad = 0;
+	m_bSprintEnabled = true;
+
+	m_flArmorReductionTime = 0.0f;
+	m_iArmorReductionFrom = 0;
 }
 
 //
@@ -166,8 +281,12 @@ CHL2_Player::CHL2_Player()
 	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 12.5f );				// 100 units in 8 seconds
 #endif
 
-CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 2.222 );	// 100 units in 45 second
-CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 10.00 );			// 100 units in 10 seconds
+#ifdef HL2_EPISODIC
+	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 1.111 );	// 100 units in 90 second
+#else
+	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 2.222 );	// 100 units in 45 second
+#endif
+CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 units in 15 seconds (plus three padded seconds)
 
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
@@ -196,6 +315,7 @@ void CHL2_Player::Precache( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::CheckSuitZoom( void )
 {
+//#ifndef _XBOX 
 	//Adrian - No zooming without a suit!
 	if ( IsSuitEquipped() )
 	{
@@ -208,13 +328,27 @@ void CHL2_Player::CheckSuitZoom( void )
 			StartZooming();
 		}
 	}
+//#endif//_XBOX
 }
 
-void CHL2_Player::EquipSuit( void )
+void CHL2_Player::EquipSuit( bool bPlayEffects )
 {
+	MDLCACHE_CRITICAL_SECTION();
 	BaseClass::EquipSuit();
 	
-    StartAdmireGlovesAnimation();
+	m_HL2Local.m_bDisplayReticle = true;
+
+	if ( bPlayEffects == true )
+	{
+		StartAdmireGlovesAnimation();
+	}
+}
+
+void CHL2_Player::RemoveSuit( void )
+{
+	BaseClass::RemoveSuit();
+
+	m_HL2Local.m_bDisplayReticle = false;
 }
 
 void CHL2_Player::HandleSpeedChanges( void )
@@ -226,15 +360,21 @@ void CHL2_Player::HandleSpeedChanges( void )
 		// The state of the sprint/run button has changed.
 		if ( IsSuitEquipped() )
 		{
-			if ( !(m_afButtonPressed & IN_SPEED)  && IsSprinting() )
+			if ( !(m_afButtonPressed & IN_SPEED) && IsSprinting() )
 			{
+#ifndef _XBOX
 				StopSprinting();
+#endif
 			}
 			else if ( (m_afButtonPressed & IN_SPEED) && !IsSprinting() )
 			{
 				if ( CanSprint() )
 				{
+#ifdef _XBOX
+					StartAutoSprint();
+#else
 					StartSprinting();
+#endif
 				}
 				else
 				{
@@ -242,6 +382,12 @@ void CHL2_Player::HandleSpeedChanges( void )
 					m_nButtons &= ~IN_SPEED;
 				}
 			}
+#ifdef _XBOX
+			else if( (m_afButtonPressed & IN_SPEED) && IsSprinting() )
+			{
+				StopSprinting();
+			}
+#endif//_XBOX
 		}
 		else
 		{
@@ -279,6 +425,23 @@ void CHL2_Player::HandleSpeedChanges( void )
 		 StopWalking();
 }
 
+//-----------------------------------------------------------------------------
+// This happens when we powerdown from the mega physcannon to the regular one
+//-----------------------------------------------------------------------------
+void CHL2_Player::HandleArmorReduction( void )
+{
+	if ( m_flArmorReductionTime < gpGlobals->curtime )
+		return;
+
+	if ( ArmorValue() <= 0 )
+		return;
+
+	float flPercent = 1.0f - (( m_flArmorReductionTime - gpGlobals->curtime ) / ARMOR_DECAY_TIME );
+
+	int iArmor = Lerp( flPercent, m_iArmorReductionFrom, 0 );
+
+	SetArmorValue( iArmor );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Allow pre-frame adjustments on the player
@@ -298,6 +461,7 @@ void CHL2_Player::PreThink(void)
 	// Riding a vehicle?
 	if ( IsInAVehicle() )	
 	{
+		VPROF( "CHL2_Player::PreThink-Vehicle" );
 		// make sure we update the client, check for timed damage and update suit even if we are in a vehicle
 		UpdateClientData();		
 		CheckTimeBasedDamage();
@@ -315,6 +479,7 @@ void CHL2_Player::PreThink(void)
 	// only affects you if sv_autojump is nonzero.
 	if( (GetFlags() & FL_ONGROUND) && sv_autojump.GetFloat() != 0 )
 	{
+		VPROF( "CHL2_Player::PreThink-Autojump" );
 		// check autojump
 		Vector vecCheckDir;
 
@@ -353,13 +518,42 @@ void CHL2_Player::PreThink(void)
 		}
 	}
 
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
 	HandleSpeedChanges();
+#ifdef HL2_EPISODIC
+	HandleArmorReduction();
+#endif
+
+#ifdef _XBOX
+	if( m_bIsAutoSprinting )
+	{
+		// Stop sprinting if the player lets off the stick for a moment.
+		if( GetStickDist() == 0.0f )
+		{
+			if( gpGlobals->curtime > m_fAutoSprintMinTime )
+			{
+				StopSprinting();
+			}
+		}
+		else
+		{
+			// Stop sprinting one half second after the player stops inputting with the move stick.
+			m_fAutoSprintMinTime = gpGlobals->curtime + 0.5f;
+		}
+	}
+#endif//_XBOX
+	VPROF_SCOPE_END();
 
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
 		return;         // finale
 
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-ItemPreFrame" );
 	ItemPreFrame( );
+	VPROF_SCOPE_END();
+
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-WaterMove" );
 	WaterMove();
+	VPROF_SCOPE_END();
 
 	if ( g_pGameRules && g_pGameRules->FAllowFlashlight() )
 		m_Local.m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
@@ -367,24 +561,41 @@ void CHL2_Player::PreThink(void)
 		m_Local.m_iHideHUD |= HIDEHUD_FLASHLIGHT;
 
 	
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CommanderUpdate" );
 	CommanderUpdate();
+	VPROF_SCOPE_END();
 
 	// Operate suit accessories and manage power consumption/charge
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-SuitPower_Update" );
 	SuitPower_Update();
+	VPROF_SCOPE_END();
 
 	// checks if new client data (for HUD and view control) needs to be sent to the client
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-UpdateClientData" );
 	UpdateClientData();
+	VPROF_SCOPE_END();
 	
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CheckTimeBasedDamage" );
 	CheckTimeBasedDamage();
+	VPROF_SCOPE_END();
 
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CheckSuitUpdate" );
 	CheckSuitUpdate();
+	VPROF_SCOPE_END();
+
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-CheckSuitZoom" );
 	CheckSuitZoom();
+	VPROF_SCOPE_END();
 
 	if (m_lifeState >= LIFE_DYING)
 	{
 		PlayerDeathThink();
 		return;
 	}
+
+#ifdef HL2_EPISODIC
+	CheckFlashlight();
+#endif
 
 	// So the correct flags get sent to client asap.
 	//
@@ -520,11 +731,26 @@ void CHL2_Player::PreThink(void)
 	UpdateWeaponPosture();
 
 	// Disallow shooting while zooming
+#ifdef _XBOX
+	if ( IsZooming() )
+	{
+		if( !GetActiveWeapon() || !GetActiveWeapon()->IsWeaponZoomed() )
+		{
+			// If not zoomed because of the weapon itself, do not attack.
+			m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
+		}
+	}
+#else	
 	if ( m_nButtons & IN_ZOOM )
 	{
 		//FIXME: Held weapons like the grenade get sad when this happens
+#ifdef HL2_EPISODIC
+		// Episodic allows players to zoom while using a func_tank
+		if ( !m_hUseEntity || GetActiveWeapon()->IsWeaponVisible() )
+#endif
 		m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
 	}
+#endif//_XBOX
 }
 
 void CHL2_Player::PostThink( void )
@@ -580,6 +806,36 @@ void CHL2_Player::HandleAdmireGlovesAnimation( void )
 		m_flAdmireGlovesAnimTime = 0.0f;
 }
 
+#define HL2PLAYER_RELOADGAME_ATTACK_DELAY 1.0f
+
+void CHL2_Player::Activate( void )
+{
+	BaseClass::Activate();
+	InitSprinting();
+
+#ifdef HL2_EPISODIC
+
+	// Delay attacks by 1 second after loading a game.
+	if ( GetActiveWeapon() )
+	{
+		float flRemaining = GetActiveWeapon()->m_flNextPrimaryAttack - gpGlobals->curtime;
+
+		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
+		{
+			GetActiveWeapon()->m_flNextPrimaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
+		}
+
+		flRemaining = GetActiveWeapon()->m_flNextSecondaryAttack - gpGlobals->curtime;
+
+		if ( flRemaining < HL2PLAYER_RELOADGAME_ATTACK_DELAY )
+		{
+			GetActiveWeapon()->m_flNextSecondaryAttack = gpGlobals->curtime + HL2PLAYER_RELOADGAME_ATTACK_DELAY;
+		}
+	}
+
+#endif
+}
+
 //------------------------------------------------------------------------------
 // Purpose :
 // Input   :
@@ -627,6 +883,18 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
 	}
 	else if (interactionType ==	g_interactionBarnacleVictimGrab)
 	{
+#ifdef HL2_EPISODIC
+		CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+		if ( pAlyx )
+		{
+			// Make Alyx totally hate this barnacle so that she saves the player.
+			int priority;
+
+			priority = pAlyx->IRelationPriority(sourceEnt);
+			pAlyx->AddEntityRelationship( sourceEnt, D_HT, priority + 5 );
+		}
+#endif//HL2_EPISODIC
+
 		m_afPhysicsFlags |= PFLAG_ONBARNACLE;
 		ClearUseEntity();
 		return true;
@@ -709,8 +977,6 @@ void CHL2_Player::Spawn(void)
 	//
 	//m_flMaxspeed = 320;
 
-	InitSprinting();
-
 	if ( !IsSuitEquipped() )
 		 StartWalking();
 
@@ -719,14 +985,18 @@ void CHL2_Player::Spawn(void)
 	m_Local.m_iHideHUD |= HIDEHUD_CHAT;
 
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
-}
 
+	InitSprinting();
+
+	GetPlayerProxy();
+
+	SetFlashlightPowerDrainScale( 1.0f );
+}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CHL2_Player::InitSprinting( void )
 {
-	m_bSprintEnabled = true;
 	StopSprinting();
 }
 
@@ -743,6 +1013,23 @@ bool CHL2_Player::CanSprint()
 			(GlobalEntity_GetState("suit_no_sprint") != GLOBAL_ON) );	// Out of the question without the sprint module
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+#ifdef _XBOX
+void CHL2_Player::StartAutoSprint() 
+{
+	if( IsSprinting() )
+	{
+		StopSprinting();
+	}
+	else
+	{
+		StartSprinting();
+		m_bIsAutoSprinting = true;
+		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
+	}
+}
+#endif// _XBOX
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -780,6 +1067,11 @@ void CHL2_Player::StopSprinting( void )
 	}
 	SetMaxSpeed( HL2_NORM_SPEED );
 	m_fIsSprinting = false;
+
+#ifdef _XBOX
+	m_bIsAutoSprinting = false;
+	m_fAutoSprintMinTime = 0.0f;
+#endif//_XBOX
 }
 
 
@@ -826,6 +1118,20 @@ bool CHL2_Player::CanZoom( CBaseEntity *pRequester )
 	//Check our weapon
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::ToggleZoom(void)
+{
+	if( IsZooming() )
+	{
+		StopZooming();
+	}
+	else
+	{
+		StartZooming();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1219,91 +1525,6 @@ void CHL2_Player::CommanderMode()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-static CBaseEntity *CreateJeep( CBasePlayer *pPlayer )
-{
-	// Cheat to create a jeep in front of the player
-	Vector vecForward;
-	AngleVectors( pPlayer->EyeAngles(), &vecForward );
-	CBaseEntity *pJeep = (CBaseEntity *)CreateEntityByName( "prop_vehicle_jeep" );
-
-	if ( pJeep )
-	{
-		Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0,0,64);
-		QAngle vecAngles( 0, pPlayer->GetAbsAngles().y - 90, 0 );
-		pJeep->SetAbsOrigin( vecOrigin );
-		pJeep->SetAbsAngles( vecAngles );
-		pJeep->KeyValue( "model", "models/buggy.mdl" );
-		pJeep->KeyValue( "solid", "6" );
-		pJeep->KeyValue( "targetname", "jeep" );
-		pJeep->KeyValue( "vehiclescript", "scripts/vehicles/jeep_test.txt" );
-		pJeep->Spawn();
-		pJeep->Activate();
-		pJeep->Teleport( &vecOrigin, &vecAngles, NULL );
-
-		return pJeep;
-	}
-
-	return NULL;
-}
-
-void CC_CH_CreateJeep( void )
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if ( !pPlayer )
-		return;
-	CreateJeep( pPlayer );
-}
-
-static ConCommand ch_createjeep("ch_createjeep", CC_CH_CreateJeep, "Spawn jeep in front of the player.", FCVAR_CHEAT);
-
-
-//-----------------------------------------------------------------------------
-// Create an airboat in front of the specified player
-//-----------------------------------------------------------------------------
-static CBaseEntity *CreateAirboat( CBasePlayer *pPlayer )
-{
-	// Cheat to create a jeep in front of the player
-	Vector vecForward;
-	AngleVectors( pPlayer->EyeAngles(), &vecForward );
-	CBaseEntity *pAirboat = ( CBaseEntity* )CreateEntityByName( "prop_vehicle_airboat" );
-
-	if ( pAirboat )
-	{
-		Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector( 0,0,64 );
-		QAngle vecAngles( 0, pPlayer->GetAbsAngles().y - 90, 0 );
-		pAirboat->SetAbsOrigin( vecOrigin );
-		pAirboat->SetAbsAngles( vecAngles );
-		pAirboat->KeyValue( "model", "models/airboat.mdl" );
-		pAirboat->KeyValue( "solid", "6" );
-		pAirboat->KeyValue( "targetname", "airboat" );
-		pAirboat->KeyValue( "vehiclescript", "scripts/vehicles/airboat.txt" );
-		pAirboat->Spawn();
-		pAirboat->Activate();
-
-		return pAirboat;
-	}
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CC_CH_CreateAirboat( void )
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if ( !pPlayer )
-		return;
-
-	CreateAirboat( pPlayer );
-
-}
-
-static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 // Input  : iImpulse - 
 //-----------------------------------------------------------------------------
 void CHL2_Player::CheatImpulseCommands( int iImpulse )
@@ -1352,54 +1573,6 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 		break;
 	}
 
-	case 82:
-		// Cheat to create a jeep in front of the player
-		CreateJeep( this );
-		break;
-
-	case 83:
-		// Cheat to create a airboat in front of the player
-		CreateAirboat( this );
-		break;
-
-	case 101:
-		gEvilImpulse101 = true;
-
-		EquipSuit();
-
-		// Give the player everything!
-		BaseClass::GiveAmmo( 255,	"Pistol");
-		BaseClass::GiveAmmo( 255,	"AR2");
-		BaseClass::GiveAmmo( 5,		"AR2AltFire");
-		BaseClass::GiveAmmo( 255,	"SMG1");
-		BaseClass::GiveAmmo( 255,	"Buckshot");
-		BaseClass::GiveAmmo( 3,		"smg1_grenade");
-		BaseClass::GiveAmmo( 3,		"rpg_round");
-		BaseClass::GiveAmmo( 5,		"grenade");
-		BaseClass::GiveAmmo( 32,	"357" );
-		BaseClass::GiveAmmo( 16,	"XBowBolt" );
-		
-		GiveNamedItem( "weapon_smg1" );
-		GiveNamedItem( "weapon_frag" );
-		GiveNamedItem( "weapon_crowbar" );
-		GiveNamedItem( "weapon_pistol" );
-		GiveNamedItem( "weapon_ar2" );
-		GiveNamedItem( "weapon_shotgun" );
-		GiveNamedItem( "weapon_physcannon" );
-		GiveNamedItem( "weapon_bugbait" );
-		GiveNamedItem( "weapon_rpg" );
-		GiveNamedItem( "weapon_357" );
-		GiveNamedItem( "weapon_crossbow" );
-
-		if ( GetHealth() < 100 )
-		{
-			TakeHealth( 25, DMG_GENERIC );
-		}
-		
-		gEvilImpulse101		= false;
-
-		break;
-
 	default:
 		BaseClass::CheatImpulseCommands( iImpulse );
 	}
@@ -1446,6 +1619,8 @@ void CHL2_Player::SuitPower_Update( void )
 	{
 		float flPowerLoad = m_flSuitPowerLoad;
 
+#ifndef _XBOX
+		//Since XBox quickly shuts off sprint if it isn't being used, this isn't an issue.
 		if( SuitPower_IsDeviceActive(SuitDeviceSprint) )
 		{
 			if( !fabs(GetAbsVelocity().x) && !fabs(GetAbsVelocity().y) )
@@ -1453,6 +1628,16 @@ void CHL2_Player::SuitPower_Update( void )
 				// If player's not moving, don't drain sprint juice.
 				flPowerLoad -= SuitDeviceSprint.GetDeviceDrainRate();
 			}
+		}
+#endif//_XBOX
+
+		if( SuitPower_IsDeviceActive(SuitDeviceFlashlight) )
+		{
+			float factor;
+
+			factor = 1.0f / m_flFlashlightPowerDrainScale;
+
+			flPowerLoad -= ( SuitDeviceFlashlight.GetDeviceDrainRate() * (1.0f - factor) );
 		}
 
 		if( !SuitPower_Drain( flPowerLoad * gpGlobals->frametime ) )
@@ -1660,11 +1845,19 @@ int CHL2_Player::FlashlightIsOn( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::FlashlightTurnOn( void )
 {
+	if( m_bFlashlightDisabled )
+		return;
+
 	if( !SuitPower_AddDevice( SuitDeviceFlashlight ) )
 		return;
 
 	AddEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOn" );
+
+	variant_t flashlighton;
+	flashlighton.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+
+	FirePlayerProxyOutput( "OnFlashlightOn", flashlighton, this, this );
 }
 
 
@@ -1677,6 +1870,94 @@ void CHL2_Player::FlashlightTurnOff( void )
 
 	RemoveEffects( EF_DIMLIGHT );
 	EmitSound( "HL2Player.FlashLightOff" );
+
+	variant_t flashlightoff;
+	flashlightoff.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+	FirePlayerProxyOutput( "OnFlashlightOff", flashlightoff, this, this );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+#define FLASHLIGHT_RANGE	Square(600)
+bool CHL2_Player::IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot )
+{
+	if( !FlashlightIsOn() )
+		return false;
+
+	if( pEntity->Classify() == CLASS_BARNACLE && pEntity->GetEnemy() == this )
+	{
+		// As long as my flashlight is on, the barnacle that's pulling me in is considered illuminated.
+		// This is because players often shine their flashlights at Alyx when they are in a barnacle's 
+		// grasp, and wonder why Alyx isn't helping. Alyx isn't helping because the light isn't pointed
+		// at the barnacle. This will allow Alyx to see the barnacle no matter which way the light is pointed.
+		return true;
+	}
+
+	// Within 50 feet?
+ 	float flDistSqr = GetAbsOrigin().DistToSqr(pEntity->GetAbsOrigin());
+	if( flDistSqr > FLASHLIGHT_RANGE )
+		return false;
+
+	// Within 45 degrees?
+	Vector vecSpot = pEntity->WorldSpaceCenter();
+	Vector los;
+
+	// If the eyeposition is too close, move it back. Solves problems
+	// caused by the player being too close the target.
+	if ( flDistSqr < (128 * 128) )
+	{
+		Vector vecForward;
+		EyeVectors( &vecForward );
+		Vector vecMovedEyePos = EyePosition() - (vecForward * 128);
+		los = ( vecSpot - vecMovedEyePos );
+	}
+	else
+	{
+		los = ( vecSpot - EyePosition() );
+	}
+
+	VectorNormalize( los );
+	Vector facingDir = EyeDirection3D( );
+	float flDot = DotProduct( los, facingDir );
+
+	if ( flReturnDot )
+	{
+		 *flReturnDot = flDot;
+	}
+
+	if ( flDot < 0.92387f )
+		return false;
+
+	if( !FVisible(pEntity) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Let NPCs know when the flashlight is trained on them
+//-----------------------------------------------------------------------------
+void CHL2_Player::CheckFlashlight( void )
+{
+	if ( !FlashlightIsOn() )
+		return;
+
+	if ( m_flNextFlashlightCheckTime > gpGlobals->curtime )
+		return;
+	m_flNextFlashlightCheckTime = gpGlobals->curtime + FLASHLIGHT_NPC_CHECK_INTERVAL;
+
+	// Loop through NPCs looking for illuminated ones
+	for ( int i = 0; i < g_AI_Manager.NumAIs(); i++ )
+	{
+		CAI_BaseNPC *pNPC = g_AI_Manager.AccessAIs()[i];
+
+		float flDot;
+
+		if ( IsIlluminatedByFlashlight( pNPC, &flDot ) )
+		{
+			pNPC->PlayerHasIlluminatedNPC( this, flDot );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1704,6 +1985,23 @@ bool CHL2_Player::PassesDamageFilter( const CTakeDamageInfo &info )
 	}
 
 	return BaseClass::PassesDamageFilter( info );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::InputDisableFlashlight( inputdata_t &inputdata )
+{
+	if( FlashlightIsOn() )
+		FlashlightTurnOff();
+
+	m_bFlashlightDisabled = true;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::InputEnableFlashlight( inputdata_t &inputdata )
+{
+	m_bFlashlightDisabled = false;
 }
 
 
@@ -1794,23 +2092,6 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 			NotifyFriendsOfDamage( info.GetAttacker() );
 	}
 	
-	if( info.GetDamageType() & DMG_DROWN )
-	{
-		if( m_idrowndmg == m_idrownrestored )
-		{
-			EmitSound( "Player.DrownStart" );
-		}
-		else
-		{
-			EmitSound( "Player.DrownContinue" );
-		}
-	}
-
-	if( info.GetDamageType() & DMG_BURN )
-	{
-		EmitSound( "HL2Player.BurnPain" );
-	}
-
 	// Modify the amount of damage the player takes, based on skill.
 	CTakeDamageInfo playerDamage = info;
 
@@ -1830,6 +2111,47 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 	}
 
 	return BaseClass::OnTakeDamage( playerDamage );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &info - 
+//-----------------------------------------------------------------------------
+int CHL2_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+{
+	// Drown
+	if( info.GetDamageType() & DMG_DROWN )
+	{
+		if( m_idrowndmg == m_idrownrestored )
+		{
+			EmitSound( "Player.DrownStart" );
+		}
+		else
+		{
+			EmitSound( "Player.DrownContinue" );
+		}
+	}
+
+	// Burnt
+	if ( info.GetDamageType() & DMG_BURN )
+	{
+		EmitSound( "HL2Player.BurnPain" );
+	}
+
+
+	if( (info.GetDamageType() & DMG_SLASH) && hl2_episodic.GetBool() )
+	{
+		if( m_afPhysicsFlags & PFLAG_USING )
+		{
+			// Stop the player using a rotating button for a short time if hit by a creature's melee attack.
+			// This is for the antlion burrow-corking training in EP1 (sjb).
+			SuspendUse( 0.5f );
+		}
+	}
+
+
+	// Call the base class implementation
+	return BaseClass::OnTakeDamage_Alive( info );
 }
 
 //-----------------------------------------------------------------------------
@@ -1860,10 +2182,152 @@ bool CHL2_Player::ShouldShootMissTarget( CBaseCombatCharacter *pAttacker )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Notifies Alyx that player has put a combine ball into a socket so she can comment on it.
+// Input  : pCombineBall - ball the was socketed
 //-----------------------------------------------------------------------------
-Vector CHL2_Player::GetAutoaimVector( float flDelta  )
+void CHL2_Player::CombineBallSocketed( CPropCombineBall *pCombineBall )
 {
-	return BaseClass::GetAutoaimVector( flDelta * g_pGameRules->GetAutoAimScale(this) );
+#ifdef HL2_EPISODIC
+	CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+	if ( pAlyx )
+	{
+		pAlyx->CombineBallSocketed( pCombineBall->NumBounces() );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+{
+	BaseClass::Event_KilledOther( pVictim, info );
+
+#ifdef HL2_EPISODIC
+	CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+	if ( pAlyx )
+	{
+		pAlyx->PlayerKilledOther( pVictim, info );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
+{
+	BaseClass::Event_Killed( info );
+
+	NotifyScriptsOfDeath();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::NotifyScriptsOfDeath( void )
+{
+	CBaseEntity *pEnt =	gEntList.FindEntityByClassname( NULL, "scripted_sequence" );
+
+	while( pEnt )
+	{
+		variant_t emptyVariant;
+		pEnt->AcceptInput( "ScriptPlayerDeath", NULL, NULL, emptyVariant, 0 );
+
+		pEnt = gEntList.FindEntityByClassname( pEnt, "scripted_sequence" );
+	}
+
+	pEnt =	gEntList.FindEntityByClassname( NULL, "logic_choreographed_scene" );
+
+	while( pEnt )
+	{
+		variant_t emptyVariant;
+		pEnt->AcceptInput( "ScriptPlayerDeath", NULL, NULL, emptyVariant, 0 );
+
+		pEnt = gEntList.FindEntityByClassname( pEnt, "logic_choreographed_scene" );
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CHL2_Player::GetAutoaimVector( autoaim_params_t &params )
+{
+	BaseClass::GetAutoaimVector( params );
+
+	if ( IsXbox() )
+	{
+		if( IsInAVehicle() )
+		{
+			if( m_hLockedAutoAimEntity && m_hLockedAutoAimEntity->IsAlive() && ShouldKeepLockedAutoaimTarget(m_hLockedAutoAimEntity) )
+			{
+				if( params.m_hAutoAimEntity && params.m_hAutoAimEntity != m_hLockedAutoAimEntity )
+				{
+					// Autoaim has picked a new target. Switch.
+					m_hLockedAutoAimEntity = params.m_hAutoAimEntity;
+				}
+
+				// Ignore autoaim and just keep aiming at this target.
+				params.m_hAutoAimEntity = m_hLockedAutoAimEntity;
+				Vector vecTarget = m_hLockedAutoAimEntity->BodyTarget( EyePosition(), false );
+				Vector vecDir = vecTarget - EyePosition();
+				VectorNormalize( vecDir );
+
+				params.m_vecAutoAimDir = vecDir;
+				params.m_vecAutoAimPoint = vecTarget;
+				return;		
+			}
+			else
+			{
+				m_hLockedAutoAimEntity = NULL;
+			}
+		}
+
+		// If the player manually gets his crosshair onto a target, make that target sticky
+		if( params.m_fScale != AUTOAIM_SCALE_DIRECT_ONLY )
+		{
+			// Only affect this for 'real' queries
+			//if( params.m_hAutoAimEntity && params.m_bOnTargetNatural )
+			if( params.m_hAutoAimEntity )
+			{
+				// Turn on sticky.
+				m_HL2Local.m_bStickyAutoAim = true;
+
+				if( IsInAVehicle() )
+				{
+					m_hLockedAutoAimEntity = params.m_hAutoAimEntity;
+				}
+			}
+			else if( !params.m_hAutoAimEntity )
+			{
+				// Turn off sticky only if there's no target at all.
+				m_HL2Local.m_bStickyAutoAim = false;
+
+				m_hLockedAutoAimEntity = NULL;
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CHL2_Player::ShouldKeepLockedAutoaimTarget( EHANDLE hLockedTarget )
+{
+	Vector vecLooking;
+	Vector vecToTarget;
+
+	vecToTarget = hLockedTarget->WorldSpaceCenter()	- EyePosition();
+	float flDist = vecToTarget.Length2D();
+	VectorNormalize( vecToTarget );
+
+	if( flDist > autoaim_max_dist.GetFloat() )
+		return false;
+
+	float flDot;
+
+	vecLooking = EyeDirection3D();
+	flDot = DotProduct( vecLooking, vecToTarget );
+
+	if( flDot < autoaim_unlock_target.GetFloat() ) 
+		return false;
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -2066,12 +2530,6 @@ bool CHL2_Player::ClientCommand(const char *cmd)
 	return BaseClass::ClientCommand( cmd );
 }
 
-void CHL2_Player::GetInVehicle( IServerVehicle *pVehicle, int nRole )
-{
-	BaseClass::GetInVehicle( pVehicle, nRole );
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : void CBasePlayer::PlayerUse
@@ -2116,6 +2574,13 @@ void CHL2_Player::PlayerUse ( void )
 		{
 			return;
 		}
+	}
+
+	if( m_flTimeUseSuspended > gpGlobals->curtime )
+	{
+		// Something has temporarily stopped us being able to USE things.
+		// Obviously, this should be used very carefully.(sjb)
+		return;
 	}
 
 	CBaseEntity *pUseEntity = FindUseEntity();
@@ -2204,69 +2669,106 @@ ConVar	sv_show_crosshair_target( "sv_show_crosshair_target", "0" );
 //-----------------------------------------------------------------------------
 void CHL2_Player::UpdateWeaponPosture( void )
 {
-	Vector vecAim = GetAutoaimVector( 0.0f );
+	CBaseHLCombatWeapon *pWeapon = dynamic_cast<CBaseHLCombatWeapon *>(GetActiveWeapon());
 
-	trace_t	tr;
-	UTIL_TraceLine( EyePosition(), EyePosition() + ( vecAim * MAX_COORD_RANGE ), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-
-	CBaseEntity *aimTarget = tr.m_pEnt;
-
-	//If we're over something
-	if (  aimTarget && !tr.DidHitWorld() )
+	if ( pWeapon && m_LowerWeaponTimer.Expired() && pWeapon->CanLower() )
 	{
-		Disposition_t dis = IRelationType( aimTarget );
+		m_LowerWeaponTimer.Set( .3 );
+		VPROF( "CHL2_Player::UpdateWeaponPosture-CheckLower" );
+		Vector vecAim = BaseClass::GetAutoaimVector( AUTOAIM_SCALE_DIRECT_ONLY );
 
-		//Debug info for seeing what an object "cons" as
-		if ( sv_show_crosshair_target.GetBool() )
+		const float CHECK_FRIENDLY_RANGE = 50 * 12;
+		trace_t	tr;
+		UTIL_TraceLine( EyePosition(), EyePosition() + vecAim * CHECK_FRIENDLY_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+
+		CBaseEntity *aimTarget = tr.m_pEnt;
+
+		//If we're over something
+		if (  aimTarget && !tr.DidHitWorld() )
 		{
-			int text_offset = BaseClass::DrawDebugTextOverlays();
-
-			char tempstr[255];	
-
-			switch ( dis )
+			if ( !aimTarget->IsNPC() || aimTarget->MyNPCPointer()->GetState() != NPC_STATE_COMBAT )
 			{
-			case D_LI:
-				Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Like" );
-				break;
+				Disposition_t dis = IRelationType( aimTarget );
 
-			case D_HT:
-				Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Hate" );
-				break;
-			
-			case D_FR:
-				Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Fear" );
-				break;
-			
-			case D_NU:
-				Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Neutral" );
-				break;
+				//Debug info for seeing what an object "cons" as
+				if ( sv_show_crosshair_target.GetBool() )
+				{
+					int text_offset = BaseClass::DrawDebugTextOverlays();
 
-			default:
-			case D_ER:
-				Q_snprintf( tempstr, sizeof(tempstr), "Disposition: !!!ERROR!!!" );
-				break;
+					char tempstr[255];	
+
+					switch ( dis )
+					{
+					case D_LI:
+						Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Like" );
+						break;
+
+					case D_HT:
+						Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Hate" );
+						break;
+
+					case D_FR:
+						Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Fear" );
+						break;
+
+					case D_NU:
+						Q_snprintf( tempstr, sizeof(tempstr), "Disposition: Neutral" );
+						break;
+
+					default:
+					case D_ER:
+						Q_snprintf( tempstr, sizeof(tempstr), "Disposition: !!!ERROR!!!" );
+						break;
+					}
+
+					//Draw the text
+					NDebugOverlay::EntityText( aimTarget->entindex(), text_offset, tempstr, 0 );
+				}
+
+				//See if we hates it
+				if ( dis == D_LI  )
+				{
+					//We're over a friendly, drop our weapon
+					if ( Weapon_Lower() == false )
+					{
+						//FIXME: We couldn't lower our weapon!
+					}
+
+					return;
+				}
 			}
-
-			//Draw the text
-			NDebugOverlay::EntityText( aimTarget->entindex(), text_offset, tempstr, 0 );
 		}
 
-		//See if we hates it
-		if ( dis == D_LI && ( !aimTarget->IsNPC() || aimTarget->MyNPCPointer()->GetState() != NPC_STATE_COMBAT ) )
+		if ( Weapon_Ready() == false )
 		{
-			//We're over a friendly, drop our weapon
-			if ( Weapon_Lower() == false )
-			{
-				//FIXME: We couldn't lower our weapon!
-			}
-
-			return;
+			//FIXME: We couldn't raise our weapon!
 		}
 	}
 
-	if ( Weapon_Ready() == false )
+	if( hl2_xbox_aiming.GetBool() )
 	{
-		//FIXME: We couldn't raise our weapon!
+		if( !pWeapon || !m_AutoaimTimer.Expired() )
+		{
+			return;
+		}
+
+		m_AutoaimTimer.Set( .1 );
+
+		VPROF( "hl2_xbox_aiming" );
+
+		// Call the autoaim code to update the local player data, which allows the client to update.
+		autoaim_params_t params;
+		params.m_fScale = AUTOAIM_SCALE_DEFAULT;
+		params.m_fMaxDist = autoaim_max_dist.GetFloat();
+		GetAutoaimVector( params );
+		m_HL2Local.m_hAutoAimTarget.Set( params.m_hAutoAimEntity );
+		m_HL2Local.m_vecAutoAimPoint.Set( params.m_vecAutoAimPoint );
+		return;
+	}
+	else
+	{
+		// Make sure there's no residual autoaim target if the user changes the xbox_aiming convar on the fly.
+		m_HL2Local.m_hAutoAimTarget.Set(NULL);
 	}
 }
 
@@ -2276,6 +2778,7 @@ void CHL2_Player::UpdateWeaponPosture( void )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::Weapon_Lower( void )
 {
+	VPROF( "CHL2_Player::Weapon_Lower" );
 	// Already lowered?
 	if ( m_HL2Local.m_bWeaponLowered )
 		return true;
@@ -2296,6 +2799,8 @@ bool CHL2_Player::Weapon_Lower( void )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::Weapon_Ready( void )
 {
+	VPROF( "CHL2_Player::Weapon_Ready" );
+
 	// Already ready?
 	if ( m_HL2Local.m_bWeaponLowered == false )
 		return true;
@@ -2310,6 +2815,41 @@ bool CHL2_Player::Weapon_Ready( void )
 	return pWeapon->Ready();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Returns whether or not we can switch to the given weapon.
+// Input  : pWeapon - 
+//-----------------------------------------------------------------------------
+bool CHL2_Player::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
+{
+	CBasePlayer *pPlayer = (CBasePlayer *)this;
+#if !defined( CLIENT_DLL )
+	IServerVehicle *pVehicle = pPlayer->GetVehicle();
+#else
+	IClientVehicle *pVehicle = pPlayer->GetVehicle();
+#endif
+	if (pVehicle && !pPlayer->UsingStandardWeaponsInVehicle())
+		return false;
+
+	if ( !pWeapon->HasAnyAmmo() && !GetAmmoCount( pWeapon->m_iPrimaryAmmoType ) )
+		return false;
+
+	if ( !pWeapon->CanDeploy() )
+		return false;
+
+	if ( GetActiveWeapon() )
+	{
+		if ( PhysCannonGetHeldEntity( GetActiveWeapon() ) == pWeapon && 
+			Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType()) )
+		{
+			return true;
+		}
+
+		if ( !GetActiveWeapon()->CanHolster() )
+			return false;
+	}
+
+	return true;
+}
 
 void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 {
@@ -2354,12 +2894,24 @@ float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 //-----------------------------------------------------------------------------
 void CHL2_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis )
 {
+	if ( PhysIsInCallback() )
+	{
+		variant_t value;
+		g_EventQueue.AddEvent( this, "ForceDropPhysObjects", value, 0.01f, pOnlyIfHoldingThis, this );
+		return;
+	}
 	// Drop any objects being handheld.
 	ClearUseEntity();
 
 	// Then force the physcannon to drop anything it's holding, if it's our active weapon
 	PhysCannonForceDrop( GetActiveWeapon(), pOnlyIfHoldingThis );
 }
+
+void CHL2_Player::InputForceDropPhysObjects( inputdata_t &data )
+{
+	ForceDropOfCarriedPhysObjects( data.pActivator );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2379,6 +2931,19 @@ void CHL2_Player::UpdateClientData( void )
 
 		m_DmgTake = clamp( m_DmgTake, 0, 255 );
 		m_DmgSave = clamp( m_DmgSave, 0, 255 );
+
+		// If we're poisoned, but it wasn't this frame, don't send the indicator
+		// Without this check, any damage that occured to the player while they were
+		// recovering from a poison bite would register as poisonous as well and flash
+		// the whole screen! -- jdw
+		if ( visibleDamageBits & DMG_POISON )
+		{
+			float flLastPoisonedDelta = gpGlobals->curtime - m_tbdPrev;
+			if ( flLastPoisonedDelta > 0.1f )
+			{
+				visibleDamageBits &= ~DMG_POISON;
+			}
+		}
 
 		CSingleUserRecipientFilter user( this );
 		user.MakeReliable();
@@ -2633,7 +3198,7 @@ bool CHL2_Player::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, tr
 
 		if ( IntersectRayWithAACylinder( ray, WorldSpaceCenter(), maxs.x * PLAYER_HULL_REDUCTION, maxs.z - mins.z, &tr ) )
 		{
-			studiohdr_t *pStudioHdr = GetModelPtr( );
+			CStudioHdr *pStudioHdr = GetModelPtr( );
 			if (!pStudioHdr)
 				return false;
 
@@ -2782,4 +3347,119 @@ void CHL2_Player::ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set )
 	{
 		set.AppendCriteria( "gordon_precriminal", "0" );
 	}
+}
+
+CLogicPlayerProxy *CHL2_Player::GetPlayerProxy( void )
+{
+	CLogicPlayerProxy *pProxy = dynamic_cast< CLogicPlayerProxy* > ( m_hPlayerProxy.Get() );
+
+	if ( pProxy == NULL )
+	{
+		pProxy = (CLogicPlayerProxy*)gEntList.FindEntityByClassname(NULL, "logic_playerproxy" );
+
+		if ( pProxy == NULL )
+			return NULL;
+
+		pProxy->m_hPlayer = this;
+		m_hPlayerProxy = pProxy;
+	}
+
+	return pProxy;
+}
+
+void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller )
+{
+	if ( GetPlayerProxy() == NULL )
+		return;
+
+	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
+}
+
+LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
+
+BEGIN_DATADESC( CLogicPlayerProxy )
+	DEFINE_OUTPUT( m_OnFlashlightOn, "OnFlashlightOn" ),
+	DEFINE_OUTPUT( m_OnFlashlightOff, "OnFlashlightOff" ),
+	DEFINE_OUTPUT( m_RequestedPlayerHealth, "PlayerHealth" ),
+	DEFINE_OUTPUT( m_PlayerHasAmmo, "PlayerHasAmmo" ),
+	DEFINE_OUTPUT( m_PlayerHasNoAmmo, "PlayerHasNoAmmo" ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightSlowDrain",	InputSetFlashlightSlowDrain ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightNormalDrain",	InputSetFlashlightNormalDrain ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
+	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
+END_DATADESC()
+
+void CLogicPlayerProxy::Activate( void )
+{
+	BaseClass::Activate();
+
+	if ( m_hPlayer == NULL )
+	{
+		m_hPlayer = AI_GetSinglePlayer();
+	}
+}
+
+void CLogicPlayerProxy::InputSetPlayerHealth( inputdata_t &inputdata )
+{
+	if ( m_hPlayer == NULL )
+		return;
+
+	m_hPlayer->SetHealth( inputdata.value.Int() );
+
+}
+
+void CLogicPlayerProxy::InputRequestPlayerHealth( inputdata_t &inputdata )
+{
+	if ( m_hPlayer == NULL )
+		return;
+
+	m_RequestedPlayerHealth.Set( m_hPlayer->GetHealth(), inputdata.pActivator, inputdata.pCaller );
+}
+
+void CLogicPlayerProxy::InputSetFlashlightSlowDrain( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
+
+	if( pPlayer )
+		pPlayer->SetFlashlightPowerDrainScale( hl2_darkness_flashlight_factor.GetFloat() );
+}
+
+void CLogicPlayerProxy::InputSetFlashlightNormalDrain( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
+
+	if( pPlayer )
+		pPlayer->SetFlashlightPowerDrainScale( 1.0f );
+}
+
+void CLogicPlayerProxy::InputRequestAmmoState( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(m_hPlayer.Get());
+
+	for ( int i = 0 ; i < pPlayer->WeaponCount(); ++i )
+	{
+		CBaseCombatWeapon* pCheck = pPlayer->GetWeapon( i );
+
+		if ( pCheck )
+		{
+			if ( pCheck->HasAnyAmmo() && (pCheck->UsesPrimaryAmmo() || pCheck->UsesSecondaryAmmo()))
+			{
+				m_PlayerHasAmmo.FireOutput( this, this, 0 );
+				return;
+			}
+		}
+	}
+
+	m_PlayerHasNoAmmo.FireOutput( this, this, 0 );
 }

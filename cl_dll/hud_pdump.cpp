@@ -190,6 +190,14 @@ void CPDumpPanel::PredictionDumpColor( bool networked, bool errorchecked, bool d
 //-----------------------------------------------------------------------------
 void CPDumpPanel::DumpEntity( C_BaseEntity *ent, int commands_acknowledged )
 {
+	if ( IsXbox() )
+	{
+		return;
+	}
+
+#ifdef NO_ENTITY_PREDICTION
+	return;
+#else
 	Assert( ent );
 
 	void *original_state_data = NULL;	
@@ -229,6 +237,7 @@ void CPDumpPanel::DumpEntity( C_BaseEntity *ent, int commands_acknowledged )
 	datacompare.TransferData( "", -1, ent->GetPredDescMap() );
 
 	m_hDumpEntity = ent;
+#endif
 }
 
 void CPDumpPanel::Clear()

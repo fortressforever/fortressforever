@@ -88,7 +88,7 @@ void AddEmitSurfaceLights( const Vector &vStart, Vector lightBoxColor[6] )
 {
 	int iThread = 0;
 
-	for ( int iLight=0; iLight < numworldlights; iLight++ )
+	for ( int iLight=0; iLight < *pNumworldlights; iLight++ )
 	{
 		dworldlight_t *wl = &dworldlights[iLight];
 
@@ -203,7 +203,7 @@ void ComputePerLeafAmbientLighting()
 	// Figure out which lights should go in the per-leaf ambient cubes.
 	int nInAmbientCube = 0;
 	int nSurfaceLights = 0;
-	for ( int i=0; i < numworldlights; i++ )
+	for ( int i=0; i < *pNumworldlights; i++ )
 	{
 		dworldlight_t *wl = &dworldlights[i];
 		
@@ -220,6 +220,8 @@ void ComputePerLeafAmbientLighting()
 	}
 
 	Msg( "%d of %d (%d%% of) surface lights went in leaf ambient cubes.\n", nInAmbientCube, nSurfaceLights, nSurfaceLights ? ((nInAmbientCube*100) / nSurfaceLights) : 0 );
+
+	g_pLeafAmbientLighting->SetCount( numleafs );
 
 	StartPacifier( "ComputePerLeafAmbientLighting: " );
 	
@@ -243,7 +245,7 @@ void ComputePerLeafAmbientLighting()
 		ComputeAmbientFromSphericalSamples( center, cube );
 		for ( int i = 0; i < 6; i++ )
 		{
-			VectorToColorRGBExp32( cube[i], pLeaf->m_AmbientLighting.m_Color[i] );
+			VectorToColorRGBExp32( cube[i], (*g_pLeafAmbientLighting)[leafID].m_Color[i] );
 		}
 
 		UpdatePacifier( (float)leafID / numleafs );

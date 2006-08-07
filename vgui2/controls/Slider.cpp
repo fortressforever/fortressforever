@@ -33,6 +33,7 @@ static const float NOB_SIZE = 8.0f;
 //-----------------------------------------------------------------------------
 Slider::Slider(Panel *parent, const char *panelName ) : Panel(parent, panelName)
 {
+	m_bIsDragOnRepositionNob = false;
 	_dragging = false;
 	_value = 0;
 	_range[0] = 0;
@@ -47,6 +48,7 @@ Slider::Slider(Panel *parent, const char *panelName ) : Panel(parent, panelName)
 	SetThumbWidth( 8 );
 	RecomputeNobPosFromValue();
 	AddActionSignalTarget(this);
+	SetBlockDragChaining( true );
 }
 
 //-----------------------------------------------------------------------------
@@ -77,7 +79,7 @@ void Slider::SetValue(int value, bool bTriggerChangeMessage)
 		value=_range[1];	
 	}
 
-	_value=value;
+	_value = value;
 	
 	RecomputeNobPosFromValue();
 
@@ -118,8 +120,10 @@ void Slider::PerformLayout()
 //-----------------------------------------------------------------------------
 void Slider::RecomputeNobPosFromValue()
 {
-	int wide,tall;
-	GetPaintSize(wide,tall);
+	//int wide,tall;
+	//GetPaintSize(wide,tall);
+	int x, y, wide, tall;
+	GetTrackRect( x, y, wide, tall );
 
 	float fwide=(float)wide;
 	float frange=(float)(_range[1] -_range[0]);
@@ -127,17 +131,19 @@ void Slider::RecomputeNobPosFromValue()
 	float fper = (frange != 0.0f) ? fvalue / frange : 0.0f;
 
 	float freepixels = fwide - _nobSize;
-	float leftpixel = 0;
-	float firstpixel = leftpixel + freepixels * fper;
+	float leftpixel = (float)x;
+	float firstpixel = leftpixel + freepixels * fper + 0.5f;
 
 	_nobPos[0]=(int)( firstpixel );
 	_nobPos[1]=(int)( firstpixel + _nobSize );
 
 
-	if(_nobPos[1]>wide)
+	int rightEdge = x + wide;
+
+	if(_nobPos[1]> rightEdge )
 	{
-		_nobPos[0]=wide-((int)_nobSize);
-		_nobPos[1]=wide;
+		_nobPos[0]=rightEdge-((int)_nobSize);
+		_nobPos[1]=rightEdge;
 	}
 	
 	Repaint();
@@ -148,13 +154,15 @@ void Slider::RecomputeNobPosFromValue()
 //-----------------------------------------------------------------------------
 void Slider::RecomputeValueFromNobPos()
 {
-	int wide, tall;
-	GetPaintSize(wide, tall);
+//	int wide, tall;
+//	GetPaintSize(wide, tall);
+	int x, y, wide, tall;
+	GetTrackRect( x, y, wide, tall );
 
 	float fwide = (float)wide;
 	float frange = (float)( _range[1] - _range[0] );
 	float fvalue = (float)( _value - _range[0] );
-	float fnob = (float)_nobPos[0];
+	float fnob = (float)( _nobPos[0] - x );
 
 
 	float freepixels = fwide - _nobSize;
@@ -166,7 +174,7 @@ void Slider::RecomputeValueFromNobPos()
 	fvalue *= frange;
 
 	// Take care of rounding issues.
-	_value = (int)( fvalue + _range[0] + 0.5);
+	SetValue( (int)( fvalue + _range[0] + 0.5) );
 }
 
 //-----------------------------------------------------------------------------
@@ -297,7 +305,7 @@ void Slider::DrawTicks()
 	GetTrackRect( x, y, wide, tall );
 
 	// Figure out how to draw the ticks
-	GetPaintSize( wide, tall );
+//	GetPaintSize( wide, tall );
 
 	float fwide  = (float)wide;
 	float freepixels = fwide - _nobSize;
@@ -346,7 +354,7 @@ void Slider::DrawTickLabels()
 	GetTrackRect( x, y, wide, tall );
 
 	// Figure out how to draw the ticks
-	GetPaintSize( wide, tall );
+//	GetPaintSize( wide, tall );
 	y += (int)NOB_SIZE + 4;
 
 	// Draw Start and end range values
@@ -519,11 +527,11 @@ void Slider::SetRange(int min,int max)
 
 	if(_value<_range[0])
 	{
-		_value=_range[0];
+		SetValue( _range[0] );
 	}
 	else if( _value>_range[1])
 	{
-		_value=_range[1];	
+		SetValue( _range[0] );
 	}
 }
 
@@ -551,26 +559,48 @@ void Slider::OnCursorMoved(int x,int y)
 	input()->GetCursorPosition( x, y );
 	ScreenToLocal(x,y);
 
-	int wide,tall;
-	GetPaintSize(wide,tall);
+//	int wide,tall;
+//	GetPaintSize(wide,tall);
+	int _x, _y, wide, tall;
+	GetTrackRect( _x, _y, wide, tall );
 
 	_nobPos[0]=_nobDragStartPos[0]+(x-_dragStartPos[0]);
 	_nobPos[1]=_nobDragStartPos[1]+(x-_dragStartPos[0]);
-	if(_nobPos[1]>wide)
+
+	int rightEdge = _x +wide;
+
+	if(_nobPos[1]>rightEdge)
 	{
-		_nobPos[0]=wide-(_nobPos[1]-_nobPos[0]);
-		_nobPos[1]=wide;
+		_nobPos[0]=rightEdge-(_nobPos[1]-_nobPos[0]);
+		_nobPos[1]=rightEdge;
 	}
 		
-	if(_nobPos[0]<0)
+	if(_nobPos[0]<_x)
 	{
-		_nobPos[1]=_nobPos[1]-_nobPos[0];
+		int offset = _x - _nobPos[0];
+		_nobPos[1]=_nobPos[1]-offset;
 		_nobPos[0]=0;
 	}
 
 	RecomputeValueFromNobPos();
 	Repaint();
 	SendSliderMovedMessage();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: If you click on the slider outside of the nob, the nob jumps
+// to the click position, and if this setting is enabled, the nob
+// is then draggable from the new position until the mouse is released
+// Input  : state - 
+//-----------------------------------------------------------------------------
+void Slider::SetDragOnRepositionNob( bool state )
+{
+	m_bIsDragOnRepositionNob = state;
+}
+
+bool Slider::IsDragOnRepositionNob() const
+{
+	return m_bIsDragOnRepositionNob;
 }
 
 //-----------------------------------------------------------------------------
@@ -589,7 +619,35 @@ void Slider::OnMousePressed(MouseCode code)
 	ScreenToLocal(x,y);
     RequestFocus();
 
+	bool startdragging = false;
+
 	if ((x >= _nobPos[0]) && (x < _nobPos[1]))
+	{
+		startdragging = true;
+	}
+	else
+	{
+		// we clicked elsewhere on the slider; move the nob to that position
+		int min, max;
+		GetRange(min, max);
+
+//		int wide = GetWide();
+		int _x, _y, wide, tall;
+		GetTrackRect( _x, _y, wide, tall );
+		if ( wide > 0 )
+		{
+			float frange = ( float )( max - min );
+			float clickFrac = clamp( ( float )( x - _x ) / (float)( wide - 1 ), 0.0f, 1.0f );
+
+			float value = (float)min + clickFrac * frange;
+
+			SetValue( ( int )( value + 0.5f ) );
+
+			startdragging = IsDragOnRepositionNob();
+		}
+	}
+
+	if ( startdragging )
 	{
 		// drag the nob
 		_dragging = true;
@@ -598,15 +656,6 @@ void Slider::OnMousePressed(MouseCode code)
 		_nobDragStartPos[1] = _nobPos[1];
 		_dragStartPos[0] = x;
 		_dragStartPos[1] = y;
-	}
-	else
-	{
-		// we clicked elsewhere on the slider; move the nob to that position
-		int min, max;
-		GetRange(min, max);
-		int wide = GetWide();
-
-		SetValue((int)(((float)(max - min) / wide) * x) + min);
 	}
 }
 

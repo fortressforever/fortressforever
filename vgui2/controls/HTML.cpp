@@ -35,6 +35,19 @@ enum
 	WINDOW_BORDER_WIDTH=1
 };
 
+vgui::Panel *HTML_NoJavascript_Factory()
+{
+	return new HTML( NULL, NULL, false );
+}
+
+vgui::Panel *HTML_Javascript_Factory()
+{
+	return new HTML( NULL, NULL, true );
+}
+
+//DECLARE_BUILD_FACTORY_CUSTOM_ALIAS( HTML, HTML_NoJavascript, HTML_NoJavascript_Factory );
+//DECLARE_BUILD_FACTORY_CUSTOM_ALIAS( HTML, HTML_Javascript, HTML_Javascript_Factory );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------

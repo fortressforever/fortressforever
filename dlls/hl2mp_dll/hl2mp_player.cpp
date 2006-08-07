@@ -488,15 +488,15 @@ void CHL2MP_Player::SetupPlayerSoundsByModel( const char *pModelName )
 {
 	if ( Q_stristr( pModelName, "models/human") )
 	{
-		m_iPlayerSoundType = PLAYER_SOUNDS_CITIZEN;
+		m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
 	}
 	else if ( Q_stristr(pModelName, "police" ) )
 	{
-		m_iPlayerSoundType = PLAYER_SOUNDS_METROPOLICE;
+		m_iPlayerSoundType = (int)PLAYER_SOUNDS_METROPOLICE;
 	}
 	else if ( Q_stristr(pModelName, "combine" ) )
 	{
-		m_iPlayerSoundType = PLAYER_SOUNDS_COMBINESOLDIER;
+		m_iPlayerSoundType = (int)PLAYER_SOUNDS_COMBINESOLDIER;
 	}
 }
 
@@ -1150,12 +1150,16 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 
 int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
+	//return here if the player is in the respawn grace period vs. slams.
+	if ( gpGlobals->curtime < m_flSlamProtectTime &&  (inputInfo.GetDamageType() == DMG_BLAST ) )
+		return 0;
+
 	m_vecTotalBulletForce += inputInfo.GetDamageForce();
 	
 	return BaseClass::OnTakeDamage( inputInfo );
 }
 
-void CHL2MP_Player::DeathSound( void )
+void CHL2MP_Player::DeathSound( const CTakeDamageInfo &info )
 {
 	if ( m_hRagdoll && m_hRagdoll->GetBaseAnimating()->IsDissolving() )
 		 return;
@@ -1280,6 +1284,56 @@ ReturnSpot:
 	}
 
 	g_pLastSpawn = pSpot;
+
+	m_flSlamProtectTime = gpGlobals->curtime + 0.5;
+
 	return pSpot;
 } 
 
+
+CON_COMMAND( timeleft, "prints the time remaining in the match" )
+{
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_GetCommandClient() );
+
+	int iTimeRemaining = (int)HL2MPRules()->GetMapRemainingTime();
+    
+	if ( iTimeRemaining == 0 )
+	{
+		if ( pPlayer )
+		{
+			ClientPrint( pPlayer, HUD_PRINTTALK, "This game has no timelimit." );
+		}
+		else
+		{
+			Msg( "* No Time Limit *\n" );
+		}
+	}
+	else
+	{
+		int iMinutes, iSeconds;
+		iMinutes = iTimeRemaining / 60;
+		iSeconds = iTimeRemaining % 60;
+
+		char minutes[8];
+		char seconds[8];
+
+		Q_snprintf( minutes, sizeof(minutes), "%d", iMinutes );
+		Q_snprintf( seconds, sizeof(seconds), "%2.2d", iSeconds );
+
+		if ( pPlayer )
+		{
+			ClientPrint( pPlayer, HUD_PRINTTALK, "Time left in map: %s1:%s2", minutes, seconds );
+		}
+		else
+		{
+			Msg( "Time Remaining:  %s:%s\n", minutes, seconds );
+		}
+	}	
+}
+
+
+void CHL2MP_Player::Reset()
+{	
+	ResetDeathCount();
+	ResetFragCount();
+}

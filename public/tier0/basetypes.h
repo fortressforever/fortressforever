@@ -20,6 +20,16 @@
 
 #include "protected_things.h"
 
+// There's a different version of this file in the xbox codeline
+// so the PC version built in the xbox branch includes things like 
+// tickrate changes.
+#include "xbox_codeline_defines.h"
+
+#ifdef IN_XBOX_CODELINE
+#define XBOX_CODELINE_ONLY()
+#else
+#define XBOX_CODELINE_ONLY() Error_Compiling_Code_Only_Valid_in_Xbox_Codeline
+#endif
 
 // stdio.h
 #ifndef NULL
@@ -39,6 +49,13 @@
 
 
 #define ExecuteOnce( x )			ExecuteNTimes( 1, x )
+
+
+template <typename T>
+inline T AlignValue( T val, unsigned alignment )
+{
+	return (T)( ( (unsigned)val + alignment - 1 ) & ~( alignment - 1 ) );
+}
 
 
 // Pad a number so it lies on an N byte boundary.
@@ -201,10 +218,9 @@ struct colorVec
 };
 
 
-#ifndef UNUSED
-#define UNUSED(x)	(x = x)	// for pesky compiler / lint warnings
+#ifndef NOTE_UNUSED
+#define NOTE_UNUSED(x)	(x = x)	// for pesky compiler / lint warnings
 #endif
-
 #ifdef __cplusplus
 
 struct vrect_t
@@ -223,6 +239,16 @@ struct Rect_t
 {
     int x, y;
 	int width, height;
+};
+
+
+//-----------------------------------------------------------------------------
+// Interval, used by soundemittersystem + the game
+//-----------------------------------------------------------------------------
+struct interval_t
+{
+	float start;
+	float range;
 };
 
 
@@ -297,6 +323,18 @@ protected:
 
 #define DECLARE_POINTER_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
 #define FORWARD_DECLARE_HANDLE(name) typedef struct name##__ *name
+
+// @TODO: Find a better home for this
+#if !defined(_STATIC_LINKED) && !defined(PUBLISH_DLL_SUBSYSTEM)
+// for platforms built with dynamic linking, the dll interface does not need spoofing
+#define PUBLISH_DLL_SUBSYSTEM()
+#endif
+
+#define UID_PREFIX generated_id_
+#define UID_CAT1(a,c) a ## c
+#define UID_CAT2(a,c) UID_CAT1(a,c)
+#define EXPAND_CONCAT(a,c) UID_CAT1(a,c)
+#define UNIQUE_ID UID_CAT2(UID_PREFIX,__LINE__)
 
 #include "tier0/valve_on.h"
 

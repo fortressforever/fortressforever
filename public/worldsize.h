@@ -34,10 +34,9 @@
 // This value is the LONGEST possible range (limited by max valid coordinate number, not 2x)
 #define MAX_COORD_RANGE				(MAX_COORD_INTEGER)
 
-#define ASSERT_COORD( v ) Assert( (v.x>=MIN_COORD_INTEGER) && (v.x<=MAX_COORD_INTEGER) && \
-								  (v.y>=MIN_COORD_INTEGER) && (v.y<=MAX_COORD_INTEGER) && \
-								  (v.z>=MIN_COORD_INTEGER) && (v.z<=MAX_COORD_INTEGER) ); \
-
+#define ASSERT_COORD( v ) Assert( (v.x>=MIN_COORD_INTEGER*2) && (v.x<=MAX_COORD_INTEGER*2) && \
+								  (v.y>=MIN_COORD_INTEGER*2) && (v.y<=MAX_COORD_INTEGER*2) && \
+								  (v.z>=MIN_COORD_INTEGER*2) && (v.z<=MAX_COORD_INTEGER*2) ); \
 
 
 #endif // WORLDSIZE_H

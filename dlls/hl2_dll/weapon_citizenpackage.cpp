@@ -5,25 +5,10 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "basehlcombatweapon.h"
+#include "weapon_citizenpackage.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CWeaponCitizenPackage : public CBaseHLCombatWeapon
-{
-	DECLARE_CLASS( CWeaponCitizenPackage, CBaseHLCombatWeapon );
-public:
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();	
-	DECLARE_ACTTABLE();
-
-	void ItemPostFrame( void );
-	void Drop( const Vector &vecVelocity );
-};
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponCitizenPackage, DT_WeaponCitizenPackage)
 END_SEND_TABLE()

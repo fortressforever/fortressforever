@@ -41,12 +41,6 @@ ConVar ffdev_snipertracesize("ffdev_snipertracesize", "3", FCVAR_REPLICATED);
 #define FF_SNIPER_MAXPUSH 6.7f
 
 extern ConVar ai_debug_shoot_positions;
-
-BEGIN_PREDICTION_DATA(CFFPlayer)
-	DEFINE_PRED_FIELD(m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK), 
-	DEFINE_PRED_FIELD(m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE), 
-END_PREDICTION_DATA()
-
 void DispatchEffect(const char *pName, const CEffectData &data);
 
 // Used to decide whether effects are allowed
@@ -732,7 +726,12 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 							data.m_nSurfaceProp = tr.surface.surfaceProps;
 							data.m_nDamageType = nDamageType;
 							data.m_nHitBox = tr.hitbox;
+
+#ifdef GAME_DLL
 							data.m_nEntIndex = tr.m_pEnt->entindex();
+#else
+							data.m_hEntity = tr.m_pEnt;
+#endif
 
 							// No impact effects for most of the shots or possible
 							// this entire burst

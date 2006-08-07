@@ -315,32 +315,36 @@ int Load_SMD ( s_source_t *psource )
 		if ((numRead == EOF) || (numRead == 0))
 			continue;
 
-		if (strcmp( cmd, "version" ) == 0) 
+		if (stricmp( cmd, "version" ) == 0) 
 		{
 			if (option != 1) 
 			{
 				MdlError("bad version\n");
 			}
 		}
-		else if (strcmp( cmd, "nodes" ) == 0) 
+		else if (stricmp( cmd, "nodes" ) == 0) 
 		{
 			psource->numbones = Grab_Nodes( psource->localBone );
 		}
-		else if (strcmp( cmd, "skeleton" ) == 0) 
+		else if (stricmp( cmd, "skeleton" ) == 0) 
 		{
 			Grab_Animation( psource );
 		}
-		else if (strcmp( cmd, "triangles" ) == 0) 
+		else if (stricmp( cmd, "triangles" ) == 0) 
 		{
 			Grab_Triangles( psource );
 		}
-		else if (strcmp( cmd, "vertexanimation" ) == 0) 
+		else if (stricmp( cmd, "vertexanimation" ) == 0) 
 		{
 			Grab_Vertexanimation( psource );
 		}
+		else if ((strncmp( cmd, "//", 2 ) == 0) || (strncmp( cmd, ";", 1 ) == 0) || (strncmp( cmd, "#", 1 ) == 0))
+		{
+			continue;
+		}
 		else 
 		{
-			MdlWarning("unknown studio command\n" );
+			MdlWarning("unknown studio command \"%s\"\n", cmd );
 		}
 	}
 	fclose( g_fpInput );

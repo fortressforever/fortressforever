@@ -36,7 +36,7 @@ void ResizeWindowControls( vgui::EditablePanel *pWindow, int tall, int wide, int
 // Purpose: transform a standard scaled value into one that is scaled based the minimum
 //          of the horizontal and vertical ratios
 //-----------------------------------------------------------------------------
-int GetAlternateProportionalValueFromScaled( int scaledValue );
+int GetAlternateProportionalValueFromScaled( vgui::HScheme hScheme, int scaledValue );
 
 //-----------------------------------------------------------------------------
 

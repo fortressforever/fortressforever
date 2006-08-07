@@ -10,7 +10,11 @@
 #pragma once
 #endif
 
-#include "npc_combine.h"
+#ifdef HL2_EPISODIC 
+	#include "npc_combine_episodic.h"
+#else
+	#include "npc_combine.h"
+#endif//HL2_EPISODIC
 
 //=========================================================
 //	>> CNPC_CombineS
@@ -22,12 +26,11 @@ class CNPC_CombineS : public CNPC_Combine
 public: 
 	void		Spawn( void );
 	void		Precache( void );
-	void		DeathSound( void );
+	void		DeathSound( const CTakeDamageInfo &info );
 	void		PrescheduleThink( void );
 	void		BuildScheduleTestBits( void );
 	int			SelectSchedule ( void );
 	float		GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info );
-	int			TakeDamage( const CTakeDamageInfo &info );
 	void		HandleAnimEvent( animevent_t *pEvent );
 	void		OnChangeActivity( Activity eNewActivity );
 	void		Event_Killed( const CTakeDamageInfo &info );

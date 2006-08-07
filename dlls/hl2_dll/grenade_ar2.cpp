@@ -81,7 +81,7 @@ void CGrenadeAR2::Spawn( void )
 
 	SetGravity( UTIL_ScaleForGravity( 400 ) );	// use a lower gravity for grenades to make them easier to see
 	SetFriction( 0.8 );
-	SetSequence( 1 );
+	SetSequence( 0 );
 
 	m_fDangerRadius = 100;
 
@@ -90,7 +90,7 @@ void CGrenadeAR2::Spawn( void )
 	// -------------
 	// Smoke trail.
 	// -------------
-	if(g_CV_SmokeTrail.GetInt())
+	if( g_CV_SmokeTrail.GetInt() && !IsXbox() )
 	{
 		m_hSmokeTrail = SmokeTrail::CreateSmokeTrail();
 		

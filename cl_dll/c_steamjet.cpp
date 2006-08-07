@@ -87,6 +87,7 @@ public:
 	bool			m_bFaceLeft;	// For support of legacy env_steamjet entity, which faced left instead of forward.
 
 	int				m_spawnflags;
+	float			m_flRollSpeed;
 
 private:
 
@@ -132,6 +133,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_SteamJet, DT_SteamJet, CSteamJet)
 	RecvPropInt(RECVINFO(m_bFaceLeft), 0),
 	RecvPropInt(RECVINFO(m_nType), 0),
 	RecvPropInt( RECVINFO( m_spawnflags ) ),
+	RecvPropFloat(RECVINFO(m_flRollSpeed), 0 ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------- //
@@ -174,7 +176,7 @@ void C_SteamJet::OnDataChanged(DataUpdateType_t updateType)
 
 	if(updateType == DATA_UPDATE_CREATED)
 	{
-		Start(&g_ParticleMgr, NULL);
+		Start(ParticleMgr(), NULL);
 	}
 
 	// Recalulate lifetime in case length or speed changed.
@@ -225,10 +227,45 @@ bool C_SteamJet::GetPropEditInfo( RecvTable **ppTable, void **ppObj )
 	return true;
 }
 
+
+// This might be useful someday.
+/*
+void CalcFastApproximateRenderBoundsAABB( C_BaseEntity *pEnt, float flBloatSize, Vector *pMin, Vector *pMax )
+{
+	C_BaseEntity *pParent = pEnt->GetMoveParent();
+	if ( pParent )
+	{
+		// Get the parent's abs space world bounds.
+		CalcFastApproximateRenderBoundsAABB( pParent, 0, pMin, pMax );
+
+		// Add the maximum of our local render bounds. This is making the assumption that we can be at any
+		// point and at any angle within the parent's world space bounds.
+		Vector vAddMins, vAddMaxs;
+		pEnt->GetRenderBounds( vAddMins, vAddMaxs );
+
+		flBloatSize += max( vAddMins.Length(), vAddMaxs.Length() );
+	}
+	else
+	{
+		// Start out with our own render bounds. Since we don't have a parent, this won't incur any nasty 
+		pEnt->GetRenderBoundsWorldspace( *pMin, *pMax );
+	}
+
+	// Bloat the box.
+	if ( flBloatSize )
+	{
+		*pMin -= Vector( flBloatSize, flBloatSize, flBloatSize );
+		*pMax += Vector( flBloatSize, flBloatSize, flBloatSize );
+	}
+}
+*/
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : fTimeDelta - 
 //-----------------------------------------------------------------------------
+
 void C_SteamJet::Update(float fTimeDelta)
 {
 	if(!m_pParticleMgr)
@@ -237,54 +274,66 @@ void C_SteamJet::Update(float fTimeDelta)
 		return;
 	}
 
-	// Add new particles.
-	Vector forward, right, up;
-	AngleVectors(GetAbsAngles(), &forward, &right, &up);			
-
-	// Legacy env_steamjet entities faced left instead of forward.
-	if (m_bFaceLeft)
+	if( m_bEmit )
 	{
-		Vector temp = forward;
-		forward = -right;
-		right = temp;
-	}
-
-	// Set the bbox so the particle manager knows when to draw this steamjet.
-	Vector vEndPoint = GetAbsOrigin() + forward * m_Speed;
-	Vector vMin, vMax;
-	VectorMin( GetAbsOrigin(), vEndPoint, vMin );
-	VectorMax( GetAbsOrigin(), vEndPoint, vMax );
-	m_ParticleEffect.SetBBox( vMin, vMax );
-
-	if( m_bEmit && m_ParticleEffect.WasDrawnPrevFrame() )
-	{
+		// Add new particles.
+		int nToEmit = 0;
 		float tempDelta = fTimeDelta;
-		while(m_ParticleSpawn.NextEvent(tempDelta))
+		while( m_ParticleSpawn.NextEvent(tempDelta) )
+			++nToEmit;
+
+		if ( nToEmit > 0 )
 		{
-			// Make a new particle.
-			if( SteamJetParticle *pParticle = (SteamJetParticle*) m_ParticleEffect.AddParticle( sizeof(SteamJetParticle), m_MaterialHandle ) )
+			Vector forward, right, up;
+			AngleVectors(GetAbsAngles(), &forward, &right, &up);			
+
+			// Legacy env_steamjet entities faced left instead of forward.
+			if (m_bFaceLeft)
 			{
-				pParticle->m_Pos = GetAbsOrigin();
-				
-				pParticle->m_Velocity = 
-					FRand(-m_SpreadSpeed,m_SpreadSpeed) * right +
-					FRand(-m_SpreadSpeed,m_SpreadSpeed) * up +
-					m_Speed * forward;
-				
-				pParticle->m_Lifetime	= 0;
-				pParticle->m_DieTime	= m_Lifetime;
-
-				pParticle->m_uchStartSize	= m_StartSize;
-				pParticle->m_uchEndSize		= m_EndSize;
-
-				pParticle->m_flRoll = random->RandomFloat( 0, 360 );
-				pParticle->m_flRollDelta = random->RandomFloat( -8.0f, 8.0f );
+				Vector temp = forward;
+				forward = -right;
+				right = temp;
 			}
-		}
 
-		UpdateLightingRamp();
+			// EVIL: Ideally, we could tell the renderer our OBB, and let it build a big box that encloses
+			// the entity with its parent so it doesn't have to setup its parent's bones here.
+			Vector vEndPoint = GetAbsOrigin() + forward * m_Speed;
+			Vector vMin, vMax;
+			VectorMin( GetAbsOrigin(), vEndPoint, vMin );
+			VectorMax( GetAbsOrigin(), vEndPoint, vMax );
+			m_ParticleEffect.SetBBox( vMin, vMax );
+
+			if ( m_ParticleEffect.WasDrawnPrevFrame() )
+			{
+				while ( nToEmit-- )
+				{
+					// Make a new particle.
+					if( SteamJetParticle *pParticle = (SteamJetParticle*) m_ParticleEffect.AddParticle( sizeof(SteamJetParticle), m_MaterialHandle ) )
+					{
+						pParticle->m_Pos = GetAbsOrigin();
+						
+						pParticle->m_Velocity = 
+							FRand(-m_SpreadSpeed,m_SpreadSpeed) * right +
+							FRand(-m_SpreadSpeed,m_SpreadSpeed) * up +
+							m_Speed * forward;
+						
+						pParticle->m_Lifetime	= 0;
+						pParticle->m_DieTime	= m_Lifetime;
+
+						pParticle->m_uchStartSize	= m_StartSize;
+						pParticle->m_uchEndSize		= m_EndSize;
+
+						pParticle->m_flRoll = random->RandomFloat( 0, 360 );
+						pParticle->m_flRollDelta = random->RandomFloat( -m_flRollSpeed, m_flRollSpeed );
+					}
+				}
+			}
+
+			UpdateLightingRamp();
+		}	
 	}
 }
+
 
 // Render a quad on the screen where you pass in color and size.
 // Normal is random and "flutters"
@@ -391,6 +440,11 @@ void C_SteamJet::RenderParticles( CParticleRenderIterator *pIterator )
 
 void C_SteamJet::SimulateParticles( CParticleSimulateIterator *pIterator )
 {
+	//Don't simulate if we're emiting particles...
+	//This fixes the cases where looking away from a steam jet and then looking back would cause a break on the stream.
+	if ( m_ParticleEffect.WasDrawnPrevFrame() == false && m_bEmit )
+		return;
+
 	SteamJetParticle *pParticle = (SteamJetParticle*)pIterator->GetFirst();
 	while ( pParticle )
 	{

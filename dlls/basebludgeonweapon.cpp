@@ -19,6 +19,7 @@
 #include "basebludgeonweapon.h"
 #include "ndebugoverlay.h"
 #include "te_effect_dispatch.h"
+#include "rumble_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -139,6 +140,9 @@ void CBaseHLBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity )
 
 	//Make sound for the AI
 	CSoundEnt::InsertSound( SOUND_BULLET_IMPACT, traceHit.endpos, 400, 0.2f, pPlayer );
+
+	// This isn't great, but it's something for when the crowbar hits.
+	pPlayer->RumbleEffect( RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART );
 
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
@@ -288,10 +292,14 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 	if ( !pOwner )
 		return;
 
+#ifdef _XBOX
+	pOwner->RumbleEffect( RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART );
+#endif//_XBOX
+
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
 
-	pOwner->EyeVectors( &forward, NULL, NULL );
+	forward = pOwner->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT, GetRange() );
 
 	Vector swingEnd = swingStart + forward * GetRange();
 	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
@@ -299,7 +307,9 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 
 	// Like bullets, bludgeon traces have to trace against triggers.
 	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetDamageForActivity( nHitActivity ), DMG_CLUB );
-	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
+	triggerInfo.SetDamagePosition( traceHit.startpos );
+	triggerInfo.SetDamageForce( forward );
+	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
 
 	if ( traceHit.fraction == 1.0 )
 	{

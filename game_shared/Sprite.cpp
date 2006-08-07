@@ -45,6 +45,7 @@ BEGIN_DATADESC( CSprite )
 	DEFINE_KEYFIELD( m_flSpriteScale, FIELD_FLOAT, "scale" ),
 	DEFINE_KEYFIELD( m_flSpriteFramerate, FIELD_FLOAT, "framerate" ),
 	DEFINE_KEYFIELD( m_flFrame, FIELD_FLOAT, "frame" ),
+	DEFINE_KEYFIELD( m_flHDRColorScale, FIELD_FLOAT, "HDRColorScale" ),
 
 	DEFINE_KEYFIELD( m_flGlowProxySize,	FIELD_FLOAT, "GlowProxySize" ),
 	
@@ -68,9 +69,13 @@ BEGIN_DATADESC( CSprite )
 	DEFINE_INPUTFUNC( FIELD_VOID, "HideSprite", InputHideSprite ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowSprite", InputShowSprite ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ToggleSprite", InputToggleSprite ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "ColorRedValue", InputColorRedValue ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "ColorGreenValue", InputColorGreenValue ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "ColorBlueValue", InputColorBlueValue ),
 
 END_DATADESC()
-#endif
+
+#else
 
 BEGIN_PREDICTION_DATA( CSprite )
 
@@ -88,6 +93,7 @@ BEGIN_PREDICTION_DATA( CSprite )
 	DEFINE_FIELD( m_flMaxFrame, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flDieTime, FIELD_FLOAT ),
 
+//	DEFINE_FIELD( m_flHDRColorScale, FIELD_FLOAT ),
 //	DEFINE_FIELD( m_flStartScale, FIELD_FLOAT ),			//Starting scale
 //	DEFINE_FIELD( m_flDestScale, FIELD_FLOAT ),			//Destination scale
 //	DEFINE_FIELD( m_flScaleTimeStart, FIELD_FLOAT ),		//Real time for start of scale
@@ -96,6 +102,8 @@ BEGIN_PREDICTION_DATA( CSprite )
 //	DEFINE_FIELD( m_flBrightnessTimeStart, FIELD_FLOAT ),	//Real time for brightness
 
 END_PREDICTION_DATA()
+
+#endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED( Sprite, DT_Sprite );
 
@@ -121,6 +129,8 @@ BEGIN_NETWORK_TABLE( CSprite, DT_Sprite )
 #endif
 	SendPropFloat( SENDINFO(m_flGlowProxySize ), 6,	SPROP_ROUNDUP,	0.0f,	MAX_GLOW_PROXY_SIZE),
 
+	SendPropFloat( SENDINFO(m_flHDRColorScale ), 0,	SPROP_NOSCALE,	0.0f,	100.0f),
+
 	SendPropFloat( SENDINFO(m_flSpriteFramerate ), 8,	SPROP_ROUNDUP,	0,	60.0f),
 	SendPropFloat( SENDINFO(m_flFrame),		20, SPROP_ROUNDDOWN,	0.0f,   256.0f),
 	SendPropFloat( SENDINFO(m_flBrightnessTime ), 0,	SPROP_NOSCALE ),
@@ -134,6 +144,8 @@ BEGIN_NETWORK_TABLE( CSprite, DT_Sprite )
 	RecvPropFloat(RECVINFO(m_flSpriteFramerate)),
 	RecvPropFloat(RECVINFO(m_flGlowProxySize)),
 
+	RecvPropFloat( RECVINFO(m_flHDRColorScale )),
+
 	RecvPropFloat(RECVINFO(m_flFrame)),
 	RecvPropFloat(RECVINFO(m_flBrightnessTime)),
 	RecvPropInt(RECVINFO(m_nBrightness)),
@@ -145,6 +157,7 @@ END_NETWORK_TABLE()
 CSprite::CSprite()
 {
 	m_flGlowProxySize = 2.0f;
+	m_flHDRColorScale = 1.0f;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -253,7 +266,7 @@ void CSprite::SetModel( const char *szModelName )
 	const model_t *model = modelinfo->GetModel( index );
 	if ( model && modelinfo->GetModelType( model ) != mod_sprite )
 	{
-		Msg( "Setting CSprite to non-sprite model %s\n", szModelName );
+		Msg( "Setting CSprite to non-sprite model %s\n", szModelName?szModelName:"NULL" );
 	}
 
 #if !defined( CLIENT_DLL )
@@ -565,6 +578,23 @@ void CSprite::InputShowSprite( inputdata_t &inputdata )
 	TurnOn();
 }
 
+void CSprite::InputColorRedValue( inputdata_t &inputdata )
+{
+	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	SetColor( nNewColor, m_clrRender->g, m_clrRender->b );
+}
+
+void CSprite::InputColorGreenValue( inputdata_t &inputdata )
+{
+	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	SetColor( m_clrRender->r, nNewColor, m_clrRender->b );
+}
+
+void CSprite::InputColorBlueValue( inputdata_t &inputdata )
+{
+	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	SetColor( m_clrRender->r, m_clrRender->g, nNewColor );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler that toggles the sprite between hidden and shown.
@@ -684,6 +714,7 @@ void CSprite::ClientThink( void )
 }
 
 extern bool g_bRenderingScreenshot;
+extern ConVar r_drawviewmodel;
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : flags - 
@@ -698,7 +729,7 @@ int CSprite::DrawModel( int flags )
 
 	// Tracker 16432:  If rendering a savegame screenshot then don't draw sprites 
 	//   who have viewmodels as their moveparent
-	if ( g_bRenderingScreenshot )
+	if ( g_bRenderingScreenshot || !r_drawviewmodel.GetBool() )
 	{
 		C_BaseViewModel *vm = dynamic_cast< C_BaseViewModel * >( GetMoveParent() );
 		if ( vm )
@@ -710,7 +741,7 @@ int CSprite::DrawModel( int flags )
 	//Must be a sprite
 	if ( modelinfo->GetModelType( GetModel() ) != mod_sprite )
 	{
-		assert( 0 );
+		Assert( 0 );
 		return 0;
 	}
 
@@ -733,11 +764,13 @@ int CSprite::DrawModel( int flags )
 		m_nAttachment,			// attachment point
 		GetRenderMode(),		// rendermode
 		m_nRenderFX,
-		GetRenderBrightness(),		// alpha
+		GetRenderBrightness(),	// alpha
 		m_clrRender->r,
 		m_clrRender->g,
 		m_clrRender->b,
-		renderscale );			// sprite scale
+		renderscale,			// sprite scale
+		GetHDRColorScale()		// HDR Color Scale
+		);
 
 	return drawn;
 }

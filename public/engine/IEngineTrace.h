@@ -13,6 +13,7 @@
 #endif
 
 #include "basehandle.h"
+#include "utlvector.h" //need CUtlVector for IEngineTrace::GetBrushesIn*()
 
 
 class Vector;
@@ -23,6 +24,8 @@ typedef CGameTrace trace_t;
 class ICollideable;
 class QAngle;
 class CTraceListData;
+class CPhysCollide;
+struct cplane_t;
 
 //-----------------------------------------------------------------------------
 // The standard trace filter... NOTE: Most normal traces inherit from CTraceFilter!!!
@@ -35,7 +38,7 @@ enum TraceType_t
 	TRACE_EVERYTHING_FILTER_PROPS,	// NOTE: This version will pass the IHandleEntity for props through the filter, unlike all other filters
 };
 
-class ITraceFilter
+abstract_class ITraceFilter
 {
 public:
 	virtual bool ShouldHitEntity( IHandleEntity *pEntity, int contentsMask ) = 0;
@@ -109,7 +112,7 @@ public:
 //-----------------------------------------------------------------------------
 // Enumeration interface for EnumerateLinkEntities
 //-----------------------------------------------------------------------------
-class IEntityEnumerator
+abstract_class IEntityEnumerator
 {
 public:
 	// This gets called with each handle
@@ -122,7 +125,7 @@ public:
 //-----------------------------------------------------------------------------
 #define INTERFACEVERSION_ENGINETRACE_SERVER	"EngineTraceServer003"
 #define INTERFACEVERSION_ENGINETRACE_CLIENT	"EngineTraceClient003"
-class IEngineTrace
+abstract_class IEngineTrace
 {
 public:
 	// Returns the contents mask + entity at a particular world-space position
@@ -168,6 +171,20 @@ public:
 	// HACKHACK: Temp for performance measurments
 	virtual int GetStatByIndex( int index, bool bClear ) = 0;
 
+
+	//finds brushes in an AABB, prone to some false positives
+	virtual void GetBrushesInAABB( const Vector &vMins, const Vector &vMaxs, CUtlVector<int> *pOutput, int iContentsMask = 0xFFFFFFFF ) = 0;
+
+	//Creates a CPhysCollide out of all displacements wholly or partially contained in the specified AABB
+	virtual CPhysCollide* GetCollidableFromDisplacementsInAABB( const Vector& vMins, const Vector& vMaxs ) = 0;
+
+	//retrieve brush planes and contents, returns true if data is being returned in the output pointers, false if the brush doesn't exist
+	virtual bool GetBrushInfo( int iBrush, CUtlVector<const cplane_t *> *pPlanesOut, int *pContentsOut ) = 0;
+
+	virtual bool PointOutsideWorld( const Vector &ptTest ) = 0; //Tests a point to see if it's outside any playable area
+
+	// Walks bsp to find the leaf containing the specified point
+	virtual int GetLeafContainingPoint( const Vector &ptTest ) = 0;
 };
 
 

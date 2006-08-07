@@ -17,27 +17,22 @@
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-AI_CriteriaSet::AI_CriteriaSet()
+AI_CriteriaSet::AI_CriteriaSet() : m_Lookup( 0, 0, CritEntry_t::LessFunc )
 {
-	m_pCriteria = new KeyValues( "CriteriaSet" );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : src - 
 //-----------------------------------------------------------------------------
-AI_CriteriaSet::AI_CriteriaSet( const AI_CriteriaSet& src )
+AI_CriteriaSet::AI_CriteriaSet( const AI_CriteriaSet& src ) : m_Lookup( 0, 0, CritEntry_t::LessFunc )
 {
-	m_pCriteria = new KeyValues( "CriteriaSet" );
-	if ( src.m_pCriteria )
+	m_Lookup.Purge();
+	for ( short i = src.m_Lookup.FirstInorder(); 
+		i != src.m_Lookup.InvalidIndex(); 
+		i = src.m_Lookup.NextInorder( i ) )
 	{
-		*m_pCriteria = *src.m_pCriteria;
-	}
-
-	KeyValues *kv;
-	for ( kv = m_pCriteria->GetFirstSubKey(); kv; kv = kv->GetNextKey() )
-	{
-		m_Lookup.Insert( kv->GetName(), kv );
+		m_Lookup.Insert( src.m_Lookup[ i ] );
 	}
 }
 
@@ -46,7 +41,6 @@ AI_CriteriaSet::AI_CriteriaSet( const AI_CriteriaSet& src )
 //-----------------------------------------------------------------------------
 AI_CriteriaSet::~AI_CriteriaSet()
 {
-	m_pCriteria->deleteThis();
 }
 
 //-----------------------------------------------------------------------------
@@ -57,15 +51,19 @@ AI_CriteriaSet::~AI_CriteriaSet()
 //-----------------------------------------------------------------------------
 void AI_CriteriaSet::AppendCriteria( const char *criteria, const char *value /*= ""*/, float weight /*= 1.0f*/ )
 {
-	Assert( m_pCriteria );
+	int idx = FindCriterionIndex( criteria );
+	if ( idx == -1 )
+	{
+		CritEntry_t entry;
+		entry.criterianame = criteria;
+		MEM_ALLOC_CREDIT();
+		idx = m_Lookup.Insert( entry );
+	}
 
-	KeyValues *sub = m_pCriteria->FindKey( criteria, true );
-	Assert( sub );
+	CritEntry_t *entry = &m_Lookup[ idx ];
 
-	sub->SetString( "value", value );
-	sub->SetFloat( "weight", weight );
-
-	m_Lookup.Insert( criteria, sub );
+	entry->SetValue( value );
+	entry->weight = weight;
 }
 
 
@@ -74,14 +72,11 @@ void AI_CriteriaSet::AppendCriteria( const char *criteria, const char *value /*=
 //-----------------------------------------------------------------------------
 void AI_CriteriaSet::RemoveCriteria( const char *criteria )
 {
-	Assert( m_pCriteria );
+	int idx = FindCriterionIndex( criteria );
+	if ( idx == -1 )
+		return;
 
-	KeyValues *sub = m_pCriteria->FindKey( criteria );
-	if ( sub )
-	{
-		m_Lookup.Remove( sub->GetName() );
-		sub->deleteThis();
-	}
+	m_Lookup.RemoveAt( idx );
 }
 
 
@@ -101,7 +96,9 @@ int AI_CriteriaSet::GetCount() const
 //-----------------------------------------------------------------------------
 int AI_CriteriaSet::FindCriterionIndex( const char *name ) const
 {
-	int idx = m_Lookup.Find( name );
+	CritEntry_t search;
+	search.criterianame = name;
+	int idx = m_Lookup.Find( search );
 	if ( idx == m_Lookup.InvalidIndex() )
 		return -1;
 
@@ -115,11 +112,13 @@ int AI_CriteriaSet::FindCriterionIndex( const char *name ) const
 //-----------------------------------------------------------------------------
 const char *AI_CriteriaSet::GetName( int index ) const
 {
+	static char namebuf[ 128 ];
 	if ( index < 0 || index >= (int)m_Lookup.Count() )
 		return "";
 
-	KeyValues *sub = m_Lookup[ index ];
-	return sub->GetName();
+	const CritEntry_t *entry = &m_Lookup[ index ];
+	Q_strncpy( namebuf, entry->criterianame.String(), sizeof( namebuf ) );
+	return namebuf;
 }
 
 //-----------------------------------------------------------------------------
@@ -132,8 +131,8 @@ const char *AI_CriteriaSet::GetValue( int index ) const
 	if ( index < 0 || index >= (int)m_Lookup.Count() )
 		return "";
 
-	KeyValues *sub = m_Lookup[ index ];
-	return sub->GetString( "value", "" );
+	const CritEntry_t *entry = &m_Lookup[ index ];
+	return entry->value ? entry->value : "";
 }
 
 //-----------------------------------------------------------------------------
@@ -146,8 +145,8 @@ float AI_CriteriaSet::GetWeight( int index ) const
 	if ( index < 0 || index >= (int)m_Lookup.Count() )
 		return 1.0f;
 
-	KeyValues *sub = m_Lookup[ index ];
-	return sub->GetFloat( "weight", 1.0f );
+	const CritEntry_t *entry = &m_Lookup[ index ];
+	return entry->weight;
 }
 
 //-----------------------------------------------------------------------------
@@ -155,36 +154,32 @@ float AI_CriteriaSet::GetWeight( int index ) const
 //-----------------------------------------------------------------------------
 void AI_CriteriaSet::Describe()
 {
-	KeyValues *kv = m_pCriteria->GetFirstSubKey();
-	while( kv )
+	for ( short i = m_Lookup.FirstInorder(); i != m_Lookup.InvalidIndex(); i = m_Lookup.NextInorder( i ) )
 	{
-		const char *value = kv->GetString( "value", "" );
-		if ( value && value[ 0 ] )
+
+		CritEntry_t *entry = &m_Lookup[ i ];
+
+		if ( entry->weight != 1.0f )
 		{
-			float w = kv->GetFloat( "weight", 1.0f );
-			if ( w != 1.0f )
-			{
-				DevMsg( "  %20s = '%s' (weight %f)\n", kv->GetName(), value, w );
-			}
-			else
-			{
-				DevMsg( "  %20s = '%s'\n", kv->GetName(), value );
-			}
+			DevMsg( "  %20s = '%s' (weight %f)\n", entry->criterianame.String(), entry->value ? entry->value : "", entry->weight );
 		}
-		kv = kv->GetNextKey();
+		else
+		{
+			DevMsg( "  %20s = '%s'\n", entry->criterianame.String(), entry->value ? entry->value : "" );
+		}
 	}
 }
 
 BEGIN_SIMPLE_DATADESC( AI_ResponseParams )
-	DEFINE_FIELD( flags,	FIELD_INTEGER ),
-	DEFINE_FIELD( odds,	FIELD_INTEGER ),	
-	DEFINE_FIELD( soundlevel,	FIELD_INTEGER ),	
-	DEFINE_FIELD( delay,	FIELD_INTERVAL ),	
-	DEFINE_FIELD( respeakdelay,	FIELD_INTERVAL ),	
+	DEFINE_FIELD( flags,	FIELD_CHARACTER ),
+	DEFINE_FIELD( odds,	FIELD_SHORT ),	
+	DEFINE_FIELD( soundlevel,	FIELD_CHARACTER ),	
+	DEFINE_FIELD( delay,	FIELD_INTEGER ),		// These are compressed down to two float16s, so treat as an INT for saverestore
+	DEFINE_FIELD( respeakdelay,	FIELD_INTEGER ),	//  "
 END_DATADESC()
 
 BEGIN_SIMPLE_DATADESC( AI_Response )
-	DEFINE_FIELD( m_Type,	FIELD_INTEGER ),
+	DEFINE_FIELD( m_Type,	FIELD_CHARACTER ),
 	DEFINE_ARRAY( m_szResponseName, FIELD_CHARACTER, AI_Response::MAX_RESPONSE_NAME ),	
 	DEFINE_ARRAY( m_szMatchingRule, FIELD_CHARACTER, AI_Response::MAX_RULE_NAME ),	
 	// DEFINE_FIELD( m_pCriteria, FIELD_??? ), // Don't need to save this probably
@@ -200,6 +195,7 @@ AI_Response::AI_Response()
 	m_szResponseName[0] = 0;
 	m_pCriteria = NULL;
 	m_szMatchingRule[0]=0;
+	m_szContext = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -207,8 +203,11 @@ AI_Response::AI_Response()
 AI_Response::AI_Response( const AI_Response &from )
 {
 	Assert( (void*)(&m_Type) == (void*)this );
+	m_pCriteria = NULL;
 	memcpy( this, &from, sizeof(*this) );
 	m_pCriteria = NULL;
+	m_szContext = NULL;
+	SetContext( from.m_szContext );
 }
 
 //-----------------------------------------------------------------------------
@@ -217,15 +216,19 @@ AI_Response::AI_Response( const AI_Response &from )
 AI_Response::~AI_Response()
 {
 	delete m_pCriteria;
+	delete[] m_szContext;
 }
 
 //-----------------------------------------------------------------------------
 AI_Response &AI_Response::operator=( const AI_Response &from )
 {
 	Assert( (void*)(&m_Type) == (void*)this );
+	delete m_pCriteria;
+	m_pCriteria = NULL;
 	memcpy( this, &from, sizeof(*this) );
 	m_pCriteria = NULL;
-
+	m_szContext = NULL;
+	SetContext( from.m_szContext );
 	return *this;
 }
 
@@ -234,7 +237,7 @@ AI_Response &AI_Response::operator=( const AI_Response &from )
 // Input  : *response - 
 //			*criteria - 
 //-----------------------------------------------------------------------------
-void AI_Response::Init( ResponseType_t type, const char *responseName, const AI_CriteriaSet& criteria, const AI_ResponseParams& responseparams, const char *ruleName )
+void AI_Response::Init( ResponseType_t type, const char *responseName, const AI_CriteriaSet& criteria, const AI_ResponseParams& responseparams, const char *ruleName, const char *applyContext )
 {
 	m_Type = type;
 	Q_strncpy( m_szResponseName, responseName, sizeof( m_szResponseName ) );
@@ -242,6 +245,7 @@ void AI_Response::Init( ResponseType_t type, const char *responseName, const AI_
 	m_pCriteria = new AI_CriteriaSet( criteria );
 	Q_strncpy( m_szMatchingRule, ruleName ? ruleName : "NULL", sizeof( m_szMatchingRule ) );
 	m_Params = responseparams;
+	SetContext( applyContext );
 }
 
 //-----------------------------------------------------------------------------
@@ -254,20 +258,25 @@ void AI_Response::Describe()
 		DevMsg( "Search criteria:\n" );
 		m_pCriteria->Describe();
 	}
-	if ( m_szMatchingRule[0] )
+	if ( m_szMatchingRule[ 0 ] )
 	{
 		DevMsg( "Matched rule '%s', ", m_szMatchingRule );
 	}
-	DevMsg( "response %s = '%s'\n", DescribeResponse( m_Type ), m_szResponseName );
+	if ( m_szContext )
+	{
+		DevMsg( "Contexts to set '%s', ", m_szContext );
+	}
+
+	DevMsg( "response %s = '%s'\n", DescribeResponse( (ResponseType_t)m_Type ),  m_szResponseName );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : char const
 //-----------------------------------------------------------------------------
-const char *AI_Response::GetName() const
+void AI_Response::GetName( char *buf, size_t buflen ) const
 {
-	return m_szResponseName;
+	Q_strncpy( buf, m_szResponseName, buflen );
 }
 
 
@@ -275,9 +284,9 @@ const char *AI_Response::GetName() const
 // Purpose: 
 // Output : char const
 //-----------------------------------------------------------------------------
-const char *AI_Response::GetResponse() const
+void AI_Response::GetResponse( char *buf, size_t buflen ) const
 {
-	return GetName();
+	GetName( buf, buflen );
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -341,7 +350,7 @@ soundlevel_t AI_Response::GetSoundLevel() const
 {
 	if ( m_Params.flags & AI_ResponseParams::RG_SOUNDLEVEL )
 	{
-		return m_Params.soundlevel;
+		return (soundlevel_t)m_Params.soundlevel;
 	}
 
 	return SNDLVL_TALKING;
@@ -351,7 +360,21 @@ float AI_Response::GetRespeakDelay( void ) const
 {
 	if ( m_Params.flags & AI_ResponseParams::RG_RESPEAKDELAY )
 	{
-		return RandomInterval( m_Params.respeakdelay );
+		interval_t temp;
+		m_Params.respeakdelay.ToInterval( temp );
+		return RandomInterval( temp );
+	}
+
+	return 0.0f;
+}
+
+float AI_Response::GetWeaponDelay( void ) const
+{
+	if ( m_Params.flags & AI_ResponseParams::RG_WEAPONDELAY )
+	{
+		interval_t temp;
+		m_Params.weapondelay.ToInterval( temp );
+		return RandomInterval( temp );
 	}
 
 	return 0.0f;
@@ -372,6 +395,11 @@ bool AI_Response::ShouldntUseScene( void ) const
 	return ( m_Params.flags & AI_ResponseParams::RG_DONT_USE_SCENE ) != 0;
 }
 
+bool AI_Response::ShouldBreakOnNonIdle( void ) const
+{
+	return ( m_Params.flags & AI_ResponseParams::RG_STOP_ON_NONIDLE ) != 0;
+}
+
 int AI_Response::GetOdds( void ) const
 {
 	if ( m_Params.flags & AI_ResponseParams::RG_ODDS )
@@ -385,9 +413,29 @@ float AI_Response::GetDelay() const
 {
 	if ( m_Params.flags & AI_ResponseParams::RG_DELAYAFTERSPEAK )
 	{
-		return RandomInterval( m_Params.delay );
+		interval_t temp;
+		m_Params.delay.ToInterval( temp );
+		return RandomInterval( temp );
 	}
 	return 0.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets context string
+// Output : void
+//-----------------------------------------------------------------------------
+void AI_Response::SetContext( const char *context )
+{
+	delete[] m_szContext;
+	m_szContext = NULL;
+
+	if ( context )
+	{
+		int len = Q_strlen( context );
+		m_szContext = new char[ len + 1 ];
+		Q_memcpy( m_szContext, context, len );
+		m_szContext[ len ] = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -397,33 +445,50 @@ float AI_Response::GetDelay() const
 //			keylen - 
 //			*value - 
 //			valuelen - 
+//			*duration -
 // Output : static bool
 //-----------------------------------------------------------------------------
-const char *SplitContext( const char *raw, char *key, int keylen, char *value, int valuelen )
+const char *SplitContext( const char *raw, char *key, int keylen, char *value, int valuelen, float *duration )
 {
-	char *colon = Q_strstr( raw, ":" );
-	if ( !colon )
+	char *colon1 = Q_strstr( raw, ":" );
+	if ( !colon1 )
 	{
 		DevMsg( "SplitContext:  warning, ignoring context '%s', missing colon separator!\n", raw );
 		return NULL;
 	}
 
-	int len = colon - raw;
+	int len = colon1 - raw;
 	Q_strncpy( key, raw, min( len + 1, keylen ) );
-	key[ min( len, keylen ) ] = 0;
+	key[ min( len, keylen - 1 ) ] = 0;
 
 	bool last = false;
-	char *end = Q_strstr( colon + 1, "," );
+	char *end = Q_strstr( colon1 + 1, "," );
 	if ( !end )
 	{
-		int remaining = Q_strlen( colon + 1 );
-		end = colon + 1 + remaining;
+		int remaining = Q_strlen( colon1 + 1 );
+		end = colon1 + 1 + remaining;
 		last = true;
 	}
-	len = end - ( colon + 1 );
 
-	Q_strncpy( value, colon + 1, len + 1 );
-	value[ len ] = 0;
+	char *colon2 = Q_strstr( colon1 + 1, ":" );
+	if ( colon2 && ( colon2 < end ) )
+	{
+		if ( duration )
+			*duration = atof( colon2 + 1 );
+
+		len = min( colon2 - ( colon1 + 1 ), valuelen - 1 );
+		Q_strncpy( value, colon1 + 1, len + 1 );
+		value[ len ] = 0;
+	}
+	else
+	{
+		if ( duration )
+			*duration = 0.0;
+
+		len = min( end - ( colon1 + 1 ), valuelen - 1 );
+		Q_strncpy( value, colon1 + 1, len + 1 );
+		value[ len ] = 0;
+	}
 
 	return last ? NULL : end + 1;
 }

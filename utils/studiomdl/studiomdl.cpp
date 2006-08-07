@@ -57,6 +57,9 @@ bool g_bVerifyOnly = false;
 bool g_bUseBoneInBBox = true;
 bool g_bLockBoneLengths = false;
 bool g_bOverridePreDefinedBones = true;
+bool g_bXbox = false;
+int g_minLod = 0;
+bool g_bNoWarnings = false;
 
 char g_path[1024];
 
@@ -134,14 +137,38 @@ void CreateMakefile_OutputMakefile( void )
 
 static bool g_bFirstWarning = true;
 
+void TokenError( char const *fmt, ... )
+{
+	static char output[1024];
+	va_list		args;
+
+	char *pFilename;
+	int iLineNumber;
+
+	if (GetTokenizerStatus( &pFilename, &iLineNumber ))
+	{
+		va_start( args, fmt );
+		vsprintf( output, fmt, args );
+
+		MdlError( "%s(%d): - %s", pFilename, iLineNumber, output );
+	}
+	else
+	{
+		va_start( args, fmt );
+		vsprintf( output, fmt, args );
+		MdlError( "%s", output );
+	}
+}
+
 void MdlError( char const *fmt, ... )
 {
 	static char output[1024];
-	static char *knownExtensions[] = {".mdl", ".ani", ".phy", ".sw.vtx", ".dx80.vtx", ".dx90.vtx", ".vvd"};
+	static char *knownExtensions[] = {".mdl", ".ani", ".phy", ".sw.vtx", ".dx80.vtx", ".dx90.vtx", ".xbox.vtx", ".vvd"};
 	char		fileName[MAX_PATH];
 	char		baseName[MAX_PATH];
 	va_list		args;
 
+	Assert( 0 );
 	if (g_quiet)
 	{
 		if (g_bFirstWarning)
@@ -190,6 +217,9 @@ void MdlWarning( const char *fmt, ... )
 	va_list args;
 	static char output[1024];
 
+	if (g_bNoWarnings)
+		return;
+
 	if (g_quiet)
 	{
 		if (g_bFirstWarning)
@@ -200,12 +230,14 @@ void MdlWarning( const char *fmt, ... )
 		printf("\t");
 	}
 
+	Assert( 0 );
+
 	printf("WARNING: ");
 	va_start( args, fmt );
 	vprintf( fmt, args );
 }
 
-
+#ifndef _DEBUG
 
 void MdlHandleCrash( const char *pMessage, bool bAssert )
 {
@@ -279,7 +311,7 @@ void MdlExceptionFilter( unsigned long code )
 	TerminateProcess( GetCurrentProcess(), 1 );
 }
 
-
+#endif
 
 /*
 =================
@@ -292,7 +324,10 @@ void *kalloc( int num, int size )
 	// printf( "calloc( %d, %d )\n", num, size );
 	// printf( "%d ", num * size );
 	k_memtotal += num * size;
-	return calloc( num, size );
+	// ensure memory alignment on maximum of ALIGN
+	void *ptr = calloc( num, size + 511 );
+	ptr = (byte *)((int)((byte *)ptr + 511) & ~ 511);
+	return ptr;
 }
 
 void kmemset( void *ptr, int value, int size )
@@ -307,7 +342,7 @@ int verify_atoi( const char *token )
 {
 	if (token[0] != '-' && (token[0] < '0' || token[0] > '9'))
 	{
-		MdlError( "expecting number, got \"%s\"\n", token );
+		TokenError( "expecting number, got \"%s\"\n", token );
 	}
 	return atoi( token );
 }
@@ -316,7 +351,7 @@ float verify_atof( const char *token )
 {
 	if (token[0] != '-' && token[0] != '.' && (token[0] < '0' || token[0] > '9'))
 	{
-		MdlError( "expecting number, got \"%s\"\n", token );
+		TokenError( "expecting number, got \"%s\"\n", token );
 	}
 	return atof( token );
 }
@@ -400,7 +435,7 @@ int LookupPoseParameter( char *name )
 
 	if (g_numposeparameters > MAXSTUDIOPOSEPARAM)
 	{
-		MdlError( "too many pose parameters (max %d)\n", MAXSTUDIOPOSEPARAM );
+		TokenError( "too many pose parameters (max %d)\n", MAXSTUDIOPOSEPARAM );
 	}
 
 	return i;
@@ -410,7 +445,7 @@ void Cmd_PoseParameter( )
 {
 	if (g_numposeparameters >= MAXSTUDIOPOSEPARAM)
 	{
-		MdlError( "too many pose parameters (max %d)\n", MAXSTUDIOPOSEPARAM );
+		TokenError( "too many pose parameters (max %d)\n", MAXSTUDIOPOSEPARAM );
 	}
 
 	int i = LookupPoseParameter( token );
@@ -858,7 +893,7 @@ void Cmd_Modelname (void)
 	
 	if ( token[0] == '/' || token[0] == '\\' )
 	{
-		Warning( "$modelname key has slash as first character. Removing.\n" );
+		MdlWarning( "$modelname key has slash as first character. Removing.\n" );
 		Q_strncpy( outname, &token[1], sizeof( outname ) );
 	}
 	else
@@ -1057,7 +1092,7 @@ void Grab_Animation( s_source_t *psource )
 		}
 		else if (sscanf( g_szLine, "%1023s %d", cmd, &index ))
 		{
-			if (strcmp( cmd, "time" ) == 0) 
+			if (stricmp( cmd, "time" ) == 0) 
 			{
 				t = index;
 				if (psource->startframe == -1)
@@ -1093,7 +1128,7 @@ void Grab_Animation( s_source_t *psource )
 					// MdlError( "%s has duplicated frame %d\n", psource->filename, t );
 				}
 			}
-			else if (strcmp( cmd, "end") == 0) 
+			else if (stricmp( cmd, "end") == 0) 
 			{
 				psource->numframes = psource->endframe - psource->startframe + 1;
 
@@ -1153,7 +1188,7 @@ int Option_Event ( s_sequence_t *psequence )
 {
 	if (psequence->numevents + 1 >= MAXSTUDIOEVENTS)
 	{
-		MdlError("too many events\n");
+		TokenError("too many events\n");
 	}
 
 	GetToken (false);
@@ -1195,7 +1230,7 @@ void Option_IKRule( s_ikrule_t *pRule )
 	}
 	if (i >= g_numikchains)
 	{
-		MdlError( "unknown chain \"%s\" in ikrule\n", token );
+		TokenError( "unknown chain \"%s\" in ikrule\n", token );
 	}
 	pRule->chain = i;
 	// default slot
@@ -1418,7 +1453,7 @@ void Cmd_UpAxis( void )
 	}
 	else
 	{
-		MdlError( "unknown $upaxis option: \"%s\"\n", token );
+		TokenError( "unknown $upaxis option: \"%s\"\n", token );
 	}
 }
 
@@ -1527,7 +1562,7 @@ static s_source_t *FindCachedSource( char const* name, char const* xext )
 s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool isActiveModel )
 {
 	if ( g_numsources >= MAXSTUDIOSEQUENCES )
-		MdlError( "Load_Source( %s ) - overflowed g_numsources.", name );
+		TokenError( "Load_Source( %s ) - overflowed g_numsources.", name );
 
 	Assert(name);
 	int namelen = strlen(name) + 1;
@@ -1576,6 +1611,18 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 		strcpyn( g_source[g_numsources]->filename, g_szFilename );
 		result = Load_SMD( g_source[g_numsources] );
 	}
+	if ( ( !result && xext[0] == '\0' ) || stricmp( xext, "sma" ) == 0)
+	{
+		sprintf (g_szFilename, "%s%s.sma", cddir[numdirs], pTempName );
+		strcpyn( g_source[g_numsources]->filename, g_szFilename );
+		result = Load_SMD( g_source[g_numsources] );
+	}
+	if ( ( !result && xext[0] == '\0' ) || stricmp( xext, "phys" ) == 0)
+	{
+		sprintf (g_szFilename, "%s%s.phys", cddir[numdirs], pTempName );
+		strcpyn( g_source[g_numsources]->filename, g_szFilename );
+		result = Load_SMD( g_source[g_numsources] );
+	}
 	if (( !result && xext[0] == '\0' ) || stricmp( xext, "vta" ) == 0)
 	{
 		sprintf (g_szFilename, "%s%s.vta", cddir[numdirs], pTempName );
@@ -1591,12 +1638,12 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 
 	if (!g_bCreateMakefile && !result)
 	{
-		MdlError( "could not load file '%s'\n", g_source[g_numsources]->filename );
+		TokenError( "could not load file '%s'\n", g_source[g_numsources]->filename );
 	}
 
 	if ( g_source[g_numsources]->numbones == 0 )
 	{
-		MdlError( "missing all bones in file '%s'\n", g_source[g_numsources]->filename );
+		TokenError( "missing all bones in file '%s'\n", g_source[g_numsources]->filename );
 	}
 
 	g_numsources++;
@@ -1677,7 +1724,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		}
 		if (i == g_numweightlist)
 		{
-			MdlError( "unknown weightlist '%s\'\n", token );
+			TokenError( "unknown weightlist '%s\'\n", token );
 		}
 		pcmd->cmd = CMD_WEIGHTS;
 		pcmd->u.weightlist.index = i;
@@ -1691,7 +1738,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown subtract animation '%s\'\n", token );
+			TokenError( "unknown subtract animation '%s\'\n", token );
 		}
 
 		pcmd->u.subtract.ref = extanim;
@@ -1710,7 +1757,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown presubtract animation '%s\'\n", token );
+			TokenError( "unknown presubtract animation '%s\'\n", token );
 		}
 
 		pcmd->u.subtract.ref = extanim;
@@ -1728,7 +1775,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown alignto animation '%s\'\n", token );
+			TokenError( "unknown alignto animation '%s\'\n", token );
 		}
 
 		pcmd->u.ao.ref = extanim;
@@ -1746,7 +1793,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown align animation '%s\'\n", token );
+			TokenError( "unknown align animation '%s\'\n", token );
 		}
 
 		pcmd->u.ao.ref = extanim;
@@ -1762,7 +1809,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		}
 		if (pcmd->u.ao.motiontype == 0)
 		{
-			MdlError( "missing controls on align\n" );
+			TokenError( "missing controls on align\n" );
 		}
 
 		// frame of reference animation to match
@@ -1783,7 +1830,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown alignboneto animation '%s\'\n", token );
+			TokenError( "unknown alignboneto animation '%s\'\n", token );
 		}
 
 		pcmd->u.ao.ref = extanim;
@@ -1800,10 +1847,41 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
+			TokenError( "unknown match animation '%s\'\n", token );
+		}
+
+		pcmd->u.match.ref = extanim;
+	}
+	else if (stricmp( "matchblend", token ) == 0)
+	{
+		pcmd->cmd = CMD_MATCHBLEND;
+
+		GetToken( false );
+
+		s_animation_t *extanim = LookupAnimation( token );
+		if (extanim == NULL)
+		{
 			MdlError( "unknown match animation '%s\'\n", token );
 		}
 
 		pcmd->u.match.ref = extanim;
+
+		// frame of reference animation to match
+		GetToken( false );
+		pcmd->u.match.srcframe = verify_atoi( token );
+
+		// against what frame of the current animation
+		GetToken( false );
+		pcmd->u.match.destframe = verify_atoi( token );
+
+		// backup and starting match in here
+		GetToken( false );
+		pcmd->u.match.destpre = verify_atoi( token );
+
+		// continue blending match till here
+		GetToken( false );
+		pcmd->u.match.destpost = verify_atoi( token );
+
 	}
 	else if (stricmp( "worldspaceblend", token ) == 0)
 	{
@@ -1814,10 +1892,31 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown worldspaceblend animation '%s\'\n", token );
+			TokenError( "unknown worldspaceblend animation '%s\'\n", token );
 		}
 
-		pcmd->u.match.ref = extanim;
+		pcmd->u.world.ref = extanim;
+		pcmd->u.world.startframe = 0;
+		pcmd->u.world.loops = false;
+	}
+	else if (stricmp( "worldspaceblendloop", token ) == 0)
+	{
+		pcmd->cmd = CMD_WORLDSPACEBLEND;
+
+		GetToken( false );
+
+		s_animation_t *extanim = LookupAnimation( token );
+		if (extanim == NULL)
+		{
+			TokenError( "unknown worldspaceblend animation '%s\'\n", token );
+		}
+
+		pcmd->u.world.ref = extanim;
+
+		GetToken( false );
+		pcmd->u.world.startframe = atoi( token );
+
+		pcmd->u.world.loops = true;
 	}
 	else if (stricmp( "rotateto", token ) == 0)
 	{
@@ -1891,7 +1990,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown alignto animation '%s\'\n", token );
+			TokenError( "unknown alignto animation '%s\'\n", token );
 		}
 		pcmd->u.motion.pRefAnim = extanim;
 
@@ -1939,7 +2038,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		s_animation_t *extanim = LookupAnimation( token );
 		if (extanim == NULL)
 		{
-			MdlError( "unknown alignto animation '%s\'\n", token );
+			TokenError( "unknown alignto animation '%s\'\n", token );
 		}
 		pcmd->u.motion.pRefAnim = extanim;
 
@@ -1960,7 +2059,7 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 		}
 		if (pcmd->u.motion.motiontype == 0)
 		{
-			MdlError( "missing controls on walkalign\n" );
+			TokenError( "missing controls on walkalign\n" );
 		}
 
 		// frame of reference animation to match
@@ -1985,13 +2084,13 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 	else if (stricmp("lineardelta", token ) == 0)
 	{
 		pcmd->cmd = CMD_LINEARDELTA;
-		pcmd->u.linear.flags |= STUDIO_POST;
+		pcmd->u.linear.flags |= STUDIO_AL_POST;
 	}
 	else if (stricmp("splinedelta", token ) == 0)
 	{
 		pcmd->cmd = CMD_LINEARDELTA;
-		pcmd->u.linear.flags |= STUDIO_POST;
-		pcmd->u.linear.flags |= STUDIO_SPLINE;
+		pcmd->u.linear.flags |= STUDIO_AL_POST;
+		pcmd->u.linear.flags |= STUDIO_AL_SPLINE;
 	}
 	else if (stricmp("compress", token ) == 0)
 	{
@@ -2056,13 +2155,38 @@ int ParseCmdlistToken( int &numcmds, s_animcmd_t *cmds )
 
 int ParseAnimationToken( s_animation_t *panim )
 {
-	if (stricmp("fps", token ) == 0)
+	if (stricmp("if", token ) == 0)
+	{
+		// fixme: add expression evaluation
+		GetToken( false );
+		if (atoi( token ) == 0 && stricmp( token, "true" ) != 0)
+		{
+			GetToken(true);
+			if (token[0] == '{')
+			{
+				int depth = 1;
+				while (TokenAvailable() && depth > 0)
+				{
+					GetToken( true );
+					if (stricmp("{", token ) == 0)
+					{
+						depth++;
+					}
+					else if (stricmp("}", token ) == 0)
+					{
+						depth--;
+					}
+				}
+			}
+		}
+	}
+	else if (stricmp("fps", token ) == 0)
 	{
 		GetToken( false );
 		panim->fps = verify_atof( token );
 		if ( panim->fps <= 0.0f )
 		{
-			MdlError( "ParseAnimationToken:  fps (%f from '%s') <= 0.0\n", panim->fps, token );
+			TokenError( "ParseAnimationToken:  fps (%f from '%s') <= 0.0\n", panim->fps, token );
 		}
 	}
 	else if (stricmp("origin", token ) == 0)
@@ -2129,7 +2253,7 @@ int ParseAnimationToken( s_animation_t *panim )
 			panim->endframe = panim->source->endframe;
 
 		if (!g_bCreateMakefile && panim->endframe < panim->startframe)
-			MdlError( "end frame before start frame in %s", panim->name );
+			TokenError( "end frame before start frame in %s", panim->name );
 
 		panim->numframes = panim->endframe - panim->startframe + 1;
 	}
@@ -2162,13 +2286,13 @@ int ParseAnimationToken( s_animation_t *panim )
 			}
 		}
 		if (i == g_numcmdlists)
-			MdlError( "unknown cmdlist %s\n", token );
+			TokenError( "unknown cmdlist %s\n", token );
 
 		for (int j = 0; j < g_cmdlist[i].numcmds; j++)
 		{
 			if (panim->numcmds >= MAXSTUDIOCMDS)
 			{
-				MdlError("Too many cmds in %s\n", panim->name );
+				TokenError("Too many cmds in %s\n", panim->name );
 			}
 			panim->cmds[panim->numcmds++] = g_cmdlist[i].cmds[j];
 		}
@@ -2222,7 +2346,7 @@ void Cmd_Cmdlist( )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return;
 		}
@@ -2240,12 +2364,12 @@ void Cmd_Cmdlist( )
 		}
 		else
 		{
-			MdlError( "unknown command: %s\n", token );
+			TokenError( "unknown command: %s\n", token );
 		}
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
 
@@ -2270,7 +2394,7 @@ void Cmd_Animation( )
 	{
 		if (!panim->isOverride)
 		{
-			MdlError( "Duplicate animation name \"%s\"\n", token );
+			TokenError( "Duplicate animation name \"%s\"\n", token );
 		}
 		else
 		{
@@ -2293,7 +2417,8 @@ void Cmd_Animation( )
 
 	// panim->animgroup = g_currentanimgroup;
 
-	panim->source = Load_Source( panim->filename, "smd" );
+	//panim->source = Load_Source( panim->filename, "smd" );
+	panim->source = Load_Source( panim->filename, "" );
 	panim->startframe = panim->source->startframe;
 	panim->endframe = panim->source->endframe;
 
@@ -2301,7 +2426,6 @@ void Cmd_Animation( )
 	panim->rotation = g_defaultrotation;
 	panim->scale = 1.0f;
 	panim->fps = 30.0;
-	panim->weightlist = 0;
 
 	ParseAnimation( panim, false );
 
@@ -2343,7 +2467,7 @@ int ParseAnimation( s_animation_t *panim, bool isAppend )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return 1;
 		}
@@ -2361,12 +2485,12 @@ int ParseAnimation( s_animation_t *panim, bool isAppend )
 		}
 		else
 		{
-			MdlError( "Unknown animation option\'%s\'\n", token );
+			TokenError( "Unknown animation option\'%s\'\n", token );
 		}
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
 
@@ -2401,9 +2525,9 @@ s_animation_t *Cmd_ImpliedAnimation( s_sequence_t *psequence, char *filename )
 	panim->scale = 1.0f;
 	panim->rotation = g_defaultrotation;
 	panim->fps = 30;
-	panim->weightlist = 0;
 
-	panim->source = Load_Source( panim->filename, "smd" );
+	//panim->source = Load_Source( panim->filename, "smd" );
+	panim->source = Load_Source( panim->filename, "" );
 
 	if (panim->startframe < panim->source->startframe)
 		panim->startframe = panim->source->startframe;
@@ -2412,7 +2536,7 @@ s_animation_t *Cmd_ImpliedAnimation( s_sequence_t *psequence, char *filename )
 		panim->endframe = panim->source->endframe;
 
 	if (!g_bCreateMakefile && panim->endframe < panim->startframe)
-		MdlError( "end frame before start frame in %s", panim->name );
+		TokenError( "end frame before start frame in %s", panim->name );
 
 	panim->numframes = panim->endframe - panim->startframe + 1;
 
@@ -2444,7 +2568,7 @@ void CopyAnimationSettings( s_animation_t *pdest, s_animation_t *psrc )
 		pdest->endframe = psrc->endframe;
 	
 	if (pdest->endframe < pdest->startframe)
-		MdlError( "fixedup end frame before start frame in %s", pdest->name );
+		TokenError( "fixedup end frame before start frame in %s", pdest->name );
 
 	pdest->numframes = pdest->endframe - pdest->startframe + 1;*/
 
@@ -2452,7 +2576,7 @@ void CopyAnimationSettings( s_animation_t *pdest, s_animation_t *psrc )
 	{
 		if (pdest->numcmds >= MAXSTUDIOCMDS)
 		{
-			MdlError("Too many cmds in %s\n", pdest->name );
+			TokenError("Too many cmds in %s\n", pdest->name );
 		}
 		pdest->cmds[pdest->numcmds++] = psrc->cmds[i];
 	}
@@ -2480,7 +2604,7 @@ void Cmd_Sequence( )
 	{
 		if (!panim->isOverride)
 		{
-			MdlError( "Duplicate sequence name \"%s\"\n", token );
+			TokenError( "Duplicate sequence name \"%s\"\n", token );
 		}
 		else
 		{
@@ -2492,7 +2616,7 @@ void Cmd_Sequence( )
 
 	if (g_sequence.Count() >= MAXSTUDIOSEQUENCES)
 	{
-		MdlError("Too many sequences (%d max)\n", MAXSTUDIOSEQUENCES );
+		TokenError("Too many sequences (%d max)\n", MAXSTUDIOSEQUENCES );
 	}
 
 	s_sequence_t *pseq = &g_sequence[ g_sequence.AddToTail() ];
@@ -2559,7 +2683,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return 1;
 		}
@@ -2641,7 +2765,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			pseq->paramattachment[i] = LookupAttachment( token );
 			if (pseq->paramattachment[i] == -1)
 			{
-				MdlError( "Unknown calcblend attachment \"%s\"\n", token );
+				TokenError( "Unknown calcblend attachment \"%s\"\n", token );
 			}
 
 			GetToken( false );
@@ -2653,7 +2777,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			pseq->paramanim = LookupAnimation( token );
 			if (pseq->paramanim == NULL)
 			{
-				MdlError( "Unknown blendref animation \"%s\"\n", token );
+				TokenError( "Unknown blendref animation \"%s\"\n", token );
 			}
 		}
 		else if (stricmp("blendcomp", token ) == 0)
@@ -2662,7 +2786,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			pseq->paramcompanim = LookupAnimation( token );
 			if (pseq->paramcompanim == NULL)
 			{
-				MdlError( "Unknown blendcomp animation \"%s\"\n", token );
+				TokenError( "Unknown blendcomp animation \"%s\"\n", token );
 			}
 		}
 		else if (stricmp("blendcenter", token ) == 0)
@@ -2671,7 +2795,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			pseq->paramcenter = LookupAnimation( token );
 			if (pseq->paramcenter == NULL)
 			{
-				MdlError( "Unknown blendcenter animation \"%s\"\n", token );
+				TokenError( "Unknown blendcenter animation \"%s\"\n", token );
 			}
 		}
 		else if (stricmp("node", token ) == 0)
@@ -2702,6 +2826,11 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 		else if (stricmp("delta", token) == 0)
 		{
 			pseq->flags |= STUDIO_DELTA;
+			pseq->flags |= STUDIO_POST;
+		}
+		else if (stricmp("worldspace", token) == 0)
+		{
+			pseq->flags |= STUDIO_WORLD;
 			pseq->flags |= STUDIO_POST;
 		}
 		else if (stricmp("post", token) == 0) // remove
@@ -2781,15 +2910,26 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 				GetToken( false );
 				if (stricmp( "xfade", token ) == 0)
 				{
-					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_XFADE;
+					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_AL_XFADE;
 				}
 				else if (stricmp( "spline", token ) == 0)
 				{
-					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_SPLINE;
+					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_AL_SPLINE;
 				}
 				else if (stricmp( "noblend", token ) == 0)
 				{
-					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_NOBLEND;
+					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_AL_NOBLEND;
+				}
+				else if (stricmp( "poseparameter", token ) == 0)
+				{
+					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_AL_POSE;
+					GetToken( false );
+					pseq->autolayer[pseq->numautolayers].pose = LookupPoseParameter( token );
+				}
+				else if (stricmp( "local", token ) == 0)
+				{
+					pseq->autolayer[pseq->numautolayers].flags |= STUDIO_AL_LOCAL;
+					pseq->flags |= STUDIO_LOCAL;
 				}
 				else
 				{
@@ -2829,10 +2969,14 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			}
 
 		}
+		else
+		{
+			TokenError( "unknown command \"%s\"\n", token );
+		}
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
 
@@ -2843,7 +2987,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 
 	if (numblends == 0)
 	{
-		MdlError("no animations found\n");
+		TokenError("no animations found\n");
 	}
 
 	if (pseq->groupsize[0] == 0)
@@ -2863,7 +3007,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 			}
 			else
 			{
-				MdlError( "non-square (%d) number of blends without \"blendwidth\" set\n", numblends );
+				TokenError( "non-square (%d) number of blends without \"blendwidth\" set\n", numblends );
 			}
 		}
 	}
@@ -2873,7 +3017,7 @@ int ParseSequence( s_sequence_t *pseq, bool isAppend )
 
 		if (pseq->groupsize[0] * pseq->groupsize[1] != numblends)
 		{
-			MdlError( "missing animation blends. Expected %d, found %d\n", 
+			TokenError( "missing animation blends. Expected %d, found %d\n", 
 				pseq->groupsize[0] * pseq->groupsize[1], numblends );
 		}
 	}
@@ -2930,7 +3074,7 @@ int ParseEmpty( )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return 1;
 		}
@@ -2945,7 +3089,7 @@ int ParseEmpty( )
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
 
@@ -2978,7 +3122,7 @@ void Cmd_Append( )
 			return;
 		}
 	}
-	MdlError( "unknown append animation %s\n", token );
+	TokenError( "unknown append animation %s\n", token );
 }
 
 
@@ -3019,7 +3163,7 @@ void Cmd_Prepend( )
 		panim->cmds[0] = tmp;
 		return;
 	}
-	MdlError( "unknown prepend animation \"%s\"\n", token );
+	TokenError( "unknown prepend animation \"%s\"\n", token );
 }
 
 void Cmd_Continue( )
@@ -3049,7 +3193,7 @@ void Cmd_Continue( )
 			return;
 		}
 	}
-	MdlError( "unknown continue animation %s\n", token );
+	TokenError( "unknown continue animation %s\n", token );
 }
 
 //-----------------------------------------------------------------------------
@@ -3060,7 +3204,7 @@ void Cmd_DeclareSequence( void )
 {
 	if (g_sequence.Count() >= MAXSTUDIOSEQUENCES)
 	{
-		MdlError("Too many sequences (%d max)\n", MAXSTUDIOSEQUENCES );
+		TokenError("Too many sequences (%d max)\n", MAXSTUDIOSEQUENCES );
 	}
 
 	s_sequence_t *pseq = &g_sequence[ g_sequence.AddToTail() ];
@@ -3081,7 +3225,7 @@ void Cmd_DeclareAnimation( void )
 {
 	if (g_numani >= MAXSTUDIOANIMS)
 	{
-		MdlError("Too many animations (%d max)\n", MAXSTUDIOANIMS );
+		TokenError("Too many animations (%d max)\n", MAXSTUDIOANIMS );
 	}
 
 	// allocate animation entry
@@ -3100,23 +3244,12 @@ void Cmd_DeclareAnimation( void )
 //-----------------------------------------------------------------------------
 // Purpose: create named list of boneweights
 //-----------------------------------------------------------------------------
-
-void Cmd_Weightlist( )
+void Option_Weightlist( s_weightlist_t *pweightlist )
 {
 	int depth = 0;
 	int i;
 
-	if (!GetToken(false)) 
-		return;
-
-	if (g_numweightlist >= MAXWEIGHTLISTS)
-	{
-		MdlError( "Too many weightlist commands (%d)\n", MAXWEIGHTLISTS );
-	}
-
-	strcpyn( g_weightlist[g_numweightlist].name, token );
-
-	g_weightlist[g_numweightlist].numbones = 0;
+	pweightlist->numbones = 0;
 
 	while (1)
 	{
@@ -3143,7 +3276,7 @@ void Cmd_Weightlist( )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return;
 		}
@@ -3155,27 +3288,73 @@ void Cmd_Weightlist( )
 		{
 			depth--;
 		}
+		else if (stricmp("posweight", token ) == 0)
+		{
+			i = pweightlist->numbones - 1;
+			if (i < 0)
+			{
+				MdlError( "Error with specifing bone Position weight \'%s:%s\'\n", pweightlist->name, pweightlist->bonename[i] );
+			}
+			GetToken( false );
+			pweightlist->boneposweight[i] = verify_atof( token );
+			if (pweightlist->boneweight[i] == 0 && pweightlist->boneposweight[i] > 0)
+			{
+				MdlError( "Non-zero Position weight with zero Rotation weight not allowed \'%s:%s %f %f\'\n", 
+					pweightlist->name, pweightlist->bonename[i], pweightlist->boneweight[i], pweightlist->boneposweight[i] );
+			}
+		}
 		else
 		{
-			i = g_weightlist[g_numweightlist].numbones++;
+			i = pweightlist->numbones++;
 			if (i >= MAXWEIGHTSPERLIST)
 			{
-				MdlError("Too many bones (%d) in weightlist '%s'\n", i, g_weightlist[g_numweightlist].name );
+				TokenError("Too many bones (%d) in weightlist '%s'\n", i, pweightlist->name );
 			}
-			strcpyn( g_weightlist[g_numweightlist].bonename[i], token );
+			strcpyn( pweightlist->bonename[i], token );
 			GetToken( false );
-			g_weightlist[g_numweightlist].boneweight[i] = verify_atof( token );
+			pweightlist->boneweight[i] = verify_atof( token );
+			pweightlist->boneposweight[i] = pweightlist->boneweight[i];
 		}
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
+}
+
+
+void Cmd_Weightlist( )
+{
+	int i;
+
+	if (!GetToken(false)) 
+		return;
+
+	if (g_numweightlist >= MAXWEIGHTLISTS)
+	{
+		TokenError( "Too many weightlist commands (%d)\n", MAXWEIGHTLISTS );
+	}
+
+	for (i = 1; i < g_numweightlist; i++)
+	{
+		if (stricmp( g_weightlist[i].name, token ) == 0)
+		{
+			TokenError( "Duplicate weightlist '%s'\n", token );
+		}
+	}
+
+	strcpyn( g_weightlist[i].name, token );
+
+	Option_Weightlist( &g_weightlist[g_numweightlist] );
 
 	g_numweightlist++;
 }
 
+void Cmd_DefaultWeightlist( )
+{
+	Option_Weightlist( &g_weightlist[0] );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -3206,7 +3385,7 @@ void Option_Eyeball( s_model_t *pmodel )
 	}
 	if (!g_bCreateMakefile && i >= pmodel->source->numbones)
 	{
-		MdlError( "unknown eyeball bone \"%s\"\n", token );
+		TokenError( "unknown eyeball bone \"%s\"\n", token );
 	}
 
 	// X
@@ -3259,7 +3438,7 @@ void Option_Eyeball( s_model_t *pmodel )
 
 	if (!g_bCreateMakefile && i >= pmodel->source->nummeshes)
 	{
-		MdlError("can't find eyeball texture \"%s\" on model\n", szMeshMaterial );
+		TokenError("can't find eyeball texture \"%s\" on model\n", szMeshMaterial );
 	}
 	
 	// translate eyeball into bone space
@@ -3311,26 +3490,25 @@ void Option_Spherenormals( s_source_t *psource )
 
 		if (j == mesh_material)
 		{
-			Vector *vertex = &psource->vertex[psource->mesh[i].vertexoffset];
-			Vector *normal = &psource->normal[psource->mesh[i].vertexoffset];
+			s_vertexinfo_t *vertex = &psource->vertex[psource->mesh[i].vertexoffset];
 
 			for (int k = 0; k < psource->mesh[i].numvertices; k++)
 			{
-				Vector n = vertex[k] - pos;
+				Vector n = vertex[k].position - pos;
 				VectorNormalize( n );
-				if (DotProduct( n, normal[k] ) < 0.0)
+				if (DotProduct( n, vertex[k].normal ) < 0.0)
 				{
-					normal[k] = -1 * n;
+					vertex[k].normal = -1 * n;
 				}
 				else
 				{
-					normal[k] = n;
+					vertex[k].normal = n;
 				}
 #if 0
-				normal[k][0] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
-				normal[k][1] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
-				normal[k][2] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
-				VectorNormalize( normal[k] );
+				vertex[k].normal[0] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
+				vertex[k].normal[1] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
+				vertex[k].normal[2] += 0.5f * ( 2.0f * ( ( float )rand() ) / ( float )RAND_MAX ) - 1.0f;
+				VectorNormalize( vertex[k].normal );
 #endif
 			}
 			break;
@@ -3339,7 +3517,7 @@ void Option_Spherenormals( s_source_t *psource )
 
 	if (i >= psource->nummeshes)
 	{
-		MdlError("can't find spherenormal texture \"%s\" on model\n", szMeshMaterial );
+		TokenError("can't find spherenormal texture \"%s\" on model\n", szMeshMaterial );
 	}
 }
 
@@ -3360,7 +3538,7 @@ int Add_Flexdesc( const char *name )
 
 	if (flexdesc >= MAXSTUDIOFLEXDESC)
 	{
-		MdlError( "Too many flex types, max %d\n", MAXSTUDIOFLEXDESC );
+		TokenError( "Too many flex types, max %d\n", MAXSTUDIOFLEXDESC );
 	}
 
 	if (flexdesc == g_numflexdesc)
@@ -3381,7 +3559,7 @@ void Option_Flex( char *name, char *vtafile, int imodel, float pairsplit )
 {
 	if (g_numflexkeys >= MAXSTUDIOFLEXKEYS)
 	{
-		MdlError( "Too many flexes, max %d\n", MAXSTUDIOFLEXKEYS );
+		TokenError( "Too many flexes, max %d\n", MAXSTUDIOFLEXKEYS );
 	}
 
 	int flexdesc, flexpair;
@@ -3409,6 +3587,7 @@ void Option_Flex( char *name, char *vtafile, int imodel, float pairsplit )
 	g_flexkey[g_numflexkeys].target3 = 11;
 	g_flexkey[g_numflexkeys].split = pairsplit;
 	g_flexkey[g_numflexkeys].flexpair = flexpair;
+	g_flexkey[g_numflexkeys].decay = 1.0;
 
 	while (TokenAvailable())
 	{
@@ -3430,9 +3609,14 @@ void Option_Flex( char *name, char *vtafile, int imodel, float pairsplit )
 			GetToken (false);
 			g_flexkey[g_numflexkeys].split = verify_atof( token );
 		}
+		else if (stricmp( token, "decay") == 0)
+		{
+			GetToken (false);
+			g_flexkey[g_numflexkeys].decay = verify_atof( token );
+		}
 		else
 		{
-			MdlError( "unknown option: %s", token );
+			TokenError( "unknown option: %s", token );
 		}
 
 	}
@@ -3530,7 +3714,7 @@ void Option_Eyelid( int imodel )
 
 		else
 		{
-			MdlError( "unknown option: %s", token );
+			TokenError( "unknown option: %s", token );
 		}
 	}
 
@@ -3543,6 +3727,7 @@ void Option_Eyelid( int imodel )
 	g_flexkey[g_numflexkeys+0].target1 = -10;
 	g_flexkey[g_numflexkeys+0].target2 = lowerertarget;
 	g_flexkey[g_numflexkeys+0].target3 = neutraltarget;
+	g_flexkey[g_numflexkeys+0].decay = 0.0;
 
 	g_flexkey[g_numflexkeys+1].source = g_flexkey[g_numflexkeys+0].source;
 	g_flexkey[g_numflexkeys+1].frame = neutralframe;
@@ -3553,6 +3738,7 @@ void Option_Eyelid( int imodel )
 	g_flexkey[g_numflexkeys+1].target1 = neutraltarget;
 	g_flexkey[g_numflexkeys+1].target2 = neutraltarget;
 	g_flexkey[g_numflexkeys+1].target3 = raisertarget;
+	g_flexkey[g_numflexkeys+1].decay = 0.0;
 
 	g_flexkey[g_numflexkeys+2].source = g_flexkey[g_numflexkeys+0].source;
 	g_flexkey[g_numflexkeys+2].frame = raiserframe;
@@ -3563,6 +3749,7 @@ void Option_Eyelid( int imodel )
 	g_flexkey[g_numflexkeys+2].target1 = raisertarget;
 	g_flexkey[g_numflexkeys+2].target2 = 10;
 	g_flexkey[g_numflexkeys+2].target3 = 11;
+	g_flexkey[g_numflexkeys+2].decay = 0.0;
 	g_numflexkeys += 3;
 
 	s_model_t *pmodel = g_model[imodel];
@@ -3578,15 +3765,15 @@ void Option_Eyelid( int imodel )
 
 		if (fabs( lowerertarget ) > peyeball->radius)
 		{
-			MdlError( "Eyelid \"%s\" lowerer out of range (+-%.1f)\n", type, peyeball->radius );
+			TokenError( "Eyelid \"%s\" lowerer out of range (+-%.1f)\n", type, peyeball->radius );
 		}
 		if (fabs( neutraltarget ) > peyeball->radius)
 		{
-			MdlError( "Eyelid \"%s\" neutral out of range (+-%.1f)\n", type, peyeball->radius );
+			TokenError( "Eyelid \"%s\" neutral out of range (+-%.1f)\n", type, peyeball->radius );
 		}
 		if (fabs( raisertarget ) > peyeball->radius)
 		{
-			MdlError( "Eyelid \"%s\" raiser  out of range (+-%.1f)\n", type, peyeball->radius );
+			TokenError( "Eyelid \"%s\" raiser  out of range (+-%.1f)\n", type, peyeball->radius );
 		}
 
 		switch( type[0] )
@@ -3671,7 +3858,7 @@ void Option_Flexcontroller( s_model_t *pmodel )
 		{
 			if (g_numflexcontrollers >= MAXSTUDIOFLEXCTRL)
 			{
-				MdlError( "Too many flex controllers, max %d\n", MAXSTUDIOFLEXCTRL );
+				TokenError( "Too many flex controllers, max %d\n", MAXSTUDIOFLEXCTRL );
 			}
 
 
@@ -3688,18 +3875,21 @@ void Option_Flexcontroller( s_model_t *pmodel )
 
 void Option_Flexrule( s_model_t *pmodel, char *name )
 {
-	int precidence[32];
-	precidence[ STUDIO_CONST ] = 	0;
-	precidence[ STUDIO_FETCH1 ] =	0;
-	precidence[ STUDIO_FETCH2 ] =	0;
-	precidence[ STUDIO_ADD ] =		1;
-	precidence[ STUDIO_SUB ] =		1;
-	precidence[ STUDIO_MUL ] =		2;
-	precidence[ STUDIO_DIV ] =		2;
-	precidence[ STUDIO_NEG ] =		4;
-	precidence[ STUDIO_EXP ] =		3;
-	precidence[ STUDIO_OPEN ] =		0;	// only used in token parsing
-	precidence[ STUDIO_CLOSE ] =	0;
+	int precedence[32];
+	precedence[ STUDIO_CONST ] = 	0;
+	precedence[ STUDIO_FETCH1 ] =	0;
+	precedence[ STUDIO_FETCH2 ] =	0;
+	precedence[ STUDIO_ADD ] =		1;
+	precedence[ STUDIO_SUB ] =		1;
+	precedence[ STUDIO_MUL ] =		2;
+	precedence[ STUDIO_DIV ] =		2;
+	precedence[ STUDIO_NEG ] =		4;
+	precedence[ STUDIO_EXP ] =		3;
+	precedence[ STUDIO_OPEN ] =		0;	// only used in token parsing
+	precedence[ STUDIO_CLOSE ] =	0;
+	precedence[ STUDIO_COMMA ] =	0;
+	precedence[ STUDIO_MAX ] =		5;
+	precedence[ STUDIO_MIN ] =		5;
 
 	s_flexop_t stream[MAX_OPS];
 	int i = 0;
@@ -3711,7 +3901,7 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 
 	if (g_numflexrules > MAXSTUDIOFLEXRULES)
 	{
-		MdlError( "Too many flex rules (max %d)\n", MAXSTUDIOFLEXRULES );
+		TokenError( "Too many flex rules (max %d)\n", MAXSTUDIOFLEXRULES );
 	}
 
 	int flexdesc;
@@ -3725,7 +3915,7 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 
 	if (flexdesc >= g_numflexdesc)
 	{
-		MdlError( "Rule for unknown flex %s\n", name );
+		TokenError( "Rule for unknown flex %s\n", g_flexdesc[flexdesc].FACS );
 	}
 
 	pRule->flex = flexdesc;
@@ -3735,39 +3925,77 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 	GetToken(false);
 
 	// parse all the tokens
-	while (TokenAvailable())
+	bool linecontinue = false;
+	while ( linecontinue || TokenAvailable())
 	{
-		GetExprToken(false);
+		GetExprToken(linecontinue);
 
-		if ( token[0] == '(' )
+		linecontinue = false;
+
+		if ( token[0] == '\\' )
 		{
-			stream[i].op = STUDIO_OPEN;
+			if (!GetToken(false) || token[0] != '\\')
+			{
+				TokenError( "unknown expression token '\\%s\n", token );
+			}
+			linecontinue = true;
+		}
+		else if ( token[0] == '(' )
+		{
+			stream[i++].op = STUDIO_OPEN;
 		}
 		else if ( token[0] == ')' )
 		{
-			stream[i].op = STUDIO_CLOSE;
+			stream[i++].op = STUDIO_CLOSE;
 		}
 		else if ( token[0] == '+' )
 		{
-			stream[i].op = STUDIO_ADD;
+			stream[i++].op = STUDIO_ADD;
 		}
 		else if ( token[0] == '-' )
 		{
-			// check for unary operator here ?
 			stream[i].op = STUDIO_SUB;
+			if (i > 0)
+			{
+				switch( stream[i-1].op )
+				{
+				case STUDIO_OPEN:
+				case STUDIO_ADD:
+				case STUDIO_SUB:
+				case STUDIO_MUL:
+				case STUDIO_DIV:
+				case STUDIO_COMMA:
+					// it's a unary if it's preceded by a "(+-*/,"?
+					stream[i].op = STUDIO_NEG;
+					break;
+				}
+			}
+			i++;
 		}
 		else if ( token[0] == '*' )
 		{
-			stream[i].op = STUDIO_MUL;
+			stream[i++].op = STUDIO_MUL;
 		}
 		else if ( token[0] == '/' )
 		{
-			stream[i].op = STUDIO_DIV;
+			stream[i++].op = STUDIO_DIV;
 		}
 		else if ( isdigit( token[0] ))
 		{
 			stream[i].op = STUDIO_CONST;
-			stream[i].d.value = verify_atof( token );
+			stream[i++].d.value = verify_atof( token );
+		}
+		else if ( token[0] == ',' )
+		{
+			stream[i++].op = STUDIO_COMMA;
+		}
+		else if ( stricmp( token, "max" ) == 0)
+		{
+			stream[i++].op = STUDIO_MAX;
+		}
+		else if ( stricmp( token, "min" ) == 0)
+		{
+			stream[i++].op = STUDIO_MIN;
 		}
 		else 
 		{
@@ -3780,13 +4008,13 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 					if (stricmp( token, g_flexdesc[k].FACS ) == 0)
 					{
 						stream[i].op = STUDIO_FETCH2;
-						stream[i].d.index = k;
+						stream[i++].d.index = k;
 						break;
 					}
 				}
 				if (k >= g_numflexdesc)
 				{
-					MdlError( "unknown flex %s\n", token );
+					TokenError( "unknown flex %s\n", token );
 				}
 			}
 			else
@@ -3796,22 +4024,58 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 					if (stricmp( token, g_flexcontroller[k].name ) == 0)
 					{
 						stream[i].op = STUDIO_FETCH1;
-						stream[i].d.index = k;
+						stream[i++].d.index = k;
 						break;
 					}
 				}
 				if (k >= g_numflexcontrollers)
 				{
-					MdlError( "unknown controller %s\n", token );
+					TokenError( "unknown controller %s\n", token );
 				}
 			}
 		}
-		i++;
+	}
+
+	if (i > MAX_OPS)
+	{
+		TokenError("expression %s too complicated\n", g_flexdesc[pRule->flex].FACS );
+	}
+
+	if (0)
+	{
+		printf("%s = ", g_flexdesc[pRule->flex].FACS );
+		for ( k = 0; k < i; k++)
+		{
+			switch( stream[k].op )
+			{
+			case STUDIO_CONST: printf("%f ", stream[k].d.value ); break;
+			case STUDIO_FETCH1: printf("%s ", g_flexcontroller[stream[k].d.index].name ); break;
+			case STUDIO_FETCH2: printf("[%d] ", stream[k].d.index ); break;
+			case STUDIO_ADD: printf("+ "); break;
+			case STUDIO_SUB: printf("- "); break;
+			case STUDIO_MUL: printf("* "); break;
+			case STUDIO_DIV: printf("/ "); break;
+			case STUDIO_NEG: printf("neg "); break;
+			case STUDIO_MAX: printf("max "); break;
+			case STUDIO_MIN: printf("min "); break;
+			case STUDIO_COMMA: 	printf(", "); break; // error
+			case STUDIO_OPEN: 	printf("( " ); break; // error
+			case STUDIO_CLOSE: 	printf(") " ); break; // error
+			default:
+				printf("err%d ", stream[k].op ); break;
+			}
+		}
+		printf("\n");
+		// exit(1);
 	}
 
 	j = 0;
 	for (k = 0; k < i; k++)
 	{
+		if (j >= MAX_OPS)
+		{
+			TokenError("expression %s too complicated\n", g_flexdesc[pRule->flex].FACS );
+		}
 		switch( stream[k].op )
 		{
 		case STUDIO_CONST:
@@ -3823,35 +4087,107 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 			stack[j++] = stream[k];
 			break;
 		case STUDIO_CLOSE:
+			// pop all operators off of the stack until an open paren
 			while (j > 0 && stack[j-1].op != STUDIO_OPEN)
 			{
 				pRule->op[pRule->numops++] = stack[j-1];
 				j--;
 			}
+			if (j == 0)
+			{
+				TokenError( "unmatched closed parentheses\n" );
+			}
 			if (j > 0) 
 				j--;
+			break;
+		case STUDIO_COMMA:
+			// pop all operators off of the stack until an open paren
+			while (j > 0 && stack[j-1].op != STUDIO_OPEN)
+			{
+				pRule->op[pRule->numops++] = stack[j-1];
+				j--;
+			}
+			// push operator onto the stack
+			stack[j++] = stream[k];
 			break;
 		case STUDIO_ADD:
 		case STUDIO_SUB:
 		case STUDIO_MUL:
 		case STUDIO_DIV:
-			while (j > 0 && precidence[stream[k].op] < precidence[stack[j-1].op])
+			// pop all operators off of the stack that have equal or higher precedence
+			while (j > 0 && precedence[stream[k].op] <= precedence[stack[j-1].op])
 			{
 				pRule->op[pRule->numops++] = stack[j-1];
 				j--;
 			}
+			// push operator onto the stack
+			stack[j++] = stream[k];
+			break;
+		case STUDIO_NEG:
+			if (stream[k+1].op == STUDIO_CONST)
+			{
+				// change sign of constant, skip op
+				stream[k+1].d.value = -stream[k+1].d.value;
+			}
+			else
+			{
+				// push operator onto the stack
+				stack[j++] = stream[k];
+			}
+			break;
+		case STUDIO_MAX:
+		case STUDIO_MIN:
+			// push operator onto the stack
 			stack[j++] = stream[k];
 			break;
 		}
 		if (pRule->numops >= MAX_OPS)
-			MdlError("expression for \"%s\" too complicated\n", g_flexdesc[pRule->flex].FACS );
+			TokenError("expression for \"%s\" too complicated\n", g_flexdesc[pRule->flex].FACS );
 	}
+	// pop all operators off of the stack
 	while (j > 0)
 	{
 		pRule->op[pRule->numops++] = stack[j-1];
 		j--;
 		if (pRule->numops >= MAX_OPS)
-			MdlError("expression for \"%s\" too complicated\n", g_flexdesc[pRule->flex].FACS );
+			TokenError("expression for \"%s\" too complicated\n", g_flexdesc[pRule->flex].FACS );
+	}
+
+	// reprocess the operands, eating commas for all functions
+	int numCommas = 0;
+	j = 0;
+	for (k = 0; k < pRule->numops; k++)
+	{
+		switch( pRule->op[k].op )
+		{
+		case STUDIO_MAX:
+		case STUDIO_MIN:
+			if (pRule->op[j-1].op != STUDIO_COMMA)
+			{
+				TokenError( "missing comma\n");
+			}
+			// eat the comma operator
+			numCommas--;
+			pRule->op[j-1] = pRule->op[k];
+			break;
+		case STUDIO_COMMA:
+			numCommas++;
+			pRule->op[j++] = pRule->op[k];
+			break;
+		default:
+			pRule->op[j++] = pRule->op[k];
+			break;
+		}
+	}
+	pRule->numops = j;
+	if (numCommas != 0)
+	{
+		TokenError( "too many comma's\n" );
+	}
+
+	if (pRule->numops > MAX_OPS)
+	{
+		TokenError("expression %s too complicated\n", g_flexdesc[pRule->flex].FACS );
 	}
 
 	if (0)
@@ -3868,11 +4204,18 @@ void Option_Flexrule( s_model_t *pmodel, char *name )
 			case STUDIO_SUB: printf("- "); break;
 			case STUDIO_MUL: printf("* "); break;
 			case STUDIO_DIV: printf("/ "); break;
+			case STUDIO_NEG: printf("neg "); break;
+			case STUDIO_MAX: printf("max "); break;
+			case STUDIO_MIN: printf("min "); break;
+			case STUDIO_COMMA: 	printf(", "); break; // error
+			case STUDIO_OPEN: 	printf("( " ); break; // error
+			case STUDIO_CLOSE: 	printf(") " ); break; // error
 			default:
 				printf("err%d ", pRule->op[i].op ); break;
 			}
 		}
 		printf("\n");
+		// exit(1);
 	}
 }
 
@@ -3932,7 +4275,7 @@ void Cmd_Model( )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return;
 		}
@@ -4031,12 +4374,12 @@ void Cmd_Model( )
 		}
 		else
 		{
-			MdlError( "unknown model option \"%s\"\n", token );
+			TokenError( "unknown model option \"%s\"\n", token );
 		}
 
 		if (depth < 0)
 		{
-			MdlError("missing {\n");
+			TokenError("missing {\n");
 		}
 	};
 
@@ -4080,7 +4423,7 @@ void Cmd_FakeVTA( void )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return;
 		}
@@ -4304,11 +4647,11 @@ void Cmd_ScreenAlign ( void )
 
 		if( GetToken( false ) )
 		{
-			if( !strcmpi( "sphere", token )  )
+			if( !stricmp( "sphere", token )  )
 			{
 				g_screenalignedbone[g_numscreenalignedbones].flags = BONE_SCREEN_ALIGN_SPHERE;				
 			}
-			else if( !strcmpi( "cylinder", token ) )
+			else if( !stricmp( "cylinder", token ) )
 			{
 				g_screenalignedbone[g_numscreenalignedbones].flags = BONE_SCREEN_ALIGN_CYLINDER;				
 			}
@@ -4318,7 +4661,7 @@ void Cmd_ScreenAlign ( void )
 
 	} else
 	{
-		MdlError( "$screenalign: expected bone name\n" );
+		TokenError( "$screenalign: expected bone name\n" );
 	}
 }
 
@@ -4405,7 +4748,7 @@ void Cmd_TextureGroup( )
 	int group = 0;
 
 	if (g_numtextures == 0)
-		MdlError( "texturegroups must follow model loading\n");
+		TokenError( "texturegroups must follow model loading\n");
 
 	if (!GetToken(false)) 
 		return;
@@ -4424,7 +4767,7 @@ void Cmd_TextureGroup( )
 		{
 			if (depth != 0)
 			{
-				MdlError("missing }\n" );
+				TokenError("missing }\n" );
 			}
 			return;
 		}
@@ -4954,7 +5297,7 @@ void Cmd_Attachment( )
 		}
 		else
 		{
-			MdlError("unknown attachment (%s) option: ", g_attachment[g_numattachments].name, token );
+			TokenError("unknown attachment (%s) option: ", g_attachment[g_numattachments].name, token );
 		}
 	}
 
@@ -5056,7 +5399,7 @@ static void Cmd_ReplaceModel( LodScriptData_t& lodData )
 	if (!FindCachedSource( token, "" ))
 	{
 		// must have prior knowledge of the from
-		MdlError( "Unknown replace model '%s'\n", token );
+		TokenError( "Unknown replace model '%s'\n", token );
 	}
 
 	newReplacement.SetSrcName( token );
@@ -5075,7 +5418,7 @@ static void Cmd_ReplaceModel( LodScriptData_t& lodData )
 		}
 		else
 		{
-			MdlError( "\"%s\" unexpected\n", token );
+			TokenError( "\"%s\" unexpected\n", token );
 		}
 	}
 
@@ -5170,6 +5513,9 @@ static void Cmd_ReplaceMaterial( LodScriptData_t& lodData )
 	// to
 	GetToken( false );
 	newReplacement.SetDstName( token );
+
+	// make sure it goes into the master list
+	use_texture_as_material( lookup_texture( token, sizeof( token ) ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -5237,7 +5583,7 @@ static void Cmd_LOD( char const *cmdname )
 	}
 
 	GetToken( true );
-	if( strcmp( "{", token ) != 0 )
+	if( stricmp( "{", token ) != 0 )
 	{
 		MdlError( "\"{\" expected while processing %s (%d) : %s", cmdname, g_iLinecount, g_szLine );
 	}
@@ -5278,7 +5624,7 @@ static void Cmd_LOD( char const *cmdname )
 			if (isShadowCall)
 			{
 				// facial animation has no reasonable purpose on a shadow lod
-				MdlError( "Facial animation is not allowed for $shadowlod\n" );
+				TokenError( "Facial animation is not allowed for $shadowlod\n" );
 			}
 
 			newLOD.EnableFacialAnimation( true );
@@ -5290,7 +5636,7 @@ static void Cmd_LOD( char const *cmdname )
 				gflags |= STUDIOHDR_FLAGS_USE_SHADOWLOD_MATERIALS;
 			}
 		}
-		else if( strcmp( "}", token ) == 0 )
+		else if( stricmp( "}", token ) == 0 )
 		{
 			break;
 		}
@@ -5336,6 +5682,13 @@ void Cmd_TranslucentTwoPass( )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Indicates the model be rendered with ambient boost heuristic (first used on Alyx in Episode 1)
+//-----------------------------------------------------------------------------
+void Cmd_AmbientBoost()
+{
+	gflags |= STUDIOHDR_FLAGS_AMBIENT_BOOST;
+}
 
 //-----------------------------------------------------------------------------
 // Indicates the model should not fade out even if the level or fallback settings say to
@@ -5410,14 +5763,14 @@ void Option_KeyValues( CUtlVector< char > *pKeyValue )
 
 	while ( GetToken(true) )
 	{
-		if ( !strcmp( token, "}" ) )
+		if ( !stricmp( token, "}" ) )
 		{
 			nLevel--;
 			if ( nLevel <= 0 )
 				break;
 			AppendKeyValueText( pKeyValue, " }\n" );
 		}
-		else if ( !strcmp( token, "{" ) )
+		else if ( !stricmp( token, "{" ) )
 		{
 			AppendKeyValueText( pKeyValue, "{\n" );
 			nLevel++;
@@ -5441,7 +5794,7 @@ void Option_KeyValues( CUtlVector< char > *pKeyValue )
 
 	if ( nLevel >= 1 )
 	{
-		MdlError( "Keyvalue block missing matching braces.\n" );
+		TokenError( "Keyvalue block missing matching braces.\n" );
 	}
 
 	AppendKeyValueText( pKeyValue, "}\n" );
@@ -5671,7 +6024,7 @@ void Grab_Vertexanimation( s_source_t *psource )
 			// next command
 			if (sscanf( g_szLine, "%1023s %d", cmd, &index ))
 			{
-				if (strcmp( cmd, "time" ) == 0) 
+				if (stricmp( cmd, "time" ) == 0) 
 				{
 					t = index;
 					count = 0;
@@ -5687,7 +6040,7 @@ void Grab_Vertexanimation( s_source_t *psource )
 
 					t -= psource->startframe;
 				}
-				else if (strcmp( cmd, "end") == 0) 
+				else if (stricmp( cmd, "end") == 0) 
 				{
 					psource->numframes = psource->endframe - psource->startframe + 1;
 					return;
@@ -5786,28 +6139,28 @@ int Load_VTA( s_source_t *psource )
 	{
 		g_iLinecount++;
 		sscanf( g_szLine, "%s %d", cmd, &option );
-		if (strcmp( cmd, "version" ) == 0) 
+		if (stricmp( cmd, "version" ) == 0) 
 		{
 			if (option != 1) 
 			{
 				MdlError("bad version\n");
 			}
 		}
-		else if (strcmp( cmd, "nodes" ) == 0) 
+		else if (stricmp( cmd, "nodes" ) == 0) 
 		{
 			psource->numbones = Grab_Nodes( psource->localBone );
 		}
-		else if (strcmp( cmd, "skeleton" ) == 0) 
+		else if (stricmp( cmd, "skeleton" ) == 0) 
 		{
 			Grab_Animation( psource );
 		}
-		else if (strcmp( cmd, "vertexanimation" ) == 0) 
+		else if (stricmp( cmd, "vertexanimation" ) == 0) 
 		{
 			Grab_Vertexanimation( psource );
 		}
 		else 
 		{
-			MdlWarning("unknown studio command\n" );
+			MdlWarning("unknown studio command \"%s\"\n", cmd );
 		}
 	}
 	fclose( g_fpInput );
@@ -5870,6 +6223,75 @@ void Grab_AxisInterpBones( )
 }
 
 
+bool Grab_AimAtBones( )
+{
+	s_aimatbone_t *pAimAtBone( &g_aimatbones[g_numaimatbones] );
+
+	// Already know it's <aimconstraint> in the first string, otherwise wouldn't be here
+	if ( sscanf( g_szLine, "%*s %127s %127s %127s", pAimAtBone->bonename, pAimAtBone->parentname, pAimAtBone->aimname ) == 3 )
+	{
+		g_numaimatbones++;
+
+		char	cmd[1024];
+		Vector	vector;
+
+		while ( fgets( g_szLine, sizeof( g_szLine ), g_fpInput ) != NULL) 
+		{
+			g_iLinecount++;
+
+			if (IsEnd( g_szLine )) 
+			{
+				return false;
+			}
+
+			if ( sscanf( g_szLine, "%1024s %f %f %f", cmd, &vector[0], &vector[1], &vector[2] ) != 4 )
+			{
+				// Allow blank lines to be skipped without error
+				bool allSpace( true );
+				for ( const char *pC( g_szLine ); *pC != '\0' && pC < ( g_szLine + 4096 ); ++pC )
+				{
+					if ( !isspace( *pC ) )
+					{
+						allSpace = false;
+						break;
+					}
+				}
+
+				if ( allSpace )
+				{
+					continue;
+				}
+
+				return true;
+			}
+
+			if ( stricmp( cmd, "<aimvector>" ) == 0)
+			{
+				// Make sure these are unit length on read
+				VectorNormalize( vector );
+				pAimAtBone->aimvector = vector;
+			}
+			else if ( stricmp( cmd, "<upvector>" ) == 0)
+			{
+				// Make sure these are unit length on read
+				VectorNormalize( vector );
+				pAimAtBone->upvector = vector;
+			}
+			else if ( stricmp( cmd, "<basepos>" ) == 0)
+			{
+				pAimAtBone->basepos = vector;
+			}
+			else
+			{
+				return true;
+			}
+		}
+	}
+
+	// If we get here, we're at EOF
+	return false;
+}
+
 
 void Grab_QuatInterpBones( )
 {
@@ -5885,7 +6307,24 @@ void Grab_QuatInterpBones( )
 		{
 			return;
 		}
+
 		int i = sscanf( g_szLine, "%s %s %s %s %s", cmd, pBone->bonename, pBone->parentname, pBone->controlparentname, pBone->controlname );
+
+		while ( i == 4 && stricmp( cmd, "<aimconstraint>" ) == 0 )
+		{
+			// If Grab_AimAtBones() returns false, there file is at EOF
+			if ( !Grab_AimAtBones() )
+			{
+				return;
+			}
+
+			// Grab_AimAtBones will read input into g_szLine same as here until it gets a line it doesn't understand, at which point
+			// it will exit leaving that line in g_szLine, so check for the end and scan the current buffer again and continue on with 
+			// the normal QuatInterpBones process
+
+			i = sscanf( g_szLine, "%s %s %s %s %s", cmd, pBone->bonename, pBone->parentname, pBone->controlparentname, pBone->controlname );
+		}
+
 		if (i == 5 && stricmp( cmd, "<helper>") == 0)
 		{
 			// printf( "\"%s\" \"%s\" \"%s\" \"%s\"\n", cmd, pBone->bonename, tmp, pBone->controlname );
@@ -5893,69 +6332,98 @@ void Grab_QuatInterpBones( )
 			g_numquatinterpbones++;
 			pBone = &g_quatinterpbones[g_numquatinterpbones];
 		}
-		else if (stricmp( cmd, "<display>" ) == 0)
+		else if ( i > 0 )
 		{
-			// skip all display info
-			Vector size;
-			float distance;
+			// There was a bug before which could cause the same command to be parsed twice
+			// because if the sscanf above completely fails, it will return 0 and not 
+			// change the contents of cmd, so i should be greater than 0 in order for
+			// any of these checks to be valid... Still kind of buggy as these checks
+			// do case insensitive stricmp but then the sscanf does case sensitive
+			// matching afterwards... Should probably change those to
+			// sscanf( g_szLine, "%*s %f ... ) etc...
 
-			i = sscanf( g_szLine, "<display> %f %f %f %f", 
-				&size[0], &size[1], &size[2],
-				&distance );
-
-			if (i == 4)
+			if ( stricmp( cmd, "<display>" ) == 0)
 			{
-				pAxis->percentage = distance / 100.0;
-				pAxis->size = size;
+				// skip all display info
+				Vector size;
+				float distance;
+
+				i = sscanf( g_szLine, "<display> %f %f %f %f", 
+					&size[0], &size[1], &size[2],
+					&distance );
+
+				if (i == 4)
+				{
+					pAxis->percentage = distance / 100.0;
+					pAxis->size = size;
+				}
+				else
+				{
+					MdlError( "Line %d: Unable to parse procedual <display> bone: %s", g_iLinecount, g_szLine );
+				}
+			}
+			else if ( stricmp( cmd, "<basepos>" ) == 0)
+			{
+				i = sscanf( g_szLine, "<basepos> %f %f %f", &basepos.x, &basepos.y, &basepos.z );
+				// skip all type info
+			}
+			else if ( stricmp( cmd, "<trigger>" ) == 0)
+			{
+				float tolerance;
+				RadianEuler trigger;
+				Vector pos;
+				RadianEuler ang;
+
+				QAngle rot;
+				int j;
+				i = sscanf( g_szLine, "<trigger> %f %f %f %f %f %f %f %f %f %f", 
+					&tolerance,
+					&trigger.x, &trigger.y, &trigger.z,
+					&ang.x, &ang.y, &ang.z,
+					&pos.x, &pos.y, &pos.z );
+
+				if (i == 10)
+				{
+					trigger.x = DEG2RAD( trigger.x );
+					trigger.y = DEG2RAD( trigger.y );
+					trigger.z = DEG2RAD( trigger.z );
+					ang.x = DEG2RAD( ang.x );
+					ang.y = DEG2RAD( ang.y );
+					ang.z = DEG2RAD( ang.z );
+
+					j = pAxis->numtriggers++;
+					pAxis->tolerance[j] = DEG2RAD( tolerance );
+					AngleQuaternion( trigger, pAxis->trigger[j] );
+					VectorAdd( basepos, pos, pAxis->pos[j] );
+					AngleQuaternion( ang, pAxis->quat[j] );
+				}
+				else
+				{
+					MdlError( "Line %d: Unable to parse procedual <trigger> bone: %s", g_iLinecount, g_szLine );
+				}
 			}
 			else
 			{
-				MdlError("unable to parse procedual bones\n");
-			}
-		}
-		else if (stricmp( cmd, "<basepos>" ) == 0)
-		{
-			i = sscanf( g_szLine, "<basepos> %f %f %f", &basepos.x, &basepos.y, &basepos.z );
-			// skip all type info
-		}
-		else if (stricmp( cmd, "<trigger>" ) == 0)
-		{
-			float tolerance;
-			RadianEuler trigger;
-			Vector pos;
-			RadianEuler ang;
-
-			QAngle rot;
-			int j;
-			i = sscanf( g_szLine, "<trigger> %f %f %f %f %f %f %f %f %f %f", 
-				&tolerance,
-				&trigger.x, &trigger.y, &trigger.z,
-				&ang.x, &ang.y, &ang.z,
-				&pos.x, &pos.y, &pos.z );
-
-			if (i == 10)
-			{
-				trigger.x = DEG2RAD( trigger.x );
-				trigger.y = DEG2RAD( trigger.y );
-				trigger.z = DEG2RAD( trigger.z );
-				ang.x = DEG2RAD( ang.x );
-				ang.y = DEG2RAD( ang.y );
-				ang.z = DEG2RAD( ang.z );
-
-				j = pAxis->numtriggers++;
-				pAxis->tolerance[j] = DEG2RAD( tolerance );
-				AngleQuaternion( trigger, pAxis->trigger[j] );
-				VectorAdd( basepos, pos, pAxis->pos[j] );
-				AngleQuaternion( ang, pAxis->quat[j] );
-			}
-			else
-			{
-				MdlError("unable to parse procedual bones\n");
+				MdlError( "Line %d: Unable to parse procedual bone data: %s", g_iLinecount, g_szLine );
 			}
 		}
 		else
 		{
-			MdlError("unknown procedual bone data\n");
+			// Allow blank lines to be skipped without error
+			bool allSpace( true );
+			for ( const char *pC( g_szLine ); *pC != '\0' && pC < ( g_szLine + 4096 ); ++pC )
+			{
+				if ( !isspace( *pC ) )
+				{
+					allSpace = false;
+					break;
+				}
+			}
+
+			if ( !allSpace )
+			{
+				MdlError( "Line %d: Unable to parse procedual bone data: %s", g_iLinecount, g_szLine );
+			}
 		}
 	}
 }
@@ -5988,14 +6456,14 @@ void Load_ProceduralBones( )
 		{
 			g_iLinecount++;
 			sscanf( g_szLine, "%s", cmd, &option );
-			if (strcmp( cmd, "version" ) == 0) 
+			if (stricmp( cmd, "version" ) == 0) 
 			{
 				if (option != 1) 
 				{
 					MdlError("bad version\n");
 				}
 			}
-			else if (strcmp( cmd, "proceduralbones" ) == 0) 
+			else if (stricmp( cmd, "proceduralbones" ) == 0) 
 			{
 				Grab_AxisInterpBones( );
 			}
@@ -6118,6 +6586,51 @@ void Cmd_KeyValues()
 	Option_KeyValues( &g_KeyValueText );
 }
 
+void Cmd_ConstDirectionalLight()
+{
+	gflags |= STUDIOHDR_FLAGS_CONSTANT_DIRECTIONAL_LIGHT_DOT;
+
+	GetToken (false);
+	g_constdirectionalightdot = (byte)( verify_atof(token) * 255.0f );
+}
+
+void Cmd_MinLOD()
+{
+	GetToken( false );
+	g_minLod = atoi( token );
+}
+
+
+void Cmd_BoneSaveFrame( )
+{
+	s_bonesaveframe_t tmp;
+
+	// bone name
+	GetToken( false );
+	strcpyn( tmp.name, token );
+
+	tmp.bSavePos = false;
+	tmp.bSaveRot = false;
+	while (TokenAvailable(  ))
+	{
+		GetToken( false );
+		if (stricmp( "position", token ) == 0)
+		{
+			tmp.bSavePos = true;
+		}
+		else if (stricmp( "rotation", token ) == 0)
+		{
+			tmp.bSaveRot = true;
+		}
+		else
+		{
+			MdlError( "unknown option \"%s\" on $bonesaveframe : %s\n", token, tmp.name );
+		}
+	}
+
+	g_bonesaveframe.AddToTail( tmp );
+}
+
 
 //
 // This is the master list of the commands a QC file supports.
@@ -6155,6 +6668,7 @@ struct
 	{ "$cmdlist", Cmd_Cmdlist },
 	{ "$animblocksize", Cmd_AnimBlockSize },
 	{ "$weightlist", Cmd_Weightlist },
+	{ "$defaultweightlist", Cmd_DefaultWeightlist },
 	{ "$ikchain", Cmd_IKChain },
 	{ "$ikautoplaylock", Cmd_IKAutoplayLock },
 	{ "$eyeposition", Cmd_Eyeposition },
@@ -6207,6 +6721,10 @@ struct
 	{ "$forcephonemecrossfade", Cmd_ForcePhonemeCrossfade },
 	{ "$lockbonelengths", Cmd_LockBoneLengths },
 	{ "$lockdefinebones", Cmd_LockDefineBones },
+	{ "$constantdirectionallight", Cmd_ConstDirectionalLight },
+	{ "$minlod", Cmd_MinLOD },
+	{ "$bonesaveframe", Cmd_BoneSaveFrame },
+	{ "$ambientboost", Cmd_AmbientBoost }
 };
 	
 
@@ -6237,7 +6755,7 @@ void ParseScript (void)
 		{
 			if( !g_bCreateMakefile )
 			{
-				MdlError("bad command %s\n", token);
+				TokenError("bad command %s\n", token);
 			}
 		}
 	}
@@ -6300,9 +6818,33 @@ bool HandlePrintSurfaceProps( int &returnValue )
 
 void UsageAndExit()
 {
-	MdlError( "usage: studiomdl [-game gamedir] [-t texture] -r(tag reversed) -n(tag bad normals) -f(flip all triangles) [-a normal_blend_angle] -h(dump hboxes) -i(ignore warnings) -d(dump glview files) [-quiet] [-fullcollide(don't truncate really big collisionmodels)] [-checklengths] [-printbones] [-perf] [-printgraph] [-definebones] file.qc");
+	MdlError( "Bad or missing options\n"
+		"usage: studiomdl [options] <file.qc>\n"
+		"options:\n"
+		"[-a <normal_blend_angle>]\n"
+		"[-checklengths]\n"
+		"[-d] - dump glview files\n"
+		"[-definebones]\n"
+		"[-f] - flip all triangles\n"
+		"[-fullcollide] - don't truncate really big collisionmodels\n"
+		"[-game <gamedir>]\n"
+		"[-h] - dump hboxes\n"
+		"[-i] - ignore warnings\n"
+		"[-minlod <lod>] - truncate to highest detail <lod>\n"
+		"[-n] - tag bad normals\n"
+		"[-perf]\n"
+		"[-printbones]\n"
+		"[-printgraph]\n"
+		"[-quiet] - operate silently\n"
+		"[-r] - tag reversed\n"
+		"[-t <texture>]\n"
+		"[-xbox] - enable xbox processing(default)\n"
+		"[-notxbox] - disable xbox processing\n"
+		"[-nowarnings] - disable warnings\n"
+		);
 }
 
+#ifndef _DEBUG
 
 LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
 {
@@ -6310,7 +6852,7 @@ LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
 	return EXCEPTION_EXECUTE_HANDLER; // (never gets here anyway)
 }
 
-
+#endif
 /*
 ==============
 main
@@ -6321,7 +6863,9 @@ int main (int argc, char **argv)
 {
 	int		i;
 
+#ifndef _DEBUG
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldFilter = SetUnhandledExceptionFilter( VExceptionFilter );
+#endif
 
 	CommandLine()->CreateCmdLine( argc, argv );
 
@@ -6355,6 +6899,7 @@ int main (int argc, char **argv)
 	g_centerstaticprop = false;
 
 	g_realignbones = false;
+	g_constdirectionalightdot = 0;
 
 	if (argc == 1)
 	{
@@ -6443,6 +6988,32 @@ int main (int argc, char **argv)
 				continue;
 			}
 
+			if (!stricmp(argv[i], "-minlod"))
+			{
+				g_minLod = atoi( argv[++i] );
+				continue;
+			}
+
+			if (!stricmp(argv[i], "-xbox"))
+			{
+				g_bXbox  = true;
+				g_minLod = 2;
+				continue;
+			}
+
+			if (!stricmp(argv[i], "-notxbox"))
+			{
+				g_bXbox  = false;
+				g_minLod = 0;
+				continue;
+			}
+
+			if (!stricmp(argv[i], "-nowarnings"))
+			{
+				g_bNoWarnings = true;
+				continue;
+			}
+
 			if (argv[i][1] && argv[i][2] == '\0')
 			{
 				switch( argv[i][1] )
@@ -6502,9 +7073,25 @@ int main (int argc, char **argv)
 
 	Q_FileBase( g_path, g_path, sizeof( g_path ) );
 
+	// look for the "content\hl2x" string in the qdir and add what should be the correct path as an alternate
+	// FIXME: add these to an envvar if folks are using complicated directory mappings instead of defaults
+	char *match = "content\\hl2x\\";
+	char *sp = strstr( qdir, match );
+	if (sp)
+	{
+		char temp[1024];
+		strncpy( temp, qdir, sp - qdir + strlen( match ) );
+		temp[sp - qdir + strlen( match )] = '\0';
+		CmdLib_AddBasePath( temp );
+		strcat( temp, "..\\..\\..\\..\\main\\content\\hl2\\" );
+		CmdLib_AddBasePath( temp );
+	}
+
 	if (!g_quiet)
 	{
-		printf("%s, %s, path %s\n", qdir, gamedir, g_path );
+		printf("qdir:    \"%s\"\n", qdir );
+		printf("gamedir: \"%s\"\n", gamedir );
+		printf("g_path:  \"%s\"\n", g_path );
 	}
 
 	// load the script

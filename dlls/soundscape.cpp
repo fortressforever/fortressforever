@@ -14,6 +14,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar soundscape_debug( "soundscape_debug", "0", FCVAR_NONE, "When on, draws lines to all env_soundscape entities. Green lines show the active soundscape, red lines show soundscapes that aren't in range, and white lines show soundscapes that are in range, but not the active soundscape." );
+
 // ----------------------------------------------------------------------------- //
 // CEnvSoundscapeProxy stuff.
 // ----------------------------------------------------------------------------- //
@@ -37,7 +39,7 @@ void CEnvSoundscapeProxy::Activate()
 {
 	if ( m_MainSoundscapeName != NULL_STRING )
 	{
-		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_MainSoundscapeName, this );
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_MainSoundscapeName );
 		if ( pEntity )
 		{
 			m_hProxySoundscape = dynamic_cast< CEnvSoundscape* >( pEntity );
@@ -225,7 +227,8 @@ void CEnvSoundscape::WriteAudioParamsTo( audioparams_t &audio )
 	{
 		if ( m_positionNames[i] != NULL_STRING )
 		{
-			CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_positionNames[i], this );
+			// We are a valid entity for a sound position
+			CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_positionNames[i], this, this );
 			if ( pEntity )
 			{
 				audio.localBits |= 1<<i;
@@ -284,7 +287,7 @@ void CEnvSoundscape::Update()
 
 	if ( !IsEnabled() )
 		return;
-	
+
 	for ( int i=0; i < m_hPlayersInPVS.Count(); i++ )
 	{
 		CBasePlayer *pPlayer = m_hPlayersInPVS[i];
@@ -315,6 +318,37 @@ void CEnvSoundscape::Update()
 			WriteAudioParamsTo( audio );
 		}
 	} 
+
+	if ( soundscape_debug.GetBool() )
+	{
+		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+ 		if ( pPlayer )
+		{
+			audioparams_t &audio = pPlayer->GetAudioParams();
+			if ( audio.ent.Get() != this )
+			{
+				if ( InRangeOfPlayer( pPlayer ) )
+				{
+					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 255,255, true, 0.1 );
+				}
+				else
+				{
+					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 0,0, true, 0.1 );
+				}
+			}
+			else
+			{
+				if ( InRangeOfPlayer( pPlayer ) )
+				{
+					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 0, 255,0, true, 0.1 );
+				}
+  				else
+				{
+					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 170,0, true, 0.1 );
+				}
+			}
+		}
+	}
 }
 
 //
@@ -339,10 +373,12 @@ void CEnvSoundscape::Precache()
 	}
 
 	m_soundscapeIndex = g_SoundscapeSystem.GetSoundscapeIndex( STRING(m_soundscapeName) );
-
+#ifdef _XBOX
+	g_SoundscapeSystem.PrecacheSounds( m_soundscapeIndex );
+#endif
 	if ( !g_SoundscapeSystem.IsValidIndex(m_soundscapeIndex) )
 	{
-		DevMsg("Can't find soundscape: %s\n", STRING(m_soundscapeName) );
+		DevWarning("Can't find soundscape: %s\n", STRING(m_soundscapeName) );
 	}
 }
 
@@ -360,6 +396,7 @@ void CEnvSoundscape::DrawDebugGeometryOverlays( void )
 			}
 		}
 	}
+
 	BaseClass::DrawDebugGeometryOverlays();
 }
 
@@ -501,7 +538,7 @@ void CTriggerSoundscape::Spawn()
 
 void CTriggerSoundscape::Activate()
 {
-	m_hSoundscape = dynamic_cast< CEnvSoundscapeTriggerable* >( gEntList.FindEntityByName( NULL, m_SoundscapeName, NULL ) );
+	m_hSoundscape = dynamic_cast< CEnvSoundscapeTriggerable* >( gEntList.FindEntityByName( NULL, m_SoundscapeName ) );
 	BaseClass::Activate();
 }
 

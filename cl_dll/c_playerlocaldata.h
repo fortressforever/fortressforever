@@ -32,7 +32,8 @@ public:
 		m_iv_vecPunchAngle.Setup( &m_vecPunchAngle.m_Value, LATCH_SIMULATION_VAR );
 	}
 
-	unsigned char			m_chAreaBits[32];	// Area visibility flags.
+	unsigned char			m_chAreaBits[MAX_AREA_STATE_BYTES];				// Area visibility flags.
+	unsigned char			m_chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES];// Area portal visibility flags.
 
 	int						m_iHideHUD;			// bitfields containing sections of the HUD to hide
 	int						m_iFOV;				// field of view

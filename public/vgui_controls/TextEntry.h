@@ -94,6 +94,8 @@ public:
 	virtual void SetText(const char *text);
 	virtual void GetText(char *buf, int bufLen);
 	virtual void GetText(wchar_t *buf, int bufLen);
+	virtual int GetTextLength() const;
+	virtual bool IsTextFullySelected() const;
 
 	// editing
 	virtual void GotoLeft();		// move cursor one char left
@@ -193,6 +195,8 @@ public:
 		"TextChanged"	- sent when the text is edited by the user
 			
 		"TextNewLine" - sent when the end key is pressed in the text entry AND _sendNewLines is true
+
+		"TextKillFocus" - sent when focus leaves textentry field
 	*/
 
 	// Selects all the text in the text entry.
@@ -212,6 +216,16 @@ public:
 	// By default, we draw the language shortname on the right hand side of the control
 	void SetDrawLanguageIDAtLeft( bool state );
 
+	virtual bool GetDropContextMenu( Menu *menu, CUtlVector< KeyValues * >& data );
+	virtual bool IsDroppable( CUtlVector< KeyValues * >& data );
+	virtual void OnPanelDropped( CUtlVector< KeyValues * >& data );
+	virtual Panel *GetDragPanel();
+	virtual void OnCreateDragData( KeyValues *msg );
+
+	void SelectAllOnFocusAlways( bool status );
+	void SetSelectionTextColor( const Color& clr );
+	void SetSelectionBgColor( const Color& clr );
+	void SetSelectionUnfocusedBgColor( const Color& clr );
 protected:
 	virtual void ResetCursorBlink();
 	virtual void PerformLayout();  // layout the text in the window
@@ -231,7 +245,7 @@ protected:
 	virtual void AddAnotherLine(int &cx, int &cy);
 	virtual int  GetYStart(); // works out ypixel position drawing started at
 
-	virtual void SelectCheck();	 // check if we are in text selection mode
+	virtual bool SelectCheck( bool fromMouse = false );	 // check if we are in text selection mode
 	MESSAGE_FUNC_WCHARPTR( OnSetText, "SetText", text );
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" ); // respond to scroll bar events
 	virtual void OnKillFocus();
@@ -241,8 +255,9 @@ protected:
 
 	virtual void OnCursorMoved(int x, int y);  // respond to moving the cursor with mouse button down
 	virtual void OnMousePressed(MouseCode code); // respond to mouse down events
-	virtual void OnMouseDoublePressed(MouseCode code);
-	virtual void OnMouseReleased(MouseCode codel);	// respond to mouse up events
+	virtual void OnMouseDoublePressed( MouseCode code );
+	virtual void OnMouseTriplePressed( MouseCode code );
+	virtual void OnMouseReleased( MouseCode code );	// respond to mouse up events
 
 	virtual void OnKeyFocusTicked(); // do while window has keyboard focus
 	virtual void OnMouseFocusTicked(); // do while window has mouse focus
@@ -327,7 +342,8 @@ private:
 	Menu				*m_pEditMenu; ///cut/copy/paste popup
 
 	int				   _recalculateBreaksIndex; // tells next linebreakindex index to Start recalculating line breaks	
-	bool			   _selectAllOnFirstFocus; // highlights all text in window when focus is gained.
+	bool			   _selectAllOnFirstFocus : 1; // highlights all text in window when focus is gained.
+	bool				_selectAllOnFocusAlways : 1;
 	bool			   _firstFocusStatus; // keep track if we've had that first focus or not
 	bool				m_bAllowNumericInputOnly;
 	bool				m_bAllowNonAsciiCharacters;

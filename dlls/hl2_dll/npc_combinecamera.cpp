@@ -373,6 +373,9 @@ void CNPC_CombineCamera::Spawn()
 
 	// Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat(0.1f, 0.3f) );
+
+	// Don't allow us to skip animation setup because our attachments are critical to us!
+	SetBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
 }
 
 
@@ -521,10 +524,8 @@ bool CNPC_CombineCamera::UpdateFacing()
 Vector CNPC_CombineCamera::HeadDirection2D()
 {
 	Vector	vecMuzzle, vecMuzzleDir;
-	QAngle	vecMuzzleAng;
 
-	GetAttachment("eyes", vecMuzzle, vecMuzzleAng);
-	AngleVectors(vecMuzzleAng, &vecMuzzleDir);
+	GetAttachment("eyes", vecMuzzle, &vecMuzzleDir );
 	vecMuzzleDir.z = 0;
 	VectorNormalize(vecMuzzleDir);
 
@@ -723,8 +724,7 @@ void CNPC_CombineCamera::TrackTarget( CBaseEntity *pTarget )
 	Vector vecMuzzle, vecMuzzleDir;
 	QAngle vecMuzzleAng;
 	
-	GetAttachment("eyes", vecMuzzle, vecMuzzleAng);
-	AngleVectors(vecMuzzleAng, &vecMuzzleDir);
+	GetAttachment("eyes", vecMuzzle, &vecMuzzleDir);
 	
 	SetIdealActivity((Activity) ACT_COMBINE_CAMERA_OPEN_IDLE);
 
@@ -804,6 +804,8 @@ void CNPC_CombineCamera::SearchThink()
 //-----------------------------------------------------------------------------
 bool CNPC_CombineCamera::PreThink(cameraState_e state)
 {
+	CheckPVSCondition();
+
 	MaintainActivity();
 	StudioFrameAdvance();
 
@@ -1146,7 +1148,7 @@ int CNPC_CombineCamera::DrawDebugTextOverlays(void)
 		char tempstr[512];
 
 		Q_snprintf( tempstr, sizeof( tempstr ),"Enemy     : %s", m_hEnemyTarget ? m_hEnemyTarget->GetDebugName() : "<none>");
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;

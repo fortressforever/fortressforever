@@ -43,9 +43,9 @@ public:
 	virtual void Spawn( void );
 	virtual void Precache();
 
-	CBaseEntity* Respawn( void );
+	virtual CBaseEntity* Respawn( void );
 	void ItemTouch( CBaseEntity *pOther );
-	void Materialize( void );
+	virtual void Materialize( void );
 	virtual bool MyTouch( CBasePlayer *pPlayer ) { return false; };
 
 	// Become touchable when we are at rest
@@ -58,13 +58,16 @@ public:
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason = PICKED_UP_BY_CANNON );
 	virtual void OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason );
 
-	virtual int	ObjectCaps() { return BaseClass::ObjectCaps() | FCAP_IMPULSE_USE; };
+	virtual int	ObjectCaps() { return BaseClass::ObjectCaps() | FCAP_IMPULSE_USE | FCAP_WCEDIT_POSITION; };
 	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	Vector	GetOriginalSpawnOrigin( void ) { return m_vOriginalSpawnOrigin;	}
 	QAngle	GetOriginalSpawnAngles( void ) { return m_vOriginalSpawnAngles;	}
+	void	SetOriginalSpawnOrigin( const Vector& origin ) { m_vOriginalSpawnOrigin = origin; }
+	void	SetOriginalSpawnAngles( const QAngle& angles ) { m_vOriginalSpawnAngles = angles; }
 	bool	CreateItemVPhysicsObject( void );
+	bool	ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer );
 
-#ifdef HL2MP
+#if defined( HL2MP )
 	void	FallThink( void );
 	float  m_flNextResetCheckTime;
 #endif

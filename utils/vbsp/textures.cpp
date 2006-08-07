@@ -28,6 +28,8 @@ extern qboolean onlyents;
 
 dtexdata_t *GetTexData( int index )
 {
+	if ( index < 0 )
+		return NULL;
 	Assert( !onlyents );
 	return &dtexdata[ index ];
 }
@@ -49,7 +51,7 @@ int	FindMiptex (const char *name)
 {
 	int		i;
 	MaterialSystemMaterial_t matID;
-	const char *propVal;
+	const char *propVal, *propVal2;
 	int opacity;
 	bool found;
 		
@@ -134,11 +136,15 @@ int	FindMiptex (const char *name)
 	else if ( ( propVal = GetMaterialVar( matID, "%compileTrigger" ) ) &&
 		StringIsTrue( propVal ) )
 	{
-		textureref[i].flags |= SURF_NOLIGHT;
+		textureref[i].flags |= ( SURF_NOLIGHT | SURF_TRIGGER );
+		if ( g_NodrawTriggers )
+		{
+			textureref[i].flags |= SURF_NODRAW;
+		}
 	}
-	// handle triggers
-	else if ( ( propVal = GetMaterialVar( matID, "%compileNoLight" ) ) &&
-		StringIsTrue( propVal ) )
+	// handle nolight surfs (except water)
+	else if ( (( propVal = GetMaterialVar( matID, "%compileNoLight" ) ) && StringIsTrue( propVal )) && 
+		!(( propVal2 = GetMaterialVar( matID, "%compileWater" ) ) && StringIsTrue( propVal2 ) ) )
 	{
 		textureref[i].flags |= SURF_NOLIGHT;
 	}
@@ -186,7 +192,6 @@ int	FindMiptex (const char *name)
 		{
 			textureref[i].flags |= SURF_NOLIGHT;
 		}
-
 		// handle nodraw faces/brushes
 		if ( ( propVal = GetMaterialVar( matID, "%compileNoDraw" ) ) && StringIsTrue( propVal ) )
 		{								    
@@ -228,9 +233,26 @@ int	FindMiptex (const char *name)
 			textureref[i].contents &= ~(CONTENTS_SOLID|CONTENTS_DETAIL);
 			textureref[i].contents |= CONTENTS_WATER;
 			textureref[i].flags |= SURF_WARP | SURF_NOSHADOWS | SURF_NODECALS;
+
+			bool bKeepLighting = ( ( propVal = GetMaterialVar( matID, "%compileKeepLight" ) ) &&
+				StringIsTrue( propVal ) );
+
+			if ( g_DisableWaterLighting && !bKeepLighting )
+			{
+				textureref[i].flags |= SURF_NOLIGHT;
+			}
+
 			// Set this so that we can check at the end of the process the presence of a a WaterLODControl entity.
 			g_bHasWater = true;
 		}
+		const char *pShaderName = GetMaterialShaderName(matID);
+		if ( !Q_strncasecmp( pShaderName, "water", 5 ) || !Q_strncasecmp( pShaderName, "UnlitGeneric", 12 ) )
+		{
+			//if ( !(textureref[i].flags & SURF_NOLIGHT) )
+			//	Warning("Forcing lit materal %s to nolight\n", name );
+			textureref[i].flags |= SURF_NOLIGHT;
+		}
+
 		if ( ( propVal = GetMaterialVar( matID, "%compileSlime" ) ) &&
 			StringIsTrue( propVal ) )
 		{
@@ -470,7 +492,7 @@ int FindOrCreateTexData( const char *pName_ )
 	if ( matID == MATERIAL_NOT_FOUND || (!bFound) )
 	{
 		qprintf( "WARNING: material not found: \"%s\"\n", pName );
-		return -1;
+		return nOutput;
 	}
 
 	GetMaterialDimensions( matID, &pTexData->width, &pTexData->height );

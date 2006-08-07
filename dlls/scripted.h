@@ -49,6 +49,12 @@ enum script_moveto_t
 	CINE_MOVETO_WAIT_FACING = 5,
 };
 
+enum SCRIPT_PLAYER_DEATH
+{
+	SCRIPT_DO_NOTHING = 0,
+	SCRIPT_CANCEL = 1,
+};
+
 
 //
 // Interrupt levels for grabbing NPCs to act out scripted events. These indicate
@@ -110,17 +116,43 @@ public:
 	void PostIdleDone( CAI_BaseNPC *pNPC );
 	void FixScriptNPCSchedule( CAI_BaseNPC *pNPC, int iSavedCineFlags );
 	void FixFlyFlag( CAI_BaseNPC *pNPC, int iSavedCineFlags );
-	bool	CanInterrupt( void );
-	void	AllowInterrupt( bool fAllow );
-	void	RemoveIgnoredConditions( void );
-	bool    PlayedSequence( void ) { return m_sequenceStarted; }
-	bool	ScriptHasNoMovement( void ) { return HasSpawnFlags(SF_SCRIPT_NOSCRIPTMOVEMENT); }
+	bool CanInterrupt( void );
+	void AllowInterrupt( bool fAllow );
+	void RemoveIgnoredConditions( void );
+	bool PlayedSequence( void ) { return m_sequenceStarted; }
+	bool ScriptHasNoMovement( void ) { return HasSpawnFlags(SF_SCRIPT_NOSCRIPTMOVEMENT); }
 	bool CanEnqueueAfter( void );
+
+	// Entry & Action loops
+	bool IsPlayingEntry( void ) { return m_bIsPlayingEntry; }
+	bool IsPlayingAction( void ) { return ( m_sequenceStarted && !m_bIsPlayingEntry ); }
+	bool FinishedActionSequence( CAI_BaseNPC *pNPC );
+	void SetLoopActionSequence( bool bLoop ) { m_bLoopActionSequence = bLoop; }
+	bool ShouldLoopActionSequence( void ) { return m_bLoopActionSequence; }
+	void StopActionLoop( bool bStopSynchronizedScenes );
+	void SetSynchPostIdles( bool bSynch ) { m_bSynchPostIdles = bSynch; }
+	void SynchNewSequence( CAI_BaseNPC::SCRIPTSTATE newState, string_t iszSequence, bool bSynchOtherScenes );
+
+	// Dynamic scripted sequence spawning
+	void ForceSetTargetEntity( CAI_BaseNPC *pTarget, bool bDontCancelOtherSequences );
+
+	// Dynamic interactions
+	void SetupInteractionPosition( CBaseEntity *pRelativeEntity, VMatrix &matDesiredLocalToWorld );
+	void ModifyScriptedAutoMovement( Vector *vecNewPos );
+
+	bool IsTeleportingDueToMoveTo( void ) { return m_bIsTeleportingDueToMoveTo; }
+
+	// Debug
+	virtual int DrawDebugTextOverlays( void );
+	virtual void DrawDebugGeometryOverlays( void );
+
+	void InputScriptPlayerDeath( inputdata_t &inputdata );
 
 private:
 	friend class CAI_BaseNPC;	// should probably try to eliminate this relationship
 
-	string_t m_iszPreIdle;		// String index for idle animation to play before playing the action anim
+	string_t m_iszEntry;		// String index for animation that must be played before entering the main action anim
+	string_t m_iszPreIdle;		// String index for idle animation to play before playing the action anim (only played while waiting for the script to begin)
 	string_t m_iszPlay;			// String index for scripted action animation
 	string_t m_iszPostIdle;		// String index for idle animation to play before playing the action anim
 	string_t m_iszCustomMove;	// String index for custom movement animation
@@ -128,6 +160,9 @@ private:
 	string_t m_iszEntity;		// Entity that is wanted for this script
 
 	int m_fMoveTo;
+	bool m_bIsPlayingEntry;
+	bool m_bLoopActionSequence;
+	bool m_bSynchPostIdles;
 
 	float m_flRadius;			// Range to search for an NPC to possess.
 	float m_flRepeat;			// Repeat rate
@@ -149,16 +184,36 @@ private:
 	bool	m_bThinking;
 	bool 	m_bInitiatedSelfDelete;
 
+	bool	m_bIsTeleportingDueToMoveTo;
+
 	CAI_BaseNPC *FindScriptEntity( void );
 	EHANDLE m_hLastFoundEntity;
 
+	// Code forced us to use a specific NPC
+	EHANDLE m_hForcedTarget;
+	bool	m_bDontCancelOtherSequences;
+	bool	m_bForceSynch;
+
+	bool	m_bTargetWasAsleep;
+
 	COutputEvent m_OnBeginSequence;
 	COutputEvent m_OnEndSequence;
+	COutputEvent m_OnPostIdleEndSequence;
+	COutputEvent m_OnCancelSequence;
+	COutputEvent m_OnCancelFailedSequence;	// Fired when a scene is cancelled before it's ever run
 	COutputEvent m_OnScriptEvent[MAX_SCRIPT_EVENTS];
 
-	static void ScriptEntityCancel( CBaseEntity *pentCine );
+	static void ScriptEntityCancel( CBaseEntity *pentCine, bool bPretendSuccess = false );
 
 	static const char *GetSpawnPreIdleSequenceForScript( CBaseEntity *pTargetEntity );
+
+	// Dynamic interactions
+	// For now, store just a single one of these. To synchronize positions
+	// with multiple other NPCs, this needs to be an array of NPCs & desired position matrices.
+	VMatrix		m_matInteractionPosition;
+	EHANDLE		m_hInteractionRelativeEntity;
+
+	int			m_iPlayerDeathBehavior;
 };
 
 

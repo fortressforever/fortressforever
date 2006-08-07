@@ -31,6 +31,26 @@ CAI_ClassScheduleIdSpace *CAI_BehaviorBase::GetClassScheduleIdSpace()
 	return GetOuter()->GetClassScheduleIdSpace();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draw any text overlays (override in subclass to add additional text)
+// Input  : Previous text offset from the top
+// Output : Current text offset from the top
+//-----------------------------------------------------------------------------
+int CAI_BehaviorBase::DrawDebugTextOverlays( int text_offset )
+{
+	char	tempstr[ 512 ];
+	int		offset = text_offset;
+
+	if ( GetOuter()->m_debugOverlays & OVERLAY_TEXT_BIT )
+	{
+		Q_snprintf( tempstr, sizeof( tempstr ), "Behv: %s, ", GetName() );
+		GetOuter()->EntityText( offset, tempstr, 0 );
+		offset++;
+	}
+
+	return offset;
+}
+
 //-------------------------------------
 
 void CAI_BehaviorBase::GatherConditions()
@@ -214,6 +234,15 @@ bool CAI_BehaviorBase::IsValidShootPosition( const Vector &vLocation, CAI_Node *
 
 //-------------------------------------
 
+float CAI_BehaviorBase::GetMaxTacticalLateralMovement( void )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_GetMaxTacticalLateralMovement();
+}
+
+//-------------------------------------
+
 bool CAI_BehaviorBase::ShouldIgnoreSound( CSound *pSound )
 {
 	Assert( m_pBackBridge != NULL );
@@ -229,6 +258,53 @@ bool CAI_BehaviorBase::IsInterruptable( void )
 	
 	return m_pBackBridge->BackBridge_IsInterruptable();
 }
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::CanFlinch( void )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_CanFlinch();
+}
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::IsCrouching( void )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_IsCrouching();
+}
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::IsCrouchedActivity( Activity activity )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_IsCrouchedActivity( activity );
+}
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::QueryHearSound( CSound *pSound )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_QueryHearSound( pSound );
+}
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::CanRunAScriptedNPCInteraction( bool bForced )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_CanRunAScriptedNPCInteraction( bForced );
+}
+
+//-------------------------------------
 
 bool CAI_BehaviorBase::ShouldPlayerAvoid( void )
 {
@@ -265,6 +341,24 @@ bool CAI_BehaviorBase::ShouldAlwaysThink()
 
 //-------------------------------------
 
+Activity CAI_BehaviorBase::GetFlinchActivity( bool bHeavyDamage, bool bGesture )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_GetFlinchActivity( bHeavyDamage, bGesture );
+}
+
+//-------------------------------------
+
+bool CAI_BehaviorBase::OnCalcBaseMove( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult )
+{
+	Assert( m_pBackBridge != NULL );
+
+	return m_pBackBridge->BackBridge_OnCalcBaseMove( pMoveGoal, distClear, pResult );
+}
+
+//-------------------------------------
+
 bool CAI_BehaviorBase::NotifyChangeBehaviorStatus( bool fCanFinishSchedule )
 {
 	bool fInterrupt = GetOuter()->OnBehaviorChangeStatus( this, fCanFinishSchedule );
@@ -275,7 +369,18 @@ bool CAI_BehaviorBase::NotifyChangeBehaviorStatus( bool fCanFinishSchedule )
 	if ( fInterrupt )
 	{
 		if ( GetOuter()->m_hCine )
+		{
+			if( GetOuter()->m_hCine->PlayedSequence() )
+			{
+				DevWarning( "NPC: %s canceled running script %s due to behavior change\n", GetOuter()->GetDebugName(), GetOuter()->m_hCine->GetDebugName() );
+			}
+			else
+			{
+				DevWarning( "NPC: %s canceled script %s without playing, due to behavior change\n", GetOuter()->GetDebugName(), GetOuter()->m_hCine->GetDebugName() );
+			}
+
 			GetOuter()->m_hCine->CancelScript();
+		}
 
 		//!!!HACKHACK
 		// this is dirty, but it forces NPC to pick a new schedule next time through.

@@ -13,9 +13,10 @@
 #endif
 
 #include <vgui/VGUI.h>
+#include <vgui/IPanel.h>
 #include <vstdlib/IKeyValuesSystem.h>
 
-#include "interface.h"
+#include "tier1/interface.h"
 
 class IFileSystem;
 
@@ -95,10 +96,12 @@ class ScrollBar;
 class ScrollBarSlider;
 class SectionedListPanel;
 class Slider;
+class Splitter;
 class TextEntry;
 class ToggleButton;
 class Tooltip;
 class TreeView;
+class CTreeViewListControl;
 class URLLabel;
 class WizardPanel;
 class WizardSubPanel;
@@ -121,5 +124,13 @@ enum MouseCode;
 // hotkeys disabled until we work out exactly how we want to do them
 #define VGUI_HOTKEYS_ENABLED
 // #define VGUI_DRAW_HOTKEYS_ENABLED
+
+#define USING_BUILD_FACTORY( className )				\
+	extern className *g_##className##LinkerHack;		\
+	className *g_##className##PullInModule = g_##className##LinkerHack;
+
+#define USING_BUILD_FACTORY_ALIAS( className, factoryName )				\
+	extern className *g_##factoryName##LinkerHack;		\
+	className *g_##factoryName##PullInModule = g_##factoryName##LinkerHack;
 
 #endif // CONTROLS_H

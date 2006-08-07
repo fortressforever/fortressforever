@@ -173,11 +173,11 @@ void CPropThumper::Thump ( void )
 	if ( m_iHammerAttachment != -1 )
 	{
 		Vector vOrigin;
-		QAngle qAngle;
-		GetAttachment( m_iHammerAttachment, vOrigin, qAngle );
+		GetAttachment( m_iHammerAttachment, vOrigin );
 
 		CEffectData	data;
 
+		data.m_nEntIndex = entindex();
 		data.m_vOrigin = vOrigin;
 		data.m_flScale = m_iDustScale * m_flPlaybackRate;
 		DispatchEffect( "ThumperDust", data );

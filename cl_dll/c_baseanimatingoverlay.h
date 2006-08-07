@@ -5,12 +5,12 @@
 // $NoKeywords: $
 //
 //=============================================================================//
-// Client-side CBasePlayer
 
-#ifndef C_XX_H
-#define C_XX_H
+#ifndef C_BASEANIMATINGOVERLAY_H
+#define C_BASEANIMATINGOVERLAY_H
 #pragma once
 
+#include "c_baseanimating.h"
 
 // For shared code.
 #define CBaseAnimatingOverlay C_BaseAnimatingOverlay
@@ -33,12 +33,12 @@ public:
 
 	virtual void	GetRenderBounds( Vector& theMins, Vector& theMaxs );
 
-	void			CheckForLayerChanges( studiohdr_t *hdr, float currentTime );
+	void			CheckForLayerChanges( CStudioHdr *hdr, float currentTime );
 
 	// model specific
-	virtual void	AccumulateLayers( studiohdr_t *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
+	virtual void	AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
 
-	virtual	void	DoAnimationEvents( void );
+	virtual void DoAnimationEvents( CStudioHdr *pStudioHdr );
 
 	enum
 	{
@@ -59,7 +59,7 @@ private:
 EXTERN_RECV_TABLE(DT_BaseAnimatingOverlay);
 
 
-#endif // C_XX_H
+#endif // C_BASEANIMATINGOVERLAY_H
 
 
 

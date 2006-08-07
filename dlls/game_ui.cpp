@@ -54,6 +54,13 @@ public:
 	COutputEvent		m_pressedBack;
 	COutputEvent		m_pressedAttack;
 	COutputEvent		m_pressedAttack2;
+	
+	COutputEvent		m_unpressedMoveLeft;
+	COutputEvent		m_unpressedMoveRight;
+	COutputEvent		m_unpressedForward;
+	COutputEvent		m_unpressedBack;
+	COutputEvent		m_unpressedAttack;
+	COutputEvent		m_unpressedAttack2;
 
 	COutputFloat		m_xaxis;
 	COutputFloat		m_yaxis;
@@ -61,6 +68,7 @@ public:
 	COutputFloat		m_attack2axis;
 
 	bool				m_bForceUpdate;
+	int					m_nLastButtonState;
 
 	CHandle<CBasePlayer>	m_player;
 };
@@ -72,9 +80,10 @@ BEGIN_DATADESC( CGameUI )
 	DEFINE_FIELD( m_hSaveWeapon, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bForceUpdate, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_player, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_nLastButtonState, FIELD_INTEGER ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Deactivate", InputDeactivate ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "Activate", InputActivate ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "Activate", InputActivate ),
 
 	DEFINE_OUTPUT( m_playerOn, "PlayerOn" ),
 	DEFINE_OUTPUT( m_playerOff, "PlayerOff" ),
@@ -85,6 +94,13 @@ BEGIN_DATADESC( CGameUI )
 	DEFINE_OUTPUT( m_pressedBack, "PressedBack" ),
 	DEFINE_OUTPUT( m_pressedAttack, "PressedAttack" ),
 	DEFINE_OUTPUT( m_pressedAttack2, "PressedAttack2" ),
+
+	DEFINE_OUTPUT( m_unpressedMoveLeft, "UnpressedMoveLeft" ),
+	DEFINE_OUTPUT( m_unpressedMoveRight, "UnpressedMoveRight" ),
+	DEFINE_OUTPUT( m_unpressedForward, "UnpressedForward" ),
+	DEFINE_OUTPUT( m_unpressedBack, "UnpressedBack" ),
+	DEFINE_OUTPUT( m_unpressedAttack, "UnpressedAttack" ),
+	DEFINE_OUTPUT( m_unpressedAttack2, "UnpressedAttack2" ),
 
 	DEFINE_OUTPUT( m_xaxis, "XAxis" ),
 	DEFINE_OUTPUT( m_yaxis, "YAxis" ),
@@ -113,44 +129,43 @@ void CGameUI::Deactivate( CBaseEntity *pActivator )
 {
 	CBasePlayer *pPlayer = m_player;
 
-	// If deactivated by the player using me
-	if ( pPlayer == pActivator )
+	// Re-enable player motion
+	if ( FBitSet( m_spawnflags, SF_GAMEUI_FREEZE_PLAYER ) )
 	{
-		// Re-enable player motion
-		if (FBitSet(m_spawnflags, SF_GAMEUI_FREEZE_PLAYER))
-		{
-			m_player->RemoveFlag( FL_ATCONTROLS );
-		}
-
-		// Restore weapons
-		if (FBitSet(m_spawnflags, SF_GAMEUI_HIDE_WEAPON))
-		{
-			// Turn the hud back on
-			pPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
-
-			if (m_hSaveWeapon.Get())
-			{
-				m_player->Weapon_Switch( m_hSaveWeapon.Get() );
-				m_hSaveWeapon = NULL;
-			}
-
-			if ( pPlayer->GetActiveWeapon() )
-			{
-				pPlayer->GetActiveWeapon()->Deploy();
-			}
-		}
-
-		m_playerOff.FireOutput( pPlayer, this, 0 );
-
-		// clear out the axis controls
-		m_xaxis.Set( 0, pPlayer, this );
-		m_yaxis.Set( 0, pPlayer, this );
-		m_attackaxis.Set( 0, pPlayer, this );
-		m_attack2axis.Set( 0, pPlayer, this );
-
-		m_player = NULL;
-		SetNextThink( TICK_NEVER_THINK );
+		m_player->RemoveFlag( FL_ATCONTROLS );
 	}
+
+	// Restore weapons
+	if ( FBitSet( m_spawnflags, SF_GAMEUI_HIDE_WEAPON ) )
+	{
+		// Turn the hud back on
+		pPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
+
+		if ( m_hSaveWeapon.Get() )
+		{
+			m_player->Weapon_Switch( m_hSaveWeapon.Get() );
+			m_hSaveWeapon = NULL;
+		}
+
+		if ( pPlayer->GetActiveWeapon() )
+		{
+			pPlayer->GetActiveWeapon()->Deploy();
+		}
+	}
+
+	// Announce that the player is no longer controlling through us
+	m_playerOff.FireOutput( pPlayer, this, 0 );
+
+	// Clear out the axis controls
+	m_xaxis.Set( 0, pPlayer, this );
+	m_yaxis.Set( 0, pPlayer, this );
+	m_attackaxis.Set( 0, pPlayer, this );
+	m_attack2axis.Set( 0, pPlayer, this );
+	m_nLastButtonState = 0;
+	m_player = NULL;
+	
+	// Stop thinking
+	SetNextThink( TICK_NEVER_THINK );
 }
 
 
@@ -159,41 +174,68 @@ void CGameUI::Deactivate( CBaseEntity *pActivator )
 //------------------------------------------------------------------------------
 void CGameUI::InputActivate( inputdata_t &inputdata )
 {
-	// If already in use, ignore activatation by others
-	if (( m_player.Get() != NULL ) && ( m_player.Get() != inputdata.pActivator ))
+	CBasePlayer *pPlayer;
+
+	// Determine if we're specifying this as an override parameter
+	if ( inputdata.value.StringID() != NULL_STRING )
 	{
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, inputdata.value.String(), this, inputdata.pActivator, inputdata.pCaller );
+		if ( pEntity == NULL || pEntity->IsPlayer() == false )
+		{
+			Warning( "%s InputActivate: entity %s not found or is not a player!\n", GetEntityName(), inputdata.value.String() );
+			return;
+		}
+
+		pPlayer = ToBasePlayer( pEntity );
+	}
+	else
+	{
+		// Otherwise try to use the activator
+		if ( inputdata.pActivator == NULL || inputdata.pActivator->IsPlayer() == false )
+		{
+			Warning( "%s InputActivate: invalid or missing !activator!\n", GetEntityName(), inputdata.value.String() );
+			return;
+		}
+
+		pPlayer = ToBasePlayer( inputdata.pActivator );
+	}
+
+	// If another player is already using these controls3, ignore this activation
+	if ( m_player.Get() != NULL && pPlayer != m_player.Get() )
+	{
+		// TODO: We could allow this by calling Deactivate() at this point and continuing on -- jdw
 		return;
 	}
 
-	if ( inputdata.pActivator && inputdata.pActivator->IsPlayer() )
+	// Setup our internal data
+	m_player = pPlayer;
+	m_playerOn.FireOutput( pPlayer, this, 0 );
+
+	// Turn the hud off
+	SetNextThink( gpGlobals->curtime );
+
+	// Disable player's motion
+	if ( FBitSet( m_spawnflags, SF_GAMEUI_FREEZE_PLAYER ) )
 	{
-		m_player = (CBasePlayer *)inputdata.pActivator;
-		m_playerOn.FireOutput( inputdata.pActivator, this, 0 );
+		m_player->AddFlag( FL_ATCONTROLS );
+	}
 
-		// Turn the hud off
-		SetNextThink( gpGlobals->curtime );
+	// Store off and hide the currently held weapon
+	if ( FBitSet( m_spawnflags, SF_GAMEUI_HIDE_WEAPON ) )
+	{
+		m_player->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 
-		// Disable player motion
-		if (FBitSet(m_spawnflags, SF_GAMEUI_FREEZE_PLAYER))
+		if ( m_player->GetActiveWeapon() )
 		{
-			m_player->AddFlag( FL_ATCONTROLS );
-		}
+			m_hSaveWeapon = m_player->GetActiveWeapon();
 
-		if (FBitSet(m_spawnflags, SF_GAMEUI_HIDE_WEAPON))
-		{
-			m_player->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
-
-			if ( m_player->GetActiveWeapon() )
-			{
-				m_hSaveWeapon = m_player->GetActiveWeapon();
-
-				m_player->GetActiveWeapon()->Holster();
-				m_player->ClearActiveWeapon();
-				m_player->HideViewModels();
-			}
+			m_player->GetActiveWeapon()->Holster();
+			m_player->ClearActiveWeapon();
+			m_player->HideViewModels();
 		}
 	}
 
+	// We must update our state
 	m_bForceUpdate = true;
 }
 
@@ -211,6 +253,12 @@ void CGameUI::Think( void )
 	{
 		SetNextThink( TICK_NEVER_THINK );
 		return;
+	}
+
+	// If we're forcing an update, state with a clean button state
+	if ( m_bForceUpdate )
+	{
+		m_nLastButtonState = pPlayer->m_nButtons;
 	}
 
 	// ------------------------------------------------
@@ -235,9 +283,6 @@ void CGameUI::Think( void )
 	pPlayer->AddFlag( FL_ONTRAIN );
 	SetNextThink( gpGlobals->curtime );
 
-	// BUGBUG: m_afButtonPressed is broken - check the player.cpp code!!!
-	
-	//
 	// Deactivate if they jump or press +use.
 	// FIXME: prevent the use from going through in player.cpp
 	if ((( pPlayer->m_afButtonPressed & IN_USE ) && ( m_spawnflags & SF_GAMEUI_USE_DEACTIVATES )) ||
@@ -247,33 +292,87 @@ void CGameUI::Think( void )
 		return;
 	}
 
-	if ( pPlayer->m_afButtonPressed & IN_MOVERIGHT )
+	// Determine what's different
+	int nButtonsChanged = ( pPlayer->m_nButtons ^ m_nLastButtonState );
+
+	//
+	// Handle all our possible input triggers
+	//
+
+	if ( nButtonsChanged & IN_MOVERIGHT )
 	{
-		m_pressedMoveRight.FireOutput( pPlayer, this, 0 );
-	}
-	if ( pPlayer->m_afButtonPressed & IN_MOVELEFT )
-	{
-		m_pressedMoveLeft.FireOutput( pPlayer, this, 0 );
+		if ( m_nLastButtonState & IN_MOVERIGHT )
+		{
+			m_unpressedMoveRight.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedMoveRight.FireOutput( pPlayer, this, 0 );
+		}
 	}
 
-	if ( pPlayer->m_afButtonPressed & IN_FORWARD )
+	if ( nButtonsChanged & IN_MOVELEFT )
 	{
-		m_pressedForward.FireOutput( pPlayer, this, 0 );
-	}
-	if ( pPlayer->m_afButtonPressed & IN_BACK )
-	{
-		m_pressedBack.FireOutput( pPlayer, this, 0 );
-	}
-
-	if ( pPlayer->m_afButtonPressed & IN_ATTACK )
-	{
-		m_pressedAttack.FireOutput( pPlayer, this, 0 );
+		if ( m_nLastButtonState & IN_MOVELEFT )
+		{
+			m_unpressedMoveLeft.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedMoveLeft.FireOutput( pPlayer, this, 0 );
+		}
 	}
 
-	if ( pPlayer->m_afButtonPressed & IN_ATTACK2 )
+	if ( nButtonsChanged & IN_FORWARD )
 	{
-		m_pressedAttack2.FireOutput( pPlayer, this, 0 );
+		if ( m_nLastButtonState & IN_FORWARD )
+		{
+			m_unpressedForward.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedForward.FireOutput( pPlayer, this, 0 );
+		}
 	}
+
+	if ( nButtonsChanged & IN_BACK )
+	{
+		if ( m_nLastButtonState & IN_BACK )
+		{
+			m_unpressedBack.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedBack.FireOutput( pPlayer, this, 0 );
+		}
+	}
+
+	if ( nButtonsChanged & IN_ATTACK )
+	{
+		if ( m_nLastButtonState & IN_ATTACK )
+		{
+			m_unpressedAttack.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedAttack.FireOutput( pPlayer, this, 0 );
+		}
+	}
+
+	if ( nButtonsChanged & IN_ATTACK2 )
+	{
+		if ( m_nLastButtonState & IN_ATTACK2 )
+		{
+			m_unpressedAttack2.FireOutput( pPlayer, this, 0 );
+		}
+		else
+		{
+			m_pressedAttack2.FireOutput( pPlayer, this, 0 );
+		}
+	}
+
+	// Setup for the next frame
+	m_nLastButtonState = pPlayer->m_nButtons;
 
 	float x = 0, y = 0, attack = 0, attack2 = 0;
 	if ( pPlayer->m_nButtons & IN_MOVERIGHT )

@@ -13,6 +13,10 @@
 #include "ai_utils.h"
 #include "ai_moveshoot.h"
 
+#ifdef HL2_EPISODIC
+	#include "hl2_gamerules.h"
+#endif
+
 #if defined( _WIN32 )
 #pragma once
 #endif
@@ -27,6 +31,14 @@ enum AI_Formations_t
 	AIF_COMMANDER,
 	AIF_TIGHT,
 	AIF_MEDIUM,
+	AIF_SIDEKICK,
+};
+
+enum AI_FollowFormationFlags_t
+{
+	AIFF_DEFAULT 					= 0,
+	AIFF_USE_FOLLOW_POINTS 			= 0x01,
+	AIFF_REQUIRE_LOS_OUTSIDE_COMBAT	= 0x02,
 };
 
 //-----------------------------------------------------------------------------
@@ -46,6 +58,7 @@ public:
 
 	virtual void EnableGoal( CAI_BaseNPC *pAI );
 	virtual void DisableGoal( CAI_BaseNPC *pAI  );
+	virtual void InputOutsideTransition( inputdata_t &inputdata );
 
 	int m_iFormation;
 
@@ -56,8 +69,10 @@ public:
 
 struct AI_FollowNavInfo_t
 {
+	int		flags;
 	Vector  position;
 	float 	range;
+	float	Zrange;
 	float   tolerance;
 	float   followPointTolerance;
 	float	targetMoveTolerance;
@@ -70,7 +85,13 @@ struct AI_FollowNavInfo_t
 	DECLARE_SIMPLE_DATADESC();
 };
 
-DECLARE_POINTER_HANDLE(AI_FollowManagerInfoHandle_t);
+struct AI_FollowGroup_t;
+
+struct AI_FollowManagerInfoHandle_t
+{
+	AI_FollowGroup_t *m_pGroup;
+	int m_hFollower;
+};
 
 //-------------------------------------
 
@@ -94,7 +115,12 @@ class CAI_FollowBehavior : public CAI_SimpleBehavior
 public:
 	CAI_FollowBehavior( const AI_FollowParams_t &params = AIF_SIMPLE );
 	~CAI_FollowBehavior();
+
+	virtual int		DrawDebugTextOverlays( int text_offset );
 	
+	// Returns true if the NPC is actively following a target.
+	bool			IsActive( void );
+
 	void			SetParameters( const AI_FollowParams_t &params );
 
 	virtual const char *GetName() {	return "Follow"; }
@@ -122,6 +148,14 @@ public:
 	bool			IsMovingToFollowTarget();
 
 	float			GetGoalRange();
+	float			GetGoalZRange();
+
+	virtual Activity	NPC_TranslateActivity( Activity activity );
+	virtual int			TranslateSchedule( int scheduleType );
+	virtual void	StartTask( const Task_t *pTask );
+	virtual int		SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
+	virtual void	TaskComplete( bool fIgnoreSetFailedCondition = false );
+	virtual void 	GatherConditions();
 
 private:
 	friend class CAI_FollowManager;
@@ -132,16 +166,10 @@ private:
 	virtual void	CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput );
 
 	virtual void	Precache();
-	virtual void 	GatherConditions();
-	virtual int		SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	virtual int		SelectSchedule();
-	virtual int		TranslateSchedule( int scheduleType );
 	virtual void	OnStartSchedule( int scheduleType );
-	virtual void	StartTask( const Task_t *pTask );
 	virtual void	RunTask( const Task_t *pTask );
-	virtual void	TaskComplete( bool fIgnoreSetFailedCondition = false );
 	void			BuildScheduleTestBits();
-	virtual Activity NPC_TranslateActivity( Activity activity );
 
 	bool			IsCurScheduleFollowSchedule();
 
@@ -150,7 +178,6 @@ private:
 	virtual void	OnMovementComplete();
 	virtual bool	FValidateHintType( CAI_Hint *pHint );
 	
-	bool			IsValidEnemy(CBaseEntity *pEnemy);
 	bool			IsValidCover( const Vector &vLocation, CAI_Hint const *pHint );
 	bool			IsValidShootPosition( const Vector &vLocation, CAI_Node *pNode, CAI_Hint const *pHint );
 	bool 			FindCoverFromEnemyAtFollowTarget( float coverRadius, Vector *pResult );
@@ -182,18 +209,21 @@ private:
 	virtual bool	ShouldFollow();
 	bool 			UpdateFollowPosition();
 	const Vector &	GetGoalPosition();
+	const int		GetGoalFlags();
 	float 			GetGoalTolerance();
 	bool			PlayerIsPushing();
 
 	bool			IsFollowTargetInRange();
 
-	bool			IsFollowGoalInRange( float tolerance, float zTolerance = -1.0 ); // zTolerance defaults to hull height
+	bool			IsFollowGoalInRange( float tolerance, float zTolerance, int flags );
 	virtual bool	IsChaseGoalInRange();
 
 	void			NoteFailedFollow();
 	void			NoteSuccessfulFollow();
 
 	//----------------------------
+
+protected:
 
 	enum
 	{
@@ -227,11 +257,15 @@ private:
 		COND_FOLLOW_TARGET_VISIBLE,
 		COND_FOLLOW_TARGET_NOT_VISIBLE,
 		COND_FOLLOW_WAIT_POINT_INVALID,
+		COND_FOLLOW_PLAYER_IS_LIT,
+		COND_FOLLOW_PLAYER_IS_NOT_LIT,
 		NEXT_CONDITION,
 	};
 
 	DEFINE_CUSTOM_SCHEDULE_PROVIDER;
 	
+private:
+
 	//----------------------------
 	
 	EHANDLE 		   				m_hFollowTarget;
@@ -248,6 +282,7 @@ private:
 	Vector							m_vFollowMoveAnchor;
 
 	bool							m_bMovingToCover;
+	float							m_flOriginalEnemyDiscardTime;
 	
 	CRandStopwatch	   				m_FollowDelay;
 	
@@ -289,6 +324,13 @@ inline const AI_FollowNavInfo_t &CAI_FollowBehavior::GetFollowGoalInfo()
 
 //-------------------------------------
 
+inline const int CAI_FollowBehavior::GetGoalFlags()
+{
+	return m_FollowNavGoal.flags;
+}
+
+//-------------------------------------
+
 inline const Vector &CAI_FollowBehavior::GetGoalPosition()
 {
 	return m_FollowNavGoal.position;
@@ -310,18 +352,9 @@ inline float CAI_FollowBehavior::GetGoalRange()
 
 //-------------------------------------
 
-inline bool CAI_FollowBehavior::IsFollowGoalInRange( float tolerance, float zTolerance )
+inline float CAI_FollowBehavior::GetGoalZRange()
 {
-	const Vector &origin = WorldSpaceCenter();
-	const Vector &goal = GetGoalPosition();
-	if ( zTolerance == -1 )
-		zTolerance = GetHullHeight();
-	if ( fabs( origin.z - goal.z ) > zTolerance )
-		return false;
-	float distanceSq = ( goal.AsVector2D() - origin.AsVector2D() ).LengthSqr();
-	tolerance += 0.1;
-
-	return ( distanceSq < tolerance*tolerance );
+	return m_FollowNavGoal.Zrange;
 }
 
 //-----------------------------------------------------------------------------

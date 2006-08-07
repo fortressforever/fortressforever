@@ -18,11 +18,14 @@
 #include "physics_bone_follower.h"
 #include "Sprite.h"
 #include "ai_behavior_follow.h"
+#include "collisionutils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define EFFECT_COUNT 4
+
+extern ConVar ai_debug_avoidancebounds;
 
 class CNPC_Dog : public CAI_BaseActor
 {
@@ -43,7 +46,7 @@ public:
 
 	void PrescheduleThink( void );
 
-	bool CanPlayerSeeMe( void );
+	bool CanTargetSeeMe( void );
 
 	void InputSetPickupTarget( inputdata_t &inputdata );
 	void InputStartCatchThrowBehavior( inputdata_t &inputdata );
@@ -54,12 +57,16 @@ public:
 	void InputStopWaitAndCatch( inputdata_t &inputdata );
 	void InputSetThrowArcModifier( inputdata_t &inputdata );
 	void InputSetThrowTarget( inputdata_t &inputdata );
+	
+	void InputTurnBoneFollowersOff( inputdata_t &inputdata );
+	void InputTurnBoneFollowersOn( inputdata_t &inputdata );
 
-	void CleanCatchAndThrow( bool bTaskFail = true );
+	void CleanCatchAndThrow( bool bClearTimers = true );
 	void SetTurnActivity ( void );
 	void ThrowObject( const char *pAttachmentName );
 	void PickupOrCatchObject( const char *pAttachmentName );
 	void PullObject( bool bMantain );
+	void SetupThrowTarget( void );
 
 	void GatherConditions( void );
 
@@ -67,6 +74,18 @@ public:
 
 	int OnTakeDamage_Alive( const CTakeDamageInfo &info );
 
+	void	MantainBoneFollowerCollisionGroups( int CollisionGroup );
+	virtual void SetPlayerAvoidState( void );
+
+protected:
+	enum
+	{
+		COND_DOG_LOST_PHYSICS_ENTITY = BaseClass::NEXT_CONDITION,
+
+		NEXT_CONDITION,
+	};
+
+protected:
 	float m_flNextSwat;
 	float m_flTimeToCatch;
 	float m_flTimeToPull;
@@ -107,6 +126,8 @@ public:
 	virtual bool CreateBehaviors( void );
 	CAI_FollowBehavior		m_FollowBehavior;
 
+	bool	m_bBoneFollowersActive;
+
 
 protected:
 	
@@ -133,6 +154,7 @@ BEGIN_DATADESC( CNPC_Dog )
 	DEFINE_FIELD( m_bHasObject, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_iContainerMoveType, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bBeamEffects, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bBoneFollowersActive, FIELD_BOOLEAN ),
 	DEFINE_UTLVECTOR( m_hUnreachableObjects, FIELD_EHANDLE ),
 	DEFINE_AUTO_ARRAY( m_hGlowSprites, FIELD_EHANDLE ),
 	DEFINE_AUTO_ARRAY( m_hBeams, FIELD_EHANDLE ),
@@ -144,6 +166,8 @@ BEGIN_DATADESC( CNPC_Dog )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"StopWaitAndCatch", InputStopWaitAndCatch ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT,	"SetThrowArcModifier", InputSetThrowArcModifier ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetThrowTarget", InputSetThrowTarget ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"TurnBoneFollowersOff", InputTurnBoneFollowersOff ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"TurnBoneFollowersOn", InputTurnBoneFollowersOn ),
 	DEFINE_OUTPUT( m_OnThrow, "OnDogThrow"),
 	DEFINE_OUTPUT( m_OnCatch, "OnDogCatch"),
 	DEFINE_OUTPUT( m_OnPickup, "OnDogPickup"),
@@ -186,7 +210,8 @@ enum
 	TASK_DOG_FACE_OBJECT,
 	TASK_DOG_WAIT_FOR_OBJECT,
 	TASK_DOG_CATCH_OBJECT,
-	TASK_DOG_WAIT_FOR_PLAYER_TO_FACE,
+	TASK_DOG_WAIT_FOR_TARGET_TO_FACE,
+	TASK_DOG_SETUP_THROW_TARGET,
 };
 
 int ACT_DOG_THROW;
@@ -235,7 +260,10 @@ bool CNPC_Dog::CreateVPhysics( void )
 {
 	BaseClass::CreateVPhysics();
 
-	m_BoneFollowerManager.InitBoneFollowers( this, ARRAYSIZE(pFollowerBoneNames), pFollowerBoneNames );
+	if ( m_bBoneFollowersActive == true )
+	{
+		m_BoneFollowerManager.InitBoneFollowers( this, ARRAYSIZE(pFollowerBoneNames), pFollowerBoneNames );
+	}
 	return true;
 }
 
@@ -266,6 +294,123 @@ int	CNPC_Dog::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return BaseClass::OnTakeDamage_Alive( info );
 }
 
+//-----------------------------------------------------------------------------
+// This function checks if Dog's collision group doesn't match his bone follower's and fixes them up.
+//-----------------------------------------------------------------------------
+void CNPC_Dog::MantainBoneFollowerCollisionGroups( int iCollisionGroup )
+{
+	if ( m_bBoneFollowersActive == false )
+		return;
+
+	physfollower_t* pBone = m_BoneFollowerManager.GetBoneFollower( 0 );
+
+	if ( pBone && pBone->hFollower && pBone->hFollower->GetCollisionGroup() != iCollisionGroup )
+	{
+		for ( int i = 0; i < m_BoneFollowerManager.GetNumBoneFollowers(); i++ )
+		{
+			pBone = m_BoneFollowerManager.GetBoneFollower( i );
+
+			if ( pBone && pBone->hFollower )
+			{
+				pBone->hFollower->SetCollisionGroup( iCollisionGroup );
+			}
+		}
+	}
+}
+
+void CNPC_Dog::SetPlayerAvoidState( void )
+{
+	bool bIntersectingBoneFollowers = false;
+	bool bIntersectingNPCBox = false;
+
+	Vector vNothing;
+
+	GetSequenceLinearMotion( GetSequence(), &vNothing );
+	bool bIsMoving = ( IsMoving() || ( vNothing != vec3_origin ) );
+
+	//If we are coming out of a script, check if we are stuck inside the player.
+	if ( m_bPerformAvoidance || ( ShouldPlayerAvoid() && bIsMoving ) )
+	{
+		trace_t trace;
+		Vector vMins, vMaxs;
+		Vector vWorldMins, vWorldMaxs;
+		Vector vPlayerMins, vPlayerMaxs;
+		physfollower_t *pBone;
+		int i;
+
+		CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
+
+		if ( pLocalPlayer )
+		{
+			vWorldMins = WorldAlignMins();
+			vWorldMaxs = WorldAlignMaxs();
+
+			vPlayerMins = pLocalPlayer->GetAbsOrigin() + pLocalPlayer->WorldAlignMins();
+			vPlayerMaxs = pLocalPlayer->GetAbsOrigin() + pLocalPlayer->WorldAlignMaxs();
+
+			// check if the player intersects the bounds of any of the bone followers
+			for ( i = 0; i < m_BoneFollowerManager.GetNumBoneFollowers(); i++ )
+			{
+				pBone = m_BoneFollowerManager.GetBoneFollower( i );
+				if ( pBone && pBone->hFollower )
+				{
+					pBone->hFollower->CollisionProp()->WorldSpaceSurroundingBounds( &vMins, &vMaxs );
+					if ( IsBoxIntersectingBox( vMins, vMaxs, vPlayerMins, vPlayerMaxs ) )
+					{
+						bIntersectingBoneFollowers = true;
+						break;
+					}
+				}
+			}
+
+			bIntersectingNPCBox = IsBoxIntersectingBox( GetAbsOrigin() + vWorldMins, GetAbsOrigin() + vWorldMaxs, vPlayerMins, vPlayerMaxs );
+
+			if ( ai_debug_avoidancebounds.GetBool() )
+			{
+				int iRed = ( bIntersectingNPCBox == true ) ? 255 : 0;
+
+				NDebugOverlay::Box( GetAbsOrigin(), vWorldMins, vWorldMaxs, iRed, 0, 255, 64, 0.1 );
+
+				// draw the bounds of the bone followers
+				for ( i = 0; i < m_BoneFollowerManager.GetNumBoneFollowers(); i++ )
+				{
+					pBone = m_BoneFollowerManager.GetBoneFollower( i );
+					if ( pBone && pBone->hFollower )
+					{
+						pBone->hFollower->CollisionProp()->WorldSpaceSurroundingBounds( &vMins, &vMaxs );
+						iRed = ( IsBoxIntersectingBox( vMins, vMaxs, vPlayerMins, vPlayerMaxs ) ) ? 255 : 0;
+
+						NDebugOverlay::Box( vec3_origin, vMins, vMaxs, iRed, 0, 255, 64, 0.1 );
+					}
+				}
+			}
+		}
+	}
+
+	m_bPlayerAvoidState = ShouldPlayerAvoid();
+	m_bPerformAvoidance = bIntersectingNPCBox || bIntersectingBoneFollowers;
+
+	if ( GetCollisionGroup() == COLLISION_GROUP_NPC || GetCollisionGroup() == COLLISION_GROUP_NPC_ACTOR )
+	{
+		if ( bIntersectingNPCBox == true )
+		{
+			SetCollisionGroup( COLLISION_GROUP_NPC_ACTOR );
+		}
+		else
+		{
+			SetCollisionGroup( COLLISION_GROUP_NPC );
+		}
+
+		if ( bIntersectingBoneFollowers == true )
+		{
+			MantainBoneFollowerCollisionGroups( COLLISION_GROUP_NPC_ACTOR );
+		}
+		else
+		{
+			MantainBoneFollowerCollisionGroups( COLLISION_GROUP_NPC );
+		}
+	}
+}
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CNPC_Dog::NPCThink( void )
@@ -283,7 +428,8 @@ void CNPC_Dog::NPCThink( void )
 		 RelaxAim();
 		 PullObject( true );
 	}
-		
+	
+	
 	// update follower bones
 	m_BoneFollowerManager.UpdateBoneFollowers();
 }
@@ -301,6 +447,8 @@ void CNPC_Dog::Event_Killed( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CNPC_Dog::Spawn( void )
 {
+	m_bBoneFollowersActive = true;
+
 	Precache();
 
 	BaseClass::Spawn();
@@ -369,6 +517,8 @@ void CNPC_Dog::PrescheduleThink( void )
 
 int CNPC_Dog::SelectSchedule ( void )
 {
+	ClearCondition( COND_DOG_LOST_PHYSICS_ENTITY );
+
 	if ( GetState() == NPC_STATE_SCRIPT || IsInAScript() )
 		 return BaseClass::SelectSchedule();
 
@@ -424,8 +574,7 @@ void CNPC_Dog::PullObject( bool bMantain )
 	CreateBeams();
 
 	Vector vGunPos;
-	QAngle angGunAngles;
-	GetAttachment( m_iPhysGunAttachment, vGunPos, angGunAngles );
+	GetAttachment( m_iPhysGunAttachment, vGunPos );
 	float flDistance = ( vGunPos - m_hPhysicsEnt->WorldSpaceCenter() ).Length();
 
 	if ( bMantain == false )
@@ -490,7 +639,7 @@ void CNPC_Dog::Precache( void )
 	BaseClass::Precache();
 }
 
-void CNPC_Dog::CleanCatchAndThrow( bool bTaskFail )
+void CNPC_Dog::CleanCatchAndThrow( bool bClearTimers )
 {
 	if ( m_hPhysicsEnt )
 	{
@@ -527,22 +676,16 @@ void CNPC_Dog::CleanCatchAndThrow( bool bTaskFail )
 		}
 		
 		m_hPhysicsEnt = NULL;
-
-		if ( bTaskFail == true )
-			 TaskFail( "Done with catch and throw!" );
 	}
 
-	if ( bTaskFail == true )
+	if ( bClearTimers == true )
 	{
 		 m_bDoCatchThrowBehavior = false;
 		 m_bDoWaitforObjectBehavior = false;
-	}
-
-
-	if ( bTaskFail == true )
-	{
 		 m_flTimeToCatch = 0.0f;
 		 m_flNextSwat = 0.0f;
+
+		 SetCondition( COND_DOG_LOST_PHYSICS_ENTITY );
 	}
 }
 
@@ -625,7 +768,7 @@ void CNPC_Dog::InputStopCatchThrowBehavior( inputdata_t &inputdata )
 
 void CNPC_Dog::InputSetThrowTarget( inputdata_t &inputdata )
 {
-	m_hThrowTarget = gEntList.FindEntityByName( NULL, inputdata.value.String(), this );
+	m_hThrowTarget = gEntList.FindEntityByName( NULL, inputdata.value.String(), NULL, inputdata.pActivator, inputdata.pCaller );
 }
 
 void CNPC_Dog::SetTurnActivity( void )
@@ -643,10 +786,6 @@ void CNPC_Dog::ThrowObject( const char *pAttachmentName )
 {
 	if ( m_hPhysicsEnt )
 	{
-		m_hPhysicsEnt->SetParent( NULL );
-		m_hPhysicsEnt->SetMoveType( (MoveType_t)m_iContainerMoveType );
-		m_hPhysicsEnt->SetOwnerEntity( this );
-
 		m_bHasObject = false;
 
 		IPhysicsObject *pPhysObj = m_hPhysicsEnt->VPhysicsGetObject();
@@ -668,12 +807,20 @@ void CNPC_Dog::ThrowObject( const char *pAttachmentName )
 			GetAttachment( iAttachment, vGunPos, angGunAngles );
 
 			pPhysObj->Wake();
-			pPhysObj->RemoveShadowController();
-			pPhysObj->SetPosition( m_hPhysicsEnt->GetLocalOrigin(), m_hPhysicsEnt->GetLocalAngles(), true );
-		
-			pPhysObj->RecheckCollisionFilter();
-			pPhysObj->RecheckContactPoints();
-	
+
+			if ( pPhysObj->GetShadowController() )
+			{
+				m_hPhysicsEnt->SetParent( NULL );
+				m_hPhysicsEnt->SetMoveType( (MoveType_t)m_iContainerMoveType );
+				m_hPhysicsEnt->SetOwnerEntity( this );
+
+				pPhysObj->RemoveShadowController();
+				pPhysObj->SetPosition( m_hPhysicsEnt->GetLocalOrigin(), m_hPhysicsEnt->GetLocalAngles(), true );
+
+				pPhysObj->RecheckCollisionFilter();
+				pPhysObj->RecheckContactPoints();
+			}
+				
 			if ( m_hThrowTarget == NULL )
 				 m_hThrowTarget = AI_GetSinglePlayer();
 
@@ -760,9 +907,6 @@ void CNPC_Dog::PickupOrCatchObject( const char *pAttachmentName )
 {
 	if ( m_hPhysicsEnt )
 	{
-		Vector vGunPos;
-		QAngle angGunAngles;
-
 		InvalidateBoneCache();
 
 		int iAttachment = LookupAttachment( pAttachmentName );
@@ -770,8 +914,6 @@ void CNPC_Dog::PickupOrCatchObject( const char *pAttachmentName )
 		if ( iAttachment == 0 )
 			 iAttachment = m_iPhysGunAttachment;
 		
-		GetAttachment( iAttachment, vGunPos, angGunAngles );
-
 		// Move physobject to shadow
 		IPhysicsObject *pPhysicsObject = m_hPhysicsEnt->VPhysicsGetObject();
 		if ( pPhysicsObject )
@@ -928,7 +1070,7 @@ bool CNPC_Dog::FindPhysicsObject( const char *pPickupName, CBaseEntity *pIgnore 
 
 	if ( pPickupName != NULL && strlen( pPickupName ) > 0 )
 	{
-		pEnt = gEntList.FindEntityByName( NULL, pPickupName, this );
+		pEnt = gEntList.FindEntityByName( NULL, pPickupName );
 		
 		if ( m_hUnreachableObjects.Find( pEnt ) == -1  )
 		{
@@ -1008,21 +1150,29 @@ bool CNPC_Dog::FindPhysicsObject( const char *pPickupName, CBaseEntity *pIgnore 
 //-----------------------------------------------------------------------------
 // Can me enemy see me? 
 //-----------------------------------------------------------------------------
-bool CNPC_Dog::CanPlayerSeeMe( void )
+bool CNPC_Dog::CanTargetSeeMe( void )
 {
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	CBaseEntity *pEntity = m_hThrowTarget;
 
-	if ( pPlayer )
+	if ( pEntity )
 	{
-		if ( m_hPhysicsEnt )
-		{
-			if ( pPlayer->FVisible( m_hPhysicsEnt ) == false )
-				 return false;
-		}
-		
-		if ( pPlayer->FInViewCone( this ) )
-		{
+		if ( pEntity->IsPlayer() == false )
 			return true;
+
+		CBasePlayer *pPlayer = dynamic_cast<CBasePlayer*>( pEntity );
+
+		if ( pPlayer )
+		{
+			if ( m_hPhysicsEnt )
+			{
+				if ( pPlayer->FVisible( m_hPhysicsEnt ) == false )
+					return false;
+			}
+			
+			if ( pPlayer->FInViewCone( this ) )
+			{
+				return true;
+			}
 		}
 	}
 
@@ -1132,12 +1282,12 @@ void CNPC_Dog::RunTask( const Task_t *pTask )
 		}
 		break;
 
-	case TASK_DOG_WAIT_FOR_PLAYER_TO_FACE:
+	case TASK_DOG_WAIT_FOR_TARGET_TO_FACE:
 	{
-		if ( CanPlayerSeeMe() )
+		if ( CanTargetSeeMe() )
 			 TaskComplete();
 	}
-	break;
+		break;
 
 	case TASK_WAIT_FOR_MOVEMENT:
 		{
@@ -1216,8 +1366,7 @@ void CNPC_Dog::RunTask( const Task_t *pTask )
 
 
 				Vector vGunPos;
-				QAngle angGunAngles;
-				GetAttachment( m_iPhysGunAttachment, vGunPos, angGunAngles );
+				GetAttachment( m_iPhysGunAttachment, vGunPos );
 
 				Vector vToObject = m_hPhysicsEnt->WorldSpaceCenter() - vGunPos;
 				float flDistance = vToObject.Length();
@@ -1356,6 +1505,16 @@ void CNPC_Dog::RunTask( const Task_t *pTask )
 	}
 }
 
+void CNPC_Dog::SetupThrowTarget( void )
+{
+	if ( m_hThrowTarget == NULL )
+	{
+		m_hThrowTarget = AI_GetSinglePlayer();
+	}
+
+	SetTarget( m_hThrowTarget );
+}
+
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CNPC_Dog::StartTask( const Task_t *pTask )
@@ -1363,6 +1522,12 @@ void CNPC_Dog::StartTask( const Task_t *pTask )
 	switch( pTask->iTask )
 	{
 
+	case TASK_DOG_SETUP_THROW_TARGET:
+		{
+			SetupThrowTarget();
+			TaskComplete();
+		}
+		break;
 	case TASK_DOG_GET_PATH_TO_PHYSOBJ:
 		{
 			FindPhysicsObject( STRING( m_sObjectName ) );
@@ -1476,12 +1641,10 @@ void CNPC_Dog::StartTask( const Task_t *pTask )
 
 		break;
 
-	case TASK_DOG_WAIT_FOR_PLAYER_TO_FACE:
+	case TASK_DOG_WAIT_FOR_TARGET_TO_FACE:
 		{
-			if ( CanPlayerSeeMe() )
+			if ( CanTargetSeeMe() )
 				 TaskComplete();
-
-		
 		}
 		break;
 
@@ -1499,6 +1662,10 @@ void CNPC_Dog::StartTask( const Task_t *pTask )
 			
 	case TASK_DOG_DELAY_SWAT:
 		m_flNextSwat = gpGlobals->curtime + pTask->flTaskData;
+
+		if ( m_hThrowTarget == NULL )
+			m_hThrowTarget = AI_GetSinglePlayer();
+
 		TaskComplete();
 		break;
 
@@ -1507,6 +1674,24 @@ void CNPC_Dog::StartTask( const Task_t *pTask )
 	}
 }
 
+void CNPC_Dog::InputTurnBoneFollowersOff( inputdata_t &inputdata )
+{
+	if ( m_bBoneFollowersActive )
+	{
+		m_bBoneFollowersActive = false;
+		m_BoneFollowerManager.DestroyBoneFollowers();
+	}
+
+}
+
+void CNPC_Dog::InputTurnBoneFollowersOn( inputdata_t &inputdata )
+{
+	if ( !m_bBoneFollowersActive )
+	{
+		m_bBoneFollowersActive = true;
+		m_BoneFollowerManager.InitBoneFollowers( this, ARRAYSIZE(pFollowerBoneNames), pFollowerBoneNames );
+	}
+}
 
 AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 
@@ -1517,6 +1702,8 @@ AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 	DECLARE_ACTIVITY( ACT_DOG_WAITING )
 	DECLARE_ACTIVITY( ACT_DOG_CATCH )
 	
+	DECLARE_CONDITION( COND_DOG_LOST_PHYSICS_ENTITY )
+
 	DECLARE_TASK( TASK_DOG_DELAY_SWAT )
 	DECLARE_TASK( TASK_DOG_GET_PATH_TO_PHYSOBJ )
 	DECLARE_TASK( TASK_DOG_LAUNCH_ITEM )
@@ -1525,7 +1712,8 @@ AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 	DECLARE_TASK( TASK_DOG_WAIT_FOR_OBJECT )
 	DECLARE_TASK( TASK_DOG_CATCH_OBJECT )
 
-	DECLARE_TASK( TASK_DOG_WAIT_FOR_PLAYER_TO_FACE )
+	DECLARE_TASK( TASK_DOG_WAIT_FOR_TARGET_TO_FACE )
+	DECLARE_TASK( TASK_DOG_SETUP_THROW_TARGET )
 		
 	DECLARE_ANIMEVENT( AE_DOG_THROW )
 	DECLARE_ANIMEVENT( AE_DOG_PICKUP )
@@ -1545,20 +1733,26 @@ AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 		"		TASK_DOG_FACE_OBJECT				0"
 		"		TASK_FACE_IDEAL						0"
 		"		TASK_DOG_PICKUP_ITEM				0"
-		"		TASK_FACE_PLAYER					0.5"
-		"		TASK_DOG_WAIT_FOR_PLAYER_TO_FACE	0"
+		"		TASK_DOG_SETUP_THROW_TARGET			0"
+		"		TASK_FACE_TARGET					0.5"
+		"		TASK_DOG_WAIT_FOR_TARGET_TO_FACE	0"
 		"		TASK_DOG_LAUNCH_ITEM				0"
-		"	"
+		""
+		"	Interrupts"
+		"		COND_DOG_LOST_PHYSICS_ENTITY"
 	)
 
 	DEFINE_SCHEDULE
 	(
 		SCHED_DOG_WAIT_THROW_OBJECT,
 		"	Tasks"
-		"		TASK_FACE_PLAYER					0.5"
-		"		TASK_DOG_WAIT_FOR_PLAYER_TO_FACE	0"
+		"		TASK_DOG_SETUP_THROW_TARGET			0"
+		"		TASK_FACE_TARGET					0.5"
+		"		TASK_DOG_WAIT_FOR_TARGET_TO_FACE	0"
 		"		TASK_DOG_LAUNCH_ITEM				0"
-		"	"
+		""
+		"	Interrupts"
+		"		COND_DOG_LOST_PHYSICS_ENTITY"
 	)
 
 	DEFINE_SCHEDULE
@@ -1569,10 +1763,12 @@ AI_BEGIN_CUSTOM_NPC( npc_dog, CNPC_Dog )
 		"		TASK_DOG_WAIT_FOR_OBJECT			0"
 		"		TASK_DOG_CATCH_OBJECT				0"
 		"		TASK_FACE_PLAYER					0.5"
-		"		TASK_DOG_WAIT_FOR_PLAYER_TO_FACE	0"
+		"		TASK_DOG_WAIT_FOR_TARGET_TO_FACE	0"
 		"		TASK_DOG_LAUNCH_ITEM				0"
 		"		TASK_SET_FAIL_SCHEDULE				SCHEDULE:SCHED_IDLE_STAND"
-		"	"
+		""
+		"	Interrupts"
+		"		COND_DOG_LOST_PHYSICS_ENTITY"
 	)
 
 AI_END_CUSTOM_NPC()

@@ -21,6 +21,10 @@
 class CBullseyeList : public CAutoGameSystem
 {
 public:
+	CBullseyeList( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	virtual void LevelShutdownPostEntity() 
 	{
 		Clear();
@@ -51,7 +55,7 @@ void CBullseyeList::RemoveFromList( CNPC_Bullseye *pBullseye )
 	}
 }
 
-CBullseyeList g_BullseyeList;
+CBullseyeList g_BullseyeList( "CBullseyeList" );
 
 int FindBullseyesInCone( CBaseEntity **pList, int listMax, const Vector &coneOrigin, const Vector &coneAxis, float coneAngleCos, float coneLength )
 {
@@ -82,6 +86,7 @@ ConVar	sk_bullseye_health( "sk_bullseye_health","0");
 BEGIN_DATADESC( CNPC_Bullseye )
 
 	DEFINE_FIELD( m_hPainPartner, FIELD_EHANDLE ),
+	DEFINE_KEYFIELD( m_fAutoaimRadius, FIELD_FLOAT, "autoaimradius" ),
 	// DEFINE_FIELD( m_bPerfectAccuracy, FIELD_BOOLEAN ),	// Don't save
 
 	// Function Pointers
@@ -151,6 +156,7 @@ void CNPC_Bullseye::Spawn( void )
 	}
 
 	AddFlag( FL_NPC );
+	AddEFlags( EFL_NO_DISSOLVE );
 
 	SetThink( &CNPC_Bullseye::BullseyeThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
@@ -160,6 +166,11 @@ void CNPC_Bullseye::Spawn( void )
 	if( m_spawnflags & SF_BULLSEYE_NONSOLID )
 	{
 		AddSolidFlags( FSOLID_NOT_SOLID );
+	}
+	
+	if ( m_spawnflags & SF_BULLSEYE_VPHYSICSSHADOW )
+	{
+		VPhysicsInitShadow( false, false );
 	}
 	
 	if( m_spawnflags & SF_BULLSEYE_NODAMAGE )
@@ -176,6 +187,14 @@ void CNPC_Bullseye::Spawn( void )
 	PhysicsCheckWater();
 
 	CapabilitiesAdd( bits_CAP_SIMPLE_RADIUS_DAMAGE );
+
+	m_iMaxHealth = GetHealth();
+
+	if( m_fAutoaimRadius > 0.0f )
+	{
+		// Make this an aimtarget, since it has some autoaim influence.
+		AddFlag(FL_AIMTARGET);
+	}
 }
 
 
@@ -204,10 +223,29 @@ void CNPC_Bullseye::Event_Killed( const CTakeDamageInfo &info )
 {
 	BaseClass::Event_Killed( info );
 
-	// Don't want to collide with bullseye any more, but keep around for burns
+	if( GetParent() )
+	{
+		if( GetParent()->ClassMatches("prop_combine_ball") )
+		{
+			// If this bullseye is parented to a combine ball, explode the combine ball
+			// and remove this bullseye.
+			variant_t emptyVariant;
+			GetParent()->AcceptInput( "explode", this, this, emptyVariant, 0 );
+
+			// Unhook.
+			SetParent(NULL);
+
+			UTIL_Remove(this);
+			return;
+		}
+	}
+
 	SetMoveType( MOVETYPE_NONE );
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	UTIL_SetSize(this, vec3_origin, vec3_origin );
+
+	SetNextThink( gpGlobals->curtime + 0.1f );
+	SetThink( &CBaseEntity::SUB_Remove );
 }
 
 //------------------------------------------------------------------------------
@@ -272,6 +310,21 @@ void CNPC_Bullseye::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustom
 Class_T	CNPC_Bullseye::Classify( void )
 {
 	return	CLASS_BULLSEYE;
+}
+
+void CNPC_Bullseye::OnRestore( void )
+{
+	if ( m_spawnflags & SF_BULLSEYE_VPHYSICSSHADOW )
+	{
+		IPhysicsObject *pObject = VPhysicsGetObject();
+
+		if ( pObject == NULL )
+		{
+			VPhysicsInitShadow( false, false );
+		}
+	}
+
+	BaseClass::OnRestore();
 }
 
 //-----------------------------------------------------------------------------

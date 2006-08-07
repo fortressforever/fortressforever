@@ -212,12 +212,14 @@ private:
 };
 }
 
-static bool __cdecl DefaultSortFunc(KeyValues *kv1, KeyValues *kv2)
+static bool DefaultSortFunc(KeyValues *kv1, KeyValues *kv2)
 {
 	const char *string1 = kv1->GetString("text");
 	const char *string2 = kv2->GetString("text");
 	return Q_stricmp(string1, string2) < 0;
 }
+
+DECLARE_BUILD_FACTORY( ListViewPanel );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor

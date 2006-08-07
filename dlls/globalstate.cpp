@@ -29,16 +29,26 @@ struct globalentity_t
 class CGlobalState : public CAutoGameSystem
 {
 public:
+	CGlobalState( char const *name ) : CAutoGameSystem( name ), m_disableStateUpdates(false)
+	{
+	}
 
 	// IGameSystem
 	virtual void LevelShutdownPreEntity() 
 	{
 		// don't allow state updates during shutdowns
+		Assert( !m_disableStateUpdates );
 		m_disableStateUpdates = true;
 	}
 	virtual void LevelShutdownPostEntity() 
 	{
+		Assert( m_disableStateUpdates );
 		m_disableStateUpdates = false;
+	}
+
+	void EnableStateUpdates( bool bEnable )
+	{
+		m_disableStateUpdates = !bEnable;
 	}
 
 	void SetState( int globalIndex, GLOBALESTATE state )
@@ -121,7 +131,7 @@ private:
 	CUtlVector<globalentity_t> m_list;
 };
 
-static CGlobalState gGlobalState;
+static CGlobalState gGlobalState( "CGlobalState" );
 
 static CUtlSymbolDataOps g_GlobalSymbolDataOps( gGlobalState.m_nameList );
 
@@ -129,6 +139,11 @@ static CUtlSymbolDataOps g_GlobalSymbolDataOps( gGlobalState.m_nameList );
 void GlobalEntity_SetState( int globalIndex, GLOBALESTATE state )
 {
 	gGlobalState.SetState( globalIndex, state );
+}
+
+void GlobalEntity_EnableStateUpdates( bool bEnable )
+{
+	gGlobalState.EnableStateUpdates( bEnable );
 }
 
 

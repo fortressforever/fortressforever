@@ -34,6 +34,13 @@ struct fogparams_t
 	CNetworkVar( float, start );
 	CNetworkVar( float, end );
 	CNetworkVar( float, farz );
+
+	CNetworkColor32( colorPrimaryLerpTo );
+	CNetworkColor32( colorSecondaryLerpTo );
+	CNetworkVar( float, startLerpTo );
+	CNetworkVar( float, endLerpTo );
+	CNetworkVar( float, lerptime );
+	CNetworkVar( float, duration );
 };
 
 struct sky3dparams_t

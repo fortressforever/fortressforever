@@ -18,6 +18,7 @@
 #include "saverestore_utlvector.h"
 #include "editor_sendcommand.h"
 #include "bitstring.h"
+#include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -28,15 +29,14 @@ LINK_ENTITY_TO_CLASS(info_node_link_controller, CAI_DynamicLinkController);
 
 BEGIN_DATADESC( CAI_DynamicLinkController )
 
-	DEFINE_KEYFIELD( m_nLinkState, FIELD_INTEGER, "initialstate" ),
-	DEFINE_KEYFIELD( m_strAllowUse, FIELD_STRING, "AllowUse" ),
-	//				 m_ControlledLinks (rebuilt)
+DEFINE_KEYFIELD( m_nLinkState, FIELD_INTEGER, "initialstate" ),
+DEFINE_KEYFIELD( m_strAllowUse, FIELD_STRING, "AllowUse" ),
+//				 m_ControlledLinks (rebuilt)
 
-	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
+DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
+DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
 
 END_DATADESC()
-
 
 void CAI_DynamicLinkController::GenerateLinksFromVolume()
 {
@@ -131,18 +131,19 @@ LINK_ENTITY_TO_CLASS(info_node_link, CAI_DynamicLink);
 
 BEGIN_DATADESC( CAI_DynamicLink )
 
-	//								m_pNextDynamicLink
-	DEFINE_KEYFIELD( m_nLinkState, FIELD_INTEGER, "initialstate" ),
-	DEFINE_KEYFIELD( m_nSrcEditID,	FIELD_INTEGER, "startnode" ),
-	DEFINE_KEYFIELD( m_nDestEditID,	FIELD_INTEGER, "endnode" ),
-	//				m_nSrcID (rebuilt)
-	//				m_nDestID (rebuilt)
-	DEFINE_KEYFIELD( m_strAllowUse, FIELD_STRING, "AllowUse" ),
-	//				m_bFixedUpIds (part of rebuild)
-	//				m_bNotSaved (rebuilt)
+//								m_pNextDynamicLink
+DEFINE_KEYFIELD( m_nLinkState, FIELD_INTEGER, "initialstate" ),
+DEFINE_KEYFIELD( m_nSrcEditID,	FIELD_INTEGER, "startnode" ),
+DEFINE_KEYFIELD( m_nDestEditID,	FIELD_INTEGER, "endnode" ),
+DEFINE_KEYFIELD( m_nLinkType, FIELD_INTEGER, "linktype" ),
+//				m_nSrcID (rebuilt)
+//				m_nDestID (rebuilt)
+DEFINE_KEYFIELD( m_strAllowUse, FIELD_STRING, "AllowUse" ),
+//				m_bFixedUpIds (part of rebuild)
+//				m_bNotSaved (rebuilt)
 
-	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
+DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
+DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
 
 END_DATADESC()
 
@@ -162,7 +163,7 @@ void CAI_DynamicLink::GenerateControllerLinks()
 	{
 		pController->GenerateLinksFromVolume();
 	}
-	
+
 }
 
 //------------------------------------------------------------------------------
@@ -175,7 +176,7 @@ void CAI_DynamicLink::InitDynamicLinks(void)
 {
 	if (!g_pAINetworkManager->GetEditOps()->m_pNodeIndexTable)
 	{
-		DevMsg("ERROR: Trying initialize links with no WC ID table!\n");
+		Warning("ERROR: Trying initialize links with no WC ID table!\n");
 		return;
 	}
 
@@ -185,7 +186,7 @@ void CAI_DynamicLink::InitDynamicLinks(void)
 	gm_bInitialized = true;
 
 	bool bUpdateZones = false;
-	
+
 	GenerateControllerLinks();
 
 	CAI_DynamicLink* pDynamicLink = CAI_DynamicLink::m_pAllDynamicLinks;
@@ -210,7 +211,7 @@ void CAI_DynamicLink::InitDynamicLinks(void)
 				DevMsg( "ERROR: Dynamic link dest WC node %d not found\n", pDynamicLink->m_nDestEditID );
 				nDestID = NO_NODE;
 			}
-			
+
 			pDynamicLink->m_nSrcID  = nSrcID;
 			pDynamicLink->m_nDestID  = nDestID;
 			pDynamicLink->m_bFixedUpIds = true;
@@ -245,7 +246,9 @@ void CAI_DynamicLink::InitDynamicLinks(void)
 					for ( int i = 0; i < NUM_HULLS; i++ )
 					{
 						if ( hullBits & ( 1 << i ) )
-							pLink->m_iAcceptedMoveTypes[i] = bits_CAP_MOVE_GROUND;
+						{
+							pLink->m_iAcceptedMoveTypes[i] = pDynamicLink->m_nLinkType;
+						}
 					}
 				}
 			}
@@ -382,10 +385,10 @@ CAI_Link *CAI_DynamicLink::FindLink()
 			CAI_Link* pLink = pSrcNode->GetLinkByIndex(i);
 
 			if (((pLink->m_iSrcID  == m_nSrcID )&&
-				 (pLink->m_iDestID == m_nDestID))   ||
+				(pLink->m_iDestID == m_nDestID))   ||
 
 				((pLink->m_iSrcID  == m_nDestID)&&
-				 (pLink->m_iDestID == m_nSrcID ))   )
+				(pLink->m_iDestID == m_nSrcID ))   )
 			{
 				return pLink;
 			}
@@ -415,7 +418,8 @@ void CAI_DynamicLink::SetLinkState(void)
 {
 	if (m_nSrcID == NO_NODE || m_nDestID == NO_NODE)
 	{
-		DevMsg("ERROR: Dynamic link pointing to invalid node ID!!\n");
+		Vector pos = GetAbsOrigin();
+		DevWarning("ERROR: Dynamic link at %f %f %f pointing to invalid node ID!!\n", pos.x, pos.y, pos.z);
 		return;
 	}
 
@@ -442,7 +446,7 @@ void CAI_DynamicLink::SetLinkState(void)
 		}
 		else
 		{
-			DevMsg("Error: info_node_link unable to form between nodes %d and %d\n", m_nSrcID, m_nDestID );
+			DevMsg("Dynamic Link Error: (%s) unable to form between nodes %d and %d\n", GetDebugName(), m_nSrcID, m_nDestID );
 		}
 	}
 
@@ -484,6 +488,7 @@ CAI_DynamicLink::CAI_DynamicLink(void)
 	m_nSrcID			= NO_NODE;
 	m_nDestID			= NO_NODE;
 	m_nLinkState		= LINK_OFF;
+	m_nLinkType			= bits_CAP_MOVE_GROUND;
 
 	// -------------------------------------
 	//  Add to linked list of dynamic links
@@ -522,3 +527,152 @@ CAI_DynamicLink::~CAI_DynamicLink(void) {
 	}
 }
 
+LINK_ENTITY_TO_CLASS(info_radial_link_controller, CAI_RadialLinkController);
+
+BEGIN_DATADESC( CAI_RadialLinkController )
+DEFINE_KEYFIELD( m_flRadius, FIELD_FLOAT, "radius" ),
+DEFINE_FIELD( m_vecAtRestOrigin, FIELD_POSITION_VECTOR ),
+DEFINE_FIELD( m_bAtRest, FIELD_BOOLEAN ),
+
+DEFINE_THINKFUNC( PollMotionThink ),
+END_DATADESC()
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void CAI_RadialLinkController::Spawn()
+{
+	SetSolid( SOLID_NONE );
+	AddEffects( EF_NODRAW );
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void CAI_RadialLinkController::Activate()
+{
+	BaseClass::Activate();
+
+	m_bAtRest = false;
+	m_vecAtRestOrigin = vec3_invalid;
+
+	// Force re-evaluation
+	SetThink( &CAI_RadialLinkController::PollMotionThink );
+
+	// Spread think times out.
+	SetNextThink( gpGlobals->curtime + 0.5f + random->RandomFloat( 0.0f, 1.0f) );
+
+	if( GetParent() != NULL )
+	{
+		float flDist = GetAbsOrigin().DistTo( GetParent()->GetAbsOrigin() );
+
+		if( flDist > 200.0f )
+		{
+			// Warn at the console if a link controller is far away from its parent. This
+			// most likely means that a level designer has copied an entity without researching its hierarchy.
+			DevMsg("RadialLinkController (%s) is far from its parent!\n", GetDebugName() );
+		}
+	}
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void CAI_RadialLinkController::PollMotionThink()
+{
+	SetNextThink( gpGlobals->curtime + 0.5f );
+
+	CBaseEntity *pParent = GetParent();
+
+	if( pParent )
+	{
+		if( pParent->VPhysicsGetObject()->IsAsleep() )
+		{
+			if( !m_bAtRest )
+			{
+				m_vecAtRestOrigin = GetAbsOrigin();
+				ModifyNodeLinks( true );
+				m_bAtRest = true;
+				//Msg("At Rest!\n");
+			}
+		}
+		else
+		{
+			if( m_bAtRest )
+			{
+				float flDist; 
+
+				flDist = GetAbsOrigin().DistTo(m_vecAtRestOrigin);
+
+				if( flDist < 18.0f )
+				{
+					// Ignore movement If moved less than 18 inches from the place where we came to rest.
+					//Msg("Reject.\n");
+					return;
+				}
+			}
+
+			//Msg("Polling!\n");
+
+			if( m_vecAtRestOrigin != vec3_invalid )
+			{
+				ModifyNodeLinks( false );
+				m_bAtRest = false;
+				m_vecAtRestOrigin = vec3_invalid;
+			}
+		}
+	}
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+ConVar ai_radial_max_link_dist( "ai_radial_max_link_dist", "512" );
+void CAI_RadialLinkController::ModifyNodeLinks( bool bMakeStale )
+{
+	int nNodes = g_pBigAINet->NumNodes();
+	CAI_Node **ppNodes = g_pBigAINet->AccessNodes();
+
+	VPROF_BUDGET("ModifyLinks", "ModifyLinks");
+
+	const float MinDistCareSq = Square( ai_radial_max_link_dist.GetFloat() + 0.1 );
+
+	for ( int i = 0; i < nNodes; i++ )
+	{
+		CAI_Node *pNode = ppNodes[i];
+		const Vector &nodeOrigin = pNode->GetOrigin();
+		if ( m_vecAtRestOrigin.DistToSqr(nodeOrigin) < MinDistCareSq )
+		{
+			int nLinks = pNode->NumLinks();
+			for ( int j = 0; j < nLinks; j++ )
+			{
+				CAI_Link *pLink = pNode->GetLinkByIndex( j );
+				int iLinkDest = pLink->DestNodeID( i );
+
+				if ( iLinkDest > i )
+				{
+					bool bQualify = true;
+
+					if( (pLink->m_iAcceptedMoveTypes[HULL_HUMAN] & bits_CAP_MOVE_GROUND) == 0 )
+					{
+						// Micro-optimization: Ignore any connection that's not a walking connection for humans.(sjb)
+						bQualify = false;
+					}
+
+					const Vector &originOther = ppNodes[iLinkDest]->GetOrigin();
+					if ( bQualify && m_vecAtRestOrigin.DistToSqr(originOther) < MinDistCareSq )
+					{
+						if ( IsRayIntersectingSphere(nodeOrigin, originOther - nodeOrigin, m_vecAtRestOrigin, m_flRadius) )
+						{
+							if( bMakeStale )
+							{
+								pLink->m_LinkInfo |= bits_LINK_STALE_SUGGESTED;
+								pLink->m_timeStaleExpires = FLT_MAX;
+							}
+							else
+							{
+								pLink->m_LinkInfo &= ~bits_LINK_STALE_SUGGESTED;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -34,6 +34,10 @@ public:
 class CClientEffectPrecacheSystem : public IGameSystem
 {
 public:
+	virtual char const *Name() { return "CCLientEffectPrecacheSystem"; }
+
+	virtual bool	IsPerFrame() { return false; }
+
 	// constructor, destructor
 	CClientEffectPrecacheSystem() {}
 	virtual ~CClientEffectPrecacheSystem() {}
@@ -51,12 +55,6 @@ public:
 	virtual void OnSave() {}
 	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
-
-	// Gets called each frame
-	virtual void Update ( float frametime ) {}
-
-	// Pre-rendering setup
-	void PreRender( ) {}
 
 	void Register( IClientEffect *effect );
 
@@ -108,30 +106,44 @@ public:
 //Automatic precache macros
 
 //Beginning
-#define	CLIENTEFFECT_REGISTER_BEGIN( className )\
-namespace className {\
-class ClientEffectRegister : public CClientEffect\
-{\
-private:\
-	static const char *m_pszMaterials[];\
-public:\
-	void Cache( bool precache = true );\
-};\
+#define	CLIENTEFFECT_REGISTER_BEGIN( className )		\
+namespace className {									\
+class ClientEffectRegister : public CClientEffect		\
+{														\
+private:												\
+	static const char *m_pszMaterials[];				\
+public:													\
+	void Cache( bool precache = true );					\
+};														\
 const char *ClientEffectRegister::m_pszMaterials[] = {
 
 //Material definitions
 #define	CLIENTEFFECT_MATERIAL( materialName )	materialName,
 
 //End
-#define	CLIENTEFFECT_REGISTER_END( )	};\
-void ClientEffectRegister::Cache( bool precache )\
-{\
-	for ( int i = 0; i < ARRAYSIZE( m_pszMaterials ); i++ )\
-	{\
-		ReferenceMaterial( m_pszMaterials[i], precache );\
-	}\
-}\
-ClientEffectRegister	register_ClientEffectRegister;\
+#define	CLIENTEFFECT_REGISTER_END( )	};					\
+void ClientEffectRegister::Cache( bool precache )			\
+{															\
+	for ( int i = 0; i < ARRAYSIZE( m_pszMaterials ); i++ )	\
+	{														\
+		ReferenceMaterial( m_pszMaterials[i], precache );	\
+	}														\
+}															\
+ClientEffectRegister	register_ClientEffectRegister;		\
+}
+
+#define	CLIENTEFFECT_REGISTER_END_CONDITIONAL(condition )	};	\
+void ClientEffectRegister::Cache( bool precache )				\
+{																\
+	if ( condition)												\
+	{															\
+		for ( int i = 0; i < ARRAYSIZE( m_pszMaterials ); i++ )	\
+		{														\
+			ReferenceMaterial( m_pszMaterials[i], precache );	\
+		}														\
+	}															\
+}																\
+ClientEffectRegister	register_ClientEffectRegister;			\
 }
 
 #endif	//CLIENTEFFECTPRECACHESYSTEM_H

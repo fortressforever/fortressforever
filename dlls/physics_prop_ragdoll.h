@@ -100,6 +100,9 @@ public:
 	void			SetKiller( CBaseEntity *pKiller ) { m_hKiller = pKiller; }
 	void			GetAngleOverrideFromCurrentState( char *pOut, int size );
 
+	// Input/Output
+	void			InputStartRadgollBoogie( inputdata_t &inputdata );
+
 	DECLARE_DATADESC();
 
 protected:
@@ -135,9 +138,6 @@ private:
 	// If not 1, then allow underlying sequence to blend in with simulated bone positions
 	CNetworkVar( float, m_flBlendWeight );
 	CNetworkVar( int, m_nOverlaySequence );
-	CNetworkVar( float, m_fadeMinDist );
-	CNetworkVar( float, m_fadeMaxDist );
-	CNetworkVar( float, m_flFadeScale );
 	float	m_flDefaultFadeScale;
 	
 	Vector				m_ragdollMins[RAGDOLL_MAX_ELEMENTS];

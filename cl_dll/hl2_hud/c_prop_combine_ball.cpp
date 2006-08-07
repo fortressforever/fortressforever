@@ -5,6 +5,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "c_prop_combine_ball.h"
 #include "materialsystem/IMaterial.h"
 #include "model_types.h"
 #include "c_physicsprop.h"
@@ -14,8 +15,7 @@
 #include "ClientEffectPrecacheSystem.h"
 #include "view.h"
 #include "view_scene.h"
-
-extern void DrawHalo( IMaterial* pMaterial, const Vector &source, float scale, float const *color );
+#include "beamdraw.h"
 
 // Precache our effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectCombineBall )
@@ -27,36 +27,6 @@ CLIENTEFFECT_MATERIAL( "effects/combinemuzzle1" )
 CLIENTEFFECT_MATERIAL( "effects/ar2_altfire1" )
 CLIENTEFFECT_MATERIAL( "effects/ar2_altfire1b" )
 CLIENTEFFECT_REGISTER_END()
-
-class C_PropCombineBall : public C_BaseAnimating
-{
-	DECLARE_CLASS( C_PropCombineBall, C_BaseAnimating );
-	DECLARE_CLIENTCLASS();
-public:
-	
-					C_PropCombineBall( void );
-
-	virtual RenderGroup_t GetRenderGroup( void );
-
-	virtual void	OnDataChanged( DataUpdateType_t updateType );
-	virtual int		DrawModel( int flags );
-
-protected:
-
-	void	DrawMotionBlur( void );
-	void	DrawFlicker( void );
-	bool	InitMaterials( void );
-
-	Vector	m_vecLastOrigin;
-	bool	m_bEmit;
-	float	m_flRadius;
-	bool	m_bHeld;
-	bool	m_bLaunched;
-
-	IMaterial	*m_pFlickerMaterial;
-	IMaterial	*m_pBodyMaterial;
-	IMaterial	*m_pBlurMaterial;
-};
 
 IMPLEMENT_CLIENTCLASS_DT( C_PropCombineBall, DT_PropCombineBall, CPropCombineBall )
 	RecvPropBool( RECVINFO( m_bEmit ) ),
@@ -172,12 +142,21 @@ void C_PropCombineBall::DrawMotionBlur( void )
 //-----------------------------------------------------------------------------
 void C_PropCombineBall::DrawFlicker( void )
 {
+	float rand1 = random->RandomFloat( 0.2f, 0.3f );
+	float rand2 = random->RandomFloat( 1.5f, 2.5f );
+
+	if ( gpGlobals->frametime == 0.0f )
+	{
+		rand1 = 0.2f;
+		rand2 = 1.5f;
+	}
+
 	float color[3];
-	color[0] = color[1] = color[2] = random->RandomFloat( 0.2f, 0.3f );
+	color[0] = color[1] = color[2] = rand1;
 
 	// Draw the flickering glow
 	materials->Bind( m_pFlickerMaterial );
-	DrawHalo( m_pFlickerMaterial, GetAbsOrigin(), m_flRadius * random->RandomFloat( 1.5f, 2.5f ), color );
+	DrawHalo( m_pFlickerMaterial, GetAbsOrigin(), m_flRadius * rand2, color );
 }
 
 //-----------------------------------------------------------------------------

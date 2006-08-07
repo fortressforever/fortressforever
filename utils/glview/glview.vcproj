@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="glview"
 	ProjectGUID="{BD1604CA-F401-4C4B-821C-251F5AE157FE}"
-	SccProjectName="&quot;$/Src/utils/glview&quot;, DCGBAAAA"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -25,7 +25,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\common,..\..\public,..\..\public\tier1"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;PROTECTED_THINGS_DISABLE"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Debug/glview.pch"
 				AssemblerListingLocation=".\Debug/"
@@ -38,16 +38,20 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copy to ..\..\..\bin"
-				CommandLine="if exist ..\..\..\bin\glview.exe attrib -r ..\..\..\bin\glview.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+
 "
-				Outputs="..\..\..\bin\glview.exe"/>
+				Outputs="..\..\..\bin\glview.exe;..\..\..\bin\glview.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glu32.lib opengl32.lib glaux.lib odbc32.lib odbccp32.lib winmm.lib"
 				OutputFile=".\Debug/glview.exe"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/glview.pdb"
 				SubSystem="2"
@@ -91,11 +95,16 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				InlineFunctionExpansion="1"
+				GlobalOptimizations="TRUE"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
+				FavorSizeOrSpeed="1"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="..\common,..\..\public,..\..\public\tier1"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;PROTECTED_THINGS_DISABLE"
 				StringPooling="TRUE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Release/glview.pch"
@@ -108,16 +117,20 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copy to ..\..\..\bin"
-				CommandLine="if exist ..\..\..\bin\glview.exe attrib -r ..\..\..\bin\glview.exe
-if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+
 "
-				Outputs="..\..\..\bin\glview.exe"/>
+				Outputs="..\..\..\bin\glview.exe;..\..\..\bin\glview.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glu32.lib opengl32.lib glaux.lib odbc32.lib odbccp32.lib winmm.lib"
 				OutputFile=".\Release/glview.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libcmtd.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/glview.pdb"
 				GenerateMapFile="TRUE"
@@ -163,15 +176,9 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 			<File
 				RelativePath="glview.cpp">
 			</File>
-			<File
-				RelativePath="..\..\Public\Mathlib.cpp">
-			</File>
 			<Filter
 				Name="common files"
 				Filter="cpp,h">
-				<File
-					RelativePath="..\..\tier1\characterset.cpp">
-				</File>
 				<File
 					RelativePath="..\common\cmdlib.cpp">
 				</File>
@@ -185,19 +192,22 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 					RelativePath="..\common\filesystem_tools.cpp">
 				</File>
 				<File
-					RelativePath="..\..\tier1\interface.cpp">
-				</File>
-				<File
-					RelativePath="..\..\tier1\KeyValues.cpp">
+					RelativePath="..\..\public\tier0\memoverride.cpp">
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\common\physdll.cpp">
-				</File>
-				<File
-					RelativePath="..\..\tier1\utlbuffer.cpp">
-				</File>
-				<File
-					RelativePath="..\..\public\tier1\utlbuffer.h">
 				</File>
 			</Filter>
 		</Filter>
@@ -221,40 +231,53 @@ if exist &quot;$(TargetPath)&quot; copy &quot;$(TargetPath)&quot; ..\..\..\bin
 				RelativePath="C:\Program Files\Microsoft Visual Studio\VC98\Include\BASETSD.H">
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\lib\public\tier0.lib">
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\vstdlib.lib">
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
+		<Filter
+			Name="Link Libraries"
+			Filter="">
+			<File
+				RelativePath="..\..\lib\public\mathlib.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier0.lib">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier1.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier2.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\vstdlib.lib">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

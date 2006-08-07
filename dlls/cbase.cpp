@@ -82,16 +82,15 @@ OUTPUTS:
 #include "entityoutput.h"
 #include "mempool.h"
 #include "vstdlib/strtools.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
+#include "env_debughistory.h"
 
 #include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
 extern ISaveRestoreOps *variantFuncs;	// function pointer set for save/restoring variants
-
 
 BEGIN_SIMPLE_DATADESC( CEventAction )
 	DEFINE_FIELD( m_iTarget, FIELD_STRING ),
@@ -278,11 +277,17 @@ void CBaseEntityOutput::FireOutput(variant_t Value, CBaseEntity *pActivator, CBa
 
 		if ( ev->m_flDelay )
 		{
-			DevMsg( 2, "output: (%s,%s) -> (%s,%s,%.1f)\n", pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput), ev->m_flDelay );
+			char szBuffer[256];
+			Q_snprintf( szBuffer, sizeof(szBuffer), "(%0.2f) output: (%s,%s) -> (%s,%s,%.1f)(%s)\n", gpGlobals->curtime, pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput), ev->m_flDelay, STRING(ev->m_iParameter) );
+			DevMsg( 2, szBuffer );
+			ADD_DEBUG_HISTORY( HISTORY_ENTITY_IO, szBuffer );
 		}
 		else
 		{
-			DevMsg( 2, "output: (%s,%s) -> (%s,%s)\n", pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput) );
+			char szBuffer[256];
+			Q_snprintf( szBuffer, sizeof(szBuffer), "(%0.2f) output: (%s,%s) -> (%s,%s)(%s)\n", gpGlobals->curtime, pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput), STRING(ev->m_iParameter) );
+			DevMsg( 2, szBuffer );
+			ADD_DEBUG_HISTORY( HISTORY_ENTITY_IO, szBuffer );
 		}
 
 		if ( pCaller && pCaller->m_debugOverlays & OVERLAY_MESSAGE_BIT)
@@ -300,7 +305,10 @@ void CBaseEntityOutput::FireOutput(variant_t Value, CBaseEntity *pActivator, CBa
 			ev->m_nTimesToFire--;
 			if (ev->m_nTimesToFire == 0)
 			{
-				DevMsg( 2, "Removing from action list: (%s,%s) -> (%s,%s)\n", pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput));
+				char szBuffer[256];
+				Q_snprintf( szBuffer, sizeof(szBuffer), "Removing from action list: (%s,%s) -> (%s,%s)\n", pCaller ? STRING(pCaller->m_iClassname) : "NULL", pCaller ? STRING(pCaller->GetEntityName()) : "NULL", STRING(ev->m_iTarget), STRING(ev->m_iTargetInput));
+				DevMsg( 2, szBuffer );
+				ADD_DEBUG_HISTORY( HISTORY_ENTITY_IO, szBuffer );
 				bRemove = true;
 			}
 		}
@@ -387,6 +395,7 @@ int CBaseEntityOutput::Restore( IRestore &restore, int elementCount )
 	m_ActionList = NULL;
 
 	// read in all the fields
+	CEventAction *lastEv = NULL;
 	for ( int i = 0; i < elementCount; i++ )
 	{
 		CEventAction *ev = new CEventAction(NULL);
@@ -394,9 +403,17 @@ int CBaseEntityOutput::Restore( IRestore &restore, int elementCount )
 		if ( !restore.ReadFields( "EntityOutput", ev, NULL, ev->m_DataMap.dataDesc, ev->m_DataMap.dataNumFields ) )
 			return 0;
 
-		// add it to the list
-		ev->m_pNext = m_ActionList;
-		m_ActionList = ev;
+		// add it to the list in the same order it was saved in
+		if ( lastEv )
+		{
+			lastEv->m_pNext = ev;
+		}
+		else
+		{
+			m_ActionList = ev;
+		}
+		ev->m_pNext = NULL;
+		lastEv = ev;
 	}
 
 	return 1;
@@ -590,6 +607,7 @@ CEventQueue::~CEventQueue()
 	Clear();
 }
 
+// Robin: Left here for backwards compatability.
 class CEventQueueSaveLoadProxy : public CLogicalEntity
 {
 	DECLARE_CLASS( CEventQueueSaveLoadProxy, CLogicalEntity );
@@ -610,17 +628,83 @@ class CEventQueueSaveLoadProxy : public CLogicalEntity
 			return 0;
 
 		// restore the event queue
-		return g_EventQueue.Restore( restore );
+		int iReturn = g_EventQueue.Restore( restore );
+
+		// Now remove myself, because the CEventQueue_SaveRestoreBlockHandler
+		// will handle future saves.
+		UTIL_Remove( this );
+
+		return iReturn;
 	}
 };
 
 LINK_ENTITY_TO_CLASS(event_queue_saveload_proxy, CEventQueueSaveLoadProxy);
 
+//-----------------------------------------------------------------------------
+// EVENT QUEUE SAVE / RESTORE
+//-----------------------------------------------------------------------------
+static short EVENTQUEUE_SAVE_RESTORE_VERSION = 1;
+
+class CEventQueue_SaveRestoreBlockHandler : public CDefSaveRestoreBlockHandler
+{
+public:
+	const char *GetBlockName()
+	{
+		return "EventQueue";
+	}
+
+	//---------------------------------
+
+	void Save( ISave *pSave )
+	{
+		g_EventQueue.Save( *pSave );
+	}
+
+	//---------------------------------
+
+	void WriteSaveHeaders( ISave *pSave )
+	{
+		pSave->WriteShort( &EVENTQUEUE_SAVE_RESTORE_VERSION );
+	}
+
+	//---------------------------------
+
+	void ReadRestoreHeaders( IRestore *pRestore )
+	{
+		// No reason why any future version shouldn't try to retain backward compatability. The default here is to not do so.
+		short version;
+		pRestore->ReadShort( &version );
+		m_fDoLoad = ( version == EVENTQUEUE_SAVE_RESTORE_VERSION );
+	}
+
+	//---------------------------------
+
+	void Restore( IRestore *pRestore, bool createPlayers )
+	{
+		if ( m_fDoLoad )
+		{
+			g_EventQueue.Restore( *pRestore );
+		}
+	}
+
+private:
+	bool m_fDoLoad;
+};
+
+//-----------------------------------------------------------------------------
+
+CEventQueue_SaveRestoreBlockHandler g_EventQueue_SaveRestoreBlockHandler;
+
+//-------------------------------------
+
+ISaveRestoreBlockHandler *GetEventQueueSaveRestoreBlockHandler()
+{
+	return &g_EventQueue_SaveRestoreBlockHandler;
+}
+
+
 void CEventQueue::Init( void )
 {
-	if ( !gEntList.FindEntityByClassname( NULL, "event_queue_saveload_proxy" ) )
-		CreateEntityByName( "event_queue_saveload_proxy" );
-
 	Clear();
 }
 
@@ -637,6 +721,30 @@ void CEventQueue::Clear( void )
 	}
 
 	m_Events.m_pNext = NULL;
+}
+
+void CEventQueue::Dump( void )
+{
+	EventQueuePrioritizedEvent_t *pe = m_Events.m_pNext;
+
+	Msg("Dumping event queue. Current time is: %.2f\n", gpGlobals->curtime );
+
+	while ( pe != NULL )
+	{
+		EventQueuePrioritizedEvent_t *next = pe->m_pNext;
+
+		Msg("   (%.2f) Target: '%s', Input: '%s', Parameter '%s'. Activator: '%s', Caller '%s'.  \n", 
+			pe->m_flFireTime, 
+			STRING(pe->m_iTarget), 
+			STRING(pe->m_iTargetInput), 
+			pe->m_VariantValue.String(),
+			pe->m_pActivator ? pe->m_pActivator->GetDebugName() : "None", 
+			pe->m_pCaller ? pe->m_pCaller->GetDebugName() : "None"  );
+
+		pe = next;
+	}
+
+	Msg("Finished dump.\n");
 }
 
 
@@ -739,17 +847,19 @@ void CEventQueue::ServiceEvents( void )
 
 	while ( pe != NULL && pe->m_flFireTime <= gpGlobals->curtime )
 	{
-		CEngineCacheCriticalSection engineCacheCriticalSection( engineCache );
+		MDLCACHE_CRITICAL_SECTION();
 
 		bool targetFound = false;
 
 		// find the targets
 		if ( pe->m_iTarget != NULL_STRING )
 		{
+			// In the context the event, the searching entity is also the caller
+			CBaseEntity *pSearchingEntity = pe->m_pCaller;
 			CBaseEntity *target = NULL;
 			while ( 1 )
 			{
-				target = gEntList.FindEntityByName( target, pe->m_iTarget, pe->m_pActivator, pe->m_pCaller );
+				target = gEntList.FindEntityByName( target, pe->m_iTarget, pSearchingEntity, pe->m_pActivator, pe->m_pCaller );
 				if ( !target )
 					break;
 
@@ -796,8 +906,10 @@ void CEventQueue::ServiceEvents( void )
 				pName = STRING(pe->m_pCaller->GetEntityName());
 			}
 			
-			DevMsg( 2, "unhandled input: (%s) -> (%s), from (%s,%s); target entity not found\n", 
-				STRING(pe->m_iTargetInput), STRING(pe->m_iTarget), pClass, pName );
+			char szBuffer[256];
+			Q_snprintf( szBuffer, sizeof(szBuffer), "unhandled input: (%s) -> (%s), from (%s,%s); target entity not found\n", STRING(pe->m_iTargetInput), STRING(pe->m_iTarget), pClass, pName );
+			DevMsg( 2, szBuffer );
+			ADD_DEBUG_HISTORY( HISTORY_ENTITY_IO, szBuffer );
 		}
 
 		// remove the event from the list (remembering that the queue may have been added to)
@@ -820,6 +932,14 @@ void CEventQueue::ServiceEvents( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Dumps the contents of the Entity I/O event queue to the console.
+//-----------------------------------------------------------------------------
+void CC_DumpEventQueue()
+{
+	g_EventQueue.Dump();
+}
+static ConCommand dumpeventqueue( "dumpeventqueue", CC_DumpEventQueue, "Dump the contents of the Entity I/O event queue to the console." );
 
 //-----------------------------------------------------------------------------
 // Purpose: Removes all pending events from the I/O queue that were added by the
@@ -963,6 +1083,7 @@ int CEventQueue::Save( ISave &save )
 {
 	// count the number of items in the queue
 	EventQueuePrioritizedEvent_t *pe;
+
 	m_iListCount = 0;
 	for ( pe = m_Events.m_pNext; pe != NULL; pe = pe->m_pNext )
 	{
@@ -1232,7 +1353,7 @@ bool variant_t::Convert( fieldtype_t newType )
 					if ( iszVal != NULL_STRING )
 					{
 						// FIXME: do we need to pass an activator in here?
-						ent = gEntList.FindEntityByName( NULL, iszVal, NULL );
+						ent = gEntList.FindEntityByName( NULL, iszVal );
 					}
 					SetEntity( ent );
 					return true;

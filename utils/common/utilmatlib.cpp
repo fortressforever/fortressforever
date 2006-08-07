@@ -20,8 +20,6 @@
 #include "materialsystem/MaterialSystem_Config.h"
 #include "Mathlib.h"
 
-IMaterialSystem *g_pMaterialSystem = NULL;
-
 void LoadMaterialSystemInterface( CreateInterfaceFn fileSystemFactory )
 {
 	if( g_pMaterialSystem )
@@ -61,6 +59,15 @@ void InitMaterialSystem( const char *materialBaseDirPath, CreateInterfaceFn file
 	LoadMaterialSystemInterface( fileSystemFactory );
 	MaterialSystem_Config_t config;
 	g_pMaterialSystem->OverrideConfig( config, false );
+}
+
+void ShutdownMaterialSystem( )
+{
+	if ( g_pMaterialSystem )
+	{
+		g_pMaterialSystem->Shutdown();
+		g_pMaterialSystem = NULL;
+	}
 }
 
 MaterialSystemMaterial_t FindMaterial( const char *materialName, bool *pFound, bool bComplain )
@@ -168,4 +175,10 @@ const char *GetMaterialVar( MaterialSystemMaterial_t materialHandle, const char 
 	{
 		return NULL;
 	}
+}
+
+const char *GetMaterialShaderName( MaterialSystemMaterial_t materialHandle )
+{
+	IMaterial *material = ( IMaterial * )materialHandle;
+	return material->GetShaderName();
 }

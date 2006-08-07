@@ -5,7 +5,6 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "stdafx.h" 
-#define stricmp strcasecmp 
 #include "makefilecreator.h" 
 #include "cmdlib.h"
 
@@ -36,6 +35,11 @@ void CMakefileCreator::CreateMakefiles( CVCProjConvert & proj )
 		CreateMakefileName( proj.GetName().String(), proj.GetConfiguration(i) );
 		CreateBaseDirs( proj.GetConfiguration(i) );
 		FileHandle_t f = g_pFileSystem->Open( m_MakefileName.String(), "w+" );
+		if ( !f )
+		{
+			Warning( "failed to open %s for writing.\n", m_MakefileName.String() );
+			continue;
+		}
 		OutputDirs(f);
 		OutputIncludes( proj.GetConfiguration(i), f );
 		OutputObjLists( proj.GetConfiguration(i), f );
@@ -197,7 +201,7 @@ void CMakefileCreator::OutputDirs( FileHandle_t f )
 		dirs.m_ObjName = friendlyDirName;		
 		
 		char objDirName[ MAX_PATH ];
-		Q_snprintf(  objDirName, sizeof(objDirName) , "obj%c$(NAME)%c", CORRECT_PATH_SEPARATOR, CORRECT_PATH_SEPARATOR );
+		Q_snprintf(  objDirName, sizeof(objDirName) , "obj%c$(NAME)_$(ARCH)%c", CORRECT_PATH_SEPARATOR, CORRECT_PATH_SEPARATOR );
 		Q_strncat( objDirName, dirName, sizeof(objDirName), COPY_ALL_CHARACTERS );
 		CreateObjDirectoryFriendlyName( objDirName );
 		dirs.m_ObjOutputDir = objDirName;

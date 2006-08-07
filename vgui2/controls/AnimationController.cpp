@@ -46,7 +46,12 @@ AnimationController *GetAnimationController()
 //-----------------------------------------------------------------------------
 AnimationController::AnimationController(Panel *parent) : BaseClass(parent, NULL)
 {
+	m_hSizePanel = 0;
+	m_nScreenBounds[ 0 ] = m_nScreenBounds[ 1 ] = -1;
+	m_nScreenBounds[ 2 ] = m_nScreenBounds[ 3 ] = -1;
+
 	m_bAutoReloadScript = false;
+	m_sScriptFileName = UTL_INVAL_SYMBOL;
 
 	// always invisible
 	SetVisible(false);
@@ -77,8 +82,10 @@ AnimationController::~AnimationController()
 //-----------------------------------------------------------------------------
 // Purpose: Sets which script file to use
 //-----------------------------------------------------------------------------
-bool AnimationController::SetScriptFile(const char *fileName, bool wipeAll /*=false*/ )
+bool AnimationController::SetScriptFile( VPANEL sizingPanel, const char *fileName, bool wipeAll /*=false*/ )
 {
+	m_hSizePanel = sizingPanel;
+
 	m_sScriptFileName = g_ScriptSymbols.AddString(fileName);
 
 	// clear the current script
@@ -88,6 +95,8 @@ bool AnimationController::SetScriptFile(const char *fileName, bool wipeAll /*=fa
 	{
 		CancelAllAnimations();
 	}
+
+	UpdateScreenSize();
 
 	// load the new script file
 	return LoadScriptFile(fileName);
@@ -100,7 +109,7 @@ void AnimationController::ReloadScriptFile()
 {
 	if (strlen(g_ScriptSymbols.String(m_sScriptFileName)) > 0)
 	{
-		SetScriptFile(g_ScriptSymbols.String(m_sScriptFileName));
+		SetScriptFile( m_hSizePanel, g_ScriptSymbols.String(m_sScriptFileName));
 	}
 }
 
@@ -119,9 +128,14 @@ bool AnimationController::LoadScriptFile(const char *fileName)
 	// read the whole thing into memory
 	int size = filesystem()->Size(f);
 	// read into temporary memory block
-	char *pMem = (char *)malloc(size);
-	int bytesRead = filesystem()->Read(pMem, size, f);
-	Assert(bytesRead < size);
+	int nBufSize = size+1;
+	if ( IsXbox() )
+	{
+		nBufSize = AlignValue( nBufSize, 512 );
+	}
+	char *pMem = (char *)malloc(nBufSize);
+	int bytesRead = filesystem()->ReadEx(pMem, nBufSize, size, f);
+	Assert(bytesRead <= size);
 	pMem[bytesRead] = 0;
 	filesystem()->Close(f);
 	// parse
@@ -233,7 +247,7 @@ void AnimationController::SetupPosition( AnimCmdAnimate_t& cmd, float *output, c
 	// scale the values
 	if (IsProportional())
 	{
-		pos = vgui::scheme()->GetProportionalScaledValue( pos );
+		pos = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), pos );
 	}
 
 	// adjust the positions
@@ -259,8 +273,8 @@ bool AnimationController::ParseScriptFile(char *pMem, int length)
 	IScheme *scheme = vgui::scheme()->GetIScheme(GetScheme());
 
 	// get our screen size (for left/right/center alignment)
-	int screenWide, screenTall;
-	surface()->GetScreenSize(screenWide, screenTall);
+	int screenWide = m_nScreenBounds[ 2 ];
+	int screenTall = m_nScreenBounds[ 3 ];
 
 	// start by getting the first token
 	char token[512];
@@ -365,8 +379,8 @@ bool AnimationController::ParseScriptFile(char *pMem, int length)
 				{
 					if (IsProportional())
 					{
-						cmdAnimate.target.a = static_cast<float>( vgui::scheme()->GetProportionalScaledValue(cmdAnimate.target.a) );
-						cmdAnimate.target.b = static_cast<float>( vgui::scheme()->GetProportionalScaledValue(cmdAnimate.target.b) );
+						cmdAnimate.target.a = static_cast<float>( vgui::scheme()->GetProportionalScaledValueEx(GetScheme(), cmdAnimate.target.a) );
+						cmdAnimate.target.b = static_cast<float>( vgui::scheme()->GetProportionalScaledValueEx(GetScheme(), cmdAnimate.target.b) );
 					}
 				}
 				else if (cmdAnimate.variable == m_sWide ||
@@ -375,7 +389,7 @@ bool AnimationController::ParseScriptFile(char *pMem, int length)
 					if (IsProportional())
 					{
 						// Wide and tall both use.a
-						cmdAnimate.target.a = static_cast<float>( vgui::scheme()->GetProportionalScaledValue(cmdAnimate.target.a) );
+						cmdAnimate.target.a = static_cast<float>( vgui::scheme()->GetProportionalScaledValueEx(GetScheme(), cmdAnimate.target.a) );
 					}
 				}
 				
@@ -637,12 +651,45 @@ void AnimationController::UpdateActiveAnimations(bool bRunToCompletion)
 	}
 }
 
+bool AnimationController::UpdateScreenSize()
+{
+	// get our screen size (for left/right/center alignment)
+	int screenWide, screenTall;
+	int sx = 0, sy = 0;
+	if ( m_hSizePanel != 0 )
+	{
+		ipanel()->GetSize( m_hSizePanel, screenWide, screenTall );
+		ipanel()->GetPos( m_hSizePanel, sx, sy );
+	}
+	else
+	{
+		surface()->GetScreenSize(screenWide, screenTall);
+	}
+
+	bool changed =	m_nScreenBounds[ 0 ] != sx || 
+					m_nScreenBounds[ 1 ] != sy ||
+					m_nScreenBounds[ 2 ] != screenWide || 
+					m_nScreenBounds[ 3 ] != screenTall;
+
+	m_nScreenBounds[ 0 ] = sx;
+	m_nScreenBounds[ 1 ] = sy;
+	m_nScreenBounds[ 2 ] = screenWide;
+	m_nScreenBounds[ 3 ] = screenTall;
+
+	return changed;
+}
 //-----------------------------------------------------------------------------
 // Purpose: runs a frame of animation
 //-----------------------------------------------------------------------------
 void AnimationController::UpdateAnimations( float currentTime )
 {
 	m_flCurrentTime = currentTime;
+
+	if ( UpdateScreenSize()	&& m_sScriptFileName != UTL_INVAL_SYMBOL )
+	{
+		RunAllAnimationsToCompletion();
+		ReloadScriptFile();
+	}
 
 	UpdatePostedMessages(false);
 	UpdateActiveAnimations(false);
@@ -653,10 +700,11 @@ void AnimationController::UpdateAnimations( float currentTime )
 //-----------------------------------------------------------------------------
 void AnimationController::RunAllAnimationsToCompletion()
 {
+#ifndef _XBOX
 	// Msg( "AnimationController::RunAllAnimationsToCompletion()\n" );
-
 	UpdatePostedMessages(true);
 	UpdateActiveAnimations(true);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -735,7 +783,7 @@ bool AnimationController::StartAnimationSequence(const char *sequenceName)
 	if (m_bAutoReloadScript)
 	{
 		// reload the script file
-		SetScriptFile(g_ScriptSymbols.String(m_sScriptFileName));
+		SetScriptFile( m_hSizePanel, g_ScriptSymbols.String(m_sScriptFileName));
 	}
 
 	// lookup the symbol for the name
@@ -770,7 +818,7 @@ bool AnimationController::StartAnimationSequence(const char *sequenceName)
 //-----------------------------------------------------------------------------
 // Purpose: Runs a custom command from code, not from a script file
 //-----------------------------------------------------------------------------
-void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *variable, float targetValue, float startDelaySeconds, float duration, Interpolators_e interpolator)
+void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *variable, float targetValue, float startDelaySeconds, float duration, Interpolators_e interpolator, float animParameter /* = 0 */ )
 {
 	// clear any previous animations of this variable
 	UtlSymId_t var = g_ScriptSymbols.AddString(variable);
@@ -783,6 +831,7 @@ void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *va
 	animateCmd.variable = var;
 	animateCmd.target.a = targetValue;
 	animateCmd.interpolationFunction = interpolator;
+	animateCmd.interpolationParameter = animParameter;
 	animateCmd.startTime = startDelaySeconds;
 	animateCmd.duration = duration;
 
@@ -793,7 +842,7 @@ void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *va
 //-----------------------------------------------------------------------------
 // Purpose: Runs a custom command from code, not from a script file
 //-----------------------------------------------------------------------------
-void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *variable, Color targetValue, float startDelaySeconds, float duration, Interpolators_e interpolator)
+void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *variable, Color targetValue, float startDelaySeconds, float duration, Interpolators_e interpolator, float animParameter /* = 0 */ )
 {
 	// clear any previous animations of this variable
 	UtlSymId_t var = g_ScriptSymbols.AddString(variable);
@@ -809,6 +858,7 @@ void AnimationController::RunAnimationCommand(vgui::Panel *panel, const char *va
 	animateCmd.target.c = targetValue[2];
 	animateCmd.target.d = targetValue[3];
 	animateCmd.interpolationFunction = interpolator;
+	animateCmd.interpolationParameter = animParameter;
 	animateCmd.startTime = startDelaySeconds;
 	animateCmd.duration = duration;
 

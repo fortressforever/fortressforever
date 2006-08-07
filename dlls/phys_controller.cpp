@@ -87,7 +87,7 @@ IMotionEvent::simresult_e CConstantForceController::Simulate( IPhysicsMotionCont
 // Purpose: This is a general entity that has a force/motion controller that 
 //			simply integrates a constant linear/angular acceleration
 //-----------------------------------------------------------------------------
-class CPhysForce : public CPointEntity
+abstract_class CPhysForce : public CPointEntity
 {
 public:
 	DECLARE_CLASS( CPhysForce, CPointEntity );
@@ -207,7 +207,7 @@ void CPhysForce::Activate( void )
 
 	if ( m_attachedObject == NULL )
 	{
-		m_attachedObject = gEntList.FindEntityByName( NULL, m_nameAttach, NULL );
+		m_attachedObject = gEntList.FindEntityByName( NULL, m_nameAttach );
 	}
 	
 	// Let the derived class set up before we throw the switch
@@ -743,7 +743,7 @@ void CPhysMotor::Activate( void )
 	// This gets called after all objects spawn and after all objects restore
 	if ( m_attachedObject == NULL )
 	{
-		CBaseEntity *pAttach = gEntList.FindEntityByName( NULL, m_nameAttach, NULL );
+		CBaseEntity *pAttach = gEntList.FindEntityByName( NULL, m_nameAttach );
 		if ( pAttach && pAttach->GetMoveType() == MOVETYPE_VPHYSICS )
 		{
 			m_attachedObject = pAttach;
@@ -856,6 +856,11 @@ public:
 		m_bActive = false;
 	}
 
+	void InputSetAngularLimit( inputdata_t &inputdata )
+	{
+		m_angularLimit = inputdata.value.Float();
+	}
+
 private:	
 	friend CBaseEntity *CreateKeepUpright( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, float flAngularLimit, bool bActive );
 
@@ -884,6 +889,7 @@ BEGIN_DATADESC( CKeepUpright )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetAngularLimit", InputSetAngularLimit ),
 
 END_DATADESC()
 

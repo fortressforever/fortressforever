@@ -3,6 +3,8 @@
 // Purpose: 
 //
 //=============================================================================//
+
+
 #include "cbase.h"
 #include "movevars_shared.h"
 
@@ -10,7 +12,7 @@
 #include "tier0/memdbgon.h"
 
 // some cvars used by player movement system
-#ifdef HL2_DLL
+#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 #define DEFAULT_GRAVITY_STRING	"600"
 #else
 #define DEFAULT_GRAVITY_STRING	"800"
@@ -24,7 +26,13 @@ ConVar	sv_specaccelerate( "sv_specaccelerate", "5", FCVAR_NOTIFY | FCVAR_ARCHIVE
 ConVar	sv_specspeed	( "sv_specspeed", "3", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar	sv_specnoclip	( "sv_specnoclip", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar	sv_maxspeed		( "sv_maxspeed", "600", FCVAR_NOTIFY | FCVAR_REPLICATED);	// |-- Mirv: A more sane max speed
-ConVar	sv_accelerate	( "sv_accelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
+#ifdef _XBOX
+	ConVar	sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED);
+#else
+	ConVar	sv_accelerate	( "sv_accelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
+#endif//_XBOX
+
 ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);    
 ConVar	sv_wateraccelerate(  "sv_wateraccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);     
 ConVar	sv_waterfriction(  "sv_waterfriction", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);      

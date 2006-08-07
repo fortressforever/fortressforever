@@ -197,7 +197,7 @@ bool CServerNetworkProperty::IsInPVS( const CCheckTransmitInfo *pInfo )
 	{
 		int clientArea = pInfo->m_Areas[i];
 
-		// Early out if the areas are not connected
+		// Early out if the areas are connected
 		if ( engine->CheckAreasConnected( clientArea, m_PVSInfo.m_nAreaNum) )
 		{	
 			break;

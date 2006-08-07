@@ -11,11 +11,8 @@
 #pragma once
 #endif
 
-struct interval_t
-{
-	float start;
-	float range;
-};
+#include "basetypes.h"
+
 
 interval_t ReadInterval( const char *pString );
 float RandomInterval( const interval_t &interval );

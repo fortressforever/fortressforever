@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-class ISceneTokenProcessor
+abstract_class ISceneTokenProcessor
 {
 public:
 	virtual const char	*CurrentToken( void ) = 0;

@@ -92,7 +92,7 @@ void CFuncMoveLinear::Spawn( void )
 	Precache();
 
 	// It is solid?
-	SetSolid( SOLID_BSP );
+	SetSolid( SOLID_VPHYSICS );
 
 	if ( FClassnameIs( this, "func_water_analog" ) )
 	{
@@ -360,12 +360,12 @@ int CFuncMoveLinear::DrawDebugTextOverlays(void)
 		float flTravelDist = (m_vecPosition1 - m_vecPosition2).Length();
 		float flCurDist	   = (m_vecPosition1 - GetLocalOrigin()).Length();
 		Q_snprintf(tempstr,sizeof(tempstr),"Current Pos: %3.3f",flCurDist/flTravelDist);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		float flTargetDist	   = (m_vecPosition1 - m_vecFinalDest).Length();
 		Q_snprintf(tempstr,sizeof(tempstr),"Target Pos: %3.3f",flTargetDist/flTravelDist);
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;

@@ -170,6 +170,7 @@ public:
 		Vector const &vInputMax,
 		Vector const &vOutputMin,
 		Vector const &vOutputMax );
+	virtual bool		GetAutoFlush();
 	virtual void		SetAutoFlush( bool bAutoFlush );
 	virtual void		DrawPoint( CSPVert const &v, float flPointSize );
 	virtual void		DrawLine( CSPVert const &v1, CSPVert const &v2 );

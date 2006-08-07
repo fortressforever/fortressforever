@@ -34,6 +34,14 @@
 
 #endif
 
+#ifdef HL2_EPISODIC
+ConVar hl2_episodic( "hl2_episodic", "1", FCVAR_REPLICATED );
+#else
+ConVar hl2_episodic( "hl2_episodic", "0", FCVAR_REPLICATED );
+#endif//HL2_EPISODIC
+
+#include "rumble_shared.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -58,7 +66,7 @@ void SpawnBlood(Vector vecSpot, const Vector &vecDir, int bloodColor, float flDa
 	UTIL_BloodDrips( vecSpot, vecDir, bloodColor, (int)flDamage );
 }
 
-
+#if !defined( NO_ENTITY_PREDICTION )
 //-----------------------------------------------------------------------------
 // The player drives simulation of this entity
 //-----------------------------------------------------------------------------
@@ -78,7 +86,7 @@ void CBaseEntity::UnsetPlayerSimulated( void )
 	m_hPlayerSimulationOwner = NULL;
 	m_bIsPlayerSimulated = false;
 }
-
+#endif
 
 // position of eyes
 Vector CBaseEntity::EyePosition( void )
@@ -141,6 +149,23 @@ void CBaseEntity::SetEffects( int nEffects )
 {
 	if ( nEffects != m_fEffects )
 	{
+#if !defined( CLIENT_DLL )
+#ifdef HL2_EPISODIC
+		// Hack for now, to avoid player emitting radius with his flashlight
+		if ( !IsPlayer() )
+		{
+			if ( (nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && !(m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
+			{
+				AddEntityToDarknessCheck( this );
+			}
+			else if ( !(nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && (m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
+			{
+				RemoveEntityFromDarknessCheck( this );
+			}
+		}
+#endif // HL2_EPISODIC
+#endif // !CLIENT_DLL
+
 		m_fEffects = nEffects;
 
 #if !defined( CLIENT_DLL )
@@ -151,7 +176,7 @@ void CBaseEntity::SetEffects( int nEffects )
 #endif
 
 #ifndef CLIENT_DLL
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
 #else
 		UpdateVisibility();
 #endif
@@ -160,20 +185,32 @@ void CBaseEntity::SetEffects( int nEffects )
 
 void CBaseEntity::AddEffects( int nEffects ) 
 { 
+#if !defined( CLIENT_DLL )
+#ifdef HL2_EPISODIC
+	if ( (nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && !(m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
+	{
+		// Hack for now, to avoid player emitting radius with his flashlight
+		if ( !IsPlayer() )
+		{
+			AddEntityToDarknessCheck( this );
+		}
+	}
+#endif // HL2_EPISODIC
+#endif // !CLIENT_DLL
+
 	m_fEffects |= nEffects; 
 #if !defined( CLIENT_DLL )
 	if ( nEffects & ( EF_NOINTERP ) )
 	{
 		gEntList.AddPostClientMessageEntity( this );
 	}
-
 #endif
 
 
 	if ( nEffects & EF_NODRAW)
 	{
 #ifndef CLIENT_DLL
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
 #else
 		UpdateVisibility();
 #endif
@@ -269,7 +306,7 @@ bool CBaseEntity::KeyValue( const char *szKeyName, const char *szValue )
 {
 	//!! temp hack, until worldcraft is fixed
 	// strip the # tokens from (duplicate) key names
-	char *s = strchr( szKeyName, '#' );
+	char *s = (char *)strchr( szKeyName, '#' );
 	if ( s )
 	{
 		*s = '\0';
@@ -407,7 +444,7 @@ bool CBaseEntity::KeyValue( const char *szKeyName, const char *szValue )
 		bool printKeyHits = false;
 		const char *debugName = "";
 
-		if ( *ent_debugkeys.GetString() && !stricmp(ent_debugkeys.GetString(), STRING(m_iClassname)) )
+		if ( *ent_debugkeys.GetString() && !Q_stricmp(ent_debugkeys.GetString(), STRING(m_iClassname)) )
 		{
 			// Msg( "-- found entity of type %s\n", STRING(m_iClassname) );
 			printKeyHits = true;
@@ -417,7 +454,7 @@ bool CBaseEntity::KeyValue( const char *szKeyName, const char *szValue )
 		// loop through the data description, and try and place the keys in
 		for ( datamap_t *dmap = GetDataDescMap(); dmap != NULL; dmap = dmap->baseMap )
 		{
-			if ( !printKeyHits && *ent_debugkeys.GetString() && !stricmp(dmap->dataClassName, ent_debugkeys.GetString()) )
+			if ( !printKeyHits && *ent_debugkeys.GetString() && !Q_stricmp(dmap->dataClassName, ent_debugkeys.GetString()) )
 			{
 				// Msg( "-- found class of type %s\n", dmap->dataClassName );
 				printKeyHits = true;
@@ -525,7 +562,11 @@ void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	data.m_nSurfaceProp = pTrace->surface.surfaceProps;
 	data.m_nDamageType = iDamageType;
 	data.m_nHitBox = pTrace->hitbox;
+#ifdef CLIENT_DLL
+	data.m_hEntity = ClientEntityList().EntIndexToHandle( pEntity->entindex() );
+#else
 	data.m_nEntIndex = pEntity->entindex();
+#endif
 
 	// Send it on its way
 	if ( !pCustomImpactName )
@@ -737,12 +778,16 @@ int	CBaseEntity::GetNextThinkTick( const char *szContext /*= NULL*/ )
 	{
 		// Find the think function in our list
 		iIndex = GetIndexForThinkContext( szContext );
+
+		// Looking up an invalid think context!
+		Assert( iIndex != -1 );
 	}
 
-	if ( m_aThinkFunctions[ iIndex ].m_nNextThinkTick == TICK_NEVER_THINK )
+	if ( ( iIndex == -1 ) || ( m_aThinkFunctions[ iIndex ].m_nNextThinkTick == TICK_NEVER_THINK ) )
 	{
 		return TICK_NEVER_THINK;
 	}
+
 	return m_aThinkFunctions[ iIndex ].m_nNextThinkTick;
 }
 
@@ -926,6 +971,11 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 	{
 	case MOVETYPE_VPHYSICS:
 		{
+			if ( GetMoveParent() )
+			{
+				DevWarning("Updating physics on object in hierarchy %s!\n", GetClassname());
+				return;
+			}
 			Vector origin;
 			QAngle angles;
 
@@ -933,7 +983,7 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 
 			if ( !IsFinite( angles.x ) || !IsFinite( angles.y ) || !IsFinite( angles.x ) )
 			{
-				Msg( "Infinite values from vphysics!\n" );
+				Msg( "Infinite angles from vphysics! (entity %s)\n", GetDebugName() );
 				angles = vec3_angle;
 			}
 #ifndef CLIENT_DLL 
@@ -941,9 +991,13 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 #endif
 
 			if ( origin.IsValid() )
+			{
 				SetAbsOrigin( origin );
+			}
 			else
-				Msg( "Infinite values from vphysics!\n" );
+			{
+				Msg( "Infinite origin from vphysics! (entity %s)\n", GetDebugName() );
+			}
 
 			SetAbsAngles( angles );
 
@@ -1354,6 +1408,29 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	bDoServerEffects = false;
 #endif
 
+#if defined ( _XBOX ) && defined( GAME_DLL )
+	if( IsPlayer() )
+	{
+		CBasePlayer *pPlayer = dynamic_cast<CBasePlayer*>(this);
+
+		int rumbleEffect = pPlayer->GetActiveWeapon()->GetRumbleEffect();
+
+		if( rumbleEffect != RUMBLE_INVALID )
+		{
+			if( rumbleEffect == RUMBLE_SHOTGUN_SINGLE )
+			{
+				if( info.m_iShots == 12 )
+				{
+					// Upgrade to double barrel rumble effect
+					rumbleEffect = RUMBLE_SHOTGUN_DOUBLE;
+				}
+			}
+
+			pPlayer->RumbleEffect( rumbleEffect, 0, RUMBLE_FLAG_RESTART );
+		}
+	}
+#endif//_XBOX
+
 	int iPlayerDamage = info.m_iPlayerDamage;
 	if ( iPlayerDamage == 0 )
 	{
@@ -1377,6 +1454,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 	Vector vecDir;
 	Vector vecEnd;
+	Vector vecFinalDir;	// bullet's final direction can be changed by passing through a portal
 	
 	CTraceFilterSkipTwoEntities traceFilter( this, info.m_pAdditionalIgnoreEnt, /*COLLISION_GROUP_NONE*/ COLLISION_GROUP_PROJECTILE );	// |-- Mirv: Count bullets as projectiles so they don't hit weapon bags
 
@@ -1440,6 +1518,9 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
 		}
 
+		vecFinalDir = tr.endpos - tr.startpos;
+		VectorNormalize( vecFinalDir );
+
 #ifdef GAME_DLL
 		if ( ai_debug_shoot_positions.GetBool() )
 			NDebugOverlay::Line(info.m_vecSrc, vecEnd, 255, 255, 255, false, .1 );
@@ -1448,7 +1529,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		if ( bStartedInWater )
 		{
 #ifdef GAME_DLL
-			CreateBubbleTrailTracer( info.m_vecSrc, tr.endpos, vecDir );
+			CreateBubbleTrailTracer( info.m_vecSrc, tr.endpos, vecFinalDir );
 #endif
 			bHitWater = true;
 		}
@@ -1456,12 +1537,12 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		// Now hit all triggers along the ray that respond to shots...
 		// Clip the ray to the first collided solid returned from traceline
 		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, /*info.m_iDamage*/flDmg, nDamageType ); // |-- Mirv: Split damage into shots
-		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecDir, tr.endpos );
+		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecFinalDir, tr.endpos );
 		triggerInfo.ScaleDamageForce( info.m_flDamageForceScale );
 		triggerInfo.SetAmmoType( info.m_iAmmoType );
 
 #ifdef GAME_DLL
-		TraceAttackToTriggers( triggerInfo, tr.startpos, tr.endpos, vecDir );
+		TraceAttackToTriggers( triggerInfo, tr.startpos, tr.endpos, vecFinalDir );
 #endif
 
 		// Make sure given a valid bullet type
@@ -1526,7 +1607,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			{
 				// Damage specified by function parameter
 				CTakeDamageInfo dmgInfo( this, pAttacker, flActualDamage, nActualDamageType );
-				CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, vecDir, tr.endpos );
+				CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, vecFinalDir, tr.endpos );
 				dmgInfo.ScaleDamageForce( info.m_flDamageForceScale );
 				dmgInfo.SetAmmoType( info.m_iAmmoType );
 
@@ -1536,8 +1617,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 					dmgInfo.ScaleDamageForce(0.01f);
 				}
 				// <-- Mirv
-
-				tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecDir, &tr );
+				tr.m_pEnt->DispatchTraceAttack( dmgInfo, vecFinalDir, &tr );
 			
 				if ( bStartedInWater || !bHitWater || (info.m_nFlags & FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS) )
 				{
@@ -1608,7 +1688,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 #ifdef GAME_DLL
 		if ( bHitGlass )
 		{
-			HandleShotImpactingGlass( info, tr, vecDir, &traceFilter );
+			HandleShotImpactingGlass( info, tr, vecFinalDir, &traceFilter );
 		}
 #endif
 
@@ -1954,7 +2034,6 @@ void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )
 		{
 			InvalidatePhysicsRecursive( VELOCITY_CHANGED );
 			m_vecVelocity += vecImpulse;
-			NetworkStateChanged();
 		}
 	}
 }
@@ -2011,14 +2090,43 @@ void CBaseEntity::CollisionRulesChanged()
 	// that can change the state that a collision filter will return (like m_Solid) needs to call RecheckCollisionFilter.
 	if ( VPhysicsGetObject() )
 	{
+#ifndef CLIENT_DLL
+		extern bool PhysIsInCallback();
+		if ( PhysIsInCallback() )
+		{
+			Warning("Changing collision rules within a callback is likely to cause crashes!\n");
+			Assert(0);
+		}
+#endif
 		IPhysicsObject *pList[VPHYSICS_MAX_OBJECT_LIST_COUNT];
 		int count = VPhysicsGetObjectList( pList, ARRAYSIZE(pList) );
 		for ( int i = 0; i < count; i++ )
 		{
-			pList[i]->RecheckCollisionFilter();
+			if ( pList[i] != NULL ) //this really shouldn't happen, but it does >_<
+				pList[i]->RecheckCollisionFilter();
 		}
 	}
 }
+
+int CBaseEntity::GetWaterType() const
+{
+	int out = 0;
+	if ( m_nWaterType & 1 )
+		out |= CONTENTS_WATER;
+	if ( m_nWaterType & 2 )
+		out |= CONTENTS_SLIME;
+	return out;
+}
+
+void CBaseEntity::SetWaterType( int nType )
+{
+	m_nWaterType = 0;
+	if ( nType & CONTENTS_WATER )
+		m_nWaterType |= 1;
+	if ( nType & CONTENTS_SLIME )
+		m_nWaterType |= 2;
+}
+
 
 static ConVar sv_alternateticks( "sv_alternateticks", "0", FCVAR_SPONLY, 
 			"If set, server only simulates entities on alternate ticks.\n" );
@@ -2036,3 +2144,19 @@ bool CBaseEntity::IsSimulatingOnAlternateTicks()
 
 	return sv_alternateticks.GetBool();
 }
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CBaseEntity::IsToolRecording() const
+{
+#ifndef NO_TOOLFRAMEWORK
+	return m_bToolRecording;
+#else
+	return false;
+#endif
+}
+#endif

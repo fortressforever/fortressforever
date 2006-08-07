@@ -46,7 +46,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBasePlayer for pev, and call spawn
 	CHL2_Player *pPlayer = CHL2_Player::CreatePlayer( "player", pEdict );
-	pPlayer->PlayerData()->netname = AllocPooledString( playername );
+	pPlayer->SetPlayerName( playername );
 }
 
 
@@ -148,29 +148,26 @@ void GameStartFrame( void )
 	gpGlobals->teamplay = (teamplay.GetInt() != 0);
 }
 
+#ifdef HL2_EPISODIC
+extern ConVar gamerules_survival;
+#endif
+
 //=========================================================
 // instantiate the proper game rules object
 //=========================================================
 void InstallGameRules()
 {
-	if ( !gpGlobals->deathmatch )
+#ifdef HL2_EPISODIC
+	if ( gamerules_survival.GetBool() )
+	{
+		// Survival mode
+		CreateGameRulesObject( "CHalfLife2Survival" );
+	}
+	else
+#endif
 	{
 		// generic half-life
 		CreateGameRulesObject( "CHalfLife2" );
-		return;
-	}
-	else
-	{
-		if ( teamplay.GetInt() > 0 )
-		{
-			// teamplay
-			CreateGameRulesObject( "CTeamplayRules" );
-		}
-		else
-		{
-			// vanilla deathmatch
-			CreateGameRulesObject( "CMultiplayRules" );
-		}
 	}
 }
 

@@ -83,7 +83,8 @@ void CHudGeiger::Init(void)
 //-----------------------------------------------------------------------------
 void CHudGeiger::VidInit(void)
 {
-};
+	m_iGeigerRange = 0;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -100,7 +101,7 @@ void CHudGeiger::MsgFunc_Geiger( bf_read &msg )
 //-----------------------------------------------------------------------------
 bool CHudGeiger::ShouldDraw( void )
 {
-	return ( CHudElement::ShouldDraw() && ( m_iGeigerRange < 1000 && m_iGeigerRange > 0 ) );
+	return ( ( m_iGeigerRange > 0 && m_iGeigerRange < 1000 ) && CHudElement::ShouldDraw() );
 }
 
 //-----------------------------------------------------------------------------

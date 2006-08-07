@@ -25,7 +25,6 @@
 #pragma once
 #endif
 
-
 #include "baseentity.h"
 #include "entityoutput.h"
 
@@ -40,8 +39,8 @@ public:
 
 	DECLARE_DATADESC();
 
-	bool PassesFilter(CBaseEntity *pEntity);
-	bool PassesDamageFilter(const CTakeDamageInfo &info);
+	bool PassesFilter( CBaseEntity *pCaller, CBaseEntity *pEntity );
+	bool PassesDamageFilter( const CTakeDamageInfo &info );
 
 	bool m_bNegated;
 
@@ -54,7 +53,7 @@ public:
 
 protected:
 
-	virtual bool PassesFilterImpl(CBaseEntity *pEntity);
+	virtual bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity );
 	virtual bool PassesDamageFilterImpl(const CTakeDamageInfo &info);
 };
 

@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #if !defined( ITEMPENTS_H )
 #define ITEMPENTS_H
@@ -17,11 +17,13 @@
 #include "irecipientfilter.h"
 
 class CEffectData;
+class KeyValues;
+
 
 //-----------------------------------------------------------------------------
 // Purpose:  Shared interface to temp entities
 //-----------------------------------------------------------------------------
-class ITempEntsSystem : public IPredictionSystem
+abstract_class ITempEntsSystem : public IPredictionSystem
 {
 public:
 	virtual void ArmorRicochet( IRecipientFilter& filer, float delay,
@@ -114,8 +116,11 @@ public:
 				const Vector &pos, const Vector &dir, int type ) = 0;
 	virtual void DispatchEffect( IRecipientFilter& filter, float delay,
 				const Vector &pos, const char *pName, const CEffectData &data ) = 0;
-	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags ) = 0;
+	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex, int skin, 
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects ) = 0;
+
+	// For playback from external tools
+	virtual void TriggerTempEntity( KeyValues *pKeyValues ) = 0;
 };
 
 extern ITempEntsSystem *te;

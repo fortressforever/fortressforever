@@ -41,6 +41,17 @@ ParticleSmokeGrenade::ParticleSmokeGrenade()
 }
 
 
+// Smoke grenade particles should always transmitted to clients.  If not, a client who
+// enters the PVS late will see the smoke start billowing from then, allowing better vision.
+int ParticleSmokeGrenade::UpdateTransmitState( void )
+{
+	if ( IsEffectActive( EF_NODRAW ) )
+		return SetTransmitState( FL_EDICT_DONTSEND );
+
+	return SetTransmitState( FL_EDICT_ALWAYS );
+}
+
+
 void ParticleSmokeGrenade::FillVolume()
 {
 	m_CurrentStage = 1;
@@ -54,4 +65,11 @@ void ParticleSmokeGrenade::SetFadeTime(float startTime, float endTime)
 	m_FadeEndTime = endTime;
 }
 
+// Fade start and end are relative to current time
+void ParticleSmokeGrenade::SetRelativeFadeTime(float startTime, float endTime)
+{
+	float flCurrentTime = gpGlobals->curtime - m_flSpawnTime;
 
+	m_FadeStartTime = flCurrentTime + startTime;
+	m_FadeEndTime = flCurrentTime + endTime;
+}

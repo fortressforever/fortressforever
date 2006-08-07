@@ -21,6 +21,12 @@
 
 using namespace vgui;
 
+vgui::Panel *URLLabel_Factory()
+{
+	return new URLLabel(NULL, NULL, "URLLabel", NULL);
+}
+
+DECLARE_BUILD_FACTORY_CUSTOM( URLLabel, URLLabel_Factory );
 //-----------------------------------------------------------------------------
 // Purpose: constructor
 //-----------------------------------------------------------------------------

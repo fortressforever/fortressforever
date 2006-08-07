@@ -131,11 +131,6 @@ protected:
 	ListElem_t& InternalElement( I i ) { return m_Memory[i]; }
 	ListElem_t const& InternalElement( I i ) const { return m_Memory[i]; }
 
-	void ResetDbgInfo()
-	{
-		m_pElements = m_Memory.Base();
-	}
-	
 	// copy constructors not allowed
 	CUtlLinkedList( CUtlLinkedList<T, I> const& list ) { Assert(0); }
 	   
@@ -146,9 +141,19 @@ protected:
 	I	m_ElementCount;		// The number actually in the list
 	I	m_TotalElements;	// The number allocated
 	
+#if !defined(_XBOX) || defined(_DEBUG)
 	// For debugging purposes; 
 	// it's in release builds so this can be used in libraries correctly
 	ListElem_t  *m_pElements;
+
+	void ResetDbgInfo()
+	{
+		m_pElements = m_Memory.Base();
+	}
+
+#else
+	void ResetDbgInfo() {}
+#endif
 };
    
    
@@ -301,7 +306,12 @@ void CUtlLinkedList<T, I>::EnsureCapacity( int num )
 template <class T, class I>
 void  CUtlLinkedList<T,I>::Purge()
 {
-	RemoveAll();
+	// Prevent reentrant calls to Purge()
+	if( m_ElementCount )
+	{
+		RemoveAll();
+	}
+
 	m_Memory.Purge( );
 	m_FirstFree = InvalidIndex();
 	m_TotalElements = 0;
@@ -550,6 +560,10 @@ void  CUtlLinkedList<T,I>::RemoveAll()
 	m_Head = InvalidIndex(); 
 	m_Tail = InvalidIndex();
 	m_ElementCount = 0;
+
+#ifdef _XBOX
+	//Purge();
+#endif 
 }
 
 
@@ -687,5 +701,209 @@ inline void CUtlLinkedList<T,I>::LinkToTail( I elem )
 	LinkBefore( InvalidIndex(), elem ); 
 }
 
-   
+
+//-----------------------------------------------------------------------------
+// Class to drop in to replace a CUtlLinkedList that needs to be more memory agressive
+//-----------------------------------------------------------------------------
+
+DECLARE_POINTER_HANDLE( UtlPtrLinkedListIndex_t ); // to enforce correct usage
+
+template < typename T >
+class CUtlPtrLinkedList
+{
+public:
+	CUtlPtrLinkedList()
+		: m_pFirst( NULL ),
+		m_nElems( 0 )
+	{
+		COMPILE_TIME_ASSERT( sizeof(IndexType_t) == sizeof(Node_t *) );
+	}
+
+	~CUtlPtrLinkedList()
+	{
+		RemoveAll();
+	}
+
+	typedef UtlPtrLinkedListIndex_t IndexType_t;
+
+	T &operator[]( IndexType_t i )			
+	{ 
+		return (( Node_t * )i)->elem; 
+	}
+
+	const T &operator[]( IndexType_t i ) const
+	{ 
+		return (( Node_t * )i)->elem; 
+	}
+
+	IndexType_t	AddToTail()								
+	{ 
+		return DoInsertBefore( (IndexType_t)m_pFirst, NULL );
+	}
+
+	IndexType_t	AddToTail( T const& src )
+	{ 
+		return DoInsertBefore( (IndexType_t)m_pFirst, &src );
+	}
+
+	IndexType_t	AddToHead()								
+	{ 
+		IndexType_t result = DoInsertBefore( (IndexType_t)m_pFirst, NULL );
+		m_pFirst = ((Node_t *)result);
+		return result;
+	}
+
+	IndexType_t	AddToHead( T const& src )
+	{ 
+		IndexType_t result = DoInsertBefore( (IndexType_t)m_pFirst, &src );
+		m_pFirst = ((Node_t *)result);
+		return result;
+	}
+
+	IndexType_t InsertBefore( IndexType_t before )
+	{
+		return DoInsertBefore( before, NULL );
+	}
+
+	IndexType_t InsertAfter( IndexType_t after )
+	{
+		Node_t *pBefore = ((Node_t *)after)->next;
+		return DoInsertBefore( pBefore, NULL );
+	}
+
+	IndexType_t InsertBefore( IndexType_t before, T const& src  )
+	{
+		return DoInsertBefore( before, &src );
+	}
+
+	IndexType_t InsertAfter( IndexType_t after, T const& src  )
+	{
+		Node_t *pBefore = ((Node_t *)after)->next;
+		return DoInsertBefore( pBefore, &src );
+	}
+
+	void Remove( IndexType_t elem )
+	{ 
+		Node_t *p = (Node_t *)elem;
+
+		if ( p->pNext == p )
+		{
+			m_pFirst = NULL;
+		}
+		else
+		{
+			if ( m_pFirst == p )
+			{
+				m_pFirst = p->pNext;
+			}
+			p->pNext->pPrev = p->pPrev;
+			p->pPrev->pNext = p->pNext;
+		}
+
+		delete p;
+		m_nElems--;
+	}
+
+	void RemoveAll()
+	{
+		Node_t *p = m_pFirst;
+		if ( p )
+		{
+			do 
+			{
+				Node_t *pNext = p->pNext;
+				delete p;
+				p = pNext;
+			} while( p != m_pFirst );
+		}
+
+		m_pFirst = NULL;
+		m_nElems = 0;
+	}
+
+	int	Count() const									
+	{ 
+		return m_nElems; 
+	}
+
+	IndexType_t Head() const							
+	{ 
+		return (IndexType_t)m_pFirst;
+	}
+
+	IndexType_t Next( IndexType_t i ) const				
+	{ 
+		Node_t *p = ((Node_t *)i)->pNext;
+		if ( p != m_pFirst )
+		{
+			return (IndexType_t)p;
+		}
+		return NULL; 
+	}
+
+	bool IsValidIndex( IndexType_t i ) const
+	{
+		Node_t *p = ((Node_t *)i);
+		return ( p && p->pNext && p->pPrev );
+	}
+
+	inline static IndexType_t  InvalidIndex()			
+	{ 
+		return NULL; 
+	}
+private:
+
+	struct Node_t
+	{
+		Node_t() {}
+		Node_t( const T &elem ) : elem( elem ) {}
+
+		T elem;
+		Node_t *pPrev, *pNext;
+	};
+
+	Node_t *AllocNode( const T *pCopyFrom )
+	{
+		MEM_ALLOC_CREDIT_CLASS();
+		Node_t *p;
+
+		if ( !pCopyFrom )
+		{
+			p = new Node_t;
+		}
+		else
+		{
+			p = new Node_t( *pCopyFrom );
+		}
+
+		return p;
+	}
+
+	IndexType_t DoInsertBefore( IndexType_t before, const T *pCopyFrom )
+	{
+		Node_t *p = AllocNode( pCopyFrom );
+		Node_t *pBefore = (Node_t *)before;
+		if ( pBefore )
+		{
+			p->pNext = pBefore;
+			p->pPrev = pBefore->pPrev;
+			pBefore->pPrev = p;
+			p->pPrev->pNext = p;
+		}
+		else
+		{
+			Assert( !m_pFirst );
+			m_pFirst = p->pNext = p->pPrev = p;
+		}
+
+		m_nElems++;
+		return (IndexType_t)p;
+	}
+
+	Node_t *m_pFirst;
+	unsigned m_nElems;
+};
+
+//-----------------------------------------------------------------------------
+
 #endif // UTLLINKEDLIST_H

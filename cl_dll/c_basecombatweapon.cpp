@@ -13,6 +13,8 @@
 #include "engine/ivmodelinfo.h"
 #include "tier0/vprof.h"
 #include "hltvcamera.h"
+#include "tier1/KeyValues.h"
+#include "toolframework/itoolframework.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -58,6 +60,26 @@ void C_BaseCombatWeapon::NotifyShouldTransmit( ShouldTransmitState_t state )
 			m_iState = WEAPON_IS_CARRIED_BY_PLAYER;
 		}
 	}
+	else if( state == SHOULDTRANSMIT_START )
+	{
+		if( m_iState == WEAPON_IS_CARRIED_BY_PLAYER )
+		{
+			if( GetOwner() && GetOwner()->GetActiveWeapon() == this )
+			{
+				// Restore the Activeness of the weapon if we client-twiddled it off in the first case above.
+				m_iState = WEAPON_IS_ACTIVE;
+			}
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+static inline bool ShouldDrawLocalPlayer( void )
+{
+	return C_BasePlayer::ShouldDrawLocalPlayer();
 }
 
 //-----------------------------------------------------------------------------
@@ -88,39 +110,41 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 {
 	BaseClass::OnDataChanged(updateType);
 
-	CHandle< C_BaseCombatWeapon > handle;
-	handle = this;
+	CHandle< C_BaseCombatWeapon > handle = this;
 
 	// If it's being carried by the *local* player, on the first update,
 	// find the registered weapon for this ID
+
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (!pPlayer || !IsBeingCarried() || (GetOwner() != pPlayer) )
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	// check if weapon is carried by local player
+	bool bIsLocalPlayer = pPlayer && pPlayer == pOwner;
+	if ( bIsLocalPlayer && !ShouldDrawLocalPlayer() )
+	{
+		// If I was just picked up, or created & immediately carried, add myself to this client's list of weapons
+		if ( (m_iState != WEAPON_NOT_CARRIED ) && (m_iOldState == WEAPON_NOT_CARRIED) )
+		{
+			// Tell the HUD this weapon's been picked up
+			if ( ShouldDrawPickup() )
+			{
+				CBaseHudWeaponSelection *pHudSelection = GetHudWeaponSelection();
+				if ( pHudSelection )
+				{
+					pHudSelection->OnWeaponPickup( this );
+				}
+
+				pPlayer->EmitSound( "Player.PickupWeapon" );
+			}
+		}
+	}
+	else // weapon carried by other player or not at all
 	{
 		// BRJ 10/14/02
 		// FIXME: Remove when Yahn's client-side prediction is done
 		// It's a hacky workaround for the model indices fighting
 		// (GetRenderBounds uses the model index, which is for the view model)
-
 		SetModelIndex( GetWorldModelIndex() );
-		UpdateVisibility();
-		m_iOldState = m_iState;
-		return;
-	}
-
-	// If I was just picked up, or created & immediately carried, add myself to this client's list of weapons
-	if ( (m_iState != WEAPON_NOT_CARRIED ) && (m_iOldState == WEAPON_NOT_CARRIED) )
-	{
-		// Tell the HUD this weapon's been picked up
-		if ( ShouldDrawPickup() )
-		{
-			CBaseHudWeaponSelection *pHudSelection = GetHudWeaponSelection();
-			if ( pHudSelection )
-			{
-				pHudSelection->OnWeaponPickup( this );
-			}
-
-			pPlayer->EmitSound( "Player.PickupWeapon" );
-		}
 	}
 
 	UpdateVisibility();
@@ -316,7 +340,7 @@ bool C_BaseCombatWeapon::GetShootPosition( Vector &vOrigin, QAngle &vAngles )
 	}
 
 	QAngle vDummy;
-	if ( IsActiveByLocalPlayer() && !input->CAM_IsThirdPerson() )
+	if ( IsActiveByLocalPlayer() && !ShouldDrawLocalPlayer() )
 	{
 		C_BasePlayer *player = ToBasePlayer( pEnt );
 		C_BaseViewModel *vm = player ? player->GetViewModel( 0 ) : NULL;
@@ -351,31 +375,44 @@ bool C_BaseCombatWeapon::GetShootPosition( Vector &vOrigin, QAngle &vAngles )
 bool C_BaseCombatWeapon::ShouldDraw( void )
 {
 	if ( m_iWorldModelIndex == 0 )
+		return false;
+
+	// FIXME: All weapons with owners are set to transmit in CBaseCombatWeapon::UpdateTransmitState,
+	// even if they have EF_NODRAW set, so we have to check this here. Ideally they would never
+	// transmit except for the weapons owned by the local player.
+	if ( IsEffectActive( EF_NODRAW ) )
+		return false;
+
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	// weapon has no owner, always draw it
+	if ( !pOwner )
+		return true;
+
+	bool bIsActive = ( m_iState == WEAPON_IS_ACTIVE );
+
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+
+	 // carried by local player?
+	if ( pOwner == pLocalPlayer )
 	{
+		// Only ever show the active weapon
+		if ( !bIsActive )
+			return false;
+
+		// 3rd person mode
+		if ( ShouldDrawLocalPlayer() )
+			return true;
+
+		// don't draw active weapon if not in some kind of 3rd person mode, the viewmodel will do that
 		return false;
 	}
 
-	// carried by player?
-	if ( IsCarriedByLocalPlayer() )
-	{
-		// Only ever show the active weapon
-		if ( !IsActiveByLocalPlayer() )
-			return false;
-
-		// Don't show it if it's the view model and we're in firstperson
-		if (input->CAM_IsThirdPerson() == false)
-			return false;
-
-		SetModel( GetWorldModel() );	// |-- Mirv: 3rd person viewmodel fix
-		
-		return true;
-	}
-
 	// If it's a player, then only show active weapons
-	if ( GetOwner() && GetOwner()->IsPlayer() )
+	if ( pOwner->IsPlayer() )
 	{
 		// Show it if it's active...
-		return (m_iState == WEAPON_IS_ACTIVE);
+		return bIsActive;
 	}
 
 	// FIXME: We may want to only show active weapons on NPCs
@@ -422,4 +459,38 @@ int C_BaseCombatWeapon::DrawModel( int flags )
 	}
 
 	return BaseClass::DrawModel( flags );
+}
+
+//-----------------------------------------------------------------------------
+// tool recording
+//-----------------------------------------------------------------------------
+void C_BaseCombatWeapon::GetToolRecordingState( KeyValues *msg )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	int nModelIndex = GetModelIndex();
+	int nWorldModelIndex = GetWorldModelIndex();
+	if ( nModelIndex != nWorldModelIndex )
+	{
+		SetModelIndex( nWorldModelIndex );
+	}
+
+	BaseClass::GetToolRecordingState( msg );
+
+	if ( m_iState == WEAPON_IS_ACTIVE )
+	{
+		BaseEntityRecordingState_t *pBaseEntity = (BaseEntityRecordingState_t*)msg->GetPtr( "baseentity" );
+		pBaseEntity->m_bVisible = true;
+	}
+	else if ( m_iState == WEAPON_NOT_CARRIED )
+	{
+		BaseEntityRecordingState_t *pBaseEntity = (BaseEntityRecordingState_t*)msg->GetPtr( "baseentity" );
+		pBaseEntity->m_nOwner = 0;
+	}
+
+	if ( nModelIndex != nWorldModelIndex )
+	{
+		SetModelIndex( nModelIndex );
+	}
 }

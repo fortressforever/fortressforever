@@ -80,7 +80,7 @@ bool CVRADDispColl::Create( CCoreDispInfo *pDisp )
 	// Re-calculate the lightmap size (in uv) so that the luxels give
 	// a better world-space uniform approx. due to the non-linear nature
 	// of the displacement surface in uv-space
-	dface_t *pFace = &dfaces[m_iParent];
+	dface_t *pFace = &g_pFaces[m_iParent];
 	if( pFace )
 	{
 		CalcSampleRadius2AndBox( pFace );	
@@ -127,8 +127,7 @@ void CVRADDispColl::CalcSampleRadius2AndBox( dface_t *pFace )
 		m_vecSampleBBox[0][iAxis] -= SAMPLE_BBOX_SLOP;
 		m_vecSampleBBox[1][iAxis] += SAMPLE_BBOX_SLOP;
 	}
-
-	// Calculate the patch sampling radius (squared).
+	
 	CalcPatchSampleRadius2();
 }
 
@@ -137,25 +136,42 @@ void CVRADDispColl::CalcSampleRadius2AndBox( dface_t *pFace )
 //-----------------------------------------------------------------------------
 void CVRADDispColl::CalcPatchSampleRadius2( void )
 {
-	// Find the largest delta in x, y, or z.
-	float flDistMax = 0.0f;
-	for ( int iAxis = 0; iAxis < 3; ++iAxis )
+	// Note: we currently have to choose between two not-so-great options because the
+	// patches that are constructed for displacments are just too large if the displacment is large.
+	// The real fix is to fix the disp patch subdivision code.
+	if ( g_bLargeDispSampleRadius )
 	{
-		float flDist = fabs( m_vecSampleBBox[1][iAxis] - m_vecSampleBBox[0][iAxis] );
-		if ( flDist > flDistMax )
+		// Find the largest delta in x, y, or z.
+		float flDistMax = 0.0f;
+		for ( int iAxis = 0; iAxis < 3; ++iAxis )
 		{
-			flDistMax = flDist;
+			float flDist = fabs( m_vecSampleBBox[1][iAxis] - m_vecSampleBBox[0][iAxis] );
+			if ( flDist > flDistMax )
+			{
+				flDistMax = flDist;
+			}
 		}
+
+		// Calculate the divisor based on the power of the displacement surface.
+		int nPower = GetPower();
+		float flScale = 1.0f / static_cast<float>( ( 1 << ( nPower + 1 ) ) );
+		float flValue = flDistMax * flScale;
+		float flPatchSampleRadius = sqrt( ( flValue*flValue ) + ( flValue*flValue ) ) * RADIALDIST2;
+
+		// Squared.
+		m_flPatchSampleRadius2 = ( flPatchSampleRadius * flPatchSampleRadius );
 	}
-
-	// Calculate the divisor based on the power of the displacement surface.
-	int nPower = GetPower();
-	float flScale = 1.0f / static_cast<float>( ( 1 << ( nPower + 1 ) ) );
-	float flValue = flDistMax * flScale;
-	float flPatchSampleRadius = sqrt( ( flValue*flValue ) + ( flValue*flValue ) ) * RADIALDIST2;
-
-	// Squared.
-	m_flPatchSampleRadius2 = ( flPatchSampleRadius * flPatchSampleRadius );
+	else
+	{
+		// maxchop - see vrad.h
+		// kjb - FIXME: I'm reverting this to the pre 111277 version of the code, but this is still wrong.
+		// maxchop has nothing do with the sample sizes on a face.  I'm guessing the above code is almost 
+		// correct, but it's artifically clamping on large luxels sizes which is probably a bug, but these
+		// next two lines throw the above answer away so why is it even doing it at all, and I can't find 
+		// where chop is used by the displacement system ever.... This function needs help.
+		float flPatchSampleRadius = sqrt( ( maxchop*16*maxchop*16 ) + ( maxchop*16*maxchop*16 ) ) * RADIALDIST2;
+		m_flPatchSampleRadius2 = flPatchSampleRadius * flPatchSampleRadius;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -561,13 +577,14 @@ void CVRADDispColl::InitPatch( int iPatch, int iParentPatch, bool bFirst )
 		pPatch->ndxNextParent = patches.InvalidIndex();
 		pPatch->ndxNextClusterChild = patches.InvalidIndex();
 		pPatch->scale[0] = pPatch->scale[1] = 1.0f;
-		pPatch->chop = 64;
+		pPatch->chop = 4;
 		pPatch->sky = false;
 		pPatch->winding = NULL;
 		pPatch->plane = NULL;
 		pPatch->origin.Init();
 		pPatch->normal.Init();
 		pPatch->area = 0.0f;
+		pPatch->m_IterationKey = 0;
 
 		// Get the parent patch if it exists.
 		if ( iParentPatch != patches.InvalidIndex() )
@@ -694,7 +711,7 @@ bool CVRADDispColl::MakeParentPatch( int iPatch )
 		pPatch->normalMajorAxis = nMajorAxis;
 
 		// get the base light for the face
-		BaseLightForFace( &dfaces[m_iParent], pPatch->baselight, &pPatch->basearea, pPatch->reflectivity );
+		BaseLightForFace( &g_pFaces[m_iParent], pPatch->baselight, &pPatch->basearea, pPatch->reflectivity );
 
 		return true;
 	}

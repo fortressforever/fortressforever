@@ -28,6 +28,7 @@
 #include "model_types.h"
 // UNDONE: Reduce some dependency here!
 #include "physics_prop_ragdoll.h"
+#include "items.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -476,7 +477,7 @@ void NWCEdit::UpdateEntityPosition( CBaseEntity *pEntity )
 	const Vector &newPos = pEntity->GetAbsOrigin();
 	const QAngle &newAng = pEntity->GetAbsAngles();
 
-	DevMsg( 1, "%s\norigin %f %f %f\nangles %f %f %f\n", pEntity->GetClassname(), newPos.x, newPos.y, newPos.z, newAng.x, newAng.y, newAng.z );
+	DevMsg( 1, "%s\n   origin %f %f %f\n   angles %f %f %f\n", pEntity->GetClassname(), newPos.x, newPos.y, newPos.z, newAng.x, newAng.y, newAng.z );
 	if ( Ragdoll_IsPropRagdoll(pEntity) )
 	{
 		char tmp[2048];
@@ -708,4 +709,60 @@ CON_COMMAND( wc_update_entity, "Updates the entity's position/angles when in edi
 			NWCEdit::UpdateEntityPosition( pEnt );
 		}
 	}
+}
+
+CON_COMMAND( wc_update_safe_entities, "Updates entities in the map that can safely be updated (don't have parents or are affected by constraints)." )
+{
+	int iCount = 0;
+	CBaseEntity *pEnt = NULL;
+
+	Msg("\n====================================================\nPerforming Safe Entity Update\n" );
+
+	for ( pEnt = gEntList.FirstEnt(); pEnt != NULL; pEnt = gEntList.NextEnt(pEnt) )
+	{
+		if ( !(pEnt->ObjectCaps() & FCAP_WCEDIT_POSITION) )
+			continue;
+
+		// If we have a parent, or any children, we're not safe to update
+		if ( pEnt->GetMoveParent() || pEnt->FirstMoveChild() )
+			continue;
+
+		IPhysicsObject *pPhysics = pEnt->VPhysicsGetObject();
+		if ( !pPhysics )
+			continue;
+		// If we are affected by any constraints, we're not safe to update
+		if ( pPhysics->IsAttachedToConstraint(false)  )
+			continue;
+		// Motion disabled?
+		if ( !pPhysics->IsMoveable() )
+			continue;
+
+		NWCEdit::UpdateEntityPosition( pEnt );
+		iCount++;
+	}
+
+	while ( (pEnt = gEntList.FindEntityByClassname( pEnt, "prop_ragdoll" )) != NULL )
+	{
+		// If we have a parent, or any children, we're not safe to update
+		if ( pEnt->GetMoveParent() || pEnt->FirstMoveChild() )
+			continue;
+
+		IPhysicsObject *pPhysics = pEnt->VPhysicsGetObject();
+		if ( !pPhysics )
+			continue;
+		// If we are affected by any constraints, we're not safe to update
+		if ( pPhysics->IsAttachedToConstraint(true)  )
+		{
+			Msg("Skipping constrained ragdoll %s\n", pEnt->GetDebugName() );
+			continue;
+		}
+		// Motion disabled?
+		if ( !pPhysics->IsMoveable() )
+			continue;
+
+		NWCEdit::UpdateEntityPosition( pEnt );
+		iCount++;
+	}
+
+	Msg("Updated %d entities.\n", iCount);
 }

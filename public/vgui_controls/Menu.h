@@ -13,6 +13,7 @@
 #endif
 
 #include <vgui_controls/Panel.h>
+#include <vgui_controls/Label.h>
 #include <UtlLinkedList.h>
 #include <UtlVector.h>
 
@@ -22,6 +23,7 @@ namespace vgui
 class MenuItem;
 class ScrollBar;
 enum MouseCode;
+class MenuSeparator;
 
 //-----------------------------------------------------------------------------
 // Purpose: A menu is a list of items that can be selected with one click, navigated
@@ -85,8 +87,25 @@ class Menu : public Panel
 	DECLARE_CLASS_SIMPLE( Menu, Panel );
 	friend MenuItem;
 public:
+	enum MenuDirection_e
+	{
+		LEFT,
+		RIGHT,
+		UP,
+		DOWN,
+		CURSOR,	// make the menu appear under the mouse cursor
+		ALIGN_WITH_PARENT, // make the menu appear under the parent
+	};
+
 	Menu(Panel *parent, const char *panelName);
 	~Menu();
+
+	static void PlaceContextMenu( Panel *parent, Menu *menu );
+	static void OnInternalMousePressed( Panel *other, MouseCode code );
+
+	virtual void PositionRelativeToPanel( Panel *reference, MenuDirection_e direction, int nAdditionalYOffset = 0, bool showMenu = false );
+
+	  // the menu.  For combo boxes, it's the edit/field, etc. etc.
 
 	// Add a simple text item to the menu
 	virtual int AddMenuItem( const char *itemName, const char *itemText, const char *command, Panel *target, const KeyValues *userData = NULL );
@@ -124,27 +143,42 @@ public:
 	// Add a custom panel to the menu
 	virtual int AddMenuItem( MenuItem *panel );
 
+	virtual void AddSeparator();
+	virtual void AddSeparatorAfterItem( int itemID );
+
 	// Sets the values of a menu item at the specified index
 	virtual void UpdateMenuItem(int itemID, const char *itemText,KeyValues *message, const KeyValues *userData = NULL);
 	virtual void UpdateMenuItem(int itemID, const wchar_t *wszItemText,KeyValues *message, const KeyValues *userData = NULL);
 
+	virtual void MoveMenuItem( int itemID, int moveBeforeThisItemID );
+
 	virtual bool IsValidMenuID(int itemID);
 	virtual int GetInvalidMenuID();
 
-	virtual KeyValues *GetItemUserData(int itemID);
-	virtual void GetItemText(int itemID, wchar_t *text, int bufLenInBytes);
+	KeyValues *GetItemUserData(int itemID);
+	void GetItemText(int itemID, wchar_t *text, int bufLenInBytes);
+	void GetItemText(int itemID, char *text, int bufLenInBytes);
 
 	virtual void SetItemEnabled(const char *itemName, bool state);
 	virtual void SetItemEnabled(int itemID, bool state);
+	virtual void SetItemVisible(const char *itemName, bool visible);
+	virtual void SetItemVisible(int itemID, bool visible);
+
+	// Remove a single item
+	void DeleteItem( int itemID );
 
 	// Clear the menu, deleting all the menu items within
-	virtual void DeleteAllItems();
+	void DeleteAllItems();
 
 	// Override the auto-width setting with a single fixed width
 	virtual void SetFixedWidth( int width );
 
+	// Sets the content alignment of all items in the menu
+	void SetContentAlignment( Label::Alignment alignment );
+
 	// sets the height of each menu item
 	virtual void SetMenuItemHeight(int itemHeight);
+	virtual int  GetMenuItemHeight() const;
 
 	// Set the max number of items visible (scrollbar appears with more)
 	virtual void SetNumberOfVisibleItems( int numItems );
@@ -204,6 +238,13 @@ public:
 	virtual void SetFgColor( Color newColor );
 	virtual void SetBgColor( Color newColor );
 
+	virtual void SetFont( HFont font );
+
+	// Pass in NULL hotkey to remove hotkey
+	void SetCurrentKeyBinding( int itemID, char const *hotkey );
+
+	void ForceCalculateWidth();
+
 protected:
 	// helper functions	
 	int AddMenuItemCharCommand(MenuItem *item, const char *command, Panel *target, const KeyValues *userData);
@@ -217,12 +258,14 @@ protected:
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" );
 	virtual void Paint();
 	virtual void LayoutMenuBorder();
-	virtual void MakeItemsVisibleInScrollRange();
+	virtual void MakeItemsVisibleInScrollRange( int maxVisibleItems, int nNumPixelsAvailable );
 	virtual void OnMouseWheeled(int delta);
-
+	
+	int	CountVisibleItems();
+	void ComputeWorkspaceSize( int& workWide, int& workTall );
+	int ComputeFullMenuHeightWithInsets();
 
 	void CalculateWidth();
-	void ForceCalculateWidth();
 
 	void LayoutScrollBar();
 	void PositionCascadingMenu();
@@ -242,9 +285,13 @@ protected:
 	enum 
 	{
 		DEFAULT_MENU_ITEM_HEIGHT = 22, // height of items in the menu
-		UP = -1, // used for moving up/down list of menu items in the menu
-		DOWN = 1
+		MENU_UP = -1, // used for moving up/down list of menu items in the menu
+		MENU_DOWN = 1
 	};
+
+#ifdef DBGFLAG_VALIDATE
+	virtual void Validate( CValidator &validator, char *pchName );
+#endif // DBGFLAG_VALIDATE
 
 private:
 	MenuItem *GetParentMenuItem();
@@ -253,11 +300,14 @@ private:
 	int 			m_iFixedWidth;
 	int 			m_iMinimumWidth; // a minimum width the menu has to be if it is not fixed width
 	int 			m_iNumVisibleLines;	// number of items in menu before scroll bar adds on
-//	Dar<MenuItem *> m_MenuItems;
 	ScrollBar 		*m_pScroller;
 
 	CUtlLinkedList<MenuItem*, int> 	m_MenuItems;
+
+	CUtlVector<int>					m_VisibleSortedItems;
 	CUtlVector<int>					m_SortedItems;		// used for visual 
+	CUtlVector<int>					m_Separators;       // menu item ids after  which separators should be shown
+	CUtlVector<MenuSeparator *>		m_SeparatorPanels;
 
 	bool 			_sizedForScrollBar;  // whether menu has been sized for a scrollbar
 	int 			_menuWide;
@@ -266,9 +316,10 @@ private:
 	int 			m_iInputMode;
 	int 			m_iCheckImageWidth; // the size of the check box spot on a checkable menu.
 	int 			m_iProportionalScrollBarSize;
-
+	Label::Alignment	m_Alignment;
 	Color 			_borderDark;
 	int 			m_iActivatedItem;
+	HFont			m_hItemFont;
 };
 
 } // namespace vgui

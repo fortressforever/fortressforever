@@ -17,6 +17,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
+ASSERT_INVARIANT( ( bits_LINK_STALE_SUGGESTED | bits_LINK_OFF ) <= 255 && ( AI_MOVE_TYPE_BITS <= 255 ) );
 //-----------------------------------------------------------------------------
 // Purpose:	Given the source node ID, returns the destination ID
 // Input  :

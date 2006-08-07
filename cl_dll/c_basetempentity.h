@@ -68,6 +68,7 @@ public:
 
 	// Dummy for CNetworkVars.
 	void NetworkStateChanged() {}
+	void NetworkStateChanged( void *pVar ) {}
 
 	virtual bool					Init(int entnum, int iSerialNum);
 

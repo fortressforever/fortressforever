@@ -70,9 +70,11 @@ BEGIN_NETWORK_TABLE(CFFWeaponRailgun, DT_FFWeaponRailgun)
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA(CFFWeaponRailgun)
 DEFINE_PRED_FIELD_TOL(m_flStartCharge, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE), 
 END_PREDICTION_DATA()
+#endif
 
 LINK_ENTITY_TO_CLASS(ff_weapon_railgun, CFFWeaponRailgun);
 PRECACHE_WEAPON_REGISTER(ff_weapon_railgun);
@@ -216,7 +218,12 @@ void CFFWeaponRailgun::RailBeamEffect()
 
 	CEffectData data;
 	data.m_flScale = 1.0f;
+
+#ifdef GAME_DLL
 	data.m_nEntIndex = pPlayer->entindex();
+#else
+	data.m_hEntity = pPlayer;
+#endif
 
 	DispatchEffect("RailBeam", data);
 }

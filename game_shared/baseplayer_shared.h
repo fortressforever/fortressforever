@@ -32,6 +32,17 @@
 
 #define DEATH_ANIMATION_TIME	3.0f
 
+typedef struct 
+{
+	Vector		m_vecAutoAimDir;		// The direction autoaim wishes to point.
+	Vector		m_vecAutoAimPoint;		// The point (world space) that autoaim is aiming at.
+	EHANDLE		m_hAutoAimEntity;		// The entity that autoaim is aiming at.
+	bool		m_bAutoAimAssisting;	// If this is true, autoaim is aiming at the target. If false, the player is naturally aiming.
+	bool		m_bOnTargetNatural;		
+	float		m_fScale;
+	float		m_fMaxDist;
+} autoaim_params_t;
+
 // Shared header file for players
 #if defined( CLIENT_DLL )
 #define CBasePlayer C_BasePlayer

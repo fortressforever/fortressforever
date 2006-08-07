@@ -14,6 +14,7 @@
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/Controls.h>
 #include <vgui/IScheme.h>
+#include "ienginevgui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -43,8 +44,10 @@ private:
 CDebugOverlay::CDebugOverlay( vgui::VPANEL parent ) :
 	BaseClass( NULL, "CDebugOverlay" )
 {
+	int w, h;
+	vgui::surface()->GetScreenSize( w, h );
 	SetParent( parent );
-	SetSize( ScreenWidth(), ScreenHeight() );
+	SetSize( w, h );
 	SetPos( 0, 0 );
 	SetVisible( false );
 	SetCursor( null );
@@ -54,7 +57,7 @@ CDebugOverlay::CDebugOverlay( vgui::VPANEL parent ) :
 	SetPaintBackgroundEnabled( false );
 
 	// set the scheme before any child control is created
-	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/ClientScheme.res", "Client");
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS ), "resource/ClientScheme.res", "Client");
 	SetScheme( scheme );
 	
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 250 );
@@ -75,6 +78,11 @@ void CDebugOverlay::ApplySchemeSettings(vgui::IScheme *pScheme)
 //	m_hFont = pScheme->GetFont( "Default" );
 	m_hFont = pScheme->GetFont( "DebugOverlay" );
 	assert( m_hFont );
+
+	int w, h;
+	vgui::surface()->GetScreenSize( w, h );
+	SetSize( w, h );
+	SetPos( 0, 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -100,7 +108,6 @@ void CDebugOverlay::Paint()
 	OverlayText_t* pCurrText = debugoverlay->GetFirst();
 	while (pCurrText) 
 	{
-
 		if ( pCurrText->text != NULL ) 
 		{
 			// --------------

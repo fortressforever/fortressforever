@@ -39,6 +39,7 @@ private:
 	CNetworkVector( m_shadowDirection );
 	CNetworkColor32( m_shadowColor );
 	CNetworkVar( float, m_flShadowMaxDist );
+	CNetworkVar( bool, m_bDisableShadows );
 };
 
 LINK_ENTITY_TO_CLASS(shadow_control, CShadowControl);
@@ -46,11 +47,14 @@ LINK_ENTITY_TO_CLASS(shadow_control, CShadowControl);
 BEGIN_DATADESC( CShadowControl )
 
 	DEFINE_KEYFIELD( m_flShadowMaxDist, FIELD_FLOAT, "distance" ),
+	DEFINE_KEYFIELD( m_bDisableShadows, FIELD_BOOLEAN, "disableallshadows" ),
 
 	// Inputs
 	DEFINE_INPUT( m_shadowColor,		FIELD_COLOR32, "color" ),
 	DEFINE_INPUT( m_shadowDirection,	FIELD_VECTOR, "direction" ),
 	DEFINE_INPUT( m_flShadowMaxDist,	FIELD_FLOAT, "SetDistance" ),
+	DEFINE_INPUT( m_bDisableShadows,	FIELD_BOOLEAN, "SetShadowsDisabled" ),
+
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetAngles", InputSetAngles ),
 
 END_DATADESC()
@@ -60,6 +64,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CShadowControl, DT_ShadowControl)
 	SendPropVector(SENDINFO(m_shadowDirection), -1,  SPROP_NOSCALE ),
 	SendPropInt(SENDINFO(m_shadowColor),	32, SPROP_UNSIGNED),
 	SendPropFloat(SENDINFO(m_flShadowMaxDist), 0, SPROP_NOSCALE ),
+	SendPropBool(SENDINFO(m_bDisableShadows)),
 END_SEND_TABLE()
 
 
@@ -68,6 +73,7 @@ CShadowControl::CShadowControl()
 	m_shadowDirection.Init( 0.2, 0.2, -2 );
 	m_flShadowMaxDist = 50.0f;
 	m_shadowColor.Init( 64, 64, 64, 0 );
+	m_bDisableShadows = false;
 }
 
 

@@ -1,21 +1,23 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 #include <stdio.h>
 #include <stdlib.h>
-#include <ImageLoader.h>
+#include <direct.h>
+#include "bitmap/imageformat.h"
 #include "vstdlib/strtools.h"
 #include "mathlib.h"
-#include <TGAWriter.h>
-#include <TGALoader.h>
+#include "bitmap/TGAWriter.h"
+#include "bitmap/TGALoader.h"
 #include <math.h>
 #include <conio.h>
-#include "cmdlib.h"
-
+#include "tier1/utlbuffer.h"
+#include "tier2/tier2.h"
+#include "filesystem.h"
 
 static bool g_NoPause = false;
 static bool g_Quiet = false;
@@ -42,13 +44,13 @@ static bool ImageRGBA8888HasAlpha( unsigned char *pImage, int numTexels )
 	return false;
 }
 
-static bool GetKeyValueFromFP( FILE *fp, char **key, char **val )
+static bool GetKeyValueFromBuffer( CUtlBuffer &buf, char **key, char **val )
 {
-	static char buf[2048];
-	while( !feof( fp ) )
+	char stringBuf[2048];
+	while( buf.IsValid() )
 	{
-		fgets( buf, 2047, fp );
-		char *scan = buf;
+		buf.GetLine( stringBuf, sizeof(stringBuf) );
+		char *scan = stringBuf;
 		// search for the first quote for the key.
 		while( 1 )
 		{
@@ -124,9 +126,8 @@ next_line:
 
 static void LoadConfigFile( const char *pFileName, float *bumpScale, int *startFrame, int *endFrame )
 {
-	FILE *fp;
-	fp = fopen( pFileName, "r" );
-	if( !fp )
+	CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
+	if ( !g_pFullFileSystem->ReadFile( pFileName, NULL, buf ) )
 	{
 		fprintf( stderr, "Can't open: %s\n", pFileName );
 		Pause();
@@ -135,7 +136,7 @@ static void LoadConfigFile( const char *pFileName, float *bumpScale, int *startF
 
 	char *key = NULL;
 	char *val = NULL;
-	while( GetKeyValueFromFP( fp, &key, &val ) )
+	while( GetKeyValueFromBuffer( buf, &key, &val ) )
 	{
 		if( stricmp( key, "bumpscale" ) == 0 )
 		{
@@ -150,7 +151,6 @@ static void LoadConfigFile( const char *pFileName, float *bumpScale, int *startF
 			*endFrame = atoi( val );
 		}
 	}
-	fclose( fp );
 }
 
 static void Usage()
@@ -163,7 +163,6 @@ static void Usage()
 }
 
 void ProcessFiles( const char *pNormalFileNameWithoutExtension,
-				   const char *pBaseName,
 				   int startFrame, int endFrame,
 				   float bumpScale )
 {
@@ -206,34 +205,48 @@ void ProcessFiles( const char *pNormalFileNameWithoutExtension,
 		enum ImageFormat imageFormat;
 		int width, height;
 		float sourceGamma;
-		if( !TGALoader::GetInfo( heightTGAFileName, &width, &height, &imageFormat, &sourceGamma ) )
+		CUtlBuffer buf;
+		if ( !g_pFullFileSystem->ReadFile( heightTGAFileName, NULL, buf ) )
 		{
 			fprintf( stderr, "%s not found\n", heightTGAFileName );
 			return;
 		}
 
-		int memRequired = ImageLoader::GetMemRequired( width, height, IMAGE_FORMAT_IA88, false );
+		if ( !TGALoader::GetInfo( buf, &width, &height, &imageFormat, &sourceGamma ) )
+		{
+			fprintf( stderr, "error in %s\n", heightTGAFileName );
+			return;
+		}
+
+		int memRequired = ImageLoader::GetMemRequired( width, height, 1, IMAGE_FORMAT_IA88, false );
 		unsigned char *pImageIA88 = new unsigned char[memRequired];
 		
-		TGALoader::Load( pImageIA88, heightTGAFileName, width, height, IMAGE_FORMAT_IA88, sourceGamma, false );
+		buf.SeekGet( CUtlBuffer::SEEK_HEAD, 0 );
+		TGALoader::Load( pImageIA88, buf, width, height, IMAGE_FORMAT_IA88, sourceGamma, false );
 
-		memRequired = ImageLoader::GetMemRequired( width, height, IMAGE_FORMAT_RGBA8888, false );
+		memRequired = ImageLoader::GetMemRequired( width, height, 1, IMAGE_FORMAT_RGBA8888, false );
 		unsigned char *pImageRGBA8888 = new unsigned char[memRequired];
 		ImageLoader::ConvertIA88ImageToNormalMapRGBA8888( pImageIA88, width, height, pImageRGBA8888, bumpScale );
 
+		CUtlBuffer normalBuf;
 		ImageLoader::NormalizeNormalMapRGBA8888( pImageRGBA8888, width * height );
 		if( ImageRGBA8888HasAlpha( pImageRGBA8888, width * height ) )
 		{
-			TGAWriter::Write( pImageRGBA8888, normalTGAFileName, width, height, IMAGE_FORMAT_RGBA8888, IMAGE_FORMAT_RGBA8888 );
+			TGAWriter::WriteToBuffer( pImageRGBA8888, normalBuf, width, height, IMAGE_FORMAT_RGBA8888, IMAGE_FORMAT_RGBA8888 );
 		}
 		else
 		{
-			memRequired = ImageLoader::GetMemRequired( width, height, IMAGE_FORMAT_RGB888, false );
+			memRequired = ImageLoader::GetMemRequired( width, height, 1, IMAGE_FORMAT_RGB888, false );
 			unsigned char *pImageRGB888 = new unsigned char[memRequired];
 			ImageLoader::ConvertImageFormat( pImageRGBA8888, IMAGE_FORMAT_RGBA8888, 
 				pImageRGB888, IMAGE_FORMAT_RGB888, width, height, 0, 0 );
-			TGAWriter::Write( pImageRGB888, normalTGAFileName, width, height, IMAGE_FORMAT_RGB888, IMAGE_FORMAT_RGB888 );
+			TGAWriter::WriteToBuffer( pImageRGB888, normalBuf, width, height, IMAGE_FORMAT_RGB888, IMAGE_FORMAT_RGB888 );
 			delete [] pImageRGB888;
+		}
+		if ( !g_pFullFileSystem->WriteFile( normalTGAFileName, NULL, normalBuf ) )
+		{
+			fprintf( stderr, "unable to write %s\n", normalTGAFileName );
+			return;
 		}
 		delete [] pImageIA88;
 		delete [] pImageRGBA8888;
@@ -247,9 +260,9 @@ int main( int argc, char **argv )
 		Usage();
 	}
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
+	InitDefaultFileSystem();
 
 	int i = 1;
-	i = 1;
 	while( i < argc )
 	{
 		if( stricmp( argv[i], "-quiet" ) == 0 )
@@ -268,10 +281,31 @@ int main( int argc, char **argv )
 			break;
 		}
 	}
+
+	char pCurrentDirectory[MAX_PATH];
+	if ( _getcwd( pCurrentDirectory, sizeof(pCurrentDirectory) ) == NULL )
+	{
+		fprintf( stderr, "Unable to get the current directory\n" );
+		return -1;
+	}
+
+	Q_FixSlashes( pCurrentDirectory );
+	Q_StripTrailingSlash( pCurrentDirectory );
+
 	for( ; i < argc; i++ )
 	{
 		static char normalFileNameWithoutExtension[1024];
-		char *pFileName = argv[i];
+		char *pFileName;
+		if ( !Q_IsAbsolutePath( argv[i] ) )
+		{
+			Q_snprintf( normalFileNameWithoutExtension, sizeof(normalFileNameWithoutExtension), "%s\\%s", pCurrentDirectory, argv[i] );
+			pFileName = normalFileNameWithoutExtension;
+		}
+		else
+		{
+			pFileName = argv[i];
+		}
+
 		if( !g_Quiet )
 		{
 			printf( "file: %s\n", pFileName );
@@ -299,16 +333,7 @@ int main( int argc, char **argv )
 		}
 		
 		Q_StripExtension( pFileName, normalFileNameWithoutExtension, sizeof( normalFileNameWithoutExtension ) );
-
-		const char *pBaseName = normalFileNameWithoutExtension;
-		while( (pBaseName >= normalFileNameWithoutExtension) && *pBaseName != '\\' && *pBaseName != '/' )
-		{
-			pBaseName--;
-		}
-		pBaseName++;
-		
 		ProcessFiles( normalFileNameWithoutExtension,
-					  pBaseName,
 					  startFrame, endFrame,
 					  bumpScale );
 	}

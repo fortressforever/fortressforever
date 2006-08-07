@@ -28,6 +28,7 @@
 #define SF_TANK_IGNORE_RANGE_IN_VIEWCONE	0x2000		// 8192		Don't use range as a factor in determining if something is in view cone
 #define SF_TANK_NOTSOLID					0x8000		// 32768
 #define SF_TANK_SOUNDON						0x10000		// FIXME: This is not really a spawnflag! It holds transient state!!!
+#define SF_TANK_HACKPLAYERHIT				0x20000		// 131072	Make this func_tank cheat and hit the player regularly
 
 #define FUNCTANK_DISTANCE_MAX				1200			// 100 ft.
 #define FUNCTANK_DISTANCE_MIN_TO_ENEMY		180
@@ -39,8 +40,9 @@
 // instead of the individual effect settings. (muzzleflash, sound, tracer, etc)
 enum FUNCTANK_EFFECT_HANDLING
 {
-	EH_NONE,	// Use the effect settings
-	EH_AR2,		// Use AR2 effects
+	EH_NONE,			// Use the effect settings
+	EH_AR2,				// Use AR2 effects
+	EH_COMBINE_CANNON	// Large Combine cannon
 };
 
 enum TANKBULLET
@@ -133,7 +135,7 @@ protected:
 	float GetNextAttack() const { return m_flNextAttack; }
 	virtual void SetNextAttack( float flWait ) { m_flNextAttack = flWait; }
 
-	virtual void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker );
+	virtual void Fire( int bulletCount, const Vector &barrelEnd, const Vector &forward, CBaseEntity *pAttacker, bool bIgnoreSpread );
 	void		TankTrace( const Vector &vecStart, const Vector &vecForward, const Vector &vecSpread, trace_t &tr );
 	int			GetRandomBurst( void );
 	float		GetRandomFireTime( void );
@@ -223,9 +225,14 @@ protected:
 	int						m_iBulletDamage; // 0 means use Bullet type's default damage
 	int						m_iBulletDamageVsPlayer; // Damage vs player. 0 means use m_iBulletDamage
 
+#ifdef HL2_EPISODIC
+	string_t				m_iszAmmoType;		// The name of the ammodef that we use when we fire. Bullet damage still comes from keyvalues.
+	int						m_iAmmoType;		// The cached index of the ammodef that we use when we fire.
+#else
 	int						m_iSmallAmmoType;
 	int						m_iMediumAmmoType;
 	int						m_iLargeAmmoType;
+#endif // HL2_EPISODIC
 
 	int						m_spread;		// firing spread
 

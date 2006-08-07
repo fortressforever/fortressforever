@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="mxtoolkitwin32"
 	ProjectGUID="{991F7046-2B96-4FF0-8449-6E2BBF6A49D2}"
-	SccProjectName="&quot;$/Src/utils/mxtk/msvc&quot;, ODRCAAAA"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -28,7 +28,7 @@
 				PreprocessorDefinitions="_WIN32;WIN32;_DEBUG;_WINDOWS"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\mxToolKit - Debug/mxtoolkitwin32.pch"
 				AssemblerListingLocation=".\mxToolKit - Debug/"
@@ -40,14 +40,10 @@
 				DebugInformationFormat="1"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\lib\common\mxtk.lib attrib -r ..\..\..\lib\common\mxtk.lib
-copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
-"
-				Outputs="..\..\..\lib\common\mxtk.lib"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="Debug\mxtk.lib"
+				OutputFile="..\..\..\lib\common\mxtk.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -56,7 +52,8 @@ copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\..\..\lib\common\mxtk.lib attrib -r ..\..\..\lib\common\mxtk.lib"/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				Culture="1033"/>
@@ -78,17 +75,18 @@ copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
 			ATLMinimizesCRunTimeLibraryUsage="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="0"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="../include,../../../public,../../../public/tier1"
 				PreprocessorDefinitions="_WIN32;WIN32;NDEBUG;_WINDOWS"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
@@ -101,14 +99,10 @@ copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
 				DebugInformationFormat="1"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				CommandLine="if exist ..\..\..\lib\common\mxtk.lib attrib -r ..\..\..\lib\common\mxtk.lib
-copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
-"
-				Outputs="..\..\..\lib\common\mxtk.lib"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="Release\mxtk.lib"
+				OutputFile="..\..\..\lib\common\mxtk.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -117,7 +111,8 @@ copy &quot;$(TargetDir)&quot;mxtk.lib ..\..\..\lib\common\mxtk.lib
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+				CommandLine="if exist ..\..\..\lib\common\mxtk.lib attrib -r ..\..\..\lib\common\mxtk.lib"/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				Culture="1033"/>

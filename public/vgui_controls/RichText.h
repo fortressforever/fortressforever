@@ -35,6 +35,7 @@ public:
 	void SetText(const char *text);
 	void SetText(const wchar_t *text);
 	void GetText(int offset, wchar_t *buf, int bufLenInBytes);
+	void GetText(int offset, char *pch, int bufLenInBytes);
 
 	// configuration
 	void SetFont(HFont font);
@@ -68,7 +69,7 @@ public:
 	void InsertIndentChange(int pixelsIndent);
 	// clickable text
 	// notification that text was clicked is through "TextClicked" message
-	void InsertClickableTextStart();
+	void InsertClickableTextStart( const char *pchClickAction = NULL );
 	void InsertClickableTextEnd();
 	// inserts a string that needs to be scanned for urls/mailto commands to be made clickable
 	void InsertPossibleURLString(const char *text, Color URLTextColor, Color normalTextColor);
@@ -98,12 +99,14 @@ public:
 				"text" - text contained in the text box
 	*/
 	virtual void SetFgColor( Color color );
+	virtual void SetDrawOffsets( int ofsx, int ofsy );
+	bool IsScrollbarVisible();
 
 protected:
 	virtual void OnThink();
 	virtual void PerformLayout();  // layout the text in the window
 	virtual void ApplySchemeSettings(IScheme *pScheme);
-	virtual void PaintBackground();
+	virtual void Paint();
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void GetSettings( KeyValues *outResourceData );
@@ -133,7 +136,13 @@ protected:
 	int ParseTextStringForUrls(const char *text, int startPos, char *resultBuffer, int resultBufferSize, bool &clickable);
 	virtual void OnTextClicked(const wchar_t *text);
 
+#ifdef DBGFLAG_VALIDATE
+	virtual void Validate( CValidator &validator, char *pchName );
+#endif // DBGFLAG_VALIDATE
+
 private:
+	void CheckRecalcLineBreaks();
+
 	void GotoWordRight();	// move cursor to start of next word
 	void GotoWordLeft();	// move cursor to start of prev word
 
@@ -165,6 +174,7 @@ private:
 		Color color;
 		int pixelsIndent;
 		bool textClickable;
+		CUtlSymbol m_sClickableTextAction;
 
 		// position in TextStream that these changes take effect
 		int textStreamIndex;
@@ -190,11 +200,13 @@ private:
 	Color			   _selectionColor;
 	Color			   _selectionTextColor;	// color of the highlighted text
 	bool			   _currentTextClickable;
-	Dar<ClickPanel *>  _clickableTextPanels;
+	CUtlVector<ClickPanel *>  _clickableTextPanels;
 	int				   _clickableTextIndex;
 	Color				_defaultTextColor;
 	int					_drawOffsetX;
 	int					_drawOffsetY;
+
+	Panel				*m_pInterior;
 
 
 	// sub-controls
@@ -228,8 +240,8 @@ private:
 	void GenerateRenderStateForTextStreamIndex(int textStreamIndex, TRenderState &renderState);
 	int FindFormatStreamIndexForTextStreamPos(int textStreamIndex);
 
-	// draws a single character with the current render state
-	int DrawChar(wchar_t ch, TRenderState &renderState, HFont font, int index);
+	// draws a string of characters with the same formatting using the current render state
+	int DrawString(int iFirst, int iLast, TRenderState &renderState, HFont font);
 };
 
 } // namespace vgui

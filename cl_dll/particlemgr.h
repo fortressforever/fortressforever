@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 
 //
 // This module implements the particle manager for the client DLL.
@@ -50,7 +50,7 @@ Example class:
 		// Call this to start the effect by adding it to the particle manager.
 		void			Start()
 		{
-			g_ParticleMgr.AddEffect( &m_ParticleEffect, this );
+			ParticleMgr()->AddEffect( &m_ParticleEffect, this );
 		}
 
 		// implementation of IParticleEffect functions go here...
@@ -117,11 +117,14 @@ entities. Each one is useful under different conditions.
 #include "utllinkedlist.h"
 #include "UtlDict.h"
 
+#include <typeinfo.h>
+
 //-----------------------------------------------------------------------------
 // forward declarations
 //-----------------------------------------------------------------------------
 
 class IParticleEffect;
+class IClientParticleListener;
 struct Particle;
 class ParticleDraw;
 class CMeshBuilder;
@@ -129,6 +132,7 @@ class CMemoryPool;
 class CEffectMaterial;
 class CParticleSimulateIterator;
 class CParticleRenderIterator;
+
 
 
 #define INVALID_MATERIAL_HANDLE	NULL
@@ -156,6 +160,8 @@ struct Particle
 
 	// If m_Pos isn't used to store the world position, then implement IParticleEffect::GetParticlePosition()
 	Vector m_Pos;			// Position of the particle in world space
+
+	void ToolRecordParticle( KeyValues *msg );
 };
 
 
@@ -225,7 +231,7 @@ public:
 // will get the callbacks it needs to simulate and render the particles.
 //-----------------------------------------------------------------------------
 
-class IParticleEffect
+abstract_class IParticleEffect
 {
 // Overridables.
 public:
@@ -245,6 +251,8 @@ public:
 	virtual void	StartRender( VMatrix &effectMatrix ) {}
 
 	// Simulate the particles.
+	virtual bool	ShouldSimulate() const = 0;
+	virtual void	SetShouldSimulate( bool bSim ) = 0;
 	virtual void	SimulateParticles( CParticleSimulateIterator *pIterator ) = 0;
 
 	// Render the particles.
@@ -272,7 +280,37 @@ public:
 // TODO: REMOVE THIS. ALL PARTICLE SYSTEMS SHOULD EITHER SET m_Pos IN CONJUNCTION WITH THE
 // PARTICLE_LOCALSPACE FLAG, OR DO SETBBOX THEMSELVES.
 	virtual const Vector *GetParticlePosition( Particle *pParticle ) { return &pParticle->m_Pos; }
+
+	virtual const char *GetEffectName() { return "???"; } 
 };
+
+#define REGISTER_EFFECT( effect )														\
+	IParticleEffect* effect##_Factory()													\
+	{																					\
+		return new effect;																\
+	}																					\
+	struct effect##_RegistrationHelper													\
+	{																					\
+		effect##_RegistrationHelper()													\
+		{																				\
+			ParticleMgr()->RegisterEffect( typeid( effect ).name(), effect##_Factory );	\
+		}																				\
+	};																					\
+	static effect##_RegistrationHelper g_##effect##_RegistrationHelper
+
+#define REGISTER_EFFECT_USING_CREATE( effect )											\
+	IParticleEffect* effect##_Factory()													\
+	{																					\
+		return effect::Create( #effect ).GetObject();									\
+	}																					\
+	struct effect##_RegistrationHelper													\
+	{																					\
+		effect##_RegistrationHelper()													\
+		{																				\
+			ParticleMgr()->RegisterEffect( typeid( effect ).name(), effect##_Factory );	\
+		}																				\
+	};																					\
+	static effect##_RegistrationHelper g_##effect##_RegistrationHelper
 
 
 // In order to create a particle effect, you must have one of these around and
@@ -431,11 +469,11 @@ private:
 	void			BBoxCalcEnd( bool bFullBBoxUpdate, bool bboxSet, Vector &bbMin, Vector &bbMax );
 	
 	void			DoBucketSort( 
-		CEffectMaterial *pMaterial, 
-		float *zCoords, 
-		int nZCoords,
-		float minZ,
-		float maxZ );
+						CEffectMaterial *pMaterial, 
+						float *zCoords, 
+						int nZCoords,
+						float minZ,
+						float maxZ );
 
 	int				GetRemovalInProgressFlag()					{ return GetFlag( FLAGS_REMOVALINPROGRESS ); }
 	void			SetRemovalInProgressFlag()					{ SetFlag( FLAGS_REMOVALINPROGRESS, 1 ); }
@@ -451,17 +489,17 @@ private:
 	int				WasDrawn()									{ return GetFlag( FLAGS_DRAWN ); }
 	void			SetDrawn( int bDrawn )						{ SetFlag( FLAGS_DRAWN, bDrawn ); }
 
-	// Update m_Min/m_Max. Returns false and sets the bbox to (0,0,0) if there are no particles.
+	// Update m_Min/m_Max. Returns false and sets the bbox to the sort origin if there are no particles.
 	bool			RecalculateBoundingBox();
 
 	CEffectMaterial* GetEffectMaterial( CParticleSubTexture *pSubTexture );
-
 
 // IClientRenderable overrides.
 public:		
 
 	virtual const Vector&			GetRenderOrigin( void );
 	virtual const QAngle&			GetRenderAngles( void );
+	virtual const matrix3x4_t &		RenderableToWorldTransform();
 	virtual void					GetRenderBounds( Vector& mins, Vector& maxs );
 	virtual bool					ShouldDraw( void );
 	virtual bool					IsTransparent( void );
@@ -528,6 +566,9 @@ private:
 	
 	// For faster iteration.
 	CUtlLinkedList<CEffectMaterial*, unsigned short> m_Materials;
+
+	// auto updates the bbox after N frames
+	unsigned short					m_UpdateBBoxCounter;
 };
 
 
@@ -537,6 +578,13 @@ public:
 	Vector	m_vPos;
 	Vector	m_vColor;	// 0-1
 	float	m_flIntensity;
+};
+
+typedef IParticleEffect* (*CreateParticleEffectFN)();
+
+enum
+{
+	TOOLPARTICLESYSTEMID_INVALID = -1,
 };
 
 
@@ -554,6 +602,9 @@ public:
 
 	// Shutdown - free everything.
 	void			Term();
+
+	void			RegisterEffect( const char *pEffectType, CreateParticleEffectFN func );
+	IParticleEffect	*CreateEffect( const char *pEffectType );
 
 	// Add and remove effects from the active list.
 	// Note: once you call AddEffect, CParticleEffectBinding will automatically call
@@ -594,7 +645,14 @@ public:
 	void GetDirectionalLightInfo( CParticleLightInfo &info ) const;
 	void SetDirectionalLightInfo( const CParticleLightInfo &info );
 
+	void SpewInfo( bool bDetail );
 
+	// add a class that gets notified of entity events
+	void AddEffectListener( IClientParticleListener *pListener );
+	void RemoveEffectListener( IClientParticleListener *pListener );
+
+	// Tool effect ids
+	int AllocateToolParticleEffectId();
 private:
 	// Call Update() on all the effects.
 	void			UpdateAllEffects( float flTimeDelta );
@@ -602,6 +660,8 @@ private:
 	CParticleSubTextureGroup* FindOrAddSubTextureGroup( IMaterial *pPageMaterial );
 
 private:
+
+	int m_nCurrentParticlesAllocated;
 
 	// Directional lighting info.
 	CParticleLightInfo m_DirectionalLight;
@@ -616,18 +676,33 @@ private:
 	// All the active effects.
 	CUtlLinkedList<CParticleEffectBinding*, unsigned short>		m_Effects;
 
+	CUtlVector< IClientParticleListener *> m_effectListeners;
+
 	IMaterialSystem					*m_pMaterialSystem;
 
 	// Store the concatenated modelview matrix
 	VMatrix							m_mModelView;
 	
-	// This is a big array that is used to allocate and index the particles.
-	CMemoryPool						*m_pParticleBucket;
-
-	
 	CUtlVector<CParticleSubTextureGroup*>				m_SubTextureGroups;	// lookup by group name
 	CUtlDict<CParticleSubTexture*,unsigned short>		m_SubTextures;		// lookup by material name
 	CParticleSubTexture m_DefaultInvalidSubTexture; // Used when they specify an invalid material name.
+
+	CUtlMap< const char*, CreateParticleEffectFN > m_effectFactories;
+
+	int m_nToolParticleEffectId;
+};
+
+inline int CParticleMgr::AllocateToolParticleEffectId()
+{
+	return m_nToolParticleEffectId++;
+}
+
+// Implement this class and register with CParticleMgr to receive particle effect add/remove notification
+class IClientParticleListener
+{
+public:
+	virtual void OnParticleEffectAdded( IParticleEffect *pEffect ) = 0;
+	virtual void OnParticleEffectRemoved( IParticleEffect *pEffect ) = 0;
 };
 
 
@@ -666,7 +741,7 @@ inline const matrix3x4_t& CParticleEffectBinding::GetLocalSpaceTransform() const
 // GLOBALS
 // ------------------------------------------------------------------------ //
 
-extern CParticleMgr g_ParticleMgr;
+CParticleMgr *ParticleMgr();
 
 
 

@@ -61,7 +61,7 @@ CBaseEntity *CAI_PoliceGoal::GetTarget( void )
 {
 	if ( m_hTarget == NULL )
 	{
-		CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_iszTarget, NULL );
+		CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_iszTarget );
 
 		if ( pTarget == NULL )
 		{

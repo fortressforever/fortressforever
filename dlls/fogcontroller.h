@@ -14,7 +14,7 @@
 #include "playernet_vars.h"
 
 
-void GetWorldFogParams( fogparams_t &fog );
+bool GetWorldFogParams( fogparams_t &fog );
 
 
 #endif // FOGCONTROLLER_H

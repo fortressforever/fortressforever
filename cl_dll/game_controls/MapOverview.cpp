@@ -1,6 +1,6 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: MiniMap.cpp: implementation of the CMiniMap class.
+// Purpose: MapOverview.cpp: implementation of the CMapOverview class.
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -19,14 +19,17 @@
 #include "spectatorgui.h"
 #include "c_playerresource.h"
 
+#include "clientmode.h"
+#include <vgui_controls/AnimationController.h>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar overview_health( "overview_health", "1", 0, "Show player's health in map overview.\n" );
-static ConVar overview_names ( "overview_names",  "1", 0, "Show player's names in map overview.\n" );
-static ConVar overview_tracks( "overview_tracks", "1", 0, "Show player's tracks in map overview.\n" );
-static ConVar overview_locked( "overview_locked", "1", 0, "Locks map angle, doesn't follow view angle.\n" );
-static ConVar overview_alpha( "overview_alpha",  "1.0", 0, "Overview map translucency.\n" );
+ConVar overview_health( "overview_health", "1", FCVAR_ARCHIVE, "Show player's health in map overview.\n" );
+ConVar overview_names ( "overview_names",  "1", FCVAR_ARCHIVE, "Show player's names in map overview.\n" );
+ConVar overview_tracks( "overview_tracks", "1", FCVAR_ARCHIVE, "Show player's tracks in map overview.\n" );
+ConVar overview_locked( "overview_locked", "1", FCVAR_ARCHIVE, "Locks map angle, doesn't follow view angle.\n" );
+ConVar overview_alpha( "overview_alpha",  "1.0", FCVAR_ARCHIVE, "Overview map translucency.\n" );
 
 CMapOverview *g_pMapOverview = NULL; // we assume only one overview is created
 
@@ -64,7 +67,7 @@ CON_COMMAND( overview_zoom, "Sets overview map zoom: <zoom> [<time>] [rel]" )
 	if ( engine->Cmd_Argc() == 4 )
 		zoom *= g_pMapOverview->GetZoom();
 
-	g_pMapOverview->SetZoom( zoom, time );
+	g_pClientMode->GetViewportAnimationController()->RunAnimationCommand( g_pMapOverview, "zoom", zoom, 0.0, time, vgui::AnimationController::INTERPOLATOR_LINEAR );
 }
 
 CON_COMMAND( overview_mode, "Sets overview map mode off,small,large: <0|1|2>" )
@@ -98,14 +101,14 @@ CON_COMMAND( overview_mode, "Sets overview map mode off,small,large: <0|1|2>" )
 
 using namespace vgui;
 
-CMapOverview::CMapOverview( IViewPort *pViewPort ) : BaseClass( NULL, PANEL_OVERVIEW )
+CMapOverview::CMapOverview( const char *pElementName ) : BaseClass( NULL, pElementName ), CHudElement( pElementName )
 {
-	m_pViewPort = pViewPort;
+	SetParent( g_pClientMode->GetViewport()->GetVPanel() );
 
 	SetBounds( 0,0, 256, 256 );
 	SetBgColor( Color( 0,0,0,100 ) );
 	SetPaintBackgroundEnabled( true );
-	SetVisible( false );
+	ShowPanel( false );
 
 	// Make sure we actually have the font...
 	vgui::IScheme *pScheme = vgui::scheme()->GetIScheme( GetScheme() );
@@ -118,7 +121,7 @@ CMapOverview::CMapOverview( IViewPort *pViewPort ) : BaseClass( NULL, PANEL_OVER
 	m_MapOrigin = Vector( 0, 0, 0 );
 	m_fMapScale = 1.0f;
 	m_bFollowAngle = false;
-	m_nMode = MAP_MODE_OFF;
+	SetMode( MAP_MODE_OFF );
 
 	m_fZoom = 3.0f;
 	m_MapCenter = Vector2D( 512, 512 );
@@ -141,6 +144,11 @@ CMapOverview::CMapOverview( IViewPort *pViewPort ) : BaseClass( NULL, PANEL_OVER
 
 	InitTeamColorsAndIcons();
 
+	g_pMapOverview = this;  // for cvars access etc
+}
+
+void CMapOverview::Init( void )
+{
 	// register for events as client listener
 	gameeventmanager->AddListener( this, "game_newmap", false );
 	gameeventmanager->AddListener( this, "round_start", false );
@@ -150,8 +158,6 @@ CMapOverview::CMapOverview( IViewPort *pViewPort ) : BaseClass( NULL, PANEL_OVER
 	gameeventmanager->AddListener( this, "player_spawn", false );
 	gameeventmanager->AddListener( this, "player_death", false );
 	gameeventmanager->AddListener( this, "player_disconnect", false );
-		
-	g_pMapOverview = this;  // for cvars access etc
 }
 
 void CMapOverview::InitTeamColorsAndIcons()
@@ -202,10 +208,20 @@ CMapOverview::~CMapOverview()
 
 void CMapOverview::UpdatePlayers()
 {
+	if ( !g_PR )
+		return;
+
+	// first disable all players health
+	for ( int i=0; i<MAX_PLAYERS; i++ )
+	{
+		m_Players[i].health = 0;
+		m_Players[i].team = TEAM_SPECTATOR;
+	}
+
 	for ( int i = 1; i<= gpGlobals->maxClients; i++)
 	{
 		// update from global player resources
-		if ( g_PR->IsConnected(i) )
+		if ( g_PR && g_PR->IsConnected(i) )
 		{
 			MapPlayer_t *player = &m_Players[i-1];
 
@@ -268,27 +284,6 @@ void CMapOverview::UpdatePlayerTrails()
 	}
 }
 
-void CMapOverview::UpdateZoom()
-{
-    if ( m_fZoom == m_fTragetZoom )
-		return;
-
-	if ( m_fZoom < m_fTragetZoom )
-	{
-		m_fZoom += gpGlobals->frametime * m_fZoomSpeed;
-
-		if ( m_fZoom > m_fTragetZoom )
-			m_fZoom = m_fTragetZoom;
-	}
-	else 
-	{
-		m_fZoom -= gpGlobals->frametime * m_fZoomSpeed;
-
-		if ( m_fZoom < m_fTragetZoom )
-			m_fZoom = m_fTragetZoom;
-	}
-}
-
 void CMapOverview::UpdateFollowEntity()
 {
 	if ( m_nFollowEntity != 0 )
@@ -319,8 +314,6 @@ void CMapOverview::UpdateFollowEntity()
 void CMapOverview::Paint()
 {
 	UpdateSizeAndPosition();
-
-	UpdateZoom();
 
 	UpdateFollowEntity();
 
@@ -421,6 +414,15 @@ void CMapOverview::ShowPanel(bool bShow)
 	SetVisible( bShow );
 }
 
+void CMapOverview::OnThink( void )
+{
+	if ( NeedsUpdate() )
+	{
+		Update();
+		m_fNextUpdateTime = gpGlobals->curtime + 0.2f; // update 5 times a second
+	}
+}
+
 bool CMapOverview::NeedsUpdate( void )
 {
 	return m_fNextUpdateTime < gpGlobals->curtime;
@@ -435,8 +437,6 @@ void CMapOverview::Update( void )
 	m_fTrailUpdateInterval = overview_tracks.GetInt();
 
 	m_fWorldTime = gpGlobals->curtime;
-
-	m_fNextUpdateTime = gpGlobals->curtime + 0.2f; // update 5 times a second
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
@@ -562,23 +562,43 @@ void CMapOverview::DrawObjects( )
 	{
 		MapObject_t *obj = &m_Objects[i];
 
-
 		const char *text = NULL;
 
 		if ( Q_strlen(obj->name) > 0 )
 			text = obj->name;
 
+		float flAngle = obj->angle[YAW];
+
+		if ( obj->flags & MAP_OBJECT_ALIGN_TO_MAP && m_bRotateMap )
+		{
+			if ( m_bRotateMap )
+                flAngle = 90;
+			else
+				flAngle = 0;
+		}
+
+		MapObject_t tempObj = *obj;
+		tempObj.angle[YAW] = flAngle;
+		tempObj.text = text;
+		tempObj.statusColor = obj->color;
+
 		// draw icon
-		if ( !DrawIcon( obj->icon, obj->position, obj->size, obj->angle[YAW], text, &obj->color, obj->status, &obj->color ) )
+		if ( !DrawIcon( &tempObj ) )
 			continue;
-
-		// draw text
 	}
-
 }
 
-bool CMapOverview::DrawIcon( int textureID, Vector pos, float scale, float angle, const char *text, Color *textColor, float status, Color *statusColor )
+bool CMapOverview::DrawIcon( MapObject_t *obj )
 {
+	int textureID = obj->icon;
+	Vector pos = obj->position;
+	float scale = obj->size;
+	float angle = obj->angle[YAW];
+	const char *text = obj->text;
+	Color *textColor = &obj->color;
+	float status = obj->status;
+	Color *statusColor = &obj->statusColor;
+
 	Vector offset;	offset.z = 0;
 	
 	Vector2D pospanel = WorldToMap( pos );
@@ -698,7 +718,19 @@ void CMapOverview::DrawMapPlayers()
 		if ( m_bShowHealth && CanPlayerHealthBeSeen( player ) )
 			status = player->health/100.0f;
 
-		DrawIcon( player->icon, player->position, m_flIconSize, player->angle[YAW], name, &player->color, status, &colorGreen );
+		// convert from PlayerObject_t
+		MapObject_t tempObj;
+		memset( &tempObj, 0, sizeof(MapObject_t) );
+		tempObj.icon = player->icon;
+		tempObj.position = player->position;
+		tempObj.size = m_flIconSize;
+		tempObj.angle = player->angle;
+		tempObj.text = name;
+		tempObj.color = player->color;
+		tempObj.status = status;
+		tempObj.statusColor = colorGreen;
+
+		DrawIcon( &tempObj );
 	}
 }
 
@@ -736,8 +768,11 @@ Vector2D CMapOverview::MapToPanel( const Vector2D &mappos )
 
 	VectorYawRotate( offset, viewAngle, offset );
 
-	offset.x *= m_fZoom/OVERVIEW_MAP_SIZE;
-	offset.y *= m_fZoom/OVERVIEW_MAP_SIZE;
+	// find the actual zoom from the animationvar m_fZoom and the map zoom scale
+	float fScale = (m_fZoom * m_fFullZoom) / OVERVIEW_MAP_SIZE;
+
+	offset.x *= fScale;
+	offset.y *= fScale;
 
 	panelpos.x = (pwidth * 0.5f) + (pheight * offset.x);
 	panelpos.y = (pheight * 0.5f) + (pheight * offset.y);
@@ -752,8 +787,14 @@ void CMapOverview::SetTime( float time )
 
 void CMapOverview::SetMap(const char * levelname)
 {
-	// load new KeyValues
+	// Reset players and objects, even if the map is the same as the previous one
+	m_Objects.RemoveAll();
+	
+	m_fNextTrailUpdate = m_fWorldTime;
 
+	InitTeamColorsAndIcons();
+
+	// load new KeyValues
 	if ( m_MapKeyValues && Q_strcmp( levelname, m_MapKeyValues->GetName() ) == 0 )
 	{
 		return;	// map didn't change
@@ -797,11 +838,6 @@ void CMapOverview::SetMap(const char * levelname)
 	m_fMapScale		= m_MapKeyValues->GetFloat("scale", 1.0f);
 	m_bRotateMap	= m_MapKeyValues->GetInt("rotate")!=0;
 	m_fFullZoom		= m_MapKeyValues->GetFloat("zoom", 1.0f );
-	// remove all objects and reset players
-	m_Objects.RemoveAll();
-
-	
-	m_fNextTrailUpdate = m_fWorldTime;
 }
 
 void CMapOverview::ResetRound()
@@ -852,7 +888,7 @@ void CMapOverview::FireGameEvent( IGameEvent *event )
 
 	else if ( Q_strcmp(type,"player_connect") == 0 )
 	{
-		int index = event->GetInt("index"); // = entity index-1 
+		int index = event->GetInt("index"); // = entity index - 1 
 
 		if ( index < 0 || index >= MAX_PLAYERS )
 			return;
@@ -871,7 +907,7 @@ void CMapOverview::FireGameEvent( IGameEvent *event )
 
 	else if ( Q_strcmp(type,"player_info") == 0 )
 	{
-		int index = event->GetInt("index"); // entindex
+		int index = event->GetInt("index"); // = entity index - 1
 
 		if ( index < 0 || index >= MAX_PLAYERS )
 			return;
@@ -934,28 +970,40 @@ void CMapOverview::SetMode(int mode)
 
 	if ( mode == MAP_MODE_OFF )
 	{
-		gViewPortInterface->ShowPanel( this, false );		
+		ShowPanel( false );
+
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "MapOff" );
 	}
 	else if ( mode == MAP_MODE_INSET )
 	{
 		if ( m_nMode != MAP_MODE_OFF )
 			m_flChangeSpeed = 1000; // zoom effect
 
-		m_fZoom = 1.0f; // zoom in effect
-		SetZoom( 3.0f, 1.0f );
-		SetFollowEntity( CBasePlayer::GetLocalPlayer()->entindex() );
+		C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 
-		gViewPortInterface->ShowPanel( this, true );		
+		if ( pPlayer )
+            SetFollowEntity( pPlayer->entindex() );
+
+		ShowPanel( true );
+
+		if ( mode != m_nMode )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "MapZoomToSmall" );
+		}
 	}
 	else if ( mode == MAP_MODE_FULL )
 	{
 		if ( m_nMode != MAP_MODE_OFF )
 			m_flChangeSpeed = 1000; // zoom effect
 
-		SetZoom( -1.0f, 0.5 ); // zoom -1 means best full zoom
 		SetFollowEntity( 0 );
 
-		gViewPortInterface->ShowPanel( this, true );		
+		ShowPanel( true );
+
+		if ( mode != m_nMode )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "MapZoomToLarge" );
+		}
 	}
 
 	// finally set mode
@@ -964,62 +1012,31 @@ void CMapOverview::SetMode(int mode)
 	UpdateSizeAndPosition();
 }
 
+bool CMapOverview::ShouldDraw( void )
+{
+	return ( m_nMode != MAP_MODE_OFF ) && CHudElement::ShouldDraw();
+}
+
 void CMapOverview::UpdateSizeAndPosition()
 {
-	int x,y,w,h;
-
-	vgui::surface()->GetScreenSize( w, h );
-
-	if ( m_nMode == MAP_MODE_INSET )
+	if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
 	{
-		m_vPosition.x = w - m_vSize.x - YRES(2);
-		m_vPosition.y = YRES(2);
+		int iScreenWide, iScreenTall;
+		GetHudSize( iScreenWide, iScreenTall );
 
-		if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
-		{
-			m_vPosition.y += g_pSpectatorGUI->GetTopBarHeight();
-		}
+		int iTopBarHeight = g_pSpectatorGUI->GetTopBarHeight();
+		int iBottomBarHeight = g_pSpectatorGUI->GetBottomBarHeight();
 
-		m_vSize.x = w/4;
-		m_vSize.y = m_vSize.x/1.333;
+		iScreenTall -= ( iTopBarHeight + iBottomBarHeight );
+
+		int x,y,w,h;
+		GetBounds( x,y,w,h );
+
+		if ( y < iTopBarHeight )
+			y = iTopBarHeight;
+
+        SetBounds( x,y,w,min(h,iScreenTall) );
 	}
-	else if ( m_nMode == MAP_MODE_FULL )
-	{
-		m_vSize.x = w;
-		m_vSize.y = h;
-
-		m_vPosition.x = 0;
-		m_vPosition.y = 0;
-
-		if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
-		{
-			m_vPosition.y += g_pSpectatorGUI->GetTopBarHeight();
-			m_vSize.y -= g_pSpectatorGUI->GetTopBarHeight();
-			m_vSize.y -= g_pSpectatorGUI->GetBottomBarHeight();
-		}
-	}
-
-	GetBounds( x,y,w,h );
-
-	if ( m_flChangeSpeed > 0 )
-	{
-		// adjust slowly
-		int pixels = m_flChangeSpeed * gpGlobals->frametime;
-		x = AdjustValue( x, m_vPosition.x, pixels );
-		y = AdjustValue( y, m_vPosition.y, pixels );
-		w = AdjustValue( w, m_vSize.x, pixels );
-		h = AdjustValue( h, m_vSize.y, pixels );
-	}
-	else
-	{
-		// set instantly
-		x = m_vPosition.x;
-		y = m_vPosition.y;
-		w = m_vSize.x;
-		h = m_vSize.y;
-	}
-
-	SetBounds( x,y,w,h );
 }
 
 void CMapOverview::SetCenter(const Vector2D &mappos)
@@ -1031,8 +1048,9 @@ void CMapOverview::SetCenter(const Vector2D &mappos)
 	m_ViewOrigin = mappos;
 	m_MapCenter = mappos;
 
-	width = OVERVIEW_MAP_SIZE / (m_fZoom*2);
-	height = OVERVIEW_MAP_SIZE / (m_fZoom*2);
+	float fTwiceZoom = m_fZoom * m_fFullZoom * 2;
+
+	width = height = OVERVIEW_MAP_SIZE / (fTwiceZoom);
 
 	if ( m_MapCenter.x < width )
 		m_MapCenter.x = width;
@@ -1047,7 +1065,7 @@ void CMapOverview::SetCenter(const Vector2D &mappos)
 		m_MapCenter.y = (OVERVIEW_MAP_SIZE-height);
 
 	//center if in full map mode
-	if ( m_fZoom <= m_fFullZoom )
+	if ( m_fZoom <= 1.0 )
 	{
 		m_MapCenter.x = OVERVIEW_MAP_SIZE/2;
 		m_MapCenter.y = OVERVIEW_MAP_SIZE/2;
@@ -1066,48 +1084,12 @@ void CMapOverview::SetFollowEntity(int entindex)
 
 float CMapOverview::GetZoom( void )
 {
-	return m_fTragetZoom;
+	return m_fZoom;
 }
 
 int CMapOverview::GetMode( void )
 {
 	return m_nMode;
-}
-
-void CMapOverview::SetZoom( float zoom, float time )
-{
-	m_fTragetZoom = zoom;
-
-	if ( m_fTragetZoom == -1.0f )
-	{
-		if ( m_nMapTextureID > 0 )
-		{
-			m_fTragetZoom = m_fFullZoom;
-		}
-		else
-		{
-			m_fTragetZoom = 1.0f;
-		}
-	}
-	else if ( m_fTragetZoom < 0.5f )
-	{
-		m_fTragetZoom = 0.5f;
-	}
-	else if ( m_fTragetZoom > 5.0f )
-	{
-		m_fTragetZoom = 5.0f;
-	}
-
-	if ( time <= 0 )
-	{
-		// instantly set new zoom
-		m_fZoom = m_fTragetZoom;
-		m_fZoomSpeed = 0;
-	}
-	else
-	{
-		m_fZoomSpeed = fabs( m_fZoom - m_fTragetZoom )/time;
-	}
 }
 
 void CMapOverview::SetAngle(float angle)
@@ -1191,7 +1173,7 @@ void CMapOverview::SetObjectText( int objectID, const char *text, Color color )
 	obj->color = color;
 }
 
-void CMapOverview::SetObjectStatus( int objectID, float status )
+void CMapOverview::SetObjectStatus( int objectID, float status, Color color )
 {
 	MapObject_t* obj = FindObjectByID( objectID );
 
@@ -1199,6 +1181,7 @@ void CMapOverview::SetObjectStatus( int objectID, float status )
 		return;
 
 	obj->status = status;
+	obj->statusColor = color;
 }
 
 void CMapOverview::SetObjectIcon( int objectID, const char *icon, float size )
@@ -1221,6 +1204,38 @@ void CMapOverview::SetObjectPosition( int objectID, const Vector &position, cons
 
 	obj->angle = angle;
 	obj->position = position;
+}
+
+void CMapOverview::AddObjectFlags( int objectID, int flags )
+{
+	MapObject_t* obj = FindObjectByID( objectID );
+
+	if ( !obj )
+		return;
+
+	obj->flags |= flags;
+}
+
+void CMapOverview::SetObjectFlags( int objectID, int flags )
+{
+	MapObject_t* obj = FindObjectByID( objectID );
+
+	if ( !obj )
+		return;
+
+	obj->flags = flags;
+}
+
+void CMapOverview::RemoveObjectByIndex( int index )
+{
+	for ( int i = 0; i < m_Objects.Count(); i++ )
+	{
+		if ( m_Objects[i].index == index )
+		{
+			m_Objects.Remove( i );
+			return;
+		}
+	}
 }
 
 void CMapOverview::RemoveObject( int objectID )

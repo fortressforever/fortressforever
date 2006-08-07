@@ -93,6 +93,11 @@ void CPhysicsCannister::Spawn( void )
 	m_active = false;
 
 	CreateVPhysics();
+	if ( !VPhysicsGetObject() )
+	{
+		// must have a physics object or code will crash later
+		UTIL_Remove(this);
+	}
 }
 
 void CPhysicsCannister::OnRestore()
@@ -356,6 +361,7 @@ void CPhysicsCannister::Explode( CBaseEntity *pAttacker )
 	Vector velocity;
 	AngularImpulse angVelocity;
 	IPhysicsObject *pPhysics = VPhysicsGetObject();
+
 	pPhysics->GetVelocity( &velocity, &angVelocity );
 	PropBreakableCreateAll( GetModelIndex(), pPhysics, GetAbsOrigin(), GetAbsAngles(), velocity, angVelocity, 1.0, 20, COLLISION_GROUP_DEBRIS );
 	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), pAttacker, m_damage, 0, true );

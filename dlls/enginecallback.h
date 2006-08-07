@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 #ifndef ENGINECALLBACK_H
 #define ENGINECALLBACK_H
 
@@ -27,7 +27,9 @@ class IVModelInfo;
 class IEngineTrace;
 class IGameEventManager2;
 class IVDebugOverlay;
-class IVEngineCache;
+class IDataCache;
+class IMDLCache;
+class IServerEngineTools;
 
 extern IVEngineServer			*engine;
 extern IVoiceServer				*g_pVoiceServer;
@@ -40,7 +42,10 @@ extern IVModelInfo				*modelinfo;
 extern IEngineTrace				*enginetrace;
 extern IGameEventManager2		*gameeventmanager;
 extern IVDebugOverlay			*debugoverlay;
-extern IVEngineCache			*engineCache;
+extern IDataCache				*datacache;
+extern IMDLCache				*mdlcache;
+extern IServerEngineTools		*serverenginetools;
+
 
 //-----------------------------------------------------------------------------
 // Precaches a material
@@ -77,6 +82,8 @@ void MessageWriteVec3Normal( const Vector& rgflValue);
 void MessageWriteAngles( const QAngle& rgflValue);
 void MessageWriteString( const char *sz );
 void MessageWriteEntity( int iValue);
+void MessageWriteEHandle( CBaseEntity *pEntity ); //encoded as a long
+
 
 // bitwise
 void MessageWriteBool( bool bValue );
@@ -99,6 +106,7 @@ void MessageWriteBits( const void *pIn, int nBits );
 #define WRITE_ANGLES	(MessageWriteAngles)
 #define WRITE_STRING	(MessageWriteString)
 #define WRITE_ENTITY	(MessageWriteEntity)
+#define WRITE_EHANDLE	(MessageWriteEHandle)
 
 // Bitwise
 #define WRITE_BOOL		(MessageWriteBool)

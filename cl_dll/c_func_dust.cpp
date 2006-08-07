@@ -13,6 +13,10 @@
 #include "tier0/vprof.h"
 #include "ClientEffectPrecacheSystem.h"
 
+#ifdef _XBOX
+#include "particles_ez.h"
+#endif // XBOX
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -27,6 +31,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_Func_Dust, DT_Func_Dust, CFunc_Dust )
 	RecvPropInt( RECVINFO(m_SpeedMax) ),
 	RecvPropInt( RECVINFO(m_DistMax) ),
 	RecvPropInt( RECVINFO( m_nModelIndex ) ),
+	RecvPropFloat( RECVINFO( m_FallSpeed ) ),
 	RecvPropDataTable( RECVINFO_DT( m_Collision ), 0, &REFERENCE_RECV_TABLE(DT_CollisionProperty) ),
 END_RECV_TABLE()
 
@@ -57,7 +62,7 @@ void CDustEffect::RenderParticles( CParticleRenderIterator *pIterator )
 		}
 
 		Vector tPos;
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = (int) tPos.z;
 
 		if( -tPos.z <= m_pDust->m_DistMax )
@@ -81,7 +86,6 @@ void CDustEffect::RenderParticles( CParticleRenderIterator *pIterator )
 		pParticle = (const CFuncDustParticle*)pIterator->GetNext( sortKey );
 	}
 }
-
 
 void CDustEffect::SimulateParticles( CParticleSimulateIterator *pIterator )
 {
@@ -227,6 +231,7 @@ void C_Func_Dust::AttemptSpawnNewParticle()
 			if( pParticle )
 			{
 				pParticle->m_vVelocity = RandomVector( -m_SpeedMax, m_SpeedMax );
+				pParticle->m_vVelocity.z -= m_FallSpeed;
 
 				pParticle->m_flLifetime = 0;
 				pParticle->m_flDieTime = RemapVal( rand(), 0, RAND_MAX, m_LifetimeMin, m_LifetimeMax );
@@ -253,6 +258,74 @@ void C_Func_Dust::AttemptSpawnNewParticle()
 //-----------------------------------------------------------------------------
 void FX_Dust( const Vector &vecOrigin, const Vector &vecDirection, float flSize, float flSpeed )
 {
+#ifdef _XBOX
+
+	//
+	// XBox Version
+	//
+
+	VPROF_BUDGET( "FX_Dust", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
+	
+	int	numPuffs = (flSize*0.5f);
+
+	if ( numPuffs < 1 )
+		numPuffs = 1;
+	if ( numPuffs > 32 )
+		numPuffs = 32;
+
+	float speed = flSpeed * 0.1f;
+
+	if ( speed < 0 )
+		speed = 1.0f;
+	if (speed > 48.0f )
+		speed = 48.0f;
+
+	//FIXME: Better sampling area
+	Vector offset = vecOrigin + ( vecDirection * flSize );
+
+	//Find area ambient light color and use it to tint smoke
+	Vector	worldLight = WorldGetLightForPoint( offset, true );
+
+	// FIXME: Reduce
+	PMaterialHandle	hMaterial[2];
+	hMaterial[0] = ParticleMgr()->GetPMaterial("particle/particle_smokegrenade");
+	hMaterial[1] = ParticleMgr()->GetPMaterial("particle/particle_noisesphere");
+
+	// Throw puffs
+	SimpleParticle particle;
+	for ( int i = 0; i < numPuffs; i++ )
+	{
+		offset.Random( -(flSize*0.25f), flSize*0.25f );
+		offset += vecOrigin + ( vecDirection * flSize );
+
+		particle.m_Pos = offset;
+		particle.m_flLifetime = 0.0f;
+		particle.m_flDieTime  = random->RandomFloat( 0.4f, 1.0f );
+		
+		particle.m_vecVelocity = vecDirection * random->RandomFloat( speed*0.5f, speed ) * i;
+		particle.m_vecVelocity[2] = 0.0f;
+
+		int	color = random->RandomInt( 48, 64 );
+
+		particle.m_uchColor[0] = (color+16) + ( worldLight[0] * (float) color );
+		particle.m_uchColor[1] = (color+8) + ( worldLight[1] * (float) color );
+		particle.m_uchColor[2] = color + ( worldLight[2] * (float) color );
+
+		particle.m_uchStartAlpha= random->RandomInt( 64, 128 );
+		particle.m_uchEndAlpha	= 0;
+		particle.m_uchStartSize = random->RandomInt( 2, 8 );
+		particle.m_uchEndSize	= random->RandomInt( 24, 48 );
+		particle.m_flRoll		= random->RandomInt( 0, 360 );
+		particle.m_flRollDelta	= random->RandomFloat( -0.5f, 0.5f );
+
+		AddSimpleParticle( &particle, hMaterial[random->RandomInt(0,1)] );
+	}
+#else
+	
+	//
+	// PC Version
+	//
+
 	VPROF_BUDGET( "FX_Dust", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "dust" );
 	pSimple->SetSortOrigin( vecOrigin );
@@ -273,7 +346,7 @@ void FX_Dust( const Vector &vecOrigin, const Vector &vecDirection, float flSize,
 
 	if ( speed < 0 )
 		speed = 1.0f;
-	
+
 	if (speed > 48.0f )
 		speed = 48.0f;
 
@@ -300,7 +373,7 @@ void FX_Dust( const Vector &vecOrigin, const Vector &vecDirection, float flSize,
 		{			
 			pParticle->m_flLifetime		= 0.0f;
 			pParticle->m_flDieTime		= random->RandomFloat( 0.4f, 1.5f );
-			
+
 			pParticle->m_vecVelocity = vecDirection * random->RandomFloat( speed*0.5f, speed ) * i;
 
 			pParticle->m_vecVelocity[2] = 0.0f;
@@ -319,6 +392,7 @@ void FX_Dust( const Vector &vecOrigin, const Vector &vecDirection, float flSize,
 			pParticle->m_flRollDelta	= random->RandomFloat( -1.0f, 1.0f );
 		}
 	}
+#endif // _XBOX
 }
 
 

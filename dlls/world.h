@@ -50,6 +50,8 @@ public:
 	void SetDisplayTitle( bool display );
 	void SetStartDark( bool startdark );
 
+	bool IsColdWorld( void );
+
 private:
 	DECLARE_DATADESC();
 
@@ -62,9 +64,11 @@ private:
 	CNetworkVar( float, m_flMinOccluderArea );
 	CNetworkVar( float, m_flMinPropScreenSpaceWidth );
 	CNetworkVar( float, m_flMaxPropScreenSpaceWidth );
+	CNetworkVar( string_t, m_iszDetailSpriteMaterial );
 
 	// start flags
 	CNetworkVar( bool, m_bStartDark );
+	CNetworkVar( bool, m_bColdWorld );
 	bool m_bDisplayTitle;
 };
 

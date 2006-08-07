@@ -33,6 +33,7 @@ class CUtlFixedLinkedList
 public:
 	typedef T ElemType_t;
 	typedef int I;
+	typedef int IndexType_t;
 
 	// constructor, destructor
 	CUtlFixedLinkedList( int growSize = 0, int initSize = 0 );

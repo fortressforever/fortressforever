@@ -24,7 +24,7 @@ void RegisterUserMessages()
 	usermessages->Register( "Shake", 13 );		// shake view
 	usermessages->Register( "Fade", 10 );	// fade HUD in/out
 	usermessages->Register( "VGUIMenu", -1 );	// Show VGUI menu
-	usermessages->Register( "CloseCaption", 3 ); // Show a caption (by string id number)(duration in 10th of a second)
+	usermessages->Register( "CloseCaption", 7 ); // Show a caption (by string id number)(duration in 10th of a second)
 
 	usermessages->Register( "SendAudio", -1 );	// play radion command
 

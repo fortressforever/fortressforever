@@ -42,8 +42,8 @@ namespace vgui
 enum ImageFormat;
 enum ShakeCommand_t;
 
+extern bool g_MakingDevShots;
 
-void	SetScreenSize( void );
 // ScreenHeight returns the height of the screen, in pixels
 int		ScreenHeight( void );
 // ScreenWidth returns the width of the screen, in pixels
@@ -64,7 +64,8 @@ void	UTIL_SetOrigin( C_BaseEntity *entity, const Vector &vecOrigin );
 void	UTIL_ScreenShake( const Vector &center, float amplitude, float frequency, float duration, float radius, ShakeCommand_t eCommand, bool bAirShake=false );
 byte	*UTIL_LoadFileForMe( const char *filename, int *pLength );
 void	UTIL_FreeFile( byte *buffer );
-void	UTIL_MakeSafeName( const char *oldName, char *newName, int newNameBufSize );
+void	UTIL_MakeSafeName( const char *oldName, char *newName, int newNameBufSize );	///< Cleans up player names for putting in vgui controls (cleaned names can be up to original*2+1 in length)
+const char *UTIL_SafeName( const char *oldName );	///< Wraps UTIL_MakeSafeName, and returns a static buffer
 
 // Fade out an entity based on distance fades
 unsigned char UTIL_ComputeEntityFade( C_BaseEntity *pEntity, float flMinDist, float flMaxDist, float flFadeScale );

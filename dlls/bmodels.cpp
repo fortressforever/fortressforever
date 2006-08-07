@@ -81,7 +81,6 @@ void CFuncWall::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 {
 	if ( ShouldToggle( useType, m_nState ) )
 	{
-		NetworkStateChanged();
 		m_nState = 1 - m_nState;
 	}
 }
@@ -134,7 +133,6 @@ void CFuncWallToggle::TurnOff( void )
 	}
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	AddEffects( EF_NODRAW );
-	NetworkStateChanged();
 }
 
 
@@ -147,7 +145,6 @@ void CFuncWallToggle::TurnOn( void )
 	}
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 	RemoveEffects( EF_NODRAW );
-	NetworkStateChanged();
 }
 
 
@@ -305,7 +302,6 @@ void CFuncConveyor::Spawn( void )
 void CFuncConveyor::UpdateSpeed( float flNewSpeed )
 {
 	m_flConveyorSpeed = flNewSpeed;
-	NetworkStateChanged();
 }
 
 
@@ -1218,7 +1214,7 @@ int CFuncRotating::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf( tempstr, sizeof( tempstr ),"Speed cur (target): %3.2f (%3.2f)", GetMoveSpeed( m_flSpeed ), GetMoveSpeed( m_flTargetSpeed ) );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -1280,7 +1276,7 @@ void CFuncVPhysicsClip::Activate( void )
 	// Get a handle to my filter entity if there is one
 	if (m_iFilterName != NULL_STRING)
 	{
-		m_hFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iFilterName, NULL ));
+		m_hFilter = dynamic_cast<CBaseFilter *>(gEntList.FindEntityByName( NULL, m_iFilterName ));
 	}
 	BaseClass::Activate();
 }
@@ -1290,7 +1286,7 @@ bool CFuncVPhysicsClip::EntityPassesFilter( CBaseEntity *pOther )
 	CBaseFilter* pFilter = (CBaseFilter*)(m_hFilter.Get());
 
 	if ( pFilter )
-		return pFilter->PassesFilter(pOther);
+		return pFilter->PassesFilter( this, pOther );
 
 	if ( pOther->GetMoveType() == MOVETYPE_VPHYSICS && pOther->VPhysicsGetObject()->IsMoveable() )
 		return true;

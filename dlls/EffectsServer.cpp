@@ -46,6 +46,8 @@ public:
 	// other client-server neutral interface?
 	virtual float Time();
 	virtual bool IsServer();
+	virtual void SuppressEffectsSounds( bool bSuppress ) { Assert(0); }
+
 private:
 	//-----------------------------------------------------------------------------
 	// Purpose: Returning true means don't even call TE func
@@ -104,9 +106,6 @@ void CEffectsServer::Beam( const Vector &vecStart, const Vector &vecEnd, int nMo
 	unsigned char noise, unsigned char red, unsigned char green,
 	unsigned char blue, unsigned char brightness, unsigned char speed)
 {
-	// Not working yet...
-	Assert(0);
-
 	CBroadcastRecipientFilter filter;
 	if ( !SuppressTE( filter ) )
 	{

@@ -19,6 +19,7 @@
 #include "props_shared.h"
 #include "func_breakablesurf.h"
 #include "Color.h"
+#include "collisionutils.h"
 
 #ifdef _WIN32
 #pragma warning (disable:4701)				// disable warning that variable *may* not be initialized 
@@ -36,7 +37,8 @@ bool CNavArea::m_isReset = false;
 
 ConVar nav_coplanar_slope_limit( "nav_coplanar_slope_limit", "0.99", FCVAR_GAMEDLL );
 ConVar nav_split_place_on_ground( "nav_split_place_on_ground", "0", FCVAR_GAMEDLL, "If true, nav areas will be placed flush with the ground when split." );
-ConVar nav_area_bgcolor( "nav_area_bgcolor", "0 0 0 0", FCVAR_GAMEDLL, "RGBA color to draw as the background color for nav areas while editing." );
+ConVar nav_area_bgcolor( "nav_area_bgcolor", "0 0 0 30", FCVAR_GAMEDLL, "RGBA color to draw as the background color for nav areas while editing." );
+ConVar nav_corner_adjust_adjacent( "nav_corner_adjust_adjacent", "18", FCVAR_GAMEDLL, "radius used to raise/lower corners in nearby areas when raising/lowering corners." );
 
 //--------------------------------------------------------------------------------------------------------------
 void CNavArea::CompressIDs( void )
@@ -67,8 +69,12 @@ void CNavArea::Initialize( void )
 	m_attributeFlags = 0;
 	m_place = TheNavMesh->GetNavPlace();
 	m_isBlocked = false;
+	m_isUnderwater = false;
 
-	for ( int i=0; i<MAX_NAV_TEAMS; ++i )
+	ResetNodes();
+
+	int i;
+	for ( i=0; i<MAX_NAV_TEAMS; ++i )
 	{
 		m_danger[i] = 0.0f;
 		m_dangerTimestamp[i] = 0.0f;
@@ -89,6 +95,16 @@ void CNavArea::Initialize( void )
 	m_nextHash = NULL;
 
 	m_isBattlefront = false;
+
+	for( i = 0; i<NUM_DIRECTIONS; ++i )
+	{
+		m_connect[i].RemoveAll();
+	}
+
+	for( i=0; i<CNavLadder::NUM_LADDER_DIRECTIONS; ++i )
+	{
+		m_ladder[i].RemoveAll();
+	}
 }
 
 //--------------------------------------------------------------------------------------------------------------
@@ -226,6 +242,34 @@ CNavArea::~CNavArea()
 
 //--------------------------------------------------------------------------------------------------------------
 /**
+ * This is invoked at the start of an incremental nav generation on pre-existing areas.
+ */
+void CNavArea::ResetNodes( void )
+{
+	for ( int i=0; i<NUM_CORNERS; ++i )
+	{
+		m_node[i] = NULL;
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool CNavArea::HasNodes( void ) const
+{
+	for ( int i=0; i<NUM_CORNERS; ++i )
+	{
+		if ( m_node[i] )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+/**
  * This is invoked when an area is going away.
  * Remove any references we have to it.
  */
@@ -247,12 +291,7 @@ void CNavArea::OnDestroyNotify( CNavArea *dead )
  */
 void CNavArea::OnDestroyNotify( CNavLadder *dead )
 {
-	NavLadderConnect con;
-	con.ladder = dead;
-	for( int i=0; i<CNavLadder::NUM_LADDER_DIRECTIONS; ++i )
-	{
-		m_ladder[i].FindAndRemove( con );
-	}
+	Disconnect( dead );
 }
 
 
@@ -312,7 +351,9 @@ void CNavArea::Disconnect( CNavArea *area )
 	connect.area = area;
 
 	for( int dir = 0; dir<NUM_DIRECTIONS; dir++ )
+	{
 		m_connect[ dir ].FindAndRemove( connect );
+	}
 }
 
 
@@ -329,6 +370,28 @@ void CNavArea::Disconnect( CNavLadder *ladder )
 	{
 		m_ladder[i].FindAndRemove( con );
 	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavArea::AddLadderUp( CNavLadder *ladder )
+{
+	Disconnect( ladder ); // just in case
+
+	NavLadderConnect tmp;
+	tmp.ladder = ladder;
+	m_ladder[ CNavLadder::LADDER_UP ].AddToTail( tmp );
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavArea::AddLadderDown( CNavLadder *ladder )
+{
+	Disconnect( ladder ); // just in case
+
+	NavLadderConnect tmp;
+	tmp.ladder = ladder;
+	m_ladder[ CNavLadder::LADDER_DOWN ].AddToTail( tmp );
 }
 
 
@@ -572,7 +635,7 @@ bool CNavArea::SplitEdit( bool splitAlongX, float splitEdge, CNavArea **outAlpha
 		FinishSplitEdit( beta, WEST );
 	}
 
-	if ( nav_split_place_on_ground.GetBool() )
+	if ( !TheNavMesh->IsGenerating() && nav_split_place_on_ground.GetBool() )
 	{
 		alpha->PlaceOnGround( NUM_CORNERS );
 		beta->PlaceOnGround( NUM_CORNERS );
@@ -778,6 +841,63 @@ void CNavArea::FinishSplitEdit( CNavArea *newArea, NavDirType ignoreEdge )
 
 	TheNavAreaList.AddToTail( newArea );
 	TheNavMesh->AddNavArea( newArea );
+
+	// Assign nodes
+	if ( HasNodes() )
+	{
+		// first give it all our nodes...
+		newArea->m_node[ NORTH_WEST ] = m_node[ NORTH_WEST ];
+		newArea->m_node[ NORTH_EAST ] = m_node[ NORTH_EAST ];
+		newArea->m_node[ SOUTH_EAST ] = m_node[ SOUTH_EAST ];
+		newArea->m_node[ SOUTH_WEST ] = m_node[ SOUTH_WEST ];
+
+		// ... then pull in one edge...
+		NavDirType dir = NUM_DIRECTIONS;
+		NavCornerType corner[2] = { NUM_CORNERS, NUM_CORNERS };
+
+		switch ( ignoreEdge )
+		{
+		case NORTH:
+			dir = SOUTH;
+			corner[0] = NORTH_WEST;
+			corner[1] = NORTH_EAST;
+			break;
+		case SOUTH:
+			dir = NORTH;
+			corner[0] = SOUTH_WEST;
+			corner[1] = SOUTH_EAST;
+			break;
+		case EAST:
+			dir = WEST;
+			corner[0] = NORTH_EAST;
+			corner[1] = SOUTH_EAST;
+			break;
+		case WEST:
+			dir = EAST;
+			corner[0] = NORTH_WEST;
+			corner[1] = SOUTH_WEST;
+			break;
+		}
+
+		while ( !newArea->IsOverlapping( *newArea->m_node[ corner[0] ]->GetPosition(), GenerationStepSize/2 ) )
+		{
+			for ( int i=0; i<2; ++i )
+			{
+				Assert( newArea->m_node[ corner[i] ] );
+				Assert( newArea->m_node[ corner[i] ]->GetConnectedNode( dir ) );
+				newArea->m_node[ corner[i] ] = newArea->m_node[ corner[i] ]->GetConnectedNode( dir );
+			}
+		}
+
+		// assign internal nodes...
+		newArea->AssignNodes( newArea );
+
+		// ... and grab the node heights for our corner heights.
+		newArea->m_neZ			= newArea->m_node[ NORTH_EAST ]->GetPosition()->z;
+		newArea->m_extent.lo.z	= newArea->m_node[ NORTH_WEST ]->GetPosition()->z;
+		newArea->m_swZ			= newArea->m_node[ SOUTH_WEST ]->GetPosition()->z;
+		newArea->m_extent.hi.z	= newArea->m_node[ SOUTH_EAST ]->GetPosition()->z;
+	}
 }
 
 //--------------------------------------------------------------------------------------------------------------
@@ -1044,10 +1164,10 @@ bool CNavArea::IsRoughlySquare( void ) const
 /**
  * Return true if 'pos' is within 2D extents of area.
  */
-bool CNavArea::IsOverlapping( const Vector &pos ) const
+bool CNavArea::IsOverlapping( const Vector &pos, float tolerance ) const
 {
-	if (pos.x >= m_extent.lo.x && pos.x <= m_extent.hi.x &&
-		pos.y >= m_extent.lo.y && pos.y <= m_extent.hi.y)
+	if (pos.x + tolerance >= m_extent.lo.x && pos.x - tolerance <= m_extent.hi.x &&
+		pos.y + tolerance >= m_extent.lo.y && pos.y - tolerance <= m_extent.hi.y)
 		return true;
 
 	return false;
@@ -1136,6 +1256,59 @@ bool CNavArea::Contains( const Vector &pos ) const
 	return true;
 }
 
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavArea::ComputeNormal( Vector *normal, bool alternate ) const
+{
+	if ( !normal )
+		return;
+
+	Vector u, v;
+
+	if ( !alternate )
+	{
+		u.x = m_extent.hi.x - m_extent.lo.x;
+		u.y = 0.0f;
+		u.z = m_neZ - m_extent.lo.z;
+
+		v.x = 0.0f;
+		v.y = m_extent.hi.y - m_extent.lo.y;
+		v.z = m_swZ - m_extent.lo.z;
+	}
+	else
+	{
+		u.x = m_extent.lo.x - m_extent.hi.x;
+		u.y = 0.0f;
+		u.z = m_swZ - m_extent.hi.z;
+
+		v.x = 0.0f;
+		v.y = m_extent.lo.y - m_extent.hi.y;
+		v.z = m_neZ - m_extent.hi.z;
+	}
+
+	*normal = CrossProduct( u, v );
+	normal->NormalizeInPlace();
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+/**
+ * Return true if the area is approximately flat, using normals computed from opposite corners
+ */
+bool CNavArea::IsFlat( void ) const
+{
+	Vector normal, otherNormal;
+	ComputeNormal( &normal );
+	ComputeNormal( &otherNormal, true );
+
+	const float tolerance = nav_coplanar_slope_limit.GetFloat();
+	if (DotProduct( normal, otherNormal ) > tolerance)
+		return true;
+
+	return false;
+}
+
+
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Return true if this area and given area are approximately co-planar
@@ -1144,30 +1317,16 @@ bool CNavArea::IsCoplanar( const CNavArea *area ) const
 {
 	Vector u, v;
 
+	if ( !IsFlat() )
+		return false;
+
+	if ( !area->IsFlat() )
+		return false;
+
 	// compute our unit surface normal
-	u.x = m_extent.hi.x - m_extent.lo.x;
-	u.y = 0.0f;
-	u.z = m_neZ - m_extent.lo.z;
-
-	v.x = 0.0f;
-	v.y = m_extent.hi.y - m_extent.lo.y;
-	v.z = m_swZ - m_extent.lo.z;
-
-	Vector normal = CrossProduct( u, v );
-	normal.NormalizeInPlace();
-
-
-	// compute their unit surface normal
-	u.x = area->m_extent.hi.x - area->m_extent.lo.x;
-	u.y = 0.0f;
-	u.z = area->m_neZ - area->m_extent.lo.z;
-
-	v.x = 0.0f;
-	v.y = area->m_extent.hi.y - area->m_extent.lo.y;
-	v.z = area->m_swZ - area->m_extent.lo.z;
-
-	Vector otherNormal = CrossProduct( u, v );
-	otherNormal.NormalizeInPlace();
+	Vector normal, otherNormal;
+	ComputeNormal( &normal );
+	area->ComputeNormal( &otherNormal );
 
 	// can only merge areas that are nearly planar, to ensure areas do not differ from underlying geometry much
 	const float tolerance = nav_coplanar_slope_limit.GetFloat(); //0.99f; // 0.7071f;		// 0.9
@@ -1577,6 +1736,94 @@ NavDirType CNavArea::ComputeDirection( Vector *point ) const
 	return NUM_DIRECTIONS;
 }
 
+
+//--------------------------------------------------------------------------------------------------------------
+bool CNavArea::GetCornerHotspot( NavCornerType corner, Vector hotspot[NUM_CORNERS] ) const
+{
+	Vector nw = GetCorner( NORTH_WEST );
+	Vector ne = GetCorner( NORTH_EAST );
+	Vector sw = GetCorner( SOUTH_WEST );
+	Vector se = GetCorner( SOUTH_EAST );
+
+	float size = 9.0f;
+	size = min( size, GetSizeX()/3 );	// make sure the hotspot doesn't extend outside small areas
+	size = min( size, GetSizeY()/3 );
+
+	switch ( corner )
+	{
+	case NORTH_WEST:
+		hotspot[0] = nw;
+		hotspot[1] = hotspot[0] + Vector( size, 0, 0 );
+		hotspot[2] = hotspot[0] + Vector( size, size, 0 );
+		hotspot[3] = hotspot[0] + Vector( 0, size, 0 );
+		break;
+	case NORTH_EAST:
+		hotspot[0] = ne;
+		hotspot[1] = hotspot[0] + Vector( -size, 0, 0 );
+		hotspot[2] = hotspot[0] + Vector( -size, size, 0 );
+		hotspot[3] = hotspot[0] + Vector( 0, size, 0 );
+		break;
+	case SOUTH_WEST:
+		hotspot[0] = sw;
+		hotspot[1] = hotspot[0] + Vector( size, 0, 0 );
+		hotspot[2] = hotspot[0] + Vector( size, -size, 0 );
+		hotspot[3] = hotspot[0] + Vector( 0, -size, 0 );
+		break;
+	case SOUTH_EAST:
+		hotspot[0] = se;
+		hotspot[1] = hotspot[0] + Vector( -size, 0, 0 );
+		hotspot[2] = hotspot[0] + Vector( -size, -size, 0 );
+		hotspot[3] = hotspot[0] + Vector( 0, -size, 0 );
+		break;
+	default:
+		return false;
+	}
+
+	for ( int i=1; i<NUM_CORNERS; ++i )
+	{
+		hotspot[i].z = GetZ( hotspot[i] );
+	}
+
+	Vector eyePos, eyeForward;
+	TheNavMesh->GetEditVectors( &eyePos, &eyeForward );
+
+	Ray_t ray;
+	ray.Init( eyePos, eyePos + 10000.0f * eyeForward, vec3_origin, vec3_origin );
+
+	float dist = IntersectRayWithTriangle( ray, hotspot[0], hotspot[1], hotspot[2], false );
+	if ( dist > 0 )
+	{
+		return true;
+	}
+
+	dist = IntersectRayWithTriangle( ray, hotspot[2], hotspot[3], hotspot[0], false );
+	if ( dist > 0 )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+NavCornerType CNavArea::GetCornerUnderCursor( void ) const
+{
+	Vector eyePos, eyeForward;
+	TheNavMesh->GetEditVectors( &eyePos, &eyeForward );
+
+	for ( int i=0; i<NUM_CORNERS; ++i )
+	{
+		Vector hotspot[NUM_CORNERS];
+		if ( GetCornerHotspot( (NavCornerType)i, hotspot ) )
+		{
+			return (NavCornerType)i;
+		}
+	}
+
+	return NUM_CORNERS;
+}
+
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Draw area for debugging
@@ -1642,6 +1889,8 @@ void CNavArea::Draw( void ) const
 			color = NavDegenerateFirstColor;
 		else
 			color = NavDegenerateSecondColor;
+
+		NDebugOverlay::Text( GetCenter(), UTIL_VarArgs( "Degenerate area %d", GetID() ), true, 0.1f );
 	}
 
 	Vector nw, ne, sw, se;
@@ -1663,21 +1912,21 @@ void CNavArea::Draw( void ) const
 
 		if ( bgcolor[3] > 0 )
 		{
-			const Vector offset( 0, 0, -1 );
+			const Vector offset( 0, 0, 0.8f );
 			NDebugOverlay::Triangle( nw+offset, se+offset, ne+offset, bgcolor[0], bgcolor[1], bgcolor[2], bgcolor[3], true, 0.15f );
 			NDebugOverlay::Triangle( se+offset, nw+offset, sw+offset, bgcolor[0], bgcolor[1], bgcolor[2], bgcolor[3], true, 0.15f );
 		}
 	}
 
-	float border = 2.0f;
-	nw.x += border;
-	nw.y += border;
-	ne.x -= border;
-	ne.y += border;
-	sw.x += border;
-	sw.y -= border;
-	se.x -= border;
-	se.y -= border;
+	const float inset = 0.2f;
+	nw.x += inset;
+	nw.y += inset;
+	ne.x -= inset;
+	ne.y += inset;
+	sw.x += inset;
+	sw.y -= inset;
+	se.x -= inset;
+	se.y -= inset;
 
 	if ( GetAttributes() & NAV_MESH_TRANSIENT )
 	{
@@ -1692,6 +1941,25 @@ void CNavArea::Draw( void ) const
 		NavDrawLine( ne, se, color );
 		NavDrawLine( se, sw, color );
 		NavDrawLine( sw, nw, color );
+	}
+
+	if ( this == TheNavMesh->GetMarkedArea() && TheNavMesh->m_markedCorner != NUM_CORNERS )
+	{
+		Vector p[NUM_CORNERS];
+		GetCornerHotspot( TheNavMesh->m_markedCorner, p );
+
+		NavDrawLine( p[1], p[2], NavMarkedColor );
+		NavDrawLine( p[2], p[3], NavMarkedColor );
+	}
+	if ( this != TheNavMesh->GetMarkedArea() && this == TheNavMesh->GetSelectedArea() && TheNavMesh->m_navEditMode == CNavMesh::NAV_EDIT_NORMAL )
+	{
+		NavCornerType bestCorner = GetCornerUnderCursor();
+
+		Vector p[NUM_CORNERS];
+		GetCornerHotspot( bestCorner, p );
+
+		NavDrawLine( p[1], p[2], NavSelectedColor );
+		NavDrawLine( p[2], p[3], NavSelectedColor );
 	}
 
 	if (GetAttributes() & NAV_MESH_CROUCH)
@@ -1824,51 +2092,6 @@ void CNavArea::Draw( void ) const
 		NavDrawTriangle( m_center + Vector( 0, -bottomHeight, 0 ), m_center + Vector( -bottomWidth, -bottomHeight*2, 0 ), m_center + Vector( bottomWidth, -bottomHeight*2, 0 ), color );
 	}
 }
-
-//--------------------------------------------------------------------------------------------------------------
-/**
- * Draw selected corner for debugging
- */
-void CNavArea::DrawMarkedCorner( NavCornerType corner ) const
-{
-	Vector nw, ne, sw, se;
-
-	nw = m_extent.lo;
-	se = m_extent.hi;
-	ne.x = se.x;
-	ne.y = nw.y;
-	ne.z = m_neZ;
-	sw.x = nw.x;
-	sw.y = se.y;
-	sw.z = m_swZ;
-
-	float border = 2.0f;
-	nw.x += border;
-	nw.y += border;
-	ne.x -= border;
-	ne.y += border;
-	sw.x += border;
-	sw.y -= border;
-	se.x -= border;
-	se.y -= border;
-
-	switch( corner )
-	{
-	case NORTH_WEST:
-		NavDrawLine( nw + Vector( 0, 0, 10 ), nw, NavCornerColor );
-		break;
-	case NORTH_EAST:
-		NavDrawLine( ne + Vector( 0, 0, 10 ), ne, NavCornerColor );
-		break;
-	case SOUTH_EAST:
-		NavDrawLine( se + Vector( 0, 0, 10 ), se, NavCornerColor );
-		break;
-	case SOUTH_WEST:
-		NavDrawLine( sw + Vector( 0, 0, 10 ), sw, NavCornerColor );
-		break;
-	}
-}
-
 
 //--------------------------------------------------------------------------------------------------------------
 /**
@@ -2157,6 +2380,49 @@ const Vector &CNavArea::GetCorner( NavCornerType corner ) const
 			return m_extent.hi;
 	}
 }
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavArea::SetCorner( NavCornerType corner, const Vector& newPosition )
+{
+	switch( corner )
+	{
+		case NORTH_WEST:
+			m_extent.lo = newPosition;
+			break;
+
+		case NORTH_EAST:
+			m_extent.hi.x = newPosition.x;
+			m_extent.lo.y = newPosition.y;
+			m_neZ = newPosition.z;
+			break;
+
+		case SOUTH_WEST:
+			m_extent.lo.x = newPosition.x;
+			m_extent.hi.y = newPosition.y;
+			m_swZ = newPosition.z;
+			break;
+
+		case SOUTH_EAST:
+			m_extent.hi = newPosition;
+			break;
+
+		default:
+		{
+			Vector oldPosition = GetCenter();
+			Vector delta = newPosition - oldPosition;
+			m_extent.lo += delta;
+			m_extent.hi += delta;
+			m_neZ += delta.z;
+			m_swZ += delta.z;
+		}
+	}
+
+	m_center.x = (m_extent.lo.x + m_extent.hi.x)/2.0f;
+	m_center.y = (m_extent.lo.y + m_extent.hi.y)/2.0f;
+	m_center.z = (m_extent.lo.z + m_extent.hi.z)/2.0f;
+}
+
 
 //--------------------------------------------------------------------------------------------------------------
 /**
@@ -2735,37 +3001,94 @@ float CNavArea::GetDanger( int teamID )
 /**
  * Raise/lower a corner
  */
-void CNavArea::RaiseCorner( NavCornerType corner, int amount )
+void CNavArea::RaiseCorner( NavCornerType corner, int amount, bool raiseAdjacentCorners )
 {
 	if ( corner == NUM_CORNERS )
 	{
-		m_extent.lo.z += amount;
-		m_extent.hi.z += amount;
-		m_neZ += amount;
-		m_swZ += amount;
-	}
-	else
-	{
-		switch (corner)
-		{
-		case NORTH_WEST:
-			m_extent.lo.z += amount;
-			break;
-		case NORTH_EAST:
-			m_neZ += amount;
-			break;
-		case SOUTH_WEST:
-			m_swZ += amount;
-			break;
-		case SOUTH_EAST:
-			m_extent.hi.z += amount;
-			break;
-		}
+		RaiseCorner( NORTH_WEST, amount, raiseAdjacentCorners );
+		RaiseCorner( NORTH_EAST, amount, raiseAdjacentCorners );
+		RaiseCorner( SOUTH_WEST, amount, raiseAdjacentCorners );
+		RaiseCorner( SOUTH_EAST, amount, raiseAdjacentCorners );
+		return;
 	}
 
+	// Move the corner
+	switch (corner)
+	{
+	case NORTH_WEST:
+		m_extent.lo.z += amount;
+		break;
+	case NORTH_EAST:
+		m_neZ += amount;
+		break;
+	case SOUTH_WEST:
+		m_swZ += amount;
+		break;
+	case SOUTH_EAST:
+		m_extent.hi.z += amount;
+		break;
+	}
+
+	// Recompute the center
 	m_center.x = (m_extent.lo.x + m_extent.hi.x)/2.0f;
 	m_center.y = (m_extent.lo.y + m_extent.hi.y)/2.0f;
 	m_center.z = (m_extent.lo.z + m_extent.hi.z)/2.0f;
+
+	if ( !raiseAdjacentCorners || nav_corner_adjust_adjacent.GetFloat() <= 0.0f )
+	{
+		return;
+	}
+
+	// Find nearby areas that share the corner
+	CNavArea::MakeNewMarker();
+	Mark();
+
+	const float tolerance = nav_corner_adjust_adjacent.GetFloat();
+
+	Vector cornerPos = GetCorner( corner );
+	cornerPos.z -= amount; // use the pre-adjustment corner for adjacency checks
+
+	int gridX = TheNavMesh->WorldToGridX( cornerPos.x );
+	int gridY = TheNavMesh->WorldToGridY( cornerPos.y );
+
+	const int shift = 1; // try a 3x3 set of grids in case we're on the edge
+
+	for( int x = gridX - shift; x <= gridX + shift; ++x )
+	{
+		if (x < 0 || x >= TheNavMesh->m_gridSizeX)
+			continue;
+
+		for( int y = gridY - shift; y <= gridY + shift; ++y )
+		{
+			if (y < 0 || y >= TheNavMesh->m_gridSizeY)
+				continue;
+
+			NavAreaList *list = &TheNavMesh->m_grid[ x + y*TheNavMesh->m_gridSizeX ];
+
+			// find closest area in this cell
+			FOR_EACH_LL( (*list), it )
+			{
+				CNavArea *area = (*list)[ it ];
+
+				// skip if we've already visited this area
+				if (area->IsMarked())
+					continue;
+
+				area->Mark();
+
+				Vector areaPos;
+				for ( int i=0; i<NUM_CORNERS; ++i )
+				{
+					areaPos = area->GetCorner( NavCornerType(i) );
+					if ( areaPos.DistTo( cornerPos ) < tolerance )
+					{
+						float heightDiff = (cornerPos.z + amount ) - areaPos.z;
+						area->RaiseCorner( NavCornerType(i), heightDiff, false );
+					}
+				}
+			}
+		}
+	}
 }
 
 
@@ -2918,6 +3241,7 @@ static void CommandNavUpdateBlocked( void )
 	else
 	{
 		float start = engine->Time();
+		CNavArea *blockedArea = NULL;
 		FOR_EACH_LL( TheNavAreaList, nit )
 		{
 			CNavArea *area = TheNavAreaList[ nit ];
@@ -2925,12 +3249,29 @@ static void CommandNavUpdateBlocked( void )
 			if ( area->IsBlocked() )
 			{
 				DevMsg( "Area #%d %s is blocked\n", area->GetID(), VecToString( area->GetCenter() + Vector( 0, 0, HalfHumanHeight ) ) );
+				if ( !blockedArea )
+				{
+					blockedArea = area;
+				}
 			}
 		}
 
 		float end = engine->Time();
 		float time = (end - start) * 1000.0f;
 		DevMsg( "nav_update_blocked took %2.2f ms\n", time );
+
+		if ( blockedArea )
+		{
+			CBasePlayer *player = UTIL_GetListenServerHost();
+			if ( player )
+			{
+				if ( ( player->IsDead() || player->IsObserver() ) && player->GetObserverMode() == OBS_MODE_ROAMING )
+				{
+					Vector origin = blockedArea->GetCenter() + Vector( 0, 0, 0.75f * HumanHeight );
+					UTIL_SetOrigin( player, origin );
+				}
+			}
+		}
 	}
 }
 static ConCommand nav_update_blocked( "nav_update_blocked", CommandNavUpdateBlocked, "Updates the blocked/unblocked status for every nav area.", FCVAR_GAMEDLL );
@@ -3044,14 +3385,15 @@ void CNavArea::UpdateBlocked( void )
 
 	const float sizeX = max( 1, min( GetSizeX()/2 - 5, HalfHumanWidth ) );
 	const float sizeY = max( 1, min( GetSizeY()/2 - 5, HalfHumanWidth ) );
-	Vector mins = Vector( -sizeX, -sizeY, 0 );
-	Vector maxs = Vector( sizeX, sizeY, VEC_DUCK_HULL_MAX.z );
+	Vector mins( -sizeX, -sizeY, 0 );
+	Vector maxs( sizeX, sizeY, VEC_DUCK_HULL_MAX.z );
 
 	maxs.z -= HalfHumanHeight;
 
 	bool wasBlocked = m_isBlocked;
 
 	// See if spot is valid
+	CTraceFilterWalkableEntities filter( NULL, COLLISION_GROUP_PLAYER_MOVEMENT, WALK_THRU_DOORS | WALK_THRU_BREAKABLES );
 	trace_t tr;
 	UTIL_TraceHull(
 		origin,
@@ -3059,35 +3401,10 @@ void CNavArea::UpdateBlocked( void )
 		mins,
 		maxs,
 		MASK_PLAYERSOLID_BRUSHONLY,
-		NULL,
-		COLLISION_GROUP_PLAYER_MOVEMENT,
+		&filter,
 		&tr );
 
 	m_isBlocked = tr.startsolid;
-
-	// If the spot isn't valid, check for physics props etc that might be blocking it before we reject the area
-	if ( m_isBlocked )
-	{
-		CBaseEntity *ignore = NULL;
-		CBaseEntity *props[1];
-		CNavBlockerEnumerator enumerator( props, ARRAYSIZE( props ) );
-		int nEnts = GetPushawayEntsInVolume( origin, mins, maxs, props, ARRAYSIZE( props ), PARTITION_ENGINE_SOLID_EDICTS, &enumerator );
-		if ( nEnts == 1 )
-			ignore = props[0];
-
-		trace_t tr;
-		UTIL_TraceHull(
-			origin,
-			origin,
-			mins,
-			maxs,
-			MASK_PLAYERSOLID,
-			ignore,
-			COLLISION_GROUP_PLAYER_MOVEMENT,
-			&tr );
-
-		m_isBlocked = tr.startsolid;
-	}
 
 	if ( wasBlocked != m_isBlocked )
 	{
@@ -3167,6 +3484,21 @@ void CNavArea::CheckFloor( CBaseEntity *ignore )
 		NDebugOverlay::Box( origin, mins, maxs, 0, 255, 0, 64, 3.0f );
 	}
 	*/
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavArea::CheckWaterLevel( void )
+{
+	Vector pos( GetCenter() );
+	if ( !TheNavMesh->GetGroundHeight( pos, &pos.z ) )
+	{
+		m_isUnderwater = false;
+		return;
+	}
+
+	pos.z += 1;
+	m_isUnderwater = (enginetrace->GetPointContents( pos ) & MASK_WATER) != 0;
 }
 
 

@@ -49,7 +49,7 @@ struct IClientStatsTextDisplay
 // the engine to allow clients to render their own stats.
 //-----------------------------------------------------------------------------
 
-class IClientStats
+abstract_class IClientStats
 {
 public:
 	// This is called at startup to tell the stats about time
@@ -80,7 +80,7 @@ public:
 //-----------------------------------------------------------------------------
 
 template <int timedStatCount, int countedStatCount>
-class CBaseClientStats : public IClientStats
+abstract_class CBaseClientStats : public IClientStats
 {
 public:
 	void Init( IClientStatsTime* pTime );

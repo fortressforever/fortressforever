@@ -30,7 +30,7 @@ bool CalcBarycentricCooefs( Vector const &v0, Vector const &v1, Vector const &v2
 	// get the area of the triangle
 	vCross = vSeg0.Cross( vSeg1 );
 	float totalArea = vCross.Length() * 0.5f;
-	float ooTotalArea = 1.0f / totalArea;
+	float ooTotalArea = totalArea ? 1.0f / totalArea : 0.0f;
 
 	// get the area for cooeficient 0 (pt, v1, v2)
 	vSeg0 = v1 - pt;
@@ -535,6 +535,14 @@ void CCoreDispInfo::InitDispInfo( int power, int minTess, float smoothingAngle,
 	// general displacement data
 	//
 	m_Power = power;
+
+	if ( ( minTess & 0x80000000 ) != 0 )
+	{
+		// If the high bit is set, this represents FLAGS (SURF_NOPHYSICS_COLL, etc.) flags.
+		int nFlags = minTess;
+		nFlags &= ~0x80000000;
+		GetSurface()->SetFlags( nFlags );
+	}
 
 	// Allocate + initialize verts
 	int size = GetSize();

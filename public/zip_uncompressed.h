@@ -61,6 +61,8 @@ struct ZIP_LocalFileHeader
 	unsigned int uncompressedSize; // uncompressed size 4 bytes 
 	unsigned short fileNameLength; // file name length 2 bytes 
 	unsigned short extraFieldLength; // extra field length 2 bytes 
+	// file name (variable size) 
+	// extra field (variable size) 
 };
 #pragma pack()
 

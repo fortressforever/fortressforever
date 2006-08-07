@@ -11,6 +11,7 @@
 #include "gamestringpool.h"
 #include "props_shared.h"
 #include "c_te_effect_dispatch.h"
+#include "datacache/imdlcache.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -82,11 +83,11 @@ bool C_PhysPropClientside::KeyValue( const char *szKeyName, const char *szValue 
 	}
 	else if ( FStrEq(szKeyName, "health") )
 	{
-		m_iHealth = atoi(szValue);
+		m_iHealth = Q_atoi(szValue);
 	}
 	else if (FStrEq(szKeyName, "spawnflags"))
 	{
-		m_spawnflags = atoi(szValue);
+		m_spawnflags = Q_atoi(szValue);
 	}
 	else if (FStrEq(szKeyName, "model"))
 	{
@@ -94,20 +95,25 @@ bool C_PhysPropClientside::KeyValue( const char *szKeyName, const char *szValue 
 	}
 	else if (FStrEq(szKeyName, "fademaxdist"))
 	{
-		m_fadeMaxDist = atof(szValue);
+		m_fadeMaxDist = Q_atof(szValue);
 	}
 	else if (FStrEq(szKeyName, "fademindist"))
 	{
-		m_fadeMinDist = atof(szValue);
+		m_fadeMinDist = Q_atof(szValue);
 	}
 	else if (FStrEq(szKeyName, "fadescale"))
 	{
-		m_flFadeScale = atof(szValue);
+		m_flFadeScale = Q_atof(szValue);
 	}
 	else if (FStrEq(szKeyName, "inertiaScale"))
 	{
-		m_inertiaScale = atof(szValue);
+		m_inertiaScale = Q_atof(szValue);
 	}
+	else if (FStrEq(szKeyName, "skin"))
+	{
+		m_nSkin  = Q_atoi(szValue);
+	}
+
 	else
 	{
 		if ( !BaseClass::KeyValue( szKeyName, szValue ) )
@@ -206,6 +212,8 @@ bool C_PhysPropClientside::Initialize()
 
 	solid_t tmpSolid;
 
+	// Create the object in the physics system
+
 	if ( !PhysModelParseSolid( tmpSolid, this, GetModelIndex() ) )
 	{
 		DevMsg("C_PhysPropClientside::Initialize: PhysModelParseSolid failed for entity %i.\n", GetModelIndex() );
@@ -213,7 +221,7 @@ bool C_PhysPropClientside::Initialize()
 	}
 	else
 	{
-		m_pPhysicsObject = VPhysicsInitNormal( SOLID_VPHYSICS, 0, false, &tmpSolid );
+		m_pPhysicsObject = VPhysicsInitNormal( SOLID_VPHYSICS, 0, m_spawnflags & SF_PHYSPROP_START_ASLEEP, &tmpSolid );
 	
 		if ( !m_pPhysicsObject )
 		{
@@ -221,6 +229,11 @@ bool C_PhysPropClientside::Initialize()
 		DevMsg(" C_PhysPropClientside::Initialize: VPhysicsInitNormal() failed for %s.\n", STRING(GetModelName()) );
 			return false;
 		}
+	}
+
+	if ( m_spawnflags & SF_PHYSPROP_MOTIONDISABLED )
+	{
+		m_pPhysicsObject->EnableMotion( false );
 	}
 		
 	Spawn(); // loads breakable & prop data
@@ -230,6 +243,13 @@ bool C_PhysPropClientside::Initialize()
 		m_iPhysicsMode = GetAutoMultiplayerPhysicsMode( 
 			CollisionProp()->OBBSize(), m_pPhysicsObject->GetMass() );
 	}
+
+	if 	( m_spawnflags & SF_PHYSPROP_FORCE_SERVER_SIDE )
+	{
+		// forced to be server-side by map maker
+		return false;
+	}
+		
 
 	
 	if ( m_iPhysicsMode != PHYSICS_MULTIPLAYER_CLIENTSIDE )
@@ -522,8 +542,7 @@ void C_PhysPropClientside::ImpactTrace( trace_t *pTrace, int iDamageType, char *
 		data.m_nSurfaceProp = pTrace->surface.surfaceProps;
 		data.m_nDamageType = iDamageType;
 		data.m_nHitBox = pTrace->hitbox;
-		data.m_nEntIndex = entindex();
-		data.m_pEntity = this;
+		data.m_hEntity = GetRefEHandle();
 
 		// Send it on its way
 		if ( !pCustomImpactName )
@@ -546,6 +565,8 @@ const char *C_PhysPropClientside::ParseEntity( const char *pEntData )
 	CEntityMapData entData( (char*)pEntData );
 	char className[MAPKEY_MAXLENGTH];
 	
+	MDLCACHE_CRITICAL_SECTION();
+
 	if (!entData.ExtractValue("classname", className))
 	{
 		Error( "classname missing from entity!\n" );
@@ -641,6 +662,8 @@ CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, 
 	// Inherit the base object's damage modifiers
 	if ( pBreakableOwner )
 	{
+		pEntity->SetEffects( pBreakableOwner->GetEffects() );
+
 		pEntity->m_spawnflags = pBreakableOwner->m_spawnflags;
 
 		// We never want to be motion disabled
@@ -669,6 +692,10 @@ CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, 
 
 	pEntity->m_nSkin = nSkin;
 	pEntity->m_iHealth = pModel->health;
+
+#ifdef DOD_DLL
+	pEntity->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+#endif
 
 	if ( pModel->health == 0 )
 	{

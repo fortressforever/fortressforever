@@ -62,7 +62,7 @@ void CBoneFollowerManager::AddBoneFollower( CBaseEntity *pEntity, const char *pF
 // return the hitgroup of that box
 static int HitGroupFromPhysicsBone( CBaseAnimating *pAnim, int physicsBone )
 {
-	studiohdr_t *pStudioHdr = pAnim->GetModelPtr( );
+	CStudioHdr *pStudioHdr = pAnim->GetModelPtr( );
 	mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pAnim->m_nHitboxSet );
 	for ( int i = 0; i < set->numhitboxes; i++ )
 	{
@@ -83,7 +83,7 @@ static int HitGroupFromPhysicsBone( CBaseAnimating *pAnim, int physicsBone )
 //-----------------------------------------------------------------------------
 bool CBoneFollowerManager::CreatePhysicsFollower( physfollower_t &follow, const char *pBoneName )
 {
-	studiohdr_t *pStudioHdr = m_hOuter->GetModelPtr();
+	CStudioHdr *pStudioHdr = m_hOuter->GetModelPtr();
 	matrix3x4_t boneToWorld;
 	solid_t solid;
 
@@ -104,17 +104,24 @@ bool CBoneFollowerManager::CreatePhysicsFollower( physfollower_t &follow, const 
 		follow.boneIndex = Studio_BoneIndexByName( pStudioHdr, solid.name );
 		if ( follow.boneIndex < 0 )
 		{
-			Warning("Can't find ragdoll bone %s for model %s\n", solid.name, pStudioHdr->name );
+			if ( pStudioHdr->numbones() > 1 )
+			{
+				Warning("Can't find ragdoll bone %s for model %s\n", solid.name, pStudioHdr->pszName() );
+			}
 			follow.boneIndex = boneIndex;
 		}
 
-
 		m_hOuter->GetBoneTransform( follow.boneIndex, boneToWorld );
 		MatrixAngles( boneToWorld, boneAngles, bonePosition );
+
 		follow.hFollower = CBoneFollower::Create( m_hOuter, STRING(m_hOuter->GetModelName()), solid, bonePosition, boneAngles );
 		follow.hFollower->SetTraceData( physicsBone, HitGroupFromPhysicsBone( m_hOuter, physicsBone ) );
 		follow.hFollower->SetBlocksLOS( m_hOuter->BlocksLOS() );
 		return true;
+	}
+	else
+	{
+		Warning( "ERROR: Tried to create bone follower on invalid bone %s\n", pBoneName );
 	}
 
 	return false;

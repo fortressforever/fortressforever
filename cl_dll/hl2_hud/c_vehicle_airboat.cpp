@@ -11,6 +11,7 @@
 
 #include "cbase.h"
 #include "c_prop_vehicle.h"
+#include "datacache/imdlcache.h"
 #include "flashlighteffect.h"
 #include "movevars_shared.h"
 #include "ammodef.h"
@@ -23,6 +24,10 @@
 #include "engine/ivdebugoverlay.h"
 #include "view.h"
 #include "ClientEffectPrecacheSystem.h"
+
+#ifdef _XBOX
+#include "c_basehlplayer.h"
+#endif//_XBOX
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -232,7 +237,9 @@ void C_PropAirboat::DrawHudElements( )
 {
 	BaseClass::DrawHudElements();
 
-	CHudTexture *pIcon = gHUD.GetIcon( "plushair" );
+	MDLCACHE_CRITICAL_SECTION();
+
+	CHudTexture *pIcon = gHUD.GetIcon( IsXbox() ? "crosshair_default" : "plushair" );
 	if ( pIcon != NULL )
 	{
 		float x, y;
@@ -274,8 +281,34 @@ void C_PropAirboat::UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUserCmd *pCmd
 		//
 		// Autocenter the view after a period of no mouse movement while throttling.
 		//
+		bool bResetViewAngleTime = false;
+
+#ifdef _XBOX
 		if ( ( pCmd->mousedx != 0 || pCmd->mousedy != 0 ) || ( fabsf( m_flThrottle ) < 0.01f ) )
 		{
+			// Only reset this if there isn't an autoaim target!
+			C_BaseHLPlayer *pLocalHLPlayer = (C_BaseHLPlayer *)pLocalPlayer;
+			if ( pLocalHLPlayer )
+			{
+				// Get the autoaim target.
+				CBaseEntity *pTarget = pLocalHLPlayer->m_HL2Local.m_hAutoAimTarget.Get();
+
+				if( !pTarget )
+				{
+					bResetViewAngleTime = true;
+				}
+			}
+		}
+#else
+		if ( ( pCmd->mousedx != 0 || pCmd->mousedy != 0 ) || ( fabsf( m_flThrottle ) < 0.01f ) )
+		{
+			bResetViewAngleTime = true;
+		}
+#endif//_XBOX
+
+		if( bResetViewAngleTime )
+		{
+
 			m_flViewAngleDeltaTime = 0.0f;
 		}
 		else
@@ -599,11 +632,11 @@ void C_PropAirboat::DrawPontoonSplash( Vector origin, Vector direction, float sp
 	{
 		if ( random->RandomInt( 0, 1 ) )
 		{
-			hMaterial = g_ParticleMgr.GetPMaterial( "effects/splash1" );
+			hMaterial = ParticleMgr()->GetPMaterial( "effects/splash1" );
 		}
 		else
 		{
-			hMaterial = g_ParticleMgr.GetPMaterial( "effects/splash2" );
+			hMaterial = ParticleMgr()->GetPMaterial( "effects/splash2" );
 		}
 
 		offset = RandomVector( -8.0f * flScale, 8.0f * flScale );
@@ -732,7 +765,7 @@ int C_PropAirboat::DrawWake( void )
 	if ( GetWaterLevel() == 2 )
 		return 0;
 
-	bool bDriven = ( GetPassenger( 0 ) != NULL );
+	bool bDriven = ( GetPassenger( VEHICLE_ROLE_DRIVER ) != NULL );
 
 	Vector vehicleDir = m_vecPhysVelocity;
 	float vehicleSpeed = VectorNormalize( vehicleDir );

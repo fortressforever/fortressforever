@@ -113,10 +113,10 @@ IPhysicsObject *PhysModelCreateBox( CBaseEntity *pEntity, const Vector &mins, co
 		const model_t *model = modelinfo->GetModel( modelIndex );
 		if ( model )
 		{
-			if ( modelinfo->GetModelType( model ) == mod_studio )
+			CStudioHdr studioHdr( modelinfo->GetStudiomodel( model ), mdlcache );
+			if ( studioHdr.IsValid() )
 			{
-				studiohdr_t *pstudiohdr = static_cast< studiohdr_t * >( modelinfo->GetModelExtraData( model ) );
-				pSurfaceProps = Studio_GetDefaultSurfaceProps( pstudiohdr );
+				pSurfaceProps = Studio_GetDefaultSurfaceProps( &studioHdr );
 			}
 		}
 	}
@@ -153,10 +153,10 @@ IPhysicsObject *PhysModelCreateOBB( CBaseEntity *pEntity, const Vector &mins, co
 		const model_t *model = modelinfo->GetModel( modelIndex );
 		if ( model )
 		{
-			if ( modelinfo->GetModelType( model ) == mod_studio )
+			CStudioHdr studioHdr( modelinfo->GetStudiomodel( model ), mdlcache );
+			if (studioHdr.IsValid()) 
 			{
-				studiohdr_t *pstudiohdr = static_cast< studiohdr_t * >( modelinfo->GetModelExtraData( model ) );
-				pSurfaceProps = Studio_GetDefaultSurfaceProps( pstudiohdr );
+				pSurfaceProps = Studio_GetDefaultSurfaceProps( &studioHdr );
 			}
 		}
 	}
@@ -188,7 +188,7 @@ bool PhysModelParseSolidByIndex( solid_t &solid, CBaseEntity *pEntity, int model
 
 	memset( &solid, 0, sizeof(solid) );
 	solid.params = g_PhysDefaultObjectParams;
-
+#if !defined(USE_PHX_FILES)
 	IVPhysicsKeyParser *pParse = physcollision->VPhysicsKeyParserCreate( pCollide->pKeyValues );
 	while ( !pParse->Finished() )
 	{
@@ -216,6 +216,15 @@ bool PhysModelParseSolidByIndex( solid_t &solid, CBaseEntity *pEntity, int model
 		}
 	}
 	physcollision->VPhysicsKeyParserDestroy( pParse );
+#else
+	Assert( pCollide->isPacked );
+	CPackedPhysicsDescription *pPacked = physcollision->CreatePackedDesc( pCollide->pKeyValues, pCollide->descSize );
+	if ( solidIndex < 0 ) // -1 means first solid
+		solidIndex = 0;
+	pPacked->GetSolid( &solid, solidIndex );
+	physcollision->DestroyPackedDesc( pPacked );
+	parsed = true;
+#endif
 
 	// collisions are off by default
 	solid.params.enableCollisions = true;
@@ -252,6 +261,7 @@ bool PhysModelParseSolidByIndex( solid_t &solid, CBaseEntity *pEntity, vcollide_
 	memset( &solid, 0, sizeof(solid) );
 	solid.params = g_PhysDefaultObjectParams;
 
+#if !defined(USE_PHX_FILES)
 	IVPhysicsKeyParser *pParse = physcollision->VPhysicsKeyParserCreate( pCollide->pKeyValues );
 	while ( !pParse->Finished() )
 	{
@@ -279,6 +289,15 @@ bool PhysModelParseSolidByIndex( solid_t &solid, CBaseEntity *pEntity, vcollide_
 		}
 	}
 	physcollision->VPhysicsKeyParserDestroy( pParse );
+#else
+	if ( solidIndex < 0 )
+		solidIndex = 0;
+	Assert( pCollide->isPacked );
+	CPackedPhysicsDescription *pPacked = physcollision->CreatePackedDesc( pCollide->pKeyValues, pCollide->descSize );
+	pPacked->GetSolid( &solid, solidIndex );
+	physcollision->DestroyPackedDesc( pPacked );
+	parsed = true;
+#endif
 
 	// collisions are off by default
 	solid.params.enableCollisions = true;
@@ -489,15 +508,20 @@ void PhysDestroyObject( IPhysicsObject *pObject, CBaseEntity *pEntity )
 void AddSurfacepropFile( const char *pFileName, IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem )
 {
 	// Load file into memory
-	FileHandle_t file = pFileSystem->Open( pFileName, "rb" );
+	FileHandle_t file = pFileSystem->Open( pFileName, "rb", "GAME" );
 
 	if ( file )
 	{
 		int len = pFileSystem->Size( file );
 
 		// read the file
-		char *buffer = (char *)stackalloc( len+1 );
-		pFileSystem->Read( buffer, len, file );
+		int nBufSize = len+1;
+		if ( IsXbox() )
+		{
+			nBufSize = AlignValue( nBufSize , 512 );
+		}
+		char *buffer = (char *)stackalloc( nBufSize );
+		pFileSystem->ReadEx( buffer, nBufSize, len, file );
 		pFileSystem->Close( file );
 		buffer[len] = 0;
 		pProps->ParseSurfaceData( pFileName, buffer );
@@ -535,6 +559,34 @@ void PhysParseSurfaceData( IPhysicsSurfaceProps *pProps, IFileSystem *pFileSyste
 	manifest->deleteThis();
 }
 
+void PhysCreateVirtualTerrain( CBaseEntity *pWorld, const objectparams_t &defaultParams )
+{
+	for ( int i = 0; i < MAX_MAP_DISPINFO; i++ )
+	{
+		virtualterrainparams_t params;
+		params.index = i;
+		CPhysCollide *pCollide = modelinfo->GetCollideForVirtualTerrain( params );
+		if ( pCollide )
+		{
+			solid_t solid;
+			solid.params = defaultParams;
+			solid.params.enableCollisions = true;
+			solid.params.pGameData = static_cast<void *>(pWorld);
+			solid.params.pName = "world";
+			int surfaceData = physprops->GetSurfaceIndex( "default" );
+			// create this as part of the world
+			IPhysicsObject *pObject = physenv->CreatePolyObjectStatic( pCollide, surfaceData, vec3_origin, vec3_angle, &solid.params );
+			pObject->SetCallbackFlags( pObject->GetCallbackFlags() | CALLBACK_NEVER_DELETED );
+		}
+	}
+}
+
+#ifndef CLIENT_DLL
+CON_COMMAND( dump_terrain, "Dump physics info about virtual terrains" )
+{
+	physcollision->DumpVirtualCollideStats();
+}
+#endif
 
 IPhysicsObject *PhysCreateWorld_Shared( CBaseEntity *pWorld, vcollide_t *pWorldCollide, const objectparams_t &defaultParams )
 {
@@ -555,8 +607,10 @@ IPhysicsObject *PhysCreateWorld_Shared( CBaseEntity *pWorld, vcollide_t *pWorldC
 
 	//PhysCheckAdd( world, "World" );
 	// walk the world keys in case there are some fluid volumes to create
+#if !defined(USE_PHX_FILES)
 	IVPhysicsKeyParser *pParse = physcollision->VPhysicsKeyParserCreate( pWorldCollide->pKeyValues );
 
+	bool bCreateVirtualTerrain = false;
 	while ( !pParse->Finished() )
 	{
 		const char *pBlock = pParse->GetCurrentBlockName();
@@ -569,9 +623,21 @@ IPhysicsObject *PhysCreateWorld_Shared( CBaseEntity *pWorld, vcollide_t *pWorldC
 			solid.params.pGameData = static_cast<void *>(pWorld);
 			solid.params.pName = "world";
 			int surfaceData = physprops->GetSurfaceIndex( "default" );
+
+			if ( !pWorldCollide->solids[solid.index] )
+			{
+				// this implies that the collision model is a mopp and the physics DLL doesn't support that.
+				bCreateVirtualTerrain = true;
+				continue;
+			}
 			// create this as part of the world
 			IPhysicsObject *pObject = physenv->CreatePolyObjectStatic( pWorldCollide->solids[solid.index], 
 				surfaceData, vec3_origin, vec3_angle, &solid.params );
+
+			// invalid collision model or can't create, ignore
+			if (!pObject)
+				continue;
+
 			pObject->SetCallbackFlags( pObject->GetCallbackFlags() | CALLBACK_NEVER_DELETED );
 			Assert( g_SolidSetup.GetContentsMask() != 0 );
 			pObject->SetContents( g_SolidSetup.GetContentsMask() );
@@ -610,6 +676,11 @@ IPhysicsObject *PhysCreateWorld_Shared( CBaseEntity *pWorld, vcollide_t *pWorldC
 			pParse->ParseSurfaceTable( surfaceTable, NULL );
 			physprops->SetWorldMaterialIndexTable( surfaceTable, 128 );
 		}
+		else if ( !strcmpi(pBlock, "virtualterrain" ) )
+		{
+			bCreateVirtualTerrain = true;
+			pParse->SkipBlock();
+		}
 		else
 		{
 			// unknown chunk???
@@ -618,6 +689,72 @@ IPhysicsObject *PhysCreateWorld_Shared( CBaseEntity *pWorld, vcollide_t *pWorldC
 	}
 	physcollision->VPhysicsKeyParserDestroy( pParse );
 
+	if ( bCreateVirtualTerrain && physcollision->SupportsVirtualMesh() )
+	{
+		PhysCreateVirtualTerrain( pWorld, defaultParams );
+	}
+#else
+	Assert( pWorldCollide->isPacked );
+	CPackedPhysicsDescription *pPacked = physcollision->CreatePackedDesc( pWorldCollide->pKeyValues, pWorldCollide->descSize );
+	int i;
+	for ( i = 0; i < pPacked->m_solidCount; i++ )
+	{
+		solid.params = defaultParams;
+		pPacked->GetSolid( &solid, i );
+		solid.params.enableCollisions = true;
+		solid.params.pGameData = static_cast<void *>(pWorld);
+		solid.params.pName = "world";
+		int surfaceData = physprops->GetSurfaceIndex( "default" );
+		// create this as part of the world
+		IPhysicsObject *pObject = physenv->CreatePolyObjectStatic( pWorldCollide->solids[solid.index], 
+			surfaceData, vec3_origin, vec3_angle, &solid.params );
+#ifdef _XBOX
+		// xboxissue - mopp not available, just ignore, but could ignore other real errors
+		if (!pObject)
+			continue;
+#endif
+		pObject->SetCallbackFlags( pObject->GetCallbackFlags() | CALLBACK_NEVER_DELETED );
+		pObject->SetContents( pPacked->GetSolidContents(i) );
+
+		if ( !pWorldPhysics )
+		{
+			pWorldPhysics = pObject;
+		}
+	}
+	for ( i = 0; i < pPacked->m_fluidCount; i++ )
+	{
+		pPacked->GetFluid( &fluid, i );
+
+		// create a fluid for floating
+		if ( fluid.index > 0 )
+		{
+			solid.params = defaultParams;	// copy world's params
+			solid.params.enableCollisions = true;
+			solid.params.pName = "fluid";
+			solid.params.pGameData = static_cast<void *>(pWorld);
+			fluid.params.pGameData = static_cast<void *>(pWorld);
+			int surfaceData = physprops->GetSurfaceIndex( fluid.surfaceprop );
+			// create this as part of the world
+			IPhysicsObject *pWater = physenv->CreatePolyObjectStatic( pWorldCollide->solids[fluid.index], 
+				surfaceData, vec3_origin, vec3_angle, &solid.params );
+
+			pWater->SetCallbackFlags( pWater->GetCallbackFlags() | CALLBACK_NEVER_DELETED );
+			physenv->CreateFluidController( pWater, &fluid.params );
+		}
+	}
+
+	if ( pPacked->m_materialTableCount )
+	{
+		int surfaceTable[128];
+		pPacked->GetMaterialTable( surfaceTable, 128 );
+		physprops->SetWorldMaterialIndexTable( surfaceTable, 128 );
+	}
+	if ( pPacked->m_virtualTerrainCount )
+	{
+		PhysCreateVirtualTerrain( pWorld, defaultParams );
+	}
+	physcollision->DestroyPackedDesc( pPacked );
+#endif
 	return pWorldPhysics;
 }
 
@@ -920,14 +1057,17 @@ void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, float ene
 	float volume = energy * energy;
 		
 	unsigned short soundName = psurf->sounds.scrapeRough;
+	short *soundHandle = &psurf->soundhandles.scrapeRough;
+
 	if ( psurf->sounds.scrapeSmooth && phit->audio.roughnessFactor < psurf->audio.roughThreshold )
 	{
 		soundName = psurf->sounds.scrapeSmooth;
+		soundHandle = &psurf->soundhandles.scrapeRough;
 	}
 
 	const char *pSoundName = physprops->GetString( soundName );
 
-	PhysFrictionSound( pEntity, pObject, pSoundName, volume );
+	PhysFrictionSound( pEntity, pObject, pSoundName, *soundHandle, volume );
 }
 
 

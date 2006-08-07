@@ -45,7 +45,7 @@ public:
 	DECLARE_DATADESC();
 };
 
-class CBaseNPCMaker : public CBaseEntity
+abstract_class CBaseNPCMaker : public CBaseEntity
 {
 public:
 	DECLARE_CLASS( CBaseNPCMaker, CBaseEntity );
@@ -76,8 +76,8 @@ public:
 
 	// State changers
 	void Toggle( void );
-	void Enable( void );
-	void Disable( void );
+	virtual void Enable( void );
+	virtual void Disable( void );
 
 	virtual bool IsDepleted( void );
 
@@ -89,11 +89,15 @@ public:
 	COutputEHANDLE m_OnSpawnNPC;
 	COutputEvent m_OnAllSpawned;
 	COutputEvent m_OnAllSpawnedDead;
+	COutputEvent m_OnAllLiveChildrenDead;
 	
 	int		m_nLiveChildren;	// how many NPCs made by this NPC maker that are currently alive
 	int		m_nMaxLiveChildren;	// max number of NPCs that this maker may have out at one time.
 
 	bool	m_bDisabled;
+
+	EHANDLE m_hIgnoreEntity;
+	string_t m_iszIngoreEnt;
 };
 
 
@@ -123,7 +127,10 @@ class CTemplateNPCMaker : public CBaseNPCMaker
 public:
 	DECLARE_CLASS( CTemplateNPCMaker, CBaseNPCMaker );
 
-	CTemplateNPCMaker( void ) {}
+	CTemplateNPCMaker( void ) 
+	{
+		m_iMinSpawnDistance = 0;
+	}
 
 	virtual void Precache();
 
@@ -139,6 +146,7 @@ public:
 	void InputSpawnInRadius( inputdata_t &inputdata ) { MakeNPCInRadius(); }
 	void InputSpawnInLine( inputdata_t &inputdata ) { MakeNPCInLine(); }
 	void InputChangeDestinationGroup( inputdata_t &inputdata );
+	void InputSetMinimumSpawnDistance( inputdata_t &inputdata );
 	
 	float	m_flRadius;
 
@@ -147,6 +155,8 @@ public:
 	string_t m_iszTemplateName;		// The name of the NPC that will be used as the template.
 	string_t m_iszTemplateData;		// The keyvalue data blob from the template NPC that will be used to spawn new ones.
 	string_t m_iszDestinationGroup;	
+
+	int		m_iMinSpawnDistance;
 
 	enum ThreeStateYesNo_t
 	{

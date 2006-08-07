@@ -422,7 +422,7 @@ bool CSoundCombiner::LoadSentenceFromWavFile( char const *wavfile, CSentence& se
 void CSoundCombiner::StoreValveDataChunk( CSentence& sentence )
 {
 	// Buffer and dump data
-	CUtlBuffer buf( 0, 0, true );
+	CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
 
 	sentence.SaveToBuffer( buf );
 

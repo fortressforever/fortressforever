@@ -27,8 +27,8 @@ typedef CGameTrace trace_t;
 struct studiohdr_t;
 struct virtualmodel_t;
 typedef unsigned char byte;
-
-
+struct virtualterrainparams_t;
+class CPhysCollide;
 //-----------------------------------------------------------------------------
 // Model info interface
 //-----------------------------------------------------------------------------
@@ -95,6 +95,14 @@ public:
 
 	// both client and server
 	virtual int						GetAutoplayList( const studiohdr_t *pStudioHdr, unsigned short **pAutoplayList ) const = 0;
+
+	// Gets a virtual terrain collision model (creates if necessary)
+	// NOTE: This may return NULL if the terrain model cannot be virtualized
+	virtual CPhysCollide			*GetCollideForVirtualTerrain( const virtualterrainparams_t &params ) = 0;
+
+	virtual bool					IsUsingFBTexture( const model_t *model ) const = 0;
+
+	virtual const model_t			*FindOrLoadModel( const char *name ) const = 0;
 };
 
 
@@ -103,5 +111,11 @@ class IVModelInfoClient : public IVModelInfo
 public:
 };
 
+
+struct virtualterrainparams_t
+{
+	// UNDONE: Add grouping here, specified in BSP file? (test grouping to see if this is necessary)
+	int index;
+};
 
 #endif // IVMODELINFO_H

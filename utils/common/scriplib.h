@@ -4,19 +4,14 @@
 //
 // $Workfile:     $
 // $Date:         $
-//
-//-----------------------------------------------------------------------------
-// $Log: $
-//
 // $NoKeywords: $
 //=============================================================================//
 
 #ifndef SCRIPLIB_H
 #define SCRIPLIB_H
-#pragma once
 
-#ifndef CMDLIB_H
-#include "cmdlib.h"
+#ifdef _WIN32
+#pragma once
 #endif
 
 
@@ -53,6 +48,7 @@ qboolean GetToken (qboolean crossline);
 qboolean GetExprToken (qboolean crossline);
 void UnGetToken (void);
 qboolean TokenAvailable (void);
+qboolean GetTokenizerStatus( char **pFilename, int *pLine );
 
 #ifdef __cplusplus
 }

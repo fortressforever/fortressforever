@@ -33,6 +33,8 @@ static inline char *CloneString( const char *str )
 	return cloneStr;
 }
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CBitmapImagePanel, BitmapImagePanel );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------

@@ -20,7 +20,7 @@ CLIENTEFFECT_REGISTER_END()
 //-----------------------------------------------------------------------------
 // Purpose: Special draw for the warped overlay
 //-----------------------------------------------------------------------------
-void CWarpOverlay::Draw( void )
+void CWarpOverlay::Draw( bool bCacheFullSceneState )
 {
 	// Get the vector to the sun.
 	Vector vToGlow;
@@ -37,7 +37,7 @@ void CWarpOverlay::Draw( void )
 	if( flDot <= g_flOverlayRange )
 		return;
 
-	UpdateGlowObstruction( vToGlow );
+	UpdateGlowObstruction( vToGlow, bCacheFullSceneState );
 	if( m_flGlowObstructionScale == 0 )
 		return;
 	

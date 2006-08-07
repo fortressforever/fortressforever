@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef PARTICLES_SIMPLE_H
 #define PARTICLES_SIMPLE_H
@@ -36,12 +36,25 @@ public:
 	// Call this before adding a bunch of particles to give it a rough estimate of where
 	// your particles are for sorting amongst other translucent entities.
 	void				SetSortOrigin( const Vector &vSortOrigin );
-	
+
 	PMaterialHandle		GetPMaterial(const char *name);
 	
 	Particle*			AddParticle( unsigned int particleSize, PMaterialHandle material, const Vector &origin );
 
 	CParticleEffectBinding&	GetBinding()	{ return m_ParticleEffect; }
+
+	const char *GetEffectName();
+
+	void AddFlags( int iFlags ) { m_Flags |= iFlags; }
+	void RemoveFlags( int iFlags ) { m_Flags &= ~iFlags; }
+
+	void SetDontRemove( bool bSet )
+	{
+		if( bSet )
+			AddFlags( FLAG_DONT_REMOVE );
+		else
+			RemoveFlags( FLAG_DONT_REMOVE );
+	}
 
 // IParticleEffect overrides
 public:
@@ -55,23 +68,24 @@ public:
 	// All Create() functions should call this so the effect deletes itself
 	// when it is removed from the particle manager.
 	void						SetDynamicallyAllocated( bool bDynamic=true );
-	
 
+	virtual bool				ShouldSimulate() const { return m_bSimulate; }
+	virtual void				SetShouldSimulate( bool bSim ) { m_bSimulate = bSim; }
+
+	int							AllocateToolParticleEffectId();
+	int							GetToolParticleEffectId() const;
 protected:
 								CParticleEffect( const char *pDebugName );
 	virtual						~CParticleEffect();
 
 	// Returns nonzero if Release() has been called.
 	int							IsReleased();
-
-
-
-protected:
 	
 	enum
 	{
-		FLAG_ALLOCATED = (1<<1)	// Most of the CParticleEffects are dynamically allocated but
+		FLAG_ALLOCATED = (1<<1),	// Most of the CParticleEffects are dynamically allocated but
 								// some are member variables of a class. If they're member variables.
+		FLAG_DONT_REMOVE = (1<<2),
 	};
 
 	// Used to track down bugs.
@@ -81,17 +95,31 @@ protected:
 	Vector						m_vSortOrigin;
 	
 	int							m_Flags;		// Combination of CParticleEffect::FLAG_
-	
-	int							m_RefCount;		// When this goes to zero and the effect has no more active
-												// particles, (and it's dynamically allocated), it will delete itself.
+
+	bool						m_bSimulate;
+	int							m_nToolParticleEffectId;
 
 private:
 	// Update the reference count.
 	void						AddRef();
 	void						Release();
+	
+	int							m_RefCount;		// When this goes to zero and the effect has no more active
+												// particles, (and it's dynamically allocated), it will delete itself.
 
 	CParticleEffect( const CParticleEffect & ); // not defined, not accessible
 };
+
+inline int CParticleEffect::GetToolParticleEffectId() const
+{
+	return m_nToolParticleEffectId;
+}
+
+inline int CParticleEffect::AllocateToolParticleEffectId()
+{
+	m_nToolParticleEffectId = ParticleMgr()->AllocateToolParticleEffectId();
+	return m_nToolParticleEffectId;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -121,6 +149,8 @@ public:
 	unsigned char	m_uchEndSize;
 	unsigned char 	m_iFlags;	// See SimpleParticleFlag_t above
 	float		m_flRollDelta;
+
+	void ToolRecordParticle( KeyValues *msg );
 };
 
 
@@ -138,21 +168,21 @@ class CSimpleEmitter : public CParticleEffect
 public:
 
 	DECLARE_CLASS( CSimpleEmitter, CParticleEffect );
-	
+
 	static CSmartPtr<CSimpleEmitter>	Create( const char *pDebugName );
 
-	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
-	virtual void RenderParticles( CParticleRenderIterator *pIterator );
+	virtual void	SimulateParticles( CParticleSimulateIterator *pIterator );
+	virtual void	RenderParticles( CParticleRenderIterator *pIterator );
 
 	void			SetNearClip( float nearClipMin, float nearClipMax );
 
 	void			SetDrawBeforeViewModel( bool state = true );
 
 	SimpleParticle*	AddSimpleParticle( PMaterialHandle hMaterial, const Vector &vOrigin, float flDieTime=3, unsigned char uchSize=10 );
-
+	
 // Overridables for variants like CEmberEffect.
 protected:
-					CSimpleEmitter( const char *pDebugName );
+					CSimpleEmitter( const char *pDebugName = NULL );
 	virtual			~CSimpleEmitter();
 
 	virtual	float	UpdateAlpha( const SimpleParticle *pParticle );

@@ -5,6 +5,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include "filesystem.h"
 #include "filesystem_helpers.h"
 #include "characterset.h"
@@ -134,5 +136,6 @@ char* ParseFile( char* pFileBytes, char* pToken, bool* pWasQuoted )
 	return (char*)ParseFile( (const char*)pFileBytes, pToken, pWasQuoted );
 }
 
+#endif // !_STATIC_LINKED || _SHARED_LIB
 
 

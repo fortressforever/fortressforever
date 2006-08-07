@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "enginesprite.h"
 #include "hud.h"
@@ -211,127 +211,171 @@ static void AdjustSubRect(CEngineSprite *pSprite, int frame, float *pfLeft, floa
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : *pName - 
-// Output : static IMaterial
 //-----------------------------------------------------------------------------
-
-static IMaterial *FindSpriteMaterial( const char *pName )
+static unsigned int spriteOriginCache = 0;
+bool CEngineSprite::Init( const char *pName )
 {
-	IMaterial *material;
-	
-	material = materials->FindMaterial( pName, TEXTURE_GROUP_CLIENT_EFFECTS );
-	return material;
+	m_hAVIMaterial = AVIMATERIAL_INVALID;
+	m_width = m_height = m_numFrames = 1;
+
+	const char *pExt = Q_GetFileExtension( pName );
+	bool bIsAVI = pExt && !Q_stricmp( pExt, "avi" );
+	if ( bIsAVI )
+	{
+		m_hAVIMaterial = avi->CreateAVIMaterial( pName, pName, "GAME" );
+		if ( m_hAVIMaterial == AVIMATERIAL_INVALID )
+			return false;
+
+		m_material = avi->GetMaterial( m_hAVIMaterial );
+		avi->GetFrameSize( m_hAVIMaterial, &m_width, &m_height );
+		m_numFrames = avi->GetFrameCount( m_hAVIMaterial );
+	}
+	else
+	{
+		m_material = materials->FindMaterial( pName, TEXTURE_GROUP_CLIENT_EFFECTS );
+		m_width = m_material->GetMappingWidth();
+		m_height = m_material->GetMappingHeight();
+		m_numFrames = (!bIsAVI) ? m_material->GetNumAnimationFrames() : avi->GetFrameCount( m_hAVIMaterial );
+	}
+
+	if ( !m_material )
+		return false;
+
+	m_material->IncrementReferenceCount();
+
+	m_orientation = GetOrientation();
+
+	IMaterialVar *originVar = m_material->FindVarFast( "$spriteorigin", &spriteOriginCache );
+	Vector origin, originVarValue;
+	if( !originVar || ( originVar->GetType() != MATERIAL_VAR_TYPE_VECTOR ) )
+	{
+		origin[0] = -m_width * 0.5f;
+		origin[1] = m_height * 0.5f;
+	}
+	else
+	{
+		originVar->GetVecValue( &originVarValue[0], 3 );
+		origin[0] = -m_width * originVarValue[0];
+		origin[1] = m_height * originVarValue[1];
+	}
+
+	up = origin[1];
+	down = origin[1] - m_height;
+	left = origin[0];
+	right = m_width + origin[0];
+
+	return true;
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CEngineSprite::Shutdown( void )
 {
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *name - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CEngineSprite::Init( const char *name )
-{
-	m_material = FindSpriteMaterial( name );
-	if( m_material )
+	if ( m_hAVIMaterial != AVIMATERIAL_INVALID )
 	{
-		m_width = m_material->GetMappingWidth();
-		m_height = m_material->GetMappingHeight();
-		m_numFrames = m_material->GetNumAnimationFrames();
-
-		bool found;
-		IMaterialVar *orientationVar = m_material->FindVar( "$spriteorigin", &found, false );
-		if( found )
-		{
-			m_orientation = orientationVar->GetIntValue();
-		}
-		else
-		{
-			m_orientation = C_SpriteRenderer::SPR_VP_PARALLEL_UPRIGHT;
-		}
-
-		IMaterialVar *originVar = m_material->FindVar( "$spriteorigin", &found, false );
-		Vector origin, originVarValue;
-		if( !found || ( originVar->GetType() != MATERIAL_VAR_TYPE_VECTOR ) )
-		{
-			origin[0] = -m_width * 0.5f;
-			origin[1] = m_height * 0.5f;
-		}
-		else
-		{
-			originVar->GetVecValue( &originVarValue[0], 3 );
-			origin[0] = -m_width * originVarValue[0];
-			origin[1] = m_height * originVarValue[1];
-		}
-
-		up = origin[1];
-		down = origin[1] - m_height;
-		left = origin[0];
-		right = m_width + origin[0];
+		avi->DestroyAVIMaterial( m_hAVIMaterial );
+		m_hAVIMaterial = AVIMATERIAL_INVALID;
 	}
-	return m_material ? true : false;
+
+	if ( m_material )
+	{
+		m_material->DecrementReferenceCount();
+		m_material = NULL;
+	}
 }
+
+
+//-----------------------------------------------------------------------------
+// Is the sprite an AVI?
+//-----------------------------------------------------------------------------
+bool CEngineSprite::IsAVI()
+{
+	return ( m_hAVIMaterial != AVIMATERIAL_INVALID );
+}
+
+
+//-----------------------------------------------------------------------------
+// Returns the texture coordinate range	used to draw the sprite
+//-----------------------------------------------------------------------------
+void CEngineSprite::GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, float *pMaxV )
+{
+	*pMaxU = 1.0f; 
+	*pMaxV = 1.0f;
+	if ( IsAVI() )
+	{
+		avi->GetTexCoordRange( m_hAVIMaterial, pMaxU, pMaxV );
+	}
+	float flOOWidth = ( m_width != 0 ) ? 1.0f / m_width : 1.0f;
+	float flOOHeight = ( m_height!= 0 ) ? 1.0f / m_height : 1.0f;
+
+	*pMinU = 0.5f * flOOWidth; 
+	*pMinV = 0.5f * flOOHeight;
+	*pMaxU = (*pMaxU) - (*pMinU);
+	*pMaxV = (*pMaxV) - (*pMinV);
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : r - 
-//			g - 
-//			b - 
 //-----------------------------------------------------------------------------
 void CEngineSprite::SetColor( float r, float g, float b )
 {
-	assert( (r >= 0.0) && (g >= 0.0) && (b >= 0.0) );
-	assert( (r <= 1.0) && (g <= 1.0) && (b <= 1.0) );
+	Assert( (r >= 0.0) && (g >= 0.0) && (b >= 0.0) );
+	Assert( (r <= 1.0) && (g <= 1.0) && (b <= 1.0) );
 	m_hudSpriteColor[0] = r;
 	m_hudSpriteColor[1] = g;
 	m_hudSpriteColor[2] = b;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : color - 
 //-----------------------------------------------------------------------------
 void CEngineSprite::GetHUDSpriteColor( float* color )
 {
 	VectorCopy( m_hudSpriteColor, color );
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : additive - 
 //-----------------------------------------------------------------------------
 void CEngineSprite::SetAdditive( bool additive )
 {
 	SetRenderMode( additive ? kRenderTransAdd : kRenderTransTexture ); 
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : frame - 
 //-----------------------------------------------------------------------------
+static unsigned int frameCache = 0;
 void CEngineSprite::SetFrame( float frame )
 {
-	bool found;
-	IMaterialVar* pFrameVar = m_material->FindVar( "$frame", &found, false );
-	if (found)
-		pFrameVar->SetFloatValue( frame );
+	if ( !IsAVI() )
+	{
+		IMaterialVar* pFrameVar = m_material->FindVarFast( "$frame", &frameCache );
+		if (pFrameVar)
+		{
+			pFrameVar->SetFloatValue( frame );
+		}
+		return;
+	}
+
+	avi->SetFrame( m_hAVIMaterial, frame );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : renderMode - 
 //-----------------------------------------------------------------------------
-
+static unsigned int spriteRenderModeCache = 0;
 void CEngineSprite::SetRenderMode( int renderMode )
 {
-	bool found;
-	IMaterialVar* pRenderModeVar = m_material->FindVar( "$spriteRenderMode", &found, false );
-	if (found)
+	IMaterialVar* pRenderModeVar = m_material->FindVarFast( "$spriteRenderMode", &spriteRenderModeCache );
+	if (pRenderModeVar)
 	{
 		if ( pRenderModeVar->GetIntValue() != renderMode )
 		{
@@ -345,11 +389,11 @@ void CEngineSprite::SetRenderMode( int renderMode )
 // Purpose: 
 // Output : int
 //-----------------------------------------------------------------------------
+static unsigned int spriteOrientationCache = 0;
 int CEngineSprite::GetOrientation( void )
 {
-	bool found;
-	IMaterialVar *orientationVar = m_material->FindVar( "$spriteorientation", &found, false );
-	if( found )
+	IMaterialVar *orientationVar = m_material->FindVarFast( "$spriteorientation", &spriteOrientationCache );
+	if( orientationVar )
 	{
 		return orientationVar->GetIntValue();
 	}
@@ -371,17 +415,15 @@ void CEngineSprite::UnloadMaterial( void )
 	m_material = NULL;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : frame - 
-//			x - 
-//			y - 
-//			*prcSubRect - 
 //-----------------------------------------------------------------------------
 void CEngineSprite::DrawFrame( int frame, int x, int y, const wrect_t *prcSubRect )
 {
 	DrawFrameOfSize( frame, x, y, GetWidth(), GetHeight(), prcSubRect);
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -392,6 +434,9 @@ void CEngineSprite::DrawFrame( int frame, int x, int y, const wrect_t *prcSubRec
 //-----------------------------------------------------------------------------
 void CEngineSprite::DrawFrameOfSize( int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect )
 {
+	// FIXME: If we ever call this with AVIs, need to have it call GetTexCoordRange and make that work
+	Assert( !IsAVI() );
+
 	float fLeft = 0;
 	float fRight = 1;
 	float fTop = 0;

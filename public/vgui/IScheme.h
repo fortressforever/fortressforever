@@ -13,7 +13,7 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include "interface.h"
+#include "tier1/interface.h"
 
 class Color;
 
@@ -73,6 +73,9 @@ public:
 	// returns a pointer to an image
 	virtual IImage *GetImage(const char *imageName, bool hardwareFiltered) = 0;
 	virtual HTexture GetImageID(const char *imageName, bool hardwareFiltered) = 0;
+#ifdef _XBOX
+	virtual void DeleteImage( const char *pImageName ) = 0;
+#endif
 
 	// This can only be called at certain times, like during paint()
 	// It will assert-fail if you call it at the wrong time...
@@ -87,8 +90,17 @@ public:
 
 	// gets the proportional coordinates for doing screen-size independant panel layouts
 	// use these for font, image and panel size scaling (they all use the pixel height of the display for scaling)
-	virtual int GetProportionalScaledValue(int normalizedValue) = 0;
+	virtual int GetProportionalScaledValue( int normalizedValue) = 0;
 	virtual int GetProportionalNormalizedValue(int scaledValue) = 0;
+
+	// loads a scheme from a file
+	// first scheme loaded becomes the default scheme, and all subsequent loaded scheme are derivitives of that
+	virtual HScheme LoadSchemeFromFileEx( VPANEL sizingPanel, const char *fileName, const char *tag) = 0;
+	// gets the proportional coordinates for doing screen-size independant panel layouts
+	// use these for font, image and panel size scaling (they all use the pixel height of the display for scaling)
+	virtual int GetProportionalScaledValueEx( HScheme scheme, int normalizedValue ) = 0;
+	virtual int GetProportionalNormalizedValueEx( HScheme scheme, int scaledValue ) = 0;
+
 };
 
 #define VGUI_SCHEME_INTERFACE_VERSION "VGUI_Scheme010"

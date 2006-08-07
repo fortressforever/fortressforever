@@ -30,7 +30,7 @@ enum
 	MM_SAY_TEAM,
 };
 
-class IClientMode
+abstract_class IClientMode
 {
 // Misc.
 public:
@@ -100,9 +100,6 @@ public:
 	// Called before rendering a view.
 	virtual void	PreRender( CViewSetup *pSetup ) = 0;
 
-	// Called after the world is rendered but before the hud is rendered.
-	virtual void	PostRenderWorld() = 0;
-	
 	// Called after everything is rendered.
 	virtual void	PostRender( void ) = 0;
 
@@ -111,6 +108,8 @@ public:
 	virtual void	ActivateInGameVGuiContext( vgui::Panel *pPanel ) = 0;
 	virtual void	DeactivateInGameVGuiContext() = 0;
 	virtual float	GetViewModelFOV( void ) = 0;
+
+	virtual bool	CanRecordDemo( char *errorMsg, int length ) const = 0;
 
 // Updates.
 public:

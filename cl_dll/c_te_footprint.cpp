@@ -9,6 +9,7 @@
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "iefx.h"
+#include "fx.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -37,8 +38,6 @@ public:
 	int				m_nEntity;
 	int				m_nIndex;
 	char			m_chMaterialType;
-
-	const ConVar	*m_pDecals;
 };
 
 IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEFootprintDecal, DT_TEFootprintDecal, CTEFootprintDecal)
@@ -61,8 +60,6 @@ C_TEFootprintDecal::C_TEFootprintDecal( void )
 	m_nEntity = 0;
 	m_nIndex = 0;
 	m_chMaterialType = 'C';
-
-	m_pDecals = NULL;
 }
 
 C_TEFootprintDecal::~C_TEFootprintDecal( void )
@@ -75,7 +72,6 @@ C_TEFootprintDecal::~C_TEFootprintDecal( void )
 
 void C_TEFootprintDecal::Precache( void )
 {
-	m_pDecals = cvar->FindVar( "r_decals" );
 }
 
 //-----------------------------------------------------------------------------
@@ -85,7 +81,7 @@ void C_TEFootprintDecal::Precache( void )
 void C_TEFootprintDecal::PostDataUpdate( DataUpdateType_t updateType )
 {
 	// FIXME: Make this choose the decal based on material type
-	if ( m_pDecals && m_pDecals->GetInt() )
+	if ( r_decals.GetInt() )
 	{
 		C_BaseEntity *ent = cl_entitylist->GetEnt( m_nEntity );
 		if ( ent )
@@ -99,10 +95,7 @@ void C_TEFootprintDecal::PostDataUpdate( DataUpdateType_t updateType )
 void TE_FootprintDecal( IRecipientFilter& filter, float delay, const Vector *origin, const Vector* right, 
 	int entity, int index, unsigned char materialType )
 {
-	const ConVar *decals =cvar->FindVar( "r_decals" );
-
-	// FIXME: Make this choose the decal based on material type
-	if ( decals && decals->GetInt() )
+	if ( r_decals.GetInt() )
 	{
 		C_BaseEntity *ent = cl_entitylist->GetEnt( entity );
 		if ( ent )

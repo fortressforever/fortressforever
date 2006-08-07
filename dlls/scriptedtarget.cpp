@@ -197,7 +197,7 @@ CBaseEntity* CScriptedTarget::FindEntity( void )
 	// ---------------------------------------------------
 	//	First try to find the entity by name
 	// ---------------------------------------------------
-	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_iszEntity, NULL );
+	CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, m_iszEntity );
 	if (pEntity && pEntity->GetFlags() & FL_NPC)
 	{
 		CAI_BaseNPC* pNPC	= pEntity->MyNPCPointer();
@@ -285,7 +285,7 @@ int CScriptedTarget::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"State: On",sizeof(tempstr));
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		// -----------------
@@ -300,7 +300,7 @@ int CScriptedTarget::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"Next: -NONE-",sizeof(tempstr));
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
 		// --------------
@@ -318,7 +318,7 @@ int CScriptedTarget::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"User: -LOOKING-",sizeof(tempstr));
 		}
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;

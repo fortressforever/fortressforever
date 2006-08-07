@@ -10,12 +10,71 @@
 #include "collisionutils.h"
 #include "vstdlib/strtools.h"
 #include "tier0/vprof.h"
+#include "tier1/fmtstr.h"
+#include "tier1/utlhash.h"
+#include "tier1/generichash.h"
 #include "tier0/fasttimer.h"
-
+#include "vphysics/virtualmesh.h"
+#include "tier1/datamanager.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define NEWRAYTEST 1
+
+#if defined(_XBOX) && !defined(_RETAIL)
+	inline void ValidateAABB( Vector *source, CDispCollAABBVector *dest )
+	{
+		if ( dest[0].operator Vector().x > source[0].x )
+			__asm int 3;
+		if ( dest[0].operator Vector().y > source[0].y )
+			__asm int 3;
+		if ( dest[0].operator Vector().z > source[0].z )
+			__asm int 3;
+		if ( dest[1].operator Vector().x < source[1].x )
+			__asm int 3;
+		if ( dest[1].operator Vector().y < source[1].y )
+			__asm int 3;
+		if ( dest[1].operator Vector().z < source[1].z )
+			__asm int 3;
+	}
+#else
+	#define ValidateAABB( source, dest ) ((void)0)
+#endif
+
+//=============================================================================
+//	Cache
+
+#ifdef ENGINE_DLL
+CDataManager<CDispCollTree, CDispCollTree *, bool> g_DispCollTriCache( ( IsConsole() ) ? 192*1024 : 2048*1024 );
+#endif
+
+
+struct DispCollPlaneIndex_t
+{
+	Vector vecPlane;
+	int index;
+};
+
+class CPlaneIndexHashFuncs
+{
+public:
+	CPlaneIndexHashFuncs( int ) {}
+
+	// Compare
+	bool operator()( const DispCollPlaneIndex_t &lhs, const DispCollPlaneIndex_t &rhs ) const
+	{
+		return ( lhs.vecPlane == rhs.vecPlane || lhs.vecPlane == -rhs.vecPlane );
+	}
+
+	// Hash
+	unsigned int operator()( const DispCollPlaneIndex_t &item ) const
+	{
+		return HashItem( item.vecPlane ) ^ HashItem( -item.vecPlane );
+	}
+};
+
+CUtlHash<DispCollPlaneIndex_t, CPlaneIndexHashFuncs, CPlaneIndexHashFuncs> g_DispCollPlaneIndexHash( 512 );
+
 
 //=============================================================================
 //	Displacement Collision Triangle
@@ -36,7 +95,6 @@ void CDispCollTri::Init( void )
 	m_vecNormal.Init();
 	m_flDist = 0.0f;
 	m_TriData[0].m_IndexDummy = m_TriData[1].m_IndexDummy = m_TriData[2].m_IndexDummy = 0;
-	m_uiCache = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -137,17 +195,23 @@ void CDispCollAABBNode::Init( void )
 //-----------------------------------------------------------------------------
 void CDispCollAABBNode::GenerateBox( CUtlVector<CDispCollTri> &m_aTris, CUtlVector<Vector> &m_aVerts )
 {
-	m_vecBox[0].Init( FLT_MAX, FLT_MAX, FLT_MAX );
-	m_vecBox[1].Init( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+	Vector vecBox[2];
+	vecBox[0].Init( FLT_MAX, FLT_MAX, FLT_MAX );
+	vecBox[1].Init( -FLT_MAX, -FLT_MAX, -FLT_MAX );
 
 	for ( int iTri = 0; iTri < 2; ++iTri )
 	{
 		for ( int iVert = 0; iVert < 3; ++iVert )
 		{
-			VectorMin( m_aVerts[m_aTris[m_iTris[iTri]].GetVert( iVert )], m_vecBox[0], m_vecBox[0] );
-			VectorMax( m_aVerts[m_aTris[m_iTris[iTri]].GetVert( iVert )], m_vecBox[1], m_vecBox[1] );
+			VectorMin( m_aVerts[m_aTris[m_iTris[iTri]].GetVert( iVert )], vecBox[0], vecBox[0] );
+			VectorMax( m_aVerts[m_aTris[m_iTris[iTri]].GetVert( iVert )], vecBox[1], vecBox[1] );
 		}
 	}
+
+	m_vecBox[0].SetMins( vecBox[0] );
+	m_vecBox[1].SetMaxs( vecBox[1] );
+
+	ValidateAABB( vecBox, m_vecBox );
 }
 
 //-----------------------------------------------------------------------------
@@ -155,6 +219,9 @@ void CDispCollAABBNode::GenerateBox( CUtlVector<CDispCollTri> &m_aTris, CUtlVect
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_Create( CCoreDispInfo *pDisp )
 {
+	// Copy the flags.
+	m_nFlags = pDisp->GetSurface()->GetFlags();
+
 	// Copy necessary displacement data.
 	AABBTree_CopyDispData( pDisp );
 	
@@ -189,9 +256,20 @@ void CDispCollTree::AABBTree_CopyDispData( CCoreDispInfo *pDisp )
 	}
 
 	// Allocate collision tree data.
+	{
+	MEM_ALLOC_CREDIT();
 	m_aVerts.SetSize( GetSize() );
+	}
+
+	{
+	MEM_ALLOC_CREDIT();
 	m_aTris.SetSize( GetTriSize() );
+	}
+
+	{
+	MEM_ALLOC_CREDIT();
 	m_aNodes.SetSize( Nodes_CalcCount( m_nPower ) );
+	}
 
 	// Setup size.
 	m_nSize = sizeof( this );
@@ -239,13 +317,6 @@ void CDispCollTree::AABBTree_CopyDispData( CCoreDispInfo *pDisp )
 		m_aTris[iTri].CalcPlane( m_aVerts );
 		m_aTris[iTri].FindMinMax( m_aVerts );
 	}
-
-	// Test triangle cache.
-	Cache_TestIt();
-
-	m_nCacheSize = sizeof( CDispCollTriCache ) * m_aTrisCache.Count();
-	m_nCacheSize += sizeof( Vector ) * m_aEdgePlanes.Count();
-	m_nSize += m_nCacheSize;
 }
 
 //-----------------------------------------------------------------------------
@@ -285,6 +356,7 @@ void CDispCollTree::AABBTree_CreateLeafs( void )
 //-----------------------------------------------------------------------------
 void CDispCollTree::AABBTree_GenerateBoxes( void )
 {
+	Vector vecBox[2];
 	for ( int iNode = ( m_aNodes.Count() - 1 ); iNode >= 0; --iNode )
 	{
 		// Leaf?
@@ -295,16 +367,21 @@ void CDispCollTree::AABBTree_GenerateBoxes( void )
 		else
 		{
 			// Get bounds from children.
-			m_aNodes[iNode].m_vecBox[0].Init( FLT_MAX, FLT_MAX, FLT_MAX );
-			m_aNodes[iNode].m_vecBox[1].Init( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+
+			vecBox[0].Init( FLT_MAX, FLT_MAX, FLT_MAX );
+			vecBox[1].Init( -FLT_MAX, -FLT_MAX, -FLT_MAX );
 			
 			for ( int iChild = 0; iChild < 4; ++iChild )
 			{
 				int iChildNode = Nodes_GetChild( iNode, iChild );
 				
-				VectorMin( m_aNodes[iChildNode].m_vecBox[0], m_aNodes[iNode].m_vecBox[0], m_aNodes[iNode].m_vecBox[0] );
-				VectorMax( m_aNodes[iChildNode].m_vecBox[1], m_aNodes[iNode].m_vecBox[1], m_aNodes[iNode].m_vecBox[1] );
+				VectorMin( m_aNodes[iChildNode].m_vecBox[0], vecBox[0], vecBox[0] );
+				VectorMax( m_aNodes[iChildNode].m_vecBox[1], vecBox[1], vecBox[1] );
 			}
+			m_aNodes[iNode].m_vecBox[0].SetMins( vecBox[0] );
+			m_aNodes[iNode].m_vecBox[1].SetMaxs( vecBox[1] );
+
+			ValidateAABB( vecBox, m_aNodes[iNode].m_vecBox );
 		}
 	}
 }
@@ -339,17 +416,46 @@ void CDispCollTree::AABBTree_CalcBounds( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CDispCollTree::Cache_TestIt( void )
+inline void CDispCollTree::CheckCache()
 {
+#ifdef ENGINE_DLL
+	if ( !g_DispCollTriCache.GetResource_NoLock( m_hCache ) )
+	{
+		Cache();
+		m_hCache = g_DispCollTriCache.CreateResource( this );
+		//Msg( "Adding 0x%x to cache (actual %d) [%d, %d --> %.2f] %d total, %d unique\n", this, GetCacheMemorySize(), GetTriSize(), m_aEdgePlanes.Count(), (float)m_aEdgePlanes.Count()/(float)GetTriSize(), totals, uniques );
+	}
+#else
+	Cache();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CDispCollTree::Cache( void )
+{
+	if ( m_aTrisCache.Count() == GetTriSize() )
+	{
+		return;
+	}
+
+	VPROF( "CDispCollTree::Cache" );
+
 	// Alloc.
 //	int nSize = sizeof( CDispCollTriCache ) * GetTriSize();
-	m_aTrisCache.SetSize( GetTriSize() );
-
 	int nTriCount = GetTriSize();
+	{
+	MEM_ALLOC_CREDIT();
+	m_aTrisCache.SetSize( nTriCount );
+	}
+
 	for ( int iTri = 0; iTri < nTriCount; ++iTri )
 	{
 		Cache_Create( &m_aTris[iTri], iTri );
 	}
+
+	g_DispCollPlaneIndexHash.Purge();
 }
 
 #ifdef NEWRAYTEST
@@ -358,7 +464,11 @@ void CDispCollTree::Cache_TestIt( void )
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_Ray( const Ray_t &ray, RayDispOutput_t &output )
 {
-	VPROF_BUDGET( "DispRayTest", "DispRayTest" );
+	VPROF( "DispRayTest" );
+
+	// Check for ray test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NORAY_COLL ) )
+		return false;
 
 	// Check for opacity.
 	if ( !( m_nContents & MASK_OPAQUE ) )
@@ -471,6 +581,10 @@ void CDispCollTree::AABBTree_TreeTrisRayBarycentricTest_r( const Ray_t &ray, con
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_Ray( const Ray_t &ray, RayDispOutput_t &output )
 {
+	// Check for ray test.
+	if ( CheckFlags( SURF_NORAY_COLL ) )
+		return false;
+
 	// Check for opacity.
 	if ( !( m_nContents & MASK_OPAQUE ) )
 		return false;
@@ -537,6 +651,10 @@ bool CDispCollTree::AABBTree_Ray( const Ray_t &ray, RayDispOutput_t &output )
 bool CDispCollTree::AABBTree_Ray( const Ray_t &ray, CBaseTrace *pTrace, bool bSide )
 {
 //	VPROF_BUDGET( "DispRayTraces", VPROF_BUDGETGROUP_DISP_RAYTRACES );
+
+	// Check for ray test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NORAY_COLL ) )
+		return false;
 
 	// Check for opacity.
 	if ( !( m_nContents & MASK_OPAQUE ) )
@@ -627,6 +745,10 @@ void CDispCollTree::AABBTree_TreeTrisRayTest_r( const Ray_t &ray, const Vector &
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_Ray( const Ray_t &ray, CBaseTrace *pTrace, bool bSide )
 {
+	// Check for ray test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NORAY_COLL ) )
+		return false;
+
 	// Check for opacity.
 	if ( !( m_nContents & MASK_OPAQUE ) )
 		return false;	
@@ -738,11 +860,45 @@ void CDispCollTree::AABBTree_BuildTreeTrisIntersect_r( const Ray_t &ray, int iNo
 	}
 }
 
+void CDispCollTree::AABBTree_GetTrisInSphere( const Vector &center, float radius, unsigned short *pIndexOut, int indexMax, int *pIndexCount )
+{
+	unsigned short triCount = 0;
+	AABBTree_BuildTreeTrisInSphere_r( center, radius, DISPCOLL_ROOTNODE_INDEX, pIndexOut, indexMax, triCount );
+	*pIndexCount = triCount;
+}
+
+void CDispCollTree::AABBTree_BuildTreeTrisInSphere_r( const Vector &center, float radius, int iNode, unsigned short *pIndexOut, unsigned short indexMax, unsigned short &nTriCount  )
+{
+	if ( IsBoxIntersectingSphere( m_aNodes[iNode].m_vecBox[0],m_aNodes[iNode].m_vecBox[1], center, radius ) )
+	{
+		if ( m_aNodes[iNode].IsLeaf() )
+		{
+			if ( (nTriCount+2) <= indexMax )
+			{
+				pIndexOut[nTriCount] = m_aNodes[iNode].m_iTris[0];
+				pIndexOut[nTriCount+1] = m_aNodes[iNode].m_iTris[1];
+				nTriCount += 2;
+			}
+		}
+		else
+		{
+			AABBTree_BuildTreeTrisInSphere_r( center, radius, Nodes_GetChild( iNode, 0 ), pIndexOut, indexMax, nTriCount );
+			AABBTree_BuildTreeTrisInSphere_r( center, radius, Nodes_GetChild( iNode, 1 ), pIndexOut, indexMax, nTriCount );
+			AABBTree_BuildTreeTrisInSphere_r( center, radius, Nodes_GetChild( iNode, 2 ), pIndexOut, indexMax, nTriCount );
+			AABBTree_BuildTreeTrisInSphere_r( center, radius, Nodes_GetChild( iNode, 3 ), pIndexOut, indexMax, nTriCount );
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_IntersectAABB( const Ray_t &ray )
 {
+	// Check for hull test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NOHULL_COLL ) )
+		return false;
+	
 	cplane_t plane;
 
 	// Build the triangle list.
@@ -778,9 +934,18 @@ bool CDispCollTree::AABBTree_IntersectAABB( const Ray_t &ray )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+inline float Invert( float f )
+{
+	return ( f != 0.0 ) ? 1.0f / f : FLT_MAX;
+}
+
 bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 {
 //	VPROF_BUDGET( "DispHullTraces", VPROF_BUDGETGROUP_DISP_HULLTRACES );
+
+	// Check for hull test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NOHULL_COLL ) )
+		return false;
 
 	// Test ray against the triangles in the list.
 	Vector rayDir;
@@ -797,24 +962,18 @@ bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 	
 	// Calculate the inverse ray delta.
 	Vector vecInvDelta;
-	for ( int iAxis = 0; iAxis < 3; ++iAxis )
-	{
-		if ( ray.m_Delta[iAxis] != 0.0f )
-		{
-			vecInvDelta[iAxis] = 1.0f / ray.m_Delta[iAxis];
-		}
-		else
-		{
-			vecInvDelta[iAxis] = FLT_MAX;
-		}
-	}
+	
+	vecInvDelta[0] = Invert( ray.m_Delta[0] );
+	vecInvDelta[1] = Invert( ray.m_Delta[1] );
+	vecInvDelta[2] = Invert( ray.m_Delta[2] );
 		
+	const CDispCollAABBVector *vecNodeBox = m_aNodes[DISPCOLL_ROOTNODE_INDEX].m_vecBox;
 	Vector vecBox[2];
-	VectorSubtract( m_aNodes[DISPCOLL_ROOTNODE_INDEX].m_vecBox[0], ray.m_Extents, vecBox[0] );
-	VectorAdd( m_aNodes[DISPCOLL_ROOTNODE_INDEX].m_vecBox[1], ray.m_Extents, vecBox[1] );
+	VectorSubtract( vecNodeBox[0], ray.m_Extents, vecBox[0] );
+	VectorAdd( vecNodeBox[1], ray.m_Extents, vecBox[1] );
 	if( IsBoxIntersectingRay( vecBox[0], vecBox[1], ray.m_Start, ray.m_Delta, vecInvDelta, DISPCOLL_DIST_EPSILON ) )
 	{
-		AABBTree_TreeTrisSweepTest_r( ray, vecInvDelta, rayDir, DISPCOLL_ROOTNODE_INDEX, pTrace );
+		AABBTree_TreeTrisSweepTest_r( AABBTree_TreeTrisSweepTest_Args_t( ray, vecInvDelta, rayDir, pTrace ), DISPCOLL_ROOTNODE_INDEX );
 	}
 
 	// Collision.
@@ -828,16 +987,21 @@ bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CDispCollTree::AABBTree_TreeTrisSweepTest_r( const Ray_t &ray, const Vector &vecInvDelta, const Vector &rayDir,
-												  int iNode, CBaseTrace *pTrace )
+void CDispCollTree::AABBTree_TreeTrisSweepTest_r( const AABBTree_TreeTrisSweepTest_Args_t &args, int iNode )
 {
-	if ( m_aNodes[iNode].IsLeaf() )
+	const CDispCollAABBNode &node = m_aNodes[iNode];
+	const Ray_t &ray = args.ray;
+	if ( node.IsLeaf() )
 	{
-		CDispCollTri *pTri0 = &m_aTris[m_aNodes[iNode].m_iTris[0]];
-		CDispCollTri *pTri1 = &m_aTris[m_aNodes[iNode].m_iTris[1]];
+		int iTri0 = node.m_iTris[0];
+		int iTri1 = node.m_iTris[1];
+		CDispCollTri *pTri0 = &m_aTris[iTri0];
+		CDispCollTri *pTri1 = &m_aTris[iTri1];
+		const Vector &rayDir = args.rayDir;
+		CBaseTrace *pTrace = args.pTrace;
 
-		SweepAABBTriIntersect( ray, rayDir, pTri0, pTrace, false );
-		SweepAABBTriIntersect( ray, rayDir, pTri1, pTrace, false );
+		SweepAABBTriIntersect( ray, rayDir, iTri0, pTri0, pTrace, false );
+		SweepAABBTriIntersect( ray, rayDir, iTri1, pTri1, pTrace, false );
 	}
 	else
 	{
@@ -848,25 +1012,34 @@ void CDispCollTree::AABBTree_TreeTrisSweepTest_r( const Ray_t &ray, const Vector
 		iChildNode[3] = Nodes_GetChild( iNode, 3 );
 
 		Vector vecBox[4][2];
-		VectorSubtract( m_aNodes[iChildNode[0]].m_vecBox[0], ray.m_Extents, vecBox[0][0] );
-		VectorAdd( m_aNodes[iChildNode[0]].m_vecBox[1], ray.m_Extents, vecBox[0][1] );
-		VectorSubtract( m_aNodes[iChildNode[1]].m_vecBox[0], ray.m_Extents, vecBox[1][0] );
-		VectorAdd( m_aNodes[iChildNode[1]].m_vecBox[1], ray.m_Extents, vecBox[1][1] );
-		VectorSubtract( m_aNodes[iChildNode[2]].m_vecBox[0], ray.m_Extents, vecBox[2][0] );
-		VectorAdd( m_aNodes[iChildNode[2]].m_vecBox[1], ray.m_Extents, vecBox[2][1] );
-		VectorSubtract( m_aNodes[iChildNode[3]].m_vecBox[0], ray.m_Extents, vecBox[3][0] );
-		VectorAdd( m_aNodes[iChildNode[3]].m_vecBox[1], ray.m_Extents, vecBox[3][1] );
+
+		const CDispCollAABBNode &node0 = m_aNodes[iChildNode[0]];
+		VectorSubtract( node0.m_vecBox[0], ray.m_Extents, vecBox[0][0] );
+		VectorAdd( node0.m_vecBox[1], ray.m_Extents, vecBox[0][1] );
+
+		const CDispCollAABBNode &node1 = m_aNodes[iChildNode[1]];
+		VectorSubtract( node1.m_vecBox[0], ray.m_Extents, vecBox[1][0] );
+		VectorAdd( node1.m_vecBox[1], ray.m_Extents, vecBox[1][1] );
+
+		const CDispCollAABBNode &node2 = m_aNodes[iChildNode[2]];
+		VectorSubtract( node2.m_vecBox[0], ray.m_Extents, vecBox[2][0] );
+		VectorAdd( node2.m_vecBox[1], ray.m_Extents, vecBox[2][1] );
+
+		const CDispCollAABBNode &node3 = m_aNodes[iChildNode[3]];
+		VectorSubtract( node3.m_vecBox[0], ray.m_Extents, vecBox[3][0] );
+		VectorAdd( node3.m_vecBox[1], ray.m_Extents, vecBox[3][1] );
 
 		bool bIntersectChild[4];
+		const Vector &vecInvDelta = args.vecInvDelta;
 		bIntersectChild[0] = IsBoxIntersectingRay( vecBox[0][0], vecBox[0][1], ray.m_Start, ray.m_Delta, vecInvDelta, DISPCOLL_DIST_EPSILON );
 		bIntersectChild[1] = IsBoxIntersectingRay( vecBox[1][0], vecBox[1][1], ray.m_Start, ray.m_Delta, vecInvDelta, DISPCOLL_DIST_EPSILON );
 		bIntersectChild[2] = IsBoxIntersectingRay( vecBox[2][0], vecBox[2][1], ray.m_Start, ray.m_Delta, vecInvDelta, DISPCOLL_DIST_EPSILON );
 		bIntersectChild[3] = IsBoxIntersectingRay( vecBox[3][0], vecBox[3][1], ray.m_Start, ray.m_Delta, vecInvDelta, DISPCOLL_DIST_EPSILON );
 
-		if ( bIntersectChild[0] ) { AABBTree_TreeTrisSweepTest_r( ray, vecInvDelta, rayDir, iChildNode[0], pTrace ); }
-		if ( bIntersectChild[1] ) { AABBTree_TreeTrisSweepTest_r( ray, vecInvDelta, rayDir, iChildNode[1], pTrace ); }
-		if ( bIntersectChild[2] ) { AABBTree_TreeTrisSweepTest_r( ray, vecInvDelta, rayDir, iChildNode[2], pTrace ); }
-		if ( bIntersectChild[3] ) { AABBTree_TreeTrisSweepTest_r( ray, vecInvDelta, rayDir, iChildNode[3], pTrace ); }
+		if ( bIntersectChild[0] ) { AABBTree_TreeTrisSweepTest_r( args, iChildNode[0] ); }
+		if ( bIntersectChild[1] ) { AABBTree_TreeTrisSweepTest_r( args, iChildNode[1] ); }
+		if ( bIntersectChild[2] ) { AABBTree_TreeTrisSweepTest_r( args, iChildNode[2] ); }
+		if ( bIntersectChild[3] ) { AABBTree_TreeTrisSweepTest_r( args, iChildNode[3] ); }
 	}
 }
 
@@ -875,6 +1048,10 @@ void CDispCollTree::AABBTree_TreeTrisSweepTest_r( const Ray_t &ray, const Vector
 //-----------------------------------------------------------------------------
 bool CDispCollTree::AABBTree_SweepAABBBox( const Ray_t &ray, const Vector &rayDir, CBaseTrace *pTrace )
 {
+	// Check for hull test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NOHULL_COLL ) )
+		return false;
+
 	// Save fraction.
 	float flFrac = pTrace->fraction; 
 
@@ -914,12 +1091,14 @@ void CDispCollTree::AABBTree_TreeTrisSweepTestBox_r( const Ray_t &ray, const Vec
 {
 	if ( m_aNodes[iNode].IsLeaf() )
 	{
+		int iTri0 = m_aNodes[iNode].m_iTris[0];
+		int iTri1 = m_aNodes[iNode].m_iTris[1];
+
 		CDispCollTri *pTri0 = &m_aTris[m_aNodes[iNode].m_iTris[0]];
 		CDispCollTri *pTri1 = &m_aTris[m_aNodes[iNode].m_iTris[1]];
 
-
-		SweepAABBTriIntersect( ray, rayDir, pTri0, pTrace, false );
-		SweepAABBTriIntersect( ray, rayDir, pTri1, pTrace, false );
+		SweepAABBTriIntersect( ray, rayDir, iTri0, pTri0, pTrace, false );
+		SweepAABBTriIntersect( ray, rayDir, iTri1, pTri1, pTrace, false );
 	}
 	else
 	{
@@ -949,6 +1128,10 @@ bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 {
 //	VPROF_BUDGET( "DispHullTraces", VPROF_BUDGETGROUP_DISP_HULLTRACES );
 
+	// Check for hull test.
+	if ( CheckFlags( CCoreDispInfo::SURF_NOHULL_COLL ) )
+		return false;
+
 	// Build the triangle list.
 	unsigned short nTreeTriCount = 0;
 	CDispCollTri *aTreeTris[DISPCOLL_TREETRI_SIZE];
@@ -966,7 +1149,7 @@ bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 	for ( int iTri = 0; iTri < nTreeTriCount; ++iTri )
 	{
 		CDispCollTri *pTri = aTreeTris[iTri];
-		SweepAABBTriIntersect( ray, rayDir, pTri, pTrace, false );
+		SweepAABBTriIntersect( ray, rayDir, iTri, pTri, pTrace, false );
 	}
 
 	// Collision.
@@ -977,6 +1160,42 @@ bool CDispCollTree::AABBTree_SweepAABB( const Ray_t &ray, CBaseTrace *pTrace )
 	return false;
 }
 #endif
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CDispCollTree::ResolveRayPlaneIntersect( float flStart, float flEnd, const Vector &vecNormal, float flDist )
+{
+	if( ( flStart > 0.0f ) && ( flEnd > 0.0f ) ) 
+		return false; 
+
+	if( ( flStart < 0.0f ) && ( flEnd < 0.0f ) ) 
+		return true; 
+
+	float flDenom = flStart - flEnd;
+	bool bDenomIsZero = ( flDenom == 0.0f );
+	if( ( flStart >= 0.0f ) && ( flEnd <= 0.0f ) )
+	{
+		// Find t - the parametric distance along the trace line.
+		float t = ( !bDenomIsZero ) ? ( flStart - DISPCOLL_DIST_EPSILON ) / flDenom : 0.0f;
+		if( t > m_Helper.m_flStartFrac )
+		{
+			m_Helper.m_flStartFrac = t;
+			VectorCopy( vecNormal, m_Helper.m_vecImpactNormal );
+			m_Helper.m_flImpactDist = flDist;
+		}
+	}
+	else
+	{
+		// Find t - the parametric distance along the trace line.
+		float t = ( !bDenomIsZero ) ? ( flStart + DISPCOLL_DIST_EPSILON ) / flDenom : 0.0f;
+		if( t < m_Helper.m_flEndFrac )
+		{
+			m_Helper.m_flEndFrac = t;
+		}	
+	}
+
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -998,95 +1217,68 @@ inline bool CDispCollTree::FacePlane( const Ray_t &ray, const Vector &rayDir, CD
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-inline bool CDispCollTree::AxisPlanesXYZ( const Ray_t &ray, const Vector &rayDir, CDispCollTri *pTri )
+bool FORCEINLINE CDispCollTree::AxisPlanesXYZ( const Ray_t &ray, CDispCollTri *pTri )
 {
+	static const TableVector g_ImpactNormalVecs[2][3] = 
+	{
+		{
+			{ -1, 0, 0 },
+			{ 0, -1, 0 },
+			{ 0, 0, -1 },
+		},
+
+		{
+			{ 1, 0, 0 },
+			{ 0, 1, 0 },
+			{ 0, 0, 1 },
+		}
+	};
+
 	Vector vecImpactNormal;
 	float flDist, flExpDist, flStart, flEnd;
 	
-	// Min
 	int iAxis;
-	for ( iAxis = 0; iAxis < 3; ++iAxis )
+	for ( iAxis = 2; iAxis >= 0; --iAxis )
 	{
-		vecImpactNormal.Init();
+		const float rayStart = ray.m_Start[iAxis];
+		const float rayExtent = ray.m_Extents[iAxis];
+		const float rayDelta = ray.m_Delta[iAxis];
 
+		// Min
 		flDist = m_aVerts[pTri->GetVert(pTri->GetMin(iAxis))][iAxis];
-		flExpDist = flDist - ray.m_Extents[iAxis];
-		flStart = flExpDist - ray.m_Start[iAxis];
-		flEnd = flExpDist - ( ray.m_Start[iAxis] + ray.m_Delta[iAxis] );
+		flExpDist = flDist - rayExtent;
+		flStart = flExpDist - rayStart;
+		flEnd = flStart - rayDelta;
 
-		vecImpactNormal[iAxis] = -1.0f;
-		if ( !ResolveRayPlaneIntersect( flStart, flEnd, vecImpactNormal, flDist ) )
+		if ( !ResolveRayPlaneIntersect( flStart, flEnd, g_ImpactNormalVecs[0][iAxis], flDist ) )
 			return false;
-	}
 
-	// Max
-	for ( iAxis = 0; iAxis < 3; ++iAxis )
-	{
-		vecImpactNormal.Init();
-
+		// Max
 		flDist = m_aVerts[pTri->GetVert(pTri->GetMax(iAxis))][iAxis];
-		flExpDist = flDist + ray.m_Extents[iAxis];
-		flStart = ray.m_Start[iAxis] - flExpDist;
-		flEnd = ( ray.m_Start[iAxis] + ray.m_Delta[iAxis] ) - flExpDist;
+		flExpDist = flDist + rayExtent;
+		flStart = rayStart - flExpDist;
+		flEnd = flStart + rayDelta;
 
-		vecImpactNormal[iAxis] = 1.0f;
-		if ( !ResolveRayPlaneIntersect( flStart, flEnd, vecImpactNormal, flDist ) )
+		if ( !ResolveRayPlaneIntersect( flStart, flEnd, g_ImpactNormalVecs[1][iAxis], flDist ) )
 			return false;
 	}
 
 	return true;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CDispCollTree::Cache_Create( CDispCollTri *pTri )
-{
-	Vector *pVerts[3];
-	pVerts[0] = &m_aVerts[pTri->GetVert( 0 )];
-	pVerts[1] = &m_aVerts[pTri->GetVert( 1 )];
-	pVerts[2] = &m_aVerts[pTri->GetVert( 2 )];
-
-#if 0
-	// Get the next position available in the cache.
-//	int iCache = ;
-//	CDispCollTriCache *pCache = &m_aTrisCache[iTri];
-//	pTri->SetCacheIndex( iCache );
-
-	Vector vecEdge;
-
-	// Edge 1
-	VectorSubtract( *pVerts[1], *pVerts[0], vecEdge );
-	Cache_EdgeCrossAxisX( vecEdge, *pVerts[0], *pVerts[2], pTri, pCache->m_vecCrossX[0] );
-	Cache_EdgeCrossAxisY( vecEdge, *pVerts[0], *pVerts[2], pTri, pCache->m_vecCrossY[0] );
-	Cache_EdgeCrossAxisZ( vecEdge, *pVerts[0], *pVerts[2], pTri, pCache->m_vecCrossZ[0] );
-
-	// Edge 2
-	VectorSubtract( *pVerts[2], *pVerts[1], vecEdge );
-	Cache_EdgeCrossAxisX( vecEdge, *pVerts[1], *pVerts[0], pTri, pCache->m_vecCrossX[1] );
-	Cache_EdgeCrossAxisY( vecEdge, *pVerts[1], *pVerts[0], pTri, pCache->m_vecCrossY[1] );
-	Cache_EdgeCrossAxisZ( vecEdge, *pVerts[1], *pVerts[0], pTri, pCache->m_vecCrossZ[1] );
-
-	// Edge 3
-	VectorSubtract( *pVerts[0], *pVerts[2], vecEdge );
-	Cache_EdgeCrossAxisX( vecEdge, *pVerts[2], *pVerts[1], pTri, pCache->m_vecCrossX[2] );
-	Cache_EdgeCrossAxisY( vecEdge, *pVerts[2], *pVerts[1], pTri, pCache->m_vecCrossY[2] );
-	Cache_EdgeCrossAxisZ( vecEdge, *pVerts[2], *pVerts[1], pTri, pCache->m_vecCrossZ[2] );
-#endif
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Testing!
 //-----------------------------------------------------------------------------
 void CDispCollTree::Cache_Create( CDispCollTri *pTri, int iTri )
 {
+	MEM_ALLOC_CREDIT();
 	Vector *pVerts[3];
 	pVerts[0] = &m_aVerts[pTri->GetVert( 0 )];
 	pVerts[1] = &m_aVerts[pTri->GetVert( 1 )];
 	pVerts[2] = &m_aVerts[pTri->GetVert( 2 )];
 
 	CDispCollTriCache *pCache = &m_aTrisCache[iTri];
-	pTri->SetCacheIndex( iTri );
 
 	Vector vecEdge;
 
@@ -1113,14 +1305,26 @@ void CDispCollTree::Cache_Create( CDispCollTri *pTri, int iTri )
 //-----------------------------------------------------------------------------
 int CDispCollTree::AddPlane( const Vector &vecNormal )
 {
-	for ( int i = m_aEdgePlanes.Count(); --i >= 0; )
-	{
-		const Vector &vecPlaneNormal = m_aEdgePlanes[i];
-		if ( vecPlaneNormal == vecNormal )
-			return i;
+	UtlHashHandle_t handle;
+	DispCollPlaneIndex_t planeIndex;
+	bool bDidInsert;
 
-		if ( vecPlaneNormal == -vecNormal )
-			return i | 0x8000;
+	planeIndex.vecPlane = vecNormal;
+	planeIndex.index = m_aEdgePlanes.Count();
+
+	handle = g_DispCollPlaneIndexHash.Insert( planeIndex, &bDidInsert );
+
+	if ( !bDidInsert )
+	{
+		DispCollPlaneIndex_t &existingEntry = g_DispCollPlaneIndexHash[handle];
+		if ( existingEntry.vecPlane == vecNormal )
+		{
+			return existingEntry.index;
+		}
+		else
+		{
+			return ( existingEntry.index | 0x8000 );
+		}
 	}
 
 	return m_aEdgePlanes.AddToTail( vecNormal );
@@ -1277,7 +1481,8 @@ bool CDispCollTree::Cache_EdgeCrossAxisZ( const Vector &vecEdge, const Vector &v
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-inline bool CDispCollTree::EdgeCrossAxisX( const Ray_t &ray, unsigned short iPlane )
+template <int AXIS>
+bool CDispCollTree::EdgeCrossAxis( const Ray_t &ray, unsigned short iPlane )
 {
 	if ( iPlane == DISPCOLL_NORMAL_UNDEF )
 		return true;
@@ -1294,23 +1499,30 @@ inline bool CDispCollTree::EdgeCrossAxisX( const Ray_t &ray, unsigned short iPla
 		VectorCopy( m_aEdgePlanes[iPlane], vecNormal );
 	}
 
+	const int OTHER_AXIS1 = ( AXIS + 1 ) % 3;
+	const int OTHER_AXIS2 = ( AXIS + 2 ) % 3;
+
 	// Get the pland distance are "fix" the normal.
-	float flDist = vecNormal.x;
-	vecNormal.x = 0.0f;
+	float flDist = vecNormal[AXIS];
+	vecNormal[AXIS] = 0.0f;
 
 	// Calculate the closest point on box to plane (get extents in that direction).
 	Vector vecExtent;
-	vecExtent.x = 0.0f;
-	( vecNormal.y < 0.0f ) ? vecExtent.y = ray.m_Extents.y : vecExtent.y = -ray.m_Extents.y;
-	( vecNormal.z < 0.0f ) ? vecExtent.z = ray.m_Extents.z : vecExtent.z = -ray.m_Extents.z;
+	//vecExtent[AXIS] = 0.0f;
+	vecExtent[OTHER_AXIS1] = ( vecNormal[OTHER_AXIS1] < 0.0f ) ? ray.m_Extents[OTHER_AXIS1] : -ray.m_Extents[OTHER_AXIS1];
+	vecExtent[OTHER_AXIS2] = ( vecNormal[OTHER_AXIS2] < 0.0f ) ? ray.m_Extents[OTHER_AXIS2] : -ray.m_Extents[OTHER_AXIS2];
 
 	// Expand the plane by the extents of the box to reduce the swept box/triangle
 	// test to a ray/extruded triangle test (one of the triangles extruded planes
 	// was just calculated above).
-	Vector vecEnd( 0.0f, ( ray.m_Start.y + ray.m_Delta.y ), ( ray.m_Start.z + ray.m_Delta.z ) );
-	float flExpandDist = flDist - ( ( vecNormal.y * vecExtent.y ) + ( vecNormal.z * vecExtent.z ) );
-	float flStart = ( vecNormal.y * ray.m_Start.y ) + ( vecNormal.z * ray.m_Start.z ) - flExpandDist;
-	float flEnd = ( vecNormal.y * vecEnd.y ) + ( vecNormal.z * vecEnd.z ) - flExpandDist;
+	Vector vecEnd;
+	vecEnd[AXIS] = 0;
+	vecEnd[OTHER_AXIS1] = ray.m_Start[OTHER_AXIS1] + ray.m_Delta[OTHER_AXIS1];
+	vecEnd[OTHER_AXIS2] = ray.m_Start[OTHER_AXIS2] + ray.m_Delta[OTHER_AXIS2];
+
+	float flExpandDist 	= flDist - ( ( vecNormal[OTHER_AXIS1] * vecExtent[OTHER_AXIS1] ) + ( vecNormal[OTHER_AXIS2] * vecExtent[OTHER_AXIS2] ) );
+	float flStart 		= ( vecNormal[OTHER_AXIS1] * ray.m_Start[OTHER_AXIS1] ) + ( vecNormal[OTHER_AXIS2] * ray.m_Start[OTHER_AXIS2] ) - flExpandDist;
+	float flEnd 		= ( vecNormal[OTHER_AXIS1] * vecEnd[OTHER_AXIS1] ) + ( vecNormal[OTHER_AXIS2] * vecEnd[OTHER_AXIS2] ) - flExpandDist;
 
 	return ResolveRayPlaneIntersect( flStart, flEnd, vecNormal, flDist );
 }
@@ -1318,41 +1530,17 @@ inline bool CDispCollTree::EdgeCrossAxisX( const Ray_t &ray, unsigned short iPla
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
+inline bool CDispCollTree::EdgeCrossAxisX( const Ray_t &ray, unsigned short iPlane )
+{
+	return EdgeCrossAxis<0>( ray, iPlane );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 inline bool CDispCollTree::EdgeCrossAxisY( const Ray_t &ray, unsigned short iPlane )
 {
-	if ( iPlane == DISPCOLL_NORMAL_UNDEF )
-		return true;
-
-	// Get the edge plane.
-	Vector vecNormal;
-	if ( ( iPlane & 0x8000 ) != 0 )
-	{
-		VectorCopy( m_aEdgePlanes[(iPlane&0x7fff)], vecNormal );
-		vecNormal.Negate();
-	}
-	else
-	{
-		VectorCopy( m_aEdgePlanes[iPlane], vecNormal );
-	}
-
-	// Get the pland distance are "fix" the normal.
-	float flDist = vecNormal.y;
-	vecNormal.y = 0.0f;
-
-	// Calculate the closest point on box to plane (get extents in that direction).
-	Vector vecExtent;
-	( vecNormal.x < 0.0f ) ? vecExtent.x = ray.m_Extents.x : vecExtent.x = -ray.m_Extents.x;
-	( vecNormal.z < 0.0f ) ? vecExtent.z = ray.m_Extents.z : vecExtent.z = -ray.m_Extents.z;
-
-	// Expand the plane by the extents of the box to reduce the swept box/triangle
-	// test to a ray/extruded triangle test (one of the triangles extruded planes
-	// was just calculated above).
-	Vector vecEnd( ( ray.m_Start.x + ray.m_Delta.x ), 0.0f, ( ray.m_Start.z + ray.m_Delta.z ) );
-	float flExpandDist = flDist - ( ( vecNormal.x * vecExtent.x ) + ( vecNormal.z * vecExtent.z ) );
-	float flStart = ( vecNormal.x * ray.m_Start.x ) + ( vecNormal.z * ray.m_Start.z ) - flExpandDist;
-	float flEnd = ( vecNormal.x * vecEnd.x ) + ( vecNormal.z * vecEnd.z ) - flExpandDist;
-
-	return ResolveRayPlaneIntersect( flStart, flEnd, vecNormal, flDist );
+	return EdgeCrossAxis<1>( ray, iPlane );
 }
 
 //-----------------------------------------------------------------------------
@@ -1360,45 +1548,13 @@ inline bool CDispCollTree::EdgeCrossAxisY( const Ray_t &ray, unsigned short iPla
 //-----------------------------------------------------------------------------
 inline bool CDispCollTree::EdgeCrossAxisZ( const Ray_t &ray, unsigned short iPlane )
 {
-	if ( iPlane == DISPCOLL_NORMAL_UNDEF )
-		return true;
-
-	// Get the edge plane.
-	Vector vecNormal;
-	if ( ( iPlane & 0x8000 ) != 0 )
-	{
-		VectorCopy( m_aEdgePlanes[(iPlane&0x7fff)], vecNormal );
-		vecNormal.Negate();
-	}
-	else
-	{
-		VectorCopy( m_aEdgePlanes[iPlane], vecNormal );
-	}
-
-	// Get the pland distance are "fix" the normal.
-	float flDist = vecNormal.z;
-	vecNormal.z = 0.0f;
-
-	// Calculate the closest point on box to plane (get extents in that direction).
-	Vector vecExtent;
-	( vecNormal.x < 0.0f ) ? vecExtent.x = ray.m_Extents.x : vecExtent.x = -ray.m_Extents.x;
-	( vecNormal.y < 0.0f ) ? vecExtent.y = ray.m_Extents.y : vecExtent.y = -ray.m_Extents.y;
-
-	// Expand the plane by the extents of the box to reduce the swept box/triangle
-	// test to a ray/extruded triangle test (one of the triangles extruded planes
-	// was just calculated above).
-	Vector vecEnd( ( ray.m_Start.x + ray.m_Delta.x ), ( ray.m_Start.y + ray.m_Delta.y ), 0.0f );
-	float flExpandDist = flDist - ( ( vecNormal.x * vecExtent.x ) + ( vecNormal.y * vecExtent.y ) );
-	float flStart = ( vecNormal.x * ray.m_Start.x ) + ( vecNormal.y * ray.m_Start.y ) - flExpandDist;
-	float flEnd = ( vecNormal.x * vecEnd.x ) + ( vecNormal.y * vecEnd.y ) - flExpandDist;
-
-	return ResolveRayPlaneIntersect( flStart, flEnd, vecNormal, flDist );
+	return EdgeCrossAxis<2>( ray, iPlane );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CDispCollTree::SweepAABBTriIntersect( const Ray_t ray, const Vector &rayDir, CDispCollTri *pTri, CBaseTrace *pTrace, bool bTestOutside )
+void CDispCollTree::SweepAABBTriIntersect( const Ray_t &ray, const Vector &rayDir, int iTri, CDispCollTri *pTri, CBaseTrace *pTrace, bool bTestOutside )
 {
 #if 0
 	// Do we test to make sure we aren't in solid?
@@ -1416,15 +1572,11 @@ void CDispCollTree::SweepAABBTriIntersect( const Ray_t ray, const Vector &rayDir
 	if( flAngle > DISPCOLL_DIST_EPSILON )
 		return;
 
-	// Cache
-	if ( !pTri->IsCached() )
-	{
-		Cache_Create( pTri );
-	}
-
 	// Test against the axis planes.
-	if ( !AxisPlanesXYZ( ray, rayDir, pTri ) )
+	if ( !AxisPlanesXYZ( ray, pTri ) )
+	{
 		return;
+	}
 
 	//
 	// There are 9 edge tests - edges 1, 2, 3 cross with the box edges (symmetry) 1, 2, 3.  However, the box
@@ -1434,21 +1586,22 @@ void CDispCollTree::SweepAABBTriIntersect( const Ray_t ray, const Vector &rayDir
 	// There are potentially 9 more tests with edges, the edge's edges and the direction of motion!
 	// NOTE: I don't think these tests are necessary for a manifold surface.
 	//
-	CDispCollTriCache *pCache = &m_aTrisCache[pTri->GetCacheIndex()];
 
-	// Edge 1 - axis tests are 2d tests
+	CheckCache();
+
+	CDispCollTriCache *pCache = &m_aTrisCache[iTri];
+
+	// Edges 1-3, interleaved - axis tests are 2d tests
 	if ( !EdgeCrossAxisX( ray, pCache->m_iCrossX[0] ) ) { return; }
-	if ( !EdgeCrossAxisY( ray, pCache->m_iCrossY[0] ) ) { return; }
-	if ( !EdgeCrossAxisZ( ray, pCache->m_iCrossZ[0] ) ) { return; }
-
-	// Edge 2 - axis tests are 2d tests
 	if ( !EdgeCrossAxisX( ray, pCache->m_iCrossX[1] ) ) { return; }
-	if ( !EdgeCrossAxisY( ray, pCache->m_iCrossY[1] ) ) { return; }
-	if ( !EdgeCrossAxisZ( ray, pCache->m_iCrossZ[1] ) ) { return; }
-
-	// Edge 3 - axis tests are 2d tests
 	if ( !EdgeCrossAxisX( ray, pCache->m_iCrossX[2] ) ) { return; }
+
+	if ( !EdgeCrossAxisY( ray, pCache->m_iCrossY[0] ) ) { return; }
+	if ( !EdgeCrossAxisY( ray, pCache->m_iCrossY[1] ) ) { return; }
 	if ( !EdgeCrossAxisY( ray, pCache->m_iCrossY[2] ) ) { return; }
+
+	if ( !EdgeCrossAxisZ( ray, pCache->m_iCrossZ[0] ) ) { return; }
+	if ( !EdgeCrossAxisZ( ray, pCache->m_iCrossZ[1] ) ) { return; }
 	if ( !EdgeCrossAxisZ( ray, pCache->m_iCrossZ[2] ) ) { return; }
 
 	// Test against the triangle face plane.
@@ -1479,7 +1632,7 @@ void CDispCollTree::SweepAABBTriIntersect( const Ray_t ray, const Vector &rayDir
 CDispCollTree::CDispCollTree()
 {
 	m_nPower = 0;
-
+	m_nFlags = 0;
 	m_pLeafLinkHead = NULL;
 
 	for ( int iPoint = 0; iPoint < 4; ++iPoint )
@@ -1503,13 +1656,20 @@ CDispCollTree::CDispCollTree()
 	m_aTris.Purge();
 	m_aNodes.Purge();
 	m_aEdgePlanes.Purge();
+#ifdef ENGINE_DLL
+	m_hCache = INVALID_MEMHANDLE;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: deconstructor
 //-----------------------------------------------------------------------------
 CDispCollTree::~CDispCollTree()
-{
+{	
+#ifdef ENGINE_DLL
+	if ( m_hCache != INVALID_MEMHANDLE )
+		g_DispCollTriCache.DestroyResource( m_hCache );
+#endif
 	m_aVerts.Purge();
 	m_aTris.Purge();
 	m_aNodes.Purge();
@@ -1571,6 +1731,24 @@ void CDispCollTree::ApplyTerrainMod( ITerrainMod *pMod )
 	// Create the bounding box of the displacement surface + the base face.
 	AABBTree_CalcBounds();
 #endif
+}
+
+void CDispCollTree::GetVirtualMeshList( virtualmeshlist_t *pList )
+{
+	int i;
+	int triangleCount = GetTriSize();
+	pList->indexCount = triangleCount * 3;
+	pList->triangleCount = triangleCount;
+	pList->vertexCount = m_aVerts.Count();
+	pList->pVerts = m_aVerts.Base();
+	int index = 0;
+	for ( i = 0 ; i < triangleCount; i++ )
+	{
+		pList->indices[index+0] = m_aTris[i].GetVert(0);
+		pList->indices[index+1] = m_aTris[i].GetVert(1);
+		pList->indices[index+2] = m_aTris[i].GetVert(2);
+		index += 3;
+	}
 }
 
 //-----------------------------------------------------------------------------

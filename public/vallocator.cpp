@@ -6,6 +6,8 @@
 //
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include <malloc.h>
 #include "vallocator.h"
 #include "basetypes.h"
@@ -14,7 +16,6 @@
 #include "tier0/memdbgon.h"
 
 VStdAllocator g_StdAllocator;
-
 
 void* VStdAllocator::Alloc(unsigned long size)
 {
@@ -27,9 +28,9 @@ void* VStdAllocator::Alloc(unsigned long size)
 		return 0;
 }
 
-
 void VStdAllocator::Free(void *ptr)
 {
 	free(ptr);
 }
 
+#endif // !_STATIC_LINKED || _SHARED_LIB

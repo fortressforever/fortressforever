@@ -23,12 +23,13 @@ class CHudSuitPower : public CHudElement, public vgui::Panel
 
 public:
 	CHudSuitPower( const char *pElementName );
-	virtual void Init( void );
-	virtual void Reset( void );
-	virtual void OnThink( void );
+	virtual void	Init( void );
+	virtual void	Reset( void );
+	virtual void	OnThink( void );
+	bool			ShouldDraw( void );
 
 protected:
-	virtual void Paint();
+	virtual void	Paint();
 
 private:
 	CPanelAnimationVar( Color, m_AuxPowerColor, "AuxPowerColor", "255 0 0 255" );

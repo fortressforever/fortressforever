@@ -13,90 +13,92 @@
 #pragma once
 #endif
 
-#include "interface.h"
-
-//-----------------------------------------------------------------------------
-// Forward declarations
-//-----------------------------------------------------------------------------
-class IAppSystem;
+#include "appframework/IAppSystemGroup.h"
 
 
 //-----------------------------------------------------------------------------
-// Handle to a DLL
+// Gets the application instance..
 //-----------------------------------------------------------------------------
-typedef int AppModule_t;
-
-enum
-{
-	APP_MODULE_INVALID = (AppModule_t)~0
-};
-
-//-----------------------------------------------------------------------------
-// This interface represents a group of app systems that all have the same
-// lifetime that need to be connected/initialized, etc. in a well-defined order
-//-----------------------------------------------------------------------------
-class IAppSystemGroup
-{
-public:
-	// This method will add a module (DLL) to the app system group
-	// returns APP_MODULE_INVALID in case of error
-	virtual AppModule_t LoadModule( const char *pDLLName ) = 0;
-
-	// Method to add various global singleton systems
-	// Passing a module == APP_MODULE_INVALID will cause this to return NULL always
-	// returns NULL if it fails
-	virtual IAppSystem *AddSystem( AppModule_t module, const char *pInterfaceName ) = 0;
-
-	// Finds a system in the group..
-	virtual void *FindSystem( const char *pSystemName ) = 0;
-
-	// Gets at a factory that works just like FindSystem
-	virtual CreateInterfaceFn GetFactory() = 0;
-};
-
-
-//-----------------------------------------------------------------------------
-// Create a window (windows apps only)..
-//-----------------------------------------------------------------------------
-///bool CreateAppWindow( char const *pTitle, bool bWindowed, int w, int h );
-//void *GetAppWindow();
 void *GetAppInstance();
 
 
 //-----------------------------------------------------------------------------
-// NOTE: The following methods may be implemented in your application
-// although you need not implement them all...
+// Sets the application instance, should only be used if you're not calling AppMain.
 //-----------------------------------------------------------------------------
-class IApplication
+void SetAppInstance( void* hInstance );
+
+
+//-----------------------------------------------------------------------------
+// Main entry point for the application
+//-----------------------------------------------------------------------------
+int AppMain( void* hInstance, void* hPrevInstance, const char* lpCmdLine, int nCmdShow, CAppSystemGroup *pAppSystemGroup );
+int AppMain( int argc, char **argv, CAppSystemGroup *pAppSystemGroup );
+
+
+//-----------------------------------------------------------------------------
+// Macros to create singleton application objects for windowed + console apps
+//-----------------------------------------------------------------------------
+#define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
+	int __stdcall WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )	\
+	{																							\
+		return AppMain( hInstance, hPrevInstance, lpCmdLine, nCmdShow, &_globalVarName );		\
+	}
+
+#define DEFINE_CONSOLE_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
+	int main( int argc, char **argv )			\
+	{											\
+		return AppMain( argc, argv, &_globalVarName );	\
+	}
+
+#define DEFINE_WINDOWED_APPLICATION_OBJECT( _className )	\
+	static _className __s_ApplicationObject;				\
+	DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( __s_ApplicationObject )
+
+#define DEFINE_CONSOLE_APPLICATION_OBJECT( _className )	\
+	static _className *__s_ApplicationObject;			\
+	DEFINE_CONSOLE_APPLICATION_OBJECT_GLOBALVAR( __s_ApplicationObject )
+
+
+//-----------------------------------------------------------------------------
+// This class is a helper class used for steam-based applications.
+// It loads up the file system in preparation for using it to load other
+// required modules from steam.
+//-----------------------------------------------------------------------------
+class CSteamApplication : public CAppSystemGroup
 {
 public:
-	// An installed application creation function, you should tell the group
-	// the DLLs and the singleton interfaces you want to instantiate.
-	// Return false if there's any problems and the app will abort
-	virtual bool Create( IAppSystemGroup *pAppSystemGroup ) = 0;
+	CSteamApplication( CSteamAppSystemGroup *pAppSystemGroup );
 
-	// Allow the application to do some work after AppSystems are connected but 
-	// they are all Initialized.
-	// Return false if there's any problems and the app will abort
-	virtual bool PreInit( IAppSystemGroup *pAppSystemGroup ) = 0;
+	// Implementation of IAppSystemGroup
+	virtual bool Create( );
+	virtual bool PreInit( );
+	virtual int Main( );
+	virtual void PostShutdown();
+	virtual void Destroy();
 
-	// Main loop implemented by the application
-	virtual void Main() = 0;
-
-	// Allow the application to do some work after all AppSystems are shut down
-	virtual void PostShutdown() = 0;
-
-	// Call an installed application destroy function, occurring after all modules
-	// are unloaded
-	virtual void Destroy() = 0;
+protected:
+	IFileSystem *m_pFileSystem;
+	CSteamAppSystemGroup *m_pChildAppSystemGroup;
+	bool m_bSteam;
 };
 
-#define DEFINE_APPLICATION_OBJECT( _className )	\
-	static _className *s_ApplicationObject;		\
-	IApplication *__g_pApplicationObject = &s_ApplicationObject
 
-#define DEFINE_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
-	IApplication *__g_pApplicationObject = &_globalVarName
+//-----------------------------------------------------------------------------
+// Macros to help create singleton application objects for windowed + console steam apps
+//-----------------------------------------------------------------------------
+#define DEFINE_WINDOWED_STEAM_APPLICATION_OBJECT_GLOBALVAR( _className, _varName )	\
+	static CSteamApplication __s_SteamApplicationObject( &_varName );	\
+	DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( __s_SteamApplicationObject )
 
- 
+#define DEFINE_WINDOWED_STEAM_APPLICATION_OBJECT( _className )	\
+	static _className __s_ApplicationObject;				\
+	static CSteamApplication __s_SteamApplicationObject( &__s_ApplicationObject );	\
+	DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( __s_SteamApplicationObject )
+
+#define DEFINE_CONSOLE_STEAM_APPLICATION_OBJECT( _className )	\
+	static _className __s_ApplicationObject;			\
+	static CSteamApplication __s_SteamApplicationObject( &__s_ApplicationObject );	\
+	DEFINE_CONSOLE_APPLICATION_OBJECT_GLOBALVAR( __s_SteamApplicationObject )
+
+
 #endif // APPFRAMEWORK_H

@@ -9,6 +9,8 @@
 #ifndef COLLISIONUTILS_H
 #define COLLISIONUTILS_H
 
+#include "tier0/platform.h"
+
 #ifdef _WIN32
 #pragma once
 #endif
@@ -233,15 +235,15 @@ bool IsOBBIntersectingOBB( const Vector &vecOrigin1, const QAngle &vecAngles1, c
 // returns true if there's an intersection between box and ray
 //
 //-----------------------------------------------------------------------------
-bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
-						   const Vector& origin, const Vector& delta, float flTolerance = 0.0f );
+bool FASTCALL IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
+									const Vector& origin, const Vector& delta, float flTolerance = 0.0f );
 
-bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
-						   const Ray_t& ray, float flTolerance = 0.0f );
+bool FASTCALL IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
+									const Ray_t& ray, float flTolerance = 0.0f );
 
-bool IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
-						   const Vector& origin, const Vector& delta,
-					       const Vector& invDelta, float flTolerance = 0.0f );
+bool FASTCALL IsBoxIntersectingRay( const Vector& boxMin, const Vector& boxMax, 
+									const Vector& origin, const Vector& delta,
+									const Vector& invDelta, float flTolerance = 0.0f );
 
 //-----------------------------------------------------------------------------
 // 
@@ -339,5 +341,8 @@ bool ComputeSeparatingPlane( const Vector& org1, const QAngle& angles1, const Ve
 bool IsBoxIntersectingTriangle( const Vector &vecBoxCenter, const Vector &vecBoxExtents,
 				   		        const Vector &v1, const Vector &v2, const Vector &v3,
 						        const cplane_t &plane, float flTolerance );
+
+
+Vector CalcClosestPointOnTriangle( const Vector &P, const Vector &v0, const Vector &v1, const Vector &v2 );
 
 #endif // COLLISIONUTILS_H

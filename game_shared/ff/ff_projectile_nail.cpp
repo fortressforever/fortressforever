@@ -188,7 +188,13 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const 
 	CEffectData data;
 	data.m_vOrigin = vecOrigin;
 	data.m_vAngles = angAngles;
+
+#ifdef GAME_DLL
 	data.m_nEntIndex = pentOwner->entindex();
+#else
+	data.m_hEntity = pentOwner;
+#endif
+
 	DispatchEffect("Projectile_Nail", data);
 
 #ifdef GAME_DLL

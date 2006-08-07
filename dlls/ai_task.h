@@ -128,6 +128,9 @@ enum sharedtasks_e
 		// Move to within specified range of m_hTargetEnt
 		TASK_MOVE_TO_TARGET_RANGE,
 
+		// Move to within specified range of our nav goal
+		TASK_MOVE_TO_GOAL_RANGE,
+
 		// Path that moves the character a few steps forward of where it is.
 		TASK_MOVE_AWAY_PATH,
 
@@ -169,6 +172,8 @@ enum sharedtasks_e
 		// Allow a little slop, and allow for some Z offset (like the target is a gun on a table).
 		TASK_GET_PATH_TO_TARGET_WEAPON,
 
+		TASK_CREATE_PENDING_WEAPON,
+
 		// Path to nodes[ m_pHintNode ]
 		TASK_GET_PATH_TO_HINTNODE,
 
@@ -184,6 +189,8 @@ enum sharedtasks_e
 		// Store best sound position for later reference
 		TASK_STORE_BESTSOUND_IN_SAVEPOSITION,
 		TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION,
+
+		TASK_REACT_TO_COMBAT_SOUND,
 
 		// Store current enemy position in saveposition
 		TASK_STORE_ENEMY_POSITION_IN_SAVEPOSITION,
@@ -252,6 +259,9 @@ enum sharedtasks_e
 		// Decide on the appropriate big flinch animation, and play it. 
 		TASK_BIG_FLINCH,
 
+		// Prevent dodging for a certain amount of time.
+		TASK_DEFER_DODGE,
+
 		// Turn to face ideal yaw
 		TASK_FACE_IDEAL,
 
@@ -281,6 +291,9 @@ enum sharedtasks_e
 
 		// Turn to face stored save position (save position must be stored first!)
 		TASK_FACE_SAVEPOSITION,
+
+		// Turn to face directly away from stored save position (save position must be stored first!)
+		TASK_FACE_AWAY_FROM_SAVEPOSITION,
 
 		// Set the current facing to be the ideal
 		TASK_SET_IDEAL_YAW_TO_CURRENT,
@@ -332,6 +345,9 @@ enum sharedtasks_e
 
 		// Set current animation activity to the specified activity
 		TASK_SET_ACTIVITY,
+
+		// Adjust the framerate to plus/minus N%
+		TASK_RANDOMIZE_FRAMERATE,
 
 		// Immediately change to a schedule of the specified type
 		TASK_SET_SCHEDULE,
@@ -459,7 +475,16 @@ enum sharedtasks_e
 
 		// Add a specified amount of health to this NPC
 		TASK_ADD_HEALTH,
-		
+
+		// Add a gesture layer and wait until it's finished
+		TASK_ADD_GESTURE_WAIT,
+
+		// Add a gesture layer
+		TASK_ADD_GESTURE,
+
+		// Get a path to my forced interaction partner
+		TASK_GET_PATH_TO_INTERACTION_PARTNER,
+
 		// ======================================
 		// IMPORTANT: This must be the last enum
 		// ======================================

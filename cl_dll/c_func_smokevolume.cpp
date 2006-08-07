@@ -282,7 +282,7 @@ void C_FuncSmokeVolume::OnDataChanged( DataUpdateType_t updateType )
 
 //	Warning( "m_Density: %f\n", m_Density );
 //	Warning( "m_MovementSpeed: %f\n", m_MovementSpeed );
-
+	
 	if(updateType == DATA_UPDATE_CREATED)
 	{
 		Vector size = WorldAlignMaxs() - WorldAlignMins();
@@ -293,7 +293,7 @@ void C_FuncSmokeVolume::OnDataChanged( DataUpdateType_t updateType )
 
 		delete [] m_pSmokeParticleInfos;
 		m_pSmokeParticleInfos = new SmokeParticleInfo[m_xCount * m_yCount * m_zCount];
-		Start( &g_ParticleMgr, NULL );
+		Start( ParticleMgr(), NULL );
 	}
 	BaseClass::OnDataChanged( updateType );
 }
@@ -359,10 +359,15 @@ void C_FuncSmokeVolume::Update( float fTimeDelta )
 	}
 	
 	// This is used to randomize the direction it chooses to move a particle in.
+
 	int offsetLookup[3] = {-1,0,1};
 
-	float tradeDurationMax = m_ParticleSpacingDistance / m_MovementSpeed;
+	float tradeDurationMax = m_ParticleSpacingDistance / ( m_MovementSpeed + 0.1f );
 	float tradeDurationMin = tradeDurationMax * 0.5f;
+
+	if ( IS_NAN( tradeDurationMax ) || IS_NAN( tradeDurationMin ) )
+		return;
+
 //	Warning( "tradeDuration: [%f,%f]\n", tradeDurationMin, tradeDurationMax );
 	
 	// Update all the moving traders and establish new ones.
@@ -509,7 +514,7 @@ void C_FuncSmokeVolume::RenderParticles( CParticleRenderIterator *pIterator )
 		}
 		
 		Vector tRenderPos;
-		TransformParticle( g_ParticleMgr.GetModelView(), renderPos, tRenderPos );
+		TransformParticle( ParticleMgr()->GetModelView(), renderPos, tRenderPos );
 		float sortKey = 1;//tRenderPos.z;
 
 		RenderParticle_ColorSizeAngle(

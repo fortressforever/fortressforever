@@ -14,6 +14,7 @@
 
 #define	TRACKPATHER_DEBUG_LEADING	1
 #define	TRACKPATHER_DEBUG_PATH		2
+#define TRACKPATHER_DEBUG_TRACKS	3
 ConVar g_debug_trackpather( "g_debug_trackpather", "0", FCVAR_CHEAT );
 
 //------------------------------------------------------------------------------
@@ -114,7 +115,7 @@ void CAI_TrackPather::OnRestore( void )
 	// Restore current path
 	if ( m_strCurrentPathName != NULL_STRING )
 	{
-		m_pCurrentPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strCurrentPathName, NULL );
+		m_pCurrentPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strCurrentPathName );
 	}
 	else
 	{
@@ -124,7 +125,7 @@ void CAI_TrackPather::OnRestore( void )
 	// Restore destination path
 	if ( m_strDestPathName != NULL_STRING )
 	{
-		m_pDestPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strDestPathName, NULL );
+		m_pDestPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strDestPathName );
 	}
 	else
 	{
@@ -134,7 +135,7 @@ void CAI_TrackPather::OnRestore( void )
 	// Restore last path
 	if ( m_strLastPathName != NULL_STRING )
 	{
-		m_pLastPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strLastPathName, NULL );
+		m_pLastPathTarget = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strLastPathName );
 	}
 	else
 	{
@@ -144,7 +145,7 @@ void CAI_TrackPather::OnRestore( void )
 	// Restore target nearest path
 	if ( m_strTargetNearestPathName != NULL_STRING )
 	{
-		m_pTargetNearestPath = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strTargetNearestPathName, NULL );
+		m_pTargetNearestPath = (CPathTrack *) gEntList.FindEntityByName( NULL, m_strTargetNearestPathName );
 	}
 	else
 	{
@@ -246,13 +247,16 @@ CPathTrack *CAI_TrackPather::BestPointOnPath( CPathTrack *pPath, const Vector &t
 		return NULL;
 	}
 
-	// Our target may be a player in a vehicle
-	CBaseEntity *pTargetEnt = GetTrackPatherTargetEnt();
-	CBasePlayer *pPlayer = ToBasePlayer( pTargetEnt );
+	// Our target may be in a vehicle
 	CBaseEntity *pVehicle = NULL;
-	if ( pPlayer && pPlayer->IsInAVehicle() )
+	CBaseEntity *pTargetEnt = GetTrackPatherTargetEnt();	
+	if ( pTargetEnt != NULL )
 	{
-		pVehicle = pPlayer->GetVehicleEntity();
+		CBaseCombatCharacter *pCCTarget = pTargetEnt->MyCombatCharacterPointer();
+		if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
+		{
+			pVehicle = pCCTarget->GetVehicleEntity();
+		}
 	}
 
 	// Faster math...
@@ -440,6 +444,25 @@ void CAI_TrackPather::VisualizeDebugInfo( const Vector &vecNearestPoint, const V
 			NDebugOverlay::Cross3D( m_pTargetNearestPath->GetAbsOrigin(), -Vector(24,24,24), Vector(24,24,24), 255, 0, 255, true, 0.1f );
 		}
 	}
+
+	if ( g_debug_trackpather.GetInt() == TRACKPATHER_DEBUG_TRACKS )
+	{
+		if ( m_pCurrentPathTarget )
+		{
+			CPathTrack *pPathTrack = m_pCurrentPathTarget;
+			for ( ; CPathTrack::ValidPath( pPathTrack ); pPathTrack = pPathTrack->GetNext() )
+			{
+				NDebugOverlay::Box( pPathTrack->GetAbsOrigin(), -Vector(2,2,2), Vector(2,2,2), 0,255, 0, 8, 0.1 );
+				if ( CPathTrack::ValidPath( pPathTrack->GetNext() ) )
+				{
+					NDebugOverlay::Line( pPathTrack->GetAbsOrigin(), pPathTrack->GetNext()->GetAbsOrigin(), 0,255,0, true, 0.1 );
+				}
+
+				if ( pPathTrack->GetNext() == m_pCurrentPathTarget )
+					break;
+			}
+		}
+	}
 }
 
 
@@ -456,11 +479,12 @@ bool CAI_TrackPather::HasLOSToTarget( CPathTrack *pTrack )
 	if ( !GetTrackPatherTarget( &targetPos ) )
 		return true;
 
-	CBasePlayer *pPlayer = ToBasePlayer( pTargetEnt );
+	// Translate driver into vehicle for testing
 	CBaseEntity *pVehicle = NULL;
-	if ( pPlayer && pPlayer->IsInAVehicle() )
+	CBaseCombatCharacter *pCCTarget = pTargetEnt->MyCombatCharacterPointer();
+	if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
 	{
-		pVehicle = pPlayer->GetVehicleEntity();
+		pVehicle = pCCTarget->GetVehicleEntity();
 	}
 
 	// If it has to be visible, run those checks
@@ -902,10 +926,15 @@ void CAI_TrackPather::SelectNewDestTarget()
 	if ( !m_bPatrolling )
 		return;
 
-		// NOTE: This version is bugged, but I didn't want to make the fix
+	// NOTE: This version is bugged, but I didn't want to make the fix
 	// here for fear of breaking a lot of maps late in the day.
 	// So, only the chopper does the "right" thing.
+#ifdef HL2_EPISODIC 
+	// Episodic uses the fixed logic for all trackpathers
+	if ( 1 )
+#else
 	if ( ShouldUseFixedPatrolLogic() )
+#endif
 	{
 		CPathTrack *pOldDest = m_pDestPathTarget;
 
@@ -1429,6 +1458,18 @@ bool CAI_TrackPather::IsOnSameTrack( CPathTrack *pPath1, CPathTrack *pPath2 ) co
 
 
 //-----------------------------------------------------------------------------
+// Deal with teleportation
+//-----------------------------------------------------------------------------
+void CAI_TrackPather::Teleported()
+{
+	// This updates the paths so they are reasonable
+	CPathTrack *pClosestTrack = BestPointOnPath( GetDestPathTarget(), WorldSpaceCenter(), 0.0f, false, false );
+	m_pDestPathTarget = NULL;
+	MoveToClosestTrackPoint( pClosestTrack );
+}
+
+	
+//-----------------------------------------------------------------------------
 // Returns distance along path to target, returns FLT_MAX if there's no path
 //-----------------------------------------------------------------------------
 float CAI_TrackPather::ComputePathDistance( CPathTrack *pPath, CPathTrack *pDest, bool bForward ) const
@@ -1564,7 +1605,7 @@ void CAI_TrackPather::SetTrack( CBaseEntity *pGoalEnt )
 void CAI_TrackPather::SetTrack( string_t strTrackName )
 {
 	// Find our specified target
-	CBaseEntity *pGoalEnt = gEntList.FindEntityByName( NULL, strTrackName, NULL );
+	CBaseEntity *pGoalEnt = gEntList.FindEntityByName( NULL, strTrackName );
 	if ( pGoalEnt == NULL )
 	{
 		DevWarning( "%s: Could not find path_track '%s'!\n", GetClassname(), STRING( strTrackName ) );
@@ -1592,7 +1633,7 @@ void CAI_TrackPather::InputSetTrack( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CAI_TrackPather::FlyToPathTrack( string_t strTrackName )
 {
-	CBaseEntity *pGoalEnt = gEntList.FindEntityByName( NULL, strTrackName, NULL );
+	CBaseEntity *pGoalEnt = gEntList.FindEntityByName( NULL, strTrackName );
 	if ( pGoalEnt == NULL )
 	{
 		DevWarning( "%s: Could not find path_track '%s'!\n", GetClassname(), STRING( strTrackName ) );

@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: Interfaces between the client.dll and engine
 //
-//=============================================================================//
+//===========================================================================//
 
 #ifndef CDLL_INT_H
 #define CDLL_INT_H
@@ -103,6 +103,13 @@ enum ClientFrameStage_t
 	FRAME_RENDER_END
 };
 
+// Used by RenderViewEx
+enum RenderViewInfo_t
+{
+	RENDERVIEW_UNSPECIFIED	 = 0,
+	RENDERVIEW_DRAWVIEWMODEL = (1<<0),
+	RENDERVIEW_DRAWHUD		 = (1<<1),
+};
 
 //-----------------------------------------------------------------------------
 // Lightcache entry handle
@@ -133,7 +140,7 @@ struct OcclusionParams_t
 //-----------------------------------------------------------------------------
 // Purpose: Interface exposed from the engine to the client .dll
 //-----------------------------------------------------------------------------
-class IVEngineClient
+abstract_class IVEngineClient
 {
 public:
 	// Find the model's surfaces that intersect the given sphere.
@@ -214,7 +221,7 @@ public:
 	// Given the string pBinding which may be bound to a key, 
 	//  returns the string name of the key to which this string is bound. Returns NULL if no such binding exists
 	virtual	const char			*Key_LookupBinding( const char *pBinding ) = 0;
-	
+
 	// key trapping (for binding keys)
 	virtual void				StartKeyTrapMode( void ) = 0;
 	virtual bool				CheckDoneKeyTrapping( int &buttons, int &key ) = 0;
@@ -299,10 +306,10 @@ public:
 
 	// Get the name of the current map
 	virtual char const	*GetLevelName( void ) = 0;
-
+#ifndef _XBOX
 	// Obtain access to the voice tweaking API
 	virtual struct IVoiceTweak_s *GetVoiceTweakAPI( void ) = 0;
-
+#endif
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
 	virtual void		EngineStats_BeginFrame( void ) = 0;
 	virtual void		EngineStats_EndFrame( void ) = 0;
@@ -395,13 +402,33 @@ public:
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
 	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
 
-	virtual int			GetLastPressedEngineKey( void ) = 0;
+	virtual int		GetLastPressedEngineKey( void ) = 0;
+
+	// Communicates to the color correction editor that it's time to grab the pre-color corrected frame
+	// Passes in the actual size of the viewport
+	virtual void			GrabPreColorCorrectedFrame( int x, int y, int width, int height ) = 0;
+
+	virtual bool			IsHammerRunning( ) const = 0;
+
+	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
+	// And then executes the command string immediately (vs ClientCmd() which executes in the next frame)
+	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
+
+	// returns if the loaded map was processed with HDR info. This will be set regardless
+	// of what HDR mode the player is in.
+	virtual bool MapHasHDRLighting(void) = 0;
+
+	virtual int	GetAppID() = 0;
+
+	// Just get the leaf ambient light - no caching, no samples
+	virtual Vector			GetLightForPointFast(const Vector &pos, bool bClamp) = 0;
 };
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface exposed from the client .dll back to the engine
 //-----------------------------------------------------------------------------
-class IBaseClientDLL
+abstract_class IBaseClientDLL
 {
 public:
 	// Called once when the client DLL is loaded
@@ -475,7 +502,8 @@ public:
 	virtual void			View_Render( vrect_t *rect ) = 0;
 
 	// Allow engine to expressly render a view (e.g., during timerefresh)
-	virtual void			RenderView( const CViewSetup &view, bool drawViewmodel ) = 0;
+	// See IVRenderView.h, PushViewFlags_t for nFlags values
+	virtual void			RenderView( const CViewSetup &view, int nFlags, bool drawViewmodel ) = 0;
 
 	// Apply screen fade directly from engine
 	virtual void			View_Fade( ScreenFade_t *pSF ) = 0;
@@ -530,8 +558,35 @@ public:
 	// Emits a regular close caption by token name
 	virtual void			EmitCloseCaption( char const *captionname, float duration ) = 0;
 
+	// Returns true if the client can start recording a demo now.  If the client returns false,
+	// an error message of up to length bytes should be returned in errorMsg.
+	virtual bool			CanRecordDemo( char *errorMsg, int length ) const = 0;
+
+	// Added interface
+
+	// save game screenshot writing
+	virtual void			WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height ) = 0;
+
+	// See RenderViewInfo_t
+	virtual void			RenderViewEx( const CViewSetup &view, int nClearFlags, int whatToDraw ) = 0;
+
+	// Gets the current view
+	virtual bool			GetPlayerView( CViewSetup &playerView ) = 0;
 };
 
-#define CLIENT_DLL_INTERFACE_VERSION		"VClient011"
+#define CLIENT_DLL_INTERFACE_VERSION		"VClient013"
+
+//-----------------------------------------------------------------------------
+// Purpose: Interface exposed from the client .dll back to the engine for specifying shared .dll IAppSystems (e.g., ISoundEmitterSystem)
+//-----------------------------------------------------------------------------
+abstract_class IClientDLLSharedAppSystems
+{
+public:
+	virtual int	Count() = 0;
+	virtual char const *GetDllName( int idx ) = 0;
+	virtual char const *GetInterfaceName( int idx ) = 0;
+};
+
+#define CLIENT_DLL_SHARED_APPSYSTEMS		"VClientDllSharedAppSystems001"
 
 #endif // CDLL_INT_H

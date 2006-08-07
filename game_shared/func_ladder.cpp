@@ -68,7 +68,7 @@ void CFuncLadder::Spawn()
 	Vector playerMaxs = VEC_HULL_MAX;
 
 	// This will swap them if they are inverted
-	SetEndPoints( m_vecPlayerMountPositionBottom, m_vecPlayerMountPositionTop );
+	SetEndPoints( m_vecPlayerMountPositionTop, m_vecPlayerMountPositionBottom );
 
 #if !defined( CLIENT_DLL )
 	trace_t bottomtrace, toptrace;
@@ -217,6 +217,7 @@ void CFuncLadder::SetEndPoints( const Vector& p1, const Vector& p2 )
 		m_vecPlayerMountPositionTop = temp;
 	}
 
+#if !defined( CLIENT_DLL)
 	Vector playerMins = VEC_HULL_MIN;
 	Vector playerMaxs = VEC_HULL_MAX;
 
@@ -236,6 +237,7 @@ void CFuncLadder::SetEndPoints( const Vector& p1, const Vector& p2 )
 	{
 		m_vecPlayerMountPositionBottom = result.endpos;
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -391,6 +393,7 @@ void CFuncLadder::PlayerGotOn( CBasePlayer *pPlayer )
 {
 #if !defined( CLIENT_DLL )
 	m_OnPlayerGotOnLadder.FireOutput(this, pPlayer);
+	pPlayer->EmitSound( "Ladder.StepRight" );
 #endif
 }
 

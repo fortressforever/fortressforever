@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $Date:         $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #if !defined( VIEWRENDER_H )
 #define VIEWRENDER_H
 #ifdef _WIN32
@@ -13,12 +13,22 @@
 #endif
 
 #include "shareddefs.h"
+#include "tier1/utlstack.h"
 
+
+//-----------------------------------------------------------------------------
+// Forward declarations
+//-----------------------------------------------------------------------------
 class ConVar;
 class CRenderList;
 class IClientVehicle;
 class C_PointCamera;
+class IScreenSpaceEffect;
+enum ScreenSpaceEffectType_t;
 
+#ifdef HL2_EPISODIC
+	class CStunEffect;
+#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 // Data specific to intro mode to control rendering.
@@ -90,7 +100,7 @@ struct ClientWorldListInfo_t : public WorldListInfo_t
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Implements the interview to view rendering for the client .dll
+// Purpose: Implements the interface to view rendering for the client .dll
 //-----------------------------------------------------------------------------
 class CViewRender : public IViewRender
 {
@@ -107,17 +117,21 @@ public:
 	// Render functions
 	virtual void	OnRenderStart();
 	virtual	void	Render( vrect_t *rect );
-	virtual void	RenderView( const CViewSetup &view, bool drawViewmodel );
+	virtual void	RenderView( const CViewSetup &view, int nClearFlags, bool drawViewmodel );
 	virtual void	RenderPlayerSprites();
-	
+	virtual void	Render2DEffectsPreHUD( const CViewSetup &view );
+	virtual void	Render2DEffectsPostHUD( const CViewSetup &view );
+
 	// What are we currently rendering? Returns a combination of DF_ flags.
-	virtual int GetDrawFlags();
+	virtual int		GetDrawFlags();
 
 	virtual void	StartPitchDrift( void );
 	virtual void	StopPitchDrift( void );
 
 	// Called once per level change
 	void			LevelInit( void );
+	void			LevelShutdown( void );
+
 	// Add entity to transparent entity queue
 
 	virtual VPlane*	GetFrustum();
@@ -125,10 +139,15 @@ public:
 	bool			ShouldDrawBrushModels( void );
 	bool			ShouldDrawEntities( void );
 
-	const CViewSetup *GetViewSetup( void ) const;
+	const CViewSetup *GetViewSetup( ) const;
+	const CViewSetup *GetPlayerViewSetup( ) const;
 	
 	void			AddVisOrigin( const Vector& origin );
+	void			ClearAllCustomVisOrigins ( void );		  // Remove all current vis origins in the list, return to using the main view
 	void			DisableVis( void );
+
+	void			ForceVisOverride ( VisOverrideData_t& visData );
+	void			ForceViewLeaf ( int iViewLeaf );
 
 	int				FrameNumber() const;
 	int				BuildWorldListsNumber() const;
@@ -146,6 +165,13 @@ public:
 
 	void			DriftPitch (void);
 
+	virtual void	RenderViewEx( const CViewSetup &view, int nClearFlags, int whatToDraw );
+
+	virtual void	QueueOverlayRenderView( const CViewSetup &view, int nClearFlags, int whatToDraw );
+
+	virtual float	GetZNear();
+	virtual float	GetZFar();
+	virtual void	GetScreenFadeDistances( float *min, float *max );
 
 private:
 	struct WaterRenderInfo_t
@@ -167,9 +193,9 @@ private:
 
 	// General draw methods
 	// baseDrawFlags is a combination of DF_ defines. DF_MONITOR is passed into here while drawing a monitor.
-	void			ViewDrawScene( bool drawSkybox, const CViewSetup &view, view_id_t viewID, bool bSetupViewModel = false, bool bDrawViewModel = false, int baseDrawFlags = 0 );
+	void			ViewDrawScene( bool bDrew3dSkybox, bool bSkyboxVisible, const CViewSetup &view, int nClearFlags, view_id_t viewID, bool bDrawViewModel = false, int baseDrawFlags = 0 );
 
-	bool			Draw3dSkyboxworld( const CViewSetup &view );
+	void			Draw3dSkyboxworld( const CViewSetup &view, int &nClearFlags, bool &bDrew3dSkybox, bool &bSkyboxVisible );
 	
 	// If iForceViewLeaf is not -1, then it uses the specified leaf as your starting area for setting up area portal culling.
 	// This is used by water since your reflected view origin is often in solid space, but we still want to treat it as though
@@ -181,13 +207,12 @@ private:
 
 	void			DrawWorld( ClientWorldListInfo_t& info, CRenderList &renderList, int flags, float waterZAdjust );
 
-	void			DrawHighEndMonitors( CViewSetup cameraView );
-	void			DrawLowEndMonitors( CViewSetup cameraView, const vrect_t *rect );
+	void			DrawMonitors( const CViewSetup &cameraView );
 
-	bool			DrawOneMonitor( int cameraNum, C_PointCamera *pCameraEnt, CViewSetup &cameraView, C_BasePlayer *localPlayer, 
-						int x, int y, int width, int height, bool highend );
+	bool			DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_PointCamera *pCameraEnt, const CViewSetup &cameraView, C_BasePlayer *localPlayer, 
+						int x, int y, int width, int height );
 
-	void			SetupVis( const CViewSetup& view );
+	void			SetupVis( const CViewSetup& view, unsigned int &visFlags );
 
 	// Drawing primitives
 	bool			ShouldDrawViewModel( bool drawViewmodel );
@@ -212,32 +237,37 @@ private:
 	void			SetUpOverView();
 
 	// Purpose: Renders world and all entities, etc.
-	void			DrawWorldAndEntities( bool drawSkybox, const CViewSetup &view );
+	void			DrawWorldAndEntities( bool drawSkybox, const CViewSetup &view, int nClearFlags );
 
 	// Draws all the debugging info
 	void			Draw3DDebuggingInfo( const CViewSetup &view );
 	void			Draw2DDebuggingInfo( const CViewSetup &view );
 
-	// Screen-space effects (uses the contents of the frame buffer)
-	void			SetScreenSpaceEffectMaterial( IMaterial *pMaterial );
-	void			PerformScreenSpaceEffects();
+	void			PerformScreenSpaceEffects( int x, int y, int w, int h );
 
 	// Overlays
 	void			SetScreenOverlayMaterial( IMaterial *pMaterial );
 	IMaterial		*GetScreenOverlayMaterial( );
-	void			PerformScreenOverlay();
+	void			PerformScreenOverlay( int x, int y, int w, int h );
 
 	// Water-related methods
-	void			WaterDrawWorldAndEntities( bool drawSkybox, const CViewSetup &view );
+	void			WaterDrawWorldAndEntities( bool drawSkybox, const CViewSetup &view, int nClearFlags );
 	
 	void			WaterDrawHelper( const CViewSetup &view, ClientWorldListInfo_t &info, CRenderList &renderList, 
 						float waterHeight, int flags, view_id_t viewID, float waterZAdjust, int iForceViewLeaf );
 	
-	void			SetRenderTargetAndView( CViewSetup &view, float waterHeight, int flags );	// see DrawFlags_t
-	void			ViewDrawScene_EyeAboveWater( bool bDrawSkybox, const CViewSetup &view, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
-	void			ViewDrawScene_EyeUnderWater( bool bDrawSkybox, const CViewSetup &view, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
-	void			ViewDrawScene_NoWater( bool bDrawSkybox, const CViewSetup &view, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
-	void			ViewDrawScene_Intro( const CViewSetup &view, const IntroData_t &introData );
+	void			PushWaterRenderTarget( CViewSetup &view, int nClearFlags, float waterHeight, int flags );	// see DrawFlags_t
+	void			PopWaterRenderTarget( int nFlags );
+
+	void			ViewDrawScene_EyeAboveWater( bool bDrawSkybox, const CViewSetup &view, int nClearFlags, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
+	void			ViewDrawScene_EyeUnderWater( bool bDrawSkybox, const CViewSetup &view, int nClearFlags, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
+	void			ViewDrawScene_NoWater( bool bDrawSkybox, const CViewSetup &view, int nClearFlags, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info );
+	void			ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, const IntroData_t &introData );
+
+#ifdef _XBOX
+	// Draws a perspective-correct dudv map into the reflection texture
+	void			DrawScreenSpaceWaterDuDv( const CViewSetup &view, float waterZAdjust );
+#endif
 
 	// Renders all translucent world surfaces in a particular set of leaves
 	void			DrawTranslucentWorldInLeaves( int iCurLeaf, int iFinalLeaf, ClientWorldListInfo_t &info, int nDrawFlags );
@@ -262,6 +292,14 @@ private:
 	
 	void			DrawRenderablesInList( CUtlVector< IClientRenderable * > &list );
 
+	virtual void	WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height );
+
+	void			DoScreenSpaceBloom();
+
+	// Sets up, cleans up the main 3D view
+	void			SetupMain3DView( const CViewSetup &view, int &nClearFlags );
+	void			CleanupMain3DView( const CViewSetup &view );
+
 private:
 	enum
 	{
@@ -276,6 +314,9 @@ private:
 	// This stores all of the view setup parameters that the engine needs to know about
 	CViewSetup		m_View;
 	
+	// This stores the current view
+ 	CViewSetup		m_CurrentView;
+
 	// VIS Overrides
 	// Set to true to turn off client side vis ( !!!! rendering will be slow since everything will draw )
 	bool			m_bForceNoVis;		
@@ -283,11 +324,19 @@ private:
 	// Set to true if you want to use multiple origins for doing client side map vis culling
 	// NOTE:  In generaly, you won't want to do this, and by default the 3d origin of the camera, as above,
 	//  will be used as the origin for vis, too.
-	bool			m_bOverrideVisOrigin; 
+	bool			m_bOverrideVisOrigin;
 	// Number of origins to use from m_rgVisOrigins
 	int				m_nNumVisOrigins;
 	// Array of origins
 	Vector			m_rgVisOrigins[ MAX_VIS_LEAVES ];
+
+	// The view data overrides for visibility calculations with area portals
+	VisOverrideData_t m_VisData;
+	bool			m_bOverrideVisData;
+
+	// The starting leaf to determing which area to start in when performing area portal culling on the engine
+	// Default behavior is to use the leaf the camera position is in.
+	int				m_iForceViewLeaf;
 
 	Frustum			m_Frustum;
 
@@ -312,14 +361,24 @@ private:
 	CMaterialReference	m_ModulateSingleColor;
 	CMaterialReference	m_ScreenOverlayMaterial;
 
-	// The render target coming into ViewDrawScene so that we can restore in as appropriate
-	ITexture		*m_pViewDrawSceneRenderTarget;
-
-	CMaterialReference m_ScreenSpaceEffectMaterial;
-
 	Vector			m_vecLastFacing;
 	float			m_flCheapWaterStartDistance;
 	float			m_flCheapWaterEndDistance;
+
+#ifndef _XBOX
+	CViewSetup			m_OverlayViewSetup;
+	int					m_OverlayClearFlags;
+	int					m_OverlayDrawFlags;
+	bool				m_bDrawOverlay;
+#endif
+
+#ifdef _XBOX
+	CMaterialReference	m_BloomDownsample;
+	CMaterialReference	m_BloomBlurX;
+	CMaterialReference	m_BloomBlurY;
+	CMaterialReference	m_BloomAdd;
+#endif
+
 };
 
 #endif // VIEWRENDER_H

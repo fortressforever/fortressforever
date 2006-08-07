@@ -134,8 +134,8 @@ private:
 	virtual void	LostEnemySound( void );
 	virtual void	FoundEnemySound( void );
 	virtual void	AlertSound( void );
-	virtual void	PainSound( void );
-	virtual void	DeathSound( void );
+	virtual void	PainSound( const CTakeDamageInfo &info );
+	virtual void	DeathSound( const CTakeDamageInfo &info );
 	virtual void	IdleSound( void );
 	virtual bool	ShouldPlayIdleSound( void );
 

@@ -20,6 +20,15 @@
 //    for legacy code). In this case, you need to make a new version name for your new interface, and make a wrapper interface and 
 //    expose it for the old interface.
 
+// Static Linking:
+// Must mimic unique seperate class 'InterfaceReg' constructors per subsystem.
+// Each subsystem can then import and export interfaces as expected.
+// This is achieved through unique namespacing 'InterfaceReg' via symbol _SUBSYSTEM.
+// Static Linking also needs to generate unique symbols per interface so as to
+// provide a 'stitching' method whereby these interface symbols can be referenced
+// via the lib's primary module (usually the lib's interface exposure)
+// therby stitching all of that lib's code/data together for eventual final exe link inclusion.
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
@@ -40,31 +49,27 @@
 // TODO: move interface.cpp into tier0 library.
 #include "tier0/platform.h"
 
-
 // All interfaces derive from this.
 class IBaseInterface
 {
 public:
-
-	virtual			~IBaseInterface() {}
+	virtual	~IBaseInterface() {}
 };
 
 
 #define CREATEINTERFACE_PROCNAME	"CreateInterface"
 typedef void* (*CreateInterfaceFn)(const char *pName, int *pReturnCode);
-
-
 typedef void* (*InstantiateInterfaceFn)();
+
 
 
 // Used internally to register classes.
 class InterfaceReg
 {
 public:
-				InterfaceReg(InstantiateInterfaceFn fn, const char *pName);
+	InterfaceReg(InstantiateInterfaceFn fn, const char *pName);
 
 public:
-
 	InstantiateInterfaceFn	m_CreateFn;
 	const char				*m_pName;
 
@@ -72,6 +77,9 @@ public:
 	static InterfaceReg		*s_pInterfaceRegs;
 };
 
+#if defined(_STATIC_LINKED) && defined(_SUBSYSTEM)
+
+#endif
 
 // Use this to expose an interface that can have multiple instances.
 // e.g.:
@@ -85,36 +93,82 @@ public:
 // A single class can support multiple interfaces through multiple inheritance
 //
 // Use this if you want to write the factory function.
+#if !defined(_STATIC_LINKED) || !defined(_SUBSYSTEM)
 #define EXPOSE_INTERFACE_FN(functionName, interfaceName, versionName) \
 	static InterfaceReg __g_Create##interfaceName##_reg(functionName, versionName);
+#else
+#define EXPOSE_INTERFACE_FN(functionName, interfaceName, versionName) \
+	namespace _SUBSYSTEM \
+	{	\
+		static InterfaceReg __g_Create##interfaceName##_reg(functionName, versionName); \
+	}
+#endif
 
+#if !defined(_STATIC_LINKED) || !defined(_SUBSYSTEM)
 #define EXPOSE_INTERFACE(className, interfaceName, versionName) \
-	static void* __Create##className##_interface() {return (interfaceName *)new className;}\
+	static void* __Create##className##_interface() {return (interfaceName *)new className;} \
 	static InterfaceReg __g_Create##className##_reg(__Create##className##_interface, versionName );
+#else
+#define EXPOSE_INTERFACE(className, interfaceName, versionName) \
+	namespace _SUBSYSTEM \
+	{	\
+		static void* __Create##className##_interface() {return (interfaceName *)new className;} \
+		static InterfaceReg __g_Create##className##_reg(__Create##className##_interface, versionName ); \
+	}
+#endif
 
 // Use this to expose a singleton interface with a global variable you've created.
+#if !defined(_STATIC_LINKED) || !defined(_SUBSYSTEM)
 #define EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, globalVarName) \
-	static void* __Create##className##interfaceName##_interface() {return (interfaceName *)&globalVarName;}\
+	static void* __Create##className##interfaceName##_interface() {return (interfaceName *)&globalVarName;} \
 	static InterfaceReg __g_Create##className##interfaceName##_reg(__Create##className##interfaceName##_interface, versionName);
+#else
+#define EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, globalVarName) \
+	namespace _SUBSYSTEM \
+	{ \
+		static void* __Create##className##interfaceName##_interface() {return (interfaceName *)&globalVarName;} \
+		static InterfaceReg __g_Create##className##interfaceName##_reg(__Create##className##interfaceName##_interface, versionName); \
+	}
+#endif
 
 // Use this to expose a singleton interface. This creates the global variable for you automatically.
+#if !defined(_STATIC_LINKED) || !defined(_SUBSYSTEM)
 #define EXPOSE_SINGLE_INTERFACE(className, interfaceName, versionName) \
-	static className __g_##className##_singleton;\
+	static className __g_##className##_singleton; \
 	EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, __g_##className##_singleton)
-
+#else
+#define EXPOSE_SINGLE_INTERFACE(className, interfaceName, versionName) \
+	namespace _SUBSYSTEM \
+	{	\
+		static className __g_##className##_singleton; \
+	}	\
+	EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, __g_##className##_singleton)
+#endif
 
 // This function is automatically exported and allows you to access any interfaces exposed with the above macros.
 // if pReturnCode is set, it will return one of the following values
 // extend this for other error conditions/code
+
+// load/unload components
+class CSysModule;
+
+// interface return status
 enum 
 {
 	IFACE_OK = 0,
 	IFACE_FAILED
 };
 
+#if defined(_STATIC_LINKED) && defined(_SUBSYSTEM)
 
+#endif
+
+//-----------------------------------------------------------------------------
+// This function is automatically exported and allows you to access any interfaces exposed with the above macros.
+// if pReturnCode is set, it will return one of the following values (IFACE_OK, IFACE_FAILED)
+// extend this for other error conditions/code
+//-----------------------------------------------------------------------------
 DLL_EXPORT void* CreateInterface(const char *pName, int *pReturnCode);
-
 
 extern CreateInterfaceFn	Sys_GetFactoryThis( void );
 
@@ -124,9 +178,6 @@ extern CreateInterfaceFn	Sys_GetFactoryThis( void );
 //-----------------------------------------------------------------------------
 extern CreateInterfaceFn	Sys_GetFactory( const char *pModuleName );
 
-
-// load/unload components
-class CSysModule;
 
 //-----------------------------------------------------------------------------
 // Load & Unload should be called in exactly one place for each module
@@ -138,7 +189,6 @@ extern void					Sys_UnloadModule( CSysModule *pModule );
 
 extern CreateInterfaceFn	Sys_GetFactory( CSysModule *pModule );
 
-
 // This is a helper function to load a module, get its factory, and get a specific interface.
 // You are expected to free all of these things.
 // Returns false and cleans up if any of the steps fail.
@@ -147,6 +197,7 @@ bool Sys_LoadInterface(
 	const char *pInterfaceVersionName,
 	CSysModule **pOutModule,
 	void **pOutInterface );
+
 
 #endif
 

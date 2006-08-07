@@ -56,6 +56,9 @@ void CHLPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	CHLMoveData *pHLMove = static_cast<CHLMoveData*>( move );
 	Assert( pHLMove );
 
+	player->m_flForwardMove = ucmd->forwardmove;
+	player->m_flSideMove = ucmd->sidemove;
+
 	pHLMove->m_bIsSprinting = pHLPlayer->IsSprinting();
 
 	IServerVehicle *pVehicle = player->GetVehicle();

@@ -31,7 +31,7 @@ public:
 	bool	ShouldDraw();
 	void	ClientThink( void );
 
-	virtual bool Interpolate( float currentTime );
+	virtual bool ShouldInterpolate();
 
 
 //	Vector	m_vSpotlightOrg;
@@ -84,37 +84,8 @@ bool C_SpotlightEnd::ShouldDraw()
 // Input  : currentTime - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool C_SpotlightEnd::Interpolate( float currentTime )
+bool C_SpotlightEnd::ShouldInterpolate()
 {
-	// These get moved to the parent position automatically
-	if ( IsFollowingEntity() || !IsInterpolationEnabled() )
-	{
-		// Assume current origin ( no interpolation )
-		MoveToLastReceivedPosition();
-		return true;
-	}
-
-	Vector oldOrigin = GetLocalOrigin();
-	QAngle oldAngles = GetLocalAngles();
-
-	Interp_Interpolate( GetVarMapping(), currentTime );
-
-	int nChangeFlags = 0;
-	if ( GetLocalOrigin() != oldOrigin )
-	{
-		nChangeFlags |= POSITION_CHANGED;
-	}
-
-	if( GetLocalAngles() != oldAngles )
-	{
-		nChangeFlags |= ANGLES_CHANGED;
-	}
-
-	if ( nChangeFlags != 0 )
-	{
-		InvalidatePhysicsRecursive( nChangeFlags );
-	}
-
 	return true;
 }
 

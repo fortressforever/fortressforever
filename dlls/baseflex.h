@@ -15,6 +15,7 @@
 #include "BaseAnimatingOverlay.h"
 #include "utlvector.h"
 #include "utlrbtree.h"
+#include "sceneentity_shared.h"
 
 struct flexsettinghdr_t;
 struct flexsetting_t;
@@ -33,81 +34,6 @@ public:
 	char			filename[ MAX_FLEX_FILENAME ];
 	void			*buffer;
 };
-
-class CBaseFlex;
-class CChoreoEvent;
-class CChoreoScene;
-class CChoreoActor;
-class CSceneEntity;
-
-//-----------------------------------------------------------------------------
-// Purpose: One of a number of currently playing scene events for this actor
-//-----------------------------------------------------------------------------
-// FIXME: move this, it's only used in in baseflex and baseactor
-class CSceneEventInfo
-{
-public:
-	CSceneEventInfo()
-		:
-	m_pEvent( 0 ),
-	m_pScene( 0 ),
-	m_pActor( 0 ),
-	m_bStarted( false ),
-	m_iLayer( -1 ),
-	m_iPriority( 0 ),
-	m_nSequence( 0 ),
-	m_bIsPosture( false ),
-	m_flWeight( 0.0f ),
-	m_hTarget(),
-	m_bIsMoving( false ),
-	m_flInitialYaw( 0.0f ),
-	m_flTargetYaw( 0.0f ),
-	m_flFacingYaw( 0.0f ),
-	m_nType( 0 ),
-	m_flNext( 0.0f )
-	{
-	}
-
-	// The event handle of the current scene event
-	CChoreoEvent	*m_pEvent;
-
-	// Current Scene
-	CChoreoScene	*m_pScene;
-
-	// Current actor
-	CChoreoActor	*m_pActor;
-
-	// Set after the first time the event has been configured ( allows
-	//  bumping markov index only at start of event playback, not every frame )
-	bool			m_bStarted;
-
-public:
-	//	EVENT local data...
-	// FIXME: Evil, make accessors or figure out better place
-	// FIXME: This won't work, scenes don't save and restore...
-	int						m_iLayer;
-	int						m_iPriority;
-	int						m_nSequence;
-	bool					m_bIsPosture;
-	float					m_flWeight; // used for suppressions of posture while moving
-
-	// movement, faceto targets?
-	EHANDLE					m_hTarget;
-	bool					m_bIsMoving;
-	bool					m_bHasArrived;
-	float					m_flInitialYaw;
-	float					m_flTargetYaw;
-	float					m_flFacingYaw;
-
-	// generic AI events
-	int						m_nType;
-	float					m_flNext;
-
-	void					InitWeight( CBaseFlex *pActor );
-	float					UpdateWeight( CBaseFlex *pActor );
-};
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Animated characters who have vertex flex capability (e.g., facial expressions)
@@ -202,6 +128,7 @@ protected:
 	void				AddFlexAnimation( CSceneEventInfo *info );
 
 	bool				HasSceneEvents() const;
+	bool				IsRunningSceneMoveToEvent();
 
 	int					FlexControllerLocalToGlobal( const flexsettinghdr_t *pSettinghdr, int key );
 

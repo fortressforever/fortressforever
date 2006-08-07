@@ -11,11 +11,13 @@
 #pragma once
 #endif
 
-#include "utlvector.h"
-#include "utlrbtree.h"
+#include "tier1/utlvector.h"
+#include "tier1/utlrbtree.h"
 
 class CChoreoEvent;
 class CChoreoActor;
+class CChoreoScene;
+class CUtlBuffer;
 
 //-----------------------------------------------------------------------------
 // Purpose: A channel is owned by an actor and contains zero or more events
@@ -29,6 +31,10 @@ public:
 
 	// Assignment
 	CChoreoChannel&	operator=(const CChoreoChannel& src );
+
+	// Serialization
+	void			SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene );
+	bool			RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene, CChoreoActor *pActor );
 
 	// Accessors
 	void			SetName( const char *name );

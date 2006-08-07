@@ -12,10 +12,12 @@
 #include "choreoevent.h"
 #include "choreoactor.h"
 #include "choreochannel.h"
+#include "minmax.h"
 #include "mathlib.h"
 #include "vstdlib/strtools.h"
 #include "choreoscene.h"
 #include "ichoreoeventcallback.h"
+#include "tier1/utlbuffer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -35,7 +37,7 @@ CEventRelativeTag::CEventRelativeTag( CChoreoEvent *owner, const char *name, flo
 	Assert( percentage >= 0.0f );
 	Assert( percentage <= 1.0f );
 
-	Q_strncpy( m_szName, name, sizeof( m_szName ) );
+	m_Name = name;
 	m_flPercentage = percentage;
 	m_pOwner = owner;
 }
@@ -46,7 +48,7 @@ CEventRelativeTag::CEventRelativeTag( CChoreoEvent *owner, const char *name, flo
 //-----------------------------------------------------------------------------
 CEventRelativeTag::CEventRelativeTag( const CEventRelativeTag& src )
 {
-	Q_strncpy( m_szName, src.m_szName, sizeof( m_szName ) );
+	m_Name			= src.m_Name;
 	m_flPercentage	= src.m_flPercentage;
 	m_pOwner		= src.m_pOwner;
 }
@@ -57,7 +59,7 @@ CEventRelativeTag::CEventRelativeTag( const CEventRelativeTag& src )
 //-----------------------------------------------------------------------------
 const char *CEventRelativeTag::GetName( void )
 {
-	return m_szName;
+	return m_Name.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -166,7 +168,7 @@ CEventAbsoluteTag::CEventAbsoluteTag( CChoreoEvent *owner, const char *name, flo
 	Assert( name );
 	Assert( t >= 0.0f );
 
-	Q_strncpy( m_szName, name, sizeof( m_szName ) );
+	m_Name = name;
 	m_flPercentage = t;
 	m_pOwner = owner;
 	m_bLocked = false;
@@ -182,7 +184,7 @@ CEventAbsoluteTag::CEventAbsoluteTag( CChoreoEvent *owner, const char *name, flo
 //-----------------------------------------------------------------------------
 CEventAbsoluteTag::CEventAbsoluteTag( const CEventAbsoluteTag& src )
 {
-	Q_strncpy( m_szName, src.m_szName, sizeof( m_szName ) );
+	m_Name			= src.m_Name;
 	m_flPercentage	= src.m_flPercentage;
 	m_pOwner		= src.m_pOwner;
 	m_bLocked		= src.m_bLocked;
@@ -197,7 +199,7 @@ CEventAbsoluteTag::CEventAbsoluteTag( const CEventAbsoluteTag& src )
 //-----------------------------------------------------------------------------
 const char *CEventAbsoluteTag::GetName( void )
 {
-	return m_szName;
+	return m_Name.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -406,6 +408,7 @@ CFlexAnimationTrack::CFlexAnimationTrack( CChoreoEvent *event )
 	m_pControllerName	=	NULL;
 	m_bActive			= false;
 	m_bCombo			= false;
+	m_bServerSide		= false;
 	m_nFlexControllerIndex[ 0 ] = m_nFlexControllerIndex[ 1 ] = -1;
 	m_nFlexControllerIndexRaw[ 0 ] = m_nFlexControllerIndexRaw[ 1 ] = -1;
 
@@ -425,6 +428,7 @@ CFlexAnimationTrack::CFlexAnimationTrack( const CFlexAnimationTrack* src )
 
 	m_bActive	= src->m_bActive;
 	m_bCombo	= src->m_bCombo;
+	m_bServerSide = src->m_bServerSide;
 
 	for ( int t = 0; t < 2; t++ )
 	{
@@ -444,6 +448,10 @@ CFlexAnimationTrack::CFlexAnimationTrack( const CFlexAnimationTrack* src )
 
 	m_flMin = src->m_flMin;
 	m_flMax = src->m_flMax;
+
+	m_EdgeInfo[ 0 ] = src->m_EdgeInfo[ 0 ];
+	m_EdgeInfo[ 1 ] = src->m_EdgeInfo[ 1 ];
+
 	m_pEvent = NULL;
 }
 
@@ -555,22 +563,81 @@ void CFlexAnimationTrack::SetTrackActive( bool active )
 	m_bActive = active;
 }
 
+void CFlexAnimationTrack::SetEdgeInfo( bool leftEdge, int curveType, float zero )
+{
+	int idx = leftEdge ? 0 : 1;
+	m_EdgeInfo[ idx ].m_CurveType = curveType;
+	m_EdgeInfo[ idx ].m_flZeroPos = zero;
+}
+
+void CFlexAnimationTrack::GetEdgeInfo( bool leftEdge, int& curveType, float& zero ) const
+{
+	int idx = leftEdge ? 0 : 1;
+	curveType = m_EdgeInfo[ idx ].m_CurveType;
+	zero = m_EdgeInfo[ idx ].m_flZeroPos;
+}
+
+void CFlexAnimationTrack::SetEdgeActive( bool leftEdge, bool state )
+{
+	int idx = leftEdge ? 0 : 1;
+	m_EdgeInfo[ idx ].m_bActive = state;
+}
+
+bool CFlexAnimationTrack::IsEdgeActive( bool leftEdge ) const
+{
+	int idx = leftEdge ? 0 : 1;
+	return m_EdgeInfo[ idx ].m_bActive;
+}
+
+int CFlexAnimationTrack::GetEdgeCurveType( bool leftEdge ) const
+{
+	if ( !IsEdgeActive( leftEdge ) )
+	{
+		return CURVE_DEFAULT;
+	}
+
+	int idx = leftEdge ? 0 : 1;
+	return m_EdgeInfo[ idx ].m_CurveType;
+}
+
+float CFlexAnimationTrack::GetEdgeZeroValue( bool leftEdge ) const
+{
+	if ( !IsEdgeActive( leftEdge ) )
+	{
+		return 0.0f;
+	}
+
+	int idx = leftEdge ? 0 : 1;
+	return m_EdgeInfo[ idx ].m_flZeroPos;
+}
+
+float CFlexAnimationTrack::GetDefaultEdgeZeroPos() const
+{
+	float zero = 0.0f;
+	if ( m_flMin != m_flMax )
+	{
+		zero = ( 0.0f - m_flMin ) / ( m_flMax - m_flMin );
+	}
+	return zero;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-float CFlexAnimationTrack::GetZeroValue( int type )
+float CFlexAnimationTrack::GetZeroValue( int type, bool leftSide )
 {
-	float zero = 0.0f;
-	if (type == 1)
+	// Stereo track is always clamped to 0.5 and doesn't care about l/r settings
+	if ( type == 1 )
 	{
-		zero = 0.5f;
+		return 0.5f;
 	}
-	else if (m_flMin != m_flMax)
+
+	if ( IsEdgeActive( leftSide ) )
 	{
-		zero = (0.0f - m_flMin) / (m_flMax - m_flMin);
+		return GetEdgeZeroValue( leftSide );
 	}
-	return zero;
+
+	return GetDefaultEdgeZeroPos();
 }
 
 //-----------------------------------------------------------------------------
@@ -578,27 +645,45 @@ float CFlexAnimationTrack::GetZeroValue( int type )
 // Input  : number - 
 // Output : CExpressionSample
 //-----------------------------------------------------------------------------
-CExpressionSample *CFlexAnimationTrack::GetBoundedSample( int number, int type /*=0*/ )
+CExpressionSample *CFlexAnimationTrack::GetBoundedSample( int number, bool& bClamped, int type /*=0*/ )
 {
 	Assert( type == 0 || type == 1 );
 
-	// Search for two samples which span time f
-	static CExpressionSample nullstart;
-	nullstart.time = 0.0f;
-	nullstart.value = GetZeroValue( type );
-	static CExpressionSample nullend;
-	nullend.time = m_pEvent->GetDuration();
-	nullend.value = GetZeroValue( type );
-
 	if ( number < 0 )
 	{
+		// Search for two samples which span time f
+		static CExpressionSample nullstart;
+		nullstart.time = 0.0f;
+		nullstart.value = GetZeroValue( type, true );
+		if ( type == 0 )
+		{
+			nullstart.SetCurveType( GetEdgeCurveType( true ) );
+		}
+		else
+		{
+			nullstart.SetCurveType( CURVE_DEFAULT );
+		}
+		bClamped = true;
 		return &nullstart;
 	}
 	else if ( number >= GetNumSamples( type ) )
 	{
+		static CExpressionSample nullend;
+		nullend.time = m_pEvent->GetDuration();
+		nullend.value = GetZeroValue( type, false );
+		if ( type == 0 )
+		{
+			nullend.SetCurveType( GetEdgeCurveType( false ) );
+		}
+		else
+		{
+			nullend.SetCurveType( CURVE_DEFAULT );
+		}
+		bClamped = true;
 		return &nullend;
 	}
 	
+	bClamped = false;
 	return GetSample( number, type );
 }
 
@@ -610,31 +695,32 @@ CExpressionSample *CFlexAnimationTrack::GetBoundedSample( int number, int type /
 //-----------------------------------------------------------------------------
 float CFlexAnimationTrack::GetIntensityInternal( float time, int type )
 {
-	float zeroValue = GetZeroValue( type );
-
 	Assert( type == 0 || type == 1 );
 
+	float retval = 0.0f;
+
 	// find samples that span the time
-	if ( !m_pEvent || !m_pEvent->HasEndTime() )
-		return zeroValue;
-
-	if ( time < m_pEvent->GetStartTime() )
-		return zeroValue;
-	if ( time > m_pEvent->GetEndTime() )
-		return zeroValue;
-
-	float elapsed = time - m_pEvent->GetStartTime();
-
-	float retval = GetFracIntensity( elapsed, type );
+	if ( !m_pEvent || !m_pEvent->HasEndTime() || time < m_pEvent->GetStartTime() )
+	{
+		retval = GetZeroValue( type, true );;
+	}
+	else if ( time > m_pEvent->GetEndTime() )
+	{
+		retval = GetZeroValue( type, false );;
+	}
+	else
+	{
+		float elapsed = time - m_pEvent->GetStartTime();
+		retval = GetFracIntensity( elapsed, type );
+	}
 
 	// scale
-	if (m_flMin != m_flMax)
+	if (type == 0 && m_flMin != m_flMax)
 	{
 		retval = retval * (m_flMax - m_flMin) + m_flMin;
 	}
 	return retval;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -644,47 +730,67 @@ float CFlexAnimationTrack::GetIntensityInternal( float time, int type )
 //-----------------------------------------------------------------------------
 float CFlexAnimationTrack::GetFracIntensity( float time, int type )
 {
-	float zeroValue = GetZeroValue( type );
+	float zeroValueLeft = GetZeroValue( type, true );
 
 	Assert( type == 0 || type == 1 );
 
 	// find samples that span the time
 	if ( !m_pEvent || !m_pEvent->HasEndTime() )
-		return zeroValue;
+		return zeroValueLeft;
 
-	if ( GetNumSamples( type ) < 1 )
+	int rampCount = GetNumSamples( type );
+	if ( rampCount < 1 )
 	{
-		return zeroValue;
+		return zeroValueLeft;
 	}
 
-	int i;
-	for ( i = -1 ; i < GetNumSamples( type ); i++ )
-	{
-		CExpressionSample *s = GetBoundedSample( i, type );
-		CExpressionSample *n = GetBoundedSample( i + 1, type );
-		if ( !s || !n )
-			continue;
+	CExpressionSample *esStart = NULL;
+	CExpressionSample *esEnd = NULL;
 
-		if ( time >= s->time && time <= n->time )
+	// do binary search for sample in time period
+	int j = max( rampCount / 2, 1 );
+	int i = j;
+	while ( i > -2 && i < rampCount + 1 )
+	{
+		bool dummy;
+		esStart = GetBoundedSample( i, dummy, type );
+		esEnd = GetBoundedSample( i + 1, dummy, type );
+
+		j = max( j / 2, 1 );
+		if ( time < esStart->time)
 		{
+			i -= j;
+		}
+		else if ( time > esEnd->time)
+		{
+			i += j;
+		}
+		else
+		{
+			if ( time == esEnd->time )
+			{	
+				++i;
+				esStart = GetBoundedSample( i, dummy, type );
+				esEnd = GetBoundedSample( i + 1, dummy, type );
+			}
 			break;
 		}
 	}
 
+	if (!esStart)
+	{
+		return zeroValueLeft;
+	}
+
 	int prev = i - 1;
-	int start = i;
-	int end = i + 1;
 	int next = i + 2;
 
 	prev = max( -1, prev );
-	start = max( -1, start );
-	end = min( end, GetNumSamples( type ) );
-	next = min( next, GetNumSamples( type ) );
+	next = min( next, rampCount );
 
-	CExpressionSample *esPre = GetBoundedSample( prev, type );
-	CExpressionSample *esStart = GetBoundedSample( start, type );
-	CExpressionSample *esEnd = GetBoundedSample( end, type );
-	CExpressionSample *esNext = GetBoundedSample( next, type );
+	bool clamp[ 2 ];
+	CExpressionSample *esPre = GetBoundedSample( prev, clamp[ 0 ], type );
+	CExpressionSample *esNext = GetBoundedSample( next, clamp[ 1 ], type );
 
 	float dt = esEnd->time - esStart->time;
 
@@ -701,13 +807,42 @@ float CFlexAnimationTrack::GetFracIntensity( float time, int type )
 	f2 = clamp( f2, 0.0f, 1.0f );
 
 	Vector vOut;
-	Catmull_Rom_Spline_NormalizeX( 
-		vPre,
-		vStart,
-		vEnd,
-		vNext,
-		f2, 
-		vOut );
+	int dummy;
+	int earlypart, laterpart;
+
+	// Not holding out value of previous curve...
+	Interpolator_CurveInterpolatorsForType( esStart->GetCurveType(), dummy, earlypart );
+	Interpolator_CurveInterpolatorsForType( esEnd->GetCurveType(), laterpart, dummy );
+
+	if ( earlypart == INTERPOLATE_HOLD )
+	{
+		// Hold "out" of previous sample (can cause a discontinuity)
+		VectorLerp( vStart, vEnd, f2, vOut );
+		vOut.y = vStart.y;
+	}
+	else if ( laterpart == INTERPOLATE_HOLD )
+	{
+		// Hold "out" of previous sample (can cause a discontinuity)
+		VectorLerp( vStart, vEnd, f2, vOut );
+		vOut.y = vEnd.y;
+	}
+	else
+	{
+		bool sameCurveType = earlypart == laterpart ? true : false;
+		if ( sameCurveType )
+		{
+			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut );
+		}
+		else // curves differ, sigh
+		{
+			Vector vOut1, vOut2;
+
+			Interpolator_CurveInterpolate( earlypart, vPre, vStart, vEnd, vNext, f2, vOut1 );
+			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut2 );
+
+			VectorLerp( vOut1, vOut2, f2, vOut );
+		}
+	}
 
 	float retval = clamp( vOut.y, 0.0f, 1.0f );
 	return retval;
@@ -775,7 +910,7 @@ float CFlexAnimationTrack::GetIntensity( float time, int side )
 // Input  : time - 
 //			value - 
 //-----------------------------------------------------------------------------
-void CFlexAnimationTrack::AddSample( float time, float value, int type /*=0*/ )
+CExpressionSample *CFlexAnimationTrack::AddSample( float time, float value, int type /*=0*/ )
 {
 	Assert( type == 0 || type == 1 );
 
@@ -784,9 +919,10 @@ void CFlexAnimationTrack::AddSample( float time, float value, int type /*=0*/ )
 	sample.value = value;
 	sample.selected = false;
 
-	m_Samples[ type ].AddToTail( sample );
+	int idx = m_Samples[ type ].AddToTail( sample );
 	
 	// Resort( type );
+	return &m_Samples[ type ][ idx ];
 }
 
 //-----------------------------------------------------------------------------
@@ -893,6 +1029,25 @@ bool CFlexAnimationTrack::IsComboType( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: True if this should be simulated on the server side always
+// Input  : state - 
+//-----------------------------------------------------------------------------
+void CFlexAnimationTrack::SetServerSide( bool state )
+{
+	m_bServerSide = state;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CFlexAnimationTrack::IsServerSide() const
+{
+	return m_bServerSide;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CFlexAnimationTrack::SetMin( float value )
@@ -928,6 +1083,25 @@ float CFlexAnimationTrack::GetMax( int type )
 		return m_flMax;
 	else
 		return 1.0f;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFlexAnimationTrack::IsInverted( void )
+{
+	if (m_bInverted)
+		return true;
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFlexAnimationTrack::SetInverted( bool isInverted )
+{
+	m_bInverted = isInverted;
 }
 
 //-----------------------------------------------------------------------------
@@ -1006,6 +1180,8 @@ CChoreoEvent::~CChoreoEvent( void )
 //-----------------------------------------------------------------------------
 CChoreoEvent& CChoreoEvent::operator=( const CChoreoEvent& src )
 {
+	MEM_ALLOC_CREDIT();
+
 	// Copy global id when copying entity
 	m_nGlobalID = src.m_nGlobalID;
 
@@ -1013,9 +1189,9 @@ CChoreoEvent& CChoreoEvent::operator=( const CChoreoEvent& src )
 	m_pChannel = NULL;
 
 	m_fType = src.m_fType;
-	Q_strncpy( m_szName, src.m_szName, sizeof( m_szName ) );
-	Q_strncpy( m_szParameters, src.m_szParameters, sizeof( m_szParameters ) );
-	Q_strncpy( m_szParameters2, src.m_szParameters2, sizeof( m_szParameters2 ) );
+	m_Name = src.m_Name;
+	m_Parameters = src.m_Parameters;
+	m_Parameters2= src.m_Parameters2;
 	m_flStartTime = src.m_flStartTime;
 	m_flEndTime = src.m_flEndTime;
 
@@ -1024,9 +1200,10 @@ CChoreoEvent& CChoreoEvent::operator=( const CChoreoEvent& src )
 	m_bResumeCondition = src.m_bResumeCondition;
 	m_bLockBodyFacing = src.m_bLockBodyFacing;
 	m_flDistanceToTarget = src.m_flDistanceToTarget;
+	m_bForceShortMovement = src.m_bForceShortMovement;
 	m_bUsesTag = src.m_bUsesTag;
-	Q_strncpy( m_szTagName, src.m_szTagName, sizeof( m_szTagName ) );
-	Q_strncpy( m_szTagWavName, src.m_szTagWavName, sizeof( m_szTagWavName ) );
+	m_TagName = src.m_TagName;
+	m_TagWavName = src.m_TagWavName;
 
 	ClearAllRelativeTags();
 	ClearAllTimingTags();
@@ -1093,8 +1270,11 @@ CChoreoEvent& CChoreoEvent::operator=( const CChoreoEvent& src )
 		AddRamp( sample.time, sample.value, sample.selected );
 	}
 
+	m_RampEdgeInfo[ 0 ] = src.m_RampEdgeInfo[ 0 ];
+	m_RampEdgeInfo[ 1 ] = src.m_RampEdgeInfo[ 1 ];
+
 	m_ccType = src.m_ccType;
-	Q_strncpy( m_szCCToken, src.m_szCCToken, sizeof( m_szCCToken ) );
+	m_CCToken = src.m_CCToken;
 	m_bUsingCombinedSoundFile = src.m_bUsingCombinedSoundFile;
 	m_uRequiredCombinedChecksum = src.m_uRequiredCombinedChecksum; 
 	m_nNumSlaves = src.m_nNumSlaves;
@@ -1115,9 +1295,9 @@ void CChoreoEvent::Init( CChoreoScene *scene )
 	m_nGlobalID			= s_nGlobalID++;
 
 	m_fType				= UNSPECIFIED;
-	m_szName[ 0 ]		= 0;
-	m_szParameters[ 0 ] = 0;
-	m_szParameters2[ 0 ]  = 0;
+	m_Name.clear();
+	m_Parameters.clear();
+	m_Parameters2.clear();
 
 	m_flStartTime		= 0.0f;
 	m_flEndTime			= -1.0f;
@@ -1134,6 +1314,8 @@ void CChoreoEvent::Init( CChoreoScene *scene )
 
 	m_bLockBodyFacing	= false;
 	m_flDistanceToTarget = 0.0f;
+	m_bForceShortMovement = false;
+	m_bSyncToFollowingGesture = false;
 
 	m_pSubScene			= NULL;
 	m_bProcessing		= false;
@@ -1146,7 +1328,7 @@ void CChoreoEvent::Init( CChoreoScene *scene )
 	m_nLoopsRemaining = 0;
 
 	// Close captioning/localization support
-	Q_memset( m_szCCToken, 0, sizeof( m_szCCToken ) );
+	m_CCToken.clear();
 	m_ccType					= CC_MASTER;
 	m_bUsingCombinedSoundFile	= false;
 	m_uRequiredCombinedChecksum = 0; 
@@ -1163,7 +1345,7 @@ void CChoreoEvent::Init( CChoreoScene *scene )
 //-----------------------------------------------------------------------------
 CChoreoEvent::EVENTTYPE CChoreoEvent::GetType( void )
 {
-	return m_fType;
+	return (EVENTTYPE)m_fType;
 }
 
 //-----------------------------------------------------------------------------
@@ -1191,8 +1373,7 @@ void CChoreoEvent::SetType( EVENTTYPE type )
 //-----------------------------------------------------------------------------
 void CChoreoEvent::SetName( const char *name )
 {
-	Assert( strlen( name ) < MAX_CHOREOEVENT_NAME );
-	Q_strncpy( m_szName, name, sizeof( m_szName ) );
+	m_Name = name;
 }
 
 //-----------------------------------------------------------------------------
@@ -1201,7 +1382,7 @@ void CChoreoEvent::SetName( const char *name )
 //-----------------------------------------------------------------------------
 const char *CChoreoEvent::GetName( void )
 {
-	return m_szName;
+	return m_Name.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -1210,8 +1391,7 @@ const char *CChoreoEvent::GetName( void )
 //-----------------------------------------------------------------------------
 void CChoreoEvent::SetParameters( const char *param )
 {
-	Assert( strlen( param ) < MAX_PARAMETERS_STRING );
-	Q_strncpy( m_szParameters, param, sizeof( m_szParameters ) );
+	m_Parameters = param;
 }
 
 //-----------------------------------------------------------------------------
@@ -1220,7 +1400,7 @@ void CChoreoEvent::SetParameters( const char *param )
 //-----------------------------------------------------------------------------
 const char *CChoreoEvent::GetParameters( void )
 {
-	return m_szParameters;
+	return m_Parameters.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -1230,13 +1410,15 @@ const char *CChoreoEvent::GetParameters( void )
 void CChoreoEvent::SetParameters2( const char *param )
 {
 	int iLength = strlen( param );
-	Assert( iLength < MAX_PARAMETERS_STRING );
-	Q_strncpy( m_szParameters2, param, sizeof( m_szParameters2 ) );
+	m_Parameters2 = param;
 
 	// HACK: Remove trailing " " until faceposer is fixed
-	if ( param[iLength-1] == ' ' )
+	if ( iLength > 0 )
 	{
-		m_szParameters2[iLength-1] = '\0';
+		if ( param[iLength-1] == ' ' )
+		{
+			m_Parameters2.erase(iLength-1);
+		}
 	}
 }
 
@@ -1246,7 +1428,7 @@ void CChoreoEvent::SetParameters2( const char *param )
 //-----------------------------------------------------------------------------
 const char *CChoreoEvent::GetParameters2( void )
 {
-	return m_szParameters2;
+	return m_Parameters2.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -1261,7 +1443,7 @@ const char *CChoreoEvent::GetDescription( void )
 
 	if ( !GetActor() )
 	{
-		Q_snprintf( description,sizeof(description), "global %s", m_szName );
+		Q_snprintf( description,sizeof(description), "global %s", m_Name.c_str() );
 	}
 	else
 	{
@@ -1363,48 +1545,88 @@ float CChoreoEvent::GetCompletion( float time )
 	return t;
 }
 
-float CChoreoEvent::GetRampIntensity( float time )
+// ICurveDataAccessor method
+bool CChoreoEvent::CurveHasEndTime()
+{
+	return HasEndTime();
+}
+
+// ICurveDataAccessor method
+int CChoreoEvent::CurveGetSampleCount()
+{
+	return GetRampCount();
+}
+
+// ICurveDataAccessor method
+CExpressionSample *CChoreoEvent::CurveGetBoundedSample( int idx, bool& bClamped )
+{
+	return GetBoundedRamp( idx, bClamped );
+}
+
+int CChoreoEvent::GetDefaultCurveType()
+{
+	return CURVE_CATMULL_ROM_TO_CATMULL_ROM;
+}
+
+// Static method!!!
+float CChoreoEvent::GetRampIntensity( ICurveDataAccessor *data, float time )
 {
 	float zeroValue = 0.0f;
 
 	// find samples that span the time
-	if ( !HasEndTime() )
-		return zeroValue;
-
-	int rampCount = GetRampCount();
-	if ( rampCount < 1 )
+	if ( !data->CurveHasEndTime() )
 	{
 		return zeroValue;
 	}
 
-	int i;
-	for ( i = -1 ; i < rampCount; i++ )
+	int rampCount = data->CurveGetSampleCount();
+	if ( rampCount < 1 )
 	{
-		CExpressionSample *s = GetBoundedRamp( i );
-		CExpressionSample *n = GetBoundedRamp( i + 1 );
-		if ( !s || !n )
-			continue;
+		// Full intensity
+		return 1.0f;
+	}
 
-		if ( time >= s->time && time <= n->time )
+	CExpressionSample *esStart = NULL;
+	CExpressionSample *esEnd = NULL;
+
+	// do binary search for sample in time period
+	int j = max( rampCount / 2, 1 );
+	int i = j;
+	while ( i > -2 && i < rampCount + 1 )
+	{
+		bool dummy;
+		esStart = data->CurveGetBoundedSample( i, dummy );
+		esEnd = data->CurveGetBoundedSample( i + 1, dummy  );
+
+		j = max( j / 2, 1 );
+		if ( time < esStart->time)
+		{
+			i -= j;
+		}
+		else if ( time > esEnd->time)
+		{
+			i += j;
+		}
+		else
 		{
 			break;
 		}
 	}
 
+	if (!esStart)
+	{
+		return 1.0f;
+	}
+
 	int prev = i - 1;
-	int start = i;
-	int end = i + 1;
 	int next = i + 2;
 
 	prev = max( -1, prev );
-	start = max( -1, start );
-	end = min( end, rampCount );
 	next = min( next, rampCount );
 
-	CExpressionSample *esPre = GetBoundedRamp( prev );
-	CExpressionSample *esStart = GetBoundedRamp( start );
-	CExpressionSample *esEnd = GetBoundedRamp( end );
-	CExpressionSample *esNext = GetBoundedRamp( next );
+	bool clamp[ 2 ];
+	CExpressionSample *esPre = data->CurveGetBoundedSample( prev, clamp[ 0 ] );
+	CExpressionSample *esNext = data->CurveGetBoundedSample( next, clamp[ 1 ] );
 
 	float dt = esEnd->time - esStart->time;
 
@@ -1412,6 +1634,16 @@ float CChoreoEvent::GetRampIntensity( float time )
 	Vector vStart( esStart->time, esStart->value, 0 );
 	Vector vEnd( esEnd->time, esEnd->value, 0 );
 	Vector vNext( esNext->time, esNext->value, 0 );
+
+	if ( clamp[ 0 ] )
+	{
+		vPre.x = vStart.x;
+	}
+
+	if ( clamp[ 1 ] )
+	{
+		vNext.x = vEnd.x;
+	}
 
 	float f2 = 0.0f;
 	if ( dt > 0.0f )
@@ -1421,13 +1653,54 @@ float CChoreoEvent::GetRampIntensity( float time )
 	f2 = clamp( f2, 0.0f, 1.0f );
 
 	Vector vOut;
-	Catmull_Rom_Spline_Normalize( 
-		vPre,
-		vStart,
-		vEnd,
-		vNext,
-		f2, 
-		vOut );
+	int dummy;
+	int earlypart, laterpart;
+
+	int startCurve	= esStart->GetCurveType();
+	int endCurve	= esEnd->GetCurveType();
+
+	if ( startCurve == CURVE_DEFAULT )
+	{
+		startCurve = data->GetDefaultCurveType();
+	}
+	if ( endCurve == CURVE_DEFAULT )
+	{
+		endCurve = data->GetDefaultCurveType();
+	}
+
+	// Not holding out value of previous curve...
+	Interpolator_CurveInterpolatorsForType( startCurve, dummy, earlypart );
+	Interpolator_CurveInterpolatorsForType( endCurve, laterpart, dummy );
+
+	if ( earlypart == INTERPOLATE_HOLD )
+	{
+		// Hold "out" of previous sample (can cause a discontinuity)
+		VectorLerp( vStart, vEnd, f2, vOut );
+		vOut.y = vStart.y;
+	}
+	else if ( laterpart == INTERPOLATE_HOLD )
+	{
+		// Hold "out" of previous sample (can cause a discontinuity)
+		VectorLerp( vStart, vEnd, f2, vOut );
+		vOut.y = vEnd.y;
+	}
+	else
+	{
+		bool sameCurveType = earlypart == laterpart ? true : false;
+		if ( sameCurveType )
+		{
+			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut );
+		}
+		else // curves differ, sigh
+		{
+			Vector vOut1, vOut2;
+
+			Interpolator_CurveInterpolate( earlypart, vPre, vStart, vEnd, vNext, f2, vOut1 );
+			Interpolator_CurveInterpolate( laterpart, vPre, vStart, vEnd, vNext, f2, vOut2 );
+
+			VectorLerp( vOut1, vOut2, f2, vOut );
+		}
+	}
 
 	float retval = clamp( vOut.y, 0.0f, 1.0f );
 	return retval;
@@ -1437,7 +1710,7 @@ float CChoreoEvent::GetRampIntensity( float time )
 // Purpose: Get intensity for event, bounded by scene global intensity
 // Output : float
 //-----------------------------------------------------------------------------
-float CChoreoEvent::GetIntensity( float scenetime )
+float CChoreoEvent::GetIntensity( ICurveDataAccessor *data, float scenetime )
 {
 	float global_intensity = 1.0f;
 	if ( m_pScene )
@@ -1449,7 +1722,7 @@ float CChoreoEvent::GetIntensity( float scenetime )
 		Assert( 0 );
 	}
 
-	float event_intensity = _GetIntensity( scenetime );
+	float event_intensity = _GetIntensity( data, scenetime );
 
 	return global_intensity * event_intensity;
 }
@@ -1458,78 +1731,11 @@ float CChoreoEvent::GetIntensity( float scenetime )
 // Purpose: 
 // Output : float
 //-----------------------------------------------------------------------------
-float CChoreoEvent::_GetIntensity( float scenetime )
+float CChoreoEvent::_GetIntensity( ICurveDataAccessor *data, float scenetime )
 {
 	// Convert to event local time
 	float time = scenetime - GetStartTime();
-
-	float zeroValue = 0.0f;
-
-	// find samples that span the time
-	if ( !HasEndTime() )
-		return zeroValue;
-
-	int rampCount = GetRampCount();
-	if ( rampCount < 1 )
-	{
-		// Full intensity
-		return 1.0f;
-	}
-
-	int i;
-	for ( i = -1 ; i < rampCount; i++ )
-	{
-		CExpressionSample *s = GetBoundedRamp( i );
-		CExpressionSample *n = GetBoundedRamp( i + 1 );
-		if ( !s || !n )
-			continue;
-
-		if ( time >= s->time && time <= n->time )
-		{
-			break;
-		}
-	}
-
-	int prev = i - 1;
-	int start = i;
-	int end = i + 1;
-	int next = i + 2;
-
-	prev = max( -1, prev );
-	start = max( -1, start );
-	end = min( end, rampCount );
-	next = min( next, rampCount );
-
-	CExpressionSample *esPre = GetBoundedRamp( prev );
-	CExpressionSample *esStart = GetBoundedRamp( start );
-	CExpressionSample *esEnd = GetBoundedRamp( end );
-	CExpressionSample *esNext = GetBoundedRamp( next );
-
-	float dt = esEnd->time - esStart->time;
-
-	Vector vPre( esPre->time, esPre->value, 0 );
-	Vector vStart( esStart->time, esStart->value, 0 );
-	Vector vEnd( esEnd->time, esEnd->value, 0 );
-	Vector vNext( esNext->time, esNext->value, 0 );
-
-	float f2 = 0.0f;
-	if ( dt > 0.0f )
-	{
-		f2 = ( time - esStart->time ) / ( dt );
-	}
-	f2 = clamp( f2, 0.0f, 1.0f );
-
-	Vector vOut;
-	Catmull_Rom_Spline_Normalize( 
-		vPre,
-		vStart,
-		vEnd,
-		vNext,
-		f2, 
-		vOut );
-
-	float retval = clamp( vOut.y, 0.0f, 1.0f );
-	return retval;
+	return GetRampIntensity( data, time );
 }
 
 
@@ -1878,6 +2084,48 @@ float CChoreoEvent::GetDistanceToTarget( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+// Input  : set if small (sub-1/2 bbox) movements are forced
+//-----------------------------------------------------------------------------
+
+void CChoreoEvent::SetForceShortMovement( bool bForceShortMovement )
+{
+	m_bForceShortMovement = bForceShortMovement;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output  : get if small (sub-1/2 bbox) movements are forced
+//-----------------------------------------------------------------------------
+
+bool CChoreoEvent::GetForceShortMovement( void )
+{
+	return m_bForceShortMovement;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : set if the gesture should sync its exit tag with the following gestures entry tag
+//-----------------------------------------------------------------------------
+
+void CChoreoEvent::SetSyncToFollowingGesture( bool bSyncToFollowingGesture )
+{
+	m_bSyncToFollowingGesture = bSyncToFollowingGesture;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output  : get if the gesture should sync its exit tag with the following gestures entry tag
+//-----------------------------------------------------------------------------
+
+bool CChoreoEvent::GetSyncToFollowingGesture( void )
+{
+	return m_bSyncToFollowingGesture;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 // Output : float
 //-----------------------------------------------------------------------------
 float CChoreoEvent::GetDuration( void )
@@ -1992,19 +2240,19 @@ void CChoreoEvent::SetUsingRelativeTag( bool usetag, const char *tagname /*= 0*/
 	m_bUsesTag = usetag;
 	if ( tagname )
 	{
-		Q_strncpy( m_szTagName, tagname, sizeof( m_szTagName ) );
+		m_TagName = tagname;
 	}
 	else
 	{
-		Q_strncpy( m_szTagName, "", sizeof( m_szTagName ) );
+		m_TagName.clear();
 	}
 	if ( wavname )
 	{
-		Q_strncpy( m_szTagWavName, wavname, sizeof( m_szTagWavName ) );
+		m_TagWavName = wavname;
 	}
 	else
 	{
-		Q_strncpy( m_szTagWavName, "", sizeof( m_szTagWavName ) );
+		m_TagWavName.clear();
 	}
 }
 
@@ -2014,7 +2262,7 @@ void CChoreoEvent::SetUsingRelativeTag( bool usetag, const char *tagname /*= 0*/
 //-----------------------------------------------------------------------------
 const char *CChoreoEvent::GetRelativeTagName( void )
 {
-	return m_szTagName;
+	return m_TagName.c_str();
 }
 
 
@@ -2024,7 +2272,7 @@ const char *CChoreoEvent::GetRelativeTagName( void )
 //-----------------------------------------------------------------------------
 const char *CChoreoEvent::GetRelativeWavName( void )
 {
-	return m_szTagWavName;
+	return m_TagWavName.c_str();
 }
 
 //-----------------------------------------------------------------------------
@@ -3005,6 +3253,11 @@ int CChoreoEvent::GetLoopCount( void )
 	return m_nNumLoops;
 }
 
+EdgeInfo_t *CChoreoEvent::GetRampEdgeInfo( int idx )
+{
+	return &m_RampEdgeInfo[ idx ];
+}
+
 int	 CChoreoEvent::GetRampCount( void )
 {
 	return m_Ramp.Count();
@@ -3018,7 +3271,7 @@ CExpressionSample *CChoreoEvent::GetRamp( int index )
 	return &m_Ramp[ index ];
 }
 
-void CChoreoEvent::AddRamp( float time, float value, bool selected )
+CExpressionSample *CChoreoEvent::AddRamp( float time, float value, bool selected )
 {
 	CExpressionSample sample;
 
@@ -3026,7 +3279,8 @@ void CChoreoEvent::AddRamp( float time, float value, bool selected )
 	sample.value = value;
 	sample.selected = selected;
 
-	m_Ramp.AddToTail( sample );
+	int idx = m_Ramp.AddToTail( sample );
+	return &m_Ramp[ idx ];
 }
 
 void CChoreoEvent::DeleteRamp( int index )
@@ -3070,25 +3324,29 @@ void CChoreoEvent::ResortRamp( void )
 // Input  : number - 
 // Output : CExpressionSample
 //-----------------------------------------------------------------------------
-CExpressionSample *CChoreoEvent::GetBoundedRamp( int number )
+CExpressionSample *CChoreoEvent::GetBoundedRamp( int number, bool& bClamped )
 {
 	// Search for two samples which span time f
-	static CExpressionSample nullstart;
-	nullstart.time = 0.0f;
-	nullstart.value = 0.0f;
-	static CExpressionSample nullend;
-	nullend.time = GetDuration();
-	nullend.value = 0.0f;
-
 	if ( number < 0 )
 	{
+		static CExpressionSample nullstart;
+		nullstart.time = 0.0f;
+		nullstart.value = RampGetEdgeZeroValue( true );
+		nullstart.SetCurveType( RampGetEdgeCurveType( true ) );
+		bClamped = true;
 		return &nullstart;
 	}
 	else if ( number >= GetRampCount() )
 	{
+		static CExpressionSample nullend;
+		nullend.time = GetDuration();
+		nullend.value = RampGetEdgeZeroValue( false );
+		nullend.SetCurveType( RampGetEdgeCurveType( false ) );
+		bClamped = true;
 		return &nullend;
 	}
 	
+	bClamped = false;
 	return GetRamp( number );
 }
 
@@ -3244,7 +3502,7 @@ void CChoreoEvent::GetMovementStyle( char *style, int maxlen )
 
 	style[0] = 0;
 
-	const char *in = m_szParameters2;
+	const char *in = m_Parameters2.c_str();
 	char *out = style;
 
 	while ( *in && *in != '\0' && *in != ' ' )
@@ -3268,7 +3526,7 @@ void CChoreoEvent::GetDistanceStyle( char *style, int maxlen )
 
 	style[0]= 0;
 
-	const char *in = Q_strstr( m_szParameters2, " " );
+	const char *in = Q_strstr( m_Parameters2.c_str(), " " );
 	if ( !in )
 		return;
 
@@ -3294,20 +3552,20 @@ void CChoreoEvent::SetCloseCaptionType( CLOSECAPTION type )
 CChoreoEvent::CLOSECAPTION CChoreoEvent::GetCloseCaptionType() const
 {
 	Assert( m_fType == SPEAK );
-	return m_ccType;
+	return (CLOSECAPTION)m_ccType;
 }
 
 void CChoreoEvent::SetCloseCaptionToken( char const *token )
 {
 	Assert( m_fType == SPEAK );
 	Assert( token );
-	Q_strncpy( m_szCCToken, token, sizeof( m_szCCToken ) );
+	m_CCToken = token;
 }
 
 char const *CChoreoEvent::GetCloseCaptionToken() const
 {
 	Assert( m_fType == SPEAK );
-	return m_szCCToken;
+	return m_CCToken.c_str();
 }
 
 bool CChoreoEvent::GetPlaybackCloseCaptionToken( char *dest, int destlen )
@@ -3331,13 +3589,13 @@ bool CChoreoEvent::GetPlaybackCloseCaptionToken( char *dest, int destlen )
 				return false;
 			}
 
-			if ( m_szCCToken[ 0 ] != 0 )
+			if ( m_CCToken[ 0 ] != 0 )
 			{
-				Q_strncpy( dest, m_szCCToken, destlen );
+				Q_strncpy( dest, m_CCToken.c_str(), destlen );
 			}
 			else
 			{
-				Q_strncpy( dest, m_szParameters, destlen );
+				Q_strncpy( dest, m_Parameters.c_str(), destlen );
 			}
 			return true;
 		}
@@ -3345,13 +3603,13 @@ bool CChoreoEvent::GetPlaybackCloseCaptionToken( char *dest, int destlen )
 		{
 			// Always use the override if we're the master, otherwise always use the default
 			//  parameter
-			if ( m_szCCToken[ 0 ] != 0 )
+			if ( m_CCToken[ 0 ] != 0 )
 			{
-				Q_strncpy( dest, m_szCCToken, destlen );
+				Q_strncpy( dest, m_CCToken.c_str(), destlen );
 			}
 			else
 			{
-				Q_strncpy( dest, m_szParameters, destlen );
+				Q_strncpy( dest, m_Parameters.c_str(), destlen );
 			}
 			return true;
 		}
@@ -3465,7 +3723,7 @@ bool CChoreoEvent::ComputeCombinedBaseFileName( char *dest, int destlen, bool cr
 
 	char vcdpath[ 512 ];
 	char cleanedtoken[ MAX_CCTOKEN_STRING ];
-	CleanupTokenName( m_szCCToken, cleanedtoken, sizeof( cleanedtoken ) );
+	CleanupTokenName( m_CCToken.c_str(), cleanedtoken, sizeof( cleanedtoken ) );
 
 	if ( Q_strlen( cleanedtoken ) <= 0 )
 		return false;
@@ -3565,4 +3823,382 @@ void CChoreoEvent::GetEventDependencies( CUtlVector< CChoreoEvent * >& list )
 	{
 		list.AddToTail( m_Dependencies[ i ] );
 	}
+}
+
+void CChoreoEvent::RampSetEdgeInfo( bool leftEdge, int curveType, float zero )
+{
+	int idx = leftEdge ? 0 : 1;
+	m_RampEdgeInfo[ idx ].m_CurveType = curveType;
+	m_RampEdgeInfo[ idx ].m_flZeroPos = zero;
+}
+
+void CChoreoEvent::RampGetEdgeInfo( bool leftEdge, int& curveType, float& zero ) const
+{
+	int idx = leftEdge ? 0 : 1;
+	curveType = m_RampEdgeInfo[ idx ].m_CurveType;
+	zero = m_RampEdgeInfo[ idx ].m_flZeroPos;
+}
+
+void CChoreoEvent::RampSetEdgeActive( bool leftEdge, bool state )
+{
+	int idx = leftEdge ? 0 : 1;
+	m_RampEdgeInfo[ idx ].m_bActive = state;
+}
+
+bool CChoreoEvent::RampIsEdgeActive( bool leftEdge ) const
+{
+	int idx = leftEdge ? 0 : 1;
+	return m_RampEdgeInfo[ idx ].m_bActive;
+}
+
+int CChoreoEvent::RampGetEdgeCurveType( bool leftEdge ) const
+{
+	if ( !RampIsEdgeActive( leftEdge ) )
+	{
+		return CURVE_DEFAULT;
+	}
+
+	int idx = leftEdge ? 0 : 1;
+	return m_RampEdgeInfo[ idx ].m_CurveType;
+}
+
+float CChoreoEvent::RampGetEdgeZeroValue( bool leftEdge ) const
+{
+	if ( !RampIsEdgeActive( leftEdge ) )
+	{
+		return 0.0f;
+	}
+
+	int idx = leftEdge ? 0 : 1;
+	return m_RampEdgeInfo[ idx ].m_flZeroPos;
+}
+
+
+void CChoreoEvent::SaveToBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
+{
+	buf.PutChar( GetType() );
+	buf.PutString( GetName() );
+
+	float st, et;
+	st = GetStartTime();
+	et = GetEndTime();
+
+	buf.PutFloat( st );
+	buf.PutFloat( et );
+
+	buf.PutString( GetParameters() );
+	buf.PutString( GetParameters2() );
+
+	SaveRampToBuffer( buf );  
+
+	buf.PutChar( IsResumeCondition() ? 1 : 0 );
+	buf.PutChar( IsLockBodyFacing() ? 1 : 0 );
+	buf.PutFloat( GetDistanceToTarget() );
+	buf.PutChar( IsFixedLength() ? 1 : 0 );
+
+	buf.PutShort( GetNumRelativeTags() );
+
+	for ( int t = 0; t < GetNumRelativeTags(); t++ )
+	{
+		CEventRelativeTag *rt = GetRelativeTag( t );
+		Assert( rt );
+		buf.PutString( rt->GetName() );
+		buf.PutFloat( rt->GetPercentage() );
+	}
+
+	buf.PutShort( GetNumTimingTags() );
+
+	for ( int t = 0; t < GetNumTimingTags(); t++ )
+	{
+		CFlexTimingTag *tt = GetTimingTag( t );
+		Assert( tt );
+		buf.PutString( tt->GetName() );
+		buf.PutFloat( tt->GetPercentage() );
+		// Don't save locked state, it's only used by the editor tt->GetLocked()
+	}
+
+	int tagtype;
+	for ( tagtype = 0; tagtype < CChoreoEvent::NUM_ABS_TAG_TYPES; tagtype++ )
+	{
+		int num = GetNumAbsoluteTags( (CChoreoEvent::AbsTagType)tagtype );
+		buf.PutShort( num );
+		for ( int i = 0; i < num ; ++i )
+		{
+			CEventAbsoluteTag *abstag = GetAbsoluteTag( (CChoreoEvent::AbsTagType)tagtype, i );
+			Assert( abstag );
+			buf.PutString( abstag->GetName() );
+			buf.PutFloat( abstag->GetPercentage() );
+		}
+	}
+
+	if ( GetType() == CChoreoEvent::GESTURE )
+	{
+		float duration;
+		if ( GetGestureSequenceDuration( duration ) )
+		{
+			buf.PutFloat( duration );
+		}
+		else
+		{
+			buf.PutFloat( -1.0f );
+		}
+	}
+
+	buf.PutChar( IsUsingRelativeTag() ? 1 : 0 );
+	if ( IsUsingRelativeTag() )
+	{
+		buf.PutString( GetRelativeTagName() );
+		buf.PutString( GetRelativeWavName() );
+	}
+	
+	SaveFlexAnimationsToBuffer( buf );
+
+	if ( GetType() == LOOP )
+	{
+		buf.PutChar( GetLoopCount() );
+	}
+
+	if ( GetType() == CChoreoEvent::SPEAK )
+	{
+		buf.PutChar( GetCloseCaptionType() );
+		buf.PutString( GetCloseCaptionToken() );
+		int flags = 0;
+
+		if ( GetCloseCaptionType() != CChoreoEvent::CC_DISABLED &&
+			 IsUsingCombinedFile() )
+		{
+			flags |= ( 1<<0 );
+		}
+		if ( IsCombinedUsingGenderToken() )
+		{
+			flags |= ( 1<<1 );
+		}
+		if ( IsSuppressingCaptionAttenuation() )
+		{
+			flags |= ( 1<<2 );
+		}
+
+		buf.PutChar( flags );
+	}
+}
+
+bool CChoreoEvent::RestoreFromBuffer( CUtlBuffer& buf, CChoreoScene *pScene )
+{
+	SetType( (EVENTTYPE)buf.GetChar() );
+	char sz[ 256 ];
+	buf.GetString( sz, sizeof( sz ) );
+	SetName( sz );
+
+	SetStartTime( buf.GetFloat() );
+	SetEndTime( buf.GetFloat() );
+
+	char params[ 2048 ];
+	buf.GetString( params, sizeof( params ) );
+	SetParameters( params );
+	buf.GetString( params, sizeof( params ) );
+	SetParameters2( params );
+
+	if ( !RestoreRampFromBuffer( buf ) )
+		return false;
+
+	SetResumeCondition( buf.GetChar() == 1 ? true : false );
+	SetLockBodyFacing( buf.GetChar() == 1 ? true : false );
+	SetDistanceToTarget( buf.GetFloat() );
+	SetFixedLength( buf.GetChar() == 1 ? true : false );
+
+	int numRelTags = buf.GetShort();
+	for ( int i = 0 ;i < numRelTags; ++i )
+	{
+		char tagName[ 256 ];
+		buf.GetString( tagName, sizeof( tagName ) );
+		float percentage = buf.GetFloat();
+		AddRelativeTag( tagName, percentage );
+	}
+
+	int numTimingTags = buf.GetShort();
+	for ( int i = 0 ;i < numTimingTags; ++i )
+	{
+		char tagName[ 256 ];
+		buf.GetString( tagName, sizeof( tagName ) );
+		float percentage = buf.GetFloat();
+		// Don't parse locked state, only used by editors
+		AddTimingTag( tagName, percentage, false );
+	}
+
+	int tagtype;
+	for ( tagtype = 0; tagtype < CChoreoEvent::NUM_ABS_TAG_TYPES; tagtype++ )
+	{
+		int num = buf.GetShort();
+		for ( int i = 0 ; i < num ; ++i )
+		{
+			char tagName[ 256 ];
+			buf.GetString( tagName, sizeof( tagName ) );
+			float percentage = buf.GetFloat();
+			// Don't parse locked state, only used by editors
+			AddAbsoluteTag( (CChoreoEvent::AbsTagType)tagtype, tagName, percentage );
+		}
+	}
+
+	if ( GetType() == CChoreoEvent::GESTURE )
+	{
+		float duration = buf.GetFloat();
+		if ( duration != -1 )
+		{
+			SetGestureSequenceDuration( duration );
+		}
+	}
+	
+	if ( buf.GetChar() == 1 )
+	{
+		char tagname[ 256 ];
+		char wavname[ 256 ];
+		buf.GetString( tagname, sizeof( tagname ) );
+		buf.GetString( wavname, sizeof( wavname ) );
+
+		SetUsingRelativeTag( true, tagname, wavname );
+	}
+
+	if ( !RestoreFlexAnimationsFromBuffer( buf ) )
+		return false;
+
+	if ( GetType() == LOOP )
+	{
+		SetLoopCount( buf.GetChar() );
+	}
+
+	if ( GetType() == CChoreoEvent::SPEAK )
+	{
+		SetCloseCaptionType( (CLOSECAPTION)buf.GetChar() );
+		char cctoken[ 256 ];
+		buf.GetString( cctoken, sizeof( cctoken ) );
+		SetCloseCaptionToken( cctoken );
+		int flags = buf.GetChar();
+		if ( flags & ( 1<<0 ) )
+		{
+			SetUsingCombinedFile( true );
+		}
+		if ( flags & ( 1<<1 ) )
+		{
+			SetCombinedUsingGenderToken( true );
+		}
+		if ( flags & ( 1<<2 ) )
+		{
+			SetSuppressingCaptionAttenuation( true );
+		}
+	}
+
+	return true;
+}
+
+void CChoreoEvent::SaveRampToBuffer( CUtlBuffer& buf )
+{
+	int c = GetRampCount();
+	buf.PutInt( c );
+	if ( c <= 0 )
+		return;
+
+	for ( int i = 0; i < c; i++ )
+	{
+		CExpressionSample *sample = GetRamp( i );
+		buf.PutFloat( sample->time );
+		buf.PutFloat( sample->value );
+	}	
+}
+
+bool CChoreoEvent::RestoreRampFromBuffer( CUtlBuffer& buf )
+{
+	int c = buf.GetInt();
+	for ( int i = 0; i < c; i++ )
+	{
+		float t, v;
+		t = buf.GetFloat();
+		v = buf.GetFloat();
+
+		AddRamp( t, v, false );
+	}
+
+	return true;
+}
+
+void CChoreoEvent::SaveFlexAnimationsToBuffer( CUtlBuffer& buf )
+{
+	buf.PutShort( GetNumFlexAnimationTracks() );
+	for ( int i = 0; i < GetNumFlexAnimationTracks(); i++ )
+	{
+		CFlexAnimationTrack *track = GetFlexAnimationTrack( i );
+
+		buf.PutString( track->GetFlexControllerName() );
+		buf.PutChar( track->IsTrackActive() ? 1 : 0 );
+		buf.PutChar( track->IsComboType() ? 1 : 0 );
+		buf.PutFloat( track->GetMin() );
+		buf.PutFloat( track->GetMax() );
+
+		buf.PutShort( track->GetNumSamples( 0 ) );
+        for ( int j = 0 ; j < track->GetNumSamples( 0 ) ; j++ )
+		{
+			CExpressionSample *s = track->GetSample( j, 0 );
+			if ( !s )
+				continue;
+
+			buf.PutFloat( s->time );
+			buf.PutFloat( s->value );
+		}
+
+		// Write out combo samples
+		if ( track->IsComboType() )
+		{
+			buf.PutShort( track->GetNumSamples( 1 ) );
+			for ( int j = 0 ; j < track->GetNumSamples( 1) ; j++ )
+			{
+				CExpressionSample *s = track->GetSample( j, 1 );
+				if ( !s )
+					continue;
+
+				buf.PutFloat( s->time );
+				buf.PutFloat( s->value );
+			}
+		}
+	}
+}
+
+bool CChoreoEvent::RestoreFlexAnimationsFromBuffer( CUtlBuffer& buf )
+{
+	int numTracks = buf.GetShort();
+
+	for ( int i = 0; i < numTracks; i++ )
+	{
+		char name[ 256 ];
+		buf.GetString( name, sizeof( name ) );
+
+		CFlexAnimationTrack *track = AddTrack( name );
+		track->SetTrackActive( buf.GetChar() == 1 ? true : false );
+		track->SetComboType( buf.GetChar() == 1 ? true : false );
+		track->SetMin( buf.GetFloat() );
+		track->SetMax( buf.GetFloat() );
+
+		int s = buf.GetShort();
+		for ( int j = 0; j < s; ++j )
+		{
+			float t, v;
+			t = buf.GetFloat();
+			v = buf.GetFloat();
+
+			track->AddSample( t, v, 0 );
+		}
+
+		if ( track->IsComboType() )
+		{
+			int s = buf.GetShort();
+			for ( int j = 0; j < s; ++j )
+			{
+				float t, v;
+				t = buf.GetFloat();
+				v = buf.GetFloat();
+
+				track->AddSample( t, v, 1 );
+			}
+		}
+	}
+
+	return true;
 }

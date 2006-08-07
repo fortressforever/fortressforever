@@ -30,7 +30,7 @@ public:
 	// CPropVehicle
 	virtual void	SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move );
 	virtual void	EnterVehicle( CBasePlayer *pPlayer );
-	virtual void	ExitVehicle( int iRole );
+	virtual void	ExitVehicle( int nRole );
 
 	// Inputs to force the player in/out of the vehicle
 	void			InputForcePlayerIn( inputdata_t &inputdata );
@@ -123,9 +123,9 @@ void CPropVehicleViewController::EnterVehicle( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehicleViewController::ExitVehicle( int iRole )
+void CPropVehicleViewController::ExitVehicle( int nRole )
 {
-	BaseClass::ExitVehicle(iRole);
+	BaseClass::ExitVehicle( nRole );
 	m_bEnterAnimOn = false;
 }
 
@@ -152,7 +152,13 @@ void CPropVehicleViewController::InputForcePlayerIn( inputdata_t &inputdata )
 		}
 	}
 
-	pPlayer->GetInVehicle( GetServerVehicle(), VEHICLE_DRIVER);
+	// Make sure we successfully got in the vehicle
+	if ( pPlayer->GetInVehicle( GetServerVehicle(), VEHICLE_ROLE_DRIVER ) == false )
+	{
+		// The player was unable to enter the vehicle and the output has failed
+		Assert( 0 );
+		return;
+	}
 
 	// Setup the "enter" vehicle sequence
 	SetCycle( 0 );

@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: Console commands for debugging and manipulating NPCs.
 //
-//=============================================================================//
+//===========================================================================//
 
 #include "cbase.h"
 #include "ai_basenpc.h"
@@ -13,13 +13,15 @@
 #include "ai_link.h"
 #include "ai_networkmanager.h"
 #include "ndebugoverlay.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern CAI_Node*	FindPickerAINode( CBasePlayer* pPlayer, NodeType_e nNodeType );
 extern void			SetDebugBits( CBasePlayer* pPlayer, char *name, int bit );
+
+bool g_bAIDisabledByUser = false;
 
 //------------------------------------------------------------------------------
 // Purpose: Disables all NPCs
@@ -35,6 +37,7 @@ void CC_AI_Disable( void )
 	{
 		CAI_BaseNPC::m_nDebugBits |= bits_debugDisableAI;
 		DevMsg("AI Disabled.\n");
+		g_bAIDisabledByUser = true;
 	}
 
 	CBaseEntity::m_nDebugPlayer = UTIL_GetCommandClientIndex();
@@ -326,17 +329,23 @@ ConVar npc_create_equipment("npc_create_equipment", "");
 //------------------------------------------------------------------------------
 void CC_NPC_Create( void )
 {
-	CEngineCacheCriticalSection engineCacheCriticalSection( engineCache );
+	MDLCACHE_CRITICAL_SECTION();
 
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
 	CBaseEntity::SetAllowPrecache( true );
 
 	// Try to create entity
-	CAI_BaseNPC *baseNPC = (CAI_BaseNPC *)CreateEntityByName(engine->Cmd_Argv(1));
+	CAI_BaseNPC *baseNPC = dynamic_cast< CAI_BaseNPC * >( CreateEntityByName(engine->Cmd_Argv(1)) );
 	if (baseNPC)
 	{
 		baseNPC->KeyValue( "additionalequipment", npc_create_equipment.GetString() );
 		baseNPC->Precache();
+
+		if ( engine->Cmd_Argc() == 3 )
+		{
+			baseNPC->SetName( AllocPooledString( engine->Cmd_Argv(2) ) );
+		}
+
 		DispatchSpawn(baseNPC);
 		// Now attempt to drop into the world
 		CBasePlayer* pPlayer = UTIL_GetCommandClient();
@@ -374,6 +383,7 @@ void CC_NPC_Create( void )
 				NDebugOverlay::Box(baseNPC->GetAbsOrigin(), baseNPC->GetHullMins(), baseNPC->GetHullMaxs(), 255, 0, 0, 0, 0);
 			}
 		}
+
 		baseNPC->Activate();
 	}
 	CBaseEntity::SetAllowPrecache( allowPrecache );
@@ -386,61 +396,68 @@ static ConCommand npc_create("npc_create", CC_NPC_Create, "Creates an NPC of the
 //------------------------------------------------------------------------------
 void CC_NPC_Create_Aimed( void )
 {
-	// First make sure one of these types exists, becuase if it ain't
-	// precached, we can't spawn one 
-	CBaseEntity *pPrecached = gEntList.FindEntityByClassname(NULL, engine->Cmd_Argv(1));
-	if (!pPrecached)
-	{
-		DevMsg("Can't create %s.  Not precached!\n",engine->Cmd_Argv(1));
-		return;
-	}
+	MDLCACHE_CRITICAL_SECTION();
+
+	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
+	CBaseEntity::SetAllowPrecache( true );
 
 	// Try to create entity
-	CAI_BaseNPC *baseNPC = (CAI_BaseNPC *)CreateEntityByName(engine->Cmd_Argv(1));
+	CAI_BaseNPC *baseNPC = dynamic_cast< CAI_BaseNPC * >( CreateEntityByName(engine->Cmd_Argv(1)) );
 	if (baseNPC)
 	{
-		CBasePlayer* pPlayer = UTIL_GetCommandClient();
+		baseNPC->KeyValue( "additionalequipment", npc_create_equipment.GetString() );
+		baseNPC->Precache();
+		DispatchSpawn( baseNPC );
 
 		// Now attempt to drop into the world
+		QAngle angles;
+		CBasePlayer* pPlayer = UTIL_GetCommandClient();
 		trace_t tr;
 		Vector forward;
 		pPlayer->EyeVectors( &forward );
-		AI_TraceLine(pPlayer->EyePosition(),
+		VectorAngles( forward, angles );
+		angles.x = 0; 
+		angles.z = 0;
+		AI_TraceLine( pPlayer->EyePosition(),
 			pPlayer->EyePosition() + forward * MAX_TRACE_LENGTH,MASK_NPCSOLID, 
 			pPlayer, COLLISION_GROUP_NONE, &tr );
+
 		if ( tr.fraction != 1.0)
 		{
-			baseNPC->KeyValue( "additionalequipment", npc_create_equipment.GetString() );
-			QAngle angles = pPlayer->GetLocalAngles();
-			angles.x = 0;
-			angles.z = 0;
-			baseNPC->SetLocalAngles( angles );
-
-			// Raise the end position a little up off the floor, place the npc and drop him down
-			tr.endpos.z += 12;
-
-			baseNPC->SetLocalOrigin( tr.endpos );
-
-			baseNPC->Spawn();
-
-			UTIL_DropToFloor( baseNPC, MASK_NPCSOLID );
+			if (baseNPC->CapabilitiesGet() & bits_CAP_MOVE_FLY)
+			{
+				Vector pos = tr.endpos - forward * 36;
+				baseNPC->Teleport( &pos, &angles, NULL );
+			}
+			else
+			{
+				// Raise the end position a little up off the floor, place the npc and drop him down
+				tr.endpos.z += 12;
+				baseNPC->Teleport( &tr.endpos, &angles, NULL );
+				UTIL_DropToFloor( baseNPC, MASK_NPCSOLID );
+			}
 
 			// Now check that this is a valid location for the new npc to be
 			Vector	vUpBit = baseNPC->GetAbsOrigin();
 			vUpBit.z += 1;
 
-			AI_TraceHull( baseNPC->GetAbsOrigin(), vUpBit, baseNPC->GetHullMins(), 
-				baseNPC->GetHullMaxs(), MASK_NPCSOLID, baseNPC, COLLISION_GROUP_NONE, &tr );
+			AI_TraceHull( baseNPC->GetAbsOrigin(), vUpBit, baseNPC->GetHullMins(), baseNPC->GetHullMaxs(), 
+				MASK_NPCSOLID, baseNPC, COLLISION_GROUP_NONE, &tr );
 			if ( tr.startsolid || (tr.fraction < 1.0) )
 			{
 				baseNPC->SUB_Remove();
 				DevMsg("Can't create %s.  Bad Position!\n",engine->Cmd_Argv(1));
-				NDebugOverlay::Box(baseNPC->GetAbsOrigin(), baseNPC->GetHullMins(), 
-					baseNPC->GetHullMaxs(), 255, 0, 0, 0, 0);
-				return;
+				NDebugOverlay::Box(baseNPC->GetAbsOrigin(), baseNPC->GetHullMins(), baseNPC->GetHullMaxs(), 255, 0, 0, 0, 0);
 			}
 		}
+		else
+		{
+			baseNPC->Teleport( NULL, &angles, NULL );
+		}
+
+		baseNPC->Activate();
 	}
+	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
 static ConCommand npc_create_aimed("npc_create_aimed", CC_NPC_Create_Aimed, "Creates an NPC aimed away from the player of the given type where the player is looking (if the given NPC can actually stand at that location).  Note that this only works for npc classes that are already in the world.  You can not create an entity that doesn't have an instance in the level.\n\tArguments:	{npc_class_name}", FCVAR_CHEAT);
 
@@ -531,6 +548,36 @@ CON_COMMAND(npc_thinknow, "Trigger NPC to think")
 //------------------------------------------------------------------------------
 // Purpose: Tell selected NPC to go to a where player is looking
 //------------------------------------------------------------------------------
+
+void CC_NPC_Teleport( void )
+{
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+	trace_t tr;
+	Vector forward;
+	pPlayer->EyeVectors( &forward );
+	AI_TraceLine(pPlayer->EyePosition(),
+		pPlayer->EyePosition() + forward * MAX_TRACE_LENGTH,MASK_NPCSOLID, 
+		pPlayer, COLLISION_GROUP_NONE, &tr );
+
+	if ( tr.fraction != 1.0)
+	{
+		CAI_BaseNPC *npc = gEntList.NextEntByClass( (CAI_BaseNPC *)NULL );
+
+		while (npc)
+		{
+			//Only Teleport one NPC if more than one is selected.
+			if (npc->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT) 
+			{
+                npc->Teleport( &tr.endpos, NULL, NULL );
+				break;
+			}
+
+			npc = gEntList.NextEntByClass(npc);
+		}
+	}
+}
+
+static ConCommand npc_teleport("npc_teleport", CC_NPC_Teleport, "Selected NPC will teleport to the location that the player is looking (shown with a purple box)\n\tArguments:	-none-", FCVAR_CHEAT);
 
 static ConVar npc_go_do_run( "npc_go_do_run", "1", 0, "Set whether should run on NPC go" );
 
@@ -647,6 +694,14 @@ void CC_NPC_Viewcone( void )
 }
 static ConCommand npc_viewcone("npc_viewcone", CC_NPC_Viewcone, "Displays the viewcone of the NPC (where they are currently looking and what the extents of there vision is)\n\tArguments:   	{entity_name} / {class_name} / no argument picks what player is looking at", FCVAR_CHEAT);
 
+//------------------------------------------------------------------------------
+// Purpose: Show an NPC's relationships to other NPCs
+//------------------------------------------------------------------------------
+void CC_NPC_Relationships( void )
+{
+	SetDebugBits( UTIL_GetCommandClient(),engine->Cmd_Argv(1), OVERLAY_NPC_RELATION_BIT );
+}
+static ConCommand npc_relationships("npc_relationships", CC_NPC_Relationships, "Displays the relationships between this NPC and all others.\n\tArguments:   	{entity_name} / {class_name} / no argument picks what player is looking at", FCVAR_CHEAT );
 
 //------------------------------------------------------------------------------
 // Purpose: Show an NPC's steering regulations

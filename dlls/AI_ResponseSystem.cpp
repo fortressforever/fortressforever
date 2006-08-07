@@ -3,6 +3,8 @@
 // Purpose: 
 //
 //=============================================================================//
+
+
 #include "cbase.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "AI_ResponseSystem.h"
@@ -16,12 +18,17 @@
 #include <ctype.h>
 #include "sceneentity.h"
 #include "isaverestore.h"
+#include "utlbuffer.h"
+#include "stringpool.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar sv_debugresponses( "sv_debugresponses", "0", 0, "Show verbose matching output (1 for simple, 2 for rule scoring)" );
-static ConVar sv_dumpresponses( "sv_dumpresponses", "0", 0, "Dump all response_rules.txt and rules (requires restart)" );
+ConVar rr_debugresponses( "rr_debugresponses", "0", FCVAR_NONE, "Show verbose matching output (1 for simple, 2 for rule scoring). If set to 3, it will only show response success/failure for npc_selected NPCs." );
+ConVar rr_debugrule( "rr_debugrule", "", FCVAR_NONE, "If set to the name of the rule, that rule's score will be shown whenever a concept is passed into the response rules system.");
+ConVar rr_dumpresponses( "rr_dumpresponses", "0", FCVAR_NONE, "Dump all response_rules.txt and rules (requires restart)" );
+
+static CUtlSymbolTable g_RS;
 
 inline static char *CopyString( const char *in )
 {
@@ -35,24 +42,24 @@ inline static char *CopyString( const char *in )
 	return out;
 }
 
-struct Matcher
+#pragma pack(1)
+class Matcher
 {
+public:
 	Matcher()
 	{
 		valid = false;
-
-		token[0]=0;
-		rawtoken[0] = 0;
 		isnumeric = false;
-		
 		notequal = false;
-
 		usemin = false;
 		minequals = false;
-		minval = false;
 		usemax = false;
 		maxequals = false;
-		maxval = false;
+		maxval = 0.0f;
+		minval = 0.0f;
+
+		token = UTL_INVAL_SYMBOL;
+		rawtoken = UTL_INVAL_SYMBOL;
 	}
 
 	void Describe( void )
@@ -92,29 +99,53 @@ struct Matcher
 
 		if ( notequal )
 		{
-			DevMsg( "    matcher:  !=%s\n", token );
+			DevMsg( "    matcher:  !=%s\n", GetToken() );
 			return;
 		}
 
-		DevMsg( "    matcher:  ==%s\n", token );
+		DevMsg( "    matcher:  ==%s\n", GetToken() );
 	}
 
-	bool	valid;
-
-	bool	isnumeric;
-
-	bool	notequal;
-
-	bool	usemin;
-	bool	minequals;
+	float	maxval;
 	float	minval;
 
-	bool	usemax;
-	bool	maxequals;
-	float	maxval;
+	bool	valid : 1;      //1
+	bool	isnumeric : 1;  //2
+	bool	notequal : 1;   //3
+	bool	usemin : 1;     //4
+	bool	minequals : 1;  //5
+	bool	usemax : 1;     //6
+	bool	maxequals : 1;  //7
 
-	char	token[ 128 ];
-	char	rawtoken[ 128 ];
+	void	SetToken( char const *s )
+	{
+		token = g_RS.AddString( s );
+	}
+
+	char const *GetToken()
+	{
+		if ( token.IsValid() )
+		{
+			return g_RS.String( token );
+		}
+		return "";
+	}
+	void	SetRaw( char const *raw )
+	{
+		rawtoken = g_RS.AddString( raw );
+	}
+	char const *GetRaw()
+	{
+		if ( rawtoken.IsValid() )
+		{
+			return g_RS.String( rawtoken );
+		}
+		return "";
+	}
+
+private:
+	CUtlSymbol	token;
+	CUtlSymbol	rawtoken;
 };
 
 struct Response
@@ -125,7 +156,7 @@ struct Response
 	{
 		type = RESPONSE_NONE;
 		value = NULL;
-		weight = 1.0f;
+		weight.SetFloat( 1.0f );
 		depletioncount = 0;
 		first = false;
 		last = false;
@@ -159,13 +190,15 @@ struct Response
 		delete[] value;
 	}
 
-	ResponseType_t	type;
+	ResponseType_t GetType() { return (ResponseType_t)type; }
 
-	char						*value;  // fixed up value spot
-	float						weight;
-	int							depletioncount;
-	bool						first;
-	bool						last;
+	char						*value;  // fixed up value spot		// 4
+	float16						weight;								// 6
+
+	byte						depletioncount;						// 7
+	byte						type : 6;							// 8
+	byte						first : 1;							// 
+	byte						last : 1;							// 
 };
 
 struct ResponseGroup
@@ -332,22 +365,25 @@ struct ResponseGroup
 	void	SetEnabled( bool enabled ) { m_bEnabled = enabled; }
 
 	int		GetCurrentIndex() const { return m_nCurrentIndex; }
-	void	SetCurrentIndex( int idx ) { m_nCurrentIndex = idx; }
+	void	SetCurrentIndex( byte idx ) { m_nCurrentIndex = idx; }
 
 	CUtlVector< Response >	group;
 
 	AI_ResponseParams		rp;
 
-	// Use all slots before repeating any
-	bool					m_bDepleteBeforeRepeat;
-	// Invalidation counter
-	int						m_nDepletionCount;
-	bool					m_bHasFirst;
-	bool					m_bHasLast;
-	bool					m_bSequential;
-	bool					m_bNoRepeat;
 	bool					m_bEnabled;
-	int						m_nCurrentIndex;
+
+	byte					m_nCurrentIndex;
+	// Invalidation counter
+	byte					m_nDepletionCount;
+
+	// Use all slots before repeating any
+	bool					m_bDepleteBeforeRepeat : 1;
+	bool					m_bHasFirst : 1;
+	bool					m_bHasLast : 1;
+	bool					m_bSequential : 1;
+	bool					m_bNoRepeat : 1;
+	
 };
 
 struct Criteria
@@ -356,7 +392,7 @@ struct Criteria
 	{
 		name = NULL;
 		value = NULL;
-		weight = 1.0f;
+		weight.SetFloat( 1.0f );
 		required = false;
 	}
 	Criteria& operator =(const Criteria& src )
@@ -407,13 +443,13 @@ struct Criteria
 
 	char						*name;
 	char						*value;
-	float						weight;
+	float16						weight;
 	bool						required;
 
 	Matcher						matcher;
 
 	// Indices into sub criteria
-	CUtlVector< int >			subcriteria;
+	CUtlVector< unsigned short >	subcriteria;
 };
 
 struct Rule
@@ -422,6 +458,7 @@ struct Rule
 	{
 		m_bMatchOnce = false;
 		m_bEnabled = true;
+		m_szContext = NULL;
 	}
 
 	Rule& operator =( const Rule& src )
@@ -444,6 +481,7 @@ struct Rule
 			m_Responses.AddToTail( src.m_Responses[ i ] );
 		}
 
+		SetContext( src.m_szContext );
 		m_bMatchOnce = src.m_bMatchOnce;
 		m_bEnabled = src.m_bEnabled;
 		return *this;
@@ -466,26 +504,43 @@ struct Rule
 			m_Responses.AddToTail( src.m_Responses[ i ] );
 		}
 
+		SetContext( src.m_szContext );
 		m_bMatchOnce = src.m_bMatchOnce;
 		m_bEnabled = src.m_bEnabled;
 	}
+
+	~Rule()
+	{
+		delete[] m_szContext;
+	}
+
+	void SetContext( const char *context )
+	{
+		delete[] m_szContext;
+		m_szContext = CopyString( context );
+	}
+
+	const char *GetContext( void ) const { return m_szContext; }
 
 	bool	IsEnabled() const { return m_bEnabled; }
 	void	Disable() { m_bEnabled = false; }
 	bool	IsMatchOnce() const { return m_bMatchOnce; }
 
 	// Indices into underlying criteria and response dictionaries
-	CUtlVector< int >	m_Criteria;
-	CUtlVector< int	>	m_Responses;
+	CUtlVector< unsigned short >	m_Criteria;
+	CUtlVector< unsigned short>		m_Responses;
 
-	bool				m_bMatchOnce;
-	bool				m_bEnabled;
+	char				*m_szContext;
+
+	bool				m_bMatchOnce : 1;
+	bool				m_bEnabled : 1;
 };
+#pragma pack()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CResponseSystem : public IResponseSystem 
+abstract_class CResponseSystem : public IResponseSystem 
 {
 public:
 	CResponseSystem();
@@ -509,7 +564,6 @@ public:
 	bool		ShouldPrecache() { return m_bPrecache; }
 	
 	void		Clear();
-
 
 protected:
 
@@ -598,7 +652,7 @@ private:
 	
 	void		ParseOneResponse( const char *responseGroupName, ResponseGroup& group );
 
-	void		ParseInclude( void );
+	void		ParseInclude( CStringPool &includedFiles );
 	void		ParseResponse( void );
 	void		ParseCriterion( void );
 	void		ParseRule( void );
@@ -609,7 +663,7 @@ private:
 	bool		Compare( const char *setValue, Criteria *c, bool verbose = false );
 	bool		CompareUsingMatcher( const char *setValue, Matcher& m, bool verbose = false );
 	void		ComputeMatcher( Criteria *c, Matcher& matcher );
-	void		ResolveToken( Matcher& matcher );
+	void		ResolveToken( Matcher& matcher, char *token, size_t bufsize, char const *rawtoken );
 	float		LookupEnumeration( const char *name, bool& found );
 
 	int			FindBestMatchingRule( const AI_CriteriaSet& set, bool verbose );
@@ -623,11 +677,11 @@ private:
 	void		DescribeResponseGroup( ResponseGroup *group, int selected, int depth );
 	void		DebugPrint( int depth, const char *fmt, ... );
 
-	void		LoadFromBuffer( const char *scriptfile, const char *buffer );
+	void		LoadFromBuffer( const char *scriptfile, const char *buffer, CStringPool &includedFiles );
 
 //	void		TouchReferencedScenes();
 
-	char const	*GetCurrentScript();
+	void		GetCurrentScript( char *buf, size_t buflen );
 	int			GetCurrentToken() const;
 	void		SetCurrentScript( const char *script );
 	bool		IsRootCommand();
@@ -637,10 +691,10 @@ private:
 
 	void		ResponseWarning( const char *fmt, ... );
 
-	CUtlDict< ResponseGroup, int >	m_Responses;
-	CUtlDict< Criteria, int >	m_Criteria;
-	CUtlDict< Rule, int >	m_Rules;
-	CUtlDict< Enumeration, int > m_Enumerations;
+	CUtlDict< ResponseGroup, short >	m_Responses;
+	CUtlDict< Criteria, short >	m_Criteria;
+	CUtlDict< Rule, short >	m_Rules;
+	CUtlDict< Enumeration, short > m_Enumerations;
 
 	char		token[ 1204 ];
 
@@ -649,8 +703,8 @@ private:
 
 	struct ScriptEntry
 	{
-		unsigned char *buffer;
-		char			name[ 256 ];
+		unsigned char	*buffer;
+		FileNameHandle_t name;
 		const char		*currenttoken;
 		int				tokencount;
 	};
@@ -665,7 +719,7 @@ BEGIN_SIMPLE_DATADESC( Response )
 	// DEFINE_FIELD( type, FIELD_INTEGER ),
 	// DEFINE_ARRAY( value, FIELD_CHARACTER ),
 	// DEFINE_FIELD( weight, FIELD_FLOAT ),
-	DEFINE_FIELD( depletioncount, FIELD_INTEGER ),
+	DEFINE_FIELD( depletioncount, FIELD_CHARACTER ),
 	// DEFINE_FIELD( first, FIELD_BOOLEAN ),
 	// DEFINE_FIELD( last, FIELD_BOOLEAN ),
 END_DATADESC()
@@ -674,13 +728,13 @@ BEGIN_SIMPLE_DATADESC( ResponseGroup )
 	// DEFINE_FIELD( group, FIELD_UTLVECTOR ),
 	// DEFINE_FIELD( rp, FIELD_EMBEDDED ),
 	// DEFINE_FIELD( m_bDepleteBeforeRepeat, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nDepletionCount, FIELD_INTEGER ),
+	DEFINE_FIELD( m_nDepletionCount, FIELD_CHARACTER ),
 	// DEFINE_FIELD( m_bHasFirst, FIELD_BOOLEAN ),
 	// DEFINE_FIELD( m_bHasLast, FIELD_BOOLEAN ),
 	// DEFINE_FIELD( m_bSequential, FIELD_BOOLEAN ),
 	// DEFINE_FIELD( m_bNoRepeat, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bEnabled, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_nCurrentIndex, FIELD_INTEGER ),
+	DEFINE_FIELD( m_nCurrentIndex, FIELD_CHARACTER ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -704,18 +758,24 @@ CResponseSystem::~CResponseSystem()
 // Purpose: 
 // Output : char const
 //-----------------------------------------------------------------------------
-const char *CResponseSystem::GetCurrentScript()
+void CResponseSystem::GetCurrentScript( char *buf, size_t buflen )
 {
+	Assert( buf );
+	buf[ 0 ] = 0;
 	if ( m_ScriptStack.Count() <= 0 )
-		return "";
+		return;
 	
-	return m_ScriptStack[ 0 ].name;
+	if ( filesystem->String( m_ScriptStack[ 0 ].name, buf, buflen ) )
+	{
+		return;
+	}
+	buf[ 0 ] = 0;
 }
 
 void CResponseSystem::PushScript( const char *scriptfile, unsigned char *buffer )
 {
 	ScriptEntry e;
-	Q_snprintf( e.name, sizeof( e.name ), "%s", scriptfile );
+	e.name = filesystem->FindOrAddFileName( scriptfile );
 	e.buffer = buffer;
 	e.currenttoken = (char *)e.buffer;
 	e.tokencount = 0;
@@ -766,27 +826,25 @@ float CResponseSystem::LookupEnumeration( const char *name, bool& found )
 // Purpose: 
 // Input  : matcher - 
 //-----------------------------------------------------------------------------
-void CResponseSystem::ResolveToken( Matcher& matcher )
+void CResponseSystem::ResolveToken( Matcher& matcher, char *token, size_t bufsize, char const *rawtoken )
 {
-	Q_strncpy( matcher.token, matcher.rawtoken, sizeof( matcher.token ) );
-
-	if ( matcher.rawtoken[0] != '[' )
+	if ( rawtoken[0] != '[' )
 	{
+		Q_strncpy( token, rawtoken, bufsize );
 		return;
 	}
-
-	Q_strlower( matcher.token );
 
 	// Now lookup enumeration
 	bool found = false;
-	float f = LookupEnumeration( matcher.token, found );
+	float f = LookupEnumeration( rawtoken, found );
 	if ( !found )
 	{
-		ResponseWarning( "No such enumeration '%s'\n", matcher.token );
+		Q_strncpy( token, rawtoken, bufsize );
+		ResponseWarning( "No such enumeration '%s'\n", token );
 		return;
 	}
 
-	Q_snprintf( matcher.token, sizeof( matcher.token ), "%f", f );
+	Q_snprintf( token, bufsize, "%f", f );
 }
 
 
@@ -818,8 +876,12 @@ void CResponseSystem::ComputeMatcher( Criteria *c, Matcher& matcher )
 
 	const char *in = s;
 
-	matcher.token[ 0 ] = 0;
-	matcher.rawtoken[ 0 ] = 0;
+	char token[ 128 ];
+	char rawtoken[ 128 ];
+
+	token[ 0 ] = 0;
+	rawtoken[ 0 ] = 0;
+
 	int n = 0;
 
 	bool gt = false;
@@ -852,18 +914,18 @@ void CResponseSystem::ComputeMatcher( Criteria *c, Matcher& matcher )
 		case ',':
 		case '\0':
 			{
-				matcher.rawtoken[ n ] = 0;
+				rawtoken[ n ] = 0;
 				n = 0;
 
 				// Convert raw token to real token in case token is an enumerated type specifier
-				ResolveToken( matcher );
+				ResolveToken( matcher, token, sizeof( token ), rawtoken );
 
 				// Fill in first data set
 				if ( gt )
 				{
 					matcher.usemin = true;
 					matcher.minequals = eq;
-					matcher.minval = (float)atof( matcher.token );
+					matcher.minval = (float)atof( token );
 
 					matcher.isnumeric = true;
 				}
@@ -871,7 +933,7 @@ void CResponseSystem::ComputeMatcher( Criteria *c, Matcher& matcher )
 				{
 					matcher.usemax = true;
 					matcher.maxequals = eq;
-					matcher.maxval = (float)atof( matcher.token );
+					matcher.maxval = (float)atof( token );
 
 					matcher.isnumeric = true;
 				}
@@ -885,7 +947,7 @@ void CResponseSystem::ComputeMatcher( Criteria *c, Matcher& matcher )
 
 					matcher.notequal = nt;
 
-					matcher.isnumeric = AppearsToBeANumber( matcher.token );
+					matcher.isnumeric = AppearsToBeANumber( token );
 				}
 
 				gt = lt = eq = nt = false;
@@ -900,13 +962,15 @@ void CResponseSystem::ComputeMatcher( Criteria *c, Matcher& matcher )
 			nt = true;
 			break;
 		default:
-			matcher.rawtoken[ n++ ] = *in;
+			rawtoken[ n++ ] = *in;
 			break;
 		}
 
 		in++;
 	}
 
+	matcher.SetToken( token );
+	matcher.SetRaw( rawtoken );
 	matcher.valid = true;
 }
 
@@ -966,12 +1030,12 @@ bool CResponseSystem::CompareUsingMatcher( const char *setValue, Matcher& m, boo
 	{
 		if ( m.isnumeric )
 		{
-			if ( v == (float)atof( m.token ) )
+			if ( v == (float)atof( m.GetToken() ) )
 				return false;
 		}
 		else
 		{
-			if ( !Q_stricmp( setValue, m.token ) )
+			if ( !Q_stricmp( setValue, m.GetToken() ) )
 				return false;
 		}
 
@@ -985,10 +1049,10 @@ bool CResponseSystem::CompareUsingMatcher( const char *setValue, Matcher& m, boo
 		if ( !setValue || !setValue[0] )
 			return false;
 
-		return v == (float)atof( m.token );
+		return v == (float)atof( m.GetToken() );
 	}
 
-	return !Q_stricmp( setValue, m.token ) ? true : false;
+	return !Q_stricmp( setValue, m.GetToken() ) ? true : false;
 }
 
 bool CResponseSystem::Compare( const char *setValue, Criteria *c, bool verbose /*= false*/ )
@@ -1028,7 +1092,7 @@ float CResponseSystem::RecursiveScoreSubcriteriaAgainstRule( const AI_CriteriaSe
 
 	exclude = ( parent->required && score == 0.0f ) ? true : false;
 
-	return score * parent->weight;
+	return score * parent->weight.GetFloat();
 }
 
 float CResponseSystem::ScoreCriteriaAgainstRuleCriteria( const AI_CriteriaSet& set, int icriterion, bool& exclude, bool verbose /*=false*/ )
@@ -1067,7 +1131,7 @@ float CResponseSystem::ScoreCriteriaAgainstRuleCriteria( const AI_CriteriaSet& s
 	if ( Compare( actualValue, c, verbose ) )
 	{
 		float w = set.GetWeight( found );
-		score = w * c->weight;
+		score = w * c->weight.GetFloat();
 
 		if ( verbose )
 		{
@@ -1102,8 +1166,28 @@ float CResponseSystem::ScoreCriteriaAgainstRule( const AI_CriteriaSet& set, int 
 	Rule *rule = &m_Rules[ irule ];
 	float score = 0.0f;
 
+	bool bBeingWatched = false;
+
+	// See if we're trying to debug this rule
+	const char *pszText = rr_debugrule.GetString();
+	if ( pszText && pszText[0] && !Q_stricmp( pszText, m_Rules.GetElementName( irule ) ) )
+	{
+		bBeingWatched = true;
+	}
+
 	if ( !rule->IsEnabled() )
+	{
+		if ( bBeingWatched )
+		{
+			DevMsg("Rule '%s' is disabled.\n" );
+		}
 		return 0.0f;
+	}
+
+	if ( bBeingWatched )
+	{
+		verbose = true;
+	}
 
 	if ( verbose )
 	{
@@ -1197,7 +1281,7 @@ int CResponseSystem::SelectWeightedResponseFromResponseGroup( ResponseGroup *g, 
 		for ( i = 0; i < c; i++ )
 		{
 			Response *r = &g->group[ i ];
-			if ( r->depletioncount != g->GetDepletionCount() && !pFilter->IsValidResponse( r->type, r->value ) )
+			if ( r->depletioncount != g->GetDepletionCount() && !pFilter->IsValidResponse( r->GetType(), r->value ) )
 			{
 				fakedDepletes.AddToTail( i );
 				g->MarkResponseUsed( i );
@@ -1215,7 +1299,7 @@ int CResponseSystem::SelectWeightedResponseFromResponseGroup( ResponseGroup *g, 
 			for ( i = 0; i < c; i++ )
 			{
 				Response *r = &g->group[ i ];
-				if ( !pFilter->IsValidResponse( r->type, r->value ) )
+				if ( !pFilter->IsValidResponse( r->GetType(), r->value ) )
 				{
 					fakedDepletes.AddToTail( i );
 					g->MarkResponseUsed( i );
@@ -1302,16 +1386,16 @@ int CResponseSystem::SelectWeightedResponseFromResponseGroup( ResponseGroup *g, 
 			}
 
 			// Always assume very first slot will match
-			totalweight += r->weight;
-			if ( !totalweight || random->RandomFloat(0,totalweight) < r->weight )
+			totalweight += r->weight.GetFloat();
+			if ( !totalweight || random->RandomFloat(0,totalweight) < r->weight.GetFloat() )
 			{
 				slot = i;
 			}
 
-			if ( !checkrepeats && slot != prevSlot && pFilter && !pFilter->IsValidResponse( r->type, r->value ) )
+			if ( !checkrepeats && slot != prevSlot && pFilter && !pFilter->IsValidResponse( r->GetType(), r->value ) )
 			{
 				slot = prevSlot;
-				totalweight -= r->weight;
+				totalweight -= r->weight.GetFloat();
 			}
 		}
 	}
@@ -1377,7 +1461,7 @@ bool CResponseSystem::ResolveResponse( ResponseSearchResult& searchResult, int d
 				g->SetCurrentIndex( 0 );
 			}
 
-			if ( !pFilter || pFilter->IsValidResponse( g->group[idx].type, g->group[idx].value ) )
+			if ( !pFilter || pFilter->IsValidResponse( g->group[idx].GetType(), g->group[idx].value ) )
 			{
 				bFoundValid = true;
 				break;
@@ -1439,7 +1523,7 @@ void CResponseSystem::DescribeResponseGroup( ResponseGroup *group, int selected,
 		Response *r = &group->group[ i ];
 		DebugPrint( depth + 1, "%s%20s : %40s %5.3f\n",
 			i == selected ? "-> " : "   ",
-			AI_Response::DescribeResponse( r->type ),
+			AI_Response::DescribeResponse( r->GetType() ),
 			r->value,
 			r->weight );
 	}
@@ -1492,7 +1576,7 @@ bool CResponseSystem::GetBestResponse( ResponseSearchResult& searchResult, Rule 
 				g->SetCurrentIndex( 0 );
 			}
 
-			if ( !pFilter || pFilter->IsValidResponse( g->group[responseIndex].type, g->group[responseIndex].value ) )
+			if ( !pFilter || pFilter->IsValidResponse( g->group[responseIndex].GetType(), g->group[responseIndex].value ) )
 			{
 				bFoundValid = true;
 				break;
@@ -1599,8 +1683,9 @@ bool CResponseSystem::FindBestResponse( const AI_CriteriaSet& set, AI_Response& 
 {
 	bool valid = false;
 
-	bool showRules = ( sv_debugresponses.GetInt() >= 2 ) ? true : false;
-	bool showResult = sv_debugresponses.GetBool();
+	int iDbgResponse = rr_debugresponses.GetInt();
+	bool showRules = ( iDbgResponse == 2 );
+	bool showResult = ( iDbgResponse == 1 || iDbgResponse == 2 );
 
 	// Look for match
 	int bestRule = FindBestMatchingRule( set, showRules );
@@ -1610,8 +1695,10 @@ bool CResponseSystem::FindBestResponse( const AI_CriteriaSet& set, AI_Response& 
 
 	char ruleName[ 128 ];
 	char responseName[ 128 ];
+	const char *context;
 	ruleName[ 0 ] = 0;
 	responseName[ 0 ] = 0;
+	context = NULL;
 	if ( bestRule != -1 )
 	{
 		Rule *r = &m_Rules[ bestRule ];
@@ -1620,7 +1707,7 @@ bool CResponseSystem::FindBestResponse( const AI_CriteriaSet& set, AI_Response& 
 		if ( GetBestResponse( result, r, showResult, pFilter ) )
 		{
 			Q_strncpy( responseName, result.action->value, sizeof( responseName ) );
-			responseType = result.action->type;
+			responseType = result.action->GetType();
 			rp = result.group->rp;
 		}
 
@@ -1631,11 +1718,12 @@ bool CResponseSystem::FindBestResponse( const AI_CriteriaSet& set, AI_Response& 
 		{
 			r->Disable();
 		}
+		context = r->GetContext();
 
 		valid = true;
 	}
 
-	response.Init( responseType, responseName, set, rp, ruleName );
+	response.Init( responseType, responseName, set, rp, ruleName, context );
 
 	if ( showResult )
 	{
@@ -1645,8 +1733,11 @@ bool CResponseSystem::FindBestResponse( const AI_CriteriaSet& set, AI_Response& 
 			ScoreCriteriaAgainstRule( set, bestRule, true );
 		}
 	
-		// Describe the response, too
-		response.Describe();
+		if ( valid || showRules )
+		{
+			// Describe the response, too
+			response.Describe();
+		}
 	}
 
 	return valid;
@@ -1666,7 +1757,7 @@ void CResponseSystem::GetAllResponses( CUtlVector<AI_Response *> *pResponses )
 			if ( response.type != RESPONSE_RESPONSE )
 			{
 				AI_Response *pResponse = new AI_Response;
-				pResponse->Init( response.type, response.value, AI_CriteriaSet(), group.rp, NULL);
+				pResponse->Init( response.GetType(), response.value, AI_CriteriaSet(), group.rp, NULL, NULL );
 				pResponses->AddToTail(pResponse);
 			}
 		}
@@ -1787,31 +1878,35 @@ void CResponseSystem::TouchReferencedScenes()
 }
 */
 
-void CResponseSystem::ParseInclude( void )
+void CResponseSystem::ParseInclude( CStringPool &includedFiles )
 {
 	char includefile[ 256 ];
 	ParseToken();
 	Q_snprintf( includefile, sizeof( includefile ), "scripts/%s", token );
 
+	// check if the file is already included
+	if ( includedFiles.Find( includefile ) != NULL )
+	{
+		return;
+	}
+
 	// Try and load it
-	int length;
-	unsigned char *buffer = UTIL_LoadFileForMe( includefile, &length );
-	if ( !buffer )
+	CUtlBuffer buf;
+	if ( !filesystem->ReadFile( includefile, "GAME", buf ) )
 	{
 		DevMsg( "Unable to load #included script %s\n", includefile );
 		return;
 	}
 
-	LoadFromBuffer( includefile, (const char *)buffer );
-
-	UTIL_FreeFile( buffer );
+	LoadFromBuffer( includefile, (const char *)buf.PeekGet(), includedFiles );
 }
 
-void CResponseSystem::LoadFromBuffer( const char *scriptfile, const char *buffer )
+void CResponseSystem::LoadFromBuffer( const char *scriptfile, const char *buffer, CStringPool &includedFiles )
 {
+	includedFiles.Allocate( scriptfile );
 	PushScript( scriptfile, (unsigned char * )buffer );
 
-	if( sv_dumpresponses.GetBool() )
+	if( rr_dumpresponses.GetBool() )
 	{
 		DevMsg("Reading: %s\n", scriptfile );
 	}
@@ -1826,7 +1921,7 @@ void CResponseSystem::LoadFromBuffer( const char *scriptfile, const char *buffer
 
 		if ( !Q_stricmp( token, "#include" ) )
 		{
-			ParseInclude();
+			ParseInclude( includedFiles );
 		}
 		else if ( !Q_stricmp( token, "response" ) )
 		{
@@ -1857,10 +1952,12 @@ void CResponseSystem::LoadFromBuffer( const char *scriptfile, const char *buffer
 
 	if ( m_ScriptStack.Count() == 1 )
 	{
+		char cur[ 256 ];
+		GetCurrentScript( cur, sizeof( cur ) );
 		DevMsg( 1, "CResponseSystem:  %s (%i rules, %i criteria, and %i responses)\n",
-			GetCurrentScript(), m_Rules.Count(), m_Criteria.Count(), m_Responses.Count() );
+			cur, m_Rules.Count(), m_Criteria.Count(), m_Responses.Count() );
 
-		if( sv_dumpresponses.GetBool() )
+		if( rr_dumpresponses.GetBool() )
 		{
 			DumpRules();
 		}
@@ -1882,7 +1979,9 @@ void CResponseSystem::LoadRuleSet( const char *basescript )
 		return;
 	}
 
-	LoadFromBuffer( basescript, (const char *)buffer );
+	CStringPool includedFiles;
+
+	LoadFromBuffer( basescript, (const char *)buffer, includedFiles );
 
 	UTIL_FreeFile( buffer );
 
@@ -1920,7 +2019,7 @@ static ResponseType_t ComputeResponseType( const char *s )
 void CResponseSystem::ParseOneResponse( const char *responseGroupName, ResponseGroup& group )
 {
 	Response newResponse;
-	newResponse.weight = 1.0f;
+	newResponse.weight.SetFloat( 1.0f );
 	AI_ResponseParams *rp = &group.rp;
 
 	newResponse.type = ComputeResponseType( token );
@@ -1939,7 +2038,7 @@ void CResponseSystem::ParseOneResponse( const char *responseGroupName, ResponseG
 		if ( !Q_stricmp( token, "weight" ) )
 		{
 			ParseToken();
-			newResponse.weight = (float)atof( token );
+			newResponse.weight.SetFloat( (float)atof( token ) );
 			continue;
 		}
 
@@ -1964,7 +2063,7 @@ void CResponseSystem::ParseOneResponse( const char *responseGroupName, ResponseG
 		{
 			ParseToken();
 			rp->flags |= AI_ResponseParams::RG_DELAYAFTERSPEAK;
-			rp->delay = ReadInterval( token );
+			rp->delay.FromInterval( ReadInterval( token ) );
 			continue;
 		}
 		
@@ -1977,6 +2076,12 @@ void CResponseSystem::ParseOneResponse( const char *responseGroupName, ResponseG
 		if ( !Q_stricmp( token, "noscene" ) )
 		{
 			rp->flags |= AI_ResponseParams::RG_DONT_USE_SCENE;
+			continue;
+		}
+
+		if ( !Q_stricmp( token, "stop_on_nonidle" ) )
+		{
+			rp->flags |= AI_ResponseParams::RG_STOP_ON_NONIDLE;
 			continue;
 		}
 		
@@ -1992,10 +2097,18 @@ void CResponseSystem::ParseOneResponse( const char *responseGroupName, ResponseG
 		{
 			ParseToken();
 			rp->flags |= AI_ResponseParams::RG_RESPEAKDELAY;
-			rp->respeakdelay = ReadInterval( token );
+			rp->respeakdelay.FromInterval( ReadInterval( token ) );
 			continue;
 		}
 		
+		if ( !Q_stricmp( token, "weapondelay" ) )
+		{
+			ParseToken();
+			rp->flags |= AI_ResponseParams::RG_WEAPONDELAY;
+			rp->weapondelay.FromInterval( ReadInterval( token ) );
+			continue;
+		}
+
 		if ( !Q_stricmp( token, "soundlevel" ) )
 		{
 			ParseToken();
@@ -2120,7 +2233,7 @@ void CResponseSystem::ParseResponse( void )
 		{
 			ParseToken();
 			rp->flags |= AI_ResponseParams::RG_DELAYAFTERSPEAK;
-			rp->delay = ReadInterval( token );
+			rp->delay.FromInterval( ReadInterval( token ) );
 			continue;
 		}
 		
@@ -2136,6 +2249,12 @@ void CResponseSystem::ParseResponse( void )
 			continue;
 		}
 		
+		if ( !Q_stricmp( token, "stop_on_nonidle" ) )
+		{
+			rp->flags |= AI_ResponseParams::RG_STOP_ON_NONIDLE;
+			continue;
+		}
+
 		if ( !Q_stricmp( token, "odds" ) )
 		{
 			ParseToken();
@@ -2148,10 +2267,18 @@ void CResponseSystem::ParseResponse( void )
 		{
 			ParseToken();
 			rp->flags |= AI_ResponseParams::RG_RESPEAKDELAY;
-			rp->respeakdelay = ReadInterval( token );
+			rp->respeakdelay.FromInterval( ReadInterval( token ) );
 			continue;
 		}
-		
+
+		if ( !Q_stricmp( token, "weapondelay" ) )
+		{
+			ParseToken();
+			rp->flags |= AI_ResponseParams::RG_WEAPONDELAY;
+			rp->weapondelay.FromInterval( ReadInterval( token ) );
+			continue;
+		}
+
 		if ( !Q_stricmp( token, "soundlevel" ) )
 		{
 			ParseToken();
@@ -2221,7 +2348,7 @@ int CResponseSystem::ParseOneCriterion( const char *criterionName )
 		else if ( !Q_stricmp( token, "weight" ) )
 		{
 			ParseToken();
-			newCriterion.weight = (float)atof( token );
+			newCriterion.weight.SetFloat( (float)atof( token ) );
 		}
 		else
 		{
@@ -2242,6 +2369,12 @@ int CResponseSystem::ParseOneCriterion( const char *criterionName )
 	if ( !newCriterion.IsSubCriteriaType() )
 	{
 		ComputeMatcher( &newCriterion, newCriterion.matcher );
+	}
+
+	if ( m_Criteria.Find( criterionName ) != m_Criteria.InvalidIndex() )
+	{
+		ResponseWarning( "Multiple definitions for criteria '%s'\n", criterionName );
+		return m_Criteria.InvalidIndex();
 	}
 
 	int idx = m_Criteria.Insert( criterionName, newCriterion );
@@ -2360,6 +2493,21 @@ void CResponseSystem::ParseRule( void )
 			continue;
 		}
 
+		if ( !Q_stricmp( token, "applyContext" ) )
+		{
+			ParseToken();
+			if ( newRule.GetContext() == NULL )
+			{
+				newRule.SetContext( token );
+			}
+			else
+			{
+				CFmtStrN<1024> newContext( "%s,%s", newRule.GetContext(), token );
+				newRule.SetContext( newContext );
+			}
+			continue;
+		}
+		
 		if ( !Q_stricmp( token, "response" ) )
 		{
 			// Read them until we run out.
@@ -2369,6 +2517,7 @@ void CResponseSystem::ParseRule( void )
 				int idx = m_Responses.Find( token );
 				if ( idx != m_Responses.InvalidIndex() )
 				{
+					MEM_ALLOC_CREDIT();
 					newRule.m_Responses.AddToTail( idx );
 				}
 				else
@@ -2391,6 +2540,7 @@ void CResponseSystem::ParseRule( void )
 				int idx = m_Criteria.Find( token );
 				if ( idx != m_Criteria.InvalidIndex() )
 				{
+					MEM_ALLOC_CREDIT();
 					newRule.m_Criteria.AddToTail( idx );
 				}
 				else
@@ -2437,13 +2587,19 @@ int	CResponseSystem::GetCurrentToken() const
 void CResponseSystem::ResponseWarning( const char *fmt, ... )
 {
 	va_list		argptr;
-	static char		string[1024];
-	
+#ifndef _XBOX
+	static char	string[1024];
+#else
+	char		string[1024];
+#endif	
+
 	va_start (argptr, fmt);
 	Q_vsnprintf(string, sizeof(string), fmt,argptr);
 	va_end (argptr);
 
-	DevMsg( 1, "%s(token %i) : %s", GetCurrentScript(), GetCurrentToken(), string );
+	char cur[ 256 ];
+	GetCurrentScript( cur, sizeof( cur ) );
+	DevMsg( 1, "%s(token %i) : %s", cur, GetCurrentToken(), string );
 }
 
 
@@ -2507,6 +2663,10 @@ class CDefaultResponseSystem : public CResponseSystem, public CAutoGameSystem
 	typedef CAutoGameSystem BaseClass;
 
 public:
+	CDefaultResponseSystem() : CAutoGameSystem( "CDefaultResponseSystem" )
+	{
+	}
+
 	virtual const char *GetScriptFile( void ) 
 	{
 		return "scripts/talker/response_rules.txt";
@@ -2610,7 +2770,7 @@ private:
 static CDefaultResponseSystem defaultresponsesytem;
 IResponseSystem *g_pResponseSystem = &defaultresponsesytem;
 
-CON_COMMAND( ai_reloadresponsesystems, "Reload all response system scripts." )
+CON_COMMAND( rr_reloadresponsesystems, "Reload all response system scripts." )
 {
 	defaultresponsesytem.ReloadAllResponseSystems();
 }
@@ -2859,6 +3019,12 @@ ISaveRestoreOps *responseSystemSaveRestoreOps = &g_ResponseSystemSaveRestoreOps;
 //-----------------------------------------------------------------------------
 bool CDefaultResponseSystem::Init()
 {
+/*
+	Warning( "sizeof( Response ) == %d\n", sizeof( Response ) );
+	Warning( "sizeof( ResponseGroup ) == %d\n", sizeof( ResponseGroup ) );
+	Warning( "sizeof( Criteria ) == %d\n", sizeof( Criteria ) );
+	Warning( "sizeof( AI_ResponseParams ) == %d\n", sizeof( AI_ResponseParams ) );
+*/
 	const char *basescript = GetScriptFile();
 
 	LoadRuleSet( basescript );

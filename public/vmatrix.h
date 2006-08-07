@@ -111,6 +111,9 @@ public:
 	void		CopyFrom3x4( const matrix3x4_t &m3x4 );
 	void		Set3x4( matrix3x4_t& matrix3x4 ) const;
 
+	bool		operator==( const VMatrix& src ) const;
+	bool		operator!=( const VMatrix& src ) const { return !( *this == src ); }
+
 #ifndef VECTOR_NO_SLOW_OPERATIONS
 	// Access the basis vectors.
 	Vector		GetLeft() const;
@@ -284,6 +287,8 @@ void MatrixMultiply( const VMatrix& src1, const VMatrix& src2, VMatrix& dst );
 // Accessors
 void MatrixGetColumn( const VMatrix &src, int nCol, Vector *pColumn );
 void MatrixSetColumn( VMatrix &src, int nCol, const Vector &column );
+void MatrixGetRow( const VMatrix &src, int nCol, Vector *pColumn );
+void MatrixSetRow( VMatrix &src, int nCol, const Vector &column );
 
 // Vector3DMultiply treats src2 as if it's a direction vector
 void Vector3DMultiply( const VMatrix& src1, const Vector& src2, Vector& dst );
@@ -800,9 +805,9 @@ inline void MatrixGetColumn( const VMatrix &src, int nCol, Vector *pColumn )
 {
 	Assert( (nCol >= 0) && (nCol <= 3) );
 
-	(*pColumn)[0] = src[0][nCol];
-	(*pColumn)[1] = src[1][nCol];
-	(*pColumn)[2] = src[2][nCol];
+	pColumn->x = src[0][nCol];
+	pColumn->y = src[1][nCol];
+	pColumn->z = src[2][nCol];
 }
 
 inline void MatrixSetColumn( VMatrix &src, int nCol, const Vector &column )
@@ -812,6 +817,18 @@ inline void MatrixSetColumn( VMatrix &src, int nCol, const Vector &column )
 	src.m[0][nCol] = column.x;
 	src.m[1][nCol] = column.y;
 	src.m[2][nCol] = column.z;
+}
+
+inline void MatrixGetRow( const VMatrix &src, int nRow, Vector *pRow )
+{
+	Assert( (nRow >= 0) && (nRow <= 3) );
+	*pRow = *(Vector*)src[nRow];
+}
+
+inline void MatrixSetRow( VMatrix &dst, int nRow, const Vector &row )
+{
+	Assert( (nRow >= 0) && (nRow <= 3) );
+	*(Vector*)dst[nRow] = row;
 }
 
 

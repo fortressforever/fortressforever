@@ -42,7 +42,7 @@ public:
 static int GetAlternateProportionalValueFromNormal(int normalizedValue)
 {
 	int wide, tall;
-	surface()->GetScreenSize( wide, tall );
+	GetHudSize( wide, tall );
 	int proH, proW;
 	surface()->GetProportionalBase( proW, proH );
 	double scaleH = (double)tall / (double)proH;
@@ -56,9 +56,9 @@ static int GetAlternateProportionalValueFromNormal(int normalizedValue)
 // Purpose: transform a standard scaled value into one that is scaled based the minimum
 //          of the horizontal and vertical ratios
 //-----------------------------------------------------------------------------
-int GetAlternateProportionalValueFromScaled(int scaledValue)
+int GetAlternateProportionalValueFromScaled( HScheme hScheme, int scaledValue)
 {
-	return GetAlternateProportionalValueFromNormal( scheme()->GetProportionalNormalizedValue( scaledValue ) );
+	return GetAlternateProportionalValueFromNormal( scheme()->GetProportionalNormalizedValueEx( hScheme,  scaledValue ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -73,16 +73,16 @@ static void RepositionControl( Panel *pPanel )
 	int x1, y1, w1, h1;
 	pPanel->GetBounds(x1, y1, w1, h1);
 	int x2, y2, w2, h2;
-	x2 = scheme()->GetProportionalNormalizedValue( x1 );
-	y2 = scheme()->GetProportionalNormalizedValue( y1 );
-	w2 = scheme()->GetProportionalNormalizedValue( w1 );
-	h2 = scheme()->GetProportionalNormalizedValue( h1 );
+	x2 = scheme()->GetProportionalNormalizedValueEx( pPanel->GetScheme(),  x1 );
+	y2 = scheme()->GetProportionalNormalizedValueEx( pPanel->GetScheme(),  y1 );
+	w2 = scheme()->GetProportionalNormalizedValueEx( pPanel->GetScheme(),  w1 );
+	h2 = scheme()->GetProportionalNormalizedValueEx( pPanel->GetScheme(),  h1 );
 #endif
 
-	x = GetAlternateProportionalValueFromScaled(x);
-	y = GetAlternateProportionalValueFromScaled(y);
-	w = GetAlternateProportionalValueFromScaled(w);
-	h = GetAlternateProportionalValueFromScaled(h);
+	x = GetAlternateProportionalValueFromScaled(pPanel->GetScheme(),x);
+	y = GetAlternateProportionalValueFromScaled(pPanel->GetScheme(),y);
+	w = GetAlternateProportionalValueFromScaled(pPanel->GetScheme(),w);
+	h = GetAlternateProportionalValueFromScaled(pPanel->GetScheme(),h);
 
 	pPanel->SetBounds(x, y, w, h);
 
@@ -401,7 +401,7 @@ void LayoutBackgroundPanel( EditablePanel *pWindow )
 		return;
 
 	int screenW, screenH;
-	surface()->GetScreenSize( screenW, screenH );
+	GetHudSize( screenW, screenH );
 
 	int wide, tall;
 	pWindow->GetSize( wide, tall );
@@ -414,8 +414,8 @@ void LayoutBackgroundPanel( EditablePanel *pWindow )
 
 	if ( wide != screenW || tall != screenH )
 	{
-		wide = GetAlternateProportionalValueFromScaled(wide);
-		tall = GetAlternateProportionalValueFromScaled(tall);
+		wide = GetAlternateProportionalValueFromScaled(pWindow->GetScheme(), wide);
+		tall = GetAlternateProportionalValueFromScaled(pWindow->GetScheme(), tall);
 
 		offsetX = (screenW - wide)/2;
 		offsetY = (screenH - tall)/2;

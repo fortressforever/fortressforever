@@ -105,7 +105,8 @@ enum ShaderShadeMode_t
 enum ShaderTexCoordComponent_t
 {
 	SHADER_TEXCOORD_S = 0,
-	SHADER_TEXCOORD_T
+	SHADER_TEXCOORD_T,
+	SHADER_TEXCOORD_U
 };
 
 enum ShaderPolyModeFace_t
@@ -154,7 +155,10 @@ enum ShaderTexOp_t
 	SHADER_TEXOP_BLEND_TEXTUREALPHA,
 	SHADER_TEXOP_BLEND_PREVIOUSSTAGEALPHA,
 	SHADER_TEXOP_MODULATECOLOR_ADDALPHA,
-	SHADER_TEXOP_MODULATEINVCOLOR_ADDALPHA
+	SHADER_TEXOP_MODULATEINVCOLOR_ADDALPHA,
+
+	// DX7
+	SHADER_TEXOP_DOTPRODUCT3
 };
 
 enum ShaderTexGenParam_t
@@ -248,6 +252,11 @@ enum TextureStage_t
 	SHADER_TEXTURE_STAGE8,
 	SHADER_TEXTURE_STAGE9,
 	SHADER_TEXTURE_STAGE10,
+	SHADER_TEXTURE_STAGE11,
+	SHADER_TEXTURE_STAGE12,
+	SHADER_TEXTURE_STAGE13,
+	SHADER_TEXTURE_STAGE14,
+	SHADER_TEXTURE_STAGE15,
 };
 
 enum ShaderFogMode_t
@@ -275,13 +284,10 @@ enum ShaderMaterialSource_t
 #define SHADERAPI_INTERFACE_VERSION		"ShaderApi028"
 #define SHADERSHADOW_INTERFACE_VERSION	"ShaderShadow010"
 
-
-typedef int ShaderAPITextureHandle_t;
-
 //-----------------------------------------------------------------------------
 // Methods that can be called from the SHADER_INIT blocks of shaders
 //-----------------------------------------------------------------------------
-class IShaderInit
+abstract_class IShaderInit
 {
 public:
 	// Loads up a texture
@@ -294,7 +300,7 @@ public:
 //-----------------------------------------------------------------------------
 // the shader API interface (methods called from shaders)
 //-----------------------------------------------------------------------------
-class IShaderShadow
+abstract_class IShaderShadow
 {
 public:
 	// Sets the default *shadow* state
@@ -306,6 +312,8 @@ public:
 	virtual void EnableDepthTest( bool bEnable ) = 0;
 	virtual void EnablePolyOffset( bool bEnable ) = 0;
 
+	// These methods for controlling stencil are obsolete and stubbed to do nothing.  Stencil
+	// control is via the shaderapi/material system now, not part of the shadow state.
 	// Methods related to stencil
 	virtual void EnableStencil( bool bEnable ) = 0;
 	virtual void StencilFunc( ShaderStencilFunc_t stencilFunc ) = 0;
@@ -336,10 +344,10 @@ public:
 	
 	// constant color + transparency
 	virtual void EnableConstantColor( bool bEnable ) = 0;
-
+#ifndef _XBOX
 	// Indicates we're preprocessing vertex data
 	virtual void EnableVertexDataPreprocess( bool bEnable ) = 0;
-
+#endif
 	// Indicates the vertex format for use with a vertex shader
 	// The flags to pass in here come from the VertexFormatFlags_t enum
 	// If pTexCoordDimensions is *not* specified, we assume all coordinates
@@ -357,13 +365,15 @@ public:
 
 	// Enables specular lighting (lighting has also got to be enabled)
 	virtual void EnableSpecular( bool bEnable ) = 0;
-
+#ifndef _XBOX
 	// Convert from linear to gamma color space on writes to frame buffer.
 	virtual void EnableSRGBWrite( bool bEnable ) = 0;
+#endif
 
+#ifndef _XBOX
 	// Convert from gamma to linear on texture fetch.
 	virtual void EnableSRGBRead( TextureStage_t stage, bool bEnable ) = 0;
-
+#endif
 	// Activate/deactivate skinning. Indexed blending is automatically
 	// enabled if it's available for this hardware. When blending is enabled,
 	// we allocate enough room for 3 weights (max allowed)
@@ -392,12 +402,20 @@ public:
 	virtual void EnableTextureAlpha( TextureStage_t stage, bool bEnable ) = 0;
 
 	// GR - Separate alpha blending
+#ifndef _XBOX
 	virtual void EnableBlendingSeparateAlpha( bool bEnable ) = 0;
 	virtual void BlendFuncSeparateAlpha( ShaderBlendFactor_t srcFactor, ShaderBlendFactor_t dstFactor ) = 0;
-
+#endif
 	virtual void FogMode( ShaderFogMode_t fogMode ) = 0;
 
 	virtual void SetDiffuseMaterialSource( ShaderMaterialSource_t materialSource ) = 0;
+
+	// Indicates the morph format for use with a vertex shader
+	// The flags to pass in here come from the MorphFormatFlags_t enum
+	virtual void SetMorphFormat( MorphFormat_t flags ) = 0;
+#ifdef _XBOX
+	virtual void SetColorSign( TextureStage_t stage, bool isSigned ) = 0;
+#endif
 };
 // end class IShaderShadow
 
@@ -405,12 +423,51 @@ public:
 // the 3D shader API interface
 // This interface is all that shaders see.
 //-----------------------------------------------------------------------------
-class IShaderDynamicAPI
+enum StandardTextureId_t
+{
+	// Lightmaps
+	TEXTURE_LIGHTMAP = 0,
+	TEXTURE_LIGHTMAP_ALPHA,
+	TEXTURE_LIGHTMAP_FULLBRIGHT,
+	TEXTURE_LIGHTMAP_BUMPED,
+	TEXTURE_LIGHTMAP_BUMPED_FULLBRIGHT,
+
+	// Flat colors
+	TEXTURE_WHITE,
+	TEXTURE_BLACK,
+	TEXTURE_GREY,
+
+	// Normalmaps
+	TEXTURE_NORMALMAP_FLAT,
+
+	// Normalization
+	TEXTURE_NORMALIZATION_CUBEMAP,
+	TEXTURE_NORMALIZATION_CUBEMAP_SIGNED,
+
+	// Frame-buffer textures
+	TEXTURE_FRAME_BUFFER_FULL_TEXTURE_0,
+	TEXTURE_FRAME_BUFFER_FULL_TEXTURE_1,
+
+	// Color correction
+	TEXTURE_COLOR_CORRECTION_VOLUME_0,
+	TEXTURE_COLOR_CORRECTION_VOLUME_1,
+	TEXTURE_COLOR_CORRECTION_VOLUME_2,
+	TEXTURE_COLOR_CORRECTION_VOLUME_3,
+
+#ifdef _XBOX
+	// An alias to the Back Frame Buffer
+	TEXTURE_FRAME_BUFFER_ALIAS,
+#endif
+};
+
+
+abstract_class IShaderDynamicAPI
 {
 public:
 	// returns the current time in seconds....
 	virtual double CurrentTime() const = 0;
 
+	// NOTE: All these various bind methods are deprecated. Use the StandardTextureId_t enum in future
 	// Lightmap texture binding
 	virtual void BindLightmap( TextureStage_t stage ) = 0;
 	// GR - bind separate lightmap alpha
@@ -429,8 +486,9 @@ public:
 	// Special system flat normal map binding.
 	virtual void BindFlatNormalMap( TextureStage_t stage ) = 0;
 	virtual void BindNormalizationCubeMap( TextureStage_t stage ) = 0;
+#ifndef _XBOX
 	virtual void BindSignedNormalizationCubeMap( TextureStage_t stage ) = 0;
-
+#endif
 	// Scene fog state.
 	// This is used by the shaders for picking the proper vertex shader for fogging based on dynamic state.
 	virtual MaterialFogMode_t GetSceneFogMode( ) = 0;
@@ -500,14 +558,71 @@ public:
 
 	virtual void SetPixelShaderFogParams( int reg ) = 0;
 
-	// Render state for the ambient light cube (vertex shaders)
+	// Render state for the ambient light cube
 	virtual void SetVertexShaderStateAmbientLightCube() = 0;
 	virtual void SetPixelShaderStateAmbientLightCube( int pshReg ) = 0;
 	virtual void CommitPixelShaderLighting( int pshReg ) = 0;
+
 	// Use this to get the mesh builder that allows us to modify vertex data
 	virtual CMeshBuilder* GetVertexModifyBuilder() = 0;
 	virtual bool InFlashlightMode() const = 0;
 	virtual const FlashlightState_t &GetFlashlightState( VMatrix &worldToTexture ) const = 0;
+	virtual bool InEditorMode() const = 0;
+
+	//
+	// NOTE: Stuff after this is added after shipping HL2.
+	//
+#ifndef _XBOX
+	// Gets the bound morph's vertex format; returns 0 if no morph is bound
+	virtual MorphFormat_t GetBoundMorphFormat() = 0;
+#endif
+	// Binds a standard texture
+	virtual void BindStandardTexture( TextureStage_t stage, StandardTextureId_t id ) = 0;
+
+	virtual ITexture *GetRenderTargetEx( int nRenderTargetID ) = 0;
+
+#ifndef _XBOX
+	virtual void SetToneMappingScaleLinear( const Vector &scale ) = 0;
+	virtual const Vector &GetToneMappingScaleLinear( void ) const = 0;
+	virtual const Vector &GetToneMappingScaleGamma( void ) const = 0;
+#endif
+
+#ifdef _XBOX
+	virtual bool GetBoundTextureDimensions(TextureStage_t stage, int *pWidth, int *pHeight, bool *pIsLinear ) = 0;
+#endif
+
+	virtual void LoadBoneMatrix( int boneIndex, const float *m ) = 0;
+
+	virtual void PerspectiveOffCenterX( double fovx, double aspect, double zNear, double zFar, double bottom, double top, double left, double right ) = 0;
+
+	virtual void SetFloatRenderingParameter(int parm_number, float value) = 0;
+
+	virtual void SetIntRenderingParameter(int parm_number, int value) = 0 ;
+	virtual void SetVectorRenderingParameter(int parm_number, Vector const &value) = 0 ;
+
+	virtual float GetFloatRenderingParameter(int parm_number) const = 0 ;
+
+	virtual int GetIntRenderingParameter(int parm_number) const = 0 ;
+
+	virtual Vector GetVectorRenderingParameter(int parm_number) const = 0 ;
+
+	// stencil buffer operations.
+	virtual void SetStencilEnable(bool onoff) = 0;
+	virtual void SetStencilFailOperation(StencilOperation_t op) = 0;
+	virtual void SetStencilZFailOperation(StencilOperation_t op) = 0;
+	virtual void SetStencilPassOperation(StencilOperation_t op) = 0;
+	virtual void SetStencilCompareFunction(StencilComparisonFunction_t cmpfn) = 0;
+	virtual void SetStencilReferenceValue(int ref) = 0;
+	virtual void SetStencilTestMask(uint32 msk) = 0;
+	virtual void SetStencilWriteMask(uint32 msk) = 0;
+	virtual void ClearStencilBufferRectangle(
+		int xmin, int ymin, int xmax, int ymax,int value)=0;
+
+	virtual void GetDXLevelDefaults(uint &max_dxlevel,uint &recommended_dxlevel) = 0;
+
+	virtual const FlashlightState_t &GetFlashlightStateEx( VMatrix &worldToTexture, ITexture **pFlashlightDepthTexture ) const = 0;
+
+	virtual float GetAmbientLightCubeLuminance() = 0;
 };
 // end class IShaderDynamicAPI
 

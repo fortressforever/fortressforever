@@ -16,13 +16,14 @@
 #include "nav_colors.h"
 #include "Color.h"
 #include "tier0/vprof.h"
+#include "collisionutils.h"
 
 ConVar nav_show_area_info( "nav_show_area_info", "0.5", FCVAR_GAMEDLL, "Duration in seconds to show nav area ID and attributes while editing" );
 ConVar nav_snap_to_grid( "nav_snap_to_grid", "0", FCVAR_GAMEDLL, "Snap to the nav generation grid when creating new nav areas" );
 ConVar nav_create_place_on_ground( "nav_create_place_on_ground", "0", FCVAR_GAMEDLL, "If true, nav areas will be placed flush with the ground when created by hand." );
 
 #if DEBUG_NAV_NODES
-ConVar nav_show_nodes( "nav_show_nodes", "1" );
+extern ConVar nav_show_nodes;
 #endif // DEBUG_NAV_NODES
 
 
@@ -70,7 +71,104 @@ PRECACHE_REGISTER_FN( EditNav_Precache );
 inline float round( float val, float unit )
 {
 	val = val + ((val < 0.0f) ? -unit*0.5f : unit*0.5f);
-	return (float)( ((int)val) / (int)unit );
+	return (float)( unit * ( ((int)val) / (int)unit ) );
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+int GetGridSize( bool forceGrid = false )
+{
+	if ( TheNavMesh->IsGenerating() )
+	{
+		return (int)GenerationStepSize;
+	}
+
+	int snapVal = nav_snap_to_grid.GetInt();
+	if ( forceGrid && !snapVal )
+	{
+		snapVal = 1;
+	}
+
+	if ( snapVal == 0 )
+	{
+		return 0;
+	}
+
+	int scale = (int)GenerationStepSize;
+	switch ( snapVal )
+	{
+	case 3:
+		scale = 1;
+		break;
+	case 2:
+		scale = 5;
+		break;
+	case 1:
+	default:
+		break;
+	}
+
+	return scale;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+Vector CNavMesh::SnapToGrid( const Vector& in, bool snapX, bool snapY, bool forceGrid ) const
+{
+	int scale = GetGridSize( forceGrid );
+	if ( !scale )
+	{
+		return in;
+	}
+
+	Vector out( in );
+
+	if ( snapX )
+	{
+		out.x = round( in.x, scale );
+	}
+
+	if ( snapY )
+	{
+		out.y = round( in.y, scale );
+	}
+
+	return out;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+float CNavMesh::SnapToGrid( float x, bool forceGrid ) const
+{
+	int scale = GetGridSize( forceGrid );
+	if ( !scale )
+	{
+		return x;
+	}
+
+	x = round( x, scale );
+	return x;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavMesh::GetEditVectors( Vector *pos, Vector *forward )
+{
+	if ( !pos || !forward )
+	{
+		return;
+	}
+
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if ( !player )
+	{
+		return;
+	}
+
+	Vector dir;
+	AngleVectors( player->EyeAngles() + player->GetPunchAngle(), forward );
+
+	*pos = player->EyePosition();
 }
 
 
@@ -94,10 +192,9 @@ bool CNavMesh::GetActiveNavArea( void )
 
 	const float maxRange = 1000.0f;		// 500
 
-	Vector dir;
-	AngleVectors( player->EyeAngles() + player->GetPunchAngle(), &dir );
+	Vector from, dir;
+	GetEditVectors( &from, &dir );
 
-	Vector from = player->EyePosition();
 	Vector to = from + maxRange * dir;
 
 	trace_t result;
@@ -105,7 +202,7 @@ bool CNavMesh::GetActiveNavArea( void )
 
 	if (result.fraction != 1.0f)
 	{
-		if ( !m_isCreatingNavArea )
+		if ( m_navEditMode != NAV_EDIT_CREATE )
 		{
 			m_climbableSurface = physprops->GetSurfaceData( result.surface.surfaceProps )->game.climbable != 0;
 			if ( !m_climbableSurface )
@@ -132,7 +229,7 @@ bool CNavMesh::GetActiveNavArea( void )
 			}
 		}
 
-		if ( m_climbableSurface && !m_isCreatingLadder )
+		if ( ( m_climbableSurface && !m_isCreatingLadder ) || m_navEditMode != NAV_EDIT_CREATE )
 		{
 			float closestDistSqr = 200.0f * 200.0f;
 
@@ -164,6 +261,9 @@ bool CNavMesh::GetActiveNavArea( void )
 					break;
 				}
 
+				if ( !m_climbableSurface )
+					continue;
+
 				Vector p1 = (ladder->m_bottom + ladder->m_top)/2;
 				Vector p2 = m_editCursorPos;
 				float distSqr = p1.DistToSqr( p2 );
@@ -179,9 +279,77 @@ bool CNavMesh::GetActiveNavArea( void )
 		m_editCursorPos = result.endpos;
 
 		// find the area the player is pointing at
-		if ( !m_climbableSurface )
+		if ( !m_climbableSurface && !m_selectedLadder )
 		{
-			m_selectedArea = TheNavMesh->GetNearestNavArea( result.endpos, false, 500.0f );
+			// Try to clip our trace to nav areas
+			if ( m_grid )
+			{
+				Vector start = result.startpos;
+				Vector end = result.endpos + 10.0f * dir; // extend a few units into the ground
+				Ray_t ray;
+				ray.Init( start, end, vec3_origin, vec3_origin );
+
+				float bestDist = 1.0f;
+
+				Extent extent;
+				extent.lo = extent.hi = start;
+				extent.Encompass( end );
+
+				int loX = WorldToGridX( extent.lo.x );
+				int loY = WorldToGridY( extent.lo.y );
+				int hiX = WorldToGridX( extent.hi.x );
+				int hiY = WorldToGridY( extent.hi.y );
+
+				//int navAreasTouched = 0;
+				//int gridBucketsTouched = 0;
+				for( int y = loY; y <= hiY; ++y )
+				{
+					for( int x = loX; x <= hiX; ++x )
+					{
+						NavAreaList &areaGrid = m_grid[ x + y*m_gridSizeX ];
+						//++gridBucketsTouched;
+
+						FOR_EACH_LL( areaGrid, it )
+						{
+							//++navAreasTouched;
+
+							CNavArea *area = areaGrid[ it ];
+
+							Vector nw = area->m_extent.lo;
+							Vector se = area->m_extent.hi;
+							Vector ne, sw;
+							ne.x = se.x;
+							ne.y = nw.y;
+							ne.z = area->m_neZ;
+							sw.x = nw.x;
+							sw.y = se.y;
+							sw.z = area->m_swZ;
+
+							float dist = IntersectRayWithTriangle( ray, nw, ne, se, false );
+							if ( dist > 0 && dist < bestDist )
+							{
+								m_selectedArea = area;
+								bestDist = dist;
+							}
+
+							dist = IntersectRayWithTriangle( ray, se, sw, nw, false );
+							if ( dist > 0 && dist < bestDist )
+							{
+								m_selectedArea = area;
+								bestDist = dist;
+							}
+						}
+					}
+				}
+			}
+
+			//engine->Con_NPrintf( 20, "%d areas queried in %d grid buckets, instead of %d areas", navAreasTouched, gridBucketsTouched, TheNavAreaList.Count() );
+
+			// Failing that, get the closest area to the endpoint
+			if ( !m_selectedArea )
+			{
+				m_selectedArea = TheNavMesh->GetNearestNavArea( result.endpos, false, 500.0f );
+			}
 		}
 
 		if ( m_selectedArea )
@@ -195,26 +363,173 @@ bool CNavMesh::GetActiveNavArea( void )
 
 			if ((yaw < 45.0f || yaw > 315.0f) || (yaw > 135.0f && yaw < 225.0f))
 			{
-				m_splitEdge = GenerationStepSize * round( result.endpos.y, GenerationStepSize );
+				m_splitEdge = SnapToGrid( result.endpos.y, true );
 				m_splitAlongX = true;
 			}
 			else
 			{
-				m_splitEdge = GenerationStepSize * round( result.endpos.x, GenerationStepSize );
+				m_splitEdge = SnapToGrid( result.endpos.x, true );
 				m_splitAlongX = false;
 			}
 		}
 
-		if ( nav_snap_to_grid.GetBool() && !m_climbableSurface && !m_isCreatingLadder )
+		if ( !m_climbableSurface && !m_isCreatingLadder )
 		{
-			m_editCursorPos.x = GenerationStepSize * round( result.endpos.x, GenerationStepSize );
-			m_editCursorPos.y = GenerationStepSize * round( result.endpos.y, GenerationStepSize );
+			m_editCursorPos = SnapToGrid( m_editCursorPos );
 		}
 
 		return true;
 	}
 	
 	return false;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+bool CheckForClimbableSurface( const Vector &start, const Vector &end )
+{
+	trace_t result;
+	UTIL_TraceLine( start, end, MASK_PLAYERSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+
+	bool climbableSurface = false;
+	if (result.fraction != 1.0f)
+	{
+		climbableSurface = physprops->GetSurfaceData( result.surface.surfaceProps )->game.climbable != 0;
+		if ( !climbableSurface )
+		{
+			climbableSurface = (result.contents & CONTENTS_LADDER) != 0;
+		}
+	}
+
+	return climbableSurface;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void StepAlongClimbableSurface( Vector &pos, const Vector &increment, const Vector &probe )
+{
+	while ( CheckForClimbableSurface( pos + increment - probe, pos + increment + probe ) )
+	{
+		pos += increment;
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavBuildLadder( void )
+{
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || !m_climbableSurface )
+	{
+		return;
+	}
+
+	// We've got a ladder at m_editCursorPos, with a normal of m_surfaceNormal
+	Vector right, up;
+	VectorVectors( -m_surfaceNormal, right, up );
+
+	Vector startPos = m_editCursorPos;
+
+	Vector leftEdge = startPos;
+	Vector rightEdge = startPos;
+	Vector topEdge = startPos;
+	Vector bottomEdge = startPos;
+
+	// trace to the sides to find the width
+	Vector probe = m_surfaceNormal * -HalfHumanWidth;
+	const float StepSize = 1.0f;
+	StepAlongClimbableSurface( leftEdge, right * -StepSize, probe );
+	StepAlongClimbableSurface( rightEdge, right * StepSize, probe );
+	StepAlongClimbableSurface( topEdge, up * StepSize, probe );
+	StepAlongClimbableSurface( bottomEdge, up * -StepSize, probe );
+
+	Vector2D ladderDir = m_surfaceNormal.AsVector2D();
+
+	trace_t result;
+	CNavLadder *ladder = new CNavLadder;
+
+	// compute top & bottom of ladder
+	ladder->m_top = topEdge;
+	ladder->m_bottom = bottomEdge;
+	ladder->m_width = leftEdge.DistTo( rightEdge );
+	if ( fabs( ladderDir.x ) > fabs( ladderDir.y ) )
+	{
+		if ( ladderDir.x > 0.0f )
+		{
+			ladder->SetDir( EAST );
+		}
+		else
+		{
+			ladder->SetDir( WEST );
+		}
+	}
+	else
+	{
+		if ( ladderDir.y > 0.0f )
+		{
+			ladder->SetDir( SOUTH );
+		}
+		else
+		{
+			ladder->SetDir( NORTH );
+		}
+	}
+
+	// adjust top and bottom of ladder to make sure they are reachable
+	// (cs_office has a crate right in front of the base of a ladder)
+	Vector along = ladder->m_top - ladder->m_bottom;
+	float length = along.NormalizeInPlace();
+	Vector on, out;
+	const float minLadderClearance = 32.0f;
+
+	// adjust bottom to bypass blockages
+	const float inc = 10.0f;
+	float t;		
+	for( t = 0.0f; t <= length; t += inc )
+	{
+		on = ladder->m_bottom + t * along;
+
+		out = on + ladder->GetNormal() * minLadderClearance;
+
+		UTIL_TraceLine( on, out, MASK_PLAYERSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+
+		if (result.fraction == 1.0f && !result.startsolid)
+		{
+			// found viable ladder bottom
+			ladder->m_bottom = on;
+			break;
+		}
+	}
+
+	// adjust top to bypass blockages
+	for( t = 0.0f; t <= length; t += inc )
+	{
+		on = ladder->m_top - t * along;
+
+		out = on + ladder->GetNormal() * minLadderClearance;
+
+		UTIL_TraceLine( on, out, MASK_PLAYERSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+
+		if (result.fraction == 1.0f && !result.startsolid)
+		{
+			// found viable ladder top
+			ladder->m_top = on;
+			break;
+		}
+	}
+
+	ladder->m_length = (ladder->m_top - ladder->m_bottom).Length();
+
+	ladder->SetDir( ladder->GetDir() );	// now that we've adjusted the top and bottom, re-check the normal
+
+	ladder->m_bottomArea = NULL;
+	ladder->m_topForwardArea = NULL;
+	ladder->m_topLeftArea = NULL;
+	ladder->m_topRightArea = NULL;
+	ladder->m_topBehindArea = NULL;
+	ladder->ConnectGeneratedLadder();
+
+	// add ladder to global list
+	m_ladderList.AddToTail( ladder );		
 }
 
 
@@ -340,11 +655,56 @@ void CNavMesh::DrawEditMode( void )
 		}
 	}
 
-	Vector dir;
-	AngleVectors( player->EyeAngles() + player->GetPunchAngle(), &dir );
+	Vector from, dir;
+	GetEditVectors( &from, &dir );
 
-	Vector from = player->EyePosition();
 	Vector to = from + maxRange * dir;
+
+	/* IN_PROGRESS:
+	if ( m_navEditMode != NAV_EDIT_PLACE && nav_snap_to_grid.GetBool() )
+	{
+		Vector center = SnapToGrid( m_editCursorPos );
+
+		const int GridCount = 3;
+		const int GridArraySize = GridCount * 2 + 1;
+		const int GridSize = GetGridSize();
+
+		// fill in an array of heights for the grid
+		Vector pos[GridArraySize][GridArraySize];
+		int x, y;
+		for ( x=0; x<GridArraySize; ++x )
+		{
+			for ( y=0; y<GridArraySize; ++y )
+			{
+				pos[x][y] = center;
+				pos[x][y].x += (x-GridCount) * GridSize;
+				pos[x][y].y += (y-GridCount) * GridSize;
+				pos[x][y].z += 36.0f;
+
+				GetGroundHeight( pos[x][y], &pos[x][y].z );
+			}
+		}
+
+		for ( x=1; x<GridArraySize; ++x )
+		{
+			for ( y=1; y<GridArraySize; ++y )
+			{
+				NavDrawLine( pos[x-1][y-1], pos[x-1][y], NavGridColor );
+				NavDrawLine( pos[x-1][y-1], pos[x][y-1], NavGridColor );
+
+				if ( x == GridArraySize-1 )
+				{
+					NavDrawLine( pos[x][y-1], pos[x][y], NavGridColor );
+				}
+
+				if ( y == GridArraySize-1 )
+				{
+					NavDrawLine( pos[x-1][y], pos[x][y], NavGridColor );
+				}
+			}
+		}
+	}
+	*/
 
 	if ( GetActiveNavArea() )
 	{
@@ -363,7 +723,7 @@ void CNavMesh::DrawEditMode( void )
 		}
 
 		// show drag rectangle when creating areas and ladders
-		if ( m_isCreatingNavArea )
+		if ( m_navEditMode == NAV_EDIT_CREATE )
 		{
 			float z = m_anchor.z + 2.0f;
 			NavDrawLine( Vector( m_editCursorPos.x, m_editCursorPos.y, z ), Vector( m_anchor.x, m_editCursorPos.y, z ),	NavCreationColor );
@@ -400,21 +760,16 @@ void CNavMesh::DrawEditMode( void )
 			m_selectedLadder->DrawConnectedAreas();
 		}
 
-		if ( m_markedLadder && !m_isPlaceMode )
+		if ( m_markedLadder && m_navEditMode != NAV_EDIT_PLACE )
 		{
 			// draw the "marked" ladder
 			m_markedLadder->DrawLadder();
 		}
 
-		if ( m_markedArea && !m_isPlaceMode )
+		if ( m_markedArea && m_navEditMode != NAV_EDIT_PLACE )
 		{
 			// draw the "marked" area
 			m_markedArea->Draw();
-
-			if ( m_markedCorner != NUM_CORNERS )
-			{
-				m_markedArea->DrawMarkedCorner( m_markedCorner );
-			}
 		}
 
 		// find the area the player is pointing at
@@ -448,7 +803,7 @@ void CNavMesh::DrawEditMode( void )
 					locName[0] = '\000';
 				}
 
-				if (m_isPlaceMode)
+				if (m_navEditMode == NAV_EDIT_PLACE)
 				{
 					attrib[0] = '\000';
 				}
@@ -467,7 +822,9 @@ void CNavMesh::DrawEditMode( void )
 					if ( attributes & NAV_MESH_TRANSIENT )	Q_strncat( attrib, "TRANSIENT ", sizeof( attrib ), -1 );
 					if ( attributes & NAV_MESH_DONT_HIDE )	Q_strncat( attrib, "DONT_HIDE ", sizeof( attrib ), -1 );
 					if ( attributes & NAV_MESH_STAND )		Q_strncat( attrib, "STAND ", sizeof( attrib ), -1 );
+					if ( attributes & NAV_MESH_NO_HOSTAGES )Q_strncat( attrib, "NO HOSTAGES ", sizeof( attrib ), -1 );
 					if ( m_selectedArea->IsBlocked() )		Q_strncat( attrib, "BLOCKED ", sizeof( attrib ), -1 );
+					if ( m_selectedArea->IsUnderwater() )	Q_strncat( attrib, "UNDERWATER ", sizeof( attrib ), -1 );
 				}
 
 				Q_snprintf( buffer, sizeof( buffer ), "Area #%d %s %s\n", m_selectedArea->GetID(), locName, attrib );
@@ -484,7 +841,7 @@ void CNavMesh::DrawEditMode( void )
 				}
 			}
 
-			if (m_isPlaceMode)
+			if (m_navEditMode == NAV_EDIT_PLACE)
 			{
 				m_selectedArea->DrawConnectedAreas();
 
@@ -542,14 +899,14 @@ void CNavMesh::SetEditMode( bool isPlaceMode )
 		m_markedCorner = NUM_CORNERS;
 	}
 
-	m_isPlaceMode = isPlaceMode;
+	m_navEditMode = (isPlaceMode)?NAV_EDIT_PLACE:NAV_EDIT_NORMAL;
 }
 
 
 //--------------------------------------------------------------------------------------------------------------
 void CNavMesh::SetPlacePaintingMode( bool painting )
 {
-	if ( m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_PLACE )
 	{
 		m_markedLadder = NULL;
 		m_markedArea = NULL;
@@ -585,7 +942,7 @@ void CNavMesh::CommandNavDelete( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -611,13 +968,37 @@ void CNavMesh::CommandNavDelete( void )
 
 
 //--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavDeleteMarked( void )
+{
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if (player == NULL)
+		return;
+
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
+		return;
+
+	CNavArea *markedArea = GetMarkedArea();
+	if( markedArea )
+	{
+		player->EmitSound( "EDIT_DELETE" );
+		TheNavAreaList.FindAndRemove( markedArea );
+		delete markedArea;
+	}
+
+	StripNavigationAreas();
+
+	SetMarkedArea( NULL );			// unmark the mark area
+	m_markedCorner = NUM_CORNERS;	// clear the corner selection
+}
+
+//--------------------------------------------------------------------------------------------------------------
 void CNavMesh::CommandNavSplit( void )
 {
 	CBasePlayer *player = UTIL_GetListenServerHost();
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -648,16 +1029,19 @@ bool MakeSniperSpots( CNavArea *area )
 
 	const float minSplitSize = 2.0f; // ensure the first split is larger than this
 
-	if ( area->GetSizeX() > GenerationStepSize )
+	float sizeX = area->GetSizeX();
+	float sizeY = area->GetSizeY();
+
+	if ( sizeX > GenerationStepSize && sizeX > sizeY )
 	{
-		splitEdge = GenerationStepSize * round( area->GetExtent().lo.x, GenerationStepSize );
+		splitEdge = round( area->GetExtent().lo.x, GenerationStepSize );
 		if ( splitEdge < area->GetExtent().lo.x + minSplitSize )
 			splitEdge += GenerationStepSize;
 		splitAlongX = false;
 	}
-	else if ( area->GetSizeY() > GenerationStepSize )
+	else if ( sizeY > GenerationStepSize && sizeY > sizeX )
 	{
-		splitEdge = GenerationStepSize * round( area->GetExtent().lo.y, GenerationStepSize );
+		splitEdge = round( area->GetExtent().lo.y, GenerationStepSize );
 		if ( splitEdge < area->GetExtent().lo.y + minSplitSize )
 			splitEdge += GenerationStepSize;
 		splitAlongX = true;
@@ -690,7 +1074,7 @@ void CNavMesh::CommandNavMakeSniperSpots( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -726,7 +1110,7 @@ void CNavMesh::CommandNavMerge( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -761,7 +1145,7 @@ void CNavMesh::CommandNavMark( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -770,7 +1154,40 @@ void CNavMesh::CommandNavMark( void )
 	{
 		// Unmark area or ladder
 		player->EmitSound( "EDIT_MARK.Enable" );
+		Msg("Area unmarked.\n");
 		SetMarkedArea( NULL );
+	}
+	else if ( engine->Cmd_Argc() > 1 )
+	{
+		const char *areaIDNameToMark = engine->Cmd_Argv(1);
+		if( areaIDNameToMark != NULL )
+		{
+			unsigned int areaIDToMark = atoi(areaIDNameToMark);
+			if( areaIDToMark != 0 )
+			{
+				CNavArea *areaToMark = NULL;
+				FOR_EACH_LL( TheNavAreaList, nit )
+				{
+					if( TheNavAreaList[nit]->GetID() == areaIDToMark )
+					{
+						areaToMark = TheNavAreaList[nit];
+						break;
+					}
+				}
+				if( areaToMark )
+				{
+					SetMarkedArea( areaToMark );
+
+					int connected = 0;
+					connected += GetMarkedArea()->GetAdjacentCount( NORTH );
+					connected += GetMarkedArea()->GetAdjacentCount( SOUTH );
+					connected += GetMarkedArea()->GetAdjacentCount( EAST );
+					connected += GetMarkedArea()->GetAdjacentCount( WEST );
+
+					Msg( "Marked Area is connected to %d other Areas\n", connected );
+				}
+			}
+		}
 	}
 	else if ( m_selectedArea )
 	{
@@ -813,7 +1230,7 @@ void CNavMesh::CommandNavUnmark( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	player->EmitSound( "EDIT_MARK.Enable" );
@@ -829,7 +1246,7 @@ void CNavMesh::CommandNavBeginArea( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_PLACE )
 	{
 		player->EmitSound( "EDIT_END_AREA.NotCreating" );
 		return;
@@ -837,9 +1254,9 @@ void CNavMesh::CommandNavBeginArea( void )
 
 	GetActiveNavArea();
 
-	if (m_isCreatingNavArea)
+	if (m_navEditMode == NAV_EDIT_CREATE)
 	{
-		m_isCreatingNavArea = false;
+		m_navEditMode = NAV_EDIT_NORMAL;
 		player->EmitSound( "EDIT_BEGIN_AREA.Creating" );
 	}
 	else if ( m_isCreatingLadder )
@@ -859,7 +1276,7 @@ void CNavMesh::CommandNavBeginArea( void )
 	else
 	{
 		player->EmitSound( "EDIT_BEGIN_AREA.NotCreating" );
-		m_isCreatingNavArea = true;
+		m_navEditMode = NAV_EDIT_CREATE;
 
 		// m_anchor starting corner
 		m_anchor = m_editCursorPos;
@@ -877,13 +1294,13 @@ void CNavMesh::CommandNavEndArea( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_PLACE )
 	{
 		player->EmitSound( "EDIT_END_AREA.NotCreating" );
 		return;
 	}
 
-	if ( m_isCreatingNavArea )
+	if ( m_navEditMode == NAV_EDIT_CREATE )
 	{
 		// create the new nav area
 		Vector endPos = m_editCursorPos;
@@ -928,7 +1345,7 @@ void CNavMesh::CommandNavEndArea( void )
 			SetMarkedArea( newArea );
 		}
 
-		m_isCreatingNavArea = false;
+		m_navEditMode = NAV_EDIT_NORMAL;
 	}
 	else if ( m_isCreatingLadder )
 	{
@@ -966,7 +1383,7 @@ void CNavMesh::CommandNavConnect( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1023,7 +1440,7 @@ void CNavMesh::CommandNavDisconnect( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1078,7 +1495,7 @@ void CNavMesh::CommandNavSplice( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1111,7 +1528,7 @@ void CNavMesh::CommandNavToggleAttribute( NavAttributeType attribute )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1120,6 +1537,18 @@ void CNavMesh::CommandNavToggleAttribute( NavAttributeType attribute )
 	{
 		player->EmitSound( "EDIT.ToggleAttribute" );
 		m_selectedArea->SetAttributes( m_selectedArea->GetAttributes() ^ attribute );
+
+		if ( attribute == NAV_MESH_TRANSIENT )
+		{
+			if ( m_selectedArea->GetAttributes() & NAV_MESH_TRANSIENT )
+			{
+				m_transientAreas.AddToTail( m_selectedArea );
+			}
+			else
+			{
+				m_transientAreas.FindAndRemove( m_selectedArea );
+			}
+		}
 	}
 
 	SetMarkedArea( NULL );			// unmark the mark area
@@ -1134,11 +1563,11 @@ void CNavMesh::CommandNavTogglePlaceMode( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder )
 		return;
 
 	player->EmitSound( "EDIT_TOGGLE_PLACE_MODE" );
-	m_isPlaceMode = !m_isPlaceMode;
+	m_navEditMode = (m_navEditMode == NAV_EDIT_PLACE) ? NAV_EDIT_NORMAL : NAV_EDIT_PLACE;
 
 	SetMarkedArea( NULL );			// unmark the mark area
 	m_markedCorner = NUM_CORNERS;	// clear the corner selection
@@ -1152,7 +1581,7 @@ void CNavMesh::CommandNavPlaceFloodFill( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || !m_isPlaceMode )
+	if ( m_navEditMode != NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1175,7 +1604,7 @@ void CNavMesh::CommandNavPlacePick( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || !m_isPlaceMode )
+	if ( m_navEditMode != NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1198,7 +1627,7 @@ void CNavMesh::CommandNavTogglePlacePainting( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || !m_isPlaceMode )
+	if ( m_navEditMode != NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1233,7 +1662,7 @@ void CNavMesh::CommandNavMarkUnnamed( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1292,13 +1721,200 @@ void CNavMesh::CommandNavMarkUnnamed( void )
 
 
 //--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavPickArea( void )
+{
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if (player == NULL)
+		return;
+
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
+		return;
+
+	if ( m_markedLadder )
+	{
+		// Unmark ladder
+		player->EmitSound( "EDIT_MARK.Enable" );
+		Msg("Ladder unmarked.\n");
+		SetMarkedArea( NULL );
+		m_markedCorner = NUM_CORNERS;	// clear the corner selection
+		return;
+	}
+	else if ( m_selectedArea )
+	{
+		NavCornerType bestCorner = m_selectedArea->GetCornerUnderCursor();
+
+		if ( m_markedCorner == bestCorner && m_selectedArea == m_markedArea )
+		{
+			// Unmark area
+			player->EmitSound( "EDIT_MARK.Enable" );
+			Msg("Area unmarked.\n");
+			SetMarkedArea( NULL );
+			m_markedCorner = NUM_CORNERS;	// clear the corner selection
+			return;
+		}
+
+
+		// Mark an area
+		SetMarkedArea( m_selectedArea );
+		m_markedCorner = bestCorner;
+
+		int connected = 0;
+		connected += GetMarkedArea()->GetAdjacentCount( NORTH );
+		connected += GetMarkedArea()->GetAdjacentCount( SOUTH );
+		connected += GetMarkedArea()->GetAdjacentCount( EAST );
+		connected += GetMarkedArea()->GetAdjacentCount( WEST );
+
+		player->EmitSound( "EDIT_MARK.Disable" );
+		Msg( "Marked Area is connected to %d other Areas\n", connected );
+	}
+	else if ( m_selectedLadder )
+	{
+		// Mark a ladder
+		player->EmitSound( "EDIT_MARK.Disable" );
+		SetMarkedLadder( m_selectedLadder );
+
+		int connected = 0;
+		connected += m_markedLadder->m_topForwardArea != NULL;
+		connected += m_markedLadder->m_topLeftArea != NULL;
+		connected += m_markedLadder->m_topRightArea != NULL;
+		connected += m_markedLadder->m_topBehindArea != NULL;
+		connected += m_markedLadder->m_bottomArea != NULL;
+
+		Msg( "Marked Ladder is connected to %d Areas\n", connected );
+		m_markedCorner = NUM_CORNERS;	// clear the corner selection
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavResizeHorizontal( void )
+{
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if (player == NULL)
+		return;
+
+	if ( !m_markedArea )
+	{
+		CommandNavPickArea();	// try to grab an area first
+	}
+
+	if ( !m_markedArea )
+	{
+		player->EmitSound( "EDIT_END_AREA.Creating" );
+		return;
+	}
+
+	if ( m_navEditMode == NAV_EDIT_RESIZE_HORIZONTAL )
+	{
+		m_navEditMode = NAV_EDIT_NORMAL;
+		player->EmitSound( "EDIT_BEGIN_AREA.Creating" );
+		return;
+	}
+
+	if ( m_navEditMode != NAV_EDIT_NORMAL )
+	{
+		return;
+	}
+
+	m_navEditMode = NAV_EDIT_RESIZE_HORIZONTAL;
+	player->EmitSound( "EDIT_BEGIN_AREA.NotCreating" );
+	m_anchor = m_editCursorPos;
+	if ( nav_snap_to_grid.GetBool() )
+	{
+		m_anchor = SnapToGrid( m_anchor );
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavResizeVertical( void )
+{
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if (player == NULL)
+		return;
+
+	if ( !m_markedArea )
+	{
+		player->EmitSound( "EDIT_END_AREA.Creating" );
+		return;
+	}
+
+	if ( m_navEditMode == NAV_EDIT_RESIZE_VERTICAL )
+	{
+		m_navEditMode = NAV_EDIT_NORMAL;
+		player->EmitSound( "EDIT_BEGIN_AREA.Creating" );
+		return;
+	}
+
+	if ( m_navEditMode != NAV_EDIT_NORMAL )
+	{
+		return;
+	}
+
+	m_navEditMode = NAV_EDIT_RESIZE_VERTICAL;
+	player->EmitSound( "EDIT_BEGIN_AREA.NotCreating" );
+	m_anchor = m_editCursorPos;
+	if ( nav_snap_to_grid.GetBool() )
+	{
+		m_anchor = SnapToGrid( m_anchor );
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavMesh::CommandNavResizeEnd( void )
+{
+	CBasePlayer *player = UTIL_GetListenServerHost();
+	if (player == NULL)
+		return;
+
+	if ( m_navEditMode != NAV_EDIT_RESIZE_HORIZONTAL && m_navEditMode != NAV_EDIT_RESIZE_VERTICAL )
+	{
+		player->EmitSound( "EDIT_END_AREA.Creating" );
+		return;
+	}
+
+	if ( !m_markedArea )
+	{
+		player->EmitSound( "EDIT_END_AREA.Creating" );
+		m_navEditMode = NAV_EDIT_NORMAL;
+		return;
+	}
+
+	Vector cornerPos = ( m_markedCorner == NUM_CORNERS ) ? m_markedArea->GetCenter() : m_markedArea->GetCorner( m_markedCorner );
+
+	if ( m_navEditMode == NAV_EDIT_RESIZE_HORIZONTAL )
+	{
+		// find the new pos
+		Vector from, dir;
+		GetEditVectors( &from, &dir );
+
+		const float dist = 10000.0f;
+		float t = IntersectRayWithAAPlane( from, from + dir * dist, 2, 1.0f, cornerPos.z );
+
+		if ( t > 0 && t < 1 )
+		{
+			Vector newPos = from + dir * dist * t;
+			if ( nav_snap_to_grid.GetBool() )
+			{
+				newPos = SnapToGrid( newPos );
+			}
+			m_markedArea->SetCorner( m_markedCorner, newPos );
+		}
+	}
+	player->EmitSound( "EDIT_END_AREA.NotCreating" );
+	m_navEditMode = NAV_EDIT_NORMAL;
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
 void CNavMesh::CommandNavCornerSelect( void )
 {
 	CBasePlayer *player = UTIL_GetListenServerHost();
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1326,7 +1942,7 @@ void CNavMesh::CommandNavCornerRaise( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1353,7 +1969,7 @@ void CNavMesh::CommandNavCornerLower( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1380,7 +1996,7 @@ void CNavMesh::CommandNavCornerPlaceOnGround( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();
@@ -1414,7 +2030,7 @@ void CNavMesh::CommandNavWarpToMark( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	if (GetMarkedArea())
@@ -1458,7 +2074,7 @@ void CNavMesh::CommandNavLadderFlip( void )
 	if (player == NULL)
 		return;
 
-	if ( m_isCreatingNavArea || m_isCreatingLadder || m_isPlaceMode )
+	if ( m_navEditMode == NAV_EDIT_CREATE || m_isCreatingLadder || m_navEditMode == NAV_EDIT_PLACE )
 		return;
 
 	GetActiveNavArea();

@@ -111,6 +111,7 @@ public:
 	virtual IImage *GetImageAtIndex(int index);
 	virtual int GetImageCount();
 	virtual void ClearImages();
+	virtual void ResetToSimpleTextImage();
 	// fixes the layout bounds of the image within the label
 	virtual void SetImageBounds(int index, int x, int width);
 

@@ -256,7 +256,7 @@ void AR2TracerCallback( const CEffectData &data )
 	Vector vecStart = GetTracerOrigin( data );
 	float flVelocity = data.m_flScale;
 	bool bWhiz = (data.m_fFlags & TRACER_FLAG_WHIZ);
-	int iEntIndex = data.m_nEntIndex;
+	int iEntIndex = data.entindex();
 
 	if ( iEntIndex && iEntIndex == player->index )
 	{
@@ -411,36 +411,62 @@ void AR2ImpactCallback( const CEffectData &data )
 DECLARE_CLIENT_EFFECT( "AR2Impact", AR2ImpactCallback );
 
 //-----------------------------------------------------------------------------
+// Creates a muzzleflash elight
+//-----------------------------------------------------------------------------
+void CreateMuzzleflashELight( const Vector &origin, int exponent, int nMinRadius, int nMaxRadius, ClientEntityHandle_t hEntity )
+{
+	if ( muzzleflash_light.GetInt() )
+	{
+		int entityIndex = ClientEntityList().HandleToEntIndex( hEntity );
+		if ( entityIndex >= 0 )
+		{
+			dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
+
+			el->origin	= origin;
+
+			el->color.r = 255;
+			el->color.g = 192;
+			el->color.b = 64;
+			el->color.exponent = exponent;
+
+			el->radius	= random->RandomInt( nMinRadius, nMaxRadius );
+			el->decay	= el->radius / 0.05f;
+			el->die		= gpGlobals->curtime + 0.1f;
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Airboat muzzle flashes
 //-----------------------------------------------------------------------------
-void MuzzleFlash_Airboat( int entityIndex, int attachmentIndex )
+void MuzzleFlash_Airboat( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Airboat", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 
-	matrix3x4_t	matAttachment;
-	// If the client hasn't seen this entity yet, bail.
-	if ( !FX_GetAttachmentTransform( entityIndex, attachmentIndex, matAttachment ) )
-		return;
-
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", hEntity, attachmentIndex );
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
 
-	float flScale = random->RandomFloat( 0.75f, 2.5f );
+	float flScale = random->RandomFloat( 0.75f, IsXbox() ? 2.0f : 2.5f );
+
+	PMaterialHandle pMuzzle[2];
+	pMuzzle[0] = pSimple->GetPMaterial( "effects/combinemuzzle1" );
+	pMuzzle[1] = pSimple->GetPMaterial( "effects/combinemuzzle2" );
 
 	// Flash
 	for ( int i = 1; i < 7; i++ )
 	{
 		offset = (forward * (i*6.0f*flScale));
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pSimple->GetPMaterial( VarArgs( "effects/combinemuzzle%d", random->RandomInt(1,2) ) ), offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), pMuzzle[random->RandomInt(0,1)], offset );
 			
 		if ( pParticle == NULL )
 			return;
 
 		pParticle->m_flLifetime		= 0.0f;
-		pParticle->m_flDieTime		= 0.01f;
+		pParticle->m_flDieTime		= IsXbox() ? 0.0001f : 0.01f;
 
 		pParticle->m_vecVelocity.Init();
 
@@ -483,51 +509,46 @@ void MuzzleFlash_Airboat( int entityIndex, int attachmentIndex )
 	pParticle->m_flRoll			= (360.0/6.0f)*spokePos;
 	pParticle->m_flRollDelta	= 0.0f;
 	
+#ifndef _XBOX
 	// Grab the origin out of the transform for the attachment
-	Vector		origin;
-	MatrixGetColumn( matAttachment, 3, &origin );
-	
 	if ( muzzleflash_light.GetInt() )
 	{
-		dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
-
-		el->origin	= origin;
-
-		el->color.r = 255;
-		el->color.g = 192;
-		el->color.b = 64;
-		el->color.exponent = 5;
-
-		el->radius	= random->RandomInt( 64, 128 );
-		el->decay	= el->radius / 0.05f;
-		el->die		= gpGlobals->curtime + 0.1f;
+		// If the client hasn't seen this entity yet, bail.
+		matrix3x4_t	matAttachment;
+		if ( FX_GetAttachmentTransform( hEntity, attachmentIndex, matAttachment ) )
+		{
+			Vector		origin;
+			MatrixGetColumn( matAttachment, 3, &origin );
+			CreateMuzzleflashELight( origin, 5, 64, 128, hEntity );
+		}
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : &data - 
 //-----------------------------------------------------------------------------
 void AirboatMuzzleFlashCallback( const CEffectData &data )
 {
-	MuzzleFlash_Airboat( data.m_nEntIndex, data.m_nAttachmentIndex );
+	MuzzleFlash_Airboat( data.m_hEntity, data.m_nAttachmentIndex );
 }
 
 DECLARE_CLIENT_EFFECT( "AirboatMuzzleFlash", AirboatMuzzleFlashCallback );
 
+
 //-----------------------------------------------------------------------------
 // Chopper muzzle flashes
 //-----------------------------------------------------------------------------
-void MuzzleFlash_Chopper( int entityIndex, int attachmentIndex )
+void MuzzleFlash_Chopper( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Chopper", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 
 	matrix3x4_t	matAttachment;
 	// If the client hasn't seen this entity yet, bail.
-	if ( !FX_GetAttachmentTransform( entityIndex, attachmentIndex, matAttachment ) )
+	if ( !FX_GetAttachmentTransform( hEntity, attachmentIndex, matAttachment ) )
 		return;
 	
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", hEntity, attachmentIndex );
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -565,31 +586,16 @@ void MuzzleFlash_Chopper( int entityIndex, int attachmentIndex )
 	// Grab the origin out of the transform for the attachment
 	Vector		origin;
 	MatrixGetColumn( matAttachment, 3, &origin );	
-
-	if ( muzzleflash_light.GetInt() )
-	{
-		dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
-
-		el->origin	= origin;
-
-		el->color.r = 255;
-		el->color.g = 192;
-		el->color.b = 64;
-		el->color.exponent = 6;
-
-		el->radius	= random->RandomInt( 128, 256 );
-		el->decay	= el->radius / 0.05f;
-		el->die		= gpGlobals->curtime + 0.1f;
-	}
+	CreateMuzzleflashELight( origin, 6, 128, 256, hEntity );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : &data - 
 //-----------------------------------------------------------------------------
 void ChopperMuzzleFlashCallback( const CEffectData &data )
 {
-	MuzzleFlash_Chopper( data.m_nEntIndex, data.m_nAttachmentIndex );
+	MuzzleFlash_Chopper( data.m_hEntity, data.m_nAttachmentIndex );
 }
 
 DECLARE_CLIENT_EFFECT( "ChopperMuzzleFlash", ChopperMuzzleFlashCallback );
@@ -599,15 +605,16 @@ DECLARE_CLIENT_EFFECT( "ChopperMuzzleFlash", ChopperMuzzleFlashCallback );
 //-----------------------------------------------------------------------------
 // Gunship muzzle flashes
 //-----------------------------------------------------------------------------
-void MuzzleFlash_Gunship( int entityIndex, int attachmentIndex )
+void MuzzleFlash_Gunship( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Gunship", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
-	matrix3x4_t	matAttachment;
+
 	// If the client hasn't seen this entity yet, bail.
-	if ( !FX_GetAttachmentTransform( entityIndex, attachmentIndex, matAttachment ) )
+	matrix3x4_t	matAttachment;
+	if ( !FX_GetAttachmentTransform( hEntity, attachmentIndex, matAttachment ) )
 		return;
 
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", entityIndex, attachmentIndex );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash", hEntity, attachmentIndex );
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -641,31 +648,16 @@ void MuzzleFlash_Gunship( int entityIndex, int attachmentIndex )
 	// Grab the origin out of the transform for the attachment
 	Vector		origin;
 	MatrixGetColumn( matAttachment, 3, &origin );	
-
-	if ( muzzleflash_light.GetInt() )
-	{
-		dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
-
-		el->origin	= origin;
-
-		el->color.r = 255;
-		el->color.g = 192;
-		el->color.b = 64;
-		el->color.exponent = 6;
-
-		el->radius	= random->RandomInt( 128, 256 );
-		el->decay	= el->radius / 0.05f;
-		el->die		= gpGlobals->curtime + 0.1f;
-	}
+	CreateMuzzleflashELight( origin, 6, 128, 256, hEntity );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : &data - 
 //-----------------------------------------------------------------------------
 void GunshipMuzzleFlashCallback( const CEffectData &data )
 {
-	MuzzleFlash_Gunship( data.m_nEntIndex, data.m_nAttachmentIndex );
+	MuzzleFlash_Gunship( data.m_hEntity, data.m_nAttachmentIndex );
 }
 
 DECLARE_CLIENT_EFFECT( "GunshipMuzzleFlash", GunshipMuzzleFlashCallback );

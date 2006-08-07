@@ -295,6 +295,7 @@ inline bool RecvTable::IsInMainList() const
 
 void RecvProxy_FloatToFloat  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_VectorToVector( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_QuaternionToQuaternion( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_Int32ToInt8   ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_Int32ToInt16  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_StringToString( const CRecvProxyData *pData, void *pStruct, void *pOut );
@@ -325,6 +326,17 @@ RecvProp RecvPropVector(
 
 // This is here so the RecvTable can look more like the SendTable.
 #define RecvPropQAngles RecvPropVector
+
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+
+RecvProp RecvPropQuaternion(
+	char *pVarName, 
+	int offset, 
+	int sizeofVar=SIZEOF_IGNORE,	// Handled by RECVINFO macro, but set to SIZEOF_IGNORE if you don't want to bother.
+	int flags=0, 
+	RecvVarProxyFn varProxy=RecvProxy_QuaternionToQuaternion
+	);
+#endif
 
 RecvProp RecvPropInt(
 	char *pVarName, 

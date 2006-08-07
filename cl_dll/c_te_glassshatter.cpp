@@ -1,13 +1,16 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "particle_simple3D.h"
+#include "tier1/keyvalues.h"
+#include "toolframework_client.h"
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -42,6 +45,10 @@ public:
 
 	virtual void	PostDataUpdate( DataUpdateType_t updateType );
 
+private:
+	// Recording 
+	void RecordShatterSurface( );
+
 public:
 	Vector					m_vecOrigin;
 	QAngle					m_vecAngles;
@@ -56,10 +63,30 @@ public:
 	byte					m_uchBackColor[3];
 };
 
+
 //------------------------------------------------------------------------------
-// Purpose :
-// Input   :
-// Output  :
+// Networking
+//------------------------------------------------------------------------------
+IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEShatterSurface, DT_TEShatterSurface, CTEShatterSurface)
+	RecvPropVector( RECVINFO(m_vecOrigin)),
+	RecvPropVector( RECVINFO(m_vecAngles)),
+	RecvPropVector( RECVINFO(m_vecForce)),
+	RecvPropVector( RECVINFO(m_vecForcePos)),
+	RecvPropFloat( RECVINFO(m_flWidth)),
+	RecvPropFloat( RECVINFO(m_flHeight)),
+	RecvPropFloat( RECVINFO(m_flShardSize)),
+	RecvPropInt( RECVINFO(m_nSurfaceType)),	
+	RecvPropInt( RECVINFO(m_uchFrontColor[0])),
+	RecvPropInt( RECVINFO(m_uchFrontColor[1])),
+	RecvPropInt( RECVINFO(m_uchFrontColor[2])),
+	RecvPropInt( RECVINFO(m_uchBackColor[0])),
+	RecvPropInt( RECVINFO(m_uchBackColor[1])),
+	RecvPropInt( RECVINFO(m_uchBackColor[2])),
+END_RECV_TABLE()
+
+
+//------------------------------------------------------------------------------
+// Constructor, destructor
 //------------------------------------------------------------------------------
 C_TEShatterSurface::C_TEShatterSurface( void )
 {
@@ -79,23 +106,61 @@ C_TEShatterSurface::C_TEShatterSurface( void )
 	m_uchBackColor[2]	= 255;
 }
 
-//------------------------------------------------------------------------------
-// Purpose :
-// Input   :
-// Output  :
-//------------------------------------------------------------------------------
 C_TEShatterSurface::~C_TEShatterSurface()
 {
 }
 
 
+//-----------------------------------------------------------------------------
+// Recording 
+//-----------------------------------------------------------------------------
+void C_TEShatterSurface::RecordShatterSurface( )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	if ( clienttools->IsInRecordingMode() )
+	{
+		Color front( m_uchFrontColor[0], m_uchFrontColor[1], m_uchFrontColor[2], 255 );
+		Color back( m_uchBackColor[0], m_uchBackColor[1], m_uchBackColor[2], 255 );
+
+		KeyValues *msg = new KeyValues( "TempEntity" );
+
+ 		msg->SetInt( "te", TE_SHATTER_SURFACE );
+ 		msg->SetString( "name", "TE_ShatterSurface" );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		msg->SetFloat( "originx", m_vecOrigin.x );
+		msg->SetFloat( "originy", m_vecOrigin.y );
+		msg->SetFloat( "originz", m_vecOrigin.z );
+		msg->SetFloat( "anglesx", m_vecAngles.x );
+		msg->SetFloat( "anglesy", m_vecAngles.y );
+		msg->SetFloat( "anglesz", m_vecAngles.z );
+		msg->SetFloat( "forcex", m_vecForce.x );
+		msg->SetFloat( "forcey", m_vecForce.y );
+		msg->SetFloat( "forcez", m_vecForce.z );
+		msg->SetFloat( "forceposx", m_vecForcePos.x );
+		msg->SetFloat( "forceposy", m_vecForcePos.y );
+		msg->SetFloat( "forceposz", m_vecForcePos.z );
+		msg->SetColor( "frontcolor", front );
+		msg->SetColor( "backcolor", back );
+		msg->SetFloat( "width", m_flWidth );
+		msg->SetFloat( "height", m_flHeight );
+		msg->SetFloat( "size", m_flShardSize );
+		msg->SetInt( "surfacetype", m_nSurfaceType );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : bool - 
 //-----------------------------------------------------------------------------
 void C_TEShatterSurface::PostDataUpdate( DataUpdateType_t updateType )
 {
+	RecordShatterSurface();
+
 	CSmartPtr<CSimple3DEmitter> pGlassEmitter = CSimple3DEmitter::Create( "C_TEShatterSurface 1" );
 	pGlassEmitter->SetSortOrigin( m_vecOrigin );
 
@@ -209,23 +274,6 @@ void C_TEShatterSurface::PostDataUpdate( DataUpdateType_t updateType )
 												flMinSpeed, flMaxSpeed, GLASS_SHARD_GRAVITY, GLASS_SHARD_DAMPING );
 }
 
-IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEShatterSurface, DT_TEShatterSurface, CTEShatterSurface)
-	RecvPropVector( RECVINFO(m_vecOrigin)),
-	RecvPropVector( RECVINFO(m_vecAngles)),
-	RecvPropVector( RECVINFO(m_vecForce)),
-	RecvPropVector( RECVINFO(m_vecForcePos)),
-	RecvPropFloat( RECVINFO(m_flWidth)),
-	RecvPropFloat( RECVINFO(m_flHeight)),
-	RecvPropFloat( RECVINFO(m_flShardSize)),
-	RecvPropInt( RECVINFO(m_nSurfaceType)),	
-	RecvPropInt( RECVINFO(m_uchFrontColor[0])),
-	RecvPropInt( RECVINFO(m_uchFrontColor[1])),
-	RecvPropInt( RECVINFO(m_uchFrontColor[2])),
-	RecvPropInt( RECVINFO(m_uchBackColor[0])),
-	RecvPropInt( RECVINFO(m_uchBackColor[1])),
-	RecvPropInt( RECVINFO(m_uchBackColor[2])),
-END_RECV_TABLE()
-
 void TE_ShatterSurface( IRecipientFilter& filter, float delay,
 	const Vector* pos, const QAngle* angle, const Vector* vForce, const Vector* vForcePos, 
 	float width, float height, float shardsize, ShatterSurface_t surfacetype,
@@ -250,3 +298,29 @@ void TE_ShatterSurface( IRecipientFilter& filter, float delay,
 	__g_C_TEShatterSurface.PostDataUpdate( DATA_UPDATE_CREATED );
 }
 
+void TE_ShatterSurface( IRecipientFilter& filter, float delay, KeyValues *pKeyValues )
+{
+	Vector vecOrigin, vecForce, vecForcePos;
+	QAngle angles;
+	vecOrigin.x = pKeyValues->GetFloat( "originx" );
+	vecOrigin.y = pKeyValues->GetFloat( "originy" );
+	vecOrigin.z = pKeyValues->GetFloat( "originz" );
+	angles.x = pKeyValues->GetFloat( "anglesx" );
+	angles.y = pKeyValues->GetFloat( "anglesy" );
+	angles.z = pKeyValues->GetFloat( "anglesz" );
+	vecForce.x = pKeyValues->GetFloat( "forcex" );
+	vecForce.y = pKeyValues->GetFloat( "forcey" );
+	vecForce.z = pKeyValues->GetFloat( "forcez" );
+	vecForcePos.x = pKeyValues->GetFloat( "forceposx" );
+	vecForcePos.y = pKeyValues->GetFloat( "forceposy" );
+	vecForcePos.z = pKeyValues->GetFloat( "forceposz" );
+	Color front = pKeyValues->GetColor( "frontcolor" );
+	Color back = pKeyValues->GetColor( "backcolor" );
+	float flWidth = pKeyValues->GetFloat( "width" );
+	float flHeight = pKeyValues->GetFloat( "height" );
+	float flSize = pKeyValues->GetFloat( "size" );
+	ShatterSurface_t nSurfaceType = (ShatterSurface_t)pKeyValues->GetInt( "surfacetype" );
+	TE_ShatterSurface( filter, 0.0f, &vecOrigin, &angles, &vecForce, &vecForcePos,
+		flWidth, flHeight, flSize, nSurfaceType, front.r(), front.g(), front.b(),
+		back.r(), back.g(), back.b() );
+}

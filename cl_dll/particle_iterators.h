@@ -17,7 +17,11 @@
 
 
 #define NUM_PARTICLES_PER_BATCH 200
+#ifndef _XBOX
 #define MAX_TOTAL_PARTICLES		2048	// Max particles in the world.
+#else
+#define MAX_TOTAL_PARTICLES		1024
+#endif
 
 
 //
@@ -216,12 +220,15 @@ inline Particle* CParticleSimulateIterator::GetFirst()
 	{
 		Assert( m_pNextParticle == &m_pMaterial->m_Particles );
 	}
-	m_bGotFirst = true;
 #endif
 
 	Particle *pRet = m_pMaterial->m_Particles.m_pNext;
 	if ( pRet == &m_pMaterial->m_Particles )
 		return NULL;
+
+#ifdef _DEBUG
+	m_bGotFirst = true;
+#endif
 
 	m_pNextParticle = pRet->m_pNext;
 	return pRet;

@@ -140,6 +140,11 @@ public:
 	virtual void OnCursorExited();
 	virtual void SizeToContents();
 
+	virtual KeyValues *GetCommand();
+
+	bool IsDrawingFocusBox();
+	void DrawFocusBox( bool bEnable );
+
 protected:
 	virtual void DrawFocusBorder(int tx0, int ty0, int tx1, int ty1);
 
@@ -163,13 +168,21 @@ protected:
 	virtual const char *GetDescription( void );
 
 private:
-	bool               _armed;		// whether the mouse is over the button
-	bool		       _depressed;	// whether the button is visual depressed
-	bool               _selected;	// whether the mouse is being held down on this button
-	bool			   _forceDepressed;
-	bool               _buttonBorderEnabled;
-	bool			   _useCaptureMouse;
-	bool			   _keyDown;
+	enum ButtonFlags_t
+	{
+		ARMED					= 0x0001,
+		DEPRESSED				= 0x0002,
+		FORCE_DEPRESSED			= 0x0004,
+		BUTTON_BORDER_ENABLED	= 0x0008,
+		USE_CAPTURE_MOUSE		= 0x0010,
+		BUTTON_KEY_DOWN			= 0x0020,
+		DEFAULT_BUTTON			= 0x0040,
+		SELECTED				= 0x0080,
+		DRAW_FOCUS_BOX			= 0x0100,
+		ALL_FLAGS				= 0xFFFF,
+	};
+
+	CUtlFlags< unsigned short > _buttonFlags;	// see ButtonFlags_t
 	int                _mouseClickMask;
 	KeyValues		  *_actionMessage;
 	ActivationType_t   _activationType;
@@ -184,7 +197,7 @@ private:
 	Color              _keyboardFocusColor;
 
 	unsigned short	   m_sArmedSoundName, m_sDepressedSoundName, m_sReleasedSoundName;
-	bool _defaultButton;	// true if this is the button that gets activated by default when the user hits enter
+	bool m_bSelectionStateSaved;
 };
 
 } // namespace vgui

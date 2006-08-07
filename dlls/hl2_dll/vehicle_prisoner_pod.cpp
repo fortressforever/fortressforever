@@ -132,12 +132,12 @@ public:
 	virtual bool CanExitVehicle( CBaseEntity *pEntity );
 	virtual void SetVehicleEntryAnim( bool bOn );
 	virtual void SetVehicleExitAnim( bool bOn, Vector vecEyeExitEndpoint ) { m_bExitAnimOn = bOn; if ( bOn ) m_vecEyeExitEndpoint = vecEyeExitEndpoint; }
-	virtual void EnterVehicle( CBasePlayer *pPlayer );
+	virtual void EnterVehicle( CBaseCombatCharacter *pPassenger );
 
-	virtual bool AllowBlockedExit( CBasePlayer *pPlayer, int nRole ) { return true; }
-	virtual bool AllowMidairExit( CBasePlayer *pPlayer, int nRole ) { return true; }
-	virtual void PreExitVehicle( CBasePlayer *pPlayer, int nRole ) {}
-	virtual void ExitVehicle( int iRole );
+	virtual bool AllowBlockedExit( CBaseCombatCharacter *pPassenger, int nRole ) { return true; }
+	virtual bool AllowMidairExit( CBaseCombatCharacter *pPassenger, int nRole ) { return true; }
+	virtual void PreExitVehicle( CBaseCombatCharacter *pPassenger, int nRole ) {}
+	virtual void ExitVehicle( int nRole );
 
 	virtual void ItemPostFrame( CBasePlayer *pPlayer ) {}
 	virtual void SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move ) {}
@@ -456,21 +456,30 @@ void CPropVehiclePrisonerPod::DrawDebugGeometryOverlays(void)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehiclePrisonerPod::EnterVehicle( CBasePlayer *pPlayer )
+void CPropVehiclePrisonerPod::EnterVehicle( CBaseCombatCharacter *pPassenger )
 {
-	if ( !pPlayer )
+	if ( pPassenger == NULL )
 		return;
 
-	// Remove any player who may be in the vehicle at the moment
-	if ( m_hPlayer )
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
+	if ( pPlayer != NULL )
 	{
-		ExitVehicle(VEHICLE_DRIVER);
+		// Remove any player who may be in the vehicle at the moment
+		if ( m_hPlayer )
+		{
+			ExitVehicle( VEHICLE_ROLE_DRIVER );
+		}
+
+		m_hPlayer = pPlayer;
+		m_playerOn.FireOutput( pPlayer, this, 0 );
+
+		m_ServerVehicle.SoundStart();
 	}
-
-	m_hPlayer = pPlayer;
-	m_playerOn.FireOutput( pPlayer, this, 0 );
-
-	m_ServerVehicle.SoundStart();
+	else
+	{
+		// NPCs are not supported yet - jdw
+		Assert( 0 );
+	}
 }
 
 
@@ -486,7 +495,7 @@ void CPropVehiclePrisonerPod::SetVehicleEntryAnim( bool bOn )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehiclePrisonerPod::ExitVehicle( int iRole )
+void CPropVehiclePrisonerPod::ExitVehicle( int nRole )
 {
 	CBasePlayer *pPlayer = m_hPlayer;
 	if ( !pPlayer )
@@ -571,12 +580,12 @@ void CPropVehiclePrisonerPod::InputEnterVehicle( inputdata_t &inputdata )
 		return;
 
 	// Try the activator first & use them if they are a player.
-	CBasePlayer *pPlayer = ToBasePlayer( inputdata.pActivator );
-	if ( !pPlayer )
+	CBaseCombatCharacter *pPassenger = ToBaseCombatCharacter( inputdata.pActivator );
+	if ( pPassenger == NULL )
 	{
 		// Activator was not a player, just grab the singleplayer player.
-		pPlayer = UTIL_PlayerByIndex( 1 );
-		if ( !pPlayer )
+		pPassenger = UTIL_PlayerByIndex( 1 );
+		if ( pPassenger == NULL )
 			return;
 	}
 
@@ -584,7 +593,7 @@ void CPropVehiclePrisonerPod::InputEnterVehicle( inputdata_t &inputdata )
 	//		  to allow entry into locked vehicles
 	bool bWasLocked = m_bLocked;
 	m_bLocked = false;
-	GetServerVehicle()->HandlePassengerEntry( pPlayer, true );
+	GetServerVehicle()->HandlePassengerEntry( pPassenger, true );
 	m_bLocked = bWasLocked;
 }
 
@@ -598,22 +607,31 @@ void CPropVehiclePrisonerPod::InputEnterVehicleImmediate( inputdata_t &inputdata
 		return;
 
 	// Try the activator first & use them if they are a player.
-	CBasePlayer *pPlayer = ToBasePlayer( inputdata.pActivator );
-	if ( !pPlayer )
+	CBaseCombatCharacter *pPassenger = ToBaseCombatCharacter( inputdata.pActivator );
+	if ( pPassenger == NULL )
 	{
 		// Activator was not a player, just grab the singleplayer player.
-		pPlayer = UTIL_PlayerByIndex( 1 );
-		if ( !pPlayer )
+		pPassenger = UTIL_PlayerByIndex( 1 );
+		if ( pPassenger == NULL )
 			return;
 	}
 
-	if ( pPlayer->IsInAVehicle() )
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
+	if ( pPlayer != NULL )
 	{
-		// Force the player out of whatever vehicle they are in.
-		pPlayer->LeaveVehicle();
+		if ( pPlayer->IsInAVehicle() )
+		{
+			// Force the player out of whatever vehicle they are in.
+			pPlayer->LeaveVehicle();
+		}
+		
+		pPlayer->GetInVehicle( GetServerVehicle(), VEHICLE_ROLE_DRIVER );
 	}
-	
-	pPlayer->GetInVehicle( GetServerVehicle(), VEHICLE_DRIVER );
+	else
+	{
+		// NPCs are not currently supported - jdw
+		Assert( 0 );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -664,7 +682,7 @@ void CPrisonerPodServerVehicle::ItemPostFrame( CBasePlayer *player )
 //-----------------------------------------------------------------------------
 void CPrisonerPodServerVehicle::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles )
 {
-	Assert( nRole == VEHICLE_DRIVER );
+	Assert( nRole == VEHICLE_ROLE_DRIVER );
 	CBasePlayer *pPlayer = ToBasePlayer( GetDrivableVehicle()->GetDriver() );
 	Assert( pPlayer );
 

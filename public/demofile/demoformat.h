@@ -15,7 +15,7 @@
 #include "tier0/platform.h"
 
 #define DEMO_HEADER_ID		"HL2DEMO"
-#define DEMO_PROTOCOL		2
+#define DEMO_PROTOCOL		3
 
 #if !defined( MAX_OSPATH )
 #define	MAX_OSPATH		260			// max length of a filesystem pathname
@@ -203,6 +203,7 @@ struct CSmoothingContext
 	{
 		active = false;
 		filename[ 0 ] = 0;
+		m_nFirstSelectableSample = 0;
 	}
 
 	CSmoothingContext&	operator=(const CSmoothingContext& src )
@@ -223,12 +224,15 @@ struct CSmoothingContext
 			smooth.AddToTail( newitem );
 		}
 
+		m_nFirstSelectableSample = src.m_nFirstSelectableSample;
+
 		return *this;
 	}
 
 	bool							active;
 	char							filename[ 512 ];
 	CUtlVector< demosmoothing_t >	smooth;
+	int								m_nFirstSelectableSample;
 };
 
 #endif // DEMOFORMAT_H

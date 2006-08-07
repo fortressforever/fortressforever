@@ -8,19 +8,27 @@
 #include "npc_antlion.h"
 #include "antlion_maker.h"
 #include "saverestore_utlvector.h"
-#include "ai_hint.h"
 #include "mapentities.h"
 #include "decals.h"
 #include "iservervehicle.h"
+#include "antlion_dust.h"
+#include "smoke_trail.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-CAntlionMakerManager g_AntlionMakerManager;
+CAntlionMakerManager g_AntlionMakerManager( "CAntlionMakerManager" );
 
 static const char *s_pPoolThinkContext = "PoolThinkContext";
+static const char *s_pBlockedEffectsThinkContext = "BlockedEffectsThinkContext";
+static const char *s_pBlockedCheckContext = "BlockedCheckContext";
 
 ConVar g_debug_antlionmaker( "g_debug_antlionmaker", "0", FCVAR_CHEAT );
+
+
+#define ANTLION_MAKER_PLAYER_DETECT_RADIUS	512
+#define ANTLION_MAKER_BLOCKED_MASS			250.0f		// half the weight of a car
+#define ANTLION_MAKE_SPORE_SPAWNRATE		25.0f
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -30,7 +38,7 @@ void CAntlionMakerManager::BroadcastFightGoal( const Vector &vFightGoal )
 {
 	CAntlionTemplateMaker *pMaker;
 
-	for ( int i=0; i < m_Makers.Size(); i++ )
+	for ( int i=0; i < m_Makers.Count(); i++ )
 	{
 		pMaker = m_Makers[i];
 
@@ -51,7 +59,7 @@ void CAntlionMakerManager::BroadcastFightGoal( CBaseEntity *pFightGoal )
 {
 	CAntlionTemplateMaker *pMaker;
 
-	for ( int i=0; i < m_Makers.Size(); i++ )
+	for ( int i=0; i < m_Makers.Count(); i++ )
 	{
 		pMaker = m_Makers[i];
 
@@ -72,7 +80,7 @@ void CAntlionMakerManager::BroadcastFollowGoal( CBaseEntity *pFollowGoal )
 {
 	CAntlionTemplateMaker *pMaker;
 
-	for ( int i=0; i < m_Makers.Size(); i++ )
+	for ( int i=0; i < m_Makers.Count(); i++ )
 	{
 		pMaker = m_Makers[i];
 
@@ -136,6 +144,8 @@ BEGIN_DATADESC( CAntlionTemplateMaker )
 	DEFINE_FIELD( m_hProxyTarget,		FIELD_EHANDLE ),
 	DEFINE_FIELD( m_hFollowTarget,		FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iSkinCount,			FIELD_INTEGER ),
+	DEFINE_FIELD( m_flBlockedBumpTime,  FIELD_TIME ),
+	DEFINE_FIELD( m_bBlocked,			FIELD_BOOLEAN ),
 
 	DEFINE_UTLVECTOR( m_Children,		FIELD_EHANDLE ),
 
@@ -153,8 +163,14 @@ BEGIN_DATADESC( CAntlionTemplateMaker )
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetMaxPool",			InputSetMaxPool ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPoolRegenAmount",	InputSetPoolRegenAmount ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT,	 "SetPoolRegenTime",	InputSetPoolRegenTime ),
+	DEFINE_INPUTFUNC( FIELD_STRING,	 "ChangeDestinationGroup",	InputChangeDestinationGroup ),
+	DEFINE_OUTPUT( m_OnAllBlocked, "OnAllBlocked" ),
+
+	DEFINE_KEYFIELD( m_bCreateSpores,			FIELD_BOOLEAN,	"createspores" ),
 
 	DEFINE_THINKFUNC( PoolRegenThink ),
+	DEFINE_THINKFUNC( FindNodesCloseToPlayer ),
+	DEFINE_THINKFUNC( BlockedCheckFunc ),
 
 END_DATADESC()
 
@@ -168,6 +184,7 @@ CAntlionTemplateMaker::CAntlionTemplateMaker( void )
 	m_hFollowTarget = NULL;
 	m_nChildMoveState = ANTLION_MOVE_FREE;
 	m_iSkinCount = 0;
+	m_flBlockedBumpTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -245,7 +262,127 @@ void CAntlionTemplateMaker::Activate( void )
 			m_flPoolRegenTime = 0.1;
 		}
 
-		SetContextThink( &CAntlionTemplateMaker::PoolRegenThink, gpGlobals->curtime + m_flPoolRegenTime, s_pPoolThinkContext );
+		// Start up our think cycle unless we're reloading this map (which would reset it)
+		if ( m_bDisabled == false && gpGlobals->eLoadType != MapLoad_LoadGame )
+		{
+			// Start our pool regeneration cycle
+			SetContextThink( &CAntlionTemplateMaker::PoolRegenThink, gpGlobals->curtime + m_flPoolRegenTime, s_pPoolThinkContext );
+
+			// Start our blocked effects cycle
+			if ( hl2_episodic.GetBool() == true && HasSpawnFlags( SF_ANTLIONMAKER_DO_BLOCKEDEFFECTS ) )
+			{
+				SetContextThink( &CAntlionTemplateMaker::FindNodesCloseToPlayer, gpGlobals->curtime + 1.0f, s_pBlockedEffectsThinkContext );
+			}
+		}
+	}
+
+	ActivateAllSpores();
+}
+
+void CAntlionTemplateMaker::ActivateSpore( const char* sporename, Vector vOrigin )
+{
+	if ( m_bCreateSpores == false )
+		return;
+
+	char szName[64];
+	Q_snprintf( szName, sizeof( szName ), "%s_spore", sporename );
+
+	SporeExplosion *pSpore = (SporeExplosion*)gEntList.FindEntityByName( NULL, szName );
+
+	//One already exists...
+	if ( pSpore )
+	{	
+		if ( pSpore->m_bDisabled == true )
+		{
+			inputdata_t inputdata;
+			pSpore->InputEnable( inputdata );
+		}
+
+		return;
+	}
+
+	CBaseEntity *pEnt = CreateEntityByName( "env_sporeexplosion" );
+
+	if ( pEnt )
+	{
+		pSpore = dynamic_cast<SporeExplosion*>(pEnt);
+		
+		if ( pSpore )
+		{
+			pSpore->SetAbsOrigin( vOrigin );
+			pSpore->SetName( AllocPooledString( szName ) );
+			pSpore->m_flSpawnRate = ANTLION_MAKE_SPORE_SPAWNRATE;
+		}
+	}
+}
+
+void CAntlionTemplateMaker::DisableSpore( const char* sporename )
+{
+	if ( m_bCreateSpores == false )
+		return;
+
+	char szName[64];
+	Q_snprintf( szName, sizeof( szName ), "%s_spore", sporename );
+
+	SporeExplosion *pSpore = (SporeExplosion*)gEntList.FindEntityByName( NULL, szName );
+
+	if ( pSpore && pSpore->m_bDisabled == false )
+	{	
+		inputdata_t inputdata;
+		pSpore->InputDisable( inputdata );
+		return;
+	}
+}
+
+void CAntlionTemplateMaker::ActivateAllSpores( void )
+{
+	if ( m_bDisabled == true )
+		return;
+
+	if ( m_bCreateSpores == false )
+		return;
+
+	CHintCriteria	hintCriteria;
+
+	hintCriteria.SetGroup( m_strSpawnGroup );
+	hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
+
+	CUtlVector<CAI_Hint *> hintList;
+	CAI_HintManager::FindAllHints( vec3_origin, hintCriteria, &hintList );
+
+	for ( int i = 0; i < hintList.Count(); i++ )
+	{
+		CAI_Hint *pTestHint = hintList[i];
+
+		if ( pTestHint )
+		{
+			bool bBlank;
+			if ( !AllHintsFromClusterBlocked( pTestHint, bBlank ) )
+			{
+				ActivateSpore( STRING( pTestHint->GetEntityName() ), pTestHint->GetAbsOrigin() );
+			}
+		}
+	}
+}
+
+void CAntlionTemplateMaker::DisableAllSpores( void )
+{
+	CHintCriteria	hintCriteria;
+
+	hintCriteria.SetGroup( m_strSpawnGroup );
+	hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
+
+	CUtlVector<CAI_Hint *> hintList;
+	CAI_HintManager::FindAllHints( vec3_origin, hintCriteria, &hintList );
+
+	for ( int i = 0; i < hintList.Count(); i++ )
+	{
+		CAI_Hint *pTestHint = hintList[i];
+
+		if ( pTestHint )
+		{
+			DisableSpore( STRING( pTestHint->GetEntityName() ) );
+		}
 	}
 }
 
@@ -279,7 +416,8 @@ void CAntlionTemplateMaker::UpdateChildren( void )
 	CNPC_Antlion *pAntlion = NULL;
 
 	// Move through our child list
-	for ( int i=0; i < m_Children.Size(); i++ )
+	int i=0;
+	for ( ; i < m_Children.Count(); i++ )
 	{
 		pAntlion = m_Children[i];
 		
@@ -308,13 +446,27 @@ void CAntlionTemplateMaker::UpdateChildren( void )
 // Purpose: 
 // Input  : strTarget - 
 //-----------------------------------------------------------------------------
-void CAntlionTemplateMaker::SetFightTarget( string_t strTarget )
+void CAntlionTemplateMaker::SetFightTarget( string_t strTarget, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
-	CBaseEntity *pSearch = gEntList.FindEntityByName( NULL, strTarget, this );
-
-	if ( pSearch != NULL )
+	if ( HasSpawnFlags( SF_ANTLIONMAKER_RANDOM_FIGHT_TARGET ) )
 	{
-		SetFightTarget( pSearch );
+		CBaseEntity *pSearch = m_hFightTarget;
+
+		for ( int i = random->RandomInt(1,5); i > 0; i-- )
+			pSearch = gEntList.FindEntityByName( pSearch, strTarget, this, pActivator, pCaller );
+
+		if ( pSearch != NULL )
+		{
+			SetFightTarget( pSearch );
+		}
+		else
+		{
+			SetFightTarget( gEntList.FindEntityByName( NULL, strTarget, this, pActivator, pCaller ) );
+		}
+	}
+	else 
+	{
+		SetFightTarget( gEntList.FindEntityByName( NULL, strTarget, this, pActivator, pCaller ) );
 	}
 }
 
@@ -352,9 +504,9 @@ void CAntlionTemplateMaker::SetFollowTarget( CBaseEntity *pTarget )
 // Purpose: 
 // Input  : *pTarget - 
 //-----------------------------------------------------------------------------
-void CAntlionTemplateMaker::SetFollowTarget( string_t strTarget )
+void CAntlionTemplateMaker::SetFollowTarget( string_t strTarget, CBaseEntity *pActivator, CBaseEntity *pCaller )
 {
-	CBaseEntity *pSearch = gEntList.FindEntityByName( NULL, strTarget, this );
+	CBaseEntity *pSearch = gEntList.FindEntityByName( NULL, strTarget, NULL, pActivator, pCaller );
 
 	if ( pSearch != NULL )
 	{
@@ -424,7 +576,37 @@ bool CAntlionTemplateMaker::CanMakeNPC( bool bIgnoreSolidEntities )
 	if ( m_iMaxPool && !m_iPool )
 		return false;
 
+	if ( (CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI) == bits_debugDisableAI )
+		return false;
+
 	return true;
+}
+
+void CAntlionTemplateMaker::Enable( void )
+{
+	BaseClass::Enable();
+
+	if ( m_iMaxPool )
+	{
+		SetContextThink( &CAntlionTemplateMaker::PoolRegenThink, gpGlobals->curtime + m_flPoolRegenTime, s_pPoolThinkContext );
+	}
+
+	if ( hl2_episodic.GetBool() == true && HasSpawnFlags( SF_ANTLIONMAKER_DO_BLOCKEDEFFECTS ) )
+	{
+		SetContextThink( &CAntlionTemplateMaker::FindNodesCloseToPlayer, gpGlobals->curtime + 1.0f, s_pBlockedEffectsThinkContext );
+	}
+
+	ActivateAllSpores();
+}
+
+void CAntlionTemplateMaker::Disable( void )
+{
+	BaseClass::Disable();
+
+	SetContextThink( NULL, gpGlobals->curtime, s_pPoolThinkContext );
+	SetContextThink( NULL, gpGlobals->curtime, s_pBlockedEffectsThinkContext );
+
+	DisableAllSpores();
 }
 
 //-----------------------------------------------------------------------------
@@ -475,51 +657,7 @@ void CAntlionTemplateMaker::MakeNPC( void )
 		if ( FindHintSpawnPosition( targetOrigin, m_flSpawnRadius, m_strSpawnGroup, &pNode, bRandom ) == false )
 			return;
 
-		 pNode->GetPosition( HULL_MEDIUM, &spawnOrigin );
-
-		trace_t	tr;
-		UTIL_TraceHull( spawnOrigin, spawnOrigin + Vector(0,0,1), NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), MASK_NPCSOLID, NULL, COLLISION_GROUP_NONE, &tr );
-
-		if ( tr.startsolid || tr.allsolid )
-			return;
-
-		CBaseEntity*	pList[100];
-
-		Vector vMins = NAI_Hull::Mins( HULL_MEDIUM );
-		Vector vMaxs = NAI_Hull::Maxs( HULL_MEDIUM );
-		vMins.z = -96;
-		UTIL_TraceHull( spawnOrigin, spawnOrigin + Vector(0,0,1), vMins, vMaxs, MASK_NPCSOLID, NULL, COLLISION_GROUP_NONE, &tr );
-
-		int count = UTIL_EntitiesInBox( pList, 100, spawnOrigin + vMins, spawnOrigin + vMaxs, 0 );
-	
-		//Iterate over all the possible targets
-		for ( int i = 0; i < count; i++ )
-		{
-			CBaseEntity *pObstruction = pList[i];
-
-			if ( pObstruction )
-			{
-				if ( pObstruction->GetMoveType() == MOVETYPE_VPHYSICS && pObstruction->GetCollisionGroup() != COLLISION_GROUP_DEBRIS && pObstruction->GetCollisionGroup() != COLLISION_GROUP_INTERACTIVE_DEBRIS  )
-				{
-					IPhysicsObject *pObject = pObstruction->VPhysicsGetObject();
-					
-					if ( pObject )
-					{
-						Vector v;
-						Vector physicsCenter = pObstruction->WorldSpaceCenter();
-						v = spawnOrigin + Vector( 0, 0, 128 ) - physicsCenter;
-
-						VectorNormalize( v );
-
-						v = v * 800;
-		
-						AngularImpulse angVelocity( random->RandomFloat(-180, 180), random->RandomFloat(-180, 180), random->RandomFloat(-360, 360) );
-
-						pObject->AddVelocity( &v, &angVelocity );
-					}
-				}
-			}
-		}
+		pNode->GetPosition( HULL_MEDIUM, &spawnOrigin );
 	}
 	
 	// Point at the current position of the enemy
@@ -560,21 +698,29 @@ void CAntlionTemplateMaker::MakeNPC( void )
 
 	ChildPreSpawn( pent );
 
-	DispatchSpawn( pent );
-	
 	// Put us at the desired location
 	pent->SetLocalOrigin( spawnOrigin );
-	
-	// Face our spawning direction
-	Vector	spawnDir = ( targetOrigin - spawnOrigin );
-	VectorNormalize( spawnDir );
 
 	QAngle	spawnAngles;
-	VectorAngles( spawnDir, spawnAngles );
-	spawnAngles[PITCH] = 0.0f;
-	spawnAngles[ROLL] = 0.0f;
+
+	if ( pTarget )
+	{
+		// Face our spawning direction
+		Vector	spawnDir = ( targetOrigin - spawnOrigin );
+		VectorNormalize( spawnDir );
+
+		VectorAngles( spawnDir, spawnAngles );
+		spawnAngles[PITCH] = 0.0f;
+		spawnAngles[ROLL] = 0.0f;
+	}
+	else if ( pNode )
+	{
+		spawnAngles = QAngle( 0, pNode->Yaw(), 0 );
+	}
 
 	pent->SetLocalAngles( spawnAngles );	
+	DispatchSpawn( pent );
+	
 	pent->Activate();
 
 	m_iSkinCount = ( m_iSkinCount + 1 ) % ANTLION_SKIN_COUNT;
@@ -583,7 +729,14 @@ void CAntlionTemplateMaker::MakeNPC( void )
 	ChildPostSpawn( pent );
 
 	// Hold onto the child
-	AddChild( static_cast<CNPC_Antlion *>(pent) );
+	CNPC_Antlion *pAntlion = dynamic_cast<CNPC_Antlion *>(pent);
+
+	AddChild( pAntlion );
+
+	m_bBlocked = false;
+	SetContextThink( NULL, -1, s_pBlockedCheckContext );
+
+	pAntlion->ClearBurrowPoint( spawnOrigin );
 
 	if (!(m_spawnflags & SF_NPCMAKER_INF_CHILD))
 	{
@@ -798,6 +951,7 @@ bool CAntlionTemplateMaker::FindNearTargetSpawnPosition( Vector &origin, float r
 	return false;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Find a hint position to spawn the new antlion at
 // Input  : &origin - search origin
@@ -808,11 +962,13 @@ bool CAntlionTemplateMaker::FindNearTargetSpawnPosition( Vector &origin, float r
 //-----------------------------------------------------------------------------
 bool CAntlionTemplateMaker::FindHintSpawnPosition( const Vector &origin, float radius, string_t hintGroupName, CAI_Hint **pHint, bool bRandom )
 {
+	CAI_Hint *pChosenHint = NULL;
+
 	CHintCriteria	hintCriteria;
 
 	hintCriteria.SetGroup( hintGroupName );
 	hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
-	
+
 	if ( bRandom )
 	{
 		hintCriteria.SetFlag( bits_HINT_NODE_RANDOM );
@@ -832,17 +988,267 @@ bool CAntlionTemplateMaker::FindHintSpawnPosition( const Vector &origin, float r
 
 	if ( bRandom == true )
 	{
-		*pHint = CAI_HintManager::FindHintRandom( NULL, origin, hintCriteria );
+		pChosenHint = CAI_HintManager::FindHintRandom( NULL, origin, hintCriteria );
 	}
 	else
 	{
-		*pHint = CAI_HintManager::FindHint( origin, hintCriteria );
+		pChosenHint = CAI_HintManager::FindHint( origin, hintCriteria );
 	}
 
-	if ( *pHint != NULL )
+	if ( pChosenHint != NULL )
+	{
+		bool bChosenHintBlocked = false;
+
+		if ( AllHintsFromClusterBlocked( pChosenHint, bChosenHintBlocked ) )
+		{
+			if ( ( GetIndexForThinkContext( s_pBlockedCheckContext ) == NO_THINK_CONTEXT ) ||
+				( GetNextThinkTick( s_pBlockedCheckContext ) == TICK_NEVER_THINK ) )
+			{
+				SetContextThink( &CAntlionTemplateMaker::BlockedCheckFunc, gpGlobals->curtime + 2.0f, s_pBlockedCheckContext );
+			}
+
+			return false;
+		}
+		
+		if ( bChosenHintBlocked == true )
+		{
+			return false;
+		}
+
+		*pHint = pChosenHint;
 		return true;
+	}
 
 	return false;
+}
+
+void CAntlionTemplateMaker::DoBlockedEffects( CBaseEntity *pBlocker, Vector vOrigin )
+{
+	// If the object blocking the hole is a physics object, wobble it a bit.
+	if( pBlocker )
+	{
+		IPhysicsObject *pPhysObj = pBlocker->VPhysicsGetObject();
+
+		if( pPhysObj && pPhysObj->IsAsleep() )
+		{
+			// Don't bonk the object unless it is at rest.
+			float x = RandomFloat( -5000, 5000 );
+			float y = RandomFloat( -5000, 5000 );
+
+			Vector vecForce = Vector( x, y, RandomFloat(10000, 15000) );
+			pPhysObj->ApplyForceCenter( vecForce );
+
+			UTIL_CreateAntlionDust( vOrigin, vec3_angle, true );
+			pBlocker->EmitSound( "NPC_Antlion.MeleeAttackSingle_Muffled" );
+			pBlocker->EmitSound( "NPC_Antlion.TrappedMetal" );
+
+
+			m_flBlockedBumpTime = gpGlobals->curtime + random->RandomFloat( 1.75, 2.75 );
+		}
+	}
+}
+
+CBaseEntity *CAntlionTemplateMaker::AllHintsFromClusterBlocked( CAI_Hint *pNode, bool &bChosenHintBlocked )
+{
+	CBaseEntity *pBlocker = NULL;
+
+	if ( pNode != NULL )
+	{
+		int iNumBlocked = 0;
+		int iNumNodes = 0;
+
+		CHintCriteria	hintCriteria;
+
+		hintCriteria.SetGroup( m_strSpawnGroup );
+		hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
+
+		CUtlVector<CAI_Hint *> hintList;
+		CAI_HintManager::FindAllHints( vec3_origin, hintCriteria, &hintList );
+	
+		for ( int i = 0; i < hintList.Count(); i++ )
+		{
+			CAI_Hint *pTestHint = hintList[i];
+
+			if ( pTestHint )
+			{
+				if ( pTestHint->NameMatches( pNode->GetEntityName() ) )
+				{
+					bool bBlocked;
+
+					iNumNodes++;
+
+					Vector spawnOrigin;
+					pTestHint->GetPosition( HULL_MEDIUM, &spawnOrigin );
+
+					bBlocked = false;
+
+					CBaseEntity*	pList[20];
+				
+					int count = UTIL_EntitiesInBox( pList, 20, spawnOrigin + NAI_Hull::Mins( HULL_MEDIUM ), spawnOrigin + NAI_Hull::Maxs( HULL_MEDIUM ), 0 );
+
+					//Iterate over all the possible targets
+					for ( int i = 0; i < count; i++ )
+					{
+						if ( pList[i]->GetMoveType() != MOVETYPE_VPHYSICS )
+							continue;
+
+						if ( PhysGetEntityMass( pList[i] ) > ANTLION_MAKER_BLOCKED_MASS )
+						{
+							bBlocked = true;
+							iNumBlocked++;
+							pBlocker = pList[i];
+
+							if ( pTestHint == pNode )
+							{
+								bChosenHintBlocked = true;
+							}
+
+							break;
+						}
+					}
+
+					if ( g_debug_antlionmaker.GetInt() == 1 )
+					{
+						if ( bBlocked ) 
+						{
+							NDebugOverlay::Box( spawnOrigin + Vector(0,0,5), NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), 255, 0, 0, 128, 0.25f );
+						}
+						else
+						{
+							NDebugOverlay::Box( spawnOrigin + Vector(0,0,5), NAI_Hull::Mins( HULL_MEDIUM ), NAI_Hull::Maxs( HULL_MEDIUM ), 0, 255, 0, 128, 0.25f );
+						}
+					}
+				}
+			}
+		}
+
+		//All the nodes from this cluster are blocked so start playing the effects.
+		if ( iNumNodes > 0 && iNumBlocked == iNumNodes )
+		{
+			return pBlocker;
+		}
+	}
+
+	return NULL;
+}
+
+void CAntlionTemplateMaker::FindNodesCloseToPlayer( void )
+{
+	SetContextThink( &CAntlionTemplateMaker::FindNodesCloseToPlayer, gpGlobals->curtime + random->RandomFloat( 0.75, 1.75 ), s_pBlockedEffectsThinkContext );
+
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+
+	if ( pPlayer == NULL )
+		 return;
+
+	CHintCriteria hintCriteria;
+
+	float flRadius = ANTLION_MAKER_PLAYER_DETECT_RADIUS;
+
+	hintCriteria.SetGroup( m_strSpawnGroup );
+	hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
+	hintCriteria.AddIncludePosition( pPlayer->GetAbsOrigin(), ANTLION_MAKER_PLAYER_DETECT_RADIUS );
+
+	CUtlVector<CAI_Hint *> hintList;
+
+	if ( CAI_HintManager::FindAllHints( vec3_origin, hintCriteria, &hintList ) <= 0 )
+		return;
+
+	CUtlVector<string_t> m_BlockedNames;
+
+	//----
+	//What we do here is find all hints of the same name (cluster name) and figure out if all of them are blocked.
+	//If they are then we only need to play the blocked effects once
+	//---
+	for ( int i = 0; i < hintList.Count(); i++ )
+	{
+		CAI_Hint *pNode = hintList[i];
+
+		if ( pNode && pNode->HintMatchesCriteria( NULL, hintCriteria, pPlayer->GetAbsOrigin(), &flRadius ) )
+		{
+			bool bClusterAlreadyBlocked = false;
+
+			//Have one of the nodes from this cluster been checked for blockage? If so then there's no need to do block checks again for this cluster.
+			for ( int iStringCount = 0; iStringCount < m_BlockedNames.Count(); iStringCount++ )
+			{
+				if ( pNode->NameMatches( m_BlockedNames[iStringCount] ) )
+				{
+					bClusterAlreadyBlocked = true;
+					break;
+				}
+			}
+
+			if ( bClusterAlreadyBlocked == true )
+				continue;
+
+			Vector vHintPos;
+			pNode->GetPosition( HULL_MEDIUM, &vHintPos );
+		
+			bool bBlank;
+			if ( CBaseEntity *pBlocker = AllHintsFromClusterBlocked( pNode, bBlank ) )
+			{
+				DisableSpore( STRING( pNode->GetEntityName() ) );
+				DoBlockedEffects( pBlocker, vHintPos );
+				m_BlockedNames.AddToTail( pNode->GetEntityName() );
+			}
+			else
+			{
+				ActivateSpore( STRING( pNode->GetEntityName() ), pNode->GetAbsOrigin() );
+			}
+		}
+	}
+}
+
+void CAntlionTemplateMaker::BlockedCheckFunc( void )
+{
+	SetContextThink( &CAntlionTemplateMaker::BlockedCheckFunc, -1, s_pBlockedCheckContext );
+
+	if ( m_bBlocked == true )
+		 return;
+
+	CUtlVector<CAI_Hint *> hintList;
+	int iBlocked = 0;
+
+	CHintCriteria	hintCriteria;
+
+	hintCriteria.SetGroup( m_strSpawnGroup );
+	hintCriteria.SetHintType( HINT_ANTLION_BURROW_POINT );
+
+	if ( CAI_HintManager::FindAllHints( vec3_origin, hintCriteria, &hintList ) > 0 )
+	{
+		for ( int i = 0; i < hintList.Count(); i++ )
+		{
+			CAI_Hint *pNode = hintList[i];
+
+			if ( pNode )
+			{
+				Vector vHintPos;
+				pNode->GetPosition( AI_GetSinglePlayer(), &vHintPos );
+
+				CBaseEntity*	pList[20];
+				int count = UTIL_EntitiesInBox( pList, 20, vHintPos + NAI_Hull::Mins( HULL_MEDIUM ), vHintPos + NAI_Hull::Maxs( HULL_MEDIUM ), 0 );
+
+				//Iterate over all the possible targets
+				for ( int i = 0; i < count; i++ )
+				{
+					if ( pList[i]->GetMoveType() != MOVETYPE_VPHYSICS )
+						continue;
+
+					if ( PhysGetEntityMass( pList[i] ) > ANTLION_MAKER_BLOCKED_MASS )
+					{
+						iBlocked++;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	if ( iBlocked > 0 && hintList.Count() == iBlocked )
+	{
+		m_bBlocked = true;
+		m_OnAllBlocked.FireOutput( this, this );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -883,7 +1289,7 @@ void CAntlionTemplateMaker::ChildPostSpawn( CAI_BaseNPC *pChild )
 		}
 	}
 	// See if we need to send them on their way to a fight goal
-	if ( GetFightTarget() )
+	if ( GetFightTarget() && !HasSpawnFlags( SF_ANTLIONMAKER_RANDOM_FIGHT_TARGET ) )
 	{
 		pAntlion->SetFightTarget( GetFightTarget() );
 	}
@@ -906,7 +1312,10 @@ void CAntlionTemplateMaker::ChildPostSpawn( CAI_BaseNPC *pChild )
 	// Save our name for level transitions
 	pAntlion->SetParentSpawnerName( STRING( GetEntityName() ) );
 
-	BaseClass::ChildPostSpawn( pChild );
+	if ( m_hIgnoreEntity != NULL )
+	{
+		pChild->SetOwnerEntity( m_hIgnoreEntity );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -918,7 +1327,7 @@ void CAntlionTemplateMaker::InputSetFightTarget( inputdata_t &inputdata )
 	// Set our new goal
 	m_strFightTarget = MAKE_STRING( inputdata.value.String() );
 
-	SetFightTarget( m_strFightTarget );
+	SetFightTarget( m_strFightTarget, inputdata.pActivator, inputdata.pCaller );
 	SetChildMoveState( ANTLION_MOVE_FIGHT_TO_GOAL );
 	
 	UpdateChildren();
@@ -933,7 +1342,7 @@ void CAntlionTemplateMaker::InputSetFollowTarget( inputdata_t &inputdata )
 	// Set our new goal
 	m_strFollowTarget = MAKE_STRING( inputdata.value.String() );
 
-	SetFollowTarget( m_strFollowTarget );
+	SetFollowTarget( m_strFollowTarget, inputdata.pActivator, inputdata.pCaller );
 	SetChildMoveState( ANTLION_MOVE_FOLLOW );
 	
 	UpdateChildren();
@@ -1016,6 +1425,15 @@ void CAntlionTemplateMaker::InputSetPoolRegenAmount( inputdata_t &inputdata )
 void CAntlionTemplateMaker::InputSetPoolRegenTime( inputdata_t &inputdata )
 {
 	m_flPoolRegenTime = inputdata.value.Float();
+
+	if ( m_flPoolRegenTime != 0.0f )
+	{
+		SetContextThink( &CAntlionTemplateMaker::PoolRegenThink, gpGlobals->curtime + m_flPoolRegenTime, s_pPoolThinkContext );
+	}
+	else
+	{
+		SetContextThink( NULL, gpGlobals->curtime, s_pPoolThinkContext );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1052,18 +1470,24 @@ void CAntlionTemplateMaker::PoolRegenThink( void )
 void CAntlionTemplateMaker::DeathNotice( CBaseEntity *pVictim )
 {
 	CNPC_Antlion *pAnt = dynamic_cast<CNPC_Antlion *>(pVictim);
-
 	if ( pAnt == NULL )
 		return;
 
 	// Take it out of our list
 	RemoveChild( pAnt );
 
-	// See if we've exhausted our supply of NPCs
-	if ( ( HasSpawnFlags(SF_NPCMAKER_INF_CHILD) == false ) && IsDepleted() || m_iMaxPool && !m_iPool )
+	// Check if all live children are now dead
+	if ( m_nLiveChildren <= 0 )
 	{
-		// Signal that all our children have been spawned and are now dead
-		m_OnAllSpawnedDead.FireOutput( this, this );
+		// Fire the output for this case
+		m_OnAllLiveChildrenDead.FireOutput( this, this );
+
+		bool bPoolDepleted = ( m_iMaxPool != 0 && m_iPool == 0 );
+		if ( bPoolDepleted || IsDepleted() )
+		{
+			// Signal that all our children have been spawned and are now dead
+			m_OnAllSpawnedDead.FireOutput( this, this );
+		}
 	}
 }
 
@@ -1078,4 +1502,216 @@ bool CAntlionTemplateMaker::IsDepleted( void )
 		return false;
 
 	return BaseClass::IsDepleted();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Change the spawn group the maker is using
+//-----------------------------------------------------------------------------
+void CAntlionTemplateMaker::InputChangeDestinationGroup( inputdata_t &inputdata )
+{
+	// FIXME: This function is redundant to the base class version, remove the m_strSpawnGroup
+	m_strSpawnGroup = inputdata.value.StringID();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw debugging text for the spawner
+//-----------------------------------------------------------------------------
+int CAntlionTemplateMaker::DrawDebugTextOverlays( void )
+{
+	// We don't want the base class info, it's not useful to us
+	int text_offset = BaseClass::DrawDebugTextOverlays();
+
+	if ( m_debugOverlays & OVERLAY_TEXT_BIT )
+	{
+		char tempstr[255];
+		
+		// Print the state of the spawner
+		if ( m_bDisabled )
+		{
+			Q_strncpy( tempstr, "State: Disabled\n", sizeof(tempstr) );
+		}
+		else
+		{
+			Q_strncpy( tempstr, "State: Enabled\n", sizeof(tempstr) );
+		}
+
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print follow information
+		if ( m_strFollowTarget != NULL_STRING )
+		{
+			Q_snprintf( tempstr, sizeof(tempstr), "Follow Target: %s\n", STRING( m_strFollowTarget ) );
+		}
+		else
+		{
+			Q_strncpy( tempstr, "Follow Target : NONE\n", sizeof(tempstr) );
+		}
+
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print fight information
+		if ( m_strFightTarget != NULL_STRING )
+		{
+			Q_snprintf( tempstr, sizeof(tempstr), "Fight Target: %s\n", STRING( m_strFightTarget ) );
+		}
+		else
+		{
+			Q_strncpy( tempstr, "Fight Target : NONE\n", sizeof(tempstr) );
+		}
+
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print spawning criteria information
+		if ( m_strSpawnTarget != NULL_STRING )
+		{
+			Q_snprintf( tempstr, sizeof(tempstr), "Spawn Target: %s\n", STRING( m_strSpawnTarget ) );
+		}
+		else
+		{
+			Q_strncpy( tempstr, "Spawn Target : NONE\n", sizeof(tempstr) );
+		}
+
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print the chilrens' state
+		Q_snprintf( tempstr, sizeof(tempstr), "Spawn Frequency: %f\n", m_flSpawnFrequency );
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print the spawn radius
+		Q_snprintf( tempstr, sizeof(tempstr), "Spawn Radius: %.02f units\n", m_flSpawnRadius );
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print the spawn group we're using
+		if ( m_strSpawnGroup != NULL_STRING )
+		{
+			Q_snprintf( tempstr, sizeof(tempstr), "Spawn Group: %s\n", STRING( m_strSpawnGroup ) );
+			EntityText( text_offset, tempstr, 0 );
+			text_offset++;
+		}
+
+		// Print the chilrens' state
+		Q_snprintf( tempstr, sizeof(tempstr), "Live Children: (%d/%d)\n", m_nLiveChildren, m_nMaxLiveChildren );
+		EntityText( text_offset, tempstr, 0 );
+		text_offset++;
+
+		// Print pool information
+		if ( m_iMaxPool )
+		{
+			// Print the pool's state
+			Q_snprintf( tempstr, sizeof(tempstr), "Pool: (%d/%d) (%d per regen)\n", m_iPool, m_iMaxPool, m_iPoolRegenAmount );
+			EntityText( text_offset, tempstr, 0 );
+			text_offset++;
+
+			float flTimeRemaining = GetNextThink( s_pPoolThinkContext ) - gpGlobals->curtime;
+
+			if ( flTimeRemaining < 0.0f )
+			{
+				flTimeRemaining = 0.0f;
+			}
+
+			// Print the pool's regeneration state
+			Q_snprintf( tempstr, sizeof(tempstr), "Pool Regen Time: %.02f sec. (%.02f remaining)\n", m_flPoolRegenTime, flTimeRemaining );
+			EntityText( text_offset, tempstr, 0 );
+			text_offset++;
+		}
+	}
+
+	return text_offset;	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw debugging overlays for the spawner
+//-----------------------------------------------------------------------------
+void CAntlionTemplateMaker::DrawDebugGeometryOverlays( void )
+{
+	BaseClass::DrawDebugGeometryOverlays();
+
+	if ( m_debugOverlays & OVERLAY_TEXT_BIT )
+	{
+		float r, g, b;
+
+		// Color by active state
+		if ( m_bDisabled )
+		{
+			r = 255.0f;
+			g = 0.0f;
+			b = 0.0f;
+		}
+		else
+		{
+			r = 0.0f;
+			g = 255.0f;
+			b = 0.0f;
+		}
+
+		// Draw ourself
+		NDebugOverlay::Box( GetAbsOrigin(), -Vector(8,8,8), Vector(8,8,8), r, g, b, true, 0.05f );
+
+		// Draw lines to our spawngroup hints
+		if ( m_strSpawnGroup != NULL_STRING )
+		{
+			// Draw lines to our active hint groups
+			AIHintIter_t iter;
+			CAI_Hint *pHint = CAI_HintManager::GetFirstHint( &iter );
+			while ( pHint != NULL )
+			{
+				// Must be of the hint group we care about
+				if ( pHint->GetGroup() != m_strSpawnGroup )
+				{
+					pHint = CAI_HintManager::GetNextHint( &iter );
+					continue;
+				}
+
+				// Draw an arrow to the spot
+				NDebugOverlay::VertArrow( GetAbsOrigin(), pHint->GetAbsOrigin() + Vector( 0, 0, 32 ), 8.0f, r, g, b, 0, true, 0.05f );
+				
+				// Draw a box to represent where it's sitting
+				Vector vecForward;
+				AngleVectors( pHint->GetAbsAngles(), &vecForward );
+				NDebugOverlay::BoxDirection( pHint->GetAbsOrigin(), -Vector(32,32,0), Vector(32,32,16), vecForward, r, g, b, true, 0.05f );
+				
+				// Move to the next
+				pHint = CAI_HintManager::GetNextHint( &iter );
+			}
+		}
+
+		// Draw a line to the spawn target (if it exists)
+		if ( m_strSpawnTarget != NULL_STRING )
+		{
+			// Find all the possible targets
+			CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_strSpawnTarget );
+			if ( pTarget != NULL )
+			{
+				NDebugOverlay::VertArrow( GetAbsOrigin(), pTarget->WorldSpaceCenter(), 4.0f, 255, 255, 255, 0, true, 0.05f );
+			}
+		}
+
+		// Draw a line to the follow target (if it exists)
+		if ( m_strFollowTarget != NULL_STRING )
+		{
+			// Find all the possible targets
+			CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_strFollowTarget );
+			if ( pTarget != NULL )
+			{
+				NDebugOverlay::VertArrow( GetAbsOrigin(), pTarget->WorldSpaceCenter(), 4.0f, 255, 255, 0, 0, true, 0.05f );
+			}
+		}
+
+		// Draw a line to the fight target (if it exists)
+		if ( m_strFightTarget != NULL_STRING )
+		{
+			// Find all the possible targets
+			CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, m_strFightTarget );
+			if ( pTarget != NULL )
+			{
+				NDebugOverlay::VertArrow( GetAbsOrigin(), pTarget->WorldSpaceCenter(), 4.0f, 255, 0, 0, 0, true, 0.05f );
+			}
+		}
+	}
 }

@@ -53,6 +53,7 @@
 #include "UtlHash.h"
 #include "UtlVector.h"
 #include "iincremental.h"
+#include "raytrace.h"
 
 
 #ifdef _WIN32
@@ -70,13 +71,19 @@
 #include <direct.h>
 #include <ctype.h>
 
+
+// Can remove these options if they don't generate problems.
+//#define SAMPLEHASH_USE_AREA_PATCHES	// Add patches to sample hash based on their AABB instead of as a single point.
+#define SAMPLEHASH_QUERY_ONCE		// Big optimization - causes way less sample hash queries.
+
+
 //-----------------------------------------------------------------------------
 // forward declarations
 //-----------------------------------------------------------------------------
 
 struct Ray_t;
 
-#define		TRANSFER_EPSILON		0.01
+#define		TRANSFER_EPSILON		0.0000001
 
 struct directlight_t
 {
@@ -124,6 +131,9 @@ struct patch_t
 
 	dplane_t	*plane;				// plane (corrected for facing)
 	
+	unsigned short		m_IterationKey;	// Used to prevent touching the same patch multiple times in the same query.
+										// See IncrementPatchIterationKey().
+	
 	// these are packed into one dword
 	unsigned int normalMajorAxis : 2;	// the major axis of base face normal
 	unsigned int sky : 1;
@@ -135,6 +145,7 @@ struct patch_t
 	float		planeDist;			// Fixes up patch planes for brush models with an origin brush
 
 	float		chop;				// smallest acceptable width of patch face
+	float		luxscale;			// average luxels per world coord
 	float		scale[2];			// Scaling of texture in s & t
 
 	bumplights_t totallight;		// accumulated by radiosity
@@ -169,12 +180,6 @@ struct patch_t
 };
 
 
-//extern	patch_t		patches[MAX_PATCHES];
-//extern	unsigned	num_patches;
-//extern	patch_t		*face_patches[MAX_MAP_FACES];	// contains all patches, children first
-//extern	patch_t		*face_parents[MAX_MAP_FACES];	// contains only root patches, use nextparent to iterate
-//extern	patch_t		*cluster_children[MAX_MAP_CLUSTERS];
-
 extern CUtlVector<patch_t>	patches;
 extern CUtlVector<int>		facePatches;		// constains all patches, children first
 extern CUtlVector<int>		faceParents;		// contains only root patches, use next parent to iterate
@@ -194,29 +199,31 @@ extern sky_camera_t sky_cameras[MAX_MAP_AREAS];
 extern int area_sky_cameras[MAX_MAP_AREAS];
 void ProcessSkyCameras();
 
-extern	entity_t	*face_entity[MAX_MAP_FACES];
-extern	Vector		face_offset[MAX_MAP_FACES];		// for rotating bmodels
-extern  Vector		face_centroids[MAX_MAP_EDGES];
-extern	int		leafparents[MAX_MAP_LEAFS];
-extern	int		nodeparents[MAX_MAP_NODES];
+extern entity_t		*face_entity[MAX_MAP_FACES];
+extern Vector		face_offset[MAX_MAP_FACES];		// for rotating bmodels
+extern Vector		face_centroids[MAX_MAP_EDGES];
+extern int			leafparents[MAX_MAP_LEAFS];
+extern int			nodeparents[MAX_MAP_NODES];
+extern float		lightscale;
+extern float		dlight_threshold;
+extern float		coring;
+extern qboolean		dumppatches;
+extern bool			bRed2Black;
+extern bool			bDumpNormals;
+extern float		maxchop;
+extern bool			g_bXBox;
+extern bool			g_bExportLightmaps;
+extern FileHandle_t	pFileSamples[4];
+extern qboolean		g_bLowPriority;
+extern qboolean		do_fast;
+extern bool			g_bInterrupt;		// Was used with background lighting in WC. Tells VRAD to stop lighting.
+extern IIncremental *g_pIncremental;	// null if not doing incremental lighting
+extern bool g_dofinal;										// highest quality
+extern bool g_bLargeDispSampleRadius;
+extern bool g_bStaticPropPolys;
+extern bool g_bShowStaticPropNormals;
 
-extern	float	lightscale;
-extern	float	dlight_threshold;
-extern  float	coring;
-extern	qboolean	dumppatches;
-extern	bool	bRed2Black;
-extern	bool	bDumpNormals;
-
-extern float	maxchop;
-
-
-extern FileHandle_t pFileSamples[4];
-
-extern qboolean	g_bLowPriority;
-extern qboolean	do_fast;
-extern bool	g_bInterrupt;	// Wsed with background lighting in WC. Tells VRAD
-							// to stop lighting.
-extern IIncremental *g_pIncremental; // null if not doing incremental lighting
+extern RayTracingEnvironment g_RtEnv;
 
 #include "mpivrad.h"
 
@@ -245,6 +252,13 @@ extern  bool	debug_extra;
 extern	directlight_t	*activelights;
 extern	directlight_t	*freelights;
 
+// because of hdr having two face lumps (light styles can cause them to be different, among other
+// things), we need to always access (r/w) face data though this pointer
+extern dface_t *g_pFaces;
+
+
+extern bool g_bMPIProps;
+
 extern	byte	nodehit[MAX_MAP_NODES];
 extern  float	gamma;
 extern	float	indirect_sun;
@@ -252,6 +266,9 @@ extern	float	smoothing_threshold;
 extern	int		dlight_map;
 
 extern float	g_flMaxDispSampleSize;
+extern float	g_SunAngularExtent;
+
+extern char		source[MAX_PATH];
 
 // Used by incremental lighting to trivial-reject faces.
 // There is a bit in here for each face telling whether or not any of the
@@ -270,12 +287,31 @@ void BuildFacelights (int facenum, int threadnum);
 void PrecompLightmapOffsets();
 void FinalLightFace (int threadnum, int facenum);
 void PvsForOrigin (Vector& org, byte *pvs);
+void BuildPalettedLightmaps();
+void CompressConstantLightmaps( int constantThreshold );
+void ConvertRGBExp32ToRGBA8888( const ColorRGBExp32 *pSrc, unsigned char *pDst );
+
+inline byte PVSCheck( const byte *pvs, int iCluster )
+{
+	if ( iCluster >= 0 )
+	{
+		return pvs[iCluster >> 3] & ( 1 << ( iCluster & 7 ) );
+	}
+	else
+	{
+		// PointInLeaf still returns -1 for valid points sometimes and rather than 
+		// have black samples, we assume the sample is in the PVS.
+		return 1;
+	}
+}
 
 // returns contents at intersection point (or CONTENTS_EMPTY if no intersection)
-int TestLine (Vector const& start, Vector const& stop, int node, int iThread);
+int TestLine (Vector const& start, Vector const& stop, int node, int iThread,
+			  int static_prop_index_to_ignore=-1 );
 
 // returns surface flags at intersection (zero if no intersection or no surface properties)
-texinfo_t *TestLine_Surface( int node, Vector const& start, Vector const& stop, int iThread, bool canRecurse = true );
+texinfo_t *TestLine_Surface( int node, Vector const& start, Vector const& stop, int iThread, 
+							 bool canRecurse = true, int static_prop_to_skip=-1 );
 
 void BaseLightForFace( dface_t *f, Vector& light, float *parea, Vector& reflectivity );
 void CreateDirectLights (void);
@@ -325,12 +361,13 @@ int PointLeafnum( Vector const &point );
 
 struct sampleLightOutput_t
 {
-	float	dot[NUM_BUMP_VECTS+1];
-	float	falloff;
+	float		dot[NUM_BUMP_VECTS+1];
+	float		falloff;
 };
 
 bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum, 
-	Vector const& pos, Vector *pNormals, int normalCount, int iThread );
+						Vector const& pos, Vector *pNormals, int normalCount, int iThread,
+						bool force_fast = false, int static_prop_to_skip=-1 );
 
 //-----------------------------------------------------------------------------
 // VRad Displacements
@@ -419,7 +456,8 @@ struct PatchSampleData_t
 };
 
 UtlHashHandle_t SampleData_AddSample( sample_t *pSample, SampleHandle_t sampleHandle );
-UtlHashHandle_t PatchSampleData_AddSample( patch_t *pPatch, int ndxPatch );
+void PatchSampleData_AddSample( patch_t *pPatch, int ndxPatch );
+unsigned short IncrementPatchIterationKey();
 void SampleData_Log( void );
 
 extern CUtlHash<SampleData_t>		g_SampleHashTable;
@@ -433,6 +471,8 @@ extern int patchSamplesAdded;
 //-----------------------------------------------------------------------------
 
 void ComputeDetailPropLighting( int iThread );
+void ComputeIndirectLightingAtPoint( Vector &position, Vector &normal, Vector &outColor, 
+									 int iThread, bool force_fast = false );
 
 //-----------------------------------------------------------------------------
 // VRad static props
@@ -454,6 +494,8 @@ public:
 	virtual bool ClipRayToStaticProps( PropTested_t& propTested, Ray_t const& ray ) = 0;
 	virtual bool ClipRayToStaticPropsInLeaf( PropTested_t& propTested, Ray_t const& ray, int leaf ) = 0;
 	virtual void StartRayTest( PropTested_t& propTested ) = 0;
+	virtual void ComputeLighting( int iThread ) = 0;
+	virtual void AddPolysForRayTrace() = 0;
 };
 
 IVradStaticPropMgr* StaticPropMgr();

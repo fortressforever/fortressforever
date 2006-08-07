@@ -89,7 +89,7 @@ void CFlashEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 	{
 		Vector	tPos;
 
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = ( int )tPos.z;
 
 		flLife = pParticle->m_flLifetime - pParticle->m_flOffset;

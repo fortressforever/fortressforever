@@ -21,7 +21,7 @@ typedef enum
 
 
 
-class IPlayerAnimState
+abstract_class IPlayerAnimState
 {
 public:
 	virtual void Release() = 0;

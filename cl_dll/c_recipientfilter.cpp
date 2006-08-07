@@ -111,7 +111,8 @@ void C_RecipientFilter::AddRecipient( C_BasePlayer *player )
 	if ( m_Recipients.Find( index ) != m_Recipients.InvalidIndex() )
 		return;
 
-	if ( index != engine->GetLocalPlayer() )
+	// this is a client side filter, only add the local player
+	if ( !player->IsLocalPlayer() )
 		return;
 
 	m_Recipients.AddToTail( index );
@@ -140,11 +141,13 @@ void C_RecipientFilter::RemoveRecipientsByTeam( C_Team *team )
 
 void C_RecipientFilter::AddPlayersFromBitMask( CBitVec< ABSOLUTE_PLAYER_LIMIT >& playerbits )
 {
-	if ( !playerbits[ engine->GetLocalPlayer() ] )
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if ( !pPlayer )
 		return;
 
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
+	// only add the local player on client side
+	if ( !playerbits[ pPlayer->index ] )
 		return;
 
 	AddRecipient( pPlayer );

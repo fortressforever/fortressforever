@@ -17,7 +17,7 @@ class CUserCmd;
 //-----------------------------------------------------------------------------
 // Purpose: This is also an IServerSystem
 //-----------------------------------------------------------------------------
-class ILagCompensationManager
+abstract_class ILagCompensationManager
 {
 public:
 	// Called during player movement to set up/restore after lag compensation

@@ -41,7 +41,7 @@ enum DataUpdateType_t
 								// since it changes a bunch of existing code
 };
 
-class IClientNetworkable
+abstract_class IClientNetworkable
 {
 public:
 	// Gets at the containing class...

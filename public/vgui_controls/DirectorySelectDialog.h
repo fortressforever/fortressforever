@@ -44,6 +44,9 @@ public:
 
 	*/
 
+	// Expand the tree nodes to match a supplied path, optionally selecting the final directory
+	void ExpandTreeToPath( const char *lpszPath, bool bSelectFinalDirectory = true );
+
 protected:
 	virtual void PerformLayout();
 	virtual void ApplySchemeSettings(IScheme *pScheme);

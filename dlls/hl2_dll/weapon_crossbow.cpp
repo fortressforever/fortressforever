@@ -21,6 +21,7 @@
 #include "sprite.h"
 #include "spritetrail.h"
 #include "beam_shared.h"
+#include "rumble_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -321,7 +322,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 				AddEffects( EF_NODRAW );
 				SetTouch( NULL );
-				SetThink( SUB_Remove );
+				SetThink( &CCrossbowBolt::SUB_Remove );
 				SetNextThink( gpGlobals->curtime + 2.0f );
 
 				if ( m_pGlowSprite != NULL )
@@ -393,18 +394,24 @@ public:
 	virtual void	PrimaryAttack( void );
 	virtual void	SecondaryAttack( void );
 	virtual bool	Deploy( void );
+	virtual void	Drop( const Vector &vecVelocity );
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	virtual bool	Reload( void );
 	virtual void	ItemPostFrame( void );
 	virtual void	ItemBusyFrame( void );
 	virtual void	Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 	virtual bool	SendWeaponAnim( int iActivity );
+	virtual bool	IsWeaponZoomed() { return m_bInZoom; }
+	
+	bool	ShouldDisplayHUDHint() { return true; }
+
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
 private:
 	
+	void	StopEffects( void );
 	void	SetSkin( int skinNum );
 	void	CheckZoomToggle( void );
 	void	FireBolt( void );
@@ -457,6 +464,7 @@ CWeaponCrossbow::CWeaponCrossbow( void )
 {
 	m_bReloadsSingly	= true;
 	m_bFiresUnderwater	= true;
+	m_bAltFiresUnderwater = true;
 	m_bInZoom			= false;
 	m_bMustReload		= false;
 }
@@ -534,7 +542,7 @@ void CWeaponCrossbow::CheckZoomToggle( void )
 	
 	if ( pPlayer->m_afButtonPressed & IN_ATTACK2 )
 	{
-		ToggleZoom();
+			ToggleZoom();
 	}
 }
 
@@ -588,7 +596,9 @@ void CWeaponCrossbow::FireBolt( void )
 	if ( pOwner == NULL )
 		return;
 
-	Vector vecAiming	= pOwner->GetAutoaimVector( 0 );	
+	pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
+
+	Vector vecAiming	= pOwner->GetAutoaimVector( 0 );
 	Vector vecSrc		= pOwner->Weapon_ShootPosition();
 
 	QAngle angAiming;
@@ -651,13 +661,7 @@ bool CWeaponCrossbow::Deploy( void )
 //-----------------------------------------------------------------------------
 bool CWeaponCrossbow::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
-	if ( m_bInZoom )
-	{
-		ToggleZoom();
-	}
-
-	SetChargerState( CHARGER_STATE_OFF );
-
+	StopEffects();
 	return BaseClass::Holster( pSwitchingTo );
 }
 
@@ -890,4 +894,28 @@ bool CWeaponCrossbow::SendWeaponAnim( int iActivity )
 
 	//For now, just set the ideal activity and be done with it
 	return BaseClass::SendWeaponAnim( newActivity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop all zooming and special effects on the viewmodel
+//-----------------------------------------------------------------------------
+void CWeaponCrossbow::StopEffects( void )
+{
+	// Stop zooming
+	if ( m_bInZoom )
+	{
+		ToggleZoom();
+	}
+
+	// Turn off our sprites
+	SetChargerState( CHARGER_STATE_OFF );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponCrossbow::Drop( const Vector &vecVelocity )
+{
+	StopEffects();
+	BaseClass::Drop( vecVelocity );
 }

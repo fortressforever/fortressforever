@@ -3,6 +3,8 @@
 // Purpose: 
 //
 //=============================================================================//
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 
 #include "vector.h"
 #include "anorms.h"
@@ -176,3 +178,4 @@ Vector g_anorms[NUMVERTEXNORMALS] =
 	Vector(-0.688191, -0.587785, -0.425325)
 };
 
+#endif // !_STATIC_LINKED || _SHARED_LIB

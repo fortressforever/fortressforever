@@ -146,7 +146,7 @@ mxListView::setSelected ( int item, bool b)
 	if (!d_this)
 		return;
 
-	ListView_SetItemState (d_this->d_hwnd, item, b ? LVIS_SELECTED : 0 , LVIS_STATEIMAGEMASK );
+	ListView_SetItemState (d_this->d_hwnd, item, b ? ( LVIS_SELECTED | LVIS_FOCUSED ): 0 , LVIS_SELECTED | LVIS_FOCUSED );
 }
 
 int mxListView::getItemCount() const

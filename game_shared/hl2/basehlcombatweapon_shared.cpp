@@ -72,6 +72,15 @@ void CBaseHLCombatWeapon::ItemHolsterFrame( void )
 }
 
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+bool CBaseHLCombatWeapon::CanLower()
+{
+	if ( SelectWeightedSequence( ACT_VM_IDLE_LOWERED ) == ACTIVITY_NOT_AVAILABLE )
+		return false;
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Drops the weapon into a lowered pose
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
@@ -209,7 +218,7 @@ void CBaseHLCombatWeapon::WeaponIdle( void )
 float	g_lateralBob;
 float	g_verticalBob;
 
-#if defined( CLIENT_DLL ) && !defined (HL2MP)
+#if defined( CLIENT_DLL ) && !defined( HL2MP ) 
 
 #define	HL2_BOB_CYCLE_MIN	1.0f
 #define	HL2_BOB_CYCLE_MAX	0.45f

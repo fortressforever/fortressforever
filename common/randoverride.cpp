@@ -3,6 +3,7 @@
 // Purpose:
 //
 //=============================================================================//
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
 
 #include "stdlib.h"
 #include "vstdlib/random.h"
@@ -22,3 +23,5 @@ int __cdecl rand()
 {
 	return RandomInt( 0, 0x7fff );
 }
+
+#endif // !_STATIC_LINKED || _SHARED_LIB

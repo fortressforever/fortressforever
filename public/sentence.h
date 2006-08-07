@@ -10,6 +10,10 @@
 #pragma once
 #endif
 
+// XBOX optimizes out the extra memory needed by the editors in these types
+#ifndef _XBOX
+#define PHONEME_EDITOR 1
+#endif
 #include "utlvector.h"
 
 class CUtlBuffer;
@@ -17,13 +21,21 @@ class CUtlBuffer;
 //-----------------------------------------------------------------------------
 // Purpose: A sample point
 //-----------------------------------------------------------------------------
+// Can't do this due to backward compat issues
+//#ifdef _WIN32
+//#pragma pack (1)
+//#endif
+
 struct CEmphasisSample
 {
 	float		time;
 	float		value;
 
+	void SetSelected( bool isSelected );
+#if PHONEME_EDITOR
 	// Used by editors only
 	bool		selected;
+#endif
 };
 
 class CBasePhonemeTag
@@ -32,6 +44,20 @@ public:
 	CBasePhonemeTag();
 	CBasePhonemeTag( const CBasePhonemeTag& from );
 
+	CBasePhonemeTag &operator=( const CBasePhonemeTag &from )	{ memcpy( this, &from, sizeof(*this) ); return *this; }
+
+	float GetStartTime() const				{ return m_flStartTime; }
+	void SetStartTime( float startTime )	{ m_flStartTime = startTime; }
+	void AddStartTime( float startTime )	{ m_flStartTime += startTime; }
+
+	float GetEndTime() const				{ return m_flEndTime; }
+	void SetEndTime( float endTime )		{ m_flEndTime = endTime; }
+	void AddEndTime( float startTime )		{ m_flEndTime += startTime; }
+
+	int GetPhonemeCode() const				{ return m_nPhonemeCode; }
+	void SetPhonemeCode( int phonemeCode )	{ m_nPhonemeCode = phonemeCode; }
+
+private:
 	float			m_flStartTime;
 	float			m_flEndTime;
 	unsigned short	m_nPhonemeCode;
@@ -54,12 +80,16 @@ public:
 	char const		*GetTag() const;
 
 	unsigned int	ComputeDataCheckSum();
-
+#if PHONEME_EDITOR
 	bool			m_bSelected;
-
-	// Used by UI code
 	unsigned int	m_uiStartByte;
 	unsigned int	m_uiEndByte;
+#endif
+	void SetSelected( bool isSelected );
+	bool GetSelected() const;
+	void SetStartAndEndBytes( unsigned int start, unsigned int end );
+	unsigned int GetStartByte() const;
+	unsigned int GetEndByte() const;
 
 private:
 	char			*m_szPhoneme;
@@ -88,10 +118,17 @@ public:
 	float			m_flEndTime;
 
 	CUtlVector	< CPhonemeTag *> m_Phonemes;
-
+#if PHONEME_EDITOR
 	bool			m_bSelected;
 	unsigned int	m_uiStartByte;
 	unsigned int	m_uiEndByte;
+#endif
+	void SetSelected( bool isSelected );
+	bool GetSelected() const;
+	void SetStartAndEndBytes( unsigned int start, unsigned int end );
+	unsigned int GetStartByte() const;
+	unsigned int GetEndByte() const;
+
 private:
 	char			*m_pszWord;
 };
@@ -216,17 +253,22 @@ public:
 	void			AddRuntimePhoneme( const CPhonemeTag *src );
 
 public:
+#if PHONEME_EDITOR
 	char			*m_szText;
 
 	CUtlVector< CWordTag * >	m_Words;
+#endif
 	CUtlVector	< CBasePhonemeTag *> m_RunTimePhonemes;
 
+#if PHONEME_EDITOR
 	int				m_nResetWordBase;
-	
+#endif
 	// Phoneme emphasis data
 	CUtlVector< CEmphasisSample > m_EmphasisSamples;
 
+#if PHONEME_EDITOR
 	unsigned int	m_uCheckSum;
+#endif
 	bool			m_bIsValid : 8;
 	bool			m_bStoreCheckSum : 8;
 	bool			m_bShouldVoiceDuck : 8;
@@ -245,4 +287,7 @@ private:
 	friend class PhonemeEditor;
 };
 
+//#ifdef _WIN32
+//#pragma pack ()
+//#endif
 #endif // SENTENCE_H

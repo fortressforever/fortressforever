@@ -23,6 +23,7 @@
 BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 
 	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaBits), SendPropInt(SENDINFO_ARRAY(m_chAreaBits), 8, SPROP_UNSIGNED)),
+	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaPortalBits), SendPropInt(SENDINFO_ARRAY(m_chAreaPortalBits), 8, SPROP_UNSIGNED)),
 	
 	SendPropInt		(SENDINFO(m_iHideHUD), HIDEHUD_BITCOUNT, SPROP_UNSIGNED),
 	SendPropInt		(SENDINFO(m_iFOV),	9),
@@ -36,7 +37,6 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropFloat	(SENDINFO(m_flDuckJumpTime), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),
 	SendPropFloat	(SENDINFO(m_flJumpTime), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),
 	SendPropFloat	(SENDINFO(m_flFallVelocity), 17, SPROP_CHANGES_OFTEN, -4096.0f, 4096.0f ),
-//	SendPropInt		(SENDINFO(m_nOldButtons),	22, SPROP_UNSIGNED ),
 	SendPropVector	(SENDINFO(m_vecPunchAngle),      -1,  SPROP_COORD|SPROP_CHANGES_OFTEN),
 	SendPropVector	(SENDINFO(m_vecPunchAngleVel),      -1,  SPROP_COORD),
 	SendPropInt		(SENDINFO(m_bDrawViewmodel), 1, SPROP_UNSIGNED ),
@@ -67,6 +67,14 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.start ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.end ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.farz ), 0, SPROP_NOSCALE ),
+
+	SendPropInt( SENDINFO_STRUCTELEM( m_fog.colorPrimaryLerpTo ), 32, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO_STRUCTELEM( m_fog.colorSecondaryLerpTo ), 32, SPROP_UNSIGNED ),
+	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.startLerpTo ), 0, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.endLerpTo ), 0, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.lerptime ), 0, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO_STRUCTELEM( m_fog.duration ), 0, SPROP_NOSCALE ),
+
 	// audio data
 	SendPropVector( SENDINFO_STRUCTARRAYELEM( m_audio.localSound, 0 ), -1, SPROP_COORD),
 	SendPropVector( SENDINFO_STRUCTARRAYELEM( m_audio.localSound, 1 ), -1, SPROP_COORD),
@@ -91,7 +99,12 @@ BEGIN_DATADESC_NO_BASE( fogparams_t )
 	DEFINE_FIELD( start, FIELD_FLOAT ),
 	DEFINE_FIELD( end, FIELD_FLOAT ),
 	DEFINE_FIELD( farz, FIELD_FLOAT ),
-
+	DEFINE_FIELD( colorPrimaryLerpTo, FIELD_COLOR32 ),
+	DEFINE_FIELD( colorSecondaryLerpTo, FIELD_COLOR32 ),
+	DEFINE_FIELD( startLerpTo, FIELD_FLOAT ),
+	DEFINE_FIELD( endLerpTo, FIELD_FLOAT ),
+	DEFINE_FIELD( lerptime, FIELD_TIME ),
+	DEFINE_FIELD( duration, FIELD_FLOAT ),
 END_DATADESC()
 
 BEGIN_DATADESC_NO_BASE( sky3dparams_t )
@@ -138,12 +151,17 @@ BEGIN_SIMPLE_DATADESC( CPlayerLocalData )
 	DEFINE_EMBEDDED( m_skybox3d ),
 	DEFINE_EMBEDDED( m_fog ),
 	DEFINE_EMBEDDED( m_audio ),
-	DEFINE_FIELD( m_bSlowMovement, FIELD_BOOLEAN ),
+	
+	// "Why don't we save this field, grandpa?"
+	//
+	// "You see Billy, trigger_vphysics_motion uses vPhysics to touch the player,
+	// so if the trigger is Disabled via an input while the player is inside it,
+	// the trigger won't get its EndTouch until the player moves. Since touchlinks
+	// aren't saved and restored, if the we save before EndTouch is called, it
+	// will never be called after we load."
+	//DEFINE_FIELD( m_bSlowMovement, FIELD_BOOLEAN ),
 	
 END_DATADESC()
-
-BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
-END_PREDICTION_DATA()
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
@@ -157,24 +175,32 @@ CPlayerLocalData::CPlayerLocalData()
 	m_audio.soundscapeIndex = 0;
 	m_audio.localBits = 0;
 	m_audio.ent.Set( NULL );
+	m_pOldSkyCamera = NULL;
 }
 
 
-void CPlayerLocalData::UpdateAreaBits( CBasePlayer *pl )
+void CPlayerLocalData::UpdateAreaBits( CBasePlayer *pl, unsigned char chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES] )
 {
 	Vector origin = pl->EyePosition();
 
 	unsigned char tempBits[32];
 	COMPILE_TIME_ASSERT( sizeof( tempBits ) >= sizeof( ((CPlayerLocalData*)0)->m_chAreaBits ) );
 
+	int i;
 	int area = engine->GetArea( origin );
 	engine->GetAreaBits( area, tempBits, sizeof( tempBits ) );
-	for ( int i=0; i < m_chAreaBits.Count(); i++ )
+	for ( i=0; i < m_chAreaBits.Count(); i++ )
 	{
 		if ( tempBits[i] != m_chAreaBits[ i ] )
 		{
 			m_chAreaBits.Set( i, tempBits[i] );
 		}
+	}
+
+	for ( i=0; i < MAX_AREA_PORTAL_STATE_BYTES; i++ )
+	{
+		if ( chAreaPortalBits[i] != m_chAreaPortalBits[i] )
+			m_chAreaPortalBits.Set( i, chAreaPortalBits[i] );
 	}
 }
 
@@ -188,16 +214,21 @@ void ClientData_Update( CBasePlayer *pl )
 	// HACKHACK: for 3d skybox 
 	// UNDONE: Support multiple sky cameras?
 	CSkyCamera *pSkyCamera = GetCurrentSkyCamera();
-	if ( pSkyCamera )
+	if ( pSkyCamera != pl->m_Local.m_pOldSkyCamera )
 	{
-		pl->m_Local.m_skybox3d = pSkyCamera->m_skyboxData;
+		pl->m_Local.m_pOldSkyCamera = pSkyCamera;
+		pl->m_Local.m_skybox3d.NetworkStateChanged();
+		memcpy( &pl->m_Local.m_skybox3d, &pSkyCamera->m_skyboxData, sizeof(pl->m_Local.m_skybox3d) );
 	}
-	else
+	else if ( !pSkyCamera )
 	{
 		pl->m_Local.m_skybox3d.area = 255;
 	}
 
-	GetWorldFogParams( pl->m_Local.m_fog );
+	if ( GetWorldFogParams( pl->m_Local.m_fog ) )
+	{
+		pl->m_Local.m_fog.NetworkStateChanged();
+	}
 }
 
 
@@ -219,22 +250,4 @@ void UpdateAllClientData( void )
 		ClientData_Update( pl );
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: If the recipient is the same as objectID, go ahead and iterate down
-//  the m_Local stuff, otherwise, act like it wasn't there at all.
-// This way, only the local player receives information about him/herself.
-// Input  : *pVarData - 
-//			*pOut - 
-//			objectID - 
-//-----------------------------------------------------------------------------
-
-void* SendProxy_SendLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
-{
-	pRecipients->SetOnly( objectID - 1 );
-	return ( void * )pVarData;
-}
-
-
-
 

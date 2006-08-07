@@ -59,7 +59,7 @@ public:
 
 	CNavArea *GetNavArea( const Vector &pos, float beneathLimt = 120.0f ) const;	///< given a position, return the nav area that IsOverlapping and is *immediately* beneath it
 	CNavArea *GetNavAreaByID( unsigned int id ) const;
-	CNavArea *GetNearestNavArea( const Vector &pos, bool anyZ = false, float maxDist = 10000.0f ) const;
+	CNavArea *GetNearestNavArea( const Vector &pos, bool anyZ = false, float maxDist = 10000.0f, bool checkLOS = false ) const;
 
 	Place GetPlace( const Vector &pos ) const;							///< return Place at given coordinate
 	const char *PlaceToName( Place place ) const;						///< given a place, return its name
@@ -82,10 +82,10 @@ public:
 	//-------------------------------------------------------------------------------------
 	// Auto-generation
 	//
-	void BeginGeneration( void );										///< initiate the generation process
+	void BeginGeneration( bool incremental = false );					///< initiate the generation process
 	void BeginAnalysis( void );											///< re-analyze an existing Mesh.  Determine Hiding Spots, Encounter Spots, etc.
 
-	bool IsGenerating( void ) const		{ return m_isGenerating; }		///< return true while a Navigation Mesh is being generated
+	bool IsGenerating( void ) const		{ return m_generationMode != GENERATE_NONE; }	///< return true while a Navigation Mesh is being generated
 	const char *GetPlayerSpawnName( void ) const;						///< return name of player spawn entity
 	void SetPlayerSpawnName( const char *name );						///< define the name of player spawn entities
 	void AddWalkableSeed( const Vector &pos, const Vector &normal );	///< add given walkable position to list of seed positions for map sampling
@@ -99,6 +99,7 @@ public:
 
 	// Edit callbacks from ConCommands
 	void CommandNavDelete( void );										///< delete current area
+	void CommandNavDeleteMarked( void );								///< delete current marked area
 	void CommandNavSplit( void );										///< split current area
 	void CommandNavMerge( void );										///< merge adjacent areas
 	void CommandNavMark( void );										///< mark an area for further operations
@@ -123,8 +124,18 @@ public:
 	void CommandNavLadderFlip( void );									///< Flips the direction a ladder faces
 	void CommandNavToggleAttribute( NavAttributeType attribute );		///< toggle an attribute on current area
 	void CommandNavMakeSniperSpots( void );								///< cuts up the marked area into individual areas suitable for sniper spots
+	void CommandNavBuildLadder( void );									///< builds a nav ladder on the climbable surface under the cursor
+	void CommandNavRemoveUnusedJumpAreas( void );						///< removes jump areas with at most 1 connection to a ladder or non-jump area
 
-	bool IsPlaceMode( void ) const { return m_isPlaceMode; }
+	// IN-PROGRESS COMMANDS FOR MANIPULATING EXISTING AREAS
+	void CommandNavPickArea( void );
+	void CommandNavResizeHorizontal( void );
+	void CommandNavResizeVertical( void );
+	void CommandNavResizeEnd( void );
+
+	bool IsPlaceMode( void ) const { return m_navEditMode == NAV_EDIT_PLACE; }
+
+	void GetEditVectors( Vector *pos, Vector *forward );						///< Gets the eye position and view direction of the editing player
 
 	CNavArea *GetMarkedArea( void ) const		{ return m_markedArea; }		///< return area marked by user in edit mode
 	CNavLadder *GetMarkedLadder( void ) const	{ return m_markedLadder; }		///< return ladder marked by user in edit mode
@@ -134,11 +145,8 @@ public:
 
 	void CreateLadder( const Vector& mins, const Vector& maxs, const Vector2D *ladderDir );
 
-	float SnapToGrid( float x ) const									///< snap given coordinate to generation grid boundary
-	{
-		int gx = (int)( x / GenerationStepSize );
-		return gx * GenerationStepSize;
-	}
+	float SnapToGrid( float x, bool forceGrid = false ) const;					///< snap given coordinate to generation grid boundary
+	Vector SnapToGrid( const Vector& in, bool snapX = true, bool snapY = true, bool forceGrid = false ) const;	///< snap given vector's X & Y coordinates to generation grid boundary
 
 	const Vector &GetEditCursorPosition( void ) const	{ return m_editCursorPos; }	///< return position of edit cursor
 	void StripNavigationAreas( void );
@@ -167,6 +175,8 @@ public:
 	NavLadderList& GetLadders( void ) { return m_ladderList; }	///< Returns the list of ladders
 	CNavLadder *GetLadderByID( unsigned int id ) const;
 
+	CUtlVector< CNavArea * >& GetTransientAreas( void ) { return m_transientAreas; }
+
 private:
 	friend class CNavArea;
 	friend class CNavNode;
@@ -189,11 +199,12 @@ private:
 	int WorldToGridX( float wx ) const;							///< given X component, return grid index
 	int WorldToGridY( float wy ) const;							///< given Y component, return grid index
 	void AllocateGrid( float minX, float maxX, float minY, float maxY );	///< clear and reset the grid to the given extents
+	void GridToWorld( int gridX, int gridY, Vector *pos ) const;
 
 	void AddNavArea( CNavArea *area );							///< add an area to the grid
 	void RemoveNavArea( CNavArea *area );						///< remove an area from the grid
 
-	void DestroyNavigationMesh( void );							///< free all resources of the mesh and reset it to empty state
+	void DestroyNavigationMesh( bool incremental = false );		///< free all resources of the mesh and reset it to empty state
 	void DestroyHidingSpots( void );
 
 	void ComputeBattlefrontAreas( void );						///< determine areas where rushing teams will first meet
@@ -218,12 +229,19 @@ private:
 	CNavArea *m_selectedArea;									///< area that is selected this frame
 	CNavArea *m_lastSelectedArea;								///< area that was selected last frame
 	NavCornerType m_markedCorner;								///< currently marked corner for edit operations
-	bool m_isCreatingNavArea;									///< if true, we are manually creating a new nav area
 	Vector m_anchor;											///< first corner of an area being created
-	bool m_isPlaceMode;											///< if true, we are in place editing mode
 	bool m_isPlacePainting;										///< if true, we set an area's place by pointing at it
 	bool m_splitAlongX;											///< direction the selected nav area would be split
 	float m_splitEdge;											///< location of the possible split
+
+	enum NavEditMode {
+		NAV_EDIT_NORMAL = 0,
+		NAV_EDIT_CREATE,										///< manually creating a new nav area
+		NAV_EDIT_RESIZE_HORIZONTAL,
+		NAV_EDIT_RESIZE_VERTICAL,
+		NAV_EDIT_PLACE											///< place-editing mode
+	};
+	NavEditMode m_navEditMode;
 
 	bool m_climbableSurface;									///< if true, the cursor is pointing at a climable surface
 	Vector m_surfaceNormal;										///< Normal of the surface the cursor is pointing at
@@ -262,6 +280,7 @@ private:
 	bool TestArea( CNavNode *node, int width, int height );		///< check if an area of size (width, height) can fit, starting from node as upper left corner
 	int BuildArea( CNavNode *node, int width, int height );		///< create a CNavArea of size (width, height) starting fom node at upper left corner
 
+	void RemoveUnusedJumpAreas( void );
 	void MarkJumpAreas( void );
 	void SquareUpAreas( void );
 	void MergeGeneratedAreas( void );
@@ -281,7 +300,14 @@ private:
 		NUM_GENERATION_STATES
 	}
 	m_generationState;											///< the state of the generation process
-	bool m_isGenerating;										///< true while a Navigation Mesh is being generated
+	enum GenerationModeType
+	{
+		GENERATE_NONE,
+		GENERATE_FULL,
+		GENERATE_INCREMENTAL,
+		GENERATE_ANALYSIS_ONLY,
+	}
+	m_generationMode;						///< true while a Navigation Mesh is being generated
 	int m_generationIndex;										///< used for iterating nav areas during generation process
 	int m_sampleTick;											///< counter for displaying pseudo-progress while sampling walkable space
 
@@ -296,6 +322,9 @@ private:
 
 	CNavNode *GetNextWalkableSeedNode( void );					///< return the next walkable seed as a node
 	int m_seedIdx;
+
+	void BuildTransientAreaList( void );
+	CUtlVector< CNavArea * > m_transientAreas;
 };
 
 // the global singleton interface

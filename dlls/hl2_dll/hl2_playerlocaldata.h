@@ -35,6 +35,10 @@ public:
 	CNetworkVar( int,	m_iSquadMedicCount );
 	CNetworkVar( bool,	m_fSquadInFollowMode );
 	CNetworkVar( bool,	m_bWeaponLowered );
+	CNetworkVar( EHANDLE, m_hAutoAimTarget );
+	CNetworkVar( Vector, m_vecAutoAimPoint );
+	CNetworkVar( bool,	m_bDisplayReticle );
+	CNetworkVar( bool,	m_bStickyAutoAim );
 
 	// Ladder related data
 	CNetworkVar( EHANDLE, m_hLadder );
@@ -43,7 +47,5 @@ public:
 
 EXTERN_SEND_TABLE(DT_HL2Local);
 
-// Uses same send proxy as normal local data tables
-void* SendProxy_SendLocalDataTable( const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID );
 
 #endif // HL2_PLAYERLOCALDATA_H

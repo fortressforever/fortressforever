@@ -19,6 +19,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define SF_USE_TARGET_FACING	(1<<0)	// Use the target entity's direction instead of position
+
 class CPointAngleSensor : public CPointEntity
 {
 	DECLARE_CLASS(CPointAngleSensor, CPointEntity);
@@ -57,9 +59,10 @@ protected:
 	bool m_bFired;					// Latches the output so it only fires once per true.
 
 	// Outputs
-	COutputEvent m_OnFacingLookat;		// Fired when the target points at the lookat entity.
-	COutputEvent m_OnNotFacingLookat;	// Fired in response to a Test input if the target is not looking at the lookat entity.
-	COutputVector m_TargetDir;
+	COutputEvent	m_OnFacingLookat;		// Fired when the target points at the lookat entity.
+	COutputEvent	m_OnNotFacingLookat;	// Fired in response to a Test input if the target is not looking at the lookat entity.
+	COutputVector	m_TargetDir;
+	COutputFloat	m_FacingPercentage;	// Normalize value representing how close the entity is to facing directly at the target
 
 	DECLARE_DATADESC();
 };
@@ -83,6 +86,7 @@ BEGIN_DATADESC(CPointAngleSensor)
 	DEFINE_OUTPUT(m_OnFacingLookat, "OnFacingLookat"),
 	DEFINE_OUTPUT(m_OnNotFacingLookat, "OnNotFacingLookat"),
 	DEFINE_OUTPUT(m_TargetDir, "TargetDir"),
+	DEFINE_OUTPUT(m_FacingPercentage, "FacingPercentage"),
 
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
@@ -132,12 +136,12 @@ void CPointAngleSensor::Activate(void)
 
 	if (!m_hTargetEntity)
 	{
-		m_hTargetEntity = gEntList.FindEntityByName(NULL, m_target, NULL);
+		m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target );
 	}
 
 	if (!m_hLookAtEntity && (m_nLookAtName != NULL_STRING))
 	{
-		m_hLookAtEntity = gEntList.FindEntityByName(NULL, m_nLookAtName, NULL);
+		m_hLookAtEntity = gEntList.FindEntityByName( NULL, m_nLookAtName );
 		if (!m_hLookAtEntity)
 		{
 			DevMsg(1, "Angle sensor '%s' could not find look at entity '%s'.\n", GetDebugName(), STRING(m_nLookAtName));
@@ -151,7 +155,6 @@ void CPointAngleSensor::Activate(void)
 		SetNextThink( gpGlobals->curtime );
 	}
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Determines if one entity is facing within a given tolerance of another
@@ -175,9 +178,18 @@ bool CPointAngleSensor::IsFacingWithinTolerance(CBaseEntity *pEntity, CBaseEntit
 	Vector forward;
 	pEntity->GetVectors(&forward, NULL, NULL);
 
-	Vector dir = pTarget->GetAbsOrigin() - pEntity->GetAbsOrigin();
-	VectorNormalize(dir);
-
+	Vector dir;
+	// Use either our position relative to the target, or the target's raw facing
+	if ( HasSpawnFlags( SF_USE_TARGET_FACING ) )
+	{
+		pTarget->GetVectors(&dir, NULL, NULL);
+	}
+	else
+	{
+		dir = pTarget->GetAbsOrigin() - pEntity->GetAbsOrigin();
+		VectorNormalize(dir);
+	}
+		
 	//
 	// Larger dot product corresponds to a smaller angle.
 	//
@@ -213,7 +225,8 @@ void CPointAngleSensor::Think(void)
 			// Check to see if the measure entity's forward vector has been within
 			// given tolerance of the target entity for the given period of time.
 			//
-			if (IsFacingWithinTolerance(m_hTargetEntity, m_hLookAtEntity, m_flDotTolerance))
+			float flDot;
+			if (IsFacingWithinTolerance(m_hTargetEntity, m_hLookAtEntity, m_flDotTolerance, &flDot ))
 			{
 				if (!m_bFired)
 				{
@@ -229,11 +242,21 @@ void CPointAngleSensor::Think(void)
 					}
 				}
 			}
-			else if (m_bFired)
+			else 
 			{
-				m_bFired = false;
+				// Reset the fired state
+				if ( m_bFired )
+				{
+					m_bFired = false;
+				}
+
+				// Always reset the time when we've lost our facing
 				m_flFacingTime = 0;
 			}
+			
+			// Output the angle range we're in
+			float flPerc = RemapValClamped( flDot, 1.0f, m_flDotTolerance, 1.0f, 0.0f );
+			m_FacingPercentage.Set( flPerc, this, this );
 		}
 
 		SetNextThink( gpGlobals->curtime );
@@ -271,7 +294,7 @@ void CPointAngleSensor::InputSetTargetEntity(inputdata_t &inputdata)
 	else
 	{
 		m_target = AllocPooledString(inputdata.value.String());
-		m_hTargetEntity = gEntList.FindEntityByName(NULL, m_target, inputdata.pActivator);
+		m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target, NULL, inputdata.pActivator, inputdata.pCaller );
 		if (!m_bDisabled && m_hTargetEntity)
 		{
 			SetNextThink( gpGlobals->curtime );
@@ -351,19 +374,189 @@ int CPointAngleSensor::DrawDebugTextOverlays(void)
 
 		char tempstr[512];
 		Q_snprintf(tempstr, sizeof(tempstr), "delta ang (dot)    : %.2f (%f)", RAD2DEG(acos(flDot)), flDot);
-		NDebugOverlay::EntityText(entindex(), nOffset, tempstr, 0);
+		EntityText( nOffset, tempstr, 0);
 		nOffset++;
 
 		Q_snprintf(tempstr, sizeof(tempstr), "tolerance ang (dot): %.2f (%f)", RAD2DEG(acos(m_flDotTolerance)), m_flDotTolerance);
-		NDebugOverlay::EntityText(entindex(), nOffset, tempstr, 0);
+		EntityText( nOffset, tempstr, 0);
 		nOffset++;
 
 		Q_snprintf(tempstr, sizeof(tempstr), "facing: %s", bFacing ? "yes" : "no");
-		NDebugOverlay::EntityText(entindex(), nOffset, tempstr, 0);
+		EntityText( nOffset, tempstr, 0);
 		nOffset++;
 	}
 
 	return nOffset;
 }
 
+// ====================================================================
+//  Proximity sensor
+// ====================================================================
 
+#define SF_PROXIMITY_TEST_AGAINST_AXIS	(1<<0)
+
+class CPointProximitySensor : public CPointEntity
+{
+	DECLARE_CLASS( CPointProximitySensor, CPointEntity );
+
+public:
+
+	virtual void Activate( void );
+
+protected:
+
+	void Think( void );
+	void Enable( void );
+	void Disable( void );
+
+	// Input handlers
+	void InputEnable(inputdata_t &inputdata);
+	void InputDisable(inputdata_t &inputdata);
+	void InputToggle(inputdata_t &inputdata);
+	void InputSetTargetEntity(inputdata_t &inputdata);
+
+private:
+
+	bool	m_bDisabled;			// When disabled, we do not think or fire outputs.
+	EHANDLE m_hTargetEntity;		// Entity whose angles are being monitored.
+
+	COutputFloat	m_Distance;
+
+	DECLARE_DATADESC();
+};
+
+LINK_ENTITY_TO_CLASS( point_proximity_sensor, CPointProximitySensor );
+
+BEGIN_DATADESC( CPointProximitySensor )
+
+	// Keys
+	DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
+	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
+
+	// Outputs
+	DEFINE_OUTPUT( m_Distance, "Distance"),
+
+	// Inputs
+	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
+	DEFINE_INPUTFUNC(FIELD_STRING, "SetTargetEntity", InputSetTargetEntity),
+
+END_DATADESC()
+
+//-----------------------------------------------------------------------------
+// Purpose: Called after all entities have spawned on new map or savegame load.
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::Activate( void )
+{
+	BaseClass::Activate();
+
+	if ( m_hTargetEntity == NULL )
+	{
+		m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target );
+	}
+
+	if ( m_bDisabled == false && m_hTargetEntity != NULL )
+	{
+		SetNextThink( gpGlobals->curtime );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::InputSetTargetEntity(inputdata_t &inputdata)
+{
+	if ((inputdata.value.String() == NULL) || (inputdata.value.StringID() == NULL_STRING) || (inputdata.value.String()[0] == '\0'))
+	{
+		m_target = NULL_STRING;
+		m_hTargetEntity = NULL;
+		SetNextThink( TICK_NEVER_THINK );
+	}
+	else
+	{
+		m_target = AllocPooledString(inputdata.value.String());
+		m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target, NULL, inputdata.pActivator, inputdata.pCaller );
+		if (!m_bDisabled && m_hTargetEntity)
+		{
+			SetNextThink( gpGlobals->curtime );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::InputEnable( inputdata_t &inputdata )
+{
+	Enable();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::InputDisable( inputdata_t &inputdata )
+{
+	Disable();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::InputToggle( inputdata_t &inputdata )
+{
+	if ( m_bDisabled )
+	{
+		Enable();
+	}
+	else
+	{
+		Disable();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::Enable( void )
+{
+	m_bDisabled = false;
+	if ( m_hTargetEntity )
+	{
+		SetNextThink( gpGlobals->curtime );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::Disable( void )
+{
+	m_bDisabled = true;
+	SetNextThink( TICK_NEVER_THINK );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Called every frame
+//-----------------------------------------------------------------------------
+void CPointProximitySensor::Think( void )
+{
+	if ( m_hTargetEntity != NULL )
+	{
+		Vector vecTestDir = ( m_hTargetEntity->GetAbsOrigin() - GetAbsOrigin() );
+		float flDist = VectorNormalize( vecTestDir );
+
+		// If we're only interested in the distance along a vector, modify the length the accomodate that
+		if ( HasSpawnFlags( SF_PROXIMITY_TEST_AGAINST_AXIS ) )
+		{
+			Vector vecDir;
+			GetVectors( &vecDir, NULL, NULL );
+
+			float flDot = DotProduct( vecTestDir, vecDir );
+			flDist *= fabs( flDot );
+		}
+
+		m_Distance.Set( flDist, this, this );
+		SetNextThink( gpGlobals->curtime );
+	}
+}

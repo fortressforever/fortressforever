@@ -1,15 +1,20 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "particles_simple.h"
 #include "env_wind_shared.h"
+#include "keyvalues.h"
+#include "toolframework_client.h"
+#include "toolframework/itoolframework.h"
+#include "vstdlib/ikeyvaluessystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
 
 // Used for debugging to make sure all particle effects get freed when we exit.
 CUtlLinkedList<CParticleEffect*,int> g_ParticleEffects;
@@ -31,8 +36,10 @@ CParticleEffect::CParticleEffect( const char *pName )
 	m_pDebugName = pName;
 	m_vSortOrigin.Init();
 	m_Flags = FLAG_ALLOCATED;
+	m_nToolParticleEffectId = TOOLPARTICLESYSTEMID_INVALID;
 	m_RefCount = 0;
-	g_ParticleMgr.AddEffect( &m_ParticleEffect, this );
+	m_bSimulate = true;
+	ParticleMgr()->AddEffect( &m_ParticleEffect, this );
 #if defined( _DEBUG )
 	g_ParticleEffects.AddToTail( this );
 #endif
@@ -52,6 +59,17 @@ CParticleEffect::~CParticleEffect( void )
 	// For some reason we'll get a callback into NotifyRemove() after being deleted!
 	// Investigate dangling pointer
 	m_Flags = 0;
+
+#if !defined( _XBOX )
+	if ( ( m_nToolParticleEffectId != TOOLPARTICLESYSTEMID_INVALID ) && clienttools->IsInRecordingMode() )
+	{
+		KeyValues *msg = new KeyValues( "ParticleSystem_Destroy" );
+		msg->SetInt( "id", m_nToolParticleEffectId );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		m_nToolParticleEffectId = TOOLPARTICLESYSTEMID_INVALID; 
+	}
+#endif
 }
 
 
@@ -87,9 +105,15 @@ void CParticleEffect::Release()
 	// If all the particles are already gone, delete ourselves now.
 	// If there are still particles, wait for the last NotifyDestroyParticle.
 	if ( m_RefCount == 0 )
+	{
 		if ( m_Flags & FLAG_ALLOCATED )
+		{
 			if ( m_ParticleEffect.GetNumActiveParticles() == 0 )
+			{
 				m_ParticleEffect.SetRemoveFlag();
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -102,6 +126,11 @@ const Vector &CParticleEffect::GetSortOrigin()
 	return m_vSortOrigin;
 }
 
+const char *CParticleEffect::GetEffectName()
+{
+	return m_pDebugName;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : pParticle - 
@@ -109,7 +138,7 @@ const Vector &CParticleEffect::GetSortOrigin()
 void CParticleEffect::NotifyDestroyParticle( Particle* pParticle )
 {
 	// Go away if we're released and there are no more particles.
-	if( m_ParticleEffect.GetNumActiveParticles() == 0 && IsReleased() && m_Flags & FLAG_ALLOCATED )
+	if( m_ParticleEffect.GetNumActiveParticles() == 0 && IsReleased() && (m_Flags & FLAG_ALLOCATED) && !(m_Flags & FLAG_DONT_REMOVE) )
 	{
 		m_ParticleEffect.SetRemoveFlag();
 	}
@@ -185,14 +214,45 @@ Particle *CParticleEffect::AddParticle( unsigned int particleSize, PMaterialHand
 	return pParticle;
 }
 
+
+
+//-----------------------------------------------------------------------------
+// Particle implementation
+//-----------------------------------------------------------------------------
+
+void SimpleParticle::ToolRecordParticle( KeyValues *msg )
+{
+	Particle::ToolRecordParticle( msg );
+
+	msg->SetFloat( "velx", m_vecVelocity.x );
+	msg->SetFloat( "vely", m_vecVelocity.y );
+	msg->SetFloat( "velz", m_vecVelocity.z );
+
+	msg->SetFloat( "roll", m_flRoll );
+	msg->SetFloat( "rolldelta", m_flRollDelta );
+
+	msg->SetFloat( "dietime", m_flDieTime );
+	msg->SetFloat( "lifetime", m_flLifetime );
+
+	msg->SetColor( "color", Color( m_uchColor[0], m_uchColor[1], m_uchColor[2] ) );
+	msg->SetInt( "startalpha", m_uchStartAlpha );
+	msg->SetInt( "endalpha", m_uchEndAlpha );
+
+	msg->SetInt( "startsize", m_uchStartSize );
+	msg->SetInt( "endsize", m_uchEndSize );
+
+	msg->SetInt( "flags", m_iFlags );
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 
+REGISTER_EFFECT_USING_CREATE( CSimpleEmitter );
+
 CSimpleEmitter::CSimpleEmitter( const char *pDebugName ) : CParticleEffect( pDebugName )
 {
-	m_pDebugName = pDebugName;
-
 	m_flNearClipMin	= 16.0f;
 	m_flNearClipMax	= 64.0f;
 }
@@ -354,7 +414,6 @@ void CSimpleEmitter::SimulateParticles( CParticleSimulateIterator *pIterator )
 	}
 }
 
-
 void CSimpleEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 {
 	const SimpleParticle *pParticle = (const SimpleParticle *)pIterator->GetFirst();
@@ -363,7 +422,7 @@ void CSimpleEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		//Render
 		Vector	tPos;
 
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = (int) tPos.z;
 
 		//Render it
@@ -379,8 +438,6 @@ void CSimpleEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		pParticle = (const SimpleParticle *)pIterator->GetNext( sortKey );
 	}
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

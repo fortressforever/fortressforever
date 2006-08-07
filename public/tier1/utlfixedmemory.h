@@ -4,6 +4,10 @@
 //
 // $NoKeywords: $
 //
+// A growable memory class. This memory class does *not* store all
+// of its memory in a contiguous block, and but it does guarantee to not
+// reallocate it. Note the strange interface... ints are used instead of void*s
+// to make this look as similar as possible to CUtlMemory.
 //=============================================================================//
 
 #ifndef UTLFIXEDMEMORY_H
@@ -107,6 +111,7 @@ CUtlFixedMemory<T>::CUtlFixedMemory( int nGrowSize, int nInitAllocationCount ) :
 	Assert( (nGrowSize >= 0) && (nGrowSize != EXTERNAL_BUFFER_MARKER) );
 	if (m_nAllocationCount)
 	{
+		MEM_ALLOC_CREDIT_CLASS();
 		m_pMemory = (BlockHeader_t*)malloc( sizeof(BlockHeader_t) + m_nAllocationCount * sizeof(T) );
 		m_pMemory->m_pNext = NULL;
 		m_pMemory->m_nBlockCount = m_nAllocationCount;
@@ -318,6 +323,8 @@ void CUtlFixedMemory<T>::Grow( int num )
 	// Make sure we have at least numallocated + num allocations.
 	// Use the grow rules specified for this memory (in m_nGrowSize)
 	int nNewAllocationCount = m_nAllocationCount - nOldAllocation;
+
+	MEM_ALLOC_CREDIT_CLASS();
 
 	BlockHeader_t *pHeader = (BlockHeader_t*)malloc( sizeof(BlockHeader_t) + nNewAllocationCount * sizeof(T) );
 	pHeader->m_pNext = NULL;

@@ -121,7 +121,7 @@ CBaseEntity* CTesla::GetSourceEntity()
 {
 	if ( m_SourceEntityName != NULL_STRING )
 	{
-		CBaseEntity *pRet = gEntList.FindEntityByName( NULL, m_SourceEntityName, NULL );
+		CBaseEntity *pRet = gEntList.FindEntityByName( NULL, m_SourceEntityName );
 		if ( pRet )
 			return pRet;
 	}
@@ -147,10 +147,10 @@ void CTesla::DoSpark()
 		WRITE_VEC3COORD( pEnt->GetAbsOrigin() );
 		WRITE_SHORT( pEnt->entindex() );
 		WRITE_FLOAT( m_flRadius );
-		WRITE_CHAR( m_Color.r );
-		WRITE_CHAR( m_Color.g );
-		WRITE_CHAR( m_Color.b );
-		WRITE_CHAR( m_Color.a );
+		WRITE_BYTE( m_Color.r );
+		WRITE_BYTE( m_Color.g );
+		WRITE_BYTE( m_Color.b );
+		WRITE_BYTE( m_Color.a );
 		WRITE_CHAR( RandomInt( m_NumBeams[0], m_NumBeams[1] ) );
 		WRITE_FLOAT( RandomFloat( m_flThickness[0], m_flThickness[1] ) );
 		WRITE_FLOAT( RandomFloat( m_flTimeVisible[0], m_flTimeVisible[1] ) );

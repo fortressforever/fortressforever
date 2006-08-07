@@ -9,11 +9,16 @@
 #include "bsplib.h"
 
 
-void ScratchPad_DrawWinding( IScratchPad3D *pPad, winding_t *w, Vector vColor, Vector vOffset = Vector(0,0,0) )
+void ScratchPad_DrawWinding( 
+	IScratchPad3D *pPad, 
+	int nPoints, 
+	Vector *pPoints, 
+	Vector vColor, 
+	Vector vOffset )
 {
-	for ( int i=0; i < w->numpoints; i++ )
+	for ( int i=0; i < nPoints; i++ )
 	{
-		pPad->DrawLine( CSPVert( w->p[i]+vOffset, vColor ), CSPVert( w->p[(i+1)%w->numpoints]+vOffset, vColor ) );
+		pPad->DrawLine( CSPVert( pPoints[i]+vOffset, vColor ), CSPVert( pPoints[(i+1)%nPoints]+vOffset, vColor ) );
 	}
 }
 
@@ -70,21 +75,29 @@ void ScratchPad_DrawFace( IScratchPad3D *pPad, dface_t *f, int iFaceNumber, cons
 
 void ScratchPad_DrawWorld( IScratchPad3D *pPad, bool bDrawFaceNumbers, const CSPColor &faceColor )
 {
-	for ( int i=0; i < numfaces; i++ )
-	{
-		dface_t *f = &dfaces[i];
+	bool bAutoFlush = pPad->GetAutoFlush();
+	pPad->SetAutoFlush( false );
 
-		ScratchPad_DrawFace( pPad, f, bDrawFaceNumbers ? i : -1 );
+	for ( int i=0; i < numleafs; i++ )
+	{
+		dleaf_t *l = &dleafs[i];
+		if ( l->contents & CONTENTS_DETAIL )
+			continue;
+			
+		for ( int z=0; z < l->numleaffaces; z++ )
+		{
+			int iFace = dleaffaces[l->firstleafface+z];
+			dface_t *f = &dfaces[iFace];
+			ScratchPad_DrawFace( pPad, f, bDrawFaceNumbers ? i : -1 );
+		}
 	}
+
+	pPad->SetAutoFlush( bAutoFlush );
 }
 
 
 void ScratchPad_DrawWorld( bool bDrawFaceNumbers, const CSPColor &faceColor )
 {
 	IScratchPad3D *pPad = ScratchPad3D_Create();
-	pPad->SetAutoFlush( false );
-	
 	ScratchPad_DrawWorld( pPad, bDrawFaceNumbers );
-	
-	pPad->Release();
 }

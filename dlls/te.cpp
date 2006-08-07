@@ -101,7 +101,7 @@ void TE_Dust( IRecipientFilter& filter, float delayt,
 void TE_DispatchEffect( IRecipientFilter& filter, float delay,
 				const Vector &pos, const char *pName, const CEffectData &data );
 void TE_PhysicsProp( IRecipientFilter& filter, float delay,
-	int modelindex, const Vector& pos, const QAngle &angles, const Vector& vel, int flags );
+	int modelindex, int skin, const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects );
 	
 
 #ifdef HL2_DLL
@@ -495,13 +495,19 @@ public:
 		}
 	}
 
-	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex,
-		const Vector& pos, const QAngle &angles, const Vector& vel, int flags )
+	virtual void PhysicsProp( IRecipientFilter& filter, float delay, int modelindex, int skin,
+		const Vector& pos, const QAngle &angles, const Vector& vel, int flags, int effects )
 	{
 		if ( !SuppressTE( filter ) )
 		{
-			TE_PhysicsProp( filter, delay, modelindex, pos, angles, vel, flags );
+			TE_PhysicsProp( filter, delay, modelindex, skin, pos, angles, vel, flags, effects );
 		}
+	}
+
+	// For playback from external tools
+	virtual void TriggerTempEntity( KeyValues *pKeyValues )
+	{
+		Assert(0);
 	}
 };
 

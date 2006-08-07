@@ -31,7 +31,7 @@ class Panel;
 
 extern IClientMode *GetClientModeNormal(); // must be implemented
 
-// This class implements client mode functionality common to HL2 and TF2.
+// This class implements client mode functionality 
 class ClientModeShared : public IClientMode, public IGameEventListener2
 {
 // IClientMode overrides.
@@ -63,7 +63,6 @@ public:
 	virtual bool	ShouldDrawCrosshair( void );
 	virtual void	AdjustEngineViewport( int& x, int& y, int& width, int& height );
 	virtual void	PreRender(CViewSetup *pSetup);
-	virtual void	PostRenderWorld();
 	virtual void	PostRender();
 	virtual void	PostRenderVGui();
 	virtual void	ProcessInput(bool bActive);
@@ -89,7 +88,9 @@ public:
 		{ return m_pViewport->GetAnimationController(); }
 	
 	virtual void FireGameEvent( IGameEvent *event );
-			
+
+	virtual bool CanRecordDemo( char *errorMsg, int length ) const { return true; }
+
 protected:
 	CBaseViewport			*m_pViewport;
 
@@ -99,6 +100,7 @@ private:
 	CBaseHudChat			*m_pChatElement;
 	vgui::HCursor			m_CursorNone;
 	CBaseHudWeaponSelection *m_pWeaponSelection;
+	int						m_nRootSize[2];
 };
 
 #endif // CLIENTMODE_NORMAL_H

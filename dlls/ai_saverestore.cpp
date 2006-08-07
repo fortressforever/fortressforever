@@ -13,6 +13,7 @@
 #include "ai_basenpc.h"
 #include "ai_squad.h"
 #include "ai_network.h"
+#include "ai_networkmanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -150,12 +151,13 @@ public:
 			pRestore->EndBlock();
 		}
 		
-		if ( g_AI_Manager.NumAIs() && g_pBigAINet->NumNodes() == 0 )
+		if ( g_AI_Manager.NumAIs() && g_pBigAINet->NumNodes() == 0 && !g_pAINetworkManager->NetworksLoaded() )
 		{
 			Msg( "***\n");
 			Msg( "ERROR: Loaded save game with no node graph. Load map and build node graph first!\n");
 			Msg( "***\n");
 			CAI_BaseNPC::m_nDebugBits |= bits_debugDisableAI;
+			g_pAINetworkManager->MarkDontSaveGraph();
 		}
 	}
 

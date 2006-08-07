@@ -5,7 +5,11 @@
 // $NoKeywords: $
 //
 //=============================================================================//
-#include "cbase.h" // precompiled header include
+
+#include "cbase.h"
+
+#if !defined(_STATIC_LINKED) || defined(SOUNDEMITTERSYSTEM_DLL)
+
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "interval.h"
 #include "soundchars.h"
@@ -316,37 +320,49 @@ const char *PitchToString( float pitch )
 	return sz;
 }
 
-ISoundEmitterSystemBase::CSoundParametersInternal::CSoundParametersInternal()
+CSoundParametersInternal::CSoundParametersInternal()
 {
+	m_pConvertedNames = m_pSoundNames = NULL;
+	m_nConvertedNames = m_nSoundNames = 0;
 	channel			= CHAN_AUTO; // 0
-
-	Q_strncpy( m_szChannel, "CHAN_AUTO", sizeof( m_szChannel ) );
 
 	volume.start	= VOL_NORM;  // 1.0f
 	volume.range	= 0.0f;
 
-	Q_strncpy( m_szVolume, "VOL_NORM", sizeof( m_szVolume ) );
+	pitch.start		= PITCH_NORM; // 100
+	pitch.range		= 0;
 
-	pitch.start		= (float)PITCH_NORM; // 100
-	pitch.range		= 0.0f;
-
-	Q_strncpy( m_szPitch, "PITCH_NORM", sizeof( m_szPitch ) );
-
-	soundlevel.start = (float)SNDLVL_NORM; // 75dB
-	soundlevel.range = 0.0f;
-
-	Q_strncpy( m_szSoundLevel, "SNDLVL_NORM", sizeof( m_szSoundLevel ) );
-
+	soundlevel.start = SNDLVL_NORM; // 75dB
+	soundlevel.range = 0;
 	delay_msec = 0;
-
 	play_to_owner_only = false;
-
 	had_missing_wave_files = false;
 	uses_gender_token = false;
+
 }
 
-ISoundEmitterSystemBase::CSoundParametersInternal::CSoundParametersInternal( const CSoundParametersInternal& src )
+CSoundParametersInternal::CSoundParametersInternal( const CSoundParametersInternal& src )
 {
+	m_pSoundNames = NULL;
+	m_pConvertedNames = NULL;
+	CopyFrom( src );
+}
+
+CSoundParametersInternal::~CSoundParametersInternal()
+{
+	if ( m_nSoundNames > 1 )
+		delete m_pSoundNames;
+	if ( m_nConvertedNames > 1 )
+		delete m_pConvertedNames;
+}
+
+void CSoundParametersInternal::CopyFrom( const CSoundParametersInternal& src )
+{
+	if ( m_nSoundNames > 1 )
+		delete m_pSoundNames;
+	if ( m_nConvertedNames > 1 )
+		delete m_pConvertedNames;
+
 	channel = src.channel;
 	volume = src.volume;
 	pitch = src.pitch;
@@ -354,37 +370,49 @@ ISoundEmitterSystemBase::CSoundParametersInternal::CSoundParametersInternal( con
 	delay_msec = src.delay_msec;
 	play_to_owner_only = src.play_to_owner_only;
 
-	int c = src.soundnames.Count();
-	int i;
-	for ( i = 0; i < c; i++ )
+	m_nSoundNames = src.m_nSoundNames;
+	if ( m_nSoundNames )
 	{
-		soundnames.AddToTail( src.soundnames[ i ] );
+		if ( m_nSoundNames > 1 )
+		{
+			m_pSoundNames = new SoundFile[m_nSoundNames];
+			memcpy( m_pSoundNames, src.m_pSoundNames, m_nSoundNames * sizeof(SoundFile) );
+		}
+		else
+		{
+			m_pSoundNames = src.m_pSoundNames;
+		}
 	}
-	c = src.convertednames.Count();
-	for ( i = 0; i < c; i++ )
+	else
 	{
-		convertednames.AddToTail( src.convertednames[ i ] );
+		m_pSoundNames = NULL;
+	}
+
+	m_nConvertedNames = src.m_nConvertedNames;
+	if ( m_nConvertedNames )
+	{
+		if ( m_nConvertedNames > 1 )
+		{
+			m_pConvertedNames = new SoundFile[m_nConvertedNames];
+			memcpy( m_pConvertedNames, src.m_pConvertedNames, m_nConvertedNames * sizeof(SoundFile) );
+		}
+		else
+		{
+			m_pConvertedNames = src.m_pConvertedNames;
+		}
+	}
+	else
+	{
+		m_pConvertedNames = NULL;
 	}
 
 	had_missing_wave_files = src.had_missing_wave_files;
 	uses_gender_token = src.uses_gender_token;
-
-	memcpy( m_szChannel, src.m_szChannel, sizeof( m_szChannel ) );
-	memcpy( m_szVolume, src.m_szVolume, sizeof( m_szVolume ) );
-	memcpy( m_szPitch, src.m_szPitch, sizeof( m_szPitch ) );
-	memcpy( m_szSoundLevel, src.m_szSoundLevel, sizeof( m_szSoundLevel ) );
 }
 
-bool ISoundEmitterSystemBase::CSoundParametersInternal::CompareInterval( const interval_t& i1, const interval_t& i2 ) const
-{
-	if ( i1.start != i2.start )
-		return false;
-	if ( i1.range != i2.range )
-		return false;
-	return true;
-}
+#define CompareInterval( i1, i2 ) ( memcmp( &(i1), &(i2), sizeof(i1) ) == 0 )
 
-bool ISoundEmitterSystemBase::CSoundParametersInternal::operator == ( const ISoundEmitterSystemBase::CSoundParametersInternal& other ) const
+bool CSoundParametersInternal::operator == ( const CSoundParametersInternal& other ) const
 {
 	if ( this == &other )
 		return true;
@@ -399,52 +427,45 @@ bool ISoundEmitterSystemBase::CSoundParametersInternal::operator == ( const ISou
 		return false;
 	if ( delay_msec != other.delay_msec )
 		return false;
-	if ( Q_stricmp( m_szChannel, other.m_szChannel ) )
-		return false;
-	if ( Q_stricmp( m_szVolume, other.m_szVolume ) )
-		return false;
-	if ( Q_stricmp( m_szPitch, other.m_szPitch ) )
-		return false;
-	if ( Q_stricmp( m_szSoundLevel, other.m_szSoundLevel ) )
-		return false;
-
 	if ( play_to_owner_only != other.play_to_owner_only )
 		return false;
 
-	if ( soundnames.Count() != other.soundnames.Count() )
+	if ( m_nSoundNames != other.m_nSoundNames )
 		return false;
 
 	// Compare items
-	int c = soundnames.Count();
+	int c = m_nSoundNames;
 	for ( int i = 0; i < c; i++ )
 	{
-		if ( soundnames[ i ].symbol != other.soundnames[ i ].symbol )
+		if ( GetSoundNames()[ i ].symbol != other.GetSoundNames()[ i ].symbol )
 			return false;
 	}
 
 	return true;
 }
 
-const char *ISoundEmitterSystemBase::CSoundParametersInternal::VolumeToString( void )
+float16 ZERO_FLOAT16;
+
+const char *CSoundParametersInternal::VolumeToString( void ) const
 {
-	if ( volume.range == 0.0f )
+	if ( volume.range == ZERO_FLOAT16 )
 	{
 		return _VolumeToString( volume.start );
 	}
 
 	static char sz[ 64 ];
-	Q_snprintf( sz, sizeof( sz ),  "%.3f, %.3f", volume.start, volume.start + volume.range );
+	Q_snprintf( sz, sizeof( sz ),  "%.3f, %.3f", (float)volume.start, (float)volume.start + (float)volume.range );
 	return sz;
 }
 
-const char *ISoundEmitterSystemBase::CSoundParametersInternal::ChannelToString( void )
+const char *CSoundParametersInternal::ChannelToString( void ) const 
 {
 	return _ChannelToString( channel );
 }
 
-const char *ISoundEmitterSystemBase::CSoundParametersInternal::SoundLevelToString( void )
+const char *CSoundParametersInternal::SoundLevelToString( void ) const
 {
-	if ( soundlevel.range == 0.0f )
+	if ( soundlevel.range == 0 )
 	{
 		return _SoundLevelToString( (soundlevel_t)(int)soundlevel.start );
 	}
@@ -454,9 +475,9 @@ const char *ISoundEmitterSystemBase::CSoundParametersInternal::SoundLevelToStrin
 	return sz;
 }
 
-const char *ISoundEmitterSystemBase::CSoundParametersInternal::PitchToString( void )
+const char *CSoundParametersInternal::PitchToString( void ) const
 {
-	if ( pitch.range == 0.0f )
+	if ( pitch.range == 0 )
 	{
 		return _PitchToString( (int)pitch.start );
 	}
@@ -466,7 +487,7 @@ const char *ISoundEmitterSystemBase::CSoundParametersInternal::PitchToString( vo
 	return sz;
 }
 
-void ISoundEmitterSystemBase::CSoundParametersInternal::VolumeFromString( const char *sz )
+void CSoundParametersInternal::VolumeFromString( const char *sz )
 {
 	if ( !Q_strcasecmp( sz, "VOL_NORM" ) )
 	{
@@ -475,55 +496,80 @@ void ISoundEmitterSystemBase::CSoundParametersInternal::VolumeFromString( const 
 	}
 	else
 	{
-		volume = ReadInterval( sz );
+		volume.FromInterval( ReadInterval( sz ) );
 	}
-
-	Q_strncpy( m_szVolume, sz, sizeof( m_szVolume ) );
 }
 
-void ISoundEmitterSystemBase::CSoundParametersInternal::ChannelFromString( const char *sz )
+void CSoundParametersInternal::ChannelFromString( const char *sz )
 {
 	channel = TextToChannel( sz );
-
-	Q_strncpy( m_szChannel, sz, sizeof( m_szChannel ) );
 }
 
-void ISoundEmitterSystemBase::CSoundParametersInternal::PitchFromString( const char *sz )
+void CSoundParametersInternal::PitchFromString( const char *sz )
 {
 	if ( !Q_strcasecmp( sz, "PITCH_NORM" ) )
 	{
 		pitch.start	= PITCH_NORM;
-		pitch.range = 0.0f;
+		pitch.range = 0;
 	}
 	else if ( !Q_strcasecmp( sz, "PITCH_LOW" ) )
 	{
 		pitch.start	= PITCH_LOW;
-		pitch.range = 0.0f;
+		pitch.range = 0;
 	}
 	else if ( !Q_strcasecmp( sz, "PITCH_HIGH" ) )
 	{
 		pitch.start	= PITCH_HIGH;
-		pitch.range = 0.0f;
+		pitch.range = 0;
 	}
 	else
 	{
-		pitch= ReadInterval( sz ) ;
+		pitch.FromInterval( ReadInterval( sz ) );
 	}
-
-	Q_strncpy( m_szPitch, sz, sizeof( m_szPitch ) );
 }
 
-void ISoundEmitterSystemBase::CSoundParametersInternal::SoundLevelFromString( const char *sz )
+void CSoundParametersInternal::SoundLevelFromString( const char *sz )
 {
 	if ( !Q_strncasecmp( sz, "SNDLVL_", strlen( "SNDLVL_" ) ) )
 	{
 		soundlevel.start = TextToSoundLevel( sz );
-		soundlevel.range = 0.0f;
+		soundlevel.range = 0;
 	}
 	else
 	{
-		soundlevel = ReadInterval( sz );
+		soundlevel.FromInterval( ReadInterval( sz ) );
 	}
-
-	Q_strncpy( m_szSoundLevel, sz, sizeof( m_szSoundLevel ) );
 }
+
+void CSoundParametersInternal::AddToTail( SoundFile **pDest, uint16 *pDestCount, const SoundFile &source )
+{
+	(*pDestCount)++;
+	if ( *pDestCount == 1 )
+	{
+		// NOTE: when there's only one soundfile in the list, we store it
+		// packed into the pointer itself, the four bytes for the pointer is just used to store the sound file!
+		COMPILE_TIME_ASSERT( sizeof(SoundFile) <= sizeof(SoundFile *) );
+		*((SoundFile *)(pDest)) = source;
+	}
+	else
+	{
+		SoundFile temp;
+		if ( *pDestCount == 2 )
+		{
+			// Copying from a list of one soundfile. Save off the struct
+			// packed into the pointer field.
+			temp = *((SoundFile *)(pDest));
+			*pDest = NULL;
+		}
+
+		*pDest = (SoundFile *)realloc( *pDest, (*pDestCount) * sizeof(SoundFile) );
+		(*pDest)[ *pDestCount - 1 ] = source;
+
+		if ( *pDestCount == 2 )
+		{
+			(*pDest)[0] = temp;
+		}
+	}
+}
+
+#endif // !_STATIC_LINKED || SOUNDEMITTERSYSTEM_DLL

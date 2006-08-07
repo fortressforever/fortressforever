@@ -12,6 +12,9 @@
 #include "trace.h"
 #include "builddisp.h"
 #include "terrainmod.h"
+#include "tier1/utlrbtree.h"
+
+FORWARD_DECLARE_HANDLE( memhandle_t );
 
 #define DISPCOLL_TREETRI_SIZE		MAX_DISPTRIS
 #define DISPCOLL_DIST_EPSILON		0.03125f
@@ -34,6 +37,10 @@ struct RayDispOutput_t
 	float	dist;			// intersection distance
 };
 
+// Assumptions:
+//	Max patch is 17x17, therefore 9 bits needed to represent a triangle index
+// 
+
 //=============================================================================
 //	Displacement Collision Triangle
 class CDispCollTri
@@ -55,16 +62,14 @@ class CDispCollTri
 	};
 
 	index_t				m_TriData[3];
-	unsigned short		m_uiCache;				// 1-bit cached, 15-bit index
 
 public:
+	unsigned short		m_ucSignBits:3;			// Plane test.
+	unsigned short		m_ucPlaneType:3;		// Axial test?
+	unsigned short		m_uiFlags:5;			// Uses 5-bits - maybe look into merging it with something?
 
 	Vector				m_vecNormal;			// Triangle normal (plane normal).
 	float				m_flDist;				// Triangle plane dist.
-	byte				m_ucSignBits;			// Plane test.
-	byte				m_ucPlaneType;			// Axial test?
-	unsigned short		m_uiFlags;				// Uses 5-bits - maybe look into merging it with something?
-	unsigned short		m_uiPad[2];				// Pad to 32-bytes.
 
 	// Creation.
 	     CDispCollTri();
@@ -79,29 +84,69 @@ public:
 	inline int  GetMin( int iAxis )						{ Assert( ( iAxis >= 0 ) && ( iAxis < 3 ) ); return m_TriData[iAxis].m_Index.uiMin; }
 	inline void SetMax( int iAxis, int iMax )			{ Assert( ( iAxis >= 0 ) && ( iAxis < 3 ) ); Assert( ( iMax >= 0 ) && ( iMax < 3 ) ); m_TriData[iAxis].m_Index.uiMax = iMax; }
 	inline int  GetMax( int iAxis )						{ Assert( ( iAxis >= 0 ) && ( iAxis < 3 ) ); return m_TriData[iAxis].m_Index.uiMax; }
-
-	// Cache.
-	inline void			  SetCacheIndex( int iCache )	{ Assert( ( iCache >= 0 ) && ( iCache < ( 1 << 15 ) ) ); m_uiCache = iCache; m_uiCache |= 0x8000; } 
-	inline unsigned short GetCacheIndex( void )			{ return ( m_uiCache & 0x7fff ); }
-	inline bool			  IsCached( void )				{ return ( ( m_uiCache & 0x8000 ) != 0 ); }
-	inline void			  ClearCache( void )			{ m_uiCache &= ~0x8000; }
 };
 
 //=============================================================================
 //	AABB Node
+
+#pragma pack(1)
+
+#ifdef _XBOX
+
+class CDispCollAABBVector
+{
+public:
+	void Init()
+	{
+		x = y = z = 0;
+	}
+
+	void SetMaxs( const Vector &vecFrom )
+	{
+		x = ceil( vecFrom.x );
+		y = ceil( vecFrom.y );
+		z = ceil( vecFrom.z );
+	}
+
+	void SetMins( const Vector &vecFrom )
+	{
+		x = floor( vecFrom.x );
+		y = floor( vecFrom.y );
+		z = floor( vecFrom.z );
+	}
+
+	operator Vector() const
+	{
+		return Vector( x, y, z );
+	}
+
+	short x, y, z;
+};
+
+#else
+
+class CDispCollAABBVector : public Vector
+{
+public:
+	void SetMaxs( const Vector &vecFrom ) { *((Vector *)this) = vecFrom; }
+	void SetMins( const Vector &vecFrom ) { *((Vector *)this) = vecFrom; }
+};
+
+#endif
+
 class CDispCollAABBNode
 {
 public:
-
-	Vector  m_vecBox[2];					// 0 - min, 1 - max
-	short	m_iTris[2];
-	short	m_iPad;							// Pad to 32-bytes.
+	CDispCollAABBVector	m_vecBox[2];					// 0 - min, 1 - max
+	short				m_iTris[2];
 
 		 CDispCollAABBNode();
 	void Init( void );	
-	inline bool IsLeaf( void )				{ return ( ( m_iTris[0] != DISPCOLL_INVALID_TRI ) || ( m_iTris[1] != DISPCOLL_INVALID_TRI ) ); }
+	inline bool IsLeaf( void ) const				{ return ( ( m_iTris[0] != DISPCOLL_INVALID_TRI ) || ( m_iTris[1] != DISPCOLL_INVALID_TRI ) ); }
 	void GenerateBox( CUtlVector <CDispCollTri> &m_aTris, CUtlVector<Vector> &m_aVerts );
 };
+
+#pragma pack()
 
 //=============================================================================
 //	Helper
@@ -117,14 +162,15 @@ public:
 
 //=============================================================================
 //	Cache
+#pragma pack(1)
 class CDispCollTriCache
 {
 public:
-
 	unsigned short m_iCrossX[3];
 	unsigned short m_iCrossY[3];
 	unsigned short m_iCrossZ[3];
 };
+#pragma pack()
 
 //=============================================================================
 //
@@ -159,6 +205,10 @@ public:
 	inline void SetPower( int power )								{ m_nPower = power; }
 	inline int GetPower( void )										{ return m_nPower; }
 
+	inline int	GetFlags( void )									{ return m_nFlags; }
+	inline void SetFlags( int nFlags )								{ m_nFlags = nFlags; }
+	inline bool CheckFlags( int nFlags )							{ return ( ( nFlags & GetFlags() ) != 0 ) ? true : false; }
+
 	inline int GetWidth( void )										{ return ( ( 1 << m_nPower ) + 1 ); }
 	inline int GetHeight( void )									{ return ( ( 1 << m_nPower ) + 1 ); }
 	inline int GetSize( void )										{ return ( ( 1 << m_nPower ) + 1 ) * ( ( 1 << m_nPower ) + 1 ); }
@@ -180,7 +230,12 @@ public:
 	inline int GetCheckCount( int nDepth ) const					{ Assert( ( nDepth >= 0 ) && ( nDepth < MAX_CHECK_COUNT_DEPTH ) ); return m_nCheckCount[nDepth]; }
 
 	inline unsigned int GetMemorySize( void )						{ return m_nSize; }
-	inline unsigned int GetCacheMemorySize( void )					{ return m_nCacheSize; }
+	inline unsigned int GetCacheMemorySize( void )					{ return ( m_aTrisCache.Count() * sizeof(CDispCollTriCache) + m_aEdgePlanes.Count() * sizeof(Vector) ); }
+
+	inline bool IsCached( void )									{ return m_aTrisCache.Count() == m_aTris.Count(); }
+
+	void GetVirtualMeshList( struct virtualmeshlist_t *pList );
+	void AABBTree_GetTrisInSphere( const Vector &center, float radius, unsigned short *pIndexOut, int indexMax, int *pIndexCount );
 
 public:
 
@@ -189,6 +244,40 @@ public:
 	inline int Nodes_GetParent( int iNode );
 	inline int Nodes_GetLevel( int iNode );
 	inline int Nodes_GetIndexFromComponents( int x, int y );
+
+	void CheckCache();
+	void Cache( void );
+	void Uncache()	{ m_aTrisCache.Purge(); m_aEdgePlanes.Purge(); }
+
+#ifdef ENGINE_DLL
+	// Data manager methods
+	static size_t EstimatedSize( CDispCollTree *pTree )
+	{
+		return pTree->GetCacheMemorySize();
+	}
+
+	static CDispCollTree *CreateResource( CDispCollTree *pTree )
+	{
+		// Created ahead of time
+		return pTree;
+	}
+
+	bool GetData()
+	{
+		return IsCached();
+	}
+
+	size_t Size()
+	{
+		return GetCacheMemorySize();
+	}
+
+	void DestroyResource()
+	{
+		Uncache();
+		m_hCache = NULL;
+	}
+#endif
 
 protected:
 
@@ -200,10 +289,21 @@ protected:
 
 	void AABBTree_BuildTreeTrisSweep_r( const Ray_t &ray, int iNode, CDispCollTri **ppTreeTris, unsigned short &nTriCount );
 	void AABBTree_BuildTreeTrisIntersect_r( const Ray_t &ray, int iNode, CDispCollTri **ppTreeTris, unsigned short &nTriCount );
+	void AABBTree_BuildTreeTrisInSphere_r( const Vector &center, float radius, int iNode, unsigned short *pIndexOut, unsigned short indexMax, unsigned short &nTriCount  );
 
 	void AABBTree_TreeTrisRayTest_r( const Ray_t &ray, const Vector &vecInvDelta, int iNode, CBaseTrace *pTrace, bool bSide, CDispCollTri **pImpactTri );
 	void AABBTree_TreeTrisRayBarycentricTest_r( const Ray_t &ray, const Vector &vecInvDelta, int iNode, RayDispOutput_t &output, CDispCollTri **pImpactTri );
-	void AABBTree_TreeTrisSweepTest_r( const Ray_t &ray, const Vector &vecInvDelta, const Vector &rayDir, int iNode, CBaseTrace *pTrace );
+
+	struct AABBTree_TreeTrisSweepTest_Args_t
+	{
+		AABBTree_TreeTrisSweepTest_Args_t( const Ray_t &ray, const Vector &vecInvDelta, const Vector &rayDir, CBaseTrace *pTrace )
+			: ray( ray ), vecInvDelta( vecInvDelta ), rayDir( rayDir ), pTrace( pTrace ) {}
+		const Ray_t &ray;
+		const Vector &vecInvDelta;
+		const Vector &rayDir;
+		CBaseTrace *pTrace;
+	};
+	void AABBTree_TreeTrisSweepTest_r( const AABBTree_TreeTrisSweepTest_Args_t &args, int iNode );
 
 	bool AABBTree_SweepAABBBox( const Ray_t &ray, const Vector &rayDir, CBaseTrace *pTrace );
 	void AABBTree_TreeTrisSweepTestBox_r( const Ray_t &ray, const Vector &rayDir, const Vector &vecMin, const Vector &vecMax, int iNode, CBaseTrace *pTrace );
@@ -212,29 +312,28 @@ protected:
 
 protected:
 
-	void SweepAABBTriIntersect( const Ray_t ray, const Vector &rayDir, CDispCollTri *pTri, CBaseTrace *pTrace, bool bTestOutside );
+	void SweepAABBTriIntersect( const Ray_t &ray, const Vector &rayDir, int iTri, CDispCollTri *pTri, CBaseTrace *pTrace, bool bTestOutside );
 
-	void Cache_TestIt( void );
-
-	void Cache_Create( CDispCollTri *pTri );
 	void Cache_Create( CDispCollTri *pTri, int iTri );		// Testing!
 	bool Cache_EdgeCrossAxisX( const Vector &vecEdge, const Vector &vecOnEdge, const Vector &vecOffEdge, CDispCollTri *pTri, unsigned short &iPlane );
 	bool Cache_EdgeCrossAxisY( const Vector &vecEdge, const Vector &vecOnEdge, const Vector &vecOffEdge, CDispCollTri *pTri, unsigned short &iPlane );
 	bool Cache_EdgeCrossAxisZ( const Vector &vecEdge, const Vector &vecOnEdge, const Vector &vecOffEdge, CDispCollTri *pTri, unsigned short &iPlane );
 
 	inline bool FacePlane( const Ray_t &ray, const Vector &rayDir, CDispCollTri *pTri );
-	inline bool AxisPlanesXYZ( const Ray_t &ray, const Vector &rayDir, CDispCollTri *pTri );
+	bool FORCEINLINE AxisPlanesXYZ( const Ray_t &ray, CDispCollTri *pTri );
 	inline bool EdgeCrossAxisX( const Ray_t &ray, unsigned short iPlane );
 	inline bool EdgeCrossAxisY( const Ray_t &ray, unsigned short iPlane );
 	inline bool EdgeCrossAxisZ( const Ray_t &ray, unsigned short iPlane );
 
-	inline bool ResolveRayPlaneIntersect( float flStart, float flEnd, const Vector &vecNormal, float flDist );
+	bool ResolveRayPlaneIntersect( float flStart, float flEnd, const Vector &vecNormal, float flDist );
+	template <int AXIS> bool FORCEINLINE TestOneAxisPlaneMin( const Ray_t &ray, CDispCollTri *pTri );
+	template <int AXIS> bool FORCEINLINE TestOneAxisPlaneMax( const Ray_t &ray, CDispCollTri *pTri );
+	template <int AXIS>	bool EdgeCrossAxis( const Ray_t &ray, unsigned short iPlane );
 
 	// Utility
 	inline void CalcClosestBoxPoint( const Vector &vecPlaneNormal, const Vector &vecBoxStart, const Vector &vecBoxExtents, Vector &vecBoxPoint );
 	inline void CalcClosestExtents( const Vector &vecPlaneNormal, const Vector &vecBoxExtents, Vector &vecBoxPoint );
 	int AddPlane( const Vector &vecNormal );
-
 protected:
 
 	enum { MAX_CHECK_COUNT_DEPTH = 2 };
@@ -246,6 +345,7 @@ protected:
 	Vector							m_vecSurfPoints[4];						// Base surface points.
 	int								m_nContents;								// The displacement surface "contents" (solid, etc...)
 	short							m_nSurfaceProps[2];						// Surface properties (save off from texdata for impact responses)
+	int								m_nFlags;
 
 	// Collision data.
 	Vector							m_vecStabDir;							// Direction to stab for this displacement surface (is the base face normal)
@@ -259,12 +359,15 @@ protected:
 	
 	// Cache
 	CUtlVector<CDispCollTriCache>	m_aTrisCache;
-	CUtlVector<Vector>				m_aEdgePlanes;
+	CUtlVector<Vector> m_aEdgePlanes;
 
 	CDispCollHelper					m_Helper;
 
 	unsigned int					m_nSize;
-	unsigned int					m_nCacheSize;
+
+#ifdef ENGINE_DLL
+	memhandle_t						m_hCache;
+#endif
 };
 
 //-----------------------------------------------------------------------------
@@ -373,42 +476,6 @@ inline void CDispCollTree::CalcClosestExtents( const Vector &vecPlaneNormal, con
 	( vecPlaneNormal[0] < 0.0f ) ? vecBoxPoint[0] = vecBoxExtents[0] : vecBoxPoint[0] = -vecBoxExtents[0];
 	( vecPlaneNormal[1] < 0.0f ) ? vecBoxPoint[1] = vecBoxExtents[1] : vecBoxPoint[1] = -vecBoxExtents[1];
 	( vecPlaneNormal[2] < 0.0f ) ? vecBoxPoint[2] = vecBoxExtents[2] : vecBoxPoint[2] = -vecBoxExtents[2];
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-inline bool CDispCollTree::ResolveRayPlaneIntersect( float flStart, float flEnd, const Vector &vecNormal, float flDist )
-{
-	if( ( flStart > 0.0f ) && ( flEnd > 0.0f ) ) 
-		return false; 
-
-	if( ( flStart < 0.0f ) && ( flEnd < 0.0f ) ) 
-		return true; 
-
-	if( ( flStart >= 0.0f ) && ( flEnd <= 0.0f ) )
-	{
-		// Find t - the parametric distance along the trace line.
-		float flDenom = flStart - flEnd;
-		float t = ( flDenom != 0.0f ) ? ( flStart - DISPCOLL_DIST_EPSILON ) / flDenom : 0.0f;
-		if( t > m_Helper.m_flStartFrac )
-		{
-			m_Helper.m_flStartFrac = t;
-			VectorCopy( vecNormal, m_Helper.m_vecImpactNormal );
-			m_Helper.m_flImpactDist = flDist;
-		}
-	}
-	else
-	{
-		// Find t - the parametric distance along the trace line.
-		float flDenom = flStart - flEnd;
-		float t = ( flDenom != 0.0f ) ? ( flStart + DISPCOLL_DIST_EPSILON ) / flDenom : 0.0f;
-		if( t < m_Helper.m_flEndFrac )
-		{
-			m_Helper.m_flEndFrac = t;
-		}	
-	}
-	
-	return true;
 }
 
 //=============================================================================

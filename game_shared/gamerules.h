@@ -11,6 +11,8 @@
 #pragma once
 #endif
 
+// Debug history should be disabled in release builds
+//#define DISABLE_DEBUG_HISTORY	
 
 #ifdef CLIENT_DLL
 
@@ -97,10 +99,12 @@ private:
 };
 
 
-class CGameRules : public CAutoGameSystem
+abstract_class CGameRules : public CAutoGameSystemPerFrame
 {
 public:
-	DECLARE_CLASS_GAMEROOT( CGameRules, CAutoGameSystem );
+	DECLARE_CLASS_GAMEROOT( CGameRules, CAutoGameSystemPerFrame );
+
+	virtual char const *Name() { return "CGameRules"; }
 
 	// Stuff shared between client and server.
 
@@ -123,11 +127,18 @@ public:
 		CGameRulesProxy::NotifyNetworkStateChanged();
 	}
 
+	inline void NetworkStateChanged( void *pVar )
+	{
+		// Forward the call to the entity that will send the data.
+		CGameRulesProxy::NotifyNetworkStateChanged();
+	}
+
 	// Get the view vectors for this mod.
 	virtual const CViewVectors* GetViewVectors() const;
 
 // Damage rules for ammo types
 	virtual float GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
+    virtual float GetDamageMultiplier( void ) { return 1.0f; }    
 
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsMultiplayer( void ) = 0;// is this a multiplayer game? (either coop or deathmatch)
@@ -216,6 +227,9 @@ public:
 	// Let the game rules specify if fall death should fade screen to black
 	virtual bool  FlPlayerFallDeathDoesScreenFade( CBasePlayer *pl ) { return TRUE; }
 
+	virtual bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info ) = 0;
+
+
 // Client spawn/respawn control
 	virtual void PlayerSpawn( CBasePlayer *pPlayer ) = 0;// called by CBasePlayer::Spawn just before releasing player into the game
 	virtual void PlayerThink( CBasePlayer *pPlayer ) = 0; // called by CBasePlayer::PreThink every frame, before physics are run and after keys are accepted
@@ -256,6 +270,7 @@ public:
 	virtual int ItemShouldRespawn( CItem *pItem ) = 0;// Should this item respawn?
 	virtual float FlItemRespawnTime( CItem *pItem ) = 0;// when may this item respawn?
 	virtual Vector VecItemRespawnSpot( CItem *pItem ) = 0;// where in the world should this item respawn?
+	virtual QAngle VecItemRespawnAngles( CItem *pItem ) = 0;// what angles should this item use when respawing?
 
 // Ammo retrieval
 	virtual bool CanHaveAmmo( CBaseCombatCharacter *pPlayer, int iAmmoIndex ); // can this player take more of this ammo?
@@ -313,6 +328,11 @@ public:
 
 	// VGUI format string for chat, if desired
 	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }
+
+// Whether props that are on fire should get a DLIGHT.
+	virtual bool ShouldBurningPropsEmitLight() { return false; }
+
+	virtual bool InRoundRestart( void ) { return false; }
 
 #endif
 };

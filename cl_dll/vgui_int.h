@@ -26,5 +26,6 @@ vgui::VPANEL VGui_GetClientDLLRootPanel( void );
 void VGUI_CreateClientDLLRootPanel( void );
 void VGUI_DestroyClientDLLRootPanel( void );
 void VGui_PreRender();
+void VGui_PostRender();
 
 #endif // VGUI_INT_H

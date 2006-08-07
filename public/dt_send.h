@@ -40,11 +40,41 @@
 // ------------------------------------------------------------------------ //
 typedef void (*SendVarProxyFn)( const SendProp *pProp, const void *pStructBase, const void *pData, DVariant *pOut, int iElement, int objectID );
 
+// Return the pointer to the data for the datatable.
+// If the proxy returns null, it's the same as if pRecipients->ClearAllRecipients() was called.
+class CSendProxyRecipients;
 
-class CStandardSendProxies
+typedef void* (*SendTableProxyFn)( 
+	const SendProp *pProp, 
+	const void *pStructBase, 
+	const void *pData, 
+	CSendProxyRecipients *pRecipients, 
+	int objectID );
+
+
+class CNonModifiedPointerProxy
 {
 public:
-	CStandardSendProxies();
+	CNonModifiedPointerProxy( SendTableProxyFn fn );
+
+public:
+	
+	SendTableProxyFn m_Fn;
+	CNonModifiedPointerProxy *m_pNext;
+};
+
+
+// This tells the engine that the send proxy will not modify the pointer
+// - it only plays with the recipients. This must be set on proxies that work
+// this way, otherwise the engine can't track which properties changed
+// in NetworkStateChanged().
+#define REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( sendProxyFn ) static CNonModifiedPointerProxy __proxy_##sendProxyFn( sendProxyFn );
+
+
+class CStandardSendProxiesV1
+{
+public:
+	CStandardSendProxiesV1();
 
 	SendVarProxyFn m_Int8ToInt32;
 	SendVarProxyFn m_Int16ToInt32;
@@ -57,6 +87,17 @@ public:
 	SendVarProxyFn m_FloatToFloat;
 	SendVarProxyFn m_VectorToVector;
 };
+	
+class CStandardSendProxies : public CStandardSendProxiesV1
+{
+public:
+	CStandardSendProxies();
+	
+	SendTableProxyFn m_DataTableToDataTable;
+	SendTableProxyFn m_SendLocalDataTable;
+	CNonModifiedPointerProxy **m_ppNonModifiedPointerProxies;
+};
+
 extern CStandardSendProxies g_StandardSendProxies;
 
 
@@ -113,15 +154,6 @@ inline void CSendProxyRecipients::SetOnly( int iClient )
 	m_Bits.Set( iClient );
 }
 
-
-// Return the pointer to the data for the datatable.
-// If the proxy returns null, it's the same as if pRecipients->ClearAllRecipients() was called.
-typedef void* (*SendTableProxyFn)( 
-	const SendProp *pProp, 
-	const void *pStructBase, 
-	const void *pData, 
-	CSendProxyRecipients *pRecipients, 
-	int objectID );
 
 
 // ------------------------------------------------------------------------ //
@@ -231,7 +263,6 @@ public:
 
 	char			*m_pVarName;
 	float			m_fHighLowMul;
-
 	
 private:
 
@@ -241,6 +272,9 @@ private:
 	SendTableProxyFn	m_DataTableProxyFn;		// Valid for DPT_DataTable.
 	
 	SendTable			*m_pDataTable;
+	
+	// SENDPROP_VECTORELEM makes this negative to start with so we can detect that and
+	// set the SPROP_IS_VECTOR_ELEM flag.
 	int					m_Offset;
 
 	// Extra data bound to this property.
@@ -536,7 +570,13 @@ inline void SendTable::SetWriteFlag(bool bHasBeenWritten)
 #define SENDINFO_ARRAY3(varName)			#varName, offsetof(currentSendDTClass::MakeANetworkVar_##varName, varName), sizeof(((currentSendDTClass*)0)->varName[0]), sizeof(((currentSendDTClass*)0)->varName)/sizeof(((currentSendDTClass*)0)->varName[0])
 #define SENDINFO_ARRAYELEM(varName, i)		#varName "[" #i "]", offsetof(currentSendDTClass::MakeANetworkVar_##varName, varName[i]), sizeof(((currentSendDTClass*)0)->varName[0])
 #define SENDINFO_NETWORKARRAYELEM(varName, i)#varName "[" #i "]", offsetof(currentSendDTClass::MakeANetworkVar_##varName, varName.m_Value[i]), sizeof(((currentSendDTClass*)0)->varName.m_Value[0])
-#define SENDINFO_VECTORELEM(varName, i)		#varName "[" #i "]", offsetof(currentSendDTClass::MakeANetworkVar_##varName, varName.m_Value[i]), sizeof(((currentSendDTClass*)0)->varName.m_Value[0])
+
+// NOTE: Be VERY careful to specify any other vector elems for the same vector IN ORDER and 
+// right after each other, otherwise it might miss the Y or Z component in SP.
+//
+// Note: this macro specifies a negative offset so the engine can detect it and setup m_pNext
+#define SENDINFO_VECTORELEM(varName, i)		#varName "[" #i "]", -(int)offsetof(currentSendDTClass::MakeANetworkVar_##varName, varName.m_Value[i]), sizeof(((currentSendDTClass*)0)->varName.m_Value[0])
+
 #define SENDINFO_STRUCTELEM(varName)		#varName, offsetof(currentSendDTClass, varName), sizeof(((currentSendDTClass*)0)->varName.m_Value)
 #define SENDINFO_STRUCTARRAYELEM(varName, i)#varName "[" #i "]", offsetof(currentSendDTClass, varName.m_Value[i]), sizeof(((currentSendDTClass*)0)->varName.m_Value[0])
 
@@ -558,6 +598,10 @@ void SendProxy_QAngles			( const SendProp *pProp, const void *pStruct, const voi
 void SendProxy_AngleToFloat		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 void SendProxy_FloatToFloat		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 void SendProxy_VectorToVector	( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+void SendProxy_QuaternionToQuaternion( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
+#endif
+
 void SendProxy_Int8ToInt32		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 void SendProxy_Int16ToInt32		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 void SendProxy_Int32ToInt32		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -568,6 +612,9 @@ void* SendProxy_DataTableToDataTable( const SendProp *pProp, const void *pStruct
 
 // pData is the address of a pointer to a data table.
 void* SendProxy_DataTablePtrToDataTable( const SendProp *pProp, const void *pStructBase, const void *pData, CSendProxyRecipients *pRecipients, int objectID );
+
+// Used on player entities - only sends the data to the local player (objectID-1).
+void* SendProxy_SendLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID );
 
 
 // ------------------------------------------------------------------------ //
@@ -594,6 +641,19 @@ SendProp SendPropVector(
 	float fHighValue=HIGH_DEFAULT,	// High value. If HIGH_DEFAULT, it's (1<<nBits).
 	SendVarProxyFn varProxy=SendProxy_VectorToVector
 	);
+
+#if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
+SendProp SendPropQuaternion(
+	char *pVarName,
+	int offset,
+	int sizeofVar=SIZEOF_IGNORE,
+	int nBits=32,					// Number of bits (for each floating-point component) to use when encoding.
+	int flags=SPROP_NOSCALE,
+	float fLowValue=0.0f,			// For floating point, low and high values.
+	float fHighValue=HIGH_DEFAULT,	// High value. If HIGH_DEFAULT, it's (1<<nBits).
+	SendVarProxyFn varProxy=SendProxy_QuaternionToQuaternion
+	);
+#endif
 
 SendProp SendPropAngle(
 	char *pVarName,

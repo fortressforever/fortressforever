@@ -10,6 +10,9 @@
 #pragma once
 #endif
 
+#include "vehicle_sounds.h"
+#include "entityblocker.h"
+
 class CSoundPatch;
 
 struct vbs_sound_update_t
@@ -36,6 +39,82 @@ struct vbs_sound_update_t
 	}
 };
 
+// -----------------------------------------
+//  Information about the passenger in the car 
+// -----------------------------------------
+class CPassengerInfo
+{
+public:
+	CPassengerInfo( void ) : m_nRole( -1 ), m_nSeat( -1 ), m_strRoleName( NULL_STRING ), m_strSeatName( NULL_STRING ) {}
+
+	DECLARE_SIMPLE_DATADESC();
+
+	int GetSeat( void ) const { return m_nSeat; }
+	int	GetRole( void ) const { return m_nRole; }
+	CBaseCombatCharacter *GetPassenger( void ) const { return m_hPassenger; }
+
+private:
+	int									m_nRole;		// Role (by index)
+	int									m_nSeat;		// Seat (by index)
+	string_t							m_strRoleName;	// Used in restoration for fix-up
+	string_t							m_strSeatName;	// Used in restoration for fix-up
+	CHandle<CBaseCombatCharacter>		m_hPassenger;	// Actual passenger
+
+	friend class CBaseServerVehicle;
+};
+
+// -----------------------------------------
+//  Seat transition information (animation and priority)
+// -----------------------------------------
+
+class CPassengerSeatTransition
+{
+public:
+	CPassengerSeatTransition( void ) : m_strAnimationName( NULL_STRING ), m_nPriority( -1 ) {};
+
+	string_t GetAnimationName( void ) const { return m_strAnimationName; }
+	int		 GetPriority( void ) const { return m_nPriority; }
+
+private:
+	string_t	m_strAnimationName;	// Name of animation to play
+	int			m_nPriority;		// Priority of the transition
+
+	friend class CBaseServerVehicle;
+};
+
+// -----------------------------------------
+//  Seat in a vehicle (attachment and a collection of animations to reach it)
+// -----------------------------------------
+class CPassengerSeat
+{
+public:
+	CPassengerSeat( void ) : m_nAttachmentID( -1 ) {};
+	int GetAttachmentID( void ) const { return m_nAttachmentID; }
+
+private:
+	string_t								m_strSeatName;			// Used for save/load fixup
+	int										m_nAttachmentID;		// Goal attachment
+	CUtlVector<CPassengerSeatTransition>	m_EntryTransitions;		// Entry information
+	CUtlVector<CPassengerSeatTransition>	m_ExitTransitions;		// Exit information
+
+	friend class CBaseServerVehicle;
+};
+
+// -----------------------------------------
+//  Passenger role information
+// -----------------------------------------
+class CPassengerRole
+{
+public:
+	CPassengerRole( void ) : m_strName( NULL_STRING ) {};
+	string_t GetName( void ) const { return m_strName; }
+
+private:
+	string_t						m_strName;			// Name of the set
+	CUtlVector<CPassengerSeat>		m_PassengerSeats;	// Passenger info
+
+	friend class CBaseServerVehicle;
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Base class for drivable vehicle handling. Contain it in your 
@@ -53,10 +132,11 @@ public:
 
 // IVehicle
 public:
-	virtual CBasePlayer*	GetPassenger( int nRole = VEHICLE_DRIVER );
-	virtual int				GetPassengerRole( CBasePlayer *pPassenger );
+	virtual CBaseCombatCharacter *GetPassenger( int nRole = VEHICLE_ROLE_DRIVER );
+
+	virtual int				GetPassengerRole( CBaseCombatCharacter *pPassenger );
 	virtual void			GetVehicleViewPosition( int nRole, Vector *pOrigin, QAngle *pAngles );
-	virtual bool			IsPassengerUsingStandardWeapons( int nRole = VEHICLE_DRIVER ) { return false; }
+	virtual bool			IsPassengerUsingStandardWeapons( int nRole = VEHICLE_ROLE_DRIVER ) { return false; }
 	virtual void			SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move );
 	virtual void			ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMoveData );
 	virtual void			FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *move );
@@ -65,15 +145,17 @@ public:
 // IServerVehicle
 public:
 	virtual CBaseEntity		*GetVehicleEnt( void ) { return m_pVehicle; }
-	virtual void			SetPassenger( int nRole, CBasePlayer *pPassenger );
-	virtual bool			IsPassengerVisible( int nRole = VEHICLE_DRIVER ) { return false; }
-	virtual bool			IsPassengerDamagable( int nRole  = VEHICLE_DRIVER ) { return true; }
+	virtual void			SetPassenger( int nRole, CBaseCombatCharacter *pPassenger );
+	virtual bool			IsPassengerVisible( int nRole = VEHICLE_ROLE_DRIVER ) { return false; }
+	virtual bool			IsPassengerDamagable( int nRole  = VEHICLE_ROLE_DRIVER ) { return true; }
 	virtual bool			IsVehicleUpright( void ) { return true; }
-	virtual void			HandlePassengerEntry( CBasePlayer *pPlayer, bool bAllowEntryOutsideZone = false );
-	virtual bool			HandlePassengerExit( CBasePlayer *pPlayer );
+	
+	virtual void			HandlePassengerEntry( CBaseCombatCharacter *pPassenger, bool bAllowEntryOutsideZone = false );
+	virtual bool			HandlePassengerExit( CBaseCombatCharacter *pPassenger );
+
 	virtual void			GetPassengerStartPoint( int nRole, Vector *pPoint, QAngle *pAngles );
 	virtual bool			GetPassengerExitPoint( int nRole, Vector *pPoint, QAngle *pAngles );
-	virtual Class_T			ClassifyPassenger( CBasePlayer *pPassenger, Class_T defaultClassification ) { return defaultClassification; }
+	virtual Class_T			ClassifyPassenger( CBaseCombatCharacter *pPassenger, Class_T defaultClassification ) { return defaultClassification; }
 	virtual float			DamageModifier ( CTakeDamageInfo &info ) { return 1.0; }
 	virtual const vehicleparams_t	*GetVehicleParams( void ) { return NULL; }
 	virtual bool			IsVehicleBodyInWater( void ) { return false; }
@@ -102,11 +184,49 @@ public:
 	virtual float			Weapon_PrimaryCanFireAt( void );		// Return the time at which this vehicle's primary weapon can fire again
 	virtual float			Weapon_SecondaryCanFireAt( void );		// Return the time at which this vehicle's secondary weapon can fire again
 
+	// ----------------------------------------------------------------------------
+	// NPC passenger data
+
 public:
-	// Player Driving
-	virtual CBaseEntity		*GetDriver( void );
+
+	bool			NPC_AddPassenger( CBaseCombatCharacter *pPassenger, string_t strRoleName, int nSeat );
+	bool			NPC_RemovePassenger( CBaseCombatCharacter *pPassenger );
+	virtual bool	NPC_GetPassengerSeatPosition( CBaseCombatCharacter *pPassenger, Vector *vecResultPos, QAngle *vecResultAngle );
+	virtual bool	NPC_GetPassengerSeatPositionLocal( CBaseCombatCharacter *pPassenger, Vector *vecResultPos, QAngle *vecResultAngles );
+	virtual int		NPC_GetPassengerSeatAttachment( CBaseCombatCharacter *pPassenger );
+	virtual int		NPC_GetAvailableSeat( CBaseCombatCharacter *pPassenger, string_t strRoleName, VehicleSeatQuery_e nQueryType );
+	bool			NPC_HasAvailableSeat( string_t strRoleName );
+
+
+	virtual const PassengerSeatAnims_t	*NPC_GetPassengerSeatAnims( CBaseCombatCharacter *pPassenger, PassengerSeatAnimType_t nType );
+	virtual CBaseCombatCharacter		*NPC_GetPassengerInSeat( int nRoleID, int nSeatID );
+
+private:
 
 	// Vehicle entering/exiting
+	void	ParseNPCRoles( KeyValues *pModelKeyValues );
+	void	ParseNPCPassengerSeat( KeyValues *pSetKeyValues, CPassengerSeat *pSeat );
+	void	ParseNPCSeatTransition( KeyValues *pTransitionKeyValues, CPassengerSeatTransition *pTransition );
+
+protected:
+	
+	int		FindRoleIndexByName( string_t strRoleName );
+	int		FindSeatIndexByName( int nRoleIndex, string_t strSeatName );
+	int		NPC_GetAvailableSeat_Any( CBaseCombatCharacter *pPassenger, int nRoleID );
+	int		NPC_GetAvailableSeat_Nearest( CBaseCombatCharacter *pPassenger, int nRoleID );
+
+	CPassengerRole *FindOrCreatePassengerRole( string_t strName, int *nIndex = NULL );
+
+	CUtlVector< CPassengerInfo >	m_PassengerInfo;
+	CUtlVector< CPassengerRole >	m_PassengerRoles;	// Not save/restored
+
+	// ----------------------------------------------------------------------------
+
+public:
+
+	void					RestorePassengerInfo( void );
+
+	virtual CBaseEntity		*GetDriver( void );	// Player Driving
 	virtual void			ParseEntryExitAnims( void );
 	void					ParseExitAnim( KeyValues *pkvExitList, bool bEscapeExit );
 	virtual bool			CheckExitPoint( float yaw, int distance, Vector *pEndPoint );
@@ -127,6 +247,10 @@ public:
 	virtual void			StopSound( vehiclesound iSound );
 	virtual void 			RecalculateSoundGear( vbs_sound_update_t &params );
 	void					SetVehicleVolume( float flVolume ) { m_flVehicleVolume = clamp( flVolume, 0.0, 1.0 ); }
+
+	// Rumble
+	virtual void			StartEngineRumble();
+	virtual void			StopEngineRumble();
 
 public:
 	CBaseEntity			*m_pVehicle;

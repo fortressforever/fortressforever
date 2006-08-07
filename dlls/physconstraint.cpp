@@ -52,6 +52,9 @@ struct constraint_anchor_t
 class CAnchorList : public CAutoGameSystem
 {
 public:
+	CAnchorList( char const *name ) : CAutoGameSystem( name )
+	{
+	}
 	void LevelShutdownPostEntity() 
 	{
 		m_list.Purge();
@@ -83,7 +86,7 @@ private:
 	CUtlVector<constraint_anchor_t>	m_list;
 };
 
-static CAnchorList g_AnchorList;
+static CAnchorList g_AnchorList( "CAnchorList" );
 
 class CConstraintAnchor : public CPointEntity
 {
@@ -187,7 +190,7 @@ void PhysTeleportConstrainedEntity( CBaseEntity *pTeleportSource, IPhysicsObject
 	pFixup->Teleport( &fixupPos, &fixupAngles, NULL );
 }
 
-class CPhysConstraint : public CLogicalEntity
+abstract_class CPhysConstraint : public CLogicalEntity
 {
 	DECLARE_CLASS( CPhysConstraint, CLogicalEntity );
 public:
@@ -431,11 +434,23 @@ void CPhysConstraint::GetConstraintObjects( hl_constraint_info_t &info )
 	// Missing one object, assume the world instead
 	if ( info.pObjects[0] == NULL && info.pObjects[1] )
 	{
+		if ( Q_strlen(STRING(m_nameAttach1)) )
+		{
+			Warning("Bogus constraint %s (attaches %s to %s)\n", GetDebugName(), STRING(m_nameAttach1), STRING(m_nameAttach2));
+			info.pObjects[0] = info.pObjects[1] = NULL;
+			return;
+		}
 		info.pObjects[0] = g_PhysWorldObject;
 		info.massScale[0] = info.massScale[1] = 1.0f; // no mass scale on world constraint
 	}
 	else if ( info.pObjects[0] && !info.pObjects[1] )
 	{
+		if ( Q_strlen(STRING(m_nameAttach2)) )
+		{
+			Warning("Bogus constraint %s (attaches %s to %s)\n", GetDebugName(), STRING(m_nameAttach1), STRING(m_nameAttach2));
+			info.pObjects[0] = info.pObjects[1] = NULL;
+			return;
+		}
 		info.pObjects[1] = info.pObjects[0];
 		info.pObjects[0] = g_PhysWorldObject;		// Try to make the world object consistently object0 for ease of implementation
 		info.massScale[0] = info.massScale[1] = 1.0f; // no mass scale on world constraint
@@ -459,7 +474,7 @@ void CPhysConstraint::Activate( void )
 
 IPhysicsConstraintGroup *GetConstraintGroup( string_t systemName )
 {
-	CBaseEntity *pMachine = gEntList.FindEntityByName( NULL, systemName, NULL );
+	CBaseEntity *pMachine = gEntList.FindEntityByName( NULL, systemName );
 
 	if ( pMachine )
 	{
@@ -505,6 +520,11 @@ bool CPhysConstraint::ActivateConstraint( void )
 		return false;
 	}
 
+	if ( info.pObjects[0]->GetShadowController() && info.pObjects[1]->GetShadowController() )
+	{
+		Warning("Constraint (%s) attached to two shadow objects (%s and %s)!!!\n", STRING(GetEntityName()), STRING(m_nameAttach1), m_nameAttach2 == NULL_STRING ? "world" : STRING(m_nameAttach2) );
+		return false;
+	}
 	IPhysicsConstraintGroup *pGroup = GetConstraintGroup( m_nameSystem );
 	m_pConstraint = CreateConstraint( pGroup, info );
 	if ( !m_pConstraint )

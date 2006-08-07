@@ -29,6 +29,8 @@ using namespace vgui;
 // global list of all the names of all the sounds played by buttons
 CUtlSymbolTable g_ButtonSoundNames;
 
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( Button, Button );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -60,19 +62,14 @@ Button::Button(Panel *parent, const char *panelName, const wchar_t *wszText, Pan
 //-----------------------------------------------------------------------------
 void Button::Init()
 {
-	_armed = false;
-	_selected = false;
-	_depressed = false;
-	_forceDepressed = false;
-	_buttonBorderEnabled = true;
-	_useCaptureMouse = true;
-	_keyDown = false;
+	_buttonFlags.SetFlag( USE_CAPTURE_MOUSE | BUTTON_BORDER_ENABLED );
+
 	_mouseClickMask = 0;
 	_actionMessage = NULL;
 	_defaultBorder = NULL;
 	_depressedBorder = NULL;
 	_keyFocusBorder = NULL;
-	_defaultButton = false;
+	m_bSelectionStateSaved = false;
 	m_sArmedSoundName = UTL_INVAL_SYMBOL;
 	m_sDepressedSoundName = UTL_INVAL_SYMBOL;
 	m_sReleasedSoundName = UTL_INVAL_SYMBOL;
@@ -81,7 +78,7 @@ void Button::Init()
 	SetButtonActivationType(ACTIVATE_ONPRESSEDANDRELEASED);
 
 	// labels have this off by default, but we need it on
-	SetPaintBackgroundEnabled(true);
+	SetPaintBackgroundEnabled( true );
 }
 
 //-----------------------------------------------------------------------------
@@ -108,9 +105,9 @@ void Button::SetButtonActivationType(ActivationType_t activationType)
 //-----------------------------------------------------------------------------
 void Button::SetButtonBorderEnabled( bool state )
 {
-	if (state != _buttonBorderEnabled)
+	if ( state != _buttonFlags.IsFlagSet( BUTTON_BORDER_ENABLED ) )
 	{
-		_buttonBorderEnabled = state;
+		_buttonFlags.SetFlag( BUTTON_BORDER_ENABLED, state );
 		InvalidateLayout(false);
 	}
 }
@@ -120,9 +117,9 @@ void Button::SetButtonBorderEnabled( bool state )
 //-----------------------------------------------------------------------------
 void Button::SetSelected( bool state )
 {
-	if (_selected != state)
+	if ( _buttonFlags.IsFlagSet( SELECTED ) != state )
 	{
-		_selected = state;
+		_buttonFlags.SetFlag( SELECTED, state );
 		RecalculateDepressedState();
 		InvalidateLayout(false);
 	}
@@ -133,9 +130,9 @@ void Button::SetSelected( bool state )
 //-----------------------------------------------------------------------------
 void Button::ForceDepressed(bool state)
 {
-	if (_forceDepressed != state)
+	if ( _buttonFlags.IsFlagSet( FORCE_DEPRESSED ) != state )
 	{
-		_forceDepressed = state;
+		_buttonFlags.SetFlag( FORCE_DEPRESSED, state );
 		RecalculateDepressedState();
 		InvalidateLayout(false);
 	}
@@ -153,10 +150,10 @@ void Button::RecalculateDepressedState( void )
 	}
 	else
 	{
-		newState = _forceDepressed ? true : (_armed && _selected);
+		newState = _buttonFlags.IsFlagSet( FORCE_DEPRESSED ) ? true : (_buttonFlags.IsFlagSet(ARMED) && _buttonFlags.IsFlagSet( SELECTED ) );
 	}
 
-	_depressed = newState;
+	_buttonFlags.SetFlag( DEPRESSED, newState );
 }
 
 //-----------------------------------------------------------------------------
@@ -166,7 +163,7 @@ void Button::RecalculateDepressedState( void )
 //-----------------------------------------------------------------------------
 void Button::SetUseCaptureMouse( bool state )
 {
-	_useCaptureMouse = state;
+	_buttonFlags.SetFlag( USE_CAPTURE_MOUSE, state );
 }
 
 //-----------------------------------------------------------------------------
@@ -175,7 +172,7 @@ void Button::SetUseCaptureMouse( bool state )
 //-----------------------------------------------------------------------------
 bool Button::IsUseCaptureMouseEnabled( void )
 {
-	return _useCaptureMouse;
+	return _buttonFlags.IsFlagSet( USE_CAPTURE_MOUSE );
 }
 
 //-----------------------------------------------------------------------------
@@ -183,14 +180,14 @@ bool Button::IsUseCaptureMouseEnabled( void )
 //-----------------------------------------------------------------------------
 void Button::SetArmed(bool state)
 {
-	if (_armed != state)
+	if ( _buttonFlags.IsFlagSet( ARMED ) != state )
 	{
-		_armed = state;
+		_buttonFlags.SetFlag( ARMED, state );
 		RecalculateDepressedState();
 		InvalidateLayout(false);
 
 		// play any sounds specified
-		if (_armed && m_sArmedSoundName != UTL_INVAL_SYMBOL)
+		if (state && m_sArmedSoundName != UTL_INVAL_SYMBOL)
 		{
 			surface()->PlaySound(g_ButtonSoundNames.String(m_sArmedSoundName));
 		}
@@ -202,7 +199,7 @@ void Button::SetArmed(bool state)
 //-----------------------------------------------------------------------------
 bool Button::IsArmed()
 {
-	return _armed;
+	return _buttonFlags.IsFlagSet( ARMED );
 }
 
 //-----------------------------------------------------------------------------
@@ -227,7 +224,7 @@ void Button::DoClick()
 //-----------------------------------------------------------------------------
 bool Button::IsSelected()
 {
-	return _selected;
+	return _buttonFlags.IsFlagSet( SELECTED );
 }
 
 //-----------------------------------------------------------------------------
@@ -235,9 +232,24 @@ bool Button::IsSelected()
 //-----------------------------------------------------------------------------
 bool Button::IsDepressed()
 {
-	return _depressed;
+	return _buttonFlags.IsFlagSet( DEPRESSED );
 }
 
+
+//-----------------------------------------------------------------------------
+// Drawing focus box?
+//-----------------------------------------------------------------------------
+bool Button::IsDrawingFocusBox()
+{
+	return _buttonFlags.IsFlagSet( DRAW_FOCUS_BOX );
+}
+
+void Button::DrawFocusBox( bool bEnable )
+{
+	_buttonFlags.SetFlag( DRAW_FOCUS_BOX, bEnable );
+}
+
+	
 //-----------------------------------------------------------------------------
 // Purpose:	Paint button on screen
 //-----------------------------------------------------------------------------
@@ -245,7 +257,7 @@ void Button::Paint(void)
 {
 	BaseClass::Paint();
 
-	if (HasFocus()  && IsEnabled() )
+	if ( HasFocus() && IsEnabled() && IsDrawingFocusBox() )
 	{
 		int x0, y0, x1, y1;
 		int wide, tall;
@@ -261,7 +273,7 @@ void Button::Paint(void)
 void Button::PerformLayout()
 {
 	// reset our border
-	SetBorder(GetBorder(_depressed, _armed, _selected, HasFocus()));
+	SetBorder( GetBorder(_buttonFlags.IsFlagSet( DEPRESSED ), _buttonFlags.IsFlagSet( ARMED ), _buttonFlags.IsFlagSet( SELECTED ), HasFocus() ) );
 
 	// set our color
 	SetFgColor(GetButtonFgColor());
@@ -276,18 +288,11 @@ void Button::PerformLayout()
 //-----------------------------------------------------------------------------
 Color Button::GetButtonFgColor()
 {
-	if (_depressed)
-	{
+	if (_buttonFlags.IsFlagSet( DEPRESSED ))
 		return _depressedFgColor;
-	}
-	else if (_armed)
-	{
+	if (_buttonFlags.IsFlagSet( ARMED ))
 		return _armedFgColor;
-	}
-	else
-	{
-		return _defaultFgColor;
-	}
+	return _defaultFgColor;
 }
 
 //-----------------------------------------------------------------------------
@@ -295,18 +300,11 @@ Color Button::GetButtonFgColor()
 //-----------------------------------------------------------------------------
 Color Button::GetButtonBgColor()
 {
-	if (_depressed)
-	{
+	if (_buttonFlags.IsFlagSet( DEPRESSED ))
 		return _depressedBgColor;
-	}
-	else if (_armed)
-	{
+	if (_buttonFlags.IsFlagSet( ARMED ))
 		return _armedBgColor;
-	}
-	else
-	{
-		return _defaultBgColor;
-	}
+	return _defaultBgColor;
 }
 
 //-----------------------------------------------------------------------------
@@ -426,37 +424,24 @@ void Button::SetKeyFocusBorder(IBorder *border)
 //-----------------------------------------------------------------------------
 IBorder *Button::GetBorder(bool depressed, bool armed, bool selected, bool keyfocus)
 {
-	if (_buttonBorderEnabled)
+	if ( _buttonFlags.IsFlagSet( BUTTON_BORDER_ENABLED ) )
 	{
 		// raised buttons with no armed state
 		if (depressed)
-		{
 			return _depressedBorder;
-		}
-		else if (keyfocus)
-		{
+		if (keyfocus)
 			return _keyFocusBorder;
-		}
-		else if (IsEnabled() && _defaultButton)
-		{
+		if (IsEnabled() && _buttonFlags.IsFlagSet( DEFAULT_BUTTON ))
 			return _keyFocusBorder;
-		}
-		else
-		{
-			return _defaultBorder;
-		}
+		return _defaultBorder;
 	}
 	else
 	{
 		// flat buttons that raise
 		if (depressed)
-		{
 			return _depressedBorder;
-		}
-		else if (armed)
-		{
+		if (armed)
 			return _defaultBorder;
-		}
 	}
 
 	return _defaultBorder;
@@ -468,9 +453,9 @@ IBorder *Button::GetBorder(bool depressed, bool armed, bool selected, bool keyfo
 //-----------------------------------------------------------------------------
 void Button::SetAsCurrentDefaultButton(int state)
 {
-	if (_defaultButton != (bool)state)
+	if ( _buttonFlags.IsFlagSet( DEFAULT_BUTTON ) != (bool)state )
 	{
-		_defaultButton = state;
+		_buttonFlags.SetFlag( DEFAULT_BUTTON, state );
 		if (state)
 		{
 			// post a message up notifying our nav group that we're now the default button
@@ -494,9 +479,9 @@ void Button::SetAsCurrentDefaultButton(int state)
 //-----------------------------------------------------------------------------
 void Button::SetAsDefaultButton(int state)
 {
-	if (_defaultButton != (bool)state)
+	if ( _buttonFlags.IsFlagSet( DEFAULT_BUTTON ) != (bool)state )
 	{
-		_defaultButton = state;
+		_buttonFlags.SetFlag( DEFAULT_BUTTON, state );
 		if (state)
 		{
 			// post a message up notifying our nav group that we're now the default button
@@ -611,6 +596,16 @@ void Button::SetCommand( KeyValues *message )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Peeks at the message to send when button is pressed
+// Input  :  - 
+// Output : KeyValues
+//-----------------------------------------------------------------------------
+KeyValues *Button::GetCommand()
+{
+	return _actionMessage;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Message targets that the button has been pressed
 //-----------------------------------------------------------------------------
 void Button::FireActionSignal()
@@ -670,6 +665,7 @@ bool Button::CanBeDefaultButton(void)
     return true;
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Get control settings for editing
 //-----------------------------------------------------------------------------
@@ -681,7 +677,11 @@ void Button::GetSettings( KeyValues *outResourceData )
 	{
 		outResourceData->SetString("command", _actionMessage->GetString("command", ""));
 	}
-	outResourceData->SetInt("default", _defaultButton);
+	outResourceData->SetInt("default", _buttonFlags.IsFlagSet( DEFAULT_BUTTON ) );
+	if ( m_bSelectionStateSaved )
+	{
+		outResourceData->SetInt( "selected", IsSelected() );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -703,6 +703,14 @@ void Button::ApplySettings( KeyValues *inResourceData )
 	if (defaultButton && CanBeDefaultButton())
 	{
 		SetAsDefaultButton(true);
+	}
+
+	// saved selection state
+	int iSelected = inResourceData->GetInt( "selected", -1 );
+	if ( iSelected != -1 )
+	{
+		SetSelected( iSelected != 0 );
+		m_bSelectionStateSaved = true;
 	}
 }
 
@@ -742,7 +750,7 @@ void Button::OnCursorEntered()
 //-----------------------------------------------------------------------------
 void Button::OnCursorExited()
 {
-	if (!_keyDown)
+	if ( !_buttonFlags.IsFlagSet( BUTTON_KEY_DOWN ) )
 	{
 		SetArmed(false);
 	}
@@ -761,6 +769,7 @@ void Button::OnMousePressed(MouseCode code)
 
 	if (_activationType == ACTIVATE_ONPRESSED)
 	{
+		RequestFocus();
 		DoClick();
 		return;
 	}
@@ -813,7 +822,7 @@ void Button::OnMouseReleased(MouseCode code)
 		return;
 
 	// it has to be both enabled and (mouse over the button or using a key) to fire
-	if (IsEnabled() && (GetVPanel() == input()->GetMouseOver() || _keyDown))
+	if ( IsEnabled() && ( GetVPanel() == input()->GetMouseOver() || _buttonFlags.IsFlagSet( BUTTON_KEY_DOWN ) ) )
 	{
 		DoClick();
 	}
@@ -834,7 +843,7 @@ void Button::OnKeyCodePressed(KeyCode code)
 	if (code == KEY_SPACE || code == KEY_ENTER)
 	{
 		SetArmed(true);
-		_keyDown = true;
+		_buttonFlags.SetFlag( BUTTON_KEY_DOWN );
 		OnMousePressed(MOUSE_LEFT);
 		if (IsUseCaptureMouseEnabled()) // undo the mouse capture since its a fake mouse click!
 		{
@@ -843,7 +852,7 @@ void Button::OnKeyCodePressed(KeyCode code)
 	}
 	else
 	{
-		_keyDown = false;
+		_buttonFlags.ClearFlag( BUTTON_KEY_DOWN );
 		BaseClass::OnKeyCodePressed(code);
 	}
 }
@@ -853,7 +862,7 @@ void Button::OnKeyCodePressed(KeyCode code)
 //-----------------------------------------------------------------------------
 void Button::OnKeyCodeReleased(KeyCode code)
 {
-	if (_keyDown && (code == KEY_SPACE || code == KEY_ENTER))
+	if (_buttonFlags.IsFlagSet( BUTTON_KEY_DOWN ) && (code == KEY_SPACE || code == KEY_ENTER))
 	{
 		SetArmed(true);
 		OnMouseReleased(MOUSE_LEFT);
@@ -862,7 +871,7 @@ void Button::OnKeyCodeReleased(KeyCode code)
 	{
 		BaseClass::OnKeyCodeReleased(code);
 	}
-	_keyDown = false;
+	_buttonFlags.ClearFlag( BUTTON_KEY_DOWN );
 	SetArmed(false);
 }
 

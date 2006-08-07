@@ -50,6 +50,7 @@ public:
 	int m_iDisabled;
 	bool m_bSolidBsp;
 	string_t m_iszExcludedClass;
+	bool m_bInvertExclusion;
 
 	DECLARE_DATADESC();
 

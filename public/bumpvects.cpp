@@ -11,6 +11,9 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
+
 #ifdef QUIVER
 #include "r_local.h"
 #endif
@@ -62,3 +65,5 @@ void GetBumpNormals( const Vector& sVect, const Vector& tVect, const Vector& fla
 		VectorIRotate( g_localBumpBasis[i], smoothBasis, bumpNormals[i] );
 	}
 }
+
+#endif // !_STATIC_LINKED || _SHARED_LIB

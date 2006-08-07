@@ -29,6 +29,11 @@ CLIENTEFFECT_MATERIAL( "effects/blood_drop" )
 CLIENTEFFECT_MATERIAL( "effects/blood_puff" )
 CLIENTEFFECT_REGISTER_END()
 
+// Cached material handles
+PMaterialHandle g_Blood_Core = NULL;
+PMaterialHandle g_Blood_Gore = NULL;
+PMaterialHandle g_Blood_Drops = NULL;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : bloodtype - 
@@ -113,11 +118,12 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 
 		// Partial gravity on blood drops.
 		pTrailEmitter->SetGravity( 600.0 ); 
-		
-		// Enable simple collisions with nearby surfaces.
-		pTrailEmitter->Setup(origin, &normal, 1, 10, 100, 600, 0.2, 0 );
 
-		PMaterialHandle	hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_drop" );
+		pTrailEmitter->GetBinding().SetBBox( origin - Vector( 32, 32, 32 ), origin + Vector( 32, 32, 32 ) );
+		pTrailEmitter->SetFlag( bitsPARTICLE_TRAIL_VELOCITY_DAMPEN );
+		pTrailEmitter->SetVelocityDampen( 0.2f );
+
+		PMaterialHandle	hMaterial = ParticleMgr()->GetPMaterial( "effects/blood_drop" );
 
 		//
 		// Long stringy drops of blood.
@@ -195,7 +201,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 		//
 		if (flags & FX_BLOODSPRAY_GORE)
 		{
-			hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_gore" );
+			hMaterial = ParticleMgr()->GetPMaterial( "effects/blood_gore" );
 
 			SimpleParticle *pParticle;
 
@@ -231,7 +237,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 					pParticle->m_uchEndAlpha	= 0;
 					
 					pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-					pParticle->m_flRollDelta	= random->RandomFloat( -4.0f, 4.0f );
+					pParticle->m_flRollDelta	= 0.0f;
 				}
 			}
 		}
@@ -241,7 +247,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 		//
 		if (flags & FX_BLOODSPRAY_CLOUD)
 		{
-			hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_puff" );
+			hMaterial = ParticleMgr()->GetPMaterial( "effects/blood_puff" );
 
 			SimpleParticle *pParticle;
 
@@ -276,7 +282,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 					pParticle->m_uchEndAlpha	= 0;
 					
 					pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-					pParticle->m_flRollDelta	= random->RandomFloat( -4.0f, 4.0f );
+					pParticle->m_flRollDelta	= 0.0f;
 				}
 			}
 		}
@@ -293,7 +299,7 @@ void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, uns
 //			normal - 
 //			scale - This parameter is not currently used
 //-----------------------------------------------------------------------------
-void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float scale, unsigned char r, unsigned char g, unsigned char b )
+void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float scale /*NOTE: Unused!*/, unsigned char r, unsigned char g, unsigned char b )
 {
 	if ( UTIL_IsLowViolence() )
 		return;
@@ -303,7 +309,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 	//Find area ambient light color and use it to tint smoke
 	Vector worldLight = WorldGetLightForPoint( origin, true );
 	
-	if ( gpGlobals->maxClients > 1 )
+	if ( IsPC() && gpGlobals->maxClients > 1 )
 	{
 		worldLight = Vector( 1.0, 1.0, 1.0 );
 		r = 96;
@@ -321,10 +327,16 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 		return;
 
 	pSimple->SetSortOrigin( origin );
-	pSimple->SetGravity( 0 );
+	pSimple->SetGravity( 200 );
+	
+	// Setup a bounding box to contain the particles without (stops auto-updating)
+	pSimple->GetBinding().SetBBox( origin - Vector( 16, 16, 16 ), origin + Vector( 16, 16, 16 ) );
 
-	// Blood impact
-	PMaterialHandle	hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_core" );
+	// Cache the material if we haven't already
+	if ( g_Blood_Core == NULL )
+	{
+		g_Blood_Core = ParticleMgr()->GetPMaterial( "effects/blood_core" );
+	}
 
 	SimpleParticle *pParticle;
 
@@ -332,7 +344,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 
 	offset = origin + ( 2.0f * normal );
 
-	pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), hMaterial, offset );
+	pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), g_Blood_Core, offset );
 
 	if ( pParticle != NULL )
 	{
@@ -355,16 +367,20 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 		pParticle->m_uchEndAlpha	= 0;
 		
 		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -2.0f, 2.0f );
+		pParticle->m_flRollDelta	= 0.0f;
 	}
 
-	hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_gore" );
+	// Cache the material if we haven't already
+	if ( g_Blood_Gore == NULL )
+	{
+		g_Blood_Gore = ParticleMgr()->GetPMaterial( "effects/blood_gore" );
+	}
 
 	for ( int i = 0; i < 4; i++ )
 	{
 		offset = origin + ( 2.0f * normal );
 
-		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), hMaterial, offset );
+		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), g_Blood_Gore, offset );
 
 		if ( pParticle != NULL )
 		{
@@ -387,7 +403,7 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 			pParticle->m_uchEndAlpha	= 0;
 			
 			pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-			pParticle->m_flRollDelta	= random->RandomFloat( -1.0f, 1.0f );
+			pParticle->m_flRollDelta	= 0.0f;
 		}
 	}
 
@@ -408,17 +424,20 @@ void FX_BloodBulletImpact( const Vector &origin, const Vector &normal, float sca
 	// Enable simple collisions with nearby surfaces
 	pTrailEmitter->Setup(origin, &normal, 1, 10, 100, 400, 0.2, 0 );
 
-	hMaterial = g_ParticleMgr.GetPMaterial( "effects/blood_drop" );
+	if ( g_Blood_Drops == NULL )
+	{
+		g_Blood_Drops = ParticleMgr()->GetPMaterial( "effects/blood_drop" );
+	}
 
 	//
 	// Shorter droplets
 	//
-	for ( i = 0; i < 8; i++ )
+	for ( int i = 0; i < 8; i++ )
 	{
 		// Originate from within a circle 'scale' inches in diameter
 		offset = origin;
 
-		tParticle = (TrailParticle *) pTrailEmitter->AddParticle( sizeof(TrailParticle), hMaterial, offset );
+		tParticle = (TrailParticle *) pTrailEmitter->AddParticle( sizeof(TrailParticle), g_Blood_Drops, offset );
 
 		if ( tParticle == NULL )
 			break;

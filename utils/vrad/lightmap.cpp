@@ -10,11 +10,18 @@
 #include "lightmap.h"
 #include "radial.h"
 #include <bumpvects.h>
-#include "utlvector.h"
+#include "tier1/utlvector.h"
 #include "vmpi.h"
 #include "anorms.h"
 #include "map_utils.h"
-
+#include "mathlib/halton.h"
+#include "imagepacker.h"
+#include "tier1/utlrbtree.h"
+#include "tier1/utlbuffer.h"
+#include "bitmap/tgawriter.h"
+#include "vtf/swizzler.h"
+#include "quantize.h"
+#include "bitmap/imageformat.h"
 
 enum
 {
@@ -32,10 +39,10 @@ enum
 class CNormalList
 {
 public:
-						CNormalList();
+	CNormalList();
 	
 	// Adds the normal if unique. Otherwise, returns the normal's index into m_Normals.
-	int					FindOrAddNormal( Vector const &vNormal );
+	int FindOrAddNormal( Vector const &vNormal );
 
 
 public:
@@ -104,21 +111,6 @@ int CNormalList::FindOrAddNormal( Vector const &vNormal )
 	return m_Normals.AddToTail( vNormal );
 }
 
-
-inline byte PVSCheck( const byte *pvs, int iCluster )
-{
-	if ( iCluster >= 0 )
-	{
-		return pvs[iCluster >> 3] & ( 1 << ( iCluster & 7 ) );
-	}
-	else
-	{
-		// PointInLeaf still returns -1 for valid points sometimes and rather than 
-		// have black samples, we assume the sample is in the PVS.
-		return 1;
-	}
-}
-
 // FIXME: HACK until the plane normals are made more happy
 void GetBumpNormals( const float* sVect, const float* tVect, const Vector& flatNormal, 
 					 const Vector& phongNormal, Vector bumpNormals[NUM_BUMP_VECTS] )
@@ -152,9 +144,9 @@ int EdgeVertex( dface_t *f, int edge )
 
 
 /*
-============
-PairEdges
-============
+  ============
+  PairEdges
+  ============
 */
 void PairEdges (void)
 {
@@ -165,7 +157,7 @@ void PairEdges (void)
 	faceneighbor_t  *fn;
 
 	// count number of faces that reference each vertex
-	for (i=0, f = dfaces; i<numfaces ; i++, f++)
+	for (i=0, f = g_pFaces; i<numfaces ; i++, f++)
 	{
         for (j=0 ; j<f->numedges ; j++)
         {
@@ -184,7 +176,7 @@ void PairEdges (void)
 	}
 
 	// store a list of every face that uses a perticular vertex
-	for (i=0, f = dfaces ; i<numfaces ; i++, f++)
+	for (i=0, f = g_pFaces ; i<numfaces ; i++, f++)
 	{
         for (j=0 ; j<f->numedges ; j++)
         {
@@ -205,7 +197,7 @@ void PairEdges (void)
 	}
 
 	// calc normals and set displacement surface flag
-	for (i=0, f = dfaces; i<numfaces ; i++, f++)
+	for (i=0, f = g_pFaces; i<numfaces ; i++, f++)
 	{
 		fn = &faceneighbor[i];
 
@@ -221,7 +213,7 @@ void PairEdges (void)
 	}
 
 	// find neighbors
-	for (i=0, f = dfaces ; i<numfaces ; i++, f++)
+	for (i=0, f = g_pFaces ; i<numfaces ; i++, f++)
 	{
 		numneighbors = 0;
 		fn = &faceneighbor[i];
@@ -260,7 +252,7 @@ void PairEdges (void)
 				else
 				{
 					// No smoothing - use of method (backwards compatibility).
-					if ( ( f->smoothingGroups == 0 ) && ( dfaces[vertexface[n][k]].smoothingGroups == 0 ) )
+					if ( ( f->smoothingGroups == 0 ) && ( g_pFaces[vertexface[n][k]].smoothingGroups == 0 ) )
 					{
 						if ( cos_normals_angle >= smoothing_threshold )
 						{
@@ -274,7 +266,7 @@ void PairEdges (void)
 					}
 					else
 					{
-						unsigned int smoothingGroup = ( f->smoothingGroups & dfaces[vertexface[n][k]].smoothingGroups );
+						unsigned int smoothingGroup = ( f->smoothingGroups & g_pFaces[vertexface[n][k]].smoothingGroups );
 
 						// Hard edge.
 						if ( ( smoothingGroup & SMOOTHING_GROUP_HARD_EDGE ) != 0 )
@@ -345,7 +337,7 @@ void SaveVertexNormals( void )
 	for( i = 0 ;i<numfaces ; i++ )
 	{
 		fn = &faceneighbor[i];
-		f = &dfaces[i];
+		f = &g_pFaces[i];
 
 		for( j = 0; j < f->numedges; j++ )
 		{
@@ -381,11 +373,11 @@ void SaveVertexNormals( void )
 }
 
 /*
-=================================================================
+  =================================================================
 
   LIGHTMAP SAMPLE GENERATION
 
-=================================================================
+  =================================================================
 */
 
 
@@ -397,7 +389,7 @@ void SaveVertexNormals( void )
 void ErrorLightInfo(const char *s, lightinfo_t *l)
 {
 	texinfo_t *tex = &texinfo[l->face->texinfo];
-	winding_t *w = WindingFromFace(&dfaces[l->facenum], l->modelorg);
+	winding_t *w = WindingFromFace(&g_pFaces[l->facenum], l->modelorg);
 
 	//
 	// Show the face center and material name if possible.
@@ -421,146 +413,61 @@ void ErrorLightInfo(const char *s, lightinfo_t *l)
 }
 
 
-/*
-================
-CalcFaceVectors
 
-Fills in texorg, worldtotex. and textoworld
-================
-*/
-void CalcFaceVectors (lightinfo_t *l)
+void CalcFaceVectors(lightinfo_t *l)
 {
 	texinfo_t	*tex;
 	int			i, j;
-	Vector	    textureSpaceNormal;
-	Vector	    luxelSpaceNormal;
-	vec_t	    textureDistScale, luxelDistScale;
-	vec_t	    dist, len;
 
 	tex = &texinfo[l->face->texinfo];
 	
-    // convert from float to double
+    // move into lightinfo_t
 	for (i=0 ; i<2 ; i++)
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			l->worldToTextureSpace[i][j] = tex->textureVecsTexelsPerWorldUnits[i][j];
 			l->worldToLuxelSpace[i][j] = tex->lightmapVecsLuxelsPerWorldUnits[i][j];
 		}
 	}
 
-    // calculate a normal to the texture plane.  points can be moved along this
-    // without changing their S/T
-	textureSpaceNormal[0] = 
-		tex->textureVecsTexelsPerWorldUnits[1][1] * tex->textureVecsTexelsPerWorldUnits[0][2] - 
-		tex->textureVecsTexelsPerWorldUnits[1][2] * tex->textureVecsTexelsPerWorldUnits[0][1];
-	textureSpaceNormal[1] = 
-		tex->textureVecsTexelsPerWorldUnits[1][2] * tex->textureVecsTexelsPerWorldUnits[0][0] - 
-		tex->textureVecsTexelsPerWorldUnits[1][0] * tex->textureVecsTexelsPerWorldUnits[0][2];
-	textureSpaceNormal[2] = 
-		tex->textureVecsTexelsPerWorldUnits[1][0] * tex->textureVecsTexelsPerWorldUnits[0][1] - 
-		tex->textureVecsTexelsPerWorldUnits[1][1] * tex->textureVecsTexelsPerWorldUnits[0][0];
-	VectorNormalize (textureSpaceNormal);
+	//Solve[ { x * w00 + y * w01 + z * w02 - s == 0, x * w10 + y * w11 + z * w12 - t == 0, A * x + B * y + C * z + D == 0 }, { x, y, z } ]
+	//Rule(x,(  C*s*w11 - B*s*w12 + B*t*w02 - C*t*w01 + D*w02*w11 - D*w01*w12) / (+ A*w01*w12 - A*w02*w11 + B*w02*w10 - B*w00*w12 + C*w00*w11 - C*w01*w10 )),
+	//Rule(y,(  A*s*w12 - C*s*w10 + C*t*w00 - A*t*w02 + D*w00*w12 - D*w02*w10) / (+ A*w01*w12 - A*w02*w11 + B*w02*w10 - B*w00*w12 + C*w00*w11 - C*w01*w10 )),
+	//Rule(z,(  B*s*w10 - A*s*w11 + A*t*w01 - B*t*w00 + D*w01*w10 - D*w00*w11) / (+ A*w01*w12 - A*w02*w11 + B*w02*w10 - B*w00*w12 + C*w00*w11 - C*w01*w10 ))))
 
-    // calculate a normal to the lightmap plane.  points can be moved along this
-    // without changing their S/T
-	luxelSpaceNormal[0] = 
+	Vector luxelSpaceCross;
+
+	luxelSpaceCross[0] = 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][1] * tex->lightmapVecsLuxelsPerWorldUnits[0][2] - 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][2] * tex->lightmapVecsLuxelsPerWorldUnits[0][1];
-	luxelSpaceNormal[1] = 
+	luxelSpaceCross[1] = 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][2] * tex->lightmapVecsLuxelsPerWorldUnits[0][0] - 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][0] * tex->lightmapVecsLuxelsPerWorldUnits[0][2];
-	luxelSpaceNormal[2] = 
+	luxelSpaceCross[2] = 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][0] * tex->lightmapVecsLuxelsPerWorldUnits[0][1] - 
 		tex->lightmapVecsLuxelsPerWorldUnits[1][1] * tex->lightmapVecsLuxelsPerWorldUnits[0][0];
-	VectorNormalize (luxelSpaceNormal);
 
-    // flip it towards the texture plane normal
-	textureDistScale = DotProduct (textureSpaceNormal, l->facenormal);
-	if (fabs(textureDistScale) < 1e-4)
-	{
-		ErrorLightInfo("\nTexture axis perpendicular to face", l);
+	float det = -DotProduct( l->facenormal, luxelSpaceCross );
 
-		// Try to recover...
-		if (textureDistScale < 0)
-			textureDistScale = -1e-4;
-		else
-			textureDistScale = 1e-4;
-	}
+	// invert the matrix
+	l->luxelToWorldSpace[0][0]	= (l->facenormal[2] * l->worldToLuxelSpace[1][1] - l->facenormal[1] * l->worldToLuxelSpace[1][2]) / det;
+	l->luxelToWorldSpace[1][0]	= (l->facenormal[1] * l->worldToLuxelSpace[0][2] - l->facenormal[2] * l->worldToLuxelSpace[0][1]) / det;
+	l->luxelOrigin[0]			= -(l->facedist * luxelSpaceCross[0]) / det;
+	l->luxelToWorldSpace[0][1]  = (l->facenormal[0] * l->worldToLuxelSpace[1][2] - l->facenormal[2] * l->worldToLuxelSpace[1][0]) / det; 
+	l->luxelToWorldSpace[1][1]  = (l->facenormal[2] * l->worldToLuxelSpace[0][0] - l->facenormal[0] * l->worldToLuxelSpace[0][2]) / det; 
+	l->luxelOrigin[1]			= -(l->facedist * luxelSpaceCross[1]) / det;
+	l->luxelToWorldSpace[0][2]  = (l->facenormal[1] * l->worldToLuxelSpace[1][0] - l->facenormal[0] * l->worldToLuxelSpace[1][1]) / det; 
+	l->luxelToWorldSpace[1][2]  = (l->facenormal[0] * l->worldToLuxelSpace[0][1] - l->facenormal[1] * l->worldToLuxelSpace[0][0]) / det; 
+	l->luxelOrigin[2]			= -(l->facedist * luxelSpaceCross[2]) / det;
 
-	if (textureDistScale < 0)
-	{
-		textureDistScale = -textureDistScale;
-		VectorSubtract (vec3_origin, textureSpaceNormal, textureSpaceNormal);
-	}	
-
-    // flip it towards the lightmap plane normal
-	luxelDistScale = DotProduct (luxelSpaceNormal, l->facenormal);
-	if (fabs(luxelDistScale) < 1e-4)
-	{
-		ErrorLightInfo("\nLuxel axis perpendicular to face", l);
-
-		// Try to recover...
-		if (luxelDistScale < 0)
-			luxelDistScale = -1e-4;
-		else
-			luxelDistScale = 1e-4;
-	}
-
-	if (luxelDistScale < 0)
-	{
-		luxelDistScale = -luxelDistScale;
-		VectorSubtract (vec3_origin, luxelSpaceNormal, luxelSpaceNormal);
-	}	
-
-    // distscale is the ratio of the distance along the texture normal to
-    // the distance along the plane normal
-	textureDistScale = 1.0f / textureDistScale;
-	luxelDistScale = 1.0f / luxelDistScale;
-
-	for (i=0 ; i<2 ; i++)
-	{
-		// texture space
-		len = (float)VectorLength (l->worldToTextureSpace[i]);
-		dist = DotProduct (l->worldToTextureSpace[i], l->facenormal);
-		dist *= textureDistScale;
-		VectorMA (l->worldToTextureSpace[i], -dist, textureSpaceNormal, l->textureToWorldSpace[i]);
-		VectorScale (l->textureToWorldSpace[i], (1/len)*(1/len), l->textureToWorldSpace[i]);
-
-		// luxel space
-		len = (float)VectorLength (l->worldToLuxelSpace[i]);
-		dist = DotProduct (l->worldToLuxelSpace[i], l->facenormal);
-		dist *= luxelDistScale;
-		VectorMA (l->worldToLuxelSpace[i], -dist, luxelSpaceNormal, l->luxelToWorldSpace[i]);
-		VectorScale (l->luxelToWorldSpace[i], (1/len)*(1/len), l->luxelToWorldSpace[i]);
-	}
-
-
-	for (i=0 ; i<3 ; i++)
-	{
-	    // calculate textureOrigin on the texture plane
-		l->textureOrigin[i] = -tex->textureVecsTexelsPerWorldUnits[0][3] * l->textureToWorldSpace[0][i] - 
-						       tex->textureVecsTexelsPerWorldUnits[1][3] * l->textureToWorldSpace[1][i];
-		// calculate lightmapOrigin on the lightmap plane
-		l->luxelOrigin[i] = -tex->lightmapVecsLuxelsPerWorldUnits[0][3] * l->luxelToWorldSpace[0][i] - 
-						        tex->lightmapVecsLuxelsPerWorldUnits[1][3] * l->luxelToWorldSpace[1][i];
-	}
-
-    // project back to the face plane
-	dist = DotProduct (l->textureOrigin, l->facenormal) - l->facedist;
-	dist *= textureDistScale;
-	VectorMA (l->textureOrigin, -dist, textureSpaceNormal, l->textureOrigin);
-
-	dist = DotProduct (l->luxelOrigin, l->facenormal) - l->facedist;
-	dist *= luxelDistScale;
-	VectorMA (l->luxelOrigin, -dist, luxelSpaceNormal, l->luxelOrigin);
-
-	// compensate for org'd bmodels
-	VectorAdd (l->textureOrigin, l->modelorg, l->textureOrigin);
+	// adjust for luxel offset
+	VectorMA( l->luxelOrigin, -tex->lightmapVecsLuxelsPerWorldUnits[0][3], l->luxelToWorldSpace[0], l->luxelOrigin );
+	VectorMA( l->luxelOrigin, -tex->lightmapVecsLuxelsPerWorldUnits[1][3], l->luxelToWorldSpace[1], l->luxelOrigin );
 
 	// compensate for org'd bmodels
 	VectorAdd (l->luxelOrigin, l->modelorg, l->luxelOrigin);
 }
+
 
 
 winding_t *LightmapCoordWindingForFace( lightinfo_t *l )
@@ -593,12 +500,12 @@ void WriteCoordWinding (FILE *out, lightinfo_t *l, winding_t *w, Vector& color )
 	{
 		LuxelSpaceToWorld( l, w->p[i][0], w->p[i][1], pos );
 		fprintf (out, "%5.2f %5.2f %5.2f %5.3f %5.3f %5.3f\n",
-			pos[0],
-			pos[1],
-			pos[2],
-			color[ 0 ] / 256,
-			color[ 1 ] / 256,
-			color[ 2 ] / 256 );
+				 pos[0],
+				 pos[1],
+				 pos[2],
+				 color[ 0 ] / 256,
+				 color[ 1 ] / 256,
+				 color[ 2 ] / 256 );
 	}
 }
 
@@ -645,11 +552,11 @@ void DumpFaces( lightinfo_t *pLightInfo, int ndxFace )
 		CmdLib_FPrintf(out, "%f %f %f %f %f %f\n", p2[0], p2[1], p2[2], n2[0] * 0.5 + 0.5, n2[1] * 0.5 + 0.5, n2[2] * 0.5 + 0.5 );
 		
 		CmdLib_FPrintf(out, "%f %f %f %f %f %f\n", centroid[0] + pLightInfo->modelorg[0], 
-			                                centroid[1] + pLightInfo->modelorg[1], 
-											centroid[2] + pLightInfo->modelorg[2], 
-			                                fn->facenormal[0] * 0.5 + 0.5, 
-											fn->facenormal[1] * 0.5 + 0.5, 
-											fn->facenormal[2] * 0.5 + 0.5 );
+					   centroid[1] + pLightInfo->modelorg[1], 
+					   centroid[2] + pLightInfo->modelorg[2], 
+					   fn->facenormal[0] * 0.5 + 0.5, 
+					   fn->facenormal[1] * 0.5 + 0.5, 
+					   fn->facenormal[2] * 0.5 + 0.5 );
 		
 	}
 	
@@ -660,7 +567,7 @@ void DumpFaces( lightinfo_t *pLightInfo, int ndxFace )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool BuildFaceSamplesAndLuxels_DoFast( lightinfo_t *pLightInfo, facelight_t *pFaceLight )
+bool BuildFacesamplesAndLuxels_DoFast( lightinfo_t *pLightInfo, facelight_t *pFaceLight )
 {
 	// lightmap size
 	int width = pLightInfo->face->m_LightmapTextureSizeInLuxels[0]+1;
@@ -722,7 +629,7 @@ bool BuildSamplesAndLuxels_DoFast( lightinfo_t *pLightInfo, facelight_t *pFaceLi
 	// build samples for a "face"
 	if( pLightInfo->face->dispinfo == -1 )
 	{
-		return BuildFaceSamplesAndLuxels_DoFast( pLightInfo, pFaceLight );
+		return BuildFacesamplesAndLuxels_DoFast( pLightInfo, pFaceLight );
 	}
 	// build samples for a "displacement"
 	else
@@ -734,7 +641,7 @@ bool BuildSamplesAndLuxels_DoFast( lightinfo_t *pLightInfo, facelight_t *pFaceLi
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool BuildFaceSamples( lightinfo_t *pLightInfo, facelight_t *pFaceLight )
+bool BuildFacesamples( lightinfo_t *pLightInfo, facelight_t *pFaceLight )
 {
 	// lightmap size
 	int width = pLightInfo->face->m_LightmapTextureSizeInLuxels[0]+1;
@@ -878,13 +785,14 @@ bool BuildFaceSamples( lightinfo_t *pLightInfo, facelight_t *pFaceLight )
 	// supply a default sample normal (face normal - assumed flat)
 	for( int ndxSample = 0; ndxSample < pFaceLight->numsamples; ndxSample++ )
 	{
+		Assert ( VectorLength ( pLightInfo->facenormal ) > 1.0e-20);
 		pFaceLight->sample[ndxSample].normal = pLightInfo->facenormal;
 	}
 
 	// statistics - warning?!
 	if( pFaceLight->numsamples == 0 )
 	{
-		Msg( "no samples %d\n", pLightInfo->face - dfaces );
+		Msg( "no samples %d\n", pLightInfo->face - g_pFaces );
 	}
 
 	return true;
@@ -917,7 +825,7 @@ bool BuildSamples( lightinfo_t *pLightInfo, facelight_t *pFaceLight, int ndxFace
 	// build samples for a "face"
 	if( pLightInfo->face->dispinfo == -1 )
 	{
-		return BuildFaceSamples( pLightInfo, pFaceLight );
+		return BuildFacesamples( pLightInfo, pFaceLight );
 	}
 	// build samples for a "displacement"
 	else
@@ -1019,9 +927,9 @@ facelight_t		facelight[MAX_MAP_FACES];
 int				numdlights;
 
 /*
-==================
-FindTargetEntity
-==================
+  ==================
+  FindTargetEntity
+  ==================
 */
 entity_t *FindTargetEntity (char *target)
 {
@@ -1041,9 +949,9 @@ entity_t *FindTargetEntity (char *target)
 
 
 /*
-=============
-AllocDLight
-=============
+  =============
+  AllocDLight
+  =============
 */
 
 int GetVisCache( int lastoffset, int cluster, byte *pvs );
@@ -1125,9 +1033,9 @@ void MergeDLightVis( directlight_t *dl, int cluster )
 
 
 /*
-=============
-LightForKey
-=============
+  =============
+  LightForKey
+  =============
 */
 int LightForKey (entity_t *ent, char *key, Vector& intensity )
 {
@@ -1147,33 +1055,59 @@ int LightForString( char *pLight, Vector& intensity )
 
 	// scanf into doubles, then assign, so it is vec_t size independent
 	r = g = b = scaler = 0;
-	argCnt = sscanf ( pLight, "%lf %lf %lf %lf", &r, &g, &b, &scaler );
+	double r_hdr,g_hdr,b_hdr,scaler_hdr;
+	argCnt = sscanf ( pLight, "%lf %lf %lf %lf %lf %lf %lf %lf", 
+					  &r, &g, &b, &scaler, &r_hdr,&g_hdr,&b_hdr,&scaler_hdr );
 
-	intensity[0] = pow( r / 255.0, 2.2 ) * 255; // convert to linear
-
-	if( argCnt == 1 )
+	// This is a special case for HDR lights.  If we have a vector of [-1, -1, -1, 1], then we
+	// need to fall back to the non-HDR lighting since the HDR lighting hasn't been defined
+	// for this light source.
+	if( ( argCnt == 3 && r == -1.0f && g == -1.0f && b == -1.0f ) ||
+		( argCnt == 4 && r == -1.0f && g == -1.0f && b == -1.0f && scaler == 1.0f ) )
 	{
-		// The R,G,B values are all equal.
-		intensity[1] = intensity[2] = intensity[0]; 
+		intensity.Init( -1.0f, -1.0f, -1.0f );
+		return true;
 	}
-	else if ( argCnt == 3 || argCnt == 4 )
-	{
-		// Save the other two G,B values.
-		intensity[1] = pow( g / 255.0, 2.2 ) * 255;
-		intensity[2] = pow( b / 255.0, 2.2 ) * 255;
 
-		// Did we also get an "intensity" scaler value too?
-		if ( argCnt == 4 )
+	if (argCnt==8) 											// 2 4-tuples
+	{
+		if (g_bHDR)
 		{
-			// Scale the normalized 0-255 R,G,B values by the intensity scaler
-			VectorScale( intensity, scaler / 255.0, intensity );
+			r=r_hdr;
+			g=g_hdr;
+			b=b_hdr;
+			scaler=scaler_hdr;
 		}
-	}
-	else
-	{
-		return false;
+		argCnt=4;
 	}
 
+	intensity[0] = pow( r / 255.0, 2.2 ) * 255;				// convert to linear
+	
+	switch( argCnt)
+	{
+		case 1:
+			// The R,G,B values are all equal.
+			intensity[1] = intensity[2] = intensity[0]; 
+			break;
+			
+		case 3:
+		case 4:
+			// Save the other two G,B values.
+			intensity[1] = pow( g / 255.0, 2.2 ) * 255;
+			intensity[2] = pow( b / 255.0, 2.2 ) * 255;
+			
+			// Did we also get an "intensity" scaler value too?
+			if ( argCnt == 4 )
+			{
+				// Scale the normalized 0-255 R,G,B values by the intensity scaler
+				VectorScale( intensity, scaler / 255.0, intensity );
+			}
+			break;
+
+		default:
+			printf("unknown light specifier type - %s\n",pLight);
+			return false;
+	}
 	// scale up source lights by scaling factor
 	VectorScale( intensity, lightscale, intensity );
 	return true;
@@ -1191,8 +1125,21 @@ static void ParseLightGeneric( entity_t *e, directlight_t *dl )
 
 	dl->light.style = (int)FloatForKey (e, "style");
 	
-	// get intensity
-	LightForKey( e, "_light", dl->light.intensity );
+	// get intenfsity
+	if( g_bHDR )
+	{
+		if( LightForKey( e, "_lightHDR", dl->light.intensity ) == 0 ||
+			( dl->light.intensity.x == -1.0f && 
+			  dl->light.intensity.y == -1.0f && 
+			  dl->light.intensity.z == -1.0f ) )
+		{
+			LightForKey( e, "_light", dl->light.intensity );
+		}
+	}
+	else
+	{
+		LightForKey( e, "_light", dl->light.intensity );
+	}
 	
 	// check angle, targets
 	target = ValueForKey (e, "target");
@@ -1201,7 +1148,7 @@ static void ParseLightGeneric( entity_t *e, directlight_t *dl )
 		e2 = FindTargetEntity (target);
 		if (!e2)
 			Warning("WARNING: light at (%i %i %i) has missing target\n",
-			(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
+					(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
 		else
 		{
 			GetVectorForKey (e2, "origin", dest);
@@ -1217,6 +1164,68 @@ static void ParseLightGeneric( entity_t *e, directlight_t *dl )
 		float pitch = FloatForKey (e, "pitch");
 		float angle = FloatForKey (e, "angle");
 		SetupLightNormalFromProps( QAngle( angles.x, angles.y, angles.z ), angle, pitch, dl->light.normal );
+	}
+}
+
+static void SetLightFalloffParams(entity_t *e, directlight_t *dl)
+{
+	float d50=FloatForKey(e,"_fifty_percent_distance");
+	if (d50)
+	{
+		float d0=FloatForKey(e,"_zero_percent_distance");
+		if (d0<d50)
+		{
+			Warning("light has _fifty_percent_distance of %f but no zero_percent_distance\n",d50);
+			d0=2.0*d50;
+		}
+		float a=0,b=1,c=0;
+		if (! SolveInverseQuadraticMonotonic(0,1.0,d50,2.0,d0,256.0,a,b,c))
+		{
+			Warning("can't solve quadratic for light %f %f\n",d50,d0);
+		}
+		// it it possible that the parameters couldn't be used because of enforing monoticity. If so, rescale so at
+		// least the 50 percent value is right
+//		printf("50 percent=%f 0 percent=%f\n",d50,d0);
+// 		printf("a=%f b=%f c=%f\n",a,b,c);
+		float v50=c+d50*(b+d50*a);
+		float scale=2.0/v50;
+		a*=scale;
+		b*=scale;
+		c*=scale;
+// 		printf("scaled=%f a=%f b=%f c=%f\n",scale,a,b,c);
+// 		for(float d=0;d<1000;d+=20)
+// 			printf("at %f, %f\n",d,1.0/(c+d*(b+d*a)));
+		dl->light.quadratic_attn=a;
+		dl->light.linear_attn=b;
+		dl->light.constant_attn=c;
+	}
+	else
+	{
+		dl->light.constant_attn = FloatForKey (e, "_constant_attn");
+		dl->light.linear_attn = FloatForKey (e, "_linear_attn");
+		dl->light.quadratic_attn = FloatForKey (e, "_quadratic_attn");
+		
+		dl->light.radius = FloatForKey (e, "_distance");
+		
+		// clamp values to >= 0
+		if (dl->light.constant_attn < EQUAL_EPSILON)
+			dl->light.constant_attn = 0;
+		
+		if (dl->light.linear_attn < EQUAL_EPSILON)
+			dl->light.linear_attn = 0;
+		
+		if (dl->light.quadratic_attn < EQUAL_EPSILON)
+			dl->light.quadratic_attn = 0;
+		
+		if (dl->light.constant_attn < EQUAL_EPSILON && dl->light.linear_attn < EQUAL_EPSILON && dl->light.quadratic_attn < EQUAL_EPSILON)
+			dl->light.constant_attn = 1;
+		
+		// scale intensity for unit 100 distance
+		float ratio = (dl->light.constant_attn + 100 * dl->light.linear_attn + 100 * 100 * dl->light.quadratic_attn);
+		if (ratio > 0)
+		{
+			VectorScale( dl->light.intensity, ratio, dl->light.intensity );
+		}
 	}
 }
 
@@ -1253,14 +1262,14 @@ static void ParseLightSpot( entity_t* e, directlight_t* dl )
 		if (dl->light.stopdot > 90)
 		{
 			Warning("WARNING: light_spot at (%i %i %i) has inner angle larger than 90 degrees! Clamping to 90...\n",
-				(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
+					(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
 			dl->light.stopdot = 90;
 		}
 
 		if (dl->light.stopdot2 > 90)
 		{
 			Warning("WARNING: light_spot at (%i %i %i) has outer angle larger than 90 degrees! Clamping to 90...\n",
-				(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
+					(int)dl->light.origin[0], (int)dl->light.origin[1], (int)dl->light.origin[2]);
 			dl->light.stopdot2 = 90;
 		}
 
@@ -1269,31 +1278,7 @@ static void ParseLightSpot( entity_t* e, directlight_t* dl )
 		dl->light.exponent = FloatForKey (e, "_exponent");
 	}
 
-	dl->light.constant_attn = FloatForKey (e, "_constant_attn");
-	dl->light.linear_attn = FloatForKey (e, "_linear_attn");
-	dl->light.quadratic_attn = FloatForKey (e, "_quadratic_attn");
-
-	dl->light.radius = FloatForKey (e, "_distance");
-
-	// clamp values to >= 0
-	if (dl->light.constant_attn < EQUAL_EPSILON)
-		dl->light.constant_attn = 0;
-
-	if (dl->light.linear_attn < EQUAL_EPSILON)
-		dl->light.linear_attn = 0;
-
-	if (dl->light.quadratic_attn < EQUAL_EPSILON)
-		dl->light.quadratic_attn = 0;
-
-	if (dl->light.constant_attn < EQUAL_EPSILON && dl->light.linear_attn < EQUAL_EPSILON && dl->light.quadratic_attn < EQUAL_EPSILON)
-		dl->light.constant_attn = 1;
-
-	// scale intensity for unit 100 distance
-	float ratio = (dl->light.constant_attn + 100 * dl->light.linear_attn + 100 * 100 * dl->light.quadratic_attn);
-	if (ratio > 0)
-	{
-		VectorScale( dl->light.intensity, ratio, dl->light.intensity );
-	}
+	SetLightFalloffParams(e,dl);
 }
 
 // NOTE: This is just a heuristic.  It traces a finite number of rays to find sky
@@ -1336,7 +1321,7 @@ void BuildVisForLightEnvironment( void )
 		{
 			unsigned int iFace = dleaffaces[iFirstFace+iLeafFace];
 			
-			texinfo_t &tex = texinfo[dfaces[iFace].texinfo];
+			texinfo_t &tex = texinfo[g_pFaces[iFace].texinfo];
 			if ( tex.flags & SURF_SKY )
 			{
 				dleafs[iLeaf].flags |= LEAF_FLAGS_SKY;
@@ -1433,7 +1418,14 @@ static void ParseLightEnvironment( entity_t* e, directlight_t* dl )
 		// Sky ambient light.
 		gAmbient = AllocDLight( dl->light.origin, false );
 		gAmbient->light.type = emit_skyambient;
-		if ( !LightForKey( e, "_ambient", gAmbient->light.intensity ) )
+		if( g_bHDR && LightForKey( e, "_ambientHDR", gAmbient->light.intensity ) &&
+			gAmbient->light.intensity.x != -1.0f && 
+			gAmbient->light.intensity.y != -1.0f && 
+			gAmbient->light.intensity.z != -1.0f )
+		{
+			// we have a valid HDR ambient light value
+		}
+		else if ( !LightForKey( e, "_ambient", gAmbient->light.intensity ) )
 		{
 			VectorScale( dl->light.intensity, 0.5, gAmbient->light.intensity );
 		}
@@ -1456,37 +1448,13 @@ static void ParseLightPoint( entity_t* e, directlight_t* dl )
 
 	dl->light.type = emit_point;
 
-	dl->light.constant_attn = FloatForKey (e, "_constant_attn");
-	dl->light.linear_attn = FloatForKey (e, "_linear_attn");
-	dl->light.quadratic_attn = FloatForKey (e, "_quadratic_attn");
-
-	dl->light.radius = FloatForKey (e, "_distance");
-
-	// clamp values to >= 0
-	if (dl->light.constant_attn < EQUAL_EPSILON)
-		dl->light.constant_attn = 0;
-
-	if (dl->light.linear_attn < EQUAL_EPSILON)
-		dl->light.linear_attn = 0;
-
-	if (dl->light.quadratic_attn < EQUAL_EPSILON)
-		dl->light.quadratic_attn = 0;
-
-	if (dl->light.constant_attn < EQUAL_EPSILON && dl->light.linear_attn < EQUAL_EPSILON && dl->light.quadratic_attn < EQUAL_EPSILON)
-		dl->light.constant_attn = 1;
-
-	// scale intensity for unit 100 distance
-	float ratio = (dl->light.constant_attn + 100 * dl->light.linear_attn + 100 * 100 * dl->light.quadratic_attn);
-	if (ratio > 0)
-	{
-		VectorScale( dl->light.intensity, ratio, dl->light.intensity );
-	}
+	SetLightFalloffParams(e,dl);
 }
 
 /*
-=============
-CreateDirectLights
-=============
+  =============
+  CreateDirectLights
+  =============
 */
 #define DIRECT_SCALE (100.0*100.0)
 void CreateDirectLights (void)
@@ -1523,7 +1491,7 @@ void CreateDirectLights (void)
 
 			dl->light.type = emit_surface;
 			VectorCopy (p->normal, dl->light.normal);
-
+			Assert( VectorLength( p->normal ) > 1.0e-20 );
 			// scale intensity by number of texture instances
 			VectorScale( p->baselight, lightscale * p->area * p->scale[0] * p->scale[1] / p->basearea, dl->light.intensity );
 
@@ -1569,9 +1537,9 @@ void CreateDirectLights (void)
 }
 
 /*
-=============
-ExportDirectLightsToWorldLights
-=============
+  =============
+  ExportDirectLightsToWorldLights
+  =============
 */
 
 void ExportDirectLightsToWorldLights()
@@ -1579,15 +1547,15 @@ void ExportDirectLightsToWorldLights()
 	directlight_t		*dl;
 
 	// In case the level has already been VRADed.
-	numworldlights = 0;
+	*pNumworldlights = 0;
 
 	for (dl = activelights; dl != NULL; dl = dl->next )
 	{
-		dworldlight_t *wl = &dworldlights[numworldlights++];
+		dworldlight_t *wl = &dworldlights[(*pNumworldlights)++];
 
-		if (numworldlights > MAX_MAP_WORLDLIGHTS)
+		if (*pNumworldlights > MAX_MAP_WORLDLIGHTS)
 		{
-			Error("too many lights %d / %d\n", numworldlights, MAX_MAP_WORLDLIGHTS );
+			Error("too many lights %d / %d\n", *pNumworldlights, MAX_MAP_WORLDLIGHTS );
 		}
 
 		wl->cluster	= dl->light.cluster;
@@ -1609,11 +1577,14 @@ void ExportDirectLightsToWorldLights()
 }
 
 /*
-=============
-GatherSampleLight
-=============
+  =============
+  GatherSampleLight
+  =============
 */
 #define NORMALFORMFACTOR	40.156979 // accumuated dot products for hemisphere
+
+#define NSAMPLES_SUN_AREA_LIGHT 30							// number of samples to take for an
+                                                            // non-point sun light
 
 // returns dot product with normal and delta
 // dl - light
@@ -1622,7 +1593,9 @@ GatherSampleLight
 // out.dot[] - returned dot products with light vector and each normal
 // out.falloff - amount of light falloff
 bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum, 
-	Vector const& pos, Vector *pNormals, int normalCount, int iThread )
+						Vector const& pos, Vector *pNormals, int normalCount, int iThread,
+						bool force_fast,
+						int static_prop_index_to_ignore)
 {
 	float			dot, dot2;
 	float			dist;
@@ -1638,17 +1611,42 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 		if (dot <= EQUAL_EPSILON)
 			return false;
 
-		// search back to see if we can hit a sky brush
-		VectorScale( dl->light.normal, -MAX_TRACE_LENGTH, delta );
-		VectorAdd( pos, delta, delta );
-
-		texinfo_t *tx = TestLine_Surface( 0, pos, delta, iThread );
+		int nsamples=1;
+		if (g_SunAngularExtent>0.0)
+		{
+			nsamples=NSAMPLES_SUN_AREA_LIGHT;
+			if (do_fast || force_fast )
+				nsamples/=4;
+		}
 		
-		if (tx == NULL || !(tx->flags & SURF_SKY))
-		// if (tx == NULL || tx->texdata != dl->texdata)
-			return false;	// occluded
+		int nmisses=0;
+		DirectionalSampler_t ldisp;
 
-		out.dot[0] = dot;
+		for(int d=0;d<nsamples;d++)
+		{
+			// now, determine visibility of the skylight
+			// search back to see if we can hit a sky brush
+			VectorScale( dl->light.normal, -MAX_TRACE_LENGTH, delta );
+			if (d)
+			{
+				// jitter light source location
+				Vector ofs=ldisp.NextValue();
+				ofs*=(MAX_TRACE_LENGTH*g_SunAngularExtent);
+				delta+=ofs;
+			}
+			VectorAdd( pos, delta, delta );
+
+			texinfo_t *tx = TestLine_Surface( 0, pos, delta, iThread, true, 
+											  static_prop_index_to_ignore );
+
+			if (tx == NULL || !(tx->flags & SURF_SKY))
+				nmisses++;
+		}
+		if (nmisses==nsamples)
+			return false;
+		float see_percent=(nsamples-nmisses)*(1.0/nsamples);
+		out.dot[0] = dot*see_percent;
+
 		out.falloff = 1.0f;
 		for ( int i = 1; i < normalCount; i++ )
 		{
@@ -1658,6 +1656,7 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 	} 
 	else if (dl->light.type == emit_skyambient)
 	{
+		float sumdot=0;
 		float ambient_intensity[NUM_BUMP_VECTS+1];
 		int i, j;
 		int possibleHitCount[NUM_BUMP_VECTS+1];
@@ -1671,17 +1670,26 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 		// count all of the directions that could have projected something on to the bump basis normal
 		memset( possibleHitCount, 0, sizeof(possibleHitCount) );
 
-		for (j = 0; j < NUMVERTEXNORMALS; j++)
+		DirectionalSampler_t sampler;
+		int nsky_samples=NUMVERTEXNORMALS;
+		if (do_fast || force_fast )
+			nsky_samples/=4;
+		if (g_dofinal)
+			nsky_samples*=16;
+
+		for (j = 0; j < nsky_samples; j++)
 		{
 			// make sure the angle is okay
-			dots[0] = -DotProduct( pNormals[0], g_anorms[j] );
+			Vector anorm=sampler.NextValue();
+			dots[0] = -DotProduct( pNormals[0], anorm );
 			if (dots[0] <= EQUAL_EPSILON)
 				continue;
 
+			sumdot+=dots[0];
 			possibleHitCount[0]++;
 			for ( i = 1; i < normalCount; i++ )
 			{
-				dots[i] = -DotProduct( pNormals[i], g_anorms[j] );
+				dots[i] = -DotProduct( pNormals[i], anorm );
 				if ( dots[i] <= EQUAL_EPSILON )
 				{
 					dots[i] = 0;
@@ -1692,13 +1700,14 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 				}
 			}
 			// search back to see if we can hit a sky brush
-			VectorScale( g_anorms[j], -MAX_TRACE_LENGTH, delta );
+			VectorScale( anorm, -MAX_TRACE_LENGTH, delta );
 			VectorAdd( pos, delta, delta );
 
-			texinfo_t *tx = TestLine_Surface( 0, pos, delta, iThread );
+			texinfo_t *tx = TestLine_Surface( 0, pos, delta, iThread, true,
+											  static_prop_index_to_ignore );
 
 			if (tx == NULL || !(tx->flags & SURF_SKY))
-			// if (!tx || tx->texdata != dl->texdata)
+				// if (!tx || tx->texdata != dl->texdata)
 				continue;	// occluded
 
 			for ( i = 0; i < normalCount; i++ )
@@ -1712,7 +1721,7 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 		{
 			// now scale out the missing parts of the hemisphere of this bump basis vector
 			float factor = (float)possibleHitCount[i] / (float)possibleHitCount[0];
-			out.dot[i] = ambient_intensity[i] / (factor * NORMALFORMFACTOR);
+			out.dot[i] = ambient_intensity[i] / (factor * sumdot);
 		}
 		return true;
 	}
@@ -1771,7 +1780,7 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 				return false;
 		}
 
-		if ( TestLine (pos, src, 0, iThread) != CONTENTS_EMPTY )
+		if ( TestLine (pos, src, 0, iThread, static_prop_index_to_ignore) != CONTENTS_EMPTY )
 			return false;	// occluded
 	}
 	out.dot[0] = dot;
@@ -1785,13 +1794,13 @@ bool GatherSampleLight( sampleLightOutput_t &out, directlight_t *dl, int facenum
 
 
 /*
-=============
-AddSampleToPatch
+  =============
+  AddSampleToPatch
 
-Take the sample's collected light and
-add it back into the apropriate patch
-for the radiosity pass.
-=============
+  Take the sample's collected light and
+  add it back into the apropriate patch
+  for the radiosity pass.
+  =============
 */
 void AddSampleToPatch (sample_t *s, Vector& light, int facenum)
 {
@@ -1811,7 +1820,9 @@ void AddSampleToPatch (sample_t *s, Vector& light, int facenum)
 	if( facePatches.Element( facenum ) == facePatches.InvalidIndex() )
 		return;
 
-	bool bDisp = ( dfaces[facenum].dispinfo != -1 );
+	bool bDisp = ( g_pFaces[facenum].dispinfo != -1 );
+
+	float radius = sqrt( s->area ) / 2.0;
 
 	patch_t *pNextPatch = NULL;
 	for( patch = &patches.Element( facePatches.Element( facenum ) ); patch; patch = pNextPatch )
@@ -1843,18 +1854,17 @@ void AddSampleToPatch (sample_t *s, Vector& light, int facenum)
 
 		for (i=0 ; i<3 ; i++)
 		{
-			if (mins[i] > s->pos[i] + 2)
+			if (mins[i] > s->pos[i] + radius)
 				goto nextpatch;
-			if (maxs[i] < s->pos[i] - 2)
+			if (maxs[i] < s->pos[i] - radius)
 				goto nextpatch;
 		}
 
 		// add the sample to the patch
 		patch->samplearea += s->area;
 		VectorMA( patch->samplelight, s->area, light, patch->samplelight );
-		return;
 
-nextpatch:;
+ nextpatch:;
 	}
 	// don't worry if some samples don't find a patch
 }
@@ -1863,7 +1873,7 @@ nextpatch:;
 void GetPhongNormal( int facenum, Vector const& spot, Vector& phongnormal )
 {
 	int	j;
-	dface_t		*f = &dfaces[facenum];
+	dface_t		*f = &g_pFaces[facenum];
 //	dplane_t	*p = &dplanes[f->planenum];
 	Vector		facenormal, vspot;
 
@@ -1898,9 +1908,9 @@ void GetPhongNormal( int facenum, Vector const& spot, Vector& phongnormal )
 			Vector& n2 = fn->normal[(j+1)%f->numedges];
 
 			/*
-			if (VectorCompare( n1, fn->facenormal ) 
-				&& VectorCompare( n2, fn->facenormal) )
-				continue;
+			  if (VectorCompare( n1, fn->facenormal ) 
+			  && VectorCompare( n2, fn->facenormal) )
+			  continue;
 			*/
 
 			vert1 = EdgeVertex( f, j );
@@ -1933,24 +1943,25 @@ void GetPhongNormal( int facenum, Vector const& spot, Vector& phongnormal )
 				VectorAdd( phongnormal, temp, phongnormal );
 				VectorScale( n2, a2, temp );
 				VectorAdd( phongnormal, temp, phongnormal );
+				Assert( VectorLength( phongnormal ) > 1.0e-20 );
 				VectorNormalize( phongnormal );
 
 				/*
-				if (a1 > 1 || a2 > 1 || a1 + a2 > 1)
-				{
-					Msg("\n%.2f %.2f\n", a1, a2 );
-					Msg("%.2f %.2f %.2f\n", v1[0], v1[1], v1[2] );
-					Msg("%.2f %.2f %.2f\n", v2[0], v2[1], v2[2] );
-					Msg("%.2f %.2f %.2f\n", vspot[0], vspot[1], vspot[2] );
-					exit(1);
+				  if (a1 > 1 || a2 > 1 || a1 + a2 > 1)
+				  {
+				  Msg("\n%.2f %.2f\n", a1, a2 );
+				  Msg("%.2f %.2f %.2f\n", v1[0], v1[1], v1[2] );
+				  Msg("%.2f %.2f %.2f\n", v2[0], v2[1], v2[2] );
+				  Msg("%.2f %.2f %.2f\n", vspot[0], vspot[1], vspot[2] );
+				  exit(1);
 
-					a1 = 0;
-				}
+				  a1 = 0;
+				  }
 				*/
 				/*
-				phongnormal[0] = (((j + 1) & 4) != 0) * 255;
-				phongnormal[1] = (((j + 1) & 2) != 0) * 255;
-				phongnormal[2] = (((j + 1) & 1) != 0) * 255;
+				  phongnormal[0] = (((j + 1) & 4) != 0) * 255;
+				  phongnormal[1] = (((j + 1) & 2) != 0) * 255;
+				  phongnormal[2] = (((j + 1) & 1) != 0) * 255;
 				*/
 				return;
 			}
@@ -2004,7 +2015,7 @@ void DumpSamples( int ndxFace, facelight_t *pFaceLight )
 {
 	ThreadLock();
 
-	dface_t *pFace = &dfaces[ndxFace];
+	dface_t *pFace = &g_pFaces[ndxFace];
 	if( pFace )
 	{
 		for( int ndxStyle = 0; ndxStyle < 4; ndxStyle++ )
@@ -2084,7 +2095,7 @@ static int FindOrAllocateLightstyleSamples( dface_t* f, facelight_t	*fl, int lig
 // Compute the illumination point + normal for the sample
 //-----------------------------------------------------------------------------
 static void ComputeIlluminationPointAndNormals( lightinfo_t const& l, 
-	Vector const& samplePosition, Vector const& sampleNormal, SampleInfo_t* pInfo )
+												Vector const& samplePosition, Vector const& sampleNormal, SampleInfo_t* pInfo )
 {
 	// FIXME: move sample point off the surface a bit, this is done so that
 	// light sampling will not be affected by a bug	where raycasts will
@@ -2097,6 +2108,7 @@ static void ComputeIlluminationPointAndNormals( lightinfo_t const& l,
 		// FIXME: un-work around the bug fix workaround above; displacements
 		// correctly deal with self-shadowing issues
 		pInfo->m_Point = samplePosition;
+		Assert( VectorLength( sampleNormal ) > 1.0e-20 );
 		pInfo->m_PointNormal[0] = sampleNormal;
 
 		if( pInfo->m_NormalCount > 1 )
@@ -2117,14 +2129,16 @@ static void ComputeIlluminationPointAndNormals( lightinfo_t const& l,
 		{
 			// use facenormal along with the smooth normal to build the three bump map vectors
 			GetBumpNormals( pInfo->m_pTexInfo->textureVecsTexelsPerWorldUnits[0], 
-				pInfo->m_pTexInfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
-				pInfo->m_PointNormal[0], &pInfo->m_PointNormal[1] );
+							pInfo->m_pTexInfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
+							pInfo->m_PointNormal[0], &pInfo->m_PointNormal[1] );
 		}
     }
 
 	// Compute the cluster, used for a fast cull for visibility of lights
 	// from the sample position 
 	pInfo->m_Cluster = ClusterFromPoint( samplePosition );
+
+	Assert( VectorLength( pInfo->m_PointNormal[0]) > 1.0e-20 );
 }
 
 //-----------------------------------------------------------------------------
@@ -2150,7 +2164,7 @@ static void GatherSampleLightAtPoint( SampleInfo_t& info, int sampleIdx )
 
 		// Figure out the lightstyle for this particular sample 
 		int lightStyleIndex = FindOrAllocateLightstyleSamples( info.m_pFace, info.m_pFaceLight, 
-			dl->light.style, info.m_NormalCount );
+															   dl->light.style, info.m_NormalCount );
 		if (lightStyleIndex < 0)
 		{
 			if (info.m_WarnFace != info.m_FaceNum)
@@ -2169,12 +2183,21 @@ static void GatherSampleLightAtPoint( SampleInfo_t& info, int sampleIdx )
 		if( g_pIncremental && (dl->light.style == 0) )
 		{
 			g_pIncremental->AddLightToFace( dl->m_IncrementalID, info.m_FaceNum, sampleIdx, 
-				info.m_LightmapSize, out.falloff * out.dot[0], info.m_iThread );
+											info.m_LightmapSize, out.falloff * out.dot[0], info.m_iThread );
 		}
 
 		// Compute the contributions to each of the bumped lightmaps
 		// The first sample is for non-bumped lighting.
 		// The other sample are for bumpmapping.
+		if (! (
+				(out.dot[0]>=0)
+				)
+			)
+		{
+			// do again for debug
+			GatherSampleLight( out, dl, info.m_FaceNum, info.m_Point, info.m_PointNormal, info.m_NormalCount, info.m_iThread );
+		}
+
 		VectorMA( pLightmaps[0][sampleIdx], out.falloff * out.dot[0], dl->light.intensity, pLightmaps[0][sampleIdx] );
 		Assert( pLightmaps[0][sampleIdx].x >= 0 && pLightmaps[0][sampleIdx].y >= 0 && pLightmaps[0][sampleIdx].z >= 0 );
 		Assert( pLightmaps[0][sampleIdx].x < 1e10 && pLightmaps[0][sampleIdx].y < 1e10 && pLightmaps[0][sampleIdx].z < 1e10 );
@@ -2243,7 +2266,7 @@ static void ResampleLightAtPoint( SampleInfo_t& info, int lightStyleIndex, int f
 // Perform supersampling at a particular point
 //-----------------------------------------------------------------------------
 static int SupersampleLightAtPoint( lightinfo_t& l, SampleInfo_t& info, 
-	int sampleIndex, int lightStyleIndex, Vector *pDirectLight )
+									int sampleIndex, int lightStyleIndex, Vector *pDirectLight )
 {
 	Vector superSamplePosition;
 	Vector2D sampleLightOrigin;
@@ -2308,7 +2331,7 @@ static int SupersampleLightAtPoint( lightinfo_t& l, SampleInfo_t& info,
 // Compute gradients of a lightmap
 //-----------------------------------------------------------------------------
 static void ComputeLightmapGradients( SampleInfo_t& info, bool const* pHasProcessedSample, 
-									 float* pIntensity, float* gradient )
+									  float* pIntensity, float* gradient )
 {
 	int w = info.m_LightmapWidth;
 	int h = info.m_LightmapHeight;
@@ -2331,13 +2354,13 @@ static void ComputeLightmapGradients( SampleInfo_t& info, bool const* pHasProces
 			if (sample.t > 0)
 			{
 				if (sample.s > 0)   gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j-1-w] ) );
-									gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j-w] ) );
+				gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j-w] ) );
 				if (sample.s < w-1) gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j+1-w] ) );
 			}
 			if (sample.t < h-1)
 			{
 				if (sample.s > 0)   gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j-1+w] ) );
-									gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j+w] ) );
+				gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j+w] ) );
 				if (sample.s < w-1) gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j+1+w] ) );
 			}
 			if (sample.s > 0)   gradient[i] = max( gradient[i], fabs( pIntensity[j] - pIntensity[j-1] ) );
@@ -2352,7 +2375,7 @@ static void ComputeLightmapGradients( SampleInfo_t& info, bool const* pHasProces
 // ComputeLuxelIntensity...
 //-----------------------------------------------------------------------------
 static inline void ComputeLuxelIntensity( SampleInfo_t& info, int sampleIdx, 
-							Vector **ppLightSamples, float* pSampleIntensity )
+										  Vector **ppLightSamples, float* pSampleIntensity )
 {
 	// Compute a separate intensity for each
 	sample_t& sample = info.m_pFaceLight->sample[sampleIdx];
@@ -2505,7 +2528,7 @@ void InitLightinfo( lightinfo_t *pl, int facenum )
 {
 	dface_t		*f;
 
-	f = &dfaces[facenum];
+	f = &g_pFaces[facenum];
 
 	memset (pl, 0, sizeof(*pl));
 	pl->facenum = facenum;
@@ -2566,8 +2589,8 @@ static void InitSampleInfo( lightinfo_t const& l, int iThread, SampleInfo_t& inf
 		if( info.m_NormalCount > 1 )
 		{
 			GetBumpNormals( info.m_pTexInfo->textureVecsTexelsPerWorldUnits[0], 
-				info.m_pTexInfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
-				l.facenormal, &info.m_PointNormal[1] );
+							info.m_pTexInfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
+							l.facenormal, &info.m_PointNormal[1] );
 		}
 	}
 }
@@ -2576,9 +2599,9 @@ static void InitSampleInfo( lightinfo_t const& l, int iThread, SampleInfo_t& inf
 void BuildFacelightsOld(int facenum, int iThread);
 
 /*
-=============
-BuildFacelights
-=============
+  =============
+  BuildFacelights
+  =============
 */
 void BuildFacelights (int iThread, int facenum)
 {
@@ -2616,12 +2639,12 @@ void BuildFacelights (int iThread, int facenum)
 		// will load it in and thread B will increment it but its increment will be
 		// overwritten by thread A when thread A writes it back.
 		ThreadLock();
-			++g_iCurFace;
+		++g_iCurFace;
 		ThreadUnlock();
 	}
 
     // some surfaces don't need lightmaps
-	f = &dfaces[facenum];
+	f = &g_pFaces[facenum];
 	f->lightofs = -1;
 	for (j=0 ; j<MAXLIGHTMAPS ; j++)
 		f->styles[j] = 255;
@@ -2731,9 +2754,9 @@ void BuildFacelights (int iThread, int facenum)
 }	
 
 /*
-=============
-BuildFacelights
-=============
+  =============
+  BuildFacelights
+  =============
 */
 void BuildFacelightsOld(int facenum, int iThread)
 {
@@ -2753,7 +2776,7 @@ void BuildFacelightsOld(int facenum, int iThread)
 	// will load it in and thread B will increment it but its increment will be
 	// overwritten by thread A when thread A writes it back.
 	ThreadLock();
-		++g_iCurFace;
+	++g_iCurFace;
 	ThreadUnlock();
 
 
@@ -2766,7 +2789,7 @@ void BuildFacelightsOld(int facenum, int iThread)
 	if( facePatches.Element( facenum ) == facePatches.InvalidIndex() )
 		return;
 
-	f = &dfaces[facenum];
+	f = &g_pFaces[facenum];
 	fl = &facelight[facenum];
 
     //
@@ -2806,8 +2829,8 @@ void BuildFacelightsOld(int facenum, int iThread)
 		{
 			// use facenormal along with the smooth normal to build the three bump map vectors
 			GetBumpNormals( pTexinfo->textureVecsTexelsPerWorldUnits[0], 
-				pTexinfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
-				pointnormal[0], &pointnormal[1] );
+							pTexinfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
+							pointnormal[0], &pointnormal[1] );
 		}
 	}
 
@@ -2858,8 +2881,8 @@ void BuildFacelightsOld(int facenum, int iThread)
 			{
 				// use facenormal along with the smooth normal to build the three bump map vectors
 				GetBumpNormals( pTexinfo->textureVecsTexelsPerWorldUnits[0], 
-					pTexinfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
-					pointnormal[0], &pointnormal[1] );
+								pTexinfo->textureVecsTexelsPerWorldUnits[1], l.facenormal, 
+								pointnormal[0], &pointnormal[1] );
 			}
         }
 
@@ -2889,8 +2912,8 @@ void BuildFacelightsOld(int facenum, int iThread)
 				if (k >= MAXLIGHTMAPS)
 				{
 					/*
-					Msg ("WARNING: Too many direct light styles on a face(%f,%f,%f)\n", 
-						fl->sample[i].pos[0], fl->sample[i].pos[1], fl->sample[i].pos[2] );
+					  Msg ("WARNING: Too many direct light styles on a face(%f,%f,%f)\n", 
+					  fl->sample[i].pos[0], fl->sample[i].pos[1], fl->sample[i].pos[2] );
 					*/
 					continue;
 				}
@@ -2990,13 +3013,13 @@ void BuildFacelightsOld(int facenum, int iThread)
 			if (fl->sample[i].t > 0)
 			{
 				if (fl->sample[i].s > 0)   gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j-1-w] ) );
-										   gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j-w] ) );
+				gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j-w] ) );
 				if (fl->sample[i].s < w-1) gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j+1-w] ) );
 			}
 			if (fl->sample[i].t < h-1)
 			{
 				if (fl->sample[i].s > 0)   gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j-1+w] ) );
-										   gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j+w] ) );
+				gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j+w] ) );
 				if (fl->sample[i].s < w-1) gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j+1+w] ) );
 			}
 			if (fl->sample[i].s > 0)   gradient[i] = max( gradient[i], fabs( sampled[j] - sampled[j-1] ) );
@@ -3142,7 +3165,7 @@ void BuildPatchLights( int facenum )
 
 	patch_t		*patch;
 
-	dface_t	*f = &dfaces[facenum];
+	dface_t	*f = &g_pFaces[facenum];
 	facelight_t	*fl = &facelight[facenum];
 
 	for( k = 0; k < MAXLIGHTMAPS; k++ )
@@ -3201,7 +3224,7 @@ void BuildPatchLights( int facenum )
 			{ 
 				float scale;
 				Vector v;
-				scale = 1.0 / patch->area;
+				scale = 1.0 / patch->samplearea;
 
 				VectorScale( patch->samplelight, scale, v );
 				VectorAdd( patch->totallight.light[0], v, patch->totallight.light[0] );
@@ -3271,36 +3294,36 @@ void BuildPatchLights( int facenum )
 
 #if 0
 	// if( VectorAvg( face_patches[facenum]->baselight ) >= dlight_threshold)	// Now all lighted surfaces glow
-	{
-		for( j=0; j < MAXLIGHTMAPS && f->styles[j] != 255; j++ )
-		{
-			if ( f->styles[j] == 0 )
-			{
-				// BUG: shouldn't this be done for all patches on the face?
-				for (i=0 ; i<fl->numsamples ; i++)
-				{
-					// garymctchange
-					VectorAdd( fl->light[j][0][i], face_patches[facenum]->baselight, fl->light[j][0][i] ); 
-					if( needsBumpmap )
-					{
-						for( bumpSample = 1; bumpSample < NUM_BUMP_VECTS + 1; bumpSample++ )
-						{
-							VectorAdd( fl->light[j][bumpSample][i], face_patches[facenum]->baselight, fl->light[j][bumpSample][i] ); 
-						}
-					}
-				}
-				break;
-			}
-		}
-	}
+ {
+	 for( j=0; j < MAXLIGHTMAPS && f->styles[j] != 255; j++ )
+	 {
+		 if ( f->styles[j] == 0 )
+		 {
+			 // BUG: shouldn't this be done for all patches on the face?
+			 for (i=0 ; i<fl->numsamples ; i++)
+			 {
+				 // garymctchange
+				 VectorAdd( fl->light[j][0][i], face_patches[facenum]->baselight, fl->light[j][0][i] ); 
+				 if( needsBumpmap )
+				 {
+					 for( bumpSample = 1; bumpSample < NUM_BUMP_VECTS + 1; bumpSample++ )
+					 {
+						 VectorAdd( fl->light[j][bumpSample][i], face_patches[facenum]->baselight, fl->light[j][bumpSample][i] ); 
+					 }
+				 }
+			 }
+			 break;
+		 }
+	 }
+ }
 #endif
 }
 
 
 /*
-=============
-PrecompLightmapOffsets
-=============
+  =============
+  PrecompLightmapOffsets
+  =============
 */
 
 void PrecompLightmapOffsets()
@@ -3314,7 +3337,7 @@ void PrecompLightmapOffsets()
 	// in *reverse order* of the way the lightstyles appear in the styles array.
     for( facenum = 0; facenum < numfaces; facenum++ )
     {
-        f = &dfaces[facenum];
+        f = &g_pFaces[facenum];
 
         if ( texinfo[f->texinfo].flags & TEX_SPECIAL)
             continue;		// non-lit texture
@@ -3355,8 +3378,1017 @@ void PrecompLightmapOffsets()
 
 	// The incremental lighting code needs us to preserve the contents of dlightdata
 	// since it only recomposites lighting for faces that have lights that touch them.
-	if( g_pIncremental && dlightdata.Count() )
+	if( g_pIncremental && pdlightdata->Count() )
 		return;
 
-	dlightdata.SetSize( lightdatasize );
+	pdlightdata->SetSize( lightdatasize );
 }
+CUtlVector<CImagePacker>	g_ImagePackers;
+CUtlVector<byte *>			g_rawLightmapPages;
+char						g_currentMaterialName[256];
+
+
+// Clamp the three values for bumped lighting such that we trade off directionality for brightness.
+static void ColorClampBumped( Vector& color1, Vector& color2, Vector& color3 )
+{
+	Vector maxs;
+	Vector *colors[3] = { &color1, &color2, &color3 };
+	maxs[0] = VectorMaximum( color1 );
+	maxs[1] = VectorMaximum( color2 );
+	maxs[2] = VectorMaximum( color3 );
+
+	// HACK!  Clean this up, and add some else statements
+#define CONDITION(a,b,c) do { if( maxs[a] >= maxs[b] && maxs[b] >= maxs[c] ) { order[0] = a; order[1] = b; order[2] = c; } } while( 0 )
+	
+	int order[3];
+	CONDITION(0,1,2);
+	CONDITION(0,2,1);
+	CONDITION(1,0,2);
+	CONDITION(1,2,0);
+	CONDITION(2,0,1);
+	CONDITION(2,1,0);
+
+	int i;
+	for( i = 0; i < 3; i++ )
+	{
+		float max = VectorMaximum( *colors[order[i]] );
+		if( max <= 1.0f )
+		{
+			continue;
+		}
+		// This channel is too bright. . take half of the amount that we are over and 
+		// add it to the other two channel.
+		float factorToRedist = ( max - 1.0f ) / max;
+		Vector colorToRedist = factorToRedist * *colors[order[i]];
+		*colors[order[i]] -= colorToRedist;
+		colorToRedist *= 0.5f;
+		*colors[order[(i+1)%3]] += colorToRedist;
+		*colors[order[(i+2)%3]] += colorToRedist;
+	}
+
+	ColorClamp( color1 );
+	ColorClamp( color2 );
+	ColorClamp( color3 );
+	
+	if( color1[0] < 0.f ) color1[0] = 0.f;
+	if( color1[1] < 0.f ) color1[1] = 0.f;
+	if( color1[2] < 0.f ) color1[2] = 0.f;
+	if( color2[0] < 0.f ) color2[0] = 0.f;
+	if( color2[1] < 0.f ) color2[1] = 0.f;
+	if( color2[2] < 0.f ) color2[2] = 0.f;
+	if( color3[0] < 0.f ) color3[0] = 0.f;
+	if( color3[1] < 0.f ) color3[1] = 0.f;
+	if( color3[2] < 0.f ) color3[2] = 0.f;
+}
+
+static void LinearToBumpedLightmap(
+	const float		*linearColor, 
+	const float		*linearBumpColor1,
+	const float		*linearBumpColor2, 
+	const float		*linearBumpColor3,
+	unsigned char	*ret, 
+	unsigned char	*retBump1,
+	unsigned char	*retBump2, 
+	unsigned char	*retBump3 )
+{
+	const Vector &linearBump1 = *( ( const Vector * )linearBumpColor1 );
+	const Vector &linearBump2 = *( ( const Vector * )linearBumpColor2 );
+	const Vector &linearBump3 = *( ( const Vector * )linearBumpColor3 );
+
+	Vector gammaGoal;
+	// gammaGoal is premultiplied by 1/overbright, which we want
+	gammaGoal[0] = LinearToVertexLight( linearColor[0] );
+	gammaGoal[1] = LinearToVertexLight( linearColor[1] );
+	gammaGoal[2] = LinearToVertexLight( linearColor[2] );
+	Vector bumpAverage = linearBump1;
+	bumpAverage += linearBump2;
+	bumpAverage += linearBump3;
+	bumpAverage *= ( 1.0f / 3.0f );
+	
+	Vector correctionScale;
+	if( *( int * )&bumpAverage[0] != 0 && *( int * )&bumpAverage[1] != 0 && *( int * )&bumpAverage[2] != 0 )
+	{
+		// fast path when we know that we don't have to worry about divide by zero.
+		VectorDivide( gammaGoal, bumpAverage, correctionScale );
+//			correctionScale = gammaGoal / bumpSum;
+	}
+	else
+	{
+		correctionScale.Init( 0.0f, 0.0f, 0.0f );
+		if( bumpAverage[0] != 0.0f )
+		{
+			correctionScale[0] = gammaGoal[0] / bumpAverage[0];
+		}
+		if( bumpAverage[1] != 0.0f )
+		{
+			correctionScale[1] = gammaGoal[1] / bumpAverage[1];
+		}
+		if( bumpAverage[2] != 0.0f )
+		{
+			correctionScale[2] = gammaGoal[2] / bumpAverage[2];
+		}
+	}
+	Vector correctedBumpColor1;
+	Vector correctedBumpColor2;
+	Vector correctedBumpColor3;
+	VectorMultiply( linearBump1, correctionScale, correctedBumpColor1 );
+	VectorMultiply( linearBump2, correctionScale, correctedBumpColor2 );
+	VectorMultiply( linearBump3, correctionScale, correctedBumpColor3 );
+
+	Vector check = ( correctedBumpColor1 + correctedBumpColor2 + correctedBumpColor3 ) / 3.0f;
+
+	ColorClampBumped( correctedBumpColor1, correctedBumpColor2, correctedBumpColor3 );
+
+	ret[0] = RoundFloatToByte( gammaGoal[0] * 255.0f );
+	ret[1] = RoundFloatToByte( gammaGoal[1] * 255.0f );
+	ret[2] = RoundFloatToByte( gammaGoal[2] * 255.0f );
+	retBump1[0] = RoundFloatToByte( correctedBumpColor1[0] * 255.0f );
+	retBump1[1] = RoundFloatToByte( correctedBumpColor1[1] * 255.0f );
+	retBump1[2] = RoundFloatToByte( correctedBumpColor1[2] * 255.0f );
+	retBump2[0] = RoundFloatToByte( correctedBumpColor2[0] * 255.0f );
+	retBump2[1] = RoundFloatToByte( correctedBumpColor2[1] * 255.0f );
+	retBump2[2] = RoundFloatToByte( correctedBumpColor2[2] * 255.0f );
+	retBump3[0] = RoundFloatToByte( correctedBumpColor3[0] * 255.0f );
+	retBump3[1] = RoundFloatToByte( correctedBumpColor3[1] * 255.0f );
+	retBump3[2] = RoundFloatToByte( correctedBumpColor3[2] * 255.0f );
+}
+
+//-----------------------------------------------------------------------------
+// Convert a RGBExp32 to a RGBA8888
+// This matches the engine's conversion, so the lighting result is consistent.
+//-----------------------------------------------------------------------------
+void ConvertRGBExp32ToRGBA8888( const ColorRGBExp32 *pSrc, unsigned char *pDst )
+{
+	Vector		linearColor;
+	Vector		vertexColor;
+
+	// convert from ColorRGBExp32 to linear space
+	linearColor[0] = TexLightToLinear( ((ColorRGBExp32 *)pSrc)->r, ((ColorRGBExp32 *)pSrc)->exponent );
+	linearColor[1] = TexLightToLinear( ((ColorRGBExp32 *)pSrc)->g, ((ColorRGBExp32 *)pSrc)->exponent );
+	linearColor[2] = TexLightToLinear( ((ColorRGBExp32 *)pSrc)->b, ((ColorRGBExp32 *)pSrc)->exponent );
+
+	// convert from linear space to lightmap space
+	// cannot use mathlib routine directly because it doesn't match
+	// the colorspace version found in the engine, which *is* the same sequence here
+	vertexColor[0] = LinearToVertexLight( linearColor[0] );
+	vertexColor[1] = LinearToVertexLight( linearColor[1] );
+	vertexColor[2] = LinearToVertexLight( linearColor[2] );
+
+	// this is really a color normalization with a floor
+	ColorClamp( vertexColor );
+
+	// final [0..255] scale
+	pDst[0] = RoundFloatToByte( vertexColor[0] * 255.0f );
+	pDst[1] = RoundFloatToByte( vertexColor[1] * 255.0f );
+	pDst[2] = RoundFloatToByte( vertexColor[2] * 255.0f );
+	pDst[3] = 255;
+}
+
+void SwizzleRect( const byte *pSource, byte *pTarget, int texWidth, int texHeight, int bytesPerPixel )
+{
+	int			x;
+	int			y;
+	int			n;
+	byte		*pDst;
+	const byte	*pSrc;
+
+    // Initialize a swizzler. The swizzler lets us easily convert texel
+    // addresses when the texture is swizzled.
+    Swizzler swizzle( texWidth, texHeight, 0 );
+
+    // Loop through and touch the texels. Note that SetU()/SetV() and
+    // IncU()/IncV() are used to control texture addressed. This way,
+    // the Get2D() function can be used to get the current address.
+	// Initialize the V texture coordinate
+    swizzle.SetV( 0 ); 
+
+    for ( y = 0; y < texHeight; y++ )
+    {
+        swizzle.SetU( 0 ); 
+		pSrc = pSource + y*texWidth*bytesPerPixel;
+        for ( x = 0; x < texWidth; x++ )
+        {
+			pDst = pTarget + swizzle.Get2D()*bytesPerPixel;
+			for ( n=0; n<bytesPerPixel; n++ )
+			{
+				pDst[n] = pSrc[n];
+			}
+
+            swizzle.IncU(); 
+			pSrc += bytesPerPixel;
+        }
+        swizzle.IncV(); 
+    }
+}
+
+//-----------------------------------------------------------------------------
+// Quantize the 32b lightmap pages into a palettized equivalent ready for serialization
+//-----------------------------------------------------------------------------
+void PalettizeLightmaps( void )
+{
+	uint8	*pPixels;
+	uint8	*pPalette3;
+	uint8	*pPalette4;
+	int		i;
+	int		j;
+
+	g_dLightmapPages.Purge();
+	g_dLightmapPages.EnsureCount( g_rawLightmapPages.Count() );
+
+	if ( g_bExportLightmaps )
+	{
+		// write out the raw 32bpp lightmap page
+		for ( i=0; i<g_rawLightmapPages.Count(); ++i )
+		{	
+			char	buff[256];
+			sprintf( buff, "lightmap_%2.2d.tga", i );
+
+			CUtlBuffer outBuf;
+			TGAWriter::WriteToBuffer( 
+				g_rawLightmapPages[i], outBuf, MAX_LIGHTMAPPAGE_WIDTH, 
+				MAX_LIGHTMAPPAGE_HEIGHT, IMAGE_FORMAT_RGBA8888, IMAGE_FORMAT_RGBA8888 );
+			g_pFileSystem->WriteFile( buff, NULL, outBuf );			
+		}
+	}
+
+	pPixels   = (uint8 *)malloc( MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT );
+	pPalette3 = (uint8 *)malloc( 256*3 );
+	pPalette4 = (uint8 *)malloc( 256*4 );
+
+	for (i=0; i<g_rawLightmapPages.Count(); i++)
+	{	
+		// remap to 256x3 palette
+		ColorQuantize( 
+			g_rawLightmapPages[i], 
+			MAX_LIGHTMAPPAGE_WIDTH, 
+			MAX_LIGHTMAPPAGE_HEIGHT,
+			QUANTFLAGS_NODITHER,
+			256,
+			pPixels,
+			pPalette3,
+			0 );
+
+		// fixup 256x3 rgb palette to d3d 256x4 bgra
+		for (j=0; j<256; j++)
+		{
+			pPalette4[j*4+0] = pPalette3[j*3+2];
+			pPalette4[j*4+1] = pPalette3[j*3+1];
+			pPalette4[j*4+2] = pPalette3[j*3+0];
+			pPalette4[j*4+3] = 0xFF;
+		}
+
+		SwizzleRect( pPixels, g_dLightmapPages[i].data, MAX_LIGHTMAPPAGE_WIDTH, MAX_LIGHTMAPPAGE_HEIGHT, 1 );
+		memcpy( g_dLightmapPages[i].palette, pPalette4, 256*4 );
+
+		if ( g_bExportLightmaps && g_pFullFileSystem )
+		{
+			// write out the palettize page
+			byte *pRaw4 = (byte *)malloc( MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT*4 );
+			for (j=0; j<MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT; j++)
+			{
+				// index the palette, fixup to tga rgba order
+				int color = pPixels[j]*4;
+				pRaw4[j*4+0] = pPalette4[color+2];
+				pRaw4[j*4+1] = pPalette4[color+1];
+				pRaw4[j*4+2] = pPalette4[color+0];
+				pRaw4[j*4+3] = pPalette4[color+3];
+			}
+
+			char	buff[256];
+			sprintf(buff, "lightmap_%2.2d_256.tga", i);
+
+			CUtlBuffer outBuf;
+			TGAWriter::WriteToBuffer( 
+				pRaw4, 
+				outBuf, 
+				MAX_LIGHTMAPPAGE_WIDTH, 
+				MAX_LIGHTMAPPAGE_HEIGHT, 
+				IMAGE_FORMAT_RGBA8888, 
+				IMAGE_FORMAT_RGBA8888 );
+			g_pFullFileSystem->WriteFile( buff, NULL, outBuf );
+
+			free( pRaw4 );
+		}
+	}
+
+	free( pPixels );
+	free( pPalette3 );
+	free( pPalette4 );
+}
+
+
+//-----------------------------------------------------------------------------
+// Ensure the material names compare correctly by removing path or case disparity.
+//-----------------------------------------------------------------------------
+static int MaterialNameCompare(const char *pName1, const char *pName2)
+{
+	char	buff1[256];
+	char	buff2[256];
+	Assert( strlen(pName1) < sizeof(buff1) );
+	Assert( strlen(pName2) < sizeof(buff2) );
+
+	// normalize
+	strcpy( buff1, pName1 );
+	strlwr( buff1 );
+	Q_FixSlashes(buff1, '/');
+
+	// normalize
+	strcpy( buff2, pName2 );
+	strlwr( buff2 );
+	Q_FixSlashes(buff2, '/');
+
+	return strcmp(buff1, buff2);
+}
+
+//-----------------------------------------------------------------------------
+// Allocate a surface's lightmap onto a page
+// The materials must be presented in sorted order.
+// Lightmaps are allocated onto succesive pages, and do not backfill.
+//-----------------------------------------------------------------------------
+static int AllocateLightmap( int width, int height, int offsetIntoLightmapPage[2], const char *pMaterialName )
+{	
+	// material change
+	int			i;
+	int			lightmapPage = -1;
+	int			nPackCount;
+	static int	imagePackerBase = 0;
+	bool		bMaterialChange;
+
+	bMaterialChange = false;
+	nPackCount = g_ImagePackers.Count();
+	if ( g_currentMaterialName[0] && MaterialNameCompare( g_currentMaterialName, pMaterialName ) )
+	{
+		// advance the lightmap page base to track the start of the active image packers
+		// the closed out image packers are not suitable candidates for any further allocations
+		if (nPackCount)
+		{
+			imagePackerBase = nPackCount-1;
+		}
+		bMaterialChange = true;
+	}
+
+	strcpy(g_currentMaterialName, pMaterialName);
+
+	// Try to add it to any of the active image packers
+	bool bAdded = false;
+	for ( i = imagePackerBase; i < nPackCount; ++i )
+	{
+		bAdded = g_ImagePackers[i].AddBlock( width, height, &offsetIntoLightmapPage[0], &offsetIntoLightmapPage[1] );
+		if ( bAdded )
+		{
+			lightmapPage = i;
+			break;
+		}
+	}
+
+	if ( !bAdded )
+	{
+		// allocate a new page
+		lightmapPage = g_ImagePackers.AddToTail();
+		g_ImagePackers[lightmapPage].Reset( MAX_LIGHTMAPPAGE_WIDTH, MAX_LIGHTMAPPAGE_HEIGHT );
+	
+		bAdded = g_ImagePackers[lightmapPage].AddBlock( width, height, &offsetIntoLightmapPage[0], &offsetIntoLightmapPage[1] );
+		if ( !bAdded )
+		{
+			// couldn't add to new empty page, undo the new allocation
+			g_ImagePackers.Remove( lightmapPage );
+			return -1;
+		}
+
+		g_rawLightmapPages.AddToTail();
+		g_rawLightmapPages[lightmapPage] = (byte *)malloc( MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT*4 );
+		for (int n=0; n<MAX_LIGHTMAPPAGE_WIDTH*MAX_LIGHTMAPPAGE_HEIGHT; n++)
+		{
+			if ( g_bExportLightmaps )
+			{
+				// debugging, fill empty areas with bright green
+				((unsigned int *)g_rawLightmapPages[lightmapPage])[n] = 0xFF00FF00;
+			}
+			else
+			{
+				// fill empty areas with pure opaque black
+				((unsigned int *)g_rawLightmapPages[lightmapPage])[n] = 0xFF000000;
+			}
+		}
+
+		if (bMaterialChange && imagePackerBase == nPackCount-1)
+		{
+			// failed to add new material's lightmap to last open lightmap page, so forced to new page
+			// then succeeded on new page
+			// for integrity, ensure no further allocations end up on the old page
+			imagePackerBase++;
+		}
+	}
+
+	return lightmapPage;
+}
+
+//-----------------------------------------------------------------------------
+// Rectangular blit from RGBExp32 lightmaps to final bumped format in lightmap page
+//-----------------------------------------------------------------------------
+static void BlitBumpedLightmapsToPage32bpp( byte *pSource0, byte *pSource1, byte *pSource2, byte *pSource3, byte *pTarget, int targetX, int targetY, int targetW, int targetH, int targetStride)
+{
+	int			x;
+	int			y;
+	byte		*pDst0;
+	byte		*pDst1;
+	byte		*pDst2;
+	byte		*pDst3;
+	byte		*pSrc0;
+	byte		*pSrc1;
+	byte		*pSrc2;
+	byte		*pSrc3;
+	float		linearColor[3];
+	float		linearBumpColor1[3];
+	float		linearBumpColor2[3];
+	float		linearBumpColor3[3];
+	byte		color[4];
+	byte		bumpColor1[4];
+	byte		bumpColor2[4];
+	byte		bumpColor3[4];
+
+	// add the ColorRGBExp32 bits to the page
+	pSrc0 = pSource0;
+	pSrc1 = pSource1;
+	pSrc2 = pSource2;
+	pSrc3 = pSource3;
+	for ( y=0; y<targetH; ++y )
+	{
+		pDst0 = pTarget + ( (y + targetY)*targetStride + targetX + 0*targetW)*sizeof(ColorRGBExp32);
+		pDst1 = pTarget + ( (y + targetY)*targetStride + targetX + 1*targetW)*sizeof(ColorRGBExp32);
+		pDst2 = pTarget + ( (y + targetY)*targetStride + targetX + 2*targetW)*sizeof(ColorRGBExp32);
+		pDst3 = pTarget + ( (y + targetY)*targetStride + targetX + 3*targetW)*sizeof(ColorRGBExp32);
+		for ( x=0; x<targetW; ++x )
+		{
+			// convert from ColorRGBExp32 to linear space
+			linearColor[0] = TexLightToLinear( ((ColorRGBExp32 *)pSrc0)->r, ((ColorRGBExp32 *)pSrc0)->exponent );
+			linearColor[1] = TexLightToLinear( ((ColorRGBExp32 *)pSrc0)->g, ((ColorRGBExp32 *)pSrc0)->exponent );
+			linearColor[2] = TexLightToLinear( ((ColorRGBExp32 *)pSrc0)->b, ((ColorRGBExp32 *)pSrc0)->exponent );
+
+			linearBumpColor1[0] = TexLightToLinear( ((ColorRGBExp32 *)pSrc1)->r, ((ColorRGBExp32 *)pSrc1)->exponent );
+			linearBumpColor1[1] = TexLightToLinear( ((ColorRGBExp32 *)pSrc1)->g, ((ColorRGBExp32 *)pSrc1)->exponent );
+			linearBumpColor1[2] = TexLightToLinear( ((ColorRGBExp32 *)pSrc1)->b, ((ColorRGBExp32 *)pSrc1)->exponent );
+
+			linearBumpColor2[0] = TexLightToLinear( ((ColorRGBExp32 *)pSrc2)->r, ((ColorRGBExp32 *)pSrc2)->exponent );
+			linearBumpColor2[1] = TexLightToLinear( ((ColorRGBExp32 *)pSrc2)->g, ((ColorRGBExp32 *)pSrc2)->exponent );
+			linearBumpColor2[2] = TexLightToLinear( ((ColorRGBExp32 *)pSrc2)->b, ((ColorRGBExp32 *)pSrc2)->exponent );
+
+			linearBumpColor3[0] = TexLightToLinear( ((ColorRGBExp32 *)pSrc3)->r, ((ColorRGBExp32 *)pSrc3)->exponent );
+			linearBumpColor3[1] = TexLightToLinear( ((ColorRGBExp32 *)pSrc3)->g, ((ColorRGBExp32 *)pSrc3)->exponent );
+			linearBumpColor3[2] = TexLightToLinear( ((ColorRGBExp32 *)pSrc3)->b, ((ColorRGBExp32 *)pSrc3)->exponent );
+
+			LinearToBumpedLightmap(
+				linearColor, 
+				linearBumpColor1,
+				linearBumpColor2, 
+				linearBumpColor3,
+				color,
+				bumpColor1,
+				bumpColor2,
+				bumpColor3 );
+
+			pDst0[0] = color[0];
+			pDst0[1] = color[1];
+			pDst0[2] = color[2];
+			pDst0[3] = 255;
+
+			pDst1[0] = bumpColor1[0];
+			pDst1[1] = bumpColor1[1];
+			pDst1[2] = bumpColor1[2];
+			pDst1[3] = 255;
+
+			pDst2[0] = bumpColor2[0];
+			pDst2[1] = bumpColor2[1];
+			pDst2[2] = bumpColor2[2];
+			pDst2[3] = 255;
+
+			pDst3[0] = bumpColor3[0];
+			pDst3[1] = bumpColor3[1];
+			pDst3[2] = bumpColor3[2];
+			pDst3[3] = 255;
+
+			pSrc0 += sizeof( ColorRGBExp32 );
+			pSrc1 += sizeof( ColorRGBExp32 );
+			pSrc2 += sizeof( ColorRGBExp32 );
+			pSrc3 += sizeof( ColorRGBExp32 );
+
+			pDst0 += 4;
+			pDst1 += 4;
+			pDst2 += 4;
+			pDst3 += 4;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Rectangular blit from RGBExp32 lightmaps to final color format in lightmap page
+//-----------------------------------------------------------------------------
+static void BlitLightmapToPage32bpp( byte *pSource, byte *pTarget, int targetX, int	targetY, int targetW, int targetH, int targetStride)
+{
+	int			x;
+	int			y;
+	byte		*pDst;
+	byte		*pSrc;
+
+	// add the ColorRGBExp32 bits to the page
+	pSrc = pSource;
+	for ( y=0; y<targetH; ++y )
+	{
+		pDst = pTarget + ( (y + targetY)*targetStride + targetX )*4;
+		for ( x=0; x<targetW; ++x )
+		{
+			ConvertRGBExp32ToRGBA8888( (ColorRGBExp32 *)pSrc, pDst );
+
+			pSrc += sizeof( ColorRGBExp32 );
+			pDst += 4;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Prepare and drive the allocation of the surface's lightmap
+//-----------------------------------------------------------------------------
+static void RegisterLightmappedSurface( dface_t *pFace )
+{
+	int			lightmapWidth;
+	int			lightmapHeight;
+	int			allocationWidth;
+	int			allocationHeight;
+	int			offsetIntoLightmapPage[2];
+	const char	*pMaterialName;
+	int			lightmapPage;
+	bool		bBump;
+
+	pMaterialName = TexDataStringTable_GetString( dtexdata[texinfo[pFace->texinfo].texdata].nameStringTableID );
+
+	lightmapWidth  = pFace->m_LightmapTextureSizeInLuxels[0] + 1;
+	lightmapHeight = pFace->m_LightmapTextureSizeInLuxels[1] + 1;
+	
+	allocationWidth  = lightmapWidth;
+	allocationHeight = lightmapHeight;
+	bBump            = ( texinfo[pFace->texinfo].flags & SURF_BUMPLIGHT ) > 0;
+	if ( bBump )
+	{
+		// Allocate all bumped lightmaps next to each other so that we can just 
+		// increment the s texcoord by pSurf->bumpSTexCoordOffset to render the next
+		// of the three lightmaps
+		allocationWidth *= NUM_BUMP_VECTS+1;
+	}
+
+	// register this surface's lightmap
+	lightmapPage = AllocateLightmap( allocationWidth, allocationHeight,	offsetIntoLightmapPage,	pMaterialName );
+
+//	Warning( "%s: page %d (%dx%d)\n", pMaterialName, lightmapPage, allocationWidth, allocationHeight );
+
+	if ( lightmapPage >= 0 )
+	{
+		// rectlinear transfer each page
+		if (!bBump)
+		{
+			BlitLightmapToPage32bpp(
+				pdlightdata->Base() + pFace->lightofs,
+				g_rawLightmapPages[lightmapPage],
+				offsetIntoLightmapPage[0],
+				offsetIntoLightmapPage[1],
+				lightmapWidth,
+				lightmapHeight,
+				MAX_LIGHTMAPPAGE_WIDTH );
+		}
+		else
+		{
+			int bumpMapSize = lightmapWidth*lightmapHeight*sizeof(ColorRGBExp32);
+			BlitBumpedLightmapsToPage32bpp(
+				pdlightdata->Base() + pFace->lightofs + 0*bumpMapSize,
+				pdlightdata->Base() + pFace->lightofs + 1*bumpMapSize,
+				pdlightdata->Base() + pFace->lightofs + 2*bumpMapSize,
+				pdlightdata->Base() + pFace->lightofs + 3*bumpMapSize,
+				g_rawLightmapPages[lightmapPage],
+				offsetIntoLightmapPage[0],
+				offsetIntoLightmapPage[1],
+				lightmapWidth,
+				lightmapHeight,
+				MAX_LIGHTMAPPAGE_WIDTH );
+		}
+
+		// build a new lightmap page info
+		// lightstyles are xbox deprecated, only need single average light color for static style 0
+		int pageInfo = g_dLightmapPageInfos.AddToTail();
+		g_dLightmapPageInfos[pageInfo].page      = lightmapPage;
+		g_dLightmapPageInfos[pageInfo].offset[0] = offsetIntoLightmapPage[0];
+		g_dLightmapPageInfos[pageInfo].offset[1] = offsetIntoLightmapPage[1];
+		g_dLightmapPageInfos[pageInfo].avgColor  = *dface_AvgLightColor( pFace, 0 );
+
+		// hijack lightofs, to index into page infos instead
+		pFace->lightofs = pageInfo;
+	}
+	else
+	{
+		Error( "AllocateLightmap: (%s) lightmap (%dx%d) too big to fit in page (%dx%d)\n", 
+			pMaterialName, allocationWidth, allocationHeight, MAX_LIGHTMAPPAGE_WIDTH, MAX_LIGHTMAPPAGE_HEIGHT );
+
+		// mark as unallocated
+		pFace->lightofs = -1;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Comparison function for inserting surfaces to achieve desired sort order
+//-----------------------------------------------------------------------------
+static bool LightmapLess( const int &surfID1, const int &surfID2 )
+{
+	dface_t *pFace1 = &g_pFaces[surfID1];
+	dface_t *pFace2 = &g_pFaces[surfID2];
+
+	bool hasLightmap1 = (texinfo[pFace1->texinfo].flags & SURF_NOLIGHT) == 0;
+	bool hasLightmap2 = (texinfo[pFace2->texinfo].flags & SURF_NOLIGHT) == 0;
+
+	// We want lightmapped surfaces to show up first
+	if (hasLightmap1 != hasLightmap2)
+		return hasLightmap1 > hasLightmap2;
+	
+	// sort by name
+	const char *pName1 = TexDataStringTable_GetString( dtexdata[texinfo[pFace1->texinfo].texdata].nameStringTableID );
+	const char *pName2 = TexDataStringTable_GetString( dtexdata[texinfo[pFace2->texinfo].texdata].nameStringTableID );
+	int sort = MaterialNameCompare( pName1, pName2 );
+	if (sort)
+		return sort < 0;
+
+	// then sort by lightmap area for better packing... (big areas first)
+	// must account for bumped surfaces to ensure proper descending sequences of areas
+	int width  = g_pFaces[surfID1].m_LightmapTextureSizeInLuxels[0]+1;
+	int height = g_pFaces[surfID1].m_LightmapTextureSizeInLuxels[1]+1;
+	if ( texinfo[pFace1->texinfo].flags & SURF_BUMPLIGHT )
+	{
+		width *= ( NUM_BUMP_VECTS+1 );
+	}
+	int area1 = width * height;
+
+	width  = g_pFaces[surfID2].m_LightmapTextureSizeInLuxels[0]+1;
+	height = g_pFaces[surfID2].m_LightmapTextureSizeInLuxels[1]+1;
+	if ( texinfo[pFace2->texinfo].flags & SURF_BUMPLIGHT )
+	{
+		width *= ( NUM_BUMP_VECTS+1 );
+	}
+	int area2 = width * height;
+
+	return area2 < area1;
+}
+
+//-----------------------------------------------------------------------------
+// Iterate surfaces generating cooked lightmap pages for palettizing
+// Each page gets its own palette.
+//-----------------------------------------------------------------------------
+void BuildPalettedLightmaps( void )
+{
+	int		i;
+	int		j;
+
+	g_rawLightmapPages.Purge();
+	g_currentMaterialName[0] = '\0';
+
+	g_dLightmapPageInfos.Purge();
+
+	CUtlRBTree< int, int >	surfaces( 0, numfaces, LightmapLess );
+	for ( i = 0; i < numfaces; i++ )
+	{
+		surfaces.Insert( i );
+	}
+
+	// surfaces must be iterated in order to achieve proper lightmap allocation
+	for ( i = surfaces.FirstInorder(); i != surfaces.InvalidIndex(); i = surfaces.NextInorder(i) )
+	{
+		dface_t *pFace = &g_pFaces[surfaces[i]];
+
+		bool hasLightmap = (texinfo[pFace->texinfo].flags & SURF_NOLIGHT) == 0;
+		if ( hasLightmap && pFace->lightofs != -1 )
+		{
+			RegisterLightmappedSurface( pFace );
+		}
+		else
+		{
+			pFace->lightofs = -1;
+		}
+
+		// remove unsupported light styles
+		for (j=0; j<MAXLIGHTMAPS; j++)
+			pFace->styles[j] = 255;
+	}
+
+	// convert cooked 32b lightmap pages into their palettized versions
+	PalettizeLightmaps();
+
+	for (i=0; i<g_rawLightmapPages.Count(); i++)
+		free( g_rawLightmapPages[i] );
+	
+	g_rawLightmapPages.Purge();
+	g_ImagePackers.Purge();
+	
+	// no longer require raw rgb light data
+	// ensure light data doesn't get serialized
+	pdlightdata->Purge();
+}
+
+// a temporary struct that holds a x/y/z/u/v for recursive subdivision luxel rasterization
+struct facevert_t
+{
+	Vector pos;
+	Vector2D luxel;
+};
+
+// diff these two color channels
+inline int ColorDelta( int c0, int c1 )
+{
+	return abs(c0-c1);
+}
+
+// holds the lightmap data for a face for intermediate calcs
+struct lightmapdata_t
+{
+	bool bBump;
+	ColorRGBExp32 avgColor;
+	ColorRGBExp32 bumpColor[NUM_BUMP_VECTS];
+	int		width; // width including *4 for bumps
+	int		height;
+	int		threshold;
+	ColorRGBExp32 *pLuxels;
+
+	void Init( ColorRGBExp32 *_pLuxels, bool _bBump, int _width, int _height, int _threshold )
+	{
+		pLuxels = _pLuxels;
+		bBump = _bBump;
+		width = _width;
+		height = _height;
+		threshold = _threshold;
+	}
+
+	// Get the color of the luxel at s/t
+	void GetLuxelAtCoords( ColorRGBExp32 *pDest, float s, float t, int bumpIndex = 0 ) const
+	{
+		s += 0.5f;
+		t += 0.5f;
+		int u = (int)s;
+		int v = (int)t;
+#if _DEBUG
+		int w = bBump ? (width/4) : width;
+		Assert( u >= 0 && u <= (w-1) );
+		Assert( v >= 0 && v <= (height-1) );
+#endif
+		int offset = u + v * width;
+		if ( bBump )
+		{
+			offset += bumpIndex * (width/4);
+		}
+		if ( offset > width * height )
+			offset = width * height;
+		*pDest = pLuxels[offset];
+	}
+
+	// Is this color within threshold of the average color for this lightmap
+	bool IsAvgColor( ColorRGBExp32 &color ) const
+	{
+		byte color0[4], color1[4];
+		ConvertRGBExp32ToRGBA8888( &avgColor, color0 );
+		ConvertRGBExp32ToRGBA8888( &color, color1 );
+		int delta = ColorDelta( color0[0], color1[0] );
+		delta += ColorDelta( color0[1], color1[1] );
+		delta += ColorDelta( color0[2], color1[2] );
+		return delta > threshold ? false : true;
+	}
+
+	bool IsAvgColor( float s, float t ) const
+	{
+#if 0
+		GetLuxelAtCoords( &tmp, s, t );
+		return IsAvgColor( tmp );
+#else
+		// billinear sample luxel at s,t
+		int u = s;
+		int v = t;
+		float fracU = fmod(s,1) + 0.5f;
+		float fracV = fmod(t,1) + 0.5f;
+		if ( fracU > 1 )
+		{
+			fracU -= 1.0f;
+			u++;
+		}
+		if ( fracV > 1 )
+		{
+			fracV -= 1.0f;
+			v++;
+		}
+		int w = bBump ? (width/4) : width;
+		Vector luxel[4];
+		for ( int i = 0; i < 4; i++ )
+		{
+			int sampU = u + ((i&1)?1:0);
+			int sampV = v + ((i&2)?1:0);
+			sampU = clamp(sampU, 0, w-1);
+			sampV = clamp(sampV, 0, height-1);
+			int offset = sampU + sampV*width;
+			luxel[i][0] = TexLightToLinear( pLuxels[offset].r, pLuxels[offset].exponent );
+			luxel[i][1] = TexLightToLinear( pLuxels[offset].g, pLuxels[offset].exponent );
+			luxel[i][2] = TexLightToLinear( pLuxels[offset].b, pLuxels[offset].exponent );
+		}
+		luxel[0] *= (1.0f - fracU) * (1.0f - fracV);
+		luxel[1] *= fracU * (1.0f - fracV);
+		luxel[2] *= (1.0f - fracU) * fracV;
+		luxel[3] *= fracU * fracV;
+		Vector out = luxel[0] + luxel[1] + luxel[2] + luxel[3];
+
+		Vector gammaOut;
+		for ( i = 0; i < 3; i++ )
+		{
+			gammaOut[i] = LinearToVertexLight( out[i] );
+		}
+		ColorClamp(gammaOut);
+		byte avg[4];
+		ConvertRGBExp32ToRGBA8888( &avgColor, avg );
+		int delta = 0;
+		for ( i = 0; i < 3; i++ )
+		{
+			int c = RoundFloatToByte( gammaOut[i] * 255.0f );
+			delta += ColorDelta( c, avg[i] );
+		}
+		return delta > threshold ? false : true;
+#endif
+	}
+};
+
+// Returns true if this triangle has constant lighting over its surface
+// This is evaluated by recursively subdividing the triangle until it is less than 1 luxel along each edge
+// then the entire triangle is used to point-sample a luxel which is compared to the average for constant-ness
+bool IsConstantTriangle_r( const lightmapdata_t &data, const facevert_t &v0, const facevert_t &v1, const facevert_t &v2 )
+{
+	float edge[3];
+	edge[0] = (v1.luxel - v0.luxel).Length();
+	edge[1] = (v2.luxel - v1.luxel).Length();
+	edge[2] = (v0.luxel - v2.luxel).Length();
+
+	int maxIndex = 0;
+	for ( int i = 1; i < 3; i++ )
+	{
+		if ( edge[i] > edge[maxIndex] )
+		{
+			maxIndex = i;
+		}
+	}
+	if ( edge[maxIndex] < 0.5f )
+	{
+		// smaller than 1 luxel
+		return data.IsAvgColor( v0.luxel[0], v0.luxel[1] );
+#if 0
+		ColorRGBExp32 tmp0, tmp1, tmp2;
+		data.GetLuxelAtCoords( &tmp0, v0.luxel[0], v0.luxel[1] );
+		data.GetLuxelAtCoords( &tmp1, v1.luxel[0], v1.luxel[1] );
+		data.GetLuxelAtCoords( &tmp2, v2.luxel[0], v2.luxel[1] );
+		return data.IsAvgColor( tmp0 ) && data.IsAvgColor( tmp1 ) && data.IsAvgColor( tmp2 );
+#endif
+	}
+	// subdivide largest edge and recurse
+	switch( maxIndex )
+	{
+	case 0: // v1, v0
+		{
+			facevert_t tmp;
+			tmp.pos = 0.5f * v1.pos + 0.5f * v0.pos;
+			tmp.luxel = 0.5f * v1.luxel + 0.5f * v0.luxel;
+			if ( !IsConstantTriangle_r( data, tmp, v1, v2 ))
+				return false;
+			return IsConstantTriangle_r( data, v0, tmp, v2 );
+		}
+		break;
+	case 1: // v2, v1
+		{
+			facevert_t tmp;
+			tmp.pos = 0.5f * v2.pos + 0.5f * v1.pos;
+			tmp.luxel = 0.5f * v2.luxel + 0.5f * v1.luxel;
+			if ( !IsConstantTriangle_r( data, v0, v1, tmp ))
+				return false;
+			return IsConstantTriangle_r( data, v0, tmp, v2 );
+		}
+		break;
+	default: // v0, v2
+	case 2:
+		{
+			facevert_t tmp;
+			tmp.pos = 0.5f * v2.pos + 0.5f * v0.pos;
+			tmp.luxel = 0.5f * v2.luxel + 0.5f * v0.luxel;
+			if ( !IsConstantTriangle_r( data, v0, v1, tmp ))
+				return false;
+			return IsConstantTriangle_r( data, tmp, v1, v2 );
+		}
+		break;
+	}
+}
+
+// Check to see if this face has constant lighting by recursive rasterization into the lightmap
+bool IsConstantColor( dface_t *pFace, lightmapdata_t &data )
+{
+	int vertIndex[256];
+	facevert_t v[256];
+	int i;
+	Assert( pFace->numedges < 256 );
+	texinfo_t *pTexInfo = &texinfo[ pFace->texinfo ];
+	BuildFaceCalcWindingData( pFace, vertIndex );
+#if _DEBUG
+	int wLimit = data.bBump ? (data.width/4) : data.width;
+	int hLimit = data.height;
+#endif
+	for ( i = 0; i < pFace->numedges; i++ )
+	{
+		v[i].pos = dvertexes[vertIndex[i]].point;
+
+		CalcTextureCoordsAtPoints( pTexInfo->lightmapVecsLuxelsPerWorldUnits, pFace->m_LightmapTextureMinsInLuxels, &v[i].pos, 1, &v[i].luxel );
+		if ( v[i].luxel[0] < 0 )
+		{
+			if ( v[i].luxel[0] > -1e-3f ) // clamp away a little bit of error
+				v[i].luxel[0] = 0;
+		}
+		if ( v[i].luxel[1] < 0 )
+		{
+			if ( v[i].luxel[1] > -1e-3f ) // clamp away a little bit of error
+				v[i].luxel[1] = 0;
+		}
+		Assert( v[i].luxel[0] >= 0 && v[i].luxel[0] < wLimit );
+		Assert( v[i].luxel[1] >= 0 && v[i].luxel[1] < hLimit );
+	}
+
+	// initialize the average color to be the color under the first vertex
+	data.GetLuxelAtCoords( &data.avgColor, v[0].luxel[0], v[0].luxel[1] );
+	if ( data.bBump )	
+	{
+		for ( i = 0; i < NUM_BUMP_VECTS; i++ )
+		{
+			data.GetLuxelAtCoords( &data.bumpColor[i], v[0].luxel[0], v[0].luxel[1], i+1 );
+		}
+	}
+
+	if ( pFace->GetNumPrims() )
+	{
+		// use the stored indices
+		dprimitive_t *pPrim = &g_primitives[pFace->firstPrimID];
+		Assert(pPrim->vertCount == 0);
+		Assert(pPrim->indexCount == (pFace->numedges-2)*3);
+		unsigned short *pIndices = &g_primindices[pPrim->firstIndex];
+		int index = 0;
+		for ( i = 0; i < pFace->numedges-2; i++ )
+		{
+			if ( !IsConstantTriangle_r( data, v[pIndices[index]], v[pIndices[index+1]], v[pIndices[index+2]] ) )
+				return false;
+			index += 3;
+		}
+	}
+	else
+	{
+		// this surface is a fan
+		int index = 0;
+		for ( i = 0; i < pFace->numedges-2; i++ )
+		{
+			if ( !IsConstantTriangle_r( data, v[0], v[i+1], v[i+2] ) )
+				return false;
+			index += 3;
+		}
+	}
+
+	return true;
+}
+
+// Iterate the faces and remove any lightmaps that are constant across their renderable luxels
+void CompressConstantLightmaps( int threshold )
+{
+	lightmapdata_t mapData;
+
+	for ( int i = 0; i < numfaces; i++ )
+	{
+		dface_t *pFace = &g_pFaces[i];
+		bool hasLightmap = (texinfo[pFace->texinfo].flags & SURF_NOLIGHT) == 0;
+		if ( !hasLightmap || pFace->lightofs == -1 )
+			continue;
+
+		int lightmapWidth  = pFace->m_LightmapTextureSizeInLuxels[0] + 1;
+		int lightmapHeight = pFace->m_LightmapTextureSizeInLuxels[1] + 1;
+		bool bBump = ( texinfo[pFace->texinfo].flags & SURF_BUMPLIGHT ) > 0;
+		if ( bBump )
+		{
+			lightmapWidth *= (NUM_BUMP_VECTS+1);
+		}
+
+		ColorRGBExp32 *pLightdata = reinterpret_cast<ColorRGBExp32 *>(pdlightdata->Base() + pFace->lightofs);
+
+		mapData.Init( pLightdata, bBump, lightmapWidth, lightmapHeight, threshold );
+		if ( IsConstantColor( pFace, mapData ) )
+		{
+			pLightdata[0] = mapData.avgColor;
+			pFace->m_LightmapTextureSizeInLuxels[0] = 0;
+			pFace->m_LightmapTextureSizeInLuxels[1] = 0;
+			if ( bBump )
+			{
+				for ( int i = 0; i < NUM_BUMP_VECTS; i++ )
+				{
+					pLightdata[i+1] = mapData.bumpColor[i];
+				}
+			}
+		}
+	}
+}
+

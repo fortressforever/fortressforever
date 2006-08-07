@@ -26,13 +26,18 @@ END_NETWORK_TABLE()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CPredictedViewModel::CPredictedViewModel()
-{
 #ifdef CLIENT_DLL
+CPredictedViewModel::CPredictedViewModel() : m_LagAnglesHistory("CPredictedViewModel::m_LagAnglesHistory")
+{
 	m_vLagAngles.Init();
 	m_LagAnglesHistory.Setup( &m_vLagAngles, 0 );
-#endif
 }
+#else
+CPredictedViewModel::CPredictedViewModel()
+{
+}
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 

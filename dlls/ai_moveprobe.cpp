@@ -28,7 +28,6 @@
 ConVar	ai_moveprobe_debug( "ai_moveprobe_debug", "0" );
 ConVar	ai_moveprobe_jump_debug( "ai_moveprobe_jump_debug", "0" );
 ConVar	ai_moveprobe_usetracelist( "ai_moveprobe_usetracelist", "0" );
-extern ConVar test_nav_opt;
 
 #ifdef DEBUG
 ConVar ai_old_check_stand_position( "ai_old_check_stand_position", "0" );
@@ -63,7 +62,6 @@ CON_COMMAND( ai_set_move_height_epsilon, "Set how high AI bumps up ground walker
 //-----------------------------------------------------------------------------
 
 BEGIN_SIMPLE_DATADESC(CAI_MoveProbe)
-	//					m_iszFuncBrushClass (not saved, a cached item)
 	//					m_TraceListData (not saved, a cached item)
 	DEFINE_FIELD( m_bIgnoreTransientEntities,		FIELD_BOOLEAN ),
 END_DATADESC();
@@ -81,82 +79,25 @@ AIMoveResult_t AIComputeBlockerMoveResult( CBaseEntity *pBlocker )
 	return AIMR_BLOCKED_ENTITY;
 }
 
-
 //-----------------------------------------------------------------------------
-
-class CTraceFilterNav : public CTraceFilterSimple
+bool CAI_MoveProbe::ShouldBrushBeIgnored( CBaseEntity *pEntity )
 {
-public:
-	CTraceFilterNav( CAI_BaseNPC *pProber, string_t iszFuncBrushClass, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup );
-	bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask );
+	if ( pEntity->m_iClassname == g_iszFuncBrushClassname )
+	{
+		CFuncBrush *pFuncBrush = assert_cast<CFuncBrush *>(pEntity);
+		if ( pFuncBrush->m_bInvertExclusion )
+		{
+			if ( pFuncBrush->m_iszExcludedClass != GetOuter()->m_iClassname )
+				return true;
+		}
+		else if ( pFuncBrush->m_iszExcludedClass == GetOuter()->m_iClassname )
+		{
+			return true;
+		}
+	}
 
-	CAI_BaseNPC *m_pProber;
-	string_t m_iszFuncBrushClass;
-	bool m_bIgnoreTransientEntities;
-	bool m_bCheckCollisionTable;
-};
-
-CTraceFilterNav::CTraceFilterNav( CAI_BaseNPC *pProber, string_t iszFuncBrushClass, bool bIgnoreTransientEntities, const IServerEntity *passedict, int collisionGroup ) : 
-	CTraceFilterSimple( passedict, collisionGroup ),
-	m_pProber(pProber),
-	m_iszFuncBrushClass(iszFuncBrushClass),
-	m_bIgnoreTransientEntities(bIgnoreTransientEntities)
-{
-	m_bCheckCollisionTable = g_EntityCollisionHash->IsObjectInHash( pProber );
+	return false;
 }
-
-bool CTraceFilterNav::ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
-{
-	IServerEntity *pServerEntity = (IServerEntity*)pHandleEntity;
-	CBaseEntity *pEntity = (CBaseEntity *)pServerEntity;
-
-	if ( m_pProber == pEntity )
-		return false;
-
-	if ( pEntity->m_iClassname == m_iszFuncBrushClass )
-	{
-		Assert( dynamic_cast<CFuncBrush *>(pEntity) != NULL );
-		if ( ((CFuncBrush *)pEntity)->m_iszExcludedClass == m_pProber->m_iClassname )
-			return false;
-	}
-	
-#ifdef HL1_DLL
-	if ( ( contentsMask & CONTENTS_MOVEABLE ) == 0 )
-	{
-		if ( pEntity->ClassMatches( "func_pushable" ) )
-			return false;
-	}
-#endif
-
-	if ( m_bIgnoreTransientEntities && (pEntity->IsPlayer() || pEntity->IsNPC() ) )
-		return false;
-
-	//Adrian - If I'm flagged as using the new collision method, then ignore the player when trying
-	//to check if I can get somewhere.
-	if ( m_pProber->ShouldPlayerAvoid() && pEntity->IsPlayer() )
-		 return false;
-
-	if ( pEntity->IsNavIgnored() )
-		return false;
-
-	if ( m_bCheckCollisionTable )
-	{
-		if ( g_EntityCollisionHash->IsObjectPairInHash( m_pProber, pEntity ) )
-			return false;
-	}
-
-#if 0
-	if ( m_mass > 0.0f && pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
-	{
-		IPhysicsObject *pPhysics = pEntity->VPhysicsGetObject();
-		if ( pPhysics->IsMoveable() && pPhysics->GetMass() < m_mass )
-			return false;
-	}
-#endif
-
-	return CTraceFilterSimple::ShouldHitEntity( pHandleEntity, contentsMask );
-}
-
 
 //-----------------------------------------------------------------------------
 
@@ -167,7 +108,7 @@ void CAI_MoveProbe::TraceLine( const Vector &vecStart, const Vector &vecEnd, uns
 							GetCollisionGroup() : 
 							COLLISION_GROUP_NONE;
 
-	CTraceFilterNav traceFilter( const_cast<CAI_BaseNPC *>(GetOuter()), m_iszFuncBrushClass, m_bIgnoreTransientEntities, GetOuter(), collisionGroup );
+	CTraceFilterNav traceFilter( const_cast<CAI_BaseNPC *>(GetOuter()), m_bIgnoreTransientEntities, GetOuter(), collisionGroup );
 
 	AI_TraceLine( vecStart, vecEnd, mask, &traceFilter, pResult );
 
@@ -184,9 +125,16 @@ void CAI_MoveProbe::TraceLine( const Vector &vecStart, const Vector &vecEnd, uns
 
 CAI_MoveProbe::CAI_MoveProbe(CAI_BaseNPC *pOuter)
  : 	CAI_Component( pOuter ),
-	m_bIgnoreTransientEntities( false )
+	m_bIgnoreTransientEntities( false ),
+	m_pTraceListData( NULL )
 {
-	m_iszFuncBrushClass = AllocPooledString( "func_brush" );
+}
+
+//-----------------------------------------------------------------------------
+
+CAI_MoveProbe::~CAI_MoveProbe()
+{
+	delete m_pTraceListData;
 }
 
 //-----------------------------------------------------------------------------
@@ -197,16 +145,16 @@ void CAI_MoveProbe::TraceHull(
 {
 	AI_PROFILE_SCOPE( CAI_MoveProbe_TraceHull );
 
-	CTraceFilterNav traceFilter( const_cast<CAI_BaseNPC *>(GetOuter()), m_iszFuncBrushClass, m_bIgnoreTransientEntities, GetOuter(), GetCollisionGroup() );
+	CTraceFilterNav traceFilter( const_cast<CAI_BaseNPC *>(GetOuter()), m_bIgnoreTransientEntities, GetOuter(), GetCollisionGroup() );
 
 	Ray_t ray;
 	ray.Init( vecStart, vecEnd, hullMin, hullMax );
 
-	if ( m_TraceListData.IsEmpty() )
+	if ( !m_pTraceListData || m_pTraceListData->IsEmpty() )
 		enginetrace->TraceRay( ray, mask, &traceFilter, pResult );
 	else
 	{
-		enginetrace->TraceRayAgainstLeafAndEntityList( ray, const_cast<CAI_MoveProbe *>(this)->m_TraceListData, mask, &traceFilter, pResult );
+		enginetrace->TraceRayAgainstLeafAndEntityList( ray, *(const_cast<CAI_MoveProbe *>(this)->m_pTraceListData), mask, &traceFilter, pResult );
 #if 0
 		trace_t verificationTrace;
 		enginetrace->TraceRay( ray, mask, &traceFilter, &verificationTrace );
@@ -264,7 +212,11 @@ void CAI_MoveProbe::SetupCheckStepTraceListData( const CheckStepArgs_t &args ) c
 
 		ray.Init( args.vecStart, vecEnd, hullMin, hullMax );
 
-		enginetrace->SetupLeafAndEntityListRay( ray, const_cast<CAI_MoveProbe *>(this)->m_TraceListData );
+		if ( !m_pTraceListData )
+		{
+			const_cast<CAI_MoveProbe *>(this)->m_pTraceListData = new CTraceListData;
+		}
+		enginetrace->SetupLeafAndEntityListRay( ray, *(const_cast<CAI_MoveProbe *>(this)->m_pTraceListData) );
 	}
 }
 
@@ -584,7 +536,7 @@ bool CAI_MoveProbe::TestGroundMove( const Vector &vecActualStart, const Vector &
 		if ( distClear - distStartToIgnoreGround > 0.001 )
 			checkStepArgs.groundTest = STEP_DONT_CHECK_GROUND;
 
-		Assert( m_TraceListData.IsEmpty() );
+		Assert( !m_pTraceListData || m_pTraceListData->IsEmpty() );
 		SetupCheckStepTraceListData( checkStepArgs );
 		
 		for ( i = 0; i < 16; i++ )
@@ -749,15 +701,18 @@ void CAI_MoveProbe::GroundMoveLimit( const Vector &vecStart, const Vector &vecEn
 	// Let's try to avoid invalid routes
 	TestGroundMove( vecActualStart, vecDesiredEnd, collisionMask, pctToCheckStandPositions, testGroundMoveFlags, pTrace );
 
-	// check to see if the player is in a vehicle and the vehicle is blocking our way
+	// Check to see if the target is in a vehicle and the vehicle is blocking our way
 	bool bVehicleMatchesObstruction = false;
 
-	CBasePlayer *pPlayer = ToBasePlayer( (CBaseEntity *) pTarget );
-	if ( pPlayer && pPlayer->IsInAVehicle() )
+	if ( pTarget != NULL )
 	{
-		CBaseEntity *pVehicleEnt = pPlayer->GetVehicle()->GetVehicleEnt();
-		if ( pVehicleEnt == pTrace->pObstruction )
-			bVehicleMatchesObstruction = true;
+		CBaseCombatCharacter *pCCTarget = ((CBaseEntity *)pTarget)->MyCombatCharacterPointer();
+		if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
+		{
+			CBaseEntity *pVehicleEnt = pCCTarget->GetVehicleEntity();
+			if ( pVehicleEnt == pTrace->pObstruction )
+				bVehicleMatchesObstruction = true;
+		}
 	}
 
 	if ( (pTarget && (pTarget == pTrace->pObstruction)) || bVehicleMatchesObstruction )
@@ -868,7 +823,7 @@ void CAI_MoveProbe::JumpMoveLimit( const Vector &vecStart, const Vector &vecEnd,
 	// FIXME: add max jump velocity callback?  Look at the velocity in the jump animation?  use ideal running speed?
 	float maxHorzVel = GetOuter()->GetMaxJumpSpeed();
 
-	Vector gravity = Vector(0, 0, sv_gravity.GetFloat() * GetGravity());
+	Vector gravity = Vector(0, 0, sv_gravity.GetFloat() * GetOuter()->GetJumpGravity() );
 
 	if ( gravity.z < 0.01 )
 	{
@@ -1171,7 +1126,10 @@ Vector CAI_MoveProbe::CalcJumpLaunchVelocity(const Vector &startPos, const Vecto
 bool CAI_MoveProbe::CheckStandPosition( const Vector &vecStart, unsigned int collisionMask ) const
 {
 	// If we're not supposed to do ground checks, always say we can stand there
-	if ( (test_nav_opt.GetBool() && (GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK)) )
+	if ( (GetOuter()->CapabilitiesGet() & bits_CAP_SKIP_NAV_GROUND_CHECK) )
+		return true;
+
+	if ( AIStrongOpt() )
 		return true;
 
 	if ( UseOldCheckStandPosition() )
@@ -1336,6 +1294,8 @@ bool CAI_MoveProbe::OldCheckStandPosition( const Vector &vecStart, unsigned int 
 bool CAI_MoveProbe::FloorPoint( const Vector &vecStart, unsigned int collisionMask, 
 						   float flStartZ, float flEndZ, Vector *pVecResult ) const
 {
+	AI_PROFILE_SCOPE( CAI_Motor_FloorPoint );
+
 	// make a pizzabox shaped bounding hull
 	Vector mins = WorldAlignMins();
 	Vector maxs( WorldAlignMaxs().x, WorldAlignMaxs().y, mins.z );

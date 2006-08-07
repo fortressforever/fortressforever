@@ -49,6 +49,7 @@ Color NavColors[] =
 	Color( 255, 255, 255 ),		// NavCursorColor
 	Color( 255, 255, 255 ),		// NavSplitLineColor
 	Color( 0, 255, 255 ),		// NavCreationColor
+	Color( 0, 64, 64 ),			// NavGridColor
 
 	// Nav attribute colors
 	Color( 0, 0, 255 ),			// NavAttributeCrouchColor

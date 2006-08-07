@@ -53,6 +53,10 @@
 #define FTENT_FFOPTEFFECT		0x08000000	// This projectile's effect is optional
 // <-- Mirv
 
+class C_LocalTempEntity;
+
+typedef int (*pfnDrawHelper)( C_LocalTempEntity *entity, int flags );
+
 //-----------------------------------------------------------------------------
 // Purpose: Should this derive from some other class
 //-----------------------------------------------------------------------------
@@ -74,6 +78,13 @@ public:
 	// Sets the velocity
 	void SetVelocity( const Vector &vecVelocity );
 	const Vector &GetVelocity() const { return m_vecTempEntVelocity; }
+
+	void							SetDrawHelper( pfnDrawHelper helper ) { m_pfnDrawHelper = helper; }
+	void							OnRemoveTempEntity();
+
+protected:
+
+	pfnDrawHelper					m_pfnDrawHelper;
 
 public:
 	int								flags;

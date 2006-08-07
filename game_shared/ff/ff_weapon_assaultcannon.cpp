@@ -86,9 +86,11 @@ BEGIN_NETWORK_TABLE(CFFWeaponAssaultCannon, DT_FFWeaponAssaultCannon)
 #endif
 END_NETWORK_TABLE() 
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA(CFFWeaponAssaultCannon) 
 	DEFINE_PRED_FIELD_TOL(m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 1.0f),
 END_PREDICTION_DATA() 
+#endif
 
 LINK_ENTITY_TO_CLASS(ff_weapon_assaultcannon, CFFWeaponAssaultCannon);
 PRECACHE_WEAPON_REGISTER(ff_weapon_assaultcannon);

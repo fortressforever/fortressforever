@@ -69,13 +69,20 @@ private:
 	// Ammo
 	virtual void			PlayerThink( CBasePlayer *pPlayer );
 	virtual float			GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
+
+	virtual bool			ShouldBurningPropsEmitLight();
 	
 public:
+
+	bool AllowDamage( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
 	bool	NPC_ShouldDropGrenade( CBasePlayer *pRecipient );
 	bool	NPC_ShouldDropHealth( CBasePlayer *pRecipient );
 	void	NPC_DroppedHealth( void );
 	void	NPC_DroppedGrenade( void );
+	bool	MegaPhyscannonActive( void ) { return m_bMegaPhysgun;	}
+	
+	virtual bool IsAlyxInDarknessMode();
 
 private:
 

@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "movevars_shared.h"
 #include "util_shared.h"
+#include "datacache/imdlcache.h"
 
 #if defined( CLIENT_DLL )
 
@@ -41,11 +42,30 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#ifdef GAME_DLL
+#if defined(GAME_DLL) && !defined(_XBOX)
 	extern ConVar sv_pushaway_max_force;
 	extern ConVar sv_pushaway_force;
 	extern ConVar sv_turbophysics;
 #endif
+
+class CPhysicsTraceFilter : public CTraceFilterEntitiesOnly
+{
+	public:
+		bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
+		{
+			CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
+
+			// Static prop case...
+			if ( !pEntity )
+				return false;
+
+			// Only impact on physics objects
+			if ( pEntity->VPhysicsGetObject() )
+				return true;
+
+			return false;
+		};
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -157,19 +177,16 @@ void CBasePlayer::ItemPostFrame()
 			return;
 	}
 
-#if !defined( CLIENT_DLL )
+
 	// check if the player is using something
 	if ( m_hUseEntity != NULL )
 	{
+#if !defined( CLIENT_DLL )
 		Assert( !IsInAVehicle() );
 		ImpulseCommands();// this will call playerUse
+#endif
 		return;
 	}
-#endif
-
-#if !defined( CLIENT_DLL )
-	ImpulseCommands();
-#endif
 
     if ( gpGlobals->curtime < m_flNextAttack )
 	{
@@ -177,21 +194,28 @@ void CBasePlayer::ItemPostFrame()
 		{
 			GetActiveWeapon()->ItemBusyFrame();
 		}
-		return;
 	}
-
-	if (!GetActiveWeapon())
+	else
 	{
-		return;
+		if ( GetActiveWeapon() && (!IsInAVehicle() || UsingStandardWeaponsInVehicle()) )
+		{
+#if defined( CLIENT_DLL )
+			// Not predicting this weapon
+			if ( GetActiveWeapon()->IsPredicted() )
+#endif
+
+			{
+				GetActiveWeapon()->ItemPostFrame( );
+			}
+		}
 	}
 
-	if ( IsInAVehicle() && !UsingStandardWeaponsInVehicle() )
-		return;
-
-#if defined( CLIENT_DLL )
-	// Not predicting this weapon
-	if ( !GetActiveWeapon()->IsPredicted() )
-		return;
+#if !defined( CLIENT_DLL )
+	ImpulseCommands();
+#else
+	// NOTE: If we ever support full impulse commands on the client,
+	// remove this line and call ImpulseCommands instead.
+	m_nImpulse = 0;
 #endif
 
 	// Mirv: Totally disable weapons in spectator mode
@@ -373,6 +397,13 @@ void CBasePlayer::EyePositionAndVectors( Vector *pPosition, Vector *pForward,
 	}
 }
 
+#ifdef CLIENT_DLL
+surfacedata_t * CBasePlayer::GetFootstepSurface( const Vector &origin, const char *surfaceName )
+{
+	return physprops->GetSurfaceData( physprops->GetSurfaceIndex( surfaceName ) );
+}
+#endif
+
 void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity )
 {
 	int	fWalking;
@@ -444,7 +475,11 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	// find out what we're stepping in or on...
 	if ( fLadder )
 	{
+#ifdef CLIENT_DLL
+		psurface = GetFootstepSurface( vecOrigin, "ladder" );
+#else
 		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "ladder" ) );
+#endif
 		fvol = 0.5;
 		m_flStepSoundTime = gpGlobals->curtime +0.350f;	// |-- Mirv: Added gpGlobals->curtime
 	}
@@ -533,6 +568,12 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 {
 	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() )
 		return;
+
+#if defined( CLIENT_DLL )
+	// during prediction play footstep sounds only once
+	if ( prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
+		return;
+#endif
 
 	if ( !psurface )
 		return;
@@ -655,6 +696,7 @@ void CBasePlayer::AbortReload( void )
 	}
 }
 
+#if !defined( NO_ENTITY_PREDICTION )
 void CBasePlayer::AddToPlayerSimulationList( CBaseEntity *other )
 {
 	CHandle< CBaseEntity > h;
@@ -707,7 +749,7 @@ void CBasePlayer::SimulatePlayerSimulatedEntities( void )
 		}
 
 #if defined( CLIENT_DLL )
-		if ( e->IsClientCreated() && !prediction->IsFirstTimePredicted() )
+		if ( e->IsClientCreated() && prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
 		{
 			continue;
 		}
@@ -735,7 +777,7 @@ void CBasePlayer::SimulatePlayerSimulatedEntities( void )
 		}
 
 #if defined( CLIENT_DLL )
-		if ( e->IsClientCreated() && !prediction->IsFirstTimePredicted() )
+		if ( e->IsClientCreated() && prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
 		{
 			continue;
 		}
@@ -773,6 +815,7 @@ void CBasePlayer::ClearPlayerSimulationList( void )
 
 	m_SimulatedByThisPlayer.RemoveAll();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Return true if we should allow selection of the specified item
@@ -794,6 +837,9 @@ void CBasePlayer::SelectItem( const char *pstr, int iSubType )
 
 	if (!pItem)
 		return;
+
+	if( GetObserverMode() != OBS_MODE_NONE )
+		return;// Observers can't select things.
 
 	if ( !Weapon_ShouldSelectItem( pItem ) )
 		return;
@@ -990,7 +1036,6 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	return pNearest;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Handles USE keypress
 //-----------------------------------------------------------------------------
@@ -1012,6 +1057,7 @@ void CBasePlayer::PlayerUse ( void )
 		return;
 	}
 
+#if !defined(_XBOX)
 	// push objects in turbo physics mode
 	if ( (m_nButtons & IN_USE) && sv_turbophysics.GetBool() )
 	{
@@ -1022,12 +1068,14 @@ void CBasePlayer::PlayerUse ( void )
 		// Search for objects in a sphere (tests for entities that are not solid, yet still useable)
 		Vector searchCenter = EyePosition();
 
-		UTIL_TraceLine( searchCenter, searchCenter + forward * 96.0f, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+		CPhysicsTraceFilter filter;
+
+		UTIL_TraceLine( searchCenter, searchCenter + forward * 96.0f, MASK_SOLID, &filter, &tr );
 
 		// try the hit entity if there is one, or the ground entity if there isn't.
 		CBaseEntity *entity = tr.m_pEnt;
 
-		if (entity && entity->VPhysicsGetObject() )
+		if ( entity )
 		{
 			IPhysicsObject *pObj = entity->VPhysicsGetObject();
 
@@ -1043,6 +1091,7 @@ void CBasePlayer::PlayerUse ( void )
 			pObj->ApplyForceOffset( vPushAway * flForce, WorldSpaceCenter() );
 		}
 	}
+#endif
 
 	if ( m_afButtonPressed & IN_USE )
 	{
@@ -1171,10 +1220,10 @@ void CBasePlayer::ViewPunchReset( float tolerance )
 
 #endif
 
-static ConVar smoothstairs( "smoothstairs", "1", FCVAR_REPLICATED, "Smooth player eye z coordinate when climbing stairs." );
+static ConVar smoothstairs( "smoothstairs", "1", FCVAR_REPLICATED, "Smooth player eye z coordinate when traversing stairs." );
 
 //-----------------------------------------------------------------------------
-// Handle view smoothing when going up stairs
+// Handle view smoothing when going up or down stairs
 //-----------------------------------------------------------------------------
 void CBasePlayer::SmoothViewOnStairs( Vector& eyeOrigin )
 {
@@ -1183,22 +1232,43 @@ void CBasePlayer::SmoothViewOnStairs( Vector& eyeOrigin )
 	float flCurrentPlayerViewOffsetZ = GetViewOffset().z;
 
 	// Smooth out stair step ups
-	if ( ( pGroundEntity != NULL && pGroundEntity->GetMoveType() == MOVETYPE_NONE ) && (flCurrentPlayerZ != m_flOldPlayerZ ) && smoothstairs.GetBool() && m_flOldPlayerViewOffsetZ == flCurrentPlayerViewOffsetZ)
+	// NOTE: Don't want to do this when the ground entity is moving the player
+	if ( ( pGroundEntity != NULL && pGroundEntity->GetMoveType() == MOVETYPE_NONE ) && ( flCurrentPlayerZ != m_flOldPlayerZ ) && smoothstairs.GetBool() &&
+		 m_flOldPlayerViewOffsetZ == flCurrentPlayerViewOffsetZ )
 	{
+		int dir = ( flCurrentPlayerZ > m_flOldPlayerZ ) ? 1 : -1;
+
 		float steptime = gpGlobals->frametime;
 		if (steptime < 0)
 		{
 			steptime = 0;
 		}
 
-		m_flOldPlayerZ += steptime * 150;
-		if (m_flOldPlayerZ > flCurrentPlayerZ)
+		m_flOldPlayerZ += steptime * 150 * dir;
+
+		const float stepSize = 18.0f;
+
+		if ( dir > 0 )
 		{
-			m_flOldPlayerZ = flCurrentPlayerZ;
+			if (m_flOldPlayerZ > flCurrentPlayerZ)
+			{
+				m_flOldPlayerZ = flCurrentPlayerZ;
+			}
+			if (flCurrentPlayerZ - m_flOldPlayerZ > stepSize)
+			{
+				m_flOldPlayerZ = flCurrentPlayerZ - stepSize;
+			}
 		}
-		if (flCurrentPlayerZ - m_flOldPlayerZ > 18)
+		else
 		{
-			m_flOldPlayerZ = flCurrentPlayerZ - 18;
+			if (m_flOldPlayerZ < flCurrentPlayerZ)
+			{
+				m_flOldPlayerZ = flCurrentPlayerZ;
+			}
+			if (flCurrentPlayerZ - m_flOldPlayerZ < -stepSize)
+			{
+				m_flOldPlayerZ = flCurrentPlayerZ + stepSize;
+			}
 		}
 
 		eyeOrigin[2] += m_flOldPlayerZ - flCurrentPlayerZ;
@@ -1225,22 +1295,11 @@ void CBasePlayer::ResetObserverMode()
 {
 
 	m_hObserverTarget.Set( 0 );
-	m_iObserverMode = OBS_MODE_NONE;
-
-	// clear observer view models
-	for ( int i = 0; i < MAX_VIEWMODELS; i++ )
-	{
-#if defined( CLIENT_DLL )
-		m_hObserverViewModel[ i ] = NULL;
-#else
-		m_hObserverViewModel.Set( i, NULL );
-#endif
-	}
+	m_iObserverMode = (int)OBS_MODE_NONE;
 
 #ifndef CLIENT_DLL
 	m_iObserverLastMode = OBS_MODE_ROAMING;
 	m_bForcedObserverMode = false;
-	m_bIsRecording = false;
 	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
 #endif
 }
@@ -1536,6 +1595,7 @@ void CBasePlayer::SharedSpawn()
 	m_flNextAttack	= gpGlobals->curtime;
 	m_flMaxspeed		= 0.0f;
 
+	MDLCACHE_CRITICAL_SECTION();
 	SetSequence( SelectWeightedSequence( ACT_IDLE ) );
 
 	if ( GetFlags() & FL_DUCKING ) 

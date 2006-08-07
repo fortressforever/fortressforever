@@ -275,7 +275,7 @@ void CNapalmEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 		//Render
 		Vector	tPos;
 
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = (int) tPos.z;
 
 		//Render it

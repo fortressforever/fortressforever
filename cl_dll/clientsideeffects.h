@@ -16,7 +16,7 @@ struct	FXLineData_t;
 //-----------------------------------------------------------------------------
 // Purpose: Base class for client side effects
 //-----------------------------------------------------------------------------
-class CClientSideEffect
+abstract_class CClientSideEffect
 {
 public:
 	// Constructs the named effect
@@ -43,7 +43,7 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: Base interface to effects list
 //-----------------------------------------------------------------------------
-class IEffectsList
+abstract_class IEffectsList
 {
 public:
 	virtual			~IEffectsList( void ) {}

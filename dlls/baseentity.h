@@ -113,6 +113,7 @@ enum Class_T
 	CLASS_MISSILE,
 	CLASS_FLARE,
 	CLASS_EARTH_FAUNA,
+	CLASS_HACKED_ROLLERMINE,
 
 	NUM_AI_CLASSES
 };
@@ -135,39 +136,6 @@ enum Class_T
 	CLASS_PLAYER_BIOWEAPON,
 	CLASS_ALIEN_BIOWEAPON,
 
-	NUM_AI_CLASSES
-};
-
-#elif defined( TF2_DLL )
-
-enum Class_T
-{
-	CLASS_NONE = 0,
-	CLASS_PLAYER,			
-	CLASS_PLAYER_ALLY,
-	CLASS_PLAYER_ALLY_VITAL,
-	CLASS_ANTLION,
-	CLASS_BARNACLE,
-	CLASS_BULLSEYE,
-	//CLASS_BULLSQUID,	
-	CLASS_CITIZEN_PASSIVE,	
-	CLASS_CITIZEN_REBEL,
-	CLASS_COMBINE,
-	CLASS_COMBINE_GUNSHIP,
-	CLASS_CONSCRIPT,
-	CLASS_HEADCRAB,
-	//CLASS_HOUNDEYE,
-	CLASS_MANHACK,
-	CLASS_METROPOLICE,		
-	CLASS_MILITARY,		
-	CLASS_SCANNER,		
-	CLASS_STALKER,		
-	CLASS_VORTIGAUNT,
-	CLASS_ZOMBIE,
-	CLASS_PROTOSNIPER,
-	CLASS_MISSILE,
-	CLASS_FLARE,
-	CLASS_EARTH_FAUNA,
 	NUM_AI_CLASSES
 };
 
@@ -259,6 +227,7 @@ struct ResponseContext_t
 
 	string_t		m_iszName;
 	string_t		m_iszValue;
+	float			m_fExpirationTime;		// when to expire context (0 == never)
 };
 
 
@@ -305,6 +274,8 @@ enum DebugOverlayBits_t
 	OVERLAY_ABSBOX_BIT			=	0x00000020,		// show abs bounding box overlay
 	OVERLAY_RBOX_BIT			=   0x00000040,     // show the rbox overlay
 	OVERLAY_SHOW_BLOCKSLOS		=	0x00000080,		// show entities that block NPC LOS
+	OVERLAY_ATTACHMENTS_BIT		=	0x00000100,		// show attachment points
+	OVERLAY_AUTOAIM_BIT			=	0x00000200,		// Display autoaim radius
 
 	OVERLAY_NPC_SELECTED_BIT	=	0x00001000,		// the npc is current selected
 	OVERLAY_NPC_NEAREST_BIT		=	0x00002000,		// show the nearest node of this npc
@@ -328,6 +299,7 @@ enum DebugOverlayBits_t
 
 	OVERLAY_PROP_DEBUG			=	0x10000000,
 
+	OVERLAY_NPC_RELATION_BIT	=	0x20000000,		// show relationships between target and all children
 };
 
 struct TimedOverlay_t;
@@ -399,6 +371,8 @@ protected:
 	static bool				m_bDebugPause;		// Whether entity i/o is paused for debugging.
 	static int				m_nDebugSteps;		// Number of entity outputs to fire before pausing again.
 
+	static bool				sm_bDisableTouchFuncs;	// Disables PhysicsTouch and PhysicsStartTouch function calls
+
 public:
 	// If bServerOnly is true, then the ent never goes to the client. This is used
 	// by logical entities.
@@ -464,6 +438,10 @@ public:
 	void					RemoveEFlags( int nEFlagMask );
 	bool					IsEFlagSet( int nEFlagMask ) const;
 
+	// Quick way to ask if we have a player entity as a child anywhere in our hierarchy.
+	void					RecalcHasPlayerChildBit();
+	bool					DoesHavePlayerChild();
+
 	bool					IsTransparent() const;
 
 	void					SetNavIgnore( float duration = FLT_MAX );
@@ -527,7 +505,15 @@ public:
 	// update the global transmit state if a transmission rule changed
 		    int				SetTransmitState( int nFlag);
 			int				GetTransmitState( void );
-	virtual int				UpdateTransmitState( void );
+	int						DispatchUpdateTransmitState();
+	
+	// Do NOT call this directly. Use DispatchUpdateTransmitState.
+	virtual int				UpdateTransmitState();
+	
+	// Entities (like ropes) use this to own the transmit state of another entity
+	// by forcing it to not call UpdateTransmitState.
+	void					IncrementTransmitStateOwnedCounter();
+	void					DecrementTransmitStateOwnedCounter();
 
 	// This marks the entity for transmission and passes the SetTransmit call to any dependents.
 	virtual void			SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
@@ -571,12 +557,14 @@ public:
 	virtual void SetSkin( int iSkin) {}
 
 	virtual void PostConstructor( const char *szClassname );
+	virtual void PostClientActive( void );
 	virtual void ParseMapData( CEntityMapData *mapData );
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 	virtual bool KeyValue( const char *szKeyName, float flValue );
 	virtual bool KeyValue( const char *szKeyName, Vector vec );
 
-	virtual void ValidateEntityConnections();
+	void ValidateEntityConnections();
+	void FireNamedOutput( const char *pszOutput, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller, float flDelay = 0.0f );
 
 	// Activate - called for each entity after each load game and level load
 	virtual void Activate( void );
@@ -599,7 +587,7 @@ public:
 	// If iAttachment is a valid attachment on the parent, then your local origin and angles 
 	// are relative to the attachment on this entity. If iAttachment == -1, it'll preserve the
 	// current m_iParentAttachment.
-	void		SetParent( const CBaseEntity* pNewParent, int iAttachment = -1 );
+	virtual void	SetParent( CBaseEntity* pNewParent, int iAttachment = -1 );
 	CBaseEntity* GetParent();
 	int			GetParentAttachment();
 
@@ -653,10 +641,13 @@ public:
 	//
 	// Input handlers.
 	//
+	void InputAlternativeSorting( inputdata_t &inputdata );
 	void InputAlpha( inputdata_t &inputdata );
 	void InputColor( inputdata_t &inputdata );
 	void InputSetParent( inputdata_t &inputdata );
+	void SetParentAttachment( const char *szInputName, const char *szAttachment, bool bMaintainOffset );
 	void InputSetParentAttachment( inputdata_t &inputdata );
+	void InputSetParentAttachmentMaintainOffset( inputdata_t &inputdata );
 	void InputClearParent( inputdata_t &inputdata );
 	void InputSetTeam( inputdata_t &inputdata );
 	void InputUse( inputdata_t &inputdata );
@@ -689,6 +680,7 @@ public:
 	const char* GetClassname();
 
 	// Debug Overlays
+	void		 EntityText( int text_offset, const char *text, float flDuration, int r = 255, int g = 255, int b = 255, int a = 255 );
 	const char	*GetDebugName(void); // do not make this virtual -- designed to handle NULL this
 	virtual	void DrawDebugGeometryOverlays(void);					
 	virtual int  DrawDebugTextOverlays(void);
@@ -740,6 +732,7 @@ private:
 public:
 	// Networking related methods
 	void	NetworkStateChanged();
+	void	NetworkStateChanged( void *pVar );
 
 public:
  	void CalcAbsolutePosition();
@@ -789,9 +782,10 @@ public:
 	// was pev->speed
 	float		m_flSpeed;
 	// was pev->renderfx
-	CNetworkVar( int, m_nRenderFX );
+	CNetworkVar( unsigned char, m_nRenderFX );
 	// was pev->rendermode
-	CNetworkVar( int, m_nRenderMode );
+	CNetworkVar( unsigned char, m_nRenderMode );
+	CNetworkVar( short, m_nModelIndex );
 	// was pev->rendercolor
 	CNetworkColor32( m_clrRender );
 	const color32 GetRenderColor() const;
@@ -809,10 +803,10 @@ public:
 
 	int				m_nLastThinkTick;
 
-	CNetworkVar( int, m_nModelIndex );
-
+#if !defined( NO_ENTITY_PREDICTION )
 	// Certain entities (projectiles) can be created on the client and thus need a matching id number
 	CNetworkVar( CPredictableId, m_PredictableID );
+#endif
 
 	// used so we know when things are no longer touching
 	int			touchStamp;			
@@ -828,14 +822,21 @@ protected:
 	};
 	int		GetIndexForThinkContext( const char *pszContext );
 	CUtlVector< thinkfunc_t >	m_aThinkFunctions;
-	int		m_iCurrentThinkContext;
 
-	int GetContextCount() const;
-	const char *GetContextName( int index ) const;
-	const char *GetContextValue( int index ) const;
+#ifdef _DEBUG
+	int							m_iCurrentThinkContext;
+#endif
+
+	void RemoveExpiredConcepts( void );
+	int	GetContextCount() const;						// Call RemoveExpiredConcepts to clean out expired concepts
+	const char *GetContextName( int index ) const;		// note: context may be expired
+	const char *GetContextValue( int index ) const; 	// note: context may be expired
+	bool ContextExpired( int index ) const;
 	int FindContextByName( const char *name ) const;
+public:
 	void	AddContext( const char *nameandvalue );
 
+protected:
 	CUtlVector< ResponseContext_t > m_ResponseContexts;
 
 	// Map defined context sets
@@ -868,6 +869,9 @@ public:
 // still realize that they are teammates. (overridden for NPCs that form groups)
 	virtual Class_T Classify ( void );
 	virtual void	DeathNotice ( CBaseEntity *pVictim ) {}// NPC maker children use this to tell the NPC maker that they have died.
+	virtual bool	ShouldAttractAutoAim( CBaseEntity *pAimingEnt ) { return false; }
+	virtual float	GetAutoAimRadius() { return 24.0f; }
+	virtual Vector	GetAutoAimCenter() { return WorldSpaceCenter(); }
 
 	// Call this to do a TraceAttack on an entity, performs filtering. Don't call TraceAttack() directly except when chaining up to base class
 	void			DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
@@ -878,6 +882,8 @@ protected:
 	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 
 public:
+
+	virtual bool	CanBeHitByMeleeAttack( CBaseEntity *pAttacker ) { return true; }
 
 	// returns the amount of damage inflicted
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
@@ -890,6 +896,9 @@ public:
 	bool	IsAlive( void );
 	// Entity killed (only fired once)
 	virtual void	Event_Killed( const CTakeDamageInfo &info );
+	
+	// Notifier that I've killed some other entity. (called from Victim's Event_Killed).
+	virtual void	Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info ) { return; }
 
 	// UNDONE: Make this data?
 	virtual int				BloodColor( void );
@@ -914,7 +923,7 @@ public:
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
 	virtual bool	HasTarget( string_t targetname );
 	virtual	bool	IsPlayer( void ) const { return false; }
-	virtual bool	IsNetClient( void ) { return false; }
+	virtual bool	IsNetClient( void ) const { return false; }
 	virtual bool	IsTemplate( void ) { return false; }
 	virtual bool	IsBaseObject( void ) const { return false; }
 	bool			IsBSPModel() const;
@@ -1013,6 +1022,8 @@ public:
 	void					SUB_FadeOut ( void );
 	void					SUB_Vanish( void );
 	void					SUB_CallUseToggle( void ) { this->Use( this, this, USE_TOGGLE, 0 ); }
+	void					SUB_PerformFadeOut( void );
+	virtual	bool			SUB_AllowedToFade( void );
 
 	// change position, velocity, orientation instantly
 	// passing NULL means no change
@@ -1095,12 +1106,12 @@ private:
 
 public:
 	// variables promoted from edict_t
-	CNetworkVarForDerived( int, m_lifeState );
 	string_t	m_target;
-
-	CNetworkVarForDerived( int, m_takedamage );
 	CNetworkVarForDerived( int, m_iMaxHealth ); // CBaseEntity doesn't care about changes to this variable, but there are derived classes that do.
 	CNetworkVarForDerived( int, m_iHealth );
+
+	CNetworkVarForDerived( char, m_lifeState );
+	CNetworkVarForDerived( char , m_takedamage );
 
 	// --> Added by Mulch for testing
 	CNetworkVarForDerived( int, m_iArmor );
@@ -1186,7 +1197,7 @@ public:
 	virtual	bool FVisible ( CBaseEntity *pEntity, int traceMask = MASK_OPAQUE, CBaseEntity **ppBlocker = NULL );
 	virtual bool FVisible( const Vector &vecTarget, int traceMask = MASK_OPAQUE, CBaseEntity **ppBlocker = NULL );
 
-	virtual bool CanBeSeen() { return true; } // allows entities to be 'invisible' to NPC senses.
+	virtual bool CanBeSeenBy( CAI_BaseNPC *pNPC ) { return true; } // allows entities to be 'invisible' to NPC senses.
 
 	// This function returns a value that scales all damage done by this entity.
 	// Use CDamageModifier to hook in damage modifiers on a guy.
@@ -1195,7 +1206,6 @@ public:
 	// Use CDamageModifier to hook in damage modifiers on a guy.
 	virtual float			GetReceivedDamageScale( CBaseEntity *pAttacker );
 
-	// Sorry folks, here lies TF2-specific stuff that really has no other place to go
 	virtual bool			CanBePoweredUp( void ) { return false; }
 	virtual bool			AttemptToPowerup( int iPowerup, float flTime, float flAmount = 0, CBaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL ) { return false; }
 
@@ -1295,27 +1305,32 @@ public:
 	// See CSoundEmitterSystem
 	void					PlaySound(const char *soundname);
 	void					EmitSound( const char *soundname, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter filter( this ), and EmitSound( filter, entindex(), etc. );
+	void					EmitSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter filter( this ), and EmitSound( filter, entindex(), etc. );
 	void					StopSound( const char *soundname );
+	void					StopSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
 	void					GenderExpandString( char const *in, char *out, int maxlen );
 
 
 	static float GetSoundDuration( const char *soundname, char const *actormodel );
 
 	static bool	GetParametersForSound( const char *soundname, CSoundParameters &params, char const *actormodel );
-	static const char *GetWavFileForSound( const char *soundname, char const *actormodel );
+	static bool	GetParametersForSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, CSoundParameters &params, char const *actormodel );
 
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
+	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, HSOUNDSCRIPTHANDLE& handle, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
 	static void StopSound( int iEntIndex, const char *soundname );
 	static soundlevel_t LookupSoundLevel( const char *soundname );
+	static soundlevel_t LookupSoundLevel( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
 
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const EmitSound_t & params );
+	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const EmitSound_t & params, HSOUNDSCRIPTHANDLE& handle );
 
 	static void StopSound( int iEntIndex, int iChannel, const char *pSample );
 
 	static void EmitAmbientSound( int entindex, const Vector& origin, const char *soundname, int flags = 0, float soundtime = 0.0f, float *duration = NULL );
 
 	// These files need to be listed in scripts/game_sounds_manifest.txt
-	static void PrecacheScriptSound( const char *soundname );
+	static HSOUNDSCRIPTHANDLE PrecacheScriptSound( const char *soundname );
 	static void PrefetchScriptSound( const char *soundname );
 
 	// For each client who appears to be a valid recipient, checks the client has disabled CC and if so, removes them from 
@@ -1387,12 +1402,13 @@ public:
 	// --------------------------------------------------------------------
 
 public:
+#if !defined( NO_ENTITY_PREDICTION )
 	// The player drives simulation of this entity
 	void					SetPlayerSimulated( CBasePlayer *pOwner );
 	void					UnsetPlayerSimulated( void );
 	bool					IsPlayerSimulated( void ) const;
 	CBasePlayer				*GetSimulatingPlayer( void );
-
+#endif
 	// FIXME: Make these private!
 	void					PhysicsCheckForEntityUntouch( void );
  	bool					PhysicsRunThink( thinkmethods_t thinkMethod = THINK_FIRE_ALL_FUNCTIONS );
@@ -1552,7 +1568,10 @@ private:
 	CUtlLinkedList<CDamageModifier*,int>	m_DamageModifiers;
 
 	EHANDLE m_pParent;  // for movement hierarchy
+	byte	m_nTransmitStateOwnedCounter;
 	CNetworkVar( unsigned char,  m_iParentAttachment ); // 0 if we're relative to the parent's absorigin and absangles.
+	CNetworkVar( unsigned char, m_MoveType );		// One of the MOVETYPE_ defines.
+	CNetworkVar( unsigned char, m_MoveCollide );
 
 	// Our immediate parent in the movement hierarchy.
 	// FIXME: clarify m_pParent vs. m_pMoveParent
@@ -1562,18 +1581,16 @@ private:
 	// generated from m_pMoveParent
 	EHANDLE m_hMovePeer;	
 
+	friend class CCollisionProperty;
+	friend class CServerNetworkProperty;
 	CNetworkVarEmbedded( CCollisionProperty, m_Collision );
 	CServerNetworkProperty m_Network;
 
-	CNetworkVar( MoveType_t, m_MoveType );		// One of the MOVETYPE_ defines.
-	CNetworkVar( MoveCollide_t, m_MoveCollide );
 	CNetworkHandle( CBaseEntity, m_hOwnerEntity );	// only used to point to an edict it won't collide with
 	CNetworkHandle( CBaseEntity, m_hEffectEntity );	// Fire/Dissolve entity.
 
 	CNetworkVar( int, m_CollisionGroup );		// used to cull collision tests
 	IPhysicsObject	*m_pPhysicsObject;	// pointer to the entity's physics object (vphysics.dll)
-
-	CNetworkVar( float, m_flElasticity );
 
 	CNetworkVar( float, m_flShadowCastDistance );
 	float		m_flDesiredShadowCastDistance;
@@ -1585,6 +1602,8 @@ private:
 	// Sets water type + level for physics objects
 	unsigned char	m_nWaterTouch;
 	unsigned char	m_nSlimeTouch;
+	unsigned char	m_nWaterType;
+	CNetworkVarForDerived( unsigned char, m_nWaterLevel );
 	float			m_flNavIgnoreUntilTime;
 
 	CNetworkHandleForDerived( CBaseEntity, m_hGroundEntity );
@@ -1608,14 +1627,13 @@ private:
 	matrix3x4_t		m_rgflCoordinateFrame;
 
 	// Physics state
-	CNetworkVarForDerived( int, m_nWaterLevel );
-	int				m_nWaterType;
 	EHANDLE			m_pBlocker;
 
 	// was pev->gravity;
 	float			m_flGravity;  // rename to m_flGravityScale;
 	// was pev->friction
 	CNetworkVarForDerived( float, m_flFriction );
+	CNetworkVar( float, m_flElasticity );
 
 	// was pev->ltime
 	float			m_flLocalTime;
@@ -1631,10 +1649,11 @@ private:
 	CNetworkVectorForDerived( m_vecVelocity );
 	
 	//Adrian
-	CNetworkVar( int, m_iTextureFrameIndex );
+	CNetworkVar( unsigned char, m_iTextureFrameIndex );
 	
 	CNetworkVar( bool, m_bSimulatedEveryTick );
 	CNetworkVar( bool, m_bAnimatedEveryTick );
+	CNetworkVar( bool, m_bAlternateSorting );
 
 	// User outputs. Fired when the "FireInputX" input is triggered.
 	COutputEvent m_OnUser1;
@@ -1651,17 +1670,17 @@ private:
 	// was pev->view_ofs ( FIXME:  Move somewhere up the hierarch, CBaseAnimating, etc. )
 	CNetworkVectorForDerived( m_vecViewOffset );
 
+#if !defined( NO_ENTITY_PREDICTION )
 	CNetworkVar( bool, m_bIsPlayerSimulated );
 	// Player who is driving my simulation
 	CHandle< CBasePlayer >			m_hPlayerSimulationOwner;
+#endif
 
 	int								m_fDataObjectTypes;
 
 	// So it can get at the physics methods
 	friend class CCollisionEvent;
 
-public:
-	void							InitPredictable( void );
 // Methods shared by client and server
 public:
 	void							SetSize( const Vector &vecMin, const Vector &vecMax ); // UTIL_SetSize( this, mins, maxs );
@@ -1923,7 +1942,11 @@ inline void CBaseEntity::SetEFlags( int iEFlags )
 	m_iEFlags = iEFlags;
 
 	if ( iEFlags & ( EFL_FORCE_CHECK_TRANSMIT | EFL_IN_SKYBOX ) )
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
+	
+	// Make sure the EFL_DIRTY_PVS_INFORMATION flag gets passed onto the edict.
+	if ( (iEFlags & EFL_DIRTY_PVS_INFORMATION) && edict() )
+		edict()->m_fStateFlags |= FL_EDICT_DIRTY_PVS_INFORMATION;
 }
 
 inline void CBaseEntity::AddEFlags( int nEFlagMask )
@@ -1931,7 +1954,11 @@ inline void CBaseEntity::AddEFlags( int nEFlagMask )
 	m_iEFlags |= nEFlagMask;
 
 	if ( nEFlagMask & ( EFL_FORCE_CHECK_TRANSMIT | EFL_IN_SKYBOX ) )
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
+
+	// Make sure the EFL_DIRTY_PVS_INFORMATION flag gets passed onto the edict.
+	if ( (nEFlagMask & EFL_DIRTY_PVS_INFORMATION) && edict() )
+		edict()->m_fStateFlags |= FL_EDICT_DIRTY_PVS_INFORMATION;
 }
 
 inline void CBaseEntity::RemoveEFlags( int nEFlagMask )
@@ -1939,7 +1966,7 @@ inline void CBaseEntity::RemoveEFlags( int nEFlagMask )
 	m_iEFlags &= ~nEFlagMask;
 	
 	if ( nEFlagMask & ( EFL_FORCE_CHECK_TRANSMIT | EFL_IN_SKYBOX ) )
-		UpdateTransmitState();
+		DispatchUpdateTransmitState();
 }
 
 inline bool CBaseEntity::IsEFlagSet( int nEFlagMask ) const
@@ -2201,19 +2228,9 @@ inline void CBaseEntity::SetWaterLevel( int nLevel )
 	m_nWaterLevel = nLevel;
 }
 
-inline int CBaseEntity::GetWaterType() const
-{
-	return m_nWaterType;
-}
-
-inline void CBaseEntity::SetWaterType( int nType )
-{
-	m_nWaterType = nType;
-}
-
 inline const color32 CBaseEntity::GetRenderColor() const
 {
-	return m_clrRender;
+	return m_clrRender.Get();
 }
 
 inline void CBaseEntity::SetRenderColor( byte r, byte g, byte b )
@@ -2360,7 +2377,7 @@ inline CBaseEntity *CBaseEntity::GetBaseEntity()
 inline void CBaseEntity::SetModelName( string_t name )
 {
 	m_ModelName = name;
-	UpdateTransmitState();
+	DispatchUpdateTransmitState();
 }
 
 inline string_t CBaseEntity::GetModelName( void ) const
@@ -2371,7 +2388,7 @@ inline string_t CBaseEntity::GetModelName( void ) const
 inline void CBaseEntity::SetModelIndex( int index )
 {
 	m_nModelIndex = index;
-	UpdateTransmitState();
+	DispatchUpdateTransmitState();
 }
 
 inline int CBaseEntity::GetModelIndex( void ) const
@@ -2461,6 +2478,18 @@ inline void	CBaseEntity::NetworkStateChanged()
 }
 
 
+inline void	CBaseEntity::NetworkStateChanged( void *pVar )
+{
+	// Make sure it's a semi-reasonable pointer.
+	Assert( (char*)pVar > (char*)this );
+	Assert( (char*)pVar - (char*)this < 32768 );
+	
+	// Good, they passed an offset so we can track this variable's change
+	// and avoid sending the whole entity.
+	NetworkProp()->NetworkStateChanged( (char*)pVar - (char*)this );
+}
+
+
 //-----------------------------------------------------------------------------
 // IHandleEntity overrides.
 //-----------------------------------------------------------------------------
@@ -2468,6 +2497,19 @@ inline const CBaseHandle& CBaseEntity::GetRefEHandle() const
 {
 	return m_RefEHandle;
 }
+
+inline void CBaseEntity::IncrementTransmitStateOwnedCounter()
+{
+	Assert( m_nTransmitStateOwnedCounter != 255 );
+	m_nTransmitStateOwnedCounter++;
+}
+
+inline void CBaseEntity::DecrementTransmitStateOwnedCounter()
+{
+	Assert( m_nTransmitStateOwnedCounter != 0 );
+	m_nTransmitStateOwnedCounter--;
+}
+
 
 //-----------------------------------------------------------------------------
 // Bullet firing (legacy)...
@@ -2555,8 +2597,6 @@ class CLogicalEntity : public CServerOnlyEntity
 public:
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 };
-
-
 
 
 #endif // BASEENTITY_H

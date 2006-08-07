@@ -12,8 +12,15 @@
 #endif
 
 // For introspection
+#include "tier0/platform.h"
 #include "predictioncopy.h"
 #include "shared_classnames.h"
+
+#ifndef NO_ENTITY_PREDICTION
+#define UsePrediction() 1
+#else
+#define UsePrediction() 0
+#endif
 
 // CLIENT DLL includes
 #if defined( CLIENT_DLL )
@@ -38,8 +45,6 @@ class SendTable;
 #define DECLARE_NETWORKCLASS_NOBASE()									\
 		DECLARE_CLIENTCLASS_NOBASE()							
 
-#define CONSTRUCT_PREDICTABLE( className )				// Nothing
-
 #else
 
 #define DECLARE_NETWORKCLASS()											\
@@ -48,18 +53,22 @@ class SendTable;
 #define DECLARE_NETWORKCLASS_NOBASE()									\
 		DECLARE_SERVERCLASS_NOBASE()	
 
-#define CONSTRUCT_PREDICTABLE( className )								\
-	InitPredictable();
-
 #endif
 
+#if defined( CLIENT_DLL )
+
+#ifndef NO_ENTITY_PREDICTION
 #define DECLARE_PREDICTABLE()											\
 	public:																\
 		static typedescription_t m_PredDesc[];							\
 		static datamap_t m_PredMap;										\
 		virtual datamap_t *GetPredDescMap( void );						\
 		template <typename T> friend datamap_t *PredMapInit(T *)
+#else
+#define DECLARE_PREDICTABLE()	template <typename T> friend datamap_t *PredMapInit(T *)
+#endif
 
+#ifndef NO_ENTITY_PREDICTION
 #define BEGIN_PREDICTION_DATA( className ) \
 	datamap_t className::m_PredMap = { 0, 0, #className, &BaseClass::m_PredMap }; \
 	datamap_t *className::GetPredDescMap( void ) { return &m_PredMap; } \
@@ -69,7 +78,7 @@ class SendTable;
 	datamap_t className::m_PredMap = { 0, 0, #className, NULL }; \
 	datamap_t *className::GetPredDescMap( void ) { return &m_PredMap; } \
 	BEGIN_PREDICTION_DATA_GUTS( className )
-	
+
 #define BEGIN_PREDICTION_DATA_GUTS( className ) \
 	template <typename T> datamap_t *PredMapInit(T *); \
 	template <> datamap_t *PredMapInit<className>( className * ); \
@@ -100,6 +109,34 @@ class SendTable;
 		} \
 		return &classNameTypedef::m_PredMap; \
 	}
+#else
+#define BEGIN_PREDICTION_DATA( className ) \
+	template <> inline datamap_t *PredMapInit<className>( className * ) \
+	{ \
+		if ( 0 ) \
+		{ \
+			typedef className classNameTypedef; \
+			typedescription_t predDesc[] = \
+			{ \
+				{ FIELD_VOID,0, {0,0},0,0,0,0,0,0},
+
+#define BEGIN_PREDICTION_DATA_NO_BASE( className ) BEGIN_PREDICTION_DATA( className )
+
+#define END_PREDICTION_DATA() \
+			}; \
+			predDesc[0].flags = 0; /* avoid compiler warning of unused data */ \
+		} \
+	}
+#endif
+
+#else
+
+	// nothing, only client has a prediction system
+	#define DECLARE_PREDICTABLE()	
+	#define BEGIN_PREDICTION_DATA( className ) 
+	#define END_PREDICTION_DATA() 
+
+#endif
 
 #if defined( CLIENT_DLL )
 
@@ -151,7 +188,7 @@ class SendTable;
 #endif																	
 
 // Interface used by client and server to track predictable entities
-class IPredictableList
+abstract_class IPredictableList
 {
 public:
 	// Get predictables by index

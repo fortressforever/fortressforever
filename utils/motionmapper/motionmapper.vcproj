@@ -23,7 +23,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\common,..\..\Public,..\..\Public\tier1,..\nvtristriplib,..\..\Game_Shared"
 				PreprocessorDefinitions="_CONSOLE;PROTECTED_THINGS_DISABLE;_DEBUG;_WIN32"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				PrecompiledHeaderFile=".\Debug/motionmapper.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
@@ -36,11 +36,12 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="copy to ..\..\..\bin\motionmapper.exe"
-				CommandLine="if exist ..\..\..\bin\motionmapper.exe attrib -r ..\..\..\bin\motionmapper.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
-
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\motionmapper.exe"/>
+				Outputs="..\..\..\bin\motionmapper.exe;..\..\..\bin\motionmapper.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
@@ -92,7 +93,7 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 				AdditionalIncludeDirectories="..\common,..\..\Public,..\..\Public\tier1,..\nvtristriplib,..\..\Game_Shared"
 				PreprocessorDefinitions="_CONSOLE;PROTECTED_THINGS_DISABLE;NDEBUG;_WIN32"
 				StringPooling="TRUE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				PrecompiledHeaderFile=".\Release/motionmapper.pch"
 				AssemblerListingLocation=".\Release/"
@@ -105,11 +106,12 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="copy to ..\..\..\bin\motionmapper.exe"
-				CommandLine="if exist ..\..\..\bin\motionmapper.exe attrib -r ..\..\..\bin\motionmapper.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
-
+				CommandLine="if exist ..\..\..\bin\&quot;$(TargetName)&quot;.exe attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.exe
+if exist ..\..\..\bin\&quot;$(TargetName)&quot;.pdb attrib -r ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
+copy &quot;$(TargetPath)&quot; ..\..\..\bin\&quot;$(TargetName)&quot;.pdb
 "
-				Outputs="..\..\..\bin\motionmapper.exe"/>
+				Outputs="..\..\..\bin\motionmapper.exe;..\..\..\bin\motionmapper.pdb"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib"
@@ -297,26 +299,6 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\public\mathlib.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="motionmapper.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -356,46 +338,6 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath="..\..\tier1\utlbuffer.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\tier1\utlsymbol.cpp">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -404,7 +346,7 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 				RelativePath="..\..\Public\amd3dx.h">
 			</File>
 			<File
-				RelativePath="..\..\Public\basetypes.h">
+				RelativePath="..\..\Public\tier0\basetypes.h">
 			</File>
 			<File
 				RelativePath="..\..\public\tier1\characterset.h">
@@ -521,60 +463,70 @@ copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
 				RelativePath="..\..\public\vstdlib\vstdlib.h">
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\lib\public\nvtristrip.lib">
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="copy to ..\..\..\bin\motionmapper.exe"
-					CommandLine="if exist ..\..\..\bin\motionmapper.exe attrib -r ..\..\..\bin\motionmapper.exe
-copy &quot;$(TargetPath)&quot; ..\..\..\bin\motionmapper.exe
-if exist &quot;$(TargetDir)&quot;&quot;$(TargetName)&quot;.map copy &quot;$(TargetDir)&quot;&quot;$(TargetName)&quot;.map ..\..\..\bin\&quot;$(TargetName)&quot;.map
-"/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\tier0.lib">
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\..\lib\public\vstdlib.lib">
-			<FileConfiguration
-				Name="Debug|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32">
-				<Tool
-					Name="VCCustomBuildTool"
-					Description=""
-					CommandLine=""/>
-			</FileConfiguration>
-		</File>
+		<Filter
+			Name="Link Libraries"
+			Filter="">
+			<File
+				RelativePath="..\..\lib\public\mathlib.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\nvtristrip.lib">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier0.lib">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier1.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\tier2.lib">
+			</File>
+			<File
+				RelativePath="..\..\lib\public\vstdlib.lib">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

@@ -93,9 +93,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
+#ifdef _XBOX
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#endif
+#ifndef _XBOX
 #include <windows.h>
+#endif
 #include <time.h>
 #include "zip/xzip.h"
 
@@ -2342,6 +2349,7 @@ ZRESULT TZip::Create(void *z,unsigned int len,DWORD flags)
 		ooffset=0;
 		return ZR_OK;
 	}
+#ifndef _XBOX
 	else if (flags==ZIP_MEMORY)
 	{ 
 		unsigned int size = len;
@@ -2367,6 +2375,7 @@ ZRESULT TZip::Create(void *z,unsigned int len,DWORD flags)
 		mapsize=size;
 		return ZR_OK;
 	}
+#endif
 	else 
 		return ZR_ARGS;
 }
@@ -2428,7 +2437,9 @@ ZRESULT TZip::Close()
 { // if the directory hadn't already been added through a call to GetMemory,
   // then we do it now
   ZRESULT res=ZR_OK; if (!hasputcen) res=AddCentral(); hasputcen=true;
+#ifndef _XBOX
   if (obuf!=0 && hmapout!=0) UnmapViewOfFile(obuf); obuf=0;
+#endif
   if (hmapout!=0) CloseHandle(hmapout); hmapout=0;
   if (hfout!=0) CloseHandle(hfout); hfout=0;
   return res;

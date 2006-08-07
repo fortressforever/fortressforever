@@ -32,6 +32,8 @@ public:
 	virtual void AddButton(MenuButton *button); // add button to end of menu list
 	virtual void AddMenu( const char *pButtonName, Menu *pMenu );
 
+	virtual void GetContentSize( int& w, int&h );
+
 protected:
 	virtual void OnKeyCodeTyped(KeyCode code);
 	virtual void OnKeyTyped(wchar_t unichar);
@@ -43,6 +45,7 @@ protected:
 
 private:
 	CUtlVector<MenuButton *> m_pMenuButtons;
+	int						m_nRightEdge;
 };
 
 } // namespace vgui

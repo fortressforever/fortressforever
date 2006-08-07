@@ -54,21 +54,45 @@ sub BuildDefineOptions
 	local( $output );
 	local( $combo ) = shift;
 	local( $i );
-	for( $i = 0; $i < scalar( @defineNames ); $i++ )
+	for( $i = 0; $i < scalar( @dynamicDefineNames ); $i++ )
 	{
-		local( $val ) = ( $combo % ( $defineMax[$i] - $defineMin[$i] + 1 ) ) + $defineMin[$i];
+		local( $val ) = ( $combo % ( $dynamicDefineMax[$i] - $dynamicDefineMin[$i] + 1 ) ) + $dynamicDefineMin[$i];
 		if ( $g_xbox )
 		{
 			# xsasm can only support "ifdef" compilation directive form
 			# so symbol encodes value and shader uses "ifdef <MySymbol_MyValue>"
 			# xsasm mandates space for /D argument definitions
-			$output .= "/D $defineNames[$i]_$val ";
+			$output .= "/D $dynamicDefineNames[$i]_$val ";
 		}
 		else
 		{
-			$output .= "/D$defineNames[$i]=$val ";
+			# symbol encodes value and shader uses "ifdef <MySymbol_MyValue>"
+			# psa crashes without the explicit symbol=value format
+			# encode both flavors for backwards compatibility
+			$output .= "/D$dynamicDefineNames[$i]_$val=$val ";
+			$output .= "/D$dynamicDefineNames[$i]=$val ";
 		}
-		$combo = $combo / ( $defineMax[$i] - $defineMin[$i] + 1 );
+		$combo = $combo / ( $dynamicDefineMax[$i] - $dynamicDefineMin[$i] + 1 );
+	}
+	for( $i = 0; $i < scalar( @staticDefineNames ); $i++ )
+	{
+		local( $val ) = ( $combo % ( $staticDefineMax[$i] - $staticDefineMin[$i] + 1 ) ) + $staticDefineMin[$i];
+		if ( $g_xbox )
+		{
+			# xsasm can only support "ifdef" compilation directive form
+			# so symbol encodes value and shader uses "ifdef <MySymbol_MyValue>"
+			# xsasm mandates space for /D argument definitions
+			$output .= "/D $staticDefineNames[$i]_$val ";
+		}
+		else
+		{
+			# symbol encodes value and shader uses "ifdef <MySymbol_MyValue>"
+			# psa crashes without the explicit symbol=value format
+			# encode both flavors for backwards compatibility
+			$output .= "/D$staticDefineNames[$i]_$val=$val ";
+			$output .= "/D$staticDefineNames[$i]=$val ";
+		}
+		$combo = $combo / ( $staticDefineMax[$i] - $staticDefineMin[$i] + 1 );
 	}
 	return $output;
 }
@@ -77,9 +101,24 @@ sub CalcNumCombos
 {
 	local( $i, $numCombos );
 	$numCombos = 1;
-	for( $i = 0; $i < scalar( @defineNames ); $i++ )
+	for( $i = 0; $i < scalar( @dynamicDefineNames ); $i++ )
 	{
-		$numCombos *= $defineMax[$i] - $defineMin[$i] + 1;
+		$numCombos *= $dynamicDefineMax[$i] - $dynamicDefineMin[$i] + 1;
+	}
+	for( $i = 0; $i < scalar( @staticDefineNames ); $i++ )
+	{
+		$numCombos *= $staticDefineMax[$i] - $staticDefineMin[$i] + 1;
+	}
+	return $numCombos;
+}
+
+sub CalcNumDynamicCombos
+{
+	local( $i, $numCombos );
+	$numCombos = 1;
+	for( $i = 0; $i < scalar( @dynamicDefineNames ); $i++ )
+	{
+		$numCombos *= $dynamicDefineMax[$i] - $dynamicDefineMin[$i] + 1;
 	}
 	return $numCombos;
 }
@@ -98,8 +137,9 @@ while( 1 )
 	elsif( $psh_filename =~ m/-xbox/ )
 	{
 		$g_xbox = 1;
+		$g_dx9 = 0;
 	}
-	elsif( $psh_filename =~ m/-shaderoutputdir/ )
+	elsif( $psh_filename =~ m/-shaderoutputdir/i )
 	{
 		$shaderoutputdir = shift;
 	}
@@ -128,9 +168,12 @@ close FILE;
 
 
 
-local( @defineNames );
-local( @defineMin );
-local( @defineMax );
+local( @staticDefineNames );
+local( @staticDefineMin );
+local( @staticDefineMax );
+local( @dynamicDefineNames );
+local( @dynamicDefineMin );
+local( @dynamicDefineMax );
 
 # Parse the combos.
 open PSH, "<$psh_filename";
@@ -144,21 +187,30 @@ while( <PSH> )
 		$name = $1;
 		$min = $2;
 		$max = $3;
-#		print "\"$name\" \"$min..$max\"\n";
-		push @defineNames, $name;
-		push @defineMin, $min;
-		push @defineMax, $max;
+#		print "\"STATIC: $name\" \"$min..$max\"\n";
+		push @staticDefineNames, $name;
+		push @staticDefineMin, $min;
+		push @staticDefineMax, $max;
 	}
 	elsif( m/\s*DYNAMIC\s*\:\s*\"(.*)\"\s+\"(\d+)\.\.(\d+)\"/ )
 	{
-		die "DYNAMIC combos not supported by psh_prep.pl!\n";
+		local( $name, $min, $max );
+		$name = $1;
+		$min = $2;
+		$max = $3;
+#		print "\"DYNAMIC: $name\" \"$min..$max\"\n";
+		push @dynamicDefineNames, $name;
+		push @dynamicDefineMin, $min;
+		push @dynamicDefineMax, $max;
 	}
 }
 close PSH;
 
 $numCombos = &CalcNumCombos();
+$numDynamicCombos = &CalcNumDynamicCombos();
 print "$psh_filename\n";
 #print "$numCombos combos\n";
+#print "$numDynamicCombos dynamic combos\n";
 
 if( $g_xbox )
 {
@@ -186,7 +238,8 @@ for( $shaderCombo = 0; $shaderCombo < $numCombos; $shaderCombo++ )
 	}
 	else
 	{
-		$cmd = "$g_SourceDir\\dx9sdk\\utilities\\psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename > NIL 2>&1";
+#		$cmd = "$g_SourceDir\\dx9ff\\utilities\\psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename > NIL 2>&1";
+		$cmd = "$g_SourceDir\\dx9ff\\utilities\\psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename";
 	}
 
 	if( !stat $pshtmp )
@@ -262,10 +315,12 @@ print COMPILEDSHADER pack "i", $shaderVersion;
 # totalCombos
 print COMPILEDSHADER pack "i", $numCombos;
 # dynamic combos
-print COMPILEDSHADER pack "i", 1;
+print COMPILEDSHADER pack "i", $numDynamicCombos;
 # flags
 print COMPILEDSHADER pack "I", 0x0; # nothing here for now.
 # centroid mask
+print COMPILEDSHADER pack "I", 0;
+# reference size for diffs
 print COMPILEDSHADER pack "I", 0;
 
 my $beginningOfDir = tell COMPILEDSHADER;
@@ -288,10 +343,20 @@ for( $shaderCombo = 0; $shaderCombo < $numCombos; $shaderCombo++ )
 {
 	my $filename = "shader$shaderCombo\.o";
 	my $filesize = (stat $filename)[7];
+	if( $g_xbox )
+	{
+		# ignore binary signature
+		$filesize = $filesize - 4;
+	}
 	$byteCodeStart[$shaderCombo] = tell COMPILEDSHADER;
 	$byteCodeSize[$shaderCombo] = $filesize;
 	open SHADERBYTECODE, "<$filename";
 	binmode SHADERBYTECODE;
+	if( $g_xbox )
+	{
+		# ignore binary signature
+		seek SHADERBYTECODE, 4, 0;
+	}
 	my $bin;
 	my $numread = read SHADERBYTECODE, $bin, $filesize;
 #	print "filename: $filename numread: $numread filesize: $filesize\n";
@@ -312,3 +377,5 @@ for( $i = 0; $i < $numCombos; $i++ )
 }
 
 close COMPILEDSHADER;
+
+

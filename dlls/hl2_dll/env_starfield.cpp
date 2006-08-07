@@ -22,8 +22,9 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
-	void Spawn( void );
-	int  UpdateTransmitState(void);
+	virtual void Precache();
+	virtual void Spawn( void );
+	virtual int  UpdateTransmitState(void);
 
 	// Inputs
 	void InputTurnOn( inputdata_t &inputdata );
@@ -60,6 +61,15 @@ void CEnvStarfield::Spawn()
 
 	m_flDensity = 1.0;
 	m_bOn = false;
+
+	Precache();
+}
+
+void CEnvStarfield::Precache()
+{
+	BaseClass::Precache();
+
+	PrecacheMaterial( "effects/spark_noz" );
 }
 
 //-----------------------------------------------------------------------------

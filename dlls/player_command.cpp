@@ -13,7 +13,6 @@
 #include "player_command.h"
 #include "movehelper_server.h"
 #include "iservervehicle.h"
-#include "ilagcompensationmanager.h"
 #include "tier0/vprof.h"
 #include "ff_player.h"
 
@@ -41,15 +40,14 @@ void CPlayerMove::StartCommand( CBasePlayer *player, CUserCmd *cmd )
 {
 	VPROF( "CPlayerMove::StartCommand" );
 
+#if !defined( NO_ENTITY_PREDICTION )
 	CPredictableId::ResetInstanceCounters();
+#endif
 
 	player->m_pCurrentCommand = cmd;
 	CBaseEntity::SetPredictionRandomSeed( cmd );
 	CBaseEntity::SetPredictionPlayer( player );
 	
-	// Move other players back to history positions based on local player's lag
-	//lagcompensation->StartLagCompensation( player, cmd );	// |-- Mirv: deferred until later to fix sticky collisions
-
 #if defined (HL2_DLL)
 	// pull out backchannel data and move this out
 
@@ -79,9 +77,6 @@ void CPlayerMove::FinishCommand( CBasePlayer *player )
 {
 	VPROF( "CPlayerMove::FinishCommand" );
 
-	// Restore other players to current positions
-	//lagcompensation->FinishLagCompensation( player );	// |-- Mirv: deferred until later to avoid sticky collisions
-
 	player->m_pCurrentCommand = NULL;
 	CBaseEntity::SetPredictionRandomSeed( NULL );
 	CBaseEntity::SetPredictionPlayer( NULL );
@@ -95,6 +90,8 @@ void CPlayerMove::FinishCommand( CBasePlayer *player )
 //-----------------------------------------------------------------------------
 void CPlayerMove::CheckMovingGround( CBasePlayer *player, double frametime )
 {
+	VPROF( "CPlayerMove::CheckMovingGround()" );
+
 	CBaseEntity	    *groundentity;
 
 	if ( player->GetFlags() & FL_ONGROUND )
@@ -267,13 +264,19 @@ void CPlayerMove::RunPreThink( CBasePlayer *player )
 	VPROF( "CPlayerMove::RunPreThink" );
 
 	// Run think functions on the player
+	VPROF_SCOPE_BEGIN( "player->PhysicsRunThink()" );
 	if ( !player->PhysicsRunThink() )
 		return;
+	VPROF_SCOPE_END();
 
+	VPROF_SCOPE_BEGIN( "g_pGameRules->PlayerThink( player )" );
 	// Called every frame to let game rules do any specific think logic for the player
 	g_pGameRules->PlayerThink( player );
+	VPROF_SCOPE_END();
 
+	VPROF_SCOPE_BEGIN( "player->PreThink()" );
 	player->PreThink();
+	VPROF_SCOPE_END();
 }
 
 //-----------------------------------------------------------------------------
@@ -288,6 +291,7 @@ void CPlayerMove::RunPreThink( CBasePlayer *player )
 //-----------------------------------------------------------------------------
 void CPlayerMove::RunThink (CBasePlayer *player, double frametime )
 {
+	VPROF( "CPlayerMove::RunThink" );
 	int thinktick = player->GetNextThinkTick();
 
 	if ( thinktick <= 0 || thinktick > player->m_nTickBase )
@@ -350,12 +354,15 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	}
 	*/
 
+	IGameSystem::FrameUpdatePrePlayerRunCommandAllSystems( player, ucmd );
+
 	// Do weapon selection
 	if ( ucmd->weaponselect != 0 )
 	{
 		CBaseCombatWeapon *weapon = dynamic_cast< CBaseCombatWeapon * >( CBaseEntity::Instance( ucmd->weaponselect ) );
 		if ( weapon )
 		{
+			VPROF( "player->SelectItem()" );
 			player->SelectItem( weapon->GetName(), ucmd->weaponsubtype );
 		}
 	}
@@ -374,7 +381,9 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	}
 
 	// Update player input button states
+	VPROF_SCOPE_BEGIN( "player->UpdateButtonState" );
 	player->UpdateButtonState( ucmd->buttons );
+	VPROF_SCOPE_END();
 
 	CheckMovingGround( player, TICK_INTERVAL );
 
@@ -402,11 +411,13 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	// Let the game do the movement.
 	if ( !pVehicle )
 	{
+		VPROF( "g_pGameMovement->ProcessMovement()" );
 		Assert( g_pGameMovement );
 		g_pGameMovement->ProcessMovement( player, g_pMoveData );
 	}
 	else
 	{
+		VPROF( "pVehicle->ProcessMovement()" );
 		pVehicle->ProcessMovement( player, g_pMoveData );
 	}
 			
@@ -414,13 +425,11 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	FinishMove( player, ucmd, g_pMoveData );
 
 	// Let server invoke any needed impact functions
+	VPROF_SCOPE_BEGIN( "moveHelper->ProcessImpacts" );
 	moveHelper->ProcessImpacts();
+	VPROF_SCOPE_END();
 
-	// --> Mirv: Unlagging only done for PostThink weapons stuff
-	lagcompensation->StartLagCompensation(player, ucmd);
 	RunPostThink( player );
-	lagcompensation->FinishLagCompensation(player);
-	// <-- Mirv
 
 	FinishCommand( player );
 

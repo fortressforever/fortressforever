@@ -40,6 +40,7 @@ public:
 	MESSAGE_FUNC( OnPageHide, "PageHide" );
 
 	virtual void OnKeyCodeTyped(KeyCode code);
+	virtual bool HasUserConfigSettings() { return true; }
 
 protected:
 	virtual void SetVisible(bool state);

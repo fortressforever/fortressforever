@@ -53,7 +53,7 @@ C_PropCrane::C_PropCrane( void )
 //-----------------------------------------------------------------------------
 void C_PropCrane::PreDataUpdate( DataUpdateType_t updateType )
 {
-	BaseClass::OnPreDataChanged( updateType );
+	BaseClass::PreDataUpdate( updateType );
 
 	m_hPrevPlayer = m_hPlayer;
 }
@@ -84,23 +84,23 @@ void C_PropCrane::PostDataUpdate( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-C_BasePlayer* C_PropCrane::GetPassenger( int nRole )
+C_BaseCombatCharacter *C_PropCrane::GetPassenger( int nRole )
 {
-	if (nRole == VEHICLE_DRIVER)
+	if ( nRole == VEHICLE_ROLE_DRIVER )
 		return m_hPlayer.Get();
+
 	return NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Returns the role of the passenger
 //-----------------------------------------------------------------------------
-int	C_PropCrane::GetPassengerRole( C_BasePlayer *pEnt )
+int	C_PropCrane::GetPassengerRole( C_BaseCombatCharacter *pPassenger )
 {
-	if (m_hPlayer.Get() == pEnt)
-	{
-		return VEHICLE_DRIVER;
-	}
-	return -1;
+	if ( m_hPlayer.Get() == pPassenger )
+		return VEHICLE_ROLE_DRIVER;
+
+	return VEHICLE_ROLE_NONE;
 }
 
 //-----------------------------------------------------------------------------

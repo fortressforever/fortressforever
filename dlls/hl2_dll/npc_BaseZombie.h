@@ -14,6 +14,7 @@
 #include "ai_basenpc.h"
 #include "ai_blended_movement.h"
 #include "soundenvelope.h"
+#include "ai_behavior_actbusy.h"
 
 #define ZOM_ATTN_FOOTSTEP ATTN_IDLE
 
@@ -70,6 +71,7 @@ enum
 	SCHED_ZOMBIE_WANDER_FAIL,
 	SCHED_ZOMBIE_WANDER_STANDOFF,
 	SCHED_ZOMBIE_MELEE_ATTACK1,
+	SCHED_ZOMBIE_POST_MELEE_WAIT,
 
 	LAST_BASE_ZOMBIE_SCHEDULE,
 };
@@ -84,6 +86,7 @@ enum
 	TASK_ZOMBIE_SWAT_ITEM,
 	TASK_ZOMBIE_DIE,
 	TASK_ZOMBIE_RELEASE_HEADCRAB,
+	TASK_ZOMBIE_WAIT_POST_MELEE,
 
 	LAST_BASE_ZOMBIE_TASK,
 };
@@ -103,11 +106,13 @@ enum Zombie_Conds
 
 
 
+typedef CAI_BlendingHost< CAI_BehaviorHost<CAI_BaseNPC> > CAI_BaseZombieBase;
+
 //=========================================================
 //=========================================================
-class CNPC_BaseZombie : public CAI_BaseNPC
+abstract_class CNPC_BaseZombie : public CAI_BaseZombieBase
 {
-	DECLARE_CLASS( CNPC_BaseZombie, CAI_BaseNPC );
+	DECLARE_CLASS( CNPC_BaseZombie, CAI_BaseZombieBase );
 
 public:
 	CNPC_BaseZombie( void );
@@ -115,9 +120,12 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
+	void StartTouch( CBaseEntity *pOther );
+	bool CreateBehaviors();
 	float MaxYawSpeed( void );
 	bool OverrideMoveFacing( const AILocalMoveGoal_t &move, float flInterval );
 	Class_T Classify( void );
+	Disposition_t IRelationType( CBaseEntity *pTarget );
 	void HandleAnimEvent( animevent_t *pEvent );
 
 	void OnStateChange( NPC_STATE OldState, NPC_STATE NewState );
@@ -129,7 +137,7 @@ public:
 	}
 
 	int MeleeAttack1Conditions ( float flDot, float flDist );
-	int MeleeAttack1ConditionsVsPlayerInVehicle( CBasePlayer *pPlayer, float flDot );
+	int MeleeAttack1ConditionsVsEnemyInVehicle( CBaseCombatCharacter *pEnemy, float flDot );
 	virtual float GetClawAttackRange() const { return ZOMBIE_MELEE_REACH; }
 
 	// No range attacks
@@ -143,7 +151,6 @@ public:
 	virtual int SelectSchedule ( void );
 	virtual int	SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	virtual void BuildScheduleTestBits( void );
-	bool FValidateHintType( CAI_Hint *pHint);
 
 	virtual int TranslateSchedule( int scheduleType );
 	virtual Activity NPC_TranslateActivity( Activity baseAct );
@@ -163,6 +170,7 @@ public:
 
 	// Custom damage/death 
 	bool ShouldIgnite( const CTakeDamageInfo &info );
+	bool ShouldIgniteZombieGib( void );
 	virtual bool IsChopped( const CTakeDamageInfo &info );
 	virtual bool IsSquashed( const CTakeDamageInfo &info ) { return false; }
 	virtual void DieChopped( const CTakeDamageInfo &info );
@@ -181,6 +189,10 @@ public:
 	void ReleaseHeadcrab( const Vector &vecOrigin, const Vector &vecVelocity, bool fRemoveHead, bool fRagdollBody, bool fRagdollCrab = false );
 	void SetHeadcrabSpawnLocation( int iCrabAttachment, CBaseAnimating *pCrab );
 
+	// Slumping/sleeping
+	bool IsSlumped( void );
+	bool IsGettingUp( void );
+
 	// Swatting physics objects
 	int GetSwatActivity( void );
 	bool FindNearestPhysicsObject( int iMaxMass );
@@ -194,7 +206,7 @@ public:
 
 	// Sounds & sound envelope
 	virtual bool ShouldPlayFootstepMoan( void );
-	virtual void PainSound( void ) = 0;
+	virtual void PainSound( const CTakeDamageInfo &info ) = 0;
 	virtual void AlertSound( void ) = 0;
 	virtual void IdleSound( void ) = 0;
 	virtual void AttackSound( void ) = 0;
@@ -202,6 +214,9 @@ public:
 	virtual void AttackMissSound( void ) = 0;
 	virtual void FootstepSound( bool fRightFoot ) = 0;
 	virtual void FootscuffSound( bool fRightFoot ) = 0;
+
+	// make a sound Alyx can hear when in darkness mode
+	void		 MakeAISpookySound( float volume, float duration = 0.5 );
 
 	virtual bool CanPlayMoanSound();
 	virtual void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
@@ -213,11 +228,17 @@ public:
 	virtual const char *GetTorsoModel( void ) = 0;
 	virtual const char *GetHeadcrabModel( void ) = 0;
 
+	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy );
 	virtual Vector HeadTarget( const Vector &posSrc );
+	virtual float  GetAutoAimRadius();
 
 	bool OnInsufficientStopDist( AILocalMoveGoal_t *pMoveGoal, float distClear, AIMoveResult_t *pResult );
 
 	virtual	bool		AllowedToIgnite( void ) { return true; }
+
+public:
+	CAI_ActBusyBehavior		m_ActBusyBehavior;
+
 
 protected:
 
@@ -260,6 +281,10 @@ protected:
 	DECLARE_DATADESC();
 
 	DEFINE_CUSTOM_AI;
+
+private:
+	bool m_bIsSlumped;
+
 };
 
 #endif // NPC_BASEZOMBIE_H

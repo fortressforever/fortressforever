@@ -15,6 +15,7 @@
 	#include "c_te_effect_dispatch.h"
 	#include "model_types.h"
 	#include "ClientEffectPrecacheSystem.h"
+	#include "fx_interpvalue.h"
 #else
 	#include "hl2mp_player.h"
 	#include "soundent.h"
@@ -96,9 +97,15 @@ void PhysCannonBeginUpgrade( CBaseAnimating *pAnim )
 
 }
 
-
 bool PlayerHasMegaPhysCannon( void )
 {
+	return false;
+}
+
+bool PhysCannonAccountableForObject( CBaseCombatWeapon *pPhysCannon, CBaseEntity *pObject )
+{
+	// BRJ: FIXME! This can't be implemented trivially, so I'm leaving it to Steve or Adrian
+	Assert( 0 );
 	return false;
 }
 
@@ -565,7 +572,7 @@ void CGrabController::AttachEntity( CBasePlayer *pPlayer, CBaseEntity *pEntity, 
 	CPhysicsProp *pProp = dynamic_cast<CPhysicsProp *>(pEntity);
 	if ( pProp )
 	{
-		m_bHasPreferredCarryAngles = pProp->GetPreferredCarryAngles( m_vecPreferredCarryAngles );
+		m_bHasPreferredCarryAngles = pProp->GetPropDataAngles( "preferred_carryangles", m_vecPreferredCarryAngles );
 	}
 	else
 	{
@@ -601,6 +608,7 @@ void CGrabController::DetachEntity( bool bClearVelocity )
 		pEntity->SetBlocksLOS( m_bCarriedEntityBlocksLOS );
 		IPhysicsObject *pList[VPHYSICS_MAX_OBJECT_LIST_COUNT];
 		int count = pEntity->VPhysicsGetObjectList( pList, ARRAYSIZE(pList) );
+
 		for ( int i = 0; i < count; i++ )
 		{
 			IPhysicsObject *pPhys = pList[i];
@@ -924,96 +932,6 @@ void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject )
 
 #ifdef CLIENT_DLL
 
-// Types of supported interpolation
-enum InterpType_t
-{
-	INTERP_LINEAR = 0,
-	INTERP_SPLINE,
-};
-
-class CInterpolatedValue 
-{
-public:
-	CInterpolatedValue( void ) :  m_flStartTime( 0.0f ), m_flEndTime( 0.0f ), m_flStartValue( 0.0f ), m_flEndValue( 0.0f ), m_nInterpType( INTERP_LINEAR ) {}
-
-	CInterpolatedValue( float startTime, float endTime, float startValue, float endValue, InterpType_t type ) : 
-	  m_flStartTime( startTime ), m_flEndTime( endTime ), m_flStartValue( startValue ), m_flEndValue( endValue ), m_nInterpType( type ) {}
-
-	void	SetTime( float start, float end ) { m_flStartTime = start; m_flEndTime = end; }
-	void	SetRange( float start, float end ) { m_flStartValue = start; m_flEndValue = end; }
-	void	SetType( InterpType_t type ) { m_nInterpType = type; }
-	
-	// Set the value with no range
-	void SetAbsolute( float value )
-	{
-		m_flStartValue = m_flEndValue = value;
-		m_flStartTime = m_flEndTime = gpGlobals->curtime;
-		m_nInterpType = INTERP_LINEAR;
-	}
-
-	// Set the value with range and time supplied
-	void Init( float startValue, float endValue, float dt, InterpType_t type = INTERP_LINEAR )
-	{
-		if ( dt <= 0.0f )
-		{
-			SetAbsolute( endValue );
-			return;
-		}
-
-		SetTime( gpGlobals->curtime, gpGlobals->curtime + dt );
-		SetRange( startValue, endValue );
-		SetType( type );
-	}
-
-	// Start from the current value and move towards the end value
-	void InitFromCurrent( float endValue, float dt, InterpType_t type = INTERP_LINEAR )
-	{
-		Init( Interp( gpGlobals->curtime ), endValue, dt, type );
-	}
-
-	// Find our interpolated value at the given point in time
-	float Interp( float curTime )
-	{
-		switch( m_nInterpType )
-		{
-		case INTERP_LINEAR:
-			{
-				if ( curTime >= m_flEndTime )
-					return m_flEndValue;
-
-				if ( curTime <= m_flStartTime )
-					return m_flStartValue;
-
-				return RemapVal( curTime, m_flStartTime, m_flEndTime, m_flStartValue, m_flEndValue );
-			}
-
-		case INTERP_SPLINE:
-			{
-				if ( curTime >= m_flEndTime )
-					return m_flEndValue;
-
-				if ( curTime <= m_flStartTime )
-					return m_flStartValue;
-
-				return SimpleSplineRemapVal( curTime, m_flStartTime, m_flEndTime, m_flStartValue, m_flEndValue );
-			}
-		}
-
-		// NOTENOTE: You managed to pass in a bogus interpolation type!
-		Assert(0);
-		return -1.0f;
-	}
-
-private:
-
-	float	m_flStartTime;
-	float	m_flEndTime;
-	float	m_flStartValue;
-	float	m_flEndValue;
-
-	int		m_nInterpType;
-};
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 //  CPhysCannonEffect class
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1327,6 +1245,9 @@ protected:
 	
 	CGrabController		m_grabController;
 
+	float	m_flRepuntObjectTime;
+	EHANDLE m_hLastPuntedObject;
+
 private:
 	CWeaponPhysCannon( const CWeaponPhysCannon & );
 
@@ -1359,10 +1280,12 @@ BEGIN_NETWORK_TABLE( CWeaponPhysCannon, DT_WeaponPhysCannon )
 #endif
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponPhysCannon )
 	DEFINE_PRED_FIELD( m_EffectState,	FIELD_INTEGER,	FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bOpen,			FIELD_BOOLEAN,	FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
+#endif
 
 LINK_ENTITY_TO_CLASS( weapon_physcannon, CWeaponPhysCannon );
 PRECACHE_WEAPON_REGISTER( weapon_physcannon );
@@ -1409,7 +1332,7 @@ CWeaponPhysCannon::CWeaponPhysCannon( void )
 	m_bOpen					= false;
 	m_nChangeState			= ELEMENT_STATE_NONE;
 	m_flCheckSuppressTime	= 0.0f;
-	m_EffectState			= EFFECT_NONE;
+	m_EffectState			= (int)EFFECT_NONE;
 	m_flLastDenySoundPlayed	= false;
 
 #ifdef CLIENT_DLL
@@ -1660,6 +1583,9 @@ void CWeaponPhysCannon::PrimaryFireEffect( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntNonVPhysics( CBaseEntity *pEntity, const Vector &forward, trace_t &tr )
 {
+	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
+		return;
+
 #ifndef CLIENT_DLL
 	CTakeDamageInfo	info;
 	
@@ -1669,6 +1595,9 @@ void CWeaponPhysCannon::PuntNonVPhysics( CBaseEntity *pEntity, const Vector &for
 	info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN );
 	info.SetDamageForce( forward );	// Scale?
 	info.SetDamagePosition( tr.endpos );
+
+	m_hLastPuntedObject = pEntity;
+	m_flRepuntObjectTime = gpGlobals->curtime + 0.5f;
 
 	pEntity->DispatchTraceAttack( info, forward, &tr );
 
@@ -1711,6 +1640,13 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 {
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
+
+	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
+		return;
+
+	m_hLastPuntedObject = pEntity;
+	m_flRepuntObjectTime = gpGlobals->curtime + 0.5f;
+
 #ifndef CLIENT_DLL
 	CTakeDamageInfo	info;
 
@@ -1722,6 +1658,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 	info.SetDamageType( DMG_PHYSGUN );
 	pEntity->DispatchTraceAttack( info, forward, &tr );
 	ApplyMultiDamage();
+
 
 	if ( Pickup_OnAttemptPhysGunPickup( pEntity, pOwner, PUNTED_BY_CANNON ) )
 	{
@@ -1740,7 +1677,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 			//reflect, but flatten the trajectory out a bit so it's easier to hit standing targets
 			forward.z *= -0.65f;
 		}
-		
+				
 		// NOTE: Do this first to enable motion (if disabled) - so forces will work
 		// Tell the object it's been punted
 		Physgun_OnPhysGunPickup( pEntity, pOwner, PUNTED_BY_CANNON );
@@ -2294,10 +2231,14 @@ CBaseEntity *CWeaponPhysCannon::FindObjectInCone( const Vector &vecOrigin, const
 bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 {
 	CBaseEntity *pEntity = GetAttached();
-	if ( !pEntity || ComputeError() > flError || pPlayer->GetGroundEntity() == pEntity || !pEntity->VPhysicsGetObject() )
-	{
+	if ( !pEntity )
 		return false;
-	}
+	if ( ComputeError() > flError )
+		return false;
+	if ( pPlayer->GetGroundEntity() == pEntity )
+		return false;
+	if (!pEntity->VPhysicsGetObject() )
+		return false;    
 
 	//Adrian: Oops, our object became motion disabled, let go!
 	IPhysicsObject *pPhys = pEntity->VPhysicsGetObject();
@@ -2668,7 +2609,7 @@ void CWeaponPhysCannon::DoEffectIdle( void )
 		}
 
 		// Turn on the glow sprites
-		for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+		for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 		{
 			m_Parameters[i].GetScale().SetAbsolute( random->RandomFloat( 3, 5 ) );
 			m_Parameters[i].GetAlpha().SetAbsolute( random->RandomInt( 200, 255 ) );
@@ -2782,26 +2723,32 @@ void CWeaponPhysCannon::ItemPostFrame()
 
 void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 {
-	// FIRE!!!
-	if( m_grabController.GetAttached() )
+	CBaseEntity *pObject = m_grabController.GetAttached();
+
+	if ( !(m_hLastPuntedObject == pObject && gpGlobals->curtime < m_flRepuntObjectTime) )
 	{
-		CBaseEntity *pObject = m_grabController.GetAttached();
+		// FIRE!!!
+		if( pObject != NULL )
+		{
+			DetachObject( false, true );
 
-		DetachObject( false, true );
+			m_hLastPuntedObject = pObject;
+			m_flRepuntObjectTime = gpGlobals->curtime + 0.5f;
+
+			// Launch
+			ApplyVelocityBasedForce( pObject, vecDir );
+
+			// Don't allow the gun to regrab a thrown object!!
+			m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
 			
-		// Launch
-		ApplyVelocityBasedForce( pObject, vecDir );
+			Vector	center = pObject->WorldSpaceCenter();
 
-		// Don't allow the gun to regrab a thrown object!!
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
-		
-		Vector	center = pObject->WorldSpaceCenter();
+			//Do repulse effect
+			DoEffect( EFFECT_LAUNCH, &center );
 
-		//Do repulse effect
-		DoEffect( EFFECT_LAUNCH, &center );
-
-		m_hAttachedObject = NULL;
-		m_bActive = false;
+			m_hAttachedObject = NULL;
+			m_bActive = false;
+		}
 	}
 
 	// Stop our looping sound
@@ -3132,7 +3079,7 @@ void CWeaponPhysCannon::StartEffects( void )
 	};
 	
 	//Create the glow sprites
-	for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
 		if ( m_Parameters[i].GetMaterial() != NULL )
 			continue;
@@ -3204,7 +3151,7 @@ void CWeaponPhysCannon::DoEffectReady( void )
 	}
 
 	// Turn on the glow sprites
-	for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
 		m_Parameters[i].SetVisible( false );
 	}
@@ -3242,7 +3189,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 
 		// Turn on the glow sprites
 		// NOTE: The last glow is left off for first-person
-		for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES-1); i++ )
+		for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES-1); i++ )
 		{
 			m_Parameters[i].SetVisible();
 		}
@@ -3278,7 +3225,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 		}
 
 		// Turn on the glow sprites
-		for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+		for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 		{
 			m_Parameters[i].SetVisible();
 		}
@@ -3356,7 +3303,11 @@ void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
 	// Do an impact hit
 	CEffectData	data;
 	data.m_vOrigin = endPos;
+#ifdef CLIENT_DLL
+	data.m_hEntity = GetRefEHandle();
+#else
 	data.m_nEntIndex = entindex();
+#endif
 
 	te->DispatchEffect( filter, 0.0, data.m_vOrigin, "PhyscannonImpact", data );
 
@@ -3388,7 +3339,7 @@ void CWeaponPhysCannon::DoEffectNone( void )
 	}
 
 	// Turn on the glow sprites
-	for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
 		m_Parameters[i].SetVisible( false );
 	}
@@ -3548,7 +3499,7 @@ void CWeaponPhysCannon::DrawEffects( void )
 	}
 
 	// Draw the endcaps
-	for ( i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
+	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
 		DrawEffectSprite( (EffectType_t) i );
 	}
@@ -3675,8 +3626,7 @@ extern void FX_GaussExplosion( const Vector &pos, const Vector &dir, int type );
 
 void CallbackPhyscannonImpact( const CEffectData &data )
 {
-	C_BaseEntity *pEnt = cl_entitylist->GetEnt( data.m_nEntIndex );
-
+	C_BaseEntity *pEnt = data.GetEntity();
 	if ( pEnt == NULL )
 		return;
 

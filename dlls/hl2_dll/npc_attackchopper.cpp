@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
-//=============================================================================//
+//===========================================================================//
 
 #include "cbase.h"
 #include "ai_network.h"
@@ -36,6 +36,7 @@
 #include "vphysics/constraints.h"
 #include "physics_saverestore.h"
 #include "ai_memory.h"
+#include "npc_attackchopper.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -58,10 +59,10 @@ static const char *s_pChunkModelName[CHOPPER_MAX_CHUNKS] =
 };
 
 
-
 #define	HELICOPTER_CHUNK_COCKPIT	"models/gibs/helicopter_brokenpiece_04_cockpit.mdl"
 #define	HELICOPTER_CHUNK_TAIL		"models/gibs/helicopter_brokenpiece_05_tailfan.mdl"
 #define	HELICOPTER_CHUNK_BODY		"models/gibs/helicopter_brokenpiece_06_body.mdl"
+
 
 #define CHOPPER_MAX_SPEED			(60 * 17.6f)
 #define CHOPPER_MAX_FIRING_SPEED	250.0f
@@ -194,6 +195,7 @@ public:
 	virtual float GetShakeRadius( void ) { return sk_helicopter_grenaderadius.GetFloat() * 2; }
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
+	void		 SetExplodeOnContact( bool bExplode ) { m_bExplodeOnContact = bExplode; }
 
 private:
 	// Pow!
@@ -205,6 +207,7 @@ private:
 	void ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
 
 	bool m_bActivated;
+	bool m_bExplodeOnContact;
 	CSoundPatch	*m_pWarnSound;
 };
 
@@ -305,6 +308,8 @@ public:
 	virtual void	Activate( void );
 	virtual bool	CreateComponents();
 
+	virtual int		ObjectCaps();
+
 	virtual void	UpdateOnRemove();
 	virtual void	StopLoopingSounds();
 
@@ -372,6 +377,13 @@ private:
 	// For scripted times where it *has* to shoot
 	void	InputResetIdleTime( inputdata_t &inputdata );
 	void	InputSetHealthFraction( inputdata_t &inputdata );
+	void	InputStartBombExplodeOnContact( inputdata_t &inputdata );
+	void	InputStopBombExplodeOnContact( inputdata_t &inputdata );
+
+	void	InputEnableAlwaysTransition( inputdata_t &inputdata );
+	void	InputDisableAlwaysTransition( inputdata_t &inputdata );
+	void 	InputOutsideTransition( inputdata_t &inputdata );
+	void 	InputSetOutsideTransitionTarget( inputdata_t &inputdata );
 
 	// Turns off the gun
 	void	InputGunOff( inputdata_t &inputdata );
@@ -480,8 +492,6 @@ private:
 
 	// Creates the breakable husk of an attack chopper
 	void CreateChopperHusk();
-	void BecomeChunks( void );
-	void CreateChunk( const Vector &vecChunkPos, const QAngle &vecChunkAngles, const char *pszChunkName, bool bSmall );
 
 	// Pow!
 	void ExplodeAndThrowChunk( const Vector &vecExplosionPos );
@@ -609,6 +619,7 @@ private:
 	int			m_nSmokeTrailCount;
 	bool		m_bIndestructible;
 	float		m_flGracePeriod;
+	bool		m_bBombsExplodeOnContact;
 
 	int			m_nNearShots;
 	int			m_nMaxNearShots;
@@ -644,6 +655,10 @@ private:
 
 	// Path behavior
 	bool		m_bIgnorePathVisibilityTests;
+
+	// Teleport
+	bool		m_bAlwaysTransition;
+	string_t	m_iszTransitionTarget;
 
 	// Sounds
 	CSoundPatch	*m_pGunFiringSound;
@@ -704,6 +719,14 @@ BEGIN_DATADESC( CNPC_AttackHelicopter )
 	DEFINE_FIELD( m_bIgnorePathVisibilityTests, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bShortBlink,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bIndestructible,	FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bBombsExplodeOnContact, FIELD_BOOLEAN ),
+
+	DEFINE_KEYFIELD( m_bAlwaysTransition, FIELD_BOOLEAN, "AlwaysTransition" ),
+	DEFINE_KEYFIELD( m_iszTransitionTarget, FIELD_STRING, "TransitionTarget" ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableAlwaysTransition", InputEnableAlwaysTransition ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableAlwaysTransition", InputDisableAlwaysTransition ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "OutsideTransition",	InputOutsideTransition ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "SetTransitionTarget", InputSetOutsideTransitionTarget ),
 
 	DEFINE_KEYFIELD( m_flGracePeriod,	FIELD_FLOAT, "GracePeriod" ),
 	DEFINE_KEYFIELD( m_flMaxSpeed,		FIELD_FLOAT, "PatrolSpeed" ),
@@ -728,6 +751,8 @@ BEGIN_DATADESC( CNPC_AttackHelicopter )
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartContinuousShooting", InputStartContinuousShooting ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "GunOff", InputGunOff ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetHealthFraction", InputSetHealthFraction ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StartBombExplodeOnContact", InputStartBombExplodeOnContact ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StopBombExplodeOnContact", InputStopBombExplodeOnContact ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisablePathVisibilityTests", InputDisablePathVisibilityTests ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnablePathVisibilityTests", InputEnablePathVisibilityTests ),
@@ -747,6 +772,7 @@ CNPC_AttackHelicopter::CNPC_AttackHelicopter()
 {
 	m_flGracePeriod = 2.0f;
 	m_flMaxSpeed = 0;
+	m_bBombsExplodeOnContact = false;
 }
 
 CNPC_AttackHelicopter::~CNPC_AttackHelicopter(void)
@@ -769,6 +795,20 @@ void CNPC_AttackHelicopter::StopLoopingSounds()
 	}
 }
 
+//------------------------------------------------------------------------------
+// Purpose :
+//------------------------------------------------------------------------------
+void Chopper_PrecacheChunks( CBaseEntity *pChopper )
+{
+	for ( int i = 0; i < CHOPPER_MAX_CHUNKS; ++i )
+	{
+		pChopper->PrecacheModel( s_pChunkModelName[i] );
+	}
+
+	pChopper->PrecacheModel( HELICOPTER_CHUNK_COCKPIT );
+	pChopper->PrecacheModel( HELICOPTER_CHUNK_TAIL );
+	pChopper->PrecacheModel( HELICOPTER_CHUNK_BODY );
+}
  
 //------------------------------------------------------------------------------
 // Purpose :
@@ -790,16 +830,9 @@ void CNPC_AttackHelicopter::Precache( void )
 	//PrecacheModel( CHOPPER_MODEL_CORPSE_NAME );
 	
 	UTIL_PrecacheOther( "grenade_helicopter" );
-	
-	for ( int i = 0; i < CHOPPER_MAX_CHUNKS; ++i )
-	{
-		PrecacheModel( s_pChunkModelName[i] );
-	}
 
-	PrecacheModel( HELICOPTER_CHUNK_COCKPIT );
-	PrecacheModel( HELICOPTER_CHUNK_TAIL );
-	PrecacheModel( HELICOPTER_CHUNK_BODY );
-	
+	Chopper_PrecacheChunks( this );
+
 	PrecacheModel("models/combine_soldier.mdl");
 
 	PrecacheScriptSound("NPC_AttackHelicopter.ChargeGun");
@@ -825,6 +858,36 @@ void CNPC_AttackHelicopter::Precache( void )
 
 	PrecacheScriptSound( "ReallyLoudSpark" );
 	PrecacheScriptSound( "NPC_AttackHelicopterGrenade.Ping" );
+}
+
+int CNPC_AttackHelicopter::ObjectCaps() 
+{ 
+	int caps = BaseClass::ObjectCaps();
+	if ( m_bAlwaysTransition )
+		caps |= FCAP_NOTIFY_ON_TRANSITION;
+	return caps; 
+}
+
+void CNPC_AttackHelicopter::InputOutsideTransition( inputdata_t &inputdata )
+{
+	CBaseEntity *pEnt = gEntList.FindEntityByName( NULL, m_iszTransitionTarget );
+
+	if ( pEnt )
+	{
+		Vector teleportLocation = pEnt->GetAbsOrigin();
+		QAngle teleportAngles = pEnt->GetAbsAngles();
+		Teleport( &teleportLocation, &teleportAngles, &vec3_origin );
+		Teleported();
+	}
+	else
+	{
+		DevMsg( 2, "NPC \"%s\" failed to find a suitable transition a point\n", STRING(GetEntityName()) );
+	}
+}
+
+void CNPC_AttackHelicopter::InputSetOutsideTransitionTarget( inputdata_t &inputdata )
+{
+	m_iszTransitionTarget = MAKE_STRING( inputdata.value.String() );
 }
 
 
@@ -913,6 +976,8 @@ void CNPC_AttackHelicopter::Spawn( void )
 	m_hSensor->SetLocalOrigin( vec3_origin );
 	m_hSensor->SetLocalAngles( vec3_angle );
 	m_hSensor->SetOwnerEntity( this );
+
+	AddFlag( FL_AIMTARGET );
 }
 
 
@@ -1001,9 +1066,8 @@ void CNPC_AttackHelicopter::SpotlightStartup()
 		return;
 
 	Vector vecForward;
-	QAngle angles;
-	GetAttachment( m_nSpotlightAttachment, vecForward, angles );
-	AngleVectors( angles, &vecForward, NULL, NULL );
+	Vector vecOrigin;
+	GetAttachment( m_nSpotlightAttachment, vecOrigin, &vecForward );
 	m_Spotlight.SpotlightCreate( m_nSpotlightAttachment, vecForward );
 	SpotlightThink();
 }
@@ -1040,9 +1104,8 @@ void CNPC_AttackHelicopter::SpotlightThink()
 			case BULLRUSH_MODE_SHOOT_GUN:
 				{
 					Vector vecForward;
-					QAngle angles;
-					GetAttachment( m_nSpotlightAttachment, vecForward, angles );
-					AngleVectors( angles, &vecForward, NULL, NULL );
+					Vector vecOrigin;
+					GetAttachment( m_nSpotlightAttachment, vecOrigin, &vecForward );
 					m_Spotlight.SetSpotlightTargetDirection( vecForward );
 				}
 				break;
@@ -1070,7 +1133,22 @@ void CNPC_AttackHelicopter::SpotlightThink()
 	SetContextThink( &CNPC_AttackHelicopter::SpotlightThink, gpGlobals->curtime + TICK_INTERVAL, s_pSpotlightThinkContext );
 }
 
-  
+//-----------------------------------------------------------------------------
+// Purpose: Always transition along with the player
+//-----------------------------------------------------------------------------
+void CNPC_AttackHelicopter::InputEnableAlwaysTransition( inputdata_t &inputdata )
+{
+	m_bAlwaysTransition = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Stop always transitioning along with the player
+//-----------------------------------------------------------------------------
+void CNPC_AttackHelicopter::InputDisableAlwaysTransition( inputdata_t &inputdata )
+{
+	m_bAlwaysTransition = false;
+}
+
 //------------------------------------------------------------------------------
 // On Remove
 //------------------------------------------------------------------------------
@@ -1355,6 +1433,23 @@ void CNPC_AttackHelicopter::InputSetHealthFraction( inputdata_t &inputdata )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &inputdata - 
+//-----------------------------------------------------------------------------
+void CNPC_AttackHelicopter::InputStartBombExplodeOnContact( inputdata_t &inputdata )
+{
+	m_bBombsExplodeOnContact = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &inputdata - 
+//-----------------------------------------------------------------------------
+void CNPC_AttackHelicopter::InputStopBombExplodeOnContact( inputdata_t &inputdata )
+{
+	m_bBombsExplodeOnContact = false;
+}
 	
 //------------------------------------------------------------------------------
 // For scripted times where it *has* to shoot
@@ -2445,8 +2540,7 @@ void CNPC_AttackHelicopter::CreateBomb( bool bCheckForFairness, Vector *pVecVelo
 		return;
 
 	Vector vTipPos;
-	QAngle vTipAng;
-	GetAttachment( m_nBombAttachment, vTipPos, vTipAng );
+	GetAttachment( m_nBombAttachment, vTipPos );
 
 	if ( !CBombSuppressor::CanBomb( vTipPos ) )
 		return;
@@ -2493,6 +2587,7 @@ void CNPC_AttackHelicopter::CreateBomb( bool bCheckForFairness, Vector *pVecVelo
 	pGrenade->SetOwnerEntity( this );
 	pGrenade->SetAbsVelocity( vecActualVelocity );
 	pGrenade->Spawn();
+	pGrenade->SetExplodeOnContact( m_bBombsExplodeOnContact );
 }
 
 
@@ -2529,14 +2624,14 @@ void CNPC_AttackHelicopter::InputDropBombStraightDown( inputdata_t &inputdata )
 	m_flInputDropBombTime = gpGlobals->curtime + 0.01f;
 
 	Vector vTipPos;
-	QAngle vTipAng;
-	GetAttachment( m_nBombAttachment, vTipPos, vTipAng );
+	GetAttachment( m_nBombAttachment, vTipPos );
 
 	CGrenadeHelicopter *pGrenade = static_cast<CGrenadeHelicopter*>(CreateEntityByName( "grenade_helicopter" ));
 	pGrenade->SetAbsOrigin( vTipPos );
 	pGrenade->SetOwnerEntity( this );
 	pGrenade->SetAbsVelocity( vec3_origin );
 	pGrenade->Spawn();
+	pGrenade->SetExplodeOnContact( m_bBombsExplodeOnContact );
 
 	// If we're in the middle of a bomb dropping schedule, wait to drop another bomb.
 	if ( ShouldDropBombs() )
@@ -2559,7 +2654,7 @@ void CNPC_AttackHelicopter::InputDropBombAtTargetInternal( inputdata_t &inputdat
 
 	// Find our specified target
 	string_t strBombTarget = MAKE_STRING( inputdata.value.String() );
-	CBaseEntity *pBombEnt = gEntList.FindEntityByName( NULL, strBombTarget, NULL );
+	CBaseEntity *pBombEnt = gEntList.FindEntityByName( NULL, strBombTarget );
 	if ( pBombEnt == NULL )
 	{
 		Warning( "%s: Could not find bomb drop target '%s'!\n", GetClassname(), STRING( strBombTarget ) );
@@ -2567,8 +2662,7 @@ void CNPC_AttackHelicopter::InputDropBombAtTargetInternal( inputdata_t &inputdat
 	}
 
 	Vector vTipPos;
-	QAngle vTipAng;
-	GetAttachment( m_nBombAttachment, vTipPos, vTipAng );
+	GetAttachment( m_nBombAttachment, vTipPos );
 
 	// Compute the time it would take to fall to the target
 	Vector vecTarget = pBombEnt->BodyTarget( GetAbsOrigin(), false );
@@ -2597,6 +2691,7 @@ void CNPC_AttackHelicopter::InputDropBombAtTargetInternal( inputdata_t &inputdat
 	pGrenade->SetOwnerEntity( this );
 	pGrenade->SetAbsVelocity( vecVelocity );
 	pGrenade->Spawn();
+	pGrenade->SetExplodeOnContact( m_bBombsExplodeOnContact );
 
 	// If we're in the middle of a bomb dropping schedule, wait to drop another bomb.
 	if ( ShouldDropBombs() )
@@ -2855,8 +2950,7 @@ bool CNPC_AttackHelicopter::FireGun( void )
 
 	// Get gun attachment points
 	Vector vBasePos;
-	QAngle vBaseAng;
-	GetAttachment( m_nGunBaseAttachment, vBasePos, vBaseAng );
+	GetAttachment( m_nGunBaseAttachment, vBasePos );
 
 	// Aim perfectly while idle, but after charging, the gun don't move so fast.
 	Vector vecFireAtPosition;
@@ -2884,8 +2978,7 @@ bool CNPC_AttackHelicopter::FireGun( void )
 	}
 
 	Vector vTipPos;
-	QAngle vTipAng;
-	GetAttachment( m_nGunTipAttachment, vTipPos, vTipAng );
+	GetAttachment( m_nGunTipAttachment, vTipPos );
 
 	Vector vGunDir = vTipPos - vBasePos;
 	VectorNormalize( vGunDir );
@@ -2985,7 +3078,7 @@ void CNPC_AttackHelicopter::DestroySmokeTrails()
 // Purpose: 
 // Input  : &vecChunkPos - 
 //-----------------------------------------------------------------------------
-void CNPC_AttackHelicopter::CreateChunk( const Vector &vecChunkPos, const QAngle &vecChunkAngles, const char *pszChunkName, bool bSmall )
+void Chopper_CreateChunk( CBaseEntity *pChopper, const Vector &vecChunkPos, const QAngle &vecChunkAngles, const char *pszChunkName, bool bSmall )
 {
 	// Drop a flaming, smoking chunk.
 	CGib *pChunk = CREATE_ENTITY( CGib, "gib" );
@@ -2995,7 +3088,7 @@ void CNPC_AttackHelicopter::CreateChunk( const Vector &vecChunkPos, const QAngle
 	pChunk->SetAbsOrigin( vecChunkPos );
 	pChunk->SetAbsAngles( vecChunkAngles );
 
-	pChunk->SetOwnerEntity( this );
+	pChunk->SetOwnerEntity( pChopper );
 	
 	if ( bSmall )
 	{
@@ -3023,7 +3116,7 @@ void CNPC_AttackHelicopter::CreateChunk( const Vector &vecChunkPos, const QAngle
 	AngleVectors( angles, &vecVelocity );
 	
 	vecVelocity *= random->RandomFloat( 550, 800 );
-	vecVelocity += GetAbsVelocity();
+	vecVelocity += pChopper->GetAbsVelocity();
 
 	angImpulse = RandomAngularImpulse( -180, 180 );
 
@@ -3069,12 +3162,12 @@ void CNPC_AttackHelicopter::ExplodeAndThrowChunk( const Vector &vecExplosionPos 
 	{
 		for ( int i = 0; i < 2; i++ )
 		{
-			CreateChunk( vecExplosionPos, RandomAngle(0, 360), g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ), true );
+			Chopper_CreateChunk( this, vecExplosionPos, RandomAngle(0, 360), g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ), true );
 		}
 	}
 	else
 	{
-		CreateChunk( vecExplosionPos, RandomAngle(0, 360), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_SMALL_CHUNKS - 1 )], false );
+		Chopper_CreateChunk( this, vecExplosionPos, RandomAngle(0, 360), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_SMALL_CHUNKS - 1 )], false );
 	}
 }
 
@@ -3192,32 +3285,32 @@ int CNPC_AttackHelicopter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_AttackHelicopter::BecomeChunks( void )
+void Chopper_BecomeChunks( CBaseEntity *pChopper )
 {
-	QAngle vecChunkAngles = GetAbsAngles();
+	QAngle vecChunkAngles = pChopper->GetAbsAngles();
 
 	Vector vecForward, vecUp;
-	GetVectors( &vecForward, NULL, &vecUp );
+	pChopper->GetVectors( &vecForward, NULL, &vecUp );
 
-	Vector vecChunkPos = GetAbsOrigin();
+	Vector vecChunkPos = pChopper->GetAbsOrigin();
 
 	// Body
-	CHelicopterChunk *pBodyChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, GetAbsVelocity(), HELICOPTER_CHUNK_BODY, CHUNK_BODY );
-	CreateChunk( vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
+	CHelicopterChunk *pBodyChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity(), HELICOPTER_CHUNK_BODY, CHUNK_BODY );
+	Chopper_CreateChunk( pChopper, vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
 
-	vecChunkPos = GetAbsOrigin() + ( vecForward * 100.0f ) + ( vecUp * -38.0f );
+	vecChunkPos = pChopper->GetAbsOrigin() + ( vecForward * 100.0f ) + ( vecUp * -38.0f );
 
 	// Cockpit
-	CHelicopterChunk *pCockpitChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, GetAbsVelocity(), HELICOPTER_CHUNK_COCKPIT, CHUNK_COCKPIT );
-	CreateChunk( vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
+	CHelicopterChunk *pCockpitChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity(), HELICOPTER_CHUNK_COCKPIT, CHUNK_COCKPIT );
+	Chopper_CreateChunk( pChopper, vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
 
 	pCockpitChunk->m_hMaster = pBodyChunk;
 
-	vecChunkPos = GetAbsOrigin() + ( vecForward * -175.0f );
+	vecChunkPos = pChopper->GetAbsOrigin() + ( vecForward * -175.0f );
 
 	// Tail
-	CHelicopterChunk *pTailChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, GetAbsVelocity(), HELICOPTER_CHUNK_TAIL, CHUNK_TAIL );
-	CreateChunk( vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
+	CHelicopterChunk *pTailChunk = CHelicopterChunk::CreateHelicopterChunk( vecChunkPos, vecChunkAngles, pChopper->GetAbsVelocity(), HELICOPTER_CHUNK_TAIL, CHUNK_TAIL );
+	Chopper_CreateChunk( pChopper, vecChunkPos, RandomAngle( 0, 360 ), s_pChunkModelName[random->RandomInt( 0, CHOPPER_MAX_CHUNKS - 1 )], false );
 
 	pTailChunk->m_hMaster = pBodyChunk;
 
@@ -3258,7 +3351,7 @@ void CNPC_AttackHelicopter::Event_Killed( const CTakeDamageInfo &info )
 	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
 	controller.SoundChangeVolume( m_pGunFiringSound, 0.0, 0.1f );
 
-	BecomeChunks();
+	Chopper_BecomeChunks( this );
 	StopLoopingSounds();
 
 	m_lifeState = LIFE_DEAD;
@@ -3299,6 +3392,7 @@ void CNPC_AttackHelicopter::CreateChopperHusk()
 //-----------------------------------------------------------------------------
 void CNPC_AttackHelicopter::PrescheduleThink( void )
 {
+
 	switch( m_lifeState )
 	{
 	case LIFE_DYING:
@@ -4388,6 +4482,7 @@ LINK_ENTITY_TO_CLASS( grenade_helicopter, CGrenadeHelicopter );
 BEGIN_DATADESC( CGrenadeHelicopter )
 
 	DEFINE_FIELD( m_bActivated,			FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bExplodeOnContact,			FIELD_BOOLEAN ),
 	DEFINE_SOUNDPATCH( m_pWarnSound ),
 
 	DEFINE_THINKFUNC( ExplodeThink ),
@@ -4460,6 +4555,7 @@ void CGrenadeHelicopter::Spawn( void )
 
 	m_bActivated = false;
 	m_pWarnSound = NULL;
+	m_bExplodeOnContact = false;
 
 	m_flDamage = sk_helicopter_grenadedamage.GetFloat();
 
@@ -4579,6 +4675,13 @@ void CGrenadeHelicopter::VPhysicsCollision( int index, gamevcollisionevent_t *pE
 {
 	BaseClass::VPhysicsCollision( index, pEvent );
 	BecomeActive();
+
+	if ( m_bExplodeOnContact )
+	{
+		Vector vecVelocity;
+		GetVelocity( &vecVelocity, NULL );
+		DoExplosion( GetAbsOrigin(), vecVelocity );
+	}
 }
 
 
@@ -4659,8 +4762,11 @@ void CGrenadeHelicopter::ExplodeConcussion( CBaseEntity *pOther )
 	if ( !pOther->IsSolid() )
 		return;
 
-	if ( pOther->IsWorld() )
-		return;
+	if ( !m_bExplodeOnContact )
+	{
+		if ( pOther->IsWorld() )
+			return;
+	}
 
 	Vector vecVelocity;
 	GetVelocity( &vecVelocity, NULL );

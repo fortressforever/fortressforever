@@ -25,7 +25,7 @@ class Vector;
 
 class OverlayText_t;
 
-class IVDebugOverlay
+abstract_class IVDebugOverlay
 {
 public:
 	virtual void AddEntityTextOverlay(int ent_index, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) = 0;
@@ -44,6 +44,12 @@ public:
 	virtual OverlayText_t *GetNext( OverlayText_t *current ) = 0;
 	virtual void ClearDeadOverlays( void ) = 0;
 	virtual void ClearAllOverlays() = 0;
+
+	virtual void AddTextOverlayRGB(const Vector& origin, int line_offset, float duration, float r, float g, float b, float alpha, const char *format, ...) = 0;
+	virtual void AddTextOverlayRGB(const Vector& origin, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) = 0;
+
+private:
+	inline void AddTextOverlay(const Vector& origin, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) {} /* catch improper use of bad interface. Needed because '0' duration can be resolved by compiler to NULL format string (i.e., compiles but calls wrong function) */
 };
 
 

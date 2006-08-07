@@ -16,6 +16,8 @@
 #include "c_pixel_visibility.h"
 #include "fx_fleck.h"
 
+#include "tier0/memdbgon.h"
+
 #define	bitsPARTICLE_TRAIL_VELOCITY_DAMPEN	0x00000001	//Dampen the velocity as the particles move
 #define	bitsPARTICLE_TRAIL_COLLIDE			0x00000002	//Do collision with simulation
 #define	bitsPARTICLE_TRAIL_FADE				0x00000004	//Fade away
@@ -139,19 +141,28 @@ class CSimpleGlowEmitter : public CSimpleEmitter
 {
 	DECLARE_CLASS( CSimpleGlowEmitter, CSimpleEmitter );
 public:
-	CSimpleGlowEmitter( const char *pDebugName, const Vector &sortOrigin );
-	static CSimpleGlowEmitter	*Create( const char *pDebugName, const Vector &sortOrigin );
+	CSimpleGlowEmitter( const char *pDebugName, const Vector &sortOrigin, float flDeathTime );
+	static CSimpleGlowEmitter	*Create( const char *pDebugName, const Vector &sortOrigin, float flDeathTime );
 
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
-
 protected:
 
+	bool WasTestedInView( unsigned char viewMask );
+	bool IsVisibleInView( unsigned char viewMask );
+	void SetTestedInView( unsigned char viewMask, bool bTested );
+	void SetVisibleInView( unsigned char viewMask, bool bVisible );
+	unsigned char CurrentViewMask() const;
+
+	float				m_flDeathTime;			// How long it has been alive for so far.
 	float				m_startTime;
 	pixelvis_handle_t	m_queryHandle;
+private:
 	unsigned char		m_wasTested;
 	unsigned char		m_isVisible;
 
 private:
 	CSimpleGlowEmitter( const CSimpleGlowEmitter & ); // not defined, not accessible
 };
+
+#include "tier0/memdbgoff.h"

@@ -13,6 +13,8 @@
 #include "func_break.h"		// For materials
 #include "player.h"
 #include "vstdlib/random.h"
+#include "ai_utils.h"
+#include "EntityFlame.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -31,6 +33,8 @@ BEGIN_DATADESC( CGib )
 
 //	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
 //	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
+
+//  DEFINE_FIELD( m_bForceRemove, FIELD_BOOLEAN ),
 
 	// Function pointers
 	DEFINE_ENTITYFUNC( BounceGibTouch ),
@@ -350,13 +354,26 @@ void CGib::WaitTillLand ( void )
 
 		if ( GetSprite() )
 		{
-			CSprite *pSprite = (CSprite*)GetSprite();
+			CSprite *pSprite = dynamic_cast<CSprite*>( GetSprite() );
 
-			//Adrian - Why am I doing this? Check InitPointGib for the answer!
-			if ( m_lifeTime == 0 )
-				 m_lifeTime = random->RandomFloat( 1, 3 );
+			if ( pSprite )
+			{
+				//Adrian - Why am I doing this? Check InitPointGib for the answer!
+				if ( m_lifeTime == 0 )
+					m_lifeTime = random->RandomFloat( 1, 3 );
 
-			pSprite->FadeAndDie( m_lifeTime );
+				pSprite->FadeAndDie( m_lifeTime );
+			}
+		}
+
+		if ( GetFlame() )
+		{
+			CEntityFlame *pFlame = dynamic_cast< CEntityFlame*>( GetFlame() );
+
+			if ( pFlame )
+			{
+				pFlame->SetLifetime( 1.0f );
+			}
 		}
 
 		// If you bleed, you stink!
@@ -374,15 +391,56 @@ void CGib::WaitTillLand ( void )
 	}
 }
 
+bool CGib::SUB_AllowedToFade( void )
+{
+	if( VPhysicsGetObject() )
+	{
+		if( VPhysicsGetObject()->GetGameFlags() & FVPHYSICS_PLAYER_HELD || GetEFlags() & EFL_IS_BEING_LIFTED_BY_BARNACLE )
+			return false;
+	}
+
+	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
+
+	if ( pPlayer && pPlayer->FInViewCone( this ) && m_bForceRemove == false )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
 void CGib::DieThink ( void )
 {
 	if ( GetSprite() )
 	{
-		CSprite *pSprite = (CSprite*)GetSprite();
-		pSprite->FadeAndDie( 0.0 );
+		CSprite *pSprite = dynamic_cast<CSprite*>( GetSprite() );
+
+		if ( pSprite )
+		{
+			pSprite->FadeAndDie( 0.0 );
+		}
 	}
 
-	UTIL_Remove( this );
+	if ( GetFlame() )
+	{
+		CEntityFlame *pFlame = dynamic_cast< CEntityFlame*>( GetFlame() );
+
+		if ( pFlame )
+		{
+			pFlame->SetLifetime( 1.0f );
+		}
+	}
+
+	if ( g_pGameRules->IsMultiplayer() )
+	{
+		UTIL_Remove( this );
+	}
+	else
+	{
+		SetThink ( &CGib::SUB_FadeOut );
+		SetNextThink( gpGlobals->curtime );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -547,8 +605,9 @@ void CGib::Spawn( const char *szGibModel )
 
 	SetNextThink( gpGlobals->curtime + 4 );
 	m_lifeTime = 25;
-	SetThink ( &CGib::WaitTillLand );
 	SetTouch ( &CGib::BounceGibTouch );
+
+    m_bForceRemove = false;
 
 	m_material = matNone;
 	m_cBloodDecals = 5;// how many blood decals this gib can place (1 per bounce until none remain). 

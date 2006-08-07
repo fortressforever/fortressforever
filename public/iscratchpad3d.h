@@ -114,7 +114,7 @@ public:
 };
 
 
-class IScratchPad3D
+abstract_class IScratchPad3D
 {
 protected:
 
@@ -157,6 +157,7 @@ public:
 	// If you want to draw a lot of things, you can set this to false and call Flush() 
 	// manually when you want the file written out.
 	// When you set auto flush to true, it calls Flush().
+	virtual bool		GetAutoFlush() = 0;
 	virtual void		SetAutoFlush( bool bAutoFlush ) = 0;
 
 	// Draw a point. Point size is (roughly) in world coordinates, so points

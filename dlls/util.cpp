@@ -33,7 +33,7 @@
 #include "tier0/vprof.h"
 #include "ndebugoverlay.h"
 #include "engine/ivdebugoverlay.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 #include "util.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -69,13 +69,14 @@ public:
 	virtual void InstallFactory( IEntityFactory *pFactory, const char *pClassName );
 	virtual IServerNetworkable *Create( const char *pClassName );
 	virtual void Destroy( const char *pClassName, IServerNetworkable *pNetworkable );
+	virtual const char *GetCannonicalName( const char *pClassName );
+	void ReportEntitySizes();
 
 private:
 	IEntityFactory *FindFactory( const char *pClassName );
-
+public:
 	CUtlDict< IEntityFactory *, unsigned short > m_Factories;
 };
-
 
 //-----------------------------------------------------------------------------
 // Singleton accessor
@@ -84,6 +85,29 @@ IEntityFactoryDictionary *EntityFactoryDictionary()
 {
 	static CEntityFactoryDictionary s_EntityFactory;
 	return &s_EntityFactory;
+}
+
+void DumpEntityFactories_f()
+{
+	CEntityFactoryDictionary *dict = ( CEntityFactoryDictionary * )EntityFactoryDictionary();
+	if ( dict )
+	{
+		for ( int i = dict->m_Factories.First(); i != dict->m_Factories.InvalidIndex(); i = dict->m_Factories.Next( i ) )
+		{
+			Warning( "%s\n", dict->m_Factories.GetElementName( i ) );
+		}
+	}
+}
+
+static ConCommand dumpentityfactories( "dumpentityfactories", DumpEntityFactories_f, "Lists all entity factory names.", FCVAR_GAMEDLL );
+
+
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+CON_COMMAND( dump_entity_sizes, "Print sizeof(entclass)" )
+{
+	((CEntityFactoryDictionary*)EntityFactoryDictionary())->ReportEntitySizes();
 }
 
 
@@ -128,10 +152,19 @@ IServerNetworkable *CEntityFactoryDictionary::Create( const char *pClassName )
 		Warning("Attempted to create unknown entity type %s!\n", pClassName );
 		return NULL;
 	}
-
+#if defined(TRACK_ENTITY_MEMORY) && defined(USE_MEM_DEBUG)
+	MEM_ALLOC_CREDIT_( m_Factories.GetElementName( m_Factories.Find( pClassName ) ) );
+#endif
 	return pFactory->Create( pClassName );
 }
 
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+const char *CEntityFactoryDictionary::GetCannonicalName( const char *pClassName )
+{
+	return m_Factories.GetElementName( m_Factories.Find( pClassName ) );
+}
 
 //-----------------------------------------------------------------------------
 // Destroy a networkable
@@ -146,6 +179,17 @@ void CEntityFactoryDictionary::Destroy( const char *pClassName, IServerNetworkab
 	}
 
 	pFactory->Destroy( pNetworkable );
+}
+
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void CEntityFactoryDictionary::ReportEntitySizes()
+{
+	for ( int i = m_Factories.First(); i != m_Factories.InvalidIndex(); i = m_Factories.Next( i ) )
+	{
+		Msg( " %s: %d", m_Factories.GetElementName( i ), m_Factories[i]->GetEntitySize() );
+	}
 }
 
 
@@ -389,6 +433,14 @@ void UTIL_Remove( IServerNetworkable *oldObj )
 	if ( !oldObj || (oldObj->GetEFlags() & EFL_KILLME) )
 		return;
 
+	if ( PhysIsInCallback() )
+	{
+		// Need to hunt down why this is happening!
+		Assert(0);
+		PhysCallbackRemove(oldObj);
+		return;
+	}
+
 	// mark it for deletion	
 	oldObj->AddEFlags( EFL_KILLME );
 
@@ -440,6 +492,7 @@ void UTIL_RemoveImmediate( CBaseEntity *oldObj )
 		UTIL_Remove(oldObj);
 		return;
 	}
+
 	oldObj->AddEFlags( EFL_KILLME );	// Make sure to ignore further calls into here or UTIL_Remove.
 
 	g_bReceivedChainedUpdateOnRemove = false;
@@ -805,6 +858,51 @@ void UTIL_ScreenShakeObject( CBaseEntity *pEnt, const Vector &center, float ampl
 }
 
 
+//-----------------------------------------------------------------------------
+// Purpose: Punches the view of all clients within radius.
+//			If radius is 0, punches all clients.
+// Input  : center - Center of punch, radius is measured from here.
+//			radius - Radius of effect, 0 punches all clients.
+//			bInAir - if this is false, then it will only punch players standing on the ground.
+//-----------------------------------------------------------------------------
+void UTIL_ViewPunch( const Vector &center, QAngle angPunch, float radius, bool bInAir )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CBaseEntity *pPlayer = UTIL_PlayerByIndex( i );
+
+		//
+		// Only apply the punch to players that are on the ground unless doing an air punch.
+		//
+		if ( !pPlayer || (!bInAir && !(pPlayer->GetFlags() & FL_ONGROUND)) )
+		{
+			continue;
+		}
+
+		QAngle angTemp = angPunch;
+
+		if ( radius > 0 )
+		{
+			Vector delta = center - pPlayer->GetAbsOrigin();
+			float distance = delta.Length();
+
+			if ( distance <= radius )
+			{
+				// Make the punch amplitude fall off over distance.
+				float flPerc = 1.0 - (distance / radius);
+				angTemp *= flPerc;
+			}
+			else
+			{
+				continue;
+			}
+		}
+		
+		pPlayer->ViewPunch( angTemp );
+	}
+}
+
+
 void UTIL_ScreenFadeBuild( ScreenFade_t &fade, const color32 &color, float fadeTime, float fadeHold, int flags )
 {
 	fade.duration = FixedUnsigned16( fadeTime, 1<<SCREENFADE_FRACBITS );		// 7.9 fixed
@@ -964,23 +1062,6 @@ void ClientPrint( CBasePlayer *player, int msg_dest, const char *msg_name, const
 	UTIL_ClientPrintFilter( user, msg_dest, msg_name, param1, param2, param3, param4 );
 }
 
-void UTIL_SayText( const char *pText, CBasePlayer *pToPlayer )
-{
-	if ( !pToPlayer->IsNetClient() )
-		return;
-
-	CSingleUserRecipientFilter user( pToPlayer );
-	user.MakeReliable();
-
-	UTIL_SayTextFilter( user, pText, pToPlayer, false );
-}
-
-void UTIL_SayTextAll( const char *pText, CBasePlayer *pPlayer, bool bChat )
-{
-	CReliableBroadcastRecipientFilter filter;
-	UTIL_SayTextFilter( filter, pText, pPlayer, bChat );
-}
-
 void UTIL_SayTextFilter( IRecipientFilter& filter, const char *pText, CBasePlayer *pPlayer, bool bChat )
 {
 	UserMessageBegin( filter, "SayText" );
@@ -1036,6 +1117,22 @@ void UTIL_SayText2Filter( IRecipientFilter& filter, CBasePlayer *pEntity, bool b
 	MessageEnd();
 }
 
+void UTIL_SayText( const char *pText, CBasePlayer *pToPlayer )
+{
+	if ( !pToPlayer->IsNetClient() )
+		return;
+
+	CSingleUserRecipientFilter user( pToPlayer );
+	user.MakeReliable();
+
+	UTIL_SayTextFilter( user, pText, pToPlayer, false );
+}
+
+void UTIL_SayTextAll( const char *pText, CBasePlayer *pPlayer, bool bChat )
+{
+	CReliableBroadcastRecipientFilter filter;
+	UTIL_SayTextFilter( filter, pText, pPlayer, bChat );
+}
 
 void UTIL_ShowMessage( const char *pString, CBasePlayer *pPlayer )
 {
@@ -1134,7 +1231,7 @@ void UTIL_SetModel( CBaseEntity *pEntity, const char *pModelName )
 	}
 
 	pEntity->SetModelIndex( i ) ;
-	pEntity->SetModelName( MAKE_STRING( pModelName ) );
+	pEntity->SetModelName( AllocPooledString( pModelName ) );
 
 	// brush model
 	const model_t *mod = modelinfo->GetModel( i );
@@ -1207,7 +1304,7 @@ bool UTIL_IsMasterTriggered(string_t sMaster, CBaseEntity *pActivator)
 {
 	if (sMaster != NULL_STRING)
 	{
-		CBaseEntity *pMaster = gEntList.FindEntityByName( NULL, sMaster, pActivator );
+		CBaseEntity *pMaster = gEntList.FindEntityByName( NULL, sMaster, NULL, pActivator );
 	
 		if ( pMaster && (pMaster->ObjectCaps() & FCAP_MASTER) )
 		{
@@ -1555,6 +1652,9 @@ bool UTIL_IsValidEntity( CBaseEntity *pEnt )
 class CPrecacheOtherList : public CAutoGameSystem
 {
 public:
+	CPrecacheOtherList( char const *name ) : CAutoGameSystem( name )
+	{
+	}
 	virtual void LevelInitPreEntity();
 	virtual void LevelShutdownPostEntity();
 
@@ -1589,7 +1689,7 @@ bool CPrecacheOtherList::AddOrMarkPrecached( const char *pClassname )
 	return true;
 }
 
-CPrecacheOtherList g_PrecacheOtherList;
+CPrecacheOtherList g_PrecacheOtherList( "CPrecacheOtherList" );
 #endif
 
 //-----------------------------------------------------------------------------
@@ -1708,7 +1808,7 @@ int DispatchSpawn( CBaseEntity *pEntity )
 {
 	if ( pEntity )
 	{
-		CEngineCacheCriticalSection engineCacheCriticalSection( engineCache );
+		MDLCACHE_CRITICAL_SECTION();
 
 		// keep a smart pointer that will now if the object gets deleted
 		EHANDLE pEntSafe;
@@ -1719,7 +1819,37 @@ int DispatchSpawn( CBaseEntity *pEntity )
 		//pEntity->SetAbsMins( pEntity->GetOrigin() - Vector(1,1,1) );
 		//pEntity->SetAbsMaxs( pEntity->GetOrigin() + Vector(1,1,1) );
 
-		pEntity->Spawn();
+#if defined(TRACK_ENTITY_MEMORY) && defined(USE_MEM_DEBUG)
+		const char *pszClassname = NULL;
+		int iClassname = ((CEntityFactoryDictionary*)EntityFactoryDictionary())->m_Factories.Find( pEntity->GetClassname() );
+		if ( iClassname != ((CEntityFactoryDictionary*)EntityFactoryDictionary())->m_Factories.InvalidIndex() )
+			pszClassname = ((CEntityFactoryDictionary*)EntityFactoryDictionary())->m_Factories.GetElementName( iClassname );
+		if ( pszClassname )
+		{
+			MemAlloc_PushAllocDbgInfo( pszClassname, __LINE__ );
+		}
+#endif
+		bool bAsyncAnims = mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, false );
+		CBaseAnimating *pAnimating = pEntity->GetBaseAnimating();
+		if (!pAnimating)
+		{
+			pEntity->Spawn();
+		}
+		else
+		{
+			// Don't allow the PVS check to skip animation setup during spawning
+			pAnimating->SetBoneCacheFlags( BCF_IS_IN_SPAWN );
+			pEntity->Spawn();
+			pAnimating->ClearBoneCacheFlags( BCF_IS_IN_SPAWN );
+		}
+		mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, bAsyncAnims );
+
+#if defined(TRACK_ENTITY_MEMORY) && defined(USE_MEM_DEBUG)
+		if ( pszClassname )
+		{
+			MemAlloc_PopAllocDbgInfo();
+		}
+#endif
 		// Try to get the pointer again, in case the spawn function deleted the entity.
 		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
 		// that would touch too much code for me to do that right now.
@@ -1890,6 +2020,10 @@ const char *nexttoken(char *token, const char *str, char sep)
 class CCheckClient : public CAutoGameSystem
 {
 public:
+	CCheckClient( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	void LevelInitPreEntity()
 	{
 		m_checkCluster = -1;
@@ -1906,7 +2040,7 @@ public:
 	bool	m_bClientPVSIsExpanded;
 };
 
-CCheckClient g_CheckClient;
+CCheckClient g_CheckClient( "CCheckClient" );
 
 
 static int UTIL_GetNewCheckClient( int check )
@@ -2219,7 +2353,7 @@ void UTIL_PredictedPosition( CBaseEntity *pTarget, float flTimeDelta, Vector *ve
 		if ( pPlayer->IsInAVehicle() )
 		{
 			//Calculate the predicted position in this vehicle
-			vecPredictedVel = pPlayer->GetVehicle()->GetVehicleEnt()->GetSmoothedVelocity();
+			vecPredictedVel = pPlayer->GetVehicleEntity()->GetSmoothedVelocity();
 		}
 		else
 		{
@@ -2229,15 +2363,26 @@ void UTIL_PredictedPosition( CBaseEntity *pTarget, float flTimeDelta, Vector *ve
 	}
 	else
 	{
-		CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(pTarget);
-
-		if ( pAnimating )
+		// See if we're a combat character in a vehicle
+		CBaseCombatCharacter *pCCTarget = pTarget->MyCombatCharacterPointer();
+		if ( pCCTarget != NULL && pCCTarget->IsInAVehicle() )
 		{
-			vecPredictedVel = pAnimating->GetGroundSpeedVelocity();
+			//Calculate the predicted position in this vehicle
+			vecPredictedVel = pCCTarget->GetVehicleEntity()->GetSmoothedVelocity();
 		}
 		else
 		{
-			vecPredictedVel = pTarget->GetSmoothedVelocity();				
+			// See if we're an animating entity
+			CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(pTarget);
+			if ( pAnimating != NULL )
+			{
+				vecPredictedVel = pAnimating->GetGroundSpeedVelocity();
+			}
+			else
+			{
+				// Otherwise we're a vanilla entity
+				vecPredictedVel = pTarget->GetSmoothedVelocity();				
+			}
 		}
 	}
 
@@ -2277,7 +2422,7 @@ bool UTIL_PointAtEntity( CBaseEntity *pDest, CBaseEntity *pTarget )
 void UTIL_PointAtNamedEntity( CBaseEntity *pDest, string_t strTarget )
 {
 	//Attempt to find the entity
-	if ( !UTIL_PointAtEntity( pDest, gEntList.FindEntityByName( NULL, strTarget, NULL ) ) )
+	if ( !UTIL_PointAtEntity( pDest, gEntList.FindEntityByName( NULL, strTarget ) ) )
 	{
 		DevMsg( 1, "%s (%s) was unable to point at an entity named: %s\n", pDest->GetClassname(), pDest->GetDebugName(), STRING( strTarget ) );
 	}
@@ -2345,36 +2490,16 @@ AngularImpulse WorldToLocalRotation( const VMatrix &localToWorld, const Vector &
 //-----------------------------------------------------------------------------
 byte *UTIL_LoadFileForMe( const char *filename, int *pLength )
 {
-	byte *buffer;
+	void *buffer = NULL;
 
-	FileHandle_t file;
-	file = filesystem->Open( filename, "rb" );
-	if ( FILESYSTEM_INVALID_HANDLE == file )
-	{
-		if ( pLength ) *pLength = 0;
-		return NULL;
-	}
-
-	int size = filesystem->Size( file );
-	buffer = new byte[ size + 1 ];
-	if ( !buffer )
-	{
-		Warning( "UTIL_LoadFileForMe:  Couldn't allocate buffer of size %i for file %s\n", size + 1, filename );
-		filesystem->Close( file );
-		return NULL;
-	}
-	filesystem->Read( buffer, size, file );
-	filesystem->Close( file );
-
-	// Ensure null terminator
-	buffer[ size ] =0;
+	int length = filesystem->ReadFileEx( filename, "GAME", &buffer, true, true );
 
 	if ( pLength )
 	{
-		*pLength = size;
+		*pLength = length;
 	}
 
-	return buffer;
+	return (byte *)buffer;
 }
 
 //-----------------------------------------------------------------------------
@@ -2383,7 +2508,185 @@ byte *UTIL_LoadFileForMe( const char *filename, int *pLength )
 //-----------------------------------------------------------------------------
 void UTIL_FreeFile( byte *buffer )
 {
-	delete[] buffer;
+	filesystem->FreeOptimalReadBuffer( buffer );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Determines whether an entity is within a certain angular tolerance to viewer
+// Input  : *pEntity - entity which is the "viewer"
+//			vecPosition - position to test against
+//			flTolerance - tolerance (as dot-product)
+//			*pflDot - if not NULL, holds the 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, const Vector &vecPosition, float flDotTolerance, float *pflDot /*= NULL*/ )
+{
+	if ( pflDot )
+	{
+		*pflDot = 0.0f;
+	}
+
+	// Required elements
+	if ( pViewer == NULL )
+		return false;
+
+	Vector forward;
+	pViewer->GetVectors( &forward, NULL, NULL );
+
+	Vector dir = vecPosition - pViewer->GetAbsOrigin();
+	VectorNormalize( dir );
+
+	// Larger dot product corresponds to a smaller angle
+	float flDot = dir.Dot( forward );
+
+	// Return the result
+	if ( pflDot )
+	{
+		*pflDot = flDot;
+	}
+
+	// Within the goal tolerance
+	if ( flDot >= flDotTolerance )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Determines whether an entity is within a certain angular tolerance to viewer
+// Input  : *pEntity - entity which is the "viewer"
+//			*pTarget - entity to test against
+//			flTolerance - tolerance (as dot-product)
+//			*pflDot - if not NULL, holds the 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, CBaseEntity *pTarget, float flDotTolerance, float *pflDot /*= NULL*/ )
+{
+	if ( pViewer == NULL || pTarget == NULL )
+		return false;
+
+	return UTIL_IsFacingWithinTolerance( pViewer, pTarget->GetAbsOrigin(), flDotTolerance, pflDot );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fills in color for debug purposes based on a relationship
+// Input  : nRelationship - relationship to test
+//			*pR, *pG, *pB - colors to fill
+//-----------------------------------------------------------------------------
+void UTIL_GetDebugColorForRelationship( int nRelationship, int &r, int &g, int &b )
+{
+	switch ( nRelationship )
+	{
+	case D_LI:
+		r = 0;
+		g = 255;
+		b = 0;
+		break;
+	case D_NU:
+		r = 0;
+		g = 0;
+		b = 255;
+		break;
+	case D_HT:
+		r = 255;
+		g = 0;
+		b = 0;
+		break;
+	case D_FR:
+		r = 255;
+		g = 255;
+		b = 0;
+		break;
+	default:
+		r = 255;
+		g = 255;
+		b = 255;
+		break;
+	}
+}
+
+void LoadAndSpawnEntities_ParseEntKVBlockHelper( CBaseEntity *pNode, KeyValues *pkvNode )
+{
+	KeyValues *pkvNodeData = pkvNode->GetFirstSubKey();
+	while ( pkvNodeData )
+	{
+		// Handle the connections block
+		if ( !Q_strcmp(pkvNodeData->GetName(), "connections") )
+		{
+			LoadAndSpawnEntities_ParseEntKVBlockHelper( pNode, pkvNodeData );
+		}
+		else
+		{
+			pNode->KeyValue( pkvNodeData->GetName(), pkvNodeData->GetString() );
+		}
+
+		pkvNodeData = pkvNodeData->GetNextKey();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Loads and parses a file and spawns entities defined in it.
+//-----------------------------------------------------------------------------
+bool UTIL_LoadAndSpawnEntitiesFromScript( CUtlVector <CBaseEntity*> &entities, const char *pScriptFile, const char *pBlock, bool bActivate )
+{
+	KeyValues *pkvFile = new KeyValues( pBlock );
+
+	if ( pkvFile->LoadFromFile( filesystem, pScriptFile, "MOD" ) )
+	{	
+		// Load each block, and spawn the entities
+		KeyValues *pkvNode = pkvFile->GetFirstSubKey();
+		while ( pkvNode )
+		{
+			// Get name
+			const char *pNodeName = pkvNode->GetName();
+
+			if ( stricmp( pNodeName, "entity" ) )
+			{
+				pkvNode = pkvNode->GetNextKey();
+				continue;
+			}
+
+			KeyValues *pClassname = pkvNode->FindKey( "classname" );
+
+			if ( pClassname )
+			{
+				// Use the classname instead
+				pNodeName = pClassname->GetString();
+			}
+
+			// Spawn the entity
+			CBaseEntity *pNode = CreateEntityByName( pNodeName );
+
+			if ( pNode )
+			{
+				LoadAndSpawnEntities_ParseEntKVBlockHelper( pNode, pkvNode );
+				DispatchSpawn( pNode );
+				entities.AddToTail( pNode );
+			}
+			else
+			{
+				Warning( "UTIL_LoadAndSpawnEntitiesFromScript: Failed to spawn entity, type: '%s'\n", pNodeName );
+			}
+
+			// Move to next entity
+			pkvNode = pkvNode->GetNextKey();
+		}
+
+		if ( bActivate == true )
+		{
+			bool bAsyncAnims = mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, false );
+			// Then activate all the entities
+			for ( int i = 0; i < entities.Count(); i++ )
+			{
+				entities[i]->Activate();
+			}
+			mdlcache->SetAsyncLoad( MDLCACHE_ANIMBLOCK, bAsyncAnims );
+		}
+	}
+	else
+		return false;
+
+	return true;
 }
 
 //=============================================================================
@@ -2690,7 +2993,110 @@ static ConCommand voxeltree_sphere( "voxeltree_sphere", CC_VoxelTreeSphere, "Vie
 
 
 
+#define NUM_COLLISION_TESTS 2500
+void CC_CollisionTest( void )
+{
+	if ( !physenv )
+		return;
 
+	Msg( "Testing collision system\n" );
+	partition->ReportStats( "" );
+	int i;
+	CBaseEntity *pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+	Vector start = pSpot->GetAbsOrigin();
+	static Vector *targets = NULL;
+	static bool first = true;
+	static float test[2] = {1,1};
+	if ( first )
+	{
+		targets = new Vector[NUM_COLLISION_TESTS];
+		float radius = 0;
+		float theta = 0;
+		float phi = 0;
+		for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+		{
+			radius += NUM_COLLISION_TESTS * 123.123;
+			radius = fabs(fmod(radius, 128));
+			theta += NUM_COLLISION_TESTS * 76.76;
+			theta = fabs(fmod(theta, DEG2RAD(360)));
+			phi += NUM_COLLISION_TESTS * 1997.99;
+			phi = fabs(fmod(phi, DEG2RAD(180)));
+			
+			float st, ct, sp, cp;
+			SinCos( theta, &st, &ct );
+			SinCos( phi, &sp, &cp );
+
+			targets[i].x = radius * ct * sp;
+			targets[i].y = radius * st * sp;
+			targets[i].z = radius * cp;
+			
+			// make the trace 1024 units long
+			Vector dir = targets[i] - start;
+			VectorNormalize(dir);
+			targets[i] = start + dir * 1024;
+		}
+		first = false;
+	}
+
+	//Vector results[NUM_COLLISION_TESTS];
+
+	int testType = 0;
+	if ( engine->Cmd_Argc() >= 2 )
+	{
+		testType = atoi(engine->Cmd_Argv(1));
+	}
+	float duration = 0;
+	Vector size[2];
+	size[0].Init(0,0,0);
+	size[1].Init(16,16,16);
+	unsigned int dots = 0;
+	int nMask = MASK_ALL & ~(CONTENTS_MONSTER | CONTENTS_HITBOX );
+	for ( int j = 0; j < 2; j++ )
+	{
+		float startTime = engine->Time();
+		if ( testType == 1 )
+		{
+			trace_t tr;
+			for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+			{
+				UTIL_TraceHull( start, targets[i], -size[1], size[1], nMask, NULL, COLLISION_GROUP_NONE, &tr );
+			}
+		}
+		else
+		{
+			testType = 0;
+			trace_t tr;
+
+			for ( i = 0; i < NUM_COLLISION_TESTS; i++ )
+			{
+				if ( i == 0 )
+				{
+					partition->RenderLeafsForRayTraceStart( 10.0f );
+				}
+
+				UTIL_TraceLine( start, targets[i], nMask, NULL, COLLISION_GROUP_NONE, &tr );
+
+				if ( i == 0 )
+				{
+					partition->RenderLeafsForRayTraceEnd( );
+				}
+			}
+		}
+
+		duration += engine->Time() - startTime;
+	}
+	test[testType] = duration;
+	Msg("%d collisions in %.2f ms (%u dots)\n", NUM_COLLISION_TESTS, duration*1000, dots );
+	partition->ReportStats( "" );
+#if 1
+	int red = 255, green = 0, blue = 0;
+	for ( i = 0; i < 1 /*NUM_COLLISION_TESTS*/; i++ )
+	{
+		NDebugOverlay::Line( start, targets[i], red, green, blue, false, 2 );
+	}
+#endif
+}
+static ConCommand collision_test("collision_test", CC_CollisionTest, "Tests collision system", FCVAR_CHEAT );
 
 
 

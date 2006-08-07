@@ -11,6 +11,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
+#define NUM_DL_EXPONENT_BITS	8
+#define MIN_DL_EXPONENT_VALUE	-((1 << (NUM_DL_EXPONENT_BITS-1)) - 1)
+#define MAX_DL_EXPONENT_VALUE	((1 << (NUM_DL_EXPONENT_BITS-1)) - 1)
+
+
 class CDynamicLight : public CBaseEntity
 {
 public:
@@ -70,7 +76,7 @@ IMPLEMENT_SERVERCLASS_ST(CDynamicLight, DT_DynamicLight)
 	SendPropInt( SENDINFO(m_Flags), 4, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO(m_LightStyle), 4, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO(m_Radius), 0, SPROP_NOSCALE),
-	SendPropInt( SENDINFO(m_Exponent), 8),
+	SendPropInt( SENDINFO(m_Exponent), NUM_DL_EXPONENT_BITS),
 	SendPropFloat( SENDINFO(m_InnerAngle), 8, 0, 0.0, 360.0f ),
 	SendPropFloat( SENDINFO(m_OuterAngle), 8, 0, 0.0, 360.0f ),
 	SendPropFloat( SENDINFO(m_SpotRadius), 0, SPROP_NOSCALE),
@@ -161,6 +167,18 @@ void CDynamicLight::Spawn( void )
 	{
 		SetThink( &CDynamicLight::DynamicLightThink );
 		SetNextThink( gpGlobals->curtime + 0.1 );
+	}
+	
+	int clampedExponent = clamp( m_Exponent, MIN_DL_EXPONENT_VALUE, MAX_DL_EXPONENT_VALUE );
+	if ( m_Exponent != clampedExponent )
+	{
+		Warning( "light_dynamic at [%d %d %d] has invalid exponent value (%d must be between %d and %d).\n",
+			(int)GetAbsOrigin().x, (int)GetAbsOrigin().x, (int)GetAbsOrigin().x, 
+			m_Exponent.Get(),
+			MIN_DL_EXPONENT_VALUE,
+			MAX_DL_EXPONENT_VALUE );
+		
+		m_Exponent = clampedExponent;
 	}
 }
 

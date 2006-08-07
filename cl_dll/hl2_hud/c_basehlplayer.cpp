@@ -14,9 +14,18 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+// How fast to avoid collisions with center of other object, in units per second
+#define AVOID_SPEED 2000.0f
+extern ConVar cl_forwardspeed;
+extern ConVar cl_backspeed;
+extern ConVar cl_sidespeed;
+
+extern ConVar zoom_sensitivity_ratio;
 extern ConVar default_fov;
 extern ConVar sensitivity;
-extern ConVar zoom_sensitivity_ratio;
+
+ConVar cl_npc_speedmod_intime( "cl_npc_speedmod_intime", "0.25", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
 IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
 	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
@@ -54,6 +63,7 @@ C_BaseHLPlayer::C_BaseHLPlayer()
 	m_flZoomEnd			= 0.0f;
 	m_flZoomRate		= 0.0f;
 	m_flZoomStartTime	= 0.0f;
+	m_flSpeedMod		= cl_forwardspeed.GetFloat();
 }
 
 //-----------------------------------------------------------------------------
@@ -170,11 +180,60 @@ void C_BaseHLPlayer::ExitLadder()
 	m_HL2Local.m_hLadder = NULL;
 }
 
-// How fast to avoid collisions with center of other object, in units per second
-#define AVOID_SPEED 2000.0f
-extern ConVar cl_forwardspeed;
-extern ConVar cl_backspeed;
-extern ConVar cl_sidespeed;
+//-----------------------------------------------------------------------------
+// Purpose: Determines if a player can be safely moved towards a point
+// Input:   pos - position to test move to, fVertDist - how far to trace downwards to see if the player would fall,
+//			radius - how close the player can be to the object, objPos - position of the object to avoid,
+//			objDir - direction the object is travelling
+//-----------------------------------------------------------------------------
+bool C_BaseHLPlayer::TestMove( const Vector &pos, float fVertDist, float radius, const Vector &objPos, const Vector &objDir )
+{
+	trace_t trUp;
+	trace_t trOver;
+	trace_t trDown;
+	float flHit1, flHit2;
+	
+	UTIL_TraceHull( GetAbsOrigin(), pos, GetPlayerMins(), GetPlayerMaxs(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trOver );
+	if ( trOver.fraction < 1.0f )
+	{
+		// check if the endpos intersects with the direction the object is travelling.  if it doesn't, this is a good direction to move.
+		if ( objDir.IsZero() ||
+			( LineSphereIntersection( trOver.endpos, radius, objPos, objDir, &flHit1, &flHit2 ) && 
+			( ( flHit1 >= 0.0f ) || ( flHit2 >= 0.0f ) ) )
+			)
+		{
+			// our first trace failed, so see if we can go farther if we step up.
+
+			// trace up to see if we have enough room.
+			UTIL_TraceHull( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, m_Local.m_flStepSize ), 
+				GetPlayerMins(), GetPlayerMaxs(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trUp );
+
+			// do a trace from the stepped up height
+			UTIL_TraceHull( trUp.endpos, pos + Vector( 0, 0, trUp.endpos.z - trUp.startpos.z ), 
+				GetPlayerMins(), GetPlayerMaxs(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trOver );
+
+			if ( trOver.fraction < 1.0f )
+			{
+				// check if the endpos intersects with the direction the object is travelling.  if it doesn't, this is a good direction to move.
+				if ( objDir.IsZero() ||
+					LineSphereIntersection( trOver.endpos, radius, objPos, objDir, &flHit1, &flHit2 ) && ( ( flHit1 >= 0.0f ) || ( flHit2 >= 0.0f ) ) )
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	// trace down to see if this position is on the ground
+	UTIL_TraceLine( trOver.endpos, trOver.endpos - Vector( 0, 0, fVertDist ), 
+		MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &trDown );
+
+	if ( trDown.fraction == 1.0f ) 
+		return false;
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 // Client-side obstacle avoidance
 //-----------------------------------------------------------------------------
@@ -207,6 +266,8 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 
 	if ( curspeed > 150.0f )
 	{
+		curspeed = min( 2048.0f, curspeed );
+
 		factor = ( 1.0f + ( curspeed - 150.0f ) / 150.0f );
 
 	//	engine->Con_NPrintf( slot++, "scaleup (%f) to radius %f\n", factor, radius * factor );
@@ -225,7 +286,7 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 	bool istryingtomove = false;
 	bool ismovingforward = false;
 	if ( fabs( pCmd->forwardmove ) > 0.0f || 
-		 fabs( pCmd->sidemove ) > 0.0f )
+		fabs( pCmd->sidemove ) > 0.0f )
 	{
 		istryingtomove = true;
 		if ( pCmd->forwardmove > 1.0f )
@@ -273,11 +334,27 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 		if ( !obj->IsMoving() && flDist > objectradius )
 			  continue;
 
-		float flHit1, flHit2;
+		if ( flDist > objectradius && obj->IsEffectActive( EF_NODRAW ) )
+		{
+			obj->RemoveEffects( EF_NODRAW );
+		}
 
+		Vector vPlayerForward;
+		AngleVectors( GetAbsAngles(), &vPlayerForward );
+
+		Vector vNPCForward, vNPCRight;
+		AngleVectors( obj->GetAbsAngles(), &vNPCForward, &vNPCRight, NULL );
+		
+		Vector vPlayerVel = GetAbsVelocity();
+		VectorNormalize( vPlayerVel );
+
+		float flHit1, flHit2;
 		Vector vRayDir = vecToObject;
 
 		VectorNormalize( vRayDir );
+
+		float flVelProduct = DotProduct( vNPCForward, vPlayerVel );
+		float flDirProduct = DotProduct( vRayDir, vPlayerVel );
 
 		if ( !LineSphereIntersection(
 				obj->GetAbsOrigin(),
@@ -289,27 +366,104 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 			continue;
 
 		float force = 1.0f;
-
 		float forward = 0.0f, side = 0.0f;
 
-		Vector vNPCForward, vNPCRight;
-		AngleVectors( obj->GetAbsAngles(), &vNPCForward, &vNPCRight, NULL );
+        Vector dirToObject = -vecToObject;
+		VectorNormalize( dirToObject );
 
-		Vector moveDir = -vecToObject;
-		VectorNormalize( moveDir );
-
-		float fwd = currentdir.Dot( moveDir );
-		float rt = rightdir.Dot( moveDir );
+		float fwd = currentdir.Dot( dirToObject );
+		float rt = rightdir.Dot( dirToObject );
 
 		float sidescale = 2.0f;
 		float forwardscale = 1.0f;
+		bool foundResult = false;
 
-		if ( flDist < objectradius )
+		Vector vTestPosition;
+
+		// determine which direction the object is moving
+		Vector vMoveDir = obj->GetAbsOrigin() - obj->GetPrevLocalOrigin();
+		if ( vMoveDir.NormalizeInPlace() > 0.001f )
 		{
-			 fwd = currentdir.Dot( -vNPCForward );
-			 rt = rightdir.Dot( -vNPCForward );
+			// test if we can move in the direction the object is moving
+			vTestPosition = GetAbsOrigin() + vMoveDir * radius * 2;
+			if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+			{
+				fwd = currentdir.Dot( vMoveDir );
+				rt = rightdir.Dot( vMoveDir );
 
-			 obj->SetEffects( EF_NODRAW );
+				if ( flDist < objectradius )
+				{
+					obj->AddEffects( EF_NODRAW );
+				}
+				foundResult = true;
+			}
+			else
+			{
+				// test if we can move through the object
+				vTestPosition = GetAbsOrigin() - vMoveDir * radius * 2;
+				if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+				{
+					fwd = currentdir.Dot( -vMoveDir );
+					rt = rightdir.Dot( -vMoveDir );
+
+					if ( flDist < objectradius )
+					{
+						obj->AddEffects( EF_NODRAW );
+					}
+					foundResult = true;
+				}
+			}
+		}
+		else
+		{
+			// the object isn't moving, so try moving opposite the way it's facing
+			vTestPosition = GetAbsOrigin() - vNPCForward * radius * 2;
+			if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+			{
+				fwd = currentdir.Dot( -vNPCForward );
+				rt = rightdir.Dot( -vNPCForward );
+
+				if ( flDist < objectradius )
+				{
+					obj->AddEffects( EF_NODRAW );
+				}
+				foundResult = true;
+			}
+		}
+
+		if ( !foundResult )
+		{
+			// try moving to the right
+			vTestPosition = GetAbsOrigin() + vNPCRight * radius * 2;
+			if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+			{
+				fwd = currentdir.Dot( vNPCRight );
+				rt = rightdir.Dot( vNPCRight );
+				foundResult = true;
+			}
+			else
+			{
+				// try moving to the left
+				vTestPosition = GetAbsOrigin() - vNPCRight * radius * 2;
+				if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+				{
+					fwd = -currentdir.Dot( vNPCRight );
+					rt = -rightdir.Dot( vNPCRight );
+					foundResult = true;
+				}
+			}
+		}
+
+		if ( !foundResult )
+		{
+			// try moving directly away from the object
+			vTestPosition = GetAbsOrigin() - dirToObject * radius * 2;
+			if ( TestMove( vTestPosition, size.z * 2, radius * 2, obj->GetAbsOrigin(), vMoveDir ) )
+			{
+				fwd = currentdir.Dot( -dirToObject );
+				rt = rightdir.Dot( -dirToObject );
+				foundResult = true;
+			}
 		}
 
 		// If running, then do a lot more sideways veer since we're not going to do anything to
@@ -317,6 +471,11 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 		if ( istryingtomove )
 		{
 			sidescale = 6.0f;
+		}
+
+		if ( flVelProduct > 0.0f && flDirProduct > 0.0f )
+		{
+			sidescale = 0.1f;
 		}
 
 	//	engine->Con_NPrintf( slot++, "sqrt(force) == %f\n", force );
@@ -347,6 +506,100 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 //	engine->Con_NPrintf( slot++, "fwd %f right %f\n", pCmd->forwardmove, pCmd->sidemove );
 }
 
+void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd )
+{
+	if ( m_hClosestNPC == NULL )
+	{
+		if ( m_flSpeedMod != cl_forwardspeed.GetFloat() )
+		{
+			float flDeltaTime = (m_flSpeedModTime - gpGlobals->curtime);
+			m_flSpeedMod = RemapValClamped( flDeltaTime, cl_npc_speedmod_outtime.GetFloat(), 0, m_flExitSpeedMod, cl_forwardspeed.GetFloat() );
+		}
+	}
+	else
+	{
+		C_AI_BaseNPC *pNPC = dynamic_cast< C_AI_BaseNPC *>( m_hClosestNPC.Get() );
+
+		if ( pNPC )
+		{
+			float flDist = (GetAbsOrigin() - pNPC->GetAbsOrigin()).LengthSqr();
+			bool bShouldModSpeed = false; 
+
+			// Within range?
+			if ( flDist < pNPC->GetSpeedModifyRadius() )
+			{
+				// Now, only slowdown if we're facing & running parallel to the target's movement
+				// Facing check first (in 2D)
+				Vector vecTargetOrigin = pNPC->GetAbsOrigin();
+				Vector los = ( vecTargetOrigin - EyePosition() );
+				los.z = 0;
+				VectorNormalize( los );
+				Vector facingDir;
+				AngleVectors( GetAbsAngles(), &facingDir );
+				float flDot = DotProduct( los, facingDir );
+				if ( flDot > 0.8 )
+				{
+					/*
+					// Velocity check (abort if the target isn't moving)
+					Vector vecTargetVelocity;
+					pNPC->EstimateAbsVelocity( vecTargetVelocity );
+					float flSpeed = VectorNormalize(vecTargetVelocity);
+					Vector vecMyVelocity = GetAbsVelocity();
+					VectorNormalize(vecMyVelocity);
+					if ( flSpeed > 1.0 )
+					{
+						// Velocity roughly parallel?
+						if ( DotProduct(vecTargetVelocity,vecMyVelocity) > 0.4  )
+						{
+							bShouldModSpeed = true;
+						}
+					} 
+					else
+					{
+						// NPC's not moving, slow down if we're moving at him
+						//Msg("Dot: %.2f\n", DotProduct( los, vecMyVelocity ) );
+						if ( DotProduct( los, vecMyVelocity ) > 0.8 )
+						{
+							bShouldModSpeed = true;
+						} 
+					}
+					*/
+
+					bShouldModSpeed = true;
+				}
+			}
+
+			if ( !bShouldModSpeed )
+			{
+				m_hClosestNPC = NULL;
+				m_flSpeedModTime = gpGlobals->curtime + cl_npc_speedmod_outtime.GetFloat();
+				m_flExitSpeedMod = m_flSpeedMod;
+				return;
+			}
+			else 
+			{
+				if ( m_flSpeedMod != pNPC->GetSpeedModifySpeed() )
+				{
+					float flDeltaTime = (m_flSpeedModTime - gpGlobals->curtime);
+					m_flSpeedMod = RemapValClamped( flDeltaTime, cl_npc_speedmod_intime.GetFloat(), 0, cl_forwardspeed.GetFloat(), pNPC->GetSpeedModifySpeed() );
+				}
+			}
+		}
+	}
+
+	if ( pCmd->forwardmove > 0.0f )
+	{
+		pCmd->forwardmove = clamp( pCmd->forwardmove, -m_flSpeedMod, m_flSpeedMod );
+	}
+	else
+	{
+		pCmd->forwardmove = clamp( pCmd->forwardmove, -m_flSpeedMod, m_flSpeedMod );
+	}
+	pCmd->sidemove = clamp( pCmd->sidemove, -m_flSpeedMod, m_flSpeedMod );
+   
+	//Msg( "fwd %f right %f\n", pCmd->forwardmove, pCmd->sidemove );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Input handling
 //-----------------------------------------------------------------------------
@@ -357,5 +610,6 @@ void C_BaseHLPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	if ( !IsInAVehicle() )
 	{
 		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
+		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
 	}
 }

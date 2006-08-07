@@ -129,6 +129,9 @@ void CMessageCharsPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 	m_hFont = pScheme->GetFont( "Default" );
 	Assert( m_hFont != vgui::INVALID_FONT );
+
+	SetSize( ScreenWidth(), ScreenHeight() );
+	SetPos( 0, 0 );
 }
 
 

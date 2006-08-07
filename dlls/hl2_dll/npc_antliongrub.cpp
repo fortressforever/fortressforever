@@ -25,6 +25,7 @@
 #include "vstdlib/random.h"
 #include "npc_antliongrub.h"
 #include "engine/IEngineSound.h"
+#include "te_effect_dispatch.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,6 +37,80 @@ ConVar	sk_antliongrub_health( "sk_antliongrub_health", "0" );
 #define	ANTLIONGRUB_HEAL_RANGE			256.0f
 #define	ANTLIONGRUB_HEAL_CONE			0.5f
 #define	ANTLIONGRUB_ENEMY_HOSTILE_TIME	8.0f
+
+#include "AI_BaseNPC.h"
+#include "soundenvelope.h"
+#include "bitstring.h"
+
+class CSprite;
+
+#define	ANTLIONGRUB_MODEL				"models/antlion_grub.mdl"
+#define	ANTLIONGRUB_SQUASHED_MODEL		"models/antlion_grub_squashed.mdl"
+
+class CNPC_AntlionGrub : public CAI_BaseNPC
+{
+public:
+	DECLARE_CLASS( CNPC_AntlionGrub, CAI_BaseNPC );
+	DECLARE_DATADESC();
+
+	CNPC_AntlionGrub( void );
+
+	virtual int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
+	virtual int		SelectSchedule( void );
+	virtual int		TranslateSchedule( int type );
+	int				MeleeAttack1Conditions( float flDot, float flDist );
+
+	bool			HandleInteraction( int interactionType, void *data, CBaseCombatCharacter *sourceEnt );
+
+	void			Precache( void );
+	void			Spawn( void );
+	void			StartTask( const Task_t *pTask );
+	void			RunTask( const Task_t *pTask );
+	void			GrubTouch( CBaseEntity *pOther );
+	void			EndTouch(  CBaseEntity *pOther );
+	void			PainSound( const CTakeDamageInfo &info );
+	void			PrescheduleThink( void );
+	void			HandleAnimEvent( animevent_t *pEvent );
+	void			Event_Killed( const CTakeDamageInfo &info );
+	void			BuildScheduleTestBits( void );
+	void			StopLoopingSounds();
+
+	float			MaxYawSpeed( void ) { 	return 2.0f;	}
+	float			StepHeight( ) const { return 12.0f; }	//NOTENOTE: We don't want them to move up too high
+
+	Class_T			Classify( void ) { return CLASS_ANTLION; }
+
+private:
+
+	void			AttachToSurface( void );
+	void			SpawnSquashedGrub( void );
+	void			Squash( CBaseEntity *pOther );
+	void			BroadcastAlert( void );
+
+	/*
+	CSoundPatch		*m_pMovementSound;
+	CSoundPatch		*m_pVoiceSound;
+	CSoundPatch		*m_pHealSound;
+	*/
+
+	CSprite			*m_pGlowSprite;
+
+	float			m_flNextVoiceChange;	//The next point to alter our voice
+	float			m_flSquashTime;			//Amount of time we've been stepped on
+	float			m_flNearTime;			//Amount of time the player has been near enough to be considered for healing
+	float			m_flHealthTime;			//Amount of time until the next piece of health is given
+	float			m_flEnemyHostileTime;	//Amount of time the enemy should be avoided (because they displayed aggressive behavior)
+
+	bool			m_bMoving;
+	bool			m_bSquashed;
+	bool			m_bSquashValid;
+	bool			m_bHealing;
+
+	int				m_nHealthReserve;
+	int				m_nGlowSpriteHandle;
+
+	DEFINE_CUSTOM_AI;
+};
 
 //Sharp fast attack
 envelopePoint_t envFastAttack[] =
@@ -111,9 +186,9 @@ envelopeDescription_t grubVoiceEnvelopes[] =
 //Data description
 BEGIN_DATADESC( CNPC_AntlionGrub )
 
-	DEFINE_SOUNDPATCH( m_pMovementSound ),
-	DEFINE_SOUNDPATCH( m_pVoiceSound ),
-	DEFINE_SOUNDPATCH( m_pHealSound ),
+	//DEFINE_SOUNDPATCH( m_pMovementSound ),
+	//DEFINE_SOUNDPATCH( m_pVoiceSound ),
+	//DEFINE_SOUNDPATCH( m_pHealSound ),
 	DEFINE_FIELD( m_pGlowSprite,			FIELD_CLASSPTR ),
 	DEFINE_FIELD( m_flNextVoiceChange,	FIELD_TIME ),
 	DEFINE_FIELD( m_flSquashTime,			FIELD_TIME ),
@@ -215,8 +290,8 @@ void CNPC_AntlionGrub::InitCustomSchedules( void )
 	AI_LOAD_SCHEDULE( CNPC_AntlionGrub,	SCHED_ANTLIONGUARD_RETREAT );
 }
 
-LINK_ENTITY_TO_CLASS( npc_antliongrub, CNPC_AntlionGrub );
-IMPLEMENT_CUSTOM_AI( npc_antliongrub, CNPC_AntlionGrub );
+LINK_ENTITY_TO_CLASS( npc_antlion_grub, CNPC_AntlionGrub );
+IMPLEMENT_CUSTOM_AI( npc_antlion_grub, CNPC_AntlionGrub );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -228,14 +303,37 @@ void CNPC_AntlionGrub::Precache( void )
 
 	m_nGlowSpriteHandle = PrecacheModel("sprites/blueflare1.vmt");
 
+	/*
 	PrecacheScriptSound( "NPC_AntlionGrub.Scared" );
 	PrecacheScriptSound( "NPC_AntlionGrub.Squash" );
 
 	PrecacheScriptSound( "NPC_Antlion.Movement" );
 	PrecacheScriptSound( "NPC_Antlion.Voice" );
 	PrecacheScriptSound( "NPC_Antlion.Heal" );
+	*/
 
 	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Attaches the grub to the surface underneath its abdomen
+//-----------------------------------------------------------------------------
+void CNPC_AntlionGrub::AttachToSurface( void )
+{
+	// Get our downward direction
+	Vector vecForward, vecRight, vecDown;
+	GetVectors( &vecForward, &vecRight, &vecDown );
+	vecDown.Negate();
+
+	// Trace down to find a surface
+	trace_t tr;
+	UTIL_TraceLine( WorldSpaceCenter(), WorldSpaceCenter() + (vecDown*256.0f), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
+
+	if ( tr.fraction < 1.0f )
+	{
+		// Move there
+		UTIL_SetOrigin( this, tr.endpos, false );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -246,33 +344,20 @@ void CNPC_AntlionGrub::Spawn( void )
 	Precache();
 
 	SetModel( ANTLIONGRUB_MODEL );
-
-	SetHullType(HULL_TINY);
 	
-	Vector	vecMins, vecMaxs;
-
-	vecMins = GetHullMins();
-	vecMaxs = GetHullMaxs();
-
-	//Just the perfect size for being stepped on
-	vecMaxs[2] -= 14.0f;
-
-	UTIL_SetSize( this, vecMins, vecMaxs );
-	
-	SetNavType(NAV_GROUND);
 	m_NPCState				= NPC_STATE_NONE;
-	SetBloodColor( BLOOD_COLOR_YELLOW );
 	m_iHealth				= sk_antliongrub_health.GetFloat();
 	m_iMaxHealth			= m_iHealth;
-	m_flFieldOfView			= -1.0f;
+	m_flFieldOfView			= 0.5f;
 	
 	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
-
-	SetMoveType( MOVETYPE_STEP );
+	SetMoveType( MOVETYPE_NONE );
+	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+	SetHullSizeNormal();
+	SetHullType( HULL_SMALL_CENTERED );
+	SetBloodColor( BLOOD_COLOR_YELLOW );
 
 	CapabilitiesClear();
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_MELEE_ATTACK1 );
 
 	m_flNextVoiceChange		= gpGlobals->curtime;
 	m_flSquashTime			= gpGlobals->curtime;
@@ -289,6 +374,13 @@ void CNPC_AntlionGrub::Spawn( void )
 	
 	SetTouch( GrubTouch );
 
+	// Attach to the surface under our belly
+	AttachToSurface();
+
+	// Use detailed collision because we're an odd shape
+	CollisionProp()->SetSurroundingBoundsType( USE_HITBOXES );
+	
+	/*
 	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
 
 	CPASAttenuationFilter filter( this );
@@ -299,22 +391,30 @@ void CNPC_AntlionGrub::Spawn( void )
 	controller.Play( m_pMovementSound, 0.0f, 100 );
 	controller.Play( m_pVoiceSound, 0.0f, 100 );
 	controller.Play( m_pHealSound, 0.0f, 100 );
+	*/
 
 	m_pGlowSprite = CSprite::SpriteCreate( "sprites/blueflare1.vmt", GetLocalOrigin(), false );
-	
+
 	Assert( m_pGlowSprite );
 
 	if ( m_pGlowSprite == NULL )
 		return;
 
-	m_pGlowSprite->TurnOff();
-	m_pGlowSprite->SetTransparency( kRenderGlow, 32, 32, 128, 255, kRenderFxNoDissipation );
-	//m_pGlowSprite->SetAttachment( this, 1 );
+	Vector vecUp;
+	GetVectors( NULL, NULL, &vecUp );
+
+	m_pGlowSprite->TurnOn();
+	m_pGlowSprite->SetTransparency( kRenderWorldGlow, 156, 169, 121, 164, kRenderFxNoDissipation );
+	m_pGlowSprite->SetAbsOrigin( GetAbsOrigin() + vecUp * 8.0f );
 	m_pGlowSprite->SetScale( 1.0f );
+	m_pGlowSprite->SetGlowProxySize( 16.0f );
 
+	// We don't want to teleport at this point
+	AddSpawnFlags( SF_NPC_FALL_TO_GROUND );
+
+	// We get a bogus error otherwise
 	NPCInit();
-
-	BaseClass::Spawn();
+	AddSolidFlags( FSOLID_TRIGGER );
 }
 
 //-----------------------------------------------------------------------------
@@ -327,19 +427,17 @@ void CNPC_AntlionGrub::HandleAnimEvent( animevent_t *pEvent )
 	{
 	case ANTLIONGRUB_AE_START_SQUIRM:
 		{
-			float duration = random->RandomFloat( 0.1f, 0.3f );
-
-			CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, random->RandomInt( 100, 120 ), duration );
-			CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, random->RandomFloat( 0.6f, 0.8f ), duration );
+			//float duration = random->RandomFloat( 0.1f, 0.3f );
+			//CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, random->RandomInt( 100, 120 ), duration );
+			//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, random->RandomFloat( 0.6f, 0.8f ), duration );
 		}
 		break;
 
 	case ANTLIONGRUB_AE_END_SQUIRM:
 		{
-			float duration = random->RandomFloat( 0.1f, 0.3f );
-
-			CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, random->RandomInt( 80, 100 ), duration );
-			CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, random->RandomFloat( 0.0f, 0.1f ), duration );
+			//float duration = random->RandomFloat( 0.1f, 0.3f );
+			//CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, random->RandomInt( 80, 100 ), duration );
+			//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, random->RandomFloat( 0.0f, 0.1f ), duration );
 		}
 		break;
 
@@ -354,10 +452,6 @@ void CNPC_AntlionGrub::HandleAnimEvent( animevent_t *pEvent )
 //-----------------------------------------------------------------------------
 int CNPC_AntlionGrub::SelectSchedule( void )
 {
-	//Don't do anything if we're dead
-	if ( m_NPCState == NPC_STATE_DEAD )
-		return BaseClass::SelectSchedule();
-
 	//If we've heard someone else squeal, we should too
 	if ( HasCondition( COND_ANTLIONGRUB_HEARD_SQUEAL ) || HasCondition( COND_ANTLIONGRUB_BEING_SQUASHED ) )
 	{
@@ -366,25 +460,33 @@ int CNPC_AntlionGrub::SelectSchedule( void )
 	}
 
 	//See if we need to run away from our enemy
+	/*
 	if ( m_flEnemyHostileTime > gpGlobals->curtime )
 		return SCHED_ANTLIONGUARD_RETREAT;
+		*/
 
+	/*
 	if ( HasCondition( COND_ANTLIONGRUB_IN_HEAL_RANGE ) )
 	{
 		SetTarget( GetEnemy() );
 		return SCHED_ANTLIONGRUB_GIVE_HEALTH;
 	}
+	*/
 
 	//If we've taken any damage, squirm and squeal
 	if ( HasCondition( COND_LIGHT_DAMAGE ) && SelectWeightedSequence( ACT_SMALL_FLINCH ) != -1 )
 		return SCHED_SMALL_FLINCH;
 
+	/*
 	//Randomly stand still
 	if ( random->RandomInt( 0, 3 ) == 0 )
 		return SCHED_IDLE_STAND;
 
 	//Otherwise just walk around a little
 	return SCHED_PATROL_WALK;
+	*/
+
+	return SCHED_IDLE_STAND;
 }
 
 //-----------------------------------------------------------------------------
@@ -452,7 +554,7 @@ void CNPC_AntlionGrub::StartTask( const Task_t *pTask )
 
 		SetActivity( (Activity) ACT_ANTLIONGRUB_HEAL );
 
-		CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.5f, 2.0f );
+		//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.5f, 2.0f );
 
 		//Must have a target
 		if ( GetEnemy() == NULL )
@@ -555,7 +657,7 @@ void CNPC_AntlionGrub::RunTask( const Task_t *pTask )
 		if ( ( GetEnemy()->m_iHealth == GetEnemy()->m_iMaxHealth ) || ( m_nHealthReserve <= 0 ) || ( (GetEnemy()->GetLocalOrigin() - GetLocalOrigin()).Length() > 64 ) )
 		{
 			m_bHealing = false;
-			CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.0f, 0.5f );
+			//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.0f, 0.5f );
 			TaskComplete();
 			return;
 		}
@@ -607,42 +709,12 @@ void CNPC_AntlionGrub::GrubTouch( CBaseEntity *pOther )
 		return;
 
 	//Allow a crusing velocity to kill them in one go (or they're already dead)
-	if ( ( pOther->GetAbsVelocity()[2] < -200 ) || ( IsAlive() == false ) )
+	if ( ( pOther->GetAbsVelocity().Length() > 200 ) || ( IsAlive() == false ) )
 	{
-		Squash( pOther );
+		//TakeDamage( CTakeDamageInfo( pOther, pOther, vec3_origin, GetAbsOrigin(), 100, DMG_CRUSH ) );
 		return;
 	}
-
-	//Otherwise, the pressure must be maintained to squash
-	if ( m_bSquashValid == false )
-	{
-		//Shake the screen
-		UTIL_ScreenShake( GetAbsOrigin(), 0.01f, 50.0f, 0.1f, 128, SHAKE_START );
-
-		m_bSquashValid = true;
-		m_flSquashTime = gpGlobals->curtime + ANTLIONGRUB_SQUASH_TIME;
-		
-		CSoundEnvelopeController::GetController().CommandClear( m_pVoiceSound );
-		CSoundEnvelopeController::GetController().SoundChangePitch( m_pVoiceSound, 150, ANTLIONGRUB_SQUASH_TIME*0.5f );
-		CSoundEnvelopeController::GetController().SoundChangeVolume( m_pVoiceSound, 1.0f, 0.5f );
-	}
-	else
-	{
-		//Wiggle faster the longer the player is squashing us
-		m_flPlaybackRate = 3.0f * ( 1.0f - ( m_flSquashTime - gpGlobals->curtime ) );
-		
-		//Shake the screen for effect
-		UTIL_ScreenShake( GetAbsOrigin(), 1.5f, 0.1f, 0.5f, 128, SHAKE_START );
-
-		//Taken enough damage?
-		if ( m_flSquashTime < gpGlobals->curtime )
-		{
-			EmitSound( "NPC_AntlionGrub.Scared" );
-			Squash( pOther );
-			return;
-		}
-	}
-
+	
 	//Need to know we're being squashed
 	SetCondition( COND_ANTLIONGRUB_BEING_SQUASHED );
 }
@@ -657,8 +729,10 @@ void CNPC_AntlionGrub::EndTouch( CBaseEntity *pOther )
 
 	m_bSquashValid = false;
 	
+	/*
 	CSoundEnvelopeController::GetController().SoundChangePitch( m_pVoiceSound, 100, 0.5f );
 	CSoundEnvelopeController::GetController().SoundChangeVolume( m_pVoiceSound, 0.0f, 1.0f );
+	*/
 
 	m_flPlaybackRate = 1.0f;
 }
@@ -668,6 +742,7 @@ void CNPC_AntlionGrub::EndTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CNPC_AntlionGrub::BroadcastAlert( void )
 {
+	/*
 	CBaseEntity *pEntity = NULL;
 	CAI_BaseNPC *pNPC;
 
@@ -685,12 +760,29 @@ void CNPC_AntlionGrub::BroadcastAlert( void )
 			pNPC->DispatchInteraction( g_interactionAntlionGrubAlert, NULL, this );
 		}
 	}
+	*/
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Twiddle damage based on certain criteria
+//-----------------------------------------------------------------------------
+int CNPC_AntlionGrub::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+{
+	CTakeDamageInfo newInfo = info;
+
+	// Always squash on a crowbar hit
+	if ( newInfo.GetDamageType() & DMG_CLUB )
+	{
+		newInfo.SetDamage( GetHealth() + 1.0f );
+	}
+
+	return BaseClass::OnTakeDamage_Alive( newInfo );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_AntlionGrub::PainSound( void )
+void CNPC_AntlionGrub::PainSound( const CTakeDamageInfo &info )
 {
 	BroadcastAlert();
 }
@@ -710,8 +802,8 @@ bool CNPC_AntlionGrub::HandleInteraction( int interactionType, void *data, CBase
 		SetCondition( COND_ANTLIONGRUB_HEARD_SQUEAL );
 		
 		//float envDuration = PlayEnvelope( m_pVoiceSound, SOUNDCTRL_CHANGE_VOLUME, envScared, ARRAYSIZE(envScared) );
-		float envDuration = CSoundEnvelopeController::GetController().SoundPlayEnvelope( m_pVoiceSound, SOUNDCTRL_CHANGE_VOLUME, envMidSustain, ARRAYSIZE(envMidSustain) );
-		m_flNextVoiceChange = gpGlobals->curtime + envDuration + random->RandomFloat( 4.0f, 8.0f );
+		//float envDuration = CSoundEnvelopeController::GetController().SoundPlayEnvelope( m_pVoiceSound, SOUNDCTRL_CHANGE_VOLUME, envMidSustain, ARRAYSIZE(envMidSustain) );
+		//m_flNextVoiceChange = gpGlobals->curtime + envDuration + random->RandomFloat( 4.0f, 8.0f );
 
 		return true;
 	}
@@ -729,23 +821,38 @@ void CNPC_AntlionGrub::Squash( CBaseEntity *pOther )
 	AddEffects( EF_NODRAW );
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	
-	Event_Killed( CTakeDamageInfo( pOther, pOther, 200, DMG_CRUSH ) );
-
 	EmitSound( "NPC_AntlionGrub.Squash" );
 	
 	BroadcastAlert();
 
+	Vector vecUp;
+	AngleVectors( GetAbsAngles(), NULL, NULL, &vecUp );
+
 	trace_t	tr;
-	Vector vecDir( 0, 0, -1.0f );
+	
+	for ( int i = 0; i < 4; i++ )
+	{
+		tr.endpos = WorldSpaceCenter();
+		tr.endpos[0] += random->RandomFloat( -16.0f, 16.0f );
+		tr.endpos[1] += random->RandomFloat( -16.0f, 16.0f );
+		tr.endpos += vecUp * 8.0f;
 
-	tr.endpos = GetLocalOrigin();
-	tr.endpos[2] += 8.0f;
-
-	MakeDamageBloodDecal( 4, 0.8f, &tr, vecDir );
+		MakeDamageBloodDecal( 2, 0.8f, &tr, -vecUp );
+	}
 
 	SetTouch( NULL );
 
 	m_bSquashed = true;
+
+	// Temp squash effect
+	CEffectData	data;
+	data.m_fFlags = 0;
+	data.m_vOrigin = WorldSpaceCenter();
+	data.m_vNormal = vecUp;
+	VectorAngles( vecUp, data.m_vAngles );
+	data.m_flScale = random->RandomFloat( 5, 7 );
+	data.m_fFlags |= FX_WATER_IN_SLIME;
+	DispatchEffect( "watersplash", data );
 }
 
 //-----------------------------------------------------------------------------
@@ -766,52 +873,38 @@ void CNPC_AntlionGrub::SpawnSquashedGrub( void )
 
 void CNPC_AntlionGrub::StopLoopingSounds()
 {
+	/*
 	CSoundEnvelopeController::GetController().SoundDestroy( m_pMovementSound );
 	CSoundEnvelopeController::GetController().SoundDestroy( m_pVoiceSound );
 	CSoundEnvelopeController::GetController().SoundDestroy( m_pHealSound );
 	m_pMovementSound = NULL;
 	m_pVoiceSound = NULL;
 	m_pHealSound = NULL;
+	*/
 
 	BaseClass::StopLoopingSounds();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : *pInflictor - 
-//			*pAttacker - 
-//			flDamage - 
-//			bitsDamageType - 
 //-----------------------------------------------------------------------------
 void CNPC_AntlionGrub::Event_Killed( const CTakeDamageInfo &info )
 {
 	BaseClass::Event_Killed( info );
 
-	m_pGlowSprite->TurnOff();
-
-	if ( m_bSquashed == false )
+	if ( ( m_bSquashed == false ) && ( info.GetDamageType() & DMG_CLUB ) )
+	{
+		// Die!
+		Squash( info.GetAttacker() );
+	}
+	else
 	{
 		//Restore this touch so we can still be squished
 		SetTouch( GrubTouch );
 	}
-	else
-	{
-		Vector	vecMins, vecMaxs;
 
-		vecMins = GetHullMins();
-		vecMaxs = GetHullMaxs();
-
-		//Move the bounds out a little
-		vecMins[0] -= 4.0f;
-		vecMins[1] -= 4.0f;
-		vecMaxs[0] += 4.0f;
-		vecMaxs[1] += 4.0f;
-
-		//Just the perfect size for being stepped on
-		vecMaxs[2] -= 14.0f;
-
-		UTIL_SetSize( this, vecMins, vecMaxs );
-	}
+	// Slowly fade out glow out
+	m_pGlowSprite->FadeAndDie( 5.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -826,13 +919,14 @@ void CNPC_AntlionGrub::PrescheduleThink( void )
 	{
 		if ( m_bHealing )
 		{
-			CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.0f, 0.5f );
+			//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pHealSound, 0.0f, 0.5f );
 		}
 
 		m_bHealing = false;
 	}
 
 	//Do glowing maintenance
+	/*
 	if ( m_pGlowSprite != NULL )
 	{
 		m_pGlowSprite->SetLocalOrigin( GetLocalOrigin() );
@@ -856,22 +950,23 @@ void CNPC_AntlionGrub::PrescheduleThink( void )
 			m_pGlowSprite->TurnOff();
 		}
 	}
+	*/
 
 	//Check for movement sounds
 	if ( m_flGroundSpeed > 0.0f )
 	{
 		if ( m_bMoving == false )
 		{
-			CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, 100, 0.1f );
-			CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, 0.4f, 1.0f );
+			//CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, 100, 0.1f );
+			//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, 0.4f, 1.0f );
 
 			m_bMoving = true;
 		}
 	}
 	else if ( m_bMoving )
 	{
-		CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, 80, 0.5f );
-		CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, 0.0f, 1.0f );
+		//CSoundEnvelopeController::GetController().SoundChangePitch( m_pMovementSound, 80, 0.5f );
+		//CSoundEnvelopeController::GetController().SoundChangeVolume( m_pMovementSound, 0.0f, 1.0f );
 		
 		m_bMoving = false;
 	}
@@ -879,8 +974,8 @@ void CNPC_AntlionGrub::PrescheduleThink( void )
 	//Check for a voice change
 	if ( m_flNextVoiceChange < gpGlobals->curtime )
 	{
-		float envDuration = CSoundEnvelopeController::GetController().SoundPlayEnvelope( m_pVoiceSound, SOUNDCTRL_CHANGE_VOLUME, &grubVoiceEnvelopes[rand()%ARRAYSIZE(grubVoiceEnvelopes)] );
-		m_flNextVoiceChange = gpGlobals->curtime + envDuration + random->RandomFloat( 1.0f, 8.0f );
+		//float envDuration = CSoundEnvelopeController::GetController().SoundPlayEnvelope( m_pVoiceSound, SOUNDCTRL_CHANGE_VOLUME, &grubVoiceEnvelopes[rand()%ARRAYSIZE(grubVoiceEnvelopes)] );
+		//m_flNextVoiceChange = gpGlobals->curtime + envDuration + random->RandomFloat( 1.0f, 8.0f );
 	}
 }
 

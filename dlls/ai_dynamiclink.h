@@ -55,6 +55,7 @@ public:
 
 	bool						m_bFixedUpIds;
 	bool						m_bNotSaved;
+	int							m_nLinkType;
 
 	void						SetLinkState( void );
 	bool						IsLinkValid( void );
@@ -93,6 +94,26 @@ public:
 	CUtlVector< CHandle<CAI_DynamicLink> > m_ControlledLinks;
 	DynamicLinkState_t			m_nLinkState;			// 
 	string_t					m_strAllowUse;
+
+	DECLARE_DATADESC();
+};
+
+//=============================================================================
+//=============================================================================
+class CAI_RadialLinkController : public CBaseEntity
+{
+	DECLARE_CLASS( CAI_RadialLinkController, CBaseEntity );
+
+public:
+	void	Spawn();
+	void	Activate();
+	void	PollMotionThink();
+	void	ModifyNodeLinks( bool bMakeStale );
+
+public:
+	float	m_flRadius;
+	Vector	m_vecAtRestOrigin;
+	bool	m_bAtRest;
 
 	DECLARE_DATADESC();
 };

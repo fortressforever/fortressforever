@@ -15,20 +15,26 @@ sub WriteHelperVar
 	# int version of set function
 	push @outputHeader, "\tvoid Set" . $name . "( int i )\n";
 	push @outputHeader, "\t{\n";
-	push @outputHeader, "\t\tAssert( i >= $min && i <= $max );\n";
-	push @outputHeader, "\t\t$varname = i;\n";
-	push @outputHeader, "#ifdef _DEBUG\n";
-	push @outputHeader, "\t\t$boolname = true;\n";
-	push @outputHeader, "#endif\n";
+	if ( $min != $max )
+	{
+		push @outputHeader, "\t\tAssert( i >= $min && i <= $max );\n";
+		push @outputHeader, "\t\t$varname = i;\n";
+		push @outputHeader, "#ifdef _DEBUG\n";
+		push @outputHeader, "\t\t$boolname = true;\n";
+		push @outputHeader, "#endif\n";
+	}
 	push @outputHeader, "\t}\n";
 	# bool version of set function
 	push @outputHeader, "\tvoid Set" . $name . "( bool i )\n";
 	push @outputHeader, "\t{\n";
+	if ( $min != $max )
+	{
 #		push @outputHeader, "\t\tAssert( i >= $min && i <= $max );\n";
-	push @outputHeader, "\t\t$varname = i ? 1 : 0;\n";
-	push @outputHeader, "#ifdef _DEBUG\n";
-	push @outputHeader, "\t\t$boolname = true;\n";
-	push @outputHeader, "#endif\n";
+		push @outputHeader, "\t\t$varname = i ? 1 : 0;\n";
+		push @outputHeader, "#ifdef _DEBUG\n";
+		push @outputHeader, "\t\t$boolname = true;\n";
+		push @outputHeader, "#endif\n";
+	}
 	push @outputHeader, "\t}\n";
 }
 
@@ -86,11 +92,21 @@ sub WriteDynamicHelperClasses
 	push @outputHeader, "\t{\n";
 	for( $i = 0; $i < scalar( @dynamicDefineNames ); $i++ )
 	{
+		$min = $dynamicDefineMin[$i];
+		$max = $dynamicDefineMax[$i];
+
 		local( $name ) = @dynamicDefineNames[$i];
 		local( $boolname ) = "m_b" . $name;
 		local( $varname ) = "m_n" . $name;
 		push @outputHeader, "#ifdef _DEBUG\n";
-		push @outputHeader, "\t\t$boolname = false;\n";
+		if ( $min != $max )
+		{
+			push @outputHeader, "\t\t$boolname = false;\n";
+		}
+		else
+		{
+			push @outputHeader, "\t\t$boolname = true;\n";
+		}
 		push @outputHeader, "#endif // _DEBUG\n";
 		push @outputHeader, "\t\t$varname = 0;\n";
 	}
@@ -155,11 +171,22 @@ sub WriteStaticHelperClasses
 	push @outputHeader, "\t{\n";
 	for( $i = 0; $i < scalar( @staticDefineNames ); $i++ )
 	{
+		$min = $staticDefineMin[$i];
+		$max = $staticDefineMax[$i];
+
 		local( $name ) = @staticDefineNames[$i];
 		local( $boolname ) = "m_b" . $name;
 		local( $varname ) = "m_n" . $name;
+		
 		push @outputHeader, "#ifdef _DEBUG\n";
-		push @outputHeader, "\t\t$boolname = false;\n";
+		if ( $min != $max )
+		{
+			push @outputHeader, "\t\t$boolname = false;\n";
+		}
+		else
+		{
+			push @outputHeader, "\t\t$boolname = true;\n";
+		}
 		push @outputHeader, "#endif // _DEBUG\n";
 		push @outputHeader, "\t\t$varname = 0;\n";
 	}
@@ -283,7 +310,7 @@ sub MakeDirHier
 		my( $dir ) = $in . $curpath;
 		if( !stat $dir )
 		{
-			print "mkdir $dir\n";
+#			print "mkdir $dir\n";
 			mkdir $dir, 0777;
 		}
 	}
@@ -300,30 +327,18 @@ sub MakeDirHier
 $ShowTimers = 0;
 sub SampleTime() { return 0; }
 
-
 $total_start_time = SampleTime();
-
-
-# NOTE: These must match the same values in macros.vsh!
-$cModelViewProj0	= "c4";
-$cModelViewProj1	= "c5";
-$cModelViewProj2	= "c6";
-$cModelViewProj3	= "c7";
-
-$cModelView0		= "c12";
-$cModelView1		= "c13";
-$cModelView2		= "c14";
-$cModelView3		= "c15";
-
-$cModel0			= "c42";
-$cModel1			= "c43";
-$cModel2			= "c44";
 
 # NOTE: These must match the same values in macros.vsh!
 $vPos				= "v0";
 $vBoneWeights		= "v1";
 $vBoneIndices		= "v2";
 $vNormal			= "v3";
+if( $g_xbox )
+{
+	$vPosFlex		= "v4";
+	$vNormalFlex	= "v13";
+}
 $vColor				= "v5";
 $vSpecular			= "v6";
 $vTexCoord0			= "v7";
@@ -333,7 +348,6 @@ $vTexCoord3			= "v10";
 $vTangentS			= "v11";
 $vTangentT			= "v12";
 $vUserData			= "v14";
-
 
 sub ReadInputFile
 {
@@ -536,6 +550,10 @@ sub TranslateDXKeywords
 	$line =~ s/\bENDIF\b/endif/g;
 	$line =~ s/\bIF\b/if/g;
 	$line =~ s/\bELSE\b/else/g;
+	if ( $g_xbox )
+	{
+		$line =~ s/^\s*vs\.1\.[0-9]/xvs.1.1/i;
+	}
 	return $line;
 }
 
@@ -560,15 +578,16 @@ while( 1 )
 {
 	$filename = shift;
 
-	if ( $filename =~ m/-source/ )
+	if ( $filename =~ m/-source/i )
 	{
 		$g_SourceDir = shift;
 	}
-	elsif( $filename =~ m/-xbox/ )
+	elsif( $filename =~ m/-xbox/i )
 	{
 		$g_xbox = 1;
+		$g_dx9 = 0;
 	}
-	elsif( $filename =~ m/-shaderoutputdir/ )
+	elsif( $filename =~ m/-shaderoutputdir/i )
 	{
 		$shaderoutputdir = shift;
 	}
@@ -654,6 +673,12 @@ foreach $_ ( @input )
 		$min = $2;
 		$max = $3;
 #		print "\"$name\" \"$min..$max\"\n";
+		if (/\[(.*)\]/)
+		{
+			$platforms=$1;
+			next if ( ($g_xbox) && (!($platforms=~/XBOX/i)) );
+			next if ( (!$g_xbox) && (!($platforms=~/PC/i)) );
+		}
 		push @staticDefineNames, $name;
 		push @staticDefineMin, $min;
 		push @staticDefineMax, $max;
@@ -664,6 +689,12 @@ foreach $_ ( @input )
 		$name = $1;
 		$min = $2;
 		$max = $3;
+		if (/\[(.*)\]/)
+		{
+			$platforms=$1;
+			next if ( ($g_xbox) && (!($platforms=~/XBOX/i)) );
+			next if ( (!$g_xbox) && (!($platforms=~/PC/i)) );
+		}
 #		print "\"$name\" \"$min..$max\"\n";
 		push @dynamicDefineNames, $name;
 		push @dynamicDefineMin, $min;
@@ -692,6 +723,12 @@ else
 
 #print $perlskipcode . "\n";
 
+if ( $g_xbox )
+{
+	# add mandatory epilogue code
+	push @outputProgram, "push \@output, \"" . "#pragma screenspace" . "\\n\";\n";
+}
+
 # Translate the input into a perl program that'll unroll everything and
 # substitute variables.
 while( $inputLine = shift @input )
@@ -717,6 +754,13 @@ while( $inputLine = shift @input )
 		push @outputProgram, &GetLeadingWhiteSpace( $inputLine ) . "push \@output, \"" . 
 			$inputLine . "\\n\";\n";
 	}
+}
+
+if ( $g_xbox )
+{	
+	# add mandatory prologue code
+	push @outputProgram, "push \@output, \"" . "mul oPos.xyz, r12, \$SHADER_VIEWPORT_CONST_SCALE +rcc r1.x, r12.w" . "\\n\";\n";
+	push @outputProgram, "push \@output, \"" . "mad oPos.xyz, r12, r1.x, \$SHADER_VIEWPORT_CONST_OFFSET" . "\\n\";\n";
 }
 
 $outputProgram = join "", @outputProgram;
@@ -796,9 +840,11 @@ for( $i = 0; $i < $numCombos; $i++ )
 	$start = SampleTime();
 
 	$g_usesPos				= 0;
+	$g_usesPosFlex			= 0;
 	$g_usesBoneWeights		= 0;
 	$g_usesBoneIndices		= 0;
 	$g_usesNormal			= 0;
+	$g_usesNormalFlex		= 0;
 	$g_usesColor			= 0;
 	$g_usesSpecular			= 0;
 	$g_usesTexCoord0		= 0;
@@ -834,6 +880,11 @@ for( $i = 0; $i < $numCombos; $i++ )
 
 	# Have to make another pass through after we know which v registers are used. . yuck.
 	$g_usesPos				= &UsesRegister( $vPos, $strippedStr );
+	if( $g_xbox )
+	{
+		$g_usesPosFlex		= &UsesRegister( $vPosFlex, $strippedStr );
+		$g_usesNormalFlex	= &UsesRegister( $vNormalFlex, $strippedStr );
+	}
 	$g_usesBoneWeights		= &UsesRegister( $vBoneWeights, $strippedStr );
 	$g_usesBoneIndices		= &UsesRegister( $vBoneIndices, $strippedStr );
 	$g_usesNormal			= &UsesRegister( $vNormal, $strippedStr );
@@ -877,7 +928,9 @@ for( $i = 0; $i < $numCombos; $i++ )
 	# for this shader.  This file is generated once per combo.
 	# We will assemble this shader with vsa.exe.
 	$outfilename = "$vshtmp\\" . $outfilename_base . ".tmp";
-	$outhdrfilename = "$vshtmp\\" . $outfilename_base . ".h";
+
+#	$outhdrfilename = "$vshtmp\\" . $outfilename_base . ".h";
+#	unlink $outhdrfilename;
 
 	open OUTPUT, ">$outfilename" || die;
 	print OUTPUT @output;
@@ -895,24 +948,18 @@ for( $i = 0; $i < $numCombos; $i++ )
 #	for( $debug = 1; $debug >= 0; $debug-- )
 	{
 		# assemble the vertex shader
-		unlink $outhdrfilename;
+		unlink "shader$i.o";
 		if( $g_xbox )
 		{
 			$vsa = "xsasm";
-			$vsadebug = "$vsa /nologo /D _XBOX=1 $outfilename shader$numCombos.o";
-			$vsanodebug = "$vsa /nologo /D _XBOX=1 $outfilename shader$numCombos.o";
+			$vsadebug = "$vsa /nologo /D _XBOX=1 $outfilename shader$i.o";
+			$vsanodebug = "$vsa /nologo /D _XBOX=1 $outfilename shader$i.o";
 		}
-		elsif( $g_dx9 )
+		else
 		{
 			$vsa = "..\\..\\dx9sdk\\utilities\\vsa";
 			$vsadebug = "$vsa /nologo /Foshader$i.o $outfilename";
 			$vsanodebug = "$vsa /nologo /Foshader$i.o $outfilename";
-		}
-		else
-		{
-			$vsa = "..\\..\\devtools\\bin\\vsa8_1";
-			$vsadebug = "$vsa -h";
-			$vsanodebug = "$vsa -h";
 		}
 
 		$vsa_start_time = SampleTime();
@@ -930,9 +977,7 @@ for( $i = 0; $i < $numCombos; $i++ )
 
 		$vsa_total_time += SampleTime() - $vsa_start_time;
 		
-		
 		$start = SampleTime();
-
 
 		&TranslateErrorMessages( @vsaoutput );
 
@@ -1001,6 +1046,8 @@ print COMPILEDSHADER pack "i", $numDynamicCombos;
 # flags
 print COMPILEDSHADER pack "I", $flags;
 # centroid mask
+print COMPILEDSHADER pack "I", 0;
+# reference size
 print COMPILEDSHADER pack "I", 0;
 
 my $beginningOfDir = tell COMPILEDSHADER;

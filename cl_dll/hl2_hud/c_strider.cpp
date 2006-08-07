@@ -620,7 +620,9 @@ int	C_StriderFX::DrawModel( int )
 //-----------------------------------------------------------------------------
 // Purpose: Strider class implementation
 //-----------------------------------------------------------------------------
-C_Strider::C_Strider()
+C_Strider::C_Strider() :
+		m_iv_vecHitPos("C_Strider::m_iv_vecHitPos"),
+		m_iv_vecIKTarget("C_Strider::m_iv_vecIKTarget")
 {
 	AddVar( &m_vecHitPos, &m_iv_vecHitPos, LATCH_ANIMATION_VAR );
 
@@ -707,7 +709,7 @@ void C_Strider::ClientThink()
 	// which causes IK to trigger, which causes raycasts against the other entities to occur,
 	// which is illegal to do while in the Relink phase.
 
-	studiohdr_t *pStudioHdr = GetModel()?modelinfo->GetStudiomodel( GetModel() ):NULL;
+	CStudioHdr *pStudioHdr = GetModelPtr();
 	if (!pStudioHdr)
 		goto doneWithComputation;
 
@@ -715,10 +717,10 @@ void C_Strider::ClientThink()
 	if ( !set || !set->numhitboxes )
 		goto doneWithComputation;
 
-	pCache = GetBoneCache( );
+	pCache = GetBoneCache( pStudioHdr );
 
 	matrix3x4_t *hitboxbones[MAXSTUDIOBONES];
-	pCache->ReadCachedBonePointers( hitboxbones, pStudioHdr->numbones );
+	pCache->ReadCachedBonePointers( hitboxbones, pStudioHdr->numbones() );
 
 	// Compute a box in world space that surrounds this entity
 	m_vecRenderMins.Init( FLT_MAX, FLT_MAX, FLT_MAX );
@@ -788,16 +790,16 @@ void C_Strider::GetRenderBounds( Vector& theMins, Vector& theMaxs )
 //-----------------------------------------------------------------------------
 // Strider muzzle flashes
 //-----------------------------------------------------------------------------
-void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
+void MuzzleFlash_Strider( ClientEntityHandle_t hEntity, int attachmentIndex )
 {
 	VPROF_BUDGET( "MuzzleFlash_Strider", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 
-	matrix3x4_t	matAttachment;
 	// If the client hasn't seen this entity yet, bail.
-	if ( !FX_GetAttachmentTransform( entityIndex, attachmentIndex, matAttachment ) )
+	matrix3x4_t	matAttachment;
+	if ( !FX_GetAttachmentTransform( hEntity, attachmentIndex, matAttachment ) )
 		return;
 
-	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_Strider", entityIndex, attachmentIndex );
+	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_Strider", hEntity, attachmentIndex );
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -844,7 +846,7 @@ void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 400.0f, 600.0f );
 
 	// Diagonal flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (dir * (i*flScale));
 
@@ -875,7 +877,7 @@ void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 400.0f, 600.0f );
 
 	// Diagonal flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (-dir * (i*flScale));
 
@@ -906,7 +908,7 @@ void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
 	burstSpeed = random->RandomFloat( 400.0f, 600.0f );
 
 	// Top flash
-	for ( i = 1; i < SIDE_LENGTH; i++ )
+	for ( int i = 1; i < SIDE_LENGTH; i++ )
 	{
 		offset = (dir * (i*flScale));
 
@@ -958,18 +960,22 @@ void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
 	Vector		origin;
 	MatrixGetColumn( matAttachment, 3, &origin );
 
-	dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
+	int entityIndex = ClientEntityList().HandleToEntIndex( hEntity );
+	if ( entityIndex >= 0 )
+	{
+		dlight_t *el = effects->CL_AllocElight( LIGHT_INDEX_MUZZLEFLASH + entityIndex );
 
-	el->origin	= origin;
+		el->origin	= origin;
 
-	el->color.r = 64;
-	el->color.g = 128;
-	el->color.b = 255;
-	el->color.exponent = 5;
+		el->color.r = 64;
+		el->color.g = 128;
+		el->color.b = 255;
+		el->color.exponent = 5;
 
-	el->radius	= random->RandomInt( 100, 150 );
-	el->decay	= el->radius / 0.05f;
-	el->die		= gpGlobals->curtime + 0.1f;
+		el->radius	= random->RandomInt( 100, 150 );
+		el->decay	= el->radius / 0.05f;
+		el->die		= gpGlobals->curtime + 0.1f;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -978,7 +984,7 @@ void MuzzleFlash_Strider( int entityIndex, int attachmentIndex )
 //-----------------------------------------------------------------------------
 void StriderMuzzleFlashCallback( const CEffectData &data )
 {
-	MuzzleFlash_Strider( data.m_nEntIndex, data.m_nAttachmentIndex );
+	MuzzleFlash_Strider( data.m_hEntity, data.m_nAttachmentIndex );
 }
 
 DECLARE_CLIENT_EFFECT( "StriderMuzzleFlash", StriderMuzzleFlashCallback );
@@ -1009,7 +1015,7 @@ void StriderBlood( const Vector &origin, const Vector &normal, float scale )
 	int i;
 	float	flScale = scale / 8.0f;
 
-	PMaterialHandle	hMaterial = g_ParticleMgr.GetPMaterial( "effects/slime1" );
+	PMaterialHandle	hMaterial = ParticleMgr()->GetPMaterial( "effects/slime1" );
 
 	float	length = 0.1f;
 	Vector	vForward, vRight, vUp;

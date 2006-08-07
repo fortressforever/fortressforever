@@ -17,6 +17,7 @@
 // $NoKeywords: $
 //=============================================================================
 
+
 #include <stdio.h>
 #define PROTECTED_THINGS_DISABLE
 
@@ -37,6 +38,7 @@
 #include <vgui_controls/Label.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/MessageBox.h>
+#include "filesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -45,10 +47,18 @@ using namespace vgui;
 
 
 //-----------------------------------------------------------------------------
+// Handle table
+//-----------------------------------------------------------------------------
+IMPLEMENT_HANDLES( BuildGroup, 20 )
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 BuildGroup::BuildGroup(Panel *parentPanel, Panel *contextPanel)
 {
+	CONSTRUCT_HANDLE( );
+
 	_enabled=false;
 	_snapX=1;
 	_snapY=1;
@@ -94,6 +104,7 @@ BuildGroup::~BuildGroup()
 		}
 	}
 	
+	DESTRUCT_HANDLE();
 }
 
 //-----------------------------------------------------------------------------
@@ -265,9 +276,26 @@ void BuildGroup::DrawRulers()
 //-----------------------------------------------------------------------------
 // Purpose: respond to cursor movments
 //-----------------------------------------------------------------------------
-void BuildGroup::CursorMoved(int x, int y, Panel *panel)
+bool BuildGroup::CursorMoved(int x, int y, Panel *panel)
 {
 	Assert(panel);
+
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->CursorMoved( x, y, panel );
+				}
+			}
+		}
+		return false;
+	}
 
 	// no moving uneditable panels
 	// commented out because this has issues with panels moving 
@@ -281,7 +309,22 @@ void BuildGroup::CursorMoved(int x, int y, Panel *panel)
 		
 		if (_dragMouseCode == MOUSE_RIGHT)
 		{
-			panel->SetSize(x - _dragStartCursorPos[0], y - _dragStartCursorPos[1]);
+			int newW = max( 1, _dragStartPanelSize[ 0 ] + x - _dragStartCursorPos[0] );
+			int newH = max( 1, _dragStartPanelSize[ 1 ] + y - _dragStartCursorPos[1] );
+
+			bool shift = ( input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT) );
+			bool ctrl = ( input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL) );
+
+			if ( shift )
+			{
+				newW = _dragStartPanelSize[ 0 ];
+			}
+			if ( ctrl )
+			{
+				newH = _dragStartPanelSize[ 1 ];
+			}
+
+			panel->SetSize( newW, newH );
 			ApplySnap(panel);
 		}
 		else
@@ -309,26 +352,45 @@ void BuildGroup::CursorMoved(int x, int y, Panel *panel)
 		panel->Repaint();
 		panel->CallParentFunction(new KeyValues("Repaint"));
 	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void BuildGroup::MousePressed(MouseCode code, Panel *panel)
+bool BuildGroup::MousePressed(MouseCode code, Panel *panel)
 {
 	Assert(panel);
+
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->MousePressed( code, panel );
+				}
+			}
+		}
+		return false;
+	}
 
 	// if people click on the base build dialog panel.
 	if (panel == m_hBuildDialog)
 	{
 		// hide the click menu if its up
 		ivgui()->PostMessage(m_hBuildDialog->GetVPanel(), new KeyValues("HideNewControlMenu"), NULL);
-		return;
+		return true;
 	}
 
 	// don't select unnamed items
 	if (strlen(panel->GetName()) < 1)
-		return;
+		return true;
 	
 	bool shift = ( input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT) );	
 	if (!shift)
@@ -336,7 +398,13 @@ void BuildGroup::MousePressed(MouseCode code, Panel *panel)
 		_controlGroup.RemoveAll();	
 	}
 
-	if (code == MOUSE_LEFT)
+	// Show new ctrl menu if they click on the bg (not on a subcontrol)
+	if ( code == MOUSE_RIGHT && panel == GetContextPanel())
+	{		
+		// trigger a drop down menu to create new controls
+		ivgui()->PostMessage (m_hBuildDialog->GetVPanel(), new KeyValues("ShowNewControlMenu"), NULL);	
+	}	
+	else
 	{	
 		// don't respond if we click on ruler numbers
 		if (_showRulers) // rulers are visible
@@ -344,7 +412,7 @@ void BuildGroup::MousePressed(MouseCode code, Panel *panel)
 			for ( int i=0; i < 4; i++)
 			{
 				if ( panel == _rulerNumber[i])
-					return;
+					return true;
 			}
 		}
 
@@ -392,6 +460,8 @@ void BuildGroup::MousePressed(MouseCode code, Panel *panel)
 		_dragStartPanelPos[0]=x;
 		_dragStartPanelPos[1]=y;
 
+		basePanel->GetSize( _dragStartPanelSize[ 0 ], _dragStartPanelSize[ 1 ] );
+
 		// figure out the deltas of the other panels from the base panel
 		for (i=0; i<_controlGroup.Count(); ++i)
 		{
@@ -423,38 +493,92 @@ void BuildGroup::MousePressed(MouseCode code, Panel *panel)
 		panel->RequestFocus();
 	}
 
-	// trigger a drop down menu to create new controls
-	else if (code == MOUSE_RIGHT)
-	{	
-		ivgui()->PostMessage (m_hBuildDialog->GetVPanel(), new KeyValues("ShowNewControlMenu"), NULL);	
-	}	
+	return true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void BuildGroup::MouseReleased(MouseCode code, Panel *panel)
+bool BuildGroup::MouseReleased(MouseCode code, Panel *panel)
 {
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->MouseReleased( code, panel );
+				}
+			}
+		}
+		return false;
+	}
+
 	Assert(panel);
 
 	_dragging=false;
 	input()->SetMouseCapture(null);
+	return true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void BuildGroup::MouseDoublePressed(MouseCode code, Panel *panel)
+bool BuildGroup::MouseDoublePressed(MouseCode code, Panel *panel)
 {
 	Assert(panel);
+	return MousePressed( code, panel );
+}
+
+bool BuildGroup::KeyTyped( wchar_t unichar, Panel *panel )
+{
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->KeyTyped( unichar, panel );
+				}
+			}
+		}
+		return false;
+	}
+
+	return true;
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void BuildGroup::KeyCodeTyped(KeyCode code, Panel *panel)
+bool BuildGroup::KeyCodeTyped(KeyCode code, Panel *panel)
 {
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->KeyCodeTyped( code, panel );
+				}
+			}
+		}
+		return false;
+	}
+
 	Assert(panel);
 
 	int dx=0;
@@ -462,6 +586,19 @@ void BuildGroup::KeyCodeTyped(KeyCode code, Panel *panel)
 
 	bool shift = ( input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT) );
 	bool ctrl = ( input()->IsKeyDown(KEY_LCONTROL) || input()->IsKeyDown(KEY_RCONTROL) );
+	bool alt = (input()->IsKeyDown(KEY_LALT) || input()->IsKeyDown(KEY_RALT));
+
+	
+	if ( ctrl && shift && alt && code == KEY_B)
+	{
+		// enable build mode
+		EditablePanel *ep = dynamic_cast< EditablePanel * >( panel );
+		if ( ep )
+		{
+			ep->ActivateBuildMode();
+		}
+		return true;
+	}
 
 	switch (code)
 	{
@@ -556,7 +693,47 @@ void BuildGroup::KeyCodeTyped(KeyCode code, Panel *panel)
 		}
 	}
 
+	// If holding key while dragging, simulate moving cursor so shift/ctrl key changes take effect
+	if ( _dragging && panel != GetContextPanel() )
+	{
+		int x, y;
+		input()->GetCursorPos( x, y );
+		CursorMoved( x, y, panel );
+	}
+
+	return true;
 }
+
+bool BuildGroup::KeyCodeReleased(KeyCode code, Panel *panel )
+{
+	if ( !m_hBuildDialog.Get() )
+	{
+		if ( panel->GetParent() )
+		{
+			EditablePanel *ep = dynamic_cast< EditablePanel * >( panel->GetParent() );
+			if ( ep )
+			{
+				BuildGroup *bg = ep->GetBuildGroup();
+				if ( bg && bg != this )
+				{
+					bg->KeyCodeTyped( code, panel );
+				}
+			}
+		}
+		return false;
+	}
+
+	// If holding key while dragging, simulate moving cursor so shift/ctrl key changes take effect
+	if ( _dragging && panel != GetContextPanel() )
+	{
+		int x, y;
+		input()->GetCursorPos( x, y );
+		CursorMoved( x, y, panel );
+	}
+
+	return true;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Searches for a BuildModeDialog in the hierarchy
@@ -698,11 +875,11 @@ void BuildGroup::LoadControlSettings(const char *controlResourceName, const char
 		bool bSuccess = false;
 		if (!pathID)
 		{
-			bSuccess = rDat->LoadFromFile((IBaseFileSystem *)filesystem(), controlResourceName, "SKIN");
+			bSuccess = rDat->LoadFromFile(filesystem(), controlResourceName, "SKIN");
 		}
 		if (!bSuccess)
 		{
-			bSuccess = rDat->LoadFromFile((IBaseFileSystem *)filesystem(), controlResourceName, pathID);
+			bSuccess = rDat->LoadFromFile(filesystem(), controlResourceName, pathID);
 		}
 	}
 
@@ -853,11 +1030,13 @@ bool BuildGroup::SaveControlSettings( void )
 		GetSettings( rDat );
 		
 		// save the data out to a file
-		bSuccess = rDat->SaveToFile( (IBaseFileSystem*)filesystem(), m_pResourceName, m_pResourcePathID);
+		bSuccess = rDat->SaveToFile( filesystem(), m_pResourceName, m_pResourcePathID);
 		if (!bSuccess)
 		{
+#ifndef _XBOX
 			MessageBox *dlg = new MessageBox("BuildMode - Error saving file", "Error: Could not save changes.  File is most likely read only.");
 			dlg->DoModal();
+#endif
 		}
 
 		rDat->deleteThis();
@@ -910,6 +1089,8 @@ void BuildGroup::ApplySettings( KeyValues *resourceData )
 		if (controlKeys->GetDataType() != KeyValues::TYPE_NONE)
 			continue;
 
+		char const *keyName = controlKeys->GetName();
+
 		// check to see if any buildgroup panels have this name
 		for ( int i = 0; i < _panelDar.Count(); i++ )
 		{
@@ -926,7 +1107,9 @@ void BuildGroup::ApplySettings( KeyValues *resourceData )
 			Assert (panel);
 
 			// make the control name match CASE INSENSITIVE!
-			if (!stricmp(panel->GetName(), controlKeys->GetName()))
+			char const *panelName = panel->GetName();
+
+			if (!Q_stricmp(panelName, keyName))
 			{
 				// apply the settings
 				panel->ApplySettings(controlKeys);
@@ -937,10 +1120,8 @@ void BuildGroup::ApplySettings( KeyValues *resourceData )
 
 		if ( !bFound )
 		{
-			char const *missingName = controlKeys->GetName();
-
 			// the key was not found in the registered list, check to see if we should create it
-			if ( missingName /*controlKeys->GetInt("AlwaysCreate", false)*/ )
+			if ( keyName /*controlKeys->GetInt("AlwaysCreate", false)*/ )
 			{
 				// create the control even though it wasn't registered
 				NewControl( controlKeys );
@@ -1060,6 +1241,9 @@ Panel *BuildGroup::FieldNameTaken(const char *fieldName)
 	for ( int i = 0; i < _panelDar.Count(); i++ )
 	{
 		Panel *panel = _panelDar[i].Get();
+		if ( !panel )
+			continue;
+
 		if (!stricmp(panel->GetName(), fieldName) )
 		{
 			return panel;

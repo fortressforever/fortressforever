@@ -23,7 +23,7 @@ class bf_read;
 //-----------------------------------------------------------------------------
 // Purpose: Apply effects to view origin/angles, etc.  Screen fade and shake
 //-----------------------------------------------------------------------------
-class IViewEffects
+abstract_class IViewEffects
 {
 public:
 	// Initialize subsystem

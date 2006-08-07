@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: Client explosions
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #include "cbase.h"
 #include "tempentity.h"  // FLAGS
 #include "c_te_particlesystem.h"
@@ -12,6 +12,8 @@
 #include "fx_explosion.h"
 #include "ClientEffectPrecacheSystem.h"
 #include "engine/ivdebugoverlay.h"
+#include "tier1/keyvalues.h"
+#include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -60,20 +62,20 @@ CRagdollExplosionEnumerator::~CRagdollExplosionEnumerator()
 		// problem unless they are being hit right up by a ceiling
 		position += Vector(0, 0, 32.0f);
 
+		Vector	dir		= position - m_vecOrigin;
+		float	dist	= VectorNormalize( dir );
+		float	force	= m_flMagnitude - ( ( m_flMagnitude / m_flRadius ) * dist );
+
+		if ( force <= 1.0f )
+			continue;
+
 		trace_t	tr;
-		UTIL_TraceLine( m_vecOrigin, position, MASK_SHOT, NULL, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( m_vecOrigin, position, MASK_SHOT_HULL, NULL, COLLISION_GROUP_NONE, &tr );
 
 		// debugoverlay->AddLineOverlay( m_vecOrigin, position, 0,255,0, true, 18.0 );
 
 		if ( tr.fraction < 1.0f && tr.m_pEnt != pModel )
 			continue;	
-
-		Vector	dir		= position - m_vecOrigin;
-		float	dist	= VectorNormalize( dir );
-		float	force	= m_flMagnitude - ( ( m_flMagnitude / m_flRadius ) * dist );
-		
-		if ( force <= 1.0f )
-			continue;
 
 		dir *= force; // scale force
 
@@ -85,6 +87,7 @@ CRagdollExplosionEnumerator::~CRagdollExplosionEnumerator()
 		pModel->ImpactTrace( &tr, DMG_BLAST, NULL );
 	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Explosion TE
@@ -102,6 +105,10 @@ public:
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 
+private:
+	// Recording 
+	void RecordExplosion( );
+
 public:
 	void			AffectRagdolls( void );
 
@@ -117,13 +124,31 @@ public:
 	//CParticleCollision	m_ParticleCollision;
 	CParticleMgr		*m_pParticleMgr;
 	PMaterialHandle		m_MaterialHandle;
+	bool			m_bShouldAffectRagdolls;
 };
+
+
+//-----------------------------------------------------------------------------
+// Networking 
+//-----------------------------------------------------------------------------
+IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEExplosion, DT_TEExplosion, CTEExplosion)
+	RecvPropInt( RECVINFO(m_nModelIndex)),
+	RecvPropFloat( RECVINFO(m_fScale )),
+	RecvPropInt( RECVINFO(m_nFrameRate)),
+	RecvPropInt( RECVINFO(m_nFlags)),
+	RecvPropVector( RECVINFO(m_vecNormal)),
+	RecvPropInt( RECVINFO(m_chMaterialType)),
+	RecvPropInt( RECVINFO(m_nRadius)),
+	RecvPropInt( RECVINFO(m_nMagnitude)),
+END_RECV_TABLE()
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 C_TEExplosion::C_TEExplosion( void )
 {
+	m_bShouldAffectRagdolls = true;
 	m_nModelIndex = 0;
 	m_fScale = 0;
 	m_nFrameRate = 0;
@@ -149,7 +174,7 @@ C_TEExplosion::~C_TEExplosion( void )
 //-----------------------------------------------------------------------------
 void C_TEExplosion::AffectRagdolls( void )
 {
-	if ( ( m_nRadius == 0 ) || ( m_nMagnitude == 0 ) )
+	if ( ( m_nRadius == 0 ) || ( m_nMagnitude == 0 ) || (!m_bShouldAffectRagdolls) )
 		return;
 
 	CRagdollExplosionEnumerator	ragdollEnum( m_vecOrigin, m_nRadius, m_nMagnitude );
@@ -184,12 +209,53 @@ bool CExplosionOverlay::Update( void )
 	return false;
 }
 
+
+//-----------------------------------------------------------------------------
+// Recording 
+//-----------------------------------------------------------------------------
+void C_TEExplosion::RecordExplosion( )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	if ( clienttools->IsInRecordingMode() )
+	{
+		const model_t* pModel = (m_nModelIndex != 0) ? modelinfo->GetModel( m_nModelIndex ) : NULL;
+		const char *pModelName = pModel ? modelinfo->GetModelName( pModel ) : "";
+
+		KeyValues *msg = new KeyValues( "TempEntity" );
+
+ 		msg->SetInt( "te", TE_EXPLOSION );
+ 		msg->SetString( "name", "TE_Explosion" );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		msg->SetFloat( "originx", m_vecOrigin.x );
+		msg->SetFloat( "originy", m_vecOrigin.y );
+		msg->SetFloat( "originz", m_vecOrigin.z );
+		msg->SetFloat( "directionx", m_vecNormal.x );
+		msg->SetFloat( "directiony", m_vecNormal.y );
+		msg->SetFloat( "directionz", m_vecNormal.z );
+  		msg->SetString( "model", pModelName );
+		msg->SetFloat( "scale", m_fScale );
+		msg->SetInt( "framerate", m_nFrameRate );
+		msg->SetInt( "flags", m_nFlags );
+		msg->SetInt( "materialtype", m_chMaterialType );
+		msg->SetInt( "radius", m_nRadius );
+		msg->SetInt( "magnitude", m_nMagnitude );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : bool - 
 //-----------------------------------------------------------------------------
 void C_TEExplosion::PostDataUpdate( DataUpdateType_t updateType )
 {
+	RecordExplosion();
+
 	AffectRagdolls();
 
 	// Filter out a water explosion
@@ -229,32 +295,44 @@ void C_TEExplosion::SimulateParticles( CParticleSimulateIterator *pIterator )
 	pIterator->RemoveAllParticles();
 }
 
-IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEExplosion, DT_TEExplosion, CTEExplosion)
-	RecvPropInt( RECVINFO(m_nModelIndex)),
-	RecvPropFloat( RECVINFO(m_fScale )),
-	RecvPropInt( RECVINFO(m_nFrameRate)),
-	RecvPropInt( RECVINFO(m_nFlags)),
-	RecvPropVector( RECVINFO(m_vecNormal)),
-	RecvPropInt( RECVINFO(m_chMaterialType)),
-	RecvPropInt( RECVINFO(m_nRadius)),
-	RecvPropInt( RECVINFO(m_nMagnitude)),
-END_RECV_TABLE()
-
 
 void TE_Explosion( IRecipientFilter& filter, float delay,
 	const Vector* pos, int modelindex, float scale, int framerate, int flags, int radius, int magnitude, 
-	const Vector* normal = NULL, unsigned char materialType = 'C' )
+	const Vector* normal = NULL, unsigned char materialType = 'C', bool bShouldAffectRagdolls = true )
 {
 	// Major hack to access singleton object for doing this event (simulate receiving network message)
 	__g_C_TEExplosion.m_nModelIndex = modelindex;
 	__g_C_TEExplosion.m_fScale = scale;
 	__g_C_TEExplosion.m_nFrameRate = framerate;
 	__g_C_TEExplosion.m_nFlags = flags;
+	__g_C_TEExplosion.m_vecOrigin = *pos;
 	__g_C_TEExplosion.m_vecNormal = *normal;
 	__g_C_TEExplosion.m_chMaterialType = materialType;
 	__g_C_TEExplosion.m_nRadius = radius;
 	__g_C_TEExplosion.m_nMagnitude = magnitude;
+	__g_C_TEExplosion.m_bShouldAffectRagdolls = bShouldAffectRagdolls;
 
 	__g_C_TEExplosion.PostDataUpdate( DATA_UPDATE_CREATED );
 
+}
+
+void TE_Explosion( IRecipientFilter& filter, float delay, KeyValues *pKeyValues )
+{
+	Vector vecOrigin, vecNormal;
+	vecOrigin.x = pKeyValues->GetFloat( "originx" );
+	vecOrigin.y = pKeyValues->GetFloat( "originy" );
+	vecOrigin.z = pKeyValues->GetFloat( "originz" );
+	vecNormal.x = pKeyValues->GetFloat( "directionx" );
+	vecNormal.y = pKeyValues->GetFloat( "directiony" );
+	vecNormal.z = pKeyValues->GetFloat( "directionz" );
+	const char *pModelName = pKeyValues->GetString( "model" );
+	int nModelIndex = pModelName[0] ? modelinfo->GetModelIndex( pModelName ) : 0;
+	float flScale = pKeyValues->GetFloat( "scale" );
+	int nFrameRate = pKeyValues->GetInt( "framerate" );
+	int nFlags = pKeyValues->GetInt( "flags" );
+	int nMaterialType = pKeyValues->GetInt( "materialtype" );
+	int nRadius = pKeyValues->GetInt( "radius" );
+	int nMagnitude = pKeyValues->GetInt( "magnitude" );
+	TE_Explosion( filter, 0.0f, &vecOrigin, nModelIndex, flScale, nFrameRate,
+		nFlags, nRadius, nMagnitude, &vecNormal, (unsigned char)nMaterialType, false );
 }

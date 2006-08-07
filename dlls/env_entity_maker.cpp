@@ -51,9 +51,15 @@ private:
 	EHANDLE			m_hCurrentBlocker;	// Last entity that blocked us spawning something
 	Vector			m_vecBlockerOrigin;
 
+	// Movement after spawn
+	QAngle			m_angPostSpawnDirection;
+	float			m_flPostSpawnDirectionVariance;
+	float			m_flPostSpawnSpeed;
+
 	string_t		m_iszTemplate;
 
 	COutputEvent	m_pOutputOnSpawned;
+	COutputEvent	m_pOutputOnFailedSpawn;
 };
 
 BEGIN_DATADESC( CEnvEntityMaker )
@@ -63,9 +69,13 @@ BEGIN_DATADESC( CEnvEntityMaker )
 	DEFINE_FIELD( m_hCurrentBlocker, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_vecBlockerOrigin, FIELD_VECTOR ),
 	DEFINE_KEYFIELD( m_iszTemplate, FIELD_STRING, "EntityTemplate" ),
+	DEFINE_KEYFIELD( m_angPostSpawnDirection, FIELD_VECTOR, "PostSpawnDirection" ),
+	DEFINE_KEYFIELD( m_flPostSpawnDirectionVariance, FIELD_FLOAT, "PostSpawnDirectionVariance" ),
+	DEFINE_KEYFIELD( m_flPostSpawnSpeed, FIELD_FLOAT, "PostSpawnSpeed" ),
 
 	// Outputs
 	DEFINE_OUTPUT( m_pOutputOnSpawned, "OnEntitySpawned" ),
+	DEFINE_OUTPUT( m_pOutputOnFailedSpawn, "OnEntityFailedSpawn" ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceSpawn", InputForceSpawn ),
@@ -118,7 +128,7 @@ void CEnvEntityMaker::Activate( void )
 CPointTemplate *CEnvEntityMaker::FindTemplate()
 {
 	// Find our point_template
-	CPointTemplate *pTemplate = dynamic_cast<CPointTemplate *>(gEntList.FindEntityByName( NULL, STRING(m_iszTemplate), NULL ));
+	CPointTemplate *pTemplate = dynamic_cast<CPointTemplate *>(gEntList.FindEntityByName( NULL, STRING(m_iszTemplate) ));
 	if ( !pTemplate )
 	{
 		Warning( "env_entity_maker %s failed to find template %s.\n", GetEntityName(), STRING(m_iszTemplate) );
@@ -168,6 +178,38 @@ void CEnvEntityMaker::SpawnEntity( void )
 	{
 		SetThink( &CEnvEntityMaker::CheckSpawnThink );
 		SetNextThink( gpGlobals->curtime + 0.5f );
+	}
+
+	// If we have a specified post spawn speed, apply it to all spawned entities
+	if ( m_flPostSpawnSpeed )
+	{
+		for ( int i = 0; i < hNewEntities.Count(); i++ )
+		{
+			CBaseEntity *pEntity = hNewEntities[i];
+			if ( pEntity->GetMoveType() == MOVETYPE_NONE )
+				continue;
+
+			// Calculate a velocity for this entity
+			Vector vForward,vRight,vUp;
+			AngleVectors( m_angPostSpawnDirection, &vForward, &vRight, &vUp );
+			Vector vecShootDir = vForward;
+			vecShootDir += vRight * random->RandomFloat(-1, 1) * m_flPostSpawnDirectionVariance;
+			vecShootDir += vForward * random->RandomFloat(-1, 1) * m_flPostSpawnDirectionVariance;
+			vecShootDir += vUp * random->RandomFloat(-1, 1) * m_flPostSpawnDirectionVariance;
+			VectorNormalize( vecShootDir );
+			vecShootDir *= m_flPostSpawnSpeed;
+
+			// Apply it to the entity
+			IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
+			if ( pPhysicsObject )
+			{
+				pPhysicsObject->AddVelocity(&vecShootDir, NULL);
+			}
+			else
+			{
+				pEntity->SetAbsVelocity( vecShootDir );
+			}
+		}
 	}
 }
 
@@ -270,10 +312,16 @@ void CEnvEntityMaker::InputForceSpawn( inputdata_t &inputdata )
 		return;
 
 	if ( HasSpawnFlags( SF_ENTMAKER_CHECK_FOR_SPACE ) && !HasRoomToSpawn() )
+	{
+		m_pOutputOnFailedSpawn.FireOutput( this, this );
 		return;
+	}
 
 	if ( HasSpawnFlags( SF_ENTMAKER_CHECK_PLAYER_LOOKING ) && IsPlayerLooking() )
+	{
+		m_pOutputOnFailedSpawn.FireOutput( this, this );
 		return;
+	}
 
 	SpawnEntity();
 }

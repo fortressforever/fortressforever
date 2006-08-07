@@ -9,6 +9,10 @@
 #include "effect_dispatch_data.h"
 #include "coordsize.h"
 
+#ifdef CLIENT_DLL
+#include "cliententitylist.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -23,6 +27,12 @@
 #ifdef CLIENT_DLL
 
 	#include "dt_recv.h"
+
+	static void RecvProxy_EntIndex( const CRecvProxyData *pData, void *pStruct, void *pOut )
+	{
+		int nEntIndex = pData->m_Value.m_Int;
+		((CEffectData*)pStruct)->m_hEntity = (nEntIndex < 0) ? INVALID_EHANDLE_INDEX : ClientEntityList().EntIndexToHandle( nEntIndex );
+	}
 
 	BEGIN_RECV_TABLE_NOBASE( CEffectData, DT_EffectData )
 
@@ -49,7 +59,7 @@
 		RecvPropInt( RECVINFO( m_nDamageType ) ),
 		RecvPropInt( RECVINFO( m_nHitBox ) ),
 
-		RecvPropInt( RECVINFO( m_nEntIndex ) ),
+		RecvPropInt( "entindex", 0, SIZEOF_IGNORE, 0, RecvProxy_EntIndex ),
 
 		RecvPropInt( RECVINFO( m_nColor ) ),
 
@@ -88,7 +98,7 @@
 		SendPropInt( SENDINFO_NOCHECK( m_nDamageType ), 32, SPROP_UNSIGNED ),
 		SendPropInt( SENDINFO_NOCHECK( m_nHitBox ), 11, SPROP_UNSIGNED ),
 
-		SendPropInt( SENDINFO_NOCHECK( m_nEntIndex ), MAX_EDICT_BITS, SPROP_UNSIGNED ),
+		SendPropInt( SENDINFO_NAME( m_nEntIndex, entindex ), MAX_EDICT_BITS, SPROP_UNSIGNED ),
 
 		SendPropInt( SENDINFO_NOCHECK( m_nColor ), 8, SPROP_UNSIGNED ),
 
@@ -98,4 +108,22 @@
 
 #endif
 
+#ifdef CLIENT_DLL
 
+IClientRenderable *CEffectData::GetRenderable() const
+{
+	return ClientEntityList().GetClientRenderableFromHandle( m_hEntity );
+}
+
+C_BaseEntity *CEffectData::GetEntity() const
+{
+	return ClientEntityList().GetBaseEntityFromHandle( m_hEntity );
+}
+
+int CEffectData::entindex() const
+{
+	C_BaseEntity *pEnt = ClientEntityList().GetBaseEntityFromHandle( m_hEntity );
+	return pEnt ? pEnt->entindex() : -1;
+}
+
+#endif

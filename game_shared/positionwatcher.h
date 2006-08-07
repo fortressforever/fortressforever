@@ -38,7 +38,7 @@ private:
 };
 
 // inherit from this interface to be able to call WatchPositionChanges
-class IPositionWatcher
+abstract_class IPositionWatcher
 {
 public:
 	virtual void NotifyPositionChanged( CBaseEntity *pEntity ) = 0;

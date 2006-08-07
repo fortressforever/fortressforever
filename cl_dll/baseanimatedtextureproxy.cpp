@@ -68,7 +68,7 @@ void CBaseAnimatedTextureProxy::Cleanup()
 //-----------------------------------------------------------------------------
 void CBaseAnimatedTextureProxy::OnBind( void *pEntity )
 {
-	assert ( m_AnimatedTextureVar );
+	Assert ( m_AnimatedTextureVar );
 
 	if( m_AnimatedTextureVar->GetType() != MATERIAL_VAR_TYPE_TEXTURE )
 	{
@@ -77,6 +77,12 @@ void CBaseAnimatedTextureProxy::OnBind( void *pEntity )
 	ITexture *pTexture;
 	pTexture = m_AnimatedTextureVar->GetTextureValue();
 	int numFrames = pTexture->GetNumAnimationFrames();
+
+	if ( numFrames <= 0 )
+	{
+		Assert( !"0 frames in material calling animated texture proxy" );
+		return;
+	}
 
 	// NOTE: Must not use relative time based methods here
 	// because the bind proxy can be called many times per frame.

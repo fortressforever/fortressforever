@@ -23,6 +23,9 @@ public:
 
 	void SetAltitude( float flAltitude ) { m_flAltitude = flAltitude; }
 	void SetEmit( bool state ) { m_bEmit = state; }
+	void Spawn ( void );
+	int ShouldTransmit( const CCheckTransmitInfo *pInfo );
+	int UpdateTransmitState( void );
 
 protected:
 
@@ -37,11 +40,35 @@ END_SEND_TABLE()
 LINK_ENTITY_TO_CLASS( env_rotorwash_emitter, CRotorWashEmitter );
 
 BEGIN_DATADESC( CRotorWashEmitter )
-
 	DEFINE_FIELD( 		m_bEmit, 		FIELD_BOOLEAN ),
-	DEFINE_FIELD( 		m_flAltitude, 	FIELD_FLOAT ),
-
+	DEFINE_KEYFIELD( m_flAltitude, 	FIELD_FLOAT, "altitude" ),
 END_DATADESC()
+
+void CRotorWashEmitter::Spawn( void )
+{
+	BaseClass::Spawn();
+	SetEmit( false );
+}
+
+int CRotorWashEmitter::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	if ( GetParent() )
+	{
+		return GetParent()->ShouldTransmit( pInfo );
+	}
+
+	return FL_EDICT_PVSCHECK;
+}
+
+int CRotorWashEmitter::UpdateTransmitState( void )
+{
+	if ( GetParent() )
+	{
+		return SetTransmitState( FL_EDICT_FULLCHECK );
+	}
+
+	return SetTransmitState( FL_EDICT_PVSCHECK );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -67,4 +94,3 @@ CBaseEntity *CreateRotorWashEmitter( const Vector &localOrigin, const QAngle &lo
 
 	return pEmitter;
 }
-

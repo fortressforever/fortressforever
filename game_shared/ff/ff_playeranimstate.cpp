@@ -67,29 +67,29 @@ public:
 	virtual bool	CanThePlayerMove();
 	virtual float	GetCurrentMaxGroundSpeed();
 	virtual Activity CalcMainActivity();
-	virtual void	DebugShowAnimState( int iStartLine );
-	virtual void	ClearAnimationLayers();
+	virtual void DebugShowAnimState( int iStartLine );
+	virtual void ComputeSequences( CStudioHdr *pStudioHdr );
+	virtual void ClearAnimationLayers();
+	
 
 	virtual void	DoAnimationEvent( PlayerAnimEvent_t event );
 
-	virtual void	ComputeSequences();
-	
 	virtual int		CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle );
 	virtual void	ClearAnimationState();
 	
 protected:
 
-	int		CalcFireLayerSequence(PlayerAnimEvent_t event);
-	void	ComputeFireSequence();
+	int CalcFireLayerSequence(PlayerAnimEvent_t event);
+	void ComputeFireSequence(CStudioHdr *pStudioHdr);
 
-	int		CalcReloadLayerSequence();
-	void	ComputeReloadSequence();
+	void ComputeReloadSequence(CStudioHdr *pStudioHdr);
+	int CalcReloadLayerSequence();
 
 	const char* GetWeaponSuffix();
 
 	bool HandleJumping();
 
-	void UpdateLayerSequenceGeneric( int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
+	void UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
 
 private:
 
@@ -222,13 +222,13 @@ int CFFPlayerAnimState::CalcReloadLayerSequence()
 
 
 #ifdef CLIENT_DLL
-	void CFFPlayerAnimState::UpdateLayerSequenceGeneric( int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
+	void CFFPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
 	{
 		if ( !bEnabled )
 			return;
 
 		// Increment the fire sequence's cycle.
-		flCurCycle += m_pOuter->GetSequenceCycleRate( iSequence ) * gpGlobals->frametime;
+		flCurCycle += m_pOuter->GetSequenceCycleRate( pStudioHdr, iSequence ) * gpGlobals->frametime;
 		if ( flCurCycle > 1 )
 		{
 			if ( bWaitAtEnd )
@@ -247,19 +247,19 @@ int CFFPlayerAnimState::CalcReloadLayerSequence()
 		// Now dump the state into its animation layer.
 		C_AnimationLayer *pLayer = m_pOuter->GetAnimOverlay( iLayer );
 
-		pLayer->flCycle = flCurCycle;
-		pLayer->nSequence = iSequence;
+		pLayer->m_flCycle = flCurCycle;
+		pLayer->m_nSequence = iSequence;
 
-		pLayer->flPlaybackrate = 1.0;
-		pLayer->flWeight = 1.0f;
-		pLayer->nOrder = iLayer;
+		pLayer->m_flPlaybackRate = 1.0;
+		pLayer->m_flWeight = 1.0f;
+		pLayer->m_nOrder = iLayer;
 	}
 #endif
 
-void CFFPlayerAnimState::ComputeReloadSequence()
+void CFFPlayerAnimState::ComputeReloadSequence( CStudioHdr *pStudioHdr )
 {
 #ifdef CLIENT_DLL
-	UpdateLayerSequenceGeneric( RELOADSEQUENCE_LAYER, m_bReloading, m_flReloadCycle, m_iReloadSequence, false );
+	UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bReloading, m_flReloadCycle, m_iReloadSequence, false );
 #else
 	// Server doesn't bother with different fire sequences.
 #endif
@@ -477,12 +477,12 @@ void CFFPlayerAnimState::DebugShowAnimState( int iStartLine )
 }
 
 
-void CFFPlayerAnimState::ComputeSequences()
+void CFFPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 {
-	BaseClass::ComputeSequences();
+	BaseClass::ComputeSequences( pStudioHdr );
 
-	ComputeFireSequence();
-	ComputeReloadSequence();
+	ComputeFireSequence(pStudioHdr);
+	ComputeReloadSequence(pStudioHdr);
 }
 
 
@@ -499,10 +499,10 @@ void CFFPlayerAnimState::ClearAnimationLayers()
 }
 
 
-void CFFPlayerAnimState::ComputeFireSequence()
+void CFFPlayerAnimState::ComputeFireSequence( CStudioHdr *pStudioHdr )
 {
 #ifdef CLIENT_DLL
-	UpdateLayerSequenceGeneric( FIRESEQUENCE_LAYER, m_bFiring, m_flFireCycle, m_iFireSequence, false );
+	UpdateLayerSequenceGeneric( pStudioHdr, FIRESEQUENCE_LAYER, m_bFiring, m_flFireCycle, m_iFireSequence, false );
 #else
 	// Server doesn't bother with different fire sequences.
 #endif

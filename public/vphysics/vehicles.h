@@ -207,4 +207,24 @@ struct vehicleparams_t
 	vehicle_steeringparams_t	steering;
 };
 
+// Iterator for queries
+class CPassengerSeatTransition;
+typedef CUtlVector< CPassengerSeatTransition> PassengerSeatAnims_t;
+
+// Seat query types
+enum VehicleSeatQuery_e
+{
+	VEHICLE_SEAT_ANY,			// Any available seat for our role
+	VEHICLE_SEAT_NEAREST,		// Seat closest to our starting point
+};
+
+// Seat anim types for return
+enum PassengerSeatAnimType_t
+{
+	PASSENGER_SEAT_ENTRY,
+	PASSENGER_SEAT_EXIT
+};
+
+#define VEHICLE_SEAT_INVALID	-1		// An invalid seat
+
 #endif // VEHICLES_H

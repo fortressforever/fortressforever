@@ -63,6 +63,7 @@
 // Give it a small range so they can have multiple masters running.
 #define VMPI_MASTER_PORT_FIRST		21140
 #define VMPI_MASTER_PORT_LAST		21145
+#define VMPI_MASTER_FILESYSTEM_BROADCAST_PORT	21146
 
 
 

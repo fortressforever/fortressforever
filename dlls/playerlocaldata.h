@@ -24,18 +24,18 @@ public:
 	// Save/restore
 	DECLARE_SIMPLE_DATADESC();
 	// Prediction data copying
-	DECLARE_PREDICTABLE();
 	DECLARE_CLASS_NOBASE( CPlayerLocalData );
 	DECLARE_EMBEDDED_NETWORKVAR();
 
 	CPlayerLocalData();
 
-	void UpdateAreaBits( CBasePlayer *pl );
+	void UpdateAreaBits( CBasePlayer *pl, unsigned char chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES] );
 
 
 public:
 
-	CNetworkArray( unsigned char, m_chAreaBits, 32 );
+	CNetworkArray( unsigned char, m_chAreaBits, MAX_AREA_STATE_BYTES );								// Which areas are potentially visible to the client?
+	CNetworkArray( unsigned char, m_chAreaPortalBits, MAX_AREA_PORTAL_STATE_BYTES );	// Which area portals are open?
 
 	CNetworkVar( int,	m_iHideHUD );		// bitfields containing sections of the HUD to hide
 	CNetworkVar( int,	m_iFOV );			// field of view
@@ -60,7 +60,8 @@ public:
 	// Velocity at time when we hit ground
 	CNetworkVar( float, m_flFallVelocity );
 	// Previous button state
-	CNetworkVar( int, m_nOldButtons );
+	int m_nOldButtons;
+	class CSkyCamera *m_pOldSkyCamera;
 	// Base velocity that was passed in to server physics so 
 	//  client can predict conveyors correctly.  Server zeroes it, so we need to store here, too.
 	// auto-decaying view angle adjustment
@@ -87,6 +88,5 @@ public:
 
 EXTERN_SEND_TABLE(DT_Local);
 
-void* SendProxy_SendLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID );
 
 #endif // PLAYERLOCALDATA_H

@@ -39,6 +39,8 @@ public:
 	// other client-server neutral interface?
 	virtual float Time();
 	virtual bool IsServer();
+	virtual void SuppressEffectsSounds( bool bSuppress );
+
 private:
 	//-----------------------------------------------------------------------------
 	// Purpose: Returning true means don't even call TE func
@@ -60,6 +62,8 @@ private:
 		// There's at least one recipient
 		return false;
 	}
+
+	bool m_bSuppressSound;
 };
 
 
@@ -70,12 +74,14 @@ static CEffectsClient s_EffectClient;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CEffectsClient, IEffects, IEFFECTS_INTERFACE_VERSION, s_EffectClient);
 IEffects *g_pEffects = &s_EffectClient;
 
+ConVar r_decals("r_decals","0");
 
 //-----------------------------------------------------------------------------
 // constructor, destructor
 //-----------------------------------------------------------------------------
 CEffectsClient::CEffectsClient()
 {
+	m_bSuppressSound = false;
 }
 
 CEffectsClient::~CEffectsClient()
@@ -83,6 +89,15 @@ CEffectsClient::~CEffectsClient()
 }
 
 
+//-----------------------------------------------------------------------------
+// Suppress sound on effects
+//-----------------------------------------------------------------------------
+void CEffectsClient::SuppressEffectsSounds( bool bSuppress )
+{
+	m_bSuppressSound = bSuppress;
+}
+
+	
 //-----------------------------------------------------------------------------
 // Generates a beam
 //-----------------------------------------------------------------------------
@@ -150,15 +165,15 @@ void CEffectsClient::MuzzleFlash( const Vector &vecOrigin, const QAngle &vecAngl
 		switch( iType )
 		{
 		case MUZZLEFLASH_TYPE_DEFAULT:
-			FX_MuzzleEffect( vecOrigin, vecAngles, flScale, 0 );
+			FX_MuzzleEffect( vecOrigin, vecAngles, flScale, INVALID_EHANDLE_INDEX );
 			break;
 
 		case MUZZLEFLASH_TYPE_GUNSHIP:
-			FX_GunshipMuzzleEffect( vecOrigin, vecAngles, flScale, 0 );
+			FX_GunshipMuzzleEffect( vecOrigin, vecAngles, flScale, INVALID_EHANDLE_INDEX );
 			break;
 
 		case MUZZLEFLASH_TYPE_STRIDER:
-			FX_StriderMuzzleEffect( vecOrigin, vecAngles, flScale, 0 );
+			FX_StriderMuzzleEffect( vecOrigin, vecAngles, flScale, INVALID_EHANDLE_INDEX );
 			break;
 		
 		default:
@@ -192,7 +207,11 @@ void CEffectsClient::Ricochet( const Vector &position, const Vector &direction )
 	if ( !SuppressTE( filter ) )
 	{
 		FX_MetalSpark( position, direction, direction );
-		FX_RicochetSound( position );
+
+		if ( !m_bSuppressSound )
+		{
+			FX_RicochetSound( position );
+		}
 	}
 }
 

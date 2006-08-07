@@ -33,7 +33,7 @@ public:
 	Class_T Classify ( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
 	int		GetSoundInterests ( void );
-	bool	UseSemaphore( void )	{ return !HasSpawnFlags( SF_BREEN_BACKGROUND_TALK ); }
+	bool	UseSemaphore( void );
 };
 
 LINK_ENTITY_TO_CLASS( npc_breen, CNPC_Breen );
@@ -118,6 +118,15 @@ void CNPC_Breen::Precache()
 	BaseClass::Precache();
 }	
 
+bool CNPC_Breen::UseSemaphore( void )	
+{ 
+	if ( HasSpawnFlags( SF_BREEN_BACKGROUND_TALK ) )
+		return false;
+
+	return BaseClass::UseSemaphore();
+}
+
 //-----------------------------------------------------------------------------
 // AI Schedules Specific to this NPC
 //-----------------------------------------------------------------------------
+

@@ -25,7 +25,6 @@
 #include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
 #include "view.h"
-#include "vstdlib/ICommandLine.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -39,7 +38,7 @@
 ConVar r_FadeProps( "r_FadeProps", "1" );
 
 #endif
-
+bool g_MakingDevShots = false;
 extern ConVar cl_leveloverview;
 
 //-----------------------------------------------------------------------------
@@ -198,31 +197,14 @@ client_textmessage_t *TextMessageGet( const char *pName )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-typedef struct
-{
-	int		m_nWidth;
-	int		m_nHeight;
-} SCREENINFO;
-
-static SCREENINFO g_ScreenInfo;
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void SetScreenSize( void )
-{
-	engine->GetScreenSize( g_ScreenInfo.m_nWidth, g_ScreenInfo.m_nHeight );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: ScreenHeight returns the height of the screen, in pixels
 // Output : int
 //-----------------------------------------------------------------------------
 int ScreenHeight( void )
 {
-	return g_ScreenInfo.m_nHeight;
+	int w, h;
+	GetHudSize( w, h );
+	return h;
 }
 
 //-----------------------------------------------------------------------------
@@ -231,7 +213,9 @@ int ScreenHeight( void )
 //-----------------------------------------------------------------------------
 int ScreenWidth( void )
 {
-	return g_ScreenInfo.m_nWidth;
+	int w, h;
+	GetHudSize( w, h );
+	return w;
 }
 
 //-----------------------------------------------------------------------------
@@ -324,7 +308,7 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex, i
 	CEffectData data;
 	data.m_vStart = vecStart;
 	data.m_vOrigin = vecEnd;
-	data.m_nEntIndex = iEntIndex;
+	data.m_hEntity = ClientEntityList().EntIndexToHandle( iEntIndex );
 	data.m_flScale = flVelocity;
 
 	// Flags
@@ -349,6 +333,8 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex, i
 		DispatchEffect( "Tracer", data );
 	}
 }
+
+
 //------------------------------------------------------------------------------
 // Purpose : Creates both an decal and any associated impact effects (such
 //			 as flecks) for the given iDamageType and the trace's end position
@@ -749,9 +735,12 @@ void UTIL_MakeSafeName( const char *oldName, char *newName, int newNameBufSize )
 		else if( *p == '&' )
 		{
 			//insert another & after this one
-			newName[newpos] = '&';
-			newName[newpos+1] = '&';
-			newpos+=2;
+			if ( newpos+2 < newNameBufSize )
+			{
+				newName[newpos] = '&';
+				newName[newpos+1] = '&';
+				newpos+=2;
+			}
 		}
 		else
 		{
@@ -761,6 +750,22 @@ void UTIL_MakeSafeName( const char *oldName, char *newName, int newNameBufSize )
 	}
 	newName[newpos] = 0;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Scans player names and replaces characters that vgui won't
+//          display properly
+// Input  : *oldName - player name to be fixed up
+// Output : *char - static buffer with the safe name
+//-----------------------------------------------------------------------------
+
+const char * UTIL_SafeName( const char *oldName )
+{
+	static char safeName[ MAX_PLAYER_NAME_LENGTH * 2 + 1 ];
+	UTIL_MakeSafeName( oldName, safeName, sizeof( safeName ) );
+
+	return safeName;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -773,7 +778,7 @@ byte *UTIL_LoadFileForMe( const char *filename, int *pLength )
 	byte *buffer;
 
 	FileHandle_t file;
-	file = filesystem->Open( filename, "rb" );
+	file = filesystem->Open( filename, "rb", "GAME" );
 	if ( FILESYSTEM_INVALID_HANDLE == file )
 	{
 		if ( pLength ) *pLength = 0;
@@ -869,7 +874,7 @@ unsigned char UTIL_ComputeEntityFade( C_BaseEntity *pEntity, float flMinDist, fl
 	unsigned char nAlpha = 255;
 
 	// If we're taking devshots, don't fade props at all
-	if ( cl_leveloverview.GetFloat() > 0 )
+	if ( g_MakingDevShots || cl_leveloverview.GetFloat() > 0 )
 		return 255;
 
 #ifdef _DEBUG
@@ -898,7 +903,7 @@ unsigned char UTIL_ComputeEntityFade( C_BaseEntity *pEntity, float flMinDist, fl
 			vecAbsCenter = pEntity->GetRenderOrigin();
 		}
 
-		unsigned char nGlobalAlpha = modelinfo->ComputeLevelScreenFade( vecAbsCenter, flRadius, flFadeScale );
+		unsigned char nGlobalAlpha = IsXbox() ? 255 : modelinfo->ComputeLevelScreenFade( vecAbsCenter, flRadius, flFadeScale );
 		unsigned char nDistAlpha;
 
 		if ( !engine->IsLevelMainMenuBackground() )

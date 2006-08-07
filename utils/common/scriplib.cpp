@@ -475,13 +475,13 @@ skipspace:
 	*token_p = 0;
 
 	// check for other commands
-	if (!strcmp (token, "$include"))
+	if (!stricmp (token, "$include"))
 	{
 		GetToken (false);
 		AddScriptToStack (token);
 		return GetToken (crossline);
 	}
-	else if (!strcmp (token, "$definemacro"))
+	else if (!stricmp (token, "$definemacro"))
 	{
 		GetToken (false);
 		DefineMacro(token);
@@ -600,7 +600,7 @@ skipspace:
 
 	*token_p = 0;
 
-	if (!strcmp (token, "$include"))
+	if (!stricmp (token, "$include"))
 	{
 		GetToken (false);
 		AddScriptToStack (token);
@@ -649,4 +649,22 @@ qboolean TokenAvailable (void)
 	return true;
 }
 
+qboolean GetTokenizerStatus( char **pFilename, int *pLine )
+{
+	// is this the default state?
+	if (!script)
+		return false;
 
+	if (script->script_p >= script->end_p)
+		return false;
+
+	if (pFilename)
+	{
+		*pFilename = script->filename;
+	}
+	if (pLine)
+	{
+		*pLine = script->line;
+	}
+	return true;
+}

@@ -29,6 +29,7 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "sceneentity.h"
+#include "ai_behavior_functank.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -66,12 +67,24 @@ public:
 	void	Spawn( void );
 	void	SelectModel();
 	Class_T Classify( void );
+	void	Weapon_Equip( CBaseCombatWeapon *pWeapon );
+
+	bool CreateBehaviors( void );
 
 	void HandleAnimEvent( animevent_t *pEvent );
 
 	bool ShouldLookForBetterWeapon() { return false; }
 
-	void	DeathSound(void);
+	void OnChangeRunningBehavior( CAI_BehaviorBase *pOldBehavior,  CAI_BehaviorBase *pNewBehavior );
+
+	void DeathSound( const CTakeDamageInfo &info );
+	void DoCustomSpeechAI( void );
+	void GatherConditions();
+	void UseFunc( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+	CAI_FuncTankBehavior		m_FuncTankBehavior;
+	CStopwatch					m_SpeechWatch_PlayerLooking;
+	COutputEvent				m_OnPlayerUse;
 
 	DEFINE_CUSTOM_AI;
 };
@@ -90,7 +103,10 @@ END_SEND_TABLE()
 // Save/Restore
 //---------------------------------------------------------
 BEGIN_DATADESC( CNPC_Barney )
-
+//						m_FuncTankBehavior
+	DEFINE_EMBEDDED( m_SpeechWatch_PlayerLooking ),
+	DEFINE_OUTPUT( m_OnPlayerUse, "OnPlayerUse" ),
+	DEFINE_USEFUNC( UseFunc ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -119,6 +135,8 @@ void CNPC_Barney::Spawn( void )
 	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL | EFL_NO_PHYSCANNON_INTERACTION );
 
 	NPCInit();
+
+	SetUse( &CNPC_Barney::UseFunc );
 }
 
 //-----------------------------------------------------------------------------
@@ -128,6 +146,19 @@ void CNPC_Barney::Spawn( void )
 Class_T	CNPC_Barney::Classify( void )
 {
 	return	CLASS_PLAYER_ALLY_VITAL;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPC_Barney::Weapon_Equip( CBaseCombatWeapon *pWeapon )
+{
+	BaseClass::Weapon_Equip( pWeapon );
+
+	if( hl2_episodic.GetBool() && FClassnameIs( pWeapon, "weapon_ar2" ) )
+	{
+		// Allow Barney to defend himself at point-blank range in c17_05.
+		pWeapon->m_fMinRange1 = 0.0f;
+	}
 }
 
 //---------------------------------------------------------
@@ -155,13 +186,79 @@ void CNPC_Barney::HandleAnimEvent( animevent_t *pEvent )
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void CNPC_Barney::DeathSound()
+void CNPC_Barney::DeathSound( const CTakeDamageInfo &info )
 {
 	// Sentences don't play on dead NPCs
 	SentenceStop();
 
 	EmitSound( "npc_barney.die" );
 
+}
+
+bool CNPC_Barney::CreateBehaviors( void )
+{
+	BaseClass::CreateBehaviors();
+	AddBehavior( &m_FuncTankBehavior );
+
+	return true;
+}
+
+void CNPC_Barney::OnChangeRunningBehavior( CAI_BehaviorBase *pOldBehavior,  CAI_BehaviorBase *pNewBehavior )
+{
+	if ( pNewBehavior == &m_FuncTankBehavior )
+	{
+		m_bReadinessCapable = false;
+	}
+	else if ( pOldBehavior == &m_FuncTankBehavior )
+	{
+		m_bReadinessCapable = IsReadinessCapable();
+	}
+
+	BaseClass::OnChangeRunningBehavior( pOldBehavior, pNewBehavior );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CNPC_Barney::DoCustomSpeechAI( void )
+{
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+	if ( pPlayer && pPlayer->FInViewCone( this ) && pPlayer->FVisible( this ) )
+	{
+		if ( m_SpeechWatch_PlayerLooking.Expired() )
+		{
+			SpeakIfAllowed( TLK_LOOK );
+			m_SpeechWatch_PlayerLooking.Stop();
+		}
+	}
+	else
+	{
+		m_SpeechWatch_PlayerLooking.Start( 1.0f );
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPC_Barney::GatherConditions()
+{
+	BaseClass::GatherConditions();
+
+	// Handle speech AI. Don't speak AI speech if we're in scripts.
+	if ( m_NPCState == NPC_STATE_IDLE || m_NPCState == NPC_STATE_ALERT || m_NPCState == NPC_STATE_COMBAT )
+	{
+		DoCustomSpeechAI();
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CNPC_Barney::UseFunc( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	m_bDontUseSemaphore = true;
+	SpeakIfAllowed( TLK_USE );
+	m_bDontUseSemaphore = false;
+
+	m_OnPlayerUse.FireOutput( pActivator, pCaller );
 }
 
 //-----------------------------------------------------------------------------

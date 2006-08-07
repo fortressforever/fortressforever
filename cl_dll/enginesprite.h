@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef ENGINESPRITE_H
 #define ENGINESPRITE_H
@@ -11,17 +11,17 @@
 #pragma once
 #endif
 
-//========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//=============================================================================
 #include "vector.h"
+#include "avi/iavi.h"
 
+
+//-----------------------------------------------------------------------------
+// Forward declarations
+//-----------------------------------------------------------------------------
 class IMaterial;
 class IMaterialVar;
 typedef struct wrect_s wrect_t;
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Sprite Models
@@ -50,7 +50,11 @@ public:
 	float GetRight() { return right; }
 	void DrawFrame( int frame, int x, int y, const wrect_t *prcSubRect );
 	void DrawFrameOfSize( int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect);
+	bool IsAVI();
+	void GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, float *pMaxV );
+
 private:
+	AVIMaterial_t m_hAVIMaterial;
 	int m_width;
 	int m_height;
 	int m_numFrames;

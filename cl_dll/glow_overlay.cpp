@@ -15,6 +15,7 @@
 #include "utllinkedlist.h"
 #include "view_shared.h"
 #include "tier0/vprof.h"
+#include "materialsystem/imaterialvar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,7 +28,7 @@ CLIENTEFFECT_REGISTER_END()
 class CGlowOverlaySystem : public CAutoGameSystem
 {
 public:
-	CGlowOverlaySystem()
+	CGlowOverlaySystem() : CAutoGameSystem( "CGlowOverlaySystem" )
 	{
 	}
 	// Level init, shutdown
@@ -92,6 +93,8 @@ CGlowOverlay::CGlowOverlay()
 
 	m_queryHandle = 0;
 
+	m_flHDRColorScale = 1.0f;
+
 	//Init our sprites
 	for ( int i = 0; i < MAX_SUN_LAYERS; i++ )
 	{
@@ -116,10 +119,35 @@ bool CGlowOverlay::Update()
 
 ConVar building_cubemaps( "building_cubemaps", "0" );
 
-
-void CGlowOverlay::UpdateSkyGlowObstruction( float zFar )
+float CGlowOverlay::CalcGlowAspect()
 {
-	Assert(m_bInSky);
+	if ( m_nSprites )
+	{
+		if ( m_Sprites[0].m_flHorzSize != 0 && m_Sprites[0].m_flVertSize != 0 )
+			return m_Sprites[0].m_flHorzSize / m_Sprites[0].m_flVertSize;
+	}
+	return 1.0f;
+}
+
+void CGlowOverlay::UpdateSkyGlowObstruction( float zFar, bool bCacheFullSceneState )
+{
+	Assert( m_bInSky );
+
+	// If we already cached the sky obstruction and are still using that, early-out
+	if ( bCacheFullSceneState && m_bCacheSkyObstruction )
+		return;
+
+	// Turning on sky obstruction caching mode
+	if ( bCacheFullSceneState && !m_bCacheSkyObstruction )	
+	{
+		m_bCacheSkyObstruction = true;
+	}
+
+	// Turning off sky obstruction caching mode
+	if ( !bCacheFullSceneState && m_bCacheSkyObstruction )
+	{
+		m_bCacheSkyObstruction = false;
+	}
 
 	if ( PixelVisibility_IsAvailable() )
 	{
@@ -154,8 +182,22 @@ void CGlowOverlay::UpdateSkyGlowObstruction( float zFar )
 }
 
 
-void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow )
+void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow, bool bCacheFullSceneState )
 {
+	// If we already cached the glow obstruction and are still using that, early-out
+	if ( bCacheFullSceneState && m_bCacheGlowObstruction )
+		return;
+	
+	if ( bCacheFullSceneState && !m_bCacheGlowObstruction )	// If turning on sky obstruction caching mode
+	{
+		m_bCacheGlowObstruction = true;
+	}
+
+	if ( !bCacheFullSceneState && m_bCacheGlowObstruction )
+	{
+		m_bCacheGlowObstruction = false;
+	}
+
 	if ( PixelVisibility_IsAvailable() )
 	{
 		if ( m_bInSky )
@@ -163,7 +205,7 @@ void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow )
 			const CViewSetup *pViewSetup = view->GetViewSetup();
 			Vector pos = CurrentViewOrigin() + m_vDirection * (pViewSetup->zFar * 0.999f);
 			pixelvis_queryparams_t params;
-			params.Init( pos, m_flProxyRadius );
+			params.Init( pos, m_flProxyRadius, CalcGlowAspect() );
 			params.bSizeInScreenspace = true;
 			// use a pixel query to occlude with models
 			m_flGlowObstructionScale = PixelVisibility_FractionVisible( params, &m_queryHandle ) * m_skyObstructionScale;
@@ -175,7 +217,7 @@ void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow )
 			Assert( !m_bDirectional );
 
 			pixelvis_queryparams_t params;
-			params.Init( m_vPos, m_flProxyRadius );
+			params.Init( m_vPos, m_flProxyRadius, CalcGlowAspect() );
 
 			m_flGlowObstructionScale = PixelVisibility_FractionVisible( params, &m_queryHandle );
 		}
@@ -297,7 +339,7 @@ void CGlowOverlay::CalcBasis(
 }
 
 
-void CGlowOverlay::Draw()
+void CGlowOverlay::Draw( bool bCacheFullSceneState )
 {
 	extern ConVar	r_drawsprites;
 	if( !r_drawsprites.GetBool() )
@@ -315,17 +357,17 @@ void CGlowOverlay::Draw()
 
 	float flDot = vToGlow.Dot( CurrentViewForward() );
 
-	UpdateGlowObstruction( vToGlow );
+	UpdateGlowObstruction( vToGlow, bCacheFullSceneState );
 	if( m_flGlowObstructionScale == 0 )
 		return;
 	
 	extern ConVar mat_wireframe;
-	bool bWireframe = mat_wireframe.GetBool();
+	bool bWireframe = mat_wireframe.GetBool() || (r_drawsprites.GetInt() == 2);
 	
 	for( int iSprite=0; iSprite < m_nSprites; iSprite++ )
 	{
 		CGlowSprite *pSprite = &m_Sprites[iSprite];
-
+ 
 		// Figure out the color and size to draw it.
 		float flHorzSize, flVertSize;
 		Vector vColor;
@@ -348,6 +390,14 @@ void CGlowOverlay::Draw()
 		if ( m_Sprites[iSprite].m_pMaterial == NULL )
 		{
 			m_Sprites[iSprite].m_pMaterial = materials->FindMaterial( "sprites/light_glow02_add_noz", TEXTURE_GROUP_CLIENT_EFFECTS );
+		}
+
+		Assert( m_Sprites[iSprite].m_pMaterial );
+		static unsigned int		nHDRColorScaleCache = 0;
+		IMaterialVar *pHDRColorScaleVar = m_Sprites[iSprite].m_pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
+		if( pHDRColorScaleVar )
+		{
+			pHDRColorScaleVar->SetFloatValue( m_flHDRColorScale );
 		}
 
 		// Draw the sprite.
@@ -439,7 +489,7 @@ void CGlowOverlay::Deactivate()
 }
 
 
-void CGlowOverlay::DrawOverlays()
+void CGlowOverlay::DrawOverlays( bool bCacheFullSceneState )
 {
 	VPROF("CGlowOverlay::DrawOverlays()");
 
@@ -454,7 +504,7 @@ void CGlowOverlay::DrawOverlays()
 
 		if( pOverlay->Update() )
 		{
-			pOverlay->Draw();
+			pOverlay->Draw( bCacheFullSceneState );
 		}
 		else
 		{
@@ -463,7 +513,7 @@ void CGlowOverlay::DrawOverlays()
 	}
 }
 
-void CGlowOverlay::UpdateSkyOverlays( float zFar )
+void CGlowOverlay::UpdateSkyOverlays( float zFar, bool bCacheFullSceneState )
 {
 	unsigned short iNext;
 	for( unsigned short i=g_GlowOverlaySystem.m_GlowOverlays.Head(); i != g_GlowOverlaySystem.m_GlowOverlays.InvalidIndex(); i = iNext )
@@ -474,6 +524,6 @@ void CGlowOverlay::UpdateSkyOverlays( float zFar )
 		if( !pOverlay->m_bActivated || !pOverlay->m_bDirectional || !pOverlay->m_bInSky )
 			continue;
 
-		pOverlay->UpdateSkyGlowObstruction( zFar );
+		pOverlay->UpdateSkyGlowObstruction( zFar, bCacheFullSceneState );
 	}
 }

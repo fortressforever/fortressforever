@@ -11,12 +11,14 @@
 #pragma once
 #endif
 
-#include "interface.h"
+#include "tier1/interface.h"
 #include "vector.h"
 #include "vector4d.h"
-#include "utlbuffer.h"
-#include "utlvector.h"
+#include "tier1/utlbuffer.h"
+#include "tier1/utlvector.h"
 #include "materialsystem/imaterialsystem.h"
+#include "appframework/IAppSystem.h"
+
 
 //-----------------------------------------------------------------------------
 // forward declarations
@@ -60,21 +62,78 @@ struct StudioRenderConfig_t
 	bool bEyes;
 	bool bFlex;
 	bool bWireframe;
-	bool bNormals;
+private:
+	// Bitfield for normals, tangent frame and z buffered wireframe
+	// In earlier interfaces, this was just a bool for drawing normals
+	unsigned char bRenderFlags;
+public:
 	bool bSoftwareLighting;
 	bool bShowEnvCubemapOnly;
 	int maxDecalsPerModel;
 	bool bWireframeDecals;
 	float fEyeGlintPixelWidthLODThreshold;
-	int rootLOD;
+
+	int rootLOD;	// obsolete, left in for legacy compatibility
+
+	// Setters and getters for normals and tangent frame (now in one bitfield)
+	void SetNormals( bool bN );
+	void SetTangentFrame( bool bTF );
+	void SetZBufferedWireframe( bool bZ );
+	bool GetNormals( void );
+	bool GetTangentFrame( void );
+	bool GetZBufferedWireframe( void );
 };
+
+#define NORMAL_MASK				( 1 << 0 )
+#define TANGENT_FRAME_MASK		( 1 << 1 )
+#define ZBUFFER_WIREFRAME_MASK	( 1 << 2 )
+
+inline void StudioRenderConfig_t::SetNormals( bool bN )
+{
+	if ( bN )
+		bRenderFlags |= NORMAL_MASK;
+	else
+		bRenderFlags &= ~NORMAL_MASK;
+}
+
+inline void StudioRenderConfig_t::SetTangentFrame( bool bTF )
+{
+	if ( bTF )
+		bRenderFlags |= TANGENT_FRAME_MASK;
+	else
+		bRenderFlags &= ~TANGENT_FRAME_MASK;
+}
+
+inline void StudioRenderConfig_t::SetZBufferedWireframe( bool bZ )
+{
+	if ( bZ )
+		bRenderFlags |= ZBUFFER_WIREFRAME_MASK;
+	else
+		bRenderFlags &= ~ZBUFFER_WIREFRAME_MASK;
+}
+
+inline bool StudioRenderConfig_t::GetNormals( void )
+{
+	return ( (bRenderFlags & NORMAL_MASK) != 0 );
+}
+
+inline bool StudioRenderConfig_t::GetTangentFrame( void )
+{
+	return ( (bRenderFlags & TANGENT_FRAME_MASK) != 0 );
+}
+
+inline bool StudioRenderConfig_t::GetZBufferedWireframe( void )
+{
+	return ( (bRenderFlags & ZBUFFER_WIREFRAME_MASK) != 0 );
+}
+
 
 
 //-----------------------------------------------------------------------------
 // Studio render interface
 //-----------------------------------------------------------------------------
 
-#define STUDIO_RENDER_INTERFACE_VERSION "VStudioRender021"
+#define STUDIO_RENDER_INTERFACE_VERSION "VStudioRender023"
 
 typedef unsigned short StudioDecalHandle_t;
 
@@ -94,17 +153,23 @@ enum
 enum
 {
 	STUDIORENDER_DRAW_ENTIRE_MODEL		= 0,
-	STUDIORENDER_DRAW_OPAQUE_ONLY		= 0x1,
-	STUDIORENDER_DRAW_TRANSLUCENT_ONLY	= 0x2,
-	STUDIORENDER_DRAW_GROUP_MASK		= 0x3,
+	STUDIORENDER_DRAW_OPAQUE_ONLY		= 0x01,
+	STUDIORENDER_DRAW_TRANSLUCENT_ONLY	= 0x02,
+	STUDIORENDER_DRAW_GROUP_MASK		= 0x03,
 
-	STUDIORENDER_DRAW_NO_FLEXES			= 0x4,
-	STUDIORENDER_DRAW_STATIC_LIGHTING	= 0x8,
-
+	STUDIORENDER_DRAW_NO_FLEXES			= 0x04,
+	STUDIORENDER_DRAW_STATIC_LIGHTING	= 0x08,
 
 	STUDIORENDER_DRAW_ACCURATETIME		= 0x10,		// Use accurate timing when drawing the model.
 	STUDIORENDER_DRAW_NO_SHADOWS		= 0x20,
-	STUDIORENDER_DRAW_GET_PERF_STATS	= 0x40
+	STUDIORENDER_DRAW_GET_PERF_STATS	= 0x40,
+
+	STUDIORENDER_DRAW_WIREFRAME			= 0x80,
+
+	STUDIORENDER_DRAW_ITEM_BLINK		= 0x100,
+
+	STUDIORENDER_AMBIENT_BOOST			= 0x200,
+
 };
 
 
@@ -194,35 +259,33 @@ struct GetTriangles_Output_t
 // code expectes data to be dynamic and invokes cache callback prior to iterative access.
 // virtualModel is member passed in via studiohdr_t and passed back for model identification.
 //-----------------------------------------------------------------------------
-#define STUDIO_DATA_CACHE_INTERFACE_VERSION "VStudioDataCache003"
+#define STUDIO_DATA_CACHE_INTERFACE_VERSION "VStudioDataCache005"
  
-class IStudioDataCache
+abstract_class IStudioDataCache : public IAppSystem
 {
 public:
 	virtual bool VerifyHeaders( studiohdr_t *pStudioHdr ) = 0;
 	virtual vertexFileHeader_t *CacheVertexData( studiohdr_t *pStudioHdr ) = 0;
-	virtual OptimizedModel::FileHeader_t *CacheIndexData( studiohdr_t *pStudioHdr ) = 0;
-//	virtual studiohwdata_t *CacheHWData( studiohdr_t *pStudioHdr ) = 0;
 };
 
 //-----------------------------------------------------------------------------
 // Studio render interface
 //-----------------------------------------------------------------------------
-class IStudioRender
+abstract_class IStudioRender : public IAppSystem
 {
 public:
-	// Initializes, shutdowns the studio render library
+	// FIXME: For backward compatibility
 	virtual bool Init( CreateInterfaceFn materialSystemFactory, CreateInterfaceFn materialSystemHWConfigFactory,
 		CreateInterfaceFn convarFactory, CreateInterfaceFn studioDataCacheFactory ) = 0;
-	virtual void Shutdown( void ) = 0;
 
 	virtual void BeginFrame( void ) = 0;
 	virtual void EndFrame( void ) = 0;
 
 	// Updates the rendering configuration 
 	virtual void UpdateConfig( const StudioRenderConfig_t& config ) = 0;
+	virtual int GetRootLOD_Obsolete() = 0;
 
-	virtual bool LoadModel( studiohdr_t *pStudioHdr, studiohwdata_t	*pHardwareData ) = 0;
+	virtual bool LoadModel( studiohdr_t *pStudioHdr, void *pVtxData, studiohwdata_t	*pHardwareData ) = 0;
 	
 	// since studiomeshes are allocated inside of the lib, they need to be freed there as well.
 	virtual void UnloadModel( studiohwdata_t *pHardwareData ) = 0;
@@ -307,9 +370,24 @@ public:
 	// 1) effective triangle count (factors in batch sizes, state changes, etc)
 	// 2) texture memory usage
 	virtual void GetPerfStats( DrawModelInfo_t &info, CUtlBuffer *pSpewBuf = NULL ) const = 0;
+#ifndef _XBOX
+	virtual void GetTriangles( DrawModelInfo_t& info, GetTriangles_Output_t &out ) = 0;
+#endif
 
-	virtual void GetTriangles( DrawModelInfo_t& info,
-								 GetTriangles_Output_t &out ) = 0;
+	// Compute the lighting at a point, constant directional component is passed
+	// as flDirectionalAmount
+	virtual void ComputeLightingConstDirectional( const Vector* pAmbient, int lightCount,
+		LightDesc_t* pLights, const Vector& pt, const Vector& normal, Vector& lighting, float flDirectionalAmount ) = 0;
+
+	virtual int GetMaterialList( studiohdr_t *pStudioHdr, int count, IMaterial** ppMaterials ) = 0;
+
+	// returns the number of triangles rendered.
+	virtual int DrawModelStaticProp( DrawModelInfo_t& info, const Vector &modelOrigin, int flags = STUDIORENDER_DRAW_ENTIRE_MODEL ) = 0;
+
+	virtual void AddShadowEx( IMaterial* pMaterial, void* pProxyData, FlashlightState_t *m_pFlashlightState = NULL, VMatrix *pWorldToTexture = NULL, ITexture *pFlashlightDepthTexture = NULL ) = 0;
+
+	// Gets the current config (fills in the structure)
+	virtual void GetCurrentConfig( StudioRenderConfig_t& config ) = 0;
 };
 
 extern IStudioRender *g_pStudioRender;

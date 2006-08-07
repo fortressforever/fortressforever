@@ -256,7 +256,7 @@ radial_t *BuildPatchRadial( int facenum )
 	Vector2D        mins, maxs;
 	bool			needsBumpmap, neighborNeedsBumpmap;
 
-	needsBumpmap = texinfo[dfaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
+	needsBumpmap = texinfo[g_pFaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
 
 	rad = AllocateRadial( facenum );
 	
@@ -294,7 +294,7 @@ radial_t *BuildPatchRadial( int facenum )
 			// represent the displacement surface position and normal -- for radial "blending"
 			// we need to get the base surface patch origin!
 			//
-			if( ValidDispFace( &dfaces[facenum] ) )
+			if( ValidDispFace( &g_pFaces[facenum] ) )
 			{
 				Vector patchOrigin;
 				WindingCenter (patch->winding, patchOrigin );
@@ -330,14 +330,14 @@ radial_t *BuildPatchRadial( int facenum )
 				int ndxPatch = patch - patches.Base();
 				PatchLightmapCoordRange( rad, ndxPatch, mins, maxs  );
 				
-				neighborNeedsBumpmap = texinfo[dfaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
+				neighborNeedsBumpmap = texinfo[g_pFaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
 				
 				//
 				// displacement surface patch origin position and normal vectors have been changed to
 				// represent the displacement surface position and normal -- for radial "blending"
 				// we need to get the base surface patch origin!
 				//
-				if( ValidDispFace( &dfaces[fn->neighbor[j]] ) )
+				if( ValidDispFace( &g_pFaces[fn->neighbor[j]] ) )
 				{
 					Vector patchOrigin;
 					WindingCenter (patch->winding, patchOrigin );
@@ -373,7 +373,7 @@ radial_t *BuildLuxelRadial( int facenum, int style )
 
 	rad = AllocateRadial( facenum );
 
-	bool needsBumpmap = texinfo[dfaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
+	bool needsBumpmap = texinfo[g_pFaces[facenum].texinfo].flags & SURF_BUMPLIGHT ? true : false;
 
 	for (k=0 ; k<fl->numsamples ; k++)
 	{
@@ -398,7 +398,7 @@ radial_t *BuildLuxelRadial( int facenum, int style )
 
 		bool neighborHasBumpmap = false;
 		
-		if( texinfo[dfaces[fn->neighbor[j]].texinfo].flags & SURF_BUMPLIGHT )
+		if( texinfo[g_pFaces[fn->neighbor[j]].texinfo].flags & SURF_BUMPLIGHT )
 		{
 			neighborHasBumpmap = true;
 		}
@@ -406,10 +406,10 @@ radial_t *BuildLuxelRadial( int facenum, int style )
 		int nstyle = 0;
 
 		// look for style that matches
-		if (dfaces[fn->neighbor[j]].styles[nstyle] != dfaces[facenum].styles[style])
+		if (g_pFaces[fn->neighbor[j]].styles[nstyle] != g_pFaces[facenum].styles[style])
 		{
 			for (nstyle = 1; nstyle < MAXLIGHTMAPS; nstyle++ )
-				if ( dfaces[fn->neighbor[j]].styles[nstyle] == dfaces[facenum].styles[style] )
+				if ( g_pFaces[fn->neighbor[j]].styles[nstyle] == g_pFaces[facenum].styles[style] )
 					break;
 
 			// if not found, skip this neighbor
@@ -462,7 +462,28 @@ bool SampleRadial( radial_t *rad, Vector& pnt, Vector light[NUM_BUMP_VECTS + 1],
 	Vector2D coord;
 
 	WorldToLuxelSpace( &rad->l, pnt, coord );
-	int i = ( int )( coord[0] + 0.5f ) + ( int )( coord[1] + 0.5f ) * rad->w;
+	int u = ( int )( coord[0] + 0.5f );
+	int v = ( int )( coord[1] + 0.5f );
+	int i = u + v * rad->w;
+
+	if (u < 0 || u > rad->w || v < 0 || v > rad->h)
+	{
+		static bool warning = false;
+		if ( !warning )
+		{
+			// punting over to KenB
+			// 2d coord indexes off of lightmap, generation of pnt seems suspect
+			Warning( "SampleRadial: Punting, Waiting for fix\n" );
+			warning = true;
+		}
+		for( bumpSample = 0; bumpSample < bumpSampleCount; bumpSample++ )
+		{
+			light[bumpSample][0] = 2550;
+			light[bumpSample][1] = 0;
+			light[bumpSample][2] = 0;
+		}
+		return false;
+	}
 
 	bool baseSampleOk = true;
 	for( bumpSample = 0; bumpSample < bumpSampleCount; bumpSample++ )
@@ -537,7 +558,7 @@ void DumpLuxels( facelight_t *pFaceLight, Vector *luxelColors, int ndxFace )
 		pFpLuxels = g_pFileSystem->Open( "luxels.txt", "w" );
 	}
 
-	dface_t *pFace = &dfaces[ndxFace];
+	dface_t *pFace = &g_pFaces[ndxFace];
 	bool bDisp = ( pFace->dispinfo != -1 );
 
 	for( int ndx = 0; ndx < pFaceLight->numluxels; ndx++ )
@@ -575,7 +596,7 @@ void FinalLightFace( int iThread, int facenum )
 	radial_t	    *rad = NULL;
 	radial_t	    *prad = NULL;
 
-   	f = &dfaces[facenum];
+   	f = &g_pFaces[facenum];
 
     // test for non-lit texture
     if ( texinfo[f->texinfo].flags & TEX_SPECIAL)
@@ -616,9 +637,9 @@ void FinalLightFace( int iThread, int facenum )
 	// method that using the average; usually if there are surfaces
 	// with a large light intensity variation, the extremely bright regions
 	// have a very small area and tend to influence the average too much.
-	CUtlRBTree< float, unsigned int >	m_Red( 0, 256, FloatLess );
-	CUtlRBTree< float, unsigned int >	m_Green( 0, 256, FloatLess );
-	CUtlRBTree< float, unsigned int >	m_Blue( 0, 256, FloatLess );
+	CUtlRBTree< float, int >	m_Red( 0, 256, FloatLess );
+	CUtlRBTree< float, int >	m_Green( 0, 256, FloatLess );
+	CUtlRBTree< float, int >	m_Blue( 0, 256, FloatLess );
 
 	for (k=0 ; k < lightstyles; k++ )
 	{
@@ -659,7 +680,7 @@ void FinalLightFace( int iThread, int facenum )
 		// of light data if we don't have bumped lighting.
 		for( bumpSample = 0; bumpSample < bumpSampleCount; ++bumpSample )
 		{
-			pdata[bumpSample] = &dlightdata[f->lightofs + (k * bumpSampleCount + bumpSample) * fl->numluxels*4]; 
+			pdata[bumpSample] = &(*pdlightdata)[f->lightofs + (k * bumpSampleCount + bumpSample) * fl->numluxels*4]; 
 		}
 
 		// Compute the average luxel color, but not for the bump samples

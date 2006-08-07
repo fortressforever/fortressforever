@@ -99,7 +99,7 @@ enum
 };
 
 
-class ISpatialPartition
+abstract_class ISpatialPartition
 {
 public:
 	// Create/destroy a handle for this dude in our system. Destroy
@@ -177,19 +177,22 @@ public:
 	virtual void SuppressLists( SpatialPartitionListMask_t nListMask, bool bSuppress ) = 0;
 	virtual SpatialPartitionListMask_t GetSuppressedLists() = 0;
 
-	virtual void RenderAllObjectsInTree( float flTime ) {}
-	virtual void RenderObjectsInPlayerLeafs( const Vector &vecPlayerMin, const Vector &vecPlayerMax, float flTime ) {}
-	virtual void RenderLeafsForRayTraceStart( float flTime  ) {}
-	virtual void RenderLeafsForRayTraceEnd( void ) {}
-	virtual void RenderLeafsForHullTraceStart( float flTime  ) {}
-	virtual void RenderLeafsForHullTraceEnd( void ) {}
-	virtual void RenderLeafsForBoxStart( float flTime  ) {}
-	virtual void RenderLeafsForBoxEnd( void ) {}
-	virtual void RenderLeafsForSphereStart( float flTime  ) {}
-	virtual void RenderLeafsForSphereEnd( void ) {}
+	virtual void RenderAllObjectsInTree( float flTime ) = 0;
+	virtual void RenderObjectsInPlayerLeafs( const Vector &vecPlayerMin, const Vector &vecPlayerMax, float flTime ) = 0;
+	virtual void RenderLeafsForRayTraceStart( float flTime ) = 0;
+	virtual void RenderLeafsForRayTraceEnd( void ) = 0;
+	virtual void RenderLeafsForHullTraceStart( float flTime ) = 0;
+	virtual void RenderLeafsForHullTraceEnd( void ) = 0;
+	virtual void RenderLeafsForBoxStart( float flTime ) = 0;
+	virtual void RenderLeafsForBoxEnd( void ) = 0;
+	virtual void RenderLeafsForSphereStart( float flTime ) = 0;
+	virtual void RenderLeafsForSphereEnd( void ) = 0;
 
-	virtual void RenderObjectsInBox( const Vector &vecMin, const Vector &vecMax, float flTime ) {}
-	virtual void RenderObjectsInSphere( const Vector &vecCenter, float flRadius, float flTime ) {}
+	virtual void RenderObjectsInBox( const Vector &vecMin, const Vector &vecMax, float flTime ) = 0;
+	virtual void RenderObjectsInSphere( const Vector &vecCenter, float flRadius, float flTime ) = 0;
+	virtual void RenderObjectsAlongRay( const Ray_t& ray, float flTime ) = 0;
+
+	virtual void ReportStats( const char *pFileName ) = 0;
 };
 
 #endif

@@ -26,6 +26,8 @@ class Vector;
 class Vector2D;
 struct model_t;
 typedef unsigned short ModelInstanceHandle_t;
+class IClientRenderable;
+class ITexture;
 
 // change this when the new version is incompatable with the old
 #define ENGINE_SHADOWMGR_INTERFACE_VERSION	"VEngineShadowMgr002"
@@ -68,10 +70,10 @@ enum
 //-----------------------------------------------------------------------------
 enum ShadowCreateFlags_t
 {
-	SHADOW_CACHE_VERTS = ( 1 << 0 ),
-	SHADOW_FLASHLIGHT = ( 1 << 1 ),
+	SHADOW_CACHE_VERTS =  ( 1 << 0 ),
+	SHADOW_FLASHLIGHT =   ( 1 << 1 ),
 
-	SHADOW_LAST_FLAG = SHADOW_FLASHLIGHT
+	SHADOW_LAST_FLAG = SHADOW_FLASHLIGHT,
 };
 
 
@@ -98,7 +100,7 @@ struct FlashlightState_t;
 //-----------------------------------------------------------------------------
 // The engine's interface to the shadow manager
 //-----------------------------------------------------------------------------
-class IShadowMgr
+abstract_class IShadowMgr
 {
 public:
 	// Create, destroy shadows (see ShadowCreateFlags_t for creationFlags)
@@ -169,6 +171,13 @@ public:
 
 	// Update the state for a flashlight.
 	virtual void UpdateFlashlightState( ShadowHandle_t shadowHandle, const FlashlightState_t &lightState ) = 0;
+
+	virtual void DrawFlashlightDepthTexture( ) = 0;
+
+	virtual void AddFlashlightRenderable( ShadowHandle_t shadow, IClientRenderable *pRenderable ) = 0;
+	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags, ITexture *pFlashlightDepthTexture ) = 0;
+
+	virtual void UpdateFlashlightStateEx( ShadowHandle_t shadowHandle, const FlashlightState_t &lightState, ITexture *pFlashlightDepthTexture ) = 0;
 };
 
 

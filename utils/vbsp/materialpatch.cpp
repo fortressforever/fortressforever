@@ -287,7 +287,7 @@ bool LoadKeyValuesFromPackOrFile( const char *pFileName, KeyValues* pKeyValues )
 	CUtlBuffer buf;
 	if ( ReadFileFromPack( pFileName, true, buf ) )
 	{
-		return pKeyValues->LoadFromBuffer( pFileName, (char*)buf.Base() );
+		return pKeyValues->LoadFromBuffer( pFileName, buf );
 	}
 
 	return pKeyValues->LoadFromFile( g_pFileSystem, pFileName );

@@ -8,9 +8,13 @@
 #include "cbase.h"
 #include "baseanimating.h"
 #include "SkyCamera.h"
+#include "studio.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+// HACK HACK:  Must match cl_dll/cl_animevent.h!!!!
+#define CL_EVENT_SPRITEGROUP_CREATE		6002
 
 //-----------------------------------------------------------------------------
 // An entity which emits other entities at points 
@@ -32,6 +36,9 @@ public:
 	void InputSetSequence( inputdata_t &inputdata );
 
 private:
+
+	void	PrecacheAnimationEventMaterials();
+
 	CNetworkVar( float, m_flSequenceScale );
 };
 
@@ -68,6 +75,34 @@ CEnvParticleScript::CEnvParticleScript()
 }
 
 
+void CEnvParticleScript::PrecacheAnimationEventMaterials()
+{
+	CStudioHdr *hdr = GetModelPtr();
+	if ( hdr )
+	{
+		int numseq = hdr->GetNumSeq();
+		for ( int i = 0; i < numseq; ++i )
+		{
+			mstudioseqdesc_t& seqdesc = hdr->pSeqdesc( i );
+			int ecount = seqdesc.numevents;
+			for ( int j = 0 ; j < ecount; ++j )
+			{
+				const mstudioevent_t* event = seqdesc.pEvent( j );
+				if ( event->event == CL_EVENT_SPRITEGROUP_CREATE )
+				{
+					char pAttachmentName[256];
+					char pSpriteName[256];
+					int nArgs = sscanf( event->pszOptions(), "%255s %255s", pAttachmentName, pSpriteName );
+					if ( nArgs == 2 )
+					{
+						PrecacheMaterial( pSpriteName );
+					}
+				}
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Precache
 //-----------------------------------------------------------------------------
@@ -75,6 +110,11 @@ void CEnvParticleScript::Precache()
 {
 	BaseClass::Precache();
 	PrecacheModel( STRING( GetModelName() ) );
+	
+	// We need a model for its animation sequences even though we don't render it
+	SetModel( STRING( GetModelName() ) );
+
+	PrecacheAnimationEventMaterials();
 }
 
 

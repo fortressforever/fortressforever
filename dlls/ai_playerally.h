@@ -28,9 +28,11 @@
 //-----------------------------------------------------------------------------
 
 #define TLK_ANSWER 			"TLK_ANSWER"
+#define TLK_ANSWER_HELLO	"TLK_ANSWER_HELLO"
 #define TLK_QUESTION 		"TLK_QUESTION"
 #define TLK_IDLE 			"TLK_IDLE"
 #define TLK_STARE 			"TLK_STARE"
+#define TLK_LOOK 			"TLK_LOOK"	// player looking at player for a second
 #define TLK_USE				"TLK_USE"
 #define TLK_STARTFOLLOW 	"TLK_STARTFOLLOW"
 #define TLK_STOPFOLLOW		"TLK_STOPFOLLOW"
@@ -39,11 +41,13 @@
 #define TLK_NOSHOOT			"TLK_NOSHOOT"
 #define TLK_HELLO 			"TLK_HELLO"
 #define TLK_PHELLO 			"TLK_PHELLO"
+#define TLK_HELLO_NPC		"TLK_HELLO_NPC"
 #define TLK_PIDLE 			"TLK_PIDLE"
 #define TLK_PQUESTION 		"TLK_PQUESTION"
 #define TLK_PLHURT1 		"TLK_PLHURT1"
 #define TLK_PLHURT2 		"TLK_PLHURT2"
 #define TLK_PLHURT3 		"TLK_PLHURT3"
+#define TLK_PLHURT			"TLK_PLHURT"
 #define TLK_PLPUSH 			"TLK_PLPUSH"
 #define TLK_PLRELOAD		"TLK_PLRELOAD"
 #define TLK_SMELL 			"TLK_SMELL"
@@ -53,9 +57,11 @@
 #define TLK_DANGER			"TLK_DANGER"
 #define TLK_SEE_COMBINE		"TLK_SEE_COMBINE"
 #define TLK_ENEMY_DEAD		"TLK_ENEMY_DEAD"
+#define TLK_ALYX_ENEMY_DEAD "TLK_ALYX_ENEMY_DEAD"
 #define TLK_SELECTED		"TLK_SELECTED"	// selected by player in command mode.
 #define TLK_COMMANDED		"TLK_COMMANDED" // received orders from player in command mode
 #define TLK_COMMAND_FAILED	"TLK_COMMAND_FAILED" 
+#define TLK_DENY_COMMAND	"TLK_DENY_COMMAND" // designer has asked this NPC to politely deny player commands to move the squad
 #define TLK_BETRAYED		"TLK_BETRAYED"	// player killed an ally in front of me.
 #define TLK_ALLY_KILLED		"TLK_ALLY_KILLED" // witnessed an ally die some other way.
 #define TLK_ATTACKING		"TLK_ATTACKING" // about to fire my weapon at a target
@@ -64,18 +70,39 @@
 #define TLK_DEATH			"TLK_DEATH"	// Death rattle
 #define TLK_HELP_ME			"TLK_HELP_ME" // call out to the player for help
 #define TLK_PLYR_PHYSATK	"TLK_PLYR_PHYSATK"	// Player's attacked me with a thrown physics object
-#define TLK_ANSWER_VORT		"TLK_ANSWER_VORT"
-#define TLK_ANSWER_CIT		"TLK_ANSWER_CIT"
-#define TLK_QUESTION_VORT	"TLK_QUESTION_VORT"
-#define TLK_QUESTION_CIT	"TLK_QUESTION_CIT"
 #define TLK_NEWWEAPON		"TLK_NEWWEAPON"
 #define TLK_PLDEAD			"TLK_PLDEAD"
 #define TLK_HIDEANDRELOAD	"TLK_HIDEANDRELOAD"
 #define TLK_STARTCOMBAT		"TLK_STARTCOMBAT"
 #define TLK_WATCHOUT		"TLK_WATCHOUT"
+#define TLK_MOBBED			"TLK_MOBBED"
+#define TLK_MANY_ENEMIES	"TLK_MANY_ENEMIES"
+#define TLK_FLASHLIGHT_ILLUM		"TLK_FLASHLIGHT_ILLUM"
+#define TLK_FLASHLIGHT_ON			"TLK_FLASHLIGHT_ON"		// player turned on flashlight
+#define TLK_FLASHLIGHT_OFF			"TLK_FLASHLIGHT_OFF"	// player turned off flashlight
+#define TLK_DARKNESS_LOSTPLAYER		"TLK_DARKNESS_LOSTPLAYER"
+#define TLK_DARKNESS_FOUNDPLAYER	"TLK_DARKNESS_FOUNDPLAYER"
+#define TLK_DARKNESS_UNKNOWN_WOUND	"TLK_DARKNESS_UNKNOWN_WOUND"
+#define TLK_DARKNESS_HEARDSOUND		"TLK_DARKNESS_HEARDSOUND"
+#define TLK_DARKNESS_LOSTENEMY_BY_FLASHLIGHT			"TLK_DARKNESS_LOSTENEMY_BY_FLASHLIGHT"
+#define TLK_DARKNESS_LOSTENEMY_BY_FLASHLIGHT_EXPIRED	"TLK_DARKNESS_LOSTENEMY_BY_FLASHLIGHT_EXPIRED"
+#define TLK_DARKNESS_FOUNDENEMY_BY_FLASHLIGHT			"TLK_DARKNESS_FOUNDENEMY_BY_FLASHLIGHT"
+#define TLK_DARKNESS_FLASHLIGHT_EXPIRED					"TLK_DARKNESS_FLASHLIGHT_EXPIRED"	// flashlight expired while not in combat
+#define TLK_DARKNESS_ENEMY_IN_DARKNESS					"TLK_DARKNESS_ENEMY_IN_DARKNESS"	// have an enemy, but it's in the darkness
+#define TLK_SPOTTED_INCOMING_HEADCRAB					"TLK_SPOTTED_INCOMING_HEADCRAB"
+#define TLK_CANT_INTERACT_NOW				"TLK_CANT_INTERACT_NOW" // to busy to interact with an object the player is holding up to me
+#define TLK_ALLY_IN_BARNACLE				"TLK_ALLY_IN_BARNACLE"	// Barnacle is lifting my buddy!
+#define TLK_SELF_IN_BARNACLE				"TLK_SELF_IN_BARNACLE" // I was grabbed by a barnacle!
+#define TLK_FOUNDPLAYER						"TLK_FOUNDPLAYER"
+#define TLK_PLAYER_KILLED_NPC				"TLK_PLAYER_KILLED_NPC"
+#define TLK_ENEMY_BURNING					"TLK_ENEMY_BURNING"
+#define TLK_SPOTTED_ZOMBIE_WAKEUP			"TLK_SPOTTED_ZOMBIE_WAKEUP"
+#define TLK_SPOTTED_HEADCRAB_LEAVING_ZOMBIE	"TLK_SPOTTED_HEADCRAB_LEAVING_ZOMBIE"
+#define TLK_DANGER_ZOMBINE_GRENADE			"TLK_DANGER_ZOMBINE_GRENADE"
+#define TLK_BALLSOCKETED					"TLK_BALLSOCKETED"
 
 // resume is "as I was saying..." or "anyhow..."
-#define TLK_RESUME 			"TLK_RESUME"
+#define TLK_RESUME 		"TLK_RESUME"
 
 // tourguide stuff below
 #define TLK_TGSTAYPUT 	"TLK_TGSTAYPUT"
@@ -129,7 +156,9 @@ enum AIConceptFlags_t
 	AICF_SPEAK_ONCE			= 0x01,
 	AICF_PROPAGATE_SPOKEN	= 0x02,
 	AICF_TARGET_PLAYER		= 0x04,
-};
+	AICF_QUESTION			= 0x08,
+	AICF_ANSWER				= 0x10,
+}; 
 
 struct ConceptInfo_t
 {
@@ -155,9 +184,10 @@ public:
 	
 	void Spawn();
 
+	void AddCustomConcept( const ConceptInfo_t &conceptInfo );
 	ConceptCategoryInfo_t *GetConceptCategoryInfo( ConceptCategory_t category );
 	ConceptInfo_t *GetConceptInfo( AIConcept_t concept );
-	void OnSpokeConcept( CAI_PlayerAlly *pPlayerAlly, AIConcept_t concept );
+	void OnSpokeConcept( CAI_PlayerAlly *pPlayerAlly, AIConcept_t concept, AI_Response *response  );
 
 	void SetCategoryDelay( ConceptCategory_t category, float minDelay, float maxDelay = 0.0 );
 	bool CategoryDelayExpired( ConceptCategory_t category );
@@ -220,6 +250,7 @@ struct AISpeechSelection_t
 class CAI_PlayerAlly : public CAI_BaseActor
 {
 	DECLARE_CLASS( CAI_PlayerAlly, CAI_BaseActor );
+
 public:
 	//---------------------------------
 
@@ -234,6 +265,7 @@ public:
 	void		OnStateChange( NPC_STATE OldState, NPC_STATE NewState );
 	void		PrescheduleThink( void );
 	int			SelectSchedule( void );
+	int			SelectNonCombatSpeech( AISpeechSelection_t *pSelection );
 	virtual int	SelectNonCombatSpeechSchedule();
 	int			TranslateSchedule( int scheduleType );
 	void		OnStartSchedule( int scheduleType );
@@ -254,17 +286,19 @@ public:
 	//---------------------------------
 	void		TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
+	int			TakeHealth( float flHealth, int bitsDamageType );
 	void		Event_Killed( const CTakeDamageInfo &info );
+	bool		CreateVPhysics();
 
 	//---------------------------------
 
-	void		PainSound(void);
+	virtual void PainSound( const CTakeDamageInfo &info );
 
 	//---------------------------------
 	// Speech & Acting
 	//---------------------------------
 	CBaseEntity	*EyeLookTarget( void );		// Override to look at talk target
-	CBaseEntity	*FindNamedEntity( const char *pszName );
+	CBaseEntity	*FindNamedEntity( const char *pszName, IEntityFindFilter *pFilter = NULL );
 
 	CBaseEntity *FindSpeechTarget( int flags );
 	virtual bool IsValidSpeechTarget( int flags, CBaseEntity *pEntity );
@@ -278,9 +312,17 @@ public:
 	//---------------------------------
 	
 	virtual bool SelectIdleSpeech( AISpeechSelection_t *pSelection );
+	virtual bool SelectAlertSpeech( AISpeechSelection_t *pSelection );
 
 	virtual bool SelectInterjection();
 	virtual bool SelectPlayerUseSpeech();
+
+	//---------------------------------
+
+	virtual bool SelectQuestionAndAnswerSpeech( AISpeechSelection_t *pSelection );
+	virtual void PostSpeakDispatchResponse( AIConcept_t concept, AI_Response *response );
+	bool		 SelectQuestionFriend( CBaseEntity *pFriend, AISpeechSelection_t *pSelection );
+	bool		 SelectAnswerFriend( CBaseEntity *pFriend, AISpeechSelection_t *pSelection, bool bRespondingToHello );
 
 	//---------------------------------
 
@@ -310,7 +352,7 @@ public:
 	
 	bool		ShouldSpeakRandom( AIConcept_t concept, int iChance );
 	bool		IsAllowedToSpeak( AIConcept_t concept, bool bRespondingToPlayer = false );
-	bool		SpeakIfAllowed( AIConcept_t concept, const char *modifiers = NULL, bool bRespondingToPlayer = false );
+	virtual bool SpeakIfAllowed( AIConcept_t concept, const char *modifiers = NULL, bool bRespondingToPlayer = false, char *pszOutResponseChosen = NULL, size_t bufsize = 0 );
 	void		ModifyOrAppendCriteria( AI_CriteriaSet& set );
 
 	//---------------------------------
@@ -318,14 +360,36 @@ public:
 	float		GetTimePlayerStaring()		{ return ( m_flTimePlayerStartStare != 0 ) ? gpGlobals->curtime - m_flTimePlayerStartStare : 0; }
 
 	//---------------------------------
+	// NPC Event Response System
+	virtual bool CanRespondToEvent( const char *ResponseConcept );
+	virtual bool RespondedTo( const char *ResponseConcept, bool bForce );
 
-	void		OnSpokeConcept( AIConcept_t concept );
+	//---------------------------------
+
+	void		OnSpokeConcept( AIConcept_t concept, AI_Response *response );
 	void		OnStartSpeaking();
 
 	// Inputs
 	virtual void InputIdleRespond( inputdata_t &inputdata ) {};
+	void InputSpeakResponseConcept( inputdata_t &inputdata );
+	virtual bool SpeakMapmakerInterruptConcept( string_t iszConcept );
+
+	void			DisplayDeathMessage( void );
+	virtual const char		*GetDeathMessageText( void ) { return "GAMEOVER_ALLY"; }
+	void			InputMakeGameEndAlly( inputdata_t &inputdata );
+	void			InputMakeRegularAlly( inputdata_t &inputdata );
+	void			InputAnswerQuestion( inputdata_t &inputdata );
+	void			InputAnswerQuestionHello( inputdata_t &inputdata );
+
+	void			AnswerQuestion( CAI_PlayerAlly *pQuestioner, int iQARandomNum, bool bAnsweringHello );
 
 protected:
+	
+#ifdef HL2_DLL
+	// Health regeneration for friendly allies
+	virtual bool ShouldRegenerateHealth( void ) { return ( Classify() == CLASS_PLAYER_ALLY_VITAL ); }
+#endif
+
 	//-----------------------------------------------------
 	// Conditions, Schedules, Tasks
 	//-----------------------------------------------------
@@ -362,6 +426,9 @@ private:
 	EHANDLE			m_hTalkTarget;	// who to look at while talking
 	float			m_flNextRegenTime;
 	float			m_flTimePlayerStartStare;
+	EHANDLE			m_hPotentialSpeechTarget;	// NPC to tell the response rules about when trying to find a response to talk to them with
+	float			m_flNextIdleSpeechTime;
+	int				m_iQARandomNumber;
 
 	//---------------------------------
 
@@ -371,6 +438,14 @@ private:
 	
 	CHandle<CAI_SpeechFilter>	m_hSpeechFilter;
 
+	bool m_bGameEndAlly;
+
+	float	m_flTimeLastRegen;		// Last time I regenerated a bit of health.
+	float	m_flHealthAccumulator;	// Counterpart to the damage accumulator in CBaseCombatCharacter. So ally health regeneration is accurate over time.
+
+#ifdef _XBOX
+protected:
+#endif
 	DECLARE_DATADESC();
 protected:
 	DEFINE_CUSTOM_AI;

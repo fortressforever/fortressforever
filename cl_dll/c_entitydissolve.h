@@ -47,6 +47,11 @@ public:
 	int		m_nDissolveType;
 	float   m_flNextSparkTime;
 
+	Vector	m_vDissolverOrigin;
+	int		m_nMagnitude;
+
+	bool	m_bCoreExplode;
+
 protected:
 
 	float GetFadeInPercentage( void );		// Fade in amount (entity fading to black)

@@ -22,7 +22,7 @@ public:
 
 	// model specific
 	virtual bool	Interpolate( float currentTime );
-	virtual	void	StandardBlendingRules( Vector pos[], Quaternion q[], float currentTime, int boneMask );
+	virtual	void	StandardBlendingRules( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );
 
 	float				m_recanimtime[3];
 	AnimationLayer_t	m_Layer[4][3];
@@ -74,13 +74,12 @@ END_RECV_TABLE()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_AI_BaseHumanoid::StandardBlendingRules( Vector pos[], Quaternion q[], float currentTime, int boneMask )
+void C_AI_BaseHumanoid::StandardBlendingRules( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
 {
 	VPROF( "C_AI_BaseHumanoid::StandardBlendingRules" );
 
-	BaseClass::StandardBlendingRules( pos, q, currentTime, boneMask );
+	BaseClass::StandardBlendingRules( pStudioHdr, pos, q, currentTime, boneMask );
 
-	studiohdr_t *hdr = InitModel();
 	if ( !hdr )
 	{
 		return;
@@ -106,7 +105,7 @@ void C_AI_BaseHumanoid::StandardBlendingRules( Vector pos[], Quaternion q[], flo
 
 	// debugoverlay->AddTextOverlay( GetAbsOrigin() + Vector( 0, 0, 64 ), 0, 0, "%30s %6.2f : %6.2f", hdr->pSeqdesc( GetSequence() )->pszLabel( ), fCycle, 1.0 );
 
-	MaintainSequenceTransitions( fCycle, poseparam, pos, q, boneMask );
+	MaintainSequenceTransitions( hdr, fCycle, poseparam, pos, q, boneMask );
 
 #if 1
 	for (i = 0; i < 4; i++)

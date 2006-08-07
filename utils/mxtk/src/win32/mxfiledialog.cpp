@@ -52,6 +52,7 @@ mxGetOpenFileName (mxWindow *parent, const char *path, const char *filter)
 		ofn.hwndOwner = (HWND) parent->getHandle ();
 	ofn.hInstance = (HINSTANCE) GetModuleHandle (NULL);
 	ofn.lpstrFilter = szFilter;
+	ofn.nFilterIndex = 1;
 	ofn.lpstrFile = sd_path;
 	ofn.nMaxFile = _MAX_PATH;
 	if (path && strlen (path))

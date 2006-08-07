@@ -137,8 +137,8 @@ public:
 	virtual bool FValidateHintType( CAI_Hint *pHint );
 	virtual Activity GetHintActivity( short sHintType, Activity HintsActivity );
 
-	virtual void PainSound( void );
-	virtual void DeathSound( void );
+	virtual void PainSound( const CTakeDamageInfo &info );
+	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual void IdleSound( void );
 	virtual void AlertSound( void );
 	virtual void StopLoopingSounds( void );
@@ -209,12 +209,12 @@ public:
 		m_iBirdType = BIRDTYPE_SEAGULL;
 	}
 
-	void PainSound( void )
+	void PainSound( const CTakeDamageInfo &info )
 	{
 		EmitSound( "NPC_Seagull.Pain" );
 	}
 
-	void DeathSound( void )
+	void DeathSound( const CTakeDamageInfo &info )
 	{
 		EmitSound( "NPC_Seagull.Pain" );
 	}

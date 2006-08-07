@@ -20,7 +20,9 @@
 
 #define	HEALTH_WARNING_THRESHOLD	25
 
-static ConVar	hud_quickinfo( "hud_quickinfo", "0", FCVAR_ARCHIVE );
+static ConVar	hud_quickinfo( "hud_quickinfo", "1", FCVAR_ARCHIVE );
+
+extern ConVar crosshair;
 
 #define QUICKINFO_EVENT_DURATION	1.0f
 #define	QUICKINFO_BRIGHTNESS_FULL	255
@@ -77,14 +79,10 @@ private:
 	CHudTexture	*m_icon_lb;		// left bracket, full
 	CHudTexture	*m_icon_rbe;	// right bracket, empty
 	CHudTexture	*m_icon_lbe;	// left bracket, empty
-
 };
 
 DECLARE_HUDELEMENT( CHUDQuickInfo );
 
-//
-//-----------------------------------------------------
-//
 CHUDQuickInfo::CHUDQuickInfo( const char *pElementName ) :
 	CHudElement( pElementName ), BaseClass( NULL, "HUDQuickInfo" )
 {
@@ -102,12 +100,6 @@ void CHUDQuickInfo::ApplySchemeSettings( IScheme *scheme )
 }
 
 
-/*
-==================================================
-Init
-==================================================
-*/
-
 void CHUDQuickInfo::Init( void )
 {
 	m_ammoFade		= 0.0f;
@@ -124,11 +116,6 @@ void CHUDQuickInfo::Init( void )
 	m_flLastEventTime   = 0.0f;
 }
 
-/*
-==================================================
-VidInit
-==================================================
-*/
 
 void CHUDQuickInfo::VidInit( void )
 {
@@ -139,22 +126,16 @@ void CHUDQuickInfo::VidInit( void )
 	m_icon_lb = gHUD.GetIcon( "crosshair_left_full" );
 	m_icon_rbe = gHUD.GetIcon( "crosshair_right_empty" );
 	m_icon_lbe = gHUD.GetIcon( "crosshair_left_empty" );
-
 	m_icon_rbn = gHUD.GetIcon( "crosshair_right" );
 	m_icon_lbn = gHUD.GetIcon( "crosshair_left" );
 }
 
-/*
-==================================================
-DrawWarning
-==================================================
-*/
 
 void CHUDQuickInfo::DrawWarning( int x, int y, CHudTexture *icon, float &time )
 {
 	float scale	= (int)( fabs(sin(gpGlobals->curtime*8.0f)) * 128.0);
 
-	//Only fade out at the low point of our blink
+	// Only fade out at the low point of our blink
 	if ( time <= (gpGlobals->frametime * 200.0f) )
 	{
 		if ( scale < 40 )
@@ -164,12 +145,12 @@ void CHUDQuickInfo::DrawWarning( int x, int y, CHudTexture *icon, float &time )
 		}
 		else
 		{
-			//Counteract the offset below to survive another frame
+			// Counteract the offset below to survive another frame
 			time += (gpGlobals->frametime * 200.0f);
 		}
 	}
 	
-	//Update our time
+	// Update our time
 	time -= (gpGlobals->frametime * 200.0f);
 	Color caution = gHUD.m_clrCaution;
 	caution[3] = scale * 255;
@@ -177,6 +158,25 @@ void CHUDQuickInfo::DrawWarning( int x, int y, CHudTexture *icon, float &time )
 	icon->DrawSelf( x, y, caution );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Save CPU cycles by letting the HUD system early cull
+// costly traversal.  Called per frame, return true if thinking and 
+// painting need to occur.
+//-----------------------------------------------------------------------------
+bool CHUDQuickInfo::ShouldDraw( void )
+{
+	if ( !m_icon_c || !m_icon_rb || !m_icon_rbe || !m_icon_lb || !m_icon_lbe )
+		return false;
+
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	if ( player == NULL )
+		return false;
+
+	if ( !crosshair.GetBool() )
+		return false;
+
+	return ( CHudElement::ShouldDraw() && !engine->IsDrawingLoadingImage() );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Checks if the hud element needs to fade out
@@ -228,32 +228,9 @@ void CHUDQuickInfo::OnThink()
 	}
 }
 
-/*
-==================================================
-Draw
-==================================================
-*/
-
-bool CHUDQuickInfo::ShouldDraw( void )
-{
-	return ( CHudElement::ShouldDraw() && !engine->IsDrawingLoadingImage() && !engine->IsPaused() );
-}
-
-/*
-==================================================
-Draw
-==================================================
-*/
 
 void CHUDQuickInfo::Paint()
 {
-	if ( !m_icon_c || !m_icon_rb || !m_icon_rbe || !m_icon_lb || !m_icon_lbe )
-		return;
-
-	int		xCenter	= ( ScreenWidth() - m_icon_c->Width() ) / 2;
-	int		yCenter = ( ScreenHeight() - m_icon_c->Height() ) / 2;
-	int		scalar = 138;
-	
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( player == NULL )
 		return;
@@ -262,15 +239,16 @@ void CHUDQuickInfo::Paint()
 	if ( pWeapon == NULL )
 		return;
 
-	//Get our values
+	int		xCenter	= ( ScreenWidth() - m_icon_c->Width() ) / 2;
+	int		yCenter = ( ScreenHeight() - m_icon_c->Height() ) / 2;
+	float	scalar  = 138.0f/255.0f;
+	
+	// Check our health for a warning
 	int	health	= player->GetHealth();
-	int	ammo	= pWeapon->Clip1();
-
-	//Check our health for a warning
 	if ( health != m_lastHealth )
 	{
 		UpdateEventTime();
-		m_lastHealth	= health;
+		m_lastHealth = health;
 
 		if ( health <= HEALTH_WARNING_THRESHOLD )
 		{
@@ -290,6 +268,7 @@ void CHUDQuickInfo::Paint()
 	}
 
 	// Check our ammo for a warning
+	int	ammo = pWeapon->Clip1();
 	if ( ammo != m_lastAmmo )
 	{
 		UpdateEventTime();
@@ -325,24 +304,19 @@ void CHUDQuickInfo::Paint()
 	yCenter = ( ScreenHeight() - m_icon_lb->Height() ) / 2;
 
 	if ( !hud_quickinfo.GetInt() )
-	{
-		// no quickinfo, just draw the small versions of the crosshairs
-		clrNormal[3] = 196;
-		m_icon_lbn->DrawSelf(xCenter - (m_icon_lbn->Width() * 2), yCenter, clrNormal);
-		m_icon_rbn->DrawSelf(xCenter + m_icon_rbn->Width(), yCenter, clrNormal);
 		return;
-	}
 
 	int	sinScale = (int)( fabs(sin(gpGlobals->curtime*8.0f)) * 128.0f );
 
-	//Update our health
+	// Update our health
 	if ( m_healthFade > 0.0f )
 	{
 		DrawWarning( xCenter - (m_icon_lb->Width() * 2), yCenter, m_icon_lb, m_healthFade );
 	}
 	else
 	{
-		float	healthPerc = (float) health / 100.0f;
+		float healthPerc = (float) health / 100.0f;
+		healthPerc = clamp( healthPerc, 0.0f, 1.0f );
 
 		Color healthColor = m_warnHealth ? gHUD.m_clrCaution : gHUD.m_clrNormal;
 		
@@ -358,14 +332,24 @@ void CHUDQuickInfo::Paint()
 		gHUD.DrawIconProgressBar( xCenter - (m_icon_lb->Width() * 2), yCenter, m_icon_lb, m_icon_lbe, ( 1.0f - healthPerc ), healthColor, CHud::HUDPB_VERTICAL );
 	}
 
-	//Update our ammo
+	// Update our ammo
 	if ( m_ammoFade > 0.0f )
 	{
 		DrawWarning( xCenter + m_icon_rb->Width(), yCenter, m_icon_rb, m_ammoFade );
 	}
 	else
 	{
-		float ammoPerc = 1.0f - ( (float) ammo / (float) pWeapon->GetMaxClip1() );
+		float ammoPerc;
+
+		if ( pWeapon->GetMaxClip1() <= 0 )
+		{
+			ammoPerc = 0.0f;
+		}
+		else
+		{
+			ammoPerc = 1.0f - ( (float) ammo / (float) pWeapon->GetMaxClip1() );
+			ammoPerc = clamp( ammoPerc, 0.0f, 1.0f );
+		}
 
 		Color ammoColor = m_warnAmmo ? gHUD.m_clrCaution : gHUD.m_clrNormal;
 		

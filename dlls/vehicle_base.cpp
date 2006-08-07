@@ -14,12 +14,15 @@
 #include "in_buttons.h"
 #include "npc_vehicledriver.h"
 #include "physics_saverestore.h"
+#include "saverestore_utlvector.h"
 #include "func_break.h"
 #include "physics_impact_damage.h"
 #include "entityblocker.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#define SF_PROP_VEHICLE_ALWAYSTHINK		0x00000001
 
 ConVar g_debug_vehiclebase( "g_debug_vehiclebase", "0", FCVAR_CHEAT );
 extern ConVar g_debug_vehicledriver;
@@ -38,6 +41,10 @@ BEGIN_DATADESC( CPropVehicle )
 	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
 
+#ifdef HL2_EPISODIC
+	DEFINE_UTLVECTOR( m_hPhysicsChildren, FIELD_EHANDLE ),
+#endif // HL2_EPISODIC
+
 	// Keys
 	DEFINE_KEYFIELD( m_vehicleScript, FIELD_STRING, "VehicleScript" ),
 	DEFINE_FIELD( m_vecSmoothedVelocity, FIELD_VECTOR ),
@@ -48,6 +55,7 @@ BEGIN_DATADESC( CPropVehicle )
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Action", InputAction ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "HandBrakeOn", InputHandBrakeOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "HandBrakeOff", InputHandBrakeOff ),
+
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( prop_vehicle, CPropVehicle );
@@ -203,6 +211,14 @@ void CPropVehicle::InputHandBrakeOff( inputdata_t &inputdata )
 void CPropVehicle::Think()
 {
 	m_VehiclePhysics.Think();
+
+	// Derived classes of CPropVehicle have their own code to determine how frequently to think.
+	// But the prop_vehicle entity native to this class will only think one time, so this flag
+	// was added to allow prop_vehicle to always think without affecting the derived classes.
+	if( HasSpawnFlags(SF_PROP_VEHICLE_ALWAYSTHINK) )
+	{
+		SetNextThink(gpGlobals->curtime);
+	}
 }
 
 #define SMOOTHING_FACTOR 0.9
@@ -237,6 +253,37 @@ Vector CPropVehicle::GetSmoothedVelocity( void )
 	return m_vecSmoothedVelocity;
 }
 
+//=============================================================================
+#ifdef HL2_EPISODIC
+
+//-----------------------------------------------------------------------------
+// Purpose: Add an entity to a list which receives physics callbacks from the vehicle
+//-----------------------------------------------------------------------------
+void CPropVehicle::AddPhysicsChild( CBaseEntity *pChild )
+{
+	// Don't add something we already have
+	if ( m_hPhysicsChildren.Find( pChild ) != m_hPhysicsChildren.InvalidIndex() )
+		return ;
+
+	m_hPhysicsChildren.AddToTail( pChild );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Removes entity from physics callback list
+//-----------------------------------------------------------------------------
+void CPropVehicle::RemovePhysicsChild( CBaseEntity *pChild )
+{
+	int elemID = m_hPhysicsChildren.Find( pChild );
+
+	if ( m_hPhysicsChildren.IsValidIndex( elemID ) )
+	{
+		m_hPhysicsChildren.Remove( elemID );
+	}
+}
+
+#endif //HL2_EPISODIC
+//=============================================================================
+
 //-----------------------------------------------------------------------------
 // Purpose: Player driveable vehicle class
 //-----------------------------------------------------------------------------
@@ -259,7 +306,6 @@ IMPLEMENT_SERVERCLASS_ST(CPropVehicleDriveable, DT_PropVehicleDriveable)
 	SendPropBool(SENDINFO(m_bHasGun)),
 	SendPropVector(SENDINFO(m_vecGunCrosshair), -1, SPROP_COORD),
 END_SEND_TABLE();
-
 
 BEGIN_DATADESC( CPropVehicleDriveable )
 	// Inputs
@@ -309,12 +355,12 @@ LINK_ENTITY_TO_CLASS( prop_vehicle_driveable, CPropVehicleDriveable );
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CPropVehicleDriveable::CPropVehicleDriveable( void )
+CPropVehicleDriveable::CPropVehicleDriveable( void ) :
+	m_pServerVehicle( NULL ),
+	m_hKeepUpright( NULL ),
+	m_flTurnOffKeepUpright( 0 ),
+	m_flNoImpactDamageTime( 0 )
 {
-	m_pServerVehicle = NULL;
-	m_hKeepUpright = NULL;
-	m_flTurnOffKeepUpright = 0;
-	m_flNoImpactDamageTime = 0;
 	m_vecEyeExitEndpoint.Init();
 	m_vecGunCrosshair.Init();
 }
@@ -406,10 +452,20 @@ int CPropVehicleDriveable::Restore( IRestore &restore )
 	return nRetVal;
 }
 
-void CPropVehicleDriveable::OnRestore()
+//-----------------------------------------------------------------------------
+// Purpose: Do extra fix-up after restore
+//-----------------------------------------------------------------------------
+void CPropVehicleDriveable::OnRestore( void )
 {
 	BaseClass::OnRestore();
 	m_flNoImpactDamageTime = gpGlobals->curtime + 5.0f;
+
+	IServerVehicle *pServerVehicle = GetServerVehicle();
+	if ( pServerVehicle != NULL )
+	{
+		// Restore the passenger information we're holding on to
+		pServerVehicle->RestorePassengerInfo();
+	}
 }
 
 
@@ -479,37 +535,46 @@ CBaseEntity *CPropVehicleDriveable::GetDriver( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehicleDriveable::EnterVehicle( CBasePlayer *pPlayer )
+void CPropVehicleDriveable::EnterVehicle( CBaseCombatCharacter *pPassenger )
 {
-	if ( !pPlayer )
+	if ( pPassenger == NULL )
 		return;
 
-	// Remove any player who may be in the vehicle at the moment
-	if ( m_hPlayer )
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger	);
+	if ( pPlayer != NULL )
 	{
-		ExitVehicle(VEHICLE_DRIVER);
+		// Remove any player who may be in the vehicle at the moment
+		if ( m_hPlayer )
+		{
+			ExitVehicle( VEHICLE_ROLE_DRIVER );
+		}
+
+		m_hPlayer = pPlayer;
+		m_playerOn.FireOutput( pPlayer, this, 0 );
+
+		// Don't start the engine if the player's using an entry animation,
+		// because we want to start the engine once the animation is done.
+		if ( !m_bEnterAnimOn )
+		{
+			StartEngine();
+		}
+
+		// Start Thinking
+		SetNextThink( gpGlobals->curtime );
+
+		m_VehiclePhysics.GetVehicle()->OnVehicleEnter();
 	}
-
-	m_hPlayer = pPlayer;
-	m_playerOn.FireOutput( pPlayer, this, 0 );
-
-	// Don't start the engine if the player's using an entry animation,
-	// because we want to start the engine once the animation is done.
-	if ( !m_bEnterAnimOn )
+	else
 	{
-		StartEngine();
+		// NPCs are not yet supported - jdw
+		Assert( 0 );
 	}
-
-	// Start Thinking
-	SetNextThink( gpGlobals->curtime );
-
-	m_VehiclePhysics.GetVehicle()->OnVehicleEnter();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehicleDriveable::ExitVehicle( int iRole )
+void CPropVehicleDriveable::ExitVehicle( int nRole )
 {
 	CBasePlayer *pPlayer = m_hPlayer;
 	if ( !pPlayer )
@@ -567,8 +632,8 @@ void CPropVehicleDriveable::DriveVehicle( float flFrameTime, CUserCmd *ucmd, int
 	m_nHasBoost = m_VehiclePhysics.HasBoost();
 	m_flThrottle = m_VehiclePhysics.GetThrottle();
 
-	m_nScannerDisabledWeapons = 0;		// off for now, change once we have scanners
-	m_nScannerDisabledVehicle = 0;		// off for now, change once we have scanners
+	m_nScannerDisabledWeapons = false;		// off for now, change once we have scanners
+	m_nScannerDisabledVehicle = false;		// off for now, change once we have scanners
 
 	//
 	// Fire the appropriate outputs based on button pressed events.
@@ -640,7 +705,7 @@ void CPropVehicleDriveable::Think()
 		SetNextThink( gpGlobals->curtime );
 
 		// Time up?
-		if ( m_hKeepUpright && m_flTurnOffKeepUpright < gpGlobals->curtime && m_hKeepUpright )
+		if ( m_hKeepUpright != NULL && m_flTurnOffKeepUpright < gpGlobals->curtime )
 		{
 			variant_t emptyVariant;
 			m_hKeepUpright->AcceptInput( "TurnOff", this, this, emptyVariant, USE_TOGGLE );
@@ -688,10 +753,14 @@ void CPropVehicleDriveable::InputUnlock( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 bool CPropVehicleDriveable::CanEnterVehicle( CBaseEntity *pEntity )
 {
+	// Only drivers are supported
+	Assert( pEntity && pEntity->IsPlayer() );
+
 	// Prevent entering if the vehicle's being driven by an NPC
 	if ( GetDriver() && GetDriver() != pEntity )
 		return false;
 
+	// Can't enter if we're upside-down
 	if ( IsOverturned() )
 		return false;
 
@@ -766,6 +835,22 @@ void CPropVehicleDriveable::StopEngine( void )
 //-----------------------------------------------------------------------------
 void CPropVehicleDriveable::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 {
+
+//=============================================================================
+#ifdef HL2_EPISODIC
+
+	// Notify all children
+	for ( int i = 0; i < m_hPhysicsChildren.Count(); i++ )
+	{
+		if ( m_hPhysicsChildren[i] == NULL )
+			continue;
+
+		m_hPhysicsChildren[i]->VPhysicsCollision( index, pEvent );
+	}
+
+#endif // HL2_EPISODIC
+//=============================================================================
+
 	// Don't care if we don't have a driver
 	if ( !GetDriver() )
 		return;
@@ -781,7 +866,9 @@ void CPropVehicleDriveable::VPhysicsCollision( int index, gamevcollisionevent_t 
 	// If we hit hard enough, damage the player
 	// Don't take damage from ramming bad guys
 	if ( pHitEntity->MyNPCPointer() )
+	{
 		return;
+	}
 
 	// Don't take damage from ramming ragdolls
 	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_PART_OF_RAGDOLL )
@@ -822,21 +909,97 @@ void CPropVehicleDriveable::TraceAttack( const CTakeDamageInfo &info, const Vect
 	// If we've just been zapped by the physcannon, try and right ourselves
 	if ( info.GetDamageType() & DMG_PHYSGUN )
 	{
-		// If we don't have one, create an upright controller for us
-		if ( !m_hKeepUpright )
+		float flUprightStrength = GetUprightStrength();
+		if ( flUprightStrength )
 		{
-			m_hKeepUpright = CreateKeepUpright( GetAbsOrigin(), vec3_angle, this, 8, false );
-		}
-		Assert( m_hKeepUpright );
-		variant_t emptyVariant;
-		m_hKeepUpright->AcceptInput( "TurnOn", this, this, emptyVariant, USE_TOGGLE );
+			// Update our strength value if we already have an upright controller
+			if ( m_hKeepUpright )
+			{
+				variant_t limitVariant;
+				limitVariant.SetFloat( flUprightStrength );
+				m_hKeepUpright->AcceptInput( "SetAngularLimit", this, this, limitVariant, USE_TOGGLE );
+			}
+			else
+			{
+				// If we don't have one, create an upright controller for us
+				m_hKeepUpright = CreateKeepUpright( GetAbsOrigin(), vec3_angle, this, GetUprightStrength(), false );
+			}
 
-		// Turn off the keepupright after a short time
-		m_flTurnOffKeepUpright = gpGlobals->curtime + 5;
-		SetNextThink( gpGlobals->curtime );
+			Assert( m_hKeepUpright );
+			variant_t emptyVariant;
+			m_hKeepUpright->AcceptInput( "TurnOn", this, this, emptyVariant, USE_TOGGLE );
+
+			// Turn off the keepupright after a short time
+			m_flTurnOffKeepUpright = gpGlobals->curtime + GetUprightTime();
+			SetNextThink( gpGlobals->curtime );
+		}
 	}
 
 	BaseClass::TraceAttack( info, vecDir, ptr );
+}
+
+//=============================================================================
+// Passenger carrier
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPassenger - 
+//			bCompanion - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CPropVehicleDriveable::NPC_CanEnterVehicle( CAI_BaseNPC *pPassenger, bool bCompanion )
+{
+	// Always allowed unless a leaf class says otherwise
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPassenger - 
+//			bCompanion - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CPropVehicleDriveable::NPC_CanExitVehicle( CAI_BaseNPC *pPassenger, bool bCompanion )
+{
+	// Always allowed unless a leaf class says otherwise
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPassenger - 
+//			bCompanion - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CPropVehicleDriveable::NPC_AddPassenger( CAI_BaseNPC *pPassenger, string_t strRoleName, int nSeatID )
+{
+	// Must be allowed to enter
+	if ( NPC_CanEnterVehicle( pPassenger, true /*FIXME*/ ) == false )
+		return false;
+
+	IServerVehicle *pVehicleServer = GetServerVehicle();
+	if ( pVehicleServer != NULL )
+		return pVehicleServer->NPC_AddPassenger( pPassenger, strRoleName, nSeatID );
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPassenger - 
+//			bCompanion - 
+//-----------------------------------------------------------------------------
+bool CPropVehicleDriveable::NPC_RemovePassenger( CAI_BaseNPC *pPassenger )
+{
+	// Must be allowed to exit
+	if ( NPC_CanExitVehicle( pPassenger, true /*FIXME*/ ) == false )
+		return false;
+
+	IServerVehicle *pVehicleServer = GetServerVehicle();
+	if ( pVehicleServer != NULL )
+		return pVehicleServer->NPC_RemovePassenger( pPassenger );
+
+	return true;
 }
 
 //========================================================================================================================================
@@ -856,12 +1019,21 @@ void CFourWheelServerVehicle::SetVehicle( CBaseEntity *pVehicle )
 //-----------------------------------------------------------------------------
 void CFourWheelServerVehicle::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles )
 {
-	Assert( nRole == VEHICLE_DRIVER );
-	CBasePlayer *pPlayer = GetPassenger( VEHICLE_DRIVER );
-	Assert( pPlayer );
+	Assert( nRole == VEHICLE_ROLE_DRIVER );
+	CBaseCombatCharacter *pPassenger = GetPassenger( VEHICLE_ROLE_DRIVER );
+	Assert( pPassenger );
 
-	*pAbsAngles = pPlayer->EyeAngles(); // yuck. this is an in/out parameter.
-	GetFourWheelVehiclePhysics()->GetVehicleViewPosition( "vehicle_driver_eyes", 1.0f, pAbsOrigin, pAbsAngles );
+	CBasePlayer *pPlayer = ToBasePlayer( pPassenger );
+	if ( pPlayer != NULL )
+	{
+		*pAbsAngles = pPlayer->EyeAngles(); // yuck. this is an in/out parameter.
+		GetFourWheelVehiclePhysics()->GetVehicleViewPosition( "vehicle_driver_eyes", 1.0f, pAbsOrigin, pAbsAngles );
+	}
+	else
+	{
+		// NPCs are not supported
+		Assert( 0 );
+	}
 }
 
 //-----------------------------------------------------------------------------

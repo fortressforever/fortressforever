@@ -6,12 +6,11 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "ai_basenpc.h"
+#include "npc_turret_floor.h"
 #include "ai_senses.h"
 #include "ai_memory.h"
 #include "engine/IEngineSound.h"
 #include "ammodef.h"
-#include "Sprite.h"
 #include "hl2_dll/hl2_player.h"
 #include "soundenvelope.h"
 #include "physics_saverestore.h"
@@ -19,12 +18,10 @@
 #include "basehlcombatweapon_shared.h"
 #include "phys_controller.h"
 #include "ai_interactions.h"
-#include "player_pickup.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class CTurretTipController;
 const char *GetMassEquivalent(float flMass);
 
 #define	DISABLE_SHOT	0
@@ -36,6 +33,10 @@ extern ConVar physcannon_tracelength;
 
 // Interactions
 int	g_interactionTurretStillStanding	= 0;
+
+float CNPC_FloorTurret::fMaxTipControllerVelocity = 300.0f * 300.0f;
+float CNPC_FloorTurret::fMaxTipControllerAngularVelocity = 90.0f * 90.0f;
+
 
 #define	FLOOR_TURRET_MODEL			"models/combine_turrets/floor_turret.mdl"
 #define FLOOR_TURRET_GLOW_SPRITE	"sprites/glow1.vmt"
@@ -59,6 +60,7 @@ int	g_interactionTurretStillStanding	= 0;
 #define SF_FLOOR_TURRET_AUTOACTIVATE		0x00000020
 #define SF_FLOOR_TURRET_STARTINACTIVE		0x00000040
 #define SF_FLOOR_TURRET_FASTRETIRE			0x00000080
+#define SF_FLOOR_TURRET_OUT_OF_AMMO			0x00000100
 
 //Activities
 int ACT_FLOOR_TURRET_OPEN;
@@ -66,242 +68,6 @@ int ACT_FLOOR_TURRET_CLOSE;
 int ACT_FLOOR_TURRET_OPEN_IDLE;
 int ACT_FLOOR_TURRET_CLOSED_IDLE;
 int ACT_FLOOR_TURRET_FIRE;
-
-//Turret states
-enum turretState_e
-{
-	TURRET_SEARCHING,
-	TURRET_AUTO_SEARCHING,
-	TURRET_ACTIVE,
-	TURRET_SUPPRESSING,
-	TURRET_DEPLOYING,
-	TURRET_RETIRING,
-};
-
-//Eye states
-enum eyeState_t
-{
-	TURRET_EYE_SEE_TARGET,			//Sees the target, bright and big
-	TURRET_EYE_SEEKING_TARGET,		//Looking for a target, blinking (bright)
-	TURRET_EYE_DORMANT,				//Not active
-	TURRET_EYE_DEAD,				//Completely invisible
-	TURRET_EYE_DISABLED,			//Turned off, must be reactivated before it'll deploy again (completely invisible)
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: Floor turret
-//-----------------------------------------------------------------------------
-class CNPC_FloorTurret : public CAI_BaseNPC, public CDefaultPlayerPickupVPhysics
-{
-	DECLARE_CLASS( CNPC_FloorTurret, CAI_BaseNPC );
-public:
-	
-	CNPC_FloorTurret( void );
-	~CNPC_FloorTurret( void );
-
-	void	Precache( void );
-	void	Spawn( void );
-	void	Activate( void );
-	bool	CreateVPhysics( void );
-	void	UpdateOnRemove( void );
-	virtual int	OnTakeDamage( const CTakeDamageInfo &info );
-	int		VPhysicsTakeDamage( const CTakeDamageInfo &info );
-
-	// Player pickup
-	void	OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
-	void	OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason );
-	bool	HasPreferredCarryAnglesForPlayer( CBasePlayer *pPlayer );
-	const QAngle	&PreferredCarryAngles( void ) {return vec3_angle; }
-	bool	OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
-
-	const char *GetTracerType( void ) { return "AR2Tracer"; }
-
-	bool	ShouldSavePhysics() { return true; }
-
-	bool	HandleInteraction( int interactionType, void *data, CBaseCombatCharacter *sourceEnt );
-
-	// Think functions
-	void	Retire( void );
-	void	Deploy( void );
-	void	ActiveThink( void );
-	void	SearchThink( void );
-	void	AutoSearchThink( void );
-	void	TippedThink( void );
-	void	InactiveThink( void );
-	void	SuppressThink( void );
-	void	DisabledThink( void );
-	void	HackFindEnemy( void );
-
-	float	GetAttackDamageScale( CBaseEntity *pVictim );
-	Vector	GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget ) ;
-
-	// Do we have a physics attacker?
-	CBasePlayer *HasPhysicsAttacker( float dt );
-	bool IsHeldByPhyscannon( )	{ return VPhysicsGetObject() && (VPhysicsGetObject()->GetGameFlags() & FVPHYSICS_PLAYER_HELD); }
-
-	// Use functions
-	void	ToggleUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	int ObjectCaps() 
-	{ 
-		return BaseClass::ObjectCaps() | FCAP_IMPULSE_USE;
-	}
-
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-	{
-		CBasePlayer *pPlayer = ToBasePlayer( pActivator );
-		if ( pPlayer )
-		{
-			pPlayer->PickupObject( this, false );
-		}
-	}
-
-	// Inputs
-	void	InputToggle( inputdata_t &inputdata );
-	void	InputEnable( inputdata_t &inputdata );
-	void	InputDisable( inputdata_t &inputdata );
-	
-	bool	IsValidEnemy( CBaseEntity *pEnemy );
-	bool	CanBeAnEnemyOf( CBaseEntity *pEnemy );
-	bool	IsBeingCarriedByPlayer( void ) { return m_bCarriedByPlayer; }
-	bool	WasJustDroppedByPlayer( void );
-
-	int		BloodColor( void ) { return DONT_BLEED; }
-	float	MaxYawSpeed( void );
-
-	Class_T	Classify( void ) 
-	{
-		if( m_bEnabled ) 
-			return CLASS_COMBINE;
-
-		return CLASS_NONE;
-	}
-
-	Vector	EyePosition( void )
-	{
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
-
-		return vecOrigin;
-	}
-
-	Vector	EyeOffset( Activity nActivity ) { return Vector( 0, 0, 58 ); }
-
-	// Restore the turret to working operation after falling over
-	void	ReturnToLife( void );
-
-	int		DrawDebugTextOverlays( void );
-
-protected:
-	
-	bool	PreThink( turretState_e state );
-	void	Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
-	void	SetEyeState( eyeState_t state );
-	void	Ping( void );	
-	void	Toggle( void );
-	void	Enable( void );
-	void	Disable( void );
-	void	SpinUp( void );
-	void	SpinDown( void );
-
-	inline bool	OnSide( void );
-	
-	bool	UpdateFacing( void );
-
-protected:
-	int		m_iAmmoType;
-
-	bool	m_bAutoStart;
-	bool	m_bActive;		//Denotes the turret is deployed and looking for targets
-	bool	m_bBlinkState;
-	bool	m_bEnabled;		//Denotes whether the turret is able to deploy or not
-	
-	float	m_flShotTime;
-	float	m_flLastSight;
-	float	m_flThrashTime;
-	float	m_flPingTime;
-	float	m_flNextActivateSoundTime;
-	bool	m_bCarriedByPlayer;
-	bool	m_bUseCarryAngles;
-	float	m_flPlayerDropTime;
-
-	CHandle<CBaseCombatCharacter> m_hLastNPCToKickMe;		// Stores the last NPC who tried to knock me over
-	float	m_flKnockOverFailedTime;						// Time at which we should tell the NPC that he failed to knock me over
-
-	QAngle	m_vecGoalAngles;
-
-	int						m_iEyeAttachment;
-	int						m_iMuzzleAttachment;
-	eyeState_t				m_iEyeState;
-	CHandle<CSprite>		m_hEyeGlow;
-	CHandle<CTurretTipController>	m_pMotionController;
-
-	Vector	m_vecEnemyLKP;
-
-	// physics influence
-	CHandle<CBasePlayer>	m_hPhysicsAttacker;
-	float					m_flLastPhysicsInfluenceTime;
-
-	static const char		*m_pShotSounds[];
-
-	COutputEvent m_OnDeploy;
-	COutputEvent m_OnRetire;
-	COutputEvent m_OnTipped;
-	COutputEvent m_OnPhysGunPickup;
-	COutputEvent m_OnPhysGunDrop;
-
-	DECLARE_DATADESC();
-	DEFINE_CUSTOM_AI;
-};
-
-//
-// Tip controller
-//
-
-class CTurretTipController : public CPointEntity, public IMotionEvent
-{
-	DECLARE_CLASS( CTurretTipController, CPointEntity );
-	DECLARE_DATADESC();
-
-public:
-
-	~CTurretTipController( void );
-	void Spawn( void );
-	void Activate( void );
-	void Enable( bool state = true );
-	void Suspend( float time );
-
-	bool Enabled( void );
-
-	static CTurretTipController	*CreateTipController( CNPC_FloorTurret *pOwner )
-	{
-		if ( pOwner == NULL )
-			return NULL;
-
-		CTurretTipController *pController = (CTurretTipController *) Create( "floorturret_tipcontroller", pOwner->GetAbsOrigin(), pOwner->GetAbsAngles() );
-
-		if ( pController != NULL )
-		{
-			pController->m_pParentTurret = pOwner;
-		}
-
-		return pController;
-	}
-
-	// IMotionEvent
-	virtual simresult_e	Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular );
-
-private:
-	bool						m_bEnabled;
-	float						m_flSuspendTime;
-	Vector						m_worldGoalAxis;
-	Vector						m_localTestAxis;
-	IPhysicsMotionController	*m_pController;
-	float						m_angularLimit;
-	CNPC_FloorTurret			*m_pParentTurret;
-};
 
 //Datatable
 BEGIN_DATADESC( CNPC_FloorTurret )
@@ -334,6 +100,8 @@ BEGIN_DATADESC( CNPC_FloorTurret )
 	DEFINE_FIELD( m_hPhysicsAttacker, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_flLastPhysicsInfluenceTime, FIELD_TIME ),
 
+	DEFINE_FIELD( m_bHackedByAlyx, FIELD_BOOLEAN ),
+	
 	DEFINE_THINKFUNC( Retire ),
 	DEFINE_THINKFUNC( Deploy ),
 	DEFINE_THINKFUNC( ActiveThink ),
@@ -356,6 +124,10 @@ BEGIN_DATADESC( CNPC_FloorTurret )
 	DEFINE_OUTPUT( m_OnTipped, "OnTipped" ),
 	DEFINE_OUTPUT( m_OnPhysGunPickup, "OnPhysGunPickup" ),
 	DEFINE_OUTPUT( m_OnPhysGunDrop, "OnPhysGunDrop" ),
+
+	DEFINE_BASENPCINTERACTABLE_DATADESC(),
+
+	// DEFINE_FIELD( m_ShotSounds, FIELD_SHORT ),
 
 END_DATADESC()
 
@@ -429,11 +201,12 @@ void CNPC_FloorTurret::Precache( void )
 	PrecacheScriptSound( "NPC_Combine.WeaponBash" );
 	PrecacheScriptSound( "NPC_FloorTurret.Activate" );
 	PrecacheScriptSound( "NPC_FloorTurret.Alert" );
-	PrecacheScriptSound( "NPC_FloorTurret.ShotSounds" );
+	m_ShotSounds = PrecacheScriptSound( "NPC_FloorTurret.ShotSounds" );
 	PrecacheScriptSound( "NPC_FloorTurret.Die" );
 	PrecacheScriptSound( "NPC_FloorTurret.Retract");
 	PrecacheScriptSound( "NPC_FloorTurret.Alarm");
 	PrecacheScriptSound( "NPC_FloorTurret.Ping");
+	PrecacheScriptSound( "NPC_FloorTurret.DryFire");
 
 	BaseClass::Precache();
 }
@@ -458,7 +231,6 @@ void CNPC_FloorTurret::Spawn( void )
 	m_iHealth		= 100;
 	m_iMaxHealth	= 100;
 
-	AddFlag( FL_AIMTARGET );
 	AddEFlags( EFL_NO_DISSOLVE );
 
 	SetPoseParameter( FLOOR_TURRET_BC_YAW, 0 );
@@ -488,10 +260,20 @@ void CNPC_FloorTurret::Spawn( void )
 		SetEyeState( TURRET_EYE_DISABLED );
 	}
 
+	// Start 
+	if ( OnSide() )
+	{
+		SetThink( &CNPC_FloorTurret::DisabledThink );
+		SetEyeState( TURRET_EYE_DISABLED );
+	}
+
 	//Stagger our starting times
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.3f ) );
 
 	SetUse( &CNPC_FloorTurret::ToggleUse );
+
+	// Don't allow us to skip animation setup because our attachments are critical to us!
+	SetBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
 
 	CreateVPhysics();
 }
@@ -516,6 +298,13 @@ void CNPC_FloorTurret::Activate( void )
 		{
 			m_pMotionController->Enable();
 		}
+	}
+
+	// See if we've started tipped (if so, skip thrashing)
+	if ( OnSide() )
+	{
+		SetThink( &CNPC_FloorTurret::InactiveThink );
+		SetNextThink( gpGlobals->curtime + 0.5f );
 	}
 }
 
@@ -675,8 +464,7 @@ void CNPC_FloorTurret::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t R
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPlayer - 
+// Purpose: Whether this should return carry angles
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CNPC_FloorTurret::HasPreferredCarryAnglesForPlayer( CBasePlayer *pPlayer )
@@ -684,14 +472,6 @@ bool CNPC_FloorTurret::HasPreferredCarryAnglesForPlayer( CBasePlayer *pPlayer )
 	// Don't use preferred angles on enemy turrets
 	if ( IRelationType( pPlayer ) == D_HT )
 		return false;
-
-	// If we're not supposed to use carry angles, but we're on our side, go upright
-	if ( !m_bUseCarryAngles )
-	{
-		Vector	up;
-		GetVectors( NULL, NULL, &up );
-		return DotProduct( up, Vector(0,0,1) ) < 0.9f;
-	}
 
 	return m_bUseCarryAngles;
 }
@@ -777,23 +557,20 @@ bool CNPC_FloorTurret::WasJustDroppedByPlayer( void )
 bool CNPC_FloorTurret::UpdateFacing( void )
 {
 	bool  bMoved = false;
-	matrix3x4_t localToWorld;
-	
-	GetAttachment( m_iMuzzleAttachment, localToWorld );
+	UpdateMuzzleMatrix();
 
 	Vector vecGoalDir;
 	AngleVectors( m_vecGoalAngles, &vecGoalDir );
 
 	Vector vecGoalLocalDir;
-	VectorIRotate( vecGoalDir, localToWorld, vecGoalLocalDir );
+	VectorIRotate( vecGoalDir, m_muzzleToWorld, vecGoalLocalDir );
 
 	if ( g_debug_turret.GetBool() )
 	{
 		Vector	vecMuzzle, vecMuzzleDir;
-		QAngle	vecMuzzleAng;
 
-		GetAttachment( m_iMuzzleAttachment, vecMuzzle, vecMuzzleAng );
-		AngleVectors( vecMuzzleAng, &vecMuzzleDir );
+		MatrixGetColumn( m_muzzleToWorld, 3, vecMuzzle );
+		MatrixGetColumn( m_muzzleToWorld, 0, vecMuzzleDir );
 
 		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 255, 255, 0, false, 0.05 );
 		NDebugOverlay::Cross3D( vecMuzzle+(vecMuzzleDir*256), -Vector(2,2,2), Vector(2,2,2), 255, 255, 0, false, 0.05 );
@@ -833,6 +610,21 @@ bool CNPC_FloorTurret::UpdateFacing( void )
 	InvalidateBoneCache();
 
 	return bMoved;
+}
+
+void CNPC_FloorTurret::DryFire( void )
+{
+	EmitSound( "NPC_FloorTurret.DryFire");
+	EmitSound( "NPC_FloorTurret.Activate" );
+
+ 	if ( RandomFloat( 0, 1 ) > 0.5 )
+	{
+		m_flShotTime = gpGlobals->curtime + random->RandomFloat( 1, 2.5 );
+	}
+	else
+	{
+		m_flShotTime = gpGlobals->curtime;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -903,24 +695,30 @@ void CNPC_FloorTurret::SuppressThink( void )
 		NDebugOverlay::Line( vecMid, vecMidEnemy, 0, 255, 0, false, 0.05f );
 	}
 
-	Vector vecMuzzle, vecMuzzleDir;
-	QAngle vecMuzzleAng;
-	
-	GetAttachment( m_iMuzzleAttachment, vecMuzzle, vecMuzzleAng );
-	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
-	
 	if ( m_flShotTime < gpGlobals->curtime && m_vecEnemyLKP != vec3_invalid )
 	{
+		Vector vecMuzzle, vecMuzzleDir;
+		UpdateMuzzleMatrix();
+		MatrixGetColumn( m_muzzleToWorld, 0, vecMuzzleDir );
+		MatrixGetColumn( m_muzzleToWorld, 3, vecMuzzle );
+
 		//Fire the gun
 		if ( DotProduct( vecDirToEnemy, vecMuzzleDir ) >= 0.9848 ) // 10 degree slop
 		{
-			SetActivity( ACT_RESET );
-			SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
-			
-			//Fire the weapon
+			if( m_spawnflags & SF_FLOOR_TURRET_OUT_OF_AMMO )
+			{
+				DryFire();
+			}
+			else
+			{
+				SetActivity( ACT_RESET );
+				SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
+
+				//Fire the weapon
 #if !DISABLE_SHOT
-			Shoot( vecMuzzle, vecMuzzleDir );
+				Shoot( vecMuzzle, vecMuzzleDir );
 #endif
+			}
 		} 
 	}
 	else
@@ -992,13 +790,6 @@ void CNPC_FloorTurret::ActiveThink( void )
 	Vector	vecDirToEnemy = vecMidEnemy - vecMid;	
 	float	flDistToEnemy = VectorNormalize( vecDirToEnemy );
 
-	//We want to look at the enemy's eyes so we don't jitter
-	Vector	vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMid;
-	VectorNormalize( vecDirToEnemyEyes );
-
-	QAngle vecAnglesToEnemy;
-	VectorAngles( vecDirToEnemyEyes, vecAnglesToEnemy );
-
 	//Draw debug info
 	if ( g_debug_turret.GetBool() )
 	{
@@ -1048,14 +839,14 @@ void CNPC_FloorTurret::ActiveThink( void )
 		return;
 	}
 
-	Vector vecMuzzle, vecMuzzleDir;
-	QAngle vecMuzzleAng;
-	
-	GetAttachment( m_iMuzzleAttachment, vecMuzzle, vecMuzzleAng );
-	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
-
 	if ( g_debug_turret.GetBool() )
 	{
+		Vector vecMuzzle, vecMuzzleDir;
+
+		UpdateMuzzleMatrix();
+		MatrixGetColumn( m_muzzleToWorld, 0, vecMuzzleDir );
+		MatrixGetColumn( m_muzzleToWorld, 3, vecMuzzle );
+
 		// Visualize vertical firing ranges
 		for ( int i = 0; i < 4; i++ )
 		{
@@ -1079,6 +870,12 @@ void CNPC_FloorTurret::ActiveThink( void )
 
 	if ( m_flShotTime < gpGlobals->curtime )
 	{
+		Vector vecMuzzle, vecMuzzleDir;
+
+		UpdateMuzzleMatrix();
+		MatrixGetColumn( m_muzzleToWorld, 0, vecMuzzleDir );
+		MatrixGetColumn( m_muzzleToWorld, 3, vecMuzzle );
+
 		Vector2D vecDirToEnemy2D = vecDirToEnemy.AsVector2D();
 		Vector2D vecMuzzleDir2D = vecMuzzleDir.AsVector2D();
 
@@ -1098,16 +895,24 @@ void CNPC_FloorTurret::ActiveThink( void )
 		if ( bCanShoot ) // 10 degree slop XY
 		{
 			float dot3d = DotProduct( vecDirToEnemy, vecMuzzleDir );
-			if ( dot3d >= minCos3d ) 
+
+			if( m_spawnflags & SF_FLOOR_TURRET_OUT_OF_AMMO )
 			{
-				SetActivity( ACT_RESET );
-				SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
-				
-			//Fire the weapon
-#if !DISABLE_SHOT
-				Shoot( vecMuzzle, vecMuzzleDir, (dot3d < DOT_10DEGREE) );
+				DryFire();
 			}
+			else
+			{
+				if ( dot3d >= minCos3d ) 
+				{
+					SetActivity( ACT_RESET );
+					SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
+
+					//Fire the weapon
+#if !DISABLE_SHOT
+					Shoot( vecMuzzle, vecMuzzleDir, (dot3d < DOT_10DEGREE) );
+				}
 #endif
+			}
 		} 
 	}
 	else
@@ -1118,6 +923,13 @@ void CNPC_FloorTurret::ActiveThink( void )
 	//If we can see our enemy, face it
 	if ( bEnemyVisible )
 	{
+		//We want to look at the enemy's eyes so we don't jitter
+		Vector	vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMid;
+		VectorNormalize( vecDirToEnemyEyes );
+
+		QAngle vecAnglesToEnemy;
+		VectorAngles( vecDirToEnemyEyes, vecAnglesToEnemy );
+
 		m_vecGoalAngles.y = vecAnglesToEnemy.y;
 		m_vecGoalAngles.x = vecAnglesToEnemy.x;
 	}
@@ -1203,7 +1015,7 @@ void CNPC_FloorTurret::AutoSearchThink( void )
 {
 	//Allow descended classes a chance to do something before the think function
 	if ( PreThink( TURRET_AUTO_SEARCHING ) )
-		return;
+		return; 
 
 	//Spread out our thinking
 	SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.2f, 0.4f ) );
@@ -1250,15 +1062,8 @@ void CNPC_FloorTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy,
 	}
 	else
 	{
-		// Just shoot where you're facing!
-		Vector vecMuzzle, vecMuzzleDir;
-		QAngle vecMuzzleAng;
-		
-		GetAttachment( m_iMuzzleAttachment, vecMuzzle, vecMuzzleAng );
-		AngleVectors( vecMuzzleAng, &vecMuzzleDir );
-
 		info.m_vecSrc = vecSrc;
-		info.m_vecDirShooting = vecMuzzleDir;
+		info.m_vecDirShooting = vecDirToEnemy;
 		info.m_iTracerFreq = 1;
 		info.m_iShots = 1;
 		info.m_pAttacker = this;
@@ -1268,7 +1073,7 @@ void CNPC_FloorTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy,
 	}
 
 	FireBullets( info );
-	EmitSound( "NPC_FloorTurret.ShotSounds" );
+	EmitSound( "NPC_FloorTurret.ShotSounds", m_ShotSounds );
 	DoMuzzleFlash();
 }
 
@@ -1280,6 +1085,10 @@ void CNPC_FloorTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy,
 bool CNPC_FloorTurret::IsValidEnemy( CBaseEntity *pEnemy )
 {
 	if ( m_NPCState == NPC_STATE_DEAD )
+		return false;
+
+	// Don't shoot at other turrets.
+	if ( pEnemy->m_iClassname == m_iClassname )
 		return false;
 
 	// If our eye is stuck in something, don't shoot
@@ -1305,6 +1114,13 @@ bool CNPC_FloorTurret::IsValidEnemy( CBaseEntity *pEnemy )
 //-----------------------------------------------------------------------------
 bool CNPC_FloorTurret::CanBeAnEnemyOf( CBaseEntity *pEnemy )
 {
+	// If we're out of ammo, make friendly companions ignore us
+	if ( m_spawnflags & SF_FLOOR_TURRET_OUT_OF_AMMO )
+	{
+		if ( pEnemy->Classify() == CLASS_PLAYER_ALLY_VITAL )
+			return false;
+	} 
+
 	// If we're on the side, we're never anyone's enemy
 	if ( OnSide() )
 		return false;
@@ -1317,10 +1133,15 @@ bool CNPC_FloorTurret::CanBeAnEnemyOf( CBaseEntity *pEnemy )
 //-----------------------------------------------------------------------------
 void CNPC_FloorTurret::TippedThink( void )
 {
+	// Update our PVS state
+	CheckPVSCondition();
+
+	//Animate
+	StudioFrameAdvance();
+
 	SetNextThink( gpGlobals->curtime + 0.05f );
 	SetEnemy( NULL );
 
-	StudioFrameAdvance();
 	// If we're not on side anymore, stop thrashing
 	if ( !OnSide() )
 	{
@@ -1333,18 +1154,25 @@ void CNPC_FloorTurret::TippedThink( void )
 	{
 		if ( m_flShotTime < gpGlobals->curtime )
 		{
-			Vector vecMuzzle, vecMuzzleDir;
-			QAngle vecMuzzleAng;
-			GetAttachment( m_iMuzzleAttachment, vecMuzzle, vecMuzzleAng );
+			if( m_spawnflags & SF_FLOOR_TURRET_OUT_OF_AMMO )
+			{
+				DryFire();
+			}
+			else
+			{
+				Vector vecMuzzle, vecMuzzleDir;
+				UpdateMuzzleMatrix();
+				MatrixGetColumn( m_muzzleToWorld, 0, vecMuzzleDir );
+				MatrixGetColumn( m_muzzleToWorld, 3, vecMuzzle );
 
-			AngleVectors( vecMuzzleAng, &vecMuzzleDir );
-			
-			SetActivity( ACT_RESET );
-			SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
+				SetActivity( ACT_RESET );
+				SetActivity( (Activity) ACT_FLOOR_TURRET_FIRE );
 
 #if !DISABLE_SHOT
-			Shoot( vecMuzzle, vecMuzzleDir );
+				Shoot( vecMuzzle, vecMuzzleDir );
 #endif
+			}
+
 			m_flShotTime = gpGlobals->curtime + 0.05f;
 		}
 
@@ -1414,10 +1242,13 @@ void CNPC_FloorTurret::TippedThink( void )
 //-----------------------------------------------------------------------------
 void CNPC_FloorTurret::InactiveThink( void )
 {
+	// Update our PVS state
+	CheckPVSCondition();
+
 	SetNextThink( gpGlobals->curtime + 1.0f );
 
 	// Wake up if we're not on our side
-	if ( !OnSide() )
+	if ( !OnSide() && m_bEnabled )
 	{
 		ReturnToLife();
 	}
@@ -1455,7 +1286,6 @@ void CNPC_FloorTurret::DisabledThink( void )
 		SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 		SetThink( NULL );
 	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1492,11 +1322,17 @@ bool CNPC_FloorTurret::PreThink( turretState_e state )
 {
 	// Hack to disable turrets when ai is disabled
 	if ( CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI )
+	{
+		// Push our think out into the future
+		SetNextThink( gpGlobals->curtime + 0.1f );
 		return true;
+	}
+ 
+	CheckPVSCondition();
 
 	//Animate
 	StudioFrameAdvance();
-
+ 
 	//See if we've tipped, but only do this if we're not being carried
 	if ( !IsBeingCarriedByPlayer() )
 	{
@@ -1673,11 +1509,12 @@ void CNPC_FloorTurret::Toggle( void )
 //-----------------------------------------------------------------------------
 void CNPC_FloorTurret::Enable( void )
 {
+	// Always allow us to come back to life, even if not right now
+	m_bEnabled = true;
+
 	//This turret is on its side, it can't function
 	if ( OnSide() || ( IsAlive() == false ) )
 		return;
-
-	m_bEnabled = true;
 
 	// if the turret is flagged as an autoactivate turret, re-enable its ability open self.
 	if ( m_spawnflags & SF_FLOOR_TURRET_AUTOACTIVATE )
@@ -1879,7 +1716,7 @@ Vector CNPC_FloorTurret::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntit
 	// Switch our weapon proficiency based upon our target
 	if ( pTarget )
 	{
-		if ( pTarget->Classify() == CLASS_PLAYER || pTarget->Classify() == CLASS_ANTLION )
+		if ( pTarget->Classify() == CLASS_PLAYER || pTarget->Classify() == CLASS_ANTLION || pTarget->Classify() == CLASS_ZOMBIE )
 		{
 			// Make me much more accurate
 			weaponProficiency = WEAPON_PROFICIENCY_PERFECT;
@@ -1921,12 +1758,21 @@ int CNPC_FloorTurret::DrawDebugTextOverlays( void )
 		{
 			char tempstr[512];
 			Q_snprintf(tempstr, sizeof(tempstr),"Mass: %.2f kg / %.2f lb (%s)", VPhysicsGetObject()->GetMass(), kg2lbs(VPhysicsGetObject()->GetMass()), GetMassEquivalent(VPhysicsGetObject()->GetMass()));
-			NDebugOverlay::EntityText(entindex(), text_offset, tempstr, 0);
+			EntityText( text_offset, tempstr, 0);
 			text_offset++;
 		}
 	}
 
 	return text_offset;
+}
+
+void CNPC_FloorTurret::UpdateMuzzleMatrix()
+{
+	if ( gpGlobals->tickcount != m_muzzleToWorldTick )
+	{
+		m_muzzleToWorldTick = gpGlobals->tickcount;
+		GetAttachment( m_iMuzzleAttachment, m_muzzleToWorld );
+	}
 }
 
 // 
@@ -2018,9 +1864,6 @@ void CTurretTipController::Activate( void )
 //-----------------------------------------------------------------------------
 // Purpose: Actual simulation for tip controller
 //-----------------------------------------------------------------------------
-#define MAX_TIP_CONTROLLER_VELOCITY				(300 * 300)
-#define MAX_TIP_CONTROLLER_ANGULAR_VELOCITY		(90 * 90)
-
 IMotionEvent::simresult_e CTurretTipController::Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular )
 {
 	if ( Enabled() == false )
@@ -2044,7 +1887,7 @@ IMotionEvent::simresult_e CTurretTipController::Simulate( IPhysicsMotionControll
 		Vector vecVelocity;
 		AngularImpulse angImpulse;
 		pObject->GetVelocity( &vecVelocity, &angImpulse );
-		if ( (vecVelocity.LengthSqr() > MAX_TIP_CONTROLLER_VELOCITY) || (angImpulse.LengthSqr() > MAX_TIP_CONTROLLER_ANGULAR_VELOCITY) )
+		if ( (vecVelocity.LengthSqr() > CNPC_FloorTurret::fMaxTipControllerVelocity) || (angImpulse.LengthSqr() > CNPC_FloorTurret::fMaxTipControllerAngularVelocity) )
 			return SIM_NOTHING;
 	}
 
@@ -2082,6 +1925,12 @@ void CTurretTipController::Enable( bool state )
 void CTurretTipController::Suspend( float time )
 {
 	m_flSuspendTime = gpGlobals->curtime + time;
+}
+
+
+float CTurretTipController::SuspendedTill( void )
+{
+	return m_flSuspendTime;
 }
 
 //-----------------------------------------------------------------------------

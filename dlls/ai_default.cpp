@@ -69,6 +69,7 @@ void CAI_BaseNPC::InitDefaultScheduleSR(void)
 	ADD_DEF_SCHEDULE( "SCHED_WAKE_ANGRY",					SCHED_WAKE_ANGRY);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_FACE",					SCHED_ALERT_FACE);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_FACE_BESTSOUND",			SCHED_ALERT_FACE_BESTSOUND);
+	ADD_DEF_SCHEDULE( "SCHED_ALERT_REACT_TO_COMBAT_SOUND",	SCHED_ALERT_REACT_TO_COMBAT_SOUND);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_SCAN",					SCHED_ALERT_SCAN);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_STAND",					SCHED_ALERT_STAND);
 	ADD_DEF_SCHEDULE( "SCHED_ALERT_WALK",					SCHED_ALERT_WALK);
@@ -125,8 +126,8 @@ void CAI_BaseNPC::InitDefaultScheduleSR(void)
 	ADD_DEF_SCHEDULE( "SCHED_SCENE_GENERIC",				SCHED_SCENE_GENERIC);
 	ADD_DEF_SCHEDULE( "SCHED_NEW_WEAPON",					SCHED_NEW_WEAPON);
 	ADD_DEF_SCHEDULE( "SCHED_NEW_WEAPON_CHEAT",				SCHED_NEW_WEAPON_CHEAT);
+	ADD_DEF_SCHEDULE( "SCHED_SWITCH_TO_PENDING_WEAPON",		SCHED_SWITCH_TO_PENDING_WEAPON );
 	ADD_DEF_SCHEDULE( "SCHED_GET_HEALTHKIT",				SCHED_GET_HEALTHKIT);
-	ADD_DEF_SCHEDULE( "SCHED_GIVE_WAY",						SCHED_GIVE_WAY);
 	ADD_DEF_SCHEDULE( "SCHED_MOVE_AWAY",					SCHED_MOVE_AWAY);
 	ADD_DEF_SCHEDULE( "SCHED_MOVE_AWAY_FAIL",				SCHED_MOVE_AWAY_FAIL);
 	ADD_DEF_SCHEDULE( "SCHED_MOVE_AWAY_END",				SCHED_MOVE_AWAY_END);
@@ -138,11 +139,21 @@ void CAI_BaseNPC::InitDefaultScheduleSR(void)
 	ADD_DEF_SCHEDULE( "SCHED_PATROL_RUN",					SCHED_PATROL_RUN);
 	ADD_DEF_SCHEDULE( "SCHED_RUN_RANDOM",					SCHED_RUN_RANDOM);
 	ADD_DEF_SCHEDULE( "SCHED_FAIL",							SCHED_FAIL);
+	ADD_DEF_SCHEDULE( "SCHED_FAIL_NOSTOP",					SCHED_FAIL_NOSTOP);
 	ADD_DEF_SCHEDULE( "SCHED_FALL_TO_GROUND",				SCHED_FALL_TO_GROUND);
 	ADD_DEF_SCHEDULE( "SCHED_DROPSHIP_DUSTOFF",				SCHED_DROPSHIP_DUSTOFF);
 	ADD_DEF_SCHEDULE( "SCHED_NPC_FREEZE",					SCHED_NPC_FREEZE);
 
 	ADD_DEF_SCHEDULE( "SCHED_FLINCH_PHYSICS",			SCHED_FLINCH_PHYSICS);
+
+	ADD_DEF_SCHEDULE( "SCHED_RUN_FROM_ENEMY_MOB",		SCHED_RUN_FROM_ENEMY_MOB );
+
+	ADD_DEF_SCHEDULE( "SCHED_DUCK_DODGE",				SCHED_DUCK_DODGE );
+
+	ADD_DEF_SCHEDULE( "SCHED_INTERACTION_MOVE_TO_PARTNER",				SCHED_INTERACTION_MOVE_TO_PARTNER );
+	ADD_DEF_SCHEDULE( "SCHED_INTERACTION_WAIT_FOR_PARTNER",				SCHED_INTERACTION_WAIT_FOR_PARTNER );
+
+	ADD_DEF_SCHEDULE( "SCHED_SLEEP",					SCHED_SLEEP );
 }
 
 bool CAI_BaseNPC::LoadDefaultSchedules(void)
@@ -154,6 +165,7 @@ bool CAI_BaseNPC::LoadDefaultSchedules(void)
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_WAKE_ANGRY);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_FACE);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_FACE_BESTSOUND);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_REACT_TO_COMBAT_SOUND);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_SCAN);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_STAND);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_ALERT_WALK);
@@ -209,12 +221,12 @@ bool CAI_BaseNPC::LoadDefaultSchedules(void)
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_SCENE_GENERIC);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_NEW_WEAPON);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_NEW_WEAPON_CHEAT);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_SWITCH_TO_PENDING_WEAPON);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_GET_HEALTHKIT);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_MOVE_AWAY);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_MOVE_AWAY_FAIL);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_MOVE_AWAY_END);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_WAIT_FOR_SPEAK_FINISH);
-	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_GIVE_WAY);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FORCED_GO);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FORCED_GO_RUN);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_PATROL_WALK);
@@ -222,10 +234,16 @@ bool CAI_BaseNPC::LoadDefaultSchedules(void)
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_PATROL_RUN);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_RUN_RANDOM);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FAIL);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FAIL_NOSTOP);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FALL_TO_GROUND);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_DROPSHIP_DUSTOFF);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_FLINCH_PHYSICS);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_RUN_FROM_ENEMY_MOB );
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_DUCK_DODGE);
 	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_NPC_FREEZE);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_INTERACTION_MOVE_TO_PARTNER);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_INTERACTION_WAIT_FOR_PARTNER);
+	AI_LOAD_DEF_SCHEDULE( CAI_BaseNPC,					SCHED_SLEEP );
 
 	return true;
 }
@@ -427,6 +445,10 @@ const char *CAI_BaseNPC::TaskName(int taskID)
 class CAI_SystemHook : public CAutoGameSystem
 {
 public:
+	CAI_SystemHook( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	// UNDONE: Schedule / strings stuff should probably happen once each GAME, not each level
 	void LevelInitPreEntity()
 	{
@@ -434,9 +456,18 @@ public:
 		g_AINextDisabledMessageTime = 0;
 	
 		g_AI_SchedulesManager.CreateStringRegistries();
-		g_AI_SensedObjectsManager.Init();
 
-		CAI_BaseNPC::gm_flLastThinkRebalanceTime = 0;
+		CAI_BaseNPC::gm_iNextThinkRebalanceTick = 0;
+	}
+
+	virtual void LevelInitPostEntity()
+	{
+		g_AI_SensedObjectsManager.Init();
+	}
+
+	void LevelShutdownPreEntity()
+	{
+		CBaseCombatCharacter::ResetVisibilityCache();
 	}
 
 	void LevelShutdownPostEntity( void )
@@ -450,7 +481,7 @@ public:
 };
 
 
-static CAI_SystemHook g_AISystemHook;
+static CAI_SystemHook g_AISystemHook( "CAI_SystemHook" );
 
 
 //-----------------------------------------------------------------------------
@@ -461,12 +492,16 @@ static CAI_SystemHook g_AISystemHook;
 
 //=========================================================
 // > Fail
+// This schedule itself can fail because the NPC may
+// be unable to finish the stop moving. If so, fall back
+// the a fail schedule that has no stop moving in it.
 //=========================================================
 AI_DEFINE_SCHEDULE
 (
 	SCHED_FAIL,
 
 	"	Tasks"
+	"		TASK_SET_FAIL_SCHEDULE	SCHEDULE:SCHED_FAIL_NOSTOP"
 	"		TASK_STOP_MOVING		0"
 	"		TASK_SET_ACTIVITY		ACTIVITY:ACT_IDLE"
 	"		TASK_WAIT				1"
@@ -479,6 +514,26 @@ AI_DEFINE_SCHEDULE
 	"		COND_CAN_MELEE_ATTACK2"
 	"		COND_GIVE_WAY"
 );
+
+//=========================================================
+// > Fail without stop moving, which can fail.
+//=========================================================
+AI_DEFINE_SCHEDULE
+(
+	SCHED_FAIL_NOSTOP,
+
+	"	Tasks"
+	"		TASK_SET_ACTIVITY		ACTIVITY:ACT_IDLE"
+	"		TASK_WAIT				1"
+	"		TASK_WAIT_PVS			0"
+	""
+	"	Interrupts"
+	"		COND_CAN_RANGE_ATTACK1 "
+	"		COND_CAN_RANGE_ATTACK2 "
+	"		COND_CAN_MELEE_ATTACK1 "
+	"		COND_CAN_MELEE_ATTACK2"
+	"		COND_GIVE_WAY"
+ );
 
 //===============================================
 //	> Idle_Stand
@@ -560,6 +615,7 @@ AI_DEFINE_SCHEDULE
 	"		TASK_GET_PATH_TO_TARGET_WEAPON	0"
 //	"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_NEW_WEAPON_CHEAT"
 	"		TASK_WEAPON_RUN_PATH			0"
+	"		TASK_STOP_MOVING				0"
 	"		TASK_FACE_TARGET				0"
 	"		TASK_WEAPON_PICKUP				0"
 	"		TASK_WAIT						1"// Don't move before done standing up
@@ -583,6 +639,21 @@ AI_DEFINE_SCHEDULE
 );
 
 //===============================================
+//  > SCHED_SWITCH_TO_PENDING_WEAPON
+//===============================================
+AI_DEFINE_SCHEDULE
+(
+	SCHED_SWITCH_TO_PENDING_WEAPON,
+
+	"	Tasks"
+	"		TASK_STOP_MOVING						0"
+	"		TASK_PLAY_SEQUENCE						ACTIVITY:ACT_DROP_WEAPON"
+	"		TASK_CREATE_PENDING_WEAPON				0"
+	""	
+	"	Interrupts"
+);
+
+//===============================================
 //===============================================
 AI_DEFINE_SCHEDULE
 (
@@ -593,6 +664,7 @@ AI_DEFINE_SCHEDULE
 	"		TASK_SET_TOLERANCE_DISTANCE		5"
 	"		TASK_GET_PATH_TO_TARGET_WEAPON	0"
 	"		TASK_ITEM_RUN_PATH				0"
+	"		TASK_STOP_MOVING				0"
 	"		TASK_FACE_TARGET				0"
 	"		TASK_ITEM_PICKUP				0"
 	""
@@ -765,6 +837,18 @@ AI_DEFINE_SCHEDULE
 	"		COND_PROVOKED"
 );
 
+//=========================================================
+//=========================================================
+AI_DEFINE_SCHEDULE
+(
+ SCHED_ALERT_REACT_TO_COMBAT_SOUND,
+
+ "	Tasks"
+ "		TASK_SET_SCHEDULE			SCHEDULE:SCHED_ALERT_FACE_BESTSOUND"
+ ""
+ "	Interrupts"
+ );
+
 
 //=========================================================
 //  > Alert_Scan
@@ -812,6 +896,7 @@ AI_DEFINE_SCHEDULE
 	"		COND_HEAR_DANGER"
 	"		COND_HEAR_BULLET_IMPACT"
 	"		COND_IDLE_INTERRUPT"
+	"		COND_GIVE_WAY"	
 );
 
 
@@ -1713,6 +1798,22 @@ AI_DEFINE_SCHEDULE
 	"		COND_ENEMY_DEAD"
 );
 
+AI_DEFINE_SCHEDULE
+(
+	SCHED_RUN_FROM_ENEMY_MOB,
+
+	"	Tasks"
+	"		TASK_SET_FAIL_SCHEDULE						SCHEDULE:SCHED_RUN_RANDOM"
+	"		TASK_STOP_MOVING							0"
+	"		TASK_STORE_ENEMY_POSITION_IN_SAVEPOSITION	0"
+	"		TASK_FIND_BACKAWAY_FROM_SAVEPOSITION		0"
+	"		TASK_RUN_PATH								0"
+	"		TASK_WAIT_FOR_MOVEMENT						0"
+	""
+	"	Interrupts"
+	"		COND_HEAR_DANGER"
+);
+
 //=========================================================
 // > Fear_Face
 //
@@ -1733,37 +1834,6 @@ AI_DEFINE_SCHEDULE
 	"		COND_NEW_ENEMY"
 	"		COND_ENEMY_DEAD"
 	"		COND_SEE_ENEMY"
-);
-
-//=========================================================
-// > Give_Way
-//
-// Get out of the way of someone that requested a move
-//=========================================================
-AI_DEFINE_SCHEDULE
-(
-	SCHED_GIVE_WAY,
-
-	"	Tasks"
-		//  Disable use of small hull for now.  Introduces movement bugs"
-	//"		TASK_USE_SMALL_HULL				0"
-	//"		TASK_REMEMBER					MEMORY:IN_SMALL_HULL"
-	""
-	"		TASK_SET_ROUTE_SEARCH_TIME		0.5"	// Spend 1/2 seconds trying to build a path if stuck
-	"		TASK_SET_TOLERANCE_DISTANCE		5"
-	"		TASK_GET_PATH_TO_SAVEPOSITION	2"
-	"		TASK_RUN_PATH_TIMED				2.0"
-	"		TASK_WAIT_FOR_MOVEMENT			0"
-	""
-	"	Interrupts"
-	"		COND_GIVE_WAY"
-	"		COND_WAY_CLEAR"
-	"		COND_NEW_ENEMY"
-	"		COND_SEE_FEAR"
-	"		COND_LIGHT_DAMAGE"
-	"		COND_HEAVY_DAMAGE"
-	"		COND_SMELL"
-	"		COND_PROVOKED"
 );
 
 //=========================================================
@@ -2205,4 +2275,67 @@ AI_DEFINE_SCHEDULE
 	"		COND_HEAR_BULLET_IMPACT"
 	
 );
+
+//=========================================================
+// > SCHED_DUCK_DODGE
+//=========================================================
+AI_DEFINE_SCHEDULE  
+(
+ SCHED_DUCK_DODGE,
+
+ "	Tasks"
+ "		TASK_STOP_MOVING	0"
+ "		TASK_PLAY_SEQUENCE	ACTIVITY:ACT_DUCK_DODGE"
+ "		TASK_DEFER_DODGE	30"
+ ""
+ "	Interrupts"
+ ""
+ );
+
+//=========================================================
+// > SCHED_INTERACTION_MOVE_TO_PARTNER
+//=========================================================
+AI_DEFINE_SCHEDULE  
+(
+ SCHED_INTERACTION_MOVE_TO_PARTNER,
+
+ "	Tasks"
+ "		TASK_GET_PATH_TO_INTERACTION_PARTNER	0"
+ "		TASK_FACE_TARGET						0"
+ "		TASK_WAIT								1"
+ ""
+ "	Interrupts"
+ ""
+);
+
+//=========================================================
+// > SCHED_INTERACTION_WAIT_FOR_PARTNER
+//=========================================================
+AI_DEFINE_SCHEDULE  
+(
+ SCHED_INTERACTION_WAIT_FOR_PARTNER,
+
+ "	Tasks"
+ "		TASK_FACE_TARGET	0"
+ "		TASK_WAIT			1"
+ ""
+ "	Interrupts"
+ ""
+);
+
+//=========================================================
+// > SCHED_SLEEP
+//=========================================================
+AI_DEFINE_SCHEDULE  
+(
+ SCHED_SLEEP,
+
+ "	Tasks"
+ "		TASK_STOP_MOVING	0"
+ "		TASK_WAIT			0.2"
+ ""
+ "	Interrupts"
+ ""
+ );
+
 

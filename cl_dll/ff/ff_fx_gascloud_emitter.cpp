@@ -192,7 +192,7 @@ void CGasCloud::RenderParticles( CParticleRenderIterator *pIterator )
 		//Render
 		Vector	tPos;
 
-		TransformParticle( g_ParticleMgr.GetModelView(), pParticle->m_Pos, tPos );
+		TransformParticle( ParticleMgr()->GetModelView(), pParticle->m_Pos, tPos );
 		float sortKey = (int) tPos.z;
 
 		Vector vColor = Vector(pParticle->m_uchColor[0] / 255.0f,

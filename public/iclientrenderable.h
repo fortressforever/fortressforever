@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef ICLIENTRENDERABLE_H
 #define ICLIENTRENDERABLE_H
@@ -15,6 +15,7 @@
 #include "interface.h"
 #include "iclientunknown.h"
 #include "client_render_handle.h"
+#include "engine/ivmodelrender.h"
 
 struct model_t;
 struct matrix3x4_t;
@@ -40,6 +41,7 @@ enum ShadowType_t
 	SHADOWS_SIMPLE,
 	SHADOWS_RENDER_TO_TEXTURE,
 	SHADOWS_RENDER_TO_TEXTURE_DYNAMIC,	// the shadow is always changing state
+	SHADOWS_RENDER_TO_DEPTH_TEXTURE,
 };
 
 
@@ -51,7 +53,7 @@ enum ShadowType_t
 // number of views.
 //
 // If no views had the entity, then it is called with bInPVS=false after rendering.
-class IPVSNotify
+abstract_class IPVSNotify
 {
 public:
 	virtual void OnPVSStatusChanged( bool bInPVS ) = 0;
@@ -61,7 +63,7 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: All client entities must implement this interface.
 //-----------------------------------------------------------------------------
-class IClientRenderable
+abstract_class IClientRenderable
 {
 public:
 	// Gets at the containing class...
@@ -93,7 +95,8 @@ public:
 	// Determine the color modulation amount
 	virtual void	GetColorModulation( float* color ) = 0;
 
-	// Returns false if the entity shouldn't be drawn due to LOD.
+	// Returns false if the entity shouldn't be drawn due to LOD. 
+	// (NOTE: This is no longer used/supported, but kept in the vtable for backwards compat)
 	virtual bool	LODTest() = 0;
 
 	// Call this to get the current bone transforms for the model.
@@ -104,13 +107,11 @@ public:
 
 	virtual void	SetupWeights( void ) = 0;
 	virtual void	DoAnimationEvents( void ) = 0;
-
 	
 	// Return this if you want PVS notifications. See IPVSNotify for more info.	
 	// Note: you must always return the same value from this function. If you don't,
 	// undefined things will occur, and they won't be good.
 	virtual IPVSNotify* GetPVSNotifyInterface() = 0;
-
 
 	// Returns the bounds relative to the origin (render bounds)
 	virtual void	GetRenderBounds( Vector& mins, Vector& maxs ) = 0;
@@ -127,12 +128,42 @@ public:
 	// These methods return true if we want a per-renderable shadow cast direction + distance
 	virtual bool	GetShadowCastDistance( float *pDist, ShadowType_t shadowType ) const = 0;
 	virtual bool	GetShadowCastDirection( Vector *pDirection, ShadowType_t shadowType ) const = 0;
+
+	// Other methods related to shadow rendering
+	virtual bool	IsShadowDirty( ) = 0;
+	virtual void	MarkShadowDirty( bool bDirty ) = 0;
+
+	// Iteration over shadow hierarchy
+	virtual IClientRenderable *GetShadowParent() = 0;
+	virtual IClientRenderable *FirstShadowChild() = 0;
+	virtual IClientRenderable *NextShadowPeer() = 0;
+
+	// Returns the shadow cast type
+	virtual ShadowType_t ShadowCastType() = 0;
+
+	// Create/get/destroy model instance
+	virtual void CreateModelInstance() = 0;
+	virtual ModelInstanceHandle_t GetModelInstance() = 0;
+
+	// Returns the transform from RenderOrigin/RenderAngles to world
+	virtual const matrix3x4_t &RenderableToWorldTransform() = 0;
+
+	// Attachments
+	virtual int LookupAttachment( const char *pAttachmentName ) = 0;
+	virtual	bool GetAttachment( int number, Vector &origin, QAngle &angles ) = 0;
+	virtual bool GetAttachment( int number, matrix3x4_t &matrix ) = 0;
+
+	// Rendering clip plane, should be 4 floats, return value of NULL indicates a disabled render clip plane
+	virtual float *GetRenderClipPlane( void ) = 0;
+
+	// Get the skin parameter
+	virtual int		GetSkin() = 0;
 };
 
 
 // This class can be used to implement default versions of some of the 
 // functions of IClientRenderable.
-class CDefaultClientRenderable : public IClientUnknown, public IClientRenderable
+abstract_class CDefaultClientRenderable : public IClientUnknown, public IClientRenderable
 {
 public:
 	CDefaultClientRenderable()
@@ -142,6 +173,7 @@ public:
 
 	virtual const Vector &			GetRenderOrigin( void ) = 0;
 	virtual const QAngle &			GetRenderAngles( void ) = 0;
+	virtual const matrix3x4_t &		RenderableToWorldTransform() = 0;
 	virtual bool					ShouldDraw( void ) = 0;
 	virtual bool					IsTransparent( void ) = 0;
 	virtual bool					UsesFrameBufferTexture( void ) { return false; }
@@ -156,8 +188,8 @@ public:
 		return m_hRenderHandle;
 	}
 
-	// Get the body parameter
 	virtual int						GetBody() { return 0; }
+	virtual int						GetSkin() { return 0; }
 
 	virtual const model_t*			GetModel( ) const		{ return NULL; }
 	virtual int						DrawModel( int flags )	{ return 0; }
@@ -187,10 +219,27 @@ public:
 	virtual bool	GetShadowCastDistance( float *pDist, ShadowType_t shadowType ) const			{ return false; }
 	virtual bool	GetShadowCastDirection( Vector *pDirection, ShadowType_t shadowType ) const	{ return false; }
 
-	virtual void			GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType_t shadowType )
+	virtual void	GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType_t shadowType )
 	{
 		GetRenderBounds( mins, maxs );
 	}
+
+	virtual bool IsShadowDirty( )			     { return false; }
+	virtual void MarkShadowDirty( bool bDirty )  {}
+	virtual IClientRenderable *GetShadowParent() { return NULL; }
+	virtual IClientRenderable *FirstShadowChild(){ return NULL; }
+	virtual IClientRenderable *NextShadowPeer()  { return NULL; }
+	virtual ShadowType_t ShadowCastType()		 { return SHADOWS_NONE; }
+	virtual void CreateModelInstance()			 {}
+	virtual ModelInstanceHandle_t GetModelInstance() { return MODEL_INSTANCE_INVALID; }
+
+	// Attachments
+	virtual int LookupAttachment( const char *pAttachmentName ) { return -1; }
+	virtual	bool GetAttachment( int number, Vector &origin, QAngle &angles ) { return false; }
+	virtual bool GetAttachment( int number, matrix3x4_t &matrix ) {	return false; }
+
+	// Rendering clip plane, should be 4 floats, return value of NULL indicates a disabled render clip plane
+	virtual float *GetRenderClipPlane( void ) { return NULL; }
 
 // IClientUnknown implementation.
 public:

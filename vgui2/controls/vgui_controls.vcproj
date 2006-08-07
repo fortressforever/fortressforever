@@ -4,10 +4,10 @@
 	Version="7.10"
 	Name="vgui_controls"
 	ProjectGUID="{C3CEFD6F-5CDC-41DE-8D43-D932F508F51B}"
-	SccProjectName="Perforce Project"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="..\.."
-	SccProvider="MSSCCI:Perforce SCM">
+	SccLocalPath=""
+	SccProvider="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -30,7 +30,7 @@
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="FALSE"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="TRUE"
 				TreatWChar_tAsBuiltInType="FALSE"
 				ForceConformanceInForLoopScope="FALSE"
@@ -46,13 +46,10 @@
 				DebugInformationFormat="4"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				CommandLine="call ..\..\filecopy.bat &quot;$(TargetPath)&quot; &quot;$(ProjectDir)&quot;..\..\lib\public\&quot;$(TargetName)&quot;.lib
-"
-				Outputs="$(ProjectDir)..\..\lib\public\$(TargetName).lib"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\vgui_controls.lib"
+				OutputFile="..\..\lib\public\vgui_controls.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -61,7 +58,9 @@
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+				Description="Making ..\..\lib\public\vgui_controls.lib writeable"
+				CommandLine="if exist ..\..\lib\public\vgui_controls.lib attrib -r ..\..\lib\public\vgui_controls.lib"/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
@@ -83,13 +82,14 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
 			CharacterSet="2"
-			WholeProgramOptimization="TRUE">
+			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
+				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="FALSE"
 				OptimizeForProcessor="3"
@@ -111,15 +111,13 @@
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="2"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				CommandLine="call ..\..\filecopy.bat &quot;$(TargetPath)&quot; &quot;$(ProjectDir)&quot;..\..\lib\public\&quot;$(TargetName)&quot;.lib
-"
-				Outputs="$(ProjectDir)..\..\lib\public\$(TargetName).lib"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\vgui_controls.lib"
+				OutputFile="..\..\lib\public\vgui_controls.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -128,7 +126,9 @@
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCPreLinkEventTool"
+				Description="Making ..\..\lib\public\vgui_controls.lib writable..."
+				CommandLine="if exist ..\..\lib\public\vgui_controls.lib attrib -r ..\..\lib\public\vgui_controls.lib"/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -195,6 +195,9 @@
 				RelativePath="..\..\public\vgui_controls\EditablePanel.h">
 			</File>
 			<File
+				RelativePath="..\..\public\vgui_controls\ExpandButton.h">
+			</File>
+			<File
 				RelativePath="..\..\public\vgui_controls\FileOpenDialog.h">
 			</File>
 			<File
@@ -225,7 +228,19 @@
 				RelativePath="..\..\public\vgui_controls\ImagePanel.h">
 			</File>
 			<File
+				RelativePath="..\..\public\vgui_controls\InputDialog.h">
+			</File>
+			<File
 				RelativePath="..\..\public\tier1\interface.h">
+			</File>
+			<File
+				RelativePath="..\..\public\vgui_controls\KeyBindingHelpDialog.h">
+			</File>
+			<File
+				RelativePath="..\..\public\vgui_controls\KeyBindingMap.h">
+			</File>
+			<File
+				RelativePath="..\..\public\vgui_controls\KeyBoardEditorDialog.h">
 			</File>
 			<File
 				RelativePath="..\..\public\tier1\KeyValues.h">
@@ -312,6 +327,9 @@
 				RelativePath="..\..\public\vgui_controls\Slider.h">
 			</File>
 			<File
+				RelativePath="..\..\public\vgui_controls\Splitter.h">
+			</File>
+			<File
 				RelativePath="..\..\public\vgui_controls\TextEntry.h">
 			</File>
 			<File
@@ -322,6 +340,9 @@
 			</File>
 			<File
 				RelativePath="..\..\public\vgui_controls\Tooltip.h">
+			</File>
+			<File
+				RelativePath="..\..\public\vgui_controls\ToolWindow.h">
 			</File>
 			<File
 				RelativePath="..\..\public\vgui_controls\TreeView.h">
@@ -361,6 +382,9 @@
 				RelativePath="BitmapImagePanel.cpp">
 			</File>
 			<File
+				RelativePath=".\BuildFactoryHelper.cpp">
+			</File>
+			<File
 				RelativePath="BuildGroup.cpp">
 			</File>
 			<File
@@ -368,9 +392,6 @@
 			</File>
 			<File
 				RelativePath="Button.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\characterset.cpp">
 			</File>
 			<File
 				RelativePath="CheckButton.cpp">
@@ -392,6 +413,9 @@
 			</File>
 			<File
 				RelativePath="EditablePanel.cpp">
+			</File>
+			<File
+				RelativePath=".\ExpandButton.cpp">
 			</File>
 			<File
 				RelativePath="FileOpenDialog.cpp">
@@ -421,7 +445,13 @@
 				RelativePath="ImagePanel.cpp">
 			</File>
 			<File
-				RelativePath="..\..\tier1\KeyValues.cpp">
+				RelativePath=".\InputDialog.cpp">
+			</File>
+			<File
+				RelativePath=".\KeyBindingHelpDialog.cpp">
+			</File>
+			<File
+				RelativePath=".\KeyBoardEditorDialog.cpp">
 			</File>
 			<File
 				RelativePath="Label.cpp">
@@ -431,9 +461,6 @@
 			</File>
 			<File
 				RelativePath="ListViewPanel.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\mempool.cpp">
 			</File>
 			<File
 				RelativePath="Menu.cpp">
@@ -493,6 +520,9 @@
 				RelativePath="Slider.cpp">
 			</File>
 			<File
+				RelativePath=".\Splitter.cpp">
+			</File>
+			<File
 				RelativePath="TextEntry.cpp">
 			</File>
 			<File
@@ -505,19 +535,22 @@
 				RelativePath="Tooltip.cpp">
 			</File>
 			<File
+				RelativePath=".\ToolWindow.cpp">
+			</File>
+			<File
 				RelativePath="TreeView.cpp">
 			</File>
 			<File
 				RelativePath="TreeViewListControl.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="URLLabel.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\utlbuffer.cpp">
-			</File>
-			<File
-				RelativePath="..\..\tier1\utlsymbol.cpp">
 			</File>
 			<File
 				RelativePath="WizardPanel.cpp">

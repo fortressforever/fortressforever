@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include "cbase.h"
 #ifdef _WIN32
 #include "typeinfo.h"
@@ -23,7 +24,7 @@
 #include "mempool.h"
 #include "entitylist.h"
 #include "engine/IEngineSound.h"
-#include "engine/IVEngineCache.h"
+#include "datacache/imdlcache.h"
 #include "ispatialpartition.h"
 #include "tier0/vprof.h"
 #include "movevars_shared.h"
@@ -36,6 +37,12 @@
 #include "tier0/memdbgon.h"
 
 extern ConVar think_limit;
+#ifdef _XBOX
+ConVar vprof_think_limit( "vprof_think_limit", "0" );
+#endif
+
+ConVar vprof_scope_entity_thinks( "vprof_scope_entity_thinks", "0" );
+ConVar vprof_scope_entity_gamephys( "vprof_scope_entity_gamephys", "0" );
 
 ConVar	npc_vphysics	( "npc_vphysics","0");
 //-----------------------------------------------------------------------------
@@ -334,6 +341,7 @@ bool CPhysicsPushedEntities::IsPushedPositionValid( CBaseEntity *pBlocker )
 
 	trace_t trace;
 	UTIL_TraceEntity( pBlocker, pBlocker->GetAbsOrigin(), pBlocker->GetAbsOrigin(), pBlocker->PhysicsSolidMaskForEntity(), &pushFilter, &trace );
+
 	return !trace.startsolid;
 }
 
@@ -396,6 +404,7 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 	// Check to see if we're still blocked by the pushers
 	// FIXME: If the trace fraction == 0 can we early out also?
 	info.m_bBlocked = !IsPushedPositionValid(pBlocker);
+
 	if ( !info.m_bBlocked )
 		return true;
 
@@ -993,13 +1002,15 @@ CBaseEntity *CPhysicsPushedEntities::PerformLinearPush( CBaseEntity *pRoot, floa
 //-----------------------------------------------------------------------------
 void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 {
-	VPROF("CBaseEntity::PhysicsDispatchThink");
+	VPROF_ENTER_SCOPE( ( !vprof_scope_entity_thinks.GetBool() ) ? 
+						"CBaseEntity::PhysicsDispatchThink" : 
+						EntityFactoryDictionary()->GetCannonicalName( GetClassname() ) );
 
 	float thinkLimit = think_limit.GetFloat();
 	
 	// The thinkLimit stuff makes a LOT of calls to Sys_FloatTime, which winds up calling into
 	// VCR mode so much that the framerate becomes unusable.
-	if ( g_pVCR->GetMode() != VCR_Disabled )
+	if ( VCRGetMode() != VCR_Disabled )
 		thinkLimit = 0;
 
 	float startTime = 0.0;
@@ -1017,9 +1028,8 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 	
 	if ( thinkFunc )
 	{
-		engineCache->EnterCriticalSection();
+		MDLCACHE_CRITICAL_SECTION();
 		(this->*thinkFunc)();
-		engineCache->ExitCriticalSection();
 	}
 
 	if ( thinkLimit )
@@ -1028,6 +1038,13 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 		float time = ( engine->Time() - startTime ) * 1000.0f;
 		if ( time > thinkLimit )
 		{
+#if defined( _XBOX ) && !defined( _RETAIL )
+			if ( vprof_think_limit.GetBool() )
+			{
+				extern bool g_VProfSignalSpike;
+				g_VProfSignalSpike = true;
+			}
+#endif
 			// If its an NPC print out the shedule/task that took so long
 			CAI_BaseNPC *pNPC = MyNPCPointer();
 			if (pNPC && pNPC->GetCurSchedule())
@@ -1046,6 +1063,8 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 			}
 		}
 	}
+
+	VPROF_EXIT_SCOPE();
 }
 
 //-----------------------------------------------------------------------------
@@ -1757,8 +1776,8 @@ void CBaseEntity::PhysicsStep()
 	// The underlying values don't actually change, but we need the network sendproxy on origin/angles
 	//  to get triggered, and that only happens if NetworkStateChanged() appears to have occured.
 	// Getting them for modify marks them as changed automagically.
-
-	NetworkStateChanged();
+	m_vecOrigin.GetForModify();
+	m_angRotation.GetForModify();
 	
 	// HACK:  Make sure that the client latches the networked origin/orientation changes with the current server tick count
 	//  so that we don't get jittery interpolation.  All of this is necessary to mimic actual continuous simulation of the underlying
@@ -1870,6 +1889,9 @@ void CBaseEntity::PhysicsStep()
 }
 
 
+void UTIL_TraceLineFilterEntity( CBaseEntity *pEntity, const Vector &vecAbsStart, const Vector &vecAbsEnd, 
+					   unsigned int mask, const int nCollisionGroup, trace_t *ptr );
+
 // Check to see what (if anything) this MOVETYPE_STEP entity is standing on
 void CBaseEntity::PhysicsStepRecheckGround()
 {
@@ -1888,7 +1910,18 @@ void CBaseEntity::PhysicsStepRecheckGround()
 		{
 			point[0] = x ? maxs[0] : mins[0];
 			point[1] = y ? maxs[1] : mins[1];
-			UTIL_TraceLine( point, point, mask, this, COLLISION_GROUP_NONE, &trace );
+
+			ICollideable *pCollision = GetCollideable();
+
+			if ( pCollision && IsNPC() )
+			{
+				UTIL_TraceLineFilterEntity( this, point, point, mask, COLLISION_GROUP_NONE, &trace );
+			}
+			else
+			{
+				UTIL_TraceLine( point, point, mask, this, COLLISION_GROUP_NONE, &trace );
+			}
+
 			if ( trace.startsolid )
 			{
 				SetGroundEntity( trace.m_pEnt );
@@ -2007,8 +2040,13 @@ void CBaseEntity::PhysicsStepRunTimestep( float timestep )
 
 void Physics_SimulateEntity( CBaseEntity *pEntity )
 {
+	VPROF( ( !vprof_scope_entity_gamephys.GetBool() ) ? 
+			"Physics_SimulateEntity" : 
+			EntityFactoryDictionary()->GetCannonicalName( pEntity->GetClassname() ) );
+
 	if ( pEntity->edict() )
 	{
+#if !defined( NO_ENTITY_PREDICTION )
 		// Player drives simulation of this entity
 		if ( pEntity->IsPlayerSimulated() )
 		{
@@ -2024,9 +2062,11 @@ void Physics_SimulateEntity( CBaseEntity *pEntity )
 
 			pEntity->UnsetPlayerSimulated();
 		}
+#endif
 
-		engineCache->EnterCriticalSection();
+		MDLCACHE_CRITICAL_SECTION();
 
+#if !defined( NO_ENTITY_PREDICTION )
 		// If an object was at one point player simulated, but had that status revoked (as just
 		//  above when no packets have arrived in a while ), then we still will assume that the
 		//  owner/player will be predicting the entity locally (even if the game is playing like butt)
@@ -2049,7 +2089,10 @@ void Physics_SimulateEntity( CBaseEntity *pEntity )
 				}
 			}	
 			{
-				VPROF( "pEntity->PhysicsSimulate" );
+				VPROF( ( !vprof_scope_entity_gamephys.GetBool() ) ? 
+						"pEntity->PhysicsSimulate" : 
+						EntityFactoryDictionary()->GetCannonicalName( pEntity->GetClassname() ) );
+
 				// Run entity physics
 				pEntity->PhysicsSimulate();
 			}
@@ -2058,13 +2101,11 @@ void Physics_SimulateEntity( CBaseEntity *pEntity )
 			IPredictionSystem::SuppressHostEvents( NULL );
 		}
 		else
+#endif
 		{
-			VPROF( "pEntity->PhysicsSimulate" );
 			// Run entity physics
 			pEntity->PhysicsSimulate();
 		}
-
-		engineCache->ExitCriticalSection();
 	}
 	else
 	{

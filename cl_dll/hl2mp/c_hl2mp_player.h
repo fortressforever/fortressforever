@@ -48,7 +48,7 @@ public:
 	virtual bool ShouldDraw( void );
 	virtual void OnDataChanged( DataUpdateType_t type );
 	virtual float GetFOV( void );
-	virtual studiohdr_t *OnNewModel( void );
+	virtual CStudioHdr *OnNewModel( void );
 	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
@@ -147,7 +147,7 @@ private:
 	
 	C_HL2MPRagdoll( const C_HL2MPRagdoll & ) {}
 
-	void Interp_Copy( VarMapping_t *pDest, C_BaseAnimatingOverlay *pDestinationEntity, C_BaseAnimatingOverlay *pSourceEntity, VarMapping_t *pSrc );
+	void Interp_Copy( C_BaseAnimatingOverlay *pDestinationEntity );
 	void CreateHL2MPRagdoll( void );
 
 private:

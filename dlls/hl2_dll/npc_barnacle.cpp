@@ -23,6 +23,10 @@
 #include "bone_setup.h"
 #include "iservervehicle.h"
 #include "collisionutils.h"
+#include "combine_mine.h"
+#include "explode.h"
+#include "npc_BaseZombie.h"
+#include "modelentities.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -96,7 +100,9 @@ CNPC_Barnacle::CNPC_Barnacle(void)
 {
 	m_flRestUnitsAboveGround = 16.0f;
 	m_flNextBloodTime = -1.0f;
-	m_nBloodColor = BLOOD_COLOR_RED;
+#ifndef _XBOX
+	m_nBloodColor = BLOOD_COLOR_YELLOW;
+#endif
 	m_bPlayerWasStanding = false;
 }
 
@@ -137,7 +143,9 @@ BEGIN_DATADESC( CNPC_Barnacle )
 	DEFINE_FIELD( m_hLastSpitEnemy, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_nShakeCount, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flNextBloodTime, FIELD_TIME ),
+#ifndef _XBOX
 	DEFINE_FIELD( m_nBloodColor, FIELD_INTEGER ),
+#endif
 	DEFINE_FIELD( m_vecBloodPos, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_flBarnaclePullSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flLocalTimer, FIELD_TIME ),
@@ -145,9 +153,14 @@ BEGIN_DATADESC( CNPC_Barnacle )
 	DEFINE_FIELD( m_flLastPull, FIELD_FLOAT ),
 	DEFINE_EMBEDDED( m_StuckTimer ),
 
+	DEFINE_INPUTFUNC( FIELD_VOID, "DropTongue", InputDropTongue ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetDropTongueSpeed", InputSetDropTongueSpeed ),
+
 	// Function pointers
 	DEFINE_THINKFUNC( BarnacleThink ),
 	DEFINE_THINKFUNC( WaitTillDead ),
+
+	DEFINE_FIELD( m_bSwallowingBomb, FIELD_BOOLEAN ),
 
 END_DATADESC()
 
@@ -230,6 +243,7 @@ void CNPC_Barnacle::Spawn()
 	m_cGibs				= 0;
 	m_bLiftingPrey		= false;
 	m_bSwallowingPrey	= false;
+	m_bSwallowingBomb	= false;
 	m_flDigestFinish	= 0;
 	m_takedamage		= DAMAGE_YES;
 	m_pConstraint		= NULL;
@@ -249,6 +263,8 @@ void CNPC_Barnacle::Spawn()
 
 	//Do not have a shadow
 	AddEffects( EF_NOSHADOW );
+
+	AddFlag( FL_AIMTARGET );
 }
 
 
@@ -257,10 +273,24 @@ void CNPC_Barnacle::Spawn()
 //-----------------------------------------------------------------------------
 void CNPC_Barnacle::SetAltitude( float flAltitude )
 {
+	if ( HasSpawnFlags( SF_BARNACLE_AMBUSH ) )
+		return;
+
 	m_flAltitude = flAltitude;
 }
 
+void CNPC_Barnacle::DropTongue( void )
+{
+	if ( m_hTongueRoot )
+		return;
 
+	m_hTongueRoot = CBarnacleTongueTip::CreateTongueRoot( m_vecRoot, QAngle(90,0,0) );
+	m_hTongueTip = CBarnacleTongueTip::CreateTongueTip( this, m_hTongueRoot, m_vecTip, QAngle(0,0,0) );
+	m_nSpitAttachment = LookupAttachment( "StrikeHeadAttach" );
+	Assert( m_hTongueRoot && m_hTongueTip );
+
+	RemoveSpawnFlags( SF_BARNACLE_AMBUSH );
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -268,13 +298,13 @@ void CNPC_Barnacle::Activate( void )
 {
 	BaseClass::Activate();
 
+	if ( HasSpawnFlags( SF_BARNACLE_AMBUSH ) )
+		return;
+
 	// Create our tongue tips
 	if ( !m_hTongueRoot )
 	{
-		m_hTongueRoot = CBarnacleTongueTip::CreateTongueRoot( m_vecRoot, QAngle(90,0,0) );
-		m_hTongueTip = CBarnacleTongueTip::CreateTongueTip( this, m_hTongueRoot, m_vecTip, QAngle(0,0,0) );
-		m_nSpitAttachment = LookupAttachment( "StrikeHeadAttach" );
-		Assert( m_hTongueRoot && m_hTongueTip );
+		DropTongue();
 	}
 	else if ( GetEnemy() && IsEnemyAPlayer() && !m_pConstraint )
 	{
@@ -307,7 +337,31 @@ int	CNPC_Barnacle::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		SetActivity( ACT_SMALL_FLINCH );
 	}
 
+	if( hl2_episodic.GetBool() && info.GetAttacker() && info.GetAttacker()->Classify() == CLASS_PLAYER_ALLY_VITAL )
+	{
+		if( FClassnameIs( info.GetAttacker(), "npc_alyx" ) )
+		{
+			// Alyx does double damage to barnacles, so that she can save the 
+			// player's life in a more timely fashion. (sjb)
+			info.ScaleDamage( 2.0f );
+		}
+	}
+
+	DropTongue();
+
 	return BaseClass::OnTakeDamage_Alive( info );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Player has illuminated this NPC with the flashlight
+//-----------------------------------------------------------------------------
+void CNPC_Barnacle::PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot )
+{
+	// Create a sound to scare friendly allies away from the base on the barnacle
+	if( IsAlive() )
+	{
+ 		CSoundEnt::InsertSound( SOUND_MOVE_AWAY | SOUND_CONTEXT_ALLIES_ONLY, m_vecTip, 60.0f, FLASHLIGHT_NPC_CHECK_INTERVAL );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -324,9 +378,8 @@ void CNPC_Barnacle::InitTonguePosition( void )
 	SetAltitude( flLength );
 
 	Vector origin;
-	QAngle angle;
 
-	GetAttachment( "TongueEnd", origin, angle );
+	GetAttachment( "TongueEnd", origin );
 
 	float flTongueAdj = origin.z - GetAbsOrigin().z;
 	m_vecRoot = origin - Vector(0,0,flTongueAdj);
@@ -342,7 +395,7 @@ void CNPC_Barnacle::BarnacleThink ( void )
 	CBaseEntity *pTouchEnt;
 	float flLength;
 
-	SetNextThink( gpGlobals->curtime + 0.1f );
+ 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	UpdateTongue();
 
@@ -387,17 +440,41 @@ void CNPC_Barnacle::BarnacleThink ( void )
 			}
 		}
 	}
-	else if ( GetEnemy() )
+	else if ( GetEnemy()  )
 	{
-		if ( m_bLiftingPrey )
+ 		if ( m_bLiftingPrey || m_bSwallowingBomb == true )
 		{	
 			LiftPrey();
+		}
+		// Stay bloated as we digest
+		else if ( m_flDigestFinish )
+		{
+			// Still digesting him>
+			if ( m_flDigestFinish > gpGlobals->curtime )
+			{
+				if ( IsActivityFinished() )
+				{
+					SetActivity( ACT_IDLE );
+				}
+
+				// bite prey every once in a while
+				if ( random->RandomInt(0,25) == 0 )
+				{
+					EmitSound( "NPC_Barnacle.Digest" );
+				}
+			}
+			else
+			{
+				// Finished digesting
+				LostPrey( true ); // Remove all evidence
+				m_flDigestFinish = 0;
+			}
 		}
 	}
 	else
 	{
 		// Were we lifting prey?
-		if ( m_bSwallowingPrey || m_bLiftingPrey ) 
+		if ( m_bSwallowingPrey || m_bLiftingPrey  ) 
 		{
 			// Something removed our prey.
 			LostPrey( false );
@@ -465,6 +542,9 @@ void CNPC_Barnacle::BarnacleThink ( void )
 						m_flLastPull = 0;
 						m_StuckTimer.Set(3.0);
 						bGrabbedTarget = true;
+
+						// Set our touch flag so no one else tries to grab us this frame
+						pTouchEnt->AddEFlags( EFL_IS_BEING_LIFTED_BY_BARNACLE );
 					}
 				}
 			}
@@ -472,7 +552,10 @@ void CNPC_Barnacle::BarnacleThink ( void )
 			if ( !bGrabbedTarget )
 			{
 				// Restore the hanging spring constant 
-				m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_HANGING );
+				if ( m_hTongueTip )
+				{
+					m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_HANGING );
+				}
 				SetAltitude( flLength );
 			}
 		}
@@ -536,7 +619,9 @@ bool CNPC_Barnacle::WaitForRagdollToSettle( float flBiteZOffset )
 	Vector vecBitePoint = GetAbsOrigin();
 	vecBitePoint.z -= flBiteZOffset;
 
-	//NDebugOverlay::Box( vecBitePoint, -Vector(10,10,10), Vector(10,10,10), 0,255,0, 0, 0.1 );
+   	//NDebugOverlay::Box( vecBitePoint, -Vector(10,10,10), Vector(10,10,10), 0,255,0, 0, 0.1 );
+ 	//NDebugOverlay::Line( vecBitePoint, vecCheckPos, 0, 255, 0, true, 0.1 );
+
 	if ( (vecBitePoint.x - vecCheckPos.x) > flDelta || (vecBitePoint.y - vecCheckPos.y) > flDelta )
 	{
 		// I can't bite this critter because it's not lined up with me on the X/Y plane. If it is 
@@ -572,7 +657,7 @@ bool CNPC_Barnacle::WaitForRagdollToSettle( float flBiteZOffset )
 	}
 
 	// Get the velocity of the bone we've grabbed, and only bite when it's not moving much
-	studiohdr_t *pStudioHdr = m_hRagdoll->GetModelPtr();
+	CStudioHdr *pStudioHdr = m_hRagdoll->GetModelPtr();
 	mstudiobone_t *pBone = pStudioHdr->pBone( m_iGrabbedBoneIndex );
 	int iBoneIndex = pBone->physicsbone;
 	ragdoll_t *pRagdoll = m_hRagdoll->GetRagdoll();
@@ -644,7 +729,7 @@ void CNPC_Barnacle::PullEnemyTorwardsMouth( bool bAdjustEnemyOrigin )
 
 	float flPull = fabs(sin( m_flLocalTimer * 5 ));
 
-	flPull *= m_flBarnaclePullSpeed * dt;
+ 	flPull *= m_flBarnaclePullSpeed * dt;
 
 	SetAltitude( m_flAltitude - flPull );
 
@@ -719,15 +804,18 @@ void CNPC_Barnacle::UpdatePlayerContraint( void )
 	physenv->DestroyConstraint( m_pConstraint );
 	m_pConstraint = NULL;
 
-	// Create the new constraint for the standing/ducking player physics object.
-	IPhysicsObject *pPlayerPhys = pPlayer->VPhysicsGetObject();
-	IPhysicsObject *pTonguePhys = m_hTongueTip->VPhysicsGetObject();
-	
-	constraint_fixedparams_t fixed;
-	fixed.Defaults();
-	fixed.InitWithCurrentObjectState( pTonguePhys, pPlayerPhys );
-	fixed.constraint.Defaults();
-	m_pConstraint = physenv->CreateFixedConstraint( pTonguePhys, pPlayerPhys, NULL, fixed );
+	if ( m_hTongueTip )
+	{
+		// Create the new constraint for the standing/ducking player physics object.
+		IPhysicsObject *pPlayerPhys = pPlayer->VPhysicsGetObject();
+		IPhysicsObject *pTonguePhys = m_hTongueTip->VPhysicsGetObject();
+		
+		constraint_fixedparams_t fixed;
+		fixed.Defaults();
+		fixed.InitWithCurrentObjectState( pTonguePhys, pPlayerPhys );
+		fixed.constraint.Defaults();
+		m_pConstraint = physenv->CreateFixedConstraint( pTonguePhys, pPlayerPhys, NULL, fixed );
+	}
 
 	// Save state for the next check.
 	m_bPlayerWasStanding = bStanding;
@@ -813,13 +901,21 @@ void CNPC_Barnacle::LiftRagdoll( float flBiteZOffset )
 	if ( GetAbsOrigin().z - m_vecTip.Get().z < flBiteZOffset )
 	{
 		// If we've got a ragdoll, wait until the bone is down below the mouth.
-		if ( !WaitForRagdollToSettle( flBiteZOffset ) )
+ 		if ( !WaitForRagdollToSettle( flBiteZOffset ) )
 			return;
 
-		if( GetEnemy()->Classify() == CLASS_ZOMBIE )
+  		if ( GetEnemy()->Classify() == CLASS_ZOMBIE )
 		{
 			// lifted the prey high enough to see it's a zombie. Spit it out.
-			SpitPrey();
+			if ( hl2_episodic.GetBool() )
+			{
+				m_bLiftingPrey = false;
+				SetActivity( (Activity)ACT_BARNACLE_BITE_SMALL_THINGS );
+			}
+			else
+			{
+				SpitPrey();
+			}
 			return;
 		}
 
@@ -892,8 +988,10 @@ void CNPC_Barnacle::LiftPhysicsObject( float flBiteZOffset )
 	// Figure out when the prey has reached our bite range
 	if ( GetAbsOrigin().z - m_vecTip.Get().z < flBiteZOffset )
 	{
-
-		m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_HANGING );
+		if ( m_hTongueTip )
+		{
+			m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_HANGING );
+		}
 
 		// Wait until the physics object stops flailing
 		if ( !WaitForPhysicsObjectToSettle( flBiteZOffset ) )
@@ -905,8 +1003,32 @@ void CNPC_Barnacle::LiftPhysicsObject( float flBiteZOffset )
 		// If we got a physics prop, wait until the thing has settled down
 		m_bLiftingPrey = false;
 
-		// Start the bite animation. The anim event in it will finish the job.
-		SetActivity( (Activity)ACT_BARNACLE_TASTE_SPIT );
+		if ( hl2_episodic.GetBool() )
+		{
+			CBounceBomb *pBounce = dynamic_cast<CBounceBomb *>( pVictim );
+
+			if ( pBounce )
+			{
+				if ( m_bSwallowingBomb == true )
+				{
+					pBounce->ExplodeThink();
+					return;
+				}
+
+				SetActivity( (Activity)ACT_BARNACLE_BITE_SMALL_THINGS );
+			}
+			else
+			{
+				// Start the bite animation. The anim event in it will finish the job.
+				SetActivity( (Activity)ACT_BARNACLE_TASTE_SPIT );
+			}
+		}
+		else
+		{
+			// Start the bite animation. The anim event in it will finish the job.
+			SetActivity( (Activity)ACT_BARNACLE_TASTE_SPIT );
+		}
+		
 	}
 	else
 	{
@@ -932,6 +1054,11 @@ void CNPC_Barnacle::LiftPrey( void )
 	AI_TraceLine( WorldSpaceCenter(), pVictim->WorldSpaceCenter(), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
 	if ( !pVictim->IsAlive() || (tr.fraction < 1.0 && tr.m_pEnt != pVictim && tr.m_pEnt != m_hRagdoll) )
 	{
+		if ( !GetEnemy()->IsPlayer() )
+		{
+			// ignore the object so we don't get into a loop of trying to pick it up.
+			m_hLastSpitEnemy = GetEnemy();
+		}
 		LostPrey( false );
 		return;
 	}
@@ -967,6 +1094,101 @@ void CNPC_Barnacle::LiftPrey( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Attach a serverside ragdoll prop for the specified entity to our tongue
+//-----------------------------------------------------------------------------
+CRagdollProp *CNPC_Barnacle::AttachRagdollToTongue( CBaseAnimating *pAnimating )
+{
+	// Find his head bone
+	m_iGrabbedBoneIndex = -1;
+	Vector vecNeckOffset;
+	
+	if ( m_hTongueTip )
+	{
+		vecNeckOffset = (pAnimating->EyePosition() - m_hTongueTip->GetAbsOrigin());
+	}
+
+	CStudioHdr *pHdr = pAnimating->GetModelPtr();
+	if ( pHdr )
+	{
+		int set = pAnimating->GetHitboxSet();
+		for( int i = 0; i < pHdr->iHitboxCount(set); i++ )
+		{
+			mstudiobbox_t *pBox = pHdr->pHitbox( i, set );
+			if ( !pBox )
+				continue;
+
+			if ( pBox->group == HITGROUP_HEAD )
+			{
+				m_iGrabbedBoneIndex = pBox->bone;
+				break;
+			}
+		}
+	}
+
+	// HACK: Until we have correctly assigned hitgroups on our models, lookup the bones
+	//		 for the models that we know are in the barnacle maps.
+	//m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bip01 L Foot" );
+	if ( m_iGrabbedBoneIndex == -1 )
+	{
+ 		// Citizens, Conscripts
+		m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bip01 Head" );
+	}
+	if ( m_iGrabbedBoneIndex == -1 )
+	{
+		// Metrocops, Combine soldiers
+		m_iGrabbedBoneIndex = pAnimating->LookupBone( "ValveBiped.Bip01_Head1" );
+	}
+	if ( m_iGrabbedBoneIndex == -1 )
+	{
+		// Vortigaunts
+		m_iGrabbedBoneIndex = pAnimating->LookupBone( "ValveBiped.head" );
+	}
+	if ( m_iGrabbedBoneIndex == -1 )
+	{
+		// Bullsquids
+		m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bullsquid.Head_Bone1" );
+	}
+
+	if ( m_iGrabbedBoneIndex == -1 )
+	{
+		// Just use the first bone
+		m_iGrabbedBoneIndex = 0;
+	}
+
+	// Move the tip to the bone
+	Vector vecBonePos;
+	QAngle vecBoneAngles;
+	pAnimating->GetBonePosition( m_iGrabbedBoneIndex, vecBonePos, vecBoneAngles );
+
+	if ( m_hTongueTip )
+	{
+		m_hTongueTip->Teleport( &vecBonePos, NULL, NULL );
+	}
+
+	//NDebugOverlay::Box( vecBonePos, -Vector(5,5,5), Vector(5,5,5), 255,255,255, 0, 10.0 );
+
+	// Create the ragdoll attached to tongue
+	IPhysicsObject *pTonguePhysObject = m_hTongueTip->VPhysicsGetObject();
+	CRagdollProp *pRagdoll = CreateServerRagdollAttached( pAnimating, vec3_origin, -1, COLLISION_GROUP_NONE, pTonguePhysObject, m_hTongueTip, 0, vecBonePos, m_iGrabbedBoneIndex, vec3_origin );
+	if ( pRagdoll )
+	{
+		pRagdoll->DisableAutoFade();
+		pRagdoll->SetThink( NULL );
+	}
+
+	return pRagdoll;
+}
+
+void CNPC_Barnacle::InputSetDropTongueSpeed( inputdata_t &inputdata )
+{
+	m_flBarnaclePullSpeed = inputdata.value.Int();
+}
+
+void CNPC_Barnacle::InputDropTongue( inputdata_t &inputdata )
+{
+	DropTongue();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Grab the specified target with our tongue
@@ -1090,70 +1312,7 @@ void CNPC_Barnacle::AttachTongueToTarget( CBaseEntity *pTouchEnt, Vector vecGrab
 	// Make a ragdoll for the guy, and hide him.
 	pTouchEnt->AddSolidFlags( FSOLID_NOT_SOLID );
 
-	// Find his head bone
-	m_iGrabbedBoneIndex = -1;
-	Vector vecNeckOffset = (pTouchEnt->EyePosition() - m_hTongueTip->GetAbsOrigin());
-	studiohdr_t *pHdr = pAnimating->GetModelPtr();
-	if ( pHdr )
-	{
-		int set = pAnimating->GetHitboxSet();
-		for( int i = 0; i < pHdr->iHitboxCount(set); i++ )
-		{
-			mstudiobbox_t *pBox = pHdr->pHitbox( i, set );
-			if ( !pBox )
-				continue;
-			
-			if ( pBox->group == HITGROUP_HEAD )
-			{
-				m_iGrabbedBoneIndex = pBox->bone;
-				break;
-			}
-		}
-	}
-	
-	// HACK: Until we have correctly assigned hitgroups on our models, lookup the bones
-	//		 for the models that we know are in the barnacle maps.
-	//m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bip01 L Foot" );
-	if ( m_iGrabbedBoneIndex == -1 )
-	{
-		// Citizens, Conscripts
-		m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bip01 Head" );
-	}
-	if ( m_iGrabbedBoneIndex == -1 )
-	{
-		// Metrocops, Combine soldiers
-		m_iGrabbedBoneIndex = pAnimating->LookupBone( "ValveBiped.Bip01_Head1" );
-	}
-	if ( m_iGrabbedBoneIndex == -1 )
-	{
-		// Vortigaunts
-		m_iGrabbedBoneIndex = pAnimating->LookupBone( "ValveBiped.head" );
-	}
-	if ( m_iGrabbedBoneIndex == -1 )
-	{
-		// Bullsquids
-		m_iGrabbedBoneIndex = pAnimating->LookupBone( "Bullsquid.Head_Bone1" );
-	}
-
-	if ( m_iGrabbedBoneIndex == -1 )
-	{
-		// Just use the first bone
-		m_iGrabbedBoneIndex = 0;
-	}
-
-	// Move the tip to the bone
-	Vector vecBonePos;
-	QAngle vecBoneAngles;
-	pAnimating->GetBonePosition( m_iGrabbedBoneIndex, vecBonePos, vecBoneAngles );
-	m_hTongueTip->Teleport( &vecBonePos, NULL, NULL );
-
-	//NDebugOverlay::Box( vecBonePos, -Vector(5,5,5), Vector(5,5,5), 255,255,255, 0, 10.0 );
-
-	// Create the ragdoll attached to tongue
-	IPhysicsObject *pTonguePhysObject = m_hTongueTip->VPhysicsGetObject();
-	m_hRagdoll = CreateServerRagdollAttached( pAnimating, vec3_origin, -1, COLLISION_GROUP_NONE, pTonguePhysObject, m_hTongueTip, 0, vecBonePos, m_iGrabbedBoneIndex, vec3_origin );
-	m_hRagdoll->DisableAutoFade();
-	m_hRagdoll->SetThink( NULL );
+  	m_hRagdoll = AttachRagdollToTongue( pAnimating );
 	m_hRagdoll->SetDamageEntity( pAnimating );
 
 	// Make it try to blend out of ragdoll on the client on deletion
@@ -1203,12 +1362,8 @@ void CNPC_Barnacle::SpitPrey()
 		IPhysicsObject *pObject = GetEnemy()->VPhysicsGetObject();
 		if (pObject)
 		{
-			Vector vecPosition;
-			QAngle angles;
-			GetAttachment( m_nSpitAttachment, vecPosition, angles );
-
-			Vector force;
-			AngleVectors( angles, &force ); 
+			Vector vecPosition, force;
+			GetAttachment( m_nSpitAttachment, vecPosition, &force );
 
 			force *= pObject->GetMass() * 50.0f;
 			pObject->ApplyForceOffset( force, vec3_origin );
@@ -1229,6 +1384,39 @@ void CNPC_Barnacle::BitePrey( void )
 	Assert( GetEnemy() );
 
 	CBaseCombatCharacter *pVictim = GetEnemyCombatCharacterPointer();
+
+ 	if ( pVictim == NULL )
+	{
+		if ( hl2_episodic.GetBool() )
+		{
+			if ( GetEnemy() )
+			{
+				CBounceBomb *pBounce = dynamic_cast<CBounceBomb *>( GetEnemy() );
+
+				if ( pBounce )
+				{
+					// Stop the ragdoll moving and start to pull the sucker up into our mouth
+					m_bSwallowingPrey = true;
+					m_bSwallowingBomb = true;
+					IPhysicsObject *pTonguePhys = m_hTongueTip->VPhysicsGetObject();
+
+					// Stop the tongue's spring getting in the way of swallowing
+					m_hTongueTip->m_pSpring->SetSpringConstant( 0 );
+
+					// Switch the tongue tip to shadow and drag it up
+					pTonguePhys->SetShadow( 1e4, 1e4, false, false );
+					pTonguePhys->UpdateShadow( m_hTongueTip->GetAbsOrigin(), m_hTongueTip->GetAbsAngles(), false, 0 );
+					m_hTongueTip->SetMoveType( MOVETYPE_NOCLIP );
+					m_hTongueTip->SetAbsVelocity( Vector(0,0,32) );
+					
+
+					SetAltitude( (GetAbsOrigin().z - m_hTongueTip->GetAbsOrigin().z) );
+					return;
+				}
+			}
+		}
+	}
+	
 	Assert( pVictim );
 
 	EmitSound( "NPC_Barnacle.FinalBite" );
@@ -1254,9 +1442,31 @@ void CNPC_Barnacle::BitePrey( void )
 		iDamageType |= DMG_REMOVENORAGDOLL;
 		m_hRagdoll->SetDamageEntity( NULL );
 	}
+
 	// DMG_CRUSH because we don't wan't to impart physics forces
 	pVictim->TakeDamage( CTakeDamageInfo( this, this, nDamage, iDamageType | DMG_CRUSH ) );
 	m_cGibs = 3;
+
+	// In episodic, bite the zombie's headcrab off & drop the body
+	if ( hl2_episodic.GetBool() && GetEnemy()->Classify() == CLASS_ZOMBIE )
+	{
+		if ( m_hRagdoll )
+		{
+			m_hRagdoll->SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, false );
+			DetachAttachedRagdoll( m_hRagdoll );
+			m_hLastSpitEnemy = m_hRagdoll.Get();
+			m_hRagdoll->EmitSound( "NPC_HeadCrab.Die" );
+			m_hRagdoll = NULL;
+		}
+
+		// Create some blood to hide the vanishing headcrab
+		Vector vecBloodPos;
+		CollisionProp()->NormalizedToWorldSpace( Vector( 0.5f, 0.5f, 0.0f ), &vecBloodPos );
+		UTIL_BloodSpray( vecBloodPos, Vector(0,0,-1), GetEnemy()->BloodColor(), 8, FX_BLOODSPRAY_ALL );
+		
+		m_flDigestFinish = gpGlobals->curtime + 10.0;
+		return;
+	}
 
 	// Players are never swallowed, nor is anything we don't have a ragdoll for
 	if ( !m_hRagdoll || pVictim->IsPlayer() )
@@ -1291,7 +1501,11 @@ void CNPC_Barnacle::BitePrey( void )
 
 	// Because the victim is dead, remember the blood color
 	m_flNextBloodTime = 0.0f;
-	m_nBloodColor = pVictim->BloodColor();
+	
+	// NOTE: This was too confusing to people with the more recognizable blood -- jdw
+#ifndef _XBOX
+	m_nBloodColor = pVictim->BloodColor(); 
+#endif
 	CollisionProp()->NormalizedToWorldSpace( Vector( 0.5f, 0.5f, 0.0f ), &m_vecBloodPos );
 
 	// m_hRagdoll->SetOverlaySequence( ACT_DIE_BARNACLE_SWALLOW );
@@ -1316,8 +1530,13 @@ void CNPC_Barnacle::SprayBlood()
 	Vector jitterPos = RandomVector( -8, 8 );
 	jitterPos.z = 0.0f;
 
+#ifndef _XBOX
 	UTIL_BloodSpray( m_vecBloodPos + jitterPos, Vector( 0,0,-1),
 		m_nBloodColor, RandomInt( 4, 8 ), RandomInt(0,2) == 0 ? FX_BLOODSPRAY_ALL : FX_BLOODSPRAY_CLOUD );
+#else
+	UTIL_BloodSpray( m_vecBloodPos + jitterPos, Vector( 0,0,-1),
+		BLOOD_COLOR_YELLOW, RandomInt( 4, 8 ), RandomInt(0,2) == 0 ? FX_BLOODSPRAY_ALL : FX_BLOODSPRAY_CLOUD );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1411,7 +1630,7 @@ void CNPC_Barnacle::RemoveRagdoll( bool bDestroyRagdoll )
 //-----------------------------------------------------------------------------
 void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 {
-	if ( GetEnemy() )
+ 	if ( GetEnemy() )
 	{
 		//No one survives being snatched by a barnacle anymore, so leave
 		// this flag set so that their entity gets removed.
@@ -1420,6 +1639,8 @@ void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 		if ( pVictim )
 		{
 			pVictim->DispatchInteraction( g_interactionBarnacleVictimReleased, NULL, this );
+			pVictim->RemoveEFlags( EFL_IS_BEING_LIFTED_BY_BARNACLE );
+
 			if ( m_hRagdoll )
 			{
 				QAngle newAngles( 0, m_hRagdoll->GetAbsAngles()[ YAW ], 0 );
@@ -1432,29 +1653,38 @@ void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 			}
 			pVictim->SetGroundEntity( NULL );
 		}
+		else if ( IsEnemyAPhysicsObject() )
+		{
+			// If we're a physics object, then we need to clear this flag
+			GetEnemy()->RemoveEFlags( EFL_IS_BEING_LIFTED_BY_BARNACLE );
+		}
 	}
+
 
 	RemoveRagdoll( bRemoveRagdoll );
 	m_bLiftingPrey = false;
 	m_bSwallowingPrey = false;
 	SetEnemy( NULL );
 
-	// Remove our tongue's shadow object, in case we just finished swallowing something
-	IPhysicsObject *pPhysicsObject = m_hTongueTip->VPhysicsGetObject();
-	if ( pPhysicsObject && pPhysicsObject->GetShadowController() )
+	if ( m_hTongueTip )
 	{
-		Vector vecCenter = WorldSpaceCenter();
-		m_hTongueTip->Teleport( &vecCenter, NULL, &vec3_origin );
+		// Remove our tongue's shadow object, in case we just finished swallowing something
+		IPhysicsObject *pPhysicsObject = m_hTongueTip->VPhysicsGetObject();
+		if ( pPhysicsObject && pPhysicsObject->GetShadowController() )
+		{
+			Vector vecCenter = WorldSpaceCenter();
+			m_hTongueTip->Teleport( &vecCenter, NULL, &vec3_origin );
 
-		// Reduce the spring constant while we lower
-		m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_LOWERING );
+			// Reduce the spring constant while we lower
+			m_hTongueTip->m_pSpring->SetSpringConstant( BARNACLE_TONGUE_SPRING_CONSTANT_LOWERING );
 
-		// Start colliding with the world again
-		pPhysicsObject->RemoveShadowController();
-		m_hTongueTip->SetMoveType( MOVETYPE_VPHYSICS );
-		pPhysicsObject->EnableMotion( true );
-		pPhysicsObject->EnableGravity( true );
-		pPhysicsObject->RecheckCollisionFilter();
+			// Start colliding with the world again
+			pPhysicsObject->RemoveShadowController();
+			m_hTongueTip->SetMoveType( MOVETYPE_VPHYSICS );
+			pPhysicsObject->EnableMotion( true );
+			pPhysicsObject->EnableGravity( true );
+			pPhysicsObject->RecheckCollisionFilter();
+		}
 	}
 }
 
@@ -1479,6 +1709,9 @@ void CNPC_Barnacle::OnTongueTipUpdated()
 //-----------------------------------------------------------------------------
 void CNPC_Barnacle::UpdateTongue( void )
 {
+	if ( m_hTongueTip == NULL )
+		return;
+
 	// Set the spring's length to that of the tongue's extension
 
 	// Compute the rest length of the tongue based on the spring. 
@@ -1542,7 +1775,7 @@ void CNPC_Barnacle::Event_Killed( const CTakeDamageInfo &info )
 		m_hRagdoll->SetMoveType( MOVETYPE_VPHYSICS );
 		m_hRagdoll->SetAbsOrigin( m_hTongueTip->GetAbsOrigin() );
 		m_hRagdoll->RemoveSolidFlags( FSOLID_NOT_SOLID );
-		m_hRagdoll->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+		m_hRagdoll->SetCollisionGroup( COLLISION_GROUP_DEBRIS ); 
 		m_hRagdoll->RecheckCollisionFilter();
 		if ( npc_barnacle_swallow.GetBool() )
 		{
@@ -1570,7 +1803,11 @@ void CNPC_Barnacle::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// Puke blood
+#ifdef _XBOX
+	UTIL_BloodSpray( GetAbsOrigin(), Vector(0,0,-1), BLOOD_COLOR_YELLOW, 8, FX_BLOODSPRAY_ALL );
+#else
 	UTIL_BloodSpray( GetAbsOrigin(), Vector(0,0,-1), BLOOD_COLOR_RED, 8, FX_BLOODSPRAY_ALL );
+#endif
 
 	// Put blood on the ground if near enough
 	trace_t bloodTrace;
@@ -1578,7 +1815,11 @@ void CNPC_Barnacle::Event_Killed( const CTakeDamageInfo &info )
 	
 	if ( bloodTrace.fraction < 1.0f )
 	{
+#ifdef _XBOX
+		UTIL_BloodDecalTrace( &bloodTrace, BLOOD_COLOR_YELLOW );
+#else
 		UTIL_BloodDecalTrace( &bloodTrace, BLOOD_COLOR_RED );
+#endif
 	}
 
 	EmitSound( "NPC_Barnacle.Die" );
@@ -1610,7 +1851,7 @@ void CNPC_Barnacle::WaitTillDead ( void )
 	float goalAltitude = BARNACLE_DEAD_TONGUE_ALTITUDE;
 
 	trace_t tr;
-	AI_TraceLine( m_vecRoot.Get(), m_vecRoot.Get() - Vector( 0, 0, 256 ), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
+	AI_TraceLine( m_vecRoot.Get(), m_vecRoot.Get() - Vector( 0, 0, 256 ), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
 	if ( tr.fraction < 1.0 )
 	{
@@ -1713,6 +1954,8 @@ void CNPC_Barnacle::Precache()
 	PrecacheScriptSound( "NPC_Barnacle.Die" );
 	PrecacheScriptSound( "NPC_Barnacle.BreakNeck" );
 
+	PrecacheModel( "models/props_junk/rock001a.mdl" );
+
 	BaseClass::Precache();
 }	
 
@@ -1777,6 +2020,7 @@ public:
 		CTraceFilterSimple( passedict, collisionGroup )
 	{
 		m_pLastEnemy = pLastEnemy;
+		m_pBarnacle = const_cast<CBaseEntity*>( EntityFromEntityHandle( passedict ) );
 	}
 
 	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
@@ -1784,11 +2028,43 @@ public:
 		if ( pServerEntity == m_pLastEnemy )
 			return true;
 
+#ifdef HL2_EPISODIC
+		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
+
+		if ( pEntity )
+		{
+			if ( FStrEq( STRING( pEntity->m_iClassname ), "func_brush" ) )
+			{
+				CFuncBrush *pFuncBrush = assert_cast<CFuncBrush *>(pEntity);
+
+				if ( pFuncBrush->m_bInvertExclusion )
+				{
+					if ( pFuncBrush->m_iszExcludedClass == m_pBarnacle->m_iClassname )
+						return true;
+					else
+						return false;
+				}
+				else
+				{
+					if ( pFuncBrush->m_iszExcludedClass != m_pBarnacle->m_iClassname )
+						return false;
+
+				}
+			}
+
+			if ( pEntity->IsBSPModel() == false && pEntity->IsWorld() == false )
+			{
+				return false;
+			}
+		}
+#endif
+
 		return BaseClass::ShouldHitEntity( pServerEntity, contentsMask );
 	}
 
 private:
 	CBaseEntity *m_pLastEnemy;
+	CBaseEntity *m_pBarnacle;
 };
 
 
@@ -1798,10 +2074,16 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 	trace_t		tr;
 	float		length;
 
+	int iMask = MASK_SOLID_BRUSHONLY;
+
+#ifdef HL2_EPISODIC
+	iMask = MASK_NPCSOLID;
+#endif
+
 	// trace once to hit architecture and see if the tongue needs to change position.
 	CBarnacleTongueFilter tongueFilter( m_hLastSpitEnemy, this, COLLISION_GROUP_NONE );
 	AI_TraceLine ( GetAbsOrigin(), GetAbsOrigin() - Vector ( 0 , 0 , 2048 ), 
-		MASK_SOLID_BRUSHONLY, &tongueFilter, &tr );
+		iMask, &tongueFilter, &tr );
 	
 	length = fabs( GetAbsOrigin().z - tr.endpos.z );
 	// Pull it up a tad
@@ -1869,6 +2151,17 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 					}
 				}
 
+				// Allow the barnacles to grab stuff while their tongue is lowering
+#ifdef HL2_EPISODIC
+				length = fabs( GetAbsOrigin().z - pTest->WorldSpaceCenter().z );
+				// Pull it up a tad
+				length = max(8, length - m_flRestUnitsAboveGround);
+				if ( pflLength )
+				{
+					*pflLength = length;
+				}
+#endif
+
 				return pTest;
 			}
 		}
@@ -1885,6 +2178,18 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 			 pVictim->m_lifeState != LIFE_DYING &&
 			 !( pVictim->GetFlags() & FL_NOTARGET )	)	
 		{
+
+			// Allow the barnacles to grab stuff while their tongue is lowering
+#ifdef HL2_EPISODIC
+			length = fabs( GetAbsOrigin().z - pTest->WorldSpaceCenter().z );
+			// Pull it up a tad
+			length = max(8, length - m_flRestUnitsAboveGround);
+			if ( pflLength )
+			{
+				*pflLength = length;
+			}
+#endif
+
 			return pTest;
 		}
 	}
@@ -1922,12 +2227,16 @@ void CBarnacleTongueTip::Spawn( void )
 	m_pSpring = NULL;
 }
 
+int CBarnacleTongueTip::UpdateTransmitState( void )
+{
+	return SetTransmitState( FL_EDICT_PVSCHECK );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CBarnacleTongueTip::Precache( void )
 {
-	PrecacheModel( "models/props_junk/rock001a.mdl" );
 	BaseClass::Precache();
 }
 

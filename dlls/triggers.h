@@ -30,6 +30,7 @@ enum
 	SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES	= 0x200,	// *if* Players can fire this trigger, this flag means only players outside vehicles can 
 	SF_TRIG_PUSH_ONCE						= 0x80,		// trigger_push removes itself after firing once
 	SF_TRIG_PUSH_AFFECT_PLAYER_ON_LADDER	= 0x100,	// if pushed object is player on a ladder, then this disengages them from the ladder (HL2only)
+	SF_TRIG_TOUCH_DEBRIS 					= 0x400,	// Will touch physics debris objects
 };
 
 // DVS TODO: get rid of CBaseToggle
@@ -40,17 +41,25 @@ class CBaseTrigger : public CBaseToggle
 {
 	DECLARE_CLASS( CBaseTrigger, CBaseToggle );
 public:
+	CBaseTrigger();
+	
 	void Activate( void );
+	virtual void PostClientActive( void );
 	void InitTrigger( void );
 
 	void Enable( void );
 	void Disable( void );
 	void Spawn( void );
+	bool CreateVPhysics( void );
+	void UpdateOnRemove( void );
 
 	// Input handlers
 	virtual void InputEnable( inputdata_t &inputdata );
 	virtual void InputDisable( inputdata_t &inputdata );
 	virtual void InputToggle( inputdata_t &inputdata );
+
+	virtual void InputStartTouch( inputdata_t &inputdata );
+	virtual void InputEndTouch( inputdata_t &inputdata );
 
 	virtual bool PassesTriggerFilters(CBaseEntity *pOther);
 	virtual void StartTouch(CBaseEntity *pOther);

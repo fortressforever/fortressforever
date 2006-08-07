@@ -62,11 +62,12 @@ class CHudCredits : public CHudElement, public vgui::Panel
 public:
 	CHudCredits( const char *pElementName );
 	virtual void Init( void );
-	virtual void Reset( void );
+	virtual void LevelShutdown( void );
 
 	int GetStringPixelWidth ( wchar_t *pString, vgui::HFont hFont );
 
 	void MsgFunc_CreditsMsg( bf_read &msg );
+	void MsgFunc_LogoTimeMsg( bf_read &msg );
 
 	virtual bool	ShouldDraw( void ) 
 	{ 
@@ -80,8 +81,11 @@ public:
 
 protected:
 	virtual void Paint();
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
+
+	void	Clear();
 
 	void ReadNames( KeyValues *pKeyValue );
 	void ReadParams( KeyValues *pKeyValue );
@@ -90,7 +94,7 @@ private:
 	void DrawIntroCreditsName( void );
 	void DrawLogo( void );
 
-	void PrepareLogo( void );
+	void PrepareLogo( float flTime );
 	void PrepareOutroCredits( void );
 	void PrepareIntroCredits( void );
 
@@ -118,6 +122,7 @@ private:
 
 	float m_flLogoTimeMod;
 	float m_flLogoTime;
+	float m_flLogoDesiredLength;
 
 	float m_flX;
 	float m_flY;
@@ -127,10 +132,10 @@ private:
 
 void CHudCredits::PrepareCredits( const char *pKeyName )
 {
-	Reset();
+	Clear();
 
 	KeyValues *pKV= new KeyValues( "CreditsFile" );
-	if ( !pKV->LoadFromFile( filesystem, CREDITS_FILE ) )
+	if ( !pKV->LoadFromFile( filesystem, CREDITS_FILE, "MOD" ) )
 	{
 		pKV->deleteThis();
 
@@ -153,6 +158,7 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT( CHudCredits );
 DECLARE_HUD_MESSAGE( CHudCredits, CreditsMsg );
+DECLARE_HUD_MESSAGE( CHudCredits, LogoTimeMsg );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -163,7 +169,12 @@ CHudCredits::CHudCredits( const char *pElementName ) : CHudElement( pElementName
 	SetParent( pParent );
 }
 
-void CHudCredits::Reset( void )
+void CHudCredits::LevelShutdown()
+{
+	Clear();
+}
+
+void CHudCredits::Clear( void )
 {
 	SetActive( false );
 	m_CreditsList.RemoveAll();
@@ -178,6 +189,7 @@ void CHudCredits::Reset( void )
 void CHudCredits::Init()
 {
 	HOOK_HUD_MESSAGE( CHudCredits, CreditsMsg );
+	HOOK_HUD_MESSAGE( CHudCredits, LogoTimeMsg );
 	SetActive( false );
 }
 
@@ -247,7 +259,7 @@ void CHudCredits::DrawOutroCreditsName( void )
 
 	// fill the screen
 	int iWidth, iTall;
-	surface()->GetScreenSize(iWidth, iTall);
+	GetHudSize(iWidth, iTall);
 	SetSize( iWidth, iTall );
 
 	for ( int i = 0; i < m_CreditsList.Count(); i++ )
@@ -331,11 +343,7 @@ void CHudCredits::DrawOutroCreditsName( void )
 		int iStringWidth = GetStringPixelWidth( unicode, m_hTFont ); 
 
 		surface()->DrawSetTextPos( ( iWidth / 2 ) - ( iStringWidth / 2 ), pCredit->flYPos );
-
-		for ( wchar_t *wch = unicode; *wch != 0; wch++ )
-		{
-			surface()->DrawUnicodeChar( *wch );
-		}
+		surface()->DrawUnicodeString( unicode );
 	}
 }
 
@@ -358,7 +366,7 @@ void CHudCredits::DrawLogo( void )
 			if ( flDeltaTime <= 0.0f )
 			{
 				m_iLogoState = LOGO_FADEHOLD;
-				m_flFadeTime = gpGlobals->curtime + 1.0f;
+				m_flFadeTime = gpGlobals->curtime + m_flLogoDesiredLength;
 			}
 
 			break;
@@ -392,11 +400,26 @@ void CHudCredits::DrawLogo( void )
 
 	// fill the screen
 	int iWidth, iTall;
-	surface()->GetScreenSize(iWidth, iTall);
+	GetHudSize(iWidth, iTall);
 	SetSize( iWidth, iTall );
 
+	char szLogoFont[64];
+
+	if ( IsXbox() )
+	{
+		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "WeaponIcons_Small" );
+	}
+	else if ( hl2_episodic.GetBool() )
+	{
+		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "ClientTitleFont" );
+	}
+	else
+	{
+		Q_snprintf( szLogoFont, sizeof( szLogoFont ), "WeaponIcons" );
+	}
+
 	vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
-	vgui::HFont m_hTFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "WeaponIcons" );
+	vgui::HFont m_hTFont = vgui::scheme()->GetIScheme(scheme)->GetFont( szLogoFont );
 
 	int iFontTall = surface()->GetFontTall ( m_hTFont );
 
@@ -412,11 +435,20 @@ void CHudCredits::DrawLogo( void )
 	int iStringWidth = GetStringPixelWidth( unicode, m_hTFont ); 
 
 	surface()->DrawSetTextPos( ( iWidth / 2 ) - ( iStringWidth / 2 ), ( iTall / 2 ) - ( iFontTall / 2 ) );
+	surface()->DrawUnicodeString( unicode );
 
-	for ( wchar_t *wch = unicode; *wch != 0; wch++ )
+	//Adrian: This should really be exposed.
+	if ( hl2_episodic.GetBool() )
 	{
-		surface()->DrawUnicodeChar( *wch );
+		vgui::localize()->ConvertANSIToUnicode( "== episode one==", unicode, sizeof( unicode ) );
+
+		iStringWidth = GetStringPixelWidth( unicode, m_hTFont ); 
+
+		surface()->DrawSetTextPos( ( iWidth / 2 ) - ( iStringWidth / 2 ), ( iTall / 2 ) + ( iFontTall / 2 ));
+		surface()->DrawUnicodeString( unicode );
 	}
+
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -457,7 +489,7 @@ void CHudCredits::DrawIntroCreditsName( void )
 	
 	// fill the screen
 	int iWidth, iTall;
-	surface()->GetScreenSize(iWidth, iTall);
+	GetHudSize(iWidth, iTall);
 	SetSize( iWidth, iTall );
 
 	for ( int i = 0; i < m_CreditsList.Count(); i++ )
@@ -482,11 +514,7 @@ void CHudCredits::DrawIntroCreditsName( void )
 		vgui::localize()->ConvertANSIToUnicode( pCredit->szCreditName, unicode, sizeof( unicode ) );
 
 		surface()->DrawSetTextPos( XRES( pCredit->flXPos ), YRES( pCredit->flYPos ) );
-
-		for ( wchar_t *wch = unicode; *wch != 0; wch++ )
-		{
-			surface()->DrawUnicodeChar( *wch );
-		}
+		surface()->DrawUnicodeString( unicode );
 		
 		if ( m_flLogoTime > gpGlobals->curtime )
 			 continue;
@@ -525,16 +553,23 @@ void CHudCredits::DrawIntroCreditsName( void )
 
 			if ( i == m_CreditsList.Count()-1 )
 			{
-				Reset();
+				Clear();
 			}
 		}
 	}
 }
 
+void CHudCredits::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	SetVisible( ShouldDraw() );
+
+	SetBgColor( Color(0, 0, 0, 0) );
+}
+
 void CHudCredits::Paint()
 {
-	SetBgColor( Color(0, 0, 0, 0) );
-
 	if ( m_iCreditsType == CREDITS_LOGO )
 	{
 		DrawLogo();
@@ -549,9 +584,10 @@ void CHudCredits::Paint()
 	}
 }
 
-void CHudCredits::PrepareLogo( void )
+void CHudCredits::PrepareLogo( float flTime )
 {
 	m_Alpha = 0;
+	m_flLogoDesiredLength = flTime;
 	m_flFadeTime = gpGlobals->curtime + 5.0f;
 	m_iLogoState = LOGO_FADEIN;
 	SetActive( true );
@@ -566,7 +602,7 @@ void CHudCredits::PrepareOutroCredits( void )
 
 	// fill the screen
 	int iWidth, iTall;
-	surface()->GetScreenSize(iWidth, iTall);
+	GetHudSize(iWidth, iTall);
 	SetSize( iWidth, iTall );
 
 	int iHeight = iTall;
@@ -639,7 +675,7 @@ void CHudCredits::MsgFunc_CreditsMsg( bf_read &msg )
 	{
 		case CREDITS_LOGO:
 		{
-			PrepareLogo();
+			PrepareLogo( 5.0f );
 			break;
 		}
 		case CREDITS_INTRO:
@@ -653,6 +689,12 @@ void CHudCredits::MsgFunc_CreditsMsg( bf_read &msg )
 			break;
 		}
 	}
+}
+
+void CHudCredits::MsgFunc_LogoTimeMsg( bf_read &msg )
+{
+	m_iCreditsType = CREDITS_LOGO;
+	PrepareLogo( msg.ReadFloat() );
 }
 
 

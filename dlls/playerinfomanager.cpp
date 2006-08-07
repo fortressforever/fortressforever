@@ -19,7 +19,7 @@ namespace
 	// 
 	//  Old version support
 	//
-	class IPlayerInfo_V1
+	abstract_class IPlayerInfo_V1
 	{
 	public:
 		// returns the players name (UTF-8 encoded)
@@ -42,7 +42,7 @@ namespace
 		virtual int	GetArmorValue() = 0;
 	};
 	
-	class IPlayerInfoManager_V1
+	abstract_class IPlayerInfoManager_V1
 	{
 	public:
 		virtual IPlayerInfo_V1 *GetPlayerInfo( edict_t *pEdict ) = 0;

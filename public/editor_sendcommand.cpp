@@ -7,7 +7,13 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifdef _WIN32
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
+#ifdef _XBOX
+#include "xbox/xbox_platform.h"
+#include "xbox/xbox_win32stubs.h"
+#endif
+#if !defined(_XBOX) && defined(_WIN32)
 #include <windows.h>
 #endif
 #include <stdio.h>
@@ -219,3 +225,4 @@ EditorSendResult_t Editor_SendCommand(const char *pszCommand, bool bShowUI)
 	return(Editor_OK);
 }
 
+#endif // !_STATIC_LINKED || _SHARED_LIB

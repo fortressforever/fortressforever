@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: 
 //
@@ -10,8 +10,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "vtf/vtf.h"
-#include "UtlBuffer.h"
-#include "imageloader.h"
+#include "tier1/UtlBuffer.h"
+#include "bitmap/imageformat.h"
 #include "vector.h"
 #include <conio.h>
 
@@ -36,10 +36,13 @@ void LoadFileIntoBuffer( const char *pFileName, CUtlBuffer &buf )
 	{
 		goto error;
 	}
-	fread( buf.Base(), 1, statBuf.st_size, fp );
+	
+	int nBytesRead = fread( buf.Base(), 1, statBuf.st_size, fp );
 	fclose( fp );
 
+	buf.SeekPut( CUtlBuffer::SEEK_HEAD, nBytesRead );
 	return;
+
 error:
 	printf( "Can't find file %s\n", pFileName );
 	exit( -1 );
@@ -66,6 +69,10 @@ void PrintFlags( int flags )
 	if( flags & TEXTUREFLAGS_CLAMPT )
 	{
 		printf( "CLAMPT|" );
+	}
+	if( flags & TEXTUREFLAGS_CLAMPU )
+	{
+		printf( "CLAMPU|" );
 	}
 	if( flags & TEXTUREFLAGS_ANISOTROPIC )
 	{
@@ -160,11 +167,6 @@ int main( int argc, char **argv )
 	( ( unsigned char * )file2.Base() )[26] = 0;
 	( ( unsigned char * )file2.Base() )[27] = 0;
 
-	// the header is 63 bytes, so we sometimes end up with an extra byte worth of crap at the end. . makes no sense since
-	// we are aligned to the byte, but oh well. . may be from old code.
-	( ( unsigned char * )file1.Base() )[63] = 0;
-	( ( unsigned char * )file2.Base() )[63] = 0;
-	
 	IVTFTexture *pTexture1 = CreateVTFTexture();
 	IVTFTexture *pTexture2 = CreateVTFTexture();
 
@@ -182,12 +184,13 @@ int main( int argc, char **argv )
 	}
 
 	if( pTexture1->Width() != pTexture2->Width() ||
-		pTexture1->Height() != pTexture2->Height() )
+		pTexture1->Height() != pTexture2->Height() ||
+		pTexture1->Depth() != pTexture2->Depth() )
 	{
-		printf( "%s dimensions differ: %dx%d != %dx%d\n", 
+		printf( "%s dimensions differ: %dx%dx%d != %dx%dx%d\n", 
 			argv[1],
-			( int )pTexture1->Width(), ( int )pTexture1->Height(),
-			( int )pTexture2->Width(), ( int )pTexture2->Height() );
+			( int )pTexture1->Width(), ( int )pTexture1->Height(), ( int )pTexture1->Depth(), 
+			( int )pTexture2->Width(), ( int )pTexture2->Height(), ( int )pTexture2->Depth() );
 		bMatch = false;
 	}
 
@@ -282,48 +285,68 @@ int main( int argc, char **argv )
 		if( memcmp( pTexture1->ImageData(), pTexture2->ImageData(), 
 			pTexture1->ComputeTotalSize() ) != 0 )
 		{
-			printf( "%s data different\n",
-				argv[1] );
-			int i;
-			for( i = 0; i < pTexture1->ComputeTotalSize(); i++ )
-			{
-				if( pTexture1->ImageData()[i] != pTexture2->ImageData()[i] )
-				{
-					printf( "offset %d different\n", i );
-				}
-			}
-			bMatch = false;
-		}
-	}
+			printf( "%s data different\n", argv[1] );
 
-	if( bMatch )
-	{
-		if( file1.Size() != file2.Size() )
-		{
-			printf( "%s differing file sizes\n" );
-		}
-		else
-		{
-			if( memcmp( file1.Base(), file2.Base(), file1.Size() ) == 0 )
+			if (( pTexture1->Format() == IMAGE_FORMAT_DXT1 ) || ( pTexture1->Format() == IMAGE_FORMAT_DXT3 ) ||
+				( pTexture1->Format() == IMAGE_FORMAT_DXT5 ) )
 			{
-//				printf( "%s MATCH!\n", argv[1] );
-				bMatch = true;
+				int i;
+				for( i = 0; i < pTexture1->ComputeTotalSize(); i++ )
+				{
+					if( pTexture1->ImageData()[i] != pTexture2->ImageData()[i] )
+					{
+						printf( "offset %d different\n", i );
+					}
+				}
 			}
 			else
 			{
-				printf( "%s data mismatch\n", argv[1] );
-				int i;
-				unsigned char *pData1 = ( unsigned char * )file1.Base();
-				unsigned char *pData2 = ( unsigned char * )file2.Base();
-				for( i = 0; i < pTexture1->ComputeTotalSize(); i++ )
+				for( int iFrame = 0; iFrame < pTexture1->FrameCount(); ++iFrame )
 				{
-					if( pData1[i] != pData2[i] )
+					for ( int iMipLevel = 0; iMipLevel < pTexture1->MipCount(); ++iMipLevel )
 					{
-						printf( "offset %d different (0x%x != 0x%x)\n", i, ( int )pData1[i], ( int )pData2[i] );
+						int nMipWidth, nMipHeight, nMipDepth;
+						pTexture1->ComputeMipLevelDimensions( iMipLevel, &nMipWidth, &nMipHeight, &nMipDepth );
+
+						for (int iCubeFace = 0; iCubeFace < pTexture1->FrameCount(); ++iCubeFace)
+						{
+							for ( int z = 0; z < nMipDepth; ++z )
+							{
+								unsigned char *pData1 = pTexture1->ImageData( iFrame, iCubeFace, iMipLevel, 0, 0, z );
+								unsigned char *pData2 = pTexture2->ImageData( iFrame, iCubeFace, iMipLevel, 0, 0, z );
+
+								int nMipSize = pTexture1->ComputeMipSize( iMipLevel );
+								if ( memcmp( pData1, pData2, nMipSize ) )
+								{
+									bool bBreak = false;
+									
+									for ( int y = 0; y < nMipHeight; ++y )
+									{
+										for ( int x = 0; x < nMipWidth; ++x )
+										{
+											unsigned char *pData1a = pTexture1->ImageData( iFrame, iCubeFace, iMipLevel, x, y, z );
+											unsigned char *pData2a = pTexture2->ImageData( iFrame, iCubeFace, iMipLevel, x, y, z );
+
+											if ( memcmp( pData1a, pData2a, ImageLoader::SizeInBytes( pTexture1->Format() ) ) )
+											{
+												printf( "Frame %d Mip level %d Face %d Z-slice %d texel (%d,%d) different!\n", 
+													iFrame, iMipLevel, iCubeFace, z, x, y );
+												bBreak = true;
+												break;
+											}
+										}
+
+										if ( bBreak )
+											break;
+									}
+								}
+							}
+						}
 					}
 				}
-				bMatch = false;
 			}
+
+			bMatch = false;
 		}
 	}
 

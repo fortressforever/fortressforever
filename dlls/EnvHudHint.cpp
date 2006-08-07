@@ -27,6 +27,7 @@ public:
 
 private:
 	void InputShowHudHint( inputdata_t &inputdata );
+	void InputHideHudHint( inputdata_t &inputdata );
 	string_t m_iszMessage;
 	DECLARE_DATADESC();
 };
@@ -37,6 +38,7 @@ BEGIN_DATADESC( CEnvHudHint )
 
 	DEFINE_KEYFIELD( m_iszMessage, FIELD_STRING, "message" ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowHudHint", InputShowHudHint ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "HideHudHint", InputHideHudHint ),
 
 END_DATADESC()
 
@@ -87,6 +89,35 @@ void CEnvHudHint::InputShowHudHint( inputdata_t &inputdata )
 		UserMessageBegin( user, "HintText" );
 			WRITE_BYTE( 1 );	// one message
 			WRITE_STRING( STRING(m_iszMessage) );
+		MessageEnd();
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void CEnvHudHint::InputHideHudHint( inputdata_t &inputdata )
+{
+	CBaseEntity *pPlayer = NULL;
+
+	if ( inputdata.pActivator && inputdata.pActivator->IsPlayer() )
+	{
+		pPlayer = inputdata.pActivator;
+	}
+	else
+	{
+		pPlayer = UTIL_GetLocalPlayer();
+	}
+
+	if ( pPlayer )
+	{
+		if ( !pPlayer || !pPlayer->IsNetClient() )
+			return;
+
+		CSingleUserRecipientFilter user( (CBasePlayer *)pPlayer );
+		user.MakeReliable();
+		UserMessageBegin( user, "HintText" );
+		WRITE_BYTE( 1 );	// one message
+		WRITE_STRING( STRING(NULL_STRING) );
 		MessageEnd();
 	}
 }

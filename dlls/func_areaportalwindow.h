@@ -39,8 +39,12 @@ public:
 // CFuncAreaPortalBase stuff.
 public:
 
-	virtual bool	UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor );
+	virtual bool	UpdateVisibility( const Vector &vOrigin, float fovDistanceAdjustFactor, bool &bIsOpenOnClient );
 
+
+public:
+	// Returns false if the viewer is past the fadeout distance.
+	bool IsWindowOpen( const Vector &vOrigin, float fovDistanceAdjustFactor );
 
 public:
 	

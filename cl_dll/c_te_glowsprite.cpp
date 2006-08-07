@@ -1,19 +1,16 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
-// $Workfile:     $
-// $Date:         $
-//
-//-----------------------------------------------------------------------------
-// $Log: $
-//
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
+
 #include "cbase.h"
 #include "c_basetempentity.h"
 #include "c_te_legacytempents.h"
 #include "tempent.h"
+#include "tier1/keyvalues.h"
+#include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -40,6 +37,19 @@ public:
 	int				m_nBrightness;
 };
 
+
+//-----------------------------------------------------------------------------
+// Networking
+//-----------------------------------------------------------------------------
+IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEGlowSprite, DT_TEGlowSprite, CTEGlowSprite)
+	RecvPropVector( RECVINFO(m_vecOrigin)),
+	RecvPropInt( RECVINFO(m_nModelIndex)),
+	RecvPropFloat( RECVINFO(m_fScale )),
+	RecvPropFloat( RECVINFO(m_fLife )),
+	RecvPropInt( RECVINFO(m_nBrightness)),
+END_RECV_TABLE()
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -60,8 +70,40 @@ C_TEGlowSprite::~C_TEGlowSprite( void )
 }
 
 //-----------------------------------------------------------------------------
+// Recording 
+//-----------------------------------------------------------------------------
+static inline void RecordGlowSprite( const Vector &start, int nModelIndex, 
+	float flDuration, float flSize, int nBrightness )
+{
+	if ( !ToolsEnabled() )
+		return;
+
+	if ( clienttools->IsInRecordingMode() )
+	{
+		const model_t* pModel = (nModelIndex != 0) ? modelinfo->GetModel( nModelIndex ) : NULL;
+		const char *pModelName = pModel ? modelinfo->GetModelName( pModel ) : "";
+
+		KeyValues *msg = new KeyValues( "TempEntity" );
+
+ 		msg->SetInt( "te", TE_GLOW_SPRITE );
+ 		msg->SetString( "name", "TE_GlowSprite" );
+		msg->SetFloat( "time", gpGlobals->curtime );
+		msg->SetFloat( "originx", start.x );
+		msg->SetFloat( "originy", start.y );
+		msg->SetFloat( "originz", start.z );
+  		msg->SetString( "model", pModelName );
+		msg->SetFloat( "duration", flDuration );
+		msg->SetFloat( "size", flSize );
+		msg->SetInt( "brightness", nBrightness );
+
+		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
+		msg->deleteThis();
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : bool - 
 //-----------------------------------------------------------------------------
 void C_TEGlowSprite::PostDataUpdate( DataUpdateType_t updateType )
 {
@@ -71,6 +113,7 @@ void C_TEGlowSprite::PostDataUpdate( DataUpdateType_t updateType )
 	{
 		ent->bounceFactor = 0.2;
 	}
+	RecordGlowSprite( m_vecOrigin, m_nModelIndex, m_fLife, m_fScale, m_nBrightness );
 }
 
 void TE_GlowSprite( IRecipientFilter& filter, float delay,
@@ -82,12 +125,21 @@ void TE_GlowSprite( IRecipientFilter& filter, float delay,
 	{
 		ent->bounceFactor = 0.2;
 	}
+	RecordGlowSprite( *pos, modelindex, life, size, brightness );
 }
 
-IMPLEMENT_CLIENTCLASS_EVENT_DT(C_TEGlowSprite, DT_TEGlowSprite, CTEGlowSprite)
-	RecvPropVector( RECVINFO(m_vecOrigin)),
-	RecvPropInt( RECVINFO(m_nModelIndex)),
-	RecvPropFloat( RECVINFO(m_fScale )),
-	RecvPropFloat( RECVINFO(m_fLife )),
-	RecvPropInt( RECVINFO(m_nBrightness)),
-END_RECV_TABLE()
+void TE_GlowSprite( IRecipientFilter& filter, float delay, KeyValues *pKeyValues )
+{
+	Vector vecOrigin;
+	vecOrigin.x = pKeyValues->GetFloat( "originx" );
+	vecOrigin.y = pKeyValues->GetFloat( "originy" );
+	vecOrigin.z = pKeyValues->GetFloat( "originz" );
+	const char *pModelName = pKeyValues->GetString( "model" );
+	int nModelIndex = pModelName[0] ? modelinfo->GetModelIndex( pModelName ) : 0;
+	float flDuration = pKeyValues->GetFloat( "duration" );
+	float flSize = pKeyValues->GetFloat( "size" );
+	int nBrightness = pKeyValues->GetFloat( "brightness" );
+
+	TE_GlowSprite( filter, delay, &vecOrigin, nModelIndex, flDuration, flSize, nBrightness );
+}
+

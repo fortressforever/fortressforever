@@ -13,7 +13,7 @@
 
 #include "vgui/keycode.h"
 
-class IGameUIFuncs
+abstract_class IGameUIFuncs
 {
 public:
 	virtual bool		IsKeyDown( char const *keyname, bool& isdown ) = 0;

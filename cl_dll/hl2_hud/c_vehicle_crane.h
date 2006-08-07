@@ -36,10 +36,10 @@ public:
 	virtual void GetVehicleViewPosition( int nRole, Vector *pOrigin, QAngle *pAngles );
 	virtual void GetVehicleFOV( float &flFOV ) { flFOV = 0.0f; }
 	virtual void DrawHudElements();
-	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_DRIVER ) { return false; }
+	virtual bool IsPassengerUsingStandardWeapons( int nRole = VEHICLE_ROLE_DRIVER ) { return false; }
 	virtual void UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUserCmd *pCmd ) {}
-	virtual C_BasePlayer* GetPassenger( int nRole );
-	virtual int	GetPassengerRole( C_BasePlayer *pEnt );
+	virtual C_BaseCombatCharacter* GetPassenger( int nRole );
+	virtual int	GetPassengerRole( C_BaseCombatCharacter *pPassenger );
 	virtual void GetVehicleClipPlanes( float &flZNear, float &flZFar ) const;
 	virtual int GetPrimaryAmmoType() const { return -1; }
 	virtual int GetPrimaryAmmoCount() const { return -1; }

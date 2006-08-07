@@ -57,7 +57,7 @@ const int SIZE_BLOCK_NAME_BUF = 31 + 1;
 
 //-------------------------------------
 
-class ISaveRestoreBlockHandler
+abstract_class ISaveRestoreBlockHandler
 {
 public:
 	virtual const char *GetBlockName() = 0;
@@ -75,7 +75,7 @@ public:
 
 //-------------------------------------
 
-class ISaveRestoreBlockSet : public ISaveRestoreBlockHandler
+abstract_class ISaveRestoreBlockSet : public ISaveRestoreBlockHandler
 {
 public:
 	virtual void AddBlockHandler( ISaveRestoreBlockHandler *pHandler ) = 0;
@@ -87,7 +87,7 @@ extern ISaveRestoreBlockSet *g_pGameSaveRestoreBlockSet;
 
 //-------------------------------------
 
-class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
+abstract_class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
 {
 	virtual const char *GetBlockName() = 0;
 
@@ -108,7 +108,7 @@ class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
 //
 //-----------------------------------------------------------------------------
 
-class ISave
+abstract_class ISave
 {
 public:
 
@@ -213,7 +213,7 @@ protected:
 //
 //-----------------------------------------------------------------------------
 
-class IRestore
+abstract_class IRestore
 {
 public:
 
@@ -316,7 +316,7 @@ struct SaveRestoreFieldInfo_t
 	typedescription_t *pTypeDesc;
 };
 
-class ISaveRestoreOps
+abstract_class ISaveRestoreOps
 {
 public:
 	// save data type interface

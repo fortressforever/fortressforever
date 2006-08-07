@@ -19,7 +19,11 @@ BEGIN_RECV_TABLE_NOBASE( C_HL2PlayerLocalData, DT_HL2Local )
 	RecvPropInt( RECVINFO(m_iSquadMedicCount) ),
 	RecvPropBool( RECVINFO(m_fSquadInFollowMode) ),
 	RecvPropBool( RECVINFO(m_bWeaponLowered) ),
+	RecvPropEHandle( RECVINFO(m_hAutoAimTarget) ),
+	RecvPropVector( RECVINFO(m_vecAutoAimPoint) ),
 	RecvPropEHandle( RECVINFO(m_hLadder) ),
+	RecvPropBool( RECVINFO(m_bDisplayReticle) ),
+	RecvPropBool( RECVINFO(m_bStickyAutoAim) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA_NO_BASE( C_HL2PlayerLocalData )

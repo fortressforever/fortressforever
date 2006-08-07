@@ -28,6 +28,10 @@
 class CDecalEmitterSystem : public IDecalEmitterSystem, public CAutoGameSystem
 {
 public:
+	CDecalEmitterSystem( char const *name ) : CAutoGameSystem( name )
+	{
+	}
+
 	virtual bool		Init();
 	virtual void		Shutdown();
 	virtual void		LevelInitPreEntity();
@@ -93,7 +97,7 @@ private:
 	CUtlDict< int, int >			m_GameMaterialTranslation;
 };
 
-static CDecalEmitterSystem g_DecalSystem;
+static CDecalEmitterSystem g_DecalSystem( "CDecalEmitterSystem" );
 IDecalEmitterSystem *decalsystem = &g_DecalSystem;
 
 //-----------------------------------------------------------------------------
@@ -180,8 +184,11 @@ void CDecalEmitterSystem::LoadDecalsFromScript( char const *filename )
 	if ( kv )
 	{
 		KeyValues *translation = NULL;
-
+#ifndef _XBOX
 		if ( kv->LoadFromFile( filesystem, filename ) )
+#else
+		if ( kv->LoadFromFile( filesystem, filename, "GAME" ) )
+#endif
 		{
 			KeyValues *p = kv;
 			while ( p )
@@ -200,6 +207,8 @@ void CDecalEmitterSystem::LoadDecalsFromScript( char const *filename )
 
 						for ( KeyValues *sub = p->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
 						{
+							MEM_ALLOC_CREDIT();
+
 							DecalListEntry decal;
 							decal.precache_index = -1;
 							decal.name = m_DecalFileNames.AddString( sub->GetName() );

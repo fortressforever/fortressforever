@@ -5,11 +5,12 @@
 // $NoKeywords: $
 //
 //=============================================================================//
-f//========= Copyright © 1996-2003, Valve LLC, All rights reserved. ============
+//========= Copyright © 1996-2003, Valve LLC, All rights reserved. ============
 //
 // Purpose: This is the incendiary rifle.
 //
 //=============================================================================
+
 
 #include "cbase.h"
 #include "NPCEvent.h"

@@ -17,7 +17,7 @@ class CGameRules;
 class CBasePlayer;
 
 
-class IVoiceGameMgrHelper
+abstract_class IVoiceGameMgrHelper
 {
 public:
 	virtual				~IVoiceGameMgrHelper() {}

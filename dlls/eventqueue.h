@@ -64,6 +64,8 @@ public:
 	void Init( void );
 	void Clear( void ); // resets the list
 
+	void Dump( void );
+
 private:
 
 	void AddEvent( EventQueuePrioritizedEvent_t *event );

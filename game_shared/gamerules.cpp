@@ -112,7 +112,7 @@ ConVar	old_radius_damage( "old_radiusdamage", "0.0", FCVAR_REPLICATED );
 
 #ifdef CLIENT_DLL //{
 
-CGameRules::CGameRules()
+CGameRules::CGameRules() : CAutoGameSystemPerFrame( "CGameRules" )
 {
 	Assert( !g_pGameRules );
 	g_pGameRules = this;
@@ -130,7 +130,7 @@ extern bool	g_fGameOver;
 //-----------------------------------------------------------------------------
 // constructor, destructor
 //-----------------------------------------------------------------------------
-CGameRules::CGameRules()
+CGameRules::CGameRules() : CAutoGameSystemPerFrame( "CGameRules" )
 {
 	Assert( !g_pGameRules );
 	g_pGameRules = this;
@@ -255,7 +255,7 @@ void CGameRules::RefreshSkillData ( bool forceUpdate )
 #ifdef HL2_DLL
 	// HL2 current only uses one skill config file that represents MEDIUM skill level and
 	// synthesizes EASY and HARD. (sjb)
-	Q_snprintf( szExec,sizeof(szExec), "exec skill.cfg\n" );
+	Q_snprintf( szExec,sizeof(szExec), "exec skill_manifest.cfg\n" );
 
 	engine->ServerCommand( szExec );
 	engine->ServerExecute();
@@ -299,6 +299,7 @@ bool IsExplosionTraceBlocked( trace_t *ptr )
 #define ROBUST_RADIUS_PROBE_DIST 16.0f // If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
 void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore )
 {
+	const int MASK_RADIUS_DAMAGE = MASK_SHOT&(~CONTENTS_HITBOX);
 	CBaseEntity *pEntity = NULL;
 	trace_t		tr;
 	float		flAdjustedDamage, falloff;
@@ -355,7 +356,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 
 		// Check that the explosion can 'see' this entity.
 		vecSpot = pEntity->BodyTarget( vecSrc, false );
-		UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecSrc, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
 
 		if( old_radius_damage.GetBool() )
 		{
@@ -387,11 +388,11 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 						VectorNormalize( vecDeflect );
 
 						// Trace along the surface that intercepted the blast...
-						UTIL_TraceLine( tr.endpos, tr.endpos + vecDeflect * ROBUST_RADIUS_PROBE_DIST, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+						UTIL_TraceLine( tr.endpos, tr.endpos + vecDeflect * ROBUST_RADIUS_PROBE_DIST, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
 						//NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 255, 0, false, 10 );
 
 						// ...to see if there's a nearby edge that the explosion would 'spill over' if the blast were fully simulated.
-						UTIL_TraceLine( tr.endpos, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
+						UTIL_TraceLine( tr.endpos, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
 						//NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 0, 0, false, 10 );
 
 						if( tr.fraction != 1.0 && tr.DidHitWorld() )
@@ -567,6 +568,7 @@ float CGameRules::WeaponTraceEntity( CBaseEntity *pEntity, const Vector &vecStar
 void CGameRules::CreateStandardEntities()
 {
 	g_pPlayerResource = (CPlayerResource*)CBaseEntity::Create( "player_manager", vec3_origin, vec3_angle );
+	g_pPlayerResource->AddEFlags( EFL_KEEP_ON_RECREATE_ENTITIES );
 }
 
 #endif //} !CLIENT_DLL
@@ -597,9 +599,21 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
-		int tmp = collisionGroup0;
-		collisionGroup0 = collisionGroup1;
-		collisionGroup1 = tmp;
+		swap(collisionGroup0,collisionGroup1);
+	}
+
+#ifndef HL2MP
+	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
+		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
+	{
+		return false;
+	}
+#endif
+
+	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS && collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
+	{
+		// let debris and multiplayer objects collide
+		return true;
 	}
 	
 	// --------------------------------------------------------------------------
@@ -634,6 +648,13 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// or debris, but that's handled above
 	if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_INTERACTIVE_DEBRIS )
 		return false;
+
+#ifndef HL2MP
+	// This change was breaking HL2DM
+	// Adrian: TEST! Interactive Debris doesn't collide with the player.
+	if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && ( collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup1 == COLLISION_GROUP_PLAYER ) )
+		 return false;
+#endif
 
 	if ( collisionGroup0 == COLLISION_GROUP_BREAKABLE_GLASS && collisionGroup1 == COLLISION_GROUP_BREAKABLE_GLASS )
 		return false;
@@ -725,16 +746,16 @@ const char *CGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 
 void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
-	const char * name = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
+	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
+
+	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
-	if ( pPlayer->pl.netname != NULL_STRING && 
-		 STRING(pPlayer->pl.netname)[0] != 0 && 
-		 Q_strcmp( STRING(pPlayer->pl.netname), name ) )
+	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
 	{
 		char text[256];
-		Q_snprintf( text,sizeof(text), "%s changed name to %s\n", STRING(pPlayer->pl.netname), name );
+		Q_snprintf( text,sizeof(text), "%s changed name to %s\n", pszOldName, pszName );
 
 		UTIL_ClientPrintAll( HUD_PRINTTALK, text );
 
@@ -742,12 +763,12 @@ void CGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		if ( event )
 		{
 			event->SetInt( "userid", pPlayer->GetUserID() );
-			event->SetString( "oldname", STRING(pPlayer->pl.netname) );
-			event->SetString( "newname", name );
+			event->SetString( "oldname", pszOldName );
+			event->SetString( "newname", pszName );
 			gameeventmanager->FireEvent( event );
 		}
 		
-		pPlayer->pl.netname = AllocPooledString( name );
+		pPlayer->SetPlayerName( pszName );
 	}
 }
 

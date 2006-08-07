@@ -82,7 +82,6 @@ BEGIN_DATADESC( CBounceBomb )
 	DEFINE_FIELD( m_iFlipAttempts, FIELD_INTEGER ),
 
 	DEFINE_FIELD( m_flTimeGrabbed, FIELD_TIME ),
-	DEFINE_FIELD( m_flMotionEnableTime, FIELD_TIME ),
 	DEFINE_FIELD( m_iMineState, FIELD_INTEGER ),
 
 	// Physics Influence
@@ -181,6 +180,11 @@ void CBounceBomb::OnRestore()
 	{
 		UpdateLight( true, m_LastSpriteColor.r(), m_LastSpriteColor.g(), m_LastSpriteColor.b(), m_LastSpriteColor.a() );
 	}
+
+	if( VPhysicsGetObject() )
+	{
+		VPhysicsGetObject()->Wake();
+	}
 }
 	
 //---------------------------------------------------------
@@ -192,7 +196,7 @@ int CBounceBomb::DrawDebugTextOverlays(void)
 	{
 		char tempstr[512];
 		Q_snprintf(tempstr,sizeof(tempstr), pszMineStateNames[m_iMineState] );
-		NDebugOverlay::EntityText(entindex(),text_offset,tempstr,0);
+		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
 	return text_offset;
@@ -402,6 +406,7 @@ bool CBounceBomb::IsValidLocation()
 void CBounceBomb::BounceThink()
 {
 	SetNextThink( gpGlobals->curtime + 0.1 );
+	StudioFrameAdvance();
 
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
 	
@@ -459,6 +464,7 @@ void CBounceBomb::BounceThink()
 void CBounceBomb::CaptiveThink()
 {
 	SetNextThink( gpGlobals->curtime + 0.05 );
+	StudioFrameAdvance();
 
 	float phase = fabs( sin( gpGlobals->curtime * 4.0f ) );
 	phase *= BOUNCEBOMB_HOOK_RANGE;
@@ -471,6 +477,7 @@ void CBounceBomb::CaptiveThink()
 void CBounceBomb::SettleThink()
 {
 	SetNextThink( gpGlobals->curtime + 0.05 );
+	StudioFrameAdvance();
 
 	if( GetParent() )
 	{
@@ -569,7 +576,7 @@ void CBounceBomb::SettleThink()
 //---------------------------------------------------------
 int CBounceBomb::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	if( m_pConstraint )
+	if( m_pConstraint || !VPhysicsGetObject())
 	{
 		return false;
 	}
@@ -708,9 +715,17 @@ float CBounceBomb::FindNearestNPC()
 
 		if( pNPC->IsAlive() )
 		{
+			// ignore hidden objects
+			if ( pNPC->IsEffectActive( EF_NODRAW ) )
+				continue;
+
 			// Don't bother with NPC's that are below me.
 			if( pNPC->EyePosition().z < GetAbsOrigin().z )
 				continue;
+
+			// Disregard things that want to be disregarded
+			if( pNPC->Classify() == CLASS_NONE )
+				continue; 
 
 			// Disregard bullseyes
 			if( pNPC->Classify() == CLASS_BULLSEYE )
@@ -787,11 +802,16 @@ bool CBounceBomb::IsFriend( CBaseEntity *pEntity )
 	int classify = pEntity->Classify();
 	bool bIsCombine = false;
 
+	// Unconditional enemies to combine and Player.
+	if( classify == CLASS_ZOMBIE || classify == CLASS_HEADCRAB )
+	{
+		return false;
+	}
+
   	if( classify == CLASS_METROPOLICE	|| 
   		classify == CLASS_COMBINE		||
   		classify == CLASS_MILITARY		||
-  		classify == CLASS_SCANNER		||
-		classify == CLASS_NONE )
+  		classify == CLASS_SCANNER )
 	{
 		bIsCombine = true;
 	}
@@ -817,14 +837,19 @@ void CBounceBomb::SearchThink()
 		return;
 	}
 
+	if(	(CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI) )
+	{
+		if( IsAwake() )
+		{
+			Wake(false);
+		}
+
+		SetNextThink( gpGlobals->curtime + 0.5 );
+		return;
+	}
+
 	SetNextThink( gpGlobals->curtime + 0.1 );
 	StudioFrameAdvance();
-
-	if( !VPhysicsGetObject()->IsMoveable () && m_flMotionEnableTime > gpGlobals->curtime )
-	{
-		// Motion was disabled to prevent physgun punting from moving a mine that's locked down. Unlock me!
-		VPhysicsGetObject()->EnableMotion( true );
-	}
 
 	if( m_pConstraint && gpGlobals->curtime - m_flTimeGrabbed >= 1.0f )
 	{
@@ -881,7 +906,21 @@ void CBounceBomb::ExplodeTouch( CBaseEntity *pOther )
 
 	// Don't touch gibs and other debris
 	if( pOther->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
+	{
+		if( hl2_episodic.GetBool() )
+		{
+			Vector vecVelocity;
+
+			VPhysicsGetObject()->GetVelocity( &vecVelocity, NULL );
+
+			if( vecVelocity == vec3_origin )
+			{
+				ExplodeThink();
+			}
+		}
+
 		return;
+	}
 
 	// Don't detonate against the world if not allowed. Actually, don't
 	// detonate against anything that's probably not an NPC (such as physics props)
@@ -933,10 +972,16 @@ void CBounceBomb::OpenHooks( bool bSilent )
 	{
 		// It's possible to not have a valid physics object here, since this function doubles as an initialization function.
 		PhysClearGameFlags( VPhysicsGetObject(), FVPHYSICS_CONSTRAINT_STATIC );
+
+		VPhysicsGetObject()->EnableMotion( true );
 	}
 
 	SetPoseParameter( m_iAllHooks, BOUNCEBOMB_HOOK_RANGE );
-	StudioFrameAdvance();
+
+#ifdef _XBOX 
+	RemoveEffects( EF_NOSHADOW );
+#endif
+
 }
 
 //---------------------------------------------------------
@@ -958,10 +1003,15 @@ void CBounceBomb::CloseHooks()
 	m_bLockSilently = false;
 
 	SetPoseParameter( m_iAllHooks, 0 );
-	StudioFrameAdvance();
+
+	VPhysicsGetObject()->EnableMotion( false );
 
 	// Once I lock down, forget how many tries it took.
 	m_iFlipAttempts = 0;
+
+#ifdef _XBOX 
+	AddEffects( EF_NOSHADOW );
+#endif
 }
 
 //---------------------------------------------------------
@@ -1006,6 +1056,7 @@ void CBounceBomb::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason
 	{
 		// Set to lock down to ground again.
 		m_bPlacedByPlayer = true;
+		OpenHooks( true );
 		SetMineState( MINE_STATE_DEPLOY );
 	}
 	else if ( Reason == LAUNCHED_BY_CANNON )
@@ -1042,6 +1093,12 @@ void CBounceBomb::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t re
 			UpdateLight( true, 255, 255, 0, 190 );
 			m_flTimeGrabbed = gpGlobals->curtime;
 			m_bHeldByPhysgun = true;
+
+			VPhysicsGetObject()->EnableMotion( true );
+
+			// Try to scatter NPCs without panicking them. Make a move away sound up around their 
+			// ear level.
+			CSoundEnt::InsertSound( SOUND_MOVE_AWAY, GetAbsOrigin() + Vector( 0, 0, 60), 32.0f, 0.2f );
 			return;
 		}
 		else
@@ -1068,32 +1125,22 @@ void CBounceBomb::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t re
 
 	if( reason == PUNTED_BY_CANNON )
 	{
-		if( m_iMineState == MINE_STATE_ARMED )
+		if( m_iMineState == MINE_STATE_TRIGGERED || m_iMineState == MINE_STATE_ARMED )
 		{
-			// Disable motion so that the mine doesn't spin on its ballsocket. Motion will be reenabled on next think.
-			// This prevents the player using punt to knock a mine around that's locked down.
-			VPhysicsGetObject()->EnableMotion( false );
-			m_flMotionEnableTime = gpGlobals->curtime + 0.1f;
+			// Already set to blow
+			return;
 		}
-		else
-		{
-			if( m_iMineState == MINE_STATE_TRIGGERED )
-			{
-				// Already set to blow
-				return;
-			}
 
-			m_bDisarmed = false;
-			m_bPlacedByPlayer = true;
-			SetTouch( NULL );
-			SetThink( &CBounceBomb::SettleThink );
-			SetNextThink( gpGlobals->curtime + 0.1);
+		m_bDisarmed = false;
+		m_bPlacedByPlayer = true;
+		SetTouch( NULL );
+		SetThink( &CBounceBomb::SettleThink );
+		SetNextThink( gpGlobals->curtime + 0.1);
 
-			// Since being punted causes the mine to flip, sometimes it 'catches an edge'
-			// and ends up touching the ground from whence it came, exploding instantly. 
-			// This little stunt prevents that by ignoring world collisions for a very short time.
-			m_flIgnoreWorldTime = gpGlobals->curtime + 0.1;
-		}
+		// Since being punted causes the mine to flip, sometimes it 'catches an edge'
+		// and ends up touching the ground from whence it came, exploding instantly. 
+		// This little stunt prevents that by ignoring world collisions for a very short time.
+		m_flIgnoreWorldTime = gpGlobals->curtime + 0.1;
 	}
 }
 

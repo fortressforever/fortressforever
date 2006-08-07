@@ -20,8 +20,8 @@
 class CVertCorners
 {
 public:
-	int		m_Corner1[2];
-	int		m_Corner2[2];
+	short	m_Corner1[2];
+	short	m_Corner2[2];
 };
 
 
@@ -30,7 +30,7 @@ public:
 // ------------------------------------------------------------------------ //
 
 // This points at vertices to the side of a node (north, south, east, west).
-static int g_SideVertMul[4][2] = { {1,0}, {0,1}, {-1,0}, {0,-1} };
+static short g_SideVertMul[4][2] = { {1,0}, {0,1}, {-1,0}, {0,-1} };
 
 static CVertCorners g_SideVertCorners[4] =
 {

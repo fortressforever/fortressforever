@@ -41,7 +41,7 @@ static colorentry_t commandercolors[] =
 
 static colorentry_t bloodcolors[] =
 {
-	{ BLOOD_COLOR_RED,		64,		0,		0	},
+	{ BLOOD_COLOR_RED,		72,		0,		0	},
 	{ BLOOD_COLOR_YELLOW,	195,	195,	0	},
 	{ BLOOD_COLOR_MECH,		20,		20,		20	},
 };

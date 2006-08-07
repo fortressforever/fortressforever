@@ -1,10 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
+
 
 #include "cbase.h"
 #include "particlemgr.h"
@@ -17,6 +18,7 @@
 #include "tier0/vprof.h"
 #include "engine/ivdebugoverlay.h"
 #include "view.h"
+#include "keyvalues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,6 +29,7 @@ int			g_nParticlesDrawn;
 static ConVar r_DrawParticles("r_drawparticles", "1", FCVAR_CHEAT, "Enable/disable particle rendering");
 static ConVar particle_simulateoverflow( "particle_simulateoverflow", "0", FCVAR_CHEAT, "Used for stress-testing particle systems. Randomly denies creation of particles." );
 static ConVar cl_particleeffect_aabb_buffer( "cl_particleeffect_aabb_buffer", "2", FCVAR_CHEAT, "Add this amount to a particle effect's bbox in the leaf system so if it's growing slowly, it won't have to be reinserted as often." );
+static ConVar cl_particles_show_bbox( "cl_particles_show_bbox", "0", FCVAR_CHEAT );
 
 #define BUCKET_SORT_EVERY_N		8			// It does a bucket sort for each material approximately every N times.
 #define BBOX_UPDATE_EVERY_N		8			// It does a full bbox update (checks all particles instead of every eighth one).
@@ -40,9 +43,23 @@ static ConVar cl_particleeffect_aabb_buffer( "cl_particleeffect_aabb_buffer", "2
 
 #define PARTICLE_SIZE	96
 
-CParticleMgr g_ParticleMgr;
-bool g_bParticleMgrConstructed = false; // makes sure it isn't used from constructors.
+CParticleMgr *ParticleMgr()
+{
+	static CParticleMgr s_ParticleMgr;
+	return &s_ParticleMgr;
+}
 
+//-----------------------------------------------------------------------------
+// Particle implementation
+//-----------------------------------------------------------------------------
+
+void Particle::ToolRecordParticle( KeyValues *msg )
+{
+	msg->SetPtr( "material", m_pSubTexture );
+	msg->SetFloat( "posx", m_Pos.x );
+	msg->SetFloat( "posy", m_Pos.y );
+	msg->SetFloat( "posz", m_Pos.z );
+}
 
 
 //-----------------------------------------------------------------------------
@@ -117,6 +134,8 @@ CParticleEffectBinding::CParticleEffectBinding()
 	m_FrameCode = 0;
 	m_ListIndex = 0xFFFF; 
 
+	m_UpdateBBoxCounter = 0;
+
 	memset( m_EffectMaterialHash, 0, sizeof( m_EffectMaterialHash ) );
 }
 
@@ -154,6 +173,13 @@ const QAngle& CParticleEffectBinding::GetRenderAngles( void )
 	return vec3_angle;
 }
 
+const matrix3x4_t &	CParticleEffectBinding::RenderableToWorldTransform()
+{
+	static matrix3x4_t mat;
+	SetIdentityMatrix( mat );
+	PositionMatrix( GetRenderOrigin(), mat );
+	return mat;
+}
 
 void CParticleEffectBinding::GetRenderBounds( Vector& mins, Vector& maxs )
 {
@@ -218,8 +244,15 @@ void CParticleEffectBinding::BBoxCalcStart( bool bFullBBoxUpdate, Vector &bbMin,
 	else
 	{
 		// We're going to push out the bbox using just some of the particles.
-		bbMin = m_Min;
-		bbMax = m_Max;
+		if ( m_bLocalSpaceTransformIdentity )
+		{
+			bbMin = m_Min;
+			bbMax = m_Max;
+		}
+		else
+		{
+			ITransformAABB( m_LocalSpaceTransform.As3x4(), m_Min, m_Max, bbMin, bbMax );
+		}
 	}
 }
 
@@ -244,7 +277,7 @@ void CParticleEffectBinding::BBoxCalcEnd( bool bFullBBoxUpdate, bool bboxSet, Ve
 	if( bFullBBoxUpdate )
 	{
 		// If there were ANY particles in the system, then we've got a valid bbox here. Otherwise,
-		// we don't have anything, so leave m_Min and m_Max at the origin.
+		// we don't have anything, so leave m_Min and m_Max at the sort origin.
 		if ( bboxSet )
 		{
 			m_Min = bbMinWorld;
@@ -252,8 +285,7 @@ void CParticleEffectBinding::BBoxCalcEnd( bool bFullBBoxUpdate, bool bboxSet, Ve
 		}
 		else
 		{
-			m_Min.Init( 0, 0, 0 );
-			m_Max.Init( 0, 0, 0 );
+			m_Min = m_Max = m_pSim->GetSortOrigin();
 		}
 	}
 	else
@@ -275,34 +307,24 @@ int CParticleEffectBinding::DrawModel( int flags )
 
 	Assert( flags != 0 );
 
-
 	// If we're in commander mode and it's trying to draw the effect,
 	// exit out. If the effect has FLAGS_ALWAYSSIMULATE set, then it'll come back
 	// in here and simulate at the end of the frame.
 	if( !g_pClientMode->ShouldDrawParticles() )
 		return 0;
 
-
-	// Track how much time we spend in here.
-	// CTimeAdder adder( &g_ParticleTimer );
-
-
 	SetDrawn( true );
-	
 	
 	// Don't do anything if there are no particles.
 	if( !m_nActiveParticles )
 		return 1;
 
-	
 	// Reset the transformation matrix to identity.
 	VMatrix mTempModel, mTempView;
 	RenderStart( mTempModel, mTempView );
 
-
 	// Setup to redo our bbox?
 	bool bBucketSort = random->RandomInt( 0, BUCKET_SORT_EVERY_N ) == 0;
-
 
 	// Set frametime to zero if we've already rendered this frame.
 	float flFrameTime = 0;
@@ -312,7 +334,6 @@ int CParticleEffectBinding::DrawModel( int flags )
 		flFrameTime = Helper_GetFrameTime();
 	}
 
-
 	// For each material, render...
 	// This does an incremental bubble sort. It only does one pass every frame, and it will shuffle 
 	// unsorted particles one step towards where they should be.
@@ -321,7 +342,7 @@ int CParticleEffectBinding::DrawModel( int flags )
 	{
 		CEffectMaterial *pMaterial = m_Materials[iMaterial];
 		
-		if( pMaterial->m_pGroup->m_pPageMaterial && pMaterial->m_pGroup->m_pPageMaterial->NeedsPowerOfTwoFrameBufferTexture() )
+		if ( pMaterial->m_pGroup->m_pPageMaterial && pMaterial->m_pGroup->m_pPageMaterial->NeedsPowerOfTwoFrameBufferTexture() )
 		{
 			UpdateRefractTexture();
 		}
@@ -333,9 +354,7 @@ int CParticleEffectBinding::DrawModel( int flags )
 			bWireframe );
 	}
 
-	extern ConVar mat_wireframe;
-
-	if( mat_wireframe.GetBool() )
+	if ( mat_wireframe.GetBool() )
 	{
 		bWireframe = true;
 		FOR_EACH_LL( m_Materials, iDrawMaterial )
@@ -348,6 +367,30 @@ int CParticleEffectBinding::DrawModel( int flags )
 				flFrameTime,
 				bWireframe );
 		}
+	}
+
+	if ( !IsRetail() && cl_particles_show_bbox.GetBool() )
+	{
+		Vector center = (m_Min + m_Max)/2;
+		Vector mins   = m_Min - center;
+		Vector maxs   = m_Max - center;
+	
+		int r, g;
+		if ( m_Flags & FLAGS_AUTOUPDATEBBOX )
+		{
+			// red is bad, the bbox update is costly
+			r = 255;
+			g = 0;
+		}
+		else
+		{
+			// green, this effect presents less cpu load 
+			r = 0;
+			g = 255;
+		}
+		
+		debugoverlay->AddBoxOverlay( center, mins, maxs, QAngle( 0, 0, 0 ), r, g, 0, 16, 0 );
+		debugoverlay->AddTextOverlayRGB( center, 0, 0, r, g, 0, 64, "%s:(%d)", m_pSim->GetEffectName(), m_nActiveParticles );
 	}
 
 	RenderEnd( mTempModel, mTempView );
@@ -427,6 +470,12 @@ void CParticleEffectBinding::SetLocalSpaceTransform( const matrix3x4_t &transfor
 
 bool CParticleEffectBinding::EnlargeBBoxToContain( const Vector &pt )
 {
+	if ( m_nActiveParticles == 0 )
+	{
+		m_Min = m_Max = pt;
+		return true;
+	}
+
 	bool bHasChanged = false;
 
 	// check min bounds
@@ -491,13 +540,13 @@ void CParticleEffectBinding::DetectChanges()
 }
 
 
-void CParticleEffectBinding::GrowBBoxFromParticlePositions( CEffectMaterial *pMaterial, bool bBucketSort, bool &bboxSet, Vector &bbMin, Vector &bbMax )
+void CParticleEffectBinding::GrowBBoxFromParticlePositions( CEffectMaterial *pMaterial, bool bFullBBoxUpdate, bool &bboxSet, Vector &bbMin, Vector &bbMax )
 {
 	// If its bbox is manually set, don't bother updating it here.
 	if ( !GetAutoUpdateBBox() )
 		return;
 
-	if( bBucketSort )
+	if ( bFullBBoxUpdate )
 	{
 		for( Particle *pCur=pMaterial->m_Particles.m_pNext; pCur != &pMaterial->m_Particles; pCur=pCur->m_pNext )
 		{
@@ -507,29 +556,32 @@ void CParticleEffectBinding::GrowBBoxFromParticlePositions( CEffectMaterial *pMa
 			bboxSet = true;
 		}
 	}
-	else
-	{
-		int iParticle = 0;
-		for( Particle *pCur=pMaterial->m_Particles.m_pNext; pCur != &pMaterial->m_Particles; pCur=pCur->m_pNext )
-		{
-			// Since we're not doing the full bounding box update, just test every eighth
-			// particle and make the bbox bigger if necessary.
-			if( (iParticle++ & 7) == 0 )
-			{
-				VectorMin( bbMin, pCur->m_Pos, bbMin );
-				VectorMax( bbMax, pCur->m_Pos, bbMax );
-			}
-		}
-	}
 }
 
 
+//-----------------------------------------------------------------------------
+// Simulate particles
+//-----------------------------------------------------------------------------
 void CParticleEffectBinding::SimulateParticles( float flTimeDelta )
 {
+	if ( !m_pSim->ShouldSimulate() )
+		return;
+
 	Vector bbMin(0,0,0), bbMax(0,0,0);
 	bool bboxSet = false;
 
-	bool bFullBBoxUpdate = random->RandomInt( 0, BBOX_UPDATE_EVERY_N ) == 0;
+	// slow the expensive update operation for particle systems that use auto-update-bbox
+	// auto update the bbox after N frames then randomly 1/N or after 2*N frames 
+	bool bFullBBoxUpdate = false;
+	++m_UpdateBBoxCounter;
+	if ( ( m_UpdateBBoxCounter >= BBOX_UPDATE_EVERY_N && random->RandomInt( 0, BBOX_UPDATE_EVERY_N ) == 0 ) ||
+		( m_UpdateBBoxCounter >= 2*BBOX_UPDATE_EVERY_N ) )
+	{
+		bFullBBoxUpdate = true;
+
+		// reset watchdog
+		m_UpdateBBoxCounter = 0;
+	}
 
 	BBoxCalcStart( bFullBBoxUpdate, bbMin, bbMax );
 
@@ -687,7 +739,7 @@ void CParticleEffectBinding::RenderEnd( VMatrix &tempModel, VMatrix &tempView )
 {
 	if( IsEffectCameraSpace() )
 	{
-		// Make user clip planes workd normally
+		// Make user clip planes work normally
 		m_pParticleMgr->m_pMaterialSystem->EnableUserClipTransformOverride( false );
 
 		// Reset the model matrix.
@@ -724,7 +776,12 @@ void CParticleEffectBinding::DoBucketSort( CEffectMaterial *pMaterial, float *zC
 		UnlinkParticle( pCur );
 
 		// Add it to the appropriate bucket.
-		float flPercent = (zCoords[iCurParticle] - minZ) / (maxZ - minZ);
+		float flPercent;
+		if (maxZ == minZ)
+			flPercent = 0;
+		else
+			flPercent = (zCoords[iCurParticle] - minZ) / (maxZ - minZ);
+
 		int iAddBucket = (int)( flPercent * (NUM_BUCKETS - 0.0001f) );
 		iAddBucket = NUM_BUCKETS - iAddBucket - 1;
 		Assert( iAddBucket >= 0 && iAddBucket < NUM_BUCKETS );
@@ -762,7 +819,7 @@ void CParticleEffectBinding::Init( CParticleMgr *pMgr, IParticleEffect *pSim )
 
 void CParticleEffectBinding::Term()
 {
-	if( !m_pParticleMgr || !g_bParticleMgrConstructed )
+	if ( !m_pParticleMgr )
 		return;
 
 	// Free materials.
@@ -805,14 +862,14 @@ void CParticleEffectBinding::RemoveParticle( Particle *pParticle )
 
 bool CParticleEffectBinding::RecalculateBoundingBox()
 {
-	if( m_nActiveParticles == 0 )
+	if ( m_nActiveParticles == 0 )
 	{
 		m_Max = m_Min = m_pSim->GetSortOrigin();
 		return false;
 	}
 
-	m_Min.Init(  1e28,  1e28,  1e28 );
-	m_Max.Init( -1e28, -1e28, -1e28 );
+	Vector bbMin(  1e28,  1e28,  1e28 );
+	Vector bbMax( -1e28, -1e28, -1e28 );
 
 	FOR_EACH_LL( m_Materials, iMaterial )
 	{
@@ -820,9 +877,20 @@ bool CParticleEffectBinding::RecalculateBoundingBox()
 		
 		for( Particle *pCur=pMaterial->m_Particles.m_pNext; pCur != &pMaterial->m_Particles; pCur=pCur->m_pNext )
 		{
-			VectorMin( m_Min, pCur->m_Pos, m_Min );
-			VectorMax( m_Max, pCur->m_Pos, m_Max );
+			VectorMin( bbMin, pCur->m_Pos, bbMin );
+			VectorMax( bbMax, pCur->m_Pos, bbMax );
 		}
+	}
+
+	// Get the bbox into world space.
+	if ( m_bLocalSpaceTransformIdentity )
+	{
+		m_Min = bbMin;
+		m_Max = bbMax;
+	}
+	else
+	{
+		TransformAABB( m_LocalSpaceTransform.As3x4(), bbMin, bbMax, m_Min, m_Max );
 	}
 
 	return true;
@@ -855,12 +923,11 @@ CEffectMaterial* CParticleEffectBinding::GetEffectMaterial( CParticleSubTexture 
 
 CParticleMgr::CParticleMgr()
 {
-	m_pParticleBucket = NULL;
+	m_nToolParticleEffectId = 0;
 	m_bUpdatingEffects = false;
 	m_pMaterialSystem = NULL;
 
 	memset( &m_DirectionalLight, 0, sizeof( m_DirectionalLight ) );
-	g_bParticleMgrConstructed = true;
 
 	m_FrameCode = 1;
 
@@ -868,12 +935,15 @@ CParticleMgr::CParticleMgr()
 	m_DefaultInvalidSubTexture.m_pMaterial = NULL;
 	m_DefaultInvalidSubTexture.m_tCoordMins[0] = m_DefaultInvalidSubTexture.m_tCoordMins[1] = 0;
 	m_DefaultInvalidSubTexture.m_tCoordMaxs[0] = m_DefaultInvalidSubTexture.m_tCoordMaxs[1] = 1;
+	
+	m_nCurrentParticlesAllocated = 0;
+
+	SetDefLessFunc( m_effectFactories );
 }
 
 CParticleMgr::~CParticleMgr()
 {
 	Term();
-	g_bParticleMgrConstructed = false;
 }
 
 
@@ -885,10 +955,6 @@ bool CParticleMgr::Init(unsigned long count, IMaterialSystem *pMaterials)
 	Term();
 
 	m_pMaterialSystem = pMaterials;
-
-	m_pParticleBucket = new CMemoryPool( PARTICLE_SIZE, count, CMemoryPool::GROW_NONE, "CParticleMgr::m_pParticleBucket" );
-	if ( !m_pParticleBucket )
-		return false;
 
 	return true;
 }
@@ -912,24 +978,91 @@ void CParticleMgr::Term()
 		m_pMaterialSystem->UncacheUnusedMaterials();
 	}
 	m_pMaterialSystem = NULL;
-
-	delete m_pParticleBucket;
-	m_pParticleBucket = NULL;
+	
+	Assert( m_nCurrentParticlesAllocated == 0 );
 }
 
 Particle *CParticleMgr::AllocParticle( int size )
 {
-	if ( !m_pParticleBucket )
+	// Enforce max particle limit.
+	if ( m_nCurrentParticlesAllocated >= MAX_TOTAL_PARTICLES )
 		return NULL;
+		
+	Particle *pRet = (Particle *)malloc( size );
+	if ( pRet )
+		++m_nCurrentParticlesAllocated;
 
-	return (Particle *)m_pParticleBucket->Alloc( size );
+	return pRet;
 }
 
 void CParticleMgr::FreeParticle( Particle *pParticle )
 {
-	Assert( m_pParticleBucket );
-	m_pParticleBucket->Free( pParticle );
+	Assert( m_nCurrentParticlesAllocated > 0 );
+	if ( pParticle )
+		--m_nCurrentParticlesAllocated;
+	
+	free( pParticle );
 }
+
+
+
+//-----------------------------------------------------------------------------
+// add a class that gets notified of entity events
+//-----------------------------------------------------------------------------
+
+void CParticleMgr::AddEffectListener( IClientParticleListener *pListener )
+{
+	int i = m_effectListeners.Find( pListener );
+	if ( !m_effectListeners.IsValidIndex( i ) )
+	{
+		m_effectListeners.AddToTail( pListener );
+	}
+}
+
+void CParticleMgr::RemoveEffectListener( IClientParticleListener *pListener )
+{
+	int i = m_effectListeners.Find( pListener );
+	if ( m_effectListeners.IsValidIndex( i ) )
+	{
+		m_effectListeners.Remove( i );
+	}
+}
+
+
+
+//-----------------------------------------------------------------------------
+// registers effects classes, and create instances of these effects classes
+//-----------------------------------------------------------------------------
+
+void CParticleMgr::RegisterEffect( const char *pEffectType, CreateParticleEffectFN func )
+{
+#ifdef _DEBUG
+	int i = m_effectFactories.Find( pEffectType );
+	Assert( !m_effectFactories.IsValidIndex( i ) );
+#endif
+
+	m_effectFactories.Insert( pEffectType, func );
+}
+
+IParticleEffect *CParticleMgr::CreateEffect( const char *pEffectType )
+{
+	int i = m_effectFactories.Find( pEffectType );
+	if ( !m_effectFactories.IsValidIndex( i ) )
+	{
+		Msg( "CParticleMgr::CreateEffect: factory not found for effect '%s'\n", pEffectType );
+		return NULL;
+	}
+
+	CreateParticleEffectFN func = m_effectFactories[ i ];
+	if ( func == NULL )
+	{
+		Msg( "CParticleMgr::CreateEffect: NULL factory for effect '%s'\n", pEffectType );
+		return NULL;
+	}
+
+	return func();
+}
+
 
 //-----------------------------------------------------------------------------
 // Adds and removes effects from our global list
@@ -937,10 +1070,6 @@ void CParticleMgr::FreeParticle( Particle *pParticle )
 
 bool CParticleMgr::AddEffect( CParticleEffectBinding *pEffect, IParticleEffect *pSim )
 {
-	// If you hit this, you're using something that adds itself to 
-	// the CParticleMgr in its constructor, which is evil.
-	Assert( g_bParticleMgrConstructed );
-
 #ifdef _DEBUG
 	FOR_EACH_LL( m_Effects, i )
 	{
@@ -963,6 +1092,13 @@ bool CParticleMgr::AddEffect( CParticleEffectBinding *pEffect, IParticleEffect *
 
 	Assert( pEffect->m_ListIndex != 0xFFFF );
 
+	// notify listeners
+	int nListeners = m_effectListeners.Count();
+	for ( int i = 0; i < nListeners; ++i )
+	{
+		m_effectListeners[ i ]->OnParticleEffectAdded( pSim );
+	}
+
 	return true;
 }
 
@@ -980,8 +1116,15 @@ void CParticleMgr::RemoveEffect( CParticleEffectBinding *pEffect )
 	// Return false from the Update function instead.
 	Assert( !m_bUpdatingEffects );
 
+	// notify listeners
+	int nListeners = m_effectListeners.Count();
+	for ( int i = 0; i < nListeners; ++i )
+	{
+		m_effectListeners[ i ]->OnParticleEffectRemoved( pEffect->m_pSim );
+	}
+
 	// Take it out of the leaf system.
-	ClientLeafSystem()->RemoveRenderable( pEffect->m_hRenderHandle);
+	ClientLeafSystem()->RemoveRenderable( pEffect->m_hRenderHandle );
 
 	int listIndex = pEffect->m_ListIndex;
 	if ( pEffect->m_pSim )
@@ -1043,7 +1186,6 @@ void CParticleMgr::Simulate( float flTimeDelta )
 	UpdateAllEffects( flTimeDelta );
 }
 
-
 void CParticleMgr::PostRender()
 {
 	VPROF("CParticleMgr::SimulateUndrawnEffects");
@@ -1084,7 +1226,6 @@ void CParticleMgr::UpdateAllEffects( float flTimeDelta )
 	if( flTimeDelta > 0.1f )
 		flTimeDelta = 0.1f;
 
-	
 	FOR_EACH_LL( m_Effects, iEffect )
 	{
 		CParticleEffectBinding *pEffect = m_Effects[iEffect];
@@ -1096,7 +1237,7 @@ void CParticleMgr::UpdateAllEffects( float flTimeDelta )
 		// If this is a new effect, then update its bbox so it goes in the
 		// right leaves (if it has particles).
 		int bFirstUpdate = pEffect->GetNeedsBBoxUpdate();
-		if( bFirstUpdate )
+		if ( bFirstUpdate )
 		{
 			// If the effect already disabled auto-updating of the bbox, then it should have
 			// set the bbox by now and we can ignore this responsibility here.
@@ -1242,59 +1383,74 @@ void CParticleMgr::SetDirectionalLightInfo( const CParticleLightInfo &info )
 	m_DirectionalLight = info;
 }
 
+#ifndef _RETAIL
+void CParticleMgr::SpewInfo( bool bDetail )
+{
+	DevMsg( "Particle Effect Systems:\n" );
+	FOR_EACH_LL( m_Effects, i )
+	{
+		const char *pEffectName = m_Effects[i]->m_pSim->GetEffectName();
+		DevMsg( "%3d: NumActive: %3d, AutoBBox: %3s \"%s\" \n", i, m_Effects[i]->m_nActiveParticles, m_Effects[i]->GetAutoUpdateBBox() ? "on" : "off", pEffectName );
+	}
+}
+CON_COMMAND( cl_particles_dump_effects, "" )
+{
+	ParticleMgr()->SpewInfo( true );
+}
+#endif
 
 // ------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------ //
 float Helper_GetTime()
 {
-	#if defined( PARTICLEPROTOTYPE_APP )
-		static bool bStarted = false;
-		static CCycleCount startTimer;
-		if( !bStarted )
-		{
-			bStarted = true;
-			startTimer.Sample();
-		}
+#if defined( PARTICLEPROTOTYPE_APP )
+	static bool bStarted = false;
+	static CCycleCount startTimer;
+	if( !bStarted )
+	{
+		bStarted = true;
+		startTimer.Sample();
+	}
 
-		CCycleCount curCount;
-		curCount.Sample();
+	CCycleCount curCount;
+	curCount.Sample();
 
-		CCycleCount elapsed;
-		CCycleCount::Sub( curCount, startTimer, elapsed );
+	CCycleCount elapsed;
+	CCycleCount::Sub( curCount, startTimer, elapsed );
 
-		return (float)elapsed.GetSeconds();
-	#else
-		return gpGlobals->curtime;
-	#endif
+	return (float)elapsed.GetSeconds();
+#else
+	return gpGlobals->curtime;
+#endif
 }
 
 
 float Helper_RandomFloat( float minVal, float maxVal )
 {
-	#if defined( PARTICLEPROTOTYPE_APP )
-		return Lerp( (float)rand() / RAND_MAX, minVal, maxVal );
-	#else
-		return random->RandomFloat( minVal, maxVal );
-	#endif
+#if defined( PARTICLEPROTOTYPE_APP )
+	return Lerp( (float)rand() / RAND_MAX, minVal, maxVal );
+#else
+	return random->RandomFloat( minVal, maxVal );
+#endif
 }
 
 
 int Helper_RandomInt( int minVal, int maxVal )
 {
-	#if defined( PARTICLEPROTOTYPE_APP )
-		return minVal + (rand() * (maxVal - minVal)) / RAND_MAX;
-	#else
-		return random->RandomInt( minVal, maxVal );
-	#endif
+#if defined( PARTICLEPROTOTYPE_APP )
+	return minVal + (rand() * (maxVal - minVal)) / RAND_MAX;
+#else
+	return random->RandomInt( minVal, maxVal );
+#endif
 }
 
 
 float Helper_GetFrameTime()
 {
-	#if defined( PARTICLEPROTOTYPE_APP )
-		extern float g_ParticleAppFrameTime;
-		return g_ParticleAppFrameTime;
-	#else
-		return gpGlobals->frametime;
-	#endif
+#if defined( PARTICLEPROTOTYPE_APP )
+	extern float g_ParticleAppFrameTime;
+	return g_ParticleAppFrameTime;
+#else
+	return gpGlobals->frametime;
+#endif
 }

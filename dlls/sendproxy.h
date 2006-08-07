@@ -36,10 +36,12 @@ SendProp SendPropTime(
 	int offset,
 	int sizeofVar=SIZEOF_IGNORE );
 
+#if !defined( NO_ENTITY_PREDICTION )
 SendProp SendPropPredictableId(
 	char *pVarName,
 	int offset,
 	int sizeofVar=SIZEOF_IGNORE	);
+#endif
 
 SendProp SendPropIntWithMinusOneFlag(
 	char *pVarName,

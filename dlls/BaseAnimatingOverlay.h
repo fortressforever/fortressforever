@@ -8,16 +8,32 @@
 
 // #include "BaseAnimating.h"
 
+#ifndef BASE_ANIMATING_OVERLAY_H
+#define BASE_ANIMATING_OVERLAY_H
+#ifdef _WIN32
+#pragma once
+#endif
+
+class CBaseAnimatingOverlay;
+
 class CAnimationLayer
 {
 public:	
+	DECLARE_CLASS_NOBASE( CAnimationLayer );
+	
 	CAnimationLayer( void );
-	void	Init( );
+	void	Init( CBaseAnimatingOverlay *pOverlay );
 
 	// float	SetBlending( int iBlender, float flValue, CBaseAnimating *pOwner );
 	void	StudioFrameAdvance( float flInterval, CBaseAnimating *pOwner );
 	void	DispatchAnimEvents( CBaseAnimating *eventHandler, CBaseAnimating *pOwner );
 	void	SetOrder( int nOrder );
+
+	float GetFadeout( float flCurTime );
+
+	// For CNetworkVars.
+	void NetworkStateChanged();
+	void NetworkStateChanged( void *pVar );
 
 public:	
 
@@ -32,11 +48,13 @@ public:
 
 	bool	m_bSequenceFinished;
 	bool	m_bLooping;
-	int		m_nSequence;
-	float	m_flCycle;
-	float	m_flPrevCycle;
+	
+	CNetworkVar( int, m_nSequence );
+	CNetworkVar( float, m_flCycle );
+	CNetworkVar( float, m_flPrevCycle );
+	CNetworkVar( float, m_flWeight );
+	
 	float	m_flPlaybackRate;
-	float	m_flWeight;
 
 	float	m_flBlendIn; // start and end blend frac (0.0 for now blend)
 	float	m_flBlendOut; 
@@ -44,12 +62,15 @@ public:
 	float	m_flKillRate;
 	float	m_flKillDelay;
 
+	float	m_flLayerAnimtime;
+	float	m_flLayerFadeOuttime;
+
 	// For checking for duplicates
 	Activity	m_nActivity;
 
 	// order of layering on client
 	int		m_nPriority;
-	int		m_nOrder;
+	CNetworkVar( int, m_nOrder );
 
 	bool	IsActive( void ) { return ((m_fFlags & ANIM_LAYER_ACTIVE) != 0); }
 	bool	IsAutokill( void ) { return ((m_fFlags & ANIM_LAYER_AUTOKILL) != 0); }
@@ -67,12 +88,36 @@ public:
 
 	float	m_flLastAccess;
 
+	// Network state changes get forwarded here.
+	CBaseAnimatingOverlay *m_pOwnerEntity;
+	
 	DECLARE_SIMPLE_DATADESC();
 };
 
-inline void CAnimationLayer::SetOrder( int nOrder )
+inline float CAnimationLayer::GetFadeout( float flCurTime )
 {
-	m_nOrder = nOrder;
+	float s;
+
+	if (m_flLayerFadeOuttime <= 0.0f)
+	{
+		s = 0;
+	}
+	else
+	{
+		// blend in over 0.2 seconds
+		s = 1.0 - (flCurTime - m_flLayerAnimtime) / m_flLayerFadeOuttime;
+		if (s > 0 && s <= 1.0)
+		{
+			// do a nice spline curve
+			s = 3 * s * s - 2 * s * s * s;
+		}
+		else if ( s > 1.0f )
+		{
+			// Shouldn't happen, but maybe curtime is behind animtime?
+			s = 1.0f;
+		}
+	}
+	return s;
 }
 
 
@@ -98,7 +143,7 @@ public:
 
 	virtual void	StudioFrameAdvance();
 	virtual	void	DispatchAnimEvents ( CBaseAnimating *eventHandler );
-	virtual void	GetSkeleton( Vector pos[], Quaternion q[], int boneMask );
+	virtual void	GetSkeleton( CStudioHdr *pStudioHdr, Vector pos[], Quaternion q[], int boneMask );
 
 	int		AddGestureSequence( int sequence, bool autokill = true );
 	int		AddGestureSequence( int sequence, float flDuration, bool autokill = true );
@@ -133,7 +178,7 @@ public:
 
 	Activity	GetLayerActivity( int iLayer );
 	int			GetLayerSequence( int iLayer );
-	
+
 	int		FindGestureLayer( Activity activity );
 
 	void	RemoveLayer( int iLayer, float flKillRate = 0.2, float flKillDelay = 0.0 );
@@ -144,6 +189,8 @@ public:
 	void SetNumAnimOverlays( int num );
 
 	void VerifyOrder( void );
+
+	bool	HasActiveLayer( void );
 
 private:
 	int		AllocateLayer( int iPriority = 0 ); // lower priorities are processed first
@@ -159,3 +206,26 @@ inline int CBaseAnimatingOverlay::GetNumAnimOverlays() const
 {
 	return m_AnimOverlay.Count();
 }
+
+// ------------------------------------------------------------------------------------------ //
+// CAnimationLayer inlines.
+// ------------------------------------------------------------------------------------------ //
+
+inline void CAnimationLayer::SetOrder( int nOrder )
+{
+	m_nOrder = nOrder;
+}
+
+inline void CAnimationLayer::NetworkStateChanged()
+{
+	if ( m_pOwnerEntity )
+		m_pOwnerEntity->NetworkStateChanged();
+}
+
+inline void CAnimationLayer::NetworkStateChanged( void *pVar )
+{
+	if ( m_pOwnerEntity )
+		m_pOwnerEntity->NetworkStateChanged();
+}
+
+#endif // BASE_ANIMATING_OVERLAY_H

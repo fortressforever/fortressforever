@@ -37,8 +37,24 @@ class FastSortListPanelItem;
 class ListPanelItem
 {
 public:
+	ListPanelItem() :
+		kv( 0 ),
+		userData( 0 ),
+		m_pDragData( 0 ),
+		m_bImage( false ),
+		m_nImageIndex( -1 ),
+		m_nImageIndexSelected( -1 ),
+		m_pIcon( 0 )
+	{
+	}
+
 	KeyValues		*kv;
 	unsigned int 	userData;
+	KeyValues		*m_pDragData;
+	bool			m_bImage;
+	int				m_nImageIndex;
+	int				m_nImageIndexSelected;
+	IImage			*m_pIcon;
 };
 
 typedef int __cdecl SortFunc( 
@@ -67,7 +83,8 @@ public:
 		COLUMN_HIDDEN			= 0x08,	// column is hidden by default
 		COLUMN_UNHIDABLE		= 0x10,	// column is unhidable
 	};
-	 // adds a column header
+
+	// adds a column header
 	virtual void AddColumnHeader(int index, const char *columnName, const char *columnText, int startingWidth, int minWidth, int maxWidth, int columnFlags = 0); 
 	virtual void AddColumnHeader(int index, const char *columnName, const char *columnText, int width, int columnFlags = 0);
 
@@ -78,6 +95,7 @@ public:
 	virtual void SetColumnHeaderText(int column, wchar_t *text);
 	virtual void SetColumnHeaderImage(int column, int imageListIndex);
 	virtual void SetColumnHeaderTooltip(int column, const char *tooltipText);
+	virtual void SetColumnTextAlignment( int column, int align );
 
 	// Get information about the column headers.
 	virtual int GetNumColumnHeaders() const;
@@ -96,6 +114,7 @@ public:
 	// data->GetName() is used to uniquely identify an item
 	// data sub items are matched against column header name to be used in the table
 	virtual int AddItem(const KeyValues *data, unsigned int userData, bool bScrollToItem, bool bSortOnAdd); // Takes a copy of the data for use in the table. Returns the index the item is at.
+	void SetItemDragData( int itemID, const KeyValues *data ); // Makes a copy of the keyvalues to store in the table. Used when dragging from the table. Only used if the caller enables drag support
 	virtual int	GetItemCount( void );			// returns the number of VISIBLE items
 	virtual int GetItem(const char *itemName);	// gets the row index of an item by name (data->GetName())
 	virtual KeyValues *GetItem(int itemID); // returns pointer to data the row holds
@@ -127,6 +146,7 @@ public:
 	// this is much faster than a normal remove
 	virtual void SetItemVisible(int itemID, bool state);
 	virtual void SetItemDisabled(int itemID, bool state );
+	bool IsItemVisible( int itemID );
 
 	virtual void SetFont(HFont font);
 
@@ -156,6 +176,10 @@ public:
 	// whether or not to select specific cells (off by default)
 	virtual void SetSelectIndividualCells(bool state);
 
+	// whether or not multiple cells/rows can be selected
+	void SetMultiselectEnabled( bool bState );
+	bool IsMultiselectEnabled() const;
+
 	// sets a single cell - all other previous rows are cleared
 	virtual void SetSelectedCell(int row, int column);
 
@@ -169,6 +193,22 @@ public:
 	// relayout the scroll bar in response to changing the items in the list panel
 	// do this if you RemoveAll()
 	void ResetScrollBar();
+
+	// Attaches drag data to a particular item
+	virtual void OnCreateDragData( KeyValues *msg );
+
+	void		SetIgnoreDoubleClick( bool state );
+
+	// set up a field for editing
+	virtual void EnterEditMode(int itemID, int column, vgui::Panel *editPanel);
+
+	// leaves editing mode
+	virtual void LeaveEditMode();
+
+	// returns true if we are currently in inline editing mode
+	virtual bool IsInEditMode();
+
+	MESSAGE_FUNC_INT( ResizeColumnToContents, "ResizeColumnToContents", column );
 
 protected:
 	// PAINTING
@@ -187,7 +227,6 @@ protected:
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" );
 	MESSAGE_FUNC_INT_INT( OnColumnResized, "ColumnResized", column, delta );
 	MESSAGE_FUNC_INT( OnSetSortColumn, "SetSortColumn", column );
-	MESSAGE_FUNC_INT( ResizeColumnToContents, "ResizeColumnToContents", column );
 	MESSAGE_FUNC( OpenColumnChoiceMenu, "OpenColumnChoiceMenu" );
 	MESSAGE_FUNC_INT( OnToggleColumnVisible, "ToggleColumnVisible", col );
 	virtual float GetRowsPerPage();
@@ -203,9 +242,20 @@ protected:
 	*/
 
 private:
+	// Cleans up allocations associated with a particular item
+	void CleanupItem( FastSortListPanelItem *data );
 
 	// adds the item into the column indexes
 	void IndexItem(int itemID);
+
+	// Purpose: 
+	void UpdateSelection( vgui::MouseCode code, int x, int y, int row, int column );
+
+	// Handles multiselect 
+	void HandleMultiSelection( int itemID, int row, int column );
+
+	// Handles addselect 
+	void HandleAddSelection( int itemID, int row, int column );
 
 	// pre-sorted columns
 	struct IndexItem_t
@@ -220,7 +270,6 @@ private:
 		Button *m_pHeader;
 		int	m_iMinWidth;
 		int	m_iMaxWidth;
-		int	m_iDesiredWidth;	// in case we get squeezed down by a neighbor
 		bool m_bResizesWithWindow;
 		Panel *m_pResizer;
 		SortFunc *m_pSortFunc;
@@ -228,6 +277,7 @@ private:
 		bool m_bHidden;
 		bool m_bUnhidable;
 		IndexRBTree_t m_SortedTree;		
+		int m_nContentAlignment;
 	};
 
 	// list of the column headers
@@ -242,15 +292,12 @@ private:
 	int				    m_iColumnDraggerMoved; // which column dragger was moved->which header to resize
 	int					m_lastBarWidth;
 
-	CUtlLinkedList<FastSortListPanelItem*, int>					m_DataItems;
-	CUtlVector<int>										m_VisibleItems;
+	CUtlLinkedList<FastSortListPanelItem*, int>		m_DataItems;
+	CUtlVector<int>									m_VisibleItems;
 
 	// set to true if the table needs to be sorted before it's drawn next
-	bool 				m_bNeedsSort;
 	int 				m_iSortColumn;
 	int 				m_iSortColumnSecondary;
-	bool 				m_bSortAscending;
-	bool 				m_bSortAscendingSecondary;
 
 	void 				ResortColumnRBTree(int col);
 	static bool 		RBTreeLessFunc(vgui::ListPanel::IndexItem_t &item1, vgui::ListPanel::IndexItem_t &item2);
@@ -261,18 +308,24 @@ private:
 	ScrollBar			*m_hbar;
 	ScrollBar			*m_vbar;
 
-	bool				m_bCanSelectIndividualCells;
+	int				m_iSelectedColumn;
 
-	int					m_iSelectedColumn;
-	bool				m_bShiftHeldDown;
+	bool 			m_bNeedsSort : 1;
+	bool 			m_bSortAscending : 1;
+	bool 			m_bSortAscendingSecondary : 1;
+	bool			m_bCanSelectIndividualCells : 1;
+	bool			m_bShiftHeldDown : 1;
+	bool			m_bMultiselectEnabled : 1;
+	bool			m_bAllowUserAddDeleteColumns : 1;
+	bool 			m_bDeleteImageListWhenDone : 1;
+	bool			m_bIgnoreDoubleClick : 1;
 
-	int					m_iHeaderHeight;
-	int 				m_iRowHeight;
+	int				m_iHeaderHeight;
+	int 			m_iRowHeight;
 	
 	// selection data
 	CUtlVector<int> 	m_SelectedItems;		// array of selected rows
 	int					m_LastItemSelected;	// remember the last row selected for future shift clicks
-
 
 	int 		m_iTableStartX;
 	int	 		m_iTableStartY;
@@ -282,10 +335,12 @@ private:
 	Color 		m_SelectionFgColor;
 	Color		m_DisabledSelectionFgColor;
 
-	bool		m_bAllowUserAddDeleteColumns;
-	bool 		m_bDeleteImageListWhenDone;
 	ImageList 	*m_pImageList;
 	TextImage 	*m_pEmptyListText;
+
+	PHandle		m_hEditModePanel;
+	int			m_iEditModeItemID;
+	int			m_iEditModeColumn;
 
 	void ResetColumnHeaderCommands();
 };

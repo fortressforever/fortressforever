@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 #if !defined( IVRENDERVIEW_H )
 #define IVRENDERVIEW_H
 #ifdef _WIN32
@@ -15,10 +15,12 @@
 #include "vplane.h"
 #include "interface.h"
 #include "materialsystem/imaterialsystem.h"
+#include "const.h"
+
+
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
-
 class CViewSetup;
 class CEngineSprite;
 class IClientEntity;
@@ -26,10 +28,10 @@ class IMaterial;
 struct model_t;
 class IClientRenderable;
 
+
 //-----------------------------------------------------------------------------
 // Flags used by DrawWorldLists
 //-----------------------------------------------------------------------------
-
 enum
 {
 	DRAWWORLDLISTS_DRAW_STRICTLYABOVEWATER		= 0x1,
@@ -51,6 +53,7 @@ enum
 
 	MAX_MAT_SORT_GROUPS
 };
+
 
 typedef VPlane Frustum[FRUSTUM_NUMPLANES];
 
@@ -76,7 +79,6 @@ struct WorldListInfo_t
 	LeafIndex_t*		m_pLeafList;
 	LeafFogVolume_t*	m_pLeafFogVolume;
 };
-
 
 //-----------------------------------------------------------------------------
 // Describes the fog volume for a particular point
@@ -106,6 +108,15 @@ struct BrushVertex_t
 
 private:
 	BrushVertex_t( const BrushVertex_t& src );
+};
+
+//-----------------------------------------------------------------------------
+// Visibility data for area portal culling
+//-----------------------------------------------------------------------------
+struct VisOverrideData_t
+{
+	Vector		m_vecVisOrigin;					// The point to to use as the viewpoint for area portal backface cull checks.
+	float		m_fDistToAreaPortalTolerance;	// The distance from an area portal before using the full screen as the viewable portion.
 };
 
 
@@ -150,6 +161,7 @@ public:
 class IVRenderView
 {
 public:
+
 	// Draw normal brush model.
 	// If pMaterialOverride is non-null, then all the faces of the bmodel will
 	// set this material rather than their regular material.
@@ -188,7 +200,7 @@ public:
 	// If iForceViewLeaf is not -1, then it uses the specified leaf as your starting area for setting up area portal culling.
 	// This is used by water since your reflected view origin is often in solid space, but we still want to treat it as though
 	// the first portal we're looking out of is a water portal, so our view effectively originates under the water.
-	virtual void			BuildWorldLists( WorldListInfo_t* pInfo, bool updateLightmaps, int iForceViewLeaf ) = 0;
+	virtual void			BuildWorldLists( WorldListInfo_t* pInfo, bool updateLightmaps, int iForceFViewLeaf ) = 0;
 	virtual void			DrawWorldLists( unsigned long flags, float waterZAdjust ) = 0;
 
 	// Optimization for top view
@@ -211,8 +223,11 @@ public:
 	// Return true if any of these leaves are visible in the current PVS.
 	virtual bool			AreAnyLeavesVisible( int *leafList, int nLeaves ) = 0;
 
-	virtual void			ViewSetup3D( const CViewSetup *view, Frustum frustumPlanes ) = 0;
-	virtual void			ViewSetup2D( const CViewSetup *view ) = 0;
+	// NOTE: ViewSetup3D/ViewSetup2D are obsolete!! Do not use!!!
+	// Use Push3DView/Push2DView/PopView/GetViewFrustum instead
+	virtual void			ViewSetup3D( const CViewSetup *view, int nFlags, Frustum frustumPlanes ) = 0;
+	virtual void			ViewSetup2D( const CViewSetup *view, int nFlags ) = 0;
+
 	virtual	void			VguiPaint( void ) = 0;
 	// Sets up view fade parameters
 	virtual void			ViewDrawFade( byte *color, IMaterial *pMaterial ) = 0;
@@ -240,11 +255,47 @@ public:
 	virtual	bool			LeafContainsTranslucentSurfaces( int sortIndex, unsigned long flags ) = 0;
 
 	virtual bool			DoesBoxIntersectWaterVolume( const Vector &mins, const Vector &maxs, int leafWaterDataID ) = 0;
+
+	virtual void			SetAreaState( 
+			unsigned char chAreaBits[MAX_AREA_STATE_BYTES],
+			unsigned char chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES] ) = 0;
+
+	// See i
+	virtual void			VGui_Paint( int mode ) = 0;
+
+	// Push, pop views (see PushViewFlags_t above for flags)
+	virtual void			Push3DView( const CViewSetup &view, int nFlags, bool bUseRenderTarget, ITexture* pRenderTarget, Frustum frustumPlanes ) = 0;
+	virtual void			Push2DView( const CViewSetup &view, int nFlags, bool bUseRenderTarget, ITexture* pRenderTarget, Frustum frustumPlanes ) = 0;
+	virtual void			PopView( Frustum frustumPlanes ) = 0;
+
+	// Sets the main view
+	virtual void			SetMainView( const Vector &vecOrigin, const QAngle &angles ) = 0;
+
+	enum
+	{
+		 VIEW_SETUP_VIS_EX_RETURN_FLAGS_USES_RADIAL_VIS = 0x00000001
+	};
+
+	// Wraps view render sequence, sets up a view
+	virtual void			ViewSetupVisEx( bool novis, int numorigins, const Vector origin[], unsigned int &returnFlags ) = 0;
+
+#ifdef _XBOX
+	// Draws the water surface's dudv map
+	virtual void			DrawWaterDuDv( float flWaterZAdjust ) = 0;
+#endif
+	virtual void			BuildWorldLists_VisOverride( WorldListInfo_t* pInfo, bool updateLightmaps, int iForceViewLeaf, const VisOverrideData_t* pVisData ) = 0;
 };
 
 // change this when the new version is incompatable with the old
-#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView011"
+#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView012"
 
+#if defined(_STATIC_LINKED) && defined(CLIENT_DLL)
+namespace Client
+{
 extern IVRenderView *render;
+}
+#else
+extern IVRenderView *render;
+#endif
 
 #endif // IVRENDERVIEW_H

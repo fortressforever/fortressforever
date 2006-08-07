@@ -61,14 +61,15 @@ void UTIL_GetNormalizedColorTintAndLuminosity( const Vector &color, Vector *tint
 	// Give tint if requested
 	if ( tint != NULL )
 	{
-		float maxComponent = max( color.x, max( color.y, color.z ) );
-
-		// --> Mirv: Don't allow divide by zero here
-		if (maxComponent == 0.0f)
-			*tint = Vector(0, 0, 0);
+		if ( color == vec3_origin )
+		{
+			*tint = vec3_origin;
+		}
 		else
+		{
+			float maxComponent = max( color.x, max( color.y, color.z ) );
 			*tint = color / maxComponent;
-		// <-- Mirv
+		}
 	}
 
 }
@@ -179,8 +180,9 @@ void FX_GunshotSplash( const Vector &origin, const Vector &normal, float scale )
 	sparkEmitter->m_ParticleCollision.SetGravity( 800.0f );
 	sparkEmitter->SetFlag( bitsPARTICLE_TRAIL_VELOCITY_DAMPEN );
 	sparkEmitter->SetVelocityDampen( 2.0f );
+	sparkEmitter->GetBinding().SetBBox( origin - Vector( 32, 32, 32 ), origin + Vector( 32, 32, 32 ) );
 
-	PMaterialHandle	hMaterial = g_ParticleMgr.GetPMaterial( "effects/splash2" );
+	PMaterialHandle	hMaterial = ParticleMgr()->GetPMaterial( "effects/splash2" );
 
 	TrailParticle	*tParticle;
 
@@ -224,11 +226,12 @@ void FX_GunshotSplash( const Vector &origin, const Vector &normal, float scale )
 	pSimple->SetSortOrigin( origin );
 	pSimple->SetClipHeight( origin.z );
 	pSimple->SetParticleCullRadius( scale * 2.0f );
+	pSimple->GetBinding().SetBBox( origin - Vector( 32, 32, 32 ), origin + Vector( 32, 32, 32 ) );
 
 	SimpleParticle	*pParticle;
 
 	//Main gout
-	for ( i = 0; i < 8; i++ )
+	for ( int i = 0; i < 8; i++ )
 	{
 		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), hMaterial, origin );
 
@@ -295,8 +298,8 @@ void FX_GunshotSlimeSplash( const Vector &origin, const Vector &normal, float sc
 	float	colorRamp;
 	float	flScale = min( 1.0f, scale / 8.0f );
 
-	PMaterialHandle	hMaterial = g_ParticleMgr.GetPMaterial( "effects/slime1" );
-	PMaterialHandle	hMaterial2 = g_ParticleMgr.GetPMaterial( "effects/splash4" );
+	PMaterialHandle	hMaterial = ParticleMgr()->GetPMaterial( "effects/slime1" );
+	PMaterialHandle	hMaterial2 = ParticleMgr()->GetPMaterial( "effects/splash4" );
 
 	Vector	color;
 	float	luminosity;
@@ -318,6 +321,10 @@ void FX_GunshotSlimeSplash( const Vector &origin, const Vector &normal, float sc
 	sparkEmitter->m_ParticleCollision.SetGravity( 800.0f );
 	sparkEmitter->SetFlag( bitsPARTICLE_TRAIL_VELOCITY_DAMPEN );
 	sparkEmitter->SetVelocityDampen( 2.0f );
+	if ( IsXbox() )
+	{
+		sparkEmitter->GetBinding().SetBBox( origin - Vector( 32, 32, 64 ), origin + Vector( 32, 32, 64 ) );
+	}
 
 	//Dump out drops
 	for ( int i = 0; i < 24; i++ )
@@ -356,6 +363,11 @@ void FX_GunshotSlimeSplash( const Vector &origin, const Vector &normal, float sc
 	pSimple->SetClipHeight( origin.z );
 	pSimple->SetParticleCullRadius( scale * 2.0f );
 
+	if ( IsXbox() )
+	{
+		pSimple->GetBinding().SetBBox( origin - Vector( 32, 32, 64 ), origin + Vector( 32, 32, 64 ) );
+	}
+
 	SimpleParticle	*pParticle;
 
 	// Tint
@@ -363,7 +375,7 @@ void FX_GunshotSlimeSplash( const Vector &origin, const Vector &normal, float sc
 	color = Vector( 1.0f, 0.8f, 0.0f ) * color * colorRamp;
 
 	//Main gout
-	for ( i = 0; i < 8; i++ )
+	for ( int i = 0; i < 8; i++ )
 	{
 		pParticle = (SimpleParticle *) pSimple->AddParticle( sizeof( SimpleParticle ), hMaterial2, origin );
 

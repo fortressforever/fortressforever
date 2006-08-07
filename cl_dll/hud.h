@@ -79,6 +79,8 @@ public:
 	void DrawSelf( int x, int y, Color& clr ) const;
 	void DrawSelf( int x, int y, int w, int h, Color& clr ) const;
 	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color& clr ) const;
+	// new version to scale the texture over a finalWidth and finalHeight passed in
+	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color& clr ) const;
 
 	char		szShortName[ 64 ];
 	char		szTextureFile[ 64 ];
@@ -147,6 +149,7 @@ public:
 	bool						IsHidden( int iHudFlags );
 
 	float						GetSensitivity();
+	float						GetFOVSensitivityAdjust();
 
 	void						DrawProgressBar( int x, int y, int width, int height, float percentage, Color& clr, unsigned char type );
 	void						DrawIconProgressBar( int x, int y, CHudTexture *icon, CHudTexture *icon2, float percentage, Color& clr, int type );
@@ -166,14 +169,17 @@ public:
 public:
 
 	int							m_iKeyBits;
+#ifndef _XBOX
 	float						m_flMouseSensitivity;
 	float						m_flMouseSensitivityFactor;
+#endif
+	float						m_flFOVSensitivityAdjust;
 
-	Color					m_clrNormal;
-	Color					m_clrCaution;
-	Color					m_clrYellowish;
+	Color						m_clrNormal;
+	Color						m_clrCaution;
+	Color						m_clrYellowish;
 
-	CUtlVector< CHudElement * >		m_HudList;
+	CUtlVector< CHudElement * >	m_HudList;
 
 private:
 	void						InitFonts();
@@ -195,5 +201,6 @@ extern vgui::HFont g_hFontTrebuchet24;
 
 void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, char *szFilenameWithoutExtension, const unsigned char *pICEKey );
 
+void GetHudSize( int& w, int &h );
 
 #endif // HUD_H

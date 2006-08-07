@@ -20,6 +20,7 @@ public:
 	{
 	}
 
+	// Get data by the string itself:
 	T& operator[]( const char *pString )
 	{
 		CUtlSymbol symbol = m_SymbolTable.AddString( pString );
@@ -28,6 +29,13 @@ public:
 		{
 			m_Vector.EnsureCount( index + 1 );
 		}
+		return m_Vector[index];
+	}
+
+	// Get data by the string's symbol table ID - only used to retrieve a pre-existing symbol, not create a new one!
+	T& operator[]( UtlSymId_t n )
+	{
+		Assert( n >=0 && n <= m_Vector.Count() );
 		return m_Vector[index];
 	}
 

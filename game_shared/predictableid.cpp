@@ -11,6 +11,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if !defined( NO_ENTITY_PREDICTION )
 //-----------------------------------------------------------------------------
 // Purpose: Helper class for resetting instance numbers, etc.
 //-----------------------------------------------------------------------------
@@ -321,3 +322,4 @@ const char *CPredictableId::Describe( void ) const
 
 	return desc;
 }
+#endif

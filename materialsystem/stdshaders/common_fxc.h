@@ -151,32 +151,36 @@ float4 CompressHDR( float3 input )
 	return output;
 }
 
+
+
 float3 LinearToGamma( const float3 linear )
 {
-#if 0
-	// This is a good approx.
-	// No it isn't!!  It sucks outside of a certain range.  Don't use this without testing
-	// the range that you expect to use with it.
-	static const float a = 2.314217438285954f;
-	static const float b = -4.377606146152142f;
-	static const float c = 3.116082349104176f;
-
-	float3 gamma, tmp;
-	tmp = a * linear + b;
-	tmp = tmp * linear + c;
-	gamma = tmp * linear;
-	return gamma;
-#else
 	return pow( linear, 1.0f / 2.2f );
-#endif
+}
+
+float4 LinearToGamma( const float4 linear )
+{
+	return float4( pow( linear.xyz, 1.0f / 2.2f ), linear.w );
+}
+
+float LinearToGamma( const float linear )
+{
+	return pow( linear, 1.0f / 2.2f );
 }
 
 float3 GammaToLinear( const float3 gamma )
 {
-#if 0
-	return 0.962491f * gamma * gamma;
-#else
 	return pow( gamma, 2.2f );
-#endif
 }
+
+float4 GammaToLinear( const float4 gamma )
+{
+	return float4( pow( gamma.xyz, 2.2f ), gamma.w );
+}
+
+float GammaToLinear( const float gamma )
+{
+	return pow( gamma, 2.2f );
+}
+
 

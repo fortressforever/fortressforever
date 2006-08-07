@@ -12,20 +12,23 @@
 
 #include "ai_basenpc.h"
 #include "ai_scriptconditions.h"
+#include "saverestore_utlvector.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#define SF_ACTOR_AS_ACTIVATOR	( 1 << 0 )
 
 ConVar debugscriptconditions( "ai_debugscriptconditions", "0" );
 
 #define ScrCondDbgMsg( msg ) \
 	do \
-	{ \
-		if ( debugscriptconditions.GetBool() ) \
-		{ \
-			DevMsg msg; \
-		} \
-	} \
+{ \
+	if ( debugscriptconditions.GetBool() ) \
+{ \
+	DevMsg msg; \
+} \
+} \
 	while (0)
 
 
@@ -39,10 +42,11 @@ LINK_ENTITY_TO_CLASS(ai_script_conditions, CAI_ScriptConditions);
 
 BEGIN_DATADESC( CAI_ScriptConditions )
 
-	DEFINE_FUNCTION( EvaluationThink ),
-	
+	DEFINE_THINKFUNC( EvaluationThink ),
+
 	DEFINE_OUTPUT( m_OnConditionsSatisfied, "OnConditionsSatisfied" ),
 	DEFINE_OUTPUT( m_OnConditionsTimeout, "OnConditionsTimeout" ),
+	DEFINE_OUTPUT( m_NoValidActors, "NoValidActors" ),
 
 	//---------------------------------
 
@@ -53,20 +57,25 @@ BEGIN_DATADESC( CAI_ScriptConditions )
 
 	// Inputs
 	DEFINE_KEYFIELD(m_fDisabled, 					FIELD_BOOLEAN, 	"StartDisabled" 			),
-	DEFINE_FIELD( m_hActor, FIELD_EHANDLE ),
+
 	DEFINE_FIELD( m_hTarget, FIELD_EHANDLE ),
+	DEFINE_KEYFIELD(m_Actor,						FIELD_STRING,	"Actor"						),
 
 	DEFINE_KEYFIELD(m_flRequiredTime, 			FIELD_FLOAT, 	"RequiredTime" 				),
+
+#ifndef HL2_EPISODIC
+	DEFINE_FIELD( m_hActor, FIELD_EHANDLE ),
 	DEFINE_EMBEDDED(m_Timer ),
 	DEFINE_EMBEDDED(m_Timeout ),
+#endif
 
 	DEFINE_KEYFIELD(m_fMinState, 					FIELD_INTEGER,	"MinimumState" 				),
 	DEFINE_KEYFIELD(m_fMaxState, 					FIELD_INTEGER,	"MaximumState" 				),
-	
+
 	DEFINE_KEYFIELD(m_fScriptStatus, 				FIELD_INTEGER,	"ScriptStatus" 				),
 	DEFINE_KEYFIELD(m_fActorSeePlayer,			FIELD_INTEGER,	"ActorSeePlayer"			),
-	DEFINE_KEYFIELD(m_Actor,						FIELD_STRING,	"Actor"						),
-	
+
+
 	DEFINE_KEYFIELD(m_flPlayerActorProximity,		FIELD_FLOAT, 	"PlayerActorProximity" 		),
 	DEFINE_EMBEDDED(m_PlayerActorProxTester),
 
@@ -75,7 +84,7 @@ BEGIN_DATADESC( CAI_ScriptConditions )
 
 	DEFINE_KEYFIELD(m_fPlayerActorLOS, 			FIELD_INTEGER, 	"PlayerActorLOS" 			),
 	DEFINE_KEYFIELD(m_fActorSeeTarget,			FIELD_INTEGER,	"ActorSeeTarget" 			),
-	
+
 	DEFINE_KEYFIELD(m_flActorTargetProximity,		FIELD_FLOAT, 	"ActorTargetProximity" 		),
 	DEFINE_EMBEDDED(m_ActorTargetProxTester),
 
@@ -91,11 +100,22 @@ BEGIN_DATADESC( CAI_ScriptConditions )
 	DEFINE_KEYFIELD(m_flMinTimeout, 				FIELD_FLOAT,	"MinTimeout"				),
 	DEFINE_KEYFIELD(m_flMaxTimeout, 				FIELD_FLOAT,	"MaxTimeout"				),
 
+	DEFINE_KEYFIELD(m_fActorInPVS,		FIELD_INTEGER,  "ActorInPVS"		),
+
+	DEFINE_UTLVECTOR( m_ElementList, FIELD_EMBEDDED ),
+	DEFINE_FIELD( m_bLeaveAsleep, FIELD_BOOLEAN ),
+
 END_DATADESC()
 
 BEGIN_SIMPLE_DATADESC( CAI_ProxTester )
 	DEFINE_FIELD( m_distSq, FIELD_FLOAT ),
 	DEFINE_FIELD( m_fInside, FIELD_BOOLEAN ),
+END_DATADESC()
+
+BEGIN_SIMPLE_DATADESC( CAI_ScriptConditionsElement )
+	DEFINE_FIELD( m_hActor, FIELD_EHANDLE ),
+	DEFINE_EMBEDDED(m_Timer ),
+	DEFINE_EMBEDDED(m_Timeout ),
 END_DATADESC()
 
 
@@ -106,17 +126,48 @@ END_DATADESC()
 CAI_ScriptConditions::EvaluatorInfo_t CAI_ScriptConditions::gm_Evaluators[] =
 {
 	EVALUATOR( ActorSeePlayer ),
-	EVALUATOR( State ),
-	EVALUATOR( PlayerActorProximity ),
-	EVALUATOR( PlayerTargetProximity ),
-	EVALUATOR( ActorTargetProximity ),
-	EVALUATOR( PlayerBlockingActor ),
-	EVALUATOR( PlayerActorLook ),
-	EVALUATOR( PlayerTargetLook ),
-	EVALUATOR( ActorSeeTarget),
-	EVALUATOR( PlayerActorLOS ),
-	EVALUATOR( PlayerTargetLOS ),
+		EVALUATOR( State ),
+		EVALUATOR( PlayerActorProximity ),
+		EVALUATOR( PlayerTargetProximity ),
+		EVALUATOR( ActorTargetProximity ),
+		EVALUATOR( PlayerBlockingActor ),
+		EVALUATOR( PlayerActorLook ),
+		EVALUATOR( PlayerTargetLook ),
+		EVALUATOR( ActorSeeTarget),
+		EVALUATOR( PlayerActorLOS ),
+		EVALUATOR( PlayerTargetLOS ),
+
+#ifdef HL2_EPISODIC
+		EVALUATOR( ActorInPVS ),
+#endif
+
 };
+
+void CAI_ScriptConditions::OnRestore( void )
+{
+	BaseClass::OnRestore();
+
+#ifndef HL2_EPISODIC
+	//Old HL2 save game! Fix up to new system.
+	if ( m_hActor )
+	{
+		CAI_ScriptConditionsElement conditionactor;
+
+		conditionactor.SetActor( m_hActor );
+		conditionactor.SetTimeOut( m_Timeout );
+		conditionactor.SetTimer( m_Timer );
+ 
+		m_ElementList.AddToTail( conditionactor );
+
+		m_hActor = NULL;
+	}
+
+	if ( m_ElementList.Count() == 0 && m_Actor == NULL_STRING && m_fDisabled == false )
+	{
+		AddNewElement( NULL );
+	}
+#endif
+}
 
 //-----------------------------------------------------------------------------
 
@@ -126,31 +177,31 @@ bool CAI_ScriptConditions::EvalState( const EvalArgs_t &args )
 		return true;
 
 	CAI_BaseNPC *pNpc = args.pActor->MyNPCPointer();
-	
+
 	// !!!LATER - fix this code, we shouldn't need the table anymore
 	// now that we've placed the NPC state defs in a logical order (sjb)
 	static int stateVals[] = 
 	{
 		-1, // NPC_STATE_NONE
-		 0, // NPC_STATE_IDLE
-		 1, // NPC_STATE_ALERT
-		 2, // NPC_STATE_COMBAT
-		-1, // NPC_STATE_SCRIPT
-		-1, // NPC_STATE_PLAYDEAD
-		-1, // NPC_STATE_PRONE
-		-1, // NPC_STATE_DEAD
+			0, // NPC_STATE_IDLE
+			1, // NPC_STATE_ALERT
+			2, // NPC_STATE_COMBAT
+			-1, // NPC_STATE_SCRIPT
+			-1, // NPC_STATE_PLAYDEAD
+			-1, // NPC_STATE_PRONE
+			-1, // NPC_STATE_DEAD
 	};
-	
+
 	int valState = stateVals[pNpc->m_NPCState];
-	
+
 	if ( valState < 0 )
 	{
 		if ( pNpc->m_NPCState == NPC_STATE_SCRIPT && m_fScriptStatus >= TRS_TRUE )
 			return true;
-		
+
 		return false;
 	}
-		
+
 	const int valLow  = stateVals[m_fMinState];
 	const int valHigh = stateVals[m_fMaxState];
 
@@ -160,7 +211,7 @@ bool CAI_ScriptConditions::EvalState( const EvalArgs_t &args )
 		Disable();
 		return false;
 	}
-	
+
 	return ( valState >= valLow && valState <= valHigh );
 }
 
@@ -197,7 +248,14 @@ bool CAI_ScriptConditions::EvalActorSeeTarget( const EvalArgs_t &args )
 			return true;
 
 		CAI_BaseNPC *pNPCActor = args.pActor->MyNPCPointer();
+
+#ifdef HL2_EPISODIC
+		// This is the code we want to have written for HL2, but HL2 shipped without the QuerySeeEntity() call. This #ifdef really wants to be
+		// something like #ifndef HL2_RETAIL, since this change does want to be in any products that are built henceforth. (sjb)
+		bool fSee = pNPCActor->FInViewCone( args.pTarget ) && pNPCActor->FVisible( args.pTarget ) && pNPCActor->QuerySeeEntity( args.pTarget );
+#else
 		bool fSee = pNPCActor->FInViewCone( args.pTarget ) && pNPCActor->FVisible( args.pTarget );
+#endif//HL2_EPISODIC
 
 		if( fSee )
 		{
@@ -235,7 +293,7 @@ bool CAI_ScriptConditions::EvalPlayerActorProximity( const EvalArgs_t &args )
 bool CAI_ScriptConditions::EvalPlayerTargetProximity( const EvalArgs_t &args )
 {
 	return ( !args.pTarget || 
-			 m_PlayerTargetProxTester.Check( args.pPlayer, args.pTarget ) );
+		m_PlayerTargetProxTester.Check( args.pPlayer, args.pTarget ) );
 }
 
 
@@ -243,8 +301,8 @@ bool CAI_ScriptConditions::EvalPlayerTargetProximity( const EvalArgs_t &args )
 
 bool CAI_ScriptConditions::EvalActorTargetProximity( const EvalArgs_t &args )
 {
-	return ( !args.pTarget || 
-			 m_ActorTargetProxTester.Check( args.pActor, args.pTarget ) );
+	return ( !args.pTarget || !args.pActor ||
+		m_ActorTargetProxTester.Check( args.pActor, args.pTarget ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -252,7 +310,7 @@ bool CAI_ScriptConditions::EvalActorTargetProximity( const EvalArgs_t &args )
 bool CAI_ScriptConditions::EvalPlayerActorLook( const EvalArgs_t &args )
 {
 	return ( !args.pActor || 
-			 IsInFOV( args.pPlayer, args.pActor, m_flPlayerActorFOV, m_bPlayerActorFOVTrueCone ) );
+		IsInFOV( args.pPlayer, args.pActor, m_flPlayerActorFOV, m_bPlayerActorFOVTrueCone ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -288,6 +346,16 @@ bool CAI_ScriptConditions::EvalPlayerTargetLOS( const EvalArgs_t &args )
 	return ( !args.pTarget || PlayerHasLineOfSight( args.pPlayer, args.pTarget, m_fPlayerTargetLOS == TRS_FALSE ) );
 }
 
+bool CAI_ScriptConditions::EvalActorInPVS( const EvalArgs_t &args )
+{
+	if( m_fActorInPVS == TRS_NONE )
+	{
+		// Don't execute expensive code if we don't care.
+		return true;
+	}
+
+	return ( !args.pActor || ActorInPlayersPVS( args.pActor, m_fActorInPVS == TRS_FALSE ) );
+}
 
 //-----------------------------------------------------------------------------
 
@@ -300,10 +368,10 @@ bool CAI_ScriptConditions::EvalPlayerBlockingActor( const EvalArgs_t &args )
 	CAI_BaseNPC *pNpc = args.pActor->MyNPCPointer();
 
 	const float testDist = 30.0;
-		
+
 	Vector origin = args.pActor->WorldSpaceCenter();
 	Vector delta  = UTIL_YawToVector( args.pActor->GetAngles().y ) * testDist;
-	
+
 	Vector vecAbsMins, vecAbsMaxs;
 	args.pActor->CollisionProp()->WorldSpaceAABB( &vecAbsMins, &vecAbsMaxs );
 	bool intersect = IsBoxIntersectingRay( vecAbsMins, vecAbsMaxs, origin, delta );
@@ -320,14 +388,13 @@ bool CAI_ScriptConditions::EvalPlayerBlockingActor( const EvalArgs_t &args )
 void CAI_ScriptConditions::Spawn()
 {
 	Assert( ( m_fMinState == NPC_STATE_IDLE || m_fMinState == NPC_STATE_COMBAT || m_fMinState == NPC_STATE_ALERT ) &&
-			( m_fMaxState == NPC_STATE_IDLE || m_fMaxState == NPC_STATE_COMBAT || m_fMaxState == NPC_STATE_ALERT ) );
+		( m_fMaxState == NPC_STATE_IDLE || m_fMaxState == NPC_STATE_COMBAT || m_fMaxState == NPC_STATE_ALERT ) );
 
 	m_PlayerActorProxTester.Init( m_flPlayerActorProximity );
 	m_PlayerTargetProxTester.Init( m_flPlayerTargetProximity );
 	m_ActorTargetProxTester.Init( m_flActorTargetProximity );
 
-	m_Timer.Set( m_flRequiredTime );
-
+	m_bLeaveAsleep = m_fDisabled;
 }
 
 //-----------------------------------------------------------------------------
@@ -340,108 +407,196 @@ void CAI_ScriptConditions::Activate()
 	// following that, we keep it updated and it reflects current state.
 	if( !m_fDisabled )
 		Enable();
+
+#ifdef HL2_EPISODIC
+	gEntList.AddListenerEntity( this );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+
+void CAI_ScriptConditions::UpdateOnRemove( void )
+{
+	gEntList.RemoveListenerEntity( this );
+	BaseClass::UpdateOnRemove();
+
+	m_ElementList.Purge();
 }
 
 //-----------------------------------------------------------------------------
 
 void CAI_ScriptConditions::EvaluationThink()
 {
-	AssertMsg( !m_fDisabled, ("Violated invariant between CAI_ScriptConditions disabled state and think func setting") );
-
-	if ( m_Actor != NULL_STRING && !m_hActor.Get() )
-	{
-		DevMsg( "Warning: Active AI script conditions associated with an non-existant or destroyed NPC\n" );
-		Disable();
+	if ( m_fDisabled == true )
 		return;
-	}
 
-	if( m_flMinTimeout > 0 && m_Timeout.Expired() )
+	int iActorsDone = 0;
+
+	for ( int i = 0; i < m_ElementList.Count(); )
 	{
-		ScrCondDbgMsg( ( "%s firing output OnConditionsTimeout (%f seconds)\n", STRING( GetEntityName() ), m_Timer.GetInterval() ) );
+		CAI_ScriptConditionsElement *pConditionElement = &m_ElementList[i];
 
-		Disable();
-		m_OnConditionsTimeout.FireOutput( this, this );
-		
-		return;
-	}
-	
-	bool      result = true;
-	const int nEvaluators = sizeof( gm_Evaluators ) / sizeof( gm_Evaluators[0] );
-
-	EvalArgs_t args =
-	{
-		GetActor(),
-		GetPlayer(),
-		m_hTarget.Get()
-	};
-
-	for ( int i = 0; i < nEvaluators; ++i )
-	{
-		if ( !(this->*gm_Evaluators[i].pfnEvaluator)( args ) )
+		if ( pConditionElement == NULL )
 		{
-			m_Timer.Reset();
-			result = false;
+			i++;
+			continue;
+		}
 
-			ScrCondDbgMsg( ( "%s failed on: %s\n", STRING( GetEntityName() ), gm_Evaluators[ i ].pszName ) );
+		CBaseEntity *pActor = pConditionElement->GetActor();
+		CBaseEntity *pActivator = this;
 
-			break;
+#ifdef HL2_EPISODIC
+		if ( pActor && HasSpawnFlags( SF_ACTOR_AS_ACTIVATOR ) )
+		{
+			pActivator = pActor;
+		}
+#endif
+
+		AssertMsg( !m_fDisabled, ("Violated invariant between CAI_ScriptConditions disabled state and think func setting") );
+
+		if ( m_Actor != NULL_STRING && !pActor )
+		{
+			if ( m_ElementList.Count() == 1 )
+			{
+				DevMsg( "Warning: Active AI script conditions associated with an non-existant or destroyed NPC\n" );
+				m_NoValidActors.FireOutput( this, this, 0 );
+			}
+
+			iActorsDone++;
+			m_ElementList.Remove( i );
+			continue;
+		}
+
+		i++;
+
+		if( m_flMinTimeout > 0 && pConditionElement->GetTimeOut()->Expired() )
+		{
+			ScrCondDbgMsg( ( "%s firing output OnConditionsTimeout (%f seconds)\n", STRING( GetEntityName() ), pConditionElement->GetTimeOut()->GetInterval() ) );
+
+			iActorsDone++;
+			m_OnConditionsTimeout.FireOutput( pActivator, this );
+			continue;
+		}
+
+		bool      result = true;
+		const int nEvaluators = sizeof( gm_Evaluators ) / sizeof( gm_Evaluators[0] );
+
+		EvalArgs_t args =
+		{
+			pActor,
+			GetPlayer(),
+			m_hTarget.Get()
+		};
+
+		for ( int i = 0; i < nEvaluators; ++i )
+		{
+			if ( !(this->*gm_Evaluators[i].pfnEvaluator)( args ) )
+			{
+				pConditionElement->GetTimer()->Reset();
+				result = false;
+
+				ScrCondDbgMsg( ( "%s failed on: %s\n", GetDebugName(), gm_Evaluators[ i ].pszName ) );
+
+				break;
+			}
+		}
+
+		if ( result )
+		{
+			ScrCondDbgMsg( ( "%s waiting... %f\n", GetDebugName(), pConditionElement->GetTimer()->GetRemaining() ) );
+		}
+
+		if ( result && pConditionElement->GetTimer()->Expired() )
+		{
+			ScrCondDbgMsg( ( "%s firing output OnConditionsSatisfied\n", GetDebugName() ) );
+
+			// Default behavior for now, provide worldcraft option later.
+			iActorsDone++;
+			m_OnConditionsSatisfied.FireOutput( pActivator, this );
 		}
 	}
 
-	if ( result )
+	//All done!
+	if ( iActorsDone == m_ElementList.Count() )
 	{
-		ScrCondDbgMsg( ( "%s waiting... %f\n", STRING( GetEntityName() ), m_Timer.GetRemaining() ) );
-	}
-
-	if ( result && m_Timer.Expired() )
-	{
-		ScrCondDbgMsg( ( "%s firing output OnConditionsSatisfied\n", STRING( GetEntityName() ) ) );
-
-		// Default behavior for now, provide worldcraft option later.
 		Disable();
-		m_OnConditionsSatisfied.FireOutput( this, this );
+		m_ElementList.Purge();
 	}
-	
+
 	SetThinkTime();
+}
+
+//-----------------------------------------------------------------------------
+
+int CAI_ScriptConditions::AddNewElement( CBaseEntity *pActor )
+{
+	CAI_ScriptConditionsElement conditionelement;
+	conditionelement.SetActor( pActor );
+
+	if( m_flMaxTimeout > 0 )
+	{
+		conditionelement.GetTimeOut()->Set( random->RandomFloat( m_flMinTimeout, m_flMaxTimeout ), false );
+	}
+	else
+	{
+		conditionelement.GetTimeOut()->Set( m_flMinTimeout, false );
+	}
+
+	conditionelement.GetTimer()->Set( m_flRequiredTime );
+
+	if ( m_flRequiredTime > 0 )
+	{
+		conditionelement.GetTimer()->Reset();
+	}
+
+	return m_ElementList.AddToTail( conditionelement );
 }
 
 //-----------------------------------------------------------------------------
 
 void CAI_ScriptConditions::Enable( void )
 {
-	m_hActor = gEntList.FindEntityByName( NULL, m_Actor, NULL );
-	m_hTarget = gEntList.FindEntityByName( NULL, m_target, NULL );
-	
-	if ( m_Actor != NULL_STRING && !m_hActor.Get() )
+	m_hTarget = gEntList.FindEntityByName( NULL, m_target );
+
+	CBaseEntity *pActor = gEntList.FindEntityByName( NULL, m_Actor );
+	if ( m_ElementList.Count() == 0 )
 	{
-		DevMsg( "Warning: Spawning AI script conditions (%s) associated with an non-existant NPC\n", GetDebugName() );
-		Disable();
-		return;
+		if ( m_Actor != NULL_STRING && pActor == NULL )
+		{
+			DevMsg( "Warning: Spawning AI script conditions (%s) associated with an non-existant NPC\n", GetDebugName() );
+			m_NoValidActors.FireOutput( this, this, 0 );
+			Disable();
+			return;
+		}
+
+		if ( pActor && pActor->MyNPCPointer() == NULL )
+		{
+			Warning( "Script condition warning: warning actor is not an NPC\n" );
+			Disable();
+			return;
+		}
 	}
 
-	if ( m_hActor && !m_hActor->MyNPCPointer() )
+	while( pActor != NULL )
 	{
-		Warning( "Script condition warning: warning actor is not an NPC\n" );
-		Disable();
-		return;
+		if( !ActorInList(pActor) )
+		{
+			AddNewElement( pActor );
+		}
+
+		pActor = gEntList.FindEntityByName( pActor, m_Actor );
 	}
+
+	//If we are hitting this it means we are using a Target->Player condition
+	if ( m_Actor == NULL_STRING )
+	{
+		AddNewElement( NULL );
+	}
+
+	m_fDisabled = false;
 
 	SetThink( &CAI_ScriptConditions::EvaluationThink );
 	SetThinkTime();
-
-	if( m_flMaxTimeout > 0 )
-	{
-		m_Timeout.Set( random->RandomFloat( m_flMinTimeout, m_flMaxTimeout ), false );
-	}
-	else
-	{
-		m_Timeout.Set( m_flMinTimeout, false );
-	}
-
-	if ( m_flRequiredTime > 0 )
-		m_Timer.Reset();
-
-	m_fDisabled = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -457,6 +612,7 @@ void CAI_ScriptConditions::Disable( void )
 
 void CAI_ScriptConditions::InputEnable( inputdata_t &inputdata )
 {
+	m_bLeaveAsleep = false;
 	Enable();
 }
 
@@ -464,6 +620,7 @@ void CAI_ScriptConditions::InputEnable( inputdata_t &inputdata )
 
 void CAI_ScriptConditions::InputDisable( inputdata_t &inputdata )
 {
+	m_bLeaveAsleep = true;
 	Disable();
 }
 
@@ -513,6 +670,12 @@ bool CAI_ScriptConditions::IsInFOV( CBaseEntity *pViewer, CBaseEntity *pViewed, 
 			return false;
 		}
 	}
+
+	if( fov < 0 )
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -552,6 +715,80 @@ bool CAI_ScriptConditions::PlayerHasLineOfSight( CBaseEntity *pViewer, CBaseEnti
 	}
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+
+bool CAI_ScriptConditions::ActorInPlayersPVS( CBaseEntity *pActor, bool bNot )
+{
+	if ( pActor == NULL )
+		return true;
+
+	bool bInPVS = !!UTIL_FindClientInPVS( pActor->edict());
+
+	if ( bInPVS )
+	{
+		if( bNot )
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if( bNot )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+
+bool CAI_ScriptConditions::ActorInList( CBaseEntity *pActor )
+{
+	for ( int i = 0; i < m_ElementList.Count(); i++ )
+	{
+		if ( m_ElementList[i].GetActor() == pActor )
+			 return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+
+void CAI_ScriptConditions::OnEntitySpawned( CBaseEntity *pEntity )
+{
+	if( m_fDisabled && m_bLeaveAsleep )
+	{
+		// Don't add elements if we're not currently running and don't want to automatically wake up.
+		// Any spawning NPC's we miss during this time will be found and added when manually Enabled().
+		return;
+	}
+
+	if ( pEntity->MyNPCPointer() == NULL )
+		 return;
+
+	if ( pEntity->NameMatches( m_Actor ) )
+	{
+		if ( ActorInList( pEntity ) == false )
+		{
+			AddNewElement( pEntity );
+
+			if ( m_fDisabled == true && m_bLeaveAsleep == false )
+			{
+				Enable();
+			}
+		}
+	}
 }
 
 //=============================================================================

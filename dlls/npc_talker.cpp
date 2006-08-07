@@ -719,20 +719,6 @@ int CNPCSimpleTalker::FIdleSpeak( void )
 //-----------------------------------------------------------------------------
 bool CNPCSimpleTalker::SpeakQuestionFriend( CBaseEntity *pFriend )
 {
-	bool bSpoke = false;
-	if ( FClassnameIs( pFriend, "npc_citizen" ) )
-	{
-		bSpoke = Speak( TLK_QUESTION_CIT );
-	}
-	else if ( FClassnameIs( pFriend, "npc_vortigaunt" ) )
-	{
-		bSpoke = Speak( TLK_QUESTION_VORT );
-	}
-
-	if ( bSpoke )
-		return true;
-
-	// If we didn't find a specific response, speak the general
 	return Speak( TLK_QUESTION );
 }
 
@@ -741,23 +727,6 @@ bool CNPCSimpleTalker::SpeakQuestionFriend( CBaseEntity *pFriend )
 //-----------------------------------------------------------------------------
 bool CNPCSimpleTalker::SpeakAnswerFriend( CBaseEntity *pFriend )
 {
-	if ( pFriend )
-	{
-		bool bSpoke = false;
-		if ( FClassnameIs( pFriend, "npc_citizen" ) )
-		{
-			bSpoke = Speak( TLK_ANSWER_CIT );
-		}
-		else if ( FClassnameIs( pFriend, "npc_vortigaunt" ) )
-		{
-			bSpoke = Speak( TLK_ANSWER_VORT );
-		}
-
-		if ( bSpoke )
-			return true;
-	}
-
-	// If we didn't find a specific response, speak the general
 	return Speak( TLK_ANSWER );
 }
 
