@@ -699,6 +699,13 @@ void CViewRender::SetUpView()
 	//Adjust the viewmodel's FOV to move with any FOV offsets on the viewer's end
 	m_View.fovViewmodel		= g_pClientMode->GetViewModelFOV() - flFOVOffset;
 
+	// --> Mirv: Make sure this doesn't go negative
+	if (m_View.fovViewmodel < 10.0f)
+	{
+		m_View.fovViewmodel = 10.0f;
+	}
+	// <-- Mirv
+
 	// Disable spatical partition access
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 	// Enable access to all model bones
