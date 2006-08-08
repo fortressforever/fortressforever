@@ -491,7 +491,7 @@ void CFFDetpack::DoExplosionDamage( void )
 
 			//pEntity->ApplyAbsVelocityImpulse( ( pEntity->WorldSpaceCenter() - vecOrigin ) * 1000.0f );
 			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner, vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
+			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner.Get(), vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
 		}
 	}
 
