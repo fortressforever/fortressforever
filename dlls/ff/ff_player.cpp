@@ -3641,6 +3641,12 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration )
 {
+	// Okay, now pyros don't catch fire at all
+	if (GetClassSlot() == CLASS_PYRO)
+	{
+		return;
+	}
+
 	// send the status icon to be displayed
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
