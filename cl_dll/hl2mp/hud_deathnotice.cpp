@@ -8,7 +8,7 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "c_playerresource.h"
-#include "clientmode_hl2mpnormal.h"
+#include "clientmode_ff.h"
 #include <vgui_controls/controls.h>
 #include <vgui_controls/panel.h>
 #include <vgui/ISurface.h>
@@ -146,7 +146,7 @@ void CHudDeathNotice::Paint()
 	if ( !m_iconD_skull )
 		return;
 
-	int yStart = GetClientModeHL2MPNormal()->GetDeathMessageStartHeight();
+	int yStart = GetClientModeFFNormal()->GetDeathMessageStartHeight();
 
 	surface()->DrawSetTextFont( m_hTextFont );
 	surface()->DrawSetTextColor( GameResources()->GetTeamColor( 0 ) );
@@ -204,6 +204,11 @@ void CHudDeathNotice::Paint()
 			x = 0;
 		}
 		
+		// --> Mirv: Shove over a bit
+		y += 16;
+		x -= 28;
+		// <--
+
 		// Only draw killers name if it wasn't a suicide
 		if ( !m_DeathNotices[i].iSuicide )
 		{
