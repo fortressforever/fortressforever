@@ -30,6 +30,9 @@ public:
 
 private:
 	int		m_iModifier;
+	int		m_iPreviousValue;
+
+	float	m_flLastTick;
 };
 
 bool CProxyAmmo::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
@@ -38,6 +41,8 @@ bool CProxyAmmo::Init(IMaterial *pMaterial, KeyValues *pKeyValues)
 	TextureScrollRate.Init(pMaterial, pKeyValues, "digitindex", -1.0f);
 
 	m_iModifier = (int) TextureScrollRate.GetFloat();
+
+	m_iPreviousValue = 0;
 
 	return CResultProxy::Init(pMaterial, pKeyValues);
 }
@@ -73,6 +78,24 @@ void CProxyAmmo::OnBind(void *pC_BaseEntity)
 		iAmmo = pPlayer->GetAmmoCount(pWeapon->GetPrimaryAmmoType());
 	}
 
+	// Ammo has gone up, use a linear change
+	// Should probably take the frame rate into account here
+	if (iAmmo > m_iPreviousValue)
+	{
+		float flDelta = gpGlobals->curtime - m_flLastTick;
+
+		// Just go straight to the right number if it's been a while since the last
+		// tick. This means that it's probably been holstered and should show the 
+		// correct value when it comes up.
+		if (flDelta >= 0.0f && flDelta < 1.0f)
+		{
+			iAmmo = m_iPreviousValue + 1;
+		}
+	}
+
+	// Store the previous value of this before we screw it up
+	m_iPreviousValue = iAmmo;
+
 	// Make sure we show the correct digit
 	if (m_iModifier >= 0)
 	{
@@ -89,6 +112,8 @@ void CProxyAmmo::OnBind(void *pC_BaseEntity)
 	{
 		SetFloatResult(0);
 	}
+
+	m_flLastTick = gpGlobals->curtime;
 }
 
 EXPOSE_INTERFACE(CProxyAmmo, IMaterialProxy, "CurrentAmmo" IMATERIAL_PROXY_INTERFACE_VERSION);
