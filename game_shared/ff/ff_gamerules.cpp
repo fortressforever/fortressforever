@@ -666,13 +666,19 @@ ConVar mp_prematch( "mp_prematch",
 
 		float flMaxSafe = PLAYER_MAX_SAFE_FALL_SPEED;
 
-		// Spy can fall twice as far without hurting
-		if (pFFPlayer->GetClassSlot() == 8)
-			flMaxSafe *= 1.412;
+		bool bIsSpy = (pFFPlayer->GetClassSlot() == 8);
 
-		// Should they really be losing damage
+		// Spy can fall twice as far without hurting
+		if (bIsSpy)
+		{
+			flMaxSafe *= 1.412;
+		}
+
+		// Escape if they shouldn't be taking damage.
 		if (pPlayer->m_Local.m_flFallVelocity < flMaxSafe)
+		{
 			return 0;
+		}
 
 		// Speed is a good approximation for now of a class's weight
 		// Therefore bigger base damage for slower classes
@@ -682,6 +688,12 @@ ConVar mp_prematch( "mp_prematch",
 		// Don't worry this'll be optimised!
 		float speedratio = clamp((pPlayer->m_Local.m_flFallVelocity - flMaxSafe) / (PLAYER_FATAL_FALL_SPEED - flMaxSafe), 0, 1.0f);
 		float flDmg = flBaseDmg + speedratio * flBaseDmg;
+
+		// Spies only take half damage too
+		if (bIsSpy)
+		{
+			flDmg *= 0.5f;
+		}
 
 		return flDmg;
 	} 
