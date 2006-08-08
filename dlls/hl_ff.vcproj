@@ -118,6 +118,7 @@ if exist &quot;$(TargetDir)&quot;server.pdb copy &quot;$(TargetDir)&quot;server.
 				PreprocessorDefinitions="_DEBUG;fopen=dont_use_fopen;BOTS;FF_DLL;USES_SAVERESTORE;GAME_DLL;sprintf=use_Q_snprintf_instead_of_sprintf;_WINDOWS;VECTOR;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;_WIN32;PROTECTED_THINGS_ENABLE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="5"
+				ForceConformanceInForLoopScope="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="3"
 				PrecompiledHeaderThrough="cbase.h"
@@ -3766,6 +3767,12 @@ if exist &quot;$(TargetDir)&quot;server.pdb copy &quot;$(TargetDir)&quot;server.
 			Filter="">
 			<File
 				RelativePath="..\stats\ff_socks.cpp">
+				<FileConfiguration
+					Name="Release FF|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug FF|Win32">
 					<Tool

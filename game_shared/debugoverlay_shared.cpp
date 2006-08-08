@@ -113,13 +113,13 @@ void NDebugOverlay::Line( const Vector &origin, const Vector &target, int r, int
 	Vector clientForward;
 	player->EyeVectors( &clientForward );
 
-	Vector toOrigin		= origin - player->GetAbsOrigin();
-	Vector toTarget		= target - player->GetAbsOrigin();
- 	float  dotOrigin	= DotProduct(clientForward,toOrigin);
- 	float  dotTarget	= DotProduct(clientForward,toTarget);
+	//Vector toOrigin		= origin - player->GetAbsOrigin();
+	//Vector toTarget		= target - player->GetAbsOrigin();
+ 	//float  dotOrigin	= DotProduct(clientForward,toOrigin);
+ 	//float  dotTarget	= DotProduct(clientForward,toTarget);
 	
-//	if (dotOrigin < 0 && dotTarget < 0) 
-//		return;
+	//if (dotOrigin < 0 && dotTarget < 0) 
+	//	return;
 
 	if ( debugoverlay )
 	{
