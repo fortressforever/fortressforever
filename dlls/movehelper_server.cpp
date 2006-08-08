@@ -347,20 +347,10 @@ void CMoveHelperServer::Con_NPrintf( int idx, char const* pFormat, ...)
 bool CMoveHelperServer::PlayerFallingDamage( void )
 {
 	float flFallDamage = g_pGameRules->FlPlayerFallDamage( m_pHostPlayer );	
+
 	if ( flFallDamage > 0 )
 	{
 		m_pHostPlayer->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), flFallDamage, DMG_FALL ) ); 
-
-		// --> Mirv: Crouching spies have no fall sound
-		CFFPlayer *ffplayer = ToFFPlayer(m_pHostPlayer);
-
-		if (ffplayer && ffplayer->GetClassSlot() == CLASS_SPY && (ffplayer->GetFlags() & FL_DUCKING))
-		{
-			// Anything here instead?
-		}
-		else
-			StartSound( m_pHostPlayer->GetAbsOrigin(), "Player.FallDamage" );
-		// <-- Mirv: Crouching spies have no fall sound
 	}
 
 	if ( m_pHostPlayer->m_iHealth <= 0 )
