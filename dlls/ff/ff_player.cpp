@@ -4125,7 +4125,11 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	// Display any effect associate with this damage type
 	DamageEffect(info.GetDamage(),bitsDamage);
 
-	EmitSound("Player.Pain");	// |-- Mirv: Emit some pain sound why don't you.
+	// Emit a pain sound but not when we're falling, because that is already handled
+	if (!(info.GetDamageType() & DMG_FALL))
+	{
+		EmitSound("Player.Pain");
+	}
 
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
