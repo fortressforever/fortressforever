@@ -34,7 +34,7 @@ public:
 	void ChangeFOVThink( void );
 
 	// Bug #0000390: multiple render targets for cameras
-	string_t GetRenderTarget( void ) { return m_szRenderTarget; }
+	string_t GetRenderTarget( void ) { return m_szRenderTarget.Get(); }
 
 	void InputChangeFOV( inputdata_t &inputdata );
 	void InputSetOnAndTurnOthersOff( inputdata_t &inputdata );

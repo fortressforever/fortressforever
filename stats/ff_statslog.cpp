@@ -89,8 +89,10 @@ CFFStatsLogging::~CFFStatsLogging()
 */
 void CFFStatsLogging::CleanUp() 
 {
+	int i;
+
 	// Destroy all instances of class stats
-	for (int i = 0; i < m_nPlayers; i++) 
+	for (i = 0; i < m_nPlayers; i++) 
 	{
 		if (m_pPlayerStats[i]) 
 		{
