@@ -213,7 +213,8 @@ void CFFWeaponBaseClip::PrimaryAttack()
 #endif
 
 	// player "shoot" animation
-	pPlayer->SetAnimation(PLAYER_ATTACK1);
+	//pPlayer->SetAnimation(PLAYER_ATTACK1);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
 
 	// Fire bullets
 	Fire();

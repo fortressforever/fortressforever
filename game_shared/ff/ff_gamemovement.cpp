@@ -191,7 +191,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	// Mirv: This fixes the jump animation
 	//MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
-	ffplayer->m_PlayerAnimState->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
+	ffplayer->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
 
 	float fGroundFactor = 1.0f;
 	if (player->m_pSurfaceData)

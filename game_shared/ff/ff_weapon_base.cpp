@@ -356,7 +356,8 @@ void CFFWeaponBase::PrimaryAttack()
 	SendWeaponAnim(GetPrimaryAttackActivity());
 
 	// player "shoot" animation
-	pPlayer->SetAnimation(PLAYER_ATTACK1);
+	//pPlayer->SetAnimation(PLAYER_ATTACK1);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
 
 #ifdef GAME_DLL
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
