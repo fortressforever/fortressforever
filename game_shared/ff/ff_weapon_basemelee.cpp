@@ -343,6 +343,8 @@ void CFFWeaponMeleeBase::Swing()
 	// Send the anim
 	SendWeaponAnim(nHitActivity);
 
+	pOwner->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
+
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
 	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
