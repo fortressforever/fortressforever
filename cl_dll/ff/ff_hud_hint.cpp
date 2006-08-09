@@ -45,10 +45,7 @@ static ConVar hint_on("cl_hints", "1");
 // Helper var
 CHudHint *pHudHintHelper = NULL;
 
-#include <vector>
-#include <algorithm>
-
-typedef std::vector<unsigned short> HintVector;
+typedef CUtlVector<unsigned short> HintVector;
 
 // There is a rather lot of globals here right now!
 static HintVector sMapHints;
@@ -68,7 +65,7 @@ CHudHint::CHudHint( const char *pElementName ) : CHudElement( pElementName ), vg
 
 	szMapPath[0] = 0;
 
-	m_fActive = true;
+	m_bActive = true;
 
 	m_flNextHint = m_flDuration = m_flStarted = 0;
 
@@ -109,7 +106,7 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 	// First off, we're now ignoring hints which are triggered while a hint is
 	// playing. We don't queue them up because they'll probably have lost relevancy
 	// by the time they are played.
-	if (gpGlobals->curtime < m_flNextHint && m_fActive)
+	if (gpGlobals->curtime < m_flNextHint && m_bActive)
 	{
 		DevMsg("[Hud Hint] Hint ignored (%s)\n", pszMessage);
 		return;
@@ -128,12 +125,12 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 		sHint = &sMapHints;
 
 	// Already in list of shown hints, so not active by default
-	m_fActive = (std::find(sHint->begin(), sHint->end(), wID) == sHint->end());
+	m_bActive = sHint->HasElement(wID);
 
 	// Secondly, if it's a new hint, add it to our log file
 	// thing
-	if (m_fActive)
-		sHint->push_back(wID);
+	if (m_bActive)
+		sHint->AddToTail(wID);
 
 	// Thirdly, display the new hint
 	// Fourthly, if it's not a new hint we simply show
@@ -233,30 +230,13 @@ void CHudHint::Paint()
 		surface()->DrawSetTextPos(5, 2); // x,y position
 		surface()->DrawPrintText(m_pText, wcslen(m_pText)); // print text
 
-		if (m_fActive)
+		if (m_bActive)
 			bVisible = true;
 	}
 
 	// Update the status of the text box displaying the hint
 	if (m_pRichText->IsVisible() != bVisible)
 		m_pRichText->SetVisible(bVisible);
-}
-
-// Useful helper (stuck it in as a template because not sure yet what
-// type the hint ids will be, saves trouble if forget to change it in future)
-#include "sstream"
-
-template<class T>
-inline std::string ToString(T x)
-{
-	std::ostringstream o;
-
-	if (!(o << x))
-	{
-		return std::string("0");
-	}
-
-	return o.str();
 }
 
 /************************************************************************/
@@ -291,7 +271,7 @@ void LoadHints(const char *pFilename, HintVector &hints)
 	while (pHintID)
 	{
 		int nHintID = atoi(pHintID);
-		hints.push_back(nHintID);
+		hints.AddToTail(nHintID);
 
 		//DevMsg("Reading hint: %hu\n", nHintID);
 
@@ -312,18 +292,20 @@ void SaveHints(const char *pFilename, HintVector &hints)
 	if (!f)
 		return;
 
-	std::string sOutputBuffer;
+	// Shouldn't need any more space than this
+	char szOutputBuffer[2048] = "";
+	char szBuf[16];
 
 	// Add to a buffer space delimited
-	for (unsigned int i = 0; i < hints.size(); i++)
+	for (int i = 0; i < hints.Count(); i++)
 	{
+		Q_snprintf(szBuf, 15, "%hu", hints[i]);
+		Q_strncat(szOutputBuffer, szBuf, 2047);
+
 		DevMsg("Adding hint: %u %hu\n", i, hints[i]);
-		sOutputBuffer += ToString(hints[i]) + " ";
 	}
 
-	DevMsg("Hints: %s\n", sOutputBuffer.c_str());
-
-	(*pFilesystem)->Write(sOutputBuffer.c_str(), sOutputBuffer.size(), f);
+	(*pFilesystem)->Write(szOutputBuffer, Q_strlen(szOutputBuffer), f);
 	(*pFilesystem)->Close(f);
 }
 
@@ -337,12 +319,12 @@ void HudHintSave()
 	// Save only if there is something to save.
 	// We don't clear this because it can just carry on as our running
 	// record of map hints
-	if (!sGeneralHints.empty())
+	if (sGeneralHints.Count() > 0)
 		SaveHints("cache/hints.txt", sGeneralHints);
 
 	// Once again only save if needed
 	// We always save and clear this because we don't know what map is next
-	if (!sMapHints.empty())
+	if (sMapHints.Count() > 0)
 		SaveHints(szMapPath, sMapHints);
 }
 
@@ -353,11 +335,11 @@ void HudHintLoad(const char *pMapName)
 	Q_snprintf(szMapPath, MAX_PATH - 1, "cache/%s.txt", pMapName);
 
 	// Only load general hints if empty, since we keep them as a running record
-    if (sGeneralHints.empty())
+    if (sGeneralHints.Count() == 0)
 		LoadHints("cache/hints.txt", sGeneralHints);
 
 	// Always clear and load the map, since it has probably changed
-	sMapHints.clear();
+	sMapHints.RemoveAll();
 	LoadHints(szMapPath, sMapHints);
 }
 
@@ -366,7 +348,7 @@ CON_COMMAND(showhint, "Show a trigger'd hint")
 	if (!pHudHintHelper)
 		return;
 
-	pHudHintHelper->m_fActive = true;
+	pHudHintHelper->m_bActive = true;
 
 	// Oh yeah and do all this mess again
 	pHudHintHelper->m_flDuration = hint_duration.GetInt();

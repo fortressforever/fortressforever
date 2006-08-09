@@ -57,7 +57,7 @@ private:
 	float		m_flNextHint;	// Next hint allowed
 	float		m_flStarted;	// Start of hint
 
-	bool		m_fActive;
+	bool		m_bActive;
 
 	RichText	*m_pRichText;
 
