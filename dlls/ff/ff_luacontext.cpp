@@ -133,7 +133,9 @@ void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
+#ifdef _LINUX
 	Warning( "[CallFunction]\n" );
+#endif
 
 	m_returnVals.PurgeAndDeleteElements();
 
@@ -143,7 +145,9 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	if(!entsys.ScriptExists() || !L)
 		return false;
 
+#ifdef _LINUX
 	Warning( "[CallFunction] Hey there!\n" );
+#endif
 
 	// set lua's reference to the calling entity
 	luabind::object globals = luabind::globals(L);
