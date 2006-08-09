@@ -354,7 +354,7 @@ void CFFDetpack::DoExplosionDamage( void )
 {
 	// Cause damage and some effects to things around our origin
 	// Raise up a little, don't want to be right on the ground
-	Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 32 );
+	Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 16 );
 
 	// Better damage given out
 	CBaseEntity *pEntity = NULL;
@@ -381,13 +381,13 @@ void CFFDetpack::DoExplosionDamage( void )
 		{
 			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pEntity );
 			pPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
-			vecTarget = pDispenser->GetAbsOrigin() + Vector( 0, 0, 36 );
+			vecTarget = pDispenser->GetAbsOrigin() + Vector( 0, 0, 16 );
 		}
 		else if( pEntity->Classify() == CLASS_SENTRYGUN )
 		{
 			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pEntity );
 			pPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
-			vecTarget = pSentryGun->GetAbsOrigin() + Vector( 0, 0, 36 );
+			vecTarget = pSentryGun->GetAbsOrigin() + Vector( 0, 0, 16 );
 		}
 		else
 		{

@@ -701,15 +701,25 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	// Depending on the teamplay value, take damage
 	if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), info.GetAttacker() ) )
 	{
+		//Warning( "[Buildable] Not taking damage\n" );
 		//DevMsg( "[Buildable] Teammate or ally is attacking me so don't take damage!\n" );
 		return 0;
+	}
+	else
+	{
+		//Warning( "[Buildable] Taking damage\n" );
 	}
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	if(( info.GetAttacker() == m_hOwner.Get() ) && ( friendlyfire.GetInt() == 0 ))
 	{
+		//Warning( "[Buildable] attacker == owner && friendlyfire == 0\n" );
 		//DevMsg( "[Buildable] My owner is attacking me & friendly fire is off so don't take damage!\n" );
 		return 0;
+	}
+	else
+	{
+		//Warning( "[Buildable] false: attacker == owner && friendlyfire == 0\n" );
 	}
 
 	// Lets flicker
@@ -729,5 +739,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		SendStatsToBot();
 	}
 
-	return BaseClass::OnTakeDamage(adjustedDamage);
+	//Warning( "[Buildable] Damage: %f\n", adjustedDamage.GetDamage() );
+
+	return CBaseEntity::OnTakeDamage(adjustedDamage);
 }
