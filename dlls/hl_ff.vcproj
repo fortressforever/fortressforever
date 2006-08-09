@@ -48,14 +48,7 @@
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
-				Name="VCCustomBuildTool"
-				Description="Copying to destination folder"
-				CommandLine="if exist &quot;e:\steam\steamapps\SourceMods\newfftest\bin\server.dll&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\newfftest\bin\server.dll&quot;
-if exist &quot;$(TargetDir)&quot;server.dll copy &quot;$(TargetDir)&quot;server.dll &quot;e:\steam\steamapps\SourceMods\newfftest\bin\server.dll&quot;
-if exist &quot;e:\steam\steamapps\SourceMods\newfftest\bin\server.pdb&quot; attrib -r &quot;e:\steam\steamapps\SourceMods\newfftest\bin\server.pdb&quot;
-if exist &quot;$(TargetDir)&quot;server.pdb copy &quot;$(TargetDir)&quot;server.pdb &quot;e:\steam\steamapps\SourceMods\newfftest\bin&quot;
-"
-				Outputs="e:\steam\steamapps\SourceMods\newfftest\bin\server.dll"/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="TRUE"
@@ -82,7 +75,9 @@ if exist &quot;$(TargetDir)&quot;server.pdb copy &quot;$(TargetDir)&quot;server.
 				TypeLibraryName=".\hl___Win32_Release_DoD/hl.tlb"
 				HeaderFileName=""/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				Description="Copying server dll"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
