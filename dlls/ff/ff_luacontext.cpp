@@ -133,6 +133,8 @@ void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
+	Warning( "[CallFunction]\n" );
+
 	m_returnVals.PurgeAndDeleteElements();
 
 	lua_State* L = entsys.GetLuaState();
@@ -140,6 +142,8 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	// If there is no active script then allow the ents to always go
 	if(!entsys.ScriptExists() || !L)
 		return false;
+
+	Warning( "[CallFunction] Hey there!\n" );
 
 	// set lua's reference to the calling entity
 	luabind::object globals = luabind::globals(L);
