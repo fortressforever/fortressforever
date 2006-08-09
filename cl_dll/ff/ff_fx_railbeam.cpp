@@ -13,14 +13,19 @@
 #include "cbase.h"
 #include "ff_fx_railbeam.h"
 #include "c_te_effect_dispatch.h"
+#include "ClientEffectPrecacheSystem.h"
 #include "view.h"
 #include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define RAILBEAM_MATERIAL	"effects/blueblacklargebeam"
+#define RAILBEAM_MATERIAL	"effects/railbeam"
 #define FIRE_TIME			0.6f
+
+CLIENTEFFECT_REGISTER_BEGIN(PrecacheRailbeamMaterial)
+CLIENTEFFECT_MATERIAL(RAILBEAM_MATERIAL)
+CLIENTEFFECT_REGISTER_END()
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
