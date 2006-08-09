@@ -2344,6 +2344,9 @@
 				RelativePath=".\vehicle_baseserver.cpp">
 			</File>
 			<File
+				RelativePath=".\vehicle_choreo_generic.cpp">
+			</File>
+			<File
 				RelativePath="vehicle_sounds.h">
 			</File>
 			<File
@@ -2604,6 +2607,9 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\usermessages.cpp">
+				</File>
+				<File
+					RelativePath=".\weapon_cubemap.cpp">
 				</File>
 			</Filter>
 			<Filter

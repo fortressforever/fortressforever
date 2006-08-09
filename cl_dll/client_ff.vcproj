@@ -452,9 +452,6 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 				RelativePath="c_sprite.cpp">
 			</File>
 			<File
-				RelativePath=".\hl2_hud\c_strider.cpp">
-			</File>
-			<File
 				RelativePath="c_sun.cpp">
 			</File>
 			<File
@@ -1903,15 +1900,6 @@ if exist &quot;$(TargetDir)&quot;client.pdb copy &quot;$(TargetDir)&quot;client.
 			<Filter
 				Name="episodic"
 				Filter="">
-				<File
-					RelativePath=".\episodic\c_prop_coreball.cpp">
-				</File>
-				<File
-					RelativePath=".\episodic\c_weapon_hopwire.cpp">
-				</File>
-				<File
-					RelativePath=".\episodic\episodic_screenspaceeffects.cpp">
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
