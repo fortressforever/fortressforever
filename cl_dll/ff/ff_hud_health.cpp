@@ -72,6 +72,7 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudHealth")
 {
 	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	m_pHudElementTexture = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,10 +114,13 @@ void CHudHealth::VidInit()
 {
 	Reset();
 
+	/*
 	// Precache the background texture
 	m_pHudElementTexture = new CHudTexture();
 	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
 	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_health", true, false);
+	*/
+	//m_pHudElementTexture = gHUD.GetIcon( "healthBoxFG" );
 }
 
 //-----------------------------------------------------------------------------
@@ -218,9 +222,13 @@ void CHudHealth::Paint()
 	if( pPlayer && ( ( pPlayer->GetClassSlot() < CLASS_SCOUT ) || ( pPlayer->GetClassSlot() > CLASS_CIVILIAN ) ) )
 		return;
 
+	/*
 	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	*/
+	if( m_pHudElementTexture )
+		m_pHudElementTexture->DrawSelf( 0, 0, GetWide(), GetTall(), Color( 255, 255, 255, 255 ) );
 
 	BaseClass::Paint();
 }
