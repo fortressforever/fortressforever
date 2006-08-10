@@ -44,6 +44,7 @@ class CFFGrenadeNapalm : public CFFGrenadeBase
 {
 public:
 	DECLARE_CLASS(CFFGrenadeNapalm,CFFGrenadeBase)
+	DECLARE_NETWORKCLASS();
 
 	CNetworkVector(m_vInitialVelocity);
 
@@ -55,6 +56,9 @@ public:
 #ifdef CLIENT_DLL
 	CFFGrenadeNapalm() {}
 	CFFGrenadeNapalm( const CFFGrenadeNapalm& ) {}
+
+	virtual RenderGroup_t GetRenderGroup()  { return RENDER_GROUP_TWOPASS; }
+
 #else
 	DECLARE_DATADESC()
 	virtual void Spawn();
@@ -70,6 +74,11 @@ public:
 		DEFINE_THINKFUNC( FlameThink ),
 	END_DATADESC()
 #endif
+
+IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeNapalm, DT_FFGrenadeNapalm)
+
+BEGIN_NETWORK_TABLE(CFFGrenadeNapalm, DT_FFGrenadeNapalm)
+END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( napalmgrenade, CFFGrenadeNapalm );
 PRECACHE_WEAPON_REGISTER( napalmgrenade );
