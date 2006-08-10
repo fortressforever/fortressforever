@@ -58,7 +58,8 @@ public:
 	virtual void OnDataChanged(DataUpdateType_t type);
 
 	virtual int	 DrawModel(int flags);
-	
+
+	// Both to catch the end of this projectile's life
 	virtual void SetDormant(bool bDormant);
 	virtual void Release();
 
@@ -67,6 +68,10 @@ public:
 	// This entity is drawing its past position thanks to interpolation
 	bool IsDrawingHistory();
 
+	// No shadows for projectiles
+	virtual ShadowType_t ShadowCastType() { return SHADOWS_NONE; }
+
+private:
 	// Flag to keep track of whether projectile needs a cleanup
 	bool	m_bNeedsCleanup;
 	bool	m_bInPresent;

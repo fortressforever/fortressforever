@@ -48,6 +48,7 @@ void CFFCaltropGib::Spawn( void )
 	SetSolid( SOLID_BBOX );
 	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 	SetSize( Vector ( -3, -3, -3 ), Vector ( 3, 3, 3 ) );
+	SetEffects(EF_NOSHADOW);
 
 	SetThink( &CBaseAnimating::SUB_Remove );
 	SetNextThink( gpGlobals->curtime + 15.0f );
@@ -228,6 +229,7 @@ void CFFCaltrop::Spawn( void )
 	SetTouch( &CFFCaltrop::CaltropTouch );
 	SetThink( &CBaseAnimating::SUB_Remove );
 	SetNextThink( gpGlobals->curtime + 15.0f );
+	SetEffects(EF_NOSHADOW);
 }
 
 //-----------------------------------------------------------------------------
