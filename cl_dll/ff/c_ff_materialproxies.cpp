@@ -10,6 +10,10 @@
 //	---------
 //	09/23/2005,	Mulchman: 
 //		First created
+//
+//	08/10/2006, Mulchman:
+//		Removed some unneeded stuff. I don't think a
+//		couple of these are used anymore, though.
 
 #include "cbase.h"
 #include "c_ff_materialproxies.h"
@@ -128,8 +132,15 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 			// Get the class (actual c++ class name)
 			//const char *pszClassname = pEntity->GetClassname();
 
-			if( pEntity->Classify() == CLASS_DETPACK )
+			if( ( pEntity->Classify() == CLASS_DETPACK ) || ( pEntity->Classify() == CLASS_DISPENSER ) || ( pEntity->Classify() == CLASS_SENTRYGUN ) )
 			{
+				C_FFBuildableObject *pBuildable = dynamic_cast< C_FFBuildableObject * >( pEntity );
+				if( pBuildable )
+				{
+					iTeam = pBuildable->GetOwnerPlayer()->GetTeamNumber() - 1;
+				}
+
+				/*
 				C_FFDetpack *pDetpack = ( C_FFDetpack * )pEntity;
 				if( pDetpack )
 				{	
@@ -141,7 +152,9 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 						iTeam = pOwner->GetTeamNumber() - 1;
 					}
 				}
+				*/
 			}
+			/*
 			else if( pEntity->Classify() == CLASS_DISPENSER )
 			{
 				C_FFDispenser *pDispenser = ( C_FFDispenser * )pEntity;
@@ -170,6 +183,7 @@ void C_TeamColorMaterialProxy::OnBind( void *pC_BaseEntity )
 					}
 				}
 			}
+			*/
 			else if( pEntity->Classify() == CLASS_NONE )
 			{
 				Warning( "[Team Color Proxy] (Classify() == CLASS_NONE)\n" );
@@ -247,3 +261,95 @@ C_Refract_TeamColorMaterialProxy::C_Refract_TeamColorMaterialProxy( void )
 }
 
 EXPOSE_INTERFACE( C_Refract_TeamColorMaterialProxy, IMaterialProxy, "Refract_TeamColor" IMATERIAL_PROXY_INTERFACE_VERSION )
+
+//=============================================================================
+//
+//	class C_GlowMaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_GlowMaterialProxy::C_GlowMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+C_GlowMaterialProxy::~C_GlowMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool C_GlowMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	// Return false, was just playing with this for fun.
+	return false;
+
+	const char *pszValue = "$selfillumtint";
+	
+	bool bFound = true;
+
+	m_pValue = pMaterial->FindVar( pszValue, &bFound );
+
+	if( !bFound )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_GlowMaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	// Don't do anything, was just playing with this
+	return;
+
+	// Get the entity this material is on
+	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
+	if( pEntity )
+	{
+		if( pEntity->IsPlayer() )
+		{
+		}
+		else if( ( pEntity->Classify() == CLASS_DISPENSER ) || ( pEntity->Classify() == CLASS_SENTRYGUN ) || ( pEntity->Classify() == CLASS_DETPACK ) )
+		{
+			C_FFBuildableObject *pBuildable = dynamic_cast< C_FFBuildableObject * >( pEntity );
+			if( pBuildable )
+			{
+				int iTeam = pBuildable->GetOwnerPlayer()->GetTeamNumber();
+				switch( iTeam )
+				{
+				case TEAM_BLUE:
+					Warning( "[Glow Proxy] Blue Something!\n" );
+					m_pValue->SetVecValue( 0.0f, 0.0f, 1.0f );
+					//m_pValue->SetIntValue( 1 );
+					break;
+
+				case TEAM_RED:
+					//m_pValue->SetVecValue( 1.0f, 0.0f, 0.0f );
+					break;
+
+				case TEAM_YELLOW:
+					break;
+
+				case TEAM_GREEN:
+					break;
+				}
+			}
+		}
+		else
+		{
+			char szAssertMsg[ 256 ];
+			Q_snprintf( szAssertMsg, sizeof( szAssertMsg ), "[Glow Proxy] Unknown entity (%s) trying to use glow material proxy!\n", pEntity->GetClassname() );
+			AssertMsg( false, szAssertMsg );
+		}
+	}
+}
+
+EXPOSE_INTERFACE( C_GlowMaterialProxy, IMaterialProxy, "Glow" IMATERIAL_PROXY_INTERFACE_VERSION )
