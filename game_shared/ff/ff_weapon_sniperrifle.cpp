@@ -29,7 +29,7 @@ static int g_iBeam, g_iHalo;
 
 #define SNIPER_BEAM		"effects/bluelaser1.vmt"
 #define SNIPER_HALO		"sprites/muzzleflash1.vmt"
-#define SNIPER_DOT		"sprites/redglow1.vmt"
+#define SNIPER_DOT		"sprites/sniperdot_red.vmt"
 
 
 #ifdef CLIENT_DLL 
