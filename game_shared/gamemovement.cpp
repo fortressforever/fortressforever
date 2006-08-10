@@ -974,10 +974,12 @@ void CGameMovement::WaterMove( void )
 	}
 	else  // Go straight up by upmove amount.
 	{
+		// --> Mirv: No lets not do this (trackerid: 0000945)
 		// exaggerate upward movement along forward as well
-		float upwardMovememnt = mv->m_flForwardMove * forward.z * 2;
-		upwardMovememnt = clamp( upwardMovememnt, 0, mv->m_flClientMaxSpeed );
-		wishvel[2] += mv->m_flUpMove + upwardMovememnt;
+		//float upwardMovememnt = mv->m_flForwardMove * forward.z * 2;
+		//upwardMovememnt = clamp( upwardMovememnt, 0, mv->m_flClientMaxSpeed );
+		//wishvel[2] += mv->m_flUpMove + upwardMovememnt;
+		// <--
 	}
 
 	// Copy it over and determine speed
