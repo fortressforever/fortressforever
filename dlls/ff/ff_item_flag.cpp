@@ -156,8 +156,6 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 
 void CFFInfoScript::Spawn( void )
 {
-	Warning( "[CFFInfoScript::Spawn]\n" );
-
 	// Set the time we spawned.
 	m_flSpawnTime = gpGlobals->curtime;
 

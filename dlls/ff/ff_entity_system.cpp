@@ -549,10 +549,6 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
-#ifdef _LINUX
-	Warning( "[RunPredicates_LUA]\n" );
-#endif
-
 	if( !pContext )
 		return false;
 
@@ -566,9 +562,6 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContex
 		pContext->Push( pEntity );
 	}
 
-#ifdef _LINUX
-	Warning( "[RunPredicates_LUA] pContext->CallFunction\n" );
-#endif 
 	if( pContext->CallFunction( pObject, szFunctionName ) )
 		return true;
 
