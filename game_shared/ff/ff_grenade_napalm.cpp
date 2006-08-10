@@ -83,6 +83,13 @@ PRECACHE_WEAPON_REGISTER( napalmgrenade );
 	}
 	void CFFGrenadeNapalm::Explode( trace_t *pTrace, int bitsDamageType )
 	{
+		// Don't explode underwater
+		if (UTIL_PointContents(GetAbsOrigin()) & (CONTENTS_SLIME|CONTENTS_WATER))
+		{
+			UTIL_Bubbles(GetAbsOrigin() - Vector(5, 5, 5), GetAbsOrigin() + Vector(5, 5, 5), 30);
+			CFFGrenadeBase::PostExplode();
+			return;
+		}
 		
 //		DevMsg("[Grenade Debug] CFFGrenadeNapalm::Explode\n");
 		CFFGrenadeBase::PreExplode( pTrace, NULL, NAPALM_EFFECT );
