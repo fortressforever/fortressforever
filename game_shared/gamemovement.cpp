@@ -3951,7 +3951,7 @@ void CGameMovement::Duck( void )
 		{
 			// we should rarely ever get here, so assert so a coder knows when it happens
 			//Assert(0);	// |-- We get this every spawn, thanks.
-			DevMsg( 1, "Restoring player view height\n" );
+			//DevMsg( 1, "Restoring player view height\n" );
 
 			// set the eye height to the non-ducked height
 			SetDuckedEyeOffset(0.0f);
