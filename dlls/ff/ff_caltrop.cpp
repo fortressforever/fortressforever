@@ -257,30 +257,25 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 	{
 		if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 		{
-			DevMsg("[Grenade Debug] Damaging player and removing\n");
-			CTakeDamageInfo info(this,GetOwnerEntity(),Vector(0,0,0),GetAbsOrigin(),10.0f, DMG_GENERIC);
-			pPlayer->TakeDamage( info );
-			m_takedamage = DAMAGE_NO;
-			AddSolidFlags( FSOLID_NOT_SOLID );
-			SetMoveType( MOVETYPE_NONE );
-			AddEffects( EF_NODRAW );
-			SetTouch ( NULL );
-			SetThink ( &CBaseAnimating::SUB_Remove );
-			SetNextThink( gpGlobals->curtime );
+			float flDuration = 15.0f;
+			float flIconDuration = flDuration;
+			float flSpeed = 0.8f;
+			if( pPlayer->LuaRunEffect( SE_LEGSHOT, this, &flDuration, &flIconDuration, &flSpeed ) )
+			{
+				DevMsg("[Grenade Debug] Damaging player and removing\n");
+				CTakeDamageInfo info(this,GetOwnerEntity(),Vector(0,0,0),GetAbsOrigin(),10.0f, DMG_GENERIC);
+				pPlayer->TakeDamage( info );
+				m_takedamage = DAMAGE_NO;
+				AddSolidFlags( FSOLID_NOT_SOLID );
+				SetMoveType( MOVETYPE_NONE );
+				AddEffects( EF_NODRAW );
+				SetTouch ( NULL );
+				SetThink ( &CBaseAnimating::SUB_Remove );
+				SetNextThink( gpGlobals->curtime );
 
-			// make the player walk slow
-			pPlayer->AddSpeedEffect(SE_CALTROP, 15.0, 0.8f, SEM_ACCUMULATIVE|SEM_HEALABLE, FF_ICON_CALTROP, 15.0f);
-
-			/*
-			// send them the status icon
-			DevMsg("[Grenade Debug] Sending status icon\n");
-			CSingleUserRecipientFilter user( (CBasePlayer *)pPlayer );
-			user.MakeReliable();
-			UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_ICON_CALTROP);
-			WRITE_FLOAT(15.0);
-			MessageEnd();
-			*/
+				// make the player walk slow
+				pPlayer->AddSpeedEffect( SE_CALTROP, flDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_ICON_CALTROP, flIconDuration );
+			}
 		}		
 	}
 }
