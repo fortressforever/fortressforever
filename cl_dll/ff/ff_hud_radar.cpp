@@ -178,53 +178,23 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	}
 }
 
+// REALLY crap little macro, remove ASAP!
+#define DRAW_HUD_ELEMENT(element, x, y, col) \
+{ \
+	CHudTexture const *m_pHudElement = gHUD.GetIcon(element); \
+	if (m_pHudElement) \
+	{ \
+		m_pHudElement->DrawSelf(x, y, col); \
+	} \
+}
+
 void CHudRadar::Paint( void )
 {
 	if( engine->IsInGame() )
 	{
-		CHudTexture *m_pHudHealthFgBox = NULL;
+		DRAW_HUD_ELEMENT("ammoCarriedBoxBG", 100, 100, Color(50, 50, 150, 150));
+		DRAW_HUD_ELEMENT("ammoCarriedBoxFG", 100, 100, Color(50, 50, 150, 255));
 
-		m_pHudHealthFgBox = gHUD.GetIcon( "ammoCarriedBoxFG" );
-
-		if( m_pHudHealthFgBox )
-		{
-			//m_pHudHealthFgBox->DrawSelf( 100, 100, 400, 200, Color( 255, 255, 255, 255 ) );
-			//*
-			//m_pHudHealthFgBox->bRenderUsingFont = true;
-			//m_pHudHealthFgBox->
-			
-			surface()->DrawSetTexture( m_pHudHealthFgBox->textureId );
-			surface()->DrawSetColor( Color( 255, 255, 255, 200 ) );
-			surface()->DrawTexturedRect( 200, 200, 400, 400 );
-			//*/
-
-			//m_pHudHealthFgBox->bRenderUsingFont = true;
-			//m_pHudHealthFgBox->DrawSelf( 200, 200, 100, 100, Color( 255, 255, 255, 255 ) );
-
-			/*
-			surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-			surface()->DrawSetColor(255, 255, 255, 255);
-			surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
-			*/
-		}
-		
-		/*
-		vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
-		vgui::HFont hFont = vgui::scheme()->GetIScheme( scheme )->GetFont( "WeaponIconsSelected" );
-
-		surface()->DrawSetTextFont( hFont );
-		surface()->DrawSetTextColor( Color( 255, 255, 255, 255 ) );
-		surface()->DrawSetTextPos( 100, 100 );
-		//if( surface()->AddBitmapFontFile( "Hud_ForeGround" ) )
-		//	Warning( "[Success]\n" );
-		//else
-		//	Warning( "[Failure]\n" );
-		//surface()->DrawSetTextScale( 2.0f, 2.0f );
-		const wchar_t *pszString = L"q";
-		surface()->DrawPrintText( pszString, wcslen( pszString ) );
-		//surface()->DrawUnicodeString( L"f r j" );
-		//*/
-		
 		if( m_hRadarList.Count() )
 		{
 			// Get us
