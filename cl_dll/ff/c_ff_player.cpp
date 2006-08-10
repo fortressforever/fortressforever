@@ -922,8 +922,7 @@ void C_FFPlayer::Spawn( void )
 	// Automatically call the slot specified by cl_spawnslot
 	if (iSpawnWeapon > 0 && iSpawnWeapon <= MAX_WEAPON_SLOTS)
 	{
-		Q_snprintf(szCommand, 127, "slot%d", iSpawnWeapon);
-		engine->ClientCmd(szCommand);
+		SwapToWeaponSlot(iSpawnWeapon);
 	}
 }
 
@@ -1326,6 +1325,21 @@ void C_FFPlayer::SwapToWeapon(FFWeaponID weaponid)
 		if (weap && weap->GetWeaponID() == weaponid)
 			::input->MakeWeaponSelection(weap);
 	}	
+}
+
+void C_FFPlayer::SwapToWeaponSlot(int iSlot)
+{
+	Assert(iSlot > 0 && iSlot < MAX_WEAPON_SLOTS);
+
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		C_FFWeaponBase *pWeapon = dynamic_cast<C_FFWeaponBase *> (GetWeapon(i));
+		
+		if (pWeapon && pWeapon->GetFFWpnData().iSlot == iSlot -1)
+		{
+			::input->MakeWeaponSelection(pWeapon);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
