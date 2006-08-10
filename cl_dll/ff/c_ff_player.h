@@ -225,6 +225,7 @@ public:
 	int	  m_iSpawnInterpCounterCache;
 
 	void SwapToWeapon(FFWeaponID);
+	void SwapToWeaponSlot(int iSlot);
 
 	bool m_bFirstSpawn;
 	virtual void Spawn( void );
