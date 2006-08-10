@@ -202,6 +202,13 @@ void CFFWeaponAssaultCannon::Fire()
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage;
 
+	Vector vecTest = info.m_vecSrc;
+
+#ifdef CLIENT_DLL
+	QAngle tmpAngle;
+	pPlayer->GetViewModel()->GetAttachment(1, info.m_vecSrc, tmpAngle);
+#endif
+
 	pPlayer->FireBullets(info);
 
 }
