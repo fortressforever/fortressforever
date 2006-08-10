@@ -877,25 +877,6 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	{
 		EmitSound( "Flesh.BulletImpact" );
 	}
-	// --> Mirv: Poisoned & on fire, placeholder effects
-	if (fDamageType & DMG_POISON)
-	{
-		// Green damage indicator
-		color32 green = {32, 64, 0, 200};
-		UTIL_ScreenFade(this, green, 2.0f, 0.1f, FFADE_IN);
-
-		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
-	}
-
-	if (fDamageType & DMG_BURN)
-	{
-		// Orange damage indicator
-		color32 orange = {255,100,20,200};
-		UTIL_ScreenFade(this, orange, 2.0f, 0.1f, FFADE_IN);
-
-		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
-	}
-	// <-- Mirv
 }
 
 /*

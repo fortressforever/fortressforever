@@ -555,6 +555,18 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 		fvol *= 0.65;
 	}
 
+	// --> Mirv: Redone sound stuff
+
+	// If we are walking or ducking, silence
+	if (GetFlags() & (FL_DUCKING) || m_nButtons & IN_SPEED)
+	{
+		fvol = 0;
+	}
+	else
+	{
+		fvol = 1.0f;
+	}
+
 	PlayStepSound( feet, psurface, fvol, false );
 }
 

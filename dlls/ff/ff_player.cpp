@@ -5632,3 +5632,30 @@ bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDur
 	// Lua function didn't exist so function as normal
 	return true;
 }
+
+//------------------------------------------------------------------------------
+// Purpose : Do some kind of damage effect for the type of damage
+//------------------------------------------------------------------------------
+void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
+{
+	if (fDamageType & DMG_POISON)
+	{
+		// Green damage indicator
+		color32 green = {32, 64, 0, 200};
+		UTIL_ScreenFade(this, green, 2.0f, 0.1f, FFADE_IN);
+
+		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
+	}
+	else if (fDamageType & DMG_BURN && GetClassSlot() != CLASS_PYRO)
+	{
+		// Orange damage indicator
+		color32 orange = {255,100,20,200};
+		UTIL_ScreenFade(this, orange, 2.0f, 0.1f, FFADE_IN);
+
+		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
+	}
+	else
+	{
+		BaseClass::DamageEffect(flDamage, fDamageType);
+	}
+}

@@ -666,6 +666,7 @@ public:
 	// before giving the player the actual effect.
 	bool LuaRunEffect( int iEffect, CBaseEntity *pEffector = NULL, float *pflDuration = NULL, float *pflIconDuration = NULL, float *pflSpeed = NULL );
 
+	void DamageEffect(float flDamage, int fDamageType);
 };
 
 

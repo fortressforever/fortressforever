@@ -174,8 +174,17 @@ void CNapalmEmitter::SimulateParticles( CParticleSimulateIterator *pIterator )
 	while ( pParticle )
 	{
 		pParticle->m_flLifetime += timeDelta;
+
+		// Kill this particle if it's hit water
+		if (UTIL_PointContents(pParticle->m_Pos) & (CONTENTS_SLIME|CONTENTS_WATER))
+		{
+			pParticle->m_flLifetime = pParticle->m_flDieTime;
+		}
+
 		if ( pParticle->m_flLifetime >= pParticle->m_flDieTime )
+		{
 			pIterator->RemoveParticle( pParticle );
+		}
 		else
 		{
 			if(pParticle->m_iType == eNapalmParticle)
