@@ -259,6 +259,11 @@ public:
 
 	int			m_iHallucinationIndex;
 
+public:
+	Color GetTeamColor( void ) const { return m_clrTeamColor; }
+protected:
+	Color m_clrTeamColor;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };

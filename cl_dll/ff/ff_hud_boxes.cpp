@@ -54,3 +54,13 @@ bool GetVectorBgBoxInfo( const char *pszBoxName, char *pszFontFile, char& cFontC
 
 	return true;
 }
+
+// TEMP: Just un-macro'd mirvs macro. This is obviously
+// terrible since we'll be looking up the icon everytime
+// we want to draw it.
+void DrawHudBox( const char *pszBoxName, int x, int y, Color cColor )
+{
+	CHudTexture *pHudElement = gHUD.GetIcon( pszBoxName );
+	if( pHudElement )
+		pHudElement->DrawSelf( x, y, cColor );
+}

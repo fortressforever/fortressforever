@@ -32,6 +32,8 @@
 #include "ff_hud_grenade1timer.h"
 #include "ff_hud_grenade2timer.h"
 
+#include <igameresources.h>
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -699,6 +701,9 @@ C_FFPlayer::C_FFPlayer() :
 {
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
+	// Default
+	m_clrTeamColor = Color( 255, 255, 255, 255 );
+
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -894,6 +899,13 @@ void C_FFPlayer::Spawn( void )
 		BaseClass::Spawn();
 		m_bFirstSpawn = false;
 	}
+
+	// Set our team color color
+	IGameResources *pGR = GameResources();
+	if( pGR && ( GetTeamNumber() >= TEAM_BLUE ) && ( GetTeamNumber() <= TEAM_GREEN ) )
+		m_clrTeamColor = pGR->GetTeamColor( GetTeamNumber() );
+	else
+		m_clrTeamColor = Color( 255, 255, 255, 255 );
 
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
