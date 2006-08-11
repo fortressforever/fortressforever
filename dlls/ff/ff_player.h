@@ -75,6 +75,7 @@ struct SpeedEffect
 	float speed;			// speed to set the player to
 	int modifiers;
 	bool active;			// whether this speed effect is active or not
+	float duration;
 };
 
 struct LocationInfo

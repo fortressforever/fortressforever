@@ -3245,7 +3245,7 @@ void CFFPlayer::StatusEffectsThink( void )
 	bool recalcspeed = false;
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
-		if (m_vSpeedEffects[i].active && m_vSpeedEffects[i].endTime < gpGlobals->curtime )
+		if (m_vSpeedEffects[i].active && ( m_vSpeedEffects[i].endTime < gpGlobals->curtime ) && ( m_vSpeedEffects[i].duration != -1 ) )
 		{
 			m_vSpeedEffects[i].active = false;
 			recalcspeed = true;
@@ -3422,6 +3422,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	m_vSpeedEffects[i].type = type;
 	m_vSpeedEffects[i].startTime = gpGlobals->curtime;
 	m_vSpeedEffects[i].endTime = gpGlobals->curtime + duration;
+	m_vSpeedEffects[i].duration = duration;
 	m_vSpeedEffects[i].speed = speed;
 	m_vSpeedEffects[i].modifiers = mod;
 
