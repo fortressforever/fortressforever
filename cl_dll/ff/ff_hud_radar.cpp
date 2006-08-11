@@ -73,9 +73,29 @@ public:
 	void	VidInit( void );
 	void	Paint( void );
 
+	virtual void ApplySettings(KeyValues *inResourceData)
+	{
+		const char *pszFG = inResourceData->GetString("ForegroundTexture", NULL);
+		const char *pszBG = inResourceData->GetString("BackgroundTexture", NULL);
+
+		m_pHudBackground = (pszBG ? gHUD.GetIcon(pszBG) : NULL);
+		m_pHudForeground = (pszFG ? gHUD.GetIcon(pszFG) : NULL);
+	}
+
+	virtual void ApplySchemeSettings(IScheme *pScheme)
+	{
+		m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
+		m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
+	}
+
 	// Callback function for the "RadarUpdate" user message
 	void	MsgFunc_RadarUpdate( bf_read &msg );
 
+	CHudTexture *m_pHudForeground;
+	CHudTexture *m_pHudBackground;
+
+	Color m_HudForegroundColour;
+	Color m_HudBackgroundColour;
 };
 
 DECLARE_HUDELEMENT( CHudRadar );
@@ -175,27 +195,39 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	}
 }
 
+static ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
+
 void CHudRadar::Paint( void )
 {
 	if( engine->IsInGame() )
 	{
-		/*
 		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-		if( pPlayer )
+
+		//
+		// Framework for hud stuff has been set up temporarily here.
+		// Going to move this into a base class next 
+		// so that it is applied to every single element.
+		//
+		//	I will do this next (this is just a fyi)
+
+		Color &bg = m_HudBackgroundColour;
+		Color &fg = m_HudForegroundColour;
+
+		if (pPlayer && cl_teamcolourhud.GetBool())
 		{
-			Color fgCol = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
-			Color bgCol = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
-			
-			DrawHudBox( "ammoCarriedBoxBG", 300, 100, bgCol );
-			DrawHudBox( "ammoCarriedBoxFG", 300, 100, fgCol );
+			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
+			Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
 
-			DrawHudBox( "healthBoxBG", 5, 100, bgCol );
-			DrawHudBox( "healthBoxFG", 5, 100, fgCol );
-
-			DrawHudBox( "locationBoxBG", 5, 170, bgCol );
-			DrawHudBox( "locationBoxFG", 5, 170, fgCol );
+			bg = HudBackgroundColour;
+			fg = HudForegroundColour;
 		}
-		*/
+
+		if (m_pHudBackground)
+			m_pHudBackground->DrawSelf(0, 0, bg);
+
+		if (m_pHudForeground)
+			m_pHudForeground->DrawSelf(0, 0, fg);
+
 
 		if( m_hRadarList.Count() )
 		{
