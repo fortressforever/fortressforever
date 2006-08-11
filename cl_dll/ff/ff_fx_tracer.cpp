@@ -14,6 +14,8 @@
 
 #define	TRACER_SPEED			5000 
 
+static ConVar cl_tracers("cl_tracers", "1");
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -25,6 +27,9 @@ Vector GetTracerOrigin( const CEffectData &data );
 //-----------------------------------------------------------------------------
 void ACTracerCallback( const CEffectData &data )
 {
+	if (!cl_tracers.GetBool())
+		return;
+
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if ( !player )
 		return;
