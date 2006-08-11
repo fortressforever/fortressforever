@@ -51,6 +51,7 @@ CHudLua::CHudLua(const char *pElementName) : CHudElement(pElementName), vgui::Pa
 	SetParent(g_pClientMode->GetViewport());
 
 	SetHiddenBits(0);
+	m_nHudElements = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -66,6 +67,17 @@ CHudLua::~CHudLua()
 void CHudLua::VidInit()
 {
 	SetPaintBackgroundEnabled(false);
+
+	for( int i = 0; i < m_nHudElements; i++ )
+	{
+		if( m_sHudElements[ i ].pPanel )
+		{
+			m_sHudElements[ i ].pPanel->DeletePanel();
+			m_sHudElements[ i ].pPanel = NULL;
+		}
+	}
+
+	m_nHudElements = 0;
 }
 
 //-----------------------------------------------------------------------------
