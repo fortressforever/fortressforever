@@ -52,6 +52,33 @@ typedef struct
 	int			m_CurrentWeapon;
 } ClientInput;
 
+// class: BotTraceResult
+//		This file defines all the common structures used by the game and bot alike.
+typedef struct
+{
+	// float: m_Fraction
+	//		0.0 - 1.0 how far the trace went
+	float		m_Fraction;
+	// float: m_Normal
+	//		The plane normal that was struck
+	float		m_Normal[3];
+	// float: m_Endpos
+	//		The end point the trace ended at
+	float		m_Endpos[3];
+	// var: m_HitEntity
+	//		The entity that was hit by the trace
+	GameEntity	m_HitEntity;
+	// int: m_StartSolid
+	//		Did the trace start inside a solid?
+	int			m_StartSolid;
+	// int: m_Contents
+	//		Content flags.
+	int			m_Contents;
+	// int: m_iUser2
+	//		Extra user info from the trace
+	int			m_iUser2;
+} BotTraceResult;
+
 // typedef: Game_EngineFuncs_t
 //		This struct defines all the function pointers that the
 //		game will fill in and give to the bot so that the bot may perform generic
@@ -90,6 +117,10 @@ typedef struct
 	//		This bot should intepret and perform a traceline, returning
 	//		the results into the <BotTraceResult> parameter.
 	obResult (*pfnTraceLine)(BotTraceResult *_result, const float _start[3], const float _end[3], const AABB *_pBBox , int _mask, int _user, obBool _bUsePVS);
+
+	// Function: pfnGetPointContents
+	//		Gets the content bitflags for a location.
+	int (*pfnGetPointContents)(const float _pos[3]);
 
 	// Function: pfnFindEntityByClassName
 	//		This function should return entities matching the classname, and should be
@@ -215,11 +246,11 @@ typedef struct
 
 	// Function: pfnAddTempDisplayLine
 	//		Adds a line to immediately display between 2 positions, with a specific color
-	void (*pfnAddTempDisplayLine)(const float _start[3], const float _end[3], const obColor &_color);
+	void (*pfnAddTempDisplayLine)(const float _start[3], const float _end[3], const obColor &_color, float _time);
 
 	// Function: pfnAddDisplayRadius
 	//		Adds a radius indicator to be displayed at a certain position with radius and color
-	void (*pfnAddDisplayRadius)(const float _pos[3], const float _radius, const obColor &_color);
+	void (*pfnAddDisplayRadius)(const float _pos[3], const float _radius, const obColor &_color, float _time);
 
 	// Function: pfnClearDebugLines
 	//		This function tells the interface to potentially clear prior navigation or radius indicators
