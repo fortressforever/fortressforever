@@ -435,7 +435,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void obAddTempDisplayLine(const float _start[3], const float _end[3], const obColor &_color)
+	static void obAddTempDisplayLine(const float _start[3], const float _end[3], const obColor &_color, float _time)
 	{
 		Vector vStart(_start[0], _start[1], _start[2]);
 		Vector vEnd(_end[0], _end[1], _end[2]);
@@ -445,12 +445,12 @@ namespace Omnibot
 			_color.g(), 
 			_color.b(), 
 			false, 
-			2.0);
+			_time);
 	}
 
 	//-----------------------------------------------------------------
 
-	void obAddDisplayRadius(const float _pos[3], const float _radius, const obColor &_color)
+	void obAddDisplayRadius(const float _pos[3], const float _radius, const obColor &_color, float _time)
 	{
 		Vector pos(_pos[0], _pos[1], _pos[2] + 40);
 		Vector start;
@@ -473,7 +473,7 @@ namespace Omnibot
 				_color.g(), 
 				_color.b(), 
 				false,
-				2.0f);
+				_time);
 		}
 	}
 
@@ -958,6 +958,30 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
+	int obUtilBotContentsFromGameContents(int _contents)
+	{
+		int iBotContents = 0;
+		if(_contents & CONTENTS_SOLID)
+			iBotContents |= CONT_SOLID;
+		if(_contents & CONTENTS_WATER)
+			iBotContents |= CONT_WATER;
+		if(_contents & CONTENTS_SLIME)
+			iBotContents |= CONT_SLIME;
+		if(_contents & CONTENTS_LADDER)
+			iBotContents |= CONT_LADDER;
+		if(_contents & CONTENTS_MOVEABLE)
+			iBotContents |= CONT_MOVABLE;
+		return iBotContents;
+	}
+
+	int obGetPointContents(const float _pos[3])
+	{
+		int iContents = UTIL_PointContents(Vector(_pos[0], _pos[1], _pos[2]));
+		return obUtilBotContentsFromGameContents(iContents);
+	}
+
+	//-----------------------------------------------------------------
+
 	static obResult obTraceLine(BotTraceResult *_result, const float _start[3], const float _end[3], 
 		const AABB *_pBBox, int _mask, int _user, obBool _bUsePVS)
 	{
@@ -976,7 +1000,6 @@ namespace Omnibot
 		int iPVSLength = engine->GetPVSForCluster(iPVSCluster, sizeof(pvs), pvs);
 
 		bool bInPVS = _bUsePVS ? engine->CheckOriginInPVS(end, pvs, iPVSLength) : true;
-
 		if(bInPVS)
 		{
 			// Set up the collision masks
@@ -994,6 +1017,8 @@ namespace Omnibot
 					iMask |= MASK_OPAQUE;
 				if(_mask & TR_MASK_WATER)
 					iMask |= MASK_WATER;
+				if(_mask & TR_MASK_FLOODFILL)
+					iMask |= MASK_NPCWORLDSTATIC;
 			}
 
 			// Initialize a ray with or without a bounds
@@ -1017,15 +1042,14 @@ namespace Omnibot
 
 			// Fill in the bot traceflag.			
 			_result->m_Fraction = trace.fraction;
-			_result->m_StartSolid = trace.startsolid;
-			_result->m_iUser2 = trace.contents;
+			_result->m_StartSolid = trace.startsolid;			
 			_result->m_Endpos[0] = trace.endpos.x;
 			_result->m_Endpos[1] = trace.endpos.y;
 			_result->m_Endpos[2] = trace.endpos.z;
 			_result->m_Normal[0] = trace.plane.normal.x;
 			_result->m_Normal[1] = trace.plane.normal.y;
-			_result->m_Normal[2] = trace.plane.normal.z;	
-
+			_result->m_Normal[2] = trace.plane.normal.z;
+			_result->m_Contents = obUtilBotContentsFromGameContents(trace.contents);
 			return Success;
 		}
 
@@ -1087,6 +1111,21 @@ namespace Omnibot
 			return "rocket";
 		case TF_CLASSEX_TURRET:
 			return "ff_miniturret";
+			//////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////////
+		/*case ENT_CLASS_GENERIC_PLAYERSTART:
+			"info_player_coop"
+				"info_player_start"
+				"info_player_deathmatch"*/
+		/*case ENT_CLASS_GENERIC_BUTTON:
+		case ENT_CLASS_GENERIC_HEALTH:
+		case ENT_CLASS_GENERIC_AMMO:
+		case ENT_CLASS_GENERIC_ARMOR:*/
+		case ENT_CLASS_GENERIC_LADDER:
+			return "func_useableladder";
+		/*case ENT_CLASS_GENERIC_TELEPORTER:
+		case ENT_CLASS_GENERIC_LIFT:
+		case ENT_CLASS_GENERIC_MOVER:*/
 		}
 		return 0;
 	}
@@ -1180,7 +1219,6 @@ namespace Omnibot
 	static obResult obGetClientPosition(int _client, float _pos[3])
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( _client );
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			const Vector &vPos = pEntity->GetAbsOrigin();
@@ -1197,7 +1235,6 @@ namespace Omnibot
 	static obResult obGetEntityOrientation(const GameEntity _ent, float _fwd[3], float _right[3], float _up[3])
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			QAngle viewAngles = pEntity->EyeAngles();
@@ -1212,7 +1249,6 @@ namespace Omnibot
 	static obResult obGetClientOrientation(int _client, float _fwd[3], float _right[3], float _up[3])
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( _client );
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			QAngle viewAngles = pEntity->EyeAngles();
@@ -1243,7 +1279,6 @@ namespace Omnibot
 	static obResult obGetEntityWorldAABB(const GameEntity _ent, AABB *_aabb)
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			Vector vMins, vMaxs;
@@ -1280,7 +1315,6 @@ namespace Omnibot
 	static obResult obGetEntityEyePosition(const GameEntity _ent, float _pos[3])
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( (edict_t*)_ent );
-		assert(pEntity && "Null Ent!");
 		if(pEntity)
 		{
 			Vector vPos = pEntity->EyePosition();
@@ -1601,17 +1635,7 @@ namespace Omnibot
 					pMsg->m_IsHuman = bIsHuman ? True : False;
 				}
 				break;
-			}
-		case GEN_MSG_GETPOINTCONTENTS:
-			{
-				Msg_PointContents *pMsg = _data.Get<Msg_PointContents>();
-				if(pMsg)
-				{
-					// TODO:
-					pMsg->m_Contents = 0;
-				}
-				break;
-			}
+			}		
 		case GEN_MSG_GETEQUIPPEDWEAPON:
 			{
 				Msg_EquippedWeapon *pMsg = _data.Get<Msg_EquippedWeapon>();
@@ -2093,7 +2117,7 @@ namespace Omnibot
 				case LINE_WAYPOINT:
 				case LINE_BLOCKABLE:
 					{
-						obAddTempDisplayLine(g_DebugLines[i].start, g_DebugLines[i].end, g_DebugLines[i].color);
+						obAddTempDisplayLine(g_DebugLines[i].start, g_DebugLines[i].end, g_DebugLines[i].color, 2.0f);
 
 						// Blockables only drawn once.
 						if(g_DebugLines[i].type == LINE_BLOCKABLE)
@@ -2110,7 +2134,7 @@ namespace Omnibot
 						// of each other.
 						Vector vLineEnd(g_DebugLines[i].end[0], g_DebugLines[i].end[1], g_DebugLines[i].end[2]);
 						vLineEnd.z -= 30.0f;
-						obAddTempDisplayLine(g_DebugLines[i].start, (float*)&vLineEnd, g_DebugLines[i].color);
+						obAddTempDisplayLine(g_DebugLines[i].start, (float*)&vLineEnd, g_DebugLines[i].color, 2.0f);
 						break;
 					}
 				}
@@ -2269,6 +2293,8 @@ namespace Omnibot
 		g_InterfaceFunctions.pfnPrintError					= pfnPrintError;
 		g_InterfaceFunctions.pfnPrintMessage				= obPrintMessage;	
 		g_InterfaceFunctions.pfnTraceLine					= obTraceLine;
+		g_InterfaceFunctions.pfnGetPointContents			= obGetPointContents;		
+
 		g_InterfaceFunctions.pfnUpdateBotInput				= obUpdateBotInput;
 		g_InterfaceFunctions.pfnBotCommand					= obBotDoCommand;
 

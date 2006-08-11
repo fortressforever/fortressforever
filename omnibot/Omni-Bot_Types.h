@@ -53,6 +53,14 @@ typedef enum eobBool
 	True
 } obBool;
 
+// enum: obFunctionStatus
+//		Represents the status of some function.
+typedef enum eobFunctionStatus
+{
+	Function_Finished,
+	Function_InProgress,	
+} obFunctionStatus;
+
 // enumerations: obResult
 //		Success - Successful.
 //		OutOfPVS - Out of PVS(Potential Visibility Set).
@@ -142,27 +150,123 @@ typedef struct AABB_t
 	float	m_Mins[3];
 	float	m_Maxs[3];
 #ifdef __cplusplus
-	void CenterPoint(float _out[3])
+
+	enum Direction
+	{
+		DIR_NORTH,
+		DIR_EAST,
+		DIR_SOUTH,
+		DIR_WEST,
+		DIR_TOP,
+		DIR_BOTTOM,
+
+		DIR_ALL,
+	};
+
+	void Set(const float _pt[3])
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] = _pt[i];
+			m_Maxs[i] = _pt[i];
+		}
+	}
+	void Set(const float _min[3], const float _max[3])
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] = _min[i];
+			m_Maxs[i] = _max[i];
+		}
+	}
+	void CenterPoint(float _out[3]) const
 	{
 		_out[0] = (m_Mins[0] + m_Maxs[0]) * 0.5f;
 		_out[1] = (m_Mins[1] + m_Maxs[1]) * 0.5f;
 		_out[2] = (m_Mins[2] + m_Maxs[2]) * 0.5f;
 	}
-	AABB_t(float _mins[3], float _maxs[3])
+	void SetCenter(const float _out[3])
 	{
 		for(int i = 0; i < 3; ++i)
 		{
-			m_Mins[i] = _mins[i];
-			m_Maxs[i] = _maxs[i];
+			m_Mins[i] += _out[i];
+			m_Maxs[i] += _out[i];
 		}
 	}
-	AABB_t(float _center[3])
+	void Expand(const float _pt[3])
 	{
 		for(int i = 0; i < 3; ++i)
 		{
-			m_Mins[i] = _center[i];
-			m_Maxs[i] = _center[i];
+			if(_pt[i] < m_Mins[i])
+				m_Mins[i] = _pt[i];
+
+			if(_pt[i] > m_Maxs[i])
+				m_Maxs[i] = _pt[i];
 		}
+	}
+
+	bool Intersects(const AABB_t &_bbox) const
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (m_Maxs[i] < _bbox.m_Mins[i] || m_Mins[i] > _bbox.m_Maxs[i])
+				return false;
+		}
+		return true;
+	}
+
+	bool Intersects(const float _pt[3]) const
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (m_Maxs[i] < _pt[i] || m_Mins[i] > _pt[i])
+				return false;
+		}
+		return true;
+	}
+
+	bool FindIntersection(const AABB_t &_bbox, AABB_t& _overlap) const
+	{
+		if(Intersects(_bbox))
+		{
+			for(int i = 0; i < 3; i++)
+			{
+				if(m_Maxs[i] <= _bbox.m_Maxs[i])
+					_overlap.m_Maxs[i] = m_Maxs[i];
+				else
+					_overlap.m_Maxs[i] = _bbox.m_Maxs[i];
+
+				if(m_Mins[i] <= _bbox.m_Mins[i])
+					_overlap.m_Mins[i] = _bbox.m_Mins[i];
+				else
+					_overlap.m_Mins[i] = m_Mins[i];
+			}
+			return true;
+		}
+		return false;
+	}
+
+	float GetAxisLength(int _axis) const
+	{
+		return m_Maxs[_axis] - m_Mins[_axis];
+	}
+
+	void Scale(float _scale)
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] *= _scale;
+			m_Maxs[i] *= _scale;
+		}
+	}
+
+	AABB_t(const float _mins[3], const float _maxs[3])
+	{
+		Set(_mins, _maxs);
+	}
+	AABB_t(const float _center[3])
+	{
+		Set(_center);
 	}
 	AABB_t()
 	{
@@ -369,10 +473,15 @@ typedef enum eEntityCategory
 typedef enum eEntityClassGeneric
 {
 	ENT_CLASS_GENERIC_START = 10000,
+	ENT_CLASS_GENERIC_PLAYERSTART,
 	ENT_CLASS_GENERIC_BUTTON,
 	ENT_CLASS_GENERIC_HEALTH,
 	ENT_CLASS_GENERIC_AMMO,
 	ENT_CLASS_GENERIC_ARMOR,
+	ENT_CLASS_GENERIC_LADDER,
+	ENT_CLASS_GENERIC_TELEPORTER,
+	ENT_CLASS_GENERIC_LIFT,
+	ENT_CLASS_GENERIC_MOVER,
 } EntityClassGeneric;
 
 // enumerations: SoundType
@@ -423,10 +532,12 @@ typedef enum eContents
 	CONT_WATER		= (1<<1),
 	CONT_SLIME		= (1<<2),
 	CONT_FOG		= (1<<3),
-	CONT_TELEPORTER	= (1<<4),
-	CONT_MOVER		= (1<<5),
-	CONT_TRIGGER	= (1<<6),
-	CONT_LAVA		= (1<<7),
+	CONT_MOVER		= (1<<4),
+	CONT_TRIGGER	= (1<<5),
+	CONT_LAVA		= (1<<6),
+	CONT_LADDER		= (1<<7),
+	CONT_TELEPORTER = (1<<8),
+	CONT_MOVABLE	= (1<<9),
 
 	// THIS MUST BE LAST!
 	CONT_START_USER = (1<<24)
@@ -479,33 +590,6 @@ typedef enum eNavigatorID
 	NAVID_MAX
 } NavigatorID;
 
-// class: BotTraceResult
-//		This file defines all the common structures used by the game and bot alike.
-typedef struct
-{
-	// float: m_Fraction
-	//		0.0 - 1.0 how far the trace went
-	float		m_Fraction;
-	// float: m_Normal
-	//		The plane normal that was struck
-	float		m_Normal[3];
-	// float: m_Endpos
-	//		The end point the trace ended at
-	float		m_Endpos[3];
-	// var: m_HitEntity
-	//		The entity that was hit by the trace
-	GameEntity	m_HitEntity;
-	// int: m_StartSolid
-	//		Did the trace start inside a solid?
-	int			m_StartSolid;
-	// int: m_iUser1
-	//		Extra user info from the trace
-	int			m_iUser1;
-	// int: m_iUser2
-	//		Extra user info from the trace
-	int			m_iUser2;
-} BotTraceResult;
-
 // enumerations: TraceMasks
 //		TR_MASK_ALL - This trace should test against everything
 //		TR_MASK_SOLID - This trace should test against only solids
@@ -525,6 +609,7 @@ typedef enum eTraceMasks
 	TR_MASK_WATER		= (1<<5),
 	TR_MASK_PLAYERCLIP	= (1<<6),
 	TR_MASK_SMOKEBOMB	= (1<<7),
+	TR_MASK_FLOODFILL	= (1<<8),
 
 	// THIS MUST BE LAST!
 	TR_MASK_LAST		= (1<<16)
