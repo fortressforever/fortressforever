@@ -183,7 +183,7 @@ void CHudLua::HudText(const char *pszIdentifier, int iX, int iY, const char *psz
 		return;
 
 	// Now set this label up
-	pLabel->SetPos(iX, iY);
+	pLabel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
 	pLabel->SetText(pszText);
 	pLabel->SizeToContents();
 
@@ -201,7 +201,7 @@ void CHudLua::HudTimer(const char *pszIdentifier, int iX, int iY, float flValue,
 		return;
 
 	// Now set this label up
-	pTimer->SetPos(iX, iY);
+	pTimer->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
 	pTimer->SetTimerValue(flValue);
 	pTimer->SetTimerSpeed(flSpeed);
 	pTimer->SetTimerDrawClockStyle(true);
