@@ -26,8 +26,6 @@
 
 #endif
 
-#include "ff_weapon_base.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -846,7 +844,7 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 void CBaseCombatWeapon::SetActivity( Activity act, float duration ) 
 { 
 	//Adrian: Oh man...
-#if !defined( CLIENT_DLL ) //&& defined( HL2MP )	// |-- Mirv: We need this too
+#if !defined( CLIENT_DLL ) && defined( HL2MP )
 	SetModel( GetWorldModel() );
 #endif
 	
@@ -857,7 +855,7 @@ void CBaseCombatWeapon::SetActivity( Activity act, float duration )
 		sequence = SelectWeightedSequence( ACT_VM_IDLE );
 
 	//Adrian: Oh man again...
-#if !defined( CLIENT_DLL ) //&& defined( HL2MP )	// |-- Mirv: We need this too
+#if !defined( CLIENT_DLL ) && defined( HL2MP )
 	SetModel( GetViewModel() );
 #endif
 
@@ -1436,19 +1434,11 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	
 	if ( !bFired && (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
-		CFFWeaponBase *pFFWeapon = dynamic_cast<CFFWeaponBase*>(this);
-
-		if(!pFFWeapon)
-			return; //HACKHACK: voogru: too lazy to make the proper checks here, for now.
-
 		// Clip empty? Or out of ammo on a no-clip weapon?
 		if ( !IsMeleeWeapon() &&  
-			(( UsesClipsForAmmo1() && m_iClip1 < pFFWeapon->GetFFWpnData().m_iCycleDecrement) 
-			|| ( !UsesClipsForAmmo1() 
-			&& pOwner->GetAmmoCount(m_iPrimaryAmmoType)< pFFWeapon->GetFFWpnData().m_iCycleDecrement )) )
+			(( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pOwner->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
 		{
 			HandleFireOnEmpty();
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2; //VOOGRU: #0000562 
 		}
 		else if (pOwner->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
@@ -1488,7 +1478,7 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// -----------------------
 	//  No buttons down
 	// -----------------------
-	if (!((pOwner->m_nButtons & IN_ATTACK) || /*(pOwner->m_nButtons & IN_ATTACK2) ||*/ (pOwner->m_nButtons & IN_RELOAD))) // |-- Mirv: Removed attack2 so things can continue while in menu
+	if (!((pOwner->m_nButtons & IN_ATTACK) || (pOwner->m_nButtons & IN_ATTACK2) || (pOwner->m_nButtons & IN_RELOAD)))
 	{
 		// no fire buttons down or reloading
 		if ( !ReloadOrSwitchWeapons() && ( m_bInReload == false ) )
@@ -1580,7 +1570,6 @@ void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /
 {
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
 	const char *shootsound = GetShootSound( sound_type );
-
 	if ( !shootsound || !shootsound[0] )
 		return;
 
@@ -1684,19 +1673,8 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 
 	// If I don't have any spare ammo, I can't reload
-
-	CFFWeaponBase *pFFWeapon = dynamic_cast<CFFWeaponBase*>(this);
-
-	if(pFFWeapon)
-	{
-		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) < pFFWeapon->GetFFWpnData().m_iCycleDecrement )
-			return false;
-	}
-	else
-	{
-		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
-			return false;
-	}
+	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+		return false;
 
 	bool bReload = false;
 
@@ -2021,34 +1999,52 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	//Find the next sequence in the potential chain of sequences leading to our ideal one
 	int nextSequence = FindTransitionSequence( GetSequence(), m_nIdealSequence, NULL );
 
+	// --> Mirv: Fixed world model animations
+
+	// Must not send viewmodel sequences to the world model. The whole basecombatweapon
+	// this is done stupidly because it uses the viewmodel for all its stuff, even though
+	// it's actually a worldmodel on the client.
+	// Part of this fix is also in basecombatweapon.cpp
+
 	// Don't use transitions when we're deploying
 	if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
 	{
 		//Set our activity to the next transitional animation
+		// Timing has been moved into each conditional result now
 		SetActivity( ACT_TRANSITION );
 		SetSequence( nextSequence );	
 		SendViewModelAnim( nextSequence );
+		SetWeaponIdleTime(gpGlobals->curtime + SequenceDuration(nextSequence));
 	}
 	else
 	{
 		//Set our activity to the ideal
-		// --> Mirv: Fixed so that we can catch activity changes
-		// For idles, do it the normal way! The othe way breaks them
-		if (ideal == ACT_VM_IDLE || (ideal >= ACT_VM_IDLE_WITH0 && ideal <= ACT_VM_DEEPIDLE_WITH6))
+		SetActivity( m_IdealActivity );
+
+		// The weapon model sequence need clamping to either idle or firing for now
+		// Need to call ResetSequenceInfo for the muzzleflashes
+		// Melee weapons won't have a fire animation (for now)
+		if (m_IdealActivity == ACT_VM_PRIMARYATTACK && !IsMeleeWeapon())
 		{
-			SetActivity( m_IdealActivity, 0 );
-			SetSequence( m_nIdealSequence );
+			SetSequence(1);
+			ResetSequenceInfo();
 		}
 		else
 		{
-			SetActivity(m_IdealActivity, 0);
+			SetSequence(0);	
 		}
-		// <--
+
+		// Send the correct sequences to the viewmodel.
+		// Also use the correct timing from the original sequence (not the one
+		// that is really set)
 		SendViewModelAnim( m_nIdealSequence );
+		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration(m_nIdealSequence));
 	}
 
 	//Set the next time the weapon will idle
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	// This has been moved into the conditional results above
+	//SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	// <-- Mirv
 	return true;
 }
 
@@ -2558,11 +2554,11 @@ BEGIN_NETWORK_TABLE(CBaseCombatWeapon, DT_BaseCombatWeapon)
 	SendPropInt( SENDINFO(m_iState ), 8, SPROP_UNSIGNED ),
 	SendPropEHandle( SENDINFO(m_hOwner) ),
 #else
-	RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
-	RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),
-	RecvPropInt( RECVINFO(m_iViewModelIndex)),
-	RecvPropInt( RECVINFO(m_iWorldModelIndex)),
-	RecvPropInt( RECVINFO(m_iState )),
-	RecvPropEHandle( RECVINFO(m_hOwner ) ),
+RecvPropDataTable("LocalWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalWeaponData)),
+RecvPropDataTable("LocalActiveWeaponData", 0, 0, &REFERENCE_RECV_TABLE(DT_LocalActiveWeaponData)),
+RecvPropInt( RECVINFO(m_iViewModelIndex)),
+RecvPropInt( RECVINFO(m_iWorldModelIndex)),
+RecvPropInt( RECVINFO(m_iState )),
+RecvPropEHandle( RECVINFO(m_hOwner ) ),
 #endif
 END_NETWORK_TABLE()

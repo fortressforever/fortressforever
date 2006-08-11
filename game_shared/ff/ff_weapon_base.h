@@ -157,6 +157,9 @@ public:
 	// Default primary attack for non-clip weapons
 	virtual void		PrimaryAttack();
 
+	// Modified to take into account different ammo amounts being fired
+	virtual void		ItemPostFrame();
+
 	// Should override the fov
 	virtual float		GetFOV() { return -1; }
 

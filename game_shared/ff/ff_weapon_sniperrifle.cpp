@@ -277,7 +277,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 		// Randomly flutter
 		//renderscale = 16.0f + random->RandomFloat(-2.0f, 2.0f);	
-		renderscale = 0.5f + random->RandomFloat(-0.02f, 0.02f);
+		renderscale = 0.20f + random->RandomFloat(-0.005f, 0.005f);
 
 		if (!fDrawDot)
 			return 0;
