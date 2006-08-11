@@ -24,5 +24,6 @@
 
 // Prototype
 bool GetVectorBgBoxInfo( const char *pszBoxName, char *pszFontFile, char& cFontChar );
+void DrawHudBox( const char *pszBoxName, int x, int y, Color cColor );
 
 #endif // FF_HUD_BOXES_H

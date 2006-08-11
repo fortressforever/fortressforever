@@ -32,6 +32,7 @@ using namespace vgui;
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
+#include "ff_hud_boxes.h"
 #include "c_ff_player.h"
 #include "ff_utils.h"
 #include "ff_esp_shared.h"
@@ -66,10 +67,6 @@ public:
 
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
-		
-		// Initialize some junk
-		//m_bSomethingToDraw = false;
-		//m_iNumPlayers = 0;
 	};
 
 	void	Init( void );
@@ -78,7 +75,7 @@ public:
 
 	// Callback function for the "RadarUpdate" user message
 	void	MsgFunc_RadarUpdate( bf_read &msg );
-	
+
 };
 
 DECLARE_HUDELEMENT( CHudRadar );
@@ -178,22 +175,27 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	}
 }
 
-// REALLY crap little macro, remove ASAP!
-#define DRAW_HUD_ELEMENT(element, x, y, col) \
-{ \
-	CHudTexture const *m_pHudElement = gHUD.GetIcon(element); \
-	if (m_pHudElement) \
-	{ \
-		m_pHudElement->DrawSelf(x, y, col); \
-	} \
-}
-
 void CHudRadar::Paint( void )
 {
 	if( engine->IsInGame() )
 	{
-		DRAW_HUD_ELEMENT("ammoCarriedBoxBG", 100, 100, Color(50, 50, 150, 150));
-		DRAW_HUD_ELEMENT("ammoCarriedBoxFG", 100, 100, Color(50, 50, 150, 255));
+		/*
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+		if( pPlayer )
+		{
+			Color fgCol = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
+			Color bgCol = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
+			
+			DrawHudBox( "ammoCarriedBoxBG", 300, 100, bgCol );
+			DrawHudBox( "ammoCarriedBoxFG", 300, 100, fgCol );
+
+			DrawHudBox( "healthBoxBG", 5, 100, bgCol );
+			DrawHudBox( "healthBoxFG", 5, 100, fgCol );
+
+			DrawHudBox( "locationBoxBG", 5, 170, bgCol );
+			DrawHudBox( "locationBoxFG", 5, 170, fgCol );
+		}
+		*/
 
 		if( m_hRadarList.Count() )
 		{

@@ -113,7 +113,6 @@ void CHudAmmo::Init( void )
 //-----------------------------------------------------------------------------
 void CHudAmmo::VidInit( void )
 {
-	/*
 #ifdef FF_USE_HUD_BOX
 	GetVectorBgBoxInfo( "ammo", m_szFontFile, m_cFontChar );
 
@@ -147,8 +146,8 @@ void CHudAmmo::VidInit( void )
 		}
 	}
 #endif
-	*/
 	//m_pHudElementTexture = gHUD.GetIcon( "ammoCarriedBoxFG" );
+	//m_pHudElementTexture = NULL;
 	
 	// Reset
 	m_bGotTeamColor = false;
@@ -344,14 +343,12 @@ void CHudAmmo::Paint()
 	if( pPlayer && ( ( pPlayer->GetClassSlot() < CLASS_SCOUT ) || ( pPlayer->GetClassSlot() > CLASS_CIVILIAN ) ) )
 		return;
 
-	/*
 #ifndef FF_USE_HUD_BOX
 	// Draw background box
 	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 #endif
-	*/
 
 	// Use the weapon ammo icon if possible
 	CHudTexture *ammoIcon = gWR.GetAmmoIconFromWeapon(m_iAmmoType);
@@ -375,21 +372,19 @@ void CHudAmmo::Paint()
 		m_bGotTeamColor = true;
 	}
 	
-//#ifdef FF_USE_HUD_BOX
+#ifdef FF_USE_HUD_BOX
 	// Draw BG Box
 	if( m_pHudElementTexture )
 		m_pHudElementTexture->DrawSelf( 0, 0, GetWide(), GetTall(), m_clrTeamColor );
 
 	// Draw ammo icon
-	//ammoIcon->DrawSelf( icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height, m_clrTeamColor );
-	/*
+	ammoIcon->DrawSelf( icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height, m_clrTeamColor );
 #else
 	// Draw ammo icon
 	surface()->DrawSetTexture(ammoIcon->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(icon_xpos, icon_ypos, icon_xpos + icon_width, icon_ypos + icon_height);
 #endif
-	*/
 
 	BaseClass::Paint();
 }
