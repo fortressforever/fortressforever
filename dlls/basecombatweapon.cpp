@@ -102,15 +102,22 @@ void CBaseCombatWeapon::Operator_FrameUpdate( CBaseCombatCharacter *pOperator )
 
 	if ( IsSequenceFinished() )
 	{
-		if ( SequenceLoops() )
-		{
-			// animation does loop, which means we're playing subtle idle. Might need to fidget.
-			int iSequence = SelectWeightedSequence( GetActivity() );
-			if ( iSequence != ACTIVITY_NOT_AVAILABLE )
-			{
-				ResetSequence( iSequence );	// Set to new anim (if it's there)
-			}
-		}
+		// --> Mirv: Removed for world model fix
+
+		// Don't allow this to happen. It won't affect the viewmodel loops because
+		// they are done separately. If something comes up later with w_ model loops,
+		// reset to the current sequence and not the new SelectWeightedSequence
+
+		//if ( SequenceLoops() )
+		//{
+		//	// animation does loop, which means we're playing subtle idle. Might need to fidget.
+		//	int iSequence = SelectWeightedSequence( GetActivity() );
+		//	if ( iSequence != ACTIVITY_NOT_AVAILABLE )
+		//	{
+		//		ResetSequence( iSequence );	// Set to new anim (if it's there)
+		//	}
+		//}
+		// <-- Mirv
 #if 0
 		else
 		{
