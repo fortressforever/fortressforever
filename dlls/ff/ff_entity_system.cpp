@@ -463,7 +463,8 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 
 		if (!strlen(STRING(ent->GetEntityName())))
 		{
-			Warning( "[entsys] ent did not have an entity name!\n" );
+			// REMOVED: Really annoying to see this
+			//Warning( "[entsys] ent did not have an entity name!\n" );
 			return true /* mirv: let it cont. regardless */;
 		}
 
