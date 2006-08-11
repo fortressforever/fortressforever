@@ -255,6 +255,7 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 
 	// Can't shoot again until we've finished deploying
 	m_flNextPrimaryAttack	= gpGlobals->curtime + MAX_DEPLOY_TIME;
+	m_flNextSecondaryAttack = gpGlobals->curtime + MAX_DEPLOY_TIME;
 
 	SetWeaponVisible(true);
 

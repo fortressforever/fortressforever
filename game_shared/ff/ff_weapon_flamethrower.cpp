@@ -253,6 +253,13 @@ void CFFWeaponFlamethrower::Precache()
 //----------------------------------------------------------------------------
 void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 {
+	// We're using m_flNextSecondaryAttack to make sure we don't draw the flames
+	// before we're allowed to fire (set by DefaultDeploy)
+	if (fEmit && m_flNextSecondaryAttack > gpGlobals->curtime)
+	{
+		return;
+	}
+
 	// Try changing the flamejet. If status has changed, play the correct sound.
 	if (m_hFlameJet && m_hFlameJet->FlameEmit(fEmit))
 	{
