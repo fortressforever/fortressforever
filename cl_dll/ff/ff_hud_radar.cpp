@@ -195,20 +195,15 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	}
 }
 
-static ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
+// ALL THE HUD TEXTURE STUFF SHOULD BE REMOVED FROM HERE 
+// See commit logs for more details
+extern ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
 
 void CHudRadar::Paint( void )
 {
 	if( engine->IsInGame() )
 	{
 		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-		//
-		// Framework for hud stuff has been set up temporarily here.
-		// Going to move this into a base class next 
-		// so that it is applied to every single element.
-		//
-		//	I will do this next (this is just a fyi)
 
 		Color &bg = m_HudBackgroundColour;
 		Color &fg = m_HudForegroundColour;
