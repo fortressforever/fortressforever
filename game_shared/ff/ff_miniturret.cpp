@@ -317,8 +317,6 @@ ConVar	miniturret_castrate( "ffdev_miniturret_castrate", "0" );
 // Datatable
 BEGIN_DATADESC( CFFMiniTurret )
 
-	//DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "team" ),
-
 	DEFINE_THINKFUNC( OnRetire ),
 	DEFINE_THINKFUNC( OnDeploy ),
 	DEFINE_THINKFUNC( OnActiveThink ),
@@ -686,6 +684,19 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 
 	if( GetEnemy() )
 	{
+		// I see you new guy!
+		EmitSound( "RespawnTurret.Alert" );
+
+		// Get a delay value from LUA
+		CFFLuaSC hContext( 1, GetEnemy() );
+		if( entsys.RunPredicates_LUA( this, &hContext, "deploydelay" ) )
+		{
+			// Lua function existed, grab the delay (hopefully)
+
+			// Delay deploying!
+			SetNextThink( gpGlobals->curtime + hContext.GetFloat() );
+		}
+		
 		SetThink( &CFFMiniTurret::OnDeploy );		
 	}
 }
@@ -699,8 +710,6 @@ void CFFMiniTurret::OnDeploy( void )
 		DevMsg( "[MiniTurret] OnDeploy\n" );
 
 	OnObjectThink();
-
-	//m_vecGoalAngles = GetAbsAngles();
 
 	SetNextThink( gpGlobals->curtime );
 
@@ -754,7 +763,7 @@ void CFFMiniTurret::OnSearchThink( void )
 		m_flLastSight = 0;
 		SetThink( &CFFMiniTurret::OnActiveThink );
 		SpinUp();
-		//EmitSound( "RespawnTurret.Alert" );
+
 		return;
 	}
 
@@ -789,7 +798,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	// He might have done something to make him not valid because of
 	// the awesomeness of lua
 	bool bValidTarget = true;
-	//CFFLuaObjectWrapper hValidTarget;
+
 	CFFLuaSC hContext( 1, GetEnemy() );
 	if( entsys.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 		bValidTarget = hContext.GetBool();
@@ -799,13 +808,20 @@ void CFFMiniTurret::OnActiveThink( void )
 		SetEnemy( NULL );
 		m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;
 		SetThink( &CFFMiniTurret::OnSearchThink );
-		//m_vecGoalAngles = GetAbsAngles();
+
 		return;
 	}
 
 	bool bEnemyVisible = false;
-	Vector vecMuzzle = MuzzlePosition();	
-	Vector vecMidEnemy = BodyTarget( vecMuzzle );
+
+	// Get aiming direction and angles
+	Vector vecMuzzle, vecMuzzleDir;
+	QAngle vecMuzzleAng;
+
+	MuzzlePosition( vecMuzzle, vecMuzzleAng );
+	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
+	
+	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMuzzle );
 	
 	if( GetEnemy()->IsPlayer() )
 	{
@@ -815,31 +831,9 @@ void CFFMiniTurret::OnActiveThink( void )
 	}
 	else
 	{
-		// Enemy is a buildable
+		// Enemy is something else
 		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->EyePosition() );
-	}
-
-	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
-
-	Vector vecDirToEnemyEyes = GetEnemy()->WorldSpaceCenter() - vecMuzzle;
-	VectorNormalize( vecDirToEnemyEyes );
-
-	QAngle vecAnglesToEnemy;
-	VectorAngles( vecDirToEnemyEyes, vecAnglesToEnemy );
-
-	// Draw debug info
-	if( miniturret_debug.GetBool() )
-	{
-		NDebugOverlay::Line( EyePosition(), EyePosition() + ( vecDirToEnemyEyes * 256 ), 0, 0, 255, false, 2.0f );
-
-		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
-		NDebugOverlay::Cross3D( GetEnemy()->WorldSpaceCenter(), -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
-		NDebugOverlay::Line( vecMuzzle, GetEnemy()->WorldSpaceCenter(), 0, 255, 0, false, 0.05 );
-
-		NDebugOverlay::Cross3D( vecMuzzle, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
-		NDebugOverlay::Cross3D( vecMidEnemy, -Vector(2,2,2), Vector(2,2,2), 0, 255, 0, false, 0.05 );
-		NDebugOverlay::Line( vecMuzzle, vecMidEnemy, 0, 255, 0, false, 0.05f );
-	}
+	}	
 
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
@@ -854,22 +848,19 @@ void CFFMiniTurret::OnActiveThink( void )
 			SetEnemy( NULL );
 			m_flLastSight = gpGlobals->curtime + FF_MINITURRET_MAX_WAIT;
 			SetThink( &CFFMiniTurret::OnSearchThink );
-			//m_vecGoalAngles = GetAbsAngles();
+			
 			SpinDown();
 			return;
 		}
 	}
 
-	// Get aiming direction and angles
-	Vector vecMuzzleDir;
-	QAngle vecMuzzleAng;
-
-	MuzzlePosition( vecMuzzle, vecMuzzleAng );
-	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
+	Vector vecDirToEnemy = vecMidEnemy - vecMuzzle;
+	VectorNormalizeFast( vecDirToEnemy );	
 
 	if( miniturret_debug.GetBool() )
 	{
-		NDebugOverlay::Line( vecMuzzle, vecMuzzle + ( vecMuzzleDir * 128 ), 255, 0, 0, false, 2.0f );
+		NDebugOverlay::Line( vecMuzzle, vecMuzzle + ( vecDirToEnemy * 256 ), 255, 0, 0, false, 0.25f );
+		NDebugOverlay::Line( vecMuzzle, vecMuzzle + ( vecMuzzleDir * 256 ), 0, 0, 255, false, 0.25f );
 	}
 
 	if( m_flShotTime < gpGlobals->curtime )
@@ -892,6 +883,9 @@ void CFFMiniTurret::OnActiveThink( void )
 	// If we can see our enemy, face it
 	if( bEnemyVisible )
 	{
+		QAngle vecAnglesToEnemy;
+		VectorAngles( vecDirToEnemy, vecAnglesToEnemy );
+
 		m_vecGoalAngles.x = vecAnglesToEnemy.x;
 		m_vecGoalAngles.y = vecAnglesToEnemy.y;		
 	}
