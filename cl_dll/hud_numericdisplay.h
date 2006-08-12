@@ -49,10 +49,10 @@ private:
 	bool m_bIndent;
 
 	CPanelAnimationVar( float, m_flBlur, "Blur", "0" );
-	CPanelAnimationVar( Color, m_TextColor, "TextColor", "FgColor" );
+	CPanelAnimationVar( Color, m_NumberColor, /*"TextColor"*/ "NumberColor", "FgColor" );
 	CPanelAnimationVar( Color, m_Ammo2Color, "Ammo2Color", "FgColor" );
 
-	CPanelAnimationVar( vgui::HFont, m_hNumberFont, /*"NumberFont"*/ "TextFont", "HudNumbers2" );
+	CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudNumbers2" );
 	CPanelAnimationVar( vgui::HFont, m_hNumberGlowFont, "NumberGlowFont", "HudNumbersGlow" );
 	CPanelAnimationVar( vgui::HFont, m_hSmallNumberFont, "SmallNumberFont", "HudNumbersSmall" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
