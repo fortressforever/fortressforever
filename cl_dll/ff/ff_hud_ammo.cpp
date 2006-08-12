@@ -188,7 +188,6 @@ void CHudAmmo::SetAmmo(int iAmmo, bool bPlayAnimation)
 	SetDisplayValue(iAmmo);
 }
 
-#if 0
 ////-----------------------------------------------------------------------------
 //// Purpose: Displays current ammunition level
 ////-----------------------------------------------------------------------------
@@ -547,4 +546,3 @@ void CHudAmmo::SetAmmo(int iAmmo, bool bPlayAnimation)
 //
 //	BaseClass::Paint();
 //}
-#endif

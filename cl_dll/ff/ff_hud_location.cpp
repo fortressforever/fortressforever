@@ -30,6 +30,7 @@ using namespace vgui;
 
 #include "c_ff_player.h"
 #include "ff_utils.h"
+#include "ff_panel.h"
 //#include "c_ff_buildableobjects.h"
 //#include <igameresources.h>
 //#include "c_ff_team.h"
@@ -41,19 +42,23 @@ using namespace vgui;
 //	class CHudLocation
 //
 //=============================================================================
-class CHudLocation : public CHudElement, public vgui::Panel
+class CHudLocation : public CHudElement, public vgui::FFPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHudLocation, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CHudLocation, vgui::FFPanel );
 
 public:
-	CHudLocation( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudLocation" )
+	CHudLocation( const char *pElementName ) : vgui::FFPanel( NULL, "HudLocation" ), CHudElement( pElementName )
 	{
 		// Set our parent window
-		SetParent( g_pClientMode->GetViewport() );
+		//SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+		//SetHiddenBits( HIDEHUD_PLAYERDEAD );
+
+		SetParent(g_pClientMode->GetViewport());
+		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+
 	}
 
 	~CHudLocation( void ) {}
@@ -89,7 +94,7 @@ void CHudLocation::Init( void )
 
 void CHudLocation::VidInit( void )
 {	
-	SetPaintBackgroundEnabled( false );
+	SetPaintBackgroundEnabled( true );
 	m_pText[ 0 ] = '\0'; // Bug 0000293: clear location text buffer on map change
 }
 
@@ -132,4 +137,6 @@ void CHudLocation::Paint( void )
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
 			surface()->DrawUnicodeChar( *wch );
 	}
+
+	BaseClass::Paint();
 }
