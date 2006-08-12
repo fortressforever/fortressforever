@@ -73,29 +73,8 @@ public:
 	void	VidInit( void );
 	void	Paint( void );
 
-	virtual void ApplySettings(KeyValues *inResourceData)
-	{
-		const char *pszFG = inResourceData->GetString("ForegroundTexture", NULL);
-		const char *pszBG = inResourceData->GetString("BackgroundTexture", NULL);
-
-		m_pHudBackground = (pszBG ? gHUD.GetIcon(pszBG) : NULL);
-		m_pHudForeground = (pszFG ? gHUD.GetIcon(pszFG) : NULL);
-	}
-
-	virtual void ApplySchemeSettings(IScheme *pScheme)
-	{
-		m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
-		m_HudBackgroundColour = GetSchemeColor("HudItem.Background", pScheme);
-	}
-
 	// Callback function for the "RadarUpdate" user message
 	void	MsgFunc_RadarUpdate( bf_read &msg );
-
-	CHudTexture *m_pHudForeground;
-	CHudTexture *m_pHudBackground;
-
-	Color m_HudForegroundColour;
-	Color m_HudBackgroundColour;
 };
 
 DECLARE_HUDELEMENT( CHudRadar );
@@ -195,107 +174,82 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 	}
 }
 
-// ALL THE HUD TEXTURE STUFF SHOULD BE REMOVED FROM HERE 
-// See commit logs for more details
-extern ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
-
 void CHudRadar::Paint( void )
 {
-	if( engine->IsInGame() )
+	if (!engine->IsInGame())
+		return;
+
+	if( m_hRadarList.Count() )
 	{
-		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
-
-		Color &bg = m_HudBackgroundColour;
-		Color &fg = m_HudForegroundColour;
-
-		if (pPlayer && cl_teamcolourhud.GetBool())
+		// Get us
+		C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+		if( !pPlayer )
 		{
-			Color HudBackgroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 175 ) ;
-			Color HudForegroundColour = Color( pPlayer->GetTeamColor().r(), pPlayer->GetTeamColor().g(), pPlayer->GetTeamColor().b(), 215 ) ;
-
-			bg = HudBackgroundColour;
-			fg = HudForegroundColour;
+			Warning( "[Scout Radar] No local player!\n" );
+			return;
 		}
 
-		if (m_pHudBackground)
-			m_pHudBackground->DrawSelf(0, 0, bg);
+		// Get our origin
+		Vector vecOrigin = pPlayer->GetAbsOrigin();
 
-		if (m_pHudForeground)
-			m_pHudForeground->DrawSelf(0, 0, fg);
+		// Find our fade based on our time shown
+		float dt = ( m_flStartTime - gpGlobals->curtime );
+		float flAlpha = SimpleSplineRemapVal( dt, 0.0f, radar_duration.GetInt(), 255, 0 );
+		flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 
-
-		if( m_hRadarList.Count() )
-		{
-			// Get us
-			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
-			if( !pPlayer )
+		// Loop through all our dudes
+		for( int i = 0; i < m_hRadarList.Count(); i++ )
+		{				
+			// Draw a box around the guy if they're on our screen
+			int iScreenX, iScreenY;
+			if( GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
 			{
-				Warning( "[Scout Radar] No local player!\n" );
-				return;
-			}
+				int iTopScreenX, iTopScreenY;
+				/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin + ( m_hRadarList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
 
-			// Get our origin
-			Vector vecOrigin = pPlayer->GetAbsOrigin();
+				Color cColor;
+				SetColorByTeam( m_hRadarList[ i ].m_iTeam, cColor );
 
-			// Find our fade based on our time shown
-			float dt = ( m_flStartTime - gpGlobals->curtime );
-			float flAlpha = SimpleSplineRemapVal( dt, 0.0f, radar_duration.GetInt(), 255, 0 );
-			flAlpha = clamp( flAlpha, 0.0f, 255.0f );
+				// Get distance from us to them
+				float flDist = vecOrigin.DistTo( m_hRadarList[ i ].m_vecOrigin );
 
-			// Loop through all our dudes
-			for( int i = 0; i < m_hRadarList.Count(); i++ )
-			{				
-				// Draw a box around the guy if they're on our screen
-				int iScreenX, iScreenY;
-				if( GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
+				int iIndex = m_hRadarList[ i ].m_iClass - 1;
+
+				// Modify based on FOV
+				flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
+
+				int iWidthAdj = 30;
+				int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
+				//int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+				int iYTop = /*( bGotTopScreenY ?*/ iTopScreenY /*: ( ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) ) ) )*/;
+				int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
+
+				if( flDist <= 300 )
 				{
-					int iTopScreenX, iTopScreenY;
-					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin + ( m_hRadarList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
-
-					Color cColor;
-					SetColorByTeam( m_hRadarList[ i ].m_iTeam, cColor );
-
-					// Get distance from us to them
-					float flDist = vecOrigin.DistTo( m_hRadarList[ i ].m_vecOrigin );
-
-					int iIndex = m_hRadarList[ i ].m_iClass - 1;
-
-					// Modify based on FOV
-					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
-
-					int iWidthAdj = 30;
-					int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
-					//int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
-					int iYTop = /*( bGotTopScreenY ?*/ iTopScreenY /*: ( ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) ) ) )*/;
-					int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
-
-					if( flDist <= 300 )
-					{
-						surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
-						surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
-						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
-						surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-					}
-					else
-					{
-						surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
-						surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-					}
-
-					// Get the current frame we're supposed to draw
-					int iFrame = m_hRadarList[ i ].UpdateFrame();
-
-					// Draw the radio tower thing
-					surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
-					surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
-					surface()->DrawSetColor( 255, 255, 255, flAlpha );
-					surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
+					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
+					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 				}
+				else
+				{
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), flAlpha );
+					surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				}
+
+				// Get the current frame we're supposed to draw
+				int iFrame = m_hRadarList[ i ].UpdateFrame();
+
+				// Draw the radio tower thing
+				surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
+				surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
+				surface()->DrawSetColor( 255, 255, 255, flAlpha );
+				surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
 			}
 		}
-
-		// Stop drawing since we haven't gotten another update recently
-		if( ( m_flStartTime + radar_duration.GetInt() ) <= gpGlobals->curtime )
-			m_hRadarList.RemoveAll();
 	}
+
+	// Stop drawing since we haven't gotten another update recently
+	if( ( m_flStartTime + radar_duration.GetInt() ) <= gpGlobals->curtime )
+		m_hRadarList.RemoveAll();
 }
