@@ -94,7 +94,7 @@ void CFFBuildableFlickerer::OnObjectThink( void )
 		if( ( ( m_flFlicker + flicker_time.GetFloat() ) < gpGlobals->curtime ) /*&& ( m_pBuildable->GetRenderMode() != kRenderNormal )*/ )
 		{
 			//m_pBuildable->SetRenderMode( kRenderNormal );
-			m_pBuildable->SetBodygroup( 1, 1 );
+			m_pBuildable->SetBodygroup( 1, 0 );
 		}
 
 		// Think again soon!
@@ -121,7 +121,7 @@ void CFFBuildableFlickerer::Flicker( void )
 		//{
 			//m_pBuildable->SetRenderMode( kRenderTransAlpha );
 			//m_pBuildable->SetRenderColorA( ( byte )110 );
-			m_pBuildable->SetBodygroup( 1, 0 );
+			m_pBuildable->SetBodygroup( 1, 1 );
 		//}
 
 		// Note the time we flickered
