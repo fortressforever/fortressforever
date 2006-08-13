@@ -203,6 +203,9 @@ void CFFSentryGun::Spawn( void )
 	m_iMuzzleAttachment = LookupAttachment( "barrel01" );
 	m_iEyeAttachment = LookupAttachment( "eyes" );
 
+	m_iRocketLAttachment = LookupAttachment( "rocket01" );
+	m_iRocketRAttachment = LookupAttachment( "rocket02" );
+
 	m_iPitchPoseParameter = LookupPoseParameter( SG_BC_PITCH );
 	m_iYawPoseParameter = LookupPoseParameter( SG_BC_YAW );
 	
@@ -400,12 +403,12 @@ void CFFSentryGun::OnActiveThink( void )
 		QAngle vecAngles;
 
 		if( m_bRocketLeftBarrel )
-			GetAttachment( m_iLBarrelAttachment, vecOrigin, vecAngles );
+			GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
 		else
-			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
+			GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
         
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		CFFProjectileRocket::CreateRocket( vecOrigin /*+ vecAiming * 8.0f*/, m_angAiming, this, 102, 900.0f );
+		CFFProjectileRocket *pRocket = CFFProjectileRocket::CreateRocket( vecOrigin /*+ vecAiming * 8.0f*/, m_angAiming, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;

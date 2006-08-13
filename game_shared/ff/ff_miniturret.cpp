@@ -821,7 +821,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	MuzzlePosition( vecMuzzle, vecMuzzleAng );
 	AngleVectors( vecMuzzleAng, &vecMuzzleDir );
 	
-	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMuzzle );
+	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMuzzle, false );
 	
 	if( GetEnemy()->IsPlayer() )
 	{
@@ -833,7 +833,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	{
 		// Enemy is something else
 		bEnemyVisible = FVisible( GetEnemy()->GetAbsOrigin() ) || FVisible( GetEnemy()->EyePosition() );
-	}	
+	}
 
 	// Current enemy is not visible
 	if( !bEnemyVisible /*|| ( flDistToEnemy > FF_MINITURRET_RANGE )*/ )
