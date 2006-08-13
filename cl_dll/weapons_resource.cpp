@@ -192,6 +192,18 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 				pHudHR->SetHistoryGap( pWeaponInfo->iconAmmo2->Height() );
 			}
 		}
+
+		// --> Mirv:
+		p = FindHudTextureInDict( tempList, "deathnotice" );
+		if (p)
+		{
+			if (strlen(pWeaponInfo->szClassName) > 3)
+			{
+				Q_snprintf(p->szShortName, 63, "death_%s", pWeaponInfo->szClassName + 3);
+				gHUD.AddSearchableHudIconToList(*p);
+			}
+		}
+		// <--
 	}
 
 	FreeHudTextureList( tempList );
