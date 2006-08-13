@@ -201,10 +201,7 @@ void CFFSentryGun::Spawn( void )
 	m_iAmmoType = GetAmmoDef()->Index( "AMMO_SHELLS" );
 
 	m_iMuzzleAttachment = LookupAttachment( "barrel01" );
-	m_iEyeAttachment = LookupAttachment( "eyes" );
-
-	m_iRocketLAttachment = LookupAttachment( "rocket01" );
-	m_iRocketRAttachment = LookupAttachment( "rocket02" );
+	m_iEyeAttachment = LookupAttachment( "eyes" );	
 
 	m_iPitchPoseParameter = LookupPoseParameter( SG_BC_PITCH );
 	m_iYawPoseParameter = LookupPoseParameter( SG_BC_YAW );
@@ -408,7 +405,7 @@ void CFFSentryGun::OnActiveThink( void )
 			GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
         
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket( vecOrigin /*+ vecAiming * 8.0f*/, m_angAiming, this, 102, 900.0f );
+		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket( vecOrigin /*+ vecAiming * 8.0f*/, vecAngles, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;
@@ -839,6 +836,9 @@ void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_iEyeAttachment = LookupAttachment( "eyes" );
 			m_iLBarrelAttachment = LookupAttachment( "barrel01" );
 			m_iRBarrelAttachment = LookupAttachment( "barrel02" );
+
+			m_iRocketLAttachment = LookupAttachment( "rocket01" );
+			m_iRocketRAttachment = LookupAttachment( "rocket02" );
 
 			break;
 		}
