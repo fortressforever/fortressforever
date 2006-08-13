@@ -54,7 +54,6 @@ public:
 	DECLARE_DATADESC()
 
 	virtual void Spawn();
-	virtual void ExplodeTouch( CBaseEntity *pOther );
 
 protected:	
 
