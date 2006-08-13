@@ -40,6 +40,7 @@ public:
 	DECLARE_PREDICTABLE();
 	
 	CFFWeaponAssaultCannon();
+	~CFFWeaponAssaultCannon();
 
 	virtual void PrimaryAttack();
 	//virtual void WeaponIdle();
@@ -110,6 +111,26 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 
 #ifdef CLIENT_DLL
 	m_pEngine = NULL;
+
+	m_flRotationValue = 0;
+	m_iBarrelRotation = -1;
+#endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//----------------------------------------------------------------------------
+CFFWeaponAssaultCannon::~CFFWeaponAssaultCannon() 
+{
+	m_flNextSecondaryAttack = gpGlobals->curtime;
+
+#ifdef CLIENT_DLL
+
+	if(m_pEngine)
+	{
+		CSoundEnvelopeController::GetController().SoundDestroy(m_pEngine);
+		m_pEngine = NULL;
+	}
 
 	m_flRotationValue = 0;
 	m_iBarrelRotation = -1;
