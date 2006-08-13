@@ -243,6 +243,10 @@ protected:
 			SetNextClientThink( CLIENT_THINK_ALWAYS );
 		}
 	}
+
+	// The model is all of a sudden drawing stupid ass shadows eventhough
+	// it's up in the ceiling???
+	virtual ShadowType_t ShadowCastType( void ) { return SHADOWS_NONE; }
 #else
 
 public:

@@ -738,6 +738,8 @@ public:
 
 	int		m_iEyeAttachment;
 	int		m_iMuzzleAttachment;
+	int		m_iRocketLAttachment;
+	int		m_iRocketRAttachment;
 
 	int m_iPitchPoseParameter;
 	int m_iYawPoseParameter;

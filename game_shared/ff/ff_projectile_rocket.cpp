@@ -101,6 +101,26 @@ PRECACHE_WEAPON_REGISTER(rocket);
 		BaseClass::Spawn();
 	}
 
+	// HACK SO SG ROCKETS DON'T BLOW UP ON THE SG
+	// THAT FIRED THEM
+	void CFFProjectileRocket::ExplodeTouch( CBaseEntity *pOther )
+	{
+		/*
+		return;
+
+		if( pOther )
+		{
+			//if( pOther == GetOwnerEntity() )
+			//{
+				//if( pOther->Classify() == CLASS_SENTRYGUN )
+				//	return;
+			//}
+		}
+		*/
+
+		BaseClass::ExplodeTouch( pOther );
+	}
+
 #else
 
 	//-----------------------------------------------------------------------------
