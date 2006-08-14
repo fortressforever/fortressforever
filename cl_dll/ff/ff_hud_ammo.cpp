@@ -141,24 +141,26 @@ void CHudAmmo::OnThink()
 
 	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
 
-	if (!pWeapon || !pWeapon->UsesPrimaryAmmo())
+	int iAmmo = -1;
+
+	if (pWeapon && pWeapon->UsesPrimaryAmmo())
+	{
+		iAmmo = GetPlayerAmmo(pPlayer, pWeapon);
+	}
+
+	if (iAmmo < 0)
 	{
 		SetPaintEnabled(false);
 		SetShouldDisplayValue(false);
 		SetPaintBackgroundEnabled(false);
+
+		return;
 	}
 	else
 	{
 		SetPaintEnabled(true);
 		SetShouldDisplayValue(true);
 		SetPaintBackgroundEnabled(true);
-	}
-
-	int iAmmo = GetPlayerAmmo(pPlayer, pWeapon);
-
-	if (iAmmo < 0)
-	{
-		// Dunno yet
 	}
 
 	if (pWeapon == m_hCurrentActiveWeapon)
