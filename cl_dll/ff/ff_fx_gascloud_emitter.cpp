@@ -130,7 +130,7 @@ void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 		{
 			Vector F(0.0f, 0.0f, 0.0f);
 
-			C_BaseEntityIterator iterator;
+			/*C_BaseEntityIterator iterator;
 			CBaseEntity *point = iterator.Next();
 			while(point != NULL)
 			{
@@ -140,7 +140,7 @@ void CGasCloud::SimulateParticles( CParticleSimulateIterator *pIterator )
 						AddAttractor(&F, point->GetAbsOrigin(), pParticle->m_Pos, gas_moveforce.GetFloat() * point->GetAbsVelocity().LengthSqr());
 				}
 				point = iterator.Next();
-			}
+			}*/
 
 			ApplyDrag(&F, pParticle->m_vVelocity, 4.0f, 20.0f);
 
