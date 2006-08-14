@@ -28,8 +28,6 @@ class CFFGrenadeMirvlet : public CFFGrenadeBase
 public:
 	DECLARE_CLASS(CFFGrenadeMirvlet,CFFGrenadeBase)
 
-	CNetworkVector(m_vInitialVelocity);
-
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvletGrenade.Bounce"; }
 
@@ -45,17 +43,21 @@ LINK_ENTITY_TO_CLASS( mirvlet, CFFGrenadeMirvlet);
 PRECACHE_WEAPON_REGISTER( mirvlet );
 
 #ifdef GAME_DLL
+	//-----------------------------------------------------------------------------
+	// Purpose: Spawn stuff
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeMirvlet::Spawn( void )
 	{
-		//DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Spawn\n");
 		SetModel( MIRVLET_MODEL );
 		BaseClass::Spawn();
 	}
 #endif
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFGrenadeMirvlet::Precache()
 {
-	//DevMsg("[Grenade Debug] CFFGrenadeMirvlet::Precache\n");
 	PrecacheModel( MIRVLET_MODEL );
 	BaseClass::Precache();
 }

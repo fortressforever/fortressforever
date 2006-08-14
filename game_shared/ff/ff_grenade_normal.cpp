@@ -26,8 +26,6 @@ class CFFGrenadeNormal : public CFFGrenadeBase
 public:
 	DECLARE_CLASS(CFFGrenadeNormal,CFFGrenadeBase)
 
-	CNetworkVector(m_vInitialVelocity);
-
 	virtual void Precache();
 	virtual void Spawn();
 	virtual const char *GetBounceSound() { return "NormalGrenade.Bounce"; }
@@ -41,12 +39,19 @@ public:
 LINK_ENTITY_TO_CLASS(normalgrenade, CFFGrenadeNormal);
 PRECACHE_WEAPON_REGISTER(normalgrenade);
 
+//-----------------------------------------------------------------------------
+// Purpose: Set model
+//-----------------------------------------------------------------------------
 void CFFGrenadeNormal::Spawn()
 {
 	SetModel(NORMALGRENADE_MODEL);
 
 	BaseClass::Spawn();
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Precache model
+//-----------------------------------------------------------------------------
 void CFFGrenadeNormal::Precache()
 {
 	PrecacheModel(NORMALGRENADE_MODEL);

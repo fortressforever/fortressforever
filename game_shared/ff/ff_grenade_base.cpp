@@ -1,28 +1,14 @@
-
-/// =============== Fortress Forever ===============
-/// ======== A modification for Half-Life 2 ========
-///
-/// @file ff_grenade_base.cpp
-/// @author Shawn Smith (L0ki)
-/// @date Dec. 10, 2004
-/// @brief implementation of the base class for all primeable grenades
-///
-/// All primeable grenades in the game inherit from this class. These grenades include:
-/// - Frag
-/// - Caltrops
-/// - Concussion
-/// - Nail
-/// - MIRV
-/// - Napalm
-/// - Gas
-/// - EMP
-///
-/// Revisions
-/// ---------
-/// Dec. 10, 2004	L0ki: Initial Creation
-/// Mar. 20, 2005	Mirv: Updated some stuff, i don't like this html business
-/// Apr. 23, 2005	L0ki: removed the html stuff, made some minor modifications to the code structure
-/// Jan. 15, 2006   Mirv: Tidied this up a LOT!
+/********************************************************************
+	created:	2006/08/14
+	created:	14:8:2006   11:08
+	filename: 	f:\ff-svn\code\trunk\game_shared\ff\ff_grenade_base.cpp
+	file path:	f:\ff-svn\code\trunk\game_shared\ff
+	file base:	ff_grenade_base
+	file ext:	cpp
+	author:		Various
+	
+	purpose:	
+*********************************************************************/
 
 #include "cbase.h"
 #include "ff_grenade_base.h"
@@ -37,10 +23,6 @@
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
 #endif
-
-extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
-extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
-extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
 
 //========================================================================
 // CFFGrenadeBase tables
@@ -65,12 +47,15 @@ ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REP
 //=============================================================================
 // CFFGrenadeBase implementation
 //=============================================================================
-int CFFGrenadeBase::m_iShockwaveTexture = -1;
-int CFFGrenadeBase::m_iRingTexture = -1;
-int CFFGrenadeBase::m_iFlameSprite = -1;
 
 #ifdef GAME_DLL
 
+	extern short g_sModelIndexFireball;
+	extern short g_sModelIndexWExplosion;
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Set all the spawn stuff
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::Spawn()
 	{
 		BaseClass::Spawn();
@@ -90,7 +75,13 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		SetElasticity(GetGrenadeElasticity());
 		SetFriction(GetGrenadeFriction());
 		SetDamage(GetGrenadeDamage());
-		m_DmgRadius = GetGrenadeRadius();
+		SetDamageRadius(GetGrenadeRadius());
+
+		// Don't take damage
+		m_takedamage = DAMAGE_NO;
+
+		// Some flag
+		AddFlag(FL_GRENADE);
 
 		// Flag for whether grenade has hit the water
 		m_bHitwater = false;
@@ -100,59 +91,32 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		SetNextThink(gpGlobals->curtime);
 	}	
 
+	//-----------------------------------------------------------------------------
+	// Purpose: This'll be called once the grenade is actually thrown
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::SetDetonateTimerLength(float timer)
 	{
 		m_flDetonateTime = gpGlobals->curtime + timer;
 	}
 
-	void CFFGrenadeBase::PreExplode(trace_t *pTrace)
+	//-----------------------------------------------------------------------------
+	// Purpose: If we're trying to detonate, run through Lua first to check allowed
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeBase::Detonate()
 	{
-		m_takedamage = DAMAGE_NO;
-
-		// Pull out of the wall a bit
-		if (pTrace->fraction != 1.0)
-			SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
-	}
-
-	void CFFGrenadeBase::PreExplode(trace_t *pTrace, const char *pSound, const char *pEffect)
-	{
-		m_takedamage = DAMAGE_NO;
-
-		// Pull out of the wall a bit
-		if (pTrace->fraction != 1.0)
-			SetLocalOrigin(pTrace->endpos + (pTrace->plane.normal * 0.6));
-
-		// Bail here if in a no gren area
-		if( !FFScriptRunPredicates( this, "onexplode", true ) )
-			return;
-
-		if (pSound)
-			EmitSound(pSound);
-
-		if (pEffect)
+		// Remove if not allowed by Lua 
+		if (FFScriptRunPredicates(this, "onexplode", true) == false)
 		{
-			CEffectData data;
-			data.m_vOrigin = GetAbsOrigin();
-			data.m_flScale = 1.0f;
-			DispatchEffect(pEffect, data);
+			UTIL_Remove(this);
+			return;
 		}
+
+		BaseClass::Detonate();
 	}
 
-	void CFFGrenadeBase::PostExplode()
-	{
-		SetModelName(NULL_STRING);
-
-		AddSolidFlags(FSOLID_NOT_SOLID);
-		AddEffects(EF_NODRAW);
-
-		SetNextThink(gpGlobals->curtime);
-
-		SetThink(&CBaseGrenade::SUB_Remove);
-		SetTouch(NULL);
-
-		SetAbsVelocity(vec3_origin);
-	}
-
+	//-----------------------------------------------------------------------------
+	// Purpose: Check for end of fuse, stuff like that
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::GrenadeThink()
 	{
 		// Remove if we're nolonger in the world
@@ -179,11 +143,14 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		// Next think straight away
 		SetNextThink(gpGlobals->curtime);
 
-		CFFGrenadeBase::WaterThink();		
+		// Check for water
+		WaterCheck();		
 	}
 
-	// Mulch: bug 0000273: make grens sink-ish in water
-	void CFFGrenadeBase::WaterThink( void ) 
+	//-----------------------------------------------------------------------------
+	// Purpose: Mulch bug 0000273: make grens sink-ish in water
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeBase::WaterCheck( void ) 
 	{
 		if (GetWaterLevel() != 0)
 		{
@@ -206,6 +173,9 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		}
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: This is messy and probably shouldn't be done
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeBase::ResolveFlyCollisionCustom(trace_t &trace, Vector &vecVelocity)
 	{
 		//Assume all surfaces have the same elasticity
@@ -279,17 +249,6 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 				// Reset velocities.
 				SetAbsVelocity(vec3_origin);
 				SetLocalAngularVelocity(vec3_angle);
-
-				////align to the ground so we're not standing on end
-				//QAngle angle;
-				//VectorAngles( trace.plane.normal, angle );
-
-				//// rotate randomly in yaw
-				//angle[1] = random->RandomFloat( 0, 360 );
-
-				//// TODO: rotate around trace.plane.normal
-
-				//SetAbsAngles( angle );
 			}
 			else
 			{
@@ -324,91 +283,87 @@ int CFFGrenadeBase::m_iFlameSprite = -1;
 		}
 		BounceSound();
 	}
-#endif
 
-// Added so that grenades aren't using projectiles explode code.
-// Grenades might need to look in more places than just below
-// them to see if scorch marks can be drawn.
-void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
-{
-#ifdef GAME_DLL
-	SetModelName( NULL_STRING );//invisible
-	AddSolidFlags( FSOLID_NOT_SOLID );
-
-	m_takedamage = DAMAGE_NO;
-
-	// Make sure grenade explosion is 32.0f above the ground.
-	// In TFC exploding grenade explosions are ALWAYS 32.0f above the floor, except
-	// in the case of the concussion grenade.
-	if( pTrace->fraction != 1.0 )
-		SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 32 ) );
-
-	if( FFScriptRunPredicates( this, "onexplode", true ) )
+	//-----------------------------------------------------------------------------
+	// Purpose: Added so that grenades aren't using projectiles explode code.
+	//			Grenades might need to look in more places than just below
+	//			 them to see if scorch marks can be drawn.
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeBase::Explode( trace_t *pTrace, int bitsDamageType )
 	{
-		Vector vecAbsOrigin = GetAbsOrigin();
-		int contents = UTIL_PointContents( vecAbsOrigin );
+		SetModelName( NULL_STRING );//invisible
+		AddSolidFlags( FSOLID_NOT_SOLID );
 
-		if( pTrace->fraction != 1.0 ) 
+		m_takedamage = DAMAGE_NO;
+
+		// Make sure grenade explosion is 32.0f above the ground.
+		// In TFC exploding grenade explosions are ALWAYS 32.0f above the floor, except
+		// in the case of the concussion grenade.
+		if( pTrace->fraction != 1.0 )
+			SetLocalOrigin( pTrace->endpos + ( pTrace->plane.normal * 32 ) );
+
+		if( FFScriptRunPredicates( this, "onexplode", true ) )
 		{
-			Vector vecNormal = pTrace->plane.normal;
-			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
-			CPASFilter filter( vecAbsOrigin );
-			te->Explosion( filter, -1.0, // don't apply cl_interp delay
-				&vecAbsOrigin, 
-				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-				m_flDamage / 160, 
-				25, 
-				TE_EXPLFLAG_NONE, 
-				m_DmgRadius, 
-				m_flDamage, 
-				&vecNormal, 
-				( char )pdata->game.material );
+			Vector vecAbsOrigin = GetAbsOrigin();
+			int contents = UTIL_PointContents( vecAbsOrigin );
 
-			// Normal decals since trace hit something
-			UTIL_DecalTrace( pTrace, "Scorch" );
+			if( pTrace->fraction != 1.0 ) 
+			{
+				Vector vecNormal = pTrace->plane.normal;
+				surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+				CPASFilter filter( vecAbsOrigin );
+				te->Explosion( filter, -1.0, // don't apply cl_interp delay
+					&vecAbsOrigin, 
+					! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+					m_flDamage / 160, 
+					25, 
+					TE_EXPLFLAG_NONE, 
+					m_DmgRadius, 
+					m_flDamage, 
+					&vecNormal, 
+					( char )pdata->game.material );
+
+				// Normal decals since trace hit something
+				UTIL_DecalTrace( pTrace, "Scorch" );
+			}
+			else
+			{
+				CPASFilter filter( vecAbsOrigin );
+				te->Explosion( filter, -1.0, // don't apply cl_interp delay
+					&vecAbsOrigin, 
+					! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
+					m_flDamage / 160, 
+					25, 
+					TE_EXPLFLAG_NONE, 
+					m_DmgRadius, 
+					m_flDamage );
+
+				// Trace hit nothing so do custom scorch mark finding
+				FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
+			}
+
+			CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
+
+			CBaseEntity *pThrower = GetThrower();
+			// Use the thrower's position as the reported position
+			Vector vecReported = pThrower ? pThrower->GetAbsOrigin() : vec3_origin;
+			CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+			RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
+
+			EmitSound( "BaseGrenade.Explode" );
 		}
-		else
-		{
-			CPASFilter filter( vecAbsOrigin );
-			te->Explosion( filter, -1.0, // don't apply cl_interp delay
-				&vecAbsOrigin, 
-				! ( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion, 
-				m_flDamage / 160, 
-				25, 
-				TE_EXPLFLAG_NONE, 
-				m_DmgRadius, 
-				m_flDamage );
 
-			// Trace hit nothing so do custom scorch mark finding
-			FF_DecalTrace( this, FF_DECALTRACE_TRACE_DIST, "Scorch" );
-		}
+		SetThink( &CBaseGrenade::SUB_Remove );
+		SetTouch( NULL );
 
-		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
-
-		CBaseEntity *pThrower = GetThrower();
-		// Use the thrower's position as the reported position
-		Vector vecReported = pThrower ? pThrower->GetAbsOrigin() : vec3_origin;
-		CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
-		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-
-		EmitSound( "BaseGrenade.Explode" );
+		AddEffects( EF_NODRAW );
+		SetAbsVelocity( vec3_origin );
+		SetNextThink( gpGlobals->curtime );
 	}
-
-	SetThink( &CBaseGrenade::SUB_Remove );
-	SetTouch( NULL );
-
-	AddEffects( EF_NODRAW );
-	SetAbsVelocity( vec3_origin );
-	SetNextThink( gpGlobals->curtime );
 #endif
-}
 
 void CFFGrenadeBase::Precache()
 {
-	m_iShockwaveTexture = PrecacheModel("sprites/spotlight.vmt");
-	m_iRingTexture = PrecacheModel("sprites/smoke.vmt");
-	m_iFlameSprite = PrecacheModel("sprites/fire_floor.vmt");
-
 	//0000287: SV_StartSound: weapons/debris1.wav not precached (0)
 	PrecacheScriptSound("BaseGrenade.Explode");
 

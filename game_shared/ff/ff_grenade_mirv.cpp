@@ -43,8 +43,6 @@ class CFFGrenadeMirv : public CFFGrenadeBase
 public:
 	DECLARE_CLASS(CFFGrenadeMirv,CFFGrenadeBase)
 
-	CNetworkVector(m_vInitialVelocity);
-
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "MirvGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_MIRV; }
@@ -64,8 +62,6 @@ class CFFGrenadeMirvlet : public CFFGrenadeBase
 public:
 	DECLARE_CLASS(CFFGrenadeMirvlet,CFFGrenadeBase)
 
-	CNetworkVector(m_vInitialVelocity);
-
 	virtual void Precache();
 	virtual Class_T Classify( void ) { return CLASS_GREN_MIRVLET; }
 
@@ -81,81 +77,82 @@ LINK_ENTITY_TO_CLASS( mirvgrenade, CFFGrenadeMirv);
 PRECACHE_WEAPON_REGISTER( mirvgrenade );
 
 #ifdef GAME_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFGrenadeMirv::Spawn( void )
 {
-	//DevMsg("[Grenade Debug] CFFGrenadeMirv::Spawn\n");
 	SetModel( MIRVGRENADE_MODEL );
 	BaseClass::Spawn();
 
 	SetLocalAngularVelocity(QAngle(0, RandomFloat(-5, 5), 0));
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Normal explosion, but also spawn mirvlets
+//-----------------------------------------------------------------------------
 void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 {
-	//DevMsg("[Grenade Debug] CFFGrenadeMirv::Explode (%.2f)\n", m_flDamage);
-	// L0ki: removed this to fix the no damage bug
-	//CFFGrenadeBase::PreExplode( pTrace );
 	BaseClass::Explode( pTrace, bitsDamageType );
 
-	// If the grenade is in a no gren area
-	if( FFScriptRunPredicates( this, "onexplode", true ) )
+	CBaseEntity *pOwner = GetOwnerEntity();
+
+	//random starting y axis rotation
+	// after the first mirvlet, each of the remaining mirvletss will be rotated another 90 degrees
+	float y_ang_seed = RandomFloat(0.0f,360.0f);
+	for ( int i = 0; i < 4; i++ )
 	{
-		CBaseEntity *pOwner = GetOwnerEntity();
+		Vector vecSrc = GetAbsOrigin();
+		QAngle angSpawn;
 
-		//DevMsg("[Grenade Debug] Creating mirvlets\n");
-		//random starting y axis rotation
-		// after the first mirvlet, each of the remaining mirvletss will be rotated another 90 degrees
-		float y_ang_seed = RandomFloat(0.0f,360.0f);
-		for ( int i = 0; i < 4; i++ )
-		{
-			Vector vecSrc = GetAbsOrigin();
-			QAngle angSpawn;
+		angSpawn.x = RandomFloat(45.0f,90.0f);
+		angSpawn.y = y_ang_seed + (i*90.0f);
+		angSpawn.z = RandomFloat(mirv_ang_z_min.GetFloat(),mirv_ang_z_max.GetFloat());//0.0f;
 
-			angSpawn.x = RandomFloat(45.0f,90.0f);
-			angSpawn.y = y_ang_seed + (i*90.0f);
-			angSpawn.z = RandomFloat(mirv_ang_z_min.GetFloat(),mirv_ang_z_max.GetFloat());//0.0f;
+		Vector vecVelocity;
+		AngleVectors(angSpawn,&vecVelocity);
+		vecVelocity *= RandomFloat(mirv_vel_min.GetFloat(),mirv_vel_max.GetFloat());
 
-			Vector vecVelocity;
-			AngleVectors(angSpawn,&vecVelocity);
-			vecVelocity *= RandomFloat(mirv_vel_min.GetFloat(),mirv_vel_max.GetFloat());
+		// So they don't begin moving down, I guess
+		if (vecVelocity.z < 0)
+			vecVelocity.z *= -1;
 
-			// So they don't begin moving down, I guess
-			if (vecVelocity.z < 0)
-				vecVelocity.z *= -1;
+		CFFGrenadeMirvlet *pMirvlet = (CFFGrenadeMirvlet *)CreateEntityByName( "mirvlet" );
 
-			CFFGrenadeMirvlet *pMirvlet = (CFFGrenadeMirvlet *)CreateEntityByName( "mirvlet" );
+		QAngle angRotate;
+		angRotate.x = RandomFloat(-360.0f, 360.0f);
+		angRotate.y = RandomFloat(-360.0f, 360.0f);
+		angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
 
-			QAngle angRotate;
-			angRotate.x = RandomFloat(-360.0f, 360.0f);
-			angRotate.y = RandomFloat(-360.0f, 360.0f);
-			angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
+		UTIL_SetOrigin( pMirvlet, vecSrc );
+		pMirvlet->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
+		pMirvlet->SetLocalAngularVelocity(angRotate);
+		pMirvlet->Spawn();
+		pMirvlet->SetOwnerEntity( pOwner );
 
-			UTIL_SetOrigin( pMirvlet, vecSrc );
-			pMirvlet->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
-			pMirvlet->SetLocalAngularVelocity(angRotate);
-			pMirvlet->Spawn();
-			pMirvlet->SetOwnerEntity( pOwner );
+		// Set the speed and the initial transmitted velocity
+		// L0ki: changed this to a cvar to tweak mirvlet damage
+		pMirvlet->SetDamage( mirvlet_dmg.GetFloat() );
+		pMirvlet->m_DmgRadius = CFFGrenadeBase::GetGrenadeRadius();
+		pMirvlet->SetAbsVelocity( vecVelocity );
+		pMirvlet->SetupInitialTransmittedVelocity( vecVelocity );
+		pMirvlet->SetDetonateTimerLength( RandomFloat(2.0f,3.0f) );
+		pMirvlet->SetElasticity( GetGrenadeElasticity() );
 
-			// Set the speed and the initial transmitted velocity
-			// L0ki: changed this to a cvar to tweak mirvlet damage
-			pMirvlet->SetDamage( mirvlet_dmg.GetFloat() );
-			pMirvlet->m_DmgRadius = CFFGrenadeBase::GetGrenadeRadius();
-			pMirvlet->SetAbsVelocity( vecVelocity );
-			pMirvlet->SetupInitialTransmittedVelocity( vecVelocity );
-			pMirvlet->SetDetonateTimerLength( RandomFloat(2.0f,3.0f) );
-			pMirvlet->SetElasticity( GetGrenadeElasticity() );
-
-			pMirvlet->ChangeTeam( pOwner->GetTeamNumber() );
-			pMirvlet->SetThrower( (CBaseCombatCharacter*)pOwner ); 
-			pMirvlet->SetGravity( GetGrenadeGravity() + 0.2f );
-			pMirvlet->SetFriction( GetGrenadeFriction() );
-		}
+		pMirvlet->ChangeTeam( pOwner->GetTeamNumber() );
+		pMirvlet->SetThrower( (CBaseCombatCharacter*)pOwner ); 
+		pMirvlet->SetGravity( GetGrenadeGravity() + 0.2f );
+		pMirvlet->SetFriction( GetGrenadeFriction() );
 	}
 }
 #endif
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFGrenadeMirv::Precache()
 {
-	//DevMsg("[Grenade Debug] CFFGrenadeMirv::Precache\n");
 	PrecacheModel( MIRVGRENADE_MODEL );
 	BaseClass::Precache();
 }

@@ -112,7 +112,15 @@ void CFFPlayer::FireBullet(
 	//UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr);
 
 	float flSize = ffdev_snipertracesize.GetFloat();
-	UTIL_TraceHull(vecSrc, vecEnd, Vector(-1, -1, -1) * flSize, Vector(1, 1, 1) * flSize, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+	Vector vecHull = Vector(1.0f, 1.0f, 1.0f) * flSize;
+	QAngle tmpAngle;
+	VectorAngles(vecDir, tmpAngle);
+
+	UTIL_TraceHull(vecSrc, vecEnd, -vecHull, vecHull, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+#ifdef GAME_DLL
+	NDebugOverlay::SweptBox(vecSrc, vecEnd, -vecHull, vecHull, tmpAngle, 255, 0, 0, 255, 10.0f);
+#endif
 
 	if (tr.fraction == 1.0f)
 		return; // we didn't hit anything, stop tracing shoot
