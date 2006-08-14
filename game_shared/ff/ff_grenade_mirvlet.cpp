@@ -39,8 +39,8 @@ public:
 #endif
 };
 
-LINK_ENTITY_TO_CLASS( mirvlet, CFFGrenadeMirvlet);
-PRECACHE_WEAPON_REGISTER( mirvlet );
+LINK_ENTITY_TO_CLASS( ff_grenade_mirvlet, CFFGrenadeMirvlet);
+PRECACHE_WEAPON_REGISTER( ff_grenade_mirvlet );
 
 #ifdef GAME_DLL
 	//-----------------------------------------------------------------------------

@@ -316,7 +316,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	// Try and find the death identifier in the icon list
 	deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
 
-	if ( !deathMsg.iconDeath || deathMsg.iSuicide )
+	// Show weapon if it was a suicide too
+	if ( !deathMsg.iconDeath /*|| deathMsg.iSuicide*/ )
 	{
 		// Can't find it, so use the default skull & crossbones icon
 		deathMsg.iconDeath = m_iconD_skull;

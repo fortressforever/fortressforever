@@ -59,8 +59,8 @@ protected:
 	END_DATADESC() 
 #endif
 
-LINK_ENTITY_TO_CLASS(nailgrenade, CFFGrenadeNail);
-PRECACHE_WEAPON_REGISTER(nailgrenade);
+LINK_ENTITY_TO_CLASS(ff_grenade_nail, CFFGrenadeNail);
+PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800");

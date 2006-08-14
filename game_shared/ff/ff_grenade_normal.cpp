@@ -36,8 +36,8 @@ public:
 #endif
 };
 
-LINK_ENTITY_TO_CLASS(normalgrenade, CFFGrenadeNormal);
-PRECACHE_WEAPON_REGISTER(normalgrenade);
+LINK_ENTITY_TO_CLASS(ff_grenade_normal, CFFGrenadeNormal);
+PRECACHE_WEAPON_REGISTER(ff_grenade_normal);
 
 //-----------------------------------------------------------------------------
 // Purpose: Set model

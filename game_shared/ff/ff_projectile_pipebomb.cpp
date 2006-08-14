@@ -36,8 +36,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectilePipebomb, DT_FFProjectilePipebomb)
 BEGIN_NETWORK_TABLE(CFFProjectilePipebomb, DT_FFProjectilePipebomb) 
 END_NETWORK_TABLE() 
 
-LINK_ENTITY_TO_CLASS(pipebomb, CFFProjectilePipebomb);
-PRECACHE_WEAPON_REGISTER(pipebomb);
+LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
+PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
 //=============================================================================
 // CFFProjectilePipebomb implementation

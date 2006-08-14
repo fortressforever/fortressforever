@@ -76,8 +76,8 @@ public:
 #endif
 };
 
-LINK_ENTITY_TO_CLASS( empgrenade, CFFGrenadeEmp );
-PRECACHE_WEAPON_REGISTER( empgrenade );
+LINK_ENTITY_TO_CLASS( ff_grenade_emp, CFFGrenadeEmp );
+PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 
 #ifdef GAME_DLL
 

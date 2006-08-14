@@ -26,8 +26,8 @@
 // CFFProjectileIncendiaryRocket tables
 //=============================================================================
 
-LINK_ENTITY_TO_CLASS(incendiaryrocket, CFFProjectileIncendiaryRocket);
-PRECACHE_WEAPON_REGISTER(incendiaryrocket);
+LINK_ENTITY_TO_CLASS(ff_projectile_ic, CFFProjectileIncendiaryRocket);
+PRECACHE_WEAPON_REGISTER(ff_projectile_ic);
 
 #ifdef GAME_DLL
 BEGIN_DATADESC(CFFProjectileIncendiaryRocket)

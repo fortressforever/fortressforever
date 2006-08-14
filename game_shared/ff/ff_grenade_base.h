@@ -17,6 +17,8 @@
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeBase C_FFGrenadeBase
+
+	#include "ff_grenade_parse.h"
 #endif
 
 //========================================================================
@@ -79,6 +81,18 @@ protected:
 
 	bool	m_bHitwater;
 	float	m_flHitwaterTimer;
+
+#else
+
+private:
+	
+	// This is only needed client-side so far
+	virtual const unsigned char	*GetEncryptionKey() { return NULL; }
+	GRENADE_FILE_INFO_HANDLE	m_hGrenadeFileInfo;
+
+public:
+	CFFGrenadeInfo const &GetFFGrenadeData() const;
+
 #endif
 };
 

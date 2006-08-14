@@ -22,6 +22,7 @@
 #else
 	#include "c_te_effect_dispatch.h"
 	#include "c_ff_player.h"
+	#include "ff_grenade_parse.h"
 #endif
 
 //========================================================================
@@ -359,6 +360,18 @@ ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REP
 		AddEffects( EF_NODRAW );
 		SetAbsVelocity( vec3_origin );
 		SetNextThink( gpGlobals->curtime );
+	}
+#else
+	//----------------------------------------------------------------------------
+	// Purpose: Get script file grenade data
+	//----------------------------------------------------------------------------
+	const CFFGrenadeInfo &CFFGrenadeBase::GetFFGrenadeData() const
+	{
+		const CFFGrenadeInfo *pGrenadeInfo = GetFileGrenadeInfoFromHandle(m_hGrenadeFileInfo);
+
+		Assert(pGrenadeInfo != NULL);
+
+		return *pGrenadeInfo;
 	}
 #endif
 

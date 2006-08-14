@@ -78,8 +78,8 @@ RecvPropInt(RECVINFO(m_bIsEmitting)),
 #endif
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS( gasgrenade, CFFGrenadeGas );
-PRECACHE_WEAPON_REGISTER( gasgrenade );
+LINK_ENTITY_TO_CLASS( ff_grenade_gas, CFFGrenadeGas );
+PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 
 #ifdef GAME_DLL
 
