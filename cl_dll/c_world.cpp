@@ -139,12 +139,20 @@ short		g_sModelIndexBubbles;		// holds the index for the bubbles model
 short		g_sModelIndexBloodDrop;		// holds the sprite index for the initial blood
 short		g_sModelIndexBloodSpray;	// holds the sprite index for splattered blood
 
+extern void PrecacheFileGrenadeInfoDatabase(IFileSystem *filesystem, const unsigned char *pICEKey);
+extern void PrecacheFilePlayerClassInfoDatabase(IFileSystem *filesystem, const unsigned char *pICEKey);
+
 //-----------------------------------------------------------------------------
 // Purpose: Precache global weapon sounds
 //-----------------------------------------------------------------------------
 void W_Precache(void)
 {
 	PrecacheFileWeaponInfoDatabase( filesystem, g_pGameRules->GetEncryptionKey() );
+
+	// --> Mirv: Put these here too just like with CWorld
+	PrecacheFileGrenadeInfoDatabase(filesystem, g_pGameRules->GetEncryptionKey());
+	PrecacheFilePlayerClassInfoDatabase(filesystem, g_pGameRules->GetEncryptionKey());
+	// <-- Mirv
 
 	g_sModelIndexFireball = modelinfo->GetModelIndex ("sprites/zerogxplode.vmt");// fireball
 	g_sModelIndexWExplosion = modelinfo->GetModelIndex ("sprites/WXplo1.vmt");// underwater fireball

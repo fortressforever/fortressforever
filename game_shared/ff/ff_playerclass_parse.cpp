@@ -121,7 +121,7 @@ void PrecacheFilePlayerClassInfoDatabase(IFileSystem *filesystem, const unsigned
 		return;
 
 	FileFindHandle_t findHandle;
-	const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_ *.txt", "MOD", &findHandle);
+	const char *pFilename = filesystem->FindFirstEx("scripts/ff_playerclass_*.txt", "MOD", &findHandle);
 	while (pFilename != NULL) 
 	{
 		char fileBase[512];
@@ -212,7 +212,16 @@ bool ReadPlayerClassDataFromFileForSlot(IFileSystem * filesystem, const char *sz
 		return false;
 	}
 
-	*phandle = FindPlayerClassInfoSlot(szPlayerClassName);
+	char szRealPlayerClassName[128] = "";
+
+	if (Q_strncmp(szPlayerClassName, "ff_playerclass_", 15) != 0)
+	{
+		Q_strncpy(szRealPlayerClassName, "ff_playerclass_", 100);
+	}
+
+	Q_strncat(szRealPlayerClassName, szPlayerClassName, 50);
+
+	*phandle = FindPlayerClassInfoSlot(szRealPlayerClassName);
 	CFFPlayerClassInfo *pFileInfo = GetFilePlayerClassInfoFromHandle(*phandle);
 	Assert(pFileInfo);
 
@@ -222,12 +231,12 @@ bool ReadPlayerClassDataFromFileForSlot(IFileSystem * filesystem, const char *sz
 	pFileInfo->m_iSlot = 0;
 
 	char sz[128];
-	Q_snprintf(sz, sizeof(sz), "scripts/ff_playerclass_%s", szPlayerClassName);
+	Q_snprintf(sz, sizeof(sz), "scripts/%s", szRealPlayerClassName);
 	KeyValues *pKV = ReadEncryptedKVFile(filesystem, sz, pICEKey);
 	if (!pKV) 
 		return false;
 
-	pFileInfo->Parse(pKV, szPlayerClassName);
+	pFileInfo->Parse(pKV, szRealPlayerClassName);
 
 	pKV->deleteThis();
 

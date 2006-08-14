@@ -41,8 +41,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileRail, DT_FFProjectileRail)
 BEGIN_NETWORK_TABLE(CFFProjectileRail, DT_FFProjectileRail)
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS(rail, CFFProjectileRail);
-PRECACHE_WEAPON_REGISTER(rail);
+LINK_ENTITY_TO_CLASS(ff_projectile_rail, CFFProjectileRail);
+PRECACHE_WEAPON_REGISTER(ff_projectile_rail);
 
 
 //=============================================================================

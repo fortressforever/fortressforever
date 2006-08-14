@@ -37,8 +37,8 @@ RecvPropEHandle(RECVINFO(m_hRocketTrail)),
 #endif
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS(rocket, CFFProjectileRocket);
-PRECACHE_WEAPON_REGISTER(rocket);
+LINK_ENTITY_TO_CLASS(ff_projectile_rocket, CFFProjectileRocket);
+PRECACHE_WEAPON_REGISTER(ff_projectile_rocket);
 
 //=============================================================================
 // CFFProjectileRocket implementation

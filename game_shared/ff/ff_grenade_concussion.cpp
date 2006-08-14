@@ -120,8 +120,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeConcussion, DT_FFGrenadeConcussion)
 BEGIN_NETWORK_TABLE(CFFGrenadeConcussion, DT_FFGrenadeConcussion)
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS(concussiongrenade, CFFGrenadeConcussion);
-PRECACHE_WEAPON_REGISTER(concussiongrenade);
+LINK_ENTITY_TO_CLASS(ff_grenade_concussion, CFFGrenadeConcussion);
+PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 
 #ifdef GAME_DLL
 

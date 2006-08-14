@@ -71,8 +71,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFGrenadeNapalm, DT_FFGrenadeNapalm)
 BEGIN_NETWORK_TABLE(CFFGrenadeNapalm, DT_FFGrenadeNapalm)
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS( napalmgrenade, CFFGrenadeNapalm );
-PRECACHE_WEAPON_REGISTER( napalmgrenade );
+LINK_ENTITY_TO_CLASS( ff_grenade_napalm, CFFGrenadeNapalm );
+PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
 
 #ifdef GAME_DLL
 

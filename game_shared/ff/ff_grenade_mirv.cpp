@@ -73,8 +73,8 @@ public:
 #endif
 };
 
-LINK_ENTITY_TO_CLASS( mirvgrenade, CFFGrenadeMirv);
-PRECACHE_WEAPON_REGISTER( mirvgrenade );
+LINK_ENTITY_TO_CLASS( ff_grenade_mirv, CFFGrenadeMirv);
+PRECACHE_WEAPON_REGISTER( ff_grenade_mirv );
 
 #ifdef GAME_DLL
 
@@ -118,7 +118,11 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 		if (vecVelocity.z < 0)
 			vecVelocity.z *= -1;
 
-		CFFGrenadeMirvlet *pMirvlet = (CFFGrenadeMirvlet *)CreateEntityByName( "mirvlet" );
+		CFFGrenadeMirvlet *pMirvlet = (CFFGrenadeMirvlet *)CreateEntityByName( "ff_grenade_mirvlet" );
+
+		// I dunno... just try again i suppose
+		if (!pMirvlet)
+			continue;
 
 		QAngle angRotate;
 		angRotate.x = RandomFloat(-360.0f, 360.0f);

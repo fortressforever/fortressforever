@@ -52,12 +52,20 @@ short		g_sModelIndexBloodSpray;	// holds the sprite index for splattered blood
 ConVar weapon_showproficiency( "weapon_showproficiency", "0" );
 extern ConVar ai_debug_shoot_positions;
 
+extern void PrecacheFileGrenadeInfoDatabase(IFileSystem *filesystem, const unsigned char *pICEKey);
+extern void PrecacheFilePlayerClassInfoDatabase(IFileSystem *filesystem, const unsigned char *pICEKey);
+
 //-----------------------------------------------------------------------------
 // Purpose: Precache global weapon sounds
 //-----------------------------------------------------------------------------
 void W_Precache(void)
 {
 	PrecacheFileWeaponInfoDatabase( filesystem, g_pGameRules->GetEncryptionKey() );
+	
+	// --> Mirv: Add some more here
+	PrecacheFileGrenadeInfoDatabase(filesystem, g_pGameRules->GetEncryptionKey());
+	PrecacheFilePlayerClassInfoDatabase(filesystem, g_pGameRules->GetEncryptionKey());
+	// <--
 
 	g_sModelIndexFireball = CBaseEntity::PrecacheModel ("sprites/zerogxplode.vmt");// fireball
 	g_sModelIndexWExplosion = CBaseEntity::PrecacheModel ("sprites/WXplo1.vmt");// underwater fireball

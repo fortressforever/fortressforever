@@ -40,8 +40,8 @@ ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED, "Nail bbox");
 	END_DATADESC() 
 #endif
 
-LINK_ENTITY_TO_CLASS(nail, CFFProjectileNail);
-PRECACHE_WEAPON_REGISTER(nail);
+LINK_ENTITY_TO_CLASS(ff_projectile_nail, CFFProjectileNail);
+PRECACHE_WEAPON_REGISTER(ff_projectile_nail);
 
 //=============================================================================
 // CFFProjectileNail implementation

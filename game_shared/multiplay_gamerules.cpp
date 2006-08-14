@@ -633,6 +633,13 @@ bool CMultiplayRules::IsMultiplayer( void )
 			{
 				killer_weapon_name = STRING(pProjectile->m_iSourceClassname);
 			}
+
+			// Another important thing to do is to make sure that mirvlet = mirv
+			// in the death messages
+			if (Q_strncmp(killer_weapon_name, "ff_grenade_mirvlet", 18) == 0)
+			{
+				killer_weapon_name = "ff_grenade_mirv";
+			}
 			// <-- Mirv
 
 			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);

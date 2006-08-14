@@ -3867,7 +3867,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 	CFFGrenadeBase *pGrenade = NULL;
 
 	// Check which grenade we have to do
-	switch(m_iGrenadeState)
+	switch (m_iGrenadeState)
 	{
 		case FF_GREN_PRIMEONE:
 			
@@ -3876,21 +3876,17 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 				return;
 
 			// Make the grenade
-			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szPrimaryClassName );
-			// Set the grenades team (for use later)
-			pGrenade->ChangeTeam( GetTeamNumber() );
+			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szPrimaryClassName);
 			break;
 
 		case FF_GREN_PRIMETWO:
 
 			// They don't actually have a secondary grenade
-			if( Q_strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None" ) == 0 )
+			if (Q_strcmp( pPlayerClassInfo.m_szSecondaryClassName, "None") == 0)
 				return;
 
 			// Make the grenade
-			pGrenade = (CFFGrenadeBase *)CreateEntityByName( pPlayerClassInfo.m_szSecondaryClassName );
-			// Set the grenades team (for use later)
-			pGrenade->ChangeTeam( GetTeamNumber() );
+			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szSecondaryClassName);
 			break;
 	}
 
@@ -3924,6 +3920,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 		pGrenade->SetAbsVelocity(vecVelocity);
 		pGrenade->SetThrower(this);
 		pGrenade->SetOwnerEntity(this);
+		pGrenade->ChangeTeam(GetTeamNumber());
 
 		pGrenade->SetDetonateTimerLength( fTimer );
 		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);

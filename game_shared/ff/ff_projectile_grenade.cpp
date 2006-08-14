@@ -33,8 +33,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileGrenade, DT_FFProjectileGrenade)
 BEGIN_NETWORK_TABLE(CFFProjectileGrenade, DT_FFProjectileGrenade) 
 END_NETWORK_TABLE() 
 
-LINK_ENTITY_TO_CLASS(glgrenade, CFFProjectileGrenade);
-PRECACHE_WEAPON_REGISTER(glgrenade);
+LINK_ENTITY_TO_CLASS(ff_projectile_gl, CFFProjectileGrenade);
+PRECACHE_WEAPON_REGISTER(ff_projectile_gl);
 
 //=============================================================================
 // CFFProjectileGrenade implementation

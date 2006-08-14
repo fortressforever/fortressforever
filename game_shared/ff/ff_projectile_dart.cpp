@@ -45,8 +45,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileDart, DT_FFProjectileDart)
 BEGIN_NETWORK_TABLE(CFFProjectileDart, DT_FFProjectileDart)
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS(dart, CFFProjectileDart);
-PRECACHE_WEAPON_REGISTER(dart);
+LINK_ENTITY_TO_CLASS(ff_projectile_dart, CFFProjectileDart);
+PRECACHE_WEAPON_REGISTER(ff_projectile_dart);
 
 //=============================================================================
 // CFFProjectileDart implementation

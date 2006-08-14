@@ -449,12 +449,11 @@ private:
 
 private:
 	// --> Mirv: Player class script files
-	virtual const unsigned char *GetEncryptionKey( void );
+	virtual const unsigned char *GetEncryptionKey();
 	PLAYERCLASS_FILE_INFO_HANDLE	m_hPlayerClassFileInfo;
 
 public:
 	CFFPlayerClassInfo const &GetFFClassData() const;
-
 	// <-- Mirv: Player class script files
 
 public:

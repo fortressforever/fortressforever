@@ -58,8 +58,8 @@ public:
 #endif
 };
 
-LINK_ENTITY_TO_CLASS( caltropgrenade, CFFGrenadeCaltrop );
-PRECACHE_WEAPON_REGISTER( caltropgrenade );
+LINK_ENTITY_TO_CLASS( ff_grenade_caltrop, CFFGrenadeCaltrop );
+PRECACHE_WEAPON_REGISTER( ff_grenade_caltrop );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
