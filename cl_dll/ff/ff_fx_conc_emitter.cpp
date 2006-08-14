@@ -20,6 +20,7 @@
 #include "c_te_effect_dispatch.h"
 #include "fx_explosion.h"
 #include "tempent.h"
+#include "materialsystem/imaterialsystemhardwareconfig.h"
 
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
 
@@ -298,35 +299,33 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 		return;
 	}
 
-	C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
-
-
-
-	// Mirv: If underwater, just do a bunch of gas
-	/*if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
+	// Okay so apparently dx7 is not so good for the 3d conc effect
+	// So instead we use the flat one for those systems
+	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() > 70)
 	{
-		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
-		return;
+		C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
 	}
-
-	CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
-	
-	float offset = 0;
-
-	for (int i = 0; i < conc_ripples.GetInt(); i++)
+	else
 	{
-		ConcParticle *c = concEffect->AddConcParticle();
+		CSmartPtr<CConcEmitter> concEffect = CConcEmitter::Create("ConcussionEffect");
 
-		if (c)
+		float offset = 0;
+
+		for (int i = 0; i < conc_ripples.GetInt(); i++)
 		{
-			c->m_flDieTime = conc_speed.GetFloat();
-			c->m_Pos = data.m_vOrigin;
-			c->m_flRefract = conc_refract.GetFloat();
-			c->m_flOffset = offset;
+			ConcParticle *c = concEffect->AddConcParticle();
 
-			offset += conc_ripple_period.GetFloat();
+			if (c)
+			{
+				c->m_flDieTime = conc_speed.GetFloat();
+				c->m_Pos = data.m_vOrigin;
+				c->m_flRefract = conc_refract.GetFloat();
+				c->m_flOffset = offset;
+
+				offset += conc_ripple_period.GetFloat();
+			}
 		}
-	}*/
+	}
 }
 
 DECLARE_CLIENT_EFFECT("FF_ConcussionEffect", FF_FX_ConcussionEffect_Callback);
