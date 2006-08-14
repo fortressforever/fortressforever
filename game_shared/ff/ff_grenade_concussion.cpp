@@ -155,7 +155,7 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		data.m_flScale = 1.0f;
 		
 		DispatchEffect(CONCUSSION_EFFECT, data);
-		DispatchEffect(CONCBITS_EFFECT, data);
+		//DispatchEffect(CONCBITS_EFFECT, data);
 
 		// nb. Do not move this 32 units above the ground!
 		// That behaviour does not occur with conc grenades
@@ -251,6 +251,7 @@ void CFFGrenadeConcussion::Precache()
 {
 	PrecacheModel(CONCUSSIONGRENADE_MODEL);
 	PrecacheModel(CONCUSSIONGRENADE_GLOW_SPRITE);
+	PrecacheModel("models/grenades/conc/conceffect.mdl");
 	PrecacheScriptSound(CONCUSSION_SOUND);
 	BaseClass::Precache();
 }
