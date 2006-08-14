@@ -2171,37 +2171,34 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 	int iMaxClients = gpGlobals->maxClients;
 
 	// If we're the only ones we don't care
-	if( iMaxClients < 1 )
+	if( iMaxClients < 2 )
 		return;
 
 	// My origin
 	Vector vecOrigin = GetAbsOrigin();
 
 	// Loop through doing stuff on each player
-	for( int i = 0; i < iMaxClients; i++ )
+	for( int i = 0; i <= iMaxClients; i++ )
 	{
-		CBasePlayer *pBasePlayer = UTIL_PlayerByIndex( i );
-
-		// Skip if NULL
-		if( !pBasePlayer )
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+		
+		if( !pPlayer )
 			continue;		
 
 		// Skip if not a player
-		if( !pBasePlayer->IsPlayer() )
+		if( !pPlayer->IsPlayer() )
 			continue;
 
 		// Skip if spec
-		if( pBasePlayer->IsObserver() )
+		if( pPlayer->IsObserver() )
 			continue;
-
-		CFFPlayer *pPlayer = ToFFPlayer( pBasePlayer );
 
 		// Skip if us
 		if( pPlayer == this )
 			continue;
 
 		// Skip if not tagged
-		if( !pPlayer->m_bRadioTagged )
+		if( !pPlayer->IsRadioTagged() )
 			continue;
 
 		// Bug #0000517: Enemies see radio tag.
@@ -2230,7 +2227,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// Create a single object
 		ESP_Shared_s hObject;
 		hObject.m_iClass = pPlayer->GetClassSlot();
-		hObject.m_iTeam = pPlayer->GetTeamNumber() - 1;
+		hObject.m_iTeam = pPlayer->GetTeamNumber();
 		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
 		hObject.m_vecOrigin = vecPlayerOrigin;
 
@@ -2244,34 +2241,28 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		}
 	}
 
-	if( m_hRadioTaggedList.Count() )
+	int iCount = m_hRadioTaggedList.Count();
+	if( iCount > 0 )
 	{
 		// Only send this message to the local player	
-		CSingleUserRecipientFilter user( this );
+		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 		user.MakeReliable();
 
 		// Start the message block
 		UserMessageBegin( user, "RadioTagUpdate" );
 
-			// send block	
-			// - team (int 1-4) [to color the silhouettes elitely] adjusted value
-			// - class (int)
-			// - origin (float[3])
-			// team = 99 terminates
+		WRITE_SHORT( iCount );
 
-			for( int i = 0; i < m_hRadioTaggedList.Count(); i++ )
-			{
-				int iInfo = m_hRadioTaggedList[ i ].m_iTeam;
-				iInfo += m_hRadioTaggedList[ i ].m_iClass << 4;
+		for( int i = 0; i < iCount; i++ )
+		{
+			int iInfo = m_hRadioTaggedList[ i ].m_iTeam;
+			iInfo += m_hRadioTaggedList[ i ].m_iClass << 4;
 
-				WRITE_WORD( iInfo );
-				WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? 1 : 0 );
-				WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
-			}
+			WRITE_WORD( iInfo );
+			WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? ( byte )1 : ( byte )0 );
+			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
+		}
 			
-			// We're done sending the HUD message
-			WRITE_WORD( 0 );
-
 		// End the message block
 		MessageEnd();		
 
@@ -2369,28 +2360,22 @@ void CFFPlayer::Command_Radar( void )
 	if( gpGlobals->curtime > ( m_flLastScoutRadarUpdate + ( float )radar_wait_time.GetInt() ) )
 	{
 		// See if the player has enough ammo
-		if( GetAmmoCount( "AMMO_CELLS" ) >= radar_num_cells.GetInt( ) )
+		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
 		{
 			// Bug #0000531: Everyone hears radar
 			CPASAttenuationFilter sndFilter;
 			sndFilter.RemoveAllRecipients();
-			sndFilter.AddRecipient( this );
+			sndFilter.AddRecipient( ( CBasePlayer * )this );
 			EmitSound( sndFilter, entindex(), "radar.single_shot");
 
 			// Remove ammo
-			RemoveAmmo( radar_num_cells.GetInt(), "AMMO_CELLS" );
+			RemoveAmmo( radar_num_cells.GetInt(), AMMO_CELLS );
 
-			// Only send this message to the local player	
-			CSingleUserRecipientFilter user( this );
-			user.MakeReliable();
+			CUtlVector< ScoutRadar_s > hRadarInfo;
 
-			// Start the message block
-			UserMessageBegin( user, "RadarUpdate" );
-
-			// Send our radar/esp to the client
 			Vector vecOrigin = GetAbsOrigin();
 
-			for( int i = 1; i <= gpGlobals->maxClients; i++ )
+			for( int i = 0; i <= gpGlobals->maxClients; i++ )
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer && ( pPlayer != this ) )
@@ -2407,7 +2392,7 @@ void CFFPlayer::Command_Radar( void )
 
 					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
 					// If the player is a spectator
-					if( pPlayer->GetTeamNumber() < TEAM_BLUE )
+					if( ( pPlayer->GetTeamNumber() < TEAM_BLUE ) || ( pPlayer->GetTeamNumber() > TEAM_GREEN ) )
 						continue;
 
 					Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
@@ -2415,19 +2400,18 @@ void CFFPlayer::Command_Radar( void )
 
 					if( flDist <= ( float )radar_radius_distance.GetInt() )
 					{
-						int iInfo = pPlayer->GetTeamNumber() - 1;
+						int iInfo = pPlayer->GetTeamNumber();
 						iInfo += pPlayer->GetClassSlot() << 4;
 
 						if( ( g_pGameRules->PlayerRelationship( this, pPlayer ) == GR_NOTTEAMMATE ) &&
 							( pPlayer->IsDisguised() ) )
 						{
-							iInfo = pPlayer->GetDisguisedTeam() - 1;
+							iInfo = pPlayer->GetDisguisedTeam();
 							iInfo += pPlayer->GetDisguisedClass() << 4;
 						}
 
-						WRITE_WORD( iInfo );
-						WRITE_BYTE( ( ( pPlayer->GetFlags() & FL_DUCKING ) ? 1 : 0 ) );
-						WRITE_VEC3COORD( vecPlayerOrigin );				// Origin in 3d space
+						ScoutRadar_s hInfo( iInfo, ( pPlayer->GetFlags() & FL_DUCKING ) ? ( byte )1 : ( byte )0, vecPlayerOrigin );
+						hRadarInfo.AddToTail( hInfo );
 
 						// Omni-bot: Notify the bot he has detected someone.
 						if(IsBot())
@@ -2438,11 +2422,29 @@ void CFFPlayer::Command_Radar( void )
 				}
 			}
 
-			// We're done sending the HUD message
-			WRITE_WORD( 0 );
+			int iCount = hRadarInfo.Count();
+			if( iCount >= 0 )
+			{
+				// Only send this message to the local player	
+				CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+				user.MakeReliable();
 
-			// End the message block
-			MessageEnd();
+				// Start the message block
+				UserMessageBegin( user, "RadarUpdate" );
+
+				// Tell client how much to expect
+				WRITE_SHORT( iCount );
+
+				for( int i = 0; i < iCount; i++ )
+				{
+					WRITE_WORD( hRadarInfo[ i ].m_iInfo );
+					WRITE_BYTE( hRadarInfo[ i ].m_bDucking );
+					WRITE_VEC3COORD( hRadarInfo[ i ].m_vecOrigin );
+				}
+
+				// End the message block
+				MessageEnd();
+			}
 
 			// Update our timer
 			m_flLastScoutRadarUpdate = gpGlobals->curtime;

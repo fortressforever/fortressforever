@@ -63,7 +63,7 @@ public:
 	CHudRadar( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudRadar" ) 
 	{
 		// Set our parent window
-		SetParent( g_pClientMode->GetViewport( ) );
+		SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
@@ -100,6 +100,9 @@ void CHudRadar::VidInit( void )
 
 	// Cache textures
 	CacheTextures();
+
+	m_hRadarList.RemoveAll();
+	m_flStartTime = 0.0f;
 }
 
 void CHudRadar::Init( void )
@@ -122,34 +125,15 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 {
 	bool bRecvMessage = false;
 
-	// Initialize
-	//m_iNumPlayers = 0;
-	
-	// send block	
-	// - team (int 1-4) [to color the silhouettes elitely]
-	// - class (int)
-	// - origin (float[3])
-	// team = 99 terminates
-
-	int iInfo = msg.ReadWord();
-	while( iInfo )
+	int iCount = msg.ReadShort();
+	for( int i = 0; i < iCount; i++ )
 	{
 		CGlyphESP	hObject;
 
-		/*
-		// Do stuff here - build internal vector
-		// for when we "paint" later
-		hObject.m_iTeam = iTeam;
-
-		// Read class and do stuff
-		hObject.m_iClass = msg.ReadShort( );
-
-		// Read origin and do stuff
-		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
-		*/
+		int iInfo = msg.ReadWord();
 
 		// Get team
-		hObject.m_iTeam = iInfo & 0x0000000F;
+		hObject.m_iTeam = ( iInfo & 0x0000000F ) - 1;
 		// Get class
 		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
 		// Get ducked state
@@ -157,14 +141,12 @@ void CHudRadar::MsgFunc_RadarUpdate( bf_read &msg )
 		// Get origin
 		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
 
-		DevMsg( "[Radar] Team: %i, Class: %i, Ducked: %s, Origin: %f, %f, %f\n", hObject.m_iTeam, hObject.m_iClass, hObject.m_bDucked ? "yes" : "no", hObject.m_vecOrigin.x, hObject.m_vecOrigin.y, hObject.m_vecOrigin.z );
+		//DevMsg( "[Radar] Team: %i, Class: %i, Ducked: %s, Origin: %f, %f, %f\n", hObject.m_iTeam, hObject.m_iClass, hObject.m_bDucked ? "yes" : "no", hObject.m_vecOrigin.x, hObject.m_vecOrigin.y, hObject.m_vecOrigin.z );
 
 		// Received at least one valid message
 		bRecvMessage = true;
 
 		m_hRadarList.AddToTail( hObject );
-
-		iInfo = msg.ReadWord();
 	}
 
 	if( bRecvMessage )
@@ -182,7 +164,7 @@ void CHudRadar::Paint( void )
 	if( m_hRadarList.Count() )
 	{
 		// Get us
-		C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 		if( !pPlayer )
 		{
 			Warning( "[Scout Radar] No local player!\n" );
@@ -199,7 +181,7 @@ void CHudRadar::Paint( void )
 
 		// Loop through all our dudes
 		for( int i = 0; i < m_hRadarList.Count(); i++ )
-		{				
+		{
 			// Draw a box around the guy if they're on our screen
 			int iScreenX, iScreenY;
 			if( GetVectorInScreenSpace( m_hRadarList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
