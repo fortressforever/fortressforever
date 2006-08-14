@@ -1306,6 +1306,12 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 	}
 #endif
 
+	// Don't affect players who are chilling out
+	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsObserver())
+	{
+		return false;
+	}
+
 	if ((pAttacker) && (PlayerRelationship(pPlayer, pAttacker) == GR_TEAMMATE))
 	{
 		// If friendly fire is off and I'm not attacking myself, then

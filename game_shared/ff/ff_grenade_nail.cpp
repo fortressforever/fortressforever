@@ -34,8 +34,6 @@ class CFFGrenadeNail : public CFFGrenadeBase
 public:
 	DECLARE_CLASS(CFFGrenadeNail, CFFGrenadeBase) 
 
-	CNetworkVector(m_vInitialVelocity);
-
 	virtual void Precache();
 	virtual const char *GetBounceSound() { return "NailGrenade.Bounce"; }
 
@@ -48,7 +46,7 @@ public:
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 	virtual void Spawn();
 	virtual void NailEmit();
-	virtual void GrenadeThink();
+	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
 protected:
 	float m_flNailSpit;
@@ -57,7 +55,6 @@ protected:
 
 #ifdef GAME_DLL
 	BEGIN_DATADESC(CFFGrenadeNail) 
-		DEFINE_THINKFUNC(GrenadeThink), 
 		DEFINE_THINKFUNC(NailEmit), 
 	END_DATADESC() 
 #endif
@@ -70,11 +67,25 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.4" );
 #endif
 
+
+	//-----------------------------------------------------------------------------
+// Purpose: Various precache things
+//-----------------------------------------------------------------------------
+void CFFGrenadeNail::Precache() 
+{
+	PrecacheModel(NAILGRENADE_MODEL);
+	PrecacheScriptSound( "NailGrenade.shoot" );
+
+	BaseClass::Precache();
+}
+
 #ifdef GAME_DLL
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Various spawny flag things
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeNail::Spawn() 
 	{
-		//DevMsg("[Grenade Debug] CFFGrenadeNail\n");
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
 
@@ -82,68 +93,52 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
 
-	void CFFGrenadeNail::GrenadeThink() 
+	//-----------------------------------------------------------------------------
+	// Purpose: Instead of exploding, change to 
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeNail::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		// Remove if we're nolonger in the world
-		if (!IsInWorld()) 
+		// Clumsy, will do for now
+		if (GetMoveType() & MOVETYPE_FLY)
 		{
-			Remove();
+			BaseClass::Explode(pTrace, bitsDamageType);
 			return;
 		}
 
-		// Blow up if we've reached the end of our fuse
-		if (gpGlobals->curtime > m_flDetonateTime) 
-		{
-			// Don't start spinning up if in a no gren area
-			if( !FFScriptRunPredicates( this, "onexplode", true ) )
-			{
-				// This will remove us
-				CFFGrenadeBase::PostExplode();
-				return;
-			}
+		SetDetonateTimerLength(3.0f);
 
-			//DevMsg("[Grenade Debug] CFFGrenadeNail::GrenadeThink\n[Grenade Debug] Changing to nail mode\n");
+		// Should this maybe be noclip?
+		SetMoveType(MOVETYPE_FLY);
 
-			// Reset the detonation time
-			SetDetonateTimerLength(3);
-
-			// Should this maybe be noclip?
-			SetMoveType(MOVETYPE_FLY);
-
-			// Go into nail mode
-			SetThink(&CFFGrenadeNail::NailEmit);		// |-- Mirv: Account for GCC strictness
-			SetNextThink(gpGlobals->curtime);
-
-			return;
-		}
-
-		// Next think straight away
+		// Go into nail mode
+		SetThink(&CFFGrenadeNail::NailEmit);
 		SetNextThink(gpGlobals->curtime);
-
-		CFFGrenadeBase::WaterThink(); // Mulch: bug 0000273: make grens sink-ish in water
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Spin round emitting nails
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeNail::NailEmit() 
 	{
 		// Blow up if we've reached the end of our fuse
 		if (gpGlobals->curtime > m_flDetonateTime) 
 		{
-			//DevMsg("[Grenade Debug] CFFGrenadeNail::NailEmit\n[Grenade Debug] Detonating\n");
 			Detonate();
 			return;
 		}
 
-		float risingheight = 0;
+		float flRisingheight = 0;
 
 		// Lasts for 3 seconds, rise for 0.3, but only if not handheld
 		if (m_flDetonateTime - gpGlobals->curtime > 2.6 && !m_fIsHandheld)
-			risingheight = 80;
+			flRisingheight = 80;
 
-		SetAbsVelocity(Vector(0, 0, risingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
+		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
 
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
 		// Bug #0000674: Nail grenade doesn't shoot nails out like TFC nail grenade
+		//	Otherwise known as: Make nail grens look rubbish again
 
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
@@ -173,11 +168,3 @@ PRECACHE_WEAPON_REGISTER(nailgrenade);
 	}
 
 #endif
-
-void CFFGrenadeNail::Precache() 
-{
-	//DevMsg("[Grenade Debug] CFFGrenadeNail::Precache\n");
-	PrecacheModel(NAILGRENADE_MODEL);
-	PrecacheScriptSound( "NailGrenade.shoot" );
-	BaseClass::Precache();
-}

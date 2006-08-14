@@ -1,18 +1,14 @@
-/// =============== Fortress Forever ===============
-/// ======== A modification for Half-Life 2 ========
-///
-/// @file ff_grenade_concussion.cpp
-/// @author Shawn Smith(L0ki)
-/// @date Jan. 29, 2005
-/// @brief concussion grenade class
-///
-/// Implementation of the CFFGrenadeConcussion class. This is the secondary grenade type for scout and medic.
-/// 
-/// Revisions
-/// ---------
-/// Jan. 29, 2005	L0ki: Initial Creation
-/// Apr. 23, 2005	L0ki: removed header file, moved everything to a single cpp file
-/// Feb. 11, 2006	Mirv: Added new concussion glow effect.
+/********************************************************************
+	created:	2006/08/14
+	created:	14:8:2006   11:12
+	filename: 	f:\ff-svn\code\trunk\game_shared\ff\ff_grenade_concussion.cpp
+	file path:	f:\ff-svn\code\trunk\game_shared\ff
+	file base:	ff_grenade_concussion
+	file ext:	cpp
+	author:		Various
+	
+	purpose:	
+*********************************************************************/
 
 #include "cbase.h"
 #include "ff_grenade_base.h"
@@ -24,6 +20,7 @@
 #ifdef GAME_DLL
 	#include "ff_player.h"
 	#include "ff_entity_system.h"
+	#include "te_effect_dispatch.h"
 #endif
 
 #ifdef CLIENT_DLL
@@ -36,13 +33,13 @@
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
 
-#define CONCUSSIONGRENADE_MODEL "models/grenades/conc/conc.mdl"
-#define CONCUSSIONGRENADE_GLOW_SPRITE "sprites/glow04_noz.vmt"
-#define CONCUSSION_SOUND "ConcussionGrenade.Explode"
-#define CONCUSSION_EFFECT "FF_ConcussionEffect" // "ConcussionExplosion"
-#define CONCBITS_EFFECT "FF_ConcBitsEffect"
-#define FLASH_EFFECT "FF_FlashEffect"
-#define RING_EFFECT "FF_RingEffect"
+#define CONCUSSIONGRENADE_MODEL			"models/grenades/conc/conc.mdl"
+#define CONCUSSIONGRENADE_GLOW_SPRITE	"sprites/glow04_noz.vmt"
+#define CONCUSSION_SOUND				"ConcussionGrenade.Explode"
+#define CONCUSSION_EFFECT				"FF_ConcussionEffect" // "ConcussionExplosion"
+#define CONCBITS_EFFECT					"FF_ConcBitsEffect"
+#define FLASH_EFFECT					"FF_FlashEffect"
+#define RING_EFFECT						"FF_RingEffect"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeConcussion C_FFGrenadeConcussion
@@ -127,6 +124,10 @@ LINK_ENTITY_TO_CLASS(concussiongrenade, CFFGrenadeConcussion);
 PRECACHE_WEAPON_REGISTER(concussiongrenade);
 
 #ifdef GAME_DLL
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Set model. Add sprites (TODO: Remove sprites)
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeConcussion::Spawn()
 	{
 		SetModel(CONCUSSIONGRENADE_MODEL);
@@ -142,101 +143,92 @@ PRECACHE_WEAPON_REGISTER(concussiongrenade);
 		BaseClass::Spawn();
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Do a proper conc explosion
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeConcussion::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		CFFGrenadeBase::PreExplode(pTrace, CONCUSSION_SOUND, CONCUSSION_EFFECT);
-		//CFFGrenadeBase::PreExplode( pTrace, NULL, FLASH_EFFECT );
-		CFFGrenadeBase::PreExplode( pTrace, NULL, CONCBITS_EFFECT );
+		EmitSound(CONCUSSION_SOUND);
+
+		CEffectData data;
+		data.m_vOrigin = GetAbsOrigin();
+		data.m_flScale = 1.0f;
+		
+		DispatchEffect(CONCUSSION_EFFECT, data);
+		DispatchEffect(CONCBITS_EFFECT, data);
 
 		// nb. Do not move this 32 units above the ground!
 		// That behaviour does not occur with conc grenades
 
-		// If the grenade is in a no gren area don't deploy caltrops
-		if( FFScriptRunPredicates( this, "onexplode", true ) )
+		CBaseEntity *pEntity = NULL;
+
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
-			// --> Mirv: Rewritten
-			Vector vecDisplacement, vecForce;
+			if (!pEntity || !pEntity->IsPlayer())
+				continue;
 
-			CBaseEntity *pEntity = NULL;
-			for( CEntitySphereQuery sphere( GetAbsOrigin(), GetGrenadeRadius() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
+
+			if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
+				continue;
+
+			// Some useful things to know
+			Vector vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
+			float flDistance = vecDisplacement.Length();
+			Vector vecDir = vecDisplacement / flDistance;
+
+			// Concuss the player first
+			if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 			{
-				if( !pEntity )
-					continue;
-
-				if( !pEntity->IsPlayer() )
-					continue;
-
-				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
-
-				if( !pPlayer->IsAlive() || pPlayer->IsObserver() )
-					continue;
-
-				// I don't like this macro
-			//BEGIN_ENTITY_SPHERE_QUERY(GetAbsOrigin(), GetGrenadeRadius())
-				//if (pPlayer)
-				//{
-				vecDisplacement = pPlayer->GetLegacyAbsOrigin() - GetAbsOrigin();
-				float flDistance = vecDisplacement.Length();
-
-				// TFC considers a displacement < 16units to be a hh
-				// However in FF sometimes the distance can be more with a hh
-				// But we don't want to lose the trait of a hh-like jump with a drop conc
-				// So an extra flag here helps out.
-				// Remember that m_fIsHandheld only affects the grenade owner
-				if ((pEntity == GetThrower() && m_fIsHandheld) || flDistance < 16.0f)
-				{
-					VectorNormalize(vecDisplacement);
-					Vector pvel = pPlayer->GetAbsVelocity();
-
-					// These values are close (~within 0.01) of TFC
-					if( !pPlayer->IsBuilding() )
-						pPlayer->SetAbsVelocity(Vector(pvel.x * 2.74, pvel.y * 2.74, pvel.z * 4.10));
-				}
-				else
-				{
-					float verticalDistance = vecDisplacement.z;
-					
-					vecDisplacement.z = 0;
-					float horizontalDistance = vecDisplacement.Length();
-
-					// Normalise the lateral direction of this
-					vecDisplacement /= horizontalDistance;
-
-					// This is the equation I've calculated for drop concs
-					// Is accurate to about ~0.001 in TFC so pretty sure this is the
-					// damn thing they use.
-					vecDisplacement *= (horizontalDistance * (8.4f - 0.015f * flDistance));
-					vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
-
-					if( !pPlayer->IsBuilding() )
-						pPlayer->SetAbsVelocity(vecDisplacement);
-				}				
-
-				VectorNormalize(vecDisplacement);
-					
 				QAngle angDirection;
-				VectorAngles(vecDisplacement, angDirection);
+				VectorAngles(vecDir, angDirection);
 
-				// only concuss if teamplay rules says the player could be damaged
-				if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
+				float flDuration = (pPlayer->GetClassSlot() == CLASS_MEDIC) ? 7.5f : 15.0f;
+				float flIconDuration = flDuration;
+				if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
 				{
-					// BUG FIX: Previously teammates would
-					// get the status icon when FF was off
-
-					float flDuration = ( pPlayer->GetClassSlot() == CLASS_MEDIC ) ? 7.5f : 15.0f;
-					float flIconDuration = flDuration;
-					if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
-					{
-						pPlayer->Concuss( flDuration, flIconDuration, (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
-					}					
-				}
+					pPlayer->Concuss( flDuration, flIconDuration, (pPlayer == GetOwnerEntity() ? NULL : &angDirection));
+				}					
 			}
-			// I don't like this macro
-			//END_ENTITY_SPHERE_QUERY();
-			// <-- Mirv: Rewritten
+
+			// People who are building shouldn't be pushed around by anything
+			if (pPlayer->IsBuilding())
+				continue;
+
+			// TFC considers a displacement < 16units to be a hh
+			// However in FF sometimes the distance can be more with a hh
+			// But we don't want to lose the trait of a hh-like jump with a drop conc
+			// So an extra flag here helps out.
+			// Remember that m_fIsHandheld only affects the grenade owner
+			if ((pEntity == GetThrower() && m_fIsHandheld) || flDistance < 16.0f)
+			{
+				Vector vecVelocity = pPlayer->GetAbsVelocity();
+
+				// These values are close (~within 0.01) of TFC
+				pPlayer->SetAbsVelocity(Vector(vecVelocity.x * 2.74, vecVelocity.y * 2.74, vecVelocity.z * 4.10));
+			}
+			else
+			{
+				float verticalDistance = vecDisplacement.z;
+					
+				vecDisplacement.z = 0;
+				float horizontalDistance = vecDisplacement.Length();
+
+				// Normalise the lateral direction of this
+				vecDisplacement /= horizontalDistance;
+
+				// This is the equation I've calculated for drop concs
+				// Is accurate to about ~0.001 in TFC so pretty sure this is the
+				// damn thing they use.
+				vecDisplacement *= (horizontalDistance * (8.4f - 0.015f * flDistance));
+				vecDisplacement.z = (verticalDistance * (12.6f - 0.0225f * flDistance));
+
+				pPlayer->SetAbsVelocity(vecDisplacement);
+			}				
 		}
 
-		CFFGrenadeBase::PostExplode();
+		// Now get rid of this
+		UTIL_Remove(this);
 	}
 #endif
 
@@ -257,7 +249,6 @@ void CFFGrenadeConcussion::DoEffectIdle()
 //----------------------------------------------------------------------------
 void CFFGrenadeConcussion::Precache()
 {
-	//DevMsg("[Grenade Debug] CFFGrenadeConcussion::Precache\n");
 	PrecacheModel(CONCUSSIONGRENADE_MODEL);
 	PrecacheModel(CONCUSSIONGRENADE_GLOW_SPRITE);
 	PrecacheScriptSound(CONCUSSION_SOUND);

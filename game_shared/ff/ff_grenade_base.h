@@ -1,26 +1,14 @@
-//=============== Fortress Forever ===============
-//======== A modification for Half-Life 2 ========
-/**
-@file ff_grenade_base.h
-@brief Declaration of the base class for all primeable grenades
-
-All primeable grenades in the game inherit from this class. These grenades include:
-- Frag
-- Caltrops
-- Concussion
-- Nail
-- MIRV
-- Napalm
-- Gas
-- EMP
-
-@author Shawn Smith (L0ki)
-@date Dec. 10, 2004
-
-@revision <dl compact><dt><u>Dec. 10, 2004</u></dt><dd>L0ki: <i>Initial Creation</i></dd></dl>
-@revision <dl compact><dt><u>Apr. 20, 2005</u></dt><dd>L0ki: <i>Reorganized code structure</i></dd></dl>
-/// Jan. 15, 2006   Mirv: Tidied this up a LOT!
-*/
+/********************************************************************
+	created:	2006/08/14
+	created:	14:8:2006   11:09
+	filename: 	f:\ff-svn\code\trunk\game_shared\ff\ff_grenade_base.h
+	file path:	f:\ff-svn\code\trunk\game_shared\ff
+	file base:	ff_grenade_base
+	file ext:	h
+	author:		Various
+	
+	purpose:	
+*********************************************************************/
 
 #ifndef FF_GRENADE_BASE_H
 #define FF_GRENADE_BASE_H
@@ -49,63 +37,39 @@ class CFFGrenadeBase : public CFFProjectileBase
 public:
 	DECLARE_CLASS( CFFGrenadeBase, CFFProjectileBase );
 
-	CFFGrenadeBase::CFFGrenadeBase( void )
-	{
-		// Hey, this exists already, let's use it!
-		AddFlag( FL_GRENADE );
-	}
-
-	virtual Class_T GetGrenId( void ) { return Classify(); }
-
-	virtual void Precache();
-	virtual Class_T Classify( void ) { return CLASS_GREN; }
-	virtual void Explode( trace_t *pTrace, int bitsDamageType );
-	//virtual bool CanClipPlayer() const { return false; }
-
 #ifdef GAME_DLL
-	virtual float GetGrenadeGravity() { return gren_grav.GetFloat(); }
-	virtual float GetGrenadeFriction() { return gren_fric.GetFloat(); }
-	virtual float GetGrenadeElasticity() { return gren_elas.GetFloat(); }
-	virtual float GetGrenadeDamage() { return 180.0f; }
-	virtual float GetGrenadeRadius() { return GetGrenadeDamage() * 1.5f; }
-	virtual float GetShakeAmplitude() { return 2.5f; }
+	virtual float GetGrenadeGravity()		{ return gren_grav.GetFloat(); }
+	virtual float GetGrenadeFriction()		{ return gren_fric.GetFloat(); }
+	virtual float GetGrenadeElasticity()	{ return gren_elas.GetFloat(); }
+	virtual float GetGrenadeDamage()		{ return 180.0f; }
+	virtual float GetGrenadeRadius()		{ return GetGrenadeDamage() * 1.5f; }
+	virtual float GetShakeAmplitude()		{ return 2.5f; }
 
-	bool m_fIsHandheld;	// This will eventually need to be on the client too
+	bool m_fIsHandheld;
 #endif
 
-	static int m_iShockwaveTexture;
-	static int m_iFlameSprite;
-	static int m_iRingTexture;
+	virtual void	Precache();
+	
+	virtual Class_T		Classify( void ) { return CLASS_GREN; }
+	Class_T	GetGrenId() { return Classify(); }
 
-#ifdef CLIENT_DLL
-	//CFFGrenadeBase() {}
-	//CFFGrenadeBase( const CFFGrenadeBase& ) {}
+#ifdef GAME_DLL
 
-	int DrawModel(int flags) 
-	{
-		return CBaseGrenade::DrawModel(flags);
-	}
+	DECLARE_DATADESC();
 
-#else
+	virtual void	Spawn();
+	virtual void	GrenadeThink();
+	virtual void	Detonate();
+	virtual void	Explode(trace_t *pTrace, int bitsDamageType);
 
-	DECLARE_DATADESC(); // Since we're adding new thinks etc
-
-	virtual void Spawn( void );
-	virtual void PreExplode( trace_t *pTrace );
-	virtual void PreExplode( trace_t *pTrace, const char* pSound, const char *pEffect );
-	virtual void PostExplode( void );
-	virtual void GrenadeThink( void );
-	virtual void WaterThink( void );	// |-- Mulch: Not a real think func
-
-	void SetDetonateTimerLength( float timer );
+	void WaterCheck( void );
+	void SetDetonateTimerLength(float timer);
 
 	// BaseClass projectile was making grens use its takeemp which just removed
 	// them from the level
 	// Bug #0000527: Emps makes other grenades disappear instead of detonating them.
 	int TakeEmp( void ) { return 0; }
 
-	// Public members
-	CNetworkVector( m_vInitialVelocity );
 protected:
 
 	//Custom collision to allow for constant elasticity on hit surfaces
@@ -115,7 +79,6 @@ protected:
 
 	bool	m_bHitwater;
 	float	m_flHitwaterTimer;
-
 #endif
 };
 

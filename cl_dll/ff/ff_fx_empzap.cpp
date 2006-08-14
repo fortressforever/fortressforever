@@ -23,21 +23,53 @@
 #include "beamdraw.h"
 #include "mathlib.h"
 
-/*
-class CViewRenderBeams
-{
-public:
-	Beam_t *CreateGenericBeam( BeamInfo_t &beamInfo );
-	void CViewRenderBeams::SetBeamAttributes( Beam_t *pBeam, const BeamInfo_t &beamInfo );
-};
-*/
+extern int g_iEmpRingTexture;
 
 void FF_FX_EmpZap_Callback(const CEffectData &data)
 {
 	// this ring effect is bollocks compared to HL1's TE_BEAMCYLINDER (which doesn't seemed to be accessible in source)
 	// I have the electricity effect backed up somewhere and may try that again in future
 	CBroadcastRecipientFilter filter;
-	te->BeamRingPoint(filter, 0, data.m_vOrigin, 1.0f, 240.0f, CFFGrenadeBase::m_iRingTexture, 0, 0, 1, 0.2f, 32, 0, 0, 255, 255, 128, 196, 0, FBEAM_FADEOUT | FBEAM_SINENOISE);
+	te->BeamRingPoint(filter,
+		0,						// delay
+		data.m_vOrigin,			// origin
+		1.0f,					// start radius
+		200.0f,					// end radius
+		g_iEmpRingTexture,		// texture index
+		0,						// halo index
+		0,						// start frame
+		1,						// frame rate
+		0.2f,					// life
+		32,						// width
+		2550,					// spread (10x end width)
+		255,					// amplitude
+		128,					// r
+		255,					// g
+		255,					// b
+		196,					// a
+		0,						// speed
+		FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
+	te->BeamRingPoint(filter,
+		0,						// delay
+		data.m_vOrigin,			// origin
+		1.0f,					// start radius
+		150.0f,					// end radius
+		g_iEmpRingTexture,		// texture index
+		0,						// halo index
+		0,						// start frame
+		1,						// frame rate
+		0.2f,					// life
+		32,						// width
+		2550,					// spread (10x end width)
+		255,					// amplitude
+		128,					// r
+		128,					// g
+		255,					// b
+		196,					// a
+		0,						// speed
+		FBEAM_FADEOUT | FBEAM_SINENOISE);	// flags
+
 	// undone - didn't work
 	/*
 	BeamInfo_t beaminfo;

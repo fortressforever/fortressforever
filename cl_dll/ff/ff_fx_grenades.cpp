@@ -80,7 +80,7 @@ void FF_FX_DrawCircle(Vector &center, float radius, int modelindex, float life =
 
 void FF_FX_ConcussionExplosion( Vector &origin )
 {
-	return;
+/*	return;
 	float radius = 180.0f;
 	//FF_FX_DrawCircle(origin,radius,CFFGrenadeBase::m_iShockwaveTexture);
 	CBroadcastRecipientFilter filter;
@@ -104,7 +104,9 @@ void FF_FX_ConcussionExplosion( Vector &origin )
 		100,
 		conc_speed.GetFloat(),
 		FBEAM_FADEOUT
-	);
+	);*/
+
+	Assert(0);
 }
 
 void ConcussionExplosionCallback(const CEffectData &data)
@@ -165,60 +167,9 @@ void NapalmBurstCallback(const CEffectData &data)
 
 DECLARE_CLIENT_EFFECT( "NapalmBurst", NapalmBurstCallback )
 
-// Mirv: This is no longer used!! Gas grenade has its own CGasCloud emitter
-void FF_FX_GasCloud( Vector &origin )
-{
-	CSmartPtr<CGasCloud> pGasCloud = CGasCloud::Create("GasCloud");
-
-	if (pGasCloud == NULL)
-		return;
-
-	pGasCloud->SetSortOrigin(origin);
-
-	//float scale = gas_scale.GetFloat();
-	GasParticle *pParticle = NULL;
-	QAngle angle;
-	Vector forward, right, up, velocity;
-
-	// TODO: make the gas cloud act like "real" gas, and disperse from the grenade and slowly "fill"
-	//		 the area around the grenade
-	for (int i = 0; i < 5; i++)
-	{
-		pParticle = pGasCloud->AddGasParticle(origin);
-		
-		if(!pParticle)
-			return;
-
-		// Pick a random direction
-		Vector vecDirection(RandomFloat(-1.0, 1.0f), RandomFloat(-1.0, 1.0f), RandomFloat(0, 2.0f));
-		vecDirection.NormalizeInPlace();
-
-		// And a random distance
-		Vector vecFinalPos = origin + vecDirection * RandomFloat(50.0f, 200.0f);
-
-		// Go as far as possible
-		trace_t tr;
-		UTIL_TraceLine(origin, vecFinalPos, MASK_SOLID, NULL, COLLISION_GROUP_DEBRIS, &tr);
-
-		// Takes 5 seconds for a cloud to disperse
-		pParticle->m_vVelocity = (tr.endpos - origin) * 0.2f;
-
-		// This is the position we're going to, even though we may not reach it
-		pParticle->m_vFinalPos = tr.endpos;
-	}
-}
-
-void GasCloudCallback(const CEffectData &data)
-{
-	Vector origin = data.m_vOrigin;
-	FF_FX_GasCloud(origin);
-}
-
-DECLARE_CLIENT_EFFECT( "GasCloud", GasCloudCallback )
-
 void FF_FX_EmpExplosion( Vector &origin )
 {
-	return;
+/*	return;
 	float radius = 180.0f;
 	// TODO: something better looking?
 	//shockwave
@@ -243,7 +194,9 @@ void FF_FX_EmpExplosion( Vector &origin )
 		100,
 		conc_speed.GetFloat(),
 		FBEAM_FADEOUT
-		);
+		);*/
+
+	Assert(0);
 }
 
 void EmpExplosionCallback(const CEffectData &data)

@@ -16,9 +16,9 @@
 #include "ff_grenade_base.h"
 #include "ff_utils.h"
 
-#define GASGRENADE_MODEL "models/grenades/gas/gas.mdl"
-#define GAS_SOUND "GasGrenade.Explode"
-#define GAS_EFFECT "GasCloud"
+#define GASGRENADE_MODEL	"models/grenades/gas/gas.mdl"
+#define GAS_SOUND			"GasGrenade.Explode"
+#define GAS_EFFECT			"GasCloud"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeGas C_FFGrenadeGas
@@ -35,7 +35,6 @@ public:
 	DECLARE_CLASS(CFFGrenadeGas,CFFGrenadeBase)
 	DECLARE_NETWORKCLASS();
 
-	CNetworkVector(m_vInitialVelocity);
 	CNetworkVar(int, m_bIsEmitting);
 
 	virtual void Precache();
@@ -84,13 +83,15 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 #ifdef GAME_DLL
 
-	int ACT_GAS_IDLE;
-	int ACT_GAS_DEPLOY;
-	int ACT_GAS_DEPLOY_IDLE;
+	Activity ACT_GAS_IDLE;
+	Activity ACT_GAS_DEPLOY;
+	Activity ACT_GAS_DEPLOY_IDLE;
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Set model, activities
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeGas::Spawn( void )
 	{
-		//DevMsg("[Grenade Debug] CFFGrenadeGas::Spawn\n");
 		SetModel( GASGRENADE_MODEL );
 		BaseClass::Spawn();
 
@@ -109,31 +110,20 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		m_bIsEmitting = 0;
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Currently all the gas logic is tied up in GrenadeThink
+	//-----------------------------------------------------------------------------
 	void CFFGrenadeGas::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		//DevMsg("[Grenade Debug] CFFGrenadeGas::Explode\n");
-		CFFGrenadeBase::PreExplode( pTrace, GAS_SOUND, GAS_EFFECT );
-
-		// TODO: trigger client side hallucination here
-		// TODO: Don't for !FFScriptRunPredicates( this, "onexplode", true ) check
-
-		//CFFGrenadeBase::PostExplode();
+		UTIL_Remove(this);
 	}
 
 	void CFFGrenadeGas::GrenadeThink( void )
 	{
-		// If the grenade is in a no grenade area, kill it
-		if( !FFScriptRunPredicates( this, "onexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
-		{
-			// This will remove the gren
-			CFFGrenadeBase::PostExplode();
-			return;
-		}
-
 		// If we're done deploying, deploy idle
-		if( m_Activity == ( Activity )ACT_GAS_DEPLOY )
+		if( m_Activity == ACT_GAS_DEPLOY )
 		{
-			m_Activity = ( Activity )ACT_GAS_DEPLOY_IDLE;
+			m_Activity = ACT_GAS_DEPLOY_IDLE;
 			m_iSequence = SelectWeightedSequence( m_Activity );
 			SetSequence( m_iSequence );
 
@@ -161,10 +151,19 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		// Damage people in here
 		if (gpGlobals->curtime > m_flDetonateTime && m_flNextHurt < gpGlobals->curtime)
 		{
+			// If the grenade is in a no grenade area, kill it
+			// Have moved this into here rather than every frame. However every 0.2
+			// seconds is still a bit much.
+			if( !FFScriptRunPredicates( this, "onexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
+			{
+				UTIL_Remove(this);
+				return;
+			}
+
 			m_flNextHurt = gpGlobals->curtime + 0.2f;
 
 			// If we were idling, deploy
-			if( m_Activity == ( Activity )ACT_GAS_IDLE )
+			if( m_Activity == ACT_GAS_IDLE )
 			{
 				// If it's at rest, enable physics
 				if( GetAbsVelocity() == vec3_origin )
@@ -172,11 +171,11 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 
 				m_flOpenTime = gpGlobals->curtime;
 
-				m_Activity = ( Activity )ACT_GAS_DEPLOY;
+				m_Activity = ACT_GAS_DEPLOY;
 				m_iSequence = SelectWeightedSequence( m_Activity );
 				SetSequence( m_iSequence );
 
-				EmitSound( "GasGrenade.Open" );
+				EmitSound(GAS_SOUND);
 			}
 
 			CBaseEntity *pEntity = NULL;
@@ -210,33 +209,10 @@ PRECACHE_WEAPON_REGISTER( gasgrenade );
 		StudioFrameAdvance();
 
 		// Next think straight away
-		SetNextThink(gpGlobals->curtime);		
+		SetNextThink(gpGlobals->curtime);
 
-		/*
-		// TODO:
-		// Let's effervesce underwater
-		if( ( GetWaterLevel() != 0 ) && ( m_flOpenTime != 0.0f ) )
-		{
-			// When motion is disabled GetAbsOrigin() no longer works
-
-			IPhysicsObject *pObject = VPhysicsGetObject();
-			if( pObject )
-			{
-				//Vector vecPos;
-				//QAngle vecAng;
-				//pObject->GetPosition( &vecPos, &vecAng );
-				
-				//UTIL_Bubbles( vecPos - Vector( 16, 16, 16 ), vecPos + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
-			}
-			else
-			{
-				UTIL_Bubbles( GetAbsOrigin() - Vector( 16, 16, 16 ), GetAbsOrigin() + Vector( 16, 16, 16 ), random->RandomInt( 2, 8 ) );
-			}			
-		}
-		*/
-
-		// Do underwater grenade movement thinking
-		CFFGrenadeBase::WaterThink();		
+		// Now do rest of think
+		//BaseClass::GrenadeThink();
 	}
 #else
 
