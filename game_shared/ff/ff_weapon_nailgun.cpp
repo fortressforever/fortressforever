@@ -90,5 +90,5 @@ void CFFWeaponNailgun::Fire()
 	//QAngle angAiming;
 	//VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileNail::CreateNail(vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileNail::CreateNail(this, vecSrc, pPlayer->EyeAngles(), pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 }

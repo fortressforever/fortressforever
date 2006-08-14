@@ -89,5 +89,5 @@ void CFFWeaponTranquiliser::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileDart::CreateDart(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileDart::CreateDart(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 }

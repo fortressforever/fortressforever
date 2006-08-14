@@ -41,7 +41,7 @@ public:
 
 	virtual void Precache();
 	virtual Class_T Classify() { return CLASS_ROCKET; }
-	static CFFProjectileRocket * CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileRocket *CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
 	CFFProjectileRocket() {}

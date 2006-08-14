@@ -1260,9 +1260,6 @@ void CFFPlayer::SpySilentFeign( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
-	//Possible fix: 0000807: When using cl_autoreload 1 players randomly cannot respawn
-	//engine->ClientCommand( edict(), "-reload" ); //VOOGRU: Let's do this on the client instead.
-
 	if( m_hSaveMe )
 	{
 		// This will kill it

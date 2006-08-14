@@ -405,7 +405,7 @@ void CFFSentryGun::OnActiveThink( void )
 			GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
         
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket( vecOrigin /*+ vecAiming * 8.0f*/, vecAngles, this, 102, 900.0f );
+		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket(this, vecOrigin /*+ vecAiming * 8.0f*/, vecAngles, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;

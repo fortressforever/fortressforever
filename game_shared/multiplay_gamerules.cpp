@@ -11,6 +11,8 @@
 #include "gameeventdefs.h"
 #include <KeyValues.h>
 
+#include "ff_projectile_base.h"
+
 #ifdef CLIENT_DLL
 
 #else
@@ -565,9 +567,10 @@ bool CMultiplayRules::IsMultiplayer( void )
 		CBaseEntity *pInflictor = info.GetInflictor();
 		CBaseEntity *pKiller = info.GetAttacker();
 
+		// Removed, this is now handled further on
 		// Hack for sg rockets (might break other stuff?)
-		if( pKiller->Classify() == CLASS_SENTRYGUN )
-			pInflictor = pKiller;
+		//if( pKiller->Classify() == CLASS_SENTRYGUN )
+		//	pInflictor = pKiller;
 
 		/*
 		// HACK: Check for special infection deaths
@@ -622,6 +625,15 @@ bool CMultiplayRules::IsMultiplayer( void )
 			{
 				killer_weapon_name = STRING( pInflictor->m_iClassname );
 			}
+
+			// --> Mirv: Special case for projectiles
+			CFFProjectileBase *pProjectile = dynamic_cast<CFFProjectileBase *> (pInflictor);
+
+			if (pProjectile && pProjectile->m_iSourceClassname != NULL_STRING)
+			{
+				killer_weapon_name = STRING(pProjectile->m_iSourceClassname);
+			}
+			// <-- Mirv
 
 			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
 			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);

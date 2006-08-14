@@ -94,7 +94,7 @@ void CFFWeaponPipeLauncher::Fire()
 
 	angAiming -= QAngle(12.0f, 0, 0);
 
-	CFFProjectilePipebomb::CreatePipebomb(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
 #ifdef GAME_DLL
 	// Store off the time we shot the pipebomb

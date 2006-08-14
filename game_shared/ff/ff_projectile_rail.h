@@ -43,7 +43,7 @@ public:
 	void BubbleThink();
 	void RailTouch(CBaseEntity *pOther);
 
-	static CFFProjectileRail *CreateRail(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileRail *CreateRail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
 	CFFProjectileRail() {}
