@@ -19,16 +19,22 @@
 #include "materialsystem/imaterialvar.h"
 #include "c_te_effect_dispatch.h"
 #include "fx_explosion.h"
+#include "tempent.h"
 
 #define CONC_EFFECT_MATERIAL "sprites/concrefract"
 
 ConVar conc_on			 ("ffdev_conc_on", "1", 0, "Turn the conc effect on or off - 1 or 0." );
 ConVar conc_scale		 ("ffdev_conc_scale", "512.0", 0, "How big the conc effect gets.");
-ConVar conc_refract		 ("ffdev_conc_refract", "0.2", 0, "Refraction amount for conc effect.");
-ConVar conc_blur		 ("ffdev_conc_blur", "0", 0, "Blur amount for conc effect.");
+//ConVar conc_refract		 ("ffdev_conc_refract", "0.2", 0, "Refraction amount for conc effect.");
+//ConVar conc_blur		 ("ffdev_conc_blur", "0", 0, "Blur amount for conc effect.");
 ConVar conc_speed		 ("ffdev_conc_speed", "0.5", 0, "Duration of the conc effect.");
 ConVar conc_ripples		 ("ffdev_conc_ripples", "1", 0, "How many ripples the conc effect has.");
 ConVar conc_ripple_period("ffdev_conc_ripple_period", "0.05", 0, "Time between ripples.");
+
+ConVar conc_blur("ffdev_conc_blur", "0.5");
+ConVar conc_refract("ffdev_conc_refract", "0.2");
+ConVar conc_grow("ffdev_conc_grow", "0.2");
+ConVar conc_shrink("ffdev_conc_shrink", "1.2");
 
 //========================================================================
 // Client effect precache table
@@ -165,10 +171,139 @@ ConcParticle * CConcEmitter::AddConcParticle()
 	return pRet;
 }
 
+
+
+
+
+
+
+
+
+
+class C_ConcEffect : public C_BaseAnimating
+{
+	typedef C_BaseAnimating BaseClass;
+public:
+
+	static C_ConcEffect	*CreateClientsideEffect(const char *pszModelName, Vector vecOrigin);
+
+	bool	InitializeEffect( const char *pszModelName, Vector vecOrigin );
+	void	ClientThink( void );
+
+protected:
+
+	IMaterial	*m_pMaterial;
+	float		m_flStart;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Create the conc effect
+//-----------------------------------------------------------------------------
+C_ConcEffect *C_ConcEffect::CreateClientsideEffect(const char *pszModelName, Vector vecOrigin)
+{
+	C_ConcEffect *pEffect = new C_ConcEffect;
+
+	if (pEffect == NULL)
+		return NULL;
+
+	if (pEffect->InitializeEffect(pszModelName, vecOrigin) == false)
+		return NULL;
+
+	pEffect->m_pMaterial = materials->FindMaterial(CONC_EFFECT_MATERIAL, TEXTURE_GROUP_OTHER);
+	pEffect->m_flStart = gpGlobals->curtime;
+
+	return pEffect;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Initialise all the conc stuff
+//-----------------------------------------------------------------------------
+bool C_ConcEffect::InitializeEffect( const char *pszModelName, Vector vecOrigin )
+{
+	if (InitializeAsClientEntity(pszModelName, RENDER_GROUP_OPAQUE_ENTITY) == false)
+	{
+		Release();
+		return false;
+	}
+
+	SetAbsOrigin(vecOrigin);
+
+	SetNextClientThink(CLIENT_THINK_ALWAYS);
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Adjust the material proxies for the conc as time goes on
+//-----------------------------------------------------------------------------
+void C_ConcEffect::ClientThink( void )
+{
+	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+
+	// We need to keep the correct part of the shader oriented towards the player
+	// The bit we want is on the top, so rotate around x axis by 90
+	Vector vecDir = GetAbsOrigin() - pPlayer->EyePosition();
+
+	QAngle angFace;
+	VectorAngles(vecDir, angFace);
+	angFace.x += 90;
+
+	SetAbsAngles(angFace);
+
+	float flLife = gpGlobals->curtime - m_flStart;
+	float flStrength = 0.0f;
+
+	// These are temp until the values are decided
+	float flMidTime = conc_grow.GetFloat();
+	float flEndTime = conc_grow.GetFloat() + conc_shrink.GetFloat();
+
+	if (flLife <= /*0.4f*/ flMidTime)
+	{
+		flStrength = SimpleSplineRemapVal(flLife, 0.0f, /*0.4f*/ flMidTime, 0.0f, 1.0f);
+	}
+	else if(flLife <= /*1.2f*/ flEndTime)
+	{
+		flStrength = SimpleSplineRemapVal(flLife, /*0.4f*/ flMidTime, /*1.2f*/ flEndTime, 1.0f, 0.0f);
+	}
+	// Bit of time to settle before releasing
+	else if (flLife > /*1.5f*/ flEndTime + 0.2f)
+	{
+		Release();
+		return;
+	}
+
+	flStrength = clamp(flStrength, 0.0f, 1.0f);
+
+	bool bFound;
+	IMaterialVar *pVar = m_pMaterial->FindVar("$refractamount", &bFound, true);
+
+	if (pVar)
+		pVar->SetFloatValue(flStrength * conc_refract.GetFloat());
+
+	pVar = m_pMaterial->FindVar("$bluramount", &bFound, true);
+
+	if (pVar)
+		pVar->SetFloatValue(flStrength * conc_blur.GetFloat());
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Callback function for the concussion effect
+//-----------------------------------------------------------------------------
 void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 {
-	// Mirv: If underwater, just do a bunch of gas
+	// If underwater, just do a bunch of gas
 	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
+	{
+		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
+		return;
+	}
+
+	C_ConcEffect::CreateClientsideEffect("models/grenades/conc/conceffect.mdl", data.m_vOrigin );
+
+
+
+	// Mirv: If underwater, just do a bunch of gas
+	/*if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
 	{
 		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
 		return;
@@ -191,7 +326,7 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 
 			offset += conc_ripple_period.GetFloat();
 		}
-	}
+	}*/
 }
 
 DECLARE_CLIENT_EFFECT("FF_ConcussionEffect", FF_FX_ConcussionEffect_Callback);
