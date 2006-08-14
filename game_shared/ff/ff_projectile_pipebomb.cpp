@@ -213,7 +213,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 //----------------------------------------------------------------------------
 // Purpose: Create a new pipebomb
 //----------------------------------------------------------------------------
-CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) CreateEntityByName("pipebomb");
 
@@ -224,6 +224,7 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const Vector &vecO
 	pPipebomb->SetAbsAngles(angAngles);
 	pPipebomb->Spawn();
 	pPipebomb->SetOwnerEntity(pentOwner);
+	pPipebomb->m_iSourceClassname = (pSource ? pSource->m_iClassname : NULL_STRING);
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);

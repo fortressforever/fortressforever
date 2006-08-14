@@ -41,7 +41,7 @@ public:
 	void BubbleThink();
 	void DartTouch(CBaseEntity *pOther);
 
-	static CFFProjectileDart *CreateDart(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileDart *CreateDart(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
 #ifdef CLIENT_DLL
 	CFFProjectileDart() {}

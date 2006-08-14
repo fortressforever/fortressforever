@@ -283,7 +283,7 @@ void CFFProjectileDart::BubbleThink()
 //----------------------------------------------------------------------------
 // Purpose: Create a new dart
 //----------------------------------------------------------------------------
-CFFProjectileDart *CFFProjectileDart::CreateDart(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileDart *CFFProjectileDart::CreateDart(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectileDart *pDart = (CFFProjectileDart *) CreateEntityByName("dart");
 
@@ -291,6 +291,7 @@ CFFProjectileDart *CFFProjectileDart::CreateDart(const Vector &vecOrigin, const 
 	pDart->SetAbsAngles(angAngles);
 	pDart->Spawn();
 	pDart->SetOwnerEntity(pentOwner);
+	pDart->m_iSourceClassname = (pSource ? pSource->m_iClassname : NULL_STRING);
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);

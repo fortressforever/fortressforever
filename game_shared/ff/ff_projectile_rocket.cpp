@@ -133,7 +133,7 @@ void CFFProjectileRocket::Precache()
 //----------------------------------------------------------------------------
 // Purpose: Create a new rocket
 //----------------------------------------------------------------------------
-CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectileRocket *pRocket = (CFFProjectileRocket *) CreateEntityByName("rocket");
 
@@ -141,6 +141,7 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const Vector &vecOrigin,
 	pRocket->SetAbsAngles(angAngles);
 	pRocket->Spawn();
 	pRocket->SetOwnerEntity(pentOwner);
+	pRocket->m_iSourceClassname = (pSource ? pSource->m_iClassname : NULL_STRING);
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);

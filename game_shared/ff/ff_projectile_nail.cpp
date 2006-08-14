@@ -168,7 +168,7 @@ void CFFProjectileNail::BubbleThink()
 //----------------------------------------------------------------------------
 // Purpose: Create a new nail
 //----------------------------------------------------------------------------
-CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectileNail *pNail = (CFFProjectileNail *) CreateEntityByName("nail");
 
@@ -176,6 +176,7 @@ CFFProjectileNail *CFFProjectileNail::CreateNail(const Vector &vecOrigin, const 
 	pNail->SetAbsAngles(angAngles);
 	pNail->Spawn();
 	pNail->SetOwnerEntity(pentOwner);
+	pNail->m_iSourceClassname = (pSource ? pSource->m_iClassname : NULL_STRING);
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);

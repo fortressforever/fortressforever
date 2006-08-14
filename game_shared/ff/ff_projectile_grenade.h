@@ -50,7 +50,7 @@ public:
 
 	virtual float GetShakeAmplitude() { return 2.5f; }
 
-	static CFFProjectileGrenade * CreateGrenade(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
+	static CFFProjectileGrenade *CreateGrenade(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed);
 
 	virtual const char *GetBounceSound() { return "GrenadeProjectile.Bounce"; }
 	virtual Class_T Classify() { return CLASS_GLGRENADE; }

@@ -57,15 +57,6 @@ END_NETWORK_TABLE()
 #ifdef CLIENT_DLL
 
 	//----------------------------------------------------------------------------
-	// Purpose: Client constructor
-	//----------------------------------------------------------------------------
-	CFFProjectileBase::CFFProjectileBase()
-	{
-		m_bNeedsCleanup = true;
-		m_bInPresent = false;
-	}
-
-	//----------------------------------------------------------------------------
 	// Purpose: Add initial velocity into the interpolation history so that
 	//			interp works okay
 	//----------------------------------------------------------------------------
@@ -256,4 +247,17 @@ void CFFProjectileBase::BounceSound()
 
 		m_flNextBounceSoundTime = gpGlobals->curtime + 0.1;
 	}	
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Client & server constructor
+//----------------------------------------------------------------------------
+CFFProjectileBase::CFFProjectileBase()
+{
+#ifdef GAME_DLL
+	m_iSourceClassname = NULL_STRING;
+#else
+	m_bNeedsCleanup = true;
+	m_bInPresent = false;
+#endif
 }

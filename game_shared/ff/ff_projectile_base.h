@@ -39,6 +39,7 @@ public:
 	// so the projectile starts out moving right off the bat.
 	CNetworkVector(m_vecInitialVelocity);
 
+	CFFProjectileBase();
 	virtual void Precache();
 	virtual void Spawn();
 	virtual void BounceSound();
@@ -49,10 +50,10 @@ public:
 	float m_flSpawnTime;
 	float m_flNextBounceSoundTime;
 
+	string_t m_iSourceClassname;
+
 #ifdef CLIENT_DLL
 
-	CFFProjectileBase();
-	
 	// Add initial velocity into the interpolation history so that interp works okay
 	virtual void PostDataUpdate(DataUpdateType_t type);
 	virtual void OnDataChanged(DataUpdateType_t type);

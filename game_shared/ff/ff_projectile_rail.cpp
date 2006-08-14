@@ -310,7 +310,7 @@ void CFFProjectileRail::BubbleThink()
 //----------------------------------------------------------------------------
 // Purpose: Create a new rail
 //----------------------------------------------------------------------------
-CFFProjectileRail *CFFProjectileRail::CreateRail(const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
+CFFProjectileRail *CFFProjectileRail::CreateRail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
 	CFFProjectileRail *pRail = (CFFProjectileRail *) CreateEntityByName("rail");
 
@@ -318,6 +318,7 @@ CFFProjectileRail *CFFProjectileRail::CreateRail(const Vector &vecOrigin, const 
 	pRail->SetAbsAngles(angAngles);
 	pRail->Spawn();
 	pRail->SetOwnerEntity(pentOwner);
+	pRail->m_iSourceClassname = (pSource ? pSource->m_iClassname : NULL_STRING);
 
 	Vector vecForward;
 	AngleVectors(angAngles, &vecForward);

@@ -87,7 +87,7 @@ void CFFWeaponIC::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileIncendiaryRocket::CreateRocket(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
 	// Push player but don't add to upwards force
 	Vector vecImpulse = vForward * -200.0f;

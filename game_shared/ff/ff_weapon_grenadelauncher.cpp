@@ -94,7 +94,7 @@ void CFFWeaponGrenadeLauncher::Fire()
 
 	angAiming -= QAngle(12.0f, 0, 0);
 
-	CFFProjectileGrenade::CreateGrenade(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileGrenade::CreateGrenade(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
 	// Synchronise with pipelauncher
 	Synchronise();

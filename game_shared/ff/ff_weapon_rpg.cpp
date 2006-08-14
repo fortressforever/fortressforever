@@ -90,7 +90,7 @@ void CFFWeaponRPG::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileRocket::CreateRocket(vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 }
 
 //----------------------------------------------------------------------------
