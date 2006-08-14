@@ -77,6 +77,16 @@ public:
 	virtual void	LUA_Remove( void );
 	virtual void	LUA_Restore( void );
 
+	CBaseEntity		*GetCarrier( void );
+	CBaseEntity		*GetDropper( void );
+
+	// Phsyics can be enabled on this object which
+	// makes certain functions not work!
+	Vector			LUA_GetOrigin( void ) const;
+	void			LUA_SetOrigin( const Vector& vecOrigin );
+	QAngle			LUA_GetAngles( void ) const;
+	void			LUA_SetAngles( const QAngle& vecAngles );
+
 	void			Pickup( CBaseEntity *pEntity );
 	void			Drop( float delay, float speed = 0.0f );
 	void			Respawn( float delay );
@@ -89,7 +99,8 @@ public:
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
 	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
-	const char *EntName( void ) { return STRING( GetEntityName() ); }
+	// Already exists in CBaseEntity!
+	//const char *EntName( void ) { return STRING( GetEntityName() ); }
 
 	void SetBotGoalInfo(int _type, int _team);
 protected:

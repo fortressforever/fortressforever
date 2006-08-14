@@ -47,9 +47,11 @@
 #include "datacache/imdlcache.h"
 #include "ScreenSpaceEffects.h"
 
-#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
+// Bug #0000385: point_camera & func_monitor in-titties
+// Allways USE_MONITORS
+//#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
 #define USE_MONITORS
-#endif
+//#endif
 
 // GR
 #include "rendertexture.h"

@@ -1192,6 +1192,9 @@
 				RelativePath="func_lod.cpp">
 			</File>
 			<File
+				RelativePath=".\hl2_dll\Func_Monitor.cpp">
+			</File>
+			<File
 				RelativePath="func_movelinear.cpp">
 			</File>
 			<File

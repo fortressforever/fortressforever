@@ -41,7 +41,9 @@ public:
 
 enum CollectionFilter
 {
-	CF_PLAYERS = 0,
+	CF_NONE = 0,
+
+	CF_PLAYERS,
 	CF_PLAYER_SCOUT,
 	CF_PLAYER_SNIPER,
 	CF_PLAYER_SOLDIER,
@@ -62,6 +64,7 @@ enum CollectionFilter
 
 	CF_PROJECTILES,
 	CF_GRENADES,
+	CF_INFOSCRIPTS,
 
 	CF_BUILDABLES,
 	CF_BUILDABLE_DISPENSER,
@@ -165,8 +168,12 @@ bool PassesCollectionFilter_TeamNum( CBaseEntity *pEntity, int iTeamNum )
 //-----------------------------------------------------------------------------
 // Purpose: Check an entity against some collection filter flags
 //-----------------------------------------------------------------------------
-bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags, const Vector& vecTraceOrigin )
+bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags )
 {
+	// Bail now if none is set
+	if( pbFlags[ CF_NONE ] )
+		return true;
+
 	if( pbFlags[ CF_PLAYERS ] )
 	{
 		if( !PassesCollectionFilter_Players( pEntity ) )
@@ -281,6 +288,12 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags, const Vector& 
 			return false;
 	}
 
+	if( pbFlags[ CF_INFOSCRIPTS ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+	}
+
 	if( pbFlags[ CF_BUILDABLES ] )
 	{
 		if( ( pEntity->Classify() != CLASS_DISPENSER ) ||
@@ -308,6 +321,23 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags, const Vector& 
 	}
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool PassesCollectionFilter_Trace( CBaseEntity *pEntity, bool *pbFlags, const Vector& vecTraceOrigin )
+{
+	if( PassesCollectionFilter( pEntity, pbFlags ) )
+	{
+		// TODO: I can't remember why I wanted to have a vector passed in...
+		// but anyway the default filter shouldn't have anything but an entity
+		// and some flags hence this (*_Trace) function created.
+
+		return true;
+	}
+
+	return false;
 }
 
 //============================================================================
@@ -340,6 +370,7 @@ public:
 
 	void GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable );
 	void GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable );
+	void GetByName( const luabind::adl::object& hNameTable, const luabind::adl::object& hFilterTable );
 
 	CBaseEntity *Element( int iElement );
 
@@ -596,7 +627,7 @@ void CFFEntity_Collection::GetInSphere( const Vector& vecOrigin, float flRadius,
 			if( !pEntity )
 				continue;
 
-			if( PassesCollectionFilter( pEntity, bFlags, vecOrigin ) )
+			if( PassesCollectionFilter/*_Trace*/( pEntity, bFlags/*, vecOrigin*/ ) )
 				m_vCollection.push_back( pEntity );
 		}
 	}
@@ -627,6 +658,57 @@ void CFFEntity_Collection::GetTouching( CBaseEntity *pTouchee, const luabind::ad
 			pEntity = gEntList.NextEnt( pEntity );
 		}
 		*/
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get any entities that are named certain things
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetByName( const luabind::adl::object& hNameTable, const luabind::adl::object& hFilterTable )
+{
+	bool bFlags[ CF_MAX_FLAG ] = { false };
+	if( CollectionFilterParseFlags( hFilterTable, bFlags ) )
+	{
+		std::vector< std::string > hNames;
+
+		// Grab all the strings out of hNameTable
+		if( hNameTable.is_valid() && ( luabind::type( hNameTable ) == LUA_TTABLE ) )
+		{
+			// Iterate through the table
+			for( iterator ib( hNameTable ), ie; ib != ie; ++ib )
+			{			
+				luabind::adl::object val = *ib;
+
+				try
+				{
+					std::string szString = luabind::object_cast< std::string >( val );
+
+					if( !szString.empty() )
+						hNames.push_back( szString );
+				}
+				catch( ... )
+				{
+					Warning( "[Collection] Error in GetByName - item not a string!\n" );
+				}
+			}
+		}
+
+		// Iterate through the entity list looking for items in hNames
+		std::vector< std::string >::iterator sb = hNames.begin(), se = hNames.end();
+
+		for( ; sb != se; sb++ )
+		{
+			// Find the item of name in the entity list
+			CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, sb->c_str() );
+			while( pEntity )
+			{
+				// See if object passes the filter...
+				if( PassesCollectionFilter( pEntity, bFlags ) )
+					m_vCollection.push_back( pEntity );
+
+				pEntity = gEntList.FindEntityByName( pEntity, sb->c_str() );
+			}
+		}
 	}
 }
 
@@ -668,12 +750,16 @@ void CFFLuaLib::InitUtil(lua_State* L)
 			.def("HasItem",				(bool(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::HasItem)
 			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::GetItem)
 			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetItem)
-			.def("Element",				&CFFEntity_Collection::Element),
+			.def("Element",				&CFFEntity_Collection::Element)
+			.def("GetByName",			&CFFEntity_Collection::GetByName)
+			.def("GetInSphere",			&CFFEntity_Collection::GetInSphere),
 
 		// CFFEntity_CollectionFilter
 		class_<CFFEntity_CollectionFilter>("CF")
 			.enum_("FilterId")
 			[
+				value("kNone",				CF_NONE),
+
 				value("kPlayers",			CF_PLAYERS),
 				value("kPlayerScout",		CF_PLAYER_SCOUT),
 				value("kPlayerSniper",		CF_PLAYER_SNIPER),
@@ -695,6 +781,7 @@ void CFFLuaLib::InitUtil(lua_State* L)
 
 				value("kProjectiles",		CF_PROJECTILES),
 				value("kGrenades",			CF_GRENADES),
+				value("kInfoScipts",		CF_INFOSCRIPTS),
 				
 				value("kBuildables",		CF_BUILDABLES),
 				value("kDispenser",			CF_BUILDABLE_DISPENSER),

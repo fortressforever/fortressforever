@@ -40,9 +40,11 @@
 #include <vgui/ISurface.h>
 #include "ScreenSpaceEffects.h"
 
-#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
+// Bug #0000385: point_camera & func_monitor in-titties
+// Allways USE_MONITORS
+//#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
 #define USE_MONITORS
-#endif
+//#endif
 
 #ifdef USE_MONITORS
 #include "materialsystem/IMaterialSystem.h"
@@ -925,11 +927,14 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 	g_bRenderingCameraView = true;
 #endif
 
+	// Bug #0000390: multiple render targets for cameras
+	/*
 	// FIXME: this should check for the ability to do a render target maybe instead.
 	// FIXME: shouldn't have to truck through all of the visible entities for this!!!!
 	ITexture *pCameraTarget = GetCameraTexture();
 	int width = pCameraTarget->GetActualWidth();
 	int height = pCameraTarget->GetActualHeight();
+	*/
 
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	
@@ -937,6 +942,20 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 	{
 		if ( !pCameraEnt->IsActive() || pCameraEnt->IsDormant() )
 			continue;
+
+		// Bug #0000390: multiple render targets for cameras
+		// -->
+		ITexture *pCameraTarget = materials->FindTexture( pCameraEnt->GetRenderTarget(), TEXTURE_GROUP_RENDER_TARGET );
+
+        if( IsErrorTexture( pCameraTarget ) )
+		{
+			Msg( "Error: render target texture not found - defaulting to _rt_Camera!\n" );
+			pCameraTarget = GetCameraTexture();
+		}
+
+		int width = pCameraTarget->GetActualWidth();			
+		int height = pCameraTarget->GetActualHeight();
+		// <--
 
 		if ( !DrawOneMonitor( pCameraTarget, cameraNum, pCameraEnt, cameraView, player, 0, 0, width, height ) )
 			continue;
