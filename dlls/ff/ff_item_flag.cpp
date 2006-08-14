@@ -737,3 +737,101 @@ void CFFInfoScript::SetBotGoalInfo(int _type, int _team)
 {
 	Omnibot::Notify_GoalInfo(this, _type, _team);
 }
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFInfoScript::GetCarrier( void )
+{
+	if( IsCarried() )
+	{
+			return GetFollowedEntity();
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFInfoScript::GetDropper( void )
+{
+	if( IsDropped() )
+	{
+		return m_pLastOwner;
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the items origin
+//-----------------------------------------------------------------------------
+Vector CFFInfoScript::LUA_GetOrigin( void ) const
+{
+	IPhysicsObject *pObject = VPhysicsGetObject();
+	if( pObject )
+	{
+		Vector vecOrigin;
+		QAngle vecAngles;
+		pObject->GetPosition( &vecOrigin, &vecAngles );
+
+		return vecOrigin;
+	}
+	else
+	{
+		return GetAbsOrigin();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the items origin
+//-----------------------------------------------------------------------------
+void CFFInfoScript::LUA_SetOrigin( const Vector& vecOrigin )
+{
+	IPhysicsObject *pObject = VPhysicsGetObject();
+	if( pObject )
+	{
+		pObject->SetPosition( vecOrigin, LUA_GetAngles(), true );
+	}
+	else
+	{
+		SetAbsOrigin( vecOrigin );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the items angles
+//-----------------------------------------------------------------------------
+QAngle CFFInfoScript::LUA_GetAngles( void ) const
+{
+	IPhysicsObject *pObject = VPhysicsGetObject();
+	if( pObject )
+	{
+		Vector vecOrigin;
+		QAngle vecAngles;
+		pObject->GetPosition( &vecOrigin, &vecAngles );
+
+		return vecAngles;
+	}
+	else
+	{
+		return GetAbsAngles();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: set the items angles
+//-----------------------------------------------------------------------------
+void CFFInfoScript::LUA_SetAngles( const QAngle& vecAngles )
+{
+	IPhysicsObject *pObject = VPhysicsGetObject();
+	if( pObject )
+	{
+		pObject->SetPosition( LUA_GetOrigin(), vecAngles, true );
+	}
+	else
+	{
+		SetAbsAngles( vecAngles );
+	}
+}
