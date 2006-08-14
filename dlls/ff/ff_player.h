@@ -64,6 +64,21 @@ enum SpeedEffectType
 	SE_LUA10,	// a speed effect that lua can set
 };
 
+// Scout radar struct
+struct ScoutRadar_s
+{
+	int		m_iInfo;
+	byte	m_bDucking;
+	Vector	m_vecOrigin;
+
+	ScoutRadar_s( int iInfo, byte bDucking, const Vector& vecOrigin )
+	{
+		m_iInfo = iInfo;
+		m_bDucking = bDucking;
+		m_vecOrigin = vecOrigin;
+	}
+};
+
 // BEG: Speed Effect class for handling speed impairing effects (caltrop, legshot, etc)
 #define NUM_SPEED_EFFECTS 48
 struct SpeedEffect

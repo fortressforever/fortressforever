@@ -65,7 +65,7 @@ public:
 	CHudRadioTag( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudRadioTag" ) 
 	{
 		// Set our parent window
-		SetParent( g_pClientMode->GetViewport( ) );
+		SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );		
@@ -91,7 +91,7 @@ void CHudRadioTag::VidInit( void )
 
 	// Set up our screen position and stuff before drawing
 	int iWide, iTall;
-	surface( )->GetScreenSize( iWide, iTall );
+	surface()->GetScreenSize( iWide, iTall );
 
 	// Set up the panel to take up the WHOLE screen
 	SetPos( 0, 0 );
@@ -103,6 +103,9 @@ void CHudRadioTag::VidInit( void )
 
 	// Cache the glyphs!
 	CacheTextures( );
+
+	m_hRadioTaggedList.RemoveAll();
+	m_flStartTime = 0.0f;
 }
 
 void CHudRadioTag::Init( void )
@@ -128,34 +131,16 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 	
 	bool bRecvMessage = false;
 
-	// Initialize
-	//m_iNumPlayers = 0;
+	int iCount = msg.ReadShort();
 
-	// send block	
-	// - team (int 1-4) [to color the silhouettes elitely]
-	// - class (int)
-	// - origin (float[3])
-	// team = 99 terminates
-
-	int iInfo = msg.ReadWord();
-	while( iInfo )
+	for( int i = 0; i < iCount; i++ )
 	{
 		CGlyphESP	hObject;
 
-		/*
-		// Do stuff here - build internal vector
-		// for when we "paint" later
-		hObject.m_iTeam = iTeam;
-
-		// Read class and do stuff
-		hObject.m_iClass = msg.ReadShort( );
-
-		// Read origin and do stuff
-		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
-		*/
+		int iInfo = msg.ReadWord();
 
 		// Get team
-		hObject.m_iTeam = iInfo & 0x0000000F;
+		hObject.m_iTeam = ( iInfo & 0x0000000F ) - 1;
 		// Get class
 		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
 		// Get ducked state
@@ -167,8 +152,6 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 		bRecvMessage = true;
 
 		m_hRadioTaggedList.AddToTail( hObject );
-
-		iInfo = msg.ReadWord();
 	}
 
 	if( bRecvMessage )
@@ -185,7 +168,7 @@ void CHudRadioTag::Paint( void )
 		if( m_hRadioTaggedList.Count() )
 		{
 			// Get us
-			C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 			if( !pPlayer )
 			{
 				Warning( "[Radio Tag] No local player!\n" );
