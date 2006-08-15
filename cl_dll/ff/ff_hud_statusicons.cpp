@@ -97,19 +97,9 @@ CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementNa
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: Handy helping function
-//-----------------------------------------------------------------------------
-static CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
-{
-	int idx = list.Find( psz );
-	if ( idx == list.InvalidIndex() )
-		return NULL;
-
-	return list[ idx ];
-}
-
+// Need these for the texture caching
 void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
+CHudTexture *FindHudTextureInDict(CUtlDict<CHudTexture *, int>& list, const char *psz);
 
 //-----------------------------------------------------------------------------
 // Purpose: Load all the status icon textures

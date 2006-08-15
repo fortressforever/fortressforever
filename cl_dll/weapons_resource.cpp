@@ -19,15 +19,7 @@
 WeaponsResource gWR;
 
 void FreeHudTextureList( CUtlDict< CHudTexture *, int >& list );
-
-static CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
-{
-	int idx = list.Find( psz );
-	if ( idx == list.InvalidIndex() )
-		return NULL;
-
-	return list[ idx ];
-}
+CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz );	// |-- Mirv: Now defined in hud.cpp
 
 //-----------------------------------------------------------------------------
 // Purpose: 

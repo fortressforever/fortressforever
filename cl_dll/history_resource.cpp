@@ -67,6 +67,10 @@ void CHudHistoryResource::Init( void )
 	Reset();
 }
 
+// Need these for the texture caching
+void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
+CHudTexture *FindHudTextureInDict(CUtlDict<CHudTexture *, int>& list, const char *psz);
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -77,20 +81,29 @@ void CHudHistoryResource::Reset( void )
 	m_bDoNotDraw = true;
 
 	// --> Mirv: Get icon for each generic ammo type
+	
+	// Open up our dedicated ammo hud file
+	CUtlDict<CHudTexture *, int> tempList;
+	LoadHudTextures(tempList, "scripts/ff_hud_genericammo", NULL);
+
 	for (int i = 0; i < MAX_AMMO_TYPES; i++)
 	{
-		Ammo_t *ammo = GetAmmoDef()->GetAmmoOfIndex(i);
+		Ammo_t *pAmmo = GetAmmoDef()->GetAmmoOfIndex(i);
 
-		if (ammo && ammo->pName)
+		if (pAmmo && pAmmo->pName)
 		{
-			char buf[128];
-			sprintf(buf, "vgui/hud_%s", ammo->pName);
-
-			m_pHudAmmoTypes[i] = new CHudTexture();
-			m_pHudAmmoTypes[i]->textureId = surface()->CreateNewTextureID();
-			surface()->DrawSetTextureFile(m_pHudAmmoTypes[i]->textureId, buf, true, false);
+			CHudTexture *p = FindHudTextureInDict(tempList, pAmmo->pName);
+			if (p)
+			{
+				m_pHudAmmoTypes[i] = gHUD.AddUnsearchableHudIconToList(*p);
+			}
+			else
+			{
+				Warning("Could not find entry for %s ammo in ff_hud_genericammo\n", pAmmo->pName);
+			}
 		}
 	}
+	FreeHudTextureList(tempList);
 	// <-- Mirv: Get icon for each generic ammo type
 }
 
@@ -404,15 +417,9 @@ void CHudHistoryResource::Paint( void )
 				itemIcon = m_pHudAmmoTypes[m_PickupHistory[i].iId];
 
 			int ypos = tall - (m_flHistoryGap * (i + 1));
-			int xpos = wide - /*itemIcon->Width()*/ m_iIconWidth - m_flIconInset;
+			int xpos = wide - itemIcon->Width() /*m_iIconWidth*/ - m_flIconInset;
 
-#ifdef FF_USE_HUD_BOX
-			itemIcon->DrawSelf( xpos, ypos, 80, 80, clr );
-#else
-			surface()->DrawSetTexture(itemIcon->textureId);
-			surface()->DrawSetColor(255, 255, 255, 255);
-			surface()->DrawTexturedRect(xpos, ypos, xpos + m_iIconWidth, ypos + m_iIconHeight);
-#endif
+			itemIcon->DrawSelf(xpos, ypos, clr);
 			// <-- Mirv: Draw proper icons
 
 			if ( iAmount )
@@ -421,7 +428,7 @@ void CHudHistoryResource::Paint( void )
 				_snwprintf( text, sizeof( text ) / sizeof(wchar_t), L"%i", m_PickupHistory[i].iCount );
 
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;	// |-- Mirv:
+				ypos -= ( surface()->GetFontTall( m_hNumberFont ) - itemIcon->Height() ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hNumberFont );
 				vgui::surface()->DrawSetTextColor( clr );
@@ -431,7 +438,7 @@ void CHudHistoryResource::Paint( void )
 			else if ( bUseAmmoFullMsg )
 			{
 				// offset the number to sit properly next to the icon
-				ypos -= ( surface()->GetFontTall( m_hTextFont ) - m_iIconHeight /*itemIcon->Height()*/ ) / 2;	// |-- Mirv:
+				ypos -= ( surface()->GetFontTall( m_hTextFont ) - itemIcon->Height() ) / 2;
 
 				vgui::surface()->DrawSetTextFont( m_hTextFont );
 				vgui::surface()->DrawSetTextColor( clr );
