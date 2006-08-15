@@ -232,7 +232,7 @@ void CStatusIcons::Paint( void )
 			continue;
 
 		// We're going vertical now
-		sIcon.pTexture->DrawSelf(0, iOffset, Color(255, 255, 255, 100));
+		sIcon.pTexture->DrawSelf(0, iOffset, gHUD.m_clrNormal);
 
 		iOffset += sIcon.pTexture->Height() + 5.0f;
 	}
