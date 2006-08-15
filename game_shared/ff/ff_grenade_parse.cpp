@@ -228,19 +228,8 @@ CFFGrenadeInfo::CFFGrenadeInfo()
 	iconHud = NULL;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Handy helping function
-//-----------------------------------------------------------------------------
-static CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
-{
-	int idx = list.Find( psz );
-	if ( idx == list.InvalidIndex() )
-		return NULL;
-
-	return list[ idx ];
-}
-
 void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
+CHudTexture *FindHudTextureInDict(CUtlDict< CHudTexture *, int>& list, const char *psz);
 
 //----------------------------------------------------------------------------
 // Purpose: Parse all the values for a class

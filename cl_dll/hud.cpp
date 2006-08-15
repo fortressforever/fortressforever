@@ -95,6 +95,20 @@ void FreeHudTextureList( CUtlDict< CHudTexture *, int >& list )
 	list.RemoveAll();
 }
 
+// --> Mirv:
+//-----------------------------------------------------------------------------
+// Purpose: Added this helper function in too
+//-----------------------------------------------------------------------------
+CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
+{
+	int idx = list.Find( psz );
+	if ( idx == list.InvalidIndex() )
+		return NULL;
+
+	return list[ idx ];
+}
+// <-- Mirv
+
 // Globally-used fonts
 vgui::HFont g_hFontTrebuchet24 = vgui::INVALID_FONT;
 
