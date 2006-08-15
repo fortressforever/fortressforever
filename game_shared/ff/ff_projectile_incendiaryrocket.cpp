@@ -138,7 +138,7 @@ void CFFProjectileIncendiaryRocket::Precache()
 //----------------------------------------------------------------------------
 CFFProjectileIncendiaryRocket * CFFProjectileIncendiaryRocket::CreateRocket(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed)
 {
-	CFFProjectileIncendiaryRocket *pRocket = (CFFProjectileIncendiaryRocket *) CreateEntityByName("incendiaryrocket");
+	CFFProjectileIncendiaryRocket *pRocket = (CFFProjectileIncendiaryRocket *) CreateEntityByName("ff_projectile_ic");
 
 	UTIL_SetOrigin(pRocket, vecOrigin);
 	pRocket->SetAbsAngles(angAngles);
