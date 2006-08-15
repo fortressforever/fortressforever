@@ -347,7 +347,7 @@ int CFFGrenadeConcussionGlow::DrawModel(int flags)
 		/*m_clrRender->r */ conc_glow_r.GetInt(), 
 		/*m_clrRender->g */ conc_glow_g.GetInt(), 
 		/*m_clrRender->b */ conc_glow_b.GetInt(), 
-		conc_glow_size.GetFloat());			// sprite scale
+		conc_glow_size.GetFloat() + random->RandomFloat(-0.04f, 0.04f));			// sprite scale
 
 	return drawn;
 }
