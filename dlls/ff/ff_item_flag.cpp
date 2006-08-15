@@ -445,8 +445,6 @@ void CFFInfoScript::Drop( float delay, float speed )
 
 	if( m_bUsePhysics )
 	{
-		Warning( "[Physics!]\n" );
-
 		IPhysicsObject *pPhysics = VPhysicsGetObject();
 
 		// If we're here, pPhysics won't be NULL
@@ -462,7 +460,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 
 		// NOTE: This is the right angle shit... the ball just
 		// doesn't want to be thrown that way
-		// NDebugOverlay::Line( pOwner->EyePosition(), pOwner->EyePosition() + ( 256.0f * vecDir ), 0, 0, 255, false, 5.0f );
+		//NDebugOverlay::Line( pOwner->EyePosition(), pOwner->EyePosition() + ( 256.0f * vecDir ), 0, 0, 255, false, 5.0f );
 
 		pPhysics->ApplyForceCenter( ( ( pOwner->GetAbsOrigin() + ( 256.0f * vecDir ) ) - pOwner->GetAbsOrigin() ) * vel * vel );
 
@@ -480,13 +478,11 @@ void CFFInfoScript::Drop( float delay, float speed )
 		{
 			ResetSequenceInfo();
 			SetCycle( 0 );
-			SetSequence( -1 );
+			SetSequence( 0 );
 		}		
 	}
 	else
 	{
-		Warning( "[Physics!] FAILED\n" );
-
 		// inherit the owner's motion
 		SetGravity( 1.0 );
 		//SetAbsOrigin(owner->GetAbsOrigin());
