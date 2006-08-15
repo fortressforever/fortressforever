@@ -11,6 +11,7 @@
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
 
+
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"
@@ -23,6 +24,7 @@
 	#include "ff_player.h"
 	#include "iservervehicle.h"
 	#include "decals.h"
+	#include "ilagcompensationmanager.h"
 
 #endif
 
@@ -582,6 +584,13 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 	bool bDoEffects = AllowEffects(entindex(), 0.3f);
 
+#ifdef GAME_DLL
+	CFFPlayer *pPlayer = ToFFPlayer(this);
+
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
+#endif
+
 	// Now simulate each shot
 	for (int iShot = 0; iShot < info.m_iShots; iShot++)
 	{
@@ -604,12 +613,12 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 		vecEnd = info.m_vecSrc + vecDir * info.m_flDistance;
 
-		if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
-		{
-			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
-			AI_TraceHull(info.m_vecSrc, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT, &traceFilter, &tr);
-		}
-		else
+		//if (IsPlayer() && /*info.m_iShots > 1 &&*/ (iShot % 2) == 0)
+		//{
+		//	// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
+		//	AI_TraceHull(info.m_vecSrc, vecEnd, Vector(-3, -3, -3), Vector(3, 3, 3), MASK_SHOT, &traceFilter, &tr);
+		//}
+		//else
 		{
 			// But half aren't
 			AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
@@ -804,6 +813,10 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 
 		iSeed++;
 	}
+
+#ifdef GAME_DLL
+	lagcompensation->FinishLagCompensation(pPlayer);
+#endif
 
 	// Client side effects
 #if defined(HL2MP) && defined(GAME_DLL)

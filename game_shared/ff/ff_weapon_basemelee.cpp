@@ -16,6 +16,8 @@
 
 #ifdef CLIENT_DLL
 #include "c_ff_player.h"
+#else
+#include "ilagcompensationmanager.h"
 #endif
 
 #define MELEE_HULL_DIM		16
@@ -264,6 +266,9 @@ void CFFWeaponMeleeBase::Swing()
 	{
 		pOwner->ResetDisguise();
 	}
+
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation(pOwner, pPlayer->GetCurrentCommand());
 #endif
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();
@@ -348,4 +353,8 @@ void CFFWeaponMeleeBase::Swing()
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
 	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+
+#ifdef GAME_DLL
+	lagcompensation->FinishLagCompensation(pOwner);
+#endif
 }
