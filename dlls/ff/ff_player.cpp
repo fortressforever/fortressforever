@@ -229,6 +229,9 @@ static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
 void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event )
 {
 	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
+
+	// Mirv: Don't send animation event to self
+	filter.RemoveRecipient(pPlayer);
 	
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;

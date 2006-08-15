@@ -312,7 +312,7 @@ void CFFProjectileRail::BubbleThink()
 //----------------------------------------------------------------------------
 CFFProjectileRail *CFFProjectileRail::CreateRail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
-	CFFProjectileRail *pRail = (CFFProjectileRail *) CreateEntityByName("rail");
+	CFFProjectileRail *pRail = (CFFProjectileRail *) CreateEntityByName("ff_projectile_rail");
 
 	UTIL_SetOrigin(pRail, vecOrigin);
 	pRail->SetAbsAngles(angAngles);

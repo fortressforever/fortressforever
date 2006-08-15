@@ -170,7 +170,7 @@ void CFFProjectileNail::BubbleThink()
 //----------------------------------------------------------------------------
 CFFProjectileNail *CFFProjectileNail::CreateNail(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBaseEntity *pentOwner, const int iDamage, const int iSpeed) 
 {
-	CFFProjectileNail *pNail = (CFFProjectileNail *) CreateEntityByName("nail");
+	CFFProjectileNail *pNail = (CFFProjectileNail *) CreateEntityByName("ff_projectile_nail");
 
 	UTIL_SetOrigin(pNail, vecOrigin);
 	pNail->SetAbsAngles(angAngles);

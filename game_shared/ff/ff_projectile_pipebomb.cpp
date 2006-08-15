@@ -215,7 +215,7 @@ void CFFProjectilePipebomb::DestroyAllPipes(CBaseEntity *pOwner, bool force)
 //----------------------------------------------------------------------------
 CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
-	CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) CreateEntityByName("pipebomb");
+	CFFProjectilePipebomb *pPipebomb = (CFFProjectilePipebomb *) CreateEntityByName("ff_projectile_pl");
 
 	if( !pPipebomb )
 		return NULL;

@@ -285,7 +285,7 @@ void CFFProjectileDart::BubbleThink()
 //----------------------------------------------------------------------------
 CFFProjectileDart *CFFProjectileDart::CreateDart(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
-	CFFProjectileDart *pDart = (CFFProjectileDart *) CreateEntityByName("dart");
+	CFFProjectileDart *pDart = (CFFProjectileDart *) CreateEntityByName("ff_projectile_dart");
 
 	UTIL_SetOrigin(pDart, vecOrigin);
 	pDart->SetAbsAngles(angAngles);

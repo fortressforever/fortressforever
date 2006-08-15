@@ -248,7 +248,7 @@ void CFFProjectileGrenade::Precache()
 //----------------------------------------------------------------------------
 CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed) 
 {
-	CFFProjectileGrenade *pGrenade = (CFFProjectileGrenade *) CreateEntityByName("glgrenade");
+	CFFProjectileGrenade *pGrenade = (CFFProjectileGrenade *) CreateEntityByName("ff_projectile_gl");
 
 	UTIL_SetOrigin(pGrenade, vecOrigin);
 	pGrenade->SetAbsAngles(angAngles);
