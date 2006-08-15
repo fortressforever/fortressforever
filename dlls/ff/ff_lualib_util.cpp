@@ -9,6 +9,7 @@
 #include "ff_lualib.h"
 #include "ff_player.h"
 #include "ff_projectile_base.h"
+#include "ff_item_flag.h"
 
 // Lua includes
 extern "C"
@@ -65,6 +66,13 @@ enum CollectionFilter
 	CF_PROJECTILES,
 	CF_GRENADES,
 	CF_INFOSCRIPTS,
+
+	CF_INFOSCRIPT_CARRIED,
+	CF_INFOSCRIPT_DROPPED,
+	CF_INFOSCRIPT_RETURNED,
+	CF_INFOSCRIPT_ACTIVE,
+	CF_INFOSCRIPT_INACTIVE,
+	CF_INFOSCRIPT_REMOVED,
 
 	CF_BUILDABLES,
 	CF_BUILDABLE_DISPENSER,
@@ -294,6 +302,66 @@ bool PassesCollectionFilter( CBaseEntity *pEntity, bool *pbFlags )
 			return false;
 	}
 
+	if( pbFlags[ CF_INFOSCRIPT_CARRIED ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsCarried() )
+			return false;
+	}
+
+	if( pbFlags[ CF_INFOSCRIPT_DROPPED ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsDropped() )
+			return false;
+	}
+
+	if( pbFlags[ CF_INFOSCRIPT_RETURNED ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsReturned() )
+			return false;
+	}
+
+	if( pbFlags[ CF_INFOSCRIPT_ACTIVE ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsActive() )
+			return false;
+	}
+
+	if( pbFlags[ CF_INFOSCRIPT_INACTIVE ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsInactive() )
+			return false;
+	}
+
+	if( pbFlags[ CF_INFOSCRIPT_REMOVED ] )
+	{
+		if( pEntity->Classify() != CLASS_INFOSCRIPT )
+			return false;
+
+		CFFInfoScript *pInfoScript = dynamic_cast< CFFInfoScript * >( pEntity );
+		if( !pInfoScript->IsRemoved() )
+			return false;
+	}
+
 	if( pbFlags[ CF_BUILDABLES ] )
 	{
 		if( ( pEntity->Classify() != CLASS_DISPENSER ) ||
@@ -371,6 +439,7 @@ public:
 	void GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable );
 	void GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable );
 	void GetByName( const luabind::adl::object& hNameTable, const luabind::adl::object& hFilterTable );
+	void GetByFilter( const luabind::adl::object& hFilterTable );
 
 	CBaseEntity *Element( int iElement );
 
@@ -713,6 +782,28 @@ void CFFEntity_Collection::GetByName( const luabind::adl::object& hNameTable, co
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get entities based on some flags
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetByFilter( const luabind::adl::object& hFilterTable )
+{
+	bool bFlags[ CF_MAX_FLAG ] = { false };
+	if( CollectionFilterParseFlags( hFilterTable, bFlags ) )
+	{
+		// NOTE: This might be a little ridiculous...
+		// ...iterating through the entire entity list...
+		CBaseEntity *pEntity = gEntList.FirstEnt();
+		while( pEntity )
+		{
+			// See if object passes the filter...
+			if( PassesCollectionFilter( pEntity, bFlags ) )
+				m_vCollection.push_back( pEntity );
+
+			pEntity = gEntList.NextEnt( pEntity );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Return item[ iElement ]
 //-----------------------------------------------------------------------------
 CBaseEntity *CFFEntity_Collection::Element( int iElement )
@@ -782,6 +873,13 @@ void CFFLuaLib::InitUtil(lua_State* L)
 				value("kProjectiles",		CF_PROJECTILES),
 				value("kGrenades",			CF_GRENADES),
 				value("kInfoScipts",		CF_INFOSCRIPTS),
+
+				value("kInfoScript_Carried",	CF_INFOSCRIPT_CARRIED),
+				value("kInfoScript_Dropped",	CF_INFOSCRIPT_DROPPED),
+				value("kInfoScript_Returned",	CF_INFOSCRIPT_RETURNED),
+				value("kInfoScript_Active",		CF_INFOSCRIPT_ACTIVE),
+				value("kInfoScript_Inactive",	CF_INFOSCRIPT_INACTIVE),
+				value("kInfoScript_Removed",	CF_INFOSCRIPT_REMOVED),
 				
 				value("kBuildables",		CF_BUILDABLES),
 				value("kDispenser",			CF_BUILDABLE_DISPENSER),
