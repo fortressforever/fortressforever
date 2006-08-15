@@ -10,6 +10,7 @@
 #include "ff_player.h"
 #include "ff_projectile_base.h"
 #include "ff_item_flag.h"
+#include "ff_utils.h"
 
 // Lua includes
 extern "C"
@@ -78,6 +79,8 @@ enum CollectionFilter
 	CF_BUILDABLE_DISPENSER,
 	CF_BUILDABLE_SENTRYGUN,
 	CF_BUILDABLE_DETPACK,
+
+	CF_TRACE_BLOCK_WALLS,
 
 	CF_MAX_FLAG
 };
@@ -398,11 +401,14 @@ bool PassesCollectionFilter_Trace( CBaseEntity *pEntity, bool *pbFlags, const Ve
 {
 	if( PassesCollectionFilter( pEntity, pbFlags ) )
 	{
-		// TODO: I can't remember why I wanted to have a vector passed in...
-		// but anyway the default filter shouldn't have anything but an entity
-		// and some flags hence this (*_Trace) function created.
+		if( pbFlags[ CF_TRACE_BLOCK_WALLS ] )
+		{
+			trace_t tr;
+			UTIL_TraceLine( vecTraceOrigin, pEntity->GetAbsOrigin(), MASK_SOLID, NULL, COLLISION_GROUP_NONE, &tr );
 
-		return true;
+			if( !FF_TraceHitWorld( &tr ) )
+				return true;
+		}
 	}
 
 	return false;
@@ -696,7 +702,7 @@ void CFFEntity_Collection::GetInSphere( const Vector& vecOrigin, float flRadius,
 			if( !pEntity )
 				continue;
 
-			if( PassesCollectionFilter/*_Trace*/( pEntity, bFlags/*, vecOrigin*/ ) )
+			if( PassesCollectionFilter_Trace( pEntity, bFlags, vecOrigin ) )
 				m_vCollection.push_back( pEntity );
 		}
 	}
@@ -880,6 +886,8 @@ void CFFLuaLib::InitUtil(lua_State* L)
 				value("kInfoScript_Active",		CF_INFOSCRIPT_ACTIVE),
 				value("kInfoScript_Inactive",	CF_INFOSCRIPT_INACTIVE),
 				value("kInfoScript_Removed",	CF_INFOSCRIPT_REMOVED),
+
+				value("kTraceBlockWalls",	CF_TRACE_BLOCK_WALLS),
 				
 				value("kBuildables",		CF_BUILDABLES),
 				value("kDispenser",			CF_BUILDABLE_DISPENSER),

@@ -95,4 +95,6 @@ void FF_HudHint(
 
 const char *FF_GetAmmoName(int i);
 
+bool FF_TraceHitWorld( trace_t *pTrace );
+
 #endif // FF_UTILS_H
