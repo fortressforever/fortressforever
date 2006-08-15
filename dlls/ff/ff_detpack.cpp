@@ -455,11 +455,14 @@ void CFFDetpack::DoExplosionDamage( void )
 #endif
 
 				// Don't do damage if the trace hit:
+				/*
 				if( tr.DidHitWorld() ||
 					FClassnameIs( tr.m_pEnt, "func_door" ) ||
 					FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
 					FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
 					FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+					*/
+				if( FF_TraceHitWorld( &tr ) )
 					bDoDamage = false;	// Get out of loop
 
 				// Traced until we hit ourselves
@@ -569,12 +572,15 @@ void CFFDetpack::DoExplosionDamage( void )
 				// If we hit something...
 				if( tr.DidHit() )
 				{
-					// Skip object if it's not one of these:
+					// Skip object if we hit one of these while tracing to it
+					/*
 					if( tr.DidHitWorld() ||
 						FClassnameIs( tr.m_pEnt, "func_door" ) ||
 						FClassnameIs( tr.m_pEnt, "worldspawn" ) ||
 						FClassnameIs( tr.m_pEnt, "func_door_rotating" ) ||
 						FClassnameIs( tr.m_pEnt, "prop_door_rotating" ) )
+						*/
+					if( FF_TraceHitWorld( &tr ) )
 						bDoDamage = false;	// Get out of loop
 
 					// Traced until we hit ourselves
