@@ -87,6 +87,8 @@ public:
 	QAngle			LUA_GetAngles( void ) const;
 	void			LUA_SetAngles( const QAngle& vecAngles );
 
+	void			LUA_SetModel( const char *szModel );
+
 	void			Pickup( CBaseEntity *pEntity );
 	void			Drop( float delay, float speed = 0.0f );
 	void			Respawn( float delay );
@@ -122,6 +124,7 @@ protected:
 protected:	
 
 	bool m_atStart;
+	CNetworkVar( unsigned int, m_iHasModel );
 
 	bool m_bUsePhysics;
 	
@@ -137,7 +140,7 @@ protected:
 
 	CNetworkVector( m_vecOffset );
 	
-	CNetworkVar( int, m_iShadow );
+	CNetworkVar( unsigned int, m_iShadow );
 
 	CNetworkVar( int, m_iGoalState );
 	CNetworkVar( int, m_iPosState );
