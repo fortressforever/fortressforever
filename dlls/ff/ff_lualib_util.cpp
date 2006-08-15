@@ -442,9 +442,11 @@ public:
 	CBaseEntity *GetItem( CBaseEntity *pItem = NULL );
 	CBaseEntity *GetItem( const luabind::adl::object& table );
 
+	void GetInSphere( CBaseEntity *pObject, float flRadius, const luabind::adl::object& hFilterTable );
 	void GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable );
 	void GetTouching( CBaseEntity *pTouchee, const luabind::adl::object& hFilterTable );
-	void GetByName( const luabind::adl::object& hNameTable, const luabind::adl::object& hFilterTable );
+	void GetByName( const luabind::adl::object& hNameTable );
+	void GetByName( const luabind::adl::object& hNameTable, const luabind::adl::object& hFilterTable );	
 	void GetByFilter( const luabind::adl::object& hFilterTable );
 
 	CBaseEntity *Element( int iElement );
@@ -687,6 +689,38 @@ CollectionContainer::iterator CFFEntity_Collection::InternalFindItr( CBaseEntity
 //-----------------------------------------------------------------------------
 // Purpose: Get entities inside a sphere filtered by hFilterTable
 //-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetInSphere( CBaseEntity *pObject, float flRadius, const luabind::adl::object& hFilterTable )
+{
+	// Waste!
+	if( flRadius < 0 )
+		return;
+
+	if( !pObject )
+		return;
+
+	bool bFlags[ CF_MAX_FLAG ] = { false };
+	if( CollectionFilterParseFlags( hFilterTable, bFlags ) )
+	{
+		Vector vecOrigin = pObject->GetAbsOrigin();
+
+		if( pObject->IsPlayer() )
+			vecOrigin = ToFFPlayer( pObject )->GetLegacyAbsOrigin();
+
+		CBaseEntity *pEntity = NULL;
+		for( CEntitySphereQuery sphere( vecOrigin, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( !pEntity )
+				continue;
+
+			if( PassesCollectionFilter_Trace( pEntity, bFlags, vecOrigin ) )
+				m_vCollection.push_back( pEntity );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get entities inside a sphere filtered by hFilterTable
+//-----------------------------------------------------------------------------
 void CFFEntity_Collection::GetInSphere( const Vector& vecOrigin, float flRadius, const luabind::adl::object& hFilterTable )
 {
 	// Waste!
@@ -733,6 +767,50 @@ void CFFEntity_Collection::GetTouching( CBaseEntity *pTouchee, const luabind::ad
 			pEntity = gEntList.NextEnt( pEntity );
 		}
 		*/
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get any entities that are named certain things
+//-----------------------------------------------------------------------------
+void CFFEntity_Collection::GetByName( const luabind::adl::object& hNameTable )
+{
+	std::vector< std::string > hNames;
+
+	// Grab all the strings out of hNameTable
+	if( hNameTable.is_valid() && ( luabind::type( hNameTable ) == LUA_TTABLE ) )
+	{
+		// Iterate through the table
+		for( iterator ib( hNameTable ), ie; ib != ie; ++ib )
+		{			
+			luabind::adl::object val = *ib;
+
+			try
+			{
+				std::string szString = luabind::object_cast< std::string >( val );
+
+				if( !szString.empty() )
+					hNames.push_back( szString );
+			}
+			catch( ... )
+			{
+				Warning( "[Collection] Error in GetByName - item not a string!\n" );
+			}
+		}
+	}
+
+	// Iterate through the entity list looking for items in hNames
+	std::vector< std::string >::iterator sb = hNames.begin(), se = hNames.end();
+
+	for( ; sb != se; sb++ )
+	{
+		// Find the item of name in the entity list
+		CBaseEntity *pEntity = gEntList.FindEntityByName( NULL, sb->c_str() );
+		while( pEntity )
+		{
+			m_vCollection.push_back( pEntity );
+			pEntity = gEntList.FindEntityByName( pEntity, sb->c_str() );
+		}
 	}
 }
 
@@ -848,8 +926,11 @@ void CFFLuaLib::InitUtil(lua_State* L)
 			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(CBaseEntity*))&CFFEntity_Collection::GetItem)
 			.def("GetItem",				(CBaseEntity*(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetItem)
 			.def("Element",				&CFFEntity_Collection::Element)
-			.def("GetByName",			&CFFEntity_Collection::GetByName)
-			.def("GetInSphere",			&CFFEntity_Collection::GetInSphere),
+			.def("GetByName",			(void(CFFEntity_Collection::*)(const luabind::adl::object&))&CFFEntity_Collection::GetByName)
+			.def("GetByName",			(void(CFFEntity_Collection::*)(const luabind::adl::object&, const luabind::adl::object&))&CFFEntity_Collection::GetByName)
+			.def("GetInSphere",			(void(CFFEntity_Collection::*)(CBaseEntity*, float, const luabind::adl::object&))&CFFEntity_Collection::GetInSphere)
+			.def("GetInSphere",			(void(CFFEntity_Collection::*)(const Vector&, float, const luabind::adl::object&))&CFFEntity_Collection::GetInSphere)
+			.def("GetByFilter",			&CFFEntity_Collection::GetByFilter),
 
 		// CFFEntity_CollectionFilter
 		class_<CFFEntity_CollectionFilter>("CF")
