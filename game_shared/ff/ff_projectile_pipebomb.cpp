@@ -163,8 +163,8 @@ void CFFProjectilePipebomb::Explode( trace_t *pTrace, int bitsDamageType )
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
 
 	CBaseEntity *pThrower = GetThrower();
-	// Use the thrower's position as the reported position
-	Vector vecReported = pThrower ? pThrower->GetAbsOrigin() : vec3_origin;
+	// Use the grenade's position as the reported position
+	Vector vecReported = pTrace->endpos;
 	CTakeDamageInfo info( this, pThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
 	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 

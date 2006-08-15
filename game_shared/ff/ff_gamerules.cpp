@@ -885,6 +885,11 @@ ConVar mp_prematch( "mp_prematch",
 				{
                     vecDirection = vecSpot - adjustedInfo.GetReportedPosition();
 					vecDirection.NormalizeInPlace();
+
+#ifdef GAME_DLL
+					//NDebugOverlay::Line(adjustedInfo.GetReportedPosition(), vecSpot, 0, 255, 0, true, 5.0f);
+					//NDebugOverlay::Cross3D(adjustedInfo.GetReportedPosition(), 5.0f, 0, 255, 0, true, 5.0f);
+#endif
 				}
 
 
