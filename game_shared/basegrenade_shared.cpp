@@ -174,8 +174,8 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 	CSoundEnt::InsertSound ( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
 #endif
 
-	// Use the thrower's position as the reported position
-	Vector vecReported = m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
+	// We need to report where the explosion took place
+	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
 	// --> Mirv: #0000675: Killing people with certain weapons says the person killed themself
 	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );

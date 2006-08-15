@@ -721,7 +721,7 @@ ConVar mp_prematch( "mp_prematch",
 		Vector		vecSrc = vecSrcIn;
 
 #ifdef GAME_DLL
-		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
+		NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
 #endif
 
 		// TFC style falloff please.
@@ -878,6 +878,15 @@ ConVar mp_prematch( "mp_prematch",
 				// TODO: Get exact figure for this
 				if (pPlayer && pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
 					flCalculatedForce *= 0.8f;
+
+				// Don't use the damage source direction, use the reported position
+				// if it exists
+				if (adjustedInfo.GetReportedPosition() != vec3_origin)
+				{
+                    vecDirection = vecSpot - adjustedInfo.GetReportedPosition();
+					vecDirection.NormalizeInPlace();
+				}
+
 
 				// Now set all our calculated values
 				adjustedInfo.SetDamageForce(vecDirection * flCalculatedForce);
