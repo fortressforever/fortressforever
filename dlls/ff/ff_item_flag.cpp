@@ -62,6 +62,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFInfoScript, DT_FFInfoScript )
 	SendPropInt( SENDINFO( m_iGoalState ), 4 ),
 	SendPropInt( SENDINFO( m_iPosState ), 4 ),
 	SendPropInt( SENDINFO( m_iShadow ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iHasModel ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 // <-- Mirv: Added for client class
 
@@ -77,6 +78,7 @@ PRECACHE_REGISTER( info_ff_script );
 
 CFFInfoScript::CFFInfoScript( void )
 {
+	m_iHasModel = 0;
 	m_pAnimator = NULL;
 	m_pLastOwner = NULL;
 	m_spawnflags = 0;
@@ -833,5 +835,24 @@ void CFFInfoScript::LUA_SetAngles( const QAngle& vecAngles )
 	else
 	{
 		SetAbsAngles( vecAngles );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set a model. Doing this here and not baseentity to catch
+//			when someone wants to NOT use a model
+//-----------------------------------------------------------------------------
+void CFFInfoScript::LUA_SetModel( const char *szModel )
+{
+	// length > 4 because you have to have ".mdl"...
+	if( szModel && ( Q_strlen( szModel ) > 4 ) )
+	{
+		m_iHasModel = 1;
+		SetModel( szModel );
+	}
+	else
+	{
+		// No model!
+		m_iHasModel = 0;
 	}
 }

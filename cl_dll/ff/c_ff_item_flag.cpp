@@ -37,7 +37,7 @@ public:
 	DECLARE_CLASS(C_FFInfoScript, C_BaseAnimating);
 	DECLARE_CLIENTCLASS();
 
-	C_FFInfoScript() { m_iShadow = 1; }
+	C_FFInfoScript() { m_iShadow = 0; m_iHasModel = 0; }
 	~C_FFInfoScript() {};
 
 	virtual void	OnDataChanged(DataUpdateType_t updateType);
@@ -68,7 +68,8 @@ protected:
 	float m_flThrowTime;
 
 	Vector m_vecOffset;
-	int m_iShadow;
+	unsigned int m_iShadow;
+	unsigned int m_iHasModel;
 
 	CNetworkVar( int, m_iGoalState );
 	CNetworkVar( int, m_iPosState );
@@ -80,6 +81,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFInfoScript, DT_FFInfoScript, CFFInfoScript )
 	RecvPropInt( RECVINFO( m_iGoalState ) ),
 	RecvPropInt( RECVINFO( m_iPosState ) ),
 	RecvPropInt( RECVINFO( m_iShadow ) ),
+	RecvPropInt( RECVINFO( m_iHasModel ) ),
 END_RECV_TABLE() 
 
 
@@ -96,6 +98,9 @@ void C_FFInfoScript::OnDataChanged( DataUpdateType_t updateType )
 
 int C_FFInfoScript::DrawModel( int flags ) 
 {
+	if( !m_iHasModel )
+		return 0;
+
 	if( !ShouldDraw() )
 		return 0;
 
@@ -104,7 +109,6 @@ int C_FFInfoScript::DrawModel( int flags )
 	if( input->CAM_IsThirdPerson() )
 		return BaseClass::DrawModel( flags );
 
-	// Flags seem to have changed to using GetOwnerEntity now
 	if (GetFollowedEntity() == CBasePlayer::GetLocalPlayer()) 
 		return 0;
 
@@ -118,6 +122,9 @@ int C_FFInfoScript::DrawModel( int flags )
 // Bug #0000508: Carried objects cast a shadow for the carrying player
 ShadowType_t C_FFInfoScript::ShadowCastType( void )
 {
+	if( !m_iHasModel )
+		return SHADOWS_NONE;
+
 	if( !m_iShadow )
 		return SHADOWS_NONE;
 
