@@ -21,6 +21,7 @@
 	#include "fx.h"
 	#include "fx_sparks.h"
 	#include "fx_line.h"
+	#include "model_types.h"
 #endif
 
 //#define	RPG_LASER_SPRITE	"sprites/redglow1"
@@ -58,17 +59,11 @@ public:
 	DECLARE_DATADESC();
 
 #ifdef CLIENT_DLL
-	CFFWeaponLaserDot()
-	{
-
-		m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
-		m_pMaterial->IncrementReferenceCount();
-	}
+	CFFWeaponLaserDot();
+	virtual void GetRenderBounds(Vector& mins, Vector& maxs);
 #endif
 
-//	~CFFWeaponLaserDot();
-
-	static CFFWeaponLaserDot *Create(const Vector &origin, CBaseEntity *pOwner = NULL);
+	static	CFFWeaponLaserDot *Create(const Vector &origin, CBaseEntity *pOwner = NULL);
 
 	void	SetLaserPosition(const Vector &origin);
 
@@ -162,14 +157,67 @@ CFFWeaponLaserDot *CFFWeaponLaserDot::Create(const Vector &origin, CBaseEntity *
 #endif
 }
 
-#include "model_types.h"
-
+//-----------------------------------------------------------------------------
+// Purpose: Need to recompute the collision bounds to include the player too
+//			so that the laser dot is active on the client at the right times
+//-----------------------------------------------------------------------------
 void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin) 
 {
 	SetAbsOrigin(origin);
+
+	CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
+
+	Vector vecAbsStart = GetAbsOrigin();
+	Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
+
+	Vector vecBeamMin, vecBeamMax;
+	VectorMin(vecAbsStart, vecAbsEnd, vecBeamMin);
+	VectorMax(vecAbsStart, vecAbsEnd, vecBeamMax);
+
+	SetCollisionBounds(vecBeamMin - GetAbsOrigin(), vecBeamMax - GetAbsOrigin());
 }
 
 #ifdef CLIENT_DLL
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Constructor, get the right materials
+	//-----------------------------------------------------------------------------
+	CFFWeaponLaserDot::CFFWeaponLaserDot()
+	{
+		m_pMaterial = materials->FindMaterial("effects/blueblacklargebeam", TEXTURE_GROUP_CLIENT_EFFECTS);
+		m_pMaterial->IncrementReferenceCount();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Need to make sure that the render bounds include the source
+	//			player too
+	//-----------------------------------------------------------------------------
+	void CFFWeaponLaserDot::GetRenderBounds(Vector& mins, Vector& maxs)
+	{
+		CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
+
+		Vector vecAbsStart = GetAbsOrigin();
+		Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
+
+		for (int i = 0; i < 3; ++i)
+		{
+			if (vecAbsStart[i] < vecAbsEnd[i])
+			{
+				mins[i] = vecAbsStart[i];
+				maxs[i] = vecAbsEnd[i];
+			}
+			else
+			{
+				mins[i] = vecAbsEnd[i];
+				maxs[i] = vecAbsStart[i];
+			}
+		}
+
+		Vector vecAbsOrigin = GetAbsOrigin();
+		mins -= vecAbsOrigin;
+		maxs -= vecAbsOrigin;
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Draw our sprite
 	//-----------------------------------------------------------------------------
@@ -197,29 +245,13 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 		// We're going to predict it using the players' angles
 		if (pOwner != NULL && pOwner->IsDormant() == false) 
 		{
-			// Bug #0000555: Sniper rifle charge dot and conc effect
-			// Commented out by mulch for above bug
-
-			// Always draw the dot in front of our faces when in first-person
-			//if (pOwner->IsLocalPlayer()) 
-			//{
-			//	// Take our view position and orientation
-			//	vecAttachment = CurrentViewOrigin();
-			//	vecDir = CurrentViewForward();
-			//}
-			//else
-			//{
-				// Take the eye position and direction
-				vecAttachment = pOwner->Weapon_ShootPosition();
-				AngleVectors(pOwner->EyeAngles(), &vecDir);
-			//}
+			// Take the eye position and direction
+			vecAttachment = pOwner->Weapon_ShootPosition();
+			AngleVectors(pOwner->EyeAngles(), &vecDir);
 
 			trace_t tr;
 			UTIL_TraceLine(vecAttachment, vecAttachment + (vecDir * MAX_TRACE_LENGTH), MASK_SHOT, pOwner, COLLISION_GROUP_LASER, &tr);
 
-			// Backup off the hit plane
-			//endPos = tr.endpos + (tr.plane.normal * 1.0f);
-			
 			// Backup without using the normal (for trackerid: #0000866)
 			endPos = tr.endpos - vecDir;
 
@@ -231,42 +263,34 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 			if (!pOwner->IsLocalPlayer()) 
 			{
 				Vector v1 = tr.endpos - tr.startpos;
-				Vector v2 = C_BasePlayer::GetLocalPlayer()->GetAbsOrigin() - tr.startpos;
+				Vector v2 = C_BasePlayer::GetLocalPlayer()->EyePosition() - tr.startpos;
 
 				VectorNormalizeFast(v1);
 				VectorNormalizeFast(v2);
 
 				float flDot = v1.Dot(v2);
 
+				DevMsg("%f\n", flDot);
+
 				if (flDot < 0) 
 					flDot = -flDot;
 
-				float brightness = flDot * flDot;
+#define MIN_ANGLE	0.94f
 
-				/*if (brightness > 0.3f) 
-					beams->CreateBeamPoints(tr.startpos, 
-						endPos, 
-						g_iBeam, 
-						g_iHalo, 
-						5.0f, 						// haloScale
-						gpGlobals->frametime, 		// life
-						brightness, 					// width
-						brightness, 					// endwidth
-						40.0f, 						// fadelength
-						0.0f, 						// amplitude
-						brightness, 					// brightness
-						0, 							// speed
-						0, 							// startframe
-						1.0f, 						// framerate
-						brightness, 					// r
-						brightness, 					// g
-						brightness);				// b*/
+				if (flDot < MIN_ANGLE)
+					flDot = 0.0f;
 
-				color32 colour = { 255, 0, 0, alpha * brightness };
+				// Scale what we have from 0 to 1.0f now
+				if (flDot > 0.0f)
+				{
+					flDot -= MIN_ANGLE;
+					flDot /= (1.0f - MIN_ANGLE);
+				}
 
-				FX_DrawLine(tr.startpos, tr.endpos, brightness, m_pMaterial, colour);
+				float flPower = flDot * flDot;
+				color32 colour = { 255, 0, 0, alpha * flPower };
 
-				//beams->CreateBeamEntPoint(pOwner->entindex(), &tr.startpos, pOwner->entindex(), &endPos, g_iBeam, g_iHalo, 0, 0.1f, 1.0f, 1.0f, 40.0f, 1.0f, 1.0f, 0, 0, 1.0f, 1.0f, 0, 0);
+				FX_DrawLine(tr.startpos, tr.endpos, flPower, m_pMaterial, colour);
 			}
 		}
 		else
@@ -433,12 +457,23 @@ void CFFWeaponSniperRifle::Precache()
 
 bool CFFWeaponSniperRifle::Deploy() 
 {
+	m_bZoomed = false;
+
+#ifdef CLIENT_DLL
+	m_flNextZoomTime = m_flZoomTime = 0;
+#endif
+
 	return BaseClass::Deploy();
 }
 
 bool CFFWeaponSniperRifle::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
-	DevMsg("CFFWeaponSniperRifle::Holster\n");
+	m_bZoomed = false;
+
+#ifdef CLIENT_DLL
+	m_flNextZoomTime = m_flZoomTime = 0;
+	engine->ClientCmd("fov 0\n");
+#endif
 
 #ifdef GAME_DLL
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
@@ -748,6 +783,7 @@ void CFFWeaponSniperRifle::UpdateLaserPosition()
 
 		// Put dot on the wall that we hit, but pull back a little
 		m_hLaserDot->SetLaserPosition(tr.endpos - vForward);
+		m_hLaserDot->AddEFlags(EFL_FORCE_CHECK_TRANSMIT);
 	}
 #endif
 }
