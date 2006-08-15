@@ -721,7 +721,7 @@ ConVar mp_prematch( "mp_prematch",
 		Vector		vecSrc = vecSrcIn;
 
 #ifdef GAME_DLL
-		NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
+		//NDebugOverlay::Cross3D(vecSrc, 8.0f, 255, 0, 0, true, 5.0f);
 #endif
 
 		// TFC style falloff please.
