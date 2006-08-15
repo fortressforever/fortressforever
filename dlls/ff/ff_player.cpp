@@ -4879,11 +4879,8 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 
 int CFFPlayer::AddHealth(unsigned int amount)
 {
-	if( amount > 0 )
-		ClearSpeedEffects();
-
 	int left = TakeHealth( amount, DMG_GENERIC );
-    return left;
+    return left;		
 }
 
 //-----------------------------------------------------------------------------
