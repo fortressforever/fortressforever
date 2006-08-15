@@ -59,8 +59,8 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA(CFFWeaponTranquiliser) 
 END_PREDICTION_DATA() 
 
-LINK_ENTITY_TO_CLASS(ff_weapon_tranquiliser, CFFWeaponTranquiliser);
-PRECACHE_WEAPON_REGISTER(ff_weapon_tranquiliser);
+LINK_ENTITY_TO_CLASS(ff_weapon_tranq, CFFWeaponTranquiliser);
+PRECACHE_WEAPON_REGISTER(ff_weapon_tranq);
 
 //=============================================================================
 // CFFWeaponTranquiliser implementation
