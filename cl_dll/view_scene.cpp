@@ -47,6 +47,8 @@
 #include "datacache/imdlcache.h"
 #include "ScreenSpaceEffects.h"
 
+static ConVar ffdev_showrenderbounds("ffdev_showrenderbounds", "0");
+
 // Bug #0000385: point_camera & func_monitor in-titties
 // Allways USE_MONITORS
 //#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
@@ -1017,16 +1019,19 @@ static inline void DrawTranslucentRenderable( IClientRenderable *pEnt, bool twoP
 	if (twoPass)
 		flags |= STUDIO_TWOPASS;
 
-#if 0
-	Vector mins, maxs;
-	pEnt->GetRenderBounds( mins, maxs );
-	debugoverlay->AddBoxOverlay( pEnt->GetRenderOrigin(), mins, maxs, pEnt->GetRenderAngles(), 255, 255, 255, 64, 0.01 );
-	if ( pEnt->GetModel() )
+#if _DEBUG
+	if (ffdev_showrenderbounds.GetBool())
 	{
-		const char *pName = modelinfo->GetModelName( pEnt->GetModel() );
-		if ( Q_stricmp( pName, "models/props_c17/tv_monitor01_screen.mdl" ) )
+		Vector mins, maxs;
+		pEnt->GetRenderBounds( mins, maxs );
+		debugoverlay->AddBoxOverlay( pEnt->GetRenderOrigin(), mins, maxs, pEnt->GetRenderAngles(), 255, 255, 255, 64, 0.01 );
+		if ( pEnt->GetModel() )
 		{
-			debugoverlay->AddTextOverlay( pEnt->GetRenderOrigin(), 0.01, pName );
+			const char *pName = modelinfo->GetModelName( pEnt->GetModel() );
+			if ( Q_stricmp( pName, "models/props_c17/tv_monitor01_screen.mdl" ) )
+			{
+				debugoverlay->AddTextOverlay( pEnt->GetRenderOrigin(), 0.01, pName );
+			}
 		}
 	}
 #endif
