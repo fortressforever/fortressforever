@@ -369,6 +369,10 @@ bool Bot_RunMimicCommand( CUserCmd& cmd )
 	cmd = *pPlayer->GetLastUserCommand();
 	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
 
+	// Keep the bot going at full whack
+	cmd.forwardmove *= 10.0f;
+	cmd.sidemove *= 10.0f;
+
 	if( bot_crouch.GetInt() )
 		cmd.buttons |= IN_DUCK;
 

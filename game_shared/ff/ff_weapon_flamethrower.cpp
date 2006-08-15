@@ -25,6 +25,8 @@
 #else
 	#include "ff_player.h"
 	#include "ff_env_flamejet.h"
+
+	#include "ilagcompensationmanager.h"
 #endif
 
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbox");
@@ -133,6 +135,9 @@ void CFFWeaponFlamethrower::Fire()
 		return;
 	}
 
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
+
 	Vector vecStart = pPlayer->Weapon_ShootPosition() + vecForward * 16.0f;
 
 	// 320 is about how far the flames are drawn on the client
@@ -187,6 +192,8 @@ void CFFWeaponFlamethrower::Fire()
 			}
 		}		
 	}
+
+	lagcompensation->FinishLagCompensation(pPlayer);
 #endif
 }
 
