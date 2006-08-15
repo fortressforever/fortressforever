@@ -223,8 +223,9 @@ void CStatusIcons::Paint( void )
 
 		float flTimeLeft = sIcon.m_flStart + sIcon.m_flDuration - gpGlobals->curtime;
 
-		// This icon is not active
-		if (flTimeLeft < 0)
+		// This icon is not active. If the duration is negative then we allow it to
+		// stay on as long as it likes.
+		if (flTimeLeft < 0 && sIcon.m_flDuration > -0.1f)
 			continue;
 
 		// This icon has no texture, that's pretty bad news
