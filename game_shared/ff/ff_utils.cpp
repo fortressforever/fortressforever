@@ -465,6 +465,30 @@ const char *FF_GetAmmoName(int i)
 	return NULL;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: See if a trace hit the world
+//-----------------------------------------------------------------------------
+bool FF_TraceHitWorld( trace_t *pTrace )
+{
+	if( pTrace->DidHitWorld() )
+		return true;
+
+	if( pTrace->m_pEnt == NULL )
+		return false;
+
+	if( pTrace->m_pEnt->GetMoveType() == MOVETYPE_PUSH )
+	{
+		// All doors are push, but not all things that push are doors. This 
+		// narrows the search before we start to do classname compares.
+		if( FClassnameIs( pTrace->m_pEnt, "prop_door_rotating" ) ||
+			FClassnameIs( pTrace->m_pEnt, "func_door" ) ||
+			FClassnameIs( pTrace->m_pEnt, "func_door_rotating" ) )
+			return true;
+	}
+
+	return false;
+}
+
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Set an icon on the hud
