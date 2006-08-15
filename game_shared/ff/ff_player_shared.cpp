@@ -198,7 +198,7 @@ void CFFPlayer::FireBullet(
 				{
 					if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
 					{
-						player->AddSpeedEffect( SE_LEGSHOT, flDuration, flSpeed, SEM_ACCUMULATIVE| SEM_HEALABLE, FF_ICON_LEGSHOT, flIconDuration );
+						player->AddSpeedEffect( SE_LEGSHOT, flDuration, flSpeed, SEM_ACCUMULATIVE| SEM_HEALABLE, FF_STATUSICON_LEGINJURY, flIconDuration );
 					}
 				}
 #endif

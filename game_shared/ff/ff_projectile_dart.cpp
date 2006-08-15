@@ -141,7 +141,7 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 				float flSpeed = 0.3f;
 				if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
 				{
-					pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_ICON_TRANQ, flIconDuration );
+					pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration );
 				}				
 			}
 		}
