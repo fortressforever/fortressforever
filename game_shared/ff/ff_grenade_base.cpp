@@ -66,8 +66,6 @@ ConVar gren_water_reduce_think("ffdev_gren_water_reduce_think", "0.2", FCVAR_REP
 		SetCollisionGroup(COLLISION_GROUP_PROJECTILE);
 		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 
-		SetSize(Vector(-3, -3, -3), Vector(3, 3, 3));
-
 		// Rotate from the go
 		SetLocalAngularVelocity(RandomAngle(-400, 400));
 
