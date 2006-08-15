@@ -3492,9 +3492,6 @@
 				RelativePath=".\ff\ff_vehicle_jeep.cpp">
 			</File>
 			<File
-				RelativePath="C:\Documents and Settings\Mulchman\Application Data\Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf">
-			</File>
-			<File
 				RelativePath=".\ff\te_firebullets.cpp">
 			</File>
 			<File
@@ -3563,11 +3560,6 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_parse.cpp">
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_grenade_parse.h">
