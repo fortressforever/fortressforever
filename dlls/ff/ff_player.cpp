@@ -941,7 +941,7 @@ void CFFPlayer::Spawn()
 
 	// This will finish all status icons
 	UserMessageBegin(user, "StatusIconUpdate");
-	WRITE_BYTE(FF_NUMICONS);
+	WRITE_BYTE(FF_STATUSICON_MAX);
 	WRITE_FLOAT(0.0);
 	MessageEnd();
 
@@ -3190,7 +3190,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			CSingleUserRecipientFilter user((CBasePlayer *)this);
 			user.MakeReliable();
 			UserMessageBegin(user, "StatusIconUpdate");
-				WRITE_BYTE(FF_ICON_INFECTED);
+				WRITE_BYTE(FF_STATUSICON_INFECTION);
 				WRITE_FLOAT(2.0f);
 			MessageEnd(); 
 
@@ -3298,9 +3298,9 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 			}
 			break;
 			
-			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_ICON_LEGSHOT, flIconDuration ); break;
-			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_ICON_TRANQ, flIconDuration ); break;
-			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_ICON_CALTROP, flIconDuration ); break;
+			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_STATUSICON_LEGINJURY, flIconDuration ); break;
+			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration ); break;
+			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_STATUSICON_CALTROPPED, flIconDuration ); break;
 			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN );  break;
 			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN ); break;
 			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
@@ -3471,9 +3471,9 @@ void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)
 	int iIcon = -1;
 	switch( type )
 	{
-		case SE_TRANQ: iIcon = FF_ICON_TRANQ; break;
-		case SE_CALTROP: iIcon = FF_ICON_CALTROP; break;
-		case SE_LEGSHOT: iIcon = FF_ICON_LEGSHOT; break;
+		case SE_TRANQ: iIcon = FF_STATUSICON_TRANQUILIZED; break;
+		case SE_CALTROP: iIcon = FF_STATUSICON_CALTROPPED; break;
+		case SE_LEGSHOT: iIcon = FF_STATUSICON_LEGINJURY; break;
 	}
 
 	// Make the icon go away
@@ -3654,7 +3654,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
 	UserMessageBegin(user, "StatusIconUpdate");
-		WRITE_BYTE( FF_ICON_ONFIRE );
+		WRITE_BYTE( FF_STATUSICON_BURNING );
 		WRITE_FLOAT( flIconDuration );
 	MessageEnd();
 
@@ -4388,7 +4388,7 @@ void CFFPlayer::UnConcuss( void )
 	user.MakeReliable();
 
 	UserMessageBegin( user, "StatusIconUpdate" );
-		WRITE_BYTE( FF_ICON_CONCUSSION );
+		WRITE_BYTE( FF_STATUSICON_CONCUSSION );
 		WRITE_FLOAT( 0.0f );
 	MessageEnd();
 }
@@ -4409,7 +4409,7 @@ void CFFPlayer::Concuss( float flDuration, float flIconDuration, const QAngle *v
 	user.MakeReliable();
 
 	UserMessageBegin( user, "StatusIconUpdate" );
-		WRITE_BYTE( FF_ICON_CONCUSSION );
+		WRITE_BYTE( FF_STATUSICON_CONCUSSION );
 		WRITE_FLOAT( flIconDuration );
 	MessageEnd();
 
@@ -4468,7 +4468,7 @@ void CFFPlayer::Extinguish( void )
 		user.MakeReliable();
 
 		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_ICON_ONFIRE);
+			WRITE_BYTE(FF_STATUSICON_BURNING);
 			WRITE_FLOAT(0.0);
 		MessageEnd();
 
@@ -4507,7 +4507,7 @@ void CFFPlayer::Gas( float flDuration, float flIconDuration )
 	user.MakeReliable();
 
 	UserMessageBegin( user, "StatusIconUpdate" );
-		WRITE_BYTE( FF_ICON_GAS );
+		WRITE_BYTE( FF_STATUSICON_HALLUCINATIONS );
 		WRITE_FLOAT( flIconDuration );
 	MessageEnd();
 }
@@ -4524,7 +4524,7 @@ void CFFPlayer::UnGas( void )
 	user.MakeReliable();
 
 	UserMessageBegin( user, "StatusIconUpdate" );
-		WRITE_BYTE( FF_ICON_CONCUSSION );
+		WRITE_BYTE( FF_STATUSICON_CONCUSSION );
 		WRITE_FLOAT( 0.0f );
 	MessageEnd();
 }

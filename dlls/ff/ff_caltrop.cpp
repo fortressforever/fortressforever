@@ -274,7 +274,7 @@ void CFFCaltrop::CaltropTouch ( CBaseEntity *pOther )
 				SetNextThink( gpGlobals->curtime );
 
 				// make the player walk slow
-				pPlayer->AddSpeedEffect( SE_CALTROP, flDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_ICON_CALTROP, flIconDuration );
+				pPlayer->AddSpeedEffect( SE_CALTROP, flDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_STATUSICON_CALTROPPED, flIconDuration );
 			}
 		}		
 	}

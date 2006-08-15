@@ -10,6 +10,8 @@
 //	---------
 //	05/18/2005, FryGuy:
 //		Initial copy.
+//	15/08/2006, Mirv:
+//		Rewritten most of this now.
 
 #include "cbase.h"
 #include "hudelement.h"
@@ -29,23 +31,24 @@ using namespace vgui;
 #include "c_ff_player.h"
 #include "ff_utils.h"
 
-#define MAX_STATUSICONS 4
-
 // |-- Mirv: Store all the references to the textures up here now
-const char *szIcons[FF_NUMICONS] = {	"vgui/statusicon_conc",		//FF_ICON_CONCUSSION
-										"vgui/statusicon_tranq",	//FF_ICON_ONFIRE
-										"vgui/statusicon_tranq",	//FF_ICON_TRANQ
-										"vgui/statusicon_caltrop",	//FF_ICON_CALTROP
-										"vgui/statusicon_legshot",	//FF_ICON_LEGSHOT
-										"vgui/statusicon_gas",		//FF_ICON_GAS
-										"vgui/statusicon_infected"	//FF_ICON_INFECTED
-									};
+const char *szIcons[FF_STATUSICON_MAX] = {	"concussion",		// FF_STATUSICON_CONCUSSION
+											"infection",		// FF_STATUSICON_INFECTION
+											"leginjury",		// FF_STATUSICON_LEGINJURY
+											"caltropped",		// FF_STATUSICON_CALTROPPED
+											"tranquilized",		// FF_STATUSICON_TRANQUILIZED
+											"hallucinations",	// FF_STATUSICON_HALLUCINATIONS
+											"burning",			// FF_STATUSICON_BURNING
+											"drowning",			// FF_STATUSICON_DROWNING
+											"radiation",		// FF_STATUSICON_RADIATION
+											"cold",				// FF_STATUSICON_COLD
+										};
 
-struct statusicon_t {
-	int icontype;
-	float start;
-	float duration;
-	bool enabled;
+struct statusicon_t
+{
+	CHudTexture	*pTexture;
+	float		m_flStart;
+	float		m_flDuration;
 };
 
 class CStatusIcons : public CHudElement, public vgui::Panel
@@ -53,8 +56,7 @@ class CStatusIcons : public CHudElement, public vgui::Panel
 private:
 	DECLARE_CLASS_SIMPLE( CStatusIcons, vgui::Panel );
 
-	statusicon_t m_hIcons[MAX_STATUSICONS];
-	CHudTexture	*m_pIconTextures[FF_NUMICONS];
+	statusicon_t sStatusIcons[FF_STATUSICON_MAX];
 
 protected:
 	void	CacheTextures( void );
@@ -69,7 +71,7 @@ public:
 	void	OnTick( void );
 
 	// Callback function for the "StatusIconUpdate" user message
-	void	MsgFunc_StatusIconUpdate( bf_read &msg );
+	void	MsgFunc_StatusIconUpdate(bf_read &msg);
 	
 };
 
@@ -86,65 +88,76 @@ CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementNa
 	SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
 	// initialize the status icons
-	for (int i=0; i<MAX_STATUSICONS; i++) {
-		m_hIcons[i].icontype = 0;
-		m_hIcons[i].start = m_hIcons[i].duration = 0.0f;		
-		m_hIcons[i].enabled = false;
+	for (int i = 0; i < FF_STATUSICON_MAX; i++)
+	{
+		sStatusIcons[i].pTexture = NULL;
+		sStatusIcons[i].m_flStart = sStatusIcons[i].m_flDuration = 0.0f;
 	}
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 };
 
-void CStatusIcons::CacheTextures( void )
+//-----------------------------------------------------------------------------
+// Purpose: Handy helping function
+//-----------------------------------------------------------------------------
+static CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
 {
-	// |-- Mirv: Okay here's a more sane way to do it.
-	for (int i = 0; i < FF_NUMICONS; i++)
-	{
-		m_pIconTextures[i] = new CHudTexture();
-		m_pIconTextures[i]->textureId = surface()->CreateNewTextureID();
-		surface()->DrawSetTextureFile(m_pIconTextures[i]->textureId, szIcons[i], true, false);
-	}
+	int idx = list.Find( psz );
+	if ( idx == list.InvalidIndex() )
+		return NULL;
 
-	//m_pIconTextures[1] = new CHudTexture();
-	//m_pIconTextures[1]->textureId = surface()->CreateNewTextureID();
-	//surface( )->DrawSetTextureFile( m_pIconTextures[1]->textureId, "vgui/statusicon_tranq", true, false );
-
-	//m_pIconTextures[2] = new CHudTexture();
-	//m_pIconTextures[2]->textureId = surface()->CreateNewTextureID();
-	//surface( )->DrawSetTextureFile( m_pIconTextures[2]->textureId, "vgui/statusicon_tranq", true, false );
-
-	//m_pIconTextures[3] = new CHudTexture();
-	//m_pIconTextures[3]->textureId = surface()->CreateNewTextureID();
-	//surface( )->DrawSetTextureFile( m_pIconTextures[3]->textureId, "vgui/statusicon_tranq", true, false );
-
-	//m_pIconTextures[4] = new CHudTexture();
-	//m_pIconTextures[4]->textureId = surface()->CreateNewTextureID();
-	//surface( )->DrawSetTextureFile( m_pIconTextures[4]->textureId, "vgui/statusicon_tranq", true, false );
+	return list[ idx ];
 }
 
+void FreeHudTextureList(CUtlDict<CHudTexture *, int>& list);
+
+//-----------------------------------------------------------------------------
+// Purpose: Load all the status icon textures
+//-----------------------------------------------------------------------------
+void CStatusIcons::CacheTextures( void )
+{
+	// Open up our dedicated status effects hud file
+	CUtlDict<CHudTexture *, int> tempList;
+	LoadHudTextures(tempList, "scripts/ff_hud_statusicons", NULL);
+
+	for (int i = 0; i < FF_STATUSICON_MAX; i++)
+	{
+		CHudTexture *p = FindHudTextureInDict(tempList, szIcons[i]);
+		if (p)
+		{
+			sStatusIcons[i].pTexture = gHUD.AddUnsearchableHudIconToList(*p);
+		}
+		else
+		{
+			Warning("Could not find entry for %s status effect in ff_hud_statusicons\n", szIcons[i]);
+		}
+	}
+
+	FreeHudTextureList(tempList);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Reset all the status icons for map change
+//-----------------------------------------------------------------------------
 void CStatusIcons::VidInit( void )
 {	
-	// Cache textures
-	CacheTextures( );
-
-	// Bug #0000388: Status HUD icons persist don't go away
-	// Reset all icons
-	for( int i = 0; i < MAX_STATUSICONS; i++ )
+	for (int i = 0; i < FF_STATUSICON_MAX; i++)
 	{
-		m_hIcons[i].icontype = 0;
-		m_hIcons[i].start = m_hIcons[i].duration = 0.0f;
-		m_hIcons[i].enabled = false;
+		sStatusIcons[i].m_flStart = sStatusIcons[i].m_flDuration = 0.0f;
 	}
 }
 
 void CStatusIcons::Init( void )
 {
+	// Cache textures
+	CacheTextures();
+
 	HOOK_HUD_MESSAGE( CStatusIcons, StatusIconUpdate );
 }
 
 void CStatusIcons::OnTick( void )
 {
-	int iWide, iTall;
+/*	int iWide, iTall;
 	surface()->GetScreenSize( iWide, iTall );
 
 	int displayed = 0;
@@ -176,85 +189,61 @@ void CStatusIcons::OnTick( void )
 	{
 		SetVisible( false );
 	}
-
+*/
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Set the status of the correct status icon(s)
+//-----------------------------------------------------------------------------
 void CStatusIcons::MsgFunc_StatusIconUpdate( bf_read &msg )
 {
-	int icontype = msg.ReadByte();
-	float duration = msg.ReadFloat();
+	int iStatusIcon = msg.ReadByte();
+	float flDuration = msg.ReadFloat();
 
-	// Mirv: if they select NUM_STATUSICONS, set all
-	if (icontype == FF_NUMICONS)
+	// Invalid
+	if (iStatusIcon < 0 || iStatusIcon > FF_STATUSICON_MAX)
 	{
-		for (int i = 0; i < MAX_STATUSICONS; i++)
-			m_hIcons[i].duration = duration;
+		AssertMsg(0, "Invalid status icon");
+		return;
+	}
+
+	// Mirv: if they select FF_STATUSICON_MAX, set all (useful for removing all)
+	if (iStatusIcon == FF_STATUSICON_MAX)
+	{
+		for (int i = 0; i < FF_STATUSICON_MAX; i++)
+		{
+			sStatusIcons[i].m_flStart = gpGlobals->curtime;
+			sStatusIcons[i].m_flDuration = flDuration;
+		}
 
 		return;
 	}
 
-	// find an unused status icon
-	// check for an existing icon first
-	int id = 0;
-	while ((m_hIcons[id].icontype != icontype) && (id != MAX_STATUSICONS))
-		id++;
-
-	// if it's not found, then find any usable one
-	if (id == MAX_STATUSICONS)
-		id = 0;
-	while (m_hIcons[id].enabled && (m_hIcons[id].icontype != icontype) && (id != MAX_STATUSICONS))
-		id++;
-
-	// if there's no more room, break
-	// probably should throw an assertion or something
-	if (id == MAX_STATUSICONS)
-		return;
-	
-	// save this icon in the list
-	m_hIcons[id].icontype = icontype;
-	m_hIcons[id].duration = duration;
-	m_hIcons[id].start = gpGlobals->curtime;
-	m_hIcons[id].enabled = true;
+	sStatusIcons[iStatusIcon].m_flStart = gpGlobals->curtime;
+	sStatusIcons[iStatusIcon].m_flDuration = flDuration;
 }
 
 void CStatusIcons::Paint( void )
 {
-	int displayed = 0;
+	int iOffset = 0;
 
-	// display all the icons
-	for (int i=0; i<MAX_STATUSICONS; i++) {
-		if (m_hIcons[i].enabled)
-		{
-			float timeleft = 5.0f;
-			if( m_hIcons[i].duration != -1 )
-				timeleft = m_hIcons[i].duration - (gpGlobals->curtime - m_hIcons[i].start);
-			float alpha;
-			if (timeleft >= 0)
-			{
-				// this is an icon that needs to be displayed
-				// draw it..
-				if (timeleft <= 2.5)
-				{
-					alpha = fmod(timeleft*2, 2);
-					if (alpha >= 1)
-						alpha = 2 - alpha;
-				}
-				else
-				{
-					alpha = 1.0f;
-				}
-				
-				if (m_hIcons[i].icontype >= 0 && m_hIcons[i].icontype < FF_NUMICONS)
-				{
-					//surface( )->DrawSetTexture( m_pIconTextures[ m_hIcons[i].icontype ]->textureId );
-					surface( )->DrawSetTexture( m_pIconTextures[ 0 ]->textureId );
-					surface()->DrawSetColor( m_hIcons[i].icontype*255, 255, 0, (int)(alpha*255) ); //RGBA
-					//surface( )->DrawSetAlpha( alpha );
-					//surface()->DrawFilledRect( displayed*40+4, 4, displayed*40+36, 36 ); //x0,y0,x1,y1
-					surface( )->DrawTexturedRect( displayed*40+4, 4, displayed*40+36, 36 );
-				}
-				displayed++;
-			}
-		}
+	for (int i = 0; i < FF_STATUSICON_MAX; i++)
+	{
+		statusicon_t &sIcon = sStatusIcons[i];
+
+		float flTimeLeft = sIcon.m_flStart + sIcon.m_flDuration - gpGlobals->curtime;
+
+		// This icon is not active
+		if (flTimeLeft < 0)
+			continue;
+
+		// This icon has no texture, that's pretty bad news
+		if (!sIcon.pTexture)
+			continue;
+
+		// We're going vertical now
+		sIcon.pTexture->DrawSelf(0, iOffset, Color(255, 255, 255, 100));
+
+		iOffset += sIcon.pTexture->Height() + 5.0f;
 	}
 }
