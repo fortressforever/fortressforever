@@ -3194,20 +3194,16 @@ void CFFPlayer::StatusEffectsThink( void )
 				WRITE_FLOAT(2.0f);
 			MessageEnd(); 
 
-#if 1
 			// Bug #0000504: No infection visible effect
 			CEffectData data;
 			data.m_vOrigin = GetLegacyAbsOrigin();
 			data.m_flScale = 1.0f;
-			//DispatchEffect( "InfectCloud", data );
-			DispatchEffect( "bloodimpact", data );
+			DispatchEffect( "FF_InfectionEffect", data );
 
 			CEffectData data2;
 			data2.m_vOrigin = EyePosition();
 			data2.m_flScale = 1.0f;
-			//DispatchEffect( "InfectCloud", data );
-			DispatchEffect( "bloodimpact", data2 );
-#endif
+			DispatchEffect( "FF_InfectionEffect", data2 );
 
 			CBaseEntity *ent = NULL;
 
