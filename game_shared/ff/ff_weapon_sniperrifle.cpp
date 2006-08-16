@@ -196,6 +196,11 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 	{
 		CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
+		if (!pOwner)
+		{
+			return BaseClass::GetRenderBounds(mins, maxs);
+		}
+
 		Vector vecAbsStart = GetAbsOrigin();
 		Vector vecAbsEnd = pOwner->Weapon_ShootPosition();
 
@@ -269,8 +274,6 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 				VectorNormalizeFast(v2);
 
 				float flDot = v1.Dot(v2);
-
-				DevMsg("%f\n", flDot);
 
 				if (flDot < 0) 
 					flDot = -flDot;

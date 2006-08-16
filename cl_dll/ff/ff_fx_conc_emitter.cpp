@@ -296,7 +296,7 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
 	{
 		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
-		return;
+		//return;
 	}
 
 	// Okay so apparently dx7 is not so good for the 3d conc effect
