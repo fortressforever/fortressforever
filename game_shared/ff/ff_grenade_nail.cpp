@@ -99,7 +99,7 @@ void CFFGrenadeNail::Precache()
 	void CFFGrenadeNail::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		// Clumsy, will do for now
-		if (GetMoveType() & MOVETYPE_FLY)
+		if (GetMoveType() == MOVETYPE_FLY)
 		{
 			BaseClass::Explode(pTrace, bitsDamageType);
 			return;
