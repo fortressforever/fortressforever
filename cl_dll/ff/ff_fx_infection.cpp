@@ -18,8 +18,6 @@
 #include "particles_simple.h"
 #include "c_te_effect_dispatch.h"
 #include "cliententitylist.h"
-#include "materialsystem/imaterialvar.h"
-#include "mathlib.h"
 
 #include "ff_fx_infection.h"
 
@@ -48,6 +46,7 @@ PMaterialHandle CInfectionEmitter::m_hMaterial = INVALID_MATERIAL_HANDLE;
 CInfectionEmitter::CInfectionEmitter( const char *pDebugName ) : CSimpleEmitter( pDebugName )
 {
 	m_pDebugName = pDebugName;
+	//m_flNextParticle = 0.0f;
 }
 
 //========================================================================
@@ -125,7 +124,14 @@ void CInfectionEmitter::SimulateParticles( CParticleSimulateIterator *pIterator 
 		float flEnd = pParticle->m_flLifetime / pParticle->m_flDieTime;
 		float flBeg = 1.0f - flEnd;
 
-		pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.5f;		
+		Vector F( 0.0f, 0.0f, 0.0f );
+
+		ApplyDrag( &F, pParticle->m_vVelocity, 4.0f, 20.0f );
+
+		pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.75f;
+		pParticle->m_vVelocity += F * timeDelta;
+		pParticle->m_Pos += pParticle->m_vVelocity * timeDelta * 0.75f;
+		
 		pParticle->m_flAlpha = 0.8f * flBeg + 0.0f * flEnd;
 
 		if( pParticle->m_flLifetime >= pParticle->m_flDieTime )
@@ -161,6 +167,24 @@ InfectionParticle *CInfectionEmitter::AddInfectionParticle( const Vector& vecOri
 	return pRet;
 }
 
+void CInfectionEmitter::ApplyDrag( Vector *F, Vector vecVelocity, float flScale, float flTargetVel )
+{
+	if( vecVelocity.IsLengthLessThan( flTargetVel ) )
+		return;
+
+	Vector vecDir = -vecVelocity;
+	vecVelocity.NormalizeInPlace();
+
+	float flMag = vecVelocity.Length() * flScale;
+	*F += ( vecDir * flMag );
+}
+
+/*
+void CInfectionEmitter::Update( float flTimeDelta )
+{
+}
+*/
+
 void FF_FX_InfectionEffect_Callback( const CEffectData &data )
 {
 	CSmartPtr< CInfectionEmitter > InfectionEffect = CInfectionEmitter::Create( "InfectionEffect" );
@@ -171,8 +195,8 @@ void FF_FX_InfectionEffect_Callback( const CEffectData &data )
 		if( p )
 		{
 			p->m_vOrigin = data.m_vOrigin;
-			p->m_vVelocity = RandomVector( -60.0f, 60.0f );
-			p->m_vVelocity.z *= 0.1f;
+			p->m_vVelocity = data.m_vStart;// + RandomVector( -10.0f, 10.0f );
+			//p->m_vVelocity.z *= 0.1f;
 			p->m_Pos = p->m_vOrigin + RandomVector( -10.0f, 10.0f );
 			p->m_Pos.z = p->m_vOrigin.z + RandomFloat( -15.0f, 15.0f );
 		}
