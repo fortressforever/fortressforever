@@ -5645,8 +5645,15 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 	else if (fDamageType & DMG_BURN && GetClassSlot() != CLASS_PYRO)
 	{
 		// Orange damage indicator
-		color32 orange = {255,100,20,200};
-		UTIL_ScreenFade(this, orange, 2.0f, 0.1f, FFADE_IN);
+		//color32 orange = {255,100,20,200};
+		//UTIL_ScreenFade(this, orange, 2.0f, 0.1f, FFADE_IN);
+
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "BurningEffect");
+		WRITE_BYTE(min(30.0f * flDamage, 255));
+		MessageEnd();
 
 		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
 	}
