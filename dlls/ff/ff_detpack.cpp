@@ -28,8 +28,8 @@
 
 #ifdef _DEBUG
 #include "Color.h"
-#include "ff_utils.h"
 #endif
+#include "ff_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
