@@ -7,6 +7,11 @@
 // @brief infection particle effects
 //
 // particle manager for the infection particles
+//
+// Revisions
+// ---------
+// 8/15/2006, Mulchman
+//		Initial version
 
 #ifndef FF_FX_INFECTION_H
 #define FF_FX_INFECTION_H
@@ -27,33 +32,6 @@ public:
 	unsigned char	m_uchColor[3];
 };
 
-/*
-class CInfectionEmitter : public CParticleEffect
-{
-public:
-	DECLARE_CLASS(CInfectionEmitter, CParticleEffect);
-
-	static CSmartPtr<CInfectionEmitter> Create(const char *pDebugName);
-
-	virtual void SimulateParticles(CParticleSimulateIterator *pIterator);
-	virtual void RenderParticles(CParticleRenderIterator *pIterator);
-
-	void AddAttractor(Vector *F, Vector apos, Vector ppos, float scale);
-	void ApplyDrag(Vector *F, Vector vel, float scale, float targetvel);
-
-	InfectionParticle* AddInfection(const Vector &vOrigin);
-
-protected:
-	CInfectionEmitter(const char *pDebugName);
-	virtual ~CInfectionEmitter();
-
-private:
-	CInfectionEmitter(const CInfectionEmitter &o);
-
-	static PMaterialHandle m_hMaterial;
-};
-*/
-
 class CInfectionEmitter : public CSimpleEmitter
 {
 public:
@@ -63,10 +41,13 @@ public:
 
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
+	//virtual void Update( float flTimeDelta );
 
 	InfectionParticle *AddInfectionParticle( const Vector& vecOrigin );
 
 	static PMaterialHandle GetMaterial( void ) { return m_hMaterial; }
+
+	void ApplyDrag( Vector *F, Vector vecVelocity, float flScale, float flTargetVel );
 
 protected:
 	CInfectionEmitter( const char *pDebugName );

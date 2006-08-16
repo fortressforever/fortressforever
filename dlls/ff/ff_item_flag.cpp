@@ -462,15 +462,10 @@ void CFFInfoScript::Drop( float delay, float speed )
 		// doesn't want to be thrown that way
 		//NDebugOverlay::Line( pOwner->EyePosition(), pOwner->EyePosition() + ( 256.0f * vecDir ), 0, 0, 255, false, 5.0f );
 
-		pPhysics->ApplyForceCenter( ( ( pOwner->GetAbsOrigin() + ( 256.0f * vecDir ) ) - pOwner->GetAbsOrigin() ) * vel * vel );
+		vecDir *= vel * vel;
 
-		//AngularImpulse angImpulse;
-		//QAngleToAngularImpulse( pOwner->EyeAngles(), angImpulse );
-
-		// This needs to be based on where the player is looking
-		// and the angle they're looking (so they can throw upwards)
-		//Vector vecVelocity = vecDir * ( vel * vel );
-		//pPhysics->SetVelocity( &vecVelocity, &angImpulse );
+		pPhysics->ApplyForceCenter( vecDir );
+		pPhysics->AddVelocity( &vecDir, &vecDir );
 
 		// Stop the sequence if playing
 		// NOTE: This doesn't seem to work yet either...

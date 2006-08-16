@@ -1306,6 +1306,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
 
+	// Stop infection
+	m_bInfected = false;
+
 	// Beg; Added by Mulchman
 	if( m_bBuilding )
 	{
@@ -3151,7 +3154,7 @@ void CFFPlayer::StatusEffectsThink( void )
 	}
 
 	// If the player is infected, then take appropriate action
-	if( m_bInfected && ( gpGlobals->curtime > ( m_fLastInfectedTick + ffdev_infect_freq.GetFloat() ) ) )
+	if( IsInfected() && ( gpGlobals->curtime > ( m_fLastInfectedTick + ffdev_infect_freq.GetFloat() ) ) )
 	{
 		// Need to check to see if the medic who infected us has changed teams
 		// or dropped - switching to EHANDLE will handle the drop case
@@ -3172,7 +3175,7 @@ void CFFPlayer::StatusEffectsThink( void )
 		}
 
 		// If we're still infected, cause damage
-		if (m_bInfected && IsAlive())	// |-- Mirv: Bug #0000461: Infect sound plays eventhough you are dead
+		if (IsInfected() && IsAlive())	// |-- Mirv: Bug #0000461: Infect sound plays eventhough you are dead
 		{
 			CFFPlayer *pInfector = ToFFPlayer( m_hInfector );
 
@@ -3196,13 +3199,15 @@ void CFFPlayer::StatusEffectsThink( void )
 
 			// Bug #0000504: No infection visible effect
 			CEffectData data;
-			data.m_vOrigin = GetLegacyAbsOrigin();
+			data.m_vOrigin = GetLegacyAbsOrigin() - Vector( 0, 0, 16.0f );
+			data.m_vStart = GetAbsVelocity();
 			data.m_flScale = 1.0f;
 			DispatchEffect( "FF_InfectionEffect", data );
 
 			CEffectData data2;
-			data2.m_vOrigin = EyePosition();
-			data2.m_flScale = 1.0f;
+			data2.m_vOrigin = EyePosition() - Vector( 0, 0, 16.0f );
+			data2.m_vStart = GetAbsVelocity();
+			data2.m_flScale = 1.0f;			
 			DispatchEffect( "FF_InfectionEffect", data2 );
 
 			CBaseEntity *ent = NULL;
@@ -3594,7 +3599,7 @@ int CFFPlayer::GetPacketloss( void ) const
 
 void CFFPlayer::Infect( CFFPlayer *pInfector )
 {
-	if( !m_bInfected && !m_bImmune )
+	if( !IsInfected() && !m_bImmune )
 	{
 		// they aren't infected or immune, so go ahead and infect them
 		m_bInfected = true;
@@ -3609,7 +3614,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
 {
-	if( m_bInfected )
+	if( IsInfected() )
 	{
 		// they are infected, so go ahead and cure them
 		m_bInfected = false;
@@ -4554,7 +4559,7 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 	if (iOriginalHP <= 15)
 		g_StatsLog.AddToCount(pHealer, STAT_CRITICALHEALS, 1);
 
-	if (m_bInfected)
+	if (IsInfected())
 	{
 		m_bInfected = false;
 

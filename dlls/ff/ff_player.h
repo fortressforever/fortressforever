@@ -418,11 +418,11 @@ public:
 	void SetSpecialInfectedDeath( void ) { m_bSpecialInfectedDeath = true; }
 private:
 	SpeedEffect m_vSpeedEffects[NUM_SPEED_EFFECTS];				// All speed effects impairing the player
-	float m_fLastHealTick;									// When the last time the medic was healed
-	float m_fLastInfectedTick;							// When the last health tick for infections was at
+	float m_fLastHealTick;							// When the last time the medic was healed
+	float m_fLastInfectedTick;						// When the last health tick for infections was at
 	// Mulch: wrapping in EHANDLE
-	EHANDLE m_hInfector;									// Who infected this player
-	bool m_bInfected;												// if this player is infected
+	EHANDLE m_hInfector;							// Who infected this player
+	bool m_bInfected;								// if this player is infected
 	bool m_bImmune;	// Mulch: immunity
 	float m_flImmuneTime; // Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;	// Mulch: team the medic who infected us was on
