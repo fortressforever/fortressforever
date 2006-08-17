@@ -1299,14 +1299,13 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	CSingleUserRecipientFilter user(this);
 	user.MakeReliable();
 
-	UserMessageBegin(user, "InfectedEffect");
-	WRITE_FLOAT(0.0f);
+	// Reset all the view effects under our controller
+	UserMessageBegin(user, "FFViewEffect");
+	WRITE_BYTE(FF_VIEWEFFECT_MAX);
 	MessageEnd();
+
 	UserMessageBegin(user, "BurningEffect");
-	WRITE_FLOAT(0.0f);
-	MessageEnd();
-	UserMessageBegin(user, "TranquilizedEffect");
-	WRITE_FLOAT(0.0f);
+	WRITE_BYTE(0.0f);
 	MessageEnd();
 
 	// reset their status effects
@@ -3643,7 +3642,8 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
-		UserMessageBegin(user, "InfectedEffect");
+		UserMessageBegin(user, "FFViewEffect");
+		WRITE_BYTE(FF_VIEWEFFECT_INFECTED);
 		WRITE_FLOAT(999.0f);
 		MessageEnd();
 	}
@@ -4603,7 +4603,8 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
-		UserMessageBegin(user, "InfectedEffect");
+		UserMessageBegin(user, "FFViewEffect");
+		WRITE_BYTE(FF_VIEWEFFECT_INFECTED);
 		WRITE_FLOAT(1.0f);
 		MessageEnd();
 

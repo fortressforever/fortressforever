@@ -189,6 +189,14 @@ CON_COMMAND(ffdev_tranqme, "tranqs you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
 	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, 15.0f);
+	
+	CSingleUserRecipientFilter user(you);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FFViewEffect");
+	WRITE_BYTE(FF_VIEWEFFECT_TRANQUILIZED);
+	WRITE_FLOAT(6.0f);
+	MessageEnd();
 }
 
 CON_COMMAND(ffdev_score, "you score")

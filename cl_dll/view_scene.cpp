@@ -46,6 +46,7 @@
 #include "ienginevgui.h"
 #include "datacache/imdlcache.h"
 #include "ScreenSpaceEffects.h"
+#include "ff_vieweffects.h"
 
 static ConVar ffdev_showrenderbounds("ffdev_showrenderbounds", "0");
 
@@ -3455,6 +3456,8 @@ void CViewRender::RenderViewEx( const CViewSetup &view, int nClearFlags, int wha
 	// Draw the 2D graphics
 	render->Push2DView( view, 0, false, NULL, m_Frustum );
 
+	ffvieweffects->Render(VIEWEFFECT_BEFOREHUD, view.width, view.height);	// |-- Mirv
+
 	Render2DEffectsPreHUD( view );
 
 	if ( whatToDraw & RENDERVIEW_DRAWHUD )
@@ -3493,6 +3496,8 @@ void CViewRender::RenderViewEx( const CViewSetup &view, int nClearFlags, int wha
 	}
 
 	Draw2DDebuggingInfo( view );
+
+	ffvieweffects->Render(VIEWEFFECT_AFTERHUD, view.width, view.height);	// |-- Mirv
 
 	m_AnglesHistory[m_AnglesHistoryCounter] = view.angles;
 	m_AnglesHistoryCounter = (m_AnglesHistoryCounter+1) & ANGLESHISTORY_MASK;

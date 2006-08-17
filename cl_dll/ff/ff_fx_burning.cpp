@@ -64,18 +64,12 @@ private:
 DECLARE_HUDELEMENT(CBurningEffect);
 DECLARE_HUD_MESSAGE(CBurningEffect, BurningEffect);
 
-// Temporarily here
-DECLARE_HUD_MESSAGE(CBurningEffect, TranquilizedEffect);
-DECLARE_HUD_MESSAGE(CBurningEffect, InfectedEffect);
-
 //-----------------------------------------------------------------------------
 // Purpose: Hook the hud message so that it exists & sort the texture
 //-----------------------------------------------------------------------------
 void CBurningEffect::Init()
 {
 	HOOK_HUD_MESSAGE(CBurningEffect, BurningEffect);
-	HOOK_HUD_MESSAGE(CBurningEffect, TranquilizedEffect);
-	HOOK_HUD_MESSAGE(CBurningEffect, InfectedEffect);
 
 	m_WhiteAdditiveMaterial.Init("vgui/white_additive", TEXTURE_GROUP_VGUI);
 }
@@ -97,14 +91,12 @@ void CBurningEffect::VidInit()
 	m_flAmount = m_flTargetAmount = 0.0f;
 }
 
-static ConVar ffdev_eye_amount("ffdev_eye_amount", "0");
-
 //-----------------------------------------------------------------------------
 // Purpose: Only draw when there's something to show
 //-----------------------------------------------------------------------------
 bool CBurningEffect::ShouldDraw()
 {
-	return (m_flAmount > 0.0f || m_flTargetAmount > 0.0f || ffdev_eye_amount.GetFloat() > 0.0f);
+	return (m_flAmount > 0.0f || m_flTargetAmount > 0.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -115,47 +107,6 @@ bool CBurningEffect::ShouldDraw()
 //-----------------------------------------------------------------------------
 void CBurningEffect::Paint()
 {
-	// This is for beefy
-	if (ffdev_eye_amount.GetFloat() > 0.0f)
-	{
-		// Draw an eyelid
-		CMaterialReference m_hMaterial("effects/eyelid.vmt", TEXTURE_GROUP_OTHER);
-
-		IMesh *pMesh = materials->GetDynamicMesh(true, NULL, NULL, m_hMaterial);
-
-		CMeshBuilder meshBuilder;
-		meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
-		int r = 255, g = 255, b = 255, a = 255;
-
-		float amount = ffdev_eye_amount.GetFloat() * sinf(gpGlobals->curtime / 2.0f);
-
-		float wide = GetWide();
-		float tall = GetTall();
-
-		meshBuilder.Color4ub(r, g, b, a);
-		meshBuilder.TexCoord2f(0, 0.5f - amount, 0.5f - amount);
-		meshBuilder.Position3f(0.0f, 0.0f, 0);
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4ub(r, g, b, 0);
-		meshBuilder.TexCoord2f(0, 0.5f + amount, 0.5f - amount);
-		meshBuilder.Position3f(wide, 0.0f, 0);
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4ub(r, g, b, 0);
-		meshBuilder.TexCoord2f(0, 0.5f + amount, 0.5f + amount);
-		meshBuilder.Position3f(wide, tall, 0);
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4ub(r, g, b, a);
-		meshBuilder.TexCoord2f(0, 0.5f - amount, 0.5f + amount);
-		meshBuilder.Position3f(0.0f, tall, 0);
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.End();
-		pMesh->Draw();
-	}
-
 	// ADDED WHILE EYE THING IS HERE
 	if (m_flAmount <= 0.0f || m_flTargetAmount <= 0.0f)
 		return;
@@ -245,42 +196,4 @@ void CBurningEffect::MsgFunc_BurningEffect(bf_read &msg)
 
 	if (m_flTargetAmount > 255.0f)
 		m_flTargetAmount = 255.0f;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: [TEMP] Call the test infection effect
-//-----------------------------------------------------------------------------
-void CBurningEffect::MsgFunc_InfectedEffect(bf_read &msg)
-{
-	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 70)
-	{
-		Warning("*** FF Error *** Not yet implemented for < dx7!\n");
-	}
-	else
-	{
-		KeyValues *pKeys = new KeyValues("keys");
-		pKeys->SetFloat("duration", msg.ReadFloat());
-
-		g_pScreenSpaceEffects->SetScreenSpaceEffectParams("infectedeffect", pKeys);
-		g_pScreenSpaceEffects->EnableScreenSpaceEffect("infectedeffect");
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: [TEMP] Call the test tranquilized effect
-//-----------------------------------------------------------------------------
-void CBurningEffect::MsgFunc_TranquilizedEffect(bf_read &msg)
-{
-	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 70)
-	{
-		Warning("*** FF Error *** Not yet implemented for < dx7!\n");
-	}
-	else
-	{
-		KeyValues *pKeys = new KeyValues("keys");
-		pKeys->SetFloat("duration", msg.ReadFloat());
-
-		g_pScreenSpaceEffects->SetScreenSpaceEffectParams("tranquilizedeffect", pKeys);
-		g_pScreenSpaceEffects->EnableScreenSpaceEffect("tranquilizedeffect");
-	}
 }

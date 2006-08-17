@@ -148,7 +148,8 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 				CSingleUserRecipientFilter user(pPlayer);
 				user.MakeReliable();
 
-				UserMessageBegin(user, "TranquilizedEffect");
+				UserMessageBegin(user, "FFViewEffect");
+				WRITE_BYTE(FF_VIEWEFFECT_TRANQUILIZED);
 				WRITE_FLOAT(flDuration);
 				MessageEnd();
 			}
