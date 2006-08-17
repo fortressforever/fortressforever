@@ -2072,14 +2072,21 @@ void CFFPlayer::RemoveBuildables( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::RemoveProjectiles( void )
 {
+	CBaseEntity *pTemp = NULL;
 	CBaseEntity *pEnt = gEntList.FindEntityByOwner(NULL, this);
 
 	while (pEnt != NULL)
 	{
 		if (dynamic_cast<CFFProjectileBase *>( pEnt ) != NULL)
+		{
+			pTemp = gEntList.FindEntityByOwner( pEnt, this );
 			UTIL_Remove(pEnt);
-
-		pEnt = gEntList.FindEntityByOwner(pEnt, this);
+			pEnt = pTemp;
+		}
+		else
+		{
+			pEnt = gEntList.FindEntityByOwner(pEnt, this);
+		}		
 	}
 }
 
@@ -2088,14 +2095,21 @@ void CFFPlayer::RemoveProjectiles( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::RemoveBackpacks( void )
 {
+	CBaseEntity *pTemp = NULL;
 	CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_BACKPACK );
 
 	while( pEntity )
 	{
 		if( ToFFPlayer( pEntity->GetOwnerEntity() ) == this )
+		{
+			pTemp = gEntList.FindEntityByClassT( pEntity, CLASS_BACKPACK );
 			UTIL_Remove( pEntity );
-
-		pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_BACKPACK );
+			pEntity = pTemp;
+		}
+		else
+		{
+			pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_BACKPACK );
+		}
 	}
 }
 
