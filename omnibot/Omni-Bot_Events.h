@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-08-15 18:21:42 -0700 (Tue, 15 Aug 2006) $
+// $LastChangedRevision: 1245 $
 //
 // about: Generic Bot Events
 //
@@ -35,6 +35,7 @@ typedef enum
 		GAME_ID_BOTDISCONNECTED,
 		GAME_ID_CLIENTCONNECTED,
 		GAME_ID_CLIENTDISCONNECTED,
+		GAME_ID_START_TRAINING,
 	GAME_ID_LAST,
 
 	EVENT_ID_FIRST,

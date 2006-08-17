@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-08-15 18:21:42 -0700 (Tue, 15 Aug 2006) $
+// $LastChangedRevision: 1245 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,6 +257,43 @@ typedef struct AABB_t
 		{
 			m_Mins[i] *= _scale;
 			m_Maxs[i] *= _scale;
+		}
+	}
+
+	void GetBottomCorners(float _bl[3], float _tl[3], float _tr[3], float _br[3])
+	{
+		_bl[0] = m_Mins[0];
+		_bl[1] = m_Mins[1];
+		_bl[2] = m_Mins[2];
+
+		_tl[0] = m_Mins[0];
+		_tl[1] = m_Maxs[1];
+		_tl[2] = m_Mins[2];
+
+		_tr[0] = m_Maxs[0];
+		_tr[1] = m_Maxs[1];
+		_tr[2] = m_Mins[2];
+
+		_br[0] = m_Maxs[0];
+		_br[1] = m_Mins[1];
+		_br[2] = m_Mins[2];
+	}
+
+	void GetTopCorners(float _bl[3], float _tl[3], float _tr[3], float _br[3])
+	{
+		GetBottomCorners(_bl, _tl, _tr, _br);
+		_bl[2] = m_Maxs[2];
+		_tl[2] = m_Maxs[2];
+		_tr[2] = m_Maxs[2];
+		_br[2] = m_Maxs[2];
+	}
+
+	void Translate(const float _pos[3])
+	{
+		for(int i = 0; i < 3; ++i)
+		{
+			m_Mins[i] += _pos[i];
+			m_Maxs[i] += _pos[i];
 		}
 	}
 
