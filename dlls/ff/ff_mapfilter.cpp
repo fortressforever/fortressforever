@@ -22,12 +22,18 @@
 // Class CFFMapFilter
 //
 //=============================================================================
+const char *g_MapFilterKeepList[] =
+{
+	"CFFPlayer",
+	NULL
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CFFMapFilter::CFFMapFilter( void )
 {
+	Initialize();
 }
 
 //-----------------------------------------------------------------------------
@@ -62,4 +68,17 @@ CBaseEntity *CFFMapFilter::CreateNextEntity( const char *pszClassname )
 void CFFMapFilter::AddKeep( const char *pszClassname )
 {
 	m_vKeepList.Insert( pszClassname );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Loads all the entities we want to keep
+//-----------------------------------------------------------------------------
+void CFFMapFilter::Initialize( void )
+{
+	int iCount = 0;
+	while( g_MapFilterKeepList[ iCount ] )
+	{
+		AddKeep( g_MapFilterKeepList[ iCount ] );
+		iCount++;
+	}
 }

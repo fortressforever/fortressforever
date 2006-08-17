@@ -24,6 +24,7 @@
 #else
 	#include "player.h"
 	#include "ff_buildableobjects_shared.h"
+	#include "ff_mapfilter.h"
 #endif
 
 
@@ -129,6 +130,7 @@ public:
 	virtual bool	IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 
 private:
+	CFFMapFilter	m_hMapFilter;
 
 #endif
 

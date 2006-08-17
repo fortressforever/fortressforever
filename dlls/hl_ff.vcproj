@@ -3456,6 +3456,12 @@
 				RelativePath=".\ff\ff_lualib_weapons.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_mapfilter.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_mapfilter.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_minecart.cpp">
 			</File>
 			<File
