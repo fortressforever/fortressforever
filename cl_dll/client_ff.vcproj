@@ -3567,6 +3567,12 @@
 				RelativePath=".\ff\ff_teamcolorproxy.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_vieweffects.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_vieweffects.h">
+			</File>
+			<File
 				RelativePath=".\ff\ProxyAmmo.cpp">
 			</File>
 			<File

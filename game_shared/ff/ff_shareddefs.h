@@ -34,6 +34,14 @@ enum FFStatusIconTypes
 	FF_STATUSICON_MAX
 };
 
+enum FF_View_Effects_t
+{
+	FF_VIEWEFFECT_BURNING,
+	FF_VIEWEFFECT_TRANQUILIZED,
+	FF_VIEWEFFECT_INFECTED,
+	FF_VIEWEFFECT_MAX
+};
+
 // LUA Effect Flags
 // Some of these just map to speed effect values
 // but the mapping is through code and not actual

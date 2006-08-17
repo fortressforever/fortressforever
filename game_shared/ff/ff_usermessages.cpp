@@ -75,7 +75,7 @@ void RegisterUserMessages()
 
 	// Todo: Combine into one
 	usermessages->Register("BurningEffect", -1);
-	usermessages->Register("TranquilizedEffect", -1);
-	usermessages->Register("InfectedEffect", -1);
+
+	usermessages->Register("FFViewEffect", -1);
 }
 

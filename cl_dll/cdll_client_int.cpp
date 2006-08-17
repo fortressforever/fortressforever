@@ -84,6 +84,7 @@
 #include "scenefilecache/ISceneFileCache.h"
 #include "tier2/tier2.h"
 #include "avi/iavi.h"
+#include "ff_vieweffects.h"
 
 // BEG: Added by Mulchman for team menu at level start up
 #include <cl_dll/iviewport.h>
@@ -715,6 +716,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	view->Init();
 	vieweffects->Init();
+	ffvieweffects->Init();	// |-- Mirv
 
 	C_BaseTempEntity::PrecacheTempEnts();
 
@@ -1061,6 +1063,8 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	input->LevelInit();
 
 	vieweffects->LevelInit();
+
+	ffvieweffects->LevelInit();	// |-- Mirv
 	
 	// --> Mirv: Initialise hud hints & clear effect data
 	HudHintLoad(pMapName);

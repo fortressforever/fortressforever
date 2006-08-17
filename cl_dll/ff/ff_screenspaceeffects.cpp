@@ -27,13 +27,14 @@
 #include "ScreenSpaceEffects.h"
 
 //-----------------------------------------------------------------------------
-// Purpose: A tranquilised effect
+// Purpose: Okay because a lot of effects will be similar, this is now going
+//			to act as a base
 //-----------------------------------------------------------------------------
-class CTranquilizedEffect : public IScreenSpaceEffect
+class CBaseEffect : public IScreenSpaceEffect
 {
 public:
-	CTranquilizedEffect();
-	~CTranquilizedEffect();
+	CBaseEffect();
+	~CBaseEffect();
 
 	void Init();
 	void Shutdown();
@@ -45,9 +46,9 @@ public:
 	void Enable(bool bEnable);
 	bool IsEnabled();
 
-	virtual const char *pszEffect() { return "effects/tranquilized"; }
-
-private:
+protected:
+	// Just make sure nobody can instantiate this by itself
+	virtual const char *pszEffect() = 0;
 
 	bool				m_bEnable;
 
@@ -55,12 +56,21 @@ private:
 
 	float				m_flStart;
 	float				m_flDuration;
+	float				m_flDelay;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: A tranquilized class
+//-----------------------------------------------------------------------------
+class CTranquilizedEffect : public CBaseEffect
+{
+	virtual const char *pszEffect() { return "effects/tranquilized"; }
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: An infected effect
 //-----------------------------------------------------------------------------
-class CInfectedEffect : public CTranquilizedEffect
+class CInfectedEffect : public CBaseEffect
 {
 	virtual const char *pszEffect() { return "effects/infected"; }
 };
@@ -71,7 +81,7 @@ ADD_SCREENSPACE_EFFECT(CInfectedEffect, infectedeffect)
 //-----------------------------------------------------------------------------
 // Purpose CTranquilizedEffect constructor
 //-----------------------------------------------------------------------------
-CTranquilizedEffect::CTranquilizedEffect()
+CBaseEffect::CBaseEffect()
 {
 	m_flStart = m_flDuration = 0.0f;
 }
@@ -80,7 +90,7 @@ CTranquilizedEffect::CTranquilizedEffect()
 //------------------------------------------------------------------------------
 // Purpose CTranquilizedEffect destructor
 //------------------------------------------------------------------------------
-CTranquilizedEffect::~CTranquilizedEffect()
+CBaseEffect::~CBaseEffect()
 {
 }
 
@@ -88,7 +98,7 @@ CTranquilizedEffect::~CTranquilizedEffect()
 //------------------------------------------------------------------------------
 // Purpose: Get the correct texture
 //------------------------------------------------------------------------------
-void CTranquilizedEffect::Init()
+void CBaseEffect::Init()
 {
 	m_Material.Init(pszEffect(), TEXTURE_GROUP_OTHER);
 
@@ -99,7 +109,7 @@ void CTranquilizedEffect::Init()
 //------------------------------------------------------------------------------
 // Purpose: Shut it all down!
 //------------------------------------------------------------------------------
-void CTranquilizedEffect::Shutdown()
+void CBaseEffect::Shutdown()
 {
 	m_Material.Shutdown();
 }
@@ -107,7 +117,7 @@ void CTranquilizedEffect::Shutdown()
 //------------------------------------------------------------------------------
 // Purpose: Start the thing going
 //------------------------------------------------------------------------------
-void CTranquilizedEffect::Enable(bool bEnable)
+void CBaseEffect::Enable(bool bEnable)
 {
 	// This shouldn't happen because earlier a different render route should
 	// have been taken
@@ -123,26 +133,27 @@ void CTranquilizedEffect::Enable(bool bEnable)
 
 	if (m_bEnable)
 	{
-		m_flStart = gpGlobals->curtime;
+		m_flStart = gpGlobals->curtime + m_flDelay;
 	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTranquilizedEffect::IsEnabled()
+bool CBaseEffect::IsEnabled()
 {
-	return (m_flStart + m_flDuration > gpGlobals->curtime);
+	return (m_flStart < gpGlobals->curtime && m_flStart + m_flDuration > gpGlobals->curtime);
 }
 
 //------------------------------------------------------------------------------
 // Purpose: Get the duration
 //------------------------------------------------------------------------------
-void CTranquilizedEffect::SetParameters(KeyValues *params)
+void CBaseEffect::SetParameters(KeyValues *params)
 {
 	if (params->GetDataType("duration") == KeyValues::TYPE_FLOAT)
 	{
 		m_flDuration = params->GetFloat("duration");
+		m_flDelay = params->GetFloat("delay");
 	}
 }
 
@@ -152,8 +163,12 @@ void CTranquilizedEffect::SetParameters(KeyValues *params)
 //			and then take the before-buffer and re-draw that back on with
 //			alpha set.
 //------------------------------------------------------------------------------
-void CTranquilizedEffect::Render(int x, int y, int w, int h)
+void CBaseEffect::Render(int x, int y, int w, int h)
 {
+	// Don't run yet
+	if (m_flStart > gpGlobals->curtime)
+		return;
+
 	float flElapsed = gpGlobals->curtime - m_flStart;
 
 	if (flElapsed > m_flDuration)
