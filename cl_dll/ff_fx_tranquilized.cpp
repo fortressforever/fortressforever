@@ -22,9 +22,13 @@
 #include "materialsystem/IMaterialSystemHardwareConfig.h"
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/IColorCorrection.h"
+#include "c_baseplayer.h"
 
 #include "ScreenSpaceEffects.h"
 
+//-----------------------------------------------------------------------------
+// Purpose: A tranquilised effect
+//-----------------------------------------------------------------------------
 class CTranquilizedEffect : public IScreenSpaceEffect
 {
 public:
@@ -49,12 +53,13 @@ private:
 
 	CMaterialReference	m_Material;
 
-	bool				m_bSplitScreen;
-
 	float				m_flStart;
 	float				m_flDuration;
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: An infected effect
+//-----------------------------------------------------------------------------
 class CInfectedEffect : public CTranquilizedEffect
 {
 	virtual const char *pszEffect() { return "effects/infected"; }
@@ -68,7 +73,6 @@ ADD_SCREENSPACE_EFFECT(CInfectedEffect, infectedeffect)
 //-----------------------------------------------------------------------------
 CTranquilizedEffect::CTranquilizedEffect()
 {
-	m_bSplitScreen = false;
 	m_flStart = m_flDuration = 0.0f;
 }
 
@@ -212,5 +216,154 @@ void CTranquilizedEffect::Render(int x, int y, int w, int h)
 		materials->DrawScreenSpaceRectangle(pMatScreen, x, y, w, h, 
 			actualRect.x, actualRect.y, actualRect.x+actualRect.width-1, actualRect.y+actualRect.height-1, 
 			pTexture->GetActualWidth(), pTexture->GetActualHeight());
+	}
+}
+
+static ConVar ffdev_blur_addalpha("ffdev_blur_addalpha", "0.2");
+static ConVar ffdev_blur_adddelay("ffdev_blur_adddelay", "0.01");
+static ConVar ffdev_blur_drawalpha("ffdev_blur_drawalpha", "0.6");
+
+static ConVar ffdev_blur_minspeed("ffdev_blur_minspeed", "1000");
+static ConVar ffdev_blur_rangespeed("ffdev_blur_rangespeed", "600");
+
+//-----------------------------------------------------------------------------
+// Purpose: A motion blur for concs
+//-----------------------------------------------------------------------------
+class CMotionBlur : public IScreenSpaceEffect
+{
+public:
+	CMotionBlur();
+	~CMotionBlur() {};
+
+	void Init();
+	void Shutdown();
+
+	void SetParameters(KeyValues *params) {}
+
+	void Render(int x, int y, int w, int h);
+
+	void Enable(bool bEnable) {};
+	bool IsEnabled() { return true; }
+
+private:
+
+	bool				m_bEnable;
+	float				m_flNextSampleTime;
+
+	CTextureReference	m_BlurImage;		
+};
+
+ADD_SCREENSPACE_EFFECT(CMotionBlur, motionblur)
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CMotionBlur::CMotionBlur()
+{
+	m_flNextSampleTime = 0.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a buffer in which to store our samples
+//-----------------------------------------------------------------------------
+void CMotionBlur::Init()
+{
+	m_BlurImage.InitRenderTarget(256, 256, RT_SIZE_FULL_FRAME_BUFFER,
+		IMAGE_FORMAT_ARGB8888, MATERIAL_RT_DEPTH_NONE, false);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CMotionBlur::Shutdown()
+{
+	m_BlurImage.Shutdown();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Do the blurring effect based on player speed
+//-----------------------------------------------------------------------------
+void CMotionBlur::Render(int x, int y, int w, int h)
+{
+	// First of all lets work out how much to do this
+	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+
+	// Must be valid, on a team and not no-clipping
+	if (!pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
+		return;
+
+	Vector vecVelocity = pPlayer->GetAbsVelocity();
+	float flSpeed = vecVelocity.LengthSqr();
+
+	// Too slow for any blur effect
+	if (flSpeed < ffdev_blur_minspeed.GetFloat() * ffdev_blur_minspeed.GetFloat())
+	{
+		m_flNextSampleTime = 0.0f;
+		return;
+	}
+
+	flSpeed = FastSqrt(flSpeed);
+	flSpeed -= ffdev_blur_minspeed.GetFloat();
+	flSpeed /= ffdev_blur_rangespeed.GetFloat();
+
+	flSpeed = clamp(flSpeed, 0.0f, 1.0f);
+
+	Assert(flSpeed > 0.0f);
+
+	IMaterialVar *pVar = NULL;
+	bool	bFound;
+	IMaterial *pMatScreen = materials->FindMaterial("frontbuffer", TEXTURE_GROUP_OTHER, true);
+	ITexture *pOriginalRenderTarget = materials->GetRenderTarget();
+	ITexture *pOriginalTexture = NULL;
+
+	// Time to take a sample for our motionblur buffer
+	if(gpGlobals->curtime >= m_flNextSampleTime) 
+	{
+		Rect_t actualRect;
+
+		// Update the full frame buffer texture ready for use
+		UpdateScreenEffectTexture(0, x, y, w, h, false, &actualRect);
+
+		pVar = pMatScreen->FindVar("$alpha", &bFound, false);
+
+		if (pVar)
+		{
+			pVar->SetFloatValue((m_flNextSampleTime == 0.0f ? 1.0f : flSpeed * ffdev_blur_addalpha.GetFloat()));
+		}
+
+		// Draw onto our buffer
+		materials->SetRenderTarget(m_BlurImage);
+		materials->DrawScreenSpaceQuad(pMatScreen);
+
+		// Next sample time
+		m_flNextSampleTime = gpGlobals->curtime + /*flSpeed **/ ffdev_blur_adddelay.GetFloat();
+	}
+
+	// Set the alpha for the screen
+	pVar = pMatScreen->FindVar( "$alpha", &bFound, false );
+
+	if (pVar)
+	{
+		pVar->SetFloatValue(flSpeed * ffdev_blur_drawalpha.GetFloat());
+	}
+
+	// Set the texture to our buffer
+	pVar = pMatScreen->FindVar("$basetexture", &bFound, false);
+
+	if (pVar)
+	{
+		pOriginalTexture = pVar->GetTextureValue();
+		pVar->SetTextureValue(m_BlurImage);
+	}
+
+	// Now render back to our actual frontbuffer again
+	// We're now drawing 
+	materials->SetRenderTarget(pOriginalRenderTarget);
+	materials->DrawScreenSpaceQuad(pMatScreen);
+
+	// Set back to original place
+	if (pVar)
+	{
+		pVar->SetTextureValue(pOriginalTexture);
 	}
 }
