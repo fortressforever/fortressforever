@@ -97,12 +97,14 @@ void CBurningEffect::VidInit()
 	m_flAmount = m_flTargetAmount = 0.0f;
 }
 
+static ConVar ffdev_eye_amount("ffdev_eye_amount", "0");
+
 //-----------------------------------------------------------------------------
 // Purpose: Only draw when there's something to show
 //-----------------------------------------------------------------------------
 bool CBurningEffect::ShouldDraw()
 {
-	return (m_flAmount > 0.0f || m_flTargetAmount > 0.0f);
+	return (m_flAmount > 0.0f || m_flTargetAmount > 0.0f || ffdev_eye_amount.GetFloat() > 0.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -113,6 +115,51 @@ bool CBurningEffect::ShouldDraw()
 //-----------------------------------------------------------------------------
 void CBurningEffect::Paint()
 {
+	// This is for beefy
+	if (ffdev_eye_amount.GetFloat() > 0.0f)
+	{
+		// Draw an eyelid
+		CMaterialReference m_hMaterial("effects/eyelid.vmt", TEXTURE_GROUP_OTHER);
+
+		IMesh *pMesh = materials->GetDynamicMesh(true, NULL, NULL, m_hMaterial);
+
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
+		int r = 255, g = 255, b = 255, a = 255;
+
+		float amount = ffdev_eye_amount.GetFloat() * sinf(gpGlobals->curtime / 2.0f);
+
+		float wide = GetWide();
+		float tall = GetTall();
+
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 0.5f - amount, 0.5f - amount);
+		meshBuilder.Position3f(0.0f, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 0.5f + amount, 0.5f - amount);
+		meshBuilder.Position3f(wide, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 0.5f + amount, 0.5f + amount);
+		meshBuilder.Position3f(wide, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 0.5f - amount, 0.5f + amount);
+		meshBuilder.Position3f(0.0f, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.End();
+		pMesh->Draw();
+	}
+
+	// ADDED WHILE EYE THING IS HERE
+	if (m_flAmount <= 0.0f || m_flTargetAmount <= 0.0f)
+		return;
+
 	// Reduce the target amount gently
 	m_flTargetAmount -= 0.5f;
 
