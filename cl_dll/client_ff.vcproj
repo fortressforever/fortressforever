@@ -2511,10 +2511,10 @@
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -2757,10 +2757,10 @@
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
@@ -3381,7 +3381,7 @@
 				RelativePath=".\ff\clientmode_ff.h">
 			</File>
 			<File
-				RelativePath=".\ff_fx_burning.cpp">
+				RelativePath=".\ff\ff_fx_burning.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_fx_conc_emitter.cpp">
@@ -3448,9 +3448,6 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_fx_tracer.cpp">
-			</File>
-			<File
-				RelativePath=".\ff_fx_tranquilized.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_fx_weaponfx.cpp">
@@ -3562,6 +3559,9 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_prediction.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_screenspaceeffects.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_teamcolorproxy.cpp">
