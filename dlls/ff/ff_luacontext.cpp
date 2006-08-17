@@ -156,7 +156,8 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 
 		if (!strlen(STRING(pEntity->GetEntityName())))
 		{
-			Warning( "[entsys] ent did not have an entity name!\n" );
+			// REMOVED: Really annoying to see this
+			//Warning( "[entsys] ent did not have an entity name!\n" );
 			return false;
 		}
 
