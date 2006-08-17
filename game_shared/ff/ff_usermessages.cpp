@@ -73,6 +73,9 @@ void RegisterUserMessages()
 	// used to send a status icon
 	usermessages->Register( "StatusIconUpdate", -1 );
 
+	// Todo: Combine into one
 	usermessages->Register("BurningEffect", -1);
+	usermessages->Register("TranquilizedEffect", -1);
+	usermessages->Register("InfectedEffect", -1);
 }
 

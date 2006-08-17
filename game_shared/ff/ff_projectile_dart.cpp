@@ -142,7 +142,15 @@ void CFFProjectileDart::DartTouch(CBaseEntity *pOther)
 				if( pPlayer->LuaRunEffect( LUA_EF_TRANQ, GetOwnerEntity(), &flDuration, &flIconDuration, &flSpeed ) )
 				{
 					pPlayer->AddSpeedEffect( SE_TRANQ, flDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration );
-				}				
+				}
+
+				// And now.. an effect
+				CSingleUserRecipientFilter user(pPlayer);
+				user.MakeReliable();
+
+				UserMessageBegin(user, "TranquilizedEffect");
+				WRITE_FLOAT(flDuration);
+				MessageEnd();
 			}
 		}
 #endif
