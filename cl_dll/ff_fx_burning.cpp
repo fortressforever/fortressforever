@@ -26,6 +26,10 @@
 #include "ieffects.h"
 #include "hudelement.h"
 #include "ClientEffectPrecacheSystem.h"
+#include "materialsystem/IMaterialSystemHardwareConfig.h"
+#include "ScreenSpaceEffects.h"
+
+	// There's a few too many .h files here!
 
 class CBurningEffect : public CHudElement, public vgui::Panel
 {
@@ -45,8 +49,11 @@ class CBurningEffect : public CHudElement, public vgui::Panel
 	virtual void Init();
 	virtual void VidInit();
 	virtual bool ShouldDraw();
-	virtual void MsgFunc_BurningEffect(bf_read &msg);
 	virtual void Paint();
+
+	void MsgFunc_BurningEffect(bf_read &msg);
+	void MsgFunc_InfectedEffect(bf_read &msg);
+	void MsgFunc_TranquilizedEffect(bf_read &msg);
 
 private:
 
@@ -57,12 +64,18 @@ private:
 DECLARE_HUDELEMENT(CBurningEffect);
 DECLARE_HUD_MESSAGE(CBurningEffect, BurningEffect);
 
+// Temporarily here
+DECLARE_HUD_MESSAGE(CBurningEffect, TranquilizedEffect);
+DECLARE_HUD_MESSAGE(CBurningEffect, InfectedEffect);
+
 //-----------------------------------------------------------------------------
 // Purpose: Hook the hud message so that it exists & sort the texture
 //-----------------------------------------------------------------------------
 void CBurningEffect::Init()
 {
 	HOOK_HUD_MESSAGE(CBurningEffect, BurningEffect);
+	HOOK_HUD_MESSAGE(CBurningEffect, TranquilizedEffect);
+	HOOK_HUD_MESSAGE(CBurningEffect, InfectedEffect);
 
 	m_WhiteAdditiveMaterial.Init("vgui/white_additive", TEXTURE_GROUP_VGUI);
 }
@@ -90,17 +103,6 @@ void CBurningEffect::VidInit()
 bool CBurningEffect::ShouldDraw()
 {
 	return (m_flAmount > 0.0f || m_flTargetAmount > 0.0f);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Add the new burning effect amount
-//-----------------------------------------------------------------------------
-void CBurningEffect::MsgFunc_BurningEffect(bf_read &msg)
-{
-	m_flTargetAmount += (float) msg.ReadByte();
-
-	if (m_flTargetAmount > 255.0f)
-		m_flTargetAmount = 255.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -185,4 +187,53 @@ void CBurningEffect::Paint()
 
 	meshBuilder.End();
 	pMesh->Draw();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add the new burning effect amount
+//-----------------------------------------------------------------------------
+void CBurningEffect::MsgFunc_BurningEffect(bf_read &msg)
+{
+	m_flTargetAmount += (float) msg.ReadByte();
+
+	if (m_flTargetAmount > 255.0f)
+		m_flTargetAmount = 255.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: [TEMP] Call the test infection effect
+//-----------------------------------------------------------------------------
+void CBurningEffect::MsgFunc_InfectedEffect(bf_read &msg)
+{
+	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 70)
+	{
+		Warning("*** FF Error *** Not yet implemented for < dx7!\n");
+	}
+	else
+	{
+		KeyValues *pKeys = new KeyValues("keys");
+		pKeys->SetFloat("duration", msg.ReadFloat());
+
+		g_pScreenSpaceEffects->SetScreenSpaceEffectParams("infectedeffect", pKeys);
+		g_pScreenSpaceEffects->EnableScreenSpaceEffect("infectedeffect");
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: [TEMP] Call the test tranquilized effect
+//-----------------------------------------------------------------------------
+void CBurningEffect::MsgFunc_TranquilizedEffect(bf_read &msg)
+{
+	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 70)
+	{
+		Warning("*** FF Error *** Not yet implemented for < dx7!\n");
+	}
+	else
+	{
+		KeyValues *pKeys = new KeyValues("keys");
+		pKeys->SetFloat("duration", msg.ReadFloat());
+
+		g_pScreenSpaceEffects->SetScreenSpaceEffectParams("tranquilizedeffect", pKeys);
+		g_pScreenSpaceEffects->EnableScreenSpaceEffect("tranquilizedeffect");
+	}
 }

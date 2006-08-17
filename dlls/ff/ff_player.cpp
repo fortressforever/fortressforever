@@ -1295,6 +1295,20 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	ClearSpeedEffects();
 	RemoveFlag(FL_FROZEN);
 
+	// a bunch of these, will set up a better way of doing this soon
+	CSingleUserRecipientFilter user(this);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "InfectedEffect");
+	WRITE_FLOAT(0.0f);
+	MessageEnd();
+	UserMessageBegin(user, "BurningEffect");
+	WRITE_FLOAT(0.0f);
+	MessageEnd();
+	UserMessageBegin(user, "TranquilizedEffect");
+	WRITE_FLOAT(0.0f);
+	MessageEnd();
+
 	// reset their status effects
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
@@ -3610,6 +3624,14 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
 
 		g_StatsLog.AddToCount(pInfector, STAT_INFECTIONS, 1);
+
+		// And now.. an effect
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "InfectedEffect");
+		WRITE_FLOAT(999.0f);
+		MessageEnd();
 	}
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
@@ -4562,6 +4584,14 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 	if (IsInfected())
 	{
 		m_bInfected = false;
+
+		// Icon thing, give it just long enough to fade
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+
+		UserMessageBegin(user, "InfectedEffect");
+		WRITE_FLOAT(1.0f);
+		MessageEnd();
 
 		// [TODO] A better sound
 		EmitSound( "medkit.hit" );

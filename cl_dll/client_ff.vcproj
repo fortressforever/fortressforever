@@ -3450,6 +3450,9 @@
 				RelativePath=".\ff\ff_fx_tracer.cpp">
 			</File>
 			<File
+				RelativePath=".\ff_fx_tranquilized.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_fx_weaponfx.cpp">
 			</File>
 			<File
