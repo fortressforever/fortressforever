@@ -53,6 +53,9 @@ public:
 	void AddKeep( const char *pszClassname );
 
 private:
+	void Initialize( void );
+
+private:
 	CUtlSortVector< const char *, CFFMapFilterLess > m_vKeepList;
 
 };
