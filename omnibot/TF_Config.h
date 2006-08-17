@@ -429,6 +429,7 @@ typedef enum eTF_GameMessage
 	TF_MSG_LOCKPOSITION,
 	TF_MSG_HUDHINT,
 	TF_MSG_HUDMENU,
+	TF_MSG_HUDTEXT,
 
 	TF_MSG_END
 } TF_GameMessage;

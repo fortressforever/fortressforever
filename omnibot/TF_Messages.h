@@ -100,7 +100,7 @@ typedef struct
 	{
 		GuiAlert,
 		GuiMenu,
-		GuiTextBox
+		GuiTextBox,
 	};
 	GameId		m_TargetPlayer;
 	GuiType		m_MenuType;
@@ -113,6 +113,21 @@ typedef struct
 	float		m_TimeOut;
 	obColor		m_Color;
 } TF_HudMenu;
+
+// struct: TF_HudText
+//		m_TargetPlayer - Target player entity for the message.
+//		m_Message - Text to display.
+typedef struct  
+{
+	enum MsgType
+	{
+		MsgConsole,
+		MsgHudCenter,
+	};
+	GameId		m_TargetPlayer;
+	MsgType		m_MessageType;
+	char		m_Message[512];
+} TF_HudText;
 
 // struct: TF_LockPosition
 //		m_TargetPlayer - Target player entity for the hint.

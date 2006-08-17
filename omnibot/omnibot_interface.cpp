@@ -565,14 +565,14 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static void obPrintScreenText(const int _client, const float _pos[3], const obColor &_color, const char *_msg)
+	static void obPrintScreenText(const int _client, const float _pos[3], float _duration, const obColor &_color, const char *_msg)
 	{
 		if(_msg)
 		{
 			if(_pos)
 			{
 				Vector vPosition(_pos[0],_pos[1],_pos[2]);		
-				debugoverlay->AddTextOverlay(vPosition, 2.0f, _msg);
+				debugoverlay->AddTextOverlay(vPosition, _duration, _msg);
 			}
 			else
 			{
@@ -586,10 +586,10 @@ namespace Omnibot
 				int iLength = Q_strlen(buffer);
 				for(int i = 0; i < iLength; ++i)
 				{
-					if(buffer[i] == '\n')
+					if(buffer[i] == '\n' || buffer[i+1] == '\0')
 					{
 						buffer[i++] = 0;
-						debugoverlay->AddScreenTextOverlay(0.5f, fVertical, 0.1,
+						debugoverlay->AddScreenTextOverlay(0.5f, fVertical, _duration,
 							_color.r(), _color.g(), _color.b(), _color.a(), pbufferstart);
 						fVertical += 0.02f;
 						pbufferstart = &buffer[i];
@@ -1856,11 +1856,14 @@ namespace Omnibot
 
 					for(int i = 0; i < 10; ++i)
 					{
-						char num[10];
-						Q_snprintf( num, sizeof(num), "%i", i );
-						KeyValues *item1 = kv->FindKey( num, true );
-						item1->SetString( "msg", pMsg->m_Option[i] );
-						item1->SetString( "command", pMsg->m_Command[i] );
+						if(pMsg->m_Option[i][0])
+						{
+							char num[10];
+							Q_snprintf( num, sizeof(num), "%i", i );
+							KeyValues *item1 = kv->FindKey( num, true );
+							item1->SetString( "msg", pMsg->m_Option[i] );
+							item1->SetString( "command", pMsg->m_Command[i] );
+						}
 					}
 
 					DIALOG_TYPE type = DIALOG_MSG;
@@ -1878,6 +1881,31 @@ namespace Omnibot
 					}					
 					serverpluginhelpers->CreateMessage( pPlayer->edict(), type, kv, &g_ServerPlugin );
 					kv->deleteThis();
+				}
+				break;
+			}
+		case TF_MSG_HUDTEXT:
+			{
+				TF_HudText *pMsg = _data.Get<TF_HudText>();
+				pEnt = CBaseEntity::Instance( pMsg->m_TargetPlayer );
+				pPlayer = pEnt ? pEnt->MyCharacterPointer() : 0;
+				if(pMsg && pMsg->m_Message[0])
+				{
+					int iDest = HUD_PRINTCONSOLE;
+					switch(pMsg->m_MessageType)
+					{
+					case TF_HudText::MsgConsole:
+						{
+							iDest = HUD_PRINTCONSOLE;
+							break;
+						}
+					case TF_HudText::MsgHudCenter:
+						{
+							iDest = HUD_PRINTCENTER;
+							break;
+						}
+					}
+					ClientPrint(pPlayer, iDest, pMsg->m_Message);
 				}
 				break;
 			}
@@ -2124,7 +2152,6 @@ namespace Omnibot
 						{
 							g_DebugLines[i].type = LINE_NONE;
 						}
-
 						break;
 					}
 				case LINE_PATH:

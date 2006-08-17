@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-08-11 09:08:58 -0700 (Fri, 11 Aug 2006) $
+// $LastChangedRevision: 1243 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -268,7 +268,7 @@ typedef struct
 
 	// Function: pfnPrintScreenMessage
 	//		This function should print a message the the game screen if possible
-	void (*pfnPrintScreenText)(const int _client, const float _pos[3], const obColor &_color, const char *_msg);
+	void (*pfnPrintScreenText)(const int _client, const float _pos[3], float _duration, const obColor &_color, const char *_msg);
 
 	// Function: pfnGetMapName
 	//		This function should give access to the name of the currently loaded map
