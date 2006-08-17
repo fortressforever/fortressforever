@@ -1,9 +1,9 @@
 /********************************************************************
 	created:	2006/08/16
 	created:	16:8:2006   18:35
-	filename: 	f:\ff-svn\code\trunk\cl_dll\ff_fx_tranquilized.cpp
-	file path:	f:\ff-svn\code\trunk\cl_dll
-	file base:	ff_fx_tranquilized
+	filename: 	f:\ff-svn\code\trunk\cl_dll\ff\ff_screenspaceeffects.cpp
+	file path:	f:\ff-svn\code\trunk\cl_dll\ff
+	file base:	ff_screenspaceeffects
 	file ext:	cpp
 	author:		Gavin "Mirvin_Monkey" Bramhill
 	
