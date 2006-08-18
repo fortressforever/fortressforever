@@ -234,10 +234,6 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 	}
 }
 
-static ConVar ffdev_blur_addalpha("ffdev_blur_addalpha", "0.2");
-static ConVar ffdev_blur_adddelay("ffdev_blur_adddelay", "0.01");
-static ConVar ffdev_blur_drawalpha("ffdev_blur_drawalpha", "0.6");
-
 static ConVar ffdev_blur_minspeed("ffdev_blur_minspeed", "1000");
 static ConVar ffdev_blur_rangespeed("ffdev_blur_rangespeed", "600");
 
@@ -343,7 +339,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 
 		if (pVar)
 		{
-			pVar->SetFloatValue((m_flNextSampleTime == 0.0f ? 1.0f : flSpeed * ffdev_blur_addalpha.GetFloat()));
+			pVar->SetFloatValue((m_flNextSampleTime == 0.0f ? 1.0f : flSpeed * 0.2f));
 		}
 
 		// Draw onto our buffer
@@ -351,7 +347,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 		materials->DrawScreenSpaceQuad(pMatScreen);
 
 		// Next sample time
-		m_flNextSampleTime = gpGlobals->curtime + /*flSpeed **/ ffdev_blur_adddelay.GetFloat();
+		m_flNextSampleTime = gpGlobals->curtime + 0.01f;
 	}
 
 	// Set the alpha for the screen
@@ -359,7 +355,7 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 
 	if (pVar)
 	{
-		pVar->SetFloatValue(flSpeed * ffdev_blur_drawalpha.GetFloat());
+		pVar->SetFloatValue(flSpeed * 0.6f);
 	}
 
 	// Set the texture to our buffer
