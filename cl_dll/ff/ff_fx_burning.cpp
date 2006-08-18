@@ -107,10 +107,6 @@ bool CBurningEffect::ShouldDraw()
 //-----------------------------------------------------------------------------
 void CBurningEffect::Paint()
 {
-	// ADDED WHILE EYE THING IS HERE
-	if (m_flAmount <= 0.0f || m_flTargetAmount <= 0.0f)
-		return;
-
 	// Reduce the target amount gently
 	m_flTargetAmount -= 0.5f;
 
