@@ -67,7 +67,7 @@ inline int CheckDisguiseClass( int iClass )
 	int iTeam = pPlayer->GetTeamNumber();
 	int iDisguiseTeam = TEAM_UNASSIGNED;
 
-	if( !Q_strcmp( pszTeam, "friendly" ) )
+	if( !Q_strcmp( pszTeam, "friendly " ) )
 		iDisguiseTeam = iTeam;
 	else if( !Q_strcmp( pszTeam, "enemy " ) )
 	{
