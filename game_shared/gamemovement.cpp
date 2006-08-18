@@ -955,7 +955,9 @@ void CGameMovement::WaterMove( void )
 	//
 	for (i=0 ; i<3 ; i++)
 	{
-		wishvel[i] = forward[i]*mv->m_flForwardMove + right[i]*mv->m_flSideMove;
+		// Bug #0000964: +moveup/+movedown don't work
+		// Hey, get some up velocity wishing going on to buddy! Don't forget about us +moveup/+movedown users!
+		wishvel[i] = forward[i]*mv->m_flForwardMove + right[i]*mv->m_flSideMove + up[i]*mv->m_flUpMove;
 	}
 
 	// --> Mirv: Sharking fix
