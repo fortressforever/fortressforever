@@ -4960,10 +4960,7 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 int CFFPlayer::AddHealth(unsigned int amount)
 {
 	int left = TakeHealth( amount, DMG_GENERIC );
-	Warning( "[CFFPlayer::AddHealth]\n" );
-	// Bug #0000773: Getting health doesn't cure status effects
-	ClearSpeedEffects( SEM_HEALABLE );
-    return left;		
+    return left;
 }
 
 //-----------------------------------------------------------------------------
