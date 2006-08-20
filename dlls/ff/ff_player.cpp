@@ -3570,8 +3570,8 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 	{
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 		{
-			// if effect is active and wasn't added by lua, we can remove it
-			if( m_vSpeedEffects[i].active && !m_vSpeedEffects[ i ].bLuaEnforced )
+			// No mod supplied so lets assume we want all reset
+			if( m_vSpeedEffects[i].active )
 			{
 				m_vSpeedEffects[i].active = false;
 				iCount++;
