@@ -4595,6 +4595,18 @@ void CFFPlayer::Extinguish( void )
 		pFlame->SetLifetime(-1);
 		pFlame->FlameThink();
 	}
+
+	// Bug #0000969: first person flame effect not extinguished when going in water
+	// Remove view effect
+	{
+		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+		user.MakeReliable();
+
+		UserMessageBegin( user, "FFViewEffect" );
+			WRITE_BYTE( FF_VIEWEFFECT_BURNING );
+			WRITE_FLOAT( 0.0 );
+		MessageEnd();
+	}
 }
 
 //-----------------------------------------------------------------------------
