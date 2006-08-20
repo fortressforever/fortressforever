@@ -415,7 +415,7 @@ CFFPlayer::CFFPlayer()
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
-		m_vSpeedEffects[i].active = false;
+		RemoveSpeedEffectByIndex( i );
 	}
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
@@ -1059,7 +1059,7 @@ void CFFPlayer::Spawn()
 	entsys.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
-		m_vSpeedEffects[i].active = false;
+		RemoveSpeedEffectByIndex( i );
 
 	// equip the HEV suit
 	EquipSuit();
@@ -1314,7 +1314,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flBurningDamage = 0.0;
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
-		m_vSpeedEffects[i].active = false;
+		RemoveSpeedEffectByIndex( i );
 	}
 	m_fLastHealTick = 0.0f;
 	m_fLastInfectedTick = 0.0f;
@@ -3277,7 +3277,7 @@ void CFFPlayer::StatusEffectsThink( void )
 	{
 		if (m_vSpeedEffects[i].active && ( m_vSpeedEffects[i].endTime < gpGlobals->curtime ) && ( m_vSpeedEffects[i].duration != -1 ) )
 		{
-			m_vSpeedEffects[i].active = false;
+			RemoveSpeedEffectByIndex( i );
 			recalcspeed = true;
 		}
 	}
@@ -3499,14 +3499,14 @@ void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type, bool bLuaAdded)
 				if( bLuaAdded )
 				{
 					bRemoved = true;
-					m_vSpeedEffects[i].active = false;
+					RemoveSpeedEffectByIndex( i );
 				}				
 			}
 			// Effect not added by lua so remove anyway
 			else
 			{
 				bRemoved = true;
-				m_vSpeedEffects[i].active = false;
+				RemoveSpeedEffectByIndex( i );
 			}
 		}
 	}
@@ -3514,29 +3514,66 @@ void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type, bool bLuaAdded)
 	if( !bRemoved )
 		return;
 
-	// Certain speed effects have icons so
-	// we need to remove them from the client
-	int iIcon = -1;
-	switch( type )
-	{
-		case SE_TRANQ: iIcon = FF_STATUSICON_TRANQUILIZED; break;
-		case SE_CALTROP: iIcon = FF_STATUSICON_CALTROPPED; break;
-		case SE_LEGSHOT: iIcon = FF_STATUSICON_LEGINJURY; break;
-	}
-
-	// Make the icon go away
-	if( iIcon != -1 )
-	{
-		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
-		user.MakeReliable();
-
-		UserMessageBegin( user, "StatusIconUpdate" );
-			WRITE_BYTE( iIcon );
-			WRITE_FLOAT( 0.0f );
-		MessageEnd();
-	}
-
 	RecalculateSpeed();
+}
+
+void CFFPlayer::RemoveSpeedEffectByIndex( int iSpeedEffectIndex )
+{
+	if( iSpeedEffectIndex < 0 )
+		return;
+	if( iSpeedEffectIndex >= NUM_SPEED_EFFECTS )
+		return;
+
+	// If it's active, do stuff
+	if( m_vSpeedEffects[ iSpeedEffectIndex ].active )
+	{
+		// Turn it off
+		m_vSpeedEffects[ iSpeedEffectIndex ].active = false;
+
+		int iIcon = -1;
+
+		// Get its icon
+		switch( m_vSpeedEffects[ iSpeedEffectIndex ].type )
+		{
+			case SE_TRANQ: iIcon = FF_STATUSICON_TRANQUILIZED; break;
+			case SE_CALTROP: iIcon = FF_STATUSICON_CALTROPPED; break;
+			case SE_LEGSHOT: iIcon = FF_STATUSICON_LEGINJURY; break;
+		}
+
+		// Remove its icon
+		if( iIcon != -1 )
+		{
+			// Send message to remove
+			CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+			user.MakeReliable();
+
+			UserMessageBegin( user, "StatusIconUpdate" );
+				WRITE_BYTE( iIcon );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
+
+		int iViewEffect = -1;
+
+		// Get its view effect
+		switch( m_vSpeedEffects[ iSpeedEffectIndex ].type )
+		{
+			case SE_TRANQ: iViewEffect = FF_VIEWEFFECT_TRANQUILIZED; break;
+		}
+
+		// Remove its view effect
+		if( iViewEffect != -1 )
+		{
+			// Send message to remove
+			CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+			user.MakeReliable();
+
+			UserMessageBegin( user, "FFViewEffect" );
+				WRITE_BYTE( iViewEffect );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
+	}
 }
 
 int CFFPlayer::ClearSpeedEffects(int mod)
@@ -3560,8 +3597,8 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 					// was fucking up the loop. Same goes for the else case below.
 					// Fixed now.
 
-					iCount++;
-					m_vSpeedEffects[i].active = false;
+					iCount++;					
+					RemoveSpeedEffectByIndex( i );
 				}				
 			}
 		}
@@ -3573,7 +3610,7 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 			// No mod supplied so lets assume we want all reset
 			if( m_vSpeedEffects[i].active )
 			{
-				m_vSpeedEffects[i].active = false;
+				RemoveSpeedEffectByIndex( i );
 				iCount++;
 			}
 		}
@@ -4663,7 +4700,11 @@ int CFFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 //	// Only have good effects if they got health from this
 
 	// Bug #0000604: Taking health with health kit doesn't fix status effects
-	if (hp && flHealth)
+	//if (hp && flHealth)
+	// Want to remove the effects anyway whether you get health or not
+	// because you could walk over a health kit but not get health or something
+	// but your effect should still go away. Ie. you shouldn't have to be
+	// injured to make a bag/pack remove your status effects
 		ClearSpeedEffects(SEM_HEALABLE);
 
 	return hp;
