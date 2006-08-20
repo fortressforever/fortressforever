@@ -979,7 +979,7 @@ int C_FFPlayer::DrawModel( int flags )
 				{
 					materials->Bind( pMaterial );
 					color32 c = { 255, 255, 255, 255 };
-					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 8.0f ), 15.0f, 15.0f, c );
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
 				}
 			}
 		}	
