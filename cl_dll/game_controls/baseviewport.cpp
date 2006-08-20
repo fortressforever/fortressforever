@@ -167,7 +167,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_INFO ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ) );
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ) );
-	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ) );
+	//AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ) );
 	// AddNewPanel( CreatePanelByName( PANEL_TEAM ) );
 	// AddNewPanel( CreatePanelByName( PANEL_CLASS ) );
 	// AddNewPanel( CreatePanelByName( PANEL_BUY ) );

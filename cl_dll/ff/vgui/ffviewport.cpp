@@ -74,7 +74,11 @@ IViewPortPanel* FFViewport::CreatePanelByName(const char *szPanelName)
 
 void FFViewport::CreateDefaultPanels( void )
 {
-	AddNewPanel( CreatePanelByName( PANEL_OVERVIEW ) );	// |-- Mirv: Overview!
+	// PANEL_OVERVIEW isn't used in baseviewport.cpp CreatePanelByName
+	// This is what was giving us the 
+	// "CBaseViewport::AddNewPanel: NULL panel."
+	// message in the console
+	//AddNewPanel( CreatePanelByName( PANEL_OVERVIEW ) );	// |-- Mirv: Overview!
 
 	BaseClass::CreateDefaultPanels();
 }
