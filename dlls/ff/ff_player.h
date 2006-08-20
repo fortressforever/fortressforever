@@ -400,7 +400,10 @@ public:
 	bool IsSpeedEffectSet( SpeedEffectType type );
 	void RemoveSpeedEffect(SpeedEffectType type, bool bLuaAdded = false);
 	int	ClearSpeedEffects(int mod = 0);
+protected:
+	void RemoveSpeedEffectByIndex( int iSpeedEffectIndex );
 
+public:
 	void Infect( CFFPlayer *pPlayer );
 	void Cure( CFFPlayer *pPlayer );
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f );
