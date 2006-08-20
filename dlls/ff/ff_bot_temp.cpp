@@ -188,7 +188,7 @@ CON_COMMAND(ffdev_legshotme, "legshots you")
 CON_COMMAND(ffdev_tranqme, "tranqs you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
-	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, 15.0f);
+	you->AddSpeedEffect(SE_TRANQ, 6.0, 0.3f, SEM_BOOLEAN|SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, 6.0f);
 	
 	CSingleUserRecipientFilter user(you);
 	user.MakeReliable();

@@ -91,6 +91,10 @@ struct SpeedEffect
 	int modifiers;
 	bool active;			// whether this speed effect is active or not
 	float duration;
+	bool bLuaEnforced;		// this is for speed effects set by lua that should not
+							// be removed until lua says it can be removed (like when
+							// you've got a speed effect on you and you get health
+							// we don't want lua enforced effects to be removed then)
 };
 
 struct LocationInfo
@@ -391,10 +395,10 @@ public:
 	void LuaAddEffect( int iEffect, float flEffectDuration = 0.0f, float flIconDuration = 0.0f, float flSpeed = 0.0f );
 	bool LuaIsEffectActive( int iEffect );
 	void LuaRemoveEffect( int iEffect );
-
-	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0, int iIcon = -1, float flIconDuration = -1);
+ 
+	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0, int iIcon = -1, float flIconDuration = -1, bool bLuaAdded = false);
 	bool IsSpeedEffectSet( SpeedEffectType type );
-	void RemoveSpeedEffect(SpeedEffectType type);
+	void RemoveSpeedEffect(SpeedEffectType type, bool bLuaAdded = false);
 	int	ClearSpeedEffects(int mod = 0);
 
 	void Infect( CFFPlayer *pPlayer );

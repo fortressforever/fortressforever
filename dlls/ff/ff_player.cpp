@@ -3326,21 +3326,21 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 			}
 			break;
 			
-			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_STATUSICON_LEGINJURY, flIconDuration ); break;
-			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration ); break;
-			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_STATUSICON_CALTROPPED, flIconDuration ); break;
-			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN );  break;
-			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN ); break;
-			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA2: AddSpeedEffect( SE_LUA2, flEffectDuration, flSpeed, SEM_ACCUMULATIVE );  break;
-			case LUA_EF_SPEED_LUA3: AddSpeedEffect( SE_LUA3, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA4: AddSpeedEffect( SE_LUA4, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA5: AddSpeedEffect( SE_LUA5, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA6: AddSpeedEffect( SE_LUA6, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA7: AddSpeedEffect( SE_LUA7, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA8: AddSpeedEffect( SE_LUA8, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA9: AddSpeedEffect( SE_LUA9, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
-			case LUA_EF_SPEED_LUA10: AddSpeedEffect( SE_LUA10, flEffectDuration, flSpeed, SEM_ACCUMULATIVE ); break;
+			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_STATUSICON_LEGINJURY, flIconDuration, true ); break;
+			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration, true ); break;
+			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_STATUSICON_CALTROPPED, flIconDuration, true ); break;
+			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN, true );  break;
+			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN, true ); break;
+			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA2: AddSpeedEffect( SE_LUA2, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true );  break;
+			case LUA_EF_SPEED_LUA3: AddSpeedEffect( SE_LUA3, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA4: AddSpeedEffect( SE_LUA4, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA5: AddSpeedEffect( SE_LUA5, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA6: AddSpeedEffect( SE_LUA6, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA7: AddSpeedEffect( SE_LUA7, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA8: AddSpeedEffect( SE_LUA8, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA9: AddSpeedEffect( SE_LUA9, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_SPEED_LUA10: AddSpeedEffect( SE_LUA10, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
 		}
 	}
 }
@@ -3401,25 +3401,25 @@ void CFFPlayer::LuaRemoveEffect( int iEffect )
 		}
 		break;
 
-		case LUA_EF_LEGSHOT: RemoveSpeedEffect( SE_LEGSHOT ); break;
-		case LUA_EF_TRANQ: RemoveSpeedEffect( SE_TRANQ ); break;
-		case LUA_EF_CALTROP: RemoveSpeedEffect( SE_CALTROP ); break;
-		case LUA_EF_ACSPINUP: RemoveSpeedEffect( SE_ASSAULTCANNON ); break;
-		case LUA_EF_SNIPERRIFLE: RemoveSpeedEffect( SE_SNIPERRIFLE ); break;
-		case LUA_EF_SPEED_LUA1: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA2: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA3: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA4: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA5: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA6: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA7: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA8: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA9: RemoveSpeedEffect( SE_LUA1 ); break;
-		case LUA_EF_SPEED_LUA10: RemoveSpeedEffect( SE_LUA1 ); break;
+		case LUA_EF_LEGSHOT: RemoveSpeedEffect( SE_LEGSHOT, true ); break;
+		case LUA_EF_TRANQ: RemoveSpeedEffect( SE_TRANQ, true ); break;
+		case LUA_EF_CALTROP: RemoveSpeedEffect( SE_CALTROP, true ); break;
+		case LUA_EF_ACSPINUP: RemoveSpeedEffect( SE_ASSAULTCANNON, true ); break;
+		case LUA_EF_SNIPERRIFLE: RemoveSpeedEffect( SE_SNIPERRIFLE, true ); break;
+		case LUA_EF_SPEED_LUA1: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA2: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA3: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA4: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA5: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA6: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA7: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA8: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA9: RemoveSpeedEffect( SE_LUA1, true ); break;
+		case LUA_EF_SPEED_LUA10: RemoveSpeedEffect( SE_LUA1, true ); break;
 	}
 }
 
-void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod, int iIcon, float flIconDuration)
+void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod, int iIcon, float flIconDuration, bool bLuaAdded)
 {
 	// find an open slot
 	int i = 0;
@@ -3455,6 +3455,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	m_vSpeedEffects[i].duration = duration;
 	m_vSpeedEffects[i].speed = speed;
 	m_vSpeedEffects[i].modifiers = mod;
+	m_vSpeedEffects[i].bLuaEnforced = bLuaAdded;
 
 	if( iIcon != -1 )
 	{
@@ -3483,16 +3484,35 @@ bool CFFPlayer::IsSpeedEffectSet( SpeedEffectType type )
 	return bFound;
 }
 
-void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)
+void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type, bool bLuaAdded)
 {
+	bool bRemoved = false;
 	// Remove speed effects with the certain name
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
 		if (m_vSpeedEffects[i].type == type)
 		{
-			m_vSpeedEffects[i].active = false;
+			// If the effect was added by lua...
+			if( m_vSpeedEffects[i].bLuaEnforced )
+			{
+				// ... make sure lua is removing it
+				if( bLuaAdded )
+				{
+					bRemoved = true;
+					m_vSpeedEffects[i].active = false;
+				}				
+			}
+			// Effect not added by lua so remove anyway
+			else
+			{
+				bRemoved = true;
+				m_vSpeedEffects[i].active = false;
+			}
 		}
 	}
+
+	if( !bRemoved )
+		return;
 
 	// Certain speed effects have icons so
 	// we need to remove them from the client
@@ -3521,7 +3541,7 @@ void CFFPlayer::RemoveSpeedEffect(SpeedEffectType type)
 
 int CFFPlayer::ClearSpeedEffects(int mod)
 {
-	int i = 0;
+	int iCount = 0;
 
 	if (mod)
 	{
@@ -3529,11 +3549,20 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 		{
 			if (m_vSpeedEffects[i].modifiers & mod)
 			{
-				// Keep track of any we've turned off
-				if (m_vSpeedEffects[i].active)
-					i++;
+				// if effect is active and wasn't added by lua, we can remove it
+				if( m_vSpeedEffects[i].active && !m_vSpeedEffects[ i ].bLuaEnforced )
+				{
+					// Wow, I just spent an hour debugging why my speed
+					// effect wasn't getting removed and it was because
+					// of this i++ line.
+					//i++;
+					// I'm assuming you meant for it to be a counter... but it
+					// was fucking up the loop. Same goes for the else case below.
+					// Fixed now.
 
-				m_vSpeedEffects[i].active = false;
+					iCount++;
+					m_vSpeedEffects[i].active = false;
+				}				
 			}
 		}
 	}
@@ -3541,17 +3570,18 @@ int CFFPlayer::ClearSpeedEffects(int mod)
 	{
 		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 		{
-			// Keep track of any we've turned off
-			if (m_vSpeedEffects[i].active)
-				i++;
-
-			m_vSpeedEffects[i].active = false;
+			// if effect is active and wasn't added by lua, we can remove it
+			if( m_vSpeedEffects[i].active && !m_vSpeedEffects[ i ].bLuaEnforced )
+			{
+				m_vSpeedEffects[i].active = false;
+				iCount++;
+			}
 		}
 	}
 
 	RecalculateSpeed();
 
-	return i;
+	return iCount;
 }
 
 void CFFPlayer::RecalculateSpeed( void )
@@ -4930,6 +4960,9 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 int CFFPlayer::AddHealth(unsigned int amount)
 {
 	int left = TakeHealth( amount, DMG_GENERIC );
+	Warning( "[CFFPlayer::AddHealth]\n" );
+	// Bug #0000773: Getting health doesn't cure status effects
+	ClearSpeedEffects( SEM_HEALABLE );
     return left;		
 }
 
