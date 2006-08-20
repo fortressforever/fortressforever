@@ -2547,7 +2547,8 @@ namespace Omnibot
 		// ERROR DETECTION
 		if(bud.GetInt() == TF_WP_NONE)
 		{
-			Warning("Invalid Weapon Id: Notify_AddWeapon");
+			// Added newline since this was showing up
+			Warning("Invalid Weapon Id: Notify_AddWeapon\n");
 		}
 	}
 
@@ -2560,7 +2561,7 @@ namespace Omnibot
 		// ERROR DETECTION
 		if(bud.GetInt() == TF_WP_NONE)
 		{
-			Warning("Invalid Weapon Id: Notify_RemoveWeapon");
+			Warning("Invalid Weapon Id: Notify_RemoveWeapon\n");
 		}
 	}
 
