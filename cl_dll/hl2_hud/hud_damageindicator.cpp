@@ -65,11 +65,6 @@ private:
 	CPanelAnimationVar(Color, m_DmgColorFront, "DmgColorFront", "255 0 0 0");
 	CPanelAnimationVar(Color, m_DmgColorBehind, "DmgColorBehind", "255 0 0 0");
 
-	CPanelAnimationVar(Color, m_DmgHighColorLeft, "DmgHighColorLeft", "255 0 0 0");
-	CPanelAnimationVar(Color, m_DmgHighColorRight, "DmgHighColorRight", "255 0 0 0");
-
-	CPanelAnimationVar(Color, m_DmgFullscreenColor, "DmgFullscreenColor", "255 0 0 0");
-
 	void DrawDamageIndicator(int side);
 	void DrawFullscreenDamageIndicator();
 	void GetDamagePosition(const Vector &vecDelta, float *flRotation);
@@ -146,9 +141,6 @@ void CHudDamageIndicator::Reset()
 	m_DmgColorRight[3] = 0;
 	m_DmgColorFront[3] = 0;
 	m_DmgColorBehind[3] = 0;
-	m_DmgHighColorLeft[3] = 0;
-	m_DmgHighColorRight[3] = 0;
-	m_DmgFullscreenColor[3] = 0;
 }
 
 void CHudDamageIndicator::Init()
@@ -163,12 +155,8 @@ void CHudDamageIndicator::Init()
 //-----------------------------------------------------------------------------
 bool CHudDamageIndicator::ShouldDraw()
 {
-//	if (!CHudElement::ShouldDraw())
-//		return false;
-
-	//if (!m_DmgColorLeft[3] && !m_DmgColorRight[3] && !m_DmgHighColorLeft[3] && !m_DmgHighColorRight[3] 
-	//	&& !m_DmgFullscreenColor[3])
-	//	return false;
+	if (!CHudElement::ShouldDraw())
+		return false;
 
 	if (!m_DmgColorLeft[3] && !m_DmgColorRight[3] && !m_DmgColorFront[3] && !m_DmgColorBehind[3])
 		return false;
@@ -193,36 +181,11 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 	int y[4] = { m_flDmgY, m_flDmgY + insetY, m_flDmgY + m_flDmgTall1 - insetY, m_flDmgY + m_flDmgTall1 };
 	int alpha[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
 
-	// see if we're high damage
-	bool bHighDamage = false;
-	if (m_DmgHighColorRight[3] > m_DmgColorRight[3] || m_DmgHighColorLeft[3] > m_DmgColorLeft[3])
-	{
-		// make more of the screen be covered by damage
-		x1 = GetWide() * 0.0f;
-		x2 = GetWide() * 0.5f;
-		y[0] = 0.0f;
-		y[1] = 0.0f;
-		y[2] = GetTall();
-		y[3] = GetTall();
-		alpha[0] = 1.0f;
-		alpha[1] = 0.0f;
-		alpha[2] = 0.0f;
-		alpha[3] = 1.0f;
-		bHighDamage = true;
-	}
-
 	int r, g, b, a;
 
 	if (side == 0)
 	{
-		if (bHighDamage)
-		{
-			r = m_DmgHighColorLeft[0], g = m_DmgHighColorLeft[1], b = m_DmgHighColorLeft[2], a = m_DmgHighColorLeft[3];
-		}
-		else
-		{
-			r = m_DmgColorLeft[0], g = m_DmgColorLeft[1], b = m_DmgColorLeft[2], a = m_DmgColorLeft[3];
-		}
+		r = m_DmgColorLeft[0], g = m_DmgColorLeft[1], b = m_DmgColorLeft[2], a = m_DmgColorLeft[3];
 
 		meshBuilder.Color4ub(r, g, b, a * alpha[0]);
 		meshBuilder.TexCoord2f(0, 0, 0);
@@ -246,14 +209,7 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 	}
 	else if (side == 1)
 	{
-		if (bHighDamage)
-		{
-			r = m_DmgHighColorRight[0], g = m_DmgHighColorRight[1], b = m_DmgHighColorRight[2], a = m_DmgHighColorRight[3];
-		}
-		else
-		{
-			r = m_DmgColorRight[0], g = m_DmgColorRight[1], b = m_DmgColorRight[2], a = m_DmgColorRight[3];
-		}
+		r = m_DmgColorRight[0], g = m_DmgColorRight[1], b = m_DmgColorRight[2], a = m_DmgColorRight[3];
 
 		// realign x coords
 		x1 = GetWide() - x1;
@@ -352,50 +308,10 @@ void CHudDamageIndicator::DrawDamageIndicator(int side)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Draws full screen damage fade
-//-----------------------------------------------------------------------------
-void CHudDamageIndicator::DrawFullscreenDamageIndicator()
-{
-	IMesh *pMesh = materials->GetDynamicMesh(true, NULL, NULL, m_WhiteAdditiveMaterial);
-
-	CMeshBuilder meshBuilder;
-	meshBuilder.Begin(pMesh, MATERIAL_QUADS, 1);
-	int r = m_DmgFullscreenColor[0], g = m_DmgFullscreenColor[1], b = m_DmgFullscreenColor[2], a = m_DmgFullscreenColor[3];
-
-	float wide = GetWide(), tall = GetTall();
-
-	meshBuilder.Color4ub(r, g, b, a);
-	meshBuilder.TexCoord2f(0, 0, 0);
-	meshBuilder.Position3f(0.0f, 0.0f, 0);
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ub(r, g, b, a);
-	meshBuilder.TexCoord2f(0, 1, 0);
-	meshBuilder.Position3f(wide, 0.0f, 0);
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ub(r, g, b, a);
-	meshBuilder.TexCoord2f(0, 1, 1);
-	meshBuilder.Position3f(wide, tall, 0);
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4ub(r, g, b, a);
-	meshBuilder.TexCoord2f(0, 0, 1);
-	meshBuilder.Position3f(0.0f, tall, 0);
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.End();
-	pMesh->Draw();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Paints the damage display
 //-----------------------------------------------------------------------------
 void CHudDamageIndicator::Paint()
 {
-	// draw fullscreen damage indicators
-	//DrawFullscreenDamageIndicator();
-
 	// draw side damage indicators
 	DrawDamageIndicator(0);
 	DrawDamageIndicator(1);
