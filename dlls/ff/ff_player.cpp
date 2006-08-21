@@ -1324,10 +1324,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	WRITE_BYTE(FF_VIEWEFFECT_MAX);
 	MessageEnd();
 
-	UserMessageBegin(user, "BurningEffect");
-	WRITE_BYTE(0.0f);
-	MessageEnd();
-
 	// reset their status effects
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
@@ -5841,14 +5837,11 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 	}
 	else if (fDamageType & DMG_BURN && GetClassSlot() != CLASS_PYRO)
 	{
-		// Orange damage indicator
-		//color32 orange = {255,100,20,200};
-		//UTIL_ScreenFade(this, orange, 2.0f, 0.1f, FFADE_IN);
-
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 
-		UserMessageBegin(user, "BurningEffect");
+		UserMessageBegin(user, "FFViewEffect");
+		WRITE_BYTE(FF_VIEWEFFECT_BURNING);
 		WRITE_BYTE(min(30.0f * flDamage, 255));
 		MessageEnd();
 

@@ -48,6 +48,9 @@ private:
 static CFFViewEffectsMgr g_FFViewEffects;
 IFFViewEffects *ffvieweffects = (IFFViewEffects *) &g_FFViewEffects;
 
+//-----------------------------------------------------------------------------
+// Purpose: This catches all our view effect messages
+//-----------------------------------------------------------------------------
 void __MsgFunc_FFViewEffect(bf_read &msg)
 {
 	g_FFViewEffects.Message(msg);
@@ -59,6 +62,10 @@ void __MsgFunc_FFViewEffect(bf_read &msg)
 class CFFBaseViewEffect : public IFFViewEffects
 {
 public:
+	//-----------------------------------------------------------------------------
+	// Purpose: Register the view effect with the manager. This is a pretty simple
+	//			way of going about this.
+	//-----------------------------------------------------------------------------
 	CFFBaseViewEffect(FF_View_Effects_t id)
 	{
 		g_FFViewEffects.Add(id, this);
@@ -140,8 +147,10 @@ void CFFViewEffectsMgr::Add(int iId, IFFViewEffects *pViewEffect)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: A message has been passed in
-//			FF_VIEWEFFECT_MAX will reset all view effects
+// Purpose: A message has been passed in. We read the first byte to determine
+//			what view effect this is and then pass the msg onto the view effect
+//			itself to dissect as needed.
+//			FF_VIEWEFFECT_MAX will reset all view effects.
 //-----------------------------------------------------------------------------
 void CFFViewEffectsMgr::Message(bf_read &msg)
 {
@@ -177,6 +186,8 @@ void CFFViewEffectsMgr::Message(bf_read &msg)
 		}
 	}
 
+	// The vieweffect either hasn't been initialized properly in its constructor
+	// or perhaps hasn't been created with the DECLARE_VIEWEFFECT macro.
 	AssertMsg(0, "ViewEffect hasn't been instantiated yet!");
 }
 
@@ -210,11 +221,11 @@ public:
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Render the giant eyelids! Do this after the hud
+	// Purpose: Render the giant eyelids over the hud.
 	//-----------------------------------------------------------------------------
 	void Render(int type, int width, int height)
 	{
-		// Don't draw until after the hud
+		// This draws above the hud
 		if (type == VIEWEFFECT_BEFOREHUD)
 			return;
 
@@ -270,11 +281,10 @@ public:
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: 
+	// Purpose: Need to reset the screenspace effects
 	//-----------------------------------------------------------------------------
 	void Reset()
 	{
-		// Do something else for this
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
 		}
@@ -285,18 +295,20 @@ public:
 
 			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("tranquilizedeffect", pKeys);
 			g_pScreenSpaceEffects->EnableScreenSpaceEffect("tranquilizedeffect");
+
+			pKeys->deleteThis();
 		}
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Receive a message and do stuff
+	// Purpose: Expects a DURATION as a FLOAT.
+	//			Will also trigger the screenspace effect.
 	//-----------------------------------------------------------------------------
 	void Message(bf_read &msg)
 	{
 		m_flStart = gpGlobals->curtime;
 		m_flDuration = msg.ReadFloat();
 
-		// Do something else for this
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
 			Warning("*** FF Error *** Not yet implemented for < dx8!\n");
@@ -309,6 +321,8 @@ public:
 
 			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("tranquilizedeffect", pKeys);
 			g_pScreenSpaceEffects->EnableScreenSpaceEffect("tranquilizedeffect");
+
+			pKeys->deleteThis();
 		}
 	}
 
@@ -336,11 +350,10 @@ public:
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: 
+	// Purpose: Reset screenspace effect
 	//-----------------------------------------------------------------------------
 	void Reset()
 	{
-		// Do something else for this
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
 		}
@@ -351,15 +364,17 @@ public:
 
 			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("infectedeffect", pKeys);
 			g_pScreenSpaceEffects->EnableScreenSpaceEffect("infectedeffect");
+
+			pKeys->deleteThis();
 		}
 	}
 
 	//-----------------------------------------------------------------------------
-	// Purpose: Receive a message and do stuff
+	// Purpose: Expects a DURATION as a FLOAT.
+	//			Will also trigger the screenspace effect.
 	//-----------------------------------------------------------------------------
 	void Message(bf_read &msg)
 	{
-		// Do something else for this
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
 			Warning("*** FF Error *** Not yet implemented for < dx8!\n");
@@ -371,8 +386,151 @@ public:
 
 			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("infectedeffect", pKeys);
 			g_pScreenSpaceEffects->EnableScreenSpaceEffect("infectedeffect");
+
+			pKeys->deleteThis();
 		}
 	}
 };
 
 DECLARE_VIEWEFFECT(CFFInfectedViewEffect);
+
+//=============================================================================
+// Purpose: Burning vieweffect
+//=============================================================================
+class CFFBurningEffect : public CFFBaseViewEffect
+{
+public:
+	//-----------------------------------------------------------------------------
+	// Purpose: Register
+	//-----------------------------------------------------------------------------
+	CFFBurningEffect(const char *pName) : CFFBaseViewEffect(FF_VIEWEFFECT_BURNING)
+	{
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	void Reset()
+	{
+		m_flAmount = m_flTargetAmount = 0.0f;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Get material set up
+	//-----------------------------------------------------------------------------
+	void Init()
+	{
+		m_WhiteAdditiveMaterial.Init("vgui/white_additive", TEXTURE_GROUP_VGUI);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Paint two quads on either side of the screen.
+	//			Make sure we have some linear progression up to the new target
+	//			amount so that it appears gracefully.
+	//			TODO: Take into account fps
+	//-----------------------------------------------------------------------------
+	void Render(int type, int width, int height)
+	{
+		// This draws above the hud
+		if (type == VIEWEFFECT_BEFOREHUD)
+			return;
+
+		// Nothing to do
+		if (m_flAmount == 0.0f && m_flTargetAmount == 0.0f)
+			return;
+
+		// Reduce the target amount gently
+		m_flTargetAmount -= 0.5f;
+
+		if (m_flTargetAmount < 0.0f)
+			m_flTargetAmount = 0.0f;
+
+		// Actual value less than intended, so raise up to meet
+		if (m_flAmount < m_flTargetAmount)
+		{
+			m_flAmount += 1.0f;
+			m_flAmount = min(m_flAmount, m_flTargetAmount);
+		}
+		else
+		{
+			m_flAmount = m_flTargetAmount;
+		}
+
+		IMesh *pMesh = materials->GetDynamicMesh(true, NULL, NULL, m_WhiteAdditiveMaterial);
+
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin(pMesh, MATERIAL_QUADS, 2);
+		int r = 255, g = 0, b = 0, a = clamp(m_flAmount, 0, 255);
+
+		float wide = (float) width;
+		float lend =  wide / 1.8f;
+		float rstart = wide / 2.24f;
+		float tall = (float) height;
+
+		// LHS
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 0, 0);
+		meshBuilder.Position3f(0.0f, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 1, 0);
+		meshBuilder.Position3f(lend, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 1, 1);
+		meshBuilder.Position3f(lend, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 0, 1);
+		meshBuilder.Position3f(0.0f, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		// RHS
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 0, 0);
+		meshBuilder.Position3f(rstart, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 1, 0);
+		meshBuilder.Position3f(wide, 0.0f, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, a);
+		meshBuilder.TexCoord2f(0, 1, 1);
+		meshBuilder.Position3f(wide, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4ub(r, g, b, 0);
+		meshBuilder.TexCoord2f(0, 0, 1);
+		meshBuilder.Position3f(rstart, tall, 0);
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.End();
+		pMesh->Draw();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Expects a DAMAGE AMOUNT as a BYTE.
+	//			This will be added onto the current damage (which gradually fades)
+	//-----------------------------------------------------------------------------
+	void Message(bf_read &msg)
+	{
+		m_flTargetAmount += (float) msg.ReadByte();
+
+		if (m_flTargetAmount > 255.0f)
+			m_flTargetAmount = 255.0f;
+	}
+
+private:
+
+	float	m_flAmount;
+	float	m_flTargetAmount;
+
+	CMaterialReference m_WhiteAdditiveMaterial;
+};
+
+DECLARE_VIEWEFFECT(CFFBurningEffect);
