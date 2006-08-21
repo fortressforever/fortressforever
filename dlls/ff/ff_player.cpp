@@ -3815,6 +3815,9 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 	// Bug #0000528: Medics can self-cure being caltropped/tranq'ed
 	ClearSpeedEffects( SEM_HEALABLE );
+
+	// Wiki says curing removes everything but concussion
+	Extinguish();
 }
 
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration )
