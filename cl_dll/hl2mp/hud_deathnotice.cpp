@@ -110,7 +110,9 @@ void CHudDeathNotice::ApplySchemeSettings( IScheme *scheme )
 //-----------------------------------------------------------------------------
 void CHudDeathNotice::Init( void )
 {
-	gameeventmanager->AddListener(this, "player_death", false );	
+	gameeventmanager->AddListener(this, "player_death", false );
+	gameeventmanager->AddListener( this, "dispenser_killed", false );
+	gameeventmanager->AddListener( this, "sentrygun_killed", false );
 }
 
 //-----------------------------------------------------------------------------
@@ -303,6 +305,19 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		killer_name = "";
 	if ( !victim_name )
 		victim_name = "";
+
+	// Temporary until we decide how we're displaying dispenser/sg deaths
+	char pszVictimMod[ 256 ];
+	if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
+	{
+		Q_snprintf( pszVictimMod, sizeof( pszVictimMod ), "%s's Dispenser", victim_name );
+		victim_name = const_cast< char * >( pszVictimMod );
+	}
+	else if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
+	{
+		Q_snprintf( pszVictimMod, sizeof( pszVictimMod ), "%s's Sentrygun", victim_name );
+		victim_name = const_cast< char * >( pszVictimMod );
+	}
 
 	// Make a new death notice
 	DeathNoticeItem deathMsg;
