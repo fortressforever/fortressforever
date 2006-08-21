@@ -91,7 +91,7 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheSaveMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_saveme" )
 CLIENTEFFECT_REGISTER_END()
 
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheWrenchMeSprite )
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheEngyMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
 CLIENTEFFECT_REGISTER_END()
 
@@ -412,7 +412,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
 	
 	RecvPropInt( RECVINFO( m_iSaveMe ) ),
-	RecvPropInt( RECVINFO( m_iWrenchMe ) ),
+	RecvPropInt( RECVINFO( m_iEngyMe ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
@@ -998,9 +998,9 @@ int C_FFPlayer::DrawModel( int flags )
 		}
 
 		// ********************************
-		// Check for "wrenchme"
+		// Check for "engyme"
 		// ********************************
-		if( IsInWrenchMe() )
+		if( IsInEngyMe() )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_OTHER );
 			if( pMaterial )

@@ -155,7 +155,7 @@ FF_AUTO_COMMAND( radar, &CFFPlayer::Command_Radar, "Start the scout radar.", FF_
 FF_AUTO_COMMAND( sevtest, &CFFPlayer::Command_SevTest, "Spawn sev's testing thing", FF_CMD_ALIVE  | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_WrenchMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH )
 
 // entity system interfacing stuffs
