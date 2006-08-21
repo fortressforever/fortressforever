@@ -1940,7 +1940,7 @@ void C_BaseEntity::PreDataUpdate( DataUpdateType_t updateType )
 
 	// If the entity moves itself every FRAME on the server but doesn't update animtime,
 	// then use the current server time as the time for interpolation.
-	if ( !IsSelfAnimating() )
+	if ( !IsSelfAnimating() && !IsNPC() && !IsPlayer() )	// |-- Mirv: Apparently this fixes jittery anims
 	{
 		m_flAnimTime = engine->GetLastTimeStamp();	
 	}

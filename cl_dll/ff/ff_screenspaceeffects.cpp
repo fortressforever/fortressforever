@@ -299,8 +299,8 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	// First of all lets work out how much to do this
 	C_BasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 
-	// Must be valid, on a team and not no-clipping
-	if (!pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
+	// Must be valid, on a team and not no-clipping and alive
+	if (!pPlayer || pPlayer->GetTeamNumber() < TEAM_BLUE || !pPlayer->IsAlive() || pPlayer->GetMoveType() == MOVETYPE_NOCLIP)
 		return;
 
 	Vector vecVelocity = pPlayer->GetAbsVelocity();

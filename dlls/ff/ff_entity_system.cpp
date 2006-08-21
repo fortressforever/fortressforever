@@ -189,8 +189,8 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 bool CFFEntitySystem::StartForMap()
 {
 #ifdef _LINUX
-	Warning("Entity system disabled!\n");
-	return false;
+//	Warning("Entity system disabled!\n");
+//	return false;
 #endif
 
 	// [TODO]
@@ -442,7 +442,7 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
 #ifdef _LINUX
-	return true;
+//	return true;
 #endif
 
 	// If there is no active script then allow the ents to always go
@@ -529,7 +529,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
 #ifdef _LINUX
-	return bExpectedVal;
+//	return bExpectedVal;
 #endif
 
 	if( pObject && pszFunction )
@@ -564,7 +564,7 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
 #ifdef _LINUX
-	return false;
+//	return false;
 #endif
 
 	if( !pContext )
