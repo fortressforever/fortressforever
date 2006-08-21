@@ -18,8 +18,78 @@
 #include "keyvalues.h"
 #include "materialsystem/IMaterialSystemHardwareConfig.h"
 
-
 void __MsgFunc_FFViewEffect(bf_read &msg);
+
+//-----------------------------------------------------------------------------
+// Purpose: A useful function. Give it your current start & duration, a new
+//			duration and your fade in / out times and it'll set your new
+//			start + duration times without messing up any in-progress effect
+//-----------------------------------------------------------------------------
+void AddNewDurationFromNow(float &flStart, float &flDuration, float flNewDuration, float flFadeInTime, float flFadeOutTime)
+{
+	float flElapsed  = gpGlobals->curtime - flStart;
+	float flRemaining = flDuration - flElapsed;
+
+	// We're not currently in an effect, either because the last one just
+	// finished or the next one is still in the future. Therefore set straight
+	// away
+	if (flElapsed > flDuration || flStart > gpGlobals->curtime)
+	{
+		flStart = gpGlobals->curtime;
+		flDuration = flNewDuration;
+		return;
+	}
+
+	// We're in some sort of effect now, make sure that the duration isn't too short
+	// so that we don't do an ugly cut.
+	if (flNewDuration < flFadeOutTime)
+	{
+		// We're already fading out, we can't do it any quicker.
+		// So escape now.
+		if (flRemaining < flFadeOutTime)
+			return;
+
+		// Duration is now set to the minimum possible.
+		flDuration = flElapsed + flFadeOutTime;
+
+		// If we haven't even finihed fading in, adjust the start time so that we
+		// continue fading out from this point
+		if (flElapsed < flFadeInTime)
+		{
+			flStart -= flFadeInTime - flElapsed;
+		}
+
+		// Phew!
+		return;
+	}
+
+	// We're still fading in, therefore we don't want to change the start time.
+	// However this means that the duration needs to be increased since it's an
+	// earlier starttime than it was expecting.
+	if (flElapsed < flFadeInTime)
+	{
+		flDuration = flNewDuration + flElapsed;
+		return;
+	}
+
+	// We're in the middle of fading out. We want to start fading in again at
+	// the point we're currently at. This means that the new flElapsed should
+	// equal the old flRemaining.
+	// Since this means we have to put the start time in the past, we should
+	// therefore extend the duration by the same amount.
+	if (flRemaining < flFadeOutTime)
+	{
+		flStart = gpGlobals->curtime - flRemaining;
+		flDuration = flNewDuration + flRemaining;
+		return;
+	}
+
+	// We must be within an effect. Keep the start time (there's no real good
+	// reason to change it) and adjust the duration accordingly.
+	// This is the same as conditional statement 2, so can probably be resolved
+	// along with that.
+	flDuration = flNewDuration + flElapsed;
+}
 
 //=============================================================================
 // A manager for our view effects
@@ -246,11 +316,11 @@ public:
 		
 		if (flElapsed <= M_PI_2)
 		{
-			flAmount = 0.2f * sinf(flElapsed);
+			flAmount = 0.05f + 0.15f * sinf(flElapsed);
 		}
 		else if (flRemaining <= M_PI_2)
 		{
-			flAmount = 0.2f * sinf(flRemaining);
+			flAmount = 0.05f + 0.15f * sinf(flRemaining);
 		}
 
 		float wide = width;
@@ -306,8 +376,12 @@ public:
 	//-----------------------------------------------------------------------------
 	void Message(bf_read &msg)
 	{
-		m_flStart = gpGlobals->curtime;
-		m_flDuration = msg.ReadFloat();
+		//m_flStart = gpGlobals->curtime;
+		//m_flDuration = msg.ReadFloat();
+
+		float flNewDuration = msg.ReadFloat();
+
+		AddNewDurationFromNow(m_flStart, m_flDuration, flNewDuration, M_PI_2, M_PI_2);
 
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
@@ -316,8 +390,8 @@ public:
 		else
 		{
 			KeyValues *pKeys = new KeyValues("keys");
-			pKeys->SetFloat("duration", m_flDuration - 0.6f);
-			pKeys->SetFloat("delay", 0.3f);
+			pKeys->SetFloat("duration", flNewDuration - 0.3f);
+			pKeys->SetFloat("delay", 0.3f);	// Not used atm
 
 			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("tranquilizedeffect", pKeys);
 			g_pScreenSpaceEffects->EnableScreenSpaceEffect("tranquilizedeffect");
