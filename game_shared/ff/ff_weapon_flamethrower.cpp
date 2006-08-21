@@ -240,6 +240,7 @@ bool CFFWeaponFlamethrower::Deploy()
 
 		// Should inherit it's angles & position from the player for now
 		m_hFlameJet->SetOwnerEntity(pPlayer);
+		m_hFlameJet->FollowEntity(pPlayer);
 	}
 #endif
 	
