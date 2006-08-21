@@ -441,7 +441,7 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
-#ifndef _LINUX
+#ifdef _LINUX
 	return true;
 #endif
 
@@ -528,7 +528,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 //----------------------------------------------------------------------------
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
-#ifndef _LINUX
+#ifdef _LINUX
 	return bExpectedVal;
 #endif
 
@@ -563,7 +563,7 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
-#ifndef _LINUX
+#ifdef _LINUX
 	return false;
 #endif
 
