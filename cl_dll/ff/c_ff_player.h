@@ -275,7 +275,7 @@ protected:
 	// **********************************
 	// EngyMe stuffs
 public:
-	bool IsInEngyMe( void ) const { return m_iEngyhMe != 0; }
+	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
 protected:
 	unsigned int m_iEngyMe;
 	// **********************************
