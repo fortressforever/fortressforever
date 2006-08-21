@@ -179,6 +179,19 @@ CON_COMMAND(bot_saveme, "have a bot do saveme")
 	}
 }
 
+CON_COMMAND(bot_engyme, "have a bot do engyme")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			pPlayer->Command_WrenchMe();
+		}
+	}
+}
+
 CON_COMMAND(ffdev_legshotme, "legshots you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());

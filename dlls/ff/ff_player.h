@@ -293,7 +293,8 @@ public:
 	void Command_FlagInfo( void ); // flaginfo
 	void Command_DropItems( void );
 	void Command_Discard( void );	
-	void Command_SaveMe( void );	
+	void Command_SaveMe( void );
+	void Command_WrenchMe( void );
 	void Command_Disguise();
 
 	void Command_SabotageSentry();
@@ -606,8 +607,24 @@ public:
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
 	CNetworkVar(int, m_iSpawnInterpCounter);
 
+	// **********************************
+	// SaveMe stuffs
+public:
+	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
 protected:
-	CHandle< CFFSaveMe >	m_hSaveMe;
+	//CHandle< CFFSaveMe >	m_hSaveMe;
+	CNetworkVar( unsigned int, m_iSaveMe );
+	float m_flSaveMeTime;
+	// **********************************
+
+	// **********************************
+	// WrenchMe stuffs
+public:
+	bool IsInWrenchMe( void ) const { return m_iWrenchMe != 0; }
+protected:
+	CNetworkVar( unsigned int, m_iWrenchMe );
+	float m_flWrenchMeTime;
+	// **********************************
 
 public:
 	// Some luabind functions

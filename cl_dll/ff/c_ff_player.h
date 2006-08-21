@@ -264,6 +264,22 @@ public:
 protected:
 	Color m_clrTeamColor;
 
+	// **********************************
+	// SaveMe stuffs
+public:
+	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
+protected:
+	unsigned int m_iSaveMe;
+	// **********************************
+
+	// **********************************
+	// WrenchMe stuffs
+public:
+	bool IsInWrenchMe( void ) const { return m_iWrenchMe != 0; }
+protected:
+	unsigned int m_iWrenchMe;
+	// **********************************
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 };
