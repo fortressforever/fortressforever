@@ -3879,6 +3879,13 @@
 				<File
 					RelativePath="..\game_shared\choreoactor.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3888,6 +3895,13 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\choreochannel.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -3899,6 +3913,13 @@
 				<File
 					RelativePath="..\game_shared\choreoevent.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3908,6 +3929,13 @@
 				</File>
 				<File
 					RelativePath="..\game_shared\choreoscene.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -3923,6 +3951,13 @@
 				<File
 					RelativePath="..\public\mathlib.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3937,6 +3972,13 @@
 				<File
 					RelativePath="..\tier1\byteswap.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3946,6 +3988,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\datamanager.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -3957,6 +4006,13 @@
 				<File
 					RelativePath="..\tier1\diff.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3966,6 +4022,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\generichash.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -3977,6 +4040,13 @@
 				<File
 					RelativePath="..\tier1\jobthread.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -3986,6 +4056,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\memstack.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -3997,6 +4074,13 @@
 				<File
 					RelativePath="..\tier1\NetAdr.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -4006,6 +4090,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\processor_detect.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -4017,6 +4108,13 @@
 				<File
 					RelativePath="..\tier1\rangecheckedvar.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -4026,6 +4124,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\strtools.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
@@ -4037,6 +4142,13 @@
 				<File
 					RelativePath="..\tier1\tokenreader.cpp">
 					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
 						<Tool
@@ -4046,6 +4158,13 @@
 				</File>
 				<File
 					RelativePath="..\tier1\utlstring.cpp">
+					<FileConfiguration
+						Name="Release FF|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 					<FileConfiguration
 						Name="Debug FF|Win32"
 						ExcludedFromBuild="TRUE">
