@@ -188,6 +188,11 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::StartForMap()
 {
+#ifdef _LINUX
+	Warning("Entity system disabled!\n");
+	return false;
+#endif
+
 	// [TODO]
 	// Fix the fact that it keeps holding information across calls to this function
 	char filename[128];
@@ -436,6 +441,10 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
+#ifndef _LINUX
+	return true;
+#endif
+
 	// If there is no active script then allow the ents to always go
 	if( !m_ScriptExists || !L )
 		return true;
@@ -519,6 +528,10 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 //----------------------------------------------------------------------------
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
+#ifndef _LINUX
+	return bExpectedVal;
+#endif
+
 	if( pObject && pszFunction )
 	{
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
@@ -550,6 +563,10 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
+#ifndef _LINUX
+	return false;
+#endif
+
 	if( !pContext )
 		return false;
 
