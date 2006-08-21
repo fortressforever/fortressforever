@@ -270,30 +270,21 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 				Vector v1 = tr.endpos - tr.startpos;
 				Vector v2 = C_BasePlayer::GetLocalPlayer()->EyePosition() - tr.startpos;
 
-				VectorNormalizeFast(v1);
-				VectorNormalizeFast(v2);
+				Vector vecCross = v1.Cross(v2);
 
-				float flDot = v1.Dot(v2);
+				// Area of parallelogram
+				float flLength = vecCross.Length();
+				flLength /= v1.Length();
 
-				if (flDot < 0) 
-					flDot = -flDot;
+#define MAX_DIST	60.0f
 
-#define MIN_ANGLE	0.94f
-
-				if (flDot < MIN_ANGLE)
-					flDot = 0.0f;
-
-				// Scale what we have from 0 to 1.0f now
-				if (flDot > 0.0f)
+				if (flLength < MAX_DIST)
 				{
-					flDot -= MIN_ANGLE;
-					flDot /= (1.0f - MIN_ANGLE);
+					float flVisibility = (MAX_DIST - flLength) / MAX_DIST;
+					color32 colour = { 255, 0, 0, alpha * flVisibility };
+
+					FX_DrawLine(tr.startpos, tr.endpos, flVisibility, m_pMaterial, colour);
 				}
-
-				float flPower = flDot * flDot;
-				color32 colour = { 255, 0, 0, alpha * flPower };
-
-				FX_DrawLine(tr.startpos, tr.endpos, flPower, m_pMaterial, colour);
 			}
 		}
 		else

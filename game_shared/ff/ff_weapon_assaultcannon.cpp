@@ -71,6 +71,8 @@ public:	// temp while i expose m_flChargeTime to global function
 	CSoundPatch *m_pEngine;
 
 	float		m_flRotationValue;
+	float		m_flChargeTimeClient;
+
 	int			m_iBarrelRotation;
 #endif
 };
@@ -245,6 +247,19 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	m_flLastTick = gpGlobals->curtime;
 
 #ifdef CLIENT_DLL
+	
+	// A buffered version of m_flChargeTime, if you will. This is to stop the
+	// jerkiness that is being annoying
+	if (pOwner->m_nButtons & IN_ATTACK)
+	{
+		m_flChargeTimeClient = max(m_flChargeTimeClient, m_flChargeTime);
+	}
+	else
+	{
+		m_flChargeTimeClient = min(m_flChargeTimeClient, m_flChargeTime);
+	}
+	
+
 	CBaseViewModel *pVM = pOwner->GetViewModel();
 	
 	if (m_iBarrelRotation < 0)
@@ -254,7 +269,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 	// Might need to separate m_flRotationValue from m_flChargeTime
 	// Perhaps a separate client-side variable to track it
-	m_flRotationValue += flTimeDelta * 100.0f * m_flChargeTime * 5.0f;
+	m_flRotationValue += flTimeDelta * 100.0f * m_flChargeTimeClient * 5.0f;
 	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
 #endif
 
