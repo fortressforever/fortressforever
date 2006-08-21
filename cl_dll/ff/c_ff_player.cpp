@@ -32,6 +32,8 @@
 #include "ff_hud_grenade1timer.h"
 #include "ff_hud_grenade2timer.h"
 
+#include "ff_gamerules.h"
+
 #include <igameresources.h>
 
 #if defined( CFFPlayer )
@@ -983,7 +985,7 @@ int C_FFPlayer::DrawModel( int flags )
 		// ********************************
 		// Check for "saveme"
 		// ********************************
-		if( IsInSaveMe() )
+		if( IsInSaveMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_saveme", TEXTURE_GROUP_OTHER );
 			if( pMaterial )
@@ -1000,7 +1002,7 @@ int C_FFPlayer::DrawModel( int flags )
 		// ********************************
 		// Check for "engyme"
 		// ********************************
-		if( IsInEngyMe() )
+		if( IsInEngyMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_OTHER );
 			if( pMaterial )
