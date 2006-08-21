@@ -270,10 +270,8 @@ CFFProjectileGrenade * CFFProjectileGrenade::CreateGrenade(const CBaseEntity *pS
 	pGrenade->SetElasticity(GetGrenadeElasticity());
 #endif
 
-	pGrenade->m_flDamage = iDamage;
-
-	// Bug #0000678: Pipe blast damage radius out of whack
-	pGrenade->m_DmgRadius = /*pGrenade->m_flDamage * 3.5f;*/ 120.0f;
+	pGrenade->SetDamage(iDamage);
+	pGrenade->SetDamageRadius(iDamage);
 
 	pGrenade->m_bIsLive = true;
 

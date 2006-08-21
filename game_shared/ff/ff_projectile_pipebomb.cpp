@@ -240,10 +240,8 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	pPipebomb->SetElasticity(GetGrenadeElasticity());
 #endif
 
-	pPipebomb->m_flDamage = iDamage;
-
-	// Bug #0000678: Pipe blast damage radius out of whack
-	pPipebomb->m_DmgRadius = /*pPipebomb->m_flDamage * 3.5f;*/ 120.0f;
+	pPipebomb->SetDamage(iDamage);
+	pPipebomb->SetDamageRadius(iDamage);
 
 	pPipebomb->m_bIsLive = false;
 
