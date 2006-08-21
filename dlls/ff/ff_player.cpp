@@ -310,6 +310,9 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iSpyDisguise ) ), 
 
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
+
+	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iWrenchMe ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -496,6 +499,14 @@ void CFFPlayer::PreThink(void)
 	{
 		m_bRadioTagged = false;
 	}
+
+	// See if it's time to reset our saveme status
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iSaveMe != 0 ) )
+		m_iSaveMe = 0;
+
+	// See if it's time to reset our wrenchme status
+	if( ( m_flWrenchMeTime < gpGlobals->curtime ) && ( m_iWrenchMe != 0 ) )
+		m_iWrenchMe = 0;
 
 	// Update our list of tagged players that the client
 	// should be "seeing" if it's time to do another update
@@ -1077,7 +1088,9 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
-	m_hSaveMe = NULL;
+	//m_hSaveMe = NULL;
+	m_flSaveMeTime = 0.0f;
+	m_flWrenchMeTime = 0.0f;
 
 	m_flPipebombShotTime = 0.0f;
 
@@ -1263,11 +1276,18 @@ void CFFPlayer::SpySilentFeign( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	/*
 	if( m_hSaveMe )
 	{
 		// This will kill it
 		m_hSaveMe->SetLifeTime( gpGlobals->curtime );
 	}
+	*/
+	if( m_iSaveMe )
+		m_iSaveMe = 0;
+
+	if( m_iWrenchMe )
+		m_iWrenchMe = 0;
 
 	// Log the death to the stats engine
 	g_StatsLog.AddToCount(this, STAT_DEATHS);
@@ -3082,6 +3102,30 @@ void CFFPlayer::Command_Discard( void )
 
 void CFFPlayer::Command_SaveMe( void )
 {
+	if( m_flSaveMeTime < gpGlobals->curtime )
+	{
+		m_iSaveMe = 1;
+
+		// Set the time we can do another saveme at
+		m_flSaveMeTime = gpGlobals->curtime + 7.0f;
+	}
+
+	// Do the actual sound always... cause spamming the sound is fun
+	CPASAttenuationFilter sndFilter( this );
+
+	// Remove people not allied to us (or not on our team)
+	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+	{
+		if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
+			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
+	}
+
+	// Compose the sound
+	char szBuf[ 64 ];
+	Q_snprintf( szBuf, sizeof( szBuf ), "%s.saveme", Class_IntToString( GetClassSlot() ) );
+	EmitSound( sndFilter, entindex(), szBuf );
+
+	/*
 	// MEDIC!
 	if( !m_hSaveMe )
 	{
@@ -3111,6 +3155,33 @@ void CFFPlayer::Command_SaveMe( void )
 	char buf[64];
 	Q_snprintf(buf, 63, "%s.saveme", Class_IntToString(GetClassSlot()));
 	EmitSound(sndFilter, entindex(), buf);
+	*/
+}
+
+void CFFPlayer::Command_WrenchMe( void )
+{
+	if( m_flWrenchMeTime < gpGlobals->curtime )
+	{
+		m_iWrenchMe = 1;
+
+		// Set the time we can do another wrenchme at
+		m_flWrenchMeTime = gpGlobals->curtime + 7.0f;
+	}
+
+	// Do the actual sound always... cause spamming the sound is fun
+	CPASAttenuationFilter sndFilter( this );
+
+	// Remove people not allied to us (or not on our team)
+	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+	{
+		if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
+			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
+	}
+
+	// Compose the sound
+	char szBuf[ 64 ];
+	Q_snprintf( szBuf, sizeof( szBuf ), "%s.wrenchme", Class_IntToString( GetClassSlot() ) );
+	EmitSound( sndFilter, entindex(), szBuf );
 }
 
 void CFFPlayer::StatusEffectsThink( void )
@@ -4154,16 +4225,6 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
 	{
 		SetRadioTagged( ToFFPlayer( info.GetAttacker() ), gpGlobals->curtime, radiotag_draw_duration.GetInt() );
-		//m_bRadioTagged = true;
-		//m_flRadioTaggedStartTime = gpGlobals->curtime;
-
-		// Setting time to max
-		//m_flRadioTaggedDuration = 3 * inputInfo.GetSniperRifleCharge( );
-		//m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
-
-		// Keep track of who's radio tagged us to award them each a point when we die
-		//m_hWhoTaggedMeList.AddToTail( ToFFPlayer( info.GetAttacker( ) ) );
-		//m_pWhoTaggedMe = ToFFPlayer( info.GetAttacker() );
 	}
 
 	// if it's a pyro, they take half damage

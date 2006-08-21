@@ -87,6 +87,14 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheSpySprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_spy" )
 CLIENTEFFECT_REGISTER_END()
 
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheSaveMeSprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_saveme" )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheWrenchMeSprite )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
+CLIENTEFFECT_REGISTER_END()
+
 void OnTimerExpired(C_FFTimer *pTimer)
 {
 	string name = pTimer->GetTimerName();
@@ -402,6 +410,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iSpyDisguise ) ),
 
 	RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
+	
+	RecvPropInt( RECVINFO( m_iSaveMe ) ),
+	RecvPropInt( RECVINFO( m_iWrenchMe ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
@@ -964,8 +975,49 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 int C_FFPlayer::DrawModel( int flags )
 {
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
+
+	float flOffset = 0.0f;
+	
 	if( pPlayer && ( this != pPlayer ) )
 	{
+		// ********************************
+		// Check for "saveme"
+		// ********************************
+		if( IsInSaveMe() )
+		{
+			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_saveme", TEXTURE_GROUP_OTHER );
+			if( pMaterial )
+			{
+				materials->Bind( pMaterial );
+				color32 c = { 255, 0, 0, 255 };
+				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+
+				// Increment offset
+				flOffset += 16.0f;
+			}
+		}
+
+		// ********************************
+		// Check for "wrenchme"
+		// ********************************
+		if( IsInWrenchMe() )
+		{
+			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_OTHER );
+			if( pMaterial )
+			{
+				materials->Bind( pMaterial );
+				color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
+				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+
+				// Increment offset
+				flOffset += 16.0f;
+			}
+		}
+
+		// ********************************
+		// Check for friendly spies
+		// ********************************
+
 		// See if we're drawing a spy who is on our team and disguised
 		if( IsDisguised() && ( GetTeamNumber() == pPlayer->GetTeamNumber() ) )
 		{
@@ -973,16 +1025,15 @@ int C_FFPlayer::DrawModel( int flags )
 			if( GetDisguisedTeam() != pPlayer->GetTeamNumber() )
 			{
 				// Thanks mirv!
-				IMaterial *pMaterial;
-				pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
+				IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
 				if( pMaterial )
 				{
 					materials->Bind( pMaterial );
-					color32 c = { 255, 255, 255, 255 };
-					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+					color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
 				}
 			}
-		}	
+		}
 	}
 
 	// If we're hallucinating, players intermittently get swapped.  But only for
