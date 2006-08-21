@@ -26,6 +26,10 @@
 
 #include "ScreenSpaceEffects.h"
 
+#define M_PI_2     1.57079632679489661923
+
+extern void AddNewDurationFromNow(float &flStart, float &flDuration, float flNewDuration, float flFadeInTime, float flFadeOutTime);
+
 //-----------------------------------------------------------------------------
 // Purpose: Okay because a lot of effects will be similar, this is now going
 //			to act as a base
@@ -56,7 +60,9 @@ protected:
 
 	float				m_flStart;
 	float				m_flDuration;
-	float				m_flDelay;
+
+	float				m_flNextDelay;
+	float				m_flNextDuration;
 };
 
 //-----------------------------------------------------------------------------
@@ -133,7 +139,7 @@ void CBaseEffect::Enable(bool bEnable)
 
 	if (m_bEnable)
 	{
-		m_flStart = gpGlobals->curtime + m_flDelay;
+		AddNewDurationFromNow(m_flStart, m_flDuration, m_flNextDuration, M_PI_2, M_PI_2);
 	}
 }
 
@@ -152,8 +158,8 @@ void CBaseEffect::SetParameters(KeyValues *params)
 {
 	if (params->GetDataType("duration") == KeyValues::TYPE_FLOAT)
 	{
-		m_flDuration = params->GetFloat("duration");
-		m_flDelay = params->GetFloat("delay");
+		m_flNextDuration = max(0, params->GetFloat("duration"));
+		m_flNextDelay = params->GetFloat("delay");	// Not used atm
 	}
 }
 
@@ -204,11 +210,11 @@ void CBaseEffect::Render(int x, int y, int w, int h)
 
 	// We want to fade in and out
 	// frontbuffer.vmt is a quick and simple way of getting the.. frontbuffer
-	if (flElapsed < 0.5f || flRemaining < 0.5f)
+	if (flElapsed < M_PI_2 || flRemaining < M_PI_2)
 	{
 		pMatScreen = materials->FindMaterial("frontbuffer.vmt", TEXTURE_GROUP_OTHER, true);
 
-		flInverseAlpha = (flElapsed < 0.5f ? flElapsed : flRemaining) * 2.0f;
+		flInverseAlpha = (flElapsed < M_PI_2 ? flElapsed : flRemaining) / M_PI_2;
 
 		flInverseAlpha = 1.0f - clamp(flInverseAlpha, 0.0f, 1.0f);
 	}
