@@ -294,7 +294,7 @@ public:
 	void Command_DropItems( void );
 	void Command_Discard( void );	
 	void Command_SaveMe( void );
-	void Command_WrenchMe( void );
+	void Command_EngyMe( void );
 	void Command_Disguise();
 
 	void Command_SabotageSentry();
@@ -618,12 +618,12 @@ protected:
 	// **********************************
 
 	// **********************************
-	// WrenchMe stuffs
+	// EngyMe stuffs
 public:
-	bool IsInWrenchMe( void ) const { return m_iWrenchMe != 0; }
+	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
 protected:
-	CNetworkVar( unsigned int, m_iWrenchMe );
-	float m_flWrenchMeTime;
+	CNetworkVar( unsigned int, m_iEngyMe );
+	float m_flEngyMeTime;
 	// **********************************
 
 public:

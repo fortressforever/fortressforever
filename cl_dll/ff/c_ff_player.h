@@ -273,11 +273,11 @@ protected:
 	// **********************************
 
 	// **********************************
-	// WrenchMe stuffs
+	// EngyMe stuffs
 public:
-	bool IsInWrenchMe( void ) const { return m_iWrenchMe != 0; }
+	bool IsInEngyMe( void ) const { return m_iEngyhMe != 0; }
 protected:
-	unsigned int m_iWrenchMe;
+	unsigned int m_iEngyMe;
 	// **********************************
 
 private:

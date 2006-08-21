@@ -312,7 +312,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt(SENDINFO(m_iSpawnInterpCounter), 4),
 
 	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iWrenchMe ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -504,9 +504,9 @@ void CFFPlayer::PreThink(void)
 	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iSaveMe != 0 ) )
 		m_iSaveMe = 0;
 
-	// See if it's time to reset our wrenchme status
-	if( ( m_flWrenchMeTime < gpGlobals->curtime ) && ( m_iWrenchMe != 0 ) )
-		m_iWrenchMe = 0;
+	// See if it's time to reset our engyme status
+	if( ( m_flEngyMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
+		m_iEngyMe = 0;
 
 	// Update our list of tagged players that the client
 	// should be "seeing" if it's time to do another update
@@ -1090,7 +1090,7 @@ void CFFPlayer::SetupClassVariables()
 
 	//m_hSaveMe = NULL;
 	m_flSaveMeTime = 0.0f;
-	m_flWrenchMeTime = 0.0f;
+	m_flEngyMeTime = 0.0f;
 
 	m_flPipebombShotTime = 0.0f;
 
@@ -1286,8 +1286,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( m_iSaveMe )
 		m_iSaveMe = 0;
 
-	if( m_iWrenchMe )
-		m_iWrenchMe = 0;
+	if( m_iEngyMe )
+		m_iEngyMe = 0;
 
 	// Log the death to the stats engine
 	g_StatsLog.AddToCount(this, STAT_DEATHS);
@@ -3158,14 +3158,14 @@ void CFFPlayer::Command_SaveMe( void )
 	*/
 }
 
-void CFFPlayer::Command_WrenchMe( void )
+void CFFPlayer::Command_EngyMe( void )
 {
-	if( m_flWrenchMeTime < gpGlobals->curtime )
+	if( m_flEngyMeTime < gpGlobals->curtime )
 	{
-		m_iWrenchMe = 1;
+		m_iEngyMe = 1;
 
-		// Set the time we can do another wrenchme at
-		m_flWrenchMeTime = gpGlobals->curtime + 7.0f;
+		// Set the time we can do another engyme at
+		m_flEngyMeTime = gpGlobals->curtime + 7.0f;
 	}
 
 	// Do the actual sound always... cause spamming the sound is fun
@@ -3180,7 +3180,7 @@ void CFFPlayer::Command_WrenchMe( void )
 
 	// Compose the sound
 	char szBuf[ 64 ];
-	Q_snprintf( szBuf, sizeof( szBuf ), "%s.wrenchme", Class_IntToString( GetClassSlot() ) );
+	Q_snprintf( szBuf, sizeof( szBuf ), "%s.engyme", Class_IntToString( GetClassSlot() ) );
 	EmitSound( sndFilter, entindex(), szBuf );
 }
 
