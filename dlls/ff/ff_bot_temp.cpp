@@ -187,7 +187,7 @@ CON_COMMAND(bot_engyme, "have a bot do engyme")
 
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
-			pPlayer->Command_WrenchMe();
+			pPlayer->Command_EngyMe();
 		}
 	}
 }
