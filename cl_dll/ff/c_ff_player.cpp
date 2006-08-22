@@ -886,8 +886,12 @@ void C_FFPlayer::PreThink( void )
 	else if (m_afButtonReleased & IN_ATTACK2)
 		ClassSpecificSkill_Post();
 
-	if (m_afButtonPressed & IN_RELOAD && !IsAlive())
-		engine->ClientCmd("-reload");
+	//if (m_afButtonPressed & IN_RELOAD && !IsAlive())
+	//	engine->ClientCmd("-reload");
+
+	// New possible fix
+	if( ::input && !IsAlive() )
+		::input->ClearInputButton( IN_RELOAD );
 
 	BaseClass::PreThink();
 }
