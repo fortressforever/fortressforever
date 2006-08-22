@@ -325,20 +325,15 @@ void CFFPlayer::PlayJumpSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 	m_flJumpTime = gpGlobals->curtime + 0.2f;
 
-	// If we want different jump sounds for material...
-//	IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
-//	const char *pSoundName = physprops->GetString(stepSoundName);
-//	CSoundParameters params;
-//	if (!CBaseEntity::GetParametersForSound(pSoundName, params, NULL))
-//		return;
-
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);
 
 #ifndef CLIENT_DLL
-	// Jump sounds done clientside for everybody who can see the models
+	// Don't send to self
 	if (gpGlobals->maxClients > 1)
-		filter.RemoveRecipientsByPVS(vecOrigin);
+	{
+		filter.RemoveRecipient(this);
+	}
 #endif
 
 	EmitSound_t ep;
@@ -371,6 +366,7 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	filter.AddRecipientsByPAS(vecOrigin);
 
 #ifndef CLIENT_DLL
+	// Should we be excluding by PVS or just the local player??
 	if (gpGlobals->maxClients > 1)
 		filter.RemoveRecipientsByPVS(vecOrigin);
 #endif
