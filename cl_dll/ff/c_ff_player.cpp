@@ -25,6 +25,7 @@
 #include "dlight.h"
 #include "beamdraw.h"
 #include "fx.h"
+#include "c_te_effect_dispatch.h"
 
 #include "view.h"
 #include "iviewrender.h"
@@ -893,6 +894,12 @@ void C_FFPlayer::PreThink( void )
 	if( ::input && !IsAlive() )
 		::input->ClearInputButton( IN_RELOAD );
 
+	// Clear hallucinations if time
+	if (m_iHallucinationIndex && m_flHallucinationFinish < gpGlobals->curtime)
+	{
+		m_iHallucinationIndex = 0;
+	}
+
 	BaseClass::PreThink();
 }
 
@@ -1068,6 +1075,14 @@ int C_FFPlayer::DrawModel( int flags )
 			{
 				m_nSkin = nSkin;
 			}
+		}
+	}
+	else
+	{
+		// Make sure hallucinations are reset!
+		if (m_nSkin != GetTeamNumber() - TEAM_BLUE)
+		{
+			m_nSkin = GetTeamNumber() - TEAM_BLUE;
 		}
 	}
 
@@ -1656,3 +1671,28 @@ CON_COMMAND(ffdev_hallucinatereset, "okay stop")
 	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 	pPlayer->m_iHallucinationIndex = 0;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: This is a bit of a mis-use of the effects system
+//-----------------------------------------------------------------------------
+void Hallucination_Callback(const CEffectData &data)
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+	Assert(pPlayer);
+
+	// There is already a hallucination going on. We don't want to keep
+	// swapping the index because that will look weird. Just extend the
+	// current effect instead
+	if (pPlayer->m_iHallucinationIndex)
+	{
+		pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 15.0f;
+		return;
+	}
+	
+	pPlayer->m_iHallucinationIndex = random->RandomInt(1, 50);
+	pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 15.0f;
+}
+
+DECLARE_CLIENT_EFFECT("Hallucination", Hallucination_Callback);
+
