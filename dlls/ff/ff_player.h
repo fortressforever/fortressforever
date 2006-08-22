@@ -226,6 +226,7 @@ public:
 	bool m_fRandomPC;
 	int m_iNextClass;
 
+	void ChangeTeam(int iTeamNum);
 	void ChangeClass(const char *szNewClassName);
 	int ActivateClass( void );
 	int GetClassSlot();

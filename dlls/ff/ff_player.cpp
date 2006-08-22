@@ -1811,6 +1811,14 @@ int CFFPlayer::ActivateClass()
 	return GetClassSlot();
 }
 
+void CFFPlayer::ChangeTeam(int iTeamNum)
+{
+	// clear the random player class flag, so player doesnt
+	// immediately spawn when changing classes
+	m_fRandomPC = false;
+	BaseClass::ChangeTeam(iTeamNum);
+}
+
 void CFFPlayer::ChangeClass(const char *szNewClassName)
 {
 	//const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
