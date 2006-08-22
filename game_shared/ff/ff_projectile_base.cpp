@@ -20,6 +20,7 @@
 	#include "util.h"
 #else
 	#include "c_ff_player.h"
+	#include "iinput.h"
 #endif 
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
@@ -64,19 +65,26 @@ END_NETWORK_TABLE()
 	{
 		BaseClass::PostDataUpdate(type);
 
+		// That's all for now
+		if (GetOwnerEntity() != CBasePlayer::GetLocalPlayer() || input->CAM_IsThirdPerson())
+			return;
+
 		if (type == DATA_UPDATE_CREATED) 
 		{
+			// We want to interpolate this thing
+			AddToInterpolationList();
+
 			// Store start origin
 			m_vecStartOrigin = GetLocalOrigin();
 
 			// Now stick our initial velocity into the interpolation history 
 			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-			
+
 			interpolator.ClearHistory();
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			Vector vecCurOrigin = GetLocalOrigin() - m_vecInitialVelocity;
+			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.1f);
 			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
 
 			// Add the current sample.
