@@ -367,8 +367,12 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 #ifndef CLIENT_DLL
 	// Should we be excluding by PVS or just the local player??
+	// Doing the latter for now
 	if (gpGlobals->maxClients > 1)
-		filter.RemoveRecipientsByPVS(vecOrigin);
+	{
+		//filter.RemoveRecipientsByPVS(vecOrigin);
+		filter.RemoveRecipient(this);
+	}
 #endif
 
 	EmitSound_t ep;
