@@ -233,9 +233,7 @@ bool CFFEntitySystem::StartForMap()
 	LoadLuaFile(L, "maps/includes/base.lua");
 
 	// Get filename from map
-	strcpy( filename, "maps/" );
-	strcat( filename, STRING( gpGlobals->mapname ) );
-	strcat( filename, ".lua" );
+	Q_snprintf( filename, sizeof( filename ), "maps/%s.lua", STRING( gpGlobals->mapname ) );
 
 	m_ScriptExists = LoadLuaFile(L, filename);
 
