@@ -384,38 +384,6 @@ namespace FFLib
 	{
 		return gEntList.FindEntityByName(NULL, szName, NULL);
 	}
-	
-	// These don't work - use the "Collection" stuff instead
-	/*
-	//std::vector<CBaseEntity*> GetEntitiesByName(const char* szName)
-	std::vector<int> GetEntitiesByName(const char* szName)
-	{
-		static std::vector<int> ret;
-
-		CBaseEntity *ent = gEntList.FindEntityByName(NULL, szName, NULL);
-		while (ent != NULL)
-		{
-			DevMsg("push_back(%d)\n", ENTINDEX(ent));
-			ret.push_back(ENTINDEX(ent));
-			ent = gEntList.FindEntityByName(ent, szName, NULL);
-		}
-
-		return ret;
-	}
-
-	std::vector<CBaseEntity*> GetEntitiesInSphere(Vector origin, float radius)
-	{
-		static std::vector<CBaseEntity*> ret;
-
-		CBaseEntity *ent;
-		for( CEntitySphereQuery sphere( origin, radius ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-		{
-			ret.push_back(ent);
-		}
-
-		return ret;
-	}
-	*/
 
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
@@ -575,18 +543,6 @@ namespace FFLib
 
 		return dynamic_cast< CFFDetpack * >( pEntity );
 	}
-
-	/*CFFMiniTurret *CastToTurret( CBaseEntity *pEntity )
-	{
-		if( !pEntity )
-			return NULL;
-
-		if( !IsTurret( pEntity ) )
-			return NULL;
-		
-		return dynamic_cast< CFFMiniTurret * >( pEntity );
-	}
-	*/
 
 	bool AreTeamsAllied(CTeam* pTeam1, CTeam* pTeam2)
 	{
@@ -800,54 +756,6 @@ namespace FFLib
 	{
 	}
 
-	void UseEntity(const char* itemname, const char* classname, const char* action)
-	{
-		// get all info_ff_scripts
-		CBaseEntity *pEnt = gEntList.FindEntityByClassname( NULL, classname );
-
-		inputdata_t id;
-
-		while( pEnt != NULL )
-		{
-			if ( FStrEq( STRING(pEnt->GetEntityName()), itemname ) )
-			{
-				// if this is the right one, then fire its output
-				DevMsg("[SCRIPT] found goal %d: %s\n", ENTINDEX(pEnt), itemname);
-
-				if (FStrEq(classname, "ff_goal"))
-				{
-					if (FStrEq(action, "FireOutput"))
-						((CFFGoal *)pEnt)->FireOutput();
-				}
-				else if (FStrEq(classname, "func_door") || FStrEq(classname, "func_water"))
-				{
-					if (FStrEq(action, "Open"))
-						((CBaseDoor *)pEnt)->InputOpen(id);
-					else if (FStrEq(action, "Close"))
-						((CBaseDoor *)pEnt)->InputClose(id);
-					else if (FStrEq(action, "Toggle"))
-						((CBaseDoor *)pEnt)->InputToggle(id);
-					else if (FStrEq(action, "Lock"))
-						((CBaseDoor *)pEnt)->InputLock(id);
-					else if (FStrEq(action, "Unlock"))
-						((CBaseDoor *)pEnt)->InputUnlock(id);
-				}
-				else if (FStrEq(classname, "func_button"))
-				{
-					if (FStrEq(action, "Lock"))
-						((CBaseButton *)pEnt)->InputLock(id);
-					else if (FStrEq(action, "Unlock"))
-						((CBaseButton *)pEnt)->InputUnlock(id);
-					else if (FStrEq(action, "Press"))
-						((CBaseButton *)pEnt)->InputPress(id);
-				}
-			}
-
-			// Next!
-			pEnt = gEntList.FindEntityByClassname( pEnt, classname );
-		}
-	}
-
 	float GetConvar( const char *pszConvarName )
 	{
 		if( !pszConvarName )
@@ -1053,6 +961,14 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 			.def_readwrite("Green",		&CPlayerLimits::green),
 
 		// global functions
+		def("AddHudIcon",				&FFLib::AddHudIcon),
+		def("AddHudText",				&FFLib::AddHudText),
+		def("AddHudTimer",				&FFLib::AddHudTimer),
+		def("ApplyToAll",				&FFLib::ApplyToAll),
+		def("ApplyToTeam",				&FFLib::ApplyToTeam),
+		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
+		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
+		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
 		def("BroadCastMessage",			&FFLib::BroadcastMessage),
 		def("BroadCastMessageToPlayer",	&FFLib::SendPlayerMessage),
 		def("BroadCastSound",			&FFLib::BroadcastSound),
@@ -1065,66 +981,54 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToDispenser",			&FFLib::CastToDispenser),
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
-		//def("CastToTurret",				&FFLib::CastToTurret),
+		def("ConsoleToAll",				&FFLib::ConsoleToAll),
+		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
-		//def("GetEntitiesByName",		&FFLib::GetEntitiesByName,			return_stl_iterator),
-		//def("GetEntitiesInSphere",		&FFLib::GetEntitiesInSphere,		return_stl_iterator),
 		def("GetInfoScriptById",		&FFLib::GetInfoScriptById),
 		def("GetInfoScriptByName",		&FFLib::GetInfoScriptByName),
-		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
-		def("GetPlayer",				&FFLib::GetPlayer),
-		def("GetTeam",					&FFLib::GetTeam),
 		def("GetGrenade",				&FFLib::GetGrenade),
+		def("GetPacketloss",			&FFLib::GetPacketloss),
+		def("GetPing",					&FFLib::GetPing),
+		def("GetPlayer",				&FFLib::GetPlayer),
+		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
+		def("GetServerTime",			&FFLib::GetServerTime),
+		def("GetSteamID",				&FFLib::GetSteamID),
+		def("GetTeam",					&FFLib::GetTeam),
+		def("GetTriggerScriptByName",	&FFLib::GetTriggerScriptByName),
+		def("GoToIntermission",			&FFLib::GoToIntermission),
+		def("IncludeScript",			&FFLib::IncludeScript),
 		def("IsPlayer",					&FFLib::IsPlayer),
 		def("IsDispenser",				&FFLib::IsDispenser),
 		def("IsSentrygun",				&FFLib::IsSentrygun),
 		def("IsDetpack",				&FFLib::IsDetpack),
 		def("IsGrenade",				&FFLib::IsGrenade),
 		def("IsTurret",					&FFLib::IsTurret),
-		def("AreTeamsAllied",			(bool(*)(CTeam*, CTeam*))&FFLib::AreTeamsAllied),
-		def("AreTeamsAllied",			(bool(*)(int, int))&FFLib::AreTeamsAllied),
-		def("ConsoleToAll",				&FFLib::ConsoleToAll),
+		def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
 		def("NumPlayers",				&FF_NumPlayers),
+		def("OutputEvent",				(void(*)(const char*, const char*))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
+		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float, unsigned int))&FFLib::FireOutput),
 		def("PrecacheModel",			&CBaseEntity::PrecacheModel),
 		def("PrecacheSound",			&CBaseEntity::PrecacheScriptSound),
+		def("PrintBool",				&FFLib::PrintBool),
 		def("RandomFloat",				&FFLib::RandomFloat),
 		def("RandomInt",				&FFLib::RandomInt),
 		def("RemoveEntity",				&FFLib::RemoveEntity),
+		def("RemoveHudItem",			&FFLib::RemoveHudItem),
 		def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
-		def("KillAndRespawnAllPlayers",	&FFLib::KillAndRespawnAllPlayers),
+		def("ResetMap",					&FFLib::ResetMap),
 		def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
 		def("SetPlayerLimit",			&FFLib::SetPlayerLimit),
 		def("SetPlayerLimits",			&FFLib::SetPlayerLimits),
 		def("SetClassLimits",			&FFLib::SmartClassLimits),
+		def("SetConvar",				&FFLib::SetConvar),
 		def("SetTeamClassLimit",		&FFLib::SetTeamClassLimit),
 		def("SetTeamName",				&FFLib::SetTeamName),
 		def("SmartMessage",				&FFLib::SmartMessage),
 		def("SmartSound",				&FFLib::SmartSound),
 		def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
-		def("SmartTeamSound",			&FFLib::SmartTeamSound),
-		def("GetServerTime",			&FFLib::GetServerTime),
-		def("UseEntity",				&FFLib::UseEntity),
-		def("IncludeScript",			&FFLib::IncludeScript),
-		def("ApplyToAll",				&FFLib::ApplyToAll),
-		def("ApplyToTeam",				&FFLib::ApplyToTeam),
-		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
-		def("ResetMap",					&FFLib::ResetMap),
-		def("GetConvar",				&FFLib::GetConvar),
-		def("SetConvar",				&FFLib::SetConvar),
-		def("GetSteamID",				&FFLib::GetSteamID),
-		def("GetPing",					&FFLib::GetPing),
-		def("GetPacketloss",			&FFLib::GetPacketloss),
-		def("PrintBool",				&FFLib::PrintBool),
-		def("GoToIntermission",			&FFLib::GoToIntermission),
-		def("OutputEvent",				(void(*)(const char*, const char*))&FFLib::FireOutput),
-		def("OutputEvent",				(void(*)(const char*, const char*, const char*))&FFLib::FireOutput),
-		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float))&FFLib::FireOutput),
-		def("OutputEvent",				(void(*)(const char*, const char*, const char*, float, unsigned int))&FFLib::FireOutput),
-		def("GetPlayerByID",			&FFLib::GetPlayerByID),	// TEMPORARY
-		def("AddHudIcon",				&FFLib::AddHudIcon),
-		def("AddHudText",				&FFLib::AddHudText),
-		def("AddHudTimer",				&FFLib::AddHudTimer),
-		def("RemoveHudItem",			&FFLib::RemoveHudItem)
+		def("SmartTeamSound",			&FFLib::SmartTeamSound)
 	];
 }
