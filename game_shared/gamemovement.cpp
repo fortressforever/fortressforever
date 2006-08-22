@@ -3554,7 +3554,7 @@ void CGameMovement::FinishUnDuck( void )
 		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
 		Vector viewDelta = ( hullSizeNormal - hullSizeCrouch );
 		viewDelta.Negate();
-		VectorAdd( newOrigin, viewDelta, newOrigin );
+		//VectorAdd( newOrigin, viewDelta, newOrigin );	// |-- Mirv: I think this is causing the duck bug
 	}
 
 	player->m_Local.m_bDucked = false;
