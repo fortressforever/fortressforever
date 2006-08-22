@@ -258,6 +258,7 @@ public:
 	float		m_flSpeedModifier;
 
 	int			m_iHallucinationIndex;
+	float		m_flHallucinationFinish;
 
 public:
 	Color GetTeamColor( void ) const { return m_clrTeamColor; }

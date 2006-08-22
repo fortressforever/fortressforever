@@ -65,6 +65,8 @@ protected:
 	float m_flNextHurt;
 	float m_flOpenTime;
 	float m_flNextPuff;
+
+	Vector	m_vecLastPosition;
 #endif
 };
 
@@ -108,6 +110,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		m_flNextPuff = 0.0f;
 
 		m_bIsEmitting = 0;
+
+		m_vecLastPosition = vec3_origin;
 	}
 
 	//-----------------------------------------------------------------------------
@@ -152,12 +156,16 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		if (gpGlobals->curtime > m_flDetonateTime && m_flNextHurt < gpGlobals->curtime)
 		{
 			// If the grenade is in a no grenade area, kill it
-			// Have moved this into here rather than every frame. However every 0.2
-			// seconds is still a bit much.
-			if( !FFScriptRunPredicates( this, "onexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
+			// This is now only run when the grenade has changed position
+			if (m_vecLastPosition != GetAbsOrigin())
 			{
-				UTIL_Remove(this);
-				return;
+				if( !FFScriptRunPredicates( this, "onexplode", true ) && ( gpGlobals->curtime > m_flDetonateTime ) )
+				{
+					UTIL_Remove(this);
+					return;
+				}
+
+				m_vecLastPosition = GetAbsOrigin();
 			}
 
 			m_flNextHurt = gpGlobals->curtime + 0.2f;

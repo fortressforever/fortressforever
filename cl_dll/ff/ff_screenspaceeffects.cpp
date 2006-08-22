@@ -23,8 +23,13 @@
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/IColorCorrection.h"
 #include "c_baseplayer.h"
+#include "clienteffectprecachesystem.h"
 
 #include "ScreenSpaceEffects.h"
+
+CLIENTEFFECT_REGISTER_BEGIN(PrecacheFrontbuffer)
+CLIENTEFFECT_MATERIAL("frontbuffer.vmt")
+CLIENTEFFECT_REGISTER_END()
 
 #define M_PI_2     1.57079632679489661923
 

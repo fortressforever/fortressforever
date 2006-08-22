@@ -4682,6 +4682,10 @@ void CFFPlayer::Extinguish( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Gas( float flDuration, float flIconDuration )
 {
+	// The gas effect is limited to once per second
+	if (m_flLastGassed + 1.0f > gpGlobals->curtime)
+		return;
+
 	m_bGassed = true;
 
 	m_flLastGassed = gpGlobals->curtime;	
@@ -4694,6 +4698,11 @@ void CFFPlayer::Gas( float flDuration, float flIconDuration )
 		WRITE_BYTE( FF_STATUSICON_HALLUCINATIONS );
 		WRITE_FLOAT( flIconDuration );
 	MessageEnd();
+
+	// Send hallucination effect
+	// This should probably be done as a HUD message!
+	CEffectData data;
+	te->DispatchEffect(user, 0.0, data.m_vOrigin, "Hallucination", data);
 }
 
 //-----------------------------------------------------------------------------
