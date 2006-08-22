@@ -116,6 +116,9 @@ void CHudLocation::MsgFunc_SetPlayerLocation( bf_read &msg )
 
 void CHudLocation::Paint( void )
 {
+	if( !engine->IsInGame() )
+		return;
+
 	if( C_BasePlayer::GetLocalPlayer() && ( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE ) )
 		return;
 

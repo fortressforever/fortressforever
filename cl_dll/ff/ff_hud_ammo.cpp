@@ -134,6 +134,11 @@ int CHudAmmo::GetPlayerAmmo(C_FFPlayer *pPlayer, C_BaseCombatWeapon *pWeapon)
 
 void CHudAmmo::OnThink()
 {
+	// Fix for ToFFPlayer( NULL ) being called.
+	if( !engine->IsInGame() )
+		return;
+
+	// A ha! One of the ToFFPlayer( NULL ) calls!
 	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 
 	if (!pPlayer)

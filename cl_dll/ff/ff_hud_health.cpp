@@ -128,9 +128,14 @@ void CHudHealth::VidInit()
 //-----------------------------------------------------------------------------
 void CHudHealth::OnThink()
 {
-	int newHealth = 0;
-	int maxHealth = 0;
+	// Fix for ToFFPlayer( NULL ) being called.
+	if( !engine->IsInGame() )
+		return;
 
+	int newHealth = 0;
+	int maxHealth = 0;	
+
+	// A ha! One of the ToFFPlayer( NULL ) calls!
 	C_FFPlayer *local = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
 
 	if (!local)
