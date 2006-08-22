@@ -315,6 +315,7 @@ END_RECV_TABLE( )
 //-----------------------------------------------------------------------------
 C_FFSentryGun::C_FFSentryGun( void )
 {
+	m_iLocalHallucinationIndex = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -370,4 +371,66 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 	pSentryGun->m_nSkin = clamp(CBasePlayer::GetLocalPlayer()->GetTeamNumber() - TEAM_BLUE, 0, 3);
 
 	return pSentryGun;
+}
+
+//-------------------------------------------------------------------------
+// Purpose: Sentryguns will sometimes appear as the wrong model when
+//			the local player is hallucinating
+//-------------------------------------------------------------------------
+int C_FFSentryGun::DrawModel(int flags)
+{
+	int nRet = BaseClass::DrawModel(flags);
+
+	if (m_iLevel <= 0)
+		return nRet;
+
+	C_FFPlayer *pLocalPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+	// No hallucinations here. But check first if we have to reset
+	if (!pLocalPlayer || !pLocalPlayer->m_iHallucinationIndex)
+	{
+		if (m_iLocalHallucinationIndex >= 0)
+		{
+			switch (m_iLevel)
+			{
+			case 1:
+				SetModel(FF_SENTRYGUN_MODEL);
+				break;
+			case 2:
+				SetModel(FF_SENTRYGUN_MODEL_LVL2);
+				break;
+			case 3:
+				SetModel(FF_SENTRYGUN_MODEL_LVL3);
+				break;
+			}
+
+			m_iLocalHallucinationIndex = -1;
+		}
+
+		return nRet;
+	}
+
+	int nNewLevel = entindex() + pLocalPlayer->m_iHallucinationIndex;
+
+	nNewLevel = nNewLevel % 3; // ouch
+
+	if (m_iLocalHallucinationIndex == nNewLevel)
+		return nRet;
+
+	switch (nNewLevel)
+	{
+	case 0:
+		SetModel(FF_SENTRYGUN_MODEL);
+		break;
+	case 1:
+		SetModel(FF_SENTRYGUN_MODEL_LVL2);
+		break;
+	case 2:
+		SetModel(FF_SENTRYGUN_MODEL_LVL3);
+		break;
+	}
+
+	m_iLocalHallucinationIndex = nNewLevel;
+
+	return nRet;
 }

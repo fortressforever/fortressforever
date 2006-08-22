@@ -644,6 +644,10 @@ public:
 	// Creates a client side ONLY sentrygun - used for build slot
 	static C_FFSentryGun *CreateClientSideSentryGun( const Vector& vecOrigin, const QAngle& vecAngles );
 
+	int	m_iLocalHallucinationIndex;
+
+	virtual int DrawModel(int flags);
+
 	// Mulch: now this is in buildableobject to extend to disp & sg
 	// Mirv: Just going to store the ammo percentage here, with the msb
 	// holding the rocket state
