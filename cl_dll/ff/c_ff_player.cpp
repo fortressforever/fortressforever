@@ -1052,8 +1052,8 @@ int C_FFPlayer::DrawModel( int flags )
 		{
 			int nSkin = entindex() + pLocalPlayer->m_iHallucinationIndex;
 
-			// It doesn't really matter if this is acutally odd or even, just need
-			// half the samples
+			// It doesn't really matter if this is actually odd or even, 
+			// we just need to differentiate between half of them
 			if (nSkin & 1)
 			{
 				nSkin = pLocalPlayer->GetTeamNumber() - TEAM_BLUE;
@@ -1063,7 +1063,7 @@ int C_FFPlayer::DrawModel( int flags )
 				nSkin = GetTeamNumber() - TEAM_BLUE;
 			}
 
-			// Skin has changed
+			// This player's skin needs changing
 			if (m_nSkin != nSkin)
 			{
 				m_nSkin = nSkin;
@@ -1649,4 +1649,10 @@ CON_COMMAND(ffdev_hallucinate, "hallucination!")
 {
 	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 	pPlayer->m_iHallucinationIndex++;
+}
+
+CON_COMMAND(ffdev_hallucinatereset, "okay stop")
+{
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	pPlayer->m_iHallucinationIndex = 0;
 }

@@ -3466,6 +3466,12 @@ void CViewRender::RenderViewEx( const CViewSetup &view, int nClearFlags, int wha
 		// paint the vgui screen
 		VGui_PreRender();
 
+		// --> Mirv: 
+		// Reduce the depth range so that our hud stuff isn't affected
+		// by the world/viewmodel.
+		materials->DepthRange( 0.0f, 0.1f );
+		// <--
+
 		// Make sure the client .dll root panel is at the proper point before doing the "SolveTraverse" calls
 		vgui::VPANEL root = enginevgui->GetPanel( PANEL_CLIENTDLL );
 		if ( root != 0 )
