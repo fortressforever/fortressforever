@@ -439,9 +439,8 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
-#ifdef _LINUX
+	Warning( "[RunPredicates] Shit is deprecated!\n" );
 	return true;
-#endif
 
 	// If there is no active script then allow the ents to always go
 	if( !m_ScriptExists || !L )
@@ -527,7 +526,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
 #ifdef _LINUX
-	return bExpectedVal;
+	//return bExpectedVal;
 #endif
 
 	if( pObject && pszFunction )
