@@ -566,7 +566,7 @@ ConVar mp_prematch( "mp_prematch",
 			return false;
 
 		CBaseEntity *pList[ 128 ];
-		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() -Vector( 16, 16, 36 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 36 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() -Vector( 16, 16, 0 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 70 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
 		if( count )
 		{
 			// Iterate through the list and check the results
