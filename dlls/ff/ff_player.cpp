@@ -631,6 +631,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
+	PrecacheScriptSound("Player.Flameout");
 
 	// Flashlight - Bug #0000679: flashlight sound isn't precached
 	PrecacheScriptSound( "HL2Player.FlashLightOn" );
@@ -4645,6 +4646,19 @@ void CFFPlayer::Extinguish( void )
 		MessageEnd();
 
 		RemoveFlag(FL_ONFIRE);
+
+		// Bug #0000969: first person flame effect not extinguished when going in water
+		// Remove view effect
+		CSingleUserRecipientFilter user2( ( CBasePlayer * )this );
+		user2.MakeReliable();
+
+		UserMessageBegin( user2, "FFViewEffect" );
+			WRITE_BYTE( FF_VIEWEFFECT_BURNING );
+			WRITE_FLOAT( 0.0 );
+		MessageEnd();
+
+		// Play sound!
+		EmitSound( "Player.Flameout" );
 	}
 
 	// Make sure these are turned off
@@ -4662,18 +4676,6 @@ void CFFPlayer::Extinguish( void )
 		// Bug #0000162: Switching class while on fire, keeps playing burn sound
 		pFlame->SetLifetime(-1);
 		pFlame->FlameThink();
-	}
-
-	// Bug #0000969: first person flame effect not extinguished when going in water
-	// Remove view effect
-	{
-		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
-		user.MakeReliable();
-
-		UserMessageBegin( user, "FFViewEffect" );
-			WRITE_BYTE( FF_VIEWEFFECT_BURNING );
-			WRITE_FLOAT( 0.0 );
-		MessageEnd();
 	}
 }
 
