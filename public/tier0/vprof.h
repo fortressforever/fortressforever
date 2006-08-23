@@ -96,6 +96,9 @@
 #define VPROF_BUDGETGROUP_DISP_RAYTRACES			_T("Displacement Ray Traces")
 #define VPROF_BUDGETGROUP_DISP_HULLTRACES			_T("Displacement Hull Traces")
 #define VPROF_BUDGETGROUP_TEXTURE_CACHE				_T("Texture Cache")
+
+// FF SPECIFIC VPROF ENTRIES
+#define VPROF_BUDGETGROUP_FF_BUILDABLE					_T("FF Buildable Objects")
 	
 #ifdef _XBOX
 // update flags

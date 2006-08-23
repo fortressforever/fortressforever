@@ -207,6 +207,8 @@ void CFFDispenser::GoLive( void )
 */
 void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 {
+	VPROF_BUDGET( "CFFDispenser::OnObjectTouch", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CheckForOwner();
 
 	if( pOther )
@@ -317,6 +319,8 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 */
 void CFFDispenser::OnObjectThink( void )
 {
+	VPROF_BUDGET( "CFFDispenser::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Do any thinking that needs to be done for _this_ class
 	CheckForOwner();
 
@@ -342,6 +346,8 @@ void CFFDispenser::OnObjectThink( void )
 
 void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 {
+	VPROF_BUDGET( "CFFDispenser::Event_Killed", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if( m_hOwner.Get() )
 		SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "Dispenser_Destroyed" );
 
@@ -406,6 +412,8 @@ CFFDispenser *CFFDispenser::Create( const Vector &vecOrigin, const QAngle &vecAn
 //
 void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 {
+	VPROF_BUDGET( "CFFDispenser::Dispense", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if( pPlayer->GetClassSlot() == CLASS_ENGINEER )
 		DispenseHelper( pPlayer, m_iCells.GetForModify(), 75, AMMO_CELLS ); // Engies get 75 cells
 	else
@@ -582,6 +590,8 @@ void CFFDispenser::Detonate()
 //-----------------------------------------------------------------------------
 void CFFDispenser::DoExplosionDamage()
 {
+	VPROF_BUDGET( "CFFDispenser::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Using the values posted in the bugtracker, capping at 200
 	float flDamage = 1.4f * m_iRockets + 1.0f * m_iCells;
 	flDamage = min(200, flDamage);
