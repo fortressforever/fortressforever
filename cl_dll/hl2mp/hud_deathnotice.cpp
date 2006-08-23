@@ -229,10 +229,13 @@ void CHudDeathNotice::Paint()
 		}
 
 		Color iconColor( 255, 80, 0, 255 );
+		Color iconTeamKillColor(0, 185, 0 , 250);
+
+		bool bTeamKill = (iKillerTeam == iVictimTeam);
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
-		icon->DrawSelf( x, y, iconWide, iconTall, iconColor );
+		icon->DrawSelf( x, y, iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
 		x += iconWide;		
 
 		SetColorForNoticePlayer( iVictimTeam );
@@ -301,6 +304,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	const char *killer_name = g_PR->GetPlayerName( killer );
 	const char *victim_name = g_PR->GetPlayerName( victim );
 
+	bool bTeamKill = (g_PR->GetTeam(killer) == g_PR->GetTeam(victim));
+
 	if ( !killer_name )
 		killer_name = "";
 	if ( !victim_name )
@@ -357,7 +362,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	}
 	else
 	{
-		Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s killed %s", deathMsg.Killer.szName, deathMsg.Victim.szName );
+		Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s %skilled %s", deathMsg.Killer.szName, bTeamKill ? "team" : "", deathMsg.Victim.szName );
 
 		if ( fullkilledwith && *fullkilledwith && (*fullkilledwith > 13 ) )
 		{
