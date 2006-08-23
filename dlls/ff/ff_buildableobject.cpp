@@ -86,6 +86,8 @@ void CFFBuildableFlickerer::Spawn( void )
 //-----------------------------------------------------------------------------
 void CFFBuildableFlickerer::OnObjectThink( void )
 {
+	VPROF_BUDGET( "CFFBuildableFlickerer::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// If a certain time period has gone by
 	// since we last flickered we need to unflicker
 
@@ -113,6 +115,8 @@ void CFFBuildableFlickerer::OnObjectThink( void )
 //-----------------------------------------------------------------------------
 void CFFBuildableFlickerer::Flicker( void )
 {
+	VPROF_BUDGET( "CFFBuildableFlickerer::Flicker", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// When flicker is called the buildable is taking damage
 
 	if( m_pBuildable )
@@ -466,6 +470,7 @@ void CFFBuildableObject::RemoveQuietly( void )
 */
 void CFFBuildableObject::OnObjectThink( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 }
 
 /**
@@ -476,6 +481,8 @@ void CFFBuildableObject::OnObjectThink( void )
 */
 void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 {
+	VPROF_BUDGET( "CFFBuildableObject::Event_Killed", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Remove the flickerer
 	if( m_pFlickerer )
 	{
@@ -525,6 +532,8 @@ CFFBuildableObject *CFFBuildableObject::Create( const Vector& vecOrigin, const Q
 //
 int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 {
+	VPROF_BUDGET( "CFFBuildableObject::VPhysicsTakeDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	return 0;
 }
 
@@ -625,6 +634,8 @@ void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDi
 */
 void CFFBuildableObject::DoExplosion( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::DoExplosion", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	//CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 
 	// Explosion!
@@ -657,6 +668,8 @@ void CFFBuildableObject::DoExplosion( void )
 
 int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 {
+	VPROF_BUDGET( "CFFBuildableObject::OnTakeDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// If we're not live yet don't take damage
 	if( !m_bBuilt )

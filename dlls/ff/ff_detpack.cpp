@@ -179,6 +179,8 @@ void CFFDetpack::GoLive( void )
 */
 void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 {
+	VPROF_BUDGET( "CFFDetpack::OnObjectTouch", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CheckForOwner();
 
 	if( !m_bBuilt )
@@ -226,6 +228,8 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 */
 void CFFDetpack::OnObjectThink( void )
 {
+	VPROF_BUDGET( "CFFDetpack::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CheckForOwner();
 
 	// First time we come here it will be 5 seconds before we need 
@@ -352,6 +356,8 @@ void CFFDetpack::Detonate()
 //-----------------------------------------------------------------------------
 void CFFDetpack::DoExplosionDamage( void )
 {
+	VPROF_BUDGET( "CFFDetpack::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Cause damage and some effects to things around our origin
 	// Raise up a little, don't want to be right on the ground
 	Vector vecOrigin = GetAbsOrigin() + Vector( 0, 0, 16 );

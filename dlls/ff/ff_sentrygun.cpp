@@ -268,6 +268,8 @@ void CFFSentryGun::GoLive( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::OnObjectThink( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CheckForOwner();
 
 	// Animate
@@ -279,6 +281,8 @@ void CFFSentryGun::OnObjectThink( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::OnSearchThink( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::OnOSearchThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	OnObjectThink();
 
 	SetNextThink( gpGlobals->curtime + 0.05f );
@@ -330,6 +334,8 @@ void CFFSentryGun::OnSearchThink( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::OnActiveThink( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::OnActiveThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	OnObjectThink();
 
 	// Update our think time
@@ -464,6 +470,8 @@ CBaseEntity *SG_IsBetterTarget( CBaseEntity *cur, CBaseEntity *latest, float dis
 //-----------------------------------------------------------------------------
 void CFFSentryGun::HackFindEnemy( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::HackFindEnemy", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Find our owner
 	CFFPlayer *pOwner = ToFFPlayer( m_hOwner.Get() );
 
@@ -557,6 +565,8 @@ float CFFSentryGun::MaxPitchSpeed( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::Shoot", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	FireBulletsInfo_t info;
 	Vector vecDir;
 
@@ -599,6 +609,8 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 void CFFSentryGun::DoMuzzleFlash( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::DoMuzzleFlash", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CEffectData data;
 
 	data.m_nAttachmentIndex = m_iMuzzleAttachment;
@@ -650,6 +662,8 @@ void CFFSentryGun::SpinDown( void )
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::UpdateFacing( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::UpdateFacing", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Get vectors for sg base
 	Vector vecBaseForward, vecBaseRight, vecBaseUp;
 	GetVectors( &vecBaseForward, &vecBaseRight, &vecBaseUp );
@@ -708,7 +722,11 @@ bool CFFSentryGun::UpdateFacing( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info ) 
 {
-	SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "SentryGun_Destroyed" );
+	VPROF_BUDGET( "CFFSentryGun::Event_Killed", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if( m_hOwner.Get() )
+		SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "SentryGun_Destroyed" );
+
 	BaseClass::Event_Killed( info );
 }
 
@@ -717,6 +735,8 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 Vector CFFSentryGun::EyePosition( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::EyePosition", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	Vector vecOrigin;
 	QAngle vecAngles;
 
@@ -726,6 +746,8 @@ Vector CFFSentryGun::EyePosition( void )
 }
 Vector CFFSentryGun::MuzzlePosition( void )
 {
+	VPROF_BUDGET( "CFFSentryGun::MuzzlePosition", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	Vector vecOrigin;
 	QAngle vecAngles;
 	GetAttachment( m_iMuzzleAttachment, vecOrigin, vecAngles );
@@ -757,6 +779,8 @@ void CFFSentryGun::SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessa
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRockets ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::Update", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if( bUpgradeLevel ) 
 	{
 		if( m_iLevel < 3 ) 
@@ -1042,6 +1066,8 @@ void CFFSentryGun::Detonate()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::DoExplosionDamage()
 {
+	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	float flDamage = 2 * (m_iRockets * 1.4f + m_iShells * 1.0f);
 	flDamage = min(280, flDamage);
 	
