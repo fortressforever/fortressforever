@@ -60,7 +60,7 @@ SOURCE_DIR=..
 ARCH=i486
 #ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx -O3
 #ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx
-ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx
+ARCH_CFLAGS=-mtune=i686 -march=pentium3 -mmmx -O3
 
 # -fpermissive is so gcc 3.4.x doesn't complain about some template stuff
 BASE_CFLAGS=-fpermissive -D_LINUX -DNDEBUG -Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_strnicmp=strncasecmp -Dstrnicmp=strncasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -D_alloca=alloca -Dstrcmpi=strcasecmp
@@ -97,7 +97,8 @@ vcpm:
 mod: vcpm
 	if [ ! -f "tier0_i486.so" ]; then ln -s $(GAME_DIR)/bin/tier0_i486.so .; fi
 	if [ ! -f "vstdlib_i486.so" ]; then ln -s $(GAME_DIR)/bin/vstdlib_i486.so .; fi
-	./vcpm $(MOD_PROJ)
+	perl vcprojfix.pl $(MOD_PROJ) > $(MOD_PROJ).linux
+	./vcpm $(MOD_PROJ).linux
 	perl vcpm-fix.pl Makefile.$(MOD_CONFIG) > Makefile.$(MOD_CONFIG)-fixed
 	$(MAKE) -f $(MAKE_MOD) $(BASE_DEFINES)
 
