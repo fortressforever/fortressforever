@@ -189,8 +189,8 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 bool CFFEntitySystem::StartForMap()
 {
 #ifdef _LINUX
-	Warning("Entity system disabled!\n");
-	return false;
+	//Warning("Entity system disabled!\n");
+	//return false;
 #endif
 
 	// [TODO]
@@ -562,7 +562,7 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
 #ifdef _LINUX
-	return false;
+	//return false;
 #endif
 
 	if( !pContext )
