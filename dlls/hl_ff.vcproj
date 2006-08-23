@@ -107,7 +107,6 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/EHa"
 				Optimization="0"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="../Public/tier1;../game_shared/ff;./;../Public;../game_shared;../utils/common;../dlls;../dlls/ff;../game_shared/hl2;../stats;..\omnibot;..\external\luabind\include;..\external\boost\include;..\external\lua\include"
