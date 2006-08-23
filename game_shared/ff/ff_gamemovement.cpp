@@ -214,8 +214,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	trace_t pm;
 
-	Vector vecStart = mv->m_vecAbsOrigin + Vector(0, 0, GetPlayerMins()[2] + 1.0f);
-	Vector vecStop = vecStart - Vector(0, 0, 16.0f);
+	// Adjusted for TFC bboxes.
+	// TODO: Look at this later
+	Vector vecStart = mv->m_vecAbsOrigin; // + Vector(0, 0, GetPlayerMins()[2] + 1.0f);
+	Vector vecStop = vecStart - Vector(0, 0, 60.0f);
 	
 	TracePlayerBBox(vecStart, vecStop, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm);
 

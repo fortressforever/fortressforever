@@ -48,19 +48,19 @@ ConVar g_Language( "g_Language", "0", FCVAR_REPLICATED );
 //	Vector( 0, 0, 14 )				// m_vDeadViewHeight
 //);
 static CViewVectors g_DefaultViewVectors(
-	Vector( 0, 0, 64 ),            // m_vView
+	Vector( 0, 0, 28 ),            // m_vView
 
-	Vector(-16, -16, 0 ),         // m_vHullMin
-	Vector( 16,  16,  72 ),         // m_vHullMax
+	Vector(-16, -16, -36 ),         // m_vHullMin
+	Vector( 16,  16,  36 ),         // m_vHullMax
 
-	Vector(-16, -16, 0 ),         // m_vDuckHullMin
-	Vector( 16,  16,  36 ),         // m_vDuckHullMax
-	Vector( 0, 0, 30 ),            // m_vDuckView         // |-- Mirv: Changed from 28
+	Vector(-16, -16, -18 ),         // m_vDuckHullMin
+	Vector( 16,  16,  18 ),         // m_vDuckHullMax
+	Vector( 0, 0, 12 ),            // m_vDuckView         // |-- Mirv: Changed from 28
 
 	Vector(-10, -10, -10 ),         // m_vObsHullMin
 	Vector( 10,  10,  10 ),         // m_vObsHullMax
 
-	Vector( 0, 0, 14 )            // m_vDeadViewHeight
+	Vector( 0, 0, -2 )            // m_vDeadViewHeight
 );
 // <-- Mirv: Changed some of the values
 
@@ -172,7 +172,7 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
 	Assert( pSpawnSpot );
 
-	pPlayer->SetLocalOrigin( pSpawnSpot->GetAbsOrigin() + Vector(0,0,1) );
+	pPlayer->SetLocalOrigin( pSpawnSpot->GetAbsOrigin() + Vector(0,0,1 + 36) );	// |-- Mirv: Added 36 for shift in position
 	pPlayer->SetAbsVelocity( vec3_origin );
 	pPlayer->SetLocalAngles( pSpawnSpot->GetLocalAngles() );
 	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;

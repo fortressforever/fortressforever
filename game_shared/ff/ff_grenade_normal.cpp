@@ -15,7 +15,7 @@
 #include "cbase.h"
 #include "ff_grenade_base.h"
 
-#define NORMALGRENADE_MODEL "models/weapons/w_eq_fraggrenade_thrown.mdl"
+#define NORMALGRENADE_MODEL "models/grenades/frag/frag.mdl"
 
 #ifdef CLIENT_DLL
 	#define CFFGrenadeNormal C_FFGrenadeNormal
