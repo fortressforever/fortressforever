@@ -975,10 +975,12 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 	}
 	else
 	{
+		// NOTE: Removed this for geekfeststarter
+
 		// This caught my eye... do we want this in or is it alright
 		// to override this function and then not call the baseclass?
 		// Certainly remove it and ignore me if it's not needed :P - Mulch
-		BaseClass::CreateMove( flInputSampleTime, pCmd );
+		//BaseClass::CreateMove( flInputSampleTime, pCmd );
 	}
 }
 
