@@ -473,10 +473,13 @@ void CFFPlayer::ClassSpecificSkill_Post()
 
 //-----------------------------------------------------------------------------
 // Purpose: TFC style man!
+//			UNDONE: We've shifted the player's abs origins now. Remove
+//					this later.
 //-----------------------------------------------------------------------------
 Vector CFFPlayer::GetLegacyAbsOrigin()
 {
-	return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
+	return GetAbsOrigin();
+	//return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
 }
 
 int CFFPlayer::GetHealthPercentage()
