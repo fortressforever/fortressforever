@@ -992,8 +992,6 @@ ConVar mp_prematch( "mp_prematch",
 
 	void CFFGameRules::BuildableKilled( CFFBuildableObject *pObject, const CTakeDamageInfo& info )
 	{
-		// DevMsg( "[FFGameRules] Buildable was killed!\n" );
-
 		const char *pszWeapon = "world";
 		int iKillerID = 0;
 
@@ -1082,7 +1080,9 @@ ConVar mp_prematch( "mp_prematch",
 			// it's a 'team kill'
 			if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
 			{
-				pScorer->IncrementFragCount( -1 );
+				// Don't decrement frag count if killing a friendly buildable as per
+				// bug #0000985: killing your own dispenser with friendlyfire on gives you a negative kill
+				//pScorer->IncrementFragCount( -1 );
 				pszWeapon = "teammate";
 			}
 			else

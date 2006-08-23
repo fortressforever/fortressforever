@@ -42,6 +42,7 @@
 #include "ff_gamerules.h"
 #include "world.h"
 #include "ff_entity_system.h"
+#include "ff_luacontext.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -482,6 +483,8 @@ void CFFBuildableObject::Event_Killed( const CTakeDamageInfo& info )
 		m_pFlickerer = NULL;
 	}
 
+	// TODO: Run through lua "buildable_onkilled"
+
 	// Can't kill detpacks
 	if( Classify() != CLASS_DETPACK )
 	{
@@ -659,89 +662,42 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	if( !m_bBuilt )
 		return 0;
 
-	// TODO: We really do need to take damage while building
-	// or set the solid to none until built so that you can't
-	// use the building phase to be invulnerable.
-	// But, don't want to make the object non-solid as players
-	// can/could walk into the building area and be stuck on
-	// the model when it went solid finally.
-
-	//*
-	//Warning( "[Buildable] %s Taking damage\n", this->GetClassname() );
-
-	//if( info.GetInflictor() )
-	//	Warning( "[Buildable] Inflictor: %s\n", info.GetInflictor()->GetClassname() );
-	//if( info.GetAttacker() )
-	//	Warning( "[Buildable] Attacker: %s\n", info.GetAttacker()->GetClassname() );
-
-	if( info.GetInflictor() )
-	{
-		// To stop falling detpacks from destroying objects they fall on
-		if( !Q_strcmp( info.GetInflictor()->GetClassname(), "worldspawn" ) )
-			return 0;
-
-		bool bDoorDamage = false;
-		
-		if( !Q_strcmp( info.GetInflictor()->GetClassname(), "func_door" ) )
-			bDoorDamage = true;
-		else if( !Q_strcmp( info.GetAttacker()->GetClassname(), "func_door" ) )
-			bDoorDamage = true;
-
-		if( bDoorDamage )
-		{
-			Warning( "[Buildable] Taking door damage! Damage amount: %f\n", info.GetDamage() );
-
-			CTakeDamageInfo info_mod = info;
-			info_mod.SetAttacker( GetWorldEntity() );
-			info_mod.SetInflictor( GetWorldEntity() );
-			return CBaseEntity::OnTakeDamage( info_mod );
-		}
-	//	*/
-	}
-
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	// Depending on the teamplay value, take damage
-	if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), info.GetAttacker() ) )
-	{
-		//Warning( "[Buildable] Not taking damage\n" );
-		//DevMsg( "[Buildable] Teammate or ally is attacking me so don't take damage!\n" );
-		return 0;
-	}
-	else
-	{
-		//Warning( "[Buildable] Taking damage\n" );
-	}
-
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if(( info.GetAttacker() == m_hOwner.Get() ) && ( friendlyfire.GetInt() == 0 ))
-	{
-		//Warning( "[Buildable] attacker == owner && friendlyfire == 0\n" );
-		//DevMsg( "[Buildable] My owner is attacking me & friendly fire is off so don't take damage!\n" );
-		return 0;
-	}
-	else
-	{
-		//Warning( "[Buildable] false: attacker == owner && friendlyfire == 0\n" );
-	}
-
-	// Lets flicker
-	if( m_pFlickerer )
-		m_pFlickerer->Flicker();
-
 	// Sentry gun seems to take about 110% of damage, going to assume its the same
 	// for all others for now -mirv
 	CTakeDamageInfo adjustedDamage = info;
-	adjustedDamage.SetDamage(adjustedDamage.GetDamage() * 1.1f);
+	adjustedDamage.SetDamage( adjustedDamage.GetDamage() * 1.1f );
+
+	// Sorry trepids, not putting this one check in LUA
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	if(( adjustedDamage.GetAttacker() == m_hOwner.Get() ) && ( friendlyfire.GetInt() == 0 ))
+		return 0;
+
+	// Run through LUA!
+	CFFLuaSC hContext;
+	hContext.Push( this );
+	hContext.Push( &adjustedDamage );
+	entsys.RunPredicates_LUA( NULL, &hContext, "buildable_ondamage" );
+
+	// Bug #0000333: Buildable Behavior (non build slot) while building
+	// Depending on the teamplay value, take damage
+	if( !g_pGameRules->FPlayerCanTakeDamage( ToFFPlayer( m_hOwner.Get() ), adjustedDamage.GetAttacker() ) )
+		return 0;
+
+	// If we haven't taken any damage, no need to flicker or report to bots
+	if( adjustedDamage.GetDamage() <= 0 )
+		return 0;
+
+	// Lets flicker since we're taking damage
+	if( m_pFlickerer )
+		m_pFlickerer->Flicker();
 	
 	// Just extending this to send events to the bots.
-	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
-	if(pOwner && pOwner->IsBot())
+	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
+	if( pOwner && pOwner->IsBot() )
 	{
-		Omnibot::Notify_BuildableDamaged(pOwner, Classify(), edict());
+		Omnibot::Notify_BuildableDamaged( pOwner, Classify(), edict() );
 		SendStatsToBot();
 	}
 
-	//Warning( "[Buildable] Damage: %f\n", adjustedDamage.GetDamage() );
-
-	return CBaseEntity::OnTakeDamage(adjustedDamage);
+	return CBaseEntity::OnTakeDamage( adjustedDamage );
 }
