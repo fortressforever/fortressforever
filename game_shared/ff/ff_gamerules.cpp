@@ -284,7 +284,8 @@ ConVar mp_prematch( "mp_prematch",
 
 		bool bFlags[ AT_MAX_FLAG ] = { true };
 
-		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
+		// Reset entities
+		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );		
 	}
 
 	//-----------------------------------------------------------------------------
@@ -541,6 +542,13 @@ ConVar mp_prematch( "mp_prematch",
 
 				pTeam->SetScore( 0 );
 				pTeam->SetDeaths( 0 );
+			}
+
+			// Send event
+			IGameEvent *pEvent = gameeventmanager->CreateEvent( "ff_restartround" );
+			if( pEvent )
+			{
+				gameeventmanager->FireEvent( pEvent );
 			}
 		}
 
