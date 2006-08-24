@@ -386,6 +386,7 @@ private:
 	CNetworkVar(int, m_iPrimary);
 	CNetworkVar(int, m_iSecondary);
 	bool m_bWantToThrowGrenade;			// does the client want to throw this grenade as soon as possible?
+	bool m_bEngyGrenWarned;
 	// Backpacks
 public:
 	void PackDeadPlayerItems( void );
