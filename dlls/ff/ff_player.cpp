@@ -4666,7 +4666,8 @@ void CFFPlayer::Extinguish( void )
 		MessageEnd();
 
 		// Play sound!
-		EmitSound( "Player.Flameout" );
+		CSingleUserRecipientFilter hFilter( ( CBasePlayer * )this );
+		EmitSound( hFilter, entindex(), "Player.Flameout" );
 	}
 
 	// Make sure these are turned off
