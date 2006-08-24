@@ -123,6 +123,8 @@ CFFDetpack::~CFFDetpack( void )
 */ 
 void CFFDetpack::Spawn( void )
 {
+	VPROF_BUDGET( "CFFDetpack::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Yeah, you can guess what this does!
 	Precache();
 	
@@ -139,14 +141,13 @@ void CFFDetpack::Spawn( void )
 */
 void CFFDetpack::GoLive( void )
 {
+	VPROF_BUDGET( "CFFDetpack::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Call base class
 	CFFBuildableObject::GoLive();
 
 	// Object is now built
 	m_bBuilt = true;
-
-	// Tell client to start the timer
-	SendStartTimerMessage();
 
 	// Set up when we're supposed to blow up
 	float flCurTime = gpGlobals->curtime;
@@ -210,9 +211,6 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 	if( !g_pGameRules->FPlayerCanTakeDamage( ( ( CFFPlayer * )m_hOwner.Get() ), pPlayer ) )
 		return;
 
-	// Tell client to stop the timer
-	SendStopTimerMessage();
-
 	// Play defuse sound
 	CPASAttenuationFilter sndFilter( this );
 	EmitSound( sndFilter, entindex(), "Detpack.Defuse" );
@@ -234,12 +232,8 @@ void CFFDetpack::OnObjectThink( void )
 
 	// First time we come here it will be 5 seconds before we need 
 	// to blow up
-	//DevMsg( "[Detpack] In think function!\n" );
-
 	if( !m_bFiveSeconds )
 	{
-		//DevMsg( "[Detpack] Setting 5 second timer\n" );
-		
 		// Play the 5 second to go sound (whine up) whatever.
 		EmitSound( m_ppszSounds[ 2 ] );		
 
@@ -249,55 +243,17 @@ void CFFDetpack::OnObjectThink( void )
 	}
 	else
 	{
-		//DevMsg( "[Detpack] Detonating\n" );
-
-		// Tell player to stop timer (in case the detpack took emp damage)
-		SendStopTimerMessage();
-
 		// Second time calling the think func, so time to blow up!
 		Detonate();
 	}
 }
 
-void CFFDetpack::SendStartTimerMessage( void )
-{
-	// Only send this message to the owner player	
-	CSingleUserRecipientFilter user( ToFFPlayer( m_hOwner.Get() ) );
-	user.MakeReliable( );
-
-	// Start the message block
-	UserMessageBegin( user, "DetpackStartTimer" );
-
-	// Message to send
-	WRITE_SHORT( m_iFuseTime );
-
-	// End the message block
-	MessageEnd( );
-}
-
-void CFFDetpack::SendStopTimerMessage( void )
-{
-	// Only send this message to the owner player	
-	CSingleUserRecipientFilter user( ToFFPlayer( m_hOwner.Get() ) );
-	user.MakeReliable();
-
-	// Start the message block
-	UserMessageBegin( user, "DetpackStopTimer" );
-
-	// Message to send
-	WRITE_SHORT( 1 );
-
-	// End the message block
-	MessageEnd();
-}
-
 int CFFDetpack::TakeEmp( void )
 {
-	//DevMsg( "[Detpack] Emp gren attacked me!\n" );
+	VPROF_BUDGET( "CFFDetpack::TakeEmp", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( ( m_flDetonateTime - gpGlobals->curtime ) >= 5.0f )
 	{
-		//DevMsg( "[Detpack] Calling think function early to start timer - hit by emp!\n" );
 		m_flThinkTime = 0.001f;	// immediate
 		SetNextThink( gpGlobals->curtime + m_flThinkTime );
 
@@ -338,6 +294,8 @@ CFFDetpack *CFFDetpack::Create( const Vector &vecOrigin, const QAngle &vecAngles
 //-----------------------------------------------------------------------------
 void CFFDetpack::Detonate()
 {
+	VPROF_BUDGET( "CFFDetpack::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Fire an event.
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("detpack_detonated");						
 	if(pEvent)

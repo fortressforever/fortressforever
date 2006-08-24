@@ -128,6 +128,8 @@ inline void DispenseHelper( CFFPlayer *pPlayer, int& iAmmo, int iGiveAmmo, const
 */ 
 void CFFDispenser::Spawn( void )
 {
+	VPROF_BUDGET( "CFFDispenser::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Yeah, you can guess what this does!
 	Precache();
 
@@ -150,6 +152,8 @@ void CFFDispenser::Spawn( void )
 */
 void CFFDispenser::GoLive( void )
 {
+	VPROF_BUDGET( "CFFDispenser::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Call base class
 	CFFBuildableObject::GoLive();
 
@@ -291,11 +295,11 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					// Mirv: Don't do this while sabotaged
 					if (!IsSabotaged())
 					{
-						// TODO: Hud message to owner					
-						SendMessageToPlayer( pOwner, "Dispenser_EnemiesUsing" );
+						// Message owner
+						ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
 
-						// TODO: Hud message to person who touched us
-						SendMessageToPlayer( pPlayer, "Dispenser_TouchEnemy", true );
+						if( Q_strlen( m_szCustomText ) > 1 )
+							ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
 
 						// Fire an event.
 						IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_enemyused");						
@@ -333,15 +337,15 @@ void CFFDispenser::OnObjectThink( void )
 	m_iRadioTags = clamp( m_iRadioTags + 10, 0, m_iMaxRadioTags );
 
 	// Update ammo percentage
-	UpdateAmmoPercentage();
-
-	// Call base class think func
-	CFFBuildableObject::OnObjectThink();
+	UpdateAmmoPercentage();	
 
 	SendStatsToBot();
 
 	// Set the next time to call this function
 	SetNextThink( gpGlobals->curtime + m_flThinkTime );
+
+	// Call base class think func
+	CFFBuildableObject::OnObjectThink();
 }
 
 void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
@@ -349,37 +353,9 @@ void CFFDispenser::Event_Killed( const CTakeDamageInfo &info )
 	VPROF_BUDGET( "CFFDispenser::Event_Killed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( m_hOwner.Get() )
-		SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "Dispenser_Destroyed" );
+		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_DISPENSER_DESTROYED" );
 
 	BaseClass::Event_Killed( info );
-}
-
-void CFFDispenser::SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText )
-{
-	if( !pPlayer )
-		return;
-
-	CSingleUserRecipientFilter user( pPlayer );
-	user.MakeReliable();
-
-	// Begin message block
-	UserMessageBegin( user, pszMessage );
-
-	// Write something
-	WRITE_SHORT( 1 );
-
-	// If we're sending the custom text...
-	if( bDispenserText )
-	{
-		// TODO: Make sure it's not null... want to send at least one character
-		if( ( int )strlen( m_szCustomText ) < 1 )
-			WRITE_STRING( "@1" );
-		else
-			WRITE_STRING( m_szCustomText );
-	}
-
-	// End of message block
-	MessageEnd();
 }
 
 /**
@@ -446,6 +422,8 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 //
 void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags )
 {
+	VPROF_BUDGET( "CFFDispenser::AddAmmo", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	m_iArmor = min( m_iArmor + iArmor, m_iMaxArmor );
 	m_iCells = min( m_iCells + iCells, m_iMaxCells );
 	m_iShells = min( m_iShells + iShells, m_iMaxShells );
@@ -462,6 +440,8 @@ void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int
 //		based on how much stuff is in the dispenser
 void CFFDispenser::CalcAdjExplosionVal( void )
 {
+	VPROF_BUDGET( "CFFDispenser::CalcAdjExplosionVal", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// TODO: Calculate some percentage full and modify the 
 	// explosion magnitude value by taking this percentage
 	// times the original explosion magnitude value
@@ -496,6 +476,8 @@ void CFFDispenser::CalcAdjExplosionVal( void )
 //
 void CFFDispenser::UpdateAmmoPercentage( void )
 {
+	VPROF_BUDGET( "CFFDispenser::UpdateAmmoPercentage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets + m_iRadioTags + m_iArmor;
 	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets + m_iMaxRadioTags + m_iMaxArmor;
 
@@ -504,6 +486,8 @@ void CFFDispenser::UpdateAmmoPercentage( void )
 
 void CFFDispenser::SendStatsToBot()
 {
+	VPROF_BUDGET( "CFFDispenser::SendStatsToBot", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CFFPlayer *pOwner = static_cast<CFFPlayer*>(m_hOwner.Get());
 	if(pOwner && pOwner->IsBot())
 	{
@@ -530,6 +514,8 @@ void CFFDispenser::SendStatsToBot()
 //-----------------------------------------------------------------------------
 bool CFFDispenser::CanSabotage()
 {
+	VPROF_BUDGET( "CFFDispenser::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if (!m_bBuilt)
 		return false;
 
@@ -541,6 +527,8 @@ bool CFFDispenser::CanSabotage()
 //-----------------------------------------------------------------------------
 bool CFFDispenser::IsSabotaged()
 {
+	VPROF_BUDGET( "CFFDispenser::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
 }
 
@@ -552,6 +540,8 @@ bool CFFDispenser::IsSabotaged()
 //-----------------------------------------------------------------------------
 void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 {
+	VPROF_BUDGET( "CFFDispenser::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
 
@@ -563,6 +553,8 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
+	VPROF_BUDGET( "CFFDispenser::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	Detonate();
 
 	Warning("Dispenser maliciously sabotaged\n");
@@ -573,6 +565,8 @@ void CFFDispenser::MaliciousSabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 void CFFDispenser::Detonate()
 {
+	VPROF_BUDGET( "CFFDispenser::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Fire an event.
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_detonated");						
 	if(pEvent)

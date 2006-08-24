@@ -102,8 +102,8 @@
 #define FF_DISPENSER_MINS	Vector( -12, -12, 0 )
 #define FF_DISPENSER_MAXS	Vector( 12, 12, 48 )
 
-#define FF_SENTRYGUN_MINS	Vector( -24, -21, 0 )
-#define FF_SENTRYGUN_MAXS	Vector( 24, 21, 43 )
+#define FF_SENTRYGUN_MINS	Vector( -32, -32, 0 )
+#define FF_SENTRYGUN_MAXS	Vector( 32, 32, 65 )
 
 #define FF_DETPACK_MINS		Vector( -14, -14, 0 )
 #define FF_DETPACK_MAXS		Vector( 14, 14, 11 )
@@ -300,7 +300,8 @@ public:
 
 		return true;
 	}
-	//void EyeVectors( )
+
+	virtual bool HasMalfunctioned( void ) const;
 
 	// NOTE: Super class handles touch function
 	// void OnObjectTouch( CBaseEntity *pOther );
@@ -473,16 +474,11 @@ public:
 
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
-	void SendStartTimerMessage( void );
-	void SendStopTimerMessage( void );
-	//void OnEmpExplosion( void );
 	virtual int TakeEmp( void );
-
 	virtual void DoExplosionDamage();
 
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
-	//bool	m_bLive;
 	int		m_iFuseTime;
 	float	m_flDetonateTime;
 	bool	m_bFiveSeconds;
@@ -576,8 +572,6 @@ public:
 
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
-	// Generic function to send hud messages to players
-	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage, bool bDispenserText = false );
 	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags );
 
 	// Some functions for the custom dispenser text
@@ -693,9 +687,6 @@ public:
 	virtual Vector EyePosition( void );
 	Vector MuzzlePosition( void );
 	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
-
-	// Generic function to send hud messages to players
-	void SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage );
 
 	int GetLevel( void ) const { return m_iLevel; }
 	void Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );

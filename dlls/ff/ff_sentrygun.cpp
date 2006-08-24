@@ -118,6 +118,22 @@ const char *g_pszFFSentryGunSounds[] =
 	NULL
 };
 
+static Vector g_ffdev_sg_mins = FF_SENTRYGUN_MINS;
+static Vector g_ffdev_sg_maxs = FF_SENTRYGUN_MAXS;
+
+CON_COMMAND( ffdev_setsgsize, "set the sg's size" )
+{
+	g_ffdev_sg_mins.x = -atof( engine->Cmd_Argv( 1 ) );
+	g_ffdev_sg_mins.y = -atof( engine->Cmd_Argv( 2 ) );
+	g_ffdev_sg_mins.z = -atof( engine->Cmd_Argv( 3 ) );
+
+	g_ffdev_sg_maxs.x = atof( engine->Cmd_Argv( 4 ) );
+	g_ffdev_sg_maxs.y = atof( engine->Cmd_Argv( 5 ) );
+	g_ffdev_sg_maxs.z = atof( engine->Cmd_Argv( 6 ) );
+
+	Warning( "[Mins/Maxs] %f, %f, %f, - %f, %f, %f\n", g_ffdev_sg_mins.x, g_ffdev_sg_mins.y, g_ffdev_sg_mins.z, g_ffdev_sg_maxs.x, g_ffdev_sg_maxs.y, g_ffdev_sg_maxs.z );
+}
+
 //-----------------------------------------------------------------------------
 // Constructor
 //-----------------------------------------------------------------------------
@@ -165,6 +181,8 @@ CFFSentryGun::~CFFSentryGun( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Precache( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::Precache", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	BaseClass::Precache();
 }
 
@@ -173,6 +191,8 @@ void CFFSentryGun::Precache( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Spawn( void ) 
 { 
+	VPROF_BUDGET( "CFFSentryGun::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	Precache();
 
 	BaseClass::Spawn();
@@ -221,6 +241,8 @@ void CFFSentryGun::Spawn( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::GoLive( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	BaseClass::GoLive();
 
 	// Upgrade to level 1
@@ -270,10 +292,25 @@ void CFFSentryGun::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	bool bValid = true;
+	for ( int i=0 ; i<3 ; i++ )
+	{
+		if (  g_ffdev_sg_mins[i] >  g_ffdev_sg_maxs[i] )
+		{
+			bValid = false;			
+		}
+	}
+
+	if( bValid )
+		UTIL_SetSize( this, g_ffdev_sg_mins, g_ffdev_sg_maxs );
+
 	CheckForOwner();
 
 	// Animate
 	StudioFrameAdvance();
+
+	// Run base class thinking
+	CFFBuildableObject::OnObjectThink();
 }
 
 //-----------------------------------------------------------------------------
@@ -546,6 +583,8 @@ void CFFSentryGun::HackFindEnemy( void )
 //-----------------------------------------------------------------------------
 float CFFSentryGun::MaxYawSpeed( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::MaxYawSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if( GetEnemy() )
 		return sg_turnspeed.GetFloat();
 		
@@ -554,6 +593,8 @@ float CFFSentryGun::MaxYawSpeed( void )
 
 float CFFSentryGun::MaxPitchSpeed( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::MaxPitchSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if( GetEnemy() )
 		return sg_pitchspeed.GetFloat();
 
@@ -632,6 +673,8 @@ void CFFSentryGun::DoMuzzleFlash( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Ping( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::Ping", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// See if it's time to ping again
 	if( m_flPingTime > gpGlobals->curtime ) 
 		return;
@@ -646,7 +689,9 @@ void CFFSentryGun::Ping( void )
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CFFSentryGun::SpinUp( void ) 
-{	
+{
+	VPROF_BUDGET( "CFFSentryGun::SpinUp", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	EmitSound("Sentry.Spot");
 }
 
@@ -655,6 +700,7 @@ void CFFSentryGun::SpinUp( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::SpinDown( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::SpinDown", VPROF_BUDGETGROUP_FF_BUILDABLE );
 }
 
 //-----------------------------------------------------------------------------
@@ -725,7 +771,7 @@ void CFFSentryGun::Event_Killed( const CTakeDamageInfo &info )
 	VPROF_BUDGET( "CFFSentryGun::Event_Killed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	if( m_hOwner.Get() )
-		SendMessageToPlayer( ToFFPlayer( m_hOwner.Get() ), "SentryGun_Destroyed" );
+		ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_SENTRYGUN_DESTROYED" );
 
 	BaseClass::Event_Killed( info );
 }
@@ -759,19 +805,6 @@ Vector CFFSentryGun::MuzzlePosition( void )
 			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
 	}
 	return vecOrigin;
-}
-
-void CFFSentryGun::SendMessageToPlayer( CFFPlayer *pPlayer, const char *pszMessage ) 
-{
-	CSingleUserRecipientFilter user( pPlayer );
-	user.MakeReliable();
-
-	// Begin message block
-	UserMessageBegin( user, pszMessage );
-		// Write something
-		WRITE_SHORT(1);
-	// End of message block
-	MessageEnd();
 }
 
 //-----------------------------------------------------------------------------
@@ -920,6 +953,8 @@ CFFSentryGun *CFFSentryGun::Create( const Vector &vecOrigin, const QAngle &vecAn
 // Player-set aim focus point!
 void CFFSentryGun::SetFocusPoint( Vector &origin ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::SetFocusPoint", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	QAngle newangle;
 	Vector dir = origin - EyePosition();
 	VectorNormalize( dir );
@@ -953,6 +988,8 @@ void CFFSentryGun::SetFocusPoint( Vector &origin )
 // How much damage should be taken from an emp explosion
 int CFFSentryGun::TakeEmp( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::TakeEmp", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// This base damage matches up the total damage with tfc
 	int ammodmg = 100;
 
@@ -965,6 +1002,8 @@ int CFFSentryGun::TakeEmp( void )
 
 void CFFSentryGun::SendStatsToBot( void ) 
 {
+	VPROF_BUDGET( "CFFSentryGun::SendStatsTobot", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	CFFPlayer *pOwner = static_cast<CFFPlayer *>( m_hOwner.Get() );
 	if (pOwner && pOwner->IsBot()) 
 	{
@@ -991,6 +1030,8 @@ void CFFSentryGun::SendStatsToBot( void )
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::CanSabotage()
 {
+	VPROF_BUDGET( "CFFSentryGun::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	if (!m_bBuilt)
 		return false;
 
@@ -1002,6 +1043,8 @@ bool CFFSentryGun::CanSabotage()
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::IsSabotaged()
 {
+	VPROF_BUDGET( "CFFSentryGun::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	return (m_hSaboteur && m_flSabotageTime > gpGlobals->curtime);
 }
 
@@ -1010,6 +1053,8 @@ bool CFFSentryGun::IsSabotaged()
 //-----------------------------------------------------------------------------
 bool CFFSentryGun::IsShootingTeammates()
 {
+	VPROF_BUDGET( "CFFSentryGun::IsShootingTeammates", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	return (m_hSaboteur && m_bShootingTeammates && m_flSabotageTime > gpGlobals->curtime);
 }
 
@@ -1020,6 +1065,8 @@ bool CFFSentryGun::IsShootingTeammates()
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 {
+	VPROF_BUDGET( "CFFSentryGun::Sabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
 	m_bShootingTeammates = false;
@@ -1035,6 +1082,8 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
+	VPROF_BUDGET( "CFFSentryGun::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	m_flSabotageTime = gpGlobals->curtime + 10.0f;
 	m_bShootingTeammates = true;
 
@@ -1049,6 +1098,8 @@ void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Detonate()
 {
+	VPROF_BUDGET( "CFFSentryGun::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Fire an event.
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("sentry_detonated");						
 	if(pEvent)
