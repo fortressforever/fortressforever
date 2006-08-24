@@ -96,7 +96,7 @@ ConVar ffdev_regen_health("ffdev_regen_health","2",0,"Amount of health a player 
 ConVar ffdev_regen_armor("ffdev_regen_armor","4",0,"Amount of armor a player gains while a engy");
 ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in seconds) a player loses health when health > maxhealth");
 
-static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.1", 0, "Amount to jerk view on conc" );
+static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 
 extern ConVar sv_maxspeed;
 
@@ -663,6 +663,11 @@ void CFFPlayer::Precache()
 		// Saveme shouts
 		Q_snprintf(buf, 255, "%s.saveme", class_string);
 		PrecacheScriptSound(buf);
+	}
+
+	for (int i = 0; i < 8; i++)
+	{
+		PrecacheModel(UTIL_VarArgs("gibs/gib%d.mdl", (i + 1)));
 	}
 
 	BaseClass::Precache();
