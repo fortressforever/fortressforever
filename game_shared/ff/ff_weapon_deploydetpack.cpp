@@ -138,8 +138,6 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 {
 	if( m_flTimeWeaponIdle < gpGlobals->curtime )
 	{
-		//SetWeaponIdleTime( gpGlobals->curtime + 0.1f );
-
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
@@ -151,7 +149,27 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 				flRaiseVal /= 2;
 
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, flRaiseVal);
-			
+
+			if( pDetpack )
+			{
+				// Update current fake Detpack
+				pDetpack->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
+				pDetpack->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
+
+				pDetpack->SetBuildError( hBuildInfo.BuildResult() );
+			}
+			else
+			{
+				// Create fake Detpack
+				pDetpack = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+			}
+
+			if( hBuildInfo.BuildResult() != 0 )
+				pDetpack->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
+			else
+				pDetpack->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
+
+			/*
 			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
 			{
 				if (pDetpack)
@@ -171,6 +189,7 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 			// Unable to build, so hide buildable
 			else if(pDetpack && !(pDetpack->GetEffects() & EF_NODRAW))
 				pDetpack->SetEffects(EF_NODRAW);
+				*/
 		}
 		// Destroy if we already have one
 		else

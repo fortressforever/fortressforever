@@ -1002,9 +1002,9 @@ int C_FFPlayer::DrawModel( int flags )
 	
 	if( pPlayer && ( this != pPlayer ) )
 	{
-		// ********************************
+		// --------------------------------
 		// Check for "saveme"
-		// ********************************
+		// --------------------------------
 		if( IsInSaveMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_saveme", TEXTURE_GROUP_OTHER );
@@ -1019,9 +1019,9 @@ int C_FFPlayer::DrawModel( int flags )
 			}
 		}
 
-		// ********************************
+		// --------------------------------
 		// Check for "engyme"
-		// ********************************
+		// --------------------------------
 		if( IsInEngyMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_OTHER );
@@ -1036,9 +1036,9 @@ int C_FFPlayer::DrawModel( int flags )
 			}
 		}
 
-		// ********************************
+		// --------------------------------
 		// Check for friendly spies
-		// ********************************
+		// --------------------------------
 
 		// See if we're drawing a spy who is on our team and disguised
 		if( IsDisguised() && ( GetTeamNumber() == pPlayer->GetTeamNumber() ) )
