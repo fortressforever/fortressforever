@@ -79,6 +79,14 @@ struct SpyDisguiseWeapon
 	char szAnimExt[6][MAX_WEAPON_PREFIX];
 };
 
+// Decapitation flags
+// These should be in the same order as the attachments + bodygroups in the model
+#define DECAP_HEAD			( 1 << 0 )
+#define DECAP_LEFT_ARM		( 1 << 1 )
+#define DECAP_RIGHT_ARM		( 1 << 2 )
+#define DECAP_LEFT_LEG		( 1 << 3 )
+#define DECAP_RIGHT_LEG		( 1 << 4 )
+
 #ifdef CLIENT_DLL
 struct SpyInfo_s
 {

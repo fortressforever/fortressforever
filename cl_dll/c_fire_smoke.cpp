@@ -1099,7 +1099,7 @@ void C_EntityFlame::AttachToHitBoxes( void )
 {
 	m_pCachedModel = NULL;
 
-	C_BaseCombatCharacter *pAnimating = (C_BaseCombatCharacter *)m_hEntAttached.Get();
+	C_BaseCombatCharacter *pAnimating = (C_BaseCombatCharacter *) m_hEntAttached.Get();
 	if (!pAnimating || !pAnimating->GetModel())
 	{
 		return;
