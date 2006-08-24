@@ -62,6 +62,7 @@ static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
 
 static ConVar decap_test("ffdev_decaptest", "0");
+static ConVar gibcount("cl_gibcount", "6");
 
 static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
 
@@ -918,6 +919,14 @@ void C_FFPlayer::PostThink( void )
 	BaseClass::PostThink();
 }
 
+void C_FFPlayer::Precache()
+{
+	for (int i = 1; i <= 8; i++)
+	{
+		PrecacheModel(VarArgs("models/gibs/gib%d.mdl", i));
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Spawn
 //-----------------------------------------------------------------------------
@@ -1716,3 +1725,31 @@ void Hallucination_Callback(const CEffectData &data)
 
 DECLARE_CLIENT_EFFECT("Hallucination", Hallucination_Callback);
 
+void Gib_Callback(const CEffectData &data)
+{
+	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (data.GetEntity());
+
+	Vector vecPosition = data.m_vOrigin;
+	Vector vecOffset;
+	const char *pszGibModel;
+
+	// We can use the player origin here
+	if (pPlayer && !pPlayer->IsDormant())
+	{
+		vecPosition = pPlayer->GetAbsOrigin();
+	}
+
+	// Now spawn a number of gibs
+	for (int i = 0; i < gibcount.GetInt(); i++)
+	{
+		vecOffset = vecPosition + Vector(0, 0, random->RandomFloat(-12, 12));
+
+		pszGibModel = VarArgs("models/gibs/gib%d.mdl", random->RandomInt(1, 8));
+
+		C_Gib::CreateClientsideGib(pszGibModel, vecOffset, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), Vector(0, 0, 0), 10.0f);
+
+		UTIL_BloodImpact(vecOffset, Vector(0, 0, 0), BLOOD_COLOR_RED, 512);
+	}
+}
+
+DECLARE_CLIENT_EFFECT("Gib", Gib_Callback);

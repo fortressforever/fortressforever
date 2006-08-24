@@ -19,6 +19,7 @@ class C_Gib : public C_BaseAnimating
 	typedef C_BaseAnimating BaseClass;
 public:
 
+	C_Gib();
 	C_Gib::~C_Gib( void );
 
 	static C_Gib	*CreateClientsideGib( const char *pszModelName, Vector vecOrigin, Vector vecForceDir, AngularImpulse vecAngularImp, float flLifetime = DEFAULT_GIB_LIFETIME );
@@ -32,6 +33,9 @@ public:
 protected:
 
 	float	m_flTouchDelta;		// Amount of time that must pass before another touch function can be called
+	bool	m_bDecal;
+
+	static int m_iBloodDecal;
 };
 
 #ifdef HL2_CLIENT_DLL

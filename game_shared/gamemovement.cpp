@@ -3806,6 +3806,9 @@ bool CGameMovement::CanUnDuckJump( trace_t &trace )
 //-----------------------------------------------------------------------------
 void CGameMovement::Duck( void )
 {
+	if (!player->IsAlive())
+		return;
+
 	int i;
 	float time;
 	float duckFraction;

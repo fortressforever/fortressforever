@@ -62,6 +62,7 @@
 #include "movehelper_server.h"
 #include "gameinterface.h"
 #include "ff_utils.h"
+#include "te_effect_dispatch.h"
 
 // TODO: REMOVE ME REMOVE ME
 //#include "ff_detpack.h"
@@ -190,6 +191,16 @@ CON_COMMAND(bot_engyme, "have a bot do engyme")
 			pPlayer->Command_EngyMe();
 		}
 	}
+}
+
+CON_COMMAND(ffdev_gibs, "gibs")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+
+	CEffectData effect;
+	effect.m_nEntIndex = you->entindex();
+
+	DispatchEffect("Gib", effect);
 }
 
 CON_COMMAND(ffdev_legshotme, "legshots you")

@@ -130,6 +130,8 @@ public:
 	void PlayFallSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol );
 	void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
+	virtual void Precache();
+
 	float	m_flJumpTime;
 	float	m_flFallTime;
 	// <-- Mirv: Proper sound effects
