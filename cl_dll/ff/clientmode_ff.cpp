@@ -30,6 +30,10 @@
 #include <keyvalues.h>
 #include "text_message.h"
 #include "panelmetaclassmgr.h"
+#include "c_soundscape.h"
+#include "engine/IEngineSound.h"
+#include "c_te_legacytempents.h"
+#include "physpropclientside.h"
 
 // Bug #0000310: fov doesn't reset |-- Mulch
 //ConVar default_fov( "default_fov", "90", FCVAR_NONE );
@@ -128,6 +132,36 @@ void ClientModeFFNormal::PostRenderVGui()
 {
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void ClientModeFFNormal::Init( void )
+{
+	gameeventmanager->AddListener( this, "ff_restartround", false );
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Capture FF Specific events
+//-----------------------------------------------------------------------------
+void ClientModeFFNormal::FireGameEvent( IGameEvent *pEvent )
+{
+	const char *pszEventName = pEvent->GetName();
 
+	if( Q_strcmp( "ff_restartround", pszEventName ) == 0 )
+	{
+		// Recreate all client side physics props
+		C_PhysPropClientside::RecreateAll();
 
+		// Just tell engine to clear decals
+		engine->ClientCmd( "r_cleardecals" );
+
+		tempents->Clear();
+
+		// Stop any looping sounds
+		enginesound->StopAllSounds( true );
+
+		Soundscape_OnStopAllSounds(); // Tell the soundscape system
+	}
+
+	BaseClass::FireGameEvent( pEvent );
+}

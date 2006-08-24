@@ -33,6 +33,8 @@ public:
 
 	virtual void	PostRenderVGui();
 
+	virtual void	Init( void );
+	virtual void	FireGameEvent( IGameEvent *pEvent );
 	
 private:
 	
