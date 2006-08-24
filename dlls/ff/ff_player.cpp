@@ -2426,9 +2426,10 @@ void CFFPlayer::Command_Radar( void )
 		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
 		{
 			// Bug #0000531: Everyone hears radar
-			CPASAttenuationFilter sndFilter;
-			sndFilter.RemoveAllRecipients();
-			sndFilter.AddRecipient( ( CBasePlayer * )this );
+			//CPASAttenuationFilter sndFilter;
+			//sndFilter.RemoveAllRecipients();
+			//sndFilter.AddRecipient( ( CBasePlayer * )this );
+			CSingleUserRecipientFilter sndFilter( ( CBasePlayer * )this );
 			EmitSound( sndFilter, entindex(), "radar.single_shot");
 
 			// Remove ammo
