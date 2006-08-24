@@ -3813,8 +3813,8 @@ void CGameMovement::Duck( void )
 	int buttonsChanged	= ( mv->m_nOldButtons ^ mv->m_nButtons );	// These buttons have changed this frame
 	int nButtonPressed	=  buttonsChanged & mv->m_nButtons;		// The changed ones still down are "pressed"
 
-	int duckchange		= buttonsChanged & IN_DUCK ? 1 : 0;
-	int duckpressed		= nButtonPressed & IN_DUCK ? 1 : 0;
+	//int duckchange		= buttonsChanged & IN_DUCK ? 1 : 0;
+	//int duckpressed		= nButtonPressed & IN_DUCK ? 1 : 0;
 
 	if ( mv->m_nButtons & IN_DUCK )
 	{
