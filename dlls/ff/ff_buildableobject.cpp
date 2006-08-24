@@ -505,7 +505,7 @@ void CFFBuildableObject::OnObjectThink( void )
 			}
 		}
 
-		Detonate();
+		//Detonate();
 	}
 }
 
@@ -516,7 +516,11 @@ bool CFFBuildableObject::HasMalfunctioned( void ) const
 {
 	VPROF_BUDGET( "CFFBuildableObject::HasMalfunctioned", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	if( m_bBuilt && ( m_vecGroundOrigin != GetAbsOrigin() ) )
+	// This test can be flakey hence switching to distance and giving
+	// it a little fluff. If part of the bbox is inside something the
+	// origin will jump around (in really really small values though
+	// but enough so that m_vecGroundOrigin != GetAbsOrigin()
+	if( m_bBuilt && ( m_vecGroundOrigin.DistTo( GetAbsOrigin() ) > 3.0f ) )
 		return true;
 
 	return false;

@@ -243,7 +243,7 @@ void CFFSentryGun::Spawn( void )
 //-----------------------------------------------------------------------------
 void CFFSentryGun::GoLive( void ) 
 {
-	VPROF_BUDGET( "CFFSentryGun::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );
+	VPROF_BUDGET( "CFFSentryGun::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );	
 
 	BaseClass::GoLive();
 
@@ -906,6 +906,9 @@ void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 		SetPoseParameter( m_iPitchPoseParameter, flAimPitch );
 		SetPoseParameter( m_iYawPoseParameter, flAimYaw );
+
+		// Re-adjust size
+		UTIL_SetSize( this, FF_SENTRYGUN_MINS, FF_SENTRYGUN_MAXS );
 	}
 	else
 	{
