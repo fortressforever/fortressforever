@@ -234,7 +234,7 @@ void CHudDeathNotice::Paint()
 
 		// Don't include self kills when determining if teamkill
 		//bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
-		bool bTeamKill = ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE );
+		bool bTeamKill = ( ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
@@ -311,7 +311,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	const char *victim_name = g_PR->GetPlayerName( victim );
 
 	//bool bTeamKill = (g_PR->GetTeam(killer) == g_PR->GetTeam(victim));
-	bool bTeamKill = ( FFGameRules()->IsTeam1AlliedToTeam2( g_PR->GetTeam( killer ), g_PR->GetTeam( victim ) ) == GR_TEAMMATE );
+	bool bTeamKill = ( ( FFGameRules()->IsTeam1AlliedToTeam2( g_PR->GetTeam( killer ), g_PR->GetTeam( victim ) ) == GR_TEAMMATE ) && ( killer != victim ) );
 
 	if ( !killer_name )
 		killer_name = "";
