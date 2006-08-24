@@ -56,6 +56,8 @@ CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float f
 	VectorNormalize(m_vecPlayerForward);
 	VectorNormalize(m_vecPlayerRight);
 
+	// I NEED FEET VECTORS *CRY*
+
 	// Store the players' origin
 	m_vecPlayerOrigin = pPlayer->GetAbsOrigin();
 

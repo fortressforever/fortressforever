@@ -234,6 +234,8 @@ public:
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
 	Vector GetLegacyAbsOrigin();
+	Vector GetWaistOrigin( void );
+	Vector GetFeetOrigin( void );
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
