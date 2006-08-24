@@ -662,7 +662,7 @@ void CFFPlayer::Precache()
 
 	for (int i = 0; i < 8; i++)
 	{
-		PrecacheModel(UTIL_VarArgs("gibs/gib%d.mdl", (i + 1)));
+		PrecacheModel(UTIL_VarArgs("models/gibs/gib%d.mdl", (i + 1)));
 	}
 
 	BaseClass::Precache();
@@ -1466,7 +1466,10 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
-	CreateRagdollEntity(&info);
+	if (!ShouldGib(info))
+	{
+		CreateRagdollEntity(&info);
+	}
 }
 
 void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
@@ -4539,11 +4542,25 @@ void CFFPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 bool CFFPlayer::ShouldGib( const CTakeDamageInfo &info )
 {
-	// Some sort of HP check here
-	if( false )
-		return true;
-	else
-		return false;
+	return (GetHealth() <= -100.0f);
+}
+
+bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
+{
+	m_takedamage	= DAMAGE_NO;
+	AddSolidFlags( FSOLID_NOT_SOLID );
+	m_lifeState		= LIFE_DEAD;
+	AddEffects( EF_NODRAW ); // make the model invisible.
+
+	SetThink(&CBasePlayer::PlayerDeathThink);
+	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	CEffectData data;
+	data.m_nEntIndex = entindex();
+	data.m_vStart = GetAbsVelocity();
+	DispatchEffect("Gib", data);
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------

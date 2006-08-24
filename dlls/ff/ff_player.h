@@ -680,6 +680,8 @@ public:
 	
 	void	SetupClassVariables();
 
+	virtual bool Event_Gibbed(const CTakeDamageInfo &info);
+
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
 
