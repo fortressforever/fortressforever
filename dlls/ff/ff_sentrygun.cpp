@@ -118,6 +118,7 @@ const char *g_pszFFSentryGunSounds[] =
 	NULL
 };
 
+/*
 static Vector g_ffdev_sg_mins = FF_SENTRYGUN_MINS;
 static Vector g_ffdev_sg_maxs = FF_SENTRYGUN_MAXS;
 
@@ -133,6 +134,7 @@ CON_COMMAND( ffdev_setsgsize, "set the sg's size" )
 
 	Warning( "[Mins/Maxs] %f, %f, %f, - %f, %f, %f\n", g_ffdev_sg_mins.x, g_ffdev_sg_mins.y, g_ffdev_sg_mins.z, g_ffdev_sg_maxs.x, g_ffdev_sg_maxs.y, g_ffdev_sg_maxs.z );
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -292,6 +294,7 @@ void CFFSentryGun::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
+	/*
 	bool bValid = true;
 	for ( int i=0 ; i<3 ; i++ )
 	{
@@ -303,6 +306,7 @@ void CFFSentryGun::OnObjectThink( void )
 
 	if( bValid )
 		UTIL_SetSize( this, g_ffdev_sg_mins, g_ffdev_sg_maxs );
+		*/
 
 	CheckForOwner();
 
