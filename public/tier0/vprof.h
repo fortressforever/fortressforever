@@ -98,7 +98,8 @@
 #define VPROF_BUDGETGROUP_TEXTURE_CACHE				_T("Texture Cache")
 
 // FF SPECIFIC VPROF ENTRIES
-#define VPROF_BUDGETGROUP_FF_BUILDABLE					_T("FF Buildable Objects")
+#define VPROF_BUDGETGROUP_FF_BUILDABLE				_T("FF Buildable Objects")
+#define VPROF_BUDGETGROUP_FF_LUA					_T("FF Lua")
 	
 #ifdef _XBOX
 // update flags
