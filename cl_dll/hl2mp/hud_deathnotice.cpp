@@ -16,6 +16,7 @@
 #include <KeyValues.h>
 #include "c_baseplayer.h"
 #include "c_team.h"
+#include "ff_gamerules.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -232,7 +233,8 @@ void CHudDeathNotice::Paint()
 		Color iconTeamKillColor(0, 185, 0 , 250);
 
 		// Don't include self kills when determining if teamkill
-		bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
+		//bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
+		bool bTeamKill = ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE );
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
@@ -283,6 +285,9 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	int victim = engine->GetPlayerForUserID( event->GetInt("userid") );
 	const char *killedwith = event->GetString( "weapon" );
 
+	// Stuffs for handling buildable deaths
+	bool bBuildableKilled = false;
+
 	char fullkilledwith[128];
 	if ( killedwith && *killedwith )
 	{
@@ -305,23 +310,25 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	const char *killer_name = g_PR->GetPlayerName( killer );
 	const char *victim_name = g_PR->GetPlayerName( victim );
 
-	// Don't include self-kills as teamkills.
-	bool bTeamKill = (g_PR->GetTeam(killer) == g_PR->GetTeam(victim) && killer != victim);
+	//bool bTeamKill = (g_PR->GetTeam(killer) == g_PR->GetTeam(victim));
+	bool bTeamKill = ( FFGameRules()->IsTeam1AlliedToTeam2( g_PR->GetTeam( killer ), g_PR->GetTeam( victim ) ) == GR_TEAMMATE );
 
 	if ( !killer_name )
 		killer_name = "";
 	if ( !victim_name )
 		victim_name = "";
 
-	// Temporary until we decide how we're displaying dispenser/sg deaths
-	char pszVictimMod[ 256 ];
+	// Buildable stuff
+	char pszVictimMod[ MAX_PLAYER_NAME_LENGTH + 24 ];
 	if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
 	{
+		bBuildableKilled = true;
 		Q_snprintf( pszVictimMod, sizeof( pszVictimMod ), "%s's Dispenser", victim_name );
 		victim_name = const_cast< char * >( pszVictimMod );
 	}
 	else if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
 	{
+		bBuildableKilled = true;
 		Q_snprintf( pszVictimMod, sizeof( pszVictimMod ), "%s's Sentrygun", victim_name );
 		victim_name = const_cast< char * >( pszVictimMod );
 	}
@@ -333,7 +340,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	Q_strncpy( deathMsg.Killer.szName, killer_name, MAX_PLAYER_NAME_LENGTH );
 	Q_strncpy( deathMsg.Victim.szName, victim_name, MAX_PLAYER_NAME_LENGTH );
 	deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
-	deathMsg.iSuicide = ( !killer || killer == victim );
+	deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
 	// Try and find the death identifier in the icon list
 	deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
