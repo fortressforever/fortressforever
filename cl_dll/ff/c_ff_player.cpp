@@ -1034,7 +1034,7 @@ int C_FFPlayer::DrawModel( int flags )
 		// ********************************
 
 		// See if we're drawing a spy who is on our team and disguised
-		if( IsDisguised() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() == GR_TEAMMATE ) ) )
+		if( IsDisguised() && ( GetTeamNumber() == pPlayer->GetTeamNumber() ) )
 		{
 			// Spy is disguised as someone not of the team we're on
 			if( GetDisguisedTeam() != pPlayer->GetTeamNumber() )
