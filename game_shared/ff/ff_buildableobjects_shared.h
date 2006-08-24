@@ -248,6 +248,7 @@ public:
 
 	CFFPlayer *GetOwnerPlayer( void );
 	CFFTeam *GetOwnerTeam( void );
+	int GetOwnerTeamId( void );
 
 	int GetHealthPercent( void );
 	unsigned int GetAmmoPercent( void ) { return m_iAmmoPercent; }

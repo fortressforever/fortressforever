@@ -36,7 +36,8 @@ void CFFLuaLib::InitBuildables(lua_State* L)
 		class_<CFFBuildableObject>("BaseBuildable")
 			.def("GetTeamId",			&CFFBuildableObject::GetTeamNumber)
 			.def("GetOwner",			&CFFBuildableObject::GetOwnerPlayer)
-			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam),
+			.def("GetTeam",				&CFFBuildableObject::GetOwnerTeam)
+			.def("GetTeamId",			&CFFBuildableObject::GetOwnerTeamId),
 
 		// Dispenser
 		class_<CFFDispenser, CFFBuildableObject>("Dispenser"),
