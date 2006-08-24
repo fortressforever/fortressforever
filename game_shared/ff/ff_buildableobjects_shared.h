@@ -259,6 +259,7 @@ protected:
 
 #ifdef CLIENT_DLL
 public:
+	virtual int  DrawModel( int flags );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
 	virtual int	GetHealth( void ) const { return m_iHealth; }
@@ -267,6 +268,14 @@ public:
 	bool CheckForOwner( void ) { return ( m_hOwner.Get() ); }
 
 	bool m_bBuilt;	
+
+	// Stuff for the "can't build" type glyphs
+	virtual void SetClientSideOnly( bool bValue ) { m_bClientSideOnly = bValue; }
+	virtual void SetBuildError( BuildInfoResult_t hValue ) { m_hBuildError = hValue; }
+protected:
+	bool				m_bClientSideOnly;
+	BuildInfoResult_t	m_hBuildError;
+
 #else
 public:
 	virtual void Spawn( void ); 

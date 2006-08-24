@@ -51,6 +51,36 @@
 #include "ff_buildableobjects_shared.h"
 #include "c_ff_timers.h"
 
+#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/IMesh.h"
+#include "ClientEffectPrecacheSystem.h"
+
+// For DrawSprite
+#include "beamdraw.h"
+
+// Defines
+#define FF_BUILD_ERROR_NOROOM	"sprites/ff_sprite_spy"
+#define FF_BUILD_ERROR_TOOSTEEP	"sprites/ff_sprite_spy"
+#define FF_BUILD_ERROR_TOOFAR	"sprites/ff_sprite_spy"
+#define FF_BUILD_ERROR_INVALIDGROUND	"sprites/ff_sprite_spy"
+
+// Define all the sprites to precache
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorNoRoom )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_NOROOM )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorTooSteep )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_TOOSTEEP )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorTooFar )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_TOOFAR )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorInvalidGround )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_INVALIDGROUND )
+CLIENTEFFECT_REGISTER_END()
+
 //=============================================================================
 //
 //	class C_FFBuildableObject
@@ -73,6 +103,8 @@ END_RECV_TABLE( )
 //-----------------------------------------------------------------------------
 C_FFBuildableObject::C_FFBuildableObject( void )
 {
+	// Initialize
+	m_bClientSideOnly = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,6 +125,61 @@ void C_FFBuildableObject::OnDataChanged( DataUpdateType_t updateType )
 	if( updateType == DATA_UPDATE_CREATED )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Using this to draw any "can't build" type glyphs
+//-----------------------------------------------------------------------------
+int C_FFBuildableObject::DrawModel( int flags )
+{
+	if( m_bClientSideOnly )
+	{
+		// Draw our glyphs
+
+		// See if there's even an error
+		if( m_hBuildError >= BUILD_ALLOWED )
+		{
+			float flOffset = 0.0f;
+
+			// Get an offset for drawing (relative to GetAbsOrigin)
+			switch( Classify() )
+			{
+				case CLASS_DISPENSER: flOffset = 32.0f; break;
+				case CLASS_SENTRYGUN: flOffset = 32.0f; break;
+				case CLASS_DETPACK: flOffset = GetAbsOrigin().z; break;
+			}
+
+			const char *pszMaterial = NULL;
+
+			// Find out which error we're showing
+			switch( m_hBuildError )
+			{
+				case BUILD_NOROOM: pszMaterial = FF_BUILD_ERROR_NOROOM; break;
+				case BUILD_TOOSTEEP: pszMaterial = FF_BUILD_ERROR_TOOSTEEP; break;
+				case BUILD_TOOFAR: pszMaterial = FF_BUILD_ERROR_TOOFAR; break;
+				case BUILD_INVALIDGROUND: pszMaterial = FF_BUILD_ERROR_INVALIDGROUND; break;
+			}
+
+			// If a valid material...
+			if( pszMaterial )
+			{
+				// Draw!
+				IMaterial *pMaterial = materials->FindMaterial( pszMaterial, TEXTURE_GROUP_OTHER );
+				if( pMaterial )
+				{
+					materials->Bind( pMaterial );
+					color32 c = { 255, 0, 0, 255 };
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + flOffset ), 30.0f, 30.0f, c );
+				}
+			}
+		}
+
+		return BaseClass::DrawModel( flags );
+	}
+	else
+	{
+		return BaseClass::DrawModel( flags );
 	}
 }
 
@@ -209,6 +296,7 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!
 	pDetpack->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
+	pDetpack->SetClientSideOnly( true );
 
 	return pDetpack;
 }
@@ -288,6 +376,7 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!
 	pDispenser->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
+	pDispenser->SetClientSideOnly( true );
 
 	return pDispenser;
 }
@@ -369,6 +458,7 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 
 	// Mirv: Show up as the correct skin
 	pSentryGun->m_nSkin = clamp(CBasePlayer::GetLocalPlayer()->GetTeamNumber() - TEAM_BLUE, 0, 3);
+	pSentryGun->SetClientSideOnly( true );
 
 	return pSentryGun;
 }
