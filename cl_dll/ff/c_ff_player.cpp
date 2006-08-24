@@ -1160,12 +1160,23 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_FFPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
+void C_FFPlayer::CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
 	if (m_flConcTime > gpGlobals->curtime || m_flConcTime < 0)
-		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles - m_angConced );
+	{
+		QAngle angConced = m_angConced;
+		
+		// Don't allow us to see underneath the weapon because then we'll see
+		// arms stopping in the middle of nowhere and stuff like that
+		if (angConced.x > 0.0f)
+			angConced.x = 0.0f;
+
+		BaseClass::CalcViewModelView(eyeOrigin, eyeAngles - angConced);
+	}
 	else
-		BaseClass::CalcViewModelView( eyeOrigin, eyeAngles );
+	{
+		BaseClass::CalcViewModelView(eyeOrigin, eyeAngles);
+	}
 }
 // <-- Mirv: Conc angles
 
