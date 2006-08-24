@@ -139,7 +139,7 @@ void ClientModeFFNormal::Init( void )
 {
 	gameeventmanager->AddListener( this, "ff_restartround", false );
 
-	BaseClass::Init();
+	ClientModeShared::Init();
 }
 
 //-----------------------------------------------------------------------------
