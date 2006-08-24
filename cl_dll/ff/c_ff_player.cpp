@@ -49,14 +49,7 @@ extern CHudGrenade2Timer *g_pGrenade2Timer;
 #include "c_ff_timers.h"
 #include "vguicenterprint.h"
 
-// --> Mirv: Decaptiation code
-// These need to be mirrored in ff_player.cpp
-#define DECAP_HEAD			( 1 << 0 )
-#define DECAP_LEFT_ARM		( 1 << 1 )
-#define DECAP_RIGHT_ARM		( 1 << 2 )
-#define DECAP_LEFT_LEG		( 1 << 3 )
-#define DECAP_RIGHT_LEG		( 1 << 4 )
-// <-- Mirv: Decaptiation code
+#include "ff_fx_bloodstream.h"
 
 // --> Mirv: Conc stuff
 static ConVar horiz_speed( "ffdev_concuss_hspeed", "2.0", 0, "Horizontal speed" );
@@ -67,6 +60,8 @@ static ConVar conc_test( "ffdev_concuss_test", "0", 0, "Show conced decals" );
 // <-- Mirv: Conc stuff
 
 static ConVar render_mode( "ffdev_rendermode", "0", FCVAR_CLIENTDLL );
+
+static ConVar decap_test("ffdev_decaptest", "0");
 
 static ConVar cl_spawnweapon("cl_spawnslot", "0", FCVAR_ARCHIVE, "Weapon slot to spawn with");
 
@@ -460,6 +455,8 @@ private:
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
 
+	CSmartPtr<CBloodStream>	m_pBloodStreamEmitter;
+
 	int		m_fBodygroupState;
 	int		m_nSkinIndex;
 };
@@ -480,6 +477,7 @@ END_RECV_TABLE()
 
 C_FFRagdoll::C_FFRagdoll()
 {
+	m_pBloodStreamEmitter = NULL;
 }
 
 C_FFRagdoll::~C_FFRagdoll()
@@ -631,6 +629,12 @@ void C_FFRagdoll::CreateRagdoll()
 	SetModelIndex( m_nModelIndex );
 	m_nSkin = m_nSkinIndex;
 
+	// TEMP to test blood streams!!
+	if (decap_test.GetBool())
+	{
+		m_fBodygroupState = 0xFFFFFFFF;
+	}
+
 	// Remove the correct parts of the body
 	if (m_fBodygroupState & DECAP_HEAD)
 		SetBodygroup(1, 1);
@@ -653,6 +657,9 @@ void C_FFRagdoll::CreateRagdoll()
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+
+	m_pBloodStreamEmitter = CBloodStream::Create(this, "BloodStream");
+	m_pBloodStreamEmitter->SetDieTime(gpGlobals->curtime + 25.0f);
 }
 
 

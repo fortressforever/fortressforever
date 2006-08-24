@@ -46,14 +46,6 @@
 extern int gEvilImpulse101;
 #define FF_PLAYER_MODEL "models/player/demoman/demoman.mdl"
 
-// Decapitation code
-// These need to be mirrored in c_ff_player.cpp
-#define DECAP_HEAD			( 1 << 0 )
-#define DECAP_LEFT_ARM		( 1 << 1 )
-#define DECAP_RIGHT_ARM		( 1 << 2 )
-#define DECAP_LEFT_LEG		( 1 << 3 )
-#define DECAP_RIGHT_LEG		( 1 << 4 )
-
 // Oh no a gobal.
 int g_iLimbs[CLASS_CIVILIAN + 1][5] = { { 0 } };
 
