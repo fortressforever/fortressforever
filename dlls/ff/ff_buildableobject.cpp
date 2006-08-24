@@ -274,11 +274,7 @@ void CFFBuildableObject::Spawn( void )
 		AddSolidFlags( FSOLID_FORCE_WORLD_ALIGNED );
 		SetMoveType( MOVETYPE_FLY );
 
-		IPhysicsObject *pObject = VPhysicsInitStatic();
-		if( pObject )
-			Warning( "[Object %s] Phyics: True\n", this->GetClassName() );
-		else
-			Warning( "[Object %s] Phyics: False\n", this->GetClassName() );
+		VPhysicsInitStatic();
 	}
 
 	SetCollisionGroup( COLLISION_GROUP_PLAYER );
