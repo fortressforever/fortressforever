@@ -478,6 +478,18 @@ CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get a buildables team id
+//-----------------------------------------------------------------------------
+int CFFBuildableObject::GetOwnerTeamId( void )
+{
+	CFFPlayer *pOwner = GetOwnerPlayer();
+	if( pOwner )
+		return pOwner->GetTeamNumber();
+
+	return TEAM_UNASSIGNED;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CFFDispenser::CFFDispenser( void )
