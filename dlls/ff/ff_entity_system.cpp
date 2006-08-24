@@ -96,6 +96,8 @@ void CFFEntitySystemHelper::Spawn( void )
 //----------------------------------------------------------------------------
 void CFFEntitySystemHelper::OnThink( void )
 {
+	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
+
 	CFFLuaSC hTick;
 	entsys.RunPredicates_LUA( NULL, &hTick, "tick" );
 	SetNextThink( gpGlobals->curtime + 1.0f );
@@ -104,6 +106,8 @@ void CFFEntitySystemHelper::OnThink( void )
 //----------------------------------------------------------------------------
 void CFFEntitySystemHelper::Precache( void )
 {
+	VPROF_BUDGET( "CFFEntitySystemHelper::OnPrecache", VPROF_BUDGETGROUP_FF_LUA );
+
 	CFFLuaSC hPrecache;
 	entsys.RunPredicates_LUA( NULL, &hPrecache, "precache" );
 }
@@ -135,6 +139,8 @@ CFFEntitySystem::~CFFEntitySystem()
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 {
+	VPROF_BUDGET( "CFFEntitySystem::LoadLuaFile", VPROF_BUDGETGROUP_FF_LUA );
+
 	DevMsg("[SCRIPT] Loading Lua File: %s\n", filename);
 	FileHandle_t f = filesystem->Open( filename, "rb", "MOD" );
 
@@ -188,6 +194,8 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::StartForMap()
 {
+	VPROF_BUDGET( "CFFEntitySystem::StartForMap", VPROF_BUDGETGROUP_FF_LUA );
+
 #ifdef _LINUX
 	//Warning("Entity system disabled!\n");
 	//return false;
@@ -249,6 +257,8 @@ bool CFFEntitySystem::StartForMap()
 //----------------------------------------------------------------------------
 int CFFEntitySystem::HandleError( lua_State *L )
 {
+	VPROF_BUDGET( "CFFEntitySystem::HandleError", VPROF_BUDGETGROUP_FF_LUA );
+
 	const char *error = lua_tostring(L, -1);
 	Warning("[SCRIPT] %s", error);
 
@@ -360,6 +370,8 @@ void CFFEntitySystem::DoString( const char *buffer )
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject)
 {
+	VPROF_BUDGET( "CFFEntitySystem::GetObject", VPROF_BUDGETGROUP_FF_LUA );
+
 	if(!pEntity)
 		return false;
 
@@ -371,6 +383,8 @@ bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outO
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::GetObject(const char* szTableName, luabind::adl::object& outObject)
 {
+	VPROF_BUDGET( "CFFEntitySystem::GetObject", VPROF_BUDGETGROUP_FF_LUA );
+
 	if(NULL == szTableName)
 		return false;
 
@@ -398,6 +412,8 @@ bool CFFEntitySystem::GetFunction(CBaseEntity* pEntity,
 								  const char* szFunctionName,
 								  luabind::adl::object& outObject)
 {
+	VPROF_BUDGET( "CFFEntitySystem::GetFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	if(NULL == pEntity || NULL == szFunctionName)
 		return false;
 
@@ -413,6 +429,8 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 								  const char* szFunctionName,
 								  luabind::adl::object& outObject)
 {
+	VPROF_BUDGET( "CFFEntitySystem::GetFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	if(NULL == szFunctionName)
 		return false;
 
@@ -439,6 +457,8 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 //----------------------------------------------------------------------------
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
+	VPROF_BUDGET( "CFFEntitySystem::RunPredicates", VPROF_BUDGETGROUP_FF_LUA );
+
 	Warning( "[RunPredicates] Shit is deprecated!\n" );
 	return true;
 
@@ -525,6 +545,8 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 //----------------------------------------------------------------------------
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
+	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
+
 #ifdef _LINUX
 	//return bExpectedVal;
 #endif
@@ -560,6 +582,8 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 //----------------------------------------------------------------------------
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
+	VPROF_BUDGET( "CFFEntitySystem::RunPredicates_LUA", VPROF_BUDGETGROUP_FF_LUA );
+
 #ifdef _LINUX
 	//return false;
 #endif

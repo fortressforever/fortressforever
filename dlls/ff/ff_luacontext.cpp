@@ -133,6 +133,8 @@ void CFFLuaSC::PushRef(CTakeDamageInfo& info) { m_params.AddToTail(SETOBJECTREF(
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
+	VPROF_BUDGET( "CFFLuaSC::CallFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	m_returnVals.PurgeAndDeleteElements();
 
 	lua_State* L = entsys.GetLuaState();
@@ -235,6 +237,8 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 //---------------------------------------------------------------------------
 bool CFFLuaSC::CallFunction(const char* szFunctionName)
 {
+	VPROF_BUDGET( "CFFLuaSC::CallFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	return CallFunction(NULL, szFunctionName);
 }
 
@@ -285,6 +289,8 @@ Vector CFFLuaSC::GetVector()
 //---------------------------------------------------------------------------
 void CFFLuaSC::QuickCallFunction(const char* szFunctionName)
 {
+	VPROF_BUDGET( "CFFLuaSC::QuickCallFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	CFFLuaSC sc;
 	sc.CallFunction(NULL, szFunctionName);
 }
@@ -292,6 +298,8 @@ void CFFLuaSC::QuickCallFunction(const char* szFunctionName)
 //---------------------------------------------------------------------------
 void CFFLuaSC::QuickCallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 {
+	VPROF_BUDGET( "CFFLuaSC::QuickCallFunction", VPROF_BUDGETGROUP_FF_LUA );
+
 	CFFLuaSC sc;
 	sc.CallFunction(pEntity, szFunctionName);
 }
