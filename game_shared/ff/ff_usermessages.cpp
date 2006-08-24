@@ -53,21 +53,6 @@ void RegisterUserMessages()
 
 	usermessages->Register("FF_HudLua", -1);
 
-	// so we know when a detpack has been removed
-	// so the owner's client can stop drawing the timer
-	usermessages->Register( "DetpackStopTimer", -1 );
-	// So we know when to start a detpack timer on a client
-	usermessages->Register( "DetpackStartTimer", -1 );
-
-	// When an enemy is touching our dispenser (sent to owner of dispenser)
-	usermessages->Register( "Dispenser_EnemiesUsing", -1 );
-	// When an enemy is touching our dispenser (sent to enemy doing the touching)
-	usermessages->Register( "Dispenser_TouchEnemy", -1 );
-	// When our dispenser blows up (sent to owner of dispenser)
-	usermessages->Register( "Dispenser_Destroyed", -1 );
-	// When our sentrygun blows up (sent to owner of sg)
-	usermessages->Register( "SentryGun_Destroyed", -1 );
-
 	usermessages->Register("FF_BuildTimer", -1);
   
 	// used to send a status icon

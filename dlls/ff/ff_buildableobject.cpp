@@ -75,6 +75,8 @@ static ConVar flicker_time( "ffdev_flicker_time", "0.1", FCVAR_NONE );
 //-----------------------------------------------------------------------------
 void CFFBuildableFlickerer::Spawn( void )
 {
+	VPROF_BUDGET( "CFFBuildableFlickerer::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	m_flFlicker = gpGlobals->curtime;
 
 	SetThink( &CFFBuildableFlickerer::OnObjectThink );
@@ -251,6 +253,8 @@ CFFBuildableObject::~CFFBuildableObject( void )
 */
 void CFFBuildableObject::Spawn( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Set the team number to the owner team number.
 	// Hope this is ok, bots use this for ally checks atm.
 	// Mulch: Yeah, keep this here, needed for some lua stuff
@@ -270,7 +274,11 @@ void CFFBuildableObject::Spawn( void )
 		AddSolidFlags( FSOLID_FORCE_WORLD_ALIGNED );
 		SetMoveType( MOVETYPE_FLY );
 
-		VPhysicsInitStatic();
+		IPhysicsObject *pObject = VPhysicsInitStatic();
+		if( pObject )
+			Warning( "[Object %s] Phyics: True\n", this->GetClassName() );
+		else
+			Warning( "[Object %s] Phyics: False\n", this->GetClassName() );
 	}
 
 	SetCollisionGroup( COLLISION_GROUP_PLAYER );
@@ -319,6 +327,8 @@ void CFFBuildableObject::Spawn( void )
 */
 void CFFBuildableObject::GoLive( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::GoLive", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Object is now built
 	m_bBuilt = true;
 
@@ -360,7 +370,7 @@ void CFFBuildableObject::GoLive( void )
 		pPhysics->EnableDrag( m_bUsePhysics );
 
 		if( Classify() == CLASS_DETPACK )
-			pPhysics->SetMass( 1000.0f );
+			pPhysics->SetMass( 500.0f );
 	}
 	//*/
 }
@@ -372,6 +382,8 @@ void CFFBuildableObject::GoLive( void )
 */
 void CFFBuildableObject::Precache( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::Precache", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Precache normal models
 	int iCount = 0;
 	while( m_ppszModels[ iCount ] != NULL )
@@ -427,6 +439,8 @@ void CFFBuildableObject::Precache( void )
 */
 void CFFBuildableObject::Detonate( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::Detonate", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// Do the explosion and radius damage
 	Explode();
 }
@@ -438,6 +452,8 @@ void CFFBuildableObject::Detonate( void )
 */
 void CFFBuildableObject::RemoveQuietly( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::RemoveQuietly", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// MUST DO THIS or CreateExplosion crashes HL2
 	m_takedamage = DAMAGE_NO;
 
@@ -471,6 +487,39 @@ void CFFBuildableObject::RemoveQuietly( void )
 void CFFBuildableObject::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFBuildableObject::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	// Check for "malfunctions"
+	if( HasMalfunctioned() )
+	{
+		if( m_hOwner.Get() )
+		{
+			switch( Classify() )
+			{
+				case CLASS_DISPENSER:
+					ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_DISPENSER_MALFUNCTIONED" );
+				break;
+
+				case CLASS_SENTRYGUN:
+					ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_SENTRYGUN_MALFUNCTIONED" );
+				break;
+			}
+		}
+
+		Detonate();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if we've malfunctioned
+//-----------------------------------------------------------------------------
+bool CFFBuildableObject::HasMalfunctioned( void ) const
+{
+	VPROF_BUDGET( "CFFBuildableObject::HasMalfunctioned", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if( m_bBuilt && ( m_vecGroundOrigin != GetAbsOrigin() ) )
+		return true;
+
+	return false;
 }
 
 /**
@@ -544,6 +593,8 @@ int CFFBuildableObject::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 */
 void CFFBuildableObject::Explode( void )
 {
+	VPROF_BUDGET( "CFFBuildableObject::Explode", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	// MUST DO THIS or CreateExplosion crashes HL2
 	m_takedamage = DAMAGE_NO;
 
@@ -569,6 +620,8 @@ void CFFBuildableObject::Explode( void )
 */
 void CFFBuildableObject::SpawnGib( const char *szGibModel, bool bFlame, bool bDieGroundTouch )
 {
+	VPROF_BUDGET( "CFFBuildableObject::SpawnGib", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
 	/*
 	// Create some gibs! MMMMM CHUNKY
 	CGib *pChunk = CREATE_ENTITY( CGib, "gib" );
