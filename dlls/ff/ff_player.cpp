@@ -399,6 +399,7 @@ CFFPlayer::CFFPlayer()
 	// Grenade Related
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0;
+	m_bEngyGrenWarned = false;
 	m_iPrimary = 0;
 	m_iSecondary = 0;
 	m_bWantToThrowGrenade = false;
@@ -632,6 +633,8 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
 	PrecacheScriptSound("Player.Flameout");
+	// Special case
+	PrecacheScriptSound( "EmpGrenade.Explode" );
 
 	// Flashlight - Bug #0000679: flashlight sound isn't precached
 	PrecacheScriptSound( "HL2Player.FlashLightOn" );
@@ -1316,6 +1319,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime), 0.0f);
 		m_iGrenadeState = FF_GREN_NONE;
 		m_flServerPrimeTime = 0;
+		m_bEngyGrenWarned = false;
 	}
 
 	ClearSpeedEffects();
@@ -3983,6 +3987,7 @@ void CFFPlayer::Command_ThrowGren(void)
 	m_bWantToThrowGrenade = false;
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0.0f;
+	m_bEngyGrenWarned = false;
 }
 
 int CFFPlayer::GetPrimaryGrenades( void )
@@ -4033,6 +4038,18 @@ void CFFPlayer::GrenadeThink(void)
 	if (!IsGrenadePrimed())
 		return;
 
+	// Bug #0000993: Holding(HHing) an emp bugs the pre-det sound
+	// Because the grenade doesn't actually exist yet for the bug,
+	// we've gotta play the sound here if applicable
+	if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_iGrenadeState == FF_GREN_PRIMETWO ) )
+	{
+		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + gren_timer.GetFloat() - 0.685f ) ) )
+		{
+			m_bEngyGrenWarned = true;
+			EmitSound( "EmpGrenade.Explode" );
+		}
+	}	
+
 	if(m_bWantToThrowGrenade && gpGlobals->curtime - m_flServerPrimeTime >= gren_throw_delay.GetFloat())
 	{
 		Command_ThrowGren();
@@ -4044,6 +4061,7 @@ void CFFPlayer::GrenadeThink(void)
 		ThrowGrenade(0); // "throw" a grenade that immediately explodes at the player's origin
 		m_iGrenadeState = FF_GREN_NONE;
 		m_flServerPrimeTime = 0;
+		m_bEngyGrenWarned = false;
 	}
 }
 
@@ -4143,6 +4161,7 @@ void CFFPlayer::RemovePrimedGrenades( void )
 	{
 		m_flServerPrimeTime = 0.0f;
 		m_iGrenadeState = FF_GREN_NONE;
+		m_bEngyGrenWarned = false;
 	}
 }
 
