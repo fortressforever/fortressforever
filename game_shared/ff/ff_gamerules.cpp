@@ -1072,20 +1072,10 @@ ConVar mp_prematch( "mp_prematch",
 			// END: Added by Mulchman for FF_ entities
 		}
 
-		// Award points & modify weapon if 'team kill'
-
 		if( pScorer )
 		{
-			// If the owner of the buildable is an ally or teammate
-			// it's a 'team kill'
-			if( PlayerRelationship( pScorer, pVictim ) == GR_TEAMMATE )
-			{
-				// Don't decrement frag count if killing a friendly buildable as per
-				// bug #0000985: killing your own dispenser with friendlyfire on gives you a negative kill
-				//pScorer->IncrementFragCount( -1 );
-				pszWeapon = "teammate";
-			}
-			else
+			// Award point for killing a buildable
+			if( PlayerRelationship( pScorer, pVictim ) != GR_TEAMMATE )
 				pScorer->IncrementFragCount( 1 );
 		}
 
@@ -1103,6 +1093,7 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent->SetInt( "userid", pVictim->GetUserID() );
 			pEvent->SetInt( "attacker", iKillerID );
 			pEvent->SetString( "weapon", pszWeapon );
+			pEvent->SetInt( "priority", 10 );
 			gameeventmanager->FireEvent( pEvent );
 		}
 	}
