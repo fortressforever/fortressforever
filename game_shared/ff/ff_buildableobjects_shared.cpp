@@ -56,10 +56,8 @@ CFFBuildableInfo::CFFBuildableInfo(CFFPlayer *pPlayer, int iBuildObject, float f
 	VectorNormalize(m_vecPlayerForward);
 	VectorNormalize(m_vecPlayerRight);
 
-	// I NEED FEET VECTORS *CRY*
-
-	// Store the players' origin
-	m_vecPlayerOrigin = pPlayer->GetAbsOrigin();
+	// Store the players' FEET POSITION
+	m_vecPlayerOrigin = pPlayer->GetFeetOrigin();
 
 	// Get a position in front of the player a certain distance & raise it up
 	m_vecBuildAirOrigin = m_vecPlayerOrigin + (m_vecPlayerForward * m_flBuildDist);
@@ -155,13 +153,17 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	// Bug #0000347: SG and dispenser buildable on an elevator
 	// Check if the player is standing on an ele
 
+	// TODO:
 	// Could you catch all these just by checking if movetype is MOVETYPE_PUSH?
 	//																	- mirv
+	// IF IT'LL WORK ON THE CLIENT, YEAH
 
 	trace_t tr1;
 	UTIL_TraceLine( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecPlayerOrigin - Vector( 0, 0, 6 * m_flRaiseVal ), CONTENTS_MOVEABLE|CONTENTS_SOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &tr1 );
 	if( tr1.DidHit() && tr1.m_pEnt )
 	{
+		if( tr1.m_pEnt->GetMoveType() == MOVETYPE_PUSH )
+			/*
 #ifdef CLIENT_DLL
 		if( !Q_strcmp( "C_BaseDoor", tr1.m_pEnt->GetClassName() ) ||
 			!Q_strcmp( "C_RotDoor", tr1.m_pEnt->GetClassName() ) ||
@@ -185,6 +187,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 			!Q_strcmp( "func_tracktrain", tr1.m_pEnt->GetClassname() ) ||
 			!Q_strcmp( "func_traincontrols", tr1.m_pEnt->GetClassname() ) )
 #endif
+			*/
 			return true;
 	}
 
@@ -193,6 +196,8 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	UTIL_TraceLine( m_vecBuildAirOrigin, m_vecBuildAirOrigin - Vector( 0, 0, 7 * m_flRaiseVal ), CONTENTS_MOVEABLE|CONTENTS_SOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &tr2 );
 	if( tr2.DidHit() && tr2.m_pEnt )
 	{
+		if( tr2.m_pEnt->GetMoveType() == MOVETYPE_PUSH )
+			/*
 #ifdef CLIENT_DLL
 		if( !Q_strcmp( "C_BaseDoor", tr2.m_pEnt->GetClassName() ) ||
 			!Q_strcmp( "C_RotDoor", tr2.m_pEnt->GetClassName() ) ||
@@ -216,6 +221,7 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 			!Q_strcmp( "func_tracktrain", tr2.m_pEnt->GetClassname() ) ||
 			!Q_strcmp( "func_traincontrols", tr2.m_pEnt->GetClassname() ) )
 #endif
+			*/
 			return true;
 	}
 
