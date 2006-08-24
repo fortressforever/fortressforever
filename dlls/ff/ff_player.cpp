@@ -4500,6 +4500,7 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 				pRagdoll->m_nForceBone = m_nForceBone;
 				pRagdoll->m_vecForce = Vector(0, 0, 0);
 				pRagdoll->m_fBodygroupState = 0;
+				pRagdoll->m_nSkinIndex = m_nSkin;
 
 				// remove it after a time
 				pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
@@ -4569,7 +4570,7 @@ void CFFPlayer::UnConcuss( void )
 //-----------------------------------------------------------------------------
 // Purpose: Apply the concussion effect on this player
 //-----------------------------------------------------------------------------
-void CFFPlayer::Concuss( float flDuration, float flIconDuration, const QAngle *viewjerk )
+void CFFPlayer::Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk, float flDistance)
 {
 	if( flDuration == -1 )
 		m_flConcTime = flDuration;
@@ -4586,8 +4587,10 @@ void CFFPlayer::Concuss( float flDuration, float flIconDuration, const QAngle *v
 		WRITE_FLOAT( flIconDuration );
 	MessageEnd();
 
-	if( viewjerk )
-		ViewPunch( (*viewjerk) * jerkmulti.GetFloat() );
+	if (viewjerk)
+	{
+		ViewPunch((*viewjerk) * jerkmulti.GetFloat() * flDistance);
+	}
 }
 
 //-----------------------------------------------------------------------------

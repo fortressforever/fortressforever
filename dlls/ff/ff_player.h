@@ -550,7 +550,7 @@ public:
 
 	CNetworkVar( float, m_flConcTime );
 	void UnConcuss( void );
-	void Concuss( float flDuration, float flIconDuration, const QAngle *viewjerk = NULL );
+	void Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk = NULL, float flDistance = 0.0f);
 
 	CNetworkVar( int, m_iClassStatus );
 	int GetClassForClient() { return (0x0000000F & m_iClassStatus); }
