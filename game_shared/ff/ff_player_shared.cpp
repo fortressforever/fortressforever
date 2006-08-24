@@ -482,6 +482,27 @@ Vector CFFPlayer::GetLegacyAbsOrigin()
 	//return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Get our feet position
+//-----------------------------------------------------------------------------
+Vector CFFPlayer::GetFeetOrigin( void )
+{
+	// TODO: Get a position for in water (when swimming)
+
+	if( GetFlags() & FL_DUCKING )
+		return GetWaistOrigin() - Vector( 0, 0, 18 );
+	else
+		return GetWaistOrigin() - Vector( 0, 0, 36 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get our waist position
+//-----------------------------------------------------------------------------
+Vector CFFPlayer::GetWaistOrigin( void )
+{
+	return GetAbsOrigin();
+}
+
 int CFFPlayer::GetHealthPercentage()
 {
 	float flPerc;

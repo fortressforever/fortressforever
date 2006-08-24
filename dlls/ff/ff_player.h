@@ -671,6 +671,8 @@ public:
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
 	Vector GetLegacyAbsOrigin();
+	Vector GetWaistOrigin( void );
+	Vector GetFeetOrigin( void );
 
 	virtual void Touch(CBaseEntity *pOther);
 	void	InstaSwitch(int iClassNum);
