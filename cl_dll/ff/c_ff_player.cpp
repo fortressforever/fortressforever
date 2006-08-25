@@ -34,6 +34,7 @@
 #include "ff_hud_grenade2timer.h"
 
 #include "ff_gamerules.h"
+#include "ff_vieweffects.h"
 
 #include <igameresources.h>
 
@@ -988,6 +989,17 @@ void C_FFPlayer::Spawn( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Local player has died, clean up various things here
+//-----------------------------------------------------------------------------
+void C_FFPlayer::Death()
+{
+	ffvieweffects->Reset();
+	
+	extern void ClearStatusIcons();
+	ClearStatusIcons();
+}
+
 // Stomp any movement if we're in mapguide mode
 void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 {
@@ -1271,20 +1283,36 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 
-	// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
-	// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
-	// This fixes it, hurrah.
-	// Added extra guards to make this safer
-	if (this == C_BasePlayer::GetLocalPlayer() && IsAlive() && GetTeamNumber() >= TEAM_BLUE && GetActiveWeapon() != m_pOldActiveWeapon)
+	if (IsLocalPlayer())
 	{
-		if (m_pOldActiveWeapon)
-			m_pOldActiveWeapon->Holster(GetActiveWeapon());
+		// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
+		// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
+		// This fixes it, hurrah.
+		// Added extra guards to make this safer
+		if (IsAlive() && GetTeamNumber() >= TEAM_BLUE && GetActiveWeapon() != m_pOldActiveWeapon)
+		{
+			if (m_pOldActiveWeapon)
+				m_pOldActiveWeapon->Holster(GetActiveWeapon());
 
-		if (GetActiveWeapon())
-			GetActiveWeapon()->Deploy();
+			if (GetActiveWeapon())
+				GetActiveWeapon()->Deploy();
 
-		m_pOldActiveWeapon = GetActiveWeapon();
+			m_pOldActiveWeapon = GetActiveWeapon();
+		}
+
+		// Also lets keep track of the lift state of the local player here too
+		// That way we can find out if the local player has died and do any jobs
+		// needed (such as clearing status icons or view effects).
+		static char localLifeState = LIFE_DEAD;
+
+		if (localLifeState == LIFE_ALIVE && m_lifeState > LIFE_ALIVE)
+		{
+			Death();
+		}
+
+		localLifeState = m_lifeState;
 	}
+
 /*
 	// BEG: Added by Mulchman
 	if( m_bBuilding && !m_bClientBuilding )

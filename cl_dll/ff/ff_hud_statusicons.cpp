@@ -78,6 +78,7 @@ public:
 DECLARE_HUDELEMENT( CStatusIcons );
 DECLARE_HUD_MESSAGE( CStatusIcons, StatusIconUpdate );
 
+static CStatusIcons *g_pStatusIcons = NULL;
 
 CStatusIcons::CStatusIcons( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudStatusIcons" )
 {
@@ -141,6 +142,9 @@ void CStatusIcons::Init( void )
 {
 	// Cache textures
 	CacheTextures();
+
+	// Needed for elsewhere
+	g_pStatusIcons = this;
 
 	HOOK_HUD_MESSAGE( CStatusIcons, StatusIconUpdate );
 }
@@ -236,5 +240,23 @@ void CStatusIcons::Paint( void )
 		sIcon.pTexture->DrawSelf(0, iOffset, gHUD.m_clrNormal);
 
 		iOffset += sIcon.pTexture->Height() + 5.0f;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: So we can reset all these from elsewhere (e.g. player death)
+//-----------------------------------------------------------------------------
+void ClearStatusIcons()
+{
+	if (!g_pStatusIcons)
+	{
+		Assert(0);
+		return;
+	}
+    
+	for (int i = 0; i < FF_STATUSICON_MAX; i++)
+	{
+		g_pStatusIcons->sStatusIcons[i].m_flStart = gpGlobals->curtime;
+		g_pStatusIcons->sStatusIcons[i].m_flDuration = 0.0f;
 	}
 }

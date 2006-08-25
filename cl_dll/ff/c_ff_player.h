@@ -233,6 +233,8 @@ public:
 	virtual void Spawn( void );
 	virtual void CreateMove(float flInputSampleTime, CUserCmd *pCmd);
 
+	virtual void Death();
+
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
 	Vector GetLegacyAbsOrigin();
