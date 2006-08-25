@@ -151,32 +151,32 @@ namespace Omnibot
 	const char *g_Weapons[TF_WP_MAX] =
 	{
 		0,		
-		"ff_weapon_umbrella", // TF_WP_UMBRELLA
-		0, // TF_WP_AXE
-		"ff_weapon_crowbar", // TF_WP_CROWBAR
-		"ff_weapon_medkit", // TF_WP_MEDKIT
-		"ff_weapon_knife", // TF_WP_KNIFE
-		"ff_weapon_spanner", // TF_WP_SPANNER
-		"ff_weapon_shotgun", // TF_WP_SHOTGUN
-		"ff_weapon_supershotgun", // TF_WP_SUPERSHOTGUN	
-		"ff_weapon_nailgun", // TF_WP_NAILGUN
-		"ff_weapon_supernailgun", // TF_WP_SUPERNAILGUN		
-		"ff_weapon_grenadelauncher", // TF_WP_GRENADE_LAUNCHER
-		"ff_weapon_rpg", // TF_WP_ROCKET_LAUNCHER
-		"ff_weapon_sniperrifle", // TF_WP_SNIPER_RIFLE
-		"ff_weapon_radiotagrifle", // TF_WP_RADIOTAG_RIFLE
-		"ff_weapon_railgun", // TF_WP_RAILGUN
-		"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
-		"ff_weapon_assaultcannon", // TF_WP_MINIGUN
-		"ff_weapon_autorifle", // TF_WP_AUTORIFLE
-		"ff_weapon_tranquiliser", // TF_WP_DARTGUN
-		"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
-		"ff_weapon_ic", // TF_WP_NAPALMCANNON
-		"ff_weapon_tommygun", // TF_WP_TOMMYGUN
-		"ff_weapon_deploysentrygun", // TF_WP_DEPLOY_SG
-		"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
-		"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
-		"ff_weapon_flag", // TF_WP_FLAG
+			"ff_weapon_umbrella", // TF_WP_UMBRELLA
+			0, // TF_WP_AXE
+			"ff_weapon_crowbar", // TF_WP_CROWBAR
+			"ff_weapon_medkit", // TF_WP_MEDKIT
+			"ff_weapon_knife", // TF_WP_KNIFE
+			"ff_weapon_spanner", // TF_WP_SPANNER
+			"ff_weapon_shotgun", // TF_WP_SHOTGUN
+			"ff_weapon_supershotgun", // TF_WP_SUPERSHOTGUN	
+			"ff_weapon_nailgun", // TF_WP_NAILGUN
+			"ff_weapon_supernailgun", // TF_WP_SUPERNAILGUN		
+			"ff_weapon_grenadelauncher", // TF_WP_GRENADE_LAUNCHER
+			"ff_weapon_rpg", // TF_WP_ROCKET_LAUNCHER
+			"ff_weapon_sniperrifle", // TF_WP_SNIPER_RIFLE
+			"ff_weapon_radiotagrifle", // TF_WP_RADIOTAG_RIFLE
+			"ff_weapon_railgun", // TF_WP_RAILGUN
+			"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
+			"ff_weapon_assaultcannon", // TF_WP_MINIGUN
+			"ff_weapon_autorifle", // TF_WP_AUTORIFLE
+			"ff_weapon_tranquiliser", // TF_WP_DARTGUN
+			"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
+			"ff_weapon_ic", // TF_WP_NAPALMCANNON
+			"ff_weapon_tommygun", // TF_WP_TOMMYGUN
+			"ff_weapon_deploysentrygun", // TF_WP_DEPLOY_SG
+			"ff_weapon_deploydispenser", // TF_WP_DEPLOY_DISP
+			"ff_weapon_deploydetpack", // TF_WP_DEPLOY_DETP
+			"ff_weapon_flag", // TF_WP_FLAG
 	};
 	//
 	int obUtilGetWeaponId(const char *_weaponName)
@@ -618,9 +618,9 @@ namespace Omnibot
 
 		if(pEdict)
 		{
-			CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
+			/*CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
 			CFFPlayer *pFFPlayer = dynamic_cast<CFFPlayer*>(pEntity);
-			ASSERT(pFFPlayer);
+			ASSERT(pFFPlayer);*/
 
 			const char *pTeam = "auto";
 			switch(obUtilGetGameTeamFromBotTeam(_newteam))
@@ -931,7 +931,7 @@ namespace Omnibot
 
 	int obIDFromEntity(const GameEntity _ent)
 	{
-		return ENTINDEX((edict_t*)_ent);
+		return !FNullEnt((edict_t*)_ent) ? ENTINDEX((edict_t*)_ent) : -1;
 	}
 
 	//-----------------------------------------------------------------
@@ -985,13 +985,6 @@ namespace Omnibot
 	static obResult obTraceLine(BotTraceResult *_result, const float _start[3], const float _end[3], 
 		const AABB *_pBBox, int _mask, int _user, obBool _bUsePVS)
 	{
-		int iMask = 0;
-		Ray_t ray;
-		trace_t trace;
-
-		// TODO: possibly use other types of filters?
-		CTraceFilterWorldAndPropsOnly traceFilter;
-
 		Vector start(_start[0],_start[1],_start[2]);
 		Vector end(_end[0],_end[1],_end[2]);
 
@@ -1002,6 +995,10 @@ namespace Omnibot
 		bool bInPVS = _bUsePVS ? engine->CheckOriginInPVS(end, pvs, iPVSLength) : true;
 		if(bInPVS)
 		{
+			int iMask = 0;
+			Ray_t ray;
+			trace_t trace;
+
 			// Set up the collision masks
 			if(_mask & TR_MASK_ALL)
 				iMask |= MASK_ALL;
@@ -1033,6 +1030,8 @@ namespace Omnibot
 				ray.Init(start, end);
 			}
 
+			CBaseEntity *pIgnoreEnt = _user > 0 ? CBaseEntity::Instance(_user) : 0;
+			CTraceFilterSimple traceFilter(pIgnoreEnt, iMask);
 			enginetrace->TraceRay(ray, iMask, &traceFilter, &trace);
 
 			if(trace.DidHit() && trace.m_pEnt && (trace.m_pEnt->entindex() != 0))
@@ -1081,7 +1080,10 @@ namespace Omnibot
 			return "FF_SentryGun";
 		case TF_CLASSEX_DISPENSER:
 			return "FF_Dispenser";
-		case TF_CLASSEX_BACKPACK:
+		case TF_CLASSEX_BACKPACK_AMMO:
+		case TF_CLASSEX_BACKPACK_HEALTH:
+		case TF_CLASSEX_BACKPACK_ARMOR:
+		case TF_CLASSEX_BACKPACK_GRENADES:
 			return "ff_item_backpack";
 		case TF_CLASSEX_DETPACK:
 			return "FF_Detpack";
@@ -1113,19 +1115,19 @@ namespace Omnibot
 			return "ff_miniturret";
 			//////////////////////////////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////////
-		/*case ENT_CLASS_GENERIC_PLAYERSTART:
+			/*case ENT_CLASS_GENERIC_PLAYERSTART:
 			"info_player_coop"
-				"info_player_start"
-				"info_player_deathmatch"*/
-		/*case ENT_CLASS_GENERIC_BUTTON:
-		case ENT_CLASS_GENERIC_HEALTH:
-		case ENT_CLASS_GENERIC_AMMO:
-		case ENT_CLASS_GENERIC_ARMOR:*/
+			"info_player_start"
+			"info_player_deathmatch"*/
+			/*case ENT_CLASS_GENERIC_BUTTON:
+			case ENT_CLASS_GENERIC_HEALTH:
+			case ENT_CLASS_GENERIC_AMMO:
+			case ENT_CLASS_GENERIC_ARMOR:*/
 		case ENT_CLASS_GENERIC_LADDER:
 			return "func_useableladder";
-		/*case ENT_CLASS_GENERIC_TELEPORTER:
-		case ENT_CLASS_GENERIC_LIFT:
-		case ENT_CLASS_GENERIC_MOVER:*/
+			/*case ENT_CLASS_GENERIC_TELEPORTER:
+			case ENT_CLASS_GENERIC_LIFT:
+			case ENT_CLASS_GENERIC_MOVER:*/
 		}
 		return 0;
 	}
@@ -1135,7 +1137,7 @@ namespace Omnibot
 	static GameEntity obFindEntityByClassName(GameEntity _pStart, const char *_name)
 	{
 		CBaseEntity *pEntity = _pStart ? CBaseEntity::Instance( (edict_t*)_pStart ) : 0;
-		
+
 		do 
 		{
 			pEntity = gEntList.FindEntityByClassname(pEntity, _name);
@@ -1292,10 +1294,15 @@ namespace Omnibot
 			}
 			else
 			{
-				if(pEntity->entindex() == 0)
+				if(!pEntity->CollisionProp() || pEntity->entindex() == 0)
 					return InvalidEntity;
-				vMins = pEntity->WorldAlignMins();
-				vMaxs = pEntity->WorldAlignMaxs();
+
+				Vector vOrig(0.f, 0.f, 0.f);
+				if(pEntity->CollisionProp()->IsBoundsDefinedInEntitySpace())
+					vOrig = pEntity->GetAbsOrigin();
+
+				vMins = vOrig + pEntity->CollisionProp()->OBBMins();;
+				vMaxs = vOrig + pEntity->CollisionProp()->OBBMaxs();
 			}
 
 			_aabb->m_Mins[0] = vMins.x;
@@ -1487,7 +1494,7 @@ namespace Omnibot
 		{
 			// default data.
 			info.m_EntityFlags.ClearAll();
-			info.m_EntityCategory = 0;
+			info.m_EntityCategory.ClearAll();
 			info.m_EntityClass = obGetEntityClass(pEntity->edict());
 
 			switch(pEntity->Classify())
@@ -1498,22 +1505,20 @@ namespace Omnibot
 					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pEntity);
 					ASSERT(pFFPlayer);
 					//info.m_EntityClass = obUtilGetBotClassFromGameClass(pFFPlayer->GetClassSlot());				
-					info.m_EntityCategory = ENT_CAT_SHOOTABLE | ENT_CAT_PLAYER;
+					info.m_EntityCategory.SetFlag(ENT_CAT_SHOOTABLE);
+					info.m_EntityCategory.SetFlag(ENT_CAT_PLAYER);
 					obGetEntityFlags(pFFPlayer->edict(), info.m_EntityFlags);
 					break;
 				}
 			case CLASS_DISPENSER:
 				//info.m_EntityClass = TF_CLASSEX_DISPENSER;
-				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
+				info.m_EntityCategory.SetFlag(ENT_CAT_SHOOTABLE);
 				break;
 			case CLASS_SENTRYGUN:
 				//info.m_EntityClass = TF_CLASSEX_SENTRY;
-				info.m_EntityCategory = ENT_CAT_SHOOTABLE;
+				info.m_EntityCategory.SetFlag(ENT_CAT_SHOOTABLE);
 				break;
 			case CLASS_DETPACK:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
-				//info.m_EntityClass = TF_CLASSEX_DETPACK;
-				break;
 			case CLASS_GREN:
 			case CLASS_GREN_EMP:
 			case CLASS_GREN_NAIL:
@@ -1526,14 +1531,16 @@ namespace Omnibot
 			case CLASS_PIPEBOMB:
 			case CLASS_GLGRENADE:
 			case CLASS_ROCKET:
-				info.m_EntityCategory = ENT_CAT_PROJECTILE | ENT_CAT_AVOID;
+				info.m_EntityCategory.SetFlag(ENT_CAT_PROJECTILE);
+				info.m_EntityCategory.SetFlag(ENT_CAT_AVOID);
 				break;
 			case CLASS_TURRET:
-				info.m_EntityCategory = ENT_CAT_AUTODEFENSE | ENT_CAT_STATIC;
+				info.m_EntityCategory.SetFlag(ENT_CAT_AUTODEFENSE);
+				info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
 				//info.m_EntityClass = TF_CLASSEX_PIPE;
 				break;
 			case CLASS_BACKPACK:
-				info.m_EntityCategory = ENT_CAT_PICKUP;
+				info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
 				//info.m_EntityClass = TF_CLASSEX_PIPE;
 				break;
 			//case CLASS_INFOSCRIPT:
@@ -2011,6 +2018,7 @@ namespace Omnibot
 		if(pPlayer && pPlayer->IsBot())
 		{
 			CBotCmd cmd;
+			//CUserCmd cmd;
 
 			// Process the bot keypresses.
 			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_ATTACK1))
@@ -2055,6 +2063,7 @@ namespace Omnibot
 			}
 
 			pPlayer->GetBotController()->RunPlayerMove(&cmd);
+			//pPlayer->ProcessUsercmds(&cmd, 1, 1, 0, false);
 			pPlayer->GetBotController()->PostClientMessagesSent();
 		}
 	}
@@ -2438,6 +2447,7 @@ namespace Omnibot
 				// Call the libraries update.
 				if(g_BotFunctions.pfnBotUpdate)
 				{
+					VPROF_BUDGET( "Omni-bot::Update", _T("Omni-bot") );
 					//////////////////////////////////////////////////////////////////////////
 					if(!engine->IsDedicatedServer())
 					{
@@ -2962,11 +2972,53 @@ namespace Omnibot
 
 			switch(_type)
 			{
-			case Omnibot::kBackPack:			
+			case Omnibot::kBackPack_Grenades:
 				{
-					gi.m_GoalTeam ^= iAllTeams;
-					gi.m_GoalType = TF_GOAL_BACK_PACK;									
-					break;
+					EntityInfo info;
+					info.m_EntityClass = TF_CLASSEX_BACKPACK_GRENADES;
+					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
+					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
+					if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
+					if(g_BotFunctions.pfnBotAddThreatEntity)
+						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					return;
+				}
+			case Omnibot::kBackPack_Health:
+				{
+					EntityInfo info;
+					info.m_EntityClass = TF_CLASSEX_BACKPACK_HEALTH;
+					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
+					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
+					if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
+					if(g_BotFunctions.pfnBotAddThreatEntity)
+						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					return;
+				}
+			case Omnibot::kBackPack_Armor:
+				{
+					EntityInfo info;
+					info.m_EntityClass = TF_CLASSEX_BACKPACK_ARMOR;
+					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
+					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
+					if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
+					if(g_BotFunctions.pfnBotAddThreatEntity)
+						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					return;
+				}
+			case Omnibot::kBackPack_Ammo:
+				{
+					EntityInfo info;
+					info.m_EntityClass = TF_CLASSEX_BACKPACK_AMMO;
+					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
+					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
+					if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
+					if(g_BotFunctions.pfnBotAddThreatEntity)
+						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					return;
 				}
 			case Omnibot::kFlag:
 				{

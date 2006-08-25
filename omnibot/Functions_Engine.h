@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-11 09:08:58 -0700 (Fri, 11 Aug 2006) $
-// $LastChangedRevision: 1243 $
+// $LastChangedDate: 2006-08-18 23:45:31 -0700 (Fri, 18 Aug 2006) $
+// $LastChangedRevision: 1247 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,10 +23,10 @@ typedef struct
 	// int: m_EntityClass
 	//		The specific classification of this entity
 	int			m_EntityClass;	
-	// int: m_EntityCategoty
+	// BitFlag64: m_EntityCategoty
 	//		Current category of this entity, see <EntityCategory>
-	int			m_EntityCategory;
-	// int: m_EntityFlags
+	BitFlag64	m_EntityCategory;
+	// BitFlag64: m_EntityFlags
 	//		Current flags of this entity, see <EntityFlags>
 	BitFlag64	m_EntityFlags;
 } EntityInfo;
@@ -74,9 +74,9 @@ typedef struct
 	// int: m_Contents
 	//		Content flags.
 	int			m_Contents;
-	// int: m_iUser2
+	// int: m_iUser1
 	//		Extra user info from the trace
-	int			m_iUser2;
+	int			m_iUser1;
 } BotTraceResult;
 
 // typedef: Game_EngineFuncs_t

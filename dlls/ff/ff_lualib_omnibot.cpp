@@ -36,14 +36,16 @@ public:
 void CFFLuaLib::InitOmnibot(lua_State* L)
 {
 	ASSERT(L);
-
 	module(L)
 	[
 		class_<Omnibot_GoalTypes>("Bot")
 			.enum_("GoalType")
 			[
 				value("kNone",				Omnibot::kNone),
-				value("kBackPack",			Omnibot::kBackPack),
+				value("kBackPack_Ammo",		Omnibot::kBackPack_Ammo),
+				value("kBackPack_Armor",	Omnibot::kBackPack_Armor),
+				value("kBackPack_Health",	Omnibot::kBackPack_Health),
+				value("kBackPack_Grenades",	Omnibot::kBackPack_Grenades),
 				value("kFlag",				Omnibot::kFlag),
 				value("kFlagCap",			Omnibot::kFlagCap)
 			]

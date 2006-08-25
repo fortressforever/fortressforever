@@ -102,7 +102,10 @@ namespace Omnibot
 	enum BotGoalTypes
 	{
 		kNone,
-		kBackPack,
+		kBackPack_Ammo,
+		kBackPack_Armor,
+		kBackPack_Health,
+		kBackPack_Grenades,
 		kFlag,
 		kFlagCap
 	};
