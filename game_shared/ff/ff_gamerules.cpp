@@ -300,42 +300,63 @@ ConVar mp_prematch( "mp_prematch",
 		Assert( pbFlags );
 #endif
 
-		// For use later
-		int iNumChangeClassFlags = 0;
-
-		bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
-		bool bUsePlayer = pFFPlayer ? true : false;
-
-		// Eh? Which one do we use? 
-		if( bUseTeam && bUsePlayer )
-		{
-			// We'll go with player since it took more params to get there
-			bUseTeam = false;
-		}
-
-		// Sum up the number of changeclass flags set, if any
-		for( int i = AT_CHANGECLASS_SCOUT; i <= AT_CHANGECLASS_RANDOM; i++ )
-		{
-			if( pbFlags[ i ] )
-				iNumChangeClassFlags++;
-		}
-
 		// Full map reset, really only used w/ ff_restartround as it restarts
-		// absolutely everything - scores, players, entities, etc.
+		// absolutely everything - scores, players, entities, etc.		
 		if( bFullReset )
 		{
-			// Set these to false so we do an "all" type of update later
-			bUseTeam = false;
-			bUsePlayer = false;
-			iNumChangeClassFlags = 0;
-		}
-		
-		if( bFullReset )
-		{
-			// Want to reset the map and spawns before restting players & teams
-
 			// TODO: Do stuff!
 
+			/*
+			CBaseEntity *pEntity = gEntList.FirstEnt();
+			while( pEntity )
+			{
+				Warning( "[Hi %i] %s\n", pEntity->entindex(), pEntity->GetClassname() );
+
+				pEntity = gEntList.NextEnt( pEntity );
+			}
+			*/
+			CBaseEntity *pEntity = gEntList.FirstEnt();
+			while( pEntity )
+			{
+				if( m_hMapFilter.ShouldCreateEntity( pEntity->GetClassname() ) )
+				{
+					// Grab the next ent
+					CBaseEntity *pTemp = gEntList.NextEnt( pEntity );
+
+					// Delete current ent
+					UTIL_Remove( pEntity );
+
+					// Set up current ent again
+					pEntity = pTemp;
+				}
+				else
+				{
+					pEntity = gEntList.NextEnt( pEntity );
+				}
+			}
+
+			// Clear anything that's been deleted
+			gEntList.CleanupDeleteList();
+
+			// RAWR!
+			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
+
+			// Restart lua
+			entsys.StartForMap();
+
+			// Respawn/Reset all players
+			for( int i = 0; i < gpGlobals->maxClients; i++ )
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+				if( pPlayer )
+				{
+					pPlayer->Spawn();
+					pPlayer->ResetFragCount();
+					pPlayer->ResetDeathCount();
+				}
+			}
+
+			/*
 			// Temporary to reset items
 			CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
 			while( pEntity )
@@ -360,177 +381,8 @@ ConVar mp_prematch( "mp_prematch",
 
 				pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_INFOSCRIPT );
 			}
-		}
+			*/
 
-		// Loop through all players
-		for( int i = 1; i < gpGlobals->maxClients; i++ )
-		{	
-			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
-			if( pPlayer && pPlayer->IsPlayer() )
-			{
-				// If bUseTeam, meaning we were sent in a valid team...
-				if( bUseTeam )
-				{
-					// Then filter out players not on team iTeam
-					if( pPlayer->GetTeamNumber() != iTeam )
-						continue;
-				}
-
-				// If we're acting on one player
-				if( bUsePlayer )
-				{
-					// TODO: Move this so we don't enter the loop
-					// if bUsePlayer is true (no need to waste time
-					// with UTIL_PlayerByIndex since we've already
-					// got a player pointer!
-					if( pPlayer != pFFPlayer )
-						continue;
-				}				
-
-				// Please don't change the order. They're set up hopefully
-				// to work correctly.
-
-				// 1 or more changeclass flags was set
-				if( iNumChangeClassFlags > 0 )
-				{
-					if( iNumChangeClassFlags == 1 )
-					{
-					}
-					else
-					{
-						// Pick a random class
-					}
-				}
-
-				if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
-				{
-					// Don't do anything...
-					// ownerdie will get called if RS_KILL_PLAYERS is set and that
-					// will handle whether or not the items a player is carrying
-					// get thrown or dropped
-
-					// NOTE: this is a useless flag I think...
-				}
-
-				if( pbFlags[ AT_FORCE_DROP_ITEMS ] || pbFlags[ AT_FORCE_THROW_ITEMS ] )
-				{
-					// TODO: iterate through getting this players' items
-					// and make them be dropped before killing the player
-
-					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
-					while( pEntity )
-					{
-						CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
-						if( pFFScript )
-						{
-							// TODO: Need to make a lua call to get the delay and throw speed
-							float flDelay = 10.0f;
-							float flSpeed = 0.0f;
-							pFFScript->Drop( flDelay, flSpeed );
-						}
-
-						pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
-					}
-				}
-
-				// Do this before killing the player and before respawning. This is
-				// for when we're doing a force respawn without killing the player.
-				// In this type of situation objects are never asked if they should
-				// be dropped from the player or not so we could end up in a situation
-				// where a player has a flag and another team does something to trigger
-				// ApplyToAll/Team/Player to get called and now we respawn with a flag
-				// and we're not supposed to.
-				if( pbFlags[ AT_RESPAWN_PLAYERS ] && !pbFlags[ AT_KILL_PLAYERS ] )
-				{
-					// Iterate through objects this player has and ask lua object what
-					// it should do.
-					CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
-					
-					while( pEntity )
-					{
-						CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
-						if( pFFScript )
-						{
-							// Yes, this is redundant since we're searching by owner & class_t
-							// so we already know this guy is the owner of this info_ff_script.
-							pFFScript->OnOwnerForceRespawn( ( CBaseEntity * )pPlayer );
-						}
-
-						pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
-					}
-				}
-
-				if( pbFlags[ AT_RETURN_CARRIED_ITEMS ] )
-				{
-					// Eh? This is dumb. Needs a "FORCE". We're not going to forcibly
-					// return a carried item. If the player is killed, ownerdie handles
-					// that. The only case left is a player being respawned and not
-					// killed and for that you might want to do something
-				}
-
-				if( pbFlags[ AT_RETURN_DROPPED_ITEMS ] )
-				{
-					// TODO: do this globally - not on each player's iteration
-				}
-
-				if( pbFlags[ AT_STOP_PRIMED_GRENS ] )
-				{
-					pPlayer->RemovePrimedGrenades();
-				}
-
-				// TODO: this is temp for testing
-				// of course more have to be added...
-				if( pbFlags[ AT_CHANGECLASS_SCOUT ] )
-				{
-					pPlayer->InstaSwitch( CLASS_SCOUT );
-				}
-
-				if( pbFlags[ AT_KILL_PLAYERS ] )
-				{
-					pPlayer->KillPlayer();
-				}
-
-				if( pbFlags[ AT_RESPAWN_PLAYERS ] )
-				{
-					pPlayer->Spawn();
-				}
-
-				if( pbFlags[ AT_REMOVE_RAGDOLLS ] )
-				{
-				}
-
-				if( pbFlags[ AT_REMOVE_PACKS ] )
-				{
-					pPlayer->RemoveBackpacks();
-				}
-
-				if( pbFlags[ AT_REMOVE_PROJECTILES ] )
-				{
-					pPlayer->RemoveProjectiles();
-				}
-
-				if( pbFlags[ AT_REMOVE_BUILDABLES ] )
-				{
-					pPlayer->RemoveBuildables();
-				}
-					
-				if( pbFlags[ AT_REMOVE_DECALS ] )
-				{
-					engine->ClientCommand( pPlayer->edict(), "r_cleardecals" );
-				}
-
-				// Reset players score
-				if( bFullReset )
-				{
-					pPlayer->ResetFragCount();
-					pPlayer->ResetDeathCount();
-				}
-			}
-		}
-
-		// If a full reset...
-		if( bFullReset )
-		{
 			// Reset all team scores & deaths. Do it here
 			// after we've killed/spawned players.
 			for( int i = 0; i < GetNumberOfTeams(); i++ )
@@ -549,6 +401,196 @@ ConVar mp_prematch( "mp_prematch",
 			if( pEvent )
 			{
 				gameeventmanager->FireEvent( pEvent );
+			}
+		}
+		else
+		{
+			// For use later
+			int iNumChangeClassFlags = 0;
+
+			bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
+			bool bUsePlayer = pFFPlayer ? true : false;
+
+			// Eh? Which one do we use? 
+			if( bUseTeam && bUsePlayer )
+			{
+				// We'll go with player since it took more params to get there
+				bUseTeam = false;
+			}
+
+			// Sum up the number of changeclass flags set, if any
+			for( int i = AT_CHANGECLASS_SCOUT; i <= AT_CHANGECLASS_RANDOM; i++ )
+			{
+				if( pbFlags[ i ] )
+					iNumChangeClassFlags++;
+			}
+
+			// Loop through all players
+			for( int i = 1; i < gpGlobals->maxClients; i++ )
+			{	
+				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+				if( pPlayer && pPlayer->IsPlayer() )
+				{
+					// If bUseTeam, meaning we were sent in a valid team...
+					if( bUseTeam )
+					{
+						// Then filter out players not on team iTeam
+						if( pPlayer->GetTeamNumber() != iTeam )
+							continue;
+					}
+
+					// If we're acting on one player
+					if( bUsePlayer )
+					{
+						// TODO: Move this so we don't enter the loop
+						// if bUsePlayer is true (no need to waste time
+						// with UTIL_PlayerByIndex since we've already
+						// got a player pointer!
+						if( pPlayer != pFFPlayer )
+							continue;
+					}				
+
+					// Please don't change the order. They're set up hopefully
+					// to work correctly.
+
+					// 1 or more changeclass flags was set
+					if( iNumChangeClassFlags > 0 )
+					{
+						if( iNumChangeClassFlags == 1 )
+						{
+						}
+						else
+						{
+							// Pick a random class
+						}
+					}
+
+					if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
+					{
+						// Don't do anything...
+						// ownerdie will get called if RS_KILL_PLAYERS is set and that
+						// will handle whether or not the items a player is carrying
+						// get thrown or dropped
+
+						// NOTE: this is a useless flag I think...
+					}
+
+					if( pbFlags[ AT_FORCE_DROP_ITEMS ] || pbFlags[ AT_FORCE_THROW_ITEMS ] )
+					{
+						// TODO: iterate through getting this players' items
+						// and make them be dropped before killing the player
+
+						CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+						while( pEntity )
+						{
+							CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+							if( pFFScript )
+							{
+								// TODO: Need to make a lua call to get the delay and throw speed
+								float flDelay = 10.0f;
+								float flSpeed = 0.0f;
+								pFFScript->Drop( flDelay, flSpeed );
+							}
+
+							pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+						}
+					}
+
+					// Do this before killing the player and before respawning. This is
+					// for when we're doing a force respawn without killing the player.
+					// In this type of situation objects are never asked if they should
+					// be dropped from the player or not so we could end up in a situation
+					// where a player has a flag and another team does something to trigger
+					// ApplyToAll/Team/Player to get called and now we respawn with a flag
+					// and we're not supposed to.
+					if( pbFlags[ AT_RESPAWN_PLAYERS ] && !pbFlags[ AT_KILL_PLAYERS ] )
+					{
+						// Iterate through objects this player has and ask lua object what
+						// it should do.
+						CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+
+						while( pEntity )
+						{
+							CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+							if( pFFScript )
+							{
+								// Yes, this is redundant since we're searching by owner & class_t
+								// so we already know this guy is the owner of this info_ff_script.
+								pFFScript->OnOwnerForceRespawn( ( CBaseEntity * )pPlayer );
+							}
+
+							pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+						}
+					}
+
+					if( pbFlags[ AT_RETURN_CARRIED_ITEMS ] )
+					{
+						// Eh? This is dumb. Needs a "FORCE". We're not going to forcibly
+						// return a carried item. If the player is killed, ownerdie handles
+						// that. The only case left is a player being respawned and not
+						// killed and for that you might want to do something
+					}
+
+					if( pbFlags[ AT_RETURN_DROPPED_ITEMS ] )
+					{
+						// TODO: do this globally - not on each player's iteration
+					}
+
+					if( pbFlags[ AT_STOP_PRIMED_GRENS ] )
+					{
+						pPlayer->RemovePrimedGrenades();
+					}
+
+					// TODO: this is temp for testing
+					// of course more have to be added...
+					if( pbFlags[ AT_CHANGECLASS_SCOUT ] )
+					{
+						pPlayer->InstaSwitch( CLASS_SCOUT );
+					}
+
+					if( pbFlags[ AT_KILL_PLAYERS ] )
+					{
+						pPlayer->KillPlayer();
+					}
+
+					if( pbFlags[ AT_RESPAWN_PLAYERS ] )
+					{
+						pPlayer->Spawn();
+					}
+
+					if( pbFlags[ AT_REMOVE_RAGDOLLS ] )
+					{
+					}
+
+					if( pbFlags[ AT_REMOVE_PACKS ] )
+					{
+						pPlayer->RemoveBackpacks();
+					}
+
+					if( pbFlags[ AT_REMOVE_PROJECTILES ] )
+					{
+						pPlayer->RemoveProjectiles();
+					}
+
+					if( pbFlags[ AT_REMOVE_BUILDABLES ] )
+					{
+						pPlayer->RemoveBuildables();
+					}
+
+					if( pbFlags[ AT_REMOVE_DECALS ] )
+					{
+						engine->ClientCommand( pPlayer->edict(), "r_cleardecals" );
+					}
+
+					/*
+					// Reset players score
+					if( bFullReset )
+					{
+						pPlayer->ResetFragCount();
+						pPlayer->ResetDeathCount();
+					}
+					*/
+				}
 			}
 		}
 
