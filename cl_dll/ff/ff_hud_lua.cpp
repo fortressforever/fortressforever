@@ -86,6 +86,8 @@ void CHudLua::VidInit()
 void CHudLua::Init()
 {
 	HOOK_HUD_MESSAGE(CHudLua, FF_HudLua);
+
+	gameeventmanager->AddListener( this, "ff_restartround", false );
 }
 
 //-----------------------------------------------------------------------------
@@ -275,5 +277,19 @@ void CHudLua::RemoveElement(const char *pszIdentifier)
 	{
 		if (Q_strcmp(pszIdentifier, m_sHudElements[i].szIdentifier) == 0)
 			m_sHudElements[i].pPanel->SetVisible(false);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: On restart round, remove any icons on screen
+//-----------------------------------------------------------------------------
+void CHudLua::FireGameEvent( IGameEvent *pEvent )
+{
+	const char *pszEventName = pEvent->GetName();
+
+	if( Q_strcmp( "ff_restartround", pszEventName ) == 0 )
+	{
+		// Clear all hud stuff
+		VidInit();
 	}
 }

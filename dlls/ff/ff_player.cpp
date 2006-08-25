@@ -819,6 +819,7 @@ ReturnSpot:
 				// See if the spot is clear
 				if( FFGameRules()->IsSpawnPointClear( pSpot, ( CBasePlayer * )this ) )
 				{
+					/*
 #ifdef _DEBUG
 					// Some debug listenserver visualization
 					if( !engine->IsDedicatedServer() )
@@ -827,11 +828,13 @@ ReturnSpot:
 						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 0, 0, 255, false, 10.0f );
 					}
 #endif
+					*/
 
 					goto ReturnSpot;
 				}
 				else
 				{
+					/*
 #ifdef _DEBUG
 					// Some debug listenserver visualization
 					if( !engine->IsDedicatedServer() )
@@ -840,6 +843,7 @@ ReturnSpot:
 						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 255, 0, 0, false, 10.0f );
 					}
 #endif
+					*/
 					// Not clear, so perhaps later we'll gib the guy here
 					pGibSpot = pSpot;
 				}
@@ -938,6 +942,10 @@ void CFFPlayer::Spawn()
 	
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
+
+	// If we get spawned, kill any primed grenades!
+	m_flServerPrimeTime = 0.0f;
+	m_iGrenadeState = FF_GREN_NONE;
 
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
@@ -2828,12 +2836,22 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
 
+			CAI_BaseNPC *pEntity = NULL;
+
 			// Cancel the build
 			switch( m_iCurBuild )
 			{
-				case FF_BUILD_DISPENSER: ( ( CFFDispenser * )( m_hDispenser.Get() ) )->Cancel(); break;
-				case FF_BUILD_SENTRYGUN: ( ( CFFSentryGun * )( m_hSentryGun.Get() ) )->Cancel(); break;
-				case FF_BUILD_DETPACK:   ( ( CFFDetpack * )( m_hDetpack.Get() ) )->Cancel(); break;
+				case FF_BUILD_DISPENSER: pEntity = m_hDispenser.Get(); break;
+				case FF_BUILD_SENTRYGUN: pEntity = m_hSentryGun.Get(); break;
+				case FF_BUILD_DETPACK:   pEntity = m_hDetpack.Get(); break;
+			}
+
+			// If object exists (was crashing ff_restartround), stop building
+			if( pEntity )
+			{
+				CFFBuildableObject *pBuildable = dynamic_cast< CFFBuildableObject * >( pEntity );
+				if( pBuildable )
+					pBuildable->Cancel();
 			}
 
 			// Unlock the player

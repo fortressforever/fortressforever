@@ -65,6 +65,8 @@ public:
 	void	HudText(const char *pszIdentifer, int iX, int iY, const char *pszText);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
 
+	void	FireGameEvent( IGameEvent *pEvent );
+
 private:
 	HudElement_t		m_sHudElements[MAX_HUD_ELEMENTS];
 	int					m_nHudElements;

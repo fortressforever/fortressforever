@@ -17,16 +17,56 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+// TODO: Add stuff you don't want deleted upon ff_restartround
+const char *g_MapFilterKeepList[] =
+{	
+	"ai_network",
+	"ai_hint",
+	"ambient_generic",
+	"ff_gamerules",
+	"ff_team_manager",
+	"player_manager",
+	"env_soundscape",
+	"env_soundscape_proxy",
+	"env_soundscape_triggerable",
+	"env_sun",
+	"env_wind",
+	"env_fog_controller",
+	"func_brush",
+	"func_wall",
+	"func_illusionary",
+	"func_rotating",
+	"ff_gamerules",
+	"infodecal",
+	"info_projecteddecal",
+	"info_node",
+	"info_target",
+	"info_node_hint",
+	"info_spectator",
+	"info_map_parameters",
+	"keyframe_rope",
+	"move_rope",
+	"info_ladder",
+	"player",
+	"point_viewcontrol",
+	"scene_manager",
+	"shadow_control",
+	"sky_camera",
+	"soundent",
+	"trigger_soundscape",
+	"viewmodel",
+	"predicted_viewmodel",
+	"worldspawn",
+	"point_devshot_camera",
+	"ff_mapguide",
+	NULL
+};
+
 //=============================================================================
 //
 // Class CFFMapFilter
 //
 //=============================================================================
-const char *g_MapFilterKeepList[] =
-{
-	"CFFPlayer",
-	NULL
-};
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
