@@ -355,6 +355,8 @@ public:
 	//-----------------------------------------------------------------------------
 	void Reset()
 	{
+		AddNewDurationFromNow(m_flStart, m_flDuration, 0.0f, M_PI_2, M_PI_2);
+
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
 		{
 		}
