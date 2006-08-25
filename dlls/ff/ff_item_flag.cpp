@@ -358,8 +358,6 @@ void CFFInfoScript::Respawn(float delay)
 
 	SetThink( &CFFInfoScript::OnRespawn );
 	SetNextThink( gpGlobals->curtime + delay );
-
-	Omnibot::Notify_ItemRespawned(this);
 }
 
 void CFFInfoScript::OnRespawn( void )

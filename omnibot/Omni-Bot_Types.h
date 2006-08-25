@@ -81,8 +81,13 @@ inline int SUCCESS(obResult _res)
 {
 	return (_res == Success) ? 1 : 0;
 }
+inline int MAKE_KEY(char _1, char _2, char _3, char _4)
+{
+	return (((_1)<<24) | ((_2)<<16) | ((_3)<<8) | (_4));
+}
 #else
 #define SUCCESS(res) ((res) == Success ? 1 : 0)
+#define MAKE_KEY(res) (((_1)<<24) | ((_2)<<16) | ((_3)<<8) | (_4))
 #endif
 //#define SUCCESS(x) ((x)==Success ? true : false)
 
@@ -184,6 +189,18 @@ typedef struct AABB_t
 		_out[0] = (m_Mins[0] + m_Maxs[0]) * 0.5f;
 		_out[1] = (m_Mins[1] + m_Maxs[1]) * 0.5f;
 		_out[2] = (m_Mins[2] + m_Maxs[2]) * 0.5f;
+	}
+	void CenterTop(float _out[3]) const
+	{
+		_out[0] = (m_Mins[0] + m_Maxs[0]) * 0.5f;
+		_out[1] = (m_Mins[1] + m_Maxs[1]) * 0.5f;
+		_out[2] = m_Maxs[2];
+	}
+	void CenterBottom(float _out[3]) const
+	{
+		_out[0] = (m_Mins[0] + m_Maxs[0]) * 0.5f;
+		_out[1] = (m_Mins[1] + m_Maxs[1]) * 0.5f;
+		_out[2] = m_Mins[2];
 	}
 	void SetCenter(const float _out[3])
 	{
@@ -489,20 +506,21 @@ typedef enum ePowerups
 //		ENT_CAT_STATIC - Static entities don't need to be seen. This allows the bot to skip LOS checks.
 typedef enum eEntityCategory
 {
-	ENT_CAT_PLAYER		= (1<<0),
-	ENT_CAT_PROJECTILE	= (1<<1),
-	ENT_CAT_SHOOTABLE	= (1<<2),
-	ENT_CAT_PICKUP		= (1<<3),
-	ENT_CAT_TRIGGER		= (1<<4),
-	ENT_CAT_MOVER		= (1<<5),
-	ENT_CAT_AVOID		= (1<<6),
-	ENT_CAT_MOUNTEDWEAPON= (1<<7),
-	ENT_CAT_MISC		= (1<<8),
-	ENT_CAT_STATIC		= (1<<9),
-	ENT_CAT_AUTODEFENSE	= (1<<10),
+	ENT_CAT_NONE = 0,
+	ENT_CAT_PLAYER,
+	ENT_CAT_PROJECTILE,
+	ENT_CAT_SHOOTABLE,
+	ENT_CAT_PICKUP,
+	ENT_CAT_TRIGGER,
+	ENT_CAT_MOVER,
+	ENT_CAT_AVOID,
+	ENT_CAT_MOUNTEDWEAPON,
+	ENT_CAT_MISC,
+	ENT_CAT_STATIC,
+	ENT_CAT_AUTODEFENSE,
 
 	// THIS MUST BE LAST
-	ENT_CAT_MAX			= (1<<16),
+	ENT_CAT_MAX,
 } EntityCategory;
 
 // package: EntityClassGeneric

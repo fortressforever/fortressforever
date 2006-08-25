@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-08-18 23:45:31 -0700 (Fri, 18 Aug 2006) $
+// $LastChangedRevision: 1247 $
 //
 // Title: TF Config
 //
@@ -42,7 +42,6 @@
 //		TF_CLASS_CIVILIAN - Civilian player class.
 //		TF_CLASSEX_SENTRY - Sentry entity.
 //		TF_CLASSEX_DISPENSER - Dispenser entity.
-//		TF_CLASSEX_BACKPACK - Backpack entity.
 //		TF_CLASSEX_DETPACK - Detpack entity.
 //		TF_CLASSEX_GRENADE - Grenade entity.
 //		TF_CLASSEX_EMP_GRENADE - EMP Grenade entity.
@@ -55,8 +54,13 @@
 //		TF_CLASSEX_CALTROP - Caltrop Grenade entity.
 //		TF_CLASSEX_PIPE - Pipe Grenade entity.
 //		TF_CLASSEX_ROCKET - Rocket Grenade entity.
+//		TF_CLASSEX_BACKPACK_AMMO - Backpack entity.
+//		TF_CLASSEX_BACKPACK_HEALTH - Backpack entity.
+//		TF_CLASSEX_BACKPACK_ARMOR - Backpack entity.
+//		TF_CLASSEX_BACKPACK_GRENADES - Backpack entity.
 typedef enum eTF_EntityClass
 {
+	TF_CLASS_UNKNOWN = 0,
 	TF_CLASS_NONE = 0,
 	TF_CLASS_SCOUT,
 	TF_CLASS_SNIPER,
@@ -73,6 +77,10 @@ typedef enum eTF_EntityClass
 	TF_CLASSEX_SENTRY,
 	TF_CLASSEX_DISPENSER,
 	TF_CLASSEX_BACKPACK,
+	TF_CLASSEX_BACKPACK_AMMO,
+	TF_CLASSEX_BACKPACK_HEALTH,
+	TF_CLASSEX_BACKPACK_ARMOR,
+	TF_CLASSEX_BACKPACK_GRENADES,
 	TF_CLASSEX_DETPACK,
 	TF_CLASSEX_GRENADE,
 	TF_CLASSEX_EMP_GRENADE,
@@ -240,7 +248,7 @@ typedef enum eTF_AmmoType
 	TF_AMMO_MAX
 } TF_AmmoType;
 
-// constants: TF_GrenadeTypes
+// constants: TF_ItemTypes
 //		TF_GREN_NORMAL - Normal grenade.
 //		TF_GREN_CONCUSS - Concussion grenade.
 //		TF_GREN_FLASH - Flash grenade.
@@ -251,10 +259,9 @@ typedef enum eTF_AmmoType
 //		TF_GREN_NAPALM - Napalm/Incendiary grenade.
 //		TF_GREN_GAS - Gas/Hallucinogen grenade.
 //		TF_GREN_EMP - EMP grenade.
-typedef enum eTF_GrenadeTypes
+typedef enum eTF_ItemTypes
 {
-	TF_GREN_NONE,
-	TF_GREN_NORMAL,
+	TF_GREN_NORMAL = 1,
 	TF_GREN_CONCUSS,
 	TF_GREN_FLASH,
 	TF_GREN_FLARE,
@@ -265,7 +272,7 @@ typedef enum eTF_GrenadeTypes
 	TF_GREN_GAS,
 	TF_GREN_EMP,
 	TF_NUM_GRENADES
-} TF_GrenadeTypes;
+} TF_ItemTypes;
 
 // enumerations: TF_Team
 //		TF_TEAM_BLUE - Blue team.
@@ -439,13 +446,14 @@ typedef enum eTF_GameMessage
 typedef enum eTF_GoalType
 {
 	TF_GOAL_FLAG = BASE_GOAL_NUM,
-	TF_GOAL_BACK_PACK,
 	TF_GOAL_CAPPOINT,
 	TF_GOAL_SNIPEPOINT,
 	TF_GOAL_SENTRYPOINT,
 	TF_GOAL_DISPENSERPOINT,
 	TF_GOAL_PIPETRAPPOINT,
 	TF_GOAL_DETPACK,
+	TF_GOAL_RJ,
+	TF_GOAL_CJ,
 } TF_GoalType;
 
 // typedef: TF_Goals
@@ -467,6 +475,8 @@ typedef enum eTF_Goals
 	goal_tf_givehealth,
 	goal_tf_givearmor,
 	goal_tf_giveammo,
+	goal_tf_rocketjump,
+	goal_tf_concjump,
 	goal_tf_num
 } TF_Goals;
 
