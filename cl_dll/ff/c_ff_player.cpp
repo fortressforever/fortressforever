@@ -881,6 +881,16 @@ void C_FFPlayer::PreThink( void )
 		{
 			// Our conc angles, this is also quite slow for now
 			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
+
+			float flTotalAngle = BaseClass::EyeAngles().x + m_angConced.x;
+
+			// We need to make sure we're not looking down further than 90 as this
+			// makes the viewmodel glitchy. Therefore remove any excess from the 
+			// conced angles.
+			if (flTotalAngle > 90.0f)
+			{
+				m_angConced.x -= flTotalAngle - 90.0f;
+			}
 		}
 		else
 		{
