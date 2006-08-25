@@ -614,6 +614,14 @@ void C_FFRagdoll::CreateRagdoll()
 		{
 			IgniteRagdoll(pPlayer);
 		}
+
+		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+
+		// We can also spawn a weapon
+		if (pWeapon)
+		{
+			C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+		}
 	}
 	else
 	{
@@ -1775,6 +1783,14 @@ void Gib_Callback(const CEffectData &data)
 	if (pPlayer && !pPlayer->IsDormant())
 	{
 		vecPosition = pPlayer->GetAbsOrigin();
+
+		// We can also use this player to create a weapon model
+		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+
+		if (pWeapon)
+		{
+			C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pPlayer->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+		}
 	}
 
 	// Now spawn a number of gibs
