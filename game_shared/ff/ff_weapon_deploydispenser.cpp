@@ -168,6 +168,7 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DISPENSER, FF_BUILD_DISP_BUILD_DIST, FF_BUILD_DISP_RAISE_VAL);
 
+			/*
 			if( pDispenser )
 			{
 				// Update current fake dispenser
@@ -186,8 +187,9 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 				pDispenser->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
 			else
 				pDispenser->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
+				*/
 
-			/*
+			//*
 			if (hBuildInfo.BuildResult() == BUILD_ALLOWED) 
 			{
 				if (pDispenser) 
@@ -206,7 +208,7 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 			// Unable to build, so hide buildable
 			else if (pDispenser && ! (pDispenser->GetEffects() & EF_NODRAW)) 
 				pDispenser->SetEffects(EF_NODRAW);
-				*/
+				//*/
 		}
 		// Destroy if we already have one
 		else

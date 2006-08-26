@@ -164,6 +164,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_SENTRYGUN, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL);
 
+			/*
 			if( pSentryGun )
 			{
 				// Update current fake SentryGun
@@ -182,8 +183,9 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 				pSentryGun->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
 			else
 				pSentryGun->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
+				*/
 
-			/*
+			//*
 			if (hBuildInfo.BuildResult() == BUILD_ALLOWED) 
 			{
 				if (pSentryGun) 
@@ -202,7 +204,7 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 			// Unable to build, so hide buildable
 			else if (pSentryGun && ! (pSentryGun->GetEffects() & EF_NODRAW)) 
 				pSentryGun->SetEffects(EF_NODRAW);
-				*/
+				//*/
 		}
 		// If we have built a sentrygun...
 		else

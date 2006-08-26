@@ -133,6 +133,7 @@ void C_FFBuildableObject::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 int C_FFBuildableObject::DrawModel( int flags )
 {
+	/*
 	if( m_bClientSideOnly )
 	{
 		// Draw our glyphs
@@ -178,9 +179,9 @@ int C_FFBuildableObject::DrawModel( int flags )
 		return BaseClass::DrawModel( flags );
 	}
 	else
-	{
+	{*/
 		return BaseClass::DrawModel( flags );
-	}
+	//}
 }
 
 //=============================================================================
