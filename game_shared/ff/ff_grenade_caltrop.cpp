@@ -88,6 +88,8 @@ void CFFGrenadeCaltrop::Precache()
 	{
 		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
 
+		UTIL_Remove(this);
+
 		// Drop the grenade shell gibs
 		for( int i = 0; i < 2; i++ )
 		{
