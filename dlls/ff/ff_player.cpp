@@ -1189,6 +1189,10 @@ void CFFPlayer::InitialSpawn( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpyFeign( void )
 {
+	// Just be on ground
+	if (GetGroundEntity() == NULL)
+		return;
+
 	// A yell of pain
 	if (!m_fFeigned)
 	{
@@ -1204,6 +1208,10 @@ void CFFPlayer::SpyFeign( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpySilentFeign( void )
 {
+	// Must be on ground
+	if (GetGroundEntity() == NULL)
+		return;
+
 	// Already feigned so remove all effects
 	if (m_fFeigned)
 	{
