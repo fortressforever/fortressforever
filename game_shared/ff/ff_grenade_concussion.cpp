@@ -155,7 +155,38 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		data.m_flScale = 1.0f;
 		
 		DispatchEffect(CONCUSSION_EFFECT, data);
-		//DispatchEffect(CONCBITS_EFFECT, data);
+
+		//Need this so they make ragdolls go flying.
+		Vector vecAbsOrigin = GetAbsOrigin();
+
+		if( pTrace->fraction != 1.0 ) 
+		{
+			Vector vecNormal = pTrace->plane.normal;
+			surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+			CPASFilter filter( vecAbsOrigin );
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
+				&vecAbsOrigin, 
+				0,
+				0, 
+				0, 
+				TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NODLIGHTS | TE_EXPLFLAG_NOPARTICLES | TE_EXPLFLAG_NOFIREBALL | TE_EXPLFLAG_NOFIREBALLSMOKE, 
+				GetGrenadeRadius(), 
+				600, 
+				&vecNormal, 
+				( char )pdata->game.material );
+		}
+		else
+		{
+			CPASFilter filter( vecAbsOrigin );
+			te->Explosion( filter, -1.0, // don't apply cl_interp delay
+				&vecAbsOrigin, 
+				0,
+				0, 
+				0, 
+				TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NODLIGHTS | TE_EXPLFLAG_NOPARTICLES | TE_EXPLFLAG_NOFIREBALL | TE_EXPLFLAG_NOFIREBALLSMOKE, 
+				GetGrenadeRadius(), 
+				600);
+		}
 
 		// nb. Do not move this 32 units above the ground!
 		// That behaviour does not occur with conc grenades
