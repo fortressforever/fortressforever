@@ -56,9 +56,11 @@ extern CFFEntitySystemHelper *helper;
 //============================================================================
 // CFFEntitySystem
 //============================================================================
-class CFFEntitySystem
+class CFFEntitySystem// : public CBaseEntity // KEEP THIS (or it breaks lua when using ff_restartround)*/
 {
 private:
+	//DECLARE_CLASS( CFFEntitySystem, CBaseEntity );
+
 	lua_State* L;
 	bool m_ScriptExists;
 
