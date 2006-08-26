@@ -452,7 +452,7 @@ namespace Omnibot
 
 	void obAddDisplayRadius(const float _pos[3], const float _radius, const obColor &_color, float _time)
 	{
-		Vector pos(_pos[0], _pos[1], _pos[2] + 40);
+		Vector pos(_pos[0], _pos[1], _pos[2] + 4);
 		Vector start;
 		Vector end;
 		start.Init();
@@ -503,10 +503,10 @@ namespace Omnibot
 
 	static void obAddDisplayLine(int _type, const float _start[3], const float _end[3], const obColor &_color)
 	{
-		static float fStartOffset = 64.0f;
-		static float fEndOffset = 0.0f;
-		static float fStartPathOffset = 60.0f;
-		static float fEndPathOffset = 40.0f;
+		static float fStartOffset = 36.0f;
+		static float fEndOffset = -36.0f;
+		static float fStartPathOffset = 32.0f;
+		static float fEndPathOffset = 12.0f;
 
 		switch(_type)
 		{
@@ -1536,7 +1536,7 @@ namespace Omnibot
 				break;
 			case CLASS_TURRET:
 				info.m_EntityCategory.SetFlag(ENT_CAT_AUTODEFENSE);
-				info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
+				//info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
 				//info.m_EntityClass = TF_CLASSEX_PIPE;
 				break;
 			case CLASS_BACKPACK:
@@ -2231,10 +2231,6 @@ namespace Omnibot
 			{
 				g_BotFunctions.pfnBotSendEvent(_eid, _dest, _source, _msdelay, _data);
 			}
-			else
-			{		
-				obPrintMessage( "Omni-bot Not Loaded\n" );
-			}
 		}
 	}
 
@@ -2248,10 +2244,6 @@ namespace Omnibot
 			{
 				g_BotFunctions.pfnBotSendGlobalEvent(_eid, _source, _msdelay, _data);
 			}
-			else
-			{		
-				obPrintMessage( "Omni-bot Not Loaded\n" );
-			}
 		}
 	}
 	//-----------------------------------------------------------------
@@ -2263,10 +2255,6 @@ namespace Omnibot
 			if(g_BotFunctions.pfnBotSendTrigger)
 			{
 				g_BotFunctions.pfnBotSendTrigger(_triggerInfo);
-			}
-			else
-			{		
-				obPrintMessage( "Omni-bot Not Loaded\n" );
 			}
 		}
 	}
