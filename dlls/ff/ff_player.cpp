@@ -3436,18 +3436,18 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 			case LUA_EF_LEGSHOT: AddSpeedEffect( SE_LEGSHOT, flEffectDuration, flSpeed, SEM_BOOLEAN, FF_STATUSICON_LEGINJURY, flIconDuration, true ); break;
 			case LUA_EF_TRANQ: AddSpeedEffect( SE_TRANQ, flEffectDuration, flSpeed, SEM_BOOLEAN | SEM_HEALABLE, FF_STATUSICON_TRANQUILIZED, flIconDuration, true ); break;
 			case LUA_EF_CALTROP: AddSpeedEffect( SE_CALTROP, flEffectDuration, flSpeed, SEM_ACCUMULATIVE | SEM_HEALABLE, FF_STATUSICON_CALTROPPED, flIconDuration, true ); break;
-			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN, true );  break;
-			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN, true ); break;
-			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA2: AddSpeedEffect( SE_LUA2, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true );  break;
-			case LUA_EF_SPEED_LUA3: AddSpeedEffect( SE_LUA3, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA4: AddSpeedEffect( SE_LUA4, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA5: AddSpeedEffect( SE_LUA5, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA6: AddSpeedEffect( SE_LUA6, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA7: AddSpeedEffect( SE_LUA7, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA8: AddSpeedEffect( SE_LUA8, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA9: AddSpeedEffect( SE_LUA9, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
-			case LUA_EF_SPEED_LUA10: AddSpeedEffect( SE_LUA10, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, true ); break;
+			case LUA_EF_ACSPINUP: AddSpeedEffect( SE_ASSAULTCANNON, flEffectDuration, flSpeed, SEM_BOOLEAN, -1, -1.0f, true );  break;
+			case LUA_EF_SNIPERRIFLE: AddSpeedEffect( SE_SNIPERRIFLE, flEffectDuration, flSpeed, SEM_BOOLEAN, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA1: AddSpeedEffect( SE_LUA1, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA2: AddSpeedEffect( SE_LUA2, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true );  break;
+			case LUA_EF_SPEED_LUA3: AddSpeedEffect( SE_LUA3, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA4: AddSpeedEffect( SE_LUA4, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA5: AddSpeedEffect( SE_LUA5, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA6: AddSpeedEffect( SE_LUA6, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA7: AddSpeedEffect( SE_LUA7, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA8: AddSpeedEffect( SE_LUA8, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA9: AddSpeedEffect( SE_LUA9, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
+			case LUA_EF_SPEED_LUA10: AddSpeedEffect( SE_LUA10, flEffectDuration, flSpeed, SEM_ACCUMULATIVE, -1, -1.0f, true ); break;
 		}
 	}
 }
