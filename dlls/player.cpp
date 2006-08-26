@@ -3186,7 +3186,7 @@ void CBasePlayer::PhysicsSimulate( void )
 	gpGlobals->frametime	= saveframetime;
 
 	// Since this isn't called for bots.. call it here?
-	if(IsBot())
+	if(m_pPhysicsController && IsBot())
 	{
 		UpdateVPhysicsPosition( m_vNewVPhysicsPosition, m_vNewVPhysicsVelocity, gpGlobals->frametime );
 	}
@@ -8215,15 +8215,6 @@ void CPlayerInfo::RunPlayerMove( CBotCmd *ucmd )
 
 		// Clear out any fixangle that has been set
 		m_pParent->pl.fixangle = FIXANGLE_NONE;
-
-		// NOTE: Without this bot physics can get stuck under lifts and shit.
-		//m_pParent->UpdatePhysicsShadowToCurrentPosition();
-		/*IPhysicsObject *pPhysics = m_pParent->VPhysicsGetObject();
-		if(pPhysics)
-		{
-			pPhysics->SetPosition()
-		}*/
-		m_pParent->VPhysicsGetObject()->SetPosition( GetAbsOrigin(), vec3_angle, true );
 
 		// Restore the globals..
 		gpGlobals->frametime = flOldFrametime;
