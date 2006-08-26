@@ -150,6 +150,7 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, flRaiseVal);
 
+			/*
 			if( pDetpack )
 			{
 				// Update current fake Detpack
@@ -168,8 +169,9 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 				pDetpack->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
 			else
 				pDetpack->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
+				*/
 
-			/*
+			//*
 			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
 			{
 				if (pDetpack)
@@ -189,7 +191,7 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 			// Unable to build, so hide buildable
 			else if(pDetpack && !(pDetpack->GetEffects() & EF_NODRAW))
 				pDetpack->SetEffects(EF_NODRAW);
-				*/
+				//*/
 		}
 		// Destroy if we already have one
 		else
