@@ -66,7 +66,7 @@ extern "C"
 //----------------------------------------------------------------------------
 // globals
 CFFEntitySystem entsys;
-CFFEntitySystemHelper *helper; // global variable.. OH NOES!
+CFFEntitySystemHelper *helper = NULL; // global variable.. OH NOES!
 
 ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 
@@ -75,12 +75,17 @@ using namespace luabind;
 //============================================================================
 // CFFEntitySystemHelper implementation
 //============================================================================
-LINK_ENTITY_TO_CLASS( entity_system_helper, CFFEntitySystemHelper );
+LINK_ENTITY_TO_CLASS( ff_entity_system_helper, CFFEntitySystemHelper );
 
 // Start of our data description for the class
 BEGIN_DATADESC( CFFEntitySystemHelper )
 	DEFINE_THINKFUNC( OnThink ),
 END_DATADESC()
+
+//============================================================================
+// CFFEntitySystem implementation
+//============================================================================
+//LINK_ENTITY_TO_CLASS( ff_entity_system, CFFEntitySystem );
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets up the entity's initial state
@@ -106,7 +111,7 @@ void CFFEntitySystemHelper::OnThink( void )
 //----------------------------------------------------------------------------
 void CFFEntitySystemHelper::Precache( void )
 {
-	VPROF_BUDGET( "CFFEntitySystemHelper::OnPrecache", VPROF_BUDGETGROUP_FF_LUA );
+	VPROF_BUDGET( "CFFEntitySystemHelper::Precache", VPROF_BUDGETGROUP_FF_LUA );
 
 	CFFLuaSC hPrecache;
 	entsys.RunPredicates_LUA( NULL, &hPrecache, "precache" );
@@ -196,15 +201,9 @@ bool CFFEntitySystem::StartForMap()
 {
 	VPROF_BUDGET( "CFFEntitySystem::StartForMap", VPROF_BUDGETGROUP_FF_LUA );
 
-#ifdef _LINUX
-	//Warning("Entity system disabled!\n");
-	//return false;
-#endif
-
 	// [TODO]
 	// Fix the fact that it keeps holding information across calls to this function
 	char filename[128];
-
 
 	// Clear up an existing one
 	if( L )
@@ -246,7 +245,7 @@ bool CFFEntitySystem::StartForMap()
 	m_ScriptExists = LoadLuaFile(L, filename);
 
 	// spawn the helper entity
-	helper = (CFFEntitySystemHelper *)CreateEntityByName( "entity_system_helper" );
+	helper = (CFFEntitySystemHelper *)CreateEntityByName( "ff_entity_system_helper" );
 	helper->Spawn();
 
 	helper->Precache();
@@ -547,10 +546,6 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 {
 	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
 
-#ifdef _LINUX
-	//return bExpectedVal;
-#endif
-
 	if( pObject && pszFunction )
 	{
 		for( int i = 0; i < pObject->m_hActiveScripts.Count(); i++ )
@@ -583,10 +578,6 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
 	VPROF_BUDGET( "CFFEntitySystem::RunPredicates_LUA", VPROF_BUDGETGROUP_FF_LUA );
-
-#ifdef _LINUX
-	//return false;
-#endif
 
 	if( !pContext )
 		return false;

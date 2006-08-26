@@ -306,6 +306,8 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
+			//entsys.CloseForMap();
+
 			/*
 			CBaseEntity *pEntity = gEntList.FirstEnt();
 			while( pEntity )
@@ -315,6 +317,26 @@ ConVar mp_prematch( "mp_prematch",
 				pEntity = gEntList.NextEnt( pEntity );
 			}
 			*/
+
+			/*
+			// Kill the entity system
+			UTIL_Remove( helper );
+
+			// Force removal of entity system
+			gEntList.CleanupDeleteList();
+
+			// Re-init entity system
+			//entsys = ( CFFEntitySystem * )CreateEntityByName( "ff_entity_system" );
+			//if( !entsys )
+			//{
+			//	Error( "Critical Error: FF Entity System failed to init!\n" );
+			//	return;
+			//}
+
+			// Start up entity system now
+			entsys.StartForMap();
+
+			//*
 			CBaseEntity *pEntity = gEntList.FirstEnt();
 			while( pEntity )
 			{
@@ -341,9 +363,6 @@ ConVar mp_prematch( "mp_prematch",
 			// RAWR!
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
 
-			// Restart lua
-			entsys.StartForMap();
-
 			// Respawn/Reset all players
 			for( int i = 0; i < gpGlobals->maxClients; i++ )
 			{
@@ -355,6 +374,7 @@ ConVar mp_prematch( "mp_prematch",
 					pPlayer->ResetDeathCount();
 				}
 			}
+			//*/
 
 			/*
 			// Temporary to reset items
@@ -383,6 +403,7 @@ ConVar mp_prematch( "mp_prematch",
 			}
 			*/
 
+			/*
 			// Reset all team scores & deaths. Do it here
 			// after we've killed/spawned players.
 			for( int i = 0; i < GetNumberOfTeams(); i++ )
@@ -402,6 +423,7 @@ ConVar mp_prematch( "mp_prematch",
 			{
 				gameeventmanager->FireEvent( pEvent );
 			}
+			*/
 		}
 		else
 		{

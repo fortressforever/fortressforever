@@ -32,6 +32,9 @@ const char *g_MapFilterKeepList[] =
 	"env_sun",
 	"env_wind",
 	"env_fog_controller",
+	//"ff_entity_system",			// ignore this
+	"ff_entity_system_helper",	// ignore this (entity system spawns it)
+	"ff_mapguide",
 	"func_brush",
 	"func_wall",
 	"func_illusionary",
@@ -58,7 +61,6 @@ const char *g_MapFilterKeepList[] =
 	"predicted_viewmodel",
 	"worldspawn",
 	"point_devshot_camera",
-	"ff_mapguide",
 	NULL
 };
 
