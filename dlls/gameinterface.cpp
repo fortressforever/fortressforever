@@ -959,9 +959,11 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 
 #ifndef _XBOX
 	// load the Navigation Mesh for this map
-	NavErrorType navErr = TheNavMesh->Load();
+	// We... don't use this -Mulch
+	//NavErrorType navErr = TheNavMesh->Load();
 #endif
 
+	/*
 	const char *pErrMsg = "Ok";
 	switch(navErr)
 	{
@@ -986,6 +988,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 		Warning("NAV MESH STATUS: %s\n", pErrMsg);
 		//TheNavMesh->BeginGeneration();
 	}
+	*/
 
 	// Omni-bot: Initialize the bot interface
 	Omnibot::omnibot_interface::InitBotInterface();
