@@ -590,15 +590,15 @@ bool CMultiplayRules::IsMultiplayer( void )
 		CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor );
 
 		// Custom kill type?
-		if ( info.GetCustomKill() )
-		{
-			killer_weapon_name = GetCustomKillString( info );
-			if ( pScorer )
-			{
-				killer_ID = pScorer->GetUserID();
-			}
-		}
-		else
+		//if ( info.GetCustomKill() )
+		//{
+		//	killer_weapon_name = GetCustomKillString( info );
+		//	if ( pScorer )
+		//	{
+		//		killer_ID = pScorer->GetUserID();
+		//	}
+		//}
+		//else
 		{
 			// Is the killer a client?
 			if ( pScorer )

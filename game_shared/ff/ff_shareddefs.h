@@ -87,6 +87,14 @@ struct SpyDisguiseWeapon
 #define DECAP_LEFT_LEG		( 1 << 3 )
 #define DECAP_RIGHT_LEG		( 1 << 4 )
 
+// Some kill modifiers.
+enum KillTypes_t
+{
+	KILLTYPE_HEADSHOT = 1,
+	KILLTYPE_BODYSHOUT = 2
+};
+
+
 #ifdef CLIENT_DLL
 struct SpyInfo_s
 {

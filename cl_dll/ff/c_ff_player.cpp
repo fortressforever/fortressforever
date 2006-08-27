@@ -620,7 +620,8 @@ void C_FFRagdoll::CreateRagdoll()
 		// We can also spawn a weapon
 		if (pWeapon)
 		{
-			C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			pGib->SetAbsAngles(pWeapon->GetAbsAngles());
 		}
 	}
 	else
@@ -1794,7 +1795,8 @@ void Gib_Callback(const CEffectData &data)
 
 		if (pWeapon)
 		{
-			C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pPlayer->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
+			pGib->SetAbsAngles(pWeapon->GetAbsAngles());
 		}
 	}
 

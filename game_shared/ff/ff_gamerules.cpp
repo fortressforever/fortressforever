@@ -1036,15 +1036,15 @@ ConVar mp_prematch( "mp_prematch",
 			pVictim = ToFFPlayer( ( ( CFFDispenser * )pObject )->m_hOwner.Get() );
 
 		// Custom kill type?
-		if( info.GetCustomKill() )
-		{
-			pszWeapon = GetCustomKillString( info );
-			if( pScorer )
-			{
-				iKillerID = pScorer->GetUserID();
-			}
-		}
-		else
+		//if( info.GetCustomKill() )
+		//{
+		//	pszWeapon = GetCustomKillString( info );
+		//	if( pScorer )
+		//	{
+		//		iKillerID = pScorer->GetUserID();
+		//	}
+		//}
+		//else
 		{
 			// Is the killer a client?
 			if( pScorer )
