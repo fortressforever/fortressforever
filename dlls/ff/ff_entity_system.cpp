@@ -82,11 +82,6 @@ BEGIN_DATADESC( CFFEntitySystemHelper )
 	DEFINE_THINKFUNC( OnThink ),
 END_DATADESC()
 
-//============================================================================
-// CFFEntitySystem implementation
-//============================================================================
-//LINK_ENTITY_TO_CLASS( ff_entity_system, CFFEntitySystem );
-
 //-----------------------------------------------------------------------------
 // Purpose: Sets up the entity's initial state
 //-----------------------------------------------------------------------------
