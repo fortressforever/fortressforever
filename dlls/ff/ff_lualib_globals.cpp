@@ -930,6 +930,7 @@ namespace FFLib
 		FF_LuaHudRemove( pPlayer, pszIdentifier );
 	}
 
+	/*
 	void AddSchedule(const char* szScheduleName, float time, const luabind::adl::object& fn)
 	{
 		_scheduleman.AddSchedule(szScheduleName, time, fn, 1);
@@ -965,6 +966,7 @@ namespace FFLib
 	{
 		_scheduleman.RemoveSchedule(szScheduleName);
 	}
+	*/
 
 } // namespace FFLib
 
@@ -1001,10 +1003,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddHudIcon",				&FFLib::AddHudIcon),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
-		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
-		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
-		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
-		def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
+		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
+		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		//def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
 		def("ApplyToAll",				&FFLib::ApplyToAll),
 		def("ApplyToTeam",				&FFLib::ApplyToTeam),
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
@@ -1023,7 +1025,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
-		def("DeleteSchedule",			&FFLib::DeleteSchedule),
+		//def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),

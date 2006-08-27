@@ -70,7 +70,7 @@ bool CFFScheduleCallack::Update()
 {
 	m_timeLeft -= gpGlobals->frametime;
 
-	if(m_timeLeft < 0.0f)
+	if(m_timeLeft <= 0.0f)
 	{
 		// call the lua function
 		try
