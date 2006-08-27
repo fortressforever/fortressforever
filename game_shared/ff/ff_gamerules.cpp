@@ -309,10 +309,13 @@ ConVar mp_prematch( "mp_prematch",
 			// Kill entity system helper
 			UTIL_Remove( helper );
 
+			// Clear delete list
 			gEntList.CleanupDeleteList();
 
+			// Reset helper
 			helper = NULL;
 
+			// Re-start entsys for the map
 			entsys.StartForMap();
 
 			// Go through and delete entities
@@ -339,11 +342,12 @@ ConVar mp_prematch( "mp_prematch",
 			// Clear anything that's been deleted
 			gEntList.CleanupDeleteList();
 
-			// RAWR!
+			// RAWR! Add all entities back
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
 
-			// Start up the entity system
-			//entsys.StartForMap();
+			// Run startup stuff again!
+			CFFLuaSC hStartup;
+			entsys.RunPredicates_LUA(NULL, &hStartup, "startup");
 
 			// Respawn/Reset all players
 			for( int i = 0; i < gpGlobals->maxClients; i++ )

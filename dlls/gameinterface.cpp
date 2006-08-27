@@ -805,14 +805,6 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	UpdateChapterRestrictions( pMapName );
 
 	// Added: Initialize Lua stuff
-	//entsys.StartForMap();
-	//entsys = ( CFFEntitySystem * )CreateEntityByName( "ff_entity_system" );
-	//if( !entsys )
-	//{
-	//	Error( "Critical Error: FF Entity System failed to init!\n" );
-	//	return false;
-	//}
-
 	entsys.StartForMap();
 
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
@@ -1185,8 +1177,6 @@ void CServerGameDLL::LevelShutdown( void )
 
 	// In case we quit out during initial load
 	CBaseEntity::SetAllowPrecache( false );
-
-	//entsys = NULL;
 }
 
 //-----------------------------------------------------------------------------
