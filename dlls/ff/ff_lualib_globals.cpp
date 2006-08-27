@@ -12,7 +12,8 @@
 #include "ff_item_flag.h"
 #include "ff_player.h"
 #include "ff_utils.h"
-#include "ff_scheduleman.h"
+// BLAH! This is giving linux min/max error again too
+//#include "ff_scheduleman.h"
 
 #include "beam_shared.h"
 #include "buttons.h"
