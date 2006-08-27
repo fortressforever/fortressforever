@@ -306,37 +306,16 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
-			//entsys.CloseForMap();
-
-			/*
-			CBaseEntity *pEntity = gEntList.FirstEnt();
-			while( pEntity )
-			{
-				Warning( "[Hi %i] %s\n", pEntity->entindex(), pEntity->GetClassname() );
-
-				pEntity = gEntList.NextEnt( pEntity );
-			}
-			*/
-
-			/*
-			// Kill the entity system
+			// Kill entity system helper
 			UTIL_Remove( helper );
 
-			// Force removal of entity system
 			gEntList.CleanupDeleteList();
 
-			// Re-init entity system
-			//entsys = ( CFFEntitySystem * )CreateEntityByName( "ff_entity_system" );
-			//if( !entsys )
-			//{
-			//	Error( "Critical Error: FF Entity System failed to init!\n" );
-			//	return;
-			//}
+			helper = NULL;
 
-			// Start up entity system now
 			entsys.StartForMap();
 
-			//*
+			// Go through and delete entities
 			CBaseEntity *pEntity = gEntList.FirstEnt();
 			while( pEntity )
 			{
@@ -363,6 +342,9 @@ ConVar mp_prematch( "mp_prematch",
 			// RAWR!
 			MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &m_hMapFilter, true );
 
+			// Start up the entity system
+			//entsys.StartForMap();
+
 			// Respawn/Reset all players
 			for( int i = 0; i < gpGlobals->maxClients; i++ )
 			{
@@ -374,36 +356,7 @@ ConVar mp_prematch( "mp_prematch",
 					pPlayer->ResetDeathCount();
 				}
 			}
-			//*/
 
-			/*
-			// Temporary to reset items
-			CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
-			while( pEntity )
-			{
-				CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
-				if( pFFScript )
-				{
-					// If it's being carried...
-					if( pFFScript->GetOwnerEntity() )
-					{
-						// Drop will assert if there's no GetOwnerEntity()
-
-						// This will drop it and make it respawn back where it goes
-						pFFScript->Drop( 0.0f, 0.0f );
-					}
-					else
-					{
-						// Put it back at it's spawn...
-						pFFScript->Return();
-					}
-				}
-
-				pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_INFOSCRIPT );
-			}
-			*/
-
-			/*
 			// Reset all team scores & deaths. Do it here
 			// after we've killed/spawned players.
 			for( int i = 0; i < GetNumberOfTeams(); i++ )
@@ -423,7 +376,6 @@ ConVar mp_prematch( "mp_prematch",
 			{
 				gameeventmanager->FireEvent( pEvent );
 			}
-			*/
 		}
 		else
 		{
@@ -1176,11 +1128,15 @@ ConVar mp_prematch( "mp_prematch",
 	{
 		m_flGameStarted = gpGlobals->curtime;
 
-		// Stuff to do when prematch ends
-		bool bFlags[ AT_MAX_FLAG ] = { true };
+		// Don't do this upon first spawning in a map w/o any prematch
+		if( gpGlobals->curtime > 2.0f )
+		{
+			// Stuff to do when prematch ends
+			bool bFlags[ AT_MAX_FLAG ] = { true };
 
-		// Piggy back this guy now with a FULL MAP RESET
-		ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
+			// Piggy back this guy now with a FULL MAP RESET
+			ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
+		}		
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("game_start");
 		if(pEvent)
