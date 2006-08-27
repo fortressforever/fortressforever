@@ -141,6 +141,54 @@ CON_COMMAND(bot_disguise, "trigger a disguise")
 	}
 }
 
+CON_COMMAND(bot_disguisez, "trigger a disguise")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			int iTeam = TEAM_UNASSIGNED;
+			int iClass = CLASS_NONE;
+
+			if( !Q_stricmp( engine->Cmd_Argv(1), "blue" ) )
+				iTeam = TEAM_BLUE;
+			else if( !Q_stricmp( engine->Cmd_Argv(1), "red" ) )
+				iTeam = TEAM_RED;
+			else if( !Q_stricmp( engine->Cmd_Argv(1), "yellow" ) )
+				iTeam = TEAM_YELLOW;
+			else if( !Q_stricmp( engine->Cmd_Argv(1), "green" ) )
+				iTeam = TEAM_GREEN;
+
+			if( !Q_stricmp( engine->Cmd_Argv(2), "scout" ) )
+				iClass = CLASS_SCOUT;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "sniper" ) )
+				iClass = CLASS_SNIPER;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "soldier" ) )
+				iClass = CLASS_SOLDIER;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "demoman" ) )
+				iClass = CLASS_DEMOMAN;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "medic" ) )
+				iClass = CLASS_MEDIC;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "hwguy" ) )
+				iClass = CLASS_HWGUY;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "pyro" ) )
+				iClass = CLASS_PYRO;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "spy" ) )
+				iClass = CLASS_SPY;
+			else if( !Q_stricmp( engine->Cmd_Argv(2), "engineer" ) )
+				iClass = CLASS_ENGINEER;
+
+			if( iTeam != TEAM_UNASSIGNED && iClass != CLASS_NONE )
+			{
+				Warning( "[Bot %s] Disguising as: %s %s\n", pPlayer->GetPlayerName(), engine->Cmd_Argv(1), engine->Cmd_Argv(2) );
+				pPlayer->Bot_Disguise( iTeam, iClass );
+			}			
+		}
+	}
+}
+
 CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
 {
 	for( int i = 0; i < gpGlobals->maxClients; i++ )
