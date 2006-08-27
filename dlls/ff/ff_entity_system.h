@@ -72,6 +72,8 @@ public:
 	// loads the script for the current map
 	bool StartForMap();
 
+	void Update();
+
 	// returns the lua interpreter
 	lua_State* GetLuaState() const { return L; }
 	bool ScriptExists( void ) const { return m_ScriptExists; }
