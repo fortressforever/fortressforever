@@ -871,7 +871,12 @@ C_FFPlayer::~C_FFPlayer()
 
 C_FFPlayer* C_FFPlayer::GetLocalFFPlayer()
 {
-	return ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	// Assert thrown from here sometimes, validate 
+	// C_BasePlayer::GetLocalPlayer() first
+	if( C_BasePlayer::GetLocalPlayer() )
+        return ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	else
+		return NULL;
 }
 
 //-----------------------------------------------------------------------------
