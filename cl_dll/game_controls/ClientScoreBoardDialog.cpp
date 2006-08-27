@@ -913,6 +913,14 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 	if (pGR && pGR->IsLocalPlayer(playerIndex))
 		return;
 
+	// No valid player selected, do nothing!
+	if( playerIndex == -1 )
+		return;
+
+	// This line was causing one of the
+	// Assert(i >= 0 && i < GetNumBits());
+	// bugs! It's fixed now!
+
 	// If player is not audible, only toggle text block
 	if (!GetClientVoiceMgr()->IsPlayerAudible(playerIndex))
 	{
