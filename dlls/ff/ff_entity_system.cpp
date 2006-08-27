@@ -197,7 +197,14 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 	return true;
 }
 
-//----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Purpose: Called to start up lua for a map
+// NOTE:	This can be called MULTIPLE times per round so it needs to also
+//			shut stuff down before starting it back up! ff_restartround is
+//			how it gets stopped and started during a map. Also, note the helper
+//			entity is manually deleted when doing ff_restartround (see
+//			ff_gamerules.cpp) and then started back up in here.
+// ---------------------------------------------------------------------------
 bool CFFEntitySystem::StartForMap()
 {
 	VPROF_BUDGET( "CFFEntitySystem::StartForMap", VPROF_BUDGETGROUP_FF_LUA );
@@ -208,7 +215,12 @@ bool CFFEntitySystem::StartForMap()
 
 	// Clear up an existing one
 	if( L )
+	{
 		lua_close(L);
+
+		// Need to close this down too
+		_scheduleman.Shutdown();
+	}
 
 	// Now open Lua VM
 	L = lua_open();
