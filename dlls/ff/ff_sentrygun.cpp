@@ -670,7 +670,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	if (IsSabotaged()&& !IsShootingTeammates())
 		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
-	//FireBullets( info );
+	FireBullets( info );
 	EmitSound( "Sentry.Fire" );
 	DoMuzzleFlash();
 
