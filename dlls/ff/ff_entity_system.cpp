@@ -42,6 +42,7 @@
 #include "ff_luacontext.h"
 #include "ff_lualib.h"
 #include "ammodef.h"
+#include "ff_scheduleman.h"
 //#include "ff_miniturret.h"
 
 // Lua includes
@@ -98,9 +99,12 @@ void CFFEntitySystemHelper::OnThink( void )
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
 
-	CFFLuaSC hTick;
-	entsys.RunPredicates_LUA( NULL, &hTick, "tick" );
-	SetNextThink( gpGlobals->curtime + 1.0f );
+//	CFFLuaSC hTick;
+//	entsys.RunPredicates_LUA( NULL, &hTick, "tick" );
+//	SetNextThink( gpGlobals->curtime + 1.0f );
+
+	_scheduleman.Update();
+	SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
 }
 
 //----------------------------------------------------------------------------
@@ -134,6 +138,8 @@ CFFEntitySystem::~CFFEntitySystem()
 
 	// Just to be safe!
 	L = NULL;
+
+	_scheduleman.Shutdown();
 }
 
 //----------------------------------------------------------------------------
@@ -227,6 +233,8 @@ bool CFFEntitySystem::StartForMap()
 
 	// And now load some of ours
 	CFFLuaLib::Init(L);
+
+	_scheduleman.Init();
 	
 	// Hurrah well that is set up now
 	DevMsg( "[SCRIPT] Entity system all set up!\n" );

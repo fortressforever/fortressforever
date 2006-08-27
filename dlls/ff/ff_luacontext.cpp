@@ -111,6 +111,7 @@ CFFLuaSC::~CFFLuaSC()
 }
 
 //---------------------------------------------------------------------------
+void CFFLuaSC::Push(luabind::adl::object& luabindObject) { m_params.AddToTail(SETOBJECT(luabindObject)); }
 void CFFLuaSC::Push(CBaseEntity* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(CFFBuildableObject* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }
 void CFFLuaSC::Push(CFFDispenser* pEntity) { m_params.AddToTail(SETOBJECT(pEntity)); }

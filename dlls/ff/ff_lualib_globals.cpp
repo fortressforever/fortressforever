@@ -12,6 +12,7 @@
 #include "ff_item_flag.h"
 #include "ff_player.h"
 #include "ff_utils.h"
+#include "ff_scheduleman.h"
 
 #include "beam_shared.h"
 #include "buttons.h"
@@ -929,6 +930,42 @@ namespace FFLib
 		FF_LuaHudRemove( pPlayer, pszIdentifier );
 	}
 
+	void AddSchedule(const char* szScheduleName, float time, const luabind::adl::object& fn)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 1);
+	}
+
+	void AddSchedule(const char* szScheduleName,
+					 float time,
+					 const luabind::adl::object& fn,
+					 const luabind::adl::object& param)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 1, param);
+	}
+
+	void AddSchedule(const char* szScheduleName,
+					 float time,
+					 const luabind::adl::object& fn,
+					 const luabind::adl::object& param1,
+					 const luabind::adl::object& param2)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 1, param1, param2);
+	}
+
+	void AddScheduleRepeating(const char* szScheduleName,
+							  float time,
+							  const luabind::adl::object& fn,
+							  const luabind::adl::object& param1,
+							  const luabind::adl::object& param2)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1, param2);
+	}
+
+	void DeleteSchedule(const char* szScheduleName)
+	{
+		_scheduleman.RemoveSchedule(szScheduleName);
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -964,6 +1001,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddHudIcon",				&FFLib::AddHudIcon),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
 		def("ApplyToAll",				&FFLib::ApplyToAll),
 		def("ApplyToTeam",				&FFLib::ApplyToTeam),
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
@@ -982,6 +1023,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
+		def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
