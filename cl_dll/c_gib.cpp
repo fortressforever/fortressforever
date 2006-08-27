@@ -88,12 +88,12 @@ bool C_Gib::InitializeGib( const char *pszModelName, Vector vecOrigin, Vector ve
 	else
 	{
 		// failed to create a physics object
-		//Release();
-		//return false;
+		Release();
+		return false;
 
-		SetSolid(SOLID_BBOX);
-		AddSolidFlags(FSOLID_NOT_STANDABLE);
-		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+		//SetSolid(SOLID_BBOX);
+		//AddSolidFlags(FSOLID_NOT_STANDABLE);
+		//SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
 	}
 
 	SetNextClientThink( gpGlobals->curtime + flLifetime );

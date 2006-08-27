@@ -108,6 +108,8 @@ void CFFPlayer::FireBullet(
 
 	float flMaxRange = 8000;
 
+	bool	bHeadshot = false;
+
 	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
 
 	trace_t tr; // main enter bullet trace
@@ -174,6 +176,8 @@ void CFFPlayer::FireBullet(
 			{
 				DevMsg("Headshot\n");
 				fCurrentDamage *= 7.5f;
+
+				bHeadshot = true;
 			}
 			else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 			{
@@ -269,6 +273,11 @@ void CFFPlayer::FireBullet(
 		if (tr.m_pEnt->IsPlayer())
 		{
 			info.ScaleDamageForce(0.01f);
+		}
+
+		if (bHeadshot)
+		{
+			info.SetCustomKill(KILLTYPE_HEADSHOT);
 		}
 
 		tr.m_pEnt->DispatchTraceAttack(info, vecDir, &tr);

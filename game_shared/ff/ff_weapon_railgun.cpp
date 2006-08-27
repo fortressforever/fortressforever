@@ -164,6 +164,10 @@ void CFFWeaponRailgun::Fire()
 	info.m_flDamageForceScale = 1.0f + (flChargeTime * ffdev_railpush.GetFloat());
 
 	pPlayer->FireBullets(info);
+
+	pPlayer->DoMuzzleFlash();
+	SendWeaponAnim(GetPrimaryAttackActivity());
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
 }
 
 //----------------------------------------------------------------------------

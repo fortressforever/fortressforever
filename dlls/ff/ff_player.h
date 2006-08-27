@@ -252,6 +252,7 @@ public:
 	virtual bool HasHumanGibs( void ) { return true; }
 
 	void LimbDecapitation( const CTakeDamageInfo &info );
+	void CreateLimbs(int iLimbs);
 
 	int m_fBodygroupState;
 	// <-- Mirv: Damage & force stuff

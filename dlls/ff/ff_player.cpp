@@ -1487,6 +1487,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (!ShouldGib(info))
 	{
 		CreateRagdollEntity(&info);
+		CreateLimbs(m_fBodygroupState);
 	}
 }
 
@@ -4440,7 +4441,7 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 		m_fBodygroupState = 0;
 	}
 	// Only explosions now okay.
-	else if (m_iHealth < 50.0f && info.GetDamageType() & DMG_BLAST)
+	else if (m_iHealth < 50.0f /*&& info.GetDamageType() & DMG_BLAST*/)
 	{
 		LimbDecapitation(info);
 	}
@@ -4491,6 +4492,17 @@ int CFFPlayer::ObjectCaps( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 {
+	// Headshot
+	if (info.GetCustomKill() == KILLTYPE_HEADSHOT)
+	{
+		m_fBodygroupState = DECAP_HEAD;
+		return;
+	}
+
+	// For now the rest of this depends on explosions
+	if (!(info.GetDamageType() & DMG_BLAST))
+		return;
+
 	// In which direction from the player was the explosion?
 	Vector direction = info.GetDamagePosition() - BodyTarget(info.GetDamagePosition(), false);
 	VectorNormalize(direction);
@@ -4528,12 +4540,18 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 		if (! (m_fBodygroupState & DECAP_LEFT_ARM))
 			m_fBodygroupState |= DECAP_RIGHT_LEG;
 	}
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: Create limbs for bitfield iLimbs
+//-----------------------------------------------------------------------------
+void CFFPlayer::CreateLimbs(int iLimbs)
+{
 	// Now spawn any limbs that are needed
 	// [TODO] This is not a great way to do it okay!
 	for (int i = 0; i <= 4; i++)
 	{
-		if (m_fBodygroupState & (1 << i))
+		if (iLimbs & (1 << i))
 		{
 			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * > (CreateEntityByName("ff_ragdoll"));
 
@@ -4545,10 +4563,16 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 
 			if (pRagdoll)
 			{
+				Vector vecPosition, vecDirection;
+				QAngle angAngle;
+
+				GetAttachment(i, vecPosition, angAngle);
+				AngleVectors(angAngle, &vecDirection);
+
 				// Don't associate with a player, this is a quick fix to the ragdoll
 				// limbs trying to snatch a player model instance.
 				pRagdoll->m_hPlayer = NULL;	
-				pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
+				pRagdoll->m_vecRagdollOrigin = vecPosition;
 				pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 				pRagdoll->m_nModelIndex = g_iLimbs[GetClassSlot()][i];
 				pRagdoll->m_nForceBone = m_nForceBone;
@@ -4556,9 +4580,12 @@ void CFFPlayer::LimbDecapitation(const CTakeDamageInfo &info)
 				pRagdoll->m_fBodygroupState = 0;
 				pRagdoll->m_nSkinIndex = m_nSkin;
 
-				// remove it after a time
+				// Remove it after a time
 				pRagdoll->SetThink(&CBaseEntity::SUB_Remove);
 				pRagdoll->SetNextThink(gpGlobals->curtime + 10.0f);
+
+				// Some blood
+				UTIL_BloodSpray(vecPosition, vecDirection, BLOOD_COLOR_RED, 255, FX_BLOODSPRAY_ALL);
 			}
 		}
 	}
