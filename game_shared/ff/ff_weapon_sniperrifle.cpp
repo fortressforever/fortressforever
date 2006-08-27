@@ -470,6 +470,7 @@ bool CFFWeaponSniperRifle::Holster(CBaseCombatWeapon *pSwitchingTo)
 #endif
 
 #ifdef GAME_DLL
+	// Supposed to be GetOwnerEntity()?
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
 	if (pPlayer == NULL) 
