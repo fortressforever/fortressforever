@@ -1078,20 +1078,22 @@ int C_FFPlayer::DrawModel( int flags )
 		// --------------------------------
 		// Check for friendly spies
 		// --------------------------------
-
-		// See if we're drawing a spy who is on our team and disguised
-		if( IsDisguised() && ( GetTeamNumber() == pPlayer->GetTeamNumber() ) )
+		if( IsDisguised() )
 		{
-			// Spy is disguised as someone not of the team we're on
-			if( GetDisguisedTeam() != pPlayer->GetTeamNumber() )
+			// See if the spy is a teammate or ally
+			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )
 			{
-				// Thanks mirv!
-				IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
-				if( pMaterial )
+				// Now, is the spy disguised as an enemy?
+				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetDisguisedTeam() == GR_NOTTEAMMATE ) )
 				{
-					materials->Bind( pMaterial );
-					color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
-					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+					// Thanks mirv!
+					IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
+					if( pMaterial )
+					{
+						materials->Bind( pMaterial );
+						color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
+						DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+					}
 				}
 			}
 		}
