@@ -13,7 +13,7 @@
 /// Apr. 23, 2005	L0ki: Initial creation
 
 #include "cbase.h"
-#include "ff_grenade_base.h"
+#include "ff_grenade_emp.h"
 #include "ff_utils.h"
 #include "engine/IEngineSound.h"
 
@@ -25,10 +25,6 @@
 	#include "ff_entity_system.h"
 	#include "te_effect_dispatch.h"
 #endif
-
-#define EMPGRENADE_MODEL	"models/grenades/emp/emp.mdl"
-#define EMP_SOUND			"EmpGrenade.Explode"
-#define EMP_EFFECT			"FF_EmpZap"
 
 extern short g_sModelIndexFireball;
 extern short g_sModelIndexWExplosion;
@@ -50,31 +46,6 @@ int g_iEmpRingTexture = -1;
 	ConVar emp_speed("ffdev_emp_speed","0",0,"speed of the emp shockwave");
 	ConVar emp_buildable_damage("ffdev_emp_buildable_damage","10.0",0,"Amount of damage to deal to sentryguns and dispensers in the emp radius.");
 #endif
-
-class CFFGrenadeEmp : public CFFGrenadeBase
-{
-public:
-	DECLARE_CLASS(CFFGrenadeEmp,CFFGrenadeBase)
-
-	virtual void Precache();
-	virtual Class_T Classify( void ) { return CLASS_GREN_EMP; }
-
-	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
-	virtual float GetGrenadeRadius() { return 240.0f; }
-	virtual float GetGrenadeDamage() { return 0.0f; }
-	virtual const char *GetBounceSound() { return "EmpGrenade.Bounce"; }
-
-#ifdef CLIENT_DLL
-	CFFGrenadeEmp() {}
-	CFFGrenadeEmp( const CFFGrenadeEmp& ) {}
-#else
-	virtual void Spawn();
-	virtual void Explode(trace_t *pTrace, int bitsDamageType);
-
-	void GrenadeThink( void );
-	bool m_bWarned;
-#endif
-};
 
 LINK_ENTITY_TO_CLASS( ff_grenade_emp, CFFGrenadeEmp );
 PRECACHE_WEAPON_REGISTER( ff_grenade_emp );

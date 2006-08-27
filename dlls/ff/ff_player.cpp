@@ -25,6 +25,7 @@
 #include "ff_team.h"			// team info
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
+#include "ff_grenade_emp.h"
 
 #include "client.h"
 
@@ -626,7 +627,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.Pain");
 	PrecacheScriptSound("Player.Flameout");
 	// Special case
-	PrecacheScriptSound( "EmpGrenade.Explode" );
+	PrecacheScriptSound( EMP_SOUND );
 
 	// Flashlight - Bug #0000679: flashlight sound isn't precached
 	PrecacheScriptSound( "HL2Player.FlashLightOn" );
@@ -4067,7 +4068,7 @@ void CFFPlayer::GrenadeThink(void)
 		if( !m_bEngyGrenWarned && ( gpGlobals->curtime > ( m_flServerPrimeTime + gren_timer.GetFloat() - 0.685f ) ) )
 		{
 			m_bEngyGrenWarned = true;
-			EmitSound( "EmpGrenade.Explode" );
+			EmitSound( EMP_SOUND );
 		}
 	}	
 
@@ -4118,6 +4119,12 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 
 			// Make the grenade
 			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szSecondaryClassName);
+
+			if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_bEngyGrenWarned ) )
+			{
+				if( pGrenade )
+					dynamic_cast< CFFGrenadeEmp * >( pGrenade )->SetWarned();
+			}
 			break;
 	}
 
