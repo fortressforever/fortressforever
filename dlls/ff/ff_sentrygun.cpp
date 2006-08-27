@@ -370,6 +370,8 @@ void CFFSentryGun::OnSearchThink( void )
 	Ping();
 }
 
+static ConVar sg_pos( "ffdev_sg_pos", "34", FCVAR_ARCHIVE | FCVAR_CHEAT );
+
 //-----------------------------------------------------------------------------
 // Purpose: Allows the turret to fire on targets if they're visible
 //-----------------------------------------------------------------------------
@@ -442,17 +444,43 @@ void CFFSentryGun::OnActiveThink( void )
 	if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) )
 	{
 		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
+
+		// Something is REALLY wrong with the attachments. The angle
+		// and origin is way off where they're supposed to be... It's
+		// gotta be something in the model...
 		
 		Vector vecOrigin;
 		QAngle vecAngles;
 
+		vecOrigin.Init();
+		vecAngles.Init();
+
+		// This does not get the correct location from the attachment
+		// and I don't know why...
 		if( m_bRocketLeftBarrel )
 			GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
 		else
 			GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
-        
+
+		// So, since the attachment grabbing isn't working, hacking in a
+		// position for dustbowl playtest
+
+		vecOrigin.z -= sg_pos.GetFloat();
+
+		vecDirToEnemy = GetEnemy()->BodyTarget( vecOrigin, false ) - vecOrigin;
+		VectorNormalize( vecDirToEnemy );
+
+		QAngle vecDirToEnemyAngles;
+		VectorAngles( vecDirToEnemy, vecDirToEnemyAngles );
+
+		//NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecDirToEnemy * 256.0f ), 255, 0, 0, false, 5.0f );
+
+		// TODO: Need to factor in a dot product for aiming as the sg can be not facing
+		// someone but its time to fire a rocket so rocket comes out of the back of sg 
+		// or something that looks silly
+
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket(this, vecOrigin /*+ vecAiming * 8.0f*/, vecAngles, this, 102, 900.0f );
+		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;
@@ -642,7 +670,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	if (IsSabotaged()&& !IsShootingTeammates())
 		info.m_vecSpread = VECTOR_CONE_10DEGREES;
 
-	FireBullets( info );
+	//FireBullets( info );
 	EmitSound( "Sentry.Fire" );
 	DoMuzzleFlash();
 
