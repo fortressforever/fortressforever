@@ -541,8 +541,9 @@ void CFFPlayer::PreThink(void)
 		}
 
 		// Our origin has changed while building! no!!!!!!!!!!!!!!!!!!!!!!
-		if( m_vecBuildOrigin != GetAbsOrigin() )
+		if( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 36.0f )
 		{
+			Vector vecOrigin = GetAbsOrigin();
 			Warning( "[Buildable] Player origin has changed!\n" );
 			m_iWantBuild = m_iCurBuild;
 			PreBuildGenericThink();
