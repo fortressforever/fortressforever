@@ -4585,7 +4585,7 @@ void CFFPlayer::CreateLimbs(int iLimbs)
 				pRagdoll->SetNextThink(gpGlobals->curtime + 10.0f);
 
 				// Some blood
-				UTIL_BloodSpray(vecPosition, vecDirection, BLOOD_COLOR_RED, 255, FX_BLOODSPRAY_ALL);
+				UTIL_BloodSpray(vecPosition, vecDirection, BLOOD_COLOR_RED, 23, FX_BLOODSPRAY_ALL);
 			}
 		}
 	}
