@@ -189,6 +189,27 @@ CON_COMMAND(bot_disguisez, "trigger a disguise")
 	}
 }
 
+CON_COMMAND( bot_dmggun, "Makes a bot attach your sg" )
+{
+	for( int i = 0; i < gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if( pPlayer && ( pPlayer->GetFlags() & FL_FAKECLIENT ) )
+		{
+			CFFPlayer *pOwner = ToFFPlayer( UTIL_GetCommandClient() );
+			if( pOwner )
+			{
+				if( pOwner->m_hSentryGun.Get() )
+				{
+					Warning( "[Bot %s] Sending damage to %s's sentrygun!\n", pPlayer->GetPlayerName(), pOwner->GetPlayerName() );
+					( pOwner->m_hSentryGun.Get() )->TakeDamage( CTakeDamageInfo( pPlayer, pPlayer, 999999.0f, DMG_DIRECT ) );
+				}
+			}
+		}
+	}
+}
+
 CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
 {
 	for( int i = 0; i < gpGlobals->maxClients; i++ )
