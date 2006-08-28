@@ -429,6 +429,7 @@ void CFFSentryGun::OnActiveThink( void )
 
 	bool bFired = false;
 
+	/*
 	// Fire shells
 	if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
 	{
@@ -480,7 +481,7 @@ void CFFSentryGun::OnActiveThink( void )
 		// or something that looks silly
 
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		/*CFFProjectileRocket *pRocket =*/ CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
+		CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;
@@ -490,6 +491,7 @@ void CFFSentryGun::OnActiveThink( void )
 		// Flip which barrel to come out of next
 		m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
 	}
+	*/
 
 	if( bFired ) 
 	{
