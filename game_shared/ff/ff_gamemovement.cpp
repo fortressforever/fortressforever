@@ -35,6 +35,7 @@
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
 static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "0.3", FCVAR_REPLICATED);
+static ConVar sv_trimpmax("sv_trimpmax", "600", FCVAR_REPLICATED);
 
 class CBasePlayer;
 
@@ -300,6 +301,8 @@ bool CFFGameMovement::CheckJumpButton(void)
 		mv->m_vecVelocity[2] = 0;
 
 	mv->m_vecVelocity[2] += fMul;
+
+	mv->m_vecVelocity[2] = min(mv->m_vecVelocity[2], sv_trimpmax.GetFloat());
 	// <-- Mirv: Add on new velocity
 
 	FinishGravity();
