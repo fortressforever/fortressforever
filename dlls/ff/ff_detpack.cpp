@@ -46,6 +46,8 @@ BEGIN_DATADESC( CFFDetpack )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC( )
 
+static ConVar detpack_radius( "ffdev_detpack_radius", "700", FCVAR_ARCHIVE );
+
 // Array of char *'s to dispenser models
 const char *g_pszFFDetpackModels[ ] =
 {
@@ -322,7 +324,7 @@ void CFFDetpack::DoExplosionDamage( void )
 
 	// Better damage given out
 	CBaseEntity *pEntity = NULL;
-	for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	for( CEntitySphereQuery sphere( GetAbsOrigin(), /*m_flExplosionRadius*/detpack_radius.GetFloat() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 	{
 		if( !pEntity )
 			continue;

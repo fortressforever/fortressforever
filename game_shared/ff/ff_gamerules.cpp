@@ -26,6 +26,7 @@
 	#include "ff_item_flag.h"
 	#include "ff_entity_system.h"
 	#include "ff_luacontext.h"
+	#include "ff_scheduleman.h"
 
 #endif
 
@@ -314,6 +315,11 @@ ConVar mp_prematch( "mp_prematch",
 
 			// Reset helper
 			helper = NULL;
+
+			// Shutdown schedule manager
+			_scheduleman.Shutdown();
+			// Start schedule manager
+			_scheduleman.Init();
 
 			// Re-start entsys for the map
 			entsys.StartForMap();
