@@ -307,6 +307,9 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
+			// TODO: Shutdown stats
+			// TODO: Restart stats
+
 			// Kill entity system helper
 			UTIL_Remove( helper );
 
