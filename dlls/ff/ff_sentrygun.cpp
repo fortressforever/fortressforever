@@ -429,7 +429,6 @@ void CFFSentryGun::OnActiveThink( void )
 
 	bool bFired = false;
 
-	/*
 	// Fire shells
 	if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
 	{
@@ -453,8 +452,8 @@ void CFFSentryGun::OnActiveThink( void )
 		Vector vecOrigin;
 		QAngle vecAngles;
 
-		vecOrigin.Init();
-		vecAngles.Init();
+		//vecOrigin.Init();
+		//vecAngles.Init();
 
 		// This does not get the correct location from the attachment
 		// and I don't know why...
@@ -466,13 +465,13 @@ void CFFSentryGun::OnActiveThink( void )
 		// So, since the attachment grabbing isn't working, hacking in a
 		// position for dustbowl playtest
 
-		vecOrigin.z -= sg_pos.GetFloat();
+		//vecOrigin.z -= sg_pos.GetFloat();
 
-		vecDirToEnemy = GetEnemy()->BodyTarget( vecOrigin, false ) - vecOrigin;
-		VectorNormalize( vecDirToEnemy );
+		//vecDirToEnemy = GetEnemy()->BodyTarget( vecOrigin, false ) - vecOrigin;
+		//VectorNormalize( vecDirToEnemy );
 
-		QAngle vecDirToEnemyAngles;
-		VectorAngles( vecDirToEnemy, vecDirToEnemyAngles );
+		//QAngle vecDirToEnemyAngles;
+		//VectorAngles( vecDirToEnemy, vecDirToEnemyAngles );
 
 		//NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecDirToEnemy * 256.0f ), 255, 0, 0, false, 5.0f );
 
@@ -481,7 +480,8 @@ void CFFSentryGun::OnActiveThink( void )
 		// or something that looks silly
 
 		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
+		//CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
+		CFFProjectileRocket::CreateRocket(this, vecOrigin, vecAngles, this, 102, 900.0f );
 
 		// Rockets weren't being decremented
 		m_iRockets--;
@@ -491,7 +491,6 @@ void CFFSentryGun::OnActiveThink( void )
 		// Flip which barrel to come out of next
 		m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
 	}
-	*/
 
 	if( bFired ) 
 	{
