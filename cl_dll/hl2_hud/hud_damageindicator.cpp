@@ -345,11 +345,14 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 		return;
 	}
 
-	// ignore damage without direction
+	// UNDONE: ignore damage without direction
 	// this should never happen, unless it's drowning damage, 
 	// or the player is forcibly killed, handled above
 	if (vecFrom == vec3_origin && ! (bitsDamage & DMG_DROWN))
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HudTakeDamageAll");
 		return;
+	}
 
 	Vector vecDelta = (vecFrom - MainViewOrigin());
 	VectorNormalize(vecDelta);
