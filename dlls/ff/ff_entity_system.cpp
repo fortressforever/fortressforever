@@ -99,16 +99,8 @@ void CFFEntitySystemHelper::OnThink( void )
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
 
-	CFFLuaSC hTick;
-	entsys.RunPredicates_LUA( NULL, &hTick, "tick" );
-	SetNextThink( gpGlobals->curtime + 1.0f );
-
-	/* -- This isn't working yet (try ff_dev_ctf or ff_dustbowl)
-	// can't grab the flag more than once on dustbowl and can't
-	// cap the same flag more than once on ff_dev_ctf...
 	_scheduleman.Update();
 	SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
-	*/
 }
 
 //----------------------------------------------------------------------------
@@ -221,9 +213,6 @@ bool CFFEntitySystem::StartForMap()
 	if( L )
 	{
 		lua_close(L);
-
-		// Need to close this down too
-		_scheduleman.Shutdown();
 	}
 
 	// Now open Lua VM
@@ -249,8 +238,6 @@ bool CFFEntitySystem::StartForMap()
 
 	// And now load some of ours
 	CFFLuaLib::Init(L);
-
-	_scheduleman.Init();
 	
 	// Hurrah well that is set up now
 	DevMsg( "[SCRIPT] Entity system all set up!\n" );

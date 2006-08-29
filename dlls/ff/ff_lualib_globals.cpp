@@ -12,8 +12,6 @@
 #include "ff_item_flag.h"
 #include "ff_player.h"
 #include "ff_utils.h"
-// BLAH! This is giving linux min/max error again too
-//#include "ff_scheduleman.h"
 
 #include "beam_shared.h"
 #include "buttons.h"
@@ -35,6 +33,8 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 #include "luabind/iterator_policy.hpp"
+
+#include "ff_scheduleman.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -931,7 +931,6 @@ namespace FFLib
 		FF_LuaHudRemove( pPlayer, pszIdentifier );
 	}
 
-	/*
 	void AddSchedule(const char* szScheduleName, float time, const luabind::adl::object& fn)
 	{
 		_scheduleman.AddSchedule(szScheduleName, time, fn, 1);
@@ -967,8 +966,6 @@ namespace FFLib
 	{
 		_scheduleman.RemoveSchedule(szScheduleName);
 	}
-	*/
-
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -1004,10 +1001,10 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddHudIcon",				&FFLib::AddHudIcon),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
-		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
-		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
-		//def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
-		//def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
 		def("ApplyToAll",				&FFLib::ApplyToAll),
 		def("ApplyToTeam",				&FFLib::ApplyToTeam),
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
@@ -1026,7 +1023,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
-		//def("DeleteSchedule",			&FFLib::DeleteSchedule),
+		def("DeleteSchedule",			&FFLib::DeleteSchedule),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),

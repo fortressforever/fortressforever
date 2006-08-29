@@ -79,6 +79,7 @@
 #include "scenefilecache/ISceneFileCache.h"
 #include "ff_entity_system.h"
 #include "ff_luacontext.h"
+#include "ff_scheduleman.h"
 
 #if !defined( _RETAIL )
 #ifdef _XBOX
@@ -805,6 +806,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	UpdateChapterRestrictions( pMapName );
 
 	// Added: Initialize Lua stuff
+	_scheduleman.Init();
 	entsys.StartForMap();
 
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
@@ -1164,6 +1166,8 @@ void CServerGameDLL::LevelShutdown( void )
 {
 	// Omni-bot: Shut down the bot interface
 	Omnibot::omnibot_interface::ShutdownBotInterface();
+
+	_scheduleman.Shutdown();
 
 	IGameSystem::LevelShutdownPreEntityAllSystems();
 
