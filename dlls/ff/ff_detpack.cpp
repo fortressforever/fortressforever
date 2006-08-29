@@ -47,6 +47,7 @@ BEGIN_DATADESC( CFFDetpack )
 END_DATADESC( )
 
 static ConVar detpack_radius( "ffdev_detpack_radius", "700", FCVAR_ARCHIVE );
+static ConVar detpack_falloff( "ffdev_detpack_falloff", "1", FCVAR_ARCHIVE );
 
 // Array of char *'s to dispenser models
 const char *g_pszFFDetpackModels[ ] =
@@ -458,9 +459,9 @@ void CFFDetpack::DoExplosionDamage( void )
 			Vector vecDir = pEntity->GetAbsOrigin() - vecOrigin;
 			VectorNormalize( vecDir );
 
-			//pEntity->ApplyAbsVelocityImpulse( ( pEntity->WorldSpaceCenter() - vecOrigin ) * 1000.0f );
-			// TODO: Scale damage by distance?
-			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner.Get(), vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), m_flExplosionDamage, DMG_SHOCK | DMG_BLAST ) );			
+			// Linear falloff * detpack_falloff%
+			float flDamage = ( ( detpack_radius.GetFloat() - vecOrigin.DistTo( GetAbsOrigin() ) ) / detpack_radius.GetFloat() ) * m_flExplosionDamage * detpack_falloff.GetFloat();
+			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner.Get(), vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), flDamage, DMG_SHOCK | DMG_BLAST ) );
 		}
 	}
 
