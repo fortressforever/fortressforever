@@ -31,6 +31,8 @@ public:
 					   const luabind::adl::object& param1,
 					   const luabind::adl::object& param2);
 
+	CFFScheduleCallack(const CFFScheduleCallack& rhs);
+
 	~CFFScheduleCallack() {}
 
 public:
@@ -40,7 +42,7 @@ public:
 
 private:
 	// private data
-	luabind::adl::object m_function;
+	luabind::adl::object m_function;	// handle to the lua function to call
 	float	m_timeLeft;					// time until the lua function should be called
 	float	m_timeTotal;				// total time for a complete cycle
 	int		m_nRepeat;					// number of times to cycle (-1 is infinite)

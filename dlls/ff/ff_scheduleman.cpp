@@ -47,7 +47,10 @@ CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
 									   int nRepeat,
 									   const luabind::adl::object& param)
 {
-	CFFScheduleCallack(fn, timer, nRepeat);
+	m_function = fn;
+	m_timeLeft = timer;
+	m_timeTotal = timer;
+	m_nRepeat = nRepeat;
 	m_nParams = 1;
 	m_params[0] = param;
 }
@@ -59,10 +62,25 @@ CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
 									   const luabind::adl::object& param1,
 									   const luabind::adl::object& param2)
 {
-	CFFScheduleCallack(fn, timer, nRepeat);
+	m_function = fn;
+	m_timeLeft = timer;
+	m_timeTotal = timer;
+	m_nRepeat = nRepeat;
 	m_nParams = 2;
 	m_params[0] = param1;
 	m_params[1] = param2;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFScheduleCallack::CFFScheduleCallack(const CFFScheduleCallack& rhs)
+{
+	m_function = rhs.m_function;
+	m_timeLeft = rhs.m_timeLeft;
+	m_timeTotal = rhs.m_timeTotal;
+	m_nRepeat = rhs.m_nRepeat;
+	m_nParams = rhs.m_nParams;
+	m_params[0] = m_params[0];
+	m_params[1] = m_params[1];
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -117,7 +135,7 @@ CFFScheduleManager::CFFScheduleManager()
 /////////////////////////////////////////////////////////////////////////////
 CFFScheduleManager::~CFFScheduleManager()
 {
-	Shutdown();
+
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -189,7 +207,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 /////////////////////////////////////////////////////////////////////////////
 void CFFScheduleManager::Init()
 {
-
+	Shutdown();
 }
 
 /////////////////////////////////////////////////////////////////////////////
