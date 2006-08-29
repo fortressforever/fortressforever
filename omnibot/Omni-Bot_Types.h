@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-15 18:21:42 -0700 (Tue, 15 Aug 2006) $
-// $LastChangedRevision: 1245 $
+// $LastChangedDate: 2006-08-26 20:09:40 -0700 (Sat, 26 Aug 2006) $
+// $LastChangedRevision: 1258 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -463,7 +463,6 @@ typedef enum eBasicGoals
 //		ENT_FLAG_LADDER - This entity is on a ladder.
 typedef enum eEntityFlag
 {
-	ENT_FLAG_NONE = 0,	
 	ENT_FLAG_TEAM1,
 	ENT_FLAG_TEAM2,
 	ENT_FLAG_TEAM3,
@@ -506,7 +505,6 @@ typedef enum ePowerups
 //		ENT_CAT_STATIC - Static entities don't need to be seen. This allows the bot to skip LOS checks.
 typedef enum eEntityCategory
 {
-	ENT_CAT_NONE = 0,
 	ENT_CAT_PLAYER,
 	ENT_CAT_PROJECTILE,
 	ENT_CAT_SHOOTABLE,
