@@ -1164,13 +1164,12 @@ int C_FFPlayer::DrawModel( int flags )
 	}
 	else
 	{
-		// NOTE: This was always changing the players skin back even
-		// if they were disguised!
+		int nRealSkin = (IsDisguised() ? GetDisguisedTeam() : GetTeamNumber()) - TEAM_BLUE;
 
 		// Make sure hallucinations are reset!
-		if ( ( m_nSkin != ( GetTeamNumber() - TEAM_BLUE ) ) && !IsDisguised() )
+		if (m_nSkin != nRealSkin)
 		{
-			m_nSkin = GetTeamNumber() - TEAM_BLUE;
+			m_nSkin = nRealSkin;
 		}
 	}
 
