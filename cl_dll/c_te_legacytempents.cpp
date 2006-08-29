@@ -352,7 +352,8 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 			}
 
 			// Remove straight away if its something that is movable or is the skybox
-			if (pm.m_pEnt->GetMoveType() != MOVETYPE_NONE || (pm.surface.flags & SURF_SKY))
+			// Or is a player
+			if (pm.m_pEnt->IsPlayer() || pm.m_pEnt->GetMoveType() != MOVETYPE_NONE || (pm.surface.flags & SURF_SKY))
 				die = gpGlobals->curtime;
 
 			// Also remove straight away if their graphics are toned down
