@@ -98,6 +98,12 @@ void CFFGrenadeMirv::Explode( trace_t *pTrace, int bitsDamageType )
 
 	CBaseEntity *pOwner = GetOwnerEntity();
 
+	if(!pOwner)
+	{
+		Warning("BIG PROBLEM: NULL OWNER (%s)\n", __FUNCTION__);
+		return;
+	}
+
 	//random starting y axis rotation
 	// after the first mirvlet, each of the remaining mirvletss will be rotated another 90 degrees
 	float y_ang_seed = RandomFloat(0.0f,360.0f);

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-11 09:08:58 -0700 (Fri, 11 Aug 2006) $
-// $LastChangedRevision: 1243 $
+// $LastChangedDate: 2006-08-26 20:09:40 -0700 (Sat, 26 Aug 2006) $
+// $LastChangedRevision: 1258 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ public:
 	}
 	BitFlag32& operator&=(const BitFlag32& rhs)
 	{
-		m_Flags |= rhs.m_Flags;
+		m_Flags &= rhs.m_Flags;
 		return *this;
 	}
 	BitFlag32 operator&(const BitFlag32& rhs) const
@@ -77,7 +77,7 @@ public:
 	}
 	BitFlag64& operator&=(const BitFlag64& rhs)
 	{
-		m_Flags |= rhs.m_Flags;
+		m_Flags &= rhs.m_Flags;
 		return *this;
 	}
 	BitFlag64 operator&(const BitFlag64& rhs) const
