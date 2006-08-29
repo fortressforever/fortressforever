@@ -35,6 +35,7 @@
 
 #include "ff_gamerules.h"
 #include "ff_vieweffects.h"
+#include "c_fire_smoke.h"
 
 #include <igameresources.h>
 
@@ -442,6 +443,8 @@ public:
 
 	void ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
 
+	void ClientThink();
+
 private:
 
 	C_FFRagdoll( const C_FFRagdoll & ) {}
@@ -613,6 +616,7 @@ void C_FFRagdoll::CreateRagdoll()
 		if (pPlayer->GetEffectEntity())
 		{
 			IgniteRagdoll(pPlayer);
+			SetNextClientThink(gpGlobals->curtime + 1.0f);
 		}
 
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
@@ -720,6 +724,28 @@ IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const
 	{
 		return NULL;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Check to see if we've entered the water and remove any flames
+//			if we have.
+//-----------------------------------------------------------------------------
+void C_FFRagdoll::ClientThink()
+{
+	if (UTIL_PointContents(GetAbsOrigin()) & MASK_WATER)
+	{
+		C_EntityFlame *pFlame = (C_EntityFlame *) GetEffectEntity();
+
+		// Destroy the flame. Also don't bother thinking again because we won't need
+		// to re-extinguish
+		if (pFlame)
+		{
+			pFlame->Remove();
+			return;
+		}
+	}
+
+	SetNextClientThink(gpGlobals->curtime + 0.3f);
 }
 
 const unsigned char *GetEncryptionKey( void )
