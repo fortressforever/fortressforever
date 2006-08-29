@@ -350,7 +350,11 @@ void CHudDamageIndicator::MsgFunc_Damage(bf_read &msg)
 	// or the player is forcibly killed, handled above
 	if (vecFrom == vec3_origin && ! (bitsDamage & DMG_DROWN))
 	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HudTakeDamageAll");
+		if (damageTaken > 0)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HudTakeDamageAll");
+		}
+		
 		return;
 	}
 

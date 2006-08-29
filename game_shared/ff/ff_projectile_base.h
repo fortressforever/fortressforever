@@ -65,9 +65,12 @@ public:
 	virtual void Release();
 
 	virtual void CleanUp();
-
 	// This entity is drawing its past position thanks to interpolation
 	bool IsDrawingHistory();
+
+	virtual void ClientThink();
+
+	virtual bool ShouldInterpolate() { return false; }
 
 	// No shadows for projectiles
 	virtual ShadowType_t ShadowCastType() { return SHADOWS_NONE; }
