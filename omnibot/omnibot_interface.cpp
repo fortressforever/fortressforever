@@ -2503,8 +2503,11 @@ namespace Omnibot
 			if (pPlayer && pPlayer->IsBot())
 			{
 				int iGameId = pPlayer->entindex()-1;
-				omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_GLOBALCHATMSG, 
-					iGameId, iSourceGameId, 0, &bud);
+				if(iGameId != iSourceGameId)
+				{
+					omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_GLOBALCHATMSG, 
+						iGameId, iSourceGameId, 0, &bud);
+				}
 			}
 		}
 	}
@@ -2521,8 +2524,11 @@ namespace Omnibot
 			if (pPlayer && pPlayer->IsBot() && pPlayer->GetTeamNumber() == _player->GetTeamNumber())
 			{
 				int iGameId = pPlayer->entindex()-1;
-				omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_TEAMCHATMSG, 
-					iGameId, iSourceGameId, 0, &bud);
+				if(iGameId != iSourceGameId)
+				{
+					omnibot_interface::Bot_Interface_SendEvent(PERCEPT_HEAR_TEAMCHATMSG, 
+						iGameId, iSourceGameId, 0, &bud);
+				}
 			}
 		}
 	}
@@ -2571,11 +2577,11 @@ namespace Omnibot
 
 	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot)
 	{
-		int iGameId = _player->entindex()-1;
+		/*int iGameId = _player->entindex()-1;
 		if (_isbot)
 			omnibot_interface::Bot_Interface_SendGlobalEvent(GAME_ID_BOTCONNECTED, iGameId, 100, NULL);
 		else
-			omnibot_interface::Bot_Interface_SendGlobalEvent(GAME_ID_CLIENTCONNECTED, iGameId, 100, NULL);
+			omnibot_interface::Bot_Interface_SendGlobalEvent(GAME_ID_CLIENTCONNECTED, iGameId, 100, NULL);*/
 	}
 
 	void Notify_ClientDisConnected(CBasePlayer *_player)
