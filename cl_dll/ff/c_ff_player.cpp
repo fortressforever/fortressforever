@@ -1017,8 +1017,11 @@ void C_FFPlayer::Spawn( void )
 	char szCommand[128];
 
 	// Execute the player config
-	Q_snprintf(szCommand, 127, "exec %.10s.cfg", Class_IntToString(GetClassSlot()));
-	engine->ClientCmd(szCommand);
+	if (GetClassSlot() > 0)
+	{
+		Q_snprintf(szCommand, 127, "exec %.10s.cfg", Class_IntToString(GetClassSlot()));
+		engine->ClientCmd(szCommand);
+	}
 
 	int iSpawnWeapon = cl_spawnweapon.GetInt();
 

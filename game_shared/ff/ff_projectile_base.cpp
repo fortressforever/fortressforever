@@ -65,6 +65,9 @@ END_NETWORK_TABLE()
 	{
 		BaseClass::PostDataUpdate(type);
 
+		// UNDONE: Interp has been removed from projectiles for now
+		return;
+
 		// That's all for now
 		if (GetOwnerEntity() != CBasePlayer::GetLocalPlayer() || input->CAM_IsThirdPerson())
 			return;
@@ -106,6 +109,8 @@ END_NETWORK_TABLE()
 			{
 				EmitSound(GetFlightSound());
 			}
+
+			SetNextClientThink(CLIENT_THINK_ALWAYS);
 		}
 
 		BaseClass::OnDataChanged(type);
@@ -120,6 +125,9 @@ END_NETWORK_TABLE()
 	//-----------------------------------------------------------------------------
 	bool CFFProjectileBase::IsDrawingHistory()
 	{
+		// UNDONE: Interp has been removed from projectiles for now
+		return false;
+
 		// Once we've come out of history, make sure we never go back in again
 		if (m_bInPresent)
 		{
@@ -194,6 +202,16 @@ END_NETWORK_TABLE()
 		}
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Perform the client think on the client too. This will
+	//			hopefully reduce some of the jerkiness resulting from the
+	//			removal of interp.
+	//-----------------------------------------------------------------------------
+	void CFFProjectileBase::ClientThink()
+	{
+		PhysicsSimulate();
+	}
+
 #else
 
 	//----------------------------------------------------------------------------
@@ -217,7 +235,6 @@ END_NETWORK_TABLE()
 		UTIL_Remove(this);
 		return m_flDamage;
 	}
-
 #endif
 
 //----------------------------------------------------------------------------
