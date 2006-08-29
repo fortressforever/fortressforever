@@ -54,14 +54,20 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	Vector vecReported = vec3_origin;
 	CTakeDamageInfo info(this, GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, DMG_BURN, 0, &vecReported);
 	RadiusDamage(info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL);
+	
+	// Sorry, not fond of the BEGIN_ENTITY_SPHERE_QUERY macro
+	CBaseEntity *pEntity = NULL;
+	for( CEntitySphereQuery sphere( vecSrc, m_DmgRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if( !pEntity || !pEntity->IsPlayer() )
+			continue;
 
-	BEGIN_ENTITY_SPHERE_QUERY(vecSrc, m_DmgRadius)
-		if (pEntity->Classify() == CLASS_PLAYER)
+		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+		if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 		{
-			CFFPlayer *pPlayer = ToFFPlayer(pEntity);
 			pPlayer->ApplyBurning(pPlayer, 0.5f);
 		}
-	END_ENTITY_SPHERE_QUERY();
+	}
 
 	Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
