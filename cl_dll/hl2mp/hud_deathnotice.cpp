@@ -200,7 +200,7 @@ void CHudDeathNotice::Paint()
 		int x;
 		if ( m_bRightJustify )
 		{
-			x =	GetWide() - len - iconWide;
+			x =	GetWide() - len - iconWide - 5;	// |-- Mirv: 10 extra px gap between elements
 		}
 		else
 		{
@@ -210,6 +210,8 @@ void CHudDeathNotice::Paint()
 		// --> Mirv: Shove over a bit
 		y += 16;
 		x -= 28;
+
+		int offset = iconTall / 4;
 		// <--
 
 		// Only draw killers name if it wasn't a suicide
@@ -227,6 +229,8 @@ void CHudDeathNotice::Paint()
 			surface()->DrawSetTextFont( m_hTextFont );
 			surface()->DrawUnicodeString( killer );
 			surface()->DrawGetTextPos( x, y );
+
+			x += 5;	// |-- Mirv: 5px gap
 		}
 
 		Color iconColor( 255, 80, 0, 255 );
@@ -238,8 +242,8 @@ void CHudDeathNotice::Paint()
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
-		icon->DrawSelf( x, y, iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
-		x += iconWide;		
+		icon->DrawSelf( x, y - offset, iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
+		x += iconWide + 5;		// |-- Mirv: 5px gap
 
 		SetColorForNoticePlayer( iVictimTeam );
 
