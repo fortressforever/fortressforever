@@ -618,7 +618,11 @@ void CFFWeaponSniperRifle::CheckFire()
 	// if we're currently firing, then check to see if we release
 	if (m_bInFire) 
 	{
-		if (! (pPlayer->m_nButtons & IN_ATTACK)) 
+		// Using m_afButtonReleased to catch the button being released rather than
+		// just testing for IN_ATTACK not being pressed. This way we don't think we've
+		// fird multiple times due to the latency of m_bInFire being changed by server
+		//if (! (pPlayer->m_nButtons & IN_ATTACK)) 
+		if (pPlayer->m_afButtonReleased & IN_ATTACK)
 		{
 			// Make sure we're on the ground
 			if (pPlayer->GetFlags() & FL_ONGROUND) 
