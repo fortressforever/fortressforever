@@ -13,6 +13,8 @@
 #include "vgui_controls/controls.h"
 #include "vgui/ISurface.h"
 #include "IVRenderView.h"
+#include "ff_weapon_base.h"
+#include "c_ff_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -47,6 +49,12 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 
 	m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
 	SetPaintBackgroundEnabled( false );
+
+	vgui::HScheme ffscheme = vgui::scheme()->GetScheme("ClientScheme");
+	
+	m_hCrosshairs1 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs1");
+	m_hCrosshairs2 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs2");
+	m_hCrosshairs3 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs3");
 
     SetSize( ScreenWidth(), ScreenHeight() );
 }
@@ -91,6 +99,8 @@ bool CHudCrosshair::ShouldDraw( void )
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
+extern void GetCrosshair(FFWeaponID iWeapon, char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize);	// |-- Mirv
+
 void CHudCrosshair::Paint( void )
 {
 	if ( !m_pCrosshair )
@@ -111,6 +121,7 @@ void CHudCrosshair::Paint( void )
 	// screen
 	if ( m_vecCrossHairOffsetAngle != vec3_angle )
 	{
+		Assert(0);	// |-- Mirv
 		QAngle angles;
 		Vector forward;
 		Vector point, screen;
@@ -125,10 +136,82 @@ void CHudCrosshair::Paint( void )
 		y += 0.5f * screen[1] * ScreenHeight() + 0.5f;
 	}
 
-	m_pCrosshair->DrawSelf( 
-			x - 0.5f * m_pCrosshair->Width(), 
-			y - 0.5f * m_pCrosshair->Height(),
-			m_clrCrosshair );
+	// --> Mirv: Crosshair stuff
+	//m_pCrosshair->DrawSelf( 
+	//		x - 0.5f * m_pCrosshair->Width(), 
+	//		y - 0.5f * m_pCrosshair->Height(),
+	//		m_clrCrosshair );
+
+	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	
+	if (!pPlayer)
+	{
+		return;
+	}
+
+	C_FFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+
+	// No crosshair for no weapon
+	if (!pWeapon)
+	{
+		return;
+	}
+
+	Color innerCol, outerCol;
+	char innerChar, outerChar;
+	int innerSize, outerSize;
+
+	//
+	// TODO: Clean this up!!!!
+	//
+
+	HFont currentFont;
+	GetCrosshair(pPlayer->GetActiveFFWeapon()->GetWeaponID(), innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
+
+	switch (innerSize)
+	{
+	case 1:
+		currentFont = m_hCrosshairs1; break;
+	case 3:
+		currentFont = m_hCrosshairs3; break;
+	default:
+		currentFont = m_hCrosshairs2; break;
+	}
+
+	surface()->DrawSetTextColor(innerCol.r(), innerCol.g(), innerCol.b(), innerCol.a());
+	surface()->DrawSetTextFont(currentFont);
+
+	int charOffsetX = surface()->GetCharacterWidth(currentFont, innerChar) / 2;
+	int charOffsetY = surface()->GetFontTall(currentFont) / 2;
+
+	wchar_t unicode[2];
+	swprintf(unicode, L"%c", innerChar);
+
+	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
+	surface()->DrawUnicodeChar(unicode[0]);
+
+	switch (outerSize)
+	{
+	case 1:
+		currentFont = m_hCrosshairs1; break;
+	case 3:
+		currentFont = m_hCrosshairs3; break;
+	default:
+		currentFont = m_hCrosshairs2; break;
+	}
+	
+	charOffsetX = surface()->GetCharacterWidth(currentFont, outerChar) / 2;
+	charOffsetY = surface()->GetFontTall(currentFont) / 2;
+
+	surface()->DrawSetTextColor(outerCol.r(), outerCol.g(), outerCol.b(), outerCol.a());
+	surface()->DrawSetTextFont(currentFont);
+
+	swprintf(unicode, L"%c", outerChar);
+
+	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
+	surface()->DrawUnicodeChar(unicode[0]);
+
+	// <-- Mirv
 }
 
 //-----------------------------------------------------------------------------

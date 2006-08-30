@@ -85,8 +85,14 @@ typedef enum
 	// Soldier specific
 	FF_WEAPON_RPG, 
 
+	// End of normal TFC weapons
+	// =========================
+
 	// Civilian specific
 	FF_WEAPON_TOMMYGUN,
+
+	// End of physical weapons
+	// =======================
 
 	// Buildables
 	FF_WEAPON_DEPLOYDISPENSER, 
@@ -95,7 +101,8 @@ typedef enum
 
 	// Don't put any more weapons down here! 
 	// Put the rest above the DEPLOY weapons please.
-	
+	// =============================================
+
 	FF_WEAPON_MAX, 		// number of weapons weapon index
 
 } FFWeaponID;
