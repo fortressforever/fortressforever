@@ -86,9 +86,7 @@ void CFFGrenadeCaltrop::Precache()
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeCaltrop::Explode(trace_t *pTrace, int bitsDamageType)
 	{
-		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
-
-		UTIL_Remove(this);
+		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );		
 
 		// Drop the grenade shell gibs
 		for( int i = 0; i < 2; i++ )
@@ -174,6 +172,8 @@ void CFFGrenadeCaltrop::Precache()
 			pCaltrop->SetGravity( GetGrenadeGravity() + 0.2f );
 			pCaltrop->SetFriction( GetGrenadeFriction() );
 		}
+
+		UTIL_Remove(this);
 	}
 #endif
 
