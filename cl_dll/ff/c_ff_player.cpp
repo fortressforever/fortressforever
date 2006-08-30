@@ -621,8 +621,8 @@ void C_FFRagdoll::CreateRagdoll()
 
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
-		// We can also spawn a weapon
-		if (pWeapon)
+		// We can also spawn a valid weapon
+		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
 			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
 			pGib->SetAbsAngles(pWeapon->GetAbsAngles());
@@ -1826,7 +1826,7 @@ void Gib_Callback(const CEffectData &data)
 		// We can also use this player to create a weapon model
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
-		if (pWeapon)
+		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
 			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
 			pGib->SetAbsAngles(pWeapon->GetAbsAngles());

@@ -85,13 +85,16 @@ typedef enum
 	// Soldier specific
 	FF_WEAPON_RPG, 
 
+	// Civilian specific
+	FF_WEAPON_TOMMYGUN,
+
 	// Buildables
 	FF_WEAPON_DEPLOYDISPENSER, 
 	FF_WEAPON_DEPLOYSENTRYGUN, 
 	FF_WEAPON_DEPLOYDETPACK, 
 
-	// Civilian specific
-	FF_WEAPON_TOMMYGUN,
+	// Don't put any more weapons down here! 
+	// Put the rest above the DEPLOY weapons please.
 	
 	FF_WEAPON_MAX, 		// number of weapons weapon index
 
