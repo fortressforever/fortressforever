@@ -46,7 +46,7 @@ BEGIN_DATADESC( CFFDetpack )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC( )
 
-static ConVar detpack_radius( "ffdev_detpack_radius", "700", FCVAR_ARCHIVE );
+//static ConVar detpack_radius( "ffdev_detpack_radius", "700", FCVAR_ARCHIVE );
 static ConVar detpack_falloff( "ffdev_detpack_falloff", "1", FCVAR_ARCHIVE );
 
 // Array of char *'s to dispenser models
@@ -87,8 +87,8 @@ CFFDetpack::CFFDetpack( void )
 	// Override some values
 	m_iExplosionMagnitude = 200;
 	m_flExplosionMagnitude = 200.0f;
-	m_flExplosionRadius = 700.0f / 2;
-	m_iExplosionRadius = 700 / 2;
+	m_flExplosionRadius = 700.0f;
+	m_iExplosionRadius = 700;
 	m_flExplosionForce = 3000.0f;
 	m_flExplosionDamage = 1270.f;
 	m_flExplosionDuration = 2.0f;
@@ -325,7 +325,7 @@ void CFFDetpack::DoExplosionDamage( void )
 
 	// Better damage given out
 	CBaseEntity *pEntity = NULL;
-	for( CEntitySphereQuery sphere( GetAbsOrigin(), /*m_flExplosionRadius*/detpack_radius.GetFloat() ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	for( CEntitySphereQuery sphere( GetAbsOrigin(), m_flExplosionRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 	{
 		if( !pEntity )
 			continue;
@@ -460,7 +460,7 @@ void CFFDetpack::DoExplosionDamage( void )
 			VectorNormalize( vecDir );
 
 			// Linear falloff * detpack_falloff%
-			float flDamage = ( ( detpack_radius.GetFloat() - vecOrigin.DistTo( GetAbsOrigin() ) ) / detpack_radius.GetFloat() ) * m_flExplosionDamage * detpack_falloff.GetFloat();
+			float flDamage = ( ( m_flExplosionRadius - (float)vecOrigin.DistTo( GetAbsOrigin() ) ) / m_flExplosionRadius ) * m_flExplosionDamage * detpack_falloff.GetFloat();
 			pEntity->TakeDamage( CTakeDamageInfo( this, m_hOwner.Get(), vecDir * m_flExplosionForce, pEntity->GetAbsOrigin(), flDamage, DMG_SHOCK | DMG_BLAST ) );
 		}
 	}
