@@ -357,7 +357,7 @@ public:
 	{
 		AddNewDurationFromNow(m_flStart, m_flDuration, 0.0f, M_PI_2, M_PI_2);
 
-		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 		{
 		}
 		else
@@ -385,9 +385,9 @@ public:
 
 		AddNewDurationFromNow(m_flStart, m_flDuration, flNewDuration, M_PI_2, M_PI_2);
 
-		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 		{
-			Warning("*** FF Error *** Not yet implemented for < dx8!\n");
+			Warning("*** FF Error *** Not yet implemented for < dx9!\n");
 		}
 		else
 		{
@@ -430,7 +430,7 @@ public:
 	//-----------------------------------------------------------------------------
 	void Reset()
 	{
-		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 		{
 		}
 		else
@@ -451,9 +451,9 @@ public:
 	//-----------------------------------------------------------------------------
 	void Message(bf_read &msg)
 	{
-		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80)
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 		{
-			Warning("*** FF Error *** Not yet implemented for < dx8!\n");
+			Warning("*** FF Error *** Not yet implemented for < dx9!\n");
 		}
 		else
 		{

@@ -48,6 +48,10 @@ private:
 
 	QAngle			m_curViewAngles;
 	Vector			m_curViewOrigin;
+
+	vgui::HFont		m_hCrosshairs1;
+	vgui::HFont		m_hCrosshairs2;
+	vgui::HFont		m_hCrosshairs3;
 };
 
 

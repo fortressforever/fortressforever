@@ -22,6 +22,7 @@
 #include <vgui_controls/Panel.h>
 #include <KeyValues.h>
 #include "FileSystem.h"
+#include "ff_options.h"
 
 using namespace vgui;
 
@@ -150,6 +151,7 @@ void VGui_CreateGlobalPanels( void )
 {
 	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
 	VPANEL toolParent = enginevgui->GetPanel( PANEL_TOOLS );
+	VPANEL uiParent = enginevgui->GetPanel( PANEL_GAMEUIDLL );	// |-- Mirv
 #if defined( TRACK_BLOCKING_IO )
 #if !defined( _XBOX )
 	VPANEL gameDLLPanel = enginevgui->GetPanel( PANEL_GAMEDLL );
@@ -179,6 +181,8 @@ void VGui_CreateGlobalPanels( void )
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
 #endif
+
+	ffoptions->Create( uiParent );	// |-- Mirv
 }
 
 void VGui_Shutdown()
@@ -200,6 +204,8 @@ void VGui_Shutdown()
 #endif
 	internalCenterPrint->Destroy();
 	textmessage->Destroy();
+
+	ffoptions->Destroy();	// |-- Mirv
 
 	if ( g_pClientMode )
 	{

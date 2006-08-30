@@ -62,11 +62,11 @@ const char *s_WeaponAliasInfo[] =
 
 	"rpg", 				// FF_WEAPON_RPG
 
+	"tommygun",			// FF_WEAPON_TOMMYGUN
+
 	"deploydispenser", 	// FF_WEAPON_DEPLOYDISPENSER
 	"deploysentrygun", 	// FF_WEAPON_DEPLOYSENTRYGUN
 	"deploydetpack", 	// FF_WEAPON_DEPLOYDETPACK
-
-	"tommygun",			// FF_WEAPON_TOMMYGUN
 
 	NULL, 				// FF_WEAPON_MAX
 };
