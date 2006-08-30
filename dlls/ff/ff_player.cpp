@@ -1928,6 +1928,20 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		// They didn't want to kill themselves, so let them know they're changing
 		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_CHANGECLASS_LATER", Class_IntToString(iClass));
 	}
+
+	// These next things are kind of lame... but when doing bot training
+	// maps the player automatically spawns as a team and a class... so
+	// we need to kill the vgui menus otherwise it looks bad being spawned
+	// and ready to go and all the stuff is still on your screen
+
+	// Hide motd panel if it's showing
+	ShowViewPortPanel( PANEL_INFO, false );
+
+	// Hide team panel if it's showing
+	ShowViewPortPanel( PANEL_TEAM, false );
+
+	// Hide class panel if it's showing
+	ShowViewPortPanel( PANEL_CLASS, false );
 }
 
 void CFFPlayer::Command_Class(void)
@@ -2067,6 +2081,12 @@ void CFFPlayer::Command_Team( void )
 
 	// A forced spawn situation
 	m_flNextSpawnDelay = -1;
+
+	// Hide motd panel if it's showing
+	ShowViewPortPanel( PANEL_INFO, false );
+
+	// Hide team panel if it's showing
+	ShowViewPortPanel( PANEL_TEAM, false );
 
 	Spawn();
 /*
