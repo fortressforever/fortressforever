@@ -671,6 +671,12 @@ void CFFPlayer::Precache()
 }
 
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
+
+void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
+{
+	g_pLastSpawn = pEntity;
+}
+
 CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 {
 	/*
