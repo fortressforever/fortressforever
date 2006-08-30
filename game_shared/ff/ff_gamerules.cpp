@@ -364,6 +364,10 @@ ConVar mp_prematch( "mp_prematch",
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer )
 				{
+					// Going to be deleting the last spawn entity,
+					// so make sure the player knows it doesn't exist anymore!
+					pPlayer->SetLastSpawn( NULL );
+
 					pPlayer->Spawn();
 					pPlayer->ResetFragCount();
 					pPlayer->ResetDeathCount();

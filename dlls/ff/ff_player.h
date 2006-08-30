@@ -222,6 +222,8 @@ public:
 	int NeedsRadioTag( void ) const { return GetMaxRadioTag() - GetAmmoCount( AMMO_RADIOTAG ); }
 	// END: Added by Mulchman for armor stuff
 
+	void	SetLastSpawn( CBaseEntity *pEntity );
+
 public:
 	bool m_fRandomPC;
 	int m_iNextClass;
