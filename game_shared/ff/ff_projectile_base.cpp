@@ -58,24 +58,6 @@ END_NETWORK_TABLE()
 #ifdef CLIENT_DLL
 
 	//----------------------------------------------------------------------------
-	// Purpose: Add initial velocity into the interpolation history so that
-	//			interp works okay
-	//----------------------------------------------------------------------------
-	void CFFProjectileBase::PostDataUpdate(DataUpdateType_t type) 
-	{
-		BaseClass::PostDataUpdate(type);
-
-		// UNDONE: Interp has been removed from projectiles for now
-		//return;
-
-		// That's all for now
-		if (GetOwnerEntity() != CBasePlayer::GetLocalPlayer() || input->CAM_IsThirdPerson())
-			return;
-
-
-	}
-
-	//----------------------------------------------------------------------------
 	// Purpose: When the rocket enters the client's PVS, add the flight sound
 	//			to it. This is done here rather than PostDataUpdate because 
 	//			origins (needed for emitsound) are not valid there

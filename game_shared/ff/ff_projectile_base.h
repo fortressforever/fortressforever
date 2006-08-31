@@ -55,7 +55,6 @@ public:
 #ifdef CLIENT_DLL
 
 	// Add initial velocity into the interpolation history so that interp works okay
-	virtual void PostDataUpdate(DataUpdateType_t type);
 	virtual void OnDataChanged(DataUpdateType_t type);
 
 	// Both to catch the end of this projectile's life
