@@ -16,18 +16,9 @@
 #include "tier1/keyvalues.h"
 #include "toolframework_client.h"
 #include "view.h"
-#include "ff_projectile_base.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-// --> Mirv: Handy function
-inline bool InInterpolationHistory(CBaseEntity *pEntity)
-{
-	C_FFProjectileBase *pProjectile = dynamic_cast<C_FFProjectileBase *> (pEntity);
-	return (pProjectile && pProjectile->IsDrawingHistory());
-}
-// <--
 
 //
 // CRocketTrailParticle
@@ -310,16 +301,6 @@ void C_SmokeTrail::Update( float fTimeDelta )
 
 	if ( ( m_StopEmitTime != 0 ) && ( m_StopEmitTime <= gpGlobals->curtime ) )
 		return;
-
-	// --> Mirv: Don't draw when the projectile is in the past.
-	// We can just keep returning here because this is not a proper emitter 
-	// (it just makes other emitters) and so won't remove itself when it runs
-	// out of particles.
-	if (InInterpolationHistory(GetMoveParent()))
-	{
-		return;
-	}
-	// <-- Mirv
 
 	float tempDelta = fTimeDelta;
 
@@ -691,16 +672,6 @@ void C_RocketTrail::Update( float fTimeDelta )
 
 	if ( gpGlobals->frametime == 0.0f )
 		return;
-
-	// --> Mirv: Don't draw when the projectile is in the past.
-	// We can just keep returning here because this is not a proper emitter 
-	// (it just makes other emitters) and so won't remove itself when it runs
-	// out of particles.
-	if (InInterpolationHistory(GetMoveParent()))
-	{
-		return;
-	}
-	// <-- Mirv
 
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash" );
 	pSimple->SetSortOrigin( GetAbsOrigin() );

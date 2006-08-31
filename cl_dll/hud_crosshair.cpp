@@ -166,6 +166,7 @@ void CHudCrosshair::Paint( void )
 	Color innerCol, outerCol;
 	char innerChar, outerChar;
 	int innerSize, outerSize;
+	wchar_t unicode[2];
 
 	//
 	// TODO: Clean this up!!!!
@@ -174,6 +175,29 @@ void CHudCrosshair::Paint( void )
 	HFont currentFont;
 	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
+	// Do outer crosshair first so that it is underneath
+	switch (outerSize)
+	{
+	case 1:
+		currentFont = m_hCrosshairs1; break;
+	case 3:
+		currentFont = m_hCrosshairs3; break;
+	default:
+		currentFont = m_hCrosshairs2; break;
+	}
+
+	surface()->DrawSetTextColor(outerCol.r(), outerCol.g(), outerCol.b(), outerCol.a());
+	surface()->DrawSetTextFont(currentFont);
+
+	int charOffsetX = surface()->GetCharacterWidth(currentFont, outerChar) / 2;
+	int charOffsetY = surface()->GetFontTall(currentFont) / 2;
+
+	swprintf(unicode, L"%c", outerChar);
+
+	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
+	surface()->DrawUnicodeChar(unicode[0]);
+
+	// Do inner crosshair
 	switch (innerSize)
 	{
 	case 1:
@@ -187,36 +211,13 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawSetTextColor(innerCol.r(), innerCol.g(), innerCol.b(), innerCol.a());
 	surface()->DrawSetTextFont(currentFont);
 
-	int charOffsetX = surface()->GetCharacterWidth(currentFont, innerChar) / 2;
-	int charOffsetY = surface()->GetFontTall(currentFont) / 2;
+	charOffsetX = surface()->GetCharacterWidth(currentFont, innerChar) / 2;
+	charOffsetY = surface()->GetFontTall(currentFont) / 2;
 
-	wchar_t unicode[2];
 	swprintf(unicode, L"%c", innerChar);
 
 	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
 	surface()->DrawUnicodeChar(unicode[0]);
-
-	switch (outerSize)
-	{
-	case 1:
-		currentFont = m_hCrosshairs1; break;
-	case 3:
-		currentFont = m_hCrosshairs3; break;
-	default:
-		currentFont = m_hCrosshairs2; break;
-	}
-	
-	charOffsetX = surface()->GetCharacterWidth(currentFont, outerChar) / 2;
-	charOffsetY = surface()->GetFontTall(currentFont) / 2;
-
-	surface()->DrawSetTextColor(outerCol.r(), outerCol.g(), outerCol.b(), outerCol.a());
-	surface()->DrawSetTextFont(currentFont);
-
-	swprintf(unicode, L"%c", outerChar);
-
-	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
-	surface()->DrawUnicodeChar(unicode[0]);
-
 	// <-- Mirv
 }
 

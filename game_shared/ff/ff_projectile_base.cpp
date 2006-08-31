@@ -66,7 +66,7 @@ END_NETWORK_TABLE()
 		BaseClass::PostDataUpdate(type);
 
 		// UNDONE: Interp has been removed from projectiles for now
-		return;
+		//return;
 
 		// That's all for now
 		if (GetOwnerEntity() != CBasePlayer::GetLocalPlayer() || input->CAM_IsThirdPerson())
@@ -77,9 +77,6 @@ END_NETWORK_TABLE()
 			// We want to interpolate this thing
 			AddToInterpolationList();
 
-			// Store start origin
-			m_vecStartOrigin = GetLocalOrigin();
-
 			// Now stick our initial velocity into the interpolation history 
 			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
 
@@ -87,8 +84,8 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.1f);
-			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
+			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.01f);
+			interpolator.AddToHead(changeTime - 0.01f, &vecCurOrigin, false);
 
 			// Add the current sample.
 			vecCurOrigin = GetLocalOrigin();
@@ -109,57 +106,9 @@ END_NETWORK_TABLE()
 			{
 				EmitSound(GetFlightSound());
 			}
-
-			SetNextClientThink(CLIENT_THINK_ALWAYS);
 		}
 
 		BaseClass::OnDataChanged(type);
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Because we're adding interpolation history, the projectile will be
-	//			drawn slightly in the past at various times. This function just
-	//			calculates whether or not this is the case. It is needed by Draw()
-	//			and for any entities that use this as their move parent (eg. rocket
-	//			trails).
-	//-----------------------------------------------------------------------------
-	bool CFFProjectileBase::IsDrawingHistory()
-	{
-		// UNDONE: Interp has been removed from projectiles for now
-		return false;
-
-		// Once we've come out of history, make sure we never go back in again
-		if (m_bInPresent)
-		{
-			return false;
-		}
-
-		// We could probably factor in the player's velocity into this too to make it
-		// more accurate.
-		Vector vecDisplacement = GetLocalOrigin() - m_vecStartOrigin;
-
-		// We don't need to normalise because the magnitude doesn't matter.
-		float flDot = vecDisplacement.Dot(m_vecInitialVelocity);
-
-		// If the rocket is behind our start point (thanks to the interpolation)
-		// then don't draw it. We also need to stop drawing the trail too.
-		m_bInPresent = (flDot >= 0);
-
-		return m_bInPresent;
-	}
-
-	//----------------------------------------------------------------------------
-	// Purpose: 
-	//----------------------------------------------------------------------------
-	int CFFProjectileBase::DrawModel(int flags) 
-	{
-		// Don't draw us if we're in some interpolated past.
-		if (IsDrawingHistory())
-		{
-			return 0;
-		}
-
-		return BaseClass::DrawModel(flags);
 	}
 
 	//----------------------------------------------------------------------------
@@ -200,16 +149,6 @@ END_NETWORK_TABLE()
 		{
 			StopSound(GetFlightSound());
 		}
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Perform the client think on the client too. This will
-	//			hopefully reduce some of the jerkiness resulting from the
-	//			removal of interp.
-	//-----------------------------------------------------------------------------
-	void CFFProjectileBase::ClientThink()
-	{
-		PhysicsSimulate();
 	}
 
 #else

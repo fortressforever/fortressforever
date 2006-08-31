@@ -5268,6 +5268,16 @@ void C_BaseEntity::ResetLatched()
 
 static float AdjustInterpolationAmount( C_BaseEntity *pEntity, float baseInterpolation )
 {
+	// --> Mirv: Reduce the interpolation on non-player stuff
+	// This fixes:  projectiles
+	//				doors
+	//				lots of other laggy entities
+	if (!pEntity->IsPlayer())
+	{
+		return TICKS_TO_TIME(TIME_TO_TICKS(0.01f) + 1.0f);
+	}
+	// <-- Mirv
+
 	if ( cl_interp_npcs.GetFloat() > 0 )
 	{
 		const float minNPCInterpolationTime = cl_interp_npcs.GetFloat();

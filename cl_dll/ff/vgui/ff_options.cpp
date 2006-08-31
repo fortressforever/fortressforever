@@ -170,9 +170,11 @@ public:
 
 		m_pForceGlobal = new CheckButton(this, "UseGlobal", "");
 
-		// Display of crosshair
+		// Display of crosshair, Z-ordered so that inner is over outer
 		m_pInnerCrosshair = new Label(this, "innerDisplay", "1");
+		m_pInnerCrosshair->SetZPos(2);
 		m_pOuterCrosshair = new Label(this, "outerDisplay", "a");
+		m_pOuterCrosshair->SetZPos(1);
 
 		// Background showing some ingame screenshot for crosshair comparison
 		m_pCrosshairBackground = new ImagePanel(this, "CrosshairBackground");
