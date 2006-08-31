@@ -50,11 +50,16 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 	m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
 	SetPaintBackgroundEnabled( false );
 
-	vgui::HScheme ffscheme = vgui::scheme()->GetScheme("ClientScheme");
-	
-	m_hCrosshairs1 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs1");
-	m_hCrosshairs2 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs2");
-	m_hCrosshairs3 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs3");
+	// --> Mirv
+	vgui::HScheme CrossHairScheme = vgui::scheme()->LoadSchemeFromFile("resource/CrosshairScheme.res", "CrosshairScheme");
+
+	for (int i = 0; i < CROSSHAIR_SIZES; i++)
+	{
+		m_hPrimaryCrosshairs[i] = vgui::scheme()->GetIScheme(CrossHairScheme)->GetFont(VarArgs("PrimaryCrosshairs%d", (i + 1)));
+		m_hSecondaryCrosshairs[i] = vgui::scheme()->GetIScheme(CrossHairScheme)->GetFont(VarArgs("SecondaryCrosshairs%d", (i + 1)));
+	}
+	// <-- Mirv
+
 
     SetSize( ScreenWidth(), ScreenHeight() );
 }
@@ -175,16 +180,7 @@ void CHudCrosshair::Paint( void )
 	HFont currentFont;
 	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
-	// Do outer crosshair first so that it is underneath
-	switch (outerSize)
-	{
-	case 1:
-		currentFont = m_hCrosshairs1; break;
-	case 3:
-		currentFont = m_hCrosshairs3; break;
-	default:
-		currentFont = m_hCrosshairs2; break;
-	}
+	currentFont = m_hPrimaryCrosshairs[clamp(innerSize, 1, CROSSHAIR_SIZES) - 1];
 
 	surface()->DrawSetTextColor(outerCol.r(), outerCol.g(), outerCol.b(), outerCol.a());
 	surface()->DrawSetTextFont(currentFont);
@@ -197,16 +193,7 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
 	surface()->DrawUnicodeChar(unicode[0]);
 
-	// Do inner crosshair
-	switch (innerSize)
-	{
-	case 1:
-		currentFont = m_hCrosshairs1; break;
-	case 3:
-		currentFont = m_hCrosshairs3; break;
-	default:
-		currentFont = m_hCrosshairs2; break;
-	}
+	currentFont = m_hSecondaryCrosshairs[clamp(outerSize, 1, CROSSHAIR_SIZES) - 1];
 
 	surface()->DrawSetTextColor(innerCol.r(), innerCol.g(), innerCol.b(), innerCol.a());
 	surface()->DrawSetTextFont(currentFont);
