@@ -36,8 +36,7 @@
 #include "ff_gamerules.h"
 #include "ff_vieweffects.h"
 #include "c_fire_smoke.h"
-
-#include <igameresources.h>
+#include "c_playerresource.h"
 
 #if defined( CFFPlayer )
 	#undef CFFPlayer
@@ -995,12 +994,12 @@ void C_FFPlayer::Spawn( void )
 		m_bFirstSpawn = false;
 	}
 
-	// Set our team color color
-	IGameResources *pGR = GameResources();
-	if( pGR && ( GetTeamNumber() >= TEAM_BLUE ) && ( GetTeamNumber() <= TEAM_GREEN ) )
-		m_clrTeamColor = pGR->GetTeamColor( GetTeamNumber() );
-	else
-		m_clrTeamColor = Color( 255, 255, 255, 255 );
+	// Default
+	m_clrTeamColor = Color( 255, 255, 255, 255 );
+
+	// Set our team color
+	if( g_PR && ( GetTeamNumber() >= TEAM_BLUE ) && ( GetTeamNumber() <= TEAM_GREEN ) )
+		m_clrTeamColor = g_PR->GetTeamColor( GetTeamNumber() );
 
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
@@ -1117,20 +1116,28 @@ int C_FFPlayer::DrawModel( int flags )
 		// --------------------------------
 		// Check for friendly spies
 		// --------------------------------
-		if( IsDisguised() )
+		if( IsDisguised() && IsAlive() )
 		{
 			// See if the spy is a teammate or ally
 			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )
 			{
 				// Now, is the spy disguised as an enemy?
-				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetDisguisedTeam() == GR_NOTTEAMMATE ) )
+				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetDisguisedTeam() ) == GR_NOTTEAMMATE )
 				{
 					// Thanks mirv!
 					IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
 					if( pMaterial )
 					{
 						materials->Bind( pMaterial );
-						color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
+
+						// The color is based on the spies' real team
+						int iTeam = GetTeamNumber();						
+						Color clr = Color( 255, 255, 255, 255 );
+
+						if( g_PR )
+							clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+						
+						color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
 						DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
 					}
 				}
