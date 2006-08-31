@@ -80,7 +80,7 @@ static ConVar  cl_extrapolate( "cl_extrapolate", "1", FCVAR_CHEAT, "Enable/disab
 static ConVar  cl_interpolate( "cl_interpolate", "1.0", FCVAR_USERINFO, "Interpolate entities on the client." );
 static ConVar  cl_interp	 ( "cl_interp", "0.1", FCVAR_USERINFO | FCVAR_DEMO, "Interpolate object positions starting this many seconds in past", true, 0.01, true, 1.0, cc_cl_interp_changed );  
 static ConVar  cl_interp_npcs( "cl_interp_npcs", "0.0", FCVAR_USERINFO, "Interpolate NPC positions starting this many seconds in past (or cl_interp, if greater)", 0, 0, 0, 0, cc_cl_interp_changed );  
-static ConVar  cl_interp_ents( "cl_interp_ents", "0.01", 0, "", true, 0.01, true, 1.0, cc_cl_interp_changed);
+static ConVar  cl_interp_ents( "cl_interp_ents", "0.05", 0, "", true, 0.01, true, 1.0, cc_cl_interp_changed);
 static ConVar  cl_interp_all( "cl_interp_all", "0", 0, "Disable interpolation list optimizations.", 0, 0, 0, 0, cc_cl_interp_all_changed );
 //APSFIXME - Temp until I fix
 ConVar  r_drawmodeldecals( "r_drawmodeldecals", IsXbox() ? "0" : "1" );
@@ -5269,11 +5269,8 @@ void C_BaseEntity::ResetLatched()
 
 static float AdjustInterpolationAmount( C_BaseEntity *pEntity, float baseInterpolation )
 {
-	// --> Mirv: Reduce the interpolation on non-player stuff
-	// This fixes:  projectiles
-	//				doors
-	//				lots of other laggy entities
-	if (!pEntity->IsPlayer())
+	// --> Mirv: Reduce the interpolation for our projectiles
+	if (!pEntity->IsPlayer() && pEntity->Classify() > CLASS_GREN)
 	{
 		return TICKS_TO_TIME(TIME_TO_TICKS(/*0.01f*/ cl_interp_ents.GetFloat()) + 1.0f);
 	}

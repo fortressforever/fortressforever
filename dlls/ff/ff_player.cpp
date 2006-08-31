@@ -3147,6 +3147,7 @@ void CFFPlayer::Command_Discard( void )
 	if (pBackpack)
 	{
 		pBackpack->SetSpawnFlags(SF_NORESPAWN);
+		pBackpack->SetOwnerEntity(this);
 
 		Vector vForward;
 		AngleVectors(EyeAngles(), &vForward);
