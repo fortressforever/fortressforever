@@ -52,6 +52,8 @@ public:
 #ifdef CLIENT_DLL
 	CFFGrenadeCaltrop() {}
 	CFFGrenadeCaltrop( const CFFGrenadeCaltrop& ) {}
+
+	virtual void OnDataChanged( DataUpdateType_t updateType ) { BaseClass::OnDataChanged( updateType ); }
 #else
 	virtual void Spawn();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
@@ -87,11 +89,6 @@ void CFFGrenadeCaltrop::Precache()
 	void CFFGrenadeCaltrop::Explode(trace_t *pTrace, int bitsDamageType)
 	{
 		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
-
-		SetModelName( NULL_STRING );//invisible
-		AddSolidFlags( FSOLID_NOT_SOLID );
-
-		m_takedamage = DAMAGE_NO;
 
 		// Drop the grenade shell gibs
 		for( int i = 0; i < 2; i++ )
@@ -178,12 +175,7 @@ void CFFGrenadeCaltrop::Precache()
 			pCaltrop->SetFriction( GetGrenadeFriction() );
 		}
 
-		SetThink( &CBaseGrenade::SUB_Remove );
-		SetTouch( NULL );
-
-		AddEffects( EF_NODRAW );
-		SetAbsVelocity( vec3_origin );
-		SetNextThink( gpGlobals->curtime );
+		UTIL_Remove( this );
 	}
 #endif
 
