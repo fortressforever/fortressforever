@@ -14,6 +14,8 @@
 #include "hudelement.h"
 #include <vgui_controls/Panel.h>
 
+#define	CROSSHAIR_SIZES	5	// This needs to be matched in ff_options.cpp
+
 namespace vgui
 {
 	class IScheme;
@@ -49,9 +51,8 @@ private:
 	QAngle			m_curViewAngles;
 	Vector			m_curViewOrigin;
 
-	vgui::HFont		m_hCrosshairs1;
-	vgui::HFont		m_hCrosshairs2;
-	vgui::HFont		m_hCrosshairs3;
+	vgui::HFont		m_hPrimaryCrosshairs[CROSSHAIR_SIZES];
+	vgui::HFont		m_hSecondaryCrosshairs[CROSSHAIR_SIZES];
 };
 
 

@@ -30,7 +30,9 @@ extern const char *s_WeaponAliasInfo[];
 #include <vgui_controls/CheckButton.h>
 
 extern IFileSystem **pFilesystem;
-#define CROSSHAIRS_FILE	"crosshairs.vdf"
+
+#define CROSSHAIRS_FILE		"crosshairs.vdf"
+#define CROSSHAIR_SIZES		5					// This needs to be matched in hud_crosshair.h
 
 extern ConVar cl_timerwav;
 
@@ -126,12 +128,12 @@ public:
 		}
 
 		m_pInnerScale = new CInputSlider(this, "InnerScale", "InnerScaleInput");
-		m_pInnerScale->SetRange(1, 3);
-		m_pInnerScale->SetValue(2);
+		m_pInnerScale->SetRange(1, CROSSHAIR_SIZES);
+		m_pInnerScale->SetValue(1 + CROSSHAIR_SIZES / 2);
 
 		m_pOuterScale = new CInputSlider(this, "OuterScale", "OuterScaleInput");
-		m_pOuterScale->SetRange(1, 3);
-		m_pOuterScale->SetValue(2);
+		m_pOuterScale->SetRange(1, CROSSHAIR_SIZES);
+		m_pOuterScale->SetValue(1 + CROSSHAIR_SIZES / 2);
 
 		m_pInnerRed = new CInputSlider(this, "InnerRed", "InnerRedInput");
 		m_pInnerRed->SetRange(0, 255);
@@ -253,11 +255,13 @@ public:
 	//-----------------------------------------------------------------------------
 	virtual void ApplySchemeSettings(IScheme *pScheme)
 	{
-		vgui::HScheme ffscheme = vgui::scheme()->LoadSchemeFromFile("resource/ClientScheme.res", "ClientScheme");
+		vgui::HScheme CrossHairScheme = vgui::scheme()->LoadSchemeFromFile("resource/CrosshairScheme.res", "CrosshairScheme");
 
-		m_hCrosshairs1 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs1");
-		m_hCrosshairs2 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs2");
-		m_hCrosshairs3 = vgui::scheme()->GetIScheme(ffscheme)->GetFont("Crosshairs3");
+		for (int i = 0; i < CROSSHAIR_SIZES; i++)
+		{
+			m_hPrimaryCrosshairs[i] = vgui::scheme()->GetIScheme(CrossHairScheme)->GetFont(VarArgs("PrimaryCrosshairs%d", (i + 1)));
+			m_hSecondaryCrosshairs[i] = vgui::scheme()->GetIScheme(CrossHairScheme)->GetFont(VarArgs("SecondaryCrosshairs%d", (i + 1)));
+		}
 
 		BaseClass::ApplySchemeSettings(pScheme);
 	}
@@ -496,15 +500,7 @@ private:
 			pDrawCrosshair = &m_sCrosshairInfo[0];
 		}
 
-		switch (pDrawCrosshair->innerScale)
-		{
-		case 1:
-			m_pInnerCrosshair->SetFont(m_hCrosshairs1); break;
-		case 3:
-			m_pInnerCrosshair->SetFont(m_hCrosshairs3); break;
-		default:
-			m_pInnerCrosshair->SetFont(m_hCrosshairs2); break;
-		}
+		m_pInnerCrosshair->SetFont(m_hPrimaryCrosshairs[clamp(pDrawCrosshair->innerScale, 1, CROSSHAIR_SIZES) - 1]);
 
 		m_pInnerCrosshair->SetFgColor(Color(pDrawCrosshair->innerR, pDrawCrosshair->innerG, pDrawCrosshair->innerB, pDrawCrosshair->innerA));
 		m_pInnerCrosshair->SetText(VarArgs("%c", pDrawCrosshair->innerChar));
@@ -515,15 +511,7 @@ private:
 			pDrawCrosshair = &cinfo;
 		}
 
-		switch (pDrawCrosshair->outerScale)
-		{
-		case 1:
-			m_pOuterCrosshair->SetFont(m_hCrosshairs1); break;
-		case 3:
-			m_pOuterCrosshair->SetFont(m_hCrosshairs3); break;
-		default:
-			m_pOuterCrosshair->SetFont(m_hCrosshairs2); break;
-		}
+		m_pOuterCrosshair->SetFont(m_hSecondaryCrosshairs[clamp(pDrawCrosshair->outerScale, 1, CROSSHAIR_SIZES) - 1]);
 
 		m_pOuterCrosshair->SetFgColor(Color(pDrawCrosshair->outerR, pDrawCrosshair->outerG, pDrawCrosshair->outerB, pDrawCrosshair->outerA));
 		m_pOuterCrosshair->SetText(VarArgs("%c", pDrawCrosshair->outerChar));
@@ -592,9 +580,8 @@ private:
 
 	ImagePanel		*m_pCrosshairBackground;
 
-	HFont			m_hCrosshairs1;
-	HFont			m_hCrosshairs2;
-	HFont			m_hCrosshairs3;
+	HFont			m_hPrimaryCrosshairs[CROSSHAIR_SIZES];
+	HFont			m_hSecondaryCrosshairs[CROSSHAIR_SIZES];
 
 private:
 
