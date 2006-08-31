@@ -3850,7 +3850,7 @@ void CGameMovement::Duck( void )
 
 			time = max( 0.0, ( 1.0 - (float)player->m_Local.m_flDucktime / 1000.0 ) );
 
-			if ( player->m_Local.m_bDucking )
+			//if ( player->m_Local.m_bDucking )
 			{
 				// Finish ducking immediately if duck time is over or not on ground
 				if ( ( (float)player->m_Local.m_flDucktime / 1000.0 <= ( 1.0 - TIME_TO_DUCK ) ) ||
