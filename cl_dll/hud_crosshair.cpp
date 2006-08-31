@@ -180,7 +180,7 @@ void CHudCrosshair::Paint( void )
 	HFont currentFont;
 	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
-	currentFont = m_hPrimaryCrosshairs[clamp(innerSize, 1, CROSSHAIR_SIZES) - 1];
+	currentFont = m_hSecondaryCrosshairs[clamp(outerSize, 1, CROSSHAIR_SIZES) - 1];
 
 	surface()->DrawSetTextColor(outerCol.r(), outerCol.g(), outerCol.b(), outerCol.a());
 	surface()->DrawSetTextFont(currentFont);
@@ -193,7 +193,7 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
 	surface()->DrawUnicodeChar(unicode[0]);
 
-	currentFont = m_hSecondaryCrosshairs[clamp(outerSize, 1, CROSSHAIR_SIZES) - 1];
+	currentFont = m_hPrimaryCrosshairs[clamp(innerSize, 1, CROSSHAIR_SIZES) - 1];
 
 	surface()->DrawSetTextColor(innerCol.r(), innerCol.g(), innerCol.b(), innerCol.a());
 	surface()->DrawSetTextFont(currentFont);
