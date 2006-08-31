@@ -34,6 +34,7 @@
 #include "engine/IEngineSound.h"
 #include "c_te_legacytempents.h"
 #include "physpropclientside.h"
+#include "ff_gamerules.h"
 
 // Bug #0000310: fov doesn't reset |-- Mulch
 //ConVar default_fov( "default_fov", "90", FCVAR_NONE );
@@ -75,6 +76,11 @@ void CFFModeManager::Init()
 void CFFModeManager::LevelInit( const char *newmap )
 {
 	g_pClientMode->LevelInit( newmap );
+
+	// Reset client timer to zero (otherwise it'll
+	// be where we left off with the last round)
+	if( FFGameRules() )
+		FFGameRules()->SetRoundStart( 0.0f );
 }
 
 void CFFModeManager::LevelShutdown( void )
@@ -151,6 +157,11 @@ void ClientModeFFNormal::FireGameEvent( IGameEvent *pEvent )
 
 	if( Q_strcmp( "ff_restartround", pszEventName ) == 0 )
 	{
+		// Set up current round offset for client
+		float flCurtime = pEvent->GetFloat( "curtime" );
+		if( FFGameRules() )
+			FFGameRules()->SetRoundStart( flCurtime + ( gpGlobals->curtime - flCurtime ) );
+
 		// Recreate all client side physics props
 		C_PhysPropClientside::RecreateAll();
 

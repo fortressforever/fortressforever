@@ -245,6 +245,9 @@ ConVar mp_prematch( "mp_prematch",
 			g_Teams.AddToTail( pTeam );
 		}
 
+		// Init
+		m_flRoundStarted = 0.0f;
+
 		// Prematch system, game has not started
 		m_flGameStarted = -1.0f;
 		
@@ -307,8 +310,9 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
-			// TODO: Shutdown stats
-			// TODO: Restart stats
+			// Restart stats!
+			SendStats();
+			g_StatsLog.CleanUp();
 
 			// Kill entity system helper
 			UTIL_Remove( helper );
@@ -391,6 +395,7 @@ ConVar mp_prematch( "mp_prematch",
 			IGameEvent *pEvent = gameeventmanager->CreateEvent( "ff_restartround" );
 			if( pEvent )
 			{
+				pEvent->SetFloat( "curtime", gpGlobals->curtime );
 				gameeventmanager->FireEvent( pEvent );
 			}
 		}
@@ -572,15 +577,6 @@ ConVar mp_prematch( "mp_prematch",
 					{
 						engine->ClientCommand( pPlayer->edict(), "r_cleardecals" );
 					}
-
-					/*
-					// Reset players score
-					if( bFullReset )
-					{
-						pPlayer->ResetFragCount();
-						pPlayer->ResetDeathCount();
-					}
-					*/
 				}
 			}
 		}
@@ -1153,7 +1149,7 @@ ConVar mp_prematch( "mp_prematch",
 
 			// Piggy back this guy now with a FULL MAP RESET
 			ResetUsingCriteria( bFlags, TEAM_UNASSIGNED, NULL, true );
-		}		
+		}
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("game_start");
 		if(pEvent)
