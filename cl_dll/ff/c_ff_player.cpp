@@ -1214,6 +1214,7 @@ const QAngle &C_FFPlayer::EyeAngles()
 	if (GetTeamNumber() < TEAM_BLUE && m_hNextMapGuide)
 	{
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
+		t = SimpleSpline(t);
 
 		static QAngle angDirection;
 
