@@ -5332,7 +5332,6 @@ CFFMapGuide *CFFPlayer::FindMapGuide(string_t targetname)
 
 //-----------------------------------------------------------------------------
 // Purpose: Move between map guide points.
-//			Currently no splining is done.
 //-----------------------------------------------------------------------------
 void CFFPlayer::MoveTowardsMapGuide()
 {
@@ -5401,6 +5400,7 @@ void CFFPlayer::MoveTowardsMapGuide()
 		Vector vecNewPos;
 
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
+		t = SimpleSpline(t);
 
 		// There've no curve point to worry about
 		if (m_hLastMapGuide->m_iCurveEntity == NULL_STRING)
