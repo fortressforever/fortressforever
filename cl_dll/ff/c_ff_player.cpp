@@ -625,7 +625,11 @@ void C_FFRagdoll::CreateRagdoll()
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
 			C_Gib *pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
-			pGib->SetAbsAngles(pWeapon->GetAbsAngles());
+
+			if (pGib)
+			{
+				pGib->SetAbsAngles(pWeapon->GetAbsAngles());
+			}
 		}
 	}
 	else
@@ -1829,7 +1833,11 @@ void Gib_Callback(const CEffectData &data)
 		if (pWeapon && pWeapon->GetWeaponID() < FF_WEAPON_DEPLOYDISPENSER)
 		{
 			C_Gib * pGib = C_Gib::CreateClientsideGib(pWeapon->GetFFWpnData().szWorldModel, pWeapon->GetAbsOrigin(), pPlayer->GetAbsVelocity(), Vector(0, 0, 0), 10.0f);
-			pGib->SetAbsAngles(pWeapon->GetAbsAngles());
+
+			if (pGib)
+			{
+				pGib->SetAbsAngles(pWeapon->GetAbsAngles());
+			}
 		}
 	}
 
