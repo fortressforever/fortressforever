@@ -93,7 +93,7 @@ public:
 
 		memset(&m_sCrosshairInfo, 0, sizeof(m_sCrosshairInfo));
 
-		const char *pszInner = "1234567890-=!@#$%^&*()_+";
+		const char *pszInner = "1234567890-=!@#$%^?*()_+";
 		int nInner = strlen(pszInner);
 
 		m_pInnerCharacter = new ComboBox(this, "InnerCharacter", nInner, false);

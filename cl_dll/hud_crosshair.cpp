@@ -157,6 +157,12 @@ void CHudCrosshair::Paint( void )
 		return;
 	}
 
+	FFWeaponID weaponID = pPlayer->GetActiveFFWeapon()->GetWeaponID();
+
+	// Weapons other than these don't get crosshairs
+	if (weaponID <= FF_WEAPON_NONE || weaponID >= FF_WEAPON_TOMMYGUN)
+		return;
+
 	Color innerCol, outerCol;
 	char innerChar, outerChar;
 	int innerSize, outerSize;
@@ -166,7 +172,7 @@ void CHudCrosshair::Paint( void )
 	//
 
 	HFont currentFont;
-	GetCrosshair(pPlayer->GetActiveFFWeapon()->GetWeaponID(), innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
+	GetCrosshair(weaponID, innerChar, innerCol, innerSize, outerChar, outerCol, outerSize);
 
 	switch (innerSize)
 	{
