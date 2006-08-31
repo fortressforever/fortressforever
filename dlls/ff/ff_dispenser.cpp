@@ -227,20 +227,14 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				// If we haven't been touched...
 				if( !m_pLastTouch )
 				{
-					//DevMsg( "[Dispenser] Have not been touched before!\n" );
-
 					bDispense = true;
 				}
 				// We've been touched before...
 				else
 				{
-					//DevMsg( "[Dispenser] Has been touched before!\n" );
-
 					// If the last person to touch us touches us again...
 					if( pPlayer == m_pLastTouch )
 					{
-						//DevMsg( "[Dispenser] Last person to touch us was this guy!\n" );
-
 						// If the player hasn't touched us within some time...
 						if( ( m_flLastTouch + 2.0f ) < gpGlobals->curtime )
 						{
@@ -250,8 +244,6 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					// Someone new touched us...
 					else
 					{
-						//DevMsg( "[Dispenser] Someone new touched us!\n" );
-
 						bDispense = true;
 					}
 				}
@@ -259,8 +251,6 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 				// Give the player junk if we need to
 				if( bDispense )
 				{
-					//DevMsg( "[Dispenser] Dispensing @ time: %f\n", gpGlobals->curtime );
-
 					m_pLastTouch = pPlayer;
 					m_flLastTouch = gpGlobals->curtime;
 
@@ -295,8 +285,9 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					// Mirv: Don't do this while sabotaged
 					if (!IsSabotaged())
 					{
-						// Message owner
-						ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
+						// Message owner (wiki says spies don't trigger the "enemies are using..." message)
+						if( !pPlayer->IsDisguised() )
+							ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
 
 						if( Q_strlen( m_szCustomText ) > 1 )
 							ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
