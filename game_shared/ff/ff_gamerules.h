@@ -33,7 +33,6 @@
 	#define CFFGameRulesProxy C_FFGameRulesProxy
 #endif
 
-
 class CFFGameRulesProxy : public CGameRulesProxy
 {
 public:
@@ -101,6 +100,8 @@ public:
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
 
+	CFFGameRules( void ) { m_flRoundStarted = 0.0f; }
+
 #else
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -140,14 +141,12 @@ protected:
 	void	StartGame();
 	float	m_flGameStarted;
 	float	m_flNextMsg;
-	//float	m_flRoundStarted;
-	// Alright mirv, I need this networked but the send/recv proxy
-	// is messing with me. talk to you sunday about it.
-	CNetworkVar( float, m_flRoundStarted );
+	float	m_flRoundStarted;
 
 public:
 	bool HasGameStarted() { return !( m_flGameStarted < 0 ); }
 	float GetRoundStart( void ) const { return m_flRoundStarted; }
+	void SetRoundStart( float flStartTime ) { m_flRoundStarted = flStartTime; }
 };
 
 //-----------------------------------------------------------------------------
@@ -158,6 +157,5 @@ inline CFFGameRules* FFGameRules()
 {
 	return static_cast<CFFGameRules*>(g_pGameRules);
 }
-
 
 #endif // FF_GAMERULES_H

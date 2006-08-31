@@ -723,10 +723,7 @@ void CSpectatorGUI::UpdateTimer()
 {
 	wchar_t szText[ 63 ];
 
-	// Yeah, doesn't work just yet, need to modify gamerules
 	int timer = gpGlobals->curtime - FFGameRules()->GetRoundStart();
-	//Warning( "[hi] getroundstart %f\n", FFGameRules()->GetRoundStart() );
-
 	_snwprintf ( szText, sizeof( szText ), L"%d:%02d", (timer / 60), (timer % 60) );
 
 	szText[63] = 0;
