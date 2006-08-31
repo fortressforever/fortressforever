@@ -72,25 +72,7 @@ END_NETWORK_TABLE()
 		if (GetOwnerEntity() != CBasePlayer::GetLocalPlayer() || input->CAM_IsThirdPerson())
 			return;
 
-		if (type == DATA_UPDATE_CREATED) 
-		{
-			// We want to interpolate this thing
-			AddToInterpolationList();
 
-			// Now stick our initial velocity into the interpolation history 
-			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-
-			interpolator.ClearHistory();
-			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
-
-			// Add a sample 1 second back.
-			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.01f);
-			interpolator.AddToHead(changeTime - 0.01f, &vecCurOrigin, false);
-
-			// Add the current sample.
-			vecCurOrigin = GetLocalOrigin();
-			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
-		}
 	}
 
 	//----------------------------------------------------------------------------
@@ -100,15 +82,36 @@ END_NETWORK_TABLE()
 	//----------------------------------------------------------------------------
 	void CFFProjectileBase::OnDataChanged(DataUpdateType_t type) 
 	{
+		BaseClass::OnDataChanged(type);
+
 		if (type == DATA_UPDATE_CREATED)
 		{
 			if (GetFlightSound())
 			{
 				EmitSound(GetFlightSound());
 			}
-		}
 
-		BaseClass::OnDataChanged(type);
+		}
+	
+		// Don't do the extra interpolation samples for now
+		return;
+
+		if (type == DATA_UPDATE_CREATED) 
+		{
+			// Now stick our initial velocity into the interpolation history 
+			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
+
+			interpolator.ClearHistory();
+			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
+
+			// Add a sample 1 second back.
+			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.01f);
+			interpolator.AddToHead(changeTime - 0.1f, &vecCurOrigin, false);
+
+			// Add the current sample.
+			vecCurOrigin = GetLocalOrigin();
+			interpolator.AddToHead(changeTime, &vecCurOrigin, false);
+		}
 	}
 
 	//----------------------------------------------------------------------------
