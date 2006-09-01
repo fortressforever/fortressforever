@@ -470,6 +470,9 @@ const char *FF_GetAmmoName(int i)
 //-----------------------------------------------------------------------------
 bool FF_TraceHitWorld( trace_t *pTrace )
 {
+	if( !pTrace )
+		return false;
+
 	if( pTrace->DidHitWorld() )
 		return true;
 
