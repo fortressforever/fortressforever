@@ -285,7 +285,7 @@ namespace FFLib
 	void RespawnAllPlayers( void )
 	{		
 		// loop through each player
-		for (int i=0; i<gpGlobals->maxClients; i++)
+		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
 			CBasePlayer *ent = UTIL_PlayerByIndex( i );
 			if (ent && ent->IsPlayer())
@@ -302,7 +302,7 @@ namespace FFLib
 	void KillAndRespawnAllPlayers( void )
 	{
 		// loop through each player
-		for (int i=0; i<gpGlobals->maxClients; i++)
+		for (int i=1; i<=gpGlobals->maxClients; i++)
 		{
 			CBasePlayer *ent = UTIL_PlayerByIndex( i );
 			if (ent && ent->IsPlayer())
