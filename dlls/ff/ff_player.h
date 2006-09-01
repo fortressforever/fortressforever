@@ -136,7 +136,11 @@ public:
 	virtual void Spawn();
 	virtual void InitialSpawn();
 	virtual void Precache();
-	virtual void Event_Killed( const CTakeDamageInfo &info );
+	
+	virtual void Event_Killed(const CTakeDamageInfo &info);
+	virtual bool Event_Gibbed(const CTakeDamageInfo &info);
+	virtual bool BecomeRagdollOnClient(const Vector &force);
+
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	
 	// returns the name of the active weapons. returns null if there
@@ -683,13 +687,12 @@ public:
 	
 	void	SetupClassVariables();
 
-	virtual bool Event_Gibbed(const CTakeDamageInfo &info);
-
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
 
 	void		SpySabotageThink();
 	void		SpySabotageRelease();
+
 
 	float		m_flNextSpySabotageThink;
 	float		m_flSpySabotageFinish;

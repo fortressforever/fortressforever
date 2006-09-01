@@ -91,6 +91,8 @@ ConVar ffdev_overhealth_freq("ffdev_overhealth_freq","3",0,"Frequency (in second
 
 static ConVar jerkmulti( "ffdev_concuss_jerkmulti", "0.0004", 0, "Amount to jerk view on conc" );
 
+static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
+
 extern ConVar sv_maxspeed;
 
 // --------------------------------------------------------------------------------
@@ -1490,11 +1492,26 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
+	// Set view angle + positions
+	SetViewOffset(VEC_DEAD_VIEWHEIGHT);
+	AddFlag(FL_DUCKING);
+	QAngle eyeAngles = EyeAngles();
+	eyeAngles.z = 50.0f;
+	SnapEyeAngles(eyeAngles);
+
 	if (!ShouldGib(info))
 	{
 		CreateRagdollEntity(&info);
 		CreateLimbs(m_fBodygroupState);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: This is handled instead by CreateRagdollEntity()!
+//-----------------------------------------------------------------------------
+bool CFFPlayer::BecomeRagdollOnClient( const Vector &force )
+{
+	return true;
 }
 
 void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
@@ -4630,7 +4647,7 @@ void CFFPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 bool CFFPlayer::ShouldGib( const CTakeDamageInfo &info )
 {
-	return (GetHealth() <= -100.0f);
+	return (GetHealth() <= -ffdev_gibdamage.GetFloat());
 }
 
 bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
@@ -4639,6 +4656,9 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	m_lifeState		= LIFE_DEAD;
 	AddEffects( EF_NODRAW ); // make the model invisible.
+	pl.deadflag = true;
+
+	SetMoveType(MOVETYPE_FLYGRAVITY);
 
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
