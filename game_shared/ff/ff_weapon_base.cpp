@@ -145,9 +145,9 @@ CFFWeaponBase::CFFWeaponBase()
 #ifdef GAME_DLL
 	char buf[256];
 	Q_snprintf(buf, 256, "fired_%s", GetClassName());
-	m_iStatFired = g_StatsLog.GetStatID(buf);
+	m_iStatFired = g_StatsLog->GetStatID(buf);
 	Q_snprintf(buf, 256, "hit_%s", GetClassName());
-	m_iStatHit = g_StatsLog.GetStatID(buf);
+	m_iStatHit = g_StatsLog->GetStatID(buf);
 #endif
 }
 
@@ -374,7 +374,7 @@ void CFFWeaponBase::PrimaryAttack()
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
 
 	// record in stats as a firing
-	g_StatsLog.AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
+	g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 #endif
 
 	// Fire now
