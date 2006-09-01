@@ -84,7 +84,7 @@ private:
 };
 
 // singleton
-CFFStatsLog g_StatsLogSingleton;
+static CFFStatsLog g_StatsLogSingleton;
 IStatsLog *g_StatsLog = (IStatsLog *) &g_StatsLogSingleton;
 
 /**
