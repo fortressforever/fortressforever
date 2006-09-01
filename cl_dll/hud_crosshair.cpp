@@ -15,6 +15,7 @@
 #include "IVRenderView.h"
 #include "ff_weapon_base.h"
 #include "c_ff_player.h"
+#include "ff_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -75,6 +76,12 @@ bool CHudCrosshair::ShouldDraw( void )
 
 	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
 	if ( !pPlayer )
+		return false;
+
+	C_FFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
+
+	// Dunno about this... specs might want a crosshair drawn?
+	if( FF_IsPlayerSpec( pFFPlayer ) || !FF_HasPlayerPickedClass( pFFPlayer ) )
 		return false;
 
 	// draw a crosshair only if alive or spectating in eye
