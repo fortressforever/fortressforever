@@ -14,9 +14,9 @@ function run_action($action, $in_params)
 
 	// load up the action from the list
 	if (empty($action))
-		$action = $defaultaction;
+		{ throw_error("invalid action"); return; }//$action = $defaultaction;
 	if (!isset($actions[$action]))
-		$action = $defaultaction;
+		{ throw_error("invalid action"); return; }//$action = $defaultaction;
 	$action = $actions[$action];
 	
 	// load up the appropriate parameters
@@ -33,12 +33,8 @@ function run_action($action, $in_params)
 			$params[$key] = $data;
 	}
 	
-	
-	
 	// run the action
-	include "header.php";
 	$action['function']($params);
-	include "footer.php";
 }
 
 ?>

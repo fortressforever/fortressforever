@@ -8,8 +8,9 @@ function recent_rounds($params)
 	$limit = isset($params['limit']) ? $params['limit'] : 25;
 
 	$recentrounds = sql_query("
-		select rounds.id, maps.name as map, starttime, unix_timestamp(endtime)-unix_timestamp(starttime) as duration,
-			bluescore, redscore, yellowscore, greenscore
+		select rounds.id, maps.id as mapid, maps.name as map, starttime,
+		unix_timestamp(endtime)-unix_timestamp(starttime) as duration,
+			bluescore, redscore, yellowscore, greenscore, numteams
 		from rounds
 		left join maps on rounds.map = maps.id
 		where 1=1
@@ -33,13 +34,13 @@ function recent_rounds($params)
 <? foreach ($recentrounds as $round) { ?>
 	<tr>
 		<td><?=date("j-M-y g:ia", strtotime($round['starttime']))?></td>
-		<td><?=$round['map']?></td>
+		<td><a href="?a=mapdetails&map=<?=$round['mapid']?>"><?=$round['map']?></a></td>
 		<td><?=h_m_s_format($round['duration'])?></td>
 		<td>
-			<span class="redteam"><?=$round['redscore']?></span>
-			<span class="blueteam"><?=$round['bluescore']?></span>
-			<span class="yellowteam"><?=$round['yellowscore']?></span>
-			<span class="greenteam"><?=$round['greenscore']?></span>
+			<?if ($round['numteams']>=1){?><span class="redteam"><?=$round['redscore']?></span><?}?>
+			<?if ($round['numteams']>=2){?><span class="blueteam"><?=$round['bluescore']?></span><?}?>
+			<?if ($round['numteams']>=3){?><span class="yellowteam"><?=$round['yellowscore']?></span><?}?>
+			<?if ($round['numteams']>=4){?><span class="greenteam"><?=$round['greenscore']?></span><?}?>
 		</td>
 		<td><a href="?a=rounddetails&round=<?=$round['id']?>">Details</a></td>
 	</tr>

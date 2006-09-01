@@ -3,7 +3,7 @@
 function throw_message($title, $message)
 {
 ?>
-<div class="c_table">
+<div>
 	<div class="t_header"><?=$title?></div>
 	<div class="t_body"><?=$message?></div>
 </div>
@@ -32,23 +32,26 @@ function lookup_stat($stat)
 	}
 	return $stats[$stat];
 }
-function lookup_weapon($weapon)
+function lookup_action($action)
 {
 	static $weapons;
 	if (!isset($weapons)) {
-		$weapons = array();
-		$sq = sql_query("SELECT gameid, id FROM weaponinfo");
+		$actions = array();
+		$sq = sql_query("SELECT gameid, id FROM actioninfo");
 		foreach ($sq as $s) {
-			$weapons[$s['id']] = $s['gameid'];
-			$weapons[$s['gameid']] = $s['id'];
+			$actions[$s['id']] = $s['gameid'];
+			$actions[$s['gameid']] = $s['id'];
 		}  
 	}
-	return $weapons[$weapon];
+	return $actions[$action];
 }
 
 function get_round_stat($round, $player, $stat)
 {
-	return get_stat($player, $stat, 'round', array('round'=>$round));
+	if (!empty($round))
+		return get_stat($player, $stat, 'round', array('round'=>$round));
+	else
+		return get_stat($player, $stat, 'player');
 }
 function get_player_stat($round, $player, $stat)
 {
