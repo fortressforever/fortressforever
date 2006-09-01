@@ -931,6 +931,10 @@ void C_FFPlayer::PreThink( void )
 			// We need to make sure we're not looking down further than 90 as this
 			// makes the viewmodel glitchy. Therefore remove any excess from the 
 			// conced angles.
+			// We have to do this here rather than on the viewmodel because the
+			// viewmodel also has to be locked so that you can't see below it which
+			// would conflict with also locking it above a certain point. So we have to
+			// remove it from the conc'ed angle itself.
 			if (flTotalAngle > 90.0f)
 			{
 				m_angConced.x -= flTotalAngle - 90.0f;
@@ -1259,6 +1263,8 @@ void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 //-----------------------------------------------------------------------------
 void C_FFPlayer::CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
+	QAngle angEyeAngles = eyeAngles;
+
 	if (m_flConcTime > gpGlobals->curtime || m_flConcTime < 0)
 	{
 		QAngle angConced = m_angConced;
@@ -1268,12 +1274,14 @@ void C_FFPlayer::CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAng
 		if (angConced.x > 0.0f)
 			angConced.x = 0.0f;
 
-		BaseClass::CalcViewModelView(eyeOrigin, eyeAngles - angConced);
+		angEyeAngles -= angConced;
 	}
-	else
-	{
-		BaseClass::CalcViewModelView(eyeOrigin, eyeAngles);
-	}
+
+	// If we look up too far then we glitch
+	if (angEyeAngles.x < -89.0f)
+		angEyeAngles.x = -89.0f;
+
+	BaseClass::CalcViewModelView(eyeOrigin, angEyeAngles);
 }
 // <-- Mirv: Conc angles
 
