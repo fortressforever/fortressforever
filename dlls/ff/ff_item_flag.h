@@ -15,10 +15,15 @@
 #ifndef FF_ITEM_FLAG_H
 #define FF_ITEM_FLAG_H
 
+/////////////////////////////////////////////////////////////////////////////
+// includes
 #include "baseanimating.h"
 
+/////////////////////////////////////////////////////////////////////////////
+// defines
 #define FLAG_MODEL "models/items/healthkit.mdl"
 
+/////////////////////////////////////////////////////////////////////////////
 // An info_ff_script has 3 position states
 enum FF_ScriptPosState_e
 {
@@ -36,9 +41,28 @@ enum FF_ScriptGoalState_e
 	GS_REMOVED = 2
 };
 
+enum FF_AllowFlags
+{
+	kAllowOnlyPlayers	= 1 << 0,
+	kAllowBlueTeam		= 1 << 1,
+	kAllowRedTeam		= 1 << 2,
+	kAllowYellowTeam	= 1 << 3,
+	kAllowGreenTeam		= 1 << 4,
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // Forward declaration
 class CFFInfoScriptAnimator;
 
+namespace luabind
+{
+	namespace adl
+	{
+		class object;
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
 class CFFInfoScript : public CBaseAnimating
 {
 public:
@@ -105,6 +129,13 @@ public:
 	//const char *EntName( void ) { return STRING( GetEntityName() ); }
 
 	void SetBotGoalInfo(int _type, int _team);
+
+	// returns the critia necessary for another entity
+	// to "touch" this entity
+	int GetTouchFlags() const { return m_allowTouchFlags; }
+
+	void SetTouchFlags(const luabind::adl::object& table);
+
 protected:
 	// Do not expose these to LUA!
 	virtual void	SetActive( void );
@@ -146,8 +177,13 @@ protected:
 	CNetworkVar( int, m_iPosState );
 
 	float m_flSpawnTime;
+
+	// indicates some criteria limiting what will
+	// be allowed to "touch" this entity
+	int		m_allowTouchFlags;
 };
 
+/////////////////////////////////////////////////////////////////////////////
 // This is a cheap hack. Basically, this just calls
 // StudioFrameAdvance() on m_pFFScript.
 class CFFInfoScriptAnimator : public CBaseAnimating
@@ -165,4 +201,5 @@ public:
 	CFFInfoScript *m_pFFScript;
 };
 
+/////////////////////////////////////////////////////////////////////////////
 #endif //FF_ITEM_FLAG_H

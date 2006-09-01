@@ -19,6 +19,21 @@
 #include "ff_player.h"
 #include "omnibot_interface.h"
 
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#undef MINMAX_H
+#undef min
+#undef max
+
+#include "luabind/luabind.hpp"
+#include "luabind/iterator_policy.hpp"
+
 #include "tier0/memdbgon.h"
 
 #define ITEM_PICKUP_BOX_BLOAT		24
@@ -91,6 +106,8 @@ CFFInfoScript::CFFInfoScript( void )
 	m_iGoalState = GS_INACTIVE;
 	// Init the position state
 	m_iPosState = PS_RETURNED;
+
+	m_allowTouchFlags = 0;
 }
 
 CFFInfoScript::~CFFInfoScript( void )
@@ -277,8 +294,98 @@ void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 	if( !pEntity )
 		return;
 
-	CFFLuaSC hTouch( 1, pEntity );
-	entsys.RunPredicates_LUA( this, &hTouch, "touch" );
+	// early out if we dont pass the player filter
+	if(m_allowTouchFlags & kAllowOnlyPlayers)
+	{
+		if(!pEntity->IsPlayer())
+			return;
+	}
+
+	// temp: default to true in order to not break everything
+	// since only backpacks are current setup correctly with "allow flags"
+	bool bCanTouch = true;
+
+	// check if any of the team flags have been marked
+	int teamMask = kAllowRedTeam|kAllowBlueTeam|kAllowYellowTeam|kAllowGreenTeam;
+
+	if(teamMask & m_allowTouchFlags)
+	{
+		int iTeam = pEntity->GetTeamNumber();
+		switch(iTeam)
+		{
+		case TEAM_BLUE:
+			bCanTouch = (m_allowTouchFlags & kAllowBlueTeam) == kAllowBlueTeam;
+			break;
+
+		case TEAM_RED:
+			bCanTouch = (m_allowTouchFlags & kAllowRedTeam) == kAllowRedTeam;
+			break;
+
+		case TEAM_GREEN:
+			bCanTouch = (m_allowTouchFlags & kAllowGreenTeam) == kAllowGreenTeam;
+			break;
+
+		case TEAM_YELLOW:
+			bCanTouch = (m_allowTouchFlags & kAllowYellowTeam) == kAllowYellowTeam;
+			break;
+		}
+	}
+
+	// if allowed, notify script entity was touched
+	if(bCanTouch)
+	{
+		CFFLuaSC hTouch( 1, pEntity );
+		entsys.RunPredicates_LUA( this, &hTouch, "touch" );
+	}
+}
+
+void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
+{
+	m_allowTouchFlags = 0;
+
+	if(table.is_valid() && (luabind::type(table) == LUA_TTABLE))
+	{
+		// Iterate through the table
+		for(luabind::iterator ib(table), ie; ib != ie; ++ib)
+		{
+			luabind::adl::object val = *ib;
+
+			if(luabind::type(val) == LUA_TNUMBER)
+			{
+				try
+				{
+					int flag = luabind::object_cast<int>(val);
+					switch(flag)
+					{
+					case kAllowBlueTeam:
+						m_allowTouchFlags |= kAllowBlueTeam;
+						break;
+
+					case kAllowRedTeam:
+						m_allowTouchFlags |= kAllowRedTeam;
+						break;
+
+					case kAllowYellowTeam:
+						m_allowTouchFlags |= kAllowYellowTeam;
+						break;
+
+					case kAllowGreenTeam:
+						m_allowTouchFlags |= kAllowGreenTeam;
+						break;
+
+					case kAllowOnlyPlayers:
+						m_allowTouchFlags |= kAllowOnlyPlayers;
+						break;
+					}
+				}
+				catch(...)
+				{
+					// throw out exception
+					// an invalid cast is not exceptional!!
+				}
+			}
+		}
+	}
 }
 
 void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
