@@ -2313,7 +2313,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		return;
 
 	// My origin
-	Vector vecOrigin = GetAbsOrigin();
+	Vector vecOrigin = GetFeetOrigin();
 
 	// Loop through doing stuff on each player
 	for( int i = 1; i <= iMaxClients; i++ )
@@ -2328,7 +2328,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			continue;
 
 		// Skip if spec
-		if( pPlayer->IsObserver() )
+		if( pPlayer->IsObserver() || FF_IsPlayerSpec( pPlayer ) )
 			continue;
 
 		// Skip if us
@@ -2353,7 +2353,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 //			continue;
 
 		// Get their origin
-		Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
+		Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
 
 		// Skip if they're out of range
 		if( vecOrigin.DistTo( vecPlayerOrigin ) > radiotag_distance.GetInt() )
@@ -2512,7 +2512,7 @@ void CFFPlayer::Command_Radar( void )
 
 			CUtlVector< ScoutRadar_s > hRadarInfo;
 
-			Vector vecOrigin = GetAbsOrigin();
+			Vector vecOrigin = GetFeetOrigin();
 
 			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
@@ -2531,10 +2531,10 @@ void CFFPlayer::Command_Radar( void )
 
 					// Bug #0000497: The scout radar picks up on people who are observing/spectating.
 					// If the player is a spectator
-					if( ( pPlayer->GetTeamNumber() < TEAM_BLUE ) || ( pPlayer->GetTeamNumber() > TEAM_GREEN ) )
-						continue;
+					if( FF_IsPlayerSpec( pPlayer ) )
+						return;
 
-					Vector vecPlayerOrigin = pPlayer->GetAbsOrigin();
+					Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
 					float flDist = vecOrigin.DistTo( vecPlayerOrigin );
 
 					if( flDist <= ( float )radar_radius_distance.GetInt() )
