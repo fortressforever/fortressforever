@@ -32,6 +32,7 @@ using namespace vgui;
 #include "ConVar.h"
 
 #include "c_ff_player.h"
+#include "ff_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -204,17 +205,16 @@ void CHudArmor::MsgFunc_Damage( bf_read &msg )
 
 void CHudArmor::Paint()
 {
-	if( C_BasePlayer::GetLocalPlayer() && ( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE ) )
+	if( !engine->IsInGame() )
 		return;
 
-	// Bug #0000721: Switching from spectator to a team results in HUD irregularities
-	C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
-	if( pPlayer && ( ( pPlayer->GetClassSlot() < CLASS_SCOUT ) || ( pPlayer->GetClassSlot() > CLASS_CIVILIAN ) ) )
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
 		return;
 
-	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	//surface()->DrawSetColor(255, 255, 255, 255);
-	//surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
+	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+		return;
 
 	BaseClass::Paint();
 }

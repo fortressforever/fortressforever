@@ -26,16 +26,9 @@ using namespace vgui;
 #include <vgui/ILocalize.h>
 #include <vgui/IVGui.h>
 
-//#include "debugoverlay_shared.h"
-
 #include "c_ff_player.h"
 #include "ff_utils.h"
 #include "ff_panel.h"
-//#include "c_ff_buildableobjects.h"
-//#include <igameresources.h>
-//#include "c_ff_team.h"
-//#include "ff_gamerules.h"
-//#include "ff_utils.h"
 
 //=============================================================================
 //
@@ -119,12 +112,12 @@ void CHudLocation::Paint( void )
 	if( !engine->IsInGame() )
 		return;
 
-	if( C_BasePlayer::GetLocalPlayer() && ( C_BasePlayer::GetLocalPlayer()->GetTeamNumber() < TEAM_BLUE ) )
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
 		return;
 
-	// Bug #0000721: Switching from spectator to a team results in HUD irregularities
-	C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
-	if( pPlayer && ( ( pPlayer->GetClassSlot() < CLASS_SCOUT ) || ( pPlayer->GetClassSlot() > CLASS_CIVILIAN ) ) )
+	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 		return;
 
 	if( m_pText )
