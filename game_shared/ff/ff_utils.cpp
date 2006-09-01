@@ -569,6 +569,28 @@ void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier)
 }
 #endif
 
+//-----------------------------------------------------------------------------
+// Purpose: Returns whether we're a spectator or not
+//-----------------------------------------------------------------------------
+bool FF_IsPlayerSpec( CFFPlayer *pPlayer )
+{
+	if( !pPlayer )
+		return false;
+
+	return !( ( pPlayer->GetTeamNumber() >= TEAM_BLUE ) && ( pPlayer->GetTeamNumber() <= TEAM_GREEN ) );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns whether we've picked a class yet
+//-----------------------------------------------------------------------------
+bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer )
+{
+	if( !pPlayer )
+		return false;
+
+	return ( ( pPlayer->GetClassSlot() >= CLASS_SCOUT ) && ( pPlayer->GetClassSlot() <= CLASS_CIVILIAN ) );
+}
+
 #if defined(GAME_DLL) && defined(_LINUX)
 
 	// A few empty bodies for some missing exports.

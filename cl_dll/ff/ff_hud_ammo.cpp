@@ -22,6 +22,7 @@
 #include "c_ff_player.h"
 #include "ff_weapon_base.h"
 #include "ff_hud_boxes.h"
+#include "ff_utils.h"
 
 #include <vgui/ILocalize.h>
 
@@ -153,7 +154,7 @@ void CHudAmmo::OnThink()
 		iAmmo = GetPlayerAmmo(pPlayer, pWeapon);
 	}
 
-	if (iAmmo < 0)
+	if (iAmmo < 0 || FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
 	{
 		SetPaintEnabled(false);
 		SetShouldDisplayValue(false);

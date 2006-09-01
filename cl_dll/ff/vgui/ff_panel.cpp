@@ -19,6 +19,7 @@
 
 #include "c_ff_player.h"
 #include "ff_panel.h"
+#include "ff_utils.h"
 
 ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
 
@@ -49,6 +50,10 @@ namespace vgui
 		Color &fg = m_HudForegroundColour;
 
 		C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+
+		// Don't draw if we're a spectator or we have no class
+		if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+			return;
 
 		if (cl_teamcolourhud.GetBool())
 		{
