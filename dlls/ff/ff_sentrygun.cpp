@@ -70,6 +70,8 @@ ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1152.0" );
 ConVar	sg_attachments( "ffdev_sg_attachments", "0" );
+ConVar	sg_bone1( "ffdev_sg_bone1", "1" );
+ConVar	sg_bone2( "ffdev_sg_bone2", "2" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -352,7 +354,7 @@ void CFFSentryGun::OnObjectThink( void )
 
 		// Try rockets w/ bones
 		{
-			int iBones[ 2 ];
+			//int iBones[ 2 ];
 
 			//iBones[ 0 ] = LookupBone( "bone_sgRocket1" );
 			//iBones[ 1 ] = LookupBone( "bone_sgRocket2" );
@@ -364,9 +366,9 @@ void CFFSentryGun::OnObjectThink( void )
 
 				//GetBonePosition( iBones[ i ], vecOrigin, vecAngles );
 				if( i == 0 )
-					GetBonePosition( 8, vecOrigin, vecAngles );
+					GetBonePosition( sg_bone1.GetInt(), vecOrigin, vecAngles );
 				else
-					GetBonePosition( 18, vecOrigin, vecAngles );
+					GetBonePosition( sg_bone2.GetInt(), vecOrigin, vecAngles );
 
 				Vector vecForward;
 				AngleVectors( vecAngles, &vecForward );
