@@ -10,6 +10,7 @@
 #include "ff_entity_system.h"
 #include "ff_gamerules.h"
 #include "ff_shareddefs.h"
+#include "ff_item_flag.h"
 
 // Lua includes
 extern "C"
@@ -28,7 +29,10 @@ extern "C"
 using namespace luabind;
 
 //---------------------------------------------------------------------------
-
+class CFFEntity_AllowFlags
+{
+public:
+};
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitConstants(lua_State* L)
@@ -117,6 +121,16 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kText",				LUA_HUD_ITEM_TEXT),
 				value("kTimer",				LUA_HUD_ITEM_TIMER),
 				value("kRemove",			LUA_HUD_ITEM_REMOVE)
+			],
+
+		class_<CFFEntity_AllowFlags>("AllowFlags")
+			.enum_("AllowFlags")
+			[
+				value("kOnlyPlayers",	kAllowOnlyPlayers),
+				value("kBlue",			kAllowBlueTeam),
+				value("kRed",			kAllowRedTeam),
+				value("kYellow",		kAllowYellowTeam),
+				value("kGreen",			kAllowGreenTeam)
 			]
 	];
 };
