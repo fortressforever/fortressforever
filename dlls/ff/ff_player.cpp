@@ -4178,13 +4178,7 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 				return;
 
 			// Make the grenade
-			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szSecondaryClassName);
-
-			if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_bEngyGrenWarned ) )
-			{
-				if( pGrenade )
-					dynamic_cast< CFFGrenadeEmp * >( pGrenade )->SetWarned();
-			}
+			pGrenade = (CFFGrenadeBase *) CreateEntityByName(pPlayerClassInfo.m_szSecondaryClassName);			
 			break;
 	}
 
@@ -4222,6 +4216,10 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 
 		pGrenade->SetDetonateTimerLength( fTimer );
 		pGrenade->SetupInitialTransmittedVelocity(vecVelocity);
+
+		// Special case for emps since their explode sound starts before it actually explodes
+		if( ( GetClassSlot() == CLASS_ENGINEER ) && ( m_bEngyGrenWarned ) && ( pGrenade->Classify() == CLASS_GREN_EMP ) )
+			dynamic_cast< CFFGrenadeEmp * >( pGrenade )->SetWarned();
 
 		if (fTimer > 0)
 			pGrenade->m_fIsHandheld = false;
