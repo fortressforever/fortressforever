@@ -2316,7 +2316,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 	Vector vecOrigin = GetAbsOrigin();
 
 	// Loop through doing stuff on each player
-	for( int i = 0; i <= iMaxClients; i++ )
+	for( int i = 1; i <= iMaxClients; i++ )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 		
@@ -2514,7 +2514,7 @@ void CFFPlayer::Command_Radar( void )
 
 			Vector vecOrigin = GetAbsOrigin();
 
-			for( int i = 0; i <= gpGlobals->maxClients; i++ )
+			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer && ( pPlayer != this ) )

@@ -363,7 +363,7 @@ ConVar mp_prematch( "mp_prematch",
 			entsys.RunPredicates_LUA(NULL, &hStartup, "startup");
 
 			// Respawn/Reset all players
-			for( int i = 0; i < gpGlobals->maxClients; i++ )
+			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer )
@@ -422,7 +422,7 @@ ConVar mp_prematch( "mp_prematch",
 			}
 
 			// Loop through all players
-			for( int i = 1; i < gpGlobals->maxClients; i++ )
+			for( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{	
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer && pPlayer->IsPlayer() )

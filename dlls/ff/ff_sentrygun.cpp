@@ -555,7 +555,7 @@ void CFFSentryGun::HackFindEnemy( void )
 	Vector vecOrigin = GetAbsOrigin();
 	CBaseEntity *target = NULL;
 
-	for( int i = 1; i < gpGlobals->maxClients; i++ ) 
+	for( int i = 1; i <= gpGlobals->maxClients; i++ ) 
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 

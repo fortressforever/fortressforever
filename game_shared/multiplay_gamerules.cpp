@@ -943,7 +943,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 				
 		m_flIntermissionEndTime = gpGlobals->curtime + flWaitTime;
 
-		for ( int i = 0; i < MAX_PLAYERS; i++ )
+		for ( int i = 1; i <= MAX_PLAYERS; i++ )
 		{
 			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 

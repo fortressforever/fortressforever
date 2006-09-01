@@ -695,10 +695,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 
 	C_FFPlayer *pPlayer = NULL;
 
-	// To stop one of those annoying ass c_ff_player.h asserts
-	// UNDONE: This meant that we couldn't see player class details when they were
-	// dead. Need to find a different solution to the asserts if they come back
-	if( pGR->IsConnected( playerIndex ) /*&& pGR->IsAlive( playerIndex )*/ )
+	if( pGR->IsConnected( playerIndex ) )
 	{
 		CBasePlayer *pTemp = UTIL_PlayerByIndex( playerIndex );
 		if( pTemp && pTemp->IsPlayer() )

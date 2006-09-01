@@ -191,7 +191,7 @@ CON_COMMAND(bot_disguisez, "trigger a disguise")
 
 CON_COMMAND( bot_dmggun, "Makes a bot attach your sg" )
 {
-	for( int i = 0; i < gpGlobals->maxClients; i++ )
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 
@@ -212,7 +212,7 @@ CON_COMMAND( bot_dmggun, "Makes a bot attach your sg" )
 
 CON_COMMAND( bot_showhealth, "Makes a bot show his health" )
 {
-	for( int i = 0; i < gpGlobals->maxClients; i++ )
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 
