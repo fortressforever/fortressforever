@@ -176,7 +176,7 @@ void CHudRadioTag::Paint( void )
 			}
 
 			// Get our origin
-			Vector vecOrigin = pPlayer->GetAbsOrigin();
+			Vector vecOrigin = pPlayer->GetFeetOrigin();
 
 			// Find our fade based on our time shown
 			float dt = ( m_flStartTime - gpGlobals->curtime );
