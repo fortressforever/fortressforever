@@ -328,7 +328,7 @@ void CFFSentryGun::OnObjectThink( void )
 				AngleVectors( vecAngles, &vecForward );
 
 				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 0, 0, 255, false, 5.0f );
-			}
+			}		
 		}
 
 		// Rockets
@@ -348,6 +348,27 @@ void CFFSentryGun::OnObjectThink( void )
 
 				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 0, 0, false, 5.0f );
 			}			
+		}
+
+		// Try rockets w/ bones
+		{
+			int iBones[ 2 ];
+
+			iBones[ 0 ] = LookupBone( "bone_sgRocket1" );
+			iBones[ 1 ] = LookupBone( "bone_sgRocket2" );
+
+			for( int i = 0; i < 2; i++ )
+			{
+				Vector vecOrigin;
+				QAngle vecAngles;
+
+				GetBonePosition( iBones[ i ], vecOrigin, vecAngles );
+
+				Vector vecForward;
+				AngleVectors( vecAngles, &vecForward );
+
+				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 255, 255, false, 5.0f );
+			}				
 		}
 	}
 
