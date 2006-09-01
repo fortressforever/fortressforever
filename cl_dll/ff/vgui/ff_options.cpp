@@ -58,7 +58,9 @@ public:
 	{
 		m_pInputBox = new TextEntry(parent, inputName);
 		m_pInputBox->SetAllowNumericInputOnly(true);
-		m_pInputBox->SetEditable(false);
+		//m_pInputBox->SetEditable(false);
+		m_pInputBox->AddActionSignalTarget(this);
+		//m_pInputBox->SendNewLine(true);
 
 		AddActionSignalTarget(parent);
 	}
@@ -69,10 +71,92 @@ public:
 	virtual void SetValue(int value, bool bTriggerChangeMessage = true)
 	{
 		m_pInputBox->SetText(VarArgs("%d", value));
-		BaseClass::SetValue(value);
+		BaseClass::SetValue(value, bTriggerChangeMessage);
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Keep the input box up to date
+	//-----------------------------------------------------------------------------
+	virtual void SetEnabled(bool state)
+	{
+		m_pInputBox->SetEnabled(state);
+		BaseClass::SetEnabled(state);
+	}
+
+
 private:
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Allow the input box to change this value
+	//-----------------------------------------------------------------------------
+	virtual void UpdateFromInput(int iValue, bool bTriggerChangeMessage = true)
+	{
+		BaseClass::SetValue(iValue, bTriggerChangeMessage);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	int GetInputValue()
+	{
+		if (m_pInputBox->GetTextLength() == 0)
+			return -1;
+
+		char szValue[5];
+		m_pInputBox->GetText(szValue, 4);
+
+		if (!szValue[0])
+			return -1;
+
+		int iValue = atoi(szValue);
+
+		// Since text is disabled on this box (and hopefully Valve haven't messed that
+		// up, the next checks aren't need
+
+		// atoi returned zero so make sure that the box is 1 character long and that
+		// character is 0, otherwise it could just be some text.
+		//if (iValue == 0 && (szValue[0] != '0' || m_pInputBox->GetTextLength() != 1))
+		//	return -1;
+
+		// Make sure that this number is as long as the string
+		//
+
+		return iValue;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the text box being changed and update the slider
+	//-----------------------------------------------------------------------------
+	MESSAGE_FUNC_PARAMS(OnTextChanged, "TextChanged", data)
+	{
+		// Apparently this is a good check
+		if (!m_pInputBox->HasFocus())
+			return;
+
+		int iValue = GetInputValue();
+
+		int iMin, iMax;
+		GetRange(iMin, iMax);
+
+		iValue = clamp(iValue, iMin, iMax);
+
+		UpdateFromInput(iValue, false);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Don't let the box be left on invalid values
+	//-----------------------------------------------------------------------------
+	MESSAGE_FUNC_PARAMS(OnKillFocus, "TextKillFocus", data)
+	{
+		int iValue = GetInputValue();
+
+		int iMin, iMax;
+		GetRange(iMin, iMax);
+
+		iValue = clamp(iValue, iMin, iMax);
+
+		m_pInputBox->SetText(VarArgs("%d", iValue));
+	}
 
 	TextEntry *m_pInputBox;
 };
@@ -102,7 +186,7 @@ public:
 		m_pInnerCharacter->AddActionSignalTarget(this);
 		m_pInnerCharacter->SetEditable(false);
 
-		const char *pszOuter = "abcdefghijklmnopqrstuvwABCDEFGHIJKLMNOPQRSTUVW";
+		const char *pszOuter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		int nOuter = strlen(pszOuter);
 
 		m_pOuterCharacter = new ComboBox(this, "OuterCharacter", nOuter, false);
