@@ -5270,7 +5270,7 @@ void C_BaseEntity::ResetLatched()
 static float AdjustInterpolationAmount( C_BaseEntity *pEntity, float baseInterpolation )
 {
 	// --> Mirv: Reduce the interpolation for our projectiles
-	if (!pEntity->IsPlayer() && pEntity->Classify() > CLASS_GREN)
+	if (!pEntity->IsPlayer() && pEntity->Classify() >= CLASS_GREN)
 	{
 		return TICKS_TO_TIME(TIME_TO_TICKS(/*0.01f*/ cl_interp_ents.GetFloat()) + 1.0f);
 	}
