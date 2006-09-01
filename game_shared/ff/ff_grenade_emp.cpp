@@ -67,6 +67,13 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 	//-----------------------------------------------------------------------------
 	void CFFGrenadeEmp::Explode(trace_t *pTrace, int bitsDamageType)
 	{
+		// Don't explode if in no gren area
+		if( !FFScriptRunPredicates( this, "onexplode", true ) )
+		{
+			UTIL_Remove( this );
+			return;
+		}
+
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
