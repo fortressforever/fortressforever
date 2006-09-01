@@ -69,6 +69,7 @@ ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1152.0" );
+ConVar	sg_attachments( "ffdev_sg_attachments", "0" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -308,6 +309,51 @@ void CFFSentryGun::OnObjectThink( void )
 		UTIL_SetSize( this, g_ffdev_sg_mins, g_ffdev_sg_maxs );
 		*/
 
+	// For FC
+	if( sg_attachments.GetBool() && !engine->IsDedicatedServer() && ( GetLevel() == 3 ) )
+	{
+		// Barrels
+		{
+			
+
+			for( int i = 0; i < 2; i++ )
+			{
+				Vector vecOrigin;
+				QAngle vecAngles;
+
+				if( i == 0 )
+					GetAttachment( m_iLBarrelAttachment, vecOrigin, vecAngles );
+				else
+					GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
+
+				Vector vecForward;
+				AngleVectors( vecAngles, &vecForward );
+
+				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 0, 0, 255, false, 5.0f );
+
+			}
+		}
+
+		// Rockets
+		{
+			for( int i = 0; i < 2; i++ )
+			{
+				Vector vecOrigin;
+				QAngle vecAngles;
+
+				if( i == 0 )
+					GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
+				else
+					GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
+
+				Vector vecForward;
+				AngleVectors( vecAngles, &vecForward );
+
+				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 0, 0, false, 5.0f );
+			}			
+		}
+	}
+
 	CheckForOwner();
 
 	// Animate
@@ -434,7 +480,7 @@ void CFFSentryGun::OnActiveThink( void )
 	{
 		m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
 
-		if( vecAiming.Dot( vecGoal ) > DOT_5DEGREE ) 
+		if( vecAiming.Dot( vecGoal ) > DOT_5DEGREE )
 			Shoot( MuzzlePosition(), vecAiming, true );
 
 		bFired = true;
