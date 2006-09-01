@@ -354,15 +354,19 @@ void CFFSentryGun::OnObjectThink( void )
 		{
 			int iBones[ 2 ];
 
-			iBones[ 0 ] = LookupBone( "bone_sgRocket1" );
-			iBones[ 1 ] = LookupBone( "bone_sgRocket2" );
+			//iBones[ 0 ] = LookupBone( "bone_sgRocket1" );
+			//iBones[ 1 ] = LookupBone( "bone_sgRocket2" );
 
 			for( int i = 0; i < 2; i++ )
 			{
 				Vector vecOrigin;
 				QAngle vecAngles;
 
-				GetBonePosition( iBones[ i ], vecOrigin, vecAngles );
+				//GetBonePosition( iBones[ i ], vecOrigin, vecAngles );
+				if( i == 0 )
+					GetBonePosition( 8, vecOrigin, vecAngles );
+				else
+					GetBonePosition( 18, vecOrigin, vecAngles );
 
 				Vector vecForward;
 				AngleVectors( vecAngles, &vecForward );
