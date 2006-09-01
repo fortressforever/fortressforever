@@ -16,82 +16,67 @@
 #include "ff_statdefs.h"
 #include "ff_weapon_base.h"
 
+#include <vector>
+
 // Forward declarations
 class CFFPlayer;
 
-/**
-* Stats information
-*
-* @author Gavin "Mirvin_Monkey" Bramhill
-* @version 1.0.0
-*/
-class CPlayerStats
-{
-public:
-	// Set to public for now
-	unsigned short	m_iCounters[STAT_MAX];
-	float			m_flTimers[TIMER_MAX];
-	bool			m_fTimerStates[TIMER_MAX];
-
-	// This could be optimised to work with slots instead since each 
-	// class only has a few weapons
-	unsigned short	m_nWpnFire[FF_WEAPON_MAX];
-	unsigned short	m_nWpnHit[FF_WEAPON_MAX];
-
-	// Hold player information
-	int		m_iPlayerUid;
-	int		m_iPlayerClass;
-	char	m_szSteamID[MAX_NETWORKID_LENGTH];	
-
-	// [DEBUG] Keep track of refs
-	static int refcount;
-
-public:
-	CPlayerStats(int playeruid, const char *steamid, int classid);
-	~CPlayerStats();
+enum stattype_t {
+	STAT_ADD,
+	STAT_MIN,
+	STAT_MAX
+};
+struct CFFStatDef {
+	char *m_sName;
+	stattype_t m_iType;
+};
+struct CFFActionDef {
+	char *m_sName;
+};
+struct CFFAction {
+	int actionid;
+	int targetid;
+	int time;
+	char *param;
+	Vector coords;
+	char *location;
 };
 
-/**
-* Stats logging class
-*
-* @author Gavin "Mirvin_Monkey" Bramhill
-* @version 1.0.0
-*/
-class CFFStatsLogging
-{
-private:
-	char			m_szMapName[MAX_MAP_NAME];
-	int				m_nPlayers;
+struct CFFPlayerStats {
+	char *m_sName;
+	char *m_sSteamID;
+	int m_iClass;
+	int m_iTeam;
+	int m_iUniqueID;
+	std::vector<double> m_vStats;
+	std::vector<double> m_vStartTimes;
+	std::vector<CFFAction> m_vActions;
+};
 
-	int				m_iPlayerUniqueID[MAX_PLAYERS];
-	char			m_szPlayerSteamID[MAX_PLAYERS][MAX_NETWORKID_LENGTH];
 
-	CPlayerStats	*m_pPlayerStats[MAX_PLAYERS * 10];
-	CPlayerStats	**m_pCurrentPlayers[MAX_PLAYERS];
 
+class CFFStatsLog {
 public:
-	CFFStatsLogging();
-	~CFFStatsLogging();
-
-	void CleanUp();
-
-	void SetMap(const char *);
-
-	void RegisterPlayerID(int playerindex, int playeruid, const char *steamid);
-	void SetClass(int playerindex, int classid);
-
-	void AddToCount(int playerindex, StatisticType stat, int i = 1);
-	void AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i = 1);
-
-	void AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i = 1);
-	void AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i = 1);
-
-	void SetTimer(int playerindex, TimerType timer, bool on);
-
+	CFFStatsLog();
+	~CFFStatsLog();
+	int GetActionID(const char *statname);
+	int GetStatID(const char *statname, stattype_t type = STAT_ADD);
+	int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name);
+	void AddStat(int playerid, int statid, double value);
+	void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location);
+	void StartTimer(int playerid, int statid);
+	void StopTimer(int playerid, int statid, bool apply = true);
+	void ResetStats();
 	void Serialise(char *buffer, int buffer_size);
 
 	const char *GetAuthString();
 	const char *GetTimestampString();
+
+private:
+	// holds all of the player's stats
+	std::vector<CFFPlayerStats> m_vPlayers;
+	std::vector<CFFStatDef> m_vStats;
+	std::vector<CFFActionDef> m_vActions;
 };
 
 /**
@@ -131,6 +116,6 @@ public:
 void SendStats();
 
 // Singleton to use
-extern CFFStatsLogging g_StatsLog;
+extern CFFStatsLog g_StatsLog;
 
 #endif /* FF_STATSLOG_H */

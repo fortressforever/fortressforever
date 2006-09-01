@@ -253,7 +253,7 @@ ConVar mp_prematch( "mp_prematch",
 		
 		// Start stats engine
 		SendStats();
-		g_StatsLog.CleanUp();
+		g_StatsLog.ResetStats();
 
 		// Reset the effects timeouts
 		ClearAllowedEffects();
@@ -312,7 +312,7 @@ ConVar mp_prematch( "mp_prematch",
 
 			// Restart stats!
 			SendStats();
-			g_StatsLog.CleanUp();
+			g_StatsLog.ResetStats();
 
 			// Kill entity system helper
 			UTIL_Remove( helper );
