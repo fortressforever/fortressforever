@@ -314,8 +314,6 @@ void CFFSentryGun::OnObjectThink( void )
 	{
 		// Barrels
 		{
-			
-
 			for( int i = 0; i < 2; i++ )
 			{
 				Vector vecOrigin;
@@ -330,7 +328,6 @@ void CFFSentryGun::OnObjectThink( void )
 				AngleVectors( vecAngles, &vecForward );
 
 				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 0, 0, 255, false, 5.0f );
-
 			}
 		}
 
