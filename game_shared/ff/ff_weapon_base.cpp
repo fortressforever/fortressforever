@@ -22,6 +22,7 @@
 #ifdef CLIENT_DLL 
 	#include "c_ff_player.h"
 #else
+	#include "ff_statslog.h"
 	#include "ff_player.h"
 	#include "eventqueue.h"
 #endif
@@ -140,6 +141,14 @@ CFFWeaponBase::CFFWeaponBase()
 	m_flNextBuildKill = 0.0f;
 
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+
+#ifdef GAME_DLL
+	char buf[256];
+	Q_snprintf(buf, 256, "fired_%s", GetClassName());
+	m_iStatFired = g_StatsLog.GetStatID(buf);
+	Q_snprintf(buf, 256, "hit_%s", GetClassName());
+	m_iStatHit = g_StatsLog.GetStatID(buf);
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -363,6 +372,9 @@ void CFFWeaponBase::PrimaryAttack()
 #ifdef GAME_DLL
 	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+
+	// record in stats as a firing
+	g_StatsLog.AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 #endif
 
 	// Fire now

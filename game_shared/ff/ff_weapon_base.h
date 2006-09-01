@@ -175,6 +175,9 @@ public:
 
 	const char			*GetWorldModel( void ) const;
 	int					GetWorldModelIndex( void );
+
+	int					m_iStatFired;
+	int					m_iStatHit;
 private:
 
 	CFFWeaponBase(const CFFWeaponBase &);

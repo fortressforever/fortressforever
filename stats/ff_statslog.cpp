@@ -25,228 +25,231 @@
 #include <list>
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include "tier0/memdbgon.h"
 
-int CPlayerStats::refcount = 0;
-
-// Singleton for this.
-CFFStatsLogging g_StatsLog;
-
-// Strings that the PHP recognise the stats by
-const char *g_pszStatStrings[] =
-{
-	"kills",			// STAT_KILLS
-	"teamkills",		// STAT_TEAMKILLS
-	"deaths",			// STAT_DEATHS
-	"roundwins",		// STAT_ROUNDWINS
-	"rounddraws",		// STAT_ROUNDDRAWS
-	"roundlosses",		// STAT_ROUNDLOSSES
-	"score",			// STAT_SCORE
-	"teamfor",			// STAT_TEAMFOR
-	"teamagainst",		// STAT_TEAMAGAINST
-	"heals",			// STAT_HEALS
-	"criticalheals",	// STAT_CRITICALHEALS
-	"hphealed",			// STAT_HPHEALED
-	"cures",			// STAT_CURES
-	"infections",		// STAT_INFECTIONS
-	"infectionspreads", // STAT_INFECTIONSPREADS
-	"infectionkills",	// STAT_INFECTIONKILLS
-	"concjumps",		// STAT_CONCJUMPS
-	"concdistance",		// STAT_CONCDISTANCE
-	"hangtime",			// STAT_HANGTIME
-};
-
-// More strings that the php recognises stats by
-const char *g_pszTimerStrings[] =
-{
-	"played",			// STAT_KILLS
-};
-
-// FF weapon names
-extern const char *s_WeaponAliasInfo[];
+// singleton
+CFFStatsLog g_StatsLog;
 
 /**
-* Constructor
+Constructor for the CFFStatsLog class
 */
-CFFStatsLogging::CFFStatsLogging() 
+CFFStatsLog::CFFStatsLog()
 {
-	m_nPlayers = 0;
-
-	CleanUp();
 }
 
 /**
-* Destructor
+Destructor for the CFFStatsLog class
 */
-CFFStatsLogging::~CFFStatsLogging() 
+CFFStatsLog::~CFFStatsLog()
 {
-	CleanUp();
+	// remove all the stuff so we don't have any memory leaks (I hope)
+	for (int i=0; i<(int)m_vPlayers.size(); i++) {
+		delete m_vPlayers[i].m_sName;
+		delete m_vPlayers[i].m_sSteamID;
+	}
+	for (int i=0; i<(int)m_vStats.size(); i++) {
+		delete m_vStats[i].m_sName;
+	}
+	m_vPlayers.clear();
+	m_vStats.clear();
 }
 
 /**
-* Cleans up all the data stored in this session
+Looks up the ID for a stat with the given name
 */
-void CFFStatsLogging::CleanUp() 
+int CFFStatsLog::GetStatID(const char *statname, stattype_t type)
 {
 	int i;
-
-	// Destroy all instances of class stats
-	for (i = 0; i < m_nPlayers; i++) 
+	
+	// see if we have it already
+	for (i=0; i<(int)m_vStats.size(); i++)
 	{
-		if (m_pPlayerStats[i]) 
-		{
-			delete m_pPlayerStats[i];
-			m_pPlayerStats[i] = NULL;
-		}
+		// if we do, then return it
+		if (FStrEq(m_vStats[i].m_sName, statname))
+			return i;
 	}
 
-	// Remove all current player things
-	for (i = 0; i < MAX_PLAYERS; i++) 
+	// otherwise we need to create it
+	CFFStatDef s;
+	s.m_sName = new char[strlen(statname)+1];
+	strcpy(s.m_sName, statname);
+	s.m_iType = type;
+	m_vStats.push_back(s);
+	
+	// i should now be the end, which is the one we created
+	return i;
+}
+
+/**
+Looks up the ID for a action with the given name
+*/
+int CFFStatsLog::GetActionID(const char *actionname)
+{
+	int i;
+	
+	// see if we have it already
+	for (i=0; i<(int)m_vActions.size(); i++)
 	{
-		m_pCurrentPlayers[i] = NULL;
+		// if we do, then return it
+		if (FStrEq(m_vActions[i].m_sName, actionname))
+			return i;
 	}
 
-	m_nPlayers = 0;
+	// otherwise we need to create it
+	CFFActionDef s;
+	s.m_sName = new char[strlen(actionname)+1];
+	strcpy(s.m_sName, actionname);
+	m_vActions.push_back(s);
+	
+	// i should now be the end, which is the one we created
+	return i;
 }
 
 /**
-* Sets the currently played map, this should only be done once per map obviously
-*
-* @param mapname Name of map
+Looks up the ID for a stat with the given name
 */
-void CFFStatsLogging::SetMap(const char *mapname) 
+int CFFStatsLog::GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name)
 {
-	Q_strncpy(m_szMapName, mapname, MAX_MAP_NAME - 1);
-}
-
-/**
-* Register a player index with a unique id and steam id
-*
-* @param playerindex Player entity index
-* @param playeruid Player unique identifier
-* @param steamid Player SteamID
-*/
-void CFFStatsLogging::RegisterPlayerID(int playerindex, int playeruid, const char *steamid) 
-{
-	// Remember this playerindex's unique id & steam id for when we create class instances
-	m_iPlayerUniqueID[playerindex] = playeruid;
-	Q_strncpy(m_szPlayerSteamID[playerindex], steamid, MAX_NETWORKID_LENGTH - 1);
-}
-
-/**
-* Set the class of this player
-* Finds previous allocation of this player's stats for this class
-* or creates a new one if needed.
-*
-* @param playerindex Player entity index
-* @param classid Class of player
-*/
-void CFFStatsLogging::SetClass(int playerindex, int classid) 
-{
-	// Get the player's uniqueid
-	int playeruid = m_iPlayerUniqueID[playerindex];
-
-	// If this player exists cancel the timers
-	if (m_pCurrentPlayers[playerindex]) 
+	int i;
+	
+	// see if we have it already
+	for (i=0; i<(int)m_vPlayers.size(); i++)
 	{
-		// Turn off all the timers
-		for (int i = 0; i < TIMER_MAX; i++) 
-			SetTimer(playerindex, (TimerType) i, false);
+		// if we do, then return it
+		if (FStrEq(m_vPlayers[i].m_sSteamID, steamid) && m_vPlayers[i].m_iClass == classid)
+			return i;
 	}
 
-	// Search through the current set of stats
-	for (int i = 0; i < m_nPlayers; i++) 
-	{
-		// This player/class combination already exists
-		if (m_pPlayerStats[i] && m_pPlayerStats[i]->m_iPlayerUid == playeruid && m_pPlayerStats[i]->m_iPlayerClass == classid) 
-		{
-			// Point to this from now on
-			m_pCurrentPlayers[playerindex] = &m_pPlayerStats[i];
-			return;
-		}
+	// otherwise we need to create it
+	CFFPlayerStats s;
+	s.m_iClass = classid;
+	s.m_iTeam = teamnum;
+	s.m_iUniqueID = uniqueid;
+	s.m_sName = new char[strlen(name)+1]; strcpy(s.m_sName, name);
+	s.m_sSteamID = new char[strlen(steamid)+1]; strcpy(s.m_sSteamID, steamid);
+	m_vPlayers.push_back(s);
+	
+	// i should now be the end, which is the one we created
+	return i;
+}
+
+/**
+Add a value to a statistic for a player. For example, add 1 shot fired with a pistol.
+*/
+void CFFStatsLog::AddStat(int playerid, int statid, double value)
+{
+	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
+	assert(statid >= 0 && statid < (int)m_vStats.size());
+
+	// make sure it's big enough
+	if (m_vPlayers[playerid].m_vStats.size() < m_vStats.size())
+		m_vPlayers[playerid].m_vStats.resize(m_vStats.size(), 0.0);
+
+	// update the stat for the appropriate type
+	if (m_vStats[statid].m_iType == STAT_ADD) {
+		m_vPlayers[playerid].m_vStats[statid] += value;
+	} else if (m_vStats[statid].m_iType == STAT_MIN) {
+		if (value < m_vPlayers[playerid].m_vStats[statid])
+			m_vPlayers[playerid].m_vStats[statid] = value;
+	} else if (m_vStats[statid].m_iType == STAT_MAX) {
+		if (value > m_vPlayers[playerid].m_vStats[statid])
+			m_vPlayers[playerid].m_vStats[statid] = value;
 	}
 
-	// This player class combination has not been picked yet
-	m_pPlayerStats[m_nPlayers] = new CPlayerStats(playeruid, m_szPlayerSteamID[playerindex], classid);
-	m_pCurrentPlayers[playerindex] = &m_pPlayerStats[m_nPlayers];
-
-	m_nPlayers++;
+	DevMsg("Added stat to player %d: %s += %f\n", playerid, m_vStats[statid].m_sName, value);
 }
 
 /**
-* Add a count to a current player
-*
-* @param player Current player
-* @param stat Statistic type
-* @param i Increment amount
+Add an action to the action list.
+	playerid: playerid for the player that performed the action (retreived from GetPlayerID())
+	targetid: playerid for the target (if applicable), otherwise -1
+	time: number of seconds since the beginning of the round
+	param: a string that is context sensitive towards the action (for example "red_flag")
+	coords: coordinates that this action happened at
+	location: string representation of the player's location
 */
-void CFFStatsLogging::AddToCount(CFFPlayer *pPlayer, StatisticType stat, int i /* = 1 */) 
+void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location)
 {
-	AddToCount(pPlayer->entindex(), stat, i);
+	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
+
+	// build the action def
+	CFFAction a;
+	a.actionid = actionid;
+	a.targetid = targetid;
+	a.param = new char[strlen(param)+1]; strcpy(a.param, param);
+	a.coords = coords;
+	a.location = new char[strlen(location)+1]; strcpy(a.location, location);
+	a.time = time;
+
+	// add it
+	m_vPlayers[playerid].m_vActions.push_back(a);
 }
 
 /**
-* Add a count to a current player
-*
-* @param playerindex Current player
-* @param stat Statistic type
-* @param i Increment amount
+Start a timer for a particular stat. For example, when a player joins a server,
+start the timer for the stat "played", and stop it later when they leave the
+server or change classes/teams.
 */
-void CFFStatsLogging::AddToCount(int playerindex, StatisticType stat, int i /* = 1 */) 
+void CFFStatsLog::StartTimer(int playerid, int statid)
 {
-	if (m_pCurrentPlayers[playerindex]) 
-		 (*m_pCurrentPlayers[playerindex])->m_iCounters[stat] += i;
-}
+	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
+	assert(statid >= 0 && statid < (int)m_vStats.size());
 
-/**
-* Add a count to weapons
-*
-* @param playerindex Current player
-* @param wpn Weapon type
-* @param i Increment amount
-*/
-void CFFStatsLogging::AddToWpnFireCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
-{
-	if (m_pCurrentPlayers[playerindex]) 
-		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
-}
+	// make sure it's big enough
+	if (m_vPlayers[playerid].m_vStartTimes.size() < m_vStats.size())
+		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
 
-/**
-* Add a count to hits with weapons
-*
-* @param playerindex Current player
-* @param wpn Weapon type
-* @param i Increment amount
-*/
-void CFFStatsLogging::AddToWpnHitCount(int playerindex, FFWeaponID wpn, int i /* = 1 */) 
-{
-	if (m_pCurrentPlayers[playerindex]) 
-		(*m_pCurrentPlayers[playerindex])->m_nWpnFire[wpn] += i;
-}
-
-/**
-* Turn a timer on or off
-*
-* @param playerindex Current player
-* @param timer Timer type
-* @param on Timer is on or not
-*/
-void CFFStatsLogging::SetTimer(int playerindex, TimerType timer, bool on) 
-{
-	// Make sure the timer status is changing
-	if (m_pCurrentPlayers[playerindex] && (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] != on) 
+	// make sure it's stopped
+	if (m_vPlayers[playerid].m_vStartTimes[statid] < 0.0001)
 	{
-		 (*m_pCurrentPlayers[playerindex])->m_flTimers[timer] = gpGlobals->curtime - (*m_pCurrentPlayers[playerindex])->m_flTimers[timer];
-
-		 (*m_pCurrentPlayers[playerindex])->m_fTimerStates[timer] = on;
+		DevWarning("Starting timer for stat %d without stopping it first\n", statid);
+		StopTimer(playerid, statid, true);
 	}
+
+	// set the start time to now
+	m_vPlayers[playerid].m_vStartTimes[statid] = gpGlobals->curtime;
+}
+
+/**
+Stop a timer for a particular stat and optionally add the time (in seconds) to the
+stat value. For example, if the stat "played" was stopped, then it would determine
+the time it was "running" and add that value to the stat. If apply is false, then
+the timer is simply stopped (for example if a stat was fastest "home-run" cap, the
+timer would be started when the flag was touched, but cancelled if the flag is dropped)
+*/
+void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
+{
+	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
+	assert(statid >= 0 && statid < (int)m_vStats.size());
+
+	// make sure it's big enough
+	if (m_vPlayers[playerid].m_vStartTimes.size() < m_vStats.size())
+		m_vPlayers[playerid].m_vStartTimes.resize(m_vStats.size(), 0.0);
+
+	if (apply)
+		AddStat(playerid, statid, gpGlobals->curtime - m_vPlayers[playerid].m_vStartTimes[statid]);
+
+	m_vPlayers[playerid].m_vStartTimes[statid] = 0;
+}
+
+/**
+Reset all of the statistics for all players. This is useful for starting a new map
+*/
+void CFFStatsLog::ResetStats()
+{
+	for (int i=0; i<(int)m_vPlayers.size(); i++) {
+		delete m_vPlayers[i].m_sName;
+		delete m_vPlayers[i].m_sSteamID;
+	}
+	m_vPlayers.clear();
 }
 
 /**
 * Retreive the authorisation string that verifies stats sent
 */
-const char *CFFStatsLogging::GetAuthString() 
+const char *CFFStatsLog::GetAuthString() 
 {
 	return "ABC";
 }
@@ -254,16 +257,17 @@ const char *CFFStatsLogging::GetAuthString()
 /**
 * Retreive a timestamp
 */
-const char *CFFStatsLogging::GetTimestampString() 
+const char *CFFStatsLog::GetTimestampString() 
 {
 	return "22-Jan-2006 00:03 UTC";
 }
 
 /**
-* Serialise the stored data for sending
+Serialise the stored data for sending
 */
-void CFFStatsLogging::Serialise(char *buffer, int buffer_size) 
+void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 {
+	DevMsg("[STATS] Generating Serialized stats log\n");
 	CQuickBuffer buf(buffer, buffer_size);
 	int i, j;
 
@@ -272,118 +276,48 @@ void CFFStatsLogging::Serialise(char *buffer, int buffer_size)
 	buf.Add("auth %s\n", GetAuthString());
 	buf.Add("date %s\n", GetTimestampString());
 	buf.Add("duration %d\n", 1800);
-	buf.Add("map %s\n", m_szMapName);
+	buf.Add("map %s\n", "fry_baked");
 	buf.Add("bluescore %d\n", 0);
 	buf.Add("redscore %d\n", 0);
 	buf.Add("yellowscore %d\n", 0);
 	buf.Add("greenscore %d\n", 0);
-	buf.Add("playerdef\n");
+	
+	// add the players section
+	buf.Add("players\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		buf.Add("%s %s %d %d\n",
+			m_vPlayers[i].m_sSteamID,
+			m_vPlayers[i].m_sName,
+			m_vPlayers[i].m_iTeam,
+			m_vPlayers[i].m_iClass);
+	}
 
-	std::list<int> i_Done;
-	std::list<int>::iterator i_Find;
-
-	// Loop through defining all players
-	// Format: STEAMID NAME UNIQUEID
-	for (i = 0; i < m_nPlayers; i++) 
-	{
-		if (!m_pPlayerStats[i]) 
-			continue;
-
-		i_Find = find(i_Done.begin(), i_Done.end(), i); // Search the list.
-		
-		// Make sure we haven't already listed this one
-		if (i_Find == i_Done.end()) 
-		{
-			buf.Add("%s %s %d\n", m_pPlayerStats[i]->m_szSteamID, "RANDOMNAME", m_pPlayerStats[i]->m_iPlayerUid);
-			i_Done.push_back(i);
+	// add the actions section
+	buf.Add("actions\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		for (j=0; j<(int)m_vPlayers[i].m_vActions.size(); j++) {
+			buf.Add("%d %d %s %d %s %s %s\n",
+				i,
+				m_vPlayers[i].m_vActions[j].targetid,
+				m_vActions[m_vPlayers[i].m_vActions[j].actionid],
+				m_vPlayers[i].m_vActions[j].time,
+				m_vPlayers[i].m_vActions[j].param,
+				"",
+				m_vPlayers[i].m_vActions[j].location);
 		}
 	}
 
-	buf.Add("statdef\n");
-
-	// Loop through defining all the stats
-	// FORMAT: STATNAME STATID
-	for (i = 0; i < STAT_MAX; i++)
-		buf.Add("%s %d\n", g_pszStatStrings[i], i);
-
-	// Loop through defining all timers and include these as stats too
-	// FORMAT: TIMERNAME TIMERID+STAT_MAX
-	for (i = 0; i < TIMER_MAX; i++)
-		buf.Add("%s %d\n", g_pszTimerStrings[i], STAT_MAX + i);
-
-	// Loop through defining all weapon stats too
-	// FORMAT: WEAPONSTATNAME WEAPONSTATID
-	for (i = 0; i < FF_WEAPON_MAX; i++)
-	{
-		buf.Add("fired_%s %d\n", s_WeaponAliasInfo[i], STAT_MAX + TIMER_MAX + (2 * i));
-		buf.Add("hit_%s %d\n", s_WeaponAliasInfo[i], STAT_MAX + TIMER_MAX + (2 * i) + 1);
-	}
-
-	buf.Add("weapondef\n");
-
-	// Loop through defining all the weapon names
-	// FORMAT: WEAPONNAME WEAPID
-	for (i = 0; i < FF_WEAPON_MAX; i++)
-		buf.Add("%s %d\n", s_WeaponAliasInfo[i], i);
-
-	// Loop through each player/class combination and print the changed stats
-	// FORMAT: UNIQUEID CLASSID STATID STATVALUE
-	for (i = 0; i < m_nPlayers; i++) 
-	{
-		if (!m_pPlayerStats[i]) 
-			continue;
-
-		// First print all the normal stats
-		for (j = 0; j < STAT_MAX; j++) 
-		{
-			// Don't send any unchanged values
-			if (m_pPlayerStats[i]->m_iCounters[j] == 0) 
-				continue;
-
-			buf.Add("%d %d %d %hu\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, m_pPlayerStats[i]->m_iCounters[j]);
-		}
-
-		// Then print all timer stats. As integers or floats?
-		for (j = 0; j < TIMER_MAX; j++)
-		{
-			// Don't send any unchanged values
-			if (m_pPlayerStats[i]->m_flTimers[j] == 0)
-				continue;
-
-			buf.Add("%d %d %d %hu\n", m_pPlayerStats[i]->m_iPlayerUid, m_pPlayerStats[i]->m_iPlayerClass, j, (unsigned short) m_pPlayerStats[i]->m_flTimers[j]);
+	// add the stats section
+	buf.Add("stats\n");
+	for (i=0; i<(int)m_vPlayers.size(); i++) {
+		for (j=0; j<(int)m_vPlayers[i].m_vStats.size(); j++) {
+			if (m_vPlayers[i].m_vStats[j] == 0.0) continue; // skip unset stats
+			buf.Add("%d %s %f\n",
+				i,
+				m_vStats[j].m_sName,
+				m_vPlayers[i].m_vStats[j]);
 		}
 	}
-}
-
-/**
-* Constructor
-*
-* @param playeruid Player unique identifier
-* @param steamid Player steam id
-* @param classid Player class
-*/
-CPlayerStats::CPlayerStats(int playeruid, const char *steamid, int classid) 
-{
-	m_iPlayerUid = playeruid;
-	m_iPlayerClass = classid;
-
-	Q_strncpy(m_szSteamID, steamid, MAX_NETWORKID_LENGTH - 1);
-
-	memset(&m_iCounters, 0, sizeof(m_iCounters));
-	memset(&m_flTimers, 0, sizeof(m_flTimers));
-
-	for (int i = 0; i < TIMER_MAX; i++) 
-		m_fTimerStates[i] = false;
-
-	CPlayerStats::refcount++;
-}
-
-/**
-* Destructor
-*/
-CPlayerStats::~CPlayerStats() 
-{
-	CPlayerStats::refcount--;
 }
 
 /**
@@ -401,8 +335,6 @@ void SendStats()
 
 	DevMsg(buf);
 
-	return;
-
 	Socks sock;
 
 	// Open up a socket
@@ -413,9 +345,17 @@ void SendStats()
 	}
 
 	// Connect to remote host
-	if (!sock.Connect("buzz", 27999)) 
+	if (!sock.Connect("localhost", 80)) 
 	{
 		DevWarning("[STATS] Could not connect to remote host\n");
+		return;
+	}
+
+	// Send data
+	if (!sock.Send(buf)) 
+	{
+		DevWarning("[STATS] Could not send data to remote host\n");
+		sock.Close();
 		return;
 	}
 

@@ -712,6 +712,18 @@ public:
 	float		m_flSpeedModifierOld;
 	float		m_flSpeedModifierChangeTime;
 
+	// stats stuff
+	int			m_iStatsID;
+	int			m_iStatDeath;
+	int			m_iStatTeamKill;
+	int			m_iStatKill;
+	int			m_iStatInfections;
+	int			m_iStatCures;
+	int			m_iStatHeals;
+	int			m_iStatHealHP;
+	int			m_iStatCritHeals;
+	int			m_iStatInfectCures;
+
 public:
 	// Run "effects" and "speed effects" through here first
 	// before giving the player the actual effect.
