@@ -1101,7 +1101,7 @@ void CFFPlayer::Spawn()
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
 	// get our stats id, just in case.
-	m_iStatsID = g_StatsLog.GetPlayerID(engine->GetPlayerNetworkIDString(this->edict()), GetClassSlot(), GetTeamNumber(), engine->GetPlayerUserId(this->edict()), GetName());
+	m_iStatsID = g_StatsLog->GetPlayerID(engine->GetPlayerNetworkIDString(this->edict()), GetClassSlot(), GetTeamNumber(), engine->GetPlayerUserId(this->edict()), GetName());
 }
 
 // Mirv: Moved all this out of spawn into here
@@ -1196,15 +1196,15 @@ void CFFPlayer::InitialSpawn( void )
 	// I'm putting this here, I'm not sure if it's the best place though
 	// I wanted to make sure that the statslog was created or I would've put
 	// it in the constructor - FryGuy
-	m_iStatDeath = g_StatsLog.GetStatID("deaths");
-	m_iStatTeamKill = g_StatsLog.GetStatID("teamkills");
-	m_iStatKill = g_StatsLog.GetStatID("kills");
-	m_iStatInfections = g_StatsLog.GetStatID("infections");
-	m_iStatCures = g_StatsLog.GetStatID("cures");
-	m_iStatHeals = g_StatsLog.GetStatID("heals");
-	m_iStatHealHP = g_StatsLog.GetStatID("healhp");
-	m_iStatCritHeals = g_StatsLog.GetStatID("critheals");
-	m_iStatInfectCures = g_StatsLog.GetStatID("infectcures");
+	m_iStatDeath = g_StatsLog->GetStatID("deaths");
+	m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
+	m_iStatKill = g_StatsLog->GetStatID("kills");
+	m_iStatInfections = g_StatsLog->GetStatID("infections");
+	m_iStatCures = g_StatsLog->GetStatID("cures");
+	m_iStatHeals = g_StatsLog->GetStatID("heals");
+	m_iStatHealHP = g_StatsLog->GetStatID("healhp");
+	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
+	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
 
 	//DevMsg("CFFPlayer::InitialSpawn");
 }
@@ -1333,7 +1333,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_iEngyMe = 0;
 
 	// Log the death to the stats engine
-	g_StatsLog.AddStat(m_iStatsID, m_iStatDeath, 1);
+	g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
 
 	// TODO: Take SGs into account here?
 	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *> (info.GetAttacker());
@@ -1342,9 +1342,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (pKiller)
 	{
 		if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
-			g_StatsLog.AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
+			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
 		else
-			g_StatsLog.AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
+			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
 	}
 
 	// Drop any grenades
@@ -3871,7 +3871,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 
 		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
 
-		g_StatsLog.AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
+		g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
 
 		// And now.. an effect
 		CSingleUserRecipientFilter user(this);
@@ -3899,7 +3899,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		pCurer->IncrementFragCount( 1 );
 
 		// Log this in the stats
-		g_StatsLog.AddStat(pCurer->m_iStatsID, m_iStatCures, 1);
+		g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatCures, 1);
 	}
 
 	// Hack-ish - removing infection effect
@@ -4906,16 +4906,16 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
 
 	// Log the added health
-	g_StatsLog.AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
-	g_StatsLog.AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
+	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
+	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
 	
 	// Critical heal is when they are <= 15hp
 	if (iOriginalHP <= 15)
-		g_StatsLog.AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
+		g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
 
 	if (IsInfected())
 	{
-		g_StatsLog.AddStat(pHealer->m_iStatsID, m_iStatInfectCures, 1);
+		g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatInfectCures, 1);
 		m_bInfected = false;
 
 		// Icon thing, give it just long enough to fade

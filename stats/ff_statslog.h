@@ -16,8 +16,6 @@
 #include "ff_statdefs.h"
 #include "ff_weapon_base.h"
 
-#include <vector>
-
 // Forward declarations
 class CFFPlayer;
 
@@ -26,64 +24,28 @@ enum stattype_t {
 	STAT_MIN,
 	STAT_MAX
 };
-struct CFFStatDef {
-	char *m_sName;
-	stattype_t m_iType;
-};
-struct CFFActionDef {
-	char *m_sName;
-};
-struct CFFAction {
-	int actionid;
-	int targetid;
-	int time;
-	char *param;
-	Vector coords;
-	char *location;
-};
 
-struct CFFPlayerStats {
-	char *m_sName;
-	char *m_sSteamID;
-	int m_iClass;
-	int m_iTeam;
-	int m_iUniqueID;
-	std::vector<double> m_vStats;
-	std::vector<double> m_vStartTimes;
-	std::vector<CFFAction> m_vActions;
-};
-
-
-
-class CFFStatsLog {
+// STL stuff has been moved out of here because Valve and STL don't really mix very well!
+class IStatsLog
+{
 public:
-	CFFStatsLog();
-	~CFFStatsLog();
-	int GetActionID(const char *statname);
-	int GetStatID(const char *statname, stattype_t type = STAT_ADD);
-	int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name);
-	void AddStat(int playerid, int statid, double value);
-	void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location);
-	void StartTimer(int playerid, int statid);
-	void StopTimer(int playerid, int statid, bool apply = true);
-	void ResetStats();
-	void Serialise(char *buffer, int buffer_size);
-
-	const char *GetAuthString();
-	const char *GetTimestampString();
-
-private:
-	// holds all of the player's stats
-	std::vector<CFFPlayerStats> m_vPlayers;
-	std::vector<CFFStatDef> m_vStats;
-	std::vector<CFFActionDef> m_vActions;
+	//virtual int GetActionID(const char *statname) = 0;
+	virtual int GetStatID(const char *statname, stattype_t type = STAT_ADD) = 0;
+	virtual int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name) = 0;
+	virtual void AddStat(int playerid, int statid, double value) = 0;
+	//virtual void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location) = 0;
+	//virtual void StartTimer(int playerid, int statid) = 0;
+	//virtual void StopTimer(int playerid, int statid, bool apply = true) = 0;
+	virtual void ResetStats() = 0;
+	//virtual void Serialise(char *buffer, int buffer_size) = 0;
 };
 
-/**
-* Temporary for now!!! Obviously std::string would be a better alternative
-*
-* @author Gavin "Mirvin_Monkey" Bramhill
-*/
+// Singleton to use
+extern IStatsLog *g_StatsLog;
+
+//
+// VVV This stuff ought to be moved out here as well!!
+//
 class CQuickBuffer
 {
 	int m_iLen;
@@ -114,8 +76,5 @@ public:
 
 // Function to send stats
 void SendStats();
-
-// Singleton to use
-extern CFFStatsLog g_StatsLog;
 
 #endif /* FF_STATSLOG_H */

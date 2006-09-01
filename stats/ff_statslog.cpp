@@ -27,10 +27,65 @@
 #include <string>
 #include <vector>
 
+#undef MINMAX_H
+#include "minmax.h"
+
 #include "tier0/memdbgon.h"
 
+struct CFFStatDef {
+	char *m_sName;
+	stattype_t m_iType;
+};
+struct CFFActionDef {
+	char *m_sName;
+};
+struct CFFAction {
+	int actionid;
+	int targetid;
+	int time;
+	char *param;
+	Vector coords;
+	char *location;
+};
+
+struct CFFPlayerStats {
+	char *m_sName;
+	char *m_sSteamID;
+	int m_iClass;
+	int m_iTeam;
+	int m_iUniqueID;
+	std::vector<double> m_vStats;
+	std::vector<double> m_vStartTimes;
+	std::vector<CFFAction> m_vActions;
+};
+
+class CFFStatsLog : public IStatsLog {
+public:
+	CFFStatsLog();
+	~CFFStatsLog();
+	int GetActionID(const char *statname);
+	int GetStatID(const char *statname, stattype_t type = STAT_ADD);
+	int GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name);
+	void AddStat(int playerid, int statid, double value);
+	void AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location);
+	void StartTimer(int playerid, int statid);
+	void StopTimer(int playerid, int statid, bool apply = true);
+	void ResetStats();
+	void Serialise(char *buffer, int buffer_size);
+
+	const char *GetAuthString();
+	const char *GetTimestampString();
+
+private:
+	// holds all of the player's stats
+	std::vector<CFFPlayerStats> m_vPlayers;
+	std::vector<CFFStatDef> m_vStats;
+	std::vector<CFFActionDef> m_vActions;
+};
+
 // singleton
-CFFStatsLog g_StatsLog;
+CFFStatsLog g_StatsLogSingleton;
+IStatsLog *g_StatsLog = (IStatsLog *) &g_StatsLogSingleton;
 
 /**
 Constructor for the CFFStatsLog class
@@ -331,7 +386,7 @@ void SendStats()
 
 	DevWarning("[STATS] Sending stats...\n");
 
-	g_StatsLog.Serialise(buf, sizeof(buf));
+	/*g_StatsLog*/ g_StatsLogSingleton.Serialise(buf, sizeof(buf));
 
 	DevMsg(buf);
 
