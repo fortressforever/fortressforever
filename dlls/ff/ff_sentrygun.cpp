@@ -620,7 +620,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	if( !bStrict && GetEnemy() ) 
 	{
 		AssertMsg( 0, "Rockets - Do you really want to hit enemy regardless?" );
-		vecDir = GetEnemy()->BodyTarget( RocketPosition(), false ) - RocketPosition();
+		vecDir = GetEnemy()->BodyTarget( vecSrc, false ) - vecSrc;
 	}
 
 	QAngle vecAngles;
