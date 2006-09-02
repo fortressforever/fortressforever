@@ -718,8 +718,8 @@ public:
 
 	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
-	virtual void DoMuzzleFlash( void );
-	virtual void DoRocketMuzzleFlash( void );
+	void DoMuzzleFlash( int iAttachment, const Vector& vecOrigin, const QAngle& vecAngles );
+	void DoRocketMuzzleFlash( int iAttachment, const Vector& vecOrigin, const QAngle& vecAngles );
 
 public:
 	CNetworkVar(unsigned int, m_iAmmoPercent);

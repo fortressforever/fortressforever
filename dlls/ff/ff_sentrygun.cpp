@@ -69,9 +69,6 @@ ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1152.0" );
-ConVar	sg_attachments( "ffdev_sg_attachments", "0" );
-ConVar	sg_bone1( "ffdev_sg_bone1", "1" );
-ConVar	sg_bone2( "ffdev_sg_bone2", "2" );
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -118,26 +115,9 @@ const char *g_pszFFSentryGunSounds[] =
 	"Sentry.Aim",
 	FF_SENTRYGUN_UNBUILD_SOUND,
 	"Spanner.HitSG",
+	"Sentry.RocketFire",
 	NULL
 };
-
-/*
-static Vector g_ffdev_sg_mins = FF_SENTRYGUN_MINS;
-static Vector g_ffdev_sg_maxs = FF_SENTRYGUN_MAXS;
-
-CON_COMMAND( ffdev_setsgsize, "set the sg's size" )
-{
-	g_ffdev_sg_mins.x = -atof( engine->Cmd_Argv( 1 ) );
-	g_ffdev_sg_mins.y = -atof( engine->Cmd_Argv( 2 ) );
-	g_ffdev_sg_mins.z = -atof( engine->Cmd_Argv( 3 ) );
-
-	g_ffdev_sg_maxs.x = atof( engine->Cmd_Argv( 4 ) );
-	g_ffdev_sg_maxs.y = atof( engine->Cmd_Argv( 5 ) );
-	g_ffdev_sg_maxs.z = atof( engine->Cmd_Argv( 6 ) );
-
-	Warning( "[Mins/Maxs] %f, %f, %f, - %f, %f, %f\n", g_ffdev_sg_mins.x, g_ffdev_sg_mins.y, g_ffdev_sg_mins.z, g_ffdev_sg_maxs.x, g_ffdev_sg_maxs.y, g_ffdev_sg_maxs.z );
-}
-*/
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -206,15 +186,8 @@ void CFFSentryGun::Spawn( void )
 	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
 	if( pOwner ) 
 		m_nSkin = clamp( pOwner->GetTeamNumber() - TEAM_BLUE, 0, 3 );	// |-- Mirv: BUG #0000118: SGs are always red	
-	// This is dumb as spawn gets called twice (once as the "constructor" and
-	// once when the game code actually runs it) so it fails once and gives 
-	// this misleading msg in the console
-	//else
-	//	Warning( "Unable to find sg owner!\n" ); 
 
-	//m_HackedGunPos	= Vector(0, 0, 12.75);
 	SetViewOffset(EyeOffset(ACT_IDLE));
-	//m_flFieldOfView	= 0.4f; // 60 degrees
 
 	AddFlag( FL_AIMTARGET );
 	AddEFlags( EFL_NO_DISSOLVE );
@@ -223,7 +196,7 @@ void CFFSentryGun::Spawn( void )
 	SetPoseParameter( SG_BC_PITCH, 0) ;
 
 	// Change this to neuter the sg
-	m_iAmmoType = GetAmmoDef()->Index( "AMMO_SHELLS" );
+	m_iAmmoType = GetAmmoDef()->Index( AMMO_SHELLS );
 
 	m_iMuzzleAttachment = LookupAttachment( "barrel01" );
 	m_iEyeAttachment = LookupAttachment( "eyes" );	
@@ -297,20 +270,6 @@ void CFFSentryGun::OnObjectThink( void )
 {
 	VPROF_BUDGET( "CFFSentryGun::OnObjectThink", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	/*
-	bool bValid = true;
-	for ( int i=0 ; i<3 ; i++ )
-	{
-		if (  g_ffdev_sg_mins[i] >  g_ffdev_sg_maxs[i] )
-		{
-			bValid = false;			
-		}
-	}
-
-	if( bValid )
-		UTIL_SetSize( this, g_ffdev_sg_mins, g_ffdev_sg_maxs );
-		*/
-
 	CheckForOwner();
 
 	// Animate
@@ -372,8 +331,6 @@ void CFFSentryGun::OnSearchThink( void )
 	UpdateFacing();
 	Ping();
 }
-
-static ConVar sg_pos( "ffdev_sg_pos", "34", FCVAR_ARCHIVE | FCVAR_CHEAT );
 
 //-----------------------------------------------------------------------------
 // Purpose: Allows the turret to fire on targets if they're visible
@@ -635,7 +592,11 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 
 	FireBullets( info );
 	EmitSound( "Sentry.Fire" );
-	DoMuzzleFlash();
+
+	QAngle vecAngles;
+	VectorAngles( vecDir, vecAngles );
+
+	DoMuzzleFlash( ( ( GetLevel() > 2 ) ? ( m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment ) : m_iMuzzleAttachment ), vecSrc, vecAngles );
 
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
@@ -668,7 +629,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, 102, 900.0f );
 
 	EmitSound( "Sentry.RocketFire" );
-	DoRocketMuzzleFlash();
+	DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );
 
 	// Rockets weren't being decremented
 	m_iRockets--;
@@ -680,41 +641,30 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 //-----------------------------------------------------------------------------
 // Purpose: Bullet muzzle flash
 //-----------------------------------------------------------------------------
-void CFFSentryGun::DoMuzzleFlash( void ) 
+void CFFSentryGun::DoMuzzleFlash( int iAttachment, const Vector& vecOrigin, const QAngle& vecAngles ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::DoMuzzleFlash", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	CEffectData data;
-
-	data.m_nAttachmentIndex = m_iMuzzleAttachment;
-
-	if( m_iLevel > 2 )
-	{
-		if( m_bLeftBarrel )
-			data.m_nAttachmentIndex = m_iLBarrelAttachment;
-		else
-			data.m_nAttachmentIndex = m_iRBarrelAttachment;
-	}
-
 	data.m_nEntIndex = entindex();
+	data.m_nAttachmentIndex = iAttachment;
+	data.m_vOrigin = vecOrigin;
+	data.m_vAngles = vecAngles;
 	DispatchEffect( "MuzzleFlash", data );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Rocket muzzle flash
 //-----------------------------------------------------------------------------
-void CFFSentryGun::DoRocketMuzzleFlash( void ) 
+void CFFSentryGun::DoRocketMuzzleFlash( int iAttachment, const Vector& vecOrigin, const QAngle& vecAngles ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::DoRocketMuzzleFlash", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
 	CEffectData data;
-
-	if( m_bLeftBarrel )
-		data.m_nAttachmentIndex = m_iRocketLAttachment;
-	else
-		data.m_nAttachmentIndex = m_iRocketRAttachment;
-
 	data.m_nEntIndex = entindex();
+	data.m_nAttachmentIndex = iAttachment;
+	data.m_vOrigin = vecOrigin;
+	data.m_vAngles = vecAngles;
 	DispatchEffect( "MuzzleFlash", data );
 }
 
