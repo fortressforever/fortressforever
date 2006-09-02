@@ -761,6 +761,21 @@ namespace Omnibot
 					}
 					break;
 				}
+			case CLASS_INFOSCRIPT:
+				{					
+					CFFInfoScript *pInfoScript = dynamic_cast<CFFInfoScript*>(pEntity);
+					if(pInfoScript)
+					{
+						//pInfoScript->GetTouchFlags
+						if(pInfoScript->IsEffectActive( EF_NODRAW ))
+							_entflags.SetFlag(ENT_FLAG_DISABLED);
+					}					
+					break;
+				}
+			case CLASS_TRIGGERSCRIPT:
+				{					
+					break;
+				}
 				/*case CLASS_SENTRYGUN:
 				{
 				CFFSentryGun *pSentry = static_cast<CFFSentryGun*>(pEntity);					
@@ -1555,8 +1570,8 @@ namespace Omnibot
 				continue;
 			}
 
-			if(g_BotFunctions.pfnBotAddThreatEntity)
-				g_BotFunctions.pfnBotAddThreatEntity((GameEntity)pEntity->edict(), &info);
+			if(g_BotFunctions.pfnBotAddEntityInfo)
+				g_BotFunctions.pfnBotAddEntityInfo((GameEntity)pEntity->edict(), &info);
 		}
 		return Success;
 	}
@@ -2972,10 +2987,10 @@ namespace Omnibot
 					info.m_EntityClass = TF_CLASSEX_BACKPACK_GRENADES;
 					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
 					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
-					if(_entity->IsEffectActive( EF_NODRAW ))
-						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
-					if(g_BotFunctions.pfnBotAddThreatEntity)
-						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					/*if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);*/
+					if(g_BotFunctions.pfnBotAddEntityInfo)
+						g_BotFunctions.pfnBotAddEntityInfo((GameEntity)_entity->edict(), &info);
 					return;
 				}
 			case Omnibot::kBackPack_Health:
@@ -2984,10 +2999,10 @@ namespace Omnibot
 					info.m_EntityClass = TF_CLASSEX_BACKPACK_HEALTH;
 					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
 					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
-					if(_entity->IsEffectActive( EF_NODRAW ))
-						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
-					if(g_BotFunctions.pfnBotAddThreatEntity)
-						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					/*if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);*/
+					if(g_BotFunctions.pfnBotAddEntityInfo)
+						g_BotFunctions.pfnBotAddEntityInfo((GameEntity)_entity->edict(), &info);
 					return;
 				}
 			case Omnibot::kBackPack_Armor:
@@ -2996,10 +3011,10 @@ namespace Omnibot
 					info.m_EntityClass = TF_CLASSEX_BACKPACK_ARMOR;
 					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
 					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
-					if(_entity->IsEffectActive( EF_NODRAW ))
-						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
-					if(g_BotFunctions.pfnBotAddThreatEntity)
-						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					/*if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);*/
+					if(g_BotFunctions.pfnBotAddEntityInfo)
+						g_BotFunctions.pfnBotAddEntityInfo((GameEntity)_entity->edict(), &info);
 					return;
 				}
 			case Omnibot::kBackPack_Ammo:
@@ -3008,10 +3023,10 @@ namespace Omnibot
 					info.m_EntityClass = TF_CLASSEX_BACKPACK_AMMO;
 					info.m_EntityCategory.SetFlag(ENT_CAT_PICKUP);
 					info.m_EntityCategory.SetFlag(ENT_CAT_STATIC);
-					if(_entity->IsEffectActive( EF_NODRAW ))
-						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);
-					if(g_BotFunctions.pfnBotAddThreatEntity)
-						g_BotFunctions.pfnBotAddThreatEntity((GameEntity)_entity->edict(), &info);
+					/*if(_entity->IsEffectActive( EF_NODRAW ))
+						info.m_EntityFlags.SetFlag(ENT_FLAG_DISABLED);*/
+					if(g_BotFunctions.pfnBotAddEntityInfo)
+						g_BotFunctions.pfnBotAddEntityInfo((GameEntity)_entity->edict(), &info);
 					return;
 				}
 			case Omnibot::kFlag:
