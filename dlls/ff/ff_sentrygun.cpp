@@ -314,6 +314,18 @@ void CFFSentryGun::OnObjectThink( void )
 	// For FC
 	if( sg_attachments.GetBool() && !engine->IsDedicatedServer() && ( GetLevel() == 3 ) )
 	{
+		// Lets try the "mouth" attachment!
+		Vector vecOrigin;
+		QAngle vecAngles;
+
+		GetAttachment( LookupAttachment( "mouth" ), vecOrigin, vecAngles );
+
+		Vector vecForward;
+		AngleVectors( vecAngles, &vecForward );
+
+		NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 255, 255, false, 5.0f );
+
+		/*
 		// Barrels
 		{
 			for( int i = 0; i < 2; i++ )
@@ -376,6 +388,7 @@ void CFFSentryGun::OnObjectThink( void )
 				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 255, 255, false, 5.0f );
 			}				
 		}
+		*/
 	}
 
 	CheckForOwner();
