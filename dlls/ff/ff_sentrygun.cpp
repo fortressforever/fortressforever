@@ -650,6 +650,8 @@ void CFFSentryGun::DoMuzzleFlash( int iAttachment, const Vector& vecOrigin, cons
 	data.m_nAttachmentIndex = iAttachment;
 	data.m_vOrigin = vecOrigin;
 	data.m_vAngles = vecAngles;
+	//data.m_hEntity = this;
+	data.m_fFlags = MUZZLEFLASH_TYPE_DEFAULT;
 	DispatchEffect( "MuzzleFlash", data );
 }
 
@@ -665,6 +667,8 @@ void CFFSentryGun::DoRocketMuzzleFlash( int iAttachment, const Vector& vecOrigin
 	data.m_nAttachmentIndex = iAttachment;
 	data.m_vOrigin = vecOrigin;
 	data.m_vAngles = vecAngles;
+	//data.m_hEntity = this;
+	data.m_fFlags = MUZZLEFLASH_RPG;
 	DispatchEffect( "MuzzleFlash", data );
 }
 
