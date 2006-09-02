@@ -596,7 +596,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	QAngle vecAngles;
 	VectorAngles( vecDir, vecAngles );
 
-	DoMuzzleFlash( ( ( GetLevel() > 2 ) ? ( m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment ) : m_iMuzzleAttachment ), vecSrc, vecAngles );
+	//DoMuzzleFlash( ( ( GetLevel() > 2 ) ? ( m_bLeftBarrel ? m_iLBarrelAttachment : m_iRBarrelAttachment ) : m_iMuzzleAttachment ), vecSrc, vecAngles );
 
 	// Change barrel
 	m_bLeftBarrel = !m_bLeftBarrel;	
@@ -629,7 +629,7 @@ void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEne
 	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, 102, 900.0f );
 
 	EmitSound( "Sentry.RocketFire" );
-	DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );
+	//DoRocketMuzzleFlash( ( m_bRocketLeftBarrel ? m_iRocketLAttachment : m_iRocketRAttachment ), vecSrc, vecAngles );
 
 	// Rockets weren't being decremented
 	m_iRockets--;
