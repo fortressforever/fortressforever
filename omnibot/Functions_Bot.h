@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-09-01 22:50:12 -0700 (Fri, 01 Sep 2006) $
+// $LastChangedRevision: 1263 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ typedef struct
 	obint32 (*pfnBotAddGoal)(const GameEntity _ent, int _goaltype, int _team, const char *_tag, BotUserData *_bud);
 	void (*pfnBotSendTrigger)(TriggerInfo *_triggerInfo);
 	void (*pfnBotAddBBRecord)(BlackBoard_Key _type, int _posterID, int _targetID, BotUserData *_data);
-	void (*pfnBotAddThreatEntity)(GameEntity _ent, EntityInfo *_info);
+	void (*pfnBotAddEntityInfo)(GameEntity _ent, EntityInfo *_info);
 	int (*pfnBotSetNavFuncs)(Nav_EngineFuncs_t *_pNavFuncs, int _size);
 
 	// New message stuff.
