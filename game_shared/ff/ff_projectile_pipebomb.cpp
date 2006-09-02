@@ -16,6 +16,7 @@
 
 #ifdef GAME_DLL
 	#include "ff_utils.h"
+	#include "soundent.h"
 #endif
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 

@@ -572,7 +572,7 @@ void event_SentryBuilt(IGameEvent *_event)
  	if(pFFPlayer && pFFPlayer->IsBot())
 	{
 		// Get the sentry edict.
-		CAI_BaseNPC *pBuildable = pFFPlayer->m_hSentryGun.Get();
+		CBaseAnimating *pBuildable = pFFPlayer->m_hSentryGun.Get();
 		if(pBuildable)
 		{
 			Omnibot::Notify_SentryBuilt(pPlayer, pBuildable->edict());			
@@ -587,7 +587,7 @@ void event_DispenserBuilt(IGameEvent *_event)
 	if(pFFPlayer && pFFPlayer->IsBot())
 	{
 		// Get the sentry edict.
-		CAI_BaseNPC *pBuildable = pFFPlayer->m_hDispenser.Get();
+		CBaseAnimating *pBuildable = pFFPlayer->m_hDispenser.Get();
 		if(pBuildable)
 		{
 			Omnibot::Notify_DispenserBuilt(pPlayer, pBuildable->edict());
@@ -602,7 +602,7 @@ void event_DetpackBuilt(IGameEvent *_event)
 	if(pFFPlayer && pFFPlayer->IsBot())
 	{
 		// Get the sentry edict.
-		CAI_BaseNPC *pBuildable = pFFPlayer->m_hDetpack.Get();
+		CBaseAnimating *pBuildable = pFFPlayer->m_hDetpack.Get();
 		if(pBuildable)
 		{
 			Omnibot::Notify_DetpackBuilt(pPlayer, pBuildable->edict());

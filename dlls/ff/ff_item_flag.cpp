@@ -18,6 +18,7 @@
 #include "ff_luacontext.h"
 #include "ff_player.h"
 #include "omnibot_interface.h"
+#include "ai_basenpc.h"
 
 // Lua includes
 extern "C"
