@@ -3850,11 +3850,11 @@ void CGameMovement::Duck( void )
 
 			time = max( 0.0, ( 1.0 - (float)player->m_Local.m_flDucktime / 1000.0 ) );
 
-			//if ( player->m_Local.m_bDucking )
+			if ( player->m_Local.m_bDucking )
 			{
 				// Finish ducking immediately if duck time is over or not on ground
 				if ( ( (float)player->m_Local.m_flDucktime / 1000.0 <= ( 1.0 - TIME_TO_DUCK ) ) ||
-					( player->GetGroundEntity() == NULL ) )
+					( player->GetGroundEntity() == NULL ) && player->m_Local.m_flDucktime > 0 )
 				{
 					player->m_Local.m_bDucked = true; //pmove->usehull = 1;
 					//pmove->view_ofs[2] = VEC_DUCK_VIEW;
@@ -3864,20 +3864,27 @@ void CGameMovement::Duck( void )
 
 					player->AddFlag(FL_DUCKING);	//player->GetFlags() |= FL_DUCKING;
 
-					player->m_Local.m_bDucking = false;
+					//player->m_Local.m_bDucking = false;
 
 					// HACKHACK - Fudge for collision bug - no time to fix this properly
 					if ( player->GetGroundEntity() != NULL )
 					{
+						trace_t pm;
+						TracePlayerBBox(mv->m_vecAbsOrigin, mv->m_vecAbsOrigin - (VEC_DUCK_HULL_MIN - VEC_HULL_MIN), PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm);
 						for ( i = 0; i < 3; i++ )
 						{
-							mv->m_vecAbsOrigin[i] -= ( VEC_DUCK_HULL_MIN[i] - VEC_HULL_MIN[i] );
+							//Assert(pm.fraction == 1.0f);
+							mv->m_vecAbsOrigin[i] -= pm.fraction * ( VEC_DUCK_HULL_MIN[i] - VEC_HULL_MIN[i] );
 						}
 						// See if we are stuck?
 						FixPlayerCrouchStuck(true);
 
 						// Recatagorize position since ducking can change origin
 						CategorizePosition();
+					}
+					else
+					{
+						player->m_Local.m_bDucking = false;
 					}
 				}
 				else
