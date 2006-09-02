@@ -24,6 +24,7 @@
 #endif
 
 #include "debugoverlay_shared.h"
+#include "tier0/vprof.h"
 
 #ifdef CLIENT_DLL
 	#include "c_ff_player.h"
@@ -31,9 +32,6 @@
 
 	#define CFFTeam C_FFTeam
 
-	#define CAI_BaseNPC C_AI_BaseNPC
-	#include "c_ai_basenpc.h"	
-	
 	#define CFFBuildableInfo C_FFBuildableInfo
 	#define CFFBuildableObject C_FFBuildableObject
 	#define CFFDispenser C_FFDispenser
@@ -43,7 +41,6 @@
 #else
 	#include "ff_player.h"
 	#include "ff_team.h"
-	#include "ai_basenpc.h"
 #endif
 
 #define FF_DISPENSER_MODEL					"models/buildable/dispenser/dispenser.mdl"
@@ -222,10 +219,10 @@ class CFFBuildableFlickerer;
 //	class CFFBuildableObject / C_FFBuildableObject
 //
 //=============================================================================
-class CFFBuildableObject : public CAI_BaseNPC
+class CFFBuildableObject : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CFFBuildableObject, CAI_BaseNPC )
+	DECLARE_CLASS( CFFBuildableObject, CBaseAnimating )
 
 #ifdef CLIENT_DLL
 	DECLARE_CLIENTCLASS();
@@ -679,8 +676,15 @@ public:
 
 	virtual void DoExplosionDamage();
 
+public:
+	CBaseEntity *GetEnemy( void	) { return m_hEnemy; }
+	void SetEnemy( CBaseEntity *hEnemy ) { m_hEnemy = hEnemy; }
+private:
+	CHandle< CBaseEntity >	m_hEnemy;
+
 protected:
 	void Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
+	void ShootRockets( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
 	void Ping( void );	
 	void SpinUp( void );
 	void SpinDown( void );
@@ -695,6 +699,7 @@ public:
 
 	virtual Vector EyePosition( void );
 	Vector MuzzlePosition( void );
+	Vector RocketPosition( void );
 	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
 
 	int GetLevel( void ) const { return m_iLevel; }
@@ -714,6 +719,7 @@ public:
 	static CFFSentryGun *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
 	virtual void DoMuzzleFlash( void );
+	virtual void DoRocketMuzzleFlash( void );
 
 public:
 	CNetworkVar(unsigned int, m_iAmmoPercent);

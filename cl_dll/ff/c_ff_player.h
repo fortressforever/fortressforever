@@ -73,9 +73,9 @@ public:
 	//EHANDLE m_hDispenser; // Shared network handle for the dispenser
 	//EHANDLE m_hSentryGun; // Shared network handle for the sentry gun
 	//EHANDLE m_hDetpack; // Shared network handle for the detpack
-	CNetworkHandle( CBaseEntity, m_hDispenser );
-	CNetworkHandle( C_AI_BaseNPC, m_hSentryGun );
-	CNetworkHandle( CBaseEntity, m_hDetpack );
+	CNetworkHandle( CBaseAnimating, m_hDispenser );
+	CNetworkHandle( CBaseAnimating, m_hSentryGun );
+	CNetworkHandle( CBaseAnimating, m_hDetpack );
 
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun

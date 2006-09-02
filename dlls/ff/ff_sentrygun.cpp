@@ -212,9 +212,9 @@ void CFFSentryGun::Spawn( void )
 	//else
 	//	Warning( "Unable to find sg owner!\n" ); 
 
-	m_HackedGunPos	= Vector(0, 0, 12.75);
+	//m_HackedGunPos	= Vector(0, 0, 12.75);
 	SetViewOffset(EyeOffset(ACT_IDLE));
-	m_flFieldOfView	= 0.4f; // 60 degrees
+	//m_flFieldOfView	= 0.4f; // 60 degrees
 
 	AddFlag( FL_AIMTARGET );
 	AddEFlags( EFL_NO_DISSOLVE );
@@ -310,86 +310,6 @@ void CFFSentryGun::OnObjectThink( void )
 	if( bValid )
 		UTIL_SetSize( this, g_ffdev_sg_mins, g_ffdev_sg_maxs );
 		*/
-
-	// For FC
-	if( sg_attachments.GetBool() && !engine->IsDedicatedServer() && ( GetLevel() == 3 ) )
-	{
-		// Lets try the "mouth" attachment!
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		GetAttachment( LookupAttachment( "mouth" ), vecOrigin, vecAngles );
-
-		Vector vecForward;
-		AngleVectors( vecAngles, &vecForward );
-
-		NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 255, 255, false, 5.0f );
-
-		/*
-		// Barrels
-		{
-			for( int i = 0; i < 2; i++ )
-			{
-				Vector vecOrigin;
-				QAngle vecAngles;
-
-				if( i == 0 )
-					GetAttachment( m_iLBarrelAttachment, vecOrigin, vecAngles );
-				else
-					GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
-
-				Vector vecForward;
-				AngleVectors( vecAngles, &vecForward );
-
-				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 0, 0, 255, false, 5.0f );
-			}		
-		}
-
-		// Rockets
-		{
-			for( int i = 0; i < 2; i++ )
-			{
-				Vector vecOrigin;
-				QAngle vecAngles;
-
-				if( i == 0 )
-					GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
-				else
-					GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
-
-				Vector vecForward;
-				AngleVectors( vecAngles, &vecForward );
-
-				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 0, 0, false, 5.0f );
-			}			
-		}
-
-		// Try rockets w/ bones
-		{
-			//int iBones[ 2 ];
-
-			//iBones[ 0 ] = LookupBone( "bone_sgRocket1" );
-			//iBones[ 1 ] = LookupBone( "bone_sgRocket2" );
-
-			for( int i = 0; i < 2; i++ )
-			{
-				Vector vecOrigin;
-				QAngle vecAngles;
-
-				//GetBonePosition( iBones[ i ], vecOrigin, vecAngles );
-				if( i == 0 )
-					GetBonePosition( sg_bone1.GetInt(), vecOrigin, vecAngles );
-				else
-					GetBonePosition( sg_bone2.GetInt(), vecOrigin, vecAngles );
-
-				Vector vecForward;
-				AngleVectors( vecAngles, &vecForward );
-
-				NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecForward * 256.0f ), 255, 255, 255, false, 5.0f );
-			}				
-		}
-		*/
-	}
 
 	CheckForOwner();
 
@@ -510,69 +430,28 @@ void CFFSentryGun::OnActiveThink( void )
 	AngleVectors( m_angAiming, &vecAiming );
 	AngleVectors( m_angGoal, &vecGoal );
 
+	// Are we rotated enough to where we can fire?
+	bool bCanFire = vecAiming.Dot( vecGoal ) > DOT_5DEGREE;
+
+	// Did we fire
 	bool bFired = false;
 
 	// Fire shells
-	if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
+	if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) && bCanFire ) 
 	{
+		Shoot( MuzzlePosition(), vecAiming, true );
+
 		m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
-
-		if( vecAiming.Dot( vecGoal ) > DOT_5DEGREE )
-			Shoot( MuzzlePosition(), vecAiming, true );
-
 		bFired = true;
 	}
 
 	// Fire rockets
-	if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) )
+	if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && bCanFire && ( GetLevel() >= 3 ) )
 	{
+		ShootRockets( RocketPosition(), vecAiming, true );
+
 		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
-
-		// Something is REALLY wrong with the attachments. The angle
-		// and origin is way off where they're supposed to be... It's
-		// gotta be something in the model...
-		
-		Vector vecOrigin;
-		QAngle vecAngles;
-
-		//vecOrigin.Init();
-		//vecAngles.Init();
-
-		// This does not get the correct location from the attachment
-		// and I don't know why...
-		if( m_bRocketLeftBarrel )
-			GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
-		else
-			GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
-
-		// So, since the attachment grabbing isn't working, hacking in a
-		// position for dustbowl playtest
-
-		//vecOrigin.z -= sg_pos.GetFloat();
-
-		//vecDirToEnemy = GetEnemy()->BodyTarget( vecOrigin, false ) - vecOrigin;
-		//VectorNormalize( vecDirToEnemy );
-
-		//QAngle vecDirToEnemyAngles;
-		//VectorAngles( vecDirToEnemy, vecDirToEnemyAngles );
-
-		//NDebugOverlay::Line( vecOrigin, vecOrigin + ( vecDirToEnemy * 256.0f ), 255, 0, 0, false, 5.0f );
-
-		// TODO: Need to factor in a dot product for aiming as the sg can be not facing
-		// someone but its time to fire a rocket so rocket comes out of the back of sg 
-		// or something that looks silly
-
-		// Bug #0000583: Dying to the rockets for the sentry gun doesn't accredit kills.
-		//CFFProjectileRocket::CreateRocket(this, vecOrigin, vecDirToEnemyAngles, this, 102, 900.0f );
-		CFFProjectileRocket::CreateRocket(this, vecOrigin, vecAngles, this, 102, 900.0f );
-
-		// Rockets weren't being decremented
-		m_iRockets--;
-
 		bFired = true;
-
-		// Flip which barrel to come out of next
-		m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
 	}
 
 	if( bFired ) 
@@ -718,7 +597,7 @@ float CFFSentryGun::MaxPitchSpeed( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Fire!
+// Purpose: Fire Bullets!
 //-----------------------------------------------------------------------------
 void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict ) 
 {
@@ -764,6 +643,43 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	m_iShells--;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Fire Rockets!
+//-----------------------------------------------------------------------------
+void CFFSentryGun::ShootRockets( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict ) 
+{
+	VPROF_BUDGET( "CFFSentryGun::ShootRockets", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	if( m_iRockets <= 0 )
+		return;
+
+	Vector vecDir = vecDirToEnemy;
+
+	// Shoot in direction we're facing or shoot directly at enemy?
+	if( !bStrict && GetEnemy() ) 
+	{
+		AssertMsg( 0, "Rockets - Do you really want to hit enemy regardless?" );
+		vecDir = GetEnemy()->BodyTarget( RocketPosition(), false ) - RocketPosition();
+	}
+
+	QAngle vecAngles;
+	VectorAngles( vecDir, vecAngles );
+
+	CFFProjectileRocket::CreateRocket( this, vecSrc, vecAngles, this, 102, 900.0f );
+
+	EmitSound( "Sentry.RocketFire" );
+	DoRocketMuzzleFlash();
+
+	// Rockets weren't being decremented
+	m_iRockets--;
+
+	// Flip which barrel to come out of next
+	m_bRocketLeftBarrel = !m_bRocketLeftBarrel;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Bullet muzzle flash
+//-----------------------------------------------------------------------------
 void CFFSentryGun::DoMuzzleFlash( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::DoMuzzleFlash", VPROF_BUDGETGROUP_FF_BUILDABLE );
@@ -779,6 +695,24 @@ void CFFSentryGun::DoMuzzleFlash( void )
 		else
 			data.m_nAttachmentIndex = m_iRBarrelAttachment;
 	}
+
+	data.m_nEntIndex = entindex();
+	DispatchEffect( "MuzzleFlash", data );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Rocket muzzle flash
+//-----------------------------------------------------------------------------
+void CFFSentryGun::DoRocketMuzzleFlash( void ) 
+{
+	VPROF_BUDGET( "CFFSentryGun::DoRocketMuzzleFlash", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	CEffectData data;
+
+	if( m_bLeftBarrel )
+		data.m_nAttachmentIndex = m_iRocketLAttachment;
+	else
+		data.m_nAttachmentIndex = m_iRocketRAttachment;
 
 	data.m_nEntIndex = entindex();
 	DispatchEffect( "MuzzleFlash", data );
@@ -920,6 +854,24 @@ Vector CFFSentryGun::MuzzlePosition( void )
 		else
 			GetAttachment( m_iRBarrelAttachment, vecOrigin, vecAngles );
 	}
+	return vecOrigin;
+}
+
+Vector CFFSentryGun::RocketPosition( void )
+{
+	VPROF_BUDGET( "CFFSentryGun::RocketPosition", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	Vector vecOrigin;
+	QAngle vecAngles;
+
+	// In case someone calls this on a non lvl3 sg
+	vecOrigin.Init();
+
+	if( m_bRocketLeftBarrel )
+		GetAttachment( m_iRocketLAttachment, vecOrigin, vecAngles );
+	else
+		GetAttachment( m_iRocketRAttachment, vecOrigin, vecAngles );
+
 	return vecOrigin;
 }
 

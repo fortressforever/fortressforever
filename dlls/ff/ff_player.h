@@ -310,9 +310,9 @@ public:
 	// ---> end of FF server-side player command handlers
 
     // Beg: Added by Mulchman for building objects and such
-	CNetworkHandle( CAI_BaseNPC, m_hDispenser );
-	CNetworkHandle( CAI_BaseNPC, m_hSentryGun );
-	CNetworkHandle( CAI_BaseNPC, m_hDetpack );
+	CNetworkHandle( CBaseAnimating, m_hDispenser );
+	CNetworkHandle( CBaseAnimating, m_hSentryGun );
+	CNetworkHandle( CBaseAnimating, m_hDetpack );
 
 	bool IsBuilding( void ) { return m_bBuilding; }
 	// Used for seeing if a player is currently

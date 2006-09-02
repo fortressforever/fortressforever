@@ -2904,7 +2904,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
 
-			CAI_BaseNPC *pEntity = NULL;
+			CBaseAnimating *pEntity = NULL;
 
 			// Cancel the build
 			switch( m_iCurBuild )

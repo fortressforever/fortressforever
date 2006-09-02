@@ -27,6 +27,7 @@
 #else
 	#include "te_effect_dispatch.h"
 	#include "ff_entity_system.h"
+	#include "ai_basenpc.h"
 #endif
 
 class CFFGrenadeGas : public CFFGrenadeBase

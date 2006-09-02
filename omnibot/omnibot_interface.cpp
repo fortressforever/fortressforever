@@ -1766,11 +1766,11 @@ namespace Omnibot
 					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
 					if(pFFPlayer)
 					{
-						CAI_BaseNPC *pSentry = pFFPlayer->m_hSentryGun.Get();
+						CBaseAnimating *pSentry = pFFPlayer->m_hSentryGun.Get();
 						pMsg->m_Sentry = pSentry ? pSentry->edict() : 0;
-						CAI_BaseNPC *pDispenser = pFFPlayer->m_hDispenser.Get();
+						CBaseAnimating *pDispenser = pFFPlayer->m_hDispenser.Get();
 						pMsg->m_Dispenser = pDispenser ? pDispenser->edict() : 0;
-						CAI_BaseNPC *pDetpack = pFFPlayer->m_hDetpack.Get();
+						CBaseAnimating *pDetpack = pFFPlayer->m_hDetpack.Get();
 						pMsg->m_Detpack = pDetpack ? pDetpack->edict() : 0;
 					}
 				}
