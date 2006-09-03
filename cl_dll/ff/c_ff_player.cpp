@@ -116,7 +116,16 @@ void CC_ToggleOne()
 	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
+	{
+		// Can't do this when frozen
+		if( pLocalPlayer->GetFlags() & FL_FROZEN )
+			return;
+
+		if( pLocalPlayer->m_bBuilding )
+			return;
+
 		CC_PrimeOne();
+	}
 }
 
 void CC_ToggleTwo()
@@ -129,7 +138,16 @@ void CC_ToggleTwo()
 	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
+	{
+		// Don't want timers going when frozen
+		if( pLocalPlayer->GetFlags() & FL_FROZEN )
+			return;
+
+		if( pLocalPlayer->m_bBuilding )
+			return;
+
 		CC_PrimeTwo();
+	}
 }
 // <-- Mirv: Toggle grenades (requested by defrag)
 
@@ -144,11 +162,8 @@ void CC_PrimeOne( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->m_bClientBuilding )
-	{
-		//DevMsg( "[Client] Building - not priming a gren!\n" );
+	if( pLocalPlayer->m_bBuilding )
 		return;
-	}
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.
@@ -213,11 +228,8 @@ void CC_PrimeTwo( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->m_bClientBuilding )
-	{
-		//DevMsg( "[Client] Building - not priming a gren!\n" );
+	if( pLocalPlayer->m_bBuilding )
 		return;
-	}
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
 	// Bug #0000064: Civilian has primary & secondary grenade.
