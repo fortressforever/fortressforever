@@ -129,6 +129,7 @@ public:
 
 	virtual bool	IsSpawnPointClear( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual bool	IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
+	virtual void	ClientDisconnected( edict_t *pClient );
 
 private:
 	CFFMapFilter	m_hMapFilter;

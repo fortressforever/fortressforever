@@ -362,7 +362,9 @@ void cc_CreatePredictionError_f()
 
 ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictionError_f, "Create a prediction error", FCVAR_CHEAT );
 
-
+// --------------------------------------------------------------------------------
+// Purpose: Constructor!
+// --------------------------------------------------------------------------------
 CFFPlayer::CFFPlayer()
 {
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
