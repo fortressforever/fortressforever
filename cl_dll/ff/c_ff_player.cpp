@@ -116,16 +116,7 @@ void CC_ToggleOne()
 	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
-	{
-		// Can't do this when frozen
-		if( pLocalPlayer->GetFlags() & FL_FROZEN )
-			return;
-
-		if( pLocalPlayer->m_bBuilding )
-			return;
-
 		CC_PrimeOne();
-	}
 }
 
 void CC_ToggleTwo()
@@ -138,16 +129,7 @@ void CC_ToggleTwo()
 	if (pLocalPlayer->m_iGrenadeState != 0)
 		CC_ThrowGren();
 	else
-	{
-		// Don't want timers going when frozen
-		if( pLocalPlayer->GetFlags() & FL_FROZEN )
-			return;
-
-		if( pLocalPlayer->m_bBuilding )
-			return;
-
 		CC_PrimeTwo();
-	}
 }
 // <-- Mirv: Toggle grenades (requested by defrag)
 

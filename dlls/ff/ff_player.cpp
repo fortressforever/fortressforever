@@ -3968,15 +3968,7 @@ void CFFPlayer::Command_ToggleOne( void )
 	if( IsGrenadePrimed() )
 		Command_ThrowGren();
 	else
-	{
-		if( GetFlags() & FL_FROZEN )
-			return;
-
-		if( m_bBuilding )
-			return;
-
 		Command_PrimeOne();
-	}
 }
 
 void CFFPlayer::Command_ToggleTwo( void )
@@ -3984,15 +3976,7 @@ void CFFPlayer::Command_ToggleTwo( void )
 	if( IsGrenadePrimed() )
 		Command_ThrowGren();
 	else
-	{
-		if( GetFlags() & FL_FROZEN )
-			return;
-
-		if( m_bBuilding )
-			return;
-
 		Command_PrimeTwo();
-	}
 }
 
 void CFFPlayer::Command_PrimeOne(void)
