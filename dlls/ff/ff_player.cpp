@@ -2370,6 +2370,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		hObject.m_iTeam = pPlayer->GetTeamNumber();
 		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
 		hObject.m_vecOrigin = vecPlayerOrigin;
+		hObject.m_vecVel = pPlayer->GetAbsVelocity();
 
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
@@ -2401,6 +2402,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			WRITE_WORD( iInfo );
 			WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? ( byte )1 : ( byte )0 );
 			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
+			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecVel );
 		}
 			
 		// End the message block

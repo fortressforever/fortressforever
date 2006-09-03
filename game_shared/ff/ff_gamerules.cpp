@@ -292,6 +292,15 @@ ConVar mp_prematch( "mp_prematch",
 
 			// TODO: Possibly loop through and find CLASS_INFOSCRIPTS
 			// and tell them OnOwnerDied()?
+			CBaseEntity *pEntity = gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+			while( pEntity )
+			{
+				CFFInfoScript *pInfoScript = static_cast< CFFInfoScript * >( pEntity );
+				if( pInfoScript )
+					pInfoScript->OnOwnerDied( ( CBaseEntity * )pPlayer );
+
+				pEntity = gEntList.FindEntityByOwnerAndClassT( pEntity, ( CBaseEntity * )pPlayer, CLASS_INFOSCRIPT );
+			}
 		}
 
 		// Chain on down, I'm in the chain gang, mang. What? I
