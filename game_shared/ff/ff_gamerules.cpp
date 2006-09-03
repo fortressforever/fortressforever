@@ -279,6 +279,45 @@ ConVar mp_prematch( "mp_prematch",
 	}
 
 	//-----------------------------------------------------------------------------
+	// Purpose: Player has just left the game
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::ClientDisconnected( edict_t *pClient )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( CBaseEntity::Instance( pClient ) );
+		if( pPlayer )
+		{
+			// Temp!
+			CBaseEntity *pTemp = NULL;
+
+			// Get the first entity this guy's an owner of!
+			CBaseEntity *pEntity = gEntList.FindEntityByOwner( NULL, ( CBaseEntity * )pPlayer );
+
+			// Iterate and remove!
+			while( pEntity )
+			{
+				// pEntity->GetOwnerEntity() == pPlayer, so delete!
+
+				// Get next entity
+				pTemp = gEntList.FindEntityByOwner( pEntity, ( CBaseEntity * )pPlayer );
+
+				// Delete the entity we found
+				UTIL_Remove( pEntity );
+
+				// Restore our loop var
+				pEntity = pTemp;
+			}
+
+			// Remove buildables too (they won't be found through
+			// FindEntityByOwner)
+			pPlayer->RemoveBuildables();
+		}
+
+		// Chain on down, I'm in the chain gang, mang. What? I
+		// typed way too much in this function. Just stop.
+		BaseClass::ClientDisconnected( pClient );
+	}
+
+	//-----------------------------------------------------------------------------
 	// Purpose: 
 	//-----------------------------------------------------------------------------
 	void CFFGameRules::RestartRound( void )

@@ -69,7 +69,9 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		}
 	}
 
-	Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
+	// We don't use this and it also caused a NULL pointer assert from
+	// GetOwnerEntity()
+	//Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
 #endif
 

@@ -221,7 +221,7 @@ void CBaseGrenade::Smoke( void )
 
 void CBaseGrenade::Event_Killed( const CTakeDamageInfo &info )
 {
-	Detonate( );
+	Detonate();
 }
 
 #if !defined( CLIENT_DLL )
@@ -268,6 +268,13 @@ void CBaseGrenade::PreDetonate( void )
 
 void CBaseGrenade::Detonate( void )
 {
+	// Verify our owner is still here!
+	if( !GetOwnerEntity() )
+	{
+		Remove();
+		return;
+	}
+
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
 
@@ -293,6 +300,13 @@ void CBaseGrenade::Detonate( void )
 // 
 void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
+	// Verify our owner is still here!
+	if( !GetOwnerEntity() )
+	{
+		Remove();
+		return;
+	}
+
 	trace_t		tr;
 	Vector		vecSpot;// trace starts here!
 
@@ -318,7 +332,7 @@ void CBaseGrenade::DangerSoundThink( void )
 {
 	if (!IsInWorld())
 	{
-		Remove( );
+		Remove();
 		return;
 	}
 
@@ -337,6 +351,13 @@ void CBaseGrenade::DangerSoundThink( void )
 
 void CBaseGrenade::BounceTouch( CBaseEntity *pOther )
 {
+	// Verify our owner is still here!
+	if( !GetOwnerEntity() )
+	{
+		Remove();
+		return;
+	}
+
 	if ( pOther->IsSolidFlagSet(FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS) )
 		return;
 
@@ -409,6 +430,13 @@ void CBaseGrenade::BounceTouch( CBaseEntity *pOther )
 
 void CBaseGrenade::SlideTouch( CBaseEntity *pOther )
 {
+	// Verify our owner is still here!
+	if( !GetOwnerEntity() )
+	{
+		Remove();
+		return;
+	}
+
 	// don't hit the guy that launched this grenade
 	if ( pOther == GetThrower() )
 		return;
@@ -438,6 +466,13 @@ void CBaseGrenade ::BounceSound( void )
 
 void CBaseGrenade ::TumbleThink( void )
 {
+	// Verify our owner is still here!
+	if( !GetOwnerEntity() )
+	{
+		Remove();
+		return;
+	}
+
 	if (!IsInWorld())
 	{
 		Remove( );
@@ -521,17 +556,3 @@ CBaseGrenade::CBaseGrenade(void)
 
 	SetSimulatedEveryTick( true );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
