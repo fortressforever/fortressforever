@@ -3968,7 +3968,15 @@ void CFFPlayer::Command_ToggleOne( void )
 	if( IsGrenadePrimed() )
 		Command_ThrowGren();
 	else
+	{
+		if( GetFlags() & FL_FROZEN )
+			return;
+
+		if( m_bBuilding )
+			return;
+
 		Command_PrimeOne();
+	}
 }
 
 void CFFPlayer::Command_ToggleTwo( void )
@@ -3976,12 +3984,23 @@ void CFFPlayer::Command_ToggleTwo( void )
 	if( IsGrenadePrimed() )
 		Command_ThrowGren();
 	else
+	{
+		if( GetFlags() & FL_FROZEN )
+			return;
+
+		if( m_bBuilding )
+			return;
+
 		Command_PrimeTwo();
+	}
 }
 
 void CFFPlayer::Command_PrimeOne(void)
 {
 	if (IsGrenadePrimed())
+		return;
+
+	if( GetFlags() & FL_FROZEN )
 		return;
 
 	// Can't throw grenade while building
@@ -4019,6 +4038,9 @@ void CFFPlayer::Command_PrimeOne(void)
 void CFFPlayer::Command_PrimeTwo(void)
 {
 	if (IsGrenadePrimed())
+		return;
+
+	if( GetFlags() & FL_FROZEN )
 		return;
 
 	// Can't throw grenade while building
