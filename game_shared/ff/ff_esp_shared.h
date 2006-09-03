@@ -9,6 +9,9 @@ struct ESP_Shared_s
 	bool	m_bDucked;
 	Vector	m_vecOrigin;
 
+	// To interp stuff
+	Vector	m_vecVel;
+
 	ESP_Shared_s( void )
 	{
 	}

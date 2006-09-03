@@ -44,6 +44,7 @@ using namespace vgui;
 #include "ff_esp_shared.h"
 #include "ff_glyph.h"
 #include "utlvector.h"
+#include "c_playerresource.h"
 
 class CHudRadioTag : public CHudElement, public vgui::Panel
 {
@@ -140,13 +141,15 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 		int iInfo = msg.ReadWord();
 
 		// Get team
-		hObject.m_iTeam = ( iInfo & 0x0000000F ) - 1;
+		hObject.m_iTeam = ( iInfo & 0x0000000F );
 		// Get class
 		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
 		// Get ducked state
 		hObject.m_bDucked = ( msg.ReadByte() == 1 );
 		// Get origin
 		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
+		// Get velocity
+		msg.ReadBitVec3Coord( hObject.m_vecVel );
 
 		// Received at least one valid message
 		bRecvMessage = true;
@@ -185,19 +188,24 @@ void CHudRadioTag::Paint( void )
 
 			// Loop through all our dudes
 			for( int i = 0; i < m_hRadioTaggedList.Count( ); i++ )
-			{				
+			{
+				Vector vecInterpPos = m_hRadioTaggedList[ i ].m_vecOrigin * m_hRadioTaggedList[ i ].m_vecVel;
+
 				// Draw a box around the guy if they're on our screen
 				int iScreenX, iScreenY;
-				if( GetVectorInScreenSpace( m_hRadioTaggedList[ i ].m_vecOrigin, iScreenX, iScreenY ) )
+				if( GetVectorInScreenSpace( vecInterpPos, iScreenX, iScreenY ) )
 				{
 					int iTopScreenX, iTopScreenY;
-					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( m_hRadioTaggedList[ i ].m_vecOrigin + ( m_hRadioTaggedList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( vecInterpPos + ( m_hRadioTaggedList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
 
-					Color cColor;
-					SetColorByTeam( m_hRadioTaggedList[ i ].m_iTeam, cColor );
+					//Color cColor;
+					//SetColorByTeam( m_hRadioTaggedList[ i ].m_iTeam, cColor );
+					Color cColor = Color( 255, 255, 255, 255 );
+					if( g_PR )
+						cColor = g_PR->GetTeamColor( m_hRadioTaggedList[ i ].m_iTeam );
 
 					// Get distance from us to them
-					float flDist = vecOrigin.DistTo( m_hRadioTaggedList[ i ].m_vecOrigin );
+					float flDist = vecOrigin.DistTo( vecInterpPos );
 
 					int iIndex = m_hRadioTaggedList[ i ].m_iClass - 1;
 
