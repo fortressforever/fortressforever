@@ -194,11 +194,13 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 	//-----------------------------------------------------------------------------
 	void CFFWeaponLaserDot::GetRenderBounds(Vector& mins, Vector& maxs)
 	{
+		// Hey, this is throwing a C_FFPlayer::ToFFPlayer( NULL ) assert... 
 		CFFPlayer *pOwner = ToFFPlayer(GetOwnerEntity());
 
 		if (!pOwner)
 		{
-			return BaseClass::GetRenderBounds(mins, maxs);
+			BaseClass::GetRenderBounds(mins, maxs);
+			return;
 		}
 
 		Vector vecAbsStart = GetAbsOrigin();
