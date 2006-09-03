@@ -286,30 +286,12 @@ ConVar mp_prematch( "mp_prematch",
 		CFFPlayer *pPlayer = ToFFPlayer( CBaseEntity::Instance( pClient ) );
 		if( pPlayer )
 		{
-			// Temp!
-			CBaseEntity *pTemp = NULL;
-
-			// Get the first entity this guy's an owner of!
-			CBaseEntity *pEntity = gEntList.FindEntityByOwner( NULL, ( CBaseEntity * )pPlayer );
-
-			// Iterate and remove!
-			while( pEntity )
-			{
-				// pEntity->GetOwnerEntity() == pPlayer, so delete!
-
-				// Get next entity
-				pTemp = gEntList.FindEntityByOwner( pEntity, ( CBaseEntity * )pPlayer );
-
-				// Delete the entity we found
-				UTIL_Remove( pEntity );
-
-				// Restore our loop var
-				pEntity = pTemp;
-			}
-
-			// Remove buildables too (they won't be found through
-			// FindEntityByOwner)
+			pPlayer->RemoveProjectiles();
+			pPlayer->RemoveBackpacks();
 			pPlayer->RemoveBuildables();
+
+			// TODO: Possibly loop through and find CLASS_INFOSCRIPTS
+			// and tell them OnOwnerDied()?
 		}
 
 		// Chain on down, I'm in the chain gang, mang. What? I
