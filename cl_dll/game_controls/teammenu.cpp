@@ -230,23 +230,30 @@ void CTeamMenu::Update()
 			pTeamButton->SetVisible(true);
 
 			wchar_t *szName = localize()->Find(pGR->GetTeamName(iTeam + TEAM_BLUE));
+			wchar_t szString[ MAX_TEAM_NAME_LENGTH + 1 ];
 
 			//DevMsg("[Teammenu] Found localized text \"%s\", %s\n", pGR->GetTeamName(iTeam + 2), (szName) ? "yes" : "no");
 
 			// Name the button(in either unicode or ansi, don't care
 			if (szName) 
 			{
-				wchar_t szbuf[256];
+				wchar_t szbuf[ MAX_TEAM_NAME_LENGTH + 1 ];
 				swprintf(szbuf, L"&%i. %s", iTeam + 1, szName);
 
 				pTeamButton->SetText(szbuf);
+
+				// Copy over
+				Q_wcsncpy( szString, szName, sizeof( szString ) );
 			}
 			else
 			{
-				char szbuf[128];
-				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + TEAM_BLUE));
+				char szbuf[ MAX_TEAM_NAME_LENGTH + 1 ];
+				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + TEAM_BLUE));				
 
 				pTeamButton->SetText(szbuf);
+
+				// Copy over the ansi team to unicode for later
+				localize()->ConvertANSIToUnicode( pGR->GetTeamName(iTeam + TEAM_BLUE), szString, sizeof( szString ) );
 			}			
 
 			// update team info if mouse is hovered over team button
@@ -257,7 +264,7 @@ void CTeamMenu::Update()
 				int idxTeam = iTeam + TEAM_BLUE;
 
 				swprintf(szText, L"&%s: %i Players (%i Points)\n",
-					szName,
+					szString,
 					iTeamNumbers[idxTeam],
 					pGR->GetTeamScore(idxTeam));
 
