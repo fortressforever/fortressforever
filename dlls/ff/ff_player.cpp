@@ -2366,11 +2366,12 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 
 		// Create a single object
 		ESP_Shared_s hObject;
+		hObject.m_iEntIndex = pPlayer->entindex() - 1;
 		hObject.m_iClass = pPlayer->GetClassSlot();
 		hObject.m_iTeam = pPlayer->GetTeamNumber();
 		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
 		hObject.m_vecOrigin = vecPlayerOrigin;
-		hObject.m_vecVel = pPlayer->GetAbsVelocity();
+		hObject.m_vecVel = pPlayer->GetAbsVelocity() + Vector( 0, 0, 6 );
 
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
@@ -2399,6 +2400,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			int iInfo = m_hRadioTaggedList[ i ].m_iTeam;
 			iInfo += m_hRadioTaggedList[ i ].m_iClass << 4;
 
+			WRITE_SHORT( m_hRadioTaggedList[ i ].m_iEntIndex );
 			WRITE_WORD( iInfo );
 			WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? ( byte )1 : ( byte )0 );
 			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );

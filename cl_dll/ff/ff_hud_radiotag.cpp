@@ -36,6 +36,7 @@ using namespace vgui;
 #include <vgui/IScheme.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
+#include <vgui/IVGui.h>
 
 #include "cliententitylist.h"
 
@@ -43,7 +44,6 @@ using namespace vgui;
 #include "ff_utils.h"
 #include "ff_esp_shared.h"
 #include "ff_glyph.h"
-#include "utlvector.h"
 #include "c_playerresource.h"
 
 class CHudRadioTag : public CHudElement, public vgui::Panel
@@ -51,13 +51,16 @@ class CHudRadioTag : public CHudElement, public vgui::Panel
 private:
 	DECLARE_CLASS_SIMPLE( CHudRadioTag, vgui::Panel );
 
-	CUtlVector< CGlyphESP >	m_hRadioTaggedList;
-	float	m_flStartTime;
+	CGlyphESP	m_hList[ MAX_PLAYERS ];
+	int			m_nItems;
 
 	int		m_iTextureWide;
 	int		m_iTextureTall;
 	int		m_iWidthOffset;
 	int		m_iHeightOffset;
+
+	float	m_flStartTime;
+	float	m_flLastDraw;
 
 	void	CacheTextures( void );
 
@@ -69,12 +72,15 @@ public:
 		SetParent( g_pClientMode->GetViewport() );
 
 		// Hide when player is dead
-		SetHiddenBits( HIDEHUD_PLAYERDEAD );		
+		SetHiddenBits( HIDEHUD_PLAYERDEAD );
+
+		vgui::ivgui()->AddTickSignal( GetVPanel() );
 	};
 
 	void	Init( void );
 	void	VidInit( void );
 	void	Paint( void );
+	void	OnTick( void );
 
 	// Callback function for the "RadioTagUpdate" user message
 	void	MsgFunc_RadioTagUpdate( bf_read &msg );
@@ -103,10 +109,45 @@ void CHudRadioTag::VidInit( void )
 	SetVisible( false );
 
 	// Cache the glyphs!
-	CacheTextures( );
+	CacheTextures();
 
-	m_hRadioTaggedList.RemoveAll();
+	// Reset!
+	for( int i = 0; i < MAX_PLAYERS; i++  )
+		m_hList[ i ].m_bActive = false;
+
+	// Reset!
+	m_nItems = 0;
+
 	m_flStartTime = 0.0f;
+	m_flLastDraw = 0.0f;
+}
+
+void CHudRadioTag::OnTick( void )
+{
+	/*
+	if( !engine->IsInGame() )
+		return;
+
+	float flTimeScale = gpGlobals->curtime - m_flLastDraw;
+
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		if( m_hList[ i ].m_bActive )
+		{
+			// Do we need to interp?
+			bool bHasVelocity = m_hList[ i ].m_vecVel != vec3_origin;
+
+			Vector vecInterpPos = m_hList[ i ].m_vecOrigin;				
+			if( bHasVelocity )
+			{
+				vecInterpPos = m_hList[ i ].m_vecOrigin + ( m_hList[ i ].m_vecVel * flTimeScale );
+				m_hList[ i ].m_vecOrigin = vecInterpPos;
+			}			
+		}
+	}
+
+	m_flLastDraw = gpGlobals->curtime;
+	*/
 }
 
 void CHudRadioTag::Init( void )
@@ -127,40 +168,72 @@ void CHudRadioTag::CacheTextures( void )
 
 void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 {
-	// Initialize
-	m_hRadioTaggedList.RemoveAll();
-	
-	bool bRecvMessage = false;
+	// Set all to non-updated
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+		m_hList[ i ].m_bUpdated = false;
 
+	bool bRecvMessage = false;
 	int iCount = msg.ReadShort();
+
+	// Store off how many active guys
+	m_nItems = iCount;
 
 	for( int i = 0; i < iCount; i++ )
 	{
-		CGlyphESP	hObject;
+		// Get player index (entindex() - 1)
+		int iIndex = msg.ReadShort();
+		
+		m_hList[ iIndex ].m_iEntIndex = iIndex; // redundant
+		m_hList[ iIndex ].m_bUpdated = true;
 
 		int iInfo = msg.ReadWord();
 
-		// Get team
-		hObject.m_iTeam = ( iInfo & 0x0000000F );
-		// Get class
-		hObject.m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
-		// Get ducked state
-		hObject.m_bDucked = ( msg.ReadByte() == 1 );
-		// Get origin
-		msg.ReadBitVec3Coord( hObject.m_vecOrigin );
-		// Get velocity
-		msg.ReadBitVec3Coord( hObject.m_vecVel );
+		m_hList[ iIndex ].m_iTeam = ( iInfo & 0x0000000F );
+		m_hList[ iIndex ].m_iClass = ( ( iInfo & 0xFFFFFFF0 ) >> 4 );
+		m_hList[ iIndex ].m_bDucked = ( msg.ReadByte() == 1 );
+		
+		if( m_hList[ iIndex ].m_bActive )
+		{
+			// Don't overwrite if this existed last frame
+			Vector vecOrigin, vecVel;
+
+			msg.ReadBitVec3Coord( vecOrigin );
+			msg.ReadBitVec3Coord( vecVel );
+
+			// If the velocity has changed, update position and velocity
+			if( m_hList[ iIndex ].m_vecVel.DistTo( vecVel ) > 2.0f )
+			{
+				m_hList[ iIndex ].m_vecOrigin = vecOrigin;
+				m_hList[ iIndex ].m_vecVel = vecVel;
+			}
+		}
+		else
+		{
+			msg.ReadBitVec3Coord( m_hList[ iIndex ].m_vecOrigin );
+			msg.ReadBitVec3Coord( m_hList[ iIndex ].m_vecVel );
+		}
+
+		//if( m_hList[ iIndex ].m_vecVel.Length() < 1.0f )
+		//	m_hList[ iIndex ].m_vecVel = vec3_origin;
+
+		m_hList[ iIndex ].m_bActive = true;
 
 		// Received at least one valid message
 		bRecvMessage = true;
-
-		m_hRadioTaggedList.AddToTail( hObject );
 	}
 
 	if( bRecvMessage )
 	{
 		// Setup our time trackers
-		m_flStartTime = gpGlobals->curtime;
+		m_flStartTime = gpGlobals->curtime;		
+	}
+
+	// Clear out old entries
+	for( int i = 0; i < MAX_PLAYERS; i++ )
+	{
+		// Make sure only guys we updated are active
+		if( !m_hList[ i ].m_bUpdated )
+			m_hList[ i ].m_bActive = false;
 	}
 }
 
@@ -168,7 +241,7 @@ void CHudRadioTag::Paint( void )
 {
 	if( engine->IsInGame() )
 	{
-		if( m_hRadioTaggedList.Count() )
+		if( m_nItems )
 		{
 			// Get us
 			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
@@ -186,28 +259,31 @@ void CHudRadioTag::Paint( void )
 			float flAlpha = SimpleSplineRemapVal( dt, 0.0f, FF_RADIOTAG_TIMETOFORGET, 255, 0 );
 			flAlpha = clamp( flAlpha, 0.0f, 255.0f );
 
+			float flTimeScale = gpGlobals->curtime - m_flLastDraw;
+
 			// Loop through all our dudes
-			for( int i = 0; i < m_hRadioTaggedList.Count( ); i++ )
+			for( int i = 0; i < MAX_PLAYERS; i++ )
 			{
-				Vector vecInterpPos = m_hRadioTaggedList[ i ].m_vecOrigin * m_hRadioTaggedList[ i ].m_vecVel;
+				if( !m_hList[ i ].m_bActive )
+					continue;
+
+				Vector vecInterpPos = m_hList[ i ].m_vecOrigin;
 
 				// Draw a box around the guy if they're on our screen
 				int iScreenX, iScreenY;
 				if( GetVectorInScreenSpace( vecInterpPos, iScreenX, iScreenY ) )
 				{
 					int iTopScreenX, iTopScreenY;
-					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( vecInterpPos + ( m_hRadioTaggedList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+					/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( vecInterpPos + ( m_hList[ i ].m_bDucked ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
 
-					//Color cColor;
-					//SetColorByTeam( m_hRadioTaggedList[ i ].m_iTeam, cColor );
 					Color cColor = Color( 255, 255, 255, 255 );
 					if( g_PR )
-						cColor = g_PR->GetTeamColor( m_hRadioTaggedList[ i ].m_iTeam );
+						cColor = g_PR->GetTeamColor( m_hList[ i ].m_iTeam );
 
 					// Get distance from us to them
 					float flDist = vecOrigin.DistTo( vecInterpPos );
 
-					int iIndex = m_hRadioTaggedList[ i ].m_iClass - 1;
+					int iIndex = m_hList[ i ].m_iClass - 1;
 
 					// Modify based on FOV
 					flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
@@ -232,7 +308,7 @@ void CHudRadioTag::Paint( void )
 					}
 
 					// Get the current frame we're supposed to draw
-					int iFrame = m_hRadioTaggedList[ i ].UpdateFrame();
+					int iFrame = m_hList[ i ].UpdateFrame();
 
 					// Draw the radio tower thing
 					surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
@@ -240,11 +316,28 @@ void CHudRadioTag::Paint( void )
 					surface()->DrawSetColor( 255, 255, 255, flAlpha );
 					surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
 				}
+
+				// Do we need to interp?
+				bool bHasVelocity = m_hList[ i ].m_vecVel != vec3_origin;
+
+				if( bHasVelocity )
+					vecInterpPos = m_hList[ i ].m_vecOrigin + ( m_hList[ i ].m_vecVel * flTimeScale );
+
+				// Update because we don't know when we'll get a server update next
+				if( bHasVelocity )
+					m_hList[ i ].m_vecOrigin = vecInterpPos;
 			}
 		}
 
 		// Stop drawing since we haven't gotten another update recently
 		if( ( m_flStartTime + FF_RADIOTAG_TIMETOFORGET ) <= gpGlobals->curtime )
-			m_hRadioTaggedList.RemoveAll();
+		{
+			for( int i = 0; i < MAX_PLAYERS; i++ )
+				m_hList[ i ].m_bActive = false;
+
+			m_nItems = 0;
+		}
 	}
+
+	m_flLastDraw = gpGlobals->curtime;
 }
