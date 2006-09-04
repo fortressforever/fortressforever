@@ -140,6 +140,9 @@ protected:
 	// Handle movement when in MOVETYPE_LADDER mode.
 	virtual void	FullLadderMove();
 
+	// Movement while building
+	virtual void	FullBuildMove( void );
+
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );
 	
