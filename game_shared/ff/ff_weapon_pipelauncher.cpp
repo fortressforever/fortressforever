@@ -94,6 +94,15 @@ void CFFWeaponPipeLauncher::Fire()
 
 	angAiming -= QAngle(12.0f, 0, 0);
 
+	// Bug #0000192: Demoman can stick pipes to walls
+	// Mirv got a better idea?
+	trace_t tr;
+	UTIL_TraceLine( vecSrc, vecSrc + ( vForward * 32 ), MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &tr );
+	if( tr.startsolid )
+		vecSrc += ( vForward * -16.0f );
+	else if( tr.fraction != 1.0f )
+		vecSrc += ( vForward * -24.0f );
+
 	CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
 #ifdef GAME_DLL
