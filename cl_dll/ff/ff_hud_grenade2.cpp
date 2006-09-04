@@ -142,7 +142,7 @@ void CHudGrenade2::UpdatePlayerGrenade(C_BasePlayer *player)
 
 	C_FFPlayer *ffplayer = ToFFPlayer(player);
 
-	if (!ffplayer || ffplayer->GetClassSlot() == CLASS_CIVILIAN) 
+	if (!ffplayer || ( ffplayer->GetClassSlot() == CLASS_CIVILIAN ) || ( ffplayer->GetClassSlot() == CLASS_SNIPER ) ) 
 	{
 		SetPaintEnabled(false);
 		SetPaintBackgroundEnabled(false);
