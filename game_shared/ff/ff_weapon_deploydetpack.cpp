@@ -58,16 +58,16 @@ private:
 
 protected:
 #ifdef CLIENT_DLL
-	C_FFDetpack *pDetpack;
+	C_FFDetpack *m_pBuildable;
 #endif
 
 	void Cleanup( void )
 	{
 #ifdef CLIENT_DLL
-		if( pDetpack )
+		if( m_pBuildable )
 		{
-			pDetpack->Remove( );
-			pDetpack = NULL;
+			m_pBuildable->Remove( );
+			m_pBuildable = NULL;
 		}
 #endif
 	}
@@ -98,7 +98,7 @@ PRECACHE_WEAPON_REGISTER( ff_weapon_deploydetpack );
 CFFWeaponDeployDetpack::CFFWeaponDeployDetpack()
 {
 #ifdef CLIENT_DLL
-	pDetpack = NULL;
+	m_pBuildable = NULL;
 #endif
 }
 
@@ -150,48 +150,25 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, flRaiseVal);
 
-			/*
-			if( pDetpack )
+			if( m_pBuildable )
 			{
-				// Update current fake Detpack
-				pDetpack->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				pDetpack->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
+				// Update current fake dispenser
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
 
-				pDetpack->SetBuildError( hBuildInfo.BuildResult() );
+				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
-				// Create fake Detpack
-				pDetpack = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				// Create fake dispenser
+				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
 			}
 
-			if( hBuildInfo.BuildResult() != 0 )
-				pDetpack->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
+			// Check whether we need to "hide" the model or not
+			if( hBuildInfo.BuildResult() != BUILD_ALLOWED )
+				m_pBuildable->SetRenderColorA( ( byte )1 );
 			else
-				pDetpack->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
-				*/
-
-			//*
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED)
-			{
-				if (pDetpack)
-				{
-					// Detpack is currently hidden
-					if (pDetpack->GetEffects() & EF_NODRAW)
-						pDetpack->RemoveEffects(EF_NODRAW);
-
-					// These were calculated in TryBuild()
-					pDetpack->SetAbsOrigin(hBuildInfo.GetBuildAirOrigin());
-					pDetpack->SetAbsAngles(hBuildInfo.GetBuildAirAngles());
-				}
-				else
-					pDetpack = C_FFDetpack::CreateClientSideDetpack(hBuildInfo.GetBuildAirOrigin(), hBuildInfo.GetBuildAirAngles());
-			}
-			// If we have built a detpack...
-			// Unable to build, so hide buildable
-			else if(pDetpack && !(pDetpack->GetEffects() & EF_NODRAW))
-				pDetpack->SetEffects(EF_NODRAW);
-				//*/
+				m_pBuildable->SetRenderColorA( ( byte )110 );
 		}
 		// Destroy if we already have one
 		else

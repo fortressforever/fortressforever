@@ -73,16 +73,16 @@ private:
 
 #ifdef CLIENT_DLL
 protected:
-	CFFSentryGun *pSentryGun;
+	CFFSentryGun *m_pBuildable;
 #endif
 
 	void Cleanup() 
 	{
 #ifdef CLIENT_DLL
-		if (pSentryGun) 
+		if (m_pBuildable) 
 		{
-			pSentryGun->Remove();
-			pSentryGun = NULL;
+			m_pBuildable->Remove();
+			m_pBuildable = NULL;
 		}
 #endif
 	}
@@ -113,7 +113,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_deploysentrygun);
 CFFWeaponDeploySentryGun::CFFWeaponDeploySentryGun() 
 {
 #ifdef CLIENT_DLL
-	pSentryGun = NULL;
+	m_pBuildable = NULL;
 #endif
 }
 
@@ -164,47 +164,25 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_SENTRYGUN, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL);
 
-			/*
-			if( pSentryGun )
+			if( m_pBuildable )
 			{
-				// Update current fake SentryGun
-				pSentryGun->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				pSentryGun->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
+				// Update current fake dispenser
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
 
-				pSentryGun->SetBuildError( hBuildInfo.BuildResult() );				
+				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
-				// Create fake SentryGun
-				pSentryGun = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				// Create fake dispenser
+				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
 			}
 
-			if( hBuildInfo.BuildResult() != 0 )
-				pSentryGun->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
+			// Check whether we need to "hide" the model or not
+			if( hBuildInfo.BuildResult() != BUILD_ALLOWED )
+				m_pBuildable->SetRenderColorA( ( byte )1 );
 			else
-				pSentryGun->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
-				*/
-
-			//*
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED) 
-			{
-				if (pSentryGun) 
-				{
-					// Sentry is currently hidden
-					if (pSentryGun->GetEffects() & EF_NODRAW) 
-						pSentryGun->RemoveEffects(EF_NODRAW);
-
-					// These were calculated in TryBuild() 
-					pSentryGun->SetAbsOrigin(hBuildInfo.GetBuildGroundOrigin());
-					pSentryGun->SetAbsAngles(hBuildInfo.GetBuildGroundAngles());
-				}
-				else
-					pSentryGun = CFFSentryGun::CreateClientSideSentryGun(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
-			}
-			// Unable to build, so hide buildable
-			else if (pSentryGun && ! (pSentryGun->GetEffects() & EF_NODRAW)) 
-				pSentryGun->SetEffects(EF_NODRAW);
-				//*/
+				m_pBuildable->SetRenderColorA( ( byte )110 );
 		}
 		// If we have built a sentrygun...
 		else
