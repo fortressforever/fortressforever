@@ -129,6 +129,51 @@ void C_FFBuildableObject::OnDataChanged( DataUpdateType_t updateType )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: To smooth the build helpers
+//-----------------------------------------------------------------------------
+void C_FFBuildableObject::ClientThink( void )
+{
+	// This is to "smooth" the build helper models
+	if( m_bClientSideOnly )
+	{
+		C_FFPlayer *pPlayer = ToFFPlayer( m_hOwner.Get() );
+		if( !pPlayer )
+			return;
+
+		float flBuildDist = 0.0f;
+
+		switch( Classify() )
+		{
+			case CLASS_DISPENSER:
+			flBuildDist = FF_BUILD_DISP_BUILD_DIST;
+			break;
+
+			case CLASS_SENTRYGUN:
+			flBuildDist = FF_BUILD_SG_BUILD_DIST;
+			break;
+
+			case CLASS_DETPACK:
+			flBuildDist = FF_BUILD_DET_BUILD_DIST;
+			break;
+		}
+
+		Vector vecForward;
+		pPlayer->EyeVectors( &vecForward );
+		vecForward.z = 0.0f;
+		VectorNormalize( vecForward );
+
+		// Need to save off the z value before setting new origin
+		Vector vecOrigin = GetAbsOrigin();
+
+		// Compute a new origin in front of the player
+		Vector vecNewOrigin = pPlayer->GetFeetOrigin() + ( vecForward * flBuildDist );
+		vecNewOrigin.z = vecOrigin.z;
+
+		SetAbsOrigin( vecNewOrigin );
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Using this to draw any "can't build" type glyphs
 //-----------------------------------------------------------------------------
 int C_FFBuildableObject::DrawModel( int flags )
@@ -298,6 +343,7 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 	// that isn't NULL!
 	pDetpack->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
 	pDetpack->SetClientSideOnly( true );
+	pDetpack->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
 	return pDetpack;
 }
@@ -378,6 +424,7 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 	// that isn't NULL!
 	pDispenser->m_hOwner = ( C_BaseEntity * )C_BasePlayer::GetLocalPlayer();
 	pDispenser->SetClientSideOnly( true );
+	pDispenser->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
 	return pDispenser;
 }
@@ -460,6 +507,7 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 	// Mirv: Show up as the correct skin
 	pSentryGun->m_nSkin = clamp(CBasePlayer::GetLocalPlayer()->GetTeamNumber() - TEAM_BLUE, 0, 3);
 	pSentryGun->SetClientSideOnly( true );
+	pSentryGun->SetNextClientThink( CLIENT_THINK_ALWAYS );
 
 	return pSentryGun;
 }
