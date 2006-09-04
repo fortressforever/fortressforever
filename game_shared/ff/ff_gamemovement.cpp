@@ -54,6 +54,9 @@ public:
 //	virtual void FinishGravity(void);
 //	virtual void CheckWaterJump( void );
 
+	// Movement while building
+	virtual void FullBuildMove( void );
+
 	virtual void FullNoClipMove( float factor, float maxacceleration ); // |-- Mirv: Map guides
 
 	DECLARE_CLASS( CFFGameMovement, CGameMovement );
@@ -195,8 +198,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 	// Mirv: Play proper jump sounds
 	//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0, true );
-	CFFPlayer *FFPlayer = dynamic_cast<CFFPlayer *> (player);
-	FFPlayer->PlayJumpSound(mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0);
+	ffplayer->PlayJumpSound(mv->m_vecAbsOrigin, player->m_pSurfaceData, 1.0);
 
 	// Mirv: This fixes the jump animation
 	//MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
@@ -229,6 +231,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 		Vector vecVelocity = mv->m_vecVelocity * Vector(1.0f, 1.0f, 0.0f);
 
 		float flHorizontalSpeed = vecVelocity.Length();
+
+		// If building, don't let them trimp!
+		if( ffplayer->m_bBuilding )
+			flHorizontalSpeed = 0.0f;
 
 		// They have to be at least moving a bit
 		if (flHorizontalSpeed > 5.0f)
@@ -273,12 +279,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//	mv->m_vecVelocity[2] = fGroundFactor * fMul;  // 2 * gravity * height
 	//}
 
-	CFFPlayer *pPlayer = ToFFPlayer(player);
-
-	// Double jump
-	if (pPlayer->m_bCanDoubleJump)
+	// Double jump - but don't allow double jumps while building, please!
+	if( ffplayer->m_bCanDoubleJump && !ffplayer->m_bBuilding )
 	{
-		float flElapsed = pPlayer->m_flNextJumpTimeForDouble - gpGlobals->curtime;
+		float flElapsed = ffplayer->m_flNextJumpTimeForDouble - gpGlobals->curtime;
 
 		if (flElapsed > 0 && flElapsed < 0.4f)
 		{
@@ -290,10 +294,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 			DevMsg("[C] Double jump %f!\n", fMul);
 #endif
 
-			pPlayer->m_bCanDoubleJump = false;
+			ffplayer->m_bCanDoubleJump = false;
 		}
 
-		pPlayer->m_flNextJumpTimeForDouble = gpGlobals->curtime + 0.5f;
+		ffplayer->m_flNextJumpTimeForDouble = gpGlobals->curtime + 0.5f;
 	}
 
 	// --> Mirv: Add on new velocity
@@ -1416,3 +1420,59 @@ void CFFGameMovement::FullNoClipMove( float factor, float maxacceleration )
 		BaseClass::FullNoClipMove( factor, maxacceleration );
 }
 // <-- Mirv: Map guides, client side part
+
+//-----------------------------------------------------------------------------
+// Purpose: Movement while building in Fortress Forever
+//-----------------------------------------------------------------------------
+void CFFGameMovement::FullBuildMove( void )
+{
+	CFFPlayer *pPlayer = ToFFPlayer( player );
+	if( !pPlayer )
+		return;
+
+	// Don't care if dead or not building...
+	if( !pPlayer->m_bBuilding || !pPlayer->IsAlive() )
+		return;
+	
+	// Don't care if under water...
+	if( pPlayer->GetWaterLevel() > WL_Feet )
+		return;
+
+	// Finally, allow jumping
+
+	StartGravity();
+
+	// Was jump button pressed?
+	if( mv->m_nButtons & IN_JUMP )
+	{
+		CheckJumpButton();
+	}
+	else
+	{
+		mv->m_nOldButtons &= ~IN_JUMP;
+	}
+
+	// Reset these so we stay in place
+	mv->m_flSideMove = 0.0f;
+	mv->m_flForwardMove = 0.0f;
+	mv->m_vecVelocity[ 0 ] = 0.0f;
+	mv->m_vecVelocity[ 1 ] = 0.0f;
+
+	CheckVelocity();
+
+	if( pPlayer->GetGroundEntity() != NULL )
+	{
+		WalkMove();
+	}
+	else
+	{
+		AirMove();  // Take into account movement when in air.
+	}
+
+	CategorizePosition();
+
+	FinishGravity();
+
+	// Does nothing, but makes me feel happy.
+	BaseClass::FullBuildMove();
+}

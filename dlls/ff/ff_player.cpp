@@ -514,26 +514,28 @@ void CFFPlayer::PreThink(void)
 	}
 
 	// Riding a vehicle?
-	if( IsInAVehicle( ) )	
+	if( IsInAVehicle() )	
 	{
 		// make sure we update the client, check for timed damage and update suit even if we are in a vehicle
-		UpdateClientData( );		
-		CheckTimeBasedDamage( );
+		UpdateClientData();		
+		CheckTimeBasedDamage();
 
 		// Allow the suit to recharge when in the vehicle.
-		CheckSuitUpdate( );
+		CheckSuitUpdate();
 		
-		WaterMove( );	
+		WaterMove();	
 		return;
 	}
 
 	// update the grenade status if needed
-	if( IsGrenadePrimed( ) )
-		GrenadeThink( );
+	if( IsGrenadePrimed() )
+		GrenadeThink();
 
 	// Bug #0000459: building on ledge locks you into place.
 	if( m_bBuilding )
 	{
+		// Players can jump while building now
+		/*
 		// Need to stop building because player somehow came off the ground
 		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
 		{
@@ -543,11 +545,11 @@ void CFFPlayer::PreThink(void)
 			m_iWantBuild = m_iCurBuild;
 			PreBuildGenericThink();
 		}
+		*/
 
 		// Our origin has changed while building! no!!!!!!!!!!!!!!!!!!!!!!
-		if( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 36.0f )
+		if( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 128.0f )
 		{
-			Vector vecOrigin = GetAbsOrigin();
 			Warning( "[Buildable] Player origin has changed!\n" );
 			m_iWantBuild = m_iCurBuild;
 			PreBuildGenericThink();
@@ -2275,14 +2277,10 @@ void CFFPlayer::KillAndRemoveItems( void )
 
 void CFFPlayer::LockPlayerInPlace( void )
 {
-	SetMoveType( MOVETYPE_NONE );
+ 	SetMoveType( MOVETYPE_NONE );
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	SetAbsVelocity( Vector( 0, 0, 0 ) );
-
-	// TODO: Other classes need to check
-	// if (m_bBuilding == True)
-	// ie. grenades, weapons, etc
 
 	if( m_bBuilding )
 	{

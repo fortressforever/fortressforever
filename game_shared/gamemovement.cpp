@@ -4114,6 +4114,14 @@ void CGameMovement::Duck( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Movement while building in Fortress Forever
+//-----------------------------------------------------------------------------
+void CGameMovement::FullBuildMove( void )
+{
+	// Do nothing, super class does the work.
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CGameMovement::PlayerMove( void )
@@ -4200,6 +4208,7 @@ void CGameMovement::PlayerMove( void )
 	switch (player->GetMoveType())
 	{
 		case MOVETYPE_NONE:
+			FullBuildMove();
 			break;
 
 		case MOVETYPE_NOCLIP:
