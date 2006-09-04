@@ -71,17 +71,17 @@ private:
 
 protected:
 #ifdef CLIENT_DLL
-	CFFDispenser *pDispenser;
+	CFFDispenser *m_pBuildable;
 #endif
 
 	// I've stuck the client dll check in here so it doesnt have to be everywhere else
 	void Cleanup() 
 	{
 #ifdef CLIENT_DLL
-		if (pDispenser) 
+		if (m_pBuildable) 
 		{
-			pDispenser->Remove();
-			pDispenser = NULL;
+			m_pBuildable->Remove();
+			m_pBuildable = NULL;
 		}
 #endif
 	}
@@ -112,7 +112,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_deploydispenser);
 CFFWeaponDeployDispenser::CFFWeaponDeployDispenser() 
 {
 #ifdef CLIENT_DLL
-	pDispenser = NULL;
+	m_pBuildable = NULL;
 #endif
 }
 
@@ -168,47 +168,25 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DISPENSER, FF_BUILD_DISP_BUILD_DIST, FF_BUILD_DISP_RAISE_VAL);
 
-			/*
-			if( pDispenser )
+			if( m_pBuildable )
 			{
 				// Update current fake dispenser
-				pDispenser->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				pDispenser->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
 
-				pDispenser->SetBuildError( hBuildInfo.BuildResult() );
+				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
 				// Create fake dispenser
-				pDispenser = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
 			}
 
-			if( hBuildInfo.BuildResult() != 0 )
-				pDispenser->SetRenderColor( ( byte )255, ( byte )0, ( byte )0 );
+			// Check whether we need to "hide" the model or not
+			if( hBuildInfo.BuildResult() != BUILD_ALLOWED )
+				m_pBuildable->SetRenderColorA( ( byte )1 );
 			else
-				pDispenser->SetRenderColor( ( byte )255, ( byte )255, ( byte )255 );
-				*/
-
-			//*
-			if (hBuildInfo.BuildResult() == BUILD_ALLOWED) 
-			{
-				if (pDispenser) 
-				{
-					// Dispenser is currently hidden
-					if (pDispenser->GetEffects() & EF_NODRAW) 
-						pDispenser->RemoveEffects(EF_NODRAW);
-
-					// These were calculated in TryBuild() 
-					pDispenser->SetAbsOrigin(hBuildInfo.GetBuildGroundOrigin());
-					pDispenser->SetAbsAngles(hBuildInfo.GetBuildGroundAngles());
-				}
-				else
-					pDispenser = CFFDispenser::CreateClientSideDispenser(hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles());
-			}
-			// Unable to build, so hide buildable
-			else if (pDispenser && ! (pDispenser->GetEffects() & EF_NODRAW)) 
-				pDispenser->SetEffects(EF_NODRAW);
-				//*/
+				m_pBuildable->SetRenderColorA( ( byte )110 );
 		}
 		// Destroy if we already have one
 		else

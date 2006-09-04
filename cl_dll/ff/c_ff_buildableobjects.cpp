@@ -59,10 +59,10 @@
 #include "beamdraw.h"
 
 // Defines
-#define FF_BUILD_ERROR_NOROOM	"sprites/ff_sprite_spy"
-#define FF_BUILD_ERROR_TOOSTEEP	"sprites/ff_sprite_spy"
-#define FF_BUILD_ERROR_TOOFAR	"sprites/ff_sprite_spy"
-#define FF_BUILD_ERROR_INVALIDGROUND	"sprites/ff_sprite_spy"
+#define FF_BUILD_ERROR_NOROOM	"sprites/ff_build_noroom"
+#define FF_BUILD_ERROR_TOOSTEEP	"sprites/ff_build_toosteep"
+#define FF_BUILD_ERROR_TOOFAR	"sprites/ff_build_toofar"
+#define FF_BUILD_ERROR_INVALIDGROUND	"sprites/ff_build_invalidground"
 
 // Define all the sprites to precache
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorNoRoom )
@@ -178,7 +178,6 @@ void C_FFBuildableObject::ClientThink( void )
 //-----------------------------------------------------------------------------
 int C_FFBuildableObject::DrawModel( int flags )
 {
-	/*
 	if( m_bClientSideOnly )
 	{
 		// Draw our glyphs
@@ -220,13 +219,9 @@ int C_FFBuildableObject::DrawModel( int flags )
 				}
 			}
 		}
-
-		return BaseClass::DrawModel( flags );
 	}
-	else
-	{*/
-		return BaseClass::DrawModel( flags );
-	//}
+		
+	return BaseClass::DrawModel( flags );
 }
 
 //=============================================================================
