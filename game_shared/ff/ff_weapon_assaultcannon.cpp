@@ -379,6 +379,10 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 				WeaponSound(STOP);
 				HandleFireOnEmpty();
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
+
+#ifdef GAME_DLL
+				pOwner->RemoveSpeedEffect(SE_ASSAULTCANNON);
+#endif
 			}
 			// Weapon should be firing now
 			else
@@ -571,7 +575,7 @@ void CFFWeaponAssaultCannon::UpdateBarrelSpin()
 
 	// A buffered version of m_flChargeTime, if you will. This is to stop the
 	// jerkiness that is being annoying
-	if (pOwner->m_nButtons & IN_ATTACK)
+	if (pOwner->m_nButtons & IN_ATTACK && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 		m_flChargeTimeClient = max(m_flChargeTimeClient, m_flChargeTime);
 	}
@@ -593,7 +597,7 @@ void CFFWeaponAssaultCannon::UpdateBarrelSpin()
 
 	// Might need to separate m_flRotationValue from m_flChargeTime
 	// Perhaps a separate client-side variable to track it
-	m_flRotationValue += m_flChargeTimeClient * 2.0f;
+	m_flRotationValue += m_flChargeTimeClient * 3.0f;
 	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
 
 #endif
