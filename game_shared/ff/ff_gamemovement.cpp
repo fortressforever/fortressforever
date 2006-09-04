@@ -163,13 +163,13 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//if ( player->m_Local.m_flDuckJumpTime > 0.0f )
 	//	return false;
 
-	// Now that we've allowed jumps to take place while unducking, we have to
+	// UNDONE: Now that we've allowed jumps to take place while unducking, we have to
 	// immediately finish the unduck. This pretty much follows TFC behaviour
 	// now.
-	if (player->m_Local.m_bDucking && (player->GetFlags() & FL_DUCKING))
-	{
-		FinishUnDuck();
-	}
+	//if (player->m_Local.m_bDucking && (player->GetFlags() & FL_DUCKING))
+	//{
+	//	FinishUnDuck();
+	//}
 
 	// In the air now.
 	SetGroundEntity( (CBaseEntity *)NULL );
