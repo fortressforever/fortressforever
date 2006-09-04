@@ -258,6 +258,7 @@ protected:
 public:
 	virtual int  DrawModel( int flags );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
+	virtual void ClientThink( void );
 
 	virtual int	GetHealth( void ) const { return m_iHealth; }
 	virtual int	GetMaxHealth( void ) const { return m_iMaxHealth; }
