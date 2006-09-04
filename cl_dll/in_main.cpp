@@ -836,6 +836,13 @@ void CInput::ScaleMovements( CUserCmd *cmd )
 		cmd->upmove      *= fRatio;
 	}
 
+	// Oh gawd.
+	// These are transmitted in a way that the decimal part gets lost. This causes the
+	// client to end up slightly faster sometimes and therefore warp around as the server
+	// drags it back. Therefore lop off the fraction now.
+	cmd->forwardmove = (int) cmd->forwardmove;
+	cmd->sidemove = (int) cmd->sidemove;
+
 	// <-- Mirv
 	return;
 

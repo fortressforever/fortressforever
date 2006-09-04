@@ -19,6 +19,7 @@
 #include "in_buttons.h"
 #include "con_nprint.h"
 #include "hud_pdump.h"
+#include "debugoverlay_shared.h"
 
 #ifdef HL2_CLIENT_DLL
 #include "c_basehlplayer.h"
@@ -193,6 +194,12 @@ void CPrediction::CheckError( int commands_acknowledged )
 				np.time_to_live = 2.0f;
 
 				engine->Con_NXPrintf( &np, "pred error %6.3f units (%6.3f %6.3f %6.3f)", len, delta.x, delta.y, delta.z );
+
+				// --> Mirv: Draw it on now too
+				int b = clamp((len / 32.0f) * 255, 0, 255);
+				debugoverlay->AddLineOverlay(predicted_origin + Vector(0, 0, 5), origin, b, b, b, false, 5.0f);
+				debugoverlay->AddLineOverlay(predicted_origin - Vector(0, 0, 5), origin, b, b, b, false, 5.0f);
+				// <-- Mirv
 			}
 		}
 	}
