@@ -24,9 +24,16 @@
 	#include "ff_player.h"
 #endif
 
-#define AC_MAX_CHARGETIME	7.0f
-#define AC_CHARGEUP_TIME	0.6f
+#define AC_MAX_CHARGETIME	4.5f
+#define AC_CHARGEUP_TIME	0.0f
 #define AC_MAX_REV_SOUND	3.0f
+#define AC_OVERHEAT_DELAY	1.0f
+
+#define	AC_MIN_SPREAD	0.01
+#define AC_MAX_SPREAD	0.10
+
+#define	AC_MAX_CYCLETIME	0.4f
+#define AC_MIN_CYCLETIME	0.04f
 
 //=============================================================================
 // CFFWeaponAssaultCannon
@@ -48,13 +55,21 @@ public:
 	virtual bool Deploy();
 
 	virtual void ItemPostFrame();
+	
+	void UpdateChargeTime();
 
 	virtual void Precache();
 
 	virtual void Fire();
 
+private:
+	virtual float GetFireRate();
+	Vector GetFireSpread();
+
+	void UpdateBarrelSpin();
+
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_ASSAULTCANNON; }
-	const char *GetTracerType() { return "ACTracer"; }
+	//const char *GetTracerType() { return "ACTracer"; }
 
 private:
 
@@ -63,7 +78,10 @@ private:
 public:	// temp while i expose m_flChargeTime to global function
 
 	float m_flLastTick;
-	CNetworkVar(float, m_flChargeTime);
+
+	float	m_flChargeTime;
+	CNetworkVar(float, m_flTriggerPressed);
+	CNetworkVar(float, m_flTriggerReleased);
 
 	bool	m_bFiring;
 
@@ -85,15 +103,18 @@ IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponAssaultCannon, DT_FFWeaponAssaultCannon)
 
 BEGIN_NETWORK_TABLE(CFFWeaponAssaultCannon, DT_FFWeaponAssaultCannon) 
 #ifdef GAME_DLL
-	SendPropFloat(SENDINFO(m_flChargeTime)),
+	SendPropFloat(SENDINFO(m_flTriggerPressed)),
+	SendPropFloat(SENDINFO(m_flTriggerReleased)),
 #else
-	RecvPropFloat(RECVINFO(m_flChargeTime)),
+	RecvPropFloat(RECVINFO(m_flTriggerPressed)),
+	RecvPropFloat(RECVINFO(m_flTriggerReleased)),
 #endif
 END_NETWORK_TABLE() 
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA(CFFWeaponAssaultCannon) 
-	DEFINE_PRED_FIELD_TOL(m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 1.0f),
+	DEFINE_PRED_FIELD_TOL(m_flTriggerPressed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 1.0f),
+	DEFINE_PRED_FIELD_TOL(m_flTriggerReleased, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 1.0f),
 END_PREDICTION_DATA() 
 #endif
 
@@ -110,6 +131,9 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_assaultcannon);
 CFFWeaponAssaultCannon::CFFWeaponAssaultCannon() 
 {
 	m_flNextSecondaryAttack = gpGlobals->curtime;
+
+	m_flTriggerReleased = 1.0f;
+	m_flTriggerPressed = 0.0f;
 
 #ifdef CLIENT_DLL
 	m_pEngine = NULL;
@@ -215,13 +239,14 @@ bool CFFWeaponAssaultCannon::Deploy()
 //----------------------------------------------------------------------------
 void CFFWeaponAssaultCannon::Fire() 
 {
+	Assert(0);
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
 	Vector vecForward;
 	AngleVectors(pPlayer->EyeAngles(), &vecForward);
 
-	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, GetFireSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
 	info.m_iDamage = pWeaponInfo.m_iDamage;
 
@@ -236,6 +261,78 @@ void CFFWeaponAssaultCannon::Fire()
 
 }
 
+void CFFWeaponAssaultCannon::UpdateChargeTime()
+{
+	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
+
+	if (!pOwner)
+		return;
+
+	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+
+	// Firing has started
+	if (pOwner->m_afButtonPressed & IN_ATTACK && m_flTriggerPressed < gpGlobals->curtime)
+	{
+		// We've logged the trigger having being released recently.
+		// If the trigger was held longer than the time since the release then there
+		// must be charge left on the AC.
+		// We will subtract this remaining charge from the curtime for the new charge.
+		if (m_flTriggerReleased > m_flTriggerPressed)
+		{
+			float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
+			float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
+			float flTimeLeft = flTimeHeld - flTimeSinceRelease;
+
+			if (flTimeLeft > 0 && flTimeLeft < AC_MAX_CHARGETIME)
+			{
+				m_flTriggerPressed = gpGlobals->curtime - flTimeLeft;
+			}
+			else
+				m_flTriggerPressed = gpGlobals->curtime;
+		}
+
+		// Sometimes m_afButtonPressed seems to be set for 2 frames in a row.
+		// Therefore only allow 
+		else if (m_flTriggerReleased > 0)
+			m_flTriggerPressed = gpGlobals->curtime;
+
+		// Reset the trigger released
+		m_flTriggerReleased = 0;
+	}
+
+	// If they have released the fire button, catch the release trigger time
+	if (pOwner->m_afButtonReleased & IN_ATTACK)
+	{
+		m_flTriggerReleased = gpGlobals->curtime;
+	}
+
+	// If we're currently firing then the charge time is simply the time since the
+	// trigger was pressed.
+	if (pOwner->m_nButtons & IN_ATTACK)
+	{
+		m_flChargeTime = gpGlobals->curtime - m_flTriggerPressed;
+	}
+	// Otherwise the charge time is the amount it was held minus the amount of time
+	// that has elapsed since it was released.
+	else
+	{
+		float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
+		float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
+
+		m_flChargeTime = flTimeHeld - flTimeSinceRelease;
+
+		if (m_flChargeTime < 0)
+			m_flChargeTime = 0;
+	}
+
+	// They might have overheated.
+	// Manufacture a smooth chargetime reduction
+	if (m_flNextSecondaryAttack > gpGlobals->curtime)
+	{
+		m_flChargeTime = AC_MAX_CHARGETIME * ((m_flNextSecondaryAttack - gpGlobals->curtime) / AC_OVERHEAT_DELAY);
+	}
+}
+
 void CFFWeaponAssaultCannon::ItemPostFrame()
 {
 	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
@@ -243,50 +340,24 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	if (!pOwner)
 		return;
 
+	// The time since we last thought
 	float flTimeDelta = gpGlobals->curtime - m_flLastTick;
 	m_flLastTick = gpGlobals->curtime;
 
-#ifdef CLIENT_DLL
-	
-	// A buffered version of m_flChargeTime, if you will. This is to stop the
-	// jerkiness that is being annoying
-	if (pOwner->m_nButtons & IN_ATTACK)
-	{
-		m_flChargeTimeClient = max(m_flChargeTimeClient, m_flChargeTime);
-	}
-	else
-	{
-		m_flChargeTimeClient = min(m_flChargeTimeClient, m_flChargeTime);
-	}
-	
-
-	CBaseViewModel *pVM = pOwner->GetViewModel();
-	
-	if (m_iBarrelRotation < 0)
-	{
-		m_iBarrelRotation = pVM->LookupPoseParameter("ac_rotate");
-	}
-
-	// Might need to separate m_flRotationValue from m_flChargeTime
-	// Perhaps a separate client-side variable to track it
-	m_flRotationValue += flTimeDelta * 100.0f * m_flChargeTimeClient * 5.0f;
-	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
-#endif
-
 	// Keep track of fire duration for anywhere else it may be needed
-	m_fFireDuration = (pOwner->m_nButtons & IN_ATTACK) ? (m_fFireDuration + gpGlobals->frametime) : 0.0f;
+	UpdateChargeTime();
+	UpdateBarrelSpin();
 
 	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
 	if (pOwner->m_nButtons & IN_ATTACK && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
-		m_flChargeTime += flTimeDelta;
-
 		// Oh no...
 		if (m_flChargeTime > AC_MAX_CHARGETIME)
 		{
 			// Freeze for 5s, reduce to max rev sound so it falls away instantly
-			m_flNextSecondaryAttack = gpGlobals->curtime + 5.0;
-			m_flChargeTime = AC_MAX_REV_SOUND;
+			m_flNextSecondaryAttack = gpGlobals->curtime + AC_OVERHEAT_DELAY;
+			m_flTriggerPressed = gpGlobals->curtime + AC_OVERHEAT_DELAY;
+			m_flTriggerReleased = 0; //gpGlobals->curtime;
 			
 			// Play the overheat sound
 			WeaponSound(SPECIAL3);
@@ -300,7 +371,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		}
 
 		// Time for the next real fire think
-		else if (m_flChargeTime > AC_CHARGEUP_TIME && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		else if (m_flChargeTime >= AC_CHARGEUP_TIME && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
@@ -320,15 +391,15 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 				PrimaryAttack();
 			}
 
-			m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+			//m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 
-			float flT = (m_flChargeTime - AC_CHARGEUP_TIME) / (2.0f * AC_MAX_CHARGETIME);
+			//float flT = (m_flChargeTime - AC_CHARGEUP_TIME) / (2.0f * AC_MAX_CHARGETIME);
 
-			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFFWpnData().m_flCycleTime * (flT > 0.0f ? 1.0f : 1 - flT));
+			//m_flNextPrimaryAttack = gpGlobals->curtime + (GetFFWpnData().m_flCycleTime * (flT > 0.0f ? 1.0f : 1 - flT));
 
 			if (!m_bFiring && m_flChargeTime > AC_CHARGEUP_TIME)
 			{
-				WeaponSound(BURST);
+				//WeaponSound(SINGLE);
 
 #ifdef GAME_DLL
 				CFFPlayer *pPlayer = GetPlayerOwner();
@@ -345,7 +416,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		// Reduce speed at 3 times the rate
 		if (m_flChargeTime > 0)
 		{
-			m_flChargeTime -= 3.0f * flTimeDelta;
+			m_flChargeTime -= flTimeDelta;
 
 			if (m_flChargeTime < 0)
 				m_flChargeTime = 0;
@@ -405,7 +476,7 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 #endif
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	//WeaponSound(SINGLE);
+	WeaponSound(SINGLE, m_flNextPrimaryAttack);
 
 	pPlayer->DoMuzzleFlash();
 
@@ -414,15 +485,46 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	// player "shoot" animation
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
+	// To make the firing framerate independent, we may have to fire more than one bullet here on low-framerate systems, 
+	// especially if the weapon we're firing has a really fast rate of fire.
+	int iBulletsToFire = 0;
+	float fireRate = GetFireRate();
+
+	while ( m_flNextPrimaryAttack <= gpGlobals->curtime )
+	{
+		m_flNextPrimaryAttack = m_flNextPrimaryAttack + fireRate;
+		iBulletsToFire++;
+	}
+
+	if (iBulletsToFire == 0)
+		return;
+
+	// Make sure we can't fire more bullets that we have
+	iBulletsToFire = min(iBulletsToFire, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
+
 #ifdef GAME_DLL
-	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
-	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+	pPlayer->RemoveAmmo(iBulletsToFire, m_iPrimaryAmmoType);
 #endif
 
-	// Fire now
-	Fire();
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+	Vector vecForward;
+	AngleVectors(pPlayer->EyeAngles(), &vecForward);
+
+	FireBulletsInfo_t info(iBulletsToFire, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	info.m_pAttacker = pPlayer;
+	info.m_iDamage = iBulletsToFire * pWeaponInfo.m_iDamage;
+
+	Vector vecTest = info.m_vecSrc;
+
+#ifdef CLIENT_DLL
+	QAngle tmpAngle;
+	pPlayer->GetViewModel()->GetAttachment(1, info.m_vecSrc, tmpAngle);
+#endif
+
+	pPlayer->FireBullets(info);
+
+	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 
 	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -431,7 +533,70 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	}
 
 	//Add our view kick in
+	pPlayer->ViewPunchReset();
 	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
+}
+
+float CFFWeaponAssaultCannon::GetFireRate()
+{
+	float t = m_flChargeTime / AC_MAX_CHARGETIME;
+	t = clamp(t, 0.0f, 1.0f);
+	t = SimpleSpline(t);
+
+	return AC_MAX_CYCLETIME * (1.0f - t) + AC_MIN_CYCLETIME * t;
+}
+
+Vector CFFWeaponAssaultCannon::GetFireSpread()
+{
+	float t = m_flChargeTime / AC_MAX_CHARGETIME;
+	t = clamp(t, 0.0f, 1.0f);
+	t = SimpleSpline(t);
+
+	float flSpread = AC_MIN_SPREAD * (1.0f - t) + AC_MAX_SPREAD * t;
+
+	return Vector(flSpread, flSpread, flSpread);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Keep the barrels spinning
+//-----------------------------------------------------------------------------
+void CFFWeaponAssaultCannon::UpdateBarrelSpin()
+{
+#ifdef CLIENT_DLL
+
+	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
+
+	if (!pOwner)
+		return;
+
+	// A buffered version of m_flChargeTime, if you will. This is to stop the
+	// jerkiness that is being annoying
+	if (pOwner->m_nButtons & IN_ATTACK)
+	{
+		m_flChargeTimeClient = max(m_flChargeTimeClient, m_flChargeTime);
+	}
+	else
+	{
+		m_flChargeTimeClient = min(m_flChargeTimeClient, m_flChargeTime);
+	}
+
+	// Max spinning speed
+	if (m_flChargeTimeClient > 1.5f)
+		m_flChargeTimeClient = 1.5f;
+
+	CBaseViewModel *pVM = pOwner->GetViewModel();
+
+	if (m_iBarrelRotation < 0)
+	{
+		m_iBarrelRotation = pVM->LookupPoseParameter("ac_rotate");
+	}
+
+	// Might need to separate m_flRotationValue from m_flChargeTime
+	// Perhaps a separate client-side variable to track it
+	m_flRotationValue += m_flChargeTimeClient * 2.0f;
+	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
+
+#endif
 }
 
 #ifdef CLIENT_DLL

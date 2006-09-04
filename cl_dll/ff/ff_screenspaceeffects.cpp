@@ -24,6 +24,7 @@
 #include "materialsystem/IColorCorrection.h"
 #include "c_baseplayer.h"
 #include "clienteffectprecachesystem.h"
+#include "in_buttons.h"
 
 #include "ScreenSpaceEffects.h"
 
@@ -321,12 +322,24 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	if (flSpeed < ffdev_blur_minspeed.GetFloat() * ffdev_blur_minspeed.GetFloat())
 	{
 		m_flNextSampleTime = 0.0f;
-		return;
-	}
 
-	flSpeed = FastSqrt(flSpeed);
-	flSpeed -= ffdev_blur_minspeed.GetFloat();
-	flSpeed /= ffdev_blur_rangespeed.GetFloat();
+		// V QUICK HACK FOR COOLNESS
+		extern float GetAssaultCannonCharge();
+		float flCharge = GetAssaultCannonCharge();
+		if (flCharge > 50.0f && pPlayer->m_nButtons & IN_ATTACK)
+		{
+			m_flNextSampleTime = 0.0f;
+			flSpeed = (flCharge - 50.0f) / 50.0f;
+		}
+		else
+			return;
+	}
+	else
+	{
+		flSpeed = FastSqrt(flSpeed);
+		flSpeed -= ffdev_blur_minspeed.GetFloat();
+		flSpeed /= ffdev_blur_rangespeed.GetFloat();
+	}
 
 	flSpeed = clamp(flSpeed, 0.0f, 1.0f);
 
