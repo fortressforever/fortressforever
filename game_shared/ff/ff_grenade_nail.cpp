@@ -64,6 +64,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800");
+	ConVar naildamage("ffdev_naildamage", "8");
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.4" );
 #endif
 
@@ -151,7 +152,7 @@ void CFFGrenadeNail::Precache()
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
-				CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), 30, nailspeed.GetInt() );
+				CFFProjectileNail *pNail = CFFProjectileNail::CreateNail(this, GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, GetOwnerEntity(), naildamage.GetInt(), nailspeed.GetInt());
 				if(pNail)
 					pNail->m_bNailGrenadeNail = true;				
 			}
