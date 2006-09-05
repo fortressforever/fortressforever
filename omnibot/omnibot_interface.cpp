@@ -710,8 +710,9 @@ namespace Omnibot
 			switch(pEntity->Classify())
 			{
 			case CLASS_PLAYER:
-				{
-					if(pEntity->GetHealth() <= 0 || pEntity->GetTeamNumber() == TEAM_SPECTATOR)
+				{					
+					if(!pEntity->IsAlive() || pEntity->GetHealth() <= 0 || 
+						pEntity->GetTeamNumber() == TEAM_SPECTATOR)
 						_entflags.SetFlag(ENT_FLAG_DEAD);
 
 					int iWaterLevel = pEntity->GetWaterLevel();
@@ -1604,7 +1605,7 @@ namespace Omnibot
 				Msg_IsAlive *pMsg = _data.Get<Msg_IsAlive>();
 				if(pMsg)
 				{
-					pMsg->m_IsAlive = pEnt && pEnt->GetHealth() > 0 ? True : False;
+					pMsg->m_IsAlive = pEnt && pEnt->IsAlive() && pEnt->GetHealth() > 0 ? True : False;
 				}
 				break;
 			}
