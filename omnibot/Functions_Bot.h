@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-01 22:50:12 -0700 (Fri, 01 Sep 2006) $
-// $LastChangedRevision: 1263 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,8 @@ typedef struct
 	int (*pfnBotSetNavFuncs)(Nav_EngineFuncs_t *_pNavFuncs, int _size);
 
 	// New message stuff.
+	void (*pfnBotSendEventEx)(const MessageHelper &_message);
+	void (*pfnBotSendGlobalEventEx)(const MessageHelper &_message);
 	/*SubscriberHandle (*pfnSubscribeToMsg)(int _msg, pfnMessageFunction _func);
 	void (*pfnUnsubscribe)(const SubscriberHandle _handle);
 

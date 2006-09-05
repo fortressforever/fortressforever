@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-24 23:21:18 -0700 (Thu, 24 Aug 2006) $
-// $LastChangedRevision: 1254 $
+// $LastChangedDate: 2006-09-04 12:43:04 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1266 $
 //
 // Title: TF Config
 //
@@ -28,6 +28,24 @@
 #define MAX_DEMO_PIPETRAPS 3
 #define MAX_DEMO_PIPES 6
 #define MAX_DEMO_TEAM_PIPES 8
+
+// enumerations: TF_ButtonFlags
+//		TF_BOT_BUTTON_GREN1 - Prime grenade 1.
+//		TF_BOT_BUTTON_GREN2 - Prime grenade 2.
+//		TF_BOT_BUTTON_GREN_THROW - Throw primed grenade.
+//		TF_BOT_BUTTON_DROPITEM - Drop carried item(flag).
+//		TF_BOT_BUTTON_DROPAMMO - Drop ammo(discard).
+typedef enum eTF_ButtonFlags
+{	
+	TF_BOT_BUTTON_GREN1 = BOT_BUTTUN_FIRSTUSER,
+	TF_BOT_BUTTON_GREN2,
+	TF_BOT_BUTTON_GREN_THROW,
+	TF_BOT_BUTTON_DROPITEM,
+	TF_BOT_BUTTON_DROPAMMO,
+	
+	// THIS MUST BE LAST
+	TF_BOT_BUTTUN_FIRSTUSER
+} TF_ButtonFlags;
 
 // enumerations: TF_EntityClass
 //		TF_CLASS_SCOUT - Scout player class.
@@ -356,7 +374,7 @@ typedef enum eTF_Events
 	TF_MSG_PYRO_END,
 
 	// Spy
-	TF_MSG_AGENT_START,	
+	TF_MSG_SPY_START,	
 	// Game Events
 	TF_MSG_DISGUISING,
 	TF_MSG_DISGUISED,
@@ -366,8 +384,10 @@ typedef enum eTF_Events
 	TF_MSG_UNFEIGNED,
 	TF_MSG_SABOTAGED_SENTRY,
 	TF_MSG_SABOTAGED_DISPENSER,
+	TF_MSG_CANTDISGUISE_AS_TEAM,
+	TF_MSG_CANTDISGUISE_AS_CLASS,
 	// Internal Events
-	TF_MSG_AGENT_END,
+	TF_MSG_SPY_END,
 
 	// Engineer
 	TF_MSG_ENGINEER_START,

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-24 23:21:18 -0700 (Thu, 24 Aug 2006) $
-// $LastChangedRevision: 1254 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +29,9 @@ typedef struct
 	// BitFlag64: m_EntityFlags
 	//		Current flags of this entity, see <EntityFlags>
 	BitFlag64	m_EntityFlags;
+	// BitFlag64: m_EntityPowerups
+	//		Current power-ups of this entity, see <Powerups>
+	BitFlag64	m_EntityPowerups;
 } EntityInfo;
 
 

@@ -128,7 +128,7 @@ public:
 	// Already exists in CBaseEntity!
 	//const char *EntName( void ) { return STRING( GetEntityName() ); }
 
-	void SetBotGoalInfo(int _type, int _team);
+	void SetBotGoalInfo(int _type);
 
 	// returns the critia necessary for another entity
 	// to "touch" this entity

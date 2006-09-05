@@ -52,6 +52,7 @@ namespace Omnibot
 	void Notify_Spawned(CBasePlayer *_player);
 	void Notify_Hurt(CBasePlayer *_player, edict_t *_attacker);
 	void Notify_Death(CBasePlayer *_player, edict_t *_attacker, const char *_weapon);
+	void Notify_KilledSomeone(CBasePlayer *_player, edict_t *_victim, const char *_weapon);
 
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam);
 	void Notify_ChangedClass(CBasePlayer *_player, int _oldclass, int _newclass);
@@ -109,7 +110,7 @@ namespace Omnibot
 		kFlag,
 		kFlagCap
 	};
-	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _team);
+	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags);
 
 	void Notify_ItemDropped(CBaseEntity *_entity);
 	void Notify_ItemPickedUp(CBaseEntity *_entity, CBaseEntity *_whodoneit);

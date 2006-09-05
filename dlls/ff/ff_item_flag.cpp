@@ -832,9 +832,18 @@ void CFFInfoScript::RemoveThink( void )
 	LUA_Remove();
 }
 
-void CFFInfoScript::SetBotGoalInfo(int _type, int _team)
+void CFFInfoScript::SetBotGoalInfo(int _type)
 {
-	Omnibot::Notify_GoalInfo(this, _type, _team);
+	int iTeamFlags = 0;
+	if(m_allowTouchFlags & kAllowBlueTeam)
+		iTeamFlags |= Omnibot::TF_TEAM_BLUE;
+	if(m_allowTouchFlags & kAllowRedTeam)
+		iTeamFlags |= Omnibot::TF_TEAM_RED;
+	if(m_allowTouchFlags & kAllowYellowTeam)
+		iTeamFlags |= Omnibot::TF_TEAM_YELLOW;
+	if(m_allowTouchFlags & kAllowGreenTeam)
+		iTeamFlags |= Omnibot::TF_TEAM_GREEN;
+	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
 }
 
 //-----------------------------------------------------------------------------
