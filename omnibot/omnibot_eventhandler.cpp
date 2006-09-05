@@ -448,12 +448,6 @@ void event_GamePlayerScore(IGameEvent *_event)
 
 void event_GamePlayerShoot(IGameEvent *_event)
 {
-	/*"player_shoot"
-	{
-		"userid" (TYPE_SHORT)
-		"weapon" (TYPE_BYTE)
-		"mode" (TYPE_BYTE)
-	}*/
 	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
 	if(pPlayer && pPlayer->IsBot())
 	{
@@ -553,7 +547,11 @@ void event_Death(IGameEvent *_event)
 	if(pPlayer && pPlayer->IsBot())
 	{
 		Omnibot::Notify_Death(pPlayer, pAttacker ? pAttacker->edict() : 0, pWeapon);
-	}	
+	}
+	if(pAttacker && pAttacker->IsBot())
+	{
+		Omnibot::Notify_KilledSomeone(pAttacker, pPlayer ? pPlayer->edict() : 0, pWeapon);
+	}
 }
 
 void event_Spawn(IGameEvent *_event)

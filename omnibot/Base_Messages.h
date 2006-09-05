@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +77,18 @@ typedef struct
 	GameState	m_GameState;
 	float		m_TimeLeft;
 } Msg_GameState;
+
+typedef struct 
+{
+	int			m_Kills;
+	int			m_Deaths;
+} Msg_EntityScore;
+
+typedef struct 
+{
+	int			m_Team;
+	int			m_Score;
+} Msg_Score;
 
 //////////////////////////////////////////////////////////////////////////
 

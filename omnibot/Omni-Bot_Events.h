@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-15 18:21:42 -0700 (Tue, 15 Aug 2006) $
-// $LastChangedRevision: 1245 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 // about: Generic Bot Events
 //
@@ -125,6 +125,9 @@ typedef enum
 	GEN_MSG_GETMAXSPEED,
 	GEN_MSG_GETFLAGSTATE,
 	GEN_MSG_GAMESTATE,
+
+	GEN_MSG_ENTITYSCORE,
+	GEN_MSG_TEAMSCORE,
 
 	// This must stay last.
 	GEN_MSG_END

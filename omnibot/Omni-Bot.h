@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-03 00:47:21 -0700 (Thu, 03 Aug 2006) $
-// $LastChangedRevision: 1241 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 // about: Exported function definitions
 //		In order for the game to call functions from the bot, we must export
@@ -56,6 +56,14 @@ void BotSendTrigger(TriggerInfo *_triggerInfo);
 // function: BotSetNavFuncs
 //		Allows the game to give the bot functions to call for an external navigation system.
 int BotSetNavFuncs(Nav_EngineFuncs_t *_pNavFuncs, int _size);
+
+// function: BotSendEventEx
+//		New Messagehelper based event handler.
+void BotSendEventEx(const MessageHelper &_message);
+
+// function: BotSendGlobalEventEx
+//		New Messagehelper based event handler.
+void BotSendGlobalEventEx(const MessageHelper &_message);
 
 //SubscriberHandle Message_SubscribeToMsg(int _msg, pfnMessageFunction _func);
 //void Message_Unsubscribe(const SubscriberHandle _handle);

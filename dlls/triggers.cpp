@@ -1112,9 +1112,29 @@ void CFuncFFScript::Spawn( void )
 
 void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
 {
-	Omnibot::Notify_GoalInfo(this, _type, _team);
+	int iTeamFlags = 0;
+	const int iAllTeams = 
+		(1<<Omnibot::TF_TEAM_BLUE)|
+		(1<<Omnibot::TF_TEAM_RED)|
+		(1<<Omnibot::TF_TEAM_YELLOW)|
+		(1<<Omnibot::TF_TEAM_GREEN);
+	switch(_team)
+	{
+	case TEAM_BLUE:
+		iTeamFlags = iAllTeams & ~(1<<Omnibot::TF_TEAM_BLUE);
+		break;
+	case TEAM_RED:
+		iTeamFlags = iAllTeams & ~(1<<Omnibot::TF_TEAM_RED);
+		break;
+	case TEAM_YELLOW:
+		iTeamFlags = iAllTeams & ~(1<<Omnibot::TF_TEAM_YELLOW);
+		break;
+	case TEAM_GREEN:
+		iTeamFlags = iAllTeams & ~(1<<Omnibot::TF_TEAM_GREEN);
+		break;
+	}	
+	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
 }
-
 
 // ##################################################################################
 //	>> TriggerOnce

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-26 20:09:40 -0700 (Sat, 26 Aug 2006) $
-// $LastChangedRevision: 1258 $
+// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
+// $LastChangedRevision: 1265 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -447,7 +447,7 @@ typedef enum eBasicGoals
 	goal_base_num = 1000
 } Goals_Base;
 
-// enumerations: EntityFlag
+// enumerations: EntityFlags
 //		ENT_FLAG_TEAM1 - This entity is only available/visible for team 1
 //		ENT_FLAG_TEAM2 - This entity is only available/visible for team 2
 //		ENT_FLAG_TEAM3 - This entity is only available/visible for team 3
@@ -479,7 +479,7 @@ typedef enum eEntityFlag
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= 32
-} EntityFlag;
+} EntityFlags;
 
 // enumerations: Powerups
 //		PW_INVINCIBLE - The entity is invincible.

@@ -169,7 +169,7 @@ namespace Omnibot
 			"ff_weapon_flamethrower", // TF_WP_FLAMETHROWER
 			"ff_weapon_assaultcannon", // TF_WP_MINIGUN
 			"ff_weapon_autorifle", // TF_WP_AUTORIFLE
-			"ff_weapon_tranquiliser", // TF_WP_DARTGUN
+			"ff_weapon_tranq", // TF_WP_DARTGUN
 			"ff_weapon_pipelauncher", // TF_WP_PIPELAUNCHER
 			"ff_weapon_ic", // TF_WP_NAPALMCANNON
 			"ff_weapon_tommygun", // TF_WP_TOMMYGUN
@@ -1503,15 +1503,18 @@ namespace Omnibot
 
 	static obResult obGetThreats()
 	{
+		//return Success;
+
 		EntityInfo info;
 
 		for ( CBaseEntity *pEntity = gEntList.FirstEnt(); pEntity != NULL; pEntity = gEntList.NextEnt(pEntity) )
 		{
 			// default data.
 			info.m_EntityFlags.ClearAll();
+			info.m_EntityPowerups.ClearAll();
 			info.m_EntityCategory.ClearAll();
 			info.m_EntityClass = obGetEntityClass(pEntity->edict());
-
+			
 			switch(pEntity->Classify())
 			{
 			case CLASS_PLAYER:
@@ -1523,6 +1526,7 @@ namespace Omnibot
 					info.m_EntityCategory.SetFlag(ENT_CAT_SHOOTABLE);
 					info.m_EntityCategory.SetFlag(ENT_CAT_PLAYER);
 					obGetEntityFlags(pFFPlayer->edict(), info.m_EntityFlags);
+					obGetEntityPowerups(pEntity->edict(), info.m_EntityPowerups);
 					break;
 				}
 			case CLASS_DISPENSER:
@@ -1579,13 +1583,6 @@ namespace Omnibot
 	//-----------------------------------------------------------------
 
 	static obResult obGetGoals()
-	{
-		return Success;
-	}
-
-	//-----------------------------------------------------------------
-
-	static obResult obPrintEntitiesInRadius(const float _pos[3], float _radius)
 	{
 		return Success;
 	}
@@ -1743,6 +1740,26 @@ namespace Omnibot
 				if(pMsg && pPlayer)
 				{
 					pMsg->m_MaxSpeed = pPlayer->MaxSpeed();
+				}
+				break;
+			}
+		case GEN_MSG_ENTITYSCORE:
+			{
+				Msg_EntityScore *pMsg = _data.Get<Msg_EntityScore>();
+				if(pMsg && pPlayer)
+				{
+					pMsg->m_Kills = pPlayer->FragCount();
+					pMsg->m_Deaths = pPlayer->DeathCount();
+				}
+				break;
+			}
+		case GEN_MSG_TEAMSCORE:
+			{
+				Msg_Score *pMsg = _data.Get<Msg_Score>();
+				if(pMsg && pPlayer)
+				{
+					CTeam *pTeam = GetGlobalTeam( obUtilGetGameTeamFromBotTeam(pMsg->m_Team) );
+					pMsg->m_Score = pTeam ? pTeam->GetScore() : 0;
 				}
 				break;
 			}
@@ -2051,6 +2068,18 @@ namespace Omnibot
 			if(_input->m_ButtonFlags.CheckFlag(BOT_BUTTON_RELOAD))
 				cmd.buttons |= IN_RELOAD;
 
+			if(_input->m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN1))
+				serverpluginhelpers->ClientCommand(pEdict, "primeone");
+			if(_input->m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN2))
+				serverpluginhelpers->ClientCommand(pEdict, "primetwo");
+			if(_input->m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_GREN_THROW))
+				serverpluginhelpers->ClientCommand(pEdict, "throwgren");
+
+			if(_input->m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPITEM))
+				serverpluginhelpers->ClientCommand(pEdict, "dropitems");
+			if(_input->m_ButtonFlags.CheckFlag(TF_BOT_BUTTON_DROPAMMO))
+				serverpluginhelpers->ClientCommand(pEdict, "discard");
+			
 			// Store the facing.
 			Vector vFacing(_input->m_Facing[0], _input->m_Facing[1], _input->m_Facing[2]);
 			VectorAngles(vFacing, cmd.viewangles);
@@ -2561,10 +2590,11 @@ namespace Omnibot
 	{
 		int iGameId = _player->entindex()-1;
 		BotUserData bud(obUtilGetWeaponId(_item));
-		omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_ADDWEAPON, iGameId, 0, &bud);
-
-		// ERROR DETECTION
-		if(bud.GetInt() == TF_WP_NONE)
+		if(bud.GetInt() != TF_WP_NONE)
+		{
+			omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_ADDWEAPON, iGameId, 0, &bud);
+		}
+		else
 		{
 			// Added newline since this was showing up
 			Warning("Invalid Weapon Id: Notify_AddWeapon\n");
@@ -2575,10 +2605,12 @@ namespace Omnibot
 	{
 		int iGameId = _player->entindex()-1;
 		BotUserData bud(obUtilGetWeaponId(_item));
-		omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_REMOVEWEAPON, iGameId, 0, &bud);
-
-		// ERROR DETECTION
-		if(bud.GetInt() == TF_WP_NONE)
+		
+		if(bud.GetInt() != TF_WP_NONE)
+		{
+			omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_REMOVEWEAPON, iGameId, 0, &bud);
+		}
+		else
 		{
 			Warning("Invalid Weapon Id: Notify_RemoveWeapon\n");
 		}
@@ -2624,6 +2656,14 @@ namespace Omnibot
 		BotUserData bud(_weapon);
 		omnibot_interface::Bot_Interface_SendEvent(MESSAGE_DEATH, 
 			iGameId, _attacker ? ENTINDEX(_attacker) : -1, 0, &bud);
+	}
+
+	void Notify_KilledSomeone(CBasePlayer *_player, edict_t *_victim, const char *_weapon)
+	{
+		int iGameId = _player->entindex()-1;
+		BotUserData bud(_weapon);
+		omnibot_interface::Bot_Interface_SendEvent(MESSAGE_KILLEDSOMEONE, 
+			iGameId, _victim ? ENTINDEX(_victim) : -1, 0, &bud);
 	}
 
 	void Notify_ChangedTeam(CBasePlayer *_player, int _newteam)
@@ -2719,7 +2759,7 @@ namespace Omnibot
 		bud.DataType = BotUserData::dt3_4byteFlags;
 		bud.udata.m_4ByteFlags[0] = obUtilGetBotTeamFromGameTeam(_disguiseTeam);
 		bud.udata.m_4ByteFlags[1] = obUtilGetBotClassFromGameClass(_disguiseClass);
-		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_DISGUISED, iGameId, 0, 0, &bud);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_DISGUISING, iGameId, 0, 0, &bud);
 	}
 
 	void Notify_Disguised(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass)
@@ -2729,7 +2769,7 @@ namespace Omnibot
 		bud.DataType = BotUserData::dt3_4byteFlags;
 		bud.udata.m_4ByteFlags[0] = obUtilGetBotTeamFromGameTeam(_disguiseTeam);
 		bud.udata.m_4ByteFlags[1] = obUtilGetBotClassFromGameClass(_disguiseClass);
-		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_DISGUISING, iGameId, 0, 0, &bud);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_DISGUISED, iGameId, 0, 0, &bud);
 	}
 
 	void Notify_DisguiseLost(CBasePlayer *_player)
@@ -2933,7 +2973,7 @@ namespace Omnibot
 	{
 		int iGameId = _player->entindex()-1;
 		BotUserData bud(obUtilGetBotWeaponFromGameWeapon(_weapon));
-		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE, iGameId, 0, 0, 0);
+		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE, iGameId, 0, 0, &bud);
 	}
 
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed)
@@ -2942,35 +2982,21 @@ namespace Omnibot
 		if(pUsedPlayer && pUsedPlayer->IsBot())
 		{
 			int iGameId = pUsedPlayer->entindex()-1;
-			BotUserData bud(_player->edict());
-			omnibot_interface::Bot_Interface_SendEvent(PERCEPT_FEEL_PLAYER_USE, iGameId, 0, 0, &bud);
+			int iSourceUser = _player->entindex()-1;
+			omnibot_interface::Bot_Interface_SendEvent(PERCEPT_FEEL_PLAYER_USE, 
+				iGameId, iSourceUser, 0, 0);
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 
-	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _team)
+	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags)
 	{
 		BotGoalInfo gi;
 
 		//////////////////////////////////////////////////////////////////////////
 		const int iAllTeams = (1<<TF_TEAM_BLUE)|(1<<TF_TEAM_RED)|(1<<TF_TEAM_YELLOW)|(1<<TF_TEAM_GREEN);
-		gi.m_GoalTeam = iAllTeams;
-		switch(_team)
-		{
-		case TEAM_BLUE:
-			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_BLUE);
-			break;
-		case TEAM_RED:
-			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_RED);
-			break;
-		case TEAM_YELLOW:
-			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_YELLOW);
-			break;
-		case TEAM_GREEN:
-			gi.m_GoalTeam = iAllTeams & ~(1<<TF_TEAM_GREEN);
-			break;
-		}
+		gi.m_GoalTeam = _teamflags;
 		//////////////////////////////////////////////////////////////////////////
 
 		if(gi.m_GoalTeam != 0)
