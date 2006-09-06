@@ -290,21 +290,20 @@ void CFFInfoScript::InternalPlayAnim( Activity hActivity )
 	}
 }
 
-void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
+//-----------------------------------------------------------------------------
+bool CFFInfoScript::CanEntityTouch(CBaseEntity* pEntity)
 {
-	if( !pEntity )
-		return;
+	if(!pEntity)
+		return false;
 
 	// early out if we dont pass the player filter
 	if(m_allowTouchFlags & kAllowOnlyPlayers)
 	{
 		if(!pEntity->IsPlayer())
-			return;
+			return false;
 	}
 
-	// temp: default to true in order to not break everything
-	// since only backpacks are current setup correctly with "allow flags"
-	bool bCanTouch = true;
+	bool bCanTouch = false;
 
 	// check if any of the team flags have been marked
 	int teamMask = kAllowRedTeam|kAllowBlueTeam|kAllowYellowTeam|kAllowGreenTeam;
@@ -332,14 +331,24 @@ void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 		}
 	}
 
+	return bCanTouch;
+}
+
+//-----------------------------------------------------------------------------
+void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
+{
+	if(!pEntity)
+		return;
+
 	// if allowed, notify script entity was touched
-	if(bCanTouch)
+	if(CanEntityTouch(pEntity))
 	{
 		CFFLuaSC hTouch( 1, pEntity );
 		entsys.RunPredicates_LUA( this, &hTouch, "touch" );
 	}
 }
 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 {
 	m_allowTouchFlags = 0;
@@ -389,6 +398,7 @@ void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 	}
 }
 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
 {
 	if( GetOwnerEntity() == pEntity )

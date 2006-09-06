@@ -130,11 +130,14 @@ public:
 
 	void SetBotGoalInfo(int _type);
 
-	// returns the critia necessary for another entity
-	// to "touch" this entity
+	// returns the criteria necessary for another entity to "touch" this entity
 	int GetTouchFlags() const { return m_allowTouchFlags; }
 
+	// sets criteria for another entity to touch this entity
 	void SetTouchFlags(const luabind::adl::object& table);
+
+	// returns true if a specified is allowed to touch this entity
+	bool CanEntityTouch(CBaseEntity* pEntity);
 
 protected:
 	// Do not expose these to LUA!
