@@ -98,7 +98,6 @@ mod: vcpm
 	if [ ! -f "tier0_i486.so" ]; then ln -s $(GAME_DIR)/bin/tier0_i486.so .; fi
 	if [ ! -f "vstdlib_i486.so" ]; then ln -s $(GAME_DIR)/bin/vstdlib_i486.so .; fi
 	./vcpm $(MOD_PROJ)
-	perl vcpm-fix.pl Makefile.$(MOD_CONFIG) > Makefile.$(MOD_CONFIG)-fixed
 	$(MAKE) -f $(MAKE_MOD) $(BASE_DEFINES)
 
 plugin:
