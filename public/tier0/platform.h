@@ -310,7 +310,7 @@ typedef void * HINSTANCE;
 #else
 	#define  STDCALL
 	#define  FASTCALL 
-	#define  FORCEINLINE			__attribute__ ((always_inline))
+	#define  FORCEINLINE			inline	// |-- Mirv: Fixes Linux build, better overall.
 	// GCC 3.4.1 has a bug in supporting forced inline of templated functions
 	// this macro lets us not force inlining in that case
 	#define  FORCEINLINE_TEMPLATE

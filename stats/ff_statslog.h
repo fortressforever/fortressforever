@@ -26,7 +26,7 @@ enum stattype_t {
 };
 
 // STL stuff has been moved out of here because Valve and STL don't really mix very well!
-class IStatsLog
+abstract_class IStatsLog
 {
 public:
 	//virtual int GetActionID(const char *statname) = 0;
