@@ -1724,10 +1724,10 @@ void CGameMovement::FullWalkMove( )
 
 		// --> Mirv: Can't remember why this is commented out
 		// If we are on ground, no downward velocity.
-		//if ( player->GetGroundEntity() != NULL )
-		//{
-		//	mv->m_vecVelocity[2] = 0;
-		//}
+		if ( player->GetGroundEntity() != NULL )
+		{
+			mv->m_vecVelocity[2] = 0;
+		}
 		// <-- Mirv: Can't remember why this is commented out
 
 		CheckFalling();
@@ -3273,7 +3273,7 @@ void CGameMovement::CategorizePosition( void )
 	
 	// Scouts going up ramps can easily break past 140, and our new
 	// jump speed is 268 anyway, so 260 is going to be a better value
-	if ( mv->m_vecVelocity[2] > flUpSpeedLimit || 
+	if ( mv->m_vecVelocity[2] > /*flUpSpeedLimit*/ 180 || 
 		( mv->m_vecVelocity[2] > 0.0f && player->GetMoveType() == MOVETYPE_LADDER ) )   
 	{
 		SetGroundEntity( (CBaseEntity *)NULL );
