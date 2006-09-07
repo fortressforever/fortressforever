@@ -445,8 +445,10 @@ ConVar mp_prematch( "mp_prematch",
 			}
 
 			// Sum up the number of changeclass flags set, if any
-			for( int i = AT_CHANGECLASS_SCOUT; i <= AT_CHANGECLASS_RANDOM; i++ )
+			for( int i = AT_CHANGECLASS_SCOUT; i < AT_CHANGECLASS_RANDOM; i++ )
 			{
+				// TODO: No support for the random flag right now
+
 				if( pbFlags[ i ] )
 					iChangeClassValidClasses.AddToTail( i - AT_CHANGECLASS_SCOUT + 1 );
 			}
