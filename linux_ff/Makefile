@@ -31,7 +31,7 @@ USER_CFLAGS=-g
 
 # link flags for your mod, make sure to include any special libraries here
 #LDFLAGS="-lm -ldl $(GAME_DIR)/bin/tier0_i486.so $(GAME_DIR)/bin/vstdlib_i486.so"
-LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so"
+LDFLAGS="-L../external/lua/lib -L../external/luabind/lib -lluabind -llua -lm -ldl tier0_i486.so vstdlib_i486.so mathlib_i486.a choreoobjects_i486.a tier1_i486.a"
 #LDFLAGS="-lm tier0_i486.so vstdlib_i486.so"
 
 # XERCES 2.6.0 or above ( http://xml.apache.org/xerces-c/ ) is used by the vcproj to makefile converter
