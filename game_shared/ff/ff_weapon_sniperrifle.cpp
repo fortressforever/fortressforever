@@ -47,6 +47,10 @@ static int g_iBeam, g_iHalo;
 	#include "ff_player.h"
 #endif
 
+#ifdef CLIENT_DLL
+	ConVar laser_beam_angle("ffdev_laserbeamangle", "1");
+#endif
+
 //=============================================================================
 // CFFWeaponLaserDot
 //=============================================================================
@@ -272,6 +276,25 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 				Vector v1 = tr.endpos - tr.startpos;
 				Vector v2 = C_BasePlayer::GetLocalPlayer()->EyePosition() - tr.startpos;
 
+#if 1
+				v1.NormalizeInPlace();
+				v2.NormalizeInPlace();
+
+				float flDot = v1.Dot(v2);
+				float flDotBounds = cos(laser_beam_angle.GetFloat());
+
+				if (flDot < 0.0f)
+					flDot *= -1.0f;
+
+				if (flDot > flDotBounds)
+				{
+					float flVisibility = (flDot - flDotBounds) / (1.0f - flDotBounds);
+					color32 colour = { 255, 0, 0, alpha * flVisibility };
+
+					FX_DrawLine(tr.startpos, tr.endpos, flVisibility, m_pMaterial, colour);
+				}
+
+#else
 				Vector vecCross = v1.Cross(v2);
 
 				// Area of parallelogram
@@ -287,6 +310,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 					FX_DrawLine(tr.startpos, tr.endpos, flVisibility, m_pMaterial, colour);
 				}
+#endif
 			}
 		}
 		else
