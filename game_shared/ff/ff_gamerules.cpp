@@ -432,7 +432,7 @@ ConVar mp_prematch( "mp_prematch",
 		else
 		{
 			// For use later
-			int iNumChangeClassFlags = 0;
+			CUtlVector< int > iChangeClassValidClasses;
 
 			bool bUseTeam = ( ( iTeam >= TEAM_BLUE ) && ( iTeam <= TEAM_GREEN ) );
 			bool bUsePlayer = pFFPlayer ? true : false;
@@ -448,7 +448,7 @@ ConVar mp_prematch( "mp_prematch",
 			for( int i = AT_CHANGECLASS_SCOUT; i <= AT_CHANGECLASS_RANDOM; i++ )
 			{
 				if( pbFlags[ i ] )
-					iNumChangeClassFlags++;
+					iChangeClassValidClasses.AddToTail( i - AT_CHANGECLASS_SCOUT + 1 );
 			}
 
 			// Loop through all players
@@ -480,15 +480,10 @@ ConVar mp_prematch( "mp_prematch",
 					// to work correctly.
 
 					// 1 or more changeclass flags was set
-					if( iNumChangeClassFlags > 0 )
+					if( iChangeClassValidClasses.Count() > 0 )
 					{
-						if( iNumChangeClassFlags == 1 )
-						{
-						}
-						else
-						{
-							// Pick a random class
-						}
+						// Pick a class from the range available
+						pPlayer->InstaSwitch( random->RandomInt( 0, iChangeClassValidClasses.Count() - 1 ) );
 					}
 
 					if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
@@ -565,14 +560,7 @@ ConVar mp_prematch( "mp_prematch",
 					if( pbFlags[ AT_STOP_PRIMED_GRENS ] )
 					{
 						pPlayer->RemovePrimedGrenades();
-					}
-
-					// TODO: this is temp for testing
-					// of course more have to be added...
-					if( pbFlags[ AT_CHANGECLASS_SCOUT ] )
-					{
-						pPlayer->InstaSwitch( CLASS_SCOUT );
-					}
+					}					
 
 					if( pbFlags[ AT_KILL_PLAYERS ] )
 					{
