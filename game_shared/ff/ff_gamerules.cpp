@@ -827,6 +827,7 @@ ConVar mp_prematch( "mp_prematch",
 			float flDistance		= vecDisplacement.Length();
 			Vector vecDirection		= vecDisplacement / flDistance;
 
+#ifdef USE_HITBOX_HACK
 			// Because our models are pretty weird, the tracelines don't work
 			// as expected. So instead we use this awful little hack here. Thanks
 			// modellers!
@@ -866,6 +867,7 @@ ConVar mp_prematch( "mp_prematch",
 					}
 				}
 			}
+#endif
 
 			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
