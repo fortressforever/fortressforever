@@ -246,6 +246,22 @@ public:
 
 LINK_ENTITY_TO_CLASS( info_ff_teamspawn , CFFTeamSpawn );
 
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+static void *SendProxy_NonLocalOrigin(const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID)
+{
+	pRecipients->ClearRecipient(objectID - 1);
+	return (void *) pVarData;
+}
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER(SendProxy_NonLocalOrigin);
+
+BEGIN_SEND_TABLE_NOBASE(CBaseEntity, DT_NonLocalOrigin)
+	SendPropVector(SENDINFO(m_vecOrigin), -1,  SPROP_COORD|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin),
+END_SEND_TABLE()
+#endif
+
 // -------------------------------------------------------------------------------- //
 // Tables.
 // -------------------------------------------------------------------------------- //
@@ -253,6 +269,11 @@ LINK_ENTITY_TO_CLASS( player, CFFPlayer );
 PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
+
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+	SendPropVector(SENDINFO(m_vecOrigin), 32,  SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT),
+#endif
+
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 
 	// Buildables
@@ -294,9 +315,16 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
 	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
 
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+	SendPropExclude( "DT_BaseEntity" , "m_vecOrigin" ),
+#endif
+
 	// Data that only gets sent to the local player.
 	SendPropDataTable( "fflocaldata", 0, &REFERENCE_SEND_TABLE(DT_FFLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+	SendPropDataTable("fforigin", 0, &REFERENCE_SEND_TABLE(DT_NonLocalOrigin), SendProxy_NonLocalOrigin),
+#endif
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11 ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11 ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),

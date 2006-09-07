@@ -30,6 +30,8 @@ public:
 
 	virtual	void HitSurface( C_BaseEntity *pOther );
 
+	void	LeaveBloodDecal(bool b) { m_bDecal = !b; }
+
 protected:
 
 	float	m_flTouchDelta;		// Amount of time that must pass before another touch function can be called
