@@ -766,5 +766,9 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		SendStatsToBot();
 	}
 
+	// Bug #0000772: Buildable hud information doesn't update... good
+	// This will force an update of this variable for the client	
+	NetworkStateChanged( ( int * )&m_iHealth );
+
 	return CBaseEntity::OnTakeDamage( adjustedDamage );
 }
