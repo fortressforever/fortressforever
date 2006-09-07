@@ -133,6 +133,16 @@ bool CFFBuildableInfo::IsGeometryInTheWay()
 	UTIL_TraceHull( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_PLAYER, &trHull );
 	//UTIL_TraceHull(vecPlayerOriginMod, m_vecBuildAirOrigin, vecMins, vecMaxs, MASK_PLAYERSOLID, m_pPlayer, COLLISION_GROUP_NONE, &trHull);
 
+#ifdef GAME_DLL
+#ifdef _DEBUG
+	//if( !engine->IsDedicatedServer() )
+	//{
+	//	NDebugOverlay::Box( m_vecPlayerOrigin + Vector( 0, 0, m_flRaiseVal ), vecMins, vecMaxs, 255, 0, 0, 255, 5.0f );
+	//	NDebugOverlay::Box( m_vecBuildAirOrigin, vecMins, vecMaxs, 0, 0, 255, 255, 5.0f );
+	//}
+#endif // _DEBUG
+#endif // GAME_DLL
+
 	// See if we started in a solid
 	if (trHull.startsolid) 
 		return true;
@@ -420,7 +430,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround()
 
 	float flEpsilon = vecNormal.z / VectorLength(vecNormal);
 
-	if (flEpsilon < 0.95f) 
+	if (flEpsilon < 0.90f) 
 		return BUILD_TOOSTEEP;
 
 	m_angBuildGroundAngles = OrientToVectors(vecNormal, m_vecPlayerForward);
@@ -446,10 +456,10 @@ int CFFSentryGun::GetRockets( void )
 //-----------------------------------------------------------------------------
 int CFFBuildableObject::GetTeamNumber()
 {
-	CFFPlayer *pOwner = dynamic_cast<CFFPlayer *> (m_hOwner.Get());
+	CFFPlayer *pOwner = GetOwnerPlayer();
 
 	if (!pOwner)
-		return -1;
+		return TEAM_UNASSIGNED;
 
 	return pOwner->GetTeamNumber();
 }
