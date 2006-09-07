@@ -2206,10 +2206,25 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 		//  the whole way, zero out our velocity and return that we
 		//  are blocked by floor and wall.
 		if (pm.allsolid)
-		{	
-			// entity is trapped in another solid
+		{
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+			// If we have the extra local origin accuracy fix in then normal behaviour
 			VectorCopy (vec3_origin, mv->m_vecVelocity);
 			return 4;
+#endif
+
+			Ray_t ray;
+			ray.Init(mv->m_vecAbsOrigin, end, GetPlayerMins() + Vector(0.01, 0.01, 0.01), GetPlayerMaxs() - Vector(0.01, 0.01, 0.01));
+			UTIL_TraceRay(ray, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+
+			// entity is trapped in another solid
+			if (pm.allsolid)
+			{
+				VectorCopy (vec3_origin, mv->m_vecVelocity);
+				return 4;
+			}
+
+			allFraction += pm.fraction;
 		}
 
 		// If we moved some portion of the total distance, then

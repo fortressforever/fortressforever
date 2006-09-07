@@ -21,7 +21,7 @@ int	C_Gib::m_iBloodDecal = -1;
 
 C_Gib::C_Gib()
 {
-	bool	m_bDecal = false;
+	m_bDecal = true;
 }
 
 //-----------------------------------------------------------------------------

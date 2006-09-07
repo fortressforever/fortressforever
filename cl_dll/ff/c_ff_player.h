@@ -45,6 +45,31 @@ void CC_ToggleOne( void );
 void CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
+// Moved here from ff_shareddefs.h
+typedef struct SpyInfo_s
+{
+	char	m_szName[ MAX_PLAYER_NAME_LENGTH ];	// Name we're using
+	int		m_iTeam;	// Disguised team
+	int		m_iClass;	// Disguised class
+
+	void	Set( const char *pszName, int iTeam, int iClass )
+	{
+		Q_strcpy( m_szName, pszName );
+		m_iTeam = iTeam;
+		m_iClass = iClass;
+	}
+
+	void	SetTeam( int iTeam ) { m_iTeam = iTeam; }
+	void	SetClass( int iClass ) { m_iClass = iClass; }
+	void	SetName( const char *pszName ) { Q_strcpy( m_szName, pszName ); }
+
+	bool	SameGuy( int iTeam, int iClass )
+	{
+		return( ( m_iTeam == iTeam ) && ( m_iClass == iClass ) );
+	}
+
+} CrosshairInfo_s;
+
 class C_FFPlayer : public C_BasePlayer, public IFFPlayerAnimStateHelpers
 {
 public:

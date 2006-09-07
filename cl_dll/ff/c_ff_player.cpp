@@ -332,10 +332,28 @@ BEGIN_RECV_TABLE_NOBASE( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	RecvPropInt( RECVINFO( m_iEvent ) )
 END_RECV_TABLE()
 
-// Prototype
-void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	// Unpack the data.
+	if(!engine->IsConnected() || !engine->IsInGame())
+	{
+		return;
+	}
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if(pLocalPlayer)
+	{
+		pLocalPlayer->m_flServerPrimeTime = pData->m_Value.m_Float;
+		if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
+			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
+	}
+}
 
 BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
+
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+	RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
+#endif
+
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 
 	// Beg: Added by Mulchman for building objects and such
@@ -374,28 +392,19 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
 END_RECV_TABLE( )
 
-void RecvProxy_PrimeTime( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	//DevMsg("[Grenades] RecvProxy_PrimeTime\n");
-	// Unpack the data.
-	if(!engine->IsConnected() || !engine->IsInGame())
-	{
-		//DevMsg("[Grenades] \t NOT connected or NOT active!\n");
-		return;
-	}
-	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
-	if(pLocalPlayer)
-	{
-		pLocalPlayer->m_flServerPrimeTime = pData->m_Value.m_Float;
-		if(pLocalPlayer->m_flServerPrimeTime != 0.0f)
-			pLocalPlayer->m_flLatency = engine->Time() - pLocalPlayer->m_flPrimeTime;
-		//DevMsg("[Grenades] \tm_flServerPrimeTime: %f\n", pLocalPlayer->m_flServerPrimeTime);
-		//DevMsg("[Grenades] \tm_flLatency: %f\n", pLocalPlayer->m_flLatency);
-	}
-}
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+BEGIN_RECV_TABLE_NOBASE(C_FFPlayer, DT_NonLocalOrigin)
+	RecvPropVector(RECVINFO_NAME(m_vecNetworkOrigin, m_vecOrigin)),
+END_RECV_TABLE()
+#endif
 
 IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropDataTable( "fflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_FFLocalPlayerExclusive) ),
+
+#ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
+	RecvPropDataTable("fforigin", 0, 0, &REFERENCE_RECV_TABLE(DT_NonLocalOrigin)),
+#endif
+
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
@@ -1858,7 +1867,12 @@ void Gib_Callback(const CEffectData &data)
 
 		pszGibModel = VarArgs("models/gibs/gib%d.mdl", random->RandomInt(1, 8));
 
-		C_Gib::CreateClientsideGib(pszGibModel, vecOffset, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), Vector(0, 0, 0), 10.0f);
+		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecOffset, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), Vector(0, 0, 0), 10.0f);
+
+		if (pGib)
+		{
+			pGib->LeaveBloodDecal(true);
+		}
 
 		UTIL_BloodImpact(vecOffset, Vector(0, 0, 0), BLOOD_COLOR_RED, 512);
 	}
