@@ -3000,12 +3000,6 @@ namespace Omnibot
 		gi.m_GoalTeam = _teamflags;
 		//////////////////////////////////////////////////////////////////////////
 
-		//////////////////////////////////////////////////////////////////////////
-		// Temporary hack to broken team flag shit.
-		if(_type == Omnibot::kFlag && gi.m_GoalTeam == 0)
-			gi.m_GoalTeam = iAllTeams;
-		//////////////////////////////////////////////////////////////////////////
-
 		if(gi.m_GoalTeam != 0)
 		{
 			gi.m_Edict = _entity->edict();
@@ -3085,6 +3079,10 @@ namespace Omnibot
 			{
 				pfnPrintError("Omni-bot: Out of deferred goal slots!");
 			}
+		}
+		else
+		{
+			pfnPrintError("Invalid Goal Entity");
 		}
 	}
 
