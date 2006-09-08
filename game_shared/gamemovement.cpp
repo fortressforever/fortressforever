@@ -3273,6 +3273,7 @@ void CGameMovement::CategorizePosition( void )
 	
 	// Scouts going up ramps can easily break past 140, and our new
 	// jump speed is 268 anyway, so 260 is going to be a better value
+	// UNDONE: Using HL value for testing.
 	if ( mv->m_vecVelocity[2] > /*flUpSpeedLimit*/ 180 || 
 		( mv->m_vecVelocity[2] > 0.0f && player->GetMoveType() == MOVETYPE_LADDER ) )   
 	{
