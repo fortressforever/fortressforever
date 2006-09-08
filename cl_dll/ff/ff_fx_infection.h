@@ -41,13 +41,19 @@ public:
 
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
-	//virtual void Update( float flTimeDelta );
+	virtual void Update( float flTimeDelta );
 
 	InfectionParticle *AddInfectionParticle( const Vector& vecOrigin );
 
 	static PMaterialHandle GetMaterial( void ) { return m_hMaterial; }
 
 	void ApplyDrag( Vector *F, Vector vecVelocity, float flScale, float flTargetVel );
+	void SetDieTime( float flDieTime ) { m_flDieTime = flDieTime; }
+	void UpdateEmitter( const Vector& vecOrigin, const Vector& vecVelocity )
+	{
+		m_vecOrigin = vecOrigin;
+		m_vecVelocity = vecVelocity;
+	}
 
 protected:
 	CInfectionEmitter( const char *pDebugName );
@@ -57,6 +63,12 @@ private:
 	CInfectionEmitter( const CInfectionEmitter & );
 
 	static PMaterialHandle m_hMaterial;
+
+	Vector	m_vecOrigin;
+	Vector	m_vecVelocity;
+
+	float	m_flDieTime;
+	float	m_flNextParticle;
 
 };
 

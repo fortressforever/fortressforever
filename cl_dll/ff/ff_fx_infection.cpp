@@ -46,7 +46,7 @@ PMaterialHandle CInfectionEmitter::m_hMaterial = INVALID_MATERIAL_HANDLE;
 CInfectionEmitter::CInfectionEmitter( const char *pDebugName ) : CSimpleEmitter( pDebugName )
 {
 	m_pDebugName = pDebugName;
-	//m_flNextParticle = 0.0f;
+	m_flNextParticle = 0.0f;
 }
 
 //========================================================================
@@ -179,14 +179,59 @@ void CInfectionEmitter::ApplyDrag( Vector *F, Vector vecVelocity, float flScale,
 	*F += ( vecDir * flMag );
 }
 
-/*
 void CInfectionEmitter::Update( float flTimeDelta )
 {
+	if( gpGlobals->curtime > m_flDieTime )
+		return;
+
+	if( gpGlobals->curtime < m_flNextParticle )
+		return;
+
+	m_flNextParticle = gpGlobals->curtime + 0.1f;
+
+	// Add 5 particles
+	for( int i = 0; i < 5; i++ )
+	{
+		InfectionParticle *pParticle = AddInfectionParticle( m_vecOrigin );
+		if( pParticle )
+		{
+			/*
+			Vector vecDirection(RandomFloat(-1.0, 1.0f), RandomFloat(-1.0, 1.0f), RandomFloat(0, 2.0f));
+			vecDirection.NormalizeInPlace();
+
+			// And a random distance
+			Vector vecFinalPos = m_vecOrigin + vecDirection * RandomFloat(50.0f, 200.0f);
+
+			// Go as far as possible
+			trace_t tr;
+			UTIL_TraceLine(m_vecOrigin, vecFinalPos, MASK_SOLID, NULL, COLLISION_GROUP_DEBRIS, &tr);
+
+			// Takes 5 seconds for a cloud to disperse
+			pParticle->m_vVelocity = m_vecVelocity + (tr.endpos - m_vecOrigin) * 0.2f;
+
+			// This is the position we're going to, even though we may not reach it
+			pParticle->m_vFinalPos = tr.endpos;
+			*/
+
+			pParticle->m_vOrigin = m_vecOrigin;
+			pParticle->m_vVelocity = m_vecVelocity;
+			pParticle->m_Pos = pParticle->m_vOrigin + RandomVector( -16.0f, 16.0f );
+			pParticle->m_Pos.z = pParticle->m_vOrigin.z + RandomFloat( -16.0f, 16.0f );
+
+			/*
+			p->m_vOrigin = data.m_vOrigin;
+			p->m_vVelocity = data.m_vStart;// + RandomVector( -10.0f, 10.0f );
+			//p->m_vVelocity.z *= 0.1f;
+			p->m_Pos = p->m_vOrigin + RandomVector( -10.0f, 10.0f );
+			p->m_Pos.z = p->m_vOrigin.z + RandomFloat( -15.0f, 15.0f );
+			*/
+		}
+	}
 }
-*/
 
 void FF_FX_InfectionEffect_Callback( const CEffectData &data )
 {
+	/*
 	CSmartPtr< CInfectionEmitter > InfectionEffect = CInfectionEmitter::Create( "InfectionEffect" );
 
 	for( int i = 0; i < 64; i++ )
@@ -201,6 +246,7 @@ void FF_FX_InfectionEffect_Callback( const CEffectData &data )
 			p->m_Pos.z = p->m_vOrigin.z + RandomFloat( -15.0f, 15.0f );
 		}
 	}
+	*/
 }
 
 DECLARE_CLIENT_EFFECT( "FF_InfectionEffect", FF_FX_InfectionEffect_Callback );
