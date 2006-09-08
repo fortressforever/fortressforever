@@ -1120,6 +1120,9 @@ void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
 		(1<<Omnibot::TF_TEAM_GREEN);
 	switch(_team)
 	{
+	case 0:
+		iTeamFlags = iAllTeams;
+		break;
 	case TEAM_BLUE:
 		iTeamFlags = iAllTeams & ~(1<<Omnibot::TF_TEAM_BLUE);
 		break;

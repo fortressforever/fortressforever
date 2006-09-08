@@ -36,6 +36,8 @@ extern "C"
 
 #include "ff_scheduleman.h"
 
+#include "omnibot_interface.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -831,6 +833,8 @@ namespace FFLib
 		COutputEvent event;
 		event.ParseEventAction(szAction);
 		event.FireOutput(NULL, NULL);
+
+		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
 	void FireOutput(const char* szTargetEntityName,
@@ -851,6 +855,8 @@ namespace FFLib
 		COutputEvent event;
 		event.ParseEventAction(szAction);
 		event.FireOutput(NULL, NULL);
+
+		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
 	void FireOutput(const char* szTargetEntityName,
@@ -873,6 +879,8 @@ namespace FFLib
 		COutputEvent event;
 		event.ParseEventAction(szAction);
 		event.FireOutput(NULL, NULL, delay);
+
+		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
 	void FireOutput(const char* szTargetEntityName,
@@ -897,6 +905,8 @@ namespace FFLib
 		COutputEvent event;
 		event.ParseEventAction(szAction);
 		event.FireOutput(NULL, NULL, delay);
+
+		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
 	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y )

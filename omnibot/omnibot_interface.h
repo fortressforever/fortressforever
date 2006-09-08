@@ -112,10 +112,14 @@ namespace Omnibot
 	};
 	void Notify_GoalInfo(CBaseEntity *_entity, int _type, int _teamflags);
 
+	void Notify_ItemRemove(CBaseEntity *_entity);
+	void Notify_ItemRestore(CBaseEntity *_entity);
 	void Notify_ItemDropped(CBaseEntity *_entity);
 	void Notify_ItemPickedUp(CBaseEntity *_entity, CBaseEntity *_whodoneit);
 	void Notify_ItemRespawned(CBaseEntity *_entity);
 	void Notify_ItemReturned(CBaseEntity *_entity);
+
+	void Notify_FireOutput(const char *_entityname, const char *_output);
 };
 
 #endif
