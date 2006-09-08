@@ -530,22 +530,21 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	// <-- Mirv: [TODO] Return on impact to invisible bodygroup
 
 	Vector dir = pTrace->endpos - pTrace->startpos;
+	Vector hitpos;
 
-	if ( iDamageType == DMG_BLAST )
+	VectorMA(pTrace->startpos, pTrace->fraction, dir, hitpos);
+	VectorNormalize(dir);
+
+	if ( iDamageType & DMG_BLAST )
 	{
-		dir *= 4000;  // adjust impact strenght
+		dir *= 40000;  // adjust impact strength
 
-		// apply force at object mass center
-		pPhysicsObject->ApplyForceCenter( dir );
-		pPhysicsObject->AddVelocity(&dir, &dir);
+		Vector vecVelocity, vecAngularVelocity;
+		pPhysicsObject->CalculateVelocityOffset(dir, pTrace->endpos, &vecVelocity, &vecAngularVelocity);
+		pPhysicsObject->AddVelocity(&vecVelocity, &vecAngularVelocity);
 	}
 	else
 	{
-		Vector hitpos;  
-
-		VectorMA( pTrace->startpos, pTrace->fraction, dir, hitpos );
-		VectorNormalize( dir );
-
 		dir *= 4000;  // adjust impact strenght
 
 		// apply force where we hit it
