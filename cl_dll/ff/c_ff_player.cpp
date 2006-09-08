@@ -416,6 +416,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	
 	RecvPropInt( RECVINFO( m_iSaveMe ) ),
 	RecvPropInt( RECVINFO( m_iEngyMe ) ),
+	RecvPropBool( RECVINFO( m_bInfected ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
@@ -1344,6 +1345,9 @@ void C_FFPlayer::PostDataUpdate( DataUpdateType_t updateType )
 	BaseClass::PostDataUpdate( updateType );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 {
 	BaseClass::OnDataChanged( type );
@@ -1351,6 +1355,8 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	if ( type == DATA_UPDATE_CREATED )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		m_pInfectionEmitter1 = NULL;
+		m_pInfectionEmitter2 = NULL;
 	}
 
 	if (IsLocalPlayer())
@@ -1464,6 +1470,56 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 	UpdateVisibility();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_FFPlayer::ClientThink( void )
+{
+	// Hopefully when the particles die the ::Create()
+	// stuff gets removed automagically?
+
+	if( IsAlive() && IsInfected() )
+	{
+		// Player is infected & emitter is NULL, start it up!
+		if( !m_pInfectionEmitter1 )
+			m_pInfectionEmitter1 = CInfectionEmitter::Create( "InfectionEmitter" );				
+
+		if( !m_pInfectionEmitter2 )
+			m_pInfectionEmitter2 = CInfectionEmitter::Create( "InfectionEmitter" );
+
+		// Update emitter position & die time
+		if( !!m_pInfectionEmitter1 )
+		{
+			m_pInfectionEmitter1->SetDieTime( gpGlobals->curtime + 5.0f );
+			m_pInfectionEmitter1->UpdateEmitter( GetAbsOrigin() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+		}
+
+		if( !!m_pInfectionEmitter2 )
+		{
+			m_pInfectionEmitter2->SetDieTime( gpGlobals->curtime + 5.0f );
+			m_pInfectionEmitter2->UpdateEmitter( EyePosition() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+		}
+	}
+	else
+	{
+		// If player dead/non-infected but emitter still active, stop it
+		if( !!m_pInfectionEmitter1 )
+		{
+			m_pInfectionEmitter1->SetDieTime( 0.0f );
+			m_pInfectionEmitter1 = NULL;
+		}
+
+		if( !!m_pInfectionEmitter2 )
+		{
+			m_pInfectionEmitter2->SetDieTime( 0.0f );
+			m_pInfectionEmitter2 = NULL;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::Simulate()
 {
 	BaseClass::Simulate();
@@ -1471,12 +1527,17 @@ void C_FFPlayer::Simulate()
 	g_FFTimers.SimulateTimers();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 {
 	m_PlayerAnimState->DoAnimationEvent( event );
 }
 
-// Bug #0000508: Carried objects cast a shadow for the carrying player
+//-----------------------------------------------------------------------------
+// Purpose: Bug #0000508: Carried objects cast a shadow for the carrying player
+//-----------------------------------------------------------------------------
 ShadowType_t C_FFPlayer::ShadowCastType( void )
 {
 	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
@@ -1492,6 +1553,9 @@ ShadowType_t C_FFPlayer::ShadowCastType( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool C_FFPlayer::ShouldDraw( void )
 {
 	// If we're dead, our ragdoll will be drawn for us instead.
@@ -1507,11 +1571,17 @@ bool C_FFPlayer::ShouldDraw( void )
 	return BaseClass::ShouldDraw();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool C_FFPlayer::IsDisguised( void )
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 int C_FFPlayer::GetDisguisedTeam( void )
 {
 	if( IsDisguised() )	
@@ -1520,6 +1590,9 @@ int C_FFPlayer::GetDisguisedTeam( void )
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 int C_FFPlayer::GetDisguisedClass( void )
 {
 	if( IsDisguised() )

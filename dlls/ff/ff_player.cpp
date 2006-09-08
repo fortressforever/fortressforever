@@ -336,6 +336,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 
 	SendPropInt( SENDINFO( m_iSaveMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bInfected ) ),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -3424,6 +3425,7 @@ void CFFPlayer::StatusEffectsThink( void )
 				WRITE_FLOAT(2.0f);
 			MessageEnd(); 
 
+			/*
 			// Bug #0000504: No infection visible effect
 			CEffectData data;
 			data.m_vOrigin = GetLegacyAbsOrigin() - Vector( 0, 0, 16.0f );
@@ -3436,6 +3438,7 @@ void CFFPlayer::StatusEffectsThink( void )
 			data2.m_vStart = GetAbsVelocity();
 			data2.m_flScale = 1.0f;			
 			DispatchEffect( "FF_InfectionEffect", data2 );
+			*/
 
 			CBaseEntity *ent = NULL;
 

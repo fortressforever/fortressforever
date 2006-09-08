@@ -19,6 +19,7 @@
 #include "ff_weapon_base.h"
 #include "iviewrender_beams.h"
 #include "Sprite.h"
+#include "ff_fx_infection.h"
 
 #define FF_BUILD_NONE		0
 #define FF_BUILD_DISPENSER	1
@@ -112,6 +113,13 @@ public:
 
 	bool	m_bClientBuilding;
 	// End: Added by Mulchman for building objects and such
+
+	bool IsInfected( void ) const	{ return m_bInfected; }
+	// Two girls for every boy?
+	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter1;
+	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter2;
+private:
+	CNetworkVar( bool, m_bInfected );
 
 // Called by shared code.
 public:
@@ -234,6 +242,7 @@ public:
 	virtual void CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
 	
+	virtual void ClientThink( void );
 	virtual void PreThink( void );
 	virtual void PostThink( void );
 	// <-- Mirv: Conc stuff

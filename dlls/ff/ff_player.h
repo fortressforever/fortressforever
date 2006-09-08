@@ -439,7 +439,8 @@ private:
 	float m_fLastInfectedTick;						// When the last health tick for infections was at
 	// Mulch: wrapping in EHANDLE
 	EHANDLE m_hInfector;							// Who infected this player
-	bool m_bInfected;								// if this player is infected
+	//bool m_bInfected;								// if this player is infected
+	CNetworkVar( bool, m_bInfected );
 	bool m_bImmune;	// Mulch: immunity
 	float m_flImmuneTime; // Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;	// Mulch: team the medic who infected us was on
