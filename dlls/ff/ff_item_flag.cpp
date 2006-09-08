@@ -655,6 +655,8 @@ void CFFInfoScript::Return( void )
 	CreateItemVPhysicsObject();
 
 	PlayReturnedAnim();
+
+	Omnibot::Notify_ItemReturned(this);
 }
 
 void CFFInfoScript::OnThink( void )
@@ -813,6 +815,8 @@ void CFFInfoScript::LUA_Remove( void )
 	SetNextThink( gpGlobals->curtime );
 
 	SetRemoved();
+
+	Omnibot::Notify_ItemRemove(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -831,6 +835,8 @@ void CFFInfoScript::LUA_Restore( void )
 
 	// Respawn the item back at it's starting spot
 	Respawn( 0.0f );
+
+	Omnibot::Notify_ItemRestore(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -861,12 +867,7 @@ void CFFInfoScript::SetBotGoalInfo(int _type)
 //-----------------------------------------------------------------------------
 CBaseEntity *CFFInfoScript::GetCarrier( void )
 {
-	if( IsCarried() )
-	{
-			return GetFollowedEntity();
-	}
-
-	return NULL;
+	return IsCarried() ? GetFollowedEntity() : NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -874,12 +875,7 @@ CBaseEntity *CFFInfoScript::GetCarrier( void )
 //-----------------------------------------------------------------------------
 CBaseEntity *CFFInfoScript::GetDropper( void )
 {
-	if( IsDropped() )
-	{
-		return m_pLastOwner;
-	}
-
-	return NULL;
+	return IsDropped() ? m_pLastOwner : NULL;
 }
 
 //-----------------------------------------------------------------------------

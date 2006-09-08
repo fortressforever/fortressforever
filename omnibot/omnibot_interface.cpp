@@ -58,7 +58,7 @@ struct BotGoalInfo
 	edict_t *m_Edict;
 };
 
-const int MAX_DEFERRED_GOALS = 32;
+const int MAX_DEFERRED_GOALS = 64;
 int	g_DeferredGoalIndex = 0;
 BotGoalInfo g_DeferredGoals[MAX_DEFERRED_GOALS] = {};
 bool g_ReadyForGoals = false;
@@ -109,7 +109,6 @@ private:
 CSkeletonServerPlugin g_ServerPlugin;
 
 //////////////////////////////////////////////////////////////////////////
-
 
 namespace Omnibot
 {
@@ -3088,6 +3087,24 @@ namespace Omnibot
 
 	//////////////////////////////////////////////////////////////////////////
 
+	void Notify_ItemRemove(CBaseEntity *_entity)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_removed";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
+	void Notify_ItemRestore(CBaseEntity *_entity)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entity->GetName();
+		ti.m_Action = "item_restore";
+		ti.m_Entity = _entity ? _entity->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
 	void Notify_ItemDropped(CBaseEntity *_entity)
 	{
 		TriggerInfo ti;
@@ -3124,6 +3141,16 @@ namespace Omnibot
 		ti.m_Activator = 0;
 		omnibot_interface::Bot_SendTrigger(&ti);
 	}
+	void Notify_FireOutput(const char *_entityname, const char *_output)
+	{
+		CBaseEntity *pEnt = _entityname ? gEntList.FindEntityByName(NULL, _entityname, NULL) : NULL;
 
+		TriggerInfo ti;
+		ti.m_TagName = _entityname;
+		ti.m_Action = _output;
+		ti.m_Entity = pEnt ? pEnt->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
 	//////////////////////////////////////////////////////////////////////////
 };
