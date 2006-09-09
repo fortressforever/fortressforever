@@ -5158,6 +5158,28 @@ void CFFPlayer::Command_Disguise()
 		return;
 	}
 
+	// Make sure class/team limits allow this disguise!
+	CFFTeam *pTeam = GetGlobalFFTeam( iTeam );
+	if( !pTeam )
+	{
+		Warning( "[Disguise] Uh, invalid somehow? What?\n" );
+		return;
+	}
+
+	if( pTeam->GetTeamLimits() == -1 )
+	{
+		// TODO: Nice hud msg!
+		Warning( "[Disguise] Invalid team for this map!\n" );
+		return;
+	}
+
+	if( pTeam->GetClassLimit( iClass ) == -1 )
+	{
+		// TODO: Nice hud msg!
+		Warning( "[Disguise] Invalid class for this map!\n" );
+		return;
+	}
+
 	Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
 
 	// Now do the actual disguise
@@ -5168,6 +5190,8 @@ void CFFPlayer::Command_Disguise()
 	// Notify the bot: convert this to an event?
 	if(IsBot())
 	{
+		// TODO: This should probably pass in iTeam & iClass as
+		// these two functions won't have the right shit yet?
 		Omnibot::Notify_Disguising(this, GetDisguisedTeam(), GetDisguisedClass());
 	}
 }
