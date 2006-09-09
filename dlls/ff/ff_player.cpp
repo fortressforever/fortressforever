@@ -5170,6 +5170,8 @@ void CFFPlayer::Command_Disguise()
 	{
 		// TODO: Nice hud msg!
 		Warning( "[Disguise] Invalid team for this map!\n" );
+
+		Omnibot::Notify_CantDisguiseAsTeam(this, iTeam);
 		return;
 	}
 
@@ -5177,6 +5179,8 @@ void CFFPlayer::Command_Disguise()
 	{
 		// TODO: Nice hud msg!
 		Warning( "[Disguise] Invalid class for this map!\n" );
+
+		Omnibot::Notify_CantDisguiseAsClass(this, iClass);
 		return;
 	}
 
@@ -5192,7 +5196,7 @@ void CFFPlayer::Command_Disguise()
 	{
 		// TODO: This should probably pass in iTeam & iClass as
 		// these two functions won't have the right shit yet?
-		Omnibot::Notify_Disguising(this, GetDisguisedTeam(), GetDisguisedClass());
+		Omnibot::Notify_Disguising(this, GetNewDisguisedTeam(), GetNewDisguisedClass());
 	}
 }
 

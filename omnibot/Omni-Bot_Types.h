@@ -566,7 +566,7 @@ typedef enum eSoundType
 	SND_VOICE_TEAM,
 	SND_VOICE_ENEMY,
 
-	// THIS MUST BE LAST!
+	// THIS MUST BE LAST
 	SND_MAX_SOUNDS
 } SoundType;
 
@@ -592,7 +592,7 @@ typedef enum eContents
 	CONT_TELEPORTER = (1<<8),
 	CONT_MOVABLE	= (1<<9),
 
-	// THIS MUST BE LAST!
+	// THIS MUST BE LAST
 	CONT_START_USER = (1<<24)
 } Contents;
 
@@ -622,7 +622,7 @@ typedef enum eSkeletonBone
 	BONE_RIGHTFOOT,
 	BONE_LEFTFOOT,
 
-	// THIS MUST BE LAST!
+	// THIS MUST BE LAST
 	BONE_LAST_BONE = 1000
 } SkeletonBone;
 
@@ -639,7 +639,7 @@ typedef enum eNavigatorID
 	NAVID_Q4_AAS,	
 	NAVID_HL2_NAVMESH,
 
-	// THIS MUST BE LAST!
+	// THIS MUST BE LAST
 	NAVID_MAX
 } NavigatorID;
 
@@ -664,7 +664,7 @@ typedef enum eTraceMasks
 	TR_MASK_SMOKEBOMB	= (1<<7),
 	TR_MASK_FLOODFILL	= (1<<8),
 
-	// THIS MUST BE LAST!
+	// THIS MUST BE LAST
 	TR_MASK_LAST		= (1<<16)
 } TraceMasks;
 

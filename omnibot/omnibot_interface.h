@@ -62,6 +62,9 @@ namespace Omnibot
 	void Notify_Build_AlreadyBuilt(CBasePlayer *_player, int _buildable);
 	void Notify_Build_NotEnoughAmmo(CBasePlayer *_player, int _buildable);
 
+
+	void Notify_CantDisguiseAsTeam(CBasePlayer *_player, int _disguiseTeam);
+	void Notify_CantDisguiseAsClass(CBasePlayer *_player, int _disguiseClass);
 	void Notify_Disguising(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass);
 	void Notify_Disguised(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass);
 	void Notify_DisguiseLost(CBasePlayer *_player);
