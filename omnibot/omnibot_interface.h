@@ -123,6 +123,8 @@ namespace Omnibot
 	void Notify_ItemReturned(CBaseEntity *_entity);
 
 	void Notify_FireOutput(const char *_entityname, const char *_output);
+
+	void BotSendTriggerEx(const char *_entityname, const char *_action);
 };
 
 #endif

@@ -20,6 +20,8 @@ extern "C"
 
 #include "luabind/luabind.hpp"
 
+#include "omnibot_interface.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -38,6 +40,8 @@ void CFFLuaLib::InitOmnibot(lua_State* L)
 	ASSERT(L);
 	module(L)
 	[
+		def("SendBotTrigger", &Omnibot::BotSendTriggerEx),
+
 		class_<Omnibot_GoalTypes>("Bot")
 			.enum_("GoalType")
 			[
