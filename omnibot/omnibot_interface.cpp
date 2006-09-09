@@ -2752,6 +2752,20 @@ namespace Omnibot
 		}
 	}
 
+	void Notify_CantDisguiseAsTeam(CBasePlayer *_player, int _disguiseTeam)
+	{
+		int iGameId = _player->entindex()-1;
+		BotUserData bud(obUtilGetBotTeamFromGameTeam(_disguiseTeam));
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_CANTDISGUISE_AS_TEAM, iGameId, 0, 0, &bud);
+	}
+
+	void Notify_CantDisguiseAsClass(CBasePlayer *_player, int _disguiseClass)
+	{
+		int iGameId = _player->entindex()-1;
+		BotUserData bud(obUtilGetBotClassFromGameClass(_disguiseClass));
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_CANTDISGUISE_AS_CLASS, iGameId, 0, 0, &bud);
+	}
+
 	void Notify_Disguising(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass)
 	{
 		int iGameId = _player->entindex()-1;
