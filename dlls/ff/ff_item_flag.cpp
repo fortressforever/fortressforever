@@ -852,13 +852,13 @@ void CFFInfoScript::SetBotGoalInfo(int _type)
 {
 	int iTeamFlags = 0;
 	if(m_allowTouchFlags & kAllowBlueTeam)
-		iTeamFlags |= Omnibot::TF_TEAM_BLUE;
+		iTeamFlags |= (1<<Omnibot::TF_TEAM_BLUE);
 	if(m_allowTouchFlags & kAllowRedTeam)
-		iTeamFlags |= Omnibot::TF_TEAM_RED;
+		iTeamFlags |= (1<<Omnibot::TF_TEAM_RED);
 	if(m_allowTouchFlags & kAllowYellowTeam)
-		iTeamFlags |= Omnibot::TF_TEAM_YELLOW;
+		iTeamFlags |= (1<<Omnibot::TF_TEAM_YELLOW);
 	if(m_allowTouchFlags & kAllowGreenTeam)
-		iTeamFlags |= Omnibot::TF_TEAM_GREEN;
+		iTeamFlags |= (1<<Omnibot::TF_TEAM_GREEN);
 	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
 }
 

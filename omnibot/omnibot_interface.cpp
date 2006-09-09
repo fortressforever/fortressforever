@@ -2415,6 +2415,7 @@ namespace Omnibot
 		// Allow user configurable navigation system
 		//int iNavSystem = omnibot_nav.GetInteger();
 		NavigatorID navId = NAVID_WP;
+		//navId = NAVID_NAVMESH;
 		/*switch(iNavSystem)
 		{
 		case NAVID_WP:
@@ -3114,7 +3115,7 @@ namespace Omnibot
 	{
 		TriggerInfo ti;
 		ti.m_TagName = _entity->GetName();
-		ti.m_Action = "item_restore";
+		ti.m_Action = "item_restored";
 		ti.m_Entity = _entity ? _entity->edict() : 0;
 		ti.m_Activator = 0;
 		omnibot_interface::Bot_SendTrigger(&ti);
@@ -3163,6 +3164,15 @@ namespace Omnibot
 		ti.m_TagName = _entityname;
 		ti.m_Action = _output;
 		ti.m_Entity = pEnt ? pEnt->edict() : 0;
+		ti.m_Activator = 0;
+		omnibot_interface::Bot_SendTrigger(&ti);
+	}
+	void BotSendTriggerEx(const char *_entityname, const char *_action)
+	{
+		TriggerInfo ti;
+		ti.m_TagName = _entityname;
+		ti.m_Action = _action;
+		ti.m_Entity = 0;
 		ti.m_Activator = 0;
 		omnibot_interface::Bot_SendTrigger(&ti);
 	}
