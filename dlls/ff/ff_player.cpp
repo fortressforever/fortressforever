@@ -3339,7 +3339,6 @@ void CFFPlayer::StatusEffectsThink( void )
 		CFFPlayer *pIgniter = GetIgniter();
 		if( pIgniter )
 		{
-			// Damage from "NULL" is okay, so we don't care if igniter is NULL
 			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
 			TakeDamage( info );
 
