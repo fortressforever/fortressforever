@@ -3387,6 +3387,8 @@ void CFFPlayer::StatusEffectsThink( void )
 	// If the player is infected, then take appropriate action
 	if( IsInfected() && ( gpGlobals->curtime > ( m_fLastInfectedTick + ffdev_infect_freq.GetFloat() ) ) )
 	{
+		bool bIsInfected = true;
+
 		// Need to check to see if the medic who infected us has changed teams
 		// or dropped - switching to EHANDLE will handle the drop case
 		if( m_hInfector )
@@ -3403,6 +3405,18 @@ void CFFPlayer::StatusEffectsThink( void )
 		{
 			// Player dropped
 			m_bInfected = false;
+		}
+
+		// If we were infected but just became uninfected,
+		// remove hud effect
+		if( bIsInfected && !m_bInfected )
+		{
+			CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+			user.MakeReliable();
+			UserMessageBegin( user, "FFViewEffect" );
+				WRITE_BYTE( FF_VIEWEFFECT_INFECTED );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd(); 
 		}
 
 		// If we're still infected, cause damage
@@ -4360,16 +4374,17 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		ApplyAbsVelocityImpulse( info.GetDamageForce() );
 	}	
 
-	entsys.SetVar("info_damage", info.GetDamage());
-	entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
-	entsys.SetVar("info_classname", info.GetInflictor()->GetClassname());
-    CFFPlayer *player = ToFFPlayer(info.GetInflictor());
-    if (player)
-    {
-        CBaseCombatWeapon *weapon = player->GetActiveWeapon();
-        if (weapon)
-			entsys.SetVar("info_classname", weapon->GetName());
-	}
+	// Don't need this anymore due to Olah's new stuff!
+	//entsys.SetVar("info_damage", info.GetDamage());
+	//entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
+	//entsys.SetVar("info_classname", info.GetInflictor()->GetClassname());
+    //CFFPlayer *player = ToFFPlayer(info.GetInflictor());
+    //if (player)
+    //{
+      //  CBaseCombatWeapon *weapon = player->GetActiveWeapon();
+        //if (weapon)
+		//	entsys.SetVar("info_classname", weapon->GetName());
+	//}
 
 	// call script: player_ondamage(player, damageinfo)	
 	CFFLuaSC func;
