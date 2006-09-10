@@ -3333,19 +3333,27 @@ void CFFPlayer::StatusEffectsThink( void )
 
 		float damage = m_flBurningDamage / (float)m_iBurnTicks;
 
-		// do damage
+		// do damage. If igniter is NULL lets just kill the fire, it
+		// means the guy has left the server and just makes bad stuff
+		// happen.
 		CFFPlayer *pIgniter = GetIgniter();
+		if( pIgniter )
+		{
+			// Damage from "NULL" is okay, so we don't care if igniter is NULL
+			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
+			TakeDamage( info );
 
-		// Damage from "NULL" is okay, so we don't care if igniter is NULL
-		CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
-		TakeDamage( info );
+			// remove a tick
+			m_iBurnTicks--;
+			m_flBurningDamage -= damage;
 
-		// remove a tick
-		m_iBurnTicks--;
-		m_flBurningDamage -= damage;
-
-		// schedule the next tick
-		m_flNextBurnTick = gpGlobals->curtime + 1.25f;
+			// schedule the next tick
+			m_flNextBurnTick = gpGlobals->curtime + 1.25f;
+		}
+		else
+		{
+			Extinguish();
+		}		
 	}
 
 	// check if the player needs a little health/armor (because they are a medic/engy)
