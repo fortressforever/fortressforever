@@ -3334,8 +3334,11 @@ void CFFPlayer::StatusEffectsThink( void )
 		float damage = m_flBurningDamage / (float)m_iBurnTicks;
 
 		// do damage
-		CTakeDamageInfo info(m_hIgniter,m_hIgniter,damage,DMG_BURN);
-		TakeDamage(info);
+		CFFPlayer *pIgniter = GetIgniter();
+
+		// Damage from "NULL" is okay, so we don't care if igniter is NULL
+		CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
+		TakeDamage( info );
 
 		// remove a tick
 		m_iBurnTicks--;
@@ -4512,6 +4515,21 @@ CFFPlayer *CFFPlayer::GetPlayerWhoTaggedMe( void )
 	if( m_pWhoTaggedMe != NULL )
 	{
 		CBaseEntity *pEntity = ( CBaseEntity * )m_pWhoTaggedMe;
+		if( pEntity && pEntity->IsPlayer() )
+			return ToFFPlayer( pEntity );
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the player who set us on fire!
+//-----------------------------------------------------------------------------
+CFFPlayer *CFFPlayer::GetIgniter( void )
+{
+	if( m_hIgniter != NULL )
+	{
+		CBaseEntity *pEntity = ( CBaseEntity * )m_hIgniter;
 		if( pEntity && pEntity->IsPlayer() )
 			return ToFFPlayer( pEntity );
 	}

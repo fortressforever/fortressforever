@@ -455,9 +455,10 @@ private:
 public:
 	bool IsImmune( void ) const { return m_bImmune; }
 
+	CFFPlayer *GetIgniter( void );
 private:
 
-	CFFPlayer *m_hIgniter;
+	EHANDLE m_hIgniter;			// Wrap this cause the guy can leave the server!
 	 float m_flNextBurnTick;   // when the next burn tick should fire
 	int m_iBurnTicks;         // how many more ticks are left to fire
 	float m_flBurningDamage;  // how much total damage is left to take
