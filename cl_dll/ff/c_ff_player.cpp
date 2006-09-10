@@ -988,6 +988,8 @@ void C_FFPlayer::Precache()
 	}
 }
 
+extern void ClearStatusIcons();
+
 //-----------------------------------------------------------------------------
 // Purpose: Spawn
 //-----------------------------------------------------------------------------
@@ -1000,6 +1002,10 @@ void C_FFPlayer::Spawn( void )
 		BaseClass::Spawn();
 		m_bFirstSpawn = false;
 	}
+
+	// Clean up some stuff
+	ffvieweffects->Reset();	
+	ClearStatusIcons();
 
 	// Default
 	m_clrTeamColor = Color( 255, 255, 255, 255 );
@@ -1040,6 +1046,9 @@ void C_FFPlayer::Spawn( void )
 	{
 		SwapToWeaponSlot(iSpawnWeapon);
 	}
+
+	// Stop any looping sounds - this too hack-ish?
+	enginesound->StopAllSounds( true );
 }
 
 //-----------------------------------------------------------------------------
@@ -1048,8 +1057,6 @@ void C_FFPlayer::Spawn( void )
 void C_FFPlayer::Death()
 {
 	ffvieweffects->Reset();
-	
-	extern void ClearStatusIcons();
 	ClearStatusIcons();
 }
 
