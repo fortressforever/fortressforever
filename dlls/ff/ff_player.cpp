@@ -1208,6 +1208,8 @@ void CFFPlayer::SetupClassVariables()
 
 		GiveAmmo(pPlayerClassInfo.m_aAmmos[i].m_iAmount, pPlayerClassInfo.m_aAmmos[i].m_szAmmoType, true);
 	}
+
+	ClearSpeedEffects();
 }
 
 void CFFPlayer::InitialSpawn( void )
