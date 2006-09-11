@@ -875,9 +875,6 @@ ConVar mp_prematch( "mp_prematch",
 
 			float flBaseDamage = info.GetDamage();
 
-			// TFC uses 0.5 falloff for everything
-			float falloff = 0.5f;
-
 			// Decrease damage for an ent that's farther from the explosion
 			flAdjustedDamage = flBaseDamage - (flDistance * falloff);
 
