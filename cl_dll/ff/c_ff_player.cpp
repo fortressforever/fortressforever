@@ -1944,7 +1944,10 @@ void Gib_Callback(const CEffectData &data)
 	{
 		vecOffset = vecPosition + Vector(0, 0, random->RandomFloat(-12, 12));
 
-		pszGibModel = VarArgs("models/gibs/gib%d.mdl", random->RandomInt(1, 8));
+		// The first 3 gibs should be done only once, those after should be random
+		int iGibNumber = (i < 3 ? i + 1 : random->RandomInt(4, 8));
+
+		pszGibModel = VarArgs("models/gibs/gib%d.mdl", iGibNumber);
 
 		C_Gib *pGib = C_Gib::CreateClientsideGib(pszGibModel, vecOffset, Vector(random->RandomFloat(-150, 150), random->RandomFloat(-150, 150), random->RandomFloat(100, 800)), Vector(0, 0, 0), 10.0f);
 
