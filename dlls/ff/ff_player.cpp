@@ -4755,6 +4755,8 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 
 	SetMoveType(MOVETYPE_FLYGRAVITY);
 
+	SetFlameSpritesLifetime(-1.0f);
+
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
@@ -4843,28 +4845,8 @@ void CFFPlayer::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool
 {
 	AddFlag( FL_ONFIRE );
 
-	CEntityFlame *pFlame = NULL;
 
-	// Extend the flames for however long
-	if (GetEffectEntity())
-	{
-		pFlame = dynamic_cast<CEntityFlame *> (GetEffectEntity());
-
-		// We shouldn't have any other ones
-		Assert(pFlame);
-	}
-	else
-	{
-		pFlame = CEntityFlame::Create( this );
-		SetEffectEntity(pFlame);
-
-		// We should now have one
-		Assert(pFlame);
-	}
-
-	// There isn't already a flame
-	pFlame->SetLifetime(flFlameLifetime);
-
+	SetFlameSpritesLifetime(flFlameLifetime);
 
 	m_OnIgnite.FireOutput( this, this );
 }
@@ -4906,18 +4888,7 @@ void CFFPlayer::Extinguish( void )
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0;
 
-	CEntityFlame *pFlame = (CEntityFlame *) GetEffectEntity();
-
-	if (!pFlame)
-		return;
-
-	// When we kill the flame it calls this again so we'll do this to avoid infinite loop
-	if (pFlame->m_flLifetime > gpGlobals->curtime)
-	{
-		// Bug #0000162: Switching class while on fire, keeps playing burn sound
-		pFlame->SetLifetime(-1);
-		pFlame->FlameThink();
-	}
+	SetFlameSpritesLifetime(-1.0f);
 }
 
 //-----------------------------------------------------------------------------
@@ -6140,4 +6111,47 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 	{
 		BaseClass::DamageEffect(flDamage, fDamageType);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A function to handle all the flame stuff rather than having it
+//			strewed throughout the code.
+//-----------------------------------------------------------------------------
+void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime)
+{
+	CEntityFlame *pFlame = dynamic_cast <CEntityFlame *> (GetEffectEntity());
+
+	// If there is no flame then only create one if necessary
+	if (!pFlame)
+	{
+		if (flLifeTime <= 0.0f)
+			return;
+
+		pFlame = CEntityFlame::Create(this);
+		SetEffectEntity(pFlame);
+	}
+
+	Assert(pFlame);
+
+	if (!pFlame)
+		return;
+
+	// If we're reducing the lifecycle in order to remove the flame then check
+	// that the flame is still going.
+	// If it's not already going then we should return without doing anything otherwise
+	// we can end up in a loop when the flame keeps notifying the player that it has
+	// run out and this function is called.
+	if (flLifeTime <= 0.0f && pFlame->m_flLifetime > gpGlobals->curtime)
+	{
+		pFlame->SetLifetime(-1.0f);
+	}
+	else if (flLifeTime > 0.0f)
+	{
+		pFlame->SetLifetime(flLifeTime);
+	}
+	else
+		return;
+
+	// Take effect immediately
+	pFlame->FlameThink();
 }
