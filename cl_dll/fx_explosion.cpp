@@ -489,7 +489,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 			if ( pParticle != NULL )
 			{
 				pParticle->m_flLifetime = 0.0f;
-				pParticle->m_flDieTime	= random->RandomFloat( 0.2f, 0.4f );
+				pParticle->m_flDieTime	= random->RandomFloat( 0.4f, 0.6f );
 
 				pParticle->m_vecVelocity.Random( -spread*0.75f, spread*0.75f );
 				pParticle->m_vecVelocity += m_vecDirection;

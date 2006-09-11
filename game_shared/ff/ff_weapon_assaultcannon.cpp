@@ -348,8 +348,10 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	UpdateChargeTime();
 	UpdateBarrelSpin();
 
+	float flTimeSinceRelease = gpGlobals->curtime - m_flTriggerReleased;
+
 	// Player is holding down fire. Don't allow it if we're still recovering from an overheat though
-	if (pOwner->m_nButtons & IN_ATTACK && m_flNextSecondaryAttack <= gpGlobals->curtime)
+	if ((flTimeSinceRelease <= 0.5f || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 		// Oh no...
 		if (m_flChargeTime > AC_MAX_CHARGETIME)
