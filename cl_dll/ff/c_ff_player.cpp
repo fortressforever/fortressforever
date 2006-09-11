@@ -441,6 +441,8 @@ public:
 		return ENTITY_SHOULD_COLLIDE_RESPOND;
 	}
 
+	virtual BloodColor() { return BLOOD_COLOR_RED; }
+
 	int GetPlayerEntIndex() const;
 	IRagdoll* GetIRagdoll() const;
 
@@ -535,6 +537,10 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 	VectorMA(pTrace->startpos, pTrace->fraction, dir, hitpos);
 	VectorNormalize(dir);
 
+	UTIL_BloodDrips(pTrace->endpos, dir, BLOOD_COLOR_RED, 20);
+	TraceBleed(20, dir, pTrace, DMG_BLAST);
+
+
 	if ( iDamageType & DMG_BLAST )
 	{
 		dir *= 40000;  // adjust impact strength
@@ -550,9 +556,6 @@ void C_FFRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomIm
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset( dir, hitpos );	
 	}
-
-	//FX_Blood(pTrace->endpos, pTrace->endpos - pTrace->startpos, 128.0f, 1.0f, 1.0f, 1.0f);
-	UTIL_BloodDrips(pTrace->endpos, pTrace->endpos - pTrace->startpos, BLOOD_COLOR_RED, 40);
 
 	m_pRagdoll->ResetRagdollSleepAfterTime();
 }
