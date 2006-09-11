@@ -4760,7 +4760,7 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 
 	CEffectData data;
 	data.m_nEntIndex = entindex();
-	data.m_vStart = GetAbsVelocity();
+	data.m_vOrigin = GetAbsOrigin();
 	DispatchEffect("Gib", data);
 
 	return true;
