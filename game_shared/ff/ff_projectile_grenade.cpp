@@ -55,12 +55,12 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 		{
 			m_hSmokeTrail->m_Opacity = 0.2f;
 			m_hSmokeTrail->m_SpawnRate = 100;
-			m_hSmokeTrail->m_ParticleLifetime = 0.5f;
-			m_hSmokeTrail->m_StartColor.Init(0.65f, 0.65f , 0.65f);
-			m_hSmokeTrail->m_EndColor.Init(0.45f, 0.45f, 0.45f);
+			m_hSmokeTrail->m_ParticleLifetime = 1.0f;
+			m_hSmokeTrail->m_StartColor.Init(0.75f, 0.75f , 0.95f);
+			m_hSmokeTrail->m_EndColor.Init(0.45f, 0.45f, 0.95f);
 			m_hSmokeTrail->m_StartSize = 4;	// 8
-			m_hSmokeTrail->m_EndSize = 12;	// 32
-			m_hSmokeTrail->m_SpawnRadius = 4;
+			m_hSmokeTrail->m_EndSize = 6;	// 32
+			m_hSmokeTrail->m_SpawnRadius = 1;
 			m_hSmokeTrail->m_MinSpeed = 2;
 			m_hSmokeTrail->m_MaxSpeed = 16;
 			
