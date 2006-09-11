@@ -3269,12 +3269,13 @@ void CGameMovement::CategorizePosition( void )
 	if( ( mv->m_nButtons & IN_JUMP ) && !( mv->m_nOldButtons & IN_JUMP ) )
 		flUpSpeedLimit = 260000;
 	else
-		flUpSpeedLimit = 260;
+		flUpSpeedLimit = 180; //260;
 	
 	// Scouts going up ramps can easily break past 140, and our new
 	// jump speed is 268 anyway, so 260 is going to be a better value
 	// UNDONE: Using HL value for testing.
-	if ( mv->m_vecVelocity[2] > /*flUpSpeedLimit*/ 180 || 
+	// UNUNDONE: Using the HL value but dynamically like before.
+	if ( mv->m_vecVelocity[2] > flUpSpeedLimit || 
 		( mv->m_vecVelocity[2] > 0.0f && player->GetMoveType() == MOVETYPE_LADDER ) )   
 	{
 		SetGroundEntity( (CBaseEntity *)NULL );
