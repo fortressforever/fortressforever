@@ -622,6 +622,14 @@ void C_FFRagdoll::CreateRagdoll()
 		{
 			IgniteRagdoll(pPlayer);
 			SetNextClientThink(gpGlobals->curtime + 1.0f);
+
+			C_EntityFlame *pFlame = (C_EntityFlame *) pPlayer->GetEffectEntity();
+
+			// Now make sure we kill our own flame
+			if (pFlame)
+			{
+				pFlame->Remove();
+			}
 		}
 
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
