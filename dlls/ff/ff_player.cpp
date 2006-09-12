@@ -1073,10 +1073,15 @@ void CFFPlayer::Spawn()
 	// They have spawned as a spectator
 	if (GetTeamNumber() == TEAM_SPECTATOR)
 	{
+		BaseClass::Spawn();
+
+		// HACK: If you spawn as spectator without spawning as a class first then
+		// you will end up with a physics object that goes mad if you try to noclip
+		// through a wall. So we're just going to brute-destroy that here.
+		VPhysicsDestroyObject();
+
 		StartObserverMode(OBS_MODE_ROAMING);
 		AddEffects(EF_NODRAW);
-
-		BaseClass::Spawn();
 
 		// We have to do this after base spawn because it handly sets it to 0
 		SetMaxSpeed(sv_maxspeed.GetFloat());
@@ -2142,7 +2147,14 @@ void CFFPlayer::Command_Team( void )
 	//ReadPlayerClassDataFromFileForSlot( filesystem, "unassigned", &m_hPlayerClassFileInfo, GetEncryptionKey() );
 	SetClassForClient(0);
 
-	KillAndRemoveItems();
+	RemoveItems();
+
+	// Only kill the player if they are alive on a team
+	if (IsAlive() && GetTeamNumber() >= TEAM_BLUE)
+	{
+		KillPlayer();
+	}
+	
 	ChangeTeam(iTeam);
 	
 	// Make sure they don't think they're meant to be spawning as a new class
