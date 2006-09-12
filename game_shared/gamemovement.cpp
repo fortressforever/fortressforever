@@ -3428,7 +3428,8 @@ void CGameMovement::CheckFalling( void )
 			// Play landing sound right away.
 			// #0000599: footstep continues to play after cratering
 			// #0000401: Oddity with the fall sound.
-			player->m_flStepSoundTime = gpGlobals->curtime + 0.600f;
+			pFFPlayer->m_flStepSoundTime = gpGlobals->curtime + 0.600f;
+			pFFPlayer->m_flJumpTime = gpGlobals->curtime + 0.600f;
 
 			// Play step sound for current texture.
 			//player->PlayStepSound( mv->m_vecAbsOrigin, player->m_pSurfaceData, fvol, true );
