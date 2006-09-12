@@ -213,7 +213,7 @@ void CFFStatsLog::AddStat(int playerid, int statid, double value)
 			m_vPlayers[playerid].m_vStats[statid] = value;
 	}
 
-	DevMsg("Added stat to player %d: %s += %f\n", playerid, m_vStats[statid].m_sName, value);
+	//DevMsg("Added stat to player %d: %s += %f\n", playerid, m_vStats[statid].m_sName, value);
 }
 
 /**
