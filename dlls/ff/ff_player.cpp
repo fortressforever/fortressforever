@@ -6102,7 +6102,7 @@ void CFFPlayer::DamageEffect(float flDamage, int fDamageType)
 	if (fDamageType & DMG_POISON)
 	{
 		// Green damage indicator
-		color32 green = {32, 64, 0, 200};
+		color32 green = {32, 64, 0, 50};
 		UTIL_ScreenFade(this, green, 2.0f, 0.1f, FFADE_IN);
 
 		ViewPunch(QAngle(random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f), random->RandomFloat(-1.0f, 1.0f)));
