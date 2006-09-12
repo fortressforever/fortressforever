@@ -208,6 +208,12 @@ void CHudChat::CreateChatInputLine( void )
 {
 	m_pChatInput = new CHudChatInputLine( this, "ChatInputLine" );
 	m_pChatInput->SetVisible( false );
+
+	// Only the chat input line is a popup now.
+	// This means that we can see the rest of the text behind the scoreboard.
+	// When the chat input line goes up the scoreboard will be removed so the 
+	// disparity is not obvious.
+	m_pChatInput->MakePopup();
 }
 
 void CHudChat::CreateChatLines( void )
@@ -563,6 +569,10 @@ void CHudChat::ChatPrintf( int iPlayerIndex, const char *fmt, ... )
 
 int CHudChat::GetChatInputOffset( void )
 {
+	// For now lets not shift text around when we're writing.
+	// It is a bit jumpy and doesn't look so good.
+	return m_iFontHeight;
+
 	if ( m_pChatInput->IsVisible() )
 	{
 		return m_iFontHeight;

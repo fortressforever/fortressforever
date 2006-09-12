@@ -19,6 +19,7 @@
 #include "vgui/keycode.h"
 #include <KeyValues.h>
 #include "ienginevgui.h"
+#include "cl_dll/iviewport.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -317,7 +318,9 @@ CBaseHudChat::CBaseHudChat( const char *pElementName )
 	}
 
 	// (We don't actually want input until they bring up the chat line).
-	MakePopup();
+	// Mirv: The whole chat box is no longer a popup, only the input line.
+	// This way we don't lose all the text behind the scores.
+	//MakePopup();
 	SetZPos( -30 );
 
 	SetHiddenBits( HIDEHUD_CHAT );
@@ -366,7 +369,13 @@ void CBaseHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		int w, h;
 		GetSize( w, h );
-		m_pChatInput->SetBounds( 1, h - m_iFontHeight - 1, w-2, m_iFontHeight );
+
+		// Mirv: Now that m_pChatInput is a popup it doesn't inherit its parent's
+		// position, therefore add that on manually.
+		int x, y;
+		GetPos(x, y);
+
+		m_pChatInput->SetBounds( x + 1, y + h - m_iFontHeight - 1, w-2, m_iFontHeight );
 	}
 
 #ifdef HL1_CLIENT_DLL
@@ -498,7 +507,13 @@ void CBaseHudChat::OnTick( void )
 			// Put input area at bottom
 			int w, h;
 			GetSize( w, h );
-			m_pChatInput->SetBounds( 1, h - m_iFontHeight - 1, w-2, m_iFontHeight );
+
+			// Mirv: Now that m_pChatInput is a popup it doesn't inherit its parent's
+			// position, therefore add that on manually.
+			int x, y;
+			GetPos(x, y);
+
+			m_pChatInput->SetBounds( x + 1, y + h - m_iFontHeight - 1, w-2, m_iFontHeight );
 		}
 	}
 
@@ -541,7 +556,8 @@ void CBaseHudChat::OnTick( void )
 		m_nVisibleHeight = 0;
 	}
 
-	vgui::surface()->MovePopupToBack( GetVPanel() );
+	// Mirv: Now that we're a popup this is no longer needed
+	//vgui::surface()->MovePopupToBack( GetVPanel() );
 #endif
 }
 
@@ -770,12 +786,17 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	{
 		m_pChatInput->SetPrompt( L"Say (TEAM) :" );
 	}
-	
-	vgui::SETUP_PANEL( this );
-	SetKeyBoardInputEnabled( true );
+
+	// Mirv: All these now only act on the chat input line
+	vgui::SETUP_PANEL( m_pChatInput );
+	m_pChatInput->SetKeyBoardInputEnabled( true );
 	m_pChatInput->SetVisible( true );
 	vgui::surface()->CalculateMouseVisible();
 	m_pChatInput->RequestFocus();
+	vgui::surface()->MovePopupToBack(m_pChatInput->GetVPanel());
+
+	// Mirv: Remove the scoreboard if it is showing
+	gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
 #endif
 }
 
