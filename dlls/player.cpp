@@ -2230,11 +2230,8 @@ bool CBasePlayer::StartObserverMode(int mode)
 	//AddEffects( EF_NODRAW );		
 
 	m_iHealth = 1;
-
-	// --> Mirv: This breaks spectator mode
-	//m_lifeState = LIFE_DEAD; // Can't be dead, otherwise movement doesn't work right.
-	//pl.deadflag = true;
-	// <-- Mirv: This breaks spectator mode
+	m_lifeState = LIFE_DEAD; // Can't be dead, otherwise movement doesn't work right.
+	pl.deadflag = true;
 
 	return true;
 }
