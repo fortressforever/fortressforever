@@ -416,6 +416,7 @@ private:
 	
 	float					m_flOldPlayerZ;
 	float					m_flOldPlayerViewOffsetZ;
+	bool					m_bSmoothStair;					// |-- Mirv
 	
 	// For UI purposes...
 	int				m_iOldAmmo[ MAX_AMMO_TYPES ];

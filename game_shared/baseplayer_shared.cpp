@@ -1244,6 +1244,27 @@ void CBasePlayer::SmoothViewOnStairs( Vector& eyeOrigin )
 	float flCurrentPlayerZ = GetLocalOrigin().z;
 	float flCurrentPlayerViewOffsetZ = GetViewOffset().z;
 
+	// --> Mirv:
+	// We're now only smoothing stairs if we've recently stepped up or down
+	// far enough (currently >= 8.0 units). This way the stair smoothing isn't
+	// affecting ramps
+	if (!m_bSmoothStair)
+	{
+		m_flOldPlayerZ = flCurrentPlayerZ;
+	}
+	else
+	{
+		// Once we've got close enough to our actual position then stop stair 
+		// smoothing
+		float flDistance = flCurrentPlayerZ - m_flOldPlayerZ;
+		if (flDistance < 0.1f && flDistance > -0.1f)
+		{
+			m_flOldPlayerZ = flCurrentPlayerZ;
+			m_bSmoothStair = false;
+		}
+	}
+	// <-- Mirv
+
 	// Smooth out stair step ups
 	// NOTE: Don't want to do this when the ground entity is moving the player
 	if ( ( pGroundEntity != NULL && pGroundEntity->GetMoveType() == MOVETYPE_NONE ) && ( flCurrentPlayerZ != m_flOldPlayerZ ) && smoothstairs.GetBool() &&

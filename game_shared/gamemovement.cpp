@@ -1171,6 +1171,15 @@ void CGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 	{
 		// copy z value from slide move
 		mv->m_vecVelocity.z = vecDownVel.z;
+
+		// --> Mirv:
+		// If we have stepped up far enough then flag for smoothstairs
+		float flDistance = vecUpPos.z - vecPos.z;
+		if (flDistance >= 8.0f)
+		{
+			player->m_bSmoothStair = true;
+		}
+		// <-- Mirv
 	}
 	
 	float flStepDist = mv->m_vecAbsOrigin.z - vecPos.z;
@@ -1484,6 +1493,15 @@ void CGameMovement::StayOnGround( void )
 		//This is incredibly hacky. The real problem is that trace returning that strange value we can't network over.
 		if ( flDelta > 0.5f * COORD_RESOLUTION)
 		{
+			// --> Mirv:
+			// If we have stepped up far enough then flag for smoothstairs
+			float flDistance = mv->m_vecAbsOrigin.z - trace.endpos.z;
+			if (flDistance >= 8.0f)
+			{
+				player->m_bSmoothStair = true;
+			}
+			// <-- Mirv
+
 			mv->m_vecAbsOrigin = trace.endpos;
 		}
 	}
@@ -2213,8 +2231,12 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 			return 4;
 #endif
 
+			// this is limited by the network fractional bits used for coords
+			// because net coords will be only be accurate to 5 bits fractional
+			// Standard collision test epsilon
+			// 1/32nd inch collision epsilon
 			Ray_t ray;
-			ray.Init(mv->m_vecAbsOrigin, end, GetPlayerMins() + Vector(0.01, 0.01, 0.01), GetPlayerMaxs() - Vector(0.01, 0.01, 0.01));
+			ray.Init(mv->m_vecAbsOrigin, end, GetPlayerMins() + Vector(DIST_EPSILON, DIST_EPSILON, DIST_EPSILON), GetPlayerMaxs() - Vector(DIST_EPSILON, DIST_EPSILON, DIST_EPSILON));
 			UTIL_TraceRay(ray, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
 
 			// entity is trapped in another solid

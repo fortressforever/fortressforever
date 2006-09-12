@@ -890,6 +890,7 @@ private:
 
 	float					m_flOldPlayerZ;
 	float					m_flOldPlayerViewOffsetZ;
+	bool					m_bSmoothStair;					// |-- Mirv
 
 	bool					m_bPlayerUnderwater;
 
