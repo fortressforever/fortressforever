@@ -619,7 +619,6 @@ float GetAssaultCannonCharge()
 		return 0.0f;
 
 	C_FFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
-	Assert(pWeapon);
 
 	if (!pWeapon || pWeapon->GetWeaponID() != FF_WEAPON_ASSAULTCANNON)
 		return 0.0f;
