@@ -29,7 +29,6 @@ class CFFItemBackpack : public CBaseAnimating
 public:
 	DECLARE_CLASS( CFFItemBackpack, CBaseAnimating );
 	DECLARE_DATADESC();
-	DECLARE_SERVERCLASS();
 
 	CFFItemBackpack( );
 
