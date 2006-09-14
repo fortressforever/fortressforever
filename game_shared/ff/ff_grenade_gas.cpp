@@ -240,6 +240,8 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 				m_pGasEmitter = NULL;
 			}
 		}
+
+		BaseClass::UpdateOnRemove();
 	}
 
 	//-----------------------------------------------------------------------------
