@@ -36,7 +36,8 @@ public:
 	DECLARE_CLASS(CFFGrenadeGas,CFFGrenadeBase)
 	DECLARE_NETWORKCLASS();
 
-	CNetworkVar(int, m_bIsEmitting);
+	// Server spits out a complaint about this not being unsigned
+	CNetworkVar( unsigned int, m_bIsEmitting );
 
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
@@ -51,6 +52,7 @@ public:
 
 	virtual void ClientThink();
 	virtual void OnDataChanged(DataUpdateType_t updateType);
+	virtual void UpdateOnRemove( void );
 
 	CSmartPtr<CGasCloud>	m_pGasEmitter;
 
@@ -224,6 +226,21 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		//BaseClass::GrenadeThink();
 	}
 #else
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Stop gas emitter
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeGas::UpdateOnRemove( void )
+	{
+		if( m_bIsEmitting )
+		{
+			if( !!m_pGasEmitter )
+			{
+				m_pGasEmitter->SetDieTime( 0.0f );
+				m_pGasEmitter = NULL;
+			}
+		}
+	}
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Emit gas.
