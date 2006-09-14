@@ -16,7 +16,7 @@
 #include "hudelement.h"
 #include "hud_macros.h"
 
-#include <KeyValues.h>
+//#include <KeyValues.h>
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
 
@@ -98,16 +98,13 @@ protected:
 private:
 	// Stuff we need to know
 	CPanelAnimationVar( vgui::HFont, m_hDisguiseFont, "DisguiseFont", "ClassGlyphs" );
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_Numbers" );
+	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
 
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "0", "proportional_float" );
-
-	CPanelAnimationVarAliasType( float, text2_xpos, "text2_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text2_ypos, "text2_ypos", "80", "proportional_float" );
+	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "64", "proportional_float" );
 
 	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "16", "proportional_float" );
+	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "0", "proportional_float" );
 
 };
 
@@ -140,37 +137,40 @@ void CHudSpyDisguise::Paint( void )
 	// Draw!
 	if( m_pHudSpyDisguise )
 	{
-		// Draw some text
-		if( 0 )
-		{
-			surface()->DrawSetTextFont( m_hTextFont );
-
-			surface()->DrawSetTextColor( 0, 0, 0, 255 );
-			surface()->DrawSetTextPos( text1_xpos, text1_ypos );
-
-			for( wchar_t *wch = L"Disguise"; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
-		}
-
+		// Figure out which glyph to use for the actual icon
 		MapClassToGlyph( pPlayer->GetDisguisedClass(), m_pHudSpyDisguise->cCharacterInFont );
 
 		Color clr = pPlayer->GetTeamColor();
 
+		// Get disguised color
 		if( g_PR )
 			clr = g_PR->GetTeamColor( pPlayer->GetDisguisedTeam() );
 
+		// Draw the icon
 		m_pHudSpyDisguise->DrawSelf( image1_xpos, image1_ypos, clr );
 
-		// Draw some more text
-		if( 0 )
+		// Get the class as a string
+		wchar_t szText[ 64 ];
+
+		// Look up the resource string
+		wchar_t *pszText = vgui::localize()->Find( Class_IntToResourceString( pPlayer->GetDisguisedClass() ) );
+
+		// No valid resource string found
+		if( !pszText )
 		{
-			surface()->DrawSetTextFont( m_hTextFont );
-
-			surface()->DrawSetTextColor( clr );
-			surface()->DrawSetTextPos( text2_xpos, text2_ypos );
-
-			for( wchar_t *wch = L"Fucker"; *wch != 0; wch++ )
-				surface()->DrawUnicodeChar( *wch );
+			vgui::localize()->ConvertANSIToUnicode( Class_IntToPrintString( pPlayer->GetDisguisedClass() ), szText, sizeof( szText ) );
+			pszText = szText;
 		}
+
+		int iCharWide = surface()->GetCharacterWidth( m_hDisguiseFont, ( int )m_pHudSpyDisguise->cCharacterInFont );
+
+		int iWide, iTall;
+		surface()->GetTextSize( m_hTextFont, pszText, iWide, iTall );
+
+		// Draw text
+		surface()->DrawSetTextFont( m_hTextFont );
+		surface()->DrawSetTextColor( clr );
+		surface()->DrawSetTextPos( text1_xpos + ( iCharWide / 2 ) - ( iWide / 2 ), text1_ypos );
+		surface()->DrawUnicodeString( pszText );
 	}	
 }
