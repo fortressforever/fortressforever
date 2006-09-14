@@ -1059,7 +1059,13 @@ void C_FFPlayer::Spawn( void )
 	}
 
 	// Stop any looping sounds - this too hack-ish?
-	enginesound->StopAllSounds( true );
+	// Mirv: Might be better to ensure this happens only for local player, all players
+	// will have this function called when they are first created and this might 
+	// therefore stop sounds at 'random' times
+	if (IsLocalPlayer())
+	{
+		enginesound->StopAllSounds( true );
+	}
 }
 
 //-----------------------------------------------------------------------------
