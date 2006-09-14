@@ -12,6 +12,9 @@
 /// ---------
 /// Jun. 26, 2005	L0ki: Initial Creation
 /// Jan. 03, 2006	Mirv: A lot redone: does what its meant to do, doesn't crash linux srv.
+//
+//	9/13/2006, Mulchman
+//		Cleaned up a tad
 
 #include "cbase.h"
 #include "ff_item_backpack.h"
@@ -19,27 +22,11 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+IMPLEMENT_SERVERCLASS_ST( CFFItemBackpack, DT_FFItemBackpack )
+END_SEND_TABLE()
+
 BEGIN_DATADESC( CFFItemBackpack )
-
-	// weapon ammo types
-/*	DEFINE_KEYFIELD( m_iAmmoCounts[1], FIELD_INTEGER, AMMO_BULLETS ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[2], FIELD_INTEGER, AMMO_SHELLS ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[3], FIELD_INTEGER, AMMO_NAILS ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[4], FIELD_INTEGER, AMMO_ROCKETS ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[5], FIELD_INTEGER, AMMO_GRENADES ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[6], FIELD_INTEGER, AMMO_CELLS ),
-	DEFINE_KEYFIELD( m_iAmmoCounts[7], FIELD_INTEGER, AMMO_DETPACK ),
-
-	//grenades
-	DEFINE_KEYFIELD( m_iGren1,	FIELD_INTEGER, "no_primary_grenades" ),
-	DEFINE_KEYFIELD( m_iGren2,	FIELD_INTEGER, "no_secondary_grenades" ),
-
-	//health and armor
-	DEFINE_KEYFIELD( m_iArmor,	FIELD_INTEGER, "armorvalue" ),
-	DEFINE_KEYFIELD( m_iHealth,	FIELD_INTEGER, "healthvalue" ),*/
-
 	DEFINE_ENTITYFUNC( RestockTouch ),
-
 END_DATADESC();
 
 LINK_ENTITY_TO_CLASS( ff_item_backpack, CFFItemBackpack );
@@ -133,33 +120,6 @@ void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )
 		if (ammotaken)
 			UTIL_Remove(this);
 	}
-}
-
-bool CFFItemBackpack::CreateItemVPhysicsObject()
-{
-	SetMoveType(MOVETYPE_NONE);
-
-	// Bug #0000131: Ammo, health and armor packs stop rockets
-	// We don't want to set as not-solid because we need to trace it for sniper rifle dot
-	SetSolid(SOLID_BBOX);
-	AddSolidFlags(FSOLID_NOT_STANDABLE|FSOLID_TRIGGER);
-	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
-
-	// If it's not physical, drop it to the floor
-	if (UTIL_DropToFloor(this, MASK_SOLID) == 0)
-	{
-		Warning( "xxxx Item %s fell out of level at %f,%f,%f\n", GetClassname(), GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z);
-		UTIL_Remove( this );
-		return false;
-	}
-
-	// make it respond to touches
-	//SetCollisionGroup(COLLISION_GROUP_WEAPON);
-	SetCollisionGroup(COLLISION_GROUP_NONE);
-	CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
-	SetTouch(&CFFItemBackpack::RestockTouch);
-
-	return true;
 }
 
 void CFFItemBackpack::SetSpawnFlags( int flags )

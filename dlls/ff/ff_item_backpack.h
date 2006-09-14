@@ -11,24 +11,25 @@
 /// Revisions
 /// ---------
 /// Jun. 26, 2005	L0ki: Initial Creation
+//
+//	9/13/2006, Mulchman
+//		Cleaned up a tad
 
 #ifndef FF_ITEM_BACKPACK_H
 #define FF_ITEM_BACKPACK_H
 
 #include "ammodef.h"
-#include "items.h"
 #include "ff_player.h"
 #include "ff_weapon_base.h" //for ammo types
 
-//#define BACKPACK_MODEL "models/items/item_item_crate.mdl"
 #define BACKPACK_MODEL "models/items/backpack/backpack.mdl"
-//#define BACKPACK_MODEL "models/items/healthkit.mdl"
 
-class CFFItemBackpack : public CItem
+class CFFItemBackpack : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CFFItemBackpack, CItem );
+	DECLARE_CLASS( CFFItemBackpack, CBaseAnimating );
 	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
 
 	CFFItemBackpack( );
 
@@ -37,7 +38,6 @@ public:
 	void RestockTouch	(CBaseEntity *);
 
 	void SetSpawnFlags( int flags );
-	bool CreateItemVPhysicsObject(void);
 
 	void SetAmmoCount( int iIndex, int iNewCount );
 	void SetGren1( int iNewCount );
