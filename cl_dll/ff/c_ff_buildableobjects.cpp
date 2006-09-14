@@ -155,6 +155,8 @@ void C_FFBuildableObject::ClientThink( void )
 			case CLASS_DETPACK:
 			flBuildDist = FF_BUILD_DET_BUILD_DIST;
 			break;
+
+			default: return; break;
 		}
 
 		Vector vecForward;
@@ -192,7 +194,8 @@ int C_FFBuildableObject::DrawModel( int flags )
 			{
 				case CLASS_DISPENSER: flOffset = 32.0f; break;
 				case CLASS_SENTRYGUN: flOffset = 32.0f; break;
-				case CLASS_DETPACK: flOffset = GetAbsOrigin().z; break;
+				case CLASS_DETPACK: flOffset = 0.0f; break;
+				default: return BaseClass::DrawModel( flags ); break;
 			}
 
 			const char *pszMaterial = NULL;
@@ -215,9 +218,12 @@ int C_FFBuildableObject::DrawModel( int flags )
 				{
 					materials->Bind( pMaterial );
 					color32 c = { 255, 0, 0, 255 };
-					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + flOffset ), 30.0f, 30.0f, c );
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + flOffset ), 15.0f, 15.0f, c );
 				}
 			}
+
+			// Finally, there was a build error, so don't actually draw the real model!
+			return 0;
 		}
 	}
 		

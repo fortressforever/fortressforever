@@ -83,24 +83,4 @@ public:
 
 };
 
-//=============================================================================
-//
-//	class C_GlowMaterialProxy
-//
-//=============================================================================
-class C_GlowMaterialProxy : public IMaterialProxy
-{
-public:
-	C_GlowMaterialProxy( void );
-	virtual ~C_GlowMaterialProxy( void );
-	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
-	virtual void OnBind( void *pC_BaseEntity );
-	virtual void Release( void ) { delete this; }
-
-private:	
-	// Actual $ value we will be modifying in the .vmt to adjust
-	// the team coloring
-	IMaterialVar	*m_pValue;
-};
-
 #endif // FF_MATERIALPROXIES_H

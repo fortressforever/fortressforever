@@ -177,12 +177,6 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 				// Create fake dispenser
 				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
 			}
-
-			// Check whether we need to "hide" the model or not
-			if( hBuildInfo.BuildResult() != BUILD_ALLOWED )
-				m_pBuildable->SetRenderColorA( ( byte )1 );
-			else
-				m_pBuildable->SetRenderColorA( ( byte )110 );
 		}
 		// If we have built a sentrygun...
 		else
