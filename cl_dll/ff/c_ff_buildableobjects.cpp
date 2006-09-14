@@ -185,7 +185,7 @@ int C_FFBuildableObject::DrawModel( int flags )
 		// Draw our glyphs
 
 		// See if there's even an error
-		if( m_hBuildError >= BUILD_ALLOWED )
+		if( m_hBuildError > BUILD_ALLOWED )
 		{
 			float flOffset = 0.0f;
 
