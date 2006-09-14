@@ -181,12 +181,6 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 				// Create fake dispenser
 				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
 			}
-
-			// Check whether we need to "hide" the model or not
-			if( hBuildInfo.BuildResult() != BUILD_ALLOWED )
-				m_pBuildable->SetRenderColorA( ( byte )1 );
-			else
-				m_pBuildable->SetRenderColorA( ( byte )110 );
 		}
 		// Destroy if we already have one
 		else
