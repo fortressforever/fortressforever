@@ -2345,8 +2345,6 @@ namespace Omnibot
 		obPrintMessage( "-------------- Omni-bot Init ----------------\n" );
 
 		int iLoadResult = -1;
-		Nav_EngineFuncs_t navFunctions;
-		memset(&navFunctions, 0, sizeof(navFunctions));
 		memset(&g_InterfaceFunctions, 0, sizeof(g_InterfaceFunctions));
 
 		g_InterfaceFunctions.pfnAddBot						= obAddBot;
