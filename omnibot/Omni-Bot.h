@@ -14,7 +14,6 @@
 #define __OMNIBOT_H__
 
 #include "Functions_Bot.h"
-#include "Functions_Nav.h"
 #include "Functions_Engine.h"
 #include "Omni-Bot_Types.h"
 #include "Omni-Bot_Events.h"
@@ -53,9 +52,6 @@ void BotSendGlobalEvent(int _eid, int _source, int _msdelay, BotUserData *_data)
 // function: Bot_SendTrigger
 //		Allows the game to notify the bot of triggered events.
 void BotSendTrigger(TriggerInfo *_triggerInfo);
-// function: BotSetNavFuncs
-//		Allows the game to give the bot functions to call for an external navigation system.
-int BotSetNavFuncs(Nav_EngineFuncs_t *_pNavFuncs, int _size);
 
 // function: BotSendEventEx
 //		New Messagehelper based event handler.

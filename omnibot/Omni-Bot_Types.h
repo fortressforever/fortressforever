@@ -640,15 +640,11 @@ typedef enum eSkeletonBone
 // enumerations: NavigationID
 //		NAVID_WP - Waypoint-based path planning implementation.
 //		NAVID_NAVMESH - Navigation mesh path planning implementation.
-//		NAVID_AAS - Implementation of Quake 4 AAS system.
-//		NAVID_HL2_NAVMESH - Implementation of HL2 Navigation Mesh.
 typedef enum eNavigatorID
 {
 	NAVID_NONE,	
 	NAVID_WP,	
-	NAVID_NAVMESH,	
-	NAVID_Q4_AAS,	
-	NAVID_HL2_NAVMESH,
+	NAVID_NAVMESH,
 
 	// THIS MUST BE LAST
 	NAVID_MAX

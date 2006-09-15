@@ -9,8 +9,6 @@
 #ifndef __FUNCTIONS_BOT_H__
 #define __FUNCTIONS_BOT_H__
 
-#include "Functions_Nav.h"
-
 #include "Omni-Bot.h"
 #include "Omni-Bot_Types.h"
 #include "Omni-Bot_Events.h"
@@ -35,8 +33,7 @@ typedef struct
 	void (*pfnBotSendTrigger)(TriggerInfo *_triggerInfo);
 	void (*pfnBotAddBBRecord)(BlackBoard_Key _type, int _posterID, int _targetID, BotUserData *_data);
 	void (*pfnBotAddEntityInfo)(GameEntity _ent, EntityInfo *_info);
-	int (*pfnBotSetNavFuncs)(Nav_EngineFuncs_t *_pNavFuncs, int _size);
-
+	
 	// New message stuff.
 	void (*pfnBotSendEventEx)(const MessageHelper &_message);
 	void (*pfnBotSendGlobalEventEx)(const MessageHelper &_message);

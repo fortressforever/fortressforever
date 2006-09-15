@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
-// $LastChangedBy: geekfeststarter $
-// $LastChangedDate: 2006-08-26 10:53:27 -0700 (Sat, 26 Aug 2006) $
-// $LastChangedRevision: 1257 $
+// $LastChangedBy: DrEvil $
+// $LastChangedDate: 2006-09-05 08:08:00 -0700 (Tue, 05 Sep 2006) $
+// $LastChangedRevision: 1269 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +22,7 @@ typedef enum eFF_Version
 	FF_VERSION_0_4,
 	FF_VERSION_0_5,
 	FF_VERSION_0_6,
+	FF_VERSION_0_7,
 	FF_VERSION_LAST,
 	FF_VERSION_LATEST = FF_VERSION_LAST - 1
 } FF_Version;
