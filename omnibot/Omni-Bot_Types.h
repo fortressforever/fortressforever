@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-08 22:15:35 -0700 (Fri, 08 Sep 2006) $
-// $LastChangedRevision: 1270 $
+// $LastChangedDate: 2006-09-12 23:56:29 -0700 (Tue, 12 Sep 2006) $
+// $LastChangedRevision: 1274 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -312,6 +312,17 @@ typedef struct AABB_t
 			m_Mins[i] += _pos[i];
 			m_Maxs[i] += _pos[i];
 		}
+	}
+
+	AABB_t TranslateCopy(const float _pos[3]) const
+	{
+		AABB_t aabb = *this;
+		for(int i = 0; i < 3; ++i)
+		{
+			aabb.m_Mins[i] += _pos[i];
+			aabb.m_Maxs[i] += _pos[i];
+		}
+		return aabb;
 	}
 
 	AABB_t(const float _mins[3], const float _maxs[3])
