@@ -2410,19 +2410,14 @@ namespace Omnibot
 		g_InterfaceFunctions.pfnFindEntityInSphereId		= obFindEntityInSphereId;
 
 		// clear the debug arrays
-		//g_DebugLines.Clear();
+		g_DebugLines.clear();
 
 		// Allow user configurable navigation system
-		//int iNavSystem = omnibot_nav.GetInteger();
+		int iNavSystem = omnibot_nav.GetInt();
 		NavigatorID navId = NAVID_WP;
-		//navId = NAVID_NAVMESH;
-		/*switch(iNavSystem)
-		{
-		case NAVID_WP:
-		navId = NAVID_WP;
-		break;
-		}*/
-
+		if(iNavSystem == NAVID_NAVMESH)
+			navId = NAVID_NAVMESH;
+		
 		// Look for the bot dll.
 		const int BUF_SIZE = 512;
 		char botFilePath[BUF_SIZE] = {0};
