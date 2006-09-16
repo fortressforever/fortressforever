@@ -31,7 +31,7 @@
 
 #ifdef FF_BETA
 
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "ff_string.h"
 
 // Forward declaration
