@@ -221,16 +221,12 @@ void CFFBetaList::Init( void )
 				{
 					if( !Q_stricmp( pItems->GetName(), "Name" ) )
 					{
-						//const char *pszString = pItems->GetString();
 						CFFBetaList_String szString = pItems->GetString();
-						DevMsg( "[FF Beta List] Read from file: %s\n", szString.GetString() );
 						m_hValidNames.AddToTail( szString );
 					}
 					else if( !Q_stricmp( pItems->GetName(), "SteamID" ) )
 					{
-						//const char *pszString = pItems->GetString();
 						CFFBetaList_String szString = pItems->GetString();
-						DevMsg( "[FF Beta List] Read from file: %s\n", szString.GetString() );
 						m_hValidSteamIDs.AddToTail( szString );
 					}
 				}
