@@ -1,3 +1,16 @@
+/********************************************************************
+	created:	2006/09/16
+	created:	16:9:2006   21:22
+	filename: 	f:\ff-svn\code\trunk\cl_dll\ff\vgui\FFSectionedListPanel.h
+	file path:	f:\ff-svn\code\trunk\cl_dll\ff\vgui
+	file base:	FFSectionedListPanel
+	file ext:	h
+	author:		Gavin "Mirvin_Monkey" Bramhill
+	
+	purpose:	A modified SectionedListPanel.h
+*********************************************************************/
+
+// Original header:
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
@@ -5,8 +18,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef SECTIONEDLISTPANEL_H
-#define SECTIONEDLISTPANEL_H
+#ifndef FF_SECTIONEDLISTPANEL_H
+#define FF_SECTIONEDLISTPANEL_H
 
 #ifdef _WIN32
 #pragma once
@@ -18,11 +31,16 @@
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
 
+#define CSectionHeader		FFSectionHeader
+#define CItemButton			FFItemButton
+#define SectionedListPanel	FFSectionedListPanel
+
 namespace vgui
 {
 
 class CSectionHeader;
 class CItemButton;
+class SectionedListPanel;
 
 // sorting function, should return true if itemID1 should be displayed before itemID2
 typedef bool (*SectionSortFunc_t)(SectionedListPanel *list, int itemID1, int itemID2);
@@ -216,4 +234,4 @@ private:
 
 } // namespace vgui
 
-#endif // SECTIONEDLISTPANEL_H
+#endif // FF_SECTIONEDLISTPANEL_H
