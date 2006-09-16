@@ -12,6 +12,9 @@
 
 
 #include "cbase.h"
+
+#if 0
+
 #include "ff_projectile_rail.h"
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
@@ -334,3 +337,5 @@ CFFProjectileRail *CFFProjectileRail::CreateRail(const CBaseEntity *pSource, con
 
 	return pRail;
 }
+
+#endif
