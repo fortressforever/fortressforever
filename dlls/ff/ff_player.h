@@ -31,6 +31,12 @@ class CFFDispenser;
 class CFFSentryGun;
 class CFFSevTest;
 
+#include "ff_betalist.h"
+#ifdef FF_BETA
+// Special stuff for beta!
+class CFFBetaList_Player;
+#endif
+
 #include "ff_mapguide.h"	// |-- Mirv: Map guides
 
 #define FF_BUILD_DISP_STRING_LEN	256
@@ -734,6 +740,14 @@ public:
 	bool LuaRunEffect( int iEffect, CBaseEntity *pEffector = NULL, float *pflDuration = NULL, float *pflIconDuration = NULL, float *pflSpeed = NULL );
 
 	void DamageEffect(float flDamage, int fDamageType);
+
+#ifdef FF_BETA
+	// Special stuff for beta!
+public:
+	CFFBetaList_Player	*GetFFBetaListInfo( void )		{ return &m_FFBetaListInfo; }
+private:
+	CFFBetaList_Player	m_FFBetaListInfo;
+#endif // FF_BETA
 };
 
 
