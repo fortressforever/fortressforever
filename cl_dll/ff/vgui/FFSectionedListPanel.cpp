@@ -1,3 +1,16 @@
+/********************************************************************
+	created:	2006/09/16
+	created:	16:9:2006   21:25
+	filename: 	f:\ff-svn\code\trunk\cl_dll\ff\vgui\FFSectionedListPanel.cpp
+	file path:	f:\ff-svn\code\trunk\cl_dll\ff\vgui
+	file base:	FFSectionedListPanel
+	file ext:	cpp
+	author:		Gavin "Mirvin_Monkey" Bramhill
+	
+	purpose:	A modified SectionedListPanel.cpp
+*********************************************************************/
+
+// Original header:
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
@@ -15,7 +28,7 @@
 #include <KeyValues.h>
 #include <vgui/MouseCode.h>
 
-#include <vgui_controls/SectionedListPanel.h>
+#include <FFSectionedListPanel.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Controls.h>
 #include <vgui_controls/Label.h>
@@ -779,7 +792,7 @@ void SectionedListPanel::LayoutPanels(int &contentTall)
 		else
 		{
 			// arrange all the items in this section underneath
-			for (i = iStart; i <= iEnd; i++)
+			for (int i = iStart; i <= iEnd; i++)
 			{
 				CItemButton *item = m_SortedItems[i]; //items[i];
 				item->SetBounds(x, y, wide, m_iLineSpacing);
