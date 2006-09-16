@@ -36,6 +36,7 @@
 #define DEFAULT_WALK_NAME "walk_upper_"
 #define DEFAULT_RUN_NAME "run_upper_"
 #define DEFAULT_SLIDE_NAME "slide_upper_"
+#define DEFAULT_JUMP_NAME "jump_upper_"
 
 #define DEFAULT_FIRE_IDLE_NAME "idle_shoot_"
 #define DEFAULT_FIRE_CROUCH_NAME "crouch_idle_shoot_"
@@ -273,6 +274,12 @@ int CFFPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequen
 
 	if ( bForceIdle )
 	{
+		// New jump animations
+		if (m_bJumping)
+		{
+			return CalcSequenceIndex("%s%s", DEFAULT_JUMP_NAME, pSuffix);
+		}
+
 		switch ( GetCurrentMainSequenceActivity() )
 		{
 			case ACT_CROUCHIDLE:
