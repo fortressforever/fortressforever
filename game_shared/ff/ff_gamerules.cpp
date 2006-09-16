@@ -16,7 +16,7 @@
 	#include "c_ff_team.h"
 
 #else
-	
+	#include "playerinfomanager.h"
 	#include "voice_gamemgr.h"
 	#include "ff_team.h"
 	#include "ff_player.h"
@@ -27,6 +27,7 @@
 	#include "ff_entity_system.h"
 	#include "ff_luacontext.h"
 	#include "ff_scheduleman.h"
+	#include "ff_betalist.h"
 
 #endif
 
@@ -265,6 +266,11 @@ ConVar mp_prematch( "mp_prematch",
 		m_flGameStarted = -1.0f;
 		m_flRoundStarted = gpGlobals->curtime;
 		BaseClass::Precache();
+
+#ifdef FF_BETA
+		// Special stuff for beta!
+		g_FFBetaList.Init();
+#endif
 	}
 	// <-- Mirv: Extra gamerules stuff
 
@@ -276,6 +282,35 @@ ConVar mp_prematch( "mp_prematch",
 		// Note, don't delete each team since they are in the gEntList and will 
 		// automatically be deleted from there, instead.
 		g_Teams.Purge();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Player has just joined the game!
+	// Purpose: called when a player tries to connect to the server
+	// Input  : *pEdict - the new player
+	//			char *pszName - the players name
+	//			char *pszAddress - the IP address of the player
+	//			reject - output - fill in with the reason why
+	//			maxrejectlen -- sizeof output buffer
+	//			the player was not allowed to connect.
+	// Output : Returns TRUE if player is allowed to join, FALSE if connection is denied.
+	//-----------------------------------------------------------------------------
+	bool CFFGameRules::ClientConnected( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
+	{
+#ifdef FF_BETA
+		// Special stuff for beta!
+		if( !g_FFBetaList.IsValidName( pszName ) )
+		{
+			// Note: An extra period will be added onto this string so don't add
+			// one to make it proper or it will look stupid with "sentence.."!
+			Q_snprintf( reject, maxrejectlen, "You are not welcome in the\nFortress Forever beta test" );
+
+			// Sorry, buddy.
+			return false;
+		}		
+#endif
+
+		return BaseClass::ClientConnected( pEdict, pszName, pszAddress, reject, maxrejectlen );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -306,6 +341,17 @@ ConVar mp_prematch( "mp_prematch",
 		// Chain on down, I'm in the chain gang, mang. What? I
 		// typed way too much in this function. Just stop.
 		BaseClass::ClientDisconnected( pClient );
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	void CFFGameRules::LevelShutdown( void )
+	{
+#ifdef FF_BETA
+		// Special stuff for beta!
+		g_FFBetaList.Shutdown();
+#endif
 	}
 
 	//-----------------------------------------------------------------------------
@@ -989,6 +1035,11 @@ ConVar mp_prematch( "mp_prematch",
 	// --> Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
 	void CFFGameRules::Think()
 	{
+#ifdef FF_BETA
+		// Special stuff for beta!
+		g_FFBetaList.Validate();
+#endif
+
 		// Lots of these depend on the game being started
 		if( !HasGameStarted() )
 		{

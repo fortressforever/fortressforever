@@ -3336,6 +3336,12 @@
 			Name="FF"
 			Filter="">
 			<File
+				RelativePath=".\ff\ff_betalist.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_betalist.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_bot_temp.cpp">
 			</File>
 			<File
@@ -3671,6 +3677,12 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_shareddefs.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_string.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_string.h">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_timers_shared.cpp">
