@@ -5,8 +5,7 @@
 // @author Patrick O'Leary (Mulchman) 
 // @date 9/16/2006
 // @brief Simple string class to wrap char*'s. Don't
-//			care too much about speed, either, or
-//			making the size adjustable!
+//			care too much about speed, either!
 //
 // REVISIONS
 // ---------
@@ -22,7 +21,7 @@ public:
 	CFFString( void );
 	CFFString( const char *pszString );
 	CFFString( const CFFString& hRHS );
-	~CFFString( void );
+	virtual ~CFFString( void );
 
 	CFFString &operator=( const CFFString& hRHS );
 	CFFString &operator=( const char *pszString );
@@ -51,8 +50,7 @@ public:
 	const char *c_str( void ) const { return m_pszString; }
 
 private:
-	//char	*m_pszString;
-	char	m_pszString[ 128 ];
+	char	*m_pszString;
 	int		m_iSize;
 
 private:

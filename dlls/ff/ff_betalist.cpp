@@ -221,13 +221,11 @@ void CFFBetaList::Init( void )
 				{
 					if( !Q_stricmp( pItems->GetName(), "Name" ) )
 					{
-						CFFBetaList_String szString = pItems->GetString();
-						m_hValidNames.AddToTail( szString );
+						m_hValidNames.Insert( pItems->GetString() );
 					}
 					else if( !Q_stricmp( pItems->GetName(), "SteamID" ) )
 					{
-						CFFBetaList_String szString = pItems->GetString();
-						m_hValidSteamIDs.AddToTail( szString );
+						m_hValidSteamIDs.Insert( pItems->GetString() );
 					}
 				}
 			}

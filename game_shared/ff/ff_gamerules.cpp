@@ -16,7 +16,6 @@
 	#include "c_ff_team.h"
 
 #else
-	#include "playerinfomanager.h"
 	#include "voice_gamemgr.h"
 	#include "ff_team.h"
 	#include "ff_player.h"

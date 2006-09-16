@@ -31,7 +31,7 @@
 
 #ifdef FF_BETA
 
-#include "utlvector.h"
+#include "UtlSortVector.h"
 #include "ff_string.h"
 
 // Forward declaration
@@ -48,7 +48,7 @@ class CFFBetaList_Player
 {
 public:
 	CFFBetaList_Player( void );
-	~CFFBetaList_Player( void );
+	virtual ~CFFBetaList_Player( void );
 
 public:
 	bool	IsValidated( void ) const	{ return m_bValidated; }
@@ -72,7 +72,7 @@ class CFFBetaList
 {
 public:
 	CFFBetaList( void );
-	~CFFBetaList( void );
+	virtual ~CFFBetaList( void );
 
 public:
 	class CFFBetaListLess
@@ -81,14 +81,6 @@ public:
 		bool Less( const CFFBetaList_String& src1, const CFFBetaList_String& src2, void *pCtx )
 		{
 			return src1 < src2;
-			/*if( src1 >= src2 )
-				return false;
-			else
-				return true;*/
-			/*if( Q_strcmp( src1, src2 ) >= 0 )
-				return false;
-			else
-				return true;*/
 		}
 	};
 
@@ -113,10 +105,10 @@ private:
 	void Clear( void );
 
 private:
-	//CUtlSortVector< CFFBetaList_String, CFFBetaListLess > m_hValidNames;
-	CUtlVector< CFFBetaList_String > m_hValidNames;
-	//CUtlSortVector< CFFBetaList_String, CFFBetaListLess > m_hValidSteamIDs;
-	CUtlVector< CFFBetaList_String > m_hValidSteamIDs;
+	CUtlSortVector< CFFBetaList_String, CFFBetaListLess > m_hValidNames;
+	//CUtlVector< CFFBetaList_String > m_hValidNames;
+	CUtlSortVector< CFFBetaList_String, CFFBetaListLess > m_hValidSteamIDs;
+	//CUtlVector< CFFBetaList_String > m_hValidSteamIDs;
 
 	float	m_flLastValidate;
 

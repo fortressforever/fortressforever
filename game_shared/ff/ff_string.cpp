@@ -4,16 +4,13 @@
 // @file ff_string.cpp
 // @author Patrick O'Leary (Mulchman) 
 // @date 9/16/2006
-// @brief Simple string class
+// @brief Simple string class to wrap char*'s. Don't
+//			care too much about speed, either!
 //
 // REVISIONS
 // ---------
 //	9/16/2006, Mulchman: 
 //		First created
-
-// NOTE: keeps crashing the game when i make the size adjustable
-// so for now it's fixed as people on irc want to play and tables
-// aren't matching.
 
 #include "cbase.h"
 #include "ff_string.h"
@@ -26,8 +23,7 @@
 //-----------------------------------------------------------------------------
 CFFString::CFFString( void )
 {
-	//m_pszString = NULL;
-	m_pszString[ 0 ] = '\0';
+	m_pszString = NULL;
 	m_iSize = 0;
 }
 
@@ -36,6 +32,9 @@ CFFString::CFFString( void )
 //-----------------------------------------------------------------------------
 CFFString::CFFString( const char *pszString )
 {
+	m_pszString = NULL;
+	m_iSize = 0;
+
 	*this = pszString;
 }
 
@@ -44,6 +43,9 @@ CFFString::CFFString( const char *pszString )
 //-----------------------------------------------------------------------------
 CFFString::CFFString( const CFFString& hRHS )
 {
+	m_pszString = NULL;
+	m_iSize = 0;
+
 	*this = hRHS;
 }
 
@@ -60,15 +62,10 @@ CFFString::~CFFString( void )
 //-----------------------------------------------------------------------------
 CFFString &CFFString::operator=( const CFFString& hRHS )
 {
-	Q_snprintf( m_pszString, sizeof( m_pszString ), "%s", hRHS.m_pszString );
-	/*
 	// Deallocate
 	Cleanup();
 
 	m_iSize = hRHS.m_iSize;
-
-	if( m_iSize == 0 )
-		return *this;
 
 	// Reallocate
 	m_pszString = new char[ m_iSize + 1 ];
@@ -81,8 +78,7 @@ CFFString &CFFString::operator=( const CFFString& hRHS )
 
 	// NULL terminate
 	m_pszString[ m_iSize ] = '\0';
-	*/
-
+	
 	return *this;
 }
 
@@ -91,15 +87,10 @@ CFFString &CFFString::operator=( const CFFString& hRHS )
 //-----------------------------------------------------------------------------
 CFFString &CFFString::operator=( const char *pszString )
 {
-	Q_snprintf( m_pszString, sizeof( m_pszString ), "%s", pszString );
-	/*
 	// Deallocate
 	Cleanup();
 
 	m_iSize = Q_strlen( pszString );
-
-	if( m_iSize == 0 )
-		return *this;
 
 	// Reallocate
 	m_pszString = new char[ m_iSize + 1 ];
@@ -112,8 +103,7 @@ CFFString &CFFString::operator=( const char *pszString )
 
 	// NULL terminate
 	m_pszString[ m_iSize ] = '\0';
-	*/
-
+	
 	return *this;
 }
 
@@ -218,13 +208,11 @@ bool CFFString::operator>=( const char *pszString ) const
 //-----------------------------------------------------------------------------
 void CFFString::Cleanup( void )
 {
-	/*
 	if( m_pszString )
 	{
 		delete [] m_pszString;
 		m_pszString = NULL;		
-	}*/
-	m_pszString[ 0 ] = '\0';
+	}
 
 	m_iSize = 0;
 }
