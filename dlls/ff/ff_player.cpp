@@ -2823,22 +2823,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 			return;
 		}
 
-		float flRaiseVal = 0.0f, flBuildDist = 0.0f;
-
-		// Set us up the bomb
-		switch( m_iWantBuild )
-		{
-			case FF_BUILD_DISPENSER: flRaiseVal = FF_BUILD_DISP_RAISE_VAL; flBuildDist = FF_BUILD_DISP_BUILD_DIST; break;
-			case FF_BUILD_SENTRYGUN: flRaiseVal = FF_BUILD_SG_RAISE_VAL; flBuildDist = FF_BUILD_SG_BUILD_DIST; break;
-			case FF_BUILD_DETPACK: flRaiseVal = FF_BUILD_DET_RAISE_VAL; flBuildDist = FF_BUILD_DET_BUILD_DIST; break;
-		}
-		
-		// Drop the detpack down a little if we're ducking so it's not hovering above us
-		if( ( GetFlags() & FL_DUCKING ) && ( m_iWantBuild == FF_BUILD_DETPACK ) )
-			flRaiseVal /= 2.0f;
-
 		// Our neat buildable info container
-		CFFBuildableInfo hBuildInfo( this, m_iWantBuild, flBuildDist, flRaiseVal );
+		CFFBuildableInfo hBuildInfo( this, m_iWantBuild );
 
 		// Will we be able to build here?
 		if( hBuildInfo.BuildResult() == BUILD_ALLOWED )
@@ -2853,14 +2839,14 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DISPENSER:
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
-					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 					
 					// Set custom text
 					pDispenser->SetText( m_szCustomDispenserText );					
 
 					// Mirv: Store future ground location + orientation
-					pDispenser->SetGroundOrigin( hBuildInfo.GetBuildGroundOrigin() );
-					pDispenser->SetGroundAngles( hBuildInfo.GetBuildGroundAngles() );
+					pDispenser->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
+					pDispenser->SetGroundAngles( hBuildInfo.GetBuildAngles() );
 
 					// Set network var
 					m_hDispenser = pDispenser;
@@ -2878,11 +2864,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_SENTRYGUN:
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
-					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 				
 					// Mirv: Store future ground location + orientation
-					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildGroundOrigin() );
-					pSentryGun->SetGroundAngles( hBuildInfo.GetBuildGroundAngles() );
+					pSentryGun->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
+					pSentryGun->SetGroundAngles( hBuildInfo.GetBuildAngles() );
 
 					// Set network var
 					m_hSentryGun = pSentryGun;
@@ -2900,14 +2886,14 @@ void CFFPlayer::PreBuildGenericThink( void )
 				case FF_BUILD_DETPACK:
 				{
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
-					CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles(), this );
+					CFFDetpack *pDetpack = CFFDetpack::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 
 					// Set the fuse time
 					pDetpack->m_iFuseTime = m_iDetpackTime;
 
 					// Mirv: Store future ground location + orientation
-					pDetpack->SetGroundOrigin( hBuildInfo.GetBuildGroundOrigin() );
-					pDetpack->SetGroundAngles( hBuildInfo.GetBuildGroundAngles() );
+					pDetpack->SetGroundOrigin( hBuildInfo.GetBuildOrigin() );
+					pDetpack->SetGroundAngles( hBuildInfo.GetBuildAngles() );
 
 					// Set network var
 					m_hDetpack = pDetpack;

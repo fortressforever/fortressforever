@@ -162,20 +162,19 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 		// If we haven't built a sentrygun...
 		else if (!pPlayer->m_hSentryGun.Get()) 
 		{
-			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_SENTRYGUN, FF_BUILD_SG_BUILD_DIST, FF_BUILD_SG_RAISE_VAL);
+			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SENTRYGUN );
 
 			if( m_pBuildable )
 			{
-				// Update current fake dispenser
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
-
+				// Update current fake sentrygun
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
-				// Create fake dispenser
-				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				// Create fake sentrygun
+				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
 		// If we have built a sentrygun...

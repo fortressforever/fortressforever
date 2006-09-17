@@ -144,24 +144,19 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 		// If we haven't built a detpack...
 		if( !pPlayer->m_hDetpack.Get() )
 		{
-			float flRaiseVal = FF_BUILD_DET_RAISE_VAL;
-			if( pPlayer->GetFlags() & FL_DUCKING )
-				flRaiseVal /= 2;
-
-			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK, FF_BUILD_DET_BUILD_DIST, flRaiseVal);
+			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK );
 
 			if( m_pBuildable )
 			{
-				// Update current fake dispenser
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
-
+				// Update current fake detpack
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
-				// Create fake dispenser
-				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				// Create fake detpack
+				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
 		// Destroy if we already have one

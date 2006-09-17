@@ -81,17 +81,15 @@
 #define FF_BUILD_SENTRYGUN	2
 #define FF_BUILD_DETPACK	3
 
+// The *_BUILD_DIST means how far in front of the player
+// the object is built
 #define FF_BUILD_DISP_BUILD_DIST	36.0f
-#define FF_BUILD_DISP_RAISE_VAL		16.0f
 #define FF_BUILD_SG_BUILD_DIST		64.0f //54.0f
-#define FF_BUILD_SG_RAISE_VAL		16.0f
 #define FF_BUILD_DET_BUILD_DIST		42.0f
 #define FF_BUILD_DET_RAISE_VAL		48.0f
+#define FF_BUILD_DET_DUCKED_RAISE_VAL	24.0f
 
 #define FF_BUILD_DISP_STRING_LEN	256
-
-// 30 Degrees
-#define FF_BUILD_EPSILON			0.13f
 
 // Using this value based off of the mins/maxs
 #define FF_BUILD_DISP_HALF_WIDTH	12.0f
@@ -107,10 +105,6 @@
 
 #define FF_SOUND_BUILD		0	// Don't change these two values
 #define FF_SOUND_EXPLODE	1
-
-// Radius of the aimsphere model
-//#define FF_SENTRYGUN_AIMSPHERE_RADIUS	128.0f
-//#define FF_SENTRYGUN_AIMSPHERE_VISIBLE	(FF_SENTRYGUN_AIMSPHERE_RADIUS + 64.0f)
 
 // Currently only the server uses these...
 #ifdef CLIENT_DLL 
@@ -138,11 +132,12 @@ enum BuildInfoResult_t
 {
 	BUILD_ALLOWED = 0,
 
-	BUILD_NOROOM,
-	BUILD_NOPLAYER,
-	BUILD_TOOSTEEP,
-	BUILD_TOOFAR,
-	BUILD_INVALIDGROUND,
+	BUILD_NOROOM,			// No room, geometry/player/something in the way
+	BUILD_NOPLAYER,			// Player pointer went invalid (?)
+	BUILD_TOOSTEEP,			// Ground is too steep
+	BUILD_TOOFAR,			// Ground is too far away
+	BUILD_PLAYEROFFGROUND,	// player is not on the ground!
+	BUILD_MOVEABLE,			// can't built on movable stuff
 
 	BUILD_ERROR
 };
@@ -153,43 +148,37 @@ private:
 	CFFBuildableInfo( void ) {}
 
 public:
-	CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject, float flBuildDist, float m_flRaiseVal );
+	CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject );
 	~CFFBuildableInfo( void ) {}
 
-	// Returns true if the area in front of the player is
-	// able to be built on (for the particular object trying
-	// to be built)
+	// Returns why you can/can't build
 	BuildInfoResult_t BuildResult( void ) const { return m_BuildResult; }
 
-	Vector	GetBuildAirOrigin( void ) const { return m_vecBuildAirOrigin; }
-	QAngle	GetBuildAirAngles( void ) const { return m_angBuildAirAngles; }
+	// Get final build position
+	Vector	GetBuildOrigin( void ) const { return m_vecBuildGroundOrigin; }
+	// Get final build angles
+	QAngle	GetBuildAngles( void ) const { return m_angBuildGroundAngles; }
 
-	Vector	GetBuildGroundOrigin( void ) const { return m_vecBuildGroundOrigin; }
-	QAngle	GetBuildGroundAngles( void ) const { return m_angBuildGroundAngles; }
-
-	//int OrientBuildableToGround( CBaseEntity *pEntity, int iBuildObject );
-
-	// Tells the player why they couldn't build
+	// Tells the player why they couldn't build - sets an error message
+	// and displays it
 	void	GetBuildError( void );
 
 protected:
-	// If the area in front of the player is able to be built on
-	//bool	m_bBuildAreaClear;
 	// Type of object we're trying to build
 	int		m_iBuildObject;
 
+	// How far out in front of the player are we building
 	float	m_flBuildDist;
-	float	m_flRaiseVal;
-	float	m_flTestDist;
 
 	// Player's info
 	CFFPlayer *m_pPlayer;
+	// Just some quick accessors instead of having to calculate
+	// these over and over...
 	Vector	m_vecPlayerForward;
 	Vector	m_vecPlayerRight;
-	Vector	m_vecPlayerOrigin;
+	Vector	m_vecPlayerOrigin;	// this is CFFPlayer::GetAbsOrigin() (so the waist!)
 
-	// Since we spawn the object in the air when building
-	// then drop it we need to have these
+	// This is our origin/angles we mess with while building/trying to build
 	Vector	m_vecBuildAirOrigin;
 	QAngle	m_angBuildAirAngles;
 
@@ -197,15 +186,15 @@ protected:
 	Vector	m_vecBuildGroundOrigin;
 	QAngle	m_angBuildGroundAngles;
 
-	// For the error parsing
-	//int		m_iBuildError;
-
+	// Stores the build result
 	BuildInfoResult_t	m_BuildResult;
 
 protected:
-	bool				IsGeometryInTheWay();
-	//bool				IsGroundTooSteep();
-	BuildInfoResult_t	CanOrientToGround();
+	// Checks if geometry or other objects are in the way of building
+	bool				IsGeometryInTheWay( void );
+	//bool				IsGroundTooSteep( void );
+	// See's if the ground is suitable for building
+	BuildInfoResult_t	CanOrientToGround( void );
 
 };
 
