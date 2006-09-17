@@ -325,28 +325,17 @@ private:
 	C_FFPlayer( const C_FFPlayer & );
 };
 
-
-inline C_FFPlayer* ToFFPlayer( CBaseEntity *pPlayer )
+// Just straight up copying the server version. Tired
+// of this nonsense.
+inline C_FFPlayer *ToFFPlayer( CBaseEntity *pEntity )
 {
-	// 7/3/2006 - Mulchman:
-	// Commented out because people are tired of getting this assert!
-	// Assert( dynamic_cast< C_FFPlayer* >( pPlayer ) != NULL );
-	if( dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL )
-	{
-		Warning( "[C_FFPlayer :: ToFFPlayer] dynamic_cast< C_FFPlayer * >( pPlayer ) == NULL\n" );
+	if( !pEntity || !pEntity->IsPlayer() )
+		return NULL;
 
-		// Try to figure out what's doing a ToFFPlayer() on a non player
-		// FIX: Check that pPlayer is actually okay first!!!!
-		
-		// Hm, who would send NULL in here? I figured it was something that wasn't
-		// a player coming in hence printing the classname and class_t shite - my bad! :)
-		if (pPlayer)
-		{
-			Warning( "\t pPlayer class: %s, class_t: %i\n", pPlayer->GetClassname(), pPlayer->Classify() );
-		}
-	}
-
-	return static_cast< C_FFPlayer* >( pPlayer );
+#ifdef _DEBUG
+	Assert( dynamic_cast< C_FFPlayer * >( pEntity ) != 0 );
+#endif
+	return static_cast< C_FFPlayer * >( pEntity );
 }
 
 #endif // C_FF_PLAYER_H
