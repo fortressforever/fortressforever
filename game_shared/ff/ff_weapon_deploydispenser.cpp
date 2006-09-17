@@ -166,20 +166,19 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 		// If we haven't built a dispenser...
 		else if (!pPlayer->m_hDispenser.Get() && pPlayer->GetAmmoCount(AMMO_CELLS) >= 100) 
 		{
-			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DISPENSER, FF_BUILD_DISP_BUILD_DIST, FF_BUILD_DISP_RAISE_VAL);
+			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
 
 			if( m_pBuildable )
 			{
 				// Update current fake dispenser
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildGroundOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildGroundAngles() );
-
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 			}
 			else
 			{
 				// Create fake dispenser
-				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildGroundOrigin(), hBuildInfo.GetBuildGroundAngles() );
+				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
 		// Destroy if we already have one

@@ -62,7 +62,8 @@
 #define FF_BUILD_ERROR_NOROOM	"sprites/ff_build_noroom"
 #define FF_BUILD_ERROR_TOOSTEEP	"sprites/ff_build_toosteep"
 #define FF_BUILD_ERROR_TOOFAR	"sprites/ff_build_toofar"
-#define FF_BUILD_ERROR_INVALIDGROUND	"sprites/ff_build_invalidground"
+#define FF_BUILD_ERROR_OFFGROUND	"sprites/ff_build_offground"
+#define FF_BUILD_ERROR_MOVEABLE		"sprites/ff_build_moveable"
 
 // Define all the sprites to precache
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorNoRoom )
@@ -77,8 +78,12 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorTooFar )
 CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_TOOFAR )
 CLIENTEFFECT_REGISTER_END()
 
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorInvalidGround )
-CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_INVALIDGROUND )
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorOffGround )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_TOOFAR )
+CLIENTEFFECT_REGISTER_END()
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorMoveable )
+CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_MOVEABLE )
 CLIENTEFFECT_REGISTER_END()
 
 //=============================================================================
@@ -168,7 +173,7 @@ void C_FFBuildableObject::ClientThink( void )
 		Vector vecOrigin = GetAbsOrigin();
 
 		// Compute a new origin in front of the player
-		Vector vecNewOrigin = pPlayer->GetFeetOrigin() + ( vecForward * flBuildDist );
+		Vector vecNewOrigin = pPlayer->GetAbsOrigin() + ( vecForward * flBuildDist );
 		vecNewOrigin.z = vecOrigin.z;
 
 		SetAbsOrigin( vecNewOrigin );
@@ -185,7 +190,7 @@ int C_FFBuildableObject::DrawModel( int flags )
 		// Draw our glyphs
 
 		// See if there's even an error
-		if( m_hBuildError > BUILD_ALLOWED )
+		if( m_hBuildError != BUILD_ALLOWED )
 		{
 			float flOffset = 0.0f;
 
@@ -206,7 +211,8 @@ int C_FFBuildableObject::DrawModel( int flags )
 				case BUILD_NOROOM: pszMaterial = FF_BUILD_ERROR_NOROOM; break;
 				case BUILD_TOOSTEEP: pszMaterial = FF_BUILD_ERROR_TOOSTEEP; break;
 				case BUILD_TOOFAR: pszMaterial = FF_BUILD_ERROR_TOOFAR; break;
-				case BUILD_INVALIDGROUND: pszMaterial = FF_BUILD_ERROR_INVALIDGROUND; break;
+				case BUILD_PLAYEROFFGROUND: pszMaterial = FF_BUILD_ERROR_OFFGROUND; break;
+				case BUILD_MOVEABLE: pszMaterial = FF_BUILD_ERROR_MOVEABLE; break;
 			}
 
 			// If a valid material...
