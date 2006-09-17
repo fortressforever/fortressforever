@@ -37,6 +37,7 @@ CFFBetaList g_FFBetaList;
 static ConVar ffbetalist_maxattempts( "ffbetalist_maxattempts", "5", FCVAR_ARCHIVE, "Maximum number of times we'll try to get a players Steam ID before kicking." );
 static ConVar ffbetalist_validatetime( "ffbetalist_validatetime", "5", FCVAR_ARCHIVE, "Number of seconds between trying to validate un-validated players." );
 static ConVar ffbetalist_allowlanids( "ffbetalist_allowlanids", "1", FCVAR_ARCHIVE, "Whether or not to allow STEAM_ID_LAN Steam IDs." );
+static ConVar ffbetalist_verbose( "ffbetalist_verbose", "0", FCVAR_ARCHIVE, "To spam the console or to not? That is the question." );
 
 //=============================================================================
 //
@@ -132,20 +133,23 @@ void CFFBetaList::Validate( void )
 	// Is it time to validate yet?
 	if( ( m_flLastValidate + ffbetalist_validatetime.GetFloat() ) < gpGlobals->curtime )
 	{
-		Warning( "[FF Beta List] Time to validate players (time: %f)!\n", gpGlobals->curtime );
+		if( ffbetalist_verbose.GetBool() )
+			Warning( "[FF Beta List] Time to validate players (time: %f)!\n", gpGlobals->curtime );
 
 		for( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 			if( pPlayer )
 			{
-				DevMsg( "[FF Beta List] Player: %s", pPlayer->GetPlayerName() );
+				if( ffbetalist_verbose.GetBool() )
+					DevMsg( "[FF Beta List] Player: %s", pPlayer->GetPlayerName() );
 
 				// Get the player's ff beta list info
 				CFFBetaList_Player *pFFBetaListInfo = pPlayer->GetFFBetaListInfo();
 				if( !pFFBetaListInfo )
 				{
-					DevMsg( " failed to get FFBetaListInfo!\n" );
+					if( ffbetalist_verbose.GetBool() )
+						DevMsg( " failed to get FFBetaListInfo!\n" );
 					Assert( 0 );
 					continue;
 				}
@@ -162,7 +166,8 @@ void CFFBetaList::Validate( void )
 						// Player is validated
 						pFFBetaListInfo->m_bValidated = true;
 
-						DevMsg( " is validated - SteamID: %s\n", pszSteamID );
+						if( ffbetalist_verbose.GetBool() )
+							DevMsg( " is validated - SteamID: %s\n", pszSteamID );
 					}
 					else
 					{
@@ -172,20 +177,23 @@ void CFFBetaList::Validate( void )
 						// Check attempts and see if we'll try
 						// later or should just kick him now!
 
-						DevMsg( " is not validated yet - SteamID: %s -", pszSteamID );
+						if( ffbetalist_verbose.GetBool() )
+							DevMsg( " is not validated yet - SteamID: %s -", pszSteamID );
 
 						if( pFFBetaListInfo->GetAttempts() < ffbetalist_maxattempts.GetInt() )
 						{
 							// We'll try again later
 							pFFBetaListInfo->m_iAttempts++;
 
-							DevMsg( " will try again later.\n" );
+							if( ffbetalist_verbose.GetBool() )
+								DevMsg( " will try again later.\n" );
 						}
 						else
 						{
 							// Kick the guy!
 
-							DevMsg( " over max attempts so kicking!\n" );
+							if( ffbetalist_verbose.GetBool() )
+								DevMsg( " over max attempts so kicking!\n" );
 
 							// TODO: kick!
 						}
@@ -193,14 +201,16 @@ void CFFBetaList::Validate( void )
 				}
 				else
 				{
-					DevMsg( " is already validated - SteamID: %s\n", pPlayer->GetSteamID() );
+					if( ffbetalist_verbose.GetBool() )
+						DevMsg( " is already validated - SteamID: %s\n", pPlayer->GetSteamID() );
 				}
 			}			
 		}
 
 		m_flLastValidate = gpGlobals->curtime;
 
-		Warning( "[FF Beta List] Validation complete (next run @ time %f).\n", m_flLastValidate + ffbetalist_validatetime.GetFloat() );
+		if( ffbetalist_verbose.GetBool() )
+			Warning( "[FF Beta List] Validation complete (next run @ time %f).\n", m_flLastValidate + ffbetalist_validatetime.GetFloat() );
 	}
 }
 
