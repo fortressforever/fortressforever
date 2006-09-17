@@ -204,6 +204,26 @@ bool CFFString::operator>=( const char *pszString ) const
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: operator []
+//-----------------------------------------------------------------------------
+char CFFString::operator[]( int iElement ) const
+{
+	Assert( ( iElement >= 0 ) && ( iElement <= ( m_iSize - 1 ) ) );
+
+	return m_pszString[ iElement ];
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: operator []
+//-----------------------------------------------------------------------------
+char &CFFString::operator[]( int iElement )
+{
+	Assert( ( iElement >= 0 ) && ( iElement <= ( m_iSize - 1 ) ) );
+
+	return m_pszString[ iElement ];
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Deallocate memory and reset
 //-----------------------------------------------------------------------------
 void CFFString::Cleanup( void )
