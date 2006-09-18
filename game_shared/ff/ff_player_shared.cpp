@@ -267,6 +267,12 @@ void CFFPlayer::FireBullet(
 		// for radio tagging and to make ammo type work in the DamageFunctions
 		info.SetAmmoType(iBulletType);
 
+#ifdef GAME_DLL
+		// Hack for sniper rifle to become radio tag rifle
+		if( flSniperRifleCharge )
+			info.SetAmmoType( m_iRadioTaggedAmmoIndex );
+#endif
+
 		CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
 		info.ScaleDamageForce(fScale * fScale * fScale);
 
