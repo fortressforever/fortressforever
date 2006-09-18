@@ -50,7 +50,7 @@ public:
 	int GetLength( void ) const	{ return m_iSize; }
 
 	const char *GetString( void ) const	{ return c_str(); }
-	const char *c_str( void ) const { return m_pszString; }
+	const char *c_str( void ) const { return m_pszString ? m_pszString : ""; }
 
 private:
 	char	*m_pszString;

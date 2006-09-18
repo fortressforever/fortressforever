@@ -13,8 +13,13 @@
 #ifndef FF_STATSLOG_H
 #define FF_STATSLOG_H
 
+#ifdef _WIN32
+#pragma once
+#endif
+
 #include "ff_statdefs.h"
 #include "ff_weapon_base.h"
+#include "ff_string.h"
 
 // Forward declarations
 class CFFPlayer;
@@ -25,6 +30,72 @@ enum stattype_t
 	STAT_ADD,
 	STAT_MIN,
 	STAT_MAX
+};
+
+class CFFStatDef 
+{
+public:
+	// Default constructor
+	CFFStatDef( void )
+	{
+		m_iType = STAT_INVALID;
+	}
+
+	// Overloaded constructor
+	CFFStatDef( const char *pszName, stattype_t iType )
+	{
+		m_sName = pszName;
+		m_iType = iType;
+	}
+
+public:
+	CFFString m_sName;
+	stattype_t m_iType;
+};
+
+class CFFActionDef 
+{
+public:
+	// Overloaded constructor
+	CFFActionDef( const char *pszName )
+	{
+		m_sName = pszName;
+	}
+
+public:
+	CFFString m_sName;
+};
+
+class CFFAction 
+{
+public:
+	// Default constructor
+	CFFAction( void )
+	{
+		actionid = -1;
+		targetid = -1;
+		time = -1;
+		coords.Init();
+	}
+
+	// Overloaded constructor
+	CFFAction( int iActionId, int iTargetId, int iTime, const char *pszParam, const Vector& vecCoords, const char *pszLocation )
+	{
+		actionid = iActionId;
+		targetid = iTargetId;
+		time = iTime;
+		param = pszParam;
+		coords = vecCoords;
+		location = pszLocation;
+	}
+
+public:
+	int actionid;
+	int targetid;
+	int time;
+	CFFString param;
+	Vector coords;
+	CFFString location;
 };
 
 // STL stuff has been moved out of here because Valve and STL don't really mix very well!

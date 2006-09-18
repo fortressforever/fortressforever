@@ -21,10 +21,11 @@
 #include "ff_socks.h"
 #include "ff_weapon_base.h"
 #include "ff_player.h"
+#include "ff_string.h"
 
-#include <list>
-#include <algorithm>
-#include <string>
+//#include <list>
+//#include <algorithm>
+//#include <string>
 #include <vector>
 
 #undef MINMAX_H
@@ -32,178 +33,12 @@
 
 #include "tier0/memdbgon.h"
 
-class CFFStatDef 
-{
-public:
-	// Default constructor
-	CFFStatDef( void )
-	{
-		m_sName = NULL;
-		m_iType = STAT_INVALID;
-	}
-
-	// Overloaded constructor
-	CFFStatDef( const char *pszName, stattype_t iType )
-	{
-		int iLen = Q_strlen( pszName );
-		m_sName = new char[ iLen + 1 ];
-
-		Assert( m_sName );
-
-		for( int i = 0; i < iLen; i++ )
-			m_sName[ i ] = pszName[ i ];
-
-		m_sName[ iLen ] = '\0';
-		m_iType = iType;
-	}
-
-	// Deconstructor
-	~CFFStatDef( void )
-	{
-		Cleanup();
-	}
-
-	// Deallocate
-	void Cleanup( void )
-	{
-		if( m_sName )
-		{
-			delete [] m_sName;
-			m_sName = NULL;
-		}
-	}
-
-public:
-	char *m_sName;
-	stattype_t m_iType;
-};
-
-class CFFActionDef 
-{
-public:
-	// Default constructor
-	CFFActionDef( void )
-	{
-		m_sName = NULL;
-	}
-
-	// Overloaded constructor
-	CFFActionDef( const char *pszName )
-	{
-		int iLen = Q_strlen( pszName );
-		m_sName = new char[ iLen + 1 ];
-
-		Assert( m_sName );
-
-		for( int i = 0; i < iLen; i++ )
-			m_sName[ i ] = pszName[ i ];
-
-		m_sName[ iLen ] = '\0';
-	}
-
-	// Deconstructor
-	~CFFActionDef( void )
-	{
-		Cleanup();		
-	}
-
-	// Deallocate
-	void Cleanup( void )
-	{
-		if( m_sName )
-		{
-			delete [] m_sName;
-			m_sName = NULL;
-		}
-	}
-
-public:
-	char *m_sName;
-};
-
-class CFFAction 
-{
-public:
-	// Default constructor
-	CFFAction( void )
-	{
-		actionid = -1;
-		targetid = -1;
-		time = -1;
-		param = NULL;
-		coords.Init();
-		location = NULL;
-	}
-
-	// Overloaded constructor
-	CFFAction( int iActionId, int iTargetId, int iTime, const char *pszParam, const Vector& vecCoords, const char *pszLocation )
-	{
-		actionid = iActionId;
-		targetid = iTargetId;
-		time = iTime;
-
-		int iLen = Q_strlen( pszParam );
-		param = new char[ iLen + 1 ];
-
-		Assert( param );
-
-		for( int i = 0; i < iLen; i++ )
-			param[ i ] = pszParam[ i ];
-
-		param[ iLen ] = '\0';
-
-		coords = vecCoords;
-
-		iLen = Q_strlen( pszLocation );
-		location = new char[ iLen + 1 ];
-
-		Assert( location );
-
-		for( int i = 0; i < iLen; i++ )
-			location[ i ] = pszLocation[ i ];
-
-		location[ iLen ] = '\0';
-	}
-
-	// Deconstructor
-	~CFFAction( void )
-	{
-		Cleanup();
-	}
-
-	// Deallocate
-	void Cleanup( void )
-	{
-		if( param )
-		{
-			delete [] param;
-			param = NULL;
-		}
-
-		if( location )
-		{
-			delete [] location;
-			location = NULL;
-		}
-	}
-
-public:
-	int actionid;
-	int targetid;
-	int time;
-	char *param;
-	Vector coords;
-	char *location;
-};
-
 class CFFPlayerStats 
 {
 public:
 	// Default constructor
 	CFFPlayerStats( void )
 	{
-		m_sName = NULL;
-		m_sSteamID = NULL;
 		m_iClass = CLASS_NONE;
 		m_iTeam = TEAM_UNASSIGNED;
 		m_iUniqueID = -1;
@@ -212,26 +47,8 @@ public:
 	// Overloaded constructor
 	CFFPlayerStats( const char *pszName, const char *pszSteamID, int iClass, int iTeam, int iUniqueID )
 	{
-		int iLen = Q_strlen( pszName );
-		m_sName = new char[ iLen + 1 ];
-
-		Assert( m_sName );
-
-		for( int i = 0; i < iLen; i++ )
-			m_sName[ i ] = pszName[ i ];
-
-		m_sName[ iLen ] = '\0';
-
-		iLen = Q_strlen( pszSteamID );
-		m_sSteamID = new char[ iLen + 1 ];
-
-		Assert( m_sSteamID );
-
-		for( int i = 0; i < iLen; i++ )
-			m_sSteamID[ i ] = pszSteamID[ i ];
-
-		m_sSteamID[ iLen ] = '\0';
-
+		m_sName = pszName;
+		m_sSteamID = pszSteamID;
 		m_iClass = iClass;
 		m_iTeam = iTeam;
 		m_iUniqueID = iUniqueID;
@@ -246,30 +63,14 @@ public:
 	// Deallocate
 	void Cleanup( void )
 	{
-		if( m_sName )
-		{
-			delete [] m_sName;
-			m_sName = NULL;
-		}
-
-		if( m_sSteamID )
-		{
-			delete [] m_sSteamID;
-			m_sSteamID = NULL;
-		}
-
 		m_vStats.clear();
 		m_vStartTimes.clear();
-
-		for( int i = 0; i < (int)m_vActions.size(); i++ )
-			m_vActions[ i ].Cleanup();
-
 		m_vActions.clear();
 	}
 
 public:
-	char *m_sName;
-	char *m_sSteamID;
+	CFFString m_sName;
+	CFFString m_sSteamID;
 	int m_iClass;
 	int m_iTeam;
 	int m_iUniqueID;
@@ -293,8 +94,8 @@ public:
 	void ResetStats();
 	void Serialise(char *buffer, int buffer_size);
 
-	const char *GetAuthString();
-	const char *GetTimestampString();
+	const char *GetAuthString() const;
+	const char *GetTimestampString() const;
 
 private:
 	// holds all of the player's stats
@@ -319,17 +120,6 @@ Destructor for the CFFStatsLog class
 */
 CFFStatsLog::~CFFStatsLog()
 {
-	// remove all the stuff so we don't have any memory leaks (I hope)
-	for( int i = 0; i < (int)m_vPlayers.size(); i++ )
-		m_vPlayers[ i ].Cleanup();
-
-	for( int i = 0; i < (int)m_vStats.size(); i++ ) 
-		m_vStats[ i ].Cleanup();
-
-	// This wasn't here previously, memory leak (param/location)!
-	for( int i = 0; i < (int)m_vActions.size(); i++ )
-		m_vActions[ i ].Cleanup();
-
 	m_vPlayers.clear();
 	m_vStats.clear();
 	m_vActions.clear();
@@ -340,13 +130,15 @@ Looks up the ID for a stat with the given name
 */
 int CFFStatsLog::GetStatID(const char *statname, stattype_t type)
 {
+	VPROF_BUDGET( "CFFStatsLog::GetStatID", VPROF_BUDGETGROUP_FF_STATS );
+
 	int i;
 	
 	// see if we have it already
-	for (i=0; i<(int)m_vStats.size(); i++)
+	for( i = 0; i < (int)m_vStats.size(); i++ )
 	{
 		// if we do, then return it
-		if (FStrEq(m_vStats[i].m_sName, statname))
+		if( m_vStats[i].m_sName == statname )
 			return i;
 	}
 
@@ -363,13 +155,15 @@ Looks up the ID for a action with the given name
 */
 int CFFStatsLog::GetActionID(const char *actionname)
 {
+	VPROF_BUDGET( "CFFStatsLog::GetActionID", VPROF_BUDGETGROUP_FF_STATS );
+
 	int i;
 	
 	// see if we have it already
-	for (i=0; i<(int)m_vActions.size(); i++)
+	for( i = 0; i < (int)m_vActions.size(); i++ )
 	{
 		// if we do, then return it
-		if (FStrEq(m_vActions[i].m_sName, actionname))
+		if( m_vActions[i].m_sName == actionname )
 			return i;
 	}
 
@@ -386,13 +180,15 @@ Looks up the ID for a stat with the given name
 */
 int CFFStatsLog::GetPlayerID(const char *steamid, int classid, int teamnum, int uniqueid, const char *name)
 {
+	VPROF_BUDGET( "CFFStatsLog::GetPlayerID", VPROF_BUDGETGROUP_FF_STATS );
+
 	int i;
 	
 	// see if we have it already
-	for (i=0; i<(int)m_vPlayers.size(); i++)
+	for( i = 0; i < (int)m_vPlayers.size(); i++ )
 	{
 		// if we do, then return it
-		if (FStrEq(m_vPlayers[i].m_sSteamID, steamid) && m_vPlayers[i].m_iClass == classid)
+		if( ( m_vPlayers[i].m_sSteamID == steamid ) && ( m_vPlayers[i].m_iClass == classid ) )
 			return i;
 	}
 
@@ -409,6 +205,8 @@ Add a value to a statistic for a player. For example, add 1 shot fired with a pi
 */
 void CFFStatsLog::AddStat(int playerid, int statid, double value)
 {
+	VPROF_BUDGET( "CFFStatsLog::AddStat", VPROF_BUDGETGROUP_FF_STATS );
+
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 	assert(statid >= 0 && statid < (int)m_vStats.size());
 
@@ -446,6 +244,8 @@ Add an action to the action list.
 */
 void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, int time, const char *param, Vector coords, const char *location)
 {
+	VPROF_BUDGET( "CFFStatsLog::AddAction", VPROF_BUDGETGROUP_FF_STATS );
+
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 
 	// build the action def
@@ -462,6 +262,8 @@ server or change classes/teams.
 */
 void CFFStatsLog::StartTimer(int playerid, int statid)
 {
+	VPROF_BUDGET( "CFFStatsLog::StartTimer", VPROF_BUDGETGROUP_FF_STATS );
+
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 	assert(statid >= 0 && statid < (int)m_vStats.size());
 
@@ -489,6 +291,8 @@ timer would be started when the flag was touched, but cancelled if the flag is d
 */
 void CFFStatsLog::StopTimer(int playerid, int statid, bool apply)
 {
+	VPROF_BUDGET( "CFFStatsLog::StopTimer", VPROF_BUDGETGROUP_FF_STATS );
+
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 	assert(statid >= 0 && statid < (int)m_vStats.size());
 
@@ -507,10 +311,7 @@ Reset all of the statistics for all players. This is useful for starting a new m
 */
 void CFFStatsLog::ResetStats()
 {
-	for( int i = 0; i < (int)m_vPlayers.size(); i++ )
-	{
-		m_vPlayers[ i ].Cleanup();
-	}
+	VPROF_BUDGET( "CFFStatsLog::ResetStats", VPROF_BUDGETGROUP_FF_STATS );
 
 	m_vPlayers.clear();
 
@@ -520,7 +321,7 @@ void CFFStatsLog::ResetStats()
 /**
 * Retreive the authorisation string that verifies stats sent
 */
-const char *CFFStatsLog::GetAuthString() 
+const char *CFFStatsLog::GetAuthString() const 
 {
 	return "ABC";
 }
@@ -528,7 +329,7 @@ const char *CFFStatsLog::GetAuthString()
 /**
 * Retreive a timestamp
 */
-const char *CFFStatsLog::GetTimestampString() 
+const char *CFFStatsLog::GetTimestampString() const
 {
 	return "22-Jan-2006 00:03 UTC";
 }
@@ -538,6 +339,8 @@ Serialise the stored data for sending
 */
 void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 {
+	VPROF_BUDGET( "CFFStatsLog::Serialise", VPROF_BUDGETGROUP_FF_STATS );
+
 	DevMsg("[STATS] Generating Serialized stats log\n");
 	CQuickBuffer buf(buffer, buffer_size);
 	int i, j;
@@ -557,8 +360,8 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	buf.Add("players\n");
 	for (i=0; i<(int)m_vPlayers.size(); i++) {
 		buf.Add("%s %s %d %d\n",
-			m_vPlayers[i].m_sSteamID,
-			m_vPlayers[i].m_sName,
+			m_vPlayers[i].m_sSteamID.GetString(),
+			m_vPlayers[i].m_sName.GetString(),
 			m_vPlayers[i].m_iTeam,
 			m_vPlayers[i].m_iClass);
 	}
@@ -572,9 +375,9 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 				m_vPlayers[i].m_vActions[j].targetid,
 				m_vActions[m_vPlayers[i].m_vActions[j].actionid],
 				m_vPlayers[i].m_vActions[j].time,
-				m_vPlayers[i].m_vActions[j].param,
+				m_vPlayers[i].m_vActions[j].param.GetString(),
 				"",
-				m_vPlayers[i].m_vActions[j].location);
+				m_vPlayers[i].m_vActions[j].location.GetString());
 		}
 	}
 
@@ -585,7 +388,7 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 			if (m_vPlayers[i].m_vStats[j] == 0.0) continue; // skip unset stats
 			buf.Add("%d %s %f\n",
 				i,
-				m_vStats[j].m_sName,
+				m_vStats[j].m_sName.GetString(),
 				m_vPlayers[i].m_vStats[j]);
 		}
 	}
@@ -596,6 +399,8 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 */
 void SendStats() 
 {
+	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
+
 	return;
 
 	char buf[131072];
