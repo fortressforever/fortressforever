@@ -15,6 +15,9 @@
 //
 //	05/10/2006,	Mulchman:
 //		Adding radio tags to dispenser
+//
+// 9/16/2006, Mulchman:
+//		Re-jigged the building process, hopefully it's a little better now
 
 #ifndef FF_BUILDABLEOBJECTS_SHARED_H
 #define FF_BUILDABLEOBJECTS_SHARED_H
