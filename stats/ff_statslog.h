@@ -19,7 +19,9 @@
 // Forward declarations
 class CFFPlayer;
 
-enum stattype_t {
+enum stattype_t 
+{
+	STAT_INVALID = 0,
 	STAT_ADD,
 	STAT_MIN,
 	STAT_MAX
