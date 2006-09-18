@@ -17,6 +17,9 @@
 //		 (Previously calculating the orientation was left until last and not part of the
 //		buildable spot validation).
 //		Also now the SG orients away from walls.
+//
+// 9/16/2006, Mulchman:
+//		Re-jigged the building process, hopefully it's a little better now
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
