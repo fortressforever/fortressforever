@@ -32,14 +32,162 @@
 
 #include "tier0/memdbgon.h"
 
-struct CFFStatDef {
+class CFFStatDef 
+{
+public:
+	// Default constructor
+	CFFStatDef( void )
+	{
+		m_sName = NULL;
+		m_iType = STAT_INVALID;
+	}
+
+	// Overloaded constructor
+	CFFStatDef( const char *pszName, stattype_t iType )
+	{
+		int iLen = Q_strlen( pszName );
+		m_sName = new char[ iLen + 1 ];
+
+		Assert( m_sName );
+
+		for( int i = 0; i < iLen; i++ )
+			m_sName[ i ] = pszName[ i ];
+
+		m_sName[ iLen ] = '\0';
+		m_iType = iType;
+	}
+
+	// Deconstructor
+	~CFFStatDef( void )
+	{
+		Cleanup();
+	}
+
+	// Deallocate
+	void Cleanup( void )
+	{
+		if( m_sName )
+		{
+			delete [] m_sName;
+			m_sName = NULL;
+		}
+	}
+
+public:
 	char *m_sName;
 	stattype_t m_iType;
 };
-struct CFFActionDef {
+
+class CFFActionDef 
+{
+public:
+	// Default constructor
+	CFFActionDef( void )
+	{
+		m_sName = NULL;
+	}
+
+	// Overloaded constructor
+	CFFActionDef( const char *pszName )
+	{
+		int iLen = Q_strlen( pszName );
+		m_sName = new char[ iLen + 1 ];
+
+		Assert( m_sName );
+
+		for( int i = 0; i < iLen; i++ )
+			m_sName[ i ] = pszName[ i ];
+
+		m_sName[ iLen ] = '\0';
+	}
+
+	// Deconstructor
+	~CFFActionDef( void )
+	{
+		Cleanup();		
+	}
+
+	// Deallocate
+	void Cleanup( void )
+	{
+		if( m_sName )
+		{
+			delete [] m_sName;
+			m_sName = NULL;
+		}
+	}
+
+public:
 	char *m_sName;
 };
-struct CFFAction {
+
+class CFFAction 
+{
+public:
+	// Default constructor
+	CFFAction( void )
+	{
+		actionid = -1;
+		targetid = -1;
+		time = -1;
+		param = NULL;
+		coords.Init();
+		location = NULL;
+	}
+
+	// Overloaded constructor
+	CFFAction( int iActionId, int iTargetId, int iTime, const char *pszParam, const Vector& vecCoords, const char *pszLocation )
+	{
+		actionid = iActionId;
+		targetid = iTargetId;
+		time = iTime;
+
+		int iLen = Q_strlen( pszParam );
+		param = new char[ iLen + 1 ];
+
+		Assert( param );
+
+		for( int i = 0; i < iLen; i++ )
+			param[ i ] = pszParam[ i ];
+
+		param[ iLen ] = '\0';
+
+		coords = vecCoords;
+
+		iLen = Q_strlen( pszLocation );
+		location = new char[ iLen + 1 ];
+
+		Assert( location );
+
+		for( int i = 0; i < iLen; i++ )
+			location[ i ] = pszLocation[ i ];
+
+		location[ iLen ] = '\0';
+	}
+
+	// Deconstructor
+	~CFFAction( void )
+	{
+		Cleanup();
+	}
+
+	// Deallocate
+	void Cleanup( void )
+	{
+		if( param )
+		{
+			delete [] param;
+			param = NULL;
+		}
+
+		if( location )
+		{
+			delete [] location;
+			location = NULL;
+		}
+	}
+
+public:
 	int actionid;
 	int targetid;
 	int time;
@@ -48,18 +196,90 @@ struct CFFAction {
 	char *location;
 };
 
-struct CFFPlayerStats {
+class CFFPlayerStats 
+{
+public:
+	// Default constructor
+	CFFPlayerStats( void )
+	{
+		m_sName = NULL;
+		m_sSteamID = NULL;
+		m_iClass = CLASS_NONE;
+		m_iTeam = TEAM_UNASSIGNED;
+		m_iUniqueID = -1;
+	}
+
+	// Overloaded constructor
+	CFFPlayerStats( const char *pszName, const char *pszSteamID, int iClass, int iTeam, int iUniqueID )
+	{
+		int iLen = Q_strlen( pszName );
+		m_sName = new char[ iLen + 1 ];
+
+		Assert( m_sName );
+
+		for( int i = 0; i < iLen; i++ )
+			m_sName[ i ] = pszName[ i ];
+
+		m_sName[ iLen ] = '\0';
+
+		iLen = Q_strlen( pszSteamID );
+		m_sSteamID = new char[ iLen + 1 ];
+
+		Assert( m_sSteamID );
+
+		for( int i = 0; i < iLen; i++ )
+			m_sSteamID[ i ] = pszSteamID[ i ];
+
+		m_sSteamID[ iLen ] = '\0';
+
+		m_iClass = iClass;
+		m_iTeam = iTeam;
+		m_iUniqueID = iUniqueID;
+	}
+
+	// Deconstructor
+	~CFFPlayerStats( void )
+	{
+		Cleanup();
+	}
+
+	// Deallocate
+	void Cleanup( void )
+	{
+		if( m_sName )
+		{
+			delete [] m_sName;
+			m_sName = NULL;
+		}
+
+		if( m_sSteamID )
+		{
+			delete [] m_sSteamID;
+			m_sSteamID = NULL;
+		}
+
+		m_vStats.clear();
+		m_vStartTimes.clear();
+
+		for( int i = 0; i < (int)m_vActions.size(); i++ )
+			m_vActions[ i ].Cleanup();
+
+		m_vActions.clear();
+	}
+
+public:
 	char *m_sName;
 	char *m_sSteamID;
 	int m_iClass;
 	int m_iTeam;
 	int m_iUniqueID;
-	std::vector<double> m_vStats;
-	std::vector<double> m_vStartTimes;
-	std::vector<CFFAction> m_vActions;
+	std::vector< double > m_vStats;
+	std::vector< double > m_vStartTimes;
+	std::vector< CFFAction > m_vActions;
 };
 
-class CFFStatsLog : public IStatsLog {
+class CFFStatsLog : public IStatsLog 
+{
 public:
 	CFFStatsLog();
 	~CFFStatsLog();
@@ -100,15 +320,19 @@ Destructor for the CFFStatsLog class
 CFFStatsLog::~CFFStatsLog()
 {
 	// remove all the stuff so we don't have any memory leaks (I hope)
-	for (int i=0; i<(int)m_vPlayers.size(); i++) {
-		delete m_vPlayers[i].m_sName;
-		delete m_vPlayers[i].m_sSteamID;
-	}
-	for (int i=0; i<(int)m_vStats.size(); i++) {
-		delete m_vStats[i].m_sName;
-	}
+	for( int i = 0; i < (int)m_vPlayers.size(); i++ )
+		m_vPlayers[ i ].Cleanup();
+
+	for( int i = 0; i < (int)m_vStats.size(); i++ ) 
+		m_vStats[ i ].Cleanup();
+
+	// This wasn't here previously, memory leak (param/location)!
+	for( int i = 0; i < (int)m_vActions.size(); i++ )
+		m_vActions[ i ].Cleanup();
+
 	m_vPlayers.clear();
 	m_vStats.clear();
+	m_vActions.clear();
 }
 
 /**
@@ -127,11 +351,8 @@ int CFFStatsLog::GetStatID(const char *statname, stattype_t type)
 	}
 
 	// otherwise we need to create it
-	CFFStatDef s;
-	s.m_sName = new char[strlen(statname)+1];
-	strcpy(s.m_sName, statname);
-	s.m_iType = type;
-	m_vStats.push_back(s);
+	CFFStatDef s( statname, type );
+	m_vStats.push_back( s );
 	
 	// i should now be the end, which is the one we created
 	return i;
@@ -153,10 +374,8 @@ int CFFStatsLog::GetActionID(const char *actionname)
 	}
 
 	// otherwise we need to create it
-	CFFActionDef s;
-	s.m_sName = new char[strlen(actionname)+1];
-	strcpy(s.m_sName, actionname);
-	m_vActions.push_back(s);
+	CFFActionDef s( actionname );
+	m_vActions.push_back( s );
 	
 	// i should now be the end, which is the one we created
 	return i;
@@ -178,13 +397,8 @@ int CFFStatsLog::GetPlayerID(const char *steamid, int classid, int teamnum, int 
 	}
 
 	// otherwise we need to create it
-	CFFPlayerStats s;
-	s.m_iClass = classid;
-	s.m_iTeam = teamnum;
-	s.m_iUniqueID = uniqueid;
-	s.m_sName = new char[strlen(name)+1]; strcpy(s.m_sName, name);
-	s.m_sSteamID = new char[strlen(steamid)+1]; strcpy(s.m_sSteamID, steamid);
-	m_vPlayers.push_back(s);
+	CFFPlayerStats s( name, steamid, classid, teamnum, uniqueid );
+	m_vPlayers.push_back( s );
 	
 	// i should now be the end, which is the one we created
 	return i;
@@ -203,12 +417,17 @@ void CFFStatsLog::AddStat(int playerid, int statid, double value)
 		m_vPlayers[playerid].m_vStats.resize(m_vStats.size(), 0.0);
 
 	// update the stat for the appropriate type
-	if (m_vStats[statid].m_iType == STAT_ADD) {
+	if (m_vStats[statid].m_iType == STAT_ADD) 
+	{
 		m_vPlayers[playerid].m_vStats[statid] += value;
-	} else if (m_vStats[statid].m_iType == STAT_MIN) {
+	} 
+	else if (m_vStats[statid].m_iType == STAT_MIN) 
+	{
 		if (value < m_vPlayers[playerid].m_vStats[statid])
 			m_vPlayers[playerid].m_vStats[statid] = value;
-	} else if (m_vStats[statid].m_iType == STAT_MAX) {
+	} 
+	else if (m_vStats[statid].m_iType == STAT_MAX) 
+	{
 		if (value > m_vPlayers[playerid].m_vStats[statid])
 			m_vPlayers[playerid].m_vStats[statid] = value;
 	}
@@ -230,16 +449,10 @@ void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, int time, 
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 
 	// build the action def
-	CFFAction a;
-	a.actionid = actionid;
-	a.targetid = targetid;
-	a.param = new char[strlen(param)+1]; strcpy(a.param, param);
-	a.coords = coords;
-	a.location = new char[strlen(location)+1]; strcpy(a.location, location);
-	a.time = time;
+	CFFAction a( actionid, targetid, time, param, coords, location );
 
 	// add it
-	m_vPlayers[playerid].m_vActions.push_back(a);
+	m_vPlayers[ playerid ].m_vActions.push_back( a );
 }
 
 /**
@@ -294,10 +507,11 @@ Reset all of the statistics for all players. This is useful for starting a new m
 */
 void CFFStatsLog::ResetStats()
 {
-	for (int i=0; i<(int)m_vPlayers.size(); i++) {
-		delete m_vPlayers[i].m_sName;
-		delete m_vPlayers[i].m_sSteamID;
+	for( int i = 0; i < (int)m_vPlayers.size(); i++ )
+	{
+		m_vPlayers[ i ].Cleanup();
 	}
+
 	m_vPlayers.clear();
 }
 
