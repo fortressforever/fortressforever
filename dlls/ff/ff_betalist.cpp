@@ -139,7 +139,7 @@ void CFFBetaList::Validate( void )
 		for( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
-			if( pPlayer )
+			if( pPlayer && !pPlayer->IsBot() )
 			{
 				if( ffbetalist_verbose.GetBool() )
 					DevMsg( "[FF Beta List] Player: %s", pPlayer->GetPlayerName() );
