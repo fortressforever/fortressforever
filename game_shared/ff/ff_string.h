@@ -51,6 +51,7 @@ public:
 
 	const char *GetString( void ) const	{ return c_str(); }
 	const char *c_str( void ) const { return m_pszString ? m_pszString : ""; }
+	const char *operator()( void ) const { return c_str(); }
 
 private:
 	char	*m_pszString;
