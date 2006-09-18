@@ -206,7 +206,7 @@ bool CFFString::operator>=( const char *pszString ) const
 //-----------------------------------------------------------------------------
 // Purpose: operator []
 //-----------------------------------------------------------------------------
-char CFFString::operator[]( int iElement ) const
+const char CFFString::operator[]( int iElement ) const
 {
 	Assert( ( iElement >= 0 ) && ( iElement <= ( m_iSize - 1 ) ) );
 	Assert( m_pszString );
