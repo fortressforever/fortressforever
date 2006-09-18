@@ -2412,7 +2412,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		hObject.m_iTeam = pPlayer->GetTeamNumber();
 		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
 		hObject.m_vecOrigin = vecPlayerOrigin;
-		hObject.m_vecVel = pPlayer->GetAbsVelocity() + Vector( 0, 0, 6 );
+		hObject.m_vecVel = pPlayer->GetAbsVelocity(); //+ Vector( 0, 0, 6 );
 
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
