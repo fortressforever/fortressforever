@@ -191,11 +191,10 @@ void CFFBetaList::Validate( void )
 						else
 						{
 							// Kick the guy!
+							engine->ServerCommand( UTIL_VarArgs( "kick %s\n", pPlayer->GetPlayerName() ) );
 
 							if( ffbetalist_verbose.GetBool() )
 								DevMsg( " over max attempts so kicking!\n" );
-
-							// TODO: kick!
 						}
 					}
 				}
