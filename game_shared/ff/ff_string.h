@@ -44,7 +44,7 @@ public:
 	bool operator>=( const CFFString& hRHS ) const;
 	bool operator>=( const char *pszString ) const;
 
-	char operator[]( int iElement ) const;
+	const char operator[]( int iElement ) const;
 	char &operator[]( int iElement );
 
 	int GetLength( void ) const	{ return m_iSize; }
