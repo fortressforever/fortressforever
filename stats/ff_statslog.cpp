@@ -513,6 +513,8 @@ void CFFStatsLog::ResetStats()
 	}
 
 	m_vPlayers.clear();
+
+	// TODO: Do we care about other stuff resetting?
 }
 
 /**
