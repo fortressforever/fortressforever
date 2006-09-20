@@ -420,6 +420,8 @@ public:
 	void LuaAddEffect( int iEffect, float flEffectDuration = 0.0f, float flIconDuration = 0.0f, float flSpeed = 0.0f );
 	bool LuaIsEffectActive( int iEffect );
 	void LuaRemoveEffect( int iEffect );
+
+	void ReloadClips( void );
  
 	void AddSpeedEffect(SpeedEffectType type, float duration, float speed, int mod = 0, int iIcon = -1, float flIconDuration = -1, bool bLuaAdded = false);
 	bool IsSpeedEffectSet( SpeedEffectType type );

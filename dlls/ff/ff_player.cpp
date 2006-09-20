@@ -11,6 +11,7 @@
 #include "ff_luacontext.h"
 #include "ff_gamerules.h"
 #include "ff_weapon_base.h"
+#include "ff_weapon_baseclip.h"
 #include "predicted_viewmodel.h"
 #include "iservervehicle.h"
 #include "viewport_panel_names.h"
@@ -3827,6 +3828,25 @@ void CFFPlayer::RecalculateSpeed( void )
 	// movement code until after m_flMaxspeedChangeTime. This allows the client to
 	// predict the speed change in time and avoid any warping.
 	m_flSpeedModifier = flSpeed;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Reloads clips that might be drained
+//-----------------------------------------------------------------------------
+void CFFPlayer::ReloadClips( void )
+{
+	if( IsAlive() )
+	{
+		for( int i = 0; i < WeaponCount(); i++ )
+		{
+			CFFWeaponBaseClip *pWeapon = dynamic_cast< CFFWeaponBaseClip * >( GetWeapon( i ) );
+			if( pWeapon )
+			{
+				if( pWeapon->m_iClip1 < pWeapon->GetMaxClip1() )
+					pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
