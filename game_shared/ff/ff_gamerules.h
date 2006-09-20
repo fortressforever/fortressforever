@@ -59,6 +59,7 @@ enum ApplyToFlag_e
 	AT_REMOVE_BUILDABLES,
 	AT_REMOVE_DECALS,
 	AT_END_MAP,
+	AT_RELOAD_CLIPS,
 
 	// Change class "ApplyTo" flags
 	AT_CHANGECLASS_SCOUT,

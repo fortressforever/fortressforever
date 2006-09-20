@@ -609,7 +609,14 @@ ConVar mp_prematch( "mp_prematch",
 					if( pbFlags[ AT_STOP_PRIMED_GRENS ] )
 					{
 						pPlayer->RemovePrimedGrenades();
-					}					
+					}
+
+					if( pbFlags[ AT_RELOAD_CLIPS ] && !pbFlags[ AT_KILL_PLAYERS ] )
+					{
+						// No sense is doing this if we're kiling the player
+						// since he'll spawn with full clips anyway...
+						pPlayer->ReloadClips();
+					}
 
 					if( pbFlags[ AT_KILL_PLAYERS ] )
 					{
@@ -643,7 +650,7 @@ ConVar mp_prematch( "mp_prematch",
 					if( pbFlags[ AT_REMOVE_DECALS ] )
 					{
 						engine->ClientCommand( pPlayer->edict(), "r_cleardecals" );
-					}
+					}					
 				}
 			}
 		}
