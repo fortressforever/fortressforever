@@ -61,7 +61,7 @@ public:
 	Panel	*GetHudElement(const char *pszIdentifier, HudElementType_t iType, bool bCreateNew = true);
 	void	RemoveElement(const char *pszIdentifier);
 
-	void	HudIcon(const char *pszIdentifer, int iX, int iY, const char *pszSource);
+	void	HudIcon(const char *pszIdentifer, int iX, int iY, const char *pszSource, int iWidth, int iHeight);
 	void	HudText(const char *pszIdentifer, int iX, int iY, const char *pszText);
 	void	HudTimer(const char *pszIdentifier, int iX, int iY, float flValue, float flSpeed);
 

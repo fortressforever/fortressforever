@@ -125,7 +125,10 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 			if (!msg.ReadString(szSource, 255))
 				return;
 
-			HudIcon(szIdentifier, xPos, yPos, szSource);
+			int iWidth = msg.ReadShort();
+			int iHeight = msg.ReadShort();
+
+			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight);
 
 			break;
 		}
@@ -156,7 +159,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 //-----------------------------------------------------------------------------
 // Purpose: Create a new icon on the hud
 //-----------------------------------------------------------------------------
-void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource)
+void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight)
 {
 	// Create or find the correct hud element
 	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON));
@@ -170,6 +173,14 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 
 	// Now set this label up
 	pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
+	
+	if( ( iWidth > 0 ) && ( iHeight > 0 ) )
+	{
+		pImagePanel->SetShouldScaleImage( true );
+		pImagePanel->SetWide( scheme()->GetProportionalScaledValue( iWidth ) );
+		pImagePanel->SetTall( scheme()->GetProportionalScaledValue( iHeight ) );
+	}
+
 	pImagePanel->SetImage(pszSource);
 	pImagePanel->SetVisible(true);
 }

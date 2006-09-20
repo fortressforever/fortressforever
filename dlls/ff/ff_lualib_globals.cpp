@@ -102,6 +102,9 @@ public:
 //---------------------------------------------------------------------------
 namespace FFLib
 {
+	// Prototype
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth = 0, int iHeight = 0 );
+
 	// returns if the entity of the specified type
 	// uses the Classify function for evaluation
 	bool IsOfClass(CBaseEntity* pEntity, int classType)
@@ -909,12 +912,12 @@ namespace FFLib
 		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
-	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y )
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
 	{
 		if( !pPlayer || !pszImage || !pszIdentifier )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight );
 	}
 
 	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y )
