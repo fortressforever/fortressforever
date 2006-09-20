@@ -79,6 +79,8 @@ void CFFWeaponMeleeBase::Precache()
 //----------------------------------------------------------------------------
 void CFFWeaponMeleeBase::PrimaryAttack() 
 {
+	CANCEL_IF_BUILDING();
+
 	Swing();
 }
 

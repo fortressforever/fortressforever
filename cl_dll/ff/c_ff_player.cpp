@@ -144,7 +144,7 @@ void CC_PrimeOne( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->m_bBuilding )
+	if( pLocalPlayer->IsBuilding() )
 		return;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
@@ -210,7 +210,7 @@ void CC_PrimeTwo( void )
 	if( pLocalPlayer->GetFlags() & FL_FROZEN )
 		return;
 
-	if( pLocalPlayer->m_bBuilding )
+	if( pLocalPlayer->IsBuilding() )
 		return;
 
 	// Bug #0000176: Sniper gren2 shouldn't trigger timer.wav
@@ -791,7 +791,6 @@ C_FFPlayer::C_FFPlayer() :
 	m_iSpawnInterpCounter = 0;
 
 	// BEG: Added by Mulchman
-	m_bClientBuilding = false;
 	m_iSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
@@ -1414,7 +1413,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 
 /*
 	// BEG: Added by Mulchman
-	if( m_bBuilding && !m_bClientBuilding )
+	if( IsBuilding() && !m_bClientBuilding )
 	{
 		// We started building
 		DevMsg( "Started building a... " );
@@ -1457,7 +1456,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 			}
 		}*//*
 	}
-	else if( !m_bBuilding && m_bClientBuilding )
+	else if( !IsBuilding() && m_bClientBuilding )
 	{
 		// We stopped building
 		//DevMsg( "Stopped building (or cancelled building)\n" );
@@ -1487,7 +1486,7 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 
 	// Update client buildling state to that of
 	// the server
-	//m_bClientBuilding = m_bBuilding;
+	//m_bClientBuilding = IsBuilding();
 	// END: Added by Mulchman
 
 	UpdateVisibility();

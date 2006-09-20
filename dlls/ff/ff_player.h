@@ -315,12 +315,12 @@ public:
 	void Command_SabotageDispenser();
 	// ---> end of FF server-side player command handlers
 
+protected:
     // Beg: Added by Mulchman for building objects and such
 	CNetworkHandle( CBaseAnimating, m_hDispenser );
 	CNetworkHandle( CBaseAnimating, m_hSentryGun );
 	CNetworkHandle( CBaseAnimating, m_hDetpack );
-
-	bool IsBuilding( void ) { return m_bBuilding; }
+	
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
 	CNetworkVar( bool, m_bBuilding );
@@ -337,6 +337,15 @@ public:
 	Vector m_vecBuildOrigin;
 
 	CFFWeaponBase *m_pBuildLastWeapon;
+
+public:
+	bool IsBuilding( void ) const;
+	int GetCurBuild( void ) const;
+	int GetWantBuild( void ) const	{ return m_iWantBuild; }
+	CFFDetpack *GetDetpack( void ) const;
+	CFFDispenser *GetDispenser( void ) const;
+	CFFSentryGun *GetSentryGun( void ) const;
+	CFFBuildableObject *GetBuildable( int iBuildable ) const;
 
 	void PreBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***

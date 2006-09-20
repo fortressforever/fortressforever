@@ -1425,29 +1425,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Beg; Added by Mulchman
 	if( m_bBuilding )
 	{
-		switch( m_iCurBuild )
-		{
-			case FF_BUILD_DISPENSER:
-			{
-				if( m_hDispenser.Get() )
-					( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
-			}
-			break;
-
-			case FF_BUILD_SENTRYGUN:
-			{
-				if( m_hSentryGun.Get() )
-					( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
-			}
-			break;
-
-			case FF_BUILD_DETPACK: 
-			{
-				if( m_hDetpack.Get() )
-					( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
-			}
-			break;
-		}
+		CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
+		if( pBuildable )
+			pBuildable->Cancel();
 
 		// Unlock the player if he/she got locked
 		UnlockPlayer( );
@@ -2206,16 +2186,14 @@ void CFFPlayer::RemoveBuildables( void )
 	m_iWantBuild = FF_BUILD_NONE;
 
 	// Remove buildables if they exist
-	if( m_hDispenser.Get() )
-		( ( CFFDispenser * )m_hDispenser.Get() )->Cancel();
+	if( GetDispenser() )
+		GetDispenser()->Cancel();
 
-	if( m_hSentryGun.Get() )
-		( ( CFFSentryGun * )m_hSentryGun.Get() )->Cancel();
+	if( GetSentryGun() )
+		GetSentryGun()->Cancel();
 
-	if( m_hDetpack.Get() )
-	{
-		( ( CFFDetpack * )m_hDetpack.Get() )->Cancel();
-	}
+	if( GetDetpack() )
+		GetDetpack()->Cancel();
 }
 
 //-----------------------------------------------------------------------------
@@ -2324,17 +2302,6 @@ void CFFPlayer::LockPlayerInPlace( void )
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	SetAbsVelocity( Vector( 0, 0, 0 ) );
-
-	if( m_bBuilding )
-	{
-		// Holster our current weapon
-		// Holster our current weapon
-		//if( GetActiveWeapon() )
-			//GetActiveWeapon()->Holster( NULL );
-		m_pBuildLastWeapon = GetActiveFFWeapon();
-		if( m_pBuildLastWeapon )
-			m_pBuildLastWeapon->Holster( NULL );
-	}
 }
 
 void CFFPlayer::UnlockPlayer( void )
@@ -2677,7 +2644,7 @@ void CFFPlayer::Command_BuildDetpack( void )
 		bool bInRange = true;
 		if( ( m_iDetpackTime < 5 ) || ( m_iDetpackTime > 60 ) )
 		{
-			m_iDetpackTime = clamp( m_iDetpackTime, 0, 60 );
+			//m_iDetpackTime = clamp( m_iDetpackTime, 5, 60 );
 			bInRange = false;
 		}
 
@@ -2688,7 +2655,8 @@ void CFFPlayer::Command_BuildDetpack( void )
 
 			// EDIT: There's no gcc/g++ itoa apparently?
 			//ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", itoa((int) m_iDetpackTime, szBuffer, 10));
-			ClientPrint(this, HUD_PRINTCONSOLE, "FF_INVALIDTIMER", szBuffer);
+			ClientPrint(this, HUD_PRINTCENTER, "FF_INVALIDTIMER", szBuffer);
+			return;
 		}
 
 		// Bug #0000453: Detpack timer can't be anything other than multiples of five
@@ -2708,10 +2676,6 @@ void CFFPlayer::Command_BuildDetpack( void )
 
 void CFFPlayer::PreBuildGenericThink( void )
 {
-	// This is associated with
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	bool bDeployHack = false;
-
 	//
 	// March 21, 2006 - Re-working entire build process
 	//
@@ -2753,9 +2717,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 		*/
 
 		// See if the user has already built this item
-		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && ( m_hDispenser.Get() ) ) ||
-			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && ( m_hSentryGun.Get() ) ) ||
-			( ( m_iWantBuild == FF_BUILD_DETPACK ) && ( m_hDetpack.Get() ) ) )
+		if( ( ( m_iWantBuild == FF_BUILD_DISPENSER ) && GetDispenser() ) ||
+			( ( m_iWantBuild == FF_BUILD_SENTRYGUN ) && GetSentryGun() ) ||
+			( ( m_iWantBuild == FF_BUILD_DETPACK ) && GetDetpack() ) )
 		{
 			// Notify the bot: convert this to an event?
 			if(IsBot())
@@ -2833,6 +2797,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iCurBuild = m_iWantBuild;
 			
 			LockPlayerInPlace();
+			m_hActiveWeapon = GetActiveFFWeapon();
+			if( m_hActiveWeapon )
+				m_hActiveWeapon->Holster( NULL );
 
 			switch( m_iCurBuild )
 			{
@@ -2937,26 +2904,12 @@ void CFFPlayer::PreBuildGenericThink( void )
 		{
 			// DevMsg( "[Building] You're currently building this item so cancel the build.\n" );
 
-			CBaseAnimating *pEntity = NULL;
-
-			// Cancel the build
-			switch( m_iCurBuild )
-			{
-				case FF_BUILD_DISPENSER: pEntity = m_hDispenser.Get(); break;
-				case FF_BUILD_SENTRYGUN: pEntity = m_hSentryGun.Get(); break;
-				case FF_BUILD_DETPACK:   pEntity = m_hDetpack.Get(); break;
-			}
-
-			// If object exists (was crashing ff_restartround), stop building
-			if( pEntity )
-			{
-				CFFBuildableObject *pBuildable = dynamic_cast< CFFBuildableObject * >( pEntity );
-				if( pBuildable )
-					pBuildable->Cancel();
-			}
+			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
+			if( pBuildable )
+				pBuildable->Cancel();
 
 			// Unlock the player
-			UnlockPlayer();
+			UnlockPlayer();			
 
 			// Mirv: Cancel build timer
 			CSingleUserRecipientFilter user( this );
@@ -2971,23 +2924,13 @@ void CFFPlayer::PreBuildGenericThink( void )
 			m_iWantBuild = FF_BUILD_NONE;
 			m_bBuilding = false;
 
-			// This is associated with
-			// Bug #0000333: Buildable Behavior (non build slot) while building
-			bDeployHack = true;
+			if( m_hActiveWeapon )
+				m_hActiveWeapon->Deploy();
 		}
 		else
 		{
 			ClientPrint( this, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
 		}
-	}
-
-	// This is associated with
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	if( bDeployHack )
-	{
-		// Need to set m_bBuilding false before bringing out a new weapon...
-		if( m_pBuildLastWeapon )
-			m_pBuildLastWeapon->Deploy();
 	}
 }
 
@@ -3001,9 +2944,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 		{
 			case FF_BUILD_DISPENSER:
 			{
-				if( m_hDispenser.Get() )
+				if( GetDispenser() )
 				{
-					( ( CFFDispenser * )m_hDispenser.Get() )->GoLive();
+					GetDispenser()->GoLive();
 
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_dispenser" );
 					if( pEvent )
@@ -3017,9 +2960,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 			case FF_BUILD_SENTRYGUN:
 			{
-				if( m_hSentryGun.Get() )
+				if( GetSentryGun() )
 				{
-					( ( CFFSentryGun * )m_hSentryGun.Get() )->GoLive();
+					GetSentryGun()->GoLive();
 
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_sentrygun" );
 					if( pEvent )
@@ -3033,13 +2976,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 			case FF_BUILD_DETPACK: 
 			{
-				if( m_hDetpack.Get() )
+				if( GetDetpack() )
 				{
-					// Remove what it cost to build. Do it here to fix
-					// bug #0000327
-					RemoveAmmo( 1, AMMO_DETPACK );
-
-					( ( CFFDetpack * )m_hDetpack.Get( ) )->GoLive();
+					GetDetpack()->GoLive();
 
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_detpack" );
 					if( pEvent )
@@ -3061,6 +3000,9 @@ void CFFPlayer::PostBuildGenericThink( void )
 		m_iWantBuild = FF_BUILD_NONE;
 		m_bBuilding = false;
 		//m_bCancelledBuild = false;
+
+		if( m_hActiveWeapon )
+			m_hActiveWeapon->Deploy();
 	}
 	else
 	{
@@ -3076,8 +3018,8 @@ void CFFPlayer::PostBuildGenericThink( void )
 	// Deploy weapon
 	//if( GetActiveWeapon()->GetLastWeapon() )
 	//	GetActiveWeapon()->GetLastWeapon()->Deploy();
-	if( m_pBuildLastWeapon )
-		m_pBuildLastWeapon->Deploy();
+	//if( m_pBuildLastWeapon )
+	//	m_pBuildLastWeapon->Deploy();
 }
 // Sev's test animation thing
 void CFFPlayer::Command_SevTest( void )

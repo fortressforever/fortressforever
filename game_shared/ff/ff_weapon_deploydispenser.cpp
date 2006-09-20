@@ -128,13 +128,17 @@ void CFFWeaponDeployDispenser::PrimaryAttack()
 		Cleanup();
 
 #ifdef GAME_DLL
-		// Bug #0000265: We've lost the dispenser explosion animation.
-		// For now, don't do anything to a built disp with primary attack.
-		//CFFPlayer *player = GetPlayerOwner();
-		//CFFDispenser *disp = dynamic_cast<CFFDispenser *> (player->m_hDispenser.Get());
-
-		//if (!disp || !disp->IsBuilt()) 
-			GetPlayerOwner()->Command_BuildDispenser();
+		CFFPlayer *pPlayer = GetPlayerOwner();		
+		if( pPlayer->IsBuilding() )
+		{
+			switch( pPlayer->GetCurBuild() )
+			{
+				case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
+				case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
+			}
+		}
+		else
+			pPlayer->Command_BuildDispenser();
 #endif
 	}
 }
@@ -159,12 +163,12 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		if (pPlayer->GetAmmoCount(AMMO_CELLS) < 100) 
-		{
-			Cleanup();
-		}
+		// If we've built and we're not building pop out wrench
+		if( ( pPlayer->GetDispenser() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 ) )
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+
 		// If we haven't built a dispenser...
-		else if (!pPlayer->m_hDispenser.Get() && pPlayer->GetAmmoCount(AMMO_CELLS) >= 100) 
+		if( !pPlayer->GetDispenser() ) 
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
 
@@ -181,14 +185,13 @@ void CFFWeaponDeployDispenser::WeaponIdle()
 				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
-		// Destroy if we already have one
 		else
-		{
 			Cleanup();
 
-			// Bug #0000333: Buildable Behavior (non build slot) while building
-			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
-		}
+		// If we're building something else, make sure to clean up
+		// this thing
+		if( pPlayer->IsBuilding() )
+			Cleanup();
 #endif
 	}
 }
@@ -204,10 +207,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer && ((CFFDispenser *) pPlayer->m_hDispenser.Get()))
+	if (pPlayer && pPlayer->GetDispenser())
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	else if( pPlayer->m_bBuilding )
+	else if( pPlayer->IsBuilding() )
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
@@ -228,10 +231,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
 			return;
 
-		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
 		if (!pDispenser)
 			return;
@@ -267,10 +270,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
 			return;
 
-		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
 		if (!pDispenser)
 			return;
@@ -292,10 +295,10 @@ bool CFFWeaponDeployDispenser::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_DISPENSER ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_DISPENSER ) )
 			return;
 
-		CFFDispenser *pDispenser = dynamic_cast<CFFDispenser *>(pPlayer->m_hDispenser.Get());
+		CFFDispenser *pDispenser = pPlayer->GetDispenser();
 
 		if (!pDispenser)
 			return;

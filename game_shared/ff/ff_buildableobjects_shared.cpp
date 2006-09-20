@@ -252,7 +252,7 @@ void CFFBuildableInfo::GetBuildError( void )
 
 		if(m_pPlayer && m_pPlayer->IsBot())
 		{
-			Omnibot::Notify_Build_CantBuild(m_pPlayer, m_pPlayer->m_iWantBuild);
+			Omnibot::Notify_Build_CantBuild(m_pPlayer, m_pPlayer->GetWantBuild());
 		}
 #endif
 	}

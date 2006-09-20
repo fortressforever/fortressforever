@@ -33,48 +33,7 @@ public:
 
 	bool PrintEvent( IGameEvent * event )	// override virtual function
 	{
-		// BEG: Added by Mulch for buildables watching for player_disconnect
 		const char *name = event->GetName();
-
-		if( Q_strncmp( name, "player_", strlen( "player_" ) ) == 0 )
-		{
-			const char *eventName = event->GetName();
-			const int userid = event->GetInt( "userid" );
-
-			if ( !Q_strncmp( eventName, "player_disconnect", Q_strlen( "player_disconnect" )  ) )
-			{
-				/*
-				const char *reason = event->GetString("reason" );
-				const char *name = event->GetString("name" );
-				const char *networkid = event->GetString("networkid" );
-				CTeam *team = NULL;
-				CBasePlayer *pPlayer = UTIL_PlayerByUserId( userid );
-
-				if ( pPlayer )
-				{
-				team = pPlayer->GetTeam();
-				}
-				*/
-
-				// See if we can get a pointer to the player
-				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByUserId( userid ) );
-				if( pPlayer )
-				{
-					// Remove any buildable objects the player might have before they
-					// disconnect
-
-					if( pPlayer->m_hDispenser.Get() )
-						( ( CFFBuildableObject * )pPlayer->m_hDispenser.Get() )->RemoveQuietly();
-
-					if( pPlayer->m_hSentryGun.Get() )
-						( ( CFFBuildableObject * )pPlayer->m_hSentryGun.Get() )->RemoveQuietly();
-
-					if( pPlayer->m_hDetpack.Get() )
-						( ( CFFBuildableObject * )pPlayer->m_hDetpack.Get() )->RemoveQuietly();
-				}
-			}
-		}
-		// END: Added by Mulch for buildables watching for player_disconnect
 
 		// BEG: Watching when buildables get built
 		if( Q_strncmp( name, "build_", strlen( "build_" ) ) == 0 )

@@ -172,6 +172,11 @@ void CFFDetpack::GoLive( void )
 
 	SetNextThink( flCurTime + m_flThinkTime );
 
+	// Take away what it cost to build
+	CFFPlayer *pOwner = GetOwnerPlayer();
+	if( pOwner )
+		pOwner->RemoveAmmo( 1, AMMO_DETPACK );
+
 	//DevMsg( "[Detpack] Next think in: %f seconds\n", flCurTime + m_flThinkTime );
 }
 
