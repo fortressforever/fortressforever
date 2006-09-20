@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
-// $LastChangedRevision: 1265 $
+// $LastChangedDate: 2006-09-19 19:31:58 -0700 (Tue, 19 Sep 2006) $
+// $LastChangedRevision: 1277 $
 //
 // about: Exported function definitions
 //		In order for the game to call functions from the bot, we must export

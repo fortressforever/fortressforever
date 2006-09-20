@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
-// $LastChangedRevision: 1265 $
+// $LastChangedDate: 2006-09-19 19:31:58 -0700 (Tue, 19 Sep 2006) $
+// $LastChangedRevision: 1277 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,7 +257,7 @@ typedef struct
 
 	// Function: pfnClearDebugLines
 	//		This function tells the interface to potentially clear prior navigation or radius indicators
-	void (*pfnClearDebugLines)(int _wpview, int _clearNav, int _clearRadius);
+	void (*pfnClearDebugLines)(obBool _navViewEnabled, const BitFlag32 &_flags);
 
 	// Function: pfnPrintError
 	//		This function should print an error the the game however desired,

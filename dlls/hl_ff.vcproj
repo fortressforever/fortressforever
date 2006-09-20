@@ -77,7 +77,8 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying server dll"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"/>
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%/../bin_release&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
