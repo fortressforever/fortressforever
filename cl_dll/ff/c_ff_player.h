@@ -20,6 +20,13 @@
 #include "iviewrender_beams.h"
 #include "Sprite.h"
 #include "ff_fx_infection.h"
+#include "ff_buildableobjects_shared.h"
+
+class C_FFBuildableObject;
+class C_FFDetpack;
+class C_FFDispenser;
+class C_FFSentryGun;
+class C_FFSevTest;
 
 #define FF_BUILD_NONE		0
 #define FF_BUILD_DISPENSER	1
@@ -94,11 +101,8 @@ public:
 	virtual void Simulate();
 	//---------------------
 
-public:
+protected:
 	// Beg: Added by Mulchman for building objects and such
-	//EHANDLE m_hDispenser; // Shared network handle for the dispenser
-	//EHANDLE m_hSentryGun; // Shared network handle for the sentry gun
-	//EHANDLE m_hDetpack; // Shared network handle for the detpack
 	CNetworkHandle( CBaseAnimating, m_hDispenser );
 	CNetworkHandle( CBaseAnimating, m_hSentryGun );
 	CNetworkHandle( CBaseAnimating, m_hDetpack );
@@ -108,10 +112,14 @@ public:
 	CNetworkVar( bool, m_bBuilding );
 	// Tells us what we are currently trying to build
 	CNetworkVar( int, m_iCurBuild );
-	// Tells us if the player cancelled building
-	//CNetworkVar( bool, m_bCancelledBuild );
 
-	bool	m_bClientBuilding;
+public:
+	bool IsBuilding( void ) const;
+	int GetCurBuild( void ) const;
+	C_FFDetpack *GetDetpack( void ) const;
+	C_FFDispenser *GetDispenser( void ) const;
+	C_FFSentryGun *GetSentryGun( void ) const;
+	C_FFBuildableObject *GetBuildable( int iBuildable ) const;
 	// End: Added by Mulchman for building objects and such
 
 	bool IsInfected( void ) const	{ return m_bInfected; }

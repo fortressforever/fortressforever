@@ -508,9 +508,9 @@ void CFFSentryGun::HackFindEnemy( void )
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 
 		// Add sentry guns
-		if( pPlayer->m_hSentryGun.Get() )
+		if( pPlayer->GetSentryGun() )
 		{
-			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
+			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
 			if( pSentryGun != this )
 			{
 				if( ( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) ) && ( vecOrigin.DistTo( pSentryGun->GetAbsOrigin() ) <= sg_range.GetFloat() ) )
@@ -519,9 +519,9 @@ void CFFSentryGun::HackFindEnemy( void )
 		}
 
 		// Add dispensers
-		if( pPlayer->m_hDispenser.Get() )
+		if( pPlayer->GetDispenser() )
 		{
-			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
+			CFFDispenser *pDispenser = pPlayer->GetDispenser();
 			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->GetAbsOrigin() ) <= sg_range.GetFloat() ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}

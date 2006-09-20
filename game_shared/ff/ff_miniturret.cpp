@@ -622,9 +622,9 @@ void CFFMiniTurret::HackFindEnemy( void )
 		}
 
 		// Check if lua will let us target this sentrygun
-		if( pPlayer->m_hSentryGun.Get() )
+		if( pPlayer->GetSentryGun() )
 		{
-			CFFSentryGun *pSentryGun = static_cast< CFFSentryGun * >( pPlayer->m_hSentryGun.Get() );
+			CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
 			if( FVisible( pSentryGun->GetAbsOrigin() ) || FVisible( pSentryGun->EyePosition() ) )
 			{
 				//CFFLuaObjectWrapper hValidTarget;
@@ -636,9 +636,9 @@ void CFFMiniTurret::HackFindEnemy( void )
 		}
 
 		// Check if lua will let us target this dispenser
-		if( pPlayer->m_hDispenser.Get() )
+		if( pPlayer->GetDispenser() )
 		{
-			CFFDispenser *pDispenser = static_cast< CFFDispenser * >( pPlayer->m_hDispenser.Get() );
+			CFFDispenser *pDispenser = pPlayer->GetDispenser();
 			if( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) )
 			{
 				//CFFLuaObjectWrapper hValidTarget;

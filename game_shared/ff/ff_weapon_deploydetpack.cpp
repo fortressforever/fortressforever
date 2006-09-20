@@ -141,8 +141,11 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
+		if( ( pPlayer->GetDetpack() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 ) )
+			pPlayer->SwapToWeapon( FF_WEAPON_CROWBAR );
+
 		// If we haven't built a detpack...
-		if( !pPlayer->m_hDetpack.Get() )
+		if( !pPlayer->GetDetpack() )
 		{
 			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK );
 
@@ -159,13 +162,8 @@ void CFFWeaponDeployDetpack::WeaponIdle()
 				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
-		// Destroy if we already have one
 		else
-		{
 			Cleanup();
-
-			pPlayer->SwapToWeapon( FF_WEAPON_CROWBAR );
-		}
 #endif
 	}
 }
@@ -181,10 +179,10 @@ bool CFFWeaponDeployDetpack::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if( pPlayer && ( ( CFFDetpack * )pPlayer->m_hDetpack.Get() ) )
+	if( pPlayer && ( ( CFFDetpack * )pPlayer->GetDetpack() ) )
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	else if( pPlayer->m_bBuilding )
+	else if( pPlayer->IsBuilding() )
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )

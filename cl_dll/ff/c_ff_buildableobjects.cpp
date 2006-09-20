@@ -173,7 +173,7 @@ void C_FFBuildableObject::ClientThink( void )
 		Vector vecOrigin = GetAbsOrigin();
 
 		// Compute a new origin in front of the player
-		Vector vecNewOrigin = pPlayer->GetAbsOrigin() + ( vecForward * flBuildDist );
+		Vector vecNewOrigin = pPlayer->GetAbsOrigin() + ( vecForward * ( flBuildDist + 16.0f ) );
 		vecNewOrigin.z = vecOrigin.z;
 
 		SetAbsOrigin( vecNewOrigin );

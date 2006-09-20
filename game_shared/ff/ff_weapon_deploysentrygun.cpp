@@ -127,9 +127,19 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
 		Cleanup();
-
+		
 #ifdef GAME_DLL
-		GetPlayerOwner()->Command_BuildSentryGun();
+		CFFPlayer *pPlayer = GetPlayerOwner();		
+		if( pPlayer->IsBuilding() )
+		{
+			switch( pPlayer->GetCurBuild() )
+			{
+				case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
+				case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
+			}
+		}
+		else
+			pPlayer->Command_BuildSentryGun();
 #endif
 	}
 }
@@ -155,12 +165,12 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		if (pPlayer->GetAmmoCount(AMMO_CELLS) < 130) 
-		{
-			Cleanup();
-		}
+		// If we've built and we're not building pop out wrench
+		if( ( pPlayer->GetSentryGun() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 ) )
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+
 		// If we haven't built a sentrygun...
-		else if (!pPlayer->m_hSentryGun.Get()) 
+		if( !pPlayer->GetSentryGun() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SENTRYGUN );
 
@@ -177,14 +187,13 @@ void CFFWeaponDeploySentryGun::WeaponIdle()
 				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 		}
-		// If we have built a sentrygun...
 		else
-		{
 			Cleanup();
 
-			// Bug #0000333: Buildable Behavior (non build slot) while building
-			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
-		}
+		// If we're building something else, make sure to clean up
+		// this thing
+		if( pPlayer->IsBuilding() )
+			Cleanup();
 #endif
 	}
 }
@@ -200,10 +209,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer && ((CFFSentryGun *) pPlayer->m_hSentryGun.Get()))
+	if (pPlayer && pPlayer->GetSentryGun())
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
-	else if( pPlayer->m_bBuilding )
+	else if( pPlayer->IsBuilding() )
 		return false;
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 )
@@ -224,10 +233,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
 			return;
 
-		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
+		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
 			return;
@@ -255,10 +264,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
 			return;
 
-		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
+		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
 			return;
@@ -300,10 +309,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
 			return;
 
-		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
+		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
 			return;
@@ -325,10 +334,10 @@ bool CFFWeaponDeploySentryGun::CanBeSelected()
 			return;
 
 		// Bug #0000333: Buildable Behavior (non build slot) while building
-		if( pPlayer->m_bBuilding && ( pPlayer->m_iCurBuild == FF_BUILD_SENTRYGUN ) )
+		if( pPlayer->IsBuilding() && ( pPlayer->GetCurBuild() == FF_BUILD_SENTRYGUN ) )
 			return;
 
-		CFFSentryGun *pSentry = dynamic_cast<CFFSentryGun *> (pPlayer->m_hSentryGun.Get());
+		CFFSentryGun *pSentry = pPlayer->GetSentryGun();
 
 		if (!pSentry) 
 			return;

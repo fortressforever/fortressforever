@@ -171,6 +171,8 @@ void CFFWeaponBaseClip::DryFire()
 //-----------------------------------------------------------------------------
 void CFFWeaponBaseClip::PrimaryAttack()
 {
+	CANCEL_IF_BUILDING();
+
 	// Only the player fires this way so we can cast
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 

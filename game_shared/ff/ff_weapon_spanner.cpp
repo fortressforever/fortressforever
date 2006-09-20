@@ -37,7 +37,6 @@ public:
 	CFFWeaponSpanner();
 
 	virtual bool CanBeSelected();
-	virtual void PrimaryAttack();
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SPANNER; }
 
 private:
@@ -80,35 +79,16 @@ CFFWeaponSpanner::CFFWeaponSpanner()
 //-----------------------------------------------------------------------------
 bool CFFWeaponSpanner::CanBeSelected()
 {
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( !pPlayer )
+		return false;
+	if( pPlayer->IsBuilding() )
+		return false;
 	if (!VisibleInWeaponSelection())
 		return false;
 
 	return true;
-}
-
-void CFFWeaponSpanner::PrimaryAttack( void )
-{
-	// Bug #0000333: Buildable Behavior (non build slot) while building
-	CFFPlayer *pPlayer = GetPlayerOwner();
-	if( pPlayer->m_bBuilding )
-	{
-		//DevMsg( "[Spanner] Player is building - need to cancel build since they are hitting +attack\n" );
-
-		switch( pPlayer->m_iCurBuild )
-		{
-#ifdef GAME_DLL
-			case FF_BUILD_DISPENSER: pPlayer->Command_BuildDispenser(); break;
-			case FF_BUILD_SENTRYGUN: pPlayer->Command_BuildSentryGun(); break;
-#else
-			case FF_BUILD_DISPENSER: pPlayer->SwapToWeapon( FF_WEAPON_DEPLOYDISPENSER ); break;
-			case FF_BUILD_SENTRYGUN: pPlayer->SwapToWeapon( FF_WEAPON_DEPLOYSENTRYGUN ); break;
-#endif
-		}
-
-		return;
-	}
-
-	BaseClass::PrimaryAttack();
 }
 
 //----------------------------------------------------------------------------

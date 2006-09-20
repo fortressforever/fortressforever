@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
+#include "ff_buildableobjects_shared.h"
 
 
 #ifdef CLIENT_DLL
@@ -518,18 +519,82 @@ Vector CFFPlayer::GetWaistOrigin( void )
 	return GetAbsOrigin();
 }
 
-int CFFPlayer::GetHealthPercentage()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetHealthPercentage( void )
 {
 	float flPerc;
 	flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
 	return (int) flPerc;
 }
 
-int CFFPlayer::GetArmorPercentage()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetArmorPercentage( void )
 {
 	float flPerc;
 	flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;
 	return (int) flPerc;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Player building?
+//-----------------------------------------------------------------------------
+bool CFFPlayer::IsBuilding( void ) const
+{
+	return m_bBuilding;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: What's the player currently buildng
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetCurBuild( void ) const
+{
+	return m_iCurBuild;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get detpack
+//-----------------------------------------------------------------------------
+CFFDetpack *CFFPlayer::GetDetpack( void ) const
+{
+	return dynamic_cast< CFFDetpack * >( m_hDetpack.Get() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get dispenser
+//-----------------------------------------------------------------------------
+CFFDispenser *CFFPlayer::GetDispenser( void ) const
+{
+	return dynamic_cast< CFFDispenser * >( m_hDispenser.Get() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get sentrygun
+//-----------------------------------------------------------------------------
+CFFSentryGun *CFFPlayer::GetSentryGun( void ) const
+{
+	return dynamic_cast< CFFSentryGun * >( m_hSentryGun.Get() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
+{
+	CFFBuildableObject *pEntity = NULL;
+
+	switch( iBuildable )
+	{
+		case FF_BUILD_DISPENSER: pEntity = GetDispenser(); break;
+		case FF_BUILD_SENTRYGUN: pEntity = GetSentryGun(); break;
+		case FF_BUILD_DETPACK: pEntity = GetDetpack(); break;
+		default: return NULL; break;
+	}
+
+	return pEntity;
 }
 
 /*
@@ -868,6 +933,9 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 #endif
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CFFPlayer::HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest)
 {
 	trace_t	waterTrace;

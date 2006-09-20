@@ -39,6 +39,45 @@ class CFFPlayer;
 #define AMMO_GREN1				"AMMO_GREN1"	// gren1
 #define AMMO_GREN2				"AMMO_GREN2"	// gren2
 
+// Bleh I can't think of anything better. Problem is you
+// can holster weapons but still fire them which is
+// kind of good cause we want the fire to CANCEL the build
+// but we don't want the weapon ACTUALLY firing. I'm
+// going to put this into the primary attack function
+// of any weapon that can be deployed for classes that
+// can build.
+#ifdef GAME_DLL
+#define CANCEL_IF_BUILDING() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( pFFPlayer && pFFPlayer->IsBuilding() ) \
+	{ \
+		switch( pFFPlayer->GetCurBuild() ) \
+		{ \
+			case FF_BUILD_DISPENSER: pFFPlayer->Command_BuildDispenser(); break; \
+			case FF_BUILD_SENTRYGUN: pFFPlayer->Command_BuildSentryGun(); break; \
+			case FF_BUILD_DETPACK: engine->ClientCommand( pFFPlayer->edict(), "detpack 5" ); break; \
+		} \
+		return; \
+	} \
+}
+#endif
+
+#ifdef CLIENT_DLL
+#define CANCEL_IF_BUILDING() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( pFFPlayer && pFFPlayer->IsBuilding() ) \
+		return; \
+}
+#endif
+#define ABORT_FUNC_IF_BUILDING() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( pFFPlayer && pFFPlayer->IsBuilding() ) \
+		return; \
+}
+
 // Weapon IDs for all FF Game weapons
 typedef enum
 {
@@ -181,14 +220,6 @@ public:
 private:
 
 	CFFWeaponBase(const CFFWeaponBase &);
-
-	// So we don't spam when trying to kill
-	// buildables (by spam I mean stopping it
-	// then starting it right away then stopping
-	// it right away etc. because of holding
-	// down the mouse button. We want one
-	// click of mouse to kill the build.)
-	float m_flNextBuildKill;
 
 #ifdef CLIENT_DLL
 	// Some things from HL2MP

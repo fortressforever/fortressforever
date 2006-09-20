@@ -138,8 +138,6 @@ CFFWeaponBase::CFFWeaponBase()
 	// All FF weapons fire underwater
 	m_bFiresUnderwater = true; 
 
-	m_flNextBuildKill = 0.0f;
-
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
 #ifdef GAME_DLL
@@ -254,6 +252,9 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 		if (pOwner->IsAlive() == false)
 			return false;
 
+		if( GetPlayerOwner()->IsBuilding() )
+			return false;
+
 		pOwner->SetAnimationExtension(szAnimExt);
 
 		SetViewModel();
@@ -283,7 +284,7 @@ bool CFFWeaponBase::CanBeSelected()
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer->m_bBuilding)
+	if (pPlayer->IsBuilding())
 		return false;
 	else
 		return BaseClass::CanBeSelected();
@@ -347,6 +348,8 @@ bool CFFWeaponBase::ShouldPredict()
 //-----------------------------------------------------------------------------
 void CFFWeaponBase::PrimaryAttack()
 {
+	CANCEL_IF_BUILDING();
+
 	// Only the player fires this way so we can cast
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 

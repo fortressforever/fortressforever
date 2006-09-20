@@ -184,6 +184,8 @@ void CFFWeaponRailgun::ItemPostFrame()
 
 	if (pPlayer->m_nButtons & IN_ATTACK)
 	{
+		CANCEL_IF_BUILDING();
+
 		// Not currently charging
 		if (m_flStartCharge < 0)
 		{

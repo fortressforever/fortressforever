@@ -743,9 +743,9 @@ namespace Omnibot
 						if(pffPlayer->m_hSabotaging)
 							_entflags.SetFlag(TF_ENT_FLAG_SABOTAGING);
 
-						if(pffPlayer->m_bBuilding)
+						if(pffPlayer->IsBuilding())
 						{
-							switch(pffPlayer->m_iCurBuild)
+							switch(pffPlayer->GetCurBuild())
 							{
 							case FF_BUILD_DISPENSER:
 								_entflags.SetFlag(TF_ENT_FLAG_BUILDING_DISP);
@@ -1783,11 +1783,11 @@ namespace Omnibot
 					CFFPlayer *pFFPlayer = static_cast<CFFPlayer*>(pPlayer);
 					if(pFFPlayer)
 					{
-						CBaseAnimating *pSentry = pFFPlayer->m_hSentryGun.Get();
+						CBaseAnimating *pSentry = pFFPlayer->GetSentryGun();
 						pMsg->m_Sentry = pSentry ? pSentry->edict() : 0;
-						CBaseAnimating *pDispenser = pFFPlayer->m_hDispenser.Get();
+						CBaseAnimating *pDispenser = pFFPlayer->GetDispenser();
 						pMsg->m_Dispenser = pDispenser ? pDispenser->edict() : 0;
-						CBaseAnimating *pDetpack = pFFPlayer->m_hDetpack.Get();
+						CBaseAnimating *pDetpack = pFFPlayer->GetDetpack();
 						pMsg->m_Detpack = pDetpack ? pDetpack->edict() : 0;
 					}
 				}
