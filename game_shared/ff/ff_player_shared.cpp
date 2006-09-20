@@ -12,7 +12,6 @@
 #include "shot_manipulator.h"
 #include "ff_buildableobjects_shared.h"
 
-
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"

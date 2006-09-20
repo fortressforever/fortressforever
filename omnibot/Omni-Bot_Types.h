@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-12 23:56:29 -0700 (Tue, 12 Sep 2006) $
-// $LastChangedRevision: 1274 $
+// $LastChangedDate: 2006-09-19 19:31:58 -0700 (Tue, 19 Sep 2006) $
+// $LastChangedRevision: 1277 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +139,7 @@ typedef enum eHelpers
 //		LINE_WAYPOINT - Waypoint line.
 //		LINE_PATH - Path line.
 //		LINE_BLOCKABLE - Blockable line.
+//		LINE_FACING - The facing of a waypoint.
 typedef enum eLineType
 {
 	LINE_NONE,
@@ -146,6 +147,7 @@ typedef enum eLineType
     LINE_WAYPOINT,
 	LINE_PATH,
 	LINE_BLOCKABLE,
+	LINE_FACING,
 } LineType;
 
 // typedef: AABB

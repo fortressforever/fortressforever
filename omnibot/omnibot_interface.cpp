@@ -420,16 +420,16 @@ namespace Omnibot
 	// Static functions for use by the bot.
 	//-----------------------------------------------------------------
 
-	static void obClearNavLines(int _wpview, int _clearLines, int _clearRadius)
+	static void obClearNavLines(obBool _navViewEnabled, const BitFlag32 &_flags)
 	{
-		if(_clearLines)
+		if(_flags.CheckFlag(LINE_WAYPOINT) || _flags.CheckFlag(LINE_PATH))
 		{
 			g_DebugLines.clear();
 		}
 
-		if(_clearRadius)
+		/*if(_flags.CheckFlag(LINE_RADIUS))
 		{
-		}
+		}*/
 	}
 
 	//-----------------------------------------------------------------
@@ -531,6 +531,13 @@ namespace Omnibot
 		case LINE_BLOCKABLE:
 			{
 				_AddDebugLineToDraw(LINE_BLOCKABLE, _start, _end, _color);
+				break;
+			}
+		case LINE_FACING:
+			{
+				float _startPos[3] = { _start[0], _start[1], _start[2] + fStartOffset/2.f };
+				float _endPos[3] = { _end[0], _end[1], _end[2] + fStartOffset/2.f };
+				_AddDebugLineToDraw(LINE_FACING, _startPos, _endPos, _color);
 				break;
 			}
 		}
@@ -2089,9 +2096,30 @@ namespace Omnibot
 			Vector vMoveDir(_input->m_MoveDir[0],_input->m_MoveDir[1],_input->m_MoveDir[2]);
 			AngleVectors(cmd.viewangles, &vForward, &vRight, &vUp);
 
+			const Vector worldUp(0.f, 0.f, 1.f);
 			cmd.forwardmove = vForward.Dot(vMoveDir) * pPlayer->MaxSpeed();
 			cmd.sidemove = vRight.Dot(vMoveDir) * pPlayer->MaxSpeed();
-			cmd.upmove = vUp.Dot(vMoveDir) * pPlayer->MaxSpeed();
+			cmd.upmove = worldUp.Dot(vMoveDir) * pPlayer->MaxSpeed();
+
+			if(cmd.sidemove > 0)
+				cmd.buttons |= IN_MOVERIGHT;
+			else if(cmd.sidemove < 0)
+				cmd.buttons |= IN_MOVELEFT;
+
+			if(pPlayer->IsOnLadder())
+			{
+				if(cmd.upmove > 0)
+					cmd.buttons |= IN_FORWARD;
+				else if(cmd.upmove < 0)
+					cmd.buttons |= IN_BACK;
+			}
+			else
+			{
+				if(cmd.forwardmove > 0)
+					cmd.buttons |= IN_FORWARD;
+				else if(cmd.forwardmove < 0)
+					cmd.buttons |= IN_BACK;
+			}
 
 			// Do we have this weapon?
 			const char *pNewWeapon = obUtilGetStringFromWeaponId(_input->m_CurrentWeapon);
@@ -2193,20 +2221,7 @@ namespace Omnibot
 			{
 				// Draw it.
 				switch(g_DebugLines[i].type)
-				{
-				case LINE_NORMAL:
-				case LINE_WAYPOINT:
-				case LINE_BLOCKABLE:
-					{
-						obAddTempDisplayLine(g_DebugLines[i].start, g_DebugLines[i].end, g_DebugLines[i].color, 2.0f);
-
-						// Blockables only drawn once.
-						if(g_DebugLines[i].type == LINE_BLOCKABLE)
-						{
-							g_DebugLines[i].type = LINE_NONE;
-						}
-						break;
-					}
+				{				
 				case LINE_PATH:
 					{
 						// adjust the end of the line for paths so they slant down
@@ -2215,6 +2230,21 @@ namespace Omnibot
 						Vector vLineEnd(g_DebugLines[i].end[0], g_DebugLines[i].end[1], g_DebugLines[i].end[2]);
 						vLineEnd.z -= 30.0f;
 						obAddTempDisplayLine(g_DebugLines[i].start, (float*)&vLineEnd, g_DebugLines[i].color, 2.0f);
+						break;
+					}
+				case LINE_NORMAL:
+				case LINE_WAYPOINT:
+				case LINE_BLOCKABLE:
+				case LINE_FACING:
+				default:
+					{
+						obAddTempDisplayLine(g_DebugLines[i].start, g_DebugLines[i].end, g_DebugLines[i].color, 2.0f);
+
+						// Blockables only drawn once.
+						if(g_DebugLines[i].type == LINE_BLOCKABLE)
+						{
+							g_DebugLines[i].type = LINE_NONE;
+						}
 						break;
 					}
 				}
@@ -2463,6 +2493,7 @@ namespace Omnibot
 
 	void omnibot_interface::UpdateBotInterface()
 	{
+		VPROF_BUDGET( "Omni-bot::Update", _T("Omni-bot") );
 		//if( gameLocal.isServer )
 		{		
 			if(gpGlobals->curtime > s_NextUpdateTime)
@@ -2473,7 +2504,6 @@ namespace Omnibot
 				// Call the libraries update.
 				if(g_BotFunctions.pfnBotUpdate)
 				{
-					VPROF_BUDGET( "Omni-bot::Update", _T("Omni-bot") );
 					//////////////////////////////////////////////////////////////////////////
 					if(!engine->IsDedicatedServer())
 					{
