@@ -783,6 +783,9 @@ C_FFPlayer::C_FFPlayer() :
 	// Default
 	m_clrTeamColor = Color( 255, 255, 255, 255 );
 
+	// Cache the radio tag glyphs
+	CacheGlyphs();
+
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -1126,8 +1129,6 @@ int C_FFPlayer::DrawModel( int flags )
 			// our radio tag glyph from here so it won't be super lagging or look bad.
 			if( pRadioTagData->GetVisible( iIndex ) )
 			{
-				//g_ClassGlyphs[ pRadioTagData->GetClass( iIndex ) - 1 ];
-
 				IMaterial *pMaterial = materials->FindMaterial( g_ClassGlyphs[ pRadioTagData->GetClass( iIndex ) - 1 ].m_szMaterial, TEXTURE_GROUP_OTHER );
 				if( pMaterial )
 				{

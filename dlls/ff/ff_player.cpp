@@ -540,11 +540,7 @@ void CFFPlayer::PreThink(void)
 		m_iEngyMe = 0;
 
 	// Update our list of tagged players that the client
-	// should be "seeing" if it's time to do another update
-	//if( ( m_flLastRadioTagUpdate + radiotag_duration.GetFloat( ) ) < gpGlobals->curtime )
-	//{
-		FindRadioTaggedPlayers();
-	//}
+	FindRadioTaggedPlayers();
 
 	// Riding a vehicle?
 	if( IsInAVehicle() )	
@@ -2322,9 +2318,6 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 	if( !m_hRadioTagData.Get() )
 		return;
 
-	// Reset
-	m_hRadioTaggedList.RemoveAll();
-
 	// Reset stuff back to zero
 	m_hRadioTagData->ClearVisible();
 
@@ -2365,15 +2358,8 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// Bug #0000517: Enemies see radio tag.
 		// Only want to show players whom people on our team have tagged or
 		// players whom allies have tagged
-		//if( ToFFPlayer( pPlayer->m_pWhoTaggedMe )->GetTeamNumber() != GetTeamNumber() )
-		//{
 		if( g_pGameRules->PlayerRelationship( this, ToFFPlayer( pPlayer->m_pWhoTaggedMe ) ) != GR_TEAMMATE )
 			continue;
-		//}
-
-//		// Skip if they're not someone we can hurt
-//		if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, this ) )
-//			continue;
 
 		// Get their origin
 		Vector vecPlayerOrigin = pPlayer->GetFeetOrigin();
@@ -2385,19 +2371,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// We're left w/ a player who's within range
 		// Add player to a list and send off to client
 
-		// Create a single object
-		ESP_Shared_s hObject;
-		hObject.m_iEntIndex = pPlayer->entindex() - 1;
-		hObject.m_iClass = pPlayer->GetClassSlot();
-		hObject.m_iTeam = pPlayer->GetTeamNumber();
-		hObject.m_bDucked = ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false;
-		hObject.m_vecOrigin = vecPlayerOrigin;
-		hObject.m_vecVel = pPlayer->GetAbsVelocity(); //+ Vector( 0, 0, 6 );
-
-		// Add object to radio tagged array
-		m_hRadioTaggedList.AddToTail( hObject );
-
-		m_hRadioTagData->Set( pPlayer->entindex(), true, hObject.m_iClass, hObject.m_iTeam, hObject.m_bDucked, hObject.m_vecOrigin );
+		m_hRadioTagData->Set( pPlayer->entindex(), true, pPlayer->GetClassSlot(), pPlayer->GetTeamNumber(), ( pPlayer->GetFlags() & FL_DUCKING ) ? true : false, vecPlayerOrigin );
 
 		// Omni-bot: Notify the bot he has detected someone.
 		if(IsBot())
@@ -2405,67 +2379,15 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 			Omnibot::Notify_RadioTagUpdate(this, pPlayer->edict());							
 		}
 	}
-
-	int iCount = m_hRadioTaggedList.Count();
-	if( iCount > 0 )
-	{
-		/*
-		// Only send this message to the local player	
-		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
-		user.MakeReliable();
-
-		// Start the message block
-		UserMessageBegin( user, "RadioTagUpdate" );
-
-		WRITE_SHORT( iCount );
-
-		for( int i = 0; i < iCount; i++ )
-		{
-			int iInfo = m_hRadioTaggedList[ i ].m_iTeam;
-			iInfo += m_hRadioTaggedList[ i ].m_iClass << 4;
-
-			WRITE_SHORT( m_hRadioTaggedList[ i ].m_iEntIndex );
-			WRITE_WORD( iInfo );
-			WRITE_BYTE( m_hRadioTaggedList[ i ].m_bDucked ? ( byte )1 : ( byte )0 );
-			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecOrigin );
-			WRITE_VEC3COORD( m_hRadioTaggedList[ i ].m_vecVel );
-		}
-			
-		// End the message block
-		MessageEnd();
-		*/
-
-		// Doing an update now...
-		m_flLastRadioTagUpdate = gpGlobals->curtime;
-	}
 }
 
 void CFFPlayer::Command_WhatTeam( void )
 {
-	//DevMsg( "[What Team] You are currently on team: %i\n", GetTeamNumber() );
-	//DevMsg( "[What Team] Dispenser Text: %s\n", m_szCustomDispenserText );
-
-	//char szBuffer[128];
-	//Q_snprintf(szBuffer, 127, "[What Team] m_iSpyDisguise: %i, Disguised? %s, Team: %i, Class: %i, My Team: %i\n", m_iSpyDisguise, IsDisguised() ? "yes" : "no", GetDisguisedTeam(), GetDisguisedClass(), GetTeamNumber());
-	//ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, szBuffer);
-	Warning( "[Player %s] IsAlive(): %s, H: %i, A: %i, LIFE_STATE: %i\n", GetPlayerName(), IsAlive() ? "Yes" : "No", GetHealth(), GetArmor(), m_lifeState );
 }
 
 void CFFPlayer::Command_HintTest( void )
 {	
-	//ShowViewPortPanel( PANEL_HINT, true );
-	//UTIL_HudHintText( this, "#FF_HELLO" );
 	FF_HudHint( this, 0, 1, "#FF_HELLO" );
-	// ted - HL2 Hint Text buffer overrun PoC, don't enable... doesn't affect FF hints!
-	/*
-	char buf[254];
-	for(unsigned int i = 0; i < sizeof(buf); i++)
-	{
-		buf[i] = 'A' + i % 26;
-	}
-	buf[sizeof(buf) - 1] = '\0';
-	UTIL_HudHintText(this, buf);
-	*/
 }
 
 void CFFPlayer::Command_DispenserText( void )
@@ -2517,8 +2439,8 @@ void CFFPlayer::Command_DispenserText( void )
 	//DevMsg( "[Dispenser Text] %s\n", m_szCustomDispenserText );
 
 	// Change text on the fly
-	if( m_hDispenser.Get() )
-		( ( CFFDispenser * )m_hDispenser.Get() )->SetText( m_szCustomDispenserText );
+	if( GetDispenser() )
+		GetDispenser()->SetText( m_szCustomDispenserText );
 }
 
 void CFFPlayer::Command_Radar( void )
@@ -5160,7 +5082,7 @@ void CFFPlayer::Command_Disguise()
 	if( pTeam->GetTeamLimits() == -1 )
 	{
 		// TODO: Nice hud msg!
-		Warning( "[Disguise] Invalid team for this map!\n" );
+		//Warning( "[Disguise] Invalid team for this map!\n" );
 
 		Omnibot::Notify_CantDisguiseAsTeam(this, iTeam);
 		return;
@@ -5169,13 +5091,13 @@ void CFFPlayer::Command_Disguise()
 	if( pTeam->GetClassLimit( iClass ) == -1 )
 	{
 		// TODO: Nice hud msg!
-		Warning( "[Disguise] Invalid class for this map!\n" );
+		//Warning( "[Disguise] Invalid class for this map!\n" );
 
 		Omnibot::Notify_CantDisguiseAsClass(this, iClass);
 		return;
 	}
 
-	Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
+	//Warning( "[Disguise] [Server] Disguise team: %i, Disguise class: %i\n", iTeam, iClass );
 
 	// Now do the actual disguise
 	SetDisguise(iTeam, iClass);
