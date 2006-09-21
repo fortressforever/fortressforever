@@ -1142,7 +1142,7 @@ int C_FFPlayer::DrawModel( int flags )
 						clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
 
 					color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
-					DrawSprite( GetAbsOrigin(), 36.0f, 72.0f, c );
+					DrawSprite( GetAbsOrigin(), 40.0f, 80.0f, c );
 				}
 			}
 		}
