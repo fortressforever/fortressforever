@@ -24,6 +24,7 @@
 #include "ff_buildableobjects_shared.h"
 #include "ff_modelglyph.h"
 #include "in_buttons.h"
+#include "ff_radiotagdata.h"
 
 class CFFBuildableObject;
 class CFFDetpack;
@@ -317,9 +318,9 @@ public:
 
 protected:
     // Beg: Added by Mulchman for building objects and such
-	CNetworkHandle( CBaseAnimating, m_hDispenser );
-	CNetworkHandle( CBaseAnimating, m_hSentryGun );
-	CNetworkHandle( CBaseAnimating, m_hDetpack );
+	CNetworkHandle( CFFDispenser, m_hDispenser );
+	CNetworkHandle( CFFSentryGun, m_hSentryGun );
+	CNetworkHandle( CFFDetpack, m_hDetpack );
 	
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -513,6 +514,9 @@ protected:
 	float m_flRadioTaggedStartTime;
 	float m_flRadioTaggedDuration;
 	int m_iRadioTaggedAmmoIndex;
+
+	// Radio tag information
+	CNetworkHandle( CFFRadioTagData, m_hRadioTagData );
 
 	// This is here so that when someone tags us w/ a radiotag and
 	// we die while tagged by that person, we can award that player 

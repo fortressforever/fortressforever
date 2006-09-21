@@ -303,6 +303,9 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropFloat(SENDINFO(m_flConcTime)),
 
 	SendPropFloat(SENDINFO(m_flSpeedModifier)),
+
+	// Radiotag information the local client needs to know
+	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -538,10 +541,10 @@ void CFFPlayer::PreThink(void)
 
 	// Update our list of tagged players that the client
 	// should be "seeing" if it's time to do another update
-	if( ( m_flLastRadioTagUpdate + radiotag_duration.GetFloat( ) ) < gpGlobals->curtime )
-	{
+	//if( ( m_flLastRadioTagUpdate + radiotag_duration.GetFloat( ) ) < gpGlobals->curtime )
+	//{
 		FindRadioTaggedPlayers();
-	}
+	//}
 
 	// Riding a vehicle?
 	if( IsInAVehicle() )	
@@ -1247,6 +1250,10 @@ void CFFPlayer::InitialSpawn( void )
 	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
 	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
 
+	m_hRadioTagData = ( CFFRadioTagData * )CreateEntityByName( "ff_radiotagdata" );
+	Assert( m_hRadioTagData );
+	m_hRadioTagData->Spawn();
+
 	//DevMsg("CFFPlayer::InitialSpawn");
 }
 
@@ -1337,15 +1344,14 @@ void CFFPlayer::SpySilentFeign( void )
 
 		CFFLuaSC hOwnerFeign( 1, this );
 		// Find any items that we are in control of and let them know we feigned
-		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( NULL, "info_ff_script" );
+		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
 		while( pEnt != NULL )
 		{
-			// Tell the ent that it died
-			if (pEnt->GetOwnerEntity() == this)
-				entsys.RunPredicates_LUA( pEnt, &hOwnerFeign, "ownerfeign" );
+			// Tell the ent that it feigned
+			entsys.RunPredicates_LUA( pEnt, &hOwnerFeign, "onownerfeign" );
 
 			// Next!
-			pEnt = (CFFInfoScript*)gEntList.FindEntityByClassname( pEnt, "info_ff_script" );
+			pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( pEnt, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
 		}
 
 		// Fire an event.
@@ -2313,15 +2319,21 @@ void CFFPlayer::UnlockPlayer( void )
 
 void CFFPlayer::FindRadioTaggedPlayers( void )
 {
+	if( !m_hRadioTagData.Get() )
+		return;
+
 	// Reset
 	m_hRadioTaggedList.RemoveAll();
+
+	// Reset stuff back to zero
+	m_hRadioTagData->ClearVisible();
 
 	// Get client count
 	int iMaxClients = gpGlobals->maxClients;
 
 	// If we're the only ones we don't care
 	if( iMaxClients < 2 )
-		return;
+		return;	
 
 	// My origin
 	Vector vecOrigin = GetFeetOrigin();
@@ -2385,6 +2397,8 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// Add object to radio tagged array
 		m_hRadioTaggedList.AddToTail( hObject );
 
+		m_hRadioTagData->Set( pPlayer->entindex(), true, hObject.m_iClass, hObject.m_iTeam, hObject.m_bDucked, hObject.m_vecOrigin );
+
 		// Omni-bot: Notify the bot he has detected someone.
 		if(IsBot())
 		{
@@ -2395,6 +2409,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 	int iCount = m_hRadioTaggedList.Count();
 	if( iCount > 0 )
 	{
+		/*
 		// Only send this message to the local player	
 		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 		user.MakeReliable();
@@ -2417,7 +2432,8 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		}
 			
 		// End the message block
-		MessageEnd();		
+		MessageEnd();
+		*/
 
 		// Doing an update now...
 		m_flLastRadioTagUpdate = gpGlobals->curtime;

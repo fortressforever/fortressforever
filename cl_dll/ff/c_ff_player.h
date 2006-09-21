@@ -21,6 +21,7 @@
 #include "Sprite.h"
 #include "ff_fx_infection.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_radiotagdata.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
@@ -103,9 +104,9 @@ public:
 
 protected:
 	// Beg: Added by Mulchman for building objects and such
-	CNetworkHandle( CBaseAnimating, m_hDispenser );
-	CNetworkHandle( CBaseAnimating, m_hSentryGun );
-	CNetworkHandle( CBaseAnimating, m_hDetpack );
+	CNetworkHandle( C_FFDispenser, m_hDispenser );
+	CNetworkHandle( C_FFSentryGun, m_hSentryGun );
+	CNetworkHandle( C_FFDetpack, m_hDetpack );
 
 	// Used for seeing if a player is currently
 	// trying to build a detpack, dispenser, or sentry gun
@@ -331,6 +332,12 @@ protected:
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
+
+public:
+	// Local radio tag data
+	C_FFRadioTagData *GetRadioTagData( void )	{ return m_hRadioTagData.Get(); }
+private:
+	CNetworkHandle( C_FFRadioTagData, m_hRadioTagData );
 };
 
 // Just straight up copying the server version. Tired

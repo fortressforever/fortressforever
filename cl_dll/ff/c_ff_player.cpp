@@ -37,6 +37,7 @@
 #include "ff_vieweffects.h"
 #include "c_fire_smoke.h"
 #include "c_playerresource.h"
+#include "ff_glyph.h"
 
 #if defined( CFFPlayer )
 	#undef CFFPlayer
@@ -390,6 +391,9 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropFloat(RECVINFO(m_flConcTime)),
 
 	RecvPropFloat(RECVINFO(m_flSpeedModifier)),
+
+	// Radiotag information the local client needs to know
+	RecvPropEHandle( RECVINFO( m_hRadioTagData ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
@@ -1109,6 +1113,39 @@ int C_FFPlayer::DrawModel( int flags )
 	
 	if( pPlayer && ( this != pPlayer ) )
 	{
+		// --------------------------------
+		// Check for visible radio tagged players
+		// --------------------------------
+		C_FFRadioTagData *pRadioTagData = pPlayer->GetRadioTagData();
+		if( pRadioTagData )
+		{
+			// Grab the player index
+			int iIndex = entindex();
+
+			// Loop through and find tagged players that we are drawing and draw
+			// our radio tag glyph from here so it won't be super lagging or look bad.
+			if( pRadioTagData->GetVisible( iIndex ) )
+			{
+				//g_ClassGlyphs[ pRadioTagData->GetClass( iIndex ) - 1 ];
+
+				IMaterial *pMaterial = materials->FindMaterial( g_ClassGlyphs[ pRadioTagData->GetClass( iIndex ) - 1 ].m_szMaterial, TEXTURE_GROUP_OTHER );
+				if( pMaterial )
+				{
+					materials->Bind( pMaterial );
+
+					// The color is based on the players real team
+					int iTeam = pRadioTagData->GetTeam( iIndex );
+					Color clr = Color( 255, 255, 255, 255 );
+
+					if( g_PR )
+						clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+
+					color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
+					DrawSprite( GetAbsOrigin(), 36.0f, 72.0f, c );
+				}
+			}
+		}
+
 		// --------------------------------
 		// Check for "saveme"
 		// --------------------------------
