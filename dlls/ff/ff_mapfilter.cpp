@@ -39,6 +39,7 @@ const char *g_MapFilterKeepList[] =
 	"func_illusionary",
 	"func_rotating",
 	"ff_gamerules",
+	"ff_radiotagdata",
 	"infodecal",
 	"info_projecteddecal",
 	"info_node",

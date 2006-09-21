@@ -45,6 +45,7 @@ using namespace vgui;
 #include "ff_esp_shared.h"
 #include "ff_glyph.h"
 #include "c_playerresource.h"
+#include "ff_radiotagdata.h"
 
 class CHudRadioTag : public CHudElement, public vgui::Panel
 {
@@ -74,21 +75,21 @@ public:
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 
-		vgui::ivgui()->AddTickSignal( GetVPanel() );
+		//vgui::ivgui()->AddTickSignal( GetVPanel() );
 	};
 
 	void	Init( void );
 	void	VidInit( void );
 	void	Paint( void );
-	void	OnTick( void );
+	//void	OnTick( void );
 
 	// Callback function for the "RadioTagUpdate" user message
-	void	MsgFunc_RadioTagUpdate( bf_read &msg );
+	//void	MsgFunc_RadioTagUpdate( bf_read &msg );
 	
 };
 
 DECLARE_HUDELEMENT( CHudRadioTag );
-DECLARE_HUD_MESSAGE( CHudRadioTag, RadioTagUpdate );
+//DECLARE_HUD_MESSAGE( CHudRadioTag, RadioTagUpdate );
 
 void CHudRadioTag::VidInit( void )
 {	
@@ -122,9 +123,9 @@ void CHudRadioTag::VidInit( void )
 	m_flLastDraw = 0.0f;
 }
 
+/*
 void CHudRadioTag::OnTick( void )
 {
-	/*
 	if( !engine->IsInGame() )
 		return;
 
@@ -147,12 +148,12 @@ void CHudRadioTag::OnTick( void )
 	}
 
 	m_flLastDraw = gpGlobals->curtime;
-	*/
 }
+*/
 
 void CHudRadioTag::Init( void )
 {
-	HOOK_HUD_MESSAGE( CHudRadioTag, RadioTagUpdate );
+	//HOOK_HUD_MESSAGE( CHudRadioTag, RadioTagUpdate );
 
 	CacheGlyphs();
 }
@@ -166,6 +167,7 @@ void CHudRadioTag::CacheTextures( void )
 	m_iHeightOffset = 160;
 }
 
+/*
 void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 {
 	// Set all to non-updated
@@ -236,9 +238,102 @@ void CHudRadioTag::MsgFunc_RadioTagUpdate( bf_read &msg )
 			m_hList[ i ].m_bActive = false;
 	}
 }
+*/
 
 void CHudRadioTag::Paint( void )
 {
+	if( engine->IsInGame() )
+	{
+		C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+		if( !pPlayer )
+		{
+			Assert( 0 );
+			return;
+		}
+
+		// Get radio tag data
+		C_FFRadioTagData *pRadioTagData = pPlayer->GetRadioTagData();
+		if( !pRadioTagData )
+		{
+			//Assert( 0 );
+			return;
+		}
+
+		// Get feet origin
+		Vector vecOrigin = pPlayer->GetFeetOrigin();
+
+		for( int i = 0; i < MAX_PLAYERS + 1; i++ )
+		{
+			// If the player isn't visible... visible
+			// meaning he's tagged and we're supposed
+			// to draw him
+			if( !pRadioTagData->GetVisible( i ) )
+				continue;
+			else
+			{
+				// C_FFPlayer::DrawModel handles drawing when the player
+				// isn't dormant. When the player is dormant, we draw here!
+				C_BaseEntity *pEntity = ClientEntityList().GetBaseEntity( i );
+				if( pEntity )
+				{
+					if( !pEntity->IsDormant() )
+						continue;
+				}
+			}
+
+			// Draw a box around the guy if they're on our screen
+			int iScreenX, iScreenY;
+			if( GetVectorInScreenSpace( pRadioTagData->GetOrigin( i ), iScreenX, iScreenY ) )
+			{
+				int iTopScreenX, iTopScreenY;
+				/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( pRadioTagData->GetOrigin( i ) + ( pRadioTagData->GetDucking( i ) ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+
+				Color cColor = Color( 255, 255, 255, 255 );
+				if( g_PR )
+					cColor = g_PR->GetTeamColor( pRadioTagData->GetTeam( i ) );
+
+				// Get distance from us to them
+				float flDist = vecOrigin.DistTo( pRadioTagData->GetOrigin( i ) );
+
+				// Store an index into our glyph array
+				int iIndex = pRadioTagData->GetClass( i ) - 1;
+
+				// Modify based on FOV
+				flDist *= ( pPlayer->GetFOVDistanceAdjustFactor() );
+
+				int iWidthAdj = 30;
+				int iAdjX = ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) * ( ( ( m_iTextureWide - iWidthAdj ) / 2 ) / flDist ) );
+				//int iYTop = ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) );
+				int iYTop = /*( bGotTopScreenY ?*/ iTopScreenY /*: ( ( iScreenY - ( m_iHeightOffset * ( ( m_iTextureTall / 2 ) / flDist ) ) ) ) )*/;
+				int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
+
+				if( flDist <= 300 )
+				{
+					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
+					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				}
+				else
+				{
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+					surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				}
+
+				// Get the current frame we're supposed to draw
+				//int iFrame = m_hList[ i ].UpdateFrame();
+
+				// Draw the radio tower thing
+				//surface()->DrawSetTextureFile( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId, g_RadioTowerGlyphs[ iFrame ].m_szMaterial, true, false );
+				//surface()->DrawSetTexture( g_RadioTowerGlyphs[ iFrame ].m_pTexture->textureId );
+				//surface()->DrawSetColor( 255, 255, 255, flAlpha );
+				//surface()->DrawTexturedRect( iScreenX, iYTop, iScreenX + iAdjX, iYTop + iAdjX );
+			}
+		}
+	}
+
+	return;
+
 	if( engine->IsInGame() )
 	{
 		if( m_nItems )
