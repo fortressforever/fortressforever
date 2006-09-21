@@ -30,7 +30,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRadioTagData, DT_FFRadioTagData )
 	SendPropArray3( SENDINFO_ARRAY3( m_iClass ), SendPropInt( SENDINFO_ARRAY( m_iClass ), 5 ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iTeam ), SendPropInt( SENDINFO_ARRAY( m_iTeam ), 4 ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_bDucking ), SendPropInt( SENDINFO_ARRAY( m_bDucking ), 1, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_vecOrigin ), SendPropVector( SENDINFO_ARRAY( m_vecOrigin ) ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_vecOrigin ), SendPropVector( SENDINFO_ARRAY( m_vecOrigin ), 32, SPROP_CHANGES_OFTEN ) ),
 END_SEND_TABLE()
 #endif
 
