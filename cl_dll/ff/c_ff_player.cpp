@@ -1031,6 +1031,9 @@ void C_FFPlayer::Spawn( void )
 	if( g_PR && ( GetTeamNumber() >= TEAM_BLUE ) && ( GetTeamNumber() <= TEAM_GREEN ) )
 		m_clrTeamColor = g_PR->GetTeamColor( GetTeamNumber() );
 
+	// Reset pipebomb counter!
+	GetPipebombCounter()->Reset();
+
 	// Stop grenade 1 timers if they're playing
 	if( g_pGrenade1Timer && ( m_iGrenadeState != FF_GREN_PRIMEONE ) )
 	{
@@ -1081,6 +1084,9 @@ void C_FFPlayer::Death()
 {
 	ffvieweffects->Reset();
 	ClearStatusIcons();
+
+	// Reset pipebomb counter!
+	GetPipebombCounter()->Reset();
 }
 
 // Stomp any movement if we're in mapguide mode
