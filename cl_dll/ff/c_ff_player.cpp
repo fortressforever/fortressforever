@@ -627,6 +627,8 @@ void C_FFRagdoll::CreateRagdoll()
 			IgniteRagdoll(pPlayer);
 			SetNextClientThink(gpGlobals->curtime + 1.0f);
 
+			// This is giving the CL_CopyExistingEntity error
+#if 0
 			C_EntityFlame *pFlame = (C_EntityFlame *) pPlayer->GetEffectEntity();
 
 			// Now make sure we kill our own flame
@@ -634,6 +636,7 @@ void C_FFRagdoll::CreateRagdoll()
 			{
 				pFlame->Remove();
 			}
+#endif
 		}
 
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
