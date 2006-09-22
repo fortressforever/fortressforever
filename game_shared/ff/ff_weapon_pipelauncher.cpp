@@ -105,6 +105,11 @@ void CFFWeaponPipeLauncher::Fire()
 
 	CFFProjectilePipebomb::CreatePipebomb(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
 
+#ifdef CLIENT_DLL
+	// This is so we know how many pipebombs we have out at a time
+	pPlayer->GetPipebombCounter()->Increment();
+#endif
+
 #ifdef GAME_DLL
 	// Store off the time we shot the pipebomb
 	pPlayer->SetPipebombShotTime( gpGlobals->curtime );

@@ -117,3 +117,34 @@ void CProxyAmmo::OnBind(void *pC_BaseEntity)
 }
 
 EXPOSE_INTERFACE(CProxyAmmo, IMaterialProxy, "CurrentAmmo" IMATERIAL_PROXY_INTERFACE_VERSION);
+
+//=============================================================================
+//
+// Class CFFRadioTagData
+//
+//=============================================================================
+class CFFProxyNumPipes : public CResultProxy
+{
+public:
+	virtual void OnBind( void *pC_BaseEntity );
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFProxyNumPipes::OnBind( void *pC_BaseEntity )
+{
+	if( !pC_BaseEntity )
+		return;
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+	{
+		Assert( 0 );
+		return;
+	}
+
+	SetFloatResult( pPlayer->GetPipebombCounter()->GetPipes() );
+}
+
+EXPOSE_INTERFACE( CFFProxyNumPipes, IMaterialProxy, "FF_NumPipes" IMATERIAL_PROXY_INTERFACE_VERSION );

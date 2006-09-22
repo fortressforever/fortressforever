@@ -79,6 +79,43 @@ typedef struct SpyInfo_s
 
 } CrosshairInfo_s;
 
+//=============================================================================
+//
+// Class CFFRadioTagData
+//
+//=============================================================================
+//-----------------------------------------------------------------------------
+// Purpose: Silly class to encapsulate how many pipes a player has out currently
+//-----------------------------------------------------------------------------
+class CFFPipebombCounter
+{
+public:
+	CFFPipebombCounter( void )
+	{
+		m_iPipes = -1;
+	}
+
+	void Increment( void )
+	{
+		m_iPipes = clamp( m_iPipes + 1, 0, 8 );
+	}
+
+	// Call this when the player dies
+	void CFFPipebombCounter::Reset( void )
+	{
+		m_iPipes = -1;
+	}
+
+	// Get the number of pipes out
+	int CFFPipebombCounter::GetPipes( void ) const
+	{
+		return m_iPipes;
+	}
+
+private:
+	int m_iPipes;
+};
+
 class C_FFPlayer : public C_BasePlayer, public IFFPlayerAnimStateHelpers
 {
 public:
@@ -333,11 +370,17 @@ protected:
 private:
 	C_FFPlayer( const C_FFPlayer & );
 
-public:
 	// Local radio tag data
+public:	
 	C_FFRadioTagData *GetRadioTagData( void )	{ return m_hRadioTagData.Get(); }
 private:
 	CNetworkHandle( C_FFRadioTagData, m_hRadioTagData );
+
+	// Pipebomb stuff
+public:	
+	CFFPipebombCounter *GetPipebombCounter( void ) { return &m_hPipebombCounter; }
+private:
+	CFFPipebombCounter m_hPipebombCounter;
 };
 
 // Just straight up copying the server version. Tired
