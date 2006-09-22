@@ -141,11 +141,14 @@ CFFWeaponBase::CFFWeaponBase()
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 
 #ifdef GAME_DLL
+	// get the stat ids
 	char buf[256];
-	Q_snprintf(buf, 256, "fired_%s", GetClassName());
+	Q_snprintf(buf, 256, "fired_%s", GetClassname());
 	m_iStatFired = g_StatsLog->GetStatID(buf);
-	Q_snprintf(buf, 256, "hit_%s", GetClassName());
+	Q_snprintf(buf, 256, "hit_%s", GetClassname());
 	m_iStatHit = g_StatsLog->GetStatID(buf);
+	Q_snprintf(buf, 256, "%s", GetClassname());
+	m_iActionKill = g_StatsLog->GetActionID(buf);
 #endif
 }
 

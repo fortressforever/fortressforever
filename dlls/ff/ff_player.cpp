@@ -1240,7 +1240,6 @@ void CFFPlayer::InitialSpawn( void )
 	m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
 	m_iStatKill = g_StatsLog->GetStatID("kills");
 	m_iStatInfections = g_StatsLog->GetStatID("infections");
-	m_iStatCures = g_StatsLog->GetStatID("cures");
 	m_iStatHeals = g_StatsLog->GetStatID("heals");
 	m_iStatHealHP = g_StatsLog->GetStatID("healhp");
 	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
@@ -1388,6 +1387,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
 		else
 			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
+
+		//if (info.GetInflictor() && info.GetInflictor()->edict() && ((CFFWeaponBase *)info.GetInflictor()))
+		//	g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, ((CFFWeaponBase *)info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
 	}
 
 	// Drop any grenades
@@ -2979,10 +2981,15 @@ void CFFPlayer::Command_SevTest( void )
 	}
 
 	STOLEN AGAIN. NINJA!
-*/
 
 	if (engine->Cmd_Argc() > 1)
 		entsys.DoString(engine->Cmd_Args());
+
+	STOLEN X3
+*/
+	char buf[100000];
+	g_StatsLog->Serialise(buf, sizeof(buf)-1);
+	DevMsg(buf);
 }
 
 /**
@@ -3860,7 +3867,8 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		pCurer->IncrementFragCount( 1 );
 
 		// Log this in the stats
-		g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatCures, 1);
+		if (pCurer)
+			g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
 	}
 
 	// Hack-ish - removing infection effect
