@@ -3826,9 +3826,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%
 				RelativePath="..\stats\ff_socks.h">
 			</File>
 			<File
-				RelativePath="..\stats\ff_statdefs.h">
-			</File>
-			<File
 				RelativePath="..\stats\ff_statslog.cpp">
 			</File>
 			<File

@@ -217,6 +217,8 @@ public:
 
 	int					m_iStatFired;
 	int					m_iStatHit;
+	int					m_iActionKill;
+
 private:
 
 	CFFWeaponBase(const CFFWeaponBase &);

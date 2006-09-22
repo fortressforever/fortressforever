@@ -210,6 +210,8 @@ void CFFStatsLog::AddStat(int playerid, int statid, double value)
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 	assert(statid >= 0 && statid < (int)m_vStats.size());
 
+	//DevMsg("[STATS] adding stat %d to %d (+%.2f)\n", statid, playerid, value);
+
 	// make sure it's big enough
 	if (m_vPlayers[playerid].m_vStats.size() < m_vStats.size())
 		m_vPlayers[playerid].m_vStats.resize(m_vStats.size(), 0.0);
@@ -248,8 +250,10 @@ void CFFStatsLog::AddAction(int playerid, int targetid, int actionid, int time, 
 
 	assert(playerid >= 0 && playerid < (int)m_vPlayers.size());
 
+	DevMsg("[STATS] adding action %d[%s] to %d (at (%.2f, %.2f, %.2f) aka '%s')\n", actionid, param, playerid, coords.x, coords.y, coords.z, location);
+
 	// build the action def
-	CFFAction a( actionid, targetid, time, param, coords, location );
+	CFFAction a( actionid, targetid, time, param, coords, location?location:"" );
 
 	// add it
 	m_vPlayers[ playerid ].m_vActions.push_back( a );
@@ -333,7 +337,6 @@ const char *CFFStatsLog::GetTimestampString() const
 {
 	return "22-Jan-2006 00:03 UTC";
 }
-
 /**
 Serialise the stored data for sending
 */
@@ -345,12 +348,27 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	CQuickBuffer buf(buffer, buffer_size);
 	int i, j;
 
+	// build the auth string here
+	const char *login = "ff-test";
+	const char *secret = "sharedsecret123";
+	const char *date = GetTimestampString(); // abuse staticness of return here
+	char preauthstring[80];
+	Q_snprintf(preauthstring, sizeof(preauthstring), "%s%s%s", login, secret, date);
+	DevMsg("[STATS] preauthstring: [%s]\n", preauthstring);
+
+	// simple hash used here
+	unsigned long hash = 0;
+	for (i=0; i<(int)strlen(preauthstring); i++) {
+		hash = (hash<<7) | (hash>>31);
+		hash ^= preauthstring[i];
+	}
+
 	// Basic header information
-	buf.Add("login ff-test\n");
-	buf.Add("auth %s\n", GetAuthString());
-	buf.Add("date %s\n", GetTimestampString());
+	buf.Add("login %s\n", login);
+	buf.Add("auth %08X\n", hash);
+	buf.Add("date %s\n", date);
 	buf.Add("duration %d\n", 1800);
-	buf.Add("map %s\n", "fry_baked");
+	buf.Add("map %s\n", "ff_dev_ctf");
 	buf.Add("bluescore %d\n", 0);
 	buf.Add("redscore %d\n", 0);
 	buf.Add("yellowscore %d\n", 0);
@@ -394,20 +412,43 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	}
 }
 
-/**
-* Send the stats to the remote server
-*/
+#define STATS_HOST "ponza.homeip.net"
+#define STATS_URL "/ff/index.php?a=parserequest"
+#define STATS_BOUNDARY "STATSBOUNDSzx9n12"
 void SendStats() 
 {
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
+	// this is kind of wasteful :(
+	char buf[100000], buf2[120000];
 
-	return;
-
-	char buf[131072];
-
-	DevWarning("[STATS] Sending stats...\n");
+	DevMsg("[STATS] Sending stats...\n");
 
 	/*g_StatsLog*/ g_StatsLogSingleton.Serialise(buf, sizeof(buf));
+	DevMsg(buf);
+	DevMsg("------\n\n");
+
+	// generate post-data first (size is used in the part below)
+	Q_snprintf(buf2, sizeof(buf2),
+		"--" STATS_BOUNDARY "\r\n"
+        "Content-Disposition: form-data; name=\"data\"\r\n"
+        "\r\n%s\r\n"
+        "--" STATS_BOUNDARY "\r\n",
+
+		buf);
+
+	// generate http request
+    Q_snprintf(buf, sizeof(buf),
+		"POST %s HTTP/1.1\r\n"
+		"Host: %s\r\n"
+		"Connection: close\r\n"
+		"Content-type: multipart/form-data, boundary=" STATS_BOUNDARY "\r\n"
+		"Content-length: %d\r\n\r\n"
+		"%s",
+		
+		STATS_URL,
+		STATS_HOST,
+		strlen(buf2),
+		buf2);
 
 	DevMsg(buf);
 
@@ -421,7 +462,7 @@ void SendStats()
 	}
 
 	// Connect to remote host
-	if (!sock.Connect("localhost", 80)) 
+	if (!sock.Connect(STATS_HOST, 80)) 
 	{
 		DevWarning("[STATS] Could not connect to remote host\n");
 		return;
@@ -443,20 +484,19 @@ void SendStats()
 		return;
 	}
 
-	char response[128];
 	int a;
 
 	// Send data
-	if ((a = sock.Recv(response, 127)) == 0) 
+	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
 	{
 		DevWarning("[STATS] Did not get response from stats server\n");
 		sock.Close();
 		return;
 	}
 
-	response[a] = '\0';
+	buf[a] = '\0';
 
-	DevMsg("[STATS] Successfully sent stats data(Response: %s) \n", response);
+	DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
 
 	// Close socket
 	sock.Close();
