@@ -500,7 +500,7 @@ void CFFMiniTurret::Spawn( void )
 
 	SetBlocksLOS( false );
 
-	SetViewOffset( EyeOffset( ACT_IDLE ) );
+	//SetViewOffset( EyeOffset( ACT_IDLE ) );
 	m_takedamage	= DAMAGE_EVENTS_ONLY;
 	m_iHealth		= 100;
 	m_iMaxHealth	= 100;
@@ -535,6 +535,11 @@ void CFFMiniTurret::Spawn( void )
 	SetAbsAngles( QAngle( 0, 180, 0 ) );
 
 	m_vecGoalAngles.Init();
+
+	SetActivity( ( Activity )ACT_MINITURRET_CLOSED_IDLE );
+
+	//m_Activity = m_IdealActivity;
+	//m_nIdealSequence = GetSequence();
 
 	//ChangeTeam( m_iTeam );
 }
@@ -651,6 +656,25 @@ void CFFMiniTurret::HackFindEnemy( void )
 	}
 
 	SetEnemy( pTarget );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set our enemy
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::SetEnemy( CBaseEntity *pEntity )
+{
+	m_hEnemy = pEntity;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get our enemy
+//-----------------------------------------------------------------------------
+CBaseEntity *CFFMiniTurret::GetEnemy( void )
+{
+	if( m_hEnemy )
+		return ( CBaseEntity * )m_hEnemy;
+
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -866,16 +890,12 @@ void CFFMiniTurret::OnActiveThink( void )
 	if( m_flShotTime < gpGlobals->curtime )
 	{
 		// Fire the gun
-		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) <= DOT_3DEGREE )
+		if( DotProduct( vecDirToEnemy, vecMuzzleDir ) > DOT_20DEGREE )
 		{
 			//SetActivity( ACT_RESET );
 			//SetActivity( ( Activity )ACT_MINITURRET_FIRE );
 
 			// Fire the weapon
-			//Shoot( vecMuzzle, vecMuzzleDir );
-			if( miniturret_debug.GetBool() )
-				DevMsg( "[MiniTurret] SHOOT!\n" );
-
 			Shoot( vecMuzzle, vecMuzzleDir );
 		} 
 	}
@@ -1100,7 +1120,10 @@ void CFFMiniTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bo
 	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
-	info.m_iDamage = 70.0f;
+	if( miniturret_debug.GetBool() )
+		info.m_iDamage = 0.0f;
+	else
+		info.m_iDamage = 70.0f;
 
 	if( !miniturret_castrate.GetBool() )
 	{
@@ -1120,6 +1143,57 @@ void CFFMiniTurret::DoMuzzleFlash( void )
 	data.m_nAttachmentIndex = m_iMuzzleAttachment;
 	data.m_nEntIndex = entindex();
 	DispatchEffect( "MuzzleFlash", data );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets the activity to the desired activity immediately, skipping any
+//			transition sequences.
+// Input  : NewActivity - 
+//-----------------------------------------------------------------------------
+void CFFMiniTurret::SetActivity( Activity NewActivity )
+{
+	if( m_Activity == NewActivity )
+		return;
+
+	// Don't do this if I'm playing a transition, unless it's ACT_RESET.
+	if( ( NewActivity != ACT_RESET ) && ( m_Activity == ACT_TRANSITION ) && ( m_IdealActivity != ACT_DO_NOT_DISTURB ) )
+		return;
+
+	if( !GetModelPtr() )
+		return;
+
+	// In case someone calls this with something other than the ideal activity.
+	m_IdealActivity = NewActivity;
+
+	m_nIdealSequence = SelectWeightedSequence( m_IdealActivity );
+
+	if( m_nIdealSequence == ACT_INVALID )
+		m_nIdealSequence = 0;
+
+	// Set to the desired anim, or default anim if the desired is not present
+	if( m_nIdealSequence > ACTIVITY_NOT_AVAILABLE )
+	{
+		if( ( GetSequence() != m_nIdealSequence ) || !SequenceLoops() )
+			SetCycle( 0 );
+
+		ResetSequence( m_nIdealSequence );
+	}
+	else
+	{
+		// Not available try to get default anim
+		ResetSequence( 0 );
+	}
+
+	// Go ahead and set this so it doesn't keep trying when the anim is not present
+	m_Activity = m_IdealActivity;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns true if our ideal activity has finished playing.
+//-----------------------------------------------------------------------------
+bool CFFMiniTurret::IsActivityFinished( void )
+{
+	return ( IsSequenceFinished() && ( GetSequence() == m_nIdealSequence ) );
 }
 
 #endif // GAME_DLL
