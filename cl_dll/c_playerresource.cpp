@@ -23,6 +23,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bAlive), RecvPropInt( RECVINFO(m_bAlive[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iHealth), RecvPropInt( RECVINFO(m_iHealth[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_iArmor), RecvPropInt( RECVINFO(m_iArmor[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iClass), RecvPropInt( RECVINFO(m_iClass[0]))), // |-- Mirv: Current class
 	RecvPropArray3( RECVINFO_ARRAY(m_iChannel), RecvPropInt( RECVINFO(m_iChannel[0]))), // |-- Mirv: Channel information
 
@@ -46,6 +47,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
 	memset( m_bAlive, 0, sizeof( m_bAlive ) );
 	memset( m_iHealth, 0, sizeof( m_iHealth ) );
+	memset( m_iArmor, 0, sizeof( m_iArmor ) );
 	memset( m_iClass, 0, sizeof( m_iClass ) );	// |-- Mirv: Current class
 
 	memset( m_iChannel, 0, sizeof( m_iChannel ) ); // |-- Mirv: Channel information
@@ -298,6 +300,17 @@ int	C_PlayerResource::GetHealth( int iIndex )
 		return 0;
 
 	return m_iHealth[iIndex];
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	C_PlayerResource::GetArmor( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_iArmor[iIndex];
 }
 
 // --> Mirv: Get the player's class
