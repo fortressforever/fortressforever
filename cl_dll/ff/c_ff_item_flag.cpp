@@ -146,44 +146,37 @@ ShadowType_t C_FFInfoScript::ShadowCastType( void )
 
 void C_FFInfoScript::ClientThink( void )
 {
-	/* Yeah...
-	// If we have an owner entity we are being carried
-	if( GetFollowedEntity() )
+	// Adjust offset relative to player
+	C_FFPlayer *pPlayer = ToFFPlayer( GetFollowedEntity() );
+	if( pPlayer && !m_vecOffset.IsZero() )
 	{
-		// Move our origin according to GetOwnerEntity()'s GetAbsOrigin()
+		// Adjust origin based on player's origin
 
-		// All this "extra" junk is so the object doesn't move
-		// when the player looks up or down
-		Vector vecForward, vecRight, vecUp;
-		GetFollowedEntity()->GetVectors( &vecForward, &vecRight, &vecUp );
+		Vector vecOrigin, vecForward, vecRight, vecUp;
+		vecOrigin = pPlayer->GetFeetOrigin();
 
-		Vector vecOrigin = GetFollowedEntity()->GetAbsOrigin();
+		pPlayer->EyeVectors( &vecForward, &vecRight );
 
-		VectorNormalizeFast( vecForward );
+		// Level off
+		vecForward.z = 0;
+		VectorNormalize( vecForward );
 
-		Vector vecForwardPos = vecOrigin + ( vecForward * 96.0f );
+		// Get straight up vector
+		vecUp = Vector( 0, 0, 1.0f );
 
-		// Put on the same plane
-		vecForwardPos.z = vecOrigin.z;
-		
-		// Get real forward direction now (not just "forward-wherever-crosshair-pointed" direction)
-		vecForward = vecForwardPos - vecOrigin;
+		// Get right vector (think this is correct, otherwise swap the shits)
+		vecRight = CrossProduct( vecUp, vecForward );
 
-		// Get real up direction
-		vecUp = ( vecOrigin + Vector( 0, 0, 96.0f ) ) - vecOrigin;
+		VectorNormalize( vecRight );
 
-		VectorNormalizeFast( vecForward );		
-		VectorNormalizeFast( vecUp );
+		bool bBalls;
+		bBalls = false;
 
-		// Think this is correct to get a right vector
-		CrossProduct( vecUp, vecForward, vecRight );
+		Vector vecBallOrigin = vecOrigin + ( vecForward * m_vecOffset.x ) + ( vecRight * m_vecOffset.y ) + ( vecUp * m_vecOffset.z );
 
-		VectorNormalizeFast( vecRight );
-
-		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.x ) + ( vecRight * m_vecOffset.y ) + ( vecUp * m_vecOffset.z ) );
+		SetAbsOrigin( vecBallOrigin );
 		SetAbsAngles( QAngle( 0, GetFollowedEntity()->GetAbsAngles().y, 0 ) );
 	}
-	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -193,17 +186,6 @@ bool C_FFInfoScript::ShouldDraw( void )
 {
 	return !IsRemoved();
 }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-//int C_FFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
-//{
-	// Force sending even if no model. By default objects
-	// without a model aren't sent to the client. And,
-	// sometimes we don't want a model.
-//	return FL_EDICT_ALWAYS;
-//}
 
 //-----------------------------------------------------------------------------
 // Purpose: Is this info_ff_script currently carried?

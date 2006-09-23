@@ -504,15 +504,18 @@ void CSpectatorGUI::Update()
 
 		m_pPlayerLabel->SetFgColor( c );
 		
-		wchar_t playerText[ 80 ], playerName[ 64 ], health[ 10 ];
+		wchar_t playerText[ 80 ], playerName[ 64 ], health[ 10 ], armor[ 10 ];
 		wcscpy( playerText, L"Unable to find #Spec_PlayerItem*" );
 		memset( playerName, 0x0, sizeof( playerName ) * sizeof( wchar_t ) );
 
 		localize()->ConvertANSIToUnicode( UTIL_SafeName(gr->GetPlayerName( playernum )), playerName, sizeof( playerName ) );
 		int iHealth = gr->GetHealth( playernum );
+		int iArmor = gr->GetArmor( playernum );
 		if ( iHealth > 0  && gr->IsAlive(playernum) )
 		{
 			_snwprintf( health, sizeof( health ), L"%i", iHealth );
+			_snwprintf( armor, sizeof( armor ), L"%i", iArmor );
+			// TODO: Modify #Spec_PlayerItem_team to include a %s for armor
 			localize()->ConstructString( playerText, sizeof( playerText ), localize()->Find( "#Spec_PlayerItem_Team" ), 2, playerName,  health );
 		}
 		else

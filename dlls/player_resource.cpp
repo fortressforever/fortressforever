@@ -25,6 +25,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bAlive), SendPropInt( SENDINFO_ARRAY(m_bAlive), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iHealth), SendPropInt( SENDINFO_ARRAY(m_iHealth), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iArmor), SendPropInt( SENDINFO_ARRAY(m_iArmor), 9, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iClass), SendPropInt( SENDINFO_ARRAY(m_iClass), 5 ) ),	// |-- Mirv: Current class
 	
 	SendPropArray3( SENDINFO_ARRAY3(m_iChannel), SendPropInt( SENDINFO_ARRAY(m_iChannel), 4 ) ), // |-- Mirv: Channel info
@@ -113,6 +114,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			m_iTeam.Set( i, pPlayer->GetTeamNumber() );
 			m_bAlive.Set( i, pPlayer->IsAlive()?1:0 );
 			m_iHealth.Set(i, max( 0, pPlayer->GetHealth() ) );
+			m_iArmor.Set(i, max( 0, pPlayer->GetArmor() ) );
 			m_iClass.Set(i, pPlayer->GetClassSlot() );	// |-- Mirv: Update our class
 
 			// Don't update ping / packetloss everytime

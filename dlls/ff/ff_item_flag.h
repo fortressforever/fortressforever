@@ -85,7 +85,7 @@ public:
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual bool	IsAlive( void ) { return false; }
 
-	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
+	virtual int		UpdateTransmitState( void );
 
 	// An info_ff_script's position state
 	virtual bool	IsCarried( void );
@@ -125,13 +125,10 @@ public:
 	bool			HasAnimations( void ) const { return m_bHasAnims; }
 	virtual Class_T	Classify( void ) { return CLASS_INFOSCRIPT; }
 
-	// Already exists in CBaseEntity!
-	//const char *EntName( void ) { return STRING( GetEntityName() ); }
-
 	void SetBotGoalInfo(int _type);
 
 	// returns the criteria necessary for another entity to "touch" this entity
-	int GetTouchFlags() const { return m_allowTouchFlags; }
+	int GetTouchFlags( void ) const { return m_allowTouchFlags; }
 
 	// sets criteria for another entity to touch this entity
 	void SetTouchFlags(const luabind::adl::object& table);

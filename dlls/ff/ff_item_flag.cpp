@@ -50,12 +50,18 @@ BEGIN_DATADESC( CFFInfoScriptAnimator )
 	DEFINE_THINKFUNC( OnThink ),
 END_DATADESC()
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScriptAnimator::Spawn( void )
 {
 	SetThink( &CFFInfoScriptAnimator::OnThink );
 	SetNextThink( gpGlobals->curtime );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScriptAnimator::OnThink( void )
 {
 	if( m_pFFScript )
@@ -92,6 +98,9 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS( info_ff_script, CFFInfoScript );
 PRECACHE_REGISTER( info_ff_script );
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 CFFInfoScript::CFFInfoScript( void )
 {
 	m_iHasModel = 0;
@@ -111,12 +120,18 @@ CFFInfoScript::CFFInfoScript( void )
 	m_allowTouchFlags = 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 CFFInfoScript::~CFFInfoScript( void )
 {
 	m_spawnflags = 0;
 	m_vStartOrigin = Vector();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Precache( void )
 {
 	PrecacheModel( FLAG_MODEL );
@@ -125,6 +140,9 @@ void CFFInfoScript::Precache( void )
 	entsys.RunPredicates_LUA( this, &hPrecache, "precache" );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CFFInfoScript::CreateItemVPhysicsObject( void )
 {
 	if( GetOwnerEntity() )
@@ -174,6 +192,9 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Spawn( void )
 {
 	// Set the time we spawned.
@@ -291,6 +312,8 @@ void CFFInfoScript::InternalPlayAnim( Activity hActivity )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CFFInfoScript::CanEntityTouch(CBaseEntity* pEntity)
 {
 	if(!pEntity)
@@ -335,6 +358,8 @@ bool CFFInfoScript::CanEntityTouch(CBaseEntity* pEntity)
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 {
 	if(!pEntity)
@@ -348,6 +373,8 @@ void CFFInfoScript::OnTouch( CBaseEntity *pEntity )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
 //-----------------------------------------------------------------------------
 void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 {
@@ -399,6 +426,8 @@ void CFFInfoScript::SetTouchFlags(const luabind::adl::object& table)
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::OnOwnerDied( CBaseEntity *pEntity )
 {
 	if( GetOwnerEntity() == pEntity )
@@ -428,6 +457,9 @@ void CFFInfoScript::OnOwnerForceRespawn( CBaseEntity *pEntity )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Pickup( CBaseEntity *pEntity )
 {
 	// Don't do anything if removed
@@ -459,6 +491,9 @@ void CFFInfoScript::Pickup( CBaseEntity *pEntity )
 	Omnibot::Notify_ItemPickedUp(this, pEntity);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Respawn(float delay)
 {
 	// Don't do anything if removed
@@ -478,6 +513,9 @@ void CFFInfoScript::Respawn(float delay)
 	SetNextThink( gpGlobals->curtime + delay );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::OnRespawn( void )
 {
 	// Don't do anything if removed
@@ -506,6 +544,9 @@ void CFFInfoScript::OnRespawn( void )
 	Omnibot::Notify_ItemRespawned(this);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Drop( float delay, float speed )
 {
 	// Don't do anything if removed
@@ -631,6 +672,9 @@ void CFFInfoScript::Drop( float delay, float speed )
 	Omnibot::Notify_ItemDropped(this);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFFInfoScript::Return( void )
 {
 	// Don't do anything if removed
@@ -659,6 +703,9 @@ void CFFInfoScript::Return( void )
 	Omnibot::Notify_ItemReturned(this);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFFInfoScript::OnThink( void )
 {
 	CFFLuaSC hOnReturn;
@@ -667,6 +714,9 @@ void CFFInfoScript::OnThink( void )
 	Return();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFFInfoScript::SetSpawnFlags( int flags )
 {
 	m_spawnflags = flags;
@@ -675,7 +725,7 @@ void CFFInfoScript::SetSpawnFlags( int flags )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-int CFFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+int CFFInfoScript::UpdateTransmitState( void )
 {
 	// Force sending even if no model. By default objects
 	// without a model aren't sent to the client. And,
@@ -848,6 +898,9 @@ void CFFInfoScript::RemoveThink( void )
 	LUA_Remove();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFFInfoScript::SetBotGoalInfo(int _type)
 {
 	int iTeamFlags = 0;
