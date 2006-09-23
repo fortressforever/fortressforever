@@ -23,6 +23,10 @@
 #include "ff_player.h"
 #include "ff_string.h"
 
+#ifdef _WIN32
+	#include <time.h>
+#endif
+
 //#include <list>
 //#include <algorithm>
 //#include <string>
@@ -335,7 +339,17 @@ const char *CFFStatsLog::GetAuthString() const
 */
 const char *CFFStatsLog::GetTimestampString() const
 {
-	return "22-Jan-2006 00:03 UTC";
+	/* note I don't know if this compiles on unix, so i put it in the win32 only stuffs */
+#ifdef _WIN32
+	// should be enough, and this is single-use so redoing it shouldn't be a problem.
+	static char ret[20], dateStr[9], timeStr[9];
+	_strdate(dateStr);
+	_strtime(timeStr);
+	Q_snprintf(ret, 19, "%s %s", dateStr, timeStr);
+	return ret;
+#else
+	return "9/9/06 12:20:30";
+#endif
 }
 /**
 Serialise the stored data for sending
