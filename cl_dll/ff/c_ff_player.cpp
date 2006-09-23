@@ -37,7 +37,6 @@
 #include "ff_vieweffects.h"
 #include "c_fire_smoke.h"
 #include "c_playerresource.h"
-#include "ff_glyph.h"
 
 #if defined( CFFPlayer )
 	#undef CFFPlayer
@@ -786,9 +785,6 @@ C_FFPlayer::C_FFPlayer() :
 	// Default
 	m_clrTeamColor = Color( 255, 255, 255, 255 );
 
-	// Cache the radio tag glyphs
-	CacheGlyphs();
-
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
@@ -1125,37 +1121,6 @@ int C_FFPlayer::DrawModel( int flags )
 	
 	if( pPlayer && ( this != pPlayer ) )
 	{
-		// --------------------------------
-		// Check for visible radio tagged players
-		// --------------------------------
-		C_FFRadioTagData *pRadioTagData = pPlayer->GetRadioTagData();
-		if( pRadioTagData )
-		{
-			// Grab the player index
-			int iIndex = entindex();
-
-			// Loop through and find tagged players that we are drawing and draw
-			// our radio tag glyph from here so it won't be super lagging or look bad.
-			if( pRadioTagData->GetVisible( iIndex ) )
-			{
-				IMaterial *pMaterial = materials->FindMaterial( g_ClassGlyphs[ pRadioTagData->GetClass( iIndex ) - 1 ].m_szMaterial, TEXTURE_GROUP_OTHER );
-				if( pMaterial )
-				{
-					materials->Bind( pMaterial );
-
-					// The color is based on the players real team
-					int iTeam = pRadioTagData->GetTeam( iIndex );
-					Color clr = Color( 255, 255, 255, 255 );
-
-					if( g_PR )
-						clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
-
-					color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
-					DrawSprite( GetAbsOrigin(), 40.0f, 80.0f, c );
-				}
-			}
-		}
-
 		// --------------------------------
 		// Check for "saveme"
 		// --------------------------------

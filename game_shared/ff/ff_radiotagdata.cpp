@@ -36,11 +36,13 @@ END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_radiotagdata, CFFRadioTagData );
 
-BEGIN_PREDICTION_DATA( CFFRadioTagData )
 #ifdef CLIENT_DLL
+BEGIN_PREDICTION_DATA_NO_BASE( CFFRadioTagData )
+
 	DEFINE_PRED_ARRAY( m_vecOrigin, FIELD_VECTOR, MAX_PLAYERS + 1, FTYPEDESC_INSENDTABLE ),
-#endif
+
 END_PREDICTION_DATA()
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
