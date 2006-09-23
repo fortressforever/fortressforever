@@ -29,12 +29,14 @@
 
 #ifdef CLIENT_DLL 
 	#define CFFMiniTurret C_FFMiniTurret
-	#define CAI_BaseNPC C_AI_BaseNPC
+	//#define CAI_BaseNPC C_AI_BaseNPC
 	#define CFFMiniTurretLaserDot C_FFMiniTurretLaserDot	
 	#define CFFMiniTurretLaserBeam C_FFMiniTurretLaserBeam
-	#include "c_ai_basenpc.h"
+	//#include "c_ai_basenpc.h"
+	#include "c_baseanimating.h"
 #else
 	#include "ai_basenpc.h"
+	#include "baseanimating.h"
 #endif
 
 //=============================================================================
@@ -196,10 +198,10 @@ LINK_ENTITY_TO_CLASS( env_ffminiturretlaserBeam, CFFMiniTurretLaserBeam );
 //	class CFFMiniTurret
 //
 //=============================================================================
-class CFFMiniTurret : public CAI_BaseNPC
+class CFFMiniTurret : public CBaseAnimating
 {
 public:
-	DECLARE_CLASS( CFFMiniTurret, CAI_BaseNPC );
+	DECLARE_CLASS( CFFMiniTurret, CBaseAnimating );
 	DECLARE_NETWORKCLASS();	
 
 	// --> Shared code
@@ -214,7 +216,6 @@ public:
 	void			LaserPosition( Vector& vecOrigin, QAngle& vecAngles );
 	void			SetupAttachments( void );
 
-	//CNetworkVar( int, m_iTeam );		// Team number
 	CNetworkVar( bool, m_bActive );		// Whether it's deployed/active or not
 	CNetworkVar( bool, m_bEnabled );	// Whether disabled or not
 
@@ -256,7 +257,6 @@ public:
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 	virtual int		VPhysicsTakeDamage( const CTakeDamageInfo &info ) { return 0; }
 
-	//virtual void	ChangeTeam( int iTeamNum );
 	const char		*GetTracerType( void ) { return "ACTracer"; } // TODO: Change
 
 	// Think functions
@@ -276,6 +276,16 @@ public:
 	*/
 
 	float			MaxYawSpeed( void );
+	
+
+	// Activity stuff
+	Activity		GetActivity( void ) { return m_Activity; }
+	virtual void	SetActivity( Activity NewActivity );
+	virtual bool	IsActivityFinished( void );
+private:
+	Activity		m_Activity;
+	Activity		m_IdealActivity;
+	int				m_nIdealSequence;
 
 protected:
 	void			Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
@@ -291,6 +301,10 @@ protected:
 	void			DisableLaserDot( void );
 	void			EnableLaserBeam( void );
 	void			DisableLaserBeam( void );
+
+	// Enemy handling
+	void			SetEnemy( CBaseEntity *pEntity );
+	CBaseEntity		*GetEnemy( void );
 
 protected:
 	int		m_iAmmoType;
@@ -312,6 +326,8 @@ protected:
 
 	CHandle< CFFMiniTurretLaserDot >	m_hLaserDot;
 	CHandle< CFFMiniTurretLaserBeam >	m_hLaserBeam;
+
+	EHANDLE	m_hEnemy;
 
 #endif // CLIENT_DLL
 };
