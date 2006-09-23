@@ -116,6 +116,8 @@ void CHudRadioTag::CacheTextures( void )
 
 	m_iWidthOffset = 32;
 	m_iHeightOffset = 160;
+
+	CacheGlyphs();
 }
 
 void CHudRadioTag::Paint( void )
@@ -132,46 +134,50 @@ void CHudRadioTag::Paint( void )
 		// Get radio tag data
 		C_FFRadioTagData *pRadioTagData = pPlayer->GetRadioTagData();
 		if( !pRadioTagData )
-		{
-			//Assert( 0 );
 			return;
-		}
 
 		// Get feet origin
 		Vector vecOrigin = pPlayer->GetFeetOrigin();
 
 		for( int i = 0; i < MAX_PLAYERS + 1; i++ )
 		{
-			// If the player isn't visible... visible
-			// meaning he's tagged and we're supposed
-			// to draw him
+			// Feet origin of tagged player
+			Vector vecPlayerOrigin;
+
+			// Skip this guy if he's not visible. Visible means
+			// he's tagged and we're supposed to be drawing him!
 			if( !pRadioTagData->GetVisible( i ) )
 				continue;
 			else
 			{
-				// C_FFPlayer::DrawModel handles drawing when the player
-				// isn't dormant. When the player is dormant, we draw here!
+				// See if player is dormant or not
 				C_BaseEntity *pEntity = ClientEntityList().GetBaseEntity( i );
 				if( pEntity )
 				{
+					// If not dormant, we can get real origin
 					if( !pEntity->IsDormant() )
-						continue;
+						vecPlayerOrigin = ToFFPlayer( pEntity )->GetFeetOrigin();
+					else
+					{
+						//DevMsg( "[Radio Tag] Drawing from network position (%f)!\n", gpGlobals->curtime );
+						vecPlayerOrigin = pRadioTagData->GetOrigin( i );
+					}
 				}
 			}
 
 			// Draw a box around the guy if they're on our screen
 			int iScreenX, iScreenY;
-			if( GetVectorInScreenSpace( pRadioTagData->GetOrigin( i ), iScreenX, iScreenY ) )
+			if( GetVectorInScreenSpace( vecPlayerOrigin, iScreenX, iScreenY ) )
 			{
 				int iTopScreenX, iTopScreenY;
-				/*bool bGotTopScreenY =*/ GetVectorInScreenSpace( pRadioTagData->GetOrigin( i ) + ( pRadioTagData->GetDucking( i ) ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
+				GetVectorInScreenSpace( vecPlayerOrigin + ( pRadioTagData->GetDucking( i ) ? Vector( 0, 0, 60 ) : Vector( 0, 0, 80 ) ), iTopScreenX, iTopScreenY );
 
 				Color cColor = Color( 255, 255, 255, 255 );
 				if( g_PR )
 					cColor = g_PR->GetTeamColor( pRadioTagData->GetTeam( i ) );
 
 				// Get distance from us to them
-				float flDist = vecOrigin.DistTo( pRadioTagData->GetOrigin( i ) );
+				float flDist = vecOrigin.DistTo( vecPlayerOrigin );
 
 				// Store an index into our glyph array
 				int iIndex = pRadioTagData->GetClass( i ) - 1;
@@ -184,21 +190,18 @@ void CHudRadioTag::Paint( void )
 				int iYTop = iTopScreenY;
 				int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
 
-				// NOTE: to be consistent w/ C_FFPlayer::DrawModel drawing
-				// (since no plain rectangles exist as vtf's (and we might
-				// be changing how all this stuff looks anyway...)
-				//if( flDist <= 300 )
-				//{
+				if( flDist <= 300 )
+				{
 					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
 					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
 					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-				//}
-				//else
-				//{
-				//	surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-				//	surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-				//}
+				}
+				else
+				{
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+					surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				}
 
 				// Get the current frame we're supposed to draw
 				//int iFrame = m_hList[ i ].UpdateFrame();
@@ -211,6 +214,4 @@ void CHudRadioTag::Paint( void )
 			}
 		}
 	}
-
-	return;
 }

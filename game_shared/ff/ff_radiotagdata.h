@@ -35,11 +35,10 @@ public:
 	DECLARE_CLASS( CFFRadioTagData, CBaseEntity );
 #ifdef CLIENT_DLL 
 	DECLARE_CLIENTCLASS();
+	DECLARE_PREDICTABLE();
 #else
 	DECLARE_SERVERCLASS();
-#endif
-
-	DECLARE_PREDICTABLE();
+#endif	
 
 	CFFRadioTagData( void );
 	~CFFRadioTagData( void );
