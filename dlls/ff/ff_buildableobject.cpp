@@ -255,12 +255,9 @@ void CFFBuildableObject::Spawn( void )
 {
 	VPROF_BUDGET( "CFFBuildableObject::Spawn", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	// Set the team number to the owner team number.
-	// Hope this is ok, bots use this for ally checks atm.
-	// Mulch: Yeah, keep this here, needed for some lua stuff
-	CFFPlayer *pOwner = static_cast< CFFPlayer * >( m_hOwner.Get() );
-	if( pOwner )
-		ChangeTeam( pOwner->GetTeamNumber() );
+	// Set a team
+	if( GetOwnerPlayer() )
+		ChangeTeam( GetOwnerPlayer()->GetTeamNumber() );
 
 	if( m_bUsePhysics )
 	{
@@ -291,9 +288,21 @@ void CFFBuildableObject::Spawn( void )
 	// Play the build sound (if there is one)
 	if( m_bHasSounds )
 	{
-		CPASAttenuationFilter sndFilter( this );
-		//sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
-		EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
+		// Detpack sound is local only
+		if( Classify() == CLASS_DETPACK )
+		{
+			if( GetOwnerPlayer() )
+			{
+				CSingleUserRecipientFilter sndFilter( GetOwnerPlayer() );
+				EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
+			}			
+		}
+		else
+		{
+			CPASAttenuationFilter sndFilter( this );
+			//sndFilter.AddRecipientsByPAS( GetAbsOrigin() );
+			EmitSound( sndFilter, entindex(), m_ppszSounds[ 0 ] );
+		}		
 	}
 
 	// Start making it drop and/or flash (if applicable)
@@ -708,9 +717,10 @@ void CFFBuildableObject::DoExplosion( void )
 	// Play the explosion sound
 	if( m_bHasSounds )
 	{
-		// m_ppszSounds[ 1 ] is the explosion sound
+		// m_ppszSounds[1] is the explosion sound
+
 		CPASAttenuationFilter sndFilter( this );
-		EmitSound( sndFilter, entindex(), m_ppszSounds[ 1 ] );	
+		EmitSound( sndFilter, entindex(), m_ppszSounds[ 1 ] );
 	}
 	else
 		Warning( "CFFBuildableObject::DoExplosion - ERROR - NO EXPLOSION SOUND (might want to add one)!\n" );

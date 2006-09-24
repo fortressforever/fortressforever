@@ -189,6 +189,8 @@ public:
 
 	// Play the correct sounds
 	virtual	void		WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
+	// Certain sounds we are only going to play for the local player
+	virtual	void		WeaponSoundLocal( WeaponSound_t sound_type, float soundtime = 0.0f );
 
 	// Ensure that weapons cannot be selected while building
 	virtual bool		CanBeSelected();
