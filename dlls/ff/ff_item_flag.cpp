@@ -725,7 +725,7 @@ void CFFInfoScript::SetSpawnFlags( int flags )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-int CFFInfoScript::UpdateTransmitState( void )
+int CFFInfoScript::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 {
 	// Force sending even if no model. By default objects
 	// without a model aren't sent to the client. And,
