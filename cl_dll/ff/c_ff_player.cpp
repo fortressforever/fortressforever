@@ -1147,7 +1147,15 @@ int C_FFPlayer::DrawModel( int flags )
 			if( pMaterial )
 			{
 				materials->Bind( pMaterial );
-				color32 c = { pPlayer->m_clrTeamColor.r(), pPlayer->m_clrTeamColor.g(), pPlayer->m_clrTeamColor.b(), 255 };
+
+				// The color is based on the players real team
+				int iTeam = GetTeamNumber();						
+				Color clr = Color( 255, 255, 255, 255 );
+
+				if( g_PR )
+					clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+				
+				color32 c = { clr.r(), clr.g(), clr.b(), 255 };
 				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
 
 				// Increment offset

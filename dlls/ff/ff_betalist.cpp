@@ -34,8 +34,8 @@ class CFFPlayer;
 //-----------------------------------------------------------------------------
 CFFBetaList g_FFBetaList;
 
-static ConVar ffbetalist_maxattempts( "ffbetalist_maxattempts", "5", FCVAR_ARCHIVE, "Maximum number of times we'll try to get a players Steam ID before kicking." );
-static ConVar ffbetalist_validatetime( "ffbetalist_validatetime", "5", FCVAR_ARCHIVE, "Number of seconds between trying to validate un-validated players." );
+static ConVar ffbetalist_maxattempts( "ffbetalist_maxattempts", "20", FCVAR_ARCHIVE, "Maximum number of times we'll try to get a players Steam ID before kicking." );
+static ConVar ffbetalist_validatetime( "ffbetalist_validatetime", "10", FCVAR_ARCHIVE, "Number of seconds between trying to validate un-validated players." );
 static ConVar ffbetalist_allowlanids( "ffbetalist_allowlanids", "1", FCVAR_ARCHIVE, "Whether or not to allow STEAM_ID_LAN Steam IDs." );
 static ConVar ffbetalist_verbose( "ffbetalist_verbose", "0", FCVAR_ARCHIVE, "To spam the console or to not? That is the question." );
 
