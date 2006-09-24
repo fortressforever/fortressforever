@@ -1072,7 +1072,7 @@ void C_FFPlayer::Spawn( void )
 	// therefore stop sounds at 'random' times
 	if (IsLocalPlayer())
 	{
-		enginesound->StopAllSounds( true );
+		//enginesound->StopAllSounds( true );
 	}
 }
 

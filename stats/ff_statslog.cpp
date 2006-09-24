@@ -437,6 +437,10 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 void SendStats() 
 {
 	VPROF_BUDGET( "CFFStatsLog::SendStats", VPROF_BUDGETGROUP_FF_STATS );
+
+	// stop crashing server!
+	return;
+
 	// this is kind of wasteful :(
 	char buf[100000], buf2[120000];
 
