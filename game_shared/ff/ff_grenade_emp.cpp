@@ -153,7 +153,7 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_emp );
 						
 					EmitSound( "BaseGrenade.Explode" );
 
-					UTIL_ScreenShake( pEntity->GetAbsOrigin(), explode, 150.0, 1.0, explode * 30, SHAKE_START );
+					UTIL_ScreenShake( pEntity->GetAbsOrigin(), explode, 150.0, 1.0, radius, SHAKE_START );
 
 					break;
 				}
