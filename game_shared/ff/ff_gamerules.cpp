@@ -1453,51 +1453,22 @@ bool CFFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 //-----------------------------------------------------------------------------
 int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
-//#ifdef GAME_DLL	
-	// BEG: Added by Mulchman
-	// TODO: Fix!?
+	if( !pPlayer || !pTarget )
+		return GR_NOTTEAMMATE;
+	
 	if( pPlayer->GetTeamNumber() == pTarget->GetTeamNumber() )
-	{
-		//DevMsg( "[PlayerRelationship] [serverside] dudes are on the same team!\n" );
 		return GR_TEAMMATE;
-	}
 
 	if( pPlayer->IsPlayer() && pTarget->IsPlayer() )
 	{
-		//DevMsg( "[PlayerRelationship] [serverside] comparing two players\n" );
-
 		// --> Mirv: Allies
 		CFFTeam *pPlayerTeam = ( CFFTeam * )GetGlobalTeam( pPlayer->GetTeamNumber() );
 
 		if( pPlayerTeam->GetAllies() & ( 1 << pTarget->GetTeamNumber() ) )
-		{
-			//DevMsg( "[PlayerRelationship] [serverside] dudes are allies!\n" );
 			return GR_TEAMMATE;		// Do you want them identified as an ally or a tm?
-		}
-
-		// Mulch: I think team mate is just fine
 		// <-- Mirv: Allies
 
 	}
-	// END: Added by Mulchman
-	
-	//DevMsg("CFFGameRules::PlayerRelationship ( %d, %d )\n", ENTINDEX(pPlayer), ENTINDEX(pTarget));
-
-//#endif
-
-	// Commented out by Mulch 02/03/2006 
-	/*
-#ifndef CLIENT_DLL
-	// half life multiplay has a simple concept of Player Relationships.
-	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() || IsTeamplay() == false )
-		return GR_NOTTEAMMATE;
-
-	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
-		return GR_TEAMMATE;
-
-#endif
-		*/
 
 	return GR_NOTTEAMMATE;
 }

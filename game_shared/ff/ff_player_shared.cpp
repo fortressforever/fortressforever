@@ -262,7 +262,7 @@ void CFFPlayer::FireBullet(
 
 		ClearMultiDamage();
 
-		CTakeDamageInfo info(pevAttacker, ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), fCurrentDamage, iDamageType);	// |-- Mirv: Modified this
+		CTakeDamageInfo info( ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), pevAttacker, fCurrentDamage, iDamageType );	// |-- Mirv: Modified this
 
 		// for radio tagging and to make ammo type work in the DamageFunctions
 		info.SetAmmoType(iBulletType);

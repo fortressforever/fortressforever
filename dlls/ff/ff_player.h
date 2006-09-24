@@ -523,8 +523,8 @@ protected:
 	// their extra point
 	EHANDLE	m_pWhoTaggedMe;
 
-	CUtlVector< ESP_Shared_s > m_hRadioTaggedList;
-	float m_flLastRadioTagUpdate;
+	//CUtlVector< ESP_Shared_s > m_hRadioTaggedList;
+	//float m_flLastRadioTagUpdate;
 
 protected:
 	void FindRadioTaggedPlayers( void );
