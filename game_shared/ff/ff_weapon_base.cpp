@@ -139,15 +139,20 @@ CFFWeaponBase::CFFWeaponBase()
 	m_bFiresUnderwater = true; 
 
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+}
+
+void CFFWeaponBase::Spawn()
+{
+	CBaseCombatWeapon::Spawn();
 
 #ifdef GAME_DLL
 	// get the stat ids
 	char buf[256];
-	Q_snprintf(buf, 256, "fired_%s", GetClassname());
+	Q_snprintf(buf, 256, "fired_%s", GetDeathNoticeName());
 	m_iStatFired = g_StatsLog->GetStatID(buf);
-	Q_snprintf(buf, 256, "hit_%s", GetClassname());
+	Q_snprintf(buf, 256, "hit_%s", GetDeathNoticeName());
 	m_iStatHit = g_StatsLog->GetStatID(buf);
-	Q_snprintf(buf, 256, "%s", GetClassname());
+	Q_snprintf(buf, 256, "%s", GetDeathNoticeName());
 	m_iActionKill = g_StatsLog->GetActionID(buf);
 #endif
 }
