@@ -1139,7 +1139,12 @@ void CFFPlayer::Spawn()
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
 	// get our stats id, just in case.
-	m_iStatsID = g_StatsLog->GetPlayerID(engine->GetPlayerNetworkIDString(this->edict()), GetClassSlot(), GetTeamNumber(), engine->GetPlayerUserId(this->edict()), GetName());
+	m_iStatsID = g_StatsLog->GetPlayerID(
+		engine->GetPlayerNetworkIDString(this->edict()),
+		GetClassSlot(),
+		GetTeamNumber(),
+		engine->GetPlayerUserId(this->edict()),
+		GetPlayerName());
 }
 
 // Mirv: Moved all this out of spawn into here
@@ -1388,8 +1393,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		else
 			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
 
-		//if (info.GetInflictor() && info.GetInflictor()->edict() && ((CFFWeaponBase *)info.GetInflictor()))
-		//	g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, ((CFFWeaponBase *)info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
+		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
+			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
 	}
 
 	// Drop any grenades

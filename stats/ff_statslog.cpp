@@ -192,8 +192,11 @@ int CFFStatsLog::GetPlayerID(const char *steamid, int classid, int teamnum, int 
 	for( i = 0; i < (int)m_vPlayers.size(); i++ )
 	{
 		// if we do, then return it
-		if( ( m_vPlayers[i].m_sSteamID == steamid ) && ( m_vPlayers[i].m_iClass == classid ) )
+		if( ( m_vPlayers[i].m_iUniqueID == uniqueid ) && ( m_vPlayers[i].m_iClass == classid ) ) {
+			m_vPlayers[i].m_sSteamID = steamid;
+			m_vPlayers[i].m_sName = name;
 			return i;
+		}
 	}
 
 	// otherwise we need to create it
@@ -402,10 +405,12 @@ void CFFStatsLog::Serialise(char *buffer, int buffer_size)
 	buf.Add("actions\n");
 	for (i=0; i<(int)m_vPlayers.size(); i++) {
 		for (j=0; j<(int)m_vPlayers[i].m_vActions.size(); j++) {
-			buf.Add("%d %d %s %d %s %s %s\n",
+	//for (std::vector<CFFPlayerStats>::const_iterator it = m_vPlayers.begin(); it!=m_vPlayers.end(); it++) {
+	//	for (std::vector<CFFAction>::const_iterator jt = (*it).m_vActions.begin(); jt!=(*it).m_vActions.end(); jt++) {
+			buf.Add("%d %d %s %.0f %s %s %s\n",
 				i,
 				m_vPlayers[i].m_vActions[j].targetid,
-				m_vActions[m_vPlayers[i].m_vActions[j].actionid],
+				m_vActions[m_vPlayers[i].m_vActions[j].actionid].m_sName.GetString(),
 				m_vPlayers[i].m_vActions[j].time,
 				m_vPlayers[i].m_vActions[j].param.GetString(),
 				"",

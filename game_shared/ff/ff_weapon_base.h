@@ -173,6 +173,8 @@ public:
 		DECLARE_DATADESC();
 	#endif
 
+	virtual void		Spawn( void );
+
 	// All FF weapons are predicted
 	virtual bool		IsPredicted() const { return true; }
 
