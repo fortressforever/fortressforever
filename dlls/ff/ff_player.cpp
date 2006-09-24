@@ -424,8 +424,6 @@ CFFPlayer::CFFPlayer()
 	m_flRadioTaggedStartTime = 0.0f;
 	m_flRadioTaggedDuration = radiotag_draw_duration.GetInt();
 
-	m_flLastRadioTagUpdate = 0.0f;
-
 	// Grenade Related
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0;
@@ -529,6 +527,7 @@ void CFFPlayer::PreThink(void)
 	if( m_bRadioTagged && ( ( m_flRadioTaggedStartTime + m_flRadioTaggedDuration ) < gpGlobals->curtime ) )
 	{
 		m_bRadioTagged = false;
+		m_pWhoTaggedMe = NULL;
 	}
 
 	// See if it's time to reset our saveme status
@@ -563,19 +562,6 @@ void CFFPlayer::PreThink(void)
 	// Bug #0000459: building on ledge locks you into place.
 	if( m_bBuilding )
 	{
-		// Players can jump while building now
-		/*
-		// Need to stop building because player somehow came off the ground
-		if( !FBitSet( GetFlags(), FL_ONGROUND ) )
-		{
-			Warning( "[Buildable] Player building and came off the ground! Need to cancel build.\n" );
-
-			// Send back through build process *should* cancel it correctly
-			m_iWantBuild = m_iCurBuild;
-			PreBuildGenericThink();
-		}
-		*/
-
 		// Our origin has changed while building! no!!!!!!!!!!!!!!!!!!!!!!
 		if( m_vecBuildOrigin.DistTo( GetAbsOrigin() ) > 128.0f )
 		{
@@ -2365,7 +2351,7 @@ void CFFPlayer::FindRadioTaggedPlayers( void )
 		// Bug #0000517: Enemies see radio tag.
 		// Only want to show players whom people on our team have tagged or
 		// players whom allies have tagged
-		if( g_pGameRules->PlayerRelationship( this, ToFFPlayer( pPlayer->m_pWhoTaggedMe ) ) != GR_TEAMMATE )
+		if( g_pGameRules->PlayerRelationship( this, ToFFPlayer( pPlayer->GetPlayerWhoTaggedMe() ) ) != GR_TEAMMATE )
 			continue;
 
 		// Get their origin
