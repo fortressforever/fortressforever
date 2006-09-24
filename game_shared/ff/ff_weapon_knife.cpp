@@ -72,7 +72,7 @@ CFFWeaponKnife::CFFWeaponKnife()
 //----------------------------------------------------------------------------
 bool CFFWeaponKnife::Deploy() 
 {
-	WeaponSound(SPECIAL1);
+	WeaponSoundLocal(SPECIAL1);
 
 	// A quick hint test
 #ifdef CLIENT_DLL

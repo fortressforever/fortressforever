@@ -224,7 +224,7 @@ bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 bool CFFWeaponFlamethrower::Deploy()
 {
 	// Play the ignite sound
-	WeaponSound(SPECIAL1);
+	WeaponSoundLocal(SPECIAL1);
 
 #ifdef GAME_DLL
 	// Flamejet entity doesn't exist yet, so make it now

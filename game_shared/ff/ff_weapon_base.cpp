@@ -180,6 +180,25 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 }
 
 //----------------------------------------------------------------------------
+// Purpose: For weapon sounds that only the local player should hear
+//----------------------------------------------------------------------------
+void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime )
+{
+#ifdef CLIENT_DLL
+	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
+	{
+		// If we have some sounds from the weapon classname.txt file, play a random one of them
+		const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
+		if( !shootsound || !shootsound[0] )
+			return;
+
+		CSingleUserRecipientFilter filter( GetPlayerOwner() );
+		CBaseEntity::EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, &GetPlayerOwner()->GetAbsOrigin() );
+	}	
+#endif
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Get CFFPlayer owner
 //----------------------------------------------------------------------------
 CFFPlayer * CFFWeaponBase::GetPlayerOwner() const
