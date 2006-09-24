@@ -449,6 +449,10 @@ ConVar mp_prematch( "mp_prematch",
 					// so make sure the player knows it doesn't exist anymore!
 					pPlayer->SetLastSpawn( NULL );
 
+					// Attempt to stop weapon sound since we're forcibly respawning
+					if( pPlayer->GetActiveFFWeapon() )
+						pPlayer->GetActiveFFWeapon()->WeaponSound( STOP );
+
 					pPlayer->Spawn();
 					pPlayer->ResetFragCount();
 					pPlayer->ResetDeathCount();
@@ -625,11 +629,15 @@ ConVar mp_prematch( "mp_prematch",
 
 					if( pbFlags[ AT_RESPAWN_PLAYERS ] )
 					{
+						// Attempt to stop weapon sound since we're forcibly respawning
+						if( pPlayer->GetActiveFFWeapon() )
+							pPlayer->GetActiveFFWeapon()->WeaponSound( STOP );
+
 						pPlayer->Spawn();
 					}
 
 					if( pbFlags[ AT_REMOVE_RAGDOLLS ] )
-					{
+					{						
 					}
 
 					if( pbFlags[ AT_REMOVE_PACKS ] )

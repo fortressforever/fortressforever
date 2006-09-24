@@ -85,7 +85,7 @@ public:
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual bool	IsAlive( void ) { return false; }
 
-	virtual int		UpdateTransmitState( void );
+	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
 
 	// An info_ff_script's position state
 	virtual bool	IsCarried( void );
