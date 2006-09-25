@@ -979,6 +979,62 @@ namespace FFLib
 	{
 		_scheduleman.RemoveSchedule(szScheduleName);
 	}
+
+	void SpeakAll(const char* szSentenceName)
+	{
+		// lookup the id of the sentence
+		if(!szSentenceName)
+			return;
+
+		int iSentence = engine->SentenceIndexFromName(szSentenceName);
+
+		// send the sentence on each client
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+		}
+	}
+
+	void SpeakPlayer(CFFPlayer *pPlayer, const char* szSentenceName)
+	{
+		// lookup the id of the sentence
+		if(!pPlayer || !szSentenceName)
+			return;
+
+		int iSentence = engine->SentenceIndexFromName(szSentenceName);
+
+		// send the sentence to the client
+		SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+	}
+
+	void SpeakTeam(int iTeam, const char* szSentenceName)
+	{
+		// lookup the id of the sentence
+		if(!szSentenceName)
+			return;
+
+		int iSentence = engine->SentenceIndexFromName(szSentenceName);
+
+		// send the sentence on each client
+		int nPlayers = FF_NumPlayers();
+		for(int i = 1 ; i <= nPlayers ; i++)
+		{
+			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
+
+			if( !pPlayer )
+				continue;
+
+			if(pPlayer->GetTeamNumber() == iTeam)
+				SENTENCEG_PlaySentenceIndex(pPlayer->edict(), iSentence, 1.0f, SNDLVL_TALKING, 0, 100);
+		}
+	}
+
 } // namespace FFLib
 
 //---------------------------------------------------------------------------
@@ -1084,6 +1140,9 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("SmartMessage",				&FFLib::SmartMessage),
 		def("SmartSound",				&FFLib::SmartSound),
 		def("SmartTeamMessage",			&FFLib::SmartTeamMessage),
-		def("SmartTeamSound",			&FFLib::SmartTeamSound)
+		def("SmartTeamSound",			&FFLib::SmartTeamSound),
+		def("SpeakAll",					&FFLib::SpeakAll),
+		def("SpeakPlayer",				&FFLib::SpeakPlayer),
+		def("SpeakTeam",				&FFLib::SpeakTeam)
 	];
 }
