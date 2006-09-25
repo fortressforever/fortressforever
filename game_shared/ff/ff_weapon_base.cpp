@@ -184,8 +184,6 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 //----------------------------------------------------------------------------
 void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime )
 {
-	Warning( "[WeaponSoundLocal] Playing the special sound jizz! This is temp until Tang gets a sound in!\n" );
-
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
 	const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
 	if( !shootsound || !shootsound[0] )
