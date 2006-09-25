@@ -91,7 +91,10 @@ bool CFFWeaponBaseClip::Reload()
 	//FillClip();
 
 	// Play reload on different channel as otherwise steals channel away from fire sound
-	WeaponSound(RELOAD);
+	if( ( GetWeaponID() == FF_WEAPON_SHOTGUN ) || ( GetWeaponID() == FF_WEAPON_SUPERSHOTGUN ) )
+		WeaponSound( RELOAD );
+	else
+		WeaponSoundLocal( RELOAD );
 	SendWeaponAnim(ACT_VM_RELOAD);
 
 	pOwner->m_flNextAttack = gpGlobals->curtime;
