@@ -96,7 +96,6 @@ bool CFFWeaponSpanner::CanBeSelected()
 //----------------------------------------------------------------------------
 void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity) 
 {
-#ifdef GAME_DLL
 	// Get the player who is swinging us...
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 	if (!pPlayer) 
@@ -119,42 +118,32 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 
 		CFFPlayer *pHitPlayer = ToFFPlayer(pHitEntity);
 		if (!pHitPlayer) 
-		{
-			Warning("[CFFWeaponSpanner] [serverside] Failed to get the hit player\n");
 			return;
-		}
-
-		//DevMsg("[CFFWeaponSpanner] Hit a player\n");
 
 		// Can the guy we hit take damage from us? If he can't, he's
 		// on our team or our ally so give him some armor!
 		// Bug #0000521: Engineer's spanner shouldn't inflict damage even with mp_friendlyfire 1
 		if( g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )		
 		{
-			//DevMsg("[CFFWeaponSpanner] Player is on my team or an ally - so giving armor!\n");
-
 			// See how much the player needs...
 			int iNeedsArmor = pHitPlayer->NeedsArmor();
 
 			if (iNeedsArmor > 0) 
 			{
-				//DevMsg("[CFFWeaponSpanner] Player NEEDS armor!\n");
-
 				// If we've got 10 cells...
 				if (pPlayer->GetAmmoCount(AMMO_CELLS) >= 10) 
 				{
-					//DevMsg("[CFFWeaponSpanner] Giving armor and reducing my cells\n");
+					int armour_given = min(max(iNeedsArmor, 50), 5 * pPlayer->GetAmmoCount(AMMO_CELLS));
 
-					int armour_needed = max(pHitPlayer->NeedsArmor(), 50);
-					int armour_given = min(armour_needed, 5 * pPlayer->GetAmmoCount(AMMO_CELLS));
+					// If we give stuff, play a special sound. Pun intended.
+					if( armour_given > 0 )
+						WeaponSoundLocal( SPECIAL3 );
 
+#ifdef GAME_DLL
 					pHitPlayer->AddArmor(armour_given);
 					pPlayer->RemoveAmmo(armour_given / 5, AMMO_CELLS);
+#endif
 				}				
-			}
-			else
-			{
-				//DevMsg("[CFFWeaponSpanner] Player DOES NOT NEED armor!\n");
 			}
 
 			// Don't want to call the baseclass hit func cause
@@ -162,10 +151,6 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// we're just helping peeps get armor over here
 			return;
 		}
-		else
-		{
-			//DevMsg("[CFFWeaponSpanner] Player is not on my team and not an ally - so sending to baseclass to hurt!\n");
-		}		
 	}
 	else
 	{
@@ -176,7 +161,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		{
 			CFFDispenser *pDispenser = (CFFDispenser *) pHitEntity;
 
-			WeaponSound(SPECIAL2);
+			WeaponSound( SPECIAL2 );
 
 			// Is the dispenser mine(is pPlayer the owner?) 
 			bool bMine = ( pPlayer == ToFFPlayer( pDispenser->m_hOwner.Get() ) );
@@ -187,17 +172,20 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 			// If the dispenser is mine, a team mates, or an allies, don't hurt it, ever
 			if( bMine || bFriendly ) 
 			{
-				//DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is mine, a team mates, or an allies, don't hurt it!\n");
-
 				// If it's damaged, restore it's health on the first clang
 				if( pDispenser->NeedsHealth() ) 
 				{
 					// We get 5 health for each cell
 					int iHealthGiven = min( pDispenser->NeedsHealth(), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
-					
-					pDispenser->SetHealth( pDispenser->GetHealth() + iHealthGiven );
 
+					// If we give health, play a special sound. Pun intended.
+					if( iHealthGiven > 0 )
+						WeaponSoundLocal( SPECIAL3 );
+					
+#ifdef GAME_DLL
+					pDispenser->SetHealth( pDispenser->GetHealth() + iHealthGiven );
 					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
+#endif
 				}
 				else
 				{
@@ -207,30 +195,31 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
 					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
 					int iRadioTags = min( min( 10, pPlayer->GetAmmoCount( AMMO_RADIOTAG ) ), pDispenser->NeedsRadioTags() );
-					// Only add armor when building
-					//int iArmor = min( min( 40, pPlayer->GetArmor() ), pDispenser->NeedsArmor() );
 
+					// If we give it anything, play a special sound. Pun intended.
+					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) || ( iRadioTags > 0 ) )
+						WeaponSoundLocal( SPECIAL3 );
+
+#ifdef GAME_DLL
 					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets, iRadioTags );
 
-					//pPlayer->RemoveArmor( iArmor );
 					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
 					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
 					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
 					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
 					pPlayer->RemoveAmmo( iRadioTags, AMMO_RADIOTAG );
+#endif
 				}
 
 				// Get out now so we don't call the baseclass and do damage
 				return;
 			}
-
-			//DevMsg("[CFFWeaponSpanner] [serverside] Dispenser is not mine, a team mates, or an allies. HURT THE THING!\n");
 		}
 		else if (pHitEntity->Classify() == CLASS_SENTRYGUN) 
 		{
 			CFFSentryGun *pSentryGun = (CFFSentryGun *) pHitEntity;
 
-			WeaponSound(SPECIAL1);
+			WeaponSound( SPECIAL1 );
 
 			// Is the sentrygun mine(is pPlayer the owner?) 
 			bool bMine = ( pPlayer == ToFFPlayer( pSentryGun->m_hOwner.Get() ) );
@@ -244,65 +233,40 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				// Try to upgrade first
 				if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) >= 130)) 
 				{
-					pSentryGun->Upgrade(true);
+					// If we upgrade, play a special sound. Pun intended.
+					if( pSentryGun->Upgrade(true) )
+						WeaponSoundLocal( SPECIAL3 );
+#ifdef GAME_DLL
 					pPlayer->RemoveAmmo(130, AMMO_CELLS);
+#endif
 				}
 				else
 				{
+					// Calculate if it needs anything...
 					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
 					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));
 					int rockets = 0; 
-					
+
 					if( pSentryGun->GetLevel() > 2 )
 						rockets = min(pSentryGun->NeedsRockets(), pPlayer->GetAmmoCount(AMMO_ROCKETS));
 
+					// If it needs anything, play a special sound. Pun intended.
+					if( ( cells > 0 ) || ( shells > 0 ) || ( rockets > 0 ) )
+						WeaponSoundLocal( SPECIAL3 );
+
+#ifdef GAME_DLL
 					pSentryGun->Upgrade(false, cells, shells, rockets);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
 					pPlayer->RemoveAmmo(shells, AMMO_SHELLS);
-					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);					
+					pPlayer->RemoveAmmo(rockets, AMMO_ROCKETS);
+#endif
 				}
 
 				// Get out now so we don't call the baseclass and do damage
 				return;
 			}
 		}
-		// See if we hit some type of entity that needs to do something
-		else if (0) 
-		{
-			// TODO: Add else if for hitting an entity
-			// that is supposed to fire some game event -
-			// like the generator in oppose or something...
-
-			// enysys.RunPredicates( NULL, this, "engy hit the shit w/ spanner, bitch" );
-		}
 	}
-#else
-
-	CBaseEntity *pHitEntity = traceHit.m_pEnt;
-
-	// If we're a client we don't want to draw decals and stuff
-	// Also since weapon sounds are predicted, play on client too
-	if (pHitEntity->Classify() == CLASS_SENTRYGUN)
-	{
-		WeaponSound(SPECIAL1);
-		return;
-	}
-	else if (pHitEntity->Classify() ==CLASS_DISPENSER)
-	{
-		WeaponSound(SPECIAL2);
-		return;
-	}
-	else if (pHitEntity->IsPlayer() && pHitEntity->IsAlive())
-	{
-		CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
-		CFFPlayer *pHitPlayer = ToFFPlayer(pHitEntity);
-
-		// Don't do rest of swing if teammate so that blood won't be shown
-		if (g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE)
-			return;
-	}
-
-#endif
 
 	BaseClass::Hit(traceHit, nHitActivity);
 }

@@ -19,6 +19,7 @@
 
 #include "ff_playeranimstate.h"
 #include "ff_weapon_parse.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 
 #ifdef CLIENT_DLL 
 	#define CFFWeaponBase C_FFWeaponBase
@@ -189,7 +190,6 @@ public:
 
 	// Play the correct sounds
 	virtual	void		WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
-	// Certain sounds we are only going to play for the local player
 	virtual	void		WeaponSoundLocal( WeaponSound_t sound_type, float soundtime = 0.0f );
 
 	// Ensure that weapons cannot be selected while building

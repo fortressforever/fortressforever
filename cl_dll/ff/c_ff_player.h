@@ -218,6 +218,8 @@ public:
 	// ---> added by billdoor
 public:
 	CNetworkVar(float, m_flArmorType);
+	
+	int NeedsArmor( void ) const { return GetMaxArmor() - GetArmor(); }
 
 	float GetArmorType() const { return m_flArmorType; };
 	// ---> end
