@@ -76,6 +76,8 @@ IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun)
 	SendPropInt( SENDINFO( m_iLevel ) ), 
 	SendPropInt( SENDINFO( m_iShells ) ),
 	SendPropInt( SENDINFO( m_iRockets ) ),
+	SendPropInt( SENDINFO( m_iMaxShells ) ),
+	SendPropInt( SENDINFO( m_iMaxRockets ) ),
 END_SEND_TABLE() 
 
 LINK_ENTITY_TO_CLASS( FF_SentryGun, CFFSentryGun );
@@ -832,14 +834,20 @@ Vector CFFSentryGun::RocketPosition( void )
 //-----------------------------------------------------------------------------
 // Purpose: Upgrade the SG
 //-----------------------------------------------------------------------------
-void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRockets ) 
+bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRockets ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::Update", VPROF_BUDGETGROUP_FF_BUILDABLE );
+
+	// Returns true if we upgrade a level
+	bool bRetval = false;
 
 	if( bUpgradeLevel ) 
 	{
 		if( m_iLevel < 3 ) 
+		{
+			bRetval = true;
 			m_iLevel++;
+		}
 
 		float flAimPitch = GetPoseParameter( SG_BC_PITCH );
 		float flAimYaw = GetPoseParameter( SG_BC_YAW );
@@ -954,6 +962,8 @@ void CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 	m_iAmmoPercent = 100.0f * (float) m_iShells / m_iMaxShells;
 	if( m_iMaxRockets && !m_iRockets ) 
 		m_iAmmoPercent += 128;
+
+	return bRetval;
 }
 
 //-----------------------------------------------------------------------------

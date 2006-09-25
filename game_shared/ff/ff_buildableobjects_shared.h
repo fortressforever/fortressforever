@@ -622,6 +622,13 @@ public:
 	~CFFSentryGun( void );
 	int GetRockets( void );
 
+	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
+	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
+	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
+	
+	int GetLevel( void ) const { return m_iLevel; }
+	bool Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
+
 	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
 
 public:
@@ -630,6 +637,9 @@ public:
 	CNetworkVar( int, m_iLevel );
 	CNetworkVar( int, m_iShells );
 	CNetworkVar( int, m_iRockets );
+
+	CNetworkVar( int, m_iMaxShells );
+	CNetworkVar( int, m_iMaxRockets );
 	// <-- shared
 
 #ifdef CLIENT_DLL 
@@ -652,9 +662,6 @@ public:
 	void GoLive( void );
 
 	int TakeEmp( void );
-	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
-	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
-	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
 
 	void SetFocusPoint(Vector &origin);
 
@@ -694,10 +701,7 @@ public:
 	Vector MuzzlePosition( void );
 	Vector RocketPosition( void );
 	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
-
-	int GetLevel( void ) const { return m_iLevel; }
-	void Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
-
+	
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
 	bool				m_bShootingTeammates;
@@ -717,9 +721,6 @@ public:
 public:
 	CNetworkVar(unsigned int, m_iAmmoPercent);
 
-	// Level-specific values
-	int		m_iMaxShells;
-	int		m_iMaxRockets;
 
 	int		m_iShellDamage;
 

@@ -452,6 +452,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFSentryGun, DT_FFSentryGun, CFFSentryGun )
 	RecvPropInt( RECVINFO( m_iLevel ) ),
 	RecvPropInt( RECVINFO( m_iShells ) ),
 	RecvPropInt( RECVINFO( m_iRockets ) ),
+	RecvPropInt( RECVINFO( m_iMaxShells ) ),
+	RecvPropInt( RECVINFO( m_iMaxRockets ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------
@@ -481,6 +483,17 @@ void C_FFSentryGun::OnDataChanged( DataUpdateType_t updateType )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool C_FFSentryGun::Upgrade( bool bUpgradelevel, int iCells, int iShells, int iRockets )
+{
+	if( ( m_iLevel < 3 ) && m_bBuilt )
+		return true;
+	else
+		return false;
 }
 
 //-----------------------------------------------------------------------------
