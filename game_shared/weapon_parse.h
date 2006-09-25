@@ -41,6 +41,11 @@ typedef enum {
 	// Add new shoot sound types here
 	COCK,
 	STOP,
+	SPECIAL4,	// For spanner
+	SPECIAL5,	// For spanner
+	SPECIAL6,	// For spanner
+	SPECIAL7,	// For spanner
+	SPECIAL8,	// For spanner
 
 	NUM_SHOOT_SOUND_TYPES,
 } WeaponSound_t;
