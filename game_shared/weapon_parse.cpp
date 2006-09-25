@@ -35,11 +35,6 @@ const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ] =
 	"special3",
 	"cock",			// |-- Mirv: Cock sfx
 	"stop"			// |-- Mirv: Stops weapon sounds
-	"special4",	// For spanner
-	"special5",	// For spanner
-	"special6",	// For spanner
-	"special7",	// For spanner
-	"special8",	// For spanner
 };
 #else
 extern const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ];
