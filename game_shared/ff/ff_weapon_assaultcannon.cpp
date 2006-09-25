@@ -197,7 +197,7 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
 #endif
 	{
-		WeaponSound(SPECIAL2);
+		WeaponSoundLocal(SPECIAL2);
 	}
 
 	//m_fFireState = 0;
