@@ -156,6 +156,9 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	SetAbsOrigin( m_vStartOrigin );
 	SetLocalAngles( m_vStartAngles );
 
+	// Reset size
+	UTIL_SetSize( this, m_vecMins, m_vecMaxs );
+
 	SetMoveType( MOVETYPE_NONE );
 
 	// Update goal state
@@ -261,12 +264,16 @@ void CFFInfoScript::Spawn( void )
 	entsys.RunPredicates_LUA( this, &hUsePhysics, "usephysics" );
 	m_bUsePhysics = hUsePhysics.GetBool();
 
+	// Store off mins/maxs
+	m_vecMins = CollisionProp()->OBBMins();
+	m_vecMins = CollisionProp()->OBBMaxs();
+
 	CreateItemVPhysicsObject();
 
 	m_pLastOwner = NULL;
 	m_flThrowTime = 0.0f;
 
-	PlayReturnedAnim();
+	PlayReturnedAnim();	
 }
 
 //-----------------------------------------------------------------------------
@@ -630,7 +637,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 		}		
 	}
 	else
-	{
+	{	
 		// Resize - only do for non physics though!
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
 		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
