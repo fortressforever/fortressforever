@@ -1127,9 +1127,11 @@ void CHLClient::LevelInitPostEntity( )
    //gViewPortInterface->ShowPanel( PANEL_CLASS, true );
 
    // Pop the info panel back up above the team change menu
-   IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
-   if( pPanel )
-      pPanel->ShowPanel( true );
+   // --> Mirv: Don't show this panel anymore
+   //IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_INFO );
+   //if( pPanel )
+   //   pPanel->ShowPanel( true );
+   // <-- Mirv
 }
 
 
