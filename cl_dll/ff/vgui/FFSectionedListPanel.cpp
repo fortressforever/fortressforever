@@ -18,6 +18,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#include "cbase.h"
 #include <stdio.h>
 
 #include <vgui/IInput.h>
