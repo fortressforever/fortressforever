@@ -169,7 +169,6 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	AddSolidFlags( FSOLID_NOT_STANDABLE | FSOLID_TRIGGER );
 	SetCollisionGroup(COLLISION_GROUP_TRIGGERONLY);
 
-	//CFFLuaObjectWrapper hDropAtSpawn;
 	CFFLuaSC hDropAtSpawn;
 	entsys.RunPredicates_LUA( this, &hDropAtSpawn, "dropatspawn" );
 
@@ -186,7 +185,6 @@ bool CFFInfoScript::CreateItemVPhysicsObject( void )
 	}
 
 	// make it respond to touches
-	//SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	SetTouch( &CFFInfoScript::OnTouch );
 
 	return true;
@@ -203,8 +201,6 @@ void CFFInfoScript::Spawn( void )
 	Precache();
 
 	// Check if this object has an attachoffset function and get the value if it does
-	//entsys.RunPredicates_Vector( this, NULL, "attachoffset", m_vecOffset.GetForModify() );
-	//CFFLuaObjectWrapper hAttachOffset;
 	CFFLuaSC hAttachOffset;
 	if( entsys.RunPredicates_LUA( this, &hAttachOffset, "attachoffset" ) )
 		m_vecOffset.GetForModify() = hAttachOffset.GetVector();	
@@ -238,7 +234,6 @@ void CFFInfoScript::Spawn( void )
 	m_atStart = true;
 
 	// See if the object uses animations
-	//CFFLuaObjectWrapper hHasAnims;
 	CFFLuaSC hHasAnimation;
 	entsys.RunPredicates_LUA( this, &hHasAnimation, "hasanimation" );	
 	m_bHasAnims = hHasAnimation.GetBool();
@@ -262,7 +257,6 @@ void CFFInfoScript::Spawn( void )
 	}
 
 	// Check to see if this object uses physics
-	//CFFLuaObjectWrapper hUsePhysics;
 	CFFLuaSC hUsePhysics;
 	entsys.RunPredicates_LUA( this, &hUsePhysics, "usephysics" );
 	m_bUsePhysics = hUsePhysics.GetBool();
@@ -554,13 +548,14 @@ void CFFInfoScript::Drop( float delay, float speed )
 		return;
 
 	// stop following
-	FollowEntity( NULL );	
+	FollowEntity( NULL );
+	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	CollisionRulesChanged();
 	
 	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
 
-	Assert( pOwner );
+	AssertMsg( pOwner, "Objects can only be attached to players currently!" );
 
 	if( !pOwner )
 		return;
@@ -573,14 +568,15 @@ void CFFInfoScript::Drop( float delay, float speed )
 	Vector vecOrigin = pOwner->GetAbsOrigin();
 
 	Vector vecForward, vecRight, vecUp;
-	pOwner->GetVectors( &vecForward, &vecRight, &vecUp );
+	//pOwner->GetVectors( &vecForward, &vecRight, &vecUp );
+	pOwner->EyeVectors( &vecForward, &vecRight, &vecUp );
 
 	VectorNormalize( vecForward );
 	VectorNormalize( vecRight );
 	VectorNormalize( vecUp );
 
 	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
-	Vector vel = Vector( 0, 0, 20.0f ); // owner->GetAbsVelocity();
+	Vector vel = Vector( 0, 0, 30.0f ); // owner->GetAbsVelocity();
 
 	if( speed )
 		vel += vecForward * speed;
@@ -635,13 +631,25 @@ void CFFInfoScript::Drop( float delay, float speed )
 	}
 	else
 	{
-		// inherit the owner's motion
-		SetGravity( 1.0 );
-		//SetAbsOrigin(owner->GetAbsOrigin());
-		SetAbsOrigin( vecOrigin + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
+		// Resize - only do for non physics though!
+		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
+		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
+
+		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
+
+		trace_t trHull;
+		UTIL_TraceHull( GetAbsOrigin(), GetAbsOrigin(), Vector( 0, 0, 0 ), Vector( 0, 0, 4 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
+
+		// If the trace started in a solid, or the trace didn't finish, or if
+		// it hit the world then we want to move it back to the player's origin.
+		// This is to stop things like the push ball that sticks out in front of
+		// the players being trapped in the world if a player is standing staring
+		// into a wall
+		if( trHull.allsolid || ( trHull.fraction != 1.0f ) || trHull.DidHitWorld() )
+			SetAbsOrigin( vecOrigin );*/
 
 		QAngle vecAngles = pOwner->EyeAngles();
-		SetAbsAngles( QAngle( 0, vecAngles.y + 90.0f, 0 ) );
+		SetAbsAngles( QAngle( 0, vecAngles.y, 0 ) );
 
 		SetAbsVelocity( vel );
 	}
