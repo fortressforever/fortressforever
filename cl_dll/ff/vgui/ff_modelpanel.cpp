@@ -23,6 +23,8 @@
 #include "ff_playerclass_parse.h"
 #include "ff_weapon_parse.h"
 
+#include <igameresources.h>
+
 extern IFileSystem **pFilesystem;
 
 using namespace vgui;
@@ -126,7 +128,7 @@ void ModelPanel::SetupPositioningAndLighting(Vector &vecOrigin)
 
 	// Move model in front of our view
 	m_hModel->SetAbsOrigin(vecOrigin);
-	m_hModel->SetAbsAngles(QAngle(0, 210, 0));
+	m_hModel->SetAbsAngles(QAngle(0, /*210*/ 100.0f * gpGlobals->curtime, 0));
 }
 
 //-----------------------------------------------------------------------------
@@ -277,6 +279,13 @@ void PlayerModelPanel::SetClass(const char *pszClassname)
 	SetModel(pClassInfo->m_szModel);
 	SetWeaponModel(pWeaponInfo->szWorldModel);
 	SetAnimations("idle_lower", VarArgs("idle_upper_%s", pWeaponInfo->m_szAnimExtension));
+
+	IGameResources *pGR = GameResources();
+
+	if (pGR)
+	{
+		m_hModel->m_nSkin = pGR->GetTeam(pLocalPlayer->entindex()) - TEAM_BLUE;
+	}
 }
 
 //-----------------------------------------------------------------------------
