@@ -164,6 +164,8 @@ protected:
 
 	Vector m_vStartOrigin;
 	QAngle m_vStartAngles;
+	Vector	m_vecMins;
+	Vector	m_vecMaxs;
 
 	CBaseEntity *m_pLastOwner;
 	
