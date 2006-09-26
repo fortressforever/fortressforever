@@ -266,7 +266,7 @@ void CFFInfoScript::Spawn( void )
 
 	// Store off mins/maxs
 	m_vecMins = CollisionProp()->OBBMins();
-	m_vecMins = CollisionProp()->OBBMaxs();
+	m_vecMaxs = CollisionProp()->OBBMaxs();
 
 	CreateItemVPhysicsObject();
 
