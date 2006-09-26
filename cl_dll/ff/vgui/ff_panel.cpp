@@ -7,7 +7,8 @@
 	file ext:	cpp
 	author:		Gavin "Mirvin_Monkey" Bramhill
 	
-	purpose:	Adds textures to panels
+	purpose:	All our custom HUD panels should be derived from here
+				Adds textures to HUD panels
 *********************************************************************/
 
 #include "cbase.h"
@@ -15,6 +16,7 @@
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
 #include <vgui/ISystem.h>
+#include <vgui/IScheme.h>
 #include "convar.h"
 
 #include "c_ff_player.h"
@@ -25,6 +27,9 @@ ConVar cl_teamcolourhud("cl_teamcolourhud", "0");
 
 namespace vgui
 {
+	//-----------------------------------------------------------------------------
+	// Purpose: Load the textures
+	//-----------------------------------------------------------------------------
 	void FFPanel::ApplySettings(KeyValues *inResourceData)
 	{
 		const char *pszFG = inResourceData->GetString("ForegroundTexture", NULL);
@@ -36,6 +41,9 @@ namespace vgui
 		Panel::ApplySettings(inResourceData);
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Load the colours
+	//-----------------------------------------------------------------------------
 	void FFPanel::ApplySchemeSettings(IScheme *pScheme)
 	{
 		m_HudForegroundColour = GetSchemeColor("HudItem.Foreground", pScheme);
@@ -44,6 +52,10 @@ namespace vgui
 		Panel::ApplySchemeSettings(pScheme);
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: The background consists of a separate foreground and background
+	//			texture.
+	//-----------------------------------------------------------------------------
 	void FFPanel::PaintBackground()
 	{
 		Color &bg = m_HudBackgroundColour;
@@ -71,5 +83,14 @@ namespace vgui
 			m_pHudForeground->DrawSelf(0, 0, fg);
 
 		Panel::PaintBackground();
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Load the correct scheme file
+	//-----------------------------------------------------------------------------
+	void FFPanel::InitFFPanel()
+	{
+		//HScheme scheme = vgui::scheme()->LoadSchemeFromFile("resource/HudScheme.res", "HudScheme");
+		//SetScheme(scheme);
 	}
 }

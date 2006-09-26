@@ -24,14 +24,18 @@ namespace vgui
 	class FFPanel : public Panel
 	{
 	public:
-		FFPanel() : Panel() {}
-		FFPanel(Panel *parent) : Panel(parent) {}
-		FFPanel(Panel *parent, const char *panelName) : Panel(parent, panelName) {}
-		FFPanel(Panel *parent, const char *panelName, HScheme scheme) : Panel(parent, panelName, scheme) {}
+		FFPanel() : Panel() { InitFFPanel(); }
+		FFPanel(Panel *parent) : Panel(parent) { InitFFPanel(); }
+		FFPanel(Panel *parent, const char *panelName) : Panel(parent, panelName) { InitFFPanel(); }
+		FFPanel(Panel *parent, const char *panelName, HScheme scheme) : Panel(parent, panelName, scheme) { InitFFPanel(); }
 
 		virtual void FFPanel::ApplySettings(KeyValues *inResourceData);
 		virtual void FFPanel::ApplySchemeSettings(IScheme *pScheme);
 		virtual void FFPanel::PaintBackground();
+
+private:
+
+		void InitFFPanel();
 
 protected:
 

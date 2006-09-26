@@ -592,3 +592,251 @@ bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer )
 
 	return ( ( pPlayer->GetClassSlot() >= CLASS_SCOUT ) && ( pPlayer->GetClassSlot() <= CLASS_CIVILIAN ) );
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: An array with current numbers on teams
+//-----------------------------------------------------------------------------
+void UTIL_GetTeamNumbers(char nTeamNumbers[4])
+{
+	// Make sure we always zero this first
+	memset(nTeamNumbers, 0, sizeof(char) * 4);
+
+#ifdef CLIENT_DLL
+	// If there's no game resources (a weird thing indeed) then we'll
+	// be returning with a zero'd out array which is okay with me.
+	IGameResources *pGR = GameResources();
+	
+	if (pGR == NULL)
+		return;
+#endif
+
+	// Now loop through the players and take different branches to find out 
+	// what team they are on.
+	for (int iClient = 1; iClient <= gpGlobals->maxClients; iClient++)
+	{
+#ifdef GAME_DLL
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(iClient - 1);
+		
+		if (pPlayer == NULL || !pPlayer->IsConnected())
+			continue;
+		
+		int iTeamIndex = pPlayer->GetTeamNumber() - TEAM_BLUE;
+#else
+		if (!pGR->IsConnected(iClient))
+			continue;
+
+		int iTeamIndex = pGR->GetTeam(iClient) - TEAM_BLUE;
+#endif
+
+		// Finally add this team if it is valid
+		if (iTeamIndex >= 0 && iTeamIndex < 4)
+		{
+			nTeamNumbers[iTeamIndex]++;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: An array with team limits
+//-----------------------------------------------------------------------------
+void UTIL_GetTeamLimits(char nTeamLimits[4])
+{
+	// Make sure we always zero this first
+	memset(nTeamLimits, 0, sizeof(char) * 4);
+
+#ifdef CLIENT_DLL
+	// If there's no game resources (a weird thing indeed) then we'll
+	// be returning with a zero'd out array which is okay with me.
+	IGameResources *pGR = GameResources();
+
+	if (pGR == NULL)
+		return;
+#endif
+
+	// Loop through teams getting limits
+	for (int iTeamID = TEAM_BLUE; iTeamID <= TEAM_GREEN; iTeamID++)
+	{
+		int iTeamIndex = iTeamID - TEAM_BLUE;
+
+#ifdef GAME_DLL
+		CFFTeam *pTeam = GetGlobalFFTeam(iTeamID);
+
+		// This team doesn't exist so keep it disabled
+		if (pTeam == NULL)
+		{
+			nTeamLimits[iTeamIndex] = -1;
+			continue;
+		}
+
+		nTeamLimits[iTeamIndex] = pTeam->GetTeamLimits();
+#else
+		nTeamLimits[iTeamIndex] = pGR->GetTeamLimits(iTeamID);
+#endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the space left on a team
+//				-1 : team disabled completely
+//				 0 : no space
+//				 n : n places left
+//			    99 : no space limit at all
+//-----------------------------------------------------------------------------
+void UTIL_GetTeamSpaces(char nSpacesRemaining[4])
+{
+	char nTeamNumbers[4];
+	UTIL_GetTeamNumbers(nTeamNumbers);
+
+	char nTeamLimits[4];
+	UTIL_GetTeamLimits(nTeamLimits);
+
+	// Now loop through the teams and take different branches to find out
+	// what their limits are and calculate places remaining from these
+	for (int iTeamID = TEAM_BLUE; iTeamID <= TEAM_GREEN; iTeamID++)
+	{
+		int iTeamIndex = iTeamID - TEAM_BLUE;
+
+		// No limit at all
+		if (nTeamLimits[iTeamIndex] == 0)
+		{
+			nSpacesRemaining[iTeamIndex] = 99;
+			continue;
+		}
+
+		// Team disabled
+		if (nTeamLimits[iTeamIndex] == -1)
+		{
+			nSpacesRemaining[iTeamIndex] = -1;
+			continue;
+		}
+
+		nSpacesRemaining[iTeamIndex] = nTeamLimits[iTeamIndex] - nTeamNumbers[iTeamIndex];
+
+		// It shouldn't get below 0 but nevermind
+		nSpacesRemaining[iTeamIndex] = max(nSpacesRemaining[iTeamIndex], 0);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: An array with current numbers on Classs
+//-----------------------------------------------------------------------------
+void UTIL_GetClassNumbers(int iTeam, char nClassNumbers[10])
+{
+	// Make sure we always zero this first
+	memset(nClassNumbers, 0, sizeof(char) * 10);
+
+#ifdef CLIENT_DLL
+	// If there's no game resources (a weird thing indeed) then we'll
+	// be returning with a zero'd out array which is okay with me.
+	IGameResources *pGR = GameResources();
+
+	if (pGR == NULL)
+		return;
+#endif
+
+	// Now loop through the players and take different branches to find out 
+	// what Class they are on.
+	for (int iClient = 1; iClient <= gpGlobals->maxClients; iClient++)
+	{
+#ifdef GAME_DLL
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex(iClient - 1);
+
+		if (pPlayer == NULL || !pPlayer->IsConnected() || pPlayer->GetTeamNumber() != iTeam)
+			continue;
+
+		int iClassIndex = pPlayer->GetClassSlot() - CLASS_SCOUT;
+#else
+		if (!pGR->IsConnected(iClient) || pGR->GetTeam(iClient) != iTeam)
+			continue;
+
+		int iClassIndex = pGR->GetClass(iClient) - CLASS_SCOUT;
+#endif
+
+		// Finally add this Class if it is valid
+		if (iClassIndex >= 0 && iClassIndex < 10)
+		{
+			nClassNumbers[iClassIndex]++;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: An array with Class limits
+//-----------------------------------------------------------------------------
+void UTIL_GetClassLimits(int iTeamID, char nClassLimits[10])
+{
+	// Make sure we always zero this first
+	memset(nClassLimits, 0, sizeof(char) * 10);
+
+#ifdef CLIENT_DLL
+	// If there's no game resources (a weird thing indeed) then we'll
+	// be returning with a zero'd out array which is okay with me.
+	IGameResources *pGR = GameResources();
+
+	if (pGR == NULL)
+		return;
+#endif
+
+	// Loop through Classs getting limits
+	for (int iClassID = CLASS_SCOUT; iClassID <= CLASS_CIVILIAN; iClassID++)
+	{
+		int iClassIndex = iClassID - CLASS_SCOUT;
+
+#ifdef GAME_DLL
+		CFFTeam *pTeam = GetGlobalFFTeam(iClassID);
+
+		// This team doesn't exist so keep all classes on 
+		if (pTeam == NULL)
+		{
+			nClassLimits[iClassIndex] = -1;
+			continue;
+		}
+
+		nClassLimits[iClassIndex] = pTeam->GetClassLimit(iClassID);
+#else
+		nClassLimits[iClassIndex] = pGR->GetTeamClassLimits(iTeamID, iClassID);
+#endif
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the space left on a Class
+//				-1 : Class disabled completely
+//				 0 : no space
+//				 n : n places left
+//			    99 : no space limit at all
+//-----------------------------------------------------------------------------
+void UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
+{
+	char nClassNumbers[10];
+	UTIL_GetClassNumbers(iTeamID, nClassNumbers);
+
+	char nClassLimits[10];
+	UTIL_GetClassLimits(iTeamID, nClassLimits);
+
+	// Now loop through the Classs and take different branches to find out
+	// what their limits are and calculate places remaining from these
+	for (int iClassID = CLASS_SCOUT; iClassID <= CLASS_CIVILIAN; iClassID++)
+	{
+		int iClassIndex = iClassID - CLASS_SCOUT;
+
+		// No limit at all
+		if (nClassLimits[iClassIndex] == 0)
+		{
+			nSpacesRemaining[iClassIndex] = 99;
+			continue;
+		}
+
+		// Class disabled
+		if (nClassLimits[iClassIndex] == -1)
+		{
+			nSpacesRemaining[iClassIndex] = -1;
+			continue;
+		}
+
+		nSpacesRemaining[iClassIndex] = nClassLimits[iClassIndex] - nClassNumbers[iClassIndex];
+
+		// It shouldn't get below 0 but nevermind
+		nSpacesRemaining[iClassIndex] = max(nSpacesRemaining[iClassIndex], 0);
+	}
+}

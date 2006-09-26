@@ -50,6 +50,11 @@ enum
 	SECTION_GAP = 8, 
 	COLUMN_DATA_INDENT = 6,
 	COLUMN_DATA_GAP = 2,
+
+	// Mirv: Gaps between buttons
+	BUTTON_GAP = 3,
+	COLUMN_TITLE_INDENT = 3,
+	EXTRA_INDENTY = 10,
 };
 
 namespace vgui
@@ -91,11 +96,17 @@ public:
 		SetBgColor(GetSchemeColor("SectionedListPanelHeader.BgColor", GetBgColor(), pScheme));
 		SetFont(pScheme->GetFont("DefaultVerySmall", IsProportional()));
 		ClearImages();
+
+		// Mirv: Make sure we are using scoreboard font
+		SetFont(pScheme->GetFont("Scoreboard", IsProportional()));
 	}
 
 	void Paint()
 	{
 		BaseClass::Paint();
+
+		// Mirv: Don't draw a line anymore
+		return;
 
 		int x, y, wide, tall;
 		GetBounds(x, y, wide, tall);
@@ -108,6 +119,12 @@ public:
 
 	void SetColor(Color col)
 	{
+		// Mirv: White font, dark version of team for background
+		SetFgColor(Color(255, 255, 255, 255));
+		SetBgColor(Color(col.r() * 0.6f, col.g() * 0.6f, col.b() * 0.6f, 255));
+		SetPaintBackgroundEnabled(true);
+		return;
+
 		m_SectionDividerColor = col;
 		SetFgColor(col);
 	}
@@ -187,13 +204,15 @@ public:
 					wide = maxWidth;
 				}
 
+				int iIndent = (i == 0 ? COLUMN_TITLE_INDENT : 0);
+
 				if (columnFlags & SectionedListPanel::COLUMN_RIGHT)
 				{
-					SetImageBounds(i, xpos + wide - contentWide, xpos + contentWide - COLUMN_DATA_GAP);
+					SetImageBounds(i, xpos + wide - contentWide + iIndent, xpos + contentWide - (iIndent + COLUMN_DATA_GAP));
 				}
 				else
 				{
-					SetImageBounds(i, xpos, xpos + wide - COLUMN_DATA_GAP);
+					SetImageBounds(i, xpos + iIndent, xpos + wide - (iIndent + COLUMN_DATA_GAP));
 				}
 				xpos += columnWidth;
 
@@ -250,6 +269,21 @@ public:
 		SetPaintBackgroundEnabled( false );
 		SetTextImageIndex(-1);
 		ClearImages();
+	}
+
+	// Mirv: Set correct colours
+	void SetColor(Color col)
+	{
+		// White font, team bg colour
+		SetFgColor(Color(255, 255, 255, 255));
+		SetBgColor(col);
+		SetPaintBackgroundEnabled(true);
+
+		// Set armed colour as a slightly brighter colour
+		m_ArmedBgColor = Color(0, 0, 0, 255);
+		m_SelectionBG2Color = Color(0, 0, 0, 255);
+
+		SetOverrideColors(true);
 	}
 
 	int GetID()
@@ -473,6 +507,9 @@ public:
 		m_BgColor = GetSchemeColor("SectionedListPanel.BgColor", GetBgColor(), pScheme);
 		m_SelectionBG2Color = GetSchemeColor("SectionedListPanel.OutOfFocusSelectedBgColor", pScheme);
 
+		// Mirv: Ensure we are using scoreboard font
+		SetFont(pScheme->GetFont("Scoreboard", IsProportional()));
+
 		ClearImages();
 	}
 
@@ -480,6 +517,11 @@ public:
 	{
 		int wide, tall;
 		GetSize(wide, tall);
+
+		// Mirv: For now always draw the team background
+		surface()->DrawSetColor(GetBgColor());
+		surface()->DrawFilledRect(0, 0, wide, tall);
+		return;
 
 		if (IsSelected() && !m_pListPanel->IsInEditMode())
 		{
@@ -786,6 +828,9 @@ void SectionedListPanel::LayoutPanels(int &contentTall)
 		section.m_pHeader->SetVisible(true);
 		y += tall;
 
+		// Mirv: A gap between buttons too
+		y += scheme()->GetProportionalScaledValue(BUTTON_GAP);
+
 		if (iStart == -1 && section.m_bAlwaysVisible)
 		{
 		}
@@ -806,11 +851,24 @@ void SectionedListPanel::LayoutPanels(int &contentTall)
 				}
 
 				y += m_iLineSpacing;
+
+				// Mirv: A gap between the player buttons
+				y += scheme()->GetProportionalScaledValue(BUTTON_GAP);
 			}
 		}
 
 		// add in a little boundry at the bottom
-		y += SECTION_GAP;
+		// Mirv: Don't do a section gap between the main column headers and the 
+		// first team.
+		if (sectionIndex != 1)
+		{
+			y += scheme()->GetProportionalScaledValue(SECTION_GAP);
+		}
+		// Add a few more pixels on at the top
+		if (sectionIndex == 0)
+		{
+			y += scheme()->GetProportionalScaledValue(EXTRA_INDENTY);
+		}
 	}
 
 	// calculate height
@@ -1077,7 +1135,12 @@ void SectionedListPanel::SetItemFgColor( int itemID, Color color )
 	if ( !m_Items.IsValidIndex(itemID) )
 		return;
 
-	m_Items[itemID]->SetFgColor( color );
+	// Mirv: Set the foreground colour to white, background to team
+	m_Items[itemID]->SetColor(color);
+	//m_Items[itemID]->SetFgColor(Color(255, 255, 255, 255));
+	//m_Items[itemID]->SetBgColor(color);
+	//m_Items[itemID]->SetPaintBackgroundEnabled(true);
+
 	m_Items[itemID]->SetOverrideColors( true );
 	m_Items[itemID]->InvalidateLayout();
 }

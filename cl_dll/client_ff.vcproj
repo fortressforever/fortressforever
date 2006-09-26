@@ -3596,7 +3596,28 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%
 				Name="vgui"
 				Filter="">
 				<File
+					RelativePath=".\ff\vgui\ff_button.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_button.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_frame.cpp">
+				</File>
+				<File
 					RelativePath=".\ff\vgui\ff_gameui.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_menu_panel.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_menu_panel.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_modelpanel.cpp">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\ff_modelpanel.h">
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_options.cpp">
@@ -3615,6 +3636,15 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ff_vgui_timer.h">
+				</File>
+				<File
+					RelativePath=".\ff\vgui\FFSectionedListPanel.cpp">
+					<FileConfiguration
+						Name="Debug FF|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\ff\vgui\ffviewport.cpp">

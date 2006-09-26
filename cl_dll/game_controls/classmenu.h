@@ -25,9 +25,13 @@
 
 #include "mouseoverpanelbutton.h"
 
+class MouseOverButton;
+
 namespace vgui
 {
 	class TextEntry;
+	class PlayerModelPanel;
+	class FFButton;
 }
 
 //-----------------------------------------------------------------------------
@@ -60,6 +64,8 @@ public:
 	void OnKeyCodePressed(vgui::KeyCode code);
 	void OnKeyCodeReleased(vgui::KeyCode code);
 
+	MESSAGE_FUNC_PARAMS(OnMouseOverMessage, "MouseOverEvent", data);
+
 public:
 
 protected:	
@@ -67,15 +73,22 @@ protected:
 	// vgui overrides
 	virtual void OnCommand(const char *command);
 
+	void UpdateClassInfo(const char *pszClassName);
+
 	IViewPort		*m_pViewPort;
 
-	vgui::Button	*m_pCancel;
 	vgui::Panel		*m_pPanel;
 
 	float			m_flNextUpdate;
 
-	virtual vgui::Panel *CreateControlByName(const char *controlName);
-	MouseOverPanelButton * CreateNewMouseOverPanelButton(vgui::Panel *panel);
+	MouseOverButton	*m_pClassButtons[10];
+	vgui::FFButton	*m_pCancelButton;
+	vgui::FFButton	*m_pRandomButton;
+
+	vgui::PlayerModelPanel	*m_pModelView;
+
+	//virtual vgui::Panel *CreateControlByName(const char *controlName);
+	//MouseOverPanelButton * CreateNewMouseOverPanelButton(vgui::Panel *panel);
 };
 
 

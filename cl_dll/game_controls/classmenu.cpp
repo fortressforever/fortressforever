@@ -26,11 +26,18 @@
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RichText.h>
+#include "ff_modelpanel.h"
 
 #include <cl_dll/iviewport.h>
 
 #include "IGameUIFuncs.h"
 #include <igameresources.h>
+
+#include "ff_utils.h"
+
+#include "ff_button.h"
+
+extern IFileSystem **pFilesystem;
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -61,6 +68,43 @@ const char *szClassButtons[] = { "scoutbutton", "sniperbutton", "soldierbutton",
 //		 Msg("Couldn't find panel.\n");
 //}
 
+using namespace vgui;
+
+class MouseOverButton : public FFButton
+{
+	DECLARE_CLASS_SIMPLE(MouseOverButton, FFButton);
+
+public:
+
+	MouseOverButton(Panel *parent, const char *panelName, const char *text, Panel *pActionSignalTarget = NULL, const char *pCmd = NULL) : BaseClass(parent, panelName, text, pActionSignalTarget, pCmd)
+	{
+	}
+
+	enum MouseEvent_t
+	{
+		MOUSE_ENTERED,
+		MOUSE_EXITED,
+	};
+
+	virtual void OnCursorEntered() 
+	{
+		BaseClass::OnCursorEntered();
+
+		KeyValues *msg = new KeyValues("MouseOverEvent");
+		msg->SetInt("event", MOUSE_ENTERED);
+		PostActionSignal(msg);
+	}
+
+	virtual void OnCursorExited()
+	{
+		BaseClass::OnCursorExited();
+
+		KeyValues *msg = new KeyValues("MouseOverEvent");
+		msg->SetInt("event", MOUSE_EXITED);
+		PostActionSignal(msg);
+	}
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -84,7 +128,23 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 	m_pPanel = new Panel(this, "ClassInfo");
 	m_pPanel->SetFgColor(Color(255, 255, 255, 255));
 
-	m_pCancel = new Button(this, "cancelbutton", "#FF_CANCEL");
+	m_pCancelButton = new FFButton(this, "CancelButton", "#FF_CANCEL");
+	m_pRandomButton = new FFButton(this, "RandomButton", "#FF_RANDOM");
+
+	char *pszButtons[] = { "ScoutButton", "SniperButton", "SoldierButton", "DemomanButton", "MedicButton", "HwguyButton", "PyroButton", "SpyButton", "EngineerButton", "CivilianButton" };
+
+	for (int iClassIndex = 0; iClassIndex < ARRAYSIZE(pszButtons); iClassIndex++)
+	{
+		m_pClassButtons[iClassIndex] = new MouseOverButton(this, pszButtons[iClassIndex], (const char *) NULL, this, pszButtons[iClassIndex]);
+	}
+
+	m_pModelView = new PlayerModelPanel(this, "ClassPreview");
+
+	// HACKHACKHACKHACK
+	// The pushing and popping in m_pModelView is breaking the rendering of subsequent
+	// vgui items. Therefore we are sticking this right to the front so that it is
+	// rendered last.
+	m_pModelView->SetZPos(50);
 
 	LoadControlSettings("Resource/UI/ClassMenu.res");
 	
@@ -103,8 +163,10 @@ CClassMenu::~CClassMenu()
 //-----------------------------------------------------------------------------
 void CClassMenu::OnCommand(const char *command) 
 {
-	if (Q_strcmp(command, "cancel") != 0) 
-		engine->ClientCmd(command);
+	if (Q_strcmp(command, "cancel") != 0)
+	{
+		engine->ClientCmd(VarArgs("class %s", command));
+	}
 
 	m_pViewPort->ShowPanel(this, false);
 
@@ -132,11 +194,15 @@ void CClassMenu::ShowPanel(bool bShow)
 	{
 		Activate();
 		SetMouseInputEnabled(true);
+
+		// Update straight away
+		Update();
 	}
 	else
 	{
 		SetVisible(false);
 		SetMouseInputEnabled(false);
+		m_pModelView->Reset();
 	}
 }
 
@@ -157,52 +223,42 @@ void CClassMenu::Update()
 	if (!pGR) 
 		return;
 
-	vgui::Button *pClassButton;
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 
-	int iClassNumbers[12] = {0};
+	if (pLocalPlayer == NULL)
+		return;
 
-	// number of classes available
-	int iVisibleButtons = 0;
+	char nSpacesRemaining[10];
+	UTIL_GetClassSpaces(pLocalPlayer->GetTeamNumber(), nSpacesRemaining);
 
-	// A quick count of who is what class
-	for (int i = 1; i < gpGlobals->maxClients; i++) 
+	int nOptions = 0;
+
+	for (int iClassIndex = 0; iClassIndex < 10; iClassIndex++) 
 	{
-		if (pGR->IsConnected(i) && pGR->GetTeam(i) == C_BasePlayer::GetLocalPlayer()->GetTeamNumber()) 
-			iClassNumbers[pGR->GetClass(i) ]++;
-	}	
+		Button *pClassButton = m_pClassButtons[iClassIndex];
 
-	// We have to do this in here because it keeps breaking otherwise
-	for (int iClass = 0; iClass < 10; iClass++) 
-	{
-		// Get the number of available slots for this class
-		int class_limit = pGR->GetTeamClassLimits(C_BasePlayer::GetLocalPlayer()->GetTeamNumber(), iClass + 1);
-		int slots_avail = class_limit - iClassNumbers[iClass + 1];
-
-		pClassButton = (vgui::Button *) FindChildByName(szClassButtons[iClass]);
-
-		// Hide the button if class is marked as unavailable
-		if (class_limit == -1 || (class_limit > 0 && slots_avail <= 0)) 
-			pClassButton->SetVisible(false);
-		else
+		switch (nSpacesRemaining[iClassIndex])
 		{
+		case -1:
+			pClassButton->SetVisible(false);
+			break;
+		case 0:
 			pClassButton->SetVisible(true);
-			iVisibleButtons++;
+			pClassButton->SetEnabled(false);
+			break;
+		default:
+			pClassButton->SetVisible(true);
+			pClassButton->SetEnabled(true);
+			
+			nOptions++;
 		}
 	}
 
-	// Only one available class, disable random
-	if( iVisibleButtons <= 1 )
-	{
-		pClassButton = ( vgui::Button * )FindChildByName( "randombutton" );
-		if( pClassButton )
-			pClassButton->SetVisible( false );
-	}
+	// Random button only enabled when there's more than one class
+	m_pRandomButton->SetVisible((nOptions > 1));
 
-	// If they are unassigned then they have to choose a class really
-	if (pGR->GetClass(C_BasePlayer::GetLocalPlayer()->entindex()) == 0) 
-		m_pCancel->SetVisible(false);
-	else
-		m_pCancel->SetVisible(true);
+	// Cancel only visible if they already have a class
+	m_pCancelButton->SetVisible((pGR->GetClass(pLocalPlayer->entindex()) != 0));
 
 	m_flNextUpdate = gpGlobals->curtime + 0.2f;
 }
@@ -235,33 +291,35 @@ void CClassMenu::OnKeyCodeReleased(KeyCode code)
 	// Bug #0000524: Scoreboard gets stuck with the class menu up when you first join
 	// Hide the scoreboard now
 	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores"))
+	{
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, false);
+	}
 
 	BaseClass::OnKeyCodeReleased(code);
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose: Magic override to allow vgui to create mouse over buttons for us
+// Purpose: Update the main display
 //-----------------------------------------------------------------------------
-Panel *CClassMenu::CreateControlByName(const char *controlName) 
+void CClassMenu::OnMouseOverMessage(KeyValues *data)
 {
-	if (!Q_stricmp("MouseOverPanelButton", controlName)) 
+	Button *pButton = (Button *) data->GetPtr("panel", NULL);
+
+	// Could not determine where this came from
+	if (pButton == NULL)
+		return;
+
+	// Get the command from this button and parse accordingly
+	if (data->GetInt("event") == MouseOverButton::MOUSE_ENTERED)
 	{
-		MouseOverPanelButton *newButton = CreateNewMouseOverPanelButton(m_pPanel);
-		
-		return newButton;
-	}
-	else
-	{
-		return BaseClass::CreateControlByName(controlName);
+		UpdateClassInfo(pButton->GetCommand()->GetString("command"));
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: A lovely factory function
+// Purpose: Load the correct class into the model view
 //-----------------------------------------------------------------------------
-MouseOverPanelButton * CClassMenu::CreateNewMouseOverPanelButton(vgui::Panel *panel) 
+void CClassMenu::UpdateClassInfo(const char *pszClassName)
 {
-	return new MouseOverPanelButton(this, NULL, panel);
+	m_pModelView->SetClass(pszClassName);
 }

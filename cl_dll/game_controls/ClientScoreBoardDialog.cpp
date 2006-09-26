@@ -24,7 +24,7 @@
 #include <KeyValues.h>
 #include <vgui_controls/ImageList.h>
 #include <vgui_controls/Label.h>
-#include <vgui_controls/SectionedListPanel.h>
+#include <FFSectionedListPanel.h>
 
 #include <cl_dll/iviewport.h>
 #include <igameresources.h>
@@ -123,7 +123,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	m_iPlayerIndexSymbol = KeyValuesSystem()->GetSymbolForString("playerIndex");
 
 	memset( s_VoiceImage, 0x0, sizeof( s_VoiceImage ) );
-	memset( s_ChannelImage, 0x0, sizeof( s_ChannelImage ) ); // |-- Mirv: Voice channels
+	//memset( s_ChannelImage, 0x0, sizeof( s_ChannelImage ) ); // |-- Mirv: Voice channels
 	TrackerImage = 0;
 	m_pViewPort = pViewPort;
 
@@ -148,9 +148,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 
 	m_pPlayerList = new SectionedListPanel(this, "PlayerList");
 	m_pPlayerList->SetVerticalScrollbar(false);
-
-	m_pChannelButton = new Button( this, "channelbutton", "#FF_CHANNEL_GLOBAL" );
-	m_pChannelButton->SetCommand( "setchannel 1" );
 
 	LoadControlSettings("Resource/UI/ScoreBoard.res");
 	m_iDesiredHeight = GetTall();
@@ -183,27 +180,6 @@ void CClientScoreBoardDialog::OnCommand( const char *command )
 	DevMsg( "command: %s\n", command );
 
 	engine->ClientCmd( command );
-
-	// This is, on the whole, quite a silly way to do it, but I want to test out the
-	// channel filtering. Will tidy this up later
-	if( Q_strcmp( command, "setchannel 0" ) == 0 )
-	{
-		DevMsg( "setting to 1\n" );
-		m_pChannelButton->SetCommand( "setchannel 1" );
-		m_pChannelButton->SetText( "#FF_CHANNEL_GLOBAL" );
-	}
-	else if( Q_strcmp( command, "setchannel 1" ) == 0 )
-	{
-		DevMsg( "setting to 2\n" );
-		m_pChannelButton->SetCommand( "setchannel 2" );
-		m_pChannelButton->SetText( "#FF_CHANNEL_A" );
-	}
-	else
-	{
-		DevMsg( "setting to 0\n" );
-		m_pChannelButton->SetCommand( "setchannel 0" );
-		m_pChannelButton->SetText( "#FF_CHANNEL_B" );
-	}
 
 	// Update straight away
 	Update();
@@ -257,10 +233,10 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	s_VoiceImage[ CVoiceStatus::VOICE_BANNEDTEXT ] = imageList->AddImage( scheme( )->GetImage( "640_textblocked", true ) );		// |-- Mirv: Text ban
 
 	// --> Mirv: Channel images
-	s_ChannelImage[0] = 0;
-	s_ChannelImage[ CHANNEL::NONE ] = imageList->AddImage( scheme()->GetImage( "640_channelnone", true ) );
-	s_ChannelImage[ CHANNEL::CHANNELA ] = imageList->AddImage( scheme()->GetImage( "640_channela", true ) );
-	s_ChannelImage[ CHANNEL::CHANNELB ] = imageList->AddImage( scheme()->GetImage( "640_channelb", true ) );
+	//s_ChannelImage[0] = 0;
+	//s_ChannelImage[ CHANNEL::NONE ] = imageList->AddImage( scheme()->GetImage( "640_channelnone", true ) );
+	//s_ChannelImage[ CHANNEL::CHANNELA ] = imageList->AddImage( scheme()->GetImage( "640_channela", true ) );
+	//s_ChannelImage[ CHANNEL::CHANNELB ] = imageList->AddImage( scheme()->GetImage( "640_channelb", true ) );
 	// <-- Mirv: Channel images
 
 	TrackerImage = imageList->AddImage( scheme( )->GetImage( "640_scoreboardtracker", true ) );
@@ -278,8 +254,12 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pPlayerList->SetImageList(imageList, false);
 	m_pPlayerList->SetVisible( true );
 
-	// light up scoreboard a bit
+	m_pPlayerList->SetPaintBackgroundEnabled(false);
+	m_pPlayerList->SetBorder(NULL);
+
 	SetBgColor( Color( 0,0,0,0) );
+	SetPaintBackgroundEnabled(true);
+	SetBorder(NULL);
 }
 
 
@@ -290,6 +270,8 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 {
 	if ( BaseClass::IsVisible() == bShow )
 		return;
+
+	m_pViewPort->ShowBackGround(false);
 
 	if ( bShow )
 	{
@@ -327,7 +309,7 @@ void CClientScoreBoardDialog::FireGameEvent( IGameEvent *event )
 	}
 	else if ( Q_strcmp(type, "server_spawn") == 0 )
 	{
-		SetControlString("ServerName", event->GetString("hostname") );
+		SetControlString("ServerName", event->GetString("hostname"));
 		MoveLabelToFront("ServerName");
 	}
 
@@ -507,8 +489,8 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->AddColumnToSection( iSection, "score" , "#FF_PlayerScore" , 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths" , "#FF_PlayerDeath" , 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping" , "#FF_PlayerPing" , 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
-		m_pPlayerList->AddColumnToSection( iSection, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ VOICE_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
-		m_pPlayerList->AddColumnToSection( iSection, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
+		m_pPlayerList->AddColumnToSection( iSection, "voice" , "#FF_PlayerVoice" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, scheme( )->GetProportionalScaledValue( VOICE_WIDTH ) );
+		//m_pPlayerList->AddColumnToSection( iSection, "channel" , "#FF_PlayerChannel" , SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, /*scheme( )->GetProportionalScaledValue(*/ CHANNEL_WIDTH /*)*/ );	// |-- Mirv: This should fix the messed up gfx settings
 	}
 	else if( iType == TYPE_TEAM )
 	{
@@ -522,7 +504,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 
 		// --> Mirv: Voice and channel images
 		m_pPlayerList->AddColumnToSection( iSection, "voice", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, VOICE_WIDTH );
-		m_pPlayerList->AddColumnToSection( iSection, "channel", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, CHANNEL_WIDTH );
+		//m_pPlayerList->AddColumnToSection( iSection, "channel", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, CHANNEL_WIDTH );
 		// <-- Mirv: Voice and channel images
 
 		iRetval = iSection;
@@ -723,12 +705,12 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 	if( bFriendly )
 	{
 		kv->SetInt( "voice", s_VoiceImage[ GetClientVoiceMgr()->GetSpeakerStatus( playerIndex ) ] + ( g_fBlockedStatus[ playerIndex ] ? 1 : 0 ) );	
-		kv->SetInt( "channel", s_ChannelImage[ pGR->GetChannel( playerIndex ) ] + 1 );
+		//kv->SetInt( "channel", s_ChannelImage[ pGR->GetChannel( playerIndex ) ] + 1 );
 	}
 	else
 	{
 		kv->SetInt( "voice", 0 );
-		kv->SetInt( "channel", 0 );
+		//kv->SetInt( "channel", 0 );
 	}
 
 	// <-- Mirv: Fixed for an extra setting
@@ -950,4 +932,14 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 
 	// Update right away to show voice icon change
 	Update();
+}
+
+void CClientScoreBoardDialog::PaintBackground()
+{
+	int iYPos = scheme()->GetProportionalScaledValue(32);
+
+	surface()->DrawSetColor(GetFgColor());
+	surface()->DrawFilledRect(0, iYPos, GetWide(), iYPos + 1);
+
+	//BaseClass::PaintBackground();
 }
