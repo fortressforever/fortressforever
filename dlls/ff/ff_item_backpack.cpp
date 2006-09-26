@@ -114,8 +114,9 @@ void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )
 		if (m_iHealth)
 			ammotaken += pFFPlayer->TakeHealth(m_iHealth, DMG_GENERIC);
 
-		if (ammotaken)
-			UTIL_Remove(this);
+		// Lets let people take packs all the time so engies can't make us fodder!
+		//if (ammotaken)
+		UTIL_Remove(this);
 	}
 }
 
