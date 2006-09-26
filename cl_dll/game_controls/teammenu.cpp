@@ -26,6 +26,9 @@
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RichText.h>
+#include <vgui_controls/ImagePanel.h>
+
+#include "ff_menu_panel.h"
 
 #include <cl_dll/iviewport.h>
 #include <igameresources.h>
@@ -33,15 +36,21 @@
 #include "IGameUIFuncs.h"
 
 #include "c_team.h"
+#include "ff_utils.h"
+
+#include "ff_button.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+
 extern INetworkStringTable *g_pStringTableInfoPanel;
 extern IGameUIFuncs *gameuifuncs;
 
 const char *szTeamButtons[] = { "bluebutton", "redbutton", "yellowbutton", "greenbutton" };
+
+#define TEAM_BUTTON_GAP		20
 
 //-----------------------------------------------------------------------------
 // Purpose: Lets us make a test menu
@@ -59,27 +68,152 @@ const char *szTeamButtons[] = { "bluebutton", "redbutton", "yellowbutton", "gree
 //		Msg("Couldn't find panel.\n");
 //}
 
+//=============================================================================
+// A team button has the following components:
+//		A number (this is the button text itself so that hotkeys work automatically)
+//		The team insignia image
+//		Score
+//		Player count
+//		Avg ping
+//=============================================================================
+class TeamButton : public FFButton
+{
+public:
+	DECLARE_CLASS_SIMPLE(TeamButton, FFButton);
+
+	TeamButton(Panel *parent, const char *panelName, const char *text, Panel *pActionSignalTarget = NULL, const char *pCmd = NULL) : BaseClass(parent, panelName, text, pActionSignalTarget, pCmd)
+	{
+		m_pTeamInsignia = new ImagePanel(this, "TeamImage");
+		m_pInfoDescriptions = new Label(this, "TeamDescription", (const char *) NULL);
+		m_pInfoValues = new Label(this, "TeamValues", (const char *) NULL);
+
+		m_iTeamID = -1;
+	}
+
+	void ApplySchemeSettings(IScheme *pScheme)
+	{
+		BaseClass::ApplySchemeSettings(pScheme);
+
+		HFont hFont = pScheme->GetFont("Tahoma12", true);
+
+		SetTextInset(10, 7);
+		SetContentAlignment(a_northwest);
+		SetFont(hFont);
+
+		// Line up image
+		int iInsigniaSize = GetTall() * 0.4f;
+
+		m_pTeamInsignia->SetBounds(GetWide() / 2 - iInsigniaSize / 2, GetTall() / 2.5f - iInsigniaSize / 2, iInsigniaSize, iInsigniaSize);
+		m_pTeamInsignia->SetShouldScaleImage(true);
+		m_pTeamInsignia->SetMouseInputEnabled(false);
+
+		// Line up info descriptions
+		m_pInfoDescriptions->SetContentAlignment(a_northwest);
+		m_pInfoDescriptions->SetBounds(GetWide() * 0.1f, GetTall() * 0.6f, GetWide() * 0.4f, GetTall() * 0.4f);
+		m_pInfoDescriptions->SetMouseInputEnabled(false);
+		m_pInfoDescriptions->SetFont(hFont);
+
+		// Line up info values
+		m_pInfoValues->SetContentAlignment(a_northeast);
+		m_pInfoValues->SetBounds(GetWide() * 0.5f, GetTall() * 0.6f, GetWide() * 0.4f, GetTall() * 0.4f);
+		m_pInfoValues->SetMouseInputEnabled(false);
+		m_pInfoValues->SetFont(hFont);
+
+		m_pInfoDescriptions->SetText("#TEAM_STATS");
+		m_pInfoValues->SetText("0\n0\n0");
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Set the team id used by this button for updating itself
+	//			Also load the team insignia image.
+	//-----------------------------------------------------------------------------
+	void SetTeamID(int iTeamID)
+	{
+		Assert(iTeamID >= TEAM_BLUE && iTeamID <= TEAM_GREEN);
+		m_iTeamID = iTeamID;
+
+		const char *pszInsignias[] = { "hud_flag_blue", "hud_flag_red", "hud_flag_yellow", "hud_flag_green" };
+		m_pTeamInsignia->SetShouldScaleImage(true);
+		m_pTeamInsignia->SetImage(pszInsignias[m_iTeamID - TEAM_BLUE]);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Update the various sections of the team button
+	//-----------------------------------------------------------------------------
+	void OnThink()
+	{
+		IGameResources *pGR = GameResources();
+
+		if (pGR == NULL)
+			return;
+
+		int iScore = pGR->GetTeamScore(m_iTeamID);
+		int nPlayers = 0;
+		int iLag = 0;
+		
+		for (int iClient = 1; iClient <= gpGlobals->maxClients; iClient++)
+		{
+			if (!pGR->IsConnected(iClient) || pGR->GetTeam(iClient) != m_iTeamID)
+				continue;
+
+			nPlayers++;
+			iLag += pGR->GetPing(iClient);
+		}
+
+		if (nPlayers > 0)
+			iLag /= nPlayers;
+
+		m_pInfoValues->SetText(VarArgs("%d\n%d\n%d", iScore, nPlayers, iLag));
+		
+		BaseClass::OnThink();
+	}
+
+private:
+
+	ImagePanel	*m_pTeamInsignia;
+	Label		*m_pInfoDescriptions;
+	Label		*m_pInfoValues;
+
+	int			m_iTeamID;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM) 
+CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM) 
 {
 	// initialize dialog
 	m_pViewPort = pViewPort;
 
 	// load the new scheme early!!
 	SetScheme("ClientScheme");
-	SetMoveable(false);
-	SetSizeable(false);
 	SetProportional(true);
 
-	// hide the system buttons
+	// Various Frame things
 	SetTitleBarVisible(false);
+	SetMoveable(false);
+	SetSizeable(false);
 
-	m_pMapInfo		= new RichText(this, "MapInfo");
-	m_pMapName		= new Label(this, "mapname", "Unknown Map");
+	// ServerInfo elements
+	m_pServerInfoText = new RichText(this, "ServerInfoText");
 
-	m_pCancel		= new Button(this, "cancelbutton", "#FF_MENU_CANCEL");
+	// MapDescription elements
+	m_pMapDescriptionHead = new Label(this, "MapDescriptionHead", "");
+	m_pMapDescriptionText = new RichText(this, "MapDescriptionText");
+
+	char *pszButtons[] = { "BlueTeamButton", "RedTeamButton", "YellowTeamButton", "GreenTeamButton" };
+	
+	for (int iTeamIndex = 0; iTeamIndex < ARRAYSIZE(pszButtons); iTeamIndex++)
+	{
+		m_pTeamButtons[iTeamIndex] = new TeamButton(this, pszButtons[iTeamIndex], (const char *) NULL, this, pszButtons[iTeamIndex]);
+		m_pTeamButtons[iTeamIndex]->SetTeamID(iTeamIndex + TEAM_BLUE);
+	}
+
+	m_pAutoAssignButton = new FFButton(this, "AutoAssignButton", (const char *) NULL, this, "AutoAssign");
+	m_pSpectateButton = new FFButton(this, "SpectateButton", (const char *) NULL, this, "Spectate");
+	m_pFlythroughButton = new FFButton(this, "FlythroughButton", (const char *) NULL, this, "mapguide overview");
+
+	new Button(this, "screenshot", "screenshot", this, "jpeg");
 
 	LoadControlSettings("Resource/UI/TeamMenu.res");
 	
@@ -91,6 +225,25 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM)
 //-----------------------------------------------------------------------------
 CTeamMenu::~CTeamMenu() 
 {
+}
+
+void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+
+	m_pMapDescriptionHead->SetFont(pScheme->GetFont("Tahoma16", true));
+
+	HFont hFont = pScheme->GetFont("Tahoma12", true);
+
+	m_pMapDescriptionText->SetFont(hFont);
+	m_pServerInfoText->SetFont(hFont);
+
+	m_pSpectateButton->SetFont(hFont);
+	m_pAutoAssignButton->SetFont(hFont);
+	m_pFlythroughButton->SetFont(hFont);
+
+	m_pMapDescriptionText->SetBorder(NULL);
+	m_pServerInfoText->SetBorder(NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -108,6 +261,11 @@ void CTeamMenu::OnCommand(const char *command)
 
 	// Run the command
 	engine->ClientCmd(command);
+
+	if (Q_strcmp(command, "jpeg") == 0)
+	{
+		return;
+	}
 
 	// Hide this panel
 	m_pViewPort->ShowPanel(this, false);
@@ -171,13 +329,16 @@ void CTeamMenu::ShowPanel(bool bShow)
 	if (BaseClass::IsVisible() == bShow) 
 		return;
 
-	m_pViewPort->ShowBackGround(bShow);
+	m_pViewPort->ShowBackGround(false);
 
 	if (bShow) 
 	{
 		Activate();
 		SetMouseInputEnabled(true);
 		SetKeyBoardInputEnabled(true);
+		SetEnabled(true);
+
+		Update();
 	}
 	else
 	{
@@ -199,148 +360,167 @@ void CTeamMenu::Reset()
 //-----------------------------------------------------------------------------
 void CTeamMenu::Update() 
 {
+	// TODO: Some of these should only happen once per map
+	UpdateMapDescriptionText();
+	UpdateServerInfo();
+	UpdateTeamButtons();
+}
+
+void CTeamMenu::UpdateTeamButtons()
+{
 	IGameResources *pGR = GameResources();
 
-	if (!pGR) 
+	if (pGR == NULL)
 		return;
 
-	vgui::Button *pTeamButton;
-	vgui::Label* pTeamInfoLabel = (vgui::Label *) FindChildByName("TeamInfo");
+	char nTeamSpaces[4];
+	UTIL_GetTeamSpaces(nTeamSpaces);
 
-	// First count number of players in each team
-	int iTeamNumbers[8] = {0};
+	int nActiveButtons = 0;
 
-	// A quick count of who is what class
-	for (int i = 1; i < gpGlobals->maxClients; i++) 
+	for (int iTeamID = TEAM_BLUE; iTeamID <= TEAM_GREEN; iTeamID++)
 	{
-		if (pGR->IsConnected(i)) 
-			iTeamNumbers[pGR->GetTeam(i) ]++;
-	}
+		int iTeamIndex = iTeamID - TEAM_BLUE;
+		TeamButton *pTeamButton = m_pTeamButtons[iTeamIndex];
 
-	pTeamInfoLabel->SetText("");
-
-	// We have to do this in here because it keeps breaking otherwise
-	for (int iTeam = 0; iTeam < 4; iTeam++) 
-	{
-		pTeamButton = (vgui::Button *) FindChildByName(szTeamButtons[iTeam]);
-
-		// This is one of the 4 teams and isn't full
-		if (GetGlobalTeam(iTeam + TEAM_BLUE) && (pGR->GetTeamLimits(iTeam + TEAM_BLUE) == 0 || iTeamNumbers[iTeam + TEAM_BLUE] < pGR->GetTeamLimits(iTeam + TEAM_BLUE))) 
+		// This team doesn't exist at all
+		if (nTeamSpaces[iTeamIndex] == -1)
 		{
-			pTeamButton->SetVisible(true);
+			pTeamButton->SetVisible(false);
+			continue;
+		}
 
-			wchar_t *szName = localize()->Find(pGR->GetTeamName(iTeam + TEAM_BLUE));
-			wchar_t szString[ MAX_TEAM_NAME_LENGTH + 1 ];
+		// Make sure team button is visible
+		pTeamButton->SetVisible(true);
 
-			//DevMsg("[Teammenu] Found localized text \"%s\", %s\n", pGR->GetTeamName(iTeam + 2), (szName) ? "yes" : "no");
+		// Need this for later
+		nActiveButtons++;
 
-			// Name the button(in either unicode or ansi, don't care
-			if (szName) 
-			{
-				wchar_t szbuf[ MAX_TEAM_NAME_LENGTH + 1 ];
-				swprintf(szbuf, L"&%i. %s", iTeam + 1, szName);
+		// The team is full, so disable 
+		pTeamButton->SetEnabled((nTeamSpaces[iTeamIndex] != 0));
 
-				pTeamButton->SetText(szbuf);
+		// Set the team name
+		wchar_t *pszName = localize()->Find(pGR->GetTeamName(iTeamID));
 
-				// Copy over
-				Q_wcsncpy( szString, szName, sizeof( szString ) );
-			}
-			else
-			{
-				char szbuf[ MAX_TEAM_NAME_LENGTH + 1 ];
-				sprintf(szbuf, "&%i. %s", iTeam + 1, pGR->GetTeamName(iTeam + TEAM_BLUE));				
-
-				pTeamButton->SetText(szbuf);
-
-				// Copy over the ansi team to unicode for later
-				localize()->ConvertANSIToUnicode( pGR->GetTeamName(iTeam + TEAM_BLUE), szString, sizeof( szString ) );
-			}			
-
-			// update team info if mouse is hovered over team button
-			if(pTeamButton->IsCursorOver())
-			{
-				// setup team name, number of players, and score
-				wchar_t szText[4096];
-				int idxTeam = iTeam + TEAM_BLUE;
-
-				swprintf(szText, L"&%s: %i Players (%i Points)\n",
-					szString,
-					iTeamNumbers[idxTeam],
-					pGR->GetTeamScore(idxTeam));
-
-				// find all the name of the players on the team
-				bool bFirstName = true;
-				for(int iClient = 1 ; iClient < gpGlobals->maxClients ; iClient++)
-				{
-					if(pGR->IsConnected(iClient))
-					{
-						if(pGR->GetTeam(iClient) == idxTeam)
-						{
-							// seperate name with a comma
-							if(!bFirstName)
-								wcscat(szText, L", ");
-							
-							bFirstName = false;
-
-							// append the player's name
-							const char* szPlayerName = pGR->GetPlayerName(iClient);
-
-							wchar_t wszName[256];
-							vgui::localize()->ConvertANSIToUnicode(szPlayerName, wszName, sizeof(wszName));
-
-							wcscat(szText, wszName);
-						}
-					}
-				}
-
-				// set label text for team info
-				pTeamInfoLabel->SetFgColor(pGR->GetTeamColor(idxTeam));
-				pTeamInfoLabel->SetText(szText);
-			}
+		if (pszName)
+		{
+			pTeamButton->SetText(pszName);
 		}
 		else
-			pTeamButton->SetVisible(false);
+		{
+			pTeamButton->SetText(pGR->GetTeamName(iTeamID));
+		}
+
+		pTeamButton->SetHotkey((wchar_t) (iTeamIndex + '1'));
 	}
 
-	// If they are unassigned then they have to choose a team really
-	if (C_BasePlayer::GetLocalPlayer()->GetTeamNumber() == 0) 
-		m_pCancel->SetVisible(false);
-	else
-		m_pCancel->SetVisible(true);
+	int iTeamButtonGap = scheme()->GetProportionalScaledValue(TEAM_BUTTON_GAP);
 
-	// Set the map name
-	char mapname[MAX_MAP_NAME];
-	Q_FileBase(engine->GetLevelName(), mapname, sizeof(mapname));
+	// Now that we know how many active buttons there are we can
+	// move them into the correct location
+	int iStartX = m_pTeamButtons[0]->GetWide() * nActiveButtons * 0.5f;
+	iStartX += (nActiveButtons - 1) * (iTeamButtonGap * 0.5f);
+	iStartX = (GetWide() * 0.5f) - iStartX;
 
-	m_pMapName->SetText(mapname);
-	m_pMapName->SetVisible(true);
-
-
-	// Set the map description
-	char mapRES[ MAX_PATH ];
-
-	Q_snprintf(mapRES, sizeof(mapRES), "maps/%s.txt", mapname);
-
-	// if no map specific description exists, load default text
-	if (vgui::filesystem()->FileExists(mapRES)) 
+	// Move active buttons in correct place
+	for (int iTeamIndex = 0; iTeamIndex < 4; iTeamIndex++)
 	{
-		// read from local text from file
-		FileHandle_t f = vgui::filesystem()->Open(mapRES, "rb", "GAME");
+		TeamButton *pTeamButton = m_pTeamButtons[iTeamIndex];
 
-		if (!f) 
-			return;
+		if (pTeamButton->IsVisible())
+		{
+			int iXPos, iYPos;
+			pTeamButton->GetPos(iXPos, iYPos);
 
-		char buffer[2048];
-				
-		int size = min(vgui::filesystem()->Size(f), sizeof(buffer) -1); // just allow 2KB
-
-		vgui::filesystem()->Read(buffer, size, f);
-		vgui::filesystem()->Close(f);
-
-		buffer[size]=0; //terminate string
-
-		//ShowText(buffer);
-		m_pMapInfo->SetText(buffer);
-		m_pMapInfo->SetVisible(true);
+			pTeamButton->SetPos(iStartX, iYPos);
+			iStartX += pTeamButton->GetWide() + iTeamButtonGap;
+		}
+		
 	}
+
+	// Done here for now
+	int iXPos, iYPos;
+
+	m_pSpectateButton->GetPos(iXPos, iYPos);
+	m_pSpectateButton->SetPos(GetWide() / 2 - (m_pAutoAssignButton->GetWide() + iTeamButtonGap / 2), iYPos);
+
+	m_pAutoAssignButton->GetPos(iXPos, iYPos);
+	m_pAutoAssignButton->SetPos(GetWide() / 2 + iTeamButtonGap / 2, iYPos);
+}
+
+void CTeamMenu::UpdateServerInfo()
+{
+	//const ConVar *pHostname = cvar->FindVar("hostname");
+	//const char *pszTitle = (pHostname) ? pHostname->GetString() : "#FF_DEFAULT_MOTD";
+
+	//m_pServerInfoText->SetText(pszTitle);
+
+	if (g_pStringTableInfoPanel == NULL)
+		return;
+
+	int iIndex = g_pStringTableInfoPanel->FindStringIndex("motd");
+
+	if (iIndex == ::INVALID_STRING_INDEX)
+	{
+		m_pServerInfoText->SetText("#FF_DEFAULT_MOTD");
+		return;
+	}
+
+	int nLength = 0;
+	const char *pszMotd = (const char *) g_pStringTableInfoPanel->GetStringUserData(iIndex, &nLength);
+
+	m_pServerInfoText->SetText(pszMotd);
+}
+
+void CTeamMenu::UpdateMapDescriptionText()
+{
+	char szMapName[MAX_MAP_NAME];
+	Q_FileBase(engine->GetLevelName(), szMapName, sizeof(szMapName));
+
+	const char *pszMapPath = VarArgs("maps/%s.txt", szMapName);
+
+	// If no map specific description exists then escape for now
+	if (!vgui::filesystem()->FileExists(pszMapPath))
+	{
+		m_pMapDescriptionHead->SetText("");
+		m_pMapDescriptionText->SetText("");
+		return;
+	}
+
+	// Read from local text from file
+	FileHandle_t f = vgui::filesystem()->Open(pszMapPath, "rb", "GAME");
+
+	if (!f) 
+		return;
+
+	char szBuffer[2048];
+				
+	int size = min(vgui::filesystem()->Size(f), sizeof(szBuffer) - 1);
+
+	vgui::filesystem()->Read(szBuffer, size, f);
+	vgui::filesystem()->Close(f);
+
+	szBuffer[size] = 0;
+
+	const char *pszEndOfHead = strstr(szBuffer, "\n");
+
+	// Could not find a title for this, just stick everything in the normal spot
+	// Or there was nothing after the title
+	if (!pszEndOfHead || (pszEndOfHead + 1) == '\0')
+	{
+		m_pMapDescriptionHead->SetText("Unknown map style");
+		m_pMapDescriptionText->SetText(szBuffer);
+
+		return;
+	}
+
+	int iEndOfHead = pszEndOfHead - szBuffer;
+
+	// Put the rest of the text into the description richtext first.
+	// We're then just going to stick in a null terminator and then add the start
+	// to the head label.
+	m_pMapDescriptionText->SetText(pszEndOfHead + 1);
+	
+	szBuffer[iEndOfHead] = 0;
+	m_pMapDescriptionHead->SetText(szBuffer);
 }

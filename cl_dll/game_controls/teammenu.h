@@ -23,54 +23,79 @@
 #include <cl_dll/iviewport.h>
 #include <vgui/KeyCode.h>
 
+
+class TeamButton;
+
+
 namespace vgui
 {
 	class TextEntry;
+	class IScheme;
+	class FFButton;
+
+
+	//-----------------------------------------------------------------------------
+	// Purpose: displays the team menu
+	//-----------------------------------------------------------------------------
+
+	class CTeamMenu : public Frame, public IViewPortPanel
+	{
+	private:
+		DECLARE_CLASS_SIMPLE(CTeamMenu, Frame);
+
+	public:
+		CTeamMenu(IViewPort *pViewPort);
+		virtual ~CTeamMenu();
+
+		virtual const char *GetName() { return PANEL_TEAM; }
+		virtual void SetData(KeyValues *data);
+		virtual void Reset();
+		virtual void Update();
+		virtual void ShowPanel(bool bShow);
+
+		virtual void OnKeyCodePressed(KeyCode code);
+		virtual void OnKeyCodeReleased(KeyCode code);
+
+		virtual bool IsVisible() 						{ return BaseClass::IsVisible(); }
+  		virtual void SetParent(VPANEL parent) 	{ BaseClass::SetParent(parent); }
+		virtual bool NeedsUpdate() 				{ return true; }
+		virtual bool HasInputElements() 			{ return true; }
+
+		virtual void ApplySchemeSettings(IScheme *pScheme);
+
+
+		// both Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
+		VPANEL GetVPanel() 					{ return BaseClass::GetVPanel(); }
+
+	private:
+
+		void	UpdateMapDescriptionText();
+		void	UpdateServerInfo();
+		void	UpdateTeamButtons();
+
+	public:
+
+	protected:	
+		// vgui overrides
+		virtual void OnCommand(const char *command);
+
+		IViewPort	*m_pViewPort;
+
+		// ServerInfo elements
+		RichText		*m_pServerInfoText;
+
+		// MapDescription elements
+		Label			*m_pMapDescriptionHead;
+		RichText		*m_pMapDescriptionText;
+
+		// ClassSelection elements
+		TeamButton		*m_pTeamButtons[4];
+		FFButton		*m_pSpectateButton;
+		FFButton		*m_pAutoAssignButton;
+		
+		// Other
+		FFButton		*m_pFlythroughButton;
+	};
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: displays the team menu
-//-----------------------------------------------------------------------------
-
-class CTeamMenu : public vgui::Frame, public IViewPortPanel
-{
-private:
-	DECLARE_CLASS_SIMPLE(CTeamMenu, vgui::Frame);
-
-public:
-	CTeamMenu(IViewPort *pViewPort);
-	virtual ~CTeamMenu();
-
-	virtual const char *GetName() { return PANEL_TEAM; }
-	virtual void SetData(KeyValues *data);
-	virtual void Reset();
-	virtual void Update();
-	virtual void ShowPanel(bool bShow);
-
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
-	virtual void OnKeyCodeReleased(vgui::KeyCode code);
-
-	virtual bool IsVisible() 						{ return BaseClass::IsVisible(); }
-  	virtual void SetParent(vgui::VPANEL parent) 	{ BaseClass::SetParent(parent); }
-	virtual bool NeedsUpdate() 				{ return true; }
-	virtual bool HasInputElements() 			{ return true; }
-
-
-	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
-	vgui::VPANEL GetVPanel() 					{ return BaseClass::GetVPanel(); }
-
-public:
-
-protected:	
-	// vgui overrides
-	virtual void OnCommand(const char *command);
-
-	IViewPort	*m_pViewPort;
-
-	vgui::RichText	*m_pMapInfo;
-	vgui::Label		*m_pMapName;
-	vgui::Button	*m_pCancel;
-};
-
 
 #endif // TEAMMENU_H

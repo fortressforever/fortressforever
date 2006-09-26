@@ -14,6 +14,7 @@
 #include <vgui_controls/Frame.h>
 #include <cl_dll/iviewport.h>
 #include <igameevents.h>
+#include "FFSectionedListPanel.h"
 
 #define TYPE_UNASSIGNED     0   
 #define TYPE_TEAM           1   // a section for a single team  
@@ -23,6 +24,12 @@
 #define TYPE_NOTEAM         0	// NOTEAM must be zero :)
 
 #define SCOREBOARD_NUMSECTIONS 8 // 6 teams, 1 blank section, 1 header section
+
+namespace vgui
+{
+	#define SectionedListPanel FFSectionedListPanel
+	class FFSectionedListPanel;
+}
 
 // --> Mirv: Channel images
 namespace CHANNEL
@@ -75,7 +82,7 @@ private:
 
 protected:
 // column widths at 640
-	enum { NAME_WIDTH = 160, CLASS_WIDTH = 60, SCORE_WIDTH = 40, DEATH_WIDTH = 40, PING_WIDTH = 40, VOICE_WIDTH = 30, CHANNEL_WIDTH = 30, FRIENDS_WIDTH = 0 };
+	enum { NAME_WIDTH = 140, CLASS_WIDTH = 60, SCORE_WIDTH = 40, DEATH_WIDTH = 40, PING_WIDTH = 30, VOICE_WIDTH = 30, CHANNEL_WIDTH = 0, FRIENDS_WIDTH = 0 };
 	// total = 340
 
 public:
@@ -118,6 +125,8 @@ protected:
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
+	void PaintBackground();
+
 	// BEG: Added by Mulchman
 	// finds the player in the scoreboard
 	int FindItemIDForPlayerIndex( int playerIndex );
@@ -133,7 +142,6 @@ protected:
 	int TrackerImage;
 	int	m_HLTVSpectators;
 
-	vgui::Button *m_pChannelButton;	// |-- Mirv: Channel button
 	vgui::Label	 *m_pMapName;		// |-- Mulch: map name
 
 	void MoveLabelToFront( const char *textEntryName );

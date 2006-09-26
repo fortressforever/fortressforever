@@ -32,7 +32,7 @@
 #define	AC_MIN_SPREAD	0.01
 #define AC_MAX_SPREAD	0.10
 
-#define	AC_MAX_CYCLETIME	0.4f
+#define	AC_MAX_CYCLETIME	0.2f
 #define AC_MIN_CYCLETIME	0.04f
 
 //=============================================================================
