@@ -394,15 +394,9 @@ namespace FFLib
 
 	CFFPlayer* GetPlayer(CBaseEntity *pEntity)
 	{
-		//CBaseEntity* pEnt = GetEntity(player_id);
-
-		if(NULL == pEntity)
-			return NULL;
-
-		if(!pEntity->IsPlayer())
-			return NULL;
-
-		return dynamic_cast<CFFPlayer*>(pEntity);
+		// ToFFPlayer checks for NULL & IsPlayer()
+		// so this is safe to do.
+		return ToFFPlayer( pEntity );
 	}
 
 	CFFGrenadeBase *GetGrenade( int ent_id )
@@ -617,8 +611,7 @@ namespace FFLib
 		if(NULL == pPlayer)
 			return;
 
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
@@ -642,8 +635,7 @@ namespace FFLib
 		if(NULL == pPlayer)
 			return;
 
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pTestPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
@@ -670,8 +662,7 @@ namespace FFLib
 			return;
 
 		// set the appropriate message to each player
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
@@ -694,8 +685,7 @@ namespace FFLib
 			return;
 
 		// set the appropriate sound to each player
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
@@ -989,8 +979,7 @@ namespace FFLib
 		int iSentence = engine->SentenceIndexFromName(szSentenceName);
 
 		// send the sentence on each client
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
@@ -1022,8 +1011,7 @@ namespace FFLib
 		int iSentence = engine->SentenceIndexFromName(szSentenceName);
 
 		// send the sentence on each client
-		int nPlayers = FF_NumPlayers();
-		for(int i = 1 ; i <= nPlayers ; i++)
+		for(int i = 1 ; i <= gpGlobals->maxClients; i++)
 		{
 			CFFPlayer* pPlayer = GetPlayer(UTIL_EntityByIndex(i));
 
