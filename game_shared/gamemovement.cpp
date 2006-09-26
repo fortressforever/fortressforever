@@ -3396,10 +3396,12 @@ void CGameMovement::CheckFalling( void )
 	{
 		bool bAlive = true;
 		float fvol = 0.5;
+		bool bLandedInWater = false;
 
 		if ( player->GetWaterLevel() > 0 )
 		{
 			// They landed in water.
+			bLandedInWater = true;
 		}
 		else
 		{
@@ -3438,7 +3440,7 @@ void CGameMovement::CheckFalling( void )
 			}
 		}
 
-		if ( fvol > 0.0 )
+		if ( fvol > 0.0 && !bLandedInWater )
 		{
 			// --> Mirv: Use a fall sound, and reduce the volume for spies
 			CFFPlayer *pFFPlayer = ToFFPlayer(player);
