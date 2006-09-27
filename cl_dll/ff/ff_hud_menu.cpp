@@ -334,6 +334,28 @@ ADD_MENU_OPTION(disguisecivilian, L"Disguise as civilian", "civilian")
 	return CheckDisguiseClass( CLASS_CIVILIAN );
 }
 
+//-----------------------------------------------------------------------------
+// Detpack menu options
+//-----------------------------------------------------------------------------
+ADD_MENU_OPTION( det5, L"5", "detpack 5" )
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION( det10, L"10", "detpack 10" )
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION( det20, L"20", "detpack 20" )
+{
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION( det50, L"50", "detpack 50" )
+{
+	return MENU_SHOW;
+}
 
 /************************************************************************/
 /* And these are the actual menus themselves                            */
@@ -342,6 +364,7 @@ menuoption_t BuildMenu[]		= { detdispenser, dismantledispenser, detsentry, disma
 menuoption_t SpyTeamDisguise2[] = { disguiseteam, disguiseenemy };
 menuoption_t SpyTeamDisguise4[] = { disguisered, disguiseblue, disguiseyellow, disguisegreen };
 menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
+menuoption_t DemoDetpackMenu[]	= { det5, det10, det20, det50 };
 
 
 CHudContextMenu::~CHudContextMenu() 
@@ -442,6 +465,11 @@ void CHudContextMenu::Display(bool state)
 			m_pMenu = &SpyTeamDisguise4[0];
 			m_nOptions = sizeof(SpyTeamDisguise4) / sizeof(SpyTeamDisguise4[0]);
 		}
+	}
+	else if( pPlayer->GetClassSlot() == CLASS_DEMOMAN )
+	{
+		m_pMenu = &DemoDetpackMenu[ 0 ];
+		m_nOptions = sizeof( DemoDetpackMenu ) / sizeof( DemoDetpackMenu[ 0 ] );
 	}
 
 	SetMenu();
