@@ -41,6 +41,9 @@
 //LINK_ENTITY_TO_CLASS(info_player_counterterrorist,CPointEntity);
 #endif
 
+// Believe we wanted this back in now
+#define USE_HITBOX_HACK
+
 REGISTER_GAMERULES_CLASS( CFFGameRules );
 
 
