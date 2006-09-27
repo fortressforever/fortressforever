@@ -640,7 +640,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 	{	
 		// Resize - only do for non physics though!
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
-		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
+		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 1 ) );
 
 		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
@@ -897,6 +897,8 @@ void CFFInfoScript::LUA_Restore( void )
 	// Set some flags so we can call respawn
 	SetInactive();
 	SetReturned();
+
+	NetworkStateChanged();
 
 	// Respawn the item back at it's starting spot
 	Respawn( 0.0f );
