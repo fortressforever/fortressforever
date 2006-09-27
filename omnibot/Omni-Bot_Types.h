@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-19 19:31:58 -0700 (Tue, 19 Sep 2006) $
-// $LastChangedRevision: 1277 $
+// $LastChangedDate: 2006-09-21 23:41:23 -0700 (Thu, 21 Sep 2006) $
+// $LastChangedRevision: 1282 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +27,7 @@ typedef enum eomnibot_error
 	BOT_ERROR_BAD_INTERFACE,
 	BOT_ERROR_WRONGVERSION,
 
-	// Keep this last
+	// THIS MUST STAY LAST
 	BOT_NUM_ERRORS
 } omnibot_error;
 

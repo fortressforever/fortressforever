@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-08-16 23:33:08 -0700 (Wed, 16 Aug 2006) $
-// $LastChangedRevision: 1246 $
+// $LastChangedDate: 2006-09-21 23:41:23 -0700 (Thu, 21 Sep 2006) $
+// $LastChangedRevision: 1282 $
 //
 // Title: TF Message Structure Definitions
 //
@@ -55,6 +55,17 @@ typedef struct
 	obint32		m_NumTeamPipers;
 	obint32		m_MaxPipesPerPiper;
 } TF_TeamPipeInfo;
+
+// struct: TF_DisguiseOptions
+//		m_CheckTeam - team to check class disguises with.
+//		m_Team - true/false if each team is available to be disguised as.
+//		m_DisguiseClass - true/false if each class is available to be disguised as.
+typedef struct  
+{
+	int			m_CheckTeam;
+	obBool		m_Team[TF_TEAM_MAX];
+	obBool		m_Class[TF_CLASS_MAX];
+} TF_DisguiseOptions;
 
 // struct: TF_Disguise
 //		m_DisguiseTeam - Team disguised as.

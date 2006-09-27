@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-04 12:43:04 -0700 (Mon, 04 Sep 2006) $
-// $LastChangedRevision: 1266 $
+// $LastChangedDate: 2006-09-26 22:30:43 -0700 (Tue, 26 Sep 2006) $
+// $LastChangedRevision: 1293 $
 //
 // Title: TF Config
 //
@@ -147,6 +147,7 @@ typedef enum eTF_EntityFlags
 	TF_ENT_FLAG_BUILDING_SG,
 	TF_ENT_FLAG_BUILDING_DISP,
 	TF_ENT_FLAG_BUILDING_DETP,
+	TF_ENT_FLAG_ONGROUND,
 } TF_EntityFlags;
 
 // enumerations: TF_Powerups
@@ -443,7 +444,6 @@ typedef enum eTF_GameMessage
 	TF_MSG_START = GEN_MSG_END,
 
 	// Info.
-	TF_MSG_ISGUNCHARGING,
 	TF_MSG_GETBUILDABLES,
 
 	// Get Info
@@ -451,6 +451,7 @@ typedef enum eTF_GameMessage
 	TF_MSG_TEAMPIPEINFO,
 
 	// Commands
+	TF_MSG_CANDISGUISE,
 	TF_MSG_DISGUISE,
 	TF_MSG_FEIGN,
 	TF_MSG_LOCKPOSITION,
