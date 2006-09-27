@@ -196,17 +196,7 @@ void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime 
 
 	CSingleUserRecipientFilter filter( GetPlayerOwner() );
 
-#ifdef CLIENT_DLL
-	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
-	{
-		if( IsPredicted() )
-			filter.UsePredictionRules();
-
-		EmitSound( filter, GetOwner()->entindex(), shootsound, NULL, soundtime );
-	}
-#else
 	EmitSound( filter, GetOwner()->entindex(), shootsound, NULL, soundtime );
-#endif
 }
 
 //----------------------------------------------------------------------------
