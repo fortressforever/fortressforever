@@ -184,19 +184,24 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 //----------------------------------------------------------------------------
 void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime )
 {
-	// If we have some sounds from the weapon classname.txt file, play a random one of them
-	const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
-	if( !shootsound || !shootsound[0] )
-		return;
+#ifdef CLIENT_DLL
+	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
+	{
+		// If we have some sounds from the weapon classname.txt file, play a random one of them
+		const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
+		if( !shootsound || !shootsound[0] )
+			return;
 
-	CSoundParameters params;
+		CSoundParameters params;
 
-	if( !GetParametersForSound( shootsound, params, NULL ) )
-		return;
+		if( !GetParametersForSound( shootsound, params, NULL ) )
+			return;
 
-	CSingleUserRecipientFilter filter( GetPlayerOwner() );
+		CSingleUserRecipientFilter filter( GetPlayerOwner() );
 
-	EmitSound( filter, GetOwner()->entindex(), shootsound, NULL, soundtime );
+		EmitSound( filter, GetOwner()->entindex(), shootsound, NULL, soundtime );
+	}
+#endif
 }
 
 //----------------------------------------------------------------------------
