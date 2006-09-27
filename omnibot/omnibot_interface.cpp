@@ -733,6 +733,8 @@ namespace Omnibot
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 					if(pffPlayer)
 					{
+						if(pffPlayer->IsOnGround())
+                            _entflags.SetFlag(TF_ENT_FLAG_ONGROUND);
 						if(pffPlayer->IsOnLadder())
 							_entflags.SetFlag(ENT_FLAG_LADDER);
 						if(pffPlayer->IsSpeedEffectSet(SE_SNIPERRIFLE))
@@ -1773,15 +1775,6 @@ namespace Omnibot
 			//////////////////////////////////
 			// Game specific messages next. //
 			//////////////////////////////////
-		case TF_MSG_ISGUNCHARGING:
-			{
-				TF_WeaponCharging *pMsg = _data.Get<TF_WeaponCharging>();
-				if(pMsg)
-				{
-					pMsg->m_IsCharging = False;
-				}
-				break;
-			}
 		case TF_MSG_GETBUILDABLES:
 			{
 				TF_BuildInfo *pMsg = _data.Get<TF_BuildInfo>();
@@ -1829,6 +1822,30 @@ namespace Omnibot
 				}
 				break;
 			}
+		case TF_MSG_CANDISGUISE:
+			{
+				TF_DisguiseOptions *pMsg = _data.Get<TF_DisguiseOptions>();
+				if(pMsg)
+				{
+					const int iCheckTeam = obUtilGetGameTeamFromBotTeam(pMsg->m_CheckTeam);
+					for(int t = TEAM_BLUE; t <= TEAM_GREEN; ++t)
+					{
+						CFFTeam *pTeam = GetGlobalFFTeam(t);
+						pMsg->m_Team[obUtilGetBotTeamFromGameTeam(t)] = 
+							(pTeam && (pTeam->GetTeamLimits() != -1)) ? True : False;
+
+						if(pTeam && (t == iCheckTeam))
+						{
+							for(int c = CLASS_SCOUT; c <= CLASS_CIVILIAN; ++c)
+							{
+								pMsg->m_Class[obUtilGetBotClassFromGameClass(c)] = 
+									(pTeam->GetClassLimit(c) != -1) ? True : False;
+							}
+						}
+					}
+				}
+				break;
+			}
 		case TF_MSG_DISGUISE:
 			{
 				TF_Disguise *pMsg = _data.Get<TF_Disguise>();
@@ -1839,7 +1856,7 @@ namespace Omnibot
 					if(iTeam != TEAM_UNASSIGNED && iClass != -1)
 					{
 						serverpluginhelpers->ClientCommand(pPlayer->edict(), 
-							UTIL_VarArgs("disguise %d %d", iTeam, iClass));
+							UTIL_VarArgs("disguise %d %d", iTeam-1, iClass));
 					}
 					else
 					{
@@ -2616,7 +2633,7 @@ namespace Omnibot
 		BotUserData bud(obUtilGetWeaponId(_item));
 		if(bud.GetInt() != TF_WP_NONE)
 		{
-			omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_ADDWEAPON, iGameId, 0, &bud);
+			omnibot_interface::Bot_Interface_SendEvent(MESSAGE_ADDWEAPON, iGameId, 0, 0, &bud);
 		}
 		else
 		{
@@ -2632,7 +2649,7 @@ namespace Omnibot
 		
 		if(bud.GetInt() != TF_WP_NONE)
 		{
-			omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_REMOVEWEAPON, iGameId, 0, &bud);
+			omnibot_interface::Bot_Interface_SendEvent(MESSAGE_REMOVEWEAPON, iGameId, 0, 0, &bud);
 		}
 		else
 		{
@@ -2643,8 +2660,8 @@ namespace Omnibot
 	void Notify_RemoveAllItems(CBasePlayer *_player)
 	{
 		int iGameId = _player->entindex()-1;
-		omnibot_interface::Bot_Interface_SendGlobalEvent(MESSAGE_RESETWEAPONS, iGameId, 0, NULL);
-	}	
+		omnibot_interface::Bot_Interface_SendEvent(MESSAGE_RESETWEAPONS, iGameId, 0, 0, NULL);
+	}
 
 	void Notify_ClientConnected(CBasePlayer *_player, bool _isbot)
 	{
