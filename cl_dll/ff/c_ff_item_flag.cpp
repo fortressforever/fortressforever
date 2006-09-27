@@ -94,6 +94,10 @@ void C_FFInfoScript::OnDataChanged( DataUpdateType_t updateType )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
+	else
+	{
+		UpdateVisibility();
+	}
 }
 
 int C_FFInfoScript::DrawModel( int flags ) 
@@ -232,5 +236,5 @@ bool C_FFInfoScript::IsInactive( void )
 //-----------------------------------------------------------------------------
 bool C_FFInfoScript::IsRemoved( void )
 {
-	return ( m_iGoalState == GS_REMOVED ) || ( m_iPosState == PS_REMOVED );
+	return ( m_iGoalState.Get() == GS_REMOVED ) || ( m_iPosState.Get() == PS_REMOVED );
 }
