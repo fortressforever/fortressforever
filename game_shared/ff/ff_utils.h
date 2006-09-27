@@ -79,7 +79,7 @@ void FF_DecalTrace( CBaseEntity *pEntity, float flRadius, const char *pszDecalNa
 
 #ifdef GAME_DLL
 void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszText);
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight);
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth = 0, int iHeight = 0);
 void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed);
 void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
 #endif
