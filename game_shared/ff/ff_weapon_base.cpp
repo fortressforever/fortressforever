@@ -173,7 +173,9 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 	if (!te->CanPredict())
 		return;
 
-	CBaseEntity::EmitSound(filter, GetPlayerOwner()->entindex(), shootsound, &GetPlayerOwner()->GetAbsOrigin()); 
+	// The GetAbsOrigin() is the reason for s_bAbsQueriesValid assert we keep getting.
+	// Let's try doing this a different way.
+	CBaseEntity::EmitSound(filter, GetPlayerOwner()->entindex(), shootsound, NULL, soundtime); 
 #else
 	BaseClass::WeaponSound(sound_type, soundtime);
 #endif
@@ -184,24 +186,33 @@ void CFFWeaponBase::WeaponSound(WeaponSound_t sound_type, float soundtime /* = 0
 //----------------------------------------------------------------------------
 void CFFWeaponBase::WeaponSoundLocal( WeaponSound_t sound_type, float soundtime )
 {
-#ifdef CLIENT_DLL
+	// If we have some sounds from the weapon classname.txt file, play a random one of them
+	const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
+	if( !shootsound || !shootsound[0] )
+		return;
+
+	CSoundParameters params;
+
+	if( !GetParametersForSound( shootsound, params, NULL ) )
+		return;
+
+	CSingleUserRecipientFilter filter( GetPlayerOwner() );
+
+#ifdef CLIENT_DLL 
 	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
 	{
-		// If we have some sounds from the weapon classname.txt file, play a random one of them
-		const char *shootsound = GetWpnData().aShootSounds[ sound_type ];
-		if( !shootsound || !shootsound[0] )
+		// Not sure why we're checking tempents... but we did it above^^
+		if( !te->CanPredict() )
 			return;
 
-		CSoundParameters params;
+		// The filter.UsePredictionRules() was throwing an assert previously. Hope
+		// the sound doesn't play twice now (?)
 
-		if( !GetParametersForSound( shootsound, params, NULL ) )
-			return;
-
-		CSingleUserRecipientFilter filter( GetPlayerOwner() );
-
-		EmitSound( filter, GetOwner()->entindex(), shootsound, NULL, soundtime );
+		EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, NULL, soundtime );
 	}
-#endif
+#else
+	EmitSound( filter, GetPlayerOwner()->entindex(), shootsound, NULL, soundtime );
+#endif	
 }
 
 //----------------------------------------------------------------------------
