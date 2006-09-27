@@ -144,11 +144,12 @@ void CFFGrenadeNail::Precache()
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
 		{
-			// Do the classic TFC pattern
-			for( int i = 0; i < 11; i++ )
+			// Do the classic TFC pattern.
+			// 9/27/2006 - upping from 12 to 24 and change angle from 30 to 15
+			for( int i = 0; i < 23; i++ )
 			{
 				Vector vecNailDir;
-				QAngle vecAngles = GetAbsAngles() + QAngle( 0, 30.0f * i, 0 );				
+				QAngle vecAngles = GetAbsAngles() + QAngle( 0, 15.0f * i, 0 );				
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
