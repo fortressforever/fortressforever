@@ -147,7 +147,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Frame( 
 	m_pMapName = new Label( this, "MapName", GetFormattedMapName() );
 
 	m_pPlayerList = new SectionedListPanel(this, "PlayerList");
-	m_pPlayerList->SetVerticalScrollbar(false);
+	//m_pPlayerList->SetVerticalScrollbar(false);
 
 	LoadControlSettings("Resource/UI/ScoreBoard.res");
 	m_iDesiredHeight = GetTall();
@@ -331,19 +331,19 @@ void CClientScoreBoardDialog::Update( void )
 	FillScoreBoard();
 
 	// grow the scoreboard to fit all the players
-	int wide, tall;
-	m_pPlayerList->GetContentSize(wide, tall);
-	wide = GetWide();
-	if (m_iDesiredHeight < tall)
-	{
-		SetSize(wide, tall);
-		m_pPlayerList->SetSize(wide, tall);
-	}
-	else
-	{
-		SetSize(wide, m_iDesiredHeight);
-		m_pPlayerList->SetSize(wide, m_iDesiredHeight);
-	}
+//	int wide, tall;
+//	m_pPlayerList->GetContentSize(wide, tall);
+//	wide = GetWide();
+//	if (m_iDesiredHeight < tall)
+//	{
+//		SetSize(wide, tall);
+//		m_pPlayerList->SetSize(wide, tall);
+//	}
+//	else
+//	{
+//		SetSize(wide, m_iDesiredHeight);
+//		m_pPlayerList->SetSize(wide, m_iDesiredHeight);
+//	}
 
 	m_pMapName->SetText( GetFormattedMapName() );
 
