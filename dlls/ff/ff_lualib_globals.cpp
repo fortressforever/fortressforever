@@ -102,9 +102,6 @@ public:
 //---------------------------------------------------------------------------
 namespace FFLib
 {
-	// Prototype
-	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth = 0, int iHeight = 0 );
-
 	// returns if the entity of the specified type
 	// uses the Classify function for evaluation
 	bool IsOfClass(CBaseEntity* pEntity, int classType)
@@ -902,9 +899,17 @@ namespace FFLib
 		Omnibot::Notify_FireOutput(szTargetEntityName, szTargetInputName);
 	}
 
-	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y )
 	{
 		if( !pPlayer || !pszImage || !pszIdentifier )
+			return;
+
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage );
+	}
+
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	{
+		if( !pPlayer || !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
 			return;
 
 		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight );
@@ -954,6 +959,19 @@ namespace FFLib
 					 const luabind::adl::object& param2)
 	{
 		_scheduleman.AddSchedule(szScheduleName, time, fn, 1, param1, param2);
+	}
+
+	void AddScheduleRepeating(const char* szScheduleName, float time, const luabind::adl::object& fn)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1);
+	}
+
+	void AddScheduleRepeating(const char* szScheduleName,
+							  float time,
+							  const luabind::adl::object& fn,
+							  const luabind::adl::object& param1)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1);
 	}
 
 	void AddScheduleRepeating(const char* szScheduleName,
@@ -1055,13 +1073,16 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 			.def_readwrite("Green",		&CPlayerLimits::green),
 
 		// global functions
-		def("AddHudIcon",				&FFLib::AddHudIcon),
+		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudIcon),
+		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudIcon),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
-		def("AddScheduleRepeating",		&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
 		def("ApplyToAll",				&FFLib::ApplyToAll),
 		def("ApplyToTeam",				&FFLib::ApplyToTeam),
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
