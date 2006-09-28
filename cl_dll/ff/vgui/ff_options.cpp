@@ -838,8 +838,8 @@ CFFOptionsPanel::CFFOptionsPanel(vgui::VPANEL parent) : BaseClass(NULL, "FFOptio
 	m_pTimerOptions = new CFFTimerOptions(this, "TimerOptions");
 
 	m_pPropertyPages = new PropertySheet(this, "OptionsPages", true);
-	m_pPropertyPages->AddPage(m_pCrosshairOptions, "Crosshairs");
-	m_pPropertyPages->AddPage(m_pTimerOptions, "Timers");
+	m_pPropertyPages->AddPage(m_pCrosshairOptions, "#GameUI_Crosshairs");
+	m_pPropertyPages->AddPage(m_pTimerOptions, "#GameUI_Timers");
 	m_pPropertyPages->SetActivePage(m_pCrosshairOptions);
 	m_pPropertyPages->SetDragEnabled(false);
 

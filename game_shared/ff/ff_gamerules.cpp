@@ -54,12 +54,18 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_gamerules, CFFGameRulesProxy );
 IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 
-// --> Mirv: Prematch
+// A bunch of bot settings. Maybe these should go in one of the omnibot files?
+#ifdef GAME_DLL
+	ConVar botrules_training("botrules_training", "", FCVAR_GAMEDLL);
+	ConVar botrules_classlimits("botrules_classlimits", "", FCVAR_GAMEDLL);
+	ConVar botrules_teamlimits("botrules_teamlimits", "", FCVAR_GAMEDLL);
+	ConVar botrules_teamroles("botrules_teamroles", "", FCVAR_GAMEDLL);
+#endif
+
 ConVar mp_prematch( "mp_prematch",
 					"0.0",							// trepids finding it annoying so i set it to zero and not .2
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
 					"delay before game starts" );
-// <-- Mirv: Prematch
 
 #ifdef CLIENT_DLL
 	void RecvProxy_FFGameRules( const RecvProp *pProp, void **pOut, void *pData, int objectID )
