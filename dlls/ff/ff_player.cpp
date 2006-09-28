@@ -3221,6 +3221,7 @@ void CFFPlayer::StatusEffectsThink( void )
 		if( pIgniter )
 		{
 			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
+			info.SetCustomKill(KILLTYPE_BURNED);
 			TakeDamage( info );
 
 			// remove a tick
@@ -3321,6 +3322,8 @@ void CFFPlayer::StatusEffectsThink( void )
 			CTakeDamageInfo info( pInfector, pInfector, ffdev_infect_damage.GetInt(), DMG_POISON );
 			//info.SetDamageForce( Vector( 0, 0, -1 ) );
 			//info.SetDamagePosition( Vector( 0, 0, 1 ) );
+			info.SetCustomKill(KILLTYPE_INFECTION);
+
 			TakeDamage( info );
 
 			CSingleUserRecipientFilter user((CBasePlayer *)this);

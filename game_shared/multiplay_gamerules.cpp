@@ -642,6 +642,17 @@ bool CMultiplayRules::IsMultiplayer( void )
 			}
 			// <-- Mirv
 
+			//voogru: fix some messages:
+			switch(info.GetCustomKill())
+			{
+			case KILLTYPE_INFECTION:
+				killer_weapon_name = "ff_weapon_medikit";
+				break;
+			case KILLTYPE_BURNED:
+				killer_weapon_name = "ff_weapon_flamethrower";
+				break;
+			}
+
 			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
 			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
 
