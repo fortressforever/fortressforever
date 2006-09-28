@@ -136,6 +136,8 @@ public:
 	// returns true if a specified is allowed to touch this entity
 	bool CanEntityTouch(CBaseEntity* pEntity);
 
+	virtual void	ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity );
+
 protected:
 	// Do not expose these to LUA!
 	virtual void	SetActive( void );
