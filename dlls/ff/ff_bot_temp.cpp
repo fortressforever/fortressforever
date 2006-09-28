@@ -99,6 +99,18 @@ CON_COMMAND(bot_feign, "feign!")
 	}
 }
 
+CON_COMMAND( bot_dropitems, "drop items" )
+{
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+		if( pPlayer && ( pPlayer->GetFlags() & FL_FAKECLIENT ) )
+		{
+			pPlayer->Command_DropItems();
+		}
+	}
+}
+
 CON_COMMAND(bot_buildsentry, "build an sg")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)

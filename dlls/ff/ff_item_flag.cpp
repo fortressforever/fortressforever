@@ -557,7 +557,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 	// stop following
 	FollowEntity( NULL );
 	SetSolid( SOLID_BBOX );
-	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	CollisionRulesChanged();
 	
 	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
@@ -642,10 +642,10 @@ void CFFInfoScript::Drop( float delay, float speed )
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
 		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 1 ) );
 
-		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
+		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );*/
 
 		trace_t trHull;
-		UTIL_TraceHull( GetAbsOrigin(), GetAbsOrigin(), Vector( 0, 0, 0 ), Vector( 0, 0, 4 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
+		UTIL_TraceHull( GetAbsOrigin(), GetAbsOrigin(), Vector( 0, 0, 0 ), Vector( 0, 0, 1 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
 
 		// If the trace started in a solid, or the trace didn't finish, or if
 		// it hit the world then we want to move it back to the player's origin.
@@ -653,7 +653,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 		// the players being trapped in the world if a player is standing staring
 		// into a wall
 		if( trHull.allsolid || ( trHull.fraction != 1.0f ) || trHull.DidHitWorld() )
-			SetAbsOrigin( vecOrigin );*/
+			SetAbsOrigin( vecOrigin - Vector( 0, 0, 2 ) );
 
 		QAngle vecAngles = pOwner->EyeAngles();
 		SetAbsAngles( QAngle( 0, vecAngles.y, 0 ) );
@@ -1036,5 +1036,19 @@ void CFFInfoScript::LUA_SetModel( const char *szModel )
 	{
 		// No model!
 		m_iHasModel = 0;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Custom fly code. Want to reset bounding boxes when item comes to rest
+//-----------------------------------------------------------------------------
+void CFFInfoScript::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVelocity )
+{
+	BaseClass::ResolveFlyCollisionBounce( trace, vecVelocity );
+
+	if( vecVelocity.IsZero() || GetAbsVelocity().IsZero() )
+	{
+		UTIL_SetSize( this, m_vecMins, m_vecMaxs );
+		SetMoveType( MOVETYPE_NONE );
 	}
 }
