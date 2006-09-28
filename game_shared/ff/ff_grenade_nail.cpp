@@ -49,7 +49,8 @@ public:
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
 protected:
-	float m_flNailSpit;
+	float	m_flNailSpit;
+	float	m_flAngleOffset;
 #endif
 };
 
@@ -66,6 +67,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 	ConVar nailspeed("ffdev_nailspeed", "800");
 	ConVar naildamage("ffdev_naildamage", "8");
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.4" );
+	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "5.0" );
 #endif
 
 
@@ -90,6 +92,7 @@ void CFFGrenadeNail::Precache()
 		SetModel(NAILGRENADE_MODEL);
 		BaseClass::Spawn();
 
+		m_flAngleOffset = 0.0f;
 		m_flNailSpit = 0.0f;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
@@ -149,7 +152,7 @@ void CFFGrenadeNail::Precache()
 			for( int i = 0; i < 23; i++ )
 			{
 				Vector vecNailDir;
-				QAngle vecAngles = GetAbsAngles() + QAngle( 0, 15.0f * i, 0 );				
+				QAngle vecAngles = GetAbsAngles() + QAngle( 0, ( 15.0f * i ) + m_flAngleOffset, 0 );				
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
 
@@ -157,6 +160,10 @@ void CFFGrenadeNail::Precache()
 				if(pNail)
 					pNail->m_bNailGrenadeNail = true;				
 			}
+
+			// Increment the starting spot for nails a bit so we
+			// don't have gaps due to the angular pattern we shoot with
+			m_flAngleOffset += nailgren_angleoffset.GetFloat();
 
 			// TODO: Get tang to make this sound sound like 12 nails being shot out
 			// Play this each time we spawn a nail?
