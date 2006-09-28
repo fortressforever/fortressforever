@@ -23,6 +23,7 @@
 #include <KeyValues.h>
 #include "FileSystem.h"
 #include "ff_options.h"
+#include "ff_gamemodes.h"
 
 using namespace vgui;
 
@@ -182,7 +183,10 @@ void VGui_CreateGlobalPanels( void )
 	MP3Player_Create( toolParent );
 #endif
 
-	ffoptions->Create( uiParent );	// |-- Mirv
+	// --> Mirv: Create extra gameui panels
+	ffoptions->Create(uiParent);
+	ffgamemodes->Create(uiParent);
+	// <-- Mirv
 }
 
 void VGui_Shutdown()
@@ -205,7 +209,10 @@ void VGui_Shutdown()
 	internalCenterPrint->Destroy();
 	textmessage->Destroy();
 
-	ffoptions->Destroy();	// |-- Mirv
+	// --> Mirv: Destroy extra gameui panels
+	ffoptions->Destroy();
+	ffgamemodes->Destroy();
+	// <-- Mirv
 
 	if ( g_pClientMode )
 	{
