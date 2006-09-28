@@ -681,14 +681,18 @@ void UTIL_GetTeamLimits(char nTeamLimits[4])
 //				 0 : no space
 //				 n : n places left
 //			    99 : no space limit at all
+//
+//				Returns number of free teams
 //-----------------------------------------------------------------------------
-void UTIL_GetTeamSpaces(char nSpacesRemaining[4])
+int UTIL_GetTeamSpaces(char nSpacesRemaining[4])
 {
 	char nTeamNumbers[4];
 	UTIL_GetTeamNumbers(nTeamNumbers);
 
 	char nTeamLimits[4];
 	UTIL_GetTeamLimits(nTeamLimits);
+
+	int nFreeTeams = 0;
 
 	// Now loop through the teams and take different branches to find out
 	// what their limits are and calculate places remaining from these
@@ -700,6 +704,7 @@ void UTIL_GetTeamSpaces(char nSpacesRemaining[4])
 		if (nTeamLimits[iTeamIndex] == 0)
 		{
 			nSpacesRemaining[iTeamIndex] = 99;
+			nFreeTeams++;
 			continue;
 		}
 
@@ -714,7 +719,14 @@ void UTIL_GetTeamSpaces(char nSpacesRemaining[4])
 
 		// It shouldn't get below 0 but nevermind
 		nSpacesRemaining[iTeamIndex] = max(nSpacesRemaining[iTeamIndex], 0);
+
+		if (nSpacesRemaining[iTeamIndex] > 0)
+		{
+			nFreeTeams++;
+		}
 	}
+
+	return nFreeTeams;
 }
 
 //-----------------------------------------------------------------------------
@@ -783,7 +795,7 @@ void UTIL_GetClassLimits(int iTeamID, char nClassLimits[10])
 		int iClassIndex = iClassID - CLASS_SCOUT;
 
 #ifdef GAME_DLL
-		CFFTeam *pTeam = GetGlobalFFTeam(iClassID);
+		CFFTeam *pTeam = GetGlobalFFTeam(iTeamID);
 
 		// This team doesn't exist so keep all classes on 
 		if (pTeam == NULL)
@@ -805,14 +817,18 @@ void UTIL_GetClassLimits(int iTeamID, char nClassLimits[10])
 //				 0 : no space
 //				 n : n places left
 //			    99 : no space limit at all
+//
+//			Returns number of free class slots
 //-----------------------------------------------------------------------------
-void UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
+int UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 {
 	char nClassNumbers[10];
 	UTIL_GetClassNumbers(iTeamID, nClassNumbers);
 
 	char nClassLimits[10];
 	UTIL_GetClassLimits(iTeamID, nClassLimits);
+
+	int nFreeClasses = 0;
 
 	// Now loop through the Classs and take different branches to find out
 	// what their limits are and calculate places remaining from these
@@ -824,6 +840,7 @@ void UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 		if (nClassLimits[iClassIndex] == 0)
 		{
 			nSpacesRemaining[iClassIndex] = 99;
+			nFreeClasses++;
 			continue;
 		}
 
@@ -838,5 +855,12 @@ void UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 
 		// It shouldn't get below 0 but nevermind
 		nSpacesRemaining[iClassIndex] = max(nSpacesRemaining[iClassIndex], 0);
+
+		if (nSpacesRemaining[iClassIndex] > 0)
+		{
+			nFreeClasses++;
+		}
 	}
+
+	return nFreeClasses;
 }

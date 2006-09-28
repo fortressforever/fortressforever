@@ -29,20 +29,9 @@
 #include "ff_grenade_emp.h"
 
 #include "client.h"
-
-#include <vector>
-#include <algorithm>
-
-// Re-adding this after STL to fix linux server issues
-#undef MINMAX_H
-#include "minmax.h"		
-
 #include "ff_statslog.h"
-
 #include "gib.h"
-
 #include "omnibot_interface.h"
-
 #include "te_effect_dispatch.h"
 
 extern int gEvilImpulse101;
@@ -96,75 +85,74 @@ static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
 
 extern ConVar sv_maxspeed;
 
-// --------------------------------------------------------------------------------
-// Purpose: To spawn a model for testing - REMOVE (or disable) for release
-//
-// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
-// --------------------------------------------------------------------------------
-class CFFModelTemp : public CBaseAnimating
-{
-public:
-	DECLARE_CLASS( CFFModelTemp, CBaseAnimating );
-	
-	CFFModelTemp( void ) { m_hModel = NULL; }
-	~CFFModelTemp( void ) {}
-
-	const char *m_hModel;
-
-	void Spawn( void )
+#ifdef _DEBUG
+	// --------------------------------------------------------------------------------
+	// Purpose: To spawn a model for testing - REMOVE (or disable) for release
+	//
+	// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
+	// --------------------------------------------------------------------------------
+	class CFFModelTemp : public CBaseAnimating
 	{
-		if( m_hModel )
-			PrecacheModel( m_hModel );
-		BaseClass::Precache();
-		if( m_hModel )
-			SetModel( m_hModel );
-	}
-
-	static CFFModelTemp *Create( const char *szModel, const Vector& vecOrigin, const QAngle& vecAngles )
-	{
-		CFFModelTemp *pObject = ( CFFModelTemp * )CBaseEntity::Create( "ff_model_temp", vecOrigin, vecAngles );
-		pObject->m_hModel = szModel;
-		pObject->Spawn();
-		return pObject;
-	}
-};
-
-// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
-LINK_ENTITY_TO_CLASS( ff_model_temp, CFFModelTemp );
-
-// Bug #0000605: Rebo would like a way to spawn models on the fly in game to test stuff
-CON_COMMAND( model_temp, "Spawn a temporary model. Usage: model_temp <model> <distance_in_front_of_player>" )
-{
-	if( ( engine->Cmd_Argc() > 2 ) && ( engine->Cmd_Argc() < 4 ) )
-	{
-		CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
-
-		if( !pPlayer )
-			return;
-
-		Vector vecOrigin, vecForward, vecRight;
+	public:
+		DECLARE_CLASS( CFFModelTemp, CBaseAnimating );
 		
-		// Get some info from the player...
-		vecOrigin = pPlayer->GetAbsOrigin();
-		pPlayer->EyeVectors( &vecForward, &vecRight );
+		CFFModelTemp( void ) { m_hModel = NULL; }
+		~CFFModelTemp( void ) {}
 
-		vecForward.z = 0;
+		const char *m_hModel;
 
-		// Normalize
-		VectorNormalize( vecForward );
+		void Spawn( void )
+		{
+			if( m_hModel )
+				PrecacheModel( m_hModel );
+			BaseClass::Precache();
+			if( m_hModel )
+				SetModel( m_hModel );
+		}
 
-		vecOrigin += ( vecForward * atof( engine->Cmd_Argv(2) ) );
-		
-		QAngle vecAngles;
-		VectorAngles( vecForward, vecAngles );
+		static CFFModelTemp *Create( const char *szModel, const Vector& vecOrigin, const QAngle& vecAngles )
+		{
+			CFFModelTemp *pObject = ( CFFModelTemp * )CBaseEntity::Create( "ff_model_temp", vecOrigin, vecAngles );
+			pObject->m_hModel = szModel;
+			pObject->Spawn();
+			return pObject;
+		}
+	};
+	LINK_ENTITY_TO_CLASS( ff_model_temp, CFFModelTemp );
 
-		CFFModelTemp::Create( engine->Cmd_Argv(1), vecOrigin, vecAngles );
-	}
-	else
+	CON_COMMAND( model_temp, "Spawn a temporary model. Usage: model_temp <model> <distance_in_front_of_player>" )
 	{
-		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Usage: model_temp <model> <distance_in_front_of_player>\n");
+		if( ( engine->Cmd_Argc() > 2 ) && ( engine->Cmd_Argc() < 4 ) )
+		{
+			CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
+
+			if( !pPlayer )
+				return;
+
+			Vector vecOrigin, vecForward, vecRight;
+			
+			// Get some info from the player...
+			vecOrigin = pPlayer->GetAbsOrigin();
+			pPlayer->EyeVectors( &vecForward, &vecRight );
+
+			vecForward.z = 0;
+
+			// Normalize
+			VectorNormalize( vecForward );
+
+			vecOrigin += ( vecForward * atof( engine->Cmd_Argv(2) ) );
+			
+			QAngle vecAngles;
+			VectorAngles( vecForward, vecAngles );
+
+			CFFModelTemp::Create( engine->Cmd_Argv(1), vecOrigin, vecAngles );
+		}
+		else
+		{
+			ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Usage: model_temp <model> <distance_in_front_of_player>\n");
+		}
 	}
-}
+#endif
 
 // --------------------------------------------------------------------------------
 // Purpose: Kill the player and set a 5 second spawn delay
@@ -1264,7 +1252,7 @@ void CFFPlayer::SpyFeign( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: This doesn't have a maximum speed either.
-//			That wasn't really a description of a purpose, I know.
+//			That wasn't really a description or a purpose, I know.
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpySilentFeign( void )
 {
@@ -1789,55 +1777,37 @@ int CFFPlayer::ActivateClass()
 		return 0;
 	}
 
-	int iClasses[11] = {0};
-
-	// Build up an array of all in-use classes
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex(i);
-
-		// Check player classes on this player's team
-		if (pPlayer && pPlayer->GetTeamNumber() == GetTeamNumber())
-		{
-			int playerclass = pPlayer->GetClassSlot();
-
-			if (playerclass > 0 && playerclass <= 10)
-				iClasses[playerclass]++;
-		}
-	}
-
-	std::vector<int> vecAvailable;
-
-	// Build up a vector array of available classes
-	for (int j = 1; j <= 10; j++)
-	{
-		int class_limit = pTeam->GetClassLimit(j);
-
-		// This class is available
-		if (class_limit == 0 || iClasses[j] < class_limit)
-			vecAvailable.push_back(j);
-	}
+	char cClassesAvailable[10];
+	int nClassesAvailable = UTIL_GetClassSpaces(GetTeamNumber(), cClassesAvailable);
 
 	// Make a random choice for randompcs
 	if (m_fRandomPC)
 	{
-		int iNumAvail = (int) vecAvailable.size();
-
-		// No available classes
-		if (iNumAvail == 0)
+		if (nClassesAvailable == 0)
 			return 0;
 
+		int iRandomClassNumber = random->RandomInt(0, nClassesAvailable - 1);
 
-		// Loop until we get a new class if there's more than one available
-		while ((m_iNextClass = vecAvailable[(rand() % iNumAvail) ]) == GetClassSlot() && iNumAvail != 1);
+		int iClassIndex = 0;
+		while (iRandomClassNumber > 0)
+		{
+			if (cClassesAvailable[iClassIndex] > 0)
+				iRandomClassNumber--;
 
-		//DevMsg("randompc: Tried to select %d out of %d options\n", m_iNextClass, (int) vecAvailable.size());
+			iClassIndex++;
+		}
+
+		m_iNextClass = iClassIndex + CLASS_SCOUT;
 	}
+
 	// Check target class is still available
 	else if (m_iNextClass != GetClassSlot())
 	{
-		// It's not available anymore, slowmow
-		if (std::find(vecAvailable.begin(), vecAvailable.end(), m_iNextClass) == vecAvailable.end())
+		int iClassIndex = m_iNextClass - CLASS_SCOUT;
+		Assert(iClassIndex >= 0 && iClassIndex <= 10);
+
+		// This class is no longer available, slow-mo
+		if (cClassesAvailable[iClassIndex] <= 0)
 		{
 			m_iNextClass = GetClassSlot();
 			ClientPrint(this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE");
@@ -1845,13 +1815,7 @@ int CFFPlayer::ActivateClass()
 		}
 	}
 
-	// It's not available anymore(server changed class limits?)
-	if (std::find(vecAvailable.begin(), vecAvailable.end(), m_iNextClass) == vecAvailable.end())
-	{
-		m_iNextClass = 0;
-		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_ERROR_NOLONGERAVAILABLE");
-		return GetClassSlot();
-	}
+	// Do we still need the availability check here? I'm pretty sure we don't.
 
 	// Now lets try reading this class, this shouldn't fail!
 	if (!ReadPlayerClassDataFromFileForSlot(filesystem, Class_IntToString(m_iNextClass), &m_hPlayerClassFileInfo, GetEncryptionKey()))
@@ -5737,6 +5701,8 @@ void CFFPlayer::Command_SabotageSentry()
 {
 	CFFSentryGun *pSentry = NULL; 
 
+	ClientPrint(this, HUD_PRINTCONSOLE, "> Send spike... ... ... ... ... ...Spike sent.\n");
+
 	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
 		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
@@ -5766,7 +5732,7 @@ void CFFPlayer::SpySabotageRelease()
 {
 	CFFDispenser *pDispenser = NULL; 
 
-	// Detonate any pipes belonging to us
+	// Release any sentryguns
 	while ((pDispenser = (CFFDispenser *) gEntList.FindEntityByClassname(pDispenser, "FF_Dispenser")) != NULL) 
 	{
 		if (pDispenser->m_hSaboteur == this) 
@@ -5778,7 +5744,7 @@ void CFFPlayer::SpySabotageRelease()
 
 	CFFSentryGun *pSentry = NULL; 
 
-	// Detonate any pipes belonging to us
+	// Release any dispensers
 	while ((pSentry = (CFFSentryGun *) gEntList.FindEntityByClassname(pSentry, "FF_SentryGun")) != NULL) 
 	{
 		if (pSentry->m_hSaboteur == this) 

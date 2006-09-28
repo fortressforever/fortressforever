@@ -67,11 +67,11 @@ int FF_GetPlayer( int iNum );
 
 void UTIL_GetTeamNumbers(char nTeamNumbers[4]);
 void UTIL_GetTeamLimits(char nTeamLimits[4]);
-void UTIL_GetTeamSpaces(char nSpacesRemaining[4]);
+int UTIL_GetTeamSpaces(char nSpacesRemaining[4]);
 
 void UTIL_GetClassNumbers(int iTeamID, char nClassNumbers[10]);
 void UTIL_GetClassLimits(int iTeamID, char nClassLimits[10]);
-void UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10]);
+int UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10]);
 
 bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting );
 
