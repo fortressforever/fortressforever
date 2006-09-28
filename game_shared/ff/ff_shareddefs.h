@@ -92,7 +92,9 @@ struct SpyDisguiseWeapon
 enum KillTypes_t
 {
 	KILLTYPE_HEADSHOT = 1,
-	KILLTYPE_BODYSHOUT = 2
+	KILLTYPE_BODYSHOUT = 2,
+	KILLTYPE_INFECTION = 3,
+	KILLTYPE_BURNED = 4
 };
 
 
