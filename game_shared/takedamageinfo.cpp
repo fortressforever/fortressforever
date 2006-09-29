@@ -11,6 +11,7 @@
 
 #ifdef GAME_DLL
 #include "ff_entity_system.h"
+#include "ff_lualib_constants.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!

@@ -3,14 +3,15 @@
 
 //---------------------------------------------------------------------------
 // includes
-//---------------------------------------------------------------------------
-// includes
 #include "cbase.h"
+#include "ff_lualib_constants.h"
 #include "ff_lualib.h"
 #include "ff_entity_system.h"
 #include "ff_gamerules.h"
 #include "ff_shareddefs.h"
 #include "ff_item_flag.h"
+
+#include "ammodef.h"
 
 // Lua includes
 extern "C"
@@ -28,11 +29,67 @@ extern "C"
 //---------------------------------------------------------------------------
 using namespace luabind;
 
-//---------------------------------------------------------------------------
-class CFFEntity_AllowFlags
+/////////////////////////////////////////////////////////////////////////////-
+// Purpose: Convert lua ammo type (int) to game ammo type (string)
+/////////////////////////////////////////////////////////////////////////////-
+const char *LookupLuaAmmo( int iLuaAmmoType )
 {
-public:
-};
+	switch( iLuaAmmoType )
+	{
+		case LUA_AMMO_SHELLS: return AMMO_SHELLS; break;
+		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
+		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
+		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
+		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
+		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
+		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
+		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
+	}
+
+	AssertMsg( false, "LookupLuaAmmo - invalid ammo type!" );
+
+	return "";
+}
+
+/////////////////////////////////////////////////////////////////////////////-
+// Purpose: Convert ammo to lua ammo
+/////////////////////////////////////////////////////////////////////////////-
+int LookupAmmoLua( int iAmmoType )
+{
+	// NOTE: this is kind of lame as in i don't think we even setup the ammo
+	// type in our CTakeDamageInfo classes ... except for radio tag rifle.
+
+	if( GetAmmoDef() )
+	{
+		char *pszName = GetAmmoDef()->GetAmmoOfIndex( iAmmoType )->pName;
+
+		if( pszName && Q_strlen( pszName ) )
+		{
+			if( !Q_strcmp( pszName, AMMO_SHELLS ) )
+				return LUA_AMMO_SHELLS;
+			else if( !Q_strcmp( pszName, AMMO_CELLS ) )
+				return LUA_AMMO_CELLS;
+			else if( !Q_strcmp( pszName, AMMO_NAILS ) )
+				return LUA_AMMO_NAILS;
+			else if( !Q_strcmp( pszName, AMMO_ROCKETS ) )
+				return LUA_AMMO_ROCKETS;
+			else if( !Q_strcmp( pszName, AMMO_RADIOTAG ) )
+				return LUA_AMMO_RADIOTAG;
+			else if( !Q_strcmp( pszName, AMMO_DETPACK ) )
+				return LUA_AMMO_DETPACK;
+			// TODO: Maybe figure these in somehow?
+			/*
+			else if( !Q_strcmp( pszName, AMMO_GREN1 ) )
+				return LUA_AMMO_GREN1;
+			else if( !Q_strcmp( pszName, AMMO_GREN2 ) )
+				return LUA_AMMO_GREN2;
+				*/
+		}
+	}
+
+	return LUA_AMMO_INVALID;
+}
+
 
 //---------------------------------------------------------------------------
 void CFFLuaLib::InitConstants(lua_State* L)

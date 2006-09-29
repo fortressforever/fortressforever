@@ -21,31 +21,15 @@
 // includes
 #include "cbase.h"
 #include "ff_entity_system.h"
-
-// Filesystem stuff
-#include "filesystem.h"
-
-// Entity stuff
-#include "takedamageinfo.h"
-#include "ff_player.h"
-#include "ff_item_flag.h"
-#include "ff_goal.h"
-#include "team.h"
-#include "doors.h"
-#include "buttons.h"
-#include "triggers.h"
-#include "ff_utils.h"
-#include "ff_team.h"
-#include "ff_gamerules.h"
-#include "ff_grenade_base.h"
-#include "beam_shared.h"
 #include "ff_luacontext.h"
 #include "ff_lualib.h"
-#include "ammodef.h"
 #include "ff_scheduleman.h"
-//#include "ff_miniturret.h"
+#include "ff_utils.h"
 
-// Lua includes
+// engine
+#include "filesystem.h"
+
+// lua
 extern "C"
 {
 	#include "lua.h"
@@ -57,6 +41,7 @@ extern "C"
 #undef min
 #undef max
 
+// luabind
 #include "luabind/luabind.hpp"
 #include "luabind/object.hpp"
 #include "luabind/iterator_policy.hpp"
@@ -67,9 +52,6 @@ extern "C"
 /////////////////////////////////////////////////////////////////////////////
 // globals
 CFFEntitySystem entsys;
-CFFEntitySystemHelper *helper = NULL; // global variable.. OH NOES!
-
-ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 
 using namespace luabind;
 
@@ -83,19 +65,41 @@ BEGIN_DATADESC( CFFEntitySystemHelper )
 	DEFINE_THINKFUNC( OnThink ),
 END_DATADESC()
 
+CFFEntitySystemHelper* CFFEntitySystemHelper::s_pInstance = NULL;
+
 /////////////////////////////////////////////////////////////////////////////
 // Purpose: Sets up the entity's initial state
 /////////////////////////////////////////////////////////////////////////////
-void CFFEntitySystemHelper::Spawn( void )
+CFFEntitySystemHelper::CFFEntitySystemHelper()
+{
+	ASSERT(!s_pInstance);
+	s_pInstance = this;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFEntitySystemHelper::~CFFEntitySystemHelper()
+{
+	s_pInstance = NULL;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFEntitySystemHelper* CFFEntitySystemHelper::GetInstance()
+{
+	ASSERT(s_pInstance);
+	return s_pInstance;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystemHelper::Spawn()
 {
 	DevMsg("[EntSys] Entity System Helper Spawned\n");
 
-	SetThink( &CFFEntitySystemHelper::OnThink );		// |-- Mirv: Account for GCC strictness
+	SetThink( &CFFEntitySystemHelper::OnThink );
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void CFFEntitySystemHelper::OnThink( void )
+void CFFEntitySystemHelper::OnThink()
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
 
@@ -104,7 +108,7 @@ void CFFEntitySystemHelper::OnThink( void )
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void CFFEntitySystemHelper::Precache( void )
+void CFFEntitySystemHelper::Precache()
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::Precache", VPROF_BUDGETGROUP_FF_LUA );
 
@@ -127,11 +131,8 @@ CFFEntitySystemHelper* CFFEntitySystemHelper::Create()
 CFFEntitySystem::CFFEntitySystem()
 : m_isLoading(false)
 , m_scriptCRC(0)
+, m_ScriptExists(false)
 {
-	DevMsg( "[SCRIPT] Attempting to start up the entity system...\n" );
-
-	// Initialise this to false
-	m_ScriptExists = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -221,12 +222,13 @@ void CFFEntitySystem::Init()
 	}
 
 	// initialize VM
+	DevMsg("[SCRIPT] Attempting to start up the entity system...\n");
 	L = lua_open();
 
 	// no need to continue if VM failed to initialize
 	if(!L)
 	{
-		DevWarning( "[SCRIPT] Unable to initialize Lua VM.\n" );
+		DevWarning("[SCRIPT] Unable to initialize Lua VM.\n");
 		return;
 	}
 
@@ -242,7 +244,7 @@ void CFFEntitySystem::Init()
 	// initialize game-specific library
 	CFFLuaLib::Init(L);
 	
-	DevMsg("[SCRIPT] Entity system initialization successful.\n" );
+	DevMsg("[SCRIPT] Entity system initialization successful.\n");
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -261,7 +263,7 @@ void CFFEntitySystem::Shutdown()
 /////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::LevelInit(const char* szMapName)
 {
-	VPROF_BUDGET("CFFEntitySystem::OnLevelInit", VPROF_BUDGETGROUP_FF_LUA);
+	VPROF_BUDGET("CFFEntitySystem::LevelInit", VPROF_BUDGETGROUP_FF_LUA);
 
 	if(!szMapName)
 		return;
@@ -279,7 +281,7 @@ void CFFEntitySystem::LevelInit(const char* szMapName)
 	EndScriptLoad();
 
 	// spawn the helper entity
-	helper = CFFEntitySystemHelper::Create();
+	CFFEntitySystemHelper::Create();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -620,65 +622,4 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContex
 		return true;
 
 	return false;
-}
-
-/////////////////////////////////////////////////////////////////////////////-
-// Purpose: Convert lua ammo type (int) to game ammo type (string)
-/////////////////////////////////////////////////////////////////////////////-
-const char *LookupLuaAmmo( int iLuaAmmoType )
-{
-	switch( iLuaAmmoType )
-	{
-		case LUA_AMMO_SHELLS: return AMMO_SHELLS; break;
-		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
-		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
-		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
-		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
-		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
-		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
-		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
-	}
-
-	AssertMsg( false, "LookupLuaAmmo - invalid ammo type!" );
-
-	return "";
-}
-
-/////////////////////////////////////////////////////////////////////////////-
-// Purpose: Convert ammo to lua ammo
-/////////////////////////////////////////////////////////////////////////////-
-int LookupAmmoLua( int iAmmoType )
-{
-	// NOTE: this is kind of lame as in i don't think we even setup the ammo
-	// type in our CTakeDamageInfo classes ... except for radio tag rifle.
-
-	if( GetAmmoDef() )
-	{
-		char *pszName = GetAmmoDef()->GetAmmoOfIndex( iAmmoType )->pName;
-
-		if( pszName && Q_strlen( pszName ) )
-		{
-			if( !Q_strcmp( pszName, AMMO_SHELLS ) )
-				return LUA_AMMO_SHELLS;
-			else if( !Q_strcmp( pszName, AMMO_CELLS ) )
-				return LUA_AMMO_CELLS;
-			else if( !Q_strcmp( pszName, AMMO_NAILS ) )
-				return LUA_AMMO_NAILS;
-			else if( !Q_strcmp( pszName, AMMO_ROCKETS ) )
-				return LUA_AMMO_ROCKETS;
-			else if( !Q_strcmp( pszName, AMMO_RADIOTAG ) )
-				return LUA_AMMO_RADIOTAG;
-			else if( !Q_strcmp( pszName, AMMO_DETPACK ) )
-				return LUA_AMMO_DETPACK;
-			// TODO: Maybe figure these in somehow?
-			/*
-			else if( !Q_strcmp( pszName, AMMO_GREN1 ) )
-				return LUA_AMMO_GREN1;
-			else if( !Q_strcmp( pszName, AMMO_GREN2 ) )
-				return LUA_AMMO_GREN2;
-				*/
-		}
-	}
-
-	return LUA_AMMO_INVALID;
 }

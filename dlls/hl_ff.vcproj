@@ -3440,6 +3440,9 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%
 				RelativePath=".\ff\ff_lualib_constants.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_lualib_constants.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_lualib_globals.cpp">
 			</File>
 			<File
