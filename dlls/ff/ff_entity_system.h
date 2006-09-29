@@ -17,9 +17,13 @@
 #pragma once
 #endif
 
-//#include <vector>
+/////////////////////////////////////////////////////////////////////////////
+// includes
+#ifndef CHECKSUM_CRC_H
+	#include "checksum_crc.h"
+#endif
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // forward declarations
 struct lua_State;
 
@@ -33,74 +37,78 @@ namespace luabind
 
 class CFFLuaSC;
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // extern declarations
 extern ConVar mp_respawndelay;
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntitySystemHelper
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntitySystemHelper : public CBaseEntity
 {
-public:
 	DECLARE_CLASS( CFFEntitySystemHelper, CBaseEntity );
 	DECLARE_DATADESC();
 
+public:
 	void Spawn( void );
 	void OnThink( void );
 	void Precache( void );
+
+public:
+	static CFFEntitySystemHelper* Create();
 };
 
 extern CFFEntitySystemHelper *helper;
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntitySystem
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntitySystem
 {
-private:
-	lua_State* L;
-	bool m_ScriptExists;
-
 public:
+	// 'structors
 	CFFEntitySystem();
 	~CFFEntitySystem();
 
-	// runs the lua file into the script environment
-	static bool LoadLuaFile( lua_State*, const char *);
+public:
+	// inserts the lua file into the script environment
+	static bool LoadFile(lua_State*, const char* filePath);
 
-	// loads the script for the current map
-	bool StartForMap();
+public:
+	// loads the scripts for the level
+	void LevelInit(const char* szMapName);
 
-	void Update();
+	// cleans up the scripts for the most recent level
+	void LevelShutdown();
 
-	// returns the lua interpreter
-	lua_State* GetLuaState() const { return L; }
-	bool ScriptExists( void ) const { return m_ScriptExists; }
+private:
+	// initializes the script VM
+	void Init();
+	void Shutdown();
 
-	// handles lua error
-	static int HandleError( lua_State *L );
+	// surround code that loads scripts to capture crc checksum
+	// of the scripts that are loaded
+	void BeginScriptLoad();
+	void EndScriptLoad();
 
+private:
+	// called when a script is loaded. internally computes the
+	// crc checksum of the file contents
+	void OnScriptLoad(const char* szFileName, const char* szFileContents);
+
+public:
 	// sets a global variable in the script environment
 	static void SetVar( lua_State *L, const char *name, const char *value );
 	static void SetVar( lua_State *L, const char *name, int value );
 	static void SetVar( lua_State *L, const char *name, float value );
-	void SetVar( const char *name, const char *value );
-	void SetVar( const char *name, int value );
-	void SetVar( const char *name, float value );
+	void SetVar(const char* name, const char* value);
+	void SetVar(const char* name, int value);
+	void SetVar(const char* name, float value);
 
 	// gets a global variable from the script environment
-	const char *GetString( const char *name );
-	int GetInt( const char *name );
-	float GetFloat( const char *name );
-
-	// runs the script
-	void DoString( const char *buffer );
-
-	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
-
-	// A better run predicates
-	bool RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName );
+	const char* GetString(const char* name);
+	int GetInt(const char* name);
+	float GetFloat(const char* name);
 
 	bool GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject);
 	bool GetObject(const char* szTableName, luabind::adl::object& outObject);
@@ -112,46 +120,65 @@ public:
 	bool GetFunction(luabind::adl::object& tableObject,
 					 const char* szFunctionName,
 					 luabind::adl::object& outObject);
+
+public:
+	int RunPredicates( CBaseEntity *pObject, CBaseEntity *pEntity, const char *szFunctionName = NULL);
+	bool RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName );
+
+public:
+	// returns the lua interpreter
+	lua_State* GetLuaState() const { return L; }
+	bool ScriptExists( void ) const { return m_ScriptExists; }
+
+	// returns the crc checksum of the currently active script
+	CRC32_t GetScriptCRC() const { return m_scriptCRC; }
+
+private:
+	// private data
+	lua_State*	L;				// lua VM
+	bool		m_ScriptExists;
+	bool		m_isLoading;
+	CRC32_t		m_scriptCRC;
 };
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // utility functions
 bool FFScriptRunPredicates( CBaseEntity *pEntity, const char *pszFunction, bool bExpectedVal );
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // global externs
 extern CFFEntitySystem entsys;
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntity_ApplyToFlags
 // Purpose: this is a fake class to expose AT_ flags to lua easily
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntity_ApplyTo_Flags
 {
 public:
 };
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntity_EffectFlags
 // Purpose: this is a fake class to expose "EF_" ["effect"] flags to lua easily
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntity_Effect_Flags
 {
 public:
 };
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntity_AmmoTypes
 // Purpose: this is a fake class to expose "AMMO" to lua
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntity_AmmoTypes
 {
 public:
 };
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // Purpose: Ammo types in lua
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 enum LuaAmmoTypes
 {
 	LUA_AMMO_SHELLS = 0,
@@ -166,20 +193,20 @@ enum LuaAmmoTypes
 	LUA_AMMO_INVALID
 };
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // Purpose: Convert lua ammo type (int) to game ammo type (string)
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 const char *LookupLuaAmmo( int iLuaAmmoType );
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // Purpose: Convert ammo to lua ammo
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 int LookupAmmoLua( int iAmmoType );
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntity_AmmoTypes
 // Purpose: this is a fake class to expose hud items to LUA
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 class CFFEntity_HudItemTypes
 {
 public:
@@ -195,4 +222,5 @@ enum LuaHudItemTypes
 	LUA_HUD_ITEM_MAX
 };
 
+/////////////////////////////////////////////////////////////////////////////
 #endif // FF_ENTITY_SYSTEM_H

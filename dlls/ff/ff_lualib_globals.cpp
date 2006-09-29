@@ -348,11 +348,11 @@ namespace FFLib
 			*/
 			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
 
-			if( !CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript ) )
+			if( !CFFEntitySystem::LoadFile( entsys.GetLuaState(), realscript ) )
 			{
 				// Try looking in the maps directory
 				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				CFFEntitySystem::LoadLuaFile( entsys.GetLuaState(), realscript );
+				CFFEntitySystem::LoadFile( entsys.GetLuaState(), realscript );
 			}
 		}
 		else

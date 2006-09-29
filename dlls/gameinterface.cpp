@@ -807,7 +807,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	// Added: Initialize Lua stuff
 	_scheduleman.Init();
-	entsys.StartForMap();
+	entsys.LevelInit(pMapName);
 
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
 	// That happens either in LoadGameState() or in MapEntity_ParseAllEntities()
@@ -1167,6 +1167,7 @@ void CServerGameDLL::LevelShutdown( void )
 	// Omni-bot: Shut down the bot interface
 	Omnibot::omnibot_interface::ShutdownBotInterface();
 
+	entsys.LevelShutdown();
 	_scheduleman.Shutdown();
 
 	IGameSystem::LevelShutdownPreEntityAllSystems();

@@ -17,7 +17,7 @@
 /// Jul 31, 2005 FryGuy: Added the entity helper, along with the sound stuffs
 /// Aug 01, 2005 FryGuy: Added BroadcastMessage and RespawnAllPlayers
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // includes
 #include "cbase.h"
 #include "ff_entity_system.h"
@@ -64,7 +64,7 @@ extern "C"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // globals
 CFFEntitySystem entsys;
 CFFEntitySystemHelper *helper = NULL; // global variable.. OH NOES!
@@ -73,9 +73,9 @@ ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn 
 
 using namespace luabind;
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntitySystemHelper implementation
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 LINK_ENTITY_TO_CLASS( ff_entity_system_helper, CFFEntitySystemHelper );
 
 // Start of our data description for the class
@@ -83,9 +83,9 @@ BEGIN_DATADESC( CFFEntitySystemHelper )
 	DEFINE_THINKFUNC( OnThink ),
 END_DATADESC()
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // Purpose: Sets up the entity's initial state
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystemHelper::Spawn( void )
 {
 	DevMsg("[EntSys] Entity System Helper Spawned\n");
@@ -94,7 +94,7 @@ void CFFEntitySystemHelper::Spawn( void )
 	SetNextThink( gpGlobals->curtime + 1.0f );
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystemHelper::OnThink( void )
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::OnThink", VPROF_BUDGETGROUP_FF_LUA );
@@ -103,7 +103,7 @@ void CFFEntitySystemHelper::OnThink( void )
 	SetNextThink(gpGlobals->curtime + TICK_INTERVAL);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystemHelper::Precache( void )
 {
 	VPROF_BUDGET( "CFFEntitySystemHelper::Precache", VPROF_BUDGETGROUP_FF_LUA );
@@ -112,10 +112,21 @@ void CFFEntitySystemHelper::Precache( void )
 	entsys.RunPredicates_LUA( NULL, &hPrecache, "precache" );
 }
 
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
+CFFEntitySystemHelper* CFFEntitySystemHelper::Create()
+{
+	CFFEntitySystemHelper* pHelper = (CFFEntitySystemHelper*)CreateEntityByName("ff_entity_system_helper");
+	pHelper->Spawn();
+	pHelper->Precache();
+	return pHelper;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // CFFEntitySystem implementation
-//============================================================================
+/////////////////////////////////////////////////////////////////////////////
 CFFEntitySystem::CFFEntitySystem()
+: m_isLoading(false)
+, m_scriptCRC(0)
 {
 	DevMsg( "[SCRIPT] Attempting to start up the entity system...\n" );
 
@@ -123,52 +134,57 @@ CFFEntitySystem::CFFEntitySystem()
 	m_ScriptExists = false;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 CFFEntitySystem::~CFFEntitySystem()
 {
-	m_ScriptExists = false;
-
-	// Check it exists then close it
-	if( L )
-		lua_close(L);
-
-	// Just to be safe!
-	L = NULL;
-
+	Shutdown();
 	_scheduleman.Shutdown();
 }
 
-//----------------------------------------------------------------------------
-bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
+/////////////////////////////////////////////////////////////////////////////
+bool CFFEntitySystem::LoadFile( lua_State *L, const char *filename)
 {
-	VPROF_BUDGET( "CFFEntitySystem::LoadLuaFile", VPROF_BUDGETGROUP_FF_LUA );
+	VPROF_BUDGET( "CFFEntitySystem::LoadFile", VPROF_BUDGETGROUP_FF_LUA );
 
-	DevMsg("[SCRIPT] Loading Lua File: %s\n", filename);
-	FileHandle_t f = filesystem->Open( filename, "rb", "MOD" );
-
-	if ( !f )
+	// don't allow scripters to sneak in scripts after the initial load
+	if(!entsys.m_isLoading)
 	{
-		DevWarning( "[SCRIPT] %s either does not exist or could not be opened!\n", filename );
+		DevMsg("[SCRIPT] Loading of scripts after inital map load is not allowed.\n");
 		return false;
 	}
 
-	int fileSize = filesystem->Size(f);
-	char *buffer = (char*)MemAllocScratch( fileSize + 1 );
-		
-	Assert( buffer );
-		
-	// load file into a null-terminated buffer
-	filesystem->Read( buffer, fileSize, f );
-	buffer[fileSize] = 0;
-	filesystem->Close( f );
+	// open the file
+	DevMsg("[SCRIPT] Loading Lua File: %s\n", filename);
+	FileHandle_t hFile = filesystem->Open(filename, "rb", "MOD");
 
-	// Now load this script [TODO: Some error checking here]
-	//lua_dostring( L, buffer );
-	int rc = luaL_loadbuffer( L, buffer, fileSize, filename );
-	if ( rc )
+	if (!hFile)
 	{
-		if ( rc == LUA_ERRSYNTAX )
+		DevWarning("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
+		return false;
+	}
+
+	// allocate buffer for file contents
+	int fileSize = filesystem->Size(hFile);
+	char *buffer = (char*)MemAllocScratch(fileSize + 1);
+	Assert(buffer);
+		
+	// load file contents into a null-terminated buffer
+	filesystem->Read(buffer, fileSize, hFile);
+	buffer[fileSize] = 0;
+	filesystem->Close(hFile);
+
+	// preprocess script data
+	entsys.OnScriptLoad(filename, buffer);
+
+	// load script
+	int errorCode = luaL_loadbuffer(L, buffer, fileSize, filename);
+
+	// check if load was successful
+	if(errorCode)
+	{
+		if(errorCode == LUA_ERRSYNTAX )
 		{
+			// syntax error, lookup description for the error
 			const char *error = lua_tostring(L, -1);
 			if (error)
 			{
@@ -185,134 +201,169 @@ bool CFFEntitySystem::LoadLuaFile( lua_State *L, const char *filename)
 		return false;
 	}
 
+	// execute script. script at top scrop gets exectued
 	lua_pcall(L, 0, 0, 0);
-
-	MemFreeScratch();
-
 	DevMsg( "[SCRIPT] Successfully loaded %s\n", filename );
+
+	// cleanup
+	MemFreeScratch();
 	return true;
 }
 
-// ---------------------------------------------------------------------------
-// Purpose: Called to start up lua for a map
-// NOTE:	This can be called MULTIPLE times per round so it needs to also
-//			shut stuff down before starting it back up! ff_restartround is
-//			how it gets stopped and started during a map. Also, note the helper
-//			entity is manually deleted when doing ff_restartround (see
-//			ff_gamerules.cpp) and then started back up in here.
-// ---------------------------------------------------------------------------
-bool CFFEntitySystem::StartForMap()
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::Init()
 {
-	VPROF_BUDGET( "CFFEntitySystem::StartForMap", VPROF_BUDGETGROUP_FF_LUA );
-
-	// [TODO]
-	// Fix the fact that it keeps holding information across calls to this function
-	char filename[128];
-
-	// Clear up an existing one
-	if( L )
+	// shutdown VM if already running
+	if(L)
 	{
 		lua_close(L);
+		L = NULL;
 	}
 
-	// Now open Lua VM
+	// initialize VM
 	L = lua_open();
 
-	// Bah!
-	if( !L )
+	// no need to continue if VM failed to initialize
+	if(!L)
 	{
-		DevWarning( "[SCRIPT] Crap, couldn't get the vm started!\n" );
-		return false;
+		DevWarning( "[SCRIPT] Unable to initialize Lua VM.\n" );
+		return;
 	}
 
-	// Load the base libraries [TODO] Not all of them !
+	// load base libraries
 	luaopen_base(L);
 	luaopen_table(L);
 	luaopen_string(L);
 	luaopen_math(L);
-	
-	//lua_atpanic(L, HandleError);
 
-	// setup luabind
+	// initialize luabind
 	luabind::open(L);
 
-	// And now load some of ours
+	// initialize game-specific library
 	CFFLuaLib::Init(L);
 	
-	// Hurrah well that is set up now
-	DevMsg( "[SCRIPT] Entity system all set up!\n" );
+	DevMsg("[SCRIPT] Entity system initialization successful.\n" );
+}
 
-	// load the generic library
-	LoadLuaFile(L, "maps/includes/base.lua");
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::Shutdown()
+{
+	m_ScriptExists = false;
 
-	// Get filename from map
-	Q_snprintf( filename, sizeof( filename ), "maps/%s.lua", STRING( gpGlobals->mapname ) );
+	// shtutdown VM
+	if(L)
+	{
+		lua_close(L);
+		L = NULL;
+	}
+}
 
-	m_ScriptExists = LoadLuaFile(L, filename);
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::LevelInit(const char* szMapName)
+{
+	VPROF_BUDGET("CFFEntitySystem::OnLevelInit", VPROF_BUDGETGROUP_FF_LUA);
+
+	if(!szMapName)
+		return;
+
+	// setup VM
+	Init();
+	
+	// load lua files
+	BeginScriptLoad();
+	LoadFile(L, "maps/includes/base.lua");
+
+	char filename[128];
+	Q_snprintf(filename, sizeof(filename), "maps/%s.lua", szMapName);
+	m_ScriptExists = LoadFile(L, filename);
+	EndScriptLoad();
 
 	// spawn the helper entity
-	helper = (CFFEntitySystemHelper *)CreateEntityByName( "ff_entity_system_helper" );
-	helper->Spawn();
-
-	helper->Precache();
-
-	return true;
+	helper = CFFEntitySystemHelper::Create();
 }
 
-//----------------------------------------------------------------------------
-int CFFEntitySystem::HandleError( lua_State *L )
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::LevelShutdown()
 {
-	VPROF_BUDGET( "CFFEntitySystem::HandleError", VPROF_BUDGETGROUP_FF_LUA );
-
-	const char *error = lua_tostring(L, -1);
-	Warning("[SCRIPT] %s", error);
-
-	return 0;
+	// shutdown the VM
+	if(L)
+	{
+		lua_close(L);
+		L = NULL;
+	}
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::OnScriptLoad(const char* szFileName,
+								   const char* szFileContents)
+{
+	// ignore the message if we are not still in the "loading" phase
+	if(!m_isLoading)
+		return;
+
+	// compute checksums of file contents
+	CRC32_ProcessBuffer(&m_scriptCRC,
+						szFileContents,
+						strlen(szFileContents));
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::BeginScriptLoad()
+{
+	CRC32_Init(&m_scriptCRC);
+	m_isLoading = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFEntitySystem::EndScriptLoad()
+{
+	CRC32_Final(&m_scriptCRC);
+	m_isLoading = false;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, const char *value )
 {
 	lua_pushstring(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, int value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( lua_State *L, const char *name, float value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( const char *name, const char *value )
 {
 	lua_pushstring(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( const char *name, int value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystem::SetVar( const char *name, float value )
 {
 	lua_pushnumber(L, value);
 	lua_setglobal(L, name);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 const char *CFFEntitySystem::GetString( const char *name )
 {
 	lua_getglobal(L, name);
@@ -321,7 +372,7 @@ const char *CFFEntitySystem::GetString( const char *name )
 	return ret;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 int CFFEntitySystem::GetInt( const char *name )
 {
 	lua_getglobal(L, name);
@@ -330,7 +381,7 @@ int CFFEntitySystem::GetInt( const char *name )
 	return ret;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 float CFFEntitySystem::GetFloat( const char *name )
 {
 	lua_getglobal(L, name);
@@ -339,40 +390,7 @@ float CFFEntitySystem::GetFloat( const char *name )
 	return ret;
 }
 
-//----------------------------------------------------------------------------
-void CFFEntitySystem::DoString( const char *buffer )
-{
-	Assert( buffer );
-
-	DevMsg("Running lua command '%s'\n", buffer);
-
-	int rc = luaL_loadbuffer( L, buffer, strlen(buffer), "User Command" );
-	if ( rc )
-	{
-		if ( rc == LUA_ERRSYNTAX )
-		{
-			const char *error = lua_tostring(L, -1);
-			if (error)
-			{
-				Warning("Error running command. %s\n", error);
-				lua_pop( L, 1 );
-			}
-			else
-				Warning("Unknown Syntax Error loading command\n");
-		}
-		else
-		{
-			Warning("Unknown Error loading command\n");
-		}
-		return;
-	}
-	
-	lua_pcall(L,0,0,0);
-
-}
-
-
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outObject)
 {
 	VPROF_BUDGET( "CFFEntitySystem::GetObject", VPROF_BUDGETGROUP_FF_LUA );
@@ -385,7 +403,7 @@ bool CFFEntitySystem::GetObject(CBaseEntity* pEntity, luabind::adl::object& outO
 	return GetObject(szEntName, outObject);
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool CFFEntitySystem::GetObject(const char* szTableName, luabind::adl::object& outObject)
 {
 	VPROF_BUDGET( "CFFEntitySystem::GetObject", VPROF_BUDGETGROUP_FF_LUA );
@@ -412,7 +430,7 @@ bool CFFEntitySystem::GetObject(const char* szTableName, luabind::adl::object& o
 	return false;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool CFFEntitySystem::GetFunction(CBaseEntity* pEntity,
 								  const char* szFunctionName,
 								  luabind::adl::object& outObject)
@@ -429,7 +447,7 @@ bool CFFEntitySystem::GetFunction(CBaseEntity* pEntity,
 	return false;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 								  const char* szFunctionName,
 								  luabind::adl::object& outObject)
@@ -459,7 +477,7 @@ bool CFFEntitySystem::GetFunction(luabind::adl::object& tableObject,
 	return false;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const char *addname )
 {
 	VPROF_BUDGET( "CFFEntitySystem::RunPredicates", VPROF_BUDGETGROUP_FF_LUA );
@@ -547,7 +565,7 @@ int CFFEntitySystem::RunPredicates( CBaseEntity *ent, CBaseEntity *player, const
 	return retVal;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool bExpectedVal )
 {
 	VPROF_BUDGET( "FFScriptRunPredicates", VPROF_BUDGETGROUP_FF_LUA );
@@ -575,12 +593,12 @@ bool FFScriptRunPredicates( CBaseEntity *pObject, const char *pszFunction, bool 
 	return bExpectedVal;
 }
 
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 // Purpose: Call into lua and get a result, basically. A better runpredicates
 // Output : hOutput - the value returned from the lua object/function called
 //
 // Function return value: function will return true if it found the lua object/function
-//----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////
 bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContext, const char *szFunctionName )
 {
 	VPROF_BUDGET( "CFFEntitySystem::RunPredicates_LUA", VPROF_BUDGETGROUP_FF_LUA );
@@ -604,9 +622,9 @@ bool CFFEntitySystem::RunPredicates_LUA( CBaseEntity *pObject, CFFLuaSC *pContex
 	return false;
 }
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////-
 // Purpose: Convert lua ammo type (int) to game ammo type (string)
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////-
 const char *LookupLuaAmmo( int iLuaAmmoType )
 {
 	switch( iLuaAmmoType )
@@ -626,9 +644,9 @@ const char *LookupLuaAmmo( int iLuaAmmoType )
 	return "";
 }
 
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////-
 // Purpose: Convert ammo to lua ammo
-//-----------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////-
 int LookupAmmoLua( int iAmmoType )
 {
 	// NOTE: this is kind of lame as in i don't think we even setup the ammo
