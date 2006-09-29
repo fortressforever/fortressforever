@@ -26,7 +26,7 @@
 	#include "ff_gamerules.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "te_effect_dispatch.h"
-	#include "ff_entity_system.h"
+	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 #endif
 
@@ -614,7 +614,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 			//DevMsg( "[MiniTurret] %s About to run predicates for player: %s ", GetEntityName(), pPlayer->GetPlayerName() );
 			//CFFLuaObjectWrapper hValidTarget;
 			CFFLuaSC hContext( 1, pPlayer );
-			if( entsys.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+			if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 			{
 				if( hContext.GetBool() )
 					pTarget = MiniTurret_IsBetterTarget( pTarget, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
@@ -634,7 +634,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 			{
 				//CFFLuaObjectWrapper hValidTarget;
 				CFFLuaSC hContext( 1, pSentryGun );
-				if( entsys.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+				if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 					if( hContext.GetBool() )
 						pTarget = MiniTurret_IsBetterTarget( pTarget, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
@@ -648,7 +648,7 @@ void CFFMiniTurret::HackFindEnemy( void )
 			{
 				//CFFLuaObjectWrapper hValidTarget;
 				CFFLuaSC hContext( 1, pDispenser );
-				if( entsys.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+				if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 					if( hContext.GetBool() )
 						pTarget = MiniTurret_IsBetterTarget( pTarget, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 			}
@@ -713,7 +713,7 @@ void CFFMiniTurret::OnAutoSearchThink( void )
 
 		// Get a delay value from LUA
 		CFFLuaSC hContext( 1, GetEnemy() );
-		if( entsys.RunPredicates_LUA( this, &hContext, "deploydelay" ) )
+		if( _scriptman.RunPredicates_LUA( this, &hContext, "deploydelay" ) )
 		{
 			// Lua function existed, grab the delay (hopefully)
 
@@ -824,7 +824,7 @@ void CFFMiniTurret::OnActiveThink( void )
 	bool bValidTarget = true;
 
 	CFFLuaSC hContext( 1, GetEnemy() );
-	if( entsys.RunPredicates_LUA( this, &hContext, "validtarget" ) )
+	if( _scriptman.RunPredicates_LUA( this, &hContext, "validtarget" ) )
 		bValidTarget = hContext.GetBool();
 
 	if( !m_bActive || !GetEnemy() || !bValidTarget )

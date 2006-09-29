@@ -24,6 +24,7 @@
 	#include "ff_statslog.h"
 	#include "ff_item_flag.h"
 	#include "ff_entity_system.h"
+	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 	#include "ff_scheduleman.h"
 	#include "ff_betalist.h"
@@ -413,7 +414,7 @@ ConVar mp_prematch( "mp_prematch",
 			_scheduleman.Init();
 
 			// Re-start entsys for the map
-			entsys.LevelInit(STRING(gpGlobals->mapname));
+			_scriptman.LevelInit(STRING(gpGlobals->mapname));
 
 			// Go through and delete entities
 			CBaseEntity *pEntity = gEntList.FirstEnt();
@@ -444,7 +445,7 @@ ConVar mp_prematch( "mp_prematch",
 
 			// Run startup stuff again!
 			CFFLuaSC hStartup;
-			entsys.RunPredicates_LUA(NULL, &hStartup, "startup");
+			_scriptman.RunPredicates_LUA(NULL, &hStartup, "startup");
 
 			// Respawn/Reset all players
 			for( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -734,7 +735,7 @@ ConVar mp_prematch( "mp_prematch",
 		// Check if lua lets us spawn here			
 		CFFLuaSC hAllowed;
 		hAllowed.Push( pFFPlayer );
-		if( entsys.RunPredicates_LUA( pSpot, &hAllowed, "validspawn" ) )
+		if( _scriptman.RunPredicates_LUA( pSpot, &hAllowed, "validspawn" ) )
 		{
 			// Spot is a valid place for us to spawn
 			if( hAllowed.GetBool() )

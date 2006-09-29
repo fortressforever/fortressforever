@@ -218,25 +218,13 @@ void CFFScheduleManager::RemoveSchedule(const char* szScheduleName)
 	// remove the schedule from the list
 	unsigned short it = m_schedules.Find(id);
 	if(m_schedules.IsValidIndex(it))
-	{
-		CFFScheduleCallack* pCallback = m_schedules.Element(it);
-		delete pCallback;
-
 		m_schedules.RemoveAt(it);
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void CFFScheduleManager::Shutdown()
 {
-	// delete all elements in the list
-	while(m_schedules.Count() > 0)
-	{
-		unsigned int it = m_schedules.FirstInorder();
-		CFFScheduleCallack* pCallback = m_schedules.Element(it);
-		m_schedules.RemoveAt(it);
-		delete pCallback;
-	}
+	m_schedules.RemoveAll();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -254,10 +242,7 @@ void CFFScheduleManager::Update()
 			// remove and cleanup the schedule callback
 			unsigned int itDeleteMe = it;
 			it = m_schedules.NextInorder(it);
-
-			CFFScheduleCallack* pDeleteMe = m_schedules.Element(itDeleteMe);
 			m_schedules.RemoveAt(itDeleteMe);
-			delete pDeleteMe;
 		}
 		else
 		{

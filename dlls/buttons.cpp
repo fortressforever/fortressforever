@@ -15,7 +15,7 @@
 #include "eventqueue.h"
 
 // --> Mirv: Temp test for triggers
-#include "ff_entity_system.h"
+#include "ff_scriptman.h"
 //#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
 // <-- Mirv: Temp test for triggers
@@ -270,22 +270,22 @@ void CBaseButton::InputPress( inputdata_t &inputdata )
 int CBaseButton::OnTakeDamage( const CTakeDamageInfo &info )
 {
 	// check to see if the trepids allow this button to do what it wants to
-	entsys.SetVar("info_damage", info.GetDamage());
-	entsys.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
-	entsys.SetVar("info_classname", info.GetInflictor()?info.GetInflictor()->GetClassname():"");
+	_scriptman.SetVar("info_damage", info.GetDamage());
+	_scriptman.SetVar("info_attacker", ENTINDEX(info.GetAttacker()));
+	_scriptman.SetVar("info_classname", info.GetInflictor()?info.GetInflictor()->GetClassname():"");
     CBasePlayer *player = ToBasePlayer(info.GetInflictor());
     if (player)
     {
         CBaseCombatWeapon *weapon = player->GetActiveWeapon();
         if (weapon)
-			entsys.SetVar("info_classname", weapon->GetName());
+			_scriptman.SetVar("info_classname", weapon->GetName());
 	}
 
 	// TODO: Need to send the attacker to the button...
 	CFFLuaSC hOnDamage;
-	if( !entsys.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
+	if( !_scriptman.RunPredicates_LUA(this, &hOnDamage, "ondamage" ) )
 		return 0;
-	if (entsys.GetFloat("info_damage") <= 0.0)
+	if (_scriptman.GetFloat("info_damage") <= 0.0)
 		return 0;
 
 	m_OnDamaged.FireOutput(m_hActivator, this);
@@ -528,11 +528,11 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 			// double check that it's allowed to toggle
 			//CFFLuaObjectWrapper hAllowed;
 			CFFLuaSC hAllowed( 1, pActivator );
-			if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+			if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 			{
 				if( !hAllowed.GetBool() )
 				{
-					entsys.RunPredicates_LUA( this, &hAllowed, "onfailuse" );
+					_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailuse" );
 					return;
 				}
 			}
@@ -549,7 +549,7 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 				EmitSound( filter, entindex(), ep );
 			}
 
-			entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
+			_scriptman.RunPredicates_LUA( this, &hAllowed, "onuse" );
 
 
 			m_OnPressed.FireOutput(m_hActivator, this);
@@ -561,16 +561,16 @@ void CBaseButton::ButtonUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 		// check with entsys to make sure it is allowed to activate
 		//CFFLuaObjectWrapper hAllowed;
 		CFFLuaSC hAllowed( 1, pActivator );
-		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+		if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 		{
 			if( !hAllowed.GetBool() )
 			{
-				entsys.RunPredicates_LUA( this, &hAllowed, "onfailused" );
+				_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailused" );
 				return;
 			}
 		}
 
-		entsys.RunPredicates_LUA( this, &hAllowed, "onuse" );
+		_scriptman.RunPredicates_LUA( this, &hAllowed, "onuse" );
 		m_OnPressed.FireOutput(m_hActivator, this);
 		ButtonActivate( );
 	}
@@ -618,11 +618,11 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 
 	//CFFLuaObjectWrapper hButtonTouch;
 	CFFLuaSC hAllowed( 1, pOther );
-	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+	if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 		{
-			entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+			_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 			return;
 		}
 	}
@@ -641,7 +641,7 @@ void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	entsys.RunPredicates_LUA( this, &hAllowed, "ontouch" );
+	_scriptman.RunPredicates_LUA( this, &hAllowed, "ontouch" );
 
 	// Temporarily disable the touch function, until movement is finished.
 	SetTouch( NULL );
