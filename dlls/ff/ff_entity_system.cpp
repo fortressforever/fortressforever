@@ -150,7 +150,7 @@ bool CFFEntitySystem::LoadFile( lua_State *L, const char *filename)
 	// don't allow scripters to sneak in scripts after the initial load
 	if(!entsys.m_isLoading)
 	{
-		DevMsg("[SCRIPT] Loading of scripts after inital map load is not allowed.\n");
+		DevMsg("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
 		return false;
 	}
 
