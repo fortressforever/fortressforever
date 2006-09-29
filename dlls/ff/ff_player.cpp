@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "ff_player.h"
 #include "ff_entity_system.h"	// Entity system
+#include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "ff_gamerules.h"
 #include "ff_weapon_base.h"
@@ -179,9 +180,9 @@ void CC_Player_Kill( void )
 		ClientKill( pPlayer->edict() );
 
 		// Call lua player_killed on suicides
-		entsys.SetVar( "killer", ENTINDEX( pPlayer ) );
+		_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
 		CFFLuaSC hPlayerKilled( 1, pPlayer );
-		entsys.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
+		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 }
 static ConCommand kill("kill", CC_Player_Kill, "kills the player");
@@ -1099,7 +1100,7 @@ void CFFPlayer::Spawn()
 	// Run this after SetupClassVariables in case lua is
 	// manipulating the players' inventory
 	CFFLuaSC hPlayerSpawn( 1, this );
-	entsys.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
+	_scriptman.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
 
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 		RemoveSpeedEffectByIndex( i );
@@ -1323,7 +1324,7 @@ void CFFPlayer::SpySilentFeign( void )
 		while( pEnt != NULL )
 		{
 			// Tell the ent that it feigned
-			entsys.RunPredicates_LUA( pEnt, &hOwnerFeign, "onownerfeign" );
+			_scriptman.RunPredicates_LUA( pEnt, &hOwnerFeign, "onownerfeign" );
 
 			// Next!
 			pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( pEnt, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
@@ -2954,7 +2955,7 @@ void CFFPlayer::Command_SevTest( void )
 void CFFPlayer::Command_FlagInfo( void )
 {	
 	CFFLuaSC hFlagInfo( 1, this );
-	entsys.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
+	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
 }
 
 /**
@@ -2971,7 +2972,7 @@ void CFFPlayer::Command_DropItems( void )
 		if( pEnt->GetOwnerEntity() == ( CBaseEntity * )this )
 		{
 			// If the function exists, try and drop
-			entsys.RunPredicates_LUA( pEnt, &hDropItemCmd, "dropitemcmd" );
+			_scriptman.RunPredicates_LUA( pEnt, &hDropItemCmd, "dropitemcmd" );
 				//pEnt->Drop(30.0f, 500.0f);
 		}
 
@@ -5851,8 +5852,8 @@ bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDur
 		case LUA_EF_LEGSHOT:
 		case LUA_EF_TRANQ:
 		case LUA_EF_CALTROP:
-			entsys.SetVar( szLuaDuration, flDuration );
-			entsys.SetVar( szLuaIconDuration, flIconDuration );
+			_scriptman.SetVar( szLuaDuration, flDuration );
+			_scriptman.SetVar( szLuaIconDuration, flIconDuration );
 			break;
 	}
 
@@ -5874,12 +5875,12 @@ bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDur
 		case LUA_EF_SPEED_LUA8:
 		case LUA_EF_SPEED_LUA9:
 		case LUA_EF_SPEED_LUA10:
-			entsys.SetVar( szLuaSpeed, flSpeed );
+			_scriptman.SetVar( szLuaSpeed, flSpeed );
 			break;
 	}
 
 	CFFLuaSC hContext( 2, this, pEffector );
-	if( entsys.RunPredicates_LUA( NULL, &hContext, szLuaFunc ) )
+	if( _scriptman.RunPredicates_LUA( NULL, &hContext, szLuaFunc ) )
 	{
 		// LUA function was found and run.
 
@@ -5902,8 +5903,8 @@ bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDur
 				case LUA_EF_LEGSHOT:
 				case LUA_EF_TRANQ:
 				case LUA_EF_CALTROP:
-					flDuration = entsys.GetFloat( szLuaDuration );
-					flIconDuration = entsys.GetFloat( szLuaIconDuration );
+					flDuration = _scriptman.GetFloat( szLuaDuration );
+					flIconDuration = _scriptman.GetFloat( szLuaIconDuration );
 					break;
 			}
 
@@ -5925,7 +5926,7 @@ bool CFFPlayer::LuaRunEffect( int iEffect, CBaseEntity *pEffector, float *pflDur
 				case LUA_EF_SPEED_LUA8:
 				case LUA_EF_SPEED_LUA9:
 				case LUA_EF_SPEED_LUA10:
-					flSpeed = entsys.GetFloat( szLuaSpeed );
+					flSpeed = _scriptman.GetFloat( szLuaSpeed );
 					break;
 			}
 

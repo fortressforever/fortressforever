@@ -41,8 +41,8 @@
 #include "beam_flags.h"
 #include "ff_gamerules.h"
 #include "world.h"
-#include "ff_entity_system.h"
 #include "ff_luacontext.h"
+#include "ff_scriptman.h"
 
 #ifdef _DEBUG
 #include "Color.h"
@@ -752,7 +752,7 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 	CFFLuaSC hContext;
 	hContext.Push( this );
 	hContext.Push( &adjustedDamage );
-	entsys.RunPredicates_LUA( NULL, &hContext, "buildable_ondamage" );
+	_scriptman.RunPredicates_LUA( NULL, &hContext, "buildable_ondamage" );
 
 	// Bug #0000333: Buildable Behavior (non build slot) while building
 	// Depending on the teamplay value, take damage

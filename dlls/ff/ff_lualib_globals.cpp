@@ -5,6 +5,7 @@
 // includes
 #include "cbase.h"
 #include "ff_lualib.h"
+#include "ff_scriptman.h"
 #include "ff_entity_system.h"
 #include "ff_gamerules.h"
 #include "ff_goal.h"
@@ -352,11 +353,11 @@ namespace FFLib
 			*/
 			Q_snprintf( realscript, sizeof( realscript ), "maps/includes/%s.lua", script );
 
-			if( !CFFEntitySystem::LoadFile( entsys.GetLuaState(), realscript ) )
+			if( !CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript ) )
 			{
 				// Try looking in the maps directory
 				Q_snprintf( realscript, sizeof( realscript ), "maps/%s.lua", script );
-				CFFEntitySystem::LoadFile( entsys.GetLuaState(), realscript );
+				CFFScriptManager::LoadFile( _scriptman.GetLuaState(), realscript );
 			}
 		}
 		else

@@ -77,7 +77,7 @@
 #include "sceneentity.h"
 #include "appframework/IAppSystemGroup.h"
 #include "scenefilecache/ISceneFileCache.h"
-#include "ff_entity_system.h"
+#include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "ff_scheduleman.h"
 
@@ -807,7 +807,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	// Added: Initialize Lua stuff
 	_scheduleman.Init();
-	entsys.LevelInit(pMapName);
+	_scriptman.LevelInit(pMapName);
 
 	// IGameSystem::LevelInitPreEntityAllSystems() is called when the world is precached
 	// That happens either in LoadGameState() or in MapEntity_ParseAllEntities()
@@ -879,7 +879,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 	g_OneWayTransition = false;
 
 	CFFLuaSC hStartup;
-	entsys.RunPredicates_LUA(NULL, &hStartup, "startup");
+	_scriptman.RunPredicates_LUA(NULL, &hStartup, "startup");
 
 	// --> Mirv: Automatically execute map config
 	char szExecMapConfig[128];
@@ -1167,7 +1167,7 @@ void CServerGameDLL::LevelShutdown( void )
 	// Omni-bot: Shut down the bot interface
 	Omnibot::omnibot_interface::ShutdownBotInterface();
 
-	entsys.LevelShutdown();
+	_scriptman.LevelShutdown();
 	_scheduleman.Shutdown();
 
 	IGameSystem::LevelShutdownPreEntityAllSystems();

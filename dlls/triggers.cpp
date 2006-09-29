@@ -37,7 +37,7 @@
 #include "omnibot_interface.h"
 
 // --> Mirv: Temp test for triggers
-#include "ff_entity_system.h"
+#include "ff_scriptman.h"
 //#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
 // <-- Mirv: Temp test for triggers
@@ -371,11 +371,11 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 			// If the entity sys allowed func returns false then 
 			// bail. If true, run these other checks.
 			CFFLuaSC hAllowed( 1, pOther );
-			if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+			if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 			{
 				if( !hAllowed.GetBool() )
 				{
-					entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+					_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 					return false;
 				}
 			}
@@ -391,11 +391,11 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 				// If the entity sys allowed func returns false then 
 				// bail. If true, run these other checks.
 				CFFLuaSC hAllowed( 1, pOther );
-				if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+				if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 				{
 					if( !hAllowed.GetBool() )
 					{
-						entsys.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
+						_scriptman.RunPredicates_LUA( this, &hAllowed, "onfailtouch" );
 						return false;
 					}
 				}
@@ -479,7 +479,7 @@ void CBaseTrigger::StartTouch(CBaseEntity *pOther)
 
 		// Fire the lua output
 		CFFLuaSC hTouch( 1, pOther );
-		entsys.RunPredicates_LUA( this, &hTouch, "ontouch" );
+		_scriptman.RunPredicates_LUA( this, &hTouch, "ontouch" );
 
 		// Got a trigger_ff_script - do special stuff
 		if( Classify() == CLASS_TRIGGERSCRIPT )
@@ -581,12 +581,12 @@ void CBaseTrigger::EndTouch(CBaseEntity *pOther)
 		// Tell lua we're not touching this thing anymore. Run allowed
 		// just to make sure we're allowed to still be touching it.
 		CFFLuaSC hAllowed( 1, pOther );
-		if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+		if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 		{
 			if( hAllowed.GetBool() )
 			{
 				// Fire the lua output
-				entsys.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
+				_scriptman.RunPredicates_LUA( this, &hAllowed, "onendtouch" );
 			}
 		}
 	}
@@ -1027,7 +1027,7 @@ void CTriggerMultiple::ActivateMultiTrigger(CBaseEntity *pActivator)
 
 	// Run lua trigger event
 	CFFLuaSC hOnTrigger( 1, pActivator );
-	entsys.RunPredicates_LUA( this, &hOnTrigger, "ontrigger" );
+	_scriptman.RunPredicates_LUA( this, &hOnTrigger, "ontrigger" );
 
 	m_OnTrigger.FireOutput(m_hActivator, this);
 
@@ -1068,7 +1068,7 @@ void CFuncFFScript::SetActive( void )
 	m_iGoalState = GS_ACTIVE;
 
 	CFFLuaSC hContext;
-	entsys.RunPredicates_LUA( this, &hContext, "onactive" );
+	_scriptman.RunPredicates_LUA( this, &hContext, "onactive" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1079,7 +1079,7 @@ void CFuncFFScript::SetInactive( void )
 	m_iGoalState = GS_INACTIVE;
 
 	CFFLuaSC hContext;
-	entsys.RunPredicates_LUA( this, &hContext, "oninactive" );
+	_scriptman.RunPredicates_LUA( this, &hContext, "oninactive" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1090,7 +1090,7 @@ void CFuncFFScript::SetRemoved( void )
 	m_iGoalState = GS_REMOVED;
 
 	CFFLuaSC hContext;
-	entsys.RunPredicates_LUA( this, &hContext, "onremoved" );
+	_scriptman.RunPredicates_LUA( this, &hContext, "onremoved" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1099,7 +1099,7 @@ void CFuncFFScript::SetRemoved( void )
 void CFuncFFScript::SetRestored( void )
 {
 	CFFLuaSC hContext;
-	entsys.RunPredicates_LUA( this, &hContext, "onrestored" );
+	_scriptman.RunPredicates_LUA( this, &hContext, "onrestored" );
 }
 
 void CFuncFFScript::Spawn( void )
@@ -1107,7 +1107,7 @@ void CFuncFFScript::Spawn( void )
 	BaseClass::Spawn();
 
 	CFFLuaSC hContext;
-	entsys.RunPredicates_LUA( this, &hContext, "spawn" );
+	_scriptman.RunPredicates_LUA( this, &hContext, "spawn" );
 }
 
 void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
@@ -4419,7 +4419,7 @@ bool CBaseVPhysicsTrigger::PassesTriggerFilters( CBaseEntity *pOther )
 	// assed like it currently is.
 	/*
 	CFFLuaSC hAllowed( 1, pOther );
-	if( entsys.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
+	if( _scriptman.RunPredicates_LUA( this, &hAllowed, "allowed" ) )
 	{
 		if( !hAllowed.GetBool() )
 			return false;

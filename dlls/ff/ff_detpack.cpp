@@ -22,7 +22,7 @@
 
 #include "cbase.h"
 #include "ff_buildableobjects_shared.h"
-#include "ff_entity_system.h"
+#include "ff_scriptman.h"
 #include "ff_luacontext.h"
 #include "beam_flags.h"
 
@@ -576,7 +576,7 @@ void CFFDetpack::DoExplosionDamage( void )
 			{
 				// If it's affected by detpack explosions do something
 				CFFLuaSC hOnExplode( 1, ( CFFDetpack * )this );
-				entsys.RunPredicates_LUA( pEntity, &hOnExplode, "onexplode" );
+				_scriptman.RunPredicates_LUA( pEntity, &hOnExplode, "onexplode" );
 			}
 		}
 	}

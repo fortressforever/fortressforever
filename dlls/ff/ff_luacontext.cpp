@@ -5,6 +5,7 @@
 // includes
 #include "cbase.h"
 #include "ff_luacontext.h"
+#include "ff_scriptman.h"
 #include "ff_entity_system.h"
 
 #include "ff_buildableobjects_shared.h"
@@ -38,8 +39,8 @@ extern "C"
 
 //---------------------------------------------------------------------------
 // defines
-#define SETOBJECT(val)		new luabind::adl::object(entsys.GetLuaState(), val)
-#define SETOBJECTREF(val)	new luabind::adl::object(entsys.GetLuaState(), boost::ref(val))
+#define SETOBJECT(val)		new luabind::adl::object(_scriptman.GetLuaState(), val)
+#define SETOBJECTREF(val)	new luabind::adl::object(_scriptman.GetLuaState(), boost::ref(val))
 
 #define RETURN_OBJECTCAST(type, defaultVal, idx)	\
 			try					\
@@ -138,10 +139,10 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 
 	m_returnVals.PurgeAndDeleteElements();
 
-	lua_State* L = entsys.GetLuaState();
+	lua_State* L = _scriptman.GetLuaState();
 
 	// If there is no active script then allow the ents to always go
-	if(!entsys.ScriptExists() || !L)
+	if(!_scriptman.ScriptExists() || !L)
 		return false;
 
 	// set lua's reference to the calling entity
@@ -166,7 +167,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 
 		// check if the function exists
 		luabind::adl::object func;
-		if(!entsys.GetFunction(pEntity, szFunctionName, func))
+		if(!_scriptman.GetFunction(pEntity, szFunctionName, func))
 			return false;
 
 		// push the function onto stack ( entname:addname )
