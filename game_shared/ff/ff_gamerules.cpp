@@ -415,7 +415,7 @@ ConVar mp_prematch( "mp_prematch",
 			_scheduleman.Init();
 
 			// Re-start entsys for the map
-			entsys.StartForMap();
+			entsys.LevelInit(STRING(gpGlobals->mapname));
 
 			// Go through and delete entities
 			CBaseEntity *pEntity = gEntList.FirstEnt();
