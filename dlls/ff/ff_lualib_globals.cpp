@@ -176,8 +176,10 @@ namespace FFLib
 	void BroadcastSound(const char* szSound)
 	{
 		CBroadcastRecipientFilter filter;
-		if( helper )
-			helper->EmitSound( filter, helper->entindex(), szSound);
+
+		CFFEntitySystemHelper* pHelperInst = CFFEntitySystemHelper::GetInstance();
+		if(pHelperInst)
+			pHelperInst->EmitSound( filter, pHelperInst->entindex(), szSound);
 	}
 
 	void SendPlayerSound(CFFPlayer* pPlayer, const char* szSound)
@@ -186,8 +188,10 @@ namespace FFLib
 			return;
 
 		CSingleUserRecipientFilter filter(pPlayer);
-		if( helper )
-			helper->EmitSound( filter, helper->entindex(), szSound);
+
+		CFFEntitySystemHelper* pHelperInst = CFFEntitySystemHelper::GetInstance();
+		if(pHelperInst)
+			pHelperInst->EmitSound( filter, pHelperInst->entindex(), szSound);
 	}
 
 	void SetGlobalRespawnDelay(float delay)

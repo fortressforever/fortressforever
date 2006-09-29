@@ -27,6 +27,7 @@
 #include "in_buttons.h"			// for in_attack2
 #include "ff_projectile_pipebomb.h"
 #include "ff_grenade_emp.h"
+#include "ff_lualib_constants.h"
 
 #include "client.h"
 #include "ff_statslog.h"

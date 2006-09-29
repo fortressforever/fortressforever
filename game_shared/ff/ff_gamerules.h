@@ -33,6 +33,10 @@
 	#define CFFGameRulesProxy C_FFGameRulesProxy
 #endif
 
+#ifdef GAME_DLL
+	extern ConVar mp_respawndelay;
+#endif
+
 class CFFGameRulesProxy : public CGameRulesProxy
 {
 public:

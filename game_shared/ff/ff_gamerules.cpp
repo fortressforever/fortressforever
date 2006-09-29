@@ -60,6 +60,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar botrules_classlimits("botrules_classlimits", "", FCVAR_GAMEDLL);
 	ConVar botrules_teamlimits("botrules_teamlimits", "", FCVAR_GAMEDLL);
 	ConVar botrules_teamroles("botrules_teamroles", "", FCVAR_GAMEDLL);
+	ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 #endif
 
 ConVar mp_prematch( "mp_prematch",
@@ -401,13 +402,10 @@ ConVar mp_prematch( "mp_prematch",
 			g_StatsLog->ResetStats();
 
 			// Kill entity system helper
-			UTIL_Remove( helper );
+			UTIL_Remove( CFFEntitySystemHelper::GetInstance() );
 
 			// Clear delete list
 			gEntList.CleanupDeleteList();
-
-			// Reset helper
-			helper = NULL;
 
 			// Shutdown schedule manager
 			_scheduleman.Shutdown();
