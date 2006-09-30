@@ -147,7 +147,17 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 
 	// set lua's reference to the calling entity
 	luabind::object globals = luabind::globals(L);
-	globals["entity"] = luabind::object(L, pEntity);
+	try
+	{
+		globals["entity"] = luabind::object(L, pEntity);
+	}
+	catch(...)
+	{
+		// CBaseEntity was not registered with luabind
+		// if this happens, something very bad has happened
+		ASSERT(false);
+		return false;
+	}
 
 	// look up the function
 	if(pEntity)
