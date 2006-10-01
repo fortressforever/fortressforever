@@ -17,6 +17,16 @@
 //
 //	Mirv: Rewritten and fully implemented this
 
+//
+//	!!!IMPORTANT!!!
+//
+//	The underlying way that hints are identified needs sorting out.
+//	Currently map hints are stored separately but this will be annoying when the
+//	same hint is shown for each map. Or will it?
+//
+//	There also needs to be implemented a system to register hints and get an id 
+//	for them.
+
 #include "cbase.h"
 IFileSystem **pFilesystem = &filesystem;
 
