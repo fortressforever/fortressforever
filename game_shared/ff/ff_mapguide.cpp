@@ -69,7 +69,7 @@ void CFFMapGuide::Spawn()
 #ifdef GAME_DLL
 	DevMsg("[SERVER] Spawned an ff_mapguide (%s)\n", STRING(GetEntityName()));
 #else
-	DevMsg("[CLIENT] Spawned an ff_mapguide (%s)\n", "NULL");
+	//DevMsg("[CLIENT] Spawned an ff_mapguide (%s)\n", "NULL");
 #endif
 #endif
 }

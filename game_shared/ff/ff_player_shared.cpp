@@ -174,14 +174,14 @@ void CFFPlayer::FireBullet(
 
 			if (tr.hitgroup == HITGROUP_HEAD)
 			{
-				DevMsg("Headshot\n");
+				//DevMsg("Headshot\n");
 				fCurrentDamage *= 7.5f;
 
 				bHeadshot = true;
 			}
 			else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 			{
-				DevMsg("Legshot\n");
+				//DevMsg("Legshot\n");
 				fCurrentDamage *= 0.5f;
 
 #ifdef GAME_DLL

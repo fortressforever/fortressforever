@@ -87,7 +87,7 @@ bool CFFWeaponKnife::Deploy()
 //----------------------------------------------------------------------------
 void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity) 
 {
-	DevMsg("[CFFWeaponKnife] Hit\n");
+	//DevMsg("[CFFWeaponKnife] Hit\n");
 #ifdef GAME_DLL
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
