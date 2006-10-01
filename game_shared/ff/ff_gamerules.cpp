@@ -307,6 +307,15 @@ ConVar mp_prematch( "mp_prematch",
 	//-----------------------------------------------------------------------------
 	bool CFFGameRules::ClientConnected( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 	{
+#ifdef FF_BETA_TEST_COMPILE
+		// NO ONE CAN JOIN THE SERVER WHEN ITS A BETA TEST COMPILE!
+		// A beta test compile means this is the server.dll the 
+		// beta testers get so that the tables match up and so they
+		// can actually play with us.
+		Q_snprintf( reject, maxrejectlen, "You are violating the terms\nof service for the beta!" );
+		return false;
+#endif
+
 #ifdef FF_BETA
 		// Special stuff for beta!
 		if( !g_FFBetaList.IsValidName( pszName ) )
