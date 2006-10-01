@@ -292,7 +292,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 #ifdef GAME_DLL
 			DevMsg("[S] Double jump %f!\n", fMul);
 #else
-			DevMsg("[C] Double jump %f!\n", fMul);
+			//DevMsg("[C] Double jump %f!\n", fMul);
 #endif
 
 			ffplayer->m_bCanDoubleJump = false;

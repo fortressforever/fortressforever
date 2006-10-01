@@ -81,21 +81,21 @@ C_FFTimerManager::C_FFTimerManager()
 
 C_FFTimerManager::~C_FFTimerManager()
 {
-	DevMsg("C_FFTimerManager::~C_FFTimerManager\n");
+	//DevMsg("C_FFTimerManager::~C_FFTimerManager\n");
 	DeleteAll();
 }
 
 C_FFTimer* C_FFTimerManager::Create( string strName, float flDuration )
 {
-	DevMsg("C_FFTimerManager::Create(%s, %f)\n",strName.c_str(),flDuration);
+	//DevMsg("C_FFTimerManager::Create(%s, %f)\n",strName.c_str(),flDuration);
 	C_FFTimer *pTimer = FindTimer( strName );
 	if( pTimer == NULL )
 	{
 		if(m_vecTimers.size() < MAX_FF_CLIENT_TIMERS)
 		{
-			DevMsg("\tCreating new timer...");
+			//DevMsg("\tCreating new timer...");
 			pTimer = new C_FFTimer(strName, flDuration);
-			DevMsg("0x%X\n",pTimer);
+			//DevMsg("0x%X\n",pTimer);
 			if(pTimer)
 			{
 				m_vecTimers.push_back(pTimer);
@@ -103,42 +103,42 @@ C_FFTimer* C_FFTimerManager::Create( string strName, float flDuration )
 		}
 		return pTimer;
 	}
-	DevMsg("\tA timer with the specified name already exists: 0x%X\n",pTimer);
+	//DevMsg("\tA timer with the specified name already exists: 0x%X\n",pTimer);
 	return pTimer;
 }
 
 C_FFTimer* C_FFTimerManager::FindTimer( string strName )
 {
-	DevMsg("C_FFTimerManager::FindTimer(%s)\n",strName.c_str());
+	//DevMsg("C_FFTimerManager::FindTimer(%s)\n",strName.c_str());
 	C_FFTimer *pTimer = NULL;
 	if(!m_vecTimers.empty())
 	{
-		DevMsg("\tSearching...\n");
+		//DevMsg("\tSearching...\n");
 		TimerIterator timer = m_vecTimers.begin();
 		TimerIterator end = m_vecTimers.end();
 		while(timer != end)
 		{
 			pTimer = *timer;
-			DevMsg("\t%s == %s? %i\n",pTimer->GetTimerName().c_str(),strName.c_str(),(pTimer->GetTimerName() == strName));
+			//DevMsg("\t%s == %s? %i\n",pTimer->GetTimerName().c_str(),strName.c_str(),(pTimer->GetTimerName() == strName));
 			if(pTimer->GetTimerName() == strName)
 			{
-				DevMsg("\t\tFound match! (0x%X)\n",pTimer);
+				//DevMsg("\t\tFound match! (0x%X)\n",pTimer);
 				return pTimer;
 			}
 			timer++;
 		}
 	}
-	DevMsg("\tNo timers exists!\n");
+	//DevMsg("\tNo timers exists!\n");
 	return NULL;
 }
 
 void C_FFTimerManager::DeleteTimer( string strName )
 {
-	DevMsg( "C_FFTimerManager::DeleteTimer(%s) - Num active timers: %i\n",strName.c_str(), m_vecTimers.size() );
+	//DevMsg( "C_FFTimerManager::DeleteTimer(%s) - Num active timers: %i\n",strName.c_str(), m_vecTimers.size() );
 	
 	if( !m_vecTimers.empty() )
 	{
-		DevMsg( "\tSearching...\n" );
+		//DevMsg( "\tSearching...\n" );
 
 		bool bFound = false;
 		TimerIterator tb = m_vecTimers.begin(), te = m_vecTimers.end(), ts = NULL;
@@ -146,7 +146,7 @@ void C_FFTimerManager::DeleteTimer( string strName )
 		{
 			if( ( *( tb ) )->GetTimerName() == strName )
 			{
-				DevMsg( "\tFound match! (0x%X)\n", *( tb ) );				
+				//DevMsg( "\tFound match! (0x%X)\n", *( tb ) );				
 				ts = tb;
 				bFound = true;
 			}
@@ -178,18 +178,18 @@ void C_FFTimerManager::DeleteTimer( string strName )
 		*/
 	}
 
-	DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
+	//DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
 }
 
 void C_FFTimerManager::DeleteTimer( C_FFTimer *pTimer )
 {
-	DevMsg( "C_FFTimerManager::DeleteTimer(0x%X) - Num active timers: %i\n", pTimer, m_vecTimers.size() );
+	//DevMsg( "C_FFTimerManager::DeleteTimer(0x%X) - Num active timers: %i\n", pTimer, m_vecTimers.size() );
 
 	// Try and delete it if the ptr isn't NULL
 	// and we've got some timers we're managing
 	if( pTimer && !m_vecTimers.empty() )
 	{
-		DevMsg( "\tSearching...\n" );
+		//DevMsg( "\tSearching...\n" );
 		
 		// Gotta find this particular C_FFTimer * in our vector
 		bool bFound = false;
@@ -198,7 +198,7 @@ void C_FFTimerManager::DeleteTimer( C_FFTimer *pTimer )
 		{			
 			if( *( tb ) == pTimer )
 			{
-				DevMsg( "\tFound a guy to erase: 0x%X\n", *tb );
+				//DevMsg( "\tFound a guy to erase: 0x%X\n", *tb );
 				ts = tb;
 				bFound = true;
 			}
@@ -208,7 +208,7 @@ void C_FFTimerManager::DeleteTimer( C_FFTimer *pTimer )
 			RemoveEntry( ts );
 	}
 
-	DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
+	//DevMsg( "Number of active timers: %i\n", m_vecTimers.size() );
 }
 
 void C_FFTimerManager::RemoveEntry( TimerIterator ti )
@@ -219,14 +219,14 @@ void C_FFTimerManager::RemoveEntry( TimerIterator ti )
 		( *( ti ) )->ResetTimer();
 
 		// Now erase actual timer
-		DevMsg( "\tErasing!\n" );
+		//DevMsg( "\tErasing!\n" );
 		m_vecTimers.erase( ti, ti + 1 );
 	}
 }
 
 void C_FFTimerManager::DeleteAll( void )
 {
-	DevMsg("C_FFTimerManager::DeleteAll\n");
+	//DevMsg("C_FFTimerManager::DeleteAll\n");
 	if(!m_vecTimers.empty())
 	{
 		TimerIterator timer = m_vecTimers.begin();
@@ -241,7 +241,7 @@ void C_FFTimerManager::DeleteAll( void )
 		}
 		m_vecTimers.clear();
 	}
-	DevMsg("\tNo timers exist!\n");
+	//DevMsg("\tNo timers exist!\n");
 }
 
 void C_FFTimerManager::SimulateTimers ( void )

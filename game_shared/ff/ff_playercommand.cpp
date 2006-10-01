@@ -69,13 +69,13 @@ bool CPlayerCommands::ProcessCommand(std::string strCommand, CBaseEntity *pEntit
 
 	if(!(i->second->m_uiFlags & FF_CMD_ALIVE) && pPlayer->IsAlive())
 	{
-		Warning("Player %s tried to use command %s, but failed because that command requires player not to be alive.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+		//Warning("Player %s tried to use command %s, but failed because that command requires player not to be alive.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 		return true;
 	}
 
 	if(!(i->second->m_uiFlags & FF_CMD_DEAD) && !pPlayer->IsAlive())
 	{
-		DevMsg("Player %s tried to use command %s, but failed because that command requires player not to be dead.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+		//DevMsg("Player %s tried to use command %s, but failed because that command requires player not to be dead.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 		return true;
 	}
 
@@ -84,20 +84,20 @@ bool CPlayerCommands::ProcessCommand(std::string strCommand, CBaseEntity *pEntit
 	if(!(i->second->m_uiFlags & FF_CMD_SPEC) && pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
 	// <-- Mirv: IsObserver includes being dead, so using TEAM_SPECTATOR now (add TEAM_UNASSIGNED too?)
 	{
-		DevMsg("Player %s tried to use command %s, but failed because that command requires player not to be spec.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+		//DevMsg("Player %s tried to use command %s, but failed because that command requires player not to be spec.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 		return true;
 	}
 
 	// --> Mirv: Some extra checks
 	if( !( i->second->m_uiFlags & FF_CMD_PREMATCH ) && !FFGameRules()->HasGameStarted() )
 	{
-		DevMsg( "Player %s tried to use command %s, but failed because that command cannot be done in prematch.\n", pPlayer->GetPlayerName(), strCommand.c_str() );
+		//DevMsg( "Player %s tried to use command %s, but failed because that command cannot be done in prematch.\n", pPlayer->GetPlayerName(), strCommand.c_str() );
 		return true;
 	}
 
 	if( !( i->second->m_uiFlags & FF_CMD_FEIGNED ) && pPlayer->m_fFeigned )
 	{
-		DevMsg( "Player %s tried to use command %s, but failed because that command cannot be done while feigned.\n", pPlayer->GetPlayerName(), strCommand.c_str() );
+		//DevMsg( "Player %s tried to use command %s, but failed because that command cannot be done while feigned.\n", pPlayer->GetPlayerName(), strCommand.c_str() );
 		return true;
 	}
 	// <-- Mirv: Some extra checks
@@ -106,7 +106,7 @@ bool CPlayerCommands::ProcessCommand(std::string strCommand, CBaseEntity *pEntit
 	{
 		if(!pPlayer->PlayerHasSkillCommand(strCommand.c_str()))
 		{
-			DevMsg("Player %s tried to use skill command %s, but he does not have that skill.\n", pPlayer->GetPlayerName(), strCommand.c_str());
+			//DevMsg("Player %s tried to use skill command %s, but he does not have that skill.\n", pPlayer->GetPlayerName(), strCommand.c_str());
 			return true;
 		}
 	}

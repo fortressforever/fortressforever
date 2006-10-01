@@ -108,11 +108,11 @@ void CHudHint::AddHudHint(byte bType, unsigned short wID, const char *pszMessage
 	// by the time they are played.
 	if (gpGlobals->curtime < m_flNextHint && m_bActive)
 	{
-		DevMsg("[Hud Hint] Hint ignored (%s)\n", pszMessage);
+		//DevMsg("[Hud Hint] Hint ignored (%s)\n", pszMessage);
 		return;
 	}
 
-	DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );
+	//DevMsg( "[Hud Hint] AddHudHint: %s\n", pszMessage );
 
 	// When adding a hud hint we need to do a couple of things
 	// Firstly, check to see if it's a new hint (ie. a hint
@@ -302,7 +302,7 @@ void SaveHints(const char *pFilename, HintVector &hints)
 		Q_snprintf(szBuf, 15, "%hu", hints[i]);
 		Q_strncat(szOutputBuffer, szBuf, 2047);
 
-		DevMsg("Adding hint: %u %hu\n", i, hints[i]);
+		//DevMsg("Adding hint: %u %hu\n", i, hints[i]);
 	}
 
 	(*pFilesystem)->Write(szOutputBuffer, Q_strlen(szOutputBuffer), f);

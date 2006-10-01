@@ -151,7 +151,7 @@ void CC_PrimeOne( void )
 	// Bug #0000064: Civilian has primary & secondary grenade.
 	if(pLocalPlayer->m_iPrimary <= 0)
 	{
-		DevMsg("[Grenades] You are out of primary grenades!\n");
+		//DevMsg("[Grenades] You are out of primary grenades!\n");
 		return;
 	}
 
@@ -217,7 +217,7 @@ void CC_PrimeTwo( void )
 	// Bug #0000064: Civilian has primary & secondary grenade.
 	if(pLocalPlayer->m_iSecondary <= 0)
 	{
-		DevMsg("[Grenades] You are out of secondary grenades!\n");
+		//DevMsg("[Grenades] You are out of secondary grenades!\n");
 		return;
 	}
 
@@ -281,10 +281,10 @@ void CC_ThrowGren( void )
 }
 void CC_TestTimers( void )
 {
-	DevMsg("[L0ki] CC_TestTimers\n");
+	//DevMsg("[L0ki] CC_TestTimers\n");
 	if(!engine->IsConnected() || !engine->IsInGame())
 	{
-		DevMsg("[L0ki] \tNOT connected or NOT active!\n");
+		//DevMsg("[L0ki] \tNOT connected or NOT active!\n");
 		return;
 	}
 
