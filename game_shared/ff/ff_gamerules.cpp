@@ -45,6 +45,10 @@
 // Believe we wanted this back in now
 #define USE_HITBOX_HACK
 
+// Leave this commented out unless you're compiling for the beta testers!
+// Mulch or Mirv should be the only ones messing with this!
+//#define FF_BETA_TEST_COMPILE
+
 REGISTER_GAMERULES_CLASS( CFFGameRules );
 
 
@@ -311,8 +315,9 @@ ConVar mp_prematch( "mp_prematch",
 		// NO ONE CAN JOIN THE SERVER WHEN ITS A BETA TEST COMPILE!
 		// A beta test compile means this is the server.dll the 
 		// beta testers get so that the tables match up and so they
-		// can actually play with us.
-		Q_snprintf( reject, maxrejectlen, "You are violating the terms\nof service for the beta!" );
+		// can actually play with us. But, don't let them have the
+		// ability to host servers!
+		Q_snprintf( reject, maxrejectlen, "You are violating the terms\nof service for the beta" );
 		return false;
 #endif
 
