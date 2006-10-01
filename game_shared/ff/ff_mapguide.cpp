@@ -27,16 +27,16 @@ BEGIN_NETWORK_TABLE(CFFMapGuide, DT_FFMapGuide)
 END_NETWORK_TABLE() 
 
 BEGIN_DATADESC(CFFMapGuide)
-	DEFINE_KEYFIELD(m_iNextMapguide, FIELD_STRING, "nextguide"),
+	DEFINE_KEYFIELD(m_iNextMapguide, FIELD_STRING, "target"),
 	DEFINE_KEYFIELD(m_flWait, FIELD_FLOAT, "wait"),
 	DEFINE_KEYFIELD(m_flTime, FIELD_FLOAT, "time"),
 	DEFINE_KEYFIELD(m_iCurveEntity, FIELD_VECTOR, "curvetowards"),
 	DEFINE_KEYFIELD(m_iNarrationFile, FIELD_STRING, "narration"),
-	DEFINE_KEYFIELD(m_iKeyName, FIELD_STRING, "keyname"),
+	//DEFINE_KEYFIELD(m_iKeyName, FIELD_STRING, "keyname"),
 END_DATADESC();
 
-LINK_ENTITY_TO_CLASS(info_ff_mapguide, CFFMapGuide);
-PRECACHE_REGISTER(info_ff_mapguide);
+LINK_ENTITY_TO_CLASS(path_mapguide, CFFMapGuide);
+PRECACHE_REGISTER(path_mapguide);
 
 CFFMapGuide::CFFMapGuide() 
 {
@@ -65,10 +65,12 @@ void CFFMapGuide::Spawn()
 	SetSolid(SOLID_NONE);
 	AddSolidFlags(FSOLID_NOT_SOLID);
 	
+#ifdef _DEBUG
 #ifdef GAME_DLL
 	DevMsg("[SERVER] Spawned an ff_mapguide (%s)\n", STRING(GetEntityName()));
 #else
 	DevMsg("[CLIENT] Spawned an ff_mapguide (%s)\n", "NULL");
+#endif
 #endif
 }
 
@@ -76,7 +78,7 @@ void CFFMapGuide::SetSpawnFlags(int flags)
 {
 }
 
-// Only transmit to spectators
+// TODO: Only transmit to spectators
 int CFFMapGuide::ShouldTransmit(const CCheckTransmitInfo *pInfo)
 {
 	return FL_EDICT_ALWAYS;
