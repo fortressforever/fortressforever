@@ -5383,7 +5383,9 @@ void CFFPlayer::MoveTowardsMapGuide()
 		Vector vecNewPos;
 
 		float t = clamp((m_flNextMapGuideTime - gpGlobals->curtime) / m_hLastMapGuide->m_flTime, 0, 1.0f);
-		t = SimpleSpline(t);
+		
+		// UNDONE: Only do the spline on the eyeangles
+		//t = SimpleSpline(t);
 
 		// There've no curve point to worry about
 		if (m_hLastMapGuide->m_iCurveEntity == NULL_STRING)
