@@ -100,8 +100,9 @@ bool CFFWeaponBaseClip::Reload()
 	pOwner->m_flNextAttack = gpGlobals->curtime;
 	m_flTimeWeaponIdle = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
 
-	// Using secondary attack for now in order to defer actual addition of ammo
-	m_flNextSecondaryAttack = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
+	// Using secondary attack for now in order to defer actual addition of ammo voogru: NOOOOOO!!!!!!!!!!!!!!11111111111oneone
+	//m_flNextSecondaryAttack = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
+	m_flReloadTime = gpGlobals->curtime + GetFFWpnData().m_flReloadTime;
 
 	return true;
 }
@@ -169,6 +170,17 @@ void CFFWeaponBaseClip::DryFire()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+// To do stuff
+//
+//-----------------------------------------------------------------------------
+bool CFFWeaponBaseClip::Holster(CBaseCombatWeapon *pSwitchingTo) 
+{
+	m_flReloadTime = -1.0;
+	return BaseClass::Holster(pSwitchingTo);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 //
 //
 //-----------------------------------------------------------------------------
@@ -188,7 +200,7 @@ void CFFWeaponBaseClip::PrimaryAttack()
 
 	// No longer reloading (cancel any deferred ammo too)
 	m_bInReload = false;
-	m_flNextSecondaryAttack = -1.0f;
+	m_flReloadTime = -1.0f;
 
 #ifdef CLIENT_DLL
 	m_flNextAutoReload = gpGlobals->curtime;
@@ -204,8 +216,9 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	// Don't fire again until fire animation has completed
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 
-#ifdef GAME_DLL
 	m_iClip1 -= GetFFWpnData().m_iCycleDecrement;
+
+#ifdef GAME_DLL
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("player_shoot");
 	if(pEvent)
@@ -214,7 +227,7 @@ void CFFWeaponBaseClip::PrimaryAttack()
 		pEvent->SetInt("weapon", GetWeaponID());
 		pEvent->SetInt("mode", 0);
 		gameeventmanager->FireEvent(pEvent, true);
-	}	
+	}
 #endif
 
 	// player "shoot" animation
@@ -248,10 +261,10 @@ void CFFWeaponBaseClip::ItemPostFrame()
 	if (m_bInReload)
 	{
 		// Add the ammo now
-		if (m_flNextSecondaryAttack > 0 && m_flNextSecondaryAttack <= gpGlobals->curtime)
+		if (m_flReloadTime > 0 && m_flReloadTime <= gpGlobals->curtime)
 		{
 			FillClip();
-			m_flNextSecondaryAttack = -1.0f;
+			m_flReloadTime = -1.0f;
 		}
 
 		// If time for the next reload tick, then do it

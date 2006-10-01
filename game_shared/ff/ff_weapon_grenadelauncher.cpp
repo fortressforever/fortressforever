@@ -182,7 +182,7 @@ bool CFFWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
 	// Synchronise with pipelauncher
 	Synchronise();
 
-	return BaseClass::Holster();
+	return BaseClass::Holster(pSwitchingTo);
 }
 
 //----------------------------------------------------------------------------

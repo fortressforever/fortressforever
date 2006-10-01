@@ -27,7 +27,7 @@
 
 class CFFPlayer;
 
-#define MAX_DEPLOY_TIME 0.75f
+#define MAX_DEPLOY_TIME 0.5f
 
 // These are the names of the ammo types that the weapon script files reference.
 // GRENADES and BULLETS have now been removed

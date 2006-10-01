@@ -116,6 +116,7 @@ void CFFItemBackpack::RestockTouch( CBaseEntity *pPlayer )
 
 		// Lets let people take packs all the time so engies can't make us fodder!
 		//if (ammotaken)
+		EmitSound("Backpack.Touch");
 		UTIL_Remove(this);
 	}
 }
