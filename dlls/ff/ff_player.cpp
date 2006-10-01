@@ -510,6 +510,13 @@ void CFFPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitA
 
 void CFFPlayer::PreThink(void)
 {
+#ifdef FF_BETA_TEST_COMPILE
+	// Crash
+	CFFPlayer *p = NULL;
+	p->PreThink();
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
 	// reset these every frame
 	m_fBodygroupState = 0;	
 
@@ -589,10 +596,18 @@ void CFFPlayer::PreThink(void)
 		ClassSpecificSkill_Post();
 
 	BaseClass::PreThink();
+#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFPlayer::PostThink()
 {
+#ifdef FF_BETA_TEST_COMPILE
+	// Crash
+	CFFPlayer *p = NULL;
+	p->PostThink();
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
 	BaseClass::PostThink();
 
 	MoveTowardsMapGuide();
@@ -604,12 +619,14 @@ void CFFPlayer::PostThink()
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );	
+    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+#endif // FF_BETA_TEST_COMPILE
 }
 
 
 void CFFPlayer::Precache()
 {
+#ifndef FF_BETA_TEST_COMPILE
 	PrecacheModel(FF_PLAYER_MODEL);
 
 	// #0000331: impulse 81 not working (weapon_cubemap)
@@ -679,6 +696,7 @@ void CFFPlayer::Precache()
 	}
 
 	BaseClass::Precache();
+#endif // FF_BETA_TEST_COMPILE
 }
 
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
@@ -690,6 +708,12 @@ void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
 
 CBaseEntity *CFFPlayer::EntSelectSpawnPoint()
 {
+#ifdef FF_BETA_TEST_COMPILE
+	// Return bogus crap
+	return NULL;
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
 	/*
 	CBaseEntity *pSpot, *pGibSpot;
 	edict_t		*player;
@@ -936,10 +960,18 @@ ReturnSpot:
 	g_pLastSpawn = pSpot;
 	return pSpot;
 	//*/
+#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFPlayer::Spawn()
 {
+#ifdef FF_BETA_TEST_COMPILE
+	// Crash
+	CFFPlayer *p = NULL;
+	p->Spawn();
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//  Please don't reinitialise class specific variables in here, but SetupClassVariables instead!
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1121,11 +1153,13 @@ void CFFPlayer::Spawn()
 		GetTeamNumber(),
 		engine->GetPlayerUserId(this->edict()),
 		GetPlayerName());
+#endif // FF_BETA_TEST_COMPILE
 }
 
 // Mirv: Moved all this out of spawn into here
 void CFFPlayer::SetupClassVariables()
 {
+#ifndef FF_BETA_TEST_COMPILE
 	// Reset Engineer stuff
 	m_pBuildLastWeapon = NULL;
 
@@ -1196,10 +1230,12 @@ void CFFPlayer::SetupClassVariables()
 	}
 
 	ClearSpeedEffects();
+#endif // FF_BETA_TEST_COMPILE
 }
 
 void CFFPlayer::InitialSpawn( void )
 {
+#ifndef FF_BETA_TEST_COMPILE
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
@@ -1231,6 +1267,7 @@ void CFFPlayer::InitialSpawn( void )
 	m_hRadioTagData->Spawn();
 
 	//DevMsg("CFFPlayer::InitialSpawn");
+#endif // FF_BETA_TEST_COMPILE
 }
 
 //-----------------------------------------------------------------------------
@@ -1342,6 +1379,13 @@ void CFFPlayer::SpySilentFeign( void )
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+#ifdef FF_BETA_TEST_COMPILE
+	// Crash
+	CFFPlayer *p = NULL;
+	p->Spawn();
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
 	/*
 	if( m_hSaveMe )
 	{
@@ -1526,6 +1570,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CreateRagdollEntity(&info);
 		CreateLimbs(m_fBodygroupState);
 	}
+#endif // FF_BETA_TEST_COMPILE
 }
 
 //-----------------------------------------------------------------------------

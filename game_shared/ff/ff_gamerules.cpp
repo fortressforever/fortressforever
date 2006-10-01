@@ -45,10 +45,6 @@
 // Believe we wanted this back in now
 #define USE_HITBOX_HACK
 
-// Leave this commented out unless you're compiling for the beta testers!
-// Mulch or Mirv should be the only ones messing with this!
-//#define FF_BETA_TEST_COMPILE
-
 REGISTER_GAMERULES_CLASS( CFFGameRules );
 
 
@@ -1073,6 +1069,14 @@ ConVar mp_prematch( "mp_prematch",
 	// --> Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
 	void CFFGameRules::Think()
 	{
+#ifdef FF_BETA_TEST_COMPILE
+		// Crash!
+		CFFPlayer *p = NULL;
+		p->Spawn();
+#endif
+
+#ifndef FF_BETA_TEST_COMPILE
+
 #ifdef FF_BETA
 		// Special stuff for beta!
 		g_FFBetaList.Validate();
@@ -1132,6 +1136,7 @@ ConVar mp_prematch( "mp_prematch",
 		}
 		
 		GetVoiceGameMgr()->Update( gpGlobals->frametime );
+#endif // FF_BETA_TEST_COMPILE
 	}
 	// <-- Mirv: Hodgepodge of different checks (from the base functions) inc. prematch
 
@@ -1247,6 +1252,7 @@ ConVar mp_prematch( "mp_prematch",
 	// Stuff to do when the game starts
 	void CFFGameRules::StartGame()
 	{
+#ifndef FF_BETA_TEST_COMPILE
 		m_flGameStarted = gpGlobals->curtime;
 
 		// Don't do this upon first spawning in a map w/o any prematch
@@ -1268,6 +1274,7 @@ ConVar mp_prematch( "mp_prematch",
 			pEvent->SetString("objective", "TF");
 			gameeventmanager->FireEvent(pEvent);
 		}
+#endif // FF_BETA_TEST_COMPILE
 	}
 	// <-- Mirv: Prematch
 
