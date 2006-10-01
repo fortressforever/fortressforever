@@ -35,6 +35,9 @@ extern IFileSystem **pFilesystem;
 // memdbgon must be the last include file in a .cpp file!!! 
 #include "tier0/memdbgon.h"
 
+#define MAX_TITLE		128
+#define MAX_DESCRIPTION	128
+
 //=============================================================================
 // Training script loader
 //=============================================================================
@@ -44,21 +47,108 @@ class CFFTrainingGameMode : public CFFGameModesPage
 
 public:
 
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
 	CFFTrainingGameMode(Panel *parent, char const *panelName) : BaseClass(parent, panelName)
 	{
+		m_pTitle = new Label(this, "TrainingTitle", "");
 		m_pDescription = new Label(this, "TrainingDescription", "");
 		m_pTrainingScripts = new ComboBox(this, "TrainingScriptsCombo", 8, "");
 
 		LoadControlSettings("resource/ui/FFGameModesTraining.res");
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Set the bot_training cvar, start the map
+	//-----------------------------------------------------------------------------
 	void Play()
 	{
+		KeyValues *kv = m_pTrainingScripts->GetActiveItemUserData();
 
+		if (kv == NULL)
+			return;
+
+		engine->ClientCmd(VarArgs("botrules_training %s\n", kv->GetString("script")));
+		engine->ClientCmd(VarArgs("map %s\n", kv->GetString("map")));
 	}
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Load the descriptions and titles into the combobox
+	//-----------------------------------------------------------------------------
 	void Load()
 	{
+		m_pTrainingScripts->DeleteAllItems();
+
+		FileFindHandle_t findHandle;
+		const char *pFilename = (*pFilesystem)->FindFirstEx("maps/*.gm", "MOD", &findHandle);
+
+		while (pFilename != NULL) 
+		{
+			char szFilename[MAX_PATH];
+			Q_strncpy(szFilename, pFilename, MAX_PATH - 1);
+
+			char *pszEndOfFilename = strstr(szFilename, "_scenario");
+
+			// Invalid name
+			if (!pszEndOfFilename)
+			{
+				pFilename = (*pFilesystem)->FindNext(findHandle);
+				continue;
+			}
+
+			pszEndOfFilename[0] = '\0';
+
+			// There is a corresponding bsp for ths file
+			if ((*pFilesystem)->FileExists(VarArgs("maps/%s.bsp", szFilename), "MOD"))
+			{
+				char szTitle[MAX_TITLE];
+				char szDescription[MAX_DESCRIPTION];
+				ReadHeader(VarArgs("maps/%s", pFilename), szTitle, szDescription);
+
+				KeyValues *kv = new KeyValues("maps");
+				kv->SetString("script", pFilename);
+				kv->SetString("map", VarArgs("%s", szFilename));
+				kv->SetString("title", szTitle);
+				kv->SetString("description", szDescription);
+				m_pTrainingScripts->AddItem(szTitle, kv);
+				kv->deleteThis();
+			}
+
+			pFilename = (*pFilesystem)->FindNext(findHandle);
+		}
+
+		(*pFilesystem)->FindClose(findHandle);
+
+		m_pTrainingScripts->ActivateItemByRow(0);
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Quick + hacky header reading script. Assumes that header starts
+	//			on the second line and is one line containing the title
+	//			and the other line containing the description (both localised)
+	//			TODO: Fix this up when possible.
+	//-----------------------------------------------------------------------------
+	bool ReadHeader(const char *pszFilename, char szTitle[MAX_TITLE], char szDescription[MAX_DESCRIPTION])
+	{
+		FileHandle_t hFile = (*pFilesystem)->Open(pszFilename, "r");
+
+		char szLineBuffer[1024];
+
+		// The first line just starts the comment, ignore
+		(*pFilesystem)->ReadLine(szLineBuffer, 1023, hFile);
+
+		// Second line has the title
+		(*pFilesystem)->ReadLine(szLineBuffer, 1023, hFile);
+		Q_strncpy(szTitle, szLineBuffer, min(strlen(szLineBuffer), MAX_TITLE - 1));
+
+		// And 3rd has the description. These should be localised ideally.
+		(*pFilesystem)->ReadLine(szLineBuffer, 1023, hFile);
+		Q_strncpy(szDescription, szLineBuffer, min(strlen(szLineBuffer), MAX_DESCRIPTION - 1));
+
+		(*pFilesystem)->Close(hFile);
+
+		return false;
 	}
 
 	void Reset()
@@ -67,7 +157,27 @@ public:
 
 private:
 
+	//-----------------------------------------------------------------------------
+	// Purpose: Catch the combo box changing training script
+	//-----------------------------------------------------------------------------
+	MESSAGE_FUNC_PARAMS(OnUpdateCombos, "TextChanged", data)
+	{
+		if (data->GetPtr("panel") == m_pTrainingScripts)
+		{
+			KeyValues *kv = m_pTrainingScripts->GetActiveItemUserData();
+
+			if (kv == NULL)
+				return;
+			
+			m_pTitle->SetText(kv->GetString("title"));
+			m_pDescription->SetText(kv->GetString("description"));
+		}
+	}
+
+private:
+
 	Label		*m_pDescription;
+	Label		*m_pTitle;
 	ComboBox	*m_pTrainingScripts;
 };
 
@@ -253,7 +363,7 @@ public:
 
 		(*pFilesystem)->FindClose(findHandle);
 
-		m_pMaps->ActivateItemByRow(0);		
+		m_pMaps->ActivateItemByRow(0);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -503,6 +613,7 @@ void CFFGameModesPanel::SetVisible(bool state)
 	if (state)
 	{
 		m_pScenarioGameMode->Load();
+		m_pTrainingGameMode->Load();
 
 		RequestFocus();
 		MoveToFront();
