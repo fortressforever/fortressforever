@@ -172,7 +172,7 @@ void CHudCrosshair::Paint( void )
 	FFWeaponID weaponID = pPlayer->GetActiveFFWeapon()->GetWeaponID();
 
 	// Weapons other than these don't get crosshairs
-	if (weaponID <= FF_WEAPON_NONE || weaponID >= FF_WEAPON_TOMMYGUN)
+	if (weaponID <= FF_WEAPON_NONE || weaponID > FF_WEAPON_TOMMYGUN)
 		return;
 
 	Color innerCol, outerCol;
