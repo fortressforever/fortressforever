@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-19 19:31:58 -0700 (Tue, 19 Sep 2006) $
-// $LastChangedRevision: 1277 $
+// $LastChangedDate: 2006-09-28 21:48:58 -0700 (Thu, 28 Sep 2006) $
+// $LastChangedRevision: 1296 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,8 +57,9 @@ typedef struct
 
 // class: BotTraceResult
 //		This file defines all the common structures used by the game and bot alike.
-typedef struct
+class BotTraceResult
 {
+public:
 	// float: m_Fraction
 	//		0.0 - 1.0 how far the trace went
 	float		m_Fraction;
@@ -80,7 +81,16 @@ typedef struct
 	// int: m_iUser1
 	//		Extra user info from the trace
 	int			m_iUser1;
-} BotTraceResult;
+
+	BotTraceResult() : 
+		m_Fraction	(0.f),
+		m_HitEntity	(0),
+		m_StartSolid(0),
+		m_Contents	(0),
+		m_iUser1	(0)
+	{
+	}
+};
 
 // typedef: Game_EngineFuncs_t
 //		This struct defines all the function pointers that the
