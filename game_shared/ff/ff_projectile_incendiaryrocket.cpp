@@ -65,7 +65,7 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 		CFFPlayer *pPlayer = ToFFPlayer( pEntity );
 		if( g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 		{
-			pPlayer->ApplyBurning(pPlayer, 0.5f);
+			pPlayer->ApplyBurning(pPlayer, 0.5f, 10.0f, BURNTYPE_ICCANNON);
 		}
 	}
 
