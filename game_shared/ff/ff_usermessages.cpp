@@ -74,5 +74,9 @@ void RegisterUserMessages()
 	usermessages->Register( "StatusIconUpdate", -1 );
 
 	usermessages->Register("FFViewEffect", -1);
+
+	// after player connects, the crc checksum of the server's level
+	// scripts are sent to the client for validation
+	usermessages->Register("FFScriptCRC", 4);
 }
 
