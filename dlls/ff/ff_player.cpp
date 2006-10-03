@@ -3232,7 +3232,14 @@ void CFFPlayer::StatusEffectsThink( void )
 		if( pIgniter )
 		{
 			CTakeDamageInfo info( pIgniter, pIgniter, damage, DMG_BURN );
-			info.SetCustomKill(KILLTYPE_BURNED);
+
+			switch(m_BurnType)
+			{
+			case BURNTYPE_FLAMETHROWER:info.SetCustomKill(KILLTYPE_BURN_FLAMETHROWER);break;
+			case BURNTYPE_ICCANNON:info.SetCustomKill(KILLTYPE_BURN_ICCANNON);break;
+			case BURNTYPE_NALPALMGRENADE:info.SetCustomKill(KILLTYPE_BURN_NALPALMGRENADE);break;
+			}
+			
 			TakeDamage( info );
 
 			// remove a tick
@@ -3891,7 +3898,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 	Extinguish();
 }
 
-void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration )
+void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration, eBurnType BurnType)
 {
 	// Okay, now pyros don't catch fire at all
 	if (GetClassSlot() == CLASS_PYRO)
@@ -3912,6 +3919,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		m_flNextBurnTick = gpGlobals->curtime + 1.25;
 	m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
 	m_flBurningDamage = 0.75f*m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
+	m_BurnType = BurnType;
 
 	/*
 	this may cause less damage to happen..

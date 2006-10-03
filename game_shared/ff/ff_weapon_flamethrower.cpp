@@ -183,7 +183,7 @@ void CFFWeaponFlamethrower::Fire()
 				if (traceHit.m_pEnt->IsPlayer())
 				{
 					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
-					pTarget->ApplyBurning( pPlayer, 0.5f );
+					pTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
 				}
 				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
 					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 8.0f, DMG_BURN ) );

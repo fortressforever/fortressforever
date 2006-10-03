@@ -648,8 +648,14 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_INFECTION:
 				killer_weapon_name = "ff_weapon_medikit";
 				break;
-			case KILLTYPE_BURNED:
+			case KILLTYPE_BURN_FLAMETHROWER:
 				killer_weapon_name = "ff_weapon_flamethrower";
+				break;
+			case KILLTYPE_BURN_ICCANNON:
+				killer_weapon_name = "ff_weapon_ic";
+				break;
+			case KILLTYPE_BURN_NALPALMGRENADE:
+				killer_weapon_name = "ff_grenade_napalm";
 				break;
 			}
 
