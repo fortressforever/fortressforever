@@ -199,20 +199,15 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 					continue;
 
 				CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+				CFFPlayer *pGasser = ToFFPlayer( GetOwnerEntity() );
 
-				if( !pPlayer || pPlayer->IsObserver() )
+				if( !pPlayer || pPlayer->IsObserver() || !pGasser)
 					continue;
 
 				if( !g_pGameRules->FPlayerCanTakeDamage( pPlayer, GetOwnerEntity() ) )
 					continue;
-			
-				if( gpGlobals->curtime > pPlayer->m_flLastGassed + 1.0f )
-				{
-					pPlayer->Gas( 10.0f, 10.0f );
 
-					CTakeDamageInfo info(this, GetOwnerEntity(), vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
-					pPlayer->TakeDamage(info);
-				}
+				pPlayer->Gas(10.0f, 10.0f, pGasser);
 			}
 		}
 

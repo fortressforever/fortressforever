@@ -32,6 +32,7 @@
 #endif
 
 //ConVar conc_radius("ffdev_conc_radius", "280.0f", 0, "Radius of grenade explosions");
+ConVar conc_ragdoll_push("conc_ragdoll_push","600",0,"How much to push ragdolls");
 
 #define CONCUSSIONGRENADE_MODEL			"models/grenades/conc/conc.mdl"
 #define CONCUSSIONGRENADE_GLOW_SPRITE	"sprites/glow04_noz.vmt"
@@ -171,7 +172,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				0, 
 				TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NODLIGHTS | TE_EXPLFLAG_NOPARTICLES | TE_EXPLFLAG_NOFIREBALL | TE_EXPLFLAG_NOFIREBALLSMOKE, 
 				GetGrenadeRadius(), 
-				600, 
+				conc_ragdoll_push.GetInt(), 
 				&vecNormal, 
 				( char )pdata->game.material );
 		}
@@ -185,7 +186,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				0, 
 				TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NODLIGHTS | TE_EXPLFLAG_NOPARTICLES | TE_EXPLFLAG_NOFIREBALL | TE_EXPLFLAG_NOFIREBALLSMOKE, 
 				GetGrenadeRadius(), 
-				600);
+				conc_ragdoll_push.GetInt());
 		}
 
 		// nb. Do not move this 32 units above the ground!

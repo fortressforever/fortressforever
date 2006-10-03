@@ -459,7 +459,10 @@ CFFPlayer::CFFPlayer()
 	m_flConcTime = 0;		// Not concussed on creation
 	m_iClassStatus = 0;		// No class sorted yet
 
-	m_flLastGassed = 0;
+	m_bGassed = false;
+	m_hGasser = NULL;
+	m_flNextGas = 0;
+	m_flGasTime = 0;
 
 	m_Locations.RemoveAll();
 	m_iClientLocation = 0;
@@ -1451,6 +1454,12 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Stop infection
 	m_bInfected = false;
+
+	//stop gas
+	m_bGassed = false;
+	m_flNextGas = 0;
+	m_flGasTime = 0;
+	m_hGasser = NULL;
 
 	// Beg; Added by Mulchman
 	if( m_bBuilding )
@@ -3210,8 +3219,32 @@ void CFFPlayer::StatusEffectsThink( void )
 {
 	if( m_bGassed )
 	{
-		// Yeah... this needs work.
-		m_bGassed = false;
+		if(m_flGasTime > gpGlobals->curtime)
+		{
+			if(m_flNextGas < gpGlobals->curtime)
+			{
+				CFFPlayer *pGasser = GetGasser();
+				if( pGasser )
+				{
+					CTakeDamageInfo info(pGasser, pGasser, vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
+					info.SetCustomKill(KILLTYPE_GASSED);
+
+					TakeDamage(info);
+				}
+				else //must be lua set...
+				{
+					CTakeDamageInfo info(this, this, vec3_origin, GetAbsOrigin(), 1.0f, DMG_DIRECT);
+					info.SetCustomKill(KILLTYPE_GASSED);
+
+					TakeDamage(info);
+				}
+				m_flNextGas = gpGlobals->curtime + 1.0f;
+			}
+		}
+		else
+		{
+			UnGas();
+		}
 	}
 
 	// If we jump in water up to waist level, extinguish ourselves
@@ -3446,7 +3479,7 @@ void CFFPlayer::LuaAddEffect( int iEffect, float flEffectDuration, float flIconD
 			break;
 
 			case LUA_EF_CONC: Concuss( flEffectDuration, flIconDuration ); break;
-			case LUA_EF_GAS: Gas( flEffectDuration, flIconDuration ); break;
+			case LUA_EF_GAS: Gas( flEffectDuration, flIconDuration, NULL); break;
 			case LUA_EF_INFECT: Infect( this ); break;
 			case LUA_EF_RADIOTAG: SetRadioTagged( NULL, gpGlobals->curtime, flEffectDuration ); break;
 
@@ -4483,6 +4516,21 @@ CFFPlayer *CFFPlayer::GetIgniter( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Get the player who last gassed us
+//-----------------------------------------------------------------------------
+CFFPlayer *CFFPlayer::GetGasser( void )
+{
+	if( m_hGasser != NULL )
+	{
+		CBaseEntity *pEntity = ( CBaseEntity * )m_hGasser;
+		if( pEntity && pEntity->IsPlayer() )
+			return ToFFPlayer( pEntity );
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Overrided in order to let the explosion force actually be of
 //			TFC proportions, also lets people lose limbs when needed
 //-----------------------------------------------------------------------------
@@ -4815,15 +4863,23 @@ void CFFPlayer::Extinguish( void )
 //-----------------------------------------------------------------------------
 // Purpose: Gas a player
 //-----------------------------------------------------------------------------
-void CFFPlayer::Gas( float flDuration, float flIconDuration )
+void CFFPlayer::Gas( float flDuration, float flIconDuration, CFFPlayer *pGasser)
 {
-	// The gas effect is limited to once per second
-	if (m_flLastGassed + 1.0f > gpGlobals->curtime)
-		return;
+	/*
+	We always want to apply gas even if they are already gassed, this way if they are killed,
+	the last person that gassed them gets the kill.
+	*/
 
 	m_bGassed = true;
+	m_hGasser = pGasser; 
 
-	m_flLastGassed = gpGlobals->curtime;	
+	if(m_flNextGas < gpGlobals->curtime)
+		m_flNextGas = gpGlobals->curtime;
+
+	if(flDuration != -1)
+		m_flGasTime = gpGlobals->curtime + flDuration;
+	else
+		m_flGasTime = gpGlobals->curtime + 99999.0f;//this should last a while.
 
 	// Send status icon
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
@@ -4845,9 +4901,12 @@ void CFFPlayer::Gas( float flDuration, float flIconDuration )
 //-----------------------------------------------------------------------------
 void CFFPlayer::UnGas( void )
 {
-	m_bGassed = false;
-
 	// Remove gas
+	m_bGassed = false;
+	m_hGasser = NULL;
+	m_flNextGas = 0;
+	m_flGasTime = 0;
+
 	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
 	user.MakeReliable();
 
