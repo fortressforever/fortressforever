@@ -31,6 +31,7 @@
 #include "ff_bot_temp.h"
 #include "viewport_panel_names.h"
 #include "ff_statslog.h"
+#include "ff_scriptman.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -40,10 +41,23 @@ extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
 
 extern bool			g_fGameOver;
 
+void SendScriptChecksumToClient(CBasePlayer* pPlayer, unsigned long scriptCRC)
+{
+	CSingleUserRecipientFilter filter(pPlayer);
+	filter.MakeReliable();
+
+	UserMessageBegin(filter, "FFScriptCRC");
+		WRITE_LONG(scriptCRC);
+	MessageEnd();
+}
 
 void FinishClientPutInServer( CFFPlayer *pPlayer )
 {
 	pPlayer->m_flNextSpawnDelay = 0;
+
+	// send the current level's script crc to the client
+	unsigned long scriptCRC = _scriptman.GetScriptCRC();
+	SendScriptChecksumToClient(pPlayer, scriptCRC);
 
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
