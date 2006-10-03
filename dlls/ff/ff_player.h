@@ -445,9 +445,12 @@ public:
 	void ApplyBurning( CFFPlayer *hIgniter, float scale = 1.0f, float flIconDuration = 10.0f, eBurnType BurnType = BURNTYPE_NONE);
 	bool IsBurning( void ) const;
 
-	void Gas( float flDuration, float flIconDuration );
+	void Gas( float flDuration, float flIconDuration, CFFPlayer *pGasser);
 	bool IsGassed( void ) const { return m_bGassed; }
-	float m_flLastGassed;	// Last time we took gas damage, so that gas grens won't be cumulative
+	CFFPlayer *GetGasser( void );
+	float m_flNextGas;
+	float m_flGasTime;
+	EHANDLE m_hGasser;
 protected:
 	void UnGas( void );
 	bool m_bGassed;

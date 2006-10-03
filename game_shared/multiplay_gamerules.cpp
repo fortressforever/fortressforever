@@ -642,7 +642,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 			}
 			// <-- Mirv
 
-			//voogru: fix some messages:
+			//fixes for certain time based damage.
 			switch(info.GetCustomKill())
 			{
 			case KILLTYPE_INFECTION:
@@ -656,6 +656,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 				break;
 			case KILLTYPE_BURN_NALPALMGRENADE:
 				killer_weapon_name = "ff_grenade_napalm";
+				break;
+			case KILLTYPE_GASSED:
+				killer_weapon_name = "ff_grenade_gas";
 				break;
 			}
 
