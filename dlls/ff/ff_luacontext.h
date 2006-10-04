@@ -49,6 +49,9 @@ public:
 
 public:
 	// pushes a parameter in preperation for a function call
+	void Push(float value);
+	void Push(int value);
+	void Push(bool value);
 	void Push(luabind::adl::object& luabindObject);
 	void Push(CBaseEntity* pEntity);
 	void Push(CFFBuildableObject* pEntity);
