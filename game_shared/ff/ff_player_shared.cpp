@@ -370,7 +370,13 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 
 	// Kill sound if we're a falling spy
 	if (GetClassSlot() == 8 && GetFlags() & FL_DUCKING)
+	{
+		// Play a local sound
+		CSingleUserRecipientFilter filter( this );
+		EmitSound( filter, entindex(), "Player.SpyFall" );
+
 		return;
+	}
 
 	if (m_flFallTime > gpGlobals->curtime)
 		return;
