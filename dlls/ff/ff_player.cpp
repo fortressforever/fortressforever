@@ -3602,6 +3602,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 		// We didn't overwrite one, so lets find an empty spot!
 		if( i == NUM_SPEED_EFFECTS )
 		{
+			// Gotta reset 0, too.
 			i = 0;
 			while( m_vSpeedEffects[ i ].active && ( i != NUM_SPEED_EFFECTS ) )
 				++i;
