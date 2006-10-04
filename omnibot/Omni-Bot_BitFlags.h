@@ -26,6 +26,13 @@ public:
 	{
 		m_Flags |= ((obint32)1<<_flag);
 	}
+	void SetFlag(obint32 _flag, bool _set)
+	{
+		if(_set)
+			SetFlag(_flag);
+		else
+			ClearFlag(_flag);
+	}
 	void ClearFlag(obint32 _flag)
 	{
 		m_Flags &= ~((obint32)1<<_flag);
@@ -66,6 +73,13 @@ public:
 	void SetFlag(obint32 _flag)
 	{
 		m_Flags |= ((obint64)1<<_flag);
+	}
+	void SetFlag(obint32 _flag, bool _set)
+	{
+		if(_set)
+			SetFlag(_flag);
+		else
+			ClearFlag(_flag);
 	}
 	void ClearFlag(obint32 _flag)
 	{
