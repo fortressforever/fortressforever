@@ -642,10 +642,10 @@ void CFFInfoScript::Drop( float delay, float speed )
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
 		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 1 ) );
 
-		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );*/
+		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
 		trace_t trHull;
-		UTIL_TraceHull( GetAbsOrigin(), GetAbsOrigin(), Vector( 0, 0, 0 ), Vector( 0, 0, 1 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
+		UTIL_TraceHull( vecOrigin, vecOrigin + Vector( 0, 0, 1 ), Vector( 0, 0, 0 ), Vector( 0, 0, 1 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
 
 		// If the trace started in a solid, or the trace didn't finish, or if
 		// it hit the world then we want to move it back to the player's origin.
@@ -653,7 +653,7 @@ void CFFInfoScript::Drop( float delay, float speed )
 		// the players being trapped in the world if a player is standing staring
 		// into a wall
 		if( trHull.allsolid || ( trHull.fraction != 1.0f ) || trHull.DidHitWorld() )
-			SetAbsOrigin( vecOrigin - Vector( 0, 0, 2 ) );
+			SetAbsOrigin( vecOrigin - Vector( 0, 0, 2 ) );*/
 
 		QAngle vecAngles = pOwner->EyeAngles();
 		SetAbsAngles( QAngle( 0, vecAngles.y, 0 ) );
