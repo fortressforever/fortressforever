@@ -1165,10 +1165,7 @@ void CServerGameDLL::Think( bool finalTick )
 void CServerGameDLL::LevelShutdown( void )
 {
 	// Omni-bot: Shut down the bot interface
-	Omnibot::omnibot_interface::ShutdownBotInterface();
-
-	_scriptman.LevelShutdown();
-	_scheduleman.Shutdown();
+	Omnibot::omnibot_interface::ShutdownBotInterface();	
 
 	IGameSystem::LevelShutdownPreEntityAllSystems();
 
@@ -1177,6 +1174,9 @@ void CServerGameDLL::LevelShutdown( void )
 	CSoundEnt::ShutdownSoundEnt();
 
 	gEntList.Clear();
+
+	_scriptman.LevelShutdown();
+	_scheduleman.Shutdown();
 
 	IGameSystem::LevelShutdownPostEntityAllSystems();
 
