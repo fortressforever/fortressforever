@@ -1520,7 +1520,7 @@ void C_FFPlayer::ClientThink( void )
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
 
-	if( IsAlive() && IsInfected() )
+	if( IsAlive() && IsInfected() && !IsDormant() )
 	{
 		// Player is infected & emitter is NULL, start it up!
 		if( !m_pInfectionEmitter1 )
