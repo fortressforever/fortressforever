@@ -412,8 +412,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 				m_pPlayerList->ModifyItem( iItemId, iSectionId, pPlayerData );
 			}
 
+			Color cCol = pGR->GetTeamColor( iPlayerTeam );
+
 			// Set the row color based on players team
-			m_pPlayerList->SetItemFgColor( iItemId, pGR->GetTeamColor( iPlayerTeam ) );
+			m_pPlayerList->SetItemFgColor( iItemId, Color( cCol.r() * 0.6f, cCol.g() * 0.6f, cCol.b() * 0.6f, cCol.a() ) );
 
 			pPlayerData->deleteThis();
 		}
