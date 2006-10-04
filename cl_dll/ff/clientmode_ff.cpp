@@ -95,6 +95,7 @@ void CFFModeManager::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 ClientModeFFNormal::ClientModeFFNormal()
 {
+	Q_strcpy(m_szValidationFile, "validationkeys.txt");
 }
 
 //-----------------------------------------------------------------------------
@@ -187,9 +188,14 @@ void ClientModeFFNormal::FireGameEvent( IGameEvent *pEvent )
 }
 
 //-----------------------------------------------------------------------------
+void ClientModeFFNormal::SetNextValidationFilePath(const char* szFilePath)
+{
+	Q_strncpy(m_szValidationFile, szFilePath, sizeof(m_szValidationFile));
+}
+
+//-----------------------------------------------------------------------------
 void ClientModeFFNormal::FFScriptCRC_MsgHandler(bf_read& msg)
 {
-	const char filePath[] = "validationkeys.txt";
 	ClientModeFFNormal* pClientMode = GetClientModeFFNormal();
 
 	unsigned long crc = (unsigned long)msg.ReadLong();
@@ -201,7 +207,11 @@ void ClientModeFFNormal::FFScriptCRC_MsgHandler(bf_read& msg)
 	szLevelName[(int)strlen(szLevelName) - 4] = '\0'; // Skip the ".bsp" part
 
 	char szDescription[256];
-	bool bValidated = ValidateLevel(filePath, szLevelName, crc, szDescription, 256);
+	bool bValidated = ValidateLevel(pClientMode->m_szValidationFile,
+									szLevelName,
+									crc,
+									szDescription,
+									256);
 
 	Msg("\n");
 	Msg("Server Script Validation\n");
@@ -219,6 +229,9 @@ void ClientModeFFNormal::FFScriptCRC_MsgHandler(bf_read& msg)
 	}
 
 	Msg("\n");
+
+	// reset the validation filepath
+	Q_strcpy(pClientMode->m_szValidationFile, "validationkeys.txt");
 }
 
 //-----------------------------------------------------------------------------
@@ -261,4 +274,18 @@ bool ClientModeFFNormal::ValidateLevel(const char* szValidateFilePath,
 
 	pKvRoot->deleteThis();
 	return bValidate;
+}
+
+//-----------------------------------------------------------------------------
+CON_COMMAND(ff_validate, "Requests a validation of the crc checksum of the server's current level scripts." )
+{
+	if(engine->Cmd_Argc() > 1)
+	{
+		const char* szFilePath = engine->Cmd_Argv(1);
+		
+		ClientModeFFNormal* pClientMode = GetClientModeFFNormal();
+		pClientMode->SetNextValidationFilePath(szFilePath);
+	}
+
+	engine->ClientCmd("ff_scriptcrc");
 }

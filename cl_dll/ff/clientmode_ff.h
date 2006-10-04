@@ -36,6 +36,8 @@ public:
 	virtual void	Init( void );
 	virtual void	FireGameEvent( IGameEvent *pEvent );
 
+	void SetNextValidationFilePath(const char* szFilePath);
+
 public:
 	static bool ValidateLevel(const char* szValidateFilePath,
 							  const char* szLevelName,
@@ -50,6 +52,7 @@ private:
 private:
 	bool	m_serverScriptValid;
 	CRC32_t	m_servercriptCRC;
+	char	m_szValidationFile[1024];
 
 };
 

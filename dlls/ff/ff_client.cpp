@@ -55,10 +55,6 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 {
 	pPlayer->m_flNextSpawnDelay = 0;
 
-	// send the current level's script crc to the client
-	unsigned long scriptCRC = _scriptman.GetScriptCRC();
-	SendScriptChecksumToClient(pPlayer, scriptCRC);
-
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 
