@@ -1274,6 +1274,21 @@ void CFFPlayer::InitialSpawn( void )
 }
 
 //-----------------------------------------------------------------------------
+extern void SendScriptChecksumToClient(CBasePlayer* pPlayer, unsigned long scriptCRC);
+
+bool CFFPlayer::ClientCommand(const char *cmd)
+{
+	if(strcmp(cmd, "ff_scriptcrc") == 0)
+	{
+		unsigned long scriptCRC = _scriptman.GetScriptCRC();
+		SendScriptChecksumToClient(this, scriptCRC);
+		return true;
+	}
+
+	return BaseClass::ClientCommand(cmd);
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: This is the normal, noisey feign. It used to have a check for
 //			velocity but not anymore.
 //-----------------------------------------------------------------------------
