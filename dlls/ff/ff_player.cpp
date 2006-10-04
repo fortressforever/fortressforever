@@ -3591,11 +3591,20 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 
 	if (mod & SEM_BOOLEAN)
 	{
-		for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
+		// Search for an already existing one to overwrite
+		for( ; i < NUM_SPEED_EFFECTS; i++)
 		{
 			// we'll overwrite the old one
 			if (m_vSpeedEffects[i].type == type)
 				break;
+		}
+
+		// We didn't overwrite one, so lets find an empty spot!
+		if( i == NUM_SPEED_EFFECTS )
+		{
+			i = 0;
+			while( m_vSpeedEffects[ i ].active && ( i != NUM_SPEED_EFFECTS ) )
+				++i;
 		}
 	}
 	else
@@ -3606,7 +3615,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 
 	if (i == NUM_SPEED_EFFECTS)
 	{
-		Warning("ERROR: Too many speed effects. Raise NUM_SPEED_EFFECTS");
+		Warning( "ERROR: Too many speed effects. Raise NUM_SPEED_EFFECTS\n" );
 		return;
 	}
 
