@@ -467,9 +467,13 @@ ConVar mp_prematch( "mp_prematch",
 					// so make sure the player knows it doesn't exist anymore!
 					pPlayer->SetLastSpawn( NULL );
 
+					// Do some cleanup
+					pPlayer->PreForceSpawn();
+					/*
 					// Attempt to stop weapon sound since we're forcibly respawning
 					if( pPlayer->GetActiveFFWeapon() )
 						pPlayer->GetActiveFFWeapon()->WeaponSound( STOP );
+						*/
 
 					pPlayer->Spawn();
 					pPlayer->ResetFragCount();
@@ -633,10 +637,11 @@ ConVar mp_prematch( "mp_prematch",
 						pPlayer->RemovePrimedGrenades();
 					}
 
-					if( pbFlags[ AT_RELOAD_CLIPS ] && !pbFlags[ AT_KILL_PLAYERS ] )
+					if( pbFlags[ AT_RELOAD_CLIPS ] && !pbFlags[ AT_KILL_PLAYERS ] && !pbFlags[ AT_RESPAWN_PLAYERS ] )
 					{
-						// No sense is doing this if we're kiling the player
-						// since he'll spawn with full clips anyway...
+						// No sense is doing this if we're kiling the player or forcibly spawning
+						// as the with the former the guy is dying and thus respawns will full clips
+						// and with the latter spawn will get it done
 						pPlayer->ReloadClips();
 					}
 
@@ -647,9 +652,15 @@ ConVar mp_prematch( "mp_prematch",
 
 					if( pbFlags[ AT_RESPAWN_PLAYERS ] )
 					{
+						// Do some cleanup (only if we didn't kill the guy)
+						if( !pbFlags[ AT_KILL_PLAYERS ] )
+							pPlayer->PreForceSpawn();
+
+						/*
 						// Attempt to stop weapon sound since we're forcibly respawning
 						if( pPlayer->GetActiveFFWeapon() )
 							pPlayer->GetActiveFFWeapon()->WeaponSound( STOP );
+							*/
 
 						pPlayer->Spawn();
 					}

@@ -148,6 +148,7 @@ public:
 	virtual void PreThink();
 	virtual void PostThink();
 	virtual CBaseEntity *EntSelectSpawnPoint();
+			void PreForceSpawn( void );
 	virtual void Spawn();
 	virtual void InitialSpawn();
 	virtual void Precache();

@@ -17,6 +17,9 @@
 #include "iservervehicle.h"
 #include "viewport_panel_names.h"
 #include "EntityFlame.h"
+#include "rumble_shared.h"
+#include "soundent.h"
+#include "nav_mesh.h"
 
 #include "ff_item_flag.h"
 #include "ff_utils.h"
@@ -967,7 +970,77 @@ ReturnSpot:
 #endif // FF_BETA_TEST_COMPILE
 }
 
-void CFFPlayer::Spawn()
+// --------------------------------------------------------------------------------
+// Purpose: This is called when players are forcibly respawned without being killed
+//			to do some stuff that Event_Killed does (clear sounds, reset weapons, etc)
+// --------------------------------------------------------------------------------
+void CFFPlayer::PreForceSpawn( void )
+{
+	// If we're already dead, who cares
+	if( IsAlive() )
+	{
+		RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
+		ClearUseEntity();
+
+		// This client isn't going to be thinking for a while, so reset the sound until they respawn
+		CSound *pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
+		if( pSound )
+			pSound->Reset();
+
+		if( m_bBuilding )
+		{
+			CFFBuildableObject *pBuildable = GetBuildable( m_iCurBuild );
+			if( pBuildable )
+				pBuildable->Cancel();
+		}
+
+		// Detonate player's pipes
+		CFFProjectilePipebomb::DestroyAllPipes(this, true);
+
+		// Release control of sabotaged structures
+		SpySabotageRelease();		
+
+		// Holster the current weapon
+		if( GetActiveFFWeapon() )
+			GetActiveFFWeapon()->Holster();
+
+		// Remove all weapons
+		for( int i = 0; i < MAX_WEAPONS; i++ )
+		{
+			if( m_hMyWeapons[ i ] )
+			{
+				m_hMyWeapons[ i ]->SetTouch( NULL );
+				m_hMyWeapons[ i ]->Drop( Vector( 0, 0, 0 ) );
+				Weapon_Detach( m_hMyWeapons[ i ] );
+				UTIL_Remove( m_hMyWeapons[ i ] );
+			}
+		}
+
+		// clear out the suit message cache so we don't keep chattering
+		SetSuitUpdate( NULL, false, 0 );
+
+		// reset FOV
+		//SetFOV( this, 0 );
+
+		if( FlashlightIsOn() )
+			FlashlightTurnOff();
+
+		// only count alive players
+		if( m_lastNavArea )
+		{
+			m_lastNavArea->DecrementPlayerCount( GetTeamNumber() );
+			m_lastNavArea = NULL;
+		}
+
+		// Clear the deceased's sound channels.(may have been firing or reloading when killed)
+		EmitSound( "BaseCombatCharacter.StopWeaponSounds" );
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Purpose: Spawn!
+// --------------------------------------------------------------------------------
+void CFFPlayer::Spawn( void )
 {
 #ifdef FF_BETA_TEST_COMPILE
 	// Crash
