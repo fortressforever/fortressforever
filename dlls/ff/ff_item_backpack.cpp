@@ -48,6 +48,7 @@ CFFItemBackpack::CFFItemBackpack()
 void CFFItemBackpack::Precache()
 {
 	PrecacheModel(BACKPACK_MODEL);
+	PrecacheScriptSound( "Backpack.touch" );
 }
 
 void CFFItemBackpack::Spawn()
