@@ -33,6 +33,7 @@ ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbo
 
 #ifdef GAME_DLL
 	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
+	ConVar buildable_flame_damage( "ffdev_buildable_flame_dmg", "8", FCVAR_ARCHIVE );
 #endif
 
 //=============================================================================
@@ -186,9 +187,9 @@ void CFFWeaponFlamethrower::Fire()
 					pTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
 				}
 				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
-					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 8.0f, DMG_BURN ) );
+					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, buildable_flame_damage.GetFloat(), DMG_BURN ) );
 				else if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
-					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 8.0f, DMG_BURN ) );
+					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, buildable_flame_damage.GetFloat(), DMG_BURN ) );
 			}
 		}		
 	}
