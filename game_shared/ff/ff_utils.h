@@ -110,4 +110,35 @@ const char *FF_GetAmmoName(int i);
 
 bool FF_TraceHitWorld( trace_t *pTrace );
 
+//-----------------------------------------------------------------------------
+// Purpose: This is a trace filter that ignores entities with a certain flag
+//-----------------------------------------------------------------------------
+class CTraceFilterIgnoreFlag : public ITraceFilter
+{
+public:
+	CTraceFilterIgnoreFlag( unsigned int flag )
+		: m_flag( flag )
+	{
+	}
+
+	virtual bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
+	{
+		// If the entity has this certain flag, ignore it!
+		CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
+
+		if( pEntity && ( pEntity->GetFlags() & m_flag ) )
+			return false;
+
+		return true;
+	}
+
+	virtual TraceType_t	GetTraceType( void ) const
+	{
+		return TRACE_ENTITIES_ONLY;
+	}
+
+private:
+	unsigned int	m_flag;
+};
+
 #endif // FF_UTILS_H
