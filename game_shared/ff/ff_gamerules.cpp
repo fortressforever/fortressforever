@@ -28,6 +28,7 @@
 	#include "ff_luacontext.h"
 	#include "ff_scheduleman.h"
 	#include "ff_betalist.h"
+	#include "ff_utils.h"
 
 #endif
 
@@ -950,7 +951,28 @@ ConVar mp_prematch( "mp_prematch",
 			}
 #endif
 
-			UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+			/* Some shit to test but apparently the laptop can't run the mod anymore *(&#@$@$*#*!*!!!
+#ifdef GAME_DLL
+			if( info.GetInflictor() )
+			{
+				CBaseEntity *pInflictor = info.GetInflictor();
+
+				Warning( "[%s] Causing RADIUSDAMAGE to: %s\n", pInflictor->GetClassname(), pEntity->GetClassname() );
+			}
+#endif
+			// Grenades inside each other end up not dealing out damamge cause their
+			// traces are blocked! So, use a tracefilter to ignore other grens if this
+			// is a grenade dealing out damage.
+			if( info.GetInflictor() && ( ( info.GetInflictor() )->GetFlags() & FL_GRENADE ) )
+			{
+				// Grenade is trying to damage this pEntity, make sure its not blocked by
+				// another grenade
+				CTraceFilterIgnoreFlag traceFilter( FL_GRENADE );
+				UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &traceFilter, &tr );
+			}
+			else
+			*/
+				UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
 #ifdef GAME_DLL
 			//NDebugOverlay::Line(vecSrc, vecSpot, 0, 255, 0, true, 5.0f);
