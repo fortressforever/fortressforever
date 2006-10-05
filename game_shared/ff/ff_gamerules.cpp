@@ -951,27 +951,17 @@ ConVar mp_prematch( "mp_prematch",
 			}
 #endif
 
-			/* Some shit to test but apparently the laptop can't run the mod anymore *(&#@$@$*#*!*!!!
-#ifdef GAME_DLL
-			if( info.GetInflictor() )
-			{
-				CBaseEntity *pInflictor = info.GetInflictor();
-
-				Warning( "[%s] Causing RADIUSDAMAGE to: %s\n", pInflictor->GetClassname(), pEntity->GetClassname() );
-			}
-#endif
-			// Grenades inside each other end up not dealing out damamge cause their
-			// traces are blocked! So, use a tracefilter to ignore other grens if this
-			// is a grenade dealing out damage.
+			// Our grenades are set up so that they have the flag FL_GRENADE. So, we can do this:
+			// Grenades inside each other end up not dealing out damamge cause their traces get
+			// blocked! So, use a trace filter to ignore other grenades if this is a grenade that
+			// is trying to deal out damage to pEntity!
+			// Bug #0001003: Grenades include projectiles in LOS collision check?
 			if( info.GetInflictor() && ( ( info.GetInflictor() )->GetFlags() & FL_GRENADE ) )
 			{
-				// Grenade is trying to damage this pEntity, make sure its not blocked by
-				// another grenade
-				CTraceFilterIgnoreFlag traceFilter( FL_GRENADE );
+				CTraceFilterIgnoreSingleFlag traceFilter( FL_GRENADE );
 				UTIL_TraceLine( vecSrc, vecSpot, MASK_SHOT, &traceFilter, &tr );
 			}
 			else
-			*/
 				UTIL_TraceLine(vecSrc, vecSpot, MASK_SHOT, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
 
 #ifdef GAME_DLL
