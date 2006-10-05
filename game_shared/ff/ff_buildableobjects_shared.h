@@ -630,6 +630,7 @@ public:
 	bool Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
 
 	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
+	virtual bool	IsNPC( void ) { return true; }
 
 public:
 	// Network variables
