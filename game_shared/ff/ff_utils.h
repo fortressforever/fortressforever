@@ -113,10 +113,10 @@ bool FF_TraceHitWorld( trace_t *pTrace );
 //-----------------------------------------------------------------------------
 // Purpose: This is a trace filter that ignores entities with a certain flag
 //-----------------------------------------------------------------------------
-class CTraceFilterIgnoreFlag : public ITraceFilter
+class CTraceFilterIgnoreSingleFlag : public CTraceFilter
 {
 public:
-	CTraceFilterIgnoreFlag( unsigned int flag )
+	CTraceFilterIgnoreSingleFlag( unsigned int flag )
 		: m_flag( flag )
 	{
 	}
@@ -130,11 +130,6 @@ public:
 			return false;
 
 		return true;
-	}
-
-	virtual TraceType_t	GetTraceType( void ) const
-	{
-		return TRACE_ENTITIES_ONLY;
 	}
 
 private:
