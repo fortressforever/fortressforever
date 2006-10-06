@@ -111,6 +111,12 @@ const char *FF_GetAmmoName(int i);
 bool FF_TraceHitWorld( trace_t *pTrace );
 
 //-----------------------------------------------------------------------------
+// Some wacky utility functions
+//-----------------------------------------------------------------------------
+bool FF_IsGrenade( CBaseEntity *pEntity );
+bool FF_IsPlayer( CBaseEntity *pEntity );
+
+//-----------------------------------------------------------------------------
 // Purpose: This is a trace filter that ignores entities with a certain flag
 //-----------------------------------------------------------------------------
 class CTraceFilterIgnoreSingleFlag : public CTraceFilter

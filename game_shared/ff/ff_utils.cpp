@@ -492,6 +492,28 @@ bool FF_TraceHitWorld( trace_t *pTrace )
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a player?
+//-----------------------------------------------------------------------------
+bool FF_IsPlayer( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return pEntity->IsPlayer();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a grenade?
+//-----------------------------------------------------------------------------
+bool FF_IsGrenade( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return ( pEntity->GetFlags() & FL_GRENADE ) ? true : false;
+}
+
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Set an icon on the hud

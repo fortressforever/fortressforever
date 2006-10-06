@@ -790,4 +790,94 @@ protected:
 };
 #endif // GAME_DLL
 
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a buildable?
+//-----------------------------------------------------------------------------
+inline bool FF_IsBuildableObject( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return( ( pEntity->Classify() == CLASS_DISPENSER ) ||
+		( pEntity->Classify() == CLASS_SENTRYGUN ) ||
+		( pEntity->Classify() == CLASS_DISPENSER ) );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a dispenser?
+//-----------------------------------------------------------------------------
+inline bool FF_IsDispenser( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return pEntity->Classify() == CLASS_DISPENSER;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a sentrygun?
+//-----------------------------------------------------------------------------
+inline bool FF_IsSentrygun( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return pEntity->Classify() == CLASS_SENTRYGUN;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the entity a detpack?
+//-----------------------------------------------------------------------------
+inline bool FF_IsDetpack( CBaseEntity *pEntity )
+{
+	if( !pEntity )
+		return false;
+
+	return pEntity->Classify() == CLASS_DETPACK;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Try and convert entity to a buildable
+//-----------------------------------------------------------------------------
+inline CFFBuildableObject *FF_ToBuildableObject( CBaseEntity *pEntity )
+{
+	if( !pEntity || !FF_IsBuildableObject( pEntity ) )
+		return NULL;
+
+	return dynamic_cast< CFFBuildableObject * >( pEntity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Try and convert entity to a dispenser
+//-----------------------------------------------------------------------------
+inline CFFBuildableObject *FF_ToDispenser( CBaseEntity *pEntity )
+{
+	if( !pEntity || !FF_IsDispenser( pEntity ) )
+		return NULL;
+
+	return dynamic_cast< CFFDispenser * >( pEntity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Try and convert entity to a sentrygun
+//-----------------------------------------------------------------------------
+inline CFFBuildableObject *FF_ToSentrygun( CBaseEntity *pEntity )
+{
+	if( !pEntity || !FF_IsSentrygun( pEntity ) )
+		return NULL;
+
+	return dynamic_cast< CFFSentryGun * >( pEntity );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Try and convert entity to a detpack
+//-----------------------------------------------------------------------------
+inline CFFBuildableObject *FF_ToDetpack( CBaseEntity *pEntity )
+{
+	if( !pEntity || !FF_IsDetpack( pEntity ) )
+		return NULL;
+
+	return dynamic_cast< CFFDetpack * >( pEntity );
+}
+
 #endif // FF_BUILDABLEOBJECTS_SHARED_H
