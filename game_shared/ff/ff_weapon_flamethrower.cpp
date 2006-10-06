@@ -180,12 +180,15 @@ void CFFWeaponFlamethrower::Fire()
 			// If pTarget can take damage from the flame thrower shooter...
 			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
 			{
-				//pTarget->TakeDamage(info);
-				if (traceHit.m_pEnt->IsPlayer())
+
+
+				// Don't burn a guy who is underwater
+				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
 					pTarget->TakeDamage( CTakeDamageInfo( this, pPlayer, GetFFWpnData().m_iDamage, DMG_BURN ) );
 					pTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
 				}
+				// TODO: Check water level for dispensers & sentryguns!
 				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
 					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
 				else if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
