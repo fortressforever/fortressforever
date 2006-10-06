@@ -20,6 +20,7 @@
 #include "iviewrender_beams.h"
 #include "Sprite.h"
 #include "ff_fx_infection.h"
+#include "ff_fx_immunity.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
 
@@ -160,12 +161,17 @@ public:
 	C_FFBuildableObject *GetBuildable( int iBuildable ) const;
 	// End: Added by Mulchman for building objects and such
 
-	bool IsInfected( void ) const	{ return m_bInfected; }
+	bool IsInfected( void ) const	{ return m_bInfected != 0; }
 	// Two girls for every boy?
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter1;
 	CSmartPtr< CInfectionEmitter >	m_pInfectionEmitter2;
+
+	bool IsImmune( void ) const		{ return m_bImmune != 0; }
+	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter1;
+	CSmartPtr< CImmunityEmitter >	m_pImmunityEmitter2;
 private:
-	CNetworkVar( bool, m_bInfected );
+	unsigned int m_bInfected;
+	unsigned int m_bImmune;
 
 // Called by shared code.
 public:
