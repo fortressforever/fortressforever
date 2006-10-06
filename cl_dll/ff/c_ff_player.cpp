@@ -419,7 +419,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	
 	RecvPropInt( RECVINFO( m_iSaveMe ) ),
 	RecvPropInt( RECVINFO( m_iEngyMe ) ),
-	RecvPropBool( RECVINFO( m_bInfected ) ),
+	RecvPropInt( RECVINFO( m_bInfected ) ),
+	RecvPropInt( RECVINFO( m_bImmune ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
@@ -1520,7 +1521,8 @@ void C_FFPlayer::ClientThink( void )
 	// Hopefully when the particles die the ::Create()
 	// stuff gets removed automagically?
 
-	if( IsAlive() && IsInfected() && !IsDormant() )
+	// Update infection emitters
+	if( IsAlive() && IsInfected() && !IsImmune() && !IsDormant() )
 	{
 		// Player is infected & emitter is NULL, start it up!
 		if( !m_pInfectionEmitter1 )
@@ -1555,6 +1557,45 @@ void C_FFPlayer::ClientThink( void )
 		{
 			m_pInfectionEmitter2->SetDieTime( 0.0f );
 			m_pInfectionEmitter2 = NULL;
+		}
+	}
+
+	// Update immunity emitters
+	if( IsAlive() && IsImmune() && !IsInfected() && !IsDormant() )
+	{
+		// Player is immune & emitter is NULL, start it up!
+		if( !m_pImmunityEmitter1 )
+			m_pImmunityEmitter1 = CImmunityEmitter::Create( "ImmunityEmitter" );				
+
+		if( !m_pImmunityEmitter2 )
+			m_pImmunityEmitter2 = CImmunityEmitter::Create( "ImmunityEmitter" );
+
+		// Update emitter position & die time
+		if( !!m_pImmunityEmitter1 )
+		{
+			m_pImmunityEmitter1->SetDieTime( gpGlobals->curtime + 5.0f );
+			m_pImmunityEmitter1->UpdateEmitter( GetAbsOrigin() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+		}
+
+		if( !!m_pImmunityEmitter2 )
+		{
+			m_pImmunityEmitter2->SetDieTime( gpGlobals->curtime + 5.0f );
+			m_pImmunityEmitter2->UpdateEmitter( EyePosition() - Vector( 0, 0, 16 ), GetAbsVelocity() );
+		}
+	}
+	else
+	{
+		// Cleanup
+		if( !!m_pImmunityEmitter1 )
+		{
+			m_pImmunityEmitter1->SetDieTime( 0.0f );
+			m_pImmunityEmitter1 = NULL;
+		}
+
+		if( !!m_pImmunityEmitter2 )
+		{
+			m_pImmunityEmitter2->SetDieTime( 0.0f );
+			m_pImmunityEmitter2 = NULL;
 		}
 	}
 }

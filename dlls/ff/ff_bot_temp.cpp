@@ -86,6 +86,15 @@ ConVar bot_crouch( "bot_crouch", "0", 0, "Bot crouches" );
 
 static int g_CurBotNumber = 1;
 
+CON_COMMAND( bot_immuneme, "immune me" )
+{
+	CFFPlayer *pHuman = ToFFPlayer( UTIL_GetCommandClient() );
+	if( pHuman )
+	{
+		pHuman->Cure( NULL );
+	}
+}
+
 CON_COMMAND(bot_feign, "feign!")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
