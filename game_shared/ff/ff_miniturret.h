@@ -227,6 +227,7 @@ public:
 	virtual bool	BlocksLOS( void ) { return false; }
 	virtual int		BloodColor( void ) { return BLOOD_COLOR_MECH; }
 	virtual bool	ShouldSavePhysics( void ) { return false; }
+	virtual bool	IsNPC( void ) { return true; }
 
 protected:
 	int		m_iEyeAttachment;
