@@ -36,19 +36,19 @@ class CFFWeaponDeployDetpack : public CFFWeaponBase
 {
 public:
 	DECLARE_CLASS( CFFWeaponDeployDetpack, CFFWeaponBase );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
+	DECLARE_NETWORKCLASS( void ); 
+	DECLARE_PREDICTABLE( void );
 	
-	CFFWeaponDeployDetpack();
+	CFFWeaponDeployDetpack( void );
 #ifdef CLIENT_DLL 
 	~CFFWeaponDeployDetpack( void ) { Cleanup( ); }
 #endif
 
-	virtual void PrimaryAttack();
-	virtual void SecondaryAttack();
-	virtual void WeaponIdle();
+	virtual void PrimaryAttack( void );
+	virtual void SecondaryAttack( void );
+	virtual void WeaponIdle( void );
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
-	virtual bool CanBeSelected();
+	virtual bool CanBeSelected( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDETPACK; }
 
@@ -95,7 +95,7 @@ PRECACHE_WEAPON_REGISTER( ff_weapon_deploydetpack );
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponDeployDetpack::CFFWeaponDeployDetpack()
+CFFWeaponDeployDetpack::CFFWeaponDeployDetpack( void )
 {
 #ifdef CLIENT_DLL
 	m_pBuildable = NULL;
@@ -134,7 +134,7 @@ void CFFWeaponDeployDetpack::SecondaryAttack( void )
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDetpack::WeaponIdle()
+void CFFWeaponDeployDetpack::WeaponIdle( void )
 {
 	if( m_flTimeWeaponIdle < gpGlobals->curtime )
 	{
@@ -175,18 +175,34 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeployDetpack::CanBeSelected()
+bool CFFWeaponDeployDetpack::CanBeSelected( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if( pPlayer && ( ( CFFDetpack * )pPlayer->GetDetpack() ) )
+	if( !pPlayer )
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+
+	if( pPlayer->GetDetpack() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYBUILT" );
+#endif
+		return false;
+	}
 	else if( pPlayer->IsBuilding() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
+#endif
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+	}
 	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" );
+#endif
 		return false;
-	else
-		return BaseClass::CanBeSelected();
+	}
+		
+	return BaseClass::CanBeSelected();
 }

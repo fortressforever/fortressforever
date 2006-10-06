@@ -51,21 +51,21 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
-	CFFWeaponDeploySentryGun();
+	CFFWeaponDeploySentryGun( void );
 #ifdef CLIENT_DLL 
-	~CFFWeaponDeploySentryGun() 
+	~CFFWeaponDeploySentryGun( void ) 
 	{ 
 		Cleanup(); 
 	}
 #endif
 
-	virtual void PrimaryAttack();
-	virtual void SecondaryAttack();
-	virtual void WeaponIdle();
+	virtual void PrimaryAttack( void );
+	virtual void SecondaryAttack( void );
+	virtual void WeaponIdle( void );
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
-	virtual bool CanBeSelected();
+	virtual bool CanBeSelected( void );
 
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_DEPLOYSENTRYGUN; }
+	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYSENTRYGUN; }
 
 private:
 
@@ -110,7 +110,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_deploysentrygun);
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponDeploySentryGun::CFFWeaponDeploySentryGun() 
+CFFWeaponDeploySentryGun::CFFWeaponDeploySentryGun( void ) 
 {
 #ifdef CLIENT_DLL
 	m_pBuildable = NULL;
@@ -120,7 +120,7 @@ CFFWeaponDeploySentryGun::CFFWeaponDeploySentryGun()
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they fire(build, aim, etc) 
 //----------------------------------------------------------------------------
-void CFFWeaponDeploySentryGun::PrimaryAttack() 
+void CFFWeaponDeploySentryGun::PrimaryAttack( void ) 
 {
 	if (m_flNextPrimaryAttack < gpGlobals->curtime) 
 	{
@@ -147,7 +147,7 @@ void CFFWeaponDeploySentryGun::PrimaryAttack()
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they secondary fire
 //----------------------------------------------------------------------------
-void CFFWeaponDeploySentryGun::SecondaryAttack() 
+void CFFWeaponDeploySentryGun::SecondaryAttack( void ) 
 {
 	if( m_flNextSecondaryAttack < gpGlobals->curtime )
 	{
@@ -158,7 +158,7 @@ void CFFWeaponDeploySentryGun::SecondaryAttack()
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
 //----------------------------------------------------------------------------
-void CFFWeaponDeploySentryGun::WeaponIdle() 
+void CFFWeaponDeploySentryGun::WeaponIdle( void ) 
 {
 	if (m_flTimeWeaponIdle < gpGlobals->curtime) 
 	{
@@ -205,20 +205,36 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeploySentryGun::CanBeSelected()
+bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer && pPlayer->GetSentryGun())
+	if( !pPlayer )
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+
+	if( pPlayer->GetSentryGun() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_ALREADYBUILT" );
+#endif
+		return false;
+	}
 	else if( pPlayer->IsBuilding() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
+#endif
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+	}
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_SENTRYGUN_NOTENOUGHAMMO" );
+#endif
 		return false;
-	else
-		return BaseClass::CanBeSelected();
+	}
+
+	return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL

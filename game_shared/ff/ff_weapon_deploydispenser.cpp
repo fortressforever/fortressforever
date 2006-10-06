@@ -52,18 +52,18 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
-	CFFWeaponDeployDispenser();
+	CFFWeaponDeployDispenser( void );
 #ifdef CLIENT_DLL 
-	~CFFWeaponDeployDispenser() { Cleanup(); }
+	~CFFWeaponDeployDispenser( void ) { Cleanup(); }
 #endif
 
-	virtual void PrimaryAttack();
-	virtual void SecondaryAttack();
-	virtual void WeaponIdle();
+	virtual void PrimaryAttack( void );
+	virtual void SecondaryAttack( void );
+	virtual void WeaponIdle( void );
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
-	virtual bool CanBeSelected();
+	virtual bool CanBeSelected( void );
 
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_DEPLOYDISPENSER; }
+	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDISPENSER; }
 
 private:
 
@@ -109,7 +109,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_deploydispenser);
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponDeployDispenser::CFFWeaponDeployDispenser() 
+CFFWeaponDeployDispenser::CFFWeaponDeployDispenser( void ) 
 {
 #ifdef CLIENT_DLL
 	m_pBuildable = NULL;
@@ -119,7 +119,7 @@ CFFWeaponDeployDispenser::CFFWeaponDeployDispenser()
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they fire(build, aim, etc) 
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDispenser::PrimaryAttack() 
+void CFFWeaponDeployDispenser::PrimaryAttack( void ) 
 {
 	if (m_flNextPrimaryAttack < gpGlobals->curtime) 
 	{
@@ -146,7 +146,7 @@ void CFFWeaponDeployDispenser::PrimaryAttack()
 //----------------------------------------------------------------------------
 // Purpose: Handles whatever should be done when they scondary fire
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDispenser::SecondaryAttack() 
+void CFFWeaponDeployDispenser::SecondaryAttack( void ) 
 {
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 }
@@ -154,7 +154,7 @@ void CFFWeaponDeployDispenser::SecondaryAttack()
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
 //----------------------------------------------------------------------------
-void CFFWeaponDeployDispenser::WeaponIdle() 
+void CFFWeaponDeployDispenser::WeaponIdle( void ) 
 {
 	if (m_flTimeWeaponIdle < gpGlobals->curtime) 
 	{
@@ -203,20 +203,36 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeployDispenser::CanBeSelected()
+bool CFFWeaponDeployDispenser::CanBeSelected( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	if (pPlayer && pPlayer->GetDispenser())
+	if( !pPlayer )
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+
+	if( pPlayer->GetDispenser() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" );
+#endif
+		return false;
+	}
 	else if( pPlayer->IsBuilding() )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
+#endif
 		return false;
-	// Bug #0000333: Buildable Behavior (non build slot) while building
+	}
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
+	{
+#ifdef GAME_DLL
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" );
+#endif
 		return false;
-	else
-		return BaseClass::CanBeSelected();
+	}
+
+	return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL
