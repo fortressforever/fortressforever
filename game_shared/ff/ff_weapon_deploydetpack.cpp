@@ -36,8 +36,8 @@ class CFFWeaponDeployDetpack : public CFFWeaponBase
 {
 public:
 	DECLARE_CLASS( CFFWeaponDeployDetpack, CFFWeaponBase );
-	DECLARE_NETWORKCLASS( void ); 
-	DECLARE_PREDICTABLE( void );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
 	
 	CFFWeaponDeployDetpack( void );
 #ifdef CLIENT_DLL 
