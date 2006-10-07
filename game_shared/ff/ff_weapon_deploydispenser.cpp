@@ -35,6 +35,7 @@
 	#define CFFDispenser C_FFDispenser
 
 	#include "c_ff_player.h"
+	#include "ff_hud_chat.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -62,6 +63,7 @@ public:
 	virtual void WeaponIdle( void );
 	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
 	virtual bool CanBeSelected( void );
+	virtual bool CanDeploy( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDISPENSER; }
 
@@ -203,7 +205,7 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeployDispenser::CanBeSelected( void )
+bool CFFWeaponDeployDispenser::CanDeploy( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -212,27 +214,32 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 
 	if( pPlayer->GetDispenser() )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_ALREADYBUILT" );
 #endif
 		return false;
 	}
 	else if( pPlayer->IsBuilding() )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
 #endif
 		return false;
 	}
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DISPENSER_NOTENOUGHAMMO" );
 #endif
 		return false;
 	}
 
-	return BaseClass::CanBeSelected();
+	return BaseClass::CanDeploy();
+}
+
+bool CFFWeaponDeployDispenser::CanBeSelected( void )
+{
+	return true;
 }
 
 #ifdef GAME_DLL

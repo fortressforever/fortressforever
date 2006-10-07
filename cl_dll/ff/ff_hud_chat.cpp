@@ -20,6 +20,9 @@ bool g_fBlockedStatus[256] = { false };		// |-- Mirv: Hold whether these dudes a
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 extern ConVar sv_specchat;
 
+// Yar!
+static CHudChat *g_pHudChat = NULL;
+
 // --> Mirv: Colours!
 int g_ColorConsole[3]	= { 153, 255, 153 };
 int g_ColorOrange[3]	= { 255, 170, 0 };
@@ -204,6 +207,11 @@ CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 	
 }
 
+CHudChat::~CHudChat( void )
+{
+	g_pHudChat = NULL;
+}
+
 void CHudChat::CreateChatInputLine( void )
 {
 	m_pChatInput = new CHudChatInputLine( this, "ChatInputLine" );
@@ -242,6 +250,8 @@ void CHudChat::Init( void )
 
 	HOOK_HUD_MESSAGE( CHudChat, SayText );
 	HOOK_HUD_MESSAGE( CHudChat, TextMsg );
+
+	g_pHudChat = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -579,4 +589,97 @@ int CHudChat::GetChatInputOffset( void )
 	}
 	else
 		return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Does a ClientPrint message but from the client (didn't want to
+//			overwrite the client version which does... nothing, litrally)
+//-----------------------------------------------------------------------------
+void ClientPrintMsg( C_BasePlayer *player, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
+{
+	if( g_pHudChat )
+	{
+		char szString[2048];
+
+		wchar_t szBuf[5][128];
+		wchar_t outputBuf[256];
+
+		for ( int i=0; i<5; ++i )
+		{
+			switch( i )
+			{
+			case 0: Q_snprintf( szString, sizeof( szString ), "%s", msg_name ); break;
+			case 1: Q_snprintf( szString, sizeof( szString ), "%s", param1 ); break;
+			case 2: Q_snprintf( szString, sizeof( szString ), "%s", param2 ); break;
+			case 3: Q_snprintf( szString, sizeof( szString ), "%s", param3 ); break;
+			case 4: Q_snprintf( szString, sizeof( szString ), "%s", param4 ); break;
+			}
+			
+			char *tmpStr = hudtextmessage->LookupString( szString, &msg_dest );
+			const wchar_t *pBuf = vgui::localize()->Find( tmpStr );
+			if ( pBuf )
+			{
+				// Copy pBuf into szBuf[i].
+				int nMaxChars = sizeof( szBuf[i] ) / sizeof( wchar_t );
+				wcsncpy( szBuf[i], pBuf, nMaxChars );
+				szBuf[i][nMaxChars-1] = 0;
+			}
+			else
+			{
+				if ( i )
+				{
+					StripEndNewlineFromString( tmpStr );  // these strings are meant for subsitution into the main strings, so cull the automatic end newlines
+				}
+				vgui::localize()->ConvertANSIToUnicode( tmpStr, szBuf[i], sizeof(szBuf[i]) );
+			}
+		}
+
+		if ( !cl_showtextmsg.GetInt() )
+			return;
+
+		int len;
+		switch ( msg_dest )
+		{
+		case HUD_PRINTCENTER:
+			vgui::localize()->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
+			internalCenterPrint->Print( ConvertCRtoNL( outputBuf ) );
+			break;
+
+			/*
+		case HUD_PRINTNOTIFY:
+			szString[0] = 1;  // mark this message to go into the notify buffer
+			vgui::localize()->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
+			vgui::localize()->ConvertUnicodeToANSI( outputBuf, szString+1, sizeof(szString)-1 );
+			len = strlen( szString );
+			if ( len && szString[len-1] != '\n' && szString[len-1] != '\r' )
+			{
+				Q_strncat( szString, "\n", sizeof(szString), 1 );
+			}
+			Msg( "%s", ConvertCRtoNL( szString ) );
+			break;
+
+		case HUD_PRINTTALK:
+			vgui::localize()->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
+			vgui::localize()->ConvertUnicodeToANSI( outputBuf, szString, sizeof(szString) );
+			len = strlen( szString );
+			if ( len && szString[len-1] != '\n' && szString[len-1] != '\r' )
+			{
+				Q_strncat( szString, "\n", sizeof(szString), 1 );
+			}
+			g_pHudChat->Printf( "%s", ConvertCRtoNL( szString ) );
+			break;
+
+		case HUD_PRINTCONSOLE:
+			vgui::localize()->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
+			vgui::localize()->ConvertUnicodeToANSI( outputBuf, szString, sizeof(szString) );
+			len = strlen( szString );
+			if ( len && szString[len-1] != '\n' && szString[len-1] != '\r' )
+			{
+				Q_strncat( szString, "\n", sizeof(szString), 1 );
+			}
+			Msg( "%s", ConvertCRtoNL( szString ) );
+			break;
+			*/
+		}
+	}
 }

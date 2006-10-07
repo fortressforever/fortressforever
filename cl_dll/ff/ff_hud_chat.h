@@ -49,6 +49,7 @@ class CHudChat : public CBaseHudChat
 
 public:
 	CHudChat( const char *pElementName );
+	virtual ~CHudChat( void );
 
 	virtual void	CreateChatInputLine( void );
 	virtual void	CreateChatLines( void );
@@ -64,5 +65,8 @@ public:
 
 	int				GetChatInputOffset( void );
 };
+
+// Don't want to overwrite ClientPrint on the client but this does the same thing, basically
+void ClientPrintMsg( C_BasePlayer *player, int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
 
 #endif	//FF_HUD_CHAT_H

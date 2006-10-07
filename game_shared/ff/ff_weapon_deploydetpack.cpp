@@ -22,6 +22,7 @@
 	#define CFFWeaponDeployDetpack C_FFWeaponDeployDetpack
 	#define CFFDetpack C_FFDetpack
 	#include "c_ff_player.h"	
+	#include "ff_hud_chat.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -49,6 +50,7 @@ public:
 	virtual void WeaponIdle( void );
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual bool CanBeSelected( void );
+	virtual bool CanDeploy( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDETPACK; }
 
@@ -175,7 +177,7 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 	return BaseClass::Holster( pSwitchingTo );
 }
 
-bool CFFWeaponDeployDetpack::CanBeSelected( void )
+bool CFFWeaponDeployDetpack::CanDeploy( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -184,25 +186,30 @@ bool CFFWeaponDeployDetpack::CanBeSelected( void )
 
 	if( pPlayer->GetDetpack() )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYBUILT" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_ALREADYBUILT" );
 #endif
 		return false;
 	}
 	else if( pPlayer->IsBuilding() )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_MULTIPLEBUILDS" );
 #endif
 		return false;
 	}
 	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
 	{
-#ifdef GAME_DLL
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" );
+#ifdef CLIENT_DLL
+		ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_BUILDERROR_DETPACK_NOTENOUGHAMMO" );
 #endif
 		return false;
 	}
-		
-	return BaseClass::CanBeSelected();
+
+	return BaseClass::CanDeploy();
+}
+
+bool CFFWeaponDeployDetpack::CanBeSelected( void )
+{
+	return true;	
 }
