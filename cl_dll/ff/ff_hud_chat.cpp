@@ -593,7 +593,7 @@ int CHudChat::GetChatInputOffset( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: Does a ClientPrint message but from the client (didn't want to
-//			overwrite the client version which does... nothing, litrally)
+//			overwrite the client version which does... nothing, literally)
 //-----------------------------------------------------------------------------
 void ClientPrintMsg( C_BasePlayer *player, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 )
 {
