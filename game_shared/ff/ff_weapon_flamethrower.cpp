@@ -166,7 +166,10 @@ void CFFWeaponFlamethrower::Fire()
 
 	// Don't hit water
 	if( ( traceHit.contents & CONTENTS_WATER ) || ( traceHit.contents & CONTENTS_SLIME ) )
+	{
+		lagcompensation->FinishLagCompensation(pPlayer);
 		return;
+	}
 
 	// We want to hit buildables too
 	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
