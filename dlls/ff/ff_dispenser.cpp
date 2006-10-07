@@ -201,6 +201,14 @@ void CFFDispenser::GoLive( void )
 
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
+
+	// Figure out if we're under water or not
+	if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 48 ) ) & CONTENTS_WATER )
+		SetWaterLevel( WL_Eyes );
+	else if( UTIL_PointContents( GetAbsOrigin() + Vector( 0, 0, 24 ) ) & CONTENTS_WATER )
+		SetWaterLevel( WL_Waist );
+	else if( UTIL_PointContents( GetAbsOrigin() ) & CONTENTS_WATER )
+		SetWaterLevel( WL_Feet );
 }
 
 /**

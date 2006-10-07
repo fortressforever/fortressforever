@@ -132,6 +132,8 @@ void C_FFFlameJet::OnDataChanged(DataUpdateType_t updateType)
 	}
 
 	m_ParticleEffect.SetParticleCullRadius(max(m_StartSize, m_EndSize));
+
+	UpdateVisibility();
 }
 
 //-----------------------------------------------------------------------------
@@ -201,15 +203,22 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
 	}
 
+	Vector vecForward;
+	AngleVectors( angAngles, &vecForward );
+	VectorNormalizeFast( vecForward );
+
 	// Check that this isn't going through a wall
 	trace_t tr;
-	UTIL_TraceLine(pOwner->GetLegacyAbsOrigin(), vecStart, MASK_SOLID_BRUSHONLY, pOwner, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(pOwner->GetLegacyAbsOrigin(), vecStart + ( vecForward * 4.0f ), MASK_SOLID_BRUSHONLY | MASK_WATER, pOwner, COLLISION_GROUP_NONE, &tr);
 
 	// Yes, going through a wall
 	if (tr.fraction < 1.0f)
 	{
 		return;
 	}
+
+	if( ( tr.contents & CONTENTS_WATER ) || ( tr.contents & CONTENTS_SLIME ) )
+		return;
 
 	Vector forward, right, up;
 	AngleVectors(angAngles, &forward, &right, &up);
@@ -263,7 +272,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				trace_t tr;
 
 				// How far can this particle travel
-				UTIL_TraceLine(pParticle->m_Pos, pParticle->m_Pos + (pParticle->m_Velocity * pParticle->m_Dietime), 	MASK_SOLID, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
+				UTIL_TraceLine(pParticle->m_Pos, pParticle->m_Pos + (pParticle->m_Velocity * pParticle->m_Dietime), MASK_SOLID | MASK_WATER, GetOwnerEntity(), COLLISION_GROUP_NONE, &tr);
 
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;

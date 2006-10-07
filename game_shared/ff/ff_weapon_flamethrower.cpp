@@ -123,15 +123,19 @@ void CFFWeaponFlamethrower::Fire()
 	Vector vecForward;
 	pPlayer->EyeVectors(&vecForward);
 
+	// Normalize, or we get that weird epsilon assert
+	VectorNormalizeFast( vecForward );
+
 	// Push them gently if in air
 	if (!pPlayer->GetGroundEntity())
 		pPlayer->ApplyAbsVelocityImpulse(vecForward * -12.0f);
 
 #ifdef GAME_DLL
+	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
+
 	// If underwater then just innocent bubbles
 	if (pPlayer->GetWaterLevel() == 3)
 	{
-		Vector vecShootPos = pPlayer->Weapon_ShootPosition();
 		UTIL_BubbleTrail(vecShootPos, vecShootPos + (vecForward * 64.0), random->RandomInt(5, 20));
 		return;
 	}
@@ -139,7 +143,7 @@ void CFFWeaponFlamethrower::Fire()
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
 
-	Vector vecStart = pPlayer->Weapon_ShootPosition() + vecForward * 16.0f;
+	Vector vecStart = vecShootPos + vecForward * 16.0f;
 
 	// 320 is about how far the flames are drawn on the client
 	// 0.4f is the time taken to reach end of flame jet
@@ -158,7 +162,11 @@ void CFFWeaponFlamethrower::Fire()
 	
 	// Changed to this to add some "width" to the shot. How much more expensive is this than traceline???
 	trace_t traceHit;
-	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL, pPlayer, COLLISION_GROUP_NONE, &traceHit );
+	UTIL_TraceHull( vecStart, vecEnd, -Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), Vector( 1.0f, 1.0f, 1.0f ) * ffdev_flame_bbox.GetFloat(), MASK_SHOT_HULL | MASK_WATER, pPlayer, COLLISION_GROUP_NONE, &traceHit );
+
+	// Don't hit water
+	if( ( traceHit.contents & CONTENTS_WATER ) || ( traceHit.contents & CONTENTS_SLIME ) )
+		return;
 
 	// We want to hit buildables too
 	if (traceHit.m_pEnt) /* && traceHit.m_pEnt->IsPlayer())*/
@@ -180,8 +188,6 @@ void CFFWeaponFlamethrower::Fire()
 			// If pTarget can take damage from the flame thrower shooter...
 			if (g_pGameRules->FPlayerCanTakeDamage(pTarget, pPlayer))
 			{
-
-
 				// Don't burn a guy who is underwater
 				if (traceHit.m_pEnt->IsPlayer() && ( pTarget->GetWaterLevel() < 3 ) )
 				{
@@ -189,10 +195,18 @@ void CFFWeaponFlamethrower::Fire()
 					pTarget->ApplyBurning( pPlayer, 0.5f, 10.0f, BURNTYPE_FLAMETHROWER);
 				}
 				// TODO: Check water level for dispensers & sentryguns!
-				else if (traceHit.m_pEnt->Classify() == CLASS_DISPENSER)
-					( ( CFFDispenser * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
-				else if (traceHit.m_pEnt->Classify() == CLASS_SENTRYGUN)
-					( ( CFFSentryGun * )traceHit.m_pEnt )->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
+				else if( FF_IsDispenser( traceHit.m_pEnt ) )
+				{
+					CFFDispenser *pDispenser = FF_ToDispenser( traceHit.m_pEnt );
+					if( pDispenser && ( pDispenser->GetWaterLevel() <= WL_Waist ) )
+						pDispenser->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
+				}
+				else if( FF_IsSentrygun( traceHit.m_pEnt ) )
+				{
+					CFFSentryGun *pSentrygun = FF_ToSentrygun( traceHit.m_pEnt );
+					if( pSentrygun && ( pSentrygun->GetWaterLevel() <= WL_Waist ) )
+						pSentrygun->TakeDamage( CTakeDamageInfo( this, pPlayer, 18.0f, DMG_BURN ) );
+				}
 			}
 		}		
 	}
