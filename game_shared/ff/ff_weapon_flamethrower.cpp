@@ -54,7 +54,7 @@ public:
 	virtual bool Deploy();
 	virtual void Precache();
 	virtual void ItemPostFrame();
-	virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
+	//virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
 	void EmitFlames(bool fEmit);
 
@@ -358,6 +358,7 @@ void CFFWeaponFlamethrower::ItemPostFrame()
 	}
 }
 
+/*
 //----------------------------------------------------------------------------
 // Purpose: Quick change to override the single sound
 //----------------------------------------------------------------------------
@@ -366,3 +367,4 @@ void CFFWeaponFlamethrower::WeaponSound(WeaponSound_t sound_type, float soundtim
 	if (sound_type != SINGLE)
 		BaseClass::WeaponSound(sound_type, soundtime);			
 }
+*/
