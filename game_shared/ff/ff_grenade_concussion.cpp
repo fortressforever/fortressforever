@@ -219,7 +219,10 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 				float flIconDuration = flDuration;
 				if( pPlayer->LuaRunEffect( LUA_EF_CONC, GetOwnerEntity(), &flDuration, &flIconDuration ) )
 				{
-					pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
+					if( pPlayer == GetOwnerEntity() )
+						pPlayer->Concuss( flDuration, flIconDuration, NULL, flDistance);
+					else
+						pPlayer->Concuss( flDuration, flIconDuration, &angDirection, flDistance);
 				}					
 			}
 
