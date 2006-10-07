@@ -94,10 +94,8 @@ void C_FFInfoScript::OnDataChanged( DataUpdateType_t updateType )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
-	else
-	{
-		UpdateVisibility();
-	}
+	
+	UpdateVisibility();
 }
 
 int C_FFInfoScript::DrawModel( int flags ) 
