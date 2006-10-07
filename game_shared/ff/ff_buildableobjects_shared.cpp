@@ -96,6 +96,18 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	m_vecBuildGroundOrigin = m_vecBuildAirOrigin;
 	m_angBuildGroundAngles = m_angBuildAirAngles;
 
+	// For the sg, because its so large, the hull (when doing the trace later) will stick
+	// into walls if we are near them [like having our back towards them] so we need to
+	// move the build origin further forward to remedy this
+	if( iBuildObject == FF_BUILD_SENTRYGUN )
+	{
+		// Move forward an arbitrary amount... but don't go more
+		// than 32 otherwise that leaves a gap between the players
+		// bbox and the object you're building so really thin brushes
+		// could be in the way and you could technically build 'through' them.
+		m_vecPlayerOrigin += m_vecPlayerForward * 32.0f;
+	}
+
 	// Check if player is even on the ground or not
 	if( !( m_pPlayer->GetFlags() & FL_ONGROUND ) )
 	{
@@ -155,6 +167,8 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 		// Some visualizations
 		if( !engine->IsDedicatedServer() )
 		{
+			// Show the players hull in yellow
+			NDebugOverlay::Box( m_pPlayer->GetFeetOrigin(), Vector( -16, -16, 0 ), Vector( 16, 16, 70 ), 255, 255, 0, 100, 10.0f );
 			// Show the hull in blue at the players origin
 			NDebugOverlay::Box( m_vecPlayerOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
 			// Show the hull in red at the build origin
@@ -377,6 +391,8 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 				// Bug #0000246: Dispenser and sg overlap if built on each other
 				if( !tr[i].DidHit() )
 					return BUILD_TOOFAR;
+				else if( tr[i].startsolid )
+					return BUILD_NOROOM;
 				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
 					return BUILD_NOROOM;
 			}
@@ -442,6 +458,8 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 				// Bug #0000246: Dispenser and sg overlap if built on each other
 				if( !tr[i].DidHit() )
 					return BUILD_TOOFAR;
+				else if( tr[i].startsolid )
+					return BUILD_NOROOM;
 				else if( ( tr[i].m_pEnt->Classify() == CLASS_SENTRYGUN ) || ( tr[i].m_pEnt->Classify() == CLASS_DISPENSER ) )
 					return BUILD_NOROOM;
 			}
