@@ -850,7 +850,7 @@ inline CFFBuildableObject *FF_ToBuildableObject( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose: Try and convert entity to a dispenser
 //-----------------------------------------------------------------------------
-inline CFFBuildableObject *FF_ToDispenser( CBaseEntity *pEntity )
+inline CFFDispenser *FF_ToDispenser( CBaseEntity *pEntity )
 {
 	if( !pEntity || !FF_IsDispenser( pEntity ) )
 		return NULL;
@@ -861,7 +861,7 @@ inline CFFBuildableObject *FF_ToDispenser( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose: Try and convert entity to a sentrygun
 //-----------------------------------------------------------------------------
-inline CFFBuildableObject *FF_ToSentrygun( CBaseEntity *pEntity )
+inline CFFSentryGun *FF_ToSentrygun( CBaseEntity *pEntity )
 {
 	if( !pEntity || !FF_IsSentrygun( pEntity ) )
 		return NULL;
@@ -872,7 +872,7 @@ inline CFFBuildableObject *FF_ToSentrygun( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose: Try and convert entity to a detpack
 //-----------------------------------------------------------------------------
-inline CFFBuildableObject *FF_ToDetpack( CBaseEntity *pEntity )
+inline CFFDetpack *FF_ToDetpack( CBaseEntity *pEntity )
 {
 	if( !pEntity || !FF_IsDetpack( pEntity ) )
 		return NULL;
