@@ -114,8 +114,16 @@ C_FFFlameJet::C_FFFlameJet()
 //----------------------------------------------------------------------------
 C_FFFlameJet::~C_FFFlameJet() 
 {
-	if (m_pParticleMgr) 
-		m_pParticleMgr->RemoveEffect(&m_ParticleEffect);
+	Cleanup();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Cleanup
+//----------------------------------------------------------------------------
+void C_FFFlameJet::Cleanup( void )
+{
+	if( m_pParticleMgr ) 
+		m_pParticleMgr->RemoveEffect( &m_ParticleEffect );
 }
 
 //----------------------------------------------------------------------------

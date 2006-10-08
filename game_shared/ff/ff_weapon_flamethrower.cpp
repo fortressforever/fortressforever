@@ -57,6 +57,7 @@ public:
 	//virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
 	void EmitFlames(bool fEmit);
+	void Cleanup( void );
 
 	virtual ~CFFWeaponFlamethrower();
 
@@ -106,12 +107,19 @@ CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 //----------------------------------------------------------------------------
 CFFWeaponFlamethrower::~CFFWeaponFlamethrower()
 {
-#ifdef GAME_DLL
-	if (m_hFlameJet)
-		UTIL_Remove(m_hFlameJet);
-#endif
+	Cleanup();
 }
 
+//----------------------------------------------------------------------------
+// Purpose: Destroy flamejet
+//----------------------------------------------------------------------------
+void CFFWeaponFlamethrower::Cleanup( void )
+{
+#ifdef GAME_DLL
+	if( m_hFlameJet )
+		UTIL_Remove( m_hFlameJet );
+#endif
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Turns on the flame stream, creates it if it doesn't yet exist
@@ -236,6 +244,9 @@ bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 		WeaponSound(STOP);
 	}
 
+	// Kill the flamejet emitter
+	Cleanup();
+
 	return BaseClass::Holster();
 }
 
@@ -292,10 +303,15 @@ void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 	// Try changing the flamejet. If status has changed, play the correct sound.
 	if (m_hFlameJet && m_hFlameJet->FlameEmit(fEmit))
 	{
-		if (fEmit)
-			WeaponSound(BURST);
-		else
-			WeaponSound(STOP);
+#ifdef CLIENT_DLL
+		if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
+#endif
+		{
+			if (fEmit)
+				WeaponSound(BURST);
+			else
+				WeaponSound(STOP);
+		}
 	}
 }
 

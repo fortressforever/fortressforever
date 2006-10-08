@@ -72,6 +72,7 @@ public:
 
 	// C_FFFlameJet-specific
 	bool				FlameEmit(bool fEmit);
+	void				Cleanup( void );
 
 public:
 
