@@ -117,7 +117,10 @@ void CFFWeaponFlamethrower::Cleanup( void )
 {
 #ifdef GAME_DLL
 	if( m_hFlameJet )
+	{
+		m_hFlameJet->FlameEmit( false );
 		UTIL_Remove( m_hFlameJet );
+	}
 #endif
 }
 
@@ -231,21 +234,16 @@ void CFFWeaponFlamethrower::Fire()
 //----------------------------------------------------------------------------
 bool CFFWeaponFlamethrower::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
-	EmitFlames(false);
-
-	// Stop any sound effect that may be playing at the time. Holster seems to be called
-	// on the client for other people too. It should only be sent by the server for other
-	// people's holstering.
-
-#ifdef CLIENT_DLL
-	if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
-#endif
-	{
-		WeaponSound(STOP);
-	}
-
 	// Kill the flamejet emitter
 	Cleanup();
+
+	// Doing it this way stops the s_absQueriesValid assert
+#ifdef CLIENT_DLL 
+	if( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() )
+#endif
+	{
+		WeaponSound( STOP );
+	}
 
 	return BaseClass::Holster();
 }
@@ -303,15 +301,10 @@ void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 	// Try changing the flamejet. If status has changed, play the correct sound.
 	if (m_hFlameJet && m_hFlameJet->FlameEmit(fEmit))
 	{
-#ifdef CLIENT_DLL
-		if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
-#endif
-		{
-			if (fEmit)
-				WeaponSound(BURST);
-			else
-				WeaponSound(STOP);
-		}
+		if (fEmit)
+			WeaponSound(BURST);
+		else
+			WeaponSound(STOP);
 	}
 }
 
