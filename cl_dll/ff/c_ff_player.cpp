@@ -1400,6 +1400,8 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 		m_pInfectionEmitter1 = NULL;
 		m_pInfectionEmitter2 = NULL;
+		m_pImmunityEmitter1 = NULL;
+		m_pImmunityEmitter2 = NULL;
 	}
 
 	if (IsLocalPlayer())
@@ -1431,84 +1433,6 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 
 		localLifeState = m_lifeState;
 	}
-
-/*
-	// BEG: Added by Mulchman
-	if( IsBuilding() && !m_bClientBuilding )
-	{
-		// We started building
-		DevMsg( "Started building a... " );
-
-		// Bug #0000333: Buildable Behavior (non build slot) while building
-		SetAbsVelocity( Vector( 0, 0, 0 ) );
-
-		bool bDrawTimer = true;
-		string szTimerName = FF_BUILDABLE_TIMER_BUILD_STRING;
-		float flTimerDuration = 2.0f;
-
-		if( m_iCurBuild == FF_BUILD_DISPENSER )
-		{
-			DevMsg( "Dispenser!\n" );
-			flTimerDuration = 2.0f;
-		}
-		else if( m_iCurBuild == FF_BUILD_SENTRYGUN )
-		{
-			DevMsg( "SentryGun!\n" );
-			flTimerDuration = 5.0f;
-		}
-		else if( m_iCurBuild == FF_BUILD_DETPACK )
-		{
-			DevMsg( "Detpack!\n" );	
-			flTimerDuration = 3.0f;
-		}
-		else
-		{
-			DevMsg( "ERROR!? WTFBBQ!?\n" );
-			bDrawTimer = false;
-		}
-
-		/*if( bDrawTimer )
-		{
-			C_FFTimer *pTimer = g_FFTimers.Create( szTimerName, flTimerDuration );
-			if( pTimer )
-			{
-				pTimer->m_bRemoveWhenExpired = true;
-				pTimer->StartTimer();				
-			}
-		}*//*
-	}
-	else if( !IsBuilding() && m_bClientBuilding )
-	{
-		// We stopped building
-		//DevMsg( "Stopped building (or cancelled building)\n" );
-
-		SetAbsVelocity( Vector( 0, 0, 0 ) );
-
-		/*C_FFTimer *pTimer = g_FFTimers.FindTimer( FF_BUILDABLE_TIMER_BUILD_STRING );
-
-		if( pTimer )
-			g_FFTimers.DeleteTimer( pTimer );*/
-/*	
-
-		// Code to get mins/maxs of a model - leave in please
-		/*		
-		//C_FFDispenser *pObject = ( C_FFDispenser * )m_hDispenser.Get( );
-		//C_FFSentryGun *pObject = ( C_FFSentryGun * )m_hSentryGun.Get( );
-		C_FFDetpack *pObject = ( C_FFDetpack * )m_hDetpack.Get( );
-		if( pObject )
-		{
-			Vector mins, maxs;
-
-			pObject->GetRenderBounds( mins, maxs );
-			DevMsg( "Mins: %f, %f, %f\nMaxs: %f, %f, %f\n", mins.x, mins.y, mins.z, maxs.x, maxs.y, maxs.z );
-		}
-		//*/
-	//}
-
-	// Update client buildling state to that of
-	// the server
-	//m_bClientBuilding = IsBuilding();
-	// END: Added by Mulchman
 
 	UpdateVisibility();
 }
@@ -1598,6 +1522,8 @@ void C_FFPlayer::ClientThink( void )
 			m_pImmunityEmitter2 = NULL;
 		}
 	}
+
+	BaseClass::ClientThink();
 }
 
 //-----------------------------------------------------------------------------
