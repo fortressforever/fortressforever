@@ -37,6 +37,60 @@ ConVar conc_refract("ffdev_conc_refract", "0.2");
 ConVar conc_grow("ffdev_conc_grow", "0.2");
 ConVar conc_shrink("ffdev_conc_shrink", "1.2");
 
+class CRagdollConcEnumerator : public IPartitionEnumerator
+{
+	DECLARE_CLASS_GAMEROOT( CRagdollConcEnumerator, IPartitionEnumerator );
+public:
+	//Forced constructor
+	CRagdollConcEnumerator( Vector origin);
+	~CRagdollConcEnumerator();
+
+	//Actual work code
+	virtual IterationRetval_t EnumElement( IHandleEntity *pHandleEntity );
+
+public:
+	//Data members
+	CUtlVector<C_BaseEntity*> m_Entities;
+	Vector	m_vecOrigin;
+};
+
+// Enumator class for ragdolls being affected by explosive forces
+CRagdollConcEnumerator::CRagdollConcEnumerator( Vector origin)
+{
+	m_vecOrigin		= origin;
+}
+
+// Actual work code
+IterationRetval_t CRagdollConcEnumerator::EnumElement( IHandleEntity *pHandleEntity )
+{
+	C_BaseEntity *pEnt = ClientEntityList().GetBaseEntityFromHandle( pHandleEntity->GetRefEHandle() );
+	
+	if ( pEnt == NULL )
+		return ITERATION_CONTINUE;
+
+	C_BaseAnimating *pModel = static_cast< C_BaseAnimating * >( pEnt );
+
+	// If the ragdoll was created on this tick, then the forces were already applied on the server
+	if ( pModel == NULL || WasRagdollCreatedOnCurrentTick( pEnt ) )
+		return ITERATION_CONTINUE;
+	
+	m_Entities.AddToTail( pEnt );
+
+	return ITERATION_CONTINUE;
+}
+
+CRagdollConcEnumerator::~CRagdollConcEnumerator()
+{
+	for (int i = 0; i < m_Entities.Count(); i++ )
+	{
+		C_BaseEntity *pEnt = m_Entities[i];
+		C_BaseAnimating *pModel = static_cast< C_BaseAnimating * >( pEnt );
+
+		Vector	position = pEnt->CollisionProp()->GetCollisionOrigin();
+	}
+}
+
+
 //========================================================================
 // Client effect precache table
 //========================================================================
@@ -172,15 +226,6 @@ ConcParticle * CConcEmitter::AddConcParticle()
 	return pRet;
 }
 
-
-
-
-
-
-
-
-
-
 class C_ConcEffect : public C_BaseAnimating
 {
 	typedef C_BaseAnimating BaseClass;
@@ -292,6 +337,14 @@ void C_ConcEffect::ClientThink( void )
 //-----------------------------------------------------------------------------
 void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 {
+	/*
+	voogru: not enough time for this shit, spent 3-4 hours fucking with this and ragdolls are being a fucking pain in the ass, 
+	I'm able to affect them, but not the way I want them to behave.
+
+	CRagdollConcEnumerator ragdollEnum(data.m_vOrigin);
+	partition->EnumerateElementsInSphere( PARTITION_CLIENT_RESPONSIVE_EDICTS, data.m_vOrigin, data.m_flRadius, false, &ragdollEnum );
+	*/
+
 	// If underwater, just do a bunch of gas
 	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
 	{
