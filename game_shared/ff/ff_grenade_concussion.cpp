@@ -154,6 +154,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_concussion);
 		CEffectData data;
 		data.m_vOrigin = GetAbsOrigin();
 		data.m_flScale = 1.0f;
+		data.m_flRadius = GetGrenadeRadius();
 		
 		DispatchEffect(CONCUSSION_EFFECT, data);
 
