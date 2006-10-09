@@ -71,7 +71,7 @@ public:
 	CHudBuildState(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudBuildState") 
 	{
 		SetParent(g_pClientMode->GetViewport());
-		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+		SetHiddenBits( 0 );
 	}
 
 	~CHudBuildState();
