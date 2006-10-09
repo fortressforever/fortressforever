@@ -24,16 +24,17 @@
 	#include "ff_player.h"
 #endif
 
-#define AC_MAX_CHARGETIME	4.5f
-#define AC_CHARGEUP_TIME	0.0f
-#define AC_MAX_REV_SOUND	3.0f
-#define AC_OVERHEAT_DELAY	1.0f
+// Please keep all values exposed to cvars so non programmers can be tweaking, even if the code isn't final.
+ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "4.5", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
+ConVar ffdev_ac_chargeuptime("ffdev_ac_chargeuptime", "0.0", FCVAR_REPLICATED, "Assault Cannon Chargeup Time");
+ConVar ffdev_ac_maxrevsound("ffdev_ac_maxrevsound", "3.0", FCVAR_REPLICATED, "Assault Cannon Max Rev Sound");
+ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED, "Assault Cannon Overheat delay");
 
-#define	AC_MIN_SPREAD	0.01
-#define AC_MAX_SPREAD	0.10
+ConVar ffdev_ac_minspread("ffdev_ac_minspread", "0.01", FCVAR_REPLICATED, "Assault Cannon Minimum spread");
+ConVar ffdev_ac_maxspread("ffdev_ac_maxspread", "0.10", FCVAR_REPLICATED, "Assault Cannon Maximum spread");
 
-#define	AC_MAX_CYCLETIME	0.2f
-#define AC_MIN_CYCLETIME	0.04f
+ConVar ffdev_ac_maxcycletime("ffdev_ac_maxcycletime", "0.2", FCVAR_REPLICATED, "Assault Cannon Maximum cycle time");
+ConVar ffdev_ac_mincycletime("ffdev_ac_mincycletime", "0.04", FCVAR_REPLICATED, "Assault Cannon Minimum cycle time");
 
 //=============================================================================
 // CFFWeaponAssaultCannon
@@ -283,7 +284,7 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 			float flTimeHeld = m_flTriggerReleased - m_flTriggerPressed;
 			float flTimeLeft = flTimeHeld - flTimeSinceRelease;
 
-			if (flTimeLeft > 0 && flTimeLeft < AC_MAX_CHARGETIME)
+			if (flTimeLeft > 0 && flTimeLeft < ffdev_ac_maxchargetime.GetFloat())
 			{
 				m_flTriggerPressed = gpGlobals->curtime - flTimeLeft;
 			}
@@ -329,7 +330,7 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	// Manufacture a smooth chargetime reduction
 	if (m_flNextSecondaryAttack > gpGlobals->curtime)
 	{
-		m_flChargeTime = AC_MAX_CHARGETIME * ((m_flNextSecondaryAttack - gpGlobals->curtime) / AC_OVERHEAT_DELAY);
+		m_flChargeTime = ffdev_ac_maxchargetime.GetFloat() * ((m_flNextSecondaryAttack - gpGlobals->curtime) / ffdev_ac_overheatdelay.GetFloat());
 	}
 }
 
@@ -354,11 +355,11 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 	if ((flTimeSinceRelease <= 0.5f || pOwner->m_nButtons & IN_ATTACK) && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
 		// Oh no...
-		if (m_flChargeTime > AC_MAX_CHARGETIME)
+		if (m_flChargeTime > ffdev_ac_maxchargetime.GetFloat())
 		{
 			// Freeze for 5s, reduce to max rev sound so it falls away instantly
-			m_flNextSecondaryAttack = gpGlobals->curtime + AC_OVERHEAT_DELAY;
-			m_flTriggerPressed = gpGlobals->curtime + AC_OVERHEAT_DELAY;
+			m_flNextSecondaryAttack = gpGlobals->curtime + ffdev_ac_overheatdelay.GetFloat();
+			m_flTriggerPressed = gpGlobals->curtime + ffdev_ac_overheatdelay.GetFloat();
 			m_flTriggerReleased = 0; //gpGlobals->curtime;
 			
 			// Play the overheat sound
@@ -373,7 +374,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		}
 
 		// Time for the next real fire think
-		else if (m_flChargeTime >= AC_CHARGEUP_TIME && m_flNextPrimaryAttack <= gpGlobals->curtime)
+		else if (m_flChargeTime >= ffdev_ac_chargeuptime.GetFloat() && m_flNextPrimaryAttack <= gpGlobals->curtime)
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
@@ -399,11 +400,11 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 			//m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 
-			//float flT = (m_flChargeTime - AC_CHARGEUP_TIME) / (2.0f * AC_MAX_CHARGETIME);
+			//float flT = (m_flChargeTime - ffdev_ac_chargeuptime.GetFloat()) / (2.0f * ffdev_ac_maxchargetime.GetFloat());
 
 			//m_flNextPrimaryAttack = gpGlobals->curtime + (GetFFWpnData().m_flCycleTime * (flT > 0.0f ? 1.0f : 1 - flT));
 
-			if (!m_bFiring && m_flChargeTime > AC_CHARGEUP_TIME)
+			if (!m_bFiring && m_flChargeTime > ffdev_ac_chargeuptime.GetFloat())
 			{
 				//WeaponSound(SINGLE);
 
@@ -446,7 +447,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 #ifdef CLIENT_DLL
 	if (m_pEngine)
 	{
-		float flPitch = 40 + 10 * min(AC_MAX_REV_SOUND, m_flChargeTime);
+		float flPitch = 40 + 10 * min(ffdev_ac_maxrevsound.GetFloat(), m_flChargeTime);
 		CSoundEnvelopeController::GetController().SoundChangePitch(m_pEngine, min(80, flPitch), 0);
 	}
 #endif
@@ -545,20 +546,20 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 
 float CFFWeaponAssaultCannon::GetFireRate()
 {
-	float t = m_flChargeTime / AC_MAX_CHARGETIME;
+	float t = m_flChargeTime / ffdev_ac_maxchargetime.GetFloat();
 	t = clamp(t, 0.0f, 1.0f);
 	t = SimpleSpline(t);
 
-	return AC_MAX_CYCLETIME * (1.0f - t) + AC_MIN_CYCLETIME * t;
+	return ffdev_ac_maxcycletime.GetFloat() * (1.0f - t) + ffdev_ac_mincycletime.GetFloat() * t;
 }
 
 Vector CFFWeaponAssaultCannon::GetFireSpread()
 {
-	float t = m_flChargeTime / AC_MAX_CHARGETIME;
+	float t = m_flChargeTime / ffdev_ac_maxchargetime.GetFloat();
 	t = clamp(t, 0.0f, 1.0f);
 	t = SimpleSpline(t);
 
-	float flSpread = AC_MIN_SPREAD * (1.0f - t) + AC_MAX_SPREAD * t;
+	float flSpread = ffdev_ac_minspread.GetFloat() * (1.0f - t) + ffdev_ac_maxspread.GetFloat() * t;
 
 	return Vector(flSpread, flSpread, flSpread);
 }
@@ -625,6 +626,6 @@ float GetAssaultCannonCharge()
 
 	CFFWeaponAssaultCannon *pAC = (CFFWeaponAssaultCannon *) pWeapon;
 
-	return (100.0f * pAC->m_flChargeTime / AC_MAX_CHARGETIME);
+	return (100.0f * pAC->m_flChargeTime / ffdev_ac_maxchargetime.GetFloat());
 }
 #endif
