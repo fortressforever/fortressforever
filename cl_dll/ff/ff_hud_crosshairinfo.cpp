@@ -70,6 +70,12 @@ public:
 	void OnTick( void );
 	void Paint( void );
 
+	void Reset( void )
+	{ 
+		if( m_flDrawTime != 0.0f )
+			m_flDrawTime = 0.0f; 
+	}
+
 protected:
 	float		m_flStartTime;
 	float		m_flDuration;
@@ -103,8 +109,9 @@ void CHudCrosshairInfo::Init( void )
 void CHudCrosshairInfo::VidInit( void )
 {	
 	SetPaintBackgroundEnabled( false );
-	m_flStartTime = -99;		// |-- Mirv: Fix messages reappearing next map
-	m_flDrawTime = -99;
+	m_pText[ 0 ] = '\0';
+	m_flStartTime = 0.0f;		// |-- Mirv: Fix messages reappearing next map
+	m_flDrawTime = 0.0f;
 	m_iTeam = 0;
 	m_iClass = 0;
 
@@ -119,11 +126,12 @@ void CHudCrosshairInfo::OnTick( void )
 	if( !engine->IsInGame() )
 		return;
 
-	// TODO: Somehow we need to keep track of spies when we ID them
-	// so that if we ID them again and they haven't changed disguise
-	// we show the same name as last time.
-	// I'm thinking an array on the local client from 0 to maxClients
-	// and 
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return;
+
+	if( !pPlayer->IsAlive() )
+		Reset();
 
 	// Check for crosshair info every x seconds
 	if( m_flStartTime < gpGlobals->curtime )
@@ -131,355 +139,350 @@ void CHudCrosshairInfo::OnTick( void )
 		// Store off when to trace next
 		m_flStartTime = gpGlobals->curtime + m_flDuration;
 
-		// Get a player pointer
-		C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
-		if( pPlayer )
+		// Get our forward vector
+		Vector vecForward;
+		pPlayer->EyeVectors( &vecForward );
+
+		VectorNormalize( vecForward );
+
+		// Get eye position
+		Vector vecOrigin = pPlayer->EyePosition();
+
+		//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 1024.f ), 0, 0, 255, false, 3.0f );
+		//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, 8 ), 255, 0, 0, false, 3.0f );
+		//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, -8 ), 255, 0, 0, false, 3.0f );
+
+		trace_t tr;
+		UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER, &tr );
+
+		// If we hit something...
+		if( tr.DidHit() )
 		{
-			// Get our forward vector
-			Vector vecForward;
-			pPlayer->EyeVectors( &vecForward );
+			// Some defaults...
+			bool bBuildable = false;
+			C_FFPlayer *pHitPlayer = NULL;
 
-			VectorNormalize( vecForward );
-
-			// Get eye position
-			Vector vecOrigin = pPlayer->EyePosition();
-
-			//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 1024.f ), 0, 0, 255, false, 3.0f );
-			//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, 8 ), 255, 0, 0, false, 3.0f );
-			//debugoverlay->AddLineOverlay( vecOrigin + ( vecForward * 64.f ), vecOrigin + ( vecForward * 64.f ) + Vector( 0, 0, -8 ), 255, 0, 0, false, 3.0f );
-
-			trace_t tr;
-			UTIL_TraceLine( vecOrigin, vecOrigin + ( vecForward * 1024.f ), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER, &tr );
-
-			// If we hit something...
-			if( tr.DidHit() )
+			// If we hit a player
+			if( tr.m_pEnt->IsPlayer() )
+			{					
+				if( tr.m_pEnt->IsAlive() )
+					pHitPlayer = ToFFPlayer( tr.m_pEnt );
+			}
+			// If we hit a sentrygun
+			else if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
 			{
-				// Some defaults...
-				bool bBuildable = false;
-				C_FFPlayer *pHitPlayer = NULL;
+				C_FFSentryGun *pSentryGun = ( C_FFSentryGun * )tr.m_pEnt;
+				if( !pSentryGun->m_bBuilt )
+					return;					
 
-				// If we hit a player
-				if( tr.m_pEnt->IsPlayer() )
-				{					
-					if( tr.m_pEnt->IsAlive() )
-						pHitPlayer = ToFFPlayer( tr.m_pEnt );
-				}
-				// If we hit a sentrygun
-				else if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
+				if( pSentryGun->IsAlive() )
 				{
-					C_FFSentryGun *pSentryGun = ( C_FFSentryGun * )tr.m_pEnt;
-					if( !pSentryGun->m_bBuilt )
-						return;					
-
-					if( pSentryGun->IsAlive() )
-					{
-						bBuildable = true;
-						pHitPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
-					}
+					bBuildable = true;
+					pHitPlayer = ToFFPlayer( pSentryGun->m_hOwner.Get() );
 				}
-				// If we hit a dispenser
-				else if( tr.m_pEnt->Classify() == CLASS_DISPENSER )
-				{
-					C_FFDispenser *pDispenser = ( C_FFDispenser * )tr.m_pEnt;
-					if( !pDispenser->m_bBuilt )
-						return;
+			}
+			// If we hit a dispenser
+			else if( tr.m_pEnt->Classify() == CLASS_DISPENSER )
+			{
+				C_FFDispenser *pDispenser = ( C_FFDispenser * )tr.m_pEnt;
+				if( !pDispenser->m_bBuilt )
+					return;
 
-					if( pDispenser->IsAlive() )
-					{
-						bBuildable = true;
-						pHitPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
-					}					
+				if( pDispenser->IsAlive() )
+				{
+					bBuildable = true;
+					pHitPlayer = ToFFPlayer( pDispenser->m_hOwner.Get() );
+				}					
+			}
+
+			// If the players/objects aren't "alive" pHitPlayer will still be NULL
+			// and we'll bail here...
+
+			// If we got a player/owner
+			if( pHitPlayer )
+			{
+				// Get at the game resources
+				IGameResources *pGR = GameResources();
+				if( !pGR )
+				{
+					Warning( "[Crosshair Info] Failed to get game resources!\n" );
+					return;
 				}
 
-				// If the players/objects aren't "alive" pHitPlayer will still be NULL
-				// and we'll bail here...
+				// Are we a medic?
+				bool bWeMedic = ( pPlayer->GetClassSlot() == CLASS_MEDIC );
+				// Are we an engineer?
+				//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
+				// Are we looking at a spy?
+				bool bTheySpy = ( pHitPlayer->GetClassSlot() == CLASS_SPY );
+				
+				// For the player/owner name
+				char szName[ MAX_PLAYER_NAME_LENGTH ];
+				// For the class
+				char szClass[ MAX_PLAYER_NAME_LENGTH ];
+					
+				// Get their real name now (deal w/ non teammate/ally spies later)
+				Q_strcpy( szName, pGR->GetPlayerName( pHitPlayer->index ) );
 
-				// If we got a player/owner
-				if( pHitPlayer )
+				if( bBuildable )
 				{
-					// Get at the game resources
-					IGameResources *pGR = GameResources();
-					if( !pGR )
-					{
-						Warning( "[Crosshair Info] Failed to get game resources!\n" );
-						return;
-					}
-
-					// Are we a medic?
-					bool bWeMedic = ( pPlayer->GetClassSlot() == CLASS_MEDIC );
-					// Are we an engineer?
-					//bool bWeEngy = ( pPlayer->GetClassSlot() == 9 );
-					// Are we looking at a spy?
-					bool bTheySpy = ( pHitPlayer->GetClassSlot() == CLASS_SPY );
-					
-					// For the player/owner name
-					char szName[ MAX_PLAYER_NAME_LENGTH ];
-					// For the class
-					char szClass[ MAX_PLAYER_NAME_LENGTH ];
-					
-					// Get their real name now (deal w/ non teammate/ally spies later)
-					Q_strcpy( szName, pGR->GetPlayerName( pHitPlayer->index ) );
-
-					if( bBuildable )
-					{
-						if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
-							Q_strcpy( szClass, "#FF_PLAYER_SENTRYGUN" );
-						else
-							Q_strcpy( szClass, "#FF_PLAYER_DISPENSER" );
-					}
+					if( tr.m_pEnt->Classify() == CLASS_SENTRYGUN )
+						Q_strcpy( szClass, "#FF_PLAYER_SENTRYGUN" );
 					else
-					{
-						// Get the players' class always
-						Q_strcpy( szClass, Class_IntToResourceString( pGR->GetClass( pHitPlayer->index ) ) );
-					}
-
-					// Default
-					int iHealth = -1, iArmor = -1;
-					
-					// Default
-					m_iTeam = pHitPlayer->GetTeamNumber();
-					m_iClass = pHitPlayer->GetTeamNumber();
-
-					if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
-					{
-						// We're looking at a teammate/ally
-
-						if( bBuildable )
-						{
-							// Now on teammates/allies can see teammate/allies
-							// buildable info according to:
-							// Bug #0000463: Hud Crosshair Info - douched
-							//if( bWeEngy )
-							//{
-								C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
-
-								iHealth = pBuildable->GetHealthPercent();
-								
-								if( pBuildable->Classify() == CLASS_DISPENSER )
-									iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPercent();
-								else if( pBuildable->Classify() == CLASS_SENTRYGUN )
-								{
-									iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
-
-									if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
-										iArmor -= 128;
-								}
-								else
-									iArmor = -1;
-							//}
-						}
-						else
-						{						
-							iHealth = pHitPlayer->GetHealthPercentage();
-							iArmor = pHitPlayer->GetArmorPercentage();
-						}
-					}
-					else
-					{
-						// We're looking at a non teammate/ally
-						// Only thing we care about is if we area medic or we're looking
-						// at a spy because otherwise we've done everything above
-
-						if( !bBuildable )
-						{
-							// We're looking at a player
-
-							if( bWeMedic )
-							{
-								// Grab the real health/armor of this player
-								iHealth = pHitPlayer->GetHealthPercentage();
-								iArmor = pHitPlayer->GetArmorPercentage();
-							}
-							
-							if( bTheySpy )
-							{
-								// We're looking at an enemy/non-allied spy
-								
-								if( pHitPlayer->IsDisguised() )
-								{
-									// The spy is disguised so we do some special stuff
-									// to try and fake out the player - like show the class
-									// we're disguised as and try to steal a name from a
-									// a player on whatever team we are disguised as playing
-									// as whatever class we are disguised as. If that fails
-									// we use a name from the team we're disguised as. If that
-									// fails we use the real name.
-
-									// Get the disguised class
-									/*int iClassSlot*/ m_iClass = pHitPlayer->GetDisguisedClass();
-									Q_strcpy( szClass, Class_IntToResourceString( m_iClass ) );
-
-									// Get the disguised team
-									m_iTeam = pHitPlayer->GetDisguisedTeam();
-
-									// If this spy is disguised as our team we need to show his
-									// health/armor
-									if( m_iTeam == pPlayer->GetTeamNumber() )
-									{
-										iHealth = pHitPlayer->GetHealthPercentage();
-										iArmor = pHitPlayer->GetArmorPercentage();
-									}
-
-									// Or, if this spy is disguised as an ally of our team we
-									// need to show his health/armor
-									if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), m_iTeam ) == GR_TEAMMATE )
-									{
-										iHealth = pHitPlayer->GetHealthPercentage();
-										iArmor = pHitPlayer->GetArmorPercentage();
-									}
-
-									// TODO: Could be bugs with this spy tracking thing in that
-									// a player who's name is being used as a spy ID drops
-									// and that name is still being used because the spy hasn't
-									// changed disguises...
-
-									// Check to see if we've ID'd this spy before as the 
-									// disguise he's currently disguised as
-									if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( m_iTeam, m_iClass ) )
-										Q_strcpy( szName, pPlayer->m_hSpyTracking[ pHitPlayer->index ].m_szName );
-									else
-									{
-										// Change name (if we can) to someone on the team iTeam
-										// that is playing the class this guy is disguised as
-
-										// Gonna generate an array of people on the team we're disguised as
-										// in case we have to randomly pick a name later
-										int iPlayers[ 128 ], iCount = 0;
-
-										bool bDone = false;
-										for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
-										{
-											// Skip this spy - kind of useless if it tells us
-											// our real name, eh? Using our real name is a last resort
-											if( i == pHitPlayer->index )
-												continue;
-
-											if( pGR->IsConnected( i ) )
-											{
-												// If the guy's on the team we're disguised as...
-												if( pGR->GetTeam( i ) == m_iTeam )
-												{
-													// Store off the player index since we found
-													// someone on the team we're disguised as
-													iPlayers[ iCount++ ] = i;
-
-													// If the guy's playing as the class we're disguised as...
-													if( pGR->GetClass( i ) == m_iClass )
-													{
-														// We're stealing this guys name
-														Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
-														bDone = true; // bail
-													}
-												}
-											}
-										}
-
-										// If no one was on the other team, add the real name
-										// to the array of possible choices
-										if( iCount == 0 )
-											iPlayers[ iCount++ ] = pHitPlayer->index;
-
-										// We iterated around and found no one on the team we're disguised as
-										// playing as the class we're disguised as so just pick a guy from
-										// the team we're disguised as (or use real name if iCount was 0)
-										if( !bDone )
-										{
-											// So we got an array of indexes to players of whom we can steal
-											// their name, so randomly steal one
-											Q_strcpy( szName, pGR->GetPlayerName( iPlayers[ random->RandomInt( 0, iCount - 1 ) ] ) );
-										}
-
-										// Store off the spies name, class & team in case we ID him again
-										// and he hasn't changed disguise
-										pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, m_iClass );
-									}
-								}
-							}
-						}					
-					}
-
-					// Set up local crosshair info struct
-					pPlayer->m_hCrosshairInfo.Set( szName, m_iTeam, m_iClass );
-
-					// NOW! Remember team is 1 higher than the actual team
-					// If health/armor are -1 then we don't show it
-
-					// Convert to unicode & localize stuff
-
-					const char *pszOldName = szName;
-					int iBufSize = ( int )strlen( pszOldName ) * 2;
-					char *pszNewName = ( char * )_alloca( iBufSize );
-
-					UTIL_MakeSafeName( pszOldName, pszNewName, iBufSize );
-
-					wchar_t wszName[ 256 ];
-					vgui::localize()->ConvertANSIToUnicode( pszNewName, wszName, sizeof( wszName ) );
-
-					wchar_t wszClass[ 256 ];					
-					wchar_t *pszTemp = vgui::localize()->Find( szClass );
-					if( pszTemp )
-						wcscpy( wszClass, pszTemp );
-					else
-					{
-						wcscpy( wszClass, L"CLASS" );	// TODO: fix to show English version of class name :/
-					}
-
-					if( ( iHealth != -1 ) && ( iArmor != -1 ) )
-					{
-						char szHealth[ 5 ], szArmor[ 5 ];
-						Q_snprintf( szHealth, 5, "%i%%", iHealth );
-						Q_snprintf( szArmor, 5, "%i%%", iArmor );
-
-						wchar_t wszHealth[ 10 ], wszArmor[ 10 ];
-
-                        vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
-						vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
-
-						_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, wszHealth, wszArmor );
-					}
-					else
-						_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
-
-					if( hud_centerid.GetInt() )
-					{
-						// Get the screen width/height
-						int iScreenWide, iScreenTall;
-						surface()->GetScreenSize( iScreenWide, iScreenTall );
-
-						// "map" screen res to 640/480
-						float iXScale = 640.0f / iScreenWide;
-						float iYScale = 480.0f / iScreenTall;
-
-						int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
-						int iTall = surface()->GetFontTall( m_hTextFont );
-
-						// Adjust values to get below the crosshair and offset correctly
-						m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
-						m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
-
-						// Scale by "map" scale values
-						m_flXOffset *= iXScale;
-						m_flYOffset *= iYScale;
-
-						// Scale to screen co-ords
-						m_flXOffset = scheme()->GetProportionalScaledValue( m_flXOffset );
-						m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
-					}
-
-					// Start drawing
-					m_flDrawTime = gpGlobals->curtime;
+						Q_strcpy( szClass, "#FF_PLAYER_DISPENSER" );
 				}
 				else
 				{
-					// Hit something but not a player/dispenser/sentrygun
-					pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
+					// Get the players' class always
+					Q_strcpy( szClass, Class_IntToResourceString( pGR->GetClass( pHitPlayer->index ) ) );
 				}
+
+				// Default
+				int iHealth = -1, iArmor = -1;
+					
+				// Default
+				m_iTeam = pHitPlayer->GetTeamNumber();
+				m_iClass = pHitPlayer->GetTeamNumber();
+
+				if( FFGameRules()->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )
+				{
+					// We're looking at a teammate/ally
+
+					if( bBuildable )
+					{
+						// Now on teammates/allies can see teammate/allies
+						// buildable info according to:
+						// Bug #0000463: Hud Crosshair Info - douched
+						//if( bWeEngy )
+						//{
+							C_FFBuildableObject *pBuildable = ( C_FFBuildableObject * )tr.m_pEnt;
+
+							iHealth = pBuildable->GetHealthPercent();
+								
+							if( pBuildable->Classify() == CLASS_DISPENSER )
+								iArmor = ( ( C_FFDispenser * )pBuildable )->GetAmmoPercent();
+							else if( pBuildable->Classify() == CLASS_SENTRYGUN )
+							{
+								iArmor = ( ( C_FFSentryGun * )pBuildable )->GetAmmoPercent();
+
+								if (iArmor >= 128) //VOOGRU: when the sg has no rockets it would show ammopercent+128.
+									iArmor -= 128;
+							}
+							else
+								iArmor = -1;
+						//}
+					}
+					else
+					{						
+						iHealth = pHitPlayer->GetHealthPercentage();
+						iArmor = pHitPlayer->GetArmorPercentage();
+					}
+				}
+				else
+				{
+					// We're looking at a non teammate/ally
+					// Only thing we care about is if we area medic or we're looking
+					// at a spy because otherwise we've done everything above
+	
+					if( !bBuildable )
+					{
+						// We're looking at a player
+
+						if( bWeMedic )
+						{
+							// Grab the real health/armor of this player
+							iHealth = pHitPlayer->GetHealthPercentage();
+							iArmor = pHitPlayer->GetArmorPercentage();
+						}
+							
+						if( bTheySpy )
+						{
+							// We're looking at an enemy/non-allied spy
+							
+							if( pHitPlayer->IsDisguised() )
+							{
+								// The spy is disguised so we do some special stuff
+								// to try and fake out the player - like show the class
+								// we're disguised as and try to steal a name from a
+								// a player on whatever team we are disguised as playing
+								// as whatever class we are disguised as. If that fails
+								// we use a name from the team we're disguised as. If that
+								// fails we use the real name.
+
+								// Get the disguised class
+								/*int iClassSlot*/ m_iClass = pHitPlayer->GetDisguisedClass();
+								Q_strcpy( szClass, Class_IntToResourceString( m_iClass ) );
+
+								// Get the disguised team
+								m_iTeam = pHitPlayer->GetDisguisedTeam();
+
+								// If this spy is disguised as our team we need to show his
+								// health/armor
+								if( m_iTeam == pPlayer->GetTeamNumber() )
+								{
+									iHealth = pHitPlayer->GetHealthPercentage();
+									iArmor = pHitPlayer->GetArmorPercentage();
+								}
+
+								// Or, if this spy is disguised as an ally of our team we
+								// need to show his health/armor
+								if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), m_iTeam ) == GR_TEAMMATE )
+								{
+									iHealth = pHitPlayer->GetHealthPercentage();
+									iArmor = pHitPlayer->GetArmorPercentage();
+								}
+
+								// TODO: Could be bugs with this spy tracking thing in that
+								// a player who's name is being used as a spy ID drops
+								// and that name is still being used because the spy hasn't
+								// changed disguises...
+
+								// Check to see if we've ID'd this spy before as the 
+								// disguise he's currently disguised as
+								if( pPlayer->m_hSpyTracking[ pHitPlayer->index ].SameGuy( m_iTeam, m_iClass ) )
+									Q_strcpy( szName, pPlayer->m_hSpyTracking[ pHitPlayer->index ].m_szName );
+								else
+								{
+									// Change name (if we can) to someone on the team iTeam
+									// that is playing the class this guy is disguised as
+
+									// Gonna generate an array of people on the team we're disguised as
+									// in case we have to randomly pick a name later
+									int iPlayers[ 128 ], iCount = 0;
+
+									bool bDone = false;
+									for( int i = 1; ( i < gpGlobals->maxClients ) && ( !bDone ); i++ )
+									{
+										// Skip this spy - kind of useless if it tells us
+										// our real name, eh? Using our real name is a last resort
+										if( i == pHitPlayer->index )
+											continue;
+
+										if( pGR->IsConnected( i ) )
+										{
+											// If the guy's on the team we're disguised as...
+											if( pGR->GetTeam( i ) == m_iTeam )
+											{
+												// Store off the player index since we found
+												// someone on the team we're disguised as
+												iPlayers[ iCount++ ] = i;
+
+												// If the guy's playing as the class we're disguised as...
+												if( pGR->GetClass( i ) == m_iClass )
+												{
+													// We're stealing this guys name
+													Q_strcpy( szName, pGR->GetPlayerName( i ) ) ;
+													bDone = true; // bail
+												}
+											}
+										}
+									}
+
+									// If no one was on the other team, add the real name
+									// to the array of possible choices
+									if( iCount == 0 )
+										iPlayers[ iCount++ ] = pHitPlayer->index;
+	
+									// We iterated around and found no one on the team we're disguised as
+									// playing as the class we're disguised as so just pick a guy from
+									// the team we're disguised as (or use real name if iCount was 0)
+									if( !bDone )
+									{
+										// So we got an array of indexes to players of whom we can steal
+										// their name, so randomly steal one
+										Q_strcpy( szName, pGR->GetPlayerName( iPlayers[ random->RandomInt( 0, iCount - 1 ) ] ) );
+									}
+
+									// Store off the spies name, class & team in case we ID him again
+									// and he hasn't changed disguise
+									pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, m_iClass );
+								}
+							}
+						}
+					}					
+				}
+
+				// Set up local crosshair info struct
+				pPlayer->m_hCrosshairInfo.Set( szName, m_iTeam, m_iClass );
+
+				// NOW! Remember team is 1 higher than the actual team
+				// If health/armor are -1 then we don't show it
+
+				// Convert to unicode & localize stuff
+
+				const char *pszOldName = szName;
+				int iBufSize = ( int )strlen( pszOldName ) * 2;
+				char *pszNewName = ( char * )_alloca( iBufSize );
+
+				UTIL_MakeSafeName( pszOldName, pszNewName, iBufSize );
+
+				wchar_t wszName[ 256 ];
+				vgui::localize()->ConvertANSIToUnicode( pszNewName, wszName, sizeof( wszName ) );
+
+				wchar_t wszClass[ 256 ];					
+				wchar_t *pszTemp = vgui::localize()->Find( szClass );
+				if( pszTemp )
+					wcscpy( wszClass, pszTemp );
+				else
+				{
+					wcscpy( wszClass, L"CLASS" );	// TODO: fix to show English version of class name :/
+				}
+
+				if( ( iHealth != -1 ) && ( iArmor != -1 ) )
+				{
+					char szHealth[ 5 ], szArmor[ 5 ];
+					Q_snprintf( szHealth, 5, "%i%%", iHealth );
+					Q_snprintf( szArmor, 5, "%i%%", iArmor );
+					
+					wchar_t wszHealth[ 10 ], wszArmor[ 10 ];
+
+                       vgui::localize()->ConvertANSIToUnicode( szHealth, wszHealth, sizeof( wszHealth ) );
+					vgui::localize()->ConvertANSIToUnicode( szArmor, wszArmor, sizeof( wszArmor ) );
+
+					_snwprintf( m_pText, 255, L"(%s) %s - H: %s, A: %s", wszClass, wszName, wszHealth, wszArmor );
+				}
+				else
+					_snwprintf( m_pText, 255, L"(%s) %s", wszClass, wszName );
+
+				if( hud_centerid.GetInt() )
+				{
+					// Get the screen width/height
+					int iScreenWide, iScreenTall;
+					surface()->GetScreenSize( iScreenWide, iScreenTall );
+
+					// "map" screen res to 640/480
+					float iXScale = 640.0f / iScreenWide;
+					float iYScale = 480.0f / iScreenTall;
+
+					int iWide = UTIL_ComputeStringWidth( m_hTextFont, m_pText );
+					int iTall = surface()->GetFontTall( m_hTextFont );
+
+					// Adjust values to get below the crosshair and offset correctly
+					m_flXOffset = ( float )( iScreenWide / 2 ) - ( iWide / 2 );
+					m_flYOffset = ( float )( iScreenTall / 2 ) + ( iTall / 2 ) + 75; // 75 to get it below the crosshair and not right on it
+
+					// Scale by "map" scale values
+					m_flXOffset *= iXScale;
+					m_flYOffset *= iYScale;
+
+					// Scale to screen co-ords
+					m_flXOffset = scheme()->GetProportionalScaledValue( m_flXOffset );
+					m_flYOffset = scheme()->GetProportionalScaledValue( m_flYOffset );
+				}
+
+				// Start drawing
+				m_flDrawTime = gpGlobals->curtime;
 			}
 			else
 			{
-				// Didn't hit anything!
+				// Hit something but not a player/dispenser/sentrygun
 				pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
 			}
+		}
+		else
+		{
+			// Didn't hit anything!
+			pPlayer->m_hCrosshairInfo.Set( "", 0, 0 );
 		}
 	}
 }

@@ -284,21 +284,29 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 
 				// If a spy who's disguised as our team (or an ally team) touches us ignore
 				if( pPlayer->IsDisguised() && ( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) == GR_TEAMMATE ) )
+				{
+					// Send him the custom message
+					// Bug #0001176: dispenser text only showing up for enemy team
+					if( Q_strlen( m_szCustomText ) > 1 )
+						ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
+
 					return;
+				}
 
 				// Bug #0000551: Dispenser treats teammates as enemies if mp_friendlyfire is enabled
 				//if( g_pGameRules->FPlayerCanTakeDamage( pOwner, pPlayer ) )				
 				if( FFGameRules()->PlayerRelationship( pOwner, pPlayer ) == GR_NOTTEAMMATE )
 				{
+					// Touched by non-teammate/non-ally, send custom message
+					if( Q_strlen( m_szCustomText ) > 1 )
+						ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
+
 					// Mirv: Don't do this while sabotaged
 					if (!IsSabotaged())
 					{
 						// Message owner (wiki says spies don't trigger the "enemies are using..." message)
 						if( !pPlayer->IsDisguised() )
 							ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
-
-						if( Q_strlen( m_szCustomText ) > 1 )
-							ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
 
 						// Fire an event.
 						IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_enemyused");						
@@ -309,6 +317,13 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 							gameeventmanager->FireEvent(pEvent, true);
 						}
 					}
+				}
+				else
+				{
+					// Touched by teammate/ally, send him the custom message
+					// Bug #0001176: dispenser text only showing up for enemy team
+					if( Q_strlen( m_szCustomText ) > 1 )
+						ClientPrint( pPlayer, HUD_PRINTCENTER, m_szCustomText );
 				}
 			}
 		}
