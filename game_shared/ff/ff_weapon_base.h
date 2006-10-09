@@ -213,6 +213,10 @@ public:
 	// Modified to take into account different ammo amounts being fired
 	virtual void		ItemPostFrame();
 
+	// Overload drop function for our weapons. Makes it so they CANT be touched EVER
+	virtual void		Drop( const Vector& vecVelocity );
+			void		DropThink( void );
+	
 	// Should override the fov
 	virtual float		GetFOV() { return -1; }
 

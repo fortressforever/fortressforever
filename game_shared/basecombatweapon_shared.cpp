@@ -2198,6 +2198,33 @@ void CGameWeaponManager::Spawn()
 #endif
 }
 
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Remove this weapon, now!
+//-----------------------------------------------------------------------------
+void CBaseCombatWeapon::ForceRemove( void )
+{
+	SetRemoveable( true );
+	AddSpawnFlags( SF_NORESPAWN );
+	StopAnimation();
+	StopFollowingEntity();
+	SetMoveType( MOVETYPE_FLYGRAVITY );
+	SetGravity( 1.0 );
+	m_iState = WEAPON_NOT_CARRIED;
+	RemoveEffects( EF_NODRAW );
+	FallInit();
+	SetGroundEntity( NULL );
+	AddEFlags( EFL_NO_WEAPON_PICKUP );
+	SetThink( NULL );
+	SetTouch( NULL );
+	SetOwnerEntity( NULL );
+	SetOwner( NULL );
+
+	// Die!
+	UTIL_Remove( this );
+}
+#endif
+
 //---------------------------------------------------------
 // Count of all the weapons in the world of my type and
 // see if we have a surplus. If there is a surplus, try
