@@ -48,7 +48,7 @@ static int g_iBeam, g_iHalo;
 #endif
 
 #ifdef CLIENT_DLL
-	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.1");
+	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.01");
 #endif
 
 //=============================================================================
