@@ -179,6 +179,7 @@ bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 bool CFFWeaponDeployDetpack::CanDeploy( void )
 {
+	/*
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
@@ -205,11 +206,24 @@ bool CFFWeaponDeployDetpack::CanDeploy( void )
 #endif
 		return false;
 	}
+	*/
 
 	return BaseClass::CanDeploy();
 }
 
 bool CFFWeaponDeployDetpack::CanBeSelected( void )
 {
-	return true;	
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( !pPlayer )
+		return false;
+
+	if( pPlayer->GetDetpack() )
+		return false;
+	else if( pPlayer->IsBuilding() )
+		return false;
+	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
+		return false;
+
+	return BaseClass::CanBeSelected();
 }

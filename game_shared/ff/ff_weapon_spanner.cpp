@@ -126,24 +126,15 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		if( g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )		
 		{
 			// See how much the player needs...
-			int iNeedsArmor = pHitPlayer->NeedsArmor();
-
-			if (iNeedsArmor > 0) 
+			int iArmorGiven = min( max( pHitPlayer->NeedsArmor(), 50 ), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
+			if( iArmorGiven > 0 )
 			{
-				// If we've got 10 cells...
-				if (pPlayer->GetAmmoCount(AMMO_CELLS) >= 10) 
-				{
-					int armour_given = min(max(iNeedsArmor, 50), 5 * pPlayer->GetAmmoCount(AMMO_CELLS));
-
-					// If we give stuff, play a special sound. Pun intended.
-					if( armour_given > 0 )
-						WeaponSoundLocal( SPECIAL3 );
+				WeaponSoundLocal( SPECIAL3 );
 
 #ifdef GAME_DLL
-					pHitPlayer->AddArmor(armour_given);
-					pPlayer->RemoveAmmo(armour_given / 5, AMMO_CELLS);
+				pHitPlayer->AddArmor( iArmorGiven );
+				pPlayer->RemoveAmmo( iArmorGiven / 5, AMMO_CELLS );
 #endif
-				}				
 			}
 
 			// Don't want to call the baseclass hit func cause

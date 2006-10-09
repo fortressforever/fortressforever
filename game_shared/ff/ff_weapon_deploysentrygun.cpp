@@ -209,6 +209,7 @@ bool CFFWeaponDeploySentryGun::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 bool CFFWeaponDeploySentryGun::CanDeploy( void )
 {
+	/*
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
@@ -235,13 +236,26 @@ bool CFFWeaponDeploySentryGun::CanDeploy( void )
 #endif
 		return false;
 	}
+	*/
 
 	return BaseClass::CanDeploy();
 }
 
 bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 {
-	return true;
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( !pPlayer )
+		return false;
+
+	if( pPlayer->GetSentryGun() )
+		return false;
+	else if( pPlayer->IsBuilding() )
+		return false;
+	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 )
+		return false;
+
+	return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL
