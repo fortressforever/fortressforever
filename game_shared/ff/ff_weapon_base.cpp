@@ -118,6 +118,7 @@ END_PREDICTION_DATA()
 
 #ifdef GAME_DLL
 	BEGIN_DATADESC(CFFWeaponBase)
+		DEFINE_ENTITYFUNC( DropThink ),
 	END_DATADESC()
 #endif
 
@@ -277,6 +278,69 @@ const CFFWeaponInfo &CFFWeaponBase::GetFFWpnData() const
 	#endif
 
 	return *pFFInfo;
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Drop the weapon
+//----------------------------------------------------------------------------
+void CFFWeaponBase::Drop( const Vector& vecVelocity )
+{
+#if !defined( CLIENT_DLL )
+
+	// Once somebody drops a gun, it's fair game for removal when/if
+	// a game_weapon_manager does a cleanup on surplus weapons in the
+	// world.
+	SetRemoveable( true );
+
+	//If it was dropped then there's no need to respawn it.
+	AddSpawnFlags( SF_NORESPAWN );
+
+	StopAnimation();
+	StopFollowingEntity( );
+	SetMoveType( MOVETYPE_FLYGRAVITY );
+	// clear follow stuff, setup for collision
+	SetGravity(1.0);
+	m_iState = WEAPON_NOT_CARRIED;
+	RemoveEffects( EF_NODRAW );
+	FallInit();
+	SetGroundEntity( NULL );
+	AddEFlags( EFL_NO_WEAPON_PICKUP );
+	SetThink( &CFFWeaponBase::DropThink );
+	SetTouch( NULL );
+
+	if( hl2_episodic.GetBool() )
+	{
+		RemoveSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP );
+	}
+
+	IPhysicsObject *pObj = VPhysicsGetObject();
+	if ( pObj != NULL )
+	{
+		AngularImpulse	angImp( 200, 200, 200 );
+		pObj->AddVelocity( &vecVelocity, &angImp );
+	}
+	else
+	{
+		SetAbsVelocity( vecVelocity );
+	}
+
+	SetNextThink( gpGlobals->curtime + 1.0f );
+	SetOwnerEntity( NULL );
+	SetOwner( NULL );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove after 30 seconds
+//-----------------------------------------------------------------------------
+void CFFWeaponBase::DropThink( void )
+{
+#if !defined( CLIENT_DLL )
+	SetTouch( NULL );
+
+	SetThink( &CBaseEntity::SUB_Remove );
+	SetNextThink( gpGlobals->curtime + 30.0f );
+#endif
 }
 
 //-----------------------------------------------------------------------------

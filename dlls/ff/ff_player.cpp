@@ -1010,10 +1010,8 @@ void CFFPlayer::PreForceSpawn( void )
 		{
 			if( m_hMyWeapons[ i ] )
 			{
-				m_hMyWeapons[ i ]->SetTouch( NULL );
-				m_hMyWeapons[ i ]->Drop( Vector( 0, 0, 0 ) );
-				Weapon_Detach( m_hMyWeapons[ i ] );
-				UTIL_Remove( m_hMyWeapons[ i ] );
+				m_hMyWeapons[ i ]->ForceRemove();
+				m_hMyWeapons.Set( i, NULL );
 			}
 		}
 

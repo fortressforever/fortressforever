@@ -345,6 +345,8 @@ public:
 	virtual void			Delete( void );
 	void					DestroyItem( void );
 	virtual void			Kill( void );
+	// Just die & get deleted already you stupid weapon
+	virtual void			ForceRemove( void );
 
 	virtual int				CapabilitiesGet( void ) { return 0; }
 	virtual	int				ObjectCaps( void );

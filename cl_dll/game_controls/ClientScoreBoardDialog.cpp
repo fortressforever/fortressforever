@@ -378,7 +378,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 
 	int iSelectedRow = -1;
 
-	for( int i = 1; i < gpGlobals->maxClients; i++ )
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		if( pGR->IsConnected( i ) )
 		{
@@ -743,7 +743,7 @@ void CClientScoreBoardDialog::FillScoreBoard( void )
 
 		int iPlayerCount = 0, iLatency = 0;
 
-		for( int j = 1; j < gpGlobals->maxClients; j++ )
+		for( int j = 1; j <= gpGlobals->maxClients; j++ )
 		{
 			if( pGR->IsConnected( j ) )
 			{
