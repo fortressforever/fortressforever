@@ -644,7 +644,7 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 
 		// Play the pickup sound for 1st-person observers
 		CRecipientFilter filter;
-		for ( int i=0; i<gpGlobals->maxClients; ++i )
+		for ( int i=0; i<=gpGlobals->maxClients; ++i )
 		{
 			CBasePlayer *player = UTIL_PlayerByIndex(i);
 			if ( player && !player->IsAlive() && player->GetObserverMode() == OBS_MODE_IN_EYE )
