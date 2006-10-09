@@ -207,6 +207,7 @@ bool CFFWeaponDeployDispenser::Holster(CBaseCombatWeapon *pSwitchingTo)
 
 bool CFFWeaponDeployDispenser::CanDeploy( void )
 {
+	/*
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
@@ -233,13 +234,26 @@ bool CFFWeaponDeployDispenser::CanDeploy( void )
 #endif
 		return false;
 	}
+	*/
 
 	return BaseClass::CanDeploy();
 }
 
 bool CFFWeaponDeployDispenser::CanBeSelected( void )
 {
-	return true;
+	CFFPlayer *pPlayer = GetPlayerOwner();
+
+	if( !pPlayer )
+		return false;
+
+	if( pPlayer->GetDispenser() )
+		return false;
+	else if( pPlayer->IsBuilding() )
+		return false;
+	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
+		return false;
+
+	return BaseClass::CanBeSelected();
 }
 
 #ifdef GAME_DLL

@@ -5878,7 +5878,7 @@ int CFFPlayer::AddArmor( int iAmount )
 	m_flArmorType = m_flBaseArmorType;
 
 	iAmount = min( iAmount, m_iMaxArmor - m_iArmor );
-	if (iAmount < 1)
+	if (iAmount <= 0)
 		return 0;
 
 	m_iArmor += iAmount;
