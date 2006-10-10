@@ -1005,6 +1005,8 @@ void CFFPlayer::PreForceSpawn( void )
 		if( GetActiveFFWeapon() )
 			GetActiveFFWeapon()->Holster();
 
+		SetActiveWeapon( NULL );
+
 		// Remove all weapons
 		for( int i = 0; i < MAX_WEAPONS; i++ )
 		{

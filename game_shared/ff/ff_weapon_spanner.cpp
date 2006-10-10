@@ -91,6 +91,15 @@ bool CFFWeaponSpanner::CanBeSelected()
 	return true;
 }
 
+// This is temp for testing
+#ifdef _DEBUG
+#ifdef GAME_DLL
+#define SCWARNING() Warning( "[Spanner] [S] " );
+#else
+#define SCWARNING() Warning( "[Spanner] [C] " );
+#endif
+#endif 
+
 //----------------------------------------------------------------------------
 // Purpose: Implement impact function
 //----------------------------------------------------------------------------
@@ -109,6 +118,23 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 	if (!pHitEntity) 
 		return;
 
+#ifdef _DEBUG
+	// Try to figure out why this isn't working!
+	CFFPlayer *FFLocalPlayer = GetPlayerOwner();
+	CFFPlayer *FFHitPlayer = ToFFPlayer( traceHit.m_pEnt );
+
+	if( FFLocalPlayer && FFHitPlayer )
+	{
+		SCWARNING();
+		Warning( "%s - health: %i (%i%%), armor: %i (%i%%)\n", FFHitPlayer->GetPlayerName(), FFHitPlayer->GetHealth(), FFHitPlayer->GetHealthPercentage(), FFHitPlayer->GetArmor(), FFHitPlayer->GetArmorPercentage() );
+	}
+	else
+	{
+		SCWARNING();
+		Warning( "FFLocalPlayer or FFHitPlayer NULL\n" );
+	}
+#endif
+
 	// Hit a player
 	if (pHitEntity->IsPlayer()) 
 	{
@@ -126,7 +152,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		if( g_pGameRules->PlayerRelationship( pPlayer, pHitPlayer ) == GR_TEAMMATE )		
 		{
 			// See how much the player needs...
-			int iArmorGiven = min( max( pHitPlayer->NeedsArmor(), 50 ), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
+			int iArmorGiven = min( min( pHitPlayer->NeedsArmor(), 50 ), 5 * pPlayer->GetAmmoCount( AMMO_CELLS ) );
 			if( iArmorGiven > 0 )
 			{
 				WeaponSoundLocal( SPECIAL3 );

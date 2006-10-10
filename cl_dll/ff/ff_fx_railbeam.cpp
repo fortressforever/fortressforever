@@ -134,6 +134,14 @@ void FX_RailBeam(int entindex, const Vector &target, float scale)
 	Vector vecDirection;
 	AngleVectors(angDirection, &vecDirection);
 
+	// Check that this isn't going through a wall
+	trace_t trWall;
+	UTIL_TraceLine( pPlayer->GetAbsOrigin(), m_vecStartPosition, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &trWall );
+
+	// Yes, going through a wall
+	if( trWall.fraction < 1.0f )
+		return;
+
 	trace_t tr;
 	UTIL_TraceLine(m_vecStartPosition, m_vecStartPosition + (vecDirection * MAX_TRACE_LENGTH), MASK_SHOT, NULL, COLLISION_GROUP_NONE, &tr);
 

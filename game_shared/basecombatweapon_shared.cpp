@@ -2208,11 +2208,11 @@ void CBaseCombatWeapon::ForceRemove( void )
 	AddSpawnFlags( SF_NORESPAWN );
 	StopAnimation();
 	StopFollowingEntity();
-	SetMoveType( MOVETYPE_FLYGRAVITY );
+	SetMoveType( MOVETYPE_NONE );
 	SetGravity( 1.0 );
 	m_iState = WEAPON_NOT_CARRIED;
 	RemoveEffects( EF_NODRAW );
-	FallInit();
+	VPhysicsDestroyObject();
 	SetGroundEntity( NULL );
 	AddEFlags( EFL_NO_WEAPON_PICKUP );
 	SetThink( NULL );
