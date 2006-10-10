@@ -141,6 +141,8 @@ void CFFWeaponFlamethrower::Fire()
 	if (!pPlayer->GetGroundEntity())
 		pPlayer->ApplyAbsVelocityImpulse(vecForward * -12.0f);
 
+	pPlayer->DoMuzzleFlash();
+
 #ifdef GAME_DLL
 	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
 
