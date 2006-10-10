@@ -64,7 +64,7 @@ inline void MapClassToGlyph( int iClass, char& cGlyph )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Displays current weapon & ammo
+// Purpose: Displays current disguised class
 //-----------------------------------------------------------------------------
 class CHudSpyDisguise : public CHudElement, public vgui::FFPanel
 {
@@ -110,6 +110,9 @@ private:
 
 DECLARE_HUDELEMENT( CHudSpyDisguise );
 
+//-----------------------------------------------------------------------------
+// Purpose: Done each map load
+//-----------------------------------------------------------------------------
 void CHudSpyDisguise::VidInit( void )
 {
 	m_pHudSpyDisguise = new CHudTexture;
@@ -118,6 +121,9 @@ void CHudSpyDisguise::VidInit( void )
 	m_pHudSpyDisguise->cCharacterInFont = '_';
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Draw stuff!
+//-----------------------------------------------------------------------------
 void CHudSpyDisguise::Paint( void )
 {
 	if( !engine->IsInGame() )

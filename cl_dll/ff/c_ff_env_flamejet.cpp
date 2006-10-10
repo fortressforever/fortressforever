@@ -211,13 +211,14 @@ void C_FFFlameJet::Update(float fTimeDelta)
 		pWeapon->GetAttachment(iAttachment, vecStart, angAngles);
 	}
 
-	Vector vecForward;
-	AngleVectors( angAngles, &vecForward );
-	VectorNormalizeFast( vecForward );
+	// Removing the forward thing as when you're up against a wall you see no flames now
+	//Vector vecForward;
+	//AngleVectors( angAngles, &vecForward );
+	//VectorNormalizeFast( vecForward );
 
 	// Check that this isn't going through a wall
 	trace_t tr;
-	UTIL_TraceLine(pOwner->GetLegacyAbsOrigin(), vecStart + ( vecForward * 4.0f ), MASK_SOLID_BRUSHONLY | MASK_WATER, pOwner, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(pOwner->GetLegacyAbsOrigin(), vecStart /*+ ( vecForward * 4.0f )*/, MASK_SOLID_BRUSHONLY | MASK_WATER, pOwner, COLLISION_GROUP_NONE, &tr);
 
 	// Yes, going through a wall
 	if (tr.fraction < 1.0f)

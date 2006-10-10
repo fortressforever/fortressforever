@@ -223,7 +223,7 @@ CON_COMMAND(bot_disguisez, "trigger a disguise")
 	}
 }
 
-CON_COMMAND( bot_dmggun, "Makes a bot attach your sg" )
+CON_COMMAND( bot_dmggun, "Makes a bot attack your sg" )
 {
 	for( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -292,6 +292,18 @@ CON_COMMAND(bot_engyme, "have a bot do engyme")
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
 			pPlayer->Command_EngyMe();
+		}
+	}
+}
+
+CON_COMMAND( bot_status, "Make bot show health / armor" )
+{
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
+		if( pPlayer && ( ( pPlayer->GetFlags() & FL_FAKECLIENT) || pPlayer->IsBot() ) )
+		{
+			Warning( "[Bot %s] Health: %i (%i%%) Armor: %i (%i%%)\n", pPlayer->GetPlayerName(), pPlayer->GetHealth(), pPlayer->GetHealthPercentage(), pPlayer->GetArmor(), pPlayer->GetArmorPercentage() );
 		}
 	}
 }

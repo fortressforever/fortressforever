@@ -69,6 +69,7 @@ public:
 	void VidInit( void );
 	void OnTick( void );
 	void Paint( void );
+	virtual	bool	ShouldDraw( void );
 
 	void Reset( void )
 	{ 
@@ -101,11 +102,17 @@ private:
 
 DECLARE_HUDELEMENT( CHudCrosshairInfo );
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CHudCrosshairInfo::Init( void )
 {
 	m_pText[ 0 ] = '\0';
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Reset on map/vgui load
+//-----------------------------------------------------------------------------
 void CHudCrosshairInfo::VidInit( void )
 {	
 	SetPaintBackgroundEnabled( false );
@@ -121,6 +128,9 @@ void CHudCrosshairInfo::VidInit( void )
 	SetTall( scheme()->GetProportionalScaledValue( 480 ) );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Trace out and touch someone
+//-----------------------------------------------------------------------------
 void CHudCrosshairInfo::OnTick( void )
 {
 	if( !engine->IsInGame() )
@@ -487,6 +497,24 @@ void CHudCrosshairInfo::OnTick( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: See if we should draw stuff or not
+//-----------------------------------------------------------------------------
+bool CHudCrosshairInfo::ShouldDraw( void )
+{
+	if( !engine->IsInGame() )
+		return false;
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return false;
+
+	return pPlayer->IsAlive();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw stuff
+//-----------------------------------------------------------------------------
 void CHudCrosshairInfo::Paint( void )
 {
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
