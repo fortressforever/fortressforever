@@ -31,6 +31,15 @@ typedef enum eomnibot_error
 	BOT_NUM_ERRORS
 } omnibot_error;
 
+typedef enum eMessageType
+{
+	kNormal,
+	kInfo,
+	kWarning,
+	kError,
+	kDebug
+} MessageType;
+
 // typedef: GameEntity
 //		Represents an entity to the bot for every game.
 typedef obvoidp GameEntity;
@@ -104,20 +113,20 @@ inline int MAKE_KEY(char _1, char _2, char _3, char _4)
 //		BOT_DEBUG_FPINFO - Output first person info.
 typedef enum eBotDebugFlag
 {
-	BOT_DEBUG_LOG		= (1<<0),
-	BOT_DEBUG_MOVEVEC	= (1<<1),
-	BOT_DEBUG_AIMPOINT	= (1<<2),
-	BOT_DEBUG_GOALS		= (1<<3),
-	BOT_DEBUG_SENSORY	= (1<<4),
-	BOT_DEBUG_BRAIN		= (1<<5),
-	BOT_DEBUG_WEAPON	= (1<<6),
-	BOT_DEBUG_SCRIPT	= (1<<7),
-	BOT_DEBUG_EVENTS	= (1<<8),
-	BOT_DEBUG_FPINFO	= (1<<9),
-	BOT_DEBUG_PLANNER	= (1<<10),
+	BOT_DEBUG_LOG = 0,
+	BOT_DEBUG_MOVEVEC,
+	BOT_DEBUG_AIMPOINT,
+	BOT_DEBUG_GOALS,
+	BOT_DEBUG_SENSORY,
+	BOT_DEBUG_BRAIN,
+	BOT_DEBUG_WEAPON,
+	BOT_DEBUG_SCRIPT,
+	BOT_DEBUG_EVENTS,
+	BOT_DEBUG_FPINFO,
+	BOT_DEBUG_PLANNER,
 
 	// THIS MUST STAY LAST
-	NUM_BOT_DEBUG_FLAGS = (1<<16)
+	NUM_BOT_DEBUG_FLAGS = 16,
 } BotDebugFlag;
 
 // enumerations: Helpers

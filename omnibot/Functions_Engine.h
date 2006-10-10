@@ -20,6 +20,9 @@
 //		Used to store information about an entity
 typedef struct 
 {
+	// BitFlag32: m_Team
+	//		If this != 0, this entity should only be visible to certain teams.
+	BitFlag32	m_Team;
 	// int: m_EntityClass
 	//		The specific classification of this entity
 	int			m_EntityClass;	
