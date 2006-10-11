@@ -677,6 +677,11 @@ public:
 
 	virtual void DoExplosionDamage();
 
+private:
+	bool IsTargetInAimingEllipse( const Vector& vecTarget ) const;
+	bool IsTargetVisible( CBaseEntity *pTarget ) const;
+	bool IsTargetClassTValid( Class_T cT ) const;
+
 public:
 	CBaseEntity *GetEnemy( void	) { return m_hEnemy; }
 	void SetEnemy( CBaseEntity *hEnemy ) { m_hEnemy = hEnemy; }

@@ -372,8 +372,8 @@ void CFFSentryGun::OnActiveThink( void )
 		return;
 	}
 
-	// Get our shot positions
-	Vector vecMid = MuzzlePosition();
+	// Get our shot positions - lets try the center of the SG
+	Vector vecMid = WorldSpaceCenter(); /* MuzzlePosition();*/
 	Vector vecMidEnemy = GetEnemy()->BodyTarget( vecMid, false ); // false: not 'noisey', so no random z added on
 
 	// Update our goal directions
@@ -403,23 +403,29 @@ void CFFSentryGun::OnActiveThink( void )
 	// Did we fire
 	bool bFired = false;
 
-	// Fire shells
-	if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) && bCanFire ) 
+	if( bCanFire )
 	{
-		Shoot( MuzzlePosition(), vecAiming, true );
+		// Fire shells
+		if( ( gpGlobals->curtime > m_flNextShell ) && ( m_iShells > 0 ) ) 
+		{
+			Shoot( MuzzlePosition(), vecAiming, true );
 
-		m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
-		bFired = true;
-	}
+			m_flNextShell = gpGlobals->curtime + m_flShellCycleTime;
+			bFired = true;
+		}
 
-	// Fire rockets
-	if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) && bCanFire && ( GetLevel() >= 3 ) )
-	{
-		ShootRockets( RocketPosition(), vecAiming, true );
+		// Fire rockets
+		if( GetLevel() >= 3 )
+		{
+			if( ( gpGlobals->curtime > m_flNextRocket ) && ( m_iRockets > 0 ) )
+			{
+				ShootRockets( RocketPosition(), vecAiming, true );
 
-		m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
-		bFired = true;
-	}
+				m_flNextRocket = gpGlobals->curtime + m_flRocketCycleTime;
+				bFired = true;
+			}
+		}		
+	}	
 
 	if( bFired ) 
 	{
@@ -488,14 +494,18 @@ void CFFSentryGun::HackFindEnemy( void )
 	{
 		CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex(i) );
 
+		/*
+		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() )
+			continue;
+			*/
+		//* // Disabled temporarily
 		// Mirv: If we are maliciously sabotaged, then shoot teammates instead.
 		int iTypeToTarget = IsShootingTeammates() ? GR_TEAMMATE : GR_NOTTEAMMATE;
 
 		// Changed a line for
 		// Bug #0000526: Sentry gun stays locked onto teammates if mp_friendlyfire is changed
 		// Don't bother
-		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || /*pPlayer == pOwner ||*/
-			( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
+		if( !pPlayer || !pPlayer->IsPlayer() || !pPlayer->IsAlive() || pPlayer->IsObserver() || ( g_pGameRules->PlayerRelationship(pOwner, pPlayer) != iTypeToTarget ) )
 			continue;
 
 		// Spy check - but don't let valid radio tagged targets sneak by!
@@ -510,9 +520,23 @@ void CFFSentryGun::HackFindEnemy( void )
 			if( FFGameRules()->IsTeam1AlliedToTeam2( pOwner->GetTeamNumber(), pPlayer->GetDisguisedTeam() ) && !IsPlayerRadioTagTarget( pPlayer, pOwner->GetTeamNumber() ) )
 				continue;
 		}
+		//*/
 
-		// Added stuff for Bug #0000669: SG can currently lock on to anybody at any range
+		// IsTargetVisible checks for NULL so these are all safe...
 
+		if( IsTargetVisible( pPlayer ) )
+			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+
+		CFFSentryGun *pSentryGun = pPlayer->GetSentryGun();
+		if( IsTargetVisible( pSentryGun ) )
+			target = SG_IsBetterTarget( target, pSentryGun, ( pSentryGun->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+
+		CFFDispenser *pDispenser = pPlayer->GetDispenser();
+		if( IsTargetVisible( pDispenser ) )
+			target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
+
+
+		/*
 		// Check a couple more locations to check as technically they could be visible whereas others wouldn't be
 		if( ( FVisible( pPlayer->GetAbsOrigin() ) || FVisible( pPlayer->GetLegacyAbsOrigin() ) || FVisible( pPlayer->EyePosition() ) ) && ( vecOrigin.DistTo( pPlayer->GetAbsOrigin() ) <= sg_range.GetFloat() ) ) 
 			target = SG_IsBetterTarget( target, pPlayer, ( pPlayer->GetAbsOrigin() - vecOrigin ).LengthSqr() );
@@ -535,6 +559,7 @@ void CFFSentryGun::HackFindEnemy( void )
 			if( ( FVisible( pDispenser->GetAbsOrigin() ) || FVisible( pDispenser->EyePosition() ) ) && ( vecOrigin.DistTo( pDispenser->GetAbsOrigin() ) <= sg_range.GetFloat() ) )
 				target = SG_IsBetterTarget( target, pDispenser, ( pDispenser->GetAbsOrigin() - vecOrigin ).LengthSqr() );
 		}
+		*/
 	}
 
 	SetEnemy( target );
@@ -553,6 +578,9 @@ float CFFSentryGun::MaxYawSpeed( void )
 	return 1.0f;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Returns the speed at which the turret can pitch to a target
+//-----------------------------------------------------------------------------
 float CFFSentryGun::MaxPitchSpeed( void ) 
 {
 	VPROF_BUDGET( "CFFSentryGun::MaxPitchSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
@@ -561,6 +589,62 @@ float CFFSentryGun::MaxPitchSpeed( void )
 		return sg_pitchspeed.GetFloat();
 
 	return 1.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if a target is visible
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::IsTargetVisible( CBaseEntity *pTarget ) const
+{
+	if( !pTarget )
+		return false;
+
+	// Get our aiming position
+	Vector vecOrigin = WorldSpaceCenter();
+
+	// Get a position on the target
+	Vector vecTarget = pTarget->BodyTarget( vecOrigin, false );
+
+	// Check for out of range
+	if( vecOrigin.DistTo( vecTarget ) > sg_range.GetFloat() )
+		return false;
+
+	// Can we trace to the target?
+	trace_t tr;
+	UTIL_TraceLine( vecOrigin, vecTarget, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &tr );
+
+	// What did our trace hit?
+	if( tr.startsolid || ( tr.fraction == 1.0f ) || !tr.m_pEnt || FF_TraceHitWorld( &tr ) )
+		return false;
+
+	// Is the trace hit entity a valid sg target
+	if( !IsTargetClassTValid( tr.m_pEnt->Classify() ) )
+		return false;
+	
+	// Finally, is that target even in our aim ellipse?
+	return IsTargetInAimingEllipse( vecTarget );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: See if a target is in our aim ellipse
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::IsTargetInAimingEllipse( const Vector& vecTarget ) const
+{
+	// The SG can't see that well behind it so we plug
+	// in the target origin to a math equation to see
+	// if the target origin is inside our "aim ellipse"
+
+	// TODO:
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: SG can target these classes
+//-----------------------------------------------------------------------------
+bool CFFSentryGun::IsTargetClassTValid( Class_T cT ) const
+{
+	return ( ( cT == CLASS_PLAYER ) || ( cT == CLASS_SENTRYGUN ) || ( cT == CLASS_DISPENSER ) );
 }
 
 //-----------------------------------------------------------------------------
