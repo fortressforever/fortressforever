@@ -983,6 +983,8 @@ void CFFPlayer::PreForceSpawn( void )
 		RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 		ClearUseEntity();
 
+		Extinguish();
+
 		// This client isn't going to be thinking for a while, so reset the sound until they respawn
 		CSound *pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
 		if( pSound )
