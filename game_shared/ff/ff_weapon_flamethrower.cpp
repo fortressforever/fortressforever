@@ -141,10 +141,16 @@ void CFFWeaponFlamethrower::Fire()
 	if (!pPlayer->GetGroundEntity())
 		pPlayer->ApplyAbsVelocityImpulse(vecForward * -12.0f);
 
-	pPlayer->DoMuzzleFlash();
-
-#ifdef GAME_DLL
 	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
+
+	/*
+	IRecipientFilter& filter, float delay,
+	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay
+	*/
+	CBroadcastRecipientFilter filter;
+	te->DynamicLight( filter, 0.0f, &vecShootPos, 255, 255, 255, 3, 256, 0.1f, gpGlobals->curtime + 0.05f );
+
+#ifdef GAME_DLL	
 
 	// If underwater then just innocent bubbles
 	if (pPlayer->GetWaterLevel() == 3)
