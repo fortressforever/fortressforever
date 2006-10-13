@@ -143,29 +143,46 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 #ifdef CLIENT_DLL 
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
-		if( ( pPlayer->GetDetpack() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 ) )
-			pPlayer->SwapToWeapon( FF_WEAPON_CROWBAR );
-
-		// If we haven't built a detpack...
-		if( !pPlayer->GetDetpack() )
+		if( !pPlayer->IsBuilding() )
 		{
-			CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK );
-
-			if( m_pBuildable )
+			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DETPACK );
+			if( !m_pBuildable )
 			{
-				// Update current fake detpack
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
-				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 			else
 			{
-				// Create fake detpack
-				m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 			}
+			m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 		}
 		else
 			Cleanup();
+
+		//if( ( pPlayer->GetDetpack() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 ) )
+		//	pPlayer->SwapToWeapon( FF_WEAPON_GRENADELAUNCHER );
+
+		//// If we haven't built a detpack...
+		//if( !pPlayer->GetDetpack() )
+		//{
+		//	CFFBuildableInfo hBuildInfo(pPlayer, FF_BUILD_DETPACK );
+
+		//	if( m_pBuildable )
+		//	{
+		//		// Update current fake detpack
+		//		m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+		//		m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
+		//		m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+		//	}
+		//	else
+		//	{
+		//		// Create fake detpack
+		//		m_pBuildable = CFFDetpack::CreateClientSideDetpack( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+		//	}
+		//}
+		//else
+		//	Cleanup();
 #endif
 	}
 }
@@ -218,10 +235,10 @@ bool CFFWeaponDeployDetpack::CanBeSelected( void )
 	if( !pPlayer )
 		return false;
 
-	if( pPlayer->GetDetpack() )
+	/*if( pPlayer->GetDetpack() )
 		return false;
 	else if( pPlayer->IsBuilding() )
-		return false;
+		return false;*/
 	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
 		return false;
 

@@ -1633,7 +1633,10 @@ void C_FFPlayer::SwapToWeapon(FFWeaponID weaponid)
 	{
 		weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
 		if (weap && weap->GetWeaponID() == weaponid)
+		{
 			::input->MakeWeaponSelection(weap);
+			break;
+		}
 	}	
 }
 

@@ -96,6 +96,34 @@ CFFBuildableInfo::CFFBuildableInfo( CFFPlayer *pPlayer, int iBuildObject )
 	m_vecBuildGroundOrigin = m_vecBuildAirOrigin;
 	m_angBuildGroundAngles = m_angBuildAirAngles;
 
+	switch( iBuildObject )
+	{
+	case FF_BUILD_DISPENSER:
+		if(pPlayer->GetDispenser())
+			m_BuildResult = BUILD_ALREADYBUILT;
+		else if(pPlayer->GetAmmoCount( AMMO_CELLS ) < 100)
+			m_BuildResult = BUILD_NEEDAMMO;
+		else
+			break;
+		return;
+	case FF_BUILD_SENTRYGUN: 
+		if(pPlayer->GetSentryGun())
+			m_BuildResult = BUILD_ALREADYBUILT;
+		else if(pPlayer->GetAmmoCount( AMMO_CELLS ) < 130)
+			m_BuildResult = BUILD_NEEDAMMO;
+		else
+			break;
+		return;		
+	case FF_BUILD_DETPACK: 
+		if(pPlayer->GetDetpack())
+			m_BuildResult = BUILD_ALREADYBUILT;
+		else if(pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1)
+			m_BuildResult = BUILD_NEEDAMMO;
+		else
+			break;
+		return;
+	}
+
 	// For the sg, because its so large, the hull (when doing the trace later) will stick
 	// into walls if we are near them [like having our back towards them] so we need to
 	// move the build origin further forward to remedy this
@@ -408,7 +436,9 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 			// Trace out in front of us from build origin (but raised a little as building
 			// on steep ramps will auto rotate us cause the forward trace is hitting the ramp)
 			trace_t tr_fwd;
-			UTIL_TraceLine( m_vecBuildAirOrigin, m_vecBuildAirOrigin + ( m_vecPlayerForward * 96.0f ) + Vector( 0, 0, 32.0f ), CONTENTS_SOLID, NULL, COLLISION_GROUP_NONE, &tr_fwd );
+			UTIL_TraceLine( m_vecBuildAirOrigin, 
+				m_vecBuildAirOrigin + ( m_vecPlayerForward * 96.0f ) + Vector( 0, 0, 32.0f ), 
+				MASK_SHOT, NULL, COLLISION_GROUP_NONE, &tr_fwd );
 
 			// If we hit a wall then we want to face towards us instead
 			if( tr_fwd.DidHit() ) 

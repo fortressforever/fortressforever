@@ -166,34 +166,51 @@ void CFFWeaponDeployDispenser::WeaponIdle( void )
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
 		// If we've built and we're not building pop out wrench
-		if( ( pPlayer->GetDispenser() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 ) )
-			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+		/*if( ( pPlayer->GetDispenser() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 ) )
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );*/
 
-		// If we haven't built a dispenser...
-		if( !pPlayer->GetDispenser() ) 
+		if( !pPlayer->IsBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
-
-			if( m_pBuildable )
+			if( !m_pBuildable )
 			{
-				// Update current fake dispenser
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
-				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 			else
 			{
-				// Create fake dispenser
-				m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 			}
+			m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 		}
 		else
 			Cleanup();
 
-		// If we're building something else, make sure to clean up
-		// this thing
-		if( pPlayer->IsBuilding() )
-			Cleanup();
+		// If we haven't built a dispenser...
+		//if( !pPlayer->GetDispenser() ) 
+		//{
+		//	CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_DISPENSER );
+
+		//	if( m_pBuildable )
+		//	{
+		//		// Update current fake dispenser
+		//		m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+		//		m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
+		//		m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+		//	}
+		//	else
+		//	{
+		//		// Create fake dispenser
+		//		m_pBuildable = CFFDispenser::CreateClientSideDispenser( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+		//	}
+		//}
+		//else
+		//	Cleanup();
+
+		//// If we're building something else, make sure to clean up
+		//// this thing
+		//if( pPlayer->IsBuilding() )
+		//	Cleanup();
 #endif
 	}
 }
@@ -241,7 +258,7 @@ bool CFFWeaponDeployDispenser::CanDeploy( void )
 
 bool CFFWeaponDeployDispenser::CanBeSelected( void )
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
+	/*CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
 		return false;
@@ -251,7 +268,7 @@ bool CFFWeaponDeployDispenser::CanBeSelected( void )
 	else if( pPlayer->IsBuilding() )
 		return false;
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 100 )
-		return false;
+		return false;*/
 
 	return BaseClass::CanBeSelected();
 }

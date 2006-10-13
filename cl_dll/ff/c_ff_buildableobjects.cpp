@@ -64,6 +64,9 @@
 #define FF_BUILD_ERROR_TOOFAR	"sprites/ff_build_toofar"
 #define FF_BUILD_ERROR_OFFGROUND	"sprites/ff_build_offground"
 #define FF_BUILD_ERROR_MOVEABLE		"sprites/ff_build_moveable"
+#define FF_BUILD_ERROR_NEEDAMMO		"sprites/ff_build_needammo"
+#define FF_BUILD_ERROR_ALREADYBUILT	"sprites/ff_build_alreadybuilt"
+
 
 // Define all the sprites to precache
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorNoRoom )
@@ -203,9 +206,8 @@ int C_FFBuildableObject::DrawModel( int flags )
 				default: return BaseClass::DrawModel( flags ); break;
 			}
 
-			const char *pszMaterial = NULL;
-
 			// Find out which error we're showing
+			const char *pszMaterial = NULL;
 			switch( m_hBuildError )
 			{
 				case BUILD_NOROOM: pszMaterial = FF_BUILD_ERROR_NOROOM; break;
@@ -213,6 +215,8 @@ int C_FFBuildableObject::DrawModel( int flags )
 				case BUILD_TOOFAR: pszMaterial = FF_BUILD_ERROR_TOOFAR; break;
 				case BUILD_PLAYEROFFGROUND: pszMaterial = FF_BUILD_ERROR_OFFGROUND; break;
 				case BUILD_MOVEABLE: pszMaterial = FF_BUILD_ERROR_MOVEABLE; break;
+				case BUILD_NEEDAMMO: pszMaterial = FF_BUILD_ERROR_NEEDAMMO; break;
+				case BUILD_ALREADYBUILT: pszMaterial = FF_BUILD_ERROR_ALREADYBUILT; break;
 			}
 
 			// If a valid material...

@@ -2983,6 +2983,8 @@ void CFFPlayer::PostBuildGenericThink( void )
 	// If we're building
 	if( m_bBuilding )
 	{
+		FFWeaponID switchToWeapon = FF_WEAPON_NONE;
+
 		// Find out what we're building and drop it to the floor
 		switch( m_iCurBuild )
 		{
@@ -2992,6 +2994,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					GetDispenser()->GoLive();
 
+					 switchToWeapon = FF_WEAPON_SPANNER;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_dispenser" );
 					if( pEvent )
 					{
@@ -3008,6 +3011,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					GetSentryGun()->GoLive();
 
+					switchToWeapon = FF_WEAPON_SPANNER;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_sentrygun" );
 					if( pEvent )
 					{
@@ -3024,6 +3028,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 				{
 					GetDetpack()->GoLive();
 
+					switchToWeapon = FF_WEAPON_GRENADELAUNCHER;
 					IGameEvent *pEvent = gameeventmanager->CreateEvent( "build_detpack" );
 					if( pEvent )
 					{
@@ -3047,6 +3052,21 @@ void CFFPlayer::PostBuildGenericThink( void )
 
 		if( m_hActiveWeapon )
 			m_hActiveWeapon->Deploy();
+
+		// Switch to another weapon, only the first time after building something
+		if(switchToWeapon != FF_WEAPON_NONE)
+		{
+			CFFWeaponBase *weap;
+			for (int i = 0; i < MAX_WEAPONS; i++)
+			{
+				weap = dynamic_cast<CFFWeaponBase *>(GetWeapon(i));
+				if (weap && weap->GetWeaponID() == switchToWeapon)
+				{
+					Weapon_Switch(weap);
+					break;
+				}
+			}
+		}
 	}
 	else
 	{
