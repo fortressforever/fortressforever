@@ -230,16 +230,16 @@ bool CFFWeaponDeployDetpack::CanDeploy( void )
 
 bool CFFWeaponDeployDetpack::CanBeSelected( void )
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
+	/*CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
 		return false;
 
-	/*if( pPlayer->GetDetpack() )
+	if( pPlayer->GetDetpack() )
 		return false;
 	else if( pPlayer->IsBuilding() )
-		return false;*/
-	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )
+		return false;
+	else if( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 )*/
 		return false;
 
 	return BaseClass::CanBeSelected();
