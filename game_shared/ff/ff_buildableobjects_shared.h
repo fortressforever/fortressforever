@@ -141,6 +141,8 @@ enum BuildInfoResult_t
 	BUILD_TOOFAR,			// Ground is too far away
 	BUILD_PLAYEROFFGROUND,	// player is not on the ground!
 	BUILD_MOVEABLE,			// can't built on movable stuff
+	BUILD_NEEDAMMO,			// Not Enough ammo to build
+	BUILD_ALREADYBUILT,		// Already built
 
 	BUILD_ERROR
 };

@@ -111,7 +111,7 @@ void FX_RailBeam(int entindex, const Vector &target, float scale)
 		return;
 	}
 
-	C_BaseAnimating *pWeapon;
+	C_BaseAnimating *pWeapon = NULL;
 
 	// Use the correct weapon model
 	if (pPlayer->IsLocalPlayer() && !input->CAM_IsThirdPerson())

@@ -168,34 +168,51 @@ void CFFWeaponDeploySentryGun::WeaponIdle( void )
 		C_FFPlayer *pPlayer = GetPlayerOwner();
 
 		// If we've built and we're not building pop out wrench
-		if( ( pPlayer->GetSentryGun() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 ) )
-			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );
+		/*if( ( pPlayer->GetSentryGun() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 ) )
+			pPlayer->SwapToWeapon( FF_WEAPON_SPANNER );*/
 
-		// If we haven't built a sentrygun...
-		if( !pPlayer->GetSentryGun() )
+		if( !pPlayer->IsBuilding() )
 		{
 			CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SENTRYGUN );
-
-			if( m_pBuildable )
+			if( !m_pBuildable )
 			{
-				// Update current fake sentrygun
-				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
-				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
-				m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
 			}
 			else
 			{
-				// Create fake sentrygun
-				m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+				m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+				m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
 			}
+			m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
 		}
 		else
 			Cleanup();
 
-		// If we're building something else, make sure to clean up
-		// this thing
-		if( pPlayer->IsBuilding() )
-			Cleanup();
+		// If we haven't built a sentrygun...
+		//if( !pPlayer->GetSentryGun() )
+		//{
+		//	CFFBuildableInfo hBuildInfo( pPlayer, FF_BUILD_SENTRYGUN );
+
+		//	if( m_pBuildable )
+		//	{
+		//		// Update current fake sentrygun
+		//		m_pBuildable->SetAbsOrigin( hBuildInfo.GetBuildOrigin() );
+		//		m_pBuildable->SetAbsAngles( hBuildInfo.GetBuildAngles() );
+		//		m_pBuildable->SetBuildError( hBuildInfo.BuildResult() );
+		//	}
+		//	else
+		//	{
+		//		// Create fake sentrygun
+		//		m_pBuildable = CFFSentryGun::CreateClientSideSentryGun( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles() );
+		//	}
+		//}
+		//else
+		//	Cleanup();
+
+		//// If we're building something else, make sure to clean up
+		//// this thing
+		//if( pPlayer->IsBuilding() )
+		//	Cleanup();
 #endif
 	}
 }
@@ -243,7 +260,7 @@ bool CFFWeaponDeploySentryGun::CanDeploy( void )
 
 bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 {
-	CFFPlayer *pPlayer = GetPlayerOwner();
+	/*CFFPlayer *pPlayer = GetPlayerOwner();
 
 	if( !pPlayer )
 		return false;
@@ -253,7 +270,7 @@ bool CFFWeaponDeploySentryGun::CanBeSelected( void )
 	else if( pPlayer->IsBuilding() )
 		return false;
 	else if( pPlayer->GetAmmoCount( AMMO_CELLS ) < 130 )
-		return false;
+		return false;*/
 
 	return BaseClass::CanBeSelected();
 }
