@@ -65,7 +65,8 @@
 #define FF_BUILD_ERROR_OFFGROUND	"sprites/ff_build_offground"
 #define FF_BUILD_ERROR_MOVEABLE		"sprites/ff_build_moveable"
 #define FF_BUILD_ERROR_NEEDAMMO		"sprites/ff_build_needammo"
-#define FF_BUILD_ERROR_ALREADYBUILT	"sprites/ff_build_alreadybuilt"
+#define FF_BUILD_ERROR_ALREADYBUILTSG	"sprites/ff_build_alreadybuiltsg"
+#define FF_BUILD_ERROR_ALREADYBUILTDISP	"sprites/ff_build_alreadybuiltdisp"
 
 
 // Define all the sprites to precache
@@ -88,6 +89,13 @@ CLIENTEFFECT_REGISTER_END()
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheBuildErrorMoveable )
 CLIENTEFFECT_MATERIAL( FF_BUILD_ERROR_MOVEABLE )
 CLIENTEFFECT_REGISTER_END()
+
+//////////////////////////////////////////////////////////////////////////
+// For ghost buildables.
+ConVar ffdev_pulsebuildable("ffdev_pulsebuildable", "0", FCVAR_REPLICATED, "Buildable ghost slow pulse");
+ConVar ffdev_buildabledrawonerror("ffdev_buildabledrawonerror", "1", FCVAR_REPLICATED, "Draw the buildable when it can't be built");
+const RenderFx_t g_BuildableRenderFx = kRenderFxPulseSlowWide;
+//////////////////////////////////////////////////////////////////////////
 
 //=============================================================================
 //
@@ -188,17 +196,21 @@ void C_FFBuildableObject::ClientThink( void )
 //-----------------------------------------------------------------------------
 int C_FFBuildableObject::DrawModel( int flags )
 {
+	
 	if( m_bClientSideOnly )
 	{
 		// Draw our glyphs
+		//color32 c = { 0, 255, 0, 110 };
 
 		// See if there's even an error
 		if( m_hBuildError != BUILD_ALLOWED )
 		{
 			float flOffset = 0.0f;
-
+			//c.r = 255; c.g = 0;
+			
 			// Get an offset for drawing (relative to GetAbsOrigin)
-			switch( Classify() )
+			const int iEntityClass = Classify();
+			switch( iEntityClass )
 			{
 				case CLASS_DISPENSER: flOffset = 32.0f; break;
 				case CLASS_SENTRYGUN: flOffset = 32.0f; break;
@@ -216,7 +228,17 @@ int C_FFBuildableObject::DrawModel( int flags )
 				case BUILD_PLAYEROFFGROUND: pszMaterial = FF_BUILD_ERROR_OFFGROUND; break;
 				case BUILD_MOVEABLE: pszMaterial = FF_BUILD_ERROR_MOVEABLE; break;
 				case BUILD_NEEDAMMO: pszMaterial = FF_BUILD_ERROR_NEEDAMMO; break;
-				case BUILD_ALREADYBUILT: pszMaterial = FF_BUILD_ERROR_ALREADYBUILT; break;
+				case BUILD_ALREADYBUILT:
+					if(iEntityClass == CLASS_DISPENSER)
+					{
+						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTDISP; 
+						break;
+					}
+					if(iEntityClass == CLASS_SENTRYGUN)
+					{
+						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTSG; 
+						break;
+					}
 			}
 
 			// If a valid material...
@@ -227,16 +249,19 @@ int C_FFBuildableObject::DrawModel( int flags )
 				if( pMaterial )
 				{
 					materials->Bind( pMaterial );
-					color32 c = { 255, 0, 0, 255 };
+					color32 c = { 255, 255, 255, 255 };
 					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + flOffset ), 15.0f, 15.0f, c );
 				}
 			}
 
 			// Finally, there was a build error, so don't actually draw the real model!
-			return 0;
+			if(!ffdev_buildabledrawonerror.GetBool())
+				return 0;
 		}
+		//SetRenderColor(c.r, c.g, c.b, c.a);
 	}
 		
+	
 	return BaseClass::DrawModel( flags );
 }
 
@@ -346,6 +371,9 @@ C_FFDetpack *C_FFDetpack::CreateClientSideDetpack( const Vector& vecOrigin, cons
 	pDetpack->SetRenderMode( kRenderTransAlpha );
 	pDetpack->SetRenderColorA( ( byte )110 );
 
+	if(ffdev_pulsebuildable.GetBool())
+		pDetpack->m_nRenderFX = g_BuildableRenderFx;
+
 	//kRenderTransAlphaAdd
 	//kRender
 
@@ -429,6 +457,9 @@ C_FFDispenser *C_FFDispenser::CreateClientSideDispenser( const Vector& vecOrigin
 	pDispenser->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 	pDispenser->SetRenderMode( kRenderTransAlpha );
 	pDispenser->SetRenderColorA( ( byte )110 );
+	
+	if(ffdev_pulsebuildable.GetBool())
+		pDispenser->m_nRenderFX = g_BuildableRenderFx;
 
 	// Since this is client side only, give it an owner just in case
 	// someone accesses the m_hOwner.Get() and wants to return something
@@ -522,7 +553,10 @@ C_FFSentryGun *C_FFSentryGun::CreateClientSideSentryGun( const Vector& vecOrigin
 	pSentryGun->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 	pSentryGun->SetRenderMode( kRenderTransAlpha );
 	pSentryGun->SetRenderColorA( ( byte )110 );
-
+	
+	if(ffdev_pulsebuildable.GetBool())
+		pSentryGun->m_nRenderFX = g_BuildableRenderFx;
+	
 	// Since this is client side only, give it an owner just in case
 	// someone accesses the m_hOwner.Get() and wants to return something
 	// that isn't NULL!
