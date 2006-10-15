@@ -25,7 +25,7 @@
 #endif
 
 // Please keep all values exposed to cvars so non programmers can be tweaking, even if the code isn't final.
-ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "6.5", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
+ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "2.5", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
 ConVar ffdev_ac_chargeuptime("ffdev_ac_chargeuptime", "0.0", FCVAR_REPLICATED, "Assault Cannon Chargeup Time");
 ConVar ffdev_ac_maxrevsound("ffdev_ac_maxrevsound", "3.0", FCVAR_REPLICATED, "Assault Cannon Max Rev Sound");
 ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED, "Assault Cannon Overheat delay");
