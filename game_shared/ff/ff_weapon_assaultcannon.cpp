@@ -25,7 +25,7 @@
 #endif
 
 // Please keep all values exposed to cvars so non programmers can be tweaking, even if the code isn't final.
-ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "4.5", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
+ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "6.5", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
 ConVar ffdev_ac_chargeuptime("ffdev_ac_chargeuptime", "0.0", FCVAR_REPLICATED, "Assault Cannon Chargeup Time");
 ConVar ffdev_ac_maxrevsound("ffdev_ac_maxrevsound", "3.0", FCVAR_REPLICATED, "Assault Cannon Max Rev Sound");
 ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED, "Assault Cannon Overheat delay");
@@ -33,7 +33,7 @@ ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED,
 ConVar ffdev_ac_minspread("ffdev_ac_minspread", "0.01", FCVAR_REPLICATED, "Assault Cannon Minimum spread");
 ConVar ffdev_ac_maxspread("ffdev_ac_maxspread", "0.10", FCVAR_REPLICATED, "Assault Cannon Maximum spread");
 
-ConVar ffdev_ac_maxcycletime("ffdev_ac_maxcycletime", "0.2", FCVAR_REPLICATED, "Assault Cannon Maximum cycle time");
+ConVar ffdev_ac_maxcycletime("ffdev_ac_maxcycletime", "0.18", FCVAR_REPLICATED, "Assault Cannon Maximum cycle time");
 ConVar ffdev_ac_mincycletime("ffdev_ac_mincycletime", "0.04", FCVAR_REPLICATED, "Assault Cannon Minimum cycle time");
 
 //=============================================================================
@@ -482,6 +482,8 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	pPlayer->ResetDisguise();
 #endif
 
+	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE, m_flNextPrimaryAttack);
 
@@ -513,14 +515,17 @@ void CFFWeaponAssaultCannon::PrimaryAttack()
 	pPlayer->RemoveAmmo(iBulletsToFire, m_iPrimaryAmmoType);
 #endif
 
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
 	Vector vecForward;
 	AngleVectors(pPlayer->EyeAngles(), &vecForward);
 
-	FireBulletsInfo_t info(iBulletsToFire, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
+	FireBulletsInfo_t info(iBulletsToFire * pWeaponInfo.m_iBullets, 
+		pPlayer->Weapon_ShootPosition(), 
+		vecForward, 
+		Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), 
+		MAX_TRACE_LENGTH, 
+		m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_iDamage = iBulletsToFire * pWeaponInfo.m_iDamage;
+	info.m_iDamage = (iBulletsToFire * pWeaponInfo.m_iBullets) * pWeaponInfo.m_iDamage;
 
 	Vector vecTest = info.m_vecSrc;
 
