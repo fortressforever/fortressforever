@@ -217,3 +217,119 @@ C_Refract_TeamColorMaterialProxy::C_Refract_TeamColorMaterialProxy( void )
 }
 
 EXPOSE_INTERFACE( C_Refract_TeamColorMaterialProxy, IMaterialProxy, "Refract_TeamColor" IMATERIAL_PROXY_INTERFACE_VERSION )
+
+//=============================================================================
+//
+//	class C_FFPlayerVelocityMaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_FFPlayerVelocityMaterialProxy::C_FFPlayerVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+C_FFPlayerVelocityMaterialProxy::~C_FFPlayerVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool C_FFPlayerVelocityMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if( !CResultProxy::Init( pMaterial, pKeyValues ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	//C_BaseEntity* pEntity = ( C_BaseEntity * )pC_BaseEntity;
+	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
+	if( !pEntity )
+		return;
+
+	if( !pEntity->IsPlayer() )
+		return;
+
+	C_FFPlayer *pPlayer = ToFFPlayer( pEntity );
+	if( !pPlayer )
+		return;
+
+	Assert( m_pResult );
+
+	// Player Velocity
+	SetFloatResult( pPlayer->GetLocalVelocity().Length() );
+
+	//Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), pPlayer->GetLocalVelocity().Length() );
+}
+
+EXPOSE_INTERFACE( C_FFPlayerVelocityMaterialProxy, IMaterialProxy, "FF_PlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+
+//=============================================================================
+//
+//	class C_FFWeaponVelocityMaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_FFWeaponVelocityMaterialProxy::C_FFWeaponVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+C_FFWeaponVelocityMaterialProxy::~C_FFWeaponVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool C_FFWeaponVelocityMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if( !CResultProxy::Init( pMaterial, pKeyValues ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
+	if( !pEntity )
+		return;
+
+	C_FFWeaponBase *pWeapon = dynamic_cast< C_FFWeaponBase * >( pEntity );
+	if( !pWeapon )
+		return;
+
+	C_FFPlayer *pWeaponOwner = pWeapon->GetPlayerOwner();
+	if( !pWeaponOwner )
+		return;
+
+	Assert( m_pResult );
+
+	// Player Velocity
+	SetFloatResult( pWeaponOwner->GetLocalVelocity().Length()  );
+
+	//Warning( "[Weapon Velocity Proxy] %s - %f (%f)\n", pWeaponOwner->GetPlayerName(), pWeaponOwner->GetLocalVelocity().Length() );
+}
+
+EXPOSE_INTERFACE( C_FFWeaponVelocityMaterialProxy, IMaterialProxy, "FF_WeaponVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
