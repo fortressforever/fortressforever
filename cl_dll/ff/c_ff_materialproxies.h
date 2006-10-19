@@ -15,6 +15,7 @@
 #define FF_MATERIALPROXIES_H
 
 #include "materialsystem/IMaterialProxy.h"
+#include "FunctionProxy.h"
 
 // Forward declarations
 class IMaterialVar;
@@ -80,6 +81,48 @@ class C_Refract_TeamColorMaterialProxy : public C_TeamColorMaterialProxy
 {
 public:
 	C_Refract_TeamColorMaterialProxy( void );
+
+};
+
+//=============================================================================
+//
+//	class C_FFPlayerVelocityMaterialProxy
+//
+//=============================================================================
+class C_FFPlayerVelocityMaterialProxy : public CResultProxy
+{
+	//-------------------------------------------------------------------------
+	// Purpose: Can get the velocity of the player the material is applied to
+	// (not just for the local player!)
+	//-------------------------------------------------------------------------
+
+public:
+	C_FFPlayerVelocityMaterialProxy( void );
+	virtual ~C_FFPlayerVelocityMaterialProxy( void );
+
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+
+};
+
+//=============================================================================
+//
+//	class C_FFWeaponVelocityMaterialProxy
+//
+//=============================================================================
+class C_FFWeaponVelocityMaterialProxy : public CResultProxy
+{
+	//-------------------------------------------------------------------------
+	// Purpose: Can get the velocity of the player who owns the weapon this
+	// material is applied to (not just for the local player!)
+	//-------------------------------------------------------------------------
+
+public:
+	C_FFWeaponVelocityMaterialProxy( void );
+	virtual ~C_FFWeaponVelocityMaterialProxy( void );
+
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
 
 };
 
