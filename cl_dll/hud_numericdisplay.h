@@ -31,6 +31,13 @@ public:
 	void SetLabelText(const wchar_t *text);
 	void SetIndent(bool state);
 
+	// So animation controller animations actually adjust the
+	// numbers' colors and not the entire panel that encapsulates the numbers
+	virtual void SetFgColor( Color color )
+	{
+		m_NumberColor = color;
+	}
+
 	virtual void Reset();
 
 protected:
