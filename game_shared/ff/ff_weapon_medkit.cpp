@@ -34,7 +34,6 @@ public:
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_MEDKIT; }
 
 	virtual void	Precache();
-	virtual void	SecondaryAttack();
 	virtual void	WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
 
@@ -76,24 +75,6 @@ void CFFWeaponMedkit::Precache()
 	PrecacheScriptSound("medkit.infect");
 
 	BaseClass::Precache();
-}
-
-void CFFWeaponMedkit::SecondaryAttack() 
-{
-	// Can we get rid of this now?
-
-	// heal the player to full if cheats are on
-	ConVar *sv_cheats = (ConVar *) ConCommandBase::FindCommand("sv_cheats");
-	if (sv_cheats) 
-	{
-		CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
-		pPlayer->SetHealth(pPlayer->GetMaxHealth());
-		EmitSound("medkit.hit");
-
-		const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-		m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
-		m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-	}
 }
 
 //----------------------------------------------------------------------------
