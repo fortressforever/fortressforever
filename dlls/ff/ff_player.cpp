@@ -4522,6 +4522,9 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 			m_iArmor -= (int) fArmorDamage;
 		}
 
+		// Set armor lost for hud "damage" message
+		m_DmgSave = fArmorDamage;
+
 		info.SetDamage(fHealthDamage);
 	}
 
@@ -4539,7 +4542,8 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	if ( info.GetInflictor() && info.GetInflictor()->edict() )
 		m_DmgOrigin = info.GetInflictor()->GetAbsOrigin();
 
-	m_DmgTake += (int)info.GetDamage();
+	// Set health lost for hud "damage" message
+	m_DmgTake += (int)info.GetDamage();	
 
 	// reset damage time countdown for each type of time based damage player just sustained
 

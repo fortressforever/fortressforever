@@ -6198,8 +6198,8 @@ void CBasePlayer::UpdateClientData( void )
 		CSingleUserRecipientFilter user( this );
 		user.MakeReliable();
 		UserMessageBegin( user, "Damage" );
-		WRITE_BYTE( m_DmgSave );
-		WRITE_BYTE( m_DmgTake );
+		WRITE_BYTE( m_DmgSave );		// armor	
+		WRITE_BYTE( m_DmgTake );		// health
 		WRITE_LONG( visibleDamageBits );
 		WRITE_FLOAT( damageOrigin.x );	//BUG: Should be fixed point (to hud) not floats
 		WRITE_FLOAT( damageOrigin.y );	//BUG: However, the HUD does _not_ implement bitfield messages (yet)
