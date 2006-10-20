@@ -60,8 +60,6 @@ private:
 	int		m_iArmor;
 
 	int		m_bitsDamage;
-
-	//CHudTexture	*m_pHudElementTexture;
 };	
 
 DECLARE_HUDELEMENT( CHudArmor );
@@ -93,17 +91,6 @@ void CHudArmor::Reset()
 	m_iArmor		= INIT_ARMOR;
 	m_bitsDamage	= 0;
 
-/*	wchar_t *tempString = vgui::localize()->Find("#Valve_Hud_ARMOR");
-
-	if (tempString)
-	{
-		SetLabelText(tempString);
-	}
-	else
-	{
-		SetLabelText(L"ARMOR");
-	}*/
-
 	SetLabelText(L"");
 	SetDisplayValue(m_iArmor);
 }
@@ -114,11 +101,6 @@ void CHudArmor::Reset()
 void CHudArmor::VidInit()
 {
 	Reset();
-
-	// Precache the background texture
-	//m_pHudElementTexture = new CHudTexture();
-	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_armor", true, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -195,7 +177,7 @@ void CHudArmor::MsgFunc_Damage( bf_read &msg )
 	// Actually took damage?
 	if ( damageTaken > 0 || armor > 0 )
 	{
-		if ( damageTaken > 0 )
+		if ( armor > 0 )
 		{
 			// start the animation
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "ArmorDamageTaken" );
