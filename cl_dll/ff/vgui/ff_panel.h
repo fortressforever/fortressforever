@@ -33,11 +33,11 @@ namespace vgui
 		virtual void FFPanel::ApplySchemeSettings(IScheme *pScheme);
 		virtual void FFPanel::PaintBackground();
 
-private:
+	private:
 
 		void InitFFPanel();
 
-protected:
+	protected:
 
 		CHudTexture		*m_pHudForeground;
 		CHudTexture		*m_pHudBackground;

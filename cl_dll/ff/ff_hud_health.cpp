@@ -60,8 +60,6 @@ private:
 	int		m_iHealth;
 	
 	int		m_bitsDamage;
-
-	CHudTexture	*m_pHudElementTexture;
 };	
 
 DECLARE_HUDELEMENT( CHudHealth );
@@ -70,10 +68,9 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudHealth")
+CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay( NULL, "HudHealth" )
 {
 	SetHiddenBits( /*HIDEHUD_HEALTH |*/ HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
-	m_pHudElementTexture = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,19 +90,8 @@ void CHudHealth::Reset()
 	m_iHealth		= INIT_HEALTH;
 	m_bitsDamage	= 0;
 
-	/*wchar_t *tempString = vgui::localize()->Find("#Valve_Hud_HEALTH");
-
-	if (tempString)
-	{
-		SetLabelText(tempString);
-	}
-	else
-	{
-		SetLabelText(L"HEALTH");
-	}*/
-
-	SetLabelText(L"");
-	SetDisplayValue(m_iHealth);
+	SetLabelText( L"" );
+	SetDisplayValue( m_iHealth );
 }
 
 //-----------------------------------------------------------------------------
@@ -114,14 +100,6 @@ void CHudHealth::Reset()
 void CHudHealth::VidInit()
 {
 	Reset();
-
-	//*
-	// Precache the background texture
-	//m_pHudElementTexture = new CHudTexture();
-	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_health", true, false);
-	//*/
-	//m_pHudElementTexture = gHUD.GetIcon( "healthBoxFG" );
 }
 
 //-----------------------------------------------------------------------------
@@ -136,9 +114,7 @@ void CHudHealth::OnThink()
 	int newHealth = 0;
 	int maxHealth = 0;	
 
-	// A ha! One of the ToFFPlayer( NULL ) calls!
-	C_FFPlayer *local = ToFFPlayer(C_BasePlayer::GetLocalPlayer());
-
+	C_FFPlayer *local = C_FFPlayer::GetLocalFFPlayer();
 	if (!local)
 		return;
 
@@ -213,7 +189,7 @@ void CHudHealth::MsgFunc_Damage( bf_read &msg )
 		if ( damageTaken > 0 )
 		{
 			// start the animation
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthDamageTaken" );
 		}
 	}
 }
