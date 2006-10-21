@@ -582,11 +582,22 @@ void CFFPlayer::PreThink(void)
 			PostBuildGenericThink();
 	}
 
-	StatusEffectsThink();
+	StatusEffectsThink();	
 
 	// Do some spy stuff
 	if (GetClassSlot() == CLASS_SPY)
 	{
+		// Get horizontal + forward velocity (no vertical velocity)
+		Vector vecVelocity = GetLocalVelocity();
+		float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
+
+		// If going faster than spies walk speed, reset
+		if( IsFeigned() && ( flSpeed > 220.0f ) )
+		{
+			// Unfeign (uncloak)
+			SpySilentFeign();
+		}
+
 		// Disguising
 		if (m_iNewSpyDisguise && gpGlobals->curtime > m_flFinishDisguise)
 			FinishDisguise();
@@ -1408,7 +1419,7 @@ void CFFPlayer::SpySilentFeign( void )
 
 		// Visible and able to move again
 		RemoveEffects(EF_NODRAW);
-		RemoveFlag(FL_FROZEN);
+		//RemoveFlag(FL_FROZEN);
 
 		// Redeploy our weapon
 		if (GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false)
@@ -1430,6 +1441,10 @@ void CFFPlayer::SpySilentFeign( void )
 	{
 		m_fFeigned = true;
 
+		// If we're currently disguising, add on some time (50%)
+		if( m_flFinishDisguise > gpGlobals->curtime )
+			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
+
 		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
 		CreateRagdollEntity();
 
@@ -1444,11 +1459,11 @@ void CFFPlayer::SpySilentFeign( void )
 
 		// Invisible and unable to move
 		AddEffects(EF_NODRAW);
-		AddFlag(FL_FROZEN);
+		//AddFlag(FL_FROZEN);
 
 		// Holster our current weapon
-		if (GetActiveWeapon())
-			GetActiveWeapon()->Holster(NULL);
+		//if (GetActiveWeapon())
+		//	GetActiveWeapon()->Holster(NULL);
 
 		CFFLuaSC hOwnerFeign( 1, this );
 		// Find any items that we are in control of and let them know we feigned
@@ -5431,7 +5446,7 @@ void CFFPlayer::FinishDisguise()
 void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 {
 #ifdef _DEBUG
-	bInstant = true;
+	//bInstant = true;
 #endif
 
 	m_iNewSpyDisguise = iTeam;
@@ -5446,6 +5461,10 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 	{
 		m_flFinishDisguise = gpGlobals->curtime + 7.0f;
 	}
+
+	// 50% longer when feigned
+	if( IsFeigned() )
+		m_flFinishDisguise += 7.0f * 0.5f;
 }
 
 int CFFPlayer::AddHealth(unsigned int amount)
