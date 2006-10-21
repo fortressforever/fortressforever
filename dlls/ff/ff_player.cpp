@@ -2013,19 +2013,24 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	//const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 	CFFTeam *pTeam = GetGlobalFFTeam( GetTeamNumber() );
 
+	// This shouldn't happen as class changes only allowed while on a team
+	if( !pTeam )
+		return;
+
+	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
+
 	// They are picking the randompc slot
 	if( FStrEq( szNewClassName, "randompc" ) )
 	{
 		m_fRandomPC = true;
-		KillAndRemoveItems();
+
+		if( fInstantSwitch )
+			KillAndRemoveItems();
+
 		return;
 	}
 	else
-		m_fRandomPC = false;
-
-	// This shouldn't happen as class changes only allowed while on a team
-	if( !pTeam )
-		return;
+		m_fRandomPC = false;	
 
 	int iClass = Class_StringToInt( szNewClassName );
 
@@ -2074,8 +2079,6 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// Yup it is okay to change
 	// We don't change class instantly, only when we spawn
 	m_iNextClass = iClass;
-
-	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
 
 	// Now just need a way to select which one you want
 	if (fInstantSwitch || GetClassSlot() == 0)
