@@ -156,15 +156,15 @@ FF_AUTO_COMMAND( sevtest, &CFFPlayer::Command_SevTest, "Spawn sev's testing thin
 FF_AUTO_COMMAND( discard, &CFFPlayer::Command_Discard, "Discards unneeded ammo", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( saveme, &CFFPlayer::Command_SaveMe, "Call for medical attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 FF_AUTO_COMMAND( engyme, &CFFPlayer::Command_EngyMe, "Call for engineer attention", FF_CMD_ALIVE | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH )
+FF_AUTO_COMMAND( disguise, &CFFPlayer::Command_Disguise, "Disguise <team> <class>", FF_CMD_SKILL_COMMAND | FF_CMD_ALIVE | FF_CMD_PREMATCH | FF_CMD_FEIGNED )
 
 // entity system interfacing stuffs
-FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( flaginfo, &CFFPlayer::Command_FlagInfo, "Displays information about the flag", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
 FF_AUTO_COMMAND( dropitems, &CFFPlayer::Command_DropItems, "Drops items (flags)", FF_CMD_ALIVE | FF_CMD_PREMATCH );
 
 // spy sabotage stuff
-FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH );
-FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy SG on own team", FF_CMD_ALIVE | FF_CMD_PREMATCH );
+FF_AUTO_COMMAND( dispensersabotage, &CFFPlayer::Command_SabotageDispenser, "Detonate enemy dispenser that you have sabtoaged", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
+FF_AUTO_COMMAND( sentrysabotage, &CFFPlayer::Command_SabotageSentry, "Turn enemy SG on own team", FF_CMD_ALIVE | FF_CMD_DEAD | FF_CMD_PREMATCH | FF_CMD_FEIGNED );
 
 
 // --> Mirv: Toggle grenades (requested by defrag)

@@ -268,8 +268,11 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
+	Vector vecVelocity = pPlayer->GetLocalVelocity();
+	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
+
 	// Player Velocity
-	SetFloatResult( pPlayer->GetLocalVelocity().Length() );
+	SetFloatResult( flSpeed );
 
 	//Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), pPlayer->GetLocalVelocity().Length() );
 }
@@ -326,8 +329,14 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
+	Vector vecVelocity = pWeaponOwner->GetLocalVelocity();
+	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
+
 	// Player Velocity
-	SetFloatResult( pWeaponOwner->GetLocalVelocity().Length()  );
+	SetFloatResult( flSpeed );
+
+	// Player Velocity
+	SetFloatResult( flSpeed );
 
 	//Warning( "[Weapon Velocity Proxy] %s - %f (%f)\n", pWeaponOwner->GetPlayerName(), pWeaponOwner->GetLocalVelocity().Length() );
 }
