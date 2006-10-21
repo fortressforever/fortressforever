@@ -574,9 +574,9 @@ public:
     
 private:
 	CNetworkVar( unsigned int, m_iFeigned );
+public:
 	void SpyFeign( void );
 	void SpySilentFeign( void );
-public:	
 	bool IsFeigned( void ) const { return m_iFeigned != 0; }
 
 public:
