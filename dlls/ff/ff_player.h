@@ -572,11 +572,14 @@ public:
 	void Command_SetChannel( void );
 	int m_iChannel;
     
-	bool m_fFeigned;
+private:
+	CNetworkVar( unsigned int, m_iFeigned );
 	void SpyFeign( void );
 	void SpySilentFeign( void );
-	bool IsFeigned( void ) const { return m_fFeigned; }
+public:	
+	bool IsFeigned( void ) const { return m_iFeigned != 0; }
 
+public:
 	int Heal(CFFPlayer *, float);
 
 	// Keeping these seperate for now

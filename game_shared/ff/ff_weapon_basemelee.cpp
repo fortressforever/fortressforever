@@ -80,6 +80,7 @@ void CFFWeaponMeleeBase::Precache()
 void CFFWeaponMeleeBase::PrimaryAttack() 
 {
 	CANCEL_IF_BUILDING();
+	CANCEL_IF_FEIGNED();
 
 	ENGY_SPECIAL_AIMSENTRYGUN();
 

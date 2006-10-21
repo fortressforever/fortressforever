@@ -335,6 +335,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iFeigned ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -1264,7 +1265,7 @@ void CFFPlayer::SetupClassVariables()
 	m_bSpecialInfectedDeath = false;
 
 	// Reset Spy stuff
-	m_fFeigned = false;
+	m_iFeigned = 0;
 	m_flFinishDisguise = 0;
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
@@ -1388,7 +1389,7 @@ void CFFPlayer::SpyFeign( void )
 		return;
 
 	// A yell of pain
-	if (!m_fFeigned)
+	if (!IsFeigned())
 	{
 		EmitSound( "Player.Death" );
 	}
@@ -1407,10 +1408,10 @@ void CFFPlayer::SpySilentFeign( void )
 		return;
 
 	// Already feigned so remove all effects
-	if (m_fFeigned)
+	if (IsFeigned())
 	{
 		// Yeah we're not feigned anymore bud
-		m_fFeigned = false;
+		m_iFeigned = 0;
 
 		// If we're currently disguising, remove some time (50%)
 		if( m_flFinishDisguise > gpGlobals->curtime )
@@ -1444,7 +1445,7 @@ void CFFPlayer::SpySilentFeign( void )
 	// Not already feigned, so collapse with ragdoll
 	else
 	{
-		m_fFeigned = true;
+		m_iFeigned = 1;
 
 		// If we're currently disguising, add on some time (50%)
 		if( m_flFinishDisguise > gpGlobals->curtime )
@@ -1467,8 +1468,8 @@ void CFFPlayer::SpySilentFeign( void )
 		//AddFlag(FL_FROZEN);
 
 		// Holster our current weapon
-		//if (GetActiveWeapon())
-		//	GetActiveWeapon()->Holster(NULL);
+		if (GetActiveWeapon())
+			GetActiveWeapon()->Holster(NULL);
 
 		CFFLuaSC hOwnerFeign( 1, this );
 		// Find any items that we are in control of and let them know we feigned
@@ -4160,7 +4161,7 @@ void CFFPlayer::Command_PrimeOne(void)
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
-	if (m_fFeigned)
+	if (IsFeigned())
 		return;
 
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -4200,7 +4201,7 @@ void CFFPlayer::Command_PrimeTwo(void)
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
-	if (m_fFeigned)
+	if (IsFeigned())
 		return;
 
     const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
