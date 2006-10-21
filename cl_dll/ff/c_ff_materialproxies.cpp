@@ -21,6 +21,7 @@
 #include "materialsystem/IMaterialVar.h"
 #include "materialsystem/IMaterial.h"
 #include "IClientRenderable.h"
+#include "ff_shareddefs.h"
 
 //#include "c_ff_player.h"
 #include "ff_buildableobjects_shared.h"
@@ -271,10 +272,12 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Vector vecVelocity = pPlayer->GetLocalVelocity();
 	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 
-	// Player Velocity
-	SetFloatResult( flSpeed );
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), 0.0f, 1.0f );
 
-	//Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), pPlayer->GetLocalVelocity().Length() );
+	// Player Velocity
+	SetFloatResult( flVal );
+
+	Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), flVal );
 }
 
 EXPOSE_INTERFACE( C_FFPlayerVelocityMaterialProxy, IMaterialProxy, "FF_PlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
@@ -332,11 +335,10 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Vector vecVelocity = pWeaponOwner->GetLocalVelocity();
 	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 
-	// Player Velocity
-	SetFloatResult( flSpeed );
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), 0.0f, 1.0f );
 
-	// Player Velocity
-	SetFloatResult( flSpeed );
+	// Weapon Velocity
+	SetFloatResult( flVal );
 
 	//Warning( "[Weapon Velocity Proxy] %s - %f (%f)\n", pWeaponOwner->GetPlayerName(), pWeaponOwner->GetLocalVelocity().Length() );
 }

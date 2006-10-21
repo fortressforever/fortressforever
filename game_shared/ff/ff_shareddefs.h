@@ -13,6 +13,8 @@
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 #define EXTRA_LOCAL_ORIGIN_ACCURACY
 
+static ConVar ffdev_spymaxcloakspeed( "ffdev_spymaxcloakspeed", "220", FCVAR_ARCHIVE | FCVAR_REPLICATED );
+
 enum FFPlayerGrenadeState
 {
     FF_GREN_NONE,
