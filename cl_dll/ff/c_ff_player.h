@@ -375,6 +375,23 @@ protected:
 	unsigned int m_iEngyMe;
 	// **********************************
 
+	// ----------------------------------
+	// Stuffs for radial menu & aiming sentry
+public:
+	bool IsAttackReboundForAiming( void ) const { return m_bAttackReboundForAiming; }
+	void SetAttackReboundForAiming( bool bValue ) { m_bAttackReboundForAiming = bValue; }
+private:
+	// Nice name, eh. This is for when the player has the cvar
+	// set that lets them select aim sentry from the radial engy
+	// menu THEN once the menu has disapeared from the screen
+	// lets them click anywhere to actually aim it. Instead of
+	// messing w/ messy rebind stuff we're setting a flag on the
+	// player and any weapon attack funcs will do the appropriate
+	// aimsentry deed + fire the weapon normally in case badguys
+	// approach.
+	bool m_bAttackReboundForAiming;
+	// ----------------------------------
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 

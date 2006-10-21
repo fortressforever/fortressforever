@@ -27,6 +27,8 @@
 
 #include <vgui/ILocalize.h>
 
+#include "ff_hud_chat.h"
+//#include "IGameUIFuncs.h"
 #include <igameresources.h>
 
 using namespace vgui;
@@ -34,9 +36,11 @@ using namespace vgui;
 CHudContextMenu *g_pHudContextMenu = NULL;
 
 extern ConVar sensitivity;
+//extern IGameUIFuncs *gameuifuncs;
 
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
 ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
+ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
 #define MENU_PROGRESS_TIME	0.3f
 
@@ -393,7 +397,21 @@ void CHudContextMenu::Init()
 void CHudContextMenu::DoCommand(const char *cmd)
 {
 	if (!m_pszPreviousCmd)
-		engine->ClientCmd(cmd);
+	{
+		if( cm_aimsentry.GetBool() && ( strcmp( cmd, "aimsentry" ) == 0 ) )
+		{
+			// Special case for aimsentry - we bind attack1 to
+			// aimsentry so they can NOW click anywhere to aim
+			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+			if( !pPlayer )
+				return;
+
+			pPlayer->SetAttackReboundForAiming( true );
+			ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_AIMSENTRY" );
+		}
+		else
+			engine->ClientCmd(cmd);
+	}
 
 	// Currently this only supports has 2 levels of menu
 	// If we need more, change m_pszPreviousCmd to a character array
@@ -409,8 +427,7 @@ void CHudContextMenu::DoCommand(const char *cmd)
 
 void CHudContextMenu::Display(bool state)
 {
-	C_FFPlayer *pPlayer = dynamic_cast<C_FFPlayer *> (C_BasePlayer::GetLocalPlayer());
-
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if (!pPlayer)
 		return;
 

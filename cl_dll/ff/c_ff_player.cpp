@@ -1020,6 +1020,9 @@ void C_FFPlayer::Spawn( void )
 		m_bFirstSpawn = false;
 	}
 
+	// Reset this to false on spawn
+	m_bAttackReboundForAiming = false;
+
 	// Clean up some stuff
 	ffvieweffects->Reset();	
 	ClearStatusIcons();
@@ -1087,6 +1090,9 @@ void C_FFPlayer::Death()
 
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
+
+	// Reset this to false on death
+	m_bAttackReboundForAiming = false;
 }
 
 // Stomp any movement if we're in mapguide mode

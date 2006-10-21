@@ -81,6 +81,8 @@ void CFFWeaponMeleeBase::PrimaryAttack()
 {
 	CANCEL_IF_BUILDING();
 
+	ENGY_SPECIAL_AIMSENTRYGUN();
+
 	Swing();
 }
 
