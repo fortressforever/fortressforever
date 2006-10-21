@@ -458,6 +458,8 @@ void CFFWeaponBase::PrimaryAttack()
 {
 	CANCEL_IF_BUILDING();
 
+	ENGY_SPECIAL_AIMSENTRYGUN();
+
 	// Only the player fires this way so we can cast
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 

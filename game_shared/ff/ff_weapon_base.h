@@ -79,6 +79,26 @@ class CFFPlayer;
 		return; \
 }
 
+#ifdef GAME_DLL
+#define ENGY_SPECIAL_AIMSENTRYGUN() \
+{ \
+}
+#endif
+
+#ifdef CLIENT_DLL 
+#define ENGY_SPECIAL_AIMSENTRYGUN() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( !pFFPlayer ) \
+		return; \
+	if( ( pFFPlayer->GetClassSlot() == CLASS_ENGINEER ) && ( pFFPlayer->IsAttackReboundForAiming() ) ) \
+	{ \
+		engine->ClientCmd( "aimsentry" ); \
+		pFFPlayer->SetAttackReboundForAiming( false ); \
+	} \
+}
+#endif
+
 // Weapon IDs for all FF Game weapons
 typedef enum
 {
