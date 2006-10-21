@@ -338,6 +338,19 @@ CON_COMMAND(ffdev_tranqme, "tranqs you")
 	MessageEnd();
 }
 
+CON_COMMAND(ffdev_gasvieweffectme, "tranqs you")
+{
+	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
+
+	CSingleUserRecipientFilter user(you);
+	user.MakeReliable();
+
+	UserMessageBegin(user, "FFViewEffect");
+	WRITE_BYTE(FF_VIEWEFFECT_GASSED);
+	WRITE_FLOAT(6.0f);
+	MessageEnd();
+}
+
 CON_COMMAND(ffdev_score, "you score")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
