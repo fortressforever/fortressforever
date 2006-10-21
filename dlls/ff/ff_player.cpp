@@ -592,7 +592,7 @@ void CFFPlayer::PreThink(void)
 		float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
 
 		// If going faster than spies walk speed, reset
-		if( IsFeigned() && ( flSpeed > 220.0f ) )
+		if( IsFeigned() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
 		{
 			// Unfeign (uncloak)
 			SpySilentFeign();
