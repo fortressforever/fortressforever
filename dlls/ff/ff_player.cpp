@@ -3353,6 +3353,14 @@ void CFFPlayer::StatusEffectsThink( void )
 
 					TakeDamage(info);
 				}
+
+				CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+				user.MakeReliable();
+				UserMessageBegin( user, "FFViewEffect" );
+					WRITE_BYTE( FF_VIEWEFFECT_GASSED );
+					WRITE_FLOAT( 1.0f );
+				MessageEnd();
+
 				m_flNextGas = gpGlobals->curtime + 1.0f;
 			}
 		}

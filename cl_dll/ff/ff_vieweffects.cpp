@@ -474,6 +474,67 @@ public:
 DECLARE_VIEWEFFECT(CFFInfectedViewEffect);
 
 //=============================================================================
+// Purpose: Gassed effect
+//=============================================================================
+class CFFGassedViewEffect : public CFFBaseViewEffect
+{
+public:
+	//-----------------------------------------------------------------------------
+	// Purpose: Register
+	//-----------------------------------------------------------------------------
+	CFFGassedViewEffect(const char *pName) : CFFBaseViewEffect(FF_VIEWEFFECT_GASSED)
+	{
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Reset screenspace effect
+	//-----------------------------------------------------------------------------
+	void Reset()
+	{
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
+		{
+		}
+		else
+		{
+			KeyValues *pKeys = new KeyValues("keys");
+			pKeys->SetFloat("duration", 0.0f);
+
+			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("gassedeffect", pKeys);
+			g_pScreenSpaceEffects->EnableScreenSpaceEffect("gassedeffect");
+
+			pKeys->deleteThis();
+		}
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Expects a DURATION as a FLOAT.
+	//			Will also trigger the screenspace effect.
+	//-----------------------------------------------------------------------------
+	void Message(bf_read &msg)
+	{
+		// Disabled
+		return;
+
+		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
+		{
+			Warning("*** FF Error *** Not yet implemented for < dx9!\n");
+		}
+		else
+		{
+			KeyValues *pKeys = new KeyValues("keys");
+			pKeys->SetFloat("duration", msg.ReadFloat());
+
+			g_pScreenSpaceEffects->SetScreenSpaceEffectParams("gassedeffect", pKeys);
+			g_pScreenSpaceEffects->EnableScreenSpaceEffect("gassedeffect");
+
+			pKeys->deleteThis();
+		}
+	}
+};
+
+DECLARE_VIEWEFFECT(CFFGassedViewEffect);
+
+//=============================================================================
 // Purpose: Burning vieweffect
 //=============================================================================
 class CFFBurningEffect : public CFFBaseViewEffect
