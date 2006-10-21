@@ -29,6 +29,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar ffdev_spymincloakness( "ffdev_spymincloakness", "0.1", FCVAR_ARCHIVE );
+
 //=============================================================================
 //
 //	class C_TeamColorMaterialProxy
@@ -269,15 +271,13 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	Vector vecVelocity = pPlayer->GetLocalVelocity();
-	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
-
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), 0.0f, 1.0f );
+	float flSpeed = pPlayer->GetLocalVelocity().Length();
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), 1.0f );
 
 	// Player Velocity
 	SetFloatResult( flVal );
 
-	Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), flVal );
+	//Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), flVal );
 }
 
 EXPOSE_INTERFACE( C_FFPlayerVelocityMaterialProxy, IMaterialProxy, "FF_PlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
@@ -332,10 +332,8 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	Vector vecVelocity = pWeaponOwner->GetLocalVelocity();
-	float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
-
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), 0.0f, 1.0f );
+	float flSpeed = pWeaponOwner->GetLocalVelocity().Length();
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), 1.0f );
 
 	// Weapon Velocity
 	SetFloatResult( flVal );

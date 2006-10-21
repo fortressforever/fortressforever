@@ -588,8 +588,9 @@ void CFFPlayer::PreThink(void)
 	if (GetClassSlot() == CLASS_SPY)
 	{
 		// Get horizontal + forward velocity (no vertical velocity)
-		Vector vecVelocity = GetLocalVelocity();
-		float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
+		//Vector vecVelocity = GetLocalVelocity();
+		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
+		float flSpeed = GetLocalVelocity().Length();
 
 		// If going faster than spies walk speed, reset
 		if( IsFeigned() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
@@ -1410,6 +1411,10 @@ void CFFPlayer::SpySilentFeign( void )
 	{
 		// Yeah we're not feigned anymore bud
 		m_fFeigned = false;
+
+		// If we're currently disguising, remove some time (50%)
+		if( m_flFinishDisguise > gpGlobals->curtime )
+			m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
 
 		CFFRagdoll *pRagdoll = dynamic_cast<CFFRagdoll *> (m_hRagdoll.Get());
 
