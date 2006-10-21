@@ -1410,6 +1410,8 @@ void CFFPlayer::SpySilentFeign( void )
 	// Already feigned so remove all effects
 	if (IsFeigned())
 	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_UNFEIGN" );
+
 		// Yeah we're not feigned anymore bud
 		m_iFeigned = 0;
 
@@ -1445,6 +1447,8 @@ void CFFPlayer::SpySilentFeign( void )
 	// Not already feigned, so collapse with ragdoll
 	else
 	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_FEIGN" );
+
 		m_iFeigned = 1;
 
 		// If we're currently disguising, add on some time (50%)
