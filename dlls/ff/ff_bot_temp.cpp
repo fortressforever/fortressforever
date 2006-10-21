@@ -338,7 +338,7 @@ CON_COMMAND(ffdev_tranqme, "tranqs you")
 	MessageEnd();
 }
 
-CON_COMMAND(ffdev_gasvieweffectme, "tranqs you")
+CON_COMMAND(ffdev_gasvieweffectme, "gas view effects you")
 {
 	CFFPlayer *you = ToFFPlayer(UTIL_GetCommandClient());
 
