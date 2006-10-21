@@ -394,6 +394,8 @@ bool CFFWeaponBase::CanBeSelected()
 
 	if (pPlayer->IsBuilding())
 		return false;
+	else if( pPlayer->IsFeigned() )
+		return false;
 	else
 		return BaseClass::CanBeSelected();
 }
@@ -457,6 +459,7 @@ bool CFFWeaponBase::ShouldPredict()
 void CFFWeaponBase::PrimaryAttack()
 {
 	CANCEL_IF_BUILDING();
+	CANCEL_IF_FEIGNED();
 
 	ENGY_SPECIAL_AIMSENTRYGUN();
 

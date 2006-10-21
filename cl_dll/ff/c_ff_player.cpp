@@ -165,7 +165,8 @@ void CC_PrimeOne( void )
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
-	if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	if( pLocalPlayer->IsFeigned() )
 		return;
 
 	// Make sure we can't insta-prime on the client either
@@ -231,7 +232,8 @@ void CC_PrimeTwo( void )
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
-	if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
+	if( pLocalPlayer->IsFeigned() )
 		return;
 
 	// Make sure we can't insta-prime on the client either
@@ -421,6 +423,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iEngyMe ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
+	RecvPropInt( RECVINFO( m_iFeigned ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )

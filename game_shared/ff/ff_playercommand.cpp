@@ -95,7 +95,7 @@ bool CPlayerCommands::ProcessCommand(std::string strCommand, CBaseEntity *pEntit
 		return true;
 	}
 
-	if( !( i->second->m_uiFlags & FF_CMD_FEIGNED ) && pPlayer->m_fFeigned )
+	if( !( i->second->m_uiFlags & FF_CMD_FEIGNED ) && pPlayer->IsFeigned() )
 	{
 		//DevMsg( "Player %s tried to use command %s, but failed because that command cannot be done while feigned.\n", pPlayer->GetPlayerName(), strCommand.c_str() );
 		return true;

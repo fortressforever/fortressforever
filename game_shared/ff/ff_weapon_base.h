@@ -99,6 +99,18 @@ class CFFPlayer;
 }
 #endif
 
+#define CANCEL_IF_FEIGNED() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( !pFFPlayer ) \
+		return; \
+	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
+	{ \
+		if( pFFPlayer->IsFeigned() ) \
+			return; \
+	} \
+}
+
 // Weapon IDs for all FF Game weapons
 typedef enum
 {

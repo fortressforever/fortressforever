@@ -392,6 +392,12 @@ private:
 	bool m_bAttackReboundForAiming;
 	// ----------------------------------
 
+	// Feign stuff
+public:
+	bool IsFeigned( void ) const { return m_iFeigned != 0; }
+private:
+	unsigned int m_iFeigned;
+
 private:
 	C_FFPlayer( const C_FFPlayer & );
 
