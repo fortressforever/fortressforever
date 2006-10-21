@@ -2070,9 +2070,12 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	//if( Q_strcmp( pPlayerClassInfo.m_szClassName, Class_IntToString( iClass ) ) == 0 )
 	//	return;
 
-	// Make sure they aren't already this class
-	if (iClass == GetClassSlot())
+	// If they're already this class, no class change needed. Just inform the player.
+	if (iClass == m_iNextClass)
+	{
+		ClientPrint(this, HUD_PRINTNOTIFY, "#FF_CHANGECLASS_LATER", Class_IntToString(iClass));
 		return;
+	}
 
 	int iAlreadyThisClass = 0;
 
