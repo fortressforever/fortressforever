@@ -28,7 +28,6 @@
 #include <vgui/ILocalize.h>
 
 #include "ff_hud_chat.h"
-//#include "IGameUIFuncs.h"
 #include <igameresources.h>
 
 using namespace vgui;
@@ -36,7 +35,6 @@ using namespace vgui;
 CHudContextMenu *g_pHudContextMenu = NULL;
 
 extern ConVar sensitivity;
-//extern IGameUIFuncs *gameuifuncs;
 
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
 ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
@@ -400,7 +398,7 @@ void CHudContextMenu::DoCommand(const char *cmd)
 	{
 		if( cm_aimsentry.GetBool() && ( strcmp( cmd, "aimsentry" ) == 0 ) )
 		{
-			// Special case for aimsentry - we bind attack1 to
+			// Special case for aimsentry - we "bind" attack1 to
 			// aimsentry so they can NOW click anywhere to aim
 			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 			if( !pPlayer )
