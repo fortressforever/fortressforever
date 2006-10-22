@@ -338,33 +338,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
-class CFFRagdoll : public CBaseAnimatingOverlay
-{
-public:
-	DECLARE_CLASS( CFFRagdoll, CBaseAnimatingOverlay );
-	DECLARE_SERVERCLASS();
-
-	// Transmit ragdolls to everyone.
-	virtual int UpdateTransmitState()
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
-
-public:
-	// In case the client has the player entity, we transmit the player index.
-	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
-	// so they can create a ragdoll in the right place.
-	CNetworkHandle( CBaseEntity, m_hPlayer );	// networked entity handle 
-	CNetworkVector( m_vecRagdollVelocity );
-	CNetworkVector( m_vecRagdollOrigin );
-
-	// State of player's limbs
-	CNetworkVar(int, m_fBodygroupState);
-	
-	// Network this separately now that previous method broken
-	CNetworkVar(int, m_nSkinIndex);
-};
-
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CFFRagdoll, DT_FFRagdoll )
@@ -597,7 +570,8 @@ void CFFPlayer::PreThink(void)
 		if( IsCloaked() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
 		{
 			// Uncloak
-			Command_SpySilentCloak();
+			SpyCloakFadeIn( true );
+			Cloak();
 		}
 
 		// Disguising
@@ -606,6 +580,9 @@ void CFFPlayer::PreThink(void)
 
 		// Sabotage!!
 		SpySabotageThink();
+
+		// Cloak fade thinking
+		SpyCloakFadeThink();
 	}
 
 	// Do we need to do a class specific skill?
@@ -996,6 +973,9 @@ void CFFPlayer::PreForceSpawn( void )
 		RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 		ClearUseEntity();
 
+		if( GetClassSlot() == CLASS_SPY )
+			SpyCloakFadeIn( true );
+
 		Extinguish();
 
 		// This client isn't going to be thinking for a while, so reset the sound until they respawn
@@ -1266,6 +1246,10 @@ void CFFPlayer::SetupClassVariables()
 
 	// Reset Spy stuff
 	m_iCloaked = 0;
+	m_flCloakFadeFinish = 0.0f;
+	m_iCloakFadeCloaking = 0;
+	// Not currently fading in or out
+	m_bCloakFadeCloaking = false;
 	m_flFinishDisguise = 0;
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
@@ -1382,8 +1366,11 @@ bool CFFPlayer::ClientCommand(const char *cmd)
 // Purpose: This is the normal, noisey cloak. It used to have a check for
 //			velocity but not anymore.
 //-----------------------------------------------------------------------------
+/*
 void CFFPlayer::Command_SpyCloak( void )
 {
+	Warning( "[Cloak] [S] Time: %f\n", gpGlobals->curtime );
+
 	// Just be on ground
 	if (GetGroundEntity() == NULL)
 		return;
@@ -1396,13 +1383,17 @@ void CFFPlayer::Command_SpyCloak( void )
 
 	Command_SpySilentCloak();
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: This doesn't have a maximum speed either.
 //			That wasn't really a description or a purpose, I know.
 //-----------------------------------------------------------------------------
+/*
 void CFFPlayer::Command_SpySilentCloak( void )
 {
+	Warning( "[Silent Cloak] [S] Time: %f\n", gpGlobals->curtime );
+
 	// Must be on ground
 	if (GetGroundEntity() == NULL)
 		return;
@@ -1496,6 +1487,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 		}
 	}
 }
+*/
 
 void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1518,6 +1510,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if( m_iEngyMe )
 		m_iEngyMe = 0;
+
+	if( GetClassSlot() == CLASS_SPY )
+		SpyCloakFadeIn( true );
 
 	// Log the death to the stats engine
 	g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
@@ -5796,6 +5791,97 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 	// Then apply the class stuff
 	ActivateClass();
 	SetupClassVariables();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFPlayer::SpyCloakFadeIn( bool bInstant )
+{
+	Warning( "[Spy Cloak Fade] Start fading in!\n" );
+
+	// Set old non-refract skin immediately!
+	if( IsDisguised() )
+		m_nSkin = GetDisguisedTeam() - FF_TEAM_BLUE;
+	else
+		m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
+
+	// Find out when we'll finish the cloak fade
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
+
+	// If instant, set alpha back to normal and bail
+	if( bInstant )
+	{
+		SetRenderColorA( ( byte )255 );
+
+		// No need for cloak think, we're already done
+		m_bCloakFadeCloaking = false;
+	}
+	else
+	{
+		// Un-cloaking
+		m_iCloakFadeCloaking = 2;
+
+		// Need to do stuff in fade think
+		m_bCloakFadeCloaking = true;
+	}	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFPlayer::SpyCloakFadeOut( bool bInstant )
+{
+	Warning( "[Spy Cloak Fade] Start fading out!\n" );
+
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
+
+	// Cloaking
+	m_iCloakFadeCloaking = 1;
+
+	// Need to do stuff in fade think
+	m_bCloakFadeCloaking = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFFPlayer::SpyCloakFadeThink( void )
+{
+	if( m_bCloakFadeCloaking )
+	{
+		float flFadeTimeLeft = m_flCloakFadeFinish - gpGlobals->curtime;
+		if( flFadeTimeLeft <= 0.0f )
+		{
+			// Done fading, set the new skin
+			m_bCloakFadeCloaking = false;
+			
+			switch( m_iCloakFadeCloaking )
+			{
+				// For finished un-cloaking, do nothing
+
+				// Done fading out from the cloak, so set refract skin
+				// and let mat proxy take over
+				case 1:
+					// TODO: Change to skin family w/ the refract shader...
+				break;
+			}
+		}
+		else
+		{
+			// Not done fading, adjust values more
+			switch( m_iCloakFadeCloaking )
+			{
+				// Un-Cloaking, so increase alpha
+				case 2:
+				break;
+
+				// Cloaking, so decrease alpha
+				case 1:
+				break;
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

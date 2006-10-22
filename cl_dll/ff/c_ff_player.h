@@ -85,7 +85,7 @@ typedef struct SpyInfo_s
 
 //=============================================================================
 //
-// Class CFFRadioTagData
+// Class CFFPipebombCounter
 //
 //=============================================================================
 //-----------------------------------------------------------------------------
@@ -395,10 +395,13 @@ private:
 	bool m_bAttackReboundForAiming;
 	// ----------------------------------
 
-	// Feign stuff
+	// Cloak stuff
 public:
+	void Command_SpyCloak( void );
+	void Command_SpySilentCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 private:
+	void Cloak( void );
 	unsigned int m_iCloaked;
 
 private:

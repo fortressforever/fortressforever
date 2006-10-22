@@ -309,8 +309,7 @@ void CC_SpyCloak( void )
 	if( !pLocalPlayer )
 		return;
 
-	if( !pLocalPlayer->IsAlive() )
-		return;
+	pLocalPlayer->Command_SpyCloak();
 }
 
 void CC_SpySilentCloak( void )
@@ -322,8 +321,7 @@ void CC_SpySilentCloak( void )
 	if( !pLocalPlayer )
 		return;
 
-	if( !pLocalPlayer->IsAlive() )
-		return;
+	pLocalPlayer->Command_SpySilentCloak();
 }
 
 #define FF_PLAYER_MODEL "models/player/terror.mdl"
@@ -1584,6 +1582,10 @@ void C_FFPlayer::DoAnimationEvent( PlayerAnimEvent_t event )
 //-----------------------------------------------------------------------------
 ShadowType_t C_FFPlayer::ShadowCastType( void )
 {
+	// Cloaked players have no shadows
+	if( IsCloaked() )
+		return SHADOWS_NONE;
+
 	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
 	{
 		if( r_selfshadows.GetInt() )
@@ -1631,7 +1633,7 @@ int C_FFPlayer::GetDisguisedTeam( void )
 	if( IsDisguised() )	
 		return ( m_iSpyDisguise & 0x0000000F );
 
-	return 0;
+	return TEAM_UNASSIGNED;
 }
 
 //-----------------------------------------------------------------------------
@@ -1642,7 +1644,7 @@ int C_FFPlayer::GetDisguisedClass( void )
 	if( IsDisguised() )
 		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 
-	return 0;
+	return CLASS_NONE;
 }
 
 // --> Mirv: Get the class

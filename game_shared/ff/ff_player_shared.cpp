@@ -26,6 +26,11 @@
 	#include "decals.h"
 	#include "ilagcompensationmanager.h"
 
+	#include "ff_item_flag.h"
+	#include "ff_entity_system.h"	// Entity system
+	#include "ff_scriptman.h"
+	#include "ff_luacontext.h"
+
 #endif
 
 #include "gamevars_shared.h"
@@ -972,4 +977,149 @@ bool CFFPlayer::HandleShotImpactingWater(const FireBulletsInfo_t &info, const Ve
 
 	*pVecTracerDest = waterTrace.endpos;
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared cloak code
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SpyCloak( void )
+{
+	// Regular cloak can be done anytime
+
+#ifdef GAME_DLL
+	// A yell of pain!
+	if( IsCloaked() )
+	{
+		EmitSound( "Player.Death" );
+
+		// Cleanup ragdoll
+		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
+		if( pRagdoll )
+		{
+			// Remove the ragdoll instantly
+			pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+			pRagdoll->SetNextThink( gpGlobals->curtime );
+		}		
+	}
+	else
+	{
+		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
+		CreateRagdollEntity();
+
+		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
+
+		if( pRagdoll )
+		{
+			pRagdoll->m_vecRagdollVelocity = GetLocalVelocity();
+			pRagdoll->SetThink( NULL );
+		}		
+	}
+#endif
+
+	Cloak();
+
+#ifdef GAME_DLL
+	if( IsCloaked() )
+		SpyCloakFadeOut();
+	else
+		SpyCloakFadeIn();
+#endif	
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Shared silent cloak code
+//-----------------------------------------------------------------------------
+void CFFPlayer::Command_SpySilentCloak( void )
+{
+	// Silent cloak must be done while not moving!
+	if( !GetLocalVelocity().IsZero() )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_SILENTCLOAK_MUSTBESTILL" );
+		return;
+	}
+
+	Cloak();
+
+#ifdef GAME_DLL
+	if( IsCloaked() )
+		SpyCloakFadeOut();
+	else
+		SpyCloakFadeIn();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: The actual cloak stuff
+//-----------------------------------------------------------------------------
+void CFFPlayer::Cloak( void )
+{
+#ifdef CLIENT_DLL 
+	Warning( "[Cloak] [C] Cloak: %f\n", gpGlobals->curtime );
+#else
+	Warning( "[Cloak] [S] Cloak: %f\n", gpGlobals->curtime );
+
+	// Already Cloaked so remove all effects
+	if( IsCloaked() )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_UNCLOAK" );
+
+		// Yeah we're not Cloaked anymore bud
+		m_iCloaked = 0;
+
+		// If we're currently disguising, remove some time (50%)
+		if( m_flFinishDisguise > gpGlobals->curtime )
+			m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
+
+		// Redeploy our weapon
+		if( GetActiveWeapon() && ( GetActiveWeapon()->IsWeaponVisible() == false ) )
+		{
+			GetActiveWeapon()->Deploy();
+			ShowCrosshair( true );
+		}
+
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "uncloaked" );
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", this->GetUserID() );
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+	// Not already cloaked
+	else
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );
+
+		// Announce being cloaked
+		m_iCloaked = 1;
+
+		// If we're currently disguising, add on some time (50%)
+		if( m_flFinishDisguise > gpGlobals->curtime )
+			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
+
+		// Holster our current weapon
+		if( GetActiveWeapon() )
+			GetActiveWeapon()->Holster(NULL);
+
+		CFFLuaSC hOwnerCloak( 1, this );
+		// Find any items that we are in control of and let them know we Cloaked
+		CFFInfoScript *pEnt = ( CFFInfoScript * )gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
+		while( pEnt != NULL )
+		{
+			// Tell the ent that it Cloaked
+			_scriptman.RunPredicates_LUA( pEnt, &hOwnerCloak, "onownercloak" );
+
+			// Next!
+			pEnt = ( CFFInfoScript * )gEntList.FindEntityByOwnerAndClassT( pEnt, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
+		}
+
+		// Fire an event.
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "cloaked" );						
+		if( pEvent )
+		{
+			pEvent->SetInt( "userid", this->GetUserID() );
+			gameeventmanager->FireEvent( pEvent, true );
+		}
+	}
+#endif
 }
