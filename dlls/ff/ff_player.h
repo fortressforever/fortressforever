@@ -124,6 +124,33 @@ enum eBurnType
 	BURNTYPE_NALPALMGRENADE,
 };
 
+class CFFRagdoll : public CBaseAnimatingOverlay
+{
+public:
+	DECLARE_CLASS( CFFRagdoll, CBaseAnimatingOverlay );
+	DECLARE_SERVERCLASS();
+
+	// Transmit ragdolls to everyone.
+	virtual int UpdateTransmitState()
+	{
+		return SetTransmitState( FL_EDICT_ALWAYS );
+	}
+
+public:
+	// In case the client has the player entity, we transmit the player index.
+	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
+	// so they can create a ragdoll in the right place.
+	CNetworkHandle( CBaseEntity, m_hPlayer );	// networked entity handle 
+	CNetworkVector( m_vecRagdollVelocity );
+	CNetworkVector( m_vecRagdollOrigin );
+
+	// State of player's limbs
+	CNetworkVar(int, m_fBodygroupState);
+
+	// Network this separately now that previous method broken
+	CNetworkVar(int, m_nSkinIndex);
+};
+
 //=============================================================================
 // >> FF Game player
 //=============================================================================
@@ -572,14 +599,24 @@ public:
 	void Command_SetChannel( void );
 	int m_iChannel;
     
+	// BEG: Spy cloak stuff
 private:
-	CNetworkVar( unsigned int, m_iCloaked );
+	void SpyCloakFadeIn( bool bInstant = false );
+	void SpyCloakFadeOut( bool bInstant = false );
+	void SpyCloakFadeThink( void );
+	float m_flCloakFadeFinish;
+	// if 1 cloaking, if 2 un-cloaking
+	int m_iCloakFadeCloaking;
+	bool m_bCloakFadeCloaking;
+	// Shared stuffs:
 public:
-	//void SpyFeign( void );
-	//void SpySilentFeign( void );
 	void Command_SpyCloak( void );
 	void Command_SpySilentCloak( void );
 	bool IsCloaked( void ) const { return m_iCloaked != 0; }
+private:
+	void Cloak( void );	
+	CNetworkVar( unsigned int, m_iCloaked );
+	// END: Spy cloak stuff
 
 public:
 	int Heal(CFFPlayer *, float);
