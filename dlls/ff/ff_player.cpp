@@ -335,7 +335,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_iEngyMe ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iFeigned ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 class CFFRagdoll : public CBaseAnimatingOverlay
@@ -594,10 +594,10 @@ void CFFPlayer::PreThink(void)
 		float flSpeed = GetLocalVelocity().Length();
 
 		// If going faster than spies walk speed, reset
-		if( IsFeigned() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
+		if( IsCloaked() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
 		{
-			// Unfeign (uncloak)
-			SpySilentFeign();
+			// Uncloak
+			Command_SpySilentCloak();
 		}
 
 		// Disguising
@@ -1265,7 +1265,7 @@ void CFFPlayer::SetupClassVariables()
 	m_bSpecialInfectedDeath = false;
 
 	// Reset Spy stuff
-	m_iFeigned = 0;
+	m_iCloaked = 0;
 	m_flFinishDisguise = 0;
 	m_iSpyDisguise = 0;
 	m_iNewSpyDisguise = 0;
@@ -1379,41 +1379,41 @@ bool CFFPlayer::ClientCommand(const char *cmd)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: This is the normal, noisey feign. It used to have a check for
+// Purpose: This is the normal, noisey cloak. It used to have a check for
 //			velocity but not anymore.
 //-----------------------------------------------------------------------------
-void CFFPlayer::SpyFeign( void )
+void CFFPlayer::Command_SpyCloak( void )
 {
 	// Just be on ground
 	if (GetGroundEntity() == NULL)
 		return;
 
 	// A yell of pain
-	if (!IsFeigned())
+	if (!IsCloaked())
 	{
 		EmitSound( "Player.Death" );
 	}
 
-	SpySilentFeign();
+	Command_SpySilentCloak();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: This doesn't have a maximum speed either.
 //			That wasn't really a description or a purpose, I know.
 //-----------------------------------------------------------------------------
-void CFFPlayer::SpySilentFeign( void )
+void CFFPlayer::Command_SpySilentCloak( void )
 {
 	// Must be on ground
 	if (GetGroundEntity() == NULL)
 		return;
 
-	// Already feigned so remove all effects
-	if (IsFeigned())
+	// Already Cloaked so remove all effects
+	if (IsCloaked())
 	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_UNFEIGN" );
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_UNCLOAK" );
 
-		// Yeah we're not feigned anymore bud
-		m_iFeigned = 0;
+		// Yeah we're not Cloaked anymore bud
+		m_iCloaked = 0;
 
 		// If we're currently disguising, remove some time (50%)
 		if( m_flFinishDisguise > gpGlobals->curtime )
@@ -1437,19 +1437,19 @@ void CFFPlayer::SpySilentFeign( void )
 		}
 
 		// Fire an event.
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("unfeigned");						
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("uncloaked");						
 		if(pEvent)
 		{
 			pEvent->SetInt("userid", this->GetUserID());
 			gameeventmanager->FireEvent(pEvent, true);
 		}
 	}
-	// Not already feigned, so collapse with ragdoll
+	// Not already cloakned, so collapse with ragdoll
 	else
 	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_FEIGN" );
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );
 
-		m_iFeigned = 1;
+		m_iCloaked = 1;
 
 		// If we're currently disguising, add on some time (50%)
 		if( m_flFinishDisguise > gpGlobals->curtime )
@@ -1475,20 +1475,20 @@ void CFFPlayer::SpySilentFeign( void )
 		if (GetActiveWeapon())
 			GetActiveWeapon()->Holster(NULL);
 
-		CFFLuaSC hOwnerFeign( 1, this );
-		// Find any items that we are in control of and let them know we feigned
+		CFFLuaSC hOwnerCloak( 1, this );
+		// Find any items that we are in control of and let them know we Cloaked
 		CFFInfoScript *pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( NULL, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
 		while( pEnt != NULL )
 		{
-			// Tell the ent that it feigned
-			_scriptman.RunPredicates_LUA( pEnt, &hOwnerFeign, "onownerfeign" );
+			// Tell the ent that it Cloaked
+			_scriptman.RunPredicates_LUA( pEnt, &hOwnerCloak, "onownercloak" );
 
 			// Next!
 			pEnt = (CFFInfoScript*)gEntList.FindEntityByOwnerAndClassT( pEnt, ( CBaseEntity * )this, CLASS_INFOSCRIPT );
 		}
 
 		// Fire an event.
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("feigned");						
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("cloaked");						
 		if(pEvent)
 		{
 			pEvent->SetInt("userid", this->GetUserID());
@@ -4167,8 +4167,8 @@ void CFFPlayer::Command_PrimeOne(void)
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
-	// Spy shouldn't be able to prime grenades when feigned
-	if (IsFeigned())
+	// Spy shouldn't be able to prime grenades when Cloaked
+	if (IsCloaked())
 		return;
 
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -4207,8 +4207,8 @@ void CFFPlayer::Command_PrimeTwo(void)
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
-	// Spy shouldn't be able to prime grenades when feigned
-	if (IsFeigned())
+	// Spy shouldn't be able to prime grenades when Cloaked
+	if (IsCloaked())
 		return;
 
     const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
@@ -5475,8 +5475,8 @@ void CFFPlayer::SetDisguise(int iTeam, int iClass, bool bInstant /* = false */)
 		m_flFinishDisguise = gpGlobals->curtime + 7.0f;
 	}
 
-	// 50% longer when feigned
-	if( IsFeigned() )
+	// 50% longer when Cloaked
+	if( IsCloaked() )
 		m_flFinishDisguise += 7.0f * 0.5f;
 }
 

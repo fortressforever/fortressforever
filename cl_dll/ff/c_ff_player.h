@@ -55,6 +55,9 @@ void CC_ToggleOne( void );
 void CC_ToggleTwo( void );
 // <-- Mirv: More gren priming functions
 
+void CC_SpyCloak( void );
+void CC_SpySilentCloak( void );
+
 // Moved here from ff_shareddefs.h
 typedef struct SpyInfo_s
 {
@@ -394,9 +397,9 @@ private:
 
 	// Feign stuff
 public:
-	bool IsFeigned( void ) const { return m_iFeigned != 0; }
+	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 private:
-	unsigned int m_iFeigned;
+	unsigned int m_iCloaked;
 
 private:
 	C_FFPlayer( const C_FFPlayer & );

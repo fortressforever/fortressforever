@@ -824,7 +824,7 @@ namespace Omnibot
 				{
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 
-					if(pffPlayer->IsFeigned())
+					if(pffPlayer->IsCloaked())
 						_powerups.SetFlag(TF_PWR_FEIGNED);
 
 					// Disguises

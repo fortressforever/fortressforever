@@ -573,11 +573,13 @@ public:
 	int m_iChannel;
     
 private:
-	CNetworkVar( unsigned int, m_iFeigned );
+	CNetworkVar( unsigned int, m_iCloaked );
 public:
-	void SpyFeign( void );
-	void SpySilentFeign( void );
-	bool IsFeigned( void ) const { return m_iFeigned != 0; }
+	//void SpyFeign( void );
+	//void SpySilentFeign( void );
+	void Command_SpyCloak( void );
+	void Command_SpySilentCloak( void );
+	bool IsCloaked( void ) const { return m_iCloaked != 0; }
 
 public:
 	int Heal(CFFPlayer *, float);

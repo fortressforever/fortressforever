@@ -99,14 +99,14 @@ class CFFPlayer;
 }
 #endif
 
-#define CANCEL_IF_FEIGNED() \
+#define CANCEL_IF_CLOAKED() \
 { \
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
 	if( !pFFPlayer ) \
 		return; \
 	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
 	{ \
-		if( pFFPlayer->IsFeigned() ) \
+		if( pFFPlayer->IsCloaked() ) \
 			return; \
 	} \
 }

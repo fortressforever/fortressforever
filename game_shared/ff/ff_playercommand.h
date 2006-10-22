@@ -84,7 +84,8 @@ typedef void (CFFPlayer::*PLAYERCMD_FUNC_TYPE)(void);
 #define FF_CMD_DEAD				(1<<2)			// command runs on dead in-game players
 #define FF_CMD_SPEC				(1<<3)			// command runs on spectators
 #define FF_CMD_PREMATCH			(1<<4)			// command runs while in prematch
-#define FF_CMD_FEIGNED			(1<<5)			// command runs while player feigned
+//#define FF_CMD_FEIGNED			(1<<5)			// command runs while player feigned
+#define FF_CMD_CLOAKED			(1<<5)			// commadn runs while player is cloaked
 
 // data class to contain information about a specific console command
 class CPlayerCommand

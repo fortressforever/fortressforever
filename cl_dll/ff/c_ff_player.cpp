@@ -166,7 +166,7 @@ void CC_PrimeOne( void )
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
-	if( pLocalPlayer->IsFeigned() )
+	if( pLocalPlayer->IsCloaked() )
 		return;
 
 	// Make sure we can't insta-prime on the client either
@@ -233,7 +233,7 @@ void CC_PrimeTwo( void )
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
-	if( pLocalPlayer->IsFeigned() )
+	if( pLocalPlayer->IsCloaked() )
 		return;
 
 	// Make sure we can't insta-prime on the client either
@@ -299,6 +299,32 @@ void CC_TestTimers( void )
 }
 
 ConCommand testtimers("cc_test_timers",CC_TestTimers,"Tests the basic timer classes.");
+
+void CC_SpyCloak( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+}
+
+void CC_SpySilentCloak( void )
+{
+	if( !engine->IsConnected() || !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+}
 
 #define FF_PLAYER_MODEL "models/player/terror.mdl"
 
@@ -423,7 +449,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_iEngyMe ) ),
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
-	RecvPropInt( RECVINFO( m_iFeigned ) ),
+	RecvPropInt( RECVINFO( m_iCloaked ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
