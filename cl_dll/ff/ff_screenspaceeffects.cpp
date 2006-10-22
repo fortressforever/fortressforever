@@ -92,7 +92,7 @@ class CInfectedEffect : public CBaseEffect
 //-----------------------------------------------------------------------------
 class CGassedEffect : public CBaseEffect
 {
-	virtual const char *pszEffect() { return "effects/gased"; }
+	virtual const char *pszEffect() { return "effects/gassed"; }
 };
 
 ADD_SCREENSPACE_EFFECT(CTranquilizedEffect, tranquilizedeffect);
