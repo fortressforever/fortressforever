@@ -95,7 +95,7 @@ CON_COMMAND( bot_immuneme, "immune me" )
 	}
 }
 
-CON_COMMAND(bot_feign, "feign!")
+CON_COMMAND(bot_cloak, "cloak!")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -103,7 +103,7 @@ CON_COMMAND(bot_feign, "feign!")
 
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
-			pPlayer->SpySilentFeign();
+			pPlayer->Command_SpySilentCloak();
 		}
 	}
 }
