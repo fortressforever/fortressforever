@@ -95,6 +95,16 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheEngyMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
 CLIENTEFFECT_REGISTER_END()
 
+bool g_StealMouseForAimSentry = false;
+void SetStealMouseForAimSentry( bool bValue )
+{
+	g_StealMouseForAimSentry = bValue;
+}
+bool CanStealMouseForAimSentry( void )
+{
+	return g_StealMouseForAimSentry;
+}
+
 void OnTimerExpired(C_FFTimer *pTimer)
 {
 	string name = pTimer->GetTimerName();
@@ -1047,8 +1057,8 @@ void C_FFPlayer::Spawn( void )
 		m_bFirstSpawn = false;
 	}
 
-	// Reset this to false on spawn
-	m_bAttackReboundForAiming = false;
+	// Reset this on spawn
+	SetStealMouseForAimSentry( false );
 
 	// Clean up some stuff
 	ffvieweffects->Reset();	
@@ -1119,7 +1129,7 @@ void C_FFPlayer::Death()
 	GetPipebombCounter()->Reset();
 
 	// Reset this to false on death
-	m_bAttackReboundForAiming = false;
+	SetStealMouseForAimSentry( false );
 }
 
 // Stomp any movement if we're in mapguide mode

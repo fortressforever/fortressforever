@@ -46,6 +46,9 @@ class C_FFSevTest;
 
 extern ConVar r_selfshadows;
 
+void SetStealMouseForAimSentry( bool bValue );
+bool CanStealMouseForAimSentry( void );
+
 void CC_PrimeOne(void);
 void CC_PrimeTwo(void);
 void CC_ThrowGren(void);
@@ -381,8 +384,8 @@ protected:
 	// ----------------------------------
 	// Stuffs for radial menu & aiming sentry
 public:
-	bool IsAttackReboundForAiming( void ) const { return m_bAttackReboundForAiming; }
-	void SetAttackReboundForAiming( bool bValue ) { m_bAttackReboundForAiming = bValue; }
+	bool IsAttackReboundForAiming( void ) const { return false; }
+	void SetAttackReboundForAiming( bool bValue ) { SetStealMouseForAimSentry( true ); }
 private:
 	// Nice name, eh. This is for when the player has the cvar
 	// set that lets them select aim sentry from the radial engy
@@ -392,7 +395,7 @@ private:
 	// player and any weapon attack funcs will do the appropriate
 	// aimsentry deed + fire the weapon normally in case badguys
 	// approach.
-	bool m_bAttackReboundForAiming;
+	//bool m_bAttackReboundForAiming;
 	// ----------------------------------
 
 	// Cloak stuff
