@@ -351,6 +351,8 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 	//-----------------------------------------------------------------------------
 	void CFFWeaponLaserDot::OnDataChanged(DataUpdateType_t updateType) 
 	{
+		BaseClass::OnDataChanged( updateType );
+
 		if (updateType == DATA_UPDATE_CREATED) 
 		{
 			SetNextClientThink( CLIENT_THINK_ALWAYS );
@@ -575,7 +577,7 @@ void CFFWeaponSniperRifle::Fire()
 
 	// TODO: Maybe FX_FireBullets is not a good idea
 
-	WeaponSound(SINGLE);
+	//WeaponSound(SINGLE);
 }
 
 //-----------------------------------------------------------------------------
