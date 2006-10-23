@@ -41,6 +41,8 @@
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client(red) and server(blue) bullet impact point");
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
 ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
+ConVar ffdev_sniper_headshotmod( "ffdev_sniperheadshotmod", "7.5", FCVAR_REPLICATED );
+ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICATED );
 
 // ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
 // ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
@@ -94,38 +96,44 @@ void CFFPlayer::FireBullet(
 						   float flSniperRifleCharge // added by Mulchman 9/20/2005
 						)
 {
+	// NOTE NOTE NOTE: Only sniper rifle uses this anymore!
+
 	float fCurrentDamage = flDamage;   // damage of the bullet at it's current trajectory
 	float fScale = 1.0f;			// scale the force
-	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
+	//float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
+	float flMaxRange = MAX_TRACE_LENGTH;
 
-	Vector vecDirShooting, vecRight, vecUp;
-	AngleVectors(shootAngles, &vecDirShooting, &vecRight, &vecUp);
+	bool bHeadshot = false;
+
+	Vector vecDirShooting /*, vecRight, vecUp*/;
+	AngleVectors( shootAngles, &vecDirShooting/*, &vecRight, &vecUp*/ );
 
 	if (!pevAttacker)
 		pevAttacker = this;  // the default attacker is ourselves
 
 	// add the spray 
+	/*
 	Vector vecDir = vecDirShooting +
 		x * vecSpread * vecRight +
 		y * vecSpread * vecUp;
+		*/
 
-	VectorNormalize(vecDir);
+	Vector vecDir = vecDirShooting;
+	VectorNormalize( vecDir );	
 
-	float flMaxRange = 8000;
-
-	bool	bHeadshot = false;
-
-	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
+	Vector vecEnd = vecSrc + ( vecDir * flMaxRange ); // max bullet range is 10000 units
 
 	trace_t tr; // main enter bullet trace
-	//UTIL_TraceLine(vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
 
+	/*
 	float flSize = ffdev_snipertracesize.GetFloat();
 	Vector vecHull = Vector(1.0f, 1.0f, 1.0f) * flSize;
 	QAngle tmpAngle;
 	VectorAngles(vecDir, tmpAngle);
 
 	UTIL_TraceHull(vecSrc, vecEnd, -vecHull, vecHull, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+	*/
 
 #ifdef GAME_DLL
 	//NDebugOverlay::SweptBox(vecSrc, vecEnd, -vecHull, vecHull, tmpAngle, 255, 0, 0, 255, 10.0f);
@@ -157,178 +165,174 @@ void CFFPlayer::FireBullet(
 #endif
 	}
 
-		//calculate the damage based on the distance the bullet travelled.
-		flCurrentDistance += tr.fraction * flMaxRange;
+	//calculate the damage based on the distance the bullet travelled.
+	//flCurrentDistance += tr.fraction * flMaxRange;
 
-		// damage get weaker of distance
-		//fCurrentDamage *= pow(0.85f, (flCurrentDistance / 500));	// |-- Mirv: Distance doesnt affect sniper rifle
+	// damage get weaker of distance
+	//fCurrentDamage *= pow(0.85f, (flCurrentDistance / 500));	// |-- Mirv: Distance doesnt affect sniper rifle
 
-		// --> Mirv: Locational damage
+	// --> Mirv: Locational damage
 
-		// Only if this is a charged shot
-		if (flSniperRifleCharge)
+	// Only if this is a charged shot
+	if (flSniperRifleCharge)
+	{
+		fCurrentDamage *= flSniperRifleCharge;
+
+		// Bug #0000671: Sniper rifle needs to cause more push upon hitting
+		// Nothing fancy... 4.5 seemed to be about TFC's quick shot
+		// and 8.5 seemed to be about TFC's full charge shot
+		//fScale = clamp( flSniperRifleCharge + 3.5f, 4.5f, 8.5f );
+		// NOTE: New phish scale!
+		fScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / 7 );
+
+		if (tr.hitgroup == HITGROUP_HEAD)
 		{
-			fCurrentDamage *= flSniperRifleCharge;
+			DevMsg("Headshot\n");
+			fCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
 
-			// Bug #0000671: Sniper rifle needs to cause more push upon hitting
-			// Nothing fancy... 4.5 seemed to be about TFC's quick shot
-			// and 8.5 seemed to be about TFC's full charge shot
-			//fScale = clamp( flSniperRifleCharge + 3.5f, 4.5f, 8.5f );
-			// NOTE: New phish scale!
-			fScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / 7 );
-
-			if (tr.hitgroup == HITGROUP_HEAD)
-			{
-				//DevMsg("Headshot\n");
-				fCurrentDamage *= 7.5f;
-
-				bHeadshot = true;
-			}
-			else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
-			{
-				//DevMsg("Legshot\n");
-				fCurrentDamage *= 0.5f;
-
-#ifdef GAME_DLL
-				// Bug #0000557: Teamplay 0 + sniper legshot slows allies
-				// Don't apply the speed effect if the hit player is a teammate/ally
-
-				// Slowed down by 10% - 60% depending on charge
-				// Person hit by sniper rifle
-				CFFPlayer *player = ToFFPlayer(tr.m_pEnt);
-
-				// Person shooting the sniper rifle
-				CFFPlayer *pShooter = ToFFPlayer(pevAttacker);
-
-				// Bug #0000557: Teamplay 0 + sniper legshot slows allies
-				// If they're not a teammate/ally then do the leg shot speed effect
-				float flDuration = -1.0f;
-				float flIconDuration = flDuration;
-				float flSpeed = 0.9f - flSniperRifleCharge / 14.0f;
-				if( player->LuaRunEffect( LUA_EF_LEGSHOT, pShooter, &flDuration, &flIconDuration, &flSpeed ) )
-				{
-					if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
-					{
-						player->AddSpeedEffect( SE_LEGSHOT, flDuration, flSpeed, SEM_ACCUMULATIVE| SEM_HEALABLE, FF_STATUSICON_LEGINJURY, flIconDuration );
-					}
-				}
-#endif
-			}			
+			bHeadshot = true;
 		}
-		// --> Mirv: Locational damage
-
-		int iDamageType = DMG_BULLET | DMG_NEVERGIB;
-
-		if (bDoEffects)
+		else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 		{
-			// See if the bullet ended up underwater + started out of the water
-			if (enginetrace->GetPointContents(tr.endpos) & (CONTENTS_WATER|CONTENTS_SLIME))
-			{	
-				trace_t waterTrace;
-				UTIL_TraceLine(vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &waterTrace);
-
-				if (waterTrace.allsolid != 1)
-				{
-					CEffectData	data;
-					data.m_vOrigin = waterTrace.endpos;
-					data.m_vNormal = waterTrace.plane.normal;
-					data.m_flScale = random->RandomFloat(8, 12);
-
-					if (waterTrace.contents & CONTENTS_SLIME)
-					{
-						data.m_fFlags |= FX_WATER_IN_SLIME;
-					}
-
-					DispatchEffect("gunshotsplash", data);
-				}
-			}
-			else
-			{
-				//Do Regular hit effects
-
-				// Don't decal nodraw surfaces
-				if (! (tr.surface.flags & (SURF_SKY|SURF_NODRAW|SURF_HINT|SURF_SKIP)))
-				{
-					CBaseEntity *pEntity = tr.m_pEnt;
-
-					// Revised further for
-					// Bug: 0000620: Trace attacks aren't hitting walls
-
-					// Mirv: Do impact traces no matter what
-					if (pEntity /*&& pEntity->IsPlayer() */) //! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber()))
-					{
-						UTIL_ImpactTrace(&tr, iDamageType);
-					}
-				}
-			}
-		} // bDoEffects
-
-		// add damage to entity that we hit
-
-		ClearMultiDamage();
-
-		CTakeDamageInfo info( ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), pevAttacker, fCurrentDamage, iDamageType );	// |-- Mirv: Modified this
-
-		// for radio tagging and to make ammo type work in the DamageFunctions
-		info.SetAmmoType(iBulletType);
+			DevMsg("Legshot\n");
+			fCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
 
 #ifdef GAME_DLL
-		// Hack for sniper rifle to become radio tag rifle
-		if( flSniperRifleCharge )
-			info.SetAmmoType( m_iRadioTaggedAmmoIndex );
+			// Bug #0000557: Teamplay 0 + sniper legshot slows allies
+			// Don't apply the speed effect if the hit player is a teammate/ally
+
+			// Slowed down by 10% - 60% depending on charge
+			// Person hit by sniper rifle
+			CFFPlayer *player = ToFFPlayer(tr.m_pEnt);
+
+			// Person shooting the sniper rifle
+			CFFPlayer *pShooter = ToFFPlayer(pevAttacker);
+
+			// Bug #0000557: Teamplay 0 + sniper legshot slows allies
+			// If they're not a teammate/ally then do the leg shot speed effect
+			float flDuration = -1.0f;
+			float flIconDuration = flDuration;
+			float flSpeed = 0.9f - flSniperRifleCharge / 14.0f;
+			if( player->LuaRunEffect( LUA_EF_LEGSHOT, pShooter, &flDuration, &flIconDuration, &flSpeed ) )
+			{
+				if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
+				{
+					player->AddSpeedEffect( SE_LEGSHOT, flDuration, flSpeed, SEM_ACCUMULATIVE| SEM_HEALABLE, FF_STATUSICON_LEGINJURY, flIconDuration );
+				}
+			}
+#endif
+		}			
+	}
+	// --> Mirv: Locational damage
+
+	int iDamageType = DMG_BULLET | DMG_NEVERGIB;
+
+	if (bDoEffects)
+	{
+		// See if the bullet ended up underwater + started out of the water
+		if (enginetrace->GetPointContents(tr.endpos) & (CONTENTS_WATER|CONTENTS_SLIME))
+		{	
+			trace_t waterTrace;
+			UTIL_TraceLine(vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &waterTrace);
+
+			if (waterTrace.allsolid != 1)
+			{
+				CEffectData	data;
+				data.m_vOrigin = waterTrace.endpos;
+				data.m_vNormal = waterTrace.plane.normal;
+				data.m_flScale = random->RandomFloat(8, 12);
+
+				if (waterTrace.contents & CONTENTS_SLIME)
+				{
+					data.m_fFlags |= FX_WATER_IN_SLIME;
+				}
+
+				DispatchEffect("gunshotsplash", data);
+			}
+		}
+		else
+		{
+			//Do Regular hit effects
+
+			// Don't decal nodraw surfaces
+			if (! (tr.surface.flags & (SURF_SKY|SURF_NODRAW|SURF_HINT|SURF_SKIP)))
+			{
+				CBaseEntity *pEntity = tr.m_pEnt;
+
+				// Revised further for
+				// Bug: 0000620: Trace attacks aren't hitting walls
+
+				// Mirv: Do impact traces no matter what
+				if (pEntity /*&& pEntity->IsPlayer() */) //! (!friendlyfire.GetBool() && pEntity && pEntity->IsPlayer() && pEntity->GetTeamNumber() == GetTeamNumber()))
+				{
+					UTIL_ImpactTrace(&tr, iDamageType);
+				}
+			}
+		}
+	} // bDoEffects
+
+	// add damage to entity that we hit
+
+	ClearMultiDamage();
+	CTakeDamageInfo info( ToFFPlayer(pevAttacker)->GetActiveFFWeapon(), pevAttacker, fCurrentDamage, iDamageType );	// |-- Mirv: Modified this
+
+	// for radio tagging and to make ammo type work in the DamageFunctions
+	info.SetAmmoType( iBulletType );
+
+#ifdef GAME_DLL
+	// Hack for sniper rifle to become radio tag rifle
+	if( flSniperRifleCharge )
+		info.SetAmmoType( m_iRadioTaggedAmmoIndex );
 #endif
 
-		CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
-		info.ScaleDamageForce(fScale * fScale * fScale);
+	CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
+	info.ScaleDamageForce(fScale * fScale * fScale);
 
+	if (tr.m_pEnt->IsPlayer())
+	{
+		info.ScaleDamageForce(0.01f);
+	}
+
+	if (bHeadshot)
+	{
+		info.SetCustomKill(KILLTYPE_HEADSHOT);
+	}
+
+	tr.m_pEnt->DispatchTraceAttack(info, vecDir, &tr);
+
+	// Bug #0000168: Blood sprites for damage on players do not display
+#ifdef GAME_DLL
+	TraceAttackToTriggers(info, tr.startpos, tr.endpos, vecDir);
+#endif
+
+	// Sniper rifle has some extra hit & gib sounds that we need to use.
+#ifdef GAME_DLL
+	if (flSniperRifleCharge)
+	{
 		if (tr.m_pEnt->IsPlayer())
 		{
-			info.ScaleDamageForce(0.01f);
-		}
+			CFFPlayer *pPlayer = ToFFPlayer(tr.m_pEnt);
 
-		if (bHeadshot)
-		{
-			info.SetCustomKill(KILLTYPE_HEADSHOT);
-		}
-
-		tr.m_pEnt->DispatchTraceAttack(info, vecDir, &tr);
-
-		// Bug #0000168: Blood sprites for damage on players do not display
-#ifdef GAME_DLL
-		TraceAttackToTriggers(info, tr.startpos, tr.endpos, vecDir);
-#endif
-
-		// Sniper rifle has some extra hit & gib sounds that we need to use.
-		if (flSniperRifleCharge)
-		{
-			if (tr.m_pEnt->IsPlayer())
+			if (pPlayer)
 			{
-				CFFPlayer *pPlayer = ToFFPlayer(tr.m_pEnt);
+				CSingleUserRecipientFilter filter( this );
+				
+				EmitSound_t ep;
+				ep.m_nChannel = CHAN_BODY;
+				ep.m_pSoundName = pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib";
+				ep.m_flVolume = 1.0f;
+				ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
+				ep.m_nFlags = 0;
+				ep.m_nPitch = PITCH_NORM; // params.pitch;
+				ep.m_pOrigin = &pPlayer->GetAbsOrigin();
 
-				if (pPlayer)
-				{
-					CRecipientFilter filter;
-					filter.AddRecipientsByPAS(pPlayer->GetAbsOrigin());
-
-#ifdef GAME_DLL
-					filter.RemoveRecipientsByPVS(pPlayer->GetAbsOrigin());
-#endif
-
-					EmitSound_t ep;
-					ep.m_nChannel = CHAN_BODY;
-					ep.m_pSoundName = pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib";
-					ep.m_flVolume = 1.0f;
-					ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
-					ep.m_nFlags = 0;
-					ep.m_nPitch = PITCH_NORM; // params.pitch;
-					ep.m_pOrigin = &pPlayer->GetAbsOrigin();
-
-					pPlayer->EmitSound(filter, pPlayer->entindex(), ep);
-				}
+				pPlayer->EmitSound( filter, pPlayer->entindex(), ep );
 			}
 		}
+	}
+#endif
 
-		ApplyMultiDamage();
+	ApplyMultiDamage();
 }
 
 // --> Mirv: Proper sounds
@@ -761,6 +765,9 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 		if (info.m_iAmmoType == -1)
 		{
 			DevMsg("ERROR: Undefined ammo type!\n");
+#ifdef GAME_DLL
+			lagcompensation->FinishLagCompensation(pPlayer);
+#endif
 			return;
 		}
 
