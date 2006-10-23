@@ -1343,6 +1343,12 @@ void CFFPlayer::InitialSpawn( void )
 	Assert( m_hRadioTagData );
 	m_hRadioTagData->Spawn();
 
+	// Mulch: I'm wondering if there's a network delay in getting this value, so
+	// lets try to get it right from the start so that later on we'll have the
+	// value right away (in attempt to fix):
+	// Bug #0001217: Instant death changing class to random pc even with cl_classautokill 0
+	engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_classautokill" );
+
 	//DevMsg("CFFPlayer::InitialSpawn");
 #endif // FF_BETA_TEST_COMPILE
 }
