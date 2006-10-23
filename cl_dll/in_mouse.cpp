@@ -246,6 +246,8 @@ void CInput::ResetMouse( void )
 }
 
 extern bool ActivateScoreboard();	// |-- Mirv: For scoreboard mouse activation
+extern bool CanStealMouseForAimSentry(); // |-- Mulch: For stealing mouse button to do aimsentry post radial menu
+extern void SetStealMouseForAimSentry( bool bValue );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -268,6 +270,15 @@ void CInput::MouseEvent( int mstate, bool down )
 			// --> Mirv: Swallow button 1 if the scoreboard is going to steal mouse focus
 			if (i == 0 && ActivateScoreboard())
 				continue;
+			// <--
+
+			// --> Mulch: Swallow button1 if special flag on player set
+			if( ( i == 0 ) && CanStealMouseForAimSentry() )
+			{
+				engine->ClientCmd( "aimsentry" );
+				SetStealMouseForAimSentry( false );
+				continue;
+			}
 			// <--
 			engine->Key_Event( K_MOUSE1 + i, 1 );
 		}
