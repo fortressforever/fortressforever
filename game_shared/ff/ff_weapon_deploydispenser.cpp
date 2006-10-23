@@ -129,8 +129,6 @@ void CFFWeaponDeployDispenser::PrimaryAttack( void )
 
 		Cleanup();
 
-		ENGY_SPECIAL_AIMSENTRYGUN();
-
 #ifdef GAME_DLL
 		CFFPlayer *pPlayer = GetPlayerOwner();		
 		if( pPlayer->IsBuilding() )

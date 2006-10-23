@@ -360,44 +360,30 @@ public:
 	int			m_iHallucinationIndex;
 	float		m_flHallucinationFinish;
 
+	// ----------------------------------
 public:
 	Color GetTeamColor( void ) const { return m_clrTeamColor; }
 protected:
 	Color m_clrTeamColor;
+	// ----------------------------------
 
-	// **********************************
+	// ----------------------------------
 	// SaveMe stuffs
 public:
 	bool IsInSaveMe( void ) const { return m_iSaveMe != 0; }
 protected:
 	unsigned int m_iSaveMe;
-	// **********************************
+	// ----------------------------------
 
-	// **********************************
+	// ----------------------------------
 	// EngyMe stuffs
 public:
 	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
 protected:
 	unsigned int m_iEngyMe;
-	// **********************************
-
-	// ----------------------------------
-	// Stuffs for radial menu & aiming sentry
-public:
-	bool IsAttackReboundForAiming( void ) const { return false; }
-	void SetAttackReboundForAiming( bool bValue ) { SetStealMouseForAimSentry( true ); }
-private:
-	// Nice name, eh. This is for when the player has the cvar
-	// set that lets them select aim sentry from the radial engy
-	// menu THEN once the menu has disapeared from the screen
-	// lets them click anywhere to actually aim it. Instead of
-	// messing w/ messy rebind stuff we're setting a flag on the
-	// player and any weapon attack funcs will do the appropriate
-	// aimsentry deed + fire the weapon normally in case badguys
-	// approach.
-	//bool m_bAttackReboundForAiming;
 	// ----------------------------------
 
+	// ----------------------------------
 	// Cloak stuff
 public:
 	void Command_SpyCloak( void );
@@ -406,21 +392,26 @@ public:
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
+	// ----------------------------------
 
 private:
 	C_FFPlayer( const C_FFPlayer & );
 
+	// ----------------------------------
 	// Local radio tag data
 public:	
 	C_FFRadioTagData *GetRadioTagData( void )	{ return m_hRadioTagData.Get(); }
 private:
 	CNetworkHandle( C_FFRadioTagData, m_hRadioTagData );
+	// ----------------------------------
 
+	// ----------------------------------
 	// Pipebomb stuff
 public:	
 	CFFPipebombCounter *GetPipebombCounter( void ) { return &m_hPipebombCounter; }
 private:
 	CFFPipebombCounter m_hPipebombCounter;
+	// ----------------------------------
 };
 
 // Just straight up copying the server version. Tired

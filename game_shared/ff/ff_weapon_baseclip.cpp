@@ -189,8 +189,6 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	CANCEL_IF_BUILDING();
 	CANCEL_IF_CLOAKED();
 
-	ENGY_SPECIAL_AIMSENTRYGUN();
-
 	// Only the player fires this way so we can cast
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 

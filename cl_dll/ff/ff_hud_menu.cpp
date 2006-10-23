@@ -404,7 +404,7 @@ void CHudContextMenu::DoCommand(const char *cmd)
 			if( !pPlayer )
 				return;
 
-			pPlayer->SetAttackReboundForAiming( true );
+			SetStealMouseForAimSentry( true );
 			ClientPrintMsg( pPlayer, HUD_PRINTCENTER, "#FF_AIMSENTRY" );
 		}
 		else
