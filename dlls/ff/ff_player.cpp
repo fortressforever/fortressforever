@@ -2039,13 +2039,19 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 
 	bool fInstantSwitch = strcmp(engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_classautokill"), "0") != 0;
 
+
 	// They are picking the randompc slot
 	if( FStrEq( szNewClassName, "randompc" ) )
 	{
 		m_fRandomPC = true;
 
 		if( fInstantSwitch )
+		{
+			// If instant switching, add in the 5 second delay
+			SetRespawnDelay( 5.0f );
+
 			KillAndRemoveItems();
+		}
 
 		return;
 	}
@@ -2106,6 +2112,9 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// Now just need a way to select which one you want
 	if (fInstantSwitch || GetClassSlot() == 0)
 	{
+		// if instant switching, add in the 5 second delay
+		SetRespawnDelay( 5.0f );
+
 		// But for now we do have instant switching
 		KillAndRemoveItems();
 
@@ -2125,8 +2134,9 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// we need to kill the vgui menus otherwise it looks bad being spawned
 	// and ready to go and all the stuff is still on your screen
 
+	// MULCH: We no longer have a motd panel!
 	// Hide motd panel if it's showing
-	ShowViewPortPanel( PANEL_INFO, false );
+	//ShowViewPortPanel( PANEL_INFO, false );
 
 	// Hide team panel if it's showing
 	ShowViewPortPanel( PANEL_TEAM, false );
