@@ -148,7 +148,10 @@ void CHudHealth::OnThink()
 		}
 		else
 		{
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncrease" );
+			if( ( ( float )( ( float )newHealth / ( float )maxHealth ) ) >= 1.0f )
+				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncreaseAbove100" );
+			else
+				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "HealthIncrease" );
 		}		
 	}
 	else
