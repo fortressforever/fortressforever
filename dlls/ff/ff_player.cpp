@@ -1246,6 +1246,7 @@ void CFFPlayer::SetupClassVariables()
 
 	// Reset Spy stuff
 	m_iCloaked = 0;
+	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
 	m_iCloakFadeCloaking = 0;
 	// Not currently fading in or out
@@ -2052,12 +2053,7 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		m_fRandomPC = true;
 
 		if( fInstantSwitch )
-		{
-			// If instant switching, add in the 5 second delay
-			SetRespawnDelay( 5.0f );
-
 			KillAndRemoveItems();
-		}
 
 		return;
 	}
@@ -2118,9 +2114,6 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// Now just need a way to select which one you want
 	if (fInstantSwitch || GetClassSlot() == 0)
 	{
-		// if instant switching, add in the 5 second delay
-		SetRespawnDelay( 5.0f );
-
 		// But for now we do have instant switching
 		KillAndRemoveItems();
 
@@ -5823,18 +5816,28 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 		m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
 
 	// Find out when we'll finish the cloak fade
+	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
 
 	// If instant, set alpha back to normal and bail
 	if( bInstant )
 	{
-		SetRenderColorA( ( byte )255 );
+		// Make sure normal drawing
+		if( GetRenderMode() != ( RenderMode_t )kRenderNormal )
+			SetRenderMode( ( RenderMode_t )kRenderNormal );
+		SetRenderColorA( 255 );
 
 		// No need for cloak think, we're already done
 		m_bCloakFadeCloaking = false;
 	}
 	else
 	{
+		// Make sure we're transparent and faded out so
+		// we can be faded in
+		if( GetRenderMode() != ( RenderMode_t )kRenderTransTexture )
+			SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+		SetRenderColorA( 0 );
+
 		// Un-cloaking
 		m_iCloakFadeCloaking = 2;
 
@@ -5850,7 +5853,13 @@ void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 {
 	Warning( "[Spy Cloak Fade] Start fading out!\n" );
 
+	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
+
+	// Change render mode so we can start fading out
+	if( GetRenderMode() != ( RenderMode_t )kRenderTransTexture )
+		SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+	SetRenderColorA( 255 );	
 
 	// Cloaking
 	m_iCloakFadeCloaking = 1;
@@ -5871,11 +5880,14 @@ void CFFPlayer::SpyCloakFadeThink( void )
 		{
 			// Done fading, set the new skin
 			m_bCloakFadeCloaking = false;
+
+			// Reset this, cloak shader handles the rest (when cloaking)
+			if( GetRenderMode() != ( RenderMode_t )kRenderNormal )
+				SetRenderMode( ( RenderMode_t )kRenderNormal );
+			SetRenderColorA( 255 );
 			
 			switch( m_iCloakFadeCloaking )
 			{
-				// For finished un-cloaking, do nothing
-
 				// Done fading out from the cloak, so set refract skin
 				// and let mat proxy take over
 				case 1:
@@ -5885,17 +5897,39 @@ void CFFPlayer::SpyCloakFadeThink( void )
 		}
 		else
 		{
-			// Not done fading, adjust values more
+			// Find percentage of fade completed
+			float flPercFade = ( gpGlobals->curtime - m_flCloakFadeStart ) / ( m_flCloakFadeFinish - m_flCloakFadeStart );
+
+			float flMinFade = 0.0f;
+			float flMaxFade = 255.0f;
+
+			float flFadeDiff = flMaxFade - flMinFade;
+
+			float flNewAlpha = 0.0f;
+
+			// Not done fading, adjust values more. Map percentage
+			// faded to a range of alpha values
 			switch( m_iCloakFadeCloaking )
 			{
 				// Un-Cloaking, so increase alpha
 				case 2:
+					flNewAlpha = flMinFade + ( flFadeDiff * flPercFade );
 				break;
 
 				// Cloaking, so decrease alpha
 				case 1:
+					flNewAlpha = flMaxFade - ( flFadeDiff * flPercFade );
+				break;
+
+				default:
+					Assert( 0 );
 				break;
 			}
+
+			Warning( "[Spy Fade] Percentage faded: %f%%, New Alpha: %f\n", flPercFade * 100.0f, flNewAlpha );
+
+			//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+			SetRenderColorA( flNewAlpha );
 		}
 	}
 }
