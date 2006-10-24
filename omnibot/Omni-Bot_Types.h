@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-09 21:51:59 -0700 (Mon, 09 Oct 2006) $
-// $LastChangedRevision: 1304 $
+// $LastChangedDate: 2006-10-23 20:31:48 -0700 (Mon, 23 Oct 2006) $
+// $LastChangedRevision: 1307 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -498,6 +498,7 @@ typedef enum eEntityFlag
 	ENT_FLAG_UNDERWATER,	
 	ENT_FLAG_ZOOMING,	
 	ENT_FLAG_LADDER,
+	ENT_FLAG_ONGROUND,
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= 32
