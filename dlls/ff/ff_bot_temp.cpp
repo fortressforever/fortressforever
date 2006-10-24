@@ -63,6 +63,8 @@
 #include "gameinterface.h"
 #include "ff_utils.h"
 #include "te_effect_dispatch.h"
+#include "bitbuf.h"
+#include "filesystem.h"
 
 // TODO: REMOVE ME REMOVE ME
 //#include "ff_detpack.h"
@@ -70,7 +72,8 @@
 
 class CFFBot;
 void Bot_Think( CFFBot *pBot );
-
+bool Bot_GhostThinkRecord( CFFBot *pBot );
+bool Bot_GhostThinkPlayback( CFFBot *pBot );
 
 ConVar bot_forcefireweapon( "bot_forcefireweapon", "", 0, "Force bots with the specified weapon to fire." );
 ConVar bot_forceattack2( "bot_forceattack2", "0", 0, "When firing, use attack2." );
@@ -83,6 +86,13 @@ static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the
 ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
 ConVar bot_crouch( "bot_crouch", "0", 0, "Bot crouches" );
+
+//////////////////////////////////////////////////////////////////////////
+
+ConVar bot_ghostrecord( "bot_ghostrecord", "-1", 0, "Record a clients usercommands to file." );
+ConVar bot_ghostplayback( "bot_ghostplayback", "-1", 0, "Playback a clients usercommands from file." );
+
+//////////////////////////////////////////////////////////////////////////
 
 static int g_CurBotNumber = 1;
 
@@ -853,6 +863,97 @@ void Bot_HandleRespawn( CFFBot *pBot, CUserCmd &cmd )
 	}
 }
 
+FileHandle_t g_GhostFile = 0;
+const int iBufferSize = 8192;
+char g_UserCmdBuffer[iBufferSize + sizeof(CUserCmd)];
+bf_write g_WriteBuffer("GhostWriter", g_UserCmdBuffer, sizeof(g_UserCmdBuffer));
+bf_read g_ReadBuffer("GhostReader", g_UserCmdBuffer, sizeof(g_UserCmdBuffer));
+
+bool Bot_GhostThinkRecord( CFFBot *pBot )
+{
+	if(bot_ghostplayback.GetInt() > 0)
+		return false;
+
+	if ( bot_ghostrecord.GetInt() <= 0 || bot_ghostrecord.GetInt() > gpGlobals->maxClients )
+	{
+		if(g_GhostFile)
+		{
+			filesystem->Write(g_WriteBuffer.GetBasePointer(), g_WriteBuffer.GetNumBytesWritten(), g_GhostFile);
+			g_WriteBuffer.Reset();
+
+			filesystem->Close(g_GhostFile);
+			g_GhostFile = 0;
+		}
+		return false;
+	}
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex( bot_ghostrecord.GetInt()  );
+	if ( !pPlayer || !pPlayer->GetLastUserCommand() )
+		return false;
+
+	if(!g_GhostFile)
+	{
+		g_GhostFile = filesystem->Open("ghost.rec", "wb");
+		g_WriteBuffer.WriteBitVec3Coord(pPlayer->GetAbsOrigin());
+	}
+
+	CUserCmd nullcmd;
+	CUserCmd cmd = *pPlayer->GetLastUserCommand();
+	
+	// Write to file.
+	WriteUsercmd( &g_WriteBuffer, &cmd, &nullcmd );
+
+	if(g_WriteBuffer.GetNumBytesWritten() > iBufferSize)
+	{
+		filesystem->Write(g_WriteBuffer.GetBasePointer(), iBufferSize, g_GhostFile);
+		g_WriteBuffer.SeekToBit(0);
+	}
+	return true;
+}
+
+bool Bot_GhostThinkPlayback( CFFBot *pBot )
+{
+	if(bot_ghostrecord.GetInt() > 0)
+		return false;
+
+	if ( bot_ghostplayback.GetInt() <= 0 || bot_ghostplayback.GetInt() > gpGlobals->maxClients )
+	{
+		if(g_GhostFile)
+		{
+			filesystem->Close(g_GhostFile);
+			g_GhostFile = 0;
+		}
+		return false;
+	}
+
+	if(!g_GhostFile)
+	{
+		g_GhostFile = filesystem->Open("ghost.rec", "rb");
+		g_ReadBuffer.Reset();
+		g_ReadBuffer.SetAssertOnOverflow(false);
+		int iRead = filesystem->Read(g_UserCmdBuffer, iBufferSize, g_GhostFile);
+		DevMsg("Read %d bytes from ghost.rec", iRead);
+
+		Vector vec;
+		g_ReadBuffer.ReadBitVec3Coord(vec);
+		pBot->SetAbsOrigin(vec);
+	}
+
+	// Write to file.
+	CUserCmd nullcmd;
+	CUserCmd cmd;
+	ReadUsercmd( &g_ReadBuffer, &cmd, &nullcmd );
+
+	if(g_ReadBuffer.GetNumBytesRead() > iBufferSize)
+	{
+		g_ReadBuffer.Seek(0);
+		filesystem->Read(g_UserCmdBuffer, iBufferSize, g_GhostFile);
+	}
+
+	float frametime = gpGlobals->frametime;
+	RunPlayerMove( pBot, cmd, frametime );
+	return true;
+}
 
 //-----------------------------------------------------------------------------
 // Run this Bot's AI for one frame.
@@ -871,6 +972,11 @@ void Bot_Think( CFFBot *pBot )
 	{
 		pBot->ChangeClass(Class_IntToString(bot_changeclass.GetInt()));
 	}
+
+	Bot_GhostThinkRecord(pBot);
+
+	if(Bot_GhostThinkPlayback(pBot))
+		return;
 
 	// Finally, override all this stuff if the bot is being forced to mimic a player.
 	if ( !Bot_RunMimicCommand( cmd ) )
@@ -908,7 +1014,6 @@ void Bot_Think( CFFBot *pBot )
 		cmd.upmove = 0;
 		cmd.impulse = 0;
 	}
-
 
 	float frametime = gpGlobals->frametime;
 	RunPlayerMove( pBot, cmd, frametime );

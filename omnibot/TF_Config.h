@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-26 22:30:43 -0700 (Tue, 26 Sep 2006) $
-// $LastChangedRevision: 1293 $
+// $LastChangedDate: 2006-10-23 20:31:48 -0700 (Mon, 23 Oct 2006) $
+// $LastChangedRevision: 1307 $
 //
 // Title: TF Config
 //
@@ -114,6 +114,7 @@ typedef enum eTF_EntityClass
 	TF_CLASSEX_ROCKET,
 	TF_CLASSEX_TURRET,
 
+	// THIS MUST STAY LAST
 	TF_NUM_CLASSES
 } TF_EntityClass;
 
@@ -130,6 +131,9 @@ typedef enum eTF_EntityClass
 //		TF_ENT_CAN_SABOTAGE - This entity can be sabotaged.
 //		TF_ENT_SABOTAGED - This entity has been sabotaged.
 //		TF_ENT_SABOTAGING - This entity is sabotaging something.
+//		TF_ENT_FLAG_BUILDING_SG - Entity is building a sentry.
+//		TF_ENT_FLAG_BUILDING_DISP - Entity is building a dispenser.
+//		TF_ENT_FLAG_BUILDING_DETP - Entity is building a detpack.
 typedef enum eTF_EntityFlags
 {
 	TF_ENT_FLAG_SAVEME = (ENT_FLAG_FIRST_USER),	
@@ -147,7 +151,6 @@ typedef enum eTF_EntityFlags
 	TF_ENT_FLAG_BUILDING_SG,
 	TF_ENT_FLAG_BUILDING_DISP,
 	TF_ENT_FLAG_BUILDING_DETP,
-	TF_ENT_FLAG_ONGROUND,
 } TF_EntityFlags;
 
 // enumerations: TF_Powerups
@@ -240,6 +243,8 @@ typedef enum eTF_Weapon
 	TF_WP_DEPLOY_DISP,
 	TF_WP_DEPLOY_DETP,
 	TF_WP_FLAG,
+
+	// THIS MUST STAY LAST
 	TF_WP_MAX
 } TF_Weapon;
 
@@ -264,6 +269,8 @@ typedef enum eTF_AmmoType
 	TF_AMMO_RADIOTAG,
 	TF_AMMO_GRENADE1,
 	TF_AMMO_GRENADE2,
+
+	// THIS MUST STAY LAST
 	TF_AMMO_MAX
 } TF_AmmoType;
 
@@ -290,6 +297,8 @@ typedef enum eTF_ItemTypes
 	TF_GREN_NAPALM,
 	TF_GREN_GAS,
 	TF_GREN_EMP,
+
+	// THIS MUST STAY LAST
 	TF_NUM_GRENADES
 } TF_ItemTypes;
 
@@ -305,6 +314,8 @@ typedef enum eTF_Team
 	TF_TEAM_RED,
 	TF_TEAM_YELLOW,
 	TF_TEAM_GREEN,
+
+	// THIS MUST STAY LAST
 	TF_TEAM_MAX
 } TF_Team;
 
@@ -434,6 +445,7 @@ typedef enum eTF_Events
 	// Internal Events
 	TF_MSG_CIVILIAN_END,
 
+	// THIS MUST STAY LAST
 	TF_MSG_END_EVENTS
 } TF_Events;
 
@@ -459,6 +471,7 @@ typedef enum eTF_GameMessage
 	TF_MSG_HUDMENU,
 	TF_MSG_HUDTEXT,
 
+	// THIS MUST STAY LAST
 	TF_MSG_END
 } TF_GameMessage;
 

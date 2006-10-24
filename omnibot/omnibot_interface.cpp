@@ -721,20 +721,12 @@ namespace Omnibot
 						pEntity->GetTeamNumber() == TEAM_SPECTATOR)
 						_entflags.SetFlag(ENT_FLAG_DEAD);
 
-					int iWaterLevel = pEntity->GetWaterLevel();
-					if(iWaterLevel == 3)
-						_entflags.SetFlag(ENT_FLAG_UNDERWATER);
-					else if(iWaterLevel >= 2)
-						_entflags.SetFlag(ENT_FLAG_INWATER);
-
 					if(pEntity->GetFlags() & FL_DUCKING)
 						_entflags.SetFlag(ENT_FLAG_CROUCHED);
 
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 					if(pffPlayer)
 					{
-						if(pffPlayer->IsOnGround())
-                            _entflags.SetFlag(TF_ENT_FLAG_ONGROUND);
 						if(pffPlayer->IsOnLadder())
 							_entflags.SetFlag(ENT_FLAG_LADDER);
 						if(pffPlayer->IsSpeedEffectSet(SE_SNIPERRIFLE))
@@ -796,6 +788,16 @@ namespace Omnibot
 				break;
 				}*/
 			}
+
+			// Common flags.
+			int iWaterLevel = pEntity->GetWaterLevel();
+			if(iWaterLevel == 3)
+				_entflags.SetFlag(ENT_FLAG_UNDERWATER);
+			else if(iWaterLevel >= 2)
+				_entflags.SetFlag(ENT_FLAG_INWATER);
+
+			if(pEntity->GetFlags() & FL_ONGROUND)
+				_entflags.SetFlag(ENT_FLAG_ONGROUND);
 
 			CFFBuildableObject *pBuildable = dynamic_cast<CFFBuildableObject*>(pEntity);
 			if(pBuildable)
