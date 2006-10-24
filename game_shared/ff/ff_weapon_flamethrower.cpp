@@ -303,6 +303,7 @@ void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 	// before we're allowed to fire (set by DefaultDeploy)
 	if (fEmit && m_flNextSecondaryAttack > gpGlobals->curtime)
 	{
+		WeaponSound(STOP);
 		return;
 	}
 
