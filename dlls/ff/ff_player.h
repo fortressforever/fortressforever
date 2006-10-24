@@ -604,6 +604,7 @@ private:
 	void SpyCloakFadeIn( bool bInstant = false );
 	void SpyCloakFadeOut( bool bInstant = false );
 	void SpyCloakFadeThink( void );
+	float m_flCloakFadeStart;
 	float m_flCloakFadeFinish;
 	// if 1 cloaking, if 2 un-cloaking
 	int m_iCloakFadeCloaking;

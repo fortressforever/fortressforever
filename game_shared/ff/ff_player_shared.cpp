@@ -520,9 +520,9 @@ Vector CFFPlayer::GetFeetOrigin( void )
 	// TODO: Get a position for in water (when swimming)
 
 	if( GetFlags() & FL_DUCKING )
-		return GetWaistOrigin() - Vector( 0, 0, 18 );
+		return GetAbsOrigin() - Vector( 0, 0, 18 );
 	else
-		return GetWaistOrigin() - Vector( 0, 0, 36 );
+		return GetAbsOrigin() - Vector( 0, 0, 36 );
 }
 
 //-----------------------------------------------------------------------------
@@ -1106,7 +1106,7 @@ void CFFPlayer::Cloak( void )
 
 		// Holster our current weapon
 		if( GetActiveWeapon() )
-			GetActiveWeapon()->Holster(NULL);
+			GetActiveWeapon()->Holster( NULL );
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked

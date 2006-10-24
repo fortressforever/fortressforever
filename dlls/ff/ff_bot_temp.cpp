@@ -103,6 +103,19 @@ CON_COMMAND(bot_cloak, "cloak!")
 
 		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
 		{
+			pPlayer->Command_SpyCloak();
+		}
+	}
+}
+
+CON_COMMAND(bot_scloak, "scloak!")
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
 			pPlayer->Command_SpySilentCloak();
 		}
 	}
