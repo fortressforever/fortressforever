@@ -9,6 +9,7 @@
 #include "Color.h"
 #include "world.h"
 #include "ff_item_flag.h"
+#include "movevars_shared.h"
 
 #include "ff_utils.h"
 #include "ff_gamerules.h"
@@ -23,6 +24,7 @@ extern ConVar mp_prematch;
 
 #include "omnibot_interface.h"
 #include "omnibot_eventhandler.h"
+#include "Omni-Bot_Events.h"
 
 #include <vector>
 
@@ -2519,6 +2521,14 @@ namespace Omnibot
 			{
 				s_NextUpdateTime = gpGlobals->curtime + 0;//omnibot_thinkrate.GetInteger();
 				obUpdateDrawnWaypoints(2000.0f);
+
+				static float serverGravity = 0.0f;
+				if(serverGravity != sv_gravity.GetFloat())
+				{
+					BotUserData bud(sv_gravity.GetFloat());
+					g_BotFunctions.pfnBotSendGlobalEvent(GAME_ID_GRAVITY, 0, 0, &bud);
+					serverGravity = sv_gravity.GetFloat();
+				}
 
 				// Call the libraries update.
 				if(g_BotFunctions.pfnBotUpdate)

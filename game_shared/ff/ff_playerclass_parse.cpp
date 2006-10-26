@@ -23,6 +23,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar ffdev_spymaxcloakspeed( "ffdev_spymaxcloakspeed", "220", FCVAR_ARCHIVE | FCVAR_REPLICATED );
+
 static CUtlDict< CFFPlayerClassInfo *, unsigned short > m_PlayerClassInfoDatabase;
 
 // used to track whether or not two player classes have been mistakenly assigned the wrong slot
