@@ -30,6 +30,7 @@
 #include "tier0/memdbgon.h"
 
 ConVar ffdev_spymincloakness( "ffdev_spymincloakness", "0.1", FCVAR_ARCHIVE );
+ConVar ffdev_spymaxrefractval( "ffdev_spymaxrefractval", "0.5", FCVAR_ARCHIVE );
 
 //=============================================================================
 //
@@ -272,7 +273,7 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), 1.0f );
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
 
 	// Player Velocity
 	SetFloatResult( flVal );
@@ -333,7 +334,7 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pWeaponOwner->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), 1.0f );
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
 
 	// Weapon Velocity
 	SetFloatResult( flVal );
