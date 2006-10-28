@@ -107,6 +107,26 @@ public:
 
 //=============================================================================
 //
+//	class C_FFLocalPlayerVelocityMaterialProxy
+//
+//=============================================================================
+class C_FFLocalPlayerVelocityMaterialProxy : public CResultProxy
+{
+	//-------------------------------------------------------------------------
+	// Purpose: Gets local players' velocity
+	//-------------------------------------------------------------------------
+
+public:
+	C_FFLocalPlayerVelocityMaterialProxy( void );
+	virtual ~C_FFLocalPlayerVelocityMaterialProxy( void );
+
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+
+};
+
+//=============================================================================
+//
 //	class C_FFWeaponVelocityMaterialProxy
 //
 //=============================================================================
