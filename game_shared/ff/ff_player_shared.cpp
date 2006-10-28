@@ -324,9 +324,9 @@ void CFFPlayer::FireBullet(
 				ep.m_SoundLevel = SNDLVL_70dB; // params.soundlevel;
 				ep.m_nFlags = 0;
 				ep.m_nPitch = PITCH_NORM; // params.pitch;
-				ep.m_pOrigin = &pPlayer->GetAbsOrigin();
+				ep.m_pOrigin = &GetAbsOrigin();
 
-				pPlayer->EmitSound( filter, pPlayer->entindex(), ep );
+				EmitSound( filter, entindex(), ep );
 			}
 		}
 	}
