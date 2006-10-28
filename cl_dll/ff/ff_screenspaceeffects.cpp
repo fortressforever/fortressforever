@@ -25,6 +25,7 @@
 #include "c_baseplayer.h"
 #include "clienteffectprecachesystem.h"
 #include "in_buttons.h"
+#include "c_ff_player.h"
 
 #include "ScreenSpaceEffects.h"
 
@@ -95,18 +96,9 @@ class CGassedEffect : public CBaseEffect
 	virtual const char *pszEffect() { return "effects/gassed"; }
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: A cloaked effect
-//-----------------------------------------------------------------------------
-class CCloakedEffect : public CBaseEffect
-{
-	virtual const char *pszEffect() { return "effects/cloaked"; }
-};
-
 ADD_SCREENSPACE_EFFECT(CTranquilizedEffect, tranquilizedeffect);
 ADD_SCREENSPACE_EFFECT(CInfectedEffect, infectedeffect)
 ADD_SCREENSPACE_EFFECT(CGassedEffect, gassedeffect)
-ADD_SCREENSPACE_EFFECT(CCloakedEffect, cloakedeffect)
 
 //-----------------------------------------------------------------------------
 // Purpose CTranquilizedEffect constructor
@@ -419,4 +411,28 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 	{
 		pVar->SetTextureValue(pOriginalTexture);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A cloaked effect
+//-----------------------------------------------------------------------------
+class CCloakedEffect : public CBaseEffect
+{
+	virtual bool IsEnabled( void );
+	virtual const char *pszEffect() { return "effects/cloaked"; }
+};
+
+ADD_SCREENSPACE_EFFECT(CCloakedEffect, cloakedeffect);
+
+//-----------------------------------------------------------------------------
+// Purpose: This effect only enabled when player is cloaked
+//-----------------------------------------------------------------------------
+bool CCloakedEffect::IsEnabled( void )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
+		return false;
+
+	return pPlayer->IsCloaked();
 }
