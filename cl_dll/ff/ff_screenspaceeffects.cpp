@@ -95,9 +95,18 @@ class CGassedEffect : public CBaseEffect
 	virtual const char *pszEffect() { return "effects/gassed"; }
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: A cloaked effect
+//-----------------------------------------------------------------------------
+class CCloakedEffect : public CBaseEffect
+{
+	virtual const char *pszEffect() { return "effects/cloaked"; }
+};
+
 ADD_SCREENSPACE_EFFECT(CTranquilizedEffect, tranquilizedeffect);
 ADD_SCREENSPACE_EFFECT(CInfectedEffect, infectedeffect)
 ADD_SCREENSPACE_EFFECT(CGassedEffect, gassedeffect)
+ADD_SCREENSPACE_EFFECT(CCloakedEffect, cloakedeffect)
 
 //-----------------------------------------------------------------------------
 // Purpose CTranquilizedEffect constructor
