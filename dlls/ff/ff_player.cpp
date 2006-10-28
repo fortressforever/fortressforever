@@ -90,6 +90,9 @@ static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
 
 extern ConVar sv_maxspeed;
 
+ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_ARCHIVE, "Time it takes to cloak (fade out to cloak)" );
+ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_ARCHIVE, "Time it takes to silent cloak (fade out to cloak)" );
+
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
 	// Purpose: To spawn a model for testing - REMOVE (or disable) for release
@@ -640,6 +643,7 @@ void CFFPlayer::Precache()
 	PrecacheModel("models/player/spy/spy.mdl");
 	PrecacheModel("models/player/engineer/engineer.mdl");
 	PrecacheModel("models/player/civilian/civilian.mdl");
+	PrecacheModel( "models/player/predator/predator.mdl" );
 
 	// Sounds
 	PrecacheScriptSound("Grenade.Timer");
@@ -1248,6 +1252,7 @@ void CFFPlayer::SetupClassVariables()
 	m_iCloaked = 0;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
+	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
 	m_iCloakFadeCloaking = 0;
 	// Not currently fading in or out
 	m_bCloakFadeCloaking = false;
@@ -5438,8 +5443,12 @@ void CFFPlayer::FinishDisguise()
 
 		if (pPlayerClassInfo)
 		{
-			SetModel(pPlayerClassInfo->m_szModel);
-			m_nSkin = GetNewDisguisedTeam() - TEAM_BLUE; // since m_nSkin = 0 is blue
+			// Only set new model & skin if we're not cloaked
+			if( !IsCloaked() )
+			{
+				SetModel(pPlayerClassInfo->m_szModel);
+				m_nSkin = GetNewDisguisedTeam() - TEAM_BLUE; // since m_nSkin = 0 is blue
+			}
 		}
 	}
 
@@ -5809,22 +5818,52 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 {
 	Warning( "[Spy Cloak Fade] Start fading in!\n" );
 
-	// Set old non-refract skin immediately!
+	// TODO: Since we've changed mdoels now, we'll need
+	// to check our disguised skin (or regular skin if
+	// not disguised) and change to the appropriate
+	// model to get out of predator model!
+
+	int iClass = CLASS_SPY;
+
+	// Set correct model
 	if( IsDisguised() )
-		m_nSkin = GetDisguisedTeam() - FF_TEAM_BLUE;
-	else
-		m_nSkin = GetTeamNumber() - FF_TEAM_BLUE;
+		iClass = GetDisguisedClass();
+
+	// HEY, be nice man.
+	Assert( ( iClass > CLASS_NONE ) && ( iClass <= CLASS_CIVILIAN ) );
+
+	const char *pszClass = Class_IntToString( iClass );
+
+	char szClass[ MAX_PATH ];
+	Q_snprintf( szClass, sizeof( szClass ), "models/player/%s/%s.mdl", pszClass, pszClass );
+
+	SetModel( szClass );
+
+	// Set correct skin
+	int iTeam = GetTeamNumber();
+
+	if( IsDisguised() )
+		iTeam = GetDisguisedTeam();
+
+	m_nSkin = iTeam - FF_TEAM_BLUE;
+
+	// NOTE NOTE: Can't seem to fade in!? You can fade out but not in...
+	// Valve has probably hacked something to fade out... but I can't figure
+	// out why you can't just change a players' render mode to something low
+	// and start ramping up the alpha. So, we'll force instant switching
+	// until I can figure it out.
+
+	bInstant = true;
 
 	// Find out when we'll finish the cloak fade
 	m_flCloakFadeStart = gpGlobals->curtime;
-	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
 
 	// If instant, set alpha back to normal and bail
 	if( bInstant )
 	{
 		// Make sure normal drawing
-		if( GetRenderMode() != ( RenderMode_t )kRenderNormal )
-			SetRenderMode( ( RenderMode_t )kRenderNormal );
+		SetRenderMode( ( RenderMode_t )kRenderNormal );
 		SetRenderColorA( 255 );
 
 		// No need for cloak think, we're already done
@@ -5834,8 +5873,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	{
 		// Make sure we're transparent and faded out so
 		// we can be faded in
-		if( GetRenderMode() != ( RenderMode_t )kRenderTransTexture )
-			SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+		SetRenderMode( ( RenderMode_t )kRenderTransTexture );
 		SetRenderColorA( 0 );
 
 		// Un-cloaking
@@ -5854,11 +5892,10 @@ void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 	Warning( "[Spy Cloak Fade] Start fading out!\n" );
 
 	m_flCloakFadeStart = gpGlobals->curtime;
-	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + 5.0f;
+	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
 
 	// Change render mode so we can start fading out
-	if( GetRenderMode() != ( RenderMode_t )kRenderTransTexture )
-		SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+	SetRenderMode( ( RenderMode_t )kRenderTransTexture );
 	SetRenderColorA( 255 );	
 
 	// Cloaking
@@ -5881,9 +5918,11 @@ void CFFPlayer::SpyCloakFadeThink( void )
 			// Done fading, set the new skin
 			m_bCloakFadeCloaking = false;
 
+			// Reset this
+			m_bCloakFadeType = false;
+
 			// Reset this, cloak shader handles the rest (when cloaking)
-			if( GetRenderMode() != ( RenderMode_t )kRenderNormal )
-				SetRenderMode( ( RenderMode_t )kRenderNormal );
+			SetRenderMode( ( RenderMode_t )kRenderNormal );
 			SetRenderColorA( 255 );
 			
 			switch( m_iCloakFadeCloaking )
@@ -5891,7 +5930,11 @@ void CFFPlayer::SpyCloakFadeThink( void )
 				// Done fading out from the cloak, so set refract skin
 				// and let mat proxy take over
 				case 1:
-					// TODO: Change to skin family w/ the refract shader...
+					SetModel( "models/player/predator/predator.mdl" );
+
+					// TODO: Will need to modify disguise code to keep
+					// the predator model if we're cloaked while disguing
+					// or doing any disguise changing while cloaked
 				break;
 			}
 		}
@@ -5900,7 +5943,7 @@ void CFFPlayer::SpyCloakFadeThink( void )
 			// Find percentage of fade completed
 			float flPercFade = ( gpGlobals->curtime - m_flCloakFadeStart ) / ( m_flCloakFadeFinish - m_flCloakFadeStart );
 
-			float flMinFade = 0.0f;
+			float flMinFade = 110.0f;
 			float flMaxFade = 255.0f;
 
 			float flFadeDiff = flMaxFade - flMinFade;
@@ -5928,7 +5971,6 @@ void CFFPlayer::SpyCloakFadeThink( void )
 
 			Warning( "[Spy Fade] Percentage faded: %f%%, New Alpha: %f\n", flPercFade * 100.0f, flNewAlpha );
 
-			//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
 			SetRenderColorA( flNewAlpha );
 		}
 	}
