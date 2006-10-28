@@ -433,8 +433,6 @@ void CCloakedEffect::Render( int x, int y, int w, int h )
 	if( !IsEnabled() )
 		return;
 
-	Warning( "[Cloaked Effect] HI!\n" );
-
 	m_flDuration = gpGlobals->curtime + 5.0f;
 
 	CBaseEffect::Render( x, y, w, h );

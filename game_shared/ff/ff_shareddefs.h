@@ -13,7 +13,7 @@
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 #define EXTRA_LOCAL_ORIGIN_ACCURACY
 
-extern ConVar ffdev_spymaxcloakspeed;
+extern ConVar ffdev_spy_maxcloakspeed;
 
 enum FFPlayerGrenadeState
 {

@@ -319,6 +319,12 @@ void CC_SpyCloak( void )
 	if( !pLocalPlayer )
 		return;
 
+	if( !pLocalPlayer->IsAlive() )
+		return;
+	
+	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
+		return;
+
 	pLocalPlayer->Command_SpyCloak();
 }
 
@@ -329,6 +335,12 @@ void CC_SpySilentCloak( void )
 
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pLocalPlayer )
+		return;
+
+	if( !pLocalPlayer->IsAlive() )
+		return;
+
+	if( pLocalPlayer->GetClassSlot() != CLASS_SPY )
 		return;
 
 	pLocalPlayer->Command_SpySilentCloak();

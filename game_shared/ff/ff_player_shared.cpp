@@ -1053,7 +1053,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	}
 
 #ifdef GAME_DLL
-	// Silent regular cloak
+	// Silent cloak
 	m_bCloakFadeType = true;
 #endif
 
@@ -1073,9 +1073,9 @@ void CFFPlayer::Command_SpySilentCloak( void )
 void CFFPlayer::Cloak( void )
 {
 #ifdef CLIENT_DLL 
-	Warning( "[Cloak] [C] Cloak: %f\n", gpGlobals->curtime );
+	//Warning( "[Cloak] [C] Cloak: %f\n", gpGlobals->curtime );
 #else
-	Warning( "[Cloak] [S] Cloak: %f\n", gpGlobals->curtime );
+	//Warning( "[Cloak] [S] Cloak: %f\n", gpGlobals->curtime );
 
 	// Already Cloaked so remove all effects
 	if( IsCloaked() )
@@ -1112,6 +1112,8 @@ void CFFPlayer::Cloak( void )
 		// Announce being cloaked
 		m_iCloaked = 1;
 
+		m_flCloakTime = gpGlobals->curtime;
+
 		// If we're currently disguising, add on some time (50%)
 		if( m_flFinishDisguise > gpGlobals->curtime )
 			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
@@ -1119,6 +1121,9 @@ void CFFPlayer::Cloak( void )
 		// Holster our current weapon
 		if( GetActiveWeapon() )
 			GetActiveWeapon()->Holster( NULL );
+
+		// Remove any decals on us
+		RemoveAllDecals();
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked
@@ -1141,4 +1146,15 @@ void CFFPlayer::Cloak( void )
 		}
 	}
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: If cloaked we use no damage decal
+//-----------------------------------------------------------------------------
+char const *CFFPlayer::DamageDecal( int bitsDamageType, int gameMaterial )
+{
+	if( IsCloaked() )
+		return "";
+
+	return BaseClass::DamageDecal( bitsDamageType, gameMaterial );
 }
