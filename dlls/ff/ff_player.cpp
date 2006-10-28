@@ -92,6 +92,7 @@ extern ConVar sv_maxspeed;
 
 ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_ARCHIVE, "Time it takes to cloak (fade out to cloak)" );
 ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_ARCHIVE, "Time it takes to silent cloak (fade out to cloak)" );
+ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_ARCHIVE, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
 
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
@@ -570,11 +571,31 @@ void CFFPlayer::PreThink(void)
 		float flSpeed = GetLocalVelocity().Length();
 
 		// If going faster than spies walk speed, reset
-		if( IsCloaked() && ( flSpeed > ffdev_spymaxcloakspeed.GetFloat() ) )
+		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
 		{
+			// If it was a regular cloak, verify we haven't JUST cloaked
+			// and are still within the ffdev_spy_speedenforcewait period
+
+			bool bUncloak = false;
+			
+			// When this is false it's a regular cloak that got us cloaked
+			if( !m_bCloakFadeType )
+			{
+				if( gpGlobals->curtime > ( m_flCloakTime +  ffdev_spy_speedenforcewait.GetFloat() ) )
+					bUncloak = true;
+			}
+			else
+			{
+				// We silently cloaked and we're above the speed, uncloak!
+				bUncloak = true;
+			}
+
 			// Uncloak
-			SpyCloakFadeIn( true );
-			Cloak();
+			if( bUncloak )
+			{				
+				SpyCloakFadeIn( true );
+				Cloak();
+			}
 		}
 
 		// Disguising
@@ -1250,6 +1271,7 @@ void CFFPlayer::SetupClassVariables()
 
 	// Reset Spy stuff
 	m_iCloaked = 0;
+	m_flCloakTime = 0.0f;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
 	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
@@ -5816,13 +5838,9 @@ void CFFPlayer::InstaSwitch(int iClassNum)
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 {
-	Warning( "[Spy Cloak Fade] Start fading in!\n" );
+	//Warning( "[Spy Cloak Fade] Start fading in!\n" );
 
-	// TODO: Since we've changed mdoels now, we'll need
-	// to check our disguised skin (or regular skin if
-	// not disguised) and change to the appropriate
-	// model to get out of predator model!
-
+	// Assume we're not disguised
 	int iClass = CLASS_SPY;
 
 	// Set correct model
@@ -5832,11 +5850,13 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	// HEY, be nice man.
 	Assert( ( iClass > CLASS_NONE ) && ( iClass <= CLASS_CIVILIAN ) );
 
+	// Come up with the path to the correct model we're as (whether disguised or not)
 	const char *pszClass = Class_IntToString( iClass );
 
 	char szClass[ MAX_PATH ];
 	Q_snprintf( szClass, sizeof( szClass ), "models/player/%s/%s.mdl", pszClass, pszClass );
 
+	// Set the correct model
 	SetModel( szClass );
 
 	// Set correct skin
@@ -5845,6 +5865,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	if( IsDisguised() )
 		iTeam = GetDisguisedTeam();
 
+	// Set the correct team color for us
 	m_nSkin = iTeam - FF_TEAM_BLUE;
 
 	// NOTE NOTE: Can't seem to fade in!? You can fade out but not in...
@@ -5853,6 +5874,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	// and start ramping up the alpha. So, we'll force instant switching
 	// until I can figure it out.
 
+	// Forcing instant switching until fade in can be resolved
 	bInstant = true;
 
 	// Find out when we'll finish the cloak fade
@@ -5889,7 +5911,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 //-----------------------------------------------------------------------------
 void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 {
-	Warning( "[Spy Cloak Fade] Start fading out!\n" );
+	//Warning( "[Spy Cloak Fade] Start fading out!\n" );
 
 	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
@@ -5918,9 +5940,6 @@ void CFFPlayer::SpyCloakFadeThink( void )
 			// Done fading, set the new skin
 			m_bCloakFadeCloaking = false;
 
-			// Reset this
-			m_bCloakFadeType = false;
-
 			// Reset this, cloak shader handles the rest (when cloaking)
 			SetRenderMode( ( RenderMode_t )kRenderNormal );
 			SetRenderColorA( 255 );
@@ -5931,10 +5950,6 @@ void CFFPlayer::SpyCloakFadeThink( void )
 				// and let mat proxy take over
 				case 1:
 					SetModel( "models/player/predator/predator.mdl" );
-
-					// TODO: Will need to modify disguise code to keep
-					// the predator model if we're cloaked while disguing
-					// or doing any disguise changing while cloaked
 				break;
 			}
 		}
@@ -5969,7 +5984,7 @@ void CFFPlayer::SpyCloakFadeThink( void )
 				break;
 			}
 
-			Warning( "[Spy Fade] Percentage faded: %f%%, New Alpha: %f\n", flPercFade * 100.0f, flNewAlpha );
+			//Warning( "[Spy Fade] Percentage faded: %f%%, New Alpha: %f\n", flPercFade * 100.0f, flNewAlpha );
 
 			SetRenderColorA( flNewAlpha );
 		}

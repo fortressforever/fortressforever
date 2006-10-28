@@ -29,8 +29,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ffdev_spymincloakness( "ffdev_spymincloakness", "0.1", FCVAR_ARCHIVE );
-ConVar ffdev_spymaxrefractval( "ffdev_spymaxrefractval", "0.5", FCVAR_ARCHIVE );
+ConVar ffdev_spy_mincloakness( "ffdev_spy_mincloakness", "0.1", FCVAR_ARCHIVE );
+ConVar ffdev_spy_maxrefractval( "ffdev_spy_maxrefractval", "0.5", FCVAR_ARCHIVE );
 
 //=============================================================================
 //
@@ -273,7 +273,7 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Player Velocity
 	SetFloatResult( flVal );
@@ -326,7 +326,7 @@ void C_FFLocalPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pPlayer->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Player Velocity
 	SetFloatResult( flVal );
@@ -385,7 +385,7 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	Assert( m_pResult );
 
 	float flSpeed = pWeaponOwner->GetLocalVelocity().Length();
-	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Weapon Velocity
 	SetFloatResult( flVal );

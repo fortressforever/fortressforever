@@ -208,7 +208,7 @@ public:
 	// IFFPlayerAnimState overrides.
 	virtual CFFWeaponBase* FFAnim_GetActiveWeapon();
 	virtual bool FFAnim_CanMove();
-	
+	virtual char const *DamageDecal( int bitsDamageType, int gameMaterial );
 
 	void FireBullet( 
 		Vector vecSrc, 
@@ -611,6 +611,8 @@ private:
 	// if 1 cloaking, if 2 un-cloaking
 	int m_iCloakFadeCloaking;
 	bool m_bCloakFadeCloaking;
+	// Time the spy started cloaking
+	float m_flCloakTime;
 	// Shared stuffs:
 public:
 	void Command_SpyCloak( void );
