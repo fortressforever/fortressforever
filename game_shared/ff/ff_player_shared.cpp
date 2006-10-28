@@ -316,7 +316,10 @@ void CFFPlayer::FireBullet(
 			if (pPlayer)
 			{
 				CSingleUserRecipientFilter filter( this );
+
+				EmitSound( filter, entindex(), pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib" );
 				
+				/*
 				EmitSound_t ep;
 				ep.m_nChannel = CHAN_BODY;
 				ep.m_pSoundName = pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib";
@@ -327,6 +330,7 @@ void CFFPlayer::FireBullet(
 				ep.m_pOrigin = &GetAbsOrigin();
 
 				EmitSound( filter, entindex(), ep );
+				*/
 			}
 		}
 	}
