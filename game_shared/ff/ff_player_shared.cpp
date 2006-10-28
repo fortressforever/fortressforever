@@ -1002,21 +1002,10 @@ void CFFPlayer::Command_SpyCloak( void )
 	m_bCloakFadeType = false;
 
 	// A yell of pain!
-	if( IsCloaked() )
+	if( !IsCloaked() )
 	{
-		EmitSound( "Player.Death" );		
-
-		// Cleanup ragdoll
-		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
-		if( pRagdoll )
-		{
-			// Remove the ragdoll instantly
-			pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-			pRagdoll->SetNextThink( gpGlobals->curtime );
-		}		
-	}
-	else
-	{
+		EmitSound( "Player.Death" );
+		
 		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
 		CreateRagdollEntity();
 
@@ -1027,6 +1016,17 @@ void CFFPlayer::Command_SpyCloak( void )
 			pRagdoll->m_vecRagdollVelocity = GetLocalVelocity();
 			pRagdoll->SetThink( NULL );
 		}		
+	}
+	else
+	{
+		// Cleanup ragdoll
+		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
+		if( pRagdoll )
+		{
+			// Remove the ragdoll instantly
+			pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+			pRagdoll->SetNextThink( gpGlobals->curtime );
+		}
 	}
 #endif
 
