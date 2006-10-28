@@ -281,7 +281,58 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 	//Warning( "[Player Velocity Proxy] %s - %f\n", pPlayer->GetPlayerName(), flVal );
 }
 
-EXPOSE_INTERFACE( C_FFPlayerVelocityMaterialProxy, IMaterialProxy, "FF_PlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+EXPOSE_INTERFACE( C_FFPlayerVelocityMaterialProxy, IMaterialProxy, "FF_PlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+//=============================================================================
+//
+//	class C_FFLocalPlayerVelocityMaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_FFLocalPlayerVelocityMaterialProxy::C_FFLocalPlayerVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+C_FFLocalPlayerVelocityMaterialProxy::~C_FFLocalPlayerVelocityMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool C_FFLocalPlayerVelocityMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if( !CResultProxy::Init( pMaterial, pKeyValues ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void C_FFLocalPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return;
+
+	Assert( m_pResult );
+
+	float flSpeed = pPlayer->GetLocalVelocity().Length();
+	float flVal = clamp( flSpeed / ffdev_spymaxcloakspeed.GetFloat(), ffdev_spymincloakness.GetFloat(), ffdev_spymaxrefractval.GetFloat() );
+
+	// Player Velocity
+	SetFloatResult( flVal );
+}
+
+EXPOSE_INTERFACE( C_FFLocalPlayerVelocityMaterialProxy, IMaterialProxy, "FF_LocalPlayerVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION );
 
 //=============================================================================
 //
