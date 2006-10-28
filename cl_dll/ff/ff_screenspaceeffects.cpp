@@ -418,11 +418,27 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 //-----------------------------------------------------------------------------
 class CCloakedEffect : public CBaseEffect
 {
+	virtual void Render( int x, int y, int w, int h );
 	virtual bool IsEnabled( void );
 	virtual const char *pszEffect() { return "effects/cloaked"; }
 };
 
-ADD_SCREENSPACE_EFFECT(CCloakedEffect, cloakedeffect);
+ADD_SCREENSPACE_EFFECT( CCloakedEffect, cloakedeffect );
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CCloakedEffect::Render( int x, int y, int w, int h )
+{
+	if( !IsEnabled() )
+		return;
+
+	Warning( "[Cloaked Effect] HI!\n" );
+
+	m_flDuration = gpGlobals->curtime + 5.0f;
+
+	CBaseEffect::Render( x, y, w, h );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: This effect only enabled when player is cloaked
@@ -432,7 +448,7 @@ bool CCloakedEffect::IsEnabled( void )
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if( !pPlayer )
-		return false;
+		return false;	
 
 	return pPlayer->IsCloaked();
 }
