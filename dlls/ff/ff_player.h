@@ -606,6 +606,8 @@ private:
 	void SpyCloakFadeThink( void );
 	float m_flCloakFadeStart;
 	float m_flCloakFadeFinish;
+	// true if silent cloak, false if regular cloak
+	bool m_bCloakFadeType;
 	// if 1 cloaking, if 2 un-cloaking
 	int m_iCloakFadeCloaking;
 	bool m_bCloakFadeCloaking;

@@ -994,10 +994,13 @@ void CFFPlayer::Command_SpyCloak( void )
 	// Regular cloak can be done anytime
 
 #ifdef GAME_DLL
+	// Regular cloak
+	m_bCloakFadeType = false;
+
 	// A yell of pain!
 	if( IsCloaked() )
 	{
-		EmitSound( "Player.Death" );
+		EmitSound( "Player.Death" );		
 
 		// Cleanup ragdoll
 		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
@@ -1044,6 +1047,11 @@ void CFFPlayer::Command_SpySilentCloak( void )
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_SILENTCLOAK_MUSTBESTILL" );
 		return;
 	}
+
+#ifdef GAME_DLL
+	// Silent regular cloak
+	m_bCloakFadeType = true;
+#endif
 
 	Cloak();
 
