@@ -18,6 +18,7 @@
 #include "c_ff_player.h"
 #include "c_ff_env_flamejet.h"
 #include "iinput.h"
+#include "iefx.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -107,6 +108,8 @@ C_FFFlameJet::C_FFFlameJet()
 	m_fEmit			= true;
 
 	m_ParticleEffect.SetAlwaysSimulate(false); // Don't simulate outside the PVS or frustum.
+
+	m_pDynLight = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -124,6 +127,8 @@ void C_FFFlameJet::Cleanup( void )
 {
 	if( m_pParticleMgr ) 
 		m_pParticleMgr->RemoveEffect( &m_ParticleEffect );
+
+	KillDynLight();
 }
 
 //----------------------------------------------------------------------------
@@ -181,6 +186,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 {
 	if (!m_pParticleMgr) 
 	{
+		KillDynLight();
 		assert(false);
 		return;
 	}
@@ -190,6 +196,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// A bunch of conditions that may stop the flamethrower
 	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)
 	{
+		KillDynLight();
 		// Don't disable it for now
 		//m_fEmit = false;
 		return;
@@ -212,9 +219,9 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	}
 
 	// Removing the forward thing as when you're up against a wall you see no flames now
-	//Vector vecForward;
-	//AngleVectors( angAngles, &vecForward );
-	//VectorNormalizeFast( vecForward );
+	Vector vecForward;
+	AngleVectors( angAngles, &vecForward );
+	VectorNormalizeFast( vecForward );
 
 	// Check that this isn't going through a wall
 	trace_t tr;
@@ -223,11 +230,15 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// Yes, going through a wall
 	if (tr.fraction < 1.0f)
 	{
+		KillDynLight();
 		return;
 	}
 
 	if( ( tr.contents & CONTENTS_WATER ) || ( tr.contents & CONTENTS_SLIME ) )
+	{
+		KillDynLight();
 		return;
+	}
 
 	Vector forward, right, up;
 	AngleVectors(angAngles, &forward, &right, &up);
@@ -285,9 +296,32 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
+
+				// -------------------------------------
+				// Dynamic light stuff
+				// -------------------------------------
+				if( !m_pDynLight )
+				{
+					m_pDynLight = effects->CL_AllocDlight( 0 );
+					Assert( m_pDynLight );
+				}
+
+				m_pDynLight->origin = pOwner->Weapon_ShootPosition();
+				m_pDynLight->m_Direction = vecForward;
+				m_pDynLight->m_InnerAngle = 15.0f;
+				m_pDynLight->m_OuterAngle = 30.0f;
+				m_pDynLight->die = gpGlobals->curtime + 5.0f;
+				m_pDynLight->color.r = 255;
+				m_pDynLight->color.g = 255;
+				m_pDynLight->color.b = 255;
+				m_pDynLight->color.exponent = 3;
+				m_pDynLight->radius = 400.0f;
+				// -------------------------------------
 			}
 		}
 	}
+	else
+		KillDynLight();
 }
 
 //----------------------------------------------------------------------------

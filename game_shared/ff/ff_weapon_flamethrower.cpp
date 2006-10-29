@@ -147,8 +147,10 @@ void CFFWeaponFlamethrower::Fire()
 	IRecipientFilter& filter, float delay,
 	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay
 	*/
+	/*
 	CBroadcastRecipientFilter filter;
 	te->DynamicLight( filter, 0.0f, &vecShootPos, 255, 255, 255, 3, 256, 0.1f, gpGlobals->curtime + 0.05f );
+	*/
 
 #ifdef GAME_DLL	
 

@@ -21,6 +21,7 @@
 #include "particle_prototype.h"
 #include "particle_util.h"
 #include "baseparticleentity.h"
+#include "dlight.h"
 
 class C_FFFlameJet : public C_BaseParticleEntity, public IPrototypeAppEffect
 {
@@ -73,6 +74,14 @@ public:
 	// C_FFFlameJet-specific
 	bool				FlameEmit(bool fEmit);
 	void				Cleanup( void );
+	void				KillDynLight( void )
+	{
+		if( m_pDynLight )
+		{
+			m_pDynLight->die = gpGlobals->curtime;
+			m_pDynLight = NULL;
+		}
+	}
 
 public:
 
@@ -92,6 +101,8 @@ private:
 	CParticleMgr		*m_pParticleMgr;
 	PMaterialHandle		m_hMaterialFlame, m_hMaterialSmoke;
 	TimedEvent			m_ParticleSpawn;
+
+	dlight_t			*m_pDynLight;
 
 private:
 	C_FFFlameJet(const C_FFFlameJet &);
