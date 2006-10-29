@@ -749,7 +749,7 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 #ifdef GAME_DLL
 		// Handy debug stuff, I guess
 		if (ai_debug_shoot_positions.GetBool())
-			NDebugOverlay::Line(info.m_vecSrc, vecEnd, 255, 255, 255, false, .1);
+			NDebugOverlay::Line(info.m_vecSrc, vecEnd, 255, 255, 255, false, 5);
 #endif
 
 		// Has this particular bullet hit water yet
