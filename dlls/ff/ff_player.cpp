@@ -4102,6 +4102,14 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		m_bImmune = 1;
 		m_flImmuneTime = gpGlobals->curtime + 10.0f;
 
+		// Send the status icon to the player
+		CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+		user.MakeReliable();
+		UserMessageBegin( user, "StatusIconUpdate" );
+			WRITE_BYTE( FF_STATUSICON_IMMUNE );
+			WRITE_FLOAT( 10.0f );
+		MessageEnd();
+
 		// credit the curer with a score
 		if( pCurer )
 			pCurer->IncrementFragCount( 1 );
