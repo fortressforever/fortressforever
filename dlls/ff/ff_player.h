@@ -621,6 +621,30 @@ public:
 private:
 	void Cloak( void );	
 	CNetworkVar( unsigned int, m_iCloaked );
+
+	// Stuffs Lua can interface with
+public:
+	// Returns true if the player can cloak
+	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
+	// Update whether the player can cloak or not due to Lua stuff
+	void SetCloakable( bool bValue )
+	{
+		// Update value
+		if( bValue )
+			m_bCloakable = 1;
+		else
+			m_bCloakable = 0;
+
+		// If setting it so the player can't cloak
+		// and we're already cloaked, uncloak immediately!
+		if( IsCloaked() && !bValue )
+		{
+			SpyCloakFadeIn( true );
+			Cloak();
+		}
+	}	
+private:
+	CNetworkVar( unsigned int, m_bCloakable );
 	// END: Spy cloak stuff
 
 public:

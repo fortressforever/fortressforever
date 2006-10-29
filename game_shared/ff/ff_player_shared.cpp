@@ -995,38 +995,19 @@ bool CFFPlayer::HandleShotImpactingWater(const FireBulletsInfo_t &info, const Ve
 //-----------------------------------------------------------------------------
 void CFFPlayer::Command_SpyCloak( void )
 {
-	// Regular cloak can be done anytime
+	if( !IsCloakable() )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
+		return;
+	}
 
 #ifdef GAME_DLL
-	// Regular cloak
-	m_bCloakFadeType = false;
-
-	// A yell of pain!
+	// If we are already cloaked, don't set the cloak type
+	// as we might have cloaked w/ scloak and not cloak
 	if( !IsCloaked() )
 	{
-		EmitSound( "Player.Death" );
-		
-		// Create our ragdoll using this function (we could just c&p it and modify it i guess)
-		CreateRagdollEntity();
-
-		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
-
-		if( pRagdoll )
-		{
-			pRagdoll->m_vecRagdollVelocity = GetLocalVelocity();
-			pRagdoll->SetThink( NULL );
-		}		
-	}
-	else
-	{
-		// Cleanup ragdoll
-		CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
-		if( pRagdoll )
-		{
-			// Remove the ragdoll instantly
-			pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
-			pRagdoll->SetNextThink( gpGlobals->curtime );
-		}
+		// Regular cloak
+		m_bCloakFadeType = false;
 	}
 #endif
 
@@ -1045,16 +1026,29 @@ void CFFPlayer::Command_SpyCloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Command_SpySilentCloak( void )
 {
-	// Silent cloak must be done while not moving!
-	if( !GetLocalVelocity().IsZero() )
+	if( !IsCloakable() )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
+		return;
+	}
+
+	// Silent cloak must be done while not moving! But if we're
+	// already cloaked we'll allow it so the player can uncloak
+	if( !GetLocalVelocity().IsZero() && !IsCloaked() )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_SILENTCLOAK_MUSTBESTILL" );
 		return;
 	}
 
-#ifdef GAME_DLL
-	// Silent cloak
-	m_bCloakFadeType = true;
+#ifdef GAME_DLL	
+	// If we are already cloaked, don't set the cloak type
+	// as we might not destory our ragdoll if we scloak'd
+	// to cloak then cloak'd to uncloak
+	if( !IsCloaked() )
+	{
+		// Silent cloak
+		m_bCloakFadeType = true;
+	}	
 #endif
 
 	Cloak();
@@ -1073,10 +1067,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 void CFFPlayer::Cloak( void )
 {
 #ifdef CLIENT_DLL 
-	//Warning( "[Cloak] [C] Cloak: %f\n", gpGlobals->curtime );
 #else
-	//Warning( "[Cloak] [S] Cloak: %f\n", gpGlobals->curtime );
-
 	// Already Cloaked so remove all effects
 	if( IsCloaked() )
 	{
@@ -1096,6 +1087,19 @@ void CFFPlayer::Cloak( void )
 			ShowCrosshair( true );
 		}
 
+		// If regular cloak cleanup ragdoll
+		if( !m_bCloakFadeType )
+		{
+			// Cleanup ragdoll
+			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
+			if( pRagdoll )
+			{
+				// Remove the ragdoll instantly
+				pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
+				pRagdoll->SetNextThink( gpGlobals->curtime );
+			}
+		}		
+
 		// Fire an event.
 		IGameEvent *pEvent = gameeventmanager->CreateEvent( "uncloaked" );
 		if( pEvent )
@@ -1103,14 +1107,21 @@ void CFFPlayer::Cloak( void )
 			pEvent->SetInt( "userid", this->GetUserID() );
 			gameeventmanager->FireEvent( pEvent, true );
 		}
+
+		// We are uncloaking so reset this
+		m_bCloakFadeType = false;
 	}
 	// Not already cloaked
 	else
 	{
-		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );
-
 		// Announce being cloaked
 		m_iCloaked = 1;
+
+		// If regular cloak, scream
+		if( !m_bCloakFadeType )
+			EmitSound( "Player.Death" );
+
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CLOAK" );		
 
 		m_flCloakTime = gpGlobals->curtime;
 
@@ -1123,7 +1134,21 @@ void CFFPlayer::Cloak( void )
 			GetActiveWeapon()->Holster( NULL );
 
 		// Remove any decals on us
-		RemoveAllDecals();
+		RemoveAllDecals();		
+
+		// If regular cloak, create ragdoll
+		if( !m_bCloakFadeType )
+		{
+			// Create our ragdoll using this function (we could just c&p it and modify it i guess)
+			CreateRagdollEntity();
+
+			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
+			if( pRagdoll )
+			{
+				pRagdoll->m_vecRagdollVelocity = GetLocalVelocity();
+				pRagdoll->SetThink( NULL );
+			}
+		}		
 
 		CFFLuaSC hOwnerCloak( 1, this );
 		// Find any items that we are in control of and let them know we Cloaked

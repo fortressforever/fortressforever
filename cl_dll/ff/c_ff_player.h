@@ -393,6 +393,12 @@ public:
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
+
+public:
+	// Returns true if the player can cloak
+	bool IsCloakable( void ) const		{ return m_bCloakable != 0; }
+private:
+	unsigned int m_bCloakable;
 	// ----------------------------------
 
 private:
