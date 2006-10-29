@@ -303,6 +303,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 
 	// Radiotag information the local client needs to know
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
+	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -1274,6 +1275,7 @@ void CFFPlayer::SetupClassVariables()
 	m_flCloakTime = 0.0f;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
+	SetCloakable( true );
 	m_bCloakFadeType = false; // assume regular cloaking and not silent coaking
 	m_iCloakFadeCloaking = 0;
 	// Not currently fading in or out
