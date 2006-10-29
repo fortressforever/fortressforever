@@ -48,6 +48,9 @@ public:
 	virtual void NailEmit();
 	virtual void Explode(trace_t *pTrace, int bitsDamageType);
 
+private:
+	void ShootNail( const Vector& vecOrigin, const QAngle& vecAngles, bool bPlaySound );
+
 protected:
 	float	m_flNailSpit;
 	float	m_flAngleOffset;
@@ -66,8 +69,10 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 #ifndef CLIENT_DLL
 	ConVar nailspeed("ffdev_nailspeed", "800");
 	ConVar naildamage("ffdev_naildamage", "8");
-	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.4" );
-	ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "5.0" );
+	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.05" );
+	//ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "5.0" );
+	ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
+	ConVar nailstreams( "ffdev_nailgren_streams", "12" );
 #endif
 
 
@@ -95,6 +100,20 @@ void CFFGrenadeNail::Precache()
 		m_flAngleOffset = 0.0f;
 		m_flNailSpit = 0.0f;
 		SetLocalAngularVelocity(QAngle(0, 0, 0));
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Shoot a nail out
+	//-----------------------------------------------------------------------------
+	void CFFGrenadeNail::ShootNail( const Vector& vecOrigin, const QAngle& vecAngles, bool bPlaySound )
+	{
+		// Create the nail and tell it it's a nail grenade nail
+		CFFProjectileNail *pNail = CFFProjectileNail::CreateNail( this, vecOrigin, vecAngles, GetOwnerEntity(), naildamage.GetInt(), nailspeed.GetInt() );
+		if( pNail )
+			pNail->m_bNailGrenadeNail = true;
+
+		if( bPlaySound )
+			EmitSound( "NailGrenade.shoot" );
 	}
 
 	//-----------------------------------------------------------------------------
@@ -138,11 +157,39 @@ void CFFGrenadeNail::Precache()
 			flRisingheight = 80;
 
 		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
-
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
+
+
+		static float flTemp = 0.0f;
+
+		// Time to spit out nails again?
+		if( m_flNailSpit < gpGlobals->curtime )
+		{
+			int iStreamRotationOffset = 0;
+
+			for( int i = 0; i < nailstreams.GetInt(); i++ )
+			{
+				Vector vecNailDir;
+				QAngle vecAngles = QAngle( 0, 0 + flTemp + iStreamRotationOffset, 0 );
+
+				AngleVectors( vecAngles, &vecNailDir );
+				VectorNormalizeFast( vecNailDir );
+
+				ShootNail( GetAbsOrigin() + ( 8.0f * vecNailDir ), vecAngles, ( iStreamRotationOffset == 0 ) ? true : false );
+
+				iStreamRotationOffset += ( 360 / nailstreams.GetInt() );
+			}
+
+			flTemp += nailspread.GetFloat();
+
+			// Set up next nail spit time
+			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();
+		}
+
+		/*
 		// Bug #0000674: Nail grenade doesn't shoot nails out like TFC nail grenade
-		//	Otherwise known as: Make nail grens look rubbish again
+		//	Otherwise known as: Make nail grens look rubbish again		
 
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
@@ -172,6 +219,7 @@ void CFFGrenadeNail::Precache()
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();
 		}
+		*/
 
 		SetNextThink(gpGlobals->curtime);
 	}
