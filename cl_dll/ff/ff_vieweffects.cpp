@@ -512,9 +512,6 @@ public:
 	//-----------------------------------------------------------------------------
 	void Message(bf_read &msg)
 	{
-		// Disabled
-		return;
-
 		if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
 		{
 			Warning("*** FF Error *** Not yet implemented for < dx9!\n");

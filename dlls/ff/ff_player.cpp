@@ -3419,7 +3419,7 @@ void CFFPlayer::StatusEffectsThink( void )
 				user.MakeReliable();
 				UserMessageBegin( user, "FFViewEffect" );
 					WRITE_BYTE( FF_VIEWEFFECT_GASSED );
-					WRITE_FLOAT( 1.0f );
+					WRITE_FLOAT( 6.0f );
 				MessageEnd();
 
 				m_flNextGas = gpGlobals->curtime + 1.0f;
