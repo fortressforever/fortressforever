@@ -591,12 +591,9 @@ void CFFPlayer::PreThink(void)
 				bUncloak = true;
 			}
 
-			// Uncloak
+			// Uncloak NOW
 			if( bUncloak )
-			{				
-				SpyCloakFadeIn( true );
-				Cloak();
-			}
+				Uncloak( true );
 		}
 
 		// Disguising

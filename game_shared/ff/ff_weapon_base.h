@@ -79,6 +79,22 @@ class CFFPlayer;
 		return; \
 }
 
+#ifdef GAME_DLL
+#define CANCEL_IF_CLOAKED() \
+{ \
+	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
+	if( !pFFPlayer ) \
+		return; \
+	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
+	{ \
+		if( pFFPlayer->IsCloaked() ) \
+		{ \
+			pFFPlayer->Uncloak( true ); \
+			return; \
+		} \
+	} \
+}
+#else
 #define CANCEL_IF_CLOAKED() \
 { \
 	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
@@ -90,6 +106,7 @@ class CFFPlayer;
 			return; \
 	} \
 }
+#endif
 
 // Weapon IDs for all FF Game weapons
 typedef enum
