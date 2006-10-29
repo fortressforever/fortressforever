@@ -41,6 +41,14 @@ static ConVar flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How
 static ConVar flame_length_min(		"ffdev_flame_length_min", 		/*"0.3"*/ "0.36", 	0, 	"Length of the flames in seconds");
 static ConVar flame_length_max(		"ffdev_flame_length_max", 		/*"0.4"*/ "0.48", 	0, 	"Length of the flames in seconds");
 
+ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "255", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "255", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "3", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "400", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_innerangle( "ffdev_flamedlight_innerangle", "15", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_outterangle( "ffdev_flamedlight_outterangle", "30", FCVAR_ARCHIVE );
+
 //=============================================================================
 // Globals
 //=============================================================================
@@ -308,14 +316,14 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 				m_pDynLight->origin = pOwner->Weapon_ShootPosition();
 				m_pDynLight->m_Direction = vecForward;
-				m_pDynLight->m_InnerAngle = 15.0f;
-				m_pDynLight->m_OuterAngle = 30.0f;
+				m_pDynLight->m_InnerAngle = ffdev_flamedlight_innerangle.GetFloat();
+				m_pDynLight->m_OuterAngle = ffdev_flamedlight_outterangle.GetFloat();
 				m_pDynLight->die = gpGlobals->curtime + 5.0f;
-				m_pDynLight->color.r = 255;
-				m_pDynLight->color.g = 255;
-				m_pDynLight->color.b = 255;
-				m_pDynLight->color.exponent = 3;
-				m_pDynLight->radius = 400.0f;
+				m_pDynLight->color.r = ffdev_flamedlight_color_r.GetInt();
+				m_pDynLight->color.g = ffdev_flamedlight_color_g.GetInt();
+				m_pDynLight->color.b = ffdev_flamedlight_color_b.GetInt();
+				m_pDynLight->color.exponent = ffdev_flamedlight_color_e.GetInt();
+				m_pDynLight->radius = ffdev_flamedlight_radius.GetFloat();
 				// -------------------------------------
 			}
 		}

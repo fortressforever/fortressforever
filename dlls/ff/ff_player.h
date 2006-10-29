@@ -622,6 +622,17 @@ private:
 	void Cloak( void );	
 	CNetworkVar( unsigned int, m_iCloaked );
 
+public:	
+	// Will uncloak you (w/o going the Command_ route)
+	void Uncloak( bool bInstant = false )
+	{
+		if( IsCloaked() )
+		{
+			SpyCloakFadeIn( bInstant );
+			Cloak();
+		}	
+	}
+
 	// Stuffs Lua can interface with
 public:
 	// Returns true if the player can cloak
@@ -638,10 +649,7 @@ public:
 		// If setting it so the player can't cloak
 		// and we're already cloaked, uncloak immediately!
 		if( IsCloaked() && !bValue )
-		{
-			SpyCloakFadeIn( true );
-			Cloak();
-		}
+			Uncloak( true );
 	}	
 private:
 	CNetworkVar( unsigned int, m_bCloakable );
