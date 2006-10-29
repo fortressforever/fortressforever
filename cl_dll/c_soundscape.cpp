@@ -298,8 +298,8 @@ bool C_SoundscapeSystem::Init()
 	if ( mapname && *mapname )
 	{
 		// BEG: Mulch: 11/07/2005
-		//mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname );
-		mapSoundscapeFilename = VarArgs( "maps/%s_soundscapes.txt", mapname );
+		mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname );
+		//mapSoundscapeFilename = VarArgs( "maps/%s_soundscapes.txt", mapname );
 		//DevMsg( "[Soundscape CLIENT] Setting soundscape file to: %s\n", mapSoundscapeFilename );
 		// END: Mulch: 11/07/2005
 	}
