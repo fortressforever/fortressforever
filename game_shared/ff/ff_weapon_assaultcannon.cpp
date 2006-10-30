@@ -79,8 +79,8 @@ private:
 public:	// temp while i expose m_flChargeTime to global function
 
 	float m_flLastTick;
-
-	float	m_flChargeTime;
+	float m_flDeployTick;
+	float m_flChargeTime;
 	CNetworkVar(float, m_flTriggerPressed);
 	CNetworkVar(float, m_flTriggerReleased);
 
@@ -198,7 +198,10 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	if (GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
 #endif
 	{
-		WeaponSoundLocal(SPECIAL2);
+		if( (m_flLastTick - m_flDeployTick) > 0.5 )
+			WeaponSoundLocal(SPECIAL2);
+		else
+			WeaponSoundLocal(STOP);
 	}
 
 	//m_fFireState = 0;
@@ -213,6 +216,7 @@ bool CFFWeaponAssaultCannon::Deploy()
 {
 	m_flChargeTime = 0;
 	m_flLastTick = gpGlobals->curtime;
+	m_flDeployTick = gpGlobals->curtime;
 	m_flNextPrimaryAttack = gpGlobals->curtime;
 
 	m_bFiring = false;
