@@ -308,15 +308,15 @@ void CFFWeaponFlamethrower::EmitFlames(bool fEmit)
 		WeaponSound(STOP);
 		return;
 	}
-
-	// Try changing the flamejet. If status has changed, play the correct sound.
-	if (m_hFlameJet && m_hFlameJet->FlameEmit(fEmit))
-	{
-		if (fEmit)
-			WeaponSound(BURST);
-		else
-			WeaponSound(STOP);
-	}
+	// Spawn the FlameJet if necessary
+	if(m_hFlameJet)
+		m_hFlameJet->FlameEmit(fEmit);
+	// If we are going to Emit play the sound, otherwise don't play anything.
+	if (fEmit)
+		WeaponSound(BURST);
+	else
+		WeaponSound(STOP);
+	return;
 }
 
 //====================================================================================
