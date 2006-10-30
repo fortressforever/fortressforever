@@ -42,10 +42,10 @@ static ConVar flame_length_min(		"ffdev_flame_length_min", 		/*"0.3"*/ "0.36", 	
 static ConVar flame_length_max(		"ffdev_flame_length_max", 		/*"0.4"*/ "0.48", 	0, 	"Length of the flames in seconds");
 
 ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "255", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "255", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "100", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "50", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "3", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "400", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "200", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_innerangle( "ffdev_flamedlight_innerangle", "15", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_outterangle( "ffdev_flamedlight_outterangle", "30", FCVAR_ARCHIVE );
 
