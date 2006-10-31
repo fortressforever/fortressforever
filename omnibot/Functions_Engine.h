@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-09 21:51:59 -0700 (Mon, 09 Oct 2006) $
-// $LastChangedRevision: 1304 $
+// $LastChangedDate: 2006-10-30 20:29:29 -0800 (Mon, 30 Oct 2006) $
+// $LastChangedRevision: 1312 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -224,11 +224,11 @@ typedef struct
 
 	// Function: pfnBotGetCurrentWeaponClip
 	//		This function should update weapon clip count for the current weapon
-	obResult (*pfnBotGetCurrentWeaponClip)(int _client, int *_curclip, int *_maxclip);
+	obResult (*pfnBotGetCurrentWeaponClip)(int _client, FireMode _mode, int &_curclip, int &_maxclip);
 
 	// Function: pfnBotGetCurrentAmmo
 	//		This function should update ammo stats for a client and ammotype
-	obResult (*pfnBotGetCurrentAmmo)(int _client, int _ammotype, int *_cur, int *_max);
+	obResult (*pfnBotGetCurrentAmmo)(int _client, int _ammotype, int &_cur, int &_max);
 
 	// Function: pfnGetGameTime
 	//		This function should return the current game time in milli-seconds

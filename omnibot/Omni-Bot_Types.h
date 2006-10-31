@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-23 20:31:48 -0700 (Mon, 23 Oct 2006) $
-// $LastChangedRevision: 1307 $
+// $LastChangedDate: 2006-10-30 20:29:29 -0800 (Mon, 30 Oct 2006) $
+// $LastChangedRevision: 1312 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,6 +99,26 @@ inline int MAKE_KEY(char _1, char _2, char _3, char _4)
 #define MAKE_KEY(res) (((_1)<<24) | ((_2)<<16) | ((_3)<<8) | (_4))
 #endif
 //#define SUCCESS(x) ((x)==Success ? true : false)
+
+typedef enum eFireMode
+{
+	Primary,
+	Secondary,
+
+	// THIS MUST STAY LAST
+	Num_FireModes,
+
+	// Cept for this
+	InvalidFireMode
+} FireMode;
+
+
+// enumerations: Q4_AmmoType
+//		Q4_AMMO_ROCKETS - Rockets for RPG
+typedef enum eAmmoType
+{
+	AMMO_NONE = -1,
+} AmmoType;
 
 // enumerations: BotDebugFlag
 //		BOT_DEBUG_LOG - Debug log for this bot.

@@ -68,9 +68,9 @@ namespace Omnibot
 	void Notify_Disguising(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass);
 	void Notify_Disguised(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass);
 	void Notify_DisguiseLost(CBasePlayer *_player);
-	void Notify_UnFeigned(CBasePlayer *_player);
-	void Notify_CantFeign(CBasePlayer *_player);
-	void Notify_Feigned(CBasePlayer *_player);
+	void Notify_UnCloaked(CBasePlayer *_player);
+	void Notify_CantCloak(CBasePlayer *_player);
+	void Notify_Cloaked(CBasePlayer *_player);
 	
 	void Notify_RadarDetectedEnemy(CBasePlayer *_player, edict_t *_ent);
 	void Notify_RadioTagUpdate(CBasePlayer *_player, edict_t *_ent);
