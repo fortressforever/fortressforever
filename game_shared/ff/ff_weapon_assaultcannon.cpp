@@ -33,8 +33,8 @@ ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED,
 ConVar ffdev_ac_minspread("ffdev_ac_minspread", "0.01", FCVAR_REPLICATED, "Assault Cannon Minimum spread");
 ConVar ffdev_ac_maxspread("ffdev_ac_maxspread", "0.10", FCVAR_REPLICATED, "Assault Cannon Maximum spread");
 
-ConVar ffdev_ac_maxcycletime("ffdev_ac_maxcycletime", "0.18", FCVAR_REPLICATED, "Assault Cannon Maximum cycle time");
-ConVar ffdev_ac_mincycletime("ffdev_ac_mincycletime", "0.04", FCVAR_REPLICATED, "Assault Cannon Minimum cycle time");
+ConVar ffdev_ac_maxcycletime("ffdev_ac_maxcycletime", "0.15", FCVAR_REPLICATED, "Assault Cannon Maximum cycle time");
+ConVar ffdev_ac_mincycletime("ffdev_ac_mincycletime", "0.07", FCVAR_REPLICATED, "Assault Cannon Minimum cycle time");
 
 //=============================================================================
 // CFFWeaponAssaultCannon
