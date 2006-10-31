@@ -43,6 +43,10 @@
 	#include "ff_gamerules.h"
 #endif
 
+#ifdef GAME_DLL
+	#include "ff_team.h"
+#endif
+
 // This function takes a class name like "scout"
 // and returns its integer value
 // 1 - scout
@@ -886,3 +890,66 @@ int UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 
 	return nFreeClasses;
 }
+
+#ifdef GAME_DLL
+int Util_PickRandomClass(int _curteam)
+{
+	char cClassesAvailable[10];
+	int nClassesAvailable = UTIL_GetClassSpaces(_curteam, cClassesAvailable);
+
+	// Make a random choice for randompcs
+	if (nClassesAvailable == 0)
+		return 0;
+
+	int iRandomClassNumber = random->RandomInt(0, nClassesAvailable - 1);
+	int iClassIndex = 0;
+	while (iRandomClassNumber > 0)
+	{
+		if (cClassesAvailable[iClassIndex] > 0)
+			iRandomClassNumber--;
+
+		iClassIndex++;
+	}
+
+	return (iClassIndex + CLASS_SCOUT);
+}
+
+int Util_PickRandomTeam()
+{
+	int iBestTeam = -1;
+	float flBestCapacity = 9999.0f;
+
+	int iTeamNumbers[8] = {0};
+
+	// Count the number of people each team
+	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CFFPlayer *pPlayer = (CFFPlayer *) UTIL_PlayerByIndex( i );
+
+		if( pPlayer )
+			iTeamNumbers[pPlayer->GetTeamNumber()]++;
+	}
+
+	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
+	{
+		CFFTeam *pTeam = GetGlobalFFTeam(iTeamToCheck);
+
+		// Don't bother with non-existant teams
+		if( !pTeam )
+			continue;
+
+		// Take team limits into account when calculating the best team to join
+		float flTeamCapacity = (float)iTeamNumbers[iTeamToCheck] / ( pTeam->GetTeamLimits() == 0 ? 32 : pTeam->GetTeamLimits() );
+
+		//DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
+
+		// Is this the best team to join so far (and there is space on it)
+		if( flTeamCapacity < flBestCapacity && ( pTeam->GetTeamLimits() == 0 || iTeamNumbers[iTeamToCheck] < pTeam->GetTeamLimits() ) )
+		{
+			flBestCapacity = flTeamCapacity;
+			iBestTeam = iTeamToCheck;
+		}
+	}
+	return iBestTeam;
+}
+#endif

@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-23 20:31:48 -0700 (Mon, 23 Oct 2006) $
-// $LastChangedRevision: 1307 $
+// $LastChangedDate: 2006-10-28 22:15:24 -0700 (Sat, 28 Oct 2006) $
+// $LastChangedRevision: 1311 $
 //
 // Title: TF Config
 //
@@ -189,7 +189,7 @@ typedef enum eTF_Powerups
 	TF_PWR_DISGUISE_CIVILIAN,
 	
 	// Other powerups
-	TF_PWR_FEIGNED,
+	TF_PWR_CLOAKED,
 } TF_Powerups;
 
 // enumerations: TF_Weapon
@@ -391,9 +391,9 @@ typedef enum eTF_Events
 	TF_MSG_DISGUISING,
 	TF_MSG_DISGUISED,
 	TF_MSG_DISGUISE_LOST,
-	TF_MSG_CANT_FEIGN,
-	TF_MSG_FEIGNED,
-	TF_MSG_UNFEIGNED,
+	TF_MSG_CANT_CLOAK,
+	TF_MSG_CLOAKED,
+	TF_MSG_UNCLOAKED,
 	TF_MSG_SABOTAGED_SENTRY,
 	TF_MSG_SABOTAGED_DISPENSER,
 	TF_MSG_CANTDISGUISE_AS_TEAM,
@@ -465,7 +465,7 @@ typedef enum eTF_GameMessage
 	// Commands
 	TF_MSG_CANDISGUISE,
 	TF_MSG_DISGUISE,
-	TF_MSG_FEIGN,
+	TF_MSG_CLOAK,
 	TF_MSG_LOCKPOSITION,
 	TF_MSG_HUDHINT,
 	TF_MSG_HUDMENU,

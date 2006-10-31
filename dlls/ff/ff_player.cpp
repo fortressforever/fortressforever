@@ -593,7 +593,7 @@ void CFFPlayer::PreThink(void)
 
 			// Uncloak NOW
 			if( bUncloak )
-				Uncloak( true );
+				Uncloak( true );		
 		}
 
 		// Disguising
@@ -1980,25 +1980,12 @@ int CFFPlayer::ActivateClass()
 
 	char cClassesAvailable[10];
 	int nClassesAvailable = UTIL_GetClassSpaces(GetTeamNumber(), cClassesAvailable);
+	nClassesAvailable;
 
 	// Make a random choice for randompcs
 	if (m_fRandomPC)
 	{
-		if (nClassesAvailable == 0)
-			return 0;
-
-		int iRandomClassNumber = random->RandomInt(0, nClassesAvailable - 1);
-
-		int iClassIndex = 0;
-		while (iRandomClassNumber > 0)
-		{
-			if (cClassesAvailable[iClassIndex] > 0)
-				iRandomClassNumber--;
-
-			iClassIndex++;
-		}
-
-		m_iNextClass = iClassIndex + CLASS_SCOUT;
+		m_iNextClass = Util_PickRandomClass(GetTeamNumber());
 	}
 
 	// Check target class is still available
@@ -2217,30 +2204,7 @@ void CFFPlayer::Command_Team( void )
 	// Pick the team with least capacity to join
 	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "auto" ) == 0 )
 	{
-		int iBestTeam = -1;
-		float flBestCapacity = 9999.0f;
-
-		// Loop from blue to green
-		for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
-		{
-			CFFTeam *pTeam = GetGlobalFFTeam(iTeamToCheck);
-
-			// Don't bother with non-existant teams
-			if( !pTeam )
-				continue;
-
-			// Take team limits into account when calculating the best team to join
-			float flTeamCapacity = (float)iTeamNumbers[iTeamToCheck] / ( pTeam->GetTeamLimits() == 0 ? 32 : pTeam->GetTeamLimits() );
-
-			//DevMsg( "Team %d: %d (%f)\n", iTeamToCheck, iTeamNumbers[iTeamToCheck], flTeamCapacity );
-
-			// Is this the best team to join so far (and there is space on it)
-			if( flTeamCapacity < flBestCapacity && ( pTeam->GetTeamLimits() == 0 || iTeamNumbers[iTeamToCheck] < pTeam->GetTeamLimits() ) )
-			{
-				flBestCapacity = flTeamCapacity;
-				iBestTeam = iTeamToCheck;
-			}
-		}
+		int iBestTeam = Util_PickRandomTeam();
 
 		// Couldn't find a valid team to join (because of limits)
 		if( iBestTeam < 0 )

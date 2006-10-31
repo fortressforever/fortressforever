@@ -63,8 +63,8 @@ void event_DispenserKilled(IGameEvent *_event);
 void event_SentryUpgraded(IGameEvent *_event);
 void event_DisguiseFinished(IGameEvent *_event);
 void event_DisguiseLost(IGameEvent *_event);
-void event_SpyUnFeigned(IGameEvent *_event);
-void event_SpyFeigned(IGameEvent *_event);
+void event_SpyUnCloaked(IGameEvent *_event);
+void event_SpyCloaked(IGameEvent *_event);
 void event_DispenserEnemyUsed(IGameEvent *_event);
 void event_DispenserSabotaged(IGameEvent *_event);
 void event_SentrySabotaged(IGameEvent *_event);
@@ -117,8 +117,8 @@ const EventCallback EVENT_CALLBACKS[] =
 	{ "sentrygun_upgraded", event_SentryUpgraded },
 	{ "disguised", event_DisguiseFinished },
 	{ "disguise_lost", event_DisguiseLost },
-	{ "unfeigned", event_SpyUnFeigned },
-	{ "feigned", event_SpyFeigned },
+	{ "uncloaked", event_SpyUnCloaked },
+	{ "cloaked", event_SpyCloaked },
 	{ "dispenser_enemyused", event_DispenserEnemyUsed },		
 	{ "dispenser_detonated", event_DispenserDetonated },
 	{ "dispenser_dismantled", event_DispenserDismantled },
@@ -656,21 +656,21 @@ void event_DisguiseLost(IGameEvent *_event)
 	}
 }
 
-void event_SpyUnFeigned(IGameEvent *_event)
+void event_SpyUnCloaked(IGameEvent *_event)
 {
 	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
 	if(pPlayer && pPlayer->IsBot())
 	{
-		Omnibot::Notify_UnFeigned(pPlayer);
+		Omnibot::Notify_UnCloaked(pPlayer);
 	}
 }
 
-void event_SpyFeigned(IGameEvent *_event)
+void event_SpyCloaked(IGameEvent *_event)
 {
 	CBasePlayer *pPlayer = UTIL_PlayerByUserId(_event->GetInt("userid"));
 	if(pPlayer && pPlayer->IsBot())
 	{
-		Omnibot::Notify_Feigned(pPlayer);
+		Omnibot::Notify_Cloaked(pPlayer);
 	}
 }
 

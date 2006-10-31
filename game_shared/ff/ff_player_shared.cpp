@@ -31,6 +31,7 @@
 	#include "ff_scriptman.h"
 	#include "ff_luacontext.h"
 
+	#include "omnibot_interface.h"
 #endif
 
 #include "gamevars_shared.h"
@@ -996,7 +997,13 @@ bool CFFPlayer::HandleShotImpactingWater(const FireBulletsInfo_t &info, const Ve
 void CFFPlayer::Command_SpyCloak( void )
 {
 	if( !IsCloakable() )
-	{
+	{		
+#ifdef GAME_DLL
+		if(IsBot())
+		{
+			Omnibot::Notify_CantCloak(this);
+		}
+#endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
 	}
@@ -1006,8 +1013,8 @@ void CFFPlayer::Command_SpyCloak( void )
 	// as we might have cloaked w/ scloak and not cloak
 	if( !IsCloaked() )
 	{
-		// Regular cloak
-		m_bCloakFadeType = false;
+	// Regular cloak
+	m_bCloakFadeType = false;
 	}
 #endif
 
@@ -1047,7 +1054,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	if( !IsCloaked() )
 	{
 		// Silent cloak
-		m_bCloakFadeType = true;
+	m_bCloakFadeType = true;
 	}	
 #endif
 

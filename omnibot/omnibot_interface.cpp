@@ -626,10 +626,6 @@ namespace Omnibot
 
 		if(pEdict)
 		{
-			/*CBaseEntity *pEntity = CBaseEntity::Instance( pEdict );
-			CFFPlayer *pFFPlayer = dynamic_cast<CFFPlayer*>(pEntity);
-			ASSERT(pFFPlayer);*/
-
 			const char *pTeam = "auto";
 			switch(obUtilGetGameTeamFromBotTeam(_newteam))
 			{
@@ -645,8 +641,28 @@ namespace Omnibot
 			case TEAM_GREEN:
 				pTeam = "green";
 				break;
+			default: 
+				{
+					// pick a random available team
+					int iRandTeam = Util_PickRandomTeam();
+					switch(iRandTeam)
+					{
+					case TEAM_BLUE:
+						pTeam = "blue";
+						break;
+					case TEAM_RED:
+						pTeam = "red";
+						break;
+					case TEAM_YELLOW:
+						pTeam = "yellow";
+						break;
+					case TEAM_GREEN:
+						pTeam = "green";
+						break;
+					}
+					break;
+				}
 			}
-
 			serverpluginhelpers->ClientCommand(pEdict, UTIL_VarArgs( "team %s", pTeam ));
 			return Success;
 		}
@@ -668,7 +684,7 @@ namespace Omnibot
 			{
 				const char *pClassName = "randompc";
 				switch(obUtilGetGameClassFromBotClass(_newclass))
-				{		
+				{
 				case CLASS_SCOUT:
 					pClassName = "scout";
 					break;
@@ -699,8 +715,13 @@ namespace Omnibot
 				case CLASS_CIVILIAN:
 					pClassName = "civilian";
 					break;
+				default:
+					{
+						int iRandTeam = Util_PickRandomClass(pFFPlayer->GetTeamNumber());
+						pClassName = Class_IntToString(iRandTeam);
+						break;
+					}
 				}
-
 				serverpluginhelpers->ClientCommand(pEdict, UTIL_VarArgs( "class %s", pClassName ));
 				return Success;
 			}
@@ -829,7 +850,7 @@ namespace Omnibot
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 
 					if(pffPlayer->IsCloaked())
-						_powerups.SetFlag(TF_PWR_FEIGNED);
+						_powerups.SetFlag(TF_PWR_CLOAKED);
 
 					// Disguises
 					if(pffPlayer)
@@ -1869,13 +1890,13 @@ namespace Omnibot
 				}
 				break;
 			}
-		case TF_MSG_FEIGN:
+		case TF_MSG_CLOAK:
 			{
 				TF_FeignDeath *pMsg = _data.Get<TF_FeignDeath>();
 				if(pMsg)
 				{
 					serverpluginhelpers->ClientCommand(pPlayer->edict(), 
-						pMsg->m_SilentFeign ? "sfeign" : "feign");                    					
+						pMsg->m_Silent ? "scloak" : "cloak");
 				}
 				break;
 			}
@@ -1987,7 +2008,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static obResult obBotGetCurrentWeaponClip(int _client, int *_curclip, int *_maxclip)
+	static obResult obBotGetCurrentWeaponClip(int _client, FireMode _mode, int &_curclip, int &_maxclip)
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance(_client);
 		CBasePlayer *pPlayer = pEntity ? pEntity->MyCharacterPointer() : 0;
@@ -1996,8 +2017,8 @@ namespace Omnibot
 			CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 			if(pWeapon)
 			{
-				*_curclip = pWeapon->Clip1();
-				*_maxclip = pWeapon->GetMaxClip1();
+				_curclip = pWeapon->Clip1();
+				_maxclip = pWeapon->GetMaxClip1();
 			}
 			return Success;
 		}
@@ -2006,7 +2027,7 @@ namespace Omnibot
 
 	//-----------------------------------------------------------------
 
-	static obResult obBotGetCurrentAmmo(int _client, int _ammotype, int *_cur, int *_max)
+	static obResult obBotGetCurrentAmmo(int _client, int _ammotype, int &_cur, int &_max)
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance(_client);
 		CBasePlayer *pPlayer = pEntity ? pEntity->MyCharacterPointer() : 0;
@@ -2016,44 +2037,44 @@ namespace Omnibot
 			switch(_ammotype)
 			{
 			case TF_AMMO_SHELLS:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_SHELLS);
-				*_max = pFFPlayer->GetMaxShells();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_SHELLS);
+				_max = pFFPlayer->GetMaxShells();
 				break;
 			case TF_AMMO_NAILS:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_NAILS);
-				*_max = pFFPlayer->GetMaxNails();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_NAILS);
+				_max = pFFPlayer->GetMaxNails();
 				break;
 			case TF_AMMO_ROCKETS:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_ROCKETS);
-				*_max = pFFPlayer->GetMaxRockets();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_ROCKETS);
+				_max = pFFPlayer->GetMaxRockets();
 				break;
 			case TF_AMMO_CELLS:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_CELLS);
-				*_max = pFFPlayer->GetMaxCells();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_CELLS);
+				_max = pFFPlayer->GetMaxCells();
 				break;
 			case TF_AMMO_MEDIKIT:
-				*_cur = -1;
-				*_max = -1;
+				_cur = -1;
+				_max = -1;
 				break;
 			case TF_AMMO_DETPACK:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_DETPACK);
-				*_max = pFFPlayer->GetMaxDetpack();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_DETPACK);
+				_max = pFFPlayer->GetMaxDetpack();
 				break;
 			case TF_AMMO_RADIOTAG:
-				*_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
-				*_max = pFFPlayer->GetMaxRadioTag();
+				_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
+				_max = pFFPlayer->GetMaxRadioTag();
 				break;
 			case TF_AMMO_GRENADE1:
-				*_cur = pFFPlayer->GetPrimaryGrenades();
-				*_max = 4;
+				_cur = pFFPlayer->GetPrimaryGrenades();
+				_max = 4;
 				break;
 			case TF_AMMO_GRENADE2:
-				*_cur = pFFPlayer->GetSecondaryGrenades();
-				*_max = 3;
+				_cur = pFFPlayer->GetSecondaryGrenades();
+				_max = 3;
 				break;
 			case -1:
-				*_cur = -1;
-				*_max = -1;
+				_cur = -1;
+				_max = -1;
 				break;
 			default:
 				return InvalidParameter;
@@ -2062,8 +2083,8 @@ namespace Omnibot
 			return Success;
 		}
 
-		*_cur = 0;
-		*_max = 0;
+		_cur = 0;
+		_max = 0;
 
 		return InvalidEntity;
 	}
@@ -2845,22 +2866,22 @@ namespace Omnibot
 		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_DISGUISE_LOST, iGameId, 0, 0, 0);
 	}
 
-	void Notify_UnFeigned(CBasePlayer *_player)
+	void Notify_UnCloaked(CBasePlayer *_player)
 	{
 		int iGameId = _player->entindex()-1;
-		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_UNFEIGNED, iGameId, 0, 0, 0);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_UNCLOAKED, iGameId, 0, 0, 0);
 	}
 
-	void Notify_CantFeign(CBasePlayer *_player)
+	void Notify_CantCloak(CBasePlayer *_player)
 	{
 		int iGameId = _player->entindex()-1;
-		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_CANT_FEIGN, iGameId, 0, 0, 0);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_CANT_CLOAK, iGameId, 0, 0, 0);
 	}
 
-	void Notify_Feigned(CBasePlayer *_player)
+	void Notify_Cloaked(CBasePlayer *_player)
 	{
 		int iGameId = _player->entindex()-1;
-		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_FEIGNED, iGameId, 0, 0, 0);
+		omnibot_interface::Bot_Interface_SendEvent(TF_MSG_CLOAKED, iGameId, 0, 0, 0);
 	}
 
 	void Notify_RadarDetectedEnemy(CBasePlayer *_player, edict_t *_ent)

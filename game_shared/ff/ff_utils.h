@@ -82,6 +82,9 @@ void FF_LuaHudText(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth = 0, int iHeight = 0);
 void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed);
 void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
+
+int Util_PickRandomClass(int _curteam);
+int Util_PickRandomTeam();
 #endif
 
 bool FF_IsPlayerSpec( CFFPlayer *pPlayer );

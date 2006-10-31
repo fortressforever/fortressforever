@@ -1711,6 +1711,7 @@ void C_FFPlayer::SwapToWeaponSlot(int iSlot)
 		if (pWeapon && pWeapon->GetFFWpnData().iSlot == iSlot -1)
 		{
 			::input->MakeWeaponSelection(pWeapon);
+			break;
 		}
 	}
 }

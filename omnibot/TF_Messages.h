@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-21 23:41:23 -0700 (Thu, 21 Sep 2006) $
-// $LastChangedRevision: 1282 $
+// $LastChangedDate: 2006-10-28 22:15:24 -0700 (Sat, 28 Oct 2006) $
+// $LastChangedRevision: 1311 $
 //
 // Title: TF Message Structure Definitions
 //
@@ -80,7 +80,7 @@ typedef struct
 //		m_SilentFeign - Silent feign or not.
 typedef struct  
 {
-	obBool		m_SilentFeign;
+	obBool		m_Silent;
 } TF_FeignDeath;
 
 // struct: TF_HudHint
