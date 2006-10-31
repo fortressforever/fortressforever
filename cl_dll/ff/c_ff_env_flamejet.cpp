@@ -145,7 +145,7 @@ void C_FFFlameJet::Cleanup( void )
 //----------------------------------------------------------------------------
 void C_FFFlameJet::OnDataChanged(DataUpdateType_t updateType) 
 {
-	C_BaseEntity::OnDataChanged(updateType);
+	BaseClass::OnDataChanged(updateType);
 
 	if (updateType == DATA_UPDATE_CREATED) 
 	{
