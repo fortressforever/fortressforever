@@ -34,6 +34,7 @@
 #include "vphysics/constraints.h"
 #include "ragdoll_shared.h"
 #include "view.h"
+#include "view_scene.h"
 #include "c_ai_basenpc.h"
 #include "c_entitydissolve.h"
 #include "saverestoretypes.h"
@@ -678,12 +679,37 @@ C_BaseAnimating::C_BaseAnimating() :
 	m_pStudioHdr = NULL;
 }
 
+// Finds the specified material to use as the override material
+// MATERIAL SHOULD BE PRECACHED ELSEWHERE
+void C_BaseAnimating::FindOverrideMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain, const char *pComplainPrefix )
+{
+	if ( m_pOverrideMaterial )
+		ReleaseOverrideMaterial();
+
+	m_pOverrideMaterial = materials->FindMaterial(pMaterialName, pTextureGroupName, complain, pComplainPrefix);
+	if ( m_pOverrideMaterial )
+		m_pOverrideMaterial->IncrementReferenceCount();
+}
+
+// Releases the override material
+void C_BaseAnimating::ReleaseOverrideMaterial()
+{
+	if (m_pOverrideMaterial)
+	{
+		m_pOverrideMaterial->DecrementReferenceCount();
+		m_pOverrideMaterial = NULL;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: cleanup
 //-----------------------------------------------------------------------------
 C_BaseAnimating::~C_BaseAnimating()
 {
 	RemoveFromClientSideAnimationList();
+
+	if ( m_pOverrideMaterial )
+		ReleaseOverrideMaterial();
 
 	TermRopes();
 	delete m_pRagdollInfo;
@@ -2374,6 +2400,23 @@ int C_BaseAnimating::DrawModel( int flags )
 
 	int drawn = 0;
 
+	// Allow overriding of materials for any entity derived from C_BaseAnimating 
+	if ( m_pOverrideMaterial )
+	{
+		// refract textures need "power of two frame buffer texture"
+		if ( m_pOverrideMaterial->NeedsPowerOfTwoFrameBufferTexture() )
+		{
+			// This TODO is just from garry, so I don't know what exactly it means
+			//Msg("TODO! C_BaseEntity::StartMaterialOverride\n");
+
+			// basially copies the font frame buffer to the refract texture
+			UpdateRefractTexture();
+		}
+
+		// override the material for when the model is drawn down below
+		modelrender->ForcedMaterialOverride( m_pOverrideMaterial );
+	}
+
 	if ( r_drawothermodels.GetInt() )
 	{
 		MDLCACHE_CRITICAL_SECTION();
@@ -2421,6 +2464,10 @@ int C_BaseAnimating::DrawModel( int flags )
 
 	// If we're visualizing our bboxes, draw them
 	DrawBBoxVisualizations();
+
+	// stop overriding the material so that every model isn't drawn with this override material
+	if ( m_pOverrideMaterial )
+		modelrender->ForcedMaterialOverride( NULL );
 
 	return drawn;
 }
