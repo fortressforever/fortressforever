@@ -637,7 +637,7 @@ void ClientPrintMsg( C_BasePlayer *player, int msg_dest, const char *msg_name, c
 		if ( !cl_showtextmsg.GetInt() )
 			return;
 
-		int len;
+		//int len;
 		switch ( msg_dest )
 		{
 		case HUD_PRINTCENTER:
