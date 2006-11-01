@@ -84,7 +84,7 @@ CRagdollConcEnumerator::~CRagdollConcEnumerator()
 	for (int i = 0; i < m_Entities.Count(); i++ )
 	{
 		C_BaseEntity *pEnt = m_Entities[i];
-		C_BaseAnimating *pModel = static_cast< C_BaseAnimating * >( pEnt );
+		//C_BaseAnimating *pModel = static_cast< C_BaseAnimating * >( pEnt );
 
 		Vector	position = pEnt->CollisionProp()->GetCollisionOrigin();
 	}

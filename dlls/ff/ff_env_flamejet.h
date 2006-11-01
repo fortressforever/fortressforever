@@ -33,7 +33,7 @@ public:
 
 	// Stuff from the datatable.
 public:
-	CNetworkVar(int, m_fEmit);
+	CNetworkVar(unsigned int, m_fEmit);
 };
 
 #endif // FF_ENV_FLAME_H
