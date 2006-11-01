@@ -1013,8 +1013,8 @@ void CFFPlayer::Command_SpyCloak( void )
 	// as we might have cloaked w/ scloak and not cloak
 	if( !IsCloaked() )
 	{
-	// Regular cloak
-	m_bCloakFadeType = false;
+		// Regular cloak
+		m_bCloakFadeType = false;
 	}
 #endif
 
@@ -1054,7 +1054,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	if( !IsCloaked() )
 	{
 		// Silent cloak
-	m_bCloakFadeType = true;
+		m_bCloakFadeType = true;
 	}	
 #endif
 

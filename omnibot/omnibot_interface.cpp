@@ -644,7 +644,7 @@ namespace Omnibot
 			default: 
 				{
 					// pick a random available team
-					int iRandTeam = Util_PickRandomTeam();
+					int iRandTeam = UTIL_PickRandomTeam();
 					switch(iRandTeam)
 					{
 					case TEAM_BLUE:
@@ -717,7 +717,7 @@ namespace Omnibot
 					break;
 				default:
 					{
-						int iRandTeam = Util_PickRandomClass(pFFPlayer->GetTeamNumber());
+						int iRandTeam = UTIL_PickRandomClass(pFFPlayer->GetTeamNumber());
 						pClassName = Class_IntToString(iRandTeam);
 						break;
 					}

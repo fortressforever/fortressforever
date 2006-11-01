@@ -593,7 +593,7 @@ void CFFPlayer::PreThink(void)
 
 			// Uncloak NOW
 			if( bUncloak )
-				Uncloak( true );		
+				Uncloak( true );
 		}
 
 		// Disguising
@@ -1985,7 +1985,7 @@ int CFFPlayer::ActivateClass()
 	// Make a random choice for randompcs
 	if (m_fRandomPC)
 	{
-		m_iNextClass = Util_PickRandomClass(GetTeamNumber());
+		m_iNextClass = UTIL_PickRandomClass(GetTeamNumber());
 	}
 
 	// Check target class is still available
@@ -2204,7 +2204,7 @@ void CFFPlayer::Command_Team( void )
 	// Pick the team with least capacity to join
 	else if( Q_stricmp( engine->Cmd_Argv( 1 ), "auto" ) == 0 )
 	{
-		int iBestTeam = Util_PickRandomTeam();
+		int iBestTeam = UTIL_PickRandomTeam();
 
 		// Couldn't find a valid team to join (because of limits)
 		if( iBestTeam < 0 )

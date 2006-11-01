@@ -892,7 +892,7 @@ int UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 }
 
 #ifdef GAME_DLL
-int Util_PickRandomClass(int _curteam)
+int UTIL_PickRandomClass(int _curteam)
 {
 	char cClassesAvailable[10];
 	int nClassesAvailable = UTIL_GetClassSpaces(_curteam, cClassesAvailable);
@@ -914,7 +914,7 @@ int Util_PickRandomClass(int _curteam)
 	return (iClassIndex + CLASS_SCOUT);
 }
 
-int Util_PickRandomTeam()
+int UTIL_PickRandomTeam()
 {
 	int iBestTeam = -1;
 	float flBestCapacity = 9999.0f;

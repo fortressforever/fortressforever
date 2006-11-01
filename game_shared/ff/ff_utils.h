@@ -83,8 +83,8 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 void FF_LuaHudTimer(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, int iStartValue, float flSpeed);
 void FF_LuaHudRemove(CFFPlayer *pPlayer, const char *pszIdentifier);
 
-int Util_PickRandomClass(int _curteam);
-int Util_PickRandomTeam();
+int UTIL_PickRandomClass(int _curteam);
+int UTIL_PickRandomTeam();
 #endif
 
 bool FF_IsPlayerSpec( CFFPlayer *pPlayer );
