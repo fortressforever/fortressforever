@@ -24,6 +24,7 @@
 #include "bone_accessor.h"
 #include "bone_merge_cache.h"
 #include "ragdoll_shared.h"
+#include "materialsystem/imaterial.h"
 
 #define LIPSYNC_POSEPARAM_NAME "mouth"
 #define NUM_HITBOX_FIRES	10
@@ -394,6 +395,11 @@ public:
 
 	// Texture group to use
 	int								m_nSkin;
+
+	// Override Material
+	IMaterial						*m_pOverrideMaterial;
+	virtual void					FindOverrideMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = NULL );
+	virtual void					ReleaseOverrideMaterial();
 
 	// Object bodygroup
 	int								m_nBody;
