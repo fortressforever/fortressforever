@@ -95,6 +95,10 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheEngyMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
 CLIENTEFFECT_REGISTER_END()
 
+CLIENTEFFECT_REGISTER_BEGIN( PrecachePlayerCloakMaterial )
+CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL )
+CLIENTEFFECT_REGISTER_END()
+
 bool g_StealMouseForAimSentry = false;
 void SetStealMouseForAimSentry( bool bValue )
 {
@@ -103,6 +107,16 @@ void SetStealMouseForAimSentry( bool bValue )
 bool CanStealMouseForAimSentry( void )
 {
 	return g_StealMouseForAimSentry;
+}
+
+bool g_StealMouseForCloak = false;
+void SetStealMouseForCloak( bool bValue )
+{
+	g_StealMouseForCloak = bValue;
+}
+bool CanStealMouseForCloak( void )
+{
+	return g_StealMouseForCloak;
 }
 
 void OnTimerExpired(C_FFTimer *pTimer)
@@ -471,6 +485,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bInfected ) ),
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
+	RecvPropFloat( RECVINFO( m_flCurrentSpeed ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )
@@ -1291,6 +1306,19 @@ int C_FFPlayer::DrawModel( int flags )
 		}
 	}
 
+	// --------------------------------
+	// Draw cloaked players special (and after we
+	// might have changed skins from hallucinating)
+	// --------------------------------
+	if( pPlayer && ( pPlayer != this ) && flags )
+	{
+		// If guy we're drawing is cloaked
+		if( IsCloaked() )
+		{
+			DRAWMODEL_CLOAKED();
+		}		
+	}
+
 	return BaseClass::DrawModel( flags );
 }
 
@@ -1462,6 +1490,11 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 
 	if (IsLocalPlayer())
 	{
+		if( IsCloaked() )
+			SetStealMouseForCloak( true );
+		else
+            SetStealMouseForCloak( false );
+
 		// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
 		// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
 		// This fixes it, hurrah.

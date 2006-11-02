@@ -341,6 +341,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
+	SendPropFloat( SENDINFO( m_flCurrentSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -504,7 +505,10 @@ void CFFPlayer::PreThink(void)
 
 #ifndef FF_BETA_TEST_COMPILE
 	// reset these every frame
-	m_fBodygroupState = 0;	
+	m_fBodygroupState = 0;
+
+	// Update networked current-speed-var for spy cloak mat proxy (sent to all players! :X)
+	m_flCurrentSpeed = GetLocalVelocity().Length();
 
 	// Has our radio tag expired?
 	if( m_bRadioTagged && ( ( m_flRadioTaggedStartTime + m_flRadioTaggedDuration ) < gpGlobals->curtime ) )
@@ -569,7 +573,7 @@ void CFFPlayer::PreThink(void)
 		// Get horizontal + forward velocity (no vertical velocity)
 		//Vector vecVelocity = GetLocalVelocity();
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
-		float flSpeed = GetLocalVelocity().Length();
+		float flSpeed = m_flCurrentSpeed;
 
 		// If going faster than spies walk speed, reset
 		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
@@ -662,7 +666,6 @@ void CFFPlayer::Precache()
 	PrecacheModel("models/player/spy/spy.mdl");
 	PrecacheModel("models/player/engineer/engineer.mdl");
 	PrecacheModel("models/player/civilian/civilian.mdl");
-	PrecacheModel( "models/player/predator/predator.mdl" );
 
 	// Sounds
 	PrecacheScriptSound("Grenade.Timer");
@@ -5811,6 +5814,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 {
 	//Warning( "[Spy Cloak Fade] Start fading in!\n" );
 
+	/*
 	// Assume we're not disguised
 	int iClass = CLASS_SPY;
 
@@ -5838,6 +5842,7 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 
 	// Set the correct team color for us
 	m_nSkin = iTeam - FF_TEAM_BLUE;
+	*/
 
 	// NOTE NOTE: Can't seem to fade in!? You can fade out but not in...
 	// Valve has probably hacked something to fade out... but I can't figure
@@ -5866,8 +5871,8 @@ void CFFPlayer::SpyCloakFadeIn( bool bInstant )
 	{
 		// Make sure we're transparent and faded out so
 		// we can be faded in
-		SetRenderMode( ( RenderMode_t )kRenderTransTexture );
-		SetRenderColorA( 0 );
+		//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+		SetRenderColorA( 110 );
 
 		// Un-cloaking
 		m_iCloakFadeCloaking = 2;
@@ -5888,7 +5893,7 @@ void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
 
 	// Change render mode so we can start fading out
-	SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+	//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
 	SetRenderColorA( 255 );	
 
 	// Cloaking
@@ -5909,18 +5914,23 @@ void CFFPlayer::SpyCloakFadeThink( void )
 		if( flFadeTimeLeft <= 0.0f )
 		{
 			// Done fading, set the new skin
-			m_bCloakFadeCloaking = false;
-
-			// Reset this, cloak shader handles the rest (when cloaking)
-			SetRenderMode( ( RenderMode_t )kRenderNormal );
-			SetRenderColorA( 255 );
+			m_bCloakFadeCloaking = false;			
 			
 			switch( m_iCloakFadeCloaking )
 			{
+				case 2:
+					// Reset this, cloak shader handles the rest (when cloaking)
+					//SetRenderMode( ( RenderMode_t )kRenderNormal );
+					SetRenderColorA( 255 );
+				break;
+
 				// Done fading out from the cloak, so set refract skin
 				// and let mat proxy take over
 				case 1:
-					SetModel( "models/player/predator/predator.mdl" );
+					//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+					SetRenderColorA( 110 );
+					//SetRenderMode( ( RenderMode_t )kRenderTransTexture );
+					//SetModel( "models/player/predator/predator.mdl" );
 				break;
 			}
 		}

@@ -10,6 +10,13 @@
 #pragma once
 #endif
 
+#ifdef CLIENT_DLL
+	#include "materialsystem/IMaterialSystem.h"
+	#include "materialsystem/IMesh.h"
+	#include "ClientEffectPrecacheSystem.h"
+	#include "view_scene.h"
+#endif
+
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 #define EXTRA_LOCAL_ORIGIN_ACCURACY
 
@@ -106,7 +113,23 @@ enum KillTypes_t
 
 
 #ifdef CLIENT_DLL
+#define FF_CLOAK_MATERIAL		"effects/player_cloak"
+#define FF_CLOAK_TEXTURE_GROUP	TEXTURE_GROUP_CLIENT_EFFECTS
 
+#define DRAWMODEL_CLOAKED() \
+{ \
+	IMaterial *pMaterial = materials->FindMaterial( FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP ); \
+	if( pMaterial ) \
+	{ \
+		materials->Bind( pMaterial ); \
+		if( pMaterial->NeedsPowerOfTwoFrameBufferTexture() ) \
+			UpdateRefractTexture(); \
+		modelrender->ForcedMaterialOverride( pMaterial ); \
+		int iDrawModelRet = BaseClass::DrawModel( flags ); \
+		modelrender->ForcedMaterialOverride( NULL ); \
+		return iDrawModelRet; \
+	} \
+}
 #endif
 
 #endif // FF_SHAREDDEFS_H

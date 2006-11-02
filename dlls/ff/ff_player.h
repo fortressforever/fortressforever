@@ -325,6 +325,11 @@ private:
 	int m_iLocalSkiState;
 	// ---> end
 
+private:
+	CNetworkVar( float, m_flCurrentSpeed );
+public:
+	float GetCurrentSpeed( void ) const { return m_flCurrentSpeed; }
+
 public:
 	// ---> FF server-side player command handlers
 	void Command_TestCommand(void);

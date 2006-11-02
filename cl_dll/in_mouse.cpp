@@ -248,6 +248,7 @@ void CInput::ResetMouse( void )
 extern bool ActivateScoreboard();	// |-- Mirv: For scoreboard mouse activation
 extern bool CanStealMouseForAimSentry(); // |-- Mulch: For stealing mouse button to do aimsentry post radial menu
 extern void SetStealMouseForAimSentry( bool bValue );
+extern bool CanStealMouseForCloak(); // |-- Mulch: For stealing mouse button to do cloak
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -277,6 +278,15 @@ void CInput::MouseEvent( int mstate, bool down )
 			{
 				engine->ClientCmd( "aimsentry" );
 				SetStealMouseForAimSentry( false );
+				continue;
+			}
+			// <--
+
+			// --> Mulch: Swallow button1 if cloaked but send
+			// a command saying we uncloaked
+			if( ( i == 0 ) && CanStealMouseForCloak() )
+			{
+				engine->ClientCmd( "cloak" );
 				continue;
 			}
 			// <--

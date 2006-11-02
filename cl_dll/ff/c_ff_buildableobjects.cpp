@@ -161,15 +161,15 @@ void C_FFBuildableObject::ClientThink( void )
 		switch( Classify() )
 		{
 			case CLASS_DISPENSER:
-			flBuildDist = FF_BUILD_DISP_BUILD_DIST;
+				flBuildDist = FF_BUILD_DISP_BUILD_DIST;
 			break;
 
 			case CLASS_SENTRYGUN:
-			flBuildDist = FF_BUILD_SG_BUILD_DIST;
+				flBuildDist = FF_BUILD_SG_BUILD_DIST;
 			break;
 
 			case CLASS_DETPACK:
-			flBuildDist = FF_BUILD_DET_BUILD_DIST;
+				flBuildDist = FF_BUILD_DET_BUILD_DIST;
 			break;
 
 			default: return; break;
@@ -200,13 +200,11 @@ int C_FFBuildableObject::DrawModel( int flags )
 	if( m_bClientSideOnly )
 	{
 		// Draw our glyphs
-		//color32 c = { 0, 255, 0, 110 };
 
 		// See if there's even an error
 		if( m_hBuildError != BUILD_ALLOWED )
 		{
 			float flOffset = 0.0f;
-			//c.r = 255; c.g = 0;
 			
 			// Get an offset for drawing (relative to GetAbsOrigin)
 			const int iEntityClass = Classify();
@@ -229,16 +227,13 @@ int C_FFBuildableObject::DrawModel( int flags )
 				case BUILD_MOVEABLE: pszMaterial = FF_BUILD_ERROR_MOVEABLE; break;
 				case BUILD_NEEDAMMO: pszMaterial = FF_BUILD_ERROR_NEEDAMMO; break;
 				case BUILD_ALREADYBUILT:
+				{				
 					if(iEntityClass == CLASS_DISPENSER)
-					{
 						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTDISP; 
-						break;
-					}
-					if(iEntityClass == CLASS_SENTRYGUN)
-					{
+					else if(iEntityClass == CLASS_SENTRYGUN)
 						pszMaterial = FF_BUILD_ERROR_ALREADYBUILTSG; 
-						break;
-					}
+				}
+				break;
 			}
 
 			// If a valid material...
@@ -254,11 +249,13 @@ int C_FFBuildableObject::DrawModel( int flags )
 				}
 			}
 
+			// This just looks bad, even if it is a cvar. 
+			// We're already drawing the sprite noculled.
+			// UNDONE:
 			// Finally, there was a build error, so don't actually draw the real model!
-			if(!ffdev_buildabledrawonerror.GetBool())
-				return 0;
+			//if(!ffdev_buildabledrawonerror.GetBool())
+			return 0;
 		}
-		//SetRenderColor(c.r, c.g, c.b, c.a);
 	}
 		
 	

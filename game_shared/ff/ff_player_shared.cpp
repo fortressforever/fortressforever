@@ -1087,12 +1087,12 @@ void CFFPlayer::Cloak( void )
 		if( m_flFinishDisguise > gpGlobals->curtime )
 			m_flFinishDisguise -= ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
 
-		// Redeploy our weapon
-		if( GetActiveWeapon() && ( GetActiveWeapon()->IsWeaponVisible() == false ) )
-		{
-			GetActiveWeapon()->Deploy();
-			ShowCrosshair( true );
-		}
+		//// Redeploy our weapon
+		//if( GetActiveWeapon() && ( GetActiveWeapon()->IsWeaponVisible() == false ) )
+		//{
+		//	GetActiveWeapon()->Deploy();
+		//	ShowCrosshair( true );
+		//}
 
 		// If regular cloak cleanup ragdoll
 		if( !m_bCloakFadeType )
@@ -1136,9 +1136,9 @@ void CFFPlayer::Cloak( void )
 		if( m_flFinishDisguise > gpGlobals->curtime )
 			m_flFinishDisguise += ( m_flFinishDisguise - gpGlobals->curtime ) * 0.5f;
 
-		// Holster our current weapon
-		if( GetActiveWeapon() )
-			GetActiveWeapon()->Holster( NULL );
+		//// Holster our current weapon
+		//if( GetActiveWeapon() )
+		//	GetActiveWeapon()->Holster( NULL );
 
 		// Remove any decals on us
 		RemoveAllDecals();		

@@ -394,8 +394,8 @@ bool CFFWeaponBase::CanBeSelected()
 
 	if (pPlayer->IsBuilding())
 		return false;
-	else if( pPlayer->IsCloaked() )
-		return false;
+	//else if( pPlayer->IsCloaked() )
+	//	return false;
 	else
 		return BaseClass::CanBeSelected();
 }
@@ -448,6 +448,23 @@ bool CFFWeaponBase::ShouldPredict()
 		return true;
 
 	return BaseClass::ShouldPredict();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Draw differently if owner cloaked
+//----------------------------------------------------------------------------
+int CFFWeaponBase::DrawModel( int flags )
+{
+	C_FFPlayer *pPlayer = GetPlayerOwner();
+	if( pPlayer )
+	{
+		if( pPlayer->IsCloaked() )
+		{
+			DRAWMODEL_CLOAKED();
+		}
+	}
+
+	return BaseClass::DrawModel( flags );
 }
 
 #endif

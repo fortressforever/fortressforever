@@ -20,6 +20,8 @@
 #include "hltvcamera.h"
 #include "iinput.h"
 
+#include "c_ff_player.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -306,6 +308,15 @@ int C_BaseViewModel::DrawModel( int flags )
 //-----------------------------------------------------------------------------
 int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 {
+	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
+	if( pPlayer )
+	{
+		if( pPlayer->IsCloaked() )
+		{
+			DRAWMODEL_CLOAKED();
+		}
+	}
+
 	return BaseClass::DrawModel( flags );
 }
 
@@ -316,11 +327,13 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 int C_BaseViewModel::GetFxBlend( void )
 {
 	// See if the local player wants to override the viewmodel's rendering
+	/*
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if ( pPlayer && pPlayer->IsOverridingViewmodel() )
 	{
 		return pPlayer->GetFxBlend();
 	}
+	*/
 
 	return BaseClass::GetFxBlend();
 }

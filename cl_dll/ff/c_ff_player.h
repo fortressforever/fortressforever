@@ -49,6 +49,9 @@ extern ConVar r_selfshadows;
 void SetStealMouseForAimSentry( bool bValue );
 bool CanStealMouseForAimSentry( void );
 
+void SetStealMouseForCloak( bool bValue );
+bool CanStealMouseForCloak( void );
+
 void CC_PrimeOne(void);
 void CC_PrimeTwo(void);
 void CC_ThrowGren(void);
@@ -141,6 +144,16 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int  DrawModel( int flags );
+	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
+	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
+
+	virtual RenderGroup_t GetRenderGroup( void )
+	{
+		if( IsCloaked() )
+			return RENDER_GROUP_TRANSLUCENT_ENTITY;
+		else
+			return BaseClass::GetRenderGroup();
+	}
 
 	//--- Added by L0ki ---
 	virtual void Simulate();
@@ -270,6 +283,11 @@ private:
 	// this version of the ski state is not sent over the network, but is altered only by the movecode for the local player
 	int m_iLocalSkiState;
 	// ---> end
+
+private:
+	float m_flCurrentSpeed;
+public:
+	float GetCurrentSpeed( void ) const { return m_flCurrentSpeed; }
 
 	// Beg: Added by L0ki for grenade stuff
 public:
