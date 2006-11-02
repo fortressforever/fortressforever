@@ -88,10 +88,7 @@ class CFFPlayer;
 	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
 	{ \
 		if( pFFPlayer->IsCloaked() ) \
-		{ \
-			pFFPlayer->Uncloak( true ); \
 			return; \
-		} \
 	} \
 }
 #else
@@ -264,6 +261,7 @@ private:
 	// Some things from HL2MP
 	virtual bool	ShouldPredict();
 	virtual void	OnDataChanged(DataUpdateType_t type);
+	virtual int		DrawModel( int flags );
 #endif
 };
 

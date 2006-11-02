@@ -146,4 +146,20 @@ public:
 
 };
 
+//=============================================================================
+//
+//	class C_FFSpyCloakMaterialProxy
+//
+//=============================================================================
+class C_FFSpyCloakMaterialProxy : public CResultProxy
+{
+public:
+	C_FFSpyCloakMaterialProxy( void );
+	virtual ~C_FFSpyCloakMaterialProxy( void );
+
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+
+};
+
 #endif // FF_MATERIALPROXIES_H

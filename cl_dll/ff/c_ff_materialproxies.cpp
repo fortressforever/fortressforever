@@ -258,6 +258,9 @@ bool C_FFPlayerVelocityMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKe
 //-----------------------------------------------------------------------------
 void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 {
+	if( !pC_BaseEntity )
+		return;
+
 	//C_BaseEntity* pEntity = ( C_BaseEntity * )pC_BaseEntity;
 	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
 	if( !pEntity )
@@ -272,7 +275,7 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	float flSpeed = pPlayer->GetLocalVelocity().Length();
+	float flSpeed = pPlayer->GetCurrentSpeed();
 	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Player Velocity
@@ -370,6 +373,9 @@ bool C_FFWeaponVelocityMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKe
 //-----------------------------------------------------------------------------
 void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 {
+	if( !pC_BaseEntity )
+		return;
+
 	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
 	if( !pEntity )
 		return;
@@ -384,7 +390,7 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	float flSpeed = pWeaponOwner->GetLocalVelocity().Length();
+	float flSpeed = pWeaponOwner->GetCurrentSpeed();
 	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Weapon Velocity
@@ -394,3 +400,93 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 }
 
 EXPOSE_INTERFACE( C_FFWeaponVelocityMaterialProxy, IMaterialProxy, "FF_WeaponVelocityProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+
+//=============================================================================
+//
+//	class C_FFSpyCloakMaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_FFSpyCloakMaterialProxy::C_FFSpyCloakMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Deconstructor
+//-----------------------------------------------------------------------------
+C_FFSpyCloakMaterialProxy::~C_FFSpyCloakMaterialProxy( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool C_FFSpyCloakMaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if( !CResultProxy::Init( pMaterial, pKeyValues ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void C_FFSpyCloakMaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	if( !pC_BaseEntity )
+		return;
+
+	C_BaseEntity *pEntity = ( ( IClientRenderable * )pC_BaseEntity )->GetIClientUnknown()->GetBaseEntity();
+	if( !pEntity )
+		return;
+
+	C_FFPlayer *pPlayer = NULL;
+	
+	// Player
+	if( pEntity->IsPlayer() )
+	{
+		pPlayer = ToFFPlayer( pEntity );
+	}
+	// Something else
+	else
+	{
+		// Viewmodel
+		C_BaseViewModel *pViewModel = dynamic_cast< C_BaseViewModel * >( pEntity );
+		if( pViewModel )
+		{
+			if( pViewModel->IsViewModel() )
+			{
+				pPlayer = C_FFPlayer::GetLocalFFPlayer();
+				// TODO: Try this while spec'ing
+				//pPlayer = ToFFPlayer( pAnimating->GetOwner() );
+			}
+		}
+
+		// Weapon
+		C_FFWeaponBase *pWeapon = dynamic_cast< C_FFWeaponBase * >( pEntity );
+		if( pWeapon && !pPlayer )
+		{
+			pPlayer = pWeapon->GetPlayerOwner();
+		}
+	}	
+
+	// No valid player, quit
+	if( !pPlayer )
+		return;
+
+	Assert( m_pResult );
+
+	float flSpeed = pPlayer->GetCurrentSpeed();
+	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
+
+	// Update the value in the material proxy
+	SetFloatResult( flVal );
+
+	//Warning( "[Spy Cloak Proxy] %s - %f (%f)\n", pPlayer->GetPlayerName(), flSpeed );
+}
+
+EXPOSE_INTERFACE( C_FFSpyCloakMaterialProxy, IMaterialProxy, "FF_SpyCloakProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
