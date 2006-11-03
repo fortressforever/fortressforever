@@ -62,7 +62,6 @@ namespace Omnibot
 	void Notify_Build_AlreadyBuilt(CBasePlayer *_player, int _buildable);
 	void Notify_Build_NotEnoughAmmo(CBasePlayer *_player, int _buildable);
 
-
 	void Notify_CantDisguiseAsTeam(CBasePlayer *_player, int _disguiseTeam);
 	void Notify_CantDisguiseAsClass(CBasePlayer *_player, int _disguiseClass);
 	void Notify_Disguising(CBasePlayer *_player, int _disguiseTeam, int _disguiseClass);
@@ -100,6 +99,7 @@ namespace Omnibot
 	void Notify_SentrySabotaged(CBasePlayer *_player, edict_t *_saboteur);	
 
 	void Notify_PlayerShoot(CBasePlayer *_player, int _weapon);
+	void Notify_PlayerShootProjectile(CBasePlayer *_player, edict_t *_projectile);
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed);
 
 	// Goal Stuff

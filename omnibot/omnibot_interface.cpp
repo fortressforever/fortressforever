@@ -2543,12 +2543,15 @@ namespace Omnibot
 				s_NextUpdateTime = gpGlobals->curtime + 0;//omnibot_thinkrate.GetInteger();
 				obUpdateDrawnWaypoints(2000.0f);
 
-				static float serverGravity = 0.0f;
-				if(serverGravity != sv_gravity.GetFloat())
+				if(g_BotFunctions.pfnBotSendGlobalEvent)
 				{
-					BotUserData bud(sv_gravity.GetFloat());
-					g_BotFunctions.pfnBotSendGlobalEvent(GAME_ID_GRAVITY, 0, 0, &bud);
-					serverGravity = sv_gravity.GetFloat();
+					static float serverGravity = 0.0f;
+					if(serverGravity != sv_gravity.GetFloat())
+					{
+						BotUserData bud(-sv_gravity.GetFloat());
+						g_BotFunctions.pfnBotSendGlobalEvent(GAME_ID_GRAVITY, 0, 0, &bud);
+						serverGravity = sv_gravity.GetFloat();
+					}
 				}
 
 				// Call the libraries update.
@@ -3062,6 +3065,19 @@ namespace Omnibot
 		int iGameId = _player->entindex()-1;
 		BotUserData bud(obUtilGetBotWeaponFromGameWeapon(_weapon));
 		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE, iGameId, 0, 0, &bud);
+	}
+
+	void Notify_PlayerShootProjectile(CBasePlayer *_player, edict_t *_projectile)
+	{
+		// Unused for now.
+		/*int iGameId = _player->entindex()-1;
+		BotUserData bud;
+		if(_projectile)
+		{
+			bud.DataType = BotUserData::dtEntity;
+			bud.udata.m_Entity = _projectile;
+		}
+		omnibot_interface::Bot_Interface_SendEvent(ACTION_WEAPON_FIRE_PROJECTILE, iGameId, 0, 0, &bud);*/
 	}
 
 	void Notify_PlayerUsed(CBasePlayer *_player, CBaseEntity *_entityUsed)

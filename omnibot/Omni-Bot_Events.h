@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-25 22:00:29 -0700 (Wed, 25 Oct 2006) $
-// $LastChangedRevision: 1309 $
+// $LastChangedDate: 2006-11-03 07:55:27 -0800 (Fri, 03 Nov 2006) $
+// $LastChangedRevision: 1315 $
 //
 // about: Generic Bot Events
 //
@@ -43,6 +43,7 @@ typedef enum
 		// Actions
 		ACTION_ID_FIRST,
 			ACTION_WEAPON_FIRE,
+			ACTION_WEAPON_FIRE_PROJECTILE,
 			ACTION_WEAPON_CHANGE,
 		ACTION_ID_LAST,
 
