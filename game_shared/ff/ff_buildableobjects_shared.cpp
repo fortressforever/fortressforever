@@ -180,7 +180,11 @@ bool CFFBuildableInfo::IsGeometryInTheWay( void )
 
 	// We're going to do this test 3 times... building on an incline always kills us
 	bool bValid = false;
-	for( int i = 0; ( i < 3 ) && !bValid; i++ )
+
+	// Detpack was climbing up short walls and stuff, nice! But a bug!
+	int iIterations = ( m_iBuildObject == FF_BUILD_DETPACK ) ? 1 : 3;
+
+	for( int i = 0; ( i < iIterations ) && !bValid; i++ )
 	{
 		// If past the first iteration, try adjusting
 		// player origin if building isn't working
