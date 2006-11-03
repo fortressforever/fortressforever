@@ -17,6 +17,7 @@
 #ifdef GAME_DLL
 	#include "ff_utils.h"
 	#include "soundent.h"
+	#include "omnibot_interface.h"
 #endif
 
 extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
@@ -275,6 +276,14 @@ CFFProjectilePipebomb * CFFProjectilePipebomb::CreatePipebomb(const CBaseEntity 
 	// Too many pipes
 	if (i > 8) 
 		pOldestPipe->DetonatePipe();
+#endif
+
+#ifdef GAME_DLL
+	{
+		CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShootProjectile(pPlayer, pPipebomb->edict());
+	}
 #endif
 
 	return pPipebomb; 

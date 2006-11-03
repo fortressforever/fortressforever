@@ -4411,6 +4411,13 @@ void CFFPlayer::ThrowGrenade(float fTimer, float flSpeed)
 
 		if (fTimer > 0)
 			pGrenade->m_fIsHandheld = false;
+
+#ifdef GAME_DLL
+		{
+			if(IsBot())
+				Omnibot::Notify_PlayerShootProjectile(this, pGrenade->edict());
+		}
+#endif
 	}
 }
 

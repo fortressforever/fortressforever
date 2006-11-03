@@ -18,6 +18,7 @@
 
 #ifdef GAME_DLL
 	#include "smoke_trail.h"
+	#include "omnibot_interface.h"
 #else
 	#define RocketTrail C_RocketTrail
 	#include "c_smoke_trail.h"
@@ -161,6 +162,14 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSour
 
 	//pRocket->EmitSound("rocket.fly");
 	// this is being swapped over to the client -mirv
+
+#ifdef GAME_DLL
+	{
+		CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
+		if(pPlayer->IsBot())
+			Omnibot::Notify_PlayerShootProjectile(pPlayer, pRocket->edict());
+	}
+#endif
 
 	return pRocket; 
 }
