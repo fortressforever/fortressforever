@@ -25,6 +25,7 @@
 	#include "iservervehicle.h"
 	#include "decals.h"
 	#include "ilagcompensationmanager.h"
+	#include "EntityFlame.h"
 
 	#include "ff_item_flag.h"
 	#include "ff_entity_system.h"	// Entity system
@@ -1101,6 +1102,11 @@ void CFFPlayer::Cloak( void )
 			CFFRagdoll *pRagdoll = dynamic_cast< CFFRagdoll * >( m_hRagdoll.Get() );
 			if( pRagdoll )
 			{
+				// Check if the ragdoll had flames on it
+				CEntityFlame *pFlame = dynamic_cast< CEntityFlame * >( pRagdoll->GetEffectEntity() );
+				if( pFlame )
+					pFlame->Extinguish();
+
 				// Remove the ragdoll instantly
 				pRagdoll->SetThink( &CBaseEntity::SUB_Remove );
 				pRagdoll->SetNextThink( gpGlobals->curtime );

@@ -466,6 +466,17 @@ CFFPlayer::~CFFPlayer()
 }
 
 // --------------------------------------------------------------------------------
+// Purpose: 
+// --------------------------------------------------------------------------------
+void CFFPlayer::UpdateOnRemove( void )
+{
+	// Kill off flame & burning sound
+	Extinguish();
+
+	BaseClass::UpdateOnRemove();
+}
+
+// --------------------------------------------------------------------------------
 // Purpose: Set the spawn delay for a player. If the current delay
 //			is longer than flDelay then flDelay is ignored and
 //			the longer delay is used. It also checks the entity
@@ -1755,12 +1766,37 @@ void CFFPlayer::CreateRagdollEntity(const CTakeDamageInfo *info)
 
 	if ( pRagdoll )
 	{
+		// Kill existing ragdoll flame stuff stuff
+		if( pRagdoll->GetFlags() & FL_ONFIRE )
+			RemoveFlag( FL_ONFIRE );
+
+		// If our ragdoll is already on fire, kill that fire
+		CEntityFlame *pPrevRagdollFlame = dynamic_cast< CEntityFlame * >( pRagdoll->GetEffectEntity() );
+		if( pPrevRagdollFlame )
+			pPrevRagdollFlame->Extinguish();
+
 		pRagdoll->m_hPlayer = this;
 		pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = Vector(0, 0, 0);
+
+		// Create flames on ragdoll if player has flames
+		CEntityFlame *pPlayerFlame = dynamic_cast< CEntityFlame * >( GetEffectEntity() );
+		if( pPlayerFlame )
+		{
+			// "Copy" flame over to ragdoll
+			CEntityFlame *pRagdollFlame = CEntityFlame::Create( pRagdoll );
+			if( pRagdollFlame )
+			{
+				pRagdollFlame->SetLifetime( 10.0f );
+				pRagdollFlame->AttachToEntity( pRagdoll );
+
+				pRagdoll->SetEffectEntity( pRagdollFlame );
+				pRagdoll->AddFlag( FL_ONFIRE );
+			}
+		}
 
 		if (info && info->GetDamageType() & DMG_BLAST)
 			pRagdoll->m_vecForce = 100.0f * info->GetDamageForce();
@@ -4902,7 +4938,7 @@ bool CFFPlayer::Event_Gibbed(const CTakeDamageInfo &info)
 
 	SetMoveType(MOVETYPE_FLYGRAVITY);
 
-	SetFlameSpritesLifetime(-1.0f);
+	Extinguish();
 
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
@@ -5896,6 +5932,10 @@ void CFFPlayer::SpyCloakFadeOut( bool bInstant )
 {
 	//Warning( "[Spy Cloak Fade] Start fading out!\n" );
 
+	// Do instant fades until we delay setting
+	// the forcedoverride material
+	bInstant = true;
+
 	m_flCloakFadeStart = gpGlobals->curtime;
 	m_flCloakFadeFinish = bInstant ? gpGlobals->curtime : gpGlobals->curtime + ( m_bCloakFadeType ? ffdev_spy_scloakfadespeed.GetFloat() : ffdev_spy_cloakfadespeed.GetFloat() );
 
@@ -6476,17 +6516,16 @@ void CFFPlayer::SetFlameSpritesLifetime(float flLifeTime)
 	// If it's not already going then we should return without doing anything otherwise
 	// we can end up in a loop when the flame keeps notifying the player that it has
 	// run out and this function is called.
-	if (flLifeTime <= 0.0f && pFlame->m_flLifetime > gpGlobals->curtime)
+	if (flLifeTime <= 0.0f)
 	{
-		pFlame->SetLifetime(-1.0f);
+		 //&& pFlame->m_flLifetime > gpGlobals->curtime)
+		pFlame->Extinguish();
 	}
 	else if (flLifeTime > 0.0f)
 	{
 		pFlame->SetLifetime(flLifeTime);
-	}
-	else
-		return;
 
-	// Take effect immediately
-	pFlame->FlameThink();
+		// Take effect immediately
+		pFlame->FlameThink();
+	}
 }

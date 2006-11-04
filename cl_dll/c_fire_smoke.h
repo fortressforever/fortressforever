@@ -307,6 +307,7 @@ protected:
 	bool			m_bAttachedToHitboxes;
 	float			m_flLifetime;
 	bool			m_bStartedFading;
+	bool			m_bUnderwater;
 
 	const model_t	*m_pCachedModel;				// Holds the model pointer to detect when it changes
 

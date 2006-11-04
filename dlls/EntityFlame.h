@@ -33,6 +33,9 @@ public:
 	void	SetLifetime( float lifetime );
 	void	SetUseHitboxes( bool use );
 
+	// Mulchman
+	void	Extinguish( void );
+
 	virtual void Precache();
 	virtual void UpdateOnRemove();
 

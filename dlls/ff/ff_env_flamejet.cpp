@@ -44,6 +44,16 @@ void CFFFlameJet::Spawn()
 	m_fEmit = false;
 }
 
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+void CFFFlameJet::UpdateOnRemove( void )
+{
+	m_fEmit = false;
+
+	BaseClass::UpdateOnRemove();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Turn the flame jet on or off
 //			Returns true if value has changed
