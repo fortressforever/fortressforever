@@ -30,6 +30,7 @@ public:
 
 	virtual void	Spawn();
 	bool			FlameEmit(bool fEmit);
+	virtual void	UpdateOnRemove( void );
 
 	// Stuff from the datatable.
 public:

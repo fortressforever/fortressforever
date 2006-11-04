@@ -686,6 +686,7 @@ void C_FFRagdoll::CreateRagdoll()
 			Interp_Reset( varMap );
 		}
 
+		/*
 		// Now set the corpse alight if needed
 		if (pPlayer->GetEffectEntity())
 		{
@@ -703,6 +704,7 @@ void C_FFRagdoll::CreateRagdoll()
 			}
 #endif
 		}
+		*/
 
 		CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
@@ -776,15 +778,14 @@ void C_FFRagdoll::OnDataChanged( DataUpdateType_t type )
 		CreateRagdoll();
 	
 		IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
-
 		if( pPhysicsObject )
 		{
 			AngularImpulse aVelocity(0,0,0);
-
 			Vector vecExaggeratedVelocity = 3 * m_vecRagdollVelocity;
-
 			pPhysicsObject->AddVelocity( &vecExaggeratedVelocity, &aVelocity );
 		}
+
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
 
@@ -819,22 +820,37 @@ IRagdoll* C_FFPlayer::GetRepresentativeRagdoll() const
 // Purpose: Check to see if we've entered the water and remove any flames
 //			if we have.
 //-----------------------------------------------------------------------------
-void C_FFRagdoll::ClientThink()
+void C_FFRagdoll::ClientThink( void )
 {
-	if (UTIL_PointContents(GetAbsOrigin()) & MASK_WATER)
+	/*
+	if( UTIL_PointContents( GetAbsOrigin() ) & MASK_WATER )
 	{
-		C_EntityFlame *pFlame = (C_EntityFlame *) GetEffectEntity();
+		C_BaseEntity *pEntity = GetEffectEntity();
 
-		// Destroy the flame. Also don't bother thinking again because we won't need
-		// to re-extinguish
-		if (pFlame)
+		if( pEntity )
 		{
-			pFlame->Remove();
+			C_BaseEntity *pEffectEntity = pEntity->GetEffectEntity();
+			if( pEffectEntity )
+			{
+				Warning( "[Effect Entity Valid!]\n" );
+			}			
+		}
+
+		C_EntityFlame *pFlame = ( C_EntityFlame * )GetEffectEntity();
+		if( pFlame )
+		{
+			// Just hide drawing it on our client
+			pFlame->SetRenderColorA( 0 );
+
+			// Stop playing its burning sound as well
+			pFlame->EmitSound( "General.StopBurning" );
+
 			return;
 		}
 	}
 
 	SetNextClientThink(gpGlobals->curtime + 0.3f);
+	*/
 }
 
 const unsigned char *GetEncryptionKey( void )

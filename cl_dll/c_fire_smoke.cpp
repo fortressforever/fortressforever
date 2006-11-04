@@ -798,6 +798,7 @@ C_EntityFlame::C_EntityFlame( void )
 	m_flLifetime = 0;
 	m_bStartedFading = false;
 	m_bCreatedClientside = false;
+	m_bUnderwater = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -809,7 +810,11 @@ C_EntityFlame::~C_EntityFlame( void )
 	{
 		for (int i = 0; i < NUM_HITBOX_FIRES; i++)
 		{
-			delete m_pFireSmoke[i];
+			if( m_pFireSmoke[i] )
+			{
+				delete m_pFireSmoke[i];
+				m_pFireSmoke[i] = NULL;
+			}
 		}
 	}
 }
@@ -861,6 +866,13 @@ void C_EntityFlame::OnDataChanged( DataUpdateType_t updateType )
 		if (pEnt == CBasePlayer::GetLocalPlayer() && !input->CAM_IsThirdPerson())
 			return;
 		// <--
+
+		// Mulch: Don't do flame underwater
+		if( pEnt->GetWaterLevel() > 0 )
+		{
+			m_bUnderwater = true;
+			return;
+		}
 		
 		if ( m_bUseHitboxes && pEnt->GetBaseAnimating() != NULL )
 		{
@@ -885,6 +897,8 @@ void C_EntityFlame::OnDataChanged( DataUpdateType_t updateType )
 				m_pEmitter->SetSortOrigin( GetAbsOrigin() );
 			}
 		}
+
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 
 	BaseClass::OnDataChanged( updateType );
@@ -1009,6 +1023,28 @@ void C_EntityFlame::Simulate( void )
 
 void C_EntityFlame::ClientThink( void )
 {
+	// Mulch: Want to client think here to
+	// stop flames on ragdolls when they enter the water
+	if( m_hEntAttached )
+	{
+		if( UTIL_PointContents( m_vecLastPosition ) & CONTENTS_WATER )
+		{
+			// We're under water!
+			m_bUnderwater = true;
+
+			// Stop drawing on this client
+			DeleteHitBoxFlames();
+
+			// Stop playing the burning sound
+			EmitSound( "General.StopBurning" );
+
+			// Don't think anymore
+			return;
+		}
+	}
+
+	// Mulch: Commented out for CL_CopyExistingEntity stuff error
+	/*
 	for (int i = 0; i < NUM_HITBOX_FIRES; i++)
 	{
 		if ( m_pFireSmoke[i] != NULL )
@@ -1039,6 +1075,7 @@ void C_EntityFlame::ClientThink( void )
 			}
 		}
 	}
+	*/
 
 	SetNextClientThink( gpGlobals->curtime + 0.1f );
 }
@@ -1226,8 +1263,12 @@ void C_EntityFlame::DeleteHitBoxFlames(void)
 {
 	for ( int i = 0; i < NUM_HITBOX_FIRES; i++ )
 	{
-		m_pFireSmoke[i]->RemoveClientOnly();
-		delete m_pFireSmoke[i];
+		if( m_pFireSmoke[i] )
+		{
+			m_pFireSmoke[i]->RemoveClientOnly();
+			delete m_pFireSmoke[i];
+			m_pFireSmoke[i] = NULL;
+		}		
 	}
 }
 
@@ -1237,6 +1278,9 @@ void C_EntityFlame::DeleteHitBoxFlames(void)
 //-----------------------------------------------------------------------------
 void C_EntityFlame::UpdateHitBoxFlames( void )
 {
+	if( m_bUnderwater )
+		return;
+
 	C_BaseCombatCharacter *pAnimating = (C_BaseCombatCharacter *)m_hEntAttached.Get();
 	if (!pAnimating)
 	{

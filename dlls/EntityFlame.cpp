@@ -286,8 +286,30 @@ void CEntityFlame::FlameThink( void )
 	FireSystem_AddHeatInRadius( GetAbsOrigin(), m_flSize/2, 2.0f );
 
 	SetNextThink( gpGlobals->curtime + FLAME_DAMAGE_INTERVAL );
-}  
+} 
 
+//-----------------------------------------------------------------------------
+// Purpose: Kill the flame NOW
+//-----------------------------------------------------------------------------
+void CEntityFlame::Extinguish( void )
+{
+	m_flLifetime = 0.0f;
+
+	SetParent( NULL );
+
+	if( m_hEntAttached )
+	{
+		m_hEntAttached->RemoveFlag( FL_ONFIRE );
+		m_hEntAttached = NULL;
+	}	
+
+	if( m_bPlayingSound )
+		EmitSound( "General.StopBurning" );
+	
+	SetThink( NULL );
+
+	UTIL_Remove( this );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

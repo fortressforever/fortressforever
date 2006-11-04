@@ -54,6 +54,7 @@ public:
 	virtual bool Deploy();
 	virtual void Precache();
 	virtual void ItemPostFrame();
+	virtual void UpdateOnRemove( void );
 	//virtual void WeaponSound(WeaponSound_t sound_type, float soundtime = 0.0f);
 
 	void EmitFlames(bool fEmit);
@@ -100,6 +101,8 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_flamethrower);
 CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 {
 	m_hFlameJet = NULL;
+
+	m_bFiresUnderwater = false;
 }
 
 //----------------------------------------------------------------------------
@@ -108,6 +111,16 @@ CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 CFFWeaponFlamethrower::~CFFWeaponFlamethrower()
 {
 	Cleanup();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+void CFFWeaponFlamethrower::UpdateOnRemove( void )
+{
+	Cleanup();
+
+	BaseClass::UpdateOnRemove();
 }
 
 //----------------------------------------------------------------------------

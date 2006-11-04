@@ -234,7 +234,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 		float flHorizontalSpeed = vecVelocity.Length();
 
 		// If building, don't let them trimp!
-		if( ffplayer->m_bBuilding )
+		if( ffplayer->IsBuilding() )
 			flHorizontalSpeed = 0.0f;
 
 		// They have to be at least moving a bit
@@ -281,7 +281,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 	//}
 
 	// Double jump - but don't allow double jumps while building, please!
-	if( ffplayer->m_bCanDoubleJump && !ffplayer->m_bBuilding )
+	if( ffplayer->m_bCanDoubleJump && !ffplayer->IsBuilding() )
 	{
 		float flElapsed = ffplayer->m_flNextJumpTimeForDouble - gpGlobals->curtime;
 
@@ -364,7 +364,7 @@ void CFFGameMovement::FullBuildMove( void )
 		return;
 
 	// Don't care if dead or not building...
-	if( !pPlayer->m_bBuilding || !pPlayer->IsAlive() )
+	if( !pPlayer->IsBuilding() || !pPlayer->IsAlive() )
 		return;
 	
 	// Don't care if under water...

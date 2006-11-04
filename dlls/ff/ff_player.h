@@ -185,6 +185,7 @@ public:
 	virtual bool BecomeRagdollOnClient(const Vector &force);
 
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+	virtual void UpdateOnRemove( void );
 	
 	// returns the name of the active weapons. returns null if there
 	// there is no active weapon
