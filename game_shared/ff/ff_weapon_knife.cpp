@@ -164,5 +164,22 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 #endif
 
+#ifdef CLIENT_DLL
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
+
+	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
+
+	if (pHitEntity != NULL && pHitEntity->IsPlayer()) 
+	{
+		CFFPlayer *pTarget = ToFFPlayer(pHitEntity);
+
+		if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, pTarget)) 
+		{
+			// we scored a hit, so play the knife slash sound
+			WeaponSound(SPECIAL2);
+		}
+	}
+#endif
+
 	BaseClass::Hit(traceHit, nHitActivity);
 }
