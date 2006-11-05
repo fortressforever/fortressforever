@@ -100,11 +100,11 @@ private:
 	CPanelAnimationVar( vgui::HFont, m_hDisguiseFont, "DisguiseFont", "ClassGlyphs" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextSmall" );
 
-	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "64", "proportional_float" );
+	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "34", "proportional_float" );
+	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "10", "proportional_float" );
 
-	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
+	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
 
 };
 
@@ -126,6 +126,8 @@ void CHudSpyDisguise::VidInit( void )
 //-----------------------------------------------------------------------------
 void CHudSpyDisguise::Paint( void )
 {
+	SetPaintBackgroundEnabled( false );
+
 	if( !engine->IsInGame() )
 		return;
 
@@ -139,6 +141,9 @@ void CHudSpyDisguise::Paint( void )
 
 	if( !pPlayer->IsDisguised() )
 		return;
+
+	// Paint foreground/background stuff
+	BaseClass::PaintBackground();
 
 	// Draw!
 	if( m_pHudSpyDisguise )
@@ -168,17 +173,12 @@ void CHudSpyDisguise::Paint( void )
 			pszText = szText;
 		}
 
-		int iCharWide = surface()->GetCharacterWidth( m_hDisguiseFont, ( int )m_pHudSpyDisguise->cCharacterInFont );
-
-		int iWide, iTall;
-		surface()->GetTextSize( m_hTextFont, pszText, iWide, iTall );
-
 		// Draw text
 		surface()->DrawSetTextFont( m_hTextFont );
 		surface()->DrawSetTextColor( clr );
-		surface()->DrawSetTextPos( text1_xpos + ( iCharWide / 2 ) - ( iWide / 2 ), text1_ypos );
+		surface()->DrawSetTextPos( text1_xpos, text1_ypos );
 		surface()->DrawUnicodeString( pszText );
-	}
+	}	
 
 	BaseClass::Paint();
 }

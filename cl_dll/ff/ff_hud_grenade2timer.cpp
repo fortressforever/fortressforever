@@ -47,9 +47,9 @@ void CHudGrenade2Timer::VidInit()
 	SetPaintBackgroundEnabled(false);
 
 	// Precache the background texture
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_timer2", true, false);
+	//m_pHudElementTexture = new CHudTexture();
+	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
+	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_timer2", true, false);
 }
 
 void CHudGrenade2Timer::Init() 
@@ -116,8 +116,10 @@ void CHudGrenade2Timer::Paint()
 		}
 	}
 
+	BaseClass::PaintBackground();
+
 	// Draw background box
-	surface()->DrawSetTexture(m_pHudElementTexture->textureId);
+	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
 	surface()->DrawSetColor(255, 255, 255, 255);
 	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
 
