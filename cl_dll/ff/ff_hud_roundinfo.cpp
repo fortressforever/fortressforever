@@ -137,7 +137,10 @@ bool CHudRoundInfo::ShouldDraw( void )
 
 	// Figure out new timer value
 	int timer = flMinutesLeft - ( gpGlobals->curtime - FFGameRules()->GetRoundStart() );
-	_snwprintf( m_szRoundTimer, sizeof( m_szRoundTimer ), L"%d:%02d", ( timer / 60 ), ( timer % 60 ) );
+	if( timer <= 0 )
+		_snwprintf( m_szRoundTimer, sizeof( m_szRoundTimer ), L"00:00" );
+	else
+		_snwprintf( m_szRoundTimer, sizeof( m_szRoundTimer ), L"%d:%02d", ( timer / 60 ), ( timer % 60 ) );
 
 	return true;
 }
