@@ -61,7 +61,11 @@ public:
 
 private:
 	// Stuff we need to know
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextSmall" );
+	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextRoundInfo" );
+	CPanelAnimationVar( vgui::HFont, m_hNumFont, "NumberFont", "HUD_TextRoundInfo" );
+
+	CPanelAnimationVarAliasType( Color, m_hTextColor, "TextColor", "255 255 255", "HUD_Tone_Default" );
+	CPanelAnimationVarAliasType( Color, m_hNumColor, "NumberColor", "255 255 255", "HUD_Tone_Default" );
 
 	/*
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "0", "proportional_float" );
@@ -145,13 +149,13 @@ void CHudRoundInfo::Paint( void )
 {
 	// Draw map text
 	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( GetFgColor() );
+	surface()->DrawSetTextColor( m_hTextColor );
 	surface()->DrawSetTextPos( m_iMapNameX, m_iMapNameY );
 	surface()->DrawUnicodeString( m_szMapName );
 
 	// Draw round timer text
-	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( GetFgColor() );
+	surface()->DrawSetTextFont( m_hNumFont );
+	surface()->DrawSetTextColor( m_hNumColor );
 	surface()->DrawSetTextPos( m_iRoundTimerX, m_iRoundTimerY );
 	surface()->DrawUnicodeString( m_szRoundTimer );
 
