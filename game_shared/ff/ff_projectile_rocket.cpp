@@ -165,8 +165,9 @@ CFFProjectileRocket * CFFProjectileRocket::CreateRocket(const CBaseEntity *pSour
 
 #ifdef GAME_DLL
 	{
+		// CRASH! CRASH! CRASH! When SG fires a rocket this was crashing
 		CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
-		if(pPlayer->IsBot())
+		if(pPlayer && pPlayer->IsBot())
 			Omnibot::Notify_PlayerShootProjectile(pPlayer, pRocket->edict());
 	}
 #endif

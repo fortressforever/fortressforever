@@ -118,12 +118,6 @@ void CHudGrenade1Timer::Paint()
 
 	BaseClass::PaintBackground();
 
-    // Draw background box
-	//surface()->DrawSetTexture(m_pHudElementTexture->textureId);
-	//surface()->DrawSetTexture( m_pHudForeground->textureId );
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawTexturedRect(0, 0, GetWide(), GetTall());
-
 	// Draw progres bars for each timer
 	int num_timers = m_Timers.Count();
 	int colour_mod = 0, timer_to_remove = -1;
