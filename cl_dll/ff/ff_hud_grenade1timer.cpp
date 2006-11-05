@@ -47,7 +47,6 @@ void CHudGrenade1Timer::VidInit()
 
 	// Precache the background texture
 	//m_pHudElementTexture = new CHudTexture();
-	
 	//m_pHudElementTexture->textureId = surface()->CreateNewTextureID();
 	//surface()->DrawSetTextureFile(m_pHudElementTexture->textureId, "vgui/hud_box_timer", true, false);
 }
@@ -116,10 +115,14 @@ void CHudGrenade1Timer::Paint()
 		}
 	}
 
+	// Draw progress bars for each timer
+	int num_timers = m_Timers.Count();
+	if( num_timers < 1 )
+		return;
+
+	// Draw fg & bg box
 	BaseClass::PaintBackground();
 
-	// Draw progres bars for each timer
-	int num_timers = m_Timers.Count();
 	int colour_mod = 0, timer_to_remove = -1;
 
 	float timer_height = bar_height / num_timers;
@@ -141,7 +144,6 @@ void CHudGrenade1Timer::Paint()
 			surface()->DrawSetColor(bar_color.r() - colour_mod, bar_color.g() - colour_mod, bar_color.b() - colour_mod, bar_color.a());
 			surface()->DrawFilledRect(bar_xpos, bar_newypos, bar_xpos + bar_width * amount, bar_newypos + timer_height);
 
-
 			bar_newypos += timer_height;
 			colour_mod += 20.0f;			// TODO: Constrain this? Probably not needed.
 		}
@@ -152,6 +154,6 @@ void CHudGrenade1Timer::Paint()
 		m_Timers.Remove(timer_to_remove);
 	
 	// Draw progress bar box
-	surface()->DrawSetColor(bar_color);
-	surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
+	// surface()->DrawSetColor(bar_color);
+	// surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
 }

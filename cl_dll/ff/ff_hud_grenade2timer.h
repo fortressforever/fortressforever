@@ -27,14 +27,14 @@ private:
 	float m_flLastTime;
 
 	// Stuff we need to know
-	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
+	//CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Default");
 
-	CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "8", "proportional_float");
-	CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "20", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_width, "icon_width", "1", "proportional_float");
-	CPanelAnimationVarAliasType(float, icon_height, "icon_height", "1", "proportional_float");
+	//CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "8", "proportional_float");
+	//CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "20", "proportional_float");
+	//CPanelAnimationVarAliasType(float, icon_xpos, "icon_xpos", "0", "proportional_float");
+	//CPanelAnimationVarAliasType(float, icon_ypos, "icon_ypos", "0", "proportional_float");
+	//CPanelAnimationVarAliasType(float, icon_width, "icon_width", "1", "proportional_float");
+	//CPanelAnimationVarAliasType(float, icon_height, "icon_height", "1", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_xpos, "bar_xpos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_ypos, "bar_ypos", "0", "proportional_float");
 	CPanelAnimationVarAliasType(float, bar_width, "bar_width", "1", "proportional_float");

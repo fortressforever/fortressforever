@@ -116,10 +116,14 @@ void CHudGrenade2Timer::Paint()
 		}
 	}
 
-	BaseClass::PaintBackground();
-
-	// Draw progres bars for each timer
+	// Draw progress bars for each timer
 	int num_timers = m_Timers.Count();
+	if( num_timers < 1 )
+		return;
+
+	// Draw fg & bg box
+	BaseClass::PaintBackground();
+	
 	int colour_mod = 0, timer_to_remove = -1;
 
 	float timer_height = bar_height / num_timers;
@@ -152,6 +156,6 @@ void CHudGrenade2Timer::Paint()
 		m_Timers.Remove(timer_to_remove);
 
 	// Draw progress bar box
-	surface()->DrawSetColor(bar_color);
-	surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
+	// surface()->DrawSetColor(bar_color);
+	// surface()->DrawOutlinedRect(bar_xpos, bar_ypos, bar_xpos + bar_width, bar_ypos + bar_height);
 }
