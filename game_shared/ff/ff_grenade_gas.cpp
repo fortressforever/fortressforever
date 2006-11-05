@@ -24,6 +24,7 @@
 	#define CFFGrenadeGas C_FFGrenadeGas
 	#include "c_te_effect_dispatch.h"
 	#include "ff_fx_gascloud_emitter.h"
+	#include <igameevents.h>
 #else
 	#include "te_effect_dispatch.h"
 	#include "ff_entity_system.h"
