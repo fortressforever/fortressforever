@@ -178,5 +178,7 @@ void CHudSpyDisguise::Paint( void )
 		surface()->DrawSetTextColor( clr );
 		surface()->DrawSetTextPos( text1_xpos + ( iCharWide / 2 ) - ( iWide / 2 ), text1_ypos );
 		surface()->DrawUnicodeString( pszText );
-	}	
+	}
+
+	BaseClass::Paint();
 }

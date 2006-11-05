@@ -467,7 +467,7 @@ public:
 	//-----------------------------------------------------------------------------
 	void GetCrosshair(FFWeaponID iWeapon, char &innerChar, Color &innerCol, int &innerSize, char &outerChar, Color &outerCol, int &outerSize)
 	{
-		Assert(iWeapon >= 0 && iWeapon < FF_WEAPON_TOMMYGUN);
+		Assert(iWeapon >= 0 && iWeapon <= FF_WEAPON_TOMMYGUN);
 
 		WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iWeapon];
 		WeaponCrosshair_t *pCrosshair = &cinfo;

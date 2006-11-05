@@ -113,6 +113,10 @@ const char *FF_GetAmmoName(int i);
 
 bool FF_TraceHitWorld( trace_t *pTrace );
 
+#ifdef CLIENT_DLL
+char *UTIL_GetFormattedMapName( void );
+#endif
+
 //-----------------------------------------------------------------------------
 // Some wacky utility functions
 //-----------------------------------------------------------------------------

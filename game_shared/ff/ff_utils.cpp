@@ -619,6 +619,20 @@ bool FF_HasPlayerPickedClass( CFFPlayer *pPlayer )
 	return ( ( pPlayer->GetClassSlot() >= CLASS_SCOUT ) && ( pPlayer->GetClassSlot() <= CLASS_CIVILIAN ) );
 }
 
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Get the current map name, but formatted
+//-----------------------------------------------------------------------------
+char *UTIL_GetFormattedMapName( void )
+{	
+	static char szText[ 256 ];
+	Q_strcpy( szText, engine->GetLevelName() + 5 ); // Skip the "maps/" part
+	szText[ ( int )strlen( szText ) - 4 ] = '\0'; // Skip the ".bsp" part
+
+	return szText;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: An array with current numbers on teams
 //-----------------------------------------------------------------------------
