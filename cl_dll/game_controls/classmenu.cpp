@@ -272,8 +272,10 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("showscores")) 
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
 
-	// Support hiding the class menu by hitting your changeteam button again like TFC
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeclass")) 
+	// Support hiding the class menu by hitting your changeclass button again like TFC
+	// 0001232: Or if the user presses escape, kill the menu
+	if ((engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeclass")) ||
+		(engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("cancelselect"))) 
 		gViewPortInterface->ShowPanel(this, false);
 
 	// Support bring the team menu back up if the class menu is showing
