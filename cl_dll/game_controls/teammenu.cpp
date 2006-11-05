@@ -296,7 +296,9 @@ void CTeamMenu::OnKeyCodePressed(KeyCode code)
 		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
 
 	// Support hiding the team menu by hitting your changeteam button again like TFC
-	if (engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeteam")) 
+	// 0001232: Or if the user presses escape, kill the menu
+	if ((engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("changeteam")) ||
+		(engine->GetLastPressedEngineKey() == gameuifuncs->GetEngineKeyCodeForBind("cancelselect"))) 
 		gViewPortInterface->ShowPanel(this, false);
 
 	// Bug #0000540: Can't changeclass while changeteam menu is up
