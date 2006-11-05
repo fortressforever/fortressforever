@@ -5072,6 +5072,8 @@ void CFFPlayer::Extinguish( void )
 	m_flBurningDamage = 0;
 
 	SetFlameSpritesLifetime(-1.0f);
+
+	EmitSound( "General.StopBurning" );
 }
 
 //-----------------------------------------------------------------------------
