@@ -168,7 +168,7 @@ void CFFWeaponFlamethrower::Fire()
 #ifdef GAME_DLL	
 
 	// If underwater then just innocent bubbles
-	if (pPlayer->GetWaterLevel() == 3)
+	if (pPlayer->GetWaterLevel() >= 3)
 	{
 		UTIL_BubbleTrail(vecShootPos, vecShootPos + (vecForward * 64.0), random->RandomInt(5, 20));
 		return;
@@ -349,13 +349,13 @@ void CFFWeaponFlamethrower::ItemPostFrame()
 	if (pOwner->m_nButtons & IN_ATTACK)
 	{
 		// Ensure it can't fire underwater
-		if (pOwner->GetWaterLevel() == 3)
+		if (pOwner->GetWaterLevel() >= 3)
 			EmitFlames(false);
 		else
 			EmitFlames(true);
 
 		// Time for the next real fire think
-		if (m_flNextPrimaryAttack <= gpGlobals->curtime)
+		if( ( m_flNextPrimaryAttack <= gpGlobals->curtime ) && ( pOwner->GetWaterLevel() < 3 ) )
 		{
 			// Out of ammo
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
