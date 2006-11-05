@@ -119,6 +119,8 @@ void CHudSpyDisguise::VidInit( void )
 	m_pHudSpyDisguise->bRenderUsingFont = true;
 	m_pHudSpyDisguise->hFont = m_hDisguiseFont;
 	m_pHudSpyDisguise->cCharacterInFont = '_';
+
+	SetPaintBackgroundEnabled( false );
 }
 
 //-----------------------------------------------------------------------------
@@ -126,8 +128,6 @@ void CHudSpyDisguise::VidInit( void )
 //-----------------------------------------------------------------------------
 void CHudSpyDisguise::Paint( void )
 {
-	SetPaintBackgroundEnabled( false );
-
 	if( !engine->IsInGame() )
 		return;
 
@@ -140,14 +140,14 @@ void CHudSpyDisguise::Paint( void )
 		return;
 
 	if( !pPlayer->IsDisguised() )
-		return;
-
-	// Paint foreground/background stuff
-	BaseClass::PaintBackground();
+		return;	
 
 	// Draw!
 	if( m_pHudSpyDisguise )
 	{
+		// Paint foreground/background stuff
+		BaseClass::PaintBackground();
+
 		// Figure out which glyph to use for the actual icon
 		MapClassToGlyph( pPlayer->GetDisguisedClass(), m_pHudSpyDisguise->cCharacterInFont );
 
@@ -178,7 +178,5 @@ void CHudSpyDisguise::Paint( void )
 		surface()->DrawSetTextColor( clr );
 		surface()->DrawSetTextPos( text1_xpos, text1_ypos );
 		surface()->DrawUnicodeString( pszText );
-	}	
-
-	BaseClass::Paint();
+	}
 }
