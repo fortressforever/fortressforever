@@ -14,6 +14,7 @@
 #define FF_HUD_GRENADE1TIMER_H
 
 #include "cbase.h"
+#include "ff_panel.h"
 
 typedef struct timer_s
 {
@@ -28,10 +29,10 @@ typedef struct timer_s
 
 } timer_t;
 
-class CHudGrenade1Timer : public CHudElement, public vgui::Panel
+class CHudGrenade1Timer : public CHudElement, public vgui::FFPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE(CHudGrenade1Timer, vgui::Panel);
+	DECLARE_CLASS_SIMPLE(CHudGrenade1Timer, vgui::FFPanel);
 
 	CUtlLinkedList<timer_t> m_Timers;
 	bool m_fVisible;
@@ -52,10 +53,10 @@ private:
 	CPanelAnimationVarAliasType(float, bar_height, "bar_height", "1", "proportional_float");
 	CPanelAnimationVarAliasType(Color, bar_color, "bar_color", "255 255 255", "color");
 
-	CHudTexture	*m_pHudElementTexture;
+	//CHudTexture	*m_pHudElementTexture;
 
 public:
-	CHudGrenade1Timer(const char *pElementName) : CHudElement(pElementName), vgui::Panel(NULL, "HudGrenade1Timer") 
+	CHudGrenade1Timer(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudGrenade1Timer") 
 	{
 		SetParent(g_pClientMode->GetViewport());
 		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
