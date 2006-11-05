@@ -104,7 +104,7 @@ void CHudRoundInfo::VidInit( void )
 	localize()->ConvertANSIToUnicode( "00:00", m_szRoundTimer, sizeof( m_szRoundTimer ) );
 	
 	int iRoundWide, iRoundTall;
-	surface()->GetTextSize( m_hTextFont, m_szRoundTimer, iRoundWide, iRoundTall );
+	surface()->GetTextSize( m_hNumFont, m_szRoundTimer, iRoundWide, iRoundTall );
 
 	m_iRoundTimerX = ( GetWide() / 2 ) - ( iRoundWide / 2 );
 	m_iRoundTimerY = m_iMapNameY + iMapTall + 3;
@@ -149,13 +149,13 @@ void CHudRoundInfo::Paint( void )
 {
 	// Draw map text
 	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( m_hTextColor );
+	surface()->DrawSetTextColor( GetFgColor() );
 	surface()->DrawSetTextPos( m_iMapNameX, m_iMapNameY );
 	surface()->DrawUnicodeString( m_szMapName );
 
 	// Draw round timer text
 	surface()->DrawSetTextFont( m_hNumFont );
-	surface()->DrawSetTextColor( m_hNumColor );
+	surface()->DrawSetTextColor( GetFgColor() );
 	surface()->DrawSetTextPos( m_iRoundTimerX, m_iRoundTimerY );
 	surface()->DrawUnicodeString( m_szRoundTimer );
 
