@@ -118,6 +118,32 @@ CON_COMMAND(bot_cloak, "cloak!")
 	}
 }
 
+CON_COMMAND( bot_slot, "change to slot x" )
+{
+	int iSlot = 1;
+
+	const char *pszString = engine->Cmd_Argv(1);
+	switch( pszString[0] )
+	{
+		case '1': iSlot = 1; break;
+		case '2': iSlot = 2; break;
+		case '3': iSlot = 3; break;
+		case '4': iSlot = 4; break;
+		case '5': iSlot = 5; break;
+		default: Warning( "[bot_slot] Default to slot 1\n" ); break;
+	}
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT))
+		{
+			pPlayer->Weapon_Switch( pPlayer->Weapon_GetSlot( iSlot ) );
+		}
+	}
+}
+
 CON_COMMAND(bot_scloak, "scloak!")
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
