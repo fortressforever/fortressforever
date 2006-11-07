@@ -184,7 +184,9 @@ void CC_PrimeOne( void )
 		return;
 
 	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
-	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
+	// 0000818: Grenade timer not playing on second of double primes
+	if ((pLocalPlayer->m_iGrenadeState != FF_GREN_NONE) &&
+		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
@@ -198,6 +200,9 @@ void CC_PrimeOne( void )
 	// This should be okay up to about ~400ms for the moment
 	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
 		return;
+
+	// 0000818: Grenade timer not playing on second of double primes
+	pLocalPlayer->m_flLastServerPrimeTime = pLocalPlayer->m_flServerPrimeTime;
 
 	pLocalPlayer->m_flPrimeTime = engine->Time();
 
@@ -251,7 +256,9 @@ void CC_PrimeTwo( void )
 		return;
 
 	// Bug #0000170: Grenade timer plays on gren2 command if the player is already priming a gren1
-	if (pLocalPlayer->m_iGrenadeState != FF_GREN_NONE)
+	// 0000818: Grenade timer not playing on second of double primes
+	if ((pLocalPlayer->m_iGrenadeState != FF_GREN_NONE) &&
+		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
 		return;
 
 	// Bug #0000366: Spy's cloaking & grenade quirks
@@ -266,8 +273,11 @@ void CC_PrimeTwo( void )
 	if (engine->Time() < pLocalPlayer->m_flPrimeTime + 0.4f)
 		return;
 
+	// 0000818: Grenade timer not playing on second of double primes
+	pLocalPlayer->m_flLastServerPrimeTime = pLocalPlayer->m_flServerPrimeTime;
+
 	pLocalPlayer->m_flPrimeTime = engine->Time();
-	
+
 	/*C_FFTimer *pTimer = g_FFTimers.Create("PrimeGren", 4.0f);
 	if (pTimer)
 	{
@@ -867,6 +877,7 @@ C_FFPlayer::C_FFPlayer() :
 	// Default
 	m_clrTeamColor = Color( 255, 255, 255, 255 );
 
+	m_flLastServerPrimeTime = 0.0f;
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 

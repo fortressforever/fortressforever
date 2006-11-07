@@ -300,6 +300,9 @@ public:
 	float m_flLatency;
 	// End: Added by L0ki for grenade stuff
 
+	// 0000818: Grenade timer not playing on second of double primes
+	float m_flLastServerPrimeTime;
+
 	// Beg: Added by FryGuy for status effect stuff
 	CNetworkVar(float, m_flNextBurnTick);   // when the next burn tick should fire
 	CNetworkVar(int, m_iBurnTicks);         // how many more ticks are left to fire
