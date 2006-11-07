@@ -1036,7 +1036,9 @@ void C_EntityFlame::ClientThink( void )
 			DeleteHitBoxFlames();
 
 			// Stop playing the burning sound
-			EmitSound( "General.StopBurning" );
+			StopSound( "General.BurningFlesh" );
+			StopSound( "General.BurningObject" );
+			//EmitSound( "General.StopBurning" );
 
 			// Don't think anymore
 			return;

@@ -43,6 +43,7 @@ public:
 	virtual void		Precache();
 	virtual const char	*GetBounceSound() { return "NapalmGrenade.Bounce"; }
 	virtual Class_T		Classify() { return CLASS_GREN_NAPALM; }
+	virtual void UpdateOnRemove( void );
 
 	float m_flLastBurnCheck;
 
@@ -73,6 +74,15 @@ END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_grenade_napalm, CFFGrenadeNapalm );
 PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
+
+void CFFGrenadeNapalm::UpdateOnRemove( void )
+{
+	StopSound( "General.BurningFlesh" );
+	StopSound( "General.BurningObject" );
+	//EmitSound( "General.StopBurning" );
+
+	BaseClass::UpdateOnRemove();
+}
 
 #ifdef GAME_DLL
 
@@ -131,11 +141,11 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
 			return;
 		}
 
-		SetAbsVelocity( Vector( 0, 0, 10 + 20 * sin( DEG2RAD( GetAbsAngles().y ) ) ) );
-		SetAbsAngles( GetAbsAngles() + QAngle( 0, 15, 0 ) );
+		//SetAbsVelocity( Vector( 0, 0, 10 + 20 * sin( DEG2RAD( GetAbsAngles().y ) ) ) );
+		//SetAbsAngles( GetAbsAngles() + QAngle( 0, 15, 0 ) );
 
-		Vector vecForward;
-		AngleVectors( GetAbsAngles(), &vecForward );
+		//Vector vecForward;
+		//AngleVectors( GetAbsAngles(), &vecForward );
 
 		if((gpGlobals->curtime - m_flLastBurnCheck) >= 1.0f)
 		{
@@ -153,8 +163,9 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
 					continue;
 
 				// Bug #0000269: Napalm through walls.
+				// Mulch: if we hit water w/ the trace, abort too!
 				trace_t tr;
-				UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_DEBRIS, &tr);
+				UTIL_TraceLine(GetAbsOrigin(), pEntity->GetAbsOrigin(), MASK_SOLID_BRUSHONLY | CONTENTS_WATER, this, COLLISION_GROUP_DEBRIS, &tr);
 
 				if (tr.fraction < 1.0f)
 					continue;
@@ -164,13 +175,17 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
 				if (height < -40.0f || height > 40.0f)
 					continue;
 
-				Class_T cls = pEntity->Classify();
+				// Don't damage if entity is more than feet deep in water
+				if( pEntity->GetWaterLevel() >= 2 )
+					continue;
 
-				switch(cls)
+				switch( pEntity->Classify() )
 				{
-				case CLASS_PLAYER:
+					case CLASS_PLAYER:
 					{
 						CFFPlayer *pPlayer = ToFFPlayer( pEntity );
+						if( !pPlayer )
+							continue;
 
 						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
 						{
@@ -179,15 +194,19 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_napalm );
 						}
 					}
 					break;
-				case CLASS_SENTRYGUN:
-				case CLASS_DISPENSER:
+					case CLASS_SENTRYGUN:
+					case CLASS_DISPENSER:
 					{
-						CFFPlayer *pPlayer = ToFFPlayer(((CFFBuildableObject *) pEntity)->GetOwnerPlayer());
+						CFFBuildableObject *pBuildable = dynamic_cast< CFFBuildableObject * >( pEntity );
+						if( !pBuildable )
+							continue;
+						
+						CFFPlayer *pPlayer = pBuildable->GetOwnerPlayer();
+						if( !pPlayer )
+							continue;
 
 						if (g_pGameRules->FPlayerCanTakeDamage(pPlayer, GetOwnerEntity()))
-						{
-							pEntity->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
-						}
+							pBuildable->TakeDamage( CTakeDamageInfo( this, GetOwnerEntity(), 8.0f, DMG_BURN ) );
 					}
 					
 					default:

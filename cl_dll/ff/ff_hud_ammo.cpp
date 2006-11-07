@@ -189,7 +189,8 @@ void CHudAmmo::SetAmmo(int iAmmo, bool bPlayAnimation)
 	{
 		const char *pszAnimation = (iAmmo == 0 ? "AmmoEmpty" : (iAmmo < 0 ? "AmmoDecreased" : "AmmoIncreased"));
 		
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence(pszAnimation);
+		// Mulch: Disabling all hud animations except for health/armor
+		//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence(pszAnimation);
 	}
 
 	m_iAmmo = iAmmo;
