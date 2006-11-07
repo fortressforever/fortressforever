@@ -5073,7 +5073,9 @@ void CFFPlayer::Extinguish( void )
 
 	SetFlameSpritesLifetime(-1.0f);
 
-	EmitSound( "General.StopBurning" );
+	StopSound( "General.BurningFlesh" );
+	StopSound( "General.BurningObject" );
+	//EmitSound( "General.StopBurning" );
 }
 
 //-----------------------------------------------------------------------------
