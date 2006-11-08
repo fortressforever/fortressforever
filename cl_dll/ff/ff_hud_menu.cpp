@@ -359,12 +359,42 @@ ADD_MENU_OPTION( det50, L"50", "detpack 50" )
 	return MENU_SHOW;
 }
 
+//-----------------------------------------------------------------------------
+// Cloak options
+//-----------------------------------------------------------------------------
+ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsCloakable() )
+		return MENU_DIM;
+
+	return MENU_SHOW;
+}
+
+ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsCloakable() )
+		return MENU_DIM;
+
+	if( ( int )pPlayer->GetCurrentSpeed() != 0 )
+		return MENU_DIM;
+
+	return MENU_SHOW;
+}
+
 /************************************************************************/
 /* And these are the actual menus themselves                            */
 /************************************************************************/
 menuoption_t BuildMenu[]		= { detdispenser, dismantledispenser, detsentry, dismantlesentry, aimsentry };
-menuoption_t SpyTeamDisguise2[] = { disguiseteam, disguiseenemy };
-menuoption_t SpyTeamDisguise4[] = { disguisered, disguiseblue, disguiseyellow, disguisegreen };
+menuoption_t SpyTeamDisguise2[] = { disguiseenemy, disguiseteam, scloak, cloak };
+menuoption_t SpyTeamDisguise4[] = { disguiseblue, disguisered, disguiseyellow, disguisegreen, scloak, cloak };
 menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 menuoption_t DemoDetpackMenu[]	= { det5, det10, det20, det50 };
 
