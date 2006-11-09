@@ -548,10 +548,15 @@ void CFFInfoScript::OnRespawn( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CFFInfoScript::Drop( float delay, float speed )
+void CFFInfoScript::Drop( float delay, Vector pos, Vector velocity )
 {
 	// Don't do anything if removed
 	if( IsRemoved() )
+		return;
+
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+	AssertMsg( pOwner, "Objects can only be attached to players currently!" );
+	if( !pOwner )
 		return;
 
 	// stop following
@@ -559,39 +564,12 @@ void CFFInfoScript::Drop( float delay, float speed )
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	CollisionRulesChanged();
-	
-	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
-
-	AssertMsg( pOwner, "Objects can only be attached to players currently!" );
-
-	if( !pOwner )
-		return;
 
 	// Update goal state
 	SetActive();
 	// Update position state
 	SetDropped();
-
-	Vector vecOrigin = pOwner->GetAbsOrigin();
-
-	Vector vecForward, vecRight, vecUp;
-	//pOwner->GetVectors( &vecForward, &vecRight, &vecUp );
-	pOwner->EyeVectors( &vecForward, &vecRight, &vecUp );
-
-	VectorNormalize( vecForward );
-	VectorNormalize( vecRight );
-	VectorNormalize( vecUp );
-
-	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
-	Vector vel = Vector( 0, 0, 30.0f ); // owner->GetAbsVelocity();
-
-	if( speed )
-		vel += vecForward * speed;
-
-	// Mirv: Don't allow a downwards velocity as this will make it float instead
-	if( vel.z < 1.0f )
-		vel.z = 1.0f;
-
+	
 	if( m_bUsePhysics )
 	{
 		// No physics object exists, create it
@@ -622,10 +600,11 @@ void CFFInfoScript::Drop( float delay, float speed )
 		// doesn't want to be thrown that way
 		//NDebugOverlay::Line( pOwner->EyePosition(), pOwner->EyePosition() + ( 256.0f * vecDir ), 0, 0, 255, false, 5.0f );
 
-		vecDir *= vel * vel;
+		//vecDir *= vel * vel;
 
-		pPhysics->ApplyForceCenter( vecDir );
-		pPhysics->AddVelocity( &vecDir, &vecDir );
+		/*pPhysics->ApplyForceCenter( vecDir );
+		pPhysics->AddVelocity( &vecDir, &vecDir );*/
+		pPhysics->SetVelocity( &velocity, &velocity );
 
 		// Stop the sequence if playing
 		// NOTE: This doesn't seem to work yet either...
@@ -642,23 +621,23 @@ void CFFInfoScript::Drop( float delay, float speed )
 		//CollisionProp()->SetCollisionBounds( Vector( 0, 0, 0 ), Vector( 0, 0, 4 ) );
 		UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 1 ) );
 
-		SetAbsOrigin( vecOrigin ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
+		SetAbsOrigin( pos ); /* + ( vecForward * m_vecOffset.GetX() ) + ( vecRight * m_vecOffset.GetY() ) + ( vecUp * m_vecOffset.GetZ() ) );
 
-		trace_t trHull;
-		UTIL_TraceHull( vecOrigin, vecOrigin + Vector( 0, 0, 1 ), Vector( 0, 0, 0 ), Vector( 0, 0, 1 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
+								   trace_t trHull;
+								   UTIL_TraceHull( vecOrigin, vecOrigin + Vector( 0, 0, 1 ), Vector( 0, 0, 0 ), Vector( 0, 0, 1 ), MASK_PLAYERSOLID, pOwner, COLLISION_GROUP_PLAYER, &trHull );
 
-		// If the trace started in a solid, or the trace didn't finish, or if
-		// it hit the world then we want to move it back to the player's origin.
-		// This is to stop things like the push ball that sticks out in front of
-		// the players being trapped in the world if a player is standing staring
-		// into a wall
-		if( trHull.allsolid || ( trHull.fraction != 1.0f ) || trHull.DidHitWorld() )
-			SetAbsOrigin( vecOrigin - Vector( 0, 0, 2 ) );*/
+								   // If the trace started in a solid, or the trace didn't finish, or if
+								   // it hit the world then we want to move it back to the player's origin.
+								   // This is to stop things like the push ball that sticks out in front of
+								   // the players being trapped in the world if a player is standing staring
+								   // into a wall
+								   if( trHull.allsolid || ( trHull.fraction != 1.0f ) || trHull.DidHitWorld() )
+								   SetAbsOrigin( vecOrigin - Vector( 0, 0, 2 ) );*/
 
 		QAngle vecAngles = pOwner->EyeAngles();
 		SetAbsAngles( QAngle( 0, vecAngles.y, 0 ) );
 
-		SetAbsVelocity( vel );
+		SetAbsVelocity( velocity );
 	}
 
 	// make it respond to touch again
@@ -685,6 +664,35 @@ void CFFInfoScript::Drop( float delay, float speed )
 	_scriptman.RunPredicates_LUA( this, &hObject, "onloseitem" );
 
 	Omnibot::Notify_ItemDropped(this);
+}
+
+void CFFInfoScript::Drop( float delay, float speed )
+{
+	CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
+	AssertMsg( pOwner, "Objects can only be attached to players currently!" );
+	if( !pOwner )
+		return;
+
+	Vector vecOrigin = pOwner->GetAbsOrigin();
+	Vector vecForward, vecRight, vecUp;
+	//pOwner->GetVectors( &vecForward, &vecRight, &vecUp );
+	pOwner->EyeVectors( &vecForward, &vecRight, &vecUp );
+
+	VectorNormalize( vecForward );
+	VectorNormalize( vecRight );
+	VectorNormalize( vecUp );
+
+	// Bug #0000429: Flags dropped on death move with the same velocity as the dead player
+	Vector vel = Vector( 0, 0, 30.0f ); // owner->GetAbsVelocity();
+
+	if( speed )
+		vel += vecForward * speed;
+
+	// Mirv: Don't allow a downwards velocity as this will make it float instead
+	if( vel.z < 1.0f )
+		vel.z = 1.0f;
+
+	Drop(delay, vecOrigin, vel);
 }
 
 //-----------------------------------------------------------------------------
@@ -1037,6 +1045,16 @@ void CFFInfoScript::LUA_SetModel( const char *szModel )
 		// No model!
 		m_iHasModel = 0;
 	}
+}
+
+void CFFInfoScript::LUA_SetStartOrigin(const Vector& vecOrigin)
+{
+	m_vStartOrigin = vecOrigin;
+}
+
+void CFFInfoScript::LUA_SetStartAngles(const QAngle& vecAngles)
+{
+	m_vStartAngles = vecAngles;
 }
 
 //-----------------------------------------------------------------------------

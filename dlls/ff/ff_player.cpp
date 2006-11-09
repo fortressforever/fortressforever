@@ -4289,7 +4289,24 @@ void CFFPlayer::Command_ThrowGren(void)
 		return;
 	}
 
-	ThrowGrenade(gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime));
+	bool bThrowGrenade = true;
+	float fPrimeTimer = gren_timer.GetFloat() - (gpGlobals->curtime - m_flServerPrimeTime);
+
+	// Give lua the chance to override grenade throwing.
+	// It should return false to avoid throwing the grenade
+	CFFLuaSC hContext( 1, this );
+	hContext.Push(1.0f - (fPrimeTimer / gren_timer.GetFloat()));
+	
+	const char *pLuaFn = 0;
+	if(m_iGrenadeState == FF_GREN_PRIMEONE)
+		pLuaFn = "player_onthrowgren1";
+	else if(m_iGrenadeState == FF_GREN_PRIMETWO)
+		pLuaFn = "player_onthrowgren2";	
+	if( pLuaFn && _scriptman.RunPredicates_LUA( NULL, &hContext, pLuaFn ) )
+		bThrowGrenade = hContext.GetBool();
+
+	if(bThrowGrenade)
+		ThrowGrenade(fPrimeTimer);
 	m_bWantToThrowGrenade = false;
 	m_iGrenadeState = FF_GREN_NONE;
 	m_flServerPrimeTime = 0.0f;

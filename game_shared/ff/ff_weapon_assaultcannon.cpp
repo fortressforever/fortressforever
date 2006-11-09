@@ -63,6 +63,11 @@ public:
 
 	virtual void Fire();
 
+	virtual void GetHeatLevel(int _firemode, float &_current, float &_max) 
+	{
+		_current = m_flChargeTime; 
+		_max = ffdev_ac_maxchargetime.GetFloat(); 
+	}
 private:
 	virtual float GetFireRate();
 	Vector GetFireSpread();

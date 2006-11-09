@@ -45,6 +45,7 @@ void CFFLuaLib::InitMath(lua_State* L)
 			.def("Length",				&Vector::Length)
 			.def("LengthSqr",			&Vector::LengthSqr)
 			.def("Normalize",			&Vector::NormalizeInPlace)
+			.def("ClampToAABB",			&Vector::ClampToAABB)
 			.def("Negate",				&Vector::Negate),
 
 		class_<QAngle>("QAngle")

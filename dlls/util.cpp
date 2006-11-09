@@ -3003,6 +3003,8 @@ void CC_CollisionTest( void )
 	partition->ReportStats( "" );
 	int i;
 	CBaseEntity *pSpot = gEntList.FindEntityByClassname( NULL, "info_player_start");
+	if(!pSpot)
+		return;
 	Vector start = pSpot->GetAbsOrigin();
 	static Vector *targets = NULL;
 	static bool first = true;
