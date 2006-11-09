@@ -113,7 +113,11 @@ public:
 
 	void			LUA_SetModel( const char *szModel );
 
+	void			LUA_SetStartOrigin(const Vector& vecOrigin);
+	void			LUA_SetStartAngles(const QAngle& vecAngles);
+
 	void			Pickup( CBaseEntity *pEntity );
+	void			Drop( float delay, Vector pos, Vector velocity );
 	void			Drop( float delay, float speed = 0.0f );
 	void			Respawn( float delay );
 	void			Return( void );

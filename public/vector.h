@@ -117,6 +117,8 @@ public:
 	FORCEINLINE Vector&	operator/=(const Vector &v);		
 	FORCEINLINE Vector&	operator/=(float s);
 
+	void	ClampToAABB(const Vector &mins, const Vector &maxs);
+
 	// negate the vector components
 	void	Negate(); 
 
@@ -572,6 +574,13 @@ inline void Vector::Negate()
 	CHECK_VALID(*this);
 	x = -x; y = -y; z = -z; 
 } 
+
+inline void Vector::ClampToAABB(const Vector &mins, const Vector &maxs)
+{
+	x = clamp(x, mins.x, maxs.x);
+	y = clamp(y, mins.y, maxs.y);
+	z = clamp(z, mins.z, maxs.z);
+}
 
 FORCEINLINE_VECTOR  Vector& Vector::operator+=(const Vector& v)	
 { 

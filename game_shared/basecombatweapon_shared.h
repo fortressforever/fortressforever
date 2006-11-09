@@ -190,6 +190,8 @@ public:
 	virtual void			HandleFireOnEmpty();					// Called when they have the attack button down
 																	// but they are out of ammo. The default implementation
 																	// either reloads, switches weapons, or plays an empty sound.
+
+	virtual void			GetHeatLevel(int _firemode, float &_current, float &_max) { _current = 0.f; _max = 0.f; }
 #ifdef CLIENT_DLL
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles ) {}
 #endif

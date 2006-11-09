@@ -65,6 +65,8 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("SetSkin",				&CBaseEntity::SetSkin)
 			.def("GetOrigin",			&CBaseEntity::GetAbsOrigin)
 			.def("SetOrigin",			&CBaseEntity::SetAbsOrigin)
+			.def("GetWorldMins",		&CBaseEntity::WorldAlignMins)
+			.def("GetWorldMaxs",		&CBaseEntity::WorldAlignMaxs)
 			.def("GetAngles",			&CBaseEntity::GetAbsAngles)
 			.def("SetAngles",			&CBaseEntity::SetAbsAngles)
 			.def("IsOnFire",			&CBaseEntity::IsOnFire)
@@ -77,7 +79,8 @@ void CFFLuaLib::InitBase(lua_State* L)
 
 		// CFFInfoScript
 		class_<CFFInfoScript, CBaseEntity>("InfoScript")
-			.def("Drop",				&CFFInfoScript::Drop)
+			.def("Drop",				(void(CFFInfoScript::*)(float, float))&CFFInfoScript::Drop)
+			.def("Drop",				(void(CFFInfoScript::*)(float, Vector, Vector))&CFFInfoScript::Drop)
 			.def("Pickup",				&CFFInfoScript::Pickup)
 			.def("Respawn",				&CFFInfoScript::Respawn)
 			.def("Return",				&CFFInfoScript::Return)
@@ -97,6 +100,8 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("SetAngles",			&CFFInfoScript::LUA_SetAngles)
 			.def("SetBotGoalInfo",		&CFFInfoScript::SetBotGoalInfo)
 			.def("SetModel",			&CFFInfoScript::LUA_SetModel) // Leave this!
+			.def("SetStartOrigin",		&CFFInfoScript::LUA_SetStartOrigin)
+			.def("SetStartAngles",		&CFFInfoScript::LUA_SetStartAngles)
 			.def("SetTouchFlags",		&CFFInfoScript::SetTouchFlags),
 
 
