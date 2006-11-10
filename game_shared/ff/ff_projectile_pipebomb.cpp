@@ -41,6 +41,9 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS(ff_projectile_pl, CFFProjectilePipebomb);
 PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 
+//0001279: Need convar for pipe det delay
+ConVar pipebomb_time_till_live("ffdev_pipedetdelay", "0.75", FCVAR_REPLICATED);
+
 //=============================================================================
 // CFFProjectilePipebomb implementation
 //=============================================================================
@@ -52,7 +55,7 @@ PRECACHE_WEAPON_REGISTER(ff_projectile_pl);
 	void CFFProjectilePipebomb::DetonatePipe(bool force, CBaseEntity *pOther) 
 	{	
 		// This is currently live
-		//if (!force && gpGlobals->curtime < m_flSpawnTime + PIPEBOMB_TIME_TILL_LIVE) 
+		//if (!force && gpGlobals->curtime < m_flSpawnTime + pipebomb_time_till_live.GetFloat()) 
 		//	return;
 
 		// Transfer ownership before exploding 
@@ -104,7 +107,7 @@ void CFFProjectilePipebomb::Spawn()
 		m_pArmedSprite->SetGlowProxySize(4.0f);
 
 		m_pArmedSprite->SetThink(&CBaseEntity::SUB_Remove);
-		m_pArmedSprite->SetNextThink(gpGlobals->curtime + PIPEBOMB_TIME_TILL_LIVE);
+		m_pArmedSprite->SetNextThink(gpGlobals->curtime + pipebomb_time_till_live.GetFloat());
 	}
 #endif	
 }

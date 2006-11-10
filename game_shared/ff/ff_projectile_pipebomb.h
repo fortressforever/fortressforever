@@ -28,7 +28,8 @@
 	#define CFFProjectilePipebomb C_FFProjectilePipebomb
 #endif
 
-#define PIPEBOMB_TIME_TILL_LIVE		0.75f
+//0001279: Commented out because of the ConVar created for the pipe det delay.
+//#define PIPEBOMB_TIME_TILL_LIVE		0.75f
 
 // Pretty much the same as CGrenade only we precache a different model and
 // we set ourself as not being live so we don't explode on contact with players.

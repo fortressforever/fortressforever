@@ -51,7 +51,10 @@ ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICAT
 #define FF_SNIPER_MINPUSH 3.5f
 #define FF_SNIPER_MAXPUSH 6.7f
 
+//0001279: Need convar for pipe det delay
+extern ConVar pipebomb_time_till_live;
 extern ConVar ai_debug_shoot_positions;
+
 void DispatchEffect(const char *pName, const CEffectData &data);
 
 // Used to decide whether effects are allowed
@@ -446,7 +449,7 @@ void CFFPlayer::ClassSpecificSkill()
 	{
 #ifdef GAME_DLL
 	case CLASS_DEMOMAN:
-		if( ( GetPipebombShotTime() + PIPEBOMB_TIME_TILL_LIVE ) < gpGlobals->curtime )
+		if( ( GetPipebombShotTime() + pipebomb_time_till_live.GetFloat() ) < gpGlobals->curtime )
 			CFFProjectilePipebomb::DestroyAllPipes(this);
 		break;
 #endif
