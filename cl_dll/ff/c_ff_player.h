@@ -49,8 +49,8 @@ extern ConVar r_selfshadows;
 void SetStealMouseForAimSentry( bool bValue );
 bool CanStealMouseForAimSentry( void );
 
-void SetStealMouseForCloak( bool bValue );
-bool CanStealMouseForCloak( void );
+//void SetStealMouseForCloak( bool bValue );
+//bool CanStealMouseForCloak( void );
 
 void CC_PrimeOne(void);
 void CC_PrimeTwo(void);
