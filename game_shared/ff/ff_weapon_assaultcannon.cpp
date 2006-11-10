@@ -179,12 +179,9 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 #ifdef GAME_DLL
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
-	// Remove previous speed effect
-	pPlayer->RemoveSpeedEffect( SE_ASSAULTCANNON );
-
 	// Add a temp slowdown as we unwind
-	//if(pPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
-    pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN );
+	if(pPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
+		pPlayer->AddSpeedEffect( SE_ASSAULTCANNON, 0.5f, 80.0f / 230.0f, SEM_BOOLEAN );
 #endif
 
 	// Also start the engine sound for the client
