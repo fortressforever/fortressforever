@@ -157,6 +157,23 @@ void C_FFFlameJet::OnDataChanged(DataUpdateType_t updateType)
 	UpdateVisibility();
 }
 
+//----------------------------------------------------------------------------
+// Purpose: 
+//----------------------------------------------------------------------------
+void C_FFFlameJet::SetDormant( bool bDormant )
+{
+	if( bDormant )
+	{
+		Cleanup();
+	}
+	else
+	{
+		Start( ParticleMgr(), NULL );
+	}
+
+	BaseClass::SetDormant( bDormant );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Starts the effect
 // Input  : *pParticleMgr - 
