@@ -88,20 +88,14 @@ class CFFPlayer;
 	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
 	{ \
 		if( pFFPlayer->IsCloaked() ) \
-			return; \
+		{ \
+			pFFPlayer->Uncloak( true ); \
+		} \
 	} \
 }
 #else
 #define CANCEL_IF_CLOAKED() \
 { \
-	CFFPlayer *pFFPlayer = GetPlayerOwner(); \
-	if( !pFFPlayer ) \
-		return; \
-	if( pFFPlayer->GetClassSlot() == CLASS_SPY ) \
-	{ \
-		if( pFFPlayer->IsCloaked() ) \
-			return; \
-	} \
 }
 #endif
 

@@ -109,15 +109,15 @@ bool CanStealMouseForAimSentry( void )
 	return g_StealMouseForAimSentry;
 }
 
-bool g_StealMouseForCloak = false;
-void SetStealMouseForCloak( bool bValue )
-{
-	g_StealMouseForCloak = bValue;
-}
-bool CanStealMouseForCloak( void )
-{
-	return g_StealMouseForCloak;
-}
+//bool g_StealMouseForCloak = false;
+//void SetStealMouseForCloak( bool bValue )
+//{
+//	g_StealMouseForCloak = bValue;
+//}
+//bool CanStealMouseForCloak( void )
+//{
+//	return g_StealMouseForCloak;
+//}
 
 void OnTimerExpired(C_FFTimer *pTimer)
 {
@@ -1517,10 +1517,10 @@ void C_FFPlayer::OnDataChanged( DataUpdateType_t type )
 
 	if (IsLocalPlayer())
 	{
-		if( IsCloaked() )
-			SetStealMouseForCloak( true );
-		else
-            SetStealMouseForCloak( false );
+		//if( IsCloaked() )
+		//	SetStealMouseForCloak( true );
+		//else
+        //    SetStealMouseForCloak( false );
 
 		// Sometimes the server changes our weapon for us (eg. if we run out of ammo).
 		// The client doesn't pick up on this and so weapons' holster and deploy aren't run.
