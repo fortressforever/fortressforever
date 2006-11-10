@@ -162,6 +162,7 @@ void C_FFFlameJet::OnDataChanged(DataUpdateType_t updateType)
 //----------------------------------------------------------------------------
 void C_FFFlameJet::SetDormant( bool bDormant )
 {
+	/*
 	if( bDormant )
 	{
 		Cleanup();
@@ -170,6 +171,7 @@ void C_FFFlameJet::SetDormant( bool bDormant )
 	{
 		Start( ParticleMgr(), NULL );
 	}
+	*/
 
 	BaseClass::SetDormant( bDormant );
 }
