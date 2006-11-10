@@ -82,6 +82,7 @@ public:
 			m_pDynLight = NULL;
 		}
 	}
+	virtual void		SetDormant( bool bDormant );
 
 public:
 
