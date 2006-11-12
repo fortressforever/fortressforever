@@ -139,13 +139,14 @@ public:
 
 	static C_FFPlayer* GetLocalFFPlayer();
 
-	virtual const QAngle& GetRenderAngles();
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int  DrawModel( int flags );
 	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
 	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
+	virtual const QAngle& GetRenderAngles( void );
+	virtual const Vector& GetRenderOrigin( void );
 
 	virtual RenderGroup_t GetRenderGroup( void )
 	{
@@ -160,6 +161,9 @@ public:
 	//---------------------
 
 protected:
+	// For render origin
+	Vector	m_vecFeetOrigin;
+
 	// Beg: Added by Mulchman for building objects and such
 	CNetworkHandle( C_FFDispenser, m_hDispenser );
 	CNetworkHandle( C_FFSentryGun, m_hSentryGun );
@@ -198,7 +202,7 @@ public:
 	// IFFPlayerAnimState overrides.
 	virtual CFFWeaponBase* FFAnim_GetActiveWeapon();
 	virtual bool FFAnim_CanMove();
-	virtual char const *DamageDecal( int bitsDamageType, int gameMaterial );
+	virtual char const *DamageDecal( int bitsDamageType, int gameMaterial );	
 
 	void DoAnimationEvent( PlayerAnimEvent_t event );
 	bool ShouldDraw();
