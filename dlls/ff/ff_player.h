@@ -396,6 +396,12 @@ public:
 	void PostBuildGenericThink( void );	// *** NOT AN ACTUAL THINK FUNCTION ***
 	// End: Added by Mulchman for building objects and such
 
+	void SetRespawnable( bool bValue ) { m_bRespawnable = bValue; }
+	bool IsRespawnable( void ) const { return m_bRespawnable; }
+	bool CanRespawn( void ) const { return IsRespawnable(); }
+private:
+	bool m_bRespawnable;
+
 public:
 	// Can we update our location yet?
 	void SetLocation(int entindex, const char *szNewLocation, int iNewLocationTeam);

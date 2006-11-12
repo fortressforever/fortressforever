@@ -156,6 +156,8 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kRemoveDecals",		AT_REMOVE_DECALS),
 				value("kEndMap",			AT_END_MAP),
 				value("kReloadClips",		AT_RELOAD_CLIPS),
+				value("kAllowRespawn",		AT_ALLOW_RESPAWN),
+				value("kDisallowRespawn",		AT_DISALLOW_RESPAWN),
 
 				value("kChangeClassScout",	AT_CHANGECLASS_SCOUT),
 				value("kChangeClassSniper",	AT_CHANGECLASS_SNIPER),
