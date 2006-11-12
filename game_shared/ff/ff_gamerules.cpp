@@ -784,6 +784,21 @@ ConVar mp_prematch( "mp_prematch",
 	}
 
 	//-----------------------------------------------------------------------------
+	// Purpose: Checks if the player can respawn or not
+	//-----------------------------------------------------------------------------
+	bool CFFGameRules::FPlayerCanRespawn( CBasePlayer *pPlayer )
+	{
+		CFFPlayer *pFFPlayer = ToFFPlayer( pPlayer );
+		if( !pFFPlayer )
+			return false;
+
+		if( !pFFPlayer->IsRespawnable() )
+			return false;
+		
+		return BaseClass::FPlayerCanRespawn( pPlayer );
+	}
+
+	//-----------------------------------------------------------------------------
 	// Purpose: TF2 Specific Client Commands
 	// Input  :
 	// Output :
