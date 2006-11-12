@@ -646,6 +646,16 @@ ConVar mp_prematch( "mp_prematch",
 						pPlayer->ReloadClips();
 					}
 
+					if( pbFlags[ AT_ALLOW_RESPAWN ] )
+					{
+						pPlayer->SetRespawnable( true );
+					}
+
+					if( pbFlags[ AT_DISALLOW_RESPAWN ] )
+					{
+						pPlayer->SetRespawnable( false );
+					}
+
 					if( pbFlags[ AT_KILL_PLAYERS ] )
 					{
 						pPlayer->KillPlayer();
