@@ -36,7 +36,7 @@
 
 //ConVar ffdev_railgun_push( "ffdev_railgun_pushmod", "30.0", FCVAR_REPLICATED, "Maximum push done by railgun" );
 ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
-ConVar ffdev_railgun_speed( "ffdev_railgun_speed", "900.0", FCVAR_REPLICATED, "Rail speed" );
+ConVar ffdev_railgun_speed( "ffdev_railgun_speed", "1100.0", FCVAR_REPLICATED, "Rail speed" );
 
 //=============================================================================
 // CFFWeaponRailgun

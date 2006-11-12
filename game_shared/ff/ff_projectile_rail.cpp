@@ -275,12 +275,12 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					SetAbsVelocity( reflect );
 #ifdef GAME_DLL
 					// Change the color
-					if( m_iNumBounces == 0 ) 
+					if( m_iNumBounces == 1 ) 
 					{
 						m_pMainGlow->SetTransparency( kRenderGlow, 255, 0, 0, 255, kRenderFxNoDissipation );
 						m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
 					}
-					else if( m_iNumBounces == 1 ) 
+					else if( m_iNumBounces == 2 ) 
 					{
 						m_pMainGlow->SetTransparency( kRenderGlow, 0, 0, 255, 255, kRenderFxNoDissipation );
 						m_pGlowTrail->SetTransparency( kRenderTransAdd, 0, 0, 255, 255, kRenderFxNone );
