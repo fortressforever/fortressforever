@@ -268,7 +268,7 @@ public:
 		m_pCrosshairBackground->SetZPos(-1);
 
 		// Weapons list
-		m_pWeapon = new ComboBox(this, "Weapon", (int) FF_WEAPON_TOMMYGUN, false);
+		m_pWeapon = new ComboBox(this, "Weapon", (int) FF_WEAPON_TOMMYGUN + 1, false);
 		m_pWeapon->AddActionSignalTarget(this);
 		m_pWeapon->SetEditable(false);
 
@@ -278,7 +278,7 @@ public:
 		m_pWeapon->AddItem("Global", kv);
 		kv->deleteThis();
 
-		for (int i = 1; i < FF_WEAPON_TOMMYGUN; i++)
+		for (int i = 1; i <= FF_WEAPON_TOMMYGUN; i++)
 		{
 			KeyValues *kv = new KeyValues("W");
 			kv->SetString("wpid", s_WeaponAliasInfo[i]);
@@ -359,7 +359,7 @@ public:
 		KeyValues *kv = new KeyValues("Crosshairs");
 		kv->SetInt("globalCrosshairs", m_bForceGlobalCrosshair);
 
-		for (int i = 0; i < FF_WEAPON_TOMMYGUN; i++)
+		for (int i = 0; i <= FF_WEAPON_TOMMYGUN; i++)
 		{
 			const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[i];
 
@@ -397,7 +397,7 @@ public:
 		m_bForceGlobalCrosshair = kv->GetInt("globalCrosshairs", 0);
 
 		// Loop through keyvalues looking for each weapon
-		for (int i = 0; i < FF_WEAPON_TOMMYGUN; i++)
+		for (int i = 0; i <= FF_WEAPON_TOMMYGUN; i++)
 		{
 			WeaponCrosshair_t &cinfo = m_sCrosshairInfo[i];
 
@@ -532,7 +532,7 @@ private:
 	void UpdateCrosshairs()
 	{
 		int iCurrentWeapon = m_pWeapon->GetActiveItem();
-		Assert(iCurrentWeapon >= 0 && iCurrentWeapon < FF_WEAPON_TOMMYGUN);
+		Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_WEAPON_TOMMYGUN);
 
 		WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iCurrentWeapon];
 		cinfo.innerChar = m_pInnerCharacter->GetActiveItemUserData()->GetString("character")[0];
@@ -607,7 +607,7 @@ private:
 	void UpdateSliders()
 	{
 		int iCurrentWeapon = m_pWeapon->GetActiveItem();
-		Assert(iCurrentWeapon >= 0 && iCurrentWeapon < FF_WEAPON_TOMMYGUN);
+		Assert(iCurrentWeapon >= 0 && iCurrentWeapon <= FF_WEAPON_TOMMYGUN);
 
 		const WeaponCrosshair_t &cinfo = m_sCrosshairInfo[iCurrentWeapon];
 
@@ -678,7 +678,7 @@ private:
 		bool	innerUseGlobal, outerUseGlobal;
 	} WeaponCrosshair_t;
 
-	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN];
+	WeaponCrosshair_t	m_sCrosshairInfo[FF_WEAPON_TOMMYGUN + 1];
 
 	bool	m_bForceGlobalCrosshair;
 };
