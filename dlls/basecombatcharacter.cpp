@@ -2108,7 +2108,7 @@ int CBaseCombatCharacter::OnTakeDamage( const CTakeDamageInfo &info )
 				// and then killed by BaseClass::Event_Killed
 				// -------------------------------------------------------------------
 				// TODO: Change killer to an object
-				_scriptman.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
+				//_scriptman.SetVar( "killer", ENTINDEX( info.GetAttacker() ) );
 				CFFLuaSC hPlayerKilled( 1, ToFFPlayer( this ) );
 				_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 			}			

@@ -188,7 +188,7 @@ void CC_Player_Kill( void )
 		ClientKill( pPlayer->edict() );
 
 		// Call lua player_killed on suicides
-		_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
+		//_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
 		CFFLuaSC hPlayerKilled( 1, pPlayer );
 		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
@@ -383,6 +383,9 @@ CFFPlayer::CFFPlayer()
 	SetViewOffset( FF_PLAYER_VIEW_OFFSET );
 
 	m_iLocalSkiState = 0;
+
+	// Assume true
+	m_bRespawnable = true;
 
 	m_bBuilding = false;
 	//m_bCancelledBuild = false;
