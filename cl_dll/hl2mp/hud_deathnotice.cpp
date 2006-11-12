@@ -346,8 +346,17 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
 	deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
-	// Try and find the death identifier in the icon list
-	deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
+	// 0000336: If we have a Detpack...
+	// NOTE: may need these changes for the SG and Dispenser in order for the death status icons to work right
+	if (Q_stricmp(killedwith, "Detpack") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploydetpack");
+	}
+	else
+	{
+		// Try and find the death identifier in the icon list
+		deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
+	}
 
 	// Show weapon if it was a suicide too
 	if ( !deathMsg.iconDeath /*|| deathMsg.iSuicide*/ )
