@@ -383,7 +383,7 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 	if( !pPlayer->IsCloakable() )
 		return MENU_DIM;
 
-	if( ( int )pPlayer->GetCurrentSpeed() != 0 )
+	if( ( int )pPlayer->GetCloakSpeed() != 0 )
 		return MENU_DIM;
 
 	return MENU_SHOW;

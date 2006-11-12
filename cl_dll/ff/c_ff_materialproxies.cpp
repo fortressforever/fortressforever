@@ -275,7 +275,7 @@ void C_FFPlayerVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	float flSpeed = pPlayer->GetCurrentSpeed();
+	float flSpeed = pPlayer->GetCloakSpeed();
 	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Player Velocity
@@ -390,7 +390,7 @@ void C_FFWeaponVelocityMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	float flSpeed = pWeaponOwner->GetCurrentSpeed();
+	float flSpeed = pWeaponOwner->GetCloakSpeed();
 	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Weapon Velocity
@@ -480,7 +480,7 @@ void C_FFSpyCloakMaterialProxy::OnBind( void *pC_BaseEntity )
 
 	Assert( m_pResult );
 
-	float flSpeed = pPlayer->GetCurrentSpeed();
+	float flSpeed = pPlayer->GetCloakSpeed();
 	float flVal = clamp( flSpeed / ffdev_spy_maxcloakspeed.GetFloat(), ffdev_spy_mincloakness.GetFloat(), ffdev_spy_maxrefractval.GetFloat() );
 
 	// Update the value in the material proxy

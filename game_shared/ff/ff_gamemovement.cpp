@@ -51,9 +51,10 @@ public:
 	virtual bool CheckJumpButton();
 	virtual bool CanAccelerate();
 	virtual void FullNoClipMove(float factor, float maxacceleration);
+	virtual void CheckVelocity( void );
 
 	// CFFGameMovement
-	virtual void FullBuildMove();
+	virtual void FullBuildMove( void );	
 
 	CFFGameMovement() {};
 };
@@ -428,6 +429,33 @@ bool CFFGameMovement::CanAccelerate()
 		return false;
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Check player velocity & clamp if cloaked
+//-----------------------------------------------------------------------------
+void CFFGameMovement::CheckVelocity( void )
+{
+	// Let regular movement clamp us within movement limits
+	BaseClass::CheckVelocity();
+
+	// Clamp further only if we're cloaked
+	
+	CFFPlayer *pPlayer = ToFFPlayer( player );
+	if( !pPlayer )
+		return;
+	
+	if( !pPlayer->IsCloaked() )
+		return;
+
+	float flMaxCloakSpeed = ffdev_spy_maxcloakspeed.GetFloat();
+
+	// Going over speed limit, need to clamp so we don't uncloak
+	if( mv->m_vecVelocity.LengthSqr() > ( flMaxCloakSpeed * flMaxCloakSpeed ) )
+	{
+		mv->m_vecVelocity.x *= 0.5f;
+		mv->m_vecVelocity.y *= 0.5f;
+	}
 }
 
 // Expose our interface.

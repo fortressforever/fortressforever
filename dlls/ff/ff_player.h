@@ -327,9 +327,9 @@ private:
 	// ---> end
 
 private:
-	CNetworkVar( float, m_flCurrentSpeed );
+	CNetworkVar( float, m_flCloakSpeed );
 public:
-	float GetCurrentSpeed( void ) const { return m_flCurrentSpeed; }
+	float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
 public:
 	// ---> FF server-side player command handlers

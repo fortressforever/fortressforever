@@ -93,6 +93,7 @@ extern ConVar sv_maxspeed;
 ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_ARCHIVE, "Time it takes to cloak (fade out to cloak)" );
 ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_ARCHIVE, "Time it takes to silent cloak (fade out to cloak)" );
 ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_ARCHIVE, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
+ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "1", FCVAR_ARCHIVE, "To tweak z factor of velocity when spy is cloaked" );
 
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
@@ -341,7 +342,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bInfected ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
-	SendPropFloat( SENDINFO( m_flCurrentSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
+	SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -519,7 +520,10 @@ void CFFPlayer::PreThink(void)
 	m_fBodygroupState = 0;
 
 	// Update networked current-speed-var for spy cloak mat proxy (sent to all players! :X)
-	m_flCurrentSpeed = GetLocalVelocity().Length();
+	Vector vecCloakVelocity = GetLocalVelocity();
+	m_flCloakSpeed = FastSqrt( ( vecCloakVelocity.x * vecCloakVelocity.x ) + 
+		( vecCloakVelocity.y * vecCloakVelocity.y ) + 
+		( ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) * ( vecCloakVelocity.z * ffdev_spy_cloakzvel.GetFloat() ) ) );
 
 	// Has our radio tag expired?
 	if( m_bRadioTagged && ( ( m_flRadioTaggedStartTime + m_flRadioTaggedDuration ) < gpGlobals->curtime ) )
@@ -584,7 +588,7 @@ void CFFPlayer::PreThink(void)
 		// Get horizontal + forward velocity (no vertical velocity)
 		//Vector vecVelocity = GetLocalVelocity();
 		//float flSpeed = FastSqrt( vecVelocity[ 0 ] * vecVelocity[ 0 ] + vecVelocity[ 1 ] * vecVelocity[ 1 ] );
-		float flSpeed = m_flCurrentSpeed;
+		float flSpeed = m_flCloakSpeed;
 
 		// If going faster than spies walk speed, reset
 		if( IsCloaked() && ( flSpeed > ffdev_spy_maxcloakspeed.GetFloat() ) )
