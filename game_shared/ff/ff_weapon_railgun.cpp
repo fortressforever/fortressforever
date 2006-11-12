@@ -54,6 +54,7 @@ public:
 	virtual void	Fire( void );
 	virtual void	ItemPostFrame( void );
 	//void			RailBeamEffect( void );
+	virtual bool	Deploy( void );
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual void	Precache( void );
 
@@ -118,6 +119,16 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 }
 
 //----------------------------------------------------------------------------
+// Purpose: Deploy
+//----------------------------------------------------------------------------
+bool CFFWeaponRailgun::Deploy( void )
+{
+	m_flStartCharge = -1.0f;
+
+	return BaseClass::Deploy();
+}
+
+//----------------------------------------------------------------------------
 // Purpose: Holster
 //----------------------------------------------------------------------------
 bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
@@ -130,6 +141,8 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 #endif
 
+	m_flStartCharge = -1.0f;
+
 	return BaseClass::Holster( pSwitchingTo );
 }
 
@@ -138,7 +151,7 @@ bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 //----------------------------------------------------------------------------
 void CFFWeaponRailgun::Precache( void )
 {
-	PrecacheScriptSound( "assaultcannon.rotate" );
+	PrecacheScriptSound( "railgun.chargeloop" );
 	BaseClass::Precache();
 }
 
@@ -242,7 +255,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				// Play charge up sound
 				CPASAttenuationFilter filter( this );
 
-				m_pEngine = CSoundEnvelopeController::GetController().SoundCreate( filter, entindex(), "assaultcannon.rotate" );
+				m_pEngine = CSoundEnvelopeController::GetController().SoundCreate( filter, entindex(), "railgun.chargeloop" );
 				CSoundEnvelopeController::GetController().Play( m_pEngine, 0.0, 50 );
 				CSoundEnvelopeController::GetController().SoundChangeVolume( m_pEngine, 0.7, 2.0 );
 			}
