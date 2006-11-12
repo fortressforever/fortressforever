@@ -1446,7 +1446,7 @@ void C_FFPlayer::CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAng
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-const QAngle& C_FFPlayer::GetRenderAngles()
+const QAngle& C_FFPlayer::GetRenderAngles( void )
 {
 	if ( IsRagdoll() )
 	{
@@ -1456,6 +1456,22 @@ const QAngle& C_FFPlayer::GetRenderAngles()
 	{
 		return m_PlayerAnimState->GetRenderAngles();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+const Vector& C_FFPlayer::GetRenderOrigin( void )
+{
+	if( IsRagdoll() )
+	{
+		return BaseClass::GetRenderOrigin();
+	}
+	else
+	{
+		m_vecFeetOrigin = GetFeetOrigin();
+		return m_vecFeetOrigin;
+	}	
 }
 
 //-----------------------------------------------------------------------------
