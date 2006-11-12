@@ -1461,22 +1461,6 @@ const QAngle& C_FFPlayer::GetRenderAngles( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-const Vector& C_FFPlayer::GetRenderOrigin( void )
-{
-	if( IsRagdoll() )
-	{
-		return BaseClass::GetRenderOrigin();
-	}
-	else
-	{
-		m_vecFeetOrigin = GetFeetOrigin();
-		return m_vecFeetOrigin;
-	}	
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void C_FFPlayer::UpdateClientSideAnimation()
 {
 	// Update the animation data. It does the local check here so this works when using
