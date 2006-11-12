@@ -23,7 +23,7 @@
 
 ConVar ffdev_nail_speed("ffdev_nail_speed", "2000.0", FCVAR_REPLICATED, "Nail speed");
 ConVar ffdev_nail_bbox("ffdev_nail_bbox", "2.0", FCVAR_REPLICATED, "Nail bbox");
-ConVar ffdev_nail_sgmod( "ffdev_nail_sgmod", "4.0", FCVAR_REPLICATED, "Added to nail damage when hitting a SG so SG's take more damage" );
+ConVar ffdev_nail_sgmod( "ffdev_nail_sgmod", "10.0", FCVAR_REPLICATED, "Added to nail damage when hitting a SG so SG's take more damage" );
 
 
 #ifdef CLIENT_DLL
