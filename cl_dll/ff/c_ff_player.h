@@ -146,7 +146,6 @@ public:
 	virtual bool IsOverridingViewmodel( void ) { return IsCloaked(); };
 	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
 	virtual const QAngle& GetRenderAngles( void );
-	virtual const Vector& GetRenderOrigin( void );
 
 	virtual RenderGroup_t GetRenderGroup( void )
 	{
