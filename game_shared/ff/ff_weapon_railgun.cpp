@@ -9,7 +9,8 @@
 /// REVISIONS
 /// ---------
 /// Jan 19 2004 Mirv: First implementation
-
+//
+//	11/11/2006 Mulchman: Reverting back to bouncy rail
 
 #include "cbase.h"
 #include "ff_weapon_base.h"
@@ -21,12 +22,12 @@
 	#define CFFWeaponRailgun C_FFWeaponRailgun
 
 	#include "c_ff_player.h"
-	#include "c_te_effect_dispatch.h"
+	//#include "c_te_effect_dispatch.h"
 	
 	#include "beamdraw.h"
 
-	extern void FormatViewModelAttachment(Vector &vOrigin, bool bInverse);
-	extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
+	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
+	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
 
 #else
 
@@ -34,7 +35,9 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-static ConVar ffdev_railpush("ffdev_railpush", "30.0", FCVAR_REPLICATED, "Maximum push done by railgun");
+//ConVar ffdev_railgun_push( "ffdev_railgun_pushmod", "30.0", FCVAR_REPLICATED, "Maximum push done by railgun" );
+ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
+ConVar ffdev_railgun_speed( "ffdev_railgun_speed", "900.0", FCVAR_REPLICATED, "Rail speed" );
 
 //=============================================================================
 // CFFWeaponRailgun
@@ -43,56 +46,57 @@ static ConVar ffdev_railpush("ffdev_railpush", "30.0", FCVAR_REPLICATED, "Maximu
 class CFFWeaponRailgun : public CFFWeaponBase
 {
 public:
-	DECLARE_CLASS(CFFWeaponRailgun, CFFWeaponBase);
+	DECLARE_CLASS( CFFWeaponRailgun, CFFWeaponBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	
-	CFFWeaponRailgun();
+	CFFWeaponRailgun( void );
 
-	virtual void	Fire();
-	virtual void	ItemPostFrame();
-	void			RailBeamEffect();
+	virtual void	Fire( void );
+	virtual void	ItemPostFrame( void );
+	//void			RailBeamEffect( void );
 
 #ifdef CLIENT_DLL
-	virtual void	ViewModelDrawn(C_BaseViewModel *pBaseViewModel);
-	virtual RenderGroup_t GetRenderGroup() { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
-	virtual IsTranslucent() { return true; }
-
-	int	m_iAttachment1;
-	int m_iAttachment2;
-#endif
-
-	CNetworkVar(float, m_flStartCharge);
-
-	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_RAILGUN; }
+	virtual void	ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
+	virtual RenderGroup_t GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
+	virtual IsTranslucent( void )				 { return true; }
 
 private:
+	int	m_iAttachment1;
+	int m_iAttachment2;
 
-	CFFWeaponRailgun(const CFFWeaponRailgun &);
+#endif	
+
+public:
+	virtual FFWeaponID GetWeaponID( void ) const { return FF_WEAPON_RAILGUN; }
+
+private:
+	CFFWeaponRailgun( const CFFWeaponRailgun & );
+	CNetworkVar( float, m_flStartCharge );
 };
 
 //=============================================================================
 // CFFWeaponRailgun tables
 //=============================================================================
 
-IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponRailgun, DT_FFWeaponRailgun)
+IMPLEMENT_NETWORKCLASS_ALIASED( FFWeaponRailgun, DT_FFWeaponRailgun )
 
-BEGIN_NETWORK_TABLE(CFFWeaponRailgun, DT_FFWeaponRailgun)
+BEGIN_NETWORK_TABLE(CFFWeaponRailgun, DT_FFWeaponRailgun )
 #ifdef GAME_DLL
-	SendPropTime(SENDINFO(m_flStartCharge)), 
+	SendPropTime( SENDINFO( m_flStartCharge ) ), 
 #else
-	RecvPropTime(RECVINFO(m_flStartCharge)), 
+	RecvPropTime( RECVINFO( m_flStartCharge ) ), 
 #endif
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
-BEGIN_PREDICTION_DATA(CFFWeaponRailgun)
-DEFINE_PRED_FIELD_TOL(m_flStartCharge, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE), 
+BEGIN_PREDICTION_DATA( CFFWeaponRailgun )
+	DEFINE_PRED_FIELD_TOL( m_flStartCharge, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ), 
 END_PREDICTION_DATA()
 #endif
 
-LINK_ENTITY_TO_CLASS(ff_weapon_railgun, CFFWeaponRailgun);
-PRECACHE_WEAPON_REGISTER(ff_weapon_railgun);
+LINK_ENTITY_TO_CLASS( ff_weapon_railgun, CFFWeaponRailgun );
+PRECACHE_WEAPON_REGISTER( ff_weapon_railgun );
 
 //=============================================================================
 // CFFWeaponRailgun implementation
@@ -101,7 +105,7 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_railgun);
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
-CFFWeaponRailgun::CFFWeaponRailgun()
+CFFWeaponRailgun::CFFWeaponRailgun( void )
 {
 	m_flStartCharge = -1.0f;
 
@@ -113,22 +117,22 @@ CFFWeaponRailgun::CFFWeaponRailgun()
 //----------------------------------------------------------------------------
 // Purpose: Fire a rail
 //----------------------------------------------------------------------------
-void CFFWeaponRailgun::Fire()
+void CFFWeaponRailgun::Fire( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
 
 	Vector	vecForward;
-	pPlayer->EyeVectors(&vecForward);
+	pPlayer->EyeVectors( &vecForward );
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
 
 #ifdef CLIENT_DLL
 	// For now, fake the bullet source on the client
-	C_BaseAnimating *pWeapon;
+	C_BaseAnimating *pWeapon = NULL;
 
 	// Use the correct weapon model
-	if (pPlayer->IsLocalPlayer())
+	if( pPlayer->IsLocalPlayer() )
 		pWeapon = pPlayer->GetViewModel(0);
 	else
 		pWeapon = pPlayer->GetActiveWeapon();
@@ -137,25 +141,28 @@ void CFFWeaponRailgun::Fire()
 	if (pWeapon)
 	{
 		QAngle angAiming;
-		int iAttachment = pWeapon->LookupAttachment("1");
-		pWeapon->GetAttachment(iAttachment, vecSrc, angAiming);
+		int iAttachment = pWeapon->LookupAttachment( "1" );
+		pWeapon->GetAttachment( iAttachment, vecSrc, angAiming );
 
-		AngleVectors(angAiming, &vecForward);
+		AngleVectors( angAiming, &vecForward );
 	}
 	else
-		AssertMsg(0, "Couldn't get weapon!");
+		AssertMsg( 0, "Couldn't get weapon railgun!" );
 #endif
 
+	VectorNormalizeFast( vecForward );
+
 	QAngle angAiming;
-	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
+	VectorAngles( pPlayer->GetAutoaimVector(0), angAiming) ;
 
-	RailBeamEffect();
+	//RailBeamEffect();
 
-	float flChargeTime = gpGlobals->curtime - m_flStartCharge;
+	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
 
-	if (flChargeTime > 5.0f)
-		flChargeTime = 5.0f;
+	//if (flChargeTime > 5.0f)
+	//	flChargeTime = 5.0f;
 
+	/*
 	// Simulate this as a bullet for now
 	FireBulletsInfo_t info(1, vecSrc, vecForward, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
@@ -164,16 +171,21 @@ void CFFWeaponRailgun::Fire()
 	info.m_flDamageForceScale = 1.0f + (flChargeTime * ffdev_railpush.GetFloat());
 
 	pPlayer->FireBullets(info);
+	*/
+
+	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_railgun_speed.GetFloat(), flChargeTime );
 
 	pPlayer->DoMuzzleFlash();
-	SendWeaponAnim(GetPrimaryAttackActivity());
-	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
+	SendWeaponAnim( GetPrimaryAttackActivity() );
+	pPlayer->DoAnimationEvent( PLAYERANIMEVENT_FIRE_GUN_PRIMARY );
+
+	m_flStartCharge = -1.0f;
 }
 
 //----------------------------------------------------------------------------
 // Purpose: Handle all the chargeup stuff here
 //----------------------------------------------------------------------------
-void CFFWeaponRailgun::ItemPostFrame()
+void CFFWeaponRailgun::ItemPostFrame( void )
 {
 	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
 
@@ -231,10 +243,11 @@ void CFFWeaponRailgun::ItemPostFrame()
 	}
 }
 
+/*
 //----------------------------------------------------------------------------
 // Purpose: Set up the actual beam effect
 //----------------------------------------------------------------------------
-void CFFWeaponRailgun::RailBeamEffect()
+void CFFWeaponRailgun::RailBeamEffect( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 
@@ -252,6 +265,7 @@ void CFFWeaponRailgun::RailBeamEffect()
 
 	DispatchEffect("RailBeam", data);
 }
+*/
 
 #ifdef CLIENT_DLL
 
@@ -260,7 +274,7 @@ void CFFWeaponRailgun::RailBeamEffect()
 //			create the glowing glob of stuff inside the railgun and the faint
 //			glow at the barrel.
 //-----------------------------------------------------------------------------
-void CFFWeaponRailgun::ViewModelDrawn(C_BaseViewModel *pBaseViewModel)
+void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 {
 	// We'll get these done and out of the way
 	if (m_iAttachment1 == -1 || m_iAttachment2 == -1)
@@ -312,4 +326,3 @@ void CFFWeaponRailgun::ViewModelDrawn(C_BaseViewModel *pBaseViewModel)
 	DrawHalo(pMat, vecMuzzle, 1.9f * flChargeAmount, colour);
 }
 #endif
-
