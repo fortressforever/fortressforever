@@ -183,30 +183,26 @@ void CFFWeaponRailgun::Fire( void )
 	QAngle angAiming;
 	VectorAngles( pPlayer->GetAutoaimVector(0), angAiming) ;
 
-	//RailBeamEffect();
-
 	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
 
-	//if (flChargeTime > 5.0f)
-	//	flChargeTime = 5.0f;
+	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_railgun_speed.GetFloat(), flChargeTime );	
 
-	/*
-	// Simulate this as a bullet for now
-	FireBulletsInfo_t info(1, vecSrc, vecForward, vec3_origin, MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
-	info.m_pAttacker = pPlayer;
-	info.m_iDamage = pWeaponInfo.m_iDamage + (flChargeTime * 3.0f);
-	info.m_iTracerFreq = 0;
-	info.m_flDamageForceScale = 1.0f + (flChargeTime * ffdev_railpush.GetFloat());
-
-	pPlayer->FireBullets(info);
-	*/
-
-	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_railgun_speed.GetFloat(), flChargeTime );
+	WeaponSound( SINGLE );
 
 	pPlayer->DoMuzzleFlash();
 	SendWeaponAnim( GetPrimaryAttackActivity() );
-	pPlayer->DoAnimationEvent( PLAYERANIMEVENT_FIRE_GUN_PRIMARY );
 
+	// Player "shoot" animation
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	pPlayer->ViewPunch( -QAngle( 1.0f + flChargeTime, 0, 0 ) );
+
+	// remove the ammo
+#ifdef GAME_DLL
+	pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+#endif
+	
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 	m_flStartCharge = -1.0f;
 }
 
@@ -265,7 +261,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 	}
 	else
 	{
-		if (m_flStartCharge > 0)
+		if( m_flStartCharge > 0 )
 		{
 #ifdef CLIENT_DLL
 			if( m_pEngine )
@@ -274,27 +270,8 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				m_pEngine = NULL;
 			}
 #endif
-			WeaponSound(SINGLE);
-
-			pPlayer->DoMuzzleFlash();
-
-			SendWeaponAnim(GetPrimaryAttackActivity());
-
-			// player "shoot" animation
-			pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-			float flPower = gpGlobals->curtime - m_flStartCharge;
-			pPlayer->ViewPunch(-QAngle(1.0f + flPower, 0, 0));
-
 			// Fire!!
 			Fire();
-
-			// remove the ammo
-#ifdef GAME_DLL
-			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-#endif
-
-			m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
 		}
 
 		m_flStartCharge = -1.0f;
