@@ -1672,13 +1672,13 @@ ShadowType_t C_FFPlayer::ShadowCastType( void )
 	if( this == ToFFPlayer( C_BasePlayer::GetLocalPlayer() ) )
 	{
 		if( r_selfshadows.GetInt() )
-			return SHADOWS_RENDER_TO_TEXTURE;
+			return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
 
 		return SHADOWS_NONE;
 	}
 	else
 	{
-		return SHADOWS_RENDER_TO_TEXTURE;
+		return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC;
 	}
 }
 

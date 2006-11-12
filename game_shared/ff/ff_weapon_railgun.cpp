@@ -38,6 +38,12 @@
 ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
 ConVar ffdev_railgun_speed( "ffdev_railgun_speed", "1100.0", FCVAR_REPLICATED, "Rail speed" );
 
+#ifdef CLIENT_DLL
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
+CLIENTEFFECT_MATERIAL( "effects/stunstick" )
+CLIENTEFFECT_REGISTER_END()
+#endif
+
 //=============================================================================
 // CFFWeaponRailgun
 //=============================================================================
@@ -348,11 +354,9 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	::FormatViewModelAttachment(vecEnd, true);
 	::FormatViewModelAttachment(vecMuzzle, true);
 
-	float flChargeAmount = gpGlobals->curtime - m_flStartCharge;
-	flChargeAmount /= 5.0f;
-
-	flChargeAmount = clamp(flChargeAmount, 0.0f, 1.0f);
-	flChargeAmount = sqrtf(flChargeAmount);
+	float flChargeAmount = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
+	flChargeAmount = clamp( flChargeAmount / ffdev_railgun_maxcharge.GetFloat(), 0.0f, 1.0f);
+	flChargeAmount = sqrtf( flChargeAmount );
 
 #define FLUTTER_AMOUNT	(1.0f * flChargeAmount)
 
