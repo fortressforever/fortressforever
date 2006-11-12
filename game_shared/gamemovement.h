@@ -154,7 +154,7 @@ protected:
 	virtual float	LadderLateralMultiplier( void ) const { return 1.0f; }
 
 	// See if the player has a bogus velocity value.
-	void			CheckVelocity( void );
+	virtual void	CheckVelocity( void );
 
 	// Does not change the entities velocity at all
 	void			PushEntity( Vector& push, trace_t *pTrace );

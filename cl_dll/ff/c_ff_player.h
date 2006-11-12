@@ -285,9 +285,10 @@ private:
 	// ---> end
 
 private:
-	float m_flCurrentSpeed;
+	// This isn't velocity.Length() so only use it for cloak stuffs
+	float m_flCloakSpeed;
 public:
-	float GetCurrentSpeed( void ) const { return m_flCurrentSpeed; }
+	float GetCloakSpeed( void ) const { return m_flCloakSpeed; }
 
 	// Beg: Added by L0ki for grenade stuff
 public:
