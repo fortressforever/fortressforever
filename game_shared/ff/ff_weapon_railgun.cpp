@@ -21,6 +21,7 @@
 #ifdef CLIENT_DLL 
 	#define CFFWeaponRailgun C_FFWeaponRailgun
 
+	#include "soundenvelope.h"
 	#include "c_ff_player.h"
 	//#include "c_te_effect_dispatch.h"
 	
@@ -28,9 +29,7 @@
 
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 	//extern void DrawHalo(IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale);
-
 #else
-
 	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
 #endif
@@ -55,16 +54,19 @@ public:
 	virtual void	Fire( void );
 	virtual void	ItemPostFrame( void );
 	//void			RailBeamEffect( void );
+	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
+	virtual void	Precache( void );
 
 #ifdef CLIENT_DLL
 	virtual void	ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
 	virtual RenderGroup_t GetRenderGroup( void ) { return RENDER_GROUP_TRANSLUCENT_ENTITY; }
-	virtual IsTranslucent( void )				 { return true; }
+	virtual bool IsTranslucent( void )			 { return true; }
 
 private:
 	int	m_iAttachment1;
 	int m_iAttachment2;
 
+	CSoundPatch *m_pEngine;
 #endif	
 
 public:
@@ -110,8 +112,34 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 	m_flStartCharge = -1.0f;
 
 #ifdef CLIENT_DLL
+	m_pEngine = NULL;
 	m_iAttachment1 = m_iAttachment2 = -1;
 #endif
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Holster
+//----------------------------------------------------------------------------
+bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
+{
+#ifdef CLIENT_DLL
+	if( m_pEngine && ( GetPlayerOwner() == C_FFPlayer::GetLocalFFPlayer() ) )
+	{
+		CSoundEnvelopeController::GetController().SoundDestroy( m_pEngine );
+		m_pEngine = NULL;
+	}
+#endif
+
+	return BaseClass::Holster( pSwitchingTo );
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Precache
+//----------------------------------------------------------------------------
+void CFFWeaponRailgun::Precache( void )
+{
+	PrecacheScriptSound( "assaultcannon.rotate" );
+	BaseClass::Precache();
 }
 
 //----------------------------------------------------------------------------
@@ -210,12 +238,42 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				return;
 
 			m_flStartCharge = gpGlobals->curtime;
+
+#ifdef CLIENT_DLL
+			// Bring up the charging looping sound
+			if( !m_pEngine )
+			{
+				// Play charge up sound
+				CPASAttenuationFilter filter( this );
+
+				m_pEngine = CSoundEnvelopeController::GetController().SoundCreate( filter, entindex(), "assaultcannon.rotate" );
+				CSoundEnvelopeController::GetController().Play( m_pEngine, 0.0, 50 );
+				CSoundEnvelopeController::GetController().SoundChangeVolume( m_pEngine, 0.7, 2.0 );
+			}
+#endif
+		}
+		else
+		{
+#ifdef CLIENT_DLL
+			if( m_pEngine )
+			{
+				float flPitch = 40 + 10 * min( ffdev_railgun_maxcharge.GetFloat(), clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() ) );
+				CSoundEnvelopeController::GetController().SoundChangePitch( m_pEngine, min( 80, flPitch ), 0 );
+			}
+#endif
 		}
 	}
 	else
 	{
 		if (m_flStartCharge > 0)
 		{
+#ifdef CLIENT_DLL
+			if( m_pEngine )
+			{
+				CSoundEnvelopeController::GetController().SoundDestroy( m_pEngine );
+				m_pEngine = NULL;
+			}
+#endif
 			WeaponSound(SINGLE);
 
 			pPlayer->DoMuzzleFlash();
