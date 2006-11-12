@@ -264,8 +264,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 //				Warning( "[Rail] Angle: %f\n", flAngle );
 //#endif
 
-				// If angle is too great, don't bounce
-				if( flAngle > ffdev_railgun_maxangle.GetFloat() )
+				// If angle is too shallow, don't bounce
+				if( flAngle <= ffdev_railgun_maxangle.GetFloat() )
 					bCantBounce = true;
 
 				// If we can bounce
