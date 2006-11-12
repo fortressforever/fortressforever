@@ -140,6 +140,7 @@ public:
 
 	virtual bool	IsSpawnPointClear( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual bool	IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
+	virtual bool	FPlayerCanRespawn( CBasePlayer *pPlayer );
 	virtual bool	ClientConnected( edict_t *pEdict, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );
 	virtual void	ClientDisconnected( edict_t *pClient );
 	virtual void	LevelShutdown( void );
