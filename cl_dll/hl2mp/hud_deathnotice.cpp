@@ -352,6 +352,16 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	{
 		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploydetpack");
 	}
+	// 0001292: If we have a Dispenser
+	else if (Q_stricmp(killedwith, "Dispenser") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploydispenser");
+	}
+	// 0001292: If we have a Sentrygun
+	else if (Q_stricmp(killedwith, "Sentrygun") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploysentrygun");
+	}
 	else
 	{
 		// Try and find the death identifier in the icon list
