@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-10-30 20:29:29 -0800 (Mon, 30 Oct 2006) $
-// $LastChangedRevision: 1312 $
+// $LastChangedDate: 2006-11-08 09:31:09 -0800 (Wed, 08 Nov 2006) $
+// $LastChangedRevision: 1316 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -502,7 +502,9 @@ typedef enum eBasicGoals
 //		ENT_FLAG_INWATER - This entity is in water
 //		ENT_FLAG_UNDERWATER - This entity is under water
 //		ENT_FLAG_ZOOMING - This entity is zooming through scope or binoculars.
-//		ENT_FLAG_LADDER - This entity is on a ladder.
+//		ENT_FLAG_ONLADDER - This entity is on a ladder.
+//		ENT_FLAG_ONGROUND - Entity is standing on the ground
+//		ENT_FLAG_RELOADING - Entity is currently reloading
 typedef enum eEntityFlag
 {
 	ENT_FLAG_TEAM1,
@@ -517,8 +519,9 @@ typedef enum eEntityFlag
 	ENT_FLAG_INWATER,	
 	ENT_FLAG_UNDERWATER,	
 	ENT_FLAG_ZOOMING,	
-	ENT_FLAG_LADDER,
+	ENT_FLAG_ONLADDER,
 	ENT_FLAG_ONGROUND,
+	ENT_FLAG_RELOADING,
 
 	// THIS MUST BE LAST
 	ENT_FLAG_FIRST_USER	= 32

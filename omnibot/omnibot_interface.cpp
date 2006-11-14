@@ -746,12 +746,16 @@ namespace Omnibot
 
 					if(pEntity->GetFlags() & FL_DUCKING)
 						_entflags.SetFlag(ENT_FLAG_CROUCHED);
-
+					
 					CFFPlayer *pffPlayer = ToFFPlayer(pEntity);
 					if(pffPlayer)
 					{
+						CBaseCombatWeapon *pWpn = pffPlayer->GetActiveWeapon();
+						if(pWpn && pWpn->m_bInReload)
+							_entflags.SetFlag(ENT_FLAG_RELOADING);
 						if(pffPlayer->IsOnLadder())
-							_entflags.SetFlag(ENT_FLAG_LADDER);
+							_entflags.SetFlag(ENT_FLAG_ONLADDER);
+
 						if(pffPlayer->IsSpeedEffectSet(SE_SNIPERRIFLE))
 							_entflags.SetFlag(TF_ENT_FLAG_SNIPERAIMING);
 						if(pffPlayer->IsSpeedEffectSet(SE_ASSAULTCANNON))
@@ -1794,6 +1798,28 @@ namespace Omnibot
 				{
 					CTeam *pTeam = GetGlobalTeam( obUtilGetGameTeamFromBotTeam(pMsg->m_Team) );
 					pMsg->m_Score = pTeam ? pTeam->GetScore() : 0;
+				}
+				break;
+			}
+		case GEN_MSG_WPCHARGED:
+			{
+				WeaponCharged *pMsg = _data.Get<WeaponCharged>();
+				if(pMsg && pPlayer)
+				{
+					pMsg->m_IsCharged = True;
+				}
+				break;
+			}
+		case GEN_MSG_WPHEATLEVEL:
+			{
+				WeaponHeatLevel *pMsg = _data.Get<WeaponHeatLevel>();
+				if(pMsg && pPlayer)
+				{
+					CBaseCombatWeapon *pWp = pPlayer->GetActiveWeapon();
+					if(pWp)
+					{
+						pWp->GetHeatLevel(pMsg->m_FireMode, pMsg->m_CurrentHeat, pMsg->m_MaxHeat);
+					}
 				}
 				break;
 			}

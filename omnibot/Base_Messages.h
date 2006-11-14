@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-09-04 09:36:01 -0700 (Mon, 04 Sep 2006) $
-// $LastChangedRevision: 1265 $
+// $LastChangedDate: 2006-11-13 08:28:33 -0800 (Mon, 13 Nov 2006) $
+// $LastChangedRevision: 1319 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +82,7 @@ typedef struct
 {
 	int			m_Kills;
 	int			m_Deaths;
+	int			m_Score;
 } Msg_EntityScore;
 
 typedef struct 
@@ -89,6 +90,20 @@ typedef struct
 	int			m_Team;
 	int			m_Score;
 } Msg_Score;
+
+typedef struct 
+{
+	int			m_Weapon;
+	FireMode	m_FireMode;
+	obBool		m_IsCharged;
+} WeaponCharged;
+
+typedef struct 
+{
+	FireMode	m_FireMode;
+	float		m_CurrentHeat;
+	float		m_MaxHeat;
+} WeaponHeatLevel;
 
 //////////////////////////////////////////////////////////////////////////
 
