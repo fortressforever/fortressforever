@@ -98,7 +98,7 @@ void CHudRoundInfo::VidInit( void )
 	surface()->GetTextSize( m_hTextFont, m_szMapName, iMapWide, iMapTall );
 
 	m_iMapNameX = ( GetWide() / 2 ) - ( iMapWide / 2 );
-	m_iMapNameY = 3;
+	m_iMapNameY = 5;
 
 	// Set up round timer
 	localize()->ConvertANSIToUnicode( "00:00", m_szRoundTimer, sizeof( m_szRoundTimer ) );
@@ -107,7 +107,7 @@ void CHudRoundInfo::VidInit( void )
 	surface()->GetTextSize( m_hNumFont, m_szRoundTimer, iRoundWide, iRoundTall );
 
 	m_iRoundTimerX = ( GetWide() / 2 ) - ( iRoundWide / 2 );
-	m_iRoundTimerY = m_iMapNameY + iMapTall + 3;
+	m_iRoundTimerY = m_iMapNameY + iMapTall + 5;
 }
 
 //-----------------------------------------------------------------------------
