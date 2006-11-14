@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-11-03 07:55:27 -0800 (Fri, 03 Nov 2006) $
-// $LastChangedRevision: 1315 $
+// $LastChangedDate: 2006-11-13 08:28:33 -0800 (Mon, 13 Nov 2006) $
+// $LastChangedRevision: 1319 $
 //
 // about: Generic Bot Events
 //
@@ -72,6 +72,7 @@ typedef enum
 			MESSAGE_RESETWEAPONS,	// tells the bot to clear out all the weapons
 			MESSAGE_SPECTATED,
 			MESSAGE_KILLEDSOMEONE,
+			MESSAGE_AIMCOMPLETED,
 		MESSAGE_ID_LAST,
 
 		COMMAND_ID_FIRST,
@@ -107,12 +108,15 @@ typedef enum
 //		GEN_MSG_ISREADYTOFIRE - Is the entity ready to fire?
 //		GEN_MSG_ISALLIED - Is the entity allied with another?
 //		GEN_MSG_ISHUMAN - Is the entity a human player?
-//		GEN_MSG_GETPOINTCONTENTS - Get the point content id for a location.
 //		GEN_MSG_GETEQUIPPEDWEAPON - Get the currently equipped weapon id for an entity.
 //		GEN_MSG_GETHEALTHARMOR - Get health and armor for an entity.
 //		GEN_MSG_GETMAXSPEED - Get the max speed of the entity.
 //		GEN_MSG_GETFLAGSTATE - Get the current state of the flag.
 //		GEN_MSG_GAMESTATE - Get the current state of the game.
+//		GEN_MSG_ENTITYSCORE - Get current frags/kills/score of an entity.
+//		GEN_MSG_TEAMSCORE - Get current team score of a team.
+//		GEN_MSG_WPCHARGED - Is the weapon charged?
+//		GEN_MSG_WPHEATLEVEL - Get the weapon heat level.
 typedef enum
 {
 	GEN_MSG_NONE = 0,
@@ -130,6 +134,9 @@ typedef enum
 
 	GEN_MSG_ENTITYSCORE,
 	GEN_MSG_TEAMSCORE,
+
+	GEN_MSG_WPCHARGED,
+	GEN_MSG_WPHEATLEVEL,
 
 	// This must stay last.
 	GEN_MSG_END
