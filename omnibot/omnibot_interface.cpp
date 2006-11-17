@@ -1781,23 +1781,33 @@ namespace Omnibot
 				}
 				break;
 			}
-		case GEN_MSG_ENTITYSCORE:
+		case GEN_MSG_ENTITYSTAT:
 			{
-				Msg_EntityScore *pMsg = _data.Get<Msg_EntityScore>();
-				if(pMsg && pPlayer)
+				Msg_EntityStat *pMsg = _data.Get<Msg_EntityStat>();
+				if(pMsg)
 				{
-					pMsg->m_Kills = pPlayer->FragCount();
-					pMsg->m_Deaths = pPlayer->DeathCount();
+					if(pPlayer && !Q_strcmp(pMsg->m_StatName, "kills"))
+						pMsg->m_Result = BotUserData(pPlayer->FragCount());
+					else if(pPlayer && !Q_strcmp(pMsg->m_StatName, "deaths"))
+						pMsg->m_Result = BotUserData(pPlayer->DeathCount());
+					else if(pPlayer && !Q_strcmp(pMsg->m_StatName, "score"))
+						pMsg->m_Result = BotUserData(0); // TODO:
 				}
 				break;
 			}
-		case GEN_MSG_TEAMSCORE:
+		case GEN_MSG_TEAMSTAT:
 			{
-				Msg_Score *pMsg = _data.Get<Msg_Score>();
-				if(pMsg && pPlayer)
+				Msg_TeamStat *pMsg = _data.Get<Msg_TeamStat>();
+				if(pMsg)
 				{
 					CTeam *pTeam = GetGlobalTeam( obUtilGetGameTeamFromBotTeam(pMsg->m_Team) );
-					pMsg->m_Score = pTeam ? pTeam->GetScore() : 0;
+					if(pTeam)
+					{
+						if(!Q_strcmp(pMsg->m_StatName, "score"))
+							pMsg->m_Result = BotUserData(pTeam->GetScore());
+						else if(!Q_strcmp(pMsg->m_StatName, "deaths"))
+							pMsg->m_Result = BotUserData(pTeam->GetDeaths());
+					}
 				}
 				break;
 			}

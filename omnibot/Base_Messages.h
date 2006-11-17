@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-11-13 08:28:33 -0800 (Mon, 13 Nov 2006) $
-// $LastChangedRevision: 1319 $
+// $LastChangedDate: 2006-11-16 21:34:50 -0800 (Thu, 16 Nov 2006) $
+// $LastChangedRevision: 1320 $
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,16 +80,16 @@ typedef struct
 
 typedef struct 
 {
-	int			m_Kills;
-	int			m_Deaths;
-	int			m_Score;
-} Msg_EntityScore;
+	char		m_StatName[64];
+	BotUserData m_Result;
+} Msg_EntityStat;
 
 typedef struct 
 {
 	int			m_Team;
-	int			m_Score;
-} Msg_Score;
+	char		m_StatName[64];
+	BotUserData m_Result;
+} Msg_TeamStat;
 
 typedef struct 
 {
