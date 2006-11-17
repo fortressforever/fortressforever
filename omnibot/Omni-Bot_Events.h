@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // $LastChangedBy: DrEvil $
-// $LastChangedDate: 2006-11-13 08:28:33 -0800 (Mon, 13 Nov 2006) $
-// $LastChangedRevision: 1319 $
+// $LastChangedDate: 2006-11-16 21:34:50 -0800 (Thu, 16 Nov 2006) $
+// $LastChangedRevision: 1320 $
 //
 // about: Generic Bot Events
 //
@@ -132,8 +132,8 @@ typedef enum
 	GEN_MSG_GETFLAGSTATE,
 	GEN_MSG_GAMESTATE,
 
-	GEN_MSG_ENTITYSCORE,
-	GEN_MSG_TEAMSCORE,
+	GEN_MSG_ENTITYSTAT,
+	GEN_MSG_TEAMSTAT,
 
 	GEN_MSG_WPCHARGED,
 	GEN_MSG_WPHEATLEVEL,
