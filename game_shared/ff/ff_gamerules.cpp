@@ -65,6 +65,13 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar mp_respawndelay( "mp_respawndelay", "0", 0, "Time (in seconds) for spawn delays. Can be overridden by LUA." );
 #endif
 
+// 0000936: Horizontal push from explosions too low
+#ifdef GAME_DLL
+	ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED);
+	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
+	ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
+#endif
+
 ConVar mp_prematch( "mp_prematch",
 					"0.0",							// trepids finding it annoying so i set it to zero and not .2
 					FCVAR_NOTIFY|FCVAR_REPLICATED,
@@ -1035,7 +1042,8 @@ ConVar mp_prematch( "mp_prematch",
 			if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin) 
 			{
 				// Multiply the damage by 8.0f (ala tfc) to get the force
-				float flCalculatedForce = flAdjustedDamage * 8.0f;
+				// 0000936 - use convar
+				float flCalculatedForce = flAdjustedDamage * push_multiplier.GetFloat();
 
 				CFFPlayer *pPlayer = NULL;
 
@@ -1043,8 +1051,9 @@ ConVar mp_prematch( "mp_prematch",
 					pPlayer = ToFFPlayer(pEntity);
 
 				// We have to reduce the force further if they're fat
+				// 0000936 - use convar
 				if (pPlayer && pPlayer->GetClassSlot() == CLASS_HWGUY) 
-					flCalculatedForce *= 0.15f;
+					flCalculatedForce *= fattypush_multiplier.GetFloat();
 
 				CFFPlayer *pAttacker = NULL;
 
@@ -1060,8 +1069,9 @@ ConVar mp_prematch( "mp_prematch",
 
 				// And also reduce if we couldn't hurt them
 				// TODO: Get exact figure for this
+				// 0000936 - use convar
 				if (pPlayer && pAttacker && !g_pGameRules->FPlayerCanTakeDamage(pPlayer, pAttacker))
-					flCalculatedForce *= 0.8f;
+					flCalculatedForce *= nodamagepush_multiplier.GetFloat();
 
 				// Don't use the damage source direction, use the reported position
 				// if it exists
