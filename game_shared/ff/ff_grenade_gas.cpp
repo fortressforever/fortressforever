@@ -31,6 +31,10 @@
 	#include "ai_basenpc.h"
 #endif
 
+
+// 0000819: gas gren radius too large
+ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "200.0", FCVAR_REPLICATED);
+
 class CFFGrenadeGas : public CFFGrenadeBase
 {
 public:
@@ -43,7 +47,8 @@ public:
 	virtual void Precache();
 	virtual float GetShakeAmplitude( void ) { return 0.0f; }	// remove the shake
 	virtual float GetGrenadeDamage() { return 0.0f; }
-	virtual float GetGrenadeRadius() { return 200.0f; }
+	// 0000819: gas gren radius too large
+	virtual float GetGrenadeRadius() { return ffdev_gasgrenradius.GetFloat(); }
 	virtual const char *GetBounceSound() { return "GasGrenade.Bounce"; }
 	virtual Class_T Classify( void ) { return CLASS_GREN_GAS; }
 
