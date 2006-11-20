@@ -70,6 +70,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED);
 	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
 	ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
+	ConVar push_clamp("ffdev_pushclamp", "100", FCVAR_REPLICATED);
 #endif
 
 ConVar mp_prematch( "mp_prematch",
@@ -1042,8 +1043,11 @@ ConVar mp_prematch( "mp_prematch",
 			if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin) 
 			{
 				// Multiply the damage by 8.0f (ala tfc) to get the force
-				// 0000936 - use convar
+				// 0000936 - use convar; ensure a lower "bounds"
 				float flCalculatedForce = flAdjustedDamage * push_multiplier.GetFloat();
+
+				if (flCalculatedForce < push_clamp.GetFloat())
+					flCalculatedForce = push_clamp.GetFloat();
 
 				CFFPlayer *pPlayer = NULL;
 
