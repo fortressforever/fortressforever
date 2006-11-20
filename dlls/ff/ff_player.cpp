@@ -699,6 +699,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.Flameout");
 	PrecacheScriptSound("medical.saveme");
 	PrecacheScriptSound("maintenance.saveme");
+	PrecacheScriptSound("infected.saveme");
 	// Special case
 	PrecacheScriptSound( EMP_SOUND );
 
@@ -3342,7 +3343,14 @@ void CFFPlayer::Command_SaveMe( void )
 	//!! char szBuf[ 64 ];
 	//!! Q_snprintf( szBuf, sizeof( szBuf ), "%s.saveme", Class_IntToString( GetClassSlot() ) );
 	//!! EmitSound( sndFilter, entindex(), szBuf );
-	EmitSound( sndFilter, entindex(), "medical.saveme" );
+
+	// 0001311: if infected do a special saveme
+	CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
+	
+	if (pPlayer && pPlayer->IsInfected())
+		EmitSound( sndFilter, entindex(), "infected.saveme" );
+	else
+		EmitSound( sndFilter, entindex(), "medical.saveme" );
 
 	/*
 	// MEDIC!
