@@ -697,6 +697,8 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
 	PrecacheScriptSound("Player.Flameout");
+	PrecacheScriptSound("medical.saveme");
+	PrecacheScriptSound("maintenance.saveme");
 	// Special case
 	PrecacheScriptSound( EMP_SOUND );
 
@@ -728,8 +730,9 @@ void CFFPlayer::Precache()
 		g_iLimbs[i][4] = PrecacheModel(buf);
 
 		// Saveme shouts
-		Q_snprintf(buf, 255, "%s.saveme", class_string);
-		PrecacheScriptSound(buf);
+		// 0001318: Get rid of class specific save me sounds
+		// Q_snprintf(buf, 255, "%s.saveme", class_string);
+		// PrecacheScriptSound(buf);
 	}
 
 	for (int i = 0; i < 8; i++)
@@ -3335,9 +3338,11 @@ void CFFPlayer::Command_SaveMe( void )
 	}
 
 	// Compose the sound
-	char szBuf[ 64 ];
-	Q_snprintf( szBuf, sizeof( szBuf ), "%s.saveme", Class_IntToString( GetClassSlot() ) );
-	EmitSound( sndFilter, entindex(), szBuf );
+	// These are for class-based calls
+	//!! char szBuf[ 64 ];
+	//!! Q_snprintf( szBuf, sizeof( szBuf ), "%s.saveme", Class_IntToString( GetClassSlot() ) );
+	//!! EmitSound( sndFilter, entindex(), szBuf );
+	EmitSound( sndFilter, entindex(), "medical.saveme" );
 
 	/*
 	// MEDIC!
@@ -3393,9 +3398,13 @@ void CFFPlayer::Command_EngyMe( void )
 	}
 
 	// Compose the sound
-	char szBuf[ 64 ];
-	Q_snprintf( szBuf, sizeof( szBuf ), "%s.engyme", Class_IntToString( GetClassSlot() ) );
-	EmitSound( sndFilter, entindex(), szBuf );
+	// These are for class-based calls
+	//!! char szBuf[ 64 ];
+	//!! Q_snprintf( szBuf, sizeof( szBuf ), "%s.engyme", Class_IntToString( GetClassSlot() ) );
+	//!! EmitSound( sndFilter, entindex(), szBuf );
+	// 0001318: generic engyme instead of class based
+	EmitSound( sndFilter, entindex(), "maintenance.saveme" );
+
 }
 
 void CFFPlayer::StatusEffectsThink( void )
