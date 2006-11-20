@@ -1170,6 +1170,7 @@ void C_FFPlayer::Spawn( void )
 	{
 		//enginesound->StopAllSounds( true );
 	}
+	ViewPunchReset();
 }
 
 //-----------------------------------------------------------------------------
