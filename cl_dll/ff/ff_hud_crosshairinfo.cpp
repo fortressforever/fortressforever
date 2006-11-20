@@ -36,7 +36,7 @@ using namespace vgui;
 #include "ff_utils.h"
 #include "ff_shareddefs.h"
 
-static ConVar hud_centerid( "hud_centerid", "0" );
+static ConVar hud_centerid( "hud_centerid", "0", FCVAR_ARCHIVE );
 
 //=============================================================================
 //
