@@ -496,21 +496,22 @@ void CFFBuildableObject::OnObjectThink( void )
 	// Check for "malfunctions"
 	if( HasMalfunctioned() )
 	{
-		if( m_hOwner.Get() )
+		CFFPlayer *pOwner = GetOwnerPlayer();
+		if( pOwner )
 		{
 			switch( Classify() )
 			{
 				case CLASS_DISPENSER:
-					ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_DISPENSER_MALFUNCTIONED" );
+					ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_MALFUNCTIONED" );
 				break;
 
 				case CLASS_SENTRYGUN:
-					ClientPrint( ToFFPlayer( m_hOwner.Get() ), HUD_PRINTCENTER, "#FF_SENTRYGUN_MALFUNCTIONED" );
+					ClientPrint( pOwner , HUD_PRINTCENTER, "#FF_SENTRYGUN_MALFUNCTIONED" );
 				break;
 			}
 		}
 
-		//Detonate();
+		Detonate();
 	}
 }
 
