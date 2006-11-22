@@ -3325,7 +3325,7 @@ void CFFPlayer::Command_SaveMe( void )
 		m_iSaveMe = 1;
 
 		// Set the time we can do another saveme at
-		m_flSaveMeTime = gpGlobals->curtime + 7.0f;
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
 		// Do the actual sound always... cause spamming the sound is fun
 		CPASAttenuationFilter sndFilter( this );
@@ -3354,7 +3354,7 @@ void CFFPlayer::Command_EngyMe( void )
 		m_iEngyMe = 1;
 
 		// Set the time we can do another engyme at
-		m_flEngyMeTime = gpGlobals->curtime + 7.0f;
+		m_flEngyMeTime = gpGlobals->curtime + 5.0f;
 
 		// Do the actual sound always... cause spamming the sound is fun
 		CPASAttenuationFilter sndFilter( this );
