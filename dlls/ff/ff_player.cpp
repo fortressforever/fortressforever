@@ -1569,6 +1569,9 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( m_iEngyMe )
 		m_iEngyMe = 0;
 
+	m_flSaveMeTime = 0.0f;
+	m_flEngyMeTime = 0.0f;
+
 	if( GetClassSlot() == CLASS_SPY )
 		SpyCloakFadeIn( true );
 
@@ -1691,6 +1694,11 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Kill infection sound
 	// Bug #0000461: Infect sound plays eventhough you are dead
 	StopSound( "Player.DrownContinue" );
+
+	// Stop the saveme sounds upon death
+	StopSound( "infected.saveme" );
+	StopSound( "medical.saveme" );
+	StopSound( "maintenance.saveme" );
 
 	// --> Mirv: Create backpack moved here to stop crash
 	CFFItemBackpack *pBackpack = (CFFItemBackpack *) CBaseEntity::Create("ff_item_backpack", GetAbsOrigin(), GetAbsAngles());
@@ -3331,19 +3339,24 @@ void CFFPlayer::Command_SaveMe( void )
 		CPASAttenuationFilter sndFilter( this );
 
 		// Remove people not allied to us (or not on our team)
-		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+		// 0001311: don't do this any more
+/*		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
 		{
 			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
 				sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
 		}
 
 		// 0001311: if infected do a special saveme
-		//CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
 
-		if (/*pPlayer && pPlayer->*/IsInfected())
+		if (IsInfected())
 			EmitSound( sndFilter, entindex(), "infected.saveme" );
 		else
 			EmitSound( sndFilter, entindex(), "medical.saveme" );
+			*/
+		if (IsInfected())
+			EmitSound( "infected.saveme" );
+		else
+			EmitSound( "medical.saveme" );
 	}	
 }
 
@@ -3360,6 +3373,8 @@ void CFFPlayer::Command_EngyMe( void )
 		CPASAttenuationFilter sndFilter( this );
 
 		// Remove people not allied to us (or not on our team)
+		// 0001311: don't do this any more. 
+/*
 		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
 		{
 			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
@@ -3367,7 +3382,9 @@ void CFFPlayer::Command_EngyMe( void )
 		}
 
 		// 0001318: generic engyme instead of class based
-		EmitSound( sndFilter, entindex(), "maintenance.saveme" );
+		EmitSound( sndFilter, entindex(), "maintenance.saveme" ); */
+		EmitSound("maintenance.saveme");
+
 	}
 }
 
