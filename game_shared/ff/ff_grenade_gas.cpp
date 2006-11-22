@@ -33,7 +33,7 @@
 
 
 // 0000819: gas gren radius too large
-ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "200.0", FCVAR_REPLICATED);
+ConVar ffdev_gasgrenradius("ffdev_gasgrenradius", "125.0", FCVAR_REPLICATED);
 
 class CFFGrenadeGas : public CFFGrenadeBase
 {
