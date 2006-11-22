@@ -3326,63 +3326,25 @@ void CFFPlayer::Command_SaveMe( void )
 
 		// Set the time we can do another saveme at
 		m_flSaveMeTime = gpGlobals->curtime + 7.0f;
-	}
 
-	// Do the actual sound always... cause spamming the sound is fun
-	CPASAttenuationFilter sndFilter( this );
+		// Do the actual sound always... cause spamming the sound is fun
+		CPASAttenuationFilter sndFilter( this );
 
-	// Remove people not allied to us (or not on our team)
-	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
-	{
-		if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
-			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
-	}
-
-	// Compose the sound
-	// These are for class-based calls
-	//!! char szBuf[ 64 ];
-	//!! Q_snprintf( szBuf, sizeof( szBuf ), "%s.saveme", Class_IntToString( GetClassSlot() ) );
-	//!! EmitSound( sndFilter, entindex(), szBuf );
-
-	// 0001311: if infected do a special saveme
-	CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
-	
-	if (pPlayer && pPlayer->IsInfected())
-		EmitSound( sndFilter, entindex(), "infected.saveme" );
-	else
-		EmitSound( sndFilter, entindex(), "medical.saveme" );
-
-	/*
-	// MEDIC!
-	if( !m_hSaveMe )
-	{
-		// Spawn the glyph
-		m_hSaveMe = ( CFFSaveMe * )CreateEntityByName( "ff_saveme" );
-
-		if( m_hSaveMe )
-		{		
-			m_hSaveMe->SetOwnerEntity( this );
-			m_hSaveMe->Spawn();
-			m_hSaveMe->SetLifeTime( gpGlobals->curtime + FF_SAVEME_LIFETIME );
-			m_hSaveMe->FollowEntity(this, true);
+		// Remove people not allied to us (or not on our team)
+		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+		{
+			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
+				sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
 		}
-	}
 
-	// play the sound
-	CPASAttenuationFilter sndFilter( this );
+		// 0001311: if infected do a special saveme
+		//CFFPlayer *pPlayer = ToFFPlayer( UTIL_GetCommandClient() );
 
-	// remove all other teams except our own
-	for( int iTeamToCheck = FF_TEAM_BLUE; iTeamToCheck <= FF_TEAM_GREEN; iTeamToCheck++ )
-	{
-		if (iTeamToCheck != GetTeamNumber() || ( FFGameRules()->IsTeam1AlliedToTeam2( iTeamToCheck, GetTeamNumber() ) == GR_NOTTEAMMATE ) )
-			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( iTeamToCheck ) );
-	}
-	
-	// BugID #0000332: PrecacheScriptSound 'speech.saveme' failed, no such sound script entry
-	char buf[64];
-	Q_snprintf(buf, 63, "%s.saveme", Class_IntToString(GetClassSlot()));
-	EmitSound(sndFilter, entindex(), buf);
-	*/
+		if (/*pPlayer && pPlayer->*/IsInfected())
+			EmitSound( sndFilter, entindex(), "infected.saveme" );
+		else
+			EmitSound( sndFilter, entindex(), "medical.saveme" );
+	}	
 }
 
 void CFFPlayer::Command_EngyMe( void )
@@ -3393,26 +3355,20 @@ void CFFPlayer::Command_EngyMe( void )
 
 		// Set the time we can do another engyme at
 		m_flEngyMeTime = gpGlobals->curtime + 7.0f;
+
+		// Do the actual sound always... cause spamming the sound is fun
+		CPASAttenuationFilter sndFilter( this );
+
+		// Remove people not allied to us (or not on our team)
+		for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
+		{
+			if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
+				sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
+		}
+
+		// 0001318: generic engyme instead of class based
+		EmitSound( sndFilter, entindex(), "maintenance.saveme" );
 	}
-
-	// Do the actual sound always... cause spamming the sound is fun
-	CPASAttenuationFilter sndFilter( this );
-
-	// Remove people not allied to us (or not on our team)
-	for( int i = TEAM_BLUE; i <= TEAM_GREEN; i++ )
-	{
-		if( FFGameRules()->IsTeam1AlliedToTeam2( GetTeamNumber(), i ) == GR_NOTTEAMMATE )
-			sndFilter.RemoveRecipientsByTeam( GetGlobalFFTeam( i ) );
-	}
-
-	// Compose the sound
-	// These are for class-based calls
-	//!! char szBuf[ 64 ];
-	//!! Q_snprintf( szBuf, sizeof( szBuf ), "%s.engyme", Class_IntToString( GetClassSlot() ) );
-	//!! EmitSound( sndFilter, entindex(), szBuf );
-	// 0001318: generic engyme instead of class based
-	EmitSound( sndFilter, entindex(), "maintenance.saveme" );
-
 }
 
 void CFFPlayer::StatusEffectsThink( void )
