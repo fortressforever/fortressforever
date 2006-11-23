@@ -94,11 +94,9 @@ public:
 	{
 		BaseClass::ApplySchemeSettings(pScheme);
 
-		HFont hFont = pScheme->GetFont("Tahoma12", true);
 
 		SetTextInset(10, 7);
 		SetContentAlignment(a_northwest);
-		SetFont(hFont);
 
 		// Line up image
 		int iInsigniaSize = GetTall() * 0.4f;
@@ -111,13 +109,11 @@ public:
 		m_pInfoDescriptions->SetContentAlignment(a_northwest);
 		m_pInfoDescriptions->SetBounds(GetWide() * 0.1f, GetTall() * 0.6f, GetWide() * 0.4f, GetTall() * 0.4f);
 		m_pInfoDescriptions->SetMouseInputEnabled(false);
-		m_pInfoDescriptions->SetFont(hFont);
 
 		// Line up info values
 		m_pInfoValues->SetContentAlignment(a_northeast);
 		m_pInfoValues->SetBounds(GetWide() * 0.5f, GetTall() * 0.6f, GetWide() * 0.4f, GetTall() * 0.4f);
 		m_pInfoValues->SetMouseInputEnabled(false);
-		m_pInfoValues->SetFont(hFont);
 
 		m_pInfoDescriptions->SetText("#TEAM_STATS");
 		m_pInfoValues->SetText("0\n0\n0");
@@ -230,17 +226,6 @@ CTeamMenu::~CTeamMenu()
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-
-	m_pMapDescriptionHead->SetFont(pScheme->GetFont("Tahoma16", true));
-
-	HFont hFont = pScheme->GetFont("Tahoma12", true);
-
-	m_pMapDescriptionText->SetFont(hFont);
-	m_pServerInfoText->SetFont(hFont);
-
-	m_pSpectateButton->SetFont(hFont);
-	m_pAutoAssignButton->SetFont(hFont);
-	m_pFlythroughButton->SetFont(hFont);
 
 	m_pMapDescriptionText->SetBorder(NULL);
 	m_pServerInfoText->SetBorder(NULL);
