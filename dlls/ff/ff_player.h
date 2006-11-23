@@ -728,15 +728,19 @@ protected:
 	float m_flPipebombShotTime;
 
 public:
-	void SetDisguisable(bool in) 
+	void SetDisguisable( bool bDisguisable ) 
 	{
-		m_bDisguisable = in;
-		if (!in) 
+		if( bDisguisable )
+			m_bDisguisable = 1;
+		else
+		{
+			m_bDisguisable = 0;
 			ResetDisguise();
+		}
 	}
-	bool GetDisguisable() const { return m_bDisguisable; }
+	bool GetDisguisable( void ) const	{ return m_bDisguisable != 0; }
 private:
-	bool m_bDisguisable;
+	CNetworkVar( unsigned int, m_bDisguisable );
 
 public:	
 	int GetDisguisedClass( void );
