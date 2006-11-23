@@ -305,6 +305,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	// Radiotag information the local client needs to know
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
 	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_bDisguisable ), 1, SPROP_UNSIGNED ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -415,7 +416,7 @@ CFFPlayer::CFFPlayer()
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
 
-	m_bDisguisable = true;
+	m_bDisguisable = 1;
 
 	m_flNextJumpTimeForDouble = 0;
 
@@ -5296,7 +5297,7 @@ void CFFPlayer::Command_Disguise()
 	if(engine->Cmd_Argc( ) < 3)
 		return;
 
-	if (!m_bDisguisable) 
+	if (!GetDisguisable()) 
 	{
 		ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_NODISGUISENOW");
 		return;

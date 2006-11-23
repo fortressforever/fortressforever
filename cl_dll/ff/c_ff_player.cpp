@@ -466,6 +466,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	// Radiotag information the local client needs to know
 	RecvPropEHandle( RECVINFO( m_hRadioTagData ) ),
 	RecvPropInt( RECVINFO( m_bCloakable ) ),
+	RecvPropInt( RECVINFO( m_bDisguisable ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY

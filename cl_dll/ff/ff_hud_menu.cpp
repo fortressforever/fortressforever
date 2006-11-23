@@ -62,8 +62,11 @@ inline int CheckDisguiseClass( int iClass )
 
 	// Remeber, pszTeam is going to have a space at the end
 
-	C_FFPlayer *pPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
 		return MENU_DIM;
 
 	int iTeam = pPlayer->GetTeamNumber();
@@ -108,7 +111,7 @@ inline int CheckDisguiseClass( int iClass )
 /************************************************************************/
 ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -126,7 +129,7 @@ ADD_MENU_OPTION(builddispenser, L"Build Dispenser", "builddispensers")
 
 ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -144,7 +147,7 @@ ADD_MENU_OPTION(detdispenser, L"Detonate Dispenser", "detdispenser")
 
 ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -162,7 +165,7 @@ ADD_MENU_OPTION(dismantledispenser, L"Dismantle Dispenser", "dismantledispenser"
 
 ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -180,7 +183,7 @@ ADD_MENU_OPTION(buildsentry, L"Build Sentry", "buildsentry")
 
 ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -198,7 +201,7 @@ ADD_MENU_OPTION(detsentry, L"Detonate Sentry", "detsentry")
 
 ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -216,7 +219,7 @@ ADD_MENU_OPTION(dismantlesentry, L"Dismantle Sentry", "dismantlesentry")
 
 ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 {
-	C_FFPlayer *ff = dynamic_cast<C_FFPlayer *>(C_BasePlayer::GetLocalPlayer());
+	C_FFPlayer *ff = C_FFPlayer::GetLocalFFPlayer();
 
 	// Yeah, this is highly unlikely to happen, but just checking anyway
 	if( !ff )
@@ -235,19 +238,42 @@ ADD_MENU_OPTION(aimsentry, L"Aim Sentry", "aimsentry")
 // These act as intermediate menus
 ADD_MENU_BRANCH(disguiseteam, L"Disguise as friendly", "disguise friendly ", SpyClassDisguise)
 {
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
 	return MENU_SHOW;
 }
 
 ADD_MENU_BRANCH(disguiseenemy, L"Disguise as enemy", "disguise enemy ", SpyClassDisguise)
 {
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
 	return MENU_SHOW;
 }
 
 ADD_MENU_BRANCH(disguisered, L"Disguise as red", "disguise red ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
+	if( !pGr )
+		return MENU_DIM;
 
-	if (!pGr || pGr->GetTeamLimits(TEAM_RED) >= 0)
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
+	if (pGr->GetTeamLimits(TEAM_RED) >= 0)
 		return MENU_SHOW;
 
 	return MENU_DIM;
@@ -256,8 +282,17 @@ ADD_MENU_BRANCH(disguisered, L"Disguise as red", "disguise red ", SpyClassDisgui
 ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", "disguise blue ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
+	if( !pGr )
+		return MENU_DIM;
 
-	if (!pGr || pGr->GetTeamLimits(TEAM_BLUE) >= 0)
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
+	if (pGr->GetTeamLimits(TEAM_BLUE) >= 0)
 		return MENU_SHOW;
 
 	return MENU_DIM;
@@ -267,8 +302,17 @@ ADD_MENU_BRANCH(disguiseblue, L"Disguise as blue", "disguise blue ", SpyClassDis
 ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", "disguise yellow ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
+	if( !pGr )
+		return MENU_DIM;
 
-	if (!pGr || pGr->GetTeamLimits(TEAM_YELLOW) >= 0)
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
+	if (pGr->GetTeamLimits(TEAM_YELLOW) >= 0)
 		return MENU_SHOW;
 
 	return MENU_DIM;
@@ -278,8 +322,17 @@ ADD_MENU_BRANCH(disguiseyellow, L"Disguise as yellow", "disguise yellow ", SpyCl
 ADD_MENU_BRANCH(disguisegreen, L"Disguise as green", "disguise green ", SpyClassDisguise)
 {
 	IGameResources *pGr = GameResources();
+	if( !pGr )
+		return MENU_DIM;
 
-	if (!pGr || pGr->GetTeamLimits(TEAM_GREEN) >= 0)
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if( !pPlayer->IsDisguisable() )
+		return MENU_DIM;
+
+	if (pGr->GetTeamLimits(TEAM_GREEN) >= 0)
 		return MENU_SHOW;
 
 	return MENU_DIM;
@@ -643,7 +696,9 @@ void CHudContextMenu::Paint()
 	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + MENU_PROGRESS_TIME)
 	{
 		// There is a next menu for this option
-		if (m_pMenu[m_iSelected].pNextMenu)
+		// ADDED: added check for conditionfunc to be true because
+		// dimmed out "branches" could still be selected.
+		if (m_pMenu[m_iSelected].pNextMenu && ( m_pMenu[m_iSelected].conditionfunc() == MENU_SHOW ) )
 		{
 			m_pszPreviousCmd = m_pMenu[m_iSelected].szCommand;
 			m_pMenu = &SpyClassDisguise[0];

@@ -274,6 +274,12 @@ public:
 	int GetDisguisedTeam( void );
 	bool IsDisguised( void );
 	CNetworkVar( int, m_iSpyDisguise );
+
+public:
+	// Returns true if the player can disguise
+	bool IsDisguisable( void ) const	{ return m_bDisguisable != 0; }
+private:
+	unsigned int m_bDisguisable;
 	// <-- mulch
 
 private:
