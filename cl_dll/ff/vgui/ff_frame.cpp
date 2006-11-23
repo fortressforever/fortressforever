@@ -36,7 +36,8 @@ public:
 		BaseClass::ApplySchemeSettings(pScheme);
 
 //!!pcdebug		m_pTitleLabel->SetBounds(GetInsetWidth(), GetInsetWidth(), 100, surface()->GetFontTall(hFont));
-
+		m_pTitleLabel->SetBounds(GetInsetWidth(), GetInsetWidth(), BaseClass::GetWide(), m_pTitleLabel->GetTall());
+		m_pTitleLabel->SetContentAlignment(Label::a_northwest);
 		SetFgColor(GetSchemeColor("HUD_Tone_Default", Color(199, 219, 255, 255), pScheme));
 		SetBgColor(GetSchemeColor("HUD_BG_Default", Color(109, 124, 142, 115), pScheme));
 
