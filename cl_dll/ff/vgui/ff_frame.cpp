@@ -35,10 +35,7 @@ public:
 	{
 		BaseClass::ApplySchemeSettings(pScheme);
 
-		HFont hFont = pScheme->GetFont("Tahoma8", true);
-
-		m_pTitleLabel->SetFont(hFont);
-		m_pTitleLabel->SetBounds(GetInsetWidth(), GetInsetWidth(), 100, surface()->GetFontTall(hFont));
+//!!pcdebug		m_pTitleLabel->SetBounds(GetInsetWidth(), GetInsetWidth(), 100, surface()->GetFontTall(hFont));
 
 		SetFgColor(GetSchemeColor("HUD_Tone_Default", Color(199, 219, 255, 255), pScheme));
 		SetBgColor(GetSchemeColor("HUD_BG_Default", Color(109, 124, 142, 115), pScheme));
