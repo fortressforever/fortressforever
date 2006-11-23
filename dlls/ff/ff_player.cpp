@@ -5465,9 +5465,27 @@ int CFFPlayer::GetNewDisguisedClass( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::ResetDisguise()
 {
-	if (!IsDisguised())
+	// If not a spy, abort
+	if( GetClassSlot() != CLASS_SPY )
 		return;
 
+	// If disguised
+	if( IsDisguised() )
+		ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE" );
+	else
+	{
+		// If not disguised...
+
+		// If we're not disguising, abort
+		if( m_iNewSpyDisguise == 0 )
+			return;
+
+		// So, guy is disguising, need to do a hud msg
+		// then change him back to normal
+		ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_FORCELOSTDISGUISE" );
+	}
+
+	// Change back to normal - "reset"
 	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
 	SetModel(pPlayerClassInfo.m_szModel);
@@ -5475,8 +5493,6 @@ void CFFPlayer::ResetDisguise()
 
 	m_iNewSpyDisguise = 0;
 	m_iSpyDisguise = 0;
-
-	ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_LOSTDISGUISE");
 
 	// Notify the bot: convert this to an event?
 	if(IsBot())
@@ -5500,12 +5516,13 @@ void CFFPlayer::FinishDisguise()
 
 		if (pPlayerClassInfo)
 		{
+			// UNDONE: Don't do this since we're not using a separate model for cloaking now
 			// Only set new model & skin if we're not cloaked
-			if( !IsCloaked() )
-			{
+			//if( !IsCloaked() )
+			//{
 				SetModel(pPlayerClassInfo->m_szModel);
 				m_nSkin = GetNewDisguisedTeam() - TEAM_BLUE; // since m_nSkin = 0 is blue
-			}
+			//}
 		}
 	}
 
