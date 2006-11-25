@@ -162,6 +162,12 @@ namespace vgui
 	//-----------------------------------------------------------------------------
 	void FFMenuPanel::LoadTexture(const char *pszName, CHudTexture **pTexture)
 	{
+		if( *pTexture )
+		{
+			delete *pTexture;
+			*pTexture = NULL;
+		}
+
 		Assert(*pTexture == NULL);
 
 		*pTexture = new CHudTexture();
