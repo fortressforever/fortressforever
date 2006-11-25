@@ -105,9 +105,35 @@ public:
 	}
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: A copy/paste so that glyphs draw correctly
+//-----------------------------------------------------------------------------
+class CHudAmmoInfo2 : public CHudElement, public vgui::FFPanel
+{
+public:
+	CHudAmmoInfo2(const char *pElementName) : CHudElement(pElementName), vgui::FFPanel(NULL, "HudAmmoInfo2")
+	{
+		// Set our parent window
+		SetParent(g_pClientMode->GetViewport());
+
+		// Hide when player is dead
+		SetHiddenBits(HIDEHUD_PLAYERDEAD);
+	}
+
+	virtual void Paint()
+	{
+		// Various things here
+		// pWeapon->GetAmmoIcon
+		// pWeapon->GetWeaponIcon
+
+		FFPanel::Paint();
+	}
+};
+
 DECLARE_HUDELEMENT(CHudAmmo);
 DECLARE_HUDELEMENT(CHudAmmoClip);
 DECLARE_HUDELEMENT(CHudAmmoInfo);
+DECLARE_HUDELEMENT(CHudAmmoInfo2);
 
 CHudAmmo::CHudAmmo(const char *pElementName) : BaseClass(NULL, "HudAmmo"), CHudElement(pElementName)
 {
