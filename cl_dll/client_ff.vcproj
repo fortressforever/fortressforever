@@ -3530,9 +3530,6 @@ if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%
 				RelativePath=".\ff\ff_hud_location.cpp">
 			</File>
 			<File
-				RelativePath=".\ff\ff_hud_location2.cpp">
-			</File>
-			<File
 				RelativePath=".\ff\ff_hud_lua.cpp">
 			</File>
 			<File
