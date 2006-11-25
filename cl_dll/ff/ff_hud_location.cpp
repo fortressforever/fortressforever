@@ -136,3 +136,60 @@ void CHudLocation::Paint( void )
 
 	BaseClass::Paint();
 }
+
+//=============================================================================
+//
+//	class CHudLocation2
+//
+//=============================================================================
+class CHudLocation2 : public CHudElement, public vgui::FFPanel
+{
+private:
+	DECLARE_CLASS_SIMPLE( CHudLocation2, vgui::FFPanel );
+
+public:
+	CHudLocation2( const char *pElementName ) : vgui::FFPanel( NULL, "HudLocation2" ), CHudElement( pElementName )
+	{
+		// Set our parent window
+		//SetParent( g_pClientMode->GetViewport() );
+
+		// Hide when player is dead
+		//SetHiddenBits( HIDEHUD_PLAYERDEAD );
+
+		SetParent(g_pClientMode->GetViewport());
+		SetHiddenBits(/*HIDEHUD_HEALTH | */HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION);
+	}
+
+	~CHudLocation2( void ) {}
+
+	void Init( void );
+	void VidInit( void );
+	void Paint( void );
+};
+
+DECLARE_HUDELEMENT( CHudLocation2 );
+
+void CHudLocation2::Init( void )
+{
+}
+
+void CHudLocation2::VidInit( void )
+{	
+	SetPaintBackgroundEnabled( true );
+}
+
+void CHudLocation2::Paint( void )
+{
+	if( !engine->IsInGame() )
+		return;
+
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+
+	if( !pPlayer )
+		return;
+
+	if( FF_IsPlayerSpec( pPlayer ) || !FF_HasPlayerPickedClass( pPlayer ) )
+		return;
+
+	BaseClass::Paint();
+}
