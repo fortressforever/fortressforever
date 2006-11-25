@@ -61,27 +61,18 @@ public:
 
 private:
 	// Stuff we need to know
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextRoundInfo" );
-	CPanelAnimationVar( vgui::HFont, m_hNumFont, "NumberFont", "HUD_TextRoundInfo" );
+	CPanelAnimationVar( vgui::HFont, m_hMapNameFont, "MapNameFont", "HUD_TextRoundInfo" );
+	CPanelAnimationVar( Color, m_hMapNameColor, "MapNameColor", "HUD_Tone_Default" );
+	CPanelAnimationVarAliasType( float, m_flMapNameX, "MapNameX", "32", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flMapNameY, "MapNameY", "3", "proportional_float" );
 
-	CPanelAnimationVarAliasType( Color, m_hTextColor, "TextColor", "255 255 255", "HUD_Tone_Default" );
-	CPanelAnimationVarAliasType( Color, m_hNumColor, "NumberColor", "255 255 255", "HUD_Tone_Default" );
-
-	/*
-	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "64", "proportional_float" );
-
-	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "0", "proportional_float" );
-	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "0", "proportional_float" );
-	*/
-
+	CPanelAnimationVar( vgui::HFont, m_hTimerFont, "TimerFont", "HUD_TextRoundInfo" );
+	CPanelAnimationVar( Color, m_hTimerColor, "TimerColor", "HUD_Tone_Default" );
+	CPanelAnimationVarAliasType( float, m_flTimerX, "TimerX", "12", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flTimerY, "TimerY", "23", "proportional_float" );
+	
 	wchar_t		m_szMapName[ MAX_PATH ];
-	int			m_iMapNameX;
-	int			m_iMapNameY;
-
 	wchar_t		m_szRoundTimer[ 8 ];
-	int			m_iRoundTimerX;
-	int			m_iRoundTimerY;
 };
 
 DECLARE_HUDELEMENT( CHudRoundInfo );
@@ -94,20 +85,8 @@ void CHudRoundInfo::VidInit( void )
 	// Set up map name
 	localize()->ConvertANSIToUnicode( UTIL_GetFormattedMapName(), m_szMapName, sizeof( m_szMapName ) );
 
-	int iMapWide, iMapTall;
-	surface()->GetTextSize( m_hTextFont, m_szMapName, iMapWide, iMapTall );
-
-	m_iMapNameX = ( GetWide() / 2 ) - ( iMapWide / 2 );
-	m_iMapNameY = 5;
-
 	// Set up round timer
 	localize()->ConvertANSIToUnicode( "00:00", m_szRoundTimer, sizeof( m_szRoundTimer ) );
-	
-	int iRoundWide, iRoundTall;
-	surface()->GetTextSize( m_hNumFont, m_szRoundTimer, iRoundWide, iRoundTall );
-
-	m_iRoundTimerX = ( GetWide() / 2 ) - ( iRoundWide / 2 );
-	m_iRoundTimerY = m_iMapNameY + iMapTall + 5;
 }
 
 //-----------------------------------------------------------------------------
@@ -136,11 +115,14 @@ bool CHudRoundInfo::ShouldDraw( void )
 	float flMinutesLeft = mp_timelimit.GetFloat() * 60;
 
 	// Figure out new timer value
+	char szTimer[ 8 ];
 	int timer = flMinutesLeft - ( gpGlobals->curtime - FFGameRules()->GetRoundStart() );
 	if( timer <= 0 )
-		_snwprintf( m_szRoundTimer, sizeof( m_szRoundTimer ), L"00:00" );
+		Q_snprintf( szTimer, sizeof( szTimer ), "00:00" );
 	else
-		_snwprintf( m_szRoundTimer, sizeof( m_szRoundTimer ), L"%d:%02d", ( timer / 60 ), ( timer % 60 ) );
+		Q_snprintf( szTimer, sizeof( szTimer ), "%d:%02d", ( timer / 60 ), ( timer % 60 ) );
+
+	localize()->ConvertANSIToUnicode( szTimer, m_szRoundTimer, sizeof( m_szRoundTimer ) );
 
 	return true;
 }
@@ -151,15 +133,15 @@ bool CHudRoundInfo::ShouldDraw( void )
 void CHudRoundInfo::Paint( void )
 {
 	// Draw map text
-	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( GetFgColor() );
-	surface()->DrawSetTextPos( m_iMapNameX, m_iMapNameY );
+	surface()->DrawSetTextFont( m_hMapNameFont );
+	surface()->DrawSetTextColor( m_hMapNameColor );
+	surface()->DrawSetTextPos( m_flMapNameX, m_flMapNameY );
 	surface()->DrawUnicodeString( m_szMapName );
 
 	// Draw round timer text
-	surface()->DrawSetTextFont( m_hNumFont );
-	surface()->DrawSetTextColor( GetFgColor() );
-	surface()->DrawSetTextPos( m_iRoundTimerX, m_iRoundTimerY );
+	surface()->DrawSetTextFont( m_hTimerFont );
+	surface()->DrawSetTextColor( m_hTimerColor );
+	surface()->DrawSetTextPos( m_flTimerX, m_flTimerY );
 	surface()->DrawUnicodeString( m_szRoundTimer );
 
 	BaseClass::Paint();

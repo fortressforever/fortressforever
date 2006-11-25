@@ -173,6 +173,23 @@ private:
 	int			m_iTeamID;
 };
 
+// Mulch: TODO: make this work for pheeeeeeeesh-y
+/*
+CON_COMMAND( hud_reloadteammenu, "hud_reloadteammenu" )
+{
+	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_TEAM );
+
+	if( !pPanel )
+		return;
+
+	CTeamMenu *pTeamMenu = dynamic_cast< CTeamMenu * >( pPanel );
+	if( !pTeamMenu )
+		return;
+
+	pTeamMenu->LoadControlSettings( "Resource/UI/TeamMenu.res" );
+}
+*/
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -209,7 +226,8 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : BaseClass(NULL, PANEL_TEAM)
 	m_pSpectateButton = new FFButton(this, "SpectateButton", (const char *) NULL, this, "Spectate");
 	m_pFlythroughButton = new FFButton(this, "FlythroughButton", (const char *) NULL, this, "mapguide overview");
 
-	new Button(this, "screenshot", "screenshot", this, "jpeg");
+	// Mulch: Removed this
+	//new Button(this, "screenshot", "screenshot", this, "jpeg");
 
 	LoadControlSettings("Resource/UI/TeamMenu.res");
 	
