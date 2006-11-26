@@ -46,6 +46,9 @@ ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Al
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED );
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICATED );
 
+// Time in seconds you have to wait until you can cloak again
+ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "1", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_ARCHIVE );
+
 // ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
 // ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
 #define FF_SNIPER_MINPUSH 3.5f
@@ -1012,6 +1015,16 @@ void CFFPlayer::Command_SpyCloak( void )
 		return;
 	}
 
+	// Check if we can cloak yet
+	if( !IsCloaked() && ( m_flNextCloak > gpGlobals->curtime ) )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
+		return;
+	}
+
+	// Can only cloak every ffdev_spy_nextcloak seconds
+	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+
 #ifdef GAME_DLL
 	// If we are already cloaked, don't set the cloak type
 	// as we might have cloaked w/ scloak and not cloak
@@ -1039,9 +1052,25 @@ void CFFPlayer::Command_SpySilentCloak( void )
 {
 	if( !IsCloakable() )
 	{
+#ifdef GAME_DLL
+		if(IsBot())
+		{
+			Omnibot::Notify_CantCloak(this);
+		}
+#endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
 		return;
 	}
+
+	// Check if we can cloak yet
+	if( !IsCloaked() && ( m_flNextCloak > gpGlobals->curtime ) )
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
+		return;
+	}
+
+	// Can only cloak every ffdev_spy_nextcloak seconds
+	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak

@@ -424,6 +424,7 @@ public:
 private:
 	void Cloak( void );
 	unsigned int m_iCloaked;
+	float m_flNextCloak;
 
 public:
 	// Returns true if the player can cloak

@@ -625,6 +625,8 @@ private:
 	bool m_bCloakFadeCloaking;
 	// Time the spy started cloaking
 	float m_flCloakTime;
+	// Time until player can cloak again
+	float m_flNextCloak;
 	// Shared stuffs:
 public:
 	void Command_SpyCloak( void );

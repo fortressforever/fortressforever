@@ -1296,6 +1296,7 @@ void CFFPlayer::SetupClassVariables()
 	// Reset Spy stuff
 	m_iCloaked = 0;
 	m_flCloakTime = 0.0f;
+	m_flNextCloak = 0.0f;
 	m_flCloakFadeStart = 0.0f;
 	m_flCloakFadeFinish = 0.0f;
 	SetCloakable( true );

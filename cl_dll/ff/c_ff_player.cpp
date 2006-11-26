@@ -1113,6 +1113,8 @@ void C_FFPlayer::Spawn( void )
 		m_bFirstSpawn = false;
 	}
 
+	m_flNextCloak = 0.0f;
+
 	// Reset this on spawn
 	SetStealMouseForAimSentry( false );
 
