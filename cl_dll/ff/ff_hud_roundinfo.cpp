@@ -85,8 +85,18 @@ void CHudRoundInfo::VidInit( void )
 	// Set up map name
 	localize()->ConvertANSIToUnicode( UTIL_GetFormattedMapName(), m_szMapName, sizeof( m_szMapName ) );
 
+	int iMapWide, iMapTall;
+	surface()->GetTextSize( m_hMapNameFont, m_szMapName, iMapWide, iMapTall );
+
+	m_flMapNameX = ( GetWide() / 2 ) - ( iMapWide / 2 );
+
 	// Set up round timer
 	localize()->ConvertANSIToUnicode( "00:00", m_szRoundTimer, sizeof( m_szRoundTimer ) );
+
+	int iTimerWide, iTimerTall;
+	surface()->GetTextSize( m_hTimerFont, m_szRoundTimer, iTimerWide, iTimerTall );
+
+	m_flTimerX = ( GetWide() / 2 ) - ( iTimerWide / 2 );
 }
 
 //-----------------------------------------------------------------------------
