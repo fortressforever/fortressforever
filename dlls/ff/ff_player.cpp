@@ -541,7 +541,7 @@ void CFFPlayer::PreThink(void)
 		m_iSaveMe = 0;
 
 	// See if it's time to reset our engyme status
-	if( ( m_flEngyMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
+	if( ( m_flSaveMeTime < gpGlobals->curtime ) && ( m_iEngyMe != 0 ) )
 		m_iEngyMe = 0;
 
 	// Update our list of tagged players that the client
@@ -1287,7 +1287,6 @@ void CFFPlayer::SetupClassVariables()
 
 	//m_hSaveMe = NULL;
 	m_flSaveMeTime = 0.0f;
-	m_flEngyMeTime = 0.0f;
 
 	m_flPipebombShotTime = 0.0f;
 
@@ -1572,7 +1571,6 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_iEngyMe = 0;
 
 	m_flSaveMeTime = 0.0f;
-	m_flEngyMeTime = 0.0f;
 
 	if( GetClassSlot() == CLASS_SPY )
 		SpyCloakFadeIn( true );
@@ -3364,12 +3362,12 @@ void CFFPlayer::Command_SaveMe( void )
 
 void CFFPlayer::Command_EngyMe( void )
 {
-	if( m_flEngyMeTime < gpGlobals->curtime )
+	if( m_flSaveMeTime < gpGlobals->curtime )
 	{
 		m_iEngyMe = 1;
 
 		// Set the time we can do another engyme at
-		m_flEngyMeTime = gpGlobals->curtime + 5.0f;
+		m_flSaveMeTime = gpGlobals->curtime + 5.0f;
 
 		// Do the actual sound always... cause spamming the sound is fun
 		CPASAttenuationFilter sndFilter( this );
