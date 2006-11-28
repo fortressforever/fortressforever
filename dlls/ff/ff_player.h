@@ -769,7 +769,7 @@ public:
 	bool IsInEngyMe( void ) const { return m_iEngyMe != 0; }
 protected:
 	CNetworkVar( unsigned int, m_iEngyMe );
-	float m_flEngyMeTime;
+	// 0001339: Share m_flSaveMeTime with the medic call.
 	// **********************************
 
 public:
