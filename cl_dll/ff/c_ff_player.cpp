@@ -95,6 +95,10 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheEngyMeSprite )
 CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_engyme" )
 CLIENTEFFECT_REGISTER_END()
 
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheTeamMate )
+CLIENTEFFECT_MATERIAL( "sprites/ff_sprite_teammate" )
+CLIENTEFFECT_REGISTER_END()
+
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePlayerCloakMaterial )
 CLIENTEFFECT_MATERIAL( FF_CLOAK_MATERIAL )
 CLIENTEFFECT_REGISTER_END()
@@ -1224,6 +1228,23 @@ int C_FFPlayer::DrawModel( int flags )
 	
 	if( pPlayer && ( this != pPlayer ) )
 	{
+		// --------------------------------
+		// Check for team mate
+		// --------------------------------
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
+		{
+			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_OTHER );
+			if( pMaterial )
+			{
+				materials->Bind( pMaterial );
+				color32 c = { 255, 255, 255, 255 };
+				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+
+				// Increment offset
+				flOffset += 16.0f;
+			}
+		}
+
 		// --------------------------------
 		// Check for "saveme"
 		// --------------------------------
