@@ -20,6 +20,11 @@
 #define FF_PLAYER_VIEW_OFFSET	Vector( 0, 0, 53.5 )
 #define EXTRA_LOCAL_ORIGIN_ACCURACY
 
+// Leave this commented out unless you're compiling for the beta testers!
+// Mulch or Mirv should be the only ones messing with this!
+//#define FF_BETA_TEST_COMPILE
+#define FF_BASTARD_HACKERS true
+
 extern ConVar ffdev_spy_maxcloakspeed;
 
 enum FFPlayerGrenadeState

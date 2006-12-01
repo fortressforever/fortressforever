@@ -86,6 +86,11 @@ CFFScheduleCallack::CFFScheduleCallack(const CFFScheduleCallack& rhs)
 /////////////////////////////////////////////////////////////////////////////
 bool CFFScheduleCallack::Update()
 {
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+	return FF_BASTARD_HACKERS;
+#else
 	m_timeLeft -= gpGlobals->frametime;
 
 	if(m_timeLeft <= 0.0f)
@@ -122,6 +127,7 @@ bool CFFScheduleCallack::Update()
 	}
 
 	return false;
+#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -144,6 +150,10 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& fn,
 									 int nRepeat)
 {
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -156,6 +166,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   nRepeat);
 
 	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -165,6 +176,10 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 int nRepeat,
 									 const luabind::adl::object& param)
 {
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -178,6 +193,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   param);
 
 	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -188,6 +204,10 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 const luabind::adl::object& param1,
 									 const luabind::adl::object& param2)
 {
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
 	CRC32_t id = ComputeChecksum(szScheduleName);
 
 	// check if the schedule of the specified name already exists
@@ -202,6 +222,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 														   param2);
 
 	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
 }
 
 /////////////////////////////////////////////////////////////////////////////
