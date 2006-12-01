@@ -34,11 +34,7 @@
 #endif
 
 #ifdef GAME_DLL
-	extern ConVar mp_respawndelay;
-
-	// Leave this commented out unless you're compiling for the beta testers!
-	// Mulch or Mirv should be the only ones messing with this!
-	//#define FF_BETA_TEST_COMPILE
+	extern ConVar mp_respawndelay;	
 #endif
 
 class CFFGameRulesProxy : public CGameRulesProxy

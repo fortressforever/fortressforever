@@ -376,6 +376,10 @@ ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictio
 // --------------------------------------------------------------------------------
 CFFPlayer::CFFPlayer()
 {
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
 	m_PlayerAnimState = CreatePlayerAnimState( this, this, LEGANIM_9WAY, true );
 
 	UseClientSideAnimation();
@@ -463,6 +467,7 @@ CFFPlayer::CFFPlayer()
 	m_iSpawnInterpCounter = 0;
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
+#endif // FF_BETA_TEST_COMPILE
 }
 
 CFFPlayer::~CFFPlayer()
