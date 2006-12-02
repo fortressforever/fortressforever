@@ -122,7 +122,7 @@ public:
 	{
 		// Mirv: White font, dark version of team for background
 		SetFgColor(Color(255, 255, 255, 255));
-		SetBgColor(Color(col.r(), col.g(), col.b(), 255));
+		SetBgColor(col);
 		SetPaintBackgroundEnabled(true);
 		return;
 
