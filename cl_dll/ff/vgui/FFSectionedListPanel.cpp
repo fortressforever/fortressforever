@@ -242,6 +242,8 @@ class CItemButton : public Label
 	DECLARE_CLASS_SIMPLE( CItemButton, Label );
 
 public:
+	IBorder *iBorder;
+
 	CItemButton(SectionedListPanel *parent, int itemID) : Label(parent, NULL, "< item >")
 	{
 		m_pListPanel = parent;
@@ -273,12 +275,16 @@ public:
 	}
 
 	// Mirv: Set correct colours
-	void SetColor(Color col)
+	void SetColor(Color col, bool isLocal)
 	{
 		// White font, team bg colour
 		SetFgColor(Color(255, 255, 255, 255));
 		SetBgColor(col);
 		SetPaintBackgroundEnabled(true);
+		
+		// set a border if this is the local player
+		if (isLocal)
+			SetBorder(iBorder);
 
 		// Set armed colour as a slightly brighter colour
 		m_ArmedBgColor = Color(0, 0, 0, 255);
@@ -497,6 +503,8 @@ public:
 	virtual void ApplySchemeSettings(IScheme *pScheme)
 	{
 		BaseClass::ApplySchemeSettings(pScheme);
+
+		iBorder = pScheme->GetBorder("ScoreBoardItemBorder");
 
 		m_ArmedFgColor1 = GetSchemeColor("SectionedListPanel.BrightTextColor", pScheme);
 		m_ArmedFgColor2 = GetSchemeColor("SectionedListPanel.SelectedTextColor", pScheme);
@@ -1130,14 +1138,14 @@ bool SectionedListPanel::ModifyItem(int itemID, int sectionID, const KeyValues *
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void SectionedListPanel::SetItemFgColor( int itemID, Color color )
+void SectionedListPanel::SetItemFgColor( int itemID, Color color, bool isLocal)
 {
 	Assert( m_Items.IsValidIndex(itemID) );
 	if ( !m_Items.IsValidIndex(itemID) )
 		return;
 
 	// Mirv: Set the foreground colour to white, background to team
-	m_Items[itemID]->SetColor(color);
+	m_Items[itemID]->SetColor(color, isLocal);
 	//m_Items[itemID]->SetFgColor(Color(255, 255, 255, 255));
 	//m_Items[itemID]->SetBgColor(color);
 	//m_Items[itemID]->SetPaintBackgroundEnabled(true);

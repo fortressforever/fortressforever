@@ -98,7 +98,7 @@ public:
 	virtual void DeleteAllItems();
 
 	// set the text color of an item
-	virtual void SetItemFgColor(int itemID, Color color);
+	virtual void SetItemFgColor(int itemID, Color color, bool isLocal = false);
 
 	/* MESSAGES SENT:
 		"RowSelected"
