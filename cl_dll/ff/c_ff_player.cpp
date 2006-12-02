@@ -1428,6 +1428,9 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return angDirection;
 	}
 
+	if( GetTeamNumber() == TEAM_UNASSIGNED )
+		return GetAbsAngles();
+
 	// Concussion
 	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() != 0 )
 	{

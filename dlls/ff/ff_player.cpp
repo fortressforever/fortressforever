@@ -1188,8 +1188,8 @@ void CFFPlayer::Spawn( void )
 					QAngle vecAngles;
 					VectorAngles( vecDir, vecAngles );
 
-					SetLocalOrigin( pSpawnSpot->GetLocalOrigin() );
-					SetLocalAngles( vecAngles );
+					SetAbsOrigin( pSpawnSpot->GetLocalOrigin() );
+					SetAbsAngles( vecAngles );
 				}
 				else
 				{
