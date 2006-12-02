@@ -1161,13 +1161,29 @@ void CFFPlayer::Spawn( void )
 		else
 		{
 			// Find an info_player_start place to spawn observer mode at
-			CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");
+			//CBaseEntity *pSpawnSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");
+			CPointEntity *pSpawnSpot = dynamic_cast< CPointEntity * >( gEntList.FindEntityByClassname( NULL, "info_intermission" ) );
 
 			// We could find one
-			if (pSpawnSpot)
+			if( pSpawnSpot )
 			{
-				SetLocalOrigin(pSpawnSpot->GetLocalOrigin() + Vector(0, 0, 1));
-				SetLocalAngles(pSpawnSpot->GetLocalAngles());
+				// Try to point at the target of the info_intermission
+				CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pSpawnSpot->m_target );
+				if( pTarget )
+				{
+					Vector vecDir = pTarget->GetLocalOrigin() - pSpawnSpot->GetLocalOrigin();
+					VectorNormalize( vecDir );
+
+					QAngle vecAngles;
+					VectorAngles( vecDir, vecAngles );
+
+					SetLocalAngles( vecAngles );
+				}
+				else
+				{
+					SetLocalOrigin(pSpawnSpot->GetLocalOrigin() + Vector(0, 0, 1));
+					SetLocalAngles(pSpawnSpot->GetLocalAngles());
+				}				
 			}
 			// We couldn't find one
 			else
