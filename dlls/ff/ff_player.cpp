@@ -657,16 +657,21 @@ void CFFPlayer::PostThink()
 #ifndef FF_BETA_TEST_COMPILE
 	BaseClass::PostThink();
 
-	MoveTowardsMapGuide();
- 
-	QAngle angles = GetLocalAngles();
-	angles[PITCH] = 0;
-	SetLocalAngles( angles );
-	
-	// Store the eye angles pitch so the client can compute its animation state correctly.
-	m_angEyeAngles = EyeAngles();
+	if( GetTeamNumber() < TEAM_BLUE )
+	{
+		MoveTowardsMapGuide();
+	}
+	else
+	{
+		QAngle angles = GetLocalAngles();
+		angles[PITCH] = 0;
+		SetLocalAngles( angles );
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+		// Store the eye angles pitch so the client can compute its animation state correctly.
+		m_angEyeAngles = EyeAngles();
+
+		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	}
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1171,12 +1176,19 @@ void CFFPlayer::Spawn( void )
 				CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pSpawnSpot->m_target );
 				if( pTarget )
 				{
+					// These don't show up???
+					//NDebugOverlay::Box( pTarget->GetAbsOrigin(), -Vector( 64, 64, 64 ), Vector( 64, 64, 64 ), 255, 0, 0, 255, 60.0f );
+					//NDebugOverlay::Line( pTarget->GetAbsOrigin(), pTarget->GetAbsOrigin() + Vector( 0, 0, 128 ), 255, 0, 0, false, 60.0f );
+					//NDebugOverlay::Box( pSpawnSpot->GetAbsOrigin(), -Vector( 64, 64, 64 ), Vector( 64, 64, 64 ), 0, 0, 255, 255, 60.0f );
+					//NDebugOverlay::Line( pSpawnSpot->GetAbsOrigin(), pSpawnSpot->GetAbsOrigin() + Vector( 0, 0, 128 ), 0, 0, 255, false, 60.0f );					
+
 					Vector vecDir = pTarget->GetLocalOrigin() - pSpawnSpot->GetLocalOrigin();
 					VectorNormalize( vecDir );
 
 					QAngle vecAngles;
 					VectorAngles( vecDir, vecAngles );
 
+					SetLocalOrigin( pSpawnSpot->GetLocalOrigin() );
 					SetLocalAngles( vecAngles );
 				}
 				else

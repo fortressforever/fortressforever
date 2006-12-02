@@ -242,7 +242,9 @@ void CPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *mo
 		player->SetPoseParameter( pitch_param, pitch );
 	}
 
-	player->SetLocalAngles( move->m_vecAngles );
+	// This line is resetting angles...
+	if( player->GetTeamNumber() != TEAM_UNASSIGNED )
+		player->SetLocalAngles( move->m_vecAngles );
 
 	// The class had better not have changed during the move!!
 	if ( player->m_hConstraintEntity )
