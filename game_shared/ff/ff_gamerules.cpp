@@ -70,7 +70,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar push_multiplier("ffdev_pushmultiplier", "8.0", FCVAR_REPLICATED);
 	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
 	ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
-	ConVar push_clamp("ffdev_pushclamp", "100", FCVAR_REPLICATED);
+	ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED);
 #endif
 
 ConVar mp_prematch( "mp_prematch",
