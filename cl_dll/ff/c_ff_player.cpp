@@ -2065,12 +2065,12 @@ void Hallucination_Callback(const CEffectData &data)
 	// current effect instead
 	if (pPlayer->m_iHallucinationIndex)
 	{
-		pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 15.0f;
+		pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 10.0f;
 		return;
 	}
 	
 	pPlayer->m_iHallucinationIndex = random->RandomInt(1, 50);
-	pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 15.0f;
+	pPlayer->m_flHallucinationFinish = gpGlobals->curtime + 10.0f;
 }
 
 DECLARE_CLIENT_EFFECT("Hallucination", Hallucination_Callback);
