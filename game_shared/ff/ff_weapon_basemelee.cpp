@@ -43,6 +43,8 @@ LINK_ENTITY_TO_CLASS(ff_weapon_basemelee, CFFWeaponMeleeBase);
 // CFFWeaponMeleeBase implementation
 //=============================================================================
 
+ConVar melee_reach("ffdev_meleereach", "32.0", FCVAR_REPLICATED);
+
 //----------------------------------------------------------------------------
 // Purpose: Constructor
 //----------------------------------------------------------------------------
@@ -61,8 +63,13 @@ void CFFWeaponMeleeBase::Spawn()
 	CFFWeaponInfo wpndata = GetFFWpnData();
 	m_fMinRange1	= 0;
 	m_fMinRange2	= 0;
-	m_fMaxRange1	= wpndata.m_flRange;
-	m_fMaxRange2	= wpndata.m_flRange;
+
+// 0000732: added convar to allow for tweakage
+//	m_fMaxRange1	= wpndata.m_flRange;
+//	m_fMaxRange2	= wpndata.m_flRange;
+	m_fMaxRange1	= melee_reach.GetFloat();
+	m_fMaxRange2	= melee_reach.GetFloat();
+
 }
 
 //----------------------------------------------------------------------------
@@ -279,7 +286,8 @@ void CFFWeaponMeleeBase::Swing()
 
 	pOwner->EyeVectors(&forward, NULL, NULL);
 
-	Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
+	// 0000732 Vector swingEnd = swingStart + forward * (pWeaponInfo.m_flRange + 20.0f);
+	Vector swingEnd = swingStart + forward * (melee_reach.GetFloat() + 20.0f);
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
 
 	Activity nHitActivity = ACT_VM_HITCENTER;
@@ -329,8 +337,8 @@ void CFFWeaponMeleeBase::Swing()
 		nHitActivity = ACT_VM_MISSCENTER;
 
 		// We want to test the first swing again
-		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
-		
+		// 0000732		Vector testEnd = swingStart + forward * pWeaponInfo.m_flRange;
+		Vector testEnd = swingStart + forward * melee_reach.GetFloat();
 		// See if we happened to hit water
 		ImpactWater(swingStart, testEnd);
 
