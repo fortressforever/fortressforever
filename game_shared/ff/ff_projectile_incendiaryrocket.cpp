@@ -21,7 +21,13 @@
 	#include "smoke_trail.h"
 	#include "ff_buildableobjects_shared.h"
 	#include "omnibot_interface.h"
+	#include "soundent.h"
 #endif
+
+extern short	g_sModelIndexFireball;		// (in combatweapon.cpp) holds the index for the fireball 
+extern short	g_sModelIndexWExplosion;	// (in combatweapon.cpp) holds the index for the underwater explosion
+extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for the smoke cloud
+
 
 //=============================================================================
 // CFFProjectileIncendiaryRocket tables
@@ -75,8 +81,82 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	//Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
 #endif
-	// 0000936: go through the explode code but don't apply damage!
-	BaseClass::Explode(pTrace, bitsDamageType, false);
+	// 0000936: go through the explode code but don't apply damage! from basegrenade.cpp
+	
+#if !defined( CLIENT_DLL )
+	
+	SetModelName( NULL_STRING );//invisible
+	AddSolidFlags( FSOLID_NOT_SOLID );
+
+	m_takedamage = DAMAGE_NO;
+
+	// Pull out of the wall a bit
+	if ( pTrace->fraction != 1.0 )
+	{
+		SetLocalOrigin( pTrace->endpos + (pTrace->plane.normal * 32.0f) );	// |-- Mirv: 32 units used in TFC
+	}
+
+	Vector vecAbsOrigin = GetAbsOrigin();
+	int contents = UTIL_PointContents ( vecAbsOrigin );
+
+#if defined( TF_DLL )
+	// Since this code only runs on the server, make sure it shows the tempents it creates.
+	// This solves a problem with remote detonating the pipebombs (client wasn't seeing the explosion effect)
+	CDisablePredictionFiltering disabler;
+#endif
+
+	if ( pTrace->fraction != 1.0 )
+	{
+		Vector vecNormal = pTrace->plane.normal;
+		surfacedata_t *pdata = physprops->GetSurfaceData( pTrace->surface.surfaceProps );	
+		CPASFilter filter( vecAbsOrigin );
+
+		te->Explosion( filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin,
+			!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+			/*m_DmgRadius * .03*/ m_flDamage / 128.0f, 
+			25,
+			TE_EXPLFLAG_NONE,
+			m_DmgRadius,
+			m_flDamage,
+			&vecNormal,
+			(char) pdata->game.material );
+	}
+	else
+	{
+		CPASFilter filter( vecAbsOrigin );
+		te->Explosion( filter, -1.0, // don't apply cl_interp delay
+			&vecAbsOrigin, 
+			!( contents & MASK_WATER ) ? g_sModelIndexFireball : g_sModelIndexWExplosion,
+			/*m_DmgRadius * .03*/ m_flDamage / 128.0f, 
+			25,
+			TE_EXPLFLAG_NONE,
+			m_DmgRadius,
+			m_flDamage );
+	}
+
+#if !defined( CLIENT_DLL )
+	CSoundEnt::InsertSound ( SOUND_COMBAT, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
+#endif
+
+	// We need to report where the explosion took place
+	vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
+	
+	// Took out the damage info here, since we don't want to apply damage 2x
+
+	UTIL_DecalTrace( pTrace, "Scorch" );
+
+	EmitSound( "BaseGrenade.Explode" );
+
+	SetThink( &CBaseGrenade::SUB_Remove );
+	SetTouch( NULL );
+	
+	AddEffects( EF_NODRAW );
+	SetAbsVelocity( vec3_origin );
+	SetNextThink( gpGlobals->curtime );
+#endif
+
+
 }
 
 
