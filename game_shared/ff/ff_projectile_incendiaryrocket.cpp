@@ -75,8 +75,8 @@ void CFFProjectileIncendiaryRocket::Explode(trace_t *pTrace, int bitsDamageType)
 	//Vector vecDisp = GetOwnerEntity()->GetAbsOrigin() - GetAbsOrigin();
 
 #endif
-
-	BaseClass::Explode(pTrace, bitsDamageType);
+	// 0000936: go through the explode code but don't apply damage!
+	BaseClass::Explode(pTrace, bitsDamageType, false);
 }
 
 
