@@ -50,7 +50,7 @@ public:
 
 	virtual void		Precache( void );
 
-	virtual void		Explode( trace_t *pTrace, int bitsDamageType, bool applyDamage = true );
+	virtual void		Explode( trace_t *pTrace, int bitsDamageType );
 	void				Smoke( void );
 
 	void				BounceTouch( CBaseEntity *pOther );

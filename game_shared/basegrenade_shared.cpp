@@ -116,7 +116,7 @@ END_PREDICTION_DATA()
 #define SF_DETONATE		0x0001
 
 // UNDONE: temporary scorching for PreAlpha - find a less sleazy permenant solution.
-void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType, bool applyDamage )
+void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType )
 {
 #if !defined( CLIENT_DLL )
 	
@@ -177,14 +177,11 @@ void CBaseGrenade::Explode( trace_t *pTrace, int bitsDamageType, bool applyDamag
 	// We need to report where the explosion took place
 	Vector vecReported = pTrace->endpos; //m_hThrower ? m_hThrower->GetAbsOrigin() : vec3_origin;
 	
-	if (applyDamage)
-	{
-		// --> Mirv: #0000675: Killing people with certain weapons says the person killed themself
-		CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
-		// <-- Mirv
+	// --> Mirv: #0000675: Killing people with certain weapons says the person killed themself
+	CTakeDamageInfo info( this, /*m_hThrower*/ GetOwnerEntity(), GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported );
+	// <-- Mirv
 
-		RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
-	}
+	RadiusDamage( info, GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 	UTIL_DecalTrace( pTrace, "Scorch" );
 
