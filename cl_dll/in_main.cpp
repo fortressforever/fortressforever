@@ -22,6 +22,7 @@
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
 #include "c_ff_player.h"	// |-- Mirv: Needed for ScaleMovements
+#include "ff_hud_menu_medengy.h"	// |-- Mulch: for g_pMedEngyHudMenu
 
 extern ConVar in_joystick;
 
@@ -548,6 +549,20 @@ void IN_ChangeClass( void )
 	}
 }
 // END: Added by Mulchman for team change & class change
+
+// BEG: Mulch: For medic & engy hud radial style menu
+void IN_MedEngyMenuDown( void )
+{
+	if( g_pMedEngyHudMenu )
+		g_pMedEngyHudMenu->KeyDown();
+}
+
+void IN_MedEngyMenuUp( void )
+{
+	if( g_pMedEngyHudMenu )
+		g_pMedEngyHudMenu->KeyUp();
+}
+// END: Mulch: For medic & engy hud radial style menu
 
 /*
 ============
@@ -1396,6 +1411,11 @@ static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
 static ConCommand changeteam( "changeteam", IN_ChangeTeam );
 static ConCommand changeclass( "changeclass", IN_ChangeClass );
 // END: Added by Mulchman for team & class changing
+
+// BEG: Mulch: For medic & engy hud radial style menu
+static ConCommand startMedEngyMenu( "+medengymenu", IN_MedEngyMenuDown );
+static ConCommand endMedEngymenu( "-medengymenu", IN_MedEngyMenuUp );
+// END: Mulch: For medic & engy hud radial style menu
 
 /*
 ============
