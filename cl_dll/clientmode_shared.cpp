@@ -267,6 +267,7 @@ bool ClientModeShared::ShouldDrawParticles( )
 }
 
 void HudContextMenuInput(float *x, float *y);	// |-- Mirv: Radial context menu
+void HudContextMenuInput_MedEngy( float *x, float *y );	// |-- Mulch: Medic/Engy Cmds Radial context menu
 
 //-----------------------------------------------------------------------------
 // Purpose: Allow weapons to override mouse input (for binoculars)
@@ -280,6 +281,7 @@ void ClientModeShared::OverrideMouseInput( float *x, float *y )
 	}
 
 	HudContextMenuInput(x, y);		// |-- Mirv: Feed into our menu
+	HudContextMenuInput_MedEngy( x, y );
 }
 
 //-----------------------------------------------------------------------------
