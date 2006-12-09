@@ -91,6 +91,8 @@ enum Class_T
 	CLASS_GLGRENADE,
 	//------------------- 
 
+	// 0000936
+	CLASS_IC_ROCKET,
 	CLASS_ROCKET,
 	CLASS_TURRET,
 	CLASS_BACKPACK,
