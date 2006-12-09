@@ -1059,7 +1059,6 @@ ConVar mp_prematch( "mp_prematch",
 				else
 					flPushClamp = push_clamp.GetFloat();
 
-				DevMsg("[pcdebug] calc force = %f; clamp = %f\n", flCalculatedForce, flPushClamp);
 				if (flCalculatedForce < flPushClamp)
 					flCalculatedForce = flPushClamp;
 
