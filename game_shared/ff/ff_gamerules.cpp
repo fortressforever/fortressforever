@@ -1045,9 +1045,23 @@ ConVar mp_prematch( "mp_prematch",
 				// Multiply the damage by 8.0f (ala tfc) to get the force
 				// 0000936 - use convar; ensure a lower "bounds"
 				float flCalculatedForce = flAdjustedDamage * push_multiplier.GetFloat();
+				
+				CBaseEntity *pInflictor = info.GetInflictor();
+				// If this is an IC projectile, set to a lower clamp (350)
+				float flPushClamp = 0.0f;
+				
+				if (pInflictor && (pInflictor->Classify() == CLASS_IC_ROCKET))
+				{
+					flPushClamp = 350.0f;
+					// lower the push because of the increased damage needed
+					flCalculatedForce /= 3;
+				}
+				else
+					flPushClamp = push_clamp.GetFloat();
 
-				if (flCalculatedForce < push_clamp.GetFloat())
-					flCalculatedForce = push_clamp.GetFloat();
+				DevMsg("[pcdebug] calc force = %f; clamp = %f\n", flCalculatedForce, flPushClamp);
+				if (flCalculatedForce < flPushClamp)
+					flCalculatedForce = flPushClamp;
 
 				CFFPlayer *pPlayer = NULL;
 
