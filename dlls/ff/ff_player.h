@@ -875,6 +875,12 @@ public:
 private:
 	CFFBetaList_Player	m_FFBetaListInfo;
 #endif // FF_BETA
+
+	// ----------------------------------
+	// info_intermission angles
+private:
+	CNetworkQAngle( m_vecInfoIntermission );
+	// ----------------------------------
 };
 
 

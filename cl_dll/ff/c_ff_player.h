@@ -451,6 +451,12 @@ public:
 private:
 	CFFPipebombCounter m_hPipebombCounter;
 	// ----------------------------------
+
+	// ----------------------------------
+	// info_intermission angles
+private:
+	QAngle m_vecInfoIntermission;
+	// ----------------------------------
 };
 
 // Just straight up copying the server version. Tired

@@ -471,6 +471,7 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 	RecvPropEHandle( RECVINFO( m_hRadioTagData ) ),
 	RecvPropInt( RECVINFO( m_bCloakable ) ),
 	RecvPropInt( RECVINFO( m_bDisguisable ) ),
+	RecvPropQAngles( RECVINFO( m_vecInfoIntermission ) ),
 END_RECV_TABLE( )
 
 #ifdef EXTRA_LOCAL_ORIGIN_ACCURACY
@@ -1428,8 +1429,9 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return angDirection;
 	}
 
+	// Force look at whatever the info_intermission's target is
 	if( GetTeamNumber() == TEAM_UNASSIGNED )
-		return GetAbsAngles();
+		return m_vecInfoIntermission;
 
 	// Concussion
 	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() != 0 )
