@@ -306,6 +306,7 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	SendPropEHandle( SENDINFO( m_hRadioTagData ) ),
 	SendPropInt( SENDINFO( m_bCloakable ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_bDisguisable ), 1, SPROP_UNSIGNED ),
+	SendPropQAngles( SENDINFO( m_vecInfoIntermission ), 13 ),
 END_SEND_TABLE( )
 
 IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
@@ -1176,12 +1177,6 @@ void CFFPlayer::Spawn( void )
 				CBaseEntity *pTarget = gEntList.FindEntityByName( NULL, pSpawnSpot->m_target );
 				if( pTarget )
 				{
-					// These don't show up???
-					//NDebugOverlay::Box( pTarget->GetAbsOrigin(), -Vector( 64, 64, 64 ), Vector( 64, 64, 64 ), 255, 0, 0, 255, 60.0f );
-					//NDebugOverlay::Line( pTarget->GetAbsOrigin(), pTarget->GetAbsOrigin() + Vector( 0, 0, 128 ), 255, 0, 0, false, 60.0f );
-					//NDebugOverlay::Box( pSpawnSpot->GetAbsOrigin(), -Vector( 64, 64, 64 ), Vector( 64, 64, 64 ), 0, 0, 255, 255, 60.0f );
-					//NDebugOverlay::Line( pSpawnSpot->GetAbsOrigin(), pSpawnSpot->GetAbsOrigin() + Vector( 0, 0, 128 ), 0, 0, 255, false, 60.0f );					
-
 					Vector vecDir = pTarget->GetLocalOrigin() - pSpawnSpot->GetLocalOrigin();
 					VectorNormalize( vecDir );
 
@@ -1190,6 +1185,10 @@ void CFFPlayer::Spawn( void )
 
 					SetAbsOrigin( pSpawnSpot->GetLocalOrigin() );
 					SetAbsAngles( vecAngles );
+
+					// Send this to client so the client will
+					// actually look at what we want it to!
+					m_vecInfoIntermission = vecAngles;
 				}
 				else
 				{
@@ -1402,6 +1401,9 @@ void CFFPlayer::InitialSpawn( void )
 	// Make sure they are dead
 	m_lifeState = LIFE_DEAD;
 	pl.deadflag = true;
+	
+	// Reset to 0
+	m_vecInfoIntermission.Init();
 
 	BaseClass::InitialSpawn( );
 
