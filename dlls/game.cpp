@@ -13,7 +13,7 @@
 #include "tier0/memdbgon.h"
 
 ConVar	displaysoundlist( "displaysoundlist","0" );
-ConVar  mapcyclefile( "mapcyclefile","mapcycle.txt" );
+ConVar  mapcyclefile( "mapcyclefile","maplist.txt" );
 ConVar  servercfgfile( "servercfgfile","server.cfg" );
 ConVar  lservercfgfile( "lservercfgfile","listenserver.cfg" );
 
