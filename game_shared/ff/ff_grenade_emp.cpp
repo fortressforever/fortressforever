@@ -192,7 +192,7 @@ void CFFGrenadeEmp::Precache()
 	PrecacheScriptSound( EMP_SOUND );
 
 #ifdef CLIENT_DLL
-	g_iEmpRingTexture = PrecacheModel("sprites/lgtning.vmt");
+	g_iEmpRingTexture = PrecacheModel("sprites/emp.vmt");
 #endif
 
 	BaseClass::Precache();
