@@ -152,15 +152,12 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 		if (flNewSpeed < 0)
 			flNewSpeed = 0;
 
-		// Don't apply this if we're bouncing down a slope
-		// This is because a) things tend not to slow down while bouncing down
-		// a slope and b) if they do then they tend to comple to a complete halt
-		// pretty sharpish.
-		if (vecAbsVelocity.z >= 0)
-		{
-			vecAbsVelocity.x *= flNewSpeed;
-			vecAbsVelocity.y *= flNewSpeed;
-		}
+		// Better download slope handling
+		if (vecAbsVelocity.z < 0)
+			vecAbsVelocity.z = 0;
+		
+		vecAbsVelocity.x *= flNewSpeed;
+		vecAbsVelocity.y *= flNewSpeed;
 
 		// Get the total velocity(player + conveyors, etc.) 
 		VectorAdd(vecAbsVelocity, GetBaseVelocity(), vecVelocity);

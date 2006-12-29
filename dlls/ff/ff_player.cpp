@@ -2071,10 +2071,6 @@ int CFFPlayer::ActivateClass()
 		return 0;
 	}
 
-	char cClassesAvailable[10];
-	int nClassesAvailable = UTIL_GetClassSpaces(GetTeamNumber(), cClassesAvailable);
-	nClassesAvailable;
-
 	// Make a random choice for randompcs
 	if (m_fRandomPC)
 	{
@@ -2084,6 +2080,10 @@ int CFFPlayer::ActivateClass()
 	// Check target class is still available
 	else if (m_iNextClass != GetClassSlot())
 	{
+		char cClassesAvailable[10];
+		int nClassesAvailable = UTIL_GetClassSpaces(GetTeamNumber(), cClassesAvailable);
+		nClassesAvailable;
+
 		int iClassIndex = m_iNextClass - CLASS_SCOUT;
 		Assert(iClassIndex >= 0 && iClassIndex <= 10);
 

@@ -353,6 +353,10 @@ void CFFWeaponBase::DropThink( void )
 //-----------------------------------------------------------------------------
 bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt)
 {
+	// We either use the default deploy time or the next time this gun is ready,
+	// whichever is larger
+	float flNextAttack = max(gpGlobals->curtime + MAX_DEPLOY_TIME, m_flNextPrimaryAttack);
+
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner)
 	{
@@ -368,12 +372,12 @@ bool CFFWeaponBase::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 		SetViewModel();
 		SendWeaponAnim(iActivity);
 
-		pOwner->SetNextAttack(gpGlobals->curtime + MAX_DEPLOY_TIME);
+		pOwner->SetNextAttack(flNextAttack);
 	}
 
 	// Can't shoot again until we've finished deploying
-	m_flNextPrimaryAttack	= gpGlobals->curtime + MAX_DEPLOY_TIME;
-	m_flNextSecondaryAttack = gpGlobals->curtime + MAX_DEPLOY_TIME;
+	m_flNextPrimaryAttack	= flNextAttack;
+	m_flNextSecondaryAttack = flNextAttack;
 
 	SetWeaponVisible(true);
 

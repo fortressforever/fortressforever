@@ -336,7 +336,10 @@ void CMotionBlur::Render(int x, int y, int w, int h)
 		// V QUICK HACK FOR COOLNESS
 		extern float GetAssaultCannonCharge();
 		float flCharge = GetAssaultCannonCharge();
-		if (flCharge > 50.0f && pPlayer->m_nButtons & IN_ATTACK)
+
+		// Blurring shouldn't stop just because the fire button has been released
+		// since it can carry on firing at high speed for a bit.
+		if (flCharge > 50.0f /*&& pPlayer->m_nButtons & IN_ATTACK*/)
 		{
 			m_flNextSampleTime = 0.0f;
 			flSpeed = (flCharge - 50.0f) / 50.0f;
