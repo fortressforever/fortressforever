@@ -906,6 +906,10 @@ int UTIL_GetClassSpaces(int iTeamID, char nSpacesRemaining[10])
 }
 
 #ifdef GAME_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: Fixed this so it selects random classes properly.
+//-----------------------------------------------------------------------------
 int UTIL_PickRandomClass(int _curteam)
 {
 	char cClassesAvailable[10];
@@ -917,10 +921,13 @@ int UTIL_PickRandomClass(int _curteam)
 
 	int iRandomClassNumber = random->RandomInt(0, nClassesAvailable - 1);
 	int iClassIndex = 0;
-	while (iRandomClassNumber > 0)
+	for (;;)
 	{
 		if (cClassesAvailable[iClassIndex] > 0)
 			iRandomClassNumber--;
+
+		if (iRandomClassNumber < 0)
+			break;
 
 		iClassIndex++;
 	}

@@ -1231,8 +1231,10 @@ int C_FFPlayer::DrawModel( int flags )
 	{
 		// --------------------------------
 		// Check for team mate
+		// Don't show anything for cloaked people, we will show a disguise icon for them
+		// instead (because they are disguised as a window)
 		// --------------------------------
-		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
+		if( !IsCloaked() && FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_OTHER );
 			if( pMaterial )
@@ -1298,8 +1300,9 @@ int C_FFPlayer::DrawModel( int flags )
 
 		// --------------------------------
 		// Check for friendly spies
+		// Mirv: Going to show disguised icon for cloaked people too.
 		// --------------------------------
-		if( IsDisguised() && IsAlive() )
+		if( (IsDisguised() || IsCloaked()) && IsAlive() )
 		{
 			// See if the spy is a teammate or ally
 			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )

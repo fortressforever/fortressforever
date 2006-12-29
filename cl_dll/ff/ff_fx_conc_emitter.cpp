@@ -344,11 +344,13 @@ void FF_FX_ConcussionEffect_Callback(const CEffectData &data)
 	CRagdollConcEnumerator ragdollEnum(data.m_vOrigin);
 	partition->EnumerateElementsInSphere( PARTITION_CLIENT_RESPONSIVE_EDICTS, data.m_vOrigin, data.m_flRadius, false, &ragdollEnum );
 	*/
+#define TE_EXPLFLAG_NODLIGHTS	0x2	// do not render dynamic lights
+#define TE_EXPLFLAG_NOSOUND		0x4	// do not play client explosion sound
 
 	// If underwater, just do a bunch of gas
 	if (UTIL_PointContents(data.m_vOrigin) & CONTENTS_WATER)
 	{
-		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, 0);
+		WaterExplosionEffect().Create(data.m_vOrigin, 180.0f, 10.0f, TE_EXPLFLAG_NODLIGHTS|TE_EXPLFLAG_NOSOUND);
 		//return;
 	}
 
