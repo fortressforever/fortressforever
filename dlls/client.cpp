@@ -1143,7 +1143,7 @@ void CC_Player_NoClip( void )
 	{
 		Vector forward, right, up;
 
-		AngleVectors ( pl->v_angle.Get(), &forward, &right, &up);	// |-- Mirv: updated now that a networkvar
+		AngleVectors ( pl->v_angle, &forward, &right, &up);
 		
 		// Try to move into the world
 		if ( !FindPassableSpace( pPlayer, forward, 1, oldorigin ) )

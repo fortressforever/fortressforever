@@ -188,7 +188,7 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 	
 	
 	move->m_nOldButtons			= player->m_Local.m_nOldButtons;
-	move->m_vecAngles			= player->pl.v_angle.Get();		// |-- Mirv: updated now that it is a networkvar
+	move->m_vecAngles			= player->pl.v_angle;
 
 	move->m_vecVelocity			= player->GetAbsVelocity();
 
@@ -387,16 +387,16 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 
 	CheckMovingGround( player, TICK_INTERVAL );
 
-	g_pMoveData->m_vecOldAngles = player->pl.v_angle.Get();		// |-- Mirv: updated now that it is a networkvar
+	g_pMoveData->m_vecOldAngles = player->pl.v_angle;
 
 	// Copy from command to player unless game .dll has set angle using fixangle
 	if ( player->pl.fixangle == FIXANGLE_NONE )
 	{
-		player->pl.v_angle.GetForModify() = ucmd->viewangles;	// |-- Mirv: updated now that it is a networkvar
+		player->pl.v_angle = ucmd->viewangles;
 	}
 	else if( player->pl.fixangle == FIXANGLE_RELATIVE )
 	{
-		player->pl.v_angle.GetForModify() = ucmd->viewangles + player->pl.anglechange;	// |-- Mirv: updated now that it is a networkvar
+		player->pl.v_angle = ucmd->viewangles + player->pl.anglechange;
 	}
 
 	// Call standard client pre-think

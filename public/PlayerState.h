@@ -31,11 +31,7 @@ public:
 	// true if the player is dead
 	CNetworkVar( bool, deadflag );	
 	// Viewing angle (player only)
-	
-	// --> Mirv: Network v_angle
-	//QAngle		v_angle;
-	CNetworkQAngle(v_angle);
-	// <--
+	QAngle		v_angle;		
 	
 // The client .dll only cares about deadflag
 //  the game and engine .dlls need to worry about the rest of this data
