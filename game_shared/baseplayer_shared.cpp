@@ -235,12 +235,12 @@ const QAngle &CBasePlayer::EyeAngles( )
 
 	if ( !pMoveParent )
 	{
-		return pl.v_angle.Get();		// |-- Mirv: updated now that it is a networkvar
+		return pl.v_angle;
 	}
 
 	// FIXME: Cache off the angles?
 	matrix3x4_t eyesToParent, eyesToWorld;
-	AngleMatrix( pl.v_angle.Get(), eyesToParent );	// |-- Mirv: updated now that it is a networkvar
+	AngleMatrix( pl.v_angle, eyesToParent );
 	ConcatTransforms( pMoveParent->EntityToWorldTransform(), eyesToParent, eyesToWorld );
 
 	static QAngle angEyeWorld;
@@ -251,7 +251,7 @@ const QAngle &CBasePlayer::EyeAngles( )
 
 const QAngle &CBasePlayer::LocalEyeAngles()
 {
-	return pl.v_angle.Get();
+	return pl.v_angle;
 }
 
 

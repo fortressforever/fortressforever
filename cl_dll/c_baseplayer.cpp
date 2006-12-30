@@ -93,7 +93,6 @@ void RecvProxy_ObserverTarget( const CRecvProxyData *pData, void *pStruct, void 
 
 	BEGIN_RECV_TABLE_NOBASE(CPlayerState, DT_PlayerState)
 		RecvPropInt		(RECVINFO(deadflag)),
-		RecvPropQAngles (RECVINFO(v_angle)),		// |-- Mirv: transmit view angles
 	END_RECV_TABLE()
 
 
@@ -481,7 +480,7 @@ bool C_BasePlayer::ViewModel_IsTransparent( void )
 //-----------------------------------------------------------------------------
 void C_BasePlayer::SetLocalViewAngles( const QAngle &viewAngles )
 {
-	pl.v_angle.GetForModify() = viewAngles;		// |-- Mirv: updated now that it is a networkvar
+	pl.v_angle = viewAngles;
 }
 
 surfacedata_t* C_BasePlayer::GetGroundSurface()
