@@ -1613,3 +1613,25 @@ int CFFGameRules::IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
 
 	return GR_NOTTEAMMATE;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Taken from Nov 06 SDK Update
+//-----------------------------------------------------------------------------
+void CFFGameRules::PlayerKilled(CBasePlayer *pVictim, const CTakeDamageInfo &info)
+{
+#ifndef CLIENT_DLL
+	if (IsIntermission())
+		return;
+
+	BaseClass::PlayerKilled(pVictim, info);
+#endif
+}
+
+bool CFFGameRules::IsIntermission()
+{
+#ifndef CLIENT_DLL
+	return m_flIntermissionEndTime > gpGlobals->curtime;
+#endif
+
+	return false;
+}

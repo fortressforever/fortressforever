@@ -1297,6 +1297,12 @@ void CFFPlayer::Spawn( void )
 	// Set on ground
 	AddFlag(FL_ONGROUND);
 
+	// Make sure we don't go running around during the intermission
+	if (FFGameRules()->IsIntermission())
+		AddFlag(FL_FROZEN);
+	else
+		RemoveFlag(FL_FROZEN);
+
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 

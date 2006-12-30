@@ -99,9 +99,13 @@ public:
 	virtual bool	FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker);
 
 	virtual bool	IsTeamplay( void ) { return false;	}
+	bool			IsIntermission();
 
 	// Returns whether or not iTeam1 is allied to iTeam2
 	int				IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 );
+
+	void			PlayerKilled(CBasePlayer *pVictim, const CTakeDamageInfo &info);
+
 
 #ifdef CLIENT_DLL
 
