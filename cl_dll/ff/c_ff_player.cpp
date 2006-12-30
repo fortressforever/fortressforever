@@ -1242,6 +1242,10 @@ void C_FFPlayer::DrawPlayerIcons()
 
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
 
+	// Don't show if observing either
+	if (pPlayer->IsObserver())
+		return;
+
 	float flOffset = 0.0f;
 
 	// --------------------------------
@@ -1445,6 +1449,10 @@ float MidAngle(float target, float value, float amount)
 //-----------------------------------------------------------------------------
 const QAngle &C_FFPlayer::EyeAngles()
 {
+	// Observer eyes
+	if (!IsLocalPlayer())
+		return m_angEyeAngles;
+
 	// Mapguides
 	if (GetTeamNumber() < TEAM_BLUE && m_hNextMapGuide)
 	{

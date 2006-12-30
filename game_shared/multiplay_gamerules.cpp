@@ -975,6 +975,10 @@ bool CMultiplayRules::IsMultiplayer( void )
 			// --> Mirv: Lock into place too
 			CFFPlayer *pFFPlayer = ToFFPlayer(pPlayer);
 			pFFPlayer->LockPlayerInPlace();
+			pFFPlayer->AddFlag(FL_FROZEN);
+
+			if (CFFWeaponBase *pWeapon = pFFPlayer->GetActiveFFWeapon())
+				pWeapon->Holster();
 			// <-- Mirv
 		}
 
