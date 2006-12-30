@@ -305,7 +305,7 @@ void FileCompletionEdit::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	m_pDropDown->PositionRelativeToPanel( this, Menu::MenuDirection_e::DOWN, 0 );
+	m_pDropDown->PositionRelativeToPanel( this, Menu::DOWN, 0 );
 
 	// reset the width of the drop down menu to be the width of this edit box
 	m_pDropDown->SetFixedWidth(GetWide());

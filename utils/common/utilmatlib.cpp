@@ -9,13 +9,13 @@
 
 // C callable material system interface for the utils.
 
+#include <windows.h>
 #include "materialsystem/IMaterialSystem.h"
 #include "materialsystem/IMaterial.h"
 #include "materialsystem/IMaterialVar.h"
 #include <cmdlib.h>
 #include "utilmatlib.h"
 #include "tier0/dbg.h"
-#include <windows.h>
 #include "FileSystem.h"
 #include "materialsystem/MaterialSystem_Config.h"
 #include "Mathlib.h"

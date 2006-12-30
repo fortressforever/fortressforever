@@ -6,6 +6,10 @@
 //
 //=============================================================================//
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef _XBOX
 #include "xbox/xbox_platform.h"
 #include "xbox/xbox_win32stubs.h"

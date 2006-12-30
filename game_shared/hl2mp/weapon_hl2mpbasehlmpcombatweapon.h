@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-//=============================================================================//
+#ifndef WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
+#define WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
+#ifdef _WIN32
+#pragma once
+#endif
 
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
@@ -11,12 +11,6 @@
 #endif
 
 #include "weapon_hl2mpbase.h"
-
-#ifndef WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
-#define WEAPON_BASEHL2MPCOMBATWEAPON_SHARED_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #if defined( CLIENT_DLL )
 #define CBaseHL2MPCombatWeapon C_BaseHL2MPCombatWeapon

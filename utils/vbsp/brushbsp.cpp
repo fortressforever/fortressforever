@@ -304,7 +304,7 @@ AllocNode
 */
 node_t *AllocNode (void)
 {
-	static s_NodeCount = 0;
+	static int s_NodeCount = 0;
 
 	node_t	*node;
 

@@ -1083,7 +1083,7 @@ static void Flood_FindConnectedWaterVolumes_r( CUtlVector<node_t *> &list, node_
 
 	baseleaf.minZ = min( pLeaf->mins.z, baseleaf.minZ );
 
-	for (p = pLeaf->portals ; p ; p = p->next[!oppositeNodeIndex])
+	for (portal_t *p = pLeaf->portals ; p ; p = p->next[!oppositeNodeIndex])
 	{
 		oppositeNodeIndex = (p->nodes[0] == pLeaf) ? 1 : 0;
 

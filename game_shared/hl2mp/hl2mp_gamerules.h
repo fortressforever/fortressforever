@@ -17,6 +17,11 @@
 
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
+#include "gamevars_shared.h"
+
+#ifndef CLIENT_DLL
+#include "hl2mp_player.h"
+#endif
 
 #define VEC_CROUCH_TRACE_MIN	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMin
 #define VEC_CROUCH_TRACE_MAX	HL2MPRules()->GetHL2MPViewVectors()->m_vCrouchTraceMax
@@ -126,14 +131,19 @@ public:
 	void	AddLevelDesignerPlacedObject( CBaseEntity *pEntity );
 	void	RemoveLevelDesignerPlacedObject( CBaseEntity *pEntity );
 	void	ManageObjectRelocation( void );
+	void    CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg );
 
 #endif
 	virtual void ClientDisconnected( edict_t *pClient );
 
 	bool CheckGameOver( void );
 	bool IsIntermission( void );
+
+	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
+
 	
 	bool	IsTeamplay( void ) { return m_bTeamPlayEnabled;	}
+	void	CheckAllPlayersReady( void );
 	
 private:
 	
@@ -143,6 +153,8 @@ private:
 	float m_tmNextPeriodicThink;
 	float m_flRestartGameTime;
 	bool m_bCompleteReset;
+	bool m_bAwaitingReadyRestart;
+	bool m_bHeardAllPlayersReady;
 
 
 };

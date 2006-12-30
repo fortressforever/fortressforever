@@ -354,7 +354,7 @@ int CParticleEffectBinding::DrawModel( int flags )
 			bWireframe );
 	}
 
-	if ( mat_wireframe.GetBool() )
+	if ( ShouldDrawInWireFrameMode() )
 	{
 		bWireframe = true;
 		FOR_EACH_LL( m_Materials, iDrawMaterial )

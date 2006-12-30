@@ -26,10 +26,7 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaPortalBits), SendPropInt(SENDINFO_ARRAY(m_chAreaPortalBits), 8, SPROP_UNSIGNED)),
 	
 	SendPropInt		(SENDINFO(m_iHideHUD), HIDEHUD_BITCOUNT, SPROP_UNSIGNED),
-	SendPropInt		(SENDINFO(m_iFOV),	9),
 	SendPropFloat	(SENDINFO(m_flFOVRate), 0, SPROP_NOSCALE ),
-	SendPropInt		(SENDINFO(m_iDefaultFOV),	9),
-
 	SendPropInt		(SENDINFO(m_bDucked),	1, SPROP_UNSIGNED ),
 	SendPropInt		(SENDINFO(m_bDucking),	1, SPROP_UNSIGNED ),
 	SendPropInt		(SENDINFO(m_bInDuckJump),	1, SPROP_UNSIGNED ),
@@ -128,9 +125,7 @@ END_DATADESC()
 BEGIN_SIMPLE_DATADESC( CPlayerLocalData )
 	DEFINE_AUTO_ARRAY( m_chAreaBits, FIELD_CHARACTER ),
 	DEFINE_FIELD( m_iHideHUD, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iFOV, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flFOVRate, FIELD_FLOAT ),
-	DEFINE_FIELD( m_iDefaultFOV, FIELD_INTEGER ),
 	DEFINE_FIELD( m_vecOverViewpoint, FIELD_VECTOR ),
 	DEFINE_FIELD( m_bDucked, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bDucking, FIELD_BOOLEAN ),

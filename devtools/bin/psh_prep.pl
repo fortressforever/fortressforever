@@ -238,8 +238,7 @@ for( $shaderCombo = 0; $shaderCombo < $numCombos; $shaderCombo++ )
 	}
 	else
 	{
-#		$cmd = "$g_SourceDir\\dx9ff\\utilities\\psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename > NIL 2>&1";
-		$cmd = "$g_SourceDir\\dx9ff\\utilities\\psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename";
+		$cmd = "psa /Foshader$shaderCombo.o /nologo " . &BuildDefineOptions( $shaderCombo ) . "$psh_filename";
 	}
 
 	if( !stat $pshtmp )

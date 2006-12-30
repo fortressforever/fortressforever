@@ -30,6 +30,8 @@ extern IFileSystem *filesystem;
 
 ConVar	cl_phys_timescale( "cl_phys_timescale", "1.0", FCVAR_CHEAT, "Sets the scale of time for client-side physics (ragdolls)" );
 
+void PrecachePhysicsSounds( void );
+
 //FIXME: Replicated from server end, consolidate?
 
 
@@ -289,6 +291,7 @@ void CPhysicsSystem::Shutdown()
 void CPhysicsSystem::LevelInitPreEntity( void )
 {
 	m_impactSounds.RemoveAll();
+	PrecachePhysicsSounds();
 }
 
 void CPhysicsSystem::LevelInitPostEntity( void )

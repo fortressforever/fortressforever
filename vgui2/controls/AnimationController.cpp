@@ -146,25 +146,25 @@ bool AnimationController::LoadScriptFile(const char *fileName)
 
 AnimationController::RelativeAlignmentLookup AnimationController::g_AlignmentLookup[] =
 {
-	{ AnimationController::RelativeAlignment::a_northwest	, "northwest" },
-	{ AnimationController::RelativeAlignment::a_north		, "north" },
-	{ AnimationController::RelativeAlignment::a_northeast	, "northeast" },
-	{ AnimationController::RelativeAlignment::a_west		, "west" },
-	{ AnimationController::RelativeAlignment::a_center		, "center" },
-	{ AnimationController::RelativeAlignment::a_east		, "east" },
-	{ AnimationController::RelativeAlignment::a_southwest	, "southwest" },
-	{ AnimationController::RelativeAlignment::a_south		, "south" },
-	{ AnimationController::RelativeAlignment::a_southeast	, "southeast" },
+	{ AnimationController::a_northwest	, "northwest" },
+	{ AnimationController::a_north		, "north" },
+	{ AnimationController::a_northeast	, "northeast" },
+	{ AnimationController::a_west		, "west" },
+	{ AnimationController::a_center		, "center" },
+	{ AnimationController::a_east		, "east" },
+	{ AnimationController::a_southwest	, "southwest" },
+	{ AnimationController::a_south		, "south" },
+	{ AnimationController::a_southeast	, "southeast" },
 
-	{ AnimationController::RelativeAlignment::a_northwest	, "nw" },
-	{ AnimationController::RelativeAlignment::a_north		, "n" },
-	{ AnimationController::RelativeAlignment::a_northeast	, "ne" },
-	{ AnimationController::RelativeAlignment::a_west		, "w" },
-	{ AnimationController::RelativeAlignment::a_center		, "c" },
-	{ AnimationController::RelativeAlignment::a_east		, "e" },
-	{ AnimationController::RelativeAlignment::a_southwest	, "sw" },
-	{ AnimationController::RelativeAlignment::a_south		, "s" },
-	{ AnimationController::RelativeAlignment::a_southeast	, "se" },
+	{ AnimationController::a_northwest	, "nw" },
+	{ AnimationController::a_north		, "n" },
+	{ AnimationController::a_northeast	, "ne" },
+	{ AnimationController::a_west		, "w" },
+	{ AnimationController::a_center		, "c" },
+	{ AnimationController::a_east		, "e" },
+	{ AnimationController::a_southwest	, "sw" },
+	{ AnimationController::a_south		, "s" },
+	{ AnimationController::a_southeast	, "se" },
 };
 
 //-----------------------------------------------------------------------------
@@ -182,7 +182,7 @@ AnimationController::RelativeAlignment AnimationController::LookupAlignment( cha
 		}
 	}
 
-	return AnimationController::RelativeAlignment::a_northwest;
+	return AnimationController::a_northwest;
 }
 
 //-----------------------------------------------------------------------------

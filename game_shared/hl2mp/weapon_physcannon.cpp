@@ -2525,7 +2525,10 @@ void CWeaponPhysCannon::ItemPreFrame()
 	BaseClass::ItemPreFrame();
 
 #ifdef CLIENT_DLL
-	ManagePredictedObject();
+	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
+
+	if ( localplayer && !localplayer->IsObserver() )
+		ManagePredictedObject();
 #endif
 
 	// Update the object if the weapon is switched on.

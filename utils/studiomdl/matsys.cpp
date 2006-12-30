@@ -5,11 +5,11 @@
 // $NoKeywords: $
 //===========================================================================//
 
+#include <windows.h>
 #include "materialsystem/IMaterialSystem.h"
 #include "materialsystem/MaterialSystem_Config.h"
 #include <cmdlib.h>
 #include "tier0/dbg.h"
-#include <windows.h>
 #include "FileSystem.h"
 #include "cmdlib.h"
 #include "tier2/tier2.h"

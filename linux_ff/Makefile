@@ -9,10 +9,11 @@
 
 # the name of the mod binary (_i486.so is appended to the end)
 NAME=server
+
 # the location of the vcproj that builds the mod
-MOD_PROJ=../dlls/hl_ff.vcproj
+MOD_PROJ=../dlls/server_scratch-2003.vcproj
 # the name of the mod configuration (typically <proj name>_<build type><build target>)
-MOD_CONFIG=hl_ReleaseFFWin32
+MOD_CONFIG=server_ff_ReleaseFFWin32
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 #GAME_DIR=../../

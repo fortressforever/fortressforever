@@ -57,9 +57,11 @@ void CTripmineGrenade::Spawn( void )
 	// motor
 	SetMoveType( MOVETYPE_FLY );
 	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_SOLID );
 	SetModel( "models/Weapons/w_slam.mdl" );
 
+    IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, true );
+	pObject->EnableMotion( false );
+	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 
 	SetCycle( 0.0f );
 	m_nBody			= 3;

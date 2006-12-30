@@ -122,7 +122,7 @@ ComboBox::ComboBox(Panel *parent, const char *panelName, int numLines, bool allo
 	SetNumberOfEditLines(numLines);
 
 	m_bHighlight = false;
-	m_iDirection = Menu::MenuDirection_e::DOWN;
+	m_iDirection = Menu::DOWN;
 	m_iOpenOffsetY = 0;
 }
 

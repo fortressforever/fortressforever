@@ -42,7 +42,7 @@ void ScratchPad_DrawFace( IScratchPad3D *pPad, dface_t *f, int iFaceNumber, cons
 
 	// Draw the outline.
 	Vector vCenter( 0, 0, 0 );
-	for ( iEdge=0; iEdge < points.Count(); iEdge++ )
+	for ( int iEdge=0; iEdge < points.Count(); iEdge++ )
 	{
 		pPad->DrawLine( CSPVert( points[iEdge]+vOffset, faceColor ), CSPVert( points[(iEdge+1)%points.Count()]+vOffset, faceColor ) );
 		vCenter += points[iEdge];

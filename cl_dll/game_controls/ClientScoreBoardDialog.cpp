@@ -381,8 +381,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo( void )
 		return;
 
 	int iSelectedRow = -1;
-
-	for( int i = 1; i <= gpGlobals->maxClients; i++ )
+	// walk all the players and make sure they're in the scoreboard
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
 		if( pGR->IsConnected( i ) )
 		{

@@ -43,10 +43,11 @@
 #define FCVAR_SOUNDSYSTEM		(1<<23)	// Defined by the soundsystem library
 #define FCVAR_INPUTSYSTEM		(1<<25)	// Defined by the inputsystem dll
 #define FCVAR_NETWORKSYSTEM		(1<<26) // Defined by the network system
+#define FCVAR_VPHYSICS			(1<<27) // defined by vphysics
 // NOTE!! if you add a cvar system, add it here too!!!!
 // the engine lacks a cvar flag, but needs it for xbox
 // an engine cvar is thus a cvar not marked with any other system
-#define FCVAR_NON_ENGINE		((FCVAR_LAUNCHER|FCVAR_GAMEDLL|FCVAR_CLIENTDLL|FCVAR_MATERIAL_SYSTEM|FCVAR_DATACACHE|FCVAR_STUDIORENDER|FCVAR_FILESYSTEM|FCVAR_PLUGIN|FCVAR_TOOLSYSTEM|FCVAR_SOUNDSYSTEM|FCVAR_INPUTSYSTEM|FCVAR_NETWORKSYSTEM))
+#define FCVAR_NON_ENGINE		((FCVAR_LAUNCHER|FCVAR_GAMEDLL|FCVAR_CLIENTDLL|FCVAR_MATERIAL_SYSTEM|FCVAR_DATACACHE|FCVAR_STUDIORENDER|FCVAR_FILESYSTEM|FCVAR_PLUGIN|FCVAR_TOOLSYSTEM|FCVAR_SOUNDSYSTEM|FCVAR_INPUTSYSTEM|FCVAR_NETWORKSYSTEM|FCVAR_VPHYSICS))
 
 // ConVar only
 #define FCVAR_PROTECTED			(1<<5)  // It's a server cvar, but we don't send the data since it's a password, etc.  Sends 1 if it's not bland/zero, 0 otherwise as value
@@ -74,7 +75,6 @@
 #define FCVAR_ARCHIVE_XBOX		(1<<24) // cvar written to config.cfg on the Xbox
 
 
-// #define FCVAR_AVAILABLE			(1<<27)
 // #define FCVAR_AVAILABLE			(1<<28)
 // #define FCVAR_AVAILABLE			(1<<29)
 // #define FCVAR_AVAILABLE			(1<<30)

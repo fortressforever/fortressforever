@@ -368,6 +368,8 @@ public:
 	virtual void					PreDataUpdate( DataUpdateType_t updateType );
 	virtual void					PostDataUpdate( DataUpdateType_t updateType );
 
+	virtual void					ValidateModelIndex( void );
+
 	// pvs info. NOTE: Do not override these!!
 	virtual void					SetDormant( bool bDormant );
 	virtual bool					IsDormant( void );
@@ -507,8 +509,6 @@ public:
 
 	int								GetModelIndex( void ) const;
 	void							SetModelIndex( int index );
-
-	virtual int						ValidateModelIndex( int index );	///< Returns either the same index, or another valid model index
 
 	// These methods return a *world-aligned* box relative to the absorigin of the entity.
 	// This is used for collision purposes and is *not* guaranteed
@@ -898,7 +898,7 @@ public:
 	CBasePlayer				*GetSimulatingPlayer( void );
 	void					UnsetPlayerSimulated( void );
 #endif
-	
+
 	virtual bool			CanBePoweredUp( void ) { return false; }
 	virtual bool			AttemptToPowerup( int iPowerup, float flTime, float flAmount = 0, C_BaseEntity *pAttacker = NULL, CDamageModifier *pDamageModifier = NULL ) { return false; }
 
@@ -1011,7 +1011,6 @@ public:
 	virtual C_BaseCombatCharacter	*MyCombatCharacterPointer( void ) { return NULL; }
 	virtual bool					IsNPC( void ) { return false; }
 	C_AI_BaseNPC					*MyNPCPointer( void ); 
-	
 	virtual bool					IsBaseObject( void ) const { return false; }
 
 	// Returns the eye point + angles (used for viewing + shooting)
@@ -1355,6 +1354,9 @@ public:
 
 	// Dirty bits
 	void							MarkRenderHandleDirty();
+
+	// used by SourceTV since move-parents may be missing when child spawns.
+	void							HierarchyUpdateMoveParent();
 
 protected:
 

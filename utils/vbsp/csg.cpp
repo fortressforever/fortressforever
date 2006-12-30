@@ -234,7 +234,7 @@ static bspbrush_t *CreateClippedBrush( mapbrush_t *mb, const Vector& clipmins, c
 	newbrush->numsides = nNumSides;
 	memcpy (newbrush->sides, mb->original_sides, nNumSides*sizeof(side_t));
 
-	for (j=0 ; j<nNumSides; j++)
+	for (int j=0 ; j<nNumSides; j++)
 	{
 		if (newbrush->sides[j].winding)
 		{

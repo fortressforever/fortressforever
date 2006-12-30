@@ -21,10 +21,16 @@
 #include "env_detail_controller.h"
 #include "vstdlib/icommandline.h"
 #include "c_world.h"
-#ifdef DOD_DLL
+
+#if defined(DOD_DLL) || defined(CSTRIKE_DLL)
+#define USE_DETAIL_SHAPES
+#endif
+
+#ifdef USE_DETAIL_SHAPES
 #include "engine/ivdebugoverlay.h"
 #include "playerenumerator.h"
 #endif
+
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,7 +46,7 @@ struct model_t;
 
 ConVar cl_detaildist( "cl_detaildist", "1200", 0, "Distance at which detail props are no longer visible" );
 ConVar cl_detailfade( "cl_detailfade", "400", 0, "Distance across which detail props fade in" );
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL )
+#if defined( USE_DETAIL_SHAPES ) 
 ConVar cl_detail_max_sway( "cl_detail_max_sway", "0", FCVAR_ARCHIVE, "Amplitude of the detail prop sway" );
 ConVar cl_detail_avoid_radius( "cl_detail_avoid_radius", "0", FCVAR_ARCHIVE, "radius around detail sprite to avoid players" );
 ConVar cl_detail_avoid_force( "cl_detail_avoid_force", "0", FCVAR_ARCHIVE, "force with which to avoid players ( in units, percentage of the width of the detail sprite )" );
@@ -167,7 +173,7 @@ public:
 	// Draw functions for the different types of sprite
 	void DrawTypeSprite( CMeshBuilder &meshBuilder );
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	void DrawTypeShapeCross( CMeshBuilder &meshBuilder );
 	void DrawTypeShapeTri( CMeshBuilder &meshBuilder );
 
@@ -222,7 +228,7 @@ protected:
 	};
 #pragma warning( default : 4201 )
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	// pointer to advanced properties
 	DetailModelAdvInfo_t *m_pAdvInfo;
 #endif
@@ -230,7 +236,6 @@ protected:
 
 static ConVar mat_fullbright( "mat_fullbright", "0", FCVAR_CHEAT ); // hook into engine's cvars..
 extern ConVar r_DrawDetailProps;
-extern ConVar mat_wireframe;
 
 
 //-----------------------------------------------------------------------------
@@ -597,7 +602,7 @@ CDetailModel::CDetailModel()
 	m_bFlipped = 0;
 	m_bHasLightStyle = 0;
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	m_pAdvInfo = NULL;
 #endif
 }
@@ -607,7 +612,7 @@ CDetailModel::CDetailModel()
 //-----------------------------------------------------------------------------
 CDetailModel::~CDetailModel()
 {
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	// delete advanced
 	if ( m_pAdvInfo )
 	{
@@ -663,7 +668,7 @@ bool CDetailModel::InitSprite( int index, const Vector& org, const QAngle& angle
 	m_Type = type;
 	m_SpriteInfo.m_flScale.SetFloat( flScale );
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	m_pAdvInfo = NULL;
 	Assert( type <= 3 );
 	// precalculate angles for shapes
@@ -679,7 +684,7 @@ bool CDetailModel::InitSprite( int index, const Vector& org, const QAngle& angle
 	return InitCommon( index, org, angles );
 }
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 void CDetailModel::InitShapedSprite( unsigned char shapeAngle, unsigned char shapeSize, unsigned char swayAmount )
 {
 	// Set up pointer to advanced shape properties object ( per instance )
@@ -843,7 +848,7 @@ void CDetailModel::DrawSprite( CMeshBuilder &meshBuilder )
 {
 	switch( m_Type )
 	{
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	case DETAIL_PROP_TYPE_SHAPE_CROSS:
 		DrawTypeShapeCross( meshBuilder );
 		break;
@@ -889,7 +894,7 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder )
 	Vector2DMultiply( dict.m_UL, scale, ul );
 	Vector2DMultiply( dict.m_LR, scale, lr );
 
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	UpdatePlayerAvoid();
 
 	Vector vecSway = vec3_origin;
@@ -921,7 +926,7 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder )
 		texlr.x = dict.m_TexUL.x;
 	}
 
-#ifndef DOD_DLL
+#ifndef USE_DETAIL_SHAPES
 	meshBuilder.Position3fv( vecOrigin.Base() );
 #else
 	meshBuilder.Position3fv( (vecOrigin+vecSway).Base() );
@@ -944,7 +949,7 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder )
 	meshBuilder.AdvanceVertex();
 
 	vecOrigin -= dy;
-#ifndef DOD_DLL
+#ifndef USE_DETAIL_SHAPES
 	meshBuilder.Position3fv( vecOrigin.Base() );
 #else
 	meshBuilder.Position3fv( (vecOrigin+vecSway).Base() );
@@ -958,7 +963,7 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder )
 // draws a procedural model, cross shape
 // two perpendicular sprites
 //-----------------------------------------------------------------------------
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawTypeShapeCross( CMeshBuilder &meshBuilder )
 {
 	Assert( m_Type == DETAIL_PROP_TYPE_SHAPE_CROSS );
@@ -1072,7 +1077,7 @@ void CDetailModel::DrawTypeShapeCross( CMeshBuilder &meshBuilder )
 //-----------------------------------------------------------------------------
 // draws a procedural model, tri shape
 //-----------------------------------------------------------------------------
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawTypeShapeTri( CMeshBuilder &meshBuilder )
 {
 	Assert( m_Type == DETAIL_PROP_TYPE_SHAPE_TRI );
@@ -1158,7 +1163,7 @@ void CDetailModel::DrawTypeShapeTri( CMeshBuilder &meshBuilder )
 //-----------------------------------------------------------------------------
 // checks for nearby players and pushes the detail to the side
 //-----------------------------------------------------------------------------
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 void CDetailModel::UpdatePlayerAvoid( void )
 {
 	float flForce = cl_detail_avoid_force.GetFloat();
@@ -1227,7 +1232,7 @@ void CDetailModel::UpdatePlayerAvoid( void )
 // draws a quad that sways on the top two vertices
 // pass vecOrigin as the top left vertex position
 //-----------------------------------------------------------------------------
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawSwayingQuad( CMeshBuilder &meshBuilder, Vector vecOrigin, Vector vecSway, Vector2D texul, Vector2D texlr, unsigned char *color,
 								   Vector width, Vector height )
 {
@@ -1544,7 +1549,7 @@ int CDetailObjectSystem::CountSpritesInLeafList( int nLeafCount, LeafIndex_t *pL
 //-----------------------------------------------------------------------------
 int CDetailObjectSystem::CountSpriteQuadsInLeafList( int nLeafCount, LeafIndex_t *pLeafList )
 {
-#ifdef DOD_DLL
+#ifdef USE_DETAIL_SHAPES
 	VPROF_BUDGET( "CDetailObjectSystem::CountSpritesInLeafList", VPROF_BUDGETGROUP_DETAILPROP_RENDERING );
 	int nQuadCount = 0;
 	int nFirstDetailObject, nDetailObjectCount;
@@ -1672,7 +1677,7 @@ void CDetailObjectSystem::RenderTranslucentDetailObjects( const Vector &viewOrig
 	materials->LoadIdentity();
 
 	IMaterial *pMaterial = m_DetailSpriteMaterial;
-	if ( mat_wireframe.GetBool() || r_DrawDetailProps.GetInt() == 2 )
+	if ( ShouldDrawInWireFrameMode() || r_DrawDetailProps.GetInt() == 2 )
 	{
 		pMaterial = m_DetailWireframeMaterial;
 	}
@@ -1789,7 +1794,7 @@ void CDetailObjectSystem::RenderTranslucentDetailObjectsInLeaf( const Vector &vi
 	materials->LoadIdentity();
 
 	IMaterial *pMaterial = m_DetailSpriteMaterial;
-	if ( mat_wireframe.GetBool() || r_DrawDetailProps.GetInt() == 2 )
+	if ( ShouldDrawInWireFrameMode() || r_DrawDetailProps.GetInt() == 2 )
 	{
 		pMaterial = m_DetailWireframeMaterial;
 	}

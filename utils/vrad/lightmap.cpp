@@ -6,6 +6,9 @@
 //
 //=============================================================================//
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "vrad.h"
 #include "lightmap.h"
 #include "radial.h"
@@ -1340,7 +1343,7 @@ void BuildVisForLightEnvironment( void )
 	unsigned char *pLeafBits = (unsigned char *)stackalloc( nLeafBytes * sizeof(unsigned char) );
 	memset( pLeafBits, 0, nLeafBytes );
 
-	for ( iLeaf = 0; iLeaf < numleafs; ++iLeaf )
+	for ( int iLeaf = 0; iLeaf < numleafs; ++iLeaf )
 	{
 		// If this leaf has light in it, then don't bother
 		if ( dleafs[iLeaf].flags & LEAF_FLAGS_SKY )
@@ -1373,7 +1376,7 @@ void BuildVisForLightEnvironment( void )
 
 	// Must set the bits in a separate pass so as to not flood-fill LEAF_FLAGS_SKY everywhere
 	// pLeafbits is a bit array of all leaves that need to be marked as seeing sky
-	for ( iLeaf = 0; iLeaf < numleafs; ++iLeaf )
+	for ( int iLeaf = 0; iLeaf < numleafs; ++iLeaf )
 	{
 		if ( dleafs[iLeaf].flags & LEAF_FLAGS_SKY )
 			continue;
@@ -4196,7 +4199,7 @@ struct lightmapdata_t
 		Vector out = luxel[0] + luxel[1] + luxel[2] + luxel[3];
 
 		Vector gammaOut;
-		for ( i = 0; i < 3; i++ )
+		for ( int i = 0; i < 3; i++ )
 		{
 			gammaOut[i] = LinearToVertexLight( out[i] );
 		}
@@ -4204,7 +4207,7 @@ struct lightmapdata_t
 		byte avg[4];
 		ConvertRGBExp32ToRGBA8888( &avgColor, avg );
 		int delta = 0;
-		for ( i = 0; i < 3; i++ )
+		for ( int i = 0; i < 3; i++ )
 		{
 			int c = RoundFloatToByte( gammaOut[i] * 255.0f );
 			delta += ColorDelta( c, avg[i] );

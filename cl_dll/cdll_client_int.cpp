@@ -84,6 +84,7 @@
 #include "scenefilecache/ISceneFileCache.h"
 #include "tier2/tier2.h"
 #include "avi/iavi.h"
+#include "hltvcamera.h"
 #include "ff_vieweffects.h"
 
 // BEG: Added by Mulchman for team menu at level start up
@@ -1632,6 +1633,7 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 			VPROF( "CHLClient::FrameStageNotify FRAME_NET_UPDATE_POSTDATAUPDATE_END" );
 			// Let prediction copy off pristine data
 			prediction->PostEntityPacketReceived();
+			HLTVCamera()->PostEntityPacketReceived();
 		}
 		break;
 	case FRAME_START:

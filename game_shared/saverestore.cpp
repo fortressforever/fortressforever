@@ -2445,8 +2445,12 @@ void CEntitySaveRestoreBlockHandler::Save( ISave *pSave )
 #if !defined( CLIENT_DLL )
 			pEntInfo->globalname = pEnt->m_iGlobalname; // remember global name
 			pEntInfo->landmarkModelSpace = ModelSpaceLandmark( pEnt->GetModelIndex() );
-			if ( pEnt->edict() && (ENTINDEX(pEnt->edict()) > 0) && (ENTINDEX(pEnt->edict()) < gpGlobals->maxClients+1) )
+			int nEntIndex = pEnt->edict() ? ENTINDEX(pEnt->edict()) : -1;
+			bool bIsPlayer = ( ( nEntIndex >= 1 ) && ( nEntIndex <= gpGlobals->maxClients ) ) ? true : false;
+			if ( bIsPlayer )
+			{
 				pEntInfo->flags |= FENTTABLE_PLAYER;
+			}
 #endif
 		}
 	}
@@ -2534,7 +2538,7 @@ void CEntitySaveRestoreBlockHandler::Restore( IRestore *pRestore, bool createPla
 					AddRestoredEntity( pent );
 				}
 			}
-			else if ( (pEntInfo->edictindex > 0) && (pEntInfo->edictindex < gpGlobals->maxClients+1) )
+			else if ( (pEntInfo->edictindex > 0) && (pEntInfo->edictindex <= gpGlobals->maxClients) )
 			{
 				if ( !(pEntInfo->flags & FENTTABLE_PLAYER) )
 				{
@@ -3252,7 +3256,7 @@ void CreateEntitiesInTransitionList( CSaveRestoreData *pSaveData, int levelMask 
 
 		// spawn players
 		pent = NULL;
-		if ( (pEntInfo->edictindex > 0) && (pEntInfo->edictindex < gpGlobals->maxClients+1) )	
+		if ( (pEntInfo->edictindex > 0) && (pEntInfo->edictindex <= gpGlobals->maxClients) )	
 		{
 			edict_t *ed = INDEXENT( pEntInfo->edictindex );
 

@@ -316,6 +316,12 @@ public:
 	// Data common to all other players, too
 	CPlayerState			pl;
 
+	// Player FOV values
+	int						m_iFOV;				// field of view
+	int						m_iFOVStart;		// starting value of the FOV changing over time (client only)
+	float					m_flFOVTime;		// starting time of the FOV zoom
+	int						m_iDefaultFOV;		// default FOV if no other zooms are occurring
+
 	// For weapon prediction
 	bool			m_fOnTarget;		//Is the crosshair on a target?
 	

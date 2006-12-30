@@ -31,7 +31,7 @@ DECLARE_BUILD_FACTORY_DEFAULT_TEXT( MenuButton, MenuButton );
 MenuButton::MenuButton(Panel *parent, const char *panelName, const char *text) : Button(parent, panelName, text)
 {
 	m_pMenu = NULL;
-	m_iDirection = Menu::MenuDirection_e::DOWN;
+	m_iDirection = Menu::DOWN;
 	m_pDropMenuImage = NULL;
 	m_nImageIndex = -1;
 

@@ -52,7 +52,8 @@ public:
 	bool IsAttachedToViewModel() const;
 
 	virtual int UpdateTransmitState( void );
-	
+	virtual int ShouldTransmit( const CCheckTransmitInfo *pInfo );
+
 private:
 	void SetAttachmentIndex( int nIndex );
  	void SetPanelName( const char *pPanelName );

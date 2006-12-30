@@ -49,6 +49,8 @@ int g_nKillCamTarget1 = 0;
 int g_nKillCamTarget2 = 0;
 int g_nUsedPrediction = 1;
 
+extern ConVar mp_forcecamera; // in gamevars_shared.h
+
 #define FLASHLIGHT_DISTANCE		1000
 #define MAX_VGUI_INPUT_MODE_SPEED 30
 #define MAX_VGUI_INPUT_MODE_SPEED_SQ (MAX_VGUI_INPUT_MODE_SPEED*MAX_VGUI_INPUT_MODE_SPEED)
@@ -101,10 +103,9 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	RecvPropInt(RECVINFO(m_iHideHUD)),
 
 	// View
-	RecvPropInt(RECVINFO(m_iFOV), 0, RecvProxy_FOV),
+	
 	RecvPropFloat(RECVINFO(m_flFOVRate)),
-	RecvPropInt(RECVINFO(m_iDefaultFOV), 0, RecvProxy_DefaultFOV),
-
+	
 	RecvPropInt		(RECVINFO(m_bDucked)),
 	RecvPropInt		(RECVINFO(m_bDucking)),
 	RecvPropInt		(RECVINFO(m_bInDuckJump)),
@@ -219,6 +220,9 @@ END_RECV_TABLE()
 
 		RecvPropDataTable(RECVINFO_DT(pl), 0, &REFERENCE_RECV_TABLE(DT_PlayerState), DataTableRecvProxy_StaticDataTable),
 
+		RecvPropInt		(RECVINFO(m_iFOV), 0, RecvProxy_FOV),
+		RecvPropInt		(RECVINFO(m_iDefaultFOV), 0, RecvProxy_DefaultFOV),
+
 		RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
 
@@ -261,7 +265,6 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 	DEFINE_FIELD( m_nStepside, FIELD_INTEGER ),
 
 	DEFINE_PRED_FIELD( m_iHideHUD, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iFOV, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
 	DEFINE_PRED_FIELD_TOL( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
 	DEFINE_PRED_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -286,6 +289,8 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 
 	DEFINE_PRED_TYPEDESCRIPTION( m_Local, CPlayerLocalData ),
 	DEFINE_PRED_TYPEDESCRIPTION( pl, CPlayerState ),
+
+	DEFINE_PRED_FIELD( m_iFOV, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_hVehicle, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flMaxspeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
@@ -397,7 +402,7 @@ void C_BasePlayer::Spawn( void )
 	int effects = GetEffects() & EF_NOSHADOW;
 	SetEffects( effects );
 
-	m_Local.m_iFOV	= 0;	// init field of view.
+	m_iFOV	= 0;	// init field of view.
 
     SetModel( "models/player.mdl" );
 
@@ -601,7 +606,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 	// Only care about this for local player
 	if ( IsLocalPlayer() )
 	{
-		//default_fov.SetValue( m_Local.m_iDefaultFOV );
+		default_fov.SetValue( m_iDefaultFOV );
 
 		//Update our FOV, including any zooms going on
 		int iDefaultFOV = default_fov.GetInt();
@@ -1162,7 +1167,11 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	QAngle viewangles;
 
-	if ( IsLocalPlayer() )
+	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	{
+		viewangles = eyeAngles;
+	}
+	else if ( IsLocalPlayer() )
 	{
 		engine->GetViewAngles( viewangles );
 	}
@@ -1276,7 +1285,11 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	}
 	else
 	{
-		eyeOrigin += m_vecViewOffset; // hack hack
+		Vector offset = m_vecViewOffset;
+#ifdef HL2MP
+		offset = target->GetViewOffset();
+#endif
+		eyeOrigin += offset; // hack hack
 	}
 
 	engine->SetViewAngles( eyeAngles );
@@ -1284,7 +1297,14 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
-	CBaseEntity	* killer = GetObserverTarget();
+	CBaseEntity	* pKiller = NULL; 
+
+	if ( mp_forcecamera.GetInt() == OBS_ALLOW_ALL )
+	{
+		// if mp_forcecamera is off let user see killer or look around
+		pKiller = GetObserverTarget();
+		eyeAngles = EyeAngles();
+	}
 
 	float interpolation = ( gpGlobals->curtime - m_flDeathTime ) / DEATH_ANIMATION_TIME;
 	interpolation = clamp( interpolation, 0.0f, 1.0f );
@@ -1292,7 +1312,7 @@ void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	m_flObserverChaseDistance += gpGlobals->frametime*48.0f;
 	m_flObserverChaseDistance = clamp( m_flObserverChaseDistance, 16, CHASE_CAM_DISTANCE );
 
-	QAngle aForward = eyeAngles = EyeAngles();
+	QAngle aForward = eyeAngles;
 	Vector origin = EyePosition();			
 
 	IRagdoll *pRagdoll = GetRepresentativeRagdoll();
@@ -1302,9 +1322,9 @@ void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 		origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
 	}
 	
-	if ( killer && killer->IsPlayer() && (killer != this) ) 
+	if ( pKiller && pKiller->IsPlayer() && (pKiller != this) ) 
 	{
-		Vector vKiller = killer->EyePosition() - origin;
+		Vector vKiller = pKiller->EyePosition() - origin;
 		QAngle aKiller; VectorAngles( vKiller, aKiller );
 		InterpolateAngles( aForward, aKiller, eyeAngles, interpolation );
 	};
@@ -1737,7 +1757,17 @@ bool C_BasePlayer::IsUseableEntity( CBaseEntity *pEntity, unsigned int requiredC
 //-----------------------------------------------------------------------------
 float C_BasePlayer::GetFOV( void )
 {
-	float fFOV = m_Local.m_iFOV;
+	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	{
+		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
+
+		if ( pTargetPlayer )
+		{
+			return pTargetPlayer->GetFOV();
+		}
+	}
+
+	float fFOV = m_iFOV;
 
 	// Allow our vehicle to override our FOV if it's currently at the default FOV.
 	IClientVehicle *pVehicle = GetVehicle();
@@ -1751,19 +1781,19 @@ float C_BasePlayer::GetFOV( void )
 		fFOV = default_fov.GetInt();
 	}
 
-	//See if we need to lerp the values
-	if ( ( fFOV != m_Local.m_iFOVStart ) && ( m_Local.m_flFOVRate > 0.0f ) )
+	//See if we need to lerp the values for local player
+	if ( IsLocalPlayer() && ( fFOV != m_iFOVStart ) && (m_Local.m_flFOVRate > 0.0f ) )
 	{
-		float deltaTime = (float)( gpGlobals->curtime - m_Local.m_flFOVTime ) / m_Local.m_flFOVRate;
+		float deltaTime = (float)( gpGlobals->curtime - m_flFOVTime ) / m_Local.m_flFOVRate;
 
 		if ( deltaTime >= 1.0f )
 		{
 			//If we're past the zoom time, just take the new value and stop lerping
-			m_Local.m_iFOVStart = fFOV;
+			m_iFOVStart = fFOV;
 		}
 		else
 		{
-			fFOV = SimpleSplineRemapVal( deltaTime, 0.0f, 1.0f, m_Local.m_iFOVStart, fFOV );
+			fFOV = SimpleSplineRemapVal( deltaTime, 0.0f, 1.0f, m_iFOVStart, fFOV );
 		}
 	}
 
@@ -1779,28 +1809,20 @@ float C_BasePlayer::GetFOV( void )
 //-----------------------------------------------------------------------------
 void RecvProxy_FOV( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	CPlayerLocalData *pPlayerData = (CPlayerLocalData *) pStruct;
+	C_BasePlayer *pPlayer = (C_BasePlayer *) pStruct;
 
 	//Hold onto the old FOV as our starting point
 	int iNewFov = pData->m_Value.m_Int;
-	if ( pPlayerData->m_iFOV == iNewFov )
+
+	if ( pPlayer->m_iFOV == iNewFov )
 		return;
 
 	// Get the true current FOV of the player at this point
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer != NULL )
-	{
-		pPlayerData->m_iFOVStart = pPlayer->GetFOV();
-	}
-	else
-	{
-		// At connect time, it can get in here b/c it's receiving baselines for other players.
-		pPlayerData->m_iFOVStart = ( pPlayerData->m_iFOV == 0 ) ? default_fov.GetInt() : pPlayerData->m_iFOV;
-	}
-
+	pPlayer->m_iFOVStart = pPlayer->GetFOV();
+	
 	//Get our start time for the zoom
-	pPlayerData->m_flFOVTime = gpGlobals->curtime;
-	pPlayerData->m_iFOV = iNewFov;
+	pPlayer->m_flFOVTime = gpGlobals->curtime;
+	pPlayer->m_iFOV = iNewFov;
 }
 
 //-----------------------------------------------------------------------------
@@ -1811,17 +1833,17 @@ void RecvProxy_FOV( const CRecvProxyData *pData, void *pStruct, void *pOut )
 //-----------------------------------------------------------------------------
 void RecvProxy_DefaultFOV( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	CPlayerLocalData *pPlayerData = (CPlayerLocalData *) pStruct;
+	C_BasePlayer *pPlayer = (C_BasePlayer *) pStruct;
 
 	//Hold onto the old FOV as our starting point
 	int iNewFov = pData->m_Value.m_Int;
 	
-	if ( pPlayerData->m_iDefaultFOV != iNewFov )
+	if ( pPlayer->m_iDefaultFOV != iNewFov )
 	{
 		// Don't lerp
-		pPlayerData->m_flFOVRate = 0.0f;
+		pPlayer->m_Local.m_flFOVRate = 0.0f;
 
-		pPlayerData->m_iDefaultFOV = iNewFov;
+		pPlayer->m_iDefaultFOV = iNewFov;
 	}
 }
 

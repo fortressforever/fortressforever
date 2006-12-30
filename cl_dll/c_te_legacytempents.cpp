@@ -1307,7 +1307,7 @@ void CTempEnts::AttachTentToPlayer( int client, int modelIndex, float zoffset, f
 	Vector				position;
 	int					frameCount;
 
-	if ( client < 0 || client > gpGlobals->maxClients )
+	if ( client <= 0 || client > gpGlobals->maxClients )
 	{
 		Warning("Bad client in AttachTentToPlayer()!\n");
 		return;
@@ -1372,7 +1372,7 @@ void CTempEnts::AttachTentToPlayer( int client, int modelIndex, float zoffset, f
 //-----------------------------------------------------------------------------
 void CTempEnts::KillAttachedTents( int client )
 {
-	if ( client < 0 || client > gpGlobals->maxClients )
+	if ( client <= 0 || client > gpGlobals->maxClients )
 	{
 		Warning("Bad client in KillAttachedTents()!\n");
 		return;

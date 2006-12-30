@@ -396,28 +396,25 @@ void C_ParticleSmokeGrenade::ClientThink()
 	if ( m_CurrentStage == 1 )
 	{
 		// Add our influence to the global smoke fog alpha.
-		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-		if ( pPlayer )
-		{
-			float testDist = (pPlayer->EyePosition() - m_SmokeBasePos).Length();
+		
+		float testDist = (MainViewOrigin() - m_SmokeBasePos).Length();
 
-			float fadeEnd = m_ExpandRadius;
+		float fadeEnd = m_ExpandRadius;
 
-			// The center of the smoke cloud that always gives full fog overlay
-			float flCoreDistance = fadeEnd * 0.15;
-			
-			if(testDist < fadeEnd)
-			{			
-				if( testDist < flCoreDistance )
-				{
-					EngineGetSmokeFogOverlayAlpha() += m_FadeAlpha;
-				}
-				else
-				{
-					EngineGetSmokeFogOverlayAlpha() += (1 - ( testDist - flCoreDistance ) / ( fadeEnd - flCoreDistance ) ) * m_FadeAlpha;
-				}
-			}	
-		}
+		// The center of the smoke cloud that always gives full fog overlay
+		float flCoreDistance = fadeEnd * 0.15;
+		
+		if(testDist < fadeEnd)
+		{			
+			if( testDist < flCoreDistance )
+			{
+				EngineGetSmokeFogOverlayAlpha() += m_FadeAlpha;
+			}
+			else
+			{
+				EngineGetSmokeFogOverlayAlpha() += (1 - ( testDist - flCoreDistance ) / ( fadeEnd - flCoreDistance ) ) * m_FadeAlpha;
+			}
+		}	
 	}
 }
 

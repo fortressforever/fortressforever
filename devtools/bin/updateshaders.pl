@@ -115,7 +115,7 @@ sub DoAsmShader
 	{
 		$xboxswitch = "-xbox ";
 	}
-	print MAKEFILE "\t$g_SourceDir\\devtools\\bin\\perl.exe $g_SourceDir\\devtools\\bin\\" . $shadertype . "_prep.pl $xboxswitch -shaderoutputdir $shaderoutputdir -source \"$g_SourceDir\" $shadername\n";
+	print MAKEFILE "\tperl $g_SourceDir\\devtools\\bin\\" . $shadertype . "_prep.pl $xboxswitch -shaderoutputdir $shaderoutputdir -source \"$g_SourceDir\" $shadername\n";
 	my $filename;
 	if( $shadertype eq "fxc" && !$dynamic_compile )
 	{

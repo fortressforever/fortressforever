@@ -4224,6 +4224,7 @@ int MapSourcesToGlobalBonetable( )
 void RealignBones( )
 {
 	int k;
+	int i;
 
 	int childbone[MAXSTUDIOBONES];
 	for (k = 0; k < g_numbones; k++)
@@ -7026,7 +7027,7 @@ void SetupFullBoneRenderBounds( CUtlVector<CBoneRenderBounds> &boneRenderBounds 
 	// Note: shared animation files will need to include the hitboxes or else their sequence
 	// boxes won't use this stuff.
 	// Now add hitboxes.
-	for ( i=0; i < g_hitboxsets.Count(); i++ )
+	for ( int i=0; i < g_hitboxsets.Count(); i++ )
 	{
 		const s_hitboxset *pSet = &g_hitboxsets[i];
 		

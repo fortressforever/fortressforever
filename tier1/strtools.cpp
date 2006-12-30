@@ -183,7 +183,8 @@ char *_V_strstr(const char* file, int line,  const char *s1, const char *search 
 	AssertValidStringPtr( s1 );
 	AssertValidStringPtr( search );
 
-	return strstr( s1, search );
+	// Casting the args to (char*) in order to get the overload of strstr() that returns a (char*) instead of (const char *). This is a changed brought about by VS2005. 
+	return strstr( (char*)s1, (char*)search );
 }
 
 char *_V_strupr (const char* file, int line, char *start)

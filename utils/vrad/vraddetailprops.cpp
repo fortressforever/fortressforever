@@ -8,6 +8,9 @@
 // This file contains code to allow us to associate client data with bsp leaves.
 //
 //=============================================================================//
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "vrad.h"
 #include "Bsplib.h"

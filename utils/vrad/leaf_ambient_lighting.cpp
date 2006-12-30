@@ -3,7 +3,9 @@
 // Purpose: 
 //
 //=============================================================================//
-
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "vrad.h"
 #include "leaf_ambient_lighting.h"
 #include "bsplib.h"

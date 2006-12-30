@@ -804,7 +804,6 @@ void ReadPolyFile (const char *name)
 	bool isPHY = !Q_stricmp( ext, "phy" );
 	if ( isPHY || isPHX )
 	{
-		FileSystem_Init( name, 0, FS_INIT_COMPATIBILITY_MODE );
 		CreateInterfaceFn physicsFactory = GetPhysicsFactory();
 		physcollision = (IPhysicsCollision *)physicsFactory( VPHYSICS_COLLISION_INTERFACE_VERSION, NULL );
 		if ( physcollision )
@@ -1353,7 +1352,7 @@ WinMain
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 					,LPSTR lpCmdLine, int nCmdShow)
 {
-	CommandLine()->CreateCmdLine( lpCmdLine );
+	CommandLine()->CreateCmdLine( Plat_GetCommandLine() );
 
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
     MSG        msg;
@@ -1367,6 +1366,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance
 
 	// Last argument is the file name
 	const char *pFileName = CommandLine()->GetParm( CommandLine()->ParmCount() - 1 );
+	CmdLib_InitFileSystem( pFileName );
 
 	if ( CommandLine()->CheckParm( "-portal") )
 	{

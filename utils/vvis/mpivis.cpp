@@ -535,7 +535,8 @@ void RunMPIPortalFlow()
 		g_PortalMCAddr.ip[3] = (unsigned char)RandomInt( 3, 255 );
 
 		g_pPortalMCSocket = CreateIPSocket();
-		for ( int i=0; i < 5; i++ )
+		int i = 0;
+		for ( i=0; i < 5; i++ )
 		{
 			if ( g_pPortalMCSocket->BindToAny( randomStream.RandomInt( 20000, 30000 ) ) )
 				break;

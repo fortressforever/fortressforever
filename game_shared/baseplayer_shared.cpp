@@ -46,10 +46,9 @@
 	extern ConVar sv_pushaway_max_force;
 	extern ConVar sv_pushaway_force;
 	extern ConVar sv_turbophysics;
-#endif
 
-class CPhysicsTraceFilter : public CTraceFilterEntitiesOnly
-{
+	class CUsePushFilter : public CTraceFilterEntitiesOnly
+	{
 	public:
 		bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 		{
@@ -60,12 +59,13 @@ class CPhysicsTraceFilter : public CTraceFilterEntitiesOnly
 				return false;
 
 			// Only impact on physics objects
-			if ( pEntity->VPhysicsGetObject() )
-				return true;
+			if ( !pEntity->VPhysicsGetObject() )
+				return false;
 
-			return false;
-		};
-};
+			return g_pGameRules->CanEntityBeUsePushed( pEntity );
+		}
+	};
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1081,7 +1081,7 @@ void CBasePlayer::PlayerUse ( void )
 		// Search for objects in a sphere (tests for entities that are not solid, yet still useable)
 		Vector searchCenter = EyePosition();
 
-		CPhysicsTraceFilter filter;
+		CUsePushFilter filter;
 
 		UTIL_TraceLine( searchCenter, searchCenter + forward * 96.0f, MASK_SOLID, &filter, &tr );
 
@@ -1577,7 +1577,7 @@ void CBasePlayer::DoMuzzleFlash()
 
 float CBasePlayer::GetFOVDistanceAdjustFactor()
 {
-	float defaultFOV	= (float)m_Local.m_iDefaultFOV;
+	float defaultFOV	= (float)GetDefaultFOV();
 	float localFOV		= (float)GetFOV();
 
 	if ( localFOV == defaultFOV || defaultFOV < 0.001f )
@@ -1650,7 +1650,19 @@ void CBasePlayer::SharedSpawn()
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetDefaultFOV( void ) const
 {
-	int iFOV = ( m_Local.m_iDefaultFOV == 0 ) ? g_pGameRules->DefaultFOV() : m_Local.m_iDefaultFOV;
+#if defined( CLIENT_DLL )
+	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	{
+		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
+
+		if ( pTargetPlayer )
+		{
+			return pTargetPlayer->GetDefaultFOV();
+		}
+	}
+#endif
+
+	int iFOV = ( m_iDefaultFOV == 0 ) ? g_pGameRules->DefaultFOV() : m_iDefaultFOV;
 
 	return iFOV;
 }

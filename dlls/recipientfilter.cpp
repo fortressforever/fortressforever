@@ -337,8 +337,8 @@ void CPASAttenuationFilter::Filter( const Vector& origin, float attenuation /*= 
 	Vector vecRelative;
 
 	int c = GetRecipientCount();
-	int i;
-	for ( i = c - 1; i >= 0; i-- )
+	
+	for ( int i = c - 1; i >= 0; i-- )
 	{
 		int index = GetRecipientIndex( i );
 
@@ -355,6 +355,12 @@ void CPASAttenuationFilter::Filter( const Vector& origin, float attenuation /*= 
 			Assert( 0 );
 			continue;
 		}
+
+#ifndef _XBOX
+		// never remove the HLTV bot
+		if ( player->IsHLTV() )
+			continue;
+#endif
 
 		VectorSubtract( player->EarPosition(), origin, vecRelative );
 		distance = VectorLength( vecRelative );

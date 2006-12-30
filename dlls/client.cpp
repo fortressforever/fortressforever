@@ -898,7 +898,7 @@ void CC_Player_FOV( void )
 		}
 		else
 		{
-			ClientPrint( pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs( "\"fov\" is \"%d\"\n", (int)pPlayer->m_Local.m_iFOV ) );
+			ClientPrint( pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs( "\"fov\" is \"%d\"\n", pPlayer->GetFOV() ) );
 		}
 	}
 }

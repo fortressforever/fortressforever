@@ -19,7 +19,7 @@
 
 #define	HLTV_MIN_DELAY				1	// minimum delay
 #define	HLTV_MIN_DIRECTOR_DELAY		10	// minimum delay if director is enabled
-#define	HLTV_MAX_DELAY				90	// maximum delay
+#define	HLTV_MAX_DELAY				120	// maximum delay
 
 
 #define MAX_NUM_CAMERAS				64	// support up to 64 fixed cameras per level

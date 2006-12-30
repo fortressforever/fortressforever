@@ -725,7 +725,7 @@ void Cubemap_InitCubemapSideData( void )
 	{
 		IntVector_t &sideList = s_EnvCubemapToBrushSides[iCubemap];
 		int nSideCount = sideList.Count();
-		for ( iSide = 0; iSide < nSideCount; ++iSide )
+		for ( int iSide = 0; iSide < nSideCount; ++iSide )
 		{
 			int nSideID = sideList[iSide];
 			int nIndex = SideIDToIndex( nSideID );
@@ -785,7 +785,7 @@ int Cubemap_FindClosestCubemap( const Vector &entityOrigin, side_t *pSide )
 	// Didn't find anything in front search for closest.
 	if( iMinCubemap == -1 )
 	{
-		for ( iCubemap = 0; iCubemap < g_nCubemapSamples; ++iCubemap )
+		for ( int iCubemap = 0; iCubemap < g_nCubemapSamples; ++iCubemap )
 		{	
 			dcubemapsample_t *pSample = &g_CubemapSamples[iCubemap];
 			Vector vecSampleOrigin( static_cast<float>( pSample->origin[0] ),

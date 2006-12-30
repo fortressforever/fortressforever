@@ -2186,12 +2186,12 @@ void RichText::InsertPossibleURLString(const char* text, Color URLTextColor, Col
 	InsertColorChange(normalTextColor);
 
 	// parse out the string for URL's
-	int len = strlen(text), pos = 0;
+	int len = Q_strlen(text), pos = 0;
 	bool clickable = false;
-	char resultBuf[512];
+	char *resultBuf = (char *)stackalloc( len + 1 );
 	while (pos < len)
 	{
-		pos = ParseTextStringForUrls(text, pos, resultBuf, sizeof(resultBuf) - 1, clickable);
+		pos = ParseTextStringForUrls(text, pos, resultBuf, len, clickable);
 		
 		if (clickable)
 		{
@@ -2294,7 +2294,7 @@ int RichText::ParseTextStringForUrls(const char *text, int startPos, char *resul
 	clickable = false;
 	int outIndex = 0;
 	int fromIndex = startPos;
-	while (fromIndex < i)
+	while (fromIndex < i && outIndex < resultBufferSize)
 	{
 		resultBuffer[outIndex++] = text[fromIndex++];
 	}

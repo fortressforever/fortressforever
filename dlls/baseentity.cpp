@@ -3190,12 +3190,16 @@ void CBaseEntity::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways  )
 	if ( pInfo->m_pTransmitEdict->Get( index ) )
 		return;
 
+	CBaseEntity *pMoveParent = GetMoveParent();
+
 	pInfo->m_pTransmitEdict->Set( index );
 
 	// HLTV needs to know if this entity is culled by PVS limits
 	if ( pInfo->m_pTransmitAlways )
 	{
-		if ( bAlways )
+		// in HLTV mode always transmit entitys with move-parents
+		// HLTV can't resolve the mode-parents relationships 
+		if ( bAlways || pMoveParent )
 		{
 			// tell HLTV that this entity is always transmitted
 			pInfo->m_pTransmitAlways->Set( index );
@@ -3209,9 +3213,9 @@ void CBaseEntity::SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways  )
 	}
 
 	// Force our aiment and move parent to be sent.
-	if ( GetMoveParent() )
+	if ( pMoveParent )
 	{
-		GetMoveParent()->SetTransmit( pInfo, bAlways );
+		pMoveParent->SetTransmit( pInfo, bAlways );
 	}
 }
 

@@ -63,6 +63,7 @@ public:
 	virtual void DoImpactEffect( trace_t &tr, int nDamageType );
 	IRagdoll* GetRepresentativeRagdoll() const;
 	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
+	virtual const QAngle& EyeAngles( void );
 
 	
 	bool	CanSprint( void );
@@ -75,6 +76,8 @@ public:
 	void	UpdateIDTarget( void );
 	void	PrecacheFootStepSounds( void );
 	const char	*GetPlayerModelSoundPrefix( void );
+
+	HL2MPPlayerState State_Get() const;
 
 
 private:
@@ -114,6 +117,9 @@ private:
 
 	void ReleaseFlashlight( void );
 	Beam_t	*m_pFlashlightBeam;
+
+	CNetworkVar( HL2MPPlayerState, m_iPlayerState );	
+
 };
 
 inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )

@@ -18,6 +18,7 @@
 #include <KeyValues.h>
 #include "decals.h"
 #include "IEffects.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 
 #include "physics_saverestore.h"
 
@@ -1068,6 +1069,47 @@ void PhysFrictionSound( CBaseEntity *pEntity, IPhysicsObject *pObject, float ene
 	const char *pSoundName = physprops->GetString( soundName );
 
 	PhysFrictionSound( pEntity, pObject, pSoundName, *soundHandle, volume );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Precaches a surfaceproperties string name if it's set.
+// Input  : idx - 
+// Output : static void
+//-----------------------------------------------------------------------------
+static HSOUNDSCRIPTHANDLE PrecachePhysicsSoundByStringIndex( int idx )
+{
+	// Only precache if a value was set in the script file...
+	if ( idx != 0 )
+	{
+		return CBaseEntity::PrecacheScriptSound( physprops->GetString( idx ) );
+	}
+
+	return SOUNDEMITTER_INVALID_HANDLE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Iterates all surfacedata sounds and precaches them
+// Output : static void
+//-----------------------------------------------------------------------------
+void PrecachePhysicsSounds()
+{
+	// precache the surface prop sounds
+	for ( int i = 0; i < physprops->SurfacePropCount(); i++ )
+	{
+		surfacedata_t *pprop = physprops->GetSurfaceData( i );
+		Assert( pprop );
+
+		pprop->soundhandles.stepleft = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepleft );
+		pprop->soundhandles.stepright = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepright );
+		pprop->soundhandles.impactSoft = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactSoft );
+		pprop->soundhandles.impactHard = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactHard );
+		pprop->soundhandles.scrapeSmooth = PrecachePhysicsSoundByStringIndex( pprop->sounds.scrapeSmooth );
+		pprop->soundhandles.scrapeRough = PrecachePhysicsSoundByStringIndex( pprop->sounds.scrapeRough );
+		pprop->soundhandles.bulletImpact = PrecachePhysicsSoundByStringIndex( pprop->sounds.bulletImpact );
+		pprop->soundhandles.rolling = PrecachePhysicsSoundByStringIndex( pprop->sounds.rolling );
+		pprop->soundhandles.breakSound = PrecachePhysicsSoundByStringIndex( pprop->sounds.breakSound );
+		pprop->soundhandles.strainSound = PrecachePhysicsSoundByStringIndex( pprop->sounds.strainSound );
+	}
 }
 
 

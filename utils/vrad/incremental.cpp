@@ -5,6 +5,10 @@
 // $NoKeywords: $
 //
 //=============================================================================//
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "incremental.h"
 #include "lightmap.h"
 

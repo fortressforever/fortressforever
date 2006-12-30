@@ -225,7 +225,7 @@ void C_HL2MP_Player::ClientThink( void )
 	Vector vForward;
 	AngleVectors( GetLocalAngles(), &vForward );
 
-	for( int iClient = 0; iClient < gpGlobals->maxClients; iClient++ )
+	for( int iClient = 1; iClient <= gpGlobals->maxClients; ++iClient )
 	{
 		CBaseEntity *pEnt = UTIL_PlayerByIndex( iClient );
 		if(!pEnt || !pEnt->IsPlayer())
@@ -333,6 +333,17 @@ void C_HL2MP_Player::PreThink( void )
 	}
 }
 
+const QAngle &C_HL2MP_Player::EyeAngles()
+{
+	if( IsLocalPlayer() )
+	{
+		return BaseClass::EyeAngles();
+	}
+	else
+	{
+		return m_angEyeAngles;
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -641,7 +652,7 @@ C_BaseAnimating *C_HL2MP_Player::BecomeRagdollOnClient( bool bCopyEntity )
 
 void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
-	if ( m_lifeState != LIFE_ALIVE )
+	if ( m_lifeState != LIFE_ALIVE && !IsObserver() )
 	{
 		Vector origin = EyePosition();			
 

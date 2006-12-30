@@ -54,6 +54,7 @@ public:
 	virtual bool OnLadder( trace_t &trace );
 	virtual int GetCheckInterval( IntervalType_t type );
 	virtual void	SetGroundEntity( CBaseEntity *newGround );
+	virtual bool CanAccelerate( void );
 
 private:
 
@@ -1253,10 +1254,24 @@ void CHL2GameMovement::SetGroundEntity( CBaseEntity *newGround )
 	player->SetGroundEntity( newGround );
 }
 
+bool CHL2GameMovement::CanAccelerate()
+{
+#ifdef HL2MP 
+	if ( player->IsObserver() )
+	{
+		return true;
+	}
+#endif
+
+	BaseClass::CanAccelerate();
+
+	return true;
+}
+
+
 
 // Expose our interface.
 static CHL2GameMovement g_GameMovement;
 IGameMovement *g_pGameMovement = ( IGameMovement * )&g_GameMovement;
 
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CGameMovement, IGameMovement,INTERFACENAME_GAMEMOVEMENT, g_GameMovement );
-

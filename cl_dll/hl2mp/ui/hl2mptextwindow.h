@@ -12,6 +12,7 @@
 #endif
 
 #include "VguiTextWindow.h"
+#include <spectatorgui.h>
 
 //-----------------------------------------------------------------------------
 // Purpose: displays the MOTD
@@ -44,6 +45,23 @@ public:
 
 	// End background panel ---------------------------------------------------
 };
+
+class CHL2MPSpectatorGUI : public CSpectatorGUI
+{
+private:
+	DECLARE_CLASS_SIMPLE( CHL2MPSpectatorGUI, CSpectatorGUI );
+
+public:
+	CHL2MPSpectatorGUI( IViewPort *pViewPort );
+
+	virtual void Update( void );
+	virtual bool NeedsUpdate( void );
+
+protected:
+	int		m_nLastSpecMode;
+	CBaseEntity	*m_nLastSpecTarget;
+};
+
 
 
 #endif // CSTEXTWINDOW_H

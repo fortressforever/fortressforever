@@ -202,7 +202,7 @@ public:
 	
 	const Type& Set( const Type &val )
 	{
-		if ( m_Value != val )
+		if ( memcmp( &m_Value, &val, sizeof(Type) ) )
 		{
 			NetworkStateChanged();
 			m_Value = val;
@@ -718,17 +718,17 @@ private:
 		type& GetForModify( int i ) \
 		{ \
 			Assert( i >= 0 && i < count ); \
-			return m_Value[i]; \
 			NetworkStateChanged( i ); \
+			return m_Value[i]; \
 		} \
 		\
 		void Set( int i, const type &val ) \
 		{ \
 			Assert( i >= 0 && i < count ); \
-			if ( m_Value[i] != val) \
+			if( memcmp( &m_Value[i], &val, sizeof(type) ) ) \
 			{ \
 				NetworkStateChanged( i ); \
-				m_Value[i] = val; \
+			       	m_Value[i] = val; \
 			} \
 		} \
 		const type* Base() const { return m_Value; } \
