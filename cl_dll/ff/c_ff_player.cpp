@@ -38,6 +38,8 @@
 #include "c_fire_smoke.h"
 #include "c_playerresource.h"
 
+#include "model_types.h"
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -1219,118 +1221,145 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Two pass so that the player icons can be drawn
+//-----------------------------------------------------------------------------
+RenderGroup_t C_FFPlayer::GetRenderGroup()
+{
+	if (IsCloaked())
+		return RENDER_GROUP_TRANSLUCENT_ENTITY;
+	else
+		return RENDER_GROUP_TWOPASS; // BaseClass::GetRenderGroup();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw some status icons (teammate, disguised, etc) for this player
+//-----------------------------------------------------------------------------
+void C_FFPlayer::DrawPlayerIcons()
+{
+	// No point putting these on self even in 3rd person mode
+	if (IsLocalPlayer())
+		return;
+
+	C_FFPlayer *pPlayer = GetLocalFFPlayer();
+
+	float flOffset = 0.0f;
+
+	// --------------------------------
+	// Check for team mate
+	// Don't show anything for cloaked people, we will show a disguise icon for them
+	// instead (because they are disguised as a window)
+	// --------------------------------
+	if( !IsCloaked() && FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+
+			// The color is based on the players real team
+			int iTeam = IsDisguised() ? GetDisguisedTeam() : GetTeamNumber();						
+			Color clr = Color( 255, 255, 255, 255 );
+
+			if( g_PR )
+				clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+
+			color32 c = { clr.r(), clr.g(), clr.b(), 255 };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+
+			// Increment offset
+			flOffset += 16.0f;
+		}
+	}
+
+	// --------------------------------
+	// Check for "saveme"
+	// --------------------------------
+	if( IsInSaveMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_saveme", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+			color32 c = { 255, 0, 0, 255 };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+
+			// Increment offset
+			flOffset += 16.0f;
+		}
+	}
+
+	// --------------------------------
+	// Check for "engyme"
+	// --------------------------------
+	if( IsInEngyMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_CLIENT_EFFECTS );
+		if( pMaterial )
+		{
+			materials->Bind( pMaterial );
+
+			// The color is based on the players real team
+			int iTeam = GetTeamNumber();						
+			Color clr = Color( 255, 255, 255, 255 );
+
+			if( g_PR )
+				clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+
+			color32 c = { clr.r(), clr.g(), clr.b(), 255 };
+			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+
+			// Increment offset
+			flOffset += 16.0f;
+		}
+	}
+
+	// --------------------------------
+	// Check for friendly spies
+	// Mirv: Going to show disguised icon for cloaked people too.
+	// --------------------------------
+	if( (IsDisguised() || IsCloaked()) && IsAlive() )
+	{
+		// See if the spy is a teammate or ally
+		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )
+		{
+			// Now, is the spy disguised as an enemy?
+			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetDisguisedTeam() ) == GR_NOTTEAMMATE )
+			{
+				// Thanks mirv!
+				IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_CLIENT_EFFECTS );
+				if( pMaterial )
+				{
+					materials->Bind( pMaterial );
+
+					// The color is based on the spies' real team
+					int iTeam = GetTeamNumber();						
+					Color clr = Color( 255, 255, 255, 255 );
+
+					if( g_PR )
+						clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+
+					color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
+					DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
+				}
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 int C_FFPlayer::DrawModel( int flags )
 {
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
 
-	float flOffset = 0.0f;
-	
-	if( pPlayer && ( this != pPlayer ) )
+	// Render the player info icons during the transparent pass
+	if (flags & STUDIO_TRANSPARENCY)
 	{
-		// --------------------------------
-		// Check for team mate
-		// Don't show anything for cloaked people, we will show a disguise icon for them
-		// instead (because they are disguised as a window)
-		// --------------------------------
-		if( !IsCloaked() && FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
-		{
-			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_OTHER );
-			if( pMaterial )
-			{
-				materials->Bind( pMaterial );
-
-				// The color is based on the players real team
-				int iTeam = IsDisguised() ? GetDisguisedTeam() : GetTeamNumber();						
-				Color clr = Color( 255, 255, 255, 255 );
-
-				if( g_PR )
-					clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
-
-				color32 c = { clr.r(), clr.g(), clr.b(), 255 };
-				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
-
-				// Increment offset
-				flOffset += 16.0f;
-			}
-		}
-
-		// --------------------------------
-		// Check for "saveme"
-		// --------------------------------
-		if( IsInSaveMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
-		{
-			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_saveme", TEXTURE_GROUP_OTHER );
-			if( pMaterial )
-			{
-				materials->Bind( pMaterial );
-				color32 c = { 255, 0, 0, 255 };
-				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
-
-				// Increment offset
-				flOffset += 16.0f;
-			}
-		}
-
-		// --------------------------------
-		// Check for "engyme"
-		// --------------------------------
-		if( IsInEngyMe() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) )
-		{
-			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_engyme", TEXTURE_GROUP_OTHER );
-			if( pMaterial )
-			{
-				materials->Bind( pMaterial );
-
-				// The color is based on the players real team
-				int iTeam = GetTeamNumber();						
-				Color clr = Color( 255, 255, 255, 255 );
-
-				if( g_PR )
-					clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
-				
-				color32 c = { clr.r(), clr.g(), clr.b(), 255 };
-				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
-
-				// Increment offset
-				flOffset += 16.0f;
-			}
-		}
-
-		// --------------------------------
-		// Check for friendly spies
-		// Mirv: Going to show disguised icon for cloaked people too.
-		// --------------------------------
-		if( (IsDisguised() || IsCloaked()) && IsAlive() )
-		{
-			// See if the spy is a teammate or ally
-			if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )
-			{
-				// Now, is the spy disguised as an enemy?
-				if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetDisguisedTeam() ) == GR_NOTTEAMMATE )
-				{
-					// Thanks mirv!
-					IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_spy", TEXTURE_GROUP_OTHER );
-					if( pMaterial )
-					{
-						materials->Bind( pMaterial );
-
-						// The color is based on the spies' real team
-						int iTeam = GetTeamNumber();						
-						Color clr = Color( 255, 255, 255, 255 );
-
-						if( g_PR )
-							clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
-						
-						color32 c = { clr.r(), clr.g(), clr.b(), clr.a() };
-						DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f + flOffset ), 15.0f, 15.0f, c );
-					}
-				}
-			}
-		}
+		DrawPlayerIcons();
+		return 1;
 	}
-
+	
 	// If we're hallucinating, players intermittently get swapped.  But only for
 	// enemy players because we don't want the teamkills
 	C_FFPlayer *pLocalPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());

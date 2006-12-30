@@ -147,13 +147,9 @@ public:
 	virtual int	DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags ) { return pViewmodel ? pViewmodel->DrawOverriddenViewmodel( flags ) : 0; }
 	virtual const QAngle& GetRenderAngles( void );
 
-	virtual RenderGroup_t GetRenderGroup( void )
-	{
-		if( IsCloaked() )
-			return RENDER_GROUP_TRANSLUCENT_ENTITY;
-		else
-			return BaseClass::GetRenderGroup();
-	}
+	virtual RenderGroup_t GetRenderGroup();
+
+	void DrawPlayerIcons();
 
 	//--- Added by L0ki ---
 	virtual void Simulate();
