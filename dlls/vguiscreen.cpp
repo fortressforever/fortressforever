@@ -212,6 +212,9 @@ void CVGuiScreen::SetAttachedToViewModel( bool bAttached )
 		{
 			m_fScreenFlags.Set( m_fScreenFlags | VGUI_SCREEN_ATTACHED_TO_VIEWMODEL );
 		}
+
+		// attached screens have different transmit rules
+		DispatchUpdateTransmitState();
 	}
 }
 
@@ -275,7 +278,12 @@ bool CVGuiScreen::IsVisibleToTeam( int nTeam )
 //-----------------------------------------------------------------------------
 int CVGuiScreen::UpdateTransmitState()
 {
-	if ( GetMoveParent() )
+	if ( IsAttachedToViewModel() )
+	{
+		// only send to the owner, or someone spectating the owner.
+		return SetTransmitState( FL_EDICT_FULLCHECK );
+	}
+	else if ( GetMoveParent() )
 	{
 		// Let the parent object trigger the send. This is more efficient than having it call CBaseEntity::ShouldTransmit
 		// for all the vgui screens in the map.
@@ -287,6 +295,19 @@ int CVGuiScreen::UpdateTransmitState()
 	}
 }
 
+int CVGuiScreen::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	Assert( IsAttachedToViewModel() );
+
+	CBaseEntity *pViewModel = GetOwnerEntity();
+
+	if ( pViewModel )
+	{
+		return pViewModel->ShouldTransmit( pInfo );
+	}
+
+	return BaseClass::ShouldTransmit( pInfo );
+}
 
 //-----------------------------------------------------------------------------
 // Convert the panel name into an integer

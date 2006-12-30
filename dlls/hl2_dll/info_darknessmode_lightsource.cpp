@@ -61,7 +61,7 @@ public:
 
 			if ( g_debug_darkness.GetBool() )
 			{
-				SetThink( DebugThink );
+				SetThink( &CInfoDarknessLightSource::DebugThink );
 				SetNextThink( gpGlobals->curtime );
 			}
 		}
@@ -364,7 +364,7 @@ void CDarknessLightSourcesSystem::SetDebug( bool bDebug )
 		{
 			if ( bDebug )
 			{
-				pLightSource->SetThink( CInfoDarknessLightSource::DebugThink );
+				pLightSource->SetThink( &CInfoDarknessLightSource::DebugThink );
 				pLightSource->SetNextThink( gpGlobals->curtime );
 			}
 			else

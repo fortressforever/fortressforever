@@ -387,6 +387,7 @@ public:
 	virtual void			ObserverUse( bool bIsPressed ); // observer pressed use
 	virtual CBaseEntity		*GetObserverTarget( void ); // returns players targer or NULL
 	virtual CBaseEntity		*FindNextObserverTarget( bool bReverse ); // returns next/prev player to follow or NULL
+	virtual int				GetNextObserverSearchStartPoint( bool bReverse ); // Where we should start looping the player list in a FindNextObserverTarget call
 	virtual bool			IsValidObserverTarget(CBaseEntity * target); // true, if player is allowed to see this target
 	virtual void			CheckObserverSettings(); // checks, if target still valid (didn't die etc)
 	virtual void			JumptoPosition(const Vector &origin, const QAngle &angles);
@@ -733,6 +734,8 @@ protected:
 	CNetworkVar( float, m_flDeathTime );		// the time at which the player died  (used in PlayerDeathThink())
 
 	CNetworkVar( int, m_iObserverMode );	// if in spectator mode != 0
+	CNetworkVar( int,	m_iFOV );			// field of view
+	CNetworkVar( int,	m_iDefaultFOV );	// default field of view
 
 	int						m_iObserverLastMode; // last used observer mode
 	CNetworkHandle( CBaseEntity, m_hObserverTarget );	// entity handle to m_iObserverTarget

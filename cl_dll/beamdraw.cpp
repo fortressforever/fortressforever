@@ -19,7 +19,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar mat_wireframe;
 extern ConVar r_drawsprites;
 extern ConVar r_DrawBeams;
 
@@ -45,7 +44,7 @@ void CBeamSegDraw::Start( int nSegs, IMaterial *pMaterial, CMeshBuilder *pMeshBu
 		m_pMeshBuilder = NULL;
 		m_nMeshVertCount = 0;
 
-		if ( mat_wireframe.GetInt() || r_DrawBeams.GetInt() == 2 )
+		if ( ShouldDrawInWireFrameMode() || r_DrawBeams.GetInt() == 2 )
 		{
 			if ( !g_pBeamWireframeMaterial )
 				g_pBeamWireframeMaterial = materials->FindMaterial("shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER);
@@ -256,7 +255,7 @@ CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, in
 	if( !material )
 		return NULL;
 	
-	if ( mat_wireframe.GetBool() || r_DrawBeams.GetInt() == 2 )
+	if ( ShouldDrawInWireFrameMode() || r_DrawBeams.GetInt() == 2 )
 	{
 		if ( !g_pBeamWireframeMaterial )
 			g_pBeamWireframeMaterial = materials->FindMaterial( "shadertest/wireframevertexcolor", TEXTURE_GROUP_OTHER );

@@ -23,7 +23,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar mat_wireframe;
 ConVar	r_drawsprites( "r_drawsprites", "1", FCVAR_CHEAT );
 
 //-----------------------------------------------------------------------------
@@ -66,7 +65,7 @@ void DrawSpriteModel( IClientEntity *baseentity, CEngineSprite *psprite, const V
 	psprite->SetRenderMode( rendermode );
 	psprite->SetFrame( frame );
 
-	if ( mat_wireframe.GetBool() || r_drawsprites.GetInt() == 2 )
+	if ( ShouldDrawInWireFrameMode() || r_drawsprites.GetInt() == 2 )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
 		materials->Bind( pMaterial, NULL );

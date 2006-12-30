@@ -4,6 +4,14 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+#ifdef _LINUX
+#include <ctime> // needed by xercesc
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "stdafx.h"
 #include "tier0/platform.h"
 #include <stdio.h>
@@ -11,7 +19,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef _WIN32
-#include <windows.h>
 #include <comutil.h> // _variant_t
 #include <atlbase.h> // CComPtr
 #elif _LINUX

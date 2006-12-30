@@ -6,6 +6,9 @@
 //
 //=============================================================================//
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "vrad.h"
 #include "vmpi.h"
 #ifdef MPI

@@ -18,6 +18,7 @@
 #include "gamevars_shared.h"
 #include "spectatorgui.h"
 #include "c_playerresource.h"
+#include "view.h"
 
 #include "clientmode.h"
 #include <vgui_controls/AnimationController.h>
@@ -31,7 +32,7 @@ ConVar overview_tracks( "overview_tracks", "1", FCVAR_ARCHIVE, "Show player's tr
 ConVar overview_locked( "overview_locked", "1", FCVAR_ARCHIVE, "Locks map angle, doesn't follow view angle.\n" );
 ConVar overview_alpha( "overview_alpha",  "1.0", FCVAR_ARCHIVE, "Overview map translucency.\n" );
 
-CMapOverview *g_pMapOverview = NULL; // we assume only one overview is created
+IMapOverviewPanel *g_pMapOverview = NULL; // we assume only one overview is created
 
 static int AdjustValue( int curValue, int targetValue, int amount )
 {
@@ -59,15 +60,30 @@ CON_COMMAND( overview_zoom, "Sets overview map zoom: <zoom> [<time>] [rel]" )
 		return;
 
 	float zoom = Q_atof( engine->Cmd_Argv( 1 ) );
+
 	float time = 0;
-	
 	if ( engine->Cmd_Argc() >= 3 )
 		time = Q_atof( engine->Cmd_Argv( 2 ) );
 
 	if ( engine->Cmd_Argc() == 4 )
 		zoom *= g_pMapOverview->GetZoom();
 
-	g_pClientMode->GetViewportAnimationController()->RunAnimationCommand( g_pMapOverview, "zoom", zoom, 0.0, time, vgui::AnimationController::INTERPOLATOR_LINEAR );
+	// We are going to store their zoom pick as the resultant overview size that it sees.  This way, the value will remain
+	// correct even on a different map that has a different intrinsic zoom.
+	float desiredViewSize = 0.0f;
+	desiredViewSize = (zoom * OVERVIEW_MAP_SIZE * g_pMapOverview->GetFullZoom()) / g_pMapOverview->GetMapScale();
+	g_pMapOverview->SetPlayerPreferredViewSize( desiredViewSize );
+
+	if( !g_pMapOverview->AllowConCommandsWhileAlive() )
+	{
+		C_BasePlayer *localPlayer = CBasePlayer::GetLocalPlayer();
+		if( localPlayer && CBasePlayer::GetLocalPlayer()->IsAlive() )
+			return;// Not allowed to execute commands while alive
+		else if( localPlayer && localPlayer->GetObserverMode() == OBS_MODE_DEATHCAM )
+			return;// In the death cam spiral counts as alive
+	}
+
+	g_pClientMode->GetViewportAnimationController()->RunAnimationCommand( g_pMapOverview->GetAsPanel(), "zoom", zoom, 0.0, time, vgui::AnimationController::INTERPOLATOR_LINEAR );
 }
 
 CON_COMMAND( overview_mode, "Sets overview map mode off,small,large: <0|1|2>" )
@@ -89,6 +105,18 @@ CON_COMMAND( overview_mode, "Sets overview map mode off,small,large: <0|1|2>" )
 	{
 		// set specific mode
 		mode = Q_atoi(engine->Cmd_Argv( 1 ));
+	}
+
+	if( mode != CMapOverview::MAP_MODE_RADAR )
+		g_pMapOverview->SetPlayerPreferredMode( mode );
+
+	if( !g_pMapOverview->AllowConCommandsWhileAlive() )
+	{
+		C_BasePlayer *localPlayer = CBasePlayer::GetLocalPlayer();
+		if( localPlayer && CBasePlayer::GetLocalPlayer()->IsAlive() )
+			return;// Not allowed to execute commands while alive
+		else if( localPlayer && localPlayer->GetObserverMode() == OBS_MODE_DEATHCAM )
+			return;// In the death cam spiral counts as alive
 	}
 
 	g_pMapOverview->SetMode( mode );
@@ -235,8 +263,8 @@ void CMapOverview::UpdatePlayers()
 			if ( player->team != g_PR->GetTeam( i ) )
 			{
 				player->team = g_PR->GetTeam( i );
-				player->icon = m_TeamIcons[ player->team  ];
-				player->color = m_TeamColors[ player->team ];
+				player->icon = m_TeamIcons[ GetIconNumberFromTeamNumber(player->team)  ];
+				player->color = m_TeamColors[ GetIconNumberFromTeamNumber(player->team) ];
 			}
 		}
 
@@ -292,7 +320,7 @@ void CMapOverview::UpdateFollowEntity()
 
 		if ( ent )
 		{
-			Vector position = ent->EyePosition();
+			Vector position = MainViewOrigin();	// Use MainViewOrigin so SourceTV works in 3rd person
 			QAngle angle = ent->EyeAngles();
 
 			if ( m_nFollowEntity <= MAX_PLAYERS )
@@ -344,8 +372,12 @@ bool CMapOverview::CanPlayerBeSeen(MapPlayer_t *player)
 		return false;
 
 	// don't draw ourself
-	if ( localPlayer->entindex() == (player->index+1) )
+	if ( localPlayer->GetUserID() == (player->userid) )
 		return false;
+
+	// Invalid guy.
+	if( player->position == Vector(0,0,0) )
+		return false; 
 
 	// if local player is on spectator team, he can see everyone
 	if ( localPlayer->GetTeamNumber() <= TEAM_SPECTATOR )
@@ -431,10 +463,10 @@ bool CMapOverview::NeedsUpdate( void )
 void CMapOverview::Update( void )
 {
 	// update settings
-	m_bShowNames = overview_names.GetBool();
-	m_bShowHealth = overview_health.GetBool();
-	m_bFollowAngle = !overview_locked.GetBool();
-	m_fTrailUpdateInterval = overview_tracks.GetInt();
+	m_bShowNames = overview_names.GetBool() && ( GetMode() != MAP_MODE_RADAR );
+	m_bShowHealth = overview_health.GetBool() && ( GetMode() != MAP_MODE_RADAR );
+	m_bFollowAngle = ( GetMode() != MAP_MODE_RADAR  && !overview_locked.GetBool() ) || ( GetMode() == MAP_MODE_RADAR  &&  !IsRadarLocked() );
+	m_fTrailUpdateInterval = overview_tracks.GetInt() && ( GetMode() != MAP_MODE_RADAR );
 
 	m_fWorldTime = gpGlobals->curtime;
 
@@ -744,12 +776,27 @@ Vector2D CMapOverview::WorldToMap( const Vector &worldpos )
 	return offset;
 }
 
+float CMapOverview::GetViewAngle( void )
+{
+	float viewAngle = m_fViewAngle - 90.0f;
+
+	if ( !m_bFollowAngle )
+	{
+		// We don't use fViewAngle.  We just show straight at all times.
+		if ( m_bRotateMap )
+			viewAngle = 90.0f;
+		else
+			viewAngle = 0.0f;
+	}
+
+	return viewAngle;
+}
 
 Vector2D CMapOverview::MapToPanel( const Vector2D &mappos )
 {
 	int pwidth, pheight; 
 	Vector2D panelpos;
-	float viewAngle = m_fViewAngle - 90.0f;
+	float viewAngle = GetViewAngle();
 
 	GetSize(pwidth, pheight);
 
@@ -757,14 +804,6 @@ Vector2D CMapOverview::MapToPanel( const Vector2D &mappos )
 	offset.x = mappos.x - m_MapCenter.x;
 	offset.y = mappos.y - m_MapCenter.y;
 	offset.z = 0;
-
-	if ( !m_bFollowAngle )
-	{
-		if ( m_bRotateMap )
-			viewAngle = 90.0f;
-		else
-			viewAngle = 0.0f;
-	}
 
 	VectorYawRotate( offset, viewAngle, offset );
 
@@ -790,7 +829,9 @@ void CMapOverview::SetMap(const char * levelname)
 	// Reset players and objects, even if the map is the same as the previous one
 	m_Objects.RemoveAll();
 	
-	m_fNextTrailUpdate = m_fWorldTime;
+	m_fNextTrailUpdate = 0;// Set to 0 for immediate update.  Our WorldTime var hasn't been updated to 0 for the new map yet
+	m_fWorldTime = 0;// In release, we occasionally race and get this bug again if we gt a paint before an update.  Reset this before the old value gets in to the timer.
+	// Please note, UpdatePlayerTrails comes from PAINT, not UPDATE.
 
 	InitTeamColorsAndIcons();
 
@@ -812,6 +853,11 @@ void CMapOverview::SetMap(const char * levelname)
 	{
 		DevMsg( 1, "Error! CMapOverview::SetMap: couldn't load file %s.\n", tempfile );
 		m_nMapTextureID = -1;
+		m_MapOrigin.x = 0;
+		m_MapOrigin.y = 0;
+		m_fMapScale = 1;
+		m_bRotateMap = false;
+		m_fFullZoom = 1;
 		return;
 	}
 
@@ -879,6 +925,7 @@ void CMapOverview::FireGameEvent( IGameEvent *event )
 	if ( Q_strcmp(type, "game_newmap") == 0 )
 	{
 		SetMap( event->GetString("mapname") );
+		ResetRound();
 	}
 
 	else if ( Q_strcmp(type, "round_start") == 0 )
@@ -927,8 +974,8 @@ void CMapOverview::FireGameEvent( IGameEvent *event )
 			return;
 
 		player->team = event->GetInt("team");
-		player->icon = m_TeamIcons[ player->team  ];
-		player->color = m_TeamColors[ player->team ];
+		player->icon = m_TeamIcons[ GetIconNumberFromTeamNumber(player->team)  ];
+		player->color = m_TeamColors[ GetIconNumberFromTeamNumber(player->team) ];
 	}
 
 	else if ( Q_strcmp(type,"player_death") == 0 )
@@ -976,6 +1023,12 @@ void CMapOverview::SetMode(int mode)
 	}
 	else if ( mode == MAP_MODE_INSET )
 	{
+		if( m_nMapTextureID == -1 )
+		{
+			SetMode( MAP_MODE_OFF );
+			return;
+		}
+
 		if ( m_nMode != MAP_MODE_OFF )
 			m_flChangeSpeed = 1000; // zoom effect
 
@@ -986,13 +1039,19 @@ void CMapOverview::SetMode(int mode)
 
 		ShowPanel( true );
 
-		if ( mode != m_nMode )
+		if ( mode != m_nMode && RunHudAnimations() )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "MapZoomToSmall" );
 		}
 	}
 	else if ( mode == MAP_MODE_FULL )
 	{
+		if( m_nMapTextureID == -1 )
+		{
+			SetMode( MAP_MODE_OFF );
+			return;
+		}
+
 		if ( m_nMode != MAP_MODE_OFF )
 			m_flChangeSpeed = 1000; // zoom effect
 
@@ -1000,7 +1059,7 @@ void CMapOverview::SetMode(int mode)
 
 		ShowPanel( true );
 
-		if ( mode != m_nMode )
+		if ( mode != m_nMode && RunHudAnimations() )
 		{
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "MapZoomToLarge" );
 		}
@@ -1052,24 +1111,28 @@ void CMapOverview::SetCenter(const Vector2D &mappos)
 
 	width = height = OVERVIEW_MAP_SIZE / (fTwiceZoom);
 
-	if ( m_MapCenter.x < width )
-		m_MapCenter.x = width;
-
-	if ( m_MapCenter.x > (OVERVIEW_MAP_SIZE-width) )
-		m_MapCenter.x = (OVERVIEW_MAP_SIZE-width);
-
-	if ( m_MapCenter.y < height )
-		m_MapCenter.y = height;
-
-	if ( m_MapCenter.y > (OVERVIEW_MAP_SIZE-height) )
-		m_MapCenter.y = (OVERVIEW_MAP_SIZE-height);
-
-	//center if in full map mode
-	if ( m_fZoom <= 1.0 )
+	if( GetMode() != MAP_MODE_RADAR )
 	{
-		m_MapCenter.x = OVERVIEW_MAP_SIZE/2;
-		m_MapCenter.y = OVERVIEW_MAP_SIZE/2;
+		if ( m_MapCenter.x < width )
+			m_MapCenter.x = width;
+
+		if ( m_MapCenter.x > (OVERVIEW_MAP_SIZE-width) )
+			m_MapCenter.x = (OVERVIEW_MAP_SIZE-width);
+
+		if ( m_MapCenter.y < height )
+			m_MapCenter.y = height;
+
+		if ( m_MapCenter.y > (OVERVIEW_MAP_SIZE-height) )
+			m_MapCenter.y = (OVERVIEW_MAP_SIZE-height);
+
+		//center if in full map mode
+		if ( m_fZoom <= 1.0 )
+		{
+			m_MapCenter.x = OVERVIEW_MAP_SIZE/2;
+			m_MapCenter.y = OVERVIEW_MAP_SIZE/2;
+		}
 	}
+
 }
 
 void CMapOverview::SetFollowAngle(bool state)

@@ -334,6 +334,8 @@ public:
 
 	virtual bool InRoundRestart( void ) { return false; }
 
+	virtual bool CanEntityBeUsePushed( CBaseEntity *pEnt ) { return true; }
+
 #endif
 };
 

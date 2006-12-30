@@ -7,6 +7,7 @@
 PLUGIN_SRC_DIR=$(SOURCE_DIR)/utils/serverplugin_sample
 PUBLIC_SRC_DIR=$(SOURCE_DIR)/public
 TIER0_PUBLIC_SRC_DIR=$(SOURCE_DIR)/public/tier0
+TIER1_PUBLIC_SRC_DIR=$(SOURCE_DIR)/public/tier1
 
 PLUGIN_OBJ_DIR=$(BUILD_OBJ_DIR)/plugin
 PUBLIC_OBJ_DIR=$(BUILD_OBJ_DIR)/plugin/public
@@ -16,7 +17,7 @@ CFLAGS=$(BASE_CFLAGS) $(ARCH_CFLAGS)
 #DEBUG = -g -ggdb
 #CFLAGS+= $(DEBUG)
 
-INCLUDEDIRS=-I$(PUBLIC_SRC_DIR) -I$(COMMON_SRC_DIR) -Dstrcmpi=strcasecmp -D_alloca=alloca
+INCLUDEDIRS=-I$(PUBLIC_SRC_DIR) -I$(TIER1_PUBLIC_SRC_DIR)  -Dstrcmpi=strcasecmp -D_alloca=alloca
 
 DO_CC=$(CPLUS) $(INCLUDEDIRS) -w $(CFLAGS) -DARCH=$(ARCH) -o $@ -c $<
 
@@ -25,15 +26,10 @@ DO_CC=$(CPLUS) $(INCLUDEDIRS) -w $(CFLAGS) -DARCH=$(ARCH) -o $@ -c $<
 PLUGIN_OBJS = \
 	$(PLUGIN_OBJ_DIR)/serverplugin_convar.o \
 	$(PLUGIN_OBJ_DIR)/serverplugin_empty.o \
-
-PUBLIC_OBJS = \
-	$(PUBLIC_OBJ_DIR)/convar.o \
-	$(PUBLIC_OBJ_DIR)/interface.o \
-	$(PUBLIC_OBJ_DIR)/KeyValues.o \
-	$(PUBLIC_OBJ_DIR)/utlbuffer.o \
+        $(PLUGIN_OBJ_DIR)/serverplugin_bot.o \
 
 TIER0_OBJS = \
-	$(TIER0_OBJ_DIR)/memoverride.o \
+	$(TIER0_OBJ_DIR)/memoverride-vc7.o \
 
 all: dirs serverplugin_empty_$(ARCH).$(SHLIBEXT)
 
@@ -44,13 +40,10 @@ dirs:
 	-mkdir $(TIER0_OBJ_DIR)
 	$(CHECK_DSP) $(SOURCE_DSP)
 
-serverplugin_empty_$(ARCH).$(SHLIBEXT): $(PLUGIN_OBJS) $(PUBLIC_OBJS) $(TIER0_OBJS)
-	$(CLINK) $(DEBUG) -o $(BUILD_DIR)/$@ $(SHLIBLDFLAGS) $(PLUGIN_OBJS) $(PUBLIC_OBJS) $(TIER0_OBJS) $(CPP_LIB) $(LDFLAGS) $(CPP_LIB)
+serverplugin_empty_$(ARCH).$(SHLIBEXT): $(PLUGIN_OBJS) $(TIER0_OBJS)
+	$(CLINK) $(DEBUG) -o $(BUILD_DIR)/$@ $(SHLIBLDFLAGS) $(PLUGIN_OBJS) $(TIER0_OBJS) $(PUBLIC_OBJS) $(CPP_LIB) $(LDFLAGS) $(CPP_LIB)
 
 $(PLUGIN_OBJ_DIR)/%.o: $(PLUGIN_SRC_DIR)/%.cpp
-	$(DO_CC)
-
-$(PUBLIC_OBJ_DIR)/%.o: $(PUBLIC_SRC_DIR)/%.cpp
 	$(DO_CC)
 
 $(TIER0_OBJ_DIR)/%.o: $(TIER0_PUBLIC_SRC_DIR)/%.cpp

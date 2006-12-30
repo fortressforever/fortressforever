@@ -90,7 +90,7 @@ void BotAdd_f()
 	if ( !botmanager )
 		return;
 
-	static s_BotNum = 0;
+	static int s_BotNum = 0;
 	char botName[64];
 	Q_snprintf( botName, sizeof(botName), "Bot_%i", s_BotNum );
 	s_BotNum++;

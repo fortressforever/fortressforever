@@ -139,7 +139,7 @@ void BlendCorners( CCoreDispInfo **ppListBase, int listSize )
 				25 );
 #endif
 
-			for ( iNeighbor=0; iNeighbor < nNeighbors; iNeighbor++ )
+			for ( int iNeighbor=0; iNeighbor < nNeighbors; iNeighbor++ )
 			{
 				int iNBListIndex = iNeighbors[iNeighbor];
 				if ( nbCornerVerts[iNeighbor] == -1 )

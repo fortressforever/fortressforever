@@ -9,9 +9,7 @@
 #include "tier0/basetypes.h"
 #include "tier0/platform.h"
 #include "generichash.h"
-#ifdef _LINUX
 #include <ctype.h>
-#endif
 
 //-----------------------------------------------------------------------------
 //

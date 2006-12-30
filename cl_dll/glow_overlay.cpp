@@ -361,8 +361,7 @@ void CGlowOverlay::Draw( bool bCacheFullSceneState )
 	if( m_flGlowObstructionScale == 0 )
 		return;
 	
-	extern ConVar mat_wireframe;
-	bool bWireframe = mat_wireframe.GetBool() || (r_drawsprites.GetInt() == 2);
+	bool bWireframe = ShouldDrawInWireFrameMode() || (r_drawsprites.GetInt() == 2);
 	
 	for( int iSprite=0; iSprite < m_nSprites; iSprite++ )
 	{

@@ -324,7 +324,7 @@ protected:
 	{
 		return in.bits.biased_exponent == 31 && in.bits.mantissa != 0;
 	}
-	static IsInfinity( float16bits in )
+	static bool IsInfinity( float16bits in )
 	{
 		return in.bits.biased_exponent == 31 && in.bits.mantissa == 0;
 	}

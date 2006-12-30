@@ -20,6 +20,7 @@
 	#include "hl2mp_player.h"
 	#include "ndebugoverlay.h"
 	#include "te_effect_dispatch.h"
+	#include "ilagcompensationmanager.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -100,7 +101,18 @@ void CBaseHL2MPBludgeonWeapon::ItemPostFrame( void )
 //------------------------------------------------------------------------------
 void CBaseHL2MPBludgeonWeapon::PrimaryAttack()
 {
+	
+#ifndef CLIENT_DLL
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetPlayerOwner() );
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
+#endif
 	Swing( false );
+#ifndef CLIENT_DLL
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->FinishLagCompensation( pPlayer );
+#endif
+
 }
 
 //------------------------------------------------------------------------------

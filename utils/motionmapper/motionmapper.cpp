@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -12,7 +13,6 @@
 #include "vstdlib/strtools.h"
 #include "vstdlib/icommandline.h"
 #include "utldict.h"
-#include <windows.h>
 #include "UtlBuffer.h"
 #include "UtlSymbol.h"
 
@@ -2920,7 +2920,7 @@ s_source_t *MotionMap( s_source_t *pSource, s_source_t *pTarget, s_template_t *p
 		//------------------------------------------------------------
         // plane constraints
         //------------------------------------------------------------
-		for(ii = 0; ii < pTemplate->numPlaneConstraints; ii++)
+		for(int ii = 0; ii < pTemplate->numPlaneConstraints; ii++)
 		{
 			s_planeConstraint_t *thisSolve = pTemplate->planeConstraints[ii];
 			
@@ -3014,7 +3014,7 @@ s_source_t *MotionMap( s_source_t *pSource, s_source_t *pTarget, s_template_t *p
 		combinedAnimation[t] = pSource->rawanim[t];
 		pSource->rawanim[t] = sourceAnimation[t];
 	}
-	for(t = 0; t < sourceNumFrames; t++)
+	for(int t = 0; t < sourceNumFrames; t++)
 	{
 		pTarget->rawanim[t] = combinedAnimation[t];
 	}

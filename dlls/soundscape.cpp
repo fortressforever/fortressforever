@@ -553,7 +553,7 @@ void CTriggerSoundscape::PlayerUpdateThink()
 	oldSpectators = m_spectators;
 	m_spectators.RemoveAll();
 
-	for ( i=1; i<gpGlobals->maxClients; ++i )
+	for ( i=1; i <= gpGlobals->maxClients; ++i )
 	{
 		CBasePlayer *player = UTIL_PlayerByIndex( i );
 

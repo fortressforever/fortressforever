@@ -37,6 +37,9 @@
 #include "physics_npc_solver.h"
 #include "physics_collisionevent.h"
 
+
+void PrecachePhysicsSounds( void );
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -71,7 +74,8 @@ ConVar phys_timescale( "phys_timescale", "1", 0, "Scale time for physics", Times
 ConVar phys_dontprintint( "phys_dontprintint", "0", FCVAR_NONE, "Don't print inter-penetration warnings." );
 #endif
 
-CCollisionEvent g_Collisions;
+	CCollisionEvent g_Collisions;
+
 
 IPhysicsCollisionSolver * const g_pCollisionSolver = &g_Collisions;
 IPhysicsCollisionEvent * const g_pCollisionEventHandler = &g_Collisions;
@@ -172,47 +176,6 @@ const char *PhysCheck( IPhysicsObject *pPhys )
 }
 #endif
 
-//-----------------------------------------------------------------------------
-// Purpose: Precaches a surfaceproperties string name if it's set.
-// Input  : idx - 
-// Output : static void
-//-----------------------------------------------------------------------------
-static HSOUNDSCRIPTHANDLE PrecachePhysicsSoundByStringIndex( int idx )
-{
-	// Only precache if a value was set in the script file...
-	if ( idx != 0 )
-	{
-		return CBaseEntity::PrecacheScriptSound( physprops->GetString( idx ) );
-	}
-
-	return SOUNDEMITTER_INVALID_HANDLE;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Iterates all surfacedata sounds and precaches them
-// Output : static void
-//-----------------------------------------------------------------------------
-static void PrecachePhysicsSounds()
-{
-	// precache the surface prop sounds
-	for ( int i = 0; i < physprops->SurfacePropCount(); i++ )
-	{
-		surfacedata_t *pprop = physprops->GetSurfaceData( i );
-		Assert( pprop );
-		
-		pprop->soundhandles.stepleft = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepleft );
-		pprop->soundhandles.stepright = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepright );
-		pprop->soundhandles.impactSoft = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactSoft );
-		pprop->soundhandles.impactHard = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactHard );
-		pprop->soundhandles.scrapeSmooth = PrecachePhysicsSoundByStringIndex( pprop->sounds.scrapeSmooth );
-		pprop->soundhandles.scrapeRough = PrecachePhysicsSoundByStringIndex( pprop->sounds.scrapeRough );
-		pprop->soundhandles.bulletImpact = PrecachePhysicsSoundByStringIndex( pprop->sounds.bulletImpact );
-		pprop->soundhandles.rolling = PrecachePhysicsSoundByStringIndex( pprop->sounds.rolling );
-		pprop->soundhandles.breakSound = PrecachePhysicsSoundByStringIndex( pprop->sounds.breakSound );
-		pprop->soundhandles.strainSound = PrecachePhysicsSoundByStringIndex( pprop->sounds.strainSound );
-	}
-}
-
 void CPhysicsHook::LevelInitPreEntity() 
 {
 	physenv = physics->CreateEnvironment();
@@ -297,12 +260,14 @@ void CPhysicsHook::FrameUpdatePostEntityThink( )
 	if ( CBaseEntity::IsSimulatingOnAlternateTicks() )
 	{
 		m_isFinalTick = false;
+
 		PhysFrame( interval );
 
 	}
 	m_isFinalTick = true;
 
 	PhysFrame( interval );
+
 }
 
 void CPhysicsHook::PreClientUpdate()
@@ -331,6 +296,7 @@ IPhysicsObject *PhysCreateWorld( CBaseEntity *pWorld )
 // because they aren't in the game physics world at present
 static bool WheelCollidesWith( IPhysicsObject *pObj, CBaseEntity *pEntity )
 {
+
 	// Cull against interactive debris
 	if ( pEntity->GetCollisionGroup() == COLLISION_GROUP_INTERACTIVE_DEBRIS )
 		return false;
@@ -1196,6 +1162,7 @@ CON_COMMAND( physics_budget, "Times the cost of each active object" )
 	}
 
 }
+
 
 
 // Advance physics by time (in seconds)

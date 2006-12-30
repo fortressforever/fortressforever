@@ -323,15 +323,15 @@ void BuildModeDialog::CreateControls()
 	// drop-down combo box for adding new controls
 	m_pAddNewControlCombo = new ComboBox(this, NULL, 30, false);
 	m_pAddNewControlCombo->SetSize(116, buttonH);
-	m_pAddNewControlCombo->SetOpenDirection(Menu::MenuDirection_e::DOWN);
+	m_pAddNewControlCombo->SetOpenDirection(Menu::DOWN);
 
 	m_pEditableParents = new CBuildModeNavCombo( this, NULL, 15, false, true, m_pBuildGroup->GetContextPanel() );
 	m_pEditableParents->SetSize(116, buttonH);
-	m_pEditableParents->SetOpenDirection(Menu::MenuDirection_e::DOWN);
+	m_pEditableParents->SetOpenDirection(Menu::DOWN);
 
 	m_pEditableChildren = new CBuildModeNavCombo( this, NULL, 15, false, false, m_pBuildGroup->GetContextPanel() );
 	m_pEditableChildren->SetSize(116, buttonH);
-	m_pEditableChildren->SetOpenDirection(Menu::MenuDirection_e::DOWN);
+	m_pEditableChildren->SetOpenDirection(Menu::DOWN);
 
 	// controls that can be added
 	// this list comes from controls EditablePanel can create by name.
@@ -377,7 +377,7 @@ void BuildModeDialog::CreateControls()
 
 	m_pVarsButton = new MenuButton(this, "VarsButton", "Variables");
 	m_pVarsButton->SetSize(72, buttonH);
-	m_pVarsButton->SetOpenDirection(Menu::MenuDirection_e::UP);
+	m_pVarsButton->SetOpenDirection(Menu::UP);
 	
 	// iterate the vars
 	KeyValues *vars = m_pBuildGroup->GetDialogVariables();

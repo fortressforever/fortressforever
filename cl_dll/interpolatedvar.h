@@ -254,9 +254,9 @@ protected:
 	{
 	public:
 		bool m_bHermite;
-		CInterpolatedVarArrayBase::CVarHistory::IndexType_t oldest;	// Only set if using hermite.
-		CInterpolatedVarArrayBase::CVarHistory::IndexType_t older;
-		CInterpolatedVarArrayBase::CVarHistory::IndexType_t newer;
+		typename CInterpolatedVarArrayBase::CVarHistory::IndexType_t oldest;	// Only set if using hermite.
+		typename CInterpolatedVarArrayBase::CVarHistory::IndexType_t older;
+		typename CInterpolatedVarArrayBase::CVarHistory::IndexType_t newer;
 		float frac;
 	};
 

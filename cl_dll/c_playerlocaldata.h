@@ -30,17 +30,16 @@ public:
 		m_iv_vecPunchAngle( "CPlayerLocalData::m_iv_vecPunchAngle" )
 	{
 		m_iv_vecPunchAngle.Setup( &m_vecPunchAngle.m_Value, LATCH_SIMULATION_VAR );
+		m_flFOVRate = 0;
 	}
 
 	unsigned char			m_chAreaBits[MAX_AREA_STATE_BYTES];				// Area visibility flags.
 	unsigned char			m_chAreaPortalBits[MAX_AREA_PORTAL_STATE_BYTES];// Area portal visibility flags.
 
 	int						m_iHideHUD;			// bitfields containing sections of the HUD to hide
-	int						m_iFOV;				// field of view
+	
 	float					m_flFOVRate;		// rate at which the FOV changes
-	int						m_iFOVStart;		// starting value of the FOV changing over time (client only)
-	float					m_flFOVTime;		// starting time of the FOV zoom
-	int						m_iDefaultFOV;		// default FOV if no other zooms are occuring
+	
 
 	bool					m_bDucked;
 	bool					m_bDucking;

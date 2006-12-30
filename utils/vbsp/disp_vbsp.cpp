@@ -467,7 +467,7 @@ void SnapRemainingVertsToSurface( CCoreDispInfo *pCoreDisp, ddispinfo_t *pDispIn
 	}
 	
 	// Now, for each vert not touched, snap its position to the main surface.
-	for ( y=0; y < pCoreDisp->GetHeight(); y++ )
+	for ( int y=0; y < pCoreDisp->GetHeight(); y++ )
 	{
 		for ( int x=0; x < pCoreDisp->GetWidth(); x++ )
 		{

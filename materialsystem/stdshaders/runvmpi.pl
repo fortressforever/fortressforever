@@ -47,22 +47,11 @@ if( !stat "filelist.txt" || !stat "uniquefilestocopy.txt" )
 $shaderpath = $cwd;
 $shaderpath =~ s,/,\\,g;
 chdir $changeToDir;
+print $cwd;
 
-if ( !length( $xboxFlag ) )
-{
-	# pc
-	$cmdToRun = "shadercompile.exe $noMPI -shaderpath $shaderpath -mpi_workercount 32 -allowdebug $gameFlag";
-}
-else
-{
-	# xbox
-	# xbox shader compilation is not compatible with mpi
-	if ( !length( $shaderoutputdir ) )
-	{
-		die "requires -shaderoutputdir <path>";
-	}	
-	$cmdToRun = "shadercompile.exe -xbox -nompi -shaderpath $shaderpath -allowdebug -shaderoutputdir $shaderoutputdir -verbose";
-}
+# pc
+#$cmdToRun = "calc";
+$cmdToRun = "\"$ENV{\"sourceff\"}\\bin\\shadercompile.exe\" -game -nompi -shaderpath $shaderpath -allowdebug $gameFlag";
 if( !$dynamic_compile )
 {
 	system $cmdToRun;

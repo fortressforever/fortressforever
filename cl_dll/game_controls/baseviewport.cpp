@@ -592,7 +592,7 @@ void CBaseViewport::ReloadScheme(const char *fromFile)
 	}
 
 	SetProportional( true );
-
+	
 	// reload the .res file from disk
 	LoadControlSettings("scripts/HudLayout.res");
 

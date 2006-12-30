@@ -72,7 +72,7 @@ public:
 		// std::ifstream
 		assert(0);
 	}
-	inline operator=(TokenReader const &)
+	inline TokenReader& operator=(TokenReader const &)
 	{
 		// prevent vc7 warning. compiler can't generate an assignment operator since descended from
 		// std::ifstream

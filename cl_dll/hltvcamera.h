@@ -30,13 +30,19 @@ public:
 	void SpecNextPlayer( bool bInverse );
 	void SpecNamedPlayer( const char *szPlayerName );
 	void ToggleChaseAsFirstPerson();
-
+	bool IsPVSLocked();
+	void SetAutoDirector( bool bActive );
+	
 	int  GetMode();	// returns current camera mode
 	C_BaseEntity *GetPrimaryTarget();  // return primary target
 	void SetPrimaryTarget( int nEntity); // set the primary obs target
 	C_BaseEntity *GetCameraMan();  // return camera entity if any
 
 	void CreateMove(CUserCmd *cmd);
+	void FixupMovmentParents();
+	void PostEntityPacketReceived();
+	const char* GetTitleText() { return m_szTitleText; }
+	int  GetNumSpectators() { return m_nNumSpectators; }
 			
 protected:
 
@@ -52,7 +58,6 @@ protected:
 	int			m_iCameraMan; // camera man entindex or 0
 	Vector		m_vCamOrigin;  //current camera origin
 	QAngle		m_aCamAngle;   //current camera angle
-	QAngle		m_aAdjustAngle;   //dynamic angle adjustment to avoid obstacles
 	int			m_iTraget1;	// first tracked target or 0
 	int			m_iTraget2; // second tracked target or 0
 	float		m_flFOV; // current FOV
@@ -63,11 +68,13 @@ protected:
 	float		m_flPhi; // view angle vertical
 	float		m_flInertia; // camera inertia 0..100
 	float		m_flLastAngleUpdateTime;
-	bool		m_bChaseAsFirstPerson;
+	bool		m_bEntityPacketReceived;	// true after a new packet was received
+	int			m_nNumSpectators;
+	char		m_szTitleText[64];
 };
 
 
-extern C_HLTVCamera *HLTVCamera();	// get Singelton
+extern C_HLTVCamera *HLTVCamera();	// get Singleton
 
 
 

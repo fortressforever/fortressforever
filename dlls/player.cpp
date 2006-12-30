@@ -228,6 +228,9 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_afButtonPressed, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonReleased, FIELD_INTEGER ),
 
+	DEFINE_FIELD( m_iFOV, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iDefaultFOV, FIELD_INTEGER ),
+
 	//DEFINE_FIELD( m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
 	DEFINE_FIELD( m_iObserverMode, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iObserverLastMode, FIELD_INTEGER ),
@@ -508,7 +511,7 @@ CBasePlayer::CBasePlayer( )
 	m_pCurrentCommand = NULL;
 	
 	// Setup our default FOV
-	m_Local.m_iDefaultFOV = g_pGameRules->DefaultFOV();
+	m_iDefaultFOV = g_pGameRules->DefaultFOV();
 
 	m_hZoomOwner = NULL;
 
@@ -1480,6 +1483,7 @@ void CBasePlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	g_pGameRules->PlayerKilled( this, info );
 
+
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 
 	ClearUseEntity();
@@ -2393,13 +2397,6 @@ void CBasePlayer::CheckObserverSettings()
 
 		if ( target && m_iObserverMode == OBS_MODE_IN_EYE )
 		{
-			float fFov = target->GetFOV();
-
-			if ( GetFOV() != fFov )
-			{
-				SetFOV( this, fFov, 0 );
-			}
-
 			int flagMask =	FL_ONGROUND | FL_DUCKING ;
 
 			int flags = target->GetFlags() & flagMask;
@@ -2558,18 +2555,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 
 		JumptoPosition( tr.endpos, target->EyeAngles() );
 	}
-	else if ( m_iObserverMode == OBS_MODE_IN_EYE )
-	{
-		// only update fov in ineye mode
-		if ( target->IsPlayer() )
-		{
-			CBasePlayer * pPlayer = ToBasePlayer( target );
-
-			// set FOV of player we observe
-			SetFOV( this, pPlayer->GetFOV() );	
-		}
-	}
-
+	
 	return true;
 }
 
@@ -2588,6 +2574,9 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 	/* Don't spec observers or players who haven't picked a class yet
  	if ( player->IsObserver() )
 		return false;	*/
+
+	if( player == this )
+		return false; // We can't observe ourselves.
 
 	if ( player->IsEffectActive( EF_NODRAW ) ) // don't watch invisible players
 		return false;
@@ -2619,6 +2608,32 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 	return true;	// passed all test
 }
 
+int CBasePlayer::GetNextObserverSearchStartPoint( bool bReverse )
+{
+	int iDir = bReverse ? -1 : 1; 
+
+	int startIndex;
+
+	if ( m_hObserverTarget )
+	{
+		// start using last followed player
+		startIndex = m_hObserverTarget->entindex();	
+	}
+	else
+	{
+		// start using own player index
+		startIndex = this->entindex();
+	}
+
+	startIndex += iDir;
+	if (startIndex > gpGlobals->maxClients)
+		startIndex = 1;
+	else if (startIndex < 1)
+		startIndex = gpGlobals->maxClients;
+
+	return startIndex;
+}
+
 CBaseEntity * CBasePlayer::FindNextObserverTarget(bool bReverse)
 {
 	// MOD AUTHORS: Modify the logic of this function if you want to restrict the observer to watching
@@ -2632,24 +2647,20 @@ CBaseEntity * CBasePlayer::FindNextObserverTarget(bool bReverse)
 	m_flNextFollowTime = gpGlobals->time + 0.25;
 	*/	// TODO move outside this function
 
-	int		startIndex;
+	int startIndex = GetNextObserverSearchStartPoint( bReverse );
 	
-	if ( m_hObserverTarget )
-	{
-		// start using last followed player
-		startIndex = m_hObserverTarget->entindex();	
-	}
-	else
-	{
-		// start using own player index
-		startIndex = this->entindex();
-	}
-
 	int	currentIndex = startIndex;
 	int iDir = bReverse ? -1 : 1; 
 	
 	do
 	{
+		CBaseEntity * nextTarget = UTIL_PlayerByIndex( currentIndex );
+
+		if ( IsValidObserverTarget( nextTarget ) )
+		{
+			return nextTarget;	// found next valid player
+		}
+
 		currentIndex += iDir;
 
 		// Loop through the clients
@@ -2658,12 +2669,6 @@ CBaseEntity * CBasePlayer::FindNextObserverTarget(bool bReverse)
 		else if (currentIndex < 1)
   			currentIndex = gpGlobals->maxClients;
 
-			CBaseEntity * nextTarget = UTIL_PlayerByIndex( currentIndex );
-
-		if ( IsValidObserverTarget( nextTarget ) )
-		{
-			return nextTarget;	// found next valid player
-		}
 	} while ( currentIndex != startIndex );
 		
 	return NULL;
@@ -7159,6 +7164,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN, SendProxy_CropFlagsToPlayerFlagBitsLength ),
 		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
 		SendPropEHandle	(SENDINFO(m_hObserverTarget) ),
+		SendPropInt		(SENDINFO(m_iFOV), 8, SPROP_UNSIGNED ),
+		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 
@@ -7512,9 +7519,10 @@ void CBasePlayer::SetVCollisionState( int collisionState )
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetFOV( void ) const
 {
-	int iFOV = ( m_Local.m_iFOV == 0 ) ? GetDefaultFOV() : m_Local.m_iFOV;
-
-	return iFOV;
+	if ( m_iFOV == 0 )
+		return GetDefaultFOV();
+	
+	return m_iFOV;
 }
 
 //-----------------------------------------------------------------------------
@@ -7550,7 +7558,8 @@ bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate )
 		}
 	}
 
-	m_Local.m_iFOV		= FOV;
+	m_iFOV = FOV;
+
 	m_Local.m_flFOVRate	= zoomRate;
 
 	return true;
@@ -7562,7 +7571,7 @@ bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate )
 //-----------------------------------------------------------------------------
 void CBasePlayer::SetDefaultFOV( int FOV )
 {
-	m_Local.m_iDefaultFOV = ( FOV == 0 ) ? g_pGameRules->DefaultFOV() : FOV;
+	m_iDefaultFOV = ( FOV == 0 ) ? g_pGameRules->DefaultFOV() : FOV;
 }
 
 //-----------------------------------------------------------------------------

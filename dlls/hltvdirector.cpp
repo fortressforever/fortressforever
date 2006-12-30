@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-static ConVar tv_delay( "tv_delay", "30", 0, "SrcTV broadcast delay in seconds" );
+static ConVar tv_delay( "tv_delay", "30", 0, "SourceTV broadcast delay in seconds", true, HLTV_MIN_DIRECTOR_DELAY, true, HLTV_MAX_DELAY );
 static ConVar tv_allow_static_shots( "tv_allow_static_shots", "1", 0, "Auto director uses fixed level cameras for shots" );
 static ConVar tv_allow_camera_man( "tv_allow_camera_man", "1", 0, "Auto director allows spectators to become camera man" );
 
@@ -1056,9 +1056,9 @@ void CHLTVDirector::BuildActivePlayerList()
 
 	m_nNumActivePlayers = 0;
 
-	for ( int i =0; i < gpGlobals->maxClients; i++ )
+	for ( int i =1; i <= gpGlobals->maxClients; i++ )
 	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i+1 );
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 
 		if ( !pPlayer )
 			continue;

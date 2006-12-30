@@ -60,6 +60,8 @@ ConVar cl_spec_mode(
 	FCVAR_ARCHIVE | FCVAR_USERINFO,
 	"spectator mode" );
 
+
+
 //-----------------------------------------------------------------------------
 // Purpose: left and right buttons pointing buttons
 //-----------------------------------------------------------------------------
@@ -107,9 +109,9 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	m_pViewOptions->SetText("#Spec_Modes");
 	m_pConfigSettings->SetText("#Spec_Options");
 
-	m_pPlayerList->SetOpenDirection( Menu::MenuDirection_e::UP );
-	m_pViewOptions->SetOpenDirection( Menu::MenuDirection_e::UP );
-	m_pConfigSettings->SetOpenDirection( Menu::MenuDirection_e::UP );
+	m_pPlayerList->SetOpenDirection( Menu::UP );
+	m_pViewOptions->SetOpenDirection( Menu::UP );
+	m_pConfigSettings->SetOpenDirection( Menu::UP );
 
 	// create view config menu
 	CommandMenu * menu = new CommandMenu(m_pViewOptions, "spectatormenu", gViewPortInterface);
@@ -231,8 +233,13 @@ void CSpectatorMenu::ShowPanel(bool bShow)
 		SetKeyBoardInputEnabled( false );
 	}
 
-	// during HLTV live broadcast, some interactive elements are disabled
-	bool bIsEnabled = !engine->IsHLTV() || engine->IsPlayingDemo();
+	bool bIsEnabled = true;
+	
+	 if ( engine->IsHLTV() && HLTVCamera()->IsPVSLocked() )
+	 {
+		 // when wattching HLTV with a locked PVS, some elements are disabled
+		 bIsEnabled = false;
+	 }
 	
 	m_pLeftButton->SetVisible( bIsEnabled );
 	m_pRightButton->SetVisible( bIsEnabled );
@@ -498,7 +505,7 @@ void CSpectatorGUI::Update()
 
 	// update player name filed, text & color
 
-	if ( playernum > 0 && playernum < gpGlobals->maxClients && gr)
+	if ( playernum > 0 && playernum <= gpGlobals->maxClients && gr )
 	{
 		Color c = gr->GetTeamColor( gr->GetTeam(playernum) ); // Player's team color
 
@@ -531,28 +538,33 @@ void CSpectatorGUI::Update()
 	}
 
 	// update extra info field
-	wchar_t string1[1024];
-/*	if ( gViewPortInterface->GetClientDllInterface()->IsHLTVMode() ) TODO
-	{
-		char numplayers[6];
-		wchar_t wNumPlayers[6];
+	wchar_t szEtxraInfo[1024];
+	wchar_t szTitleLabel[1024];
+	char tempstr[128];
 
-		Q_snprintf(numplayers,6,"%i", 666); // TODO show HLTV spectator number
-		localize()->ConvertANSIToUnicode(numplayers,wNumPlayers,sizeof(wNumPlayers));
-		localize()->ConstructString( string1,sizeof( string1 ), localize()->Find("#Spectators" ),1, wNumPlayers );
+	if ( engine->IsHLTV() )
+	{
+		// set spectator number and HLTV title
+		Q_snprintf(tempstr,sizeof(tempstr),"Spectators : %d", HLTVCamera()->GetNumSpectators() );
+		localize()->ConvertANSIToUnicode(tempstr,szEtxraInfo,sizeof(szEtxraInfo));
+		
+		Q_strncpy( tempstr, HLTVCamera()->GetTitleText(), sizeof(tempstr) );
+		localize()->ConvertANSIToUnicode(tempstr,szTitleLabel,sizeof(szTitleLabel));
 	}
-	else */
+	else
 	{
 		// otherwise show map name
-		char mapname[255];
-		Q_FileBase( engine->GetLevelName(), mapname, sizeof(mapname) );
+		Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
 
 		wchar_t wMapName[64];
-		localize()->ConvertANSIToUnicode(mapname,wMapName,sizeof(wMapName));
-		localize()->ConstructString( string1,sizeof( string1 ), localize()->Find("#Spec_Map" ),1, wMapName );
+		localize()->ConvertANSIToUnicode(tempstr,wMapName,sizeof(wMapName));
+		localize()->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), localize()->Find("#Spec_Map" ),1, wMapName );
+
+		localize()->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
 	}
 
-	SetLabelText("extrainfo", string1 );
+	SetLabelText("extrainfo", szEtxraInfo );
+	SetLabelText("titlelabel", szTitleLabel );
 }
 
 //-----------------------------------------------------------------------------
@@ -761,10 +773,13 @@ CON_COMMAND( spec_next, "Spectate next player" )
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() && engine->IsPlayingDemo() )
+	if ( engine->IsHLTV() )
 	{
 		// handle the command clientside
-		HLTVCamera()->SpecNextPlayer( false );
+		if ( !HLTVCamera()->IsPVSLocked() )
+		{
+			HLTVCamera()->SpecNextPlayer( false );
+		}
 	}
 	else
 	{
@@ -779,10 +794,13 @@ CON_COMMAND( spec_prev, "Spectate previous player" )
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() && engine->IsPlayingDemo() )
+	if ( engine->IsHLTV() )
 	{
 		// handle the command clientside
-		HLTVCamera()->SpecNextPlayer( true );
+		if ( !HLTVCamera()->IsPVSLocked() )
+		{
+			HLTVCamera()->SpecNextPlayer( true );
+		}
 	}
 	else
 	{
@@ -799,31 +817,40 @@ CON_COMMAND( spec_mode, "Set spectator mode" )
 
 	if ( engine->IsHLTV() )
 	{
-		int mode;
-
-		if ( engine->Cmd_Argc() == 2 )
+		if ( HLTVCamera()->IsPVSLocked() )
 		{
-			mode = Q_atoi( engine->Cmd_Argv(1) );
-			HLTVCamera()->SetMode( mode );
+			// in locked mode we can only switch between first and 3rd person
+			HLTVCamera()->ToggleChaseAsFirstPerson();
 		}
-		else if ( engine->IsPlayingDemo() )
+		else
 		{
-			// during HLTV demo playback we all all spectator modes
-			mode = HLTVCamera()->GetMode()+1;
+			// we can choose any mode, not loked to PVS
+			int mode;
 
-			if ( mode > OBS_MODE_ROAMING )
-				mode = OBS_MODE_IN_EYE;
+			if ( engine->Cmd_Argc() == 2 )
+			{
+				// set specifc mode
+				mode = Q_atoi( engine->Cmd_Argv(1) );
+			}
+			else
+			{
+				// set next mode 
+				mode = HLTVCamera()->GetMode()+1;
+
+				if ( mode > OBS_MODE_ROAMING )
+					mode = OBS_MODE_IN_EYE;
+			}
 			
 			// handle the command clientside
 			HLTVCamera()->SetMode( mode );
 		}
-		else
-		{
-			HLTVCamera()->ToggleChaseAsFirstPerson();
-		}
+
+			// turn off auto director once user tried to change view settings
+		HLTVCamera()->SetAutoDirector( false );
 	}
 	else
 	{
+		// we spectate on a game server, forward command
 		ForwardSpecCmdToServer();
 	}
 }
@@ -838,10 +865,13 @@ CON_COMMAND( spec_player, "Spectate player by name" )
 	if ( engine->Cmd_Argc() != 2 )
 		return;
 
-	if ( engine->IsHLTV() && engine->IsPlayingDemo() )
+	if ( engine->IsHLTV() )
 	{
-		// handle the command clientside
-		HLTVCamera()->SpecNamedPlayer( engine->Cmd_Argv(1) );
+		// we can only switch primary spectator targets is PVS isnt locked by auto-director
+		if ( !HLTVCamera()->IsPVSLocked() )
+		{
+			HLTVCamera()->SpecNamedPlayer( engine->Cmd_Argv(1) );
+		}
 	}
 	else
 	{

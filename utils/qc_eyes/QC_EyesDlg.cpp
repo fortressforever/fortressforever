@@ -651,7 +651,7 @@ void CQC_EyesDlg::OnDefaultControls()
 		GetDlgItem( g_AdvancedControls[i] )->ShowWindow( SW_HIDE );
 	}
 
-	for ( i=0; i < NUM_LEFT_LID_POSITION_CONTROLS; i++ )
+	for (int i=0; i < NUM_LEFT_LID_POSITION_CONTROLS; i++ )
 	{
 		GetDlgItem( g_LeftLidPositionControls[i] )->ShowWindow( SW_HIDE );
 	}

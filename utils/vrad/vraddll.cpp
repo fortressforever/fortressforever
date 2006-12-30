@@ -6,6 +6,9 @@
 //=============================================================================//
 
 //#include <strstrea.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "vraddll.h"
 #include "bsplib.h"
 #include "vrad.h"

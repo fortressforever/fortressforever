@@ -636,7 +636,7 @@ void Menu::PositionRelativeToPanel( Panel *relative, MenuDirection_e direction, 
 
 	switch( direction )
 	{
-	case Menu::MenuDirection_e::UP: // Menu prefers to open upward
+	case Menu::UP: // Menu prefers to open upward
 		{
 			x = rx;
 			int topOfReference = ry;
@@ -667,9 +667,9 @@ void Menu::PositionRelativeToPanel( Panel *relative, MenuDirection_e direction, 
 		break;
 		// Everyone else aligns downward...
 	default:
-	case Menu::MenuDirection_e::LEFT:
-	case Menu::MenuDirection_e::RIGHT:
-	case Menu::MenuDirection_e::DOWN:
+	case Menu::LEFT:
+	case Menu::RIGHT:
+	case Menu::DOWN:
 		{
 			x = rx;
 			int bottomOfReference = ry + rh + 1;

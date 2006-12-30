@@ -2128,7 +2128,7 @@ void Physics_RunThinkFunctions( bool simulating )
 	if ( !simulating )
 	{
 		// only simulate players
-		for ( int i = 1; i < gpGlobals->maxClients; i++ )
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 			if ( pPlayer )

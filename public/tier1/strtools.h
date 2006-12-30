@@ -95,11 +95,11 @@ inline int		V_memcmp (const void *m1, const void *m2, int count){ return memcmp(
 inline int		V_strlen (const char *str)							{ return (int) strlen ( str ); }
 inline void		V_strcpy (char *dest, const char *src)				{ strcpy( dest, src ); }
 inline int		V_wcslen(const wchar_t *pwch)						{ return (int)wcslen(pwch); }
-inline char*	V_strrchr (const char *s, char c)					{ return strrchr( s, c ); }
+inline char*	V_strrchr (const char *s, char c)					{ return strrchr((char *) s, c ); }
 inline int		V_strcmp (const char *s1, const char *s2)			{ return strcmp( s1, s2 ); }
 inline int		V_wcscmp (const wchar_t *s1, const wchar_t *s2)		{ return wcscmp( s1, s2 ); }
 inline int		V_stricmp( const char *s1, const char *s2 )			{ return stricmp( s1, s2 ); }
-inline char*	V_strstr( const char *s1, const char *search )		{ return strstr( s1, search ); }
+inline char*	V_strstr( const char *s1, const char *search )		{ return strstr((char *) s1, search ); }
 inline char*	V_strupr (char *start)								{ return strupr( start ); }
 inline char*	V_strlower (char *start)							{ return strlwr( start ); }
 

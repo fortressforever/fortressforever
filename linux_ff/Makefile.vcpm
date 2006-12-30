@@ -33,7 +33,9 @@ VCPM_OBJS = \
 TIER1_OBJS = \
 	$(TIER1_OBJ_DIR)/characterset.o \
 	$(TIER1_OBJ_DIR)/interface.o \
+	$(TIER1_OBJ_DIR)/generichash.o \
 	$(TIER1_OBJ_DIR)/KeyValues.o \
+	$(TIER1_OBJ_DIR)/stringpool.o \
 	$(TIER1_OBJ_DIR)/utlbuffer.o \
 	$(TIER1_OBJ_DIR)/utlsymbol.o \
 

@@ -112,7 +112,7 @@ ConVar r_entityclips( "r_entityclips", "1" ); //FIXME: Nvidia drivers before 81.
 // Matches the version in the engine
 static ConVar r_drawopaqueworld( "r_drawopaqueworld", "1", FCVAR_CHEAT );
 static ConVar r_drawtranslucentworld( "r_drawtranslucentworld", "1", FCVAR_CHEAT );
-static ConVar r_3dsky( "r_3dsky","1", FCVAR_CHEAT, "Enable the rendering of 3d sky boxes" );
+static ConVar r_3dsky( "r_3dsky","1", 0, "Enable the rendering of 3d sky boxes" );
 static ConVar r_skybox( "r_skybox","1", FCVAR_CHEAT, "Enable the rendering of sky boxes" );
 ConVar r_drawviewmodel( "r_drawviewmodel","1", FCVAR_CHEAT );
 static ConVar r_drawtranslucentrenderables( "r_drawtranslucentrenderables", "1", FCVAR_CHEAT );
@@ -158,6 +158,11 @@ static ConVar mat_clipz( "mat_clipz", "1" );
 static ConVar r_visocclusion( "r_visocclusion", "0", FCVAR_CHEAT );
 // (the engine owns this cvar).
 ConVar mat_wireframe( "mat_wireframe", "0", FCVAR_CHEAT );
+
+// sv_cheats is replicated and lives in the engine.  re-declaring it here without FCVAR_REPLICATED
+// breaks the linkage, and declaring it here with FCVAR_REPLICATED wants it to be declared in the server also.
+const ConVar *sv_cheats = NULL;
+
 
 
 //-----------------------------------------------------------------------------
@@ -2179,6 +2184,11 @@ void CViewRender::Draw3dSkyboxworld( const CViewSetup &view, int &nClearFlags,
 
 	// The skybox might not be visible from here
 	bSkyboxVisible = engine->IsSkyboxVisibleFromPoint( view.origin );
+
+	if ( !bSkyboxVisible && r_3dsky.GetInt() != 2 )
+	{
+		return;
+	}
 
 	// render the 3D skybox
 	if ( !r_3dsky.GetInt() )

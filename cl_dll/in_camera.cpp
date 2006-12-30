@@ -47,7 +47,7 @@ static ConVar c_orthoheight( "c_orthoheight",   "100", FCVAR_ARCHIVE );
 static kbutton_t cam_pitchup, cam_pitchdown, cam_yawleft, cam_yawright;
 static kbutton_t cam_in, cam_out, cam_move;
 
-extern const ConVar *sv_cheats = NULL;
+extern const ConVar *sv_cheats;
 
 // API Wrappers
 

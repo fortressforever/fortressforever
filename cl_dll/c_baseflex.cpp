@@ -283,16 +283,6 @@ public:
 		// Add to list
 		m_FileList.AddToTail( pfile );
 
-		/*
-		// Fill in translation table
-		flexsettinghdr_t *pSettinghdr = ( flexsettinghdr_t * )pfile->buffer;
-		Assert( pSettinghdr );
-		for (i = 0; i < pSettinghdr->numkeys; i++)
-		{
-			*(pSettinghdr->pLocalToGlobal(i)) = C_BaseFlex::AddGlobalFlexController( pSettinghdr->pLocalName( i ) );
-		}
-		*/
-
 		// Fill in translation table
 		EnsureTranslations( instance, ( const flexsettinghdr_t * )pfile->buffer );
 
@@ -1475,7 +1465,7 @@ void C_BaseFlex::EnsureTranslations( const flexsettinghdr_t *pSettinghdr )
 
 	for ( int i = 0; i < pSettinghdr->numkeys; ++i )
 	{
-		entry.m_Mapping[ i ] = FindFlexController( pSettinghdr->pLocalName( i ) );
+		entry.m_Mapping[ i ] = AddGlobalFlexController( pSettinghdr->pLocalName( i ) );
 	}
 
 	m_LocalToGlobal.Insert( entry );

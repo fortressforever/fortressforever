@@ -31,6 +31,7 @@
 	#include "team.h"
 	#include "voice_gamemgr.h"
 	#include "hl2mp_gameinterface.h"
+	#include "hl2mp_cvars.h"
 
 #ifdef DEBUG	
 	#include "hl2mp_bot_temp.h"
@@ -202,6 +203,8 @@ CHL2MPRules::CHL2MPRules()
 	m_tmNextPeriodicThink = 0;
 	m_flRestartGameTime = 0;
 	m_bCompleteReset = false;
+	m_bHeardAllPlayersReady = false;
+	m_bAwaitingReadyRestart = false;
 
 #endif
 }
@@ -276,6 +279,16 @@ bool CHL2MPRules::IsIntermission( void )
 	return false;
 }
 
+void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
+{
+#ifndef CLIENT_DLL
+	if ( IsIntermission() )
+		return;
+	BaseClass::PlayerKilled( pVictim, info );
+#endif
+}
+
+
 void CHL2MPRules::Think( void )
 {
 
@@ -333,7 +346,8 @@ void CHL2MPRules::Think( void )
 	}
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
-	{
+	{		
+		CheckAllPlayersReady();
 		CheckRestartGame();
 		m_tmNextPeriodicThink = gpGlobals->curtime + 1.0;
 	}
@@ -341,6 +355,15 @@ void CHL2MPRules::Think( void )
 	if ( m_flRestartGameTime > 0.0f && m_flRestartGameTime <= gpGlobals->curtime )
 	{
 		RestartGame();
+	}
+
+	if( m_bAwaitingReadyRestart && m_bHeardAllPlayersReady )
+	{
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, "All players ready. Game will restart in 5 seconds" );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "All players ready. Game will restart in 5 seconds" );
+
+		m_flRestartGameTime = gpGlobals->curtime + 5;
+		m_bAwaitingReadyRestart = false;
 	}
 
 	ManageObjectRelocation();
@@ -457,7 +480,7 @@ bool GetObjectsOriginalParameters( CBaseEntity *pObject, Vector &vOriginalOrigin
 		pItem->m_flNextResetCheckTime = gpGlobals->curtime + sv_hl2mp_item_respawn_time.GetFloat();
 		return true;
 	}
-	else if ( CWeaponHL2MPBase *pWeapon = IsManagedObjectAWeapon( pObject ) )
+	else if ( CWeaponHL2MPBase *pWeapon = IsManagedObjectAWeapon( pObject )) 
 	{
 		if ( pWeapon->m_flNextResetCheckTime > gpGlobals->curtime )
 			 return false;
@@ -977,29 +1000,6 @@ bool FindInList( const char **pStrings, const char *pToFind )
 	return false;
 }
 
-void CHL2MPRules::CheckRestartGame( void )
-{
-	// Restart the game if specified by the server
-	int iRestartDelay = mp_restartgame.GetInt();
-
-	if ( iRestartDelay > 0 )
-	{
-		if ( iRestartDelay > 60 )
-			iRestartDelay = 60;
-
-
-		// let the players know
-		char strRestartDelay[64];
-		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-
-		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
-		m_bCompleteReset = true;
-		mp_restartgame.SetValue( 0 );
-	}
-}
-
 void CHL2MPRules::RestartGame()
 {
 	// bounds check
@@ -1160,4 +1160,78 @@ void CHL2MPRules::CleanUpMap()
 
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
 }
+
+void CHL2MPRules::CheckChatForReadySignal( CHL2MP_Player *pPlayer, const char *chatmsg )
+{
+	if( m_bAwaitingReadyRestart && FStrEq( chatmsg, mp_ready_signal.GetString() ) )
+	{
+		if( !pPlayer->IsReady() )
+		{
+			pPlayer->SetReady( true );
+		}		
+	}
+}
+
+void CHL2MPRules::CheckRestartGame( void )
+{
+	// Restart the game if specified by the server
+	int iRestartDelay = mp_restartgame.GetInt();
+
+	if ( iRestartDelay > 0 )
+	{
+		if ( iRestartDelay > 60 )
+			iRestartDelay = 60;
+
+
+		// let the players know
+		char strRestartDelay[64];
+		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
+
+		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
+		m_bCompleteReset = true;
+		mp_restartgame.SetValue( 0 );
+	}
+
+	if( mp_readyrestart.GetBool() )
+	{
+		m_bAwaitingReadyRestart = true;
+		m_bHeardAllPlayersReady = false;
+		
+
+		const char *pszReadyString = mp_ready_signal.GetString();
+
+
+		// Don't let them put anything malicious in there
+		if( pszReadyString == NULL || Q_strlen(pszReadyString) > 16 )
+		{
+			pszReadyString = "ready";
+		}
+
+		IGameEvent *event = gameeventmanager->CreateEvent( "hl2mp_ready_restart" );
+		if ( event )
+			gameeventmanager->FireEvent( event );
+
+		mp_readyrestart.SetValue( 0 );
+
+		// cancel any restart round in progress
+		m_flRestartGameTime = -1;
+	}
+}
+
+void CHL2MPRules::CheckAllPlayersReady( void )
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
+
+		if ( !pPlayer )
+			continue;
+		if ( !pPlayer->IsReady() )
+			return;
+	}
+	m_bHeardAllPlayersReady = true;
+}
+
 #endif

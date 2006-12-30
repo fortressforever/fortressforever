@@ -4,6 +4,8 @@
 //
 //=============================================================================//
 
+#include "weapon_hl2mpbasehlmpcombatweapon.h"
+
 #include "cbase.h"
 #include "hl2mp_player.h"
 #include "globalstate.h"
@@ -22,12 +24,16 @@
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 
+#include "ilagcompensationmanager.h"
+
 int g_iLastCitizenModel = 0;
 int g_iLastCombineModel = 0;
 
 CBaseEntity	 *g_pLastCombineSpawn = NULL;
 CBaseEntity	 *g_pLastRebelSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
+
+#define HL2MP_COMMAND_MAX_RATE 0.3
 
 void ClientKill( edict_t *pEdict );
 void DropPrimedFragGrenade( CHL2MP_Player *pPlayer, CBaseCombatWeapon *pGrenade );
@@ -102,6 +108,11 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
 	m_iSpawnInterpCounter = 0;
 
+    m_bEnterObserver = false;
+	m_bReady = false;
+
+	BaseClass::ChangeTeam( 0 );
+	
 //	UseClientSideAnimation();
 }
 
@@ -283,14 +294,16 @@ void CHL2MP_Player::Spawn(void)
 	PickDefaultSpawnTeam();
 
 	BaseClass::Spawn();
-
-	pl.deadflag = false;
-	RemoveSolidFlags( FSOLID_NOT_SOLID );
-
-	RemoveEffects( EF_NODRAW );
-	StopObserverMode();
 	
-	GiveDefaultItems();
+	if ( !IsObserver() )
+	{
+		pl.deadflag = false;
+		RemoveSolidFlags( FSOLID_NOT_SOLID );
+
+		RemoveEffects( EF_NODRAW );
+		
+		GiveDefaultItems();
+	}
 
 	RemoveEffects( EF_NOINTERP );
 
@@ -319,18 +332,13 @@ void CHL2MP_Player::Spawn(void)
 	m_Local.m_bDucked = false;
 
 	SetPlayerUnderwater(false);
+
+	m_bReady = false;
 }
 
 void CHL2MP_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 {
 	
-}
-
-bool CHL2MP_Player::StartObserverMode( int mode )
-{
-	//Do nothing.
-
-	return false;
 }
 
 bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
@@ -544,6 +552,7 @@ void CHL2MP_Player::PreThink( void )
 	SetLocalAngles( vTempAngles );
 
 	BaseClass::PreThink();
+	State_PreThink();
 
 	//Reset bullet force accumulator, only lasts one frame
 	m_vecTotalBulletForce = vec3_origin;
@@ -569,8 +578,19 @@ void CHL2MP_Player::PostThink( void )
 	SetLocalAngles( angles );
 }
 
+void CHL2MP_Player::PlayerDeathThink()
+{
+	if( !IsObserver() )
+	{
+		BaseClass::PlayerDeathThink();
+	}
+}
+
 void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 {
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->StartLagCompensation( this, this->GetCurrentCommand() );
+
 	FireBulletsInfo_t modinfo = info;
 
 	CWeaponHL2MPBase *pWeapon = dynamic_cast<CWeaponHL2MPBase *>( GetActiveWeapon() );
@@ -583,6 +603,9 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 	NoteWeaponFired();
 
 	BaseClass::FireBullets( modinfo );
+
+	// Move other players back to history positions based on local player's lag
+	lagcompensation->FinishLagCompensation( this );
 }
 
 void CHL2MP_Player::NoteWeaponFired( void )
@@ -881,6 +904,12 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 	bool bKill = false;
 
+	if ( HL2MPRules()->IsTeamplay() != true && iTeam != TEAM_SPECTATOR )
+	{
+		//don't let them try to join combine or rebels during deathmatch.
+		iTeam = TEAM_UNASSIGNED;
+	}
+
 	if ( HL2MPRules()->IsTeamplay() == true )
 	{
 		if ( iTeam != GetTeamNumber() && GetTeamNumber() != TEAM_UNASSIGNED )
@@ -902,22 +931,94 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 		SetPlayerModel();
 	}
 
+	if ( iTeam == TEAM_SPECTATOR )
+	{
+		RemoveAllItems( true );
+
+		State_Transition( STATE_OBSERVER_MODE );
+	}
+
 	if ( bKill == true )
 	{
 		ClientKill( edict() );
 	}
 }
 
-
-bool CHL2MP_Player::ClientCommand( const char *cmd )
+bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 {
-	if ( FStrEq( cmd, "spectate" ) )
+	if ( !GetGlobalTeam( team ) )
 	{
-		// do nothing.
+		Warning( "HandleCommand_JoinTeam( %d ) - invalid team index.\n", team );
+		return false;
+	}
+
+	if ( team == TEAM_SPECTATOR )
+	{
+		// Prevent this is the cvar is set
+		if ( !mp_allowspectators.GetInt() )
+		{
+			ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
+			return false;
+		}
+
+		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
+		{
+			m_fNextSuicideTime = gpGlobals->curtime;	// allow the suicide to work
+
+			ClientKill( edict() );
+
+			// add 1 to frags to balance out the 1 subtracted for killing yourself
+			IncrementFragCount( 1 );
+		}
+
+		ChangeTeam( TEAM_SPECTATOR );
+
+		return true;
+	}
+	else
+	{
+		StopObserverMode();
+		State_Transition(STATE_ACTIVE);
+	}
+
+	// Switch their actual team...
+	ChangeTeam( team );
+
+	return true;
+}
+
+bool CHL2MP_Player::ClientCommand( const char *pcmd )
+{
+	if ( FStrEq( pcmd, "spectate" ) )
+	{
+		if ( ShouldRunRateLimitedCommand( pcmd ) )
+		{
+			// instantly join spectators
+			HandleCommand_JoinTeam( TEAM_SPECTATOR );	
+		}
+		return true;
+	}
+	else if ( FStrEq( pcmd, "jointeam" ) ) 
+	{
+		if ( engine->Cmd_Argc() < 2 )
+		{
+			Warning( "Player sent bad jointeam syntax\n" );
+		}
+
+		if ( ShouldRunRateLimitedCommand( pcmd ) )
+		{
+			int iTeam = atoi( engine->Cmd_Argv(1) );
+			HandleCommand_JoinTeam( iTeam );
+		}
+		return true;
+	}
+	else if ( FStrEq( pcmd, "joingame" ) )
+	{
+		
 		return true;
 	}
 
-	return BaseClass::ClientCommand( cmd );
+	return BaseClass::ClientCommand( pcmd );
 }
 
 void CHL2MP_Player::CheatImpulseCommands( int iImpulse )
@@ -935,6 +1036,26 @@ void CHL2MP_Player::CheatImpulseCommands( int iImpulse )
 
 		default:
 			BaseClass::CheatImpulseCommands( iImpulse );
+	}
+}
+
+bool CHL2MP_Player::ShouldRunRateLimitedCommand( const char *pcmd )
+{
+	int i = m_RateLimitLastCommandTimes.Find( pcmd );
+	if ( i == m_RateLimitLastCommandTimes.InvalidIndex() )
+	{
+		m_RateLimitLastCommandTimes.Insert( pcmd, gpGlobals->curtime );
+		return true;
+	}
+	else if ( (gpGlobals->curtime - m_RateLimitLastCommandTimes[i]) < HL2MP_COMMAND_MAX_RATE )
+	{
+		// Too fast.
+		return false;
+	}
+	else
+	{
+		m_RateLimitLastCommandTimes[i] = gpGlobals->curtime;
+		return true;
 	}
 }
 
@@ -1336,4 +1457,158 @@ void CHL2MP_Player::Reset()
 {	
 	ResetDeathCount();
 	ResetFragCount();
+}
+
+bool CHL2MP_Player::IsReady()
+{
+	return m_bReady;
+}
+
+void CHL2MP_Player::SetReady( bool bReady )
+{
+	m_bReady = bReady;
+}
+
+void CHL2MP_Player::CheckChatText( char *p, int bufsize )
+{
+	//Look for escape sequences and replace
+
+	char *buf = new char[bufsize];
+	int pos = 0;
+
+	// Parse say text for escape sequences
+	for ( char *pSrc = p; pSrc != NULL && *pSrc != 0 && pos < bufsize-1; pSrc++ )
+	{
+		// copy each char across
+		buf[pos] = *pSrc;
+		pos++;
+	}
+
+	buf[pos] = '\0';
+
+	// copy buf back into p
+	Q_strncpy( p, buf, bufsize );
+
+	delete[] buf;	
+
+	const char *pReadyCheck = p;
+
+	HL2MPRules()->CheckChatForReadySignal( this, pReadyCheck );
+}
+
+void CHL2MP_Player::State_Transition( HL2MPPlayerState newState )
+{
+	State_Leave();
+	State_Enter( newState );
+}
+
+
+void CHL2MP_Player::State_Enter( HL2MPPlayerState newState )
+{
+	m_iPlayerState = newState;
+	m_pCurStateInfo = State_LookupInfo( newState );
+
+	// Initialize the new state.
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
+		(this->*m_pCurStateInfo->pfnEnterState)();
+}
+
+
+void CHL2MP_Player::State_Leave()
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
+	{
+		(this->*m_pCurStateInfo->pfnLeaveState)();
+	}
+}
+
+
+void CHL2MP_Player::State_PreThink()
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnPreThink )
+	{
+		(this->*m_pCurStateInfo->pfnPreThink)();
+	}
+}
+
+
+CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo( HL2MPPlayerState state )
+{
+	// This table MUST match the 
+	static CHL2MPPlayerStateInfo playerStateInfos[] =
+	{
+		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CHL2MP_Player::State_Enter_ACTIVE, NULL, &CHL2MP_Player::State_PreThink_ACTIVE },
+		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CHL2MP_Player::State_Enter_OBSERVER_MODE,	NULL, &CHL2MP_Player::State_PreThink_OBSERVER_MODE }
+	};
+
+	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
+	{
+		if ( playerStateInfos[i].m_iPlayerState == state )
+			return &playerStateInfos[i];
+	}
+
+	return NULL;
+}
+
+bool CHL2MP_Player::StartObserverMode(int mode)
+{
+	//we only want to go into observer mode if the player asked to, not on a death timeout
+	if ( m_bEnterObserver == true )
+	{
+		return BaseClass::StartObserverMode( mode );
+	}
+	return false;
+}
+
+void CHL2MP_Player::StopObserverMode()
+{
+	m_bEnterObserver = false;
+	BaseClass::StopObserverMode();
+}
+
+void CHL2MP_Player::State_Enter_OBSERVER_MODE()
+{
+	int observerMode = m_iObserverLastMode;
+	if ( IsNetClient() )
+	{
+		const char *pIdealMode = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_spec_mode" );
+		if ( pIdealMode )
+		{
+			observerMode = atoi( pIdealMode );
+			if ( observerMode <= OBS_MODE_FIXED || observerMode > OBS_MODE_ROAMING )
+			{
+				observerMode = m_iObserverLastMode;
+			}
+		}
+	}
+	m_bEnterObserver = true;
+	StartObserverMode( observerMode );
+}
+
+void CHL2MP_Player::State_PreThink_OBSERVER_MODE()
+{
+	// Make sure nobody has changed any of our state.
+	//	Assert( GetMoveType() == MOVETYPE_FLY );
+	Assert( m_takedamage == DAMAGE_NO );
+	Assert( IsSolidFlagSet( FSOLID_NOT_SOLID ) );
+	//	Assert( IsEffectActive( EF_NODRAW ) );
+
+	// Must be dead.
+	Assert( m_lifeState == LIFE_DEAD );
+	Assert( pl.deadflag );
+}
+
+
+void CHL2MP_Player::State_Enter_ACTIVE()
+{
+	SetMoveType( MOVETYPE_WALK );
+	RemoveSolidFlags( FSOLID_NOT_SOLID );
+	m_Local.m_iHideHUD = 0;
+}
+
+
+void CHL2MP_Player::State_PreThink_ACTIVE()
+{
+	//we don't really need to do anything here. 
+	//This state_prethink structure came over from CS:S and was doing an assert check that fails the way hl2dm handles death
 }

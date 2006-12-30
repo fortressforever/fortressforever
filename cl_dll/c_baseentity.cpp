@@ -435,12 +435,6 @@ void RecvProxy_EffectFlags( const CRecvProxyData *pData, void *pStruct, void *pO
 	((C_BaseEntity*)pStruct)->SetEffects( pData->m_Value.m_Int );
 }
 
-static void RecvProxy_ModelIndex( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	C_BaseEntity *pEnt = (C_BaseEntity*)pStruct;
-	pEnt->m_nModelIndex = pEnt->ValidateModelIndex( pData->m_Value.m_Int );
-}
-
 
 BEGIN_RECV_TABLE_NOBASE( C_BaseEntity, DT_AnimTimeMustBeFirst )
 	RecvPropInt( RECVINFO(m_flAnimTime), 0, RecvProxy_AnimTime ),
@@ -461,7 +455,7 @@ BEGIN_RECV_TABLE_NOBASE(C_BaseEntity, DT_BaseEntity)
 
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 	RecvPropQAngles( RECVINFO_NAME( m_angNetworkAngles, m_angRotation ) ),
-	RecvPropInt(RECVINFO(m_nModelIndex), 0, RecvProxy_ModelIndex ),
+	RecvPropInt(RECVINFO(m_nModelIndex) ),
 
 	RecvPropInt(RECVINFO(m_fEffects), 0, RecvProxy_EffectFlags ),
 	RecvPropInt(RECVINFO(m_nRenderMode)),
@@ -1578,14 +1572,6 @@ int C_BaseEntity::GetModelIndex( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Returns either the same index, or another valid model index
-//-----------------------------------------------------------------------------
-int C_BaseEntity::ValidateModelIndex( int index )
-{
-	return index;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : index - 
 //-----------------------------------------------------------------------------
@@ -2131,6 +2117,18 @@ void C_BaseEntity::RemoveFromAimEntsList()
 }
 
 //-----------------------------------------------------------------------------
+// Update move-parent if needed. For SourceTV.
+//-----------------------------------------------------------------------------
+void C_BaseEntity::HierarchyUpdateMoveParent()
+{
+	if ( m_hNetworkMoveParent.ToInt() == m_pMoveParent.ToInt() )
+		return;
+
+	HierarchySetParent( m_hNetworkMoveParent );
+}
+
+
+//-----------------------------------------------------------------------------
 // Connects us up to hierarchy
 //-----------------------------------------------------------------------------
 void C_BaseEntity::HierarchySetParent( C_BaseEntity *pNewParent )
@@ -2231,6 +2229,15 @@ void C_BaseEntity::UnlinkFromHierarchy()
 
 
 //-----------------------------------------------------------------------------
+// Purpose: Make sure that the correct model is referenced for this entity
+//-----------------------------------------------------------------------------
+void C_BaseEntity::ValidateModelIndex( void )
+{
+	SetModelByIndex( m_nModelIndex );
+}
+
+
+//-----------------------------------------------------------------------------
 // Purpose: Entity data has been parsed and unpacked.  Now do any necessary decoding, munging
 // Input  : bnewentity - was this entity new in this update packet?
 //-----------------------------------------------------------------------------
@@ -2294,7 +2301,7 @@ void C_BaseEntity::PostDataUpdate( DataUpdateType_t updateType )
 	MarkMessageReceived();
 
 	// Make sure that the correct model is referenced for this entity
-	SetModelByIndex( m_nModelIndex );
+	ValidateModelIndex();
 
 	// If this entity was new, then latch in various values no matter what.
 	if ( updateType == DATA_UPDATE_CREATED )

@@ -423,7 +423,7 @@ void CViewRender::DriftPitch (void)
 	if ( !player )
 		return;
 
-	if ( /*input->IsNoClipping() ||*/ ( player->GetGroundEntity() == NULL ) || engine->IsPlayingDemo() )
+	if ( engine->IsHLTV() || ( player->GetGroundEntity() == NULL ) || engine->IsPlayingDemo() )
 	{
 		m_PitchDrift.driftmove = 0;
 		m_PitchDrift.pitchvel = 0;

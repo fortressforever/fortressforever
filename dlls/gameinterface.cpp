@@ -1812,20 +1812,6 @@ void CServerGameEnts::CheckTransmit( CCheckTransmitInfo *pInfo, const unsigned s
 
 	// int dontSend = 0; int always = 0; int fullCheck = 0; int PVS = 0;
 
-	// Figure out if the client's PVS is the same as last time.
-	bool bPlayerVisInfoSame = false;
-	const CCheckTransmitInfo *pPrevInfo = engine->GetPrevCheckTransmitInfo( pInfo->m_pClientEnt );
-	if ( !bIsHLTV &&
-		 gpGlobals->maxClients == 1 && 
-		 pPrevInfo && 
-		 pPrevInfo->m_nPVSSize == pInfo->m_nPVSSize &&
-		 pPrevInfo->m_nMapAreas == pInfo->m_nMapAreas && 
-		 memcmp( pPrevInfo->m_PVS, pInfo->m_PVS, pInfo->m_nPVSSize ) == 0 &&
-		 memcmp( pPrevInfo->m_AreaFloodNums, pInfo->m_AreaFloodNums, pInfo->m_nMapAreas * sizeof( pInfo->m_AreaFloodNums[0] ) ) == 0
-		 )
-	{
-		bPlayerVisInfoSame = true;
-	}
 
 	for ( int i=0; i < nEdicts; i++ )
 	{
