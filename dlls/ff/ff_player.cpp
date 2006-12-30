@@ -4695,7 +4695,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 	DamageEffect(info.GetDamage(),bitsDamage);
 
 	// Emit a pain sound but not when we're falling, because that is already handled
-	if (!(info.GetDamageType() & DMG_FALL))
+	if (IsAlive() && !(info.GetDamageType() & DMG_FALL))
 	{
 		EmitSound("Player.Pain");
 	}
