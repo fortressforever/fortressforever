@@ -10,6 +10,7 @@
 	purpose:	
 *********************************************************************/
 
+#include "cbase.h"
 #include "ff_socks.h"
 
 #pragma comment(lib, "wsock32.lib") 
