@@ -172,10 +172,21 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 	// use the proportional scale thingy
 
 	// Now set this label up
-	pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
+	//pImagePanel->SetPos( scheme()->GetProportionalScaledValue( iX ), scheme()->GetProportionalScaledValue( iY ) );
 	
+	// Jiggles: The above line displays the flag icon incorrectly on non 4:3 display resolutions
+	// -- See: Mantis issue 0001144 -- http://beta.fortress-forever.com/bugtracker/view.php?id=1144
+	// Instead, I scale the CHudLua container to the current display resolution, then calculate an x-position
+	// 5 pixels to the right of the screen.
+	// This solution has a minor problem, though: If the player changes screen resolution while carrying a flag,
+	// the flag icon will not be repositioned until he/she picks up a new one.
+
 	if( ( iWidth > 0 ) && ( iHeight > 0 ) )
 	{
+		SetSize(ScreenWidth(), ScreenHeight());
+		int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
+		pImagePanel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
+		
 		pImagePanel->SetShouldScaleImage( true );
 		pImagePanel->SetWide( scheme()->GetProportionalScaledValue( iWidth ) );
 		pImagePanel->SetTall( scheme()->GetProportionalScaledValue( iHeight ) );
