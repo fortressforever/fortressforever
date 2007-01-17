@@ -3457,7 +3457,8 @@ void CFFPlayer::StatusEffectsThink( void )
 				user.MakeReliable();
 				UserMessageBegin( user, "FFViewEffect" );
 					WRITE_BYTE( FF_VIEWEFFECT_GASSED );
-					WRITE_FLOAT( 6.0f );
+					// Jiggles: Changed from 6 to 2.5 to better match the 10 sec gas duration (Mantis: 0001222)
+					WRITE_FLOAT( 2.5f );
 				MessageEnd();
 
 				m_flNextGas = gpGlobals->curtime + 1.0f;
