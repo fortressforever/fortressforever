@@ -74,14 +74,6 @@ public:
 	// C_FFFlameJet-specific
 	bool				FlameEmit(bool fEmit);
 	void				Cleanup( void );
-	void				KillDynLight( void )
-	{
-		if( m_pDynLight )
-		{
-			m_pDynLight->die = gpGlobals->curtime;
-			m_pDynLight = NULL;
-		}
-	}
 	virtual void		SetDormant( bool bDormant );
 
 public:
@@ -102,8 +94,6 @@ private:
 	CParticleMgr		*m_pParticleMgr;
 	PMaterialHandle		m_hMaterialFlame, m_hMaterialSmoke;
 	TimedEvent			m_ParticleSpawn;
-
-	dlight_t			*m_pDynLight;
 
 private:
 	C_FFFlameJet(const C_FFFlameJet &);
