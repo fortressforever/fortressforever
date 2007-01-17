@@ -45,7 +45,8 @@ ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255", FCVAR_ARCH
 ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "160", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "64", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "5", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "150", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_radius_min( "ffdev_flamedlight_radius_min", "144", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_radius_max( "ffdev_flamedlight_radius_max", "176", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_life( "ffdev_flamedlight_life", "0.5", FCVAR_ARCHIVE );
 ConVar ffdev_flamedlight_rof( "ffdev_flamedlight_rof", "0.05", FCVAR_ARCHIVE );
 
@@ -331,9 +332,9 @@ void C_FFFlameJet::Update(float fTimeDelta)
 					if (dl)
 					{
 						dl->origin = pOwner->Weapon_ShootPosition();
-						dl->radius = ffdev_flamedlight_radius.GetFloat() + random->RandomFloat(0 - (ffdev_flamedlight_radius.GetFloat() / 8), ffdev_flamedlight_radius.GetFloat() / 8);
+						dl->radius = random->RandomFloat(ffdev_flamedlight_radius_min.GetFloat(), ffdev_flamedlight_radius_max.GetFloat());
 						dl->die = gpGlobals->curtime + ffdev_flamedlight_life.GetFloat();
-						dl->decay = ffdev_flamedlight_radius.GetFloat() / ffdev_flamedlight_life.GetFloat();
+						dl->decay = dl->radius / ffdev_flamedlight_life.GetFloat();
 						dl->color.r = ffdev_flamedlight_color_r.GetInt();
 						dl->color.g = ffdev_flamedlight_color_g.GetInt();
 						dl->color.b = ffdev_flamedlight_color_b.GetInt();

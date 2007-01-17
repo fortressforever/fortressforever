@@ -680,6 +680,14 @@ void C_BaseExplosionEffect::CreateMisc( void )
 {
 }
 
+ConVar ffdev_explosion_light_radius_min( "ffdev_explosion_light_radius_min", "224", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_radius_max( "ffdev_explosion_light_radius_max", "256", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_life( "ffdev_explosion_light_life", "0.25", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_color_r( "ffdev_explosion_light_color_r", "255", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_color_g( "ffdev_explosion_light_color_g", "224", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_color_b( "ffdev_explosion_light_color_b", "128", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_color_e( "ffdev_explosion_light_color_e", "5", FCVAR_ARCHIVE );
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -695,13 +703,13 @@ void C_BaseExplosionEffect::CreateDynamicLight( void )
 	if (dl) // I'm scared, daddy...of NULL pointers.
 	{
 		dl->origin = m_vecOrigin;
-		dl->radius	= random->RandomInt( 224, 256 ); // kinda big radius for explosion
-		dl->die = gpGlobals->curtime + 0.25f; // die = current time + life
-		dl->decay = dl->radius / 0.25f; // radius / life = good fade
-		dl->color.r = 255;
-		dl->color.g = 224;
-		dl->color.b = 128;
-		dl->color.exponent = 3; // essentially the brightness...also determines the gradient, basically
+		dl->radius	= random->RandomFloat( ffdev_explosion_light_radius_min.GetFloat(), ffdev_explosion_light_radius_max.GetFloat() ); // kinda big radius for explosion
+		dl->die = gpGlobals->curtime + ffdev_explosion_light_life.GetFloat(); // die = current time + life
+		dl->decay = dl->radius / ffdev_explosion_light_life.GetFloat(); // radius / life = good fade
+		dl->color.r = ffdev_explosion_light_color_r.GetFloat();
+		dl->color.g = ffdev_explosion_light_color_g.GetFloat();
+		dl->color.b = ffdev_explosion_light_color_b.GetFloat();
+		dl->color.exponent = ffdev_explosion_light_color_e.GetFloat(); // essentially the brightness...also determines the gradient, basically
 	}
 }
 

@@ -208,7 +208,9 @@ void CFFWeaponRailgun::Fire( void )
 
 	WeaponSound( SINGLE );
 
-	pPlayer->DoMuzzleFlash();
+	if (m_bMuzzleFlash)
+		pPlayer->DoMuzzleFlash();
+
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
 	// Player "shoot" animation
