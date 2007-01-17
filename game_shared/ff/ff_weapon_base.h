@@ -247,6 +247,8 @@ public:
 	int					m_iStatHit;
 	int					m_iActionKill;
 
+	bool				m_bMuzzleFlash;
+
 private:
 
 	CFFWeaponBase(const CFFWeaponBase &);

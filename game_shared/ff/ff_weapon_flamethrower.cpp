@@ -103,6 +103,8 @@ CFFWeaponFlamethrower::CFFWeaponFlamethrower()
 	m_hFlameJet = NULL;
 
 	m_bFiresUnderwater = false;
+
+	m_bMuzzleFlash = false;
 }
 
 //----------------------------------------------------------------------------

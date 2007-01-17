@@ -2585,6 +2585,14 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 
 extern ConVar muzzleflash_light;
 
+ConVar ffdev_muzzleflash_light_radius_min( "ffdev_muzzleflash_light_radius_min", "56", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_radius_max( "ffdev_muzzleflash_light_radius_max", "72", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_life( "ffdev_muzzleflash_light_life", "0.05", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_color_r( "ffdev_muzzleflash_light_color_r", "255", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_color_g( "ffdev_muzzleflash_light_color_g", "192", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_color_b( "ffdev_muzzleflash_light_color_b", "64", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_color_e( "ffdev_muzzleflash_light_color_e", "5", FCVAR_ARCHIVE );
+
 void C_BaseAnimating::ProcessMuzzleFlashEvent()
 {
 	// If we have an attachment, then stick a light on it.
@@ -2604,13 +2612,13 @@ void C_BaseAnimating::ProcessMuzzleFlashEvent()
 			if (dl) // I'm scared, daddy...of NULL pointers.
 			{
 				dl->origin = vAttachment;
-				dl->radius = random->RandomInt( 48, 64 ); // sorta small radius for muzzle flash
-				dl->die = gpGlobals->curtime + 0.05f; // die = current time + life
-				dl->decay = dl->radius / 0.05f; // radius / life = good fade
-				dl->color.r = 255;
-				dl->color.g = 192;
-				dl->color.b = 64;
-				dl->color.exponent = 3; // essentially the brightness...also determines the gradient, basically
+				dl->radius = random->RandomFloat( ffdev_muzzleflash_light_radius_min.GetFloat(), ffdev_muzzleflash_light_radius_max.GetFloat() ); // sorta small radius for muzzle flash
+				dl->die = gpGlobals->curtime + ffdev_muzzleflash_light_life.GetFloat(); // die = current time + life
+				dl->decay = dl->radius / ffdev_muzzleflash_light_life.GetFloat(); // radius / life = good fade
+				dl->color.r = ffdev_muzzleflash_light_color_r.GetFloat();
+				dl->color.g = ffdev_muzzleflash_light_color_g.GetFloat();
+				dl->color.b = ffdev_muzzleflash_light_color_b.GetFloat();
+				dl->color.exponent = ffdev_muzzleflash_light_color_e.GetFloat(); // essentially the brightness...also determines the gradient, basically
 			}
 		}
 	}

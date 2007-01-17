@@ -210,7 +210,8 @@ void CFFWeaponBaseClip::PrimaryAttack()
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
 
-	pPlayer->DoMuzzleFlash();
+	if (m_bMuzzleFlash)
+		pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 

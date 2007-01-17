@@ -139,6 +139,9 @@ CFFWeaponBase::CFFWeaponBase()
 	// All FF weapons fire underwater
 	m_bFiresUnderwater = true; 
 
+	// Most weapons have a muzzle flash
+	m_bMuzzleFlash = true;
+
 	SetCollisionGroup(COLLISION_GROUP_WEAPON);
 }
 
@@ -496,7 +499,8 @@ void CFFWeaponBase::PrimaryAttack()
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
 
-	pPlayer->DoMuzzleFlash();
+	if (m_bMuzzleFlash)
+		pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim(GetPrimaryAttackActivity());
 
