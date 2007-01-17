@@ -42,12 +42,12 @@ static ConVar flame_length_min(		"ffdev_flame_length_min", 		/*"0.3"*/ "0.36", 	
 static ConVar flame_length_max(		"ffdev_flame_length_max", 		/*"0.4"*/ "0.48", 	0, 	"Length of the flames in seconds");
 
 ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "100", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "50", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "3", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "200", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_innerangle( "ffdev_flamedlight_innerangle", "15", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_outterangle( "ffdev_flamedlight_outterangle", "30", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "160", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "64", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "5", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_radius( "ffdev_flamedlight_radius", "150", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_life( "ffdev_flamedlight_life", "0.5", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_rof( "ffdev_flamedlight_rof", "0.05", FCVAR_ARCHIVE );
 
 //=============================================================================
 // Globals
@@ -116,8 +116,6 @@ C_FFFlameJet::C_FFFlameJet()
 	m_fEmit			= true;
 
 	m_ParticleEffect.SetAlwaysSimulate(false); // Don't simulate outside the PVS or frustum.
-
-	m_pDynLight = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -135,8 +133,6 @@ void C_FFFlameJet::Cleanup( void )
 {
 	if( m_pParticleMgr ) 
 		m_pParticleMgr->RemoveEffect( &m_ParticleEffect );
-
-	KillDynLight();
 }
 
 //----------------------------------------------------------------------------
@@ -213,7 +209,6 @@ void C_FFFlameJet::Update(float fTimeDelta)
 {
 	if (!m_pParticleMgr) 
 	{
-		KillDynLight();
 		assert(false);
 		return;
 	}
@@ -223,7 +218,6 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	// A bunch of conditions that may stop the flamethrower
 	if (!pOwner || !pOwner->GetActiveFFWeapon() || pOwner->GetActiveFFWeapon()->GetWeaponID() != FF_WEAPON_FLAMETHROWER)
 	{
-		KillDynLight();
 		// Don't disable it for now
 		//m_fEmit = false;
 		return;
@@ -259,13 +253,11 @@ void C_FFFlameJet::Update(float fTimeDelta)
 	{
 		// Drag backwards
 		vecStart = tr.endpos - vecForward * 2.0f;
-		//KillDynLight();
 		//return;
 	}
 
 	if( ( tr.contents & CONTENTS_WATER ) || ( tr.contents & CONTENTS_SLIME ) )
 	{
-		KillDynLight();
 		return;
 	}
 
@@ -326,31 +318,33 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				pParticle->m_Collisiontime = tr.fraction * pParticle->m_Dietime;
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
 
-				// -------------------------------------
-				// Dynamic light stuff
-				// -------------------------------------
-				if( !m_pDynLight )
-				{
-					m_pDynLight = effects->CL_AllocDlight( 0 );
-					Assert( m_pDynLight );
-				}
+				static float lastdltime = gpGlobals->curtime;
 
-				m_pDynLight->origin = pOwner->Weapon_ShootPosition();
-				m_pDynLight->m_Direction = vecForward;
-				m_pDynLight->m_InnerAngle = ffdev_flamedlight_innerangle.GetFloat();
-				m_pDynLight->m_OuterAngle = ffdev_flamedlight_outterangle.GetFloat();
-				m_pDynLight->die = gpGlobals->curtime + 5.0f;
-				m_pDynLight->color.r = ffdev_flamedlight_color_r.GetInt();
-				m_pDynLight->color.g = ffdev_flamedlight_color_g.GetInt();
-				m_pDynLight->color.b = ffdev_flamedlight_color_b.GetInt();
-				m_pDynLight->color.exponent = ffdev_flamedlight_color_e.GetInt();
-				m_pDynLight->radius = ffdev_flamedlight_radius.GetFloat();
-				// -------------------------------------
+				if (gpGlobals->curtime - ffdev_flamedlight_rof.GetFloat() > lastdltime )
+				{
+					// -------------------------------------
+					// Dynamic light stuff
+					// -------------------------------------
+					dlight_t *dl = effects->CL_AllocDlight( 0 );
+
+					// don't want to start trying to access something that's not there
+					if (dl)
+					{
+						dl->origin = pOwner->Weapon_ShootPosition();
+						dl->radius = ffdev_flamedlight_radius.GetFloat() + random->RandomFloat(0 - (ffdev_flamedlight_radius.GetFloat() / 8), ffdev_flamedlight_radius.GetFloat() / 8);
+						dl->die = gpGlobals->curtime + ffdev_flamedlight_life.GetFloat();
+						dl->decay = ffdev_flamedlight_radius.GetFloat() / ffdev_flamedlight_life.GetFloat();
+						dl->color.r = ffdev_flamedlight_color_r.GetInt();
+						dl->color.g = ffdev_flamedlight_color_g.GetInt();
+						dl->color.b = ffdev_flamedlight_color_b.GetInt();
+						dl->color.exponent = ffdev_flamedlight_color_e.GetInt();
+
+						lastdltime = gpGlobals->curtime;
+					}
+				}
 			}
 		}
 	}
-	else
-		KillDynLight();
 }
 
 //----------------------------------------------------------------------------
