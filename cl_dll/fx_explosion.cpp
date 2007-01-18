@@ -680,13 +680,13 @@ void C_BaseExplosionEffect::CreateMisc( void )
 {
 }
 
-ConVar ffdev_explosion_light_radius_min( "ffdev_explosion_light_radius_min", "224", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_radius_max( "ffdev_explosion_light_radius_max", "256", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_life( "ffdev_explosion_light_life", "0.25", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_color_r( "ffdev_explosion_light_color_r", "255", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_color_g( "ffdev_explosion_light_color_g", "224", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_color_b( "ffdev_explosion_light_color_b", "128", FCVAR_ARCHIVE );
-ConVar ffdev_explosion_light_color_e( "ffdev_explosion_light_color_e", "5", FCVAR_ARCHIVE );
+ConVar ffdev_explosion_light_radius_min( "ffdev_explosion_light_radius_min", "224" );
+ConVar ffdev_explosion_light_radius_max( "ffdev_explosion_light_radius_max", "256" );
+ConVar ffdev_explosion_light_life( "ffdev_explosion_light_life", "0.25" );
+ConVar ffdev_explosion_light_color_r( "ffdev_explosion_light_color_r", "255" );
+ConVar ffdev_explosion_light_color_g( "ffdev_explosion_light_color_g", "224" );
+ConVar ffdev_explosion_light_color_b( "ffdev_explosion_light_color_b", "128" );
+ConVar ffdev_explosion_light_color_e( "ffdev_explosion_light_color_e", "5" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 

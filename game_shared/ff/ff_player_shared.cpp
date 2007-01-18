@@ -47,7 +47,7 @@ ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLIC
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICATED );
 
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "3", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_ARCHIVE );
+ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "3", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Time in seconds you have to wait until you can cloak again" );
 
 // ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
 // ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
