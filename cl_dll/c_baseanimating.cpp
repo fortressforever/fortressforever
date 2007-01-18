@@ -2585,13 +2585,13 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 
 extern ConVar muzzleflash_light;
 
-ConVar ffdev_muzzleflash_light_radius_min( "ffdev_muzzleflash_light_radius_min", "56", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_radius_max( "ffdev_muzzleflash_light_radius_max", "72", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_life( "ffdev_muzzleflash_light_life", "0.05", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_color_r( "ffdev_muzzleflash_light_color_r", "255", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_color_g( "ffdev_muzzleflash_light_color_g", "192", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_color_b( "ffdev_muzzleflash_light_color_b", "64", FCVAR_ARCHIVE );
-ConVar ffdev_muzzleflash_light_color_e( "ffdev_muzzleflash_light_color_e", "5", FCVAR_ARCHIVE );
+ConVar ffdev_muzzleflash_light_radius_min( "ffdev_muzzleflash_light_radius_min", "56" );
+ConVar ffdev_muzzleflash_light_radius_max( "ffdev_muzzleflash_light_radius_max", "72" );
+ConVar ffdev_muzzleflash_light_life( "ffdev_muzzleflash_light_life", "0.05" );
+ConVar ffdev_muzzleflash_light_color_r( "ffdev_muzzleflash_light_color_r", "255" );
+ConVar ffdev_muzzleflash_light_color_g( "ffdev_muzzleflash_light_color_g", "192" );
+ConVar ffdev_muzzleflash_light_color_b( "ffdev_muzzleflash_light_color_b", "64" );
+ConVar ffdev_muzzleflash_light_color_e( "ffdev_muzzleflash_light_color_e", "5" );
 
 void C_BaseAnimating::ProcessMuzzleFlashEvent()
 {

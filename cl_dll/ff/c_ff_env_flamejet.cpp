@@ -41,14 +41,14 @@ static ConVar flame_fadeout_time(	"ffdev_flame_fadeout_time", 	"0.2", 		0, 	"How
 static ConVar flame_length_min(		"ffdev_flame_length_min", 		/*"0.3"*/ "0.36", 	0, 	"Length of the flames in seconds");
 static ConVar flame_length_max(		"ffdev_flame_length_max", 		/*"0.4"*/ "0.48", 	0, 	"Length of the flames in seconds");
 
-ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "160", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "64", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "5", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_radius_min( "ffdev_flamedlight_radius_min", "144", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_radius_max( "ffdev_flamedlight_radius_max", "176", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_life( "ffdev_flamedlight_life", "0.5", FCVAR_ARCHIVE );
-ConVar ffdev_flamedlight_rof( "ffdev_flamedlight_rof", "0.05", FCVAR_ARCHIVE );
+ConVar ffdev_flamedlight_color_r( "ffdev_flamedlight_color_r", "255" );
+ConVar ffdev_flamedlight_color_g( "ffdev_flamedlight_color_g", "144" );
+ConVar ffdev_flamedlight_color_b( "ffdev_flamedlight_color_b", "64" );
+ConVar ffdev_flamedlight_color_e( "ffdev_flamedlight_color_e", "5" );
+ConVar ffdev_flamedlight_radius_min( "ffdev_flamedlight_radius_min", "176" );
+ConVar ffdev_flamedlight_radius_max( "ffdev_flamedlight_radius_max", "224" );
+ConVar ffdev_flamedlight_life( "ffdev_flamedlight_life", "0.5" );
+ConVar ffdev_flamedlight_rof( "ffdev_flamedlight_rof", "0.05" );
 
 //=============================================================================
 // Globals

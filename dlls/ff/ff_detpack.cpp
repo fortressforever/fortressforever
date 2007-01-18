@@ -46,8 +46,8 @@ BEGIN_DATADESC( CFFDetpack )
 	DEFINE_THINKFUNC( OnObjectThink ),
 END_DATADESC( )
 
-//static ConVar detpack_radius( "ffdev_detpack_radius", "700", FCVAR_ARCHIVE );
-static ConVar detpack_falloff( "ffdev_detpack_falloff", "1", FCVAR_ARCHIVE );
+//static ConVar detpack_radius( "ffdev_detpack_radius", "700" );
+static ConVar detpack_falloff( "ffdev_detpack_falloff", "1" );
 
 // Array of char *'s to dispenser models
 const char *g_pszFFDetpackModels[ ] =

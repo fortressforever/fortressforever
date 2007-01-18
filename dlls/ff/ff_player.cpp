@@ -90,10 +90,10 @@ static ConVar ffdev_gibdamage("ffdev_gibdamage", "100");
 
 extern ConVar sv_maxspeed;
 
-ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_ARCHIVE, "Time it takes to cloak (fade out to cloak)" );
-ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_ARCHIVE, "Time it takes to silent cloak (fade out to cloak)" );
-ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_ARCHIVE, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
-ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_ARCHIVE, "To tweak z factor of velocity when spy is cloaked" );
+ConVar ffdev_spy_cloakfadespeed( "ffdev_spy_cloaktime", "1", FCVAR_ARCHIVE | FCVAR_REPLICATED, "Time it takes to cloak (fade out to cloak)" );
+ConVar ffdev_spy_scloakfadespeed( "ffdev_spy_scloaktime", ".3", FCVAR_ARCHIVE | FCVAR_REPLICATED, "Time it takes to silent cloak (fade out to cloak)" );
+ConVar ffdev_spy_speedenforcewait( "ffdev_spy_speedenforcewait", "2", FCVAR_ARCHIVE | FCVAR_REPLICATED, "Time after cloaking a spys' speed will get enforced to the max cloak speed" );
+ConVar ffdev_spy_cloakzvel( "ffdev_spy_cloakzvel", "0.5", FCVAR_ARCHIVE | FCVAR_REPLICATED, "To tweak z factor of velocity when spy is cloaked" );
 
 #ifdef _DEBUG
 	// --------------------------------------------------------------------------------
