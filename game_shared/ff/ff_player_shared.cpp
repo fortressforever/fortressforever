@@ -435,7 +435,8 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 	m_flIdleTime = gpGlobals->curtime;
 
 	// Don't play footsteps for spy
-	if (GetClassSlot() != 8)
+	// Jiggles: But do play footsteps while disguised as a non-spy class (Mantis 0001374)
+	if ( GetClassSlot() != 8 || ( IsDisguised() && GetDisguisedClass() != 8 ) )
 		BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
 }
 // <-- Mirv: Proper sounds
