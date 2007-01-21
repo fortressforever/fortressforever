@@ -24,6 +24,7 @@
 #endif
 
 ConVar icblastpush("ffdev_icblastpush", "100", FCVAR_REPLICATED);
+ConVar ic_damage("ffdev_ic_damage", "120", FCVAR_REPLICATED);
 
 //=============================================================================
 // CFFWeaponIC
@@ -90,7 +91,9 @@ void CFFWeaponIC::Fire()
 	QAngle angAiming;
 	VectorAngles(pPlayer->GetAutoaimVector(0), angAiming);
 
-	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	// 0000936 - added cvar for testing. Keep line below commented out.
+	//CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
 
 	// Push player but don't add to upwards force
 	// 0000936 - reduce the blast push
