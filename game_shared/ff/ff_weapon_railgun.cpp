@@ -36,7 +36,12 @@
 
 //ConVar ffdev_railgun_push( "ffdev_railgun_pushmod", "30.0", FCVAR_REPLICATED, "Maximum push done by railgun" );
 ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
-ConVar ffdev_railgun_speed( "ffdev_railgun_speed", "1100.0", FCVAR_REPLICATED, "Rail speed" );
+
+// Jiggles: added ConVars per Mantis Issue 0001267
+ConVar ffdev_rail_minspeed( "ffdev_rail_minspeed", "1100.0", FCVAR_REPLICATED, "Rail min speed" ); // Minimum rail speed
+ConVar ffdev_rail_maxspeed( "ffdev_rail_maxspeed", "3300.0", FCVAR_REPLICATED, "Rail max speed" ); // Max rail speed
+ConVar ffdev_rail_mindamage( "ffdev_rail_mindamage", "25.0", FCVAR_REPLICATED, "Rail min damage" ); // Minimum rail damage
+ConVar ffdev_rail_maxdamage( "ffdev_rail_maxdamage", "75.0", FCVAR_REPLICATED, "Rail max damage" ); // Max rail damage
 
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
@@ -167,7 +172,8 @@ void CFFWeaponRailgun::Precache( void )
 void CFFWeaponRailgun::Fire( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
-	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
+	// Jiggles: Above line removed untill we decide on a good base damage value
 
 	Vector	vecForward;
 	pPlayer->EyeVectors( &vecForward );
@@ -203,9 +209,23 @@ void CFFWeaponRailgun::Fire( void )
 	VectorAngles( pPlayer->GetAutoaimVector(0), angAiming) ;
 
 	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
+	
+	// Jiggles: Adjusted Railgun behavior per Mantis Issue 0001267
+	// Determine Speed of rail projectile by: railspeed = min + [ ( ( max - min ) * chargetime ) / maxchargetime ] 
+	float flCurrentRailSpeed, flMinRailSpeed, flMaxRailSpeed;
+	flMinRailSpeed = ffdev_rail_minspeed.GetFloat();
+	flMaxRailSpeed = ffdev_rail_maxspeed.GetFloat();
+	flCurrentRailSpeed = flMinRailSpeed + ( ( ( flMaxRailSpeed - flMinRailSpeed ) * flChargeTime ) / ffdev_railgun_maxcharge.GetFloat() );
+	
+	// Now determine damage the same way
+	float flCurrentDamage, flMinDamage, flMaxDamage;
+	flMinDamage = ffdev_rail_mindamage.GetFloat();
+	flMaxDamage = ffdev_rail_maxdamage.GetFloat();
+	flCurrentDamage = flMinDamage + ( ( ( flMaxDamage - flMinDamage ) * flChargeTime ) / ffdev_railgun_maxcharge.GetFloat() );
 
-	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_railgun_speed.GetFloat(), flChargeTime );	
-
+	//CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_rail_minspeed.GetFloat(), flChargeTime );	
+	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flCurrentDamage, flCurrentRailSpeed, flChargeTime );	
+	
 	WeaponSound( SINGLE );
 
 	if (m_bMuzzleFlash)
@@ -326,7 +346,7 @@ void CFFWeaponRailgun::RailBeamEffect( void )
 #ifdef CLIENT_DLL
 
 //-----------------------------------------------------------------------------
-// Purpose: This takes palce after the viewmodel is drawn. We use this to
+// Purpose: This takes place after the viewmodel is drawn. We use this to
 //			create the glowing glob of stuff inside the railgun and the faint
 //			glow at the barrel.
 //-----------------------------------------------------------------------------
