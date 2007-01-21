@@ -59,8 +59,8 @@ public:
 	CFFGameMovement() {};
 };
 
-static ConVar bhop_cap("ffdev_bhop_cap", "1.4", FCVAR_REPLICATED);
-static ConVar bhop_baseline("ffdev_bhop_baseline", "1.32", FCVAR_REPLICATED);
+static ConVar bhop_cap("ffdev_bhop_cap", "1.08", FCVAR_REPLICATED);
+static ConVar bhop_baseline("ffdev_bhop_baseline", "1.04", FCVAR_REPLICATED);
 static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.5", FCVAR_REPLICATED);
 
 //-----------------------------------------------------------------------------
@@ -186,7 +186,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 	const float cap = /*2.0f*/ /*1.6f*/ bhop_cap.GetFloat() * mv->m_flMaxSpeed;
 	const float pcfactor = /*0.5f*/ bhop_pcfactor.GetFloat();
 	const float speed = FastSqrt(mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1]);
-	
+
 	if (speed > cap)
 	{
 		float applied_cap = (speed - cap) * pcfactor + baseline;
