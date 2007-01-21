@@ -421,6 +421,10 @@ ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
 	if( !pPlayer )
 		return MENU_DIM;
 
+	// 0001379: Must be on the ground to cloak
+	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
+		return MENU_DIM;
+
 	if( !pPlayer->IsCloakable() )
 		return MENU_DIM;
 
@@ -431,6 +435,10 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 {
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 	if( !pPlayer )
+		return MENU_DIM;
+
+	// 0001379: Must be on the ground to cloak
+	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
 		return MENU_DIM;
 
 	if( !pPlayer->IsCloakable() )
