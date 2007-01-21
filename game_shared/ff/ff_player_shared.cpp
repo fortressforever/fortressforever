@@ -1016,6 +1016,13 @@ void CFFPlayer::Command_SpyCloak( void )
 		return;
 	}
 
+	// 0001379: can cloak only if on the ground
+	if (!(GetFlags() & FL_ONGROUND) && !IsCloaked())
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
+		return;
+	}
+
 	// Check if we can cloak yet
 	if( !IsCloaked() && ( m_flNextCloak > gpGlobals->curtime ) )
 	{
@@ -1060,6 +1067,13 @@ void CFFPlayer::Command_SpySilentCloak( void )
 		}
 #endif
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK" );
+		return;
+	}
+
+	// 0001379: can cloak only if on the ground
+	if (!(GetFlags() & FL_ONGROUND) && !IsCloaked())
+	{
+		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
 
