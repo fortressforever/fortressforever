@@ -197,6 +197,10 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
 			g_pEffects->Sparks( GetAbsOrigin() );
 		}
+		
+		// 0001267: Added explosion effect if charged
+		if ( m_iMaxBounces )
+			Detonate();
 
 		Remove();
 	}
@@ -302,6 +306,9 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				m_pMainGlow->FadeAndDie( 2.0f );
 #endif
 				
+				// 0001267: Added explosion effect if charged
+				if ( m_iMaxBounces )
+					Detonate();
 				Remove();
 			}
 
@@ -313,7 +320,13 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		{
 			// Put a mark unless we've hit the sky
 			if( ( tr.surface.flags & SURF_SKY ) == false ) 
+			{
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
+				
+				// 0001267: Added explosion effect if charged
+				if ( m_iMaxBounces )
+					Detonate();
+			}
 
 			Remove();
 		}
