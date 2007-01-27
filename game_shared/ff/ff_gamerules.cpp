@@ -1056,6 +1056,12 @@ ConVar mp_prematch( "mp_prematch",
 					// lower the push because of the increased damage needed
 					flCalculatedForce /= 3;
 				}
+				else if ( pInflictor && ( pInflictor->Classify() == CLASS_RAIL_PROJECTILE ) )
+				{
+					flPushClamp = 300.0f;
+					// Don't want people jumpin' real high with the Rail Gun :)
+					flCalculatedForce /= 3;
+				}
 				else
 					flPushClamp = push_clamp.GetFloat();
 
