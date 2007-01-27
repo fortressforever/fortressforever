@@ -37,6 +37,8 @@ LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 
 ConVar ffdev_railgun_maxangle( "ffdev_railgun_maxangle", "60", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
+ConVar ffdev_rail_explodedamage( "ffdev_rail_explodedamage", "20", FCVAR_REPLICATED, "Damage caused by rail explosion" );
+ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED, "Damage multiplier per bounce" );
 
 #ifdef GAME_DLL
 //=============================================================================
@@ -200,7 +202,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		
 		// 0001267: Added explosion effect if charged
 		if ( m_iMaxBounces )
+		{
+			m_flDamage = ffdev_rail_explodedamage.GetFloat();
+			Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 			Detonate();
+		}
 
 		Remove();
 	}
@@ -246,8 +252,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				// Increment bounces
 				++m_iNumBounces;
 
-				// BOUNCE!
-				m_flDamage *= 2;				
+				//// BOUNCE!
+				//m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();				
 
 				vecDir = vForward * speed;
 				Vector reflect = vecDir + ( -2 * tr.plane.normal * DotProduct( vecDir, tr.plane.normal ) );
@@ -275,6 +281,9 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				// If we can bounce
 				if( !bCantBounce )
 				{
+					// BOUNCE BONUS DAMAGE!
+					m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 					// Shoot us back!
 					SetAbsVelocity( reflect );
 #ifdef GAME_DLL
@@ -308,7 +317,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				
 				// 0001267: Added explosion effect if charged
 				if ( m_iMaxBounces )
+				{
+					m_flDamage = ffdev_rail_explodedamage.GetFloat();
+					Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 					Detonate();
+				}
 				Remove();
 			}
 
@@ -325,7 +338,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				
 				// 0001267: Added explosion effect if charged
 				if ( m_iMaxBounces )
+				{
+					m_flDamage = ffdev_rail_explodedamage.GetFloat();
+					Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 					Detonate();
+				}
 			}
 
 			Remove();

@@ -43,6 +43,8 @@ public:
 	void RailTouch( CBaseEntity *pOther );
 
 	static CFFProjectileRail *CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime );
+	//virtual void CFFProjectileRail::Explode(trace_t *pTrace, int bitsDamageType);
+	virtual Class_T Classify( void ) { return CLASS_RAIL_PROJECTILE; }
 
 #ifdef CLIENT_DLL
 	CFFProjectileRail( void ) { m_iNumBounces = 0; }
