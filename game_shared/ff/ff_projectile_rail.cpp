@@ -204,7 +204,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		if ( m_iMaxBounces )
 		{
 			m_flDamage = ffdev_rail_explodedamage.GetFloat();
-			Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 			Detonate();
 		}
 
@@ -319,7 +318,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				if ( m_iMaxBounces )
 				{
 					m_flDamage = ffdev_rail_explodedamage.GetFloat();
-					Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 					Detonate();
 				}
 				Remove();
@@ -340,7 +338,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				if ( m_iMaxBounces )
 				{
 					m_flDamage = ffdev_rail_explodedamage.GetFloat();
-					Msg( "\nExplosion Damage is: %f\n", GetDamage() );
 					Detonate();
 				}
 			}
