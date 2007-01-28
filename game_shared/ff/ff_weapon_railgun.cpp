@@ -173,7 +173,7 @@ void CFFWeaponRailgun::Fire( void )
 {
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
-	// Jiggles: Above line removed untill we decide on a good base damage value
+	// Jiggles: Above line removed until we decide on a good base damage value
 
 	Vector	vecForward;
 	pPlayer->EyeVectors( &vecForward );
