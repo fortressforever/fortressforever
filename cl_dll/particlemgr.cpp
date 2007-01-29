@@ -41,7 +41,7 @@ static ConVar cl_particles_show_bbox( "cl_particles_show_bbox", "0", FCVAR_CHEAT
 //
 //-----------------------------------------------------------------------------
 
-#define PARTICLE_SIZE	96
+#define MAX_PARTICLE_SIZE	96
 
 CParticleMgr *ParticleMgr()
 {
@@ -409,8 +409,11 @@ PMaterialHandle CParticleEffectBinding::FindOrAddMaterial( const char *pMaterial
 }
 
 
-Particle* CParticleEffectBinding::AddParticle( int sizeInBytes, PMaterialHandle hMaterial )
+Particle* CParticleEffectBinding::AddParticle( int sizeInBytes, PMaterialHandle hMaterial, int iMaxParticleSizeOverride )
 {
+	// so we can make some particles alloc more than 96 bytes, like with the flamethrower's flame particles
+	const int PARTICLE_SIZE = iMaxParticleSizeOverride > 0 ? iMaxParticleSizeOverride : MAX_PARTICLE_SIZE;
+
 	// We've currently clamped the particle size to PARTICLE_SIZE,
 	// we may need to change this algorithm if we get particles with
 	// widely varying size
