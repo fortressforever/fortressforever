@@ -50,6 +50,11 @@ public:
 		Vector			m_HitSurfaceNormal;			// Normal of collision surface
 
 		float			m_flRedness;
+
+		dlight_t		*m_pDLight;					// dynamic light
+		float			m_fDLightDieTime;			// when the dynamic light dies, so you can avoid trying to access it
+		float			m_fDLightStartRadius;		// size of the dynamic light at the beginning
+		float			m_fDLightEndRadius;			// size of the dynamic light at the end
 	};
 
 	int IsEmissive() { return true; /*return (m_spawnflags & SF_EMISSIVE);*/ }

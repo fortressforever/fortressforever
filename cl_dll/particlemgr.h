@@ -341,7 +341,9 @@ public:
 	// deallocate them when the IParticleEffect SimulateAndRender() method 
 	// returns false. The first argument is the size of the particle
 	// structure in bytes
-	Particle*		AddParticle( int sizeInBytes, PMaterialHandle pMaterial );
+	// Use the third argument to override the alloc size by specifying the size
+	// in bytes that you want to use instead of MAX_PARTICLE_SIZE (which is 96)
+	Particle*		AddParticle( int sizeInBytes, PMaterialHandle pMaterial, int iMaxParticleSizeOverride = 0 );
 
 	// This is an optional call you can make if you want to manually manage the effect's
 	// bounding box. Normally, the bounding box is managed automatically, but in certain
