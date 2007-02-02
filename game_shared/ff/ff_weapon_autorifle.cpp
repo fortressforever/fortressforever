@@ -23,6 +23,15 @@
 	#include "ff_player.h"
 #endif
 
+
+// 1325: Dev variables for tweaking the autorifle
+ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_REPLICATED, "Assault Rifle Recoil Amount");
+ConVar ffdev_ar_push("ffdev_ar_push", "1", FCVAR_REPLICATED, "Assault Rifle Push Amount");
+ConVar ffdev_ar_damage("ffdev_ar_damage", "8", FCVAR_REPLICATED, "Assault Rifle Damage");
+ConVar ffdev_ar_rof("ffdev_ar_rof", "0.2", FCVAR_REPLICATED, "Assault Rifle Rate of Fire");
+ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.01", FCVAR_REPLICATED, "Assault Rifle Bullet Spread");
+
+
 //=============================================================================
 // CFFWeaponAutoRifle
 //=============================================================================
@@ -37,6 +46,7 @@ public:
 	CFFWeaponAutoRifle();
 
 	virtual void Fire();
+	virtual void PrimaryAttack();
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_AUTORIFLE; }
 
@@ -71,6 +81,61 @@ CFFWeaponAutoRifle::CFFWeaponAutoRifle()
 {
 }
 
+
+// 1325: Identical to the base class, except for the ConVars
+void CFFWeaponAutoRifle::PrimaryAttack() 
+{
+	CANCEL_IF_BUILDING();
+	CANCEL_IF_CLOAKED();
+
+	// Only the player fires this way so we can cast
+	CFFPlayer *pPlayer = ToFFPlayer(GetOwner());
+
+	if (!pPlayer)
+		return;
+
+	// Undisguise
+#ifdef GAME_DLL
+	pPlayer->ResetDisguise();
+#endif
+
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(SINGLE);
+
+	if (m_bMuzzleFlash)
+		pPlayer->DoMuzzleFlash();
+
+	SendWeaponAnim(GetPrimaryAttackActivity());
+
+	// player "shoot" animation
+	//pPlayer->SetAnimation(PLAYER_ATTACK1);
+	pPlayer->DoAnimationEvent(PLAYERANIMEVENT_FIRE_GUN_PRIMARY);
+
+#ifdef GAME_DLL
+	int nShots = min(GetFFWpnData().m_iCycleDecrement, pPlayer->GetAmmoCount(m_iPrimaryAmmoType));
+	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
+
+	// record in stats as a firing
+	//g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
+#endif
+
+	// Fire now
+	Fire();
+
+	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+	m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_ar_rof.GetFloat();
+
+	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+	}
+
+	//Add our view kick in
+	//pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
+	pPlayer->ViewPunch(QAngle(-ffdev_ar_recoil.GetFloat(), 0, 0));
+}
+
 //----------------------------------------------------------------------------
 // Purpose: Fires a single bullet
 //----------------------------------------------------------------------------
@@ -84,8 +149,15 @@ void CFFWeaponAutoRifle::Fire()
 
 	FireBulletsInfo_t info(pWeaponInfo.m_iBullets, pPlayer->Weapon_ShootPosition(), vecForward, Vector(pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread, pWeaponInfo.m_flBulletSpread), MAX_TRACE_LENGTH, m_iPrimaryAmmoType);
 	info.m_pAttacker = pPlayer;
-	info.m_iDamage = pWeaponInfo.m_iDamage;
-	info.m_iTracerFreq = 0;
+	//info.m_iDamage = pWeaponInfo.m_iDamage;
+	//info.m_iTracerFreq = 0;
+
+	// 1325: For tweaking autorifle
+	info.m_iDamage = ffdev_ar_damage.GetInt();
+	float flBulletSpread = ffdev_ar_bulletspread.GetFloat();
+	info.m_vecSpread = Vector( flBulletSpread, flBulletSpread, flBulletSpread );
+	info.m_flDamageForceScale = ffdev_ar_push.GetFloat();
 
 	pPlayer->FireBullets(info);
+
 }
