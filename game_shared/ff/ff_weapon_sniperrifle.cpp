@@ -655,21 +655,17 @@ void CFFWeaponSniperRifle::CheckFire()
 			// Make sure we're on the ground
 			if (pPlayer->GetFlags() & FL_ONGROUND) 
 			{
-				// Fire!!
-				Fire();
-
-#ifdef GAME_DLL
-				// remove the ammo
-				pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType);
-#endif
+				BaseClass::PrimaryAttack();
 			}
 			else
+			{
 				ClientPrint(dynamic_cast<CBasePlayer *> (GetOwnerEntity()), HUD_PRINTCENTER, "#FF_MUSTBEONGROUND");
+				const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
+				m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
+			}
 
 			// reset the data
 			m_bInFire = false;
-			const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-			m_flNextPrimaryAttack = gpGlobals->curtime + pWeaponInfo.m_flCycleTime;
 
 			// remove the laser as it's not needed anymore
 #ifdef GAME_DLL
