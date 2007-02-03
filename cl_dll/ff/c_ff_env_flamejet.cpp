@@ -45,12 +45,12 @@ ConVar ffdev_flame_dlight_color_r( "ffdev_flame_dlight_color_r", "255" );
 ConVar ffdev_flame_dlight_color_g( "ffdev_flame_dlight_color_g", "144" );
 ConVar ffdev_flame_dlight_color_b( "ffdev_flame_dlight_color_b", "64" );
 ConVar ffdev_flame_dlight_color_e( "ffdev_flame_dlight_color_e", "5" );
-ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "128" );
-ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "160" );
-ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "192" );
-ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "224" );
-//ConVar ffdev_flame_dlight_life( "ffdev_flame_dlight_life", "0.5" );
-ConVar ffdev_flame_dlight_rof( "ffdev_flame_dlight_rof", "0.075" );
+ConVar ffdev_flame_dlight_startradius_min( "ffdev_flame_dlight_startradius_min", "80" );
+ConVar ffdev_flame_dlight_startradius_max( "ffdev_flame_dlight_startradius_max", "100" );
+ConVar ffdev_flame_dlight_endradius_min( "ffdev_flame_dlight_endradius_min", "130" );
+ConVar ffdev_flame_dlight_endradius_max( "ffdev_flame_dlight_endradius_max", "150" );
+ConVar ffdev_flame_dlight_rate( "ffdev_flame_dlight_rate", "0.2", 0, "Attach a light to one of the flame particles every X seconds." );
+ConVar ffdev_flame_dlight_style( "ffdev_flame_dlight_style", "6", 0, "0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker)");
 
 //=============================================================================
 // Globals
@@ -117,6 +117,8 @@ C_FFFlameJet::C_FFFlameJet()
 	m_Rate			= ffdev_flame_rate.GetInt();			// 128; 
 
 	m_fEmit			= true;
+
+	m_pDLight = NULL;
 
 	m_ParticleEffect.SetAlwaysSimulate(false); // Don't simulate outside the PVS or frustum.
 }
@@ -283,6 +285,29 @@ void C_FFFlameJet::Update(float fTimeDelta)
 
 	if (m_fEmit && m_ParticleEffect.WasDrawnPrevFrame()) 
 	{
+		// update the existing muzzle light
+		if (m_pDLight)
+		{
+			m_pDLight->origin = vecStart;
+			m_pDLight->die = gpGlobals->curtime + ffdev_flame_dietime_max.GetFloat();
+		}
+		else
+		{
+			// create the muzzle light
+			m_pDLight = effects->CL_AllocDlight( 0 );
+			if ( m_pDLight )
+			{
+				m_pDLight->origin = vecStart;
+				m_pDLight->radius = random->RandomFloat(ffdev_flame_dlight_startradius_min.GetFloat(), ffdev_flame_dlight_startradius_max.GetFloat());
+				m_pDLight->die = gpGlobals->curtime + ffdev_flame_dietime_max.GetFloat();
+				m_pDLight->color.r = ffdev_flame_dlight_color_r.GetInt();
+				m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();
+				m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();
+				m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();
+				m_pDLight->style = ffdev_flame_dlight_style.GetInt();
+			}
+		}
+
 		float tempDelta = fTimeDelta;
 		while (m_ParticleSpawn.NextEvent(tempDelta)) 
 		{
@@ -324,7 +349,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				pParticle->m_HitSurfaceNormal = tr.plane.normal;
 
 				static float lastdltime = 0;
-				if (gpGlobals->curtime - ffdev_flame_dlight_rof.GetFloat() > lastdltime )
+				if (gpGlobals->curtime - ffdev_flame_dlight_rate.GetFloat() > lastdltime )
 				{
 					pParticle->m_fDLightDieTime = gpGlobals->curtime + pParticle->m_Dietime;
 					pParticle->m_fDLightStartRadius = random->RandomFloat(ffdev_flame_dlight_startradius_min.GetFloat(), ffdev_flame_dlight_startradius_max.GetFloat());
@@ -345,6 +370,7 @@ void C_FFFlameJet::Update(float fTimeDelta)
 						pParticle->m_pDLight->color.g = ffdev_flame_dlight_color_g.GetInt();
 						pParticle->m_pDLight->color.b = ffdev_flame_dlight_color_b.GetInt();
 						pParticle->m_pDLight->color.exponent = ffdev_flame_dlight_color_e.GetInt();
+						pParticle->m_pDLight->style = ffdev_flame_dlight_style.GetInt();
 
 						lastdltime = gpGlobals->curtime;
 					}
@@ -356,6 +382,13 @@ void C_FFFlameJet::Update(float fTimeDelta)
 				}
 			}
 		}
+	}
+	// time to kill the muzzle light
+	else if (m_pDLight)
+	{
+		m_pDLight->die = gpGlobals->curtime + ffdev_flame_dietime_min.GetFloat();
+		m_pDLight->decay = m_pDLight->radius / ffdev_flame_dietime_min.GetFloat();
+		m_pDLight = NULL;
 	}
 }
 

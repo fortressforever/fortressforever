@@ -51,7 +51,7 @@ public:
 
 		float			m_flRedness;
 
-		dlight_t		*m_pDLight;					// dynamic light
+		dlight_t		*m_pDLight;					// dynamic light attached to particle
 		float			m_fDLightDieTime;			// when the dynamic light dies, so you can avoid trying to access it
 		float			m_fDLightStartRadius;		// size of the dynamic light at the beginning
 		float			m_fDLightEndRadius;			// size of the dynamic light at the end
@@ -93,6 +93,8 @@ public:
 	float			m_EndSize;
 	float			m_Rate;
 	float			m_Lifetime; 
+
+	dlight_t		*m_pDLight; // dynamic light attached to muzzle
 
 private:
 
