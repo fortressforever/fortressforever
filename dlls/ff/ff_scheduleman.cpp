@@ -30,9 +30,19 @@ bool CRC32_LessFunc(const CRC32_t& a, const CRC32_t& b)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CFFScheduleCallack
+// CFFScheduleCallback
 /////////////////////////////////////////////////////////////////////////////
-CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn, float timer, int nRepeat)
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn, float timer)
+{
+	m_function = fn;
+	m_timeLeft = timer;
+	m_timeTotal = timer;
+	m_nRepeat = 1;
+	m_nParams = 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn, float timer, int nRepeat)
 {
 	m_function = fn;
 	m_timeLeft = timer;
@@ -42,7 +52,7 @@ CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn, float tim
 }
 
 /////////////////////////////////////////////////////////////////////////////
-CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn,
 									   float timer,
 									   int nRepeat,
 									   const luabind::adl::object& param)
@@ -56,7 +66,7 @@ CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn,
 									   float timer,
 									   int nRepeat,
 									   const luabind::adl::object& param1,
@@ -72,19 +82,59 @@ CFFScheduleCallack::CFFScheduleCallack(const luabind::adl::object& fn,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-CFFScheduleCallack::CFFScheduleCallack(const CFFScheduleCallack& rhs)
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn,
+										 float timer,
+										 int nRepeat,
+										 const luabind::adl::object& param1,
+										 const luabind::adl::object& param2,
+										 const luabind::adl::object& param3)
+{
+	m_function = fn;
+	m_timeLeft = timer;
+	m_timeTotal = timer;
+	m_nRepeat = nRepeat;
+	m_nParams = 3;
+	m_params[0] = param1;
+	m_params[1] = param2;
+	m_params[2] = param3;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFScheduleCallback::CFFScheduleCallback(const luabind::adl::object& fn,
+										 float timer,
+										 int nRepeat,
+										 const luabind::adl::object& param1,
+										 const luabind::adl::object& param2,
+										 const luabind::adl::object& param3,
+										 const luabind::adl::object& param4)
+{
+	m_function = fn;
+	m_timeLeft = timer;
+	m_timeTotal = timer;
+	m_nRepeat = nRepeat;
+	m_nParams = 4;
+	m_params[0] = param1;
+	m_params[1] = param2;
+	m_params[2] = param3;
+	m_params[3] = param4;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CFFScheduleCallback::CFFScheduleCallback(const CFFScheduleCallback& rhs)
 {
 	m_function = rhs.m_function;
 	m_timeLeft = rhs.m_timeLeft;
 	m_timeTotal = rhs.m_timeTotal;
 	m_nRepeat = rhs.m_nRepeat;
 	m_nParams = rhs.m_nParams;
-	m_params[0] = m_params[0];
-	m_params[1] = m_params[1];
+	m_params[0] = rhs.m_params[0];
+	m_params[1] = rhs.m_params[1];
+	m_params[2] = rhs.m_params[2];
+	m_params[3] = rhs.m_params[3];
 }
 
 /////////////////////////////////////////////////////////////////////////////
-bool CFFScheduleCallack::Update()
+bool CFFScheduleCallback::Update()
 {
 #ifdef FF_BETA_TEST_COMPILE
 	CBaseEntity *p = NULL;
@@ -106,23 +156,27 @@ bool CFFScheduleCallack::Update()
 
 			else if(m_nParams == 2)
 				m_function(m_params[0], m_params[1]);
+
+			else if(m_nParams == 3)
+				m_function(m_params[0], m_params[1], m_params[2]);
+
+			else if(m_nParams == 4)
+				m_function(m_params[0], m_params[1], m_params[2], m_params[3]);
 		}
 		catch(...)
 		{
 
 		}
 
-		// repeat value -1 indicates infinite
-		if(m_nRepeat == -1)
+		// repeat only so many times
+		if (m_nRepeat > 0)
+			--m_nRepeat;
+
+		// schedule is done, so clean up
+		if (m_nRepeat == 0)
 			return true;
 
-		--m_nRepeat;
-
-		// check if the schedule should be cleaned up
-		if(m_nRepeat < 1)
-			return true;
-
-		// reset the timer
+		// reset the timer for repeating shit
 		m_timeLeft = m_timeTotal;
 	}
 
@@ -147,6 +201,29 @@ CFFScheduleManager::~CFFScheduleManager()
 /////////////////////////////////////////////////////////////////////////////
 void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 									 float timer,
+									 const luabind::adl::object& fn)
+{
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
+	CRC32_t id = ComputeChecksum(szScheduleName);
+
+	// check if the schedule of the specified name already exists
+	if(m_schedules.IsValidIndex(m_schedules.Find(id)))
+		return;
+
+	// add a new schedule to the list
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
+															timer);
+
+	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFScheduleManager::AddSchedule(const char* szScheduleName,
+									 float timer,
 									 const luabind::adl::object& fn,
 									 int nRepeat)
 {
@@ -161,7 +238,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 		return;
 
 	// add a new schedule to the list
-	CFFScheduleCallack* pCallback = new CFFScheduleCallack(fn,
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
 														   timer,
 														   nRepeat);
 
@@ -187,7 +264,7 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 		return;
 
 	// add a new schedule to the list
-	CFFScheduleCallack* pCallback = new CFFScheduleCallack(fn,
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
 														   timer,
 														   nRepeat,
 														   param);
@@ -215,11 +292,75 @@ void CFFScheduleManager::AddSchedule(const char* szScheduleName,
 		return;
 
 	// add a new schedule to the list
-	CFFScheduleCallack* pCallback = new CFFScheduleCallack(fn,
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
 														   timer,
 														   nRepeat,
 														   param1,
 														   param2);
+
+	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFScheduleManager::AddSchedule(const char* szScheduleName,
+									 float timer,
+									 const luabind::adl::object& fn,
+									 int nRepeat,
+									 const luabind::adl::object& param1,
+									 const luabind::adl::object& param2,
+									 const luabind::adl::object& param3)
+{
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
+	CRC32_t id = ComputeChecksum(szScheduleName);
+
+	// check if the schedule of the specified name already exists
+	if(m_schedules.IsValidIndex(m_schedules.Find(id)))
+		return;
+
+	// add a new schedule to the list
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
+															timer,
+															nRepeat,
+															param1,
+															param2,
+															param3);
+
+	m_schedules.Insert(id, pCallback);
+#endif // FF_BETA_TEST_COMPILE
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CFFScheduleManager::AddSchedule(const char* szScheduleName,
+									 float timer,
+									 const luabind::adl::object& fn,
+									 int nRepeat,
+									 const luabind::adl::object& param1,
+									 const luabind::adl::object& param2,
+									 const luabind::adl::object& param3,
+									 const luabind::adl::object& param4)
+{
+#ifdef FF_BETA_TEST_COMPILE
+	CBaseEntity *p = NULL;
+	p->Activate();
+#else
+	CRC32_t id = ComputeChecksum(szScheduleName);
+
+	// check if the schedule of the specified name already exists
+	if(m_schedules.IsValidIndex(m_schedules.Find(id)))
+		return;
+
+	// add a new schedule to the list
+	CFFScheduleCallback* pCallback = new CFFScheduleCallback(fn,
+															timer,
+															nRepeat,
+															param1,
+															param2,
+															param3,
+															param4);
 
 	m_schedules.Insert(id, pCallback);
 #endif // FF_BETA_TEST_COMPILE
@@ -255,7 +396,7 @@ void CFFScheduleManager::Update()
 	unsigned short it = m_schedules.FirstInorder();
 	while(m_schedules.IsValidIndex(it))
 	{
-		CFFScheduleCallack* pCallback = m_schedules.Element(it);
+		CFFScheduleCallback* pCallback = m_schedules.Element(it);
 		bool isComplete = pCallback->Update();
 
 		if(isComplete)

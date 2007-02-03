@@ -946,7 +946,7 @@ namespace FFLib
 
 	void AddSchedule(const char* szScheduleName, float time, const luabind::adl::object& fn)
 	{
-		_scheduleman.AddSchedule(szScheduleName, time, fn, 1);
+		_scheduleman.AddSchedule(szScheduleName, time, fn);
 	}
 
 	void AddSchedule(const char* szScheduleName,
@@ -954,7 +954,7 @@ namespace FFLib
 					 const luabind::adl::object& fn,
 					 const luabind::adl::object& param)
 	{
-		_scheduleman.AddSchedule(szScheduleName, time, fn, 1, param);
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 0, param);
 	}
 
 	void AddSchedule(const char* szScheduleName,
@@ -963,7 +963,28 @@ namespace FFLib
 					 const luabind::adl::object& param1,
 					 const luabind::adl::object& param2)
 	{
-		_scheduleman.AddSchedule(szScheduleName, time, fn, 1, param1, param2);
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 0, param1, param2);
+	}
+
+	void AddSchedule(const char* szScheduleName,
+					float time,
+					const luabind::adl::object& fn,
+					const luabind::adl::object& param1,
+					const luabind::adl::object& param2,
+					const luabind::adl::object& param3)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 0, param1, param2, param3);
+	}
+
+	void AddSchedule(const char* szScheduleName,
+					float time,
+					const luabind::adl::object& fn,
+					const luabind::adl::object& param1,
+					const luabind::adl::object& param2,
+					const luabind::adl::object& param3,
+					const luabind::adl::object& param4)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, 0, param1, param2, param3, param4);
 	}
 
 	void AddScheduleRepeating(const char* szScheduleName, float time, const luabind::adl::object& fn)
@@ -974,9 +995,9 @@ namespace FFLib
 	void AddScheduleRepeating(const char* szScheduleName,
 							  float time,
 							  const luabind::adl::object& fn,
-							  const luabind::adl::object& param1)
+							  const luabind::adl::object& param)
 	{
-		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1);
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param);
 	}
 
 	void AddScheduleRepeating(const char* szScheduleName,
@@ -988,7 +1009,80 @@ namespace FFLib
 		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1, param2);
 	}
 
+	void AddScheduleRepeating(const char* szScheduleName,
+							float time,
+							const luabind::adl::object& fn,
+							const luabind::adl::object& param1,
+							const luabind::adl::object& param2,
+							const luabind::adl::object& param3)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1, param2, param3);
+	}
+
+	void AddScheduleRepeating(const char* szScheduleName,
+							float time,
+							const luabind::adl::object& fn,
+							const luabind::adl::object& param1,
+							const luabind::adl::object& param2,
+							const luabind::adl::object& param3,
+							const luabind::adl::object& param4)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, -1, param1, param2, param3, param4);
+	}
+
+	void AddScheduleRepeatingNotInfinitely(const char* szScheduleName, float time, const luabind::adl::object& fn, int nRepeat)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, nRepeat);
+	}
+
+	void AddScheduleRepeatingNotInfinitely(const char* szScheduleName,
+											float time,
+											const luabind::adl::object& fn,
+											int nRepeat,
+											const luabind::adl::object& param)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, nRepeat, param);
+	}
+
+	void AddScheduleRepeatingNotInfinitely(const char* szScheduleName,
+											float time,
+											const luabind::adl::object& fn,
+											int nRepeat,
+											const luabind::adl::object& param1,
+											const luabind::adl::object& param2)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, nRepeat, param1, param2);
+	}
+
+	void AddScheduleRepeatingNotInfinitely(const char* szScheduleName,
+											float time,
+											const luabind::adl::object& fn,
+											int nRepeat,
+											const luabind::adl::object& param1,
+											const luabind::adl::object& param2,
+											const luabind::adl::object& param3)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, nRepeat, param1, param2, param3);
+	}
+
+	void AddScheduleRepeatingNotInfinitely(const char* szScheduleName,
+											float time,
+											const luabind::adl::object& fn,
+											int nRepeat,
+											const luabind::adl::object& param1,
+											const luabind::adl::object& param2,
+											const luabind::adl::object& param3,
+											const luabind::adl::object& param4)
+	{
+		_scheduleman.AddSchedule(szScheduleName, time, fn, nRepeat, param1, param2, param3, param4);
+	}
+
 	void DeleteSchedule(const char* szScheduleName)
+	{
+		_scheduleman.RemoveSchedule(szScheduleName);
+	}
+
+	void RemoveSchedule(const char* szScheduleName)
 	{
 		_scheduleman.RemoveSchedule(szScheduleName);
 	}
@@ -1085,9 +1179,18 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
+		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddSchedule),
 		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
 		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
 		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeating",		(void(*)(const char*, float, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeating),
+		def("AddScheduleRepeatingNotInfinitely",		(void(*)(const char*, float, const luabind::adl::object&, int))&FFLib::AddScheduleRepeatingNotInfinitely),
+		def("AddScheduleRepeatingNotInfinitely",		(void(*)(const char*, float, const luabind::adl::object&, int, const luabind::adl::object&))&FFLib::AddScheduleRepeatingNotInfinitely),
+		def("AddScheduleRepeatingNotInfinitely",		(void(*)(const char*, float, const luabind::adl::object&, int, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeatingNotInfinitely),
+		def("AddScheduleRepeatingNotInfinitely",		(void(*)(const char*, float, const luabind::adl::object&, int, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeatingNotInfinitely),
+		def("AddScheduleRepeatingNotInfinitely",		(void(*)(const char*, float, const luabind::adl::object&, int, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&, const luabind::adl::object&))&FFLib::AddScheduleRepeatingNotInfinitely),
 		def("ApplyToAll",				&FFLib::ApplyToAll),
 		def("ApplyToTeam",				&FFLib::ApplyToTeam),
 		def("ApplyToPlayer",			&FFLib::ApplyToPlayer),
@@ -1107,6 +1210,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToDetpack",			&FFLib::CastToDetpack),
 		def("ConsoleToAll",				&FFLib::ConsoleToAll),
 		def("DeleteSchedule",			&FFLib::DeleteSchedule),
+		def("RemoveSchedule",			&FFLib::RemoveSchedule),
 		def("GetConvar",				&FFLib::GetConvar),
 		def("GetEntity",				&FFLib::GetEntity),
 		def("GetEntityByName",			&FFLib::GetEntityByName),
