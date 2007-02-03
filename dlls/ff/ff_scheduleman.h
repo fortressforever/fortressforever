@@ -14,26 +14,46 @@
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-class CFFScheduleCallack
+class CFFScheduleCallback
 {
 public:
 	// 'structors
-	CFFScheduleCallack(const luabind::adl::object& fn, float timer, int nRepeat);
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer);
 
-	CFFScheduleCallack(const luabind::adl::object& fn,
-					   float timer,
-					   int nRepeat,
-					   const luabind::adl::object& param);
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer,
+						int nRepeat);
 
-	CFFScheduleCallack(const luabind::adl::object& fn,
-					   float timer,
-					   int nRepeat,
-					   const luabind::adl::object& param1,
-					   const luabind::adl::object& param2);
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer,
+						int nRepeat,
+						const luabind::adl::object& param);
 
-	CFFScheduleCallack(const CFFScheduleCallack& rhs);
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer,
+						int nRepeat,
+						const luabind::adl::object& param1,
+						const luabind::adl::object& param2);
 
-	~CFFScheduleCallack() {}
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer,
+						int nRepeat,
+						const luabind::adl::object& param1,
+						const luabind::adl::object& param2,
+						const luabind::adl::object& param3);
+
+	CFFScheduleCallback(const luabind::adl::object& fn,
+						float timer,
+						int nRepeat,
+						const luabind::adl::object& param1,
+						const luabind::adl::object& param2,
+						const luabind::adl::object& param3,
+						const luabind::adl::object& param4);
+
+	CFFScheduleCallback(const CFFScheduleCallback& rhs);
+
+	~CFFScheduleCallback() {}
 
 public:
 	// updates. call only once per frame. returns true if the schedule is
@@ -47,7 +67,7 @@ private:
 	float	m_timeTotal;				// total time for a complete cycle
 	int		m_nRepeat;					// number of times to cycle (-1 is infinite)
 	int		m_nParams;					// number of params to pass to the function
-	luabind::adl::object m_params[2];	// params to pass to function
+	luabind::adl::object m_params[4];	// params to pass to function
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -66,22 +86,43 @@ public:
 public:
 	// adds a schedule
 	void AddSchedule(const char* szScheduleName,
-					 float timer,
-					 const luabind::adl::object& fn,
-					 int nRepeat);
+					float timer,
+					const luabind::adl::object& fn);
 
 	void AddSchedule(const char* szScheduleName,
-					 float timer,
-					 const luabind::adl::object& fn,
-					 int nRepeat,
-					 const luabind::adl::object& param);
+					float timer,
+					const luabind::adl::object& fn,
+					int nRepeat);
 
 	void AddSchedule(const char* szScheduleName,
-					 float timer,
-					 const luabind::adl::object& fn,
-					 int nRepeat,
-					 const luabind::adl::object& param1,
-					 const luabind::adl::object& param2);
+					float timer,
+					const luabind::adl::object& fn,
+					int nRepeat,
+					const luabind::adl::object& param);
+
+	void AddSchedule(const char* szScheduleName,
+					float timer,
+					const luabind::adl::object& fn,
+					int nRepeat,
+					const luabind::adl::object& param1,
+					const luabind::adl::object& param2);
+
+	void AddSchedule(const char* szScheduleName,
+					float timer,
+					const luabind::adl::object& fn,
+					int nRepeat,
+					const luabind::adl::object& param1,
+					const luabind::adl::object& param2,
+					const luabind::adl::object& param3);
+
+	void AddSchedule(const char* szScheduleName,
+					float timer,
+					const luabind::adl::object& fn,
+					int nRepeat,
+					const luabind::adl::object& param1,
+					const luabind::adl::object& param2,
+					const luabind::adl::object& param3,
+					const luabind::adl::object& param4);
 
 	// removes a schedule
 	void RemoveSchedule(const char* szScheduleName);
@@ -89,7 +130,7 @@ public:
 private:
 	// list of schedules. key is the checksum of an identifying name; it
 	// isnt necessarily the name of the lua function to call
-	CUtlMap<CRC32_t, CFFScheduleCallack*>	m_schedules;
+	CUtlMap<CRC32_t, CFFScheduleCallback*>	m_schedules;
 };
 
 /////////////////////////////////////////////////////////////////////////////
