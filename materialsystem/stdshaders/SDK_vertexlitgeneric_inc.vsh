@@ -1,4 +1,4 @@
-#include "FF_macros.vsh"
+#include "SDK_macros.vsh"
 
 sub VertexLitGeneric
 {

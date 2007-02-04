@@ -50,7 +50,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9ff\include"
+				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9sdk\include"
 				PreprocessorDefinitions="_DEBUG;_WINDOWS;_USRDLL;STDSHADER_DX8_DLL_EXPORT;_WIN32"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="0"
@@ -155,7 +155,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9ff\include"
+				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9sdk\include"
 				PreprocessorDefinitions="NDEBUG;_WINDOWS;_USRDLL;STDSHADER_DX8_DLL_EXPORT;_WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -289,7 +289,7 @@
 			Name="Link Libraries"
 			>
 			<File
-				RelativePath="..\..\dx9ff\lib\d3dx9.lib"
+				RelativePath="..\..\dx9sdk\lib\d3dx9.lib"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

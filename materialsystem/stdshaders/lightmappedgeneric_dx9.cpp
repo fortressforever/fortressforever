@@ -9,11 +9,11 @@
 #include "BaseVSShader.h"
 #include "convar.h"
 #include "lightmappedgeneric_dx9_helper.h"
-#include "FF_lightmappedgeneric_ps20.inc"
-#include "FF_lightmappedgeneric_vs20.inc"
+#include "SDK_lightmappedgeneric_ps20.inc"
+#include "SDK_lightmappedgeneric_vs20.inc"
 
-BEGIN_VS_SHADER( FF_LightmappedGeneric_DX9,
-			  "Help for FF_LightmappedGeneric" )
+BEGIN_VS_SHADER( SDK_LightmappedGeneric_DX9,
+			  "Help for SDK_LightmappedGeneric" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( ALBEDO, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "albedo (Base texture with no baked lighting)" )
@@ -91,7 +91,7 @@ END_SHADER_PARAMS
 	SHADER_FALLBACK
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 90 )
-			return "FF_LightmappedGeneric_DX8";
+			return "SDK_LightmappedGeneric_DX8";
 
 		return 0;
 	}

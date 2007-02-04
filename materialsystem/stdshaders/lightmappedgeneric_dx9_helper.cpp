@@ -9,8 +9,8 @@
 #include "lightmappedgeneric_dx9_helper.h"
 #include "BaseVSShader.h"
 #include "convar.h"
-#include "FF_lightmappedgeneric_ps20.inc"
-#include "FF_lightmappedgeneric_vs20.inc"
+#include "SDK_lightmappedgeneric_ps20.inc"
+#include "SDK_lightmappedgeneric_vs20.inc"
 
 
 // NOTE: The only reason this is not enabled is because I discovered this bug 10 days before RC1
@@ -355,7 +355,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 		bool hasSelfIllum = IS_FLAG_SET( MATERIAL_VAR_SELFILLUM );
 		bool hasNormalMapAlphaEnvmapMask = IS_FLAG_SET( MATERIAL_VAR_NORMALMAPALPHAENVMAPMASK );
 
-		DECLARE_STATIC_VERTEX_SHADER( ff_lightmappedgeneric_vs20 );
+		DECLARE_STATIC_VERTEX_SHADER( sdk_lightmappedgeneric_vs20 );
 		SET_STATIC_VERTEX_SHADER_COMBO( ENVMAP_MASK,  hasEnvmapMask );
 		SET_STATIC_VERTEX_SHADER_COMBO( TANGENTSPACE,  params[info.m_nEnvmap]->IsTexture() );
 		SET_STATIC_VERTEX_SHADER_COMBO( BUMPMAP,  hasBump );
@@ -363,7 +363,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 		SET_STATIC_VERTEX_SHADER_COMBO( VERTEXCOLOR, IS_FLAG_SET( MATERIAL_VAR_VERTEXCOLOR ) );
 		SET_STATIC_VERTEX_SHADER_COMBO( VERTEXALPHATEXBLENDFACTOR, hasBaseTexture2 || hasBump2 );
 
-		DECLARE_STATIC_PIXEL_SHADER( ff_lightmappedgeneric_ps20 );
+		DECLARE_STATIC_PIXEL_SHADER( sdk_lightmappedgeneric_ps20 );
 		SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE2, hasBaseTexture2 );
 		SET_STATIC_PIXEL_SHADER_COMBO( DETAILTEXTURE, hasDetailTexture );
 		SET_STATIC_PIXEL_SHADER_COMBO( BUMPMAP,  hasBump );
@@ -383,7 +383,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 							  (params[info.m_nMaskedBlending]->GetIntValue() != 0) );
 
 		SET_STATIC_PIXEL_SHADER_COMBO( MASKEDBLENDING, bMaskedBlending);
-		SET_STATIC_PIXEL_SHADER( ff_lightmappedgeneric_ps20 );
+		SET_STATIC_PIXEL_SHADER( sdk_lightmappedgeneric_ps20 );
 
 		// HACK HACK HACK - enable alpha writes all the time so that we have them for
 		// underwater stuff. 
@@ -393,7 +393,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 			pShaderShadow->EnableAlphaWrites( true );
 		}
 
-		SET_STATIC_VERTEX_SHADER( ff_lightmappedgeneric_vs20 );
+		SET_STATIC_VERTEX_SHADER( sdk_lightmappedgeneric_vs20 );
 
 #ifdef SRGB_ENABLED
 		pShaderShadow->EnableSRGBWrite( true );
@@ -523,14 +523,14 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 		}
 
 		MaterialFogMode_t fogType = pShaderAPI->GetSceneFogMode();
-		DECLARE_DYNAMIC_VERTEX_SHADER( ff_lightmappedgeneric_vs20 );
+		DECLARE_DYNAMIC_VERTEX_SHADER( sdk_lightmappedgeneric_vs20 );
 		SET_DYNAMIC_VERTEX_SHADER_COMBO( DOWATERFOG,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 		SET_DYNAMIC_VERTEX_SHADER_COMBO( FASTPATH,  bVertexShaderFastPath );
 		SET_DYNAMIC_VERTEX_SHADER_COMBO( 
 			LIGHTING_PREVIEW, 
 			(pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING))?1:0
 			);
-		SET_DYNAMIC_VERTEX_SHADER( ff_lightmappedgeneric_vs20 );
+		SET_DYNAMIC_VERTEX_SHADER( sdk_lightmappedgeneric_vs20 );
 
 		bool bPixelShaderFastPath = true;
 		if( pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING)!=0 )
@@ -570,7 +570,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 			bPixelShaderFastPath = false;
 		}
 		
-		DECLARE_DYNAMIC_PIXEL_SHADER( ff_lightmappedgeneric_ps20 );
+		DECLARE_DYNAMIC_PIXEL_SHADER( sdk_lightmappedgeneric_ps20 );
 		SET_DYNAMIC_PIXEL_SHADER_COMBO( FASTPATH,  bPixelShaderFastPath );
 		SET_DYNAMIC_PIXEL_SHADER_COMBO( FASTPATHENVMAPTINT,  bPixelShaderFastPath && bUsingEnvMapTint );
 		SET_DYNAMIC_PIXEL_SHADER_COMBO( FASTPATHENVMAPCONTRAST,  bPixelShaderFastPath && envmapContrast == 1.0f );
@@ -581,7 +581,7 @@ void DrawLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(
 			LIGHTING_PREVIEW, pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING));
 
-		SET_DYNAMIC_PIXEL_SHADER( ff_lightmappedgeneric_ps20 );
+		SET_DYNAMIC_PIXEL_SHADER( sdk_lightmappedgeneric_ps20 );
 		
 		// always set the transform for detail textures since I'm assuming that you'll
 		// always have a detailscale.

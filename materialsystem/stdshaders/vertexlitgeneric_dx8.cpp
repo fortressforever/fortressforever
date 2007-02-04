@@ -8,16 +8,16 @@
 
 #include "BaseVSShader.h"
 
-#include "FF_vertexlitgeneric_vs11.inc"
-#include "FF_vertexlitgeneric_selfillumonly.inc"
+#include "SDK_vertexlitgeneric_vs11.inc"
+#include "SDK_vertexlitgeneric_selfillumonly.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-DEFINE_FALLBACK_SHADER( FF_VertexLitGeneric, FF_VertexLitGeneric_DX8 )
-DEFINE_FALLBACK_SHADER( FF_Skin_DX9, FF_VertexLitGeneric_DX8 )
+DEFINE_FALLBACK_SHADER( SDK_VertexLitGeneric, SDK_VertexLitGeneric_DX8 )
+DEFINE_FALLBACK_SHADER( SDK_Skin_DX9, SDK_VertexLitGeneric_DX8 )
 
-BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8, 
+BEGIN_VS_SHADER( SDK_VertexLitGeneric_DX8, 
 				"Help for VertexLitGeneric" )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( SELFILLUMTINT, SHADER_PARAM_TYPE_COLOR, "[1 1 1]", "Self-illumination tint" )
@@ -127,13 +127,13 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 		if ( IsPC() )
 		{
 			if ( g_pHardwareConfig->GetDXSupportLevel() < 70)
-				return "FF_VertexLitGeneric_DX6";
+				return "SDK_VertexLitGeneric_DX6";
 
 			if ( g_pHardwareConfig->GetDXSupportLevel() < 80)
-				return "FF_VertexLitGeneric_DX7";
+				return "SDK_VertexLitGeneric_DX7";
 
 			if ( g_pHardwareConfig->PreferReducedFillrate() )
-				return "FF_VertexLitGeneric_NoBump_DX8";
+				return "SDK_VertexLitGeneric_NoBump_DX8";
 		}
 		return 0;
 	}
@@ -196,32 +196,32 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 	{
 		static char const* s_pPixelShaders[] = 
 		{
-			"FF_VertexLitGeneric_EnvmapV2",
-			"FF_VertexLitGeneric_SelfIlluminatedEnvmapV2",
+			"SDK_VertexLitGeneric_EnvmapV2",
+			"SDK_VertexLitGeneric_SelfIlluminatedEnvmapV2",
 
-			"FF_VertexLitGeneric_BaseAlphaMaskedEnvmapV2",
-			"FF_VertexLitGeneric_SelfIlluminatedEnvmapV2",
+			"SDK_VertexLitGeneric_BaseAlphaMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_SelfIlluminatedEnvmapV2",
 
 			// Env map mask
-			"FF_VertexLitGeneric_MaskedEnvmapV2",
-			"FF_VertexLitGeneric_SelfIlluminatedMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_MaskedEnvmapV2",
+			"SDK_VertexLitGeneric_SelfIlluminatedMaskedEnvmapV2",
 
-			"FF_VertexLitGeneric_MaskedEnvmapV2",
-			"FF_VertexLitGeneric_SelfIlluminatedMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_MaskedEnvmapV2",
+			"SDK_VertexLitGeneric_SelfIlluminatedMaskedEnvmapV2",
 
 			// Detail
-			"FF_VertexLitGeneric_DetailEnvmapV2",
-			"FF_VertexLitGeneric_DetailSelfIlluminatedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailEnvmapV2",
+			"SDK_VertexLitGeneric_DetailSelfIlluminatedEnvmapV2",
 
-			"FF_VertexLitGeneric_DetailBaseAlphaMaskedEnvmapV2",
-			"FF_VertexLitGeneric_DetailSelfIlluminatedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailBaseAlphaMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailSelfIlluminatedEnvmapV2",
 
 			// Env map mask
-			"FF_VertexLitGeneric_DetailMaskedEnvmapV2",
-			"FF_VertexLitGeneric_DetailSelfIlluminatedMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailSelfIlluminatedMaskedEnvmapV2",
 
-			"FF_VertexLitGeneric_DetailMaskedEnvmapV2",
-			"FF_VertexLitGeneric_DetailSelfIlluminatedMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailMaskedEnvmapV2",
+			"SDK_VertexLitGeneric_DetailSelfIlluminatedMaskedEnvmapV2",
 		};
 
 		if (!params[BASETEXTURE]->IsTexture())
@@ -230,22 +230,22 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 			{
 				if (!params[ENVMAPMASK]->IsTexture())
 				{
-					return "FF_VertexLitGeneric_EnvmapNoTexture";
+					return "SDK_VertexLitGeneric_EnvmapNoTexture";
 				}
 				else
 				{
-					return "FF_VertexLitGeneric_MaskedEnvmapNoTexture";
+					return "SDK_VertexLitGeneric_MaskedEnvmapNoTexture";
 				}
 			}
 			else
 			{
 				if (params[DETAIL]->IsTexture())
 				{
-					return "FF_VertexLitGeneric_DetailNoTexture";
+					return "SDK_VertexLitGeneric_DetailNoTexture";
 				}
 				else
 				{
-					return "FF_VertexLitGeneric_NoTexture";
+					return "SDK_VertexLitGeneric_NoTexture";
 				}
 			}
 		}
@@ -269,15 +269,15 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 				if (IS_FLAG_SET(MATERIAL_VAR_SELFILLUM))
 				{
 					if (params[DETAIL]->IsTexture())
-						return "FF_VertexLitGeneric_DetailSelfIlluminated";
+						return "SDK_VertexLitGeneric_DetailSelfIlluminated";
 					else
-						return "FF_VertexLitGeneric_SelfIlluminated";
+						return "SDK_VertexLitGeneric_SelfIlluminated";
 				}
 				else
 					if (params[DETAIL]->IsTexture())
-						return "FF_VertexLitGeneric_Detail";
+						return "SDK_VertexLitGeneric_Detail";
 					else
-						return "FF_VertexLitGeneric";
+						return "SDK_VertexLitGeneric";
 			}
 		}
 	}
@@ -326,7 +326,7 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 3, 0 );
 
 			// Set up the vertex shader index.
-			ff_vertexlitgeneric_vs11_Static_Index vshIndex;
+			sdk_vertexlitgeneric_vs11_Static_Index vshIndex;
 #ifndef _XBOX
 			vshIndex.SetHALF_LAMBERT( IS_FLAG_SET( MATERIAL_VAR_HALFLAMBERT ) );
 #endif
@@ -350,7 +350,7 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 				vshIndex.SetENVMAPCAMERASPACE( false );
 				vshIndex.SetENVMAPSPHERE( false );
 			}
-			pShaderShadow->SetVertexShader( "FF_vertexlitgeneric_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "SDK_vertexlitgeneric_vs11", vshIndex.GetIndex() );
 
 			const char *pshName = GetUnbumpedPixelShaderName( params, bSkipEnvmap );
 			pShaderShadow->SetPixelShader( pshName );
@@ -402,7 +402,7 @@ BEGIN_VS_SHADER( FF_VertexLitGeneric_DX8,
 			EnablePixelShaderOverbright( 0, true, true );
 			SetPixelShaderConstant( 1, SELFILLUMTINT );
 
-			ff_vertexlitgeneric_vs11_Dynamic_Index vshIndex;
+			sdk_vertexlitgeneric_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 #if !defined( _XBOX )
 			vshIndex.SetNUM_BONES( pShaderAPI->GetCurrentNumBones() );
@@ -451,16 +451,16 @@ END_SHADER
 //-----------------------------------------------------------------------------
 // Version that doesn't do bumpmapping
 //-----------------------------------------------------------------------------
-BEGIN_INHERITED_SHADER( FF_VertexLitGeneric_NoBump_DX8, FF_VertexLitGeneric_DX8,
-			  "Help for FF_VertexLitGeneric_NoBump_DX8" )
+BEGIN_INHERITED_SHADER( SDK_VertexLitGeneric_NoBump_DX8, SDK_VertexLitGeneric_DX8,
+			  "Help for SDK_VertexLitGeneric_NoBump_DX8" )
 
 	SHADER_FALLBACK
 	{
 		if (g_pConfig->bSoftwareLighting)
-			return "FF_VertexLitGeneric_DX6";
+			return "SDK_VertexLitGeneric_DX6";
 
 		if (!g_pHardwareConfig->SupportsVertexAndPixelShaders())
-			return "FF_VertexLitGeneric_DX7";
+			return "SDK_VertexLitGeneric_DX7";
 
 		return 0;
 	}

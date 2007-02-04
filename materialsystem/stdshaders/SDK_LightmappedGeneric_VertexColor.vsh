@@ -2,7 +2,7 @@ vs.1.1
 
 # DYNAMIC: "DOWATERFOG"				"0..1"
 
-#include "FF_LightmappedGeneric_inc.vsh"
+#include "SDK_LightmappedGeneric_inc.vsh"
 
 $detail = 0;
 $envmap = 0;

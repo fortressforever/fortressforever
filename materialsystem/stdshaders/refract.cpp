@@ -6,16 +6,16 @@
 //=============================================================================//
 
 #include "BaseVSShader.h"
-#include "FF_refract_vs20.inc"
-#include "FF_refract_ps20.inc"
+#include "SDK_refract_vs20.inc"
+#include "SDK_refract_ps20.inc"
 #include "convar.h"
 
 #define MAXBLUR 1
 
-DEFINE_FALLBACK_SHADER( FF_Refract, FF_Refract_DX90 )
+DEFINE_FALLBACK_SHADER( SDK_Refract, SDK_Refract_DX90 )
 
-BEGIN_VS_SHADER( FF_Refract_DX90, 
-			  "Help for FF_Refract" )
+BEGIN_VS_SHADER( SDK_Refract_DX90, 
+			  "Help for SDK_Refract" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM_OVERRIDE( COLOR, SHADER_PARAM_TYPE_COLOR, "{255 255 255}", "unused", SHADER_PARAM_NOT_EDITABLE )
@@ -86,7 +86,7 @@ BEGIN_VS_SHADER( FF_Refract_DX90,
 	SHADER_FALLBACK
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 82 )
-			return "FF_Refract_DX80";
+			return "SDK_Refract_DX80";
 
 		return 0;
 	}
@@ -190,17 +190,17 @@ BEGIN_VS_SHADER( FF_Refract_DX90,
 			}
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, numBoneWeights, userDataSize );
 
-			DECLARE_STATIC_VERTEX_SHADER( ff_refract_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_refract_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( MODEL,  bIsModel );
-			SET_STATIC_VERTEX_SHADER( ff_refract_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_refract_vs20 );
 
-			DECLARE_STATIC_PIXEL_SHADER( ff_refract_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_refract_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( BLUR,  blurAmount );
 			SET_STATIC_PIXEL_SHADER_COMBO( FADEOUTONSILHOUETTE,  bFadeOutOnSilhouette );
 			SET_STATIC_PIXEL_SHADER_COMBO( CUBEMAP,  bHasEnvmap );
 			SET_STATIC_PIXEL_SHADER_COMBO( REFRACTTINTTEXTURE,  bRefractTintTexture );
 			SET_STATIC_PIXEL_SHADER_COMBO( MASKED, bMasked );
-			SET_STATIC_PIXEL_SHADER( ff_refract_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_refract_ps20 );
 			DefaultFog();
 			if( bMasked )
 			{
@@ -234,13 +234,13 @@ BEGIN_VS_SHADER( FF_Refract_DX90,
 
 			int numBones	= pShaderAPI->GetCurrentNumBones();
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_refract_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_refract_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUMBONES,  numBones );
-			SET_DYNAMIC_VERTEX_SHADER( ff_refract_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_refract_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_refract_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_refract_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
-			SET_DYNAMIC_PIXEL_SHADER( ff_refract_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_refract_ps20 );
 
 			SetVertexShaderTextureTransform( VERTEX_SHADER_SHADER_SPECIFIC_CONST_1, BUMPTRANSFORM );
 

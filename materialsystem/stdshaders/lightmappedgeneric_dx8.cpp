@@ -9,17 +9,17 @@
 #include "BaseVSShader.h"
 
 
-#include "FF_lightmappedgeneric_vs11.inc"
-#include "FF_unlitgeneric_vs11.inc"
+#include "SDK_lightmappedgeneric_vs11.inc"
+#include "SDK_unlitgeneric_vs11.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
-DEFINE_FALLBACK_SHADER( FF_LightmappedGeneric, FF_LightmappedGeneric_DX8 )
+DEFINE_FALLBACK_SHADER( SDK_LightmappedGeneric, SDK_LightmappedGeneric_DX8 )
 
-BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
-			  "Help for FF_LightmappedGeneric_DX8" )
+BEGIN_VS_SHADER( SDK_LightmappedGeneric_DX8,
+			  "Help for SDK_LightmappedGeneric_DX8" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( ALBEDO, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "albedo (Base texture with no baked lighting)" )
@@ -166,10 +166,10 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 	SHADER_FALLBACK
 	{
 		if ( IsPC() && g_pHardwareConfig->GetDXSupportLevel() < 80)
-			return "FF_LightmappedGeneric_DX6";
+			return "SDK_LightmappedGeneric_DX6";
 
 		if ( IsPC() && g_pHardwareConfig->PreferReducedFillrate() )
-			return "FF_LightmappedGeneric_NoBump_DX8";
+			return "SDK_LightmappedGeneric_NoBump_DX8";
 
 		return 0;
 	}
@@ -231,18 +231,18 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 		static char const* s_pPixelShaders[] = 
 		{
 			// Unmasked
-			"FF_LightmappedGeneric_EnvMapV2",
-			"FF_LightmappedGeneric_SelfIlluminatedEnvMapV2",
+			"SDK_LightmappedGeneric_EnvMapV2",
+			"SDK_LightmappedGeneric_SelfIlluminatedEnvMapV2",
 
-			"FF_LightmappedGeneric_BaseAlphaMaskedEnvMapV2",
-			"FF_LightmappedGeneric_SelfIlluminatedEnvMapV2",
+			"SDK_LightmappedGeneric_BaseAlphaMaskedEnvMapV2",
+			"SDK_LightmappedGeneric_SelfIlluminatedEnvMapV2",
 
 			// Env map mask
-			"FF_LightmappedGeneric_MaskedEnvMapV2",
-			"FF_LightmappedGeneric_SelfIlluminatedMaskedEnvMapV2",
+			"SDK_LightmappedGeneric_MaskedEnvMapV2",
+			"SDK_LightmappedGeneric_SelfIlluminatedMaskedEnvMapV2",
 
-			"FF_LightmappedGeneric_MaskedEnvMapV2",
-			"FF_LightmappedGeneric_SelfIlluminatedMaskedEnvMapV2",
+			"SDK_LightmappedGeneric_MaskedEnvMapV2",
+			"SDK_LightmappedGeneric_SelfIlluminatedMaskedEnvMapV2",
 		};
 
 		if (!params[BASETEXTURE]->IsTexture())
@@ -251,16 +251,16 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			{
 				if (!params[ENVMAPMASK]->IsDefined() )
 				{
-					return "FF_LightmappedGeneric_EnvmapNoTexture";
+					return "SDK_LightmappedGeneric_EnvmapNoTexture";
 				}
 				else
 				{
-					return "FF_LightmappedGeneric_MaskedEnvmapNoTexture";
+					return "SDK_LightmappedGeneric_MaskedEnvmapNoTexture";
 				}
 			}
 			else
 			{
-				return "FF_LightmappedGeneric_NoTexture";
+				return "SDK_LightmappedGeneric_NoTexture";
 			}
 		}
  		else
@@ -279,9 +279,9 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			else
 			{
 				if (IS_FLAG_SET(MATERIAL_VAR_SELFILLUM))
-					return "FF_LightmappedGeneric_SelfIlluminated";
+					return "SDK_LightmappedGeneric_SelfIlluminated";
 				else
-					return "FF_LightmappedGeneric";
+					return "SDK_LightmappedGeneric";
 			}
 		}
 	}
@@ -342,13 +342,13 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 				}
 
 				pShaderShadow->VertexShaderVertexFormat( fmt, 2, 0, 0, 0 );
-				ff_lightmappedgeneric_vs11_Static_Index vshIndex;
+				sdk_lightmappedgeneric_vs11_Static_Index vshIndex;
 				vshIndex.SetDETAIL( false );
 				vshIndex.SetENVMAP( hasEnvmap );
 				vshIndex.SetENVMAPCAMERASPACE( hasEnvmap && hasEnvmapCameraSpace );
 				vshIndex.SetENVMAPSPHERE( hasEnvmap && hasEnvmapSphere );
 				vshIndex.SetVERTEXCOLOR( hasVertexColor );
-				pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
+				pShaderShadow->SetVertexShader( "SDK_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 				const char *pshName = GetPixelShaderName( params, bBumpedEnvMap );
 				pShaderShadow->SetPixelShader( pshName );
@@ -393,7 +393,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 				EnablePixelShaderOverbright( 0, true, true );
 				SetPixelShaderConstant( 1, SELFILLUMTINT );
 
-				ff_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
+				sdk_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
 				vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 				pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 			}
@@ -436,27 +436,27 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 
 			pShaderShadow->VertexShaderVertexFormat( fmt, 2, 0, 0, 0 );
 
-			ff_lightmappedgeneric_vs11_Static_Index vshIndex;
+			sdk_lightmappedgeneric_vs11_Static_Index vshIndex;
 			vshIndex.SetDETAIL( true );
 			vshIndex.SetENVMAP( false );
 			vshIndex.SetENVMAPCAMERASPACE( false );
 			vshIndex.SetENVMAPSPHERE( false );
 			vshIndex.SetVERTEXCOLOR( IS_FLAG_SET( MATERIAL_VAR_VERTEXCOLOR ) );
-			pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
+			pShaderShadow->SetVertexShader( "SDK_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 			if (!params[BASETEXTURE]->IsTexture())
 			{
-				pShaderShadow->SetPixelShader("FF_LightmappedGeneric_DetailNoTexture");
+				pShaderShadow->SetPixelShader("SDK_LightmappedGeneric_DetailNoTexture");
 			}
 			else
 			{
 				if (!IS_FLAG_SET(MATERIAL_VAR_SELFILLUM) || (!doSelfIllum))
 				{
-					pShaderShadow->SetPixelShader("FF_LightmappedGeneric_Detail");
+					pShaderShadow->SetPixelShader("SDK_LightmappedGeneric_Detail");
 				}
 				else
 				{
-					pShaderShadow->SetPixelShader("FF_LightmappedGeneric_DetailSelfIlluminated");
+					pShaderShadow->SetPixelShader("SDK_LightmappedGeneric_DetailSelfIlluminated");
 				}
 			}
 			DefaultFog();
@@ -482,7 +482,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 				SetPixelShaderConstant( 1, SELFILLUMTINT );
 			}
 
-			ff_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
+			sdk_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -494,12 +494,12 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 	{
 		static char const* s_pPixelShaders[] = 
 		{
-			"FF_LightmappedGeneric_AddEnvmapNoTexture",
-			"FF_LightmappedGeneric_AddEnvmapMaskNoTexture",
+			"SDK_LightmappedGeneric_AddEnvmapNoTexture",
+			"SDK_LightmappedGeneric_AddEnvmapMaskNoTexture",
 		};
 
 		if ( !usingMask && usingBaseTexture && usingBaseAlphaEnvmapMask )
-			return "FF_LightmappedGeneric_AddBaseAlphaMaskedEnvMap";
+			return "SDK_LightmappedGeneric_AddBaseAlphaMaskedEnvMap";
 
 		int pshIndex = 0;
 		if (usingMask)
@@ -543,13 +543,13 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
 			// Compute the vertex shader index.
-			ff_lightmappedgeneric_vs11_Static_Index vshIndex;
+			sdk_lightmappedgeneric_vs11_Static_Index vshIndex;
 			vshIndex.SetDETAIL( false );
 			vshIndex.SetENVMAP( true );
 			vshIndex.SetENVMAPCAMERASPACE( IS_FLAG_SET(MATERIAL_VAR_ENVMAPCAMERASPACE) );
 			vshIndex.SetENVMAPSPHERE( IS_FLAG_SET(MATERIAL_VAR_ENVMAPSPHERE) );
 			vshIndex.SetVERTEXCOLOR( false );
-			s_pShaderShadow->SetVertexShader( "FF_LightmappedGeneric_vs11", vshIndex.GetIndex() );
+			s_pShaderShadow->SetVertexShader( "SDK_LightmappedGeneric_vs11", vshIndex.GetIndex() );
 
 			const char *pshName = GetAdditiveEnvmapPixelShaderName( usingMask, 
 				usingBaseTexture, usingBaseAlphaEnvmapMask );
@@ -580,7 +580,7 @@ BEGIN_VS_SHADER( FF_LightmappedGeneric_DX8,
 			SetModulationVertexShaderDynamicState();
 
 			// Compute the vertex shader index.
-			ff_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
+			sdk_lightmappedgeneric_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( s_pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			s_pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -667,13 +667,13 @@ END_SHADER
 //-----------------------------------------------------------------------------
 // Version that doesn't do bumpmapping
 //-----------------------------------------------------------------------------
-BEGIN_INHERITED_SHADER( FF_LightmappedGeneric_NoBump_DX8, FF_LightmappedGeneric_DX8,
-			  "Help for FF_LightmappedGeneric_NoBump_DX8" )
+BEGIN_INHERITED_SHADER( SDK_LightmappedGeneric_NoBump_DX8, SDK_LightmappedGeneric_DX8,
+			  "Help for SDK_LightmappedGeneric_NoBump_DX8" )
 
 	SHADER_FALLBACK
 	{
 		if (g_pHardwareConfig->GetDXSupportLevel() < 80)
-			return "FF_LightmappedGeneric_DX6";
+			return "SDK_LightmappedGeneric_DX6";
 
 		return 0;
 	}

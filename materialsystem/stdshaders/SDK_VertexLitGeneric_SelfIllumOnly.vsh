@@ -4,7 +4,7 @@ vs.1.1
 # DYNAMIC: "SKINNING"				"0..1"	[XBOX]
 # DYNAMIC: "NUM_BONES"				"0..3"	[PC]
 
-#include "FF_macros.vsh"
+#include "SDK_macros.vsh"
 
 ;------------------------------------------------------------------------------
 ; Vertex blending

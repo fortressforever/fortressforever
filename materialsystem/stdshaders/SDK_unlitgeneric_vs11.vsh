@@ -15,6 +15,6 @@ vs.1.1
 # can't have both envmapsphere and envmapcameraspace
 # SKIP: $ENVMAPSPHERE && $ENVMAPCAMERASPACE
 
-#include "FF_UnlitGeneric_inc.vsh"
+#include "SDK_UnlitGeneric_inc.vsh"
 
 &UnlitGeneric( $DETAIL, $ENVMAP, $ENVMAPCAMERASPACE, $ENVMAPSPHERE, $VERTEXCOLOR );

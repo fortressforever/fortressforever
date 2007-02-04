@@ -10,17 +10,17 @@
 #include "common_hlsl_cpp_consts.h" // hack hack hack!
 #include "convar.h"
 
-#include "FF_watercheap_vs20.inc"
-#include "FF_watercheap_ps20.inc"
-#include "FF_water_vs20.inc"
-#include "FF_water_ps20.inc"
+#include "SDK_watercheap_vs20.inc"
+#include "SDK_watercheap_ps20.inc"
+#include "SDK_water_vs20.inc"
+#include "SDK_water_ps20.inc"
 
 static ConVar r_waterforceexpensive( "r_waterforceexpensive", "0" );
 
-DEFINE_FALLBACK_SHADER( FF_Water, FF_Water_DX9_HDR )
+DEFINE_FALLBACK_SHADER( SDK_Water, SDK_Water_DX9_HDR )
 
-BEGIN_VS_SHADER( FF_Water_DX90, 
-			  "Help for FF_Water" )
+BEGIN_VS_SHADER( SDK_Water_DX90, 
+			  "Help for SDK_Water" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( REFRACTTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_WaterRefraction", "" )
@@ -116,7 +116,7 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 90 )
 		{
-			return "FF_Water_DX81";
+			return "SDK_Water_DX81";
 		}
 		return 0;
 	}
@@ -189,13 +189,13 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S | VERTEX_TANGENT_T;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 			
-			DECLARE_STATIC_VERTEX_SHADER( ff_water_vs20 );
-			SET_STATIC_VERTEX_SHADER( ff_water_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_water_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_water_vs20 );
 
 			// "REFLECT" "0..1"
 			// "REFRACT" "0..1"
 			
-			DECLARE_STATIC_PIXEL_SHADER( ff_water_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_water_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( REFLECT,  bReflection );
 			SET_STATIC_PIXEL_SHADER_COMBO( REFRACT,  bRefraction );
 			SET_STATIC_PIXEL_SHADER_COMBO( ABOVEWATER,  params[ABOVEWATER]->GetIntValue() );
@@ -203,7 +203,7 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 			Vector4D Scroll1;
 			params[SCROLL1]->GetVecValue( Scroll1.Base(), 4 );
 			SET_STATIC_PIXEL_SHADER_COMBO( MULTITEXTURE,fabs(Scroll1.x) > 0.0);
-			SET_STATIC_PIXEL_SHADER( ff_water_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_water_ps20 );
 
 			FogToFogColor();
 
@@ -229,13 +229,13 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 			BindTexture( SHADER_TEXTURE_STAGE4, NORMALMAP, BUMPFRAME );
 			pShaderAPI->BindSignedNormalizationCubeMap( SHADER_TEXTURE_STAGE5 );
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_water_vs20 );
-			SET_DYNAMIC_VERTEX_SHADER( ff_water_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_water_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_water_vs20 );
 			
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_water_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_water_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( HDRENABLED, bHDREnabled );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
-			SET_DYNAMIC_PIXEL_SHADER( ff_water_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_water_ps20 );
 			
 			// Refraction tint
 			if( bRefraction )
@@ -322,11 +322,11 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S | VERTEX_TANGENT_T;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
-			DECLARE_STATIC_VERTEX_SHADER( ff_watercheap_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_watercheap_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( BLEND,  bBlend && bRefraction );
-			SET_STATIC_VERTEX_SHADER( ff_watercheap_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_watercheap_vs20 );
 
-			DECLARE_STATIC_PIXEL_SHADER( ff_watercheap_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_watercheap_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( FRESNEL,  params[NOFRESNEL]->GetIntValue() == 0 );
 			SET_STATIC_PIXEL_SHADER_COMBO( BLEND,  bBlend );
 			SET_STATIC_PIXEL_SHADER_COMBO( REFRACTALPHA,  bRefraction );
@@ -334,7 +334,7 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 			Vector4D Scroll1;
 			params[SCROLL1]->GetVecValue( Scroll1.Base(), 4 );
 			SET_STATIC_PIXEL_SHADER_COMBO( MULTITEXTURE,fabs(Scroll1.x) > 0.0);
-			SET_STATIC_PIXEL_SHADER( ff_watercheap_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_watercheap_ps20 );
 			// HDRFIXME: test cheap water!
 			if( g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE )
 			{
@@ -389,13 +389,13 @@ BEGIN_VS_SHADER( FF_Water_DX90,
 				pShaderAPI->SetVertexShaderConstant( VERTEX_SHADER_SHADER_SPECIFIC_CONST_3, vc0, 1 );
 			}
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_watercheap_vs20 );
-			SET_DYNAMIC_VERTEX_SHADER( ff_watercheap_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_watercheap_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_watercheap_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_watercheap_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_watercheap_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( HDRENABLED,  IsHDREnabled() );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
-			SET_DYNAMIC_PIXEL_SHADER( ff_watercheap_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_watercheap_ps20 );
 		}
 		Draw();
 	}
@@ -445,14 +445,14 @@ END_SHADER
 //-----------------------------------------------------------------------------
 // This allows us to use a block labelled 'Water_DX9_HDR' in the water materials
 //-----------------------------------------------------------------------------
-BEGIN_INHERITED_SHADER( FF_Water_DX9_HDR, FF_Water_DX90,
+BEGIN_INHERITED_SHADER( SDK_Water_DX9_HDR, SDK_Water_DX90,
 			  "Help for Water_DX9_HDR" )
 
 	SHADER_FALLBACK
 	{
 		if( g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE )
 		{
-			return "FF_WATER_DX90";
+			return "SDK_WATER_DX90";
 		}
 		return 0;
 	}

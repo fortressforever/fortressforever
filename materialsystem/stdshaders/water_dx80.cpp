@@ -9,19 +9,19 @@
 #include "BaseVSShader.h"
 #include "VMatrix.h"
 
-#include "FF_water_vs11.inc"
-#include "FF_watercheappervertexfresnel_vs11.inc"
-#include "FF_watercheap_vs11.inc"
+#include "SDK_water_vs11.inc"
+#include "SDK_watercheappervertexfresnel_vs11.inc"
+#include "SDK_watercheap_vs11.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #ifdef _XBOX
-DEFINE_FALLBACK_SHADER( FF_Water, FF_Water_DX80 )
+DEFINE_FALLBACK_SHADER( SDK_Water, SDK_Water_DX80 )
 #endif
 
 
-BEGIN_VS_SHADER( FF_Water_DX80, 
+BEGIN_VS_SHADER( SDK_Water_DX80, 
 			  "Help for Water_DX80" )
 
 	BEGIN_SHADER_PARAMS
@@ -92,7 +92,7 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 	{
 		if ( IsPC() && ( g_pHardwareConfig->GetDXSupportLevel() < 80 ||	!g_pHardwareConfig->HasProjectedBumpEnv() ) )
 		{
-			return "FF_Water_DX60";
+			return "SDK_Water_DX60";
 		}
 		return 0;
 	}
@@ -156,10 +156,10 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 				EnableAlphaBlending( SHADER_BLEND_SRC_ALPHA, SHADER_BLEND_ONE_MINUS_SRC_ALPHA );
 			}
 
-			ff_water_vs11_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "FF_Water_vs11", vshIndex.GetIndex() );
+			sdk_water_vs11_Static_Index vshIndex;
+			pShaderShadow->SetVertexShader( "SDK_Water_vs11", vshIndex.GetIndex() );
 
-			pShaderShadow->SetPixelShader( "FF_WaterReflect_ps11", 0 );
+			pShaderShadow->SetPixelShader( "SDK_WaterReflect_ps11", 0 );
 
 			FogToFogColor();
 		}
@@ -190,7 +190,7 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 
 			SetPixelShaderConstant( 0, REFLECTTINT );
 
-			ff_water_vs11_Dynamic_Index vshIndex;
+			sdk_water_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -207,10 +207,10 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S | VERTEX_TANGENT_T;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
-			ff_water_vs11_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "FF_Water_vs11", vshIndex.GetIndex() );
+			sdk_water_vs11_Static_Index vshIndex;
+			pShaderShadow->SetVertexShader( "SDK_Water_vs11", vshIndex.GetIndex() );
 
-			pShaderShadow->SetPixelShader( "FF_WaterRefract_ps11", 0 );
+			pShaderShadow->SetPixelShader( "SDK_WaterRefract_ps11", 0 );
 			FogToFogColor();
 		}
 		DYNAMIC_STATE
@@ -230,7 +230,7 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 
 			SetPixelShaderConstant( 0, REFRACTTINT );
 
-			ff_water_vs11_Dynamic_Index vshIndex;
+			sdk_water_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -253,10 +253,10 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S | VERTEX_TANGENT_T;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
-			ff_water_vs11_Static_Index vshIndex;
-			pShaderShadow->SetVertexShader( "FF_Water_vs11", vshIndex.GetIndex() );
+			sdk_water_vs11_Static_Index vshIndex;
+			pShaderShadow->SetVertexShader( "SDK_Water_vs11", vshIndex.GetIndex() );
 
-			pShaderShadow->SetPixelShader( "FF_WaterRefractFresnel_ps11", 0 );
+			pShaderShadow->SetPixelShader( "SDK_WaterRefractFresnel_ps11", 0 );
 			FogToFogColor();
 		}
 		DYNAMIC_STATE
@@ -279,7 +279,7 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 
 			SetPixelShaderConstant( 0, REFRACTTINT );
 
-			ff_water_vs11_Dynamic_Index vshIndex;
+			sdk_water_vs11_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -319,21 +319,21 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 
 			if( bNoPerVertexFresnel )
 			{
-				ff_watercheap_vs11_Static_Index vshIndex;
-				pShaderShadow->SetVertexShader( "FF_WaterCheap_vs11", vshIndex.GetIndex() );
+				sdk_watercheap_vs11_Static_Index vshIndex;
+				pShaderShadow->SetVertexShader( "SDK_WaterCheap_vs11", vshIndex.GetIndex() );
 			}
 			else
 			{
-				ff_watercheappervertexfresnel_vs11_Static_Index vshIndex;
-				pShaderShadow->SetVertexShader( "FF_WaterCheapPerVertexFresnel_vs11", vshIndex.GetIndex() );
+				sdk_watercheappervertexfresnel_vs11_Static_Index vshIndex;
+				pShaderShadow->SetVertexShader( "SDK_WaterCheapPerVertexFresnel_vs11", vshIndex.GetIndex() );
 			}
 
 			static const char *s_pPixelShaderName[] = 
 			{
-				"FF_WaterCheapOpaque_ps11",
-				"FF_WaterCheap_ps11",
-				"FF_WaterCheapNoFresnelOpaque_ps11",
-				"FF_WaterCheapNoFresnel_ps11",
+				"SDK_WaterCheapOpaque_ps11",
+				"SDK_WaterCheap_ps11",
+				"SDK_WaterCheapNoFresnelOpaque_ps11",
+				"SDK_WaterCheapNoFresnel_ps11",
 			};
 
 			int nPshIndex = 0;
@@ -366,13 +366,13 @@ BEGIN_VS_SHADER( FF_Water_DX80,
 
 			if( bNoPerVertexFresnel )
 			{
-				ff_watercheap_vs11_Dynamic_Index vshIndex;
+				sdk_watercheap_vs11_Dynamic_Index vshIndex;
 				vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 				pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 			}
 			else
 			{
-				ff_watercheappervertexfresnel_vs11_Dynamic_Index vshIndex;
+				sdk_watercheappervertexfresnel_vs11_Dynamic_Index vshIndex;
 				vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 				pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 			}
