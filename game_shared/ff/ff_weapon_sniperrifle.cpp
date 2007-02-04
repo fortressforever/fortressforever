@@ -377,7 +377,6 @@ public:
 	virtual void Precache();
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
-	virtual void WeaponIdle();
 	virtual void Spawn();
 	virtual void Fire();
 
@@ -635,6 +634,9 @@ void CFFWeaponSniperRifle::ItemPostFrame()
 
 	if (pPlayer && pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0) 
 		HandleFireOnEmpty();
+
+	if (!(pPlayer->m_nButtons & IN_ATTACK))
+		WeaponIdle();
 }
 
 
@@ -734,11 +736,6 @@ void CFFWeaponSniperRifle::Spawn()
 	// Okay putting the predicted sprite creation in here doesn't work
 	// because it can't find the owner, understandably.
 	BaseClass::Spawn();
-}
-
-void CFFWeaponSniperRifle::WeaponIdle() 
-{
-	UpdateLaserPosition();
 }
 
 void CFFWeaponSniperRifle::UpdateLaserPosition() 
