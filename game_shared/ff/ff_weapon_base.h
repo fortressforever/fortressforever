@@ -243,6 +243,9 @@ public:
 	const char			*GetWorldModel( void ) const;
 	int					GetWorldModelIndex( void );
 
+	// Let us multiply the recoil amount by something (like more recoil for a fully charged sniper rifle shot)
+	virtual float		GetRecoilMultiplier( void ) { return 1.0f; }
+
 	int					m_iStatFired;
 	int					m_iStatHit;
 	int					m_iActionKill;

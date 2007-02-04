@@ -396,6 +396,8 @@ public:
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SNIPERRIFLE; }
 
+	virtual float GetRecoilMultiplier( void );
+
 private:
 	bool m_bZoomed;
 	bool m_bInFire;
@@ -851,6 +853,14 @@ float CFFWeaponSniperRifle::GetFOV()
 	return (m_bZoomed ? 20.0f : -1);
 }
 #endif
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the weapon's fov
+//-----------------------------------------------------------------------------
+float CFFWeaponSniperRifle::GetRecoilMultiplier()
+{
+	return clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);
+}
 
 //=============================================================================
 // CFFWeaponRadioTagRifle
