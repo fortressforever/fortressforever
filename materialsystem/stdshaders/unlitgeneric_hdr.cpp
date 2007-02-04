@@ -8,7 +8,7 @@
 
 #include "BaseVSShader.h"
 
-BEGIN_VS_SHADER( UnlitGeneric,
+BEGIN_VS_SHADER( SDK_UnlitGeneric,
 			  "Help for UnlitGeneric" )
 
 	BEGIN_SHADER_PARAMS
