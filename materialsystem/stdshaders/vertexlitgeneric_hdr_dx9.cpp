@@ -9,7 +9,7 @@
 #include "BaseVSShader.h"
 #include "vertexlitgeneric_dx9_helper.h"
 
-BEGIN_VS_SHADER( VertexLitGeneric_HDR_DX9, 
+BEGIN_VS_SHADER( SDK_VertexLitGeneric_HDR_DX9, 
 				"Help for VertexLitGeneric_HDR_DX9" )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( ALBEDO, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "albedo (Base texture with no baked lighting)" )

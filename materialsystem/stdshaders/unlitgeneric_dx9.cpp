@@ -9,7 +9,7 @@
 #include "BaseVSShader.h"
 #include "vertexlitgeneric_dx9_helper.h"
 
-BEGIN_VS_SHADER( UnlitGeneric_DX9,
+BEGIN_VS_SHADER( SDK_UnlitGeneric_DX9,
 			  "Help for UnlitGeneric_DX9" )
 
 	BEGIN_SHADER_PARAMS

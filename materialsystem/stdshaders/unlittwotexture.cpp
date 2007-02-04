@@ -13,7 +13,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-BEGIN_VS_SHADER( UnlitTwoTexture, 
+BEGIN_VS_SHADER( SDK_UnlitTwoTexture, 
 			  "Help for UnlitTwoTexture" )
 			  
 	BEGIN_SHADER_PARAMS
