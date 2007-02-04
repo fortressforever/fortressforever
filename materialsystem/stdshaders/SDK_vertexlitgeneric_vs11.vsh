@@ -19,6 +19,6 @@ vs.1.1
 # decal is by itself
 # SKIP: $DECAL && ( $DETAIL || $ENVMAP || $ENVMAPCAMERASPACE || $ENVMAPSPHERE )
 
-#include "FF_VertexLitGeneric_inc.vsh"
+#include "SDK_VertexLitGeneric_inc.vsh"
 
 &VertexLitGeneric( $DETAIL, $ENVMAP, $ENVMAPCAMERASPACE, $ENVMAPSPHERE, 0 );

@@ -13,7 +13,7 @@ vs.1.1
 # can't have both envmapsphere and envmapcameraspace
 # SKIP: $ENVMAPSPHERE && $ENVMAPCAMERASPACE
 
-#include "FF_LightmappedGeneric_inc.vsh"
+#include "SDK_LightmappedGeneric_inc.vsh"
 
 &LightmappedGeneric( $DETAIL, $ENVMAP, $ENVMAPCAMERASPACE, $ENVMAPSPHERE, 
 				$VERTEXCOLOR );

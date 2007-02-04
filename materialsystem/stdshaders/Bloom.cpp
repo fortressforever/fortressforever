@@ -7,10 +7,10 @@
 
 #include "BaseVSShader.h"
 
-#include "FF_screenspaceeffect_vs20.inc"
-#include "FF_bloom_ps20.inc"
+#include "SDK_screenspaceeffect_vs20.inc"
+#include "SDK_bloom_ps20.inc"
 
-BEGIN_VS_SHADER_FLAGS( FF_Bloom, "Help for FF_Bloom", SHADER_NOT_EDITABLE )
+BEGIN_VS_SHADER_FLAGS( SDK_Bloom, "Help for SDK_Bloom", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( FBTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "" )
 		SHADER_PARAM( BLURTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_SmallHDR0", "" )
@@ -51,22 +51,22 @@ BEGIN_VS_SHADER_FLAGS( FF_Bloom, "Help for FF_Bloom", SHADER_NOT_EDITABLE )
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
 			// Pre-cache shaders
-			DECLARE_STATIC_VERTEX_SHADER( ff_screenspaceeffect_vs20 );
-			SET_STATIC_VERTEX_SHADER( ff_screenspaceeffect_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 
-			DECLARE_STATIC_PIXEL_SHADER( ff_bloom_ps20 );
-			SET_STATIC_PIXEL_SHADER( ff_bloom_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_bloom_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_bloom_ps20 );
 		}
 
 		DYNAMIC_STATE
 		{
 			BindTexture( SHADER_TEXTURE_STAGE0, FBTEXTURE, -1 );
 			BindTexture( SHADER_TEXTURE_STAGE1, BLURTEXTURE, -1 );
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_screenspaceeffect_vs20 );
-			SET_DYNAMIC_VERTEX_SHADER( ff_screenspaceeffect_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_bloom_ps20 );
-			SET_DYNAMIC_PIXEL_SHADER( ff_bloom_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_bloom_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_bloom_ps20 );
 		}
 		Draw();
 	}

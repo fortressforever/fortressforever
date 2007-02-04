@@ -11,10 +11,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-DEFINE_FALLBACK_SHADER( FF_UnlitGeneric, FF_UnlitGeneric_DX8 )
+DEFINE_FALLBACK_SHADER( SDK_UnlitGeneric, SDK_UnlitGeneric_DX8 )
 
-BEGIN_VS_SHADER( FF_UnlitGeneric_DX8,
-			  "Help for FF_UnlitGeneric_DX8" )
+BEGIN_VS_SHADER( SDK_UnlitGeneric_DX8,
+			  "Help for SDK_UnlitGeneric_DX8" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( DETAIL, SHADER_PARAM_TYPE_TEXTURE, "shadertest/detail", "detail texture" )
@@ -33,7 +33,7 @@ BEGIN_VS_SHADER( FF_UnlitGeneric_DX8,
 	{
 		if ( IsPC() && !g_pHardwareConfig->SupportsVertexAndPixelShaders())
 		{
-			return "FF_UnlitGeneric_DX6";
+			return "SDK_UnlitGeneric_DX6";
 		}
 		return 0;
 	}

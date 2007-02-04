@@ -6,15 +6,15 @@
 //=============================================================================//
 
 #include "BaseVSShader.h"
-#include "FF_core_vs20.inc"
-#include "FF_core_ps20.inc"
+#include "SDK_core_vs20.inc"
+#include "SDK_core_ps20.inc"
 
 #define MAXBLUR 1
 
-DEFINE_FALLBACK_SHADER( FF_Core, FF_Core_DX90 )
+DEFINE_FALLBACK_SHADER( SDK_Core, SDK_Core_DX90 )
 
-BEGIN_VS_SHADER( FF_Core_DX90, 
-			  "Help for FF_Core" )
+BEGIN_VS_SHADER( SDK_Core_DX90, 
+			  "Help for SDK_Core" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM_OVERRIDE( COLOR, SHADER_PARAM_TYPE_COLOR, "{255 255 255}", "unused", SHADER_PARAM_NOT_EDITABLE )
@@ -67,7 +67,7 @@ BEGIN_VS_SHADER( FF_Core_DX90,
 	SHADER_FALLBACK
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 90 )
-			return "FF_Core_dx80";
+			return "SDK_Core_dx80";
 
 		return 0;
 	}
@@ -174,16 +174,16 @@ BEGIN_VS_SHADER( FF_Core_DX90,
 			}
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, numBoneWeights, userDataSize );
 
-			DECLARE_STATIC_VERTEX_SHADER( ff_core_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_core_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( MODEL,  bIsModel );
-			SET_STATIC_VERTEX_SHADER( ff_core_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_core_vs20 );
 
-			DECLARE_STATIC_PIXEL_SHADER( ff_core_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_core_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( CUBEMAP,  bHasEnvmap && ( nPass == 1 ) );
 			SET_STATIC_PIXEL_SHADER_COMBO( FLOWMAP, bHasFlowmap );
 			SET_STATIC_PIXEL_SHADER_COMBO( CORECOLORTEXTURE, bHasCoreColorTexture && ( nPass == 0 ) );
 			SET_STATIC_PIXEL_SHADER_COMBO( REFRACT, nPass == 0 );
-			SET_STATIC_PIXEL_SHADER( ff_core_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_core_ps20 );
 			DefaultFog();
 		}
 		DYNAMIC_STATE
@@ -218,13 +218,13 @@ BEGIN_VS_SHADER( FF_Core_DX90,
 
 			int numBones	= pShaderAPI->GetCurrentNumBones();
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_core_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_core_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUMBONES,  numBones );
-			SET_DYNAMIC_VERTEX_SHADER( ff_core_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_core_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_core_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_core_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
-			SET_DYNAMIC_PIXEL_SHADER( ff_core_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_core_ps20 );
 
 			SetVertexShaderTextureTransform( VERTEX_SHADER_SHADER_SPECIFIC_CONST_1, BUMPTRANSFORM );
 

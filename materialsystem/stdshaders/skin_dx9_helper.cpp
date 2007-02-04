@@ -11,9 +11,9 @@
 #include "cpp_shader_constant_register_map.h"
 #undef C_CODE_HACK
 #include "basevsshader.h"
-#include "FF_skin_vs20.inc"
-#include "FF_skin_ps20.inc"
-#include "FF_skin_ps20b.inc"
+#include "SDK_skin_vs20.inc"
+#include "SDK_skin_ps20.inc"
+#include "SDK_skin_ps20b.inc"
 
 #include "convar.h"
 
@@ -381,16 +381,16 @@ void DrawSkin_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 
 		if ( hasBump )
 		{
-			DECLARE_STATIC_VERTEX_SHADER( ff_skin_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_skin_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( HALFLAMBERT,  bHalfLambert);
 			SET_STATIC_VERTEX_SHADER_COMBO( VERTEXCOLOR,  hasVertexColor || hasVertexAlpha );
 			SET_STATIC_VERTEX_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
-			SET_STATIC_VERTEX_SHADER( ff_skin_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_skin_vs20 );
 
 			// ps_2_b shader so we can get phong and other effects
 			if ( g_pHardwareConfig->SupportsPixelShaders_2_b() )
 			{
-				DECLARE_STATIC_PIXEL_SHADER( ff_skin_ps20b );
+				DECLARE_STATIC_PIXEL_SHADER( sdk_skin_ps20b );
 				SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE,  hasBaseTexture );
 				SET_STATIC_PIXEL_SHADER_COMBO( BUMPTEXTURE,  hasBump );
 				SET_STATIC_PIXEL_SHADER_COMBO( DIFFUSELIGHTING,  hasDiffuseLighting );
@@ -399,32 +399,32 @@ void DrawSkin_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 				SET_STATIC_PIXEL_SHADER_COMBO( SELFILLUM,  hasSelfIllum );
 				SET_STATIC_PIXEL_SHADER_COMBO( LIGHTWARPTEXTURE, hasLightingWarp && hasPhong );
 				SET_STATIC_PIXEL_SHADER_COMBO( PHONGEXPONENTTEXTURE, hasSpecularExponentTexture && hasPhong );
-				SET_STATIC_PIXEL_SHADER( ff_skin_ps20b );
+				SET_STATIC_PIXEL_SHADER( sdk_skin_ps20b );
 			}
 			else
 			{
-				DECLARE_STATIC_PIXEL_SHADER( ff_skin_ps20 );
+				DECLARE_STATIC_PIXEL_SHADER( sdk_skin_ps20 );
 				SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE,  hasBaseTexture );
 				SET_STATIC_PIXEL_SHADER_COMBO( BUMPTEXTURE,  hasBump );
 				SET_STATIC_PIXEL_SHADER_COMBO( DIFFUSELIGHTING,  hasDiffuseLighting );
 				SET_STATIC_PIXEL_SHADER_COMBO( HALFLAMBERT,  bHalfLambert);
 				SET_STATIC_PIXEL_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
 				SET_STATIC_PIXEL_SHADER_COMBO( SELFILLUM,  hasSelfIllum );
-				SET_STATIC_PIXEL_SHADER( ff_skin_ps20 );
+				SET_STATIC_PIXEL_SHADER( sdk_skin_ps20 );
 			}
 		}
 		else
 		{
-			DECLARE_STATIC_VERTEX_SHADER( ff_skin_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_skin_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( VERTEXCOLOR, hasVertexColor || hasVertexAlpha );
 			SET_STATIC_VERTEX_SHADER_COMBO( HALFLAMBERT, bHalfLambert );
 			SET_STATIC_VERTEX_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
-			SET_STATIC_VERTEX_SHADER( ff_skin_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_skin_vs20 );
 
 			// ps_2_b shader so we can get phong and other effects
 			if ( g_pHardwareConfig->SupportsPixelShaders_2_b() )
 			{
-				DECLARE_STATIC_PIXEL_SHADER( ff_skin_ps20b );
+				DECLARE_STATIC_PIXEL_SHADER( sdk_skin_ps20b );
 				SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE, hasBaseTexture );
 				SET_STATIC_PIXEL_SHADER_COMBO( BUMPTEXTURE, hasBump );
 				SET_STATIC_PIXEL_SHADER_COMBO( DIFFUSELIGHTING, hasDiffuseLighting );
@@ -433,18 +433,18 @@ void DrawSkin_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 				SET_STATIC_PIXEL_SHADER_COMBO( SELFILLUM,  hasSelfIllum );
 				SET_STATIC_PIXEL_SHADER_COMBO( LIGHTWARPTEXTURE, hasLightingWarp && hasPhong );
 				SET_STATIC_PIXEL_SHADER_COMBO( PHONGEXPONENTTEXTURE, hasSpecularExponentTexture && hasPhong );
-				SET_STATIC_PIXEL_SHADER( ff_skin_ps20b );
+				SET_STATIC_PIXEL_SHADER( sdk_skin_ps20b );
 			}
 			else
 			{
-				DECLARE_STATIC_PIXEL_SHADER( ff_skin_ps20 );
+				DECLARE_STATIC_PIXEL_SHADER( sdk_skin_ps20 );
 				SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE, hasBaseTexture );
 				SET_STATIC_PIXEL_SHADER_COMBO( BUMPTEXTURE, hasBump );
 				SET_STATIC_PIXEL_SHADER_COMBO( DIFFUSELIGHTING, hasDiffuseLighting );
 				SET_STATIC_PIXEL_SHADER_COMBO( FLASHLIGHT, hasFlashlight );
 				SET_STATIC_PIXEL_SHADER_COMBO( HALFLAMBERT, bHalfLambert);
 				SET_STATIC_PIXEL_SHADER_COMBO( SELFILLUM,  hasSelfIllum );
-				SET_STATIC_PIXEL_SHADER( ff_skin_ps20 );
+				SET_STATIC_PIXEL_SHADER( sdk_skin_ps20 );
 			}
 		}
 
@@ -535,63 +535,63 @@ void DrawSkin_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 
 		if ( hasBump )
 		{
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_skin_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_skin_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( DOWATERFOG,  fogIndex );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUM_BONES,  numBones );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING)!=0);
-			SET_DYNAMIC_VERTEX_SHADER( ff_skin_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_skin_vs20 );
 
 			// Bind ps_2_b shader so we can get phong and other effects
 			if ( g_pHardwareConfig->SupportsPixelShaders_2_b() )
 			{
-				DECLARE_DYNAMIC_PIXEL_SHADER( ff_skin_ps20b );
+				DECLARE_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20b );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z && blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
 
-				SET_DYNAMIC_PIXEL_SHADER( ff_skin_ps20b );
+				SET_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20b );
 			}
 			else
 			{
-				DECLARE_DYNAMIC_PIXEL_SHADER( ff_skin_ps20 );
+				DECLARE_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20 );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z && blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
-				SET_DYNAMIC_PIXEL_SHADER( ff_skin_ps20 );
+				SET_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20 );
 			}
 		}
 		else
 		{
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_skin_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_skin_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( DOWATERFOG,  fogIndex );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUM_BONES,  numBones );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING)!=0);
-			SET_DYNAMIC_VERTEX_SHADER( ff_skin_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_skin_vs20 );
 
 			// Bind ps_2_b shader so we can get phong and other effects
 			if ( g_pHardwareConfig->SupportsPixelShaders_2_b() )
 			{
-				DECLARE_DYNAMIC_PIXEL_SHADER( ff_skin_ps20b );
+				DECLARE_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20b );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z && blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
 	//			SET_DYNAMIC_PIXEL_SHADER_COMBO(	LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING));
-				SET_DYNAMIC_PIXEL_SHADER( ff_skin_ps20b );
+				SET_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20b );
 			}
 			else
 			{
-				DECLARE_DYNAMIC_PIXEL_SHADER( ff_skin_ps20 );
+				DECLARE_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20 );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z && blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 				SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
 	//			SET_DYNAMIC_PIXEL_SHADER_COMBO(	LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING));
-				SET_DYNAMIC_PIXEL_SHADER( ff_skin_ps20 );
+				SET_DYNAMIC_PIXEL_SHADER( sdk_skin_ps20 );
 			}
 		}
 

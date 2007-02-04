@@ -8,15 +8,15 @@
 #include "BaseVSShader.h"
 #include "VMatrix.h"
 
-#include "FF_water_ps14.inc"
-#include "FF_watercheap_vs14.inc"
+#include "SDK_water_ps14.inc"
+#include "SDK_watercheap_vs14.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-DEFINE_FALLBACK_SHADER( FF_Water, FF_Water_DX81 )
+DEFINE_FALLBACK_SHADER( SDK_Water, SDK_Water_DX81 )
 
-BEGIN_VS_SHADER( FF_Water_DX81, 
+BEGIN_VS_SHADER( SDK_Water_DX81, 
 			  "Help for Water_DX81" )
 
 	BEGIN_SHADER_PARAMS
@@ -90,7 +90,7 @@ BEGIN_VS_SHADER( FF_Water_DX81,
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 81 )
 		{
-			return "FF_Water_DX80";
+			return "SDK_Water_DX80";
 		}
 		return 0;
 	}
@@ -143,7 +143,7 @@ BEGIN_VS_SHADER( FF_Water_DX81,
 			int fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S | VERTEX_TANGENT_T;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0, 0 );
 
-			ff_water_ps14_Static_Index vshIndex;
+			sdk_water_ps14_Static_Index vshIndex;
 			pShaderShadow->SetVertexShader( "Water_ps14", vshIndex.GetIndex() );
 
 			int pshIndex = GetReflectionRefractionPixelShaderIndex( bReflection, bRefraction );
@@ -187,7 +187,7 @@ BEGIN_VS_SHADER( FF_Water_DX81,
 			pShaderAPI->SetPixelShaderConstant( 5, reflectionRefractionScale, 1 );
 			pShaderAPI->SetVertexShaderConstant( VERTEX_SHADER_SHADER_SPECIFIC_CONST_4, reflectionRefractionScale, 1 );
 
-			ff_water_ps14_Dynamic_Index vshIndex;
+			sdk_water_ps14_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}
@@ -226,15 +226,15 @@ BEGIN_VS_SHADER( FF_Water_DX81,
 				VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TANGENT_S |
 				VERTEX_TANGENT_T, 1, 0, 0, 0 );
 
-			ff_watercheap_vs14_Static_Index vshIndex;
+			sdk_watercheap_vs14_Static_Index vshIndex;
 			pShaderShadow->SetVertexShader( "WaterCheap_vs14", vshIndex.GetIndex() );
 
 			static const char *s_pPixelShader[] =
 			{
-				"FF_WaterCheapOpaque_ps14",
-				"FF_WaterCheapFresnelOpaque_ps14",
-				"FF_WaterCheap_ps14",
-				"FF_WaterCheapFresnel_ps14",
+				"SDK_WaterCheapOpaque_ps14",
+				"SDK_WaterCheapFresnelOpaque_ps14",
+				"SDK_WaterCheap_ps14",
+				"SDK_WaterCheapFresnel_ps14",
 			};
 
 			pShaderShadow->SetPixelShader( s_pPixelShader[type] );
@@ -262,7 +262,7 @@ BEGIN_VS_SHADER( FF_Water_DX81,
 				
 			SetVertexShaderTextureTransform( VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, BUMPTRANSFORM );
 
-			ff_watercheap_vs14_Dynamic_Index vshIndex;
+			sdk_watercheap_vs14_Dynamic_Index vshIndex;
 			vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 			pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 		}

@@ -8,17 +8,17 @@
 
 #include "BaseVSShader.h"
 
-#include "FF_core_vs11.inc"
+#include "SDK_core_vs11.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define MAXBLUR 1
 
-DEFINE_FALLBACK_SHADER( FF_Core, FF_Core_DX80 )
+DEFINE_FALLBACK_SHADER( SDK_Core, SDK_Core_DX80 )
 
-BEGIN_VS_SHADER( FF_Core_DX80, 
-			  "Help for FF_Core_DX80" )
+BEGIN_VS_SHADER( SDK_Core_DX80, 
+			  "Help for SDK_Core_DX80" )
 
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM_OVERRIDE( COLOR, SHADER_PARAM_TYPE_COLOR, "{255 255 255}", "unused", SHADER_PARAM_NOT_EDITABLE )
@@ -97,7 +97,7 @@ BEGIN_VS_SHADER( FF_Core_DX80,
 	SHADER_FALLBACK
 	{
 		if( g_pHardwareConfig->GetDXSupportLevel() < 80 || !g_pHardwareConfig->HasProjectedBumpEnv() )
-			return "FF_Core_DX70";
+			return "SDK_Core_DX70";
 		return NULL;
 	}
 
@@ -181,11 +181,11 @@ BEGIN_VS_SHADER( FF_Core_DX80,
 			fmt |= VERTEX_BONE_INDEX;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, numBoneWeights, userDataSize );
 
-			DECLARE_STATIC_VERTEX_SHADER( ff_core_vs11 );
-			SET_STATIC_VERTEX_SHADER( ff_core_vs11 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_core_vs11 );
+			SET_STATIC_VERTEX_SHADER( sdk_core_vs11 );
 
 			int pshIndex = 0;
-			pShaderShadow->SetPixelShader( "FF_Core_ps11", pshIndex );
+			pShaderShadow->SetPixelShader( "SDK_Core_ps11", pshIndex );
 
 			if( bMasked )
 			{
@@ -235,9 +235,9 @@ BEGIN_VS_SHADER( FF_Core_DX80,
 
 			SetVertexShaderConstant( VERTEX_SHADER_SHADER_SPECIFIC_CONST_3, FLOWMAPTEXCOORDOFFSET );
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_core_vs11 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_core_vs11 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUMBONES, pShaderAPI->GetCurrentNumBones() );
-			SET_DYNAMIC_VERTEX_SHADER( ff_core_vs11 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_core_vs11 );
 		}
 
 		Draw();

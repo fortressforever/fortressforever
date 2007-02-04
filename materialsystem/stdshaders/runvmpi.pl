@@ -51,7 +51,7 @@ print $cwd;
 
 # pc
 #$cmdToRun = "calc";
-$cmdToRun = "\"$ENV{\"sourceff\"}\\bin\\shadercompile.exe\" -game -nompi -shaderpath $shaderpath -allowdebug $gameFlag";
+$cmdToRun = "\"$ENV{\"sourcesdk\"}\\bin\\shadercompile.exe\" -game -nompi -shaderpath $shaderpath -allowdebug $gameFlag";
 if( !$dynamic_compile )
 {
 	system $cmdToRun;

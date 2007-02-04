@@ -1,4 +1,4 @@
-#include "FF_macros.vsh"
+#include "SDK_macros.vsh"
 
 ;------------------------------------------------------------------------------
 ;	 $SHADER_SPECIFIC_CONST_0-$SHADER_SPECIFIC_CONST_1 = Base texture transform

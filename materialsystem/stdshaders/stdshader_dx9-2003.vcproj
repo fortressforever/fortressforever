@@ -27,7 +27,7 @@
 				Optimization="0"
 				ImproveFloatingPointConsistency="TRUE"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9ff\include"
+				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9sdk\include"
 				PreprocessorDefinitions="_DEBUG;DX9;_WINDOWS;_USRDLL;STDSHADER_DX9_DLL_EXPORT;_WIN32"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
@@ -108,7 +108,7 @@ if exist &quot;$(TargetDir)&quot;game_shader_dx9.map copy &quot;$(TargetDir)&quo
 				ImproveFloatingPointConsistency="FALSE"
 				FavorSizeOrSpeed="1"
 				OptimizeForProcessor="3"
-				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9ff\include"
+				AdditionalIncludeDirectories="..\..\common,..\..\public,..\..\public\tier1,fxctmp9,vshtmp9,..\..\dx9sdk\include"
 				PreprocessorDefinitions="NDEBUG;DX9;_WINDOWS;_USRDLL;STDSHADER_DX9_DLL_EXPORT;_WIN32"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
@@ -268,7 +268,7 @@ if exist &quot;$(TargetDir)&quot;game_shader_dx9.map copy &quot;$(TargetDir)&quo
 			Name="Link Libraries"
 			Filter="">
 			<File
-				RelativePath="..\..\dx9ff\lib\d3d9.lib">
+				RelativePath="..\..\dx9sdk\lib\d3d9.lib">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
@@ -285,7 +285,7 @@ if exist &quot;$(TargetDir)&quot;game_shader_dx9.map copy &quot;$(TargetDir)&quo
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\dx9ff\lib\d3dx9.lib">
+				RelativePath="..\..\dx9sdk\lib\d3dx9.lib">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool

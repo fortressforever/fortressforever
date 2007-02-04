@@ -8,17 +8,17 @@
 
 #include "BaseVSShader.h"
 
-#include "FF_refract_model_vs11.inc"
-#include "FF_refract_world_vs11.inc"
+#include "SDK_refract_model_vs11.inc"
+#include "SDK_refract_world_vs11.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define MAXBLUR 1
 
-DEFINE_FALLBACK_SHADER( FF_Refract, FF_Refract_DX80 )
+DEFINE_FALLBACK_SHADER( SDK_Refract, SDK_Refract_DX80 )
 
-BEGIN_VS_SHADER( FF_Refract_DX80, 
+BEGIN_VS_SHADER( SDK_Refract_DX80, 
 			  "Help for Refract_DX80" )
 
 	BEGIN_SHADER_PARAMS
@@ -98,7 +98,7 @@ BEGIN_VS_SHADER( FF_Refract_DX80,
 			const char *pFallback = (params && params[FALLBACK]->IsDefined()) ? params[FALLBACK]->GetStringValue() : "";
 			if (!pFallback[0])
 			{
-				pFallback = "FF_Refract_DX60";
+				pFallback = "SDK_Refract_DX60";
 			}
 
 			if( g_pHardwareConfig->GetDXSupportLevel() < 80 || !g_pHardwareConfig->HasProjectedBumpEnv() )
@@ -215,18 +215,18 @@ BEGIN_VS_SHADER( FF_Refract_DX80,
 
 			if( bIsModel )
 			{
-				ff_refract_model_vs11_Static_Index vshIndex;
-				pShaderShadow->SetVertexShader( "FF_Refract_model_vs11", vshIndex.GetIndex() );
+				sdk_refract_model_vs11_Static_Index vshIndex;
+				pShaderShadow->SetVertexShader( "SDK_Refract_model_vs11", vshIndex.GetIndex() );
 			}
 			else
 			{
-				ff_refract_world_vs11_Static_Index vshIndex;
-				pShaderShadow->SetVertexShader( "FF_Refract_world_vs11", vshIndex.GetIndex() );
+				sdk_refract_world_vs11_Static_Index vshIndex;
+				pShaderShadow->SetVertexShader( "SDK_Refract_world_vs11", vshIndex.GetIndex() );
 			}
 
 			int pshIndex;
 			pshIndex = ComputePixelShaderIndex( bRefractTintTexture, bNormalMapAlpha );
-			pShaderShadow->SetPixelShader( "FF_Refract_ps11", pshIndex );
+			pShaderShadow->SetPixelShader( "SDK_Refract_ps11", pshIndex );
 
 			if( bMasked )
 			{
@@ -285,7 +285,7 @@ BEGIN_VS_SHADER( FF_Refract_DX80,
 			SetPixelShaderConstant( 0, REFRACTTINT );
 			if( bIsModel )
 			{
-				ff_refract_model_vs11_Dynamic_Index vshIndex;
+				sdk_refract_model_vs11_Dynamic_Index vshIndex;
 				vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 #if !defined( _XBOX )
 				vshIndex.SetNUM_BONES( pShaderAPI->GetCurrentNumBones() );
@@ -296,7 +296,7 @@ BEGIN_VS_SHADER( FF_Refract_DX80,
 			}
 			else
 			{
-				ff_refract_world_vs11_Dynamic_Index vshIndex;
+				sdk_refract_world_vs11_Dynamic_Index vshIndex;
 				vshIndex.SetDOWATERFOG( pShaderAPI->GetSceneFogMode() == MATERIAL_FOG_LINEAR_BELOW_FOG_Z );
 				pShaderAPI->SetVertexShaderIndex( vshIndex.GetIndex() );
 			}

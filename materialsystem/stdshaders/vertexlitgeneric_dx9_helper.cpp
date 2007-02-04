@@ -8,10 +8,10 @@
 #include "vertexlitgeneric_dx9_helper.h"
 #include "skin_dx9_helper.h"
 #include "basevsshader.h"
-#include "FF_vertexlit_and_unlit_generic_vs20.inc"
-#include "FF_vertexlit_and_unlit_generic_ps20.inc"
-#include "FF_vertexlit_and_unlit_generic_bump_vs20.inc"
-#include "FF_vertexlit_and_unlit_generic_bump_ps20.inc"
+#include "SDK_vertexlit_and_unlit_generic_vs20.inc"
+#include "SDK_vertexlit_and_unlit_generic_ps20.inc"
+#include "SDK_vertexlit_and_unlit_generic_bump_vs20.inc"
+#include "SDK_vertexlit_and_unlit_generic_bump_ps20.inc"
 #include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -403,11 +403,11 @@ void DrawVertexLitGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 
 		if ( hasBump )
 		{
-			DECLARE_STATIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_bump_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_bump_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( HALFLAMBERT,  bHalfLambert);
-			SET_STATIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_bump_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_bump_vs20 );
 			
-			DECLARE_STATIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_bump_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_bump_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE,  hasBaseTexture );
 			SET_STATIC_PIXEL_SHADER_COMBO( CUBEMAP,  hasEnvmap );
 			SET_STATIC_PIXEL_SHADER_COMBO( DIFFUSELIGHTING,  hasDiffuseLighting );
@@ -415,18 +415,18 @@ void DrawVertexLitGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 			SET_STATIC_PIXEL_SHADER_COMBO( NORMALMAPALPHAENVMAPMASK,  hasNormalMapAlphaEnvmapMask );
 			SET_STATIC_PIXEL_SHADER_COMBO( HALFLAMBERT,  bHalfLambert);
 			SET_STATIC_PIXEL_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
-			SET_STATIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_bump_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_bump_ps20 );
 		}
 		else
 		{
-			DECLARE_STATIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_vs20 );
+			DECLARE_STATIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_vs20 );
 			SET_STATIC_VERTEX_SHADER_COMBO( VERTEXCOLOR,  hasVertexColor || hasVertexAlpha );
 			SET_STATIC_VERTEX_SHADER_COMBO( CUBEMAP,  hasEnvmap );
 			SET_STATIC_VERTEX_SHADER_COMBO( HALFLAMBERT,  bHalfLambert );
 			SET_STATIC_VERTEX_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
-			SET_STATIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_vs20 );
+			SET_STATIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_vs20 );
 			
-			DECLARE_STATIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_ps20 );
+			DECLARE_STATIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_ps20 );
 			SET_STATIC_PIXEL_SHADER_COMBO( SELFILLUM_ENVMAPMASK_ALPHA, 
 										   ( hasSelfIllumInEnvMapMask && ( hasEnvmapMask ) ) );
 			SET_STATIC_PIXEL_SHADER_COMBO( BASETEXTURE,  hasBaseTexture );
@@ -439,7 +439,7 @@ void DrawVertexLitGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 			SET_STATIC_PIXEL_SHADER_COMBO( VERTEXCOLOR,  hasVertexColor );
 			SET_STATIC_PIXEL_SHADER_COMBO( VERTEXALPHA,  hasVertexAlpha );
 			SET_STATIC_PIXEL_SHADER_COMBO( FLASHLIGHT,  hasFlashlight );
-			SET_STATIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_ps20 );
+			SET_STATIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_ps20 );
 		}
 
 		if( hasFlashlight )
@@ -521,41 +521,41 @@ void DrawVertexLitGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params,
 
 		if ( hasBump )
 		{
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_bump_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_bump_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( DOWATERFOG,  fogIndex );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUM_BONES,  numBones );
-			SET_DYNAMIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_bump_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_bump_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_bump_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_bump_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z &&
 				blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
-			SET_DYNAMIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_bump_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_bump_ps20 );
 		}
 		else
 		{
 			if ( bAmbientOnly )	// Override selected light combo to be ambient only
 				lightCombo = 2;
 
-			DECLARE_DYNAMIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_vs20 );
+			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( LIGHT_COMBO,  lightCombo );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( DOWATERFOG,  fogIndex );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO( NUM_BONES,  numBones );
 			SET_DYNAMIC_VERTEX_SHADER_COMBO(
 				LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING)!=0);
-			SET_DYNAMIC_VERTEX_SHADER( ff_vertexlit_and_unlit_generic_vs20 );
+			SET_DYNAMIC_VERTEX_SHADER( sdk_vertexlit_and_unlit_generic_vs20 );
 
-			DECLARE_DYNAMIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_ps20 );
+			DECLARE_DYNAMIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_ps20 );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( WRITEWATERFOGTODESTALPHA,  fogType == MATERIAL_FOG_LINEAR_BELOW_FOG_Z &&
 				blendType != BT_BLENDADD && blendType != BT_BLEND && !bIsAlphaTested );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FOGTYPE, pShaderAPI->GetSceneFogMode() );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO(
 				LIGHTING_PREVIEW, hasDiffuseLighting && pShaderAPI->GetIntRenderingParameter(INT_RENDERPARM_ENABLE_FIXED_LIGHTING));
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( FLASHLIGHTDEPTH, bHasFlashlightDepth );
-			SET_DYNAMIC_PIXEL_SHADER( ff_vertexlit_and_unlit_generic_ps20 );
+			SET_DYNAMIC_PIXEL_SHADER( sdk_vertexlit_and_unlit_generic_ps20 );
 		}
 
 		pShader->SetVertexShaderTextureTransform( VERTEX_SHADER_SHADER_SPECIFIC_CONST_0, info.m_nBaseTextureTransform );

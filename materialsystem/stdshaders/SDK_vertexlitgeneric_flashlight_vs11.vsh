@@ -5,7 +5,7 @@ vs.1.1
 # DYNAMIC: "NUM_BONES"				"0..3"	[PC]
 # STATIC: "TEETH"					"0..1"
 
-#include "FF_macros.vsh"
+#include "SDK_macros.vsh"
 
 local( $worldPos, $worldNormal, $projPos );
 
