@@ -528,7 +528,7 @@ void CFFWeaponBase::PrimaryAttack()
 	}
 
 	//Add our view kick in
-	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount, 0, 0));
+	pPlayer->ViewPunch(QAngle(-GetFFWpnData().m_flRecoilAmount * GetRecoilMultiplier(), 0, 0));
 }
 
 //-----------------------------------------------------------------------------
