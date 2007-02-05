@@ -92,7 +92,9 @@ public:
 	float			m_StartSize;
 	float			m_EndSize;
 	float			m_Rate;
-	float			m_Lifetime; 
+	float			m_Lifetime;
+
+	float			m_fLastParticleDLightTime; // last time a particle-attached dynamic light was created
 
 	dlight_t		*m_pDLight; // dynamic light attached to muzzle
 
