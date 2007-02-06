@@ -174,7 +174,7 @@ void FX_FireBullets(
 	float	flDamage = (pWeaponInfo->m_iBullets ? (float) pWeaponInfo->m_iDamage / pWeaponInfo->m_iBullets : pWeaponInfo->m_iDamage);	// |-- Mirv: Split damage for each shot
 	int		iAmmoType = pWeaponInfo->iAmmoType;
 
-	// commented out - play sound elsewhere like the sniper rifle now does
+	// commented out - play sound elsewhere like the sniper rifle now does with its BaseClass::PrimaryAttack
 	//if ( bDoEffects)
 	//	FX_WeaponSound( iPlayerIndex, SINGLE, vOrigin, pWeaponInfo );
 
