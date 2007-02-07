@@ -891,12 +891,13 @@ ReturnSpot:
 	// Randomize the start spot
 	// NOTE: given a larger range from the default SDK function so that players won't always
 	// spawn at the "first" spawn point for their team if the spawns are put in a "bad" order
-	for( int i = random->RandomInt(15,25); i > 0; i-- )
-	{
+	// ANOTHER NOTE: This method sucks. - Jon
+	for( int i = random->RandomInt(15,30); i > random->RandomInt(0,15); i-- )
 		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
-		if( !pSpot )  // skip over the null point
-			pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
-	}
+
+	// only have to do this when finally out of that for loop instead of every time inside it
+	if( !pSpot )  // skip over the null point
+		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 
 	CBaseEntity *pFirstSpot = pSpot;
 	pGibSpot = pFirstSpot;
@@ -913,9 +914,9 @@ ReturnSpot:
 
 			if( FFGameRules()->IsSpawnPointValid( pSpot, ( CBasePlayer * )this ) )
 			{
-				Vector vecMins = -Vector( 16, 16, 0 );
-				Vector vecMaxs = Vector( 16, 16, 70 );
-				Vector vecOrigin = pSpot->GetAbsOrigin();
+				//Vector vecMins = Vector( -16, -16, 0 );
+				//Vector vecMaxs = Vector( 16, 16, 72 );
+				//Vector vecOrigin = pSpot->GetAbsOrigin();
 
 				// See if the spot is clear
 				if( FFGameRules()->IsSpawnPointClear( pSpot, ( CBasePlayer * )this ) )
@@ -926,7 +927,7 @@ ReturnSpot:
 					if( !engine->IsDedicatedServer() )
 					{
 						NDebugOverlay::Box( vecOrigin, vecMins, vecMaxs, 0, 0, 255, 100, 10.0f );
-						NDebugOverlay::Line( vecOrigin, vecOrigin + Vector( 0, 0, 70 ), 0, 0, 255, false, 10.0f );
+						NDebugOverlay::Line( vecOrigin, vecOrigin + vecMaxs.z, 0, 0, 255, false, 10.0f );
 					}
 #endif
 					*/
@@ -959,16 +960,17 @@ ReturnSpot:
 	// At this point, we've checked all ff specific team spawns. If we
 	// have a gib spot then kill people in that spot. Otherwise, we'll
 	// go and check info_player_starts.
-
 	pSpot = pGibSpot;
 	if( pSpot )
 	{
+// commenting this telefrag stuff to maybe move the player around this spawn location instead
+/*
 #ifdef _DEBUG
 		Warning( "[EntSelectSpawnPoint] All spawns full, going to have to telefrag.\n" );
 #endif
 
 		CBaseEntity *pList[ 128 ];
-		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() - Vector( 16, 16, 0 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 70 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+		int count = UTIL_EntitiesInBox( pList, 128, pSpot->GetAbsOrigin() - Vector( 16, 16, 0 ), pSpot->GetAbsOrigin() + Vector( 16, 16, 72 ), FL_CLIENT | FL_NPC | FL_FAKECLIENT );
 		if( count )
 		{
 			// Iterate through the list and check the results
@@ -980,7 +982,7 @@ ReturnSpot:
 					if( ent->IsPlayer() )
 					{
 						if( ( ToFFPlayer( ent ) != this ) && ent->IsAlive() )
-							ent->TakeDamage( CTakeDamageInfo( GetContainingEntity( INDEXENT( 0 ) ), GetContainingEntity( INDEXENT( 0 ) ), 400, DMG_GENERIC ) );
+							ent->TakeDamage( CTakeDamageInfo( GetContainingEntity( INDEXENT( 0 ) ), GetContainingEntity( INDEXENT( 0 ) ), 6969, DMG_GENERIC ) );
 					}
 					else
 					{
@@ -989,7 +991,7 @@ ReturnSpot:
 				}
 			}
 		}
-
+*/
 		goto ReturnSpot;
 	}
 
