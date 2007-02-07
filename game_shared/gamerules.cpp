@@ -172,7 +172,11 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
 	Assert( pSpawnSpot );
 
-	pPlayer->SetLocalOrigin( pSpawnSpot->GetAbsOrigin() + Vector(0,0,1 + 36) );	// |-- Mirv: Added 36 for shift in position
+	Vector vecSpawnOrigin = pSpawnSpot->GetAbsOrigin() + Vector(0,0,37);
+	Vector vecSpawnOriginOffset = GetPlayerSpawnSpotOffset( pPlayer, vecSpawnOrigin, Vector(16,16,0), Vector(16,16,72) );
+
+	//pPlayer->SetLocalOrigin( pSpawnSpot->GetAbsOrigin() + Vector(0,0,1 + 36) );	// |-- Mirv: Added 36 for shift in position
+	pPlayer->SetLocalOrigin( vecSpawnOrigin + vecSpawnOriginOffset );
 	pPlayer->SetAbsVelocity( vec3_origin );
 	pPlayer->SetLocalAngles( pSpawnSpot->GetLocalAngles() );
 	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
@@ -180,6 +184,104 @@ CBaseEntity *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	pPlayer->SnapEyeAngles( pSpawnSpot->GetLocalAngles() );
 
 	return pSpawnSpot;
+}
+
+ConVar ffdev_playerspawnspotoffset_attempts( "ffdev_playerspawnspotoffset_attempts" , "5", FCVAR_REPLICATED, "4 rotations PER this value.  Also, it keeps trying offset positions while less than this value.  Oh and also, attempt 0 just checks the original spawn location so there are no rotations.", true, 0, false, 0);
+
+// for moving the spawn spot around the original spawn spot if other players are inside it
+Vector CGameRules::GetPlayerSpawnSpotOffset( const CBasePlayer *pPlayer, const Vector vecOrigin, const Vector vecPlayerBoundsMins, const Vector vecPlayerBoundsMaxs )
+{
+	if ( pPlayer->GetTeamNumber() < TEAM_BLUE )
+		return Vector(0,0,0);
+
+	Vector vecOffset = Vector(0,0,0);
+
+	// only try this 5 times (first attempt is actually just for checking the original spawn location)
+	for (int i = 0; i < ffdev_playerspawnspotoffset_attempts.GetInt(); i++)
+	{
+		// keep track of how many directions are blocked, so we know when to give up
+		int iNumBlockedDirections = 0;
+
+		// for rotating 90 degrees at least 4 times (it's likely/hopeful that this will only happen once)
+		for (int j = 0; j < 4; j++)
+		{
+			// don't do all this crazy rotating, tracing, and other stuff on the first attempt
+			if (i > 0)
+			{
+				// update and/or rotate the offset
+				// VectorYawRotate seems to be broken?
+				// VectorYawRotate(Vector(i * 34, 0, 0), 90.0f, vecOffset);
+				if ( j == 0 )
+					vecOffset = Vector(i * 34, 0, 0);
+				else if ( j == 1 )
+					vecOffset = Vector(0, i * 34, 0);
+				else if ( j == 2 )
+					vecOffset = Vector(i * -34, 0, 0);
+				else
+					vecOffset = Vector(0, i * -34, 0);
+
+				// for tracing out to detect a wall 
+				Vector vecOffsetNormalized = vecOffset;
+				VectorNormalizeFast(vecOffsetNormalized);
+
+				// make sure a wall or something solid like that isn't in the way
+				trace_t tr;
+				int iTraceLength = (i * 34) + 16;
+				UTIL_TraceLine( vecOrigin, vecOrigin + (vecOffsetNormalized * iTraceLength), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr );
+
+				// something's in the way, so don't waste anymore time...just move on to the next rotation
+				if ( tr.DidHitWorld() )
+				{
+					// another direction cockblocked
+					iNumBlockedDirections++;
+					continue;
+				}
+			}
+
+			// check for players in this offset spawn location
+			CBaseEntity *pList[ 128 ];
+			int count = UTIL_EntitiesInBox( pList, 128, ( vecOrigin + vecOffset ) - vecPlayerBoundsMins, ( vecOrigin + vecOffset ) + vecPlayerBoundsMaxs, FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+
+			// nothing in the way, so return this offset
+			if ( count == 0 )
+				return vecOffset;
+
+			// only try once at the original location
+			if (i == 0)
+				break;
+		}
+
+		// all 4 directions are blocked (you're spawning in a small cube of death?), so don't waste anymore time
+		if (iNumBlockedDirections > 3)
+			break;
+	}
+
+	// No offset found, so let's telefrag the players in the way and return a 0 offset
+	CBaseEntity *pList[ 128 ];
+	int count = UTIL_EntitiesInBox( pList, 128, vecOrigin - vecPlayerBoundsMins, vecOrigin + vecPlayerBoundsMaxs, FL_CLIENT | FL_NPC | FL_FAKECLIENT );
+	if( count )
+	{
+		// Iterate through the list and check the results
+		for( int i = 0; i < count; i++ )
+		{
+			CBaseEntity *ent = pList[ i ];
+			if( ent )
+			{
+				if( ent->IsPlayer() )
+				{
+					if( ( ent != pPlayer ) && ent->IsAlive() )
+						ent->TakeDamage( CTakeDamageInfo( GetContainingEntity( INDEXENT( 0 ) ), GetContainingEntity( INDEXENT( 0 ) ), 6969, DMG_GENERIC ) );
+				}
+				else
+				{
+					// TODO: Remove objects - buildables/grenades/projectiles - on the spawn point?
+				}
+			}
+		}
+	}
+
+	// Just spawn already, DAMN!
+	return Vector(0,0,0);
 }
 
 // checks if the spot is clear of players
