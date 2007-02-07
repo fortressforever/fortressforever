@@ -759,6 +759,10 @@ void CFFPlayer::Precache()
 
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
 
+// this is going to strictly be for the randomizing at the beginning of EntSelectSpawnPoint
+// by starting from the last entity when going into the for loop
+CBaseEntity *g_pLastSpawnRandomizer = NULL;
+
 void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
 {
 	g_pLastSpawn = pEntity;
@@ -887,17 +891,31 @@ ReturnSpot:
 
 	CBaseEntity *pSpot = NULL, *pGibSpot = NULL;
 
-	pSpot = g_pLastSpawn;
+	// I think this was one of the main sources of the not-so-randomness - Jon
+	//pSpot = g_pLastSpawn;
+	pSpot = g_pLastSpawnRandomizer;
+
 	// Randomize the start spot
 	// NOTE: given a larger range from the default SDK function so that players won't always
 	// spawn at the "first" spawn point for their team if the spawns are put in a "bad" order
 	// ANOTHER NOTE: This method sucks. - Jon
-	for( int i = random->RandomInt(15,30); i > random->RandomInt(0,15); i-- )
+	// Also, raising it too much will make it skip over common "blocks" of valid teamspawns.
+	for( int i = random->RandomInt(1,5); i > 0; i-- )
 		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
 
 	// only have to do this when finally out of that for loop instead of every time inside it
 	if( !pSpot )  // skip over the null point
 		pSpot = gEntList.FindEntityByClassT( pSpot, CLASS_TEAMSPAWN );
+
+	// See, we'll keep track of the last entity used during all this random stuff instead of
+	// what's figured out down below, which sometimes gets back to the very first teamspawn.
+	// But this still isn't the best solution, because what will probably happen is uh...
+	// the "randomness" up there will get past a "block" of lua-based valid spawn points and just
+	// get back to the end of the valid block thanks to the do-while loop below...ending up on the
+	// same teamspawn that's always picked when the for loop up there goes past the valid block.
+	// What we really need to do is collect all lua-based valid spawn points and randomly pick from those.
+	// But my dick all hard, so I might do it tomorrow. - Jon
+	g_pLastSpawnRandomizer = pSpot;
 
 	CBaseEntity *pFirstSpot = pSpot;
 	pGibSpot = pFirstSpot;
