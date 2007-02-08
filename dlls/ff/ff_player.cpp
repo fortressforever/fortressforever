@@ -4743,6 +4743,15 @@ void CFFPlayer::SetUnRadioTagged( void )
 	m_pWhoTaggedMe = NULL;
 	m_flRadioTaggedStartTime = 0.0f;
 	m_flRadioTaggedDuration = 0.0f;	
+
+	// Send status icon
+	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "StatusIconUpdate" );
+	WRITE_BYTE( FF_STATUSICON_RADIOTAG );
+	WRITE_FLOAT( 0.0f );
+	MessageEnd();
 }
 
 //-----------------------------------------------------------------------------
@@ -4754,6 +4763,15 @@ void CFFPlayer::SetRadioTagged( CFFPlayer *pWhoTaggedMe, float flStartTime, floa
 	m_pWhoTaggedMe = pWhoTaggedMe;
 	m_flRadioTaggedStartTime = flStartTime;
 	m_flRadioTaggedDuration = flDuration;
+
+	// Send status icon
+	CSingleUserRecipientFilter user( ( CBasePlayer * )this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "StatusIconUpdate" );
+	WRITE_BYTE( FF_STATUSICON_RADIOTAG );
+	WRITE_FLOAT( flDuration );
+	MessageEnd();
 }
 
 //-----------------------------------------------------------------------------
@@ -5205,7 +5223,7 @@ void CFFPlayer::UnGas( void )
 	user.MakeReliable();
 
 	UserMessageBegin( user, "StatusIconUpdate" );
-		WRITE_BYTE( FF_STATUSICON_CONCUSSION );
+		WRITE_BYTE( FF_STATUSICON_HALLUCINATIONS );
 		WRITE_FLOAT( 0.0f );
 	MessageEnd();
 }

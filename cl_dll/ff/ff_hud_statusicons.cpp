@@ -43,6 +43,7 @@ const char *szIcons[FF_STATUSICON_MAX] = {	"concussion",		// FF_STATUSICON_CONCU
 											"radiation",		// FF_STATUSICON_RADIATION
 											"cold",				// FF_STATUSICON_COLD
 											"immune",			// FF_STATUSICON_IMMUNE
+											"radiotag",			// FF_STATUSICON_RADIOTAG
 										};
 
 struct statusicon_t
