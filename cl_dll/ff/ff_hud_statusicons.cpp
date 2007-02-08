@@ -74,7 +74,13 @@ public:
 
 	// Callback function for the "StatusIconUpdate" user message
 	void	MsgFunc_StatusIconUpdate(bf_read &msg);
-	
+
+	// for specific status icon colors (and to potentially make them pulsate)
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	Color	m_clrBright;
+	Color	m_clrDefault;
+	Color	m_clrDim;
+
 };
 
 DECLARE_HUDELEMENT( CStatusIcons );
@@ -239,7 +245,10 @@ void CStatusIcons::Paint( void )
 			continue;
 
 		// We're going vertical now
-		sIcon.pTexture->DrawSelf(0, iOffset, gHUD.m_clrNormal);
+		//sIcon.pTexture->DrawSelf(0, iOffset, gHUD.m_clrNormal);
+		// using specific status icon colors now
+		sIcon.pTexture->DrawSelf(0, iOffset, m_clrDefault );
+		// TODO: make the status icons pulsate (and possibly pulsate faster as the end of duration nears)
 
 		iOffset += sIcon.pTexture->Height() + 5.0f;
 	}
@@ -261,4 +270,14 @@ void ClearStatusIcons()
 		g_pStatusIcons->sStatusIcons[i].m_flStart = gpGlobals->curtime;
 		g_pStatusIcons->sStatusIcons[i].m_flDuration = 0.0f;
 	}
+}
+
+// Planning to give the status icons a little "pulse" action
+void CStatusIcons::ApplySchemeSettings( vgui::IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	m_clrBright = pScheme->GetColor( "HUD_Status_Bright", Color(109, 124, 142, 224));
+	m_clrDefault = pScheme->GetColor("HUD_Status_Default", Color(109, 124, 142, 160));
+	m_clrDim = pScheme->GetColor("HUD_Status_Dim", Color(109, 124, 142, 96));
 }
