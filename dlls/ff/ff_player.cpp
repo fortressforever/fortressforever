@@ -1937,12 +1937,12 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 
 	if(sv_cheats->GetBool() && GetTeamNumber() >= TEAM_BLUE && GetTeamNumber() <= TEAM_GREEN)
 	{
-		GiveAmmo(200, AMMO_NAILS);
-		GiveAmmo(200, AMMO_SHELLS);
-		GiveAmmo(200, AMMO_ROCKETS);
-		GiveAmmo(200, AMMO_CELLS);
-		GiveAmmo(200, AMMO_RADIOTAG);
-		GiveAmmo(200, AMMO_DETPACK);
+		GiveAmmo(300, AMMO_NAILS);
+		GiveAmmo(300, AMMO_SHELLS);
+		GiveAmmo(300, AMMO_ROCKETS);
+		GiveAmmo(300, AMMO_CELLS);
+		GiveAmmo(300, AMMO_RADIOTAG);
+		GiveAmmo(300, AMMO_DETPACK);
 		AddPrimaryGrenades( 4 );
 		AddSecondaryGrenades( 4 );
 		SetHealth(m_iMaxHealth);
