@@ -38,13 +38,17 @@ ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICAT
 
 ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED, "Railgun Rev Sound High Volume");
 ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED, "Railgun Rev Sound Low Volume");
-ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "200", FCVAR_REPLICATED, "Railgun Rev Sound High Pitch");
-ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "50", FCVAR_REPLICATED, "Railgun Rev Sound Low Pitch");
+ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_REPLICATED, "Railgun Rev Sound High Pitch");
+ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED, "Railgun Rev Sound Low Pitch");
+ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.02", FCVAR_REPLICATED, "How much time to wait before updating");
 
 ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1100.0", FCVAR_REPLICATED, "Minimum speed of rail" );
 ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3300.0", FCVAR_REPLICATED, "Maximum speed of rail" );
 ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "25.0", FCVAR_REPLICATED, "Minimum damage dealt by rail" );
 ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "75.0", FCVAR_REPLICATED, "Maximum damage dealt by rail" );
+
+ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "0.0", FCVAR_REPLICATED, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 
 #ifdef CLIENT_DLL
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectStunstick )
@@ -91,6 +95,7 @@ public:
 	void StopRevSound();
 	int m_nRevSound;
 	bool m_bPlayRevSound;
+	float m_flRevSoundNextUpdate;
 
 private:
 	CFFWeaponRailgun( const CFFWeaponRailgun & );
@@ -134,6 +139,7 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 
 	m_nRevSound = SPECIAL1;
 	m_bPlayRevSound = false;
+	m_flRevSoundNextUpdate = 0.0f;
 
 #ifdef CLIENT_DLL
 	m_iAttachment1 = m_iAttachment2 = -1;
@@ -146,6 +152,7 @@ CFFWeaponRailgun::CFFWeaponRailgun( void )
 bool CFFWeaponRailgun::Deploy( void )
 {
 	m_flStartCharge = -1.0f;
+	m_flRevSoundNextUpdate = 0.0f;
 
 	StopRevSound();
 
@@ -157,9 +164,10 @@ bool CFFWeaponRailgun::Deploy( void )
 //----------------------------------------------------------------------------
 bool CFFWeaponRailgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
-	StopRevSound();
-
 	m_flStartCharge = -1.0f;
+	m_flRevSoundNextUpdate = 0.0f;
+
+	StopRevSound();
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -184,10 +192,19 @@ void CFFWeaponRailgun::Fire( void )
 	//const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();  
 	// Jiggles: Above line removed until we decide on a good base damage value
 
-	Vector	vecForward;
-	pPlayer->EyeVectors( &vecForward );
+	if (!pPlayer)
+		return;
 
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecForward;
+	pPlayer->EyeVectors( &vecForward );
+	VectorNormalizeFast( vecForward );
+
+	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
+	float flPercent = flChargeTime / ffdev_railgun_maxcharge.GetFloat();
+
+	// Push them backwards
+	pPlayer->ApplyAbsVelocityImpulse(vecForward * -(ffdev_railgun_pushforce_min.GetFloat() + ( (ffdev_railgun_pushforce_max.GetFloat() - ffdev_railgun_pushforce_min.GetFloat()) * flPercent )));
 
 #ifdef CLIENT_DLL
 	// For now, fake the bullet source on the client
@@ -212,13 +229,8 @@ void CFFWeaponRailgun::Fire( void )
 		AssertMsg( 0, "Couldn't get weapon railgun!" );
 #endif
 
-	VectorNormalizeFast( vecForward );
-
 	QAngle angAiming;
 	VectorAngles( pPlayer->GetAutoaimVector(0), angAiming) ;
-
-	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
-	float flPercent = flChargeTime / ffdev_railgun_maxcharge.GetFloat();
 
 	// Determine Speed of rail projectile by: railspeed = min + [ ( ( max - min ) * chargetime ) / maxchargetime ] 
 	float flSpeed = ffdev_rail_speed_min.GetFloat() + ( (ffdev_rail_speed_max.GetFloat() - ffdev_rail_speed_min.GetFloat()) * flPercent );
@@ -304,6 +316,11 @@ void CFFWeaponRailgun::PlayRevSound()
 		return;
 	}
 
+	// wait a little while so we're not constantly calling EmitSound
+	if (gpGlobals->curtime < m_flRevSoundNextUpdate)
+		return;
+	m_flRevSoundNextUpdate = gpGlobals->curtime + ffdev_railgun_revsound_updateinterval.GetFloat();
+
 	const char *shootsound = GetShootSound( m_nRevSound );
 	if (!shootsound || !shootsound[0])
 		return;
@@ -339,21 +356,21 @@ void CFFWeaponRailgun::StopRevSound()
 
 	StopSound( entindex(), shootsound );
 	m_bPlayRevSound = false;
+	m_flRevSoundNextUpdate = 0.0f;
 }
 
 float CFFWeaponRailgun::GetRecoilMultiplier()
 {
-	float flChargeTime = gpGlobals->curtime - m_flStartCharge;
-
-	if (flChargeTime < 1.0f)
+	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
+/*
+	if (flChargeTime < ffdev_railgun_maxcharge.GetFloat() / 2)
 		return 1.0f;
-	else if (flChargeTime < 2.0f)
-		return 2.0f;
-	else
+	else if (flChargeTime < ffdev_railgun_maxcharge.GetFloat())
 		return 3.0f;
-
-	// going to do exect values instead
-	// return 1 + ( 2 * ( clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() ) / ffdev_railgun_maxcharge.GetFloat() ) );
+	else
+		return 5.0f;
+*/
+	return 1 + ( 9 * ( flChargeTime / ffdev_railgun_maxcharge.GetFloat() ) );
 }
 
 /*
