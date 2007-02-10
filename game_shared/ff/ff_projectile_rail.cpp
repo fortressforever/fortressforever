@@ -37,14 +37,14 @@ LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 
 ConVar ffdev_railgun_maxangle( "ffdev_railgun_maxangle", "45", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
-ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a 1 second chargetime." );
-ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a 2 second chargetime." );
+ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a half-charge shot." );
+ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a full-charge shot." );
 ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED, "Damage multiplier per bounce" );
 
 #ifdef GAME_DLL
 ConVar ffdev_rail_trailcolor_start( "ffdev_rail_trailcolor_start", "0 255 0", 0, "Initial color of rail (R G B)" );
-ConVar ffdev_rail_trailcolor_one( "ffdev_rail_trailcolor_one", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
-ConVar ffdev_rail_trailcolor_two( "ffdev_rail_trailcolor_two", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
+ConVar ffdev_rail_trailcolor_once( "ffdev_rail_trailcolor_once", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
+ConVar ffdev_rail_trailcolor_twice( "ffdev_rail_trailcolor_twice", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
 #endif
 
 #ifdef GAME_DLL
@@ -307,8 +307,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					if( m_iNumBounces == 1 ) 
 					{
 						float flColor[3] = { 255, 0, 0 };
-						const char *szColor = ffdev_rail_trailcolor_one.GetString();
-						if( ffdev_rail_trailcolor_one.GetInt() && szColor )
+						const char *szColor = ffdev_rail_trailcolor_once.GetString();
+						if( ffdev_rail_trailcolor_once.GetInt() && szColor )
 							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
 						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
@@ -316,8 +316,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					else if( m_iNumBounces == 2 ) 
 					{
 						float flColor[3] = { 0, 0, 255 };
-						const char *szColor = ffdev_rail_trailcolor_two.GetString();
-						if( ffdev_rail_trailcolor_two.GetInt() && szColor )
+						const char *szColor = ffdev_rail_trailcolor_twice.GetString();
+						if( ffdev_rail_trailcolor_twice.GetInt() && szColor )
 							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
 						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );

@@ -23,8 +23,8 @@
 	#include "ff_player.h"
 #endif
 
-ConVar icblastpush("ffdev_icblastpush", "100", FCVAR_REPLICATED);
-ConVar ic_damage("ffdev_ic_damage", "120", FCVAR_REPLICATED);
+ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "100", FCVAR_REPLICATED);
+ConVar ffdev_ic_damage("ffdev_ic_damage", "100", FCVAR_REPLICATED);
 
 //=============================================================================
 // CFFWeaponIC
@@ -93,11 +93,11 @@ void CFFWeaponIC::Fire()
 
 	// 0000936 - added cvar for testing. Keep line below commented out.
 	//CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, pWeaponInfo.m_iSpeed);
-	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
+	CFFProjectileIncendiaryRocket::CreateRocket(this, vecSrc, angAiming, pPlayer, ffdev_ic_damage.GetFloat(), pWeaponInfo.m_iSpeed);
 
 	// Push player but don't add to upwards force
 	// 0000936 - reduce the blast push
-	Vector vecImpulse = vForward * (icblastpush.GetFloat() * -1.0f);
+	Vector vecImpulse = vForward * (ffdev_ic_blastpush.GetFloat() * -1.0f);
 
 	if (vecImpulse.z > 0)
 		vecImpulse.z = 0;

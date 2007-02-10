@@ -30,6 +30,7 @@
 #endif
 
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbox");
+ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "16.0", FCVAR_REPLICATED, "Force of backwards push when shooting while off ground");
 
 #ifdef GAME_DLL
 	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
@@ -152,9 +153,9 @@ void CFFWeaponFlamethrower::Fire()
 	// Normalize, or we get that weird epsilon assert
 	VectorNormalizeFast( vecForward );
 
-	// Push them gently if in air
+	// Push them backwards if in air
 	if (!pPlayer->GetGroundEntity())
-		pPlayer->ApplyAbsVelocityImpulse(vecForward * -12.0f);
+		pPlayer->ApplyAbsVelocityImpulse(vecForward * -ffdev_flame_pushforce.GetFloat());
 
 	Vector vecShootPos = pPlayer->Weapon_ShootPosition();
 
