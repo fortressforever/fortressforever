@@ -607,6 +607,7 @@ public:
 	void	EmitSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
 	void	StopSound( const char *soundname );
 	void	StopSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
+	void	StopSoundInChannel( const char *soundname, HSOUNDSCRIPTHANDLE& handle, const int channel ); // Jon: for AC stuff
 	void	GenderExpandString( char const *in, char *out, int maxlen );
 
 	static float GetSoundDuration( const char *soundname, char const *actormodel );
@@ -617,6 +618,7 @@ public:
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
 	static void EmitSound( IRecipientFilter& filter, int iEntIndex, const char *soundname, HSOUNDSCRIPTHANDLE& handle, const Vector *pOrigin = NULL, float soundtime = 0.0f, float *duration = NULL );
 	static void StopSound( int iEntIndex, const char *soundname );
+	static void StopSoundInChannel( int iEntIndex, const char *soundname, const int channel ); // Jon: for AC stuff
 	static soundlevel_t LookupSoundLevel( const char *soundname );
 	static soundlevel_t LookupSoundLevel( const char *soundname, HSOUNDSCRIPTHANDLE& handle );
 

@@ -5312,6 +5312,7 @@ int CFFPlayer::TakeEmp()
 	// in which case cells will do too!
 	// EMPs also reduce your ammo store by 25%!
 	// Values calculated  from TFC
+
     int ammodmg = 0;
 
 	int iShells = GetAmmoDef()->Index(AMMO_SHELLS);
@@ -5324,7 +5325,9 @@ int CFFPlayer::TakeEmp()
 	ammodmg += GetAmmoCount(iRockets) * 1.3f;
 	SetAmmoCount(GetAmmoCount(iRockets) * 0.75f, iRockets);
 
-	if (GetClassSlot() == CLASS_PYRO)
+	// phish and I just found out that only the engineer has his cells ignored
+	// the pyro just has so many cells, that they destroy him - Jon - 2/9/2007
+	if (GetClassSlot() != CLASS_ENGINEER)
 	{
 		ammodmg += GetAmmoCount(iCells) * 1.3f;
 		SetAmmoCount(GetAmmoCount(iCells) * 0.75f, iCells);

@@ -504,6 +504,12 @@ public:
 			params.volume = ep.m_flVolume;
 		}
 
+		// needed for ac rev sound to play at the same time as ac loop shot sound - Jon
+		if( ep.m_nFlags & SND_CHANGE_CHAN )
+		{
+			params.channel = ep.m_nChannel;
+		}
+
 #if !defined( CLIENT_DLL )
 		bool bSwallowed = CEnvMicrophone::OnSoundPlayed( 
 			entindex, 
@@ -558,7 +564,7 @@ public:
 
 
 		// Don't caption modulations to the sound
-		if ( !( ep.m_nFlags & ( SND_CHANGE_PITCH | SND_CHANGE_VOL ) ) )
+		if ( !( ep.m_nFlags & ( SND_CHANGE_PITCH | SND_CHANGE_VOL | SND_CHANGE_CHAN ) ) )
 		{
 			EmitCloseCaption( filter, entindex, params, ep );
 		}
@@ -901,6 +907,54 @@ public:
 		}
 
 		StopSoundByHandle( entindex, soundname, (HSOUNDSCRIPTHANDLE &)soundindex );
+	}
+
+	// Jon: so we can stop sounds in a specific channel that's different from what the script defines
+	void StopSoundInChannelByHandle( int entindex, const char *soundname, HSOUNDSCRIPTHANDLE& handle, const int channel )
+	{
+		if ( handle == SOUNDEMITTER_INVALID_HANDLE )
+		{
+			handle = (HSOUNDSCRIPTHANDLE)soundemitterbase->GetSoundIndex( soundname );
+		}
+
+		if ( handle == SOUNDEMITTER_INVALID_HANDLE )
+			return;
+
+		CSoundParametersInternal *params;
+
+		params = soundemitterbase->InternalGetParametersForSound( (int)handle );
+		if ( !params )
+		{
+			return;
+		}
+
+		// HACK:  we have to stop all sounds if there are > 1 in the rndwave section...
+		int c = params->NumSoundNames();
+		for ( int i = 0; i < c; ++i )
+		{
+			char const *wavename = soundemitterbase->GetWaveName( params->GetSoundNames()[ i ].symbol );
+			Assert( wavename );
+
+			enginesound->StopSound( 
+				entindex, 
+				channel, 
+				wavename );
+
+			TraceEmitSound( "StopSound:  '%s' stopped as '%s' (ent %i)\n",
+				soundname, wavename, entindex );
+		}
+	}
+
+	// Jon: so we can stop sounds in a specific channel that's different from what the script defines
+	void StopSoundInChannel( int entindex, const char *soundname, const int channel )
+	{
+		int soundindex = soundemitterbase->GetSoundIndex( soundname );
+		if ( soundindex == -1 )
+		{
+			return;
+		}
+
+		StopSoundInChannelByHandle( entindex, soundname, (HSOUNDSCRIPTHANDLE &)soundindex, channel );
 	}
 
 
@@ -1264,6 +1318,21 @@ void CBaseEntity::StopSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle )
 	g_SoundEmitterSystem.StopSoundByHandle( entindex(), soundname, handle );
 }
 
+// Jon: so we can stop sounds in a specific channel that's different from what the script defines
+void CBaseEntity::StopSoundInChannel( const char *soundname, HSOUNDSCRIPTHANDLE& handle, const int channel )
+{
+#if defined( CLIENT_DLL )
+	if ( entindex() == -1 )
+	{
+		// If we're a clientside entity, we need to use the soundsourceindex instead of the entindex
+		StopSoundInChannel( GetSoundSourceIndex(), soundname, channel );
+		return;
+	}
+#endif
+
+	g_SoundEmitterSystem.StopSoundInChannelByHandle( entindex(), soundname, handle, channel );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : iEntIndex - 
@@ -1272,6 +1341,12 @@ void CBaseEntity::StopSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle )
 void CBaseEntity::StopSound( int iEntIndex, const char *soundname )
 {
 	g_SoundEmitterSystem.StopSound( iEntIndex, soundname );
+}
+
+// Jon: so we can stop sounds in a specific channel that's different from what the script defines
+void CBaseEntity::StopSoundInChannel( int iEntIndex, const char *soundname, const int channel )
+{
+	g_SoundEmitterSystem.StopSoundInChannel( iEntIndex, soundname, channel );
 }
 
 void CBaseEntity::StopSound( int iEntIndex, int iChannel, const char *pSample )

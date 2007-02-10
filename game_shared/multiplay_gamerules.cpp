@@ -660,6 +660,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 			case KILLTYPE_GASSED:
 				killer_weapon_name = "ff_grenade_gas";
 				break;
+			case KILLTYPE_HEADSHOT:
+				killer_weapon_name = "BOOM_HEADSHOT"; // BOOM HEADSHOT!  AAAAAAAAHHHH!
+				break;
 			}
 
 			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);

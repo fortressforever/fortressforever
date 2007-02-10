@@ -39,7 +39,7 @@ struct DeathNoticeItem
 	CHudTexture *iconDeath;
 	int			iSuicide;
 	float		flDisplayTime;
-	bool		bHeadshot;
+	CHudTexture *iconBuildable; // draws after victim name, if it exists
 };
 
 //-----------------------------------------------------------------------------
@@ -72,8 +72,7 @@ private:
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudNumbersTimer" );
 
 	// Texture for skull symbol
-	CHudTexture		*m_iconD_skull;  
-	CHudTexture		*m_iconD_headshot;  
+	CHudTexture		*m_iconD_skull;
 
 	CUtlVector<DeathNoticeItem> m_DeathNotices;
 };
@@ -91,7 +90,6 @@ CHudDeathNotice::CHudDeathNotice( const char *pElementName ) :
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_iconD_headshot = NULL;
 	m_iconD_skull = NULL;
 
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
@@ -197,10 +195,34 @@ void CHudDeathNotice::Paint()
 			iconTall = (int)( scale * (float)icon->Height() );
 		}
 
+
+		int iconBuildableWide = 0;
+		int iconBuildableTall = 0;
+
+		// Add room for killed buildable icon
+		CHudTexture *iconBuildable = m_DeathNotices[i].iconBuildable;
+		if ( iconBuildable )
+		{
+			if( iconBuildable->bRenderUsingFont )
+			{
+				iconBuildableWide = surface()->GetCharacterWidth( iconBuildable->hFont, iconBuildable->cCharacterInFont );
+				iconBuildableTall = surface()->GetFontTall( iconBuildable->hFont );
+			}
+			else
+			{
+				float scale = ( (float)ScreenHeight() / 480.0f );	//scale based on 640x480
+				iconBuildableWide = (int)( scale * (float)iconBuildable->Width() );
+				iconBuildableTall = (int)( scale * (float)iconBuildable->Height() );
+			}
+		}
+
 		int x;
 		if ( m_bRightJustify )
 		{
-			x =	GetWide() - len - iconWide - 5;	// |-- Mirv: 10 extra px gap between elements
+			x =	GetWide() - len - iconWide - 5;
+
+			// keep moving over for buildable icon
+			x -= iconBuildableWide ? iconBuildableWide + 5 : 0;
 		}
 		else
 		{
@@ -210,8 +232,6 @@ void CHudDeathNotice::Paint()
 		// --> Mirv: Shove over a bit
 		y += 16;
 		x -= 28;
-
-		int offset = iconTall / 4;
 		// <--
 
 		// Only draw killers name if it wasn't a suicide
@@ -242,7 +262,7 @@ void CHudDeathNotice::Paint()
 
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
-		icon->DrawSelf( x, y - offset, iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
+		icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
 		x += iconWide + 5;		// |-- Mirv: 5px gap
 
 		SetColorForNoticePlayer( iVictimTeam );
@@ -251,6 +271,14 @@ void CHudDeathNotice::Paint()
 		surface()->DrawSetTextPos( x, y );
 		surface()->DrawSetTextFont( m_hTextFont );	//reset the font, draw icon can change it
 		surface()->DrawUnicodeString( victim );
+		surface()->DrawGetTextPos( x, y );
+
+		// draw a team colored buildable icon
+		if (iconBuildable)
+		{
+			x += 5;
+			iconBuildable->DrawSelf( x, y - (iconBuildableTall / 4), iconBuildableWide, iconBuildableTall, Color(GameResources()->GetTeamColor(iVictimTeam)) );
+		}
 	}
 
 	// Now retire any death notices that have expired
@@ -322,6 +350,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	if ( !victim_name )
 		victim_name = "";
 
+	// going to make these use icons instead of text
+/*
 	// Buildable stuff
 	char pszVictimMod[ MAX_PLAYER_NAME_LENGTH + 24 ];
 	if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
@@ -336,6 +366,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		Q_snprintf( pszVictimMod, sizeof( pszVictimMod ), "%s's Sentrygun", victim_name );
 		victim_name = const_cast< char * >( pszVictimMod );
 	}
+*/
 
 	// Make a new death notice
 	DeathNoticeItem deathMsg;
@@ -344,6 +375,21 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	Q_strncpy( deathMsg.Killer.szName, killer_name, MAX_PLAYER_NAME_LENGTH );
 	Q_strncpy( deathMsg.Victim.szName, victim_name, MAX_PLAYER_NAME_LENGTH );
 	deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
+
+	// buildable kills
+	if( !Q_strcmp( event->GetName(), "sentrygun_killed" ) )
+	{
+		deathMsg.iconBuildable = gHUD.GetIcon("death_weapon_deploysentrygun");
+		bBuildableKilled = true;
+	}
+	else if( !Q_strcmp( event->GetName(), "dispenser_killed" ) ) 
+	{
+		deathMsg.iconBuildable = gHUD.GetIcon("death_weapon_deploydispenser");
+		bBuildableKilled = true;
+	}
+	else
+		deathMsg.iconBuildable = NULL;
+
 	deathMsg.iSuicide = ( !killer || ( ( killer == victim ) && ( !bBuildableKilled ) ) );
 
 	// 0000336: If we have a Detpack...
@@ -361,6 +407,12 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	else if (Q_stricmp(killedwith, "Sentrygun") == 0)
 	{
 		deathMsg.iconDeath = gHUD.GetIcon("death_weapon_deploysentrygun");
+	}
+	// only 1 weapon can kill with a headshot
+	else if (Q_stricmp(killedwith, "BOOM_HEADSHOT") == 0)
+	{
+		// need the _weapon_sniperrifle in case people create "death_notice" entries in other weapon scripts...we just want the sniper rifle's
+		deathMsg.iconDeath = gHUD.GetIcon("death_BOOM_HEADSHOT_weapon_sniperrifle");
 	}
 	else
 	{

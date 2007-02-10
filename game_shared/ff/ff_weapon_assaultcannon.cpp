@@ -24,6 +24,8 @@
 	#include "ff_player.h"
 #endif
 
+#define FF_AC_REVSOUND_CHANNEL CHAN_BODY
+
 // Please keep all values exposed to cvars so non programmers can be tweaking, even if the code isn't final.
 ConVar ffdev_ac_maxchargetime("ffdev_ac_maxchargetime", "2.0", FCVAR_REPLICATED, "Assault Cannon Max Charge Time");
 ConVar ffdev_ac_chargeuptime("ffdev_ac_chargeuptime", "0.0", FCVAR_REPLICATED, "Assault Cannon Chargeup Time");
@@ -31,9 +33,9 @@ ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED,
 
 // You pretty much only hear this high rev sound when you overheat, so it should probably be loud
 ConVar ffdev_ac_revsound_volume_high("ffdev_ac_revsound_volume_high", "1.4", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Volume");
-ConVar ffdev_ac_revsound_volume_low("ffdev_ac_revsound_volume_low", "0.5", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Volume");
-ConVar ffdev_ac_revsound_pitch_high("ffdev_ac_revsound_pitch_high", "150", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Pitch");
-ConVar ffdev_ac_revsound_pitch_low("ffdev_ac_revsound_pitch_low", "50", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Pitch");
+ConVar ffdev_ac_revsound_volume_low("ffdev_ac_revsound_volume_low", "1.0", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Volume");
+ConVar ffdev_ac_revsound_pitch_high("ffdev_ac_revsound_pitch_high", "120", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Pitch");
+ConVar ffdev_ac_revsound_pitch_low("ffdev_ac_revsound_pitch_low", "60", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Pitch");
 
 ConVar ffdev_ac_minspread("ffdev_ac_minspread", "0.01", FCVAR_REPLICATED, "Assault Cannon Minimum spread");
 ConVar ffdev_ac_maxspread("ffdev_ac_maxspread", "0.10", FCVAR_REPLICATED, "Assault Cannon Maximum spread");
@@ -43,10 +45,10 @@ ConVar ffdev_ac_mincycletime("ffdev_ac_mincycletime", "0.06", FCVAR_REPLICATED, 
 
 ConVar ffdev_ac_loopshotsound_rate_max("ffdev_ac_loopshotsound_rate_max", "0.12", FCVAR_REPLICATED, "Loop shot sound starts fading in at this rate of fire.");
 ConVar ffdev_ac_loopshotsound_rate_min("ffdev_ac_loopshotsound_rate_min", "0.06", FCVAR_REPLICATED, "Loop shot sound is at max volume at this rate of fire.");
-ConVar ffdev_ac_loopshotsound_pitch_high("ffdev_ac_loopshotsound_pitch_high", "150", FCVAR_REPLICATED, "How high the pitch of the loop shot sound can get (coincides with ffdev_ac_maxcycletime).");
-ConVar ffdev_ac_loopshotsound_pitch_low("ffdev_ac_loopshotsound_pitch_low", "50", FCVAR_REPLICATED, "How low the pitch of the loop shot sound can get (coincides with ffdev_ac_mincycletime).");
+ConVar ffdev_ac_loopshotsound_pitch_high("ffdev_ac_loopshotsound_pitch_high", "120", FCVAR_REPLICATED, "How high the pitch of the loop shot sound can get (coincides with ffdev_ac_maxcycletime).");
+ConVar ffdev_ac_loopshotsound_pitch_low("ffdev_ac_loopshotsound_pitch_low", "80", FCVAR_REPLICATED, "How low the pitch of the loop shot sound can get (coincides with ffdev_ac_mincycletime).");
 ConVar ffdev_ac_loopshotsound_volume_high("ffdev_ac_loopshotsound_volume_high", "1.4", FCVAR_REPLICATED, "How high the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_max).");
-ConVar ffdev_ac_loopshotsound_volume_low("ffdev_ac_loopshotsound_volume_low", "0.5", FCVAR_REPLICATED, "How low the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_min).");
+ConVar ffdev_ac_loopshotsound_volume_low("ffdev_ac_loopshotsound_volume_low", "0.0", FCVAR_REPLICATED, "How low the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_min).");
 
 ConVar ffdev_ac_speedeffect_max("ffdev_ac_speedeffect_max", "0.5", FCVAR_REPLICATED, "Speed effect at ffdev_ac_maxcycletime (slower shooting = faster walking).");
 ConVar ffdev_ac_speedeffect_min("ffdev_ac_speedeffect_min", "0.2", FCVAR_REPLICATED, "Speed effect at ffdev_ac_mincycletime (faster shooting = slower walking).");
@@ -98,8 +100,15 @@ private:
 	void UpdateBarrelSpin();
 #endif
 
+	void PlayRevSound();
+	void StopRevSound();
+	int m_nRevSound;
+	bool m_bPlayRevSound;
+
 	void PlayLoopShotSound();
 	void StopLoopShotSound();
+	int m_nLoopShotSound;
+	bool m_bPlayLoopShotSound;
 
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_ASSAULTCANNON; }
 	//const char *GetTracerType() { return "ACTracer"; }
@@ -117,11 +126,8 @@ public:	// temp while i expose m_flChargeTime to global function
 	CNetworkVar(float, m_flTriggerReleased);
 
 	bool	m_bFiring;
-	bool	m_bPlayLoopShotSound;
 
 #ifdef CLIENT_DLL
-	CSoundPatch *m_pRevSound;
-
 	float		m_flRotationValue;
 	float		m_flChargeTimeClient;
 	int			m_iBarrelRotation;
@@ -165,15 +171,21 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 {
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 
+	m_flLastTick = 0.0f;
+	m_flDeployTick = 0.0f;
+
 	m_flTriggerReleased = 1.0f;
 	m_flTriggerPressed = 0.0f;
 
 	m_bFiring = false;
+
+	m_nRevSound = BURST;
+	m_bPlayRevSound = false;
+
+	m_nLoopShotSound = WPN_DOUBLE;
 	m_bPlayLoopShotSound = false;
 
 #ifdef CLIENT_DLL
-	m_pRevSound = NULL;
-
 	m_flRotationValue = 0.0f;
 	m_flChargeTimeClient = 0.0f;
 	m_iBarrelRotation = -1;
@@ -188,13 +200,6 @@ CFFWeaponAssaultCannon::~CFFWeaponAssaultCannon()
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 
 #ifdef CLIENT_DLL
-
-	if(m_pRevSound)
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy(m_pRevSound);
-		m_pRevSound = NULL;
-	}
-
 	m_flRotationValue = 0.0f;
 	m_flChargeTimeClient = 0.0f;
 	m_iBarrelRotation = -1;
@@ -219,15 +224,6 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 	pPlayer->RemoveSpeedEffect(SE_ASSAULTCANNON);
 #endif
 
-	// Also start the rev sound for the client
-#ifdef CLIENT_DLL
-	if (m_pRevSound) // is this really needed? ----> && GetPlayerOwner() == CBasePlayer::GetLocalPlayer())
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy(m_pRevSound);
-		m_pRevSound = NULL;
-	}
-#endif
-
 	//if (!m_fFireState) 
 	//	return BaseClass::Holster(pSwitchingTo);
 
@@ -245,6 +241,7 @@ bool CFFWeaponAssaultCannon::Holster(CBaseCombatWeapon *pSwitchingTo)
 		//	WeaponSoundLocal(STOP);
 	}
 
+	StopRevSound();
 	StopLoopShotSound();
 
 	//m_fFireState = 0;
@@ -267,6 +264,9 @@ bool CFFWeaponAssaultCannon::Deploy()
 	m_flDeployTick = gpGlobals->curtime;
 
 	m_bFiring = false;
+
+	m_bPlayRevSound = true;
+
 	m_bPlayLoopShotSound = false;
 
 	CFFPlayer *pOwner = ToFFPlayer(GetOwner());
@@ -277,14 +277,6 @@ bool CFFWeaponAssaultCannon::Deploy()
 #ifdef CLIENT_DLL
 	// play the rev sound
 	CPASAttenuationFilter filter(this);
-
-	// Bring up the looping rev looping sound
-	if (!m_pRevSound)
-	{
-		m_pRevSound = CSoundEnvelopeController::GetController().SoundCreate(filter, entindex(), "assaultcannon.rotate");
-		CSoundEnvelopeController::GetController().Play(m_pRevSound, 0.0, ffdev_ac_revsound_pitch_low.GetFloat());
-		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pRevSound, ffdev_ac_revsound_volume_low.GetFloat(), 1.0f);
-	}
 
 	m_flRotationValue = 0;
 #endif
@@ -404,7 +396,6 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 	// The time since we last thought
 	float flTimeDelta = gpGlobals->curtime - m_flLastTick;
-	m_flLastTick = gpGlobals->curtime;
 
 	// Keep track of fire duration for anywhere else it may be needed
 	UpdateChargeTime();
@@ -412,6 +403,9 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 #ifdef CLIENT_DLL
 	UpdateBarrelSpin();
 #endif
+
+	// play the rev sound (the sound of a HW stalker...players should fear this sound)
+	PlayRevSound();
 
 	// update pitch and volume of the loop shot sound (might make it only update the volume)
 	PlayLoopShotSound();
@@ -449,6 +443,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 			{
 				//WeaponSound(STOP);
+				StopRevSound();
 				StopLoopShotSound();
 
 				HandleFireOnEmpty();
@@ -525,16 +520,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 		WeaponIdle();
 	}
 
-#ifdef CLIENT_DLL
-	// the volume fades up while deploying, so wait a second before doing this stuff
-	if (m_pRevSound && gpGlobals->curtime - m_flDeployTick > 1.0f)
-	{
-		float flPitch = FLerp(ffdev_ac_revsound_pitch_low.GetFloat(), ffdev_ac_revsound_pitch_high.GetFloat(), m_flChargeTime / ffdev_ac_maxchargetime.GetFloat());
-		float flVolume = FLerp(ffdev_ac_revsound_volume_low.GetFloat(), ffdev_ac_revsound_volume_high.GetFloat(), m_flChargeTime / ffdev_ac_maxchargetime.GetFloat());
-		CSoundEnvelopeController::GetController().SoundChangePitch(m_pRevSound, flPitch, 0.0f);
-		CSoundEnvelopeController::GetController().SoundChangeVolume(m_pRevSound, flVolume, 0.0f);
-	}
-#endif
+	m_flLastTick = gpGlobals->curtime;
 }
 
 //----------------------------------------------------------------------------
@@ -685,7 +671,7 @@ void CFFWeaponAssaultCannon::PlayLoopShotSound()
 		return;
 	}
 
-	const char *shootsound = GetShootSound( BURST );
+	const char *shootsound = GetShootSound( m_nLoopShotSound );
 	if (!shootsound || !shootsound[0])
 		return;
 
@@ -726,17 +712,63 @@ void CFFWeaponAssaultCannon::PlayLoopShotSound()
 
 void CFFWeaponAssaultCannon::StopLoopShotSound()
 {
-	//if ( IsPredicted() )
-	//	return;
-
-	// If we have some sounds from the weapon classname.txt file, play a random one of them
-	const char *shootsound = GetShootSound( BURST );
+	const char *shootsound = GetShootSound( m_nLoopShotSound );
 	if ( !shootsound || !shootsound[0] )
 		return;
 
 	StopSound( entindex(), shootsound );
-
 	m_bPlayLoopShotSound = false;
+}
+
+void CFFWeaponAssaultCannon::PlayRevSound()
+{
+	if (!m_bPlayRevSound)
+	{
+		StopRevSound();
+		return;
+	}
+
+	const char *shootsound = GetShootSound( m_nRevSound );
+	if (!shootsound || !shootsound[0])
+		return;
+
+	float flFireRate = GetFireRate();
+	float flMaxCycleTime = ffdev_ac_maxcycletime.GetFloat();
+	float flMinCycleTime = ffdev_ac_mincycletime.GetFloat();
+	float flPercent = 0.0f;
+	if (flMaxCycleTime - flMinCycleTime != 0)
+		flPercent = clamp((flMaxCycleTime - clamp(flFireRate, flMinCycleTime, flMaxCycleTime)) / (flMaxCycleTime - flMinCycleTime), 0.0f, 1.0f);
+
+	EmitSound_t params;
+	params.m_pSoundName = shootsound;
+	params.m_flSoundTime = 0.0f;
+	params.m_pOrigin = NULL;
+	params.m_pflSoundDuration = NULL;
+	params.m_bWarnOnDirectWaveReference = true;
+	params.m_SoundLevel = SNDLVL_NORM;
+	params.m_flVolume = ffdev_ac_revsound_volume_low.GetInt() + ((ffdev_ac_revsound_volume_high.GetInt() - ffdev_ac_revsound_volume_low.GetInt()) * flPercent);
+	params.m_nPitch = ffdev_ac_revsound_pitch_low.GetInt() + ((ffdev_ac_revsound_pitch_high.GetInt() - ffdev_ac_revsound_pitch_low.GetInt()) * flPercent);
+	params.m_nChannel = FF_AC_REVSOUND_CHANNEL; // trying to make this play along with the other sounds that are being played
+	params.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL | SND_CHANGE_CHAN;
+
+	CPASAttenuationFilter filter( GetOwner(), params.m_SoundLevel );
+	if ( IsPredicted() )
+	{
+		filter.UsePredictionRules();
+	}
+	EmitSound( filter, entindex(), params, params.m_hSoundScriptHandle );
+
+	m_bPlayRevSound = true;
+}
+
+void CFFWeaponAssaultCannon::StopRevSound()
+{
+	const char *shootsound = GetShootSound( m_nRevSound );
+	if ( !shootsound || !shootsound[0] )
+		return;
+
+	StopSoundInChannel( entindex(), shootsound, FF_AC_REVSOUND_CHANNEL );
+	m_bPlayRevSound = false;
 }
 
 #ifdef CLIENT_DLL

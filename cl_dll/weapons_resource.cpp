@@ -196,6 +196,18 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 			}
 		}
 		// <--
+
+		// --> Jon:
+		p = FindHudTextureInDict( tempList, "deathnotice_headshot" );
+		if (p)
+		{
+			if (strlen(pWeaponInfo->szClassName) > 3)
+			{
+				Q_snprintf(p->szShortName, 63, "death_BOOM_HEADSHOT_%s", pWeaponInfo->szClassName + 3);
+				gHUD.AddSearchableHudIconToList(*p);
+			}
+		}
+		// <--
 	}
 
 	FreeHudTextureList( tempList );
