@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "KeyValues.h"
 #include "ff_weapon_base.h"
+#include "ff_projectile_base.h"
 
 #ifdef CLIENT_DLL
 	#define C_FFTeam CFFTeam
@@ -1273,6 +1274,45 @@ ConVar mp_prematch( "mp_prematch",
 			else
 			{
 				pszWeapon = STRING( pInflictor->m_iClassname );
+			}
+
+			// --> Mirv: Special case for projectiles
+			CFFProjectileBase *pProjectile = dynamic_cast<CFFProjectileBase *> (pInflictor);
+
+			if (pProjectile && pProjectile->m_iSourceClassname != NULL_STRING)
+			{
+				pszWeapon = STRING(pProjectile->m_iSourceClassname);
+			}
+
+			// Another important thing to do is to make sure that mirvlet = mirv
+			// in the death messages
+			if (Q_strncmp(pszWeapon, "ff_grenade_mirvlet", 18) == 0)
+			{
+				pszWeapon = "ff_grenade_mirv";
+			}
+			// <-- Mirv
+
+			//fixes for certain time based damage.
+			switch(info.GetCustomKill())
+			{
+			case KILLTYPE_INFECTION:
+				pszWeapon = "ff_weapon_medikit";
+				break;
+			case KILLTYPE_BURN_FLAMETHROWER:
+				pszWeapon = "ff_weapon_flamethrower";
+				break;
+			case KILLTYPE_BURN_ICCANNON:
+				pszWeapon = "ff_weapon_ic";
+				break;
+			case KILLTYPE_BURN_NALPALMGRENADE:
+				pszWeapon = "ff_grenade_napalm";
+				break;
+			case KILLTYPE_GASSED:
+				pszWeapon = "ff_grenade_gas";
+				break;
+			case KILLTYPE_HEADSHOT:
+				pszWeapon = "BOOM_HEADSHOT"; // BOOM HEADSHOT!  AAAAAAAAHHHH!
+				break;
 			}
 
 			UTIL_LogPrintf( " killer_ID: %i\n", iKillerID );

@@ -36,9 +36,16 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 
-ConVar ffdev_railgun_maxangle( "ffdev_railgun_maxangle", "60", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
-ConVar ffdev_rail_explodedamage( "ffdev_rail_explodedamage", "20", FCVAR_REPLICATED, "Damage caused by rail explosion" );
+ConVar ffdev_railgun_maxangle( "ffdev_railgun_maxangle", "45", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
+ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a 1 second chargetime." );
+ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a 2 second chargetime." );
 ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED, "Damage multiplier per bounce" );
+
+#ifdef GAME_DLL
+ConVar ffdev_rail_trailcolor_start( "ffdev_rail_trailcolor_start", "0 255 0", 0, "Initial color of rail (R G B)" );
+ConVar ffdev_rail_trailcolor_one( "ffdev_rail_trailcolor_one", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
+ConVar ffdev_rail_trailcolor_two( "ffdev_rail_trailcolor_two", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
+#endif
 
 #ifdef GAME_DLL
 //=============================================================================
@@ -87,7 +94,7 @@ END_DATADESC()
 		if (m_pMainGlow != NULL) 
 		{
 			m_pMainGlow->FollowEntity(this);
-			m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation);
+			m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
 			m_pMainGlow->SetScale(0.2f);
 			m_pMainGlow->SetGlowProxySize(4.0f);
 		}
@@ -97,8 +104,13 @@ END_DATADESC()
 
 		if (m_pGlowTrail != NULL) 
 		{
+			float flColor[3] = { 0, 255, 0 };
+			const char *szColor = ffdev_rail_trailcolor_start.GetString();
+			if( ffdev_rail_trailcolor_start.GetInt() && szColor )
+				sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
+
 			m_pGlowTrail->FollowEntity(this);
-			m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 255, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone);
 			m_pGlowTrail->SetStartWidth(8.0f);
 			m_pGlowTrail->SetEndWidth(1.0f);
 			m_pGlowTrail->SetLifeTime(0.5f);
@@ -201,9 +213,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		}
 		
 		// 0001267: Added explosion effect if charged
-		if ( m_iMaxBounces )
+		if ( m_iMaxBounces == 1 )
 		{
-			m_flDamage = ffdev_rail_explodedamage.GetFloat();
+			m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+			Detonate();
+		}
+		else if ( m_iMaxBounces == 2 )
+		{
+			m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
 			Detonate();
 		}
 
@@ -289,13 +306,21 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 					// Change the color
 					if( m_iNumBounces == 1 ) 
 					{
-						m_pMainGlow->SetTransparency( kRenderGlow, 255, 0, 0, 255, kRenderFxNoDissipation );
-						m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
+						float flColor[3] = { 255, 0, 0 };
+						const char *szColor = ffdev_rail_trailcolor_one.GetString();
+						if( ffdev_rail_trailcolor_one.GetInt() && szColor )
+							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
+
+						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
 					}
 					else if( m_iNumBounces == 2 ) 
 					{
-						m_pMainGlow->SetTransparency( kRenderGlow, 0, 0, 255, 255, kRenderFxNoDissipation );
-						m_pGlowTrail->SetTransparency( kRenderTransAdd, 0, 0, 255, 255, kRenderFxNone );
+						float flColor[3] = { 0, 0, 255 };
+						const char *szColor = ffdev_rail_trailcolor_two.GetString();
+						if( ffdev_rail_trailcolor_two.GetInt() && szColor )
+							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
+
+						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
 					}				
 #endif
 				}				
@@ -315,9 +340,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 #endif
 				
 				// 0001267: Added explosion effect if charged
-				if ( m_iMaxBounces )
+				if ( m_iMaxBounces == 1 )
 				{
-					m_flDamage = ffdev_rail_explodedamage.GetFloat();
+					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+					Detonate();
+				}
+				else if ( m_iMaxBounces == 2 )
+				{
+					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
 					Detonate();
 				}
 				Remove();
@@ -335,9 +365,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
 				
 				// 0001267: Added explosion effect if charged
-				if ( m_iMaxBounces )
+				if ( m_iMaxBounces == 1 )
 				{
-					m_flDamage = ffdev_rail_explodedamage.GetFloat();
+					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+					Detonate();
+				}
+				else if ( m_iMaxBounces == 2 )
+				{
+					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
 					Detonate();
 				}
 			}

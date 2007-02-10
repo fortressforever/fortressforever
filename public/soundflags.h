@@ -126,8 +126,11 @@ enum SoundFlags_t
 	SND_SHOULDPAUSE		= (1<<7),		// this sound should be paused if the game is paused
 #if defined( _XBOX )
 	SND_XBOX_UI			= (1<<8),		// It's an xbox UI sound, don't suppress when game UI is active (in the menu system) ... all other sounds are paused
-	SND_XBOX_LOOP		= (1<<8)
+	SND_XBOX_LOOP		= (1<<8),
 #endif
+
+	// needed for ac rev sound to play at the same time as ac loop shot sound - Jon
+	SND_CHANGE_CHAN		= (1<<9),		// change sound pitch
 };
 
 #define SND_FLAG_BITS_ENCODE 8
