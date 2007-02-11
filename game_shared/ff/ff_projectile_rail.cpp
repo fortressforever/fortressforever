@@ -18,8 +18,8 @@
 #include "IEffects.h"
 
 #define RAIL_MODEL "models/projectiles/rail/w_rail.mdl"
-#define RAIL_GLOW "sprites/redglow1.vmt"
-#define RAIL_TRAIL "sprites/bluelaser1.vmt"
+#define RAIL_GLOW "sprites/rail_glow.vmt"
+#define RAIL_TRAIL "sprites/rail_trail.vmt"
 
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
@@ -36,15 +36,18 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
 PRECACHE_WEAPON_REGISTER( ff_projectile_rail );
 
-ConVar ffdev_railgun_maxangle( "ffdev_railgun_maxangle", "45", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
-ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a half-charge shot." );
-ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a full-charge shot." );
+extern ConVar ffdev_railgun_maxchargetime;
+
+ConVar ffdev_rail_maxbounceangle( "ffdev_rail_maxbounceangle", "45", FCVAR_REPLICATED, "Maximum angle for a rail to bounce" );
 ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FCVAR_REPLICATED, "Damage multiplier per bounce" );
 
+ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a half-charge shot." );
+ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a full-charge shot." );
+
 #ifdef GAME_DLL
-ConVar ffdev_rail_trailcolor_start( "ffdev_rail_trailcolor_start", "0 255 0", 0, "Initial color of rail (R G B)" );
-ConVar ffdev_rail_trailcolor_once( "ffdev_rail_trailcolor_once", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
-ConVar ffdev_rail_trailcolor_twice( "ffdev_rail_trailcolor_twice", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
+ConVar ffdev_rail_color_start( "ffdev_rail_color_start", "0 255 0", 0, "Color of rail initially (R G B)" );
+ConVar ffdev_rail_color_once( "ffdev_rail_color_once", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
+ConVar ffdev_rail_color_twice( "ffdev_rail_color_twice", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
 #endif
 
 #ifdef GAME_DLL
@@ -91,10 +94,15 @@ END_DATADESC()
 		// Start up the eye glow
 		m_pMainGlow = CSprite::SpriteCreate(RAIL_GLOW, GetLocalOrigin(), false);
 
-		if (m_pMainGlow != NULL) 
+		float flColor[3] = { 0, 255, 0 };
+		const char *szColor = ffdev_rail_color_start.GetString();
+		if( ffdev_rail_color_start.GetInt() && szColor )
+			sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
+
+		if (m_pMainGlow != NULL)
 		{
 			m_pMainGlow->FollowEntity(this);
-			m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+			m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 192, kRenderFxNoDissipation);
 			m_pMainGlow->SetScale(0.2f);
 			m_pMainGlow->SetGlowProxySize(4.0f);
 		}
@@ -102,15 +110,10 @@ END_DATADESC()
 		// Start up the eye trail
 		m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate(RAIL_TRAIL, GetLocalOrigin(), false);
 
-		if (m_pGlowTrail != NULL) 
+		if (m_pGlowTrail != NULL)
 		{
-			float flColor[3] = { 0, 255, 0 };
-			const char *szColor = ffdev_rail_trailcolor_start.GetString();
-			if( ffdev_rail_trailcolor_start.GetInt() && szColor )
-				sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
-
 			m_pGlowTrail->FollowEntity(this);
-			m_pGlowTrail->SetTransparency(kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, flColor[0], flColor[1], flColor[2], 192, kRenderFxNone);
 			m_pGlowTrail->SetStartWidth(8.0f);
 			m_pGlowTrail->SetEndWidth(1.0f);
 			m_pGlowTrail->SetLifeTime(0.5f);
@@ -203,27 +206,38 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		SetTouch( NULL );
 		SetThink( NULL );
 
-		Vector vecDir = GetAbsVelocity();
-
 		// Spark & leave decal if we hit an entity which wasn't human(ie. player) 
 		if( !pOther->IsPlayer() && UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER ) 
 		{
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
 			g_pEffects->Sparks( GetAbsOrigin() );
 		}
-		
+
 		// 0001267: Added explosion effect if charged
+		// half charge
 		if ( m_iMaxBounces == 1 )
 		{
+			// half charge explosion damage
 			m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+
+			// bounced, so multiply by specified bounce damage factor
+			if (m_iNumBounces > 0)
+				m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 			Detonate();
 		}
+		// full charge
 		else if ( m_iMaxBounces == 2 )
 		{
+			// full charge explosion damage
 			m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
+
+			// for each bounce, multiply by specified bounce damage factor
+			for (int i = 0; i < m_iNumBounces; i++)
+				m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 			Detonate();
 		}
-
 		Remove();
 	}
 	// Object we hit doesn't take any damage
@@ -232,15 +246,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		trace_t	tr;
 		tr = BaseClass::GetTouchTrace();
 
-		// See if we struck the world
+		// See if we struck the world, make a mark, and then try to bounce
 		// Bug #0000181: Railgun shot is absorbed by doors on ff_dev_ctf
 		if( /*pOther->GetMoveType() == MOVETYPE_NONE &&*/ !( tr.surface.flags & SURF_SKY ) ) 
 		{
 			EmitSound( "Rail.HitWorld" );
-
-			// if what we hit is static architecture, can stay around for a while.
-			Vector vecDir = GetAbsVelocity();
-			float speed = VectorNormalize( vecDir );
 
 			Vector vForward;
 			AngleVectors( GetAbsAngles(), &vForward );
@@ -260,76 +270,62 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			DispatchEffect( "RailImpact", data );			
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
 
-			bool bCantBounce = false;
+			bool bBounced = false;
 
-			// Check if its past the max # of bounces
+			// bouncing is possible if num bounces is below max bounces
 			if( m_iNumBounces < m_iMaxBounces )
 			{
-				// Increment bounces
-				++m_iNumBounces;
-
-				//// BOUNCE!
-				//m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();				
-
-				vecDir = vForward * speed;
-				Vector reflect = vecDir + ( -2 * tr.plane.normal * DotProduct( vecDir, tr.plane.normal ) );
-
-				// Check if reflect is within some limits
-				Vector vecReflectNorm = reflect;
-				VectorNormalize( vecReflectNorm );
-
-//#ifdef GAME_DLL
-//				NDebugOverlay::Line( GetAbsOrigin(), GetAbsOrigin() + reflect, 255, 0, 0, false, 5.0f );
-//				NDebugOverlay::Line( tr.endpos, tr.endpos + ( tr.plane.normal * 16.0f ), 0, 0, 255, false, 5.0f );
-//
-//				NDebugOverlay::Cross3D( GetAbsOrigin(), 32.0f, 0, 255, 0, false, 5.0f );
-//#endif
-				// Calculate angle. Since items are normalized its easy.
-				float flAngle = RAD2DEG( acos( vecReflectNorm.Dot( tr.plane.normal ) ) );
-//#ifdef GAME_DLL
-//				Warning( "[Rail] Angle: %f\n", flAngle );
-//#endif
+				Vector vecDir = GetAbsVelocity();
+				float flSpeed = VectorNormalize(vecDir);
+				float flDot = -DotProduct( tr.plane.normal, vecDir );
+				float flAngle = RAD2DEG(flDot);
 
 				// If angle is too shallow, don't bounce
-				if( flAngle <= ffdev_railgun_maxangle.GetFloat() )
-					bCantBounce = true;
-
-				// If we can bounce
-				if( !bCantBounce )
+				if( flAngle <= ffdev_rail_maxbounceangle.GetFloat() )
 				{
+					// we're bouncing!
+					bBounced = true;
+
+					// Increment bounces
+					++m_iNumBounces;
+
 					// BOUNCE BONUS DAMAGE!
 					m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
 
+					Vector vecReflect = 2 * tr.plane.normal * flDot + vecDir;
+					Vector vecReflectNorm = vecReflect;
+					VectorNormalize( vecReflectNorm );
+
 					// Shoot us back!
-					SetAbsVelocity( reflect );
+					SetAbsVelocity( vecReflectNorm * flSpeed );
 #ifdef GAME_DLL
 					// Change the color
 					if( m_iNumBounces == 1 ) 
 					{
 						float flColor[3] = { 255, 0, 0 };
-						const char *szColor = ffdev_rail_trailcolor_once.GetString();
-						if( ffdev_rail_trailcolor_once.GetInt() && szColor )
+						const char *szColor = ffdev_rail_color_once.GetString();
+						if( ffdev_rail_color_once.GetInt() && szColor )
 							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
-						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
+						m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 224, kRenderFxNoDissipation);
+						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 224, kRenderFxNone );
 					}
 					else if( m_iNumBounces == 2 ) 
 					{
 						float flColor[3] = { 0, 0, 255 };
-						const char *szColor = ffdev_rail_trailcolor_twice.GetString();
-						if( ffdev_rail_trailcolor_twice.GetInt() && szColor )
+						const char *szColor = ffdev_rail_color_twice.GetString();
+						if( ffdev_rail_color_twice.GetInt() && szColor )
 							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
+						m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 255, kRenderFxNoDissipation);
 						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
 					}				
 #endif
 				}				
 			}
-			else
-				bCantBounce = true;
 
-			// If not allowed to bounce for whatever reason, delete
-			if( bCantBounce )
+			// we didn't bounce, so it's time to die
+			if( !bBounced )
 			{
 				SetTouch( NULL );
 				SetThink( NULL );
@@ -340,21 +336,35 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 #endif
 				
 				// 0001267: Added explosion effect if charged
+				// half charge
 				if ( m_iMaxBounces == 1 )
 				{
+					// half charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+
+					// bounced, so multiply by specified bounce damage factor
+					if (m_iNumBounces > 0)
+						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 					Detonate();
 				}
+				// full charge
 				else if ( m_iMaxBounces == 2 )
 				{
+					// full charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
+
+					// for each bounce, multiply by specified bounce damage factor
+					for (int i = 0; i < m_iNumBounces; i++)
+						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 					Detonate();
 				}
 				Remove();
 			}
 
 			// Shoot some sparks
-			if( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER && ( speed > 500 ) )
+			if( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER )
 				g_pEffects->Sparks( GetAbsOrigin() );
 		}
 		else
@@ -365,14 +375,28 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
 				
 				// 0001267: Added explosion effect if charged
+				// half charge
 				if ( m_iMaxBounces == 1 )
 				{
+					// half charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
+
+					// bounced, so multiply by specified bounce damage factor
+					if (m_iNumBounces > 0)
+						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 					Detonate();
 				}
+				// full charge
 				else if ( m_iMaxBounces == 2 )
 				{
+					// full charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
+
+					// for each bounce, multiply by specified bounce damage factor
+					for (int i = 0; i < m_iNumBounces; i++)
+						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
+
 					Detonate();
 				}
 			}
@@ -409,12 +433,14 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 {
 	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
 
+	float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
+
 	UTIL_SetOrigin( pRail, vecOrigin );
 	pRail->SetAbsAngles( angAngles );
 	pRail->Spawn();
 	pRail->SetOwnerEntity( pentOwner );
 	pRail->m_iSourceClassname = ( pSource ? pSource->m_iClassname : NULL_STRING );
-	pRail->m_iMaxBounces = ( flChargeTime >= 2.0f ) ? 2 : ( flChargeTime >= 1.0f ) ? 1 : 0;
+	pRail->m_iMaxBounces = ( flChargeTime >= flMaxChargeTime ) ? flMaxChargeTime : ( flChargeTime >= flMaxChargeTime / 2 ) ? flMaxChargeTime / 2 : 0;
 
 	Vector vecForward;
 	AngleVectors( angAngles, &vecForward );

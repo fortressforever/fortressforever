@@ -34,7 +34,7 @@
 	#include "te_effect_dispatch.h"
 #endif
 
-ConVar ffdev_railgun_maxcharge( "ffdev_railgun_maxcharge", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
+ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
 
 ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", "1.0", FCVAR_REPLICATED, "Railgun Rev Sound High Volume");
 ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED, "Railgun Rev Sound Low Volume");
@@ -200,8 +200,8 @@ void CFFWeaponRailgun::Fire( void )
 	pPlayer->EyeVectors( &vecForward );
 	VectorNormalizeFast( vecForward );
 
-	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
-	float flPercent = flChargeTime / ffdev_railgun_maxcharge.GetFloat();
+	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxchargetime.GetFloat() );
+	float flPercent = flChargeTime / ffdev_railgun_maxchargetime.GetFloat();
 
 	// Push them backwards
 	pPlayer->ApplyAbsVelocityImpulse(vecForward * -(ffdev_railgun_pushforce_min.GetFloat() + ( (ffdev_railgun_pushforce_max.GetFloat() - ffdev_railgun_pushforce_min.GetFloat()) * flPercent )));
@@ -242,7 +242,7 @@ void CFFWeaponRailgun::Fire( void )
 	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, flSpeed, flChargeTime );	
 
 	// play a different sound for a fully charged shot
-	if ( flChargeTime < ffdev_railgun_maxcharge.GetFloat() )
+	if ( flChargeTime < ffdev_railgun_maxchargetime.GetFloat() )
 		WeaponSound( SINGLE );
 	else
 		WeaponSound( WPN_DOUBLE );
@@ -325,7 +325,7 @@ void CFFWeaponRailgun::PlayRevSound()
 	if (!shootsound || !shootsound[0])
 		return;
 
-	float flPercent = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() ) / ffdev_railgun_maxcharge.GetFloat();
+	float flPercent = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxchargetime.GetFloat() ) / ffdev_railgun_maxchargetime.GetFloat();
 
 	EmitSound_t params;
 	params.m_pSoundName = shootsound;
@@ -361,16 +361,16 @@ void CFFWeaponRailgun::StopRevSound()
 
 float CFFWeaponRailgun::GetRecoilMultiplier()
 {
-	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
+	float flChargeTime = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxchargetime.GetFloat() );
 /*
-	if (flChargeTime < ffdev_railgun_maxcharge.GetFloat() / 2)
+	if (flChargeTime < ffdev_railgun_maxchargetime.GetFloat() / 2)
 		return 1.0f;
-	else if (flChargeTime < ffdev_railgun_maxcharge.GetFloat())
+	else if (flChargeTime < ffdev_railgun_maxchargetime.GetFloat())
 		return 3.0f;
 	else
 		return 5.0f;
 */
-	return 1 + ( 9 * ( flChargeTime / ffdev_railgun_maxcharge.GetFloat() ) );
+	return 1 + ( 9 * ( flChargeTime / ffdev_railgun_maxchargetime.GetFloat() ) );
 }
 
 /*
@@ -430,8 +430,8 @@ void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	::FormatViewModelAttachment(vecEnd, true);
 	::FormatViewModelAttachment(vecMuzzle, true);
 
-	float flChargeAmount = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxcharge.GetFloat() );
-	flChargeAmount = clamp( flChargeAmount / ffdev_railgun_maxcharge.GetFloat(), 0.0f, 1.0f);
+	float flChargeAmount = clamp( gpGlobals->curtime - m_flStartCharge, 0.0f, ffdev_railgun_maxchargetime.GetFloat() );
+	flChargeAmount = clamp( flChargeAmount / ffdev_railgun_maxchargetime.GetFloat(), 0.0f, 1.0f);
 	flChargeAmount = sqrtf( flChargeAmount );
 
 #define FLUTTER_AMOUNT	(1.0f * flChargeAmount)
