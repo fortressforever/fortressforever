@@ -372,6 +372,10 @@ void cc_CreatePredictionError_f()
 
 ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictionError_f, "Create a prediction error", FCVAR_CHEAT );
 
+// this is going to strictly be for the randomizing at the beginning of EntSelectSpawnPoint
+// by starting from the last entity when going into the for loop
+CBaseEntity *g_pLastSpawnRandomizer = NULL;
+
 // --------------------------------------------------------------------------------
 // Purpose: Constructor!
 // --------------------------------------------------------------------------------
@@ -468,6 +472,8 @@ CFFPlayer::CFFPlayer()
 	m_iSpawnInterpCounter = 0;
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
+
+	g_pLastSpawnRandomizer = NULL;
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -759,9 +765,6 @@ void CFFPlayer::Precache()
 
 extern CBaseEntity *g_pLastSpawn; // this is defined somewhere.. i'm using it :)
 
-// this is going to strictly be for the randomizing at the beginning of EntSelectSpawnPoint
-// by starting from the last entity when going into the for loop
-CBaseEntity *g_pLastSpawnRandomizer = NULL;
 
 void CFFPlayer::SetLastSpawn( CBaseEntity *pEntity )
 {
