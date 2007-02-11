@@ -32,8 +32,8 @@ ConVar ffdev_ac_chargeuptime("ffdev_ac_chargeuptime", "0.0", FCVAR_REPLICATED, "
 ConVar ffdev_ac_overheatdelay("ffdev_ac_overheatdelay", "1.0", FCVAR_REPLICATED, "Assault Cannon Overheat delay");
 
 // You pretty much only hear this high rev sound when you overheat, so it should probably be loud
-ConVar ffdev_ac_revsound_volume_high("ffdev_ac_revsound_volume_high", "1.4", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Volume");
-ConVar ffdev_ac_revsound_volume_low("ffdev_ac_revsound_volume_low", "1.0", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Volume");
+ConVar ffdev_ac_revsound_volume_high("ffdev_ac_revsound_volume_high", "1.0", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Volume");
+ConVar ffdev_ac_revsound_volume_low("ffdev_ac_revsound_volume_low", "0.4", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Volume");
 ConVar ffdev_ac_revsound_pitch_high("ffdev_ac_revsound_pitch_high", "120", FCVAR_REPLICATED, "Assault Cannon Rev Sound High Pitch");
 ConVar ffdev_ac_revsound_pitch_low("ffdev_ac_revsound_pitch_low", "60", FCVAR_REPLICATED, "Assault Cannon Rev Sound Low Pitch");
 ConVar ffdev_ac_revsound_updateinterval("ffdev_ac_revsound_updateinterval", "0.02", FCVAR_REPLICATED, "How much time to wait before updating");
@@ -48,8 +48,8 @@ ConVar ffdev_ac_loopshotsound_rate_max("ffdev_ac_loopshotsound_rate_max", "0.12"
 ConVar ffdev_ac_loopshotsound_rate_min("ffdev_ac_loopshotsound_rate_min", "0.06", FCVAR_REPLICATED, "Loop shot sound is at max volume at this rate of fire.");
 ConVar ffdev_ac_loopshotsound_pitch_high("ffdev_ac_loopshotsound_pitch_high", "160", FCVAR_REPLICATED, "How high the pitch of the loop shot sound can get (coincides with ffdev_ac_maxcycletime).");
 ConVar ffdev_ac_loopshotsound_pitch_low("ffdev_ac_loopshotsound_pitch_low", "80", FCVAR_REPLICATED, "How low the pitch of the loop shot sound can get (coincides with ffdev_ac_mincycletime).");
-ConVar ffdev_ac_loopshotsound_volume_high("ffdev_ac_loopshotsound_volume_high", "1.4", FCVAR_REPLICATED, "How high the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_max).");
-ConVar ffdev_ac_loopshotsound_volume_low("ffdev_ac_loopshotsound_volume_low", "0.0", FCVAR_REPLICATED, "How low the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_min).");
+ConVar ffdev_ac_loopshotsound_volume_high("ffdev_ac_loopshotsound_volume_high", "1.0", FCVAR_REPLICATED, "How high the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_max).");
+ConVar ffdev_ac_loopshotsound_volume_low("ffdev_ac_loopshotsound_volume_low", "0.4", FCVAR_REPLICATED, "How low the volume of the loop shot sound can get (coincides with ffdev_ac_loopshotsound_rate_min).");
 ConVar ffdev_ac_loopshotsound_updateinterval("ffdev_ac_loopshotsound_updateinterval", "0.04", FCVAR_REPLICATED, "How much time to wait before updating");
 
 ConVar ffdev_ac_speedeffect_max("ffdev_ac_speedeffect_max", "0.5", FCVAR_REPLICATED, "Speed effect at ffdev_ac_maxcycletime (slower shooting = faster walking).");
@@ -464,7 +464,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 				m_bFiring = false;
 			}
 			// Weapon should be firing now
-			else
+			else if(m_flDeployTick + 0.5f <= gpGlobals->curtime)
 			{
 				// If the firing button was just pressed, reset the firing time
 				if (pOwner && pOwner->m_afButtonPressed & IN_ATTACK)
@@ -479,6 +479,8 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 				m_flPlaybackRate = 1.0f + m_flChargeTime;
 				PrimaryAttack();
+
+				m_bFiring = true;
 			}
 
 			//m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
@@ -709,8 +711,8 @@ void CFFWeaponAssaultCannon::PlayLoopShotSound()
 	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = true;
 	params.m_SoundLevel = SNDLVL_GUNFIRE;
-	params.m_flVolume = ffdev_ac_loopshotsound_volume_low.GetInt() + ((ffdev_ac_loopshotsound_volume_high.GetInt() - ffdev_ac_loopshotsound_volume_low.GetInt()) * flPercentForVolume);
-	params.m_nPitch = ffdev_ac_loopshotsound_pitch_low.GetInt() + ((ffdev_ac_loopshotsound_pitch_high.GetInt() - ffdev_ac_loopshotsound_pitch_low.GetInt()) * flPercentForPitch);
+	params.m_flVolume = ffdev_ac_loopshotsound_volume_low.GetFloat() + ((ffdev_ac_loopshotsound_volume_high.GetFloat() - ffdev_ac_loopshotsound_volume_low.GetFloat()) * flPercentForVolume);
+	params.m_nPitch = ffdev_ac_loopshotsound_pitch_low.GetFloat() + ((ffdev_ac_loopshotsound_pitch_high.GetFloat() - ffdev_ac_loopshotsound_pitch_low.GetFloat()) * flPercentForPitch);
 	params.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
 
 	CPASAttenuationFilter filter( GetOwner(), params.m_SoundLevel );
@@ -765,8 +767,15 @@ void CFFWeaponAssaultCannon::PlayRevSound()
 	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = true;
 	params.m_SoundLevel = SNDLVL_NORM;
-	params.m_flVolume = ffdev_ac_revsound_volume_low.GetInt() + ((ffdev_ac_revsound_volume_high.GetInt() - ffdev_ac_revsound_volume_low.GetInt()) * flPercent);
-	params.m_nPitch = ffdev_ac_revsound_pitch_low.GetInt() + ((ffdev_ac_revsound_pitch_high.GetInt() - ffdev_ac_revsound_pitch_low.GetInt()) * flPercent);
+	if (m_flDeployTick + 0.5f <= gpGlobals->curtime)
+		params.m_flVolume = ffdev_ac_revsound_volume_low.GetFloat() + ((ffdev_ac_revsound_volume_high.GetFloat() - ffdev_ac_revsound_volume_low.GetFloat()) * flPercent);
+	else if (gpGlobals->curtime != m_flDeployTick)
+		// fade up
+		params.m_flVolume = ffdev_ac_revsound_volume_low.GetFloat() * ( (gpGlobals->curtime - m_flDeployTick) / 0.5f );
+	else
+		params.m_flVolume = 0;
+
+	params.m_nPitch = ffdev_ac_revsound_pitch_low.GetFloat() + ((ffdev_ac_revsound_pitch_high.GetFloat() - ffdev_ac_revsound_pitch_low.GetFloat()) * flPercent);
 	params.m_nChannel = FF_AC_REVSOUND_CHANNEL; // trying to make this play along with the other sounds that are being played
 	params.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL | SND_CHANGE_CHAN;
 
