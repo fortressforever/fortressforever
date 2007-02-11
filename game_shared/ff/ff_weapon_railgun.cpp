@@ -334,8 +334,8 @@ void CFFWeaponRailgun::PlayRevSound()
 	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = true;
 	params.m_SoundLevel = SNDLVL_NORM;
-	params.m_flVolume = ffdev_railgun_revsound_volume_low.GetInt() + ((ffdev_railgun_revsound_volume_high.GetInt() - ffdev_railgun_revsound_volume_low.GetInt()) * flPercent);
-	params.m_nPitch = ffdev_railgun_revsound_pitch_low.GetInt() + ((ffdev_railgun_revsound_pitch_high.GetInt() - ffdev_railgun_revsound_pitch_low.GetInt()) * flPercent);
+	params.m_flVolume = ffdev_railgun_revsound_volume_low.GetFloat() + ((ffdev_railgun_revsound_volume_high.GetFloat() - ffdev_railgun_revsound_volume_low.GetFloat()) * flPercent);
+	params.m_nPitch = ffdev_railgun_revsound_pitch_low.GetFloat() + ((ffdev_railgun_revsound_pitch_high.GetFloat() - ffdev_railgun_revsound_pitch_low.GetFloat()) * flPercent);
 	params.m_nFlags = SND_CHANGE_PITCH | SND_CHANGE_VOL;
 
 	CPASAttenuationFilter filter( GetOwner(), params.m_SoundLevel );
