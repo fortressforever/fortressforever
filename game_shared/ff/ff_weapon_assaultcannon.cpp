@@ -57,8 +57,11 @@ ConVar ffdev_ac_speedeffect_min("ffdev_ac_speedeffect_min", "0.2", FCVAR_REPLICA
 
 #ifdef CLIENT_DLL
 
-ConVar ffdev_ac_barrelrotation_speed_min("ffdev_ac_barrelrotation_speed_min", "3.0", 0, "Minimum speed the ac barrel will rotate.");
-ConVar ffdev_ac_barrelrotation_speed_max("ffdev_ac_barrelrotation_speed_max", "9.0", 0, "Maximum speed the ac barrel will rotate.");
+ConVar ffdev_ac_barrelrotation_speed_idle("ffdev_ac_barrelrotation_speed_idle", "180.0", 0, "Minimum speed the ac barrel will rotate per second.");
+ConVar ffdev_ac_barrelrotation_speed_min("ffdev_ac_barrelrotation_speed_min", "360.0", 0, "Minimum speed the ac barrel will rotate per second.");
+ConVar ffdev_ac_barrelrotation_speed_max("ffdev_ac_barrelrotation_speed_max", "1080.0", 0, "Maximum speed the ac barrel will rotate per second.");
+
+ConVar ffdev_ac_chargetimebuffered_updateinterval("ffdev_ac_chargetimebuffered_updateinterval", "0.01", 0, "Update the client charge time only this often (Only used for smooth barrel rotation).");
 
 #endif
 
@@ -132,9 +135,12 @@ public:	// temp while i expose m_flChargeTime to global function
 	bool	m_bFiring;
 
 #ifdef CLIENT_DLL
+	float		m_flChargeTimeBuffered;
+	float		m_flChargeTimeBufferedNextUpdate;
+
 	float		m_flRotationValue;
-	float		m_flChargeTimeClient;
 	int			m_iBarrelRotation;
+	float		m_flBarrelRotationLastUpdate;
 #endif
 };
 
@@ -192,9 +198,12 @@ CFFWeaponAssaultCannon::CFFWeaponAssaultCannon()
 	m_flLoopShotSoundNextUpdate = 0.0f;
 
 #ifdef CLIENT_DLL
+	m_flChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+
 	m_flRotationValue = 0.0f;
-	m_flChargeTimeClient = 0.0f;
 	m_iBarrelRotation = -1;
+	m_flBarrelRotationLastUpdate = gpGlobals->curtime;
 #endif
 }
 
@@ -206,9 +215,12 @@ CFFWeaponAssaultCannon::~CFFWeaponAssaultCannon()
 	m_flNextSecondaryAttack = gpGlobals->curtime;
 
 #ifdef CLIENT_DLL
+	m_flChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+
 	m_flRotationValue = 0.0f;
-	m_flChargeTimeClient = 0.0f;
 	m_iBarrelRotation = -1;
+	m_flBarrelRotationLastUpdate = gpGlobals->curtime;
 #endif
 }
 
@@ -286,7 +298,12 @@ bool CFFWeaponAssaultCannon::Deploy()
 	// play the rev sound
 	CPASAttenuationFilter filter(this);
 
-	m_flRotationValue = 0;
+	m_flChargeTimeBuffered = 0.0f;
+	m_flChargeTimeBufferedNextUpdate = 0.0f;
+
+	m_flRotationValue = 0.0f;
+	m_iBarrelRotation = -1;
+	m_flBarrelRotationLastUpdate = gpGlobals->curtime;
 #endif
 
 	return BaseClass::Deploy();
@@ -389,6 +406,17 @@ void CFFWeaponAssaultCannon::UpdateChargeTime()
 	{
 		m_flChargeTime = ffdev_ac_maxchargetime.GetFloat() * ((m_flNextSecondaryAttack - gpGlobals->curtime) / ffdev_ac_overheatdelay.GetFloat());
 	}
+
+#ifdef CLIENT_DLL
+
+	// create a little buffer so some client stuff can be more smooth
+	if (m_flChargeTimeBufferedNextUpdate <= gpGlobals->curtime)
+	{
+		m_flChargeTimeBufferedNextUpdate = gpGlobals->curtime + ffdev_ac_chargetimebuffered_updateinterval.GetFloat();
+		m_flChargeTimeBuffered = m_flChargeTime;
+	}
+
+#endif
 }
 
 void CFFWeaponAssaultCannon::ItemPostFrame()
@@ -816,16 +844,16 @@ void CFFWeaponAssaultCannon::UpdateBarrelSpin()
 	// This is to stop the jerkiness that is being annoying.
 	if (pOwner->m_nButtons & IN_ATTACK && m_flNextSecondaryAttack <= gpGlobals->curtime)
 	{
-		m_flChargeTimeClient = max(m_flChargeTimeClient, m_flChargeTime);
+		m_flChargeTimeBuffered = max(m_flChargeTimeBuffered, m_flChargeTime);
 	}
 	else
 	{
-		m_flChargeTimeClient = min(m_flChargeTimeClient, m_flChargeTime);
+		m_flChargeTimeBuffered = min(m_flChargeTimeBuffered, m_flChargeTime);
 	}
 
 	// Max spinning speed
-	if (m_flChargeTimeClient > 1.5f)
-		m_flChargeTimeClient = 1.5f;
+	if (m_flChargeTimeBuffered > 1.5f)
+		m_flChargeTimeBuffered = 1.5f;
 
 	CBaseViewModel *pVM = pOwner->GetViewModel();
 
@@ -836,7 +864,7 @@ void CFFWeaponAssaultCannon::UpdateBarrelSpin()
 
 	// Might need to separate m_flRotationValue from m_flChargeTime
 	// Perhaps a separate client-side variable to track it
-	m_flRotationValue += m_flChargeTimeClient * 3.0f;
+	m_flRotationValue += m_flChargeTimeBuffered * 3.0f;
 	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
 */
 
@@ -851,13 +879,26 @@ void CFFWeaponAssaultCannon::UpdateBarrelSpin()
 		return;
 
 	if (m_iBarrelRotation < 0)
+	{
 		m_iBarrelRotation = pVM->LookupPoseParameter("ac_rotate");
+		m_flRotationValue = pVM->GetPoseParameter(m_iBarrelRotation);
+	}
 
 	// FLerp rules
 	// the ac plays that idle rev sound, so I'm just gonna make this shit spin all the time
-	m_flRotationValue += FLerp( ffdev_ac_barrelrotation_speed_min.GetFloat(), ffdev_ac_barrelrotation_speed_max.GetFloat(), m_flChargeTime / ffdev_ac_maxchargetime.GetFloat() );
+
+	float flDelta = FLerp( ffdev_ac_barrelrotation_speed_min.GetFloat(), ffdev_ac_barrelrotation_speed_max.GetFloat(), m_flChargeTimeBuffered / ffdev_ac_maxchargetime.GetFloat() );
+	flDelta *= (gpGlobals->curtime - m_flBarrelRotationLastUpdate / 1.0f); // speed per second
+	m_flRotationValue += flDelta;
+
+	//if (m_flNextSecondaryAttack <= gpGlobals->curtime)
+	//	m_flRotationValue += FLerp( ffdev_ac_barrelrotation_speed_min.GetFloat(), ffdev_ac_barrelrotation_speed_max.GetFloat(), m_flChargeTime / ffdev_ac_maxchargetime.GetFloat() );
+	//else
+	//	m_flRotationValue += FLerp( ffdev_ac_barrelrotation_speed_idle.GetFloat(), ffdev_ac_barrelrotation_speed_min.GetFloat(), m_flChargeTime / ffdev_ac_maxchargetime.GetFloat() );
 
 	m_flRotationValue = pVM->SetPoseParameter(m_iBarrelRotation, m_flRotationValue);
+
+	m_flBarrelRotationLastUpdate = gpGlobals->curtime;
 }
 #endif
 

@@ -465,10 +465,10 @@ int CFFWeaponBase::DrawModel( int flags )
 	C_FFPlayer *pPlayer = GetPlayerOwner();
 	if( pPlayer )
 	{
-		if( pPlayer->IsCloaked() )
-		{
-			DRAWMODEL_CLOAKED();
-		}
+		if( !pPlayer->IsCloaked() )
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+		else
+			FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
 	}
 
 	return BaseClass::DrawModel( flags );

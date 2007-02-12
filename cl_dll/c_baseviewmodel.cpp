@@ -274,7 +274,9 @@ int C_BaseViewModel::DrawModel( int flags )
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	int ret;
 	// If the local player's overriding the viewmodel rendering, let him do it
-	if ( pPlayer && pPlayer->IsOverridingViewmodel() )
+	// Jon: override if we have an override material
+	//if ( pPlayer && pPlayer->IsOverridingViewmodel() )
+	if ( (pPlayer && pPlayer->IsOverridingViewmodel()) || (pPlayer && m_pOverrideMaterial) )
 	{
 		ret = pPlayer->DrawOverriddenViewmodel( this, flags );
 	}
@@ -311,10 +313,10 @@ int C_BaseViewModel::DrawOverriddenViewmodel( int flags )
 	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
-		if( pPlayer->IsCloaked() )
-		{
-			DRAWMODEL_CLOAKED();
-		}
+		if( !pPlayer->IsCloaked() )
+			ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+		else
+			FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
 	}
 
 	return BaseClass::DrawModel( flags );
