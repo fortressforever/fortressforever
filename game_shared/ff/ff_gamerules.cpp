@@ -748,6 +748,10 @@ ConVar mp_prematch( "mp_prematch",
 						if( ( ( CBasePlayer * )ent != pPlayer ) && ent->IsAlive() )
 							return false;
 					}
+					else if( FF_IsBuildableObject( ent ) )
+					{
+						return false;
+					}
 				}
 			}
 		}
