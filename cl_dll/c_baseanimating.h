@@ -399,7 +399,9 @@ public:
 	// Override Material
 	IMaterial						*m_pOverrideMaterial;
 	virtual void					FindOverrideMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = NULL );
-	virtual void					ReleaseOverrideMaterial();
+	virtual void					ReleaseOverrideMaterial( char const* pMaterialName = 0 );
+	void							StartMaterialOverride();
+	void							StopMaterialOverride();
 
 	// Object bodygroup
 	int								m_nBody;

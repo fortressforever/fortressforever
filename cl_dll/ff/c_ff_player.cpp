@@ -1226,7 +1226,7 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 RenderGroup_t C_FFPlayer::GetRenderGroup()
 {
 	if (IsCloaked())
-		return RENDER_GROUP_TRANSLUCENT_ENTITY;
+		return RENDER_GROUP_OPAQUE_ENTITY; // 1386: was TRANSLUCENT instead of OPAQUE, but spies weren't being drawn
 	else
 		return RENDER_GROUP_TWOPASS; // BaseClass::GetRenderGroup();
 }
@@ -1237,7 +1237,7 @@ RenderGroup_t C_FFPlayer::GetRenderGroup()
 void C_FFPlayer::DrawPlayerIcons()
 {
 	// No point putting these on self even in 3rd person mode
-	if (IsLocalPlayer())
+	if (IsLocalPlayer() && !ShouldDraw())
 		return;
 
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
@@ -1355,18 +1355,19 @@ void C_FFPlayer::DrawPlayerIcons()
 //-----------------------------------------------------------------------------
 int C_FFPlayer::DrawModel( int flags )
 {
-	C_FFPlayer *pPlayer = GetLocalFFPlayer();
-
 	// Render the player info icons during the transparent pass
 	if (flags & STUDIO_TRANSPARENCY)
 	{
 		DrawPlayerIcons();
 		return 1;
 	}
-	
+	// icons will just have to be "weird" with cloaked players
+	else if ( IsCloaked() )
+		DrawPlayerIcons();
+
 	// If we're hallucinating, players intermittently get swapped.  But only for
 	// enemy players because we don't want the teamkills
-	C_FFPlayer *pLocalPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer && pLocalPlayer->m_iHallucinationIndex && !IsLocalPlayer())
 	{
@@ -1403,18 +1404,10 @@ int C_FFPlayer::DrawModel( int flags )
 		}
 	}
 
-	// --------------------------------
-	// Draw cloaked players special (and after we
-	// might have changed skins from hallucinating)
-	// --------------------------------
-	if( pPlayer && ( pPlayer != this ) && flags )
-	{
-		// If guy we're drawing is cloaked
-		if( IsCloaked() )
-		{
-			DRAWMODEL_CLOAKED();
-		}		
-	}
+	if ( !IsCloaked() )
+		ReleaseOverrideMaterial(FF_CLOAK_MATERIAL);
+	else
+		FindOverrideMaterial(FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP);
 
 	return BaseClass::DrawModel( flags );
 }

@@ -117,25 +117,4 @@ enum KillTypes_t
 	KILLTYPE_GASSED
 };
 
-
-#ifdef CLIENT_DLL
-#define FF_CLOAK_MATERIAL		"effects/player_cloak"
-#define FF_CLOAK_TEXTURE_GROUP	TEXTURE_GROUP_CLIENT_EFFECTS
-
-#define DRAWMODEL_CLOAKED() \
-{ \
-	IMaterial *pMaterial = materials->FindMaterial( FF_CLOAK_MATERIAL, FF_CLOAK_TEXTURE_GROUP ); \
-	if( pMaterial ) \
-	{ \
-		materials->Bind( pMaterial ); \
-		if( pMaterial->NeedsPowerOfTwoFrameBufferTexture() ) \
-			UpdateRefractTexture(); \
-		modelrender->ForcedMaterialOverride( pMaterial ); \
-		int iDrawModelRet = BaseClass::DrawModel( flags ); \
-		modelrender->ForcedMaterialOverride( NULL ); \
-		return iDrawModelRet; \
-	} \
-}
-#endif
-
 #endif // FF_SHAREDDEFS_H

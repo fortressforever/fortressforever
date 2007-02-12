@@ -423,7 +423,7 @@ class CCloakedEffect : public CBaseEffect
 {
 	virtual void Render( int x, int y, int w, int h );
 	virtual bool IsEnabled( void );
-	virtual const char *pszEffect() { return "effects/cloaked"; }
+	virtual const char *pszEffect() { return "effects/cloak_view"; }
 };
 
 ADD_SCREENSPACE_EFFECT( CCloakedEffect, cloakedeffect );

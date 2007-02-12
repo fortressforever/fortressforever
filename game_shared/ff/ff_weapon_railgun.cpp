@@ -40,7 +40,7 @@ ConVar ffdev_railgun_revsound_volume_high("ffdev_railgun_revsound_volume_high", 
 ConVar ffdev_railgun_revsound_volume_low("ffdev_railgun_revsound_volume_low", "0.0", FCVAR_REPLICATED, "Railgun Rev Sound Low Volume");
 ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "208", FCVAR_REPLICATED, "Railgun Rev Sound High Pitch");
 ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED, "Railgun Rev Sound Low Pitch");
-ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.02", FCVAR_REPLICATED, "How much time to wait before updating");
+ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_REPLICATED, "How much time to wait before updating");
 
 ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1100.0", FCVAR_REPLICATED, "Minimum speed of rail" );
 ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3300.0", FCVAR_REPLICATED, "Maximum speed of rail" );

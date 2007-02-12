@@ -683,22 +683,35 @@ C_BaseAnimating::C_BaseAnimating() :
 // MATERIAL SHOULD BE PRECACHED ELSEWHERE
 void C_BaseAnimating::FindOverrideMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain, const char *pComplainPrefix )
 {
+	// release if we're getting a new material
 	if ( m_pOverrideMaterial )
-		ReleaseOverrideMaterial();
+		if ( strcmp( m_pOverrideMaterial->GetName(), pMaterialName ) != 0 )
+			ReleaseOverrideMaterial();
 
-	m_pOverrideMaterial = materials->FindMaterial(pMaterialName, pTextureGroupName, complain, pComplainPrefix);
-	if ( m_pOverrideMaterial )
-		m_pOverrideMaterial->IncrementReferenceCount();
+	// only get it if we don't have one already
+	if (!m_pOverrideMaterial)
+	{
+		m_pOverrideMaterial = materials->FindMaterial(pMaterialName, pTextureGroupName, complain, pComplainPrefix);
+			if ( m_pOverrideMaterial )
+				m_pOverrideMaterial->IncrementReferenceCount();
+	}
 }
 
 // Releases the override material
-void C_BaseAnimating::ReleaseOverrideMaterial()
+void C_BaseAnimating::ReleaseOverrideMaterial( char const* pMaterialName )
 {
-	if (m_pOverrideMaterial)
-	{
-		m_pOverrideMaterial->DecrementReferenceCount();
-		m_pOverrideMaterial = NULL;
-	}
+	// can't release if it doesn't exist
+	if (!m_pOverrideMaterial)
+		return;
+
+	// if a material name is specified, only release if names match
+	if ( pMaterialName )
+		if ( strcmp( m_pOverrideMaterial->GetName(), pMaterialName ) != 0  )
+			return;
+
+	// reference counting is used instead of actual allocating/deallocating
+	m_pOverrideMaterial->DecrementReferenceCount();
+	m_pOverrideMaterial = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -2400,23 +2413,6 @@ int C_BaseAnimating::DrawModel( int flags )
 
 	int drawn = 0;
 
-	// Allow overriding of materials for any entity derived from C_BaseAnimating 
-	if ( m_pOverrideMaterial )
-	{
-		// refract textures need "power of two frame buffer texture"
-		if ( m_pOverrideMaterial->NeedsPowerOfTwoFrameBufferTexture() )
-		{
-			// This TODO is just from garry, so I don't know what exactly it means
-			//Msg("TODO! C_BaseEntity::StartMaterialOverride\n");
-
-			// basially copies the font frame buffer to the refract texture
-			UpdateRefractTexture();
-		}
-
-		// override the material for when the model is drawn down below
-		modelrender->ForcedMaterialOverride( m_pOverrideMaterial );
-	}
-
 	if ( r_drawothermodels.GetInt() )
 	{
 		MDLCACHE_CRITICAL_SECTION();
@@ -2441,15 +2437,22 @@ int C_BaseAnimating::DrawModel( int flags )
 			if ( follow )
 			{
 				// recompute master entity bone structure
-				int baseDrawn = 0;
-				if ( C_BasePlayer::ShouldDrawLocalPlayer() )
-				{
-					baseDrawn = follow->DrawModel( STUDIO_RENDER );
-				}
-				else
-				{
+				//int baseDrawn = 0;
+				//if ( C_BasePlayer::ShouldDrawLocalPlayer() )
+				//{
+				//	baseDrawn = follow->DrawModel( STUDIO_RENDER );
+				//}
+				//else
+				//{
+				//	baseDrawn = follow->DrawModel( 0 );
+				//}
+
+				// Jon: player models were getting drawn twice...and just...I think that was buggy in general
+				int baseDrawn = 1;
+
+				// players are drawn elsewhere, so don't bother drawing them twice
+				if ( !follow->IsPlayer() && follow->ShouldDraw() )
 					baseDrawn = follow->DrawModel( 0 );
-				}
 
 				// draw entity
 				// FIXME: Currently only draws if aiment is drawn.  
@@ -2464,10 +2467,6 @@ int C_BaseAnimating::DrawModel( int flags )
 
 	// If we're visualizing our bboxes, draw them
 	DrawBBoxVisualizations();
-
-	// stop overriding the material so that every model isn't drawn with this override material
-	if ( m_pOverrideMaterial )
-		modelrender->ForcedMaterialOverride( NULL );
 
 	return drawn;
 }
@@ -2552,7 +2551,13 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 		sInfo.pLightingOrigin = &(m_hLightingOrigin->GetAbsOrigin());
 	}
 
+	// allow overriding of materials for any entity derived from C_BaseAnimating
+	StartMaterialOverride();
+
 	int drawn = modelrender->DrawModelEx( sInfo );
+
+	// stop overriding so every model isn't drawn with the override material
+	StopMaterialOverride();
 
 	if ( vcollide_wireframe.GetBool() )
 	{
@@ -2581,6 +2586,33 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 	}
 
 	return drawn;
+}
+
+// starts overriding the material of the model being drawn
+void C_BaseAnimating::StartMaterialOverride()
+{
+	if ( m_pOverrideMaterial )
+	{
+		// refract textures need "power of two frame buffer texture"
+		if ( m_pOverrideMaterial->NeedsPowerOfTwoFrameBufferTexture() )
+		{
+			// This TODO is just from garry, so I don't know what exactly it means
+			//Msg("TODO! C_BaseEntity::StartMaterialOverride\n");
+
+			// basially copies the font frame buffer to the refract texture
+			UpdateRefractTexture();
+		}
+
+		// override the material for when the model is drawn down below
+		modelrender->ForcedMaterialOverride( m_pOverrideMaterial );
+	}
+}
+
+// stops overriding the material of the model being drawn
+void C_BaseAnimating::StopMaterialOverride()
+{
+	if ( m_pOverrideMaterial )
+		modelrender->ForcedMaterialOverride( NULL );
 }
 
 extern ConVar muzzleflash_light;

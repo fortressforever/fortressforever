@@ -33,6 +33,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern CBaseEntity				*g_pLastSpawnRandomizer; // this will be obsolete soon
 extern CBaseEntity				*g_pLastSpawn;
 void InitBodyQue(void);
 extern void W_Precache(void);
@@ -573,6 +574,7 @@ void CWorld::Precache( void )
 	g_WorldEntity = this;
 	g_fGameOver = false;
 	g_pLastSpawn = NULL;
+	g_pLastSpawnRandomizer = NULL;
 
 	ConVar *stepsize = ( ConVar * )cvar->FindVar( "sv_stepsize" );
 	if ( stepsize )

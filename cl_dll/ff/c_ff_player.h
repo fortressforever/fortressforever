@@ -23,6 +23,7 @@
 #include "ff_fx_immunity.h"
 #include "ff_buildableobjects_shared.h"
 #include "ff_radiotagdata.h"
+#include "model_types.h"
 
 class C_FFBuildableObject;
 class C_FFDetpack;
@@ -43,6 +44,10 @@ class C_FFSevTest;
 #define FF_TEAM_YELLOW		4
 #define FF_TEAM_GREEN		5
 // END: Added by Mulchman for team junk
+
+// moved this here from ff_shareddefs.h, because it's client-only and needs to stop wasting server compile time
+#define FF_CLOAK_MATERIAL "effects/cloak"
+#define FF_CLOAK_TEXTURE_GROUP TEXTURE_GROUP_CLIENT_EFFECTS
 
 extern ConVar r_selfshadows;
 
