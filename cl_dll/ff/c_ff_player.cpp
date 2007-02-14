@@ -1046,7 +1046,17 @@ void C_FFPlayer::PreThink( void )
 			// Our conc angles, this is also quite slow for now
 			m_angConced = QAngle( flConcAmount * vert_mag.GetFloat() * sin(vert_speed.GetFloat() * gpGlobals->curtime), flConcAmount * horiz_mag.GetFloat() * sin(horiz_speed.GetFloat() * gpGlobals->curtime), 0 );
 
-			float flTotalAngle = BaseClass::EyeAngles().x + m_angConced.x;
+			float flTotalAngle = BaseClass::EyeAngles().x;
+
+			// fix for demo playback lookdown bug, caused by looking up (above 0 or straight out) while conced
+			// playing regularly, looking upwards is 0 to -180
+			// so you can look down to go from 0 to 180 or up to go from 0 to -180
+			// but in demo playback, apparently you look down to go from 0 to 360 and up to go from 360 back to 0
+			// basically, it's 0 to 360 in demo playback instead of 0 to 180 and 0 to -180
+			if (flTotalAngle > 180)
+				flTotalAngle -= 360;
+			
+			flTotalAngle += m_angConced.x;
 
 			// We need to make sure we're not looking down further than 90 as this
 			// makes the viewmodel glitchy. Therefore remove any excess from the 
