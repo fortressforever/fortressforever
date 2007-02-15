@@ -1236,7 +1236,7 @@ void C_FFPlayer::CreateMove(float flInputSampleTime, CUserCmd *pCmd)
 RenderGroup_t C_FFPlayer::GetRenderGroup()
 {
 	if (IsCloaked())
-		return RENDER_GROUP_OPAQUE_ENTITY; // 1386: was TRANSLUCENT instead of OPAQUE, but spies weren't being drawn
+		return RENDER_GROUP_TRANSLUCENT_ENTITY;
 	else
 		return RENDER_GROUP_TWOPASS; // BaseClass::GetRenderGroup();
 }
@@ -1369,11 +1369,14 @@ int C_FFPlayer::DrawModel( int flags )
 	if (flags & STUDIO_TRANSPARENCY)
 	{
 		DrawPlayerIcons();
-		return 1;
+
+		// 1386: a better fix for spies being completely invisible while cloaked
+		// RENDER_GROUP_TRANSLUCENT_ENTITY turns on the STUDIO_TRANSPARENCY flag for the model and adds it 
+		// to the translucent renderables list, but not to the opaque renderables list as well.
+		// RENDER_GROUP_TWOPASS adds the model to both renderables lists, so we need to return if not cloaked
+		if ( !IsCloaked() )
+			return 1;
 	}
-	// icons will just have to be "weird" with cloaked players
-	else if ( IsCloaked() )
-		DrawPlayerIcons();
 
 	// If we're hallucinating, players intermittently get swapped.  But only for
 	// enemy players because we don't want the teamkills
