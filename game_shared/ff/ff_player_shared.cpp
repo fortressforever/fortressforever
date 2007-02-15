@@ -49,6 +49,8 @@ ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICAT
 // Time in seconds you have to wait until you can cloak again
 ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "3", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Time in seconds you have to wait until you can cloak again" );
 
+ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED, "Spy must be moving at least this slow to scloak." );
+
 // ConVar sniper_minpush( "ffdev_sniper_minpush", "3.5", FCVAR_REPLICATED );
 // ConVar sniper_maxpush( "ffdev_sniper_maxpush", "6.7", FCVAR_REPLICATED );
 #define FF_SNIPER_MINPUSH 3.5f
@@ -1089,7 +1091,8 @@ void CFFPlayer::Command_SpySilentCloak( void )
 
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak
-	if( !GetLocalVelocity().IsZero() && !IsCloaked() )
+	// Jon: adding in minimum allowed speed cvar
+	if( GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() && !IsCloaked() )
 	{
 		// Reset next cloak time since player technically didn't cloak yet
 		m_flNextCloak = gpGlobals->curtime;

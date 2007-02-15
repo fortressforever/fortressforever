@@ -662,9 +662,10 @@ void CTextureAllocator::GetTextureRect(TextureHandle_t handle, int& x, int& y, i
 #define MAX_CLIP_PLANE_COUNT 4
 #define SHADOW_CULL_TOLERANCE 0.5f
 
-static ConVar r_shadows( "r_shadows", "1" ); // hook into engine's cvars..
+// FF TODO: make/use a better shadow system and then enable shadows by default
+static ConVar r_shadows( "r_shadows", "0", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "1" ); // hook into engine's cvars..
 static ConVar r_shadowmaxrendered("r_shadowmaxrendered", "32");
-static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "-1" ); // hook into engine's cvars..
+static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "-1", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "-1" ); // hook into engine's cvars..
 
 //-----------------------------------------------------------------------------
 // The class responsible for dealing with shadows on the client side
