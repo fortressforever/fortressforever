@@ -294,14 +294,42 @@ bool C_SoundscapeSystem::Init()
 	m_loopingSoundId = 0;
 
 	const char *mapname = MapName();
-	const char *mapSoundscapeFilename = NULL;
+	 // Jon - 2/14/2007: new method
+	//const char *mapSoundscapeFilename = NULL;
+	char mapSoundscapeFilename[256] = {0};
+	char mapSoundscapeFilenameFF[256] = {0}; // for the FF method of using maps/mapname_soundscapes.txt
 	if ( mapname && *mapname )
 	{
-		// BEG: Mulch: 11/07/2005
-		mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname );
-		//mapSoundscapeFilename = VarArgs( "maps/%s_soundscapes.txt", mapname );
-		//DevMsg( "[Soundscape CLIENT] Setting soundscape file to: %s\n", mapSoundscapeFilename );
-		// END: Mulch: 11/07/2005
+		// Jon - 2/14/2007: Let's support both methods.
+		//mapSoundscapeFilename = VarArgs( "scripts/soundscapes_%s.txt", mapname )
+
+		// Let's load map soundscape files without worrying about the manifest.
+		if (filesystem->FileExists( VarArgs( "scripts/soundscapes_%s.txt", mapname ) ))
+		{
+			sprintf(mapSoundscapeFilename, "scripts/soundscapes_%s.txt", mapname);
+			AddSoundScapeFile( mapSoundscapeFilename );
+		}
+
+		// I'd rather FF mappers use maps/mapname_soundscapes.txt to keep most map files together in the maps directory, like with the lua files.
+		if (filesystem->FileExists( VarArgs( "maps/%s_soundscapes.txt", mapname ) ))
+		{
+			sprintf(mapSoundscapeFilenameFF, "maps/%s_soundscapes.txt", mapname);
+
+			// even though they could have completely different entries, warn them anyway so they can merge them together
+			if ( mapSoundscapeFilename[0] )
+				Warning( "C_SoundscapeSystem::Init:  Both %s and %s exist!  Potential duplicate soundscapes, so not loading %s.  To get rid of this warning, merge one file into the other.\n", mapSoundscapeFilename, mapSoundscapeFilenameFF, mapSoundscapeFilenameFF );
+			else
+				AddSoundScapeFile( mapSoundscapeFilenameFF );
+		}
+		// NULL them out just in case
+		mapSoundscapeFilename[255] = 0;
+		mapSoundscapeFilenameFF[255] = 0;
+	}
+
+	// Jon - 2/14/2007: also load map scripts/soundcapes_mapname.txt without worrying about the manifest
+	if ( mapSoundscapeFilename )
+	{
+
 	}
 
 	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );
@@ -311,12 +339,21 @@ bool C_SoundscapeSystem::Init()
 		{
 			if ( !Q_stricmp( sub->GetName(), "file" ) )
 			{
+				// Jon - 2/14/2007: don't load the map soundscapes file twice
+				if ( mapSoundscapeFilename[0] && FStrEq(sub->GetString(), mapSoundscapeFilename) )
+					continue;
+				if ( mapSoundscapeFilenameFF[0] && FStrEq(sub->GetString(), mapSoundscapeFilenameFF) )
+					continue;
+
 				// Add
 				AddSoundScapeFile( sub->GetString() );
-				if ( mapSoundscapeFilename && FStrEq( sub->GetString(), mapSoundscapeFilename ) )
-				{
-					mapSoundscapeFilename = NULL; // we've already loaded the map's soundscape
-				}
+
+				// Jon - 2/14/2007: altered and moved up above
+				//if ( mapSoundscapeFilename && FStrEq( sub->GetString(), mapSoundscapeFilename ) )
+				//{
+				//	mapSoundscapeFilename = NULL; // we've already loaded the map's soundscape
+				//}
+
 				continue;
 			}
 
@@ -324,10 +361,11 @@ bool C_SoundscapeSystem::Init()
 				SOUNDSCAPE_MANIFEST_FILE, sub->GetName() );
 		}
 
-		if ( mapSoundscapeFilename && filesystem->FileExists( mapSoundscapeFilename ) )
-		{
-			AddSoundScapeFile( mapSoundscapeFilename );
-		}
+		// Jon - 2/14/2007: altered and moved up above
+		//if ( mapSoundscapeFilename && filesystem->FileExists( mapSoundscapeFilename ) )
+		//{
+		//	AddSoundScapeFile( mapSoundscapeFilename );
+		//}
 	}
 	else
 	{

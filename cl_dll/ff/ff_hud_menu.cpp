@@ -35,6 +35,7 @@ using namespace vgui;
 CHudContextMenu *g_pHudContextMenu = NULL;
 
 extern ConVar sensitivity;
+extern ConVar ffdev_spy_scloak_minstartvelocity;
 
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
 ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
@@ -421,6 +422,10 @@ ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
 	if( !pPlayer )
 		return MENU_DIM;
 
+	// Jon: always allow to uncloak if already cloaked
+	if (pPlayer->IsCloaked())
+		return MENU_SHOW;
+
 	// 0001379: Must be on the ground to cloak
 	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
 		return MENU_DIM;
@@ -437,6 +442,10 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 	if( !pPlayer )
 		return MENU_DIM;
 
+	// Jon: always allow to uncloak if already cloaked
+	if (pPlayer->IsCloaked())
+		return MENU_SHOW;
+
 	// 0001379: Must be on the ground to cloak
 	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
 		return MENU_DIM;
@@ -444,7 +453,8 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 	if( !pPlayer->IsCloakable() )
 		return MENU_DIM;
 
-	if( ( int )pPlayer->GetCloakSpeed() != 0 )
+	// Jon: adding in minimum allowed speed cvar and allowing to un-scloak while already cloaked
+	if( pPlayer->GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 		return MENU_DIM;
 
 	return MENU_SHOW;
