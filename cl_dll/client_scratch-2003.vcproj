@@ -44,7 +44,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+"
 				Outputs="client.dll"/>
 			<Tool
 				Name="VCLinkerTool"
@@ -133,7 +134,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+"
 				Outputs="%FortressForeverBin%\client.dll"/>
 			<Tool
 				Name="VCLinkerTool"
@@ -2516,10 +2518,10 @@
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -2762,10 +2764,10 @@
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
@@ -3534,6 +3536,12 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_hint.h">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_HintCenter.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_hud_HintCenter.h">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_location.cpp">
