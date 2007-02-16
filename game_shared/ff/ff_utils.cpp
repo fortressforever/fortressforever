@@ -47,6 +47,7 @@
 	#include "ff_team.h"
 #endif
 
+
 // This function takes a class name like "scout"
 // and returns its integer value
 // 1 - scout
@@ -298,7 +299,7 @@ void FF_HudHint(
 #ifdef CLIENT_DLL
 	{		
 		if( pHudHintHelper )
-			pHudHintHelper->AddHudHint(bType, wID, pszMessage, pszSound);
+			pHudHintHelper->AddHudHint( bType, wID, pszMessage, pszSound );
 		else
 			Warning( "[Hud Hint] Pointer not set up yet! Hud Hint lost!\n" );
 	}
@@ -323,6 +324,51 @@ void FF_HudHint(
 	}
 #endif
 }
+
+// Jiggles: For sending hints to the Hint Center
+// I left HudHint intact for reference
+// FF_SendHint
+//		Client side: Just adds a HudHint message
+//		Server side: Sends a HudHint message to the client
+//
+void FF_SendHint( 
+#ifndef CLIENT_DLL 
+				CFFPlayer *pPlayer,
+#endif
+				unsigned short wID,
+				const char *pszMessage)
+{
+	//if( 1 )
+#ifdef CLIENT_DLL
+	{		
+		if( g_pHintHelper )
+			g_pHintHelper->AddHudHint( wID, pszMessage );
+		else
+			Warning( "[Hud Hint] Pointer not set up yet! Hud Hint lost!\n" );
+	}
+#else
+	{
+		if( !pPlayer )
+			return;
+
+		CSingleUserRecipientFilter user( pPlayer );
+		user.MakeReliable( );
+		UserMessageBegin( user, "FF_SendHint" );
+			//WRITE_BYTE(bType);
+			WRITE_WORD(wID);
+			WRITE_STRING( pszMessage );
+			
+			//if (pszSound)
+			//	WRITE_STRING(pszSound);
+			//else
+			//	WRITE_STRING("");
+
+			
+		MessageEnd( );
+	}
+#endif
+}
+// Jiggles: End Test
 
 
 bool IsPlayerRadioTagTarget( CFFPlayer *pPlayer, int iTeamDoingTargetting )

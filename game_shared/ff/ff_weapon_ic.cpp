@@ -19,12 +19,13 @@
 #ifdef CLIENT_DLL 
 	#define CFFWeaponIC C_FFWeaponIC
 	#include "c_ff_player.h"
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 #endif
 
 ConVar ffdev_ic_blastpush("ffdev_ic_blastpush", "100", FCVAR_REPLICATED);
-ConVar ffdev_ic_damage("ffdev_ic_damage", "100", FCVAR_REPLICATED);
+ConVar ffdev_ic_damage("ffdev_ic_damage", "60", FCVAR_REPLICATED);
 
 //=============================================================================
 // CFFWeaponIC
@@ -40,6 +41,7 @@ public:
 	CFFWeaponIC();
 
 	virtual void		Fire();
+	virtual bool Deploy();
 	virtual FFWeaponID	GetWeaponID() const	{ return FF_WEAPON_IC; }
 
 private:
@@ -71,6 +73,21 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_ic);
 CFFWeaponIC::CFFWeaponIC() 
 {
 }
+
+
+//----------------------------------------------------------------------------
+// Purpose: Display the IC hint
+//----------------------------------------------------------------------------
+bool CFFWeaponIC::Deploy()
+{
+#ifdef CLIENT_DLL
+	
+		FF_SendHint( PYRO_IC, "The IC cannon excels at raining fire from afar, use it to bombard enemies from safety." );
+#endif
+	
+	return BaseClass::Deploy();
+}
+
 
 //----------------------------------------------------------------------------
 // Purpose: Fire a rocket

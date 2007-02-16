@@ -47,6 +47,7 @@
 #include "const.h"
 #include "ff_weapon_base.h"
 #include "ff_gamerules.h"
+#include "ff_utils.h"
 //#include "ff_sevtest.h"
 
 #include "omnibot_interface.h"
@@ -306,8 +307,11 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 					{
 						// Message owner (wiki says spies don't trigger the "enemies are using..." message)
 						if( !pPlayer->IsDisguised() )
+						{
 							ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
-
+							
+								FF_SendHint( pOwner, ENGY_DISPENEMY, "An enemy is using your dispenser! You can detonate a dispenser to kill enemies, the more supplies it holds the bigger the explosion." );
+						}
 						// Fire an event.
 						IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_enemyused");						
 						if(pEvent)
