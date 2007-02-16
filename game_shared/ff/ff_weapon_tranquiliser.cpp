@@ -20,6 +20,7 @@
 #ifdef CLIENT_DLL 
 	#define CFFWeaponTranquiliser C_FFWeaponTranquiliser
 	#include "c_ff_player.h"
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -38,6 +39,7 @@ public:
 	CFFWeaponTranquiliser();
 
 	virtual void Fire();
+	virtual bool Deploy();
 
 	virtual FFWeaponID GetWeaponID() const { return FF_WEAPON_TRANQUILISER; }
 
@@ -72,6 +74,20 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_tranq);
 CFFWeaponTranquiliser::CFFWeaponTranquiliser() 
 {
 }
+
+//----------------------------------------------------------------------------
+// Purpose: Display the Tranq hint
+//----------------------------------------------------------------------------
+bool CFFWeaponTranquiliser::Deploy()
+{
+#ifdef CLIENT_DLL
+	
+		FF_SendHint( SPY_TRANQ, "Use the tranquilizer gun to drug enemies, slowing them and reducing their ability to see. For more information on how this works, check out the Fortress Forever Wiki on our website." );
+#endif
+	
+	return BaseClass::Deploy();
+}
+
 
 //----------------------------------------------------------------------------
 // Purpose: Fire a dart

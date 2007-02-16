@@ -9,6 +9,9 @@
 	
 	purpose:	
 *********************************************************************/
+#ifndef FF_HUD_MENU_H
+#define FF_HUD_MENU_H
+
 
 #include "cbase.h"
 
@@ -115,3 +118,5 @@ public:
 
 	//CUtlLinkedList
 };
+
+#endif

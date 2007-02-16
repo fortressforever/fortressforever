@@ -22,6 +22,8 @@
 
 	#include "c_ff_player.h"
 	#include "c_ff_env_flamejet.h"
+
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 	#include "ff_env_flamejet.h"
@@ -298,6 +300,11 @@ bool CFFWeaponFlamethrower::Deploy()
 		m_hFlameJet->SetOwnerEntity(pPlayer);
 		m_hFlameJet->FollowEntity(pPlayer);
 	}
+#endif
+
+#ifdef CLIENT_DLL
+	
+		FF_SendHint( PYRO_FLAMER, "The flamethrower excels as a short range weapon, particularily against the heavier classes." );
 #endif
 	
 	return BaseClass::Deploy();

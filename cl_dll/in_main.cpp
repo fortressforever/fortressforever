@@ -23,6 +23,7 @@
 #include <voice_status.h>
 #include "c_ff_player.h"	// |-- Mirv: Needed for ScaleMovements
 #include "ff_hud_menu_medengy.h"	// |-- Mulch: for g_pMedEngyHudMenu
+#include "ff_hud_HintCenter.h"		// Jiggles: for g_pHintCenter
 
 extern ConVar in_joystick;
 
@@ -563,6 +564,21 @@ void IN_MedEngyMenuUp( void )
 		g_pMedEngyHudMenu->KeyUp();
 }
 // END: Mulch: For medic & engy hud radial style menu
+
+
+// BEGIN: Jiggles: For displaying the Hint Center
+void IN_HintCenterDown( void )
+{
+	if( g_pHintCenter )
+		g_pHintCenter->KeyDown();
+}
+
+void IN_HintCenterUp( void )
+{
+	if( g_pHintCenter )
+		g_pHintCenter->KeyUp();
+}
+// END: Jiggles: For displaying the Hint Center
 
 /*
 ============
@@ -1416,6 +1432,11 @@ static ConCommand changeclass( "changeclass", IN_ChangeClass );
 static ConCommand startMedEngyMenu( "+medengymenu", IN_MedEngyMenuDown );
 static ConCommand endMedEngymenu( "-medengymenu", IN_MedEngyMenuUp );
 // END: Mulch: For medic & engy hud radial style menu
+
+// BEGIN: Jiggles: For display of the Hint Center
+static ConCommand startHintCenter( "+hintcenter", IN_HintCenterDown );
+static ConCommand endHintCenter( "-hintcenter", IN_HintCenterUp );
+// END: Jiggles: For display of the Hint Center
 
 /*
 ============

@@ -15,6 +15,7 @@
 #ifdef CLIENT_DLL
 	
 	#include "c_ff_player.h"
+	#include "ff_utils.h"
 	#define CRecipientFilter C_RecipientFilter	// |-- For PlayJumpSound
 
 	extern void HudContextShow(bool visible);
@@ -201,11 +202,18 @@ void CFFPlayer::FireBullet(
 			fCurrentDamage *= ffdev_sniper_headshotmod.GetFloat();
 
 			bHeadshot = true;
+
+#ifdef CLIENT_DLL
+			FF_SendHint( SNIPER_HEADSHOT, "Headshot! The sniper rifle is the only weapon in the game that deals more damage to the head, aim for the eyes!" );
+#endif
 		}
 		else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
 		{
 			DevMsg("Legshot\n");
 			fCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
+#ifdef CLIENT_DLL
+			FF_SendHint( SNIPER_LEGSHOT, "Legshot! Shooting an enemy in the leg slows their movement based on the damage dealt. Points are rewarded for slowing enemies even if you can't finish them off." );
+#endif
 
 #ifdef GAME_DLL
 			// Bug #0000557: Teamplay 0 + sniper legshot slows allies
@@ -405,6 +413,12 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 		return;
 
 	m_flFallTime = gpGlobals->curtime + 0.4f;
+
+#ifdef CLIENT_DLL
+	
+	if ( GetClassSlot() == 8 )
+		FF_SendHint( SPY_SPLAT, "Use the {+duck} key to crouch when landing from a high fall. You will make less noise and take less damage." );
+#endif
 
 	CRecipientFilter filter;
 	filter.AddRecipientsByPAS(vecOrigin);

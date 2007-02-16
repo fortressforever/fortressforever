@@ -22,6 +22,7 @@
 	#include "fx_sparks.h"
 	#include "fx_line.h"
 	#include "model_types.h"
+	#include "ff_utils.h"
 #endif
 
 //#define	RPG_LASER_SPRITE	"sprites/redglow1"
@@ -484,6 +485,7 @@ bool CFFWeaponSniperRifle::Deploy()
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
+	FF_SendHint( SNIPER_SR, "The sniper rifle has a unique charging mechanism: Press and hold your attack button to charge your shot. The longer the charge, the more damage dealt. A fully charged shot is 7 seconds." );
 #endif
 
 	return BaseClass::Deploy();

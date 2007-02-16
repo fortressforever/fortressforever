@@ -1654,6 +1654,15 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
 	}
 
+	// Added to send hint on EMP death
+#ifndef CLIENT_DLL
+	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
+	{
+		
+			FF_SendHint( this, GLOBAL_EMPDEATH, "If you see an EMP grenade headed your way try to avoid bags lying around on the ground. The EMP grenade detonates any ammunition in the vicinity so discard excess ammo by pressing the {dropitems} key." );
+	}
+#endif
+
 	// Drop any grenades
 	if (m_iGrenadeState != FF_GREN_NONE)
 	{
@@ -2993,6 +3002,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 			{
 				case FF_BUILD_DISPENSER:
 				{
+#ifndef CLIENT_DLL
+					
+						FF_SendHint( this, ENGY_BUILDDISP, "You are building a dispenser, this will generate ammo and armor to replenish other players." );
+#endif
+
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 					
@@ -3018,6 +3032,11 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 				case FF_BUILD_SENTRYGUN:
 				{
+#ifndef CLIENT_DLL
+					
+						FF_SendHint( this, ENGY_BUILDSG, "You are building a sentry gun. Retrieve packs to stock, upgrade or repair your gun. 130 cells upgrades your gun to the next level." );
+#endif
+
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
 				
@@ -3144,7 +3163,12 @@ void CFFPlayer::PostBuildGenericThink( void )
 					{
 						pEvent->SetInt( "userid", GetUserID() );
 						gameeventmanager->FireEvent( pEvent, true );
-					}					
+					}	
+#ifndef CLIENT_DLL
+					
+						FF_SendHint( this, ENGY_BUILTDISP, "You can add to the dispenser's stock by gathering supplies and hitting it with your wrench. Beware, a fully stocked dispenser can be a dangerous weapon!" );
+#endif
+
 				}
 			}
 			break;
@@ -3162,6 +3186,10 @@ void CFFPlayer::PostBuildGenericThink( void )
 						pEvent->SetInt( "userid", GetUserID() );
 						gameeventmanager->FireEvent( pEvent, true );
 					}
+#ifndef CLIENT_DLL
+					
+						FF_SendHint( this, ENGY_BUILTSG, "Aim your sentry gun by bringing up the quick menu, point your crosshair where you'd like your sentry to point and select aim sentry." );
+#endif
 				}
 			}
 			break;
@@ -5937,6 +5965,12 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			ffplayer->ResetDisguise();
 			
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
+
+#ifndef CLIENT_DLL
+		
+			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, "Running into an enemy spy or scout class will remove your disguise." );
+#endif
+
 
 			// This the correct func for logs?
 			UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));

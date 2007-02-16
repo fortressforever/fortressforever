@@ -12,10 +12,9 @@
 
 #include "cbase.h"
 #include "ff_weapon_basemelee.h"
-
+#include "ff_utils.h"
 #ifdef CLIENT_DLL
 	#define CFFWeaponKnife C_FFWeaponKnife
-	#include "ff_utils.h"
 #endif
 
 //=============================================================================
@@ -76,7 +75,10 @@ bool CFFWeaponKnife::Deploy()
 
 	// A quick hint test
 #ifdef CLIENT_DLL
-	FF_HudHint(HINT_GENERAL, 54, "Hi there. You seem to have drawn a knife. The knife can backstab and stuff like that - it's awesome!");
+	//FF_HudHint(HINT_GENERAL, 54, "Hi there. You seem to have drawn a knife. The knife can backstab and stuff like that - it's awesome!");
+	//Msg( "hudhints sayz: %d\n", hudhints.GetInt() );
+	
+		FF_SendHint( SPY_KNIFE, "Backstabbing enemies with the knife results in an instant kill. Close range only, try to be sneaky!" );
 #endif
 	
 	return BaseClass::Deploy();
@@ -135,6 +137,11 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 				{
 					CFFPlayer *pVictim = ToFFPlayer(pHitEntity);
 					pPlayer->SetDisguise(pVictim->GetTeamNumber(), pVictim->GetClassSlot(), true);
+
+#ifndef CLIENT_DLL
+				
+					FF_SendHint( pPlayer, SPY_GANKDISGUISE, "By landing the killing stab while disguised, you have now taken on the disguise of your dead foe. Use this to your advantage!" );
+#endif
 
 					CBaseEntity *pRagdoll = pVictim->m_hRagdoll.Get();
 

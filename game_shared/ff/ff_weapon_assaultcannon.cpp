@@ -20,6 +20,7 @@
 #ifdef CLIENT_DLL 
 	#define CFFWeaponAssaultCannon C_FFWeaponAssaultCannon
 	#include "c_ff_player.h"
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -463,6 +464,11 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 			WeaponSound(SPECIAL3);
 
 			StopLoopShotSound();
+
+#ifdef CLIENT_DLL
+	
+		FF_SendHint( HWGUY_OVERHEAT, "Limit the amount you hold fire to keep the assault cannon from overheating. It is possible to maintain a high rate of fire without overheating if done correctly." );
+#endif
 
 #ifdef GAME_DLL
 			// Remember to reset the speed soon

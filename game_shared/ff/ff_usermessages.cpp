@@ -48,6 +48,9 @@ void RegisterUserMessages()
 	// ESP/radar stuff, & hints
 	usermessages->Register( "RadarUpdate", -1 );
 	usermessages->Register( "FF_HudHint", -1 );
+	// Jiggles: Added for testing Hint Center
+	usermessages->Register( "FF_SendHint", -1 );
+	// End: Jiggles
 	usermessages->Register( "RadioTagUpdate", -1 );
 	usermessages->Register( "SetPlayerLocation", -1 );
 
