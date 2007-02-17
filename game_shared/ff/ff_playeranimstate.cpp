@@ -450,7 +450,18 @@ Activity CFFPlayerAnimState::CalcMainActivity()
 			if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
 			{
 				if ( flOuterSpeed > ARBITRARY_RUN_SPEED )
+				{
 					idealActivity = ACT_RUN;
+
+					// if cloaked, play walk animation to fix bugged out cloaked run animation
+					// FF TODO: play separate animations run/walk while cloaked?  all sneaky and shit
+					CFFPlayer *pPlayer = m_pHelpers->FFAnim_GetPlayer();
+					if ( pPlayer )
+					{
+						if ( pPlayer->IsCloaked() )
+							idealActivity = ACT_WALK;
+					}
+				}
 				else
 					idealActivity = ACT_WALK;
 				

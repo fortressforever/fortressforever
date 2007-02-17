@@ -48,7 +48,7 @@ ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLIC
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICATED );
 
 // Time in seconds you have to wait until you can cloak again
-ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "3", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Time in seconds you have to wait until you can cloak again" );
+ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "2", FCVAR_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
 
 ConVar ffdev_spy_scloak_minstartvelocity( "ffdev_spy_scloak_minstartvelocity", "80", FCVAR_REPLICATED, "Spy must be moving at least this slow to scloak." );
 
@@ -87,6 +87,11 @@ void ClearAllowedEffects()
 CFFWeaponBase * CFFPlayer::FFAnim_GetActiveWeapon()
 {
 	return GetActiveFFWeapon();
+}
+
+CFFPlayer * CFFPlayer::FFAnim_GetPlayer()
+{
+	return this;
 }
 
 bool CFFPlayer::FFAnim_CanMove()
@@ -1020,6 +1025,18 @@ bool CFFPlayer::HandleShotImpactingWater(const FireBulletsInfo_t &info, const Ve
 //-----------------------------------------------------------------------------
 void CFFPlayer::Command_SpyCloak( void )
 {
+	// Jon: always allow uncloaking if already cloaked
+	if( IsCloaked() )
+	{
+		// Can only cloak every ffdev_spy_nextcloak seconds
+		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		Cloak();
+#ifdef GAME_DLL
+		SpyCloakFadeOut();
+#endif
+		return;
+	}
+
 	if( !IsCloakable() )
 	{		
 #ifdef GAME_DLL
@@ -1033,14 +1050,15 @@ void CFFPlayer::Command_SpyCloak( void )
 	}
 
 	// 0001379: can cloak only if on the ground
-	if (!(GetFlags() & FL_ONGROUND) && !IsCloaked())
+	// added: or also not swimming
+	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
 
 	// Check if we can cloak yet
-	if( !IsCloaked() && ( m_flNextCloak > gpGlobals->curtime ) )
+	if( m_flNextCloak > gpGlobals->curtime )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
 		return;
@@ -1050,22 +1068,14 @@ void CFFPlayer::Command_SpyCloak( void )
 	m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
 
 #ifdef GAME_DLL
-	// If we are already cloaked, don't set the cloak type
-	// as we might have cloaked w/ scloak and not cloak
-	if( !IsCloaked() )
-	{
-		// Regular cloak
-		m_bCloakFadeType = false;
-	}
+	// Regular cloak
+	m_bCloakFadeType = false;
 #endif
 
 	Cloak();
 
 #ifdef GAME_DLL
-	if( IsCloaked() )
-		SpyCloakFadeOut();
-	else
-		SpyCloakFadeIn();
+	SpyCloakFadeIn();
 #endif	
 }
 
@@ -1074,6 +1084,18 @@ void CFFPlayer::Command_SpyCloak( void )
 //-----------------------------------------------------------------------------
 void CFFPlayer::Command_SpySilentCloak( void )
 {
+	// Jon: always allow uncloaking if already cloaked
+	if( IsCloaked() )
+	{
+		// Can only cloak every ffdev_spy_nextcloak seconds
+		m_flNextCloak = gpGlobals->curtime + ffdev_spy_nextcloak.GetFloat();
+		Cloak();
+#ifdef GAME_DLL
+		SpyCloakFadeOut();
+#endif
+		return;
+	}
+
 	if( !IsCloakable() )
 	{
 #ifdef GAME_DLL
@@ -1087,14 +1109,15 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	}
 
 	// 0001379: can cloak only if on the ground
-	if (!(GetFlags() & FL_ONGROUND) && !IsCloaked())
+	// added: or also not swimming
+	if ( !(GetFlags() & FL_ONGROUND || GetWaterLevel() > WL_NotInWater) )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_MUSTBEONGROUND" );
 		return;
 	}
 
 	// Check if we can cloak yet
-	if( !IsCloaked() && ( m_flNextCloak > gpGlobals->curtime ) )
+	if( m_flNextCloak > gpGlobals->curtime )
 	{
 		ClientPrint( this, HUD_PRINTCENTER, "#FF_CANTCLOAK_TIMELIMIT" );
 		return;
@@ -1106,7 +1129,7 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	// Silent cloak must be done while not moving! But if we're
 	// already cloaked we'll allow it so the player can uncloak
 	// Jon: adding in minimum allowed speed cvar
-	if( GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() && !IsCloaked() )
+	if( GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 	{
 		// Reset next cloak time since player technically didn't cloak yet
 		m_flNextCloak = gpGlobals->curtime;
@@ -1116,23 +1139,14 @@ void CFFPlayer::Command_SpySilentCloak( void )
 	}
 
 #ifdef GAME_DLL	
-	// If we are already cloaked, don't set the cloak type
-	// as we might not destory our ragdoll if we scloak'd
-	// to cloak then cloak'd to uncloak
-	if( !IsCloaked() )
-	{
-		// Silent cloak
-		m_bCloakFadeType = true;
-	}	
+	// Silent cloak
+	m_bCloakFadeType = true;
 #endif
 
 	Cloak();
 
 #ifdef GAME_DLL
-	if( IsCloaked() )
-		SpyCloakFadeOut();
-	else
-		SpyCloakFadeIn();
+	SpyCloakFadeIn();
 #endif
 }
 

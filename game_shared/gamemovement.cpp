@@ -988,12 +988,18 @@ void CGameMovement::WaterMove( void )
 	VectorCopy (wishvel, wishdir);
 	wishspeed = VectorNormalize(wishdir);
 
+	// --> Jon: cap swimming speed if cloaked
+	float flMaxSpeed = mv->m_flMaxSpeed;
+	if (ToFFPlayer(player)->IsCloaked())
+		flMaxSpeed = ffdev_spy_maxcloakspeed.GetFloat();
+
 	// Cap speed.
-	if (wishspeed > mv->m_flMaxSpeed)
+	if (wishspeed > flMaxSpeed)
 	{
-		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
-		wishspeed = mv->m_flMaxSpeed;
+		VectorScale (wishvel, flMaxSpeed/wishspeed, wishvel);
+		wishspeed = flMaxSpeed;
 	}
+	// <--
 
 	// Slow us down a bit.
 	wishspeed *= 0.8;
