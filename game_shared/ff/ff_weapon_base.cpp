@@ -462,7 +462,7 @@ bool CFFWeaponBase::ShouldPredict()
 //----------------------------------------------------------------------------
 int CFFWeaponBase::DrawModel( int flags )
 {
-	C_FFPlayer *pPlayer = GetPlayerOwner();
+	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
 	if( pPlayer )
 	{
 		if( !pPlayer->IsCloaked() )
@@ -472,6 +472,21 @@ int CFFWeaponBase::DrawModel( int flags )
 	}
 
 	return BaseClass::DrawModel( flags );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: cloaked models should be in the translucent renderables list
+//-----------------------------------------------------------------------------
+RenderGroup_t CFFWeaponBase::GetRenderGroup()
+{
+	C_FFPlayer *pPlayer = ToFFPlayer( GetOwner() );
+	if( pPlayer )
+	{
+		if ( pPlayer->IsCloaked() )
+			return RENDER_GROUP_TRANSLUCENT_ENTITY;
+	}
+
+	return BaseClass::GetRenderGroup();
 }
 
 #endif

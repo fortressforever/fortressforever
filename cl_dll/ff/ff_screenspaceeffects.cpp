@@ -449,7 +449,8 @@ bool CCloakedEffect::IsEnabled( void )
 	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if( !pPlayer )
-		return false;	
+		return false;
 
-	return pPlayer->IsCloaked();
+	// don't bother with screen effect if in thirdperson
+	return (pPlayer->IsCloaked() && !pPlayer->ShouldDraw());
 }

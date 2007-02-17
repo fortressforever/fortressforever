@@ -209,6 +209,7 @@ public:
 	// IFFPlayerAnimState overrides.
 	virtual CFFWeaponBase* FFAnim_GetActiveWeapon();
 	virtual bool FFAnim_CanMove();
+	virtual CFFPlayer* FFAnim_GetPlayer();
 	virtual char const *DamageDecal( int bitsDamageType, int gameMaterial );
 
 	void FireBullet( 

@@ -336,20 +336,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 #endif
 				
 				// 0001267: Added explosion effect if charged
-				// half charge
-				if ( m_iMaxBounces == 1 )
-				{
-					// half charge explosion damage
-					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
-
-					// bounced, so multiply by specified bounce damage factor
-					if (m_iNumBounces > 0)
-						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
-
-					Detonate();
-				}
-				// full charge
-				else if ( m_iMaxBounces == 2 )
+				// only detonate anywhere if it's a fully charged rail
+				if ( m_iMaxBounces == 2 )
 				{
 					// full charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
@@ -375,20 +363,8 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				UTIL_ImpactTrace( &tr, DMG_BULLET );
 				
 				// 0001267: Added explosion effect if charged
-				// half charge
-				if ( m_iMaxBounces == 1 )
-				{
-					// half charge explosion damage
-					m_flDamage = ffdev_rail_explodedamage_min.GetFloat();
-
-					// bounced, so multiply by specified bounce damage factor
-					if (m_iNumBounces > 0)
-						m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
-
-					Detonate();
-				}
-				// full charge
-				else if ( m_iMaxBounces == 2 )
+				// only detonate anywhere if it's a fully charged rail
+				if ( m_iMaxBounces == 2 )
 				{
 					// full charge explosion damage
 					m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
@@ -440,7 +416,7 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 	pRail->Spawn();
 	pRail->SetOwnerEntity( pentOwner );
 	pRail->m_iSourceClassname = ( pSource ? pSource->m_iClassname : NULL_STRING );
-	pRail->m_iMaxBounces = ( flChargeTime >= flMaxChargeTime ) ? flMaxChargeTime : ( flChargeTime >= flMaxChargeTime / 2 ) ? flMaxChargeTime / 2 : 0;
+	pRail->m_iMaxBounces = ( flChargeTime >= flMaxChargeTime ) ? 2 : ( flChargeTime >= flMaxChargeTime / 2 ) ? 1 : 0;
 
 	Vector vecForward;
 	AngleVectors( angAngles, &vecForward );

@@ -261,6 +261,7 @@ private:
 	virtual bool	ShouldPredict();
 	virtual void	OnDataChanged(DataUpdateType_t type);
 	virtual int		DrawModel( int flags );
+	virtual RenderGroup_t GetRenderGroup( void );
 #endif
 };
 

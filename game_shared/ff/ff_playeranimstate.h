@@ -19,6 +19,7 @@
 #ifdef CLIENT_DLL
 	class C_BaseAnimatingOverlay;
 	class C_FFWeaponBase;
+	class C_FFPlayer;
 	#define CBaseAnimatingOverlay C_BaseAnimatingOverlay
 	#define CFFWeaponBase C_FFWeaponBase
 	#define CFFPlayer C_FFPlayer
@@ -59,6 +60,7 @@ class IFFPlayerAnimStateHelpers
 public:
 	virtual CFFWeaponBase* FFAnim_GetActiveWeapon() = 0;
 	virtual bool FFAnim_CanMove() = 0;
+	virtual CFFPlayer* FFAnim_GetPlayer() = 0;
 };
 
 

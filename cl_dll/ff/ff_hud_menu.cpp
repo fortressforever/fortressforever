@@ -422,15 +422,16 @@ ADD_MENU_OPTION( cloak, L"Cloak", "cloak" )
 	if( !pPlayer )
 		return MENU_DIM;
 
-	// Jon: always allow to uncloak if already cloaked
+	// Jon: always allow uncloaking if already cloaked
 	if (pPlayer->IsCloaked())
 		return MENU_SHOW;
 
-	// 0001379: Must be on the ground to cloak
-	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
+	if( !pPlayer->IsCloakable() )
 		return MENU_DIM;
 
-	if( !pPlayer->IsCloakable() )
+	// 0001379: Must be on the ground to cloak
+	// added: or also not swimming
+	if ( !(pPlayer->GetFlags() & FL_ONGROUND || pPlayer->GetWaterLevel() > WL_NotInWater) )
 		return MENU_DIM;
 
 	return MENU_SHOW;
@@ -442,18 +443,19 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 	if( !pPlayer )
 		return MENU_DIM;
 
-	// Jon: always allow to uncloak if already cloaked
+	// Jon: always allow uncloaking if already cloaked
 	if (pPlayer->IsCloaked())
 		return MENU_SHOW;
-
-	// 0001379: Must be on the ground to cloak
-	if (!(pPlayer->GetFlags() & FL_ONGROUND) && !pPlayer->IsCloaked())
-		return MENU_DIM;
 
 	if( !pPlayer->IsCloakable() )
 		return MENU_DIM;
 
-	// Jon: adding in minimum allowed speed cvar and allowing to un-scloak while already cloaked
+	// 0001379: Must be on the ground to cloak
+	// added: or also not swimming
+	if ( !(pPlayer->GetFlags() & FL_ONGROUND || pPlayer->GetWaterLevel() > WL_NotInWater) )
+		return MENU_DIM;
+
+	// Jon: adding in minimum allowed speed cvar
 	if( pPlayer->GetCloakSpeed() > ffdev_spy_scloak_minstartvelocity.GetFloat() )
 		return MENU_DIM;
 
