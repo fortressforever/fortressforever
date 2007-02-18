@@ -17,10 +17,6 @@
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
 
-#define RAIL_MODEL "models/projectiles/rail/w_rail.mdl"
-#define RAIL_GLOW "sprites/rail_glow.vmt"
-#define RAIL_TRAIL "sprites/rail_trail.vmt"
-
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
 	#include "c_world.h"
@@ -31,6 +27,25 @@
 IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 
 BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
+#ifdef CLIENT_DLL
+	RecvPropBool( RECVINFO( m_bStart ) ),
+	RecvPropVector( RECVINFO( m_vecStart )),
+	RecvPropBool( RECVINFO( m_bEnd ) ),
+	RecvPropVector( RECVINFO( m_vecEnd )),
+	RecvPropBool( RECVINFO( m_bBounce1 ) ),
+	RecvPropVector( RECVINFO( m_vecBounce1 )),
+	RecvPropBool( RECVINFO( m_bBounce2 ) ),
+	RecvPropVector( RECVINFO( m_vecBounce2 )),
+#else
+	SendPropBool( SENDINFO( m_bStart ) ),
+	SendPropVector( SENDINFO( m_vecStart ), SPROP_COORD ),
+	SendPropBool( SENDINFO( m_bEnd ) ),
+	SendPropVector( SENDINFO( m_vecEnd ), SPROP_COORD ),
+	SendPropBool( SENDINFO( m_bBounce1 ) ),
+	SendPropVector( SENDINFO( m_vecBounce1 ), SPROP_COORD ),
+	SendPropBool( SENDINFO( m_bBounce2 ) ),
+	SendPropVector( SENDINFO( m_vecBounce2 ), SPROP_COORD ),
+#endif
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( ff_projectile_rail, CFFProjectileRail );
@@ -45,18 +60,13 @@ ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR
 ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a full-charge shot." );
 
 #ifdef GAME_DLL
-ConVar ffdev_rail_color_start( "ffdev_rail_color_start", "0 255 0", 0, "Color of rail initially (R G B)" );
-ConVar ffdev_rail_color_once( "ffdev_rail_color_once", "255 0 0", 0, "Color of rail after bouncing once (R G B)" );
-ConVar ffdev_rail_color_twice( "ffdev_rail_color_twice", "0 0 255", 0, "Color of rail after bouncing twice (R G B)" );
-#endif
-
-#ifdef GAME_DLL
 //=============================================================================
 // CFFProjectileRail tables
 //=============================================================================
 
 BEGIN_DATADESC(CFFProjectileRail) 
-	DEFINE_THINKFUNC( BubbleThink ), 
+	DEFINE_THINKFUNC( RailThink ), 
+	DEFINE_THINKFUNC( DieThink ), 
 	DEFINE_ENTITYFUNC( RailTouch ), 
 END_DATADESC() 
 #endif
@@ -65,81 +75,109 @@ END_DATADESC()
 // CFFProjectileRaile implementation
 //=============================================================================
 
+CFFProjectileRail::CFFProjectileRail()
+{
+	m_iNumBounces = 0;
+	m_iMaxBounces = 0;
+
+	m_bStart = false;
+	m_bEnd = false;
+	m_bBounce1 = false;
+	m_bBounce2 = false;
+
 #ifdef GAME_DLL
-	//----------------------------------------------------------------------------
-	// Purpose: Spawn a rail, set up model, size, etc
-	//----------------------------------------------------------------------------
-	void CFFProjectileRail::Spawn( void ) 
-	{
-		// Setup
-//		SetModel(RAIL_MODEL);
-		SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
-		SetSize(-Vector(1, 1, 1), Vector(1, 1, 1));
-		SetSolid(SOLID_BBOX);
-		SetGravity(0.01f);
-
-		// Oh really we're invisible
-		AddEffects(EF_NODRAW);
-		
-		// Set the correct think & touch for the rail
-		SetTouch(&CFFProjectileRail::RailTouch);		// |-- Mirv: Account for GCC strictness
-		SetThink(&CFFProjectileRail::BubbleThink);	// |-- Mirv: Account for GCC strictness
-
-		// Next think(ie. how bubbly it'll be) 
-		SetNextThink(gpGlobals->curtime + 0.1f);
-		
-		// Make sure we're updated if we're underwater
-		UpdateWaterState();
-
-		// Start up the eye glow
-		m_pMainGlow = CSprite::SpriteCreate(RAIL_GLOW, GetLocalOrigin(), false);
-
-		float flColor[3] = { 0, 255, 0 };
-		const char *szColor = ffdev_rail_color_start.GetString();
-		if( ffdev_rail_color_start.GetInt() && szColor )
-			sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
-
-		if (m_pMainGlow != NULL)
-		{
-			m_pMainGlow->FollowEntity(this);
-			m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 192, kRenderFxNoDissipation);
-			m_pMainGlow->SetScale(0.2f);
-			m_pMainGlow->SetGlowProxySize(4.0f);
-		}
-
-		// Start up the eye trail
-		m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate(RAIL_TRAIL, GetLocalOrigin(), false);
-
-		if (m_pGlowTrail != NULL)
-		{
-			m_pGlowTrail->FollowEntity(this);
-			m_pGlowTrail->SetTransparency(kRenderTransAdd, flColor[0], flColor[1], flColor[2], 192, kRenderFxNone);
-			m_pGlowTrail->SetStartWidth(8.0f);
-			m_pGlowTrail->SetEndWidth(1.0f);
-			m_pGlowTrail->SetLifeTime(0.5f);
-		}
-
-		m_iNumBounces = 0;
-
-		BaseClass::Spawn();
-	}
-
+	m_vecSameOriginCheck = Vector(0,0,0);
+	m_flSameOriginCheckTime = 0.0f;
 #endif
+}
 
 //----------------------------------------------------------------------------
 // Purpose: Precache the rail model
 //----------------------------------------------------------------------------
 void CFFProjectileRail::Precache( void ) 
 {
-	PrecacheModel( RAIL_MODEL );
-
-	PrecacheModel( RAIL_GLOW );
-	PrecacheModel( RAIL_TRAIL );
-
 	PrecacheScriptSound( "Rail.HitBody" );
 	PrecacheScriptSound( "Rail.HitWorld" );
 
 	BaseClass::Precache();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Create a new rail
+//----------------------------------------------------------------------------
+CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime )
+{
+	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
+
+#ifdef GAME_DLL
+	pRail->m_bStart = true;
+	pRail->m_vecStart = vecOrigin;
+	pRail->m_vecEnd = vecOrigin;
+#endif
+
+	float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
+
+	UTIL_SetOrigin( pRail, vecOrigin );
+	pRail->SetAbsAngles( angAngles );
+	pRail->Spawn();
+	pRail->SetOwnerEntity( pentOwner );
+	pRail->m_iSourceClassname = ( pSource ? pSource->m_iClassname : NULL_STRING );
+	pRail->m_iMaxBounces = (flChargeTime < flMaxChargeTime / 2) ? 0 : (flChargeTime < flMaxChargeTime) ? 1 : 2;
+
+	Vector vecForward;
+	AngleVectors( angAngles, &vecForward );
+	VectorNormalize( vecForward );
+
+	// Set the speed and the initial transmitted velocity
+	pRail->SetAbsVelocity( vecForward * iSpeed );
+
+	//#ifdef GAME_DLL
+	//pRail->SetupInitialTransmittedVelocity(vecForward * iSpeed);
+	//#endif
+
+	pRail->m_flDamage = iDamage;
+
+#ifdef GAME_DLL
+	/*
+	CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
+	if(pPlayer && pPlayer->IsBot())
+	Omnibot::Notify_PlayerShootProjectile(pPlayer, pRail->edict());
+	*/
+#endif
+
+	return pRail;
+}
+
+#ifdef GAME_DLL
+
+//----------------------------------------------------------------------------
+// Purpose: Spawn a rail, set up model, size, etc
+//----------------------------------------------------------------------------
+void CFFProjectileRail::Spawn( void ) 
+{
+	// Setup
+//		SetModel(RAIL_MODEL);
+	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+	SetSize(-Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5));
+	SetSolid(SOLID_BBOX);
+	SetGravity(0.01f);
+
+	// Oh really we're invisible
+	AddEffects(EF_NODRAW);
+	
+	// Set the correct think & touch for the rail
+	SetTouch(&CFFProjectileRail::RailTouch);		// |-- Mirv: Account for GCC strictness
+	SetThink(&CFFProjectileRail::RailThink);	// |-- Mirv: Account for GCC strictness
+
+	// Next think(ie. how bubbly it'll be) 
+	SetNextThink(gpGlobals->curtime);
+	
+	// Make sure we're updated if we're underwater
+	UpdateWaterState();
+
+	m_iNumBounces = 0;
+
+	BaseClass::Spawn();
 }
 
 //----------------------------------------------------------------------------
@@ -157,7 +195,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		tr = BaseClass::GetTouchTrace();
 		Vector	vecNormalizedVel = GetAbsVelocity();
 
-#ifdef GAME_DLL
 		ClearMultiDamage();
 		VectorNormalize( vecNormalizedVel );
 
@@ -167,7 +204,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		pOther->DispatchTraceAttack( dmgInfo, vecNormalizedVel, &tr );
 
 		ApplyMultiDamage();
-#endif
 
 		//Adrian: keep going through the glass.
 		if( pOther->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS )
@@ -192,19 +228,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 				data.m_vOrigin = tr2.endpos;
 				data.m_vNormal = vForward;
-
-#ifdef GAME_DLL
 				data.m_nEntIndex = tr2.m_pEnt->entindex();
-#else
-				data.m_hEntity = tr2.m_pEnt;
-#endif
 			
 				DispatchEffect( "RailImpact", data );
 			}
 		}
-		
-		SetTouch( NULL );
-		SetThink( NULL );
 
 		// Spark & leave decal if we hit an entity which wasn't human(ie. player) 
 		if( !pOther->IsPlayer() && UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER ) 
@@ -238,7 +266,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 			Detonate();
 		}
-		Remove();
+
+		m_bEnd = true;
+		m_vecEnd = GetAbsOrigin();
+
+		SetTouch(NULL);
+		SetThink(&CFFProjectileRail::DieThink);
+		// give enough time for the client effects to catch up and die as well
+		SetNextThink(gpGlobals->curtime + 1.5f);
 	}
 	// Object we hit doesn't take any damage
 	else
@@ -260,12 +295,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 			data.m_vOrigin = tr.endpos;
 			data.m_vNormal = vForward;
-
-#ifdef GAME_DLL
 			data.m_nEntIndex = 0;
-#else
-			data.m_hEntity = GetClientWorldEntity();	// FIXME
-#endif
 		
 			DispatchEffect( "RailImpact", data );			
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
@@ -298,43 +328,30 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 					// Shoot us back!
 					SetAbsVelocity( vecReflectNorm * flSpeed );
-#ifdef GAME_DLL
-					// Change the color
-					if( m_iNumBounces == 1 ) 
-					{
-						float flColor[3] = { 255, 0, 0 };
-						const char *szColor = ffdev_rail_color_once.GetString();
-						if( ffdev_rail_color_once.GetInt() && szColor )
-							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
-						m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 224, kRenderFxNoDissipation);
-						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 224, kRenderFxNone );
+					// Spark & leave decal
+					if ( UTIL_PointContents( GetAbsOrigin() ) != CONTENTS_WATER )
+					{
+						UTIL_ImpactTrace( &tr, DMG_BULLET );
+						g_pEffects->Sparks( GetAbsOrigin() );
 					}
-					else if( m_iNumBounces == 2 ) 
-					{
-						float flColor[3] = { 0, 0, 255 };
-						const char *szColor = ffdev_rail_color_twice.GetString();
-						if( ffdev_rail_color_twice.GetInt() && szColor )
-							sscanf( szColor, "%f%f%f", flColor, flColor+1, flColor+2 );
 
-						m_pMainGlow->SetTransparency(kRenderWorldGlow, flColor[0], flColor[1], flColor[2], 255, kRenderFxNoDissipation);
-						m_pGlowTrail->SetTransparency( kRenderTransAdd, flColor[0], flColor[1], flColor[2], 255, kRenderFxNone );
-					}				
-#endif
+					if( m_iNumBounces == 1 )
+					{
+						m_bBounce1 = true;
+						m_vecBounce1 = GetAbsOrigin();
+					}
+					else if ( m_iNumBounces == 2 )
+					{
+						m_bBounce2 = true;
+						m_vecBounce2 = GetAbsOrigin();
+					}
 				}				
 			}
 
 			// we didn't bounce, so it's time to die
 			if( !bBounced )
-			{
-				SetTouch( NULL );
-				SetThink( NULL );
-				SetNextThink( gpGlobals->curtime );
-
-#ifdef GAME_DLL
-				m_pMainGlow->FadeAndDie( 2.0f );
-#endif
-				
+			{				
 				// 0001267: Added explosion effect if charged
 				// only detonate anywhere if it's a fully charged rail
 				if ( m_iMaxBounces == 2 )
@@ -348,7 +365,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 					Detonate();
 				}
-				Remove();
+
+				m_bEnd = true;
+				m_vecEnd = tr.endpos;
+
+				SetTouch(NULL);
+				SetThink(&CFFProjectileRail::DieThink);
+				// give enough time for the client effects to catch up and die as well
+				SetNextThink(gpGlobals->curtime + 1.5f);
 			}
 
 			// Shoot some sparks
@@ -377,7 +401,13 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 				}
 			}
 
-			Remove();
+			m_bEnd = true;
+			m_vecEnd = tr.endpos;
+
+			SetTouch(NULL);
+			SetThink(&CFFProjectileRail::DieThink);
+			// give enough time for the client effects to catch up and die as well
+			SetNextThink(gpGlobals->curtime + 1.5f);
 		}
 	}
 }
@@ -385,59 +415,161 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 //----------------------------------------------------------------------------
 // Purpose: Make a trail of bubbles
 //----------------------------------------------------------------------------
-void CFFProjectileRail::BubbleThink( void ) 
+void CFFProjectileRail::RailThink( void ) 
 {
+	float flDisance = abs(Vector(GetAbsOrigin() - m_vecSameOriginCheck).Length());
+	if (flDisance < 2)
+	{
+		m_flSameOriginCheckTime += gpGlobals->frametime;
+
+		// Have we really been basically sitting still for 4 seconds?  Then, DIE!
+		if (m_flSameOriginCheckTime > 4)
+		{
+			m_bEnd = true;
+
+			SetTouch(NULL);
+			SetThink(&CFFProjectileRail::DieThink);
+			// give enough time for the client effects to catch up and die as well
+			SetNextThink(gpGlobals->curtime + 1.5f);
+
+			return;
+		}
+	}
+	else
+	{
+		m_vecSameOriginCheck = GetAbsOrigin();
+		m_flSameOriginCheckTime = 0.0f;
+	}
+
 	QAngle angNewAngles;
 
 	VectorAngles(GetAbsVelocity(), angNewAngles);
 	SetAbsAngles(angNewAngles);
 
-	SetNextThink(gpGlobals->curtime + 0.1f);
+	// always keep the client updated on where we are
+	m_vecEnd = GetAbsOrigin();
+
+	SetNextThink(gpGlobals->curtime);
+
+	// make bubbles every tenth of a second
+	if ( int(gpGlobals->curtime * 100) % 10 != 0)
+		return;
 
 	if (GetWaterLevel() == 0) 
 		return;
 
-#ifdef GAME_DLL
 	UTIL_BubbleTrail( GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 5 );
-#endif
 }
 
 //----------------------------------------------------------------------------
-// Purpose: Create a new rail
+// Purpose: die
 //----------------------------------------------------------------------------
-CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime )
+void CFFProjectileRail::DieThink( void ) 
 {
-	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
-
-	float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
-
-	UTIL_SetOrigin( pRail, vecOrigin );
-	pRail->SetAbsAngles( angAngles );
-	pRail->Spawn();
-	pRail->SetOwnerEntity( pentOwner );
-	pRail->m_iSourceClassname = ( pSource ? pSource->m_iClassname : NULL_STRING );
-	pRail->m_iMaxBounces = ( flChargeTime >= flMaxChargeTime ) ? 2 : ( flChargeTime >= flMaxChargeTime / 2 ) ? 1 : 0;
-
-	Vector vecForward;
-	AngleVectors( angAngles, &vecForward );
-	VectorNormalize( vecForward );
-
-	// Set the speed and the initial transmitted velocity
-	pRail->SetAbsVelocity( vecForward * iSpeed );
-
-//#ifdef GAME_DLL
-	//pRail->SetupInitialTransmittedVelocity(vecForward * iSpeed);
-//#endif
-
-	pRail->m_flDamage = iDamage;
-
-#ifdef GAME_DLL
-	/*
-	CBasePlayer *pPlayer = ToBasePlayer(pentOwner);
-	if(pPlayer && pPlayer->IsBot())
-		Omnibot::Notify_PlayerShootProjectile(pPlayer, pRail->edict());
-		*/
-#endif
-
-	return pRail;
+	SetThink(NULL);
+	Remove();
 }
+
+//  ^  GAME_DLL  ^
+#else 
+//  v  CLIENT_DLL  v
+
+void CFFProjectileRail::OnDataChanged(DataUpdateType_t type) 
+{
+	BaseClass::OnDataChanged(type);
+	if (type == DATA_UPDATE_CREATED)
+	{
+		m_flLastDataChange = gpGlobals->curtime;
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
+
+		if (!m_pRailEffects)
+		{
+			m_pRailEffects = (CFFRailEffects*)CreateEntityByName("ff_rail_effects");
+			m_pRailEffects->Spawn();
+			SetAbsOrigin(m_vecStart);
+			m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
+		}
+	}else if ( type == DATA_UPDATE_DATATABLE_CHANGED )
+	{
+		m_flLastDataChange = gpGlobals->curtime;
+
+		if (m_bStart && m_pRailEffects && !m_pRailEffects->m_bTimeToDie)
+		{
+			// count is at least 1 for the end position
+			int iCount = 1;
+
+			// count up for each possible position
+			if (m_bStart)
+				iCount++;
+			if (m_bBounce1)
+				iCount++;
+			if (m_bBounce2)
+				iCount++;
+
+			// only purge and make a new array if we've "grown"
+			if (iCount > m_pRailEffects->m_Keyframes.Count())
+			{
+				m_pRailEffects->m_Keyframes.Purge();
+
+				// put the end keyframe at the head (0) position of the array
+				RailKeyframe rkTemp = RailKeyframe(GetLocalOrigin(), RAIL_KEYFRAME_TYPE_END);
+				m_pRailEffects->m_Keyframes.AddToHead(rkTemp);
+
+				// insert start
+				if (m_bStart)
+				{
+					rkTemp.pos = m_vecStart;
+					rkTemp.type = RAIL_KEYFRAME_TYPE_START;
+					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
+				}
+
+				// insert bounce 1
+				if (m_bBounce1)
+				{
+					rkTemp.pos = m_vecBounce1;
+					rkTemp.type = RAIL_KEYFRAME_TYPE_BOUNCE1;
+					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
+				}
+
+				// insert bounce 2
+				if (m_bBounce2)
+				{
+					rkTemp.pos = m_vecBounce2;
+					rkTemp.type = RAIL_KEYFRAME_TYPE_BOUNCE2;
+					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
+				}
+			}
+		}
+	}
+}
+
+void CFFProjectileRail::ClientThink( void )
+{
+	if (m_pRailEffects)
+	{
+		if (m_bStart && !m_pRailEffects->m_bTimeToDie)
+		{
+			//float flDeltaTime = gpGlobals->curtime - m_flLastDataChange;
+			//Vector vecOrigin = GetAbsOrigin();
+			//VectorLerp( vecOrigin, m_vecEnd, flDeltaTime, vecOrigin );
+			//SetAbsOrigin(vecOrigin);
+
+			m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
+
+			if (m_pRailEffects->m_Keyframes.Count() > 0)
+			{
+				if (!m_bEnd)
+					m_pRailEffects->m_Keyframes[0].pos = GetAbsOrigin();
+				else
+					m_pRailEffects->m_Keyframes[0].pos = m_vecEnd;
+			}
+		}
+
+		// done moving, so kill it
+		if (m_bEnd)
+			m_pRailEffects->m_bTimeToDie = true;
+	}
+}
+
+//  ^  CLIENT_DLL  ^
+#endif
