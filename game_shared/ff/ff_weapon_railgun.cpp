@@ -227,41 +227,51 @@ void CFFWeaponRailgun::Fire( void )
 	if (!pPlayer)
 		return;
 
-	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
-	Vector	vecForward;
-	pPlayer->EyeVectors( &vecForward );
+	Vector vecForward, vecRight, vecUp;
+	pPlayer->EyeVectors( &vecForward, &vecRight, &vecUp);
 	VectorNormalizeFast( vecForward );
+
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	//Vector vecSrc = pPlayer->GetLegacyAbsOrigin() + vecForward * 16.0f + vecRight * 5.0f + Vector(0, 1, (pPlayer->GetFlags() & FL_DUCKING) ? 5.0f : 23.0f);
+
+//#ifdef CLIENT_DLL
+//	// For now, fake the bullet source on the client
+//	C_BaseAnimating *pWeapon = NULL;
+//
+//	// Use the correct weapon model
+//	if( pPlayer->IsLocalPlayer() )
+//		pWeapon = pPlayer->GetViewModel(0);
+//	else
+//		pWeapon = pPlayer->GetActiveWeapon();
+//
+//	// Get the attachment
+//	// FF TODO: precache/define this attachment string sometime
+//	if (pWeapon)
+//		pWeapon->GetAttachment( pWeapon->LookupAttachment( "1" ), vecSrc, QAngle(0,0,0) ); // passing dummy angles, because they don't matter
+//	else
+//		AssertMsg( 0, "Couldn't get weapon railgun!" );
+//#endif
+
+	QAngle angAiming;
+	VectorAngles( vecForward, angAiming) ;
+
+	// Check that this isn't going through a wall
+	//trace_t tr;
+	//UTIL_TraceLine(pPlayer->EyePosition(), vecSrc /*+ ( vecForward * 4.0f )*/, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+	//// Yes, going through a wall
+	//if (tr.fraction < 1.0f)
+	//{
+	//	// Drag backwards
+	//	trace_t tr2;
+	//	UTIL_TraceLine(tr.endpos - vecForward * 16.0f, tr.endpos, MASK_SOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr);
+	//	vecSrc = tr2.endpos;
+	//}
 
 	float flPercent = m_flClampedChargeTime / ffdev_railgun_maxchargetime.GetFloat();
 
 	// Push them backwards
 	pPlayer->ApplyAbsVelocityImpulse(vecForward * -(ffdev_railgun_pushforce_min.GetFloat() + ( (ffdev_railgun_pushforce_max.GetFloat() - ffdev_railgun_pushforce_min.GetFloat()) * flPercent )));
-
-#ifdef CLIENT_DLL
-	// For now, fake the bullet source on the client
-	C_BaseAnimating *pWeapon = NULL;
-
-	// Use the correct weapon model
-	if( pPlayer->IsLocalPlayer() )
-		pWeapon = pPlayer->GetViewModel(0);
-	else
-		pWeapon = pPlayer->GetActiveWeapon();
-
-	// Get the attachment(precache this number sometime)
-	if (pWeapon)
-	{
-		QAngle angAiming;
-		int iAttachment = pWeapon->LookupAttachment( "1" );
-		pWeapon->GetAttachment( iAttachment, vecSrc, angAiming );
-
-		AngleVectors( angAiming, &vecForward );
-	}
-	else
-		AssertMsg( 0, "Couldn't get weapon railgun!" );
-#endif
-
-	QAngle angAiming;
-	VectorAngles( pPlayer->GetAutoaimVector(0), angAiming) ;
 
 	// Determine Speed of rail projectile by: railspeed = min + [ ( ( max - min ) * chargetime ) / maxchargetime ] 
 	float flSpeed = ffdev_rail_speed_min.GetFloat() + ( (ffdev_rail_speed_max.GetFloat() - ffdev_rail_speed_min.GetFloat()) * flPercent );
@@ -269,7 +279,6 @@ void CFFWeaponRailgun::Fire( void )
 	// Now determine damage the same way
 	float flDamage = ffdev_rail_damage_min.GetFloat() + ( (ffdev_rail_damage_max.GetFloat() - ffdev_rail_damage_min.GetFloat()) * flPercent );
 
-	//CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, pWeaponInfo.m_iDamage, ffdev_rail_minspeed.GetFloat(), m_flClampedChargeTime );	
 	CFFProjectileRail::CreateRail( this, vecSrc, angAiming, pPlayer, flDamage, flSpeed, m_flClampedChargeTime );	
 
 	// play a different sound for a fully charged shot
@@ -487,17 +496,15 @@ void CFFWeaponRailgun::RailBeamEffect( void )
 //-----------------------------------------------------------------------------
 void CFFWeaponRailgun::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 {
+	// Not charging at all or even much, so no need to draw shit
+	if (m_iAmmoUsed < 1 && m_flClampedChargeTime < 0.1)
+		return;
+
 	// We'll get these done and out of the way
 	if (m_iAttachment1 == -1 || m_iAttachment2 == -1)
 	{
 		m_iAttachment1 = pBaseViewModel->LookupAttachment("railgunFX1");
 		m_iAttachment2 = pBaseViewModel->LookupAttachment("railgunFX2");
-	}
-
-	// Not charging at all, no need for a glow thing
-	if (m_iAmmoUsed < 0.0f)
-	{
-		return;
 	}
 
 	Vector vecStart, vecEnd, vecMuzzle;

@@ -1489,11 +1489,42 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return BaseClass::EyeAngles();
 }
 
+ConVar cl_ragdoll_deathview( "cl_ragdoll_deathview", "0", FCVAR_ARCHIVE, "When you die with a ragdoll, you'll see what it sees." );
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void C_FFPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
+	// if we're dead in FF, let's stick the camera in the ragdoll's head/eyes if the cvar's set
+	if ( m_lifeState != LIFE_ALIVE && !IsObserver() && m_hRagdoll.Get() && cl_ragdoll_deathview.GetBool() )
+	{
+		// get the eyes attachment
+		C_FFRagdoll *pRagdoll = (C_FFRagdoll*)m_hRagdoll.Get();
+		pRagdoll->GetAttachment( pRagdoll->LookupAttachment( "eyes" ), eyeOrigin, eyeAngles );
+
+		// setup some vectors
+		Vector vForward;
+		AngleVectors(eyeAngles, &vForward);
+		VectorNormalize(vForward);
+		Vector testOrigin;
+		VectorMA(eyeOrigin, -WALL_OFFSET, vForward, testOrigin);
+
+		// for hopefully keeping the camera out of walls
+		Vector WALL_MIN( -WALL_OFFSET, -WALL_OFFSET, -WALL_OFFSET );
+		Vector WALL_MAX( WALL_OFFSET, WALL_OFFSET, WALL_OFFSET );
+		trace_t trace; // clip against world
+		// HACK don't recompute positions while doing RayTrace
+		C_BaseEntity::EnableAbsRecomputations( false );
+		UTIL_TraceHull( testOrigin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace );
+		C_BaseEntity::EnableAbsRecomputations( true );
+
+		if (trace.fraction < 1.0)
+			eyeOrigin = trace.endpos;
+
+		return;
+	}
+
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
 
 	if ((m_flConcTime > gpGlobals->curtime || m_flConcTime < 0) && conc_test.GetInt() == 0)
