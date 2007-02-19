@@ -39,6 +39,7 @@ public:
 	CFFProjectileRail();
 
 	virtual void Precache( void );
+	virtual void UpdateOnRemove();
 	static CFFProjectileRail *CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime );
 	//virtual void CFFProjectileRail::Explode(trace_t *pTrace, int bitsDamageType);
 	virtual Class_T Classify( void ) { return CLASS_RAIL_PROJECTILE; }
@@ -47,35 +48,32 @@ public:
 	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink( void );
 
-	bool m_bStart;
+	CFFRailEffects *m_pRailEffects;
+	bool m_bShouldInit;
 	Vector m_vecStart;
+
+	// networked variables...
 	bool m_bEnd;
 	Vector m_vecEnd;
 	bool m_bBounce1;
 	Vector m_vecBounce1;
 	bool m_bBounce2;
 	Vector m_vecBounce2;
-
-	CFFRailEffects *m_pRailEffects;
-	float m_flLastDataChange;
 #else
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 	virtual void Spawn( void );
+	void SetupEnd( Vector end );
 	void DieThink( void );
 	void RailThink( void );
 	void RailTouch( CBaseEntity *pOther );
 
-	// set transmit filter to transmit always
-	int UpdateTransmitState()
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
+	// set transmit filter to always transmit
+	int UpdateTransmitState() { return SetTransmitState( FL_EDICT_PVSCHECK ); }
 
 	Vector m_vecSameOriginCheck;
-	float m_flSameOriginCheckTime;
+	float m_flSameOriginCheckTimer;
 
-	CNetworkVar( bool, m_bStart );
-	CNetworkVector( m_vecStart );
+	// networked variables...
 	CNetworkVar( bool, m_bEnd );
 	CNetworkVector( m_vecEnd );
 	CNetworkVar( bool, m_bBounce1 );
