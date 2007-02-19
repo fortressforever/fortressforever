@@ -77,8 +77,9 @@ public:
 	virtual int DrawModel( int flags );
 
 	CUtlVector<RailKeyframe> m_Keyframes;
+
 	bool m_bTimeToDie;
-	float m_flDieTime;
+	float m_flDieTimer;
 };
 
 #endif // FF_RAIL_EFFECTS_H

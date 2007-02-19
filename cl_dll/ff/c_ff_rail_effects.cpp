@@ -30,6 +30,8 @@ LINK_ENTITY_TO_CLASS( ff_rail_effects, CFFRailEffects );
 PRECACHE_REGISTER( ff_rail_effects );
 
 ConVar ffdev_rail_beamlength( "ffdev_rail_beamlength", "256", FCVAR_REPLICATED, "Length of rail beam." );
+//ConVar ffdev_rail_dietime( "ffdev_rail_dietime", "1.0", FCVAR_REPLICATED, "Length of rail beam." );
+#define RAIL_EFFECTS_DIETIME 1.0f
 
 ConVar ffdev_rail_color_default( "ffdev_rail_color_default", "0 1 0", 0, "Color of default rail (R G B - fraction from 0 to 1)" );
 ConVar ffdev_rail_color_bounce1( "ffdev_rail_color_bounce1", "1 0 0", 0, "Color of rail after bouncing once (R G B - fraction from 0 to 1)" );
@@ -40,7 +42,7 @@ CFFRailEffects::CFFRailEffects()
 	m_Keyframes.Purge();
 
 	m_bTimeToDie = false;
-	m_flDieTime = 0.0f;
+	m_flDieTimer = 0.0f;
 }
 
 void CFFRailEffects::Release()
@@ -51,7 +53,7 @@ void CFFRailEffects::Release()
 
 void CFFRailEffects::Precache( void )
 {
-	PrecacheModel(RAIL_MODEL);
+	PrecacheModel( RAIL_MODEL );
 	PrecacheMaterial( RAIL_BEAM );
 	PrecacheMaterial( RAIL_GLOW );
 
@@ -62,7 +64,7 @@ void CFFRailEffects::Spawn( void )
 {
 	SetMoveType(MOVETYPE_NONE);
 	SetSolid(SOLID_NONE);
-	AddSolidFlags( FSOLID_NOT_SOLID );
+	AddSolidFlags(FSOLID_NOT_SOLID);
 
 	ClientEntityList().AddNonNetworkableEntity( this );
 	AddToLeafSystem(GetRenderGroup());
@@ -85,8 +87,10 @@ void CFFRailEffects::GetRenderBounds( Vector& mins, Vector& maxs )
 
 int CFFRailEffects::DrawModel( int flags )
 {
-	// it's clamped at 2 down below when it's updated
-	if (m_flDieTime == 2.0f)
+	float flDieTime = RAIL_EFFECTS_DIETIME; // ffdev_rail_dietime.GetFloat();
+
+	// it's clamped at flDieTime down below when it's updated
+	if (m_flDieTimer >= flDieTime)
 	{
 		Remove();
 		return 0;
@@ -96,12 +100,12 @@ int CFFRailEffects::DrawModel( int flags )
 
 	if (m_bTimeToDie)
 	{
-		flMaxBeamLength *= clamp((0.1f - m_flDieTime) / 0.1f, 0, 1);
-		m_flDieTime = clamp(m_flDieTime + gpGlobals->frametime, 0.0f, 2.0f);
+		flMaxBeamLength *= clamp(((flDieTime / 10) - m_flDieTimer) / (flDieTime / 10), 0, 1);
+		m_flDieTimer = clamp(m_flDieTimer + gpGlobals->frametime, 0.0f, flDieTime);
 	}
 
 	float flRemainingBeamLength = flMaxBeamLength;
-	for (int i = 1; i < m_Keyframes.Count() && m_flDieTime != 2.0f; i++)
+	for (int i = 1; i < m_Keyframes.Count() && m_flDieTimer < flDieTime; i++)
 	{
 		//Warning("m_Keyframes[%d] = (%f, %f, %f)\n", i, m_Keyframes[i].x, m_Keyframes[i].y, m_Keyframes[i].z);
 
@@ -167,7 +171,7 @@ int CFFRailEffects::DrawModel( int flags )
 		if (m_bTimeToDie)
 			for (int j = 0; j < 3; j++)
 				if (flColor[j] > 0)
-					flColor[j] *= (2.0f - m_flDieTime) / 2.0f;
+					flColor[j] *= (flDieTime - m_flDieTimer) / flDieTime;
 
 		DrawHalo(pMat, vecBeamStart, 2.0f * flRandom, flColor );
 	}

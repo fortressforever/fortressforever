@@ -28,22 +28,19 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 
 BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
 #ifdef CLIENT_DLL
-	RecvPropBool( RECVINFO( m_bStart ) ),
-	RecvPropVector( RECVINFO( m_vecStart )),
-	RecvPropBool( RECVINFO( m_bEnd ) ),
+	RecvPropInt( RECVINFO( m_bEnd ) ),
 	RecvPropVector( RECVINFO( m_vecEnd )),
-	RecvPropBool( RECVINFO( m_bBounce1 ) ),
+	RecvPropInt( RECVINFO( m_bBounce1 ) ),
 	RecvPropVector( RECVINFO( m_vecBounce1 )),
-	RecvPropBool( RECVINFO( m_bBounce2 ) ),
+	RecvPropInt( RECVINFO( m_bBounce2 ) ),
 	RecvPropVector( RECVINFO( m_vecBounce2 )),
 #else
-	SendPropBool( SENDINFO( m_bStart ) ),
-	SendPropVector( SENDINFO( m_vecStart ), SPROP_COORD ),
-	SendPropBool( SENDINFO( m_bEnd ) ),
-	SendPropVector( SENDINFO( m_vecEnd ), SPROP_COORD ),
-	SendPropBool( SENDINFO( m_bBounce1 ) ),
+	// m_bEnd doesn't change often, but it needs to be a high priority
+	SendPropInt( SENDINFO(m_bEnd), 1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropVector( SENDINFO( m_vecEnd ), 32, SPROP_COORD | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO(m_bBounce1), 1, SPROP_UNSIGNED ),
 	SendPropVector( SENDINFO( m_vecBounce1 ), SPROP_COORD ),
-	SendPropBool( SENDINFO( m_bBounce2 ) ),
+	SendPropInt( SENDINFO(m_bBounce2), 1, SPROP_UNSIGNED ),
 	SendPropVector( SENDINFO( m_vecBounce2 ), SPROP_COORD ),
 #endif
 END_NETWORK_TABLE()
@@ -65,8 +62,8 @@ ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR
 //=============================================================================
 
 BEGIN_DATADESC(CFFProjectileRail) 
-	DEFINE_THINKFUNC( RailThink ), 
-	DEFINE_THINKFUNC( DieThink ), 
+	DEFINE_THINKFUNC( DieThink ),
+	DEFINE_THINKFUNC( RailThink ),
 	DEFINE_ENTITYFUNC( RailTouch ), 
 END_DATADESC() 
 #endif
@@ -77,18 +74,25 @@ END_DATADESC()
 
 CFFProjectileRail::CFFProjectileRail()
 {
+#ifdef CLIENT_DLL
+	m_pRailEffects = NULL;
+	m_bShouldInit = true;
+	m_vecStart = Vector(0,0,0);
+#else
+	m_vecSameOriginCheck = Vector(0,0,0);
+	m_flSameOriginCheckTimer = 0.0f;
+#endif
+
 	m_iNumBounces = 0;
 	m_iMaxBounces = 0;
 
-	m_bStart = false;
+	// networked variables...
 	m_bEnd = false;
+	m_vecEnd = Vector(0,0,0);
 	m_bBounce1 = false;
+	m_vecBounce1 = Vector(0,0,0);
 	m_bBounce2 = false;
-
-#ifdef GAME_DLL
-	m_vecSameOriginCheck = Vector(0,0,0);
-	m_flSameOriginCheckTime = 0.0f;
-#endif
+	m_vecBounce2 = Vector(0,0,0);
 }
 
 //----------------------------------------------------------------------------
@@ -102,18 +106,33 @@ void CFFProjectileRail::Precache( void )
 	BaseClass::Precache();
 }
 
+void CFFProjectileRail::UpdateOnRemove()
+{
+#ifdef CLIENT_DLL
+	// send some final info to the rail effects
+	if (m_pRailEffects)
+	{
+		m_pRailEffects->m_bTimeToDie = true;
+
+		// always keep the head (0) updated with our current position
+		if (m_pRailEffects->m_Keyframes.Count() > 0)
+		{
+			// FF TODO: make the effect update its own origin based on the keyframes and the projectile velocity
+			m_pRailEffects->SetAbsOrigin(m_vecEnd);
+			m_pRailEffects->m_Keyframes[0].pos = m_vecEnd;
+		}
+	}
+#endif
+
+	BaseClass::UpdateOnRemove();
+}
+
 //----------------------------------------------------------------------------
 // Purpose: Create a new rail
 //----------------------------------------------------------------------------
 CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime )
 {
 	CFFProjectileRail *pRail = ( CFFProjectileRail * )CreateEntityByName( "ff_projectile_rail" );
-
-#ifdef GAME_DLL
-	pRail->m_bStart = true;
-	pRail->m_vecStart = vecOrigin;
-	pRail->m_vecEnd = vecOrigin;
-#endif
 
 	float flMaxChargeTime = ffdev_railgun_maxchargetime.GetFloat();
 
@@ -185,18 +204,20 @@ void CFFProjectileRail::Spawn( void )
 //----------------------------------------------------------------------------
 void CFFProjectileRail::RailTouch( CBaseEntity *pOther ) 
 {
+	// FF TODO: fix the problem with rails and other projectiles touching COLLISION_GROUP_TRIGGERONLY (apparently the elevator door in dustbowl is in this collision group...which is weird)
 	if( !pOther->IsSolid() || pOther->IsSolidFlagSet( FSOLID_VOLUME_CONTENTS ) || !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) ) 
 		return;
+
+	trace_t	tr;
+	tr = BaseClass::GetTouchTrace();
 
 	// If the object we touch takes damage
 	if( pOther->m_takedamage != DAMAGE_NO ) 
 	{
-		trace_t	tr, tr2;
-		tr = BaseClass::GetTouchTrace();
 		Vector	vecNormalizedVel = GetAbsVelocity();
+		VectorNormalize( vecNormalizedVel );
 
 		ClearMultiDamage();
-		VectorNormalize( vecNormalizedVel );
 
 		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), m_flDamage, DMG_BULLET | DMG_NEVERGIB );
 		CalculateMeleeDamageForce( &dmgInfo, vecNormalizedVel, tr.endpos, 0.7f );
@@ -218,6 +239,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 		AngleVectors( GetAbsAngles(), &vForward );
 		VectorNormalize( vForward );
 
+		trace_t	tr2;
 		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + vForward * 128, MASK_OPAQUE, pOther, COLLISION_GROUP_NONE, &tr2 );
 
 		if( tr2.fraction != 1.0f ) 
@@ -266,21 +288,11 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 			Detonate();
 		}
-
-		m_bEnd = true;
-		m_vecEnd = GetAbsOrigin();
-
-		SetTouch(NULL);
-		SetThink(&CFFProjectileRail::DieThink);
-		// give enough time for the client effects to catch up and die as well
-		SetNextThink(gpGlobals->curtime + 1.5f);
+		SetupEnd(tr.endpos);
 	}
 	// Object we hit doesn't take any damage
 	else
 	{
-		trace_t	tr;
-		tr = BaseClass::GetTouchTrace();
-
 		// See if we struck the world, make a mark, and then try to bounce
 		// Bug #0000181: Railgun shot is absorbed by doors on ff_dev_ctf
 		if( /*pOther->GetMoveType() == MOVETYPE_NONE &&*/ !( tr.surface.flags & SURF_SKY ) ) 
@@ -296,7 +308,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 			data.m_vOrigin = tr.endpos;
 			data.m_vNormal = vForward;
 			data.m_nEntIndex = 0;
-		
+
 			DispatchEffect( "RailImpact", data );			
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
 
@@ -351,7 +363,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 			// we didn't bounce, so it's time to die
 			if( !bBounced )
-			{				
+			{
 				// 0001267: Added explosion effect if charged
 				// only detonate anywhere if it's a fully charged rail
 				if ( m_iMaxBounces == 2 )
@@ -365,14 +377,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 					Detonate();
 				}
-
-				m_bEnd = true;
-				m_vecEnd = tr.endpos;
-
-				SetTouch(NULL);
-				SetThink(&CFFProjectileRail::DieThink);
-				// give enough time for the client effects to catch up and die as well
-				SetNextThink(gpGlobals->curtime + 1.5f);
+				SetupEnd(tr.endpos);
 			}
 
 			// Shoot some sparks
@@ -399,17 +404,35 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 					Detonate();
 				}
+				SetupEnd(tr.endpos);
 			}
-
-			m_bEnd = true;
-			m_vecEnd = tr.endpos;
-
-			SetTouch(NULL);
-			SetThink(&CFFProjectileRail::DieThink);
-			// give enough time for the client effects to catch up and die as well
-			SetNextThink(gpGlobals->curtime + 1.5f);
 		}
 	}
+}
+
+//----------------------------------------------------------------------------
+// Purpose: set it up to die
+//----------------------------------------------------------------------------
+void CFFProjectileRail::SetupEnd( Vector end ) 
+{
+	m_bEnd = true;
+	m_vecEnd = end;
+	SetMoveType(MOVETYPE_NONE);
+	SetSolid(SOLID_NONE);
+	SetTouch(NULL);
+	SetThink(&CFFProjectileRail::DieThink);
+	// give just enough time for the client to receive the end data
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
+
+//----------------------------------------------------------------------------
+// Purpose: DIE!
+//----------------------------------------------------------------------------
+void CFFProjectileRail::DieThink( void ) 
+{
+	SetThink(NULL);
+	Remove();
+	//UTIL_RemoveImmediate(this);
 }
 
 //----------------------------------------------------------------------------
@@ -420,25 +443,35 @@ void CFFProjectileRail::RailThink( void )
 	float flDisance = abs(Vector(GetAbsOrigin() - m_vecSameOriginCheck).Length());
 	if (flDisance < 2)
 	{
-		m_flSameOriginCheckTime += gpGlobals->frametime;
+		m_flSameOriginCheckTimer += gpGlobals->frametime;
 
-		// Have we really been basically sitting still for 4 seconds?  Then, DIE!
-		if (m_flSameOriginCheckTime > 4)
+		// FF TODO: need to fix the actual problem in the top return in the touch, 
+		// which has something to do with COLLISION_GROUP_TRIGGERONLY...but I'm 
+		// too tired to fix that shit right now, so it's "TODO" later.
+
+		// Have we really been basically sitting still?  Then, DIE!
+		if (m_flSameOriginCheckTimer > 3.0f)
 		{
-			m_bEnd = true;
+			// 0001267: Added explosion effect if charged
+			// only detonate anywhere if it's a fully charged rail
+			if ( m_iMaxBounces == 2 )
+			{
+				// full charge explosion damage
+				m_flDamage = ffdev_rail_explodedamage_max.GetFloat();
 
-			SetTouch(NULL);
-			SetThink(&CFFProjectileRail::DieThink);
-			// give enough time for the client effects to catch up and die as well
-			SetNextThink(gpGlobals->curtime + 1.5f);
+				// for each bounce, multiply by specified bounce damage factor
+				for (int i = 0; i < m_iNumBounces; i++)
+					m_flDamage *= ffdev_rail_bouncedamagefactor.GetFloat();
 
-			return;
+				Detonate();
+			}
+			SetupEnd(GetAbsOrigin());
 		}
 	}
 	else
 	{
 		m_vecSameOriginCheck = GetAbsOrigin();
-		m_flSameOriginCheckTime = 0.0f;
+		m_flSameOriginCheckTimer = 0.0f;
 	}
 
 	QAngle angNewAngles;
@@ -461,15 +494,6 @@ void CFFProjectileRail::RailThink( void )
 	UTIL_BubbleTrail( GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 5 );
 }
 
-//----------------------------------------------------------------------------
-// Purpose: die
-//----------------------------------------------------------------------------
-void CFFProjectileRail::DieThink( void ) 
-{
-	SetThink(NULL);
-	Remove();
-}
-
 //  ^  GAME_DLL  ^
 #else 
 //  v  CLIENT_DLL  v
@@ -479,95 +503,77 @@ void CFFProjectileRail::OnDataChanged(DataUpdateType_t type)
 	BaseClass::OnDataChanged(type);
 	if (type == DATA_UPDATE_CREATED)
 	{
-		m_flLastDataChange = gpGlobals->curtime;
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
-
-		if (!m_pRailEffects)
-		{
-			m_pRailEffects = (CFFRailEffects*)CreateEntityByName("ff_rail_effects");
-			m_pRailEffects->Spawn();
-			SetAbsOrigin(m_vecStart);
-			m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
-		}
-	}else if ( type == DATA_UPDATE_DATATABLE_CHANGED )
-	{
-		m_flLastDataChange = gpGlobals->curtime;
-
-		if (m_bStart && m_pRailEffects && !m_pRailEffects->m_bTimeToDie)
-		{
-			// count is at least 1 for the end position
-			int iCount = 1;
-
-			// count up for each possible position
-			if (m_bStart)
-				iCount++;
-			if (m_bBounce1)
-				iCount++;
-			if (m_bBounce2)
-				iCount++;
-
-			// only purge and make a new array if we've "grown"
-			if (iCount > m_pRailEffects->m_Keyframes.Count())
-			{
-				m_pRailEffects->m_Keyframes.Purge();
-
-				// put the end keyframe at the head (0) position of the array
-				RailKeyframe rkTemp = RailKeyframe(GetLocalOrigin(), RAIL_KEYFRAME_TYPE_END);
-				m_pRailEffects->m_Keyframes.AddToHead(rkTemp);
-
-				// insert start
-				if (m_bStart)
-				{
-					rkTemp.pos = m_vecStart;
-					rkTemp.type = RAIL_KEYFRAME_TYPE_START;
-					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
-				}
-
-				// insert bounce 1
-				if (m_bBounce1)
-				{
-					rkTemp.pos = m_vecBounce1;
-					rkTemp.type = RAIL_KEYFRAME_TYPE_BOUNCE1;
-					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
-				}
-
-				// insert bounce 2
-				if (m_bBounce2)
-				{
-					rkTemp.pos = m_vecBounce2;
-					rkTemp.type = RAIL_KEYFRAME_TYPE_BOUNCE2;
-					m_pRailEffects->m_Keyframes.InsertAfter(0, rkTemp);
-				}
-			}
-		}
 	}
 }
 
 void CFFProjectileRail::ClientThink( void )
 {
-	if (m_pRailEffects)
+	// make the rail effects if there are none yet
+	if (m_bShouldInit)
 	{
-		if (m_bStart && !m_pRailEffects->m_bTimeToDie)
-		{
-			//float flDeltaTime = gpGlobals->curtime - m_flLastDataChange;
-			//Vector vecOrigin = GetAbsOrigin();
-			//VectorLerp( vecOrigin, m_vecEnd, flDeltaTime, vecOrigin );
-			//SetAbsOrigin(vecOrigin);
+		m_pRailEffects = (CFFRailEffects*)CreateEntityByName("ff_rail_effects");
 
-			m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
+		// still NULL?  then return so there are no problems
+		if (!m_pRailEffects)
+			return;
 
-			if (m_pRailEffects->m_Keyframes.Count() > 0)
-			{
-				if (!m_bEnd)
-					m_pRailEffects->m_Keyframes[0].pos = GetAbsOrigin();
-				else
-					m_pRailEffects->m_Keyframes[0].pos = m_vecEnd;
-			}
-		}
+		// no need to init anymore
+		m_bShouldInit = false;
 
-		// done moving, so kill it
-		if (m_bEnd)
-			m_pRailEffects->m_bTimeToDie = true;
+		// set these up as where we are when we create the effects
+		m_vecStart = m_vecEnd = m_vecBounce1 = m_vecBounce2 = GetAbsOrigin();
+
+		m_pRailEffects->Spawn();
+		m_pRailEffects->SetAbsOrigin(m_vecStart);
+	}
+
+	if (!m_pRailEffects)
+		return;
+
+	// count up how many positions need to be worried with
+	// starts at 2 because of start and end/current
+	int iCount = 2;
+
+	// count up for each bounce
+	if (m_bBounce1)
+		iCount++;
+	if (m_bBounce2)
+		iCount++;
+
+	// only purge and make a new array if we've "grown"
+	if (iCount > m_pRailEffects->m_Keyframes.Count())
+	{
+		m_pRailEffects->m_Keyframes.Purge();
+
+		// put the end/current at the head (0) position of the array
+		m_pRailEffects->m_Keyframes.AddToHead(RailKeyframe(GetAbsOrigin(), RAIL_KEYFRAME_TYPE_END));
+
+		// always insert start after head
+		m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecStart, RAIL_KEYFRAME_TYPE_START));
+
+		// insert bounce 1 after head
+		if (m_bBounce1)
+			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce1, RAIL_KEYFRAME_TYPE_BOUNCE1));
+
+		// insert bounce 2 after head
+		if (m_bBounce2)
+			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce2, RAIL_KEYFRAME_TYPE_BOUNCE2));
+	}
+
+	// always keep the head (0) updated with our current position
+	if (m_pRailEffects->m_Keyframes.Count() > 0)
+	{
+		// FF TODO: make the effect update its own origin based on the keyframes and the projectile velocity
+		m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
+		m_pRailEffects->m_Keyframes[0].pos = GetAbsOrigin();
+	}
+
+	if (m_bEnd)
+	{
+		m_pRailEffects->m_bTimeToDie = true;
+		SetMoveType(MOVETYPE_NONE);
+		SetSolid(SOLID_NONE);
 	}
 }
 
