@@ -126,8 +126,6 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	// Hints are off -- ignore the hint
 	if( !hudhints.GetBool() )
 		return;
-
-	// See whether the hint has been shown yet
 	
 	//int foundIndex = -1;
 	//for ( int i = 0; i < m_HintVector.Count(); ++i )
@@ -139,9 +137,14 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	//	}
 	//}
 	
-	// Set the text now
+
+	// Save some of the old hints -- note that this will cut them off at an arbitrary point
+	char oldHintString[HINT_HISTORY];
+	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
 	m_pRichText->SetText( pszMessage );
-	//vgui::localize()->ConvertANSIToUnicode( pszMessage, m_pText, sizeof( m_pText ) );
+	m_pRichText->InsertString( "\n\n" );
+	m_pRichText->InsertString( oldHintString );
+	
 
 	int foundIndex = m_HintVector.Find( hintID );
 	if (  foundIndex < 0 )  // Hint not shown yet
@@ -157,6 +160,9 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	m_bFadingOut = false;
 	m_bHintCenterVisible = true;
 	m_flSelectionTime = gpGlobals->curtime;
+
+	Activate();
+	SetMouseInputEnabled(false);
 
 	// And play a sound, if there's one
 	//if (pszSound)
@@ -212,8 +218,13 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	// Pass the string along
 	//AddHudHint(bType, wID, szString, szSound[0] == 0 ? NULL : szSound);	
 	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
-
+	
+	// Save some of the old hints -- note that this will cut them off at an arbitrary point
+	char oldHintString[HINT_HISTORY];
+	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
 	m_pRichText->SetText( szString );
+	m_pRichText->InsertString( "\n\n" );
+	m_pRichText->InsertString( oldHintString );
 
 	int foundIndex = m_HintVector.Find( wID );
 	if (  foundIndex < 0 )  // Hint not shown yet
@@ -229,6 +240,9 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	m_bFadingOut = false;
 	m_bHintCenterVisible = true;
 	m_flSelectionTime = gpGlobals->curtime;
+
+	Activate();
+	SetMouseInputEnabled(false);
 }
 
 
@@ -251,7 +265,7 @@ void CHudHintCenter::VidInit( void )
 	g_pHintCenter = this;
 
 	// Don't draw a background
-	SetPaintBackgroundEnabled( false );
+	//SetPaintBackgroundEnabled( false );
 
 	// Deallocate
 	//if( m_pHudElementTexture )
@@ -270,17 +284,18 @@ void CHudHintCenter::VidInit( void )
 	if (!m_pRichText)
 	{
 		m_pRichText = new RichText(this, "HudHintText");
+		m_pRichText->SetVerticalScrollbar( true );
 		m_pRichText->SetPos( text1_xpos, text1_ypos );
 		m_pRichText->SetWide( text1_wide );
 		m_pRichText->SetTall( text1_tall );
-		m_pRichText->SetVerticalScrollbar(false);
+
 		//m_pRichText->SetBorder( NULL );
 		//m_pRichText->InsertColorChange( m_TextColor );
 		//m_pRichText->SetFont( m_hTextFont );
 		//m_pRichText->SetFgColor( Color(0, 0, 0, 0) );
 		m_pRichText->SetPaintBorderEnabled( false );
-
-		
+		//m_pRichText->SetMaximumCharCount( 1024 );
+	
 	}
 
 }
@@ -337,6 +352,8 @@ void CHudHintCenter::HideSelection( void )
 	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("CloseHintCenter");
 	m_bFadingOut = false;
 	m_bHintCenterVisible = false;
+	OnClose();
+	//m_pRichText->SetVerticalScrollbar(false);
 }
 
 
@@ -425,16 +442,17 @@ void CHudHintCenter::Paint( void )
 //-----------------------------------------------------------------------------
 void CHudHintCenter::KeyDown( void )
 {
-	//if (m_bFadingOut)
-	//{
-		// stop us fading out, show the animation again
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-		m_bFadingOut = false;
-	//}
+	// stop us fading out, show the animation again
+	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
+	m_bFadingOut = false;
+
 	m_bHintKeyHeld = true;
 	m_bHintCenterVisible = true;
 	m_flSelectionTime = gpGlobals->curtime;
 	//Msg( "\nKEY DOWN!!!\n" );
+	Activate();
+	SetMouseInputEnabled(true);
+	//m_pRichText->SetVerticalScrollbar(true);
 }
 
 
@@ -451,6 +469,7 @@ void CHudHintCenter::KeyUp( void )
 	//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "FadeOutHintCenter" );
 	//m_bFadingOut = true;
 	m_flSelectionTime = gpGlobals->curtime - SELECTION_TIMEOUT_THRESHOLD;
+	SetMouseInputEnabled(false);
 }
 
 
