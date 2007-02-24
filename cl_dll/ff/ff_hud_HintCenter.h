@@ -17,31 +17,45 @@
 #include "hudelement.h"
 #include "iclientmode.h"
 
-#include "ff_panel.h"
+//#include "ff_panel.h"
 
 using namespace vgui;
 
-#include <vgui_controls/Panel.h>
+//#include <vgui_controls/Panel.h>
+#include <vgui_controls/Frame.h>
 #include <vgui_controls/AnimationController.h>
 #include "ff_hud_menu.h"
 
 
 #define SELECTION_TIMEOUT_THRESHOLD		5.0f	// Seconds
 #define SELECTION_FADEOUT_TIME			1.5f
+#define HINT_HISTORY					512		// Size of old hint buffer
 
-class CHudHintCenter : public CHudElement, public vgui::Panel
+class CHudHintCenter : public CHudElement, public vgui::Frame
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHudHintCenter, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CHudHintCenter, vgui::Frame );
 
 public:
-	CHudHintCenter( const char *pElementName ) : CHudElement( pElementName ), vgui::Panel( NULL, "HudHintCenter" ) 
+	CHudHintCenter( const char *pElementName ) : CHudElement( pElementName ), vgui::Frame( NULL, "HudHintCenter" ) 
 	{
 		SetParent( g_pClientMode->GetViewport() );
 		// Hide when player is dead
 		SetHiddenBits( HIDEHUD_PLAYERDEAD );
 		
 		m_pRichText = NULL;
+
+		// initialize dialog
+		SetProportional(true);
+		SetKeyBoardInputEnabled(false);
+		SetMouseInputEnabled(true);			// We have to enable this in the constructor
+											// even if it won't always be the case
+											// Otherwise panels within this one will not
+											// receive mouse input (thanks valve)
+		SetSizeable(false);
+		SetMoveable(false);
+		// hide the system buttons
+		SetTitleBarVisible( false );
 	}
 
 	~CHudHintCenter( void );	
@@ -60,8 +74,8 @@ public:
 
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "34", "proportional_float" );
 	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "10", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text1_wide, "text1_wide", "200", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text1_tall, "text1_tall", "50", "proportional_float" );
+	CPanelAnimationVarAliasType( float, text1_wide, "text1_wide", "220", "proportional_float" );
+	CPanelAnimationVarAliasType( float, text1_tall, "text1_tall", "40", "proportional_float" );
 
 	CPanelAnimationVarAliasType( float, image1_xpos, "image1_xpos", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, image1_ypos, "image1_ypos", "4", "proportional_float" );
@@ -88,7 +102,6 @@ private:
 	bool			m_bHintCenterVisible;
 	CHudTexture		*m_pHudElementTexture;
 
-	//wchar_t		m_pText[ 4096 ];
 	float		m_flStartTime;	// When the message was recevied
 	float		m_flDuration;	// Duration of the message
 
