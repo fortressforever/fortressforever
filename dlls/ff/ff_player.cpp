@@ -1659,7 +1659,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
 	{
 		
-			FF_SendHint( this, GLOBAL_EMPDEATH, "If you see an EMP grenade headed your way try to avoid bags lying around on the ground. The EMP grenade detonates any ammunition in the vicinity so discard excess ammo by pressing the {dropitems} key." );
+		FF_SendHint( this, GLOBAL_EMPDEATH, "#FF_HINT_GLOBAL_EMPDEATH" );
 	}
 #endif
 
@@ -3004,7 +3004,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 #ifndef CLIENT_DLL
 					
-						FF_SendHint( this, ENGY_BUILDDISP, "You are building a dispenser, this will generate ammo and armor to replenish other players." );
+					FF_SendHint( this, ENGY_BUILDDISP, "#FF_HINT_ENGY_BUILDDISP" );
 #endif
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
@@ -3034,7 +3034,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 #ifndef CLIENT_DLL
 					
-						FF_SendHint( this, ENGY_BUILDSG, "You are building a sentry gun. Retrieve packs to stock, upgrade or repair your gun. 130 cells upgrades your gun to the next level." );
+					FF_SendHint( this, ENGY_BUILDSG, "#FF_HINT_ENGY_BUILDSG" );
 #endif
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
@@ -3166,7 +3166,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}	
 #ifndef CLIENT_DLL
 					
-						FF_SendHint( this, ENGY_BUILTDISP, "You can add to the dispenser's stock by gathering supplies and hitting it with your wrench. Beware, a fully stocked dispenser can be a dangerous weapon!" );
+					FF_SendHint( this, ENGY_BUILTDISP, "#FF_HINT_ENGY_BUILTDISP" );
 #endif
 
 				}
@@ -3188,7 +3188,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}
 #ifndef CLIENT_DLL
 					
-						FF_SendHint( this, ENGY_BUILTSG, "Aim your sentry gun by bringing up the quick menu, point your crosshair where you'd like your sentry to point and select aim sentry." );
+					FF_SendHint( this, ENGY_BUILTSG, "#FF_HINT_ENGY_BUILTSG" );
 #endif
 				}
 			}
@@ -5593,7 +5593,7 @@ void CFFPlayer::ResetDisguise()
 
 		// So, guy is disguising, need to do a hud msg
 		// then change him back to normal
-		ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_FORCELOSTDISGUISE" );
+		ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_FORCEDLOSTDISGUISE" );
 	}
 
 	// Change back to normal - "reset"
@@ -5968,7 +5968,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 
 #ifndef CLIENT_DLL
 		
-			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, "Running into an enemy spy or scout class will remove your disguise." );
+			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, "#FF_HINT_SPY_LOSEDISGUISE" );
 #endif
 
 

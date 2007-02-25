@@ -82,7 +82,7 @@ bool CFFWeaponTranquiliser::Deploy()
 {
 #ifdef CLIENT_DLL
 	
-		FF_SendHint( SPY_TRANQ, "Use the tranquilizer gun to drug enemies, slowing them and reducing their ability to see. For more information on how this works, check out the Fortress Forever Wiki on our website." );
+	FF_SendHint( SPY_TRANQ, "#FF_HINT_SPY_TRANQ" );
 #endif
 	
 	return BaseClass::Deploy();

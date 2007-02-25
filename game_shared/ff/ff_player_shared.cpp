@@ -209,7 +209,7 @@ void CFFPlayer::FireBullet(
 			bHeadshot = true;
 
 #ifdef CLIENT_DLL
-			FF_SendHint( SNIPER_HEADSHOT, "Headshot! The sniper rifle is the only weapon in the game that deals more damage to the head, aim for the eyes!" );
+			FF_SendHint( SNIPER_HEADSHOT, "#FF_HINT_SNIPER_HEADSHOT" );
 #endif
 		}
 		else if (tr.hitgroup == HITGROUP_LEFTLEG || tr.hitgroup == HITGROUP_RIGHTLEG)
@@ -217,7 +217,7 @@ void CFFPlayer::FireBullet(
 			DevMsg("Legshot\n");
 			fCurrentDamage *= ffdev_sniper_legshotmod.GetFloat();
 #ifdef CLIENT_DLL
-			FF_SendHint( SNIPER_LEGSHOT, "Legshot! Shooting an enemy in the leg slows their movement based on the damage dealt. Points are rewarded for slowing enemies even if you can't finish them off." );
+			FF_SendHint( SNIPER_LEGSHOT, "#FF_HINT_SNIPER_LEGSHOT" );
 #endif
 
 #ifdef GAME_DLL
@@ -422,7 +422,7 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 #ifdef CLIENT_DLL
 	
 	if ( GetClassSlot() == 8 )
-		FF_SendHint( SPY_SPLAT, "Use the {+duck} key to crouch when landing from a high fall. You will make less noise and take less damage." );
+		FF_SendHint( SPY_SPLAT, "#FF_HINT_SPY_SPLAT" );
 #endif
 
 	CRecipientFilter filter;

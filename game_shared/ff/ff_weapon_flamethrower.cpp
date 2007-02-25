@@ -304,7 +304,7 @@ bool CFFWeaponFlamethrower::Deploy()
 
 #ifdef CLIENT_DLL
 	
-		FF_SendHint( PYRO_FLAMER, "The flamethrower excels as a short range weapon, particularily against the heavier classes." );
+	FF_SendHint( PYRO_FLAMER, "#FF_HINT_PYRO_FLAMER" );
 #endif
 	
 	return BaseClass::Deploy();

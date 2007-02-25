@@ -82,7 +82,7 @@ bool CFFWeaponIC::Deploy()
 {
 #ifdef CLIENT_DLL
 	
-		FF_SendHint( PYRO_IC, "The IC cannon excels at raining fire from afar, use it to bombard enemies from safety." );
+	FF_SendHint( PYRO_IC, "#FF_HINT_PYRO_IC" );
 #endif
 	
 	return BaseClass::Deploy();
