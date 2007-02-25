@@ -78,7 +78,7 @@ bool CFFWeaponKnife::Deploy()
 	//FF_HudHint(HINT_GENERAL, 54, "Hi there. You seem to have drawn a knife. The knife can backstab and stuff like that - it's awesome!");
 	//Msg( "hudhints sayz: %d\n", hudhints.GetInt() );
 	
-		FF_SendHint( SPY_KNIFE, "Backstabbing enemies with the knife results in an instant kill. Close range only, try to be sneaky!" );
+	FF_SendHint( SPY_KNIFE, "#FF_HINT_SPY_KNIFE" );
 #endif
 	
 	return BaseClass::Deploy();
@@ -140,7 +140,7 @@ void CFFWeaponKnife::Hit(trace_t &traceHit, Activity nHitActivity)
 
 #ifndef CLIENT_DLL
 				
-					FF_SendHint( pPlayer, SPY_GANKDISGUISE, "By landing the killing stab while disguised, you have now taken on the disguise of your dead foe. Use this to your advantage!" );
+					FF_SendHint( pPlayer, SPY_GANKDISGUISE, "#FF_HINT_SPY_GANKDISGUISE" );
 #endif
 
 					CBaseEntity *pRagdoll = pVictim->m_hRagdoll.Get();

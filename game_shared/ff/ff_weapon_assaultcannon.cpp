@@ -467,7 +467,7 @@ void CFFWeaponAssaultCannon::ItemPostFrame()
 
 #ifdef CLIENT_DLL
 	
-		FF_SendHint( HWGUY_OVERHEAT, "Limit the amount you hold fire to keep the assault cannon from overheating. It is possible to maintain a high rate of fire without overheating if done correctly." );
+			FF_SendHint( HWGUY_OVERHEAT, "#FF_HINT_HWGUY_OVERHEAT" );
 #endif
 
 #ifdef GAME_DLL

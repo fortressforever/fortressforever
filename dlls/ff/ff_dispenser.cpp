@@ -310,7 +310,7 @@ void CFFDispenser::OnObjectTouch( CBaseEntity *pOther )
 						{
 							ClientPrint( pOwner, HUD_PRINTCENTER, "#FF_DISPENSER_ENEMIESUSING" );
 							
-								FF_SendHint( pOwner, ENGY_DISPENEMY, "An enemy is using your dispenser! You can detonate a dispenser to kill enemies, the more supplies it holds the bigger the explosion." );
+							FF_SendHint( pOwner, ENGY_DISPENEMY, "#FF_HINT_ENGY_DISPENEMY" );
 						}
 						// Fire an event.
 						IGameEvent *pEvent = gameeventmanager->CreateEvent("dispenser_enemyused");						

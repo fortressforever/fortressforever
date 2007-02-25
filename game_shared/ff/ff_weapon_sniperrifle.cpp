@@ -485,7 +485,7 @@ bool CFFWeaponSniperRifle::Deploy()
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
-	FF_SendHint( SNIPER_SR, "The sniper rifle has a unique charging mechanism: Press and hold your attack button to charge your shot. The longer the charge, the more damage dealt. A fully charged shot is 7 seconds." );
+	FF_SendHint( SNIPER_SR, "#FF_HINT_SNIPER_SR" );
 #endif
 
 	return BaseClass::Deploy();

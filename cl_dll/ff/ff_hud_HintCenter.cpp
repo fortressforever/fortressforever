@@ -401,10 +401,10 @@ void CHudHintCenter::Paint( void )
 		
 		//BaseClass::DrawBox( xpos, ypos, m_flLargeBoxWide, m_flLargeBoxTall, m_BoxColor, m_flAlphaOverride );
 		
-
-		DrawBox( 0, 0, GetWide(), GetTall(), m_TextColor, m_flSelectionAlphaOverride / 255.0f, true );
+		DrawBox( 0, 0, GetWide(), GetTall(), m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f );
+		DrawHollowBox( 0, 0, GetWide(), GetTall(), m_TextColor, m_flSelectionAlphaOverride / 255.0f );
 		
-		DrawBox( 1, 1, GetWide()- 2, GetTall() - 2, m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f);
+		//DrawBox( 1, 1, GetWide()- 2, GetTall() - 2, m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f);
 
 		//C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 		//Color clr = pPlayer->GetTeamColor();

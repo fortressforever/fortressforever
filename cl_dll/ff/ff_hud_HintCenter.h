@@ -48,10 +48,7 @@ public:
 		// initialize dialog
 		SetProportional(true);
 		SetKeyBoardInputEnabled(false);
-		SetMouseInputEnabled(true);			// We have to enable this in the constructor
-											// even if it won't always be the case
-											// Otherwise panels within this one will not
-											// receive mouse input (thanks valve)
+		SetMouseInputEnabled(true);
 		SetSizeable(false);
 		SetMoveable(false);
 		// hide the system buttons
@@ -123,7 +120,7 @@ private:
 
 	CPanelAnimationVarAliasType( float, m_flTextYPos, "TextYPos", "54", "proportional_float" );
 
-	CPanelAnimationVar( float, m_flAlphaOverride, "Alpha", "255" );
+	CPanelAnimationVar( float, m_flAlphaOverride, "Alpha", "180" );
 	CPanelAnimationVar( float, m_flSelectionAlphaOverride, "SelectionAlpha", "255" );
 
 	CPanelAnimationVar( Color, m_TextColor, "TextColor", "SelectionTextFg" );
