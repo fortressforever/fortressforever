@@ -27,7 +27,8 @@
 #include "c_ff_player.h"
 #include "ff_utils.h"
 
-
+#include "IGameUIFuncs.h" // for key bindings
+extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 #include <vgui/ILocalize.h>
 
@@ -137,11 +138,16 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	//	}
 	//}
 	
-
+	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
 	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
-	m_pRichText->SetText( pszMessage );
+	//m_pRichText->SetText( pszMessage );
+	//wchar_t pszTest[4096];
+	//vgui::localize()->ConvertANSIToUnicode( pszMessage, pszTest, sizeof( pszTest ) );
+	wchar_t *pszTemp = vgui::localize()->Find( pszMessage );
+	m_pRichText->SetText( "" );
+	TranslateKeyCommand( pszTemp );
 	m_pRichText->InsertString( "\n\n" );
 	m_pRichText->InsertString( oldHintString );
 	
@@ -248,6 +254,74 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 
 
 
+//-------------------------------------------------------------------------------
+// Purpose: Translate key commands into user's current key bind, and add the 
+//			hint text to the text box. 
+//			-For example, if the hint string says {+duck} and the user has the
+//			 duck command bound to the SHIFT key, this function translates the 
+//			 hint string into SHIFT.
+//-------------------------------------------------------------------------------
+bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
+{
+	int I1 = 0, I2 = 0;
+
+	int i = 0;
+	for (;;)
+	{
+		if ( psHintMessage[i] == '{' )
+		{
+			//psHintMessage[i] == ' ';
+			I2 = i;
+			for ( int j = I1; j < I2; j++ )
+			{
+				m_pRichText->InsertChar( psHintMessage[j] );
+			}
+			I1 = I2;
+
+			char sKeyCommand[30];
+			int iKeyIndex = 0;
+			for (;;)
+			{
+				I2++;
+
+				// This shouldn't happen unless someone used the {} incorrectly
+				if ( psHintMessage[I2] == '\0' )
+				{
+					Msg( "\nError: Received a hint message that was formatted incorrectly!\n" );
+					return false;
+				}
+				if ( psHintMessage[I2] == '}' )
+				{
+					sKeyCommand[iKeyIndex] = '\0';
+					//Msg( "\nCommand: %s\n", sKeyCommand );
+					const char *sConvertedCommand = gameuifuncs->Key_NameForKey( gameuifuncs->GetEngineKeyCodeForBind( sKeyCommand ) );
+					//Msg( "\nConverted Command: %s\n", testString );
+					m_pRichText->InsertString( sConvertedCommand );
+					I1 = I2 + 1;
+					i=I2;
+					break;
+				}
+				sKeyCommand[iKeyIndex] = psHintMessage[I2];
+				iKeyIndex++;
+
+			}
+		}
+
+		// We have to output the part of the hint past the last '}'
+		if ( psHintMessage[i] == '\0' )
+		{
+			for ( int j = I1; j < i; j++ )
+			{
+				m_pRichText->InsertChar( psHintMessage[j] );
+			}
+			return true;
+		}
+
+		i++;
+	}
+
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Called each map load
 //-----------------------------------------------------------------------------
@@ -333,7 +407,7 @@ void CHudHintCenter::OnThink( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Opens weapon selection control
+// Purpose: Opens hint center
 //-----------------------------------------------------------------------------
 void CHudHintCenter::OpenSelection( void )
 {
@@ -344,7 +418,7 @@ void CHudHintCenter::OpenSelection( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Closes weapon selection control immediately
+// Purpose: Closes hint center immediately
 //-----------------------------------------------------------------------------
 void CHudHintCenter::HideSelection( void )
 {
@@ -396,16 +470,10 @@ void CHudHintCenter::Paint( void )
 	{
 		// Paint foreground/background stuff
 		//BaseClass::PaintBackground();
-
-		//DrawBox(xpos, ypos, largeBoxWide, largeBoxTall, selectedColor, m_flSelectionAlphaOverride, bFirstItem ? i + 1 : -1);
-		
-		//BaseClass::DrawBox( xpos, ypos, m_flLargeBoxWide, m_flLargeBoxTall, m_BoxColor, m_flAlphaOverride );
 		
 		DrawBox( 0, 0, GetWide(), GetTall(), m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f );
 		DrawHollowBox( 0, 0, GetWide(), GetTall(), m_TextColor, m_flSelectionAlphaOverride / 255.0f );
 		
-		//DrawBox( 1, 1, GetWide()- 2, GetTall() - 2, m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f);
-
 		//C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
 		//Color clr = pPlayer->GetTeamColor();
 		//Color clr = GetFgColor();
@@ -413,18 +481,8 @@ void CHudHintCenter::Paint( void )
 		// Draw the icon
 		m_pHudElementTexture->DrawSelf( image1_xpos, image1_ypos, m_TextColor );
 
-		//Get the class as a string
-		//wchar_t szText[ 64 ];
-
 		//Look up the resource string
 		//wchar_t *pszText = vgui::localize()->Find( Class_IntToResourceString( pPlayer->GetDisguisedClass() ) );
-
-		// No valid resource string found
-		//if( !pszText )
-		//{
-			//vgui::localize()->ConvertANSIToUnicode( "FUCK!", szText, sizeof( szText ) );
-			//pszText = szText;
-		//}
 
 		// Draw text
 		//surface()->DrawSetTextFont( m_hTextFont );

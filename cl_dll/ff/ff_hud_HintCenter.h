@@ -61,6 +61,7 @@ public:
 	void	KeyDown( void );
 	void	KeyUp( void );
 
+
 	//void	MouseMove( float *x, float *y );
 	//void	SetMenu( void );
 	//void	DoCommand( const char *pszCmd );
@@ -96,6 +97,11 @@ public:
 	void	AddHudHint( unsigned short hintID, const char *pszMessage );
 
 private:
+
+	// Maps hint text to the proper key binding
+	// --For example: {+duck} to SHIFT (if user has the +duck command bound to the SHIFT key)
+	bool TranslateKeyCommand( wchar_t *psHintMessage ); 
+
 	bool			m_bHintCenterVisible;
 	CHudTexture		*m_pHudElementTexture;
 
