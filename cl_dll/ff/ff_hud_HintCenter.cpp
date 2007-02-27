@@ -142,9 +142,6 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
 	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
-	//m_pRichText->SetText( pszMessage );
-	//wchar_t pszTest[4096];
-	//vgui::localize()->ConvertANSIToUnicode( pszMessage, pszTest, sizeof( pszTest ) );
 	wchar_t *pszTemp = vgui::localize()->Find( pszMessage );
 	m_pRichText->SetText( "" );
 	TranslateKeyCommand( pszTemp );
@@ -227,8 +224,11 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
-	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
-	m_pRichText->SetText( szString );
+	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
+	wchar_t *pszTemp = vgui::localize()->Find( szString );
+	m_pRichText->SetText( "" );
+	TranslateKeyCommand( pszTemp );
+	//m_pRichText->SetText( szString );
 	m_pRichText->InsertString( "\n\n" );
 	m_pRichText->InsertString( oldHintString );
 
