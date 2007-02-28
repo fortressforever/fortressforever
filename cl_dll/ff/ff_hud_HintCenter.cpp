@@ -263,60 +263,50 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 //-------------------------------------------------------------------------------
 bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
 {
-	int I1 = 0, I2 = 0;
-
 	int i = 0;
 	for (;;)
 	{
 		if ( psHintMessage[i] == '{' )
 		{
-			//psHintMessage[i] == ' ';
-			I2 = i;
-			for ( int j = I1; j < I2; j++ )
-			{
-				m_pRichText->InsertChar( psHintMessage[j] );
-			}
-			I1 = I2;
-
+			m_pRichText->InsertChar( ' ' );
+			
 			char sKeyCommand[30];
 			int iKeyIndex = 0;
 			for (;;)
 			{
-				I2++;
+				i++;
+
 
 				// This shouldn't happen unless someone used the {} incorrectly
-				if ( psHintMessage[I2] == '\0' )
+				if ( psHintMessage[i] == '\0' || iKeyIndex > 30 )
 				{
-					Msg( "\nError: Received a hint message that was formatted incorrectly!\n" );
+					Warning( "\nError: Received a hint message that was formatted incorrectly!\n" );
 					return false;
 				}
-				if ( psHintMessage[I2] == '}' )
+				// We've got the whole command -- now find out what key it's bound to
+				if ( psHintMessage[i] == '}' )
 				{
 					sKeyCommand[iKeyIndex] = '\0';
 					//Msg( "\nCommand: %s\n", sKeyCommand );
 					const char *sConvertedCommand = gameuifuncs->Key_NameForKey( gameuifuncs->GetEngineKeyCodeForBind( sKeyCommand ) );
-					//Msg( "\nConverted Command: %s\n", testString );
+					//Msg( "\nConverted Command: %s\n", sConvertedCommand );
 					m_pRichText->InsertString( sConvertedCommand );
-					I1 = I2 + 1;
-					i=I2;
+					m_pRichText->InsertChar( ' ' );
+					i++;
 					break;
 				}
-				sKeyCommand[iKeyIndex] = psHintMessage[I2];
+				//Msg( "\nChar: %c\n", psHintMessage[i] );
+				sKeyCommand[iKeyIndex] = psHintMessage[i];
 				iKeyIndex++;
 
 			}
 		}
 
-		// We have to output the part of the hint past the last '}'
+		// We're done!
 		if ( psHintMessage[i] == '\0' )
-		{
-			for ( int j = I1; j < i; j++ )
-			{
-				m_pRichText->InsertChar( psHintMessage[j] );
-			}
 			return true;
-		}
 
+		m_pRichText->InsertChar( psHintMessage[i] );
 		i++;
 	}
 
