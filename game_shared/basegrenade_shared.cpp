@@ -322,7 +322,9 @@ void CBaseGrenade::ExplodeTouch( CBaseEntity *pOther )
 	Vector velDir = GetAbsVelocity();
 	VectorNormalize( velDir );
 	vecSpot = GetAbsOrigin() - velDir * 32;
-	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+	// direct rocket hits were essentially inverting movement effects because the trace was going straight through players
+	//UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
 
 	Explode( &tr, DMG_BLAST );
 }
