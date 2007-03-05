@@ -226,6 +226,12 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	char oldHintString[HINT_HISTORY];
 	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
 	wchar_t *pszTemp = vgui::localize()->Find( szString );
+	wchar_t szUnlocalizedStr[512];
+	if( !pszTemp )
+	{
+		vgui::localize()->ConvertANSIToUnicode( szString, szUnlocalizedStr, 512 );
+		pszTemp = szUnlocalizedStr;
+	}
 	m_pRichText->SetText( "" );
 	TranslateKeyCommand( pszTemp );
 	//m_pRichText->SetText( szString );
