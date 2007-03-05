@@ -542,6 +542,10 @@ ConVar mp_prematch( "mp_prematch",
 				CFFPlayer *pPlayer = ToFFPlayer( UTIL_PlayerByIndex( i ) );
 				if( pPlayer && pPlayer->IsPlayer() )
 				{
+					// Skip spectators
+					if( FF_IsPlayerSpec( pPlayer ) )
+						continue;
+
 					// If bUseTeam, meaning we were sent in a valid team...
 					if( bUseTeam )
 					{
