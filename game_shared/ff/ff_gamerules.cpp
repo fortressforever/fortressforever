@@ -477,6 +477,9 @@ ConVar mp_prematch( "mp_prematch",
 					// so make sure the player knows it doesn't exist anymore!
 					pPlayer->SetLastSpawn( NULL );
 
+					if( FF_IsPlayerSpec( pPlayer ) )
+						continue;
+
 					// Do some cleanup
 					pPlayer->PreForceSpawn();
 					/*
