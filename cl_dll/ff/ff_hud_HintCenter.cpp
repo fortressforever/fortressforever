@@ -226,7 +226,7 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	char oldHintString[HINT_HISTORY];
 	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
 	wchar_t *pszTemp = vgui::localize()->Find( szString );
-	wchar_t szUnlocalizedStr[512];
+	wchar_t szUnlocalizedStr[4096];
 	if( !pszTemp )
 	{
 		vgui::localize()->ConvertANSIToUnicode( szString, szUnlocalizedStr, 512 );
