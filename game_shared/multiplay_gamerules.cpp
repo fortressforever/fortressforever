@@ -943,8 +943,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 	//=========================================================
 	bool CMultiplayRules::FAllowNPCs( void )
 	{
-		return true; // E3 hack
+		//return true; // E3 hack
 		//return ( allowNPCs.GetInt() != 0 );
+		return false; // Jiggles: No need for NPCs in FF :)
 	}
 
 	//=========================================================
