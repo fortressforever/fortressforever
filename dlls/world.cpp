@@ -662,16 +662,16 @@ void CWorld::Precache( void )
 	// =================================================
 	//	Load and Init AI Networks
 	// =================================================
-	CAI_NetworkManager::InitializeAINetworks();
+	//CAI_NetworkManager::InitializeAINetworks();
 	// =================================================
 	//	Load and Init AI Schedules
 	// =================================================
-	g_AI_SchedulesManager.LoadAllSchedules();
+	//g_AI_SchedulesManager.LoadAllSchedules();
 	// =================================================
 	//	Initialize NPC Relationships
 	// =================================================
-	g_pGameRules->InitDefaultAIRelationships();
-	CBaseCombatCharacter::InitInteractionSystem();
+	//g_pGameRules->InitDefaultAIRelationships();
+	//CBaseCombatCharacter::InitInteractionSystem();
 
 	// Call all registered precachers.
 	CPrecacheRegister::Precache();	

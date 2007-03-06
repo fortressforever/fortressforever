@@ -383,7 +383,8 @@ bool CSingleplayRules::IsMultiplayer( void )
 	//=========================================================
 	bool CSingleplayRules::FAllowNPCs( void )
 	{
-		return true;
+		//return true;
+		return false; // Jiggles: No need for NPCs in FF :)
 	}
 
 #endif
