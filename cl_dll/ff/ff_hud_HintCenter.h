@@ -133,7 +133,7 @@ private:
 	CPanelAnimationVar( Color, m_NumberColor, "NumberColor", "SelectionNumberFg" );
 	CPanelAnimationVar( Color, m_EmptyBoxColor, "EmptyBoxColor", "SelectionEmptyBoxBg" );
 	CPanelAnimationVar( Color, m_BoxColor, "BoxColor", "SelectionBoxBg" );
-	CPanelAnimationVar( Color, m_SelectedBoxColor, "SelectedBoxClor", "SelectionSelectedBoxBg" );
+	CPanelAnimationVar( Color, m_BGBoxColor, "BGBoxColor", "Dark" );
 
 	CPanelAnimationVar( float, m_flWeaponPickupGrowTime, "SelectionGrowTime", "0.1" );
 

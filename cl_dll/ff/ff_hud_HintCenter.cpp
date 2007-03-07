@@ -467,7 +467,7 @@ void CHudHintCenter::Paint( void )
 		// Paint foreground/background stuff
 		//BaseClass::PaintBackground();
 		
-		DrawBox( 0, 0, GetWide(), GetTall(), m_SelectedBoxColor, m_flSelectionAlphaOverride / 255.0f );
+		DrawBox( 0, 0, GetWide(), GetTall(), m_BGBoxColor, m_flSelectionAlphaOverride / 255.0f );
 		DrawHollowBox( 0, 0, GetWide(), GetTall(), m_TextColor, m_flSelectionAlphaOverride / 255.0f );
 		
 		//C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
