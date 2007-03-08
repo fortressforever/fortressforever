@@ -67,7 +67,8 @@ public:
 	//void	DoCommand( const char *pszCmd );
 
 	// Stuff we need to know
-	CPanelAnimationVar( vgui::HFont, m_hDisguiseFont, "DisguiseFont", "ClassGlyphs" );
+	CPanelAnimationVar( vgui::HFont, m_hIconFont, "IconFont", "HudHintCenterIcon" );
+	CPanelAnimationVar( vgui::HFont, m_hIconFontGlow, "IconFontGlow", "HudHintCenterIconGlow" );
 	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HUD_TextSmall" );
 
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "34", "proportional_float" );
@@ -102,8 +103,12 @@ private:
 	// --For example: {+duck} to SHIFT (if user has the +duck command bound to the SHIFT key)
 	bool TranslateKeyCommand( wchar_t *psHintMessage ); 
 
+	void PerformLayout(); // Resizes text box if user changes resolution
+
+
 	bool			m_bHintCenterVisible;
-	CHudTexture		*m_pHudElementTexture;
+	CHudTexture		*m_pHudIcon;
+	CHudTexture		*m_pHudIconGlow;
 
 	float		m_flStartTime;	// When the message was recevied
 	float		m_flDuration;	// Duration of the message
