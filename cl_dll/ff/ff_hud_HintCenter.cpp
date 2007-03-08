@@ -57,12 +57,16 @@ DECLARE_HUD_MESSAGE( CHudHintCenter, FF_SendHint );
 //-----------------------------------------------------------------------------
 CHudHintCenter::~CHudHintCenter( void )
 {
-	if( m_pHudElementTexture )
+	if( m_pHudIcon )
 	{
-		delete m_pHudElementTexture;
-		m_pHudElementTexture = NULL;
+		delete m_pHudIcon;
+		m_pHudIcon = NULL;
 	}
-	
+	if( m_pHudIconGlow )
+	{
+		delete m_pHudIconGlow;
+		m_pHudIconGlow = NULL;
+	}
 	g_pHintHelper = NULL;
 }
 
@@ -318,11 +322,29 @@ bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
 
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Resizes the text box if the user changes resolutions
+//-----------------------------------------------------------------------------
+void CHudHintCenter::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	if ( m_pRichText )
+	{
+		m_pRichText->SetPos( text1_xpos, text1_ypos );
+		m_pRichText->SetWide( text1_wide );
+		m_pRichText->SetTall( text1_tall );
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Called each map load
 //-----------------------------------------------------------------------------
 void CHudHintCenter::VidInit( void )
 {
+
 	// Point our helper to us
 	g_pHintHelper = this;
 	
@@ -344,10 +366,16 @@ void CHudHintCenter::VidInit( void )
 	//	m_pHudElementTexture = NULL;
 	//}
 
-	m_pHudElementTexture = new CHudTexture();
-	m_pHudElementTexture->bRenderUsingFont = true;
-	m_pHudElementTexture->hFont = m_hDisguiseFont;
-	m_pHudElementTexture->cCharacterInFont = 'G';
+	m_pHudIcon = new CHudTexture();
+	m_pHudIcon->bRenderUsingFont = true;
+	m_pHudIcon->hFont = m_hIconFont;
+	m_pHudIcon->cCharacterInFont = 'G';
+
+	m_pHudIconGlow = new CHudTexture();
+	m_pHudIconGlow->bRenderUsingFont = true;
+	m_pHudIconGlow->hFont = m_hIconFontGlow;
+	m_pHudIconGlow->cCharacterInFont = 'G';
+
 
 
 	 //Set up the rich text box that will contain the hud hint stuff
@@ -462,7 +490,7 @@ void CHudHintCenter::Paint( void )
 	//	return;
 
 	// Draw!
-	if( m_pHudElementTexture )
+	if( m_pHudIcon && m_pHudIconGlow )
 	{
 		// Paint foreground/background stuff
 		//BaseClass::PaintBackground();
@@ -474,8 +502,9 @@ void CHudHintCenter::Paint( void )
 		//Color clr = pPlayer->GetTeamColor();
 		//Color clr = GetFgColor();
 
-		// Draw the icon
-		m_pHudElementTexture->DrawSelf( image1_xpos, image1_ypos, m_TextColor );
+		// Draw the icon & "glow"
+		m_pHudIconGlow->DrawSelf( image1_xpos, image1_ypos, m_TextColor );
+		m_pHudIcon->DrawSelf( image1_xpos, image1_ypos, m_TextColor );
 
 		//Look up the resource string
 		//wchar_t *pszText = vgui::localize()->Find( Class_IntToResourceString( pPlayer->GetDisguisedClass() ) );
