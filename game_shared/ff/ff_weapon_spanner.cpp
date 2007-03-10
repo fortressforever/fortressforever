@@ -17,8 +17,10 @@
 #include "cbase.h"
 #include "ff_weapon_basemelee.h"
 
+
 #ifdef CLIENT_DLL
 	#define CFFWeaponSpanner C_FFWeaponSpanner
+	#include "ff_utils.h"
 #else
 	#include "ff_buildableobjects_shared.h"
 #endif
@@ -233,6 +235,12 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				}
 				else
 				{
+
+#ifdef CLIENT_DLL
+					if ((pSentryGun->GetLevel() < 3) && (pPlayer->GetAmmoCount(AMMO_CELLS) < 130))
+						FF_SendHint( ENGY_NOUPGRADE, "#FF_HINT_ENGY_NOUPGRADE" );
+#endif
+
 					// Calculate if it needs anything...
 					int cells = min(ceil(pSentryGun->NeedsHealth() / 3.5f), pPlayer->GetAmmoCount(AMMO_CELLS));
 					int shells = min(pSentryGun->NeedsShells(), pPlayer->GetAmmoCount(AMMO_SHELLS));

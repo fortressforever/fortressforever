@@ -23,6 +23,7 @@
 	#define CFFDetpack C_FFDetpack
 	#include "c_ff_player.h"	
 	#include "ff_hud_chat.h"
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -51,6 +52,7 @@ public:
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual bool CanBeSelected( void );
 	virtual bool CanDeploy( void );
+	virtual bool Deploy( void );
 
 	virtual FFWeaponID GetWeaponID( void ) const		{ return FF_WEAPON_DEPLOYDETPACK; }
 
@@ -243,4 +245,17 @@ bool CFFWeaponDeployDetpack::CanBeSelected( void )
 		return false;*/
 
 	return BaseClass::CanBeSelected();
+}
+
+//----------------------------------------------------------------------------
+// Purpose: Send special hint on detpack deploy
+//----------------------------------------------------------------------------
+bool CFFWeaponDeployDetpack::Deploy() 
+{
+
+#ifdef CLIENT_DLL	
+	FF_SendHint( DEMOMAN_DETPACK, "#FF_HINT_DEMOMAN_DETPACK" );
+#endif
+	
+	return BaseClass::Deploy();
 }

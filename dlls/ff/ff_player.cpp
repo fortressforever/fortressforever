@@ -4348,7 +4348,11 @@ void CFFPlayer::Command_PrimeTwo(void)
 		{
 			// ax1
 			EmitSound("Grenade.Prime");
-
+#ifndef CLIENT_DLL
+			//Msg("\nSecondary Class Name: %s\n", pPlayerClassInfo.m_szSecondaryClassName );
+			if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
+				FF_SendHint( this, SOLDIER_NAILGREN, "#FF_HINT_SOLDIER_NAILGREN" );
+#endif				
 			m_iGrenadeState = FF_GREN_PRIMETWO;
 			m_flServerPrimeTime = gpGlobals->curtime;
 #ifndef _DEBUG
