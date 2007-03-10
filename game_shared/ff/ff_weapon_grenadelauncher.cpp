@@ -19,6 +19,7 @@
 #ifdef CLIENT_DLL 
 	#define CFFWeaponGrenadeLauncher C_FFWeaponGrenadeLauncher
 	#include "c_ff_player.h"
+	#include "ff_utils.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -40,6 +41,7 @@ public:
 	virtual bool		Reload();
 	virtual bool		SendWeaponAnim(int iActivity);
 	virtual bool		Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool		Deploy();
 
 	void				Synchronise();
 
@@ -204,4 +206,18 @@ void CFFWeaponGrenadeLauncher::Synchronise()
 		if (w && w->GetWeaponID() == FF_WEAPON_PIPELAUNCHER) 
 			w->m_iClip1 = m_iClip1;
 	}
+}
+
+
+//----------------------------------------------------------------------------
+// Purpose: Send special hint on launcher deploy
+//----------------------------------------------------------------------------
+bool CFFWeaponGrenadeLauncher::Deploy() 
+{
+
+#ifdef CLIENT_DLL	
+	FF_SendHint( DEMOMAN_GL, "#FF_HINT_DEMOMAN_GL" );
+#endif
+	
+	return BaseClass::Deploy();
 }

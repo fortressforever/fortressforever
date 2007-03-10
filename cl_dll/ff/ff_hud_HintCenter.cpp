@@ -142,11 +142,16 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	//	}
 	//}
 	
-	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
 	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) ); 
 	wchar_t *pszTemp = vgui::localize()->Find( pszMessage );
+	wchar_t szUnlocalizedStr[4096];
+	if( !pszTemp )
+	{
+		vgui::localize()->ConvertANSIToUnicode( pszMessage, szUnlocalizedStr, 512 );
+		pszTemp = szUnlocalizedStr;
+	}
 	m_pRichText->SetText( "" );
 	TranslateKeyCommand( pszTemp );
 	m_pRichText->InsertString( "\n\n" );
@@ -226,39 +231,41 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	//AddHudHint(bType, wID, szString, szSound[0] == 0 ? NULL : szSound);	
 	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
 	
+	AddHudHint( wID, szString );
+
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
-	char oldHintString[HINT_HISTORY];
-	m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
-	wchar_t *pszTemp = vgui::localize()->Find( szString );
-	wchar_t szUnlocalizedStr[4096];
-	if( !pszTemp )
-	{
-		vgui::localize()->ConvertANSIToUnicode( szString, szUnlocalizedStr, 512 );
-		pszTemp = szUnlocalizedStr;
-	}
-	m_pRichText->SetText( "" );
-	TranslateKeyCommand( pszTemp );
-	//m_pRichText->SetText( szString );
-	m_pRichText->InsertString( "\n\n" );
-	m_pRichText->InsertString( oldHintString );
+	//char oldHintString[HINT_HISTORY];
+	//m_pRichText->GetText( 0, oldHintString, sizeof( oldHintString ) );
+	//wchar_t *pszTemp = vgui::localize()->Find( szString );
+	//wchar_t szUnlocalizedStr[4096];
+	//if( !pszTemp )
+	//{
+	//	vgui::localize()->ConvertANSIToUnicode( szString, szUnlocalizedStr, 512 );
+	//	pszTemp = szUnlocalizedStr;
+	//}
+	//m_pRichText->SetText( "" );
+	//TranslateKeyCommand( pszTemp );
+	////m_pRichText->SetText( szString );
+	//m_pRichText->InsertString( "\n\n" );
+	//m_pRichText->InsertString( oldHintString );
 
-	int foundIndex = m_HintVector.Find( wID );
-	if (  foundIndex < 0 )  // Hint not shown yet
-	{
-		m_HintVector.AddToTail( wID );
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	}
-	else if ( m_bHintKeyHeld )
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	else
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenterIcon" );
-	
-	m_bFadingOut = false;
-	m_bHintCenterVisible = true;
-	m_flSelectionTime = gpGlobals->curtime;
+	//int foundIndex = m_HintVector.Find( wID );
+	//if (  foundIndex < 0 )  // Hint not shown yet
+	//{
+	//	m_HintVector.AddToTail( wID );
+	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
+	//}
+	//else if ( m_bHintKeyHeld )
+	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
+	//else
+	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenterIcon" );
+	//
+	//m_bFadingOut = false;
+	//m_bHintCenterVisible = true;
+	//m_flSelectionTime = gpGlobals->curtime;
 
-	Activate();
-	SetMouseInputEnabled(false);
+	//Activate();
+	//SetMouseInputEnabled(false);
 }
 
 
@@ -273,6 +280,12 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 //-------------------------------------------------------------------------------
 bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
 {
+	if ( !psHintMessage )
+	{
+		Warning( "Error: Received a hint message that was formatted incorrectly!\n" );
+		return false;
+	}
+
 	int i = 0;
 	for (;;)
 	{
@@ -290,7 +303,7 @@ bool CHudHintCenter::TranslateKeyCommand( wchar_t *psHintMessage )
 				// This shouldn't happen unless someone used the {} incorrectly
 				if ( psHintMessage[i] == '\0' || iKeyIndex > 30 )
 				{
-					Warning( "\nError: Received a hint message that was formatted incorrectly!\n" );
+					Warning( "Error: Received a hint message that was formatted incorrectly!\n" );
 					return false;
 				}
 				// We've got the whole command -- now find out what key it's bound to
