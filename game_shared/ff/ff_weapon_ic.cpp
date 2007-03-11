@@ -82,7 +82,7 @@ bool CFFWeaponIC::Deploy()
 {
 #ifdef CLIENT_DLL
 	
-	FF_SendHint( PYRO_IC, "#FF_HINT_PYRO_IC" );
+	FF_SendHint( PYRO_IC, 3, "#FF_HINT_PYRO_IC" );
 #endif
 	
 	return BaseClass::Deploy();

@@ -336,13 +336,14 @@ void FF_SendHint(
 				CFFPlayer *pPlayer,
 #endif
 				unsigned short wID,
+				short	HintCount,
 				const char *pszMessage)
 {
 	//if( 1 )
 #ifdef CLIENT_DLL
 	{		
 		if( g_pHintHelper )
-			g_pHintHelper->AddHudHint( wID, pszMessage );
+			g_pHintHelper->AddHudHint( wID, HintCount, pszMessage );
 		else
 			Warning( "[Hud Hint] Pointer not set up yet! Hud Hint lost!\n" );
 	}
@@ -355,7 +356,8 @@ void FF_SendHint(
 		user.MakeReliable( );
 		UserMessageBegin( user, "FF_SendHint" );
 			//WRITE_BYTE(bType);
-			WRITE_WORD(wID);
+			WRITE_WORD( wID );
+			WRITE_SHORT( HintCount );
 			WRITE_STRING( pszMessage );
 			
 			//if (pszSound)

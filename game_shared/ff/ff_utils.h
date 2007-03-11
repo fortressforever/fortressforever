@@ -115,6 +115,7 @@ void FF_SendHint(
 				CFFPlayer *pPlayer,
 #endif
 				unsigned short wID,
+				short	HintCount,
 				const char *pszMessage);
 
 

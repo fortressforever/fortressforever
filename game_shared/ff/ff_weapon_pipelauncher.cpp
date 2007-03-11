@@ -225,7 +225,7 @@ bool CFFWeaponPipeLauncher::Deploy()
 {
 
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_PL, "#FF_HINT_DEMOMAN_PL" );
+	FF_SendHint( DEMOMAN_PL, 3, "#FF_HINT_DEMOMAN_PL" );
 #endif
 	
 	return BaseClass::Deploy();

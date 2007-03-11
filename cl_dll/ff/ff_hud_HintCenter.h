@@ -95,7 +95,7 @@ public:
 	void	MsgFunc_FF_SendHint( bf_read &msg );
 
 	// Manually add a hud hint
-	void	AddHudHint( unsigned short hintID, const char *pszMessage );
+	void	AddHudHint( unsigned short hintID, short iNumShow, const char *pszMessage );
 
 private:
 
@@ -115,7 +115,7 @@ private:
 
 	RichText	*m_pRichText;	// Stores the hint text for display
 
-	CUtlVector<unsigned short> m_HintVector;  // Stores whether a hint has been shown yet
+	CUtlVector<struct HintInfo> m_HintVector;  // Stores whether a hint has been shown yet
 
 	//CPanelAnimationVar( vgui::HFont, m_hNumberFont, "NumberFont", "HudSelectionNumbers" );
 	//CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudSelectionText" );
@@ -155,12 +155,25 @@ private:
 extern CHudHintCenter *g_pHintCenter;
 
 
-//// Keeps track of whether we've shown the hint or not
-//typedef struct HUD_HintInfo
-//{
-//	unsigned short		HintIndex;			// Each hint has a unique enumerated index (see ff_utils.cpp)
-//	bool				bBeenShown = 0;
-//};
+
+// Struct to hold the hint's unique ID and Count (# of times to show hint)
+struct HintInfo
+{
+	unsigned short	m_HintID;		// Each hint has a unique enumerated index (see ff_utils.h)
+	short			m_ShowCount;	// Number of times the hint will be displayed
+
+	HintInfo( unsigned short HintID, short ShowCount )
+	{
+		m_HintID = HintID;
+		m_ShowCount = ShowCount;
+	}
+
+	// Needed for CUtlVector's Find function to work
+	bool operator==( const HintInfo ID ) const
+	{
+		return ( ID.m_HintID == m_HintID );
+	}
+};
 
 
 

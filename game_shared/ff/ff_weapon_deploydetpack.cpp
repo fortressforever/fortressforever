@@ -254,7 +254,7 @@ bool CFFWeaponDeployDetpack::Deploy()
 {
 
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_DETPACK, "#FF_HINT_DEMOMAN_DETPACK" );
+	FF_SendHint( DEMOMAN_DETPACK, 5, "#FF_HINT_DEMOMAN_DETPACK" );
 #endif
 	
 	return BaseClass::Deploy();

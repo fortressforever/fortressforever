@@ -80,7 +80,7 @@ void CHudHintCenter::Init( void )
 
 
 
-void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
+void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, const char *pszMessage )
 {
 	// First off, we're now ignoring hints which are triggered while a hint is
 	// playing. We don't queue them up because they'll probably have lost relevancy
@@ -141,6 +141,20 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	//		break;
 	//	}
 	//}
+
+	HintInfo structHintInfo( hintID, NumShow );
+	int foundIndex = m_HintVector.Find( structHintInfo );
+	if (  foundIndex < 0 )  // Hint not shown yet
+	{
+		if ( structHintInfo.m_ShowCount != -1 ) // -1 is reserved for "infinite" hints
+			structHintInfo.m_ShowCount--;
+		m_HintVector.AddToTail( structHintInfo );
+	}
+	else if ( m_HintVector[ foundIndex ].m_ShowCount > 0 )
+		m_HintVector[ foundIndex ].m_ShowCount--;
+	else if (  m_HintVector[ foundIndex ].m_ShowCount != -1 )  // Hint has been shown enough times -- ignore it
+		return;
+
 	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
@@ -158,15 +172,9 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, const char *pszMessage )
 	m_pRichText->InsertString( oldHintString );
 	
 
-	int foundIndex = m_HintVector.Find( hintID );
-	if (  foundIndex < 0 )  // Hint not shown yet
-	{
-		m_HintVector.AddToTail( hintID );
+	if (  foundIndex < 0 || m_bHintKeyHeld )  // Hint hasn't been shown yet or user is holding down the hint key
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	}
-	else if ( m_bHintKeyHeld )
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenter" );
-	else
+	else  // Just show the hint icon
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenHintCenterIcon" );
 	
 	m_bFadingOut = false;
@@ -216,6 +224,9 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	// Hint id
 	unsigned short wID = msg.ReadWord();
 
+	// # of times to show the hint
+	short NumToShow = msg.ReadShort();
+
 	// Grab the string up to newline
 	if( !msg.ReadString( szString, sizeof( szString ), true ) )
 	{
@@ -231,7 +242,7 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	//AddHudHint(bType, wID, szString, szSound[0] == 0 ? NULL : szSound);	
 	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
 	
-	AddHudHint( wID, szString );
+	AddHudHint( wID, NumToShow, szString );
 
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	//char oldHintString[HINT_HISTORY];
