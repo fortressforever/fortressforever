@@ -1659,7 +1659,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
 	{
 		
-		FF_SendHint( this, GLOBAL_EMPDEATH, "#FF_HINT_GLOBAL_EMPDEATH" );
+		FF_SendHint( this, GLOBAL_EMPDEATH, -1, "#FF_HINT_GLOBAL_EMPDEATH" );
 	}
 #endif
 
@@ -3004,7 +3004,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILDDISP, "#FF_HINT_ENGY_BUILDDISP" );
+					FF_SendHint( this, ENGY_BUILDDISP, -1, "#FF_HINT_ENGY_BUILDDISP" );
 #endif
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
@@ -3034,7 +3034,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILDSG, "#FF_HINT_ENGY_BUILDSG" );
+					FF_SendHint( this, ENGY_BUILDSG, -1, "#FF_HINT_ENGY_BUILDSG" );
 #endif
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
@@ -3166,7 +3166,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}	
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILTDISP, "#FF_HINT_ENGY_BUILTDISP" );
+					FF_SendHint( this, ENGY_BUILTDISP, -1, "#FF_HINT_ENGY_BUILTDISP" );
 #endif
 
 				}
@@ -3188,7 +3188,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILTSG, "#FF_HINT_ENGY_BUILTSG" );
+					FF_SendHint( this, ENGY_BUILTSG, -1, "#FF_HINT_ENGY_BUILTSG" );
 #endif
 				}
 			}
@@ -4176,6 +4176,10 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		WRITE_FLOAT(999.0f);
 		MessageEnd();
 	}
+#ifndef CLIENT_DLL
+	else if ( !IsInfected() ) // they aren't infected, but they are immune
+		FF_SendHint( pInfector, MEDIC_NOINFECT, -1, "#FF_HINT_MEDIC_NOINFECT" );
+#endif	
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
 {
@@ -4351,7 +4355,9 @@ void CFFPlayer::Command_PrimeTwo(void)
 #ifndef CLIENT_DLL
 			//Msg("\nSecondary Class Name: %s\n", pPlayerClassInfo.m_szSecondaryClassName );
 			if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
-				FF_SendHint( this, SOLDIER_NAILGREN, "#FF_HINT_SOLDIER_NAILGREN" );
+				FF_SendHint( this, SOLDIER_NAILGREN, 4, "#FF_HINT_SOLDIER_NAILGREN" );
+			else if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_concussion" ) == 0 )
+				FF_SendHint( this, SCOUT_CONC1, 1, "#FF_HINT_SCOUT_CONC1" );
 #endif				
 			m_iGrenadeState = FF_GREN_PRIMETWO;
 			m_flServerPrimeTime = gpGlobals->curtime;
@@ -5972,7 +5978,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 
 #ifndef CLIENT_DLL
 		
-			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, "#FF_HINT_SPY_LOSEDISGUISE" );
+			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, "#FF_HINT_SPY_LOSEDISGUISE" );
 #endif
 
 
