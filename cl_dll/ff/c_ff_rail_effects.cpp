@@ -29,13 +29,13 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( ff_rail_effects, CFFRailEffects );
 PRECACHE_REGISTER( ff_rail_effects );
 
-ConVar ffdev_rail_beamlength( "ffdev_rail_beamlength", "256", FCVAR_REPLICATED, "Length of rail beam." );
+ConVar ffdev_rail_beamlength( "ffdev_rail_beamlength", "512", FCVAR_REPLICATED, "Length of rail beam." );
 //ConVar ffdev_rail_dietime( "ffdev_rail_dietime", "1.0", FCVAR_REPLICATED, "Length of rail beam." );
 #define RAIL_EFFECTS_DIETIME 1.0f
 
-ConVar ffdev_rail_color_default( "ffdev_rail_color_default", "0 1 0", 0, "Color of default rail (R G B - fraction from 0 to 1)" );
-ConVar ffdev_rail_color_bounce1( "ffdev_rail_color_bounce1", "1 0 0", 0, "Color of rail after bouncing once (R G B - fraction from 0 to 1)" );
-ConVar ffdev_rail_color_bounce2( "ffdev_rail_color_bounce2", "0 0 1", 0, "Color of rail after bouncing twice (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_default( "ffdev_rail_color_default", "0.2 0.4 0.6", 0, "Color of default rail (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_bounce1( "ffdev_rail_color_bounce1", "0.2 0.4 0.8", 0, "Color of rail after bouncing once (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_bounce2( "ffdev_rail_color_bounce2", "0.2 0.4 1.0", 0, "Color of rail after bouncing twice (R G B - fraction from 0 to 1)" );
 
 CFFRailEffects::CFFRailEffects()
 {
