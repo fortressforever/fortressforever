@@ -291,7 +291,7 @@ void CHudCrosshairInfo::OnTick( void )
 				else
 				{
 					// We're looking at a non teammate/ally
-					// Only thing we care about is if we area medic or we're looking
+					// Only thing we care about is if we are a medic or we're looking
 					// at a spy because otherwise we've done everything above
 	
 					if( !bBuildable )
@@ -308,7 +308,7 @@ void CHudCrosshairInfo::OnTick( void )
 						if( bTheySpy )
 						{
 							// We're looking at an enemy/non-allied spy
-							
+
 							if( pHitPlayer->IsDisguised() )
 							{
 								// The spy is disguised so we do some special stuff
@@ -408,6 +408,9 @@ void CHudCrosshairInfo::OnTick( void )
 									pPlayer->m_hSpyTracking[ pHitPlayer->index ].Set( szName, m_iTeam, m_iClass );
 								}
 							}
+							// Jiggles: Don't draw anything if we're looking at a cloaked enemy spy
+							if( pHitPlayer->IsCloaked() )
+								return;  
 						}
 					}					
 				}
