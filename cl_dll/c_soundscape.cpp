@@ -294,7 +294,8 @@ bool C_SoundscapeSystem::Init()
 	m_loopingSoundId = 0;
 
 	const char *mapname = MapName();
-	 // Jon - 2/14/2007: new method
+
+	// Jon - 2/14/2007: new method
 	//const char *mapSoundscapeFilename = NULL;
 	char mapSoundscapeFilename[256] = {0};
 	char mapSoundscapeFilenameFF[256] = {0}; // for the FF method of using maps/mapname_soundscapes.txt
@@ -306,14 +307,14 @@ bool C_SoundscapeSystem::Init()
 		// Let's load map soundscape files without worrying about the manifest.
 		if (filesystem->FileExists( VarArgs( "scripts/soundscapes_%s.txt", mapname ) ))
 		{
-			sprintf(mapSoundscapeFilename, "scripts/soundscapes_%s.txt", mapname);
+			Q_snprintf(mapSoundscapeFilename, sizeof(mapSoundscapeFilename), "scripts/soundscapes_%s.txt", mapname);
 			AddSoundScapeFile( mapSoundscapeFilename );
 		}
 
 		// I'd rather FF mappers use maps/mapname_soundscapes.txt to keep most map files together in the maps directory, like with the lua files.
 		if (filesystem->FileExists( VarArgs( "maps/%s_soundscapes.txt", mapname ) ))
 		{
-			sprintf(mapSoundscapeFilenameFF, "maps/%s_soundscapes.txt", mapname);
+			Q_snprintf(mapSoundscapeFilenameFF, sizeof(mapSoundscapeFilenameFF), "maps/%s_soundscapes.txt", mapname);
 
 			// even though they could have completely different entries, warn them anyway so they can merge them together
 			if ( mapSoundscapeFilename[0] )
@@ -321,15 +322,10 @@ bool C_SoundscapeSystem::Init()
 			else
 				AddSoundScapeFile( mapSoundscapeFilenameFF );
 		}
-		// NULL them out just in case
+
+		// NULL their ends just in case
 		mapSoundscapeFilename[255] = 0;
 		mapSoundscapeFilenameFF[255] = 0;
-	}
-
-	// Jon - 2/14/2007: also load map scripts/soundcapes_mapname.txt without worrying about the manifest
-	if ( mapSoundscapeFilename )
-	{
-
 	}
 
 	KeyValues *manifest = new KeyValues( SOUNDSCAPE_MANIFEST_FILE );
