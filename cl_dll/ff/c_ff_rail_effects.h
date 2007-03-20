@@ -78,8 +78,9 @@ public:
 
 	CUtlVector<RailKeyframe> m_Keyframes;
 
+	float m_flMaxBeamLength;
+
 	bool m_bTimeToDie;
-	float m_flDieTimer;
 };
 
 #endif // FF_RAIL_EFFECTS_H
