@@ -17,7 +17,7 @@
 #include "beamdraw.h"
 #include "model_types.h"
 
-#define RAIL_MODEL "models/projectiles/rail/w_rail.mdl"
+//#define RAIL_MODEL "models/projectiles/rail/w_rail.mdl"
 #define RAIL_BEAM "effects/rail_beam.vmt"
 #define RAIL_GLOW "effects/rail_glow.vmt"
 
@@ -30,19 +30,18 @@ LINK_ENTITY_TO_CLASS( ff_rail_effects, CFFRailEffects );
 PRECACHE_REGISTER( ff_rail_effects );
 
 ConVar ffdev_rail_beamlength( "ffdev_rail_beamlength", "512", FCVAR_REPLICATED, "Length of rail beam." );
-//ConVar ffdev_rail_dietime( "ffdev_rail_dietime", "1.0", FCVAR_REPLICATED, "Length of rail beam." );
-#define RAIL_EFFECTS_DIETIME 1.0f
 
-ConVar ffdev_rail_color_default( "ffdev_rail_color_default", "0.2 0.4 0.6", 0, "Color of default rail (R G B - fraction from 0 to 1)" );
-ConVar ffdev_rail_color_bounce1( "ffdev_rail_color_bounce1", "0.2 0.4 0.8", 0, "Color of rail after bouncing once (R G B - fraction from 0 to 1)" );
-ConVar ffdev_rail_color_bounce2( "ffdev_rail_color_bounce2", "0.2 0.4 1.0", 0, "Color of rail after bouncing twice (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_default( "ffdev_rail_color_default", "0.250 0.500 0.750", 0, "Color of default rail (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_bounce1( "ffdev_rail_color_bounce1", "0.125 0.750 0.625", 0, "Color of rail after bouncing once (R G B - fraction from 0 to 1)" );
+ConVar ffdev_rail_color_bounce2( "ffdev_rail_color_bounce2", "0.000 1.000 0.500", 0, "Color of rail after bouncing twice (R G B - fraction from 0 to 1)" );
 
 CFFRailEffects::CFFRailEffects()
 {
 	m_Keyframes.Purge();
 
+	m_flMaxBeamLength = 0.0f;
+
 	m_bTimeToDie = false;
-	m_flDieTimer = 0.0f;
 }
 
 void CFFRailEffects::Release()
@@ -53,7 +52,8 @@ void CFFRailEffects::Release()
 
 void CFFRailEffects::Precache( void )
 {
-	PrecacheModel( RAIL_MODEL );
+	//PrecacheModel( RAIL_MODEL );
+
 	PrecacheMaterial( RAIL_BEAM );
 	PrecacheMaterial( RAIL_GLOW );
 
@@ -62,9 +62,10 @@ void CFFRailEffects::Precache( void )
 
 void CFFRailEffects::Spawn( void )
 {
+	m_flMaxBeamLength = ffdev_rail_beamlength.GetFloat();
+
 	SetMoveType(MOVETYPE_NONE);
 	SetSolid(SOLID_NONE);
-	AddSolidFlags(FSOLID_NOT_SOLID);
 
 	ClientEntityList().AddNonNetworkableEntity( this );
 	AddToLeafSystem(GetRenderGroup());
@@ -87,25 +88,8 @@ void CFFRailEffects::GetRenderBounds( Vector& mins, Vector& maxs )
 
 int CFFRailEffects::DrawModel( int flags )
 {
-	float flDieTime = RAIL_EFFECTS_DIETIME; // ffdev_rail_dietime.GetFloat();
-
-	// it's clamped at flDieTime down below when it's updated
-	if (m_flDieTimer >= flDieTime)
-	{
-		Remove();
-		return 0;
-	}
-
-	float flMaxBeamLength = ffdev_rail_beamlength.GetFloat();
-
-	if (m_bTimeToDie)
-	{
-		flMaxBeamLength *= clamp(((flDieTime / 10) - m_flDieTimer) / (flDieTime / 10), 0, 1);
-		m_flDieTimer = clamp(m_flDieTimer + gpGlobals->frametime, 0.0f, flDieTime);
-	}
-
-	float flRemainingBeamLength = flMaxBeamLength;
-	for (int i = 1; i < m_Keyframes.Count() && m_flDieTimer < flDieTime; i++)
+	float flRemainingBeamLength = m_flMaxBeamLength;
+	for (int i = 1; i < m_Keyframes.Count(); i++)
 	{
 		//Warning("m_Keyframes[%d] = (%f, %f, %f)\n", i, m_Keyframes[i].x, m_Keyframes[i].y, m_Keyframes[i].z);
 
@@ -167,13 +151,19 @@ int CFFRailEffects::DrawModel( int flags )
 		IMaterial *pMat = materials->FindMaterial(RAIL_GLOW, TEXTURE_GROUP_CLIENT_EFFECTS);
 		materials->Bind(pMat);
 
-		// fade the glow
-		if (m_bTimeToDie)
-			for (int j = 0; j < 3; j++)
-				if (flColor[j] > 0)
-					flColor[j] *= (flDieTime - m_flDieTimer) / flDieTime;
-
+		// FF TODO: draw the glows on their own (er...let them die independently)
 		DrawHalo(pMat, vecBeamStart, 2.0f * flRandom, flColor );
+	}
+
+	if (m_bTimeToDie)
+	{
+		m_flMaxBeamLength = (m_flMaxBeamLength - flRemainingBeamLength) - (abs(GetAbsVelocity().Length()) * gpGlobals->frametime);
+
+		if (m_flMaxBeamLength <= 0)
+		{
+			Remove();
+			return 0;
+		}
 	}
 
 	return BaseClass::DrawModel(flags);

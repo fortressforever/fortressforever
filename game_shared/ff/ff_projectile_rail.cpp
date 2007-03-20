@@ -24,19 +24,19 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+#define RAIL_MODEL "models/crossbow_bolt.mdl"
+
 IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 
 BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
 #ifdef CLIENT_DLL
-	RecvPropInt( RECVINFO( m_bEnd ) ),
 	RecvPropVector( RECVINFO( m_vecEnd )),
 	RecvPropInt( RECVINFO( m_bBounce1 ) ),
 	RecvPropVector( RECVINFO( m_vecBounce1 )),
 	RecvPropInt( RECVINFO( m_bBounce2 ) ),
 	RecvPropVector( RECVINFO( m_vecBounce2 )),
 #else
-	// m_bEnd doesn't change often, but it needs to be a high priority
-	SendPropInt( SENDINFO(m_bEnd), 1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	// m_vecEnd doesn't change often, but it needs to be a high priority
 	SendPropVector( SENDINFO( m_vecEnd ), 32, SPROP_COORD | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO(m_bBounce1), 1, SPROP_UNSIGNED ),
 	SendPropVector( SENDINFO( m_vecBounce1 ), SPROP_COORD ),
@@ -87,7 +87,6 @@ CFFProjectileRail::CFFProjectileRail()
 	m_iMaxBounces = 0;
 
 	// networked variables...
-	m_bEnd = false;
 	m_vecEnd = Vector(0,0,0);
 	m_bBounce1 = false;
 	m_vecBounce1 = Vector(0,0,0);
@@ -100,6 +99,8 @@ CFFProjectileRail::CFFProjectileRail()
 //----------------------------------------------------------------------------
 void CFFProjectileRail::Precache( void ) 
 {
+	PrecacheModel(RAIL_MODEL);
+
 	PrecacheScriptSound( "Rail.HitBody" );
 	PrecacheScriptSound( "Rail.HitWorld" );
 
@@ -109,19 +110,19 @@ void CFFProjectileRail::Precache( void )
 void CFFProjectileRail::UpdateOnRemove()
 {
 #ifdef CLIENT_DLL
-	// send some final info to the rail effects
+
 	if (m_pRailEffects)
 	{
+		// Are you a God?
+		// No.
+		// Then...DIE!)
 		m_pRailEffects->m_bTimeToDie = true;
 
-		// always keep the head (0) updated with our current position
+		// the end gives good head (TEEEEEEEE HEEEEEEEE!!!!)
 		if (m_pRailEffects->m_Keyframes.Count() > 0)
-		{
-			// FF TODO: make the effect update its own origin based on the keyframes and the projectile velocity
-			m_pRailEffects->SetAbsOrigin(m_vecEnd);
 			m_pRailEffects->m_Keyframes[0].pos = m_vecEnd;
-		}
 	}
+
 #endif
 
 	BaseClass::UpdateOnRemove();
@@ -175,14 +176,14 @@ CFFProjectileRail *CFFProjectileRail::CreateRail( const CBaseEntity *pSource, co
 void CFFProjectileRail::Spawn( void ) 
 {
 	// Setup
-//		SetModel(RAIL_MODEL);
+	SetModel(RAIL_MODEL);
 	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
 	SetSize(-Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5));
 	SetSolid(SOLID_BBOX);
 	SetGravity(0.01f);
 
 	// Oh really we're invisible
-	AddEffects(EF_NODRAW);
+	//AddEffects(EF_NODRAW);
 	
 	// Set the correct think & touch for the rail
 	SetTouch(&CFFProjectileRail::RailTouch);		// |-- Mirv: Account for GCC strictness
@@ -415,13 +416,15 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 //----------------------------------------------------------------------------
 void CFFProjectileRail::SetupEnd( Vector end ) 
 {
-	m_bEnd = true;
 	m_vecEnd = end;
+
 	SetMoveType(MOVETYPE_NONE);
 	SetSolid(SOLID_NONE);
+
 	SetTouch(NULL);
 	SetThink(&CFFProjectileRail::DieThink);
-	// give just enough time for the client to receive the end data
+
+	// give just enough time for the client to interpolate to the end?
 	SetNextThink(gpGlobals->curtime + 0.1f);
 }
 
@@ -509,6 +512,7 @@ void CFFProjectileRail::OnDataChanged(DataUpdateType_t type)
 
 void CFFProjectileRail::ClientThink( void )
 {
+
 	// make the rail effects if there are none yet
 	if (m_bShouldInit)
 	{
@@ -518,21 +522,27 @@ void CFFProjectileRail::ClientThink( void )
 		if (!m_pRailEffects)
 			return;
 
-		// no need to init anymore
-		m_bShouldInit = false;
+		m_pRailEffects->Spawn();
+		m_pRailEffects->SetAbsVelocity(GetAbsVelocity());
 
 		// set these up as where we are when we create the effects
 		m_vecStart = m_vecEnd = m_vecBounce1 = m_vecBounce2 = GetAbsOrigin();
 
-		m_pRailEffects->Spawn();
-		m_pRailEffects->SetAbsOrigin(m_vecStart);
+		// should only doing this while using the crossbow bolt model...
+		FindOverrideMaterial("effects/cloak", TEXTURE_GROUP_CLIENT_EFFECTS);
+
+		// no need to init anymore
+		m_bShouldInit = false;
 	}
 
-	if (!m_pRailEffects)
+	if (!m_pRailEffects && !m_pRailEffects->m_bTimeToDie)
 		return;
 
-	// count up how many positions need to be worried with
-	// starts at 2 because of start and end/current
+	// FF TODO? make the effect update its own origin based on the keyframes and the projectile velocity?
+	m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
+	m_pRailEffects->SetAbsAngles(GetAbsAngles());
+
+	// count up how many positions need to be worried with (starts at 2 because of start and current/end)
 	int iCount = 2;
 
 	// count up for each bounce
@@ -546,35 +556,23 @@ void CFFProjectileRail::ClientThink( void )
 	{
 		m_pRailEffects->m_Keyframes.Purge();
 
-		// put the end/current at the head (0) position of the array
+		// put the current/end at the head (0) position of the array
 		m_pRailEffects->m_Keyframes.AddToHead(RailKeyframe(GetAbsOrigin(), RAIL_KEYFRAME_TYPE_END));
 
-		// always insert start after head
+		// always insert start after head (end of list/array)
 		m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecStart, RAIL_KEYFRAME_TYPE_START));
 
-		// insert bounce 1 after head
+		// insert bounce 1 after head (and before start)
 		if (m_bBounce1)
 			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce1, RAIL_KEYFRAME_TYPE_BOUNCE1));
 
-		// insert bounce 2 after head
+		// insert bounce 2 after head (and before bounce 1)
 		if (m_bBounce2)
 			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce2, RAIL_KEYFRAME_TYPE_BOUNCE2));
 	}
-
-	// always keep the head (0) updated with our current position
-	if (m_pRailEffects->m_Keyframes.Count() > 0)
-	{
-		// FF TODO: make the effect update its own origin based on the keyframes and the projectile velocity
-		m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
-		m_pRailEffects->m_Keyframes[0].pos = GetAbsOrigin();
-	}
-
-	if (m_bEnd)
-	{
-		m_pRailEffects->m_bTimeToDie = true;
-		SetMoveType(MOVETYPE_NONE);
-		SetSolid(SOLID_NONE);
-	}
+	// always update the head (0) with our current position
+	else
+		m_pRailEffects->m_Keyframes[0].pos = m_vecEnd = GetAbsOrigin();
 }
 
 //  ^  CLIENT_DLL  ^

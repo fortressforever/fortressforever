@@ -53,7 +53,6 @@ public:
 	Vector m_vecStart;
 
 	// networked variables...
-	bool m_bEnd;
 	Vector m_vecEnd;
 	bool m_bBounce1;
 	Vector m_vecBounce1;
@@ -74,7 +73,6 @@ public:
 	float m_flSameOriginCheckTimer;
 
 	// networked variables...
-	CNetworkVar( bool, m_bEnd );
 	CNetworkVector( m_vecEnd );
 	CNetworkVar( bool, m_bBounce1 );
 	CNetworkVector( m_vecBounce1 );
