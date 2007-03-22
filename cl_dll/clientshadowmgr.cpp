@@ -665,7 +665,7 @@ void CTextureAllocator::GetTextureRect(TextureHandle_t handle, int& x, int& y, i
 // FF TODO: make/use a better shadow system and then enable shadows by default
 static ConVar r_shadows( "r_shadows", "0", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "1" ); // hook into engine's cvars..
 static ConVar r_shadowmaxrendered("r_shadowmaxrendered", "32");
-static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "-1", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "-1" ); // hook into engine's cvars..
+static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "0", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "-1" ); // hook into engine's cvars..
 
 //-----------------------------------------------------------------------------
 // The class responsible for dealing with shadows on the client side
@@ -1295,7 +1295,8 @@ void CClientShadowMgr::LevelShutdownPostEntity()
 		m_ShadowAllocator.DeallocateAllTextures();
 	}
 
-	r_shadows_gamecontrol.SetValue( -1 );
+	// FF TODO: make/use a better shadow system and then enable shadows by default
+	r_shadows_gamecontrol.SetValue( 0 );
 }
 
 
@@ -3500,6 +3501,9 @@ void CClientShadowMgr::AdvanceFrame()
 //-----------------------------------------------------------------------------
 void CClientShadowMgr::ComputeShadowTextures( const CViewSetup *pView, int leafCount, LeafIndex_t* pLeafList )
 {
+	// FF TODO: make/use a better shadow system and then enable shadows by default
+	return;
+
 	VPROF_BUDGET( "CClientShadowMgr::ComputeShadowTextures", VPROF_BUDGETGROUP_SHADOW_RENDERING );
 	
 	if ( !m_RenderToTextureActive || (r_shadows.GetInt() == 0) || r_shadows_gamecontrol.GetInt() == 0 )
