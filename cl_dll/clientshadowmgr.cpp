@@ -662,10 +662,9 @@ void CTextureAllocator::GetTextureRect(TextureHandle_t handle, int& x, int& y, i
 #define MAX_CLIP_PLANE_COUNT 4
 #define SHADOW_CULL_TOLERANCE 0.5f
 
-// FF TODO: make/use a better shadow system and then enable shadows by default
-static ConVar r_shadows( "r_shadows", "0", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "1" ); // hook into engine's cvars..
+static ConVar r_shadows( "r_shadows", "1" ); // hook into engine's cvars..
 static ConVar r_shadowmaxrendered("r_shadowmaxrendered", "32");
-static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "0", FCVAR_CHEAT, "Shadows are disabled and considered a cheat until we make/use a better shadow system."); // "-1" ); // hook into engine's cvars..
+static ConVar r_shadows_gamecontrol( "r_shadows_gamecontrol", "-1" ); // hook into engine's cvars..
 
 //-----------------------------------------------------------------------------
 // The class responsible for dealing with shadows on the client side
@@ -1295,8 +1294,7 @@ void CClientShadowMgr::LevelShutdownPostEntity()
 		m_ShadowAllocator.DeallocateAllTextures();
 	}
 
-	// FF TODO: make/use a better shadow system and then enable shadows by default
-	r_shadows_gamecontrol.SetValue( 0 );
+	r_shadows_gamecontrol.SetValue( -1 );
 }
 
 
@@ -1968,6 +1966,9 @@ inline ShadowType_t CClientShadowMgr::GetActualShadowCastType( IClientRenderable
 void CClientShadowMgr::BuildOrthoShadow( IClientRenderable* pRenderable, 
 		ClientShadowHandle_t handle, const Vector& mins, const Vector& maxs)
 {
+	// FF TODO: make/use a better shadow system and then enable shadows by default
+	return;
+
 	// Get the object's basis
 	Vector vec[3];
 	AngleVectors( pRenderable->GetRenderAngles(), &vec[0], &vec[1], &vec[2] );
@@ -2138,6 +2139,9 @@ void CClientShadowMgr::DrawRenderToTextureDebugInfo( IClientRenderable* pRendera
 void CClientShadowMgr::BuildRenderToTextureShadow( IClientRenderable* pRenderable, 
 		ClientShadowHandle_t handle, const Vector& mins, const Vector& maxs)
 {
+	// FF TODO: make/use a better shadow system and then enable shadows by default
+	return;
+
 //	DrawRenderToTextureDebugInfo( pRenderable, mins, maxs );
 
 	// Get the object's basis
@@ -3501,9 +3505,6 @@ void CClientShadowMgr::AdvanceFrame()
 //-----------------------------------------------------------------------------
 void CClientShadowMgr::ComputeShadowTextures( const CViewSetup *pView, int leafCount, LeafIndex_t* pLeafList )
 {
-	// FF TODO: make/use a better shadow system and then enable shadows by default
-	return;
-
 	VPROF_BUDGET( "CClientShadowMgr::ComputeShadowTextures", VPROF_BUDGETGROUP_SHADOW_RENDERING );
 	
 	if ( !m_RenderToTextureActive || (r_shadows.GetInt() == 0) || r_shadows_gamecontrol.GetInt() == 0 )
