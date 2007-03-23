@@ -1253,7 +1253,8 @@ void C_FFPlayer::DrawPlayerIcons()
 	C_FFPlayer *pPlayer = GetLocalFFPlayer();
 
 	// Don't show if observing either
-	if (pPlayer->IsObserver())
+	// Mulch: Or dead
+	if (pPlayer->IsObserver() || !pPlayer->IsAlive())
 		return;
 
 	float flOffset = 0.0f;
@@ -1330,8 +1331,9 @@ void C_FFPlayer::DrawPlayerIcons()
 	// --------------------------------
 	// Check for friendly spies
 	// Mirv: Going to show disguised icon for cloaked people too.
+	// Mulch: Why?
 	// --------------------------------
-	if( (IsDisguised() || IsCloaked()) && IsAlive() )
+	if( IsDisguised() && IsAlive() )
 	{
 		// See if the spy is a teammate or ally
 		if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE )
