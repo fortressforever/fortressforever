@@ -171,6 +171,14 @@ public:
 
 	void SetBotGoalInfo(int _type, int _team);
 
+	void AddClipMask( int iClipMask )			{ m_iClipMask |= iClipMask; }
+	void RemoveClipMask( int iClipMask )		{ m_iClipMask &= (~iClipMask); }
+	void ToggleClipMask( int iClipMask )		{ m_iClipMask ^= iClipMask; }
+	bool IsClipMaskSet( int iClipMask )	const	{ return ((m_iClipMask & iClipMask) != 0); }
+
+	int GetClipMask( void ) const				{ return m_iClipMask; }
+	void SetClipMask( int iClipMask )			{ m_iClipMask = iClipMask; }
+
 	virtual void	LuaRestore( void )			{ SetRestored(); SetInactive(); Enable(); }
 	virtual void	LuaRemove( void )			{ SetRemoved(); Disable(); }
 
@@ -183,6 +191,7 @@ public:
 
 protected:
 	int	m_iGoalState;
+	int m_iClipMask;
 };
 
 #endif // TRIGGERS_H
