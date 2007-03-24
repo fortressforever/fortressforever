@@ -43,17 +43,17 @@ DECLARE_HUDELEMENT( CHudContextMenu_MedEngy );
 //-----------------------------------------------------------------------------
 // Purpose: Menu elements
 //-----------------------------------------------------------------------------
-ADD_MENU_OPTION( MedEngyMenu_Armor, L"Armor!", "engyme; say_team I need armor!" )
+ADD_MENU_OPTION( MedEngyMenu_Armor, L"Armor!", "#FF_MEDENGYMENU_ARMOR" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( MedEngyMenu_Medic, L"Medic!", "saveme; say_team I need a medic!" )
+ADD_MENU_OPTION( MedEngyMenu_Medic, L"Medic!", "#FF_MEDENGYMENU_MEDIC" )
 {
 	return MENU_SHOW;
 }
 
-ADD_MENU_OPTION( MedEngyMenu_Ammo, L"Ammo!", "engyme; say_team I need ammo!" )
+ADD_MENU_OPTION( MedEngyMenu_Ammo, L"Ammo!", "#FF_MEDENGYMENU_AMMO" )
 {
 	return MENU_SHOW;
 }
@@ -295,8 +295,23 @@ void CHudContextMenu_MedEngy::DoCommand( const char *pszCmd )
 {
 	//if( !m_pszPreviousCmd )
 	//{
-	engine->ClientCmd( pszCmd );
+	//engine->ClientCmd( pszCmd );
 	//}
+
+	// Take resource string and try to find its unicode
+	// equivalent. This might be dumb for not US guys.
+	wchar_t szString[ 512 ];
+	wchar_t *pszString = vgui::localize()->Find( pszCmd );
+	if( !pszString )
+	{
+		vgui::localize()->ConvertANSIToUnicode( pszCmd, szString, 512 );
+		pszString = szString;
+	}
+
+	// Then convert back to ansi and execute the string
+	char szAnsiString[ 512 ];
+	vgui::localize()->ConvertUnicodeToANSI( pszString, szAnsiString, 512 );
+	engine->ClientCmd( szAnsiString );
 
 	/* -- No layered menus, so ignore this
 	// Currently this only supports has 2 levels of menu
