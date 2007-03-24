@@ -71,7 +71,7 @@ PRECACHE_WEAPON_REGISTER(ff_grenade_nail);
 	ConVar naildamage("ffdev_naildamage", "8");
 	ConVar nailgren_spittime( "ffdev_nailgren_spittime", "0.1" );
 	//ConVar nailgren_angleoffset( "ffdev_nailgren_angleoffset", "5.0" );
-	ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
+	//ConVar nailspread( "ffdev_nailgren_spread", "5.0" );
 	ConVar nailstreams( "ffdev_nailgren_streams", "8" );
 #endif
 
@@ -159,9 +159,10 @@ void CFFGrenadeNail::Precache()
 		SetAbsVelocity(Vector(0, 0, flRisingheight + 20 * sin(DEG2RAD(GetAbsAngles().y))));
 		SetAbsAngles(GetAbsAngles() + QAngle(0, 15, 0));
 
-
-
-		static float flTemp = 0.0f;
+		static int iPattern[] =
+		{
+			5, 10, 15, 20, 25
+		};
 
 		// Time to spit out nails again?
 		if( m_flNailSpit < gpGlobals->curtime )
@@ -171,7 +172,7 @@ void CFFGrenadeNail::Precache()
 			for( int i = 0; i < nailstreams.GetInt(); i++ )
 			{
 				Vector vecNailDir;
-				QAngle vecAngles = QAngle( 0, 0 + flTemp + iStreamRotationOffset, 0 );
+				QAngle vecAngles = QAngle( 0, 0 + iPattern[rand() % 5] + iStreamRotationOffset, 0 );
 
 				AngleVectors( vecAngles, &vecNailDir );
 				VectorNormalizeFast( vecNailDir );
@@ -180,8 +181,6 @@ void CFFGrenadeNail::Precache()
 
 				iStreamRotationOffset += ( 360 / nailstreams.GetInt() );
 			}
-
-			flTemp += nailspread.GetFloat();
 
 			// Set up next nail spit time
 			m_flNailSpit = gpGlobals->curtime + nailgren_spittime.GetFloat();
