@@ -508,6 +508,34 @@ private:
 	const IHandleEntity *m_pIgnoreOther;
 };
 
+//// Just something handy for testing
+//class CTraceFilterInfoScriptEntity : public CTraceFilterSimple
+//{
+//	DECLARE_CLASS( CTraceFilterEntity, CTraceFilterSimple );
+//
+//public:
+//	CTraceFilterInfoScriptEntity( CBaseEntity *pEntity, int nCollisionGroup )
+//		: CTraceFilterSimple( pEntity, nCollisionGroup )
+//	{
+//		m_pEntity = pEntity;
+//	}
+//
+//	bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
+//	{
+//#ifdef GAME_DLL
+//		Assert( dynamic_cast<CBaseEntity *>( pHandleEntity ) );
+//		CBaseEntity *pTestEntity = static_cast<CBaseEntity *>( pHandleEntity );
+//
+//		DevMsg( "Info Script hitting: %s\n", pTestEntity->GetClassname() );
+//#endif
+//
+//		return BaseClass::ShouldHitEntity( pHandleEntity, contentsMask );
+//	}
+//
+//private:
+//	CBaseEntity *m_pEntity;
+//};
+
 //-----------------------------------------------------------------------------
 // Sweeps a particular entity through the world 
 //-----------------------------------------------------------------------------
@@ -518,6 +546,32 @@ void UTIL_TraceEntity( CBaseEntity *pEntity, const Vector &vecAbsStart, const Ve
 	// Adding this assertion here so game code catches it, but really the assertion belongs in the engine
 	// because one day, rotated collideables will work!
 	Assert( pCollision->GetCollisionAngles() == vec3_angle );
+
+	if( pEntity->Classify() == CLASS_INFOSCRIPT )
+	{
+//// Hey, this is some cool shit and shows just how often the shit is tested
+//#ifdef GAME_DLL
+//#include "ndebugoverlay.h"
+//		static bool bFlipFlop = false;
+//		if( bFlipFlop )
+//			NDebugOverlay::Line( vecAbsStart, vecAbsEnd, 255, 0, 0, true, 60.0f );
+//		else
+//			NDebugOverlay::Line( vecAbsStart, vecAbsEnd, 0, 0, 255, true, 60.0f );
+//		bFlipFlop = !bFlipFlop;
+//#endif
+
+		mask |= CONTENTS_PLAYERCLIP;
+
+//		CTraceFilterInfoScriptEntity traceFilter( pEntity, iCollisionGroup );
+//		enginetrace->SweepCollideable( pCollision, vecAbsStart, vecAbsEnd, pCollision->GetCollisionAngles(), mask, &traceFilter, ptr );
+
+//#ifdef GAME_DLL
+//		if( ptr && ptr->m_pEnt )
+//		{
+//			DevMsg( "Collide Ent: %s\n", ptr->m_pEnt->GetClassname() );
+//		}
+//#endif
+	}
 
 	CTraceFilterEntity traceFilter( pEntity, pCollision->GetCollisionGroup() );
 	enginetrace->SweepCollideable( pCollision, vecAbsStart, vecAbsEnd, pCollision->GetCollisionAngles(), mask, &traceFilter, ptr );
