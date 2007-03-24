@@ -528,7 +528,7 @@ public:
 		return ENTITY_SHOULD_COLLIDE_RESPOND;
 	}
 
-	virtual BloodColor() { return BLOOD_COLOR_RED; }
+	virtual int BloodColor() { return BLOOD_COLOR_RED; }
 
 	int GetPlayerEntIndex() const;
 	IRagdoll* GetIRagdoll() const;
