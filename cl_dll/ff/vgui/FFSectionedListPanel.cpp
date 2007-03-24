@@ -285,6 +285,8 @@ public:
 		// set a border if this is the local player
 		if (isLocal)
 			SetBorder(iBorder);
+		else
+			SetBorder(null);
 
 		// Set armed colour as a slightly brighter colour
 		m_ArmedBgColor = Color(0, 0, 0, 255);
