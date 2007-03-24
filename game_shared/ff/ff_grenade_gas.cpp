@@ -146,7 +146,14 @@ PRECACHE_WEAPON_REGISTER( ff_grenade_gas );
 		// Stop the thing from rolling if it starts moving
 		if( ( gpGlobals->curtime > m_flOpenTime + 2.0f ) && VPhysicsGetObject() )
 		{
-			VPhysicsGetObject()->EnableMotion( false );
+			IPhysicsObject *pObject = VPhysicsGetObject();
+			
+			Vector vecVelocity;
+			AngularImpulse angImpulse;
+			pObject->GetVelocity( &vecVelocity, &angImpulse );
+
+			if( vecVelocity.IsZero() || angImpulse.IsZero() )
+				pObject->EnableMotion( false );
 		}
 
 		// If open and we're not moving and physics aren't enabled, enable physics
