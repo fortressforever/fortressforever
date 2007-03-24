@@ -1261,28 +1261,33 @@ void C_FFPlayer::DrawPlayerIcons()
 
 	// --------------------------------
 	// Check for team mate
-	// Don't show anything for cloaked people, we will show a disguise icon for them
-	// instead (because they are disguised as a window)
 	// --------------------------------
-	if( !IsCloaked() && FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
+	if( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), ( IsDisguised() ? GetDisguisedTeam() : GetTeamNumber() ) ) == GR_TEAMMATE )
 	{
-		IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_CLIENT_EFFECTS );
-		if( pMaterial )
+		// The guy's deemed a teammate, but if he's cloaked and an enemy we don't want to show him
+
+		// If he's not cloaked it's cool
+		// If he is cloaked make sure he's on our team or an ally, no cheating
+		if( !IsCloaked() || ( IsCloaked() && ( FFGameRules()->IsTeam1AlliedToTeam2( pPlayer->GetTeamNumber(), GetTeamNumber() ) == GR_TEAMMATE ) ) )
 		{
-			materials->Bind( pMaterial );
+			IMaterial *pMaterial = materials->FindMaterial( "sprites/ff_sprite_teammate", TEXTURE_GROUP_CLIENT_EFFECTS );
+			if( pMaterial )
+			{
+				materials->Bind( pMaterial );
 
-			// The color is based on the players real team
-			int iTeam = IsDisguised() ? GetDisguisedTeam() : GetTeamNumber();						
-			Color clr = Color( 255, 255, 255, 255 );
+				// The color is based on the players real team
+				int iTeam = IsDisguised() ? GetDisguisedTeam() : GetTeamNumber();						
+				Color clr = Color( 255, 255, 255, 255 );
 
-			if( g_PR )
-				clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
+				if( g_PR )
+					clr.SetColor( g_PR->GetTeamColor( iTeam ).r(), g_PR->GetTeamColor( iTeam ).g(), g_PR->GetTeamColor( iTeam ).b(), 255 );
 
-			color32 c = { clr.r(), clr.g(), clr.b(), 255 };
-			DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
+				color32 c = { clr.r(), clr.g(), clr.b(), 255 };
+				DrawSprite( Vector( GetAbsOrigin().x, GetAbsOrigin().y, EyePosition().z + 16.0f ), 15.0f, 15.0f, c );
 
-			// Increment offset
-			flOffset += 16.0f;
+				// Increment offset
+				flOffset += 16.0f;
+			}
 		}
 	}
 
