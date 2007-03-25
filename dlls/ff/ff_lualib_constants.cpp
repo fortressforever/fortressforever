@@ -10,6 +10,7 @@
 #include "ff_gamerules.h"
 #include "ff_shareddefs.h"
 #include "ff_item_flag.h"
+#include "triggers.h"
 
 #include "ammodef.h"
 
@@ -191,6 +192,18 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kRed",			kAllowRedTeam),
 				value("kYellow",		kAllowYellowTeam),
 				value("kGreen",			kAllowGreenTeam)
+			],
+
+		class_<CFFEntity_ClipFlags>("ClipFlags")
+			.enum_("ClipFlags")
+			[
+				value("kClipPlayers",		LUA_CLIP_FLAG_PLAYERS),
+				value("kClipTeamBlue",		LUA_CLIP_FLAG_TEAMBLUE),
+				value("kClipTeamRed",		LUA_CLIP_FLAG_TEAMRED),				
+				value("kClipTeamYellow",	LUA_CLIP_FLAG_TEAMYELLOW),
+				value("kClipTeamGreen",		LUA_CLIP_FLAG_TEAMGREEN),
+				value("kClipGrenades",		LUA_CLIP_FLAG_GRENADES),
+				value("kClipProjectiles",	LUA_CLIP_FLAG_PROJECTILES)
 			]
 	];
 };
