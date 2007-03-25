@@ -1112,6 +1112,9 @@ void CFuncFFScript::SetRestored( void )
 	_scriptman.RunPredicates_LUA( this, &hContext, "onrestored" );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFuncFFScript::Spawn( void )
 {
 	BaseClass::Spawn();
@@ -1120,6 +1123,9 @@ void CFuncFFScript::Spawn( void )
 	_scriptman.RunPredicates_LUA( this, &hContext, "spawn" );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
 {
 	int iTeamFlags = 0;
@@ -1149,9 +1155,12 @@ void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
 	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CFuncFFScript::LUA_SetClipFlags( const luabind::adl::object& hTable )
 {
-	int iMask = 0;
+	SetClipMask( 0 );
 
 	if( hTable.is_valid() && ( luabind::type( hTable ) == LUA_TTABLE ) )
 	{
@@ -1165,7 +1174,7 @@ void CFuncFFScript::LUA_SetClipFlags( const luabind::adl::object& hTable )
 				try
 				{
 					int iFlag = luabind::object_cast<int>( value );
-					iMask += iFlag;
+					AddClipMask( iFlag );
 				}
 				catch( ... )
 				{
@@ -1174,8 +1183,6 @@ void CFuncFFScript::LUA_SetClipFlags( const luabind::adl::object& hTable )
 			}
 		}
 	}
-
-	SetClipMask( iMask );
 }
 
 // ##################################################################################
