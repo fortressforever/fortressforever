@@ -114,5 +114,6 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("Restore",				&CFuncFFScript::LuaRestore)
 			.def("IsTouching",			&CFuncFFScript::IsTouching)
 			.def("SetBotGoalInfo",		&CFuncFFScript::SetBotGoalInfo)
+			.def("SetClipFlags",		&CFuncFFScript::LUA_SetClipFlags)
 	];
 };

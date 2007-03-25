@@ -36,9 +36,19 @@
 
 #include "omnibot_interface.h"
 
+// Lua includes
+extern "C"
+{
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+
+#include "luabind/luabind.hpp"
+#include "luabind/iterator_policy.hpp"
+
 // --> Mirv: Temp test for triggers
 #include "ff_scriptman.h"
-//#include "ff_luaobject_wrapper.h"
 #include "ff_luacontext.h"
 // <-- Mirv: Temp test for triggers
 
@@ -1137,6 +1147,35 @@ void CFuncFFScript::SetBotGoalInfo(int _type, int _team)
 		break;
 	}	
 	Omnibot::Notify_GoalInfo(this, _type, iTeamFlags);
+}
+
+void CFuncFFScript::LUA_SetClipFlags( const luabind::adl::object& hTable )
+{
+	int iMask = 0;
+
+	if( hTable.is_valid() && ( luabind::type( hTable ) == LUA_TTABLE ) )
+	{
+		// Iterate through table
+		for( luabind::iterator ib( hTable ), ie; ib != ie; ++ib )
+		{
+			luabind::adl::object value = *ib;
+
+			if( luabind::type( value ) == LUA_TNUMBER )
+			{
+				try
+				{
+					int iFlag = luabind::object_cast<int>( value );
+					iMask += iFlag;
+				}
+				catch( ... )
+				{
+					// Don't care
+				}
+			}
+		}
+	}
+
+	SetClipMask( iMask );
 }
 
 // ##################################################################################
