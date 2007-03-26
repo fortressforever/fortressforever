@@ -3858,6 +3858,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 	int i = 0;
 
 	// Without boolean we default to accumulative, but warn anyway in case we just forgot
+	// boolean = effect is either on or off. Accumulative = the more effect you get, the stronger the effect is (e.g. more caltrops = slower)
 	Assert((mod & SEM_BOOLEAN)|(mod & SEM_ACCUMULATIVE));
 
 	if (mod & SEM_BOOLEAN)
@@ -3879,7 +3880,7 @@ void CFFPlayer::AddSpeedEffect(SpeedEffectType type, float duration, float speed
 				++i;
 		}
 	}
-	else
+	else // Accumulative
 	{
 		while (m_vSpeedEffects[i].active && (i != NUM_SPEED_EFFECTS))
 			i++;
@@ -4073,7 +4074,10 @@ void CFFPlayer::RecalculateSpeed( void )
 	{
 		if (m_vSpeedEffects[i].active)
 			flSpeed *= m_vSpeedEffects[i].speed;
+		
 	}
+	// No amount of effects should let you go below 40% speed (Cos thats just annoying)
+	if (flSpeed < 0.4f) flSpeed = 0.4f;
 
 	// If speed has gotten slower then delay the max speed change on the server.
 	// This way the client can predict in time that the speed has changed, and warping
