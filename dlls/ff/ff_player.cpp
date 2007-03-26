@@ -4073,7 +4073,7 @@ void CFFPlayer::RecalculateSpeed( void )
 	for (int i = 0; i < NUM_SPEED_EFFECTS; i++)
 	{
 		if (m_vSpeedEffects[i].active)
-			flSpeed *= m_vSpeedEffects[i].speed;
+			flSpeed -= (1 - m_vSpeedEffects[i].speed);
 		
 	}
 	// No amount of effects should let you go below 40% speed (Cos thats just annoying)
