@@ -4076,8 +4076,9 @@ void CFFPlayer::RecalculateSpeed( void )
 			flSpeed -= (1 - m_vSpeedEffects[i].speed);
 		
 	}
-	// No amount of effects should let you go below 40% speed (Cos thats just annoying)
-	if (flSpeed < 0.4f) flSpeed = 0.4f;
+	// No amount of effects should let you go below 40% speed 
+	if (flSpeed < 0.4f) 
+			flSpeed = 0.4f;
 
 	// If speed has gotten slower then delay the max speed change on the server.
 	// This way the client can predict in time that the speed has changed, and warping
