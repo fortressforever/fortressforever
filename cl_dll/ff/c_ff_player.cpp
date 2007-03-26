@@ -195,6 +195,9 @@ void CC_PrimeOne( void )
 		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
 		return;
 
+	// Bug #0001308: Holding +gren1 then pressing +gren2 produces a new timer, without priming the 2nd gren
+	if (pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMETWO)
+		return;
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
@@ -266,7 +269,10 @@ void CC_PrimeTwo( void )
 	if ((pLocalPlayer->m_iGrenadeState != FF_GREN_NONE) &&
 		(pLocalPlayer->m_flLastServerPrimeTime >= pLocalPlayer->m_flServerPrimeTime))
 		return;
-
+	
+	// Bug #0001308: Holding +gren1 then pressing +gren2 produces a new timer, without priming the 2nd gren
+	if (pLocalPlayer->m_iGrenadeState == FF_GREN_PRIMEONE)
+		return;
 	// Bug #0000366: Spy's cloaking & grenade quirks
 	// Spy shouldn't be able to prime grenades when feigned
 	//if (pLocalPlayer->GetEffects() & EF_NODRAW)
