@@ -98,6 +98,7 @@ enum Class_T
 	CLASS_TURRET,
 	CLASS_BACKPACK,
 	CLASS_INFOSCRIPT,
+	CLASS_TRIGGER_CLIP,
 	CLASS_TRIGGERSCRIPT,
 	CLASS_TEAMSPAWN,
 
@@ -592,7 +593,7 @@ public:
 
 	// Team handling
 	virtual C_Team					*GetTeam( void );
-	virtual int						GetTeamNumber( void );
+	virtual int						GetTeamNumber( void ) const;
 	virtual void					ChangeTeam( int iTeamNum );			// Assign this entity to a team.
 	virtual int						GetRenderTeamNumber( void );
 	virtual bool					InSameTeam( C_BaseEntity *pEntity );	// Returns true if the specified entity is on the same team as this one

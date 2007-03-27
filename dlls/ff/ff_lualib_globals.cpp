@@ -11,6 +11,7 @@
 #include "ff_goal.h"
 #include "ff_grenade_base.h"
 #include "ff_item_flag.h"
+#include "ff_triggerclip.h"
 #include "ff_player.h"
 #include "ff_utils.h"
 
@@ -512,6 +513,17 @@ namespace FFLib
 			return NULL;
 
 		return dynamic_cast< CFuncFFScript * >( pEntity );
+	}
+
+	CFFTriggerClip *CastToTriggerClip( CBaseEntity *pEntity )
+	{
+		if( !pEntity )
+			return NULL;
+
+		if( pEntity->Classify() != CLASS_TRIGGER_CLIP )
+			return NULL;
+
+		return dynamic_cast< CFFTriggerClip * >( pEntity );
 	}
 
 	CFFDispenser *CastToDispenser( CBaseEntity *pEntity )
@@ -1204,6 +1216,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("CastToPlayer",				&FFLib::CastToPlayer),
 		def("CastToInfoScript",			&FFLib::CastToItemFlag),
 		def("CastToTriggerScript",		&FFLib::CastToTriggerScript),
+		def("CastToTriggerClip",		&FFLib::CastToTriggerClip),
 		def("CastToGrenade",			&FFLib::CastToGrenade),
 		def("CastToDispenser",			&FFLib::CastToDispenser),
 		def("CastToSentrygun",			&FFLib::CastToSentrygun),

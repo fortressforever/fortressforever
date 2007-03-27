@@ -13,10 +13,13 @@
 #include "vphysics/object_hash.h"
 #include "IceKey.H"
 #include "checksum_crc.h"
+#include "ff_triggerclip.h"
 
 #ifdef CLIENT_DLL
+	#include "c_ff_player.h"
 	#include "c_te_effect_dispatch.h"
 #else
+	#include "ff_player.h"
 	#include "te_effect_dispatch.h"
 
 bool NPC_CheckBrushExclude( CBaseEntity *pEntity, CBaseEntity *pBrush );
@@ -277,6 +280,80 @@ CTraceFilterSimple::CTraceFilterSimple( const IHandleEntity *passedict, int coll
 //-----------------------------------------------------------------------------
 bool CTraceFilterSimple::ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 {
+	CBaseEntity *pHandle = EntityFromEntityHandle( pHandleEntity );
+
+	if( pHandle )
+	{
+		if( pHandle->Classify() == CLASS_TRIGGER_CLIP )
+		{
+			CFFTriggerClip *pTriggerClip = dynamic_cast< CFFTriggerClip * >( pHandle );
+			if( pTriggerClip && pTriggerClip->GetClipMask() )
+			{
+				const CBaseEntity *pPassEnt = NULL;
+
+				if( m_pPassEnt )
+					pPassEnt = EntityFromEntityHandle( m_pPassEnt );
+
+				if( pPassEnt )
+				{
+					bool bShouldHit = true;
+
+					// If clip requires a player...
+					if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_PLAYERS ) && !pPassEnt->IsPlayer() )
+						bShouldHit = false;
+
+					// Player specific stuff
+					if( pPassEnt->IsPlayer() )
+					{
+						const CFFPlayer *pPlayer = static_cast< const CFFPlayer * >( pPassEnt );
+
+						// If clip requires blue team...
+						if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMBLUE ) && ( pPlayer->GetTeamNumber() != TEAM_BLUE ) )
+							bShouldHit = false;
+						// If clip requires red team...
+						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMRED ) && ( pPlayer->GetTeamNumber() != TEAM_RED ) )
+							bShouldHit = false;
+						// If clip requires yellow team...
+						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMYELLOW ) && ( pPlayer->GetTeamNumber() != TEAM_YELLOW ) )
+							bShouldHit = false;
+						// If clip requires green team...
+						else if( pTriggerClip->IsClipMaskSet( LUA_CLIP_FLAG_TEAMGREEN ) && ( pPlayer->GetTeamNumber() != TEAM_GREEN ) )
+							bShouldHit = false;
+					}
+
+					return bShouldHit;
+				}
+			}
+//#ifdef GAME_DLL
+//			static float flSpamTime = 0.0f;
+//			if( flSpamTime < gpGlobals->curtime )
+//			{
+//				DevMsg( "[%f] [SERVER] Hit trigger clip\n", gpGlobals->curtime );
+//				flSpamTime = gpGlobals->curtime + 1.0f;
+//			}
+//#else
+//			static float flSpamTime = 0.0f;
+//			if( flSpamTime < gpGlobals->curtime )
+//			{
+//				DevMsg( "[%f] [CLIENT] Hit trigger clip\n", gpGlobals->curtime );
+//				flSpamTime = gpGlobals->curtime + 1.0f;
+//			}
+//#endif
+//			return false;
+		}
+//		else if( !pHandle->IsPlayer() )
+//		{
+//#ifdef GAME_DLL
+//			static float flSpamTime = 0.0f;
+//			if( flSpamTime < gpGlobals->curtime )
+//			{
+//				DevMsg( "[%f] Hit %s\n", gpGlobals->curtime, pHandle->GetClassname() );
+//				flSpamTime = gpGlobals->curtime + 1.0f;
+//			}
+//#endif
+//		}
+	}
+
 	if ( !StandardFilterRules( pHandleEntity, contentsMask ) )
 		return false;
 

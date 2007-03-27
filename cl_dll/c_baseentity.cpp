@@ -3405,7 +3405,7 @@ C_Team *C_BaseEntity::GetTeam( void )
 // Purpose: 
 // Output : int
 //-----------------------------------------------------------------------------
-int C_BaseEntity::GetTeamNumber( void )
+int C_BaseEntity::GetTeamNumber( void ) const
 {
 	return m_iTeamNum;
 }

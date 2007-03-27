@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "ff_lualib.h"
 #include "ff_item_flag.h"
+#include "ff_triggerclip.h"
 #include "ff_team.h"
 
 #include "triggers.h"
@@ -113,7 +114,9 @@ void CFFLuaLib::InitBase(lua_State* L)
 			.def("Remove",				&CFuncFFScript::LuaRemove)
 			.def("Restore",				&CFuncFFScript::LuaRestore)
 			.def("IsTouching",			&CFuncFFScript::IsTouching)
-			.def("SetBotGoalInfo",		&CFuncFFScript::SetBotGoalInfo)
-			.def("SetClipFlags",		&CFuncFFScript::LUA_SetClipFlags)
+			.def("SetBotGoalInfo",		&CFuncFFScript::SetBotGoalInfo),
+
+		class_<CFFTriggerClip>("TriggerClip")
+			.def("SetClipFlags",		&CFFTriggerClip::LUA_SetClipFlags)
 	];
 };
