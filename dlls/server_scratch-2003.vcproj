@@ -50,7 +50,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+"
 				Outputs="%FortressForeverBin%\server.dll"/>
 			<Tool
 				Name="VCLinkerTool"
@@ -131,7 +132,8 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Copying to destination folder"
-				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;"
+				CommandLine="if exist &quot;%FortressForeverBin%&quot; copy &quot;$(TargetPath)&quot; &quot;%FortressForeverBin%&quot;
+"
 				Outputs="server.dll"/>
 			<Tool
 				Name="VCLinkerTool"
@@ -3706,6 +3708,12 @@
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_timers_shared.h">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_triggerclip.cpp">
+			</File>
+			<File
+				RelativePath="..\game_shared\ff\ff_triggerclip.h">
 			</File>
 			<File
 				RelativePath="..\game_shared\ff\ff_usermessages.cpp">

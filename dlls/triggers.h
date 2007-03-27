@@ -14,30 +14,6 @@
 #include "basetoggle.h"
 #include "entityoutput.h"
 
-// Forward declaration
-namespace luabind
-{
-	namespace adl
-	{
-		class object;
-	}
-}
-
-//
-// ClipFlags for Lua
-//
-enum FF_ClipFlags
-{
-	
-	LUA_CLIP_FLAG_PLAYERS		= 1 << 0,
-	LUA_CLIP_FLAG_TEAMBLUE		= 1 << 1,
-	LUA_CLIP_FLAG_TEAMRED		= 1 << 2,
-	LUA_CLIP_FLAG_TEAMYELLOW	= 1 << 3,
-	LUA_CLIP_FLAG_TEAMGREEN		= 1 << 4,
-	LUA_CLIP_FLAG_GRENADES		= 1 << 5,
-	LUA_CLIP_FLAG_PROJECTILES	= 1 << 6,
-};
-
 //
 // Spawnflags
 //
@@ -195,14 +171,6 @@ public:
 
 	void SetBotGoalInfo(int _type, int _team);
 
-	void AddClipMask( int iClipMask )			{ m_iClipMask |= iClipMask; }
-	void RemoveClipMask( int iClipMask )		{ m_iClipMask &= (~iClipMask); }
-	void ToggleClipMask( int iClipMask )		{ m_iClipMask ^= iClipMask; }
-	bool IsClipMaskSet( int iClipMask )	const	{ return ((m_iClipMask & iClipMask) != 0); }
-
-	int GetClipMask( void ) const				{ return m_iClipMask; }
-	void SetClipMask( int iClipMask )			{ m_iClipMask = iClipMask; }
-
 	virtual void	LuaRestore( void )			{ SetRestored(); SetInactive(); Enable(); }
 	virtual void	LuaRemove( void )			{ SetRemoved(); Disable(); }
 
@@ -212,9 +180,6 @@ public:
 	virtual void	SetInactive( void );
 	virtual void	SetRemoved( void );
 	virtual void	SetRestored( void );
-
-	// These functions give Lua access to adjust stuff
-	void LUA_SetClipFlags( const luabind::adl::object& hTable );
 
 protected:
 	int	m_iGoalState;

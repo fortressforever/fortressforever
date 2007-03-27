@@ -10,7 +10,7 @@
 #include "ff_gamerules.h"
 #include "ff_shareddefs.h"
 #include "ff_item_flag.h"
-#include "triggers.h"
+#include "ff_triggerclip.h"
 
 #include "ammodef.h"
 
