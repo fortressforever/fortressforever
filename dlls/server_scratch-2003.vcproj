@@ -3397,6 +3397,12 @@
 				RelativePath=".\ff\ff_goal.h">
 			</File>
 			<File
+				RelativePath=".\ff\ff_grenade_napalmlet.cpp">
+			</File>
+			<File
+				RelativePath=".\ff\ff_grenade_napalmlet.h">
+			</File>
+			<File
 				RelativePath=".\ff\ff_item_backpack.cpp">
 			</File>
 			<File
