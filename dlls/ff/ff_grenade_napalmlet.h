@@ -14,7 +14,7 @@
 #define NAPALMLET_MODEL "models/gibs/AGIBS.mdl"
 
 #ifdef CLIENT_DLL
-	#define CFFGrenadeNapalmlet C_FFGrenadeMirvlet
+	#define CFFGrenadeNapalmlet C_FFGrenadeNapalmlet
 #endif
 
 #ifdef GAME_DLL
@@ -38,11 +38,9 @@ class CFFGrenadeNapalmlet : public CBaseAnimating
 public:
 	DECLARE_CLASS( CFFGrenadeNapalmlet, CBaseAnimating );
 	void Precache();
-	//const char *GetBounceSound() { return "MirvletGrenade.Bounce"; }
 
 
-	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f; m_flLastBurnCheck = 0; m_flBurnDamage = 15; m_bFlameSwitch = true;}
-	//CFFGrenadeNapalmlet( const CFFGrenadeNapalmlet& ){}
+	CFFGrenadeNapalmlet( void ){m_flBurnTime = gpGlobals->curtime + 5.0f; m_flLastBurnCheck = 0; m_flBurnDamage = 15; /*m_bFlameSwitch = true;*/}
 	void UpdateOnRemove( void );
 
 	void Spawn();
@@ -59,7 +57,7 @@ private:
 	float m_flLastBurnCheck;
 	float m_flBurnRadius;
 	float m_flBurnDamage;
-	bool m_bFlameSwitch;
+	//bool m_bFlameSwitch;
 	CEntityFlame *m_pFlame;
 };
 
