@@ -1488,8 +1488,19 @@ const QAngle &C_FFPlayer::EyeAngles()
 		return angDirection;
 	}
 
+	static bool bStillShowIntermission = true;
+
+	// Time to kill this yet?
+	if( bStillShowIntermission )
+	{
+		if( GetClassSlot() != 0 )
+			bStillShowIntermission = false;		
+		else if( GetTeamNumber() == TEAM_SPECTATOR )
+			bStillShowIntermission = false;
+	}
+
 	// Force look at whatever the info_intermission's target is
-	if( GetTeamNumber() == TEAM_UNASSIGNED )
+	if( (GetTeamNumber() == TEAM_UNASSIGNED) || bStillShowIntermission )
 		return m_vecInfoIntermission;
 
 	// Concussion
