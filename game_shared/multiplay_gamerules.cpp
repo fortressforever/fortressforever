@@ -533,6 +533,9 @@ bool CMultiplayRules::IsMultiplayer( void )
 		{
 			// if a player dies in a deathmatch game and the killer is a client, award the killer some points
 			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );
+
+			// AfterShock - scoring system : Just award 100 points for frag (for now)
+			pScorer->IncrementFortPointsCount( 100 );
 			
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();

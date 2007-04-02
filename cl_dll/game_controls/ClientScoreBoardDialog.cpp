@@ -495,6 +495,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		m_pPlayerList->SetSectionAlwaysVisible( iSection );
         m_pPlayerList->AddColumnToSection( iSection, "name" , "#FF_PlayerName" , 0 , scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "class" , "#FF_PlayerClass" , 0 , scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "fortpoints" , "#FF_PlayerFortPoints" , 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score" , "#FF_PlayerScore" , 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths" , "#FF_PlayerDeath" , 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping" , "#FF_PlayerPing" , 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
@@ -507,6 +508,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
 		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Team", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
@@ -524,6 +526,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
 		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Spectators", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
@@ -536,6 +539,7 @@ int CClientScoreBoardDialog::AddSection( int iType, int iSection )
 		//m_pPlayerList->SetSectionAlwaysVisible( iSection );
 		m_pPlayerList->AddColumnToSection( iSection, "name", "#FF_Unassigned", 0, scheme()->GetProportionalScaledValue( NAME_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "class", "", 0, scheme()->GetProportionalScaledValue( CLASS_WIDTH ) );	// |-- Mirv: Current class
+		m_pPlayerList->AddColumnToSection( iSection, "fortpoints", "", 0, scheme()->GetProportionalScaledValue( FORTPOINTS_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "score", "", 0, scheme()->GetProportionalScaledValue( SCORE_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "deaths", "", 0, scheme()->GetProportionalScaledValue( DEATH_WIDTH ) );
 		m_pPlayerList->AddColumnToSection( iSection, "ping", "", 0, scheme()->GetProportionalScaledValue( PING_WIDTH ) );
@@ -588,12 +592,20 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 
 		m_pPlayerList->ModifyColumn( i, "name", szTeamName );
 
-		// Loop up team score
+		// Look up team fort points
+		wchar_t szFortPoints[ 6 ];
+		swprintf( szFortPoints, L"%d", pGR->GetFortPoints( iTeam ) );
+
+		// Display team fort points
+		m_pPlayerList->ModifyColumn( i, "fortpoints", szFortPoints );
+
+		// Look up team score
 		wchar_t szScore[ 6 ];
 		swprintf( szScore, L"%d", pGR->GetTeamScore( iTeam ) );
 
 		// Display team score
 		m_pPlayerList->ModifyColumn( i, "score", szScore );
+
 
 		// Look up team deaths
 		wchar_t szDeaths[ 6 ];
@@ -629,17 +641,17 @@ bool CClientScoreBoardDialog::StaticPlayerSortFunc_Score( vgui::SectionedListPan
 	KeyValues *it2 = list->GetItemData( itemID2 );
 	Assert( it1 && it2 );
 
-	// first compare frags
-	int v1 = it1->GetInt( "score" );
-	int v2 = it2->GetInt( "score" );
+	// first compare fortpoints
+	int v1 = it1->GetInt( "fortpoints" );
+	int v2 = it2->GetInt( "fortpoints" );
 	if( v1 > v2 )
 		return true;
 	else if( v1 < v2 )
 		return false;
 
-	// next compare deaths
-	v1 = it1->GetInt( "deaths" );
-	v2 = it2->GetInt( "deaths" );
+	// next compare score
+	v1 = it1->GetInt( "score" );
+	v2 = it2->GetInt( "score" );
 	if( v1 > v2 )
 		return false;
 	else if( v1 < v2 )
@@ -698,6 +710,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 		bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE ) || ( pLocalPlayer->GetTeamNumber() == TEAM_SPECTATOR );
 
 	kv->SetInt( "deaths", pGR->GetDeaths( playerIndex ) );
+	kv->SetInt( "fortpoints", pGR->GetFortPoints( playerIndex ) );
 	kv->SetInt( "score", pGR->GetFrags( playerIndex ) );
 	kv->SetInt( "ping", pGR->GetPing( playerIndex ) ) ;
 	kv->SetString( "name", pGR->GetPlayerName( playerIndex ) );

@@ -563,6 +563,9 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
 
+	// AfterShock - scoring system: 25 points for sabotage dispenser
+	pSaboteur->AddFortPoints(25, true);
+
 	Warning("Dispenser sabotaged\n");
 }
 

@@ -20,6 +20,7 @@ public:
 	// Team data access 
 	virtual const char		*GetTeamName( int index ) = 0;
 	virtual int				GetTeamScore( int index ) = 0;
+	virtual int				GetTeamFortPoints( int index ) = 0;
 	virtual float			GetTeamScoreTime( int index ) = 0;
 	virtual int				GetTeamDeaths( int index ) = 0;
 	virtual const Color&	GetTeamColor( int index ) = 0;
@@ -35,6 +36,7 @@ public:
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetDeaths( int index ) = 0;
+	virtual int		GetFortPoints( int index ) = 0;
 	virtual int		GetFrags( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
 	virtual int		GetHealth( int index ) = 0;

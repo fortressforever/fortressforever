@@ -1671,6 +1671,22 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_flServerPrimeTime = 0;
 		m_bEngyGrenWarned = false;
 	}
+	
+	/* Legshot scoring code - unfinished (ignore)
+	if(( IsSpeedEffectSet( SE_LEGSHOT ); ) && (g_pGameRules->PlayerRelationship(this, pKiller) != GR_TEAMMATE)) 
+	{
+		if( m_pWhoTaggedMe != NULL )
+		{
+			CFFPlayer *pTagger = GetPlayerWhoTaggedMe();
+			CFFPlayer *pKiller2 = ToFFPlayer( pKiller );
+			// AfterShock - scoring system: 100 points for anyone fragging your radiotagged player
+			// No points if you kill your own radiomarked target
+			if ( !(pTagger == pKiller2) )
+				if( pKiller2 )
+					pKiller2->AddScore( 100, true );
+		}
+	}
+	*/
 
 	ClearSpeedEffects();
 	RemoveFlag(FL_FROZEN);
@@ -1729,13 +1745,18 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 	// If the tag is still active, award a point
 	// to the person who tagged us
-	if( m_bRadioTagged )
+	// (So long as you havent been TKed - AfterShock)
+	if(( m_bRadioTagged ) && (g_pGameRules->PlayerRelationship(this, pKiller) != GR_TEAMMATE)) 
 	{
 		if( m_pWhoTaggedMe != NULL )
 		{
-			CFFPlayer *pPlayer = GetPlayerWhoTaggedMe();
-			if( pPlayer )
-				pPlayer->AddPoints( 2, true );
+			CFFPlayer *pTagger = GetPlayerWhoTaggedMe();
+			CFFPlayer *pKiller2 = ToFFPlayer( pKiller );
+			// AfterShock - scoring system: 100 points for anyone fragging your radiotagged player
+			// No points if you kill your own radiomarked target
+			if ( !(pTagger == pKiller2) )
+				if( pKiller2 )
+					pKiller2->AddFortPoints( 50, true );
 		}
 	}
 
@@ -4208,7 +4229,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 		// credit the curer with a score
 		if( pCurer )
-			pCurer->IncrementFragCount( 1 );
+			pCurer->AddFortPoints( 100, true );
 
 		// Log this in the stats
 		if (pCurer)
@@ -4691,10 +4712,17 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		return 0;
 	}
 
-	// tag the player if hit by radio tag ammo
+	// tag the player if hit by radio tag ammo 
 	if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
 	{
-		SetRadioTagged( ToFFPlayer( info.GetAttacker() ), gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+		//CFFSentryGun *pSentryGun = FF_ToSentrygun( pObject );
+		CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+		SetRadioTagged( pAttacker, gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+		
+		// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
+		// This could be editted later to give points for a renewed tag
+		if ((!IsRadioTagged()) && (pAttacker))
+			pAttacker->AddFortPoints(10,true);
 	}
 
 	// if it's a pyro, they take half damage
@@ -5284,7 +5312,6 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		return 0;
 
 	int iOriginalHP = m_iHealth;
-
 	// Also medpack boosts health to maximum + then carries on to 150%
 	if( m_iHealth < m_iMaxHealth )
 		m_iHealth = m_iMaxHealth;
@@ -5292,6 +5319,10 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 		// Bug #0000467: Medic can't give over 100% health [just added in the "m_iHealth =" line...]
 		m_iHealth = min( ( float )( m_iHealth + flHealth ), ( float )( m_iMaxHealth * 1.5f ) );
 
+	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
+	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
+	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), true);
+	
 	// Log the added health
 	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
 	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
@@ -5978,6 +6009,9 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 		{
 			ClientPrint(ffplayer, HUD_PRINTTALK, "#FF_SPY_BEENREVEALED");
 			ffplayer->ResetDisguise();
+
+			//AfterShock - Scoring System: 100 points for uncovering spy
+			AddFortPoints(30, true);
 			
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
 

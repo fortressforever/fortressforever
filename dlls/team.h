@@ -69,6 +69,9 @@ public:
 	virtual void SetScore( int iScore );
 	virtual int  GetScore( void );
 	virtual float GetScoreTime( void );
+	virtual void AddFortPoints( int iFortPoints );
+	virtual void SetFortPoints( int iFortPoints );
+	virtual int  GetFortPoints( void );
 	// Bug #0000529: Total death column doesn't work
 	virtual void AddDeaths( int iScore );	// Mulch
 	virtual int  GetDeaths( void );	// Mulch
@@ -81,6 +84,7 @@ public:
 	// Data
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iScore );
+	CNetworkVar( int, m_iFortPoints );
 	// Bug #0000529: Total death column doesn't work
 	CNetworkVar( int, m_iDeaths );	// Mulch: send deaths to client
 	CNetworkVar( float, m_flScoreTime ); // Mulch: time when this team last scored
