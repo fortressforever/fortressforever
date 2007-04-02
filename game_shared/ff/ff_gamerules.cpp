@@ -490,6 +490,7 @@ ConVar mp_prematch( "mp_prematch",
 
 					pPlayer->Spawn();
 					pPlayer->ResetFragCount();
+					pPlayer->ResetFortPointsCount();
 					pPlayer->ResetDeathCount();
 				}
 			}
@@ -504,6 +505,7 @@ ConVar mp_prematch( "mp_prematch",
 					continue;
 
 				pTeam->SetScore( 0 );
+				pTeam->SetFortPoints( 0 );
 				pTeam->SetDeaths( 0 );
 			}
 
@@ -1357,8 +1359,31 @@ ConVar mp_prematch( "mp_prematch",
 		if( pScorer )
 		{
 			// Award point for killing a buildable
+			// Award point for killing a buildable
 			if( PlayerRelationship( pScorer, pVictim ) != GR_TEAMMATE )
-				pScorer->IncrementFragCount( 1 );
+			{
+				
+				// AfterShock - Scoring System: 50 points for dispenser
+				if( pObject->Classify() == CLASS_DISPENSER )
+					pScorer->AddFortPoints( 50, true );
+				else if( pObject->Classify() == CLASS_SENTRYGUN )
+				{
+					pScorer->IncrementFragCount( 1 ); // 1 frag for SG kill
+					CFFSentryGun *pSentryGun = FF_ToSentrygun( pObject );
+
+					// AfterShock - Scoring System: 100 points for level 1
+					if (pSentryGun->GetLevel() == 1)
+						pScorer->AddFortPoints( 100, true );
+					// AfterShock - Scoring System: 150 points for level 2
+					else if (pSentryGun->GetLevel() == 2)
+						pScorer->AddFortPoints( 150, true );
+					// AfterShock - Scoring System: 200 points for level 3
+					else if (pSentryGun->GetLevel() == 3)
+						pScorer->AddFortPoints( 200, true );
+					else 
+						DevMsg( "Unknown SG level :(" );
+				}
+			}
 		}
 
 		UTIL_LogPrintf( " userid (buildable's owner): %i\n", pVictim->GetUserID() );

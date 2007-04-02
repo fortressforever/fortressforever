@@ -30,6 +30,7 @@ public : // IGameResources intreface
 	// Team data access 
 	virtual int		GetTeamScore( int index );
 	virtual float	GetTeamScoreTime( int index );
+	virtual int		GetTeamFortPoints( int index );
 	virtual int		GetTeamDeaths( int index );
 	virtual const char *GetTeamName( int index );
 	virtual const Color&GetTeamColor( int index );
@@ -48,6 +49,7 @@ public : // IGameResources intreface
 	virtual int		GetDeaths( int index );
 	virtual int		GetTeam( int index );
 	virtual int		GetFrags( int index );
+	virtual int		GetFortPoints( int index );
 	virtual int		GetHealth( int index );
 	virtual int		GetArmor( int index );
 
@@ -64,6 +66,7 @@ protected:
 	char	m_szName[MAX_PLAYERS+1][ MAX_PLAYER_NAME_LENGTH ];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_iScore[MAX_PLAYERS+1];
+	int		m_iFortPoints[MAX_PLAYERS+1];
 	int		m_iDeaths[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];

@@ -136,6 +136,9 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 #ifdef GAME_DLL
 				pHitPlayer->AddArmor( iArmorGiven );
 				pPlayer->RemoveAmmo( iArmorGiven / 5, AMMO_CELLS );
+				// AfterShock - scoring system: Repair x armor +.5*armor_given (only if last damage from enemy) 
+				// Leaving the 'last damage from enemy' part out until discussion has finished about it.
+				pPlayer->AddFortPoints( ( iArmorGiven*0.5 ), true);
 #endif
 			}
 
@@ -177,6 +180,9 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					
 #ifdef GAME_DLL
 					pDispenser->SetHealth( pDispenser->GetHealth() + iHealthGiven );
+					// AfterShock - scoring system: Added this for if we later want to give points for repairing friendly dispensers
+					if ( bFriendly && !bMine )
+						pPlayer->AddFortPoints(iHealthGiven*0.1, true);
 					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
 #endif
 				}
@@ -211,7 +217,6 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 		else if (pHitEntity->Classify() == CLASS_SENTRYGUN) 
 		{
 			CFFSentryGun *pSentryGun = (CFFSentryGun *) pHitEntity;
-
 			WeaponSound( SPECIAL1 );
 
 			// Is the sentrygun mine(is pPlayer the owner?) 
@@ -228,7 +233,15 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				{
 					// If we upgrade, play a special sound. Pun intended.
 					if( pSentryGun->Upgrade(true) )
+					{
 						WeaponSoundLocal( SPECIAL3 );
+#ifdef GAME_DLL
+						// AfterShock - scoring system: If we upgrade teammates SG, +100 points
+						// P.S. Make a special upgrade sound 5 lines above this !! :D
+						if ( bFriendly && !bMine )
+							pPlayer->AddFortPoints(100, true);
+#endif
+					}
 #ifdef GAME_DLL
 					pPlayer->RemoveAmmo(130, AMMO_CELLS);
 #endif
@@ -252,8 +265,13 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// If it needs anything, play a special sound. Pun intended.
 					if( ( cells > 0 ) || ( shells > 0 ) || ( rockets > 0 ) )
 						WeaponSoundLocal( SPECIAL3 );
-
 #ifdef GAME_DLL
+					// AfterShock - scoring system: Save teammate sg +.5*amount repaired (only if last damage from enemy)
+					// last enemy damage bit ignored for now.
+					if ( cells > 0 ) 
+						pPlayer->AddFortPoints(cells*0.3, true);
+
+
 					pSentryGun->Upgrade(false, cells, shells, rockets);
 					pPlayer->RemoveAmmo(cells, AMMO_CELLS);
 					pPlayer->RemoveAmmo(shells, AMMO_SHELLS);

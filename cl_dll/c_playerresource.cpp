@@ -18,6 +18,7 @@
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iScore), RecvPropInt( RECVINFO(m_iScore[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_iFortPoints), RecvPropInt( RECVINFO(m_iFortPoints[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bConnected), RecvPropInt( RECVINFO(m_bConnected[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
@@ -42,6 +43,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iPing, 0, sizeof( m_iPing ) );
 //	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
 	memset( m_iScore, 0, sizeof( m_iScore ) );
+	memset( m_iFortPoints, 0, sizeof( m_iFortPoints ) );
 	memset( m_iDeaths, 0, sizeof( m_iDeaths ) );
 	memset( m_bConnected, 0, sizeof( m_bConnected ) );
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
@@ -149,6 +151,16 @@ int C_PlayerResource::GetTeamScore(int index)
 		return 0;
 
 	return team->Get_Score();
+}
+
+int C_PlayerResource::GetTeamFortPoints(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return 0;
+
+	return team->Get_FortPoints();
 }
 
 float C_PlayerResource::GetTeamScoreTime( int index )
@@ -278,6 +290,17 @@ int	C_PlayerResource::GetPlayerScore( int iIndex )
 		return 0;
 
 	return m_iScore[iIndex];
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	C_PlayerResource::GetFortPoints( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_iFortPoints[iIndex];
 }
 
 //-----------------------------------------------------------------------------

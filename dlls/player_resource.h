@@ -31,6 +31,7 @@ protected:
 	// Stored in individual arrays so they can be sent down via datatables
 	CNetworkArray( int, m_iPing, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iScore, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_iFortPoints, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iDeaths, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_bConnected, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iTeam, MAX_PLAYERS+1 );

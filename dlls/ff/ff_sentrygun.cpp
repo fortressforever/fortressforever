@@ -1198,6 +1198,8 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 	m_hSaboteur = pSaboteur;
 	m_bShootingTeammates = false;
 
+	// AfterShock - scoring system: 100 points for sabotage SG
+	pSaboteur->AddFortPoints(100, true);
 
 	Warning("SG sabotaged\n");
 }

@@ -40,6 +40,7 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	SendPropInt( SENDINFO(m_iScore), 0 ),
+	SendPropInt( SENDINFO(m_iFortPoints), 0 ),
 	// Bug #0000529: Total death column doesn't work
 	SendPropInt( SENDINFO(m_iDeaths), 0 ), // Mulch: send deaths to client
 	SendPropFloat( SENDINFO( m_flScoreTime) ), // Mulch: time team last scored
@@ -125,6 +126,7 @@ void CTeam::Init( const char *pName, int iNumber )
 	InitializePlayers();
 
 	m_iScore = 0;
+	m_iFortPoints = 0;
 	m_iDeaths = 0;
 	m_flScoreTime = 0.0f;
 
@@ -304,6 +306,29 @@ void CTeam::SetScore( int iScore )
 int CTeam::GetScore( void )
 {
 	return m_iScore;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Add / Remove score for this team
+//-----------------------------------------------------------------------------
+void CTeam::AddFortPoints( int iFortPoints )
+{
+	m_iFortPoints += iFortPoints;
+	//m_flScoreTime = gpGlobals->curtime;
+}
+
+void CTeam::SetFortPoints( int iFortPoints )
+{
+	m_iFortPoints= iFortPoints;
+	//m_flScoreTime = gpGlobals->curtime;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get this team's score
+//-----------------------------------------------------------------------------
+int CTeam::GetFortPoints( void )
+{
+	return m_iFortPoints;
 }
 
 //-----------------------------------------------------------------------------

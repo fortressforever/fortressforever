@@ -308,6 +308,7 @@ BEGIN_DATADESC( CBasePlayer )
 	//DEFINE_FIELD( m_lasty, FIELD_INTEGER ),
 
 	DEFINE_FIELD( m_iFrags, FIELD_INTEGER ),
+	DEFINE_FIELD( m_iFortPoints, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iDeaths, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flNextDecalTime, FIELD_TIME ),
 	//DEFINE_AUTO_ARRAY( m_szTeamName, FIELD_STRING ), // mp
@@ -2821,6 +2822,20 @@ void CBasePlayer::IncrementFragCount( int nCount )
 	pl.frags = m_iFrags;
 }
 
+void CBasePlayer::ResetFortPointsCount()
+{
+	m_iFortPoints = 0;
+	//pl.fortpoints = m_iFortPoints;
+}
+
+void CBasePlayer::IncrementFortPointsCount( int nCount )
+{
+	m_iFortPoints += nCount;
+	m_iFortPoints = min(m_iFortPoints, 9999);	// |-- Mirv: Added to placate the trepids
+
+	//pl.fortpoints = m_iFortPoints;
+}
+
 void CBasePlayer::ResetDeathCount()
 {
 	m_iDeaths = 0;
@@ -2852,6 +2867,12 @@ void CBasePlayer::AddPoints( int score, bool bAllowNegativeScore )
 
 	m_iFrags += score;
 	pl.frags = m_iFrags;
+}
+
+void CBasePlayer::AddFortPoints( int fortpoints, bool bAllowNegativeScore )
+{
+	m_iFortPoints += fortpoints;
+	//pl.fortpoints = m_iFortPoints;
 }
 
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )
@@ -7967,6 +7988,12 @@ int	CPlayerInfo::GetFragCount()
 { 
 	Assert( m_pParent );
 	return m_pParent->FragCount(); 
+}
+
+int	CPlayerInfo::GetFortPointsCount() 
+{ 
+	Assert( m_pParent );
+	return m_pParent->FortPointsCount(); 
 }
 
 int	CPlayerInfo::GetDeathCount() 
