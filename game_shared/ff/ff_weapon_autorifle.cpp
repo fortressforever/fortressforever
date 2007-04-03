@@ -27,8 +27,8 @@
 // 1325: Dev variables for tweaking the autorifle
 ConVar ffdev_ar_recoil("ffdev_ar_recoil", "0.4", FCVAR_REPLICATED, "Assault Rifle Recoil Amount");
 ConVar ffdev_ar_push("ffdev_ar_push", "1", FCVAR_REPLICATED, "Assault Rifle Push Amount");
-ConVar ffdev_ar_damage("ffdev_ar_damage", "8", FCVAR_REPLICATED, "Assault Rifle Damage");
-ConVar ffdev_ar_rof("ffdev_ar_rof", "0.2", FCVAR_REPLICATED, "Assault Rifle Rate of Fire");
+ConVar ffdev_ar_damage("ffdev_ar_damage", "10", FCVAR_REPLICATED, "Assault Rifle Damage");
+ConVar ffdev_ar_rof("ffdev_ar_rof", "0.07", FCVAR_REPLICATED, "Assault Rifle Rate of Fire");
 ConVar ffdev_ar_bulletspread("ffdev_ar_bulletspread", "0.01", FCVAR_REPLICATED, "Assault Rifle Bullet Spread");
 
 
@@ -122,7 +122,9 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 	// Fire now
 	Fire();
 
+	// To use server .txt files uncomment this line
 	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFFWpnData().m_flCycleTime;
+	// To use CVARs uncomment this line
 	m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_ar_rof.GetFloat();
 
 	if (pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
