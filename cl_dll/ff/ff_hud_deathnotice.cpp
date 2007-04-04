@@ -414,9 +414,18 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 		// need the _weapon_sniperrifle in case people create "death_notice" entries in other weapon scripts...we just want the sniper rifle's
 		deathMsg.iconDeath = gHUD.GetIcon("death_BOOM_HEADSHOT_weapon_sniperrifle");
 	}
+	else if (Q_stricmp(killedwith, "caltrop") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_grenade_caltrop");
+	}
+	else if (Q_stricmp(killedwith, "grenade_napalmlet") == 0)
+	{
+		deathMsg.iconDeath = gHUD.GetIcon("death_grenade_napalm");
+	}
 	else
 	{
 		// Try and find the death identifier in the icon list
+		DevMsg("Death BY: %s.\n",fullkilledwith );
 		deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
 	}
 
