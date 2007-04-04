@@ -649,7 +649,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 			switch(info.GetCustomKill())
 			{
 			case KILLTYPE_INFECTION:
-				killer_weapon_name = "ff_weapon_medikit";
+				killer_weapon_name = "ff_weapon_medkit";
 				break;
 			case KILLTYPE_BURN_FLAMETHROWER:
 				killer_weapon_name = "ff_weapon_flamethrower";
@@ -667,7 +667,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 				killer_weapon_name = "BOOM_HEADSHOT"; // BOOM HEADSHOT!  AAAAAAAAHHHH!
 				break;
 			}
-
+			
 			UTIL_LogPrintf(" killer_ID: %i\n",killer_ID);
 			UTIL_LogPrintf(" killer_weapon_name: %s\n",killer_weapon_name);
 
