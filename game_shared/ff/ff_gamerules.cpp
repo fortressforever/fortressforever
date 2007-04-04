@@ -1309,7 +1309,7 @@ ConVar mp_prematch( "mp_prematch",
 			switch(info.GetCustomKill())
 			{
 			case KILLTYPE_INFECTION:
-				pszWeapon = "ff_weapon_medikit";
+				pszWeapon = "ff_weapon_medkit";
 				break;
 			case KILLTYPE_BURN_FLAMETHROWER:
 				pszWeapon = "ff_weapon_flamethrower";
