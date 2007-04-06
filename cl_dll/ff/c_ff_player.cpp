@@ -1210,6 +1210,10 @@ void C_FFPlayer::Death()
 	// Reset pipebomb counter!
 	GetPipebombCounter()->Reset();
 
+	// Reset these
+	m_iHallucinationIndex = 0;
+	m_flHallucinationFinish = 0;
+
 	// Reset this to false on death
 	SetStealMouseForAimSentry( false );
 }

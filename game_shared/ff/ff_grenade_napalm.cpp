@@ -188,7 +188,7 @@ void CFFGrenadeNapalm::UpdateOnRemove( void )
 			//EmitSound( "BaseGrenade.Explode" );
 		}
 
-		SetThink( SmokeThink );
+		SetThink( &CFFGrenadeNapalm::SmokeThink );
 		SetTouch( NULL );
 
 		AddEffects( EF_NODRAW );
