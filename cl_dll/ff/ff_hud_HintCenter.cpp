@@ -398,7 +398,7 @@ void CHudHintCenter::VidInit( void )
 	m_pHudIconGlow = new CHudTexture();
 	m_pHudIconGlow->bRenderUsingFont = true;
 	m_pHudIconGlow->hFont = m_hIconFontGlow;
-	m_pHudIconGlow->cCharacterInFont = 'G';
+	m_pHudIconGlow->cCharacterInFont = 'H';
 
 
 
