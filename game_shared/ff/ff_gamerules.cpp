@@ -272,9 +272,9 @@ ConVar mp_prematch( "mp_prematch",
 		// Prematch system, game has not started
 		m_flGameStarted = -1.0f;
 		
-		// Start stats engine
-		SendStats();
-		g_StatsLog->ResetStats();
+		//// Start stats engine
+		//SendStats();
+		//g_StatsLog->ResetStats();
 
 		// Reset the effects timeouts
 		ClearAllowedEffects();
@@ -418,9 +418,9 @@ ConVar mp_prematch( "mp_prematch",
 		{
 			// TODO: Do stuff!
 
-			// Restart stats!
-			SendStats();
-			g_StatsLog->ResetStats();
+			//// Restart stats!
+			//SendStats();
+			//g_StatsLog->ResetStats();
 
 			// Kill entity system helper
 			UTIL_Remove( CFFEntitySystemHelper::GetInstance() );
