@@ -13,27 +13,26 @@
 #ifndef FF_SOCKS_H
 #define FF_SOCKS_H
 
-/**
-* Sockets
-*
-* @author Gavin "Mirvin_Monkey" Bramhill
-* @version 1.0.0
-*/
-class Socks
-{
-public:
-	Socks();
-	~Socks();
-
-	bool	Open(int type, int protocol);
-	bool	Connect(const char *hostname, unsigned short port);
-	bool	Send(const char *buffer);
-	int		Recv(void *buffer, int bufferlen);
-	bool	Close();
-
-private:
-	int		m_iSocket;
-};
-
+///**
+//* Sockets
+//*
+//* @author Gavin "Mirvin_Monkey" Bramhill
+//* @version 1.0.0
+//*/
+//class Socks
+//{
+//public:
+//	Socks();
+//	~Socks();
+//
+//	bool	Open(int type, int protocol);
+//	bool	Connect(const char *hostname, unsigned short port);
+//	bool	Send(const char *buffer);
+//	int		Recv(void *buffer, int bufferlen);
+//	bool	Close();
+//
+//private:
+//	int		m_iSocket;
+//};
 
 #endif /* FF_SOCKS_H */
