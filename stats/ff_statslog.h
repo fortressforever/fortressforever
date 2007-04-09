@@ -129,9 +129,12 @@ public:
 	CQuickBuffer(char *buf, int len) 
 	{
 		m_iLen = len;
-		m_Buf = buf;
+		m_Buf = buf;	// Mulch: what's the purpose of this when the next line does what it does?
 
 		m_Buf[0] = 0;
+
+		// Mulch: It looks like this was set up to point to a char buffer
+		// but it has a buffer itself? What?
 	}
 
 	void Add(const char *fmt, ...) 

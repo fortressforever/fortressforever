@@ -441,86 +441,90 @@ void SendStats()
 	// stop crashing server!
 	return;
 
-	// this is kind of wasteful :(
-	char buf[100000], buf2[120000];
+	// Aegeus crashed on line 450 (which is below the return ^^). How did
+	// this happen?
+	UTIL_LogPrintf( "[STATS] SOMEHOW I GOT HERE AND I SHOULDNT HAVE!\n" );
 
-	DevMsg("[STATS] Sending stats...\n");
+	//// this is kind of wasteful :(
+	//char buf[100000], buf2[120000];
 
-	/*g_StatsLog*/ g_StatsLogSingleton.Serialise(buf, sizeof(buf));
-	DevMsg(buf);
-	DevMsg("------\n\n");
+	//DevMsg("[STATS] Sending stats...\n");
 
-	// generate post-data first (size is used in the part below)
-	Q_snprintf(buf2, sizeof(buf2),
-		"--" STATS_BOUNDARY "\r\n"
-        "Content-Disposition: form-data; name=\"data\"\r\n"
-        "\r\n%s\r\n"
-        "--" STATS_BOUNDARY "\r\n",
+	///*g_StatsLog*/ g_StatsLogSingleton.Serialise(buf, sizeof(buf));
+	//DevMsg(buf);
+	//DevMsg("------\n\n");
 
-		buf);
+	//// generate post-data first (size is used in the part below)
+	//Q_snprintf(buf2, sizeof(buf2),
+	//	"--" STATS_BOUNDARY "\r\n"
+ //       "Content-Disposition: form-data; name=\"data\"\r\n"
+ //       "\r\n%s\r\n"
+ //       "--" STATS_BOUNDARY "\r\n",
 
-	// generate http request
-    Q_snprintf(buf, sizeof(buf),
-		"POST %s HTTP/1.1\r\n"
-		"Host: %s\r\n"
-		"Connection: close\r\n"
-		"Content-type: multipart/form-data, boundary=" STATS_BOUNDARY "\r\n"
-		"Content-length: %d\r\n\r\n"
-		"%s",
-		
-		STATS_URL,
-		STATS_HOST,
-		strlen(buf2),
-		buf2);
+	//	buf);
 
-	DevMsg(buf);
+	//// generate http request
+ //   Q_snprintf(buf, sizeof(buf),
+	//	"POST %s HTTP/1.1\r\n"
+	//	"Host: %s\r\n"
+	//	"Connection: close\r\n"
+	//	"Content-type: multipart/form-data, boundary=" STATS_BOUNDARY "\r\n"
+	//	"Content-length: %d\r\n\r\n"
+	//	"%s",
+	//	
+	//	STATS_URL,
+	//	STATS_HOST,
+	//	strlen(buf2),
+	//	buf2);
 
-	Socks sock;
+	//DevMsg(buf);
 
-	// Open up a socket
-	if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
-	{
-		DevWarning("[STATS] Could not open socket\n");
-		return;
-	}
+	//Socks sock;
 
-	// Connect to remote host
-	if (!sock.Connect(STATS_HOST, 80)) 
-	{
-		DevWarning("[STATS] Could not connect to remote host\n");
-		return;
-	}
+	//// Open up a socket
+	//if (!sock.Open(/*SOCK_STREAM */ 1, 0)) 
+	//{
+	//	DevWarning("[STATS] Could not open socket\n");
+	//	return;
+	//}
 
-	// Send data
-	if (!sock.Send(buf)) 
-	{
-		DevWarning("[STATS] Could not send data to remote host\n");
-		sock.Close();
-		return;
-	}
+	//// Connect to remote host
+	//if (!sock.Connect(STATS_HOST, 80)) 
+	//{
+	//	DevWarning("[STATS] Could not connect to remote host\n");
+	//	return;
+	//}
 
-	// Send data
-	if (!sock.Send(buf)) 
-	{
-		DevWarning("[STATS] Could not send data to remote host\n");
-		sock.Close();
-		return;
-	}
+	//// Send data
+	//if (!sock.Send(buf)) 
+	//{
+	//	DevWarning("[STATS] Could not send data to remote host\n");
+	//	sock.Close();
+	//	return;
+	//}
 
-	int a;
+	//// Send data
+	//if (!sock.Send(buf)) 
+	//{
+	//	DevWarning("[STATS] Could not send data to remote host\n");
+	//	sock.Close();
+	//	return;
+	//}
 
-	// Send data
-	if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
-	{
-		DevWarning("[STATS] Did not get response from stats server\n");
-		sock.Close();
-		return;
-	}
+	//int a;
 
-	buf[a] = '\0';
+	//// Send data
+	//if ((a = sock.Recv(buf, sizeof(buf)-1)) == 0) 
+	//{
+	//	DevWarning("[STATS] Did not get response from stats server\n");
+	//	sock.Close();
+	//	return;
+	//}
 
-	DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
+	//buf[a] = '\0';
 
-	// Close socket
-	sock.Close();
+	//DevMsg("[STATS] Successfully sent stats data. Response:\n---\n%s\n---\n", buf);
+
+	//// Close socket
+	//sock.Close();
 }
