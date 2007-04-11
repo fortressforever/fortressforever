@@ -2831,7 +2831,7 @@ void CBasePlayer::ResetFortPointsCount()
 void CBasePlayer::IncrementFortPointsCount( int nCount )
 {
 	m_iFortPoints += nCount;
-	m_iFortPoints = min(m_iFortPoints, 9999);	// |-- Mirv: Added to placate the trepids
+	m_iFortPoints = min(m_iFortPoints, 9999999);	// |-- Mirv: Added to placate the trepids
 
 	//pl.fortpoints = m_iFortPoints;
 }
