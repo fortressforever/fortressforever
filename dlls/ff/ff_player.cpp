@@ -2215,7 +2215,15 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 		m_fRandomPC = true;
 
 		if( fInstantSwitch )
+		{
 			KillAndRemoveItems();
+
+			if( IsAlive() && (GetClassSlot() != 0) )
+			{
+				CFFLuaSC hPlayerKilled( 1, this );
+				_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
+			}
+		}
 
 		return;
 	}
@@ -2278,6 +2286,12 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	{
 		// But for now we do have instant switching
 		KillAndRemoveItems();
+
+		if( IsAlive() && (GetClassSlot() != 0) )
+		{
+			CFFLuaSC hPlayerKilled( 1, this );
+			_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
+		}		
 
 		// Should call ActivateClass right afterwards too, since otherwise they might
 		// miss out on getting their class because somebody else took it during the 5sec
@@ -2415,6 +2429,10 @@ void CFFPlayer::Command_Team( void )
 	if (IsAlive() && GetTeamNumber() >= TEAM_BLUE)
 	{
 		KillPlayer();
+
+		// This isn't called when you changeteams
+		CFFLuaSC hPlayerKilled( 1, this );
+		_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
 	}
 	
 	ChangeTeam(iTeam);
