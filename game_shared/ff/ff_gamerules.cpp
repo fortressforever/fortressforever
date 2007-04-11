@@ -719,6 +719,21 @@ ConVar mp_prematch( "mp_prematch",
 					}					
 				}
 			}
+
+			if( pbFlags[ AT_RETURN_DROPPED_ITEMS ] )
+			{
+				CBaseEntity *pEntity = gEntList.FindEntityByClassT( NULL, CLASS_INFOSCRIPT );
+				while( pEntity )
+				{
+					CFFInfoScript *pFFScript = dynamic_cast< CFFInfoScript * >( pEntity );
+					if( pFFScript && pFFScript->IsDropped() )
+					{
+						pFFScript->ForceReturn();
+					}
+
+					pEntity = gEntList.FindEntityByClassT( pEntity, CLASS_INFOSCRIPT );
+				}
+			}
 		}
 
 		if( pbFlags[ AT_END_MAP ] )

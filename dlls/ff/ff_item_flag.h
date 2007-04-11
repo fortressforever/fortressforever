@@ -121,6 +121,7 @@ public:
 	void			Drop( float delay, float speed = 0.0f );
 	void			Respawn( float delay );
 	void			Return( void );
+	void			ForceReturn( void );
 
 	void			RemoveThink( void );
 
