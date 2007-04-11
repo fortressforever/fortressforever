@@ -2216,9 +2216,11 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 
 		if( fInstantSwitch )
 		{
+			bool bAlive = IsAlive();
+
 			KillAndRemoveItems();
 
-			if( IsAlive() && (GetClassSlot() != 0) )
+			if( bAlive && (GetClassSlot() != 0) )
 			{
 				CFFLuaSC hPlayerKilled( 1, this );
 				_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
@@ -2284,10 +2286,12 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	// Now just need a way to select which one you want
 	if (fInstantSwitch || GetClassSlot() == 0)
 	{
+		bool bAlive = IsAlive();
+
 		// But for now we do have instant switching
 		KillAndRemoveItems();
 
-		if( IsAlive() && (GetClassSlot() != 0) )
+		if( bAlive && (GetClassSlot() != 0) )
 		{
 			CFFLuaSC hPlayerKilled( 1, this );
 			_scriptman.RunPredicates_LUA( NULL, &hPlayerKilled, "player_killed" );
