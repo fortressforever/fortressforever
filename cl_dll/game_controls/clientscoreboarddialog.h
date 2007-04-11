@@ -82,8 +82,16 @@ private:
 
 protected:
 // column widths at 640
-	enum { NAME_WIDTH = 140, CLASS_WIDTH = 60, FORTPOINTS_WIDTH = 40, SCORE_WIDTH = 40,  DEATH_WIDTH = 40, PING_WIDTH = 30, VOICE_WIDTH = 30, CHANNEL_WIDTH = 0, FRIENDS_WIDTH = 0 };
-	// total = 340
+	enum {      NAME_WIDTH = 140, 
+		        CLASS_WIDTH = 60, 
+		   FORTPOINTS_WIDTH = 60, 
+		        SCORE_WIDTH = 35,  
+		        DEATH_WIDTH = 70, 
+		         PING_WIDTH = 30, 
+		        VOICE_WIDTH = 30, 
+		       CHANNEL_WIDTH = 0, 
+		       FRIENDS_WIDTH = 0 };
+	// total			   = 425  
 
 public:
 	CClientScoreBoardDialog( IViewPort *pViewPort );
