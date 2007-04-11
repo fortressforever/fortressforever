@@ -592,19 +592,20 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 
 		m_pPlayerList->ModifyColumn( i, "name", szTeamName );
 
-		// Look up team fort points
+		// Look up team fort points (currently hacked to get team score (frags) which is what was previously used)
 		wchar_t szFortPoints[ 6 ];
-		swprintf( szFortPoints, L"%d", pGR->GetFortPoints( iTeam ) );
+		swprintf( szFortPoints, L"%d", pGR->GetTeamScore( iTeam ) );
 
-		// Display team fort points
+		// Display team fort points (probably will actually be team score e.g. captures *10)
 		m_pPlayerList->ModifyColumn( i, "fortpoints", szFortPoints );
 
-		// Look up team score
+		// Look up team score (frags)
 		wchar_t szScore[ 6 ];
 		swprintf( szScore, L"%d", pGR->GetTeamScore( iTeam ) );
 
-		// Display team score
-		m_pPlayerList->ModifyColumn( i, "score", szScore );
+		// Display team frags
+		// AfterShock - commented this out so teamdeaths arent shown (and scores are clearer)
+		//m_pPlayerList->ModifyColumn( i, "score", szScore );
 
 
 		// Look up team deaths
@@ -612,7 +613,8 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 		swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( iTeam ) );
 
 		// Display team deaths
-		m_pPlayerList->ModifyColumn( i, "deaths", szDeaths );
+		// AfterShock - commented this out so teamdeaths arent shown (and scores are clearer)
+		//m_pPlayerList->ModifyColumn( i, "deaths", szDeaths );
 
 		// Set up team latency
 		if( iNumPlayers > 0 )
