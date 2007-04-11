@@ -524,9 +524,6 @@ bool C_FFTeamScore_MaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyVal
 //-----------------------------------------------------------------------------
 void C_FFTeamScore_MaterialProxy::OnBind( void *pC_BaseEntity )
 {
-	if( !pC_BaseEntity )
-		return;
-
 	C_FFTeam *pTeam = GetGlobalFFTeam( m_iTeam );
 	if( !pTeam )
 		return;
