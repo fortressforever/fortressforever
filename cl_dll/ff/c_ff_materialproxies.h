@@ -10,6 +10,13 @@
 //	---------
 //	09/23/2005,	Mulchman: 
 //		First created
+//
+//	08/10/2006, Mulchman:
+//		Removed some unneeded stuff. I don't think a
+//		couple of these are used anymore, though.
+//
+// 04/11/2007, Mulchman:
+//		Adding team score mat proxies
 
 #ifndef FF_MATERIALPROXIES_H
 #define FF_MATERIALPROXIES_H
@@ -21,6 +28,8 @@
 class IMaterialVar;
 enum MaterialVarType_t;
 class C_BaseEntity;
+
+#include "c_ff_player.h"
 
 //=============================================================================
 //
@@ -160,6 +169,79 @@ public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
 
+};
+
+//=============================================================================
+//
+//	class C_FFTeamScore_MaterialProxy
+//
+//=============================================================================
+class C_FFTeamScore_MaterialProxy : public CResultProxy
+{
+public:
+	C_FFTeamScore_MaterialProxy( void );
+
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+
+protected:
+	int m_iTeam;
+};
+
+//=============================================================================
+//
+//	class C_FFTeamScore_Blue_MaterialProxy
+//
+//=============================================================================
+class C_FFTeamScore_Blue_MaterialProxy : public C_FFTeamScore_MaterialProxy
+{
+public:
+	C_FFTeamScore_Blue_MaterialProxy( void )
+	{
+		m_iTeam = FF_TEAM_BLUE;
+	}
+};
+
+//=============================================================================
+//
+//	class C_FFTeamScore_Red_MaterialProxy
+//
+//=============================================================================
+class C_FFTeamScore_Red_MaterialProxy : public C_FFTeamScore_MaterialProxy
+{
+public:
+	C_FFTeamScore_Red_MaterialProxy( void )
+	{
+		m_iTeam = FF_TEAM_RED;
+	}
+};
+
+//=============================================================================
+//
+//	class C_FFTeamScore_Yellow_MaterialProxy
+//
+//=============================================================================
+class C_FFTeamScore_Yellow_MaterialProxy : public C_FFTeamScore_MaterialProxy
+{
+public:
+	C_FFTeamScore_Yellow_MaterialProxy( void )
+	{
+        m_iTeam = FF_TEAM_YELLOW;
+	}
+};
+
+//=============================================================================
+//
+//	class C_FFTeamScore_Green_MaterialProxy
+//
+//=============================================================================
+class C_FFTeamScore_Green_MaterialProxy : public C_FFTeamScore_MaterialProxy
+{
+public:
+	C_FFTeamScore_Green_MaterialProxy( void )
+	{
+        m_iTeam = FF_TEAM_GREEN;
+	}
 };
 
 #endif // FF_MATERIALPROXIES_H

@@ -45,5 +45,8 @@ private:
 
 };
 
+// Global team handling functions
+C_FFTeam *GetGlobalFFTeam( int iTeamNumber );
+
 
 #endif // C_FF_TEAM_H

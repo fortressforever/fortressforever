@@ -3531,6 +3531,31 @@
 			<File
 				RelativePath=".\ff\te_firebullets.h">
 			</File>
+			<Filter
+				Name="FF Stats Source"
+				Filter="">
+				<File
+					RelativePath="..\stats\ff_socks.cpp">
+					<FileConfiguration
+						Name="Debug FF|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\stats\ff_socks.h">
+				</File>
+				<File
+					RelativePath="..\stats\ff_statdefs.h">
+				</File>
+				<File
+					RelativePath="..\stats\ff_statslog.cpp">
+				</File>
+				<File
+					RelativePath="..\stats\ff_statslog.h">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="FF Shared Source"
@@ -3883,31 +3908,6 @@
 			</File>
 			<File
 				RelativePath="..\omnibot\TF_Messages.h">
-			</File>
-		</Filter>
-		<Filter
-			Name="FF Stats Source"
-			Filter="">
-			<File
-				RelativePath="..\stats\ff_socks.cpp">
-				<FileConfiguration
-					Name="Debug FF|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\stats\ff_socks.h">
-			</File>
-			<File
-				RelativePath="..\stats\ff_statdefs.h">
-			</File>
-			<File
-				RelativePath="..\stats\ff_statslog.cpp">
-			</File>
-			<File
-				RelativePath="..\stats\ff_statslog.h">
 			</File>
 		</Filter>
 		<File

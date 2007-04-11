@@ -56,3 +56,11 @@ int C_FFTeam::GetAllies( void )
 	return m_iAllies;
 }
 // <-- Mirv: Menues need to know limits
+
+//-----------------------------------------------------------------------------
+// Purpose: Get a pointer to the specified TF team manager
+//-----------------------------------------------------------------------------
+C_FFTeam *GetGlobalFFTeam( int iTeamNumber )
+{
+	return (C_FFTeam *)GetGlobalTeam( iTeamNumber );
+}

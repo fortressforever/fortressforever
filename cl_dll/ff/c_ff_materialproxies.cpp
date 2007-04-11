@@ -14,6 +14,9 @@
 //	08/10/2006, Mulchman:
 //		Removed some unneeded stuff. I don't think a
 //		couple of these are used anymore, though.
+//
+// 04/11/2007, Mulchman:
+//		Adding team score mat proxies
 
 #include "cbase.h"
 #include "c_ff_materialproxies.h"
@@ -23,8 +26,8 @@
 #include "IClientRenderable.h"
 #include "ff_shareddefs.h"
 
-//#include "c_ff_player.h"
 #include "ff_buildableobjects_shared.h"
+#include "c_ff_team.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -490,3 +493,49 @@ void C_FFSpyCloakMaterialProxy::OnBind( void *pC_BaseEntity )
 }
 
 EXPOSE_INTERFACE( C_FFSpyCloakMaterialProxy, IMaterialProxy, "FF_SpyCloakProxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+
+//=============================================================================
+//
+//	class C_FFTeamScore_MaterialProxy
+//
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+C_FFTeamScore_MaterialProxy::C_FFTeamScore_MaterialProxy( void )
+{
+	m_iTeam = FF_TEAM_UNASSIGNED;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool C_FFTeamScore_MaterialProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if( !CResultProxy::Init( pMaterial, pKeyValues ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void C_FFTeamScore_MaterialProxy::OnBind( void *pC_BaseEntity )
+{
+	if( !pC_BaseEntity )
+		return;
+
+	C_FFTeam *pTeam = GetGlobalFFTeam( m_iTeam );
+	if( !pTeam )
+		return;
+
+	// Update the value in the material proxy
+	SetFloatResult( (float)pTeam->Get_Score() );
+}
+
+EXPOSE_INTERFACE( C_FFTeamScore_Blue_MaterialProxy, IMaterialProxy, "FF_TeamScore_Blue_Proxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+EXPOSE_INTERFACE( C_FFTeamScore_Red_MaterialProxy, IMaterialProxy, "FF_TeamScore_Red_Proxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+EXPOSE_INTERFACE( C_FFTeamScore_Yellow_MaterialProxy, IMaterialProxy, "FF_TeamScore_Yellow_Proxy" IMATERIAL_PROXY_INTERFACE_VERSION )
+EXPOSE_INTERFACE( C_FFTeamScore_Green_MaterialProxy, IMaterialProxy, "FF_TeamScore_Green_Proxy" IMATERIAL_PROXY_INTERFACE_VERSION )
