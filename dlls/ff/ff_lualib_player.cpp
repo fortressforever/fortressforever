@@ -101,6 +101,7 @@ void CFFLuaLib::InitPlayer(lua_State* L)
 			.def("GetSteamID",			&CFFPlayer::GetSteamID)
 			.def("GetPing",				&CFFPlayer::GetPing)
 			.def("GetPacketloss",		&CFFPlayer::GetPacketloss)
+			.def("IsAlive",				&CFFPlayer::IsAlive)
 			.enum_("ClassId")
 			[
 				value("kScout",			CLASS_SCOUT),
