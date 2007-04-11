@@ -223,7 +223,7 @@ void CFFDetpack::OnObjectTouch( CBaseEntity *pOther )
 	CPASAttenuationFilter sndFilter( this );
 	EmitSound( sndFilter, entindex(), "Detpack.Defuse" );
 	
-	//AfterShock - Scoring System: 100 points for defusing detpack
+	// AfterShock - Scoring System: 100 points for defusing detpack
 	pPlayer->AddFortPoints(100,true);
 	// Finally remove
 	RemoveQuietly();	
