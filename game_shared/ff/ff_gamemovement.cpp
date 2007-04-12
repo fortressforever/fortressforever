@@ -59,8 +59,8 @@ public:
 	CFFGameMovement() {};
 };
 
-static ConVar bhop_cap("ffdev_bhop_cap", "1.08", FCVAR_REPLICATED);
-static ConVar bhop_baseline("ffdev_bhop_baseline", "1.04", FCVAR_REPLICATED);
+static ConVar bhop_cap("ffdev_bhop_cap", "1.15", FCVAR_REPLICATED);
+static ConVar bhop_baseline("ffdev_bhop_baseline", "1.10", FCVAR_REPLICATED);
 static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.5", FCVAR_REPLICATED);
 
 //-----------------------------------------------------------------------------
