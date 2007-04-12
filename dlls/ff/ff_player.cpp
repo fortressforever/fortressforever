@@ -6034,17 +6034,31 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 
 			//AfterShock - Scoring System: 100 points for uncovering spy
 			AddFortPoints(30, true);
-			
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
-
-#ifndef CLIENT_DLL
-		
 			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, "#FF_HINT_SPY_LOSEDISGUISE" );
-#endif
-
 
 			// This the correct func for logs?
 			UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));
+		}
+
+		// Will only let scouts uncloak dudes for the meantime
+		if( GetClassSlot() == CLASS_SCOUT )
+		{
+			if( ffplayer && ffplayer->IsCloaked() && g_pGameRules->PlayerRelationship( this, ffplayer ) == GR_NOTTEAMMATE )
+			{
+				ClientPrint( ffplayer, HUD_PRINTTALK, "#FF_SPY_BEENREVEALEDCLOAKED" );
+				ffplayer->Command_SpyCloak();
+
+				// MULCH: Assign real value here, just copy/pasted from above for
+				// Bug #0001444: Scouts do not uncloak spies
+				//AfterShock - Scoring System: ??? points for uncovering spy
+				AddFortPoints( 30, true );
+				ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_REVEALEDCLOAKEDSPY" );
+				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, "#FF_HINT_SPY_LOSECLOAK" );
+
+				// This the correct func for logs?
+				UTIL_LogPrintf( "%s just uncloaked an enemy spy!\n", STRING( ffplayer->pl.netname ) );
+			}
 		}
 	}
 
