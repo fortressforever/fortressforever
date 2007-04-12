@@ -52,4 +52,9 @@
 #define SG_MIN_PITCH		-90.0f
 #define SG_SCAN_HALFWIDTH	40.0f
 
+#define SG_HEALTH_LEVEL1	180
+#define SG_HEALTH_LEVEL2	216
+#define SG_HEALTH_LEVEL3	250
+
+
 #endif // FF_SENTRYGUN_H
