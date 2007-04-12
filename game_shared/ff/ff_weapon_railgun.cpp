@@ -36,7 +36,7 @@
 
 ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
 
-ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "10.0", FCVAR_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
+ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "4.0", FCVAR_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
 ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "10.0", FCVAR_REPLICATED, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
 
 ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.30", FCVAR_REPLICATED, "Cooldown time after firing a half-charged shot." );
@@ -50,12 +50,12 @@ ConVar ffdev_railgun_revsound_pitch_high("ffdev_railgun_revsound_pitch_high", "2
 ConVar ffdev_railgun_revsound_pitch_low("ffdev_railgun_revsound_pitch_low", "64", FCVAR_REPLICATED, "Railgun Rev Sound Low Pitch");
 ConVar ffdev_railgun_revsound_updateinterval("ffdev_railgun_revsound_updateinterval", "0.01", FCVAR_REPLICATED, "How much time to wait before updating");
 
-ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1100.0", FCVAR_REPLICATED, "Minimum speed of rail" );
-ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3300.0", FCVAR_REPLICATED, "Maximum speed of rail" );
-ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "25.0", FCVAR_REPLICATED, "Minimum damage dealt by rail" );
-ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "75.0", FCVAR_REPLICATED, "Maximum damage dealt by rail" );
+ConVar ffdev_rail_speed_min( "ffdev_rail_speed_min", "1800.0", FCVAR_REPLICATED, "Minimum speed of rail" );
+ConVar ffdev_rail_speed_max( "ffdev_rail_speed_max", "3000.0", FCVAR_REPLICATED, "Maximum speed of rail" );
+ConVar ffdev_rail_damage_min( "ffdev_rail_damage_min", "35.0", FCVAR_REPLICATED, "Minimum damage dealt by rail" );
+ConVar ffdev_rail_damage_max( "ffdev_rail_damage_max", "60.0", FCVAR_REPLICATED, "Maximum damage dealt by rail" );
 
-ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "0.0", FCVAR_REPLICATED, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
+ConVar ffdev_railgun_pushforce_min("ffdev_railgun_pushforce_min", "32.0", FCVAR_REPLICATED, "Minimum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 ConVar ffdev_railgun_pushforce_max("ffdev_railgun_pushforce_max", "64.0", FCVAR_REPLICATED, "Maximum force of backwards push (Like the HL Gauss Gun, WOOH YEAH!)");
 
 ConVar ffdev_railgun_recoil_min("ffdev_railgun_recoil_min", "1", FCVAR_REPLICATED, "Minimum recoil");
