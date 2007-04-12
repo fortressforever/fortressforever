@@ -960,8 +960,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_flShellCycleTime = 0.2f;
 
-			m_iMaxHealth = 150;
-			m_iHealth = 150;
+			m_iMaxHealth = SG_HEALTH_LEVEL1;
+			m_iHealth = SG_HEALTH_LEVEL1;
 
 			m_flLockTime = 1.0f;
 			//m_flTurnSpeed = 4.0f;
@@ -980,8 +980,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 
 			m_flShellCycleTime = 0.1f;
 
-			m_iMaxHealth = 180;
-			m_iHealth = 180;
+			m_iMaxHealth = SG_HEALTH_LEVEL2;
+			m_iHealth = SG_HEALTH_LEVEL2;
 
 			m_flLockTime = 0.5f;
 			//m_flTurnSpeed = 7.0f;
@@ -1005,8 +1005,8 @@ bool CFFSentryGun::Upgrade( bool bUpgradeLevel, int iCells, int iShells, int iRo
 			m_flShellCycleTime = 0.1f;
 			m_flRocketCycleTime = 3.0f;
 
-			m_iMaxHealth = 216;
-			m_iHealth = 216;
+			m_iMaxHealth = SG_HEALTH_LEVEL3;
+			m_iHealth = SG_HEALTH_LEVEL3;
 
 			m_flLockTime = 0.5f;
 			//m_flTurnSpeed = 7.0f;
