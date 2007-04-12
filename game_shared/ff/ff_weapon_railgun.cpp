@@ -34,6 +34,9 @@
 	#include "te_effect_dispatch.h"
 #endif
 
+#define RAILGUN_AMMOAMOUNT_HALFCHARGE 3
+#define RAILGUN_AMMOAMOUNT_FULLCHARGE 5
+
 ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
 
 ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "4.0", FCVAR_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
@@ -298,9 +301,9 @@ void CFFWeaponRailgun::Fire( void )
 	pPlayer->ViewPunch( -QAngle( ffdev_railgun_recoil_min.GetFloat() + ((ffdev_railgun_recoil_max.GetFloat() - ffdev_railgun_recoil_min.GetFloat()) * m_flClampedChargeTime), 0, 0 ) );
 
 	// cycletime is based on charge level
-	if (m_iAmmoUsed < 2 || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
+	if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE || pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0)
 		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_zerocharge.GetFloat();
-	else if (m_iAmmoUsed < 3)
+	else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE)
 		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_halfcharge.GetFloat();
 	else
 		m_flNextPrimaryAttack = gpGlobals->curtime + ffdev_railgun_cooldowntime_fullcharge.GetFloat();
@@ -355,7 +358,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 			if ( pPlayer->GetAmmoCount(GetPrimaryAmmoType()) > 0 )
 			{
 
-				if ( (m_flClampedChargeTime >= flMaxChargeTime / 2 && m_iAmmoUsed < 2) || (m_flClampedChargeTime >= flMaxChargeTime && m_iAmmoUsed < 3) )
+				if ( (m_flClampedChargeTime >= flMaxChargeTime / 2 && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE ) || (m_flClampedChargeTime >= flMaxChargeTime && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE ) )
 				{
 					// play a charge sound
 					// it's very important that half-charge is SPECIAL2 and full-charge is SPECIAL3
@@ -369,9 +372,9 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 				}
 			}
 			// autofire if we have no ammo to charge with and aren't already halfway charged (so players can still try to get a good charged shot)
-			else if (m_iAmmoUsed < 2)
+			else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE)
 				Fire();
-			else if (m_iAmmoUsed < 3)
+			else if (m_iAmmoUsed < RAILGUN_AMMOAMOUNT_FULLCHARGE)
 			{
 				// doing this so you can have 2 ammo and get halfway charged, but won't instantly become fully charged when you get more ammo
 				m_flClampedChargeTime = flMaxChargeTime / 2;
@@ -408,7 +411,7 @@ void CFFWeaponRailgun::ItemPostFrame( void )
 
 	// allow players to continue to charge if they've hit the halfway mark
 	// and don't make it immediately switch, causing shot sounds to stop
-	if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0 && m_flNextPrimaryAttack < gpGlobals->curtime && m_iAmmoUsed < 2)
+	if (pPlayer->GetAmmoCount(GetPrimaryAmmoType()) <= 0 && m_flNextPrimaryAttack < gpGlobals->curtime && m_iAmmoUsed < RAILGUN_AMMOAMOUNT_HALFCHARGE)
 		HandleFireOnEmpty();
 }
 
