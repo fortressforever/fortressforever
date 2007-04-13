@@ -176,6 +176,8 @@ void CHudDeathNotice::Paint()
 		vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
 		vgui::localize()->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
 
+		//bool bSelfKill = ( (  == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
+
 		// Get the local position for this notice
 		int len = UTIL_ComputeStringWidth( m_hTextFont, victim );
 		int y = yStart + (m_flLineHeight * i);
@@ -234,6 +236,7 @@ void CHudDeathNotice::Paint()
 		x -= 28;
 		// <--
 
+
 		// Only draw killers name if it wasn't a suicide
 		if ( !m_DeathNotices[i].iSuicide )
 		{
@@ -252,14 +255,14 @@ void CHudDeathNotice::Paint()
 
 			x += 5;	// |-- Mirv: 5px gap
 		}
-
-		Color iconColor( 255, 80, 0, 255 );
 		Color iconTeamKillColor(0, 185, 0 , 250);
+		Color iconColor( 255, 80, 0, 255 );
+		
 
 		// Don't include self kills when determining if teamkill
 		//bool bTeamKill = (iKillerTeam == iVictimTeam && m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex);
-		bool bTeamKill = ( ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE ) && ( m_DeathNotices[i].Killer.iEntIndex != m_DeathNotices[i].Victim.iEntIndex ) );
-
+		bool bTeamKill = ( ( FFGameRules()->IsTeam1AlliedToTeam2( iKillerTeam, iVictimTeam ) == GR_TEAMMATE ) && ( !m_DeathNotices[i].iSuicide ) );
+		
 		// Draw death weapon
 		//If we're using a font char, this will ignore iconTall and iconWide
 		icon->DrawSelf( x, y - (iconTall / 4), iconWide, iconTall, bTeamKill ? iconTeamKillColor : iconColor );
@@ -433,7 +436,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	if ( !deathMsg.iconDeath /*|| deathMsg.iSuicide*/ )
 	{
 		// Can't find it, so use the default skull & crossbones icon
-		deathMsg.iconDeath = m_iconD_skull;
+		DevMsg("Default death icon!" );
+		deathMsg.iconDeath = gHUD.GetIcon("death_world");
 	}
 
 	// Add it to our list of death notices
