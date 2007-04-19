@@ -323,8 +323,12 @@ namespace FFLib
 
 	void ConsoleToAll(const char* szMessage)
 	{
+		DevMsg( "Debug: " );
 		DevMsg( szMessage );
 		DevMsg( "\n" );
+
+		Msg( szMessage );
+		Msg( "\n" );
 	}
 
 	void IncludeScript(const char* script)
@@ -363,7 +367,7 @@ namespace FFLib
 		}
 		else
 		{
-			DevWarning("[SCRIPT] Warning: Invalid filename: %s\n", script);
+			Msg("[SCRIPT] Warning: Invalid filename: %s\n", script);
 		}
 	}
 

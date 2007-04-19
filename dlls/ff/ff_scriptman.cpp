@@ -61,17 +61,17 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 	// don't allow scripters to sneak in scripts after the initial load
 	if(!_scriptman.m_isLoading)
 	{
-		DevMsg("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
+		Msg("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
 		return false;
 	}
 
 	// open the file
-	DevMsg("[SCRIPT] Loading Lua File: %s\n", filename);
+	Msg("[SCRIPT] Loading Lua File: %s\n", filename);
 	FileHandle_t hFile = filesystem->Open(filename, "rb", "MOD");
 
 	if (!hFile)
 	{
-		DevWarning("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
+		Msg("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
 		return false;
 	}
 
@@ -100,22 +100,22 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 			const char *error = lua_tostring(L, -1);
 			if (error)
 			{
-				Warning("Error loading %s: %s\n", filename, error);
+				Msg("Error loading %s: %s\n", filename, error);
 				lua_pop( L, 1 );
 			}
 			else
-				Warning("Unknown Syntax Error loading %s\n", filename);
+				Msg("Unknown Syntax Error loading %s\n", filename);
 		}
 		else
 		{
-			Warning("Unknown Error loading %s\n", filename);
+			Msg("Unknown Error loading %s\n", filename);
 		}
 		return false;
 	}
 
 	// execute script. script at top scrop gets exectued
 	lua_pcall(L, 0, 0, 0);
-	DevMsg( "[SCRIPT] Successfully loaded %s\n", filename );
+	Msg( "[SCRIPT] Successfully loaded %s\n", filename );
 
 	// cleanup
 	MemFreeScratch();
