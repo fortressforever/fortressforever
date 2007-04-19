@@ -157,17 +157,13 @@ void CHudCrosshair::Paint( void )
 	C_FFPlayer *pPlayer = ToFFPlayer(CBasePlayer::GetLocalPlayer());
 	
 	if (!pPlayer)
-	{
 		return;
-	}
 
 	C_FFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
 
 	// No crosshair for no weapon
 	if (!pWeapon)
-	{
 		return;
-	}
 
 	FFWeaponID weaponID = pPlayer->GetActiveFFWeapon()->GetWeaponID();
 
@@ -213,6 +209,27 @@ void CHudCrosshair::Paint( void )
 	surface()->DrawSetTextPos(x - charOffsetX, y - charOffsetY);
 	surface()->DrawUnicodeChar(unicode[0]);
 	// <-- Mirv
+
+	// Mulch: Draw charge bar!
+	if( weaponID == FF_WEAPON_ASSAULTCANNON )
+	{
+		extern float GetAssaultCannonCharge();
+		float flCharge = GetAssaultCannonCharge();
+
+		if( flCharge <= 0.0f )
+			return;
+
+		int iLeft = x - charOffsetX;
+		int iTop = y + charOffsetY;
+		int iRight = iLeft + (charOffsetX * 2);
+		int iBottom = iTop + 10;
+
+		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
+
+		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+	}
 }
 
 //-----------------------------------------------------------------------------
