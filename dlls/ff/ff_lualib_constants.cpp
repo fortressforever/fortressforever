@@ -172,6 +172,12 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kChangeClassCivilian",	AT_CHANGECLASS_CIVILIAN),
 				value("kChangeClassRandom",	AT_CHANGECLASS_RANDOM),
 
+				value("kChangeTeamBlue",	AT_CHANGETEAM_BLUE),
+				value("kChangeTeamRed",		AT_CHANGETEAM_RED),
+				value("kChangeTeamYellow",	AT_CHANGETEAM_YELLOW),
+				value("kChangeTeamGreen",	AT_CHANGETEAM_GREEN),
+				value("kChangeTeamSpectator", AT_CHANGETEAM_SPEC),
+
 				value("kStopPrimedGrens",	AT_STOP_PRIMED_GRENS)
 			],
 

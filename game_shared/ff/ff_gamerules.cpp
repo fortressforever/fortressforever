@@ -580,6 +580,31 @@ ConVar mp_prematch( "mp_prematch",
 						pPlayer->InstaSwitch( random->RandomInt( 0, iChangeClassValidClasses.Count() - 1 ) );
 					}
 
+					if( pbFlags[ AT_CHANGETEAM_BLUE ] )
+					{
+						pPlayer->ChangeTeam( FF_TEAM_BLUE );
+					}
+
+					if( pbFlags[ AT_CHANGETEAM_RED ] )
+					{
+						pPlayer->ChangeTeam( FF_TEAM_RED );
+					}
+
+					if( pbFlags[ AT_CHANGETEAM_YELLOW ] )
+					{
+						pPlayer->ChangeTeam( FF_TEAM_YELLOW );
+					}
+
+					if( pbFlags[ AT_CHANGETEAM_GREEN ] )
+					{
+						pPlayer->ChangeTeam( FF_TEAM_GREEN );
+					}
+
+					if( pbFlags[ AT_CHANGETEAM_SPEC ] )
+					{
+						pPlayer->ChangeTeam( FF_TEAM_SPEC );
+					}
+
 					if( pbFlags[ AT_DROP_ITEMS ] || pbFlags[ AT_THROW_ITEMS ] )
 					{
 						// Don't do anything...
