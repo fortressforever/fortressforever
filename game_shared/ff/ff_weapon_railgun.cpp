@@ -39,7 +39,7 @@
 
 ConVar ffdev_railgun_maxchargetime( "ffdev_railgun_maxchargetime", "2.0", FCVAR_REPLICATED, "Maximum charge for railgun" );
 
-ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "4.0", FCVAR_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
+ConVar ffdev_railgun_overchargetime( "ffdev_railgun_overchargetime", "6.0", FCVAR_REPLICATED, "Railgun overcharges at this time, stops charging, and damages player." );
 ConVar ffdev_railgun_overchargedamage( "ffdev_railgun_overchargedamage", "10.0", FCVAR_REPLICATED, "Amount of damage an overcharge gives to the player (doubled on full charge)." );
 
 ConVar ffdev_railgun_cooldowntime_zerocharge( "ffdev_railgun_cooldowntime_zerocharge", "0.30", FCVAR_REPLICATED, "Cooldown time after firing a half-charged shot." );
