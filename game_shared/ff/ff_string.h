@@ -26,6 +26,12 @@ public:
 	CFFString &operator=( const CFFString& hRHS );
 	CFFString &operator=( const char *pszString );
 
+	CFFString &operator+=( const CFFString& hRHS );
+	CFFString &operator+=( const char *pszString );
+	CFFString &operator+=( const double& hRHS );
+	CFFString &operator+=( const float& hRHS );
+	CFFString &operator+=( const int& hRHS );
+
 	bool operator==( const CFFString& hRHS ) const;
 	bool operator==( const char *pszString ) const;
 
