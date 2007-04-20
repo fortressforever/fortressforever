@@ -62,7 +62,7 @@ void FinishClientPutInServer( CFFPlayer *pPlayer )
 	// --> Mirv: Various connectiong things
 	
 	// Register this with the stats engine
-	//g_StatsLog.RegisterPlayerID(pPlayer->entindex(), engine->GetPlayerUserId(pPlayer->edict()), engine->GetPlayerNetworkIDString(pPlayer->edict()));
+	//g_StatsLog->RegisterPlayerID(pPlayer->entindex(), engine->GetPlayerUserId(pPlayer->edict()), engine->GetPlayerNetworkIDString(pPlayer->edict()));
 
 	// Bring up the MOTD in front of the team menu
 /*	const ConVar *hostname = cvar->FindVar( "hostname" );

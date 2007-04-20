@@ -21,6 +21,7 @@
 	#include "c_ff_player.h"
 #else
 	#include "ff_player.h"
+	#include "ff_statslog.h"
 #endif
 
 
@@ -116,7 +117,7 @@ void CFFWeaponAutoRifle::PrimaryAttack()
 	pPlayer->RemoveAmmo(nShots, m_iPrimaryAmmoType);
 
 	// record in stats as a firing
-	//g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
+	g_StatsLog->AddStat(pPlayer->m_iStatsID, m_iStatFired, 1);
 #endif
 
 	// Fire now

@@ -1326,13 +1326,13 @@ void CFFPlayer::Spawn( void )
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
-	//// get our stats id, just in case.
-	//m_iStatsID = g_StatsLog->GetPlayerID(
-	//	engine->GetPlayerNetworkIDString(this->edict()),
-	//	GetClassSlot(),
-	//	GetTeamNumber(),
-	//	engine->GetPlayerUserId(this->edict()),
-	//	GetPlayerName());
+	// get our stats id, just in case.
+	m_iStatsID = g_StatsLog->GetPlayerID(
+		engine->GetPlayerNetworkIDString(this->edict()),
+		GetClassSlot(),
+		GetTeamNumber(),
+		engine->GetPlayerUserId(this->edict()),
+		GetPlayerName());
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1441,17 +1441,17 @@ void CFFPlayer::InitialSpawn( void )
 	// Set up their global voice channel
 	m_iChannel = 0;
 
-	//// I'm putting this here, I'm not sure if it's the best place though
-	//// I wanted to make sure that the statslog was created or I would've put
-	//// it in the constructor - FryGuy
-	//m_iStatDeath = g_StatsLog->GetStatID("deaths");
-	//m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
-	//m_iStatKill = g_StatsLog->GetStatID("kills");
-	//m_iStatInfections = g_StatsLog->GetStatID("infections");
-	//m_iStatHeals = g_StatsLog->GetStatID("heals");
-	//m_iStatHealHP = g_StatsLog->GetStatID("healhp");
-	//m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
-	//m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
+	// I'm putting this here, I'm not sure if it's the best place though
+	// I wanted to make sure that the statslog was created or I would've put
+	// it in the constructor - FryGuy
+	m_iStatDeath = g_StatsLog->GetStatID("deaths");
+	m_iStatTeamKill = g_StatsLog->GetStatID("teamkills");
+	m_iStatKill = g_StatsLog->GetStatID("kills");
+	m_iStatInfections = g_StatsLog->GetStatID("infections");
+	m_iStatHeals = g_StatsLog->GetStatID("heals");
+	m_iStatHealHP = g_StatsLog->GetStatID("healhp");
+	m_iStatCritHeals = g_StatsLog->GetStatID("critheals");
+	m_iStatInfectCures = g_StatsLog->GetStatID("infectcures");
 
 	m_hRadioTagData = ( CFFRadioTagData * )CreateEntityByName( "ff_radiotagdata" );
 	Assert( m_hRadioTagData );
@@ -1636,23 +1636,23 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if( GetClassSlot() == CLASS_SPY )
 		SpyCloakFadeIn( true );
 
-	//// Log the death to the stats engine
-	//g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
+	// Log the death to the stats engine
+	g_StatsLog->AddStat(m_iStatsID, m_iStatDeath, 1);
 
 	// TODO: Take SGs into account here?
 	CFFPlayer *pKiller = dynamic_cast<CFFPlayer *> (info.GetAttacker());
 	
-	//// Log the correct stat for the killer
-	//if (pKiller)
-	//{
-	//	if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
-	//		g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
-	//	else
-	//		g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
+	// Log the correct stat for the killer
+	if (pKiller)
+	{
+		if (g_pGameRules->PlayerRelationship(this, pKiller) == GR_TEAMMATE)
+			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatTeamKill, 1);
+		else
+			g_StatsLog->AddStat(pKiller->m_iStatsID, m_iStatKill, 1);
 
-	//	if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
-	//		g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
-	//}
+		if (info.GetInflictor() && info.GetInflictor()->edict() && dynamic_cast<CFFWeaponBase*>(info.GetInflictor()))
+			g_StatsLog->AddAction(pKiller->m_iStatsID, m_iStatsID, dynamic_cast<CFFWeaponBase*>(info.GetInflictor())->m_iActionKill, gpGlobals->curtime, "", GetAbsOrigin(), GetLocation());
+	}
 
 	// Added to send hint on EMP death
 #ifndef CLIENT_DLL
@@ -3325,9 +3325,6 @@ void CFFPlayer::Command_SevTest( void )
 
 	STOLEN X3
 */
-	//char buf[100000];
-	//g_StatsLog->Serialise(buf, sizeof(buf)-1);
-	//DevMsg(buf);
 }
 
 /**
@@ -4253,9 +4250,9 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 		if( pCurer )
 			pCurer->AddFortPoints( 100, true );
 
-		//// Log this in the stats
-		//if (pCurer)
-		//	g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
+		// Log this in the stats
+		if (pCurer)
+			g_StatsLog->AddStat(pCurer->m_iStatsID, m_iStatInfectCures, 1);
 	}
 
 	// Hack-ish - removing infection effect
@@ -5345,13 +5342,13 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
 	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), true);
 	
-	//// Log the added health
-	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
-	//g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
-	//
-	//// Critical heal is when they are <= 15hp
-	//if (iOriginalHP <= 15)
-	//	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
+	// Log the added health
+	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
+	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHealHP, m_iHealth - iOriginalHP);
+	
+	// Critical heal is when they are <= 15hp
+	if (iOriginalHP <= 15)
+		g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatCritHeals, 1);
 
 	if (IsInfected())
 	{
