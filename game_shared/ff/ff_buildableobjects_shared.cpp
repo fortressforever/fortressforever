@@ -532,14 +532,6 @@ int CFFBuildableObject::GetHealthPercent( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Get number of rockets a SG has
-//-----------------------------------------------------------------------------
-int CFFSentryGun::GetRockets( void )
-{
-	return m_iRockets;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Team accessor [mirv]
 //-----------------------------------------------------------------------------
 int CFFBuildableObject::GetTeamNumber()
