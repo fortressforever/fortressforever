@@ -480,7 +480,6 @@ public:
 
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
-	int		m_iFuseTime;
 	float	m_flDetonateTime;
 	bool	m_bFiveSeconds;
 #endif
@@ -520,6 +519,13 @@ public:
 	CNetworkVar( int, m_iArmor );
 	CNetworkVar( int, m_iRadioTags );
 
+	int GetCells( void ) { return m_iCells; }
+	int GetShells( void ) { return m_iShells; }
+	int GetNails ( void ) { return m_iNails; }
+	int GetRockets( void ) { return m_iRockets; }
+	int GetArmor( void ) { return m_iArmor; }
+	int GetRadioTags( void ) { return m_iRadioTags; }
+	
 	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
 	int NeedsArmor( void ) { return m_iMaxArmor - m_iArmor; }
 	int NeedsCells( void ) { return m_iMaxCells - m_iCells; }
@@ -622,8 +628,11 @@ public:
 	// --> shared
 	CFFSentryGun( void );
 	~CFFSentryGun( void );
-	int GetRockets( void );
-
+	int GetRockets( void )  { return m_iRockets; };
+	int GetShells( void )  { return m_iShells; };
+	int GetRocketsPercent( void )  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
+	int GetShellsPercent( void )  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
+	
 	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
 	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
 	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
