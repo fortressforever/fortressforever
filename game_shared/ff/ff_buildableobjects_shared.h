@@ -480,6 +480,7 @@ public:
 
 	static CFFDetpack *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pentOwner = NULL );
 
+	int		m_iFuseTime;
 	float	m_flDetonateTime;
 	bool	m_bFiveSeconds;
 #endif
