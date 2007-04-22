@@ -70,7 +70,6 @@ IMPLEMENT_SERVERCLASS_ST( CFFDispenser, DT_FFDispenser )
 	SendPropInt( SENDINFO( m_iNails ) ),
 	SendPropInt( SENDINFO( m_iRockets ) ),
 	SendPropInt( SENDINFO( m_iArmor ) ),
-	SendPropInt( SENDINFO( m_iRadioTags ) ),
 END_SEND_TABLE()
 
 // Start of our data description for the class
@@ -183,7 +182,7 @@ void CFFDispenser::GoLive( void )
 		pOwner->RemoveAmmo(100, AMMO_CELLS);
 
 		int iArmor = min( min( 40, pOwner->GetArmor() ), NeedsArmor() );
-		AddAmmo( iArmor, 0, 0, 0, 0, 0 );
+		AddAmmo( iArmor, 0, 0, 0, 0 );
 		pOwner->RemoveArmor( iArmor );
 	}
 
@@ -352,7 +351,6 @@ void CFFDispenser::OnObjectThink( void )
 	m_iCells = clamp( m_iCells + 20, 0, m_iMaxCells );
 	m_iRockets = clamp( m_iRockets + 10, 0, m_iMaxRockets );
 	m_iArmor = clamp( m_iArmor + 50, 0, m_iMaxArmor );
-	m_iRadioTags = clamp( m_iRadioTags + 10, 0, m_iMaxRadioTags );
 
 	// Update ammo percentage
 	UpdateAmmoPercentage();	
@@ -415,7 +413,6 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 	DispenseHelper( pPlayer, m_iNails.GetForModify(), m_iGiveNails, AMMO_NAILS );
 	DispenseHelper( pPlayer, m_iShells.GetForModify(), m_iGiveShells, AMMO_SHELLS );
 	DispenseHelper( pPlayer, m_iRockets.GetForModify(), m_iGiveRockets, AMMO_ROCKETS );
-	DispenseHelper( pPlayer, m_iRadioTags.GetForModify(), m_iGiveRadioTags, AMMO_RADIOTAG );
 
 	// Give armor if we can
 	if( m_iArmor > 0 )
@@ -438,7 +435,7 @@ void CFFDispenser::Dispense( CFFPlayer *pPlayer )
 // AddAmmo
 //		Put stuff into the dispenser
 //
-void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags )
+void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets )
 {
 	VPROF_BUDGET( "CFFDispenser::AddAmmo", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -447,7 +444,6 @@ void CFFDispenser::AddAmmo( int iArmor, int iCells, int iShells, int iNails, int
 	m_iShells = min( m_iShells + iShells, m_iMaxShells );
 	m_iNails = min( m_iNails + iNails, m_iMaxNails );
 	m_iRockets = min( m_iRockets + iRockets, m_iMaxRockets );
-	m_iRadioTags = min( m_iRadioTags + iRadioTags, m_iMaxRadioTags );
 
 	UpdateAmmoPercentage();
 }
@@ -496,8 +492,8 @@ void CFFDispenser::UpdateAmmoPercentage( void )
 {
 	VPROF_BUDGET( "CFFDispenser::UpdateAmmoPercentage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets + m_iRadioTags + m_iArmor;
-	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets + m_iMaxRadioTags + m_iMaxArmor;
+	float flAmmo = m_iCells + m_iNails + m_iShells + m_iRockets + m_iArmor;
+	float flMaxAmmo = m_iMaxCells + m_iMaxNails + m_iMaxShells + m_iMaxRockets + m_iMaxArmor;
 
 	m_iAmmoPercent = ( ( flAmmo / flMaxAmmo ) * 100 );
 }
@@ -530,7 +526,7 @@ void CFFDispenser::SendStatsToBot()
 //-----------------------------------------------------------------------------
 // Purpose: If already sabotaged then don't try and sabotage again
 //-----------------------------------------------------------------------------
-bool CFFDispenser::CanSabotage()
+bool CFFDispenser::CanSabotage() const
 {
 	VPROF_BUDGET( "CFFDispenser::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -543,7 +539,7 @@ bool CFFDispenser::CanSabotage()
 //-----------------------------------------------------------------------------
 // Purpose: Is this building in level 1 sabotage
 //-----------------------------------------------------------------------------
-bool CFFDispenser::IsSabotaged()
+bool CFFDispenser::IsSabotaged() const
 {
 	VPROF_BUDGET( "CFFDispenser::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
 

@@ -322,8 +322,8 @@ namespace Omnibot
 			return TF_WP_AUTORIFLE;
 		case FF_WEAPON_SNIPERRIFLE: 
 			return TF_WP_SNIPER_RIFLE;
-		case FF_WEAPON_RADIOTAGRIFLE: 
-			return TF_WP_RADIOTAG_RIFLE;
+		/*case FF_WEAPON_RADIOTAGRIFLE: 
+			return TF_WP_RADIOTAG_RIFLE;*/
 		case FF_WEAPON_FLAMETHROWER: 
 			return TF_WP_FLAMETHROWER;
 		case FF_WEAPON_IC: 
@@ -381,8 +381,8 @@ namespace Omnibot
 			return FF_WEAPON_AUTORIFLE;
 		case TF_WP_SNIPER_RIFLE: 
 			return FF_WEAPON_SNIPERRIFLE;
-		case TF_WP_RADIOTAG_RIFLE: 
-			return FF_WEAPON_RADIOTAGRIFLE;
+		/*case TF_WP_RADIOTAG_RIFLE: 
+			return FF_WEAPON_RADIOTAGRIFLE;*/
 		case TF_WP_FLAMETHROWER: 
 			return FF_WEAPON_FLAMETHROWER;
 		case TF_WP_NAPALMCANNON: 
@@ -2097,8 +2097,8 @@ namespace Omnibot
 				_max = pFFPlayer->GetMaxDetpack();
 				break;
 			case TF_AMMO_RADIOTAG:
-				_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
-				_max = pFFPlayer->GetMaxRadioTag();
+				/*_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
+				_max = pFFPlayer->GetMaxRadioTag();*/
 				break;
 			case TF_AMMO_GRENADE1:
 				_cur = pFFPlayer->GetPrimaryGrenades();

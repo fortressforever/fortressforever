@@ -302,11 +302,11 @@ void CFFPlayer::FireBullet(
 	// for radio tagging and to make ammo type work in the DamageFunctions
 	info.SetAmmoType( iBulletType );
 
-#ifdef GAME_DLL
-	// Hack for sniper rifle to become radio tag rifle
-	if( flSniperRifleCharge )
-		info.SetAmmoType( m_iRadioTaggedAmmoIndex );
-#endif
+//#ifdef GAME_DLL
+//	// Hack for sniper rifle to become radio tag rifle
+//	if( flSniperRifleCharge )
+//		info.SetAmmoType( m_iRadioTaggedAmmoIndex );
+//#endif
 
 	CalculateBulletDamageForce(&info, iBulletType, vecDir, tr.endpos, fScale);
 	info.ScaleDamageForce(fScale * fScale * fScale);
@@ -540,7 +540,7 @@ void CFFPlayer::ClassSpecificSkill_Post()
 //			UNDONE: We've shifted the player's abs origins now. Remove
 //					this later.
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetLegacyAbsOrigin()
+Vector CFFPlayer::GetLegacyAbsOrigin() const
 {
 	return GetAbsOrigin();
 	//return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
@@ -549,7 +549,7 @@ Vector CFFPlayer::GetLegacyAbsOrigin()
 //-----------------------------------------------------------------------------
 // Purpose: Get our feet position
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetFeetOrigin( void )
+Vector CFFPlayer::GetFeetOrigin( void ) const
 {
 	// TODO: Get a position for in water (when swimming)
 
@@ -562,7 +562,7 @@ Vector CFFPlayer::GetFeetOrigin( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get our waist position
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetWaistOrigin( void )
+Vector CFFPlayer::GetWaistOrigin( void ) const
 {
 	return GetAbsOrigin();
 }
@@ -570,7 +570,7 @@ Vector CFFPlayer::GetWaistOrigin( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetHealthPercentage( void )
+int CFFPlayer::GetHealthPercentage( void ) const
 {
 	float flPerc;
 	flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
@@ -580,7 +580,7 @@ int CFFPlayer::GetHealthPercentage( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetArmorPercentage( void )
+int CFFPlayer::GetArmorPercentage( void ) const
 {
 	float flPerc;
 	flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;

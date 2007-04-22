@@ -36,7 +36,6 @@ class CFFPlayer;
 #define AMMO_ROCKETS			"AMMO_ROCKETS"	// rpg
 #define AMMO_CELLS				"AMMO_CELLS"	// for building dispenser, sentry gun
 #define AMMO_DETPACK			"AMMO_DETPACK"	// for "building" detpacks
-#define AMMO_RADIOTAG			"AMMO_RADIOTAG"	// for radio tagging
 #define AMMO_GREN1				"AMMO_GREN1"	// gren1
 #define AMMO_GREN2				"AMMO_GREN2"	// gren2
 
@@ -127,7 +126,6 @@ typedef enum
 	// Sniper specific
 	FF_WEAPON_AUTORIFLE, 
 	FF_WEAPON_SNIPERRIFLE, 
-	FF_WEAPON_RADIOTAGRIFLE, 
 
 	// Pyro specific
 	FF_WEAPON_FLAMETHROWER, 

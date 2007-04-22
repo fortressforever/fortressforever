@@ -50,7 +50,6 @@ const char *s_WeaponAliasInfo[] =
 
 	"autorifle", 		// FF_WEAPON_AUTORIFLE
 	"sniperrifle", 		// FF_WEAPON_SNIPERRIFLE
-	"radiotagrifle", 	// FF_WEAPON_RADIOTAGRIFLE
 
 	"flamethrower", 	// FF_WEAPON_FLAMETHROWER, 
 	"incendiarycannon", // FF_WEAPON_INCENDIARYCANNON

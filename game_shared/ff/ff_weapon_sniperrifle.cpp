@@ -37,7 +37,6 @@ static int g_iBeam, g_iHalo;
 #ifdef CLIENT_DLL 
 	#define CFFWeaponSniperRifle C_FFWeaponSniperRifle
 	#define CFFWeaponLaserDot C_FFWeaponLaserDot
-	#define CFFWeaponRadioTagRifle C_FFWeaponRadioTagRifle
 	#include "c_ff_player.h"
 	#include "view.h"
 
@@ -863,78 +862,3 @@ float CFFWeaponSniperRifle::GetRecoilMultiplier()
 {
 	return clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);
 }
-
-//=============================================================================
-// CFFWeaponRadioTagRifle
-//=============================================================================
-
-class CFFWeaponRadioTagRifle : public CFFWeaponSniperRifle
-{
-public:
-	DECLARE_CLASS(CFFWeaponRadioTagRifle, CFFWeaponSniperRifle);
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	CFFWeaponRadioTagRifle() {};
-	~CFFWeaponRadioTagRifle() {};
-
-	// TODO: Temporary for now...
-	/*
-	virtual void Fire() 
-	{
-		CFFPlayer *pPlayer = GetPlayerOwner();
-		const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();
-
-		FX_FireBullets(
-			pPlayer->entindex(), 
-			pPlayer->Weapon_ShootPosition(), 
-			pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), 
-			GetWeaponID(), 
-			Primary_Mode, 
-			CBaseEntity::GetPredictionRandomSeed() & 255, 
-			pWeaponInfo.m_flBulletSpread);
-	}
-	*/
-
-	/*
-	virtual void PrimaryAttack();
-	virtual void WeaponIdle();
-	virtual void Spawn();
-
-	virtual bool Deploy();
-
-	void UpdateLaserPosition();
-	*/
-
-	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_RADIOTAGRIFLE; }
-
-private:
-
-	CFFWeaponRadioTagRifle(const CFFWeaponRadioTagRifle &);
-
-	/*
-#ifdef GAME_DLL
-	CHandle< CFFWeaponLaserDot >	m_hLaserDot;
-#endif
-	*/
-
-};
-
-//=============================================================================
-// CFFWeaponRadioTagRifle tables
-//=============================================================================
-
-IMPLEMENT_NETWORKCLASS_ALIASED(FFWeaponRadioTagRifle, DT_FFWeaponRadioTagRifle) 
-
-BEGIN_NETWORK_TABLE(CFFWeaponRadioTagRifle, DT_FFWeaponRadioTagRifle) 
-END_NETWORK_TABLE() 
-
-BEGIN_PREDICTION_DATA(CFFWeaponRadioTagRifle) 
-END_PREDICTION_DATA() 
-
-LINK_ENTITY_TO_CLASS(ff_weapon_radiotagrifle, CFFWeaponRadioTagRifle);
-PRECACHE_WEAPON_REGISTER(ff_weapon_radiotagrifle);
-
-//=============================================================================
-// CFFWeaponRadioTagRifle implementation
-//=============================================================================

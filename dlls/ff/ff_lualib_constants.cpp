@@ -41,7 +41,6 @@ const char *LookupLuaAmmo( int iLuaAmmoType )
 		case LUA_AMMO_CELLS: return AMMO_CELLS; break;
 		case LUA_AMMO_NAILS: return AMMO_NAILS; break;
 		case LUA_AMMO_ROCKETS: return AMMO_ROCKETS; break;
-		case LUA_AMMO_RADIOTAG: return AMMO_RADIOTAG; break;
 		case LUA_AMMO_DETPACK: return AMMO_DETPACK; break;
 		case LUA_AMMO_GREN1: return AMMO_GREN1; break;
 		case LUA_AMMO_GREN2: return AMMO_GREN2; break;
@@ -74,8 +73,6 @@ int LookupAmmoLua( int iAmmoType )
 				return LUA_AMMO_NAILS;
 			else if( !Q_strcmp( pszName, AMMO_ROCKETS ) )
 				return LUA_AMMO_ROCKETS;
-			else if( !Q_strcmp( pszName, AMMO_RADIOTAG ) )
-				return LUA_AMMO_RADIOTAG;
 			else if( !Q_strcmp( pszName, AMMO_DETPACK ) )
 				return LUA_AMMO_DETPACK;
 			// TODO: Maybe figure these in somehow?
@@ -106,7 +103,6 @@ void CFFLuaLib::InitConstants(lua_State* L)
 				value("kCells",				LUA_AMMO_CELLS),
 				value("kNails",				LUA_AMMO_NAILS),
 				value("kRockets",			LUA_AMMO_ROCKETS),
-				value("kRadiotag",			LUA_AMMO_RADIOTAG),
 				value("kDetpack",			LUA_AMMO_DETPACK),
 				value("kGren1",				LUA_AMMO_GREN1),
 				value("kGren2",				LUA_AMMO_GREN2),

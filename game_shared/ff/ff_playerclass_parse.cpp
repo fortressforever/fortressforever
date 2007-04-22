@@ -394,8 +394,6 @@ void CFFPlayerClassInfo::Parse(KeyValues *pKeyValuesData, const char *szPlayerCl
 				m_iMaxRockets = iVal;
 			else if (Q_strcmp(AMMO_DETPACK, pszAmmo) == 0) 
 				m_iMaxDetpack = iVal;
-			else if (Q_strcmp(AMMO_RADIOTAG, pszAmmo) == 0) 
-				m_iMaxRadioTag = iVal;
 
 			iMaxNumAmmos++;
 		}

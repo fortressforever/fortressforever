@@ -193,20 +193,18 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					int iShells = min( min( 40, pPlayer->GetAmmoCount( AMMO_SHELLS ) ), pDispenser->NeedsShells() );
 					int iNails = min( min( 30, pPlayer->GetAmmoCount( AMMO_NAILS ) ), pDispenser->NeedsNails() );
 					int iRockets = min( min( 10, pPlayer->GetAmmoCount( AMMO_ROCKETS ) ), pDispenser->NeedsRockets() );
-					int iRadioTags = min( min( 10, pPlayer->GetAmmoCount( AMMO_RADIOTAG ) ), pDispenser->NeedsRadioTags() );
 
 					// If we give it anything, play a special sound. Pun intended.
-					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) || ( iRadioTags > 0 ) )
+					if( ( iCells > 0 ) || ( iShells > 0 ) || ( iNails > 0 ) || ( iRockets > 0 ) )
 						WeaponSoundLocal( SPECIAL3 );
 
 #ifdef GAME_DLL
-					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets, iRadioTags );
+					pDispenser->AddAmmo( 0, iCells, iShells, iNails, iRockets );
 
 					pPlayer->RemoveAmmo( iCells, AMMO_CELLS );
 					pPlayer->RemoveAmmo( iShells, AMMO_SHELLS );
 					pPlayer->RemoveAmmo( iNails, AMMO_NAILS );
 					pPlayer->RemoveAmmo( iRockets, AMMO_ROCKETS );
-					pPlayer->RemoveAmmo( iRadioTags, AMMO_RADIOTAG );
 #endif
 				}
 
