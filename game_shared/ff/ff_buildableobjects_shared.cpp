@@ -524,7 +524,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get health as a percentage
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetHealthPercent( void ) const
+int CFFBuildableObject::GetHealthPercent( void )
 {
 	float flPercent = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;
 
@@ -534,7 +534,7 @@ int CFFBuildableObject::GetHealthPercent( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Team accessor [mirv]
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetTeamNumber() const
+int CFFBuildableObject::GetTeamNumber()
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 
@@ -547,7 +547,7 @@ int CFFBuildableObject::GetTeamNumber() const
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables owner
 //-----------------------------------------------------------------------------
-CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void ) const
+CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void )
 {
 	if( m_hOwner.Get() )
 		return ToFFPlayer( m_hOwner.Get() );
@@ -558,7 +558,7 @@ CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables team
 //-----------------------------------------------------------------------------
-CFFTeam *CFFBuildableObject::GetOwnerTeam( void ) const
+CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
@@ -570,7 +570,7 @@ CFFTeam *CFFBuildableObject::GetOwnerTeam( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables team id
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetOwnerTeamId( void ) const
+int CFFBuildableObject::GetOwnerTeamId( void )
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )

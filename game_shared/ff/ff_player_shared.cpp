@@ -540,7 +540,7 @@ void CFFPlayer::ClassSpecificSkill_Post()
 //			UNDONE: We've shifted the player's abs origins now. Remove
 //					this later.
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetLegacyAbsOrigin() const
+Vector CFFPlayer::GetLegacyAbsOrigin()
 {
 	return GetAbsOrigin();
 	//return GetAbsOrigin() + (FBitSet(GetFlags(), FL_DUCKING) ? Vector(0, 0, 16.0f) : Vector(0, 0, 36.0f));
@@ -549,7 +549,7 @@ Vector CFFPlayer::GetLegacyAbsOrigin() const
 //-----------------------------------------------------------------------------
 // Purpose: Get our feet position
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetFeetOrigin( void ) const
+Vector CFFPlayer::GetFeetOrigin( void )
 {
 	// TODO: Get a position for in water (when swimming)
 
@@ -562,7 +562,7 @@ Vector CFFPlayer::GetFeetOrigin( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Get our waist position
 //-----------------------------------------------------------------------------
-Vector CFFPlayer::GetWaistOrigin( void ) const
+Vector CFFPlayer::GetWaistOrigin( void )
 {
 	return GetAbsOrigin();
 }
@@ -570,7 +570,7 @@ Vector CFFPlayer::GetWaistOrigin( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetHealthPercentage( void ) const
+int CFFPlayer::GetHealthPercentage( void )
 {
 	float flPerc;
 	flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
@@ -580,7 +580,7 @@ int CFFPlayer::GetHealthPercentage( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetArmorPercentage( void ) const
+int CFFPlayer::GetArmorPercentage( void )
 {
 	float flPerc;
 	flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;

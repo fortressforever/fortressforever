@@ -2094,7 +2094,7 @@ void CFFPlayer::Command_SetChannel( void )
 	m_iChannel = iChannel;
 }
 
-int CFFPlayer::GetClassSlot() const
+int CFFPlayer::GetClassSlot()
 {
 /*	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -5615,12 +5615,12 @@ void CFFPlayer::Command_Disguise()
 	}
 }
 
-bool CFFPlayer::IsDisguised( void ) const
+bool CFFPlayer::IsDisguised( void )
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
 
-int CFFPlayer::GetDisguisedTeam( void ) const
+int CFFPlayer::GetDisguisedTeam( void )
 {
 	if( IsDisguised() )	
 		return ( m_iSpyDisguise & 0x0000000F );
@@ -5628,7 +5628,7 @@ int CFFPlayer::GetDisguisedTeam( void ) const
 	return 0;
 }
 
-int CFFPlayer::GetDisguisedClass( void ) const
+int CFFPlayer::GetDisguisedClass( void )
 {
 	if( IsDisguised() )
 		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -5637,14 +5637,14 @@ int CFFPlayer::GetDisguisedClass( void ) const
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedTeam( void ) const
+int CFFPlayer::GetNewDisguisedTeam( void )
 {
 	// Assumes we're a spy and currently disguising
 	return ( m_iNewSpyDisguise & 0x0000000F );
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedClass( void ) const
+int CFFPlayer::GetNewDisguisedClass( void )
 {
 	// Assumes we're a spy and currently disguising
 	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -6002,7 +6002,7 @@ bool CFFPlayer::IsInNoBuild() const
 //-----------------------------------------------------------------------------
 // Purpose: Is the flashlight on or off, taken from HL2MP
 //-----------------------------------------------------------------------------
-int CFFPlayer::FlashlightIsOn() const
+int CFFPlayer::FlashlightIsOn()
 {
 	return IsEffectActive(EF_DIMLIGHT);
 }

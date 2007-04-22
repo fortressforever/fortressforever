@@ -234,8 +234,8 @@ public:
 	// <-- Mirv: Proper sound effects
 
 	// --> mulch
-	int GetHealthPercentage( void ) const;
-	int GetArmorPercentage( void ) const;
+	int GetHealthPercentage( void );
+	int GetArmorPercentage( void );
 	// <--
 
 private:
@@ -280,7 +280,7 @@ public:
 	void ChangeTeam(int iTeamNum);
 	void ChangeClass(const char *szNewClassName);
 	int ActivateClass( void );
-	int GetClassSlot() const;
+	int GetClassSlot();
 	int GetNextClassSlot() { return m_iNextClass; }
 
 	void KillPlayer( void );
@@ -405,14 +405,14 @@ public:
 	// Can we update our location yet?
 	void SetLocation(int entindex, const char *szNewLocation, int iNewLocationTeam);
 	void RemoveLocation( int entindex );
-	const char *GetLocation( void ) const
+	const char *GetLocation( void ) 
 	{ 
 		if(m_Locations.Count() > 0)
-			return m_Locations[0].locationname;
+			return const_cast< char * >( m_Locations[0].locationname );
 		else
 			return m_szLastLocation;
 	}
-	int GetLocationTeam( void ) const
+	int GetLocationTeam( void ) 
 	{ 
 		if(m_Locations.Count() > 0)
 			return m_Locations[0].team; 
@@ -690,7 +690,7 @@ public:
 	void Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk = NULL, float flDistance = 0.0f);
 
 	CNetworkVar( int, m_iClassStatus );
-	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }
+	int GetClassForClient() { return (0x0000000F & m_iClassStatus); }
 
 	// Use this to directly set a player class.
 	// 0 is unassigned. Yar.
@@ -743,9 +743,9 @@ private:
 	CNetworkVar( unsigned int, m_bDisguisable );
 
 public:	
-	int GetDisguisedClass( void ) const;
-	int GetDisguisedTeam( void ) const;
-	bool IsDisguised( void ) const;
+	int GetDisguisedClass( void );
+	int GetDisguisedTeam( void );
+	bool IsDisguised( void );
 	void SetDisguise(int iTeam, int iClass, bool bInstant = false);
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
@@ -796,8 +796,8 @@ public:
 	int GetPacketloss( void ) const;
 
 private:
-	int GetNewDisguisedClass( void ) const;
-	int GetNewDisguisedTeam( void ) const;
+	int GetNewDisguisedClass( void );
+	int GetNewDisguisedTeam( void );
 	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
 
@@ -805,7 +805,7 @@ public:
 	void FinishDisguise();
 	void ResetDisguise();
 
-	int		FlashlightIsOn( void ) const;
+	int		FlashlightIsOn( void );
 	void	FlashlightTurnOn( void );
 	void	FlashlightTurnOff( void );
 
@@ -813,9 +813,9 @@ public:
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
-	Vector GetLegacyAbsOrigin() const;
-	Vector GetWaistOrigin( void ) const;
-	Vector GetFeetOrigin( void ) const;
+	Vector GetLegacyAbsOrigin();
+	Vector GetWaistOrigin( void );
+	Vector GetFeetOrigin( void );
 
 	virtual void Touch(CBaseEntity *pOther);
 	void	InstaSwitch(int iClassNum);

@@ -526,7 +526,7 @@ void CFFDispenser::SendStatsToBot()
 //-----------------------------------------------------------------------------
 // Purpose: If already sabotaged then don't try and sabotage again
 //-----------------------------------------------------------------------------
-bool CFFDispenser::CanSabotage() const
+bool CFFDispenser::CanSabotage()
 {
 	VPROF_BUDGET( "CFFDispenser::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -539,7 +539,7 @@ bool CFFDispenser::CanSabotage() const
 //-----------------------------------------------------------------------------
 // Purpose: Is this building in level 1 sabotage
 //-----------------------------------------------------------------------------
-bool CFFDispenser::IsSabotaged() const
+bool CFFDispenser::IsSabotaged()
 {
 	VPROF_BUDGET( "CFFDispenser::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
 

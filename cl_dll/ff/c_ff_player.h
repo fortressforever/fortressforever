@@ -256,8 +256,8 @@ public:
 	// ---> end
 
 	// --> mulch
-	int GetHealthPercentage( void ) const;
-	int GetArmorPercentage( void ) const;
+	int GetHealthPercentage( void );
+	int GetArmorPercentage( void );
 
 	// This is so when we ID a disguised spy we use the same
 	// player name until that spy disguises as something else
@@ -272,9 +272,9 @@ public:
 
 public:	
 	SpyDisguiseWeapon m_DisguisedWeapons[11];
-	int GetDisguisedClass( void ) const;
-	int GetDisguisedTeam( void ) const;
-	bool IsDisguised( void ) const;
+	int GetDisguisedClass( void );
+	int GetDisguisedTeam( void );
+	bool IsDisguised( void );
 	CNetworkVar( int, m_iSpyDisguise );
 
 public:
@@ -343,7 +343,7 @@ public:
 
 	// --> Mirv: Hold some class info on the player side
 	int m_iClassStatus;
-	int GetClassSlot( void ) const;
+	int GetClassSlot( void );
 
 	void ClassSpecificSkill();
 	void ClassSpecificSkill_Post();
@@ -365,9 +365,9 @@ public:
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
-	Vector GetLegacyAbsOrigin() const;
-	Vector GetWaistOrigin( void ) const;
-	Vector GetFeetOrigin( void ) const;
+	Vector GetLegacyAbsOrigin();
+	Vector GetWaistOrigin( void );
+	Vector GetFeetOrigin( void );
 
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleShotImpactingWater(const FireBulletsInfo_t &info, const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest);
