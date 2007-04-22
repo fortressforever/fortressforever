@@ -1846,7 +1846,7 @@ bool C_FFPlayer::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool C_FFPlayer::IsDisguised( void ) const
+bool C_FFPlayer::IsDisguised( void )
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
@@ -1854,7 +1854,7 @@ bool C_FFPlayer::IsDisguised( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_FFPlayer::GetDisguisedTeam( void ) const
+int C_FFPlayer::GetDisguisedTeam( void )
 {
 	if( IsDisguised() )	
 		return ( m_iSpyDisguise & 0x0000000F );
@@ -1865,7 +1865,7 @@ int C_FFPlayer::GetDisguisedTeam( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_FFPlayer::GetDisguisedClass( void ) const
+int C_FFPlayer::GetDisguisedClass( void )
 {
 	if( IsDisguised() )
 		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -1874,7 +1874,7 @@ int C_FFPlayer::GetDisguisedClass( void ) const
 }
 
 // --> Mirv: Get the class
-int C_FFPlayer::GetClassSlot( void ) const
+int C_FFPlayer::GetClassSlot( void )
 {
 	return ( m_iClassStatus & 0x0000000F );
 }
