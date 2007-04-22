@@ -61,7 +61,7 @@ public:
 
 static ConVar bhop_cap("ffdev_bhop_cap", "1.17", FCVAR_REPLICATED);
 static ConVar bhop_baseline("ffdev_bhop_baseline", "1.12", FCVAR_REPLICATED);
-static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.7", FCVAR_REPLICATED);
+static ConVar bhop_pcfactor("ffdev_bhop_pcfactor", "0.65", FCVAR_REPLICATED);
 
 //-----------------------------------------------------------------------------
 // Purpose: Provides TFC jump heights, trimping, doublejumps
