@@ -234,8 +234,8 @@ public:
 	// <-- Mirv: Proper sound effects
 
 	// --> mulch
-	int GetHealthPercentage( void );
-	int GetArmorPercentage( void );
+	int GetHealthPercentage( void ) const;
+	int GetArmorPercentage( void ) const;
 	// <--
 
 private:
@@ -280,8 +280,8 @@ public:
 	void ChangeTeam(int iTeamNum);
 	void ChangeClass(const char *szNewClassName);
 	int ActivateClass( void );
-	int GetClassSlot();
-	int GetNextClassSlot() { return m_iNextClass; }
+	int GetClassSlot() const;
+	int GetNextClassSlot() const { return m_iNextClass; }
 
 	void KillPlayer( void );
 	void RemoveItems( void );
@@ -405,14 +405,14 @@ public:
 	// Can we update our location yet?
 	void SetLocation(int entindex, const char *szNewLocation, int iNewLocationTeam);
 	void RemoveLocation( int entindex );
-	const char *GetLocation( void ) 
+	const char *GetLocation( void ) const
 	{ 
 		if(m_Locations.Count() > 0)
-			return const_cast< char * >( m_Locations[0].locationname );
+			return m_Locations[0].locationname;
 		else
 			return m_szLastLocation;
 	}
-	int GetLocationTeam( void ) 
+	int GetLocationTeam( void ) const
 	{ 
 		if(m_Locations.Count() > 0)
 			return m_Locations[0].team; 
@@ -690,7 +690,7 @@ public:
 	void Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk = NULL, float flDistance = 0.0f);
 
 	CNetworkVar( int, m_iClassStatus );
-	int GetClassForClient() { return (0x0000000F & m_iClassStatus); }
+	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }
 
 	// Use this to directly set a player class.
 	// 0 is unassigned. Yar.
@@ -743,9 +743,9 @@ private:
 	CNetworkVar( unsigned int, m_bDisguisable );
 
 public:	
-	int GetDisguisedClass( void );
-	int GetDisguisedTeam( void );
-	bool IsDisguised( void );
+	int GetDisguisedClass( void ) const;
+	int GetDisguisedTeam( void ) const;
+	bool IsDisguised( void ) const;
 	void SetDisguise(int iTeam, int iClass, bool bInstant = false);
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
@@ -796,8 +796,8 @@ public:
 	int GetPacketloss( void ) const;
 
 private:
-	int GetNewDisguisedClass( void );
-	int GetNewDisguisedTeam( void );
+	int GetNewDisguisedClass( void ) const;
+	int GetNewDisguisedTeam( void ) const;
 	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
 
@@ -805,7 +805,7 @@ public:
 	void FinishDisguise();
 	void ResetDisguise();
 
-	int		FlashlightIsOn( void );
+	int		FlashlightIsOn( void ) const;
 	void	FlashlightTurnOn( void );
 	void	FlashlightTurnOff( void );
 

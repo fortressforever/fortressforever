@@ -87,7 +87,7 @@ typedef struct SpyInfo_s
 	void	SetClass( int iClass ) { m_iClass = iClass; }
 	void	SetName( const char *pszName ) { Q_strcpy( m_szName, pszName ); }
 
-	bool	SameGuy( int iTeam, int iClass )
+	bool	SameGuy( int iTeam, int iClass ) const
 	{
 		return( ( m_iTeam == iTeam ) && ( m_iClass == iClass ) );
 	}
@@ -256,8 +256,8 @@ public:
 	// ---> end
 
 	// --> mulch
-	int GetHealthPercentage( void );
-	int GetArmorPercentage( void );
+	int GetHealthPercentage( void ) const;
+	int GetArmorPercentage( void ) const;
 
 	// This is so when we ID a disguised spy we use the same
 	// player name until that spy disguises as something else
@@ -272,9 +272,9 @@ public:
 
 public:	
 	SpyDisguiseWeapon m_DisguisedWeapons[11];
-	int GetDisguisedClass( void );
-	int GetDisguisedTeam( void );
-	bool IsDisguised( void );
+	int GetDisguisedClass( void ) const;
+	int GetDisguisedTeam( void ) const;
+	bool IsDisguised( void ) const;
 	CNetworkVar( int, m_iSpyDisguise );
 
 public:
@@ -343,7 +343,7 @@ public:
 
 	// --> Mirv: Hold some class info on the player side
 	int m_iClassStatus;
-	int GetClassSlot( void );
+	int GetClassSlot( void ) const;
 
 	void ClassSpecificSkill();
 	void ClassSpecificSkill_Post();

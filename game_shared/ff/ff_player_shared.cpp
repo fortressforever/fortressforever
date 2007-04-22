@@ -570,7 +570,7 @@ Vector CFFPlayer::GetWaistOrigin( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetHealthPercentage( void )
+int CFFPlayer::GetHealthPercentage( void ) const
 {
 	float flPerc;
 	flPerc = ((float) GetHealth() / (float) GetMaxHealth()) * 100.0f;
@@ -580,7 +580,7 @@ int CFFPlayer::GetHealthPercentage( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int CFFPlayer::GetArmorPercentage( void )
+int CFFPlayer::GetArmorPercentage( void ) const
 {
 	float flPerc;
 	flPerc = ((float) GetArmor() / (float) GetMaxArmor()) * 100.0f;
@@ -645,28 +645,36 @@ CFFBuildableObject *CFFPlayer::GetBuildable( int iBuildable ) const
 	return pEntity;
 }
 
-/*
-bool CFFPlayer::IsDisguised()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFFPlayer::IsDisguised( void ) const
 {
-	return (GetClassSlot() == CLASS_SPY) && (m_iSpyDisguise != 0);
+	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
 
-int CFFPlayer::GetDisguisedTeam()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetDisguisedTeam( void ) const
 {
-	if (IsDisguised()) 	
-		return (m_iSpyDisguise & 0x0000000F);
+	if( IsDisguised() )	
+		return ( m_iSpyDisguise & 0x0000000F );
 
-	return 0;
+	return TEAM_UNASSIGNED;
 }
 
-int CFFPlayer::GetDisguisedClass()
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CFFPlayer::GetDisguisedClass( void ) const
 {
-	if (IsDisguised())
-		return ((m_iSpyDisguise & 0xFFFFFFF0) >> 4);
+	if( IsDisguised() )
+		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
 
-	return 0;
+	return CLASS_NONE;
 }
-*/
+
 /*
 ================
 FireBullets
