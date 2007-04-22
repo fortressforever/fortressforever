@@ -524,7 +524,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get health as a percentage
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetHealthPercent( void )
+int CFFBuildableObject::GetHealthPercent( void ) const
 {
 	float flPercent = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;
 
