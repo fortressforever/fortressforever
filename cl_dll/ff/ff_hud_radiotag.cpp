@@ -199,8 +199,13 @@ void CHudRadioTag::Paint( void )
 				}
 				else
 				{
+					// Jiggles: We're using a different "distant" glyph now, rather than just drawing a box
+					//surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+					//surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
+					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
 					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-					surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 				}
 
 				// Get the current frame we're supposed to draw

@@ -25,6 +25,11 @@
 struct Glyph_s
 {
 	CHudTexture	*m_pTexture;
+	
+	// Jiggles: added for the distance glyphs
+	CHudTexture *m_pDistTexture; 
+	string_t	m_szDistMaterial;
+
 	string_t	m_szMaterial;
 };
 
