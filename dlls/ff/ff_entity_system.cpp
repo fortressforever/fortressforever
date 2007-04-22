@@ -66,7 +66,7 @@ CFFEntitySystemHelper* CFFEntitySystemHelper::GetInstance()
 /////////////////////////////////////////////////////////////////////////////
 void CFFEntitySystemHelper::Spawn()
 {
-	DevMsg("[EntSys] Entity System Helper Spawned\n");
+	Msg("[EntSys] Entity System Helper Spawned\n");
 
 	SetThink( &CFFEntitySystemHelper::OnThink );
 	SetNextThink( gpGlobals->curtime + 1.0f );

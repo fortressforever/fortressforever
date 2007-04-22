@@ -61,7 +61,7 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 	// don't allow scripters to sneak in scripts after the initial load
 	if(!_scriptman.m_isLoading)
 	{
-		Msg("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
+		Error("[SCRIPT] Loading of scripts after initial map load is not allowed.\n");
 		return false;
 	}
 
@@ -71,7 +71,7 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 
 	if (!hFile)
 	{
-		Msg("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
+		Error("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
 		return false;
 	}
 
@@ -100,15 +100,15 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 			const char *error = lua_tostring(L, -1);
 			if (error)
 			{
-				Msg("Error loading %s: %s\n", filename, error);
+				Error("Error loading %s: %s\n", filename, error);
 				lua_pop( L, 1 );
 			}
 			else
-				Msg("Unknown Syntax Error loading %s\n", filename);
+				Error("Unknown Syntax Error loading %s\n", filename);
 		}
 		else
 		{
-			Msg("Unknown Error loading %s\n", filename);
+			Error("Unknown Error loading %s\n", filename);
 		}
 		return false;
 	}
@@ -133,13 +133,13 @@ void CFFScriptManager::Init()
 	}
 
 	// initialize VM
-	DevMsg("[SCRIPT] Attempting to start up the entity system...\n");
+	Msg("[SCRIPT] Attempting to start up the entity system...\n");
 	L = lua_open();
 
 	// no need to continue if VM failed to initialize
 	if(!L)
 	{
-		DevWarning("[SCRIPT] Unable to initialize Lua VM.\n");
+		Error("[SCRIPT] Unable to initialize Lua VM.\n");
 		return;
 	}
 
@@ -155,7 +155,7 @@ void CFFScriptManager::Init()
 	// initialize game-specific library
 	CFFLuaLib::Init(L);
 	
-	DevMsg("[SCRIPT] Entity system initialization successful.\n");
+	Msg("[SCRIPT] Entity system initialization successful.\n");
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ int CFFScriptManager::RunPredicates( CBaseEntity *ent, CBaseEntity *player, cons
 {
 	VPROF_BUDGET( "CFFScriptManager::RunPredicates", VPROF_BUDGETGROUP_FF_LUA );
 
-	Warning( "[RunPredicates] Shit is deprecated!\n" );
+	Error( "[RunPredicates] Shit is deprecated!\n" );
 	return true;
 
 	// If there is no active script then allow the ents to always go
@@ -419,7 +419,7 @@ int CFFScriptManager::RunPredicates( CBaseEntity *ent, CBaseEntity *player, cons
 	{
 		if (!addname || !strlen(addname))
 		{
-			Warning("Can't call entsys.runpredicates with an entity and no addname\n");
+			Error("Can't call entsys.runpredicates with an entity and no addname\n");
 			return true /* mirv: let it cont. regardless */;
 		}
 
@@ -459,7 +459,7 @@ int CFFScriptManager::RunPredicates( CBaseEntity *ent, CBaseEntity *player, cons
 	{
 		// TODO: Definately don't want this message showing up permantly as it's kind of deceptive
 		// AND: should this return value be a parameter of run predicates? (so it'll work right w/ FFScriptRunPredicates?
-		DevWarning( "[SCRIPT] Error calling %s (%s) ent: %s\n", addname, lua_tostring(L, -1), ent ? STRING( ent->GetEntityName() ) : "NULL" );
+		Error( "[SCRIPT] Error calling %s (%s) ent: %s\n", addname, lua_tostring(L, -1), ent ? STRING( ent->GetEntityName() ) : "NULL" );
 		return true;
 	}
 
