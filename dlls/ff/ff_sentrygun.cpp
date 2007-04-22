@@ -568,7 +568,7 @@ void CFFSentryGun::HackFindEnemy( void )
 //-----------------------------------------------------------------------------
 // Purpose: Returns the speed at which the turret can face a target
 //-----------------------------------------------------------------------------
-float CFFSentryGun::MaxYawSpeed( void ) 
+float CFFSentryGun::MaxYawSpeed( void ) const 
 {
 	VPROF_BUDGET( "CFFSentryGun::MaxYawSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -581,7 +581,7 @@ float CFFSentryGun::MaxYawSpeed( void )
 //-----------------------------------------------------------------------------
 // Purpose: Returns the speed at which the turret can pitch to a target
 //-----------------------------------------------------------------------------
-float CFFSentryGun::MaxPitchSpeed( void ) 
+float CFFSentryGun::MaxPitchSpeed( void ) const
 {
 	VPROF_BUDGET( "CFFSentryGun::MaxPitchSpeed", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -1155,7 +1155,7 @@ void CFFSentryGun::SendStatsToBot( void )
 //-----------------------------------------------------------------------------
 // Purpose: If already sabotaged then don't try and sabotage again
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::CanSabotage()
+bool CFFSentryGun::CanSabotage() const
 {
 	VPROF_BUDGET( "CFFSentryGun::CanSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -1168,7 +1168,7 @@ bool CFFSentryGun::CanSabotage()
 //-----------------------------------------------------------------------------
 // Purpose: Is this building in level 1 sabotage
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::IsSabotaged()
+bool CFFSentryGun::IsSabotaged() const
 {
 	VPROF_BUDGET( "CFFSentryGun::IsSabotaged", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
@@ -1178,7 +1178,7 @@ bool CFFSentryGun::IsSabotaged()
 //-----------------------------------------------------------------------------
 // Purpose: Is the SG in level 2 sabotage (shooting teammates mode)
 //-----------------------------------------------------------------------------
-bool CFFSentryGun::IsShootingTeammates()
+bool CFFSentryGun::IsShootingTeammates() const
 {
 	VPROF_BUDGET( "CFFSentryGun::IsShootingTeammates", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
