@@ -2094,7 +2094,7 @@ void CFFPlayer::Command_SetChannel( void )
 	m_iChannel = iChannel;
 }
 
-int CFFPlayer::GetClassSlot()
+int CFFPlayer::GetClassSlot() const
 {
 /*	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -5615,36 +5615,15 @@ void CFFPlayer::Command_Disguise()
 	}
 }
 
-bool CFFPlayer::IsDisguised( void )
-{
-	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
-}
-
-int CFFPlayer::GetDisguisedTeam( void )
-{
-	if( IsDisguised() )	
-		return ( m_iSpyDisguise & 0x0000000F );
-
-	return 0;
-}
-
-int CFFPlayer::GetDisguisedClass( void )
-{
-	if( IsDisguised() )
-		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
-
-	return 0;
-}
-
 // Server only
-int CFFPlayer::GetNewDisguisedTeam( void )
+int CFFPlayer::GetNewDisguisedTeam( void ) const
 {
 	// Assumes we're a spy and currently disguising
 	return ( m_iNewSpyDisguise & 0x0000000F );
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedClass( void )
+int CFFPlayer::GetNewDisguisedClass( void ) const
 {
 	// Assumes we're a spy and currently disguising
 	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -6002,7 +5981,7 @@ bool CFFPlayer::IsInNoBuild() const
 //-----------------------------------------------------------------------------
 // Purpose: Is the flashlight on or off, taken from HL2MP
 //-----------------------------------------------------------------------------
-int CFFPlayer::FlashlightIsOn()
+int CFFPlayer::FlashlightIsOn() const
 {
 	return IsEffectActive(EF_DIMLIGHT);
 }
