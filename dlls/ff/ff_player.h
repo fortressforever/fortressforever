@@ -234,8 +234,8 @@ public:
 	// <-- Mirv: Proper sound effects
 
 	// --> mulch
-	int GetHealthPercentage( void );
-	int GetArmorPercentage( void );
+	int GetHealthPercentage( void ) const;
+	int GetArmorPercentage( void ) const;
 	// <--
 
 private:
@@ -259,7 +259,6 @@ public:
 	int GetMaxNails( void ) const { return GetFFClassData().m_iMaxNails; }
 	int GetMaxRockets( void ) const { return GetFFClassData().m_iMaxRockets; }
 	int GetMaxDetpack( void ) const { return GetFFClassData().m_iMaxDetpack; }
-	int GetMaxRadioTag( void ) const { return GetFFClassData().m_iMaxRadioTag; }
 
 	// These "needs" functions will return however much the player needs
 	// of the item to reach the max capacity. It'll return 0 if they don't
@@ -270,7 +269,6 @@ public:
 	int NeedsNails( void ) const { return GetMaxNails() - GetAmmoCount( AMMO_NAILS ); }
 	int NeedsRockets( void ) const { return GetMaxRockets() - GetAmmoCount( AMMO_ROCKETS ); }
 	int NeedsDetpack( void ) const { return GetMaxDetpack() - GetAmmoCount( AMMO_DETPACK ); }
-	int NeedsRadioTag( void ) const { return GetMaxRadioTag() - GetAmmoCount( AMMO_RADIOTAG ); }
 	// END: Added by Mulchman for armor stuff
 
 	void	SetLastSpawn( CBaseEntity *pEntity );
@@ -282,7 +280,7 @@ public:
 	void ChangeTeam(int iTeamNum);
 	void ChangeClass(const char *szNewClassName);
 	int ActivateClass( void );
-	int GetClassSlot();
+	int GetClassSlot() const;
 	int GetNextClassSlot() { return m_iNextClass; }
 
 	void KillPlayer( void );
@@ -407,14 +405,14 @@ public:
 	// Can we update our location yet?
 	void SetLocation(int entindex, const char *szNewLocation, int iNewLocationTeam);
 	void RemoveLocation( int entindex );
-	const char *GetLocation( void ) 
+	const char *GetLocation( void ) const
 	{ 
 		if(m_Locations.Count() > 0)
-			return const_cast< char * >( m_Locations[0].locationname );
+			return m_Locations[0].locationname;
 		else
 			return m_szLastLocation;
 	}
-	int GetLocationTeam( void ) 
+	int GetLocationTeam( void ) const
 	{ 
 		if(m_Locations.Count() > 0)
 			return m_Locations[0].team; 
@@ -568,7 +566,6 @@ protected:
 	bool m_bRadioTagged;
 	float m_flRadioTaggedStartTime;
 	float m_flRadioTaggedDuration;
-	int m_iRadioTaggedAmmoIndex;
 
 	// Radio tag information
 	CNetworkHandle( CFFRadioTagData, m_hRadioTagData );
@@ -693,7 +690,7 @@ public:
 	void Concuss(float flDuration, float flIconDuration, const QAngle *viewjerk = NULL, float flDistance = 0.0f);
 
 	CNetworkVar( int, m_iClassStatus );
-	int GetClassForClient() { return (0x0000000F & m_iClassStatus); }
+	int GetClassForClient() const { return (0x0000000F & m_iClassStatus); }
 
 	// Use this to directly set a player class.
 	// 0 is unassigned. Yar.
@@ -746,9 +743,9 @@ private:
 	CNetworkVar( unsigned int, m_bDisguisable );
 
 public:	
-	int GetDisguisedClass( void );
-	int GetDisguisedTeam( void );
-	bool IsDisguised( void );
+	int GetDisguisedClass( void ) const;
+	int GetDisguisedTeam( void ) const;
+	bool IsDisguised( void ) const;
 	void SetDisguise(int iTeam, int iClass, bool bInstant = false);
 
 	CNetworkVar( int, m_iSpyDisguise );	// Mulch: Want to tell the client our current disguise
@@ -799,8 +796,8 @@ public:
 	int GetPacketloss( void ) const;
 
 private:
-	int GetNewDisguisedClass( void );
-	int GetNewDisguisedTeam( void );
+	int GetNewDisguisedClass( void ) const;
+	int GetNewDisguisedTeam( void ) const;
 	int m_iNewSpyDisguise;
 	float m_flFinishDisguise;
 
@@ -808,7 +805,7 @@ public:
 	void FinishDisguise();
 	void ResetDisguise();
 
-	int		FlashlightIsOn( void );
+	int		FlashlightIsOn( void ) const;
 	void	FlashlightTurnOn( void );
 	void	FlashlightTurnOff( void );
 
@@ -816,9 +813,9 @@ public:
 
 	// Mirv: In TFC the AbsOrigin is midway up the model. We need to take this into
 	// account for various things. 
-	Vector GetLegacyAbsOrigin();
-	Vector GetWaistOrigin( void );
-	Vector GetFeetOrigin( void );
+	Vector GetLegacyAbsOrigin() const;
+	Vector GetWaistOrigin( void ) const;
+	Vector GetFeetOrigin( void ) const;
 
 	virtual void Touch(CBaseEntity *pOther);
 	void	InstaSwitch(int iClassNum);

@@ -787,7 +787,6 @@ void Bot_HandleSendCmd( CFFBot *pBot )
 			pBot->GiveAmmo( 200, AMMO_SHELLS );
 			pBot->GiveAmmo( 200, AMMO_NAILS );
 			pBot->GiveAmmo( 200, AMMO_ROCKETS );
-			pBot->GiveAmmo( 200, AMMO_RADIOTAG );
 			pBot->GiveAmmo( 200, AMMO_DETPACK );
 		}
 

@@ -524,7 +524,7 @@ BuildInfoResult_t CFFBuildableInfo::CanOrientToGround( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get health as a percentage
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetHealthPercent( void )
+int CFFBuildableObject::GetHealthPercent( void ) const
 {
 	float flPercent = ( ( float )GetHealth() / ( float )GetMaxHealth() ) * 100.0f;
 
@@ -534,7 +534,7 @@ int CFFBuildableObject::GetHealthPercent( void )
 //-----------------------------------------------------------------------------
 // Purpose: Team accessor [mirv]
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetTeamNumber()
+int CFFBuildableObject::GetTeamNumber() const
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 
@@ -547,7 +547,7 @@ int CFFBuildableObject::GetTeamNumber()
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables owner
 //-----------------------------------------------------------------------------
-CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void )
+CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void ) const
 {
 	if( m_hOwner.Get() )
 		return ToFFPlayer( m_hOwner.Get() );
@@ -558,7 +558,7 @@ CFFPlayer *CFFBuildableObject::GetOwnerPlayer( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables team
 //-----------------------------------------------------------------------------
-CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
+CFFTeam *CFFBuildableObject::GetOwnerTeam( void ) const
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
@@ -570,7 +570,7 @@ CFFTeam *CFFBuildableObject::GetOwnerTeam( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get a buildables team id
 //-----------------------------------------------------------------------------
-int CFFBuildableObject::GetOwnerTeamId( void )
+int CFFBuildableObject::GetOwnerTeamId( void ) const
 {
 	CFFPlayer *pOwner = GetOwnerPlayer();
 	if( pOwner )
@@ -607,7 +607,6 @@ CFFDispenser::CFFDispenser( void )
 	m_iShells = 0;
 	m_iRockets = 0;
 	m_iArmor = 0;
-	m_iRadioTags = 0;
 
 	// Max values
 	m_iMaxCells		= 400;
@@ -615,7 +614,6 @@ CFFDispenser::CFFDispenser( void )
 	m_iMaxNails		= 600;
 	m_iMaxRockets	= 300;
 	m_iMaxArmor		= 500;
-	m_iMaxRadioTags	= 200;
 
 	// Give values - values to give a player when they touch us
 	m_iGiveCells	= 10; // Give engies 75, though
@@ -623,7 +621,6 @@ CFFDispenser::CFFDispenser( void )
 	m_iGiveNails	= 20;
 	m_iGiveRockets	= 10;
 	m_iGiveArmor	= 20;
-	m_iGiveRadioTags = 10;
 
 	// Health
 	m_iMaxHealth = m_iHealth = 150;

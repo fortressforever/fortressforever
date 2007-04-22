@@ -401,7 +401,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFDispenser, DT_FFDispenser, CFFDispenser )
 	RecvPropInt( RECVINFO( m_iNails ) ),
 	RecvPropInt( RECVINFO( m_iRockets ) ),
 	RecvPropInt( RECVINFO( m_iArmor ) ),
-	RecvPropInt( RECVINFO( m_iRadioTags ) ),
 END_RECV_TABLE( )
 
 //-----------------------------------------------------------------------------

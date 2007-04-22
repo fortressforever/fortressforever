@@ -228,21 +228,21 @@ public:
 	CFFBuildableObject();
 	~CFFBuildableObject();
 	
-	virtual bool IsAlive( void ) { return true; }
+	virtual bool IsAlive( void ) const { return true; }
 	virtual bool IsPlayer( void ) const { return false; }
-	virtual bool BlocksLOS( void ) { return true; }
-	virtual int	BloodColor( void ) { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
-	virtual int	GetTeamNumber();	// |-- Mirv: Easy team id accessor	
+	virtual bool BlocksLOS( void ) const { return true; }
+	virtual int	BloodColor( void ) const { return BLOOD_COLOR_MECH; } // |-- Mirv: Don't bleed
+	virtual int	GetTeamNumber() const;	// |-- Mirv: Easy team id accessor	
 	bool IsBuilt( void	) const { return m_bBuilt; }
  
 	CNetworkHandle( CBaseEntity, m_hOwner );
 
-	CFFPlayer *GetOwnerPlayer( void );
-	CFFTeam *GetOwnerTeam( void );
-	int GetOwnerTeamId( void );
+	CFFPlayer *GetOwnerPlayer( void ) const;
+	CFFTeam *GetOwnerTeam( void ) const;
+	int GetOwnerTeamId( void ) const;
 
-	int GetHealthPercent( void );
-	unsigned int GetAmmoPercent( void ) { return m_iAmmoPercent; }
+	int GetHealthPercent( void ) const;
+	unsigned int GetAmmoPercent( void ) const { return m_iAmmoPercent; }
 
 protected:
 	CNetworkVarForDerived( unsigned int, m_iAmmoPercent );
@@ -257,7 +257,7 @@ public:
 	virtual int	GetHealth( void ) const { return m_iHealth; }
 	virtual int	GetMaxHealth( void ) const { return m_iMaxHealth; }
 
-	bool CheckForOwner( void ) { return ( m_hOwner.Get() ); }
+	bool CheckForOwner( void ) const { return ( m_hOwner.Get() != NULL ); }
 
 	bool m_bBuilt;	
 
@@ -279,8 +279,8 @@ public:
 	void Detonate( void );
 	void RemoveQuietly( void );
 
-	virtual bool CanSabotage() { return false; }
-	virtual bool IsSabotaged() { return false; }
+	virtual bool CanSabotage() const { return false; }
+	virtual bool IsSabotaged() const { return false; }
 	virtual void Sabotage(CFFPlayer *pSaboteur) {};
 	virtual void MaliciousSabotage(CFFPlayer *pSaboteur) {};
 	
@@ -312,7 +312,7 @@ public:
 
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
-	virtual bool ShouldSavePhysics( void ) { return false; }
+	virtual bool ShouldSavePhysics( void ) const { return false; }
 	virtual int TakeEmp( void ) { return 0; }
 
 	// Mirv: Store in advance the ground position
@@ -416,7 +416,7 @@ public:
 	// --> shared
 	CFFSevTest( void );
 	~CFFSevTest( void );
-	virtual bool BlocksLOS( void ) { return false; }
+	virtual bool BlocksLOS( void ) const { return false; }
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -456,8 +456,8 @@ public:
 	CFFDetpack( void );
 	~CFFDetpack( void );
 
-	virtual bool	BlocksLOS( void ) { return false; }
-	virtual Class_T Classify( void ) { return CLASS_DETPACK; }
+	virtual bool	BlocksLOS( void ) const { return false; }
+	virtual Class_T Classify( void ) const { return CLASS_DETPACK; }
 	// <-- shared
 
 #ifdef CLIENT_DLL
@@ -471,7 +471,7 @@ public:
 
 	void Detonate();
 
-	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
+	virtual Vector EyePosition( void ) const { return GetAbsOrigin() + Vector( 0, 0, 4.0f ); }
 
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
@@ -518,22 +518,19 @@ public:
 	CNetworkVar( int, m_iNails );
 	CNetworkVar( int, m_iRockets );
 	CNetworkVar( int, m_iArmor );
-	CNetworkVar( int, m_iRadioTags );
 
-	int GetCells( void ) { return m_iCells; }
-	int GetShells( void ) { return m_iShells; }
-	int GetNails ( void ) { return m_iNails; }
-	int GetRockets( void ) { return m_iRockets; }
-	int GetArmor( void ) { return m_iArmor; }
-	int GetRadioTags( void ) { return m_iRadioTags; }
+	int GetCells( void ) const { return m_iCells; }
+	int GetShells( void ) const { return m_iShells; }
+	int GetNails ( void ) const { return m_iNails; }
+	int GetRockets( void ) const { return m_iRockets; }
+	int GetArmor( void ) const { return m_iArmor; }
 	
-	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
-	int NeedsArmor( void ) { return m_iMaxArmor - m_iArmor; }
-	int NeedsCells( void ) { return m_iMaxCells - m_iCells; }
-	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
-	int NeedsNails( void ) { return m_iMaxNails - m_iNails; }
-	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
-	int NeedsRadioTags( void ) { return m_iMaxRadioTags - m_iRadioTags; }
+	int NeedsHealth( void ) const { return m_iMaxHealth - m_iHealth; }
+	int NeedsArmor( void ) const { return m_iMaxArmor - m_iArmor; }
+	int NeedsCells( void ) const { return m_iMaxCells - m_iCells; }
+	int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
+	int NeedsNails( void ) const { return m_iMaxNails - m_iNails; }
+	int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
 
 protected:
 	int		m_iMaxCells;
@@ -546,8 +543,6 @@ protected:
 	int		m_iGiveRockets;
 	int		m_iMaxArmor;
 	int		m_iGiveArmor;
-	int		m_iMaxRadioTags;
-	int		m_iGiveRadioTags;
 	// <-- shared
 
 public:
@@ -561,7 +556,7 @@ public:
 	virtual void Spawn( void );
 	void GoLive( void );
 
-	virtual Vector EyePosition( void ) { return GetAbsOrigin() + Vector( 0, 0, 48.0f ); }
+	virtual Vector EyePosition( void ) const { return GetAbsOrigin() + Vector( 0, 0, 48.0f ); }
 
 	void OnObjectTouch( CBaseEntity *pOther );
 	void OnObjectThink( void );
@@ -572,15 +567,15 @@ public:
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
 
-	virtual bool CanSabotage();
-	virtual bool IsSabotaged();
+	virtual bool CanSabotage() const;
+	virtual bool IsSabotaged() const;
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
 	void Detonate();
 
 	CNetworkVar( unsigned int, m_iAmmoPercent );
 
-	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets, int iRadioTags );
+	void AddAmmo( int iArmor, int iCells, int iShells, int iNails, int iRockets );
 
 	// Some functions for the custom dispenser text
 	void SetText( const char *szCustomText ) { Q_strcpy( m_szCustomText, szCustomText ); }
@@ -629,20 +624,20 @@ public:
 	// --> shared
 	CFFSentryGun( void );
 	~CFFSentryGun( void );
-	int GetRockets( void )  { return m_iRockets; };
-	int GetShells( void )  { return m_iShells; };
-	int GetRocketsPercent( void )  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
-	int GetShellsPercent( void )  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
+	int GetRockets( void ) const  { return m_iRockets; };
+	int GetShells( void ) const  { return m_iShells; };
+	int GetRocketsPercent( void ) const  { return (int) ((float) m_iRockets / (float) m_iMaxRockets) * 100.0f; };
+	int GetShellsPercent( void ) const  { return (int) ((float) m_iShells / (float) m_iMaxShells) * 100.0f; };
 	
-	int NeedsHealth( void ) { return m_iMaxHealth - m_iHealth; }
-	int NeedsShells( void ) { return m_iMaxShells - m_iShells; }
-	int NeedsRockets( void ) { return m_iMaxRockets - m_iRockets; }
+	int NeedsHealth( void ) const { return m_iMaxHealth - m_iHealth; }
+	int NeedsShells( void ) const { return m_iMaxShells - m_iShells; }
+	int NeedsRockets( void ) const { return m_iMaxRockets - m_iRockets; }
 	
 	int GetLevel( void ) const { return m_iLevel; }
 	bool Upgrade( bool bUpgradeLevel = false, int iCells = 0, int iShells = 0, int iRockets = 0 );
 
-	virtual Class_T Classify( void ) { return CLASS_SENTRYGUN; }
-	virtual bool	IsNPC( void ) { return true; }
+	virtual Class_T Classify( void ) const { return CLASS_SENTRYGUN; }
+	virtual bool	IsNPC( void ) const { return true; }
 
 public:
 	// Network variables
@@ -684,8 +679,8 @@ public:
 
 	void HackFindEnemy( void );
 
-	float MaxYawSpeed( void );
-	float MaxPitchSpeed( void );
+	float MaxYawSpeed( void ) const;
+	float MaxPitchSpeed( void ) const;
 
 	virtual void DoExplosionDamage();
 
@@ -695,7 +690,7 @@ private:
 	bool IsTargetClassTValid( Class_T cT ) const;
 
 public:
-	CBaseEntity *GetEnemy( void	) { return m_hEnemy; }
+	CBaseEntity *GetEnemy( void	) const { return m_hEnemy; }
 	void SetEnemy( CBaseEntity *hEnemy ) { m_hEnemy = hEnemy; }
 private:
 	CHandle< CBaseEntity >	m_hEnemy;
@@ -713,20 +708,20 @@ protected:
 public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 
-	const char *GetTracerType( void ) { return "SGTracer"; }
+	const char *GetTracerType( void ) const { return "SGTracer"; }
 
 	virtual Vector EyePosition( void );
 	Vector MuzzlePosition( void );
 	Vector RocketPosition( void );
-	Vector EyeOffset( Activity nActivity ) { return Vector( 0, 0, 64 ); }
+	Vector EyeOffset( Activity nActivity ) const { return Vector( 0, 0, 64 ); }
 	
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
 	bool				m_bShootingTeammates;
 
-	virtual bool CanSabotage();
-	virtual bool IsSabotaged();
-	virtual bool IsShootingTeammates();
+	virtual bool CanSabotage() const;
+	virtual bool IsSabotaged() const;
+	virtual bool IsShootingTeammates() const;
 	virtual void Sabotage(CFFPlayer *pSaboteur);
 	void MaliciousSabotage(CFFPlayer *pSaboteur);
 	void Detonate();

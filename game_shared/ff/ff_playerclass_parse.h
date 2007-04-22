@@ -93,7 +93,6 @@ public:
 	int						m_iMaxCells;
 	int						m_iMaxRockets;
 	int						m_iMaxDetpack;
-	int						m_iMaxRadioTag;
 };
 
 // The playerclass parse function

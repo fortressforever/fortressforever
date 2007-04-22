@@ -1402,7 +1402,6 @@ void CFFPlayer::SetupClassVariables()
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_SHELLS)] = pPlayerClassInfo.m_iMaxShells;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_ROCKETS)] = pPlayerClassInfo.m_iMaxRockets;
 	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_DETPACK)] = pPlayerClassInfo.m_iMaxDetpack;
-	m_iMaxAmmo[GetAmmoDef()->Index(AMMO_RADIOTAG)] = pPlayerClassInfo.m_iMaxRadioTag;
 
 	// Can I get some freakin ammo please?
 	// Maybe some sharks with freakin laser beams?
@@ -1431,9 +1430,7 @@ void CFFPlayer::InitialSpawn( void )
 	// Reset to 0
 	m_vecInfoIntermission.Init();
 
-	BaseClass::InitialSpawn( );
-
-	m_iRadioTaggedAmmoIndex = GetAmmoDef( )->Index( AMMO_RADIOTAG );
+	BaseClass::InitialSpawn();
 
 	// Fixes the no model problem
 	SetModel( FF_PLAYER_MODEL );
@@ -1971,7 +1968,6 @@ void CFFPlayer::CheatImpulseCommands( int iImpulse )
 		GiveAmmo(300, AMMO_SHELLS);
 		GiveAmmo(300, AMMO_ROCKETS);
 		GiveAmmo(300, AMMO_CELLS);
-		GiveAmmo(300, AMMO_RADIOTAG);
 		GiveAmmo(300, AMMO_DETPACK);
 		AddPrimaryGrenades( 4 );
 		AddSecondaryGrenades( 4 );
@@ -2098,7 +2094,7 @@ void CFFPlayer::Command_SetChannel( void )
 	m_iChannel = iChannel;
 }
 
-int CFFPlayer::GetClassSlot()
+int CFFPlayer::GetClassSlot() const
 {
 /*	const CFFPlayerClassInfo &pPlayerClassInfo = GetFFClassData();
 
@@ -4731,18 +4727,36 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		return 0;
 	}
 
-	// tag the player if hit by radio tag ammo 
-	if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
+	// Check for radio tag shots
+	if( inputInfo.GetInflictor() )
 	{
-		//CFFSentryGun *pSentryGun = FF_ToSentrygun( pObject );
-		CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
-		SetRadioTagged( pAttacker, gpGlobals->curtime, radiotag_draw_duration.GetInt() );
-		
-		// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
-		// This could be editted later to give points for a renewed tag
-		if ((!IsRadioTagged()) && (pAttacker))
-			pAttacker->AddFortPoints(10,true);
+		CFFWeaponBase *pWeapon = dynamic_cast<CFFWeaponBase *>( inputInfo.GetInflictor() );
+		if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_SNIPERRIFLE) )
+		{
+			CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+			if( pAttacker )
+			{
+				SetRadioTagged( pAttacker, gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+
+				// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
+				// This could be editted later to give points for a renewed tag
+				if (!IsRadioTagged())
+					pAttacker->AddFortPoints(10,true);
+			}			
+		}
 	}
+	//// tag the player if hit by radio tag ammo 
+	//if( inputInfo.GetAmmoType() == m_iRadioTaggedAmmoIndex )
+	//{
+	//	//CFFSentryGun *pSentryGun = FF_ToSentrygun( pObject );
+	//	CFFPlayer *pAttacker = ToFFPlayer( info.GetAttacker() );
+	//	SetRadioTagged( pAttacker, gpGlobals->curtime, radiotag_draw_duration.GetInt() );
+	//	
+	//	// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
+	//	// This could be editted later to give points for a renewed tag
+	//	if ((!IsRadioTagged()) && (pAttacker))
+	//		pAttacker->AddFortPoints(10,true);
+	//}
 
 	// if it's a pyro, they take half damage
 	if ( GetClassSlot() == CLASS_PYRO && info.GetDamageType()&DMG_BURN )
@@ -5601,12 +5615,12 @@ void CFFPlayer::Command_Disguise()
 	}
 }
 
-bool CFFPlayer::IsDisguised( void )
+bool CFFPlayer::IsDisguised( void ) const
 {
 	return ( GetClassSlot() == CLASS_SPY ) && ( m_iSpyDisguise != 0 );
 }
 
-int CFFPlayer::GetDisguisedTeam( void )
+int CFFPlayer::GetDisguisedTeam( void ) const
 {
 	if( IsDisguised() )	
 		return ( m_iSpyDisguise & 0x0000000F );
@@ -5614,7 +5628,7 @@ int CFFPlayer::GetDisguisedTeam( void )
 	return 0;
 }
 
-int CFFPlayer::GetDisguisedClass( void )
+int CFFPlayer::GetDisguisedClass( void ) const
 {
 	if( IsDisguised() )
 		return ( ( m_iSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -5623,14 +5637,14 @@ int CFFPlayer::GetDisguisedClass( void )
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedTeam( void )
+int CFFPlayer::GetNewDisguisedTeam( void ) const
 {
 	// Assumes we're a spy and currently disguising
 	return ( m_iNewSpyDisguise & 0x0000000F );
 }
 
 // Server only
-int CFFPlayer::GetNewDisguisedClass( void )
+int CFFPlayer::GetNewDisguisedClass( void ) const
 {
 	// Assumes we're a spy and currently disguising
 	return ( ( m_iNewSpyDisguise & 0xFFFFFFF0 ) >> 4 );
@@ -5763,7 +5777,6 @@ int CFFPlayer::LuaAddAmmo( int iAmmoType, int iAmount )
 		case LUA_AMMO_CELLS:
 		case LUA_AMMO_NAILS:
 		case LUA_AMMO_ROCKETS:
-		case LUA_AMMO_RADIOTAG:
 		case LUA_AMMO_DETPACK:
 			iDispensed = GiveAmmo( iAmount, LookupLuaAmmo( iAmmoType ), true );
 		break;
@@ -5791,7 +5804,6 @@ void CFFPlayer::LuaRemoveAmmo( int iAmmoType, int iAmount )
 		case LUA_AMMO_CELLS:
 		case LUA_AMMO_NAILS:
 		case LUA_AMMO_ROCKETS:
-		case LUA_AMMO_RADIOTAG:
 		case LUA_AMMO_DETPACK:
 			RemoveAmmo( iAmount, LookupLuaAmmo( iAmmoType ) );
 			break;
@@ -5990,7 +6002,7 @@ bool CFFPlayer::IsInNoBuild() const
 //-----------------------------------------------------------------------------
 // Purpose: Is the flashlight on or off, taken from HL2MP
 //-----------------------------------------------------------------------------
-int CFFPlayer::FlashlightIsOn()
+int CFFPlayer::FlashlightIsOn() const
 {
 	return IsEffectActive(EF_DIMLIGHT);
 }
