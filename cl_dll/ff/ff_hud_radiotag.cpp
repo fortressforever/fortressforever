@@ -190,23 +190,43 @@ void CHudRadioTag::Paint( void )
 				int iYTop = iTopScreenY;
 				int iYBot = iScreenY + ( m_iWidthOffset * ( ( m_iTextureTall / 2 ) / flDist ) );
 
-				if( flDist <= 300 )
+				// Let's see if the player is visible (ha ha!)
+				trace_t		tr;
+				UTIL_TraceLine ( vecOrigin + Vector( 0, 0, 80 ), vecPlayerOrigin + Vector( 0, 0, 80 ), MASK_VISIBLE, pPlayer, COLLISION_GROUP_NONE, & tr);
+				
+				if( tr.fraction != 1.0 )  // Trace hit something -- the player is not visible (hopefully!)
+				{
+					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
+					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
+					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
+				}
+				else
 				{
 					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
 					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
 					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
 					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
 				}
-				else
-				{
-					// Jiggles: We're using a different "distant" glyph now, rather than just drawing a box
-					//surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-					//surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
-					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
-					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
-					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
-				}
+
+
+				//if( flDist <= 300 )
+				//{
+				//	surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pTexture->textureId, g_ClassGlyphs[ iIndex ].m_szMaterial, true, false );
+				//	surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pTexture->textureId );
+				//	surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+				//	surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				//}
+				//else
+				//{
+				//	// Jiggles: We're using a different "distant" glyph now, rather than just drawing a box
+				//	//surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+				//	//surface()->DrawOutlinedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+				//	surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
+				//	surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
+				//	surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+				//	surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
+				//}
 
 				// Get the current frame we're supposed to draw
 				//int iFrame = m_hList[ i ].UpdateFrame();
