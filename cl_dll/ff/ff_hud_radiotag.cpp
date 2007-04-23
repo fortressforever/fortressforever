@@ -205,7 +205,7 @@ void CHudRadioTag::Paint( void )
 					surface()->DrawSetTextureFile( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId, g_ClassGlyphs[ iIndex ].m_szDistMaterial, true, false );
 					surface()->DrawSetTexture( g_ClassGlyphs[ iIndex ].m_pDistTexture->textureId );
 					surface()->DrawSetColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYBot );
+					surface()->DrawTexturedRect( iScreenX - iAdjX, iYTop, iScreenX + iAdjX, iYTop + iAdjX + iAdjX );
 				}
 
 				// Get the current frame we're supposed to draw
