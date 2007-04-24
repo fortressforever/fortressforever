@@ -117,8 +117,7 @@ void CHudSpeedometer::Paint()
 	swprintf(unicode, L"%d", (int)
 		FastSqrt(
 		vecVelocity.x * vecVelocity.x 
-		+ vecVelocity.y * vecVelocity.y 
-		+ vecVelocity.z * vecVelocity.z));
+		+ vecVelocity.y * vecVelocity.y ));
 
 	// Hey voogru, why not .Length() ? Does the same thing :)
 	
