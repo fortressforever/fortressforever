@@ -52,6 +52,13 @@ ConVar gren_throw_delay("ffdev_throw_delay","0.5",0,"Delay before primed grenade
 ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grenades spawn at.");
 //ConVar gren_forward_offset("ffdev_gren_forward_offset","8",0,"Forward offset grenades spawn at in front of the player.");
 
+ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
+ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
+ConVar burn_damage_ft("ffdev_burn_damage_ft","7.0",0,"Burn damage of the Flamethrower (per tick)");
+ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
+ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","3",0,"Burn damage multiplier for all 3 burn types.");
+ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2",0,"Burn damage multiplier for 2 burn types.");
+
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
 static ConVar radar_num_cells( "ffdev_radar_num_cells", "5" );
@@ -420,6 +427,10 @@ CFFPlayer::CFFPlayer()
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
+
+	m_bBurnFlagNG = false; // AfterShock - burning flags for multiplying flames and damage for combos!
+	m_bBurnFlagFT = false;
+	m_bBurnFlagIC = false;
 
 	m_bDisguisable = 1;
 
@@ -1384,7 +1395,6 @@ void CFFPlayer::SetupClassVariables()
 	m_flBaseArmorType = m_flArmorType;
 
 	m_flMaxspeed	= pPlayerClassInfo.m_iSpeed;
-
 	m_iPrimary		= pPlayerClassInfo.m_iPrimaryInitial;
 	m_iSecondary	= pPlayerClassInfo.m_iSecondaryInitial;
 
@@ -1701,6 +1711,11 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flNextBurnTick = 0.0;
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0.0;
+	
+	m_bBurnFlagNG = false;
+	m_bBurnFlagIC = false;
+	m_bBurnFlagFT = false;
+
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 	{
 		RemoveSpeedEffectByIndex( i );
@@ -4266,6 +4281,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 	Extinguish();
 }
 
+// scale = damage per tick :: Scale currently ignored - use cvars for weapon damage!
 void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDuration, eBurnType BurnType)
 {
 	// Okay, now pyros don't catch fire at all
@@ -4285,8 +4301,41 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	// set them on fire
 	if (!m_iBurnTicks)
 		m_flNextBurnTick = gpGlobals->curtime + 1.25;
-	m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
-	m_flBurningDamage = 0.75f*m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
+	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
+	// This prevents damage being incorrectly multiplied - shok
+	
+	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
+	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
+
+	m_iBurnTicks = burn_ticks.GetInt(); //cvar - must be an int !
+
+	switch (BurnType)
+	{
+		case BURNTYPE_NALPALMGRENADE: m_bBurnFlagNG = true; break;
+		case BURNTYPE_FLAMETHROWER: m_bBurnFlagFT = true; break;
+		case BURNTYPE_ICCANNON: m_bBurnFlagIC= true; break;
+	}
+
+	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
+	m_flBurningDamage = 0;
+	if (BURNTYPE_NALPALMGRENADE) 
+		m_flBurningDamage += burn_damage_ng.GetFloat();
+	if (BURNTYPE_FLAMETHROWER)
+		m_flBurningDamage += burn_damage_ft.GetFloat();
+	if (BURNTYPE_ICCANNON)
+		m_flBurningDamage += burn_damage_ic.GetFloat();
+	
+	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
+	
+	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
+	if (m_bBurnFlagNG && m_bBurnFlagFT && m_bBurnFlagIC)
+		m_flBurningDamage *= burn_multiplier_3burns.GetFloat();
+	// if we're on fire from 2 flame weapons, burn a bit more
+	else if (((m_bBurnFlagNG && m_bBurnFlagFT) || (m_bBurnFlagNG && m_bBurnFlagIC)) 
+											   || (m_bBurnFlagFT && m_bBurnFlagIC))
+		m_flBurningDamage *= burn_multiplier_2burns.GetFloat();
+
+
 	m_BurnType = BurnType;
 
 	/*
@@ -5268,6 +5317,9 @@ void CFFPlayer::Extinguish( void )
 	// Make sure these are turned off
 	m_iBurnTicks = 0;
 	m_flBurningDamage = 0;
+	m_bBurnFlagNG = false;
+	m_bBurnFlagIC = false;
+	m_bBurnFlagFT = false;
 
 	SetFlameSpritesLifetime(-1.0f);
 
