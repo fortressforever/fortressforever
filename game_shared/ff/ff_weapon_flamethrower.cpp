@@ -32,7 +32,7 @@
 #endif
 
 ConVar ffdev_flame_bbox("ffdev_flame_bbox", "24.0", FCVAR_REPLICATED, "Flame bbox");
-ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "16.0", FCVAR_REPLICATED, "Force of backwards push when shooting while off ground");
+ConVar ffdev_flame_pushforce("ffdev_flame_pushforce", "65.0", FCVAR_REPLICATED, "Force of backwards push when shooting while off ground");
 
 #ifdef GAME_DLL
 	ConVar ffdev_flame_showtrace("ffdev_flame_showtrace", "0", FCVAR_NONE, "Show flame trace");
