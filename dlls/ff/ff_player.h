@@ -534,6 +534,10 @@ private:
 	float m_flBurningDamage;  // how much total damage is left to take
 	eBurnType m_BurnType;		 //type of burning damage
 
+	bool m_bBurnFlagNG; // AfterShock - burning flags for multiplying flames and damage for combos!
+	bool m_bBurnFlagFT;
+	bool m_bBurnFlagIC;
+
 	void StatusEffectsThink( void );
 	void RecalculateSpeed( );
 
