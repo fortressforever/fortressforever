@@ -2096,10 +2096,6 @@ namespace Omnibot
 				_cur = pFFPlayer->GetAmmoCount(AMMO_DETPACK);
 				_max = pFFPlayer->GetMaxDetpack();
 				break;
-			case TF_AMMO_RADIOTAG:
-				/*_cur = pFFPlayer->GetAmmoCount(AMMO_RADIOTAG);
-				_max = pFFPlayer->GetMaxRadioTag();*/
-				break;
 			case TF_AMMO_GRENADE1:
 				_cur = pFFPlayer->GetPrimaryGrenades();
 				_max = 4;
