@@ -51,6 +51,9 @@ static int g_iBeam, g_iHalo;
 	ConVar laser_beam_angle("ffdev_laserbeamangle", "0.01");
 #endif
 
+ConVar sniperrifle_laserdot_scale("ffdev_sniperrifle_laserdot_scale", "0.15", FCVAR_REPLICATED, "Scale of the sniper rifle laser dot");
+ConVar sniperrifle_zoomfov("ffdev_sniperrifle_zoomfov", "25", FCVAR_REPLICATED, "fov of the sniper zoom (+attack2). smaller value = more zoomed in.");
+
 //=============================================================================
 // CFFWeaponLaserDot
 //=============================================================================
@@ -149,7 +152,7 @@ CFFWeaponLaserDot *CFFWeaponLaserDot::Create(const Vector &origin, CBaseEntity *
 	pLaserDot->SpriteInit(SNIPER_DOT, origin);
 	pLaserDot->SetName(AllocPooledString("TEST"));
 	pLaserDot->SetTransparency(kRenderWorldGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
-	pLaserDot->SetScale(0.25f);
+	pLaserDot->SetScale(sniperrifle_laserdot_scale.GetFloat());
 	pLaserDot->SetOwnerEntity(pOwner);
 //	pLaserDot->SetContextThink(LaserThink, gpGlobals->curtime + 0.1f, g_pLaserDotThink);
 	pLaserDot->SetSimulatedEveryTick(true);
@@ -321,7 +324,7 @@ void CFFWeaponLaserDot::SetLaserPosition(const Vector &origin)
 
 		// Randomly flutter
 		//renderscale = 16.0f + random->RandomFloat(-2.0f, 2.0f);	
-		renderscale = 0.20f + random->RandomFloat(-0.005f, 0.005f);
+		renderscale = sniperrifle_laserdot_scale.GetFloat() + random->RandomFloat(-0.005f, 0.005f);
 
 		if (!fDrawDot)
 			return 0;
@@ -607,7 +610,7 @@ void CFFWeaponSniperRifle::ToggleZoom()
 
 	// Set the fov cvar (which we ignore on the client) so that the server is up
 	// to date. Not the best way of doing it REALLY
-	engine->ClientCmd(m_bZoomed ? "fov 20\n" : "fov 0\n");
+	engine->ClientCmd(m_bZoomed ? "fov 25\n" : "fov 0\n");
 #endif
 }
 
@@ -834,24 +837,24 @@ float CFFWeaponSniperRifle::GetFOV()
 		// Random negative business
 		if (deltaTime < 0)
 		{
-			return (m_bZoomed ? -1 : 20.0f);
+			return (m_bZoomed ? -1 : sniperrifle_zoomfov.GetFloat());
 		}
 
 		float flFOV;
 
 		if (m_bZoomed)
 		{
-			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, default_fov.GetFloat(), 20.0f);
+			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, default_fov.GetFloat(), sniperrifle_zoomfov.GetFloat());
 		}
 		else
 		{
-			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, 20.0f, default_fov.GetFloat());
+			flFOV = SimpleSplineRemapVal(deltaTime, 0.0f, 1.0f, sniperrifle_zoomfov.GetFloat(), default_fov.GetFloat());
 		}
 
 		return flFOV;
 	}
 
-	return (m_bZoomed ? 20.0f : -1);
+	return (m_bZoomed ? sniperrifle_zoomfov.GetFloat() : -1);
 }
 #endif
 
