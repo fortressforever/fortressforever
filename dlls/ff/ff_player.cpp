@@ -719,6 +719,7 @@ void CFFPlayer::Precache()
 	PrecacheScriptSound("Player.bodysplat");
 	PrecacheScriptSound("Item.Toss");
 	PrecacheScriptSound("Player.Pain");
+	PrecacheScriptSound("Player.Scream");
 	PrecacheScriptSound("Player.Flameout");
 	PrecacheScriptSound("medical.saveme");
 	PrecacheScriptSound("maintenance.saveme");
@@ -4327,6 +4328,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	if (m_bBurnFlagNG && m_bBurnFlagFT && m_bBurnFlagIC)
 	{
 		m_flBurningDamage *= burn_multiplier_3burns.GetFloat();
+		EmitSound("Player.Scream");
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING1 );
 			WRITE_FLOAT( 0.0f );
