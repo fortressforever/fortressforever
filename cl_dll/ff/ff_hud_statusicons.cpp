@@ -83,6 +83,9 @@ public:
 	Color	m_clrBright;
 	Color	m_clrDefault;
 	Color	m_clrDim;
+	Color	m_clrBurning1;
+	Color	m_clrBurning2;
+	Color	m_clrBurning3;
 
 };
 
@@ -250,7 +253,14 @@ void CStatusIcons::Paint( void )
 		// We're going vertical now
 		//sIcon.pTexture->DrawSelf(0, iOffset, gHUD.m_clrNormal);
 		// using specific status icon colors now
-		sIcon.pTexture->DrawSelf(0, iOffset, m_clrDefault );
+		if (i == FF_STATUSICON_BURNING1)
+			sIcon.pTexture->DrawSelf(0, iOffset, m_clrBurning1 );
+		else if (i == FF_STATUSICON_BURNING2)
+			sIcon.pTexture->DrawSelf(0, iOffset, m_clrBurning2 );
+		else if (i == FF_STATUSICON_BURNING3)
+			sIcon.pTexture->DrawSelf(0, iOffset, m_clrBurning3 );
+		else
+			sIcon.pTexture->DrawSelf(0, iOffset, m_clrDefault );
 		// TODO: make the status icons pulsate (and possibly pulsate faster as the end of duration nears)
 
 		iOffset += sIcon.pTexture->Height() + 5.0f;
@@ -283,4 +293,7 @@ void CStatusIcons::ApplySchemeSettings( vgui::IScheme *pScheme )
 	m_clrBright = pScheme->GetColor( "HUD_Status_Bright", Color(109, 124, 142, 224));
 	m_clrDefault = pScheme->GetColor("HUD_Status_Default", Color(109, 124, 142, 160));
 	m_clrDim = pScheme->GetColor("HUD_Status_Dim", Color(109, 124, 142, 96));
+	m_clrBurning1 = pScheme->GetColor("HUD_Status_Burning1", Color(255, 192, 0, 96));
+	m_clrBurning2 = pScheme->GetColor("HUD_Status_Burning3", Color(255, 128, 0, 96));
+	m_clrBurning3 = pScheme->GetColor("HUD_Status_Burning3", Color(255, 0, 0, 96));
 }
