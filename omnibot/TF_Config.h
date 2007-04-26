@@ -255,7 +255,6 @@ typedef enum eTF_Weapon
 //		TF_AMMO_CELLS - Cells.
 //		TF_AMMO_MEDIKIT - Medkit.
 //		TF_AMMO_DETPACK - Detpack.
-//		TF_AMMO_RADIOTAG - Radio Tag.
 //		TF_AMMO_GRENADE1 - Grenade 1.
 //		TF_AMMO_GRENADE2 - Grenade 2.
 typedef enum eTF_AmmoType
@@ -266,7 +265,6 @@ typedef enum eTF_AmmoType
 	TF_AMMO_CELLS,
 	TF_AMMO_MEDIKIT,
 	TF_AMMO_DETPACK,
-	TF_AMMO_RADIOTAG,
 	TF_AMMO_GRENADE1,
 	TF_AMMO_GRENADE2,
 
