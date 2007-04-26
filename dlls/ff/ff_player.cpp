@@ -4293,11 +4293,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	// send the status icon to be displayed
 	CSingleUserRecipientFilter user( (CBasePlayer *)this );
 	user.MakeReliable();
-	UserMessageBegin(user, "StatusIconUpdate");
-		WRITE_BYTE( FF_STATUSICON_BURNING );
-		WRITE_FLOAT( flIconDuration );
-	MessageEnd();
-
+	
 	// set them on fire
 	if (!m_iBurnTicks)
 		m_flNextBurnTick = gpGlobals->curtime + 1.25;
@@ -4329,11 +4325,43 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	
 	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
 	if (m_bBurnFlagNG && m_bBurnFlagFT && m_bBurnFlagIC)
+	{
 		m_flBurningDamage *= burn_multiplier_3burns.GetFloat();
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING1 );
+			WRITE_FLOAT( 0.0f );
+		MessageEnd();
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING2 );
+			WRITE_FLOAT( 0.0f );
+		MessageEnd();
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING3 );
+			WRITE_FLOAT( flIconDuration );
+		MessageEnd();
+	}
 	// if we're on fire from 2 flame weapons, burn a bit more
 	else if (((m_bBurnFlagNG && m_bBurnFlagFT) || (m_bBurnFlagNG && m_bBurnFlagIC)) 
 											   || (m_bBurnFlagFT && m_bBurnFlagIC))
+	{
 		m_flBurningDamage *= burn_multiplier_2burns.GetFloat();
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING1 );
+			WRITE_FLOAT( 0.0f );
+		MessageEnd();
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING2 );
+			WRITE_FLOAT( flIconDuration );
+		MessageEnd();
+	}
+	else
+	{
+		UserMessageBegin(user, "StatusIconUpdate");
+			WRITE_BYTE( FF_STATUSICON_BURNING1 );
+			WRITE_FLOAT( flIconDuration );
+		MessageEnd();
+	}
+
 
 
 	m_BurnType = BurnType;
