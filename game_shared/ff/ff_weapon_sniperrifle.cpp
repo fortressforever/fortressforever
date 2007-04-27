@@ -23,6 +23,7 @@
 	#include "fx_line.h"
 	#include "model_types.h"
 	#include "ff_utils.h"
+	#include "c_ff_player.h"
 #endif
 
 //#define	RPG_LASER_SPRITE	"sprites/redglow1"
@@ -400,6 +401,9 @@ public:
 	virtual FFWeaponID GetWeaponID() const		{ return FF_WEAPON_SNIPERRIFLE; }
 
 	virtual float GetRecoilMultiplier( void );
+
+	float GetFireStartTime( void ) const		{ return m_flFireStartTime; }
+	bool IsInFire( void ) const					{ return m_bInFire; }
 
 private:
 	bool m_bZoomed;
@@ -865,3 +869,25 @@ float CFFWeaponSniperRifle::GetRecoilMultiplier()
 {
 	return clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);
 }
+
+#ifdef CLIENT_DLL
+float GetSniperRifleCharge( void )
+{
+	CFFPlayer *pPlayer = CFFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return 0.0f;
+
+	CFFWeaponBase *pWeapon = pPlayer->GetActiveFFWeapon();
+	if( !pWeapon || (pWeapon->GetWeaponID() != FF_WEAPON_SNIPERRIFLE) )
+		return 0.0f;
+
+	CFFWeaponSniperRifle *pSniperRifle = (CFFWeaponSniperRifle *)pWeapon;
+	if( !pSniperRifle )
+		return 0.0f;
+
+	if( !pSniperRifle->IsInFire() )
+		return 0.0;
+
+	return 100.0f * ( clamp( gpGlobals->curtime - pSniperRifle->GetFireStartTime(), 1.0f, 7.0f ) / 7.0f );
+}
+#endif

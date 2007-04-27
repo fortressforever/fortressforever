@@ -230,6 +230,25 @@ void CHudCrosshair::Paint( void )
 		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
 		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
 	}
+	else if( weaponID == FF_WEAPON_SNIPERRIFLE )
+	{
+		extern float GetSniperRifleCharge();
+		float flCharge = GetSniperRifleCharge();
+
+		if( flCharge <= 1.0f )
+			return;
+
+		int iLeft = x - charOffsetX;
+		int iTop = y + charOffsetY;
+		int iRight = iLeft + (charOffsetX * 2);
+		int iBottom = iTop + 10;
+
+		surface()->DrawSetColor( innerCol.r(), innerCol.g(), innerCol.b(), 150 );
+		surface()->DrawFilledRect( iLeft, iTop, iLeft + ((float)(iRight - iLeft) * (flCharge / 100.0f)), iBottom );
+
+		surface()->DrawSetColor( outerCol.r(), outerCol.g(), outerCol.b(), 200 );		
+		surface()->DrawOutlinedRect( iLeft, iTop, iRight, iBottom );
+	}
 }
 
 //-----------------------------------------------------------------------------
