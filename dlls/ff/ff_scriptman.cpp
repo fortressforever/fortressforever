@@ -71,7 +71,7 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 
 	if (!hFile)
 	{
-		Error("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
+		Msg("[SCRIPT] %s either does not exist or could not be opened.\n", filename);
 		return false;
 	}
 
@@ -100,15 +100,15 @@ bool CFFScriptManager::LoadFile( lua_State *L, const char *filename)
 			const char *error = lua_tostring(L, -1);
 			if (error)
 			{
-				Error("Error loading %s: %s\n", filename, error);
+				Msg("Error loading %s: %s\n", filename, error);
 				lua_pop( L, 1 );
 			}
 			else
-				Error("Unknown Syntax Error loading %s\n", filename);
+				Msg("Unknown Syntax Error loading %s\n", filename);
 		}
 		else
 		{
-			Error("Unknown Error loading %s\n", filename);
+			Msg("Unknown Error loading %s\n", filename);
 		}
 		return false;
 	}
@@ -139,7 +139,7 @@ void CFFScriptManager::Init()
 	// no need to continue if VM failed to initialize
 	if(!L)
 	{
-		Error("[SCRIPT] Unable to initialize Lua VM.\n");
+		Msg("[SCRIPT] Unable to initialize Lua VM.\n");
 		return;
 	}
 
