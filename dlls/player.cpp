@@ -2873,6 +2873,9 @@ void CBasePlayer::AddFortPoints( int fortpoints, bool bAllowNegativeScore )
 {
 	m_iFortPoints += fortpoints;
 	//pl.fortpoints = m_iFortPoints;
+	//ClientPrint( this, HUD_PRINTTALK, ("You scored " + (char *) fortpoints + " points!")  );
+	//ClientPrint( this, HUD_PRINTTALK, "#FF_SCOREPOINTS", fortpoints );
+
 }
 
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )
