@@ -118,6 +118,8 @@ const char *g_pszFFSentryGunSounds[] =
 	FF_SENTRYGUN_UNBUILD_SOUND,
 	"Spanner.HitSG",
 	"Sentry.RocketFire",
+	"Sentry.SabotageActivate",
+	"Sentry.SabotageFinish",
 	NULL
 };
 
@@ -359,6 +361,7 @@ void CFFSentryGun::OnActiveThink( void )
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
 	{
+		EmitSound( "Sentry.SabotageFinish" );
 		m_bShootingTeammates = false;
 		enemy = NULL;
 	}
@@ -1215,7 +1218,7 @@ void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 
 	m_flSabotageTime = gpGlobals->curtime + 10.0f;
 	m_bShootingTeammates = true;
-
+	EmitSound( "Sentry.SabotageActivate" );
 	// Cancel target so it searchs for a new (friendly one)
 	SetEnemy(NULL);
 
