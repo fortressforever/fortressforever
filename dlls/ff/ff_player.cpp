@@ -2766,6 +2766,9 @@ void CFFPlayer::Command_Radar( void )
 		// See if the player has enough ammo
 		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
 		{
+#ifndef CLIENT_DLL					
+					FF_SendHint( this, SCOUT_RADAR, 1, "#FF_HINT_SCOUT_RADAR" );
+#endif
 			// Bug #0000531: Everyone hears radar
 			//CPASAttenuationFilter sndFilter;
 			//sndFilter.RemoveAllRecipients();
