@@ -55,9 +55,9 @@ ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grena
 ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
 ConVar burn_damage_ft("ffdev_burn_damage_ft","7.0",0,"Burn damage of the Flamethrower (per tick)");
-ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
-ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","3",0,"Burn damage multiplier for all 3 burn types.");
-ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2",0,"Burn damage multiplier for 2 burn types.");
+ConVar burn_ticks("ffdev_burn_ticks","4",0,"Number of burn ticks for pyro weapons.");
+ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
+ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 
 // For testing purposes
 // [integer] Number of cells it takes to perform the "radar" command
@@ -4308,58 +4308,76 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
 
 	m_iBurnTicks = burn_ticks.GetInt(); //cvar - must be an int !
-
+	int oldburnlevel = 0;
+	if (m_bBurnFlagNG == true) 
+		++oldburnlevel;
+	if (m_bBurnFlagFT == true) 
+		++oldburnlevel;
+	if (m_bBurnFlagIC == true) 
+		++oldburnlevel;
 	switch (BurnType)
 	{
 		case BURNTYPE_NALPALMGRENADE: m_bBurnFlagNG = true; break;
 		case BURNTYPE_FLAMETHROWER: m_bBurnFlagFT = true; break;
 		case BURNTYPE_ICCANNON: m_bBurnFlagIC= true; break;
 	}
-
-	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
-	m_flBurningDamage = 0;
-	if (BURNTYPE_NALPALMGRENADE) 
-		m_flBurningDamage += burn_damage_ng.GetFloat();
-	if (BURNTYPE_FLAMETHROWER)
-		m_flBurningDamage += burn_damage_ft.GetFloat();
-	if (BURNTYPE_ICCANNON)
-		m_flBurningDamage += burn_damage_ic.GetFloat();
 	
+	int newburnlevel = 0;
+	if (m_bBurnFlagNG == true) 
+		++newburnlevel;
+	if (m_bBurnFlagFT == true) 
+		++newburnlevel;
+	if (m_bBurnFlagIC == true) 
+		++newburnlevel;
+	
+	// each weapons burn damage can only stack once. (else you set them on 999 fire with the FT)
+	/** Uncomment this to use different burn damages depending on the weapon - AfterShock
+	m_flBurningDamage = 0;
+	if (m_bBurnFlagNG) 
+		m_flBurningDamage += burn_damage_ng.GetFloat();
+	if (m_bBurnFlagFT)
+		m_flBurningDamage += burn_damage_ft.GetFloat();
+	if (m_bBurnFlagIC)
+		m_flBurningDamage += burn_damage_ic.GetFloat();
+	*/
+	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
+	m_flBurningDamage = burn_damage_ft.GetFloat();
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	
 	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
-	if (m_bBurnFlagNG && m_bBurnFlagFT && m_bBurnFlagIC)
+	if (newburnlevel == 3)
 	{
 		m_flBurningDamage *= burn_multiplier_3burns.GetFloat();
-		EmitSound("Player.Scream");
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING1 );
-			WRITE_FLOAT( 0.0f );
-		MessageEnd();
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING2 );
-			WRITE_FLOAT( 0.0f );
-		MessageEnd();
+		EmitSound("Player.Scream"); // haha
+		if (oldburnlevel == 2) 
+		{
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE( FF_STATUSICON_BURNING2 );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING3 );
 			WRITE_FLOAT( flIconDuration );
 		MessageEnd();
 	}
 	// if we're on fire from 2 flame weapons, burn a bit more
-	else if (((m_bBurnFlagNG && m_bBurnFlagFT) || (m_bBurnFlagNG && m_bBurnFlagIC)) 
-											   || (m_bBurnFlagFT && m_bBurnFlagIC))
+	else if (newburnlevel == 2)
 	{
 		m_flBurningDamage *= burn_multiplier_2burns.GetFloat();
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING1 );
-			WRITE_FLOAT( 0.0f );
-		MessageEnd();
+		if (oldburnlevel == 1) 
+		{
+			UserMessageBegin(user, "StatusIconUpdate");
+				WRITE_BYTE( FF_STATUSICON_BURNING1 );
+				WRITE_FLOAT( 0.0f );
+			MessageEnd();
+		}
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING2 );
 			WRITE_FLOAT( flIconDuration );
 		MessageEnd();
 	}
-	else
+	else // burn level 1
 	{
 		UserMessageBegin(user, "StatusIconUpdate");
 			WRITE_BYTE( FF_STATUSICON_BURNING1 );
