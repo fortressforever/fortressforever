@@ -2518,10 +2518,10 @@
 				RelativePath="..\public\vgui\IImage.h">
 			</File>
 			<File
-				RelativePath="iinput.h">
+				RelativePath="..\public\vgui\IInput.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui\IInput.h">
+				RelativePath="iinput.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui\IInputInternal.h">
@@ -2764,10 +2764,10 @@
 				RelativePath="..\public\tier1\mempool.h">
 			</File>
 			<File
-				RelativePath="menu.h">
+				RelativePath="..\public\vgui_controls\Menu.h">
 			</File>
 			<File
-				RelativePath="..\public\vgui_controls\Menu.h">
+				RelativePath="menu.h">
 			</File>
 			<File
 				RelativePath="..\public\vgui_controls\MenuItem.h">
@@ -3344,6 +3344,12 @@
 			</File>
 			<File
 				RelativePath=".\ff\c_ff_env_sparkler.cpp">
+			</File>
+			<File
+				RelativePath=".\c_ff_hint_timers.cpp">
+			</File>
+			<File
+				RelativePath=".\c_ff_hint_timers.h">
 			</File>
 			<File
 				RelativePath=".\ff\c_ff_item_flag.cpp">

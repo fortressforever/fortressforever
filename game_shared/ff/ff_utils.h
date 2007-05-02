@@ -132,12 +132,14 @@ enum HintType
 	SCOUT_TOUCHFLAG,	// Event: First initial touch on a flag
 	SCOUT_DEFENDER,		// Event CTF: Scout does not leave his own base(his own teams colored rooms from the lua shit) for 60 seconds
 	// SNIPER
+	SNIPER_SPAWN,		// Event: First spawn +5 seconds
 	SNIPER_SR,			// Event: select sniper rifle
 	SNIPER_TAG,			// Event: Player shoots an enemy with a non-lethal shot and proceeds to die before the tagged enemy does 
 	SNIPER_LEGSHOT,		// Event: Sniper legshots an enemy
 	SNIPER_HEADSHOT,	// Event: Sniper headshots an enemy
 	SNIPER_NOCHARGE,	// Event: 3 consecutive uncharged shots from sniper rifle
 	// SOLDIER
+	SOLDIER_SPAWN,		// Event: First spawn +5 seconds
 	SOLDIER_NAILGREN,	// Event: Prime nail grenade
 	SOLDIER_SENTRY,		// Event: Enemy sentrygun locks onto you
 	SOLDIER_PLAYTIME,	// Event: Player logs 10 minutes of soldier class
@@ -149,18 +151,22 @@ enum HintType
 	DEMOMAN_DETPACK,	// Event: Select slot 6 (Detpack)
 	DEMOMAN_SETDET,		// Event: Setting detpack
 	// MEDIC
+	MEDIC_SPAWN,		// Event: First spawn +5 seconds
 	MEDIC_GOHEAL,		// Event: Allied player within 1000 units calls for medic for the first time
 	MEDIC_CONC1,		// Event: First thrown conc(this hint should play only once for the player. See identical entry under Scout)
 	MEDIC_CONC2,		// Event: Conc hint #2
 	MEDIC_NOINFECT,		// Event: Medic tries to infect an enemy player who is Immune.
 	// HW
+	HWGUY_SPAWN,		// Event: First spawn +5 seconds
 	HWGUY_OVERHEAT,		// Event: AC overheats
 	// PYRO
+	PYRO_SPAWN,			// Event: First spawn +5 seconds
 	PYRO_FLAMER,		// Event: Select flamethrower
 	PYRO_IC,			// Event: Select IC
 	PYRO_ROASTHW,		// Event: Taking AC damage
 	PYRO_PLAYTIME,		// Event: + 5 minutes playing as pyro
 	// SPY
+	SPY_SPAWN,			// Event: First spawn +5 seconds
 	SPY_NODISGUISE,		// Event: Player plays for 5 minutes without disguising.
 	SPY_GANKDISGUISE,	// Event: Player successfully backstabs from disguise to steal enemy disguise 
 	SPY_LOSEDISGUISE,	// Event: Player's disguise is removed by proximity to an enemy spy or scout

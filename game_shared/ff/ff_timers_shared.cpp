@@ -46,6 +46,20 @@ void CFFTimerBase::SetIntervalCallback(pfnTimerCallback pfnIntervalCallback, flo
 	m_flCallbackInterval = flInterval;
 }
 
+// Jiggles: Added for Hint Timers
+void CFFTimerBase::SetHintExpiredCallback(pfnHintTimerCallback pfnExpiredCallback, bool bRemoveWhenExpired)
+{
+	m_pfnHintExpiredCallback = pfnExpiredCallback;
+	m_bRemoveWhenExpired = bRemoveWhenExpired;
+}
+
+void CFFTimerBase::SetHintIntervalCallback(pfnHintTimerCallback pfnIntervalCallback, float flInterval)
+{
+	m_pfnHintIntervalCallback = pfnIntervalCallback;
+	m_flCallbackInterval = flInterval;
+}
+
+
 float CFFTimerBase::GetElapsedTime( void )
 {
 	float elapsed = 0.0f;
