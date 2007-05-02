@@ -11,6 +11,7 @@
 #include "ai_debug_shared.h"
 #include "shot_manipulator.h"
 #include "ff_buildableobjects_shared.h"
+#include "ff_weapon_sniperrifle.h"
 
 #ifdef CLIENT_DLL
 	
@@ -453,12 +454,37 @@ void CFFPlayer::PlayFallSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force)
 {
 	// Remember last time idled
-	m_flIdleTime = gpGlobals->curtime;
+	m_flIdleTime = gpGlobals->curtime;	
 
-	// Don't play footsteps for spy
-	// Jiggles: 0001374: But do play footsteps while disguised as a non-spy class, unless cloaked 
-	if ( GetClassSlot() != 8 || ( !IsCloaked() && IsDisguised() && GetDisguisedClass() != 8 ) )
-		BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
+	switch( GetClassSlot() )
+	{
+		// Don't play footsteps for spy
+		// Jiggles: 0001374: But do play footsteps while disguised as a non-spy class, unless cloaked
+		case CLASS_SPY:
+		{
+			if( IsCloaked() )
+				return;
+
+			if( IsDisguised() && (GetDisguisedClass() == CLASS_SPY) )
+				return;
+		}
+		break;
+
+		// Bug #0001520: Sniper has footsteps while charging sniper rifle
+		case CLASS_SNIPER:
+		{
+			CFFWeaponBase *pWeapon = GetActiveFFWeapon();
+			if( pWeapon && (pWeapon->GetWeaponID() == FF_WEAPON_SNIPERRIFLE) )
+			{
+				CFFWeaponSniperRifle *pSniperRifle = dynamic_cast<CFFWeaponSniperRifle *>( pWeapon );
+				if( pSniperRifle && pSniperRifle->IsInFire() )
+					return;
+			}
+		}
+		break;
+	}
+
+	BaseClass::PlayStepSound( vecOrigin, psurface, fvol, force );
 }
 // <-- Mirv: Proper sounds
 
