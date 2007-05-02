@@ -3834,6 +3834,9 @@
 				RelativePath="..\game_shared\ff\ff_weapon_sniperrifle.cpp">
 			</File>
 			<File
+				RelativePath="..\game_shared\ff\ff_weapon_sniperrifle.h">
+			</File>
+			<File
 				RelativePath="..\game_shared\ff\ff_weapon_spanner.cpp">
 			</File>
 			<File
