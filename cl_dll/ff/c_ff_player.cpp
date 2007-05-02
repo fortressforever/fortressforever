@@ -50,6 +50,7 @@ extern CHudGrenade2Timer *g_pGrenade2Timer;
 #include "c_gib.h"
 
 #include "c_ff_timers.h"
+#include "c_ff_hint_timers.h"
 #include "vguicenterprint.h"
 
 #include "ff_fx_bloodstream.h"
@@ -133,6 +134,32 @@ void OnTimerExpired(C_FFTimer *pTimer)
 	sprintf(buf,"OnTimerExpired(%s)\n",name.c_str());
 	internalCenterPrint->SetTextColor( 255, 255, 255, 255 );
 	internalCenterPrint->Print( buf );
+}
+
+
+// Jiggles: Called 5 seconds after the first time the player spawns as a class
+void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	string name = pHintTimer->GetTimerName();
+
+	if ( name == "scoutSpawn" )
+		FF_SendHint( SCOUT_SPAWN, 1, "#FF_HINT_SCOUT_SPAWN" );
+	else if ( name == "sniperSpawn" )
+		FF_SendHint( SNIPER_SPAWN, 1, "#FF_HINT_SNIPER_SPAWN" );
+	else if ( name == "soldierSpawn" )
+		FF_SendHint( SOLDIER_SPAWN, 1, "#FF_HINT_SOLDIER_SPAWN" );
+	else if ( name == "demomanSpawn" )
+		FF_SendHint( DEMOMAN_SPAWN, 1, "#FF_HINT_DEMOMAN_SPAWN" );
+	else if ( name == "medicSpawn" )
+		FF_SendHint( MEDIC_SPAWN, 1, "#FF_HINT_MEDIC_SPAWN" );
+	else if ( name == "hwguySpawn" )
+		FF_SendHint( HWGUY_SPAWN, 1, "#FF_HINT_HWGUY_SPAWN" );
+	else if ( name == "pyroSpawn" )
+		FF_SendHint( PYRO_SPAWN, 1, "#FF_HINT_PYRO_SPAWN" );
+	else if ( name == "spySpawn" )
+		FF_SendHint( SPY_SPAWN, 1, "#FF_HINT_SPY_SPAWN" );
+	else if ( name == "engineerSpawn" )
+		FF_SendHint( ENGY_SPAWN, 1, "#FF_HINT_ENGY_SPAWN" );
 }
 
 // --> Mirv: Toggle grenades (requested by defrag)
@@ -1171,6 +1198,25 @@ void C_FFPlayer::Spawn( void )
 			g_pGrenade2Timer->ResetTimer();
 	}
 
+	// Jiggles: Class Spawn Hints -- Display 5 seconds after spawning
+	if ( GetClassSlot() > 0 )
+	{
+		char szClassHint[128];
+		Q_snprintf(szClassHint, 127, "%.10sSpawn", Class_IntToString(GetClassSlot()));
+		//Msg("\nClass Hint: %s\n", szClassHint);
+	
+		if ( g_FFHintTimers.FindTimer( szClassHint ) == NULL )
+		{
+			C_FFHintTimer *pHintTimer = g_FFHintTimers.Create( szClassHint, 5.0f );
+			if( pHintTimer )
+			{
+				pHintTimer->SetHintExpiredCallback( OnHintTimerExpired, true );
+				pHintTimer->StartTimer();
+			}
+		}
+	}
+	// End hint code
+
 	char szCommand[128];
 
 	// Execute the player config
@@ -1793,6 +1839,8 @@ void C_FFPlayer::Simulate()
 	BaseClass::Simulate();
 
 	g_FFTimers.SimulateTimers();
+
+	g_FFHintTimers.SimulateTimers();
 }
 
 //-----------------------------------------------------------------------------

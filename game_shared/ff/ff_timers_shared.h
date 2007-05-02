@@ -11,6 +11,7 @@
 /// Revisions
 /// ---------
 /// May 13, 2005	L0ki: Initial Creation
+/// May 1, 2007		Jiggles: Added support for hint timers
 
 #ifndef FF_TIMERS_SHARED_H
 #define FF_TIMERS_SHARED_H
@@ -33,11 +34,18 @@ using namespace std;
 class C_FFTimer;
 class CFFTimer;
 
+//forward declaration for the hint timer class
+class C_FFHintTimer;
+class CFFHintTimer;
+
+
 //callback function for timer events
 #ifdef CLIENT_DLL
 	typedef void (*pfnTimerCallback)(C_FFTimer *pTimer);
+	typedef void (*pfnHintTimerCallback)(C_FFHintTimer *pTimer);
 #else
 	typedef void (*pfnTimerCallback)(CFFTimer *pTimer);
+	typedef void (*pfnHintTimerCallback)(CFFHintTimer *pTimer);
 #endif
 
 // basic class for both client and server timers, since they share the same basic functionality
@@ -56,6 +64,9 @@ public:
 	void SetExpiredCallback(pfnTimerCallback pfnExpiredCallback, bool bRemoveWhenExpired);
 	void SetIntervalCallback(pfnTimerCallback pfnIntervalCallback, float flInterval);
 
+	void SetHintExpiredCallback( pfnHintTimerCallback, bool );
+	void SetHintIntervalCallback( pfnHintTimerCallback, float );
+
 	//utility
 	float GetElapsedTime( void );
 	float GetRemainingTime( void );
@@ -68,6 +79,9 @@ public:
 	pfnTimerCallback	m_pfnIntervalCallback;
 	float				m_flCallbackInterval;
 	bool				m_bRemoveWhenExpired;
+
+	pfnHintTimerCallback	m_pfnHintExpiredCallback;
+	pfnHintTimerCallback	m_pfnHintIntervalCallback;
 
 protected:
 	float		m_flDuration;
