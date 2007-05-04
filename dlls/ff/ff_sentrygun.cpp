@@ -72,6 +72,7 @@ ConVar  sg_range( "ffdev_sg_range", "1000.0" );
 
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "30.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 ConVar sg_explosiondamage_levelmultiplier("ffdev_sg_explosiondamage_levelmultiplier", "1.7", FCVAR_REPLICATED, "Multiplier for explosion damage per level (Level 1 = base, 2 = base*mult, 3= base*mult^2)");
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -688,6 +689,7 @@ void CFFSentryGun::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, boo
 	info.m_flDistance = MAX_COORD_RANGE;
 	info.m_iAmmoType = m_iAmmoType;
 	info.m_iDamage = m_iShellDamage;
+	info.m_flDamageForceScale = ffdev_sg_bulletpush.GetFloat();
 
 	// Introduce quite a big spread now if sabotaged
 	// but not if we're in malicious mode
