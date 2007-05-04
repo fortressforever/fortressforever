@@ -72,6 +72,10 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFGameRulesProxy, DT_FFGameRulesProxy )
 	ConVar fattypush_multiplier("ffdev_hwguypushmultiplier", ".15", FCVAR_REPLICATED);
 	ConVar nodamagepush_multiplier("ffdev_nodamagepushmultiplier", ".80", FCVAR_REPLICATED);
 	ConVar push_clamp("ffdev_pushclamp", "450", FCVAR_REPLICATED);
+
+	// AfterShock - increase IC self damage to reduce number of jumps you can do
+	ConVar ic_selfdamagemultiplier("ffdev_ic_selfdamagemultiplier", "1.8", FCVAR_REPLICATED);
+	
 #endif
 
 ConVar mp_prematch( "mp_prematch",
@@ -1109,6 +1113,12 @@ ConVar mp_prematch( "mp_prematch",
 					flPushClamp = 350.0f;
 					// lower the push because of the increased damage needed
 					flCalculatedForce /= 3;
+					if (pEntity == info.GetAttacker() && !pBuildable)
+					{
+						flAdjustedDamage *= ic_selfdamagemultiplier.GetFloat();
+						adjustedInfo.SetDamage(flAdjustedDamage);
+					}
+
 				}
 				else if ( pInflictor && ( pInflictor->Classify() == CLASS_RAIL_PROJECTILE ) )
 				{
