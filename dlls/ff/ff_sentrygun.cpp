@@ -68,7 +68,10 @@
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
-ConVar  sg_range( "ffdev_sg_range", "1152.0" );
+ConVar  sg_range( "ffdev_sg_range", "1000.0" );
+
+ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "100.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
+ConVar sg_explosiondamage_levelmultiplier("ffdev_sg_explosiondamage_levelmultiplier", "1.5", FCVAR_REPLICATED, "Multiplier for explosion damage per level (Level 1 = base, 2 = base*mult, 3= base*mult^2)");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
@@ -364,6 +367,10 @@ void CFFSentryGun::OnActiveThink( void )
 		EmitSound( "Sentry.SabotageFinish" );
 		m_bShootingTeammates = false;
 		enemy = NULL;
+
+		// AfterShock - Explode SG on sabotage finish
+		// TODO: create custom death message for it
+		Event_Killed( CTakeDamageInfo( m_hSaboteur, m_hSaboteur, 0, DMG_NEVERGIB ) );
 	}
 
 	// Enemy is no longer targettable
@@ -1251,8 +1258,9 @@ void CFFSentryGun::DoExplosionDamage()
 {
 	VPROF_BUDGET( "CFFSentryGun::DoExplosionDamage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	float flDamage = 2 * (m_iRockets * 1.4f + m_iShells * 1.0f);
-	flDamage = min(280, flDamage);
+	float flDamage = sg_explosiondamage_base.GetFloat() * (m_iLevel * sg_explosiondamage_levelmultiplier.GetFloat() ) + (m_iRockets * 1.4f);
+	// COmmented out for testing explosion damage - AfterShock
+	//flDamage = min(280, flDamage);
 	
 	CTakeDamageInfo info(this, m_hOwner, vec3_origin, GetAbsOrigin() + Vector(0, 0, 32.0f), flDamage, DMG_BLAST);
 	RadiusDamage(info, GetAbsOrigin(), flDamage * 2.0f, CLASS_NONE, NULL);
