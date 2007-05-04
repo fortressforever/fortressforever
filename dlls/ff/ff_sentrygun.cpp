@@ -70,8 +70,8 @@ ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1000.0" );
 
-ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "100.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
-ConVar sg_explosiondamage_levelmultiplier("ffdev_sg_explosiondamage_levelmultiplier", "1.5", FCVAR_REPLICATED, "Multiplier for explosion damage per level (Level 1 = base, 2 = base*mult, 3= base*mult^2)");
+ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "30.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
+ConVar sg_explosiondamage_levelmultiplier("ffdev_sg_explosiondamage_levelmultiplier", "1.7", FCVAR_REPLICATED, "Multiplier for explosion damage per level (Level 1 = base, 2 = base*mult, 3= base*mult^2)");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
