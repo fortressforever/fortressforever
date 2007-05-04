@@ -4827,6 +4827,19 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		return 0;
 	}
 
+	// AfterShock - Reset sabotage timer on getting shot
+	if (m_hSabotaging)
+	{
+			CSingleUserRecipientFilter user(this);
+			user.MakeReliable();
+			UserMessageBegin(user, "FF_BuildTimer");
+			WRITE_SHORT(0);
+			WRITE_FLOAT(0);
+			MessageEnd();
+			m_hSabotaging = NULL;
+	}
+		
+
 	// Check for radio tag shots
 	if( inputInfo.GetInflictor() )
 	{
