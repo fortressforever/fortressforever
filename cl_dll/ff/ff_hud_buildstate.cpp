@@ -181,6 +181,9 @@ void CHudBuildState::OnTick()
 			int iAmmoPerc = pSentryGun->GetAmmoPercent();
 			bool fNoRockets = false;
 
+			// AfterShock - get level and display it
+			int iLevel = pSentryGun->GetLevel();
+			
 			// We store the lack of rockets in the highest significant bit
 			if (iAmmoPerc >= 128) 
 			{
@@ -188,7 +191,7 @@ void CHudBuildState::OnTick()
 				fNoRockets = true;
 			}
 
-			_snwprintf(m_szSentry, 127, L"%s: %i%% %s: %i%% %s", m_szHealth, iHealthPerc, m_szAmmo, iAmmoPerc, fNoRockets ? m_szNoRockets : L"");
+			_snwprintf(m_szSentry, 127, L"Level %i - %s: %i%% %s: %i%% %s", iLevel , m_szHealth, iHealthPerc, m_szAmmo, iAmmoPerc, fNoRockets ? m_szNoRockets : L"");
 		}
 	}
 }
