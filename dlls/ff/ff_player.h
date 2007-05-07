@@ -383,6 +383,7 @@ protected:
 	CFFWeaponBase *m_pBuildLastWeapon;
 
 public:
+	bool AnyActiveSGSabotages( void ) { return m_bActiveSGSabotages; }
 	bool IsBuilding( void ) const;
 	int GetCurBuild( void ) const;
 	int GetWantBuild( void ) const	{ return m_iWantBuild; }
@@ -513,6 +514,7 @@ private:
 	//bool m_bInfected;								// if this player is infected
 	CNetworkVar( unsigned int, m_bInfected );		// Is the player infected?
 	CNetworkVar( unsigned int, m_bImmune );			// Is the player immune
+	CNetworkVar( bool, m_bActiveSGSabotages );		// Jiggles: So the client's sabotage menu knows when to be active
 	float m_flImmuneTime;							// Mulch: immunity: time in the future of when the immunity ends
 	int m_iInfectedTeam;							// Mulch: team the medic who infected us was on
     float m_flLastOverHealthTick;					// Mulch: last time we took health cause health > maxhealth
