@@ -462,11 +462,12 @@ void CFFPlayer::PlayStepSound(Vector &vecOrigin, surfacedata_t *psurface, float 
 		// Jiggles: 0001374: But do play footsteps while disguised as a non-spy class, unless cloaked
 		case CLASS_SPY:
 		{
-			if( IsCloaked() )
+			if( IsCloaked() || !IsDisguised() )
 				return;
 
 			if( IsDisguised() && (GetDisguisedClass() == CLASS_SPY) )
 				return;
+
 		}
 		break;
 
