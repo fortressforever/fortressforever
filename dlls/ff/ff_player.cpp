@@ -352,6 +352,7 @@ IMPLEMENT_SERVERCLASS_ST( CFFPlayer, DT_FFPlayer )
 	SendPropInt( SENDINFO( m_bImmune ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iCloaked ), 1, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flCloakSpeed ) ),	// Hate to do this, but for spy cloak mat proxy we need to know everyone's speed :X
+	SendPropBool( SENDINFO( m_bActiveSGSabotages ) ),
 END_SEND_TABLE( )
 
 LINK_ENTITY_TO_CLASS( ff_ragdoll, CFFRagdoll );
@@ -452,6 +453,7 @@ CFFPlayer::CFFPlayer()
 	m_iInfectedTeam = TEAM_UNASSIGNED;
 	m_flImmuneTime = 0.0f;
 	m_flLastOverHealthTick = 0.0f;
+	m_bActiveSGSabotages = false;
 
 	// Map guide stuff
 	m_hNextMapGuide = NULL;
@@ -1159,6 +1161,8 @@ void CFFPlayer::Spawn( void )
 	m_flSpeedModifierOld		= 1.0f;
 	m_flSpeedModifierChangeTime	= 0;
 
+	m_bActiveSGSabotages = false;
+
 	// If we get spawned, kill any primed grenades!
 	m_flServerPrimeTime = 0.0f;
 	m_iGrenadeState = FF_GREN_NONE;
@@ -1726,6 +1730,8 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Stop infection
 	m_bInfected = 0;
+
+	m_bActiveSGSabotages = false;
 
 	//stop gas
 	m_bGassed = false;
@@ -6454,7 +6460,10 @@ void CFFPlayer::SpySabotageThink()
 			// Fire an event.
 			IGameEvent *pEvent = NULL;
 			if(m_hSabotaging->Classify() == CLASS_SENTRYGUN)
+			{
 				pEvent = gameeventmanager->CreateEvent("sentry_sabotaged");
+				m_bActiveSGSabotages = true;
+			}
 			else if(m_hSabotaging->Classify() == CLASS_DISPENSER)
 				pEvent = gameeventmanager->CreateEvent("dispenser_sabotaged");
 			if(pEvent)
@@ -6556,6 +6565,7 @@ void CFFPlayer::Command_SabotageSentry()
 		if (pSentry->IsSabotaged() && pSentry->m_hSaboteur == this) 
 			pSentry->MaliciousSabotage(this);
 	}
+	m_bActiveSGSabotages = false;
 }
 
 //-----------------------------------------------------------------------------

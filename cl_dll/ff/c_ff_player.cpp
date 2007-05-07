@@ -537,6 +537,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_FFPlayer, DT_FFPlayer, CFFPlayer )
 	RecvPropInt( RECVINFO( m_bImmune ) ),
 	RecvPropInt( RECVINFO( m_iCloaked ) ),
 	RecvPropFloat( RECVINFO( m_flCloakSpeed ) ),
+	RecvPropBool( RECVINFO( m_bActiveSGSabotages ) ),
 END_RECV_TABLE( )
 
 BEGIN_PREDICTION_DATA( C_FFPlayer )

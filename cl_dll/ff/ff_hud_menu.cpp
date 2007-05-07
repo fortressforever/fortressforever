@@ -462,12 +462,27 @@ ADD_MENU_OPTION( scloak, L"Silent Cloak", "scloak" )
 	return MENU_SHOW;
 }
 
+//-----------------------------------------------------------------------------
+// Sentry Sabotage
+//-----------------------------------------------------------------------------
+
+ADD_MENU_OPTION( sentrysabotage, L"Sabotage Sentry", "sentrysabotage" )
+{
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( !pPlayer )
+		return MENU_DIM;
+
+	if ( pPlayer->AnyActiveSGSabotages() )
+		return MENU_SHOW;
+	else return MENU_DIM;
+}
+
 /************************************************************************/
 /* And these are the actual menus themselves                            */
 /************************************************************************/
 menuoption_t BuildMenu[]		= { detdispenser, dismantledispenser, detsentry, dismantlesentry, aimsentry };
-menuoption_t SpyTeamDisguise2[] = { disguiseenemy, disguiseteam, scloak, cloak };
-menuoption_t SpyTeamDisguise4[] = { disguiseblue, disguisered, disguiseyellow, disguisegreen, scloak, cloak };
+menuoption_t SpyTeamDisguise2[] = { disguiseenemy, disguiseteam, scloak, cloak, sentrysabotage };
+menuoption_t SpyTeamDisguise4[] = { disguiseblue, disguisered, disguiseyellow, disguisegreen, scloak, cloak, sentrysabotage };
 menuoption_t SpyClassDisguise[] = { disguisescout, disguisesniper, disguisesoldier, disguisedemoman, disguisemedic, disguisehwguy, disguisepyro, disguisespy, disguiseengineer, disguisecivilian };
 menuoption_t DemoDetpackMenu[]	= { det5, det10, det20, det50 };
 
