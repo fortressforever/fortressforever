@@ -1211,7 +1211,7 @@ void C_FFPlayer::Spawn( void )
 			C_FFHintTimer *pHintTimer = g_FFHintTimers.Create( szClassHint, 5.0f );
 			if( pHintTimer )
 			{
-				pHintTimer->SetHintExpiredCallback( OnHintTimerExpired, true );
+				pHintTimer->SetHintExpiredCallback( OnHintTimerExpired, false );
 				pHintTimer->StartTimer();
 			}
 		}
