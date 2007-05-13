@@ -290,6 +290,17 @@ void CFFSentryGun::OnObjectThink( void )
 	// Animate
 	StudioFrameAdvance();
 
+	// We've just finished being maliciously sabotaged, so remove enemy here
+	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
+	{
+		EmitSound( "Sentry.SabotageFinish" );
+
+		// AfterShock - Explode SG on sabotage finish
+		// TODO: create custom death message for it
+		// commented out until we find the cause for the crash / why this doesnt work
+		//TakeDamage( CTakeDamageInfo( m_hSaboteur, m_hSaboteur, 10000, DMG_GENERIC ) );
+	}
+
 	// Run base class thinking
 	CFFBuildableObject::OnObjectThink();
 }
@@ -364,13 +375,8 @@ void CFFSentryGun::OnActiveThink( void )
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)
 	{
-		EmitSound( "Sentry.SabotageFinish" );
 		m_bShootingTeammates = false;
 		enemy = NULL;
-
-		// AfterShock - Explode SG on sabotage finish
-		// TODO: create custom death message for it
-		Event_Killed( CTakeDamageInfo( m_hSaboteur, m_hSaboteur, 0, DMG_NEVERGIB ) );
 	}
 
 	// Enemy is no longer targettable
@@ -1207,7 +1213,8 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 
 	m_flSabotageTime = gpGlobals->curtime + 120.0f;
 	m_hSaboteur = pSaboteur;
-	m_bShootingTeammates = false;
+	// AfterShock - don't need this - it might hide bugs having this line in.
+	//m_bShootingTeammates = false;
 
 	// AfterShock - scoring system: 100 points for sabotage SG
 	pSaboteur->AddFortPoints(100, true);
@@ -1224,7 +1231,7 @@ void CFFSentryGun::MaliciousSabotage(CFFPlayer *pSaboteur)
 {
 	VPROF_BUDGET( "CFFSentryGun::MaliciousSabotage", VPROF_BUDGETGROUP_FF_BUILDABLE );
 
-	m_flSabotageTime = gpGlobals->curtime + 10.0f;
+	m_flSabotageTime = gpGlobals->curtime + 8.0f;
 	m_bShootingTeammates = true;
 	EmitSound( "Sentry.SabotageActivate" );
 	// Cancel target so it searchs for a new (friendly one)
