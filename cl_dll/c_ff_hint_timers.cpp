@@ -20,6 +20,8 @@ C_FFHintTimerManager g_FFHintTimers;
 C_FFHintTimer::C_FFHintTimer( string strName, const float flDuration )
 : CFFTimerBase( strName.c_str(), flDuration )
 {
+	m_bPaused = false;
+	m_flPausedTime = 0.0f;
 }
 
 C_FFHintTimer::~C_FFHintTimer()
@@ -35,6 +37,28 @@ void C_FFHintTimer::ResetTimer( void )
 {
 	CFFTimerBase::ResetTimer();
 }
+
+
+void C_FFHintTimer::Pause( void )
+{
+	if ( m_bPaused )  // Already paused
+		return;
+
+	m_flPausedTime = gpGlobals->curtime;
+	m_bPaused = true;
+}
+void C_FFHintTimer::Unpause( void )
+{
+	if ( !m_bPaused )  // Already unpaused
+		return;
+
+	// Just add in the time the timer was paused to the duration
+	float flNewDuration = m_flDuration + ( gpGlobals->curtime - m_flPausedTime );
+	if ( flNewDuration > 0 )
+		m_flDuration = flNewDuration;
+	m_bPaused = false;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Client side Timer Manager class
@@ -219,8 +243,8 @@ void C_FFHintTimerManager::SimulateTimers ( void )
 		{
 			pTimer = *timer;
 
-			//has the timer even started?
-			if(pTimer->HasStarted())
+			// Is the timer currently running?
+			if( pTimer->HasStarted() && !pTimer->IsPaused() )
 			{
 				if(pTimer->Interval())
 				{

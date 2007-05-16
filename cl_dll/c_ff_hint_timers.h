@@ -24,6 +24,17 @@ class C_FFHintTimer : public CFFTimerBase
 
 		void StartTimer( void );
 		void ResetTimer( void );
+
+		// Jiggles: Added pausing functions for certain hints that are triggered after playing
+		//			a character class for X minutes
+
+		bool IsPaused( void ){ return m_bPaused; }
+		void Pause( void );
+		void Unpause( void );
+
+	private:
+		bool m_bPaused;
+		float m_flPausedTime;
 };
 
 typedef std::vector<C_FFHintTimer*> HintTimerList;
