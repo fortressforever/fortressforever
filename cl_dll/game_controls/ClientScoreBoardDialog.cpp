@@ -694,22 +694,27 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo( int playerIndex, KeyValues *kv
 		return false;
 
 	bool bFriendly = false;
+	int iLocalPlayerTeam = TEAM_UNASSIGNED;
+	int iPlayerTeam = TEAM_UNASSIGNED;
 
-	C_FFPlayer *pLocalPlayer = NULL;
-	if( C_BasePlayer::GetLocalPlayer() )
-		pLocalPlayer = ToFFPlayer( C_BasePlayer::GetLocalPlayer() );
+	// Get local player team. This will always be up to date
+	// since the local player is the one viewing the scoreboard
+	// and whose machine this stuff is running on.
+	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
+	if( pLocalPlayer )
+		iLocalPlayerTeam = pLocalPlayer->GetTeamNumber();
 
-	C_FFPlayer *pPlayer = NULL;
-
+	// Check if player is connected. If connected, compare team to see if
+	// friendly or not but use the player resource as it will be up to date
+	// with server information. I think in the past there was a PVS issue
+	// and the client who was viewing the scoreboard might see old (inaccurate)
+	// data and draw stuff the class identifier wrong. Crosshair info needs
+	// to be revisited for this reason too!
 	if( pGR->IsConnected( playerIndex ) )
-	{
-		CBasePlayer *pTemp = UTIL_PlayerByIndex( playerIndex );
-		if( pTemp && pTemp->IsPlayer() )
-            pPlayer = ToFFPlayer( UTIL_PlayerByIndex( playerIndex ) );
-	}
+		iPlayerTeam = pGR->GetTeam( playerIndex );
 
-	if( pPlayer && pLocalPlayer )
-		bFriendly = ( FFGameRules()->PlayerRelationship( pLocalPlayer, pPlayer ) == GR_TEAMMATE ) || ( pLocalPlayer->GetTeamNumber() == TEAM_SPECTATOR );
+	// Check if an ally
+	bFriendly = FFGameRules()->IsTeam1AlliedToTeam2( iLocalPlayerTeam, iPlayerTeam );
 
 	kv->SetInt( "deaths", pGR->GetDeaths( playerIndex ) );
 	kv->SetInt( "fortpoints", pGR->GetFortPoints( playerIndex ) );

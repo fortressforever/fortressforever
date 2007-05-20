@@ -1721,7 +1721,12 @@ int CFFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget
 //-----------------------------------------------------------------------------
 int CFFGameRules::IsTeam1AlliedToTeam2( int iTeam1, int iTeam2 )
 {
-	// There is a spectator involved here
+	// Unassigned not a teammate to anyone
+	if( (iTeam1 == TEAM_UNASSIGNED) || (iTeam2 == TEAM_UNASSIGNED) )
+		return GR_NOTTEAMMATE;
+
+	// There is a spectator involved here. We let specs be allies for
+	// scoreboard stuff and possibly something else I'm forgetting.
 	if (iTeam1 < TEAM_BLUE || iTeam2 < TEAM_BLUE)
 	{
 		return GR_TEAMMATE;
