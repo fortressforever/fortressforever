@@ -137,14 +137,17 @@ void OnTimerExpired(C_FFTimer *pTimer)
 }
 
 
-// Jiggles: Called 5 seconds after the first time the player spawns as a class, and when
-//			a player has logged 10 minutes (total) as a Soldier
+// Jiggles: Called 5 seconds after the first time the player spawns as a class, when
+//			a player has logged 10 minutes (total) as a Soldier, and when a player has
+//			logged 5 minutes (total) as a Pyro
 void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
 	string name = pHintTimer->GetTimerName();
 
 	if ( name == "RJHint" )	// Player logged 10 minutes as a Soldier
 		FF_SendHint( SOLDIER_PLAYTIME, 1, "#FF_HINT_SOLDIER_PLAYTIME" );
+	else if ( name == "ICJHint" ) // Player logged 5 minutes as a Pyro
+		FF_SendHint( PYRO_PLAYTIME, 1, "#FF_HINT_PYRO_PLAYTIME" );
 	else if ( name == "scoutSpawn" )
 		FF_SendHint( SCOUT_SPAWN, 1, "#FF_HINT_SCOUT_SPAWN" );
 	else if ( name == "sniperSpawn" )
@@ -1237,6 +1240,26 @@ void C_FFPlayer::Spawn( void )
 		pHintTimer->Unpause();
 	else
 		pHintTimer->Pause();
+
+	// Jiggles: IC Jump hint -- triggered after player has logged 5 minutes (total) as a Pyro
+	C_FFHintTimer *pICHintTimer = g_FFHintTimers.FindTimer( "ICJHint" );
+	if ( pICHintTimer == NULL ) // Setup timer
+	{	
+		pICHintTimer = g_FFHintTimers.Create( "ICJHint", 300.0f );
+		if ( pICHintTimer )
+		{
+			pICHintTimer->SetHintExpiredCallback( OnHintTimerExpired, false );
+			pICHintTimer->StartTimer();
+			if ( GetClassSlot() != CLASS_PYRO ) // Pause the timer if player isn't a Pyro
+				pICHintTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() == CLASS_PYRO ) // Unpause the timer if the player is now a Pyro
+		pICHintTimer->Unpause();
+	else
+		pICHintTimer->Pause();
+
+
 	// End hint code
 
 	char szCommand[128];
