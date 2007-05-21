@@ -167,7 +167,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	{
 		if(!szFunctionName || !strlen(szFunctionName))
 		{
-			Warning("Can't call entsys.runpredicates with an entity and no addname\n");
+			Msg("Can't call entsys.runpredicates with an entity and no addname\n");
 			return false;
 		}
 
@@ -224,7 +224,7 @@ bool CFFLuaSC::CallFunction(CBaseEntity* pEntity, const char* szFunctionName)
 	if(lua_pcall(L, pEntity ? nParams + 1 : nParams, 1, 0) != 0)
 	{
 		const char* szErrorMsg = lua_tostring(L, -1);
-		DevWarning("[SCRIPT] Error calling %s (%s) ent: %s\n",
+		Msg("[SCRIPT] Error calling %s (%s) ent: %s\n",
 				   szFunctionName, 
 				   szErrorMsg,
 				   pEntity ? STRING(pEntity->GetEntityName()) : "NULL");
