@@ -3507,6 +3507,20 @@ void CFFPlayer::Command_SaveMe( void )
 			EmitSound( "infected.saveme" );
 		else
 			EmitSound( "medical.saveme" );
+
+		// Hint Code -- Event: Allied player within 1000 units calls for medic
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly medics within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_MEDIC ) )
+					FF_SendHint( player, MEDIC_GOHEAL, 5, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
+			}
+		}
+		// End Hint Code
 	}	
 }
 
@@ -3534,6 +3548,20 @@ void CFFPlayer::Command_EngyMe( void )
 		// 0001318: generic engyme instead of class based
 		EmitSound( sndFilter, entindex(), "maintenance.saveme" ); */
 		EmitSound("maintenance.saveme");
+
+		// Hint Code -- Event: Allied player within 1000 units calls for engy
+		CBaseEntity *ent = NULL;
+		for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if( ent->IsPlayer() )
+			{
+				CFFPlayer *player = ToFFPlayer( ent );
+				// Only alive friendly engies within 1000 units are sent this hint
+				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_ENGINEER ) )
+					FF_SendHint( player, ENGY_GOSMACK, 5, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
+			}
+		}
+		// End Hint Code
 
 	}
 }

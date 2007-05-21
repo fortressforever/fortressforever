@@ -124,6 +124,8 @@ void FF_SendHint(
 // -- Yeah, this is lengthy, but it works :)
 enum HintType
 { 	
+	//MAP_HINT,			// TODO: Have maps send their messages using the hint system
+
 	// SCOUT
 	SCOUT_SPAWN,		// Event: First spawn +5 seconds
 	SCOUT_RADAR,		// Event: First radar use
@@ -185,7 +187,7 @@ enum HintType
 	ENGY_DISPDAMAGED,	// Event: Dispenser damaged
 	ENGY_DISPENEMY,		// Event: Enemy touches dispenser
 	ENGY_TEAMSG,		// Event: Teammate engineer building gun w/in 1000 radius 
-	ENGY_GOSMACK,		// Event: Allied player within 1000 units calls for engineer/armor for the first time.0
+	ENGY_GOSMACK,		// Event: Allied player within 1000 units calls for engineer/armor for the first time.
 	// GLOBAL
 	GLOBAL_DEFENDSG,	// Event: When playing as non-engy, teammate builds a sentrygun within 1000 units (same circumstance as an engy hint, class-specific hints should play over general hints if same event)
 	GLOBAL_NOPRIME1,	// Event: 2 consecutive unprimed grenades thrown(with +gren1/gren2 commands used)
