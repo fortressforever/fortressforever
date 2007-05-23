@@ -154,9 +154,11 @@ void CHudBuildState::OnTick()
 
 	if (pDispenser) 
 	{
-		m_bDrawDispenser = true;
-
-		_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPercent(), m_szAmmo, pDispenser->GetAmmoPercent());
+		if (pDispenser->m_bBuilt == true)
+		{
+			m_bDrawDispenser = true;
+			_snwprintf(m_szDispenser, 127, L"%s: %i%% %s: %i%%", m_szHealth, pDispenser->GetHealthPercent(), m_szAmmo, pDispenser->GetAmmoPercent());
+		}
 	}
 
 	C_FFSentryGun *pSentryGun = pPlayer->GetSentryGun();
