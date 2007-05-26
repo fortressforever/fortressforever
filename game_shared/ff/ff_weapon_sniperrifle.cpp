@@ -355,6 +355,7 @@ void CFFWeaponSniperRifle::Precache()
 bool CFFWeaponSniperRifle::Deploy() 
 {
 	m_bZoomed = false;
+	m_bInFire = false;
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
@@ -367,6 +368,7 @@ bool CFFWeaponSniperRifle::Deploy()
 bool CFFWeaponSniperRifle::Holster(CBaseCombatWeapon *pSwitchingTo) 
 {
 	m_bZoomed = false;
+	m_bInFire = false;
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
