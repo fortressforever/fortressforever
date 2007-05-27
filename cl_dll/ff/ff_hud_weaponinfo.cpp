@@ -1,15 +1,15 @@
 //	=============== Fortress Forever ==============
 //	======== A modification for Half-Life 2 =======
 //
-//	@file ff_hud_spydisguise.cpp
-//	@author Patrick O'Leary (Mulchman)
-//	@date 09/01/2006
-//	@brief Hud Disguise Indicator
+//	@file ff_hud_weaponinfo.cpp
+//	@author Michael Parker (AfterShock)
+//	@date 27/05/2007
+//	@brief Hud Weapon Indicator
 //
 //	REVISIONS
 //	---------
-//	09/01/2006, Mulchman: 
-//		First created
+//	27/05/2007, AfterShock: 
+//		First created (from ff_hud_spydisguise.cpp)
 
 #include "cbase.h"
 #include "hud.h"
