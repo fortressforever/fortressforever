@@ -164,7 +164,7 @@ void CHudWeaponInfo::Paint()
 
 			// Draw itself in the bottom right corner
 			//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
-			m_pWeaponIcon->DrawSelf(85, 7, col);
+			m_pWeaponIcon->DrawSelf(70, 0, col);
 			
 			
 			
