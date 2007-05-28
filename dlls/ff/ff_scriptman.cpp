@@ -32,7 +32,7 @@ extern "C"
 #include "tier0/memdbgon.h"
 
 // custom game modes made so damn easy
-ConVar sv_mapluasuffix( "sv_mapluasuffix", "", FCVAR_ARCHIVE, "Have a custom lua file (game mode) loaded when the map loads. If this suffix string is set, maps\\mapname_suffix_.lua (if it exists) is used instead of maps\\mapname.lua. Reset this cvar by making it \"\".");
+ConVar sv_mapluasuffix( "sv_mapluasuffix", "", FCVAR_ARCHIVE, "Have a custom lua file (game mode) loaded when the map loads. If this suffix string is set, maps\\mapname__suffix__.lua (if it exists) is used instead of maps\\mapname.lua. Reset this cvar by making it \"\".");
 
 /////////////////////////////////////////////////////////////////////////////
 using namespace luabind;
@@ -194,8 +194,8 @@ void CFFScriptManager::LevelInit(const char* szMapName)
 	// Even though LoadFile already checks to see if the file exists, we'll check now so at least the default map lua file is loaded.
 	// That way servers can keep their suffix set without worrying about every map having whatever game mode they always want to use.
 	if ( strlen( sv_mapluasuffix.GetString() ) > 0 )
-		if ( filesystem->FileExists( UTIL_VarArgs( "maps/%s_%s_.lua", szMapName, sv_mapluasuffix.GetString() ) ) )
-			Q_snprintf( filename, sizeof(filename), "maps/%s_%s_.lua", szMapName, sv_mapluasuffix.GetString() );
+		if ( filesystem->FileExists( UTIL_VarArgs( "maps/%s__%s__.lua", szMapName, sv_mapluasuffix.GetString() ) ) )
+			Q_snprintf( filename, sizeof(filename), "maps/%s__%s__.lua", szMapName, sv_mapluasuffix.GetString() );
 
 	if ( !filename[0] )
 		Q_snprintf( filename, sizeof(filename), "maps/%s.lua", szMapName );
