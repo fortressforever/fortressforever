@@ -97,7 +97,7 @@ protected:
 
 private:
 	// Stuff we need to know
-	CPanelAnimationVar( vgui::HFont, m_hIconFont, "IconFont", "WeaponIconsSmall" );
+	CPanelAnimationVar( vgui::HFont, m_hIconFont, "IconFont", "WeaponIconsHUD" );
 
 };
 
@@ -111,7 +111,6 @@ void CHudWeaponInfo::VidInit( void )
 		
 	m_pWeaponIcon = new CHudTexture;
 	m_pAmmoIcon = new CHudTexture;
-
 	SetPaintBackgroundEnabled( false );
 }
 
