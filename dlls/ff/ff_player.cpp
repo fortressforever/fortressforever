@@ -433,6 +433,8 @@ CFFPlayer::CFFPlayer()
 	m_bBurnFlagFT = false;
 	m_bBurnFlagIC = false;
 
+	m_bACDamageHint = true;  // For triggering the "Pyro takes damage from HWGuy" hint only once
+
 	m_bDisguisable = 1;
 
 	m_flNextJumpTimeForDouble = 0;
@@ -5117,6 +5119,18 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 
 	if (!attacker)
 		return 0;
+	
+	// Jiggles: Hint Code
+	//			Event: Pyro takes damage from enemy Hwguy
+	CFFPlayer *pAttacker = ToFFPlayer( attacker );
+
+	if ( m_bACDamageHint && ( GetClassSlot() == CLASS_PYRO ) && pAttacker && ( pAttacker->GetClassSlot() == CLASS_HWGUY )  )
+	{
+		FF_SendHint( this, PYRO_ROASTHW, 1, "#FF_HINT_PYRO_ROASTHW" );
+		m_bACDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
+	}
+
+	// End hint code
 
 	// Apply the force needed
 	// (commented this out cause we're doing it in the above function)
