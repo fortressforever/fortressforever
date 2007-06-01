@@ -401,6 +401,7 @@ public:
 	bool CanRespawn( void ) const { return IsRespawnable(); }
 private:
 	bool m_bRespawnable;
+	bool m_bACDamageHint; // For triggering the "Pyro takes damage from HWGuy" hint only once
 
 public:
 	// Can we update our location yet?
