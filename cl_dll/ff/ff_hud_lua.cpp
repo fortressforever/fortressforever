@@ -127,8 +127,9 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 
 			int iWidth = msg.ReadShort();
 			int iHeight = msg.ReadShort();
-
-			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight);
+			int iAlign = msg.ReadShort();
+	
+			HudIcon(szIdentifier, xPos, yPos, szSource, iWidth, iHeight, iAlign);
 
 			break;
 		}
@@ -159,7 +160,7 @@ void CHudLua::MsgFunc_FF_HudLua(bf_read &msg)
 //-----------------------------------------------------------------------------
 // Purpose: Create a new icon on the hud
 //-----------------------------------------------------------------------------
-void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight)
+void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *pszSource, int iWidth, int iHeight, int iAlign)
 {
 	// Create or find the correct hud element
 	ImagePanel *pImagePanel = dynamic_cast<ImagePanel *> (GetHudElement(pszIdentifier, HUD_ICON));
@@ -184,7 +185,26 @@ void CHudLua::HudIcon(const char *pszIdentifier, int iX, int iY, const char *psz
 	if( ( iWidth > 0 ) && ( iHeight > 0 ) )
 	{
 		SetSize(ScreenWidth(), ScreenHeight());
-		int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
+		int iProperXPosition = 0;
+		int scaledX = scheme()->GetProportionalScaledValue( iX );
+		int scaledW = scheme()->GetProportionalScaledValue( iWidth );
+		switch (iAlign)
+		{
+			case 0 : // HUD_LEFT : 
+				iProperXPosition = scaledX;
+				break;
+			case 1 : //HUD_RIGHT :
+				iProperXPosition = ( ScreenWidth() - scaledX ) - scaledW;
+				break;
+			case 2 : //HUD_CENTERLEFT :
+				iProperXPosition = ((ScreenWidth() / 2) - scaledX) - scaledW;
+				break;
+			case 3 : //HUD_CENTERRIGHT :
+				iProperXPosition = (ScreenWidth() / 2) + scaledX;
+				break;
+		}
+
+		//int iProperXPosition = ScreenWidth() - scheme()->GetProportionalScaledValue( iWidth ) - 5;
 		pImagePanel->SetPos( iProperXPosition, scheme()->GetProportionalScaledValue( iY ) );
 		
 		pImagePanel->SetShouldScaleImage( true );
