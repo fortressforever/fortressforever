@@ -928,14 +928,28 @@ namespace FFLib
 		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage );
 	}
 
-	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight )
+	void AddHudIcon( CFFPlayer *pPlayer, const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
 	{
 		if( !pPlayer || !pszImage || !pszIdentifier || ( iWidth < 0 ) || ( iHeight < 0 ) )
 			return;
 
-		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight );
+		FF_LuaHudIcon( pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlign );
 	}
 
+	void AddHudIconToAll( const char *pszImage, const char *pszIdentifier, int x, int y, int iWidth, int iHeight, int iAlign )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudIcon(pPlayer, pszIdentifier, x, y, pszImage, iWidth, iHeight, iAlign);
+			}
+		}
+	}
+	
 	void AddHudText( CFFPlayer *pPlayer, const char *pszIdentifier, const char *pszText, int x, int y )
 	{
 		if( !pPlayer || !pszIdentifier || !pszText )
@@ -960,6 +974,20 @@ namespace FFLib
 		FF_LuaHudRemove( pPlayer, pszIdentifier );
 	}
 
+	void RemoveHudItemFromAll( const char *pszIdentifier )
+	{
+		// loop through each player
+		for (int i=1; i<=gpGlobals->maxClients; i++)
+		{
+			CBasePlayer *ent = UTIL_PlayerByIndex( i );
+			if (ent && ent->IsPlayer())
+			{
+				CFFPlayer *pPlayer = ToFFPlayer( ent );
+				FF_LuaHudRemove( pPlayer, pszIdentifier );
+			}
+		}
+	}
+	
 	void AddSchedule(const char* szScheduleName, float time, const luabind::adl::object& fn)
 	{
 		_scheduleman.AddSchedule(szScheduleName, time, fn);
@@ -1189,7 +1217,8 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 
 		// global functions
 		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int))&FFLib::AddHudIcon),
-		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int))&FFLib::AddHudIcon),
+		def("AddHudIcon",				(void(*)(CFFPlayer *, const char *, const char *, int, int, int, int, int))&FFLib::AddHudIcon),
+		def("AddHudIconToAll",				(void(*)(const char *, const char *, int, int, int, int, int))&FFLib::AddHudIconToAll),
 		def("AddHudText",				&FFLib::AddHudText),
 		def("AddHudTimer",				&FFLib::AddHudTimer),
 		def("AddSchedule",				(void(*)(const char*, float, const luabind::adl::object&))&FFLib::AddSchedule),
@@ -1263,6 +1292,7 @@ void CFFLuaLib::InitGlobals(lua_State* L)
 		def("RandomInt",				&FFLib::RandomInt),
 		def("RemoveEntity",				&FFLib::RemoveEntity),
 		def("RemoveHudItem",			&FFLib::RemoveHudItem),
+		def("RemoveHudItemFromAll",			&FFLib::RemoveHudItemFromAll),
 		def("RespawnAllPlayers",		&FFLib::RespawnAllPlayers),
 		def("ResetMap",					&FFLib::ResetMap),
 		def("SetGlobalRespawnDelay",	&FFLib::SetGlobalRespawnDelay),
