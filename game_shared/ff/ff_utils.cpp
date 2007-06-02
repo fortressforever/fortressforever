@@ -570,7 +570,7 @@ bool FF_IsGrenade( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose: Set an icon on the hud
 //-----------------------------------------------------------------------------
-void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight)
+void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, const char *pszImage, int iWidth, int iHeight, int iAlign)
 {
 	if (!pPlayer)
 		return;
@@ -586,6 +586,7 @@ void FF_LuaHudIcon(CFFPlayer *pPlayer, const char *pszIdentifier, int x, int y, 
 		WRITE_STRING(pszImage);
 		WRITE_SHORT(iWidth);
 		WRITE_SHORT(iHeight);
+		WRITE_SHORT(iAlign);
 	MessageEnd();
 }
 
