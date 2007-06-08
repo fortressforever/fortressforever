@@ -120,4 +120,6 @@ enum KillTypes_t
 	KILLTYPE_GASSED
 };
 
+#define FF_SNIPER_MAXCHARGE 7
+
 #endif // FF_SHAREDDEFS_H
