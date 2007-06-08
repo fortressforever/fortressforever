@@ -431,7 +431,7 @@ void CFFWeaponSniperRifle::Fire()
 	CFFPlayer *pPlayer = GetPlayerOwner();
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();	
 
-	float flSniperRifleCharge = clamp(gpGlobals->curtime - m_flFireStartTime, 1, 7);	// Minimum charge is 1.
+	float flSniperRifleCharge = clamp(gpGlobals->curtime - m_flFireStartTime, 0, FF_SNIPER_MAXCHARGE );
 	//DevMsg("FIRE IN THE HOLE(%.2f multiplier) !\n", flSniperRifleCharge);
 
 	// Does TFC have any sort of autoaiming for sniper rifle?
