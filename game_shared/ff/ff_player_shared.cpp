@@ -46,8 +46,10 @@ ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client(red
 ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allows spectators to talk to players");
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED );
-ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "0.5", FCVAR_REPLICATED );
-
+ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED );
+//ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
+//ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
+			
 // Time in seconds you have to wait until you can cloak again
 ConVar ffdev_spy_nextcloak( "ffdev_spy_nextcloak", "2", FCVAR_REPLICATED, "Time in seconds you have to wait until you can cloak again" );
 
@@ -193,14 +195,21 @@ void CFFPlayer::FireBullet(
 	// Only if this is a charged shot
 	if (flSniperRifleCharge)
 	{
-		fCurrentDamage *= flSniperRifleCharge;
+		float fBaseDamage = fCurrentDamage;
+		fCurrentDamage = fBaseDamage + fBaseDamage * (FF_SNIPER_MAXCHARGE - 1) * ( flSniperRifleCharge / FF_SNIPER_MAXCHARGE);
+		
+		/*float fOldDamage = fBaseDamage * flSniperRifleCharge;
+		if (fOldDamage < fBaseDamage)
+			fOldDamage = fBaseDamage;
+		DevMsg("Sniper damage: %.1f. Old damage: %.1f.",fCurrentDamage,fOldDamage);
+		*/
 
 		// Bug #0000671: Sniper rifle needs to cause more push upon hitting
 		// Nothing fancy... 4.5 seemed to be about TFC's quick shot
 		// and 8.5 seemed to be about TFC's full charge shot
 		//fScale = clamp( flSniperRifleCharge + 3.5f, 4.5f, 8.5f );
 		// NOTE: New phish scale!
-		fScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / 7 );
+		fScale = FF_SNIPER_MINPUSH + ( ( flSniperRifleCharge * ( FF_SNIPER_MAXPUSH - FF_SNIPER_MINPUSH ) ) / FF_SNIPER_MAXCHARGE );
 
 		if (tr.hitgroup == HITGROUP_HEAD)
 		{
@@ -236,7 +245,12 @@ void CFFPlayer::FireBullet(
 			// If they're not a teammate/ally then do the leg shot speed effect
 			float flDuration = -1.0f;
 			float flIconDuration = flDuration;
-			float flSpeed = 0.9f - flSniperRifleCharge / 14.0f;
+			// AfterShock: this should be like 0.7f - 7 / (7 * 2)
+			// so like if divider is high, less slowdown,  divider low = more slowdown
+			//float flSpeed = ffdev_sniperrifle_legshot_minslowdownspeed.GetFloat() - flSniperRifleCharge / ( FF_SNIPER_MAXCHARGE * ffdev_sniperrifle_legshot_chargedivider.GetFloat() );
+			
+			// max legshot slowdown is reached in 2 seconds (ish) - since you can fire off 2 quick legshots to achieve same result.
+			float flSpeed = 0.7f - flSniperRifleCharge / FF_SNIPER_MAXCHARGE ;
 			if( player->LuaRunEffect( LUA_EF_LEGSHOT, pShooter, &flDuration, &flIconDuration, &flSpeed ) )
 			{
 				if (g_pGameRules->PlayerRelationship(pShooter, player) == GR_NOTTEAMMATE)
