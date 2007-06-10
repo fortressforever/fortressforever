@@ -193,7 +193,10 @@ enum HintType
 	GLOBAL_NOPRIME1,	// Event: 2 consecutive unprimed grenades thrown(with +gren1/gren2 commands used)
 	GLOBAL_NOPRIME2,	// Event: 2 consecutive unprimed grenades thrown(using the double tap commands) 
 	GLOBAL_NOLASTINV,	// Event: Player goes for 10 minutes without issuing the "lastinv" weapon switch command
-	GLOBAL_EMPDEATH		// Event: Player dies from emp explosion
+	GLOBAL_EMPDEATH,	// Event: Player dies from emp explosion
+
+	// INTRO HINT
+	INTRO_HINT			// Event: Player's first spawn (introduces the Hint Center)
 };
 
 // Jiggles: End Test

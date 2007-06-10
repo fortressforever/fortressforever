@@ -27,7 +27,7 @@ using namespace vgui;
 #include "ff_hud_menu.h"
 
 
-#define SELECTION_TIMEOUT_THRESHOLD		5.0f	// Seconds
+#define SELECTION_TIMEOUT_THRESHOLD		10.0f	// Seconds
 #define SELECTION_FADEOUT_TIME			1.5f
 #define HINT_HISTORY					512		// Size of old hint buffer
 
