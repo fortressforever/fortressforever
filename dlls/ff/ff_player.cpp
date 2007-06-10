@@ -483,6 +483,8 @@ CFFPlayer::CFFPlayer()
 	m_iSpawnInterpCounter = 0;
 
 	m_fl_LuaSet_PlayerRespawnDelay = 0.0f;
+
+
 #endif // FF_BETA_TEST_COMPILE
 }
 
@@ -1326,6 +1328,12 @@ void CFFPlayer::Spawn( void )
 	CFFLuaSC hPlayerSpawn( 1, this );
 	_scriptman.RunPredicates_LUA( NULL, &hPlayerSpawn, "player_spawn" );
 
+			//AfterShock - flaginfo on spawn (connect doesnt work)
+		// Call lua player_connected on suicides
+		//_scriptman.SetVar( "killer", ENTINDEX( pPlayer ) );
+	CFFLuaSC hFlagInfo( 1, this );
+	_scriptman.RunPredicates_LUA(NULL, &hFlagInfo, "flaginfo");
+
 	for (int i=0; i<NUM_SPEED_EFFECTS; i++)
 		RemoveSpeedEffectByIndex( i );
 
@@ -1336,10 +1344,13 @@ void CFFPlayer::Spawn( void )
 	AddFlag(FL_ONGROUND);
 
 	// Make sure we don't go running around during the intermission
+	// AfterShock - Commented out to try to prevent mapload respawn frozen
+	/*
 	if (FFGameRules()->IsIntermission())
 		AddFlag(FL_FROZEN);
 	else
 		RemoveFlag(FL_FROZEN);
+	*/
 
 	// Increment the spawn counter
 	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
