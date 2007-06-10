@@ -1205,7 +1205,8 @@ void C_FFPlayer::Spawn( void )
 			g_pGrenade2Timer->ResetTimer();
 	}
 
-	// Jiggles: Class Spawn Hints -- Display 5 seconds after spawning
+	// Jiggles: Start Hint Code
+	// Class Spawn Hints -- Display 5 seconds after spawning
 	if ( GetClassSlot() > 0 )
 	{
 		char szClassHint[128];
@@ -1223,7 +1224,7 @@ void C_FFPlayer::Spawn( void )
 		}
 	}
 
-	// Jiggles: Rocket Jump hint -- triggered after player has logged 10 minutes (total) as a Soldier
+	// Rocket Jump hint -- triggered after player has logged 10 minutes (total) as a Soldier
 	C_FFHintTimer *pHintTimer = g_FFHintTimers.FindTimer( "RJHint" );
 	if ( pHintTimer == NULL ) // Setup timer
 	{	
@@ -1241,7 +1242,7 @@ void C_FFPlayer::Spawn( void )
 	else
 		pHintTimer->Pause();
 
-	// Jiggles: IC Jump hint -- triggered after player has logged 5 minutes (total) as a Pyro
+	// IC Jump hint -- triggered after player has logged 5 minutes (total) as a Pyro
 	C_FFHintTimer *pICHintTimer = g_FFHintTimers.FindTimer( "ICJHint" );
 	if ( pICHintTimer == NULL ) // Setup timer
 	{	
@@ -1258,6 +1259,10 @@ void C_FFPlayer::Spawn( void )
 		pICHintTimer->Unpause();
 	else
 		pICHintTimer->Pause();
+
+
+	// Intro to the Hint Center -- display on first spawn
+	FF_SendHint( INTRO_HINT, 1, "#FF_HINT_INTRO_HINT" );
 
 
 	// End hint code
