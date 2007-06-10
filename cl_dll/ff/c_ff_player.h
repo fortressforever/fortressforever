@@ -257,6 +257,11 @@ public:
 	float GetArmorType() const { return m_flArmorType; };
 	// ---> end
 
+	// ---> Jiggles: Tracks priming times for hint logic
+	float m_flGrenPrimeTime;  
+	int m_iUnprimedGrenCount;
+	// ---> end
+
 	// --> mulch
 	int GetHealthPercentage( void ) const;
 	int GetArmorPercentage( void ) const;
