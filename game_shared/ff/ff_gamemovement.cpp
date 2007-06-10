@@ -31,11 +31,11 @@
 // When changing jump height, recalculate the FF_MUL_CONSTANT!!!
 #define FF_JUMP_HEIGHT 27.5f // Modified by Mulch 10/20/2005 so we could jump on 63 but not 64 unit high stuff
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
-
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
-static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "0.3", FCVAR_REPLICATED);
-static ConVar sv_trimpmax("sv_trimpmax", "600", FCVAR_REPLICATED);
+static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.5", FCVAR_REPLICATED);
+static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
+static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
 
 class CBasePlayer;
 
@@ -215,7 +215,9 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// --> Mirv: Trimp code v2.0!
 	//float fMul = FF_MUL_CONSTANT;
 	//float fMul = 268.3281573;
+	// This is the base jump height before adding trimp/doublejump height
 	float fMul = 268.6261342; //sqrt(2.0f * 800.0f * 45.1f);
+
 
 	trace_t pm;
 
@@ -231,7 +233,6 @@ bool CFFGameMovement::CheckJumpButton(void)
 	{
 		// Take the lateral velocity
 		Vector vecVelocity = mv->m_vecVelocity * Vector(1.0f, 1.0f, 0.0f);
-
 		float flHorizontalSpeed = vecVelocity.Length();
 
 		// If building, don't let them trimp!
@@ -239,7 +240,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			flHorizontalSpeed = 0.0f;
 
 		// They have to be at least moving a bit
-		if (flHorizontalSpeed > 5.0f)
+		if (flHorizontalSpeed > sv_trimptriggerspeed.GetFloat())
 		{
 			vecVelocity /= flHorizontalSpeed;
 
@@ -247,17 +248,30 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
 			// Changed to 0.15f to make it a bit less trimpy on only slightly uneven ground
-			if (flDotProduct < -0.15f || flDotProduct > 0.15f)
+			//if (flDotProduct < -0.15f || flDotProduct > 0.15f)
+			if (flDotProduct < -0.15f)
 			{
 				// This is one way to do it
 				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
-
+				DevMsg("[S] Trimp %f! Dotproduct:%f. Horizontal speed:%f\n", fMul, flDotProduct, flHorizontalSpeed);
 				// This is another that'll give some different height results
 				// UNDONE: Reverted back to the original way for now
 				//Vector reflect = mv->m_vecVelocity + (-2.0f * pm.plane.normal * DotProduct(mv->m_vecVelocity, pm.plane.normal));
 				//float flSpeedAmount = clamp((flLength - 400.0f) / 800.0f, 0, 1.0f);
 				//fMul += reflect.z * flSpeedAmount;
 			}
+			/*
+			if (flDotProduct > 0.15f) // AfterShock: travelling downwards onto a downward ramp - give boost horizontally
+			{
+				// This is one way to do it
+				mv->m_vecVelocity[0] += -flDotProduct * mv->m_vecVelocity[2] * sv_trimpmultiplier.GetFloat(); //0.6f;
+				DevMsg("[S] Trimp %f! Dotproduct:%f\n", fMul, flDotProduct);
+				// This is another that'll give some different height results
+				// UNDONE: Reverted back to the original way for now
+				//Vector reflect = mv->m_vecVelocity + (-2.0f * pm.plane.normal * DotProduct(mv->m_vecVelocity, pm.plane.normal));
+				//float flSpeedAmount = clamp((flLength - 400.0f) / 800.0f, 0, 1.0f);
+				//fMul += reflect.z * flSpeedAmount;
+			}*/
 		}
 	}
 	// <-- Mirv: Trimp code v2.0!
@@ -288,7 +302,8 @@ bool CFFGameMovement::CheckJumpButton(void)
 
 		if (flElapsed > 0 && flElapsed < 0.4f)
 		{
-			fMul *= 1.5f;
+			// AfterShock: Add a set amount for a double jump (dont multiply)
+			fMul += 150.0f;
 
 #ifdef GAME_DLL
 			DevMsg("[S] Double jump %f!\n", fMul);
@@ -305,10 +320,17 @@ bool CFFGameMovement::CheckJumpButton(void)
 	// --> Mirv: Add on new velocity
 	if( mv->m_vecVelocity[2] < 0 )
 		mv->m_vecVelocity[2] = 0;
-
-	mv->m_vecVelocity[2] += fMul;
-
+//	if (fMul > 500)
+//		DevMsg("[S] vert velocity_old %f!\n", mv->m_vecVelocity[2]);
+		
+	mv->m_vecVelocity[2] = fMul;
+//	if (fMul > 500)
+//		DevMsg("[S] vert velocity %f!\n", mv->m_vecVelocity[2]);
+				
 	mv->m_vecVelocity[2] = min(mv->m_vecVelocity[2], sv_trimpmax.GetFloat());
+//	if (fMul > 500)
+//		DevMsg("[S] vert velocity2 %f!\n", mv->m_vecVelocity[2]);
+	
 	// <-- Mirv: Add on new velocity
 
 	FinishGravity();
