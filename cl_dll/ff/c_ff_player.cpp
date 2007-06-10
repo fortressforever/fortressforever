@@ -126,15 +126,15 @@ bool CanStealMouseForAimSentry( void )
 //	return g_StealMouseForCloak;
 //}
 
-void OnTimerExpired(C_FFTimer *pTimer)
-{
-	string name = pTimer->GetTimerName();
-	//DevMsg("OnTimerExpired(%s)\n",name.c_str());
-	char buf[256];
-	sprintf(buf,"OnTimerExpired(%s)\n",name.c_str());
-	internalCenterPrint->SetTextColor( 255, 255, 255, 255 );
-	internalCenterPrint->Print( buf );
-}
+//void OnTimerExpired(C_FFTimer *pTimer)
+//{
+//	string name = pTimer->GetTimerName();
+//	//DevMsg("OnTimerExpired(%s)\n",name.c_str());
+//	char buf[256];
+//	sprintf(buf,"OnTimerExpired(%s)\n",name.c_str());
+//	internalCenterPrint->SetTextColor( 255, 255, 255, 255 );
+//	internalCenterPrint->Print( buf );
+//}
 
 
 // Jiggles: Called 5 seconds after the first time the player spawns as a class, when
@@ -269,6 +269,9 @@ void CC_PrimeOne( void )
 
 	Assert (g_pGrenade1Timer);
 	g_pGrenade1Timer->SetTimer(4.0f);
+
+	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
+	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
 }
 
 void CC_PrimeTwo( void )
@@ -344,6 +347,9 @@ void CC_PrimeTwo( void )
 
 	Assert (g_pGrenade2Timer);
 	g_pGrenade2Timer->SetTimer(4.0f);
+
+	// Tracks gren prime time to see if a player released the grenade right away (unprimed)
+	pLocalPlayer->m_flGrenPrimeTime = gpGlobals->curtime;
 }
 void CC_ThrowGren( void )
 {
@@ -359,7 +365,24 @@ void CC_ThrowGren( void )
 	{
 		return;
 	}
+	
+	// Jiggles: Hint Code
+	// Let's see if the player is throwing an "unprimed" grenade
+	if( ( gpGlobals->curtime - pLocalPlayer->m_flGrenPrimeTime ) < 0.5f )
+	{
+		pLocalPlayer->m_iUnprimedGrenCount++;
+		// Event: 2 consecutive unprimed grenades thrown
+		if ( pLocalPlayer->m_iUnprimedGrenCount > 1 )
+		{
+			FF_SendHint( GLOBAL_NOPRIME1, 4, "#FF_HINT_GLOBAL_NOPRIME1" );
+			pLocalPlayer->m_iUnprimedGrenCount = 0;
+		}
+	}
+	else  // Not an "unprimed" grenade -- the time between priming and throwing was > 0.5 seconds
+		pLocalPlayer->m_iUnprimedGrenCount = 0;
+	// End hint code
 }
+/* Jiggles: Doesn't seem to be used for anything
 void CC_TestTimers( void )
 {
 	//DevMsg("[L0ki] CC_TestTimers\n");
@@ -378,6 +401,7 @@ void CC_TestTimers( void )
 }
 
 ConCommand testtimers("cc_test_timers",CC_TestTimers,"Tests the basic timer classes.");
+*/
 
 void CC_SpyCloak( void )
 {
@@ -941,6 +965,11 @@ C_FFPlayer::C_FFPlayer() :
 	m_iSpyDisguise = 0; // start w/ no disguise
 	// END: Added by Mulchman
 	
+	// ---> Tracks priming times for hint logic
+	m_flGrenPrimeTime = 0.0f;  
+	m_iUnprimedGrenCount = 0;
+	// ---> end
+
 	m_pOldActiveWeapon = NULL;
 
 	m_flConcTime = 0;
@@ -1262,8 +1291,8 @@ void C_FFPlayer::Spawn( void )
 
 
 	// Intro to the Hint Center -- display on first spawn
-	FF_SendHint( INTRO_HINT, 1, "#FF_HINT_INTRO_HINT" );
-
+	if ( GetClassSlot() > 0 )
+		FF_SendHint( INTRO_HINT, 1, "#FF_HINT_INTRO_HINT" );
 
 	// End hint code
 
@@ -1888,9 +1917,9 @@ void C_FFPlayer::Simulate()
 {
 	BaseClass::Simulate();
 
-	g_FFTimers.SimulateTimers();
+	//g_FFTimers.SimulateTimers(); // Jiggles: Doesn't seem to be used by anything anymore
 
-	g_FFHintTimers.SimulateTimers();
+	g_FFHintTimers.SimulateTimers(); // For the time-based hints
 }
 
 //-----------------------------------------------------------------------------
