@@ -260,6 +260,9 @@ public:
 	// ---> Jiggles: Tracks priming times for hint logic
 	float m_flGrenPrimeTime;  
 	int m_iUnprimedGrenCount;
+
+	int m_iUnthrownGrenCount;
+	bool m_bLastPrimed;
 	// ---> end
 
 	// --> mulch

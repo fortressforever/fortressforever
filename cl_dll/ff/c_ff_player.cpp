@@ -177,9 +177,30 @@ void CC_ToggleOne()
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer->m_iGrenadeState != 0)
+	{
 		CC_ThrowGren();
+
+		pLocalPlayer->m_iUnthrownGrenCount = 0;
+		pLocalPlayer->m_bLastPrimed = false;
+
+	}
 	else
+	{
 		CC_PrimeOne();
+		// Hint Code: Check for 2 consecutive unthrown grenades (player got blowed up!)
+		if (pLocalPlayer->m_bLastPrimed == true)
+		{
+			pLocalPlayer->m_iUnthrownGrenCount++;
+			if (pLocalPlayer->m_iUnthrownGrenCount > 1)
+			{
+				FF_SendHint( GLOBAL_NOPRIME2, 2, "#FF_HINT_GLOBAL_NOPRIME2" );
+				pLocalPlayer->m_iUnthrownGrenCount = 0;
+				pLocalPlayer->m_bLastPrimed = false;
+			}
+		}
+		else
+			pLocalPlayer->m_bLastPrimed = true;
+	}
 }
 
 void CC_ToggleTwo()
@@ -190,9 +211,30 @@ void CC_ToggleTwo()
 	C_FFPlayer *pLocalPlayer = C_FFPlayer::GetLocalFFPlayer();
 
 	if (pLocalPlayer->m_iGrenadeState != 0)
+	{
 		CC_ThrowGren();
+
+		pLocalPlayer->m_iUnthrownGrenCount = 0;
+		pLocalPlayer->m_bLastPrimed = false;
+
+	}
 	else
+	{
 		CC_PrimeTwo();
+		// Hint Code: Check for 2 consecutive unthrown grenades (player got blowed up!)
+		if (pLocalPlayer->m_bLastPrimed == true)
+		{
+			pLocalPlayer->m_iUnthrownGrenCount++;
+			if (pLocalPlayer->m_iUnthrownGrenCount > 1)
+			{
+				FF_SendHint( GLOBAL_NOPRIME2, 2, "#FF_HINT_GLOBAL_NOPRIME2" );
+				pLocalPlayer->m_iUnthrownGrenCount = 0;
+				pLocalPlayer->m_bLastPrimed = false;
+			}
+		}
+		else
+			pLocalPlayer->m_bLastPrimed = true;
+	}
 }
 // <-- Mirv: Toggle grenades (requested by defrag)
 
@@ -968,6 +1010,9 @@ C_FFPlayer::C_FFPlayer() :
 	// ---> Tracks priming times for hint logic
 	m_flGrenPrimeTime = 0.0f;  
 	m_iUnprimedGrenCount = 0;
+
+	m_iUnthrownGrenCount = 0;
+	m_bLastPrimed = false;
 	// ---> end
 
 	m_pOldActiveWeapon = NULL;
