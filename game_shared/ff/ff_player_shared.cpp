@@ -368,8 +368,10 @@ void CFFPlayer::FireBullet(
 				else // player just got killed
 					// if headshot or gib - gibsound
 					// gibbing doesnt trigger it at the moment - this is slightly bugged - AfterShock
-					if (bHeadshot ||  bShouldGib  )
+					if (bHeadshot)
 						EmitSound( filter, entindex(), "Sniper.Gib" );
+					else if ( bShouldGib )
+						EmitSound( filter, entindex(), "Player.Gib" );
 					else // killsound
 						EmitSound( filter, entindex(), "Sniper.Hit" );
 				/*
