@@ -870,7 +870,7 @@ bool CFFSentryGun::UpdateFacing( void )
 
 	// Target pitch = constrained goal pitch - current pitch
 	float new_pitch = UTIL_Approach( clamp( dst_pitch, SG_MIN_PITCH, SG_MAX_PITCH ), cur_pitch, MaxPitchSpeed() );
-	SetPoseParameter( m_iPitchPoseParameter, new_pitch );
+	SetPoseParameter( m_iPitchPoseParameter, (new_pitch/2) );
 
 	m_angAiming.x = FROM_PITCH( new_pitch + src_pitch );
 
