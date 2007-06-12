@@ -341,6 +341,12 @@ void CFFPlayer::FireBullet(
 	// Bug #0000168: Blood sprites for damage on players do not display
 #ifdef GAME_DLL
 	TraceAttackToTriggers(info, tr.startpos, tr.endpos, vecDir);
+	bool bShouldGib = false;
+	if (tr.m_pEnt->IsPlayer())
+	{
+		CFFPlayer *pPlayer = ToFFPlayer(tr.m_pEnt);
+		bShouldGib = pPlayer->ShouldGib(info);
+	}
 #endif
 
 	ApplyMultiDamage();
@@ -356,9 +362,16 @@ void CFFPlayer::FireBullet(
 			if (pPlayer)
 			{
 				CSingleUserRecipientFilter filter( this );
-				// AfterShock: we always wanna play gibsound on a kill?
-				EmitSound( filter, entindex(), pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib" );
-				
+
+				if (pPlayer->IsAlive())
+					EmitSound( filter, entindex(), "Sniper.Hit" );
+				else // player just got killed
+					// if headshot or gib - gibsound
+					// gibbing doesnt trigger it at the moment - this is slightly bugged - AfterShock
+					if (bHeadshot ||  bShouldGib  )
+						EmitSound( filter, entindex(), "Sniper.Gib" );
+					else // killsound
+						EmitSound( filter, entindex(), "Sniper.Hit" );
 				/*
 				EmitSound_t ep;
 				ep.m_nChannel = CHAN_BODY;
