@@ -343,6 +343,8 @@ void CFFPlayer::FireBullet(
 	TraceAttackToTriggers(info, tr.startpos, tr.endpos, vecDir);
 #endif
 
+	ApplyMultiDamage();
+
 	// Sniper rifle has some extra hit & gib sounds that we need to use.
 #ifdef GAME_DLL
 	if (flSniperRifleCharge)
@@ -354,7 +356,7 @@ void CFFPlayer::FireBullet(
 			if (pPlayer)
 			{
 				CSingleUserRecipientFilter filter( this );
-
+				// AfterShock: we always wanna play gibsound on a kill?
 				EmitSound( filter, entindex(), pPlayer->IsAlive() ? "Sniper.Hit" : "Sniper.Gib" );
 				
 				/*
@@ -374,7 +376,7 @@ void CFFPlayer::FireBullet(
 	}
 #endif
 
-	ApplyMultiDamage();
+
 }
 
 // --> Mirv: Proper sounds
