@@ -71,7 +71,7 @@ ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
 ConVar  sg_range( "ffdev_sg_range", "1000.0" );
 
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
-ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "4.0", FCVAR_REPLICATED, "SG bullet push force");
+ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "13.0", FCVAR_REPLICATED, "SG bullet push force");
 
 IMPLEMENT_SERVERCLASS_ST(CFFSentryGun, DT_FFSentryGun) 
 	SendPropInt( SENDINFO( m_iAmmoPercent), 8, SPROP_UNSIGNED ), 
