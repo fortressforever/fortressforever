@@ -33,7 +33,7 @@
 #define FF_MUL_CONSTANT 209.76177f //sqrt(2.0f * 800.0f * FF_JUMP_HEIGHT);
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
-static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.5", FCVAR_REPLICATED);
+static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED);
 static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
 
@@ -254,6 +254,12 @@ bool CFFGameMovement::CheckJumpButton(void)
 				// This is one way to do it
 				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
 				DevMsg("[S] Trimp %f! Dotproduct:%f. Horizontal speed:%f\n", fMul, flDotProduct, flHorizontalSpeed);
+				
+				if (sv_trimpmultiplier.GetFloat() > 0)
+				{
+					mv->m_vecVelocity[0] *= (1.0f / sv_trimpmultiplier.GetFloat() );
+					mv->m_vecVelocity[1] *= (1.0f / sv_trimpmultiplier.GetFloat() );
+				}
 				// This is another that'll give some different height results
 				// UNDONE: Reverted back to the original way for now
 				//Vector reflect = mv->m_vecVelocity + (-2.0f * pm.plane.normal * DotProduct(mv->m_vecVelocity, pm.plane.normal));
