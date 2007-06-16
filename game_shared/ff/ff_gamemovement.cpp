@@ -303,7 +303,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 		if (flElapsed > 0 && flElapsed < 0.4f)
 		{
 			// AfterShock: Add a set amount for a double jump (dont multiply)
-			fMul += 150.0f;
+			fMul += 190.0f;
 
 #ifdef GAME_DLL
 			DevMsg("[S] Double jump %f!\n", fMul);
@@ -323,7 +323,10 @@ bool CFFGameMovement::CheckJumpButton(void)
 //	if (fMul > 500)
 //		DevMsg("[S] vert velocity_old %f!\n", mv->m_vecVelocity[2]);
 		
+	// This is commented out because trimp code was getting called twice and doubling the effect sometimes.
+	//mv->m_vecVelocity[2] += fMul;
 	mv->m_vecVelocity[2] = fMul;
+
 //	if (fMul > 500)
 //		DevMsg("[S] vert velocity %f!\n", mv->m_vecVelocity[2]);
 				
