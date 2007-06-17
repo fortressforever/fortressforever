@@ -34,9 +34,10 @@
 //static ConVar FF_JUMP_HEIGHT( "ffdev_jump_height", "27.5" );
 
 static ConVar sv_trimpmultiplier("sv_trimpmultiplier", "1.4", FCVAR_REPLICATED);
+static ConVar sv_trimpdownmultiplier("sv_trimpdownmultiplier", "1.2", FCVAR_REPLICATED);
 static ConVar sv_trimpmax("sv_trimpmax", "5000", FCVAR_REPLICATED);
 static ConVar sv_trimptriggerspeed("sv_trimptriggerspeed", "550", FCVAR_REPLICATED);
-
+static ConVar sv_trimptriggerspeeddown("sv_trimptriggerspeeddown", "50", FCVAR_REPLICATED);
 class CBasePlayer;
 
 //=============================================================================
@@ -239,13 +240,14 @@ bool CFFGameMovement::CheckJumpButton(void)
 		if( ffplayer->IsBuilding() )
 			flHorizontalSpeed = 0.0f;
 
+		if (flHorizontalSpeed > 0)
+			vecVelocity /= flHorizontalSpeed;
+
+        float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
+
 		// They have to be at least moving a bit
 		if (flHorizontalSpeed > sv_trimptriggerspeed.GetFloat())
 		{
-			vecVelocity /= flHorizontalSpeed;
-
-            float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
-
 			// Don't do anything for flat ground or downwardly sloping (relative to motion)
 			// Changed to 0.15f to make it a bit less trimpy on only slightly uneven ground
 			//if (flDotProduct < -0.15f || flDotProduct > 0.15f)
@@ -266,18 +268,30 @@ bool CFFGameMovement::CheckJumpButton(void)
 				//float flSpeedAmount = clamp((flLength - 400.0f) / 800.0f, 0, 1.0f);
 				//fMul += reflect.z * flSpeedAmount;
 			}
-			/*
+		}
+		// trigger downwards trimp at any speed
+		if (flHorizontalSpeed > sv_trimptriggerspeeddown.GetFloat())
+		{
 			if (flDotProduct > 0.15f) // AfterShock: travelling downwards onto a downward ramp - give boost horizontally
 			{
 				// This is one way to do it
-				mv->m_vecVelocity[0] += -flDotProduct * mv->m_vecVelocity[2] * sv_trimpmultiplier.GetFloat(); //0.6f;
-				DevMsg("[S] Trimp %f! Dotproduct:%f\n", fMul, flDotProduct);
+				//mv->m_vecVelocity[1] += -flDotProduct * mv->m_vecVelocity[2] * sv_trimpmultiplier.GetFloat(); //0.6f;
+				//mv->m_vecVelocity[0] += -flDotProduct * mv->m_vecVelocity[2] * sv_trimpmultiplier.GetFloat(); //0.6f;
+				//mv->m_vecVelocity[1] += -flDotProduct * fMul * sv_trimpmultiplier.GetFloat(); //0.6f;
+				//mv->m_vecVelocity[0] += -flDotProduct * fMul * sv_trimpmultiplier.GetFloat(); //0.6f;
+				mv->m_vecVelocity[1] *= sv_trimpdownmultiplier.GetFloat(); //0.6f;
+				mv->m_vecVelocity[0] *= sv_trimpdownmultiplier.GetFloat(); //0.6f;
+				DevMsg("[S] Down Trimp %f! Dotproduct:%f, upwards vel:%f, vel 1:%f, vel 0:%f\n", fMul, flDotProduct,mv->m_vecVelocity[2],mv->m_vecVelocity[1],mv->m_vecVelocity[0]);
+				if (sv_trimpmultiplier.GetFloat() > 0)
+				{
+					fMul *= (1.0f / sv_trimpdownmultiplier.GetFloat() );
+				}
 				// This is another that'll give some different height results
 				// UNDONE: Reverted back to the original way for now
 				//Vector reflect = mv->m_vecVelocity + (-2.0f * pm.plane.normal * DotProduct(mv->m_vecVelocity, pm.plane.normal));
 				//float flSpeedAmount = clamp((flLength - 400.0f) / 800.0f, 0, 1.0f);
 				//fMul += reflect.z * flSpeedAmount;
-			}*/
+			}
 		}
 	}
 	// <-- Mirv: Trimp code v2.0!
