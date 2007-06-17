@@ -41,18 +41,18 @@ ConVar cl_box2(
 	"0", 
 	FCVAR_REPLICATED, 
 	"sds" );
-
+*/
 ConVar cl_box3( 
 	"cl_box3", 
-	"0", 
+	"100", 
 	FCVAR_REPLICATED, 
 	"sds" );
 ConVar cl_box4( 
 	"cl_box4", 
-	"0", 
+	"100", 
 	FCVAR_REPLICATED, 
 	"sds" );
-*/
+
 
 using namespace vgui;
 
@@ -163,20 +163,22 @@ void CHudWeaponInfo::Paint()
 
 			// Draw itself in the bottom right corner
 			//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
-			m_pWeaponIcon->DrawSelf(70, 0, col);
-			
-			
-			
-			// Shallow copy of the weapon scrolling icon
+			// for widescreen stuff we take width scaled, then subtract the X not scaled (as we dont stretch the hud)
+			// then we add the 44 not scaled 
+
+			vgui::Panel *pParent = g_pClientMode->GetViewport();
+			int newX = 44 * ((float)pParent->GetWide() / (float)640);
+
+			m_pWeaponIcon->DrawSelf( newX , 0, col);
+			m_pWeaponIcon->DrawSelf( scheme()->GetProportionalScaledValue(44) , 0, col);
+	//DevMsg( "wide: %i; tall: %i" , screenWide , screenTall );
+
+			// Shallow copy of the ammo icon
 			*m_pAmmoIcon = *pSelectedWeapon->GetSpriteAmmo();
-			// Change the font so it uses 28 size instead of 64
-			m_pAmmoIcon->hFont = m_hIconFont;
-			m_pAmmoIcon->bRenderUsingFont = true;
-			SetPaintBackgroundEnabled( false );
 
 			// Draw itself in the bottom right corner
 			// *** commented until we find a place to fit the ammo icon! - AfterShock
-			//m_pAmmoIcon->DrawSelf(cl_box3.GetInt(), cl_box4.GetInt(), col);
+			m_pAmmoIcon->DrawSelf(cl_box3.GetInt(), cl_box4.GetInt(), col);
 
 						
 					
