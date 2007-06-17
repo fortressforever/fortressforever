@@ -134,8 +134,10 @@ void CHudLocation::Paint( void )
 		{
 			int x, y;
 			GetPos( x, y );
-
-			g_iHudLocation2Pos = x + m_pHudForeground->Width() + 1;
+			vgui::Panel *pParent = g_pClientMode->GetViewport();
+			int newX = 1.3f * ((float)pParent->GetTall() / (float)480);
+			//g_iHudLocation2Pos = x + m_pHudForeground->Width() - scheme()->GetProportionalScaledValue( 1 );
+			g_iHudLocation2Pos = x + m_pHudForeground->Width() - 2 + newX ;
 		}
 	}
 
