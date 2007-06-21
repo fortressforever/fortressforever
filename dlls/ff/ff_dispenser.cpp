@@ -560,7 +560,7 @@ void CFFDispenser::Sabotage(CFFPlayer *pSaboteur)
 	m_hSaboteur = pSaboteur;
 
 	// AfterShock - scoring system: 25 points for sabotage dispenser
-	pSaboteur->AddFortPoints(25, true);
+	pSaboteur->AddFortPoints(25, "#FF_FORTPOINTS_SABOTAGEDISPENSER");
 
 	Warning("Dispenser sabotaged\n");
 }

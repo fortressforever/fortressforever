@@ -1788,7 +1788,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// No points if you kill your own radiomarked target
 			if ( !(pTagger == pKiller2) )
 				if( pKiller2 )
-					pKiller2->AddFortPoints( 50, true );
+					pKiller2->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
 		}
 	}
 
@@ -4270,7 +4270,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		m_hInfector = pInfector;
 		m_iInfectedTeam = pInfector->GetTeamNumber();
 
-		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
+		EmitSound( "Player.cough" );	// |-- Mirv: [TODO] Change to something more suitable
 
 		//g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
 
@@ -4310,7 +4310,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 		// credit the curer with a score
 		if( pCurer )
-			pCurer->AddFortPoints( 100, true );
+			pCurer->AddFortPoints( 100, "#FF_FORTPOINTS_CUREINFECTION" );
 
 		// Log this in the stats
 		if (pCurer)
@@ -4901,7 +4901,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 				// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
 				// This could be editted later to give points for a renewed tag
 				if (!IsRadioTagged())
-					pAttacker->AddFortPoints(10,true);
+					pAttacker->AddFortPoints(10,"#FF_FORTPOINTS_RADIOTAG");
 			}			
 		}
 	}
@@ -5529,7 +5529,7 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 
 	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
 	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
-	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), true);
+	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
 	
 	// Log the added health
 	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
@@ -6196,7 +6196,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			ffplayer->ResetDisguise();
 
 			//AfterShock - Scoring System: 100 points for uncovering spy
-			AddFortPoints(30, true);
+			AddFortPoints(30, "#FF_FORTPOINTS_UNDISGUISESPY");
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
 			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, "#FF_HINT_SPY_LOSEDISGUISE" );
 
@@ -6215,7 +6215,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 				// MULCH: Assign real value here, just copy/pasted from above for
 				// Bug #0001444: Scouts do not uncloak spies
 				//AfterShock - Scoring System: ??? points for uncovering spy
-				AddFortPoints( 30, true );
+				AddFortPoints( 30, "#FF_FORTPOINTS_UNCLOAKSPY" );
 				ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_REVEALEDCLOAKEDSPY" );
 				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, "#FF_HINT_SPY_LOSECLOAK" );
 
