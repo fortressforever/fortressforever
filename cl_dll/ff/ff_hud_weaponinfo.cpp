@@ -164,12 +164,8 @@ void CHudWeaponInfo::Paint()
 			// Draw itself in the bottom right corner
 			//m_pWeaponIcon->DrawSelf(cl_box1.GetInt(), cl_box2.GetInt(), col);
 			// for widescreen stuff we take width scaled, then subtract the X not scaled (as we dont stretch the hud)
-			// then we add the 44 not scaled 
+			// then we add the 44 not scaled (GetProportionalScaledValue is scaled due to height but not width)
 
-			vgui::Panel *pParent = g_pClientMode->GetViewport();
-			int newX = 44 * ((float)pParent->GetWide() / (float)640);
-
-			m_pWeaponIcon->DrawSelf( newX , 0, col);
 			m_pWeaponIcon->DrawSelf( scheme()->GetProportionalScaledValue(44) , 0, col);
 	//DevMsg( "wide: %i; tall: %i" , screenWide , screenTall );
 
