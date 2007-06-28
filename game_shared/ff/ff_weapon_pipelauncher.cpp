@@ -20,9 +20,23 @@
 	#define CFFWeaponPipeLauncher C_FFWeaponPipeLauncher
 	#include "c_ff_player.h"
 	#include "ff_utils.h"
+	#include "c_ff_hint_timers.h"
 #else
 	#include "ff_player.h"
 #endif
+
+
+
+//----------------------------------------------------------------------------
+// Purpose: Send special hint on firing first pipe
+//----------------------------------------------------------------------------
+#ifdef CLIENT_DLL
+void OnDetHintTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	FF_SendHint( DEMOMAN_FIREPL, 1, "#FF_HINT_DEMOMAN_FIREPL" );
+}
+#endif
+
 
 //=============================================================================
 // CFFWeaponPipeLauncher
@@ -49,6 +63,10 @@ public:
 
 private:
 	CFFWeaponPipeLauncher(const CFFWeaponPipeLauncher &);
+
+#ifdef CLIENT_DLL
+	bool m_bShownDetHint;
+#endif
 };
 
 //=============================================================================
@@ -76,6 +94,10 @@ PRECACHE_WEAPON_REGISTER(ff_weapon_pipelauncher);
 CFFWeaponPipeLauncher::CFFWeaponPipeLauncher() 
 {
 	m_fIsSwitching = false;
+
+#ifdef CLIENT_DLL
+	m_bShownDetHint = false;
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -110,6 +132,19 @@ void CFFWeaponPipeLauncher::Fire()
 #ifdef CLIENT_DLL
 	// This is so we know how many pipebombs we have out at a time
 	pPlayer->GetPipebombCounter()->Increment();
+
+	// Jiggles: Det delay hint -- only show once
+	if( !m_bShownDetHint )
+	{
+		C_FFHintTimer *pHintTimer = g_FFHintTimers.Create( "DetHint", 10.0f );
+		if( pHintTimer )
+		{
+			pHintTimer->SetHintExpiredCallback( OnDetHintTimerExpired, false );
+			pHintTimer->StartTimer();
+			m_bShownDetHint = true;
+		}
+	}
+	// End hint code
 #endif
 
 #ifdef GAME_DLL

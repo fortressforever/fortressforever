@@ -372,6 +372,9 @@ protected:
 	// Time (+ gpGlobals->curtime) that we will think (update network vars)
 	float	m_flThinkTime;// = 0.2f;
 
+	// Jiggles: Time between sending the "take damage" hints -- to avoid spamming
+	float m_flOnTakeDamageHintTime;
+
 	// Shockwave texture
 	int		m_iShockwaveExplosionTexture;
 	// Draw shockwaves
