@@ -320,6 +320,7 @@ CFFWeaponSniperRifle::CFFWeaponSniperRifle()
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
+	m_iUnchargedShots = 0;
 #endif
 }
 
@@ -432,6 +433,20 @@ void CFFWeaponSniperRifle::Fire()
 	const CFFWeaponInfo &pWeaponInfo = GetFFWpnData();	
 
 	float flSniperRifleCharge = clamp(gpGlobals->curtime - m_flFireStartTime, 0, FF_SNIPER_MAXCHARGE );
+
+// Jiggles: Sends a hint if the user fires three consecutive uncharged shots
+#ifdef CLIENT_DLL
+	if ( flSniperRifleCharge < 0.2 )
+	{
+		m_iUnchargedShots++;
+		if ( m_iUnchargedShots == 3 )
+			FF_SendHint( SNIPER_NOCHARGE, 3, "#FF_HINT_SNIPER_NOCHARGE" );
+	}
+	else
+		m_iUnchargedShots = 0;
+#endif
+// end hint code
+
 	//DevMsg("FIRE IN THE HOLE(%.2f multiplier) !\n", flSniperRifleCharge);
 
 	// Does TFC have any sort of autoaiming for sniper rifle?
