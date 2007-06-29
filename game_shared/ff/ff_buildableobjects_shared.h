@@ -721,6 +721,7 @@ public:
 	CHandle<CFFPlayer>	m_hSaboteur;
 	float				m_flSabotageTime;
 	bool				m_bShootingTeammates;
+	bool				m_bSendNailGrenHint;	// Only send the "kill sgs with nail grens" hint once per sg
 
 	virtual bool CanSabotage() const;
 	virtual bool IsSabotaged() const;
