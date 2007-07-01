@@ -2869,13 +2869,27 @@ void CBasePlayer::AddPoints( int score, bool bAllowNegativeScore )
 	pl.frags = m_iFrags;
 }
 
-void CBasePlayer::AddFortPoints( int fortpoints, bool bAllowNegativeScore )
+void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 {
-	m_iFortPoints += fortpoints;
+	m_iFortPoints += iFortpoints;
 	//pl.fortpoints = m_iFortPoints;
 	//ClientPrint( this, HUD_PRINTTALK, ("You scored " + (char *) fortpoints + " points!")  );
 	//ClientPrint( this, HUD_PRINTTALK, "#FF_SCOREPOINTS", fortpoints );
 
+
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	// set latest score on user HUD
+	UserMessageBegin( filter, "SetPlayerLatestFortPoints" );
+	WRITE_STRING( szDescription );
+	WRITE_SHORT( iFortpoints );
+	MessageEnd();
+
+	// set new total score on user HUD
+	UserMessageBegin( filter, "SetPlayerTotalFortPoints" );
+	WRITE_SHORT( m_iFortPoints );
+	MessageEnd();
 }
 
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )

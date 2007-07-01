@@ -24,6 +24,7 @@
 #include <vgui_controls/AnimationController.h>
 
 #include "c_ff_player.h"
+#include "c_ff_hint_timers.h"  // For the disguise hint timer
 
 #include <vgui/ILocalize.h>
 
@@ -538,6 +539,10 @@ void CHudContextMenu::DoCommand(const char *cmd)
 		char buf[256];
 		Q_snprintf(buf, 255, "%s%s", m_pszPreviousCmd, cmd);
 		engine->ClientCmd(buf);
+
+		//  Jiggles: The player used the menu to disguise!  Good for him/her!
+		//				Note: This logic assumes there is only disguise functionality in our 2nd menu level				
+		g_FFHintTimers.DeleteTimer( "DisHint" );
 	}
 }
 
