@@ -599,12 +599,12 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 		// Display team fort points (probably will actually be team score e.g. captures *10)
 		m_pPlayerList->ModifyColumn( i, "fortpoints", szFortPoints );
 
+		// AfterShock - commented this out so teamfrags arent shown (and scores are clearer)
 		// Look up team score (frags)
-		wchar_t szScore[ 6 ];
-		swprintf( szScore, L"%d", pGR->GetTeamScore( iTeam ) );
+		//wchar_t szScore[ 6 ];
+		//swprintf( szScore, L"%d", pGR->GetTeamScore( iTeam ) );
 
 		// Display team frags
-		// AfterShock - commented this out so teamdeaths arent shown (and scores are clearer)
 		//m_pPlayerList->ModifyColumn( i, "score", szScore );
 
 
