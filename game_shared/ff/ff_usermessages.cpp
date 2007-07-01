@@ -54,6 +54,7 @@ void RegisterUserMessages()
 	usermessages->Register( "RadioTagUpdate", -1 );
 	usermessages->Register( "SetPlayerLocation", -1 );
 	usermessages->Register( "SetPlayerLatestFortPoints", -1 );
+	usermessages->Register( "SetPlayerTotalFortPoints", -1 );
 
 	usermessages->Register("FF_HudLua", -1);
 
