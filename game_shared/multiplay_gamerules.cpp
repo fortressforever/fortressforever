@@ -535,7 +535,7 @@ bool CMultiplayRules::IsMultiplayer( void )
 			pScorer->IncrementFragCount( IPointsForKill( pScorer, pVictim ) );
 
 			// AfterShock - scoring system : Just award 100 points for frag (for now)
-			pScorer->IncrementFortPointsCount( 100 );
+			pScorer->AddFortPoints( 100, "#FF_FORTPOINTS_FRAG" );
 			
 			// Allow the scorer to immediately paint a decal
 			pScorer->AllowImmediateDecalPainting();

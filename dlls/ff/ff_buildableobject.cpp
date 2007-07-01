@@ -46,8 +46,9 @@
 
 #ifdef _DEBUG
 #include "Color.h"
-#include "ff_utils.h"
 #endif
+
+#include "ff_utils.h"
 
 #include "omnibot_interface.h"
 
@@ -216,6 +217,9 @@ CFFBuildableObject::CFFBuildableObject( void )
 
 	// Default think time
 	m_flThinkTime = 0.2f;
+
+	// Duration between sending hints for sentry/disp damage
+	m_flOnTakeDamageHintTime = 0.0f;
 
 	// Defaults for derived classes
 	m_iShockwaveExplosionTexture = -1;
@@ -776,6 +780,24 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		Omnibot::Notify_BuildableDamaged( pOwner, Classify(), edict() );
 		SendStatsToBot();
 	}
+
+	// Jiggles: Added hint event for buildables taking damage
+	//				There's a 10-second delay to avoid spamming the hint
+	if( pOwner && ( gpGlobals->curtime > m_flOnTakeDamageHintTime ) )
+	{
+		switch( Classify() )
+		{
+			case CLASS_DISPENSER: 
+				FF_SendHint( pOwner, ENGY_DISPDAMAGED, 3, "#FF_HINT_ENGY_DISPDAMAGED" ); 
+				m_flOnTakeDamageHintTime = gpGlobals->curtime + 10.0f; 
+				break;
+			case CLASS_SENTRYGUN: 
+				FF_SendHint( pOwner, ENGY_SGDAMAGED, 3, "#FF_HINT_ENGY_SGDAMAGED" ); 
+				m_flOnTakeDamageHintTime = gpGlobals->curtime + 10.0f;
+				break;
+		}
+	}
+	// End hint code
 
 	// Bug #0000772: Buildable hud information doesn't update... good
 	// This will force an update of this variable for the client	
