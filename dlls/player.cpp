@@ -2877,12 +2877,19 @@ void CBasePlayer::AddFortPoints( int iFortpoints, const char *szDescription )
 	//ClientPrint( this, HUD_PRINTTALK, "#FF_SCOREPOINTS", fortpoints );
 
 
-		CSingleUserRecipientFilter filter( this );
-		filter.MakeReliable();
-		UserMessageBegin( filter, "SetPlayerLatestFortPoints" );
-		WRITE_STRING( szDescription );
-		WRITE_SHORT( iFortpoints );
-		MessageEnd();
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	// set latest score on user HUD
+	UserMessageBegin( filter, "SetPlayerLatestFortPoints" );
+	WRITE_STRING( szDescription );
+	WRITE_SHORT( iFortpoints );
+	MessageEnd();
+
+	// set new total score on user HUD
+	UserMessageBegin( filter, "SetPlayerTotalFortPoints" );
+	WRITE_SHORT( m_iFortPoints );
+	MessageEnd();
 }
 
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )
