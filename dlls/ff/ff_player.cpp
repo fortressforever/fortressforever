@@ -54,8 +54,8 @@ ConVar gren_spawn_ang_x("ffdev_gren_spawn_ang_x","18.5",0,"X axis rotation grena
 
 ConVar burn_damage_ic("ffdev_burn_damage_ic","7.0",0,"Burn damage of the Incendiary Cannon (per tick)");
 ConVar burn_damage_ng("ffdev_burn_damage_ng","7.0",0,"Burn damage of the Napalm Grenade (per tick)");
-ConVar burn_damage_ft("ffdev_burn_damage_ft","15.0",0,"Burn damage of the Flamethrower (per tick)");
-ConVar burn_ticks("ffdev_burn_ticks","6",0,"Number of burn ticks for pyro weapons.");
+ConVar burn_damage_ft("ffdev_burn_damage_ft","7.0",0,"Burn damage of the Flamethrower (per tick)");
+ConVar burn_ticks("ffdev_burn_ticks","4",0,"Number of burn ticks for pyro weapons.");
 ConVar burn_multiplier_3burns("ffdev_burn_multiplier_3burns","5",0,"Burn damage multiplier for all 3 burn types.");
 ConVar burn_multiplier_2burns("ffdev_burn_multiplier_2burns","2.5",0,"Burn damage multiplier for 2 burn types.");
 
@@ -1788,7 +1788,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// No points if you kill your own radiomarked target
 			if ( !(pTagger == pKiller2) )
 				if( pKiller2 )
-					pKiller2->AddFortPoints( 50, "#FF_FORTPOINTS_TEAMMATERADIOTAGKILL" );
+					pKiller2->AddFortPoints( 50, true );
 		}
 	}
 
@@ -4270,7 +4270,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 		m_hInfector = pInfector;
 		m_iInfectedTeam = pInfector->GetTeamNumber();
 
-		EmitSound( "Player.cough" );	// |-- Mirv: [TODO] Change to something more suitable
+		EmitSound( "Player.DrownStart" );	// |-- Mirv: [TODO] Change to something more suitable
 
 		//g_StatsLog->AddStat(pInfector->m_iStatsID, m_iStatInfections, 1);
 
@@ -4310,7 +4310,7 @@ void CFFPlayer::Cure( CFFPlayer *pCurer )
 
 		// credit the curer with a score
 		if( pCurer )
-			pCurer->AddFortPoints( 100, "#FF_FORTPOINTS_CUREINFECTION" );
+			pCurer->AddFortPoints( 100, true );
 
 		// Log this in the stats
 		if (pCurer)
@@ -4350,7 +4350,6 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		m_flNextBurnTick = gpGlobals->curtime + 1.25;
 	// multiply damage left to burn by number of remaining ticks, then divide it out among the new 8 ticks
 	// This prevents damage being incorrectly multiplied - shok
-	// ignore this now - instead we use burn levels and simply reset the timer
 	
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	//m_iBurnTicks = (GetClassSlot()==CLASS_PYRO)?4:8;
@@ -4389,7 +4388,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		m_flBurningDamage += burn_damage_ic.GetFloat();
 	*/
 	// Else use this single value (from flamethrower) and multiply it by the burn multipliers
-	m_flBurningDamage = burn_damage_ft.GetFloat() * newburnlevel;
+	m_flBurningDamage = burn_damage_ft.GetFloat();
 	//m_flBurningDamage = m_flBurningDamage + scale*((GetClassSlot()==CLASS_PYRO)?8.0:16.0);
 	
 	// if we're on fire from all 3 flame weapons, holy shit BURN! - shok
@@ -4433,7 +4432,7 @@ void CFFPlayer::ApplyBurning( CFFPlayer *hIgniter, float scale, float flIconDura
 		MessageEnd();
 	}
 
-	DevMsg("Burn: %f",m_flBurningDamage);
+
 
 	m_BurnType = BurnType;
 
@@ -4902,7 +4901,7 @@ int CFFPlayer::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 				// AfterShock - Scoring system: 10 points for a radiotag (if not already tagged)
 				// This could be editted later to give points for a renewed tag
 				if (!IsRadioTagged())
-					pAttacker->AddFortPoints(10,"#FF_FORTPOINTS_RADIOTAG");
+					pAttacker->AddFortPoints(10,true);
 			}			
 		}
 	}
@@ -5417,18 +5416,8 @@ void CFFPlayer::Extinguish( void )
 		user.MakeReliable();
 
 		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE(FF_STATUSICON_BURNING1);
+			WRITE_BYTE(FF_STATUSICON_BURNING);
 			WRITE_FLOAT(0.0);
-		MessageEnd();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING2 );
-			WRITE_FLOAT( 0.0f );
-		MessageEnd();
-
-		UserMessageBegin(user, "StatusIconUpdate");
-			WRITE_BYTE( FF_STATUSICON_BURNING3 );
-			WRITE_FLOAT( 0.0f );
 		MessageEnd();
 
 		RemoveFlag(FL_ONFIRE);
@@ -5540,7 +5529,7 @@ int CFFPlayer::Heal(CFFPlayer *pHealer, float flHealth)
 
 	// AfterShock - scoring system: Heal x amount of health +.5*health_given (only if last damage from enemy) 
 	// Leaving the 'last damage from enemy' part out until discussion has finished about it.
-	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), "#FF_FORTPOINTS_GIVEHEALTH");
+	pHealer->AddFortPoints( ( (m_iHealth - iOriginalHP) * 0.5 ), true);
 	
 	// Log the added health
 	g_StatsLog->AddStat(pHealer->m_iStatsID, m_iStatHeals, 1);
@@ -6207,7 +6196,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			ffplayer->ResetDisguise();
 
 			//AfterShock - Scoring System: 100 points for uncovering spy
-			AddFortPoints(30, "#FF_FORTPOINTS_UNDISGUISESPY");
+			AddFortPoints(30, true);
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
 			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, "#FF_HINT_SPY_LOSEDISGUISE" );
 
@@ -6226,7 +6215,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 				// MULCH: Assign real value here, just copy/pasted from above for
 				// Bug #0001444: Scouts do not uncloak spies
 				//AfterShock - Scoring System: ??? points for uncovering spy
-				AddFortPoints( 30, "#FF_FORTPOINTS_UNCLOAKSPY" );
+				AddFortPoints( 30, true );
 				ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_REVEALEDCLOAKEDSPY" );
 				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, "#FF_HINT_SPY_LOSECLOAK" );
 

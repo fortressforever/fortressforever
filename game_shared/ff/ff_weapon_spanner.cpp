@@ -138,7 +138,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 				pPlayer->RemoveAmmo( iArmorGiven / 5, AMMO_CELLS );
 				// AfterShock - scoring system: Repair x armor +.5*armor_given (only if last damage from enemy) 
 				// Leaving the 'last damage from enemy' part out until discussion has finished about it.
-				pPlayer->AddFortPoints( ( iArmorGiven*0.5 ), "#FF_FORTPOINTS_GIVEARMOR");
+				pPlayer->AddFortPoints( ( iArmorGiven*0.5 ), true);
 #endif
 			}
 
@@ -182,7 +182,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					pDispenser->SetHealth( pDispenser->GetHealth() + iHealthGiven );
 					// AfterShock - scoring system: Added this for if we later want to give points for repairing friendly dispensers
 					if ( bFriendly && !bMine )
-						pPlayer->AddFortPoints(iHealthGiven*0.1, "#FF_FORTPOINTS_REPAIRTEAMDISPENSER");
+						pPlayer->AddFortPoints(iHealthGiven*0.1, true);
 					pPlayer->RemoveAmmo( iHealthGiven / 5, AMMO_CELLS );
 #endif
 				}
@@ -237,7 +237,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 						// AfterShock - scoring system: If we upgrade teammates SG, +100 points
 						// P.S. Make a special upgrade sound 5 lines above this !! :D
 						if ( bFriendly && !bMine )
-							pPlayer->AddFortPoints(100, "#FF_FORTPOINTS_UPGRADETEAMMATESG");
+							pPlayer->AddFortPoints(100, true);
 #endif
 					}
 #ifdef GAME_DLL
@@ -267,7 +267,7 @@ void CFFWeaponSpanner::Hit(trace_t &traceHit, Activity nHitActivity)
 					// AfterShock - scoring system: Save teammate sg +.5*amount repaired (only if last damage from enemy)
 					// last enemy damage bit ignored for now.
 					if ( cells > 0 ) 
-						pPlayer->AddFortPoints(cells*0.3, "#FF_FORTPOINTS_REPAIRTEAMMATESG");
+						pPlayer->AddFortPoints(cells*0.3, true);
 
 
 					pSentryGun->Upgrade(false, cells, shells, rockets);
