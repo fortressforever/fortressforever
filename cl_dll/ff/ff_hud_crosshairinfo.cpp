@@ -98,7 +98,8 @@ protected:
 private:
 
 	// Stuff we need to know
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "ChatFont" );
+	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
+
 	CPanelAnimationVarAliasType( float, text1_xpos, "text1_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, text1_ypos, "text1_ypos", "20", "proportional_float" );
 };
@@ -269,6 +270,8 @@ void CHudCrosshairInfo::OnTick( void )
 						iShells = ( ( C_FFDispenser * )pBuildable )->GetShells();
 						iCells = ( ( C_FFDispenser * )pBuildable )->GetCells();
 						iNails = ( ( C_FFDispenser* )pBuildable )->GetNails();
+						iShells = ( ( C_FFDispenser* )pBuildable )->GetShells();
+						iShells = ( ( C_FFDispenser * )pBuildable )->GetShells();
 						iArmor = ( ( C_FFDispenser * )pBuildable )->GetArmor();
 					}
 					else if( pBuildable->Classify() == CLASS_SENTRYGUN )
@@ -615,23 +618,20 @@ void CHudCrosshairInfo::Paint( void )
 {
 	if( ( m_flDrawTime + m_flDrawDuration ) > gpGlobals->curtime )
 	{
+		surface()->DrawSetTextFont( m_hTextFont );
+		//surface()->DrawSetTextColor( GetFgColor() );
 
-		// draw xhair info
+		// Bug #0000686: defrag wants team colored hud_crosshair names
+		Color cColor;
+		SetColorByTeam( m_iTeam - 1, cColor );		
+		surface()->DrawSetTextColor( cColor.r(), cColor.g(), cColor.b(), 255 );
+
 		if( hud_centerid.GetInt() )
 			surface()->DrawSetTextPos( m_flXOffset, m_flYOffset );
 		else
 			surface()->DrawSetTextPos( text1_xpos, text1_ypos );
 
-		// Bug #0000686: defrag wants team colored hud_crosshair names
-		surface()->DrawSetTextFont( m_hTextFont );
-		Color cColor;
-		SetColorByTeam( m_iTeam - 1, cColor );		
-		surface()->DrawSetTextColor( cColor.r(), cColor.g(), cColor.b(), 255 );
-
 		for( wchar_t *wch = m_pText; *wch != 0; wch++ )
 			surface()->DrawUnicodeChar( *wch );
-
-
-		
 	}
 }

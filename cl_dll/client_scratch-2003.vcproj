@@ -3580,6 +3580,9 @@
 				RelativePath=".\ff\ff_hud_message.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_playerscore.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_radar.cpp">
 			</File>
 			<File
@@ -3587,12 +3590,6 @@
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_roundinfo.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_scorelatest.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\ff_hud_scoretotal.cpp">
 			</File>
 			<File
 				RelativePath=".\ff\ff_hud_speedometer.cpp">

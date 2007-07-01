@@ -159,7 +159,6 @@ CFFSentryGun::CFFSentryGun()
 	m_flSabotageTime = 0;
 	m_hSaboteur = NULL;
 	m_bShootingTeammates = false;
-	m_bSendNailGrenHint = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -372,15 +371,6 @@ void CFFSentryGun::OnActiveThink( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	CBaseEntity *enemy = GetEnemy();
-
-	// Jiggles: Hint that tells Soldiers to use nail grens on SGs
-	CFFPlayer *pFFPlayer = ToFFPlayer( enemy );
- 	if( m_bSendNailGrenHint && pFFPlayer && ( pFFPlayer->GetClassSlot() == CLASS_SOLDIER ) )
-	{
-		FF_SendHint( pFFPlayer, SOLDIER_SENTRY, 5, "#FF_HINT_SOLDIER_SENTRY" );
-		m_bSendNailGrenHint = false;
-	}
-	// End hint code
 
 	// We've just finished being maliciously sabotaged, so remove enemy here
 	if (m_bShootingTeammates && m_flSabotageTime <= gpGlobals->curtime)

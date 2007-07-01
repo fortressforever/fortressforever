@@ -137,7 +137,7 @@ bool CanStealMouseForAimSentry( void )
 //}
 
 
-// Jiggles: Called 7 seconds after the first time the player spawns as a class, when
+// Jiggles: Called 5 seconds after the first time the player spawns as a class, when
 //			a player has logged 10 minutes (total) as a Soldier, and when a player has
 //			logged 5 minutes (total) as a Pyro
 void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
@@ -167,13 +167,6 @@ void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 	else if ( name == "engineerSpawn" )
 		FF_SendHint( ENGY_SPAWN, 1, "#FF_HINT_ENGY_SPAWN" );
 }
-
-//  Jiggles: I figure there is enough compares already in the above function
-void OnDisguiseHintTimerExpired( C_FFHintTimer *pHintTimer )
-{
-	FF_SendHint( SPY_NODISGUISE, 5, "#FF_HINT_SPY_NODISGUISE" );
-}
-
 
 // --> Mirv: Toggle grenades (requested by defrag)
 void CC_ToggleOne()
@@ -1287,7 +1280,7 @@ void C_FFPlayer::Spawn( void )
 	}
 
 	// Jiggles: Start Hint Code
-	// Class Spawn Hints -- Display 7 seconds after spawning
+	// Class Spawn Hints -- Display 5 seconds after spawning
 	if ( GetClassSlot() > 0 )
 	{
 		char szClassHint[128];
@@ -1296,7 +1289,7 @@ void C_FFPlayer::Spawn( void )
 	
 		if ( g_FFHintTimers.FindTimer( szClassHint ) == NULL )
 		{
-			C_FFHintTimer *pHintTimer = g_FFHintTimers.Create( szClassHint, 7.0f );
+			C_FFHintTimer *pHintTimer = g_FFHintTimers.Create( szClassHint, 5.0f );
 			if( pHintTimer )
 			{
 				pHintTimer->SetHintExpiredCallback( OnHintTimerExpired, false );
@@ -1340,24 +1333,6 @@ void C_FFPlayer::Spawn( void )
 		pICHintTimer->Unpause();
 	else
 		pICHintTimer->Pause();
-
-	// Spy Disguise Hint -- triggered after player has logged 5 minutes (total) as a Spy w/o disguising
-	C_FFHintTimer *pSpyHintTimer = g_FFHintTimers.FindTimer( "DisHint" );
-	if ( pSpyHintTimer == NULL ) // Setup timer
-	{	
-		pSpyHintTimer = g_FFHintTimers.Create( "DisHint", 300.0f );
-		if ( pSpyHintTimer )
-		{
-			pSpyHintTimer->SetHintExpiredCallback( OnDisguiseHintTimerExpired, false );
-			pSpyHintTimer->StartTimer();
-			if ( GetClassSlot() != CLASS_SPY ) // Pause the timer if player isn't a Spy
-				pSpyHintTimer->Pause();
-		}
-	}
-	else if ( GetClassSlot() == CLASS_SPY ) // Unpause the timer if the player is now a Spy
-		pSpyHintTimer->Unpause();
-	else
-		pSpyHintTimer->Pause();
 
 
 	// Intro to the Hint Center -- display on first spawn
