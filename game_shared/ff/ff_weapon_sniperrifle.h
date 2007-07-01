@@ -149,7 +149,6 @@ private:
 #ifdef CLIENT_DLL
 	float m_flZoomTime;
 	float m_flNextZoomTime;
-	int m_iUnchargedShots;		// Counts the number of consecutive uncharged shots (for hint code)
 #endif
 };
 
