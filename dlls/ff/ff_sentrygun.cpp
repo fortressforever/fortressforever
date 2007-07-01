@@ -68,7 +68,7 @@
 ConVar	sg_debug( "ffdev_sg_debug", "1" );
 ConVar	sg_turnspeed( "ffdev_sg_turnspeed", "16.0" );
 ConVar	sg_pitchspeed( "ffdev_sg_pitchspeed", "10.0" );
-ConVar  sg_range( "ffdev_sg_range", "1050.0" );
+ConVar  sg_range( "ffdev_sg_range", "1000.0" );
 
 ConVar sg_explosiondamage_base("ffdev_sg_explosiondamage_base", "51.0", FCVAR_REPLICATED, "Base damage for the SG explosion");
 ConVar ffdev_sg_bulletpush("ffdev_sg_bulletpush", "13.0", FCVAR_REPLICATED, "SG bullet push force");
@@ -1217,7 +1217,7 @@ void CFFSentryGun::Sabotage(CFFPlayer *pSaboteur)
 	//m_bShootingTeammates = false;
 
 	// AfterShock - scoring system: 100 points for sabotage SG
-	pSaboteur->AddFortPoints(100, "#FF_FORTPOINTS_SABOTAGESG");
+	pSaboteur->AddFortPoints(100, true);
 
 	Warning("SG sabotaged\n");
 }

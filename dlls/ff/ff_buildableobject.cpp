@@ -46,7 +46,7 @@
 
 #ifdef _DEBUG
 #include "Color.h"
-//#include "ff_utils.h"
+#include "ff_utils.h"
 #endif
 
 #include "omnibot_interface.h"

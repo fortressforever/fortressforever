@@ -1415,7 +1415,7 @@ ConVar mp_prematch( "mp_prematch",
 				
 				// AfterShock - Scoring System: 50 points for dispenser
 				if( pObject->Classify() == CLASS_DISPENSER )
-					pScorer->AddFortPoints( 50, "#FF_FORTPOINTS_KILLDISPENSER" );
+					pScorer->AddFortPoints( 50, true );
 				else if( pObject->Classify() == CLASS_SENTRYGUN )
 				{
 					pScorer->IncrementFragCount( 1 ); // 1 frag for SG kill
@@ -1423,13 +1423,13 @@ ConVar mp_prematch( "mp_prematch",
 
 					// AfterShock - Scoring System: 100 points for level 1
 					if (pSentryGun->GetLevel() == 1)
-						pScorer->AddFortPoints( 100, "#FF_FORTPOINTS_KILLSG1" );
+						pScorer->AddFortPoints( 100, true );
 					// AfterShock - Scoring System: 150 points for level 2
 					else if (pSentryGun->GetLevel() == 2)
-						pScorer->AddFortPoints( 150, "#FF_FORTPOINTS_KILLSG2" );
+						pScorer->AddFortPoints( 150, true );
 					// AfterShock - Scoring System: 200 points for level 3
 					else if (pSentryGun->GetLevel() == 3)
-						pScorer->AddFortPoints( 200, "#FF_FORTPOINTS_KILLSG3" );
+						pScorer->AddFortPoints( 200, true );
 					else 
 						DevMsg( "Unknown SG level :(" );
 				}
