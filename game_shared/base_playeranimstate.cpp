@@ -655,10 +655,15 @@ void CBasePlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 		{
 			vCurMovePose.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
 			vCurMovePose.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
+			// AfterShock - player animations can be tweaked using these values
+			//				but the clamp is at 1.0f so base animation must be fast
+			//				cos we can only slow it down, not speed it up.
+			//vCurMovePose.x = cos( DEG2RAD( flYaw ) ) * 1.0f;
+			//vCurMovePose.y = -sin( DEG2RAD( flYaw ) ) * 1.0f;
 		}
 
 		GetOuter()->SetPoseParameter( pStudioHdr, iMoveX, vCurMovePose.x );
-		GetOuter()->SetPoseParameter( pStudioHdr, iMoveY, vCurMovePose.y );
+		GetOuter()->SetPoseParameter( pStudioHdr, iMoveY, vCurMovePose.y  );
 
 		m_vLastMovePose = vCurMovePose;
 	}
