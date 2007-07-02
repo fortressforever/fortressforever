@@ -13,6 +13,7 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "iinput.h"
+#include "c_ff_hint_timers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -467,8 +468,10 @@ void CBaseHudWeaponSelection::SwitchToLastWeapon( void )
 		return;
 	// <-- Mirv: Don't select while dead
 
-
 	input->MakeWeaponSelection( player->GetLastWeapon() );
+
+	//  Jiggles: The player used the Last Inventory key!  Good for him/her!			
+	g_FFHintTimers.DeleteTimer( "LI" );
 }
 
 //-----------------------------------------------------------------------------
