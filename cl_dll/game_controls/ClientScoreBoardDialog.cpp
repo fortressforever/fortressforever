@@ -608,12 +608,12 @@ void CClientScoreBoardDialog::UpdateHeaders( void )
 		//m_pPlayerList->ModifyColumn( i, "score", szScore );
 
 
+		// AfterShock - commented this out so teamdeaths arent shown (and scores are clearer)
 		// Look up team deaths
-		wchar_t szDeaths[ 6 ];
-		swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( iTeam ) );
+		//wchar_t szDeaths[ 6 ];
+		//swprintf( szDeaths, L"%d", pGR->GetTeamDeaths( iTeam ) );
 
 		// Display team deaths
-		// AfterShock - commented this out so teamdeaths arent shown (and scores are clearer)
 		//m_pPlayerList->ModifyColumn( i, "deaths", szDeaths );
 
 		// Set up team latency
