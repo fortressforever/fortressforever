@@ -168,10 +168,15 @@ void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 		FF_SendHint( ENGY_SPAWN, 1, "#FF_HINT_ENGY_SPAWN" );
 }
 
-//  Jiggles: I figure there is enough compares already in the above function
+//  Jiggles: I figure there are enough compares already in the above function
 void OnDisguiseHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
 	FF_SendHint( SPY_NODISGUISE, 5, "#FF_HINT_SPY_NODISGUISE" );
+}
+
+void OnLastInvHintTimerExpired( C_FFHintTimer *pHintTimer )
+{
+	FF_SendHint( GLOBAL_NOLASTINV, 5, "#FF_HINT_GLOBAL_NOLASTINV" );
 }
 
 
@@ -1358,6 +1363,25 @@ void C_FFPlayer::Spawn( void )
 		pSpyHintTimer->Unpause();
 	else
 		pSpyHintTimer->Pause();
+
+
+	// Event: Player goes for 10 minutes without issuing the "lastinv" weapon switch command
+	C_FFHintTimer *pLastInvHintTimer = g_FFHintTimers.FindTimer( "LI" );
+	if ( pLastInvHintTimer == NULL ) // Setup timer
+	{	
+		pLastInvHintTimer = g_FFHintTimers.Create( "LI", 600.0f );
+		if ( pLastInvHintTimer )
+		{
+			pLastInvHintTimer->SetHintExpiredCallback( OnLastInvHintTimerExpired, false );
+			pLastInvHintTimer->StartTimer();
+			if ( GetClassSlot() <= 0 ) // Pause the timer if player isn't a player class
+				pLastInvHintTimer->Pause();
+		}
+	}
+	else if ( GetClassSlot() > 0 ) // Unpause the timer if the player is now a valid player class
+		pLastInvHintTimer->Unpause();
+	else
+		pLastInvHintTimer->Pause();
 
 
 	// Intro to the Hint Center -- display on first spawn
