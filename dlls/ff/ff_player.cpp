@@ -3078,11 +3078,8 @@ void CFFPlayer::PreBuildGenericThink( void )
 			switch( m_iCurBuild )
 			{
 				case FF_BUILD_DISPENSER:
-				{
-#ifndef CLIENT_DLL
-					
+				{					
 					FF_SendHint( this, ENGY_BUILDDISP, -1, "#FF_HINT_ENGY_BUILDDISP" );
-#endif
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
@@ -3109,10 +3106,28 @@ void CFFPlayer::PreBuildGenericThink( void )
 
 				case FF_BUILD_SENTRYGUN:
 				{
-#ifndef CLIENT_DLL
-					
+					// Jiggles: Start hint code	
+					// Event: Player starts building SG
 					FF_SendHint( this, ENGY_BUILDSG, -1, "#FF_HINT_ENGY_BUILDSG" );
-#endif
+
+					// Notify allied players within 1000 units
+					CBaseEntity *ent = NULL;
+					for( CEntitySphereQuery sphere( GetAbsOrigin(), 1000 ); ( ent = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+					{
+						if( ent->IsPlayer() )
+						{
+							CFFPlayer *player = ToFFPlayer( ent );
+							// Only alive friendly players within 1000 units are sent these hints
+							if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) )
+							{
+								if( player->GetClassSlot() == CLASS_ENGINEER )
+									FF_SendHint( player, ENGY_TEAMSG, -1, "#FF_HINT_ENGY_TEAMSG" );  // Go help that dude upgrade!
+								else
+									FF_SendHint( player, GLOBAL_DEFENDSG, -1, "#FF_HINT_GLOBAL_DEFENDSG" );  // Go protect that dude!
+							}
+						}
+					}			
+					// End hint code
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFSentryGun *pSentryGun = CFFSentryGun::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
