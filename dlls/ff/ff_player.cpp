@@ -1171,6 +1171,9 @@ void CFFPlayer::Spawn( void )
 	m_flServerPrimeTime = 0.0f;
 	m_iGrenadeState = FF_GREN_NONE;
 
+	// Maybe this will fix the death slant problem
+	pl.v_angle.z = 0;
+
 	// Fixes water bug
 	if (GetWaterLevel() == 3)
 	{
