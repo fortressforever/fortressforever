@@ -672,7 +672,7 @@ void CBaseHudChat::Printf( const char *fmt, ... )
 		msgcopy[ offset ] = 0;
 		
 		// Print first part
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo
+#if 1 // defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo		// |-- Mirv: Fix %n exploit
 		Printf( "%s", msgcopy );
 
 		// Print remainder
@@ -708,7 +708,7 @@ void CBaseHudChat::Printf( const char *fmt, ... )
 		msgcopy[ offset ] = 0;
 		
 		// Print first part
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo
+#if 1 // defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo			// |-- Mirv: Fix %n exploit
 		Printf( "%s", msgcopy );
 #else
 		Printf( msgcopy );
@@ -720,7 +720,7 @@ void CBaseHudChat::Printf( const char *fmt, ... )
 			msgcopy[ offset ] = savechar;
 
 			// Print remainder
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo
+#if 1 // defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo		// |-- Mirv: Fix %n exploit
 			Printf( "%s", &msgcopy[ offset ] );
 #else
 			Printf( &msgcopy[ offset ] );
@@ -728,7 +728,7 @@ void CBaseHudChat::Printf( const char *fmt, ... )
 		}
 		else
 		{
-#if defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo
+#if 1 // defined( CSTRIKE_DLL ) || defined( DOD_DLL ) // reltodo		// |-- Mirv: Fix %n exploit
 			Printf( "%s", &msgcopy[ offset ] + 1 );
 #else
 			Printf( &msgcopy[ offset ] + 1 );
