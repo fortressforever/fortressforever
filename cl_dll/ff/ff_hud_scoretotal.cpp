@@ -32,6 +32,8 @@
 
 using namespace vgui;
 
+static ConVar hud_fortpoints_total("hud_fortpoints_total", "1", 0, "Toggle visible team scores on the HUD.");
+
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class
 //-----------------------------------------------------------------------------
@@ -146,12 +148,16 @@ void CHudPlayerTotalScore::MsgFunc_SetPlayerTotalFortPoints( bf_read &msg )
 //-----------------------------------------------------------------------------
 void CHudPlayerTotalScore::Paint() 
 { 
-   FFPanel::Paint(); // Draws the background glyphs 
 
-      C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
+	C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
       if ( !pPlayer ) 
          return; 
 
+	  if(!hud_fortpoints_total.GetBool())
+		return;
+
+   FFPanel::Paint(); // Draws the background glyphs 
+      
 		if( m_pTextTotalScore[ 0 ] != '\0' )
 		{
 
