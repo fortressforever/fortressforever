@@ -2245,6 +2245,8 @@ void CBaseEntity::PhysicsRelinkChildren( void )
 
 void CBaseEntity::PhysicsTouchTriggers( const Vector *pPrevAbsOrigin )
 {
+	CollisionProp()->SetSurroundingBoundsType(USE_OBB_COLLISION_BOUNDS);	// |-- Mirv: Use correct bbox for physics
+
 	edict_t *pEdict = edict();
 	if ( pEdict && !IsWorld() )
 	{
@@ -2273,6 +2275,21 @@ void CBaseEntity::PhysicsTouchTriggers( const Vector *pPrevAbsOrigin )
 			engine->TriggerMoved( pEdict );
 		}
 	}
+
+	//Vector(-16, -16, -18 ),         // m_vDuckHullMin
+	//Vector( 16,  16,  18 ),         // m_vDuckHullMax
+	//Vector( 0, 0, 12 ),            // m_vDuckView         
+
+	// --> Mirv: Fix for player going out of bbox when crouching
+	// If ducked then inflate to roughly twice crouching bbox
+	if (GetFlags() & FL_DUCKING)
+	{
+		Vector absMin = Vector(-32, -32, -18);
+		Vector absMax = Vector(32, 32, 36);
+
+		CollisionProp()->SetSurroundingBoundsType(USE_SPECIFIED_BOUNDS, &absMin, &absMax);
+	}
+	// <-- Mirv
 }
 
 void CBaseEntity::VPhysicsShadowCollision( int index, gamevcollisionevent_t *pEvent )
