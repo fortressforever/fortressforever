@@ -809,6 +809,8 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 	lagcompensation->StartLagCompensation(pPlayer, pPlayer->GetCurrentCommand());
 #endif
 
+	int nBloodSpurts = 0;
+
 	// Now simulate each shot
 	for (int iShot = 0; iShot < info.m_iShots; iShot++)
 	{
@@ -963,9 +965,14 @@ void CFFPlayer::FireBullets(const FireBulletsInfo_t &info)
 							data.m_hEntity = tr.m_pEnt;
 #endif
 
-							// No impact effects for most of the shots or possible
-							// this entire burst
-							if (iShot > 2 || !bDoEffects)
+							// Always do impact effects for the first few blood spurts.
+							// Otherwise we might not show them and that's bad feedback
+							// Not sure if we should check bDoEffects or not really.
+							if (tr.m_pEnt->IsPlayer() && nBloodSpurts < 3 && bDoEffects)
+								nBloodSpurts++;
+							// Otherwise the impact effects for the 4th shot onwards are optional (depends
+							// on client's cl_effectdetail)
+							else if (iShot > 2 || !bDoEffects)
 								data.m_fFlags |= CEFFECT_EFFECTNOTNEEDED;
 
 							// No sound for all but the first few
