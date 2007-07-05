@@ -33,6 +33,7 @@
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+static ConVar hud_fortpoints_latest("hud_fortpoints_latest", "1", 0, "Toggle visible team scores on the HUD.");
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current disguised class
@@ -157,11 +158,15 @@ void CHudPlayerLatestScore::MsgFunc_SetPlayerLatestFortPoints( bf_read &msg )
 //-----------------------------------------------------------------------------
 void CHudPlayerLatestScore::Paint() 
 { 
-   FFPanel::Paint(); // Draws the background glyphs 
 
       C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer(); 
       if ( !pPlayer ) 
          return; 
+
+	  if(!hud_fortpoints_latest.GetBool())
+		return;
+
+   FFPanel::Paint(); // Draws the background glyphs 
 
 		if( m_pTextDesc[ 0 ] != '\0' )
 		{
