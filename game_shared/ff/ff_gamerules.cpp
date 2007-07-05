@@ -1013,17 +1013,22 @@ ConVar mp_prematch( "mp_prematch",
 				float dV = fabs(vecDisplacement.z - flBodyTargetOffset) - 36.0f; // Half of model height
 
 				// Inside our model bounds
-				if (dH <= 0 && dV <= 0)
+				if (dH <= 0.0f && dV <= 0.0f)
 				{
 					flDistance = 0.0f;
 				}
+				// dH must be positive at this point (dbz safe)
 				else if (dH > dV)
 				{
 					flDistance *= dH / (dH + 16.0f);
 				}
+				// dV must be positive at this point (as must vecDisplacement.z, thus (dbz safe))
 				else
 				{
-					flDistance *= dV / (vecDisplacement.z);
+					// 0001457: Throwing grenades vertically causes more damage
+					// Dividing positive dV (yeah I know this entire thing is a AWFUL HACK) by negative displacement
+					// was resulting in adding damage for falloff instead of subtracting later on.
+					flDistance *= dV / fabs(vecDisplacement.z);
 				}
 
 				// Another quick fix for the movement code this time
