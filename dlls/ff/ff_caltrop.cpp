@@ -134,7 +134,8 @@ void CFFCaltropGib::ResolveFlyCollisionCustom( trace_t& trace, Vector& vecVeloci
 
 		SetAbsVelocity( vecAbsVelocity );
 
-		if ( flSpeedSqr < ( 30 * 30 ) )
+		// Fix for #0001538: pipes bounce indefinitely (with tickrate 33)
+		if ( flSpeedSqr < ( 40 * 40 ) )
 		{
 			if ( pEntity->IsStandable() )
 			{
@@ -349,7 +350,8 @@ void CFFCaltrop::ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity 
 
 		SetAbsVelocity( vecAbsVelocity );
 
-		if ( flSpeedSqr < ( 30 * 30 ) )
+		// Fix for #0001538: pipes bounce indefinitely (with tickrate 33)
+		if ( flSpeedSqr < ( 40 * 40 ) )
 		{
 			if ( pEntity->IsStandable() )
 			{
