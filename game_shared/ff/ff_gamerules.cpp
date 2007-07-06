@@ -331,7 +331,7 @@ ConVar mp_prematch( "mp_prematch",
 		return false;
 #endif
 
-#ifdef FF_BETA
+/*#ifdef FF_BETA
 		// Special stuff for beta!
 		if( !g_FFBetaList.IsValidName( pszName ) )
 		{
@@ -342,7 +342,7 @@ ConVar mp_prematch( "mp_prematch",
 			// Sorry, buddy.
 			return false;
 		}		
-#endif
+#endif*/
 
 		return BaseClass::ClientConnected( pEdict, pszName, pszAddress, reject, maxrejectlen );
 	}
