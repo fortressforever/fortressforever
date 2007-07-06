@@ -175,6 +175,7 @@ public:
 	virtual void	RenderParticles( CParticleRenderIterator *pIterator );
 
 	void			SetNearClip( float nearClipMin, float nearClipMax );
+	void			SetFarClip( float farClipMin, float farClipMax );
 
 	void			SetDrawBeforeViewModel( bool state = true );
 
@@ -193,6 +194,9 @@ protected:
 
 	float			m_flNearClipMin;
 	float			m_flNearClipMax;
+
+	float			m_flFarClipMin;
+	float			m_flFarClipMax;
 
 private:
 	CSimpleEmitter( const CSimpleEmitter & ); // not defined, not accessible

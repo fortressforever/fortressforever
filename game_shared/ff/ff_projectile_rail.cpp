@@ -16,13 +16,7 @@
 #include "ff_projectile_rail.h"
 #include "effect_dispatch_data.h"
 #include "IEffects.h"
-
-#ifdef CLIENT_DLL
-	#include "c_te_effect_dispatch.h"
-	#include "c_world.h"
-#else
-	#include "te_effect_dispatch.h"
-#endif
+#include "iefx.h"
 
 #define RAIL_MODEL "models/crossbow_bolt.mdl"
 
@@ -30,18 +24,9 @@ IMPLEMENT_NETWORKCLASS_ALIASED( FFProjectileRail, DT_FFProjectileRail )
 
 BEGIN_NETWORK_TABLE( CFFProjectileRail, DT_FFProjectileRail )
 #ifdef CLIENT_DLL
-	RecvPropVector( RECVINFO( m_vecEnd )),
-	RecvPropInt( RECVINFO( m_bBounce1 ) ),
-	RecvPropVector( RECVINFO( m_vecBounce1 )),
-	RecvPropInt( RECVINFO( m_bBounce2 ) ),
-	RecvPropVector( RECVINFO( m_vecBounce2 )),
+	RecvPropInt( RECVINFO(m_iNumBounces) ),
 #else
-	// m_vecEnd doesn't change often, but it needs to be a high priority
-	SendPropVector( SENDINFO( m_vecEnd ), 32, SPROP_COORD | SPROP_CHANGES_OFTEN ),
-	SendPropInt( SENDINFO(m_bBounce1), 1, SPROP_UNSIGNED ),
-	SendPropVector( SENDINFO( m_vecBounce1 ), SPROP_COORD ),
-	SendPropInt( SENDINFO(m_bBounce2), 1, SPROP_UNSIGNED ),
-	SendPropVector( SENDINFO( m_vecBounce2 ), SPROP_COORD ),
+	SendPropInt( SENDINFO(m_iNumBounces), 8, SPROP_UNSIGNED ), // | SPROP_CHANGES_OFTEN ),
 #endif
 END_NETWORK_TABLE()
 
@@ -55,6 +40,13 @@ ConVar ffdev_rail_bouncedamagefactor( "ffdev_rail_bouncedamagefactor", "1.4", FC
 
 ConVar ffdev_rail_explodedamage_min( "ffdev_rail_explodedamage_min", "20", FCVAR_REPLICATED, "Explosion damage caused from a half-charge shot." );
 ConVar ffdev_rail_explodedamage_max( "ffdev_rail_explodedamage_max", "40", FCVAR_REPLICATED, "Explosion damage caused from a full-charge shot." );
+
+#ifdef CLIENT_DLL
+
+ConVar ffdev_rail_prate( "ffdev_rail_prate", "128", 0, "Amount of rail particles per second.", true, 0, true, 65536 );
+ConVar ffdev_rail_dlight( "ffdev_rail_dlight", "1", 0, "Rail light on/off." );
+
+#endif
 
 #ifdef GAME_DLL
 //=============================================================================
@@ -74,24 +66,15 @@ END_DATADESC()
 
 CFFProjectileRail::CFFProjectileRail()
 {
-#ifdef CLIENT_DLL
-	m_pRailEffects = NULL;
-	m_bShouldInit = true;
-	m_vecStart = Vector(0,0,0);
-#else
+#ifdef GAME_DLL
 	m_vecSameOriginCheck = Vector(0,0,0);
 	m_flSameOriginCheckTimer = 0.0f;
+#else
+	m_pDLight = NULL;
 #endif
 
 	m_iNumBounces = 0;
 	m_iMaxBounces = 0;
-
-	// networked variables...
-	m_vecEnd = Vector(0,0,0);
-	m_bBounce1 = false;
-	m_vecBounce1 = Vector(0,0,0);
-	m_bBounce2 = false;
-	m_vecBounce2 = Vector(0,0,0);
 }
 
 //----------------------------------------------------------------------------
@@ -105,27 +88,6 @@ void CFFProjectileRail::Precache( void )
 	PrecacheScriptSound( "Rail.HitWorld" );
 
 	BaseClass::Precache();
-}
-
-void CFFProjectileRail::UpdateOnRemove()
-{
-#ifdef CLIENT_DLL
-
-	if (m_pRailEffects)
-	{
-		// Are you a God?
-		// No.
-		// Then...DIE!)
-		m_pRailEffects->m_bTimeToDie = true;
-
-		// the end gives good head (TEEEEEEEE HEEEEEEEE!!!!)
-		if (m_pRailEffects->m_Keyframes.Count() > 0)
-			m_pRailEffects->m_Keyframes[0].pos = m_vecEnd;
-	}
-
-#endif
-
-	BaseClass::UpdateOnRemove();
 }
 
 //----------------------------------------------------------------------------
@@ -184,14 +146,14 @@ void CFFProjectileRail::Spawn( void )
 
 	// Oh really we're invisible
 	//AddEffects(EF_NODRAW);
-	
+
 	// Set the correct think & touch for the rail
-	SetTouch(&CFFProjectileRail::RailTouch);		// |-- Mirv: Account for GCC strictness
+	SetTouch(&CFFProjectileRail::RailTouch);	// |-- Mirv: Account for GCC strictness
 	SetThink(&CFFProjectileRail::RailThink);	// |-- Mirv: Account for GCC strictness
 
 	// Next think(ie. how bubbly it'll be) 
 	SetNextThink(gpGlobals->curtime);
-	
+
 	// Make sure we're updated if we're underwater
 	UpdateWaterState();
 
@@ -308,7 +270,7 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 
 			data.m_vOrigin = tr.endpos;
 			data.m_vNormal = vForward;
-			data.m_nEntIndex = 0;
+			data.m_nEntIndex = tr.m_pEnt->entindex();
 
 			DispatchEffect( "RailImpact", data );			
 			UTIL_ImpactTrace( &tr, DMG_BULLET );
@@ -349,15 +311,14 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 						g_pEffects->Sparks( GetAbsOrigin() );
 					}
 
+					// FF TODO: bounce effects
 					if( m_iNumBounces == 1 )
 					{
-						m_bBounce1 = true;
-						m_vecBounce1 = GetAbsOrigin();
+						//DispatchEffect("RailBounce1", data);
 					}
 					else if ( m_iNumBounces == 2 )
 					{
-						m_bBounce2 = true;
-						m_vecBounce2 = GetAbsOrigin();
+						//DispatchEffect("RailBounce2", data);
 					}
 				}				
 			}
@@ -416,8 +377,6 @@ void CFFProjectileRail::RailTouch( CBaseEntity *pOther )
 //----------------------------------------------------------------------------
 void CFFProjectileRail::SetupEnd( Vector end ) 
 {
-	m_vecEnd = end;
-
 	SetMoveType(MOVETYPE_NONE);
 	SetSolid(SOLID_NONE);
 
@@ -482,9 +441,6 @@ void CFFProjectileRail::RailThink( void )
 	VectorAngles(GetAbsVelocity(), angNewAngles);
 	SetAbsAngles(angNewAngles);
 
-	// always keep the client updated on where we are
-	m_vecEnd = GetAbsOrigin();
-
 	SetNextThink(gpGlobals->curtime);
 
 	// make bubbles every tenth of a second
@@ -501,78 +457,115 @@ void CFFProjectileRail::RailThink( void )
 #else 
 //  v  CLIENT_DLL  v
 
-void CFFProjectileRail::OnDataChanged(DataUpdateType_t type) 
+// default, bounce1, bounce2
+unsigned char g_uchRailColors[3][3] = { {64, 128, 192}, {32, 192, 160}, {0, 255, 128} };
+
+//-----------------------------------------------------------------------------
+// Purpose: Called when data changes on the server
+//-----------------------------------------------------------------------------
+void CFFProjectileRail::OnDataChanged( DataUpdateType_t updateType )
 {
-	BaseClass::OnDataChanged(type);
-	if (type == DATA_UPDATE_CREATED)
+	// NOTE: We MUST call the base classes' implementation of this function
+	BaseClass::OnDataChanged( updateType );
+
+	// Setup our entity's particle system on creation
+	if ( updateType == DATA_UPDATE_CREATED )
 	{
+		// make the crossbow bolt invisible (for some stupid reason, shit doesn't get interpolated properly without a model)
+		FindOverrideMaterial("effects/cloak", TEXTURE_GROUP_CLIENT_EFFECTS);
+
+		// create the rail light...maybe
+		if (ffdev_rail_dlight.GetBool())
+			m_pDLight = effects->CL_AllocDlight( 0 );
+
+		// setup the dlight
+		if (m_pDLight)
+		{
+			m_pDLight->origin = GetAbsOrigin();
+			m_pDLight->radius = 64;
+			m_pDLight->die = gpGlobals->curtime + 0.4;
+			m_pDLight->decay = m_pDLight->radius / 0.4;
+			m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];
+			m_pDLight->color.g = g_uchRailColors[m_iNumBounces][1];
+			m_pDLight->color.b = g_uchRailColors[m_iNumBounces][2];
+			m_pDLight->color.exponent = 4;
+			m_pDLight->style = 6; // 0 through 12 (0 = normal, 1 = flicker, 5 = gentle pulse, 6 = other flicker);
+		}
+
+		// Creat the emitter
+		m_hEmitter = CSimpleEmitter::Create( "RailTrail" );
+
+		// Obtain a reference handle to our particle's desired material
+		if ( m_hEmitter.IsValid() )
+			m_hMaterial = m_hEmitter->GetPMaterial( "effects/rail_glow" );
+
+		// Spawn 128 particles per second
+		m_tParticleTimer.Init( ffdev_rail_prate.GetFloat() );
+
+		// Call our ClientThink() function once every client frame
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Client-side think function for the entity
+//-----------------------------------------------------------------------------
 void CFFProjectileRail::ClientThink( void )
 {
-
-	// make the rail effects if there are none yet
-	if (m_bShouldInit)
-	{
-		m_pRailEffects = (CFFRailEffects*)CreateEntityByName("ff_rail_effects");
-
-		// still NULL?  then return so there are no problems
-		if (!m_pRailEffects)
-			return;
-
-		m_pRailEffects->Spawn();
-		m_pRailEffects->SetAbsVelocity(GetAbsVelocity());
-
-		// set these up as where we are when we create the effects
-		m_vecStart = m_vecEnd = m_vecBounce1 = m_vecBounce2 = GetAbsOrigin();
-
-		// should only doing this while using the crossbow bolt model...
-		FindOverrideMaterial("effects/cloak", TEXTURE_GROUP_CLIENT_EFFECTS);
-
-		// no need to init anymore
-		m_bShouldInit = false;
-	}
-
-	if (!m_pRailEffects && !m_pRailEffects->m_bTimeToDie)
+	if ( !m_hEmitter )
 		return;
 
-	// FF TODO? make the effect update its own origin based on the keyframes and the projectile velocity?
-	m_pRailEffects->SetAbsOrigin(GetAbsOrigin());
-	m_pRailEffects->SetAbsAngles(GetAbsAngles());
-
-	// count up how many positions need to be worried with (starts at 2 because of start and current/end)
-	int iCount = 2;
-
-	// count up for each bounce
-	if (m_bBounce1)
-		iCount++;
-	if (m_bBounce2)
-		iCount++;
-
-	// only purge and make a new array if we've "grown"
-	if (iCount > m_pRailEffects->m_Keyframes.Count())
+	if (m_pDLight)
 	{
-		m_pRailEffects->m_Keyframes.Purge();
-
-		// put the current/end at the head (0) position of the array
-		m_pRailEffects->m_Keyframes.AddToHead(RailKeyframe(GetAbsOrigin(), RAIL_KEYFRAME_TYPE_END));
-
-		// always insert start after head (end of list/array)
-		m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecStart, RAIL_KEYFRAME_TYPE_START));
-
-		// insert bounce 1 after head (and before start)
-		if (m_bBounce1)
-			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce1, RAIL_KEYFRAME_TYPE_BOUNCE1));
-
-		// insert bounce 2 after head (and before bounce 1)
-		if (m_bBounce2)
-			m_pRailEffects->m_Keyframes.InsertAfter(0, RailKeyframe(m_vecBounce2, RAIL_KEYFRAME_TYPE_BOUNCE2));
+		m_pDLight->origin = GetAbsOrigin();
+		m_pDLight->radius = 64;
+		m_pDLight->die = gpGlobals->curtime + 0.4;
+		m_pDLight->decay = m_pDLight->radius / 0.4;
+		m_pDLight->color.r = g_uchRailColors[m_iNumBounces][0];
+		m_pDLight->color.g = g_uchRailColors[m_iNumBounces][1];
+		m_pDLight->color.b = g_uchRailColors[m_iNumBounces][2];
 	}
-	// always update the head (0) with our current position
-	else
-		m_pRailEffects->m_Keyframes[0].pos = m_vecEnd = GetAbsOrigin();
+
+	SimpleParticle *pParticle;
+	float curTime = gpGlobals->frametime;
+
+	// Add as many particles as required this frame
+	while ( m_tParticleTimer.NextEvent( curTime ) )
+	{
+		// Create the particle
+		pParticle = m_hEmitter->AddSimpleParticle( m_hMaterial, GetAbsOrigin() );
+
+		if ( pParticle == NULL )
+			return;
+
+		// Setup our size
+		pParticle->m_uchStartSize = random->RandomFloat( 3, 4 );
+		pParticle->m_uchEndSize = 0;
+
+		// Setup our roll
+		pParticle->m_flRoll = random->RandomFloat( 0, 2*M_PI );
+		pParticle->m_flRollDelta = random->RandomFloat( -DEG2RAD( 180 ), DEG2RAD( 180 ) );
+
+		// Set our color
+		memcpy(pParticle->m_uchColor, g_uchRailColors[m_iNumBounces], sizeof(g_uchRailColors[0]) );
+
+		// Setup our alpha values
+		pParticle->m_uchStartAlpha = 255;
+		pParticle->m_uchEndAlpha = 255;
+
+		// Obtain a random direction
+		Vector velocity = RandomVector( -1.0f, 1.0f );
+		VectorNormalize( velocity );
+
+		// Obtain a random speed
+		float speed = random->RandomFloat( 0.5f, 5.0f );
+
+		// Set our velocity
+		pParticle->m_vecVelocity = velocity * speed;
+
+		// Die in a short range of time
+		pParticle->m_flDieTime = random->RandomFloat( 0.2f, 0.4f );
+	}
 }
 
 //  ^  CLIENT_DLL  ^
