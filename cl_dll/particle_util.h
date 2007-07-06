@@ -400,25 +400,50 @@ inline void RenderParticle_ColorSizeAngles(
  	pBuilder->AdvanceVertex();
 }
 
+//inline float GetAlphaDistanceFade(
+//	const Vector &pos,
+//	const float fadeNearDist,
+//	const float fadeFarDist)
+//{
+//	if(-pos.z > fadeFarDist)
+//	{
+//		return 1;
+//	}
+//	else if(-pos.z > fadeNearDist)
+//	{
+//		return (-pos.z - fadeNearDist) / (fadeFarDist - fadeNearDist);
+//	}
+//	else
+//	{
+//		return 0;
+//	}
+//}
+
+// If you can find a MAX_VIEW_DISTANCE or something, maybe use that instead of 65536.
 inline float GetAlphaDistanceFade(
-	const Vector &pos,
-	const float fadeNearDist,
-	const float fadeFarDist)
+								  const Vector &pos,
+								  const float fadeNearMin = 0,
+								  const float fadeNearMax = 0,
+								  const float fadeFarMin = 65536,
+								  const float fadeFarMax = 65536)
 {
-	if(-pos.z > fadeFarDist)
-	{
-		return 1;
-	}
-	else if(-pos.z > fadeNearDist)
-	{
-		return (-pos.z - fadeNearDist) / (fadeFarDist - fadeNearDist);
-	}
-	else
+	if ( -pos.z < fadeNearMin || -pos.z > fadeFarMax )
 	{
 		return 0;
 	}
+	else if ( -pos.z < fadeNearMax && fadeNearMax != fadeNearMin )
+	{
+		return ( -pos.z - fadeNearMin ) / ( fadeNearMax - fadeNearMin );
+	}
+	else if( -pos.z > fadeFarMin && fadeFarMax != fadeFarMin )
+	{
+		return 1 - ( ( -pos.z - fadeFarMin ) / ( fadeFarMax - fadeFarMin ) );
+	}
+	else
+	{
+		return 1;
+	}
 }
-
 
 inline Vector WorldGetLightForPoint(const Vector &vPos, bool bClamp)
 {

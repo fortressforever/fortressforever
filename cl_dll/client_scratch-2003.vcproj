@@ -3367,12 +3367,6 @@
 				RelativePath=".\ff\c_ff_player.h">
 			</File>
 			<File
-				RelativePath=".\ff\c_ff_rail_effects.cpp">
-			</File>
-			<File
-				RelativePath=".\ff\c_ff_rail_effects.h">
-			</File>
-			<File
 				RelativePath=".\ff\c_ff_team.cpp">
 			</File>
 			<File

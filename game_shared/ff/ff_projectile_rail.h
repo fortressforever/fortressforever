@@ -23,8 +23,13 @@
 #include "SpriteTrail.h"
 
 #ifdef CLIENT_DLL
-	#include "c_ff_rail_effects.h"
 	#define CFFProjectileRail C_FFProjectileRail
+	#include "c_world.h"
+	#include "c_te_effect_dispatch.h"
+	#include "particles_simple.h"
+	#include "dlight.h"
+#else
+	#include "te_effect_dispatch.h"
 #endif
 
 //=============================================================================
@@ -39,26 +44,25 @@ public:
 	CFFProjectileRail();
 
 	virtual void Precache( void );
-	virtual void UpdateOnRemove();
 	static CFFProjectileRail *CreateRail( const CBaseEntity *pSource, const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner, const int iDamage, const int iSpeed, float flChargeTime );
 	//virtual void CFFProjectileRail::Explode(trace_t *pTrace, int bitsDamageType);
 	virtual Class_T Classify( void ) { return CLASS_RAIL_PROJECTILE; }
 
 #ifdef CLIENT_DLL
+
 	virtual void OnDataChanged(DataUpdateType_t type);
 	virtual void ClientThink( void );
 
-	CFFRailEffects *m_pRailEffects;
-	bool m_bShouldInit;
-	Vector m_vecStart;
+	CSmartPtr<CSimpleEmitter> m_hEmitter; // particle emitter
+	PMaterialHandle m_hMaterial; // material handle for the particles
+	TimedEvent m_tParticleTimer; // Timer used to control particle emission rate
 
-	// networked variables...
-	Vector m_vecEnd;
-	bool m_bBounce1;
-	Vector m_vecBounce1;
-	bool m_bBounce2;
-	Vector m_vecBounce2;
+	int m_iNumBounces;
+
+	dlight_t *m_pDLight; // dynamic light attached to the rail
+
 #else
+
 	DECLARE_DATADESC(); // Since we're adding new thinks etc
 	virtual void Spawn( void );
 	void SetupEnd( Vector end );
@@ -72,15 +76,10 @@ public:
 	Vector m_vecSameOriginCheck;
 	float m_flSameOriginCheckTimer;
 
-	// networked variables...
-	CNetworkVector( m_vecEnd );
-	CNetworkVar( bool, m_bBounce1 );
-	CNetworkVector( m_vecBounce1 );
-	CNetworkVar( bool, m_bBounce2 );
-	CNetworkVector( m_vecBounce2 );
+	CNetworkVar( int, m_iNumBounces );
+
 #endif
 
-	int m_iNumBounces;
 	int m_iMaxBounces;
 
 private:
