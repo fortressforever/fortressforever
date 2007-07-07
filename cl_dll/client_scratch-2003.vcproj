@@ -3598,6 +3598,9 @@
 				RelativePath=".\ff\ff_hud_statusicons.cpp">
 			</File>
 			<File
+				RelativePath=".\ff\ff_hud_teamscores.cpp">
+			</File>
+			<File
 				RelativePath=".\ff\ff_hud_weaponinfo.cpp">
 			</File>
 			<File
