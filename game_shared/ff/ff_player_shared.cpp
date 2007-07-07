@@ -47,6 +47,8 @@ ConVar sv_specchat("sv_spectatorchat", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Al
 //ConVar ffdev_snipertracesize("ffdev_snipertracesize", "0.25", FCVAR_REPLICATED);
 ConVar ffdev_sniper_headshotmod( "ffdev_sniper_headshotmod", "2.0", FCVAR_REPLICATED );
 ConVar ffdev_sniper_legshotmod( "ffdev_sniper_legshotmod", "1.0", FCVAR_REPLICATED );
+ConVar ffdev_sniper_radiotag_time( "ffdev_sniper_radiotag_time", "10.0", FCVAR_REPLICATED );
+
 //ConVar ffdev_sniperrifle_legshot_minslowdownspeed( "ffdev_sniperrifle_legshot_minslowdownspeed", "0.7", FCVAR_REPLICATED, "Player speed when hit with a minimum charge sniper rifle shot (0.7 would mean player speed at 70% after being legshot)" );
 //ConVar ffdev_sniperrifle_legshot_chargedivider( "ffdev_sniperrifle_legshot_chargedivider", "3", FCVAR_REPLICATED, "1/number = extra slowdown when hit with max charge legshot. e.g. if '3.0' then 33% extra slowdown @ max charge" );
 			
@@ -243,7 +245,7 @@ void CFFPlayer::FireBullet(
 
 			// Bug #0000557: Teamplay 0 + sniper legshot slows allies
 			// If they're not a teammate/ally then do the leg shot speed effect
-			float flDuration = -1.0f;
+			float flDuration =  ffdev_sniper_radiotag_time.GetFloat();
 			float flIconDuration = flDuration;
 			// AfterShock: this should be like 0.7f - 7 / (7 * 2)
 			// so like if divider is high, less slowdown,  divider low = more slowdown
