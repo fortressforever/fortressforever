@@ -244,6 +244,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			vecVelocity /= flHorizontalSpeed;
 
         float flDotProduct = DotProduct(vecVelocity, pm.plane.normal);
+		float flRampSlideDotProduct = DotProduct(mv->m_vecVelocity, pm.plane.normal);
 
 		// They have to be at least moving a bit
 		if (flHorizontalSpeed > sv_trimptriggerspeed.GetFloat())
@@ -255,7 +256,7 @@ bool CFFGameMovement::CheckJumpButton(void)
 			{
 				// This is one way to do it
 				fMul += -flDotProduct * flHorizontalSpeed * sv_trimpmultiplier.GetFloat(); //0.6f;
-				DevMsg("[S] Trimp %f! Dotproduct:%f. Horizontal speed:%f\n", fMul, flDotProduct, flHorizontalSpeed);
+				DevMsg("[S] Trimp %f! Dotproduct:%f. Horizontal speed:%f. Rampslide dot.p.:%f\n", fMul, flDotProduct, flHorizontalSpeed, flRampSlideDotProduct);
 				
 				if (sv_trimpmultiplier.GetFloat() > 0)
 				{
