@@ -560,6 +560,8 @@ void CHudContextMenu::Display(bool state)
 			if (m_pMenu[m_iSelected].conditionfunc() == MENU_SHOW)
 				DoCommand(m_pMenu[m_iSelected].szCommand);
 		}
+		else if ( pPlayer->GetClassSlot() == CLASS_DEMOMAN ) // So the demoman can set a det by just clicking
+			engine->ClientCmd("detpack 5");
 
 		m_fVisible = state;
 		return;
