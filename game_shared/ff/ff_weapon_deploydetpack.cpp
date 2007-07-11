@@ -123,12 +123,8 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 
 //#ifdef GAME_DLL
 //		// Bug #0000378: Detpack slot sometimes cancels the deploy phase almost immediately
-//		//engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
+//		engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
 //
-//		// Jiggles: This, in effect, cancels setting the detpack
-//		CFFPlayer *pPlayer = GetPlayerOwner();		
-//		if( pPlayer && pPlayer->IsBuilding() )
-//			engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
 //#endif
 
 #ifdef CLIENT_DLL
@@ -181,15 +177,12 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 			Cleanup();
 
 		// The player just released the attack button
-		if( pPlayer->m_afButtonReleased & IN_ATTACK )
+		if( m_bInSetTimerMenu /* pPlayer->m_afButtonReleased & IN_ATTACK */ )
 		{
 			HudContextShow(false);
 			m_bInSetTimerMenu = false;
 		}
 
-
-// If the firing button was just pressed, or the alt-fire just released, reset the firing time
-			//if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))
 
 		//if( ( pPlayer->GetDetpack() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 ) )
 		//	pPlayer->SwapToWeapon( FF_WEAPON_GRENADELAUNCHER );
