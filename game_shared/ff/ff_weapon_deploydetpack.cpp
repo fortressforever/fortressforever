@@ -24,6 +24,8 @@
 	#include "c_ff_player.h"	
 	#include "ff_hud_chat.h"
 	#include "ff_utils.h"
+	extern void HudContextShow(bool visible);
+	#include "in_buttons.h"
 #else
 	#include "ff_player.h"
 #endif
@@ -63,6 +65,7 @@ private:
 protected:
 #ifdef CLIENT_DLL
 	C_FFDetpack *m_pBuildable;
+	bool m_bInSetTimerMenu;
 #endif
 
 	void Cleanup( void )
@@ -103,6 +106,7 @@ CFFWeaponDeployDetpack::CFFWeaponDeployDetpack( void )
 {
 #ifdef CLIENT_DLL
 	m_pBuildable = NULL;
+	m_bInSetTimerMenu = false;
 #endif
 }
 
@@ -117,9 +121,24 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 
 		Cleanup();
 
-#ifdef GAME_DLL
-		// Bug #0000378: Detpack slot sometimes cancels the deploy phase almost immediately
-		engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
+//#ifdef GAME_DLL
+//		// Bug #0000378: Detpack slot sometimes cancels the deploy phase almost immediately
+//		//engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
+//
+//		// Jiggles: This, in effect, cancels setting the detpack
+//		CFFPlayer *pPlayer = GetPlayerOwner();		
+//		if( pPlayer && pPlayer->IsBuilding() )
+//			engine->ClientCommand( GetPlayerOwner()->edict(), "detpack 5" );
+//#endif
+
+#ifdef CLIENT_DLL
+		// By holding down the attack button, the player brings up a radial menu
+		// to choose the timer length
+		if (!m_bInSetTimerMenu)
+		{
+			m_bInSetTimerMenu = true;
+			HudContextShow(true);
+		}
 #endif
 	}
 }
@@ -130,10 +149,9 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 void CFFWeaponDeployDetpack::SecondaryAttack( void )
 {
 	if( m_flNextSecondaryAttack < gpGlobals->curtime )
-	{
 		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
-	}
 }
+
 
 //----------------------------------------------------------------------------
 // Purpose: Checks validity of ground at this point or whatever
@@ -161,6 +179,17 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 		}
 		else
 			Cleanup();
+
+		// The player just released the attack button
+		if( pPlayer->m_afButtonReleased & IN_ATTACK )
+		{
+			HudContextShow(false);
+			m_bInSetTimerMenu = false;
+		}
+
+
+// If the firing button was just pressed, or the alt-fire just released, reset the firing time
+			//if ((pOwner->m_afButtonPressed & IN_ATTACK) || (pOwner->m_afButtonReleased & IN_ATTACK2))
 
 		//if( ( pPlayer->GetDetpack() && !pPlayer->IsBuilding() ) || ( pPlayer->GetAmmoCount( AMMO_DETPACK ) < 1 ) )
 		//	pPlayer->SwapToWeapon( FF_WEAPON_GRENADELAUNCHER );
