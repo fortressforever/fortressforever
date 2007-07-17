@@ -33,7 +33,7 @@
 #ifdef CLIENT_DLL
 void OnDetHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
-	FF_SendHint( DEMOMAN_FIREPL, 1, "#FF_HINT_DEMOMAN_FIREPL" );
+	FF_SendHint( DEMOMAN_FIREPL, 1, PRIORITY_NORMAL, "#FF_HINT_DEMOMAN_FIREPL" );
 }
 #endif
 
@@ -260,7 +260,7 @@ bool CFFWeaponPipeLauncher::Deploy()
 {
 
 #ifdef CLIENT_DLL	
-	FF_SendHint( DEMOMAN_PL, 3, "#FF_HINT_DEMOMAN_PL" );
+	FF_SendHint( DEMOMAN_PL, 3, PRIORITY_LOW, "#FF_HINT_DEMOMAN_PL" );
 #endif
 	
 	return BaseClass::Deploy();

@@ -360,7 +360,7 @@ bool CFFWeaponSniperRifle::Deploy()
 
 #ifdef CLIENT_DLL
 	m_flNextZoomTime = m_flZoomTime = 0;
-	FF_SendHint( SNIPER_SR, 3, "#FF_HINT_SNIPER_SR" );
+	FF_SendHint( SNIPER_SR, 3, PRIORITY_LOW, "#FF_HINT_SNIPER_SR" );
 #endif
 
 	return BaseClass::Deploy();
@@ -440,7 +440,7 @@ void CFFWeaponSniperRifle::Fire()
 	{
 		m_iUnchargedShots++;
 		if ( m_iUnchargedShots == 3 )
-			FF_SendHint( SNIPER_NOCHARGE, 3, "#FF_HINT_SNIPER_NOCHARGE" );
+			FF_SendHint( SNIPER_NOCHARGE, 3, PRIORITY_NORMAL, "#FF_HINT_SNIPER_NOCHARGE" );
 	}
 	else
 		m_iUnchargedShots = 0;

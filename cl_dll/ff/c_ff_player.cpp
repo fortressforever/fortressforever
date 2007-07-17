@@ -145,38 +145,38 @@ void OnHintTimerExpired( C_FFHintTimer *pHintTimer )
 	string name = pHintTimer->GetTimerName();
 
 	if ( name == "RJHint" )	// Player logged 10 minutes as a Soldier
-		FF_SendHint( SOLDIER_PLAYTIME, 1, "#FF_HINT_SOLDIER_PLAYTIME" );
+		FF_SendHint( SOLDIER_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_PLAYTIME" );
 	else if ( name == "ICJHint" ) // Player logged 5 minutes as a Pyro
-		FF_SendHint( PYRO_PLAYTIME, 1, "#FF_HINT_PYRO_PLAYTIME" );
+		FF_SendHint( PYRO_PLAYTIME, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_PLAYTIME" );
 	else if ( name == "scoutSpawn" )
-		FF_SendHint( SCOUT_SPAWN, 1, "#FF_HINT_SCOUT_SPAWN" );
+		FF_SendHint( SCOUT_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_SPAWN" );
 	else if ( name == "sniperSpawn" )
-		FF_SendHint( SNIPER_SPAWN, 1, "#FF_HINT_SNIPER_SPAWN" );
+		FF_SendHint( SNIPER_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_SNIPER_SPAWN" );
 	else if ( name == "soldierSpawn" )
-		FF_SendHint( SOLDIER_SPAWN, 1, "#FF_HINT_SOLDIER_SPAWN" );
+		FF_SendHint( SOLDIER_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_SPAWN" );
 	else if ( name == "demomanSpawn" )
-		FF_SendHint( DEMOMAN_SPAWN, 1, "#FF_HINT_DEMOMAN_SPAWN" );
+		FF_SendHint( DEMOMAN_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_DEMOMAN_SPAWN" );
 	else if ( name == "medicSpawn" )
-		FF_SendHint( MEDIC_SPAWN, 1, "#FF_HINT_MEDIC_SPAWN" );
+		FF_SendHint( MEDIC_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_SPAWN" );
 	else if ( name == "hwguySpawn" )
-		FF_SendHint( HWGUY_SPAWN, 1, "#FF_HINT_HWGUY_SPAWN" );
+		FF_SendHint( HWGUY_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_HWGUY_SPAWN" );
 	else if ( name == "pyroSpawn" )
-		FF_SendHint( PYRO_SPAWN, 1, "#FF_HINT_PYRO_SPAWN" );
+		FF_SendHint( PYRO_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_SPAWN" );
 	else if ( name == "spySpawn" )
-		FF_SendHint( SPY_SPAWN, 1, "#FF_HINT_SPY_SPAWN" );
+		FF_SendHint( SPY_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_SPY_SPAWN" );
 	else if ( name == "engineerSpawn" )
-		FF_SendHint( ENGY_SPAWN, 1, "#FF_HINT_ENGY_SPAWN" );
+		FF_SendHint( ENGY_SPAWN, 1, PRIORITY_NORMAL, "#FF_HINT_ENGY_SPAWN" );
 }
 
 //  Jiggles: I figure there are enough compares already in the above function
 void OnDisguiseHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
-	FF_SendHint( SPY_NODISGUISE, 5, "#FF_HINT_SPY_NODISGUISE" );
+	FF_SendHint( SPY_NODISGUISE, 5, PRIORITY_NORMAL, "#FF_HINT_SPY_NODISGUISE" );
 }
 
 void OnLastInvHintTimerExpired( C_FFHintTimer *pHintTimer )
 {
-	FF_SendHint( GLOBAL_NOLASTINV, 5, "#FF_HINT_GLOBAL_NOLASTINV" );
+	FF_SendHint( GLOBAL_NOLASTINV, 5, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_NOLASTINV" );
 }
 
 
@@ -205,7 +205,7 @@ void CC_ToggleOne()
 			pLocalPlayer->m_iUnthrownGrenCount++;
 			if (pLocalPlayer->m_iUnthrownGrenCount > 1)
 			{
-				FF_SendHint( GLOBAL_NOPRIME2, 2, "#FF_HINT_GLOBAL_NOPRIME2" );
+				FF_SendHint( GLOBAL_NOPRIME2, 2, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_NOPRIME2" );
 				pLocalPlayer->m_iUnthrownGrenCount = 0;
 				pLocalPlayer->m_bLastPrimed = false;
 			}
@@ -239,7 +239,7 @@ void CC_ToggleTwo()
 			pLocalPlayer->m_iUnthrownGrenCount++;
 			if (pLocalPlayer->m_iUnthrownGrenCount > 1)
 			{
-				FF_SendHint( GLOBAL_NOPRIME2, 2, "#FF_HINT_GLOBAL_NOPRIME2" );
+				FF_SendHint( GLOBAL_NOPRIME2, 2, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_NOPRIME2" );
 				pLocalPlayer->m_iUnthrownGrenCount = 0;
 				pLocalPlayer->m_bLastPrimed = false;
 			}
@@ -428,7 +428,7 @@ void CC_ThrowGren( void )
 		// Event: 2 consecutive unprimed grenades thrown
 		if ( pLocalPlayer->m_iUnprimedGrenCount > 1 )
 		{
-			FF_SendHint( GLOBAL_NOPRIME1, 4, "#FF_HINT_GLOBAL_NOPRIME1" );
+			FF_SendHint( GLOBAL_NOPRIME1, 4, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_NOPRIME1" );
 			pLocalPlayer->m_iUnprimedGrenCount = 0;
 		}
 	}
@@ -1386,7 +1386,7 @@ void C_FFPlayer::Spawn( void )
 
 	// Intro to the Hint Center -- display on first spawn
 	if ( GetClassSlot() > 0 )
-		FF_SendHint( INTRO_HINT, 1, "#FF_HINT_INTRO_HINT" );
+		FF_SendHint( INTRO_HINT, 1, PRIORITY_HIGH, "#FF_HINT_INTRO_HINT" );
 
 	// End hint code
 

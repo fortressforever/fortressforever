@@ -82,7 +82,7 @@ bool CFFWeaponTranquiliser::Deploy()
 {
 #ifdef CLIENT_DLL
 	
-	FF_SendHint( SPY_TRANQ, 3, "#FF_HINT_SPY_TRANQ" );
+	FF_SendHint( SPY_TRANQ, 3, PRIORITY_LOW, "#FF_HINT_SPY_TRANQ" );
 #endif
 	
 	return BaseClass::Deploy();

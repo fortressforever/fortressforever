@@ -337,13 +337,14 @@ void FF_SendHint(
 #endif
 				unsigned short wID,
 				short	HintCount,
+				short	HintPriority,
 				const char *pszMessage)
 {
 	//if( 1 )
 #ifdef CLIENT_DLL
 	{		
 		if( g_pHintHelper )
-			g_pHintHelper->AddHudHint( wID, HintCount, pszMessage );
+			g_pHintHelper->AddHudHint( wID, HintCount, HintPriority, pszMessage );
 		else
 			Warning( "[Hud Hint] Pointer not set up yet! Hud Hint lost!\n" );
 	}
@@ -358,6 +359,7 @@ void FF_SendHint(
 			//WRITE_BYTE(bType);
 			WRITE_WORD( wID );
 			WRITE_SHORT( HintCount );
+			WRITE_SHORT( HintPriority );
 			WRITE_STRING( pszMessage );
 			
 			//if (pszSound)
