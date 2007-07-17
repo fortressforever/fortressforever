@@ -80,7 +80,7 @@ void CHudHintCenter::Init( void )
 
 
 
-void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, const char *pszMessage )
+void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, short hintPriority, const char *pszMessage )
 {
 	// First off, we're now ignoring hints which are triggered while a hint is
 	// playing. We don't queue them up because they'll probably have lost relevancy
@@ -142,6 +142,12 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, const cha
 	//	}
 	//}
 
+	// Ignore hints that are less important than the one currently showing
+	if ( ( hintPriority < m_iLastHintPriority ) && ( gpGlobals->curtime < m_flLastHintDuration ) )
+		return;
+
+	// So, any higher-priority hints are done showing
+	// Now, let's see if this hint has been shown yet
 	HintInfo structHintInfo( hintID, NumShow );
 	int foundIndex = m_HintVector.Find( structHintInfo );
 	if (  foundIndex < 0 )  // Hint not shown yet
@@ -155,6 +161,8 @@ void CHudHintCenter::AddHudHint( unsigned short hintID, short NumShow, const cha
 	else if (  m_HintVector[ foundIndex ].m_ShowCount != -1 )  // Hint has been shown enough times -- ignore it
 		return;
 
+	m_iLastHintPriority = hintPriority;
+	m_flLastHintDuration = gpGlobals->curtime + SELECTION_TIMEOUT_THRESHOLD + SELECTION_FADEOUT_TIME;
 	
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	char oldHintString[HINT_HISTORY];
@@ -227,6 +235,9 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	// # of times to show the hint
 	short NumToShow = msg.ReadShort();
 
+	// Priority of the hint
+	short HintImportance = msg.ReadShort();
+
 	// Grab the string up to newline
 	if( !msg.ReadString( szString, sizeof( szString ), true ) )
 	{
@@ -242,7 +253,7 @@ void CHudHintCenter::MsgFunc_FF_SendHint( bf_read &msg )
 	//AddHudHint(bType, wID, szString, szSound[0] == 0 ? NULL : szSound);	
 	//vgui::localize()->ConvertANSIToUnicode( szString, m_pText, sizeof( m_pText ) );
 	
-	AddHudHint( wID, NumToShow, szString );
+	AddHudHint( wID, NumToShow, HintImportance, szString );
 
 	// Save some of the old hints -- note that this will cut them off at an arbitrary point
 	//char oldHintString[HINT_HISTORY];
@@ -420,6 +431,8 @@ void CHudHintCenter::VidInit( void )
 	
 	}
 
+	m_flLastHintDuration = 0.0f;
+	m_iLastHintPriority = 0;
 }
 
 

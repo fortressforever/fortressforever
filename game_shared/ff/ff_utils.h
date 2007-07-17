@@ -116,7 +116,16 @@ void FF_SendHint(
 #endif
 				unsigned short wID,
 				short	HintCount,
+				short	HintPriority,
 				const char *pszMessage);
+
+// Hint Priority -- if we want, we can add more later
+enum HintPriority
+{
+	PRIORITY_LOW,
+	PRIORITY_NORMAL,
+	PRIORITY_HIGH
+};
 
 
 // Unique Identifiers for all the hints.

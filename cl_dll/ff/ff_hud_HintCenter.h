@@ -95,7 +95,7 @@ public:
 	void	MsgFunc_FF_SendHint( bf_read &msg );
 
 	// Manually add a hud hint
-	void	AddHudHint( unsigned short hintID, short iNumShow, const char *pszMessage );
+	void	AddHudHint( unsigned short hintID, short iNumShow, short iPriority, const char *pszMessage );
 
 private:
 
@@ -110,8 +110,9 @@ private:
 	CHudTexture		*m_pHudIcon;
 	CHudTexture		*m_pHudIconGlow;
 
-	float		m_flStartTime;	// When the message was recevied
-	float		m_flDuration;	// Duration of the message
+	//float		m_flStartTime;	// When the message was recevied
+	float		m_flLastHintDuration;	// Duration of the hint
+	short		m_iLastHintPriority;		// How important was the last hint?
 
 	RichText	*m_pRichText;	// Stores the hint text for display
 

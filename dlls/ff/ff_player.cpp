@@ -1687,7 +1687,7 @@ void CFFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( info.GetInflictor() && ( info.GetInflictor()->Classify() == CLASS_GREN_EMP ) )
 	{
 		
-		FF_SendHint( this, GLOBAL_EMPDEATH, -1, "#FF_HINT_GLOBAL_EMPDEATH" );
+		FF_SendHint( this, GLOBAL_EMPDEATH, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_EMPDEATH" );
 	}
 #endif
 
@@ -2789,7 +2789,7 @@ void CFFPlayer::Command_Radar( void )
 		if( GetAmmoCount( AMMO_CELLS ) >= radar_num_cells.GetInt() )
 		{
 #ifndef CLIENT_DLL					
-					FF_SendHint( this, SCOUT_RADAR, 1, "#FF_HINT_SCOUT_RADAR" );
+					FF_SendHint( this, SCOUT_RADAR, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_RADAR" );
 #endif
 			// Bug #0000531: Everyone hears radar
 			//CPASAttenuationFilter sndFilter;
@@ -3082,7 +3082,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 			{
 				case FF_BUILD_DISPENSER:
 				{					
-					FF_SendHint( this, ENGY_BUILDDISP, -1, "#FF_HINT_ENGY_BUILDDISP" );
+					FF_SendHint( this, ENGY_BUILDDISP, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDDISP" );
 
 					// Changed to building straight on ground (Bug #0000191: Engy "imagines" SG placement, then lifts SG, then back to imagined position.)
 					CFFDispenser *pDispenser = CFFDispenser::Create( hBuildInfo.GetBuildOrigin(), hBuildInfo.GetBuildAngles(), this );
@@ -3111,7 +3111,7 @@ void CFFPlayer::PreBuildGenericThink( void )
 				{
 					// Jiggles: Start hint code	
 					// Event: Player starts building SG
-					FF_SendHint( this, ENGY_BUILDSG, -1, "#FF_HINT_ENGY_BUILDSG" );
+					FF_SendHint( this, ENGY_BUILDSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILDSG" );
 
 					// Notify allied players within 1000 units
 					CBaseEntity *ent = NULL;
@@ -3124,9 +3124,9 @@ void CFFPlayer::PreBuildGenericThink( void )
 							if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) )
 							{
 								if( player->GetClassSlot() == CLASS_ENGINEER )
-									FF_SendHint( player, ENGY_TEAMSG, -1, "#FF_HINT_ENGY_TEAMSG" );  // Go help that dude upgrade!
+									FF_SendHint( player, ENGY_TEAMSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_TEAMSG" );  // Go help that dude upgrade!
 								else
-									FF_SendHint( player, GLOBAL_DEFENDSG, -1, "#FF_HINT_GLOBAL_DEFENDSG" );  // Go protect that dude!
+									FF_SendHint( player, GLOBAL_DEFENDSG, -1, PRIORITY_NORMAL, "#FF_HINT_GLOBAL_DEFENDSG" );  // Go protect that dude!
 							}
 						}
 					}			
@@ -3261,7 +3261,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}	
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILTDISP, -1, "#FF_HINT_ENGY_BUILTDISP" );
+					FF_SendHint( this, ENGY_BUILTDISP, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTDISP" );
 #endif
 
 				}
@@ -3283,7 +3283,7 @@ void CFFPlayer::PostBuildGenericThink( void )
 					}
 #ifndef CLIENT_DLL
 					
-					FF_SendHint( this, ENGY_BUILTSG, -1, "#FF_HINT_ENGY_BUILTSG" );
+					FF_SendHint( this, ENGY_BUILTSG, -1, PRIORITY_NORMAL, "#FF_HINT_ENGY_BUILTSG" );
 #endif
 				}
 			}
@@ -3548,7 +3548,7 @@ void CFFPlayer::Command_SaveMe( void )
 				CFFPlayer *player = ToFFPlayer( ent );
 				// Only alive friendly medics within 1000 units are sent this hint
 				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_MEDIC ) )
-					FF_SendHint( player, MEDIC_GOHEAL, 5, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
+					FF_SendHint( player, MEDIC_GOHEAL, 5, PRIORITY_NORMAL, "#FF_HINT_MEDIC_GOHEAL" );  // Go heal that dude!
 			}
 		}
 		// End Hint Code
@@ -3589,7 +3589,7 @@ void CFFPlayer::Command_EngyMe( void )
 				CFFPlayer *player = ToFFPlayer( ent );
 				// Only alive friendly engies within 1000 units are sent this hint
 				if( player && ( player != this ) && player->IsAlive() && ( g_pGameRules->PlayerRelationship( this, player ) == GR_TEAMMATE ) && ( player->GetClassSlot() == CLASS_ENGINEER ) )
-					FF_SendHint( player, ENGY_GOSMACK, 5, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
+					FF_SendHint( player, ENGY_GOSMACK, 5, PRIORITY_NORMAL, "#FF_HINT_ENGY_GOSMACK" );  // Go wrench that dude!
 			}
 		}
 		// End Hint Code
@@ -4303,7 +4303,7 @@ void CFFPlayer::Infect( CFFPlayer *pInfector )
 	}
 #ifndef CLIENT_DLL
 	else if ( !IsInfected() ) // they aren't infected, but they are immune
-		FF_SendHint( pInfector, MEDIC_NOINFECT, -1, "#FF_HINT_MEDIC_NOINFECT" );
+		FF_SendHint( pInfector, MEDIC_NOINFECT, -1, PRIORITY_NORMAL, "#FF_HINT_MEDIC_NOINFECT" );
 #endif	
 }
 void CFFPlayer::Cure( CFFPlayer *pCurer )
@@ -4559,13 +4559,27 @@ void CFFPlayer::Command_PrimeTwo(void)
 		{
 			// ax1
 			EmitSound("Grenade.Prime");
-#ifndef CLIENT_DLL
+			
+			// Hint Code
 			//Msg("\nSecondary Class Name: %s\n", pPlayerClassInfo.m_szSecondaryClassName );
-			if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
-				FF_SendHint( this, SOLDIER_NAILGREN, 4, "#FF_HINT_SOLDIER_NAILGREN" );
-			else if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_concussion" ) == 0 )
-				FF_SendHint( this, SCOUT_CONC1, 1, "#FF_HINT_SCOUT_CONC1" );
-#endif				
+			//if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_nail" ) == 0 )
+			//	FF_SendHint( this, SOLDIER_NAILGREN, 4, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
+			//else if ( strcmp( pPlayerClassInfo.m_szSecondaryClassName, "ff_grenade_concussion" ) == 0 )
+			//	FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
+
+			// Jiggles: Let's try it this way to avoid the above string compares
+				switch( GetClassSlot() )
+				{
+					case CLASS_SOLDIER: 
+						FF_SendHint( this, SOLDIER_NAILGREN, 4, PRIORITY_NORMAL, "#FF_HINT_SOLDIER_NAILGREN" );
+						break;
+					case CLASS_MEDIC:
+					case CLASS_SCOUT:
+						FF_SendHint( this, SCOUT_CONC1, 1, PRIORITY_NORMAL, "#FF_HINT_SCOUT_CONC1" );
+						break;
+				}
+			// End hint code
+
 			m_iGrenadeState = FF_GREN_PRIMETWO;
 			m_flServerPrimeTime = gpGlobals->curtime;
 #ifndef _DEBUG
@@ -5156,7 +5170,7 @@ int CFFPlayer::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 
 	if ( m_bACDamageHint && ( GetClassSlot() == CLASS_PYRO ) && pAttacker && ( pAttacker->GetClassSlot() == CLASS_HWGUY )  )
 	{
-		FF_SendHint( this, PYRO_ROASTHW, 1, "#FF_HINT_PYRO_ROASTHW" );
+		FF_SendHint( this, PYRO_ROASTHW, 1, PRIORITY_NORMAL, "#FF_HINT_PYRO_ROASTHW" );
 		m_bACDamageHint = false; // Only do this hint once -- we don't want this hint sent every time this function is triggered!
 	}
 
@@ -6227,7 +6241,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 			//AfterShock - Scoring System: 100 points for uncovering spy
 			AddFortPoints(30, "#FF_FORTPOINTS_UNDISGUISESPY");
 			ClientPrint(this, HUD_PRINTTALK, "#FF_SPY_REVEALEDSPY");
-			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, "#FF_HINT_SPY_LOSEDISGUISE" );
+			FF_SendHint( ffplayer, SPY_LOSEDISGUISE, -1, PRIORITY_NORMAL, "#FF_HINT_SPY_LOSEDISGUISE" );
 
 			// This the correct func for logs?
 			UTIL_LogPrintf("%s just exposed an enemy spy!\n", STRING(ffplayer->pl.netname));
@@ -6246,7 +6260,7 @@ void CFFPlayer::Touch(CBaseEntity *pOther)
 				//AfterShock - Scoring System: ??? points for uncovering spy
 				AddFortPoints( 30, "#FF_FORTPOINTS_UNCLOAKSPY" );
 				ClientPrint( this, HUD_PRINTTALK, "#FF_SPY_REVEALEDCLOAKEDSPY" );
-				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, "#FF_HINT_SPY_LOSECLOAK" );
+				FF_SendHint( ffplayer, SPY_LOSECLOAK, -1, PRIORITY_NORMAL, "#FF_HINT_SPY_LOSECLOAK" );
 
 				// This the correct func for logs?
 				UTIL_LogPrintf( "%s just uncloaked an enemy spy!\n", STRING( ffplayer->pl.netname ) );

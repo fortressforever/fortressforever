@@ -788,11 +788,11 @@ int CFFBuildableObject::OnTakeDamage( const CTakeDamageInfo &info )
 		switch( Classify() )
 		{
 			case CLASS_DISPENSER: 
-				FF_SendHint( pOwner, ENGY_DISPDAMAGED, 3, "#FF_HINT_ENGY_DISPDAMAGED" ); 
+				FF_SendHint( pOwner, ENGY_DISPDAMAGED, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_DISPDAMAGED" ); 
 				m_flOnTakeDamageHintTime = gpGlobals->curtime + 10.0f; 
 				break;
 			case CLASS_SENTRYGUN: 
-				FF_SendHint( pOwner, ENGY_SGDAMAGED, 3, "#FF_HINT_ENGY_SGDAMAGED" ); 
+				FF_SendHint( pOwner, ENGY_SGDAMAGED, 3, PRIORITY_NORMAL, "#FF_HINT_ENGY_SGDAMAGED" ); 
 				m_flOnTakeDamageHintTime = gpGlobals->curtime + 10.0f;
 				break;
 		}
