@@ -134,6 +134,8 @@ void CFFWeaponDeployDetpack::PrimaryAttack( void )
 		{
 			m_bInSetTimerMenu = true;
 			HudContextShow(true);
+			
+			FF_SendHint( DEMOMAN_SETDET, 2, PRIORITY_NORMAL, "#FF_HINT_DEMOMAN_SETDET" );
 		}
 #endif
 	}
@@ -214,7 +216,9 @@ void CFFWeaponDeployDetpack::WeaponIdle( void )
 bool CFFWeaponDeployDetpack::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	Cleanup();
-
+#ifdef CLIENT_DLL
+	HudContextShow(false);
+#endif
 	return BaseClass::Holster( pSwitchingTo );
 }
 

@@ -39,7 +39,7 @@ extern ConVar sensitivity;
 extern ConVar ffdev_spy_scloak_minstartvelocity;
 
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
-ConVar cm_showmouse("cl_cmshowmouse", "0", 0, "Show mouse position");
+ConVar cm_showmouse("cl_cmshowmouse", "0", FCVAR_ARCHIVE, "Show mouse position");
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
 #define MENU_PROGRESS_TIME	0.3f
