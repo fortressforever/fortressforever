@@ -2456,9 +2456,19 @@ void CFFPlayer::Command_Team( void )
 	if( IsInfected() && GetInfector() )
 		SetSpecialInfectedDeath();
 
+	// Bug #0001545: going to spectator mode while cloaked does not turn off cloak shader -- Defrag
+	// When changing to spec, the class slot is immediately changed to 0 prior to Event_Killed() being run
+	// In Event_Killed(), the uncloak call is only made when the player is a spy, so the uncloak stuff wasn't being called.  Do it here instead.
+
+	if( GetClassSlot() == CLASS_SPY )
+	{
+		Uncloak( true );
+	}
+
 	// set their class to unassigned, so that they don't spawn
 	// immediately when changing teams
 	//ReadPlayerClassDataFromFileForSlot( filesystem, "unassigned", &m_hPlayerClassFileInfo, GetEncryptionKey() );
+	
 	SetClassForClient(0);
 
 	RemoveItems();
