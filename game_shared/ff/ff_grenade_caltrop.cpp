@@ -11,6 +11,7 @@
 /// Revisions
 /// ---------
 /// Apr. 23, 2005	L0ki: Initial Creation
+/// Jul. 23, 2007	Defrag: Added checks to stop caltrops & cannister gibs getting stuck in ceiling
 
 #include "cbase.h"
 #include "ff_grenade_base.h"
@@ -90,10 +91,38 @@ void CFFGrenadeCaltrop::Precache()
 	{
 		CFFPlayer *pOwner = ToFFPlayer( GetOwnerEntity() );
 
+		// #0001281: Caltrops stick to crossover2 map ceiling -> Defrag
+		// the caltrops are something like 12 units big and compiled with a scale of 0.6, so they've got a clearance of ~7.2 units.  Call it 8.
+
+		// const var 'cause I cba changing this in 3 places if I need to tweak it
+		const float kflCaltropCeilingOffset = 8.0f;
+
+		Vector vCannisterOrigin = GetAbsOrigin();
+		Vector vecBeg = vCannisterOrigin;
+
+		// trace from cannister up into the ceiling
+		Vector vecTarget = vCannisterOrigin + Vector( 0.0f, 0.0f, kflCaltropCeilingOffset );
+
+		bool bWillSpawnInCeiling = false;
+		CBaseEntity *pIgnore = this;
+
+		trace_t tr;
+		UTIL_TraceLine( vecBeg, vecTarget, MASK_SOLID, pIgnore, COLLISION_GROUP_NONE, &tr );
+
+		// If the trace hit the world, then the caltrops are possibly going to spawn in the ceiling
+		if( tr.DidHit() )
+		{			
+			if( FF_TraceHitWorld( &tr ) )
+			{
+				bWillSpawnInCeiling = true;
+				DevMsg( "[Grenade Debug] Warning: Caltrops may spawn in ceiling" );			
+			}
+		}
+		
 		// Drop the grenade shell gibs
 		for( int i = 0; i < 2; i++ )
 		{
-			Vector vOrigin = GetAbsOrigin();
+			Vector vShellOrigin = vCannisterOrigin;
 			QAngle angSpawn;
 
 			angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
@@ -104,15 +133,26 @@ void CFFGrenadeCaltrop::Precache()
 			AngleVectors(angSpawn,&vecVelocity);
 			vecVelocity *= RandomFloat(caltrop_vel_min.GetFloat(),caltrop_vel_max.GetFloat());
 
-			// So they don't begin moving down, I guess
-			if (vecVelocity.z < 0)
-				vecVelocity.z *= -1;
+			// shift them a little so they don't stick on each other
+			Vector vOffset = vecVelocity;
+
+			// clamp vertical component of velocity to stop it flying to the moon and into a ceiling -> Defrag
+			if( vOffset.z > 2.0f )
+				vOffset.z = 2.0f;
+
+			vShellOrigin += vOffset * 0.1f;
+
+			// extra check.  If it's spawning just under a ceiling, move it down a little just to be safe.
+			if( bWillSpawnInCeiling )
+			{
+				vShellOrigin.z -= kflCaltropCeilingOffset;
+			}
 
 			CFFCaltropGib *pCaltropGib = ( CFFCaltropGib * )CreateEntityByName( "caltropgib" );
 			pCaltropGib->m_iGibModel = clamp( i + 1, 1, 2 );
 
 			// shift them a little so they don't stick on each other
-			vOrigin += vecVelocity*.1;
+			vShellOrigin += vecVelocity*.1;
 
 			QAngle angRotate;
 			angRotate.x = RandomFloat(-360.0f, 360.0f);
@@ -120,7 +160,7 @@ void CFFGrenadeCaltrop::Precache()
 			angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
 
 			pCaltropGib->Spawn();
-			UTIL_SetOrigin( pCaltropGib, vOrigin );
+			UTIL_SetOrigin( pCaltropGib, vShellOrigin );
 			pCaltropGib->SetAbsAngles( QAngle( 0,0,0 ) ); //make the model stand on end
 			pCaltropGib->SetLocalAngularVelocity( angRotate );				
 			pCaltropGib->SetOwnerEntity( pOwner );
@@ -135,8 +175,8 @@ void CFFGrenadeCaltrop::Precache()
 
 		// Drop the caltrops
 		for ( int i = 0; i < caltrop_number.GetInt(); i++ )
-		{
-			Vector vOrigin = GetAbsOrigin();
+		{			
+			Vector vCaltropOrigin = vCannisterOrigin;
 			QAngle angSpawn;
 
 			angSpawn.x = RandomFloat(caltrop_ang_x_min.GetFloat(),caltrop_ang_x_max.GetFloat());
@@ -154,14 +194,26 @@ void CFFGrenadeCaltrop::Precache()
 			CFFCaltrop *pCaltrop= (CFFCaltrop *)CreateEntityByName( "caltrop" );
 
 			// shift them a little so they don't stick on each other
-			vOrigin += vecVelocity*.1;
+			Vector vOffset = vecVelocity;
+			
+			// clamp vertical component of velocity to stop it flying to the moon and into a ceiling -> Defrag
+			if( vOffset.z > 2.0f )
+				vOffset.z = 2.0f;
+
+			vCaltropOrigin += vOffset * 0.1f;
+
+			// extra check.  If it's spawning just under a ceiling, move it down a little just to be safe.
+			if( bWillSpawnInCeiling )
+			{
+				vCaltropOrigin.z -= kflCaltropCeilingOffset;
+			}
 
 			QAngle angRotate;
 			angRotate.x = RandomFloat(-360.0f, 360.0f);
 			angRotate.y = RandomFloat(-360.0f, 360.0f);
 			angRotate.z = 2.0*RandomFloat(-360.0f, 360.0f);
 
-			UTIL_SetOrigin( pCaltrop, vOrigin );
+			UTIL_SetOrigin( pCaltrop, vCaltropOrigin );
 			pCaltrop->SetAbsAngles(QAngle(0,0,0)); //make the model stand on end
 			pCaltrop->SetLocalAngularVelocity(angRotate);
 			pCaltrop->Spawn();
