@@ -115,7 +115,7 @@ void CFFGrenadeCaltrop::Precache()
 			if( FF_TraceHitWorld( &tr ) )
 			{
 				bWillSpawnInCeiling = true;
-				DevMsg( "[Grenade Debug] Warning: Caltrops may spawn in ceiling" );			
+				DevMsg( "[Grenade Debug] Warning: Caltrops may spawn in ceiling\n" );			
 			}
 		}
 		
