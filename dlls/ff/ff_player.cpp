@@ -2248,11 +2248,14 @@ void CFFPlayer::ChangeClass(const char *szNewClassName)
 	{
 		m_fRandomPC = true;
 
+		// #0001554: Random player class doesn't work unless you've already spawned as a 'normal' class -> Defrag
+		// Moved KillAndRemoveItems() outside the if( fInstantSwitch ) as this was causing the player to be unable to spawn
+		// unless either A: autokill was on B: the player had already played a different class 
+		KillAndRemoveItems();
+
 		if( fInstantSwitch )
 		{
-			bool bAlive = IsAlive();
-
-			KillAndRemoveItems();
+			bool bAlive = IsAlive();			
 
 			if( bAlive && (GetClassSlot() != 0) )
 			{
