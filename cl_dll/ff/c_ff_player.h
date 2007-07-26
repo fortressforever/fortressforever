@@ -251,6 +251,7 @@ public:
 	// ---> added by billdoor
 public:
 	CNetworkVar(float, m_flArmorType);
+	CNetworkVar( bool, m_fRandomPC );
 	
 	int NeedsArmor( void ) const { return GetMaxArmor() - GetArmor(); }
 

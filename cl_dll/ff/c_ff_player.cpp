@@ -40,6 +40,8 @@
 
 #include "model_types.h"
 
+#include "ff_hud_chat.h"
+
 #if defined( CFFPlayer )
 	#undef CFFPlayer
 #endif
@@ -561,6 +563,9 @@ BEGIN_RECV_TABLE_NOBASE( C_FFPlayer, DT_FFLocalPlayerExclusive )
 
 	// ---> added by billdoor
 	RecvPropFloat(RECVINFO(m_flArmorType)),
+
+	// ---> added by defrag
+	RecvPropBool( RECVINFO( m_fRandomPC ) ),
 
 	RecvPropInt(RECVINFO(m_iSkiState)),
 	// ---> end
@@ -1416,6 +1421,14 @@ void C_FFPlayer::Spawn( void )
 		//enginesound->StopAllSounds( true );
 	}
 	ViewPunchReset();
+
+	// #0001382: Random player class mode should show "you spawned as..." upon each spawn -> Defrag
+	if( m_fRandomPC )
+	{			
+		// Add a better message later (localised spawn message along the lines of "You spawned as <class>"		
+		ClientPrintMsg( this, HUD_PRINTCENTER, Class_IntToResourceString( GetClassSlot() ));
+	}
+	
 }
 
 //-----------------------------------------------------------------------------
