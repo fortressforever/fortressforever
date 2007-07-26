@@ -40,9 +40,17 @@ extern ConVar ffdev_spy_scloak_minstartvelocity;
 
 ConVar cm_capturemouse("cl_cmcapture", "1", 0, "Context menu captures mouse");
 ConVar cm_showmouse("cl_cmshowmouse", "0", FCVAR_ARCHIVE, "Show mouse position");
+ConVar cm_size("cl_cmsize", "120", 0, "Size of context radial menu");
+ConVar cm_progresstime("cl_cmprogresstime", "0.3", 0, "Time to wait for menu progress");
+ConVar cm_squash("cl_cmsquash", "0.6", 0, "");
+
 ConVar cm_aimsentry( "cl_noradialaimsentry", "0", 0, "0 - Aim sentry when selecting option in context menu or 1 - aiming AFTER selecting option in context menu" );
 
-#define MENU_PROGRESS_TIME	0.3f
+#define SCREEN_MIDDLE_X	320
+#define SCREEN_MIDDLE_Y	240
+
+#define SCREEN_MAX_X	640
+#define SCREEN_MAX_Y	480
 
 DECLARE_HUDELEMENT(CHudContextMenu);
 
@@ -619,9 +627,9 @@ void CHudContextMenu::SetMenu()
 {
 	m_flSelectStart = gpGlobals->curtime;
 
-	float midx = scheme()->GetProportionalScaledValue(320);
-	float midy = scheme()->GetProportionalScaledValue(240);
-	float dist = scheme()->GetProportionalScaledValue(120);
+	float midx = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
+	float midy = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	float dist = scheme()->GetProportionalScaledValue(cm_size.GetInt());
 
 	m_flPosX = midx;
 	m_flPosY = midy;
@@ -632,15 +640,15 @@ void CHudContextMenu::SetMenu()
 		float increments = (float) i * DEG2RAD(360) / (float) m_nOptions;
 
 		m_flPositions[i][0] = midx + dist * sin(increments);
-		m_flPositions[i][1] = midy - dist * cos(increments) * 0.6f;
+		m_flPositions[i][1] = midy - dist * cos(increments) * cm_squash.GetFloat();
 	}
 
 	// Big enough to fit whole circle
-	SetWide(scheme()->GetProportionalScaledValue(640));
-	SetTall(scheme()->GetProportionalScaledValue(480));
+	SetWide(scheme()->GetProportionalScaledValue(SCREEN_MAX_X));
+	SetTall(scheme()->GetProportionalScaledValue(SCREEN_MAX_Y));
 
 	// Position in centre
-	SetPos(scheme()->GetProportionalScaledValue(320) - GetWide() * 0.5f, scheme()->GetProportionalScaledValue(240) - GetTall() * 0.5f);
+	SetPos(scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X) - GetWide() * 0.5f, scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y) - GetTall() * 0.5f);
 }
 
 void CHudContextMenu::Paint() 
@@ -685,8 +693,8 @@ void CHudContextMenu::Paint()
 	Color highlighted(255, 0, 0, 255);
 	Color dimmed(100, 100, 100, 255);
 
-	float dx = m_flPosX - scheme()->GetProportionalScaledValue(320);
-	float dy = m_flPosY - scheme()->GetProportionalScaledValue(240);
+	float dx = m_flPosX - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
+	float dy = m_flPosY - scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
 
 	int newSelection = -1;
 
@@ -735,7 +743,7 @@ void CHudContextMenu::Paint()
 
 	// Progress to next menu if needed
 	// TODO: A cleaner way of doing this
-	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + MENU_PROGRESS_TIME)
+	if (m_iSelected > -1 && gpGlobals->curtime > m_flSelectStart + cm_progresstime.GetFloat())
 	{
 		// There is a next menu for this option
 		// ADDED: added check for conditionfunc to be true because
@@ -764,19 +772,51 @@ void CHudContextMenu::Paint()
 
 void CHudContextMenu::MouseMove(float *x, float *y) 
 {
+	if (!m_fVisible)
+		return;
+
 	float sensitivity_factor = 1.0f / (sensitivity.GetFloat() == 0 ? 0.001f : sensitivity.GetFloat());
 
-	float midx = scheme()->GetProportionalScaledValue(320);
-	float midy = scheme()->GetProportionalScaledValue(240);
-	float dist = scheme()->GetProportionalScaledValue(120);
+	float midx = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_X);
+	float midy = scheme()->GetProportionalScaledValue(SCREEN_MIDDLE_Y);
+	float dist = scheme()->GetProportionalScaledValue(cm_size.GetInt());
 
-	m_flPosX = clamp(m_flPosX + (*x * sensitivity_factor), midx - dist, midx + dist);
-	m_flPosY = clamp(m_flPosY + (*y * sensitivity_factor), midy - dist, midy + dist);
+	// UNDONE: Now capturing within a sphere, not within a box
+	//m_flPosX = clamp(m_flPosX + (*x * sensitivity_factor), midx - dist, midx + dist);
+	//m_flPosY = clamp(m_flPosY + (*y * sensitivity_factor), midy - dist, midy + dist);
 
-	if (m_fVisible && cm_capturemouse.GetBool()) 
+	// Add on the new location to our internal mouse position
+	m_flPosX += *x * sensitivity_factor;
+	m_flPosY += *y * sensitivity_factor;
+
+	// If capturing mouse then reset any x,y movement so that the player stays stationary
+	// Turning this off isn't very handy since you don't want to be moving around if you're
+	// going for the aim sentry option
+	if (cm_capturemouse.GetBool()) 
 	{
 		*x = 0;
 		*y = 0;
+	}
+
+	float flOffsetX = m_flPosX - midx;
+	float flOffsetY = m_flPosY - midy;
+
+	float flDistance = FastSqrt((flOffsetX * flOffsetX) + (flOffsetY * flOffsetY));
+
+	// Definitely no clamping required here
+	if (flDistance == 0.0f)
+		return;
+
+	// Need to take squash'ness into account here
+	float s = fabs(flOffsetY) / flDistance;
+	dist = (1.0f - s) * dist + s * (dist * cm_squash.GetFloat());
+
+	// Make sure we don't go outside the bounds
+	if (flDistance > dist)
+	{
+		flDistance = dist / flDistance;
+		m_flPosX = midx + (flOffsetX * flDistance);
+		m_flPosY = midy + (flOffsetY * flDistance);
 	}
 }
 

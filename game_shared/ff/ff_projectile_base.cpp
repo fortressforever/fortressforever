@@ -39,7 +39,7 @@ extern short	g_sModelIndexSmoke;			// (in combatweapon.cpp) holds the index for 
 IMPLEMENT_NETWORKCLASS_ALIASED(FFProjectileBase, DT_FFProjectileBase) 
 
 BEGIN_NETWORK_TABLE(CFFProjectileBase, DT_FFProjectileBase) 
-	#ifdef CLIENT_DLL
+/*	#ifdef CLIENT_DLL
 		RecvPropVector(RECVINFO(m_vecInitialVelocity)) 
 	#else
 		SendPropVector(SENDINFO(m_vecInitialVelocity), 
@@ -48,7 +48,7 @@ BEGIN_NETWORK_TABLE(CFFProjectileBase, DT_FFProjectileBase)
 			-3000, 	// low value
 			3000	// high value
 			) 
-	#endif
+	#endif*/
 END_NETWORK_TABLE() 
 
 //=============================================================================
@@ -56,6 +56,8 @@ END_NETWORK_TABLE()
 //=============================================================================
 
 #ifdef CLIENT_DLL
+
+	static ConVar ffdev_addinterpsamples("ffdev_addinterpsamples", "0", 0, "");
 
 	//----------------------------------------------------------------------------
 	// Purpose: When the rocket enters the client's PVS, add the flight sound
@@ -76,9 +78,14 @@ END_NETWORK_TABLE()
 		}
 	
 		// Don't do the extra interpolation samples for now
-		return;
+		if (ffdev_addinterpsamples.GetInt() == 0)
+			return;
 
-		if (type == DATA_UPDATE_CREATED) 
+		// NOTE NOTE NOTE
+		// If this is behaving weirdly, swap back to m_vecInitialVelocity
+
+		// Do interpolation samples a player's own projectiles when they are in first person
+		if (type == DATA_UPDATE_CREATED && GetOwnerEntity() == CBasePlayer::GetLocalPlayer() && !input->CAM_IsThirdPerson()) 
 		{
 			// Now stick our initial velocity into the interpolation history 
 			CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
@@ -87,8 +94,8 @@ END_NETWORK_TABLE()
 			float changeTime = GetLastChangeTime(LATCH_SIMULATION_VAR);
 
 			// Add a sample 1 second back.
-			Vector vecCurOrigin = GetLocalOrigin() - (m_vecInitialVelocity * 0.01f);
-			interpolator.AddToHead(changeTime - 0.1f, &vecCurOrigin, false);
+			Vector vecCurOrigin = GetLocalOrigin() - (/*m_vecInitialVelocity*/ GetAbsVelocity() * 1.0f);
+			interpolator.AddToHead(changeTime - 1.0f, &vecCurOrigin, false);
 
 			// Add the current sample.
 			vecCurOrigin = GetLocalOrigin();

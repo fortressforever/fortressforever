@@ -173,7 +173,7 @@ ConVar projectile_gren_gravity("ffdev_projectile_gren_gravity", "1.0", FCVAR_REP
 			SetAbsVelocity(vecAbsVelocity);
 
 			// Fix for #0001538: pipes bounce indefinitely (with tickrate 33)
-			if (flSpeedSqr < (50 * 50)) 
+			if (flSpeedSqr < (50 * 50) || (vecAbsVelocity.x == 0.0f && flSpeedSqr < (70*70))) 
 			{
 				if (pEntity->IsStandable()) 
 				{
