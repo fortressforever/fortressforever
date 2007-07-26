@@ -568,15 +568,25 @@ void CHudContextMenu::Display(bool state)
 	{
 		if (m_iSelected >= 0)
 		{
+			// Make sure this is a valid button (i.e. not disabled)
 			if (m_pMenu[m_iSelected].conditionfunc() == MENU_SHOW)
+			{
+				pPlayer->EmitSound("ContextMenu.Select");
 				DoCommand(m_pMenu[m_iSelected].szCommand);
+			}
 		}
 		else if ( pPlayer->GetClassSlot() == CLASS_DEMOMAN ) // So the demoman can set a det by just clicking
 			engine->ClientCmd("detpack 5");
 
+		else
+			pPlayer->EmitSound("ContextMenu.Close");
+
 		m_fVisible = state;
 		return;
 	}
+
+	if (state && state != m_fVisible)
+		pPlayer->EmitSound("ContextMenu.Open");
 
 	m_fVisible = state;
 
@@ -791,6 +801,10 @@ void CHudContextMenu::Paint()
 			m_flSelectStart = gpGlobals->curtime;
 
 			SetMenu();
+
+			C_FFPlayer *pPlayer = C_FFPlayer::GetLocalFFPlayer();
+			if (pPlayer)
+				pPlayer->EmitSound("ContextMenu.NextMenu");
 		}
 	}
 
