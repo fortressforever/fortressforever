@@ -37,7 +37,8 @@ public:
 
 	// This gets sent to the client and placed in the client's interpolation history
 	// so the projectile starts out moving right off the bat.
-	CNetworkVector(m_vecInitialVelocity);
+	//CNetworkVector(m_vecInitialVelocity);
+	Vector m_vecInitialVelocity;
 
 	CFFProjectileBase();
 	virtual void Precache();
