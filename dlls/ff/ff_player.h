@@ -274,7 +274,8 @@ public:
 	void	SetLastSpawn( CBaseEntity *pEntity );
 
 public:
-	bool m_fRandomPC;
+	// Networked the random player class var -> Defrag
+	CNetworkVar( bool, m_fRandomPC );
 	int m_iNextClass;
 
 	void ChangeTeam(int iTeamNum);

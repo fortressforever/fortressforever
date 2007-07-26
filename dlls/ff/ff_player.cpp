@@ -292,6 +292,9 @@ BEGIN_SEND_TABLE_NOBASE( CFFPlayer, DT_FFLocalPlayerExclusive )
 	// health/armor	
 	SendPropFloat(SENDINFO(m_flArmorType)),
 
+	// random player class 
+	SendPropBool( SENDINFO ( m_fRandomPC ) ),
+
 	SendPropInt(SENDINFO(m_iSkiState)),
 
 	// Grenade Related
